@@ -88,7 +88,7 @@ object Main {
               if (l =:= endLineNum) endLineCol else curLine.length + 1
             val front = curLine.slice(0, c - 1)
             val middle = underline(curLine.slice(c - 1, lastCol - 1))
-            val back = curLine.slice(lastCol - 1, curLine.size)
+            val back = curLine.slice(lastCol - 1, curLine.length)
             output(s"$prepre$pre\t$front$middle$back")
             c = 1
             l += 1

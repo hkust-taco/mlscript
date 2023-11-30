@@ -13,7 +13,7 @@ new C
 //│ class TypingUnit1 {}
 //│ const typing_unit1 = new TypingUnit1;
 //│ // Query 1
-//│ res = new C();
+//│ res = new C;
 //│ // End of generated code
 //│ res
 //│     = C {}
@@ -69,7 +69,7 @@ new C
 //│ class TypingUnit6 {}
 //│ const typing_unit6 = new TypingUnit6;
 //│ // Query 1
-//│ res = new C.class();
+//│ res = new C.class;
 //│ // End of generated code
 //│ res
 //│     = C {}

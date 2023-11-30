@@ -72,10 +72,10 @@ table = hashtbl_add table "one" (fun f -> fun x -> f x)
 
 rec def find table key =
   match_list table none (fun h -> fun t ->
-    if eq h._1 key then some h._2
+    if eq h.0 key then some h.1
     else find t key
   )
-//│ find: List[{_1: anything, _2: 'val}] -> anything -> (None | Some['val])
+//│ find: List[{0: anything, 1: 'val}] -> anything -> (None | Some['val])
 
 def nfind table key =
   let opt = find table key in
@@ -83,10 +83,10 @@ def nfind table key =
   { None -> fun f -> fun x -> x
   | Some -> opt.val
   }
-//│ nfind: List[{_1: anything, _2: 'val}] -> anything -> (anything -> 'a -> 'a | 'val)
+//│ nfind: List[{0: anything, 1: 'val}] -> anything -> (anything -> 'a -> 'a | 'val)
 
-def nfind: List[{_1: anything; _2: 'val}] -> anything -> (anything -> 'a -> 'a | 'val)
-//│ nfind: List[{_1: anything, _2: 'val}] -> anything -> ('val | anything -> 'a -> 'a)
+def nfind: List[{0: anything; 1: 'val}] -> anything -> (anything -> 'a -> 'a | 'val)
+//│ nfind: List[{0: anything, 1: 'val}] -> anything -> ('val | anything -> 'a -> 'a)
 
 // * Alternative
 // def nfind table key =

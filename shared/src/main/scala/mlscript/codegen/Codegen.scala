@@ -605,9 +605,11 @@ class JSField(`object`: JSExpr, val property: JSIdent) extends JSMember(`object`
     ) ++ SourceCode(
       if (JSField.isValidFieldName(property.name)) {
         s".${property.name}"
-      } else {
-        s"[${JSLit.makeStringLiteral(property.name)}]"
-      }
+      } else
+        property.name.toIntOption match {
+          case S(index) => s"[$index]"
+          case N => s"[${JSLit.makeStringLiteral(property.name)}]"
+        }
     )
 }
 
@@ -922,6 +924,11 @@ final case class JSClassNewDecl(
 
 final case class JSComment(text: Str) extends JSStmt {
   def toSourceCode: SourceCode = SourceCode(s"// $text")
+}
+
+final case class JSParenthesis(exp: JSExpr) extends JSExpr {
+  implicit def precedence: Int = 0
+  def toSourceCode: SourceCode = exp.embed
 }
 
 object JSCodeHelpers {

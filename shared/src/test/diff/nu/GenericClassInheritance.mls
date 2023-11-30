@@ -85,17 +85,17 @@ class C1[A] extends C0[A] { val a = a }
 //│   val a: nothing
 //│ }
 
-new C1 : C1[Int]
+new C1() : C1[Int]
 //│ C1[Int]
 //│ res
 //│     = C1 {}
 
-((new C1) : C1[Int]) : C0['X]
+(new C1() : C1[Int]) : C0['X]
 //│ C0[Int]
 //│ res
 //│     = C1 {}
 
-(new C1).a
+new C1().a
 //│ nothing
 //│ res
 //│     = undefined
@@ -103,7 +103,7 @@ new C1 : C1[Int]
 
 mixin M1[A] {
     fun f1(x: A): A = x
-    fun f2(x: A): (A, A) = (x, x)
+    fun f2(x: A): [A, A] = [x, x]
 }
 //│ mixin M1[A]() {
 //│   fun f1: (x: A) -> A
@@ -119,7 +119,7 @@ class A1 extends M1 {
 //│   fun f2: (x: 'A) -> ['A, 'A]
 //│ }
 
-class A2[S, T] extends M1[(S, T)]
+class A2[S, T] extends M1[[S, T]]
 //│ class A2[S, T] {
 //│   constructor()
 //│   fun f1: (x: [S, T]) -> [S, T]

@@ -26,12 +26,10 @@ x
 
 
 :e
-class Foo(x: Int)
 class Bar { x }
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.30: 	class Bar { x }
+//│ ║  l.29: 	class Bar { x }
 //│ ╙──      	            ^
-//│ class Foo(x: Int)
 //│ class Bar {
 //│   constructor()
 //│ }

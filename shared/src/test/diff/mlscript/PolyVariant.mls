@@ -104,16 +104,16 @@ rec def map f l = case l of {
   | Nil -> l
   | Cons -> Cons (f l.head) (map f l.tail)
   }
-//│ map: ('head -> ('head0 & 'A)) -> 'a -> 'tail
+//│ map: ('head -> ('head0 & 'A)) -> 'a -> 'b
 //│   where
-//│     'a <: (Cons[?] with {head: 'head, tail: 'a}) | Nil & List['A] & 'tail
-//│     'tail :> Cons['A] with {head: 'head0, tail: 'tail}
+//│     'a <: (Cons[?] with {head: 'head, tail: 'a}) | Nil & List['A] & 'b
+//│     'b :> Cons['A] with {head: 'head0, tail: 'b}
 //│    = [Function: map]
 
 map (fun x -> "lol") (Cons 2 (Cons 3 Nil))
-//│ res: 'tail
+//│ res: Nil | 'a
 //│   where
-//│     'tail :> (Cons["lol"] with {tail: 'tail}) | Nil
+//│     'a :> Cons["lol"] with {tail: Nil | 'a}
 //│    = Cons { head: 'lol', tail: Cons { head: 'lol', tail: Nil {} } }
 
 //************** EXAMPLE 3: ROUGH APPROXIMATIONS *************

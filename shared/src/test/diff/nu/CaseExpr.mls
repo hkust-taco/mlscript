@@ -122,3 +122,47 @@ case then 1 else 0
 //│     = [Function: res]
 
 
+
+// TODO:
+
+:pe
+:e
+case x, y then x + y
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'case'; found reference instead
+//│ ║  l.130: 	case x, y then x + y
+//│ ║         	     ^
+//│ ╟── Note: 'case' expression starts here:
+//│ ║  l.130: 	case x, y then x + y
+//│ ╙──       	^^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
+//│ ║  l.130: 	case x, y then x + y
+//│ ╙──       	      ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.130: 	case x, y then x + y
+//│ ╙──       	     ^
+//│ anything -> error
+//│ Code generation encountered an error:
+//│   unresolved symbol x
+
+:pe
+:e
+case (x, y) then x + y
+//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ║  l.149: 	case (x, y) then x + y
+//│ ╙──       	     ^^^^^^
+//│ ╔══[ERROR] type identifier not found: Tuple#2
+//│ ╙──
+//│ nothing -> error
+//│ Code generation encountered an error:
+//│   unknown match case: Tuple#2
+
+:e // * FIXME[UCS]
+case [x, y] then x + y
+//│ ╔══[ERROR] type identifier not found: Tuple#2
+//│ ╙──
+//│ nothing -> error
+//│ Code generation encountered an error:
+//│   unknown match case: Tuple#2
+
+
+

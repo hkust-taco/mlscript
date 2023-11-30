@@ -177,14 +177,14 @@ fun loop =
 val x: Bind['A, 'B] where undefined : 'A;; 'A : 'B
 //│ val x: forall 'A 'B. Bind['A, 'B]
 //│   where
-//│     'A :> undefined
+//│     'A :> ()
 //│        <: 'B
-//│     'B :> undefined
+//│     'B :> ()
 //│ x
 //│   = <missing implementation>
 
 x.run
-//│ undefined
+//│ ()
 //│ res
 //│     = <no result>
 //│       x is not implemented
@@ -192,7 +192,7 @@ x.run
 val x: Bind['A, 'B] where 'A : undefined;; 'A : 'B
 //│ val x: forall 'A 'B. Bind['A, 'B]
 //│   where
-//│     'A <: undefined & 'B
+//│     'A <: () & 'B
 //│ x
 //│   = <missing implementation>
 

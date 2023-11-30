@@ -13,7 +13,7 @@
 // TODO?
 :e
 1 : Int : Int
-//│ ╔══[ERROR] not a recognized type
+//│ ╔══[ERROR] Not a recognized type
 //│ ║  l.15: 	1 : Int : Int
 //│ ╙──      	    ^^^
 //│ anything
@@ -31,8 +31,21 @@ foo(123 : Int) : Int
 //│ res
 //│     = 124
 
-foo(123:Int):Int
+:e
+foo(123: Int): Int
+//│ ╔══[ERROR] Cannot use named arguments as the function type has untyped arguments
+//│ ║  l.35: 	foo(123: Int): Int
+//│ ╙──      	   ^^^^^^^^^^
 //│ Int
-//│ res
-//│     = 124
+//│ Code generation encountered an error:
+//│   unresolved symbol Int
+
+:e
+foo(123:Int):Int
+//│ ╔══[ERROR] Cannot use named arguments as the function type has untyped arguments
+//│ ║  l.44: 	foo(123:Int):Int
+//│ ╙──      	   ^^^^^^^^^
+//│ Int
+//│ Code generation encountered an error:
+//│   unresolved symbol Int
 

@@ -2579,9 +2579,9 @@ add
 //│ res: {u: forall 'a. 'a -> 'a}
 
 (let rec x = {v: (y => x)}; {u: x.v})
-//│ res: {u: 'v}
+//│ res: {u: anything -> 'x}
 //│   where
-//│     'v :> anything -> {v: 'v}
+//│     'x :> {v: anything -> 'x}
 
 (x => 0.v)
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -2940,9 +2940,9 @@ add
 //│ res: {v: int -> int -> int}
 
 (let rec x = {v: {v: x}}; x.v)
-//│ res: 'v
+//│ res: {v: 'x}
 //│   where
-//│     'v :> {v: {v: 'v}}
+//│     'x :> {v: {v: 'x}}
 
 0.u
 //│ ╔══[ERROR] Type mismatch in field selection:

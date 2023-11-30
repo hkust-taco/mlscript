@@ -1430,9 +1430,9 @@ module Test {
   log(0)
   module Foo { log(2) }
   log(1)
-  Foo
+  discard(Foo)
   log(3)
-  Foo
+  discard(Foo)
 }
 //│ module Test {
 //│   module Foo

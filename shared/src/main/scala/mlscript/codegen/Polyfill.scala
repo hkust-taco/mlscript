@@ -176,6 +176,9 @@ object Polyfill {
     buffer += BuiltinFunc(
       "log", fn(_, param("x")) { `return` { id("console.info")(id("x")) } }
     )
+    buffer += BuiltinFunc(
+      "discard", fn(_, param("x"))()
+    )
     buffer.toList
   }
 
