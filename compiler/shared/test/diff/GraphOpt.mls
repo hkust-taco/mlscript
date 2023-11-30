@@ -190,7 +190,7 @@ foo()
 //│   Pair => case pair%0 of
 //│     Pair => let x%4 = pair%0.x
 //│       in let x%5 = +(x%4,1)
-//│         in jump j%1(x%5)
+//│         in jump j%0(x%5)
 //│ )
 //│ Def(1, foo, [], [], 
 //│ [None], 1, 
@@ -202,10 +202,6 @@ foo()
 //│ [None], 1, 
 //│ let x%8 = +(x%7,1)
 //│   in x%8
-//│ )
-//│ Def(3, @join j%1, [x%6], [{EDirect}], 
-//│ [None], 1, 
-//│ jump j%0(x%6)
 //│ )
 //│ },
 //│ let* (x%11) = foo()
@@ -224,16 +220,12 @@ foo()
 //│ let x%8 = +(x%7,1)
 //│   in x%8
 //│ )
-//│ Def(3, @join j%1, [x%6], [{EDirect}], 
-//│ [None], 1, 
-//│ jump j%0(x%6)
-//│ )
 //│ Def(5, @join silly$D%0, [pair%0], [{EDestruct，EDirect，ESelect(x)}], 
 //│ [None], 1, 
 //│ case pair%0 of
 //│   Pair => let x%4 = pair%0.x
 //│     in let x%5 = +(x%4,1)
-//│       in jump j%1(x%5)
+//│       in jump j%0(x%5)
 //│ )
 //│ },
 //│ let* (x%11) = foo()
@@ -251,14 +243,10 @@ foo()
 //│ let x%8 = +(x%7,1)
 //│   in x%8
 //│ )
-//│ Def(3, @join j%1, [x%6], [{EDirect}], 
-//│ [None], 1, 
-//│ jump j%0(x%6)
-//│ )
 //│ Def(8, @join silly$D%0$D%0$S%0, [pair%0_x], [{EDirect}], 
 //│ [None], 1, 
 //│ let x%5 = +(pair%0_x,1)
-//│   in jump j%1(x%5)
+//│   in jump j%0(x%5)
 //│ )
 //│ },
 //│ let* (x%11) = foo()

@@ -994,66 +994,42 @@ class GraphOptimizer:
 
   private class RemoveTrivialCallAndJump extends GOVisitor:
 
+    private def param_to_arg(param: TrivialExpr, map: Map[Name, TrivialExpr]): TrivialExpr = param match
+      case Ref(x) if map.contains(x) => map(x)
+      case x: Ref => x
+      case x: Literal => x
+
     private def params_to_args(params: Ls[TrivialExpr], map: Map[Name, TrivialExpr]): Ls[TrivialExpr] =
-      params.map {
-        case Ref(x) if map.contains(x) => map(x)
-        case x: Ref => x
-        case x: Literal => x
-      }
+      params.map(param_to_arg(_, map))
     override def visit(x: GOProgram) =
       val new_defs = x.defs.map(_.accept_visitor(this))
       fixCrossReferences(x.main, new_defs)
       GOProgram(x.classes, new_defs, x.main)
+    
     override def visit(x: Jump) = x match
-      case Jump(defnref, xs) =>
-        defnref.getDefn match {
-          case Some(defn) =>
-            val parammap = defn.params.zip(xs).toMap
-            val trivial = defn.body match {
-              case Result(ys) => Some(ys)
-              case _ => None
-            }
-            if (trivial == None) return x
-
-            val retvals = trivial.get
-            
-            val ys = retvals.map { retval => retval match
-              case Literal(lit) => retval
-              case Ref(x) if parammap.contains(x) => parammap(x)
-              case _ => retval
-            }
-
-            Result(ys)
+      case Jump(defnref, as) =>
+        val defn = defnref.expectDefn 
+        val parammap = defn.params.zip(as).toMap
+        defn.body match
+          case Result(ys) =>
+            Result(params_to_args(ys, parammap))
+          case Jump(defnref, as) =>
+            Jump(defnref, params_to_args(as, parammap))
           case _ => x
-        }
 
     override def visit(x: LetCall) = x match
       case LetCall(xs, defnref, as, e) =>
         val defn = defnref.expectDefn
         val parammap = defn.params.zip(as).toMap
-        val trivial = defn.body match {
-          case Result(ys) => Some(ys)
-          case _ => None
-        }
-        if (trivial == None)
-          return LetCall(xs, defnref, as, e.accept_visitor(this))
-
-        val retvals = trivial.get
-
-        if (retvals.length != xs.length)
-          throw GraphOptimizingError("inconsistent results number")
-        
-        val init = e.accept_visitor(this) 
-
-        xs.zip(retvals).foldRight(init) {
-          case ((name, retval), node) =>
-            retval match 
-              case Literal(lit) => LetExpr(name, retval.to_expr , node)
-              case Ref(x) if parammap.contains(x) =>
-                LetExpr(name, parammap(x).to_expr, node)
-              case _ =>
-                LetExpr(name, retval.to_expr, node)
-        }
+        defn.body match
+          case Result(ys) =>
+            val init = e.accept_visitor(this) 
+            xs.zip(ys).foldRight(init) {
+              case ((name, retval), node) =>
+                LetExpr(name, param_to_arg(retval, parammap).to_expr, node)
+            }
+          case _ => LetCall(xs, defnref, as, e.accept_visitor(this))  
+    
 
   private class RemoveDeadDefn() extends GOVisitor:
     override def visit(x: GOProgram) =
