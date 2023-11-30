@@ -1,3 +1,153 @@
 :NewDefs
 
 
+1; 2
+//│ 2
+//│ res
+//│     = 1
+//│ res
+//│     = 2
+
+// :dp
+1, 2
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.12: 	1, 2
+//│ ╙──      	^
+//│ 2
+//│ res
+//│     = 2
+
+log(1), 2
+//│ 2
+//│ res
+//│     = 2
+//│ // Output
+//│ 1
+
+let a = 1, 2
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.27: 	let a = 1, 2
+//│ ╙──      	        ^
+//│ let a: 2
+//│ a
+//│   = 2
+
+let a = 1; 2
+//│ let a: 1
+//│ 2
+//│ a
+//│   = 1
+//│ res
+//│     = 2
+
+(1;2)
+//│ ╔══[PARSE ERROR] Unexpected ';' here
+//│ ║  l.43: 	(1;2)
+//│ ╙──      	  ^
+//│ 1
+//│ res
+//│     = 1
+
+(log(1), 2)
+//│ 2
+//│ res
+//│     = 2
+//│ // Output
+//│ 1
+
+fun foo(x) = x
+//│ fun foo: forall 'a. 'a -> 'a
+
+foo(1;2)
+//│ ╔══[PARSE ERROR] Unexpected ';' here
+//│ ║  l.61: 	foo(1;2)
+//│ ╙──      	     ^
+//│ 1
+//│ res
+//│     = 1
+
+foo(let x = 1; x + 1)
+//│ Int
+//│ res
+//│     = 2
+
+foo(let x = log(0), 1; log(x), x + 1)
+//│ Int
+//│ res
+//│     = 2
+//│ // Output
+//│ 0
+//│ 1
+
+foo(let x = 1 in x + 1)
+//│ Int
+//│ res
+//│     = 2
+
+foo((log(1), 2))
+//│ 2
+//│ res
+//│     = 2
+//│ // Output
+//│ 1
+
+foo(1), 2
+//│ ╔══[WARNING] Expression in statement position should have type `unit`.
+//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╟── Type mismatch in application:
+//│ ║  l.94: 	foo(1), 2
+//│ ║        	^^^^^^
+//│ ╟── integer literal of type `1` does not match type `()`
+//│ ║  l.94: 	foo(1), 2
+//│ ║        	    ^
+//│ ╟── but it flows into application with expected type `()`
+//│ ║  l.94: 	foo(1), 2
+//│ ╙──      	^^^^^^
+//│ 2
+//│ res
+//│     = 2
+
+
+fun foo(x, y) = x
+//│ fun foo: forall 'a. ('a, anything) -> 'a
+
+foo(1,2)
+//│ 1
+//│ res
+//│     = 1
+
+foo((log(1),2))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.119: 	foo((log(1),2))
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ╟── argument of type `[2]` does not match type `[?a, ?b]`
+//│ ║  l.119: 	foo((log(1),2))
+//│ ║         	   ^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from tuple literal:
+//│ ║  l.111: 	fun foo(x, y) = x
+//│ ╙──       	       ^^^^^^
+//│ error
+//│ res
+//│     = 2
+//│ // Output
+//│ 1
+
+foo(let x = log(0), 1; log(x), x + 1)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.136: 	foo(let x = log(0), 1; log(x), x + 1)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── argument of type `[?a]` does not match type `[?b, ?c]`
+//│ ║  l.136: 	foo(let x = log(0), 1; log(x), x + 1)
+//│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from tuple literal:
+//│ ║  l.111: 	fun foo(x, y) = x
+//│ ╙──       	       ^^^^^^
+//│ error
+//│ res
+//│     = 2
+//│ // Output
+//│ 0
+//│ 1
+
+
+
