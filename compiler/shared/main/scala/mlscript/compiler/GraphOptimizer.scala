@@ -9,7 +9,7 @@ import scala.annotation.tailrec
 import scala.collection.immutable.*
 import scala.collection.mutable.{HashMap => MutHMap}
 import scala.collection.mutable.{HashSet => MutHSet, Set => MutSet}
-import scala.collection.mutable.MultiMap
+import scala.collection.mutable.{MultiMap, Queue}
 
 final case class GraphOptimizingError(message: String) extends Exception(message)
 
@@ -388,25 +388,68 @@ class GraphOptimizer:
   import Elim._
   import Intro._
 
+  private class RenameBinding extends GOVisitor:
+    val map = MutHMap[Str, Str]()
+
+    override def visit_name_def(x: Name): Name =
+      println(s"defined $x")
+      val y = gensym(x.str)
+      map.update(x.str, y.str)
+      y
+
+    override def visit_param(x: Name): Name = 
+      val y = gensym(x.str)
+      map.update(x.str, y.str)
+      y
+    override def visit_name_use(x: Name): Name =
+      map.get (x.str) match
+        case Some(y) => Name(y)
+        case None => x
+
+  private class RenameCalleeBinding(map: Map[Str, Str]) extends GOVisitor:
+    private var map2 = map
+    override def visit_name_def(x: Name): Name = 
+      map2 = map2.removed(x.str)
+      x
+
+    override def visit_param(x: Name): Name = 
+      map2 = map2.removed(x.str)
+      x
+
+    override def visit_name_use(x: Name): Name =
+      map2.get(x.str) match
+        case Some(y) => Name(y)
+        case None => x
+
   private class EliminationAnalysis extends GOIterator:
-    val elims = new MutHMap[Str, MutSet[Elim]] with MultiMap[Str, Elim]
+    val elims = MutHMap[Str, MutSet[Elim]]()
+    val defcount = MutHMap[Str, Int]()
     val visited = MutHSet[Str]()
+
+    private def addElim(x: Str, elim: Elim) =
+      if (defcount.getOrElse(x, 0) <= 1)
+        elims.getOrElseUpdate(x, MutHSet.empty) += elim
+
+    override def iterate_param(x: Name): Unit = 
+      defcount.update(x.str, defcount.getOrElse(x.str, 0) + 1)
+    override def iterate_name_def(x: Name) =
+      defcount.update(x.str, defcount.getOrElse(x.str, 0) + 1)
     override def iterate_name_use(x: Name) =
-      elims.addBinding(x.str, EDirect)
+      addElim(x.str, EDirect)
     override def iterate(x: Case) = x match
       case Case(x, cases) =>
         x.accept_use_iterator(this)
-        elims.addBinding(x.str, EDestruct)
+        addElim(x.str, EDestruct)
         cases foreach { (cls, arm) => arm.accept_iterator(this) }
     override def iterate(x: Select) = x match
       case Select(x, cls, field) =>
-        elims.addBinding(x.str, ESelect(field))
+        addElim(x.str, ESelect(field))
     override def iterate(x: Jump) = x match
       case Jump(defnref, args) => 
         args.foreach(_.accept_iterator(this))
         val defn = defnref.expectDefn
         args.zip(defn.activeParams).foreach {
-          case (Ref(Name(x)), ys) => ys.foreach { y => elims.addBinding(x, y) }
+          case (Ref(Name(x)), ys) => ys.foreach { y => addElim(x, y) }
           case _ => 
         }
         if (!visited.contains(defn.name))
@@ -418,7 +461,7 @@ class GraphOptimizer:
         args.foreach(_.accept_iterator(this))
         val defn = defnref.expectDefn 
         args.zip(defn.activeParams).foreach {
-          case (Ref(Name(x)), ys) => ys.foreach { y => elims.addBinding(x, y) }
+          case (Ref(Name(x)), ys) => ys.foreach { y => addElim(x, y) }
           case _ => 
         }
         if (!visited.contains(defn.name))
@@ -434,6 +477,7 @@ class GraphOptimizer:
           val old = defn.activeParams
           elims.clear()
           visited.clear()
+          defcount.clear()
           defn.accept_iterator(this)
           defn.activeParams = defn.params.map {
             param => elims.get(param.str) match {
@@ -574,7 +618,6 @@ class GraphOptimizer:
           pre_defs.add(pre_defn)
           derived_defs.getOrElseUpdate(defn.name, MutHSet.empty) += pre_name.str
         
-        
         cases.zip(arm_fv).foreach {
           case ((cls, body), fv) =>
             val post_name = gensym(defn.name + "$D")
@@ -629,7 +672,7 @@ class GraphOptimizer:
         case _ => None
       }.zip(params).zip(active).foreach {
         case ((Some(ICtor(cls)), Name(param)), elim) if elim.contains(EDestruct) =>
-         addTarget(name, param)
+          addTarget(name, param)
         case _ =>
       }
 
@@ -759,7 +802,12 @@ class GraphOptimizer:
       val pre_map = fs.pre_map.toMap
       val post_map = fs.post_map.map { (k, v) => k -> v.toMap }.toMap
       val derived_map = fs.derived_defs.map { (k, v) => k -> v.toSet }.toMap
-      val scsr = SpittingCallSiteReplacement(pre_map, post_map, derived_map, fs.pre_defs.toSet, fs.post_defs.toSet)
+      val pre_defs = fs.pre_defs.toSet
+      val post_defs = fs.post_defs.toSet
+      
+      val new_def_names = pre_defs.map(_.name) ++ post_defs.map(_.name)
+
+      val scsr = SpittingCallSiteReplacement(pre_map, post_map, derived_map, pre_defs, post_defs)
       val y = x.accept_visitor(scsr)
       fixCrossReferences(y.main, y.defs)
       validate(y.main, y.defs)
@@ -936,23 +984,21 @@ class GraphOptimizer:
       val main = x.main
       val srta = ScalarReplacementTargetAnalysis()
       defs.foreach(_.accept_iterator(srta))
-      val workset: Map[Str, Map[Str, Set[Str]]] = srta.ctx.map {
-        case (name, m) => (name, m.toMap)
-      }.toMap
+      val worklist: Map[Str, Map[Str, Set[Str]]] = srta.ctx.map{(k, v) => (k, v.toMap)}.toMap
 
       val namemap = defs.flatMap {
-        case defn if workset.contains(defn.name) => Some(defn.name -> gensym(defn.name + "$S").str)
+        case defn if worklist.contains(defn.name) => Some(defn.name -> gensym(defn.name + "$S").str)
         case _ => None
       }.toMap
       
       val srDefs = defs.flatMap {
-        defn => workset.get(defn.name).map {
+        defn => worklist.get(defn.name).map {
             targets => defn.accept_visitor(SRNewDefinitionBuilder(namemap(defn.name), defn, targets))
       }}
 
       val clsctx: ClassCtx = classes.map{ case ClassInfo(_, name, _) => name }.zip(classes).toMap
       val fldctx: FieldCtx = classes.flatMap { case ClassInfo(_, name, fields) => fields.map { fld => (fld, (name, clsctx(name))) } }.toMap
-      val srcsp = SRCallSiteReplacement(namemap, fldctx, workset)
+      val srcsp = SRCallSiteReplacement(namemap, fldctx, worklist)
       val new_defs = defs.map(_.accept_visitor(srcsp)) ++ srDefs
       fixCrossReferences(main, new_defs)
       validate(main, new_defs)
