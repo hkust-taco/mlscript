@@ -64,6 +64,7 @@ foo()
 //│ Interpreted ------------------------------
 //│ Pair(1,2)
 
+:GOInterp
 :GraphOpt
 class Pair(x, y)
 fun foo(pair) =
@@ -118,6 +119,10 @@ bar()
 //│ let* (x%6) = bar()
 //│   in x%6)
 //│ 
+//│ Interpreted ------------------------------
+//│ Pair(1,2)
+//│ 
+//│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
 //│ Def(1, bar, [], [], 
@@ -133,9 +138,14 @@ bar()
 //│ },
 //│ let* (x%6) = bar()
 //│   in x%6)
+//│ 
+//│ 
+//│ Interpreted ------------------------------
+//│ Pair(1,2)
 
 
 
+:GOInterp
 :GraphOpt
 class Pair(x, y) {}
 fun silly(pair) =
@@ -207,6 +217,10 @@ foo()
 //│ let* (x%11) = foo()
 //│   in x%11)
 //│ 
+//│ Interpreted ------------------------------
+//│ 2
+//│ 
+//│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
 //│ Def(1, foo, [], [], 
@@ -251,10 +265,15 @@ foo()
 //│ },
 //│ let* (x%11) = foo()
 //│   in x%11)
+//│ 
+//│ 
+//│ Interpreted ------------------------------
+//│ 2
 
 
 
 
+:GOInterp
 :GraphOpt
 class Pair(x, y)
 fun inc_fst(pair) =
@@ -312,6 +331,10 @@ foo()
 //│ let* (x%7) = foo()
 //│   in x%7)
 //│ 
+//│ Interpreted ------------------------------
+//│ 2
+//│ 
+//│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
 //│ Def(1, foo, [], [], 
@@ -327,7 +350,12 @@ foo()
 //│ },
 //│ let* (x%7) = foo()
 //│   in x%7)
+//│ 
+//│ 
+//│ Interpreted ------------------------------
+//│ 2
 
+:GOInterp
 :GraphOpt
 class Pair(x, y)
 fun inc_fst(pair) =
@@ -384,6 +412,10 @@ foo()
 //│ let* (x%7) = foo()
 //│   in x%7)
 //│ 
+//│ Interpreted ------------------------------
+//│ 2
+//│ 
+//│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
 //│ Def(1, foo, [], [], 
@@ -399,7 +431,12 @@ foo()
 //│ },
 //│ let* (x%7) = foo()
 //│   in x%7)
+//│ 
+//│ 
+//│ Interpreted ------------------------------
+//│ 2
 
+:GOInterp
 :GraphOpt
 class Left(x)
 class Right(y)
@@ -477,6 +514,10 @@ bar()
 //│ let* (x%11) = bar()
 //│   in x%11)
 //│ 
+//│ Interpreted ------------------------------
+//│ 2
+//│ 
+//│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
 //│ Def(1, bar, [], [], 
@@ -486,7 +527,12 @@ bar()
 //│ },
 //│ let* (x%11) = bar()
 //│   in x%11)
+//│ 
+//│ 
+//│ Interpreted ------------------------------
+//│ 2
 
+:GOInterp
 :GraphOpt
 class True
 class False
@@ -538,6 +584,10 @@ bar()
 //│ let* (x%5) = bar()
 //│   in x%5)
 //│ 
+//│ Interpreted ------------------------------
+//│ 1
+//│ 
+//│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Pair, [x,y])}, {
 //│ Def(1, bar, [], [], 
@@ -553,8 +603,13 @@ bar()
 //│ },
 //│ let* (x%5) = bar()
 //│   in x%5)
+//│ 
+//│ 
+//│ Interpreted ------------------------------
+//│ 1
 
 
+:GOInterp
 :GraphOpt
 class C1(x, y)
 class C2(z)
@@ -611,6 +666,10 @@ bar()
 //│ let* (x%6) = bar()
 //│   in x%6)
 //│ 
+//│ Interpreted ------------------------------
+//│ 0
+//│ 
+//│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, C1, [x,y]),ClassInfo(1, C2, [z])}, {
 //│ Def(1, bar, [], [], 
@@ -620,6 +679,10 @@ bar()
 //│ },
 //│ let* (x%6) = bar()
 //│   in x%6)
+//│ 
+//│ 
+//│ Interpreted ------------------------------
+//│ 0
 
 :GOInterp
 :GraphOpt
@@ -773,6 +836,7 @@ baz()
 //│ Interpreted ------------------------------
 //│ 6
 
+:GOInterp
 :GraphOpt
 class Pair(x, y)
 fun foo() =
@@ -806,4 +870,12 @@ foo()
 //│ },
 //│ let* (x%2) = foo()
 //│   in x%2)
+//│ 
+//│ Interpreted ------------------------------
+//│ 0
+//│ 
+//│ 
+//│ 
+//│ Interpreted ------------------------------
+//│ 0
 
