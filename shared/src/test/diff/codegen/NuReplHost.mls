@@ -33,7 +33,7 @@ let r = foo(1)
 //│ └─┬ Query 2/2
 //│   ├── Prelude: <empty>
 //│   ├── Code:
-//│   ├──   globalThis.r = foo(1);
+//│   ├──   globalThis.r1 = foo(1);
 //│   └── Reply: [runtime error] Error: an error was thrown
 //│ r
 //│ Runtime error:
@@ -44,7 +44,7 @@ r
 //│ nothing
 //│ res
 //│ Runtime error:
-//│   ReferenceError: r is not defined
+//│   ReferenceError: r1 is not defined
 
 
 

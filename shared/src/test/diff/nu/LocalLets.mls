@@ -29,6 +29,6 @@ let E(x) = new E(1)
 //│ ╙──      	           ^^^^^^^^
 //│ let E: anything -> error
 //│ E
-//│   = [Function: E1]
+//│   = [Function: E2]
 
 

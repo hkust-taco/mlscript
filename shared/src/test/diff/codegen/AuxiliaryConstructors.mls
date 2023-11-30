@@ -467,11 +467,11 @@ n.ll
 //│ class TypingUnit19 {}
 //│ const typing_unit19 = new TypingUnit19;
 //│ // Query 1
-//│ globalThis.m = g(1);
+//│ globalThis.m1 = g(1);
 //│ // Query 2
-//│ globalThis.n = m(2);
+//│ globalThis.n1 = m1(2);
 //│ // Query 3
-//│ res = n.ll;
+//│ res = n1.ll;
 //│ // End of generated code
 //│ m
 //│   = [Function: ctor] { class: [class L] }
@@ -490,7 +490,7 @@ let mm = new M()
 //│ class TypingUnit21 {}
 //│ const typing_unit21 = new TypingUnit21;
 //│ // Query 1
-//│ globalThis.mm = new M.class();
+//│ globalThis.mm1 = new M.class();
 //│ // End of generated code
 //│ mm
 //│    = M {}

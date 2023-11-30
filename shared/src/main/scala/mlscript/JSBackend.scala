@@ -1382,7 +1382,7 @@ class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
     }
 
     otherStmts.foreach {
-      case fd @ NuFunDef(isLetRec, Var(nme), symNme, _, L(body)) if isLetRec.getOrElse(true) =>
+      case fd @ NuFunDef(isLetRec, Var(nme), symNme, _, L(body)) =>
         val isByname = isLetRec.isEmpty
         val isByvalueRecIn = if (isByname) None else Some(true)
         val bodyIsLam = body match { case _: Lam => true case _ => false }
