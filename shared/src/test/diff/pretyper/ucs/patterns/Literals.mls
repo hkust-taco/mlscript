@@ -9,21 +9,5 @@ class Pair[A, B](x: A, y: B)
 //│ type Option[T] = None | Some[T]
 //│ class Pair[A, B](x: A, y: B)
 
-:dpt
-// FIXME
 fun f(x) = if x is Some(1) then true else false
-//│ process <== <root>: {fun f}
-//│ | visitTypingUnit <== <root>: {fun f}
-//│ | | 1. scope = {f}
-//│ | | 2. scope = {f}
-//│ | | visitFunction <== f
-//│ | | | visitTerm <== Lam(_, _)
-//│ | | | | visitTerm <== If(_, _)
-//│ | | | | | visitIf
-//│ | | | | | | STEP 0
-//│ | | | | | | Transformed UCS term:
-//│ | | | | | | if
-//│ | | | | | |   x is Some(1) then true
-//│ | | | | | |   else false
-//│ | | | | | | STEP 1
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ fun f: (Object & ~#Some | Some[Num]) -> Bool

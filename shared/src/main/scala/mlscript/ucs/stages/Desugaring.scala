@@ -1,7 +1,8 @@
 package mlscript.ucs.stages
 
-import mlscript.{Term, Var}
+import mlscript.{App, Fld, Term, Var}
 import mlscript.ucs.{syntax => s, core => c, PartialTerm}
+import mlscript.ucs.helpers.mkBinOp
 import mlscript.utils._, shorthands._
 import mlscript.pretyper.{ScrutineeSymbol, SubValueSymbol, ValueSymbol}
 import mlscript.ucs.DesugaringException
@@ -25,7 +26,7 @@ trait Desugaring { self: mlscript.pretyper.Traceable =>
 
   private val truePattern = c.Pattern.Class(Var("true"), N)
 
-  private def flattenClassParameters(parentScrutinee: Var, parentClassName: Var, parameters: Opt[Ls[Opt[s.Pattern]]]): Opt[Ls[Opt[Var]]] -> Ls[Opt[Var -> s.ClassPattern]] =
+  private def flattenClassParameters(parentScrutinee: Var, parentClassName: Var, parameters: Opt[Ls[Opt[s.Pattern]]]): Opt[Ls[Opt[Var]]] -> Ls[Opt[Var -> s.Pattern]] =
     parameters match {
       case S(parameters) =>
         val (a, b) = parameters.zipWithIndex.unzip {
@@ -34,20 +35,14 @@ trait Desugaring { self: mlscript.pretyper.Traceable =>
           case (S(parameterPattern: s.ClassPattern), index) =>
             val scrutinee = freshScrutinee(parentScrutinee, parentClassName, index)
             (S(scrutinee), Some((scrutinee, parameterPattern)))
+          case (S(parameterPattern: s.LiteralPattern), index) =>
+            val scrutinee = freshScrutinee(parentScrutinee, parentClassName, index)
+            (S(scrutinee), Some((scrutinee, parameterPattern)))
           case _ => ??? // Other patterns are not implemented yet.
         }
         (S(a), b)
       case N => (N, Nil)
     }
-
-  private def flattenNestedSplitLet(pattern: s.ClassPattern, term: Var, tail: c.Split): c.Split = {
-    val (parameterBindings, childrenBindings) = flattenClassParameters(term, pattern.nme, pattern.parameters)
-    c.Branch(term, c.Pattern.Class(pattern.nme, parameterBindings), childrenBindings.foldRight(tail){ 
-      case (N, tail) => tail
-      case (S((nme, parameterPattern)), tail) =>
-        flattenNestedSplitLet(parameterPattern, nme, tail)
-    }) :: c.Split.Nil
-  }
 
   private def desugarTermSplit(split: s.TermSplit)(implicit termPart: PartialTerm): c.Split =
     split match {
@@ -92,8 +87,16 @@ trait Desugaring { self: mlscript.pretyper.Traceable =>
     val (parameterBindings, subPatterns) = flattenClassParameters(scrutinee, pattern.nme, pattern.parameters)
     c.Branch(scrutinee, c.Pattern.Class(pattern.nme, parameterBindings), subPatterns.foldRight(next) {
       case (None, next) => next
-      case (Some((nme, pattern)), next) =>
+      case (Some((nme, pattern: s.ClassPattern)), next) =>
         flattenNestedPattern(pattern, nme, next) :: c.Split.Nil
+      case (Some((nme, pattern: s.LiteralPattern)), next) =>
+        val scrutinee = freshScrutinee()
+        c.Split.Let(
+          rec = false,
+          scrutinee,
+          mkBinOp(nme, Var("=="), pattern.literal, true),
+          c.Branch(scrutinee, truePattern, next) :: c.Split.Nil
+        )
     })
   }
 
