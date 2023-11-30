@@ -33,7 +33,7 @@ object GOInterpreter:
       document.print
   
     private def show_args(args: Ls[Expr]) = args map { x => x.show } mkString ","
-    
+
     def document: Document = this match
       case Ref(Name(s)) => s |> raw
       case Literal(lit) => s"$lit" |> raw
@@ -171,15 +171,25 @@ object GOInterpreter:
     Program(classes, defs, main)
 
   private type Ctx = Map[Str, Expr]
+  private type ClassCtx = Map[Str, ClassInfo]
 
-  private def eval(using ctx: Ctx)(op: Str, x1: Expr, x2: Expr): Opt[Expr] = (op, x1, x2) match
+  private def getTrue(using clsctx: ClassCtx) = CtorApp(clsctx("True"), Ls.empty)
+  private def getFalse(using clsctx: ClassCtx) = CtorApp(clsctx("False"), Ls.empty)
+
+  private def eval(using ctx: Ctx, clsctx: ClassCtx)(op: Str, x1: Expr, x2: Expr): Opt[Expr] = (op, x1, x2) match
     case ("+", Literal(IntLit(x)), Literal(IntLit(y))) => Some(Literal(IntLit(x + y)))
-    case ("-", Literal(IntLit(x)), Literal(IntLit(y))) => Some(Literal(IntLit(x / y)))
+    case ("-", Literal(IntLit(x)), Literal(IntLit(y))) => Some(Literal(IntLit(x - y)))
     case ("*", Literal(IntLit(x)), Literal(IntLit(y))) => Some(Literal(IntLit(x * y)))
     case ("/", Literal(IntLit(x)), Literal(IntLit(y))) => Some(Literal(IntLit(x / y)))
+    case ("==", Literal(IntLit(x)), Literal(IntLit(y))) => Some(if x == y then getTrue else getFalse)
+    case ("!=", Literal(IntLit(x)), Literal(IntLit(y))) => Some(if x != y then getTrue else getFalse)
+    case ("<=", Literal(IntLit(x)), Literal(IntLit(y))) => Some(if x <= y then getTrue else getFalse)
+    case (">=", Literal(IntLit(x)), Literal(IntLit(y))) => Some(if x >= y then getTrue else getFalse)
+    case (">", Literal(IntLit(x)), Literal(IntLit(y))) => Some(if x > y then getTrue else getFalse)
+    case ("<", Literal(IntLit(x)), Literal(IntLit(y))) => Some(if x < y then getTrue else getFalse)
     case _ => None
 
-  private def eval_args(using ctx: Ctx)(exprs: Ls[Expr]): Either[Ls[Expr], Ls[Expr]] = 
+  private def eval_args(using ctx: Ctx, clsctx: ClassCtx)(exprs: Ls[Expr]): Either[Ls[Expr], Ls[Expr]] = 
     var changed = false
     val xs = exprs.map {
       arg => eval(arg) match
@@ -188,18 +198,18 @@ object GOInterpreter:
     }
     if (changed) Left(xs) else Right(exprs)
 
-  private def eval_args_may_not_progress(using ctx: Ctx)(exprs: Ls[Expr]) = 
+  private def eval_args_may_not_progress(using ctx: Ctx, clsctx: ClassCtx)(exprs: Ls[Expr]) = 
     exprs.map {
       arg => eval(arg) match
         case Left(expr) => expr
         case Right(expr) => expr
     }
 
-  private def eval_may_not_progress(using ctx: Ctx)(expr: Expr) = eval(expr) match
+  private def eval_may_not_progress(using ctx: Ctx, clsctx: ClassCtx)(expr: Expr) = eval(expr) match
     case Left(x) => x
     case Right(x) => x
     
-  private def eval(using ctx: Ctx)(expr: Expr): Either[Expr, Expr] = expr match
+  private def eval(using ctx: Ctx, clsctx: ClassCtx)(expr: Expr): Either[Expr, Expr] = expr match
     case Ref(Name(x)) => ctx.get(x).toLeft(expr)
     case Literal(x) => Right(expr)
     case CtorApp(name, args) =>
@@ -217,10 +227,8 @@ object GOInterpreter:
     case BasicOp(name, args) =>
       val xs = eval_args_may_not_progress(args)
       val x = name match
-        case "+" => eval(using ctx)("+", xs.head, xs.tail.head)
-        case "-" => eval(using ctx)("-", xs.head, xs.tail.head)
-        case "*" => eval(using ctx)("*", xs.head, xs.tail.head)
-        case "/" => eval(using ctx)("/", xs.head, xs.tail.head)
+        case "+" | "-" | "*" | "/" | "==" | "!=" | "<=" | ">=" | "<" | ">" => 
+          eval(using ctx, clsctx)(name, xs.head, xs.tail.head)
         case _ => throw GOInterpreterError("unexpected basic operation")
       x.toLeft(expr)
 
@@ -228,12 +236,12 @@ object GOInterpreter:
     case Left(value) => value
     case Right(value) => throw GOInterpreterError("only has the name of definition")
 
-  private def eval_may_not_progress(using ctx: Ctx)(node: Node) = eval(node) match
+  private def eval_may_not_progress(using ctx: Ctx, clsctx: ClassCtx)(node: Node) = eval(node) match
     case Left(x) => x
     case Right(x) => x
 
   @tailrec
-  private def eval(using ctx: Ctx)(node: Node): Either[Node, Node] = node match
+  private def eval(using ctx: Ctx, clsctx: ClassCtx)(node: Node): Either[Node, Node] = node match
     case Result(xs) =>
       xs |> eval_args match
         case Left(xs) => Left(Result(xs))
@@ -242,9 +250,9 @@ object GOInterpreter:
       val xs = args |> eval_args_may_not_progress
       val defn = defnref |> expect_def
       val ctx1 = ctx ++ defn.params.map{_.str}.zip(xs)
-      eval(using ctx1)(defn.body)
+      eval(using ctx1, clsctx)(defn.body)
     case Case(scrut, cases) =>
-      val CtorApp(cls, xs) = (Ref(scrut):Expr) |> eval_may_not_progress(using ctx) match {
+      val CtorApp(cls, xs) = (Ref(scrut):Expr) |> eval_may_not_progress(using ctx, clsctx) match {
         case x: CtorApp => x
         case x => throw GOInterpreterError(s"not a class $x")
       }
@@ -256,22 +264,23 @@ object GOInterpreter:
     case LetExpr(name, expr, body) =>
       val x = eval_may_not_progress(expr)
       val ctx1 = ctx + (name.str -> x)
-      eval(using ctx1)(body)
+      eval(using ctx1, clsctx)(body)
     case LetCall(xs, defnref, args, body) =>
       val defn = defnref |> expect_def
       val ys = args |> eval_args_may_not_progress
       val ctx1 = ctx ++ defn.params.map{_.str}.zip(ys)
-      val res = eval_may_not_progress(using ctx1)(defn.body) match {
+      val res = eval_may_not_progress(using ctx1, clsctx)(defn.body) match {
         case Result(xs) => xs
         case _ => throw GOInterpreterError("unexpected node")
       }
       val ctx2 = ctx ++ xs.map{_.str}.zip(res)
-      eval(using ctx2)(body)
+      eval(using ctx2, clsctx)(body)
     case _ => throw GOInterpreterError("unexpected node")
 
   private def interpret(prog: Program): Node =
     val Program(classes, defs, main) = prog
-    eval_may_not_progress(using Map.empty)(main)
+    val clsctx = classes.map(x => x.ident -> x).toMap
+    eval_may_not_progress(using Map.empty, clsctx)(main)
     
   def interpret(goprog: GOProgram): Str =
     val prog = convert(goprog)

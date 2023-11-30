@@ -86,7 +86,7 @@ bar()
 //│       in let* (x%20) = complex_foo(x%19)
 //│         in x%20
 //│ )
-//│ Def(2, @join j%0, [x%8], [{}], 
+//│ Def(2, @join j%0, [x%8], [{EDirect}], 
 //│ [None], 1, 
 //│ let x%9 = B(1,2)
 //│   in case x%9 of
@@ -103,7 +103,7 @@ bar()
 //│   in x%21)
 //│ 
 //│ Interpreted ------------------------------
-//│ 4
+//│ 3
 //│ 
 //│ 
 //│ Optimized ------------------------------
@@ -114,7 +114,7 @@ bar()
 //│   in let* (x%20) = complex_foo$D%1$S%0(9,10)
 //│     in x%20
 //│ )
-//│ Def(2, @join j%0, [x%8], [{}], 
+//│ Def(2, @join j%0, [x%8], [{EDirect}], 
 //│ [None], 1, 
 //│ let x%9 = B(1,2)
 //│   in case x%9 of
@@ -126,13 +126,13 @@ bar()
 //│ let x%16 = +(x%8,x%15)
 //│   in x%16
 //│ )
-//│ Def(7, @join complex_foo$D%0$S%0, [t%0_z,t%0_y,t%0_x], [{EDirect},{EDirect},{EDirect}], 
+//│ Def(7, complex_foo$D%0$S%0, [t%0_z,t%0_y,t%0_x], [{EDirect},{EDirect},{EDirect}], 
 //│ [None], 1, 
 //│ let x%3 = *(t%0_y,t%0_z)
 //│   in let x%4 = +(t%0_x,x%3)
 //│     in jump j%0(x%4)
 //│ )
-//│ Def(8, @join complex_foo$D%1$S%0, [t%0_m,t%0_n], [{EDirect},{EDirect}], 
+//│ Def(8, complex_foo$D%1$S%0, [t%0_m,t%0_n], [{EDirect},{EDirect}], 
 //│ [None], 1, 
 //│ let x%7 = -(t%0_m,t%0_n)
 //│   in jump j%0(x%7)
@@ -143,7 +143,7 @@ bar()
 //│ 
 //│ 
 //│ Interpreted ------------------------------
-//│ 4
+//│ 3
 
 :GOInterp
 :GraphOpt
@@ -358,7 +358,7 @@ bar()
 //│   in let x%1 = *(1,2)
 //│     in t%0,x%0,x%1
 //│ )
-//│ Def(12, @join complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(x)},{},{}], 
+//│ Def(12, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(x)},{EDirect},{EDirect}], 
 //│ [None], 1, 
 //│ let x%2 = t%0.x
 //│   in jump j%0(x%2)
@@ -571,7 +571,7 @@ bar()
 //│   in let x%13 = B(6)
 //│     in x%12,x%1,x%0,x%13,x%11
 //│ )
-//│ Def(8, @join j%0$D%0, [x%12,x%1,x%0,x%13,x%11], [{},{EDirect},{EDirect},{},{ESelect(w)，ESelect(x)}], 
+//│ Def(8, j%0$D%0, [x%12,x%1,x%0,x%13,x%11], [{EDestruct，EDirect，ESelect(w)},{EDirect},{EDirect},{EDestruct，EDirect，ESelect(w)},{ESelect(w)，ESelect(x)}], 
 //│ [None], 1, 
 //│ let x%14 = x%11.x
 //│   in let x%15 = x%11.w
@@ -589,7 +589,7 @@ bar()
 //│   in let x%1 = *(1,2)
 //│     in t%0,x%0,x%1
 //│ )
-//│ Def(12, @join complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(w)},{},{}], 
+//│ Def(12, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(w)},{EDirect},{EDirect}], 
 //│ [None], 1, 
 //│ let x%3 = t%0.w
 //│   in let x%4 = C(0)

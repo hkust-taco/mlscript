@@ -192,6 +192,8 @@ class GraphOptimizer:
               case node @ _ => node |> unexpected_node
             }
             val res = gensym()
+            if ( !clsctx.contains("True") || !clsctx.contains("False"))
+              throw GraphOptimizingError("True or False class not found, unable to use 'if then else'")
             LetJoin(jp,
               Ls(res),
               res |> ref |> sresult |> k,
@@ -321,7 +323,7 @@ class GraphOptimizer:
 
       import scala.collection.mutable.{ HashSet => MutHSet }
 
-      val ops = Set("+", "-", "*", "/")
+      val ops = Set("+", "-", "*", "/", ">", "<", ">=", "<=", "!=", "==")
       val cls = grouped.getOrElse(0, Nil).map(getClassInfo)
       
       val init: Set[Str] = Set.empty
@@ -388,6 +390,7 @@ class GraphOptimizer:
 
   private class EliminationAnalysis extends GOIterator:
     val elims = new MutHMap[Str, MutSet[Elim]] with MultiMap[Str, Elim]
+    val visited = MutHSet[Str]()
     override def iterate_name_use(x: Name) =
       elims.addBinding(x.str, EDirect)
     override def iterate(x: Case) = x match
@@ -406,6 +409,9 @@ class GraphOptimizer:
           case (Ref(Name(x)), ys) => ys.foreach { y => elims.addBinding(x, y) }
           case _ => 
         }
+        if (!visited.contains(defn.name))
+          visited.add(defn.name)
+          defn.accept_iterator(this)
     override def iterate(x: LetCall) = x match
       case LetCall(xs, defnref, args, body) =>
         xs.foreach(_.accept_def_iterator(this))
@@ -415,6 +421,9 @@ class GraphOptimizer:
           case (Ref(Name(x)), ys) => ys.foreach { y => elims.addBinding(x, y) }
           case _ => 
         }
+        if (!visited.contains(defn.name))
+          visited.add(defn.name)
+          defn.accept_iterator(this)
         body.accept_iterator(this)
 
     override def iterate(x: GOProgram) =
@@ -424,6 +433,7 @@ class GraphOptimizer:
         x.defs.foreach { defn =>
           val old = defn.activeParams
           elims.clear()
+          visited.clear()
           defn.accept_iterator(this)
           defn.activeParams = defn.params.map {
             param => elims.get(param.str) match {
@@ -543,7 +553,6 @@ class GraphOptimizer:
 
     private def split(defn: GODef, node: GONode, accu: GONode => GONode, targets: Set[Str]): Unit = node match
       case Result(res) => 
-        
       case Jump(defn, args) =>
       case Case(scrut, cases) if targets.contains(scrut.str) =>
         val arm_fv = cases.map(x => FreeVarAnalysis().run(x._2))
@@ -574,7 +583,7 @@ class GraphOptimizer:
             val new_defn = GODef(
               genfid(),
               post_name.str,
-              true,
+              false,
               post_params,
               defn.resultNum,
               body)
@@ -595,9 +604,17 @@ class GraphOptimizer:
     override def iterate(x: GODef): Unit =
       split(x, x.body, n => n, worklist.getOrElse(x.name, Set.empty))
 
-  private class SpittingTargetAnalysis extends GOIterator:
+  
+  private def bindIntroInfo(intros: Map[Str, Intro], args: Ls[TrivialExpr], params: Ls[Name]) =
+    args.zip(params).foldLeft(intros) {
+      case (accu, (Ref(Name(arg)), Name(param))) if intros.contains(arg) => accu + (param -> intros(arg))
+      case (accu, _) => accu
+    }
+
+  private class SplittingTargetAnalysis extends GOIterator:
     private val targets = MutHMap[Str, MutHSet[Str]]()
     private var intros = Map.empty[Str, Intro]
+    private val visited = MutHSet[Str]()
 
     def run(x: GOProgram): Map[Str, Set[Str]] =
       x.accept_iterator(this)
@@ -625,6 +642,10 @@ class GraphOptimizer:
       case Jump(defnref, as) =>
         val defn = defnref.expectDefn
         checkTargets(defn.name, intros, as, defn.params, defn.activeParams)
+        if (!visited.contains(defn.name))
+          visited.add(defn.name)
+          intros = bindIntroInfo(intros, as, defn.params)
+          defn.body.accept_iterator(this)
 
     override def iterate(x: LetCall): Unit = x match
       case LetCall(xs, defnref, as, e) =>
@@ -634,7 +655,16 @@ class GraphOptimizer:
           case (intros, _) => intros
         }
         checkTargets(defn.name, intros, as, defn.params, defn.activeParams)
+        if (!visited.contains(defn.name))
+          visited.add(defn.name)
+          intros = bindIntroInfo(intros, as, defn.params)
+          defn.body.accept_iterator(this)
         e.accept_iterator(this)
+
+    override def iterate(x: GODef): Unit =
+      visited.clear()
+      intros = Map.empty
+      x.body.accept_iterator(this)
 
   private class SpittingCallSiteReplacement(
     pre_map: Map[(Str, Str), (Str, Ls[Str])],
@@ -644,14 +674,13 @@ class GraphOptimizer:
     post_def: Set[GODef],
   ) extends GOVisitor:
     var intros = Map.empty[Str, Intro]
-
     override def visit(x: LetExpr) = x match
       case LetExpr(x, e1, e2) =>
         intros = IntroductionAnalysis.getIntro(e1, intros).map { y => Map(x.str -> y) }.getOrElse(intros)
         LetExpr(x, e1, e2.accept_visitor(this))
     
     private def getFirstPossibleSpitting(name: Str, intros: Map[Str, Intro], args: Ls[TrivialExpr], params: Ls[Name], active: Ls[Set[Elim]]): Opt[(Str, Str, Str)] =
-      args.map { 
+      args.map {
         case x: Ref => intros.get(x.name.str)
         case _ => None
       }.zip(params).zip(active).foreach {
@@ -701,16 +730,30 @@ class GraphOptimizer:
                 e.accept_visitor(this)))
           case None => LetCall(xs, GODefRef(Right(post_f)), as, e.accept_visitor(this))
         }
+    
+    override def visit(x: GODef) =
+      intros = Map.empty
+      GODef(
+        x.id,
+        x.name,
+        x.isjp,
+        x.params,
+        x.resultNum,
+        x.body.accept_visitor(this)
+      )
+
     override def visit(x: GOProgram) =
+      val defs = (x.defs ++ pre_def ++ post_def).map(_.accept_visitor(this))
+      intros = Map.empty
+      val main = x.main.accept_visitor(this)
       GOProgram(
         x.classes,
-        (x.defs ++ pre_def ++ post_def).map(_.accept_visitor(this)),
-        x.main.accept_visitor(this)
+        defs, main
       )
 
   private object Splitting extends GOVisitor:
     override def visit(x: GOProgram) =
-      val worklist = SpittingTargetAnalysis().run(x)
+      val worklist = SplittingTargetAnalysis().run(x)
       val fs = FunctionSplitting(worklist)
       x.accept_iterator(fs)
       val pre_map = fs.pre_map.toMap
@@ -726,7 +769,8 @@ class GraphOptimizer:
 
   private class ScalarReplacementTargetAnalysis extends GOIterator:
     val ctx = MutHMap[Str, MutHMap[Str, Set[Str]]]()
-    var intros = Map.empty[Str, Intro]
+    private var intros = Map.empty[Str, Intro]
+    private val visited = MutHSet[Str]()
 
     private def addTarget(name: Str, field: Str, target: Str) =
       ctx.getOrElseUpdate(name, MutHMap()).updateWith(target) {
@@ -751,6 +795,10 @@ class GraphOptimizer:
       case Jump(defnref, args) =>
         val defn = defnref.expectDefn
         checkTargets(defn.name, intros, args, defn.params, defn.activeParams)
+        if (!visited.contains(defn.name))
+          visited.add(defn.name)
+          intros = bindIntroInfo(intros, args, defn.params)
+          defn.body.accept_iterator(this)
 
     override def iterate(x: LetExpr): Unit = x match
       case LetExpr(x, e1, e2) =>
@@ -765,10 +813,15 @@ class GraphOptimizer:
           case (intros, _) => intros
         }
         checkTargets(defn.name, intros, as, defn.params, defn.activeParams)
+        if (!visited.contains(defn.name))
+          visited.add(defn.name)
+          intros = bindIntroInfo(intros, as, defn.params)
+          defn.body.accept_iterator(this)
         e.accept_iterator(this)
     
     override def iterate(x: GODef): Unit =
       intros = Map.empty
+      visited.clear()
       x.body.accept_iterator(this)
 
   private enum ParamSubst:
@@ -1155,10 +1208,10 @@ class GraphOptimizer:
     val defs2 = GODefRevPostOrdering.ordered(entry, defs)
     defs2.foreach { _.body.accept_iterator(it) }
 
-  private def validate(entry: GONode, defs: Set[GODef], cross_ref_is_ok: Bool = true): Unit =
+  private def validate(entry: GONode, defs: Set[GODef], cross_ref_is_ok: Bool = true, no_shadow: Bool = false): Unit =
     ensureDefRefInSet(defs)
     ensureParamsArgsConsistent(defs)
-    if (cross_ref_is_ok)
+    if (cross_ref_is_ok && no_shadow)
        ensureVarNoShadowing(entry, defs)
 
   def activeAnalyze(prog: GOProgram): GOProgram =
