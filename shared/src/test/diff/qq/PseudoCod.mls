@@ -22,13 +22,13 @@ val const: Cod[Int, nothing]
 fun quote: Array[Plain['a, 'c]] -> Cod['a, 'c]
 fun unquote: Cod['a, 'c] -> Plain['a, 'c]
 fun lam: (forall 'c: Cod['a, 'c] -> Cod['b, 'c | 'g]) -> Cod['a -> 'b, 'g]
-//│ fun quote: forall 'a 'c. Array[Plain['a, 'c]] -> Cod['a, 'c]
+//│ fun quote: forall 'c 'a. Array[Plain['a, 'c]] -> Cod['a, 'c]
 //│ val const: Cod[Int, nothing]
 //│ fun lam: forall 'a0 'b 'g. (forall 'c0. Cod['a0, 'c0] -> Cod['b, 'c0 | 'g]) -> Cod['a0 -> 'b, 'g]
 //│ fun unquote: forall 'a1 'c1. Cod['a1, 'c1] -> Plain['a1, 'c1]
 
 fun (%>) bind: (Cod['a, 'g], k: forall 'c: Cod['a, 'c] -> Cod['b, 'c | 'g]) -> Cod['b, 'g]
-//│ fun (%>) bind: forall 'g 'b 'a. (Cod['a, 'g], k: forall 'c. Cod['a, 'c] -> Cod['b, 'c | 'g]) -> Cod['b, 'g]
+//│ fun (%>) bind: forall 'a 'g 'b. (Cod['a, 'g], k: forall 'c. Cod['a, 'c] -> Cod['b, 'c | 'g]) -> Cod['b, 'g]
 
 let f = k => bind of const, k
 //│ let f: forall 'b 'g. (forall 'c. Cod[Int, 'c] -> Cod['b, 'c | 'g]) -> Cod['b, 'g]

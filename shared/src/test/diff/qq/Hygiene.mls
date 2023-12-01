@@ -58,3 +58,6 @@ let y4 = code"let y = 1 in let y = 2 in let y = 3 in y"
 run(y4)
 //│ let y4: Code[3, nothing]
 //│ 3
+
+code"x => ${let x = code"42" in discard(run(x)); x}"
+//│ Code[anything -> 42, nothing]

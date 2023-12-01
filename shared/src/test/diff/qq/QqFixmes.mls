@@ -4,7 +4,7 @@
 
 
 fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(code"x")}"
-//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, ??x0 | 'b]) -> Code['c, 'b]
+//│ fun (%>) bind: forall 'a 'b 'c. (Code['b, 'c], Code['b, ??x] -> Code['a, ??x0 | 'c]) -> Code['a, 'c]
 
 // * Notice the extrusion
 fun foo(k) = code"x => ${k(code"x")}"
@@ -16,14 +16,14 @@ fun (%>) bind(rhs, k) = code"(x => ${k(code"x")})(${rhs})"
 // * Somehow this one does extrude properly:
 fun app = code"(f, x) => f(x)"
 fun (%>) bind(rhs, k) = code"${app}(x => ${k(code"x")}, ${rhs})"
-//│ fun app: Code[forall 'a 'b. ('a -> 'b, 'a) -> 'b, nothing]
+//│ fun app: Code[forall 'a 'b. ('b -> 'a, 'b) -> 'a, nothing]
 //│ fun (%>) bind: forall 'c 'd 'e. (Code['c, 'd], Code['c, ??x] -> Code['e, ??x0 | 'd]) -> Code['e, 'd]
 
 
 fun app(f, x) = f(x)
 fun bind2(rhs, k) = code"app(x => ${k(code"x")}, ${rhs})"
 //│ fun app: forall 'a 'b. ('a -> 'b, 'a) -> 'b
-//│ fun bind2: forall 'c 'd 'e. (Code['c, 'd], Code['c, ??x] -> Code['e, ??x0 | 'd]) -> Code['e, 'd]
+//│ fun bind2: forall 'c 'd 'e. (Code['e, 'c], Code['e, ??x] -> Code['d, ??x0 | 'c]) -> Code['d, 'c]
 
 :e
 fun foo() =
@@ -47,10 +47,6 @@ bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 
 //│ forall 'a 'g. (Code['a, 'g], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
 
 
-:e
 fun foo(dbg) =
   code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
-//│ ╔══[ERROR] identifier not found: x
-//│ ║  l.52: 	  code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
-//│ ╙──      	                              ^
-//│ fun foo: forall 'a 'b. (Code[anything -> 'b, 'a] -> Code['b, ??x | 'a]) -> Code[anything -> 'b, 'a]
+//│ fun foo: forall 'a 'b. (Code[() -> 'a, ??x | 'b] -> Code['a, ??x0 | 'b]) -> Code[() -> 'a, 'b]

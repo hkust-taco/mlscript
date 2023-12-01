@@ -51,7 +51,7 @@ class BaseImpl[A]() extends ArraysImpl[A, A] {
     fun fold  (r, b, f) = f(r)(b)
 }
 //│ class BaseImpl[A]() extends ArraysImpl {
-//│   fun fold: forall 'a 'b 'c. ('a, 'b, 'a -> 'b -> 'c) -> 'c
+//│   fun fold: forall 'a 'b 'c. ('b, 'c, 'b -> 'c -> 'a) -> 'a
 //│   fun init: forall 'd. 'd -> 'd
 //│   fun sub: forall 'e. ('e, anything) -> 'e
 //│   fun update: forall 'f. (anything, anything, 'f) -> 'f
@@ -142,7 +142,7 @@ class Step'[A](from: Arrays[A]) extends Arrays[A] {
 //│ ║  l.124: 	    from.use of impl => k(StepImpl(impl))
 //│ ╙──       	    ^^^^^^^^
 //│ class Step'[A](from: Arrays[A]) extends Arrays {
-//│   fun use: forall 'a 'R. (StepImpl[A, in ??rep & 'R out 'R | ??rep0] -> 'a) -> 'a
+//│   fun use: forall 'R 'a. (StepImpl[A, in ??rep & 'R out 'R | ??rep0] -> 'a) -> 'a
 //│ }
 //│ Syntax error:
 //│   Unexpected string

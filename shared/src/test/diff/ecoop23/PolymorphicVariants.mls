@@ -110,7 +110,7 @@ Test1.eval(Nil, Abs("b", Var("a")))
 Test1.eval(Cons(["c", Var("d")], Nil), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
-//│     'a :> Abs['A] | Var | App['A0]
+//│     'a :> App['A] | Abs['A0] | Var
 //│     'A0 :> 'a
 //│     'A :> 'a
 //│ res
@@ -119,7 +119,7 @@ Test1.eval(Cons(["c", Var("d")], Nil), App(Abs("b", Var("b")), Var("c")))
 Test1.eval(Cons(["c", Abs("d", Var("d"))], Nil), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
-//│     'a :> Abs[Var] | Var | App['A] | Abs['A0]
+//│     'a :> App['A] | Abs['A0] | Abs[Var] | Var
 //│     'A0 :> 'a
 //│     'A :> 'a
 //│ res

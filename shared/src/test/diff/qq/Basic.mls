@@ -192,12 +192,26 @@ run(res)({x:1})
 code"x => ${ code"x" }"
 //│ Code[forall 'a. 'a -> 'a, nothing]
 
-:e // TODO
+
 run(code"x => x + ${x}")(1)
-//│ ╔══[ERROR] identifier not found: x
-//│ ║  l.196: 	run(code"x => x + ${x}")(1)
-//│ ╙──       	                    ^
 //│ Int
 
 run(code"x => x + ${code"x"}")(1)
 //│ Int
+
+let v: Var[Int, nothing]
+//│ let v: Var[Int, nothing]
+
+run(v)
+//│ Int
+
+let v: Var[Int, anything]
+//│ let v: Var[Int, anything]
+
+:e
+run(v)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.212: 	run(v)
+//│ ║         	^^^^^^
+//│ ╙── expression of type `anything` does not match type `nothing`
+//│ Int | error

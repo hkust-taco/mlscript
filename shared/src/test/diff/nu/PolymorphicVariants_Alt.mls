@@ -122,12 +122,12 @@ Test1.eval(Nil(), Abs("b", Var("a")))
 Test1.eval(Cons(["c", Var("d")], Nil()), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Var
+//│     'a :> Abs['a] | Var | App['a]
 
 Test1.eval(Cons(["c", Abs("d", Var("d"))], Nil()), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Abs[Var] | Var
+//│     'a :> Abs[Var] | Var | App['a] | Abs['a]
 
 class Numb(n: Int)
 class Add<out A>(l: A, r: A)
@@ -142,7 +142,7 @@ fun map_expr(f, v) =
     Numb then v
     Add(l, r) then Add(f(l), f(r))
     Mul(l, r) then Mul(f(l), f(r))
-//│ fun map_expr: forall 'a 'A 'b 'A0. ('a -> 'A & 'b -> 'A0, Add['a] | Mul['b] | Numb | Var) -> (Add['A] | Mul['A0] | Numb | Var)
+//│ fun map_expr: forall 'A 'a 'A0 'b. ('b -> 'A & 'a -> 'A0, Add['b] | Mul['a] | Numb | Var) -> (Add['A] | Mul['A0] | Numb | Var)
 
 mixin EvalExpr {
   fun eval(sub, v) =

@@ -83,15 +83,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
     def get(name: Str, quoted: Bool = false): Opt[TypeInfo] =
       if (inQuote === quoted) env.get(name) orElse parent.dlof(_.get(name, quoted))(N)
+      else if (!quoted) (env.get(name), qget(name)) match {
+        case (S(VarSymbol(ty, _)), S(tag)) =>
+          S(VarSymbol(TypeRef(TypeName("Var"), ty :: tag :: Nil)(noProv), Var(name)))
+        case _ => parent.dlof(_.get(name, quoted))(N)
+      }
       else parent.dlof(_.get(name, quoted))(N)
     def getDecl(name: Str): Opt[NuDecl] = funDefs.get(name).map(_.decl) orElse parent.dlof(_.getDecl(name))(N)
     def getTopLevel(name: Str): Opt[TypeInfo] = (get(name), getDecl(name)) match {
       case (ty, S(fd: NuFunDef)) if (fd.outer.isEmpty) => ty
       case _ => N
     }
-    def qget(name: Str, quoted: Bool = inQuote): Opt[SkolemTag] =
-      if (quoted === inQuote) qenv.get(name) orElse parent.dlof(_.qget(name, quoted))(N)
-      else parent.dlof(_.qget(name, quoted))(N)
+    def qget(name: Str): Opt[SkolemTag] = qenv.get(name) orElse parent.dlof(_.qget(name))(N)
     def getCtxTy: ST = fvars.foldLeft[ST](BotType)((res, ty) => res | ty)
     def traceFV(fv: ST): Unit = {
       println(s"Capture free variable type $fv")
@@ -269,7 +272,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     NuTypeDef(Cls, TN("Str"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Als, TN("undefined"), Nil, N, N, S(Literal(UnitLit(true))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
     NuTypeDef(Als, TN("null"), Nil, N, N, S(Literal(UnitLit(false))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
-    NuTypeDef(Cls, TN("Code"), (S(VarianceInfo.co) -> TN("T")) :: (S(VarianceInfo.co) -> TN("C")) :: Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc))
+    NuTypeDef(Cls, TN("Code"), (S(VarianceInfo.co) -> TN("T")) :: (S(VarianceInfo.co) -> TN("C")) :: Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
+    NuTypeDef(Cls, TN("Var"), (S(VarianceInfo.in) -> TN("T")) :: (S(VarianceInfo.in) -> TN("C")) :: Nil, N, N, N, TyApp(Var("Code"), TN("T") :: TN("C") :: Nil) :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc))
   )
   val builtinTypes: Ls[TypeDef] =
     TypeDef(Cls, TN("?"), Nil, TopType, Nil, Nil, Set.empty, N, Nil) :: // * Dummy for pretty-printing unknown type locations
@@ -890,7 +894,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               )
             )
           case VarSymbol(ty, _) =>
-            ctx.qget(name).foreach(sk => ctx.traceFV(sk))
+            if (ctx.inQuote) ctx.qget(name).foreach(sk => ctx.traceFV(sk))
             ty
           case lti: LazyTypeInfo =>
             // TODO deal with classes without parameter lists (ie needing `new`)

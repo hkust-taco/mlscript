@@ -29,7 +29,7 @@ code"y => ${ discard(run(test(code"y"))); code"0" }"
 
 fun test(cde, f) =
   code"x => x + ${f(cde)}"
-//│ fun test: forall 'a 'b. ('b, 'b -> Code[Int, ??x | 'a]) -> Code[Int -> Int, 'a]
+//│ fun test: forall 'a 'b. ('a, 'a -> Code[Int, ??x | 'b]) -> Code[Int -> Int, 'b]
 
 run(test(code"1", id))
 //│ Int -> Int
