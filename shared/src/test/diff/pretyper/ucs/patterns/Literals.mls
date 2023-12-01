@@ -13,17 +13,21 @@ fun f(x) = if x is Some(1) then true else false
 //│ fun f: (Object & ~#Some | Some[Num]) -> Bool
 
 fun g(x) = if x then 1 else 2
-//│ fun g: Object -> (1 | 2)
+//│ fun g: Bool -> (1 | 2)
+
+:e
+fun test_must_be_boolean(x) = if 0 then 1 else 2
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.19: 	fun test_must_be_boolean(x) = if 0 then 1 else 2
+//│ ║        	                                 ^
+//│ ╙── integer literal of type `0` is not an instance of type `Bool`
+//│ fun test_must_be_boolean: anything -> (1 | 2)
 
 fun g(x) = if x is true then 1 else 2
-//│ fun g: anything -> 1
-//│ Syntax error:
-//│   Invalid destructuring assignment target
+//│ fun g: Eql[true] -> (1 | 2)
 
 fun g(x) = if x && true is true then 1 else 2
-//│ fun g: Bool -> 1
-//│ Syntax error:
-//│   Invalid destructuring assignment target
+//│ fun g: Bool -> (1 | 2)
 
 fun h(x) = if (x : Bool) then 1 else 2
 //│ fun h: Bool -> (1 | 2)

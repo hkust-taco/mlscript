@@ -1,6 +1,6 @@
 package mlscript.ucs.stages
 
-import mlscript.{App, Fld, Term, Var}
+import mlscript.{App, Asc, Fld, Term, Var, TypeName}
 import mlscript.ucs.{syntax => s, core => c, PartialTerm}
 import mlscript.ucs.helpers.mkBinOp
 import mlscript.utils._, shorthands._
@@ -60,7 +60,7 @@ trait Desugaring { self: mlscript.pretyper.Traceable =>
         c.Split.Let(
           rec = false,
           name = `var`,
-          term = condition,
+          term = Asc(condition, TypeName("Bool")),
           tail = c.Branch(`var`, truePattern, desugarTermSplit(continuation)) :: c.Split.Nil
         )
       case s.TermBranch.Match(scrutinee, split) =>
@@ -100,21 +100,26 @@ trait Desugaring { self: mlscript.pretyper.Traceable =>
     })
   }
 
-  private def desugarPatternBranch(scrutinee: Var, branch: s.PatternBranch): c.Branch = {
-    lazy val continuation = desugarTermSplit(branch.continuation)(PartialTerm.Empty)
-    branch.pattern match {
-      case s.AliasPattern(nme, pattern) => ???
-      case s.LiteralPattern(literal) => ???
-      case s.NamePattern(nme) => c.Branch(scrutinee, c.Pattern.Name(nme), continuation)
-      case pattern @ s.ClassPattern(nme, fields) => flattenNestedPattern(pattern, scrutinee, continuation)
-      case s.TuplePattern(fields) => ???
-      case s.RecordPattern(entries) => ???
-    }
-  }
-
   private def desugarPatternSplit(split: s.PatternSplit)(implicit scrutinee: Term): c.Split = {
     def rec(scrutinee: Var, split: s.PatternSplit): c.Split = split match {
-      case s.Split.Cons(head, tail) => desugarPatternBranch(scrutinee, head) :: rec(scrutinee, tail)
+      case s.Split.Cons(head, tail) => 
+        lazy val continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty)
+        head.pattern match {
+          case s.AliasPattern(nme, pattern) => ???
+          case s.LiteralPattern(literal) => ???
+          case s.ConcretePattern(nme) => 
+            val condition = freshScrutinee()
+            c.Split.Let(
+              rec = false,
+              name = condition,
+              term = mkBinOp(scrutinee, Var("==="), nme, true),
+              tail = c.Branch(condition, truePattern, continuation) :: rec(scrutinee, tail)
+            )
+          case s.NamePattern(nme) => c.Branch(scrutinee, c.Pattern.Name(nme), continuation) :: rec(scrutinee, tail)
+          case pattern @ s.ClassPattern(nme, fields) => flattenNestedPattern(pattern, scrutinee, continuation) :: rec(scrutinee, tail)
+          case s.TuplePattern(fields) => ???
+          case s.RecordPattern(entries) => ???
+        }
       case s.Split.Let(isRec, nme, rhs, tail) => c.Split.Let(isRec, nme, rhs, rec(scrutinee, tail))
       case s.Split.Else(default) => c.Split.Else(default)
       case s.Split.Nil => c.Split.Nil

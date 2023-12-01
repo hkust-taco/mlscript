@@ -10,6 +10,7 @@ package object syntax {
     override def toString(): String = this match {
       case AliasPattern(nme, pattern) => s"$nme @ $pattern"
       case LiteralPattern(literal) => literal.toString
+      case ConcretePattern(nme) => s"`${nme.name}`"
       case NamePattern(nme) => nme.toString
       case ClassPattern(Var(name), N) => name
       case ClassPattern(Var(name), S(parameters)) =>
@@ -24,6 +25,9 @@ package object syntax {
   }
   final case class LiteralPattern(literal: Lit) extends Pattern {
     override def children: List[Located] = literal :: Nil
+  }
+  final case class ConcretePattern(nme: Var) extends Pattern {
+    override def children: List[Located] = nme :: Nil
   }
   final case class NamePattern(nme: Var) extends Pattern {
     override def children: List[Located] = nme :: Nil

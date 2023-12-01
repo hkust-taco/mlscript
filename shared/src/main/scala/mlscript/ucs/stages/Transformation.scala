@@ -30,7 +30,7 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
       case IfThen(expr, rhs) =>
         splitAnd(expr).foldRight(Split.then(rhs)) {
           case (OperatorIs(scrutinee, pattern), acc) =>
-            TermBranch.Match(scrutinee, PatternBranch(rec(pattern), acc) |> Split.single) |> Split.single
+            TermBranch.Match(scrutinee, PatternBranch(transformPattern(pattern), acc) |> Split.single) |> Split.single
           case (test, acc) => TermBranch.Boolean(test, acc) |> Split.single
         }
       case IfLet(isRec, name, rhs, body) => rare
@@ -40,7 +40,7 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
           case init :+ last =>
             init.foldRight[TermSplit](TermBranch.Match(last, transformPatternMatching(rhs)) |> Split.single) {
               case (OperatorIs(scrutinee, pattern), acc) =>
-                TermBranch.Match(scrutinee, PatternBranch(rec(pattern), acc) |> Split.single) |> Split.single
+                TermBranch.Match(scrutinee, PatternBranch(transformPattern(pattern), acc) |> Split.single) |> Split.single
               case (test, acc) => TermBranch.Boolean(test, acc) |> Split.single
             }
           case _ => rare
@@ -51,7 +51,7 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
             val first = TermBranch.Left(last, OperatorBranch.Binary(op, transformIfBody(rhs)) |> Split.single) |> Split.single
             init.foldRight[TermSplit](first) {
               case (OperatorIs(scrutinee, pattern), acc) =>
-                TermBranch.Match(scrutinee, PatternBranch(rec(pattern), acc) |> Split.single) |> Split.single
+                TermBranch.Match(scrutinee, PatternBranch(transformPattern(pattern), acc) |> Split.single) |> Split.single
               case (test, acc) => TermBranch.Boolean(test, acc) |> Split.single
             }
           case _ => rare
@@ -87,9 +87,9 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
       case IfOpApp(lhs, Var("and"), rhs) =>
         separatePattern(lhs) match {
           case (pattern, S(extraTest)) =>
-            PatternBranch(rec(lhs), ???) |> Split.single
+            PatternBranch(transformPattern(lhs), ???) |> Split.single
           case (pattern, N) =>
-            PatternBranch(rec(lhs), transformIfBody(rhs)) |> Split.single
+            PatternBranch(transformPattern(lhs), transformIfBody(rhs)) |> Split.single
         }
       case IfOpApp(lhs, op, rhs) => ???
       case IfOpsApp(lhs, opsRhss) => ???
@@ -105,18 +105,19 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
     }
   }
 
-  private def rec(term: Term)(implicit useNewDefs: Bool): Pattern = term match {
+  private def transformPattern(term: Term)(implicit useNewDefs: Bool): Pattern = term match {
+    case nme @ Var("true" | "false") => ConcretePattern(nme)
     case nme @ Var(name) if name.headOption.exists(_.isUpper) => ClassPattern(nme, N)
     case nme: Var => NamePattern(nme)
     case literal: Lit => LiteralPattern(literal)
     case App(classNme @ Var(_), Tup(parameters)) =>
       ClassPattern(classNme, S(parameters.map {
         case (_, Fld(_, Var("_"))) => N // Consider "_" as wildcard.
-        case (_, Fld(_, t)) => S(rec(t))
+        case (_, Fld(_, t)) => S(transformPattern(t))
       }))
     case Tup(fields) => TuplePattern(fields.map {
       case _ -> Fld(_, Var("_")) => N // Consider "_" as wildcard.
-      case _ -> Fld(_, t       ) => S(rec(t))
+      case _ -> Fld(_, t       ) => S(transformPattern(t))
     })
     // TODO: Support more patterns.
     case _ => throw new TransformException(msg"Unknown pattern", term.toLoc)
@@ -124,7 +125,7 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
 
   private def separatePattern(term: Term)(implicit useNewDefs: Bool): (Pattern, Opt[Term]) = {
     val (rawPattern, extraTest) = helpers.separatePattern(term, useNewDefs)
-    (rec(rawPattern), extraTest)
+    (transformPattern(rawPattern), extraTest)
   }
 
   private def rare: Nothing = throw new TransformException(msg"Wow, a rare case.", N)
