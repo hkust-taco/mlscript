@@ -465,3 +465,252 @@ main()
 //│ Interpreted ------------------------------
 //│ 404
 
+
+:GOInterp
+:GraphOpt
+class True
+class False
+class S(s)
+class O
+fun odd(x) =
+  if x is
+    O then False
+    S(s) then even(s)
+fun even(x) =
+  if x is
+    O then True
+    S(s) then odd(s)
+fun foo() = odd(S(S(S(O))))
+foo()
+//│ |#class| |True|↵|#class| |False|↵|#class| |S|(|s|)|↵|#class| |O|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|S|(|O|)|)|)|)|↵|foo|(||)|
+//│ Parsed: {class True {}; class False {}; class S(s,) {}; class O {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(S(S(S(O,),),),); foo()}
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, S, (), Tup(_: Var(s)), (), None, None, TypingUnit()), NuTypeDef(class, O, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, odd, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, even, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(odd), Tup(_: App(Var(S), Tup(_: App(Var(S), Tup(_: App(Var(S), Tup(_: Var(O))))))))))), App(Var(foo), Tup()))
+//│ 
+//│ GraphOpt:
+//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Def(0, odd, [x%0], [{}], 
+//│ [None], 1, 
+//│ let join j%0(x%4) = x%4
+//│   in case x%0 of
+//│     O => let x%1 = False()
+//│       in jump j%0(x%1)
+//│     S => let x%2 = x%0.s
+//│       in let* (x%3) = even(x%2)
+//│         in jump j%0(x%3)
+//│ )
+//│ Def(1, even, [x%5], [{}], 
+//│ [None], 1, 
+//│ let join j%1(x%9) = x%9
+//│   in case x%5 of
+//│     O => let x%6 = True()
+//│       in jump j%1(x%6)
+//│     S => let x%7 = x%5.s
+//│       in let* (x%8) = odd(x%7)
+//│         in jump j%1(x%8)
+//│ )
+//│ Def(2, foo, [], [{}], 
+//│ [None], 1, 
+//│ let x%10 = O()
+//│   in let x%11 = S(x%10)
+//│     in let x%12 = S(x%11)
+//│       in let x%13 = S(x%12)
+//│         in let* (x%14) = odd(x%13)
+//│           in x%14
+//│ )
+//│ },
+//│ let* (x%15) = foo()
+//│   in x%15)
+//│ 
+//│ Promoted ------------------------------------
+//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Def(0, odd, [x%0], [{EDestruct，EDirect，ESelect(s)}], 
+//│ [None], 1, 
+//│ case x%0 of
+//│   O => let x%1 = False()
+//│     in x%1
+//│   S => let x%2 = x%0.s
+//│     in let* (x%3) = even(x%2)
+//│       in x%3
+//│ )
+//│ Def(1, even, [x%5], [{EDestruct，EDirect，ESelect(s)}], 
+//│ [None], 1, 
+//│ case x%5 of
+//│   O => let x%6 = True()
+//│     in x%6
+//│   S => let x%7 = x%5.s
+//│     in let* (x%8) = odd(x%7)
+//│       in x%8
+//│ )
+//│ Def(2, foo, [], [], 
+//│ [None], 1, 
+//│ let x%10 = O()
+//│   in let x%11 = S(x%10)
+//│     in let x%12 = S(x%11)
+//│       in let x%13 = S(x%12)
+//│         in let* (x%14) = odd(x%13)
+//│           in x%14
+//│ )
+//│ },
+//│ let* (x%15) = foo()
+//│   in x%15)
+//│ 
+//│ Interpreted ------------------------------
+//│ True()
+//│ 
+//│ 
+//│ Optimized ------------------------------
+//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Def(0, odd, [x%0], [{EDestruct，EDirect，ESelect(s)}], 
+//│ [None], 1, 
+//│ case x%0 of
+//│   O => let x%1 = False()
+//│     in x%1
+//│   S => let x%2 = x%0.s
+//│     in let* (x%3) = even(x%2)
+//│       in x%3
+//│ )
+//│ Def(1, even, [x%5], [{EDestruct，EDirect，ESelect(s)}], 
+//│ [None], 1, 
+//│ case x%5 of
+//│   O => let x%6 = True()
+//│     in x%6
+//│   S => let x%7 = x%5.s
+//│     in let* (x%8) = odd(x%7)
+//│       in x%8
+//│ )
+//│ Def(2, foo, [], [], 
+//│ [None], 1, 
+//│ let x%10 = O()
+//│   in let x%11 = S(x%10)
+//│     in let x%12 = S(x%11)
+//│       in let* (x%14) = odd$D%1$S%0(x%12)
+//│         in x%14
+//│ )
+//│ Def(8, odd$D%1$S%0, [x%0_s], [{EDestruct，EDirect，ESelect(s)}], 
+//│ [None], 1, 
+//│ let* (x%3) = even(x%0_s)
+//│   in x%3
+//│ )
+//│ },
+//│ let* (x%15) = foo()
+//│   in x%15)
+//│ 
+//│ 
+//│ Interpreted ------------------------------
+//│ True()
+
+:GOInterp
+:GraphOpt
+class True
+class False
+class S(s)
+class O
+fun odd(x) =
+  if x is
+    O then False
+    S(s) then even(s)
+fun even(x) =
+  if x is
+    O then True
+    S(s) then odd(s)
+fun mk(n) = if n > 0 then S(mk(n - 1)) else O
+fun foo() = odd(mk(10))
+foo()
+//│ |#class| |True|↵|#class| |False|↵|#class| |S|(|s|)|↵|#class| |O|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|mk|(|10|)|)|↵|foo|(||)|
+//│ Parsed: {class True {}; class False {}; class S(s,) {}; class O {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n,)(0,)) then S(mk(-(n,)(1,),),) else O; fun foo = () => odd(mk(10,),); foo()}
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, S, (), Tup(_: Var(s)), (), None, None, TypingUnit()), NuTypeDef(class, O, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, odd, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, even, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, mk, None, [], Lam(Tup(_: Var(n)), If(IfThen(App(App(Var(>), Tup(_: Var(n))), Tup(_: IntLit(0))), App(Var(S), Tup(_: App(Var(mk), Tup(_: App(App(Var(-), Tup(_: Var(n))), Tup(_: IntLit(1))))))), Some(Var(O))))), NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(odd), Tup(_: App(Var(mk), Tup(_: IntLit(10))))))), App(Var(foo), Tup()))
+//│ 
+//│ GraphOpt:
+//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Def(0, odd, [x%0], [{}], 
+//│ [None], 1, 
+//│ let join j%0(x%4) = x%4
+//│   in case x%0 of
+//│     O => let x%1 = False()
+//│       in jump j%0(x%1)
+//│     S => let x%2 = x%0.s
+//│       in let* (x%3) = even(x%2)
+//│         in jump j%0(x%3)
+//│ )
+//│ Def(1, even, [x%5], [{}], 
+//│ [None], 1, 
+//│ let join j%1(x%9) = x%9
+//│   in case x%5 of
+//│     O => let x%6 = True()
+//│       in jump j%1(x%6)
+//│     S => let x%7 = x%5.s
+//│       in let* (x%8) = odd(x%7)
+//│         in jump j%1(x%8)
+//│ )
+//│ Def(2, mk, [n%0], [{}], 
+//│ [None], 1, 
+//│ let x%10 = >(n%0,0)
+//│   in let join j%2(x%15) = x%15
+//│     in if x%10
+//│       true => let x%11 = -(n%0,1)
+//│         in let* (x%12) = mk(x%11)
+//│           in let x%13 = S(x%12)
+//│             in jump j%2(x%13)
+//│       false => let x%14 = O()
+//│         in jump j%2(x%14)
+//│ )
+//│ Def(3, foo, [], [{}], 
+//│ [None], 1, 
+//│ let* (x%16) = mk(10)
+//│   in let* (x%17) = odd(x%16)
+//│     in x%17
+//│ )
+//│ },
+//│ let* (x%18) = foo()
+//│   in x%18)
+//│ 
+//│ Promoted ------------------------------------
+//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Def(0, odd, [x%0], [{EDestruct，EDirect，ESelect(s)}], 
+//│ [None], 1, 
+//│ case x%0 of
+//│   O => let x%1 = False()
+//│     in x%1
+//│   S => let x%2 = x%0.s
+//│     in let* (x%3) = even(x%2)
+//│       in x%3
+//│ )
+//│ Def(1, even, [x%5], [{EDestruct，EDirect，ESelect(s)}], 
+//│ [None], 1, 
+//│ case x%5 of
+//│   O => let x%6 = True()
+//│     in x%6
+//│   S => let x%7 = x%5.s
+//│     in let* (x%8) = odd(x%7)
+//│       in x%8
+//│ )
+//│ Def(2, mk, [n%0], [{EDirect}], 
+//│ [None], 1, 
+//│ let x%10 = >(n%0,0)
+//│   in if x%10
+//│     true => let x%11 = -(n%0,1)
+//│       in let* (x%12) = mk(x%11)
+//│         in let x%13 = S(x%12)
+//│           in x%13
+//│     false => let x%14 = O()
+//│       in x%14
+//│ )
+//│ Def(3, foo, [], [], 
+//│ [None], 1, 
+//│ let* (x%16) = mk(10)
+//│   in let* (x%17) = odd(x%16)
+//│     in x%17
+//│ )
+//│ },
+//│ let* (x%18) = foo()
+//│   in x%18)
+//│ 
+//│ Interpreted ------------------------------
+//│ False()
+//│ 
+//│ 
+//│ 
+//│ Interpreted ------------------------------
+//│ False()

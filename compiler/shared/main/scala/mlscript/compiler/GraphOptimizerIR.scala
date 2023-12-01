@@ -131,9 +131,6 @@ class GODef(
 ):
   var activeParams: Ls[Set[Elim]] = Ls(Set())
   var activeResults: Ls[Opt[Intro]] = Ls(None)
-  var liveIn: Set[Str] = Set()
-  var liveOut: Set[Str] = Set()
-  var isTrivial: Bool = false
   override def equals(o: Any): Bool = o match {
     case o: GODef if this.isInstanceOf[GODef] =>
       o.id == id &&
