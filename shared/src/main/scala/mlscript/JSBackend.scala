@@ -289,9 +289,12 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
       if (isQuoted) createASTCall("Blk", res)
       else Blk(res)
     case Tup(eles) =>
-      if (isQuoted) createASTCall("Tup", eles flatMap { // TODO: need flags?
-        case S(Var(name)) -> Fld(_, t) => createASTCall("Var", Var(name) :: Nil) :: createASTCall("Fld", desugarQuote(t) :: Nil) :: Nil
-        case N -> Fld(_, t) => createASTCall("Fld", desugarQuote(t) :: Nil) :: Nil
+      def toVar(b: Bool) = if (b) Var("true") else Var("false")
+      def toVars(flg: FldFlags) = toVar(flg.mut) :: toVar(flg.spec) :: toVar(flg.genGetter) :: Nil
+      if (isQuoted) createASTCall("Tup", eles flatMap {
+        case S(Var(name)) -> Fld(flags, t) =>
+          createASTCall("Var", Var(name) :: Nil) :: createASTCall("Fld", desugarQuote(t) :: toVars(flags)) :: Nil
+        case N -> Fld(flags, t) => createASTCall("Fld", desugarQuote(t) :: toVars(flags)) :: Nil
       })
       else Tup(eles.map {
         case v -> Fld(flags, t) => v -> Fld(flags, desugarQuote(t))

@@ -72,7 +72,7 @@ code"f => f(114)"
 //│ class TypingUnit5 {}
 //│ const typing_unit5 = new TypingUnit5;
 //│ // Query 1
-//│ res = ((f1) => Lam(Var(f1), App(Var(f1), Tup(Fld(IntLit(114))))))(freshName("f"));
+//│ res = ((f1) => Lam(Var(f1), App(Var(f1), Tup(Fld(IntLit(114), false, false, false)))))(freshName("f"));
 //│ // End of generated code
 
 
@@ -132,7 +132,7 @@ code"(x => x + 1)(41)"
 //│ class TypingUnit10 {}
 //│ const typing_unit10 = new TypingUnit10;
 //│ // Query 1
-//│ res = App(Bra(((x1) => Lam(Var(x1), App(Var("+"), Var(x1), IntLit(1))))(freshName("x"))), Tup(Fld(IntLit(41))));
+//│ res = App(Bra(((x1) => Lam(Var(x1), App(Var("+"), Var(x1), IntLit(1))))(freshName("x"))), Tup(Fld(IntLit(41), false, false, false)));
 //│ // End of generated code
 
 
@@ -157,7 +157,7 @@ code"let x = 1 in (discard(x + 1); x + 2)"
 //│ class TypingUnit12 {}
 //│ const typing_unit12 = new TypingUnit12;
 //│ // Query 1
-//│ res = ((x1) => Let(Var(x1), IntLit(1), Bra(Blk(App(Var(discard), Tup(Fld(App(Var("+"), Var(x1), IntLit(1))))), App(Var("+"), Var(x1), IntLit(2))))))(freshName("x"));
+//│ res = ((x1) => Let(Var(x1), IntLit(1), Bra(Blk(App(Var(discard), Tup(Fld(App(Var("+"), Var(x1), IntLit(1)), false, false, false))), App(Var("+"), Var(x1), IntLit(2))))))(freshName("x"));
 //│ // End of generated code
 
 
@@ -169,7 +169,7 @@ code"[1, 2, 3]"
 //│ class TypingUnit13 {}
 //│ const typing_unit13 = new TypingUnit13;
 //│ // Query 1
-//│ res = Tup(Fld(IntLit(1)), Fld(IntLit(2)), Fld(IntLit(3)));
+//│ res = Tup(Fld(IntLit(1), false, false, false), Fld(IntLit(2), false, false, false), Fld(IntLit(3), false, false, false));
 //│ // End of generated code
 
 :js
@@ -180,7 +180,7 @@ code"[1, 2, 3].1"
 //│ class TypingUnit14 {}
 //│ const typing_unit14 = new TypingUnit14;
 //│ // Query 1
-//│ res = Sel(Tup(Fld(IntLit(1)), Fld(IntLit(2)), Fld(IntLit(3))), Var("1"));
+//│ res = Sel(Tup(Fld(IntLit(1), false, false, false), Fld(IntLit(2), false, false, false), Fld(IntLit(3), false, false, false)), Var("1"));
 //│ // End of generated code
 
 
@@ -268,7 +268,7 @@ code"Const(42)"
 //│ class TypingUnit21 {}
 //│ const typing_unit21 = new TypingUnit21;
 //│ // Query 1
-//│ res = App(Var(Const), Tup(Fld(IntLit(42))));
+//│ res = App(Var(Const), Tup(Fld(IntLit(42), false, false, false)));
 //│ // End of generated code
 
 

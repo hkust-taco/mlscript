@@ -12,7 +12,6 @@ object NewParser {
   
   type ExpectThen >: Bool
   type FoundErr >: Bool  // may be better done as:  class FoundErr(var found: Bool)
-  type IsQuoted >: Bool
   
   final def expectThen(implicit ptr: ExpectThen): Bool = ptr === true
   final def foundErr(implicit ptr: FoundErr): Bool = ptr === true
@@ -227,8 +226,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   }
   */
   
-  final def typingUnit(implicit qenv: Set[Str] = Set.empty, quoted: IsQuoted = false): TypingUnit = {
-    val ts = block(false, false, qenv, quoted)
+  final def typingUnit(implicit qenv: Set[Str] = Set.empty): TypingUnit = {
+    val ts = block(false, false, qenv)
     val es = ts.map {
       case L(t) =>
         err(msg"Unexpected 'then'/'else' clause" -> t.toLoc :: Nil)
@@ -240,13 +239,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }
     TypingUnit(es)
   }
-  final def typingUnitMaybeIndented(implicit fe: FoundErr, qenv: Set[Str], quoted: IsQuoted): TypingUnit = yeetSpaces match {
+  final def typingUnitMaybeIndented(implicit fe: FoundErr, qenv: Set[Str]): TypingUnit = yeetSpaces match {
     case (br @ BRACKETS(Indent, toks), _) :: _ =>
       consume
       rec(toks, S(br.innerLoc), br.describe).concludeWith(_.typingUnit)
     case _ => typingUnit
   }
-  final def curlyTypingUnit(implicit fe: FoundErr, qenv: Set[Str], quoted: IsQuoted): Opt[TypingUnit] = yeetSpaces match {
+  final def curlyTypingUnit(implicit fe: FoundErr, qenv: Set[Str]): Opt[TypingUnit] = yeetSpaces match {
     case (br @ BRACKETS(Curly, toks), l1) :: _ =>
       consume
       S(rec(toks, S(br.innerLoc), br.describe).concludeWith(_.typingUnitMaybeIndented).withLoc(S(l1)))
@@ -258,7 +257,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     case t: Tuple => t
     case _ => Tuple((N, Field(None, t)) :: Nil)
   }
-  final def typ(prec: Int = 0)(implicit fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted): Type =
+  final def typ(prec: Int = 0)(implicit fe: FoundErr, l: Line, qenv: Set[Str]): Type =
     mkType(expr(prec))
   
   case class ModifierSet(mods: Map[Str, Loc]) {
@@ -304,7 +303,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       S(res, _cur)
     }
   }
-  final def block(implicit et: ExpectThen, fe: FoundErr, qenv: Set[Str], quoted: IsQuoted): Ls[IfBody \/ Statement] =
+  final def block(implicit et: ExpectThen, fe: FoundErr, qenv: Set[Str]): Ls[IfBody \/ Statement] =
     cur match {
       case Nil => Nil
       case (NEWLINE, _) :: _ => consume; block
@@ -562,7 +561,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       || tkloc._1.isInstanceOf[COMMENT] // TODO properly retrieve and sotre all comments in AST?
       ) && { consume; true })
   
-  final def funParams(implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted): Ls[Tup] = wrap(()) { l =>
+  final def funParams(implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str]): Ls[Tup] = wrap(()) { l =>
     yeetSpaces match {
       case (KEYWORD("=" | ":"), _) :: _ => Nil
       case (KEYWORD("of"), _) :: _ =>
@@ -583,8 +582,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }
   }
   
-  final def expr(prec: Int, allowSpace: Bool = true)(implicit fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted): Term = wrap(prec,allowSpace) { l =>
-    exprOrIf(prec, allowSpace)(et = false, fe = fe, l = implicitly, qenv = qenv, quoted = false) match {
+  final def expr(prec: Int, allowSpace: Bool = true)(implicit fe: FoundErr, l: Line, qenv: Set[Str]): Term = wrap(prec,allowSpace) { l =>
+    exprOrIf(prec, allowSpace)(et = false, fe = fe, l = implicitly, qenv = qenv) match {
       case R(e) => e
       case L(e) =>
         err(msg"Expected an expression; found a 'then'/'else' clause instead" -> e.toLoc :: Nil)
@@ -596,16 +595,16 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     raise(WarningReport(msg"[${cur.headOption.map(_._1).mkString}] ${""+msg}" -> loco :: Nil,
       newDefs = true))
   
-  private def letBindings(genQuote: Bool, l0: Loc)(implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted): IfBody \/ Term = {
+  private def letBindings(genQuote: Bool, l0: Loc)(implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str]): IfBody \/ Term = {
     val bs = bindings(Nil)
     val newQenv = if (genQuote) bs.map(_._1.name) else Nil
     val body = yeetSpaces match {
       case (KEYWORD("in" | ";;"), _) :: _ =>
         consume
-        exprOrIf(0)(et, fe, implicitly, qenv ++ newQenv, quoted)
+        exprOrIf(0)(et, fe, implicitly, qenv ++ newQenv)
       case (NEWLINE, _) :: _ =>
         consume
-        exprOrIf(0)(et, fe, implicitly, qenv ++ newQenv, quoted)
+        exprOrIf(0)(et, fe, implicitly, qenv ++ newQenv)
       case _ =>
         R(UnitLit(true).withLoc(curLoc.map(_.left)))
     }
@@ -620,8 +619,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }
   }
 
-  private def ifStmt(genQuote: Bool, l0: Loc)(implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted): IfBody \/ Term =
-    exprOrIf(0)(et = true, fe = fe, l = implicitly, qenv = qenv, quoted = quoted) match {
+  private def ifStmt(genQuote: Bool, l0: Loc)(implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str]): IfBody \/ Term =
+    exprOrIf(0)(et = true, fe = fe, l = implicitly, qenv = qenv) match {
       case L(body) =>
         val els = yeetSpaces match {
           case (KEYWORD("else"), _) :: _ =>
@@ -684,7 +683,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }
 
   private def bracket(genQuote: Bool, br: BRACKETS, bk: BracketKind, toks: Ls[Stroken -> Loc], loc: Loc)(
-    implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted
+    implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str]
   ) = {
     val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
     val bra = (bk, res) match {
@@ -737,7 +736,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     bra
   }
 
-  final def exprOrIf(prec: Int, allowSpace: Bool = true)(implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted): IfBody \/ Term = wrap(prec, allowSpace) { l =>
+  final def exprOrIf(prec: Int, allowSpace: Bool = true)(implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str]): IfBody \/ Term = wrap(prec, allowSpace) { l =>
     cur match {
       case (SPACE, l0) :: _ if allowSpace => // Q: do we really need the `allowSpace` flag?
         consume
@@ -750,7 +749,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         val ts = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.block)
         val es = ts.map { case L(t) => return L(IfBlock(ts)); case R(e) => e }
         R(Blk(es))
-      case (QUOTE, loc) :: _ if quoted === false =>
+      case (QUOTE, loc) :: _ =>
         consume
         cur match {
           case (IDENT(nme, false), l0) :: _ =>
@@ -767,7 +766,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             ifStmt(true, l0)
           case (br @ BRACKETS(bk @ (Round | Square | Curly), toks), loc) :: _ =>
             consume
-            exprCont(bracket(true, br, bk, toks, loc)(et, fe, implicitly, qenv, true).withLoc(S(loc)), prec, allowNewlines = false)
+            exprCont(bracket(true, br, bk, toks, loc)(et, fe, implicitly, qenv).withLoc(S(loc)), prec, allowNewlines = false)
           case _ =>
             err((
               msg"quote syntax is not supported yet." -> S(loc) :: Nil))
@@ -841,7 +840,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         L(IfElse(e).withLoc(S(l0 ++ e.toLoc)))
       case (KEYWORD("case"), l0) :: _ =>
         consume
-        exprOrIf(0)(et = true, fe = fe, l = implicitly, qenv = qenv, quoted = quoted) match {
+        exprOrIf(0)(et = true, fe = fe, l = implicitly, qenv = qenv) match {
           case L(body) =>
             R(Lam(PlainTup(Var("case$scrut")), If(IfOpApp(Var("case$scrut"), Var("is"), body), N)))
           case R(rhs) =>
@@ -874,7 +873,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (tk, l0) :: _ =>
         err(msg"Unexpected ${tk.describe} in expression position" -> S(l0) :: Nil)
         consume
-        exprOrIf(prec)(et = et, fe = true, l = implicitly, qenv = qenv, quoted = quoted)
+        exprOrIf(prec)(et = et, fe = true, l = implicitly, qenv = qenv)
   }}
   
   private def errExpr =
@@ -895,10 +894,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   }
 
   private def arrowLam(genQuote: Bool, acc: Term, prec: Int, allowNewlines: Bool)(
-    implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted
+    implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str]
   ): IfBody \/ Term = {
     val newQenv = if (genQuote) declQenv(acc) else Set.empty
-    val rhs = expr(1)(fe, implicitly, qenv ++ newQenv, quoted)
+    val rhs = expr(1)(fe, implicitly, qenv ++ newQenv)
     if (!genQuote) exprCont(Lam(PlainTup(acc), rhs), prec, allowNewlines)
     else {
       val param = acc match {
@@ -910,7 +909,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   }
 
   private def opCont(genQuote: Bool, opStr: Str, l0: Loc, acc: Term, prec: Int, allowNewlines: Bool)(
-    implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted
+    implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str]
   ): IfBody \/ Term = {
     val v = Var(opStr).withLoc(S(l0))
     // printDbg(s">>> $opStr ${opPrec(opStr)}")
@@ -954,9 +953,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }
   }
 
-  final def exprCont(acc: Term, prec: Int, allowNewlines: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted): IfBody \/ Term = wrap(prec, s"`$acc`", allowNewlines) { l =>
+  final def exprCont(acc: Term, prec: Int, allowNewlines: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str]): IfBody \/ Term = wrap(prec, s"`$acc`", allowNewlines) { l =>
     cur match {
-      case (QUOTE, l) :: _ => if (quoted === false) cur match {
+      case (QUOTE, l) :: _ => cur match {
         case _ :: (KEYWORD(opStr @ "=>"), l0) :: _ if opPrec(opStr)._1 > prec =>
           consume
           consume
@@ -977,7 +976,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           consume
           opCont(true, opStr, l0, acc, prec, allowNewlines)
         case _ => R(acc)
-      } else R(acc)
+      }
       case (KEYWORD(opStr @ "=>"), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>
         consume
         val rhs = Blk(typingUnit.entities)
@@ -1137,7 +1136,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }
   }
   
-  final def opBlock(acc: Term, opStr: Str, opLoc: Loc)(implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str], quoted: IsQuoted): IfBody \/ Term = wrap(s"`$acc`", opStr) { l =>
+  final def opBlock(acc: Term, opStr: Str, opLoc: Loc)(implicit et: ExpectThen, fe: FoundErr, l: Line, qenv: Set[Str]): IfBody \/ Term = wrap(s"`$acc`", opStr) { l =>
       val opv = Var(opStr).withLoc(S(opLoc))
       val rhs = exprOrIf(0)
       // val rhs = exprOrIf(1)
@@ -1165,7 +1164,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           L(IfOpsApp(acc, opIfBlock(opv -> rhs :: Nil)))
       }
   }
-  final def opIfBlock(acc: Ls[Var -> IfBody])(implicit et: ExpectThen, fe: FoundErr, qenv: Set[Str], quoted: IsQuoted): Ls[Var -> IfBody] = wrap(acc) { l =>
+  final def opIfBlock(acc: Ls[Var -> IfBody])(implicit et: ExpectThen, fe: FoundErr, qenv: Set[Str]): Ls[Var -> IfBody] = wrap(acc) { l =>
       cur match {
         case (NEWLINE, _) :: c => // TODO allow let bindings...
           consume
@@ -1241,7 +1240,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case _ => f(this, false)
     }
   
-  final def argsMaybeIndented()(implicit fe: FoundErr, et: ExpectThen, qenv: Set[Str], quoted: IsQuoted): Ls[Opt[Var] -> Fld] =
+  final def argsMaybeIndented()(implicit fe: FoundErr, et: ExpectThen, qenv: Set[Str]): Ls[Opt[Var] -> Fld] =
     maybeIndented(_.args(_))
   // final def argsMaybeIndented()(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
   //   cur match {
@@ -1255,9 +1254,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   //   }
   
   // TODO support comma-less arg blocks...?
-  final def args(allowNewlines: Bool, prec: Int = NoElsePrec)(implicit fe: FoundErr, et: ExpectThen, qenv: Set[Str], quoted: IsQuoted): Ls[Opt[Var] -> Fld] =
+  final def args(allowNewlines: Bool, prec: Int = NoElsePrec)(implicit fe: FoundErr, et: ExpectThen, qenv: Set[Str]): Ls[Opt[Var] -> Fld] =
     // argsOrIf(Nil).map{case (_, L(x))=> ???; case (n, R(x))=>n->x} // TODO
-    argsOrIf(Nil, Nil, allowNewlines, prec)(fe, et, qenv, quoted).flatMap{case (n, L(x))=> 
+    argsOrIf(Nil, Nil, allowNewlines, prec)(fe, et, qenv).flatMap{case (n, L(x))=> 
         err(msg"Unexpected 'then'/'else' clause" -> x.toLoc :: Nil)
         n->Fld(FldFlags.empty, errExpr)::Nil
       case (n, R(x))=>n->x::Nil} // TODO
@@ -1273,7 +1272,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   }
   */
   final def argsOrIf(acc: Ls[Opt[Var] -> (IfBody \/ Fld)], seqAcc: Ls[Statement], allowNewlines: Bool, prec: Int = NoElsePrec)
-        (implicit fe: FoundErr, et: ExpectThen, qenv: Set[Str], quoted: IsQuoted): Ls[Opt[Var] -> (IfBody \/ Fld)] =
+        (implicit fe: FoundErr, et: ExpectThen, qenv: Set[Str]): Ls[Opt[Var] -> (IfBody \/ Fld)] =
       wrap(acc, seqAcc) { l =>
     
     cur match {
@@ -1363,7 +1362,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   }
   }
   
-  final def bindings(acc: Ls[Var -> Term])(implicit fe: FoundErr, qenv: Set[Str], quoted: IsQuoted): Ls[Var -> Term] = 
+  final def bindings(acc: Ls[Var -> Term])(implicit fe: FoundErr, qenv: Set[Str]): Ls[Var -> Term] = 
     cur match {
       case (SPACE, _) :: _ =>
         consume
@@ -1373,7 +1372,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (IDENT(id, false), l0) :: _ =>
         consume
         val (success, _) = skip(KEYWORD("=")) // TODO kw?
-        val rhs = expr(0)(fe = foundErr || !success, l = implicitly, qenv = qenv, quoted = quoted)
+        val rhs = expr(0)(fe = foundErr || !success, l = implicitly, qenv = qenv)
         // cur.dropWhile(_ === SPACE) match {
         //   case (KEYWORD("in"), _) :: _ =>
         //     acc.reverse

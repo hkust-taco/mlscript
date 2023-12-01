@@ -94,20 +94,16 @@ fun foo(x) =
 // `if `1 `< `2 then `0 else `1
 
 
-:pe
+:e
 `(`42)
-//│ ╔══[PARSE ERROR] Unexpected quote in expression position
+//│ ╔══[ERROR] Nested quotation is not allowed.
 //│ ║  l.98: 	`(`42)
-//│ ╙──      	  ^
-//│ Code[42, nothing]
+//│ ╙──      	   ^^
+//│ Code[error, nothing]
 
-:pe
 :e
 `(x `=> x)
-//│ ╔══[PARSE ERROR] Unexpected quote here
-//│ ║  l.106: 	`(x `=> x)
-//│ ╙──       	    ^
-//│ ╔══[ERROR] identifier not found: x
-//│ ║  l.106: 	`(x `=> x)
-//│ ╙──       	  ^
+//│ ╔══[ERROR] Nested quotation is not allowed.
+//│ ║  l.105: 	`(x `=> x)
+//│ ╙──       	  ^^^^^^^
 //│ Code[error, nothing]
