@@ -85,15 +85,17 @@ let r = new {}
 //│ Code generation encountered an error:
 //│   Unsupported `new` class term: Bra(rcd = true, Rcd())
 
+:ge
 r : Object
 //│ Object
-//│ res
-//│     = {}
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding r
 
+:ge
 r with { x: 1 }
 //│ error & {x: 1}
-//│ res
-//│     = { x: 1 }
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding r
 
 
 let r = { x: 0 }
@@ -104,16 +106,16 @@ let r = { x: 0 }
 :e
 r : Object
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.105: 	r : Object
+//│ ║  l.107: 	r : Object
 //│ ║         	^
 //│ ╟── record literal of type `{x: 0}` is not an instance of type `Object`
-//│ ║  l.99: 	let r = { x: 0 }
-//│ ║        	             ^
+//│ ║  l.101: 	let r = { x: 0 }
+//│ ║         	             ^
 //│ ╟── but it flows into reference with expected type `Object`
-//│ ║  l.105: 	r : Object
+//│ ║  l.107: 	r : Object
 //│ ║         	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.105: 	r : Object
+//│ ║  l.107: 	r : Object
 //│ ╙──       	    ^^^^^^
 //│ Object
 //│ res
@@ -138,16 +140,16 @@ o : {}
 :e
 o : Object
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.139: 	o : Object
+//│ ║  l.141: 	o : Object
 //│ ║         	^
 //│ ╟── type `anything` is not an instance of type `Object`
-//│ ║  l.132: 	fun o : {}
+//│ ║  l.134: 	fun o : {}
 //│ ║         	        ^^
 //│ ╟── but it flows into reference with expected type `Object`
-//│ ║  l.139: 	o : Object
+//│ ║  l.141: 	o : Object
 //│ ║         	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.139: 	o : Object
+//│ ║  l.141: 	o : Object
 //│ ╙──       	    ^^^^^^
 //│ Object
 
@@ -169,10 +171,10 @@ o : Object
 :e
 let d = D & { f: 0 }
 //│ ╔══[ERROR] Illegal use of reserved operator: &
-//│ ║  l.170: 	let d = D & { f: 0 }
+//│ ║  l.172: 	let d = D & { f: 0 }
 //│ ╙──       	          ^
 //│ ╔══[ERROR] identifier not found: &
-//│ ║  l.170: 	let d = D & { f: 0 }
+//│ ║  l.172: 	let d = D & { f: 0 }
 //│ ╙──       	          ^
 //│ let d: error
 
