@@ -24,12 +24,12 @@ let f = Some => 0
 //│ class TypingUnit2 {}
 //│ const typing_unit2 = new TypingUnit2;
 //│ // Query 1
-//│ globalThis.f = function f(Some) {
+//│ globalThis.f1 = function f1(Some) {
 //│   return 0;
 //│ };
 //│ // End of generated code
 //│ f
-//│   = [Function: f]
+//│   = [Function: f1]
 
 // :e // TODO
 f(Some)

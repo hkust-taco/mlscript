@@ -4,7 +4,7 @@
 let test(x) = log(x); x + 1
 //│ let test: Int -> Int
 //│ test
-//│      = [Function: test]
+//│      = [Function: test1]
 
 test(log("here we go"); 123)
 //│ Int

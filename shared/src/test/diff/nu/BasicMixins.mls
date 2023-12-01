@@ -201,7 +201,7 @@ module Base1(base: Int, misc: string) extends Foo
 
 :e
 Base1.test
-//│ ╔══[ERROR] Parameterized modules are not supported
+//│ ╔══[ERROR] Parameterized modules are not yet supported
 //│ ║  l.203: 	Base1.test
 //│ ╙──       	^^^^^
 //│ ╔══[ERROR] Type mismatch in field selection:
