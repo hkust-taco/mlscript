@@ -51,7 +51,7 @@ new Foo(1) { fun f = id }
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ error
 //│ Code generation encountered an error:
-//│   cannot generate code for term Rft(App(NuNew(Var(Foo)), Tup(_: IntLit(1))), ...)
+//│   cannot generate code for term Rft(App(NuNew(Var(Foo)), Tup((N, IntLit(1)))), ...)
 
 
 abstract class Bar extends Foo(1)
