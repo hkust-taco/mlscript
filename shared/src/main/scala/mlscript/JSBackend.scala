@@ -204,6 +204,9 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     case _ => op
   }
 
+  // * Desugar `Quoted` into AST constructor invokations.
+  // * e.g., `42 will be translated into Quoted(IntLit(42)),
+  // * which will be further desugared into App(Var("IntLit"), IntLit(42)) and be traslated into `IntLit(42)` in JS
   private def desugarQuote(term: Term)(implicit scope: Scope, isQuoted: Bool, freeVars: MutSet[Str]): Term = term match {
     case Var("error") if isQuoted =>
       createASTCall("Var", StrLit("error") :: Nil)
@@ -1416,6 +1419,7 @@ abstract class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
 
   /**
     * Generate a piece of code for test purpose. It can be invoked repeatedly.
+    * `prettyPrintQQ` is a temporary hack due to lack of runtime support and should be removed later.
     */
   def apply(pgrm: Pgrm, allowEscape: Bool, isNewDef: Bool, prettyPrintQQ: Bool): JSTestBackend.Result =
     if (!isNewDef)

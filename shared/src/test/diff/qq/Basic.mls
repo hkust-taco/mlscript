@@ -192,6 +192,12 @@ run(res)({x:1})
 code"x => ${ code"x" }"
 //│ Code[forall 'a. 'a -> 'a, nothing]
 
+:e // TODO
+run(code"x => x + ${x}")(1)
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.196: 	run(code"x => x + ${x}")(1)
+//│ ╙──       	                    ^
+//│ Int
 
 run(code"x => x + ${code"x"}")(1)
 //│ Int

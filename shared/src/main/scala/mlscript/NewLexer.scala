@@ -98,12 +98,12 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     def pe(msg: Message): Unit =
       // raise(ParseError(false, msg -> S(loc(i, i + 1)) :: Nil))
       raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, newDefs = true, source = Lexing))
-    def fit(i: Int, syntax: Str): Bool =
+    def matches(i: Int, syntax: Str): Bool =
       i + syntax.length <= length && bytes.slice(i, i + syntax.length).mkString === syntax
-    def isQuasiquoteOpening(i: Int): Bool = fit(i, BracketKind.Quasiquote.beg)
-    def isQuasiquoteTripleOpening(i: Int): Bool =  fit(i, BracketKind.QuasiquoteTriple.beg)
-    def isUnquoteOpening(i: Int): Bool = fit(i, BracketKind.Unquote.beg)
-    def isQuasiquoteTripleClosing(i: Int): Bool = fit(i, BracketKind.QuasiquoteTriple.end)
+    def isQuasiquoteOpening(i: Int): Bool = matches(i, BracketKind.Quasiquote.beg)
+    def isQuasiquoteTripleOpening(i: Int): Bool =  matches(i, BracketKind.QuasiquoteTriple.beg)
+    def isUnquoteOpening(i: Int): Bool = matches(i, BracketKind.Unquote.beg)
+    def isQuasiquoteTripleClosing(i: Int): Bool = matches(i, BracketKind.QuasiquoteTriple.end)
     // @inline 
     // def go(j: Int, tok: Token) = lex(j, ind, (tok, loc(i, j)) :: acc)
     def next(j: Int, tok: Token) = (tok, loc(i, j)) :: acc

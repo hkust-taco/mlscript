@@ -3,6 +3,8 @@ package mlscript.codegen
 import mlscript.utils._
 import mlscript.utils.shorthands._
 
+// * Pretty printer for quasiquotes.
+// * This is a temporary hack due to lack of runtime support and should be removed later.
 object QQHelper {
   val prettyPrinter: Str = """
   |(() => {
