@@ -14,7 +14,8 @@ fib(20)
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
-//│ Def(0, fib, [n%0], [{}], 
+//│ Def(0, fib, [n%0], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let x%0 = <(n%0,2)
 //│   in let join j%0(x%6) = x%6
@@ -33,7 +34,8 @@ fib(20)
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
-//│ Def(0, fib, [n%0], [{EDirect}], 
+//│ Def(0, fib, [n%0], [{EDirect}],
+//│ [],
 //│ [None], 1, 
 //│ let x%0 = <(n%0,2)
 //│   in if x%0
@@ -72,7 +74,8 @@ foo()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
-//│ Def(0, odd, [x%0], [{}], 
+//│ Def(0, odd, [x%0], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let x%1 = ==(x%0,0)
 //│   in let join j%0(x%5) = x%5
@@ -83,7 +86,8 @@ foo()
 //│         in let* (x%4) = even(x%3)
 //│           in jump j%0(x%4)
 //│ )
-//│ Def(1, even, [x%6], [{}], 
+//│ Def(1, even, [x%6], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let x%7 = ==(x%6,0)
 //│   in let join j%1(x%11) = x%11
@@ -94,7 +98,8 @@ foo()
 //│         in let* (x%10) = odd(x%9)
 //│           in jump j%1(x%10)
 //│ )
-//│ Def(2, foo, [], [{}], 
+//│ Def(2, foo, [], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let* (x%12) = odd(10)
 //│   in x%12
@@ -105,7 +110,8 @@ foo()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
-//│ Def(0, odd, [x%0], [{EDirect}], 
+//│ Def(0, odd, [x%0], [{EDirect}],
+//│ [],
 //│ [None], 1, 
 //│ let x%1 = ==(x%0,0)
 //│   in if x%1
@@ -115,7 +121,8 @@ foo()
 //│       in let* (x%4) = even(x%3)
 //│         in x%4
 //│ )
-//│ Def(1, even, [x%6], [{EDirect}], 
+//│ Def(1, even, [x%6], [{EDirect}],
+//│ [],
 //│ [None], 1, 
 //│ let x%7 = ==(x%6,0)
 //│   in if x%7
@@ -125,7 +132,8 @@ foo()
 //│       in let* (x%10) = odd(x%9)
 //│         in x%10
 //│ )
-//│ Def(2, foo, [], [], 
+//│ Def(2, foo, [], [],
+//│ [],
 //│ [None], 1, 
 //│ let* (x%12) = odd(10)
 //│   in x%12
@@ -162,7 +170,8 @@ main()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
-//│ Def(0, not, [x%0], [{}], 
+//│ Def(0, not, [x%0], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let join j%0(x%3) = x%3
 //│   in if x%0
@@ -171,7 +180,8 @@ main()
 //│     false => let x%2 = True()
 //│       in jump j%0(x%2)
 //│ )
-//│ Def(1, foo, [x%4], [{}], 
+//│ Def(1, foo, [x%4], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let join j%1(x%9) = x%9
 //│   in if x%4
@@ -182,7 +192,8 @@ main()
 //│         in let x%8 = B(x%7)
 //│           in jump j%1(x%8)
 //│ )
-//│ Def(2, main, [], [{}], 
+//│ Def(2, main, [], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let x%10 = False()
 //│   in let* (x%11) = foo(x%10)
@@ -194,7 +205,8 @@ main()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
-//│ Def(0, not, [x%0], [{EDestruct，EDirect}], 
+//│ Def(0, not, [x%0], [{EDestruct,EDirect}],
+//│ [],
 //│ [None], 1, 
 //│ if x%0
 //│   true => let x%1 = False()
@@ -202,7 +214,8 @@ main()
 //│   false => let x%2 = True()
 //│     in x%2
 //│ )
-//│ Def(1, foo, [x%4], [{EDestruct，EDirect}], 
+//│ Def(1, foo, [x%4], [{EDestruct,EDirect,EIndirectDestruct}],
+//│ [[Some(ICtor(False))]],
 //│ [None], 1, 
 //│ if x%4
 //│   true => let x%5 = A()
@@ -212,7 +225,8 @@ main()
 //│       in let x%8 = B(x%7)
 //│         in x%8
 //│ )
-//│ Def(2, main, [], [], 
+//│ Def(2, main, [], [],
+//│ [],
 //│ [None], 1, 
 //│ let x%10 = False()
 //│   in let* (x%11) = foo(x%10)
@@ -228,7 +242,8 @@ main()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
-//│ Def(0, not, [x%0], [{EDestruct，EDirect}], 
+//│ Def(0, not, [x%0], [{EDestruct,EDirect}],
+//│ [],
 //│ [None], 1, 
 //│ if x%0
 //│   true => let x%1 = False()
@@ -236,7 +251,8 @@ main()
 //│   false => let x%2 = True()
 //│     in x%2
 //│ )
-//│ Def(1, foo, [x%4], [{EDestruct，EDirect}], 
+//│ Def(1, foo, [x%4], [{EDestruct,EDirect,EIndirectDestruct}],
+//│ [],
 //│ [None], 1, 
 //│ if x%4
 //│   true => let x%5 = A()
@@ -246,13 +262,15 @@ main()
 //│       in let x%8 = B(x%7)
 //│         in x%8
 //│ )
-//│ Def(2, main, [], [], 
+//│ Def(2, main, [], [],
+//│ [],
 //│ [Some(ICtor(B))], 1, 
 //│ let x%10 = False()
 //│   in let* (x%11) = foo$D%1(x%10)
 //│     in x%11
 //│ )
-//│ Def(7, foo$D%1, [x%4], [{EDestruct，EDirect}], 
+//│ Def(7, foo$D%1, [x%4], [{EDirect,EIndirectDestruct}],
+//│ [[Some(ICtor(False))],[Some(ICtor(False))]],
 //│ [Some(ICtor(B))], 1, 
 //│ let* (x%6) = not(x%4)
 //│   in let* (x%7) = foo(x%6)
@@ -300,7 +318,8 @@ main()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
-//│ Def(0, aaa, [], [{}], 
+//│ Def(0, aaa, [], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let x%0 = 1
 //│   in let x%1 = 2
@@ -311,14 +330,16 @@ main()
 //│             in let x%6 = +(x%5,x%3)
 //│               in x%6
 //│ )
-//│ Def(1, bbb, [], [{}], 
+//│ Def(1, bbb, [], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let* (x%7) = aaa()
 //│   in let x%8 = *(x%7,100)
 //│     in let x%9 = +(x%8,4)
 //│       in x%9
 //│ )
-//│ Def(2, not, [x%10], [{}], 
+//│ Def(2, not, [x%10], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let join j%0(x%13) = x%13
 //│   in if x%10
@@ -327,7 +348,8 @@ main()
 //│     false => let x%12 = True()
 //│       in jump j%0(x%12)
 //│ )
-//│ Def(3, foo, [x%14], [{}], 
+//│ Def(3, foo, [x%14], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let join j%1(x%19) = x%19
 //│   in if x%14
@@ -338,7 +360,8 @@ main()
 //│         in let x%18 = B(x%17)
 //│           in jump j%1(x%18)
 //│ )
-//│ Def(4, main, [], [{}], 
+//│ Def(4, main, [], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let x%20 = False()
 //│   in let* (x%21) = foo(x%20)
@@ -356,21 +379,24 @@ main()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
-//│ Def(0, aaa, [], [], 
+//│ Def(0, aaa, [], [],
+//│ [],
 //│ [None], 1, 
 //│ let x%4 = +(1,2)
 //│   in let x%5 = -(x%4,3)
 //│     in let x%6 = +(x%5,4)
 //│       in x%6
 //│ )
-//│ Def(1, bbb, [], [], 
+//│ Def(1, bbb, [], [],
+//│ [],
 //│ [None], 1, 
 //│ let* (x%7) = aaa()
 //│   in let x%8 = *(x%7,100)
 //│     in let x%9 = +(x%8,4)
 //│       in x%9
 //│ )
-//│ Def(2, not, [x%10], [{EDestruct，EDirect}], 
+//│ Def(2, not, [x%10], [{EDestruct,EDirect}],
+//│ [],
 //│ [None], 1, 
 //│ if x%10
 //│   true => let x%11 = False()
@@ -378,7 +404,8 @@ main()
 //│   false => let x%12 = True()
 //│     in x%12
 //│ )
-//│ Def(3, foo, [x%14], [{EDestruct，EDirect}], 
+//│ Def(3, foo, [x%14], [{EDestruct,EDirect,EIndirectDestruct}],
+//│ [[Some(ICtor(False))]],
 //│ [None], 1, 
 //│ if x%14
 //│   true => let x%15 = A()
@@ -388,7 +415,8 @@ main()
 //│       in let x%18 = B(x%17)
 //│         in x%18
 //│ )
-//│ Def(4, main, [], [], 
+//│ Def(4, main, [], [],
+//│ [],
 //│ [None], 1, 
 //│ let x%20 = False()
 //│   in let* (x%21) = foo(x%20)
@@ -408,21 +436,24 @@ main()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
-//│ Def(0, aaa, [], [], 
+//│ Def(0, aaa, [], [],
+//│ [],
 //│ [None], 1, 
 //│ let x%4 = +(1,2)
 //│   in let x%5 = -(x%4,3)
 //│     in let x%6 = +(x%5,4)
 //│       in x%6
 //│ )
-//│ Def(1, bbb, [], [], 
+//│ Def(1, bbb, [], [],
+//│ [],
 //│ [None], 1, 
 //│ let* (x%7) = aaa()
 //│   in let x%8 = *(x%7,100)
 //│     in let x%9 = +(x%8,4)
 //│       in x%9
 //│ )
-//│ Def(2, not, [x%10], [{EDestruct，EDirect}], 
+//│ Def(2, not, [x%10], [{EDestruct,EDirect}],
+//│ [],
 //│ [None], 1, 
 //│ if x%10
 //│   true => let x%11 = False()
@@ -430,7 +461,8 @@ main()
 //│   false => let x%12 = True()
 //│     in x%12
 //│ )
-//│ Def(3, foo, [x%14], [{EDestruct，EDirect}], 
+//│ Def(3, foo, [x%14], [{EDestruct,EDirect,EIndirectDestruct}],
+//│ [],
 //│ [None], 1, 
 //│ if x%14
 //│   true => let x%15 = A()
@@ -440,7 +472,8 @@ main()
 //│       in let x%18 = B(x%17)
 //│         in x%18
 //│ )
-//│ Def(4, main, [], [], 
+//│ Def(4, main, [], [],
+//│ [],
 //│ [None], 1, 
 //│ let x%20 = False()
 //│   in let* (x%21) = foo$D%1(x%20)
@@ -450,7 +483,8 @@ main()
 //│       B => let* (x%24) = bbb()
 //│         in x%24
 //│ )
-//│ Def(10, foo$D%1, [x%14], [{EDestruct，EDirect}], 
+//│ Def(10, foo$D%1, [x%14], [{EDirect,EIndirectDestruct}],
+//│ [[Some(ICtor(False))],[Some(ICtor(False))]],
 //│ [Some(ICtor(B))], 1, 
 //│ let* (x%16) = not(x%14)
 //│   in let* (x%17) = foo(x%16)
@@ -489,7 +523,8 @@ foo()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x%0], [{}], 
+//│ Def(0, odd, [x%0], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let join j%0(x%4) = x%4
 //│   in case x%0 of
@@ -499,7 +534,8 @@ foo()
 //│       in let* (x%3) = even(x%2)
 //│         in jump j%0(x%3)
 //│ )
-//│ Def(1, even, [x%5], [{}], 
+//│ Def(1, even, [x%5], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let join j%1(x%9) = x%9
 //│   in case x%5 of
@@ -509,7 +545,8 @@ foo()
 //│       in let* (x%8) = odd(x%7)
 //│         in jump j%1(x%8)
 //│ )
-//│ Def(2, foo, [], [{}], 
+//│ Def(2, foo, [], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let x%10 = O()
 //│   in let x%11 = S(x%10)
@@ -524,7 +561,8 @@ foo()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x%0], [{EDestruct，EDirect，ESelect(s)}], 
+//│ Def(0, odd, [x%0], [{EDestruct,EDirect,ESelect(s)}],
+//│ [[Some(ICtor(S))]],
 //│ [None], 1, 
 //│ case x%0 of
 //│   O => let x%1 = False()
@@ -533,7 +571,8 @@ foo()
 //│     in let* (x%3) = even(x%2)
 //│       in x%3
 //│ )
-//│ Def(1, even, [x%5], [{EDestruct，EDirect，ESelect(s)}], 
+//│ Def(1, even, [x%5], [{EDestruct,EDirect,ESelect(s)}],
+//│ [],
 //│ [None], 1, 
 //│ case x%5 of
 //│   O => let x%6 = True()
@@ -542,7 +581,8 @@ foo()
 //│     in let* (x%8) = odd(x%7)
 //│       in x%8
 //│ )
-//│ Def(2, foo, [], [], 
+//│ Def(2, foo, [], [],
+//│ [],
 //│ [None], 1, 
 //│ let x%10 = O()
 //│   in let x%11 = S(x%10)
@@ -561,7 +601,8 @@ foo()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x%0], [{EDestruct，EDirect，ESelect(s)}], 
+//│ Def(0, odd, [x%0], [{EDestruct,EDirect,ESelect(s)}],
+//│ [],
 //│ [None], 1, 
 //│ case x%0 of
 //│   O => let x%1 = False()
@@ -570,7 +611,8 @@ foo()
 //│     in let* (x%3) = even(x%2)
 //│       in x%3
 //│ )
-//│ Def(1, even, [x%5], [{EDestruct，EDirect，ESelect(s)}], 
+//│ Def(1, even, [x%5], [{EDestruct,EDirect,ESelect(s)}],
+//│ [],
 //│ [None], 1, 
 //│ case x%5 of
 //│   O => let x%6 = True()
@@ -579,7 +621,8 @@ foo()
 //│     in let* (x%8) = odd(x%7)
 //│       in x%8
 //│ )
-//│ Def(2, foo, [], [], 
+//│ Def(2, foo, [], [],
+//│ [],
 //│ [None], 1, 
 //│ let x%10 = O()
 //│   in let x%11 = S(x%10)
@@ -587,7 +630,8 @@ foo()
 //│       in let* (x%14) = odd$D%1$S%0(x%12)
 //│         in x%14
 //│ )
-//│ Def(8, odd$D%1$S%0, [x%0_s], [{EDestruct，EDirect，ESelect(s)}], 
+//│ Def(8, odd$D%1$S%0, [x%0_s], [{EDirect,EIndirectDestruct,ESelect(s)}],
+//│ [[Some(ICtor(S))]],
 //│ [None], 1, 
 //│ let* (x%3) = even(x%0_s)
 //│   in x%3
@@ -624,7 +668,8 @@ foo()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x%0], [{}], 
+//│ Def(0, odd, [x%0], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let join j%0(x%4) = x%4
 //│   in case x%0 of
@@ -634,7 +679,8 @@ foo()
 //│       in let* (x%3) = even(x%2)
 //│         in jump j%0(x%3)
 //│ )
-//│ Def(1, even, [x%5], [{}], 
+//│ Def(1, even, [x%5], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let join j%1(x%9) = x%9
 //│   in case x%5 of
@@ -644,7 +690,8 @@ foo()
 //│       in let* (x%8) = odd(x%7)
 //│         in jump j%1(x%8)
 //│ )
-//│ Def(2, mk, [n%0], [{}], 
+//│ Def(2, mk, [n%0], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let x%10 = >(n%0,0)
 //│   in let join j%2(x%15) = x%15
@@ -656,7 +703,8 @@ foo()
 //│       false => let x%14 = O()
 //│         in jump j%2(x%14)
 //│ )
-//│ Def(3, foo, [], [{}], 
+//│ Def(3, foo, [], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let* (x%16) = mk(10)
 //│   in let* (x%17) = odd(x%16)
@@ -668,7 +716,8 @@ foo()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x%0], [{EDestruct，EDirect，ESelect(s)}], 
+//│ Def(0, odd, [x%0], [{EDestruct,EDirect,ESelect(s)}],
+//│ [],
 //│ [None], 1, 
 //│ case x%0 of
 //│   O => let x%1 = False()
@@ -677,7 +726,8 @@ foo()
 //│     in let* (x%3) = even(x%2)
 //│       in x%3
 //│ )
-//│ Def(1, even, [x%5], [{EDestruct，EDirect，ESelect(s)}], 
+//│ Def(1, even, [x%5], [{EDestruct,EDirect,ESelect(s)}],
+//│ [],
 //│ [None], 1, 
 //│ case x%5 of
 //│   O => let x%6 = True()
@@ -686,7 +736,8 @@ foo()
 //│     in let* (x%8) = odd(x%7)
 //│       in x%8
 //│ )
-//│ Def(2, mk, [n%0], [{EDirect}], 
+//│ Def(2, mk, [n%0], [{EDirect}],
+//│ [],
 //│ [None], 1, 
 //│ let x%10 = >(n%0,0)
 //│   in if x%10
@@ -697,7 +748,8 @@ foo()
 //│     false => let x%14 = O()
 //│       in x%14
 //│ )
-//│ Def(3, foo, [], [], 
+//│ Def(3, foo, [], [],
+//│ [],
 //│ [None], 1, 
 //│ let* (x%16) = mk(10)
 //│   in let* (x%17) = odd(x%16)

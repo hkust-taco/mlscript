@@ -396,6 +396,13 @@ class GraphOptimizer:
     private def addElim(x: Str, elim: Elim) =
       if (defcount.getOrElse(x, 0) <= 1)
         elims.getOrElseUpdate(x, MutHSet.empty) += elim
+    
+    private def addBackwardElim(x: Str, elim: Elim) =
+      if (defcount.getOrElse(x, 0) <= 1)
+        val elim2 = elim match
+          case EDestruct => EIndirectDestruct
+          case _ => elim
+        elims.getOrElseUpdate(x, MutHSet.empty) += elim2          
 
     override def iterate_param(x: Name): Unit = 
       defcount.update(x.str, defcount.getOrElse(x.str, 0) + 1)
@@ -416,7 +423,7 @@ class GraphOptimizer:
         args.foreach(_.accept_iterator(this))
         val defn = defnref.expectDefn
         args.zip(defn.activeParams).foreach {
-          case (Ref(Name(x)), ys) => ys.foreach { y => addElim(x, y) }
+          case (Ref(Name(x)), ys) => ys.foreach { y => addBackwardElim(x, y) }
           case _ => 
         }
         if (!visited.contains(defn.name))
@@ -428,7 +435,7 @@ class GraphOptimizer:
         args.foreach(_.accept_iterator(this))
         val defn = defnref.expectDefn 
         args.zip(defn.activeParams).foreach {
-          case (Ref(Name(x)), ys) => ys.foreach { y => addElim(x, y) }
+          case (Ref(Name(x)), ys) => ys.foreach { y => addBackwardElim(x, y) }
           case _ => 
         }
         if (!visited.contains(defn.name))
@@ -465,10 +472,12 @@ class GraphOptimizer:
           cases_intros.head
       case Jump(defnref, args) =>
         val jpdef = defnref.expectDefn
+        jpdef.activeInputs = updateInputInfo(jpdef, intros, args)
         jpdef.activeResults
       case LetCall(resultNames, defnref, args, body) =>
         val defn = defnref.expectDefn
         val intros2 = updateIntroInfo(defn, intros, resultNames)
+        defn.activeInputs = updateInputInfo(defn, intros, args)
         getIntro(body, intros2)
       case LetExpr(name, expr, body) => 
         val intros2 = getIntro(expr, intros).map { x => intros + (name.str -> x) }.getOrElse(intros)
@@ -620,6 +629,14 @@ class GraphOptimizer:
       case (intros, (Some(i), name)) => intros + (name.str -> i)
       case (intros, _) => intros
     }
+  
+  private def updateInputInfo(defn: GODef, intros: Map[Str, Intro], args: Ls[TrivialExpr]) =
+    var all_none = true
+    val ls = args.map {
+      case Ref(Name(arg)) if intros.contains(arg) => all_none = false; Some(intros(arg))
+      case _ => None
+    }
+    if all_none then defn.activeInputs else ls :: defn.activeInputs
 
   private class SplittingTargetAnalysis extends GOIterator:
     private val targets = MutHMap[Str, MutHSet[Str]]()
@@ -677,8 +694,6 @@ class GraphOptimizer:
     pre_map: Map[(Str, Str), (Str, Ls[Str])],
     post_map: Map[(Str, Str), Map[Str, (Str, Ls[Str])]],
     derived_map: Map[Str, Set[Str]],
-    pre_def: Set[GODef],
-    post_def: Set[GODef],
   ) extends GOVisitor:
     var intros = Map.empty[Str, Intro]
     var changed = false
@@ -687,7 +702,7 @@ class GraphOptimizer:
         intros = IntroductionAnalysis.getIntro(e1, intros).map { y => Map(x.str -> y) }.getOrElse(intros)
         LetExpr(x, e1, e2.accept_visitor(this))
     
-    private def getFirstPossibleSpitting(name: Str, intros: Map[Str, Intro], args: Ls[TrivialExpr], params: Ls[Name], active: Ls[Set[Elim]]): Opt[(Str, Str, Str)] =
+    private def getFirstPossibleSplitting(name: Str, intros: Map[Str, Intro], args: Ls[TrivialExpr], params: Ls[Name], active: Ls[Set[Elim]]): Opt[(Str, Str, Str)] =
       args.map {
         case x: Ref => intros.get(x.name.str)
         case _ => None
@@ -703,7 +718,7 @@ class GraphOptimizer:
     override def visit(x: Jump) = x match
       case Jump(defnref, as) =>
         val defn = defnref.expectDefn
-        val (name, param, cls) = getFirstPossibleSpitting(defn.name, intros, as, defn.params, defn.activeParams) match {
+        val (name, param, cls) = getFirstPossibleSplitting(defn.name, intros, as, defn.params, defn.activeParams) match {
           case Some(x) => x
           case None => return x
         }
@@ -721,7 +736,7 @@ class GraphOptimizer:
     override def visit(x: LetCall) = x match
       case LetCall(xs, defnref, as, e) =>
         val defn = defnref.expectDefn
-        val (name, param, cls) = getFirstPossibleSpitting(defn.name, intros, as, defn.params, defn.activeParams) match {
+        val (name, param, cls) = getFirstPossibleSplitting(defn.name, intros, as, defn.params, defn.activeParams) match {
           case Some(x) => x
           case None => return x
         }
@@ -739,6 +754,7 @@ class GraphOptimizer:
         }
     
     override def visit(x: GODef) =
+      intros = Map.empty;
       GODef(
         x.id,
         x.name,
@@ -749,15 +765,25 @@ class GraphOptimizer:
       )
 
     override def visit(x: GOProgram) =
-      val defs = (x.defs ++ pre_def ++ post_def).map { 
-        intros = Map.empty; _.accept_visitor(this) 
-      }
+      val defs = x.defs.map(_.accept_visitor(this))
       val main = x.main.accept_visitor(this)
       fixCrossReferences(main, defs)
       validate(main, defs)
       GOProgram(
         x.classes,
         defs, main
+      )
+
+  private object CopyDefinition extends GOVisitor:
+    override def visit(x: GODef) = 
+      val name = gensym(x.name + "$C").str
+      GODef(
+        genfid(),
+        name,
+        x.isjp,
+        x.params,
+        x.resultNum,
+        x.body.accept_visitor(this)
       )
 
   private object Splitting extends GOVisitor:
@@ -771,8 +797,8 @@ class GraphOptimizer:
       val pre_defs = fs.pre_defs.toSet
       val post_defs = fs.post_defs.toSet
       
-      val scsr = LocalSplittingCallSiteReplacement(pre_map, post_map, derived_map, pre_defs, post_defs)
-      val y = x.accept_visitor(scsr)
+      val scsr = LocalSplittingCallSiteReplacement(pre_map, post_map, derived_map)
+      val y = GOProgram(x.classes, x.defs ++ pre_defs ++ post_defs, x.main).accept_visitor(scsr)
       fixCrossReferences(y.main, y.defs)
       validate(y.main, y.defs)
       y

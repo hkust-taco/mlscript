@@ -99,12 +99,14 @@ enum Elim:
   case EDirect
   case EApp(n: Int)
   case EDestruct
+  case EIndirectDestruct
   case ESelect(x: Str)
 
   override def toString: String = this match
     case EDirect => "EDirect"
     case EApp(n) => s"EApp($n)"
     case EDestruct => s"EDestruct"
+    case EIndirectDestruct => s"EIndirectDestruct"
     case ESelect(x: Str) => s"ESelect($x)"
 
 implicit object ElimOrdering extends Ordering[Elim]:
@@ -120,6 +122,9 @@ enum Intro:
     case ILam(n) => s"ILam($n)"
     case IMulti(n) => s"IMulti($n)"
 
+implicit object IntroOrdering extends Ordering[Intro]:
+  override def compare(a: Intro, b: Intro) = a.toString.compare(b.toString)
+
 class GODef(
   val id: Int,
   val name: Str,
@@ -130,6 +135,7 @@ class GODef(
   // TODO rec boundaries
 ):
   var activeParams: Ls[Set[Elim]] = Ls(Set())
+  var activeInputs: Ls[Ls[Opt[Intro]]] = Ls()
   var activeResults: Ls[Opt[Intro]] = Ls(None)
   override def equals(o: Any): Bool = o match {
     case o: GODef if this.isInstanceOf[GODef] =>
@@ -150,9 +156,10 @@ class GODef(
   override def toString: String =
     val name2 = if (isjp) s"@join $name" else s"$name"
     val ps = params.map(_.toString()).mkString("[", ",", "]")
-    val aps = activeParams.map(_.toSeq.sorted.mkString("{", "，", "}")).mkString("[", ",", "]")
-    val ars = activeResults.map(_.toString()).mkString("[", ", ", "]")
-    s"Def($id, $name2, $ps, $aps, \n$ars, $resultNum, \n$body\n)"
+    val aps = activeParams.map(_.toSeq.sorted.mkString("{", ",", "}")).mkString("[", ",", "]")
+    val ais = activeInputs.map(_.toSeq.sorted.mkString("[", ",", "]")).mkString("[", ",", "]")
+    val ars = activeResults.map(_.toString()).mkString("[", ",", "]")
+    s"Def($id, $name2, $ps, $aps,\n$ais,\n$ars, $resultNum, \n$body\n)"
 
 sealed trait TrivialExpr:
   override def toString: String

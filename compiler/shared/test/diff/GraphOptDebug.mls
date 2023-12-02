@@ -25,7 +25,8 @@ foo()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x%0], [{}], 
+//│ Def(0, odd, [x%0], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let join j%0(x%4) = x%4
 //│   in case x%0 of
@@ -35,7 +36,8 @@ foo()
 //│       in let* (x%3) = even(x%2)
 //│         in jump j%0(x%3)
 //│ )
-//│ Def(1, even, [x%5], [{}], 
+//│ Def(1, even, [x%5], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let join j%1(x%9) = x%9
 //│   in case x%5 of
@@ -45,7 +47,8 @@ foo()
 //│       in let* (x%8) = odd(x%7)
 //│         in jump j%1(x%8)
 //│ )
-//│ Def(2, foo, [], [{}], 
+//│ Def(2, foo, [], [{}],
+//│ [],
 //│ [None], 1, 
 //│ let x%10 = O()
 //│   in let x%11 = S(x%10)
@@ -60,7 +63,8 @@ foo()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x%0], [{EDestruct，EDirect，ESelect(s)}], 
+//│ Def(0, odd, [x%0], [{EDestruct,EDirect,ESelect(s)}],
+//│ [[Some(ICtor(S))]],
 //│ [None], 1, 
 //│ case x%0 of
 //│   O => let x%1 = False()
@@ -69,7 +73,8 @@ foo()
 //│     in let* (x%3) = even(x%2)
 //│       in x%3
 //│ )
-//│ Def(1, even, [x%5], [{EDestruct，EDirect，ESelect(s)}], 
+//│ Def(1, even, [x%5], [{EDestruct,EDirect,ESelect(s)}],
+//│ [],
 //│ [None], 1, 
 //│ case x%5 of
 //│   O => let x%6 = True()
@@ -78,7 +83,8 @@ foo()
 //│     in let* (x%8) = odd(x%7)
 //│       in x%8
 //│ )
-//│ Def(2, foo, [], [], 
+//│ Def(2, foo, [], [],
+//│ [],
 //│ [None], 1, 
 //│ let x%10 = O()
 //│   in let x%11 = S(x%10)
@@ -97,7 +103,8 @@ foo()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x%0], [{EDestruct，EDirect，ESelect(s)}], 
+//│ Def(0, odd, [x%0], [{EDestruct,EDirect,ESelect(s)}],
+//│ [],
 //│ [None], 1, 
 //│ case x%0 of
 //│   O => let x%1 = False()
@@ -106,7 +113,8 @@ foo()
 //│     in let* (x%3) = even(x%2)
 //│       in x%3
 //│ )
-//│ Def(1, even, [x%5], [{EDestruct，EDirect，ESelect(s)}], 
+//│ Def(1, even, [x%5], [{EDestruct,EDirect,ESelect(s)}],
+//│ [],
 //│ [None], 1, 
 //│ case x%5 of
 //│   O => let x%6 = True()
@@ -115,7 +123,8 @@ foo()
 //│     in let* (x%8) = odd(x%7)
 //│       in x%8
 //│ )
-//│ Def(2, foo, [], [], 
+//│ Def(2, foo, [], [],
+//│ [],
 //│ [None], 1, 
 //│ let x%10 = O()
 //│   in let x%11 = S(x%10)
@@ -123,7 +132,8 @@ foo()
 //│       in let* (x%14) = odd$D%1$S%0(x%12)
 //│         in x%14
 //│ )
-//│ Def(8, odd$D%1$S%0, [x%0_s], [{EDestruct，EDirect，ESelect(s)}], 
+//│ Def(8, odd$D%1$S%0, [x%0_s], [{EDirect,EIndirectDestruct,ESelect(s)}],
+//│ [[Some(ICtor(S))]],
 //│ [None], 1, 
 //│ let* (x%3) = even(x%0_s)
 //│   in x%3
