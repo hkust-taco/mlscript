@@ -110,7 +110,7 @@ bar()
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
 //│ Def(0, foo, [pair%0], [{EDestruct,EDirect,ESelect(x),ESelect(y)}],
-//│ [[Some(ICtor(Pair))],[Some(ICtor(Pair))]],
+//│ [[Some(ICtor(Pair))]],
 //│ [Some(ICtor(Pair))], 1, 
 //│ case pair%0 of
 //│   Pair => let x%0 = pair%0.y
@@ -542,7 +542,7 @@ bar()
 //│     in x%10
 //│ )
 //│ Def(2, @join j%0, [x%5], [{EDestruct,EDirect,ESelect(x),ESelect(y)}],
-//│ [[Some(ICtor(Right))],[Some(ICtor(Left))]],
+//│ [[Some(ICtor(Left))],[Some(ICtor(Right))]],
 //│ [None], 1, 
 //│ case x%5 of
 //│   Left => let x%6 = x%5.x
@@ -797,7 +797,7 @@ baz()
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
 //│ Def(0, foo, [a%0,b%0], [{ESelect(x),ESelect(y)},{ESelect(x),ESelect(y)}],
-//│ [[Some(ICtor(Pair)),Some(ICtor(Pair))],[None,Some(ICtor(Pair))],[None,Some(ICtor(Pair))]],
+//│ [[None,Some(ICtor(Pair))],[Some(ICtor(Pair)),Some(ICtor(Pair))]],
 //│ [None], 1, 
 //│ let x%0 = a%0.x
 //│   in let x%1 = a%0.y
@@ -1023,6 +1023,38 @@ foo()
 //│ Interpreted ------------------------------
 //│ O()
 //│ 
+//│ 
+//│ Optimized ------------------------------
+//│ GOProgram({ClassInfo(0, S, [s]),ClassInfo(1, O, [])}, {
+//│ Def(0, foo, [], [],
+//│ [],
+//│ [None], 1, 
+//│ let x%0 = O()
+//│   in let x%1 = S(x%0)
+//│     in let* (x%2) = bar$C%0(x%1)
+//│       in x%2
+//│ )
+//│ Def(7, bar$C%0, [x%3], [{ESelect(s)}],
+//│ [[Some(ICtor(S))]],
+//│ [None], 1, 
+//│ let x%10 = x%3.s
+//│   in x%10
+//│ )
+//│ },
+//│ let* (x%8) = foo()
+//│   in x%8)
+//│ 
+//│ Optimized ------------------------------
+//│ GOProgram({ClassInfo(0, S, [s]),ClassInfo(1, O, [])}, {
+//│ Def(0, foo, [], [],
+//│ [],
+//│ [Some(ICtor(O))], 1, 
+//│ let x%0 = O()
+//│   in x%0
+//│ )
+//│ },
+//│ let* (x%8) = foo()
+//│   in x%8)
 //│ 
 //│ 
 //│ Interpreted ------------------------------

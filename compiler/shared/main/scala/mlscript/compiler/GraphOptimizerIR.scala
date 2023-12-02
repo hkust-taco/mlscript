@@ -135,8 +135,9 @@ class GODef(
   // TODO rec boundaries
 ):
   var activeParams: Ls[Set[Elim]] = Ls(Set())
-  var activeInputs: Ls[Ls[Opt[Intro]]] = Ls()
+  var activeInputs: Set[Ls[Opt[Intro]]] = Set()
   var activeResults: Ls[Opt[Intro]] = Ls(None)
+  var specializeOn: Opt[Ls[Opt[Intro]]] = None
   override def equals(o: Any): Bool = o match {
     case o: GODef if this.isInstanceOf[GODef] =>
       o.id == id &&

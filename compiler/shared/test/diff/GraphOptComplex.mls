@@ -67,7 +67,7 @@ bar()
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
 //│ Def(0, complex_foo, [t%0], [{EDestruct,EDirect,ESelect(m),ESelect(n),ESelect(x),ESelect(y),ESelect(z)}],
-//│ [[Some(ICtor(B))],[Some(ICtor(A))]],
+//│ [[Some(ICtor(A))],[Some(ICtor(B))]],
 //│ [None], 1, 
 //│ case t%0 of
 //│   A => let x%0 = t%0.z
@@ -291,7 +291,7 @@ bar()
 //│         in x%37
 //│ )
 //│ Def(2, @join j%0, [x%9], [{EDestruct,EDirect,ESelect(w),ESelect(x)}],
-//│ [[Some(ICtor(C))],[Some(ICtor(B))]],
+//│ [[Some(ICtor(B))],[Some(ICtor(C))]],
 //│ [None], 1, 
 //│ let x%10 = A(5,x%9)
 //│   in let x%11 = B(6)
@@ -373,7 +373,7 @@ bar()
 //│     C => 8
 //│ )
 //│ Def(11, complex_foo$P%0, [t%0], [{EDirect}],
-//│ [[Some(ICtor(A))],[Some(ICtor(A))]],
+//│ [[Some(ICtor(A))]],
 //│ [None,None,None], 3, 
 //│ let x%0 = +(1,2)
 //│   in let x%1 = *(1,2)
@@ -532,7 +532,7 @@ bar()
 //│         in x%39
 //│ )
 //│ Def(2, @join j%0, [x%11], [{EDestruct,EDirect,ESelect(w),ESelect(x)}],
-//│ [[Some(ICtor(C))],[Some(ICtor(B))],[Some(ICtor(A))]],
+//│ [[Some(ICtor(A))],[Some(ICtor(B))],[Some(ICtor(C))]],
 //│ [None], 1, 
 //│ let x%12 = A(5,x%11)
 //│   in let x%13 = B(6)
@@ -596,7 +596,7 @@ bar()
 //│     C => 8
 //│ )
 //│ Def(7, j%0$P%0, [x%11], [{EDirect}],
-//│ [[Some(ICtor(A))],[Some(ICtor(A))]],
+//│ [[Some(ICtor(A))]],
 //│ [Some(ICtor(A)),None,None,Some(ICtor(B)),None], 5, 
 //│ let x%12 = A(5,x%11)
 //│   in let x%13 = B(6)
@@ -616,7 +616,7 @@ bar()
 //│           C => jump j%1(0)
 //│ )
 //│ Def(11, complex_foo$P%0, [t%0], [{EDirect}],
-//│ [[Some(ICtor(A))],[Some(ICtor(A))]],
+//│ [[Some(ICtor(A))]],
 //│ [None,None,None], 3, 
 //│ let x%0 = +(1,2)
 //│   in let x%1 = *(1,2)
