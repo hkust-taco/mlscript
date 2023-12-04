@@ -836,7 +836,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
               R(If(IfThen(e, errExpr), N))
           }
       }
-
+        
       case Nil =>
         err(msg"Unexpected end of $description; an expression was expected here" -> lastLoc :: Nil)
         R(errExpr)
@@ -864,7 +864,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   private def errExpr =
     // Tup(Nil).withLoc(lastLoc) // TODO FIXME produce error term instead
     UnitLit(true).withLoc(lastLoc) // TODO FIXME produce error term instead
-
+  
   final def exprCont(acc: Term, prec: Int, allowNewlines: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, s"`$acc`", allowNewlines) { l =>
     cur match {
       case (QUOTE, l) :: _ => cur match {
@@ -925,7 +925,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         R(Lam(PlainTup(acc), rhs))
       case (KEYWORD(opStr @ "=>"), l0) :: _ if opPrec(opStr)._1 > prec =>
         consume
-        val rhs = expr(1)(fe, implicitly)
+        val rhs = expr(1)
         val res = Lam(PlainTup(acc), rhs)
         exprCont(res, prec, allowNewlines)
       case (IDENT(".", _), l0) :: (br @ BRACKETS(Square, toks), l1) :: _ =>
