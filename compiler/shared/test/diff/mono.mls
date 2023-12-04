@@ -157,12 +157,8 @@ if(b) then 1 else 2
 //│ 
 //│ Defunc result: 
 //│ class Lambda2$1$1() {
-//│   fun apply(f, g) =
-//│     f(g)
 //│ }
 //│ class Lambda1$2$2() {
-//│   fun apply(f) =
-//│     f
 //│ }
 //│ fun apply$Lambda2$1$1(this, f, g) =
 //│   f match {case obj: Lambda1$2$2 => apply$Lambda1$2$2(obj, g)}
@@ -190,8 +186,6 @@ if(b) then 1 else 2
 //│ 
 //│ Defunc result: 
 //│ class Lambda1$1$1() {
-//│   fun apply(b) =
-//│     if b then true else false
 //│ }
 //│ fun apply$Lambda1$1$1(this, b) =
 //│   if b then true else false
@@ -321,12 +315,8 @@ generate(10).gen()
 //│ 
 //│ Defunc result: 
 //│ class Nil$2() {
-//│   fun gen() =
-//│     new Cons$1 (#0, this) 
 //│ }
 //│ class Cons$1(e, tail) {
-//│   fun gen() =
-//│     new Cons$1 (this.e, this.tail.gen()) 
 //│ }
 //│ fun gen$Cons$1(this) =
 //│   new Cons$1 (this.e, this.tail match {case obj: Cons$1 => gen$Cons$1(obj); case obj: Nil$2 => gen$Nil$2(obj)}) 
@@ -389,24 +379,12 @@ fun add2(x) = x+2
 //│ 
 //│ Defunc result: 
 //│ class Lambda1$3$4() {
-//│   fun apply(x) =
-//│     add2$1(x)
 //│ }
 //│ class Nil$2() {
-//│   fun map(f) =
-//│     this
-//│   fun count() =
-//│     #0
 //│ }
 //│ class List$1(e, tail) {
-//│   fun map: mlscript.compiler.printer.ExprPrinter$$Lambda$246892/0x000000080356d338@5d585fc1fun map(f) =
-//│     new List$1 (f(this.e), this.tail.map(f)) 
-//│   fun count: mlscript.compiler.printer.ExprPrinter$$Lambda$246892/0x000000080356d338@f15e4e8fun count() =
-//│     +(#1, this.tail.count())
 //│ }
 //│ class Lambda1$2$3() {
-//│   fun apply(x) =
-//│     +(x, #1)
 //│ }
 //│ fun map$List$1(this, f) =
 //│   new List$1 (f match {case obj: Lambda1$2$3 => apply$Lambda1$2$3(obj, this.e); case obj: Lambda1$3$4 => apply$Lambda1$3$4(obj, this.e)}, this.tail match {case obj: List$1 => map$List$1(obj, f); case obj: Nil$2 => map$Nil$2(obj, f)}) 
@@ -467,12 +445,8 @@ foo(generate(1))
 //│ 
 //│ Defunc result: 
 //│ class Nil$2() {
-//│   fun count() =
-//│     #0
 //│ }
 //│ class List$1(e, tail) {
-//│   fun count: mlscript.compiler.printer.ExprPrinter$$Lambda$246892/0x000000080356d338@43dc07e0fun count() =
-//│     +(#1, this.tail.count())
 //│ }
 //│ fun foo$1(x) =
 //│   x match {case obj: Nil$2 => count$Nil$2(obj); case obj: List$1 => count$List$1(obj)}
@@ -521,12 +495,8 @@ foo(2)
 //│ 
 //│ Defunc result: 
 //│ class Lambda1$2$1(x) {
-//│   fun apply(f) =
-//│     f(this.x)
 //│ }
 //│ class Lambda1$3$2() {
-//│   fun apply(z) =
-//│     +(z, #1)
 //│ }
 //│ fun apply$Lambda1$2$1(this, f) =
 //│   f match {case obj: Lambda1$3$2 => apply$Lambda1$3$2(obj, this.x)}
@@ -559,8 +529,6 @@ f(1)
 //│ 
 //│ Defunc result: 
 //│ class Lambda1$2$1(x) {
-//│   fun apply(y) =
-//│     f$1(+(this.x, y))
 //│ }
 //│ fun apply$Lambda1$2$1(this, y) =
 //│   f$1(+(this.x, y))
@@ -651,20 +619,12 @@ foo(new Lambda2(2))
 //│ 
 //│ Defunc result: 
 //│ class Nil$2() {
-//│   fun count() =
-//│     #0
 //│ }
 //│ class Lambda2$4(a) {
-//│   fun apply(l) =
-//│     new Cons$1 (this.a, l) .count()
 //│ }
 //│ class Cons$1(e, tail) {
-//│   fun count: mlscript.compiler.printer.ExprPrinter$$Lambda$246892/0x000000080356d338@62fadf43fun count() =
-//│     +(#1, this.tail.count())
 //│ }
 //│ class Lambda$3() {
-//│   fun apply(l) =
-//│     l.count()
 //│ }
 //│ fun count$Cons$1(this) =
 //│   +(#1, this.tail match {case obj: Cons$1 => count$Cons$1(obj); case obj: Nil$2 => count$Nil$2(obj)})
@@ -735,20 +695,12 @@ foo(l => (new Cons(2, l)).count())
 //│ 
 //│ Defunc result: 
 //│ class Lambda1$3$4() {
-//│   fun apply(l) =
-//│     new Cons$1 (#2, l) .count()
 //│ }
 //│ class Nil$2() {
-//│   fun count() =
-//│     #0
 //│ }
 //│ class Cons$1(e, tail) {
-//│   fun count: mlscript.compiler.printer.ExprPrinter$$Lambda$246892/0x000000080356d338@812528fun count() =
-//│     +(#1, this.tail.count())
 //│ }
 //│ class Lambda1$2$3() {
-//│   fun apply(l) =
-//│     l.count()
 //│ }
 //│ fun count$Cons$1(this) =
 //│   +(#1, this.tail match {case obj: Cons$1 => count$Cons$1(obj); case obj: Nil$2 => count$Nil$2(obj)})
@@ -854,40 +806,16 @@ class C(e1: Exp, e2: Exp) extends Exp {
 //│ 
 //│ Defunc result: 
 //│ class A$5(e1, e2): Exp$1() {
-//│   fun derive(x) =
-//│     new A$5 (this.e1.derive(x), this.e2.derive(x)) 
-//│   fun isEmpty() =
-//│     ||(this.e1.isEmpty(), this.e2.isEmpty())
 //│ }
 //│ class E$2(): Exp$1() {
-//│   fun derive(x) =
-//│     new E$2 () 
-//│   fun isEmpty() =
-//│     false
 //│ }
 //│ class C$6(e1, e2): Exp$1() {
-//│   fun derive(x) =
-//│     if this.e1.isEmpty() then new A$5 (new C$6 (this.e1.derive(x), this.e2) , this.e2.derive(x))  else new C$6 (this.e1.derive(x), this.e2) 
-//│   fun isEmpty() =
-//│     &&(this.e1.isEmpty(), this.e2.isEmpty())
 //│ }
 //│ class Ch$4(i): Exp$1() {
-//│   fun derive(x) =
-//│     if ==(x, this.i) then new Ep$3 ()  else new E$2 () 
-//│   fun isEmpty() =
-//│     false
 //│ }
 //│ class Ep$3(): Exp$1() {
-//│   fun derive(x) =
-//│     new E$2 () 
-//│   fun isEmpty() =
-//│     true
 //│ }
 //│ class Exp$1() {
-//│   fun derive: mlscript.compiler.printer.ExprPrinter$$Lambda$246892/0x000000080356d338@344e7423fun derive(x) =
-//│     Exp$1()
-//│   fun isEmpty: mlscript.compiler.printer.ExprPrinter$$Lambda$246892/0x000000080356d338@514b4ef0fun isEmpty() =
-//│     false
 //│ }
 //│ fun isEmpty$E$2(this) =
 //│   false
@@ -1002,10 +930,6 @@ class Foo(x: Int){
 //│ 
 //│ Defunc result: 
 //│ class Foo$1(x) {
-//│   fun bar(y) =
-//│     +(this.x, y)
-//│   fun boo(z) =
-//│     +(this.bar(z), this.x)
 //│ }
 //│ fun boo$Foo$1(this, z) =
 //│   +(this match {case obj: Foo$1 => bar$Foo$1(obj, z)}, this.x)
@@ -1044,8 +968,6 @@ class OneInt(a: Int){
 //│ 
 //│ Defunc result: 
 //│ class OneInt$1(a) {
-//│   fun fac: mlscript.compiler.printer.ExprPrinter$$Lambda$246892/0x000000080356d338@2a4995edfun fac() =
-//│     if >(this.a, #0) then new OneInt$1 (-(this.a, #1)) .fac() else #1
 //│ }
 //│ fun fac$OneInt$1(this) =
 //│   if >(this.a, #0) then new OneInt$1 (-(this.a, #1))  match {case obj: OneInt$1 => fac$OneInt$1(obj)} else #1
@@ -1135,12 +1057,8 @@ class OneBool(b: Bool){
 //│ 
 //│ Defunc result: 
 //│ class OneInt$1(a) {
-//│   fun get() =
-//│     this.a
 //│ }
 //│ class OneBool$2(b) {
-//│   fun get() =
-//│     this.b
 //│ }
 //│ fun get$OneInt$1(this) =
 //│   this.a
@@ -1194,16 +1112,8 @@ bar.car
 //│ 
 //│ Defunc result: 
 //│ class Bar$1(x) {
-//│   fun foo(x) =
-//│     x
-//│   fun FooMinus(y) =
-//│     +(this.x, y)
-//│   fun car =
-//│     this.foo(#2)
 //│ }
 //│ class Car$2() {
-//│   fun da(b) =
-//│     b.foo(#2)
 //│ }
 //│ let bar$1 =
 //│   Bar$1(#42)
@@ -1269,12 +1179,8 @@ class Sub2(c: Int) extends Sub(c+c){
 //│ 
 //│ Defunc result: 
 //│ class Sub2$3(c): Sub$2(+(c$1, c$1)) {
-//│   fun foo() =
-//│     +(this.a, c$1)
 //│ }
 //│ class Sup$1(a) {
-//│   fun foo() =
-//│     this.a
 //│ }
 //│ class Sub$2(b): Sup$1(+(this.b, this.b)) {
 //│ }
@@ -1335,18 +1241,12 @@ class F2() extends Foo(x => x+2){}
 //│ class F1$2(): Foo$1(new F1$2_Lambda1$1$4 (this) ) {
 //│ }
 //│ class F2$3_Lambda1$2$5(par$F2$3) {
-//│   fun apply(x) =
-//│     +(x, #2)
 //│ }
 //│ class F2$3(): Foo$1(new F2$3_Lambda1$2$5 (this) ) {
 //│ }
 //│ class Foo$1(f) {
-//│   fun foo() =
-//│     this.f(#1)
 //│ }
 //│ class F1$2_Lambda1$1$4(par$F1$2) {
-//│   fun apply(x) =
-//│     +(x, #1)
 //│ }
 //│ fun apply$F2$3_Lambda1$2$5(this, x) =
 //│   +(x, #2)

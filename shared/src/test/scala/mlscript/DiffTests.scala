@@ -43,6 +43,7 @@ abstract class ModeType {
   def allowEscape: Bool
   def mono: Bool
   def revConv: Bool
+  def numono: Bool
 }
 
 class DiffTests
@@ -171,6 +172,7 @@ class DiffTests
       allowEscape: Bool = false,
       mono: Bool = false,
       revConv: Bool = false,
+      numono: Bool = false,
       // noProvs: Bool = false,
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
@@ -272,6 +274,7 @@ class DiffTests
           case "escape" => mode.copy(allowEscape = true)
           case "mono" => {mode.copy(mono = true)}
           case "rc" => {mode.copy(revConv = true)}
+          case "nm" => {mode.copy(numono = true)}
           case "exit" =>
             out.println(exitMarker)
             ls.dropWhile(_ =:= exitMarker).tails.foreach {
@@ -443,7 +446,7 @@ class DiffTests
             
             if (parseOnly)
               Success(Pgrm(Nil), 0)
-            else if (mode.revConv)
+            else if (mode.revConv || mode.numono)
               Success(Pgrm(nuRes.getOrElse(???).entities), 0)
             else
               Success(Pgrm(res.entities), 0)

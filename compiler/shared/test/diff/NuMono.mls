@@ -1,0 +1,76 @@
+:NewDefs
+
+:nm
+class A() {
+    val num() = 0
+}
+class B() {
+    val num() = 1
+}
+fun foo(num) = if false then new A() else new B()
+foo(10).num()
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), num, None, [], Lam(Tup(), IntLit(0))))), NuTypeDef(class, B, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), num, None, [], Lam(Tup(), IntLit(1))))), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(num)), If(IfThen(Var(false), New(Some((TypeName(A),[])), TypingUnit())), Some(New(Some((TypeName(B),[])), TypingUnit()))))), App(Sel(App(Var(foo), Tup(_: IntLit(10))), num), Tup()))
+//│ Lifted:
+//│ TypingUnit(NuTypeDef(class, A$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), num, None, [], Lam(Tup(), IntLit(0))))), NuTypeDef(class, B$2, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), num, None, [], Lam(Tup(), IntLit(1))))), NuFunDef(None, foo$1, None, [], Lam(Tup(_: Var(num)), If(IfThen(Var(false), New(Some((TypeName(A$1),[])), TypingUnit())), Some(New(Some((TypeName(B$2),[])), TypingUnit()))))), App(Sel(App(Var(foo$1), Tup(_: IntLit(10))), num), Tup()))
+//│ TypingUnit {
+//│   class A$1([]) {let num = () => 0}
+//│   class B$2([]) {let num = () => 1}
+//│   fun foo$1 = (num,) => if (false) then new A$1([]) {} else new B$2([]) {}
+//│   Code(List((foo$1(10,)).num()))
+//│ }
+//│ Mono:
+//│ TypingUnit(NuTypeDef(class, B$2, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, A$1, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, foo$1, None, [], Lam(Tup(_: Var(num)), If(IfThen(Var(false), New(Some((TypeName(A$1),[])), TypingUnit())), Some(New(Some((TypeName(B$2),[])), TypingUnit()))))), NuFunDef(Some(false), num$B$2, None, [], Lam(Tup(_: Var(this)), IntLit(1))), NuFunDef(None, main$$3, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], App(Var(foo$1), Tup(_: IntLit(10)))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(B$2), App(Var(num$B$2), Tup(_: Var(obj)))))), None)))), App(Var(main$$3), Tup()))
+//│ TypingUnit {
+//│   class B$2([]) {}
+//│   class A$1([]) {}
+//│   fun foo$1 = (num,) => if (false) then new A$1([]) {} else new B$2([]) {}
+//│   let num$B$2 = (this,) => 1
+//│   fun main$$3 = () => {let obj = foo$1(10,); if obj is ‹(B$2) then num$B$2(obj,)›}
+//│   Code(List(main$$3()))
+//│ }
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ╟── application of type `A$1` is not an instance of type `B$2`
+//│ ║  l.11: 	foo(10).num()
+//│ ╙──      	    ^^
+//│ class B$2()
+//│ class A$1()
+//│ fun foo$1: anything -> (A$1 | B$2)
+//│ let num$B$2: anything -> 1
+//│ fun main$$3: () -> (1 | error)
+//│ 1 | error
+//│ num$B$2
+//│         = [Function: num$B$2]
+//│ res
+//│     = 1
+
+
+
+class A() {
+    val num() = 0
+}
+class B() {
+    val num() = 1
+}
+fun A_num(obj) = 0
+fun B_num(obj) = 1
+fun foo(num) = if true then new A() else new B()
+fun main3() = 
+    let obj = foo(10)
+    if obj is
+        A then A_num(obj)
+        B then B_num(obj)
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), num, None, [], Lam(Tup(), IntLit(0))))), NuTypeDef(class, B, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), num, None, [], Lam(Tup(), IntLit(1))))), NuFunDef(None, A_num, None, [], Lam(Tup(_: Var(obj)), IntLit(0))), NuFunDef(None, B_num, None, [], Lam(Tup(_: Var(obj)), IntLit(1))), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(num)), If(IfThen(Var(true), New(Some((TypeName(A),[])), TypingUnit())), Some(New(Some((TypeName(B),[])), TypingUnit()))))), NuFunDef(None, main3, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], App(Var(foo), Tup(_: IntLit(10)))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(A), App(Var(A_num), Tup(_: Var(obj))));IfThen(Var(B), App(Var(B_num), Tup(_: Var(obj)))))), None)))))
+//│ Lifted:
+//│ Lifting failed: mlscript.compiler.mono.MonomorphError: Unknown IfBody: obj is ‹(A) then A_num(obj,); (B) then B_num(obj,)›
+//│ class A() {
+//│   val num: () -> 0
+//│ }
+//│ class B() {
+//│   val num: () -> 1
+//│ }
+//│ fun A_num: anything -> 0
+//│ fun B_num: anything -> 1
+//│ fun foo: anything -> (A | B)
+//│ fun main3: () -> (0 | 1)

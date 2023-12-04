@@ -31,18 +31,27 @@ class DiffTestCompiler extends DiffTests {
         outputBuilder ++= "Lifting failed: " ++ err.toString()
         if mode.fullExceptionStack then 
           outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
-    if(mode.mono){
+    if(mode.mono || mode.numono){
       outputBuilder ++= "\nMono:\n"
       val treeDebug = new TreeDebug()
       try{
         val monomorph = new Monomorph(treeDebug)
-        val monomorphized = monomorph.defunctionalize(rstUnit)
-        outputBuilder ++= "\nDefunc result: \n"
-        outputBuilder ++= ExprPrinter.print(monomorphized)
-        outputBuilder ++= "\n"
-        if mode.dbgDefunc then
-          outputBuilder ++= treeDebug.getLines.mkString("\n")
-        return (outputBuilder.toString().linesIterator.toList, if mode.revConv then Some(monomorph.toTypingUnit(monomorphized)) else None)
+        if (mode.numono)
+          then
+            val defuncAST = monomorph.nuDefunctionalize(rstUnit)
+            outputBuilder ++= s"${mlscript.codegen.Helpers.inspect(defuncAST)}\n"
+            outputBuilder ++= PrettyPrinter.showTypingUnit(defuncAST)++"\n"
+            if mode.dbgDefunc then
+              outputBuilder ++= treeDebug.getLines.mkString("\n")
+            return (outputBuilder.toString().linesIterator.toList, Some(defuncAST))
+          else
+            val monomorphized = monomorph.defunctionalize(rstUnit)
+            outputBuilder ++= "\nDefunc result: \n"
+            outputBuilder ++= ExprPrinter.print(monomorphized)
+            outputBuilder ++= "\n"
+            if mode.dbgDefunc then
+              outputBuilder ++= treeDebug.getLines.mkString("\n")
+            return (outputBuilder.toString().linesIterator.toList, if mode.revConv then Some(monomorph.toTypingUnit(monomorphized)) else None)
       }catch{
         case error: MonomorphError => outputBuilder ++= (error.getMessage()/* :: error.getStackTrace().map(_.toString()).toList).mkString("\n"*/)
         // case error: StackOverflowError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().take(40).map(_.toString()).toList).mkString("\n")

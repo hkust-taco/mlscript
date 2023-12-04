@@ -13,7 +13,7 @@ import mlscript.compiler.CaseBranch
 import mlscript.compiler.Expr
 import mlscript.{App, Asc, Assign, Bind, Blk, Bra, CaseOf, Lam, Let, Lit,
                  New, Rcd, Sel, Subs, Term, Test, Tup, With, Var, Fld, FldFlags, If, PolyType, 
-                 IfBody, IfThen, IfElse, IfLet, IfOpApp, IfOpsApp, IfBlock}
+                 IfBody, IfThen, IfElse, IfLet, IfOpApp, IfOpsApp, IfBlock, LetS, Statement}
 import mlscript.UnitLit
 import mlscript.codegen.Helpers.inspect as showStructure
 import mlscript.compiler.mono.MonomorphError
@@ -34,7 +34,10 @@ import mlscript.TypeDefKind
 import mlscript.compiler.mono.Monomorph
 import mlscript.NuDecl
 import mlscript.TypingUnit
-import mlscript.compiler.Helpers.extractParams
+import mlscript.compiler.Helpers.extractLamParams
+import mlscript.compiler.Helpers.toTuple
+import mlscript.{MonoVal, TypeVal, ObjVal, FuncVal, LiteralVal, PrimVal, VarVal, UnknownVal, BoundedTerm}
+import mlscript.compiler.Helpers.extractFuncArgs
 
 class Specializer(monoer: Monomorph)(using debug: Debug){
 
@@ -198,40 +201,115 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
   // }(_.expValue)
   
   /*
-    Evaluate a Term given an evaluation Context and return a BoundedExpr
+    Evaluate a Term given an evaluation Context and return a EvaledTerm
   */
-  def nuEvaluate(term: Term)(using evalCtx: Map[String, BoundedExpr], callingStack: List[String]): BoundedExpr =
-    term match
-      case IntLit(value) => BoundedExpr(LiteralValue(value))
-      case DecLit(value) => BoundedExpr(LiteralValue(value))
-      case StrLit(value) => BoundedExpr(LiteralValue(value))
-      case UnitLit(value) => BoundedExpr(LiteralValue(if value then Undefined else Null))
+  def nuEvaluate(term: Term)(using evalCtx: Map[String, BoundedTerm], callingStack: List[String], dbgIndent: String = ""): Term =
+    debug.writeLine(s"${dbgIndent}╓Eval ${mlscript.codegen.Helpers.inspect(term)}:")
+    val res = term match
+      case lit: Lit => 
+        term.evaledTerm = BoundedTerm(LiteralVal(Left(lit)))
+        term
       case Var(name) => 
-        evalCtx.getOrElse(name, BoundedExpr(monoer.nuFindVar(name)))
-      case Lam(lhs, rhs) => throw MonomorphError("Should not encounter lambda during evaluation process")
+        term.evaledTerm = 
+          if name == "true"
+          then BoundedTerm(LiteralVal(Right(true)))
+          else if name == "false"
+          then BoundedTerm(LiteralVal(Right(false)))
+          else evalCtx.getOrElse(name, BoundedTerm(monoer.nuFindVar(name)))
+        term
+      // case Lam(lhs, rhs) => throw MonomorphError("Should not encounter lambda during evaluation process")
       case App(lhs, rhs) => 
-        BoundedExpr(nuEvaluate(lhs).getValue.map{
-          case FunctionValue(name, params, ctx) => ???
-          case ObjectValue(name, fields) => ???
-          case TypeValue(name) => 
-            monoer.nuCreateObjValue(name, extractParams(rhs).map((flags, nm, tp) => nuEvaluate(nm)).toList)
-        })
-      case New(Some((constructor, args)), _) => ???
-      case New(None, body) => ???
-      case Tup(fields) => ???
-      case Rcd(fields) => ???
-      case Sel(receiver, fieldName) => ???
-      case Let(rec, Var(name), rhs, body) => ???
-      case Blk(stmts) => ???
-      case Bra(rcd, term) => ???
-      case Asc(term, ty) => ???
-      case _: Bind => ???
-      case _: Test => ???
-      case With(term, Rcd(fields)) => ???
-      case CaseOf(term, cases) => ???     
-      case Subs(array, index) => ???
-      case Assign(lhs, rhs) => ???
-      case If(body, alternate) => ??? 
+        val nuLhs = nuEvaluate(lhs)(using dbgIndent = "║"++dbgIndent)
+        val nuRhs = nuEvaluate(rhs)(using dbgIndent = "║"++dbgIndent)
+        val res = App(nuLhs, nuRhs)
+        res.evaledTerm = nuLhs.evaledTerm.getValue.map{ 
+          case FuncVal(name, prm, ctx) =>
+              debug.writeLine(s"${dbgIndent}║Apply Function ${name}") 
+              monoer.nuGetFuncRetVal(name, ctx.unzip._2 ++ extractFuncArgs(nuRhs).map(_.evaledTerm))(using dbgIndent = "║"++dbgIndent)
+          case o: ObjVal => monoer.nuGetFieldVal(o, "apply").asValue match
+            case Some(FuncVal(name, prm, ctx)) => 
+              monoer.nuGetFuncRetVal(name, ctx.unzip._2 ++ extractFuncArgs(nuRhs).map(_.evaledTerm))(using dbgIndent = "║"++dbgIndent) // Unzipping ctx gives implicit "this"
+            case other => throw MonomorphError(s"Encountered unknown value ${other} when evaluating object application")
+          case TypeVal(name) => 
+            BoundedTerm(monoer.nuCreateObjValue(name, extractFuncArgs(nuRhs).map(_.evaledTerm).toList))
+        }.fold(BoundedTerm())(_ ++ _)
+        res
+      case New(Some((constructor, args)), body) => 
+        val nuArgs = nuEvaluate(args)(using dbgIndent = "║"++dbgIndent)
+        val res = New(Some(constructor, nuArgs), body)
+        res.evaledTerm = BoundedTerm(monoer.nuCreateObjValue(constructor.base.name, extractFuncArgs(nuArgs).map(_.evaledTerm)))
+        res
+      case Sel(receiver, fieldName) => 
+        val nuReceiver = nuEvaluate(receiver)(using dbgIndent = "║"++dbgIndent)
+        val res = Sel(nuReceiver, fieldName)
+        res.evaledTerm = nuReceiver.evaledTerm.getValue.map{
+          case obj: ObjVal => 
+            obj.fields.get(fieldName.name) match
+              case Some(fld) => fld
+              case None => monoer.nuGetFieldVal(obj, fieldName.name)
+          // case func: FuncVal =>
+          //   monoer.nuGetFuncRetVal
+          case other => throw MonomorphError(s"Cannot select from non-object value ${other}")
+        }.fold(BoundedTerm())(_ ++ _)
+        res
+      case Let(rec, Var(name), rhs, body) =>
+        if !rec
+        then 
+          val nuRhs = nuEvaluate(rhs)(using dbgIndent = "║"++dbgIndent)
+          val nuBody = nuEvaluate(body)(using evalCtx + (name -> nuRhs.evaledTerm), dbgIndent = "║"++dbgIndent)
+          val ret = Let(rec, Var(name), nuRhs, nuBody)
+          ret.evaledTerm = nuBody.evaledTerm
+          ret
+        else ??? //TODO: letrec
+      case Blk(stmts) => 
+        val exps = stmts.map{
+          case t: Term => nuEvaluate(t)(using dbgIndent = "║"++dbgIndent)
+          case other => throw MonomorphError(s"Encountered unlifted non-term ${other} in block ")
+        }
+        val res = Blk(exps)
+        res.evaledTerm = {
+          if exps.length == 0 
+          then BoundedTerm(LiteralVal(Left(UnitLit(false))))
+          else exps.reverse.head.evaledTerm
+        }
+        res
+      case If(body, alternate) => 
+        val res = body match
+          case IfThen(condition, consequent) => 
+            val nuConsequent = nuEvaluate(consequent)(using dbgIndent = "║"++dbgIndent)
+            val nuAlternate = alternate.map(alt => nuEvaluate(alt)(using dbgIndent = "║"++dbgIndent))
+            val nuCondition = nuEvaluate(condition)(using dbgIndent = "║"++dbgIndent)
+            val res = If(IfThen(nuCondition, nuConsequent), nuAlternate)
+            res.evaledTerm = nuCondition.evaledTerm.asValue match {
+              case Some(x: LiteralVal) if x.asBoolean().isDefined =>
+                if x.asBoolean().get
+                then nuConsequent.evaledTerm
+                else nuAlternate.map(_.evaledTerm).getOrElse(BoundedTerm(UnknownVal()))
+              case _ => nuConsequent.evaledTerm ++ nuAlternate.map(_.evaledTerm).getOrElse(BoundedTerm(UnknownVal()))
+            }
+            res
+          case other => throw MonomorphError(s"IfBody ${body} not handled")
+        res
+      case Asc(term, ty) => 
+        val nuTerm = nuEvaluate(term)(using dbgIndent = "║"++dbgIndent)
+        val res = Asc(nuTerm, ty)
+        res.evaledTerm = nuTerm.evaledTerm
+        res
+      case Tup(fields) => // TODO: give evaledTerm?
+        Tup(fields.map{
+          case (name, Fld(flags, value)) => (name, Fld(flags, nuEvaluate(value)(using dbgIndent = "║"++dbgIndent)))
+        }) 
+      // case Bra(rcd, term) => ???
+      // case _: Bind => ???
+      // case _: Test => ???
+      // case With(term, Rcd(fields)) => ???
+      // case CaseOf(term, cases) => ???     
+      // case Subs(array, index) => ???
+      // case Assign(lhs, rhs) => ???
+      // case New(None, body) => ???
+      // case Rcd(fields) => ???
+    debug.writeLine(s"${dbgIndent}╙Result ${res.evaledTerm.getValue.map(_.toString).toList}:")
+    res
 
   def defunctionalize(rawExpr: Expr): Expr = {
     val ret: Expr = rawExpr match {
@@ -284,6 +362,55 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
       case _ => throw MonomorphError(s"Unhandled case: ${rawExpr}")
     }
     ret.expValue = rawExpr.expValue
+    ret
+  }
+
+  def nuDefunctionalize(term: Term): Term = {
+    def valSetToBranches(vals: List[MonoVal], acc: List[Either[IfBody,Statement]] = List())(using field: Var, args: List[Term]): List[Either[IfBody,Statement]] = 
+      debug.writeLine(s"Expanding ${vals}")
+      vals match
+      case Nil => acc
+      case head :: next => head match
+        case o@ObjVal(name, _) =>
+          val selValue = monoer.nuGetFieldVal(o, field.name)
+          val branchCase = selValue.asValue match {
+            case Some(f: FuncVal) =>
+              IfThen(Var(name), App(Var(f.name), toTuple(Var("obj") :: args)))
+            case _ if selValue.getValue.forall(_.isInstanceOf[ObjVal]) => //FIXME: Unverified
+              val scrut = Sel(Var("obj"), field)
+              val branches = selValue.getValue.toList.map(_.asInstanceOf[ObjVal])
+                .flatMap(o => {
+                  val lambdaMemFunc = monoer.nuGetFieldVal(o, "apply").asValue.get.asInstanceOf[FuncVal]
+                  val caseVarNm: Var = Var(s"obj$$${o.name}")
+                  Right(NuFunDef(Some(false), Var("obj"), None, Nil, Left(Var(o.name)))(None, None, None, None, false)) :: 
+                    List[Either[IfBody,Statement]](Left(IfThen(Var(o.name), App(Var(lambdaMemFunc.name), toTuple(caseVarNm :: args)))))
+                })
+              IfOpApp(scrut, Var("is"), IfBlock(branches))
+            case _ =>
+              throw MonomorphError(s"Selection of field ${field} from object ${o} results in unhandled case")
+          }
+          valSetToBranches(next, Left(branchCase) :: acc)
+
+    val ret = term match
+      case x: (Lit | Var) => x
+      case App(sel@Sel(receiver, field), args) => 
+        val nuReceiver = nuDefunctionalize(receiver)
+        val nuArgs = nuDefunctionalize(args)
+        debug.writeLine(s"${showStructure(receiver)}")
+        val ifBlockLines = valSetToBranches(receiver.evaledTerm.getValue.toList)(using field, extractFuncArgs(nuArgs))
+        val ifBlk = IfBlock(ifBlockLines)
+        Blk(NuFunDef(Some(false), Var("obj"), None, Nil, Left(nuReceiver))(None, None, None, None, false) ::
+            List(If(IfOpApp(Var("obj"), Var("is"), ifBlk), None)))
+      case App(callee, args) => 
+        if(callee.evaledTerm.getValue.find(_.isInstanceOf[ObjVal]).isDefined)
+          nuDefunctionalize(App(Sel(callee, Var("apply")), args))
+        else 
+          App(nuDefunctionalize(callee), nuDefunctionalize(args))
+      case Tup(fields) => Tup(fields.map{
+        case (name, Fld(flags, value)) => (name, Fld(flags, nuDefunctionalize(value)))})
+      case If(IfThen(expr, rhs), els) => If(IfThen(nuDefunctionalize(expr), nuDefunctionalize(rhs)), els.map(nuDefunctionalize))
+      case New(Some((constructor, args)), body) => New(Some((constructor, nuDefunctionalize(args))), body)
+      case _ => throw MonomorphError(s"Cannot Defunctionalize ${term}")
     ret
   }
 }

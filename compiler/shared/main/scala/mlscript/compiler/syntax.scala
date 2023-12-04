@@ -5,7 +5,7 @@ import mlscript.compiler.printer.ExprPrinter
 import scala.collection.mutable.ArrayBuffer
 import mlscript.{Type, Union, Inter, Function, Record, Tuple, Recursive, AppliedType,
                  Neg, Rem, Bounds, WithExtension, Constrained, Top, Bot, Literal,
-                 TypeName, TypeVar, PolyType, NamedType, FldFlags, Term}
+                 TypeName, TypeVar, PolyType, NamedType, FldFlags, Term, Located, Var, Lit}
 import scala.collection.immutable.HashMap
 import mlscript.compiler.mono.specializer.BoundedExpr
 import mlscript.compiler.mono.specializer.Builtin

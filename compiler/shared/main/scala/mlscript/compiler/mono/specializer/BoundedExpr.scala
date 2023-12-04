@@ -95,7 +95,7 @@ case class PrimitiveValue() extends MonoValue{
   override def toString(): String = "*LIT*"
 }
 
-class BoundedExpr(private val values: Set[MonoValue]) extends Printable {
+class BoundedExpr(private val values: Set[MonoValue]) {
   def this(singleVal: MonoValue) = this(Set(singleVal))
   def this() = this(Set())
   def getDebugOutput: DebugOutput = DebugOutput.Plain(toStringSafe)

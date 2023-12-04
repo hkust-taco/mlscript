@@ -87,11 +87,11 @@ object Helpers {
     case IfOpsApp(lhs, opsRhss) => s"IfOpsApp(${inspect(lhs)}, ${
       opsRhss.iterator.map { case (op, body) =>
         s"$op -> ${inspect(body)}"
-      }
-    }".mkString("; ")
+      }.mkString(";")
+    })"
     case IfLet(isRec, name, rhs, body) => ???
     case IfOpApp(lhs, op, rhs) =>
-      s"IfOpApp(${inspect(lhs)}, ${inspect(op)}, ${inspect(rhs)}"
+      s"IfOpApp(${inspect(lhs)}, ${inspect(op)}, ${inspect(rhs)})"
   }
   def inspect(t: TypingUnit): Str = t.entities.iterator
     .map {

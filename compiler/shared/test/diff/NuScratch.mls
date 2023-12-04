@@ -1,6 +1,26 @@
 :NewDefs
 
 :mono
+val b =
+    let a(x) = x
+    a(5)
+//│ Parsed:
+//│ TypingUnit(NuFunDef(Some(false), b, None, [], Blk(NuFunDef(Some(false), a, None, [], Lam(Tup(_: Var(x)), Var(x))); App(Var(a), Tup(_: IntLit(5))))))
+//│ Lifted:
+//│ TypingUnit(NuFunDef(Some(false), a$2, None, [], Lam(Tup(_: Var(x)), Var(x))), NuFunDef(Some(false), b$1, None, [], Blk(App(Var(a$2), Tup(_: IntLit(5))))))
+//│ TypingUnit {let a$2 = (x,) => x; let b$1 = {a$2(5,)}}
+//│ Mono:
+//│ 
+//│ Defunc result: 
+//│ let a$2(x) =
+//│   x
+//│ let b$1 =
+//│   a$2(#5)
+//│ val b: 5
+//│ b
+//│   = 5
+
+:mono
 fun lambda(num) = (num2) => num+num2
 lambda(1)(2)
 //│ Parsed:
@@ -16,8 +36,6 @@ lambda(1)(2)
 //│ 
 //│ Defunc result: 
 //│ class Lambda1$2$1(num) {
-//│   fun apply(num2) =
-//│     +(this.num, num2)
 //│ }
 //│ fun apply$Lambda1$2$1(this, num2) =
 //│   +(this.num, num2)
@@ -48,8 +66,6 @@ class G() {
 //│ 
 //│ Defunc result: 
 //│ class G$1() {
-//│   let x =
-//│     #5
 //│ }
 //│ let x$G$1(this) =
 //│   #5
@@ -81,21 +97,15 @@ class M(num: Int) {
 //│ 
 //│ Defunc result: 
 //│ class M$1(num) {
-//│   fun get() =
-//│     this.num
 //│ }
 //│ fun get$M$1(this) =
 //│   this.num
 //│ fun main$$1() =
 //│   new M$1 (#6)  match {case obj: M$1 => get$M$1(obj)}
 //│ main$$1()
-//│ ╔══[ERROR] Parameter 'num' cannot be accessed as a field
-//│ ╙──
 //│ ╔══[ERROR] identifier not found: obj
 //│ ╙──
-//│ class M$1(num: Int) {
-//│   fun get: () -> (Int | error)
-//│ }
+//│ class M$1(num: Int)
 //│ fun get$M$1: forall 'num. {num: 'num} -> 'num
 //│ fun main$$1: () -> error
 //│ error
@@ -137,7 +147,7 @@ class W(val num: Int) {}
 //│ class Z(num: Int)
 //│ class W(num: Int)
 //│ // Prelude
-//│ class TypingUnit4 {
+//│ class TypingUnit5 {
 //│   #X;
 //│   #Y;
 //│   #Z;
@@ -209,9 +219,9 @@ class W(val num: Int) {}
 //│     return this.#W;
 //│   }
 //│ }
-//│ const typing_unit4 = new TypingUnit4;
-//│ globalThis.X = typing_unit4.X;
-//│ globalThis.Y = typing_unit4.Y;
-//│ globalThis.Z = typing_unit4.Z;
-//│ globalThis.W = typing_unit4.W;
+//│ const typing_unit5 = new TypingUnit5;
+//│ globalThis.X = typing_unit5.X;
+//│ globalThis.Y = typing_unit5.Y;
+//│ globalThis.Z = typing_unit5.Z;
+//│ globalThis.W = typing_unit5.W;
 //│ // End of generated code

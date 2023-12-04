@@ -1,3 +1,39 @@
 :NewDefs
 
+class Base() 
+class A(): Base
+class B(): Base
+val foo = A()
+//│ class Base()
+//│ class A(): Base
+//│ class B(): Base
+//│ val foo: A
+//│ foo
+//│     = A {}
+
+:p
+fun bar(a, b) = a+b
+bar(1,2: Int)
+//│ |#fun| |bar|(|a|,| |b|)| |#=| |a|+|b|↵|bar|(|1|,|2|#:| |Int|)|
+//│ AST: TypingUnit(NuFunDef(None, bar, None, [], Lam(Tup(_: Var(a), _: Var(b)), App(Var(+), Tup(_: Var(a), _: Var(b))))), App(Var(bar), Tup(_: IntLit(1), _: Asc(IntLit(2), TypeName(Int)))))
+//│ Parsed: TypingUnit(NuFunDef(None, bar, None, [], Lam(Tup(_: Var(a), _: Var(b)), App(Var(+), Tup(_: Var(a), _: Var(b))))), App(Var(bar), Tup(_: IntLit(1), _: Asc(IntLit(2), TypeName(Int)))))
+//│ fun bar: (Int, Int) -> Int
+//│ Int
+//│ res
+//│     = 3
+
+//if foo is
+//    let obj = foo
+//    A then 6
+//    B then 2
+//    else B()
+////│ |#if| |foo| |is|→|#let| |obj| |#=| |foo|↵|A| |#then| |6|↵|B| |#then| |2|↵|#else| |B|(||)|←|
+////│ AST: TypingUnit(If(
+//    IfOpApp(Var(foo), Var(is), IfBlock(
+//        Let(false, obj, Var(foo));
+//        IfThen(Var(A), IntLit(6));IfThen(Var(B), IntLit(2));IfElse(App(Var(B), Tup())))), None))
+////│ Parsed: TypingUnit(If(IfOpApp(Var(foo), Var(is), IfBlock(Let(false, obj, Var(foo));IfThen(Var(A), IntLit(6));IfThen(Var(B), IntLit(2));IfElse(App(Var(B), Tup())))), None))
+////│ 2 | 6 | B
+////│ res
+////│     = 6
 
