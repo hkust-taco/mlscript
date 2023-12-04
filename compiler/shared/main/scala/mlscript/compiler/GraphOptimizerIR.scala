@@ -131,13 +131,13 @@ class GODef(
   val isjp: Bool,
   val params: Ls[Name],
   val resultNum: Int,
+  var specialized: Opt[Ls[Opt[Intro]]],
   var body: GONode,
   // TODO rec boundaries
 ):
   var activeParams: Ls[Set[Elim]] = Ls(Set())
   var activeInputs: Set[Ls[Opt[Intro]]] = Set()
   var activeResults: Ls[Opt[Intro]] = Ls(None)
-  var specializeOn: Opt[Ls[Opt[Intro]]] = None
   override def equals(o: Any): Bool = o match {
     case o: GODef if this.isInstanceOf[GODef] =>
       o.id == id &&
@@ -150,8 +150,6 @@ class GODef(
   }
   override def hashCode: Int = id
   def getName: String = name
-  @unused
-  def getBody: GONode = body
   def accept_visitor(v: GOVisitor) = v.visit(this)
   def accept_iterator(v: GOIterator) = v.iterate(this)
   override def toString: String =
@@ -160,7 +158,8 @@ class GODef(
     val aps = activeParams.map(_.toSeq.sorted.mkString("{", ",", "}")).mkString("[", ",", "]")
     val ais = activeInputs.map(_.toSeq.sorted.mkString("[", ",", "]")).mkString("[", ",", "]")
     val ars = activeResults.map(_.toString()).mkString("[", ",", "]")
-    s"Def($id, $name2, $ps, $aps,\n$ais,\n$ars, $resultNum, \n$body\n)"
+    val spec = specialized.map(_.toSeq.sorted.mkString("[", ",", "]")).toString()
+    s"Def($id, $name2, $ps, $aps,\nS: $spec,\nI: $ais,\n$ars, $resultNum, \n$body\n)"
 
 sealed trait TrivialExpr:
   override def toString: String
@@ -354,6 +353,7 @@ trait GOVisitor extends GOTrivialExprVisitor:
       x.isjp,
       x.params.map(_.accept_param_visitor(this)),
       x.resultNum,
+      x.specialized,
       x.body.accept_visitor(this))
   def visit(x: GOProgram): GOProgram =
     GOProgram(

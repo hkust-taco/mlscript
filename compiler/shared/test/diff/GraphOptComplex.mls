@@ -26,7 +26,8 @@ bar()
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
 //│ Def(0, complex_foo, [t%0], [{}],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let join j%0(x%8) = let x%9 = B(1,2)
 //│       in let join j%1(x%15) = let x%16 = +(x%8,x%15)
@@ -52,7 +53,8 @@ bar()
 //│           in jump j%0(x%7)
 //│ )
 //│ Def(1, bar, [], [{}],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let x%17 = A(6,7,8)
 //│   in let* (x%18) = complex_foo(x%17)
@@ -67,7 +69,8 @@ bar()
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
 //│ Def(0, complex_foo, [t%0], [{EDestruct,EDirect,ESelect(m),ESelect(n),ESelect(x),ESelect(y),ESelect(z)}],
-//│ [[Some(ICtor(A))],[Some(ICtor(B))]],
+//│ S: None,
+//│ I: [[Some(ICtor(A))],[Some(ICtor(B))]],
 //│ [None], 1, 
 //│ case t%0 of
 //│   A => let x%0 = t%0.z
@@ -82,7 +85,8 @@ bar()
 //│         in jump j%0(x%7)
 //│ )
 //│ Def(1, bar, [], [],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let x%17 = A(6,7,8)
 //│   in let* (x%18) = complex_foo(x%17)
@@ -91,7 +95,8 @@ bar()
 //│         in x%20
 //│ )
 //│ Def(2, @join j%0, [x%8], [{EDirect}],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let x%9 = B(1,2)
 //│   in case x%9 of
@@ -99,7 +104,8 @@ bar()
 //│     B => jump j%1(4)
 //│ )
 //│ Def(3, @join j%1, [x%15], [{EDirect}],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let x%16 = +(x%8,x%15)
 //│   in x%16
@@ -115,14 +121,16 @@ bar()
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
 //│ Def(1, bar, [], [],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let* (x%18) = complex_foo$D%0$S%0(8,7,6)
 //│   in let* (x%20) = complex_foo$D%1$S%0(9,10)
 //│     in x%20
 //│ )
 //│ Def(2, @join j%0, [x%8], [{EDirect}],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let x%9 = B(1,2)
 //│   in case x%9 of
@@ -130,20 +138,23 @@ bar()
 //│     B => jump j%1(4)
 //│ )
 //│ Def(3, @join j%1, [x%15], [{EDirect}],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let x%16 = +(x%8,x%15)
 //│   in x%16
 //│ )
 //│ Def(7, complex_foo$D%0$S%0, [t%0_z,t%0_y,t%0_x], [{EDirect},{EDirect},{EDirect}],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let x%3 = *(t%0_y,t%0_z)
 //│   in let x%4 = +(t%0_x,x%3)
 //│     in jump j%0(x%4)
 //│ )
 //│ Def(8, complex_foo$D%1$S%0, [t%0_m,t%0_n], [{EDirect},{EDirect}],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let x%7 = -(t%0_m,t%0_n)
 //│   in jump j%0(x%7)
@@ -155,6 +166,9 @@ bar()
 //│ 
 //│ Interpreted ------------------------------
 //│ 3
+//│ 
+//│ 
+//│ Fuel used: 2
 
 :GOInterp
 :GraphOpt
@@ -198,7 +212,8 @@ bar()
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(0, complex_foo, [t%0], [{}],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let x%0 = +(1,2)
 //│   in let x%1 = *(1,2)
@@ -252,7 +267,8 @@ bar()
 //│             in jump j%0(x%8)
 //│ )
 //│ Def(1, bar, [], [{}],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let x%34 = B(10)
 //│   in let x%35 = A(9,x%34)
@@ -267,7 +283,8 @@ bar()
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(0, complex_foo, [t%0], [{EDestruct,EDirect,ESelect(x),ESelect(y)}],
-//│ [[Some(ICtor(A))]],
+//│ S: None,
+//│ I: [[Some(ICtor(A))]],
 //│ [None], 1, 
 //│ let x%0 = +(1,2)
 //│   in let x%1 = *(1,2)
@@ -282,7 +299,8 @@ bar()
 //│         in jump j%0(x%8)
 //│ )
 //│ Def(1, bar, [], [],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let x%34 = B(10)
 //│   in let x%35 = A(9,x%34)
@@ -291,7 +309,8 @@ bar()
 //│         in x%37
 //│ )
 //│ Def(2, @join j%0, [x%9], [{EDestruct,EDirect,ESelect(w),ESelect(x)}],
-//│ [[Some(ICtor(B))],[Some(ICtor(C))]],
+//│ S: None,
+//│ I: [[Some(ICtor(B))],[Some(ICtor(C))]],
 //│ [None], 1, 
 //│ let x%10 = A(5,x%9)
 //│   in let x%11 = B(6)
@@ -309,7 +328,8 @@ bar()
 //│       C => jump j%1(3)
 //│ )
 //│ Def(3, @join j%1, [x%23], [{}],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ case x%10 of
 //│   A => let x%25 = x%10.w
@@ -332,7 +352,8 @@ bar()
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(1, bar, [], [],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let x%34 = B(10)
 //│   in let x%35 = A(9,x%34)
@@ -342,7 +363,8 @@ bar()
 //│           in x%37
 //│ )
 //│ Def(2, @join j%0, [x%9], [{EDestruct,EDirect,ESelect(w),ESelect(x)}],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let x%10 = A(5,x%9)
 //│   in let x%11 = B(6)
@@ -360,7 +382,8 @@ bar()
 //│       C => jump j%1(3)
 //│ )
 //│ Def(3, @join j%1, [x%23], [{}],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ case x%10 of
 //│   A => let x%25 = x%10.w
@@ -373,14 +396,16 @@ bar()
 //│     C => 8
 //│ )
 //│ Def(11, complex_foo$P%0, [t%0], [{EDirect}],
-//│ [[Some(ICtor(A))]],
+//│ S: None,
+//│ I: [[Some(ICtor(A))]],
 //│ [None,None,None], 3, 
 //│ let x%0 = +(1,2)
 //│   in let x%1 = *(1,2)
 //│     in t%0,x%0,x%1
 //│ )
 //│ Def(12, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(x)},{EDirect},{EDirect}],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let x%2 = t%0.x
 //│   in jump j%0(x%2)
@@ -392,6 +417,9 @@ bar()
 //│ 
 //│ Interpreted ------------------------------
 //│ 5
+//│ 
+//│ 
+//│ Fuel used: 2
 
 :GOInterp
 :GraphOpt
@@ -435,7 +463,8 @@ bar()
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(0, complex_foo, [t%0], [{}],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let x%0 = +(1,2)
 //│   in let x%1 = *(1,2)
@@ -491,7 +520,8 @@ bar()
 //│             in jump j%0(x%10)
 //│ )
 //│ Def(1, bar, [], [{}],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let x%36 = B(10)
 //│   in let x%37 = A(9,x%36)
@@ -506,7 +536,8 @@ bar()
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(0, complex_foo, [t%0], [{EDestruct,EDirect,ESelect(w),ESelect(y)}],
-//│ [[Some(ICtor(A))]],
+//│ S: None,
+//│ I: [[Some(ICtor(A))]],
 //│ [None], 1, 
 //│ let x%0 = +(1,2)
 //│   in let x%1 = *(1,2)
@@ -523,7 +554,8 @@ bar()
 //│         in jump j%0(x%10)
 //│ )
 //│ Def(1, bar, [], [],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let x%36 = B(10)
 //│   in let x%37 = A(9,x%36)
@@ -532,7 +564,8 @@ bar()
 //│         in x%39
 //│ )
 //│ Def(2, @join j%0, [x%11], [{EDestruct,EDirect,ESelect(w),ESelect(x)}],
-//│ [[Some(ICtor(A))],[Some(ICtor(B))],[Some(ICtor(C))]],
+//│ S: None,
+//│ I: [[Some(ICtor(A))],[Some(ICtor(B))],[Some(ICtor(C))]],
 //│ [None], 1, 
 //│ let x%12 = A(5,x%11)
 //│   in let x%13 = B(6)
@@ -550,7 +583,8 @@ bar()
 //│       C => jump j%1(3)
 //│ )
 //│ Def(3, @join j%1, [x%25], [{}],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ case x%12 of
 //│   A => let x%27 = x%12.w
@@ -573,7 +607,8 @@ bar()
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(1, bar, [], [],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let x%36 = B(10)
 //│   in let x%37 = A(9,x%36)
@@ -583,7 +618,8 @@ bar()
 //│           in x%39
 //│ )
 //│ Def(3, @join j%1, [x%25], [{}],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ case x%12 of
 //│   A => let x%27 = x%12.w
@@ -596,14 +632,16 @@ bar()
 //│     C => 8
 //│ )
 //│ Def(7, j%0$P%0, [x%11], [{EDirect}],
-//│ [[Some(ICtor(A))]],
+//│ S: None,
+//│ I: [[Some(ICtor(A))]],
 //│ [Some(ICtor(A)),None,None,Some(ICtor(B)),None], 5, 
 //│ let x%12 = A(5,x%11)
 //│   in let x%13 = B(6)
 //│     in x%12,x%1,x%0,x%13,x%11
 //│ )
 //│ Def(8, j%0$D%0, [x%12,x%1,x%0,x%13,x%11], [{EDestruct,EDirect,ESelect(w)},{EDirect},{EDirect},{EDestruct,EDirect,ESelect(w)},{ESelect(w),ESelect(x)}],
-//│ [[None,None,None,Some(ICtor(A)),Some(ICtor(B))]],
+//│ S: None,
+//│ I: [[None,None,None,Some(ICtor(A)),Some(ICtor(B))]],
 //│ [None], 1, 
 //│ let x%14 = x%11.x
 //│   in let x%15 = x%11.w
@@ -616,14 +654,16 @@ bar()
 //│           C => jump j%1(0)
 //│ )
 //│ Def(11, complex_foo$P%0, [t%0], [{EDirect}],
-//│ [[Some(ICtor(A))]],
+//│ S: None,
+//│ I: [[Some(ICtor(A))]],
 //│ [None,None,None], 3, 
 //│ let x%0 = +(1,2)
 //│   in let x%1 = *(1,2)
 //│     in t%0,x%0,x%1
 //│ )
 //│ Def(12, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(w)},{EDirect},{EDirect}],
-//│ [],
+//│ S: None,
+//│ I: [],
 //│ [None], 1, 
 //│ let x%3 = t%0.w
 //│   in let x%4 = C(0)
@@ -638,3 +678,6 @@ bar()
 //│ 
 //│ Interpreted ------------------------------
 //│ 5
+//│ 
+//│ 
+//│ Fuel used: 2

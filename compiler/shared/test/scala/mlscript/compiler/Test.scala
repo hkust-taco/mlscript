@@ -42,7 +42,8 @@ class DiffTestCompiler extends DiffTests {
        
         var changed = true
         var g = graph3
-        var fuel = 10
+        val fuel_limit = 15
+        var fuel = fuel_limit
         while (changed && fuel > 0)
           val new_g = go.optimize(g)
           changed = g != new_g
@@ -60,15 +61,20 @@ class DiffTestCompiler extends DiffTests {
           outputBuilder ++= GOInterpreter.interpret(g)
           outputBuilder ++= "\n"
 
+        outputBuilder ++= s"\n\nFuel used: ${fuel_limit - fuel}"
+
+        if (fuel == 0)
+          throw GraphOptimizingError("Fuel exhausted")
+
       catch
         case err @ GOInterpreterError(msg) =>
-          outputBuilder ++= s"GOInterp failed: ${msg}"
+          outputBuilder ++= s"\nGOInterp failed: ${msg}"
           outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
         case err @ GraphOptimizingError(msg) =>
-          outputBuilder ++= s"GraphOpt failed: ${msg}"
+          outputBuilder ++= s"\nGraphOpt failed: ${msg}"
           outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
         case err =>
-          outputBuilder ++= s"GraphOpt failed"
+          outputBuilder ++= s"\nGraphOpt failed"
           outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
 
     outputBuilder.toString().linesIterator.toList

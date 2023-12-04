@@ -282,6 +282,7 @@ class GraphOptimizer:
         false,
         names,
         1,
+        None,
         buildResultFromTerm(body) { x => x }
       )
     case _ => throw GraphOptimizingError("unsupported NuFunDef")
@@ -505,7 +506,10 @@ class GraphOptimizer:
         x.defs.foreach { 
           defn =>
             val old = defn.activeResults
-            defn.activeResults = getIntro(defn.body, Map.empty)
+            defn.activeResults =
+              getIntro(defn.body,
+                defn.specialized.map(bindIntroInfoUsingInput(Map.empty, _, defn.params))
+                  .getOrElse(Map.empty))
             changed |= old != defn.activeResults
         }
 
@@ -581,6 +585,7 @@ class GraphOptimizer:
             false,
             defn.params,
             all_fv.size,
+            None,
             pre_body)
           pre_map.update((defn.name, scrut.str), (pre_name.str, all_fv_list))
           pre_defs.add(pre_defn)
@@ -597,6 +602,7 @@ class GraphOptimizer:
               false,
               post_params,
               defn.resultNum,
+              None,
               body)
             post_map
               .getOrElseUpdate((defn.name, scrut.str), MutHMap.empty)
@@ -618,16 +624,14 @@ class GraphOptimizer:
   private class FunctionIndirectSplitting(worklist: Map[Str, Set[Str]]) extends GOIterator, GOVisitor:
     val dup_defs = MutHSet[GODef]()
     val dup_map = MutHMap[Str, Str]()
-    val dup_input = MutHMap[Str, Ls[Opt[Intro]]]()
 
     override def iterate(x: GODef): Unit =
       if (worklist.contains(x.name))
         x.activeInputs.foreach { input =>
           val y = x.accept_visitor(CopyDefinition)
-          y.specializeOn = Some(input)
+          y.specialized = Some(input)
           dup_defs.add(y)
           dup_map.update(x.name, y.name)
-          dup_input.update(y.name, input)
         }
   
   private def bindIntroInfo(intros: Map[Str, Intro], args: Ls[TrivialExpr], params: Ls[Name]) =
@@ -719,7 +723,6 @@ class GraphOptimizer:
     pre_map: Map[(Str, Str), (Str, Ls[Str])],
     post_map: Map[(Str, Str), Map[Str, (Str, Ls[Str])]],
     derived_map: Map[Str, Set[Str]],
-    dup_input: Map[Str, Ls[Opt[Intro]]],
   ) extends GOVisitor:
     var intros = Map.empty[Str, Intro]
     var changed = false
@@ -780,15 +783,14 @@ class GraphOptimizer:
         }
     
     override def visit(x: GODef) =
-      intros = dup_input.get(x.name).map {
-        bindIntroInfoUsingInput(Map.empty, _, x.params)
-      }.getOrElse(Map.empty)
+      intros = x.specialized.map(bindIntroInfoUsingInput(Map.empty, _, x.params)).getOrElse(Map.empty)
       GODef(
         x.id,
         x.name,
         x.isjp,
         x.params,
         x.resultNum,
+        x.specialized,
         x.body.accept_visitor(this)
       )
 
@@ -804,7 +806,6 @@ class GraphOptimizer:
 
   private class LocalIndirectSplittingCallSiteReplacement(
     dup_map: Map[Str, Str],
-    dup_input: Map[Str, Ls[Opt[Intro]]],
   ) extends GOVisitor:
     var intros = Map.empty[Str, Intro]
     var changed = false
@@ -846,15 +847,14 @@ class GraphOptimizer:
           LetCall(xs, defnref, as, e.accept_visitor(this))
     
     override def visit(x: GODef) =
-      intros = dup_input.get(x.name).map {
-        bindIntroInfoUsingInput(Map.empty, _, x.params)
-      }.getOrElse(Map.empty)
+      intros = x.specialized.map(bindIntroInfoUsingInput(Map.empty, _, x.params)).getOrElse(Map.empty)
       GODef(
         x.id,
         x.name,
         x.isjp,
         x.params,
         x.resultNum,
+        x.specialized,
         x.body.accept_visitor(this)
       )
 
@@ -877,6 +877,7 @@ class GraphOptimizer:
         x.isjp,
         x.params,
         x.resultNum,
+        None,
         x.body.accept_visitor(this)
       )
       y
@@ -896,13 +897,12 @@ class GraphOptimizer:
 
       val dup_map = fis.dup_map.toMap
       val dup_defs = fis.dup_defs.toSet
-      val dup_input = fis.dup_input.toMap
 
       var y = GOProgram(x.classes, x.defs ++ pre_defs ++ post_defs ++ dup_defs, x.main)
       var changed = true
       while (changed)
-        val scsr = LocalSplittingCallSiteReplacement(pre_map, post_map, derived_map, dup_input)
-        val iscsr = LocalIndirectSplittingCallSiteReplacement(dup_map, dup_input) 
+        val scsr = LocalSplittingCallSiteReplacement(pre_map, post_map, derived_map)
+        val iscsr = LocalIndirectSplittingCallSiteReplacement(dup_map) 
         y = y.accept_visitor(scsr)
         fixCrossReferences(y.main, y.defs)
         validate(y.main, y.defs)
@@ -1026,6 +1026,7 @@ class GraphOptimizer:
           x.isjp, 
           new_params,
           x.resultNum,
+          None,
           x.body.accept_visitor(SelectionReplacement(targets.keySet)),
         )
         sr_defs.add(new_def)
@@ -1275,6 +1276,7 @@ class GraphOptimizer:
         val new_def = GODef(
           genfid(), jp,
           true, xs, 1,
+          None,
           e1,
         )
         e1.accept_iterator(this)
