@@ -328,10 +328,10 @@ generate(10).gen()
 //│   generate$1(#10) match {case obj: Cons$1 => gen$Cons$1(obj); case obj: Nil$2 => gen$Nil$2(obj)}
 //│ main$$3()
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.299: 	class Cons(e, tail){
+//│ ║  l.293: 	class Cons(e, tail){
 //│ ╙──       	           ^
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.299: 	class Cons(e, tail){
+//│ ║  l.293: 	class Cons(e, tail){
 //│ ╙──       	              ^^^^
 //│ class Cons(e: error, tail: error) {
 //│   fun gen: () -> Cons

@@ -55,9 +55,7 @@ object Helpers:
         s"Encountered unexpected structure when extracting parameters: ${term}"
       )
     })
-    case _ => throw MonomorphError(
-        s"Encountered unexpected structure when extracting parameters: ${showStructure(term)}"
-      )
+    case _ => None //FIXME: Silent failure? Improve semantics
 
   def extractObjParams(term: Term): Iterator[NuParameter] = term match
     case Tup(fields) => fields.iterator.flatMap {
@@ -90,7 +88,7 @@ object Helpers:
     case Lam(Tup(fields), rhs) => Lam(Tup((None, Fld(FldFlags.empty, Var("this")))::fields), rhs)
     case rhs => Lam(Tup((None, Fld(FldFlags.empty, Var("this")))::Nil), rhs)
 
-  // FIXME: Loses tuple information in conversion
+  // OLD FIXME: Loses tuple information in conversion
   def toFuncArgs(term: Term): IterableOnce[Term] = term match
     // The new parser generates `(undefined, )` when no arguments.
     // Let's do this temporary fix.

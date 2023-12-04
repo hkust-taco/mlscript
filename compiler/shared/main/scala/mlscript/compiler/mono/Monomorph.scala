@@ -96,7 +96,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   }
 
   private def nuAddFunction(func: NuFunDef): Unit = {
-    debug.writeLine(s"Adding Function ${func}")
+    //debug.writeLine(s"Adding Function ${func}")
     nuFunImpls.addOne(func.name, (func, MutMap(), func.body match
       case Lam(Tup(params), body) => Some(params.map(_ => BoundedTerm()))
       case _ => None
@@ -346,7 +346,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     val (func, mps, args, res) = nuFunImpls.get(funcName).get
     func.rhs match
       case Left(value) =>
-        val params = extractLamParams(value) // FIXME!!!!
+        val params = extractLamParams(value) 
         val body = params match 
           case Some(_) => extractLamBody(value) 
           case None => value
@@ -368,7 +368,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
         } else {
           debug.writeLine(s"${dbgIndent}No change in bounds of ${funcName}")
         }
-        debug.writeLine(s"old body: ${showStructure(value)} => new body: ${showStructure(nuBody)}")
+        //debug.writeLine(s"old body: ${showStructure(value)} => new body: ${showStructure(nuBody)}")
         nuFunImpls.updateWith(funcName)(_.map(x => {
           VarVal.update(x._4, nuBody.evaledTerm)
           (x._1.copy(rhs = Left(nuBody))(None, None, None, None, false), x._2, x._3, x._4)

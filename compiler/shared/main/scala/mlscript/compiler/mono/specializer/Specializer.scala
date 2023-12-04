@@ -201,8 +201,9 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
   // }(_.expValue)
   
   /*
-    Evaluate a Term given an evaluation Context and return a EvaledTerm
+    Evaluate a Term given an evaluation Context and populate its EvaledTerm
   */
+  val builtInOps: Set[String] = Set("+", "-", ">", "<", "*") 
   def nuEvaluate(term: Term)(using evalCtx: Map[String, BoundedTerm], callingStack: List[String], dbgIndent: String = ""): Term =
     debug.writeLine(s"${dbgIndent}╓Eval ${mlscript.codegen.Helpers.inspect(term)}:")
     val res = term match
@@ -218,6 +219,11 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
           else evalCtx.getOrElse(name, BoundedTerm(monoer.nuFindVar(name)))
         term
       // case Lam(lhs, rhs) => throw MonomorphError("Should not encounter lambda during evaluation process")
+      case App(lhs@Var(name), rhs) if builtInOps.contains(name) => 
+        val nuRhs = nuEvaluate(rhs)(using dbgIndent = "║"++dbgIndent)
+        val res = App(lhs, nuRhs)
+        res.evaledTerm = extractFuncArgs(nuRhs).map(_.evaledTerm).fold(BoundedTerm())(_ ++ _)
+        res
       case App(lhs, rhs) => 
         val nuLhs = nuEvaluate(lhs)(using dbgIndent = "║"++dbgIndent)
         val nuRhs = nuEvaluate(rhs)(using dbgIndent = "║"++dbgIndent)
@@ -257,9 +263,9 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
         then 
           val nuRhs = nuEvaluate(rhs)(using dbgIndent = "║"++dbgIndent)
           val nuBody = nuEvaluate(body)(using evalCtx + (name -> nuRhs.evaledTerm), dbgIndent = "║"++dbgIndent)
-          val ret = Let(rec, Var(name), nuRhs, nuBody)
-          ret.evaledTerm = nuBody.evaledTerm
-          ret
+          val res = Let(rec, Var(name), nuRhs, nuBody)
+          res.evaledTerm = nuBody.evaledTerm
+          res
         else ??? //TODO: letrec
       case Blk(stmts) => 
         val exps = stmts.map{
@@ -281,10 +287,11 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
             val nuCondition = nuEvaluate(condition)(using dbgIndent = "║"++dbgIndent)
             val res = If(IfThen(nuCondition, nuConsequent), nuAlternate)
             res.evaledTerm = nuCondition.evaledTerm.asValue match {
-              case Some(x: LiteralVal) if x.asBoolean().isDefined =>
-                if x.asBoolean().get
-                then nuConsequent.evaledTerm
-                else nuAlternate.map(_.evaledTerm).getOrElse(BoundedTerm(UnknownVal()))
+              // TODO: redundant branch elimination
+              // case Some(x: LiteralVal) if x.asBoolean().isDefined =>
+              //   if x.asBoolean().get
+              //   then nuConsequent.evaledTerm
+              //   else nuAlternate.map(_.evaledTerm).getOrElse(BoundedTerm(UnknownVal()))
               case _ => nuConsequent.evaledTerm ++ nuAlternate.map(_.evaledTerm).getOrElse(BoundedTerm(UnknownVal()))
             }
             res
@@ -410,7 +417,9 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
         case (name, Fld(flags, value)) => (name, Fld(flags, nuDefunctionalize(value)))})
       case If(IfThen(expr, rhs), els) => If(IfThen(nuDefunctionalize(expr), nuDefunctionalize(rhs)), els.map(nuDefunctionalize))
       case New(Some((constructor, args)), body) => New(Some((constructor, nuDefunctionalize(args))), body)
-      case _ => throw MonomorphError(s"Cannot Defunctionalize ${term}")
+      case Sel(receiver, fieldName) => 
+        Sel(nuDefunctionalize(receiver), fieldName)
+      case _ => throw MonomorphError(s"Cannot Defunctionalize ${showStructure(term)}")
     ret
   }
 }
