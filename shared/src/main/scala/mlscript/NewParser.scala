@@ -836,6 +836,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
               R(If(IfThen(e, errExpr), N))
           }
       }
+
       case Nil =>
         err(msg"Unexpected end of $description; an expression was expected here" -> lastLoc :: Nil)
         R(errExpr)
@@ -925,7 +926,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (KEYWORD(opStr @ "=>"), l0) :: _ if opPrec(opStr)._1 > prec =>
         consume
         val rhs = expr(1)(fe, implicitly)
-        exprCont(Lam(PlainTup(acc), rhs), prec, allowNewlines)
+        val res = Lam(PlainTup(acc), rhs)
+        exprCont(res, prec, allowNewlines)
       case (IDENT(".", _), l0) :: (br @ BRACKETS(Square, toks), l1) :: _ =>
         consume
         consume
@@ -938,19 +940,22 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         val v = Var(opStr).withLoc(S(l0))
         // printDbg(s">>> $opStr ${opPrec(opStr)}")
         exprOrIf(opPrec(opStr)._2) match {
-          case L(rhs) => L(IfOpApp(acc, v, rhs))
+          case L(rhs) =>
+            L(IfOpApp(acc, v, rhs))
           case R(rhs) =>
             exprCont(opStr match {
-              case "with" => rhs match {
-                case rhs: Rcd =>
-                  With(acc, rhs)//.withLocOf(term)
-                case Bra(true, rhs: Rcd) =>
-                  With(acc, rhs)//.withLocOf(term)
-                case _ =>
-                  err(msg"record literal expected here; found ${rhs.describe}" -> rhs.toLoc :: Nil)
-                  acc
-              }
-              case ";" => Blk(acc :: rhs :: Nil)
+              case "with" =>
+                rhs match {
+                  case rhs: Rcd =>
+                    With(acc, rhs)//.withLocOf(term)
+                  case Bra(true, rhs: Rcd) =>
+                    With(acc, rhs)//.withLocOf(term)
+                  case _ =>
+                    err(msg"record literal expected here; found ${rhs.describe}" -> rhs.toLoc :: Nil)
+                    acc
+                }
+              case ";" =>
+                Blk(acc :: rhs :: Nil)
               case _ =>
                 if (newDefs) App(v, PlainTup(acc, rhs))
                 else App(App(v, PlainTup(acc)), PlainTup(rhs))
@@ -1218,7 +1223,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   // TODO support comma-less arg blocks...?
   final def args(allowNewlines: Bool, prec: Int = NoElsePrec)(implicit fe: FoundErr, et: ExpectThen): Ls[Opt[Var] -> Fld] =
     // argsOrIf(Nil).map{case (_, L(x))=> ???; case (n, R(x))=>n->x} // TODO
-    argsOrIf(Nil, Nil, allowNewlines, prec)(fe, et).flatMap{case (n, L(x))=> 
+    argsOrIf(Nil, Nil, allowNewlines, prec).flatMap{case (n, L(x))=> 
         err(msg"Unexpected 'then'/'else' clause" -> x.toLoc :: Nil)
         n->Fld(FldFlags.empty, errExpr)::Nil
       case (n, R(x))=>n->x::Nil} // TODO
