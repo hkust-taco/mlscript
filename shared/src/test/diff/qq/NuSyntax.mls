@@ -27,8 +27,45 @@ run(x `=> x)(42)
 `1 `<= `2
 //│ Code[Bool, nothing]
 
+:p
 `1 `* `2 `+ `3
+//│ |`|1| |`|*| |`|2| |`|+| |`|3|
+//│ AST: TypingUnit(Quoted(App(Var(+), Tup(_: Unquoted(Quoted(App(Var(*), Tup(_: Unquoted(Quoted(IntLit(1))), _: Unquoted(Quoted(IntLit(2))))))), _: Unquoted(Quoted(IntLit(3)))))))
+//│ Parsed: code"+(${code"*(${code"1"}, ${code"2"},)"}, ${code"3"},)";
 //│ Code[Int, nothing]
+
+:p
+`1 `* `2 `+ `3 `- `4
+//│ |`|1| |`|*| |`|2| |`|+| |`|3| |`|-| |`|4|
+//│ AST: TypingUnit(Quoted(App(Var(-), Tup(_: Unquoted(Quoted(App(Var(+), Tup(_: Unquoted(Quoted(App(Var(*), Tup(_: Unquoted(Quoted(IntLit(1))), _: Unquoted(Quoted(IntLit(2))))))), _: Unquoted(Quoted(IntLit(3))))))), _: Unquoted(Quoted(IntLit(4)))))))
+//│ Parsed: code"-(${code"+(${code"*(${code"1"}, ${code"2"},)"}, ${code"3"},)"}, ${code"4"},)";
+//│ Code[Int, nothing]
+
+:p
+`1 `+ `2 `* `3
+//│ |`|1| |`|+| |`|2| |`|*| |`|3|
+//│ AST: TypingUnit(Quoted(App(Var(+), Tup(_: Unquoted(Quoted(IntLit(1))), _: Unquoted(Quoted(App(Var(*), Tup(_: Unquoted(Quoted(IntLit(2))), _: Unquoted(Quoted(IntLit(3)))))))))))
+//│ Parsed: code"+(${code"1"}, ${code"*(${code"2"}, ${code"3"},)"},)";
+//│ Code[Int, nothing]
+
+:p
+`1 `+ `2 `* `3 `+ `4
+//│ |`|1| |`|+| |`|2| |`|*| |`|3| |`|+| |`|4|
+//│ AST: TypingUnit(Quoted(App(Var(+), Tup(_: Unquoted(Quoted(App(Var(+), Tup(_: Unquoted(Quoted(IntLit(1))), _: Unquoted(Quoted(App(Var(*), Tup(_: Unquoted(Quoted(IntLit(2))), _: Unquoted(Quoted(IntLit(3))))))))))), _: Unquoted(Quoted(IntLit(4)))))))
+//│ Parsed: code"+(${code"+(${code"1"}, ${code"*(${code"2"}, ${code"3"},)"},)"}, ${code"4"},)";
+//│ Code[Int, nothing]
+
+:e
+:p
+`1 `+ `2 + 3
+//│ |`|1| |`|+| |`|2| |+| |3|
+//│ AST: TypingUnit(App(Var(+), Tup(_: Quoted(App(Var(+), Tup(_: Unquoted(Quoted(IntLit(1))), _: Unquoted(Quoted(IntLit(2)))))), _: IntLit(3))))
+//│ Parsed: +(code"+(${code"1"}, ${code"2"},)", 3,);
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.60: 	`1 `+ `2 + 3
+//│ ║        	^^^^^^^^^^^^
+//│ ╙── expression of type `Code[?a, ?b | ?c]` is not an instance of `Int`
+//│ Int | error
 
 x `=> x `+ `1
 //│ Code[Int -> Int, nothing]
@@ -39,13 +76,13 @@ y `=> `0 `- y
 :e
 z `=> z + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.40: 	z `=> z + 1
+//│ ║  l.77: 	z `=> z + 1
 //│ ║        	      ^^^^^
 //│ ╟── reference of type `Var[?a, ?z]` is not an instance of `Int`
-//│ ║  l.40: 	z `=> z + 1
+//│ ║  l.77: 	z `=> z + 1
 //│ ╙──      	      ^
 //│ ╔══[ERROR] Type mismatch in unquote:
-//│ ║  l.40: 	z `=> z + 1
+//│ ║  l.77: 	z `=> z + 1
 //│ ║        	      ^^^^^
 //│ ╙── operator application of type `Int` is not an instance of `Code[?a, ?b]`
 //│ Code[anything -> error, nothing]
@@ -69,8 +106,8 @@ fun f(x: Code[Int, nothing]) =
 :e
 `let x = `0, y = 1 in x `+ y
 //│ ╔══[ERROR] Type mismatch in unquote:
-//│ ║  l.70: 	`let x = `0, y = 1 in x `+ y
-//│ ║        	                 ^
+//│ ║  l.107: 	`let x = `0, y = 1 in x `+ y
+//│ ║         	                 ^
 //│ ╙── integer literal of type `1` is not an instance of type `Code`
 //│ Code[Int, nothing]
 
@@ -93,19 +130,20 @@ fun foo(x) =
   `if `(1 == 1) then x else `2
 //│ fun foo: forall 'a 'b. Code['a, 'b] -> Code[2 | 'a, 'b]
 
-// `if `1 `< `2 then `0 else `1
 
+`if `1 `< `2 `and `1 `> `2 then `0 else `1
+//│ Code[0 | 1, nothing]
 
 :e
 `(`42)
 //│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.100: 	`(`42)
+//│ ║  l.138: 	`(`42)
 //│ ╙──       	   ^^
 //│ Code[error, nothing]
 
 :e
 `(x `=> x)
 //│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.107: 	`(x `=> x)
+//│ ║  l.145: 	`(x `=> x)
 //│ ╙──       	  ^^^^^^^
 //│ Code[error, nothing]
