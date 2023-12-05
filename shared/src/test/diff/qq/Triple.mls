@@ -31,7 +31,10 @@ code""wrong example""
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.12: 	code""wrong example""
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── applied expression of type `Code[(), nothing]` is not a function
+//│ ╟── quasiquote of type `Code[(), nothing]` is not a function
+//│ ║  l.12: 	code""wrong example""
+//│ ║        	     ^
+//│ ╟── but it flows into applied expression with expected type `?a -> ?b`
 //│ ║  l.12: 	code""wrong example""
 //│ ╙──      	^^^^^^
 //│ error
@@ -42,6 +45,6 @@ code""""hello world""""
 :pe
 code""" "HKUST"
 //│ ╔══[PARSE ERROR] Unmatched opening quasiquote triple
-//│ ║  l.43: 	code""" "HKUST"
+//│ ║  l.46: 	code""" "HKUST"
 //│ ╙──      	^^^^^^^
 //│ "HKUST"

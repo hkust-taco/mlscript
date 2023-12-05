@@ -40,7 +40,10 @@ code"a + a"
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.39: 	code"a + a"
 //│ ║        	     ^^^^^
-//│ ╟── reference of type `Code[error, nothing]` is not an instance of `Int`
+//│ ╟── quasiquote of type `Code[error, nothing]` is not an instance of `Int`
+//│ ║  l.26: 	let a = code"x"
+//│ ║        	             ^
+//│ ╟── but it flows into reference with expected type `Int`
 //│ ║  l.39: 	code"a + a"
 //│ ╙──      	     ^
 //│ Code[Int | error, nothing]
@@ -49,10 +52,13 @@ code"a + a"
 :e
 code"a + b"
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.50: 	code"a + b"
+//│ ║  l.53: 	code"a + b"
 //│ ║        	     ^^^^^
-//│ ╟── reference of type `Code[error, nothing]` is not an instance of `Int`
-//│ ║  l.50: 	code"a + b"
+//│ ╟── quasiquote of type `Code[error, nothing]` is not an instance of `Int`
+//│ ║  l.26: 	let a = code"x"
+//│ ║        	             ^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.53: 	code"a + b"
 //│ ╙──      	     ^
 //│ Code[Int | error, nothing]
 
@@ -60,7 +66,7 @@ code"a + b"
 :e
 code"x + (let x = 2 in x * x)"
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.61: 	code"x + (let x = 2 in x * x)"
+//│ ║  l.67: 	code"x + (let x = 2 in x * x)"
 //│ ╙──      	     ^
 //│ Code[Int, nothing]
 
@@ -73,7 +79,7 @@ code"let x = 1
 ${a} + (let y = 1 in ${b})
 "
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.70: 	let b = code"y"
+//│ ║  l.76: 	let b = code"y"
 //│ ╙──      	             ^
 //│ let a: Code[1, nothing]
 //│ let b: Code[error, nothing]
@@ -92,7 +98,7 @@ let cde_w_unquote = code"${cde}"
 :e
 let cde_w_free_vars = code"let x = 1 in x + y"
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.93: 	let cde_w_free_vars = code"let x = 1 in x + y"
+//│ ║  l.99: 	let cde_w_free_vars = code"let x = 1 in x + y"
 //│ ╙──      	                                            ^
 //│ let cde_w_free_vars: Code[Int, nothing]
 
@@ -104,7 +110,7 @@ let cde_w_unquote_w_free_vars = code"${cde_w_free_vars}"
 :e
 let cde_w_unquote_w_local_free_vars = code"[z, ${cde_w_unquote_w_free_vars}]"
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.105: 	let cde_w_unquote_w_local_free_vars = code"[z, ${cde_w_unquote_w_free_vars}]"
+//│ ║  l.111: 	let cde_w_unquote_w_local_free_vars = code"[z, ${cde_w_unquote_w_free_vars}]"
 //│ ╙──       	                                            ^
 //│ let cde_w_unquote_w_local_free_vars: Code[[error, Int], nothing]
 
@@ -114,7 +120,7 @@ let free_var1 = code"let x = 1 in x + y"
 let free_var2 = code"let i = 1 in i + x"
 let cde_w_mutli_unquote = code"${free_var2} + ${free_var1}"
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.113: 	let free_var1 = code"let x = 1 in x + y"
+//│ ║  l.119: 	let free_var1 = code"let x = 1 in x + y"
 //│ ╙──       	                                      ^
 //│ let free_var1: Code[Int, nothing]
 //│ let free_var2: Code[Int, nothing]
@@ -127,7 +133,7 @@ fun f(x, y) = code"[${x}, ${y}]"
 :e
 let x = code"y"
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.128: 	let x = code"y"
+//│ ║  l.134: 	let x = code"y"
 //│ ╙──       	             ^
 //│ let x: Code[error, nothing]
 
@@ -138,10 +144,10 @@ let c = f(x, x)
 :e
 let cde_arr = code"[${code"y"}, ${code"y"}]"
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.139: 	let cde_arr = code"[${code"y"}, ${code"y"}]"
+//│ ║  l.145: 	let cde_arr = code"[${code"y"}, ${code"y"}]"
 //│ ╙──       	                           ^
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.139: 	let cde_arr = code"[${code"y"}, ${code"y"}]"
+//│ ║  l.145: 	let cde_arr = code"[${code"y"}, ${code"y"}]"
 //│ ╙──       	                                       ^
 //│ let cde_arr: Code[[error, error], nothing]
 
@@ -152,10 +158,10 @@ code"let y = 1 in ${cde_arr}"
 :e
 y => code"[${code"y"}, ${code"y"}]"
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.153: 	y => code"[${code"y"}, ${code"y"}]"
+//│ ║  l.159: 	y => code"[${code"y"}, ${code"y"}]"
 //│ ╙──       	                  ^
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.153: 	y => code"[${code"y"}, ${code"y"}]"
+//│ ║  l.159: 	y => code"[${code"y"}, ${code"y"}]"
 //│ ╙──       	                              ^
 //│ anything -> Code[[error, error], nothing]
 
@@ -181,7 +187,7 @@ code"f(0)"
 // :ge
 code"${code"${code"${z}"}"}"
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.182: 	code"${code"${code"${z}"}"}"
+//│ ║  l.188: 	code"${code"${code"${z}"}"}"
 //│ ╙──       	                     ^
 //│ Code[nothing, nothing]
 
@@ -194,7 +200,7 @@ code"${code"${z}"}"
 :e
 code"let x = 1 in let z = 1 in ${code"x + y"}"
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.195: 	code"let x = 1 in let z = 1 in ${code"x + y"}"
+//│ ║  l.201: 	code"let x = 1 in let z = 1 in ${code"x + y"}"
 //│ ╙──       	                                          ^
 //│ Code[Int, nothing]
 
@@ -205,7 +211,7 @@ code"let z = 0 in ${code"z + 1"}"
 :e
 code"let x = 1 in ${code"x + y"}"
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.206: 	code"let x = 1 in ${code"x + y"}"
+//│ ║  l.212: 	code"let x = 1 in ${code"x + y"}"
 //│ ╙──       	                             ^
 //│ Code[Int, nothing]
 

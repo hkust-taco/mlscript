@@ -1502,18 +1502,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         else {
           val newCtx = ctx.nest.copy(inQuote = true, qenv = MutMap.empty, fvars = MutSet.empty)
           val bodyType = typeTerm(body)(newCtx, raise, vars, genLambdas)
-          TypeRef(TypeName("Code"), bodyType :: newCtx.getCtxTy :: Nil)(noProv)
+          TypeRef(TypeName("Code"), bodyType :: newCtx.getCtxTy :: Nil)(TypeProvenance(body.toLoc, "quasiquote"))
         }
       case Unquoted(body) =>
         if (ctx.inQuote) {
           val newCtx = ctx.nest.copy(inQuote = false)
           val bodyType = typeTerm(body)(newCtx, raise, vars, genLambdas)
-          val res = freshVar(noTyProv, N)
-          val ctxTy = freshVar(noTyProv, N)
+          val res = freshVar(TypeProvenance(body.toLoc, "quasiquote body type"), N)
+          val ctxTy = freshVar(TypeProvenance(body.toLoc, "quasiquote context type"), N)
           val ty =
             con(bodyType, TypeRef(TypeName("Code"), res :: ctxTy :: Nil)(noProv), res)(newCtx)
           ctx.traceFV(ctxTy)
-          ty
+          ty.withProv(TypeProvenance(body.toLoc, "unquote"))
         }
         else err("Unquotes should be enclosed with a quasiquote.", body.toLoc)(raise)
       case Rft(bse, tu) =>
