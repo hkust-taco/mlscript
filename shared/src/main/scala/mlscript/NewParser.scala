@@ -653,7 +653,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 R(Quoted(If(IfThen(Unquoted(cond), Unquoted(body)), els.map(els => Unquoted(els)))).withLoc(S(loc ++ it.toLoc)))
               case _ =>
                 err((msg"quote syntax is not supported yet." -> S(l0) :: Nil))
-                R(Var("<error>"))
+                R(Var("<error>").withLoc(S(l0)))
             }
           case (br @ BRACKETS(bk @ Round, toks), loc) :: _ =>
             consume
@@ -667,7 +667,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           case _ =>
             err((
               msg"quote syntax is not supported yet." -> S(loc) :: Nil))
-            R(Var("<error>"))
+            R(Var("<error>").withLoc(S(loc)))
         }
       case (LITVAL(lit), l0) :: _ =>
         consume
@@ -792,53 +792,53 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (KEYWORD("if"), l0) :: _ =>
         consume
         exprOrIf(0)(et = true, fe = fe, l = implicitly) match {
-        case L(body) =>
-          R(If(body, yeetSpaces match {
-            case (KEYWORD("else"), _) :: _ =>
-              consume
-              S(expr(0))
-            case (NEWLINE, _) :: (KEYWORD("else"), _) :: _ =>
-              consume
-              consume
-              S(expr(0))
-            case (br @ BRACKETS(Indent, (KEYWORD("else"), _) :: toks), _) :: _ =>
-              consume
-              val nested = rec(toks, S(br.innerLoc), br.describe)
-              S(nested.concludeWith(_.expr(0)))
-            case _ => N
-          }))
-        case R(e) =>
-          yeetSpaces match {
-            case (br @ BRACKETS(Indent, (KEYWORD("then"), _) :: toks), _) :: _ =>
-              consume
-              val nested = rec(toks, S(br.innerLoc), br.describe)
-              val thn = nested.expr(0)
-              val els = nested.yeetSpaces match {
-                case (KEYWORD("else"), _) :: _ =>
-                  nested.consume
-                  S(nested.concludeWith(_.expr(0)))
-                case (NEWLINE, _) :: (KEYWORD("else"), _) :: _ =>
-                  nested.consume
-                  nested.consume
-                  // S(thn, S(nested.concludeWith(_.expr(0))))
-                  S(nested.concludeWith(_.expr(0)))
-                case _ =>
-                  nested.concludeWith(_.nil)
-                  // S(thn, N)
-                  N
-              }
-              R(If(IfThen(e, thn), els))
-            case _cur =>
-              val (found, loc) = _cur match {
-                case (tk, l1) :: _ => (msg"${e.describe} followed by ${tk.describe}",
-                  S(e.toLoc.foldRight(l1)(_ ++ _)))
-                case Nil => (msg"${e.describe}", e.toLoc)
-              }
-              err((msg"Expected 'then'/'else' clause after 'if'; found $found instead" -> loc ::
-                msg"Note: 'if' expression starts here:" -> S(l0) :: Nil))
-              R(If(IfThen(e, errExpr), N))
-          }
-      }
+          case L(body) =>
+            R(If(body, yeetSpaces match {
+              case (KEYWORD("else"), _) :: _ =>
+                consume
+                S(expr(0))
+              case (NEWLINE, _) :: (KEYWORD("else"), _) :: _ =>
+                consume
+                consume
+                S(expr(0))
+              case (br @ BRACKETS(Indent, (KEYWORD("else"), _) :: toks), _) :: _ =>
+                consume
+                val nested = rec(toks, S(br.innerLoc), br.describe)
+                S(nested.concludeWith(_.expr(0)))
+              case _ => N
+            }))
+          case R(e) =>
+            yeetSpaces match {
+              case (br @ BRACKETS(Indent, (KEYWORD("then"), _) :: toks), _) :: _ =>
+                consume
+                val nested = rec(toks, S(br.innerLoc), br.describe)
+                val thn = nested.expr(0)
+                val els = nested.yeetSpaces match {
+                  case (KEYWORD("else"), _) :: _ =>
+                    nested.consume
+                    S(nested.concludeWith(_.expr(0)))
+                  case (NEWLINE, _) :: (KEYWORD("else"), _) :: _ =>
+                    nested.consume
+                    nested.consume
+                    // S(thn, S(nested.concludeWith(_.expr(0))))
+                    S(nested.concludeWith(_.expr(0)))
+                  case _ =>
+                    nested.concludeWith(_.nil)
+                    // S(thn, N)
+                    N
+                }
+                R(If(IfThen(e, thn), els))
+              case _cur =>
+                val (found, loc) = _cur match {
+                  case (tk, l1) :: _ => (msg"${e.describe} followed by ${tk.describe}",
+                    S(e.toLoc.foldRight(l1)(_ ++ _)))
+                  case Nil => (msg"${e.describe}", e.toLoc)
+                }
+                err((msg"Expected 'then'/'else' clause after 'if'; found $found instead" -> loc ::
+                  msg"Note: 'if' expression starts here:" -> S(l0) :: Nil))
+                R(If(IfThen(e, errExpr), N))
+            }
+        }
         
       case Nil =>
         err(msg"Unexpected end of $description; an expression was expected here" -> lastLoc :: Nil)

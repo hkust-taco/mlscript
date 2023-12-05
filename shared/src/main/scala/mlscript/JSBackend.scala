@@ -181,6 +181,8 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
 
   case class FreeVars(vs: Set[Str])
 
+  // * Left: the branch is quoted and it has been desugared
+  // * Right: the branch is not quoted and quoted subterms have been desugared
   private def desugarQuotedBranch(branch: CaseBranches)(
     implicit scope: Scope, isQuoted: Bool, freeVars: FreeVars
   ): Either[Term, CaseBranches] = branch match {
