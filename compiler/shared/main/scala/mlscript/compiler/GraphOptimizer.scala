@@ -357,27 +357,29 @@ class GraphOptimizer:
         case _ => throw GraphOptimizingError("only one term is allowed in the top level scope")
       }) { k => k }
       
-      fixCrossReferences(main, defs)
+      fixCrossReferences(main, defs, true)
       validate(main, defs, false)
       GOProgram(clsinfo, defs, main)
 
-  private class FixCrossReferences(defs: Set[GODef]) extends GOIterator:
+  private class FixCrossReferences(defs: Set[GODef], allow_inline_jp: Bool) extends GOIterator:
     override def iterate(x: LetCall) = x match
       case LetCall(resultNames, defnref, args, body) =>
         defs.find{_.getName == defnref.getName} match
           case Some(defn) => defnref.defn = Left(defn)
-          case None => defnref.defn = throw GraphOptimizingError(f"unknown function ${defnref.getName} in ${defs.map{_.getName}.mkString(",")}")
+          case None => throw GraphOptimizingError(f"unknown function ${defnref.getName} in ${defs.map{_.getName}.mkString(",")}")
         body.accept_iterator(this)
     override def iterate(x: Jump) = x match
       case Jump(defnref, _) =>
         // maybe not promoted yet
-        defnref.defn match {
-          case Left(defn) => defs.find{_.getName == defn.name}.map{x => defnref.defn = Left(x)}
-          case Right(name) => defs.find{_.getName == name}.map{x => defnref.defn = Left(x)}
-        }
+        defs.find{_.getName == defnref.getName} match
+          case Some(defn) => defnref.defn = Left(defn)
+          case None =>
+            if (!allow_inline_jp)
+              throw GraphOptimizingError(f"unknown function ${defnref.getName} in ${defs.map{_.getName}.mkString(",")}")
 
-  private def fixCrossReferences(entry: GONode, defs: Set[GODef]): Unit  =
-    val it = FixCrossReferences(defs)
+
+  private def fixCrossReferences(entry: GONode, defs: Set[GODef], allow_inline_jp: Bool = false): Unit  =
+    val it = FixCrossReferences(defs, allow_inline_jp)
     entry.accept_iterator(it)
     defs.foreach(_.body.accept_iterator(it))
 
@@ -462,13 +464,24 @@ class GraphOptimizer:
         }
 
   private object IntroductionAnalysis extends GOIterator:
+    private def combine_intros(xs: Ls[Ls[Opt[Intro]]]): Ls[Opt[Intro]] =
+      val xst = xs.transpose
+      if (xst.exists(x => x.exists(_ != x.head)))
+        xst.map {
+          ys => 
+            val z = ys.flatMap {
+              case None => Set()
+              case Some(IMix(i)) => i
+              case Some(i) => Set(i)
+            }.toSet
+            if z.nonEmpty then Some(IMix(z)) else None
+        }
+      else
+        xs.head
     def getIntro(node: GONode, intros: Map[Str, Intro]): Ls[Opt[Intro]] = node match
       case Case(scrut, cases) => 
         val cases_intros = cases.map { case (cls, node) => getIntro(node, intros) }
-        if (cases_intros.toSet.size > 1)
-          cases_intros.head.map { _ => None }
-        else
-          cases_intros.head
+        combine_intros(cases_intros)
       case Jump(defnref, args) =>
         val jpdef = defnref.expectDefn
         jpdef.activeInputs = updateInputInfo(jpdef, intros, args)
@@ -906,6 +919,8 @@ class GraphOptimizer:
       val dup_defs = fis.dup_defs.toSet
 
       var y = GOProgram(x.classes, x.defs ++ pre_defs ++ post_defs ++ dup_defs, x.main)
+      fixCrossReferences(y.main, y.defs)
+      validate(y.main, y.defs)
       var changed = true
       while (changed)
         val scsr = LocalSplittingCallSiteReplacement(pre_map, post_map, derived_map)
@@ -1093,7 +1108,9 @@ class GraphOptimizer:
     override def visit(x: GOProgram) =
       val clsctx: ClassCtx = x.classes.map{ case ClassInfo(_, name, _) => name }.zip(x.classes).toMap
       fldctx = x.classes.flatMap { case ClassInfo(_, name, fields) => fields.map { fld => (fld, (name, clsctx(name))) } }.toMap
-      GOProgram(x.classes, x.defs.map(_.accept_visitor(this)), x.main.accept_visitor(this))
+      val y = GOProgram(x.classes, x.defs.map(_.accept_visitor(this)), x.main.accept_visitor(this))
+      fixCrossReferences(y.main, y.defs)
+      y
 
   private def expectTexprIsRef(expr: TrivialExpr): Name = expr match {
     case Ref(name) => name
@@ -1382,7 +1399,7 @@ class GraphOptimizer:
     val g2 = activeAnalyze(g1)
 
     val g3 = splitFunction(g2)
-    
+
     val g4 = simplifyProgram(g3)
     val g5 = activeAnalyze(g4)
     

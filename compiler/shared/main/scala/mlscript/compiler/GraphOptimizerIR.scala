@@ -116,11 +116,24 @@ enum Intro:
   case ICtor(c: Str)
   case ILam(n: Int)
   case IMulti(n: Int)
-  
+  case IMix(i: Set[Intro])
+
   override def toString: String = this match
     case ICtor(c) => s"ICtor($c)"
     case ILam(n) => s"ILam($n)"
     case IMulti(n) => s"IMulti($n)"
+    case IMix(i) => s"IMix(${i.toSeq.sorted.mkString(",")})"
+
+  override def equals(o: Any): Boolean = o match
+    case o: Intro if this.isInstanceOf[Intro] =>
+      (o, this) match
+        case (ICtor(c1), ICtor(c2)) => c1 == c2
+        case (ILam(n1), ILam(n2)) => n1 == n2
+        case (IMulti(n1), IMulti(n2)) => n1 == n2
+        case (IMix(i1), IMix(i2)) => 
+          i1 == i2
+        case _ => false
+    case _ => false
 
 implicit object IntroOrdering extends Ordering[Intro]:
   override def compare(a: Intro, b: Intro) = a.toString.compare(b.toString)
@@ -145,6 +158,7 @@ class GODef(
       o.isjp == isjp
       o.params == params &&
       o.resultNum == resultNum &&
+      o.specialized == specialized &&
       o.body == body
     case _ => false
   }
