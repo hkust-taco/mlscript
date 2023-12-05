@@ -64,9 +64,9 @@ run(x `=> x)(42)
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.60: 	1 + `2 `+ `3
 //│ ║        	^^^^^^
-//│ ╟── quasiquote of type `Code[2, nothing]` is not an instance of `Int`
+//│ ╟── code fragment of type `Code[2, nothing]` is not an instance of `Int`
 //│ ║  l.60: 	1 + `2 `+ `3
-//│ ╙──      	     ^
+//│ ╙──      	    ^^
 //│ ╔══[ERROR] Type mismatch in unquote:
 //│ ║  l.60: 	1 + `2 `+ `3
 //│ ║        	^^^^^^
@@ -82,7 +82,7 @@ run(x `=> x)(42)
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.78: 	`1 `+ `2 + 3
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── quasiquote of type `Code[?a, ?b | ?c]` is not an instance of `Int`
+//│ ╟── code fragment of type `Code[?a, ?b | ?c]` is not an instance of `Int`
 //│ ║  l.78: 	`1 `+ `2 + 3
 //│ ╙──      	^^^^^^^^
 //│ Int | error
@@ -158,7 +158,7 @@ fun foo(x) =
 `(`42)
 //│ ╔══[ERROR] Nested quotation is not allowed.
 //│ ║  l.158: 	`(`42)
-//│ ╙──       	   ^^
+//│ ╙──       	  ^^^
 //│ Code[error, nothing]
 
 :e

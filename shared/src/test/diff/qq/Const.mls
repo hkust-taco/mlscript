@@ -17,12 +17,12 @@ code"x => y => 100 + ${Const(x + y)}"
 code"x => y => 100 + code"${Const(x + y)}""
 //│ ╔══[ERROR] Nested quotation is not allowed.
 //│ ║  l.17: 	code"x => y => 100 + code"${Const(x + y)}""
-//│ ╙──      	                          ^^^^^^^^^^^^^^^
+//│ ╙──      	                     ^^^^^^^^^^^^^^^^^^^^^
 //│ Code[anything -> anything -> Int, nothing]
 
 :e
 let res = code"x => code"${x}""
 //│ ╔══[ERROR] Nested quotation is not allowed.
 //│ ║  l.24: 	let res = code"x => code"${x}""
-//│ ╙──      	                         ^^^^
+//│ ╙──      	                    ^^^^^^^^^^
 //│ let res: Code[anything -> error, nothing]

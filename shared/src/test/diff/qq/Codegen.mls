@@ -250,7 +250,7 @@ code"${Const(42)}"
 code"code"42""
 //│ ╔══[ERROR] Nested quotation is not allowed.
 //│ ║  l.250: 	code"code"42""
-//│ ╙──       	          ^^
+//│ ╙──       	     ^^^^^^^^
 //│ Code[error, nothing]
 //│ // Prelude
 //│ class TypingUnit20 {}

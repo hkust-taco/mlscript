@@ -40,9 +40,9 @@ code"a + a"
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.39: 	code"a + a"
 //│ ║        	     ^^^^^
-//│ ╟── quasiquote of type `Code[error, nothing]` is not an instance of `Int`
+//│ ╟── code fragment of type `Code[error, nothing]` is not an instance of `Int`
 //│ ║  l.26: 	let a = code"x"
-//│ ║        	             ^
+//│ ║        	        ^^^^^^^
 //│ ╟── but it flows into reference with expected type `Int`
 //│ ║  l.39: 	code"a + a"
 //│ ╙──      	     ^
@@ -54,9 +54,9 @@ code"a + b"
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.53: 	code"a + b"
 //│ ║        	     ^^^^^
-//│ ╟── quasiquote of type `Code[error, nothing]` is not an instance of `Int`
+//│ ╟── code fragment of type `Code[error, nothing]` is not an instance of `Int`
 //│ ║  l.26: 	let a = code"x"
-//│ ║        	             ^
+//│ ║        	        ^^^^^^^
 //│ ╟── but it flows into reference with expected type `Int`
 //│ ║  l.53: 	code"a + b"
 //│ ╙──      	     ^

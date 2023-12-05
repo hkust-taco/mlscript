@@ -1497,25 +1497,25 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         res
       case Eqn(lhs, rhs) =>
         err(msg"Unexpected equation in this position", term.toLoc)
-      case Quoted(body) =>
-        if (ctx.inQuote) err(msg"Nested quotation is not allowed.", body.toLoc)
+      case q @ Quoted(body) =>
+        if (ctx.inQuote) err(msg"Nested quotation is not allowed.", q.toLoc)
         else {
           val newCtx = ctx.nest.copy(inQuote = true, qenv = MutMap.empty, fvars = MutSet.empty)
           val bodyType = typeTerm(body)(newCtx, raise, vars, genLambdas)
-          TypeRef(TypeName("Code"), bodyType :: newCtx.getCtxTy :: Nil)(TypeProvenance(body.toLoc, "quasiquote"))
+          TypeRef(TypeName("Code"), bodyType :: newCtx.getCtxTy :: Nil)(TypeProvenance(q.toLoc, "code fragment"))
         }
-      case Unquoted(body) =>
+      case uq @ Unquoted(body) =>
         if (ctx.inQuote) {
           val newCtx = ctx.nest.copy(inQuote = false)
           val bodyType = typeTerm(body)(newCtx, raise, vars, genLambdas)
-          val res = freshVar(TypeProvenance(body.toLoc, "quasiquote body type"), N)
-          val ctxTy = freshVar(TypeProvenance(body.toLoc, "quasiquote context type"), N)
+          val res = freshVar(TypeProvenance(uq.toLoc, "code fragment body type"), N)
+          val ctxTy = freshVar(TypeProvenance(body.toLoc, "code fragment context type"), N)
           val ty =
-            con(bodyType, TypeRef(TypeName("Code"), res :: ctxTy :: Nil)(noProv), res)(newCtx)
+            con(bodyType, TypeRef(TypeName("Code"), res :: ctxTy :: Nil)(TypeProvenance(body.toLoc, "unquote body")), res)(newCtx)
           ctx.traceFV(ctxTy)
-          ty.withProv(TypeProvenance(body.toLoc, "unquote"))
+          ty.withProv(TypeProvenance(uq.toLoc, "unquote"))
         }
-        else err("Unquotes should be enclosed with a quasiquote.", body.toLoc)(raise)
+        else err("Unquotes should be enclosed with a quasiquote.", uq.toLoc)(raise)
       case Rft(bse, tu) =>
         err(msg"Refinement terms are not yet supported", term.toLoc)
     }

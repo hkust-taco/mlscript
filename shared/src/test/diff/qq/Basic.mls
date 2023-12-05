@@ -65,7 +65,7 @@ run(tup)
 let code_in_code = code"let x = code"1" in x"
 //│ ╔══[ERROR] Nested quotation is not allowed.
 //│ ║  l.65: 	let code_in_code = code"let x = code"1" in x"
-//│ ╙──      	                                     ^
+//│ ╙──      	                                ^^^^^^^
 //│ let code_in_code: Code[error, nothing]
 
 

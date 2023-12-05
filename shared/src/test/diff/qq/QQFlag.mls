@@ -66,7 +66,7 @@ run(code"let x = 42 in x + 0")
 run(code"code"114"")
 //│ ╔══[ERROR] Nested quotation is not allowed.
 //│ ║  l.66: 	run(code"code"114"")
-//│ ╙──      	              ^^^
+//│ ╙──      	         ^^^^^^^^^
 //│ error
 //│ res
 //│     = Quoted:
