@@ -887,36 +887,27 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           val res = App(Unquoted(acc), Tup(as).withLoc(S(loc)))
           exprCont(Quoted(res), prec, allowNewlines)
         case _ :: (IDENT(opStr, true), l0) :: _ if opPrec(opStr)._1 > prec =>
+          val currentOp = Var(opStr).withLoc(S(l0))
           consume
-          def insQuotes(term: Term, quoted: Bool): (Term, Bool) = term match {
-            // * If this operator is need to be quoted but has not been
-            case App(vop @ Var(op), Tup(lhs :: rhs :: Nil)) if op === opStr && !quoted =>
-              val (qlhs, done) = insQuotes(lhs._2.value, quoted)
-              if (done) App(vop, Tup(lhs._1 -> Fld(lhs._2.flags, qlhs) :: rhs :: Nil)) -> done
-              else Quoted(App(vop, Tup((lhs :: rhs :: Nil).map {
+          def insQuotes(term: Term): Term = term match {
+            // * Find the correct operator and insert quotes and unquotes.
+            case App(vop @ Var(op), Tup(lhs :: rhs :: Nil)) if op === opStr && currentOp.toLoc === vop.toLoc =>
+              Quoted(App(vop, Tup((lhs :: rhs :: Nil).map {
                 case v -> Fld(flags, t) => v -> Fld(flags, Unquoted(t))
-              }))) -> true
-            // * If this operator is not need to be quoted or has been quoted,
-            // * we look into the lhs, since the rhs has been done (higher priorities)
+              })))
+            // * Otherwise, search in LHS, since RHS has been done with higher priorities.
             case App(f, Tup((v -> Fld(flags, t)) :: tail)) =>
-              val (res, done) = insQuotes(t, quoted)
-              (App(f, Tup((v -> Fld(flags, res)) :: tail)), done)
-            case Quoted(body) =>
-              val (res, done) = insQuotes(body, true)
-              (Quoted(res), done)
-            case Unquoted(body) =>
-              val (res, done) = insQuotes(body, false)
-              (Unquoted(res), done)
-            case _ => (term, false)
+              App(f, Tup((v -> Fld(flags, insQuotes(t))) :: tail))
+            case Quoted(body) => Quoted(insQuotes(body))
+            case Unquoted(body) => Unquoted(insQuotes(body))
+            case _ => term
           }
           exprCont(acc, prec, allowNewlines) match {
             case R(term) =>
-              val (res, _) = insQuotes(term, false)
-              R(res)
+              R(insQuotes(term))
             case L(bd) => bd match {
               case IfThen(expr, rhs) =>
-                val (res, _) = insQuotes(expr, false)
-                L(IfThen(res, rhs))
+                L(IfThen(insQuotes(expr), rhs))
               case _ => L(bd)
             }
           }

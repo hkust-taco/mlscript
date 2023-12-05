@@ -57,15 +57,33 @@ run(x `=> x)(42)
 
 :e
 :p
+1 + `2 `+ `3
+//│ |1| |+| |`|2| |`|+| |`|3|
+//│ AST: TypingUnit(Quoted(App(Var(+), Tup(_: Unquoted(App(Var(+), Tup(_: IntLit(1), _: Quoted(IntLit(2))))), _: Unquoted(Quoted(IntLit(3)))))))
+//│ Parsed: code"+(${+(1, code"2",)}, ${code"3"},)";
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.60: 	1 + `2 `+ `3
+//│ ║        	^^^^^^
+//│ ╟── quasiquote of type `Code[2, nothing]` is not an instance of `Int`
+//│ ║  l.60: 	1 + `2 `+ `3
+//│ ╙──      	     ^
+//│ ╔══[ERROR] Type mismatch in unquote:
+//│ ║  l.60: 	1 + `2 `+ `3
+//│ ║        	^^^^^^
+//│ ╙── operator application of type `Int` is not an instance of `Code[?a, ?b]`
+//│ Code[Int, nothing]
+
+:e
+:p
 `1 `+ `2 + 3
 //│ |`|1| |`|+| |`|2| |+| |3|
 //│ AST: TypingUnit(App(Var(+), Tup(_: Quoted(App(Var(+), Tup(_: Unquoted(Quoted(IntLit(1))), _: Unquoted(Quoted(IntLit(2)))))), _: IntLit(3))))
 //│ Parsed: +(code"+(${code"1"}, ${code"2"},)", 3,);
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.60: 	`1 `+ `2 + 3
+//│ ║  l.78: 	`1 `+ `2 + 3
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── quasiquote of type `Code[?a, ?b | ?c]` is not an instance of `Int`
-//│ ║  l.60: 	`1 `+ `2 + 3
+//│ ║  l.78: 	`1 `+ `2 + 3
 //│ ╙──      	^^^^^^^^
 //│ Int | error
 
@@ -78,13 +96,13 @@ y `=> `0 `- y
 :e
 z `=> z + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.79: 	z `=> z + 1
+//│ ║  l.97: 	z `=> z + 1
 //│ ║        	      ^^^^^
 //│ ╟── reference of type `Var[?a, ?z]` is not an instance of `Int`
-//│ ║  l.79: 	z `=> z + 1
+//│ ║  l.97: 	z `=> z + 1
 //│ ╙──      	      ^
 //│ ╔══[ERROR] Type mismatch in unquote:
-//│ ║  l.79: 	z `=> z + 1
+//│ ║  l.97: 	z `=> z + 1
 //│ ║        	      ^^^^^
 //│ ╙── operator application of type `Int` is not an instance of `Code[?a, ?b]`
 //│ Code[anything -> error, nothing]
@@ -108,7 +126,7 @@ fun f(x: Code[Int, nothing]) =
 :e
 `let x = `0, y = 1 in x `+ y
 //│ ╔══[ERROR] Type mismatch in unquote:
-//│ ║  l.109: 	`let x = `0, y = 1 in x `+ y
+//│ ║  l.127: 	`let x = `0, y = 1 in x `+ y
 //│ ║         	                 ^
 //│ ╙── integer literal of type `1` is not an instance of type `Code`
 //│ Code[Int, nothing]
@@ -139,13 +157,13 @@ fun foo(x) =
 :e
 `(`42)
 //│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.140: 	`(`42)
+//│ ║  l.158: 	`(`42)
 //│ ╙──       	   ^^
 //│ Code[error, nothing]
 
 :e
 `(x `=> x)
 //│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.147: 	`(x `=> x)
+//│ ║  l.165: 	`(x `=> x)
 //│ ╙──       	  ^^^^^^^
 //│ Code[error, nothing]
