@@ -61,6 +61,7 @@ object Helpers {
       s"Splc($elems)"
     case If(bod, els) => s"If(${inspect(bod)}, ${els.map(inspect)})"
     case New(base, body) => s"New(${base}, ${inspect(body)})"
+    case NuNew(base) => s"NuNew(${inspect(base)})"
     case TyApp(base, targs) => s"TyApp(${inspect(base)}, ${targs})"
     case Def(rec, nme, rhs, isByname) =>
       s"Def($rec, $nme, ${rhs.fold(inspect, "" + _)}, $isByname)"
@@ -71,6 +72,7 @@ object Helpers {
     case Super() => "Super()"
     case AdtMatchWith(cond, arms) =>
       s"match ${inspect(cond)} with ${arms.map(patmat => s"${inspect(patmat.pat)} -> ${inspect(patmat.rhs)}").mkString(" | ")}"
+    case Rft(bse, tu) => s"Rft(${inspect(bse)}, ...)"
   }
 
   def inspect(body: IfBody): Str = body match {

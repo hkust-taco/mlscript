@@ -6,9 +6,9 @@ class CTX{
   fun foo(f: A => A): (A => A) => A = f(new A)
 }
 //│ |#class| |CTX|{|→|#class| |A| |{||}|↵|#fun| |foo|(|f|#:| |A| |#=>| |A|)|#:| |(|A| |#=>| |A|)| |#=>| |A| |#=| |f|(|#new| |A|)|←|↵|}|
-//│ Parsed: {class CTX {class A {}; fun foo = (f: (A,) => A,) => f(new A([]) {},) : (A -> A) -> A}}
+//│ Parsed: {class CTX {class A {}; fun foo = (f: (A,) => A,) => f(new A,) : (A -> A) -> A}}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, CTX, (), Tup(), (), None, None, TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, foo, None, [], Lam(Tup(f: Lam(Tup(_: Var(A)), Var(A))), Asc(App(Var(f), Tup(_: New(Some((TypeName(A),[])), TypingUnit()))), Function(Tuple(List((None,Field(None,Function(Tuple(List((None,Field(None,TypeName(A))))),TypeName(A)))))),TypeName(A))))))))
+//│ TypingUnit(NuTypeDef(class, CTX, (), Tup(), (), None, None, TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, foo, None, [], Lam(Tup(f: Lam(Tup(_: Var(A)), Var(A))), Asc(App(Var(f), Tup(_: NuNew(Var(A)))), Function(Tuple(List((None,Field(None,Function(Tuple(List((None,Field(None,TypeName(A))))),TypeName(A)))))),TypeName(A))))))))
 //│ Lifted:
 //│ TypingUnit(NuTypeDef(class, CTX$1_A$2, (), Tup(_: Var(par$CTX$1)), (), None, None, TypingUnit()), NuTypeDef(class, CTX$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(f: Lam(Tup(_: Var(CTX$1_A$2)), Var(CTX$1_A$2))), Asc(App(Var(f), Tup(_: New(Some((TypeName(CTX$1_A$2),[this,])), TypingUnit()))), Function(Tuple(List((None,Field(None,Function(Tuple(List((None,Field(None,TypeName(CTX$1_A$2))))),TypeName(CTX$1_A$2)))))),TypeName(CTX$1_A$2))))))))
 //│ TypingUnit {
@@ -88,7 +88,7 @@ class CTX{
     (new CTX).bar<CTX>
 }
 //│ |#class| |CTX|{|→|#fun| |ctx|(|x|,|y|)| |#=| |→|#class| |A|{| |#fun| |foo| |#=| |x| |}|↵|#fun| |bar|‹|T|›|(|any|#:| |T|)|#:| |A| |#=| |→|#let| |x| |#=| |#new| |T|↵|#new| |A|←|↵|(|#new| |CTX|)|.bar|‹|CTX|›|←|←|↵|}|
-//│ Parsed: {class CTX {fun ctx = (x, y,) => {class A {fun foo = x}; fun bar = (any: T,) => {let x = new T([]) {}; new A([]) {}} : A; ('(' new CTX([]) {} ')').bar‹CTX›}}}
+//│ Parsed: {class CTX {fun ctx = (x, y,) => {class A {fun foo = x}; fun bar = (any: T,) => {let x = new T; new A} : A; ('(' new CTX ')').bar‹CTX›}}}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, CTX, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, ctx, None, [], Lam(Tup(_: Var(x), _: Var(y)), Blk(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Var(x)))); NuFunDef(None, bar, None, [TypeName(T)], Lam(Tup(any: Var(T)), Asc(Blk(NuFunDef(Some(false), x, None, [], New(Some((TypeName(T),[])), TypingUnit())); New(Some((TypeName(A),[])), TypingUnit())), TypeName(A)))); TyApp(Sel(Bra(rcd = false, New(Some((TypeName(CTX),[])), TypingUnit())), bar), List(TypeName(CTX)))))))))
 //│ Lifted:

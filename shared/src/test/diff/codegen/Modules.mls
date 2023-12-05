@@ -9,7 +9,6 @@ module test { // hello
 //│ }
 
 
-:ge // * FIXME
 :js
 fun y = 1
 module Foo {
@@ -19,10 +18,36 @@ module Foo {
 //│ module Foo {
 //│   fun x: 1
 //│ }
-//│ Code generation encountered an error:
-//│   unresolved symbol y
+//│ // Prelude
+//│ class TypingUnit1 {
+//│   #Foo;
+//│   constructor() {
+//│   }
+//│   get Foo() {
+//│     const qualifier = this;
+//│     if (this.#Foo === undefined) {
+//│       class Foo {
+//│         constructor() {
+//│         }
+//│         get x() {
+//│           return y();
+//│         }
+//│       }
+//│       this.#Foo = new Foo();
+//│       this.#Foo.class = Foo;
+//│     }
+//│     return this.#Foo;
+//│   }
+//│ }
+//│ const typing_unit1 = new TypingUnit1;
+//│ globalThis.Foo = typing_unit1.Foo;
+//│ // Query 1
+//│ globalThis.y = function y() {
+//│   return 1;
+//│ };
+//│ // End of generated code
 
-:ge // * FIXME
+
 :js
 module Foo {
   fun x = y
@@ -32,7 +57,33 @@ fun y = 1
 //│   fun x: 1
 //│ }
 //│ fun y: 1
-//│ Code generation encountered an error:
-//│   unresolved symbol y
+//│ // Prelude
+//│ class TypingUnit2 {
+//│   #Foo;
+//│   constructor() {
+//│   }
+//│   get Foo() {
+//│     const qualifier = this;
+//│     if (this.#Foo === undefined) {
+//│       class Foo {
+//│         constructor() {
+//│         }
+//│         get x() {
+//│           return y1();
+//│         }
+//│       }
+//│       this.#Foo = new Foo();
+//│       this.#Foo.class = Foo;
+//│     }
+//│     return this.#Foo;
+//│   }
+//│ }
+//│ const typing_unit2 = new TypingUnit2;
+//│ globalThis.Foo = typing_unit2.Foo;
+//│ // Query 1
+//│ globalThis.y1 = function y1() {
+//│   return 1;
+//│ };
+//│ // End of generated code
 
 

@@ -1,13 +1,8 @@
-package mlscript.compiler
+package mlscript
+package compiler
 
-import mlscript.{App, Asc, Assign, Bind, Blk, Bra, CaseOf, Lam, Let, Lit,
-                 New, Rcd, Sel, Subs, Term, Test, Tup, With, Var, Fld, FldFlags, If, PolyType}
-import mlscript.{IfBody, IfThen, IfElse, IfLet, IfOpApp, IfOpsApp, IfBlock}
-import mlscript.UnitLit
 import mlscript.codegen.Helpers.inspect as showStructure
-import mlscript.compiler.mono.MonomorphError
-import mlscript.NuTypeDef
-import mlscript.NuFunDef
+import mlscript.compiler.mono.{Monomorph, MonomorphError}
 import scala.collection.mutable.ArrayBuffer
 import mlscript.CaseBranches
 import mlscript.Case
@@ -114,10 +109,10 @@ object Helpers:
           val params = toFuncParams(args).toList
           Expr.Lambda(params, term2Expr(body))
         case App(App(Var("."), self), App(Var(method), args: Tup)) =>
-          Expr.Apply(Expr.Select(term2Expr(self), Expr.Ref(method)), List.from(toFuncArgs(args).map(term2Expr)))
+          Expr.Apply(Expr.Select(term2Expr(self), Expr.Ref(method)), List.from(toFuncArgs(args).iterator.map(term2Expr)))
         case App(lhs, rhs) =>
           val callee = term2Expr(lhs)
-          val arguments = toFuncArgs(rhs).map(term2Expr).toList
+          val arguments = toFuncArgs(rhs).iterator.map(term2Expr).toList
           Expr.Apply(callee, arguments)
         case Tup(fields) =>
           Expr.Tuple(fields.map {
@@ -187,7 +182,7 @@ object Helpers:
           val typeName = constructor match
             case AppliedType(TypeName(name), _) => name
             case TypeName(name)                 => name
-          Expr.New(TypeName(typeName), toFuncArgs(args).map(term2Expr).toList)
+          Expr.New(TypeName(typeName), toFuncArgs(args).iterator.map(term2Expr).toList)
         // case Blk(unit) => Expr.Isolated(trans2Expr(TypingUnit(unit)))
         case If(body, alternate) => body match
           case IfThen(condition, consequent) =>
@@ -340,7 +335,12 @@ object Helpers:
     })
     val typeDecl: Item.TypeDecl = Item.TypeDecl(
       Expr.Ref(className.name), // name
-      kind, // kind
+      kind match // kind
+        case Als => TypeDeclKind.Alias
+        case Cls => TypeDeclKind.Class
+        case Trt => TypeDeclKind.Trait
+        case _ => throw MonomorphError(s"Unsupported TypeDefKind conversion ${kind}")
+      ,
       tparams.map(_._2), // typeParams
       params.map(toFuncParams(_).toList), // params
       parents.map {

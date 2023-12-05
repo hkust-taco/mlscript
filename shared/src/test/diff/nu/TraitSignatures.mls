@@ -4,7 +4,7 @@
 // * Interfaces that are "callable" are important to support for TS/JS interop
 
 
-declare trait Foo: (x: Num) => Num {
+declare trait Foo: ((x: Num) => Num) {
   val y: Str
 }
 //│ declare trait Foo: (x: Num) -> Num {

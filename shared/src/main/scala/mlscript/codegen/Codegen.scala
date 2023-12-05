@@ -605,9 +605,11 @@ class JSField(`object`: JSExpr, val property: JSIdent) extends JSMember(`object`
     ) ++ SourceCode(
       if (JSField.isValidFieldName(property.name)) {
         s".${property.name}"
-      } else {
-        s"[${JSLit.makeStringLiteral(property.name)}]"
-      }
+      } else
+        property.name.toIntOption match {
+          case S(index) => s"[$index]"
+          case N => s"[${JSLit.makeStringLiteral(property.name)}]"
+        }
     )
 }
 

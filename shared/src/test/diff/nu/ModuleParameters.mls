@@ -12,7 +12,7 @@ module A(x: Int) { fun y = x }
 
 :e
 A
-//│ ╔══[ERROR] Parameterized modules are not supported
+//│ ╔══[ERROR] Parameterized modules are not yet supported
 //│ ║  l.14: 	A
 //│ ╙──      	^
 //│ (x: Int) -> A
@@ -21,7 +21,7 @@ A
 
 :e
 A(123)
-//│ ╔══[ERROR] Parameterized modules are not supported
+//│ ╔══[ERROR] Parameterized modules are not yet supported
 //│ ║  l.23: 	A(123)
 //│ ╙──      	^
 //│ A
@@ -31,7 +31,7 @@ A(123)
 
 :e
 A.x
-//│ ╔══[ERROR] Parameterized modules are not supported
+//│ ╔══[ERROR] Parameterized modules are not yet supported
 //│ ║  l.33: 	A.x
 //│ ╙──      	^
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -46,7 +46,7 @@ A.x
 
 :e
 A.y
-//│ ╔══[ERROR] Parameterized modules are not supported
+//│ ╔══[ERROR] Parameterized modules are not yet supported
 //│ ║  l.48: 	A.y
 //│ ╙──      	^
 //│ ╔══[ERROR] Type mismatch in field selection:

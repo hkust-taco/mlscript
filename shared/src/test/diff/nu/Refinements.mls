@@ -76,28 +76,26 @@ r with { x: 1 }
 //│     = { x: 1 }
 
 
-:pe // TODO support
 :e // TODO support
 let r = new {}
-//│ ╔══[PARSE ERROR] Unexpected record after `new` keyword
-//│ ║  l.81: 	let r = new {}
+//│ ╔══[ERROR] Unexpected type `anything` after `new` keyword
+//│ ║  l.80: 	let r = new {}
 //│ ╙──      	            ^^
-//│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.81: 	let r = new {}
-//│ ╙──      	        ^^^
 //│ let r: error
-//│ r
-//│   = {}
+//│ Code generation encountered an error:
+//│   Unsupported `new` class term: Bra(rcd = true, Rcd())
 
+:ge
 r : Object
 //│ Object
-//│ res
-//│     = {}
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding r
 
+:ge
 r with { x: 1 }
 //│ error & {x: 1}
-//│ res
-//│     = { x: 1 }
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding r
 
 
 let r = { x: 0 }
@@ -108,16 +106,16 @@ let r = { x: 0 }
 :e
 r : Object
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.109: 	r : Object
+//│ ║  l.107: 	r : Object
 //│ ║         	^
 //│ ╟── record literal of type `{x: 0}` is not an instance of type `Object`
-//│ ║  l.103: 	let r = { x: 0 }
+//│ ║  l.101: 	let r = { x: 0 }
 //│ ║         	             ^
 //│ ╟── but it flows into reference with expected type `Object`
-//│ ║  l.109: 	r : Object
+//│ ║  l.107: 	r : Object
 //│ ║         	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.109: 	r : Object
+//│ ║  l.107: 	r : Object
 //│ ╙──       	    ^^^^^^
 //│ Object
 //│ res
@@ -142,16 +140,16 @@ o : {}
 :e
 o : Object
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.143: 	o : Object
+//│ ║  l.141: 	o : Object
 //│ ║         	^
 //│ ╟── type `anything` is not an instance of type `Object`
-//│ ║  l.136: 	fun o : {}
+//│ ║  l.134: 	fun o : {}
 //│ ║         	        ^^
 //│ ╟── but it flows into reference with expected type `Object`
-//│ ║  l.143: 	o : Object
+//│ ║  l.141: 	o : Object
 //│ ║         	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.143: 	o : Object
+//│ ║  l.141: 	o : Object
 //│ ╙──       	    ^^^^^^
 //│ Object
 
@@ -173,10 +171,10 @@ o : Object
 :e
 let d = D & { f: 0 }
 //│ ╔══[ERROR] Illegal use of reserved operator: &
-//│ ║  l.174: 	let d = D & { f: 0 }
+//│ ║  l.172: 	let d = D & { f: 0 }
 //│ ╙──       	          ^
 //│ ╔══[ERROR] identifier not found: &
-//│ ║  l.174: 	let d = D & { f: 0 }
+//│ ║  l.172: 	let d = D & { f: 0 }
 //│ ╙──       	          ^
 //│ let d: error
 
