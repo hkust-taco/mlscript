@@ -12,18 +12,23 @@ import mlscript.compiler.mono.MonomorphError
 
 class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*
-  override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit): (List[Str], Option[TypingUnit]) = 
+  override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (List[Str], Option[TypingUnit]) = 
     val outputBuilder = StringBuilder()
-    outputBuilder ++= "Parsed:\n"
-    outputBuilder ++= showStructure(unit)
+    output("Parsed:")    
+    output(showStructure(unit))
+    //outputBuilder ++= "Parsed:"
+    //outputBuilder ++= showStructure(unit)
 
-    outputBuilder ++= "\nLifted:\n"
+    output("Lifted:")
+    //outputBuilder ++= "\nLifted:\n"
     var rstUnit = unit;
     try
       val lifter = ClassLifter(mode.fullExceptionStack)
       rstUnit = lifter.liftTypingUnit(unit)
-      outputBuilder ++= s"${mlscript.codegen.Helpers.inspect(rstUnit)}\n"
-      outputBuilder ++= PrettyPrinter.showTypingUnit(rstUnit)
+      output(s"${mlscript.codegen.Helpers.inspect(rstUnit)}")
+      output(PrettyPrinter.showTypingUnit(rstUnit))
+      //outputBuilder ++= s"${mlscript.codegen.Helpers.inspect(rstUnit)}\n"
+      //outputBuilder ++= PrettyPrinter.showTypingUnit(rstUnit)
       if (mode.dbgLifting) 
         outputBuilder ++= lifter.getLog
     catch
@@ -32,17 +37,20 @@ class DiffTestCompiler extends DiffTests {
         if mode.fullExceptionStack then 
           outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
     if(mode.mono || mode.numono){
-      outputBuilder ++= "\nMono:\n"
-      val treeDebug = new TreeDebug()
+      output("Mono:")
+      //outputBuilder ++= "\nMono:\n"
+      val treeDebug = new TreeDebug(if mode.dbgDefunc then output else (str) => ())
       try{
         val monomorph = new Monomorph(treeDebug)
         if (mode.numono)
           then
             val defuncAST = monomorph.nuDefunctionalize(rstUnit)
-            outputBuilder ++= s"${mlscript.codegen.Helpers.inspect(defuncAST)}\n"
-            outputBuilder ++= PrettyPrinter.showTypingUnit(defuncAST)++"\n"
-            if mode.dbgDefunc then
-              outputBuilder ++= treeDebug.getLines.mkString("\n")
+            output(s"${mlscript.codegen.Helpers.inspect(defuncAST)}")
+            output(PrettyPrinter.showTypingUnit(defuncAST))
+            //outputBuilder ++= s"${mlscript.codegen.Helpers.inspect(defuncAST)}\n"
+            //outputBuilder ++= PrettyPrinter.showTypingUnit(defuncAST)++"\n"
+            //if mode.dbgDefunc then
+            //  outputBuilder ++= treeDebug.getLines.mkString("\n")
             return (outputBuilder.toString().linesIterator.toList, Some(defuncAST))
           else
             val monomorphized = monomorph.defunctionalize(rstUnit)

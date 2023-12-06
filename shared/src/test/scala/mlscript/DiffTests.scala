@@ -54,7 +54,7 @@ class DiffTests
   
   
   /**  Hook for dependent projects, like the monomorphizer. */
-  def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit): (Ls[Str], Option[TypingUnit]) = (Nil, None)
+  def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (Ls[Str], Option[TypingUnit]) = (Nil, None)
   
   
   @SuppressWarnings(Array("org.wartremover.warts.RedundantIsInstanceOf"))
@@ -444,7 +444,7 @@ class DiffTests
             if (mode.showParse)
               output("AST: " + mlscript.codegen.Helpers.inspect(res))
             
-            val (postLines, nuRes) = postProcess(mode, basePath, testName, res)
+            val (postLines, nuRes) = postProcess(mode, basePath, testName, res, output)
             postLines.foreach(output)            
             
             if (parseOnly)

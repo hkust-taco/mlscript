@@ -5,6 +5,12 @@
 1
 2
 3
+//│ Parsed:
+//│ TypingUnit(IntLit(1), IntLit(2), IntLit(3))
+//│ Lifted:
+//│ TypingUnit(IntLit(1), IntLit(2), IntLit(3))
+//│ TypingUnit {Code(List(1)); Code(List(2)); Code(List(3))}
+//│ Mono:
 //│ /!!!\ Uncaught error: java.util.NoSuchElementException: None.get
 //│ 	at: scala.None$.get(Option.scala:627)
 //│ 	at: scala.None$.get(Option.scala:626)

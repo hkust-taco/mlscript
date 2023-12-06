@@ -13,13 +13,6 @@ class Foo() {fun f() = 0}
 //│   Code(List((([Foo$1(),]).0).f()))
 //│ }
 //│ Mono:
-//│ TypingUnit(NuTypeDef(class, Foo$1, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, f$Foo$1, None, [], Lam(Tup(_: Var(this)), IntLit(0))), NuFunDef(None, main$$1, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], Sel(Tup(_: App(Var(Foo$1), Tup())), 0)); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Foo$1), App(Var(f$Foo$1), Tup(_: Var(obj)))))), None)))), App(Var(main$$1), Tup()))
-//│ TypingUnit {
-//│   class Foo$1([]) {}
-//│   fun f$Foo$1 = (this,) => 0
-//│   fun main$$1 = () => {let obj = ([Foo$1(),]).0; if obj is ‹(Foo$1) then f$Foo$1(obj,)›}
-//│   Code(List(main$$1()))
-//│ }
 //│ Queue: HashSet(main$$1)
 //│ Evaluating main$$1
 //│ ╓Eval App(Sel(Sel(Tup(_: App(Var(Foo$1), Tup())), 0), f), Tup()):
@@ -48,6 +41,13 @@ class Foo() {fun f() = 0}
 //│ Sel(Tup(_: App(Var(Foo$1), Tup())), 0)
 //│ Expanding List(ObjVal(Foo$1, HashMap()))
 //│ Expanding List()
+//│ TypingUnit(NuTypeDef(class, Foo$1, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, f$Foo$1, None, [], Lam(Tup(_: Var(this)), IntLit(0))), NuFunDef(None, main$$1, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], Sel(Tup(_: App(Var(Foo$1), Tup())), 0)); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Foo$1), App(Var(f$Foo$1), Tup(_: Var(obj)))))), None)))), App(Var(main$$1), Tup()))
+//│ TypingUnit {
+//│   class Foo$1([]) {}
+//│   fun f$Foo$1 = (this,) => 0
+//│   fun main$$1 = () => {let obj = ([Foo$1(),]).0; if obj is ‹(Foo$1) then f$Foo$1(obj,)›}
+//│   Code(List(main$$1()))
+//│ }
 //│ class Foo$1()
 //│ fun f$Foo$1: anything -> 0
 //│ fun main$$1: () -> 0
@@ -70,10 +70,21 @@ x.y.f
 //│   Code(List(((x$2()).y).f))
 //│ }
 //│ Mono:
+//│ Queue: HashSet(main$$2)
+//│ Evaluating main$$2
+//│ ╓Eval Sel(Sel(App(Var(x$2), Tup()), y), f):
+//│ ║╓Eval Sel(App(Var(x$2), Tup()), y):
+//│ ║║╓Eval App(Var(x$2), Tup()):
+//│ ║║║╓Eval Var(x$2):
+//│ ║║║╙Result List(TypeVal(x$2)):
+//│ ║║║╓Eval Tup():
+//│ ║║║╙Result List(TupVal(Map())):
+//│ ║║╙Result List(ObjVal(x$2, HashMap())):
+//│ ║╙Result List(FuncVal(y$x$2, None, List((this,ObjVal(x$2, HashMap()))))):
 //│ Cannot select from non-object value FuncVal(y$x$2, None, List((this,ObjVal(x$2, HashMap()))))
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 //│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.DiffTests.$anonfun$new$29(DiffTests.scala:453)
+//│ 	at: mlscript.DiffTests.$anonfun$new$30(DiffTests.scala:453)
 //│ 	at: scala.Option.getOrElse(Option.scala:201)
 //│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:453)
 //│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1080)
