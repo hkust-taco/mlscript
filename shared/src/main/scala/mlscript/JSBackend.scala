@@ -201,7 +201,12 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     case NoCases => if (isQuoted) L(createASTCall("NoCases", Nil)) else R(NoCases)
   }
 
-  private def toJSOperator(op: Str) = op.takeWhile(_ =/= '.')
+  private def toJSOperator(op: Str) = op match {
+    case "+." => "+"
+    case "-." => "-"
+    case "*." => "*"
+    case _ => op
+  }
 
   // * Desugar `Quoted` into AST constructor invokations.
   // * e.g., `42 will be translated into Quoted(IntLit(42)),
