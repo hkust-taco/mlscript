@@ -36,7 +36,7 @@ import mlscript.NuDecl
 import mlscript.TypingUnit
 import mlscript.compiler.Helpers.extractLamParams
 import mlscript.compiler.Helpers.toTuple
-import mlscript.{MonoVal, TypeVal, ObjVal, FuncVal, LiteralVal, PrimVal, VarVal, UnknownVal, BoundedTerm}
+import mlscript.{MonoVal, TypeVal, ObjVal, FuncVal, LiteralVal, PrimVal, VarVal, TupVal, UnknownVal, BoundedTerm}
 import mlscript.compiler.Helpers.extractFuncArgs
 
 class Specializer(monoer: Monomorph)(using debug: Debug){
@@ -253,6 +253,10 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
             obj.fields.get(fieldName.name) match
               case Some(fld) => fld
               case None => monoer.nuGetFieldVal(obj, fieldName.name)
+          case tup: TupVal =>
+            tup.fields.get(fieldName) match
+              case Some(fld) => fld
+              case None => throw MonomorphError(s"Invalid selction ${fieldName} from Tuple")
           // case func: FuncVal =>
           //   monoer.nuGetFuncRetVal
           case other => throw MonomorphError(s"Cannot select from non-object value ${other}")
@@ -303,9 +307,11 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
         res.evaledTerm = nuTerm.evaledTerm
         res
       case Tup(fields) => // TODO: give evaledTerm?
-        Tup(fields.map{
+        val res = Tup(fields.map{
           case (name, Fld(flags, value)) => (name, Fld(flags, nuEvaluate(value)(using dbgIndent = "║"++dbgIndent)))
         }) 
+        res.evaledTerm = BoundedTerm(monoer.createTupVal(res.fields.map{case (name, Fld(flags, value)) => value.evaledTerm}))
+        res
       // case Bra(rcd, term) => ???
       // case _: Bind => ???
       // case _: Test => ???

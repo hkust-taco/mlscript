@@ -236,7 +236,7 @@ let x() = 2
 //│   #2
 //│ let x$1: () -> 2
 //│ x$1
-//│     = [Function: x$13]
+//│     = [Function: x$17]
 
 :mono
 :rc

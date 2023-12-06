@@ -21,7 +21,7 @@ import mlscript.codegen.Helpers.inspect as showStructure
 import mlscript.compiler.printer.ExprPrinter
 import mlscript.compiler.mono.specializer.BoundedExpr
 import mlscript.compiler.mono.specializer.{MonoValue, TypeValue, ObjectValue, UnknownValue, FunctionValue, VariableValue}
-import mlscript.{MonoVal, TypeVal, ObjVal, FuncVal, LiteralVal, PrimVal, VarVal, UnknownVal, BoundedTerm}
+import mlscript.{MonoVal, TypeVal, ObjVal, FuncVal, LiteralVal, PrimVal, VarVal, TupVal, UnknownVal, BoundedTerm}
 
 class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   import Helpers._
@@ -453,8 +453,11 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
         val ags = (params match
           case Some(p) => extractObjParams(p).map(_._2.name).zip(args).toList // FIXME: Different structure for Obj Params
           case None => Nil)
-        ObjVal(tpName, MutMap(ags: _*))
+        ObjVal(tpName, MutMap(ags: _*)) // TODO: parent object fields
       case None => throw MonomorphError(s"TypeName ${tpName} not found in implementations ${nuAllTypeImpls}")
+
+  def createTupVal(fields: List[BoundedTerm]): TupVal = 
+    TupVal(fields.zipWithIndex.map((term, i) => (Var(i.toString()) -> term)).toMap)
 
   def getFieldVal(obj: ObjectValue, field: String): BoundedExpr = 
     debug.trace("SPEC SEL", s"$obj :: $field"){

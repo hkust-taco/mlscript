@@ -55,7 +55,7 @@ class G() {
 }
 (new G).x
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, G, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(5)))), Sel(Bra(rcd = false, New(Some((TypeName(G),[])), TypingUnit())), x))
+//│ TypingUnit(NuTypeDef(class, G, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(5)))), Sel(Bra(rcd = false, NuNew(Var(G))), x))
 //│ Lifted:
 //│ TypingUnit(NuTypeDef(class, G$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(5)))), Sel(Bra(rcd = false, New(Some((TypeName(G$1),[])), TypingUnit())), x))
 //│ TypingUnit {
@@ -77,7 +77,8 @@ class G() {
 //│ }
 //│ 5
 //│ res
-//│     = 5
+//│ Runtime error:
+//│   TypeError: G.class.x is not a constructor
 
 :mono
 :rc
@@ -86,7 +87,7 @@ class M(num: Int) {
 }
 (new M(6)).get()
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, M, (), Tup(num: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, get, None, [], Lam(Tup(), Var(num))))), App(Sel(Bra(rcd = false, New(Some((TypeName(M),[6,])), TypingUnit())), get), Tup()))
+//│ TypingUnit(NuTypeDef(class, M, (), Tup(num: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, get, None, [], Lam(Tup(), Var(num))))), App(Sel(Bra(rcd = false, App(NuNew(Var(M)), Tup(_: IntLit(6)))), get), Tup()))
 //│ Lifted:
 //│ TypingUnit(NuTypeDef(class, M$1, (), Tup(num: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, get, None, [], Lam(Tup(), Sel(Var(this), num))))), App(Sel(Bra(rcd = false, New(Some((TypeName(M$1),[6,])), TypingUnit())), get), Tup()))
 //│ TypingUnit {
@@ -103,6 +104,8 @@ class M(num: Int) {
 //│ fun main$$1() =
 //│   new M$1 (#6)  match {case obj: M$1 => get$M$1(obj)}
 //│ main$$1()
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ╙──
 //│ ╔══[ERROR] identifier not found: obj
 //│ ╙──
 //│ class M$1(num: Int)

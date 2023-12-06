@@ -1077,6 +1077,7 @@ trait MonoValImpl { self: MonoVal =>
     case LiteralVal(i) => s"LiteralVal(${i})"
     case ObjVal(name, fields) => s"ObjVal(${name}, ${fields})"
     case TypeVal(name) => s"TypeVal(${name})"
+    case TupVal(fields) => s"TupVal(${fields})"
     case _: MonoVal => "other val"
   }
 }

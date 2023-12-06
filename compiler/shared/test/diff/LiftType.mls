@@ -90,7 +90,7 @@ class CTX{
 //│ |#class| |CTX|{|→|#fun| |ctx|(|x|,|y|)| |#=| |→|#class| |A|{| |#fun| |foo| |#=| |x| |}|↵|#fun| |bar|‹|T|›|(|any|#:| |T|)|#:| |A| |#=| |→|#let| |x| |#=| |#new| |T|↵|#new| |A|←|↵|(|#new| |CTX|)|.bar|‹|CTX|›|←|←|↵|}|
 //│ Parsed: {class CTX {fun ctx = (x, y,) => {class A {fun foo = x}; fun bar = (any: T,) => {let x = new T; new A} : A; ('(' new CTX ')').bar‹CTX›}}}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, CTX, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, ctx, None, [], Lam(Tup(_: Var(x), _: Var(y)), Blk(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Var(x)))); NuFunDef(None, bar, None, [TypeName(T)], Lam(Tup(any: Var(T)), Asc(Blk(NuFunDef(Some(false), x, None, [], New(Some((TypeName(T),[])), TypingUnit())); New(Some((TypeName(A),[])), TypingUnit())), TypeName(A)))); TyApp(Sel(Bra(rcd = false, New(Some((TypeName(CTX),[])), TypingUnit())), bar), List(TypeName(CTX)))))))))
+//│ TypingUnit(NuTypeDef(class, CTX, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, ctx, None, [], Lam(Tup(_: Var(x), _: Var(y)), Blk(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Var(x)))); NuFunDef(None, bar, None, [TypeName(T)], Lam(Tup(any: Var(T)), Asc(Blk(NuFunDef(Some(false), x, None, [], NuNew(Var(T))); NuNew(Var(A))), TypeName(A)))); TyApp(Sel(Bra(rcd = false, NuNew(Var(CTX))), bar), List(TypeName(CTX)))))))))
 //│ Lifted:
 //│ Lifting failed: mlscript.codegen.CodeGenError: Cannot find type T. Class values are not supported in lifter. 
 //│ 

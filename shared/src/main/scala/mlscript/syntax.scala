@@ -272,7 +272,7 @@ final case class UnknownVal() extends MonoVal
 final case class VarVal(vx: Int, version: Int) extends MonoVal with VarValImpl
 final case class LiteralVal(i: Lit \/ Boolean) extends MonoVal with LitValImpl
 final case class PrimVal() extends MonoVal
-final case class TupVal(flds: List[MonoVal]) extends MonoVal
+final case class TupVal(fields: Map[Var, BoundedTerm]) extends MonoVal
 
 object VarVal {
   var vxCnt: Int = 0
