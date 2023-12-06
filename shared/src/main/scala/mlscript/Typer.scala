@@ -74,6 +74,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   ) {
     def +=(b: Str -> TypeInfo): Unit = {
       env += b
+      // * For lambdas and let bindings, we should not have bindings with the same name in one context.
+      // * This check (`!qenv.contains(b._1)`) is for UCS desugared terms that contain bindings and it is safe to share the same skolem tag
+      // * since the temporary variables are always bound.
       if (inQuote && !qenv.contains(b._1)) {
         val tag = SkolemTag(freshVar(NoProv, N, nameHint = S(b._1))(lvl))(NoProv)
         println(s"Create skolem tag $tag for ${b._2} in quasiquote.")
@@ -1039,13 +1042,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise)
       case Lam(pat, body) if ctx.inQuote =>
         println(s"TYPING QUOTED LAM")
-        ctx.nest.copy(fvars = MutSet.empty).poly { newCtx =>
+        ctx.nest.copy(qenv = MutMap.empty, fvars = MutSet.empty).poly { newCtx =>
           val param_ty = typePattern(pat)(newCtx, raise, vars)
           val body_ty = typeTerm(body)(newCtx, raise, vars,
             generalizeCurriedFunctions || doGenLambdas && constrainedTypes)
           val res = freshVar(noTyProv, N)(ctx.lvl)
           val ctxTy = freshVar(noTyProv, N)(ctx.lvl)
-          con(newCtx.getCtxTy, ctx.qenv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res), res)(ctx)
+          con(newCtx.getCtxTy, newCtx.qenv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res), res)(ctx)
           ctx.traceFV(ctxTy)
           FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
         }
@@ -1260,14 +1263,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case Let(isrec, nme, rhs, bod) =>
         if (ctx.inQuote) {
           val rhs_ty = typeTerm(rhs)
-          ctx.nest.copy(fvars = MutSet.empty).poly {
+          ctx.nest.copy(qenv = MutMap.empty, fvars = MutSet.empty).poly {
             newCtx => {
               newCtx += nme.name -> VarSymbol(rhs_ty, nme)
               val res_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
 
               val res = freshVar(noTyProv, N)(ctx.lvl)
               val ctxTy = freshVar(noTyProv, N)(ctx.lvl)
-              con(newCtx.getCtxTy, ctx.qenv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res), res)(ctx)
+              con(newCtx.getCtxTy, newCtx.qenv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res), res)(ctx)
               ctx.traceFV(ctxTy)
               res_ty
             }
