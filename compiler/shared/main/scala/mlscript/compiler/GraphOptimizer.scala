@@ -636,7 +636,7 @@ class GraphOptimizer:
 
   private class FunctionIndirectSplitting(worklist: Map[Str, Set[Str]]) extends GOIterator, GOVisitor:
     val dup_defs = MutHSet[GODef]()
-    val dup_map = MutHMap[Str, Str]()
+    val dup_map = MutHMap[(Str, Ls[Opt[Intro]]), Str]()
 
     override def iterate(x: GODef): Unit =
       if (worklist.contains(x.name))
@@ -644,7 +644,7 @@ class GraphOptimizer:
           val y = x.accept_visitor(CopyDefinition)
           y.specialized = Some(input)
           dup_defs.add(y)
-          dup_map.update(x.name, y.name)
+          dup_map.update((x.name, input), y.name)
         }
   
   private def bindIntroInfo(intros: Map[Str, Intro], args: Ls[TrivialExpr], params: Ls[Name]) =
@@ -824,7 +824,7 @@ class GraphOptimizer:
       )
 
   private class LocalIndirectSplittingCallSiteReplacement(
-    dup_map: Map[Str, Str],
+    dup_map: Map[(Str, Ls[Opt[Intro]]), Str],
   ) extends GOVisitor:
     var intros = Map.empty[Str, Intro]
     var changed = false
@@ -833,37 +833,32 @@ class GraphOptimizer:
         intros = IntroductionAnalysis.getIntro(e1, intros).map { y => Map(x.str -> y) }.getOrElse(intros)
         LetExpr(x, e1, e2.accept_visitor(this))
     
-    private def getPossibleSplitting(name: Str, intros: Map[Str, Intro], args: Ls[TrivialExpr], params: Ls[Name], active: Ls[Set[Elim]]): Bool =
-      args.map {
+    private def getPossibleSplitting(name: Str, intros: Map[Str, Intro], args: Ls[TrivialExpr]) =
+      val i = args.map {
         case x: Ref => intros.get(x.name.str)
         case _ => None
-      }.zip(params).zip(active).foreach {
-        case ((Some(ICtor(cls)), Name(param)), elim) if elim.contains(EIndirectDestruct) =>
-          if (dup_map.contains(name))
-            return true
-        case y @ _ =>
       }
-      return false
+      dup_map.get((name, i))
 
     override def visit(x: Jump) = x match
       case Jump(defnref, as) =>
         val defn = defnref.expectDefn
-        if (getPossibleSplitting(defn.name, intros, as, defn.params, defn.activeParams))
-          changed = true
-          val new_name = dup_map(defn.name)
-          Jump(GODefRef(Right(new_name)), as)
-        else
-          x
+        getPossibleSplitting(defn.name, intros, as) match
+          case Some(new_name) =>
+            changed = true
+            Jump(GODefRef(Right(new_name)), as)
+          case None =>
+            x
     
     override def visit(x: LetCall) = x match
       case LetCall(xs, defnref, as, e) =>
         val defn = defnref.expectDefn
-        if (getPossibleSplitting(defn.name, intros, as, defn.params, defn.activeParams))
-          changed = true
-          val new_name = dup_map(defn.name)
-          LetCall(xs, GODefRef(Right(new_name)), as, e.accept_visitor(this))
-        else
-          LetCall(xs, defnref, as, e.accept_visitor(this))
+        getPossibleSplitting(defn.name, intros, as) match
+          case Some(new_name) =>
+            changed = true
+            LetCall(xs, GODefRef(Right(new_name)), as, e.accept_visitor(this))
+          case None =>
+            LetCall(xs, defnref, as, e.accept_visitor(this))
     
     override def visit(x: GODef) =
       intros = x.specialized.map(bindIntroInfoUsingInput(Map.empty, _, x.params)).getOrElse(Map.empty)
