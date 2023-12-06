@@ -289,61 +289,16 @@ count(new List(new List(new Nil(undefined, false), true), true))
 //│ res
 //│     = 2
 
-:mono
-class Cons(e, tail){
-  fun gen() = new Cons(e, tail.gen())
-}
-class Nil(){
-  fun gen() = new Cons(0, this)
-}
-fun generate(x) = 
-  if x > 0 then new Cons(x, generate(x+1)) else new Nil()
-generate(10).gen()
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, Cons, (), Tup(_: Var(e), _: Var(tail)), (), None, None, TypingUnit(NuFunDef(None, gen, None, [], Lam(Tup(), App(NuNew(Var(Cons)), Tup(_: Var(e), _: App(Sel(Var(tail), gen), Tup()))))))), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, gen, None, [], Lam(Tup(), App(NuNew(Var(Cons)), Tup(_: IntLit(0), _: Var(this))))))), NuFunDef(None, generate, None, [], Lam(Tup(_: Var(x)), Blk(If(IfThen(App(Var(>), Tup(_: Var(x), _: IntLit(0))), App(NuNew(Var(Cons)), Tup(_: Var(x), _: App(Var(generate), Tup(_: App(Var(+), Tup(_: Var(x), _: IntLit(1)))))))), Some(App(NuNew(Var(Nil)), Tup())))))), App(Sel(App(Var(generate), Tup(_: IntLit(10))), gen), Tup()))
-//│ Lifted:
-//│ TypingUnit(NuTypeDef(class, Cons$1, (), Tup(_: Var(e), _: Var(tail)), (), None, None, TypingUnit(NuFunDef(None, gen, None, [], Lam(Tup(), New(Some((TypeName(Cons$1),[(this).e, ((this).tail).gen(),])), TypingUnit()))))), NuTypeDef(class, Nil$2, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, gen, None, [], Lam(Tup(), New(Some((TypeName(Cons$1),[0, this,])), TypingUnit()))))), NuFunDef(None, generate$1, None, [], Lam(Tup(_: Var(x)), Blk(If(IfThen(App(Var(>), Tup(_: Var(x), _: IntLit(0))), New(Some((TypeName(Cons$1),[x, generate$1(+(x, 1,),),])), TypingUnit())), Some(New(Some((TypeName(Nil$2),[])), TypingUnit())))))), App(Sel(App(Var(generate$1), Tup(_: IntLit(10))), gen), Tup()))
-//│ TypingUnit {
-//│   class Cons$1([e, tail,]) {
-//│     fun gen = () => new Cons$1([(this).e, ((this).tail).gen(),]) {}
-//│   }
-//│   class Nil$2([]) {fun gen = () => new Cons$1([0, this,]) {}}
-//│   fun generate$1 = (x,) => {if (>(x, 0,)) then new Cons$1([x, generate$1(+(x, 1,),),]) {} else new Nil$2([]) {}}
-//│   Code(List((generate$1(10,)).gen()))
-//│ }
-//│ Mono:
-//│ 
-//│ Defunc result: 
-//│ class Nil$2() {
-//│ }
-//│ class Cons$1(e, tail) {
-//│ }
-//│ fun gen$Cons$1(this) =
-//│   new Cons$1 (this.e, this.tail match {case obj: Cons$1 => gen$Cons$1(obj); case obj: Nil$2 => gen$Nil$2(obj)}) 
-//│ fun generate$1(x) =
-//│   if >(x, #0) then new Cons$1 (x, generate$1(+(x, #1)))  else new Nil$2 () 
-//│ fun gen$Nil$2(this) =
-//│   new Cons$1 (#0, this) 
-//│ fun main$$3() =
-//│   generate$1(#10) match {case obj: Cons$1 => gen$Cons$1(obj); case obj: Nil$2 => gen$Nil$2(obj)}
-//│ main$$3()
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.304: 	class Cons(e, tail){
-//│ ╙──       	           ^
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.304: 	class Cons(e, tail){
-//│ ╙──       	              ^^^^
-//│ class Cons(e: error, tail: error) {
-//│   fun gen: () -> Cons
-//│ }
-//│ class Nil() {
-//│   fun gen: () -> Cons
-//│ }
-//│ fun generate: nothing -> (Cons | Nil)
-//│ Cons
-//│ res
-//│ Runtime error:
-//│   RangeError: Maximum call stack size exceeded
+//:mono
+//class Cons(e, tail){
+//  fun gen() = new Cons(e, tail.gen())
+//}
+//class Nil(){
+//  fun gen() = new Cons(0, this)
+//}
+//fun generate(x) = 
+//  if x > 0 then new Cons(x, generate(x+1)) else new Nil()
+//generate(10).gen()
 
 :mono
 class List(e: Int, tail: List | Nil) {

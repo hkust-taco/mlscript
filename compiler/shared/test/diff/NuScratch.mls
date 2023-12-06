@@ -1,5 +1,28 @@
 :NewDefs
 
+let a = 5
+fun foo() =
+    let b = a
+    b+2
+foo()
+//│ Parsed:
+//│ TypingUnit(NuFunDef(Some(false), a, None, [], IntLit(5)), NuFunDef(None, foo, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), b, None, [], Var(a)); App(Var(+), Tup(_: Var(b), _: IntLit(2)))))), App(Var(foo), Tup()))
+//│ Lifted:
+//│ TypingUnit(NuFunDef(Some(false), a$1, None, [], IntLit(5)), NuFunDef(Some(false), b$3, None, [], Var(a$1)), NuFunDef(None, foo$2, None, [], Lam(Tup(), Blk(App(Var(+), Tup(_: Var(b$3), _: IntLit(2)))))), App(Var(foo$2), Tup()))
+//│ TypingUnit {
+//│   let a$1 = 5
+//│   let b$3 = a$1
+//│   fun foo$2 = () => {+(b$3, 2,)}
+//│   Code(List(foo$2()))
+//│ }
+//│ let a: 5
+//│ fun foo: () -> Int
+//│ Int
+//│ a
+//│   = 5
+//│ res
+//│     = 7
+
 :mono
 val b =
     let a(x) = x
@@ -49,71 +72,18 @@ lambda(1)(2)
 //│ res
 //│     = 3
 
-:mono
-class G() {
-    val x = 5
-}
-(new G).x
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, G, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(5)))), Sel(Bra(rcd = false, NuNew(Var(G))), x))
-//│ Lifted:
-//│ TypingUnit(NuTypeDef(class, G$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(5)))), Sel(Bra(rcd = false, New(Some((TypeName(G$1),[])), TypingUnit())), x))
-//│ TypingUnit {
-//│   class G$1([]) {let x = 5}
-//│   Code(List(('(' new G$1([]) {} ')').x))
-//│ }
-//│ Mono:
-//│ 
-//│ Defunc result: 
-//│ class G$1() {
-//│ }
-//│ let x$G$1(this) =
-//│   #5
-//│ fun main$$1() =
-//│   new G$1 () .x
-//│ main$$1()
-//│ class G() {
-//│   val x: 5
-//│ }
-//│ 5
-//│ res
-//│ Runtime error:
-//│   TypeError: G.class.x is not a constructor
+//:mono
+//class G() {
+//    val x = 5
+//}
+//(new G).x
 
-:mono
-:rc
-class M(num: Int) {
-    fun get() = num
-}
-(new M(6)).get()
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, M, (), Tup(num: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, get, None, [], Lam(Tup(), Var(num))))), App(Sel(Bra(rcd = false, App(NuNew(Var(M)), Tup(_: IntLit(6)))), get), Tup()))
-//│ Lifted:
-//│ TypingUnit(NuTypeDef(class, M$1, (), Tup(num: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, get, None, [], Lam(Tup(), Sel(Var(this), num))))), App(Sel(Bra(rcd = false, New(Some((TypeName(M$1),[6,])), TypingUnit())), get), Tup()))
-//│ TypingUnit {
-//│   class M$1([num: Int,]) {fun get = () => (this).num}
-//│   Code(List(('(' new M$1([6,]) {} ')').get()))
-//│ }
-//│ Mono:
-//│ 
-//│ Defunc result: 
-//│ class M$1(num) {
-//│ }
-//│ fun get$M$1(this) =
-//│   this.num
-//│ fun main$$1() =
-//│   new M$1 (#6)  match {case obj: M$1 => get$M$1(obj)}
-//│ main$$1()
-//│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ╙──
-//│ ╔══[ERROR] identifier not found: obj
-//│ ╙──
-//│ class M$1(num: Int)
-//│ fun get$M$1: forall 'num. {num: 'num} -> 'num
-//│ fun main$$1: () -> error
-//│ error
-//│ Code generation encountered an error:
-//│   unresolved symbol obj
+//:mono
+//:rc
+//class M(num: Int) {
+//    fun get() = num
+//}
+//(new M(6)).get()
 
 fun foo(num) = num
 fun bar(num: Int) = num
@@ -150,7 +120,7 @@ class W(val num: Int) {}
 //│ class Z(num: Int)
 //│ class W(num: Int)
 //│ // Prelude
-//│ class TypingUnit5 {
+//│ class TypingUnit4 {
 //│   #X;
 //│   #Y;
 //│   #Z;
@@ -222,9 +192,9 @@ class W(val num: Int) {}
 //│     return this.#W;
 //│   }
 //│ }
-//│ const typing_unit5 = new TypingUnit5;
-//│ globalThis.X = typing_unit5.X;
-//│ globalThis.Y = typing_unit5.Y;
-//│ globalThis.Z = typing_unit5.Z;
-//│ globalThis.W = typing_unit5.W;
+//│ const typing_unit4 = new TypingUnit4;
+//│ globalThis.X = typing_unit4.X;
+//│ globalThis.Y = typing_unit4.Y;
+//│ globalThis.Z = typing_unit4.Z;
+//│ globalThis.W = typing_unit4.W;
 //│ // End of generated code

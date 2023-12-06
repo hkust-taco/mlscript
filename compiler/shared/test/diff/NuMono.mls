@@ -1,5 +1,16 @@
 :NewDefs
 
+// old "new" syntax
+//:nm
+//class A() {
+//    val num() = 0
+//}
+//class B() {
+//    val num() = 1
+//}
+//fun foo(num: Int) = if false then new A() else new B()
+//foo(10).num()
+
 
 :nm
 class A() {
@@ -8,172 +19,24 @@ class A() {
 class B() {
     val num() = 1
 }
-fun foo(num: Int) = if false then new A() else new B()
+fun foo(num: Int) = if num > 5 then A() else B()
 foo(10).num()
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), num, None, [], Lam(Tup(), IntLit(0))))), NuTypeDef(class, B, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), num, None, [], Lam(Tup(), IntLit(1))))), NuFunDef(None, foo, None, [], Lam(Tup(num: Var(Int)), If(IfThen(Var(false), App(NuNew(Var(A)), Tup())), Some(App(NuNew(Var(B)), Tup()))))), App(Sel(App(Var(foo), Tup(_: IntLit(10))), num), Tup()))
+//│ TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), num, None, [], Lam(Tup(), IntLit(0))))), NuTypeDef(class, B, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), num, None, [], Lam(Tup(), IntLit(1))))), NuFunDef(None, foo, None, [], Lam(Tup(num: Var(Int)), If(IfThen(App(Var(>), Tup(_: Var(num), _: IntLit(5))), App(Var(A), Tup())), Some(App(Var(B), Tup()))))), App(Sel(App(Var(foo), Tup(_: IntLit(10))), num), Tup()))
 //│ Lifted:
-//│ TypingUnit(NuTypeDef(class, A$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), num, None, [], Lam(Tup(), IntLit(0))))), NuTypeDef(class, B$2, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), num, None, [], Lam(Tup(), IntLit(1))))), NuFunDef(None, foo$1, None, [], Lam(Tup(num: Var(Int)), If(IfThen(Var(false), New(Some((TypeName(A$1),[])), TypingUnit())), Some(New(Some((TypeName(B$2),[])), TypingUnit()))))), App(Sel(App(Var(foo$1), Tup(_: IntLit(10))), num), Tup()))
+//│ TypingUnit(NuTypeDef(class, A$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), num, None, [], Lam(Tup(), IntLit(0))))), NuTypeDef(class, B$2, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), num, None, [], Lam(Tup(), IntLit(1))))), NuFunDef(None, foo$1, None, [], Lam(Tup(num: Var(Int)), If(IfThen(App(Var(>), Tup(_: Var(num), _: IntLit(5))), App(Var(A$1), Tup())), Some(App(Var(B$2), Tup()))))), App(Sel(App(Var(foo$1), Tup(_: IntLit(10))), num), Tup()))
 //│ TypingUnit {
 //│   class A$1([]) {let num = () => 0}
 //│   class B$2([]) {let num = () => 1}
-//│   fun foo$1 = (num: Int,) => if (false) then new A$1([]) {} else new B$2([]) {}
+//│   fun foo$1 = (num: Int,) => if (>(num, 5,)) then A$1() else B$2()
 //│   Code(List((foo$1(10,)).num()))
 //│ }
 //│ Mono:
-//│ TypingUnit(NuTypeDef(class, B$2, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, A$1, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, foo$1, None, [], Lam(Tup(num: Var(Int)), If(IfThen(Var(false), New(Some((TypeName(A$1),[])), TypingUnit())), Some(New(Some((TypeName(B$2),[])), TypingUnit()))))), NuFunDef(Some(false), num$A$1, None, [], Lam(Tup(_: Var(this)), IntLit(0))), NuFunDef(Some(false), num$B$2, None, [], Lam(Tup(_: Var(this)), IntLit(1))), NuFunDef(None, main$$3, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], App(Var(foo$1), Tup(_: IntLit(10)))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(B$2), App(Var(num$B$2), Tup(_: Var(obj))));IfThen(Var(A$1), App(Var(num$A$1), Tup(_: Var(obj)))))), None)))), App(Var(main$$3), Tup()))
+//│ TypingUnit(NuTypeDef(class, B$2, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, A$1, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, foo$1, None, [], Lam(Tup(num: Var(Int)), If(IfThen(App(Var(>), Tup(_: Var(num), _: IntLit(5))), App(Var(A$1), Tup())), Some(App(Var(B$2), Tup()))))), NuFunDef(Some(false), num$A$1, None, [], Lam(Tup(_: Var(this)), IntLit(0))), NuFunDef(Some(false), num$B$2, None, [], Lam(Tup(_: Var(this)), IntLit(1))), NuFunDef(None, main$$3, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], App(Var(foo$1), Tup(_: IntLit(10)))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(B$2), App(Var(num$B$2), Tup(_: Var(obj))));IfThen(Var(A$1), App(Var(num$A$1), Tup(_: Var(obj)))))), None)))), App(Var(main$$3), Tup()))
 //│ TypingUnit {
 //│   class B$2([]) {}
 //│   class A$1([]) {}
-//│   fun foo$1 = (num: Int,) => if (false) then new A$1([]) {} else new B$2([]) {}
-//│   let num$A$1 = (this,) => 0
-//│   let num$B$2 = (this,) => 1
-//│   fun main$$3 = () => {let obj = foo$1(10,); if obj is ‹(B$2) then num$B$2(obj,); (A$1) then num$A$1(obj,)›}
-//│   Code(List(main$$3()))
-//│ }
-//│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ╙──
-//│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ╙──
-//│ class B$2()
-//│ class A$1()
-//│ fun foo$1: (num: Int) -> error
-//│ let num$A$1: anything -> 0
-//│ let num$B$2: anything -> 1
-//│ fun main$$3: () -> (0 | 1)
-//│ 0 | 1
-//│ num$A$1
-//│         = [Function: num$A$11]
-//│ num$B$2
-//│         = [Function: num$B$21]
-//│ res
-//│     = 1
-
-
-:nm
-:dd
-class A() {
-    val num() = 0
-}
-class B() {
-    val num() = 1
-}
-fun foo(num: Int) = if false then A() else B()
-foo(10).num()
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), num, None, [], Lam(Tup(), IntLit(0))))), NuTypeDef(class, B, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), num, None, [], Lam(Tup(), IntLit(1))))), NuFunDef(None, foo, None, [], Lam(Tup(num: Var(Int)), If(IfThen(Var(false), App(Var(A), Tup())), Some(App(Var(B), Tup()))))), App(Sel(App(Var(foo), Tup(_: IntLit(10))), num), Tup()))
-//│ Lifted:
-//│ TypingUnit(NuTypeDef(class, A$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), num, None, [], Lam(Tup(), IntLit(0))))), NuTypeDef(class, B$2, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), num, None, [], Lam(Tup(), IntLit(1))))), NuFunDef(None, foo$1, None, [], Lam(Tup(num: Var(Int)), If(IfThen(Var(false), App(Var(A$1), Tup())), Some(App(Var(B$2), Tup()))))), App(Sel(App(Var(foo$1), Tup(_: IntLit(10))), num), Tup()))
-//│ TypingUnit {
-//│   class A$1([]) {let num = () => 0}
-//│   class B$2([]) {let num = () => 1}
-//│   fun foo$1 = (num: Int,) => if (false) then A$1() else B$2()
-//│   Code(List((foo$1(10,)).num()))
-//│ }
-//│ Mono:
-//│ Queue: HashSet(main$$3)
-//│ Evaluating main$$3
-//│ ╓Eval App(Sel(App(Var(foo$1), Tup(_: IntLit(10))), num), Tup()):
-//│ ║╓Eval Sel(App(Var(foo$1), Tup(_: IntLit(10))), num):
-//│ ║║╓Eval App(Var(foo$1), Tup(_: IntLit(10))):
-//│ ║║║╓Eval Var(foo$1):
-//│ ║║║╙Result List(FuncVal(foo$1, (num), List())):
-//│ ║║║╓Eval Tup(_: IntLit(10)):
-//│ ║║║║╓Eval IntLit(10):
-//│ ║║║║╙Result List(LiteralVal(Left(10))):
-//│ ║║║╙Result List(TupVal(Map(0 -> LiteralVal(Left(10))))):
-//│ ║║║Apply Function foo$1
-//│ ║║║Evaluating foo$1
-//│ ║║║╓Eval If(IfThen(Var(false), App(Var(A$1), Tup())), Some(App(Var(B$2), Tup()))):
-//│ ║║║║╓Eval App(Var(A$1), Tup()):
-//│ ║║║║║╓Eval Var(A$1):
-//│ ║║║║║╙Result List(TypeVal(A$1)):
-//│ ║║║║║╓Eval Tup():
-//│ ║║║║║╙Result List(TupVal(Map())):
-//│ ║║║║╙Result List(ObjVal(A$1, HashMap())):
-//│ ║║║║╓Eval App(Var(B$2), Tup()):
-//│ ║║║║║╓Eval Var(B$2):
-//│ ║║║║║╙Result List(TypeVal(B$2)):
-//│ ║║║║║╓Eval Tup():
-//│ ║║║║║╙Result List(TupVal(Map())):
-//│ ║║║║╙Result List(ObjVal(B$2, HashMap())):
-//│ ║║║║╓Eval Var(false):
-//│ ║║║║╙Result List(LiteralVal(Right(false))):
-//│ ║║║╙Result List(ObjVal(A$1, HashMap()), ObjVal(B$2, HashMap())):
-//│ ║║║Bounds of foo$1 changed, adding dependent functions to evalQueue
-//│ ║║║Added main$$3
-//│ ║║╙Result List(ObjVal(A$1, HashMap()), ObjVal(B$2, HashMap())):
-//│ ║╙Result List(FuncVal(num$A$1, (), List((this,ObjVal(A$1, HashMap())))), FuncVal(num$B$2, (), List((this,ObjVal(B$2, HashMap()))))):
-//│ ║╓Eval Tup():
-//│ ║╙Result List(TupVal(Map())):
-//│ ║Apply Function num$A$1
-//│ ║Evaluating num$A$1
-//│ ║╓Eval IntLit(0):
-//│ ║╙Result List(LiteralVal(Left(0))):
-//│ ║No change in bounds of num$A$1
-//│ ║Apply Function num$B$2
-//│ ║Evaluating num$B$2
-//│ ║╓Eval IntLit(1):
-//│ ║╙Result List(LiteralVal(Left(1))):
-//│ ║No change in bounds of num$B$2
-//│ ╙Result List(other val):
-//│ Bounds of main$$3 changed, adding dependent functions to evalQueue
-//│ Queue: HashSet(main$$3)
-//│ Evaluating main$$3
-//│ ╓Eval App(Sel(App(Var(foo$1), Tup(_: IntLit(10))), num), Tup()):
-//│ ║╓Eval Sel(App(Var(foo$1), Tup(_: IntLit(10))), num):
-//│ ║║╓Eval App(Var(foo$1), Tup(_: IntLit(10))):
-//│ ║║║╓Eval Var(foo$1):
-//│ ║║║╙Result List(FuncVal(foo$1, (num), List())):
-//│ ║║║╓Eval Tup(_: IntLit(10)):
-//│ ║║║║╓Eval IntLit(10):
-//│ ║║║║╙Result List(LiteralVal(Left(10))):
-//│ ║║║╙Result List(TupVal(Map(0 -> LiteralVal(Left(10))))):
-//│ ║║║Apply Function foo$1
-//│ ║║║Evaluating foo$1
-//│ ║║║╓Eval If(IfThen(Var(false), App(Var(A$1), Tup())), Some(App(Var(B$2), Tup()))):
-//│ ║║║║╓Eval App(Var(A$1), Tup()):
-//│ ║║║║║╓Eval Var(A$1):
-//│ ║║║║║╙Result List(TypeVal(A$1)):
-//│ ║║║║║╓Eval Tup():
-//│ ║║║║║╙Result List(TupVal(Map())):
-//│ ║║║║╙Result List(ObjVal(A$1, HashMap())):
-//│ ║║║║╓Eval App(Var(B$2), Tup()):
-//│ ║║║║║╓Eval Var(B$2):
-//│ ║║║║║╙Result List(TypeVal(B$2)):
-//│ ║║║║║╓Eval Tup():
-//│ ║║║║║╙Result List(TupVal(Map())):
-//│ ║║║║╙Result List(ObjVal(B$2, HashMap())):
-//│ ║║║║╓Eval Var(false):
-//│ ║║║║╙Result List(LiteralVal(Right(false))):
-//│ ║║║╙Result List(ObjVal(A$1, HashMap()), ObjVal(B$2, HashMap())):
-//│ ║║║No change in bounds of foo$1
-//│ ║║╙Result List(ObjVal(A$1, HashMap()), ObjVal(B$2, HashMap())):
-//│ ║╙Result List(FuncVal(num$A$1, (), List((this,ObjVal(A$1, HashMap())))), FuncVal(num$B$2, (), List((this,ObjVal(B$2, HashMap()))))):
-//│ ║╓Eval Tup():
-//│ ║╙Result List(TupVal(Map())):
-//│ ║Apply Function num$A$1
-//│ ║Evaluating num$A$1
-//│ ║╓Eval IntLit(0):
-//│ ║╙Result List(LiteralVal(Left(0))):
-//│ ║No change in bounds of num$A$1
-//│ ║Apply Function num$B$2
-//│ ║Evaluating num$B$2
-//│ ║╓Eval IntLit(1):
-//│ ║╙Result List(LiteralVal(Left(1))):
-//│ ║No change in bounds of num$B$2
-//│ ╙Result List(other val):
-//│ No change in bounds of main$$3
-//│ ========DEFUNC PHASE========
-//│ App(Var(foo$1), Tup(_: IntLit(10)))
-//│ Expanding List(ObjVal(A$1, HashMap()), ObjVal(B$2, HashMap()))
-//│ Expanding List(ObjVal(B$2, HashMap()))
-//│ Expanding List()
-//│ TypingUnit(NuTypeDef(class, B$2, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, A$1, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, foo$1, None, [], Lam(Tup(num: Var(Int)), If(IfThen(Var(false), App(Var(A$1), Tup())), Some(App(Var(B$2), Tup()))))), NuFunDef(Some(false), num$A$1, None, [], Lam(Tup(_: Var(this)), IntLit(0))), NuFunDef(Some(false), num$B$2, None, [], Lam(Tup(_: Var(this)), IntLit(1))), NuFunDef(None, main$$3, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], App(Var(foo$1), Tup(_: IntLit(10)))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(B$2), App(Var(num$B$2), Tup(_: Var(obj))));IfThen(Var(A$1), App(Var(num$A$1), Tup(_: Var(obj)))))), None)))), App(Var(main$$3), Tup()))
-//│ TypingUnit {
-//│   class B$2([]) {}
-//│   class A$1([]) {}
-//│   fun foo$1 = (num: Int,) => if (false) then A$1() else B$2()
+//│   fun foo$1 = (num: Int,) => if (>(num, 5,)) then A$1() else B$2()
 //│   let num$A$1 = (this,) => 0
 //│   let num$B$2 = (this,) => 1
 //│   fun main$$3 = () => {let obj = foo$1(10,); if obj is ‹(B$2) then num$B$2(obj,); (A$1) then num$A$1(obj,)›}
@@ -187,11 +50,11 @@ foo(10).num()
 //│ fun main$$3: () -> (0 | 1)
 //│ 0 | 1
 //│ num$A$1
-//│         = [Function: num$A$13]
+//│         = [Function: num$A$11]
 //│ num$B$2
-//│         = [Function: num$B$23]
+//│         = [Function: num$B$21]
 //│ res
-//│     = 1
+//│     = 0
 
 
 :nm
@@ -201,41 +64,38 @@ class A(val num1: Int, val num2: Int) {
 class B(val num1: Int, val num2: Int) {
     fun foo() = num1+num2
 }
-fun foo(num: Int) = if num > 5 then new A(10,6) else B(8,7)
+fun foo(num: Int) = if num > 5 then A(10,6) else B(8,7)
 foo(10).foo()
 foo(0).foo()
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, A, (), Tup(num1: Var(Int), num2: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(-), Tup(_: Var(num1), _: Var(num2))))))), NuTypeDef(class, B, (), Tup(num1: Var(Int), num2: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(+), Tup(_: Var(num1), _: Var(num2))))))), NuFunDef(None, foo, None, [], Lam(Tup(num: Var(Int)), If(IfThen(App(Var(>), Tup(_: Var(num), _: IntLit(5))), App(NuNew(Var(A)), Tup(_: IntLit(10), _: IntLit(6)))), Some(App(Var(B), Tup(_: IntLit(8), _: IntLit(7))))))), App(Sel(App(Var(foo), Tup(_: IntLit(10))), foo), Tup()), App(Sel(App(Var(foo), Tup(_: IntLit(0))), foo), Tup()))
+//│ TypingUnit(NuTypeDef(class, A, (), Tup(num1: Var(Int), num2: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(-), Tup(_: Var(num1), _: Var(num2))))))), NuTypeDef(class, B, (), Tup(num1: Var(Int), num2: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(+), Tup(_: Var(num1), _: Var(num2))))))), NuFunDef(None, foo, None, [], Lam(Tup(num: Var(Int)), If(IfThen(App(Var(>), Tup(_: Var(num), _: IntLit(5))), App(Var(A), Tup(_: IntLit(10), _: IntLit(6)))), Some(App(Var(B), Tup(_: IntLit(8), _: IntLit(7))))))), App(Sel(App(Var(foo), Tup(_: IntLit(10))), foo), Tup()), App(Sel(App(Var(foo), Tup(_: IntLit(0))), foo), Tup()))
 //│ Lifted:
-//│ TypingUnit(NuTypeDef(class, A$1, (), Tup(num1: Var(Int), num2: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(-), Tup(_: Sel(Var(this), num1), _: Sel(Var(this), num2))))))), NuTypeDef(class, B$2, (), Tup(num1: Var(Int), num2: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(+), Tup(_: Sel(Var(this), num1), _: Sel(Var(this), num2))))))), NuFunDef(None, foo$1, None, [], Lam(Tup(num: Var(Int)), If(IfThen(App(Var(>), Tup(_: Var(num), _: IntLit(5))), New(Some((TypeName(A$1),[10, 6,])), TypingUnit())), Some(App(Var(B$2), Tup(_: IntLit(8), _: IntLit(7))))))), App(Sel(App(Var(foo$1), Tup(_: IntLit(10))), foo), Tup()), App(Sel(App(Var(foo$1), Tup(_: IntLit(0))), foo), Tup()))
+//│ TypingUnit(NuTypeDef(class, A$1, (), Tup(num1: Var(Int), num2: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(-), Tup(_: Sel(Var(this), num1), _: Sel(Var(this), num2))))))), NuTypeDef(class, B$2, (), Tup(num1: Var(Int), num2: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(+), Tup(_: Sel(Var(this), num1), _: Sel(Var(this), num2))))))), NuFunDef(None, foo$1, None, [], Lam(Tup(num: Var(Int)), If(IfThen(App(Var(>), Tup(_: Var(num), _: IntLit(5))), App(Var(A$1), Tup(_: IntLit(10), _: IntLit(6)))), Some(App(Var(B$2), Tup(_: IntLit(8), _: IntLit(7))))))), App(Sel(App(Var(foo$1), Tup(_: IntLit(10))), foo), Tup()), App(Sel(App(Var(foo$1), Tup(_: IntLit(0))), foo), Tup()))
 //│ TypingUnit {
 //│   class A$1([val num1: Int, val num2: Int,]) {fun foo = () => -((this).num1, (this).num2,)}
 //│   class B$2([val num1: Int, val num2: Int,]) {fun foo = () => +((this).num1, (this).num2,)}
-//│   fun foo$1 = (num: Int,) => if (>(num, 5,)) then new A$1([10, 6,]) {} else B$2(8, 7,)
+//│   fun foo$1 = (num: Int,) => if (>(num, 5,)) then A$1(10, 6,) else B$2(8, 7,)
 //│   Code(List((foo$1(10,)).foo()))
 //│   Code(List((foo$1(0,)).foo()))
 //│ }
 //│ Mono:
-//│ TypingUnit(NuTypeDef(class, B$2, (), Tup(num1: Var(Int), num2: Var(Int)), (), None, None, TypingUnit()), NuTypeDef(class, A$1, (), Tup(num1: Var(Int), num2: Var(Int)), (), None, None, TypingUnit()), NuFunDef(None, foo$B$2, None, [], Lam(Tup(_: Var(this)), App(Var(+), Tup(_: Sel(Var(this), num1), _: Sel(Var(this), num2))))), NuFunDef(None, foo$1, None, [], Lam(Tup(num: Var(Int)), If(IfThen(App(Var(>), Tup(_: Var(num), _: IntLit(5))), New(Some((TypeName(A$1),[10, 6,])), TypingUnit())), Some(App(Var(B$2), Tup(_: IntLit(8), _: IntLit(7))))))), NuFunDef(None, foo$A$1, None, [], Lam(Tup(_: Var(this)), App(Var(-), Tup(_: Sel(Var(this), num1), _: Sel(Var(this), num2))))), NuFunDef(None, main$$4, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], App(Var(foo$1), Tup(_: IntLit(0)))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(B$2), App(Var(foo$B$2), Tup(_: Var(obj))));IfThen(Var(A$1), App(Var(foo$A$1), Tup(_: Var(obj)))))), None)))), NuFunDef(None, main$$3, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], App(Var(foo$1), Tup(_: IntLit(10)))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(B$2), App(Var(foo$B$2), Tup(_: Var(obj))));IfThen(Var(A$1), App(Var(foo$A$1), Tup(_: Var(obj)))))), None)))), App(Var(main$$3), Tup()), App(Var(main$$4), Tup()))
+//│ TypingUnit(NuTypeDef(class, B$2, (), Tup(num1: Var(Int), num2: Var(Int)), (), None, None, TypingUnit()), NuTypeDef(class, A$1, (), Tup(num1: Var(Int), num2: Var(Int)), (), None, None, TypingUnit()), NuFunDef(None, foo$B$2, None, [], Lam(Tup(_: Var(this)), App(Var(+), Tup(_: Blk(NuFunDef(Some(false), obj, None, [], Var(this)); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(B$2), IntLit(8)))), None)), _: Blk(NuFunDef(Some(false), obj, None, [], Var(this)); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(B$2), IntLit(7)))), None)))))), NuFunDef(None, foo$1, None, [], Lam(Tup(num: Var(Int)), If(IfThen(App(Var(>), Tup(_: Var(num), _: IntLit(5))), App(Var(A$1), Tup(_: IntLit(10), _: IntLit(6)))), Some(App(Var(B$2), Tup(_: IntLit(8), _: IntLit(7))))))), NuFunDef(None, foo$A$1, None, [], Lam(Tup(_: Var(this)), App(Var(-), Tup(_: Blk(NuFunDef(Some(false), obj, None, [], Var(this)); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(A$1), IntLit(10)))), None)), _: Blk(NuFunDef(Some(false), obj, None, [], Var(this)); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(A$1), IntLit(6)))), None)))))), NuFunDef(None, main$$4, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], App(Var(foo$1), Tup(_: IntLit(0)))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(B$2), App(Var(foo$B$2), Tup(_: Var(obj))));IfThen(Var(A$1), App(Var(foo$A$1), Tup(_: Var(obj)))))), None)))), NuFunDef(None, main$$3, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], App(Var(foo$1), Tup(_: IntLit(10)))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(B$2), App(Var(foo$B$2), Tup(_: Var(obj))));IfThen(Var(A$1), App(Var(foo$A$1), Tup(_: Var(obj)))))), None)))), App(Var(main$$3), Tup()), App(Var(main$$4), Tup()))
 //│ TypingUnit {
 //│   class B$2([val num1: Int, val num2: Int,]) {}
 //│   class A$1([val num1: Int, val num2: Int,]) {}
-//│   fun foo$B$2 = (this,) => +((this).num1, (this).num2,)
-//│   fun foo$1 = (num: Int,) => if (>(num, 5,)) then new A$1([10, 6,]) {} else B$2(8, 7,)
-//│   fun foo$A$1 = (this,) => -((this).num1, (this).num2,)
+//│   fun foo$B$2 = (this,) => +({let obj = this; if obj is ‹(B$2) then 8›}, {let obj = this; if obj is ‹(B$2) then 7›},)
+//│   fun foo$1 = (num: Int,) => if (>(num, 5,)) then A$1(10, 6,) else B$2(8, 7,)
+//│   fun foo$A$1 = (this,) => -({let obj = this; if obj is ‹(A$1) then 10›}, {let obj = this; if obj is ‹(A$1) then 6›},)
 //│   fun main$$4 = () => {let obj = foo$1(0,); if obj is ‹(B$2) then foo$B$2(obj,); (A$1) then foo$A$1(obj,)›}
 //│   fun main$$3 = () => {let obj = foo$1(10,); if obj is ‹(B$2) then foo$B$2(obj,); (A$1) then foo$A$1(obj,)›}
 //│   Code(List(main$$3()))
 //│   Code(List(main$$4()))
 //│ }
-//│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.208: 	fun foo(num: Int) = if num > 5 then new A(10,6) else B(8,7)
-//│ ╙──       	                                          ^^^^
 //│ class B$2(num1: Int, num2: Int)
 //│ class A$1(num1: Int, num2: Int)
-//│ fun foo$B$2: {num1: Int, num2: Int} -> Int
-//│ fun foo$1: (num: Int) -> (B$2 | error)
-//│ fun foo$A$1: {num1: Int, num2: Int} -> Int
+//│ fun foo$B$2: B$2 -> Int
+//│ fun foo$1: (num: Int) -> (A$1 | B$2)
+//│ fun foo$A$1: A$1 -> Int
 //│ fun main$$4: () -> Int
 //│ fun main$$3: () -> Int
 //│ Int

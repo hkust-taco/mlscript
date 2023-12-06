@@ -1,0 +1,71 @@
+:NewDefs
+
+:nm
+:dd
+class A() {
+    val x = 2
+}
+val a = A()
+a.x
+//a.y()
+//a.z
+//a.w()
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(2)))), NuFunDef(Some(false), a, None, [], App(Var(A), Tup())), Sel(Var(a), x))
+//│ Lifted:
+//│ TypingUnit(NuTypeDef(class, A$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(2)))), NuFunDef(Some(false), a$1, None, [], App(Var(A$1), Tup())), Sel(Var(a$1), x))
+//│ TypingUnit {
+//│   class A$1([]) {let x = 2}
+//│   let a$1 = A$1()
+//│   Code(List((a$1).x))
+//│ }
+//│ Mono:
+//│ Queue: HashSet(main$$2)
+//│ Evaluating main$$2
+//│ ╓Eval Sel(Var(a$1), x):
+//│ ║╓Eval Var(a$1):
+//│ ║║Evaluating a$1
+//│ ║║╓Eval App(Var(A$1), Tup()):
+//│ ║║║╓Eval Var(A$1):
+//│ ║║║╙Result List(TypeVal(A$1)):
+//│ ║║║╓Eval Tup():
+//│ ║║║╙Result List(TupVal(Map())):
+//│ ║║╙Result List(ObjVal(A$1, HashMap())):
+//│ ║║Bounds of a$1 changed, adding dependent functions to evalQueue
+//│ ║║Added main$$2
+//│ ║╙Result List(ObjVal(A$1, HashMap())):
+//│ ╙Result List(FuncVal(x$A$1, None, List((this,ObjVal(A$1, HashMap()))))):
+//│ No change in bounds of main$$2
+//│ Queue: HashSet(main$$2)
+//│ Evaluating main$$2
+//│ ╓Eval Sel(Var(a$1), x):
+//│ ║╓Eval Var(a$1):
+//│ ║║Evaluating a$1
+//│ ║║╓Eval App(Var(A$1), Tup()):
+//│ ║║║╓Eval Var(A$1):
+//│ ║║║╙Result List(TypeVal(A$1)):
+//│ ║║║╓Eval Tup():
+//│ ║║║╙Result List(TupVal(Map())):
+//│ ║║╙Result List(ObjVal(A$1, HashMap())):
+//│ ║║No change in bounds of a$1
+//│ ║╙Result List(ObjVal(A$1, HashMap())):
+//│ ╙Result List(FuncVal(x$A$1, None, List((this,ObjVal(A$1, HashMap()))))):
+//│ No change in bounds of main$$2
+//│ ========DEFUNC PHASE========
+//│ Expanding List(ObjVal(A$1, HashMap()))
+//│ Expanding List()
+//│ TypingUnit(NuTypeDef(class, A$1, (), Tup(), (), None, None, TypingUnit()), NuFunDef(Some(false), x$A$1, None, [], Lam(Tup(_: Var(this)), IntLit(2))), NuFunDef(None, main$$2, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], Var(a$1)); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(A$1), App(Var(x$A$1), Tup(_: Var(obj)))))), None)))), NuFunDef(Some(false), a$1, None, [], App(Var(A$1), Tup())), App(Var(main$$2), Tup()))
+//│ TypingUnit {
+//│   class A$1([]) {}
+//│   let x$A$1 = (this,) => 2
+//│   fun main$$2 = () => {let obj = a$1; if obj is ‹(A$1) then x$A$1(obj,)›}
+//│   let a$1 = A$1()
+//│   Code(List(main$$2()))
+//│ }
+//│ class A$1()
+//│ let x$A$1: anything -> 2
+//│ fun main$$2: () -> 2
+//│ let a$1: A$1
+//│ 2
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding a$1

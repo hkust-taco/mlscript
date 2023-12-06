@@ -84,7 +84,25 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   def findClassByName(name: String): Option[mlscript.compiler.Item.TypeDecl] =
     allTypeImpls.get(name)
   
-  val specializer = mono.specializer.Specializer(this)(using debug)
+  val specializer = new mono.specializer.Specializer(this)(using debug)
+
+
+  object VarValMap {
+    var vxCnt: Int = 0
+    val vMap: MutMap[Int, BoundedTerm] = MutMap[Int, BoundedTerm]()
+    def get(v: VarVal): BoundedTerm = vMap.get(v.vx) match 
+      case Some(value) => value
+      case None => ???
+    def refresh(): VarVal = {
+      vxCnt += 1
+      val ret = VarVal(vxCnt, 0, get)
+      vMap.addOne(vxCnt -> BoundedTerm(ret))
+      ret
+    }
+    def update(v: VarVal, s: BoundedTerm): Unit = {
+      vMap.update(v.vx, s)
+    }
+  }
 
   private def addNewFunction(func: Item.FuncDecl): Unit = {
     funImpls.addOne(func.name.name, (func, MutMap(), func.params match
@@ -100,7 +118,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     nuFunImpls.addOne(func.name, (func, MutMap(), func.body match
       case Lam(Tup(params), body) => Some(params.map(_ => BoundedTerm()))
       case _ => None
-    , VarVal.refresh()))
+    , VarValMap.refresh()))
     nuFunDependence.addOne(func.name, Set())
   }
 
@@ -296,7 +314,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     }(identity)
   }
 
-  def nuGetFuncRetVal(name: String, args: List[BoundedTerm])(using evalCtx: Map[String, BoundedTerm], callingStack: List[String], dbgIndent: String = ""): BoundedTerm = {
+  def nuGetFuncRetVal(name: String, args: Option[List[BoundedTerm]])(using evalCtx: Map[String, BoundedTerm], callingStack: List[String], dbgIndent: String = ""): BoundedTerm = {
     nuFunImpls.get(name) match
       case None => throw MonomorphError(s"Function ${name} does not exist")
       case Some((funDef, mp, oldArgs, vals)) => 
@@ -305,7 +323,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
             nuFunDependence.update(name, nuFunDependence.getOrElse(name, Set()) ++ callingStack.headOption)
             val hasArgs = oldArgs.isDefined
             val params = extractLamParams(body)
-            val mergedArgs = oldArgs.map(old => (old zip (args.map(_.unfoldVars))).map(_ ++ _).zip(params.get).map(
+            val mergedArgs = oldArgs.map(old => (old zip (args.map(_.map(_.unfoldVars)).get)).map(_ ++ _).zip(params.get).map(
               (x,y) => if(y._1.spec) then x else x.literals2Prims
             ))
             // FIXME: do paramless funcs need multiple evaluations? currently only eval paramless funcs once
@@ -358,7 +376,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
           case Some(p) => Lam(paramToTuple(p.toList), nuRhs)
           case None => nuRhs
         nuBody.evaledTerm = nuRhs.evaledTerm
-        val oldExp = VarVal.get(nuFunImpls.get(funcName).get._4)
+        val oldExp = VarValMap.get(nuFunImpls.get(funcName).get._4)
         if (oldExp.compare(nuBody.evaledTerm)) {
           debug.writeLine(s"${dbgIndent}Bounds of ${funcName} changed, adding dependent functions to evalQueue")
           nuFunDependence.get(funcName).get.foreach(x => if !nuEvalQueue.contains(x) then {
@@ -370,7 +388,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
         }
         //debug.writeLine(s"old body: ${showStructure(value)} => new body: ${showStructure(nuBody)}")
         nuFunImpls.updateWith(funcName)(_.map(x => {
-          VarVal.update(x._4, nuBody.evaledTerm)
+          VarValMap.update(x._4, nuBody.evaledTerm)
           (x._1.copy(rhs = Left(nuBody))(None, None, None, None, false), x._2, x._3, x._4)
         }))
       case Right(value) => throw MonomorphError("Should not update function typeDef")
@@ -391,7 +409,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     Find a variable in the global env 
     TODO: Does TypeValue affect evaluation and dependence?
   */
-  def nuFindVar(name: String)(using evalCtx: Map[String, BoundedTerm], callingStack: List[String]): MonoVal =
+  def nuFindVar(name: String)(using evalCtx: Map[String, BoundedTerm], callingStack: List[String], dbgIndent: String): BoundedTerm =
     nuFunImpls.get(name) match
       case Some(res) =>
         val (func, _, _, _) = res
@@ -400,10 +418,12 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
           //case Left(Lam(lhs, rhs)) => Some(extractParams(lhs).map(_._2.name).toList)
           case Left(body) => extractLamParams(body).map(_.map(_._2.name).toList)
           case Right(tp) => ???
-        FuncVal(name, params, Nil)
+        params match 
+          case Some(p) => BoundedTerm(FuncVal(name, params, Nil))
+          case None => nuGetFuncRetVal(name, None)(using dbgIndent = "║"++dbgIndent)
       case None => 
         nuAllTypeImpls.get(name) match
-          case Some(res) => TypeVal(name)
+          case Some(res) => BoundedTerm(TypeVal(name))
           case None => throw MonomorphError(s"Variable ${name} not found during evaluation")
 
   private def partitationArguments(name: String, params: List[Parameter], args: List[Expr]): (List[Expr], List[Expr]) =

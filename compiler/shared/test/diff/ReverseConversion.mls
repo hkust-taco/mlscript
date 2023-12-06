@@ -11,17 +11,27 @@
 //│ TypingUnit(IntLit(1), IntLit(2), IntLit(3))
 //│ TypingUnit {Code(List(1)); Code(List(2)); Code(List(3))}
 //│ Mono:
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: None.get
-//│ 	at: scala.None$.get(Option.scala:627)
-//│ 	at: scala.None$.get(Option.scala:626)
-//│ 	at: mlscript.compiler.mono.specializer.VariableValue$.get(BoundedExpr.scala:81)
-//│ 	at: mlscript.compiler.mono.specializer.VariableValue.toStringSafe(BoundedExpr.scala:68)
-//│ 	at: mlscript.compiler.mono.specializer.VariableValue.toString(BoundedExpr.scala:69)
-//│ 	at: java.base/java.lang.String.valueOf(String.java:4225)
-//│ 	at: java.base/java.lang.StringBuilder.append(StringBuilder.java:173)
-//│ 	at: mlscript.compiler.mono.Monomorph.getfunInfo(Monomorph.scala:39)
-//│ 	at: mlscript.compiler.mono.Monomorph.updateFunction$$anonfun$3(Monomorph.scala:222)
-//│ 	at: mlscript.compiler.debug.RainbowDebug.msg$proxy1$1(RainbowDebug.scala:62)
+//│ 
+//│ Defunc result: 
+//│ fun main$$0() =
+//│   #1
+//│ fun main$$2() =
+//│   #3
+//│ fun main$$1() =
+//│   #2
+//│ main$$0()
+//│ main$$1()
+//│ main$$2()
+//│ fun main$$0: () -> 1
+//│ fun main$$2: () -> 3
+//│ fun main$$1: () -> 2
+//│ 3
+//│ res
+//│     = 1
+//│ res
+//│     = 2
+//│ res
+//│     = 3
 
 :mono
 :rc

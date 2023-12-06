@@ -1078,7 +1078,9 @@ trait MonoValImpl { self: MonoVal =>
     case ObjVal(name, fields) => s"ObjVal(${name}, ${fields})"
     case TypeVal(name) => s"TypeVal(${name})"
     case TupVal(fields) => s"TupVal(${fields})"
-    case _: MonoVal => "other val"
+    case UnknownVal() =>  s"UnknownVal"
+    case PrimVal() => s"PrimVal()"
+    case VarVal(vx, version, _) => s"VarVal(${vx})"
   }
 }
 
@@ -1137,7 +1139,7 @@ trait BoundedTermImpl { self: BoundedTerm =>
       case others => (None, Some(others))
     }.unzip
     val varSets: List[BoundedTerm] = vars.flatten.map(x => {
-      val vSet = VarVal.get(x)
+      val vSet = x.getter(x)
       if(!instackExps.contains(vSet.hashCode())) {
         vSet.unfoldVars(instackExps + vSet.hashCode())
       }
@@ -1161,7 +1163,7 @@ trait BoundedTermImpl { self: BoundedTerm =>
   def literals2Prims: BoundedTerm = {
     val hasPrim = values.find(x => x.isInstanceOf[PrimVal] || x.isInstanceOf[LiteralVal]).isDefined
     if(hasPrim)
-      BoundedTerm(values.filterNot(x => x.isInstanceOf[PrimVal] || x.isInstanceOf[LiteralVal]) + PrimVal())
+      BoundedTerm(values.filterNot(x => x.isInstanceOf[PrimVal] || x.isInstanceOf[LiteralVal])/* + PrimVal()*/)
     else this
   }
 
@@ -1179,7 +1181,7 @@ trait BoundedTermImpl { self: BoundedTerm =>
 
       var ret2 = restVals1 ++ restVals2
       if(ret2.count(x => (x.isInstanceOf[LiteralVal] || x.isInstanceOf[PrimVal])) > 1){
-        ret2 = ret2.filterNot(_.isInstanceOf[LiteralVal]) + PrimVal()
+        ret2 = ret2.filterNot(_.isInstanceOf[LiteralVal])// + PrimVal()
       }
       val retVals = BoundedTerm(ret ++ ret2)
       // retVals.updateCnt = this.updateCnt
