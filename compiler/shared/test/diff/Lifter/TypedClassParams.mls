@@ -5,6 +5,7 @@ class A() {}
 class B(foo: A) {}
 //│ Parsed:
 //│ TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, B, (), Tup(foo: Var(A)), (), None, None, TypingUnit()))
+//│ TypingUnit {class A([]) {}; class B([foo: A,]) {}}
 //│ Lifted:
 //│ TypingUnit(NuTypeDef(class, A$1, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, B$2, (), Tup(foo: Var(A$1)), (), None, None, TypingUnit()))
 //│ TypingUnit {class A$1([]) {}; class B$2([foo: A$1,]) {}}

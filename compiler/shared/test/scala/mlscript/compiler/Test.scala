@@ -16,6 +16,7 @@ class DiffTestCompiler extends DiffTests {
     val outputBuilder = StringBuilder()
     output("Parsed:")    
     output(showStructure(unit))
+    if (mode.lift) output(PrettyPrinter.showTypingUnit(unit))
     //outputBuilder ++= "Parsed:"
     //outputBuilder ++= showStructure(unit)
 
@@ -25,7 +26,7 @@ class DiffTestCompiler extends DiffTests {
     try
       val lifter = ClassLifter(mode.fullExceptionStack)
       rstUnit = lifter.liftTypingUnit(unit)
-      output(s"${mlscript.codegen.Helpers.inspect(rstUnit)}")
+      output(s"${showStructure(rstUnit)}")
       output(PrettyPrinter.showTypingUnit(rstUnit))
       //outputBuilder ++= s"${mlscript.codegen.Helpers.inspect(rstUnit)}\n"
       //outputBuilder ++= PrettyPrinter.showTypingUnit(rstUnit)
@@ -45,7 +46,7 @@ class DiffTestCompiler extends DiffTests {
         if (mode.numono)
           then
             val defuncAST = monomorph.nuDefunctionalize(rstUnit)
-            output(s"${mlscript.codegen.Helpers.inspect(defuncAST)}")
+            output(s"${showStructure(defuncAST)}")
             output(PrettyPrinter.showTypingUnit(defuncAST))
             //outputBuilder ++= s"${mlscript.codegen.Helpers.inspect(defuncAST)}\n"
             //outputBuilder ++= PrettyPrinter.showTypingUnit(defuncAST)++"\n"

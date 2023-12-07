@@ -1,5 +1,6 @@
 :NewDefs
 
+:e // FIXME
 :nm
 class Foo() {fun f = 0}
 module x { val y = Foo() }

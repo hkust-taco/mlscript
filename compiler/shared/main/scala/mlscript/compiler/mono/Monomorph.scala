@@ -114,7 +114,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   }
 
   private def nuAddFunction(func: NuFunDef): Unit = {
-    //debug.writeLine(s"Adding Function ${func}")
+    debug.writeLine(s"Adding Function ${func}")
     nuFunImpls.addOne(func.name, (func, MutMap(), func.body match
       case Lam(Tup(params), body) => Some(params.map(_ => BoundedTerm()))
       case _ => None
@@ -211,6 +211,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
       nuEvalQueue.remove(next)
       nuUpdateFunction(next)
     }
+    debug.writeLine(s"${PrettyPrinter.showTypingUnit(TypingUnit(nuGetResult(nuTerms)))}")
     debug.writeLine(s"========DEFUNC PHASE========")
     nuFunImpls.mapValuesInPlace{
       case (_, (func@NuFunDef(isLetRec, nm, sn, tp, rhs), mp, la, lr)) =>
@@ -314,7 +315,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     }(identity)
   }
 
-  def nuGetFuncRetVal(name: String, args: Option[List[BoundedTerm]])(using evalCtx: Map[String, BoundedTerm], callingStack: List[String], dbgIndent: String = ""): BoundedTerm = {
+  def nuGetFuncRetVal(name: String, args: Option[List[BoundedTerm]])(using evalCtx: Map[String, BoundedTerm], callingStack: List[String]): BoundedTerm = {
     nuFunImpls.get(name) match
       case None => throw MonomorphError(s"Function ${name} does not exist")
       case Some((funDef, mp, oldArgs, vals)) => 
@@ -359,8 +360,8 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
       case None => ()
   }
 
-  private def nuUpdateFunc(funcName: String)(using dbgIndent: String = ""): Unit = {
-    debug.writeLine(s"${dbgIndent}Evaluating ${funcName}")
+  private def nuUpdateFunc(funcName: String): Unit = {
+    debug.writeLine(s"Evaluating ${funcName}")
     val (func, mps, args, res) = nuFunImpls.get(funcName).get
     func.rhs match
       case Left(value) =>
@@ -371,20 +372,20 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
         val ctx = params match
           case Some(p) => (p.map(_._2.name) zip args.get).toMap
           case None => Map()
-        val nuRhs = specializer.nuEvaluate(body)(using ctx, List(func.name), dbgIndent)
+        val nuRhs = specializer.nuEvaluate(body)(using ctx, List(func.name))
         val nuBody = params match
           case Some(p) => Lam(paramToTuple(p.toList), nuRhs)
           case None => nuRhs
         nuBody.evaledTerm = nuRhs.evaledTerm
         val oldExp = VarValMap.get(nuFunImpls.get(funcName).get._4)
         if (oldExp.compare(nuBody.evaledTerm)) {
-          debug.writeLine(s"${dbgIndent}Bounds of ${funcName} changed, adding dependent functions to evalQueue")
+          debug.writeLine(s"Bounds of ${funcName} changed, adding dependent functions to evalQueue")
           nuFunDependence.get(funcName).get.foreach(x => if !nuEvalQueue.contains(x) then {
-            debug.writeLine(s"${dbgIndent}Added ${x}")
+            debug.writeLine(s"Added ${x}")
             nuEvalQueue.add(x)
           })
         } else {
-          debug.writeLine(s"${dbgIndent}No change in bounds of ${funcName}")
+          debug.writeLine(s"No change in bounds of ${funcName}")
         }
         //debug.writeLine(s"old body: ${showStructure(value)} => new body: ${showStructure(nuBody)}")
         nuFunImpls.updateWith(funcName)(_.map(x => {
@@ -409,7 +410,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     Find a variable in the global env 
     TODO: Does TypeValue affect evaluation and dependence?
   */
-  def nuFindVar(name: String)(using evalCtx: Map[String, BoundedTerm], callingStack: List[String], dbgIndent: String): BoundedTerm =
+  def nuFindVar(name: String)(using evalCtx: Map[String, BoundedTerm], callingStack: List[String]): BoundedTerm =
     nuFunImpls.get(name) match
       case Some(res) =>
         val (func, _, _, _) = res
@@ -420,7 +421,9 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
           case Right(tp) => ???
         params match 
           case Some(p) => BoundedTerm(FuncVal(name, params, Nil))
-          case None => nuGetFuncRetVal(name, None)(using dbgIndent = "║"++dbgIndent)
+          case None => 
+            val res = nuGetFuncRetVal(name, None)
+            res
       case None => 
         nuAllTypeImpls.get(name) match
           case Some(res) => BoundedTerm(TypeVal(name))
@@ -523,6 +526,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   }(identity)
 
   def nuGetFieldVal(obj: ObjVal, field: String): BoundedTerm =
+    debug.writeLine(s"select ${field} from ${obj.name}")
     nuAllTypeImpls.get(obj.name) match
       case None => throw MonomorphError(s"ObjectValue ${obj} not found in implementations ${allTypeImpls}")
       case Some(typeDef) => 
@@ -531,12 +535,15 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
           case _ => None
         }.headOption match
         case Some(NuFunDef(isLetRec, Var(nme), sn, tp, Left(body))) => 
+          debug.writeLine(s"found some func")
           val nuFuncName = s"${nme}$$${obj.name}"
           if (!nuFunImpls.contains(nuFuncName)) {
             nuAddFunction(NuFunDef(isLetRec, Var(nuFuncName), sn, tp, Left(addThisParam(body)))(None, None, None, None, false))
           } 
           BoundedTerm(FuncVal(nuFuncName, extractLamParams(body).map(_.map(_._2.name).toList), List("this" -> BoundedTerm(obj))))
-        case _ => obj.fields.get(field) match
+        case _ => 
+          debug.writeLine(s"did not find func")
+          obj.fields.get(field) match
           case Some(value) => value
           case None => throw MonomorphError(s"Field value ${field} not found in ObjectValue ${obj}") // TODO: Superclass fields
 

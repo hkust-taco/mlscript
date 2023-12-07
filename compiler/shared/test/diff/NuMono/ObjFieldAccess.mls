@@ -1,5 +1,6 @@
 :NewDefs
 
+:ge // FIXME
 :nm
 class A(i: Int) {
     fun get1() = i
@@ -39,3 +40,97 @@ a.get2
 //│ 6
 //│ Code generation encountered an error:
 //│   unguarded recursive use of by-value binding a$1
+
+:ge // FIXME
+:nm
+class A(i: Str) {
+    fun get1() = i
+    fun get2 = i
+}
+val a = A("6")
+a.get1()
+a.get2
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, A, (), Tup(i: Var(Str)), (), None, None, TypingUnit(NuFunDef(None, get1, None, [], Lam(Tup(), Var(i))), NuFunDef(None, get2, None, [], Var(i)))), NuFunDef(Some(false), a, None, [], App(Var(A), Tup(_: StrLit(6)))), App(Sel(Var(a), get1), Tup()), Sel(Var(a), get2))
+//│ Lifted:
+//│ TypingUnit(NuTypeDef(class, A$1, (), Tup(i: Var(Str)), (), None, None, TypingUnit(NuFunDef(None, get1, None, [], Lam(Tup(), Sel(Var(this), i))), NuFunDef(None, get2, None, [], Sel(Var(this), i)))), NuFunDef(Some(false), a$1, None, [], App(Var(A$1), Tup(_: StrLit(6)))), App(Sel(Var(a$1), get1), Tup()), Sel(Var(a$1), get2))
+//│ TypingUnit {
+//│   class A$1([i: Str,]) {fun get1 = () => (this).i; fun get2 = (this).i}
+//│   let a$1 = A$1("6",)
+//│   Code(List((a$1).get1()))
+//│   Code(List((a$1).get2))
+//│ }
+//│ Mono:
+//│ TypingUnit(NuTypeDef(class, A$1, (), Tup(i: Var(Str)), (), None, None, TypingUnit()), NuFunDef(None, get1$A$1, None, [], Lam(Tup(_: Var(this)), Blk(NuFunDef(Some(false), obj, None, [], Var(this)); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(A$1), StrLit(6)))), None)))), NuFunDef(None, get2$A$1, None, [], Lam(Tup(_: Var(this)), Blk(NuFunDef(Some(false), obj, None, [], Var(this)); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(A$1), StrLit(6)))), None)))), NuFunDef(None, main$$3, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], Var(a$1)); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(A$1), App(Var(get2$A$1), Tup(_: Var(obj)))))), None)))), NuFunDef(None, main$$2, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], Var(a$1)); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(A$1), App(Var(get1$A$1), Tup(_: Var(obj)))))), None)))), NuFunDef(Some(false), a$1, None, [], App(Var(A$1), Tup(_: StrLit(6)))), App(Var(main$$2), Tup()), App(Var(main$$3), Tup()))
+//│ TypingUnit {
+//│   class A$1([i: Str,]) {}
+//│   fun get1$A$1 = (this,) => {let obj = this; if obj is ‹(A$1) then "6"›}
+//│   fun get2$A$1 = (this,) => {let obj = this; if obj is ‹(A$1) then "6"›}
+//│   fun main$$3 = () => {let obj = a$1; if obj is ‹(A$1) then get2$A$1(obj,)›}
+//│   fun main$$2 = () => {let obj = a$1; if obj is ‹(A$1) then get1$A$1(obj,)›}
+//│   let a$1 = A$1("6",)
+//│   Code(List(main$$2()))
+//│   Code(List(main$$3()))
+//│ }
+//│ class A$1(i: Str)
+//│ fun get1$A$1: A$1 -> "6"
+//│ fun get2$A$1: A$1 -> "6"
+//│ fun main$$3: () -> "6"
+//│ fun main$$2: () -> "6"
+//│ let a$1: A$1
+//│ "6"
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding a$1
+
+class X()
+class Y(foo: X) {
+    fun get() = foo
+}
+Y(X()).get()
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, X, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Y, (), Tup(foo: Var(X)), (), None, None, TypingUnit(NuFunDef(None, get, None, [], Lam(Tup(), Var(foo))))), App(Sel(App(Var(Y), Tup(_: App(Var(X), Tup()))), get), Tup()))
+//│ Lifted:
+//│ TypingUnit(NuTypeDef(class, X$1, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Y$2, (), Tup(foo: Var(X$1)), (), None, None, TypingUnit(NuFunDef(None, get, None, [], Lam(Tup(), Sel(Var(this), foo))))), App(Sel(App(Var(Y$2), Tup(_: App(Var(X$1), Tup()))), get), Tup()))
+//│ TypingUnit {
+//│   class X$1([]) {}
+//│   class Y$2([foo: X$1,]) {fun get = () => (this).foo}
+//│   Code(List((Y$2(X$1(),)).get()))
+//│ }
+//│ class X()
+//│ class Y(foo: X) {
+//│   fun get: () -> X
+//│ }
+//│ X
+//│ res
+//│     = X {}
+
+:lift
+class X()
+class Y(foo: X) {
+    fun get() = foo
+}
+Y(X()).get()
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, X, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Y, (), Tup(foo: Var(X)), (), None, None, TypingUnit(NuFunDef(None, get, None, [], Lam(Tup(), Var(foo))))), App(Sel(App(Var(Y), Tup(_: App(Var(X), Tup()))), get), Tup()))
+//│ TypingUnit {
+//│   class X([]) {}
+//│   class Y([foo: X,]) {fun get = () => foo}
+//│   Code(List((Y(X(),)).get()))
+//│ }
+//│ Lifted:
+//│ TypingUnit(NuTypeDef(class, X$1, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Y$2, (), Tup(foo: Var(X$1)), (), None, None, TypingUnit(NuFunDef(None, get, None, [], Lam(Tup(), Sel(Var(this), foo))))), App(Sel(App(Var(Y$2), Tup(_: App(Var(X$1), Tup()))), get), Tup()))
+//│ TypingUnit {
+//│   class X$1([]) {}
+//│   class Y$2([foo: X$1,]) {fun get = () => (this).foo}
+//│   Code(List((Y$2(X$1(),)).get()))
+//│ }
+//│ ╔══[ERROR] Parameter 'foo' cannot be accessed as a field
+//│ ║  l.110: 	    fun get() = foo
+//│ ╙──       	                ^^^
+//│ class X$1()
+//│ class Y$2(foo: X$1) {
+//│   fun get: () -> (X$1 | error)
+//│ }
+//│ X$1 | error
+//│ res
+//│     = undefined

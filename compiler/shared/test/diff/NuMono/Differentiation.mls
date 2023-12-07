@@ -1,43 +1,99 @@
+// A usecase test for defunctionalization
+
 :NewDefs
 
 :nm
 class Exp() {
     virtual fun derive(): Exp
     virtual fun derive() = Exp()
+    virtual fun getVal: Str
+    virtual fun getVal = ""
 }
 class Numeric(i: Int) extends Exp {
     fun derive() = Numeric(0)
-    fun getVal = i
+    fun getVal = toString(i)
 }
-class Variable(x: Str) extends Exp {
+class Variable(nm: Str) extends Exp {
     fun derive() = Numeric(1)
+    fun getVal = nm
 }
-Numeric(1).getVal
+class Sum(lhs: Exp, rhs: Exp) extends Exp {
+    fun derive() = Sum(lhs.derive(), rhs.derive())
+    fun getVal = concat("(")(concat(concat(concat(lhs.getVal)(" + "))(rhs.getVal))(")"))
+}
+class Mul(lhs: Exp, rhs: Exp) extends Exp {
+    fun derive() = Sum(Mul(lhs.derive(), rhs), Mul(lhs, rhs.derive()))
+    fun getVal = concat("(")(concat(concat(concat(lhs.getVal)(" * "))(rhs.getVal))(")"))
+}
+Sum(Variable("y"), Variable("x")).derive()
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, Exp, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, derive, None, [], PolyType(List(),Function(Tuple(List()),TypeName(Exp)))), NuFunDef(None, derive, None, [], Lam(Tup(), App(Var(Exp), Tup()))))), NuTypeDef(class, Numeric, (), Tup(i: Var(Int)), (Var(Exp)), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(), App(Var(Numeric), Tup(_: IntLit(0))))), NuFunDef(None, getVal, None, [], Var(i)))), NuTypeDef(class, Variable, (), Tup(x: Var(Str)), (Var(Exp)), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(), App(Var(Numeric), Tup(_: IntLit(1))))))), Sel(App(Var(Numeric), Tup(_: IntLit(1))), getVal))
+//│ TypingUnit(NuTypeDef(class, Exp, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, derive, None, [], PolyType(List(),Function(Tuple(List()),TypeName(Exp)))), NuFunDef(None, derive, None, [], Lam(Tup(), App(Var(Exp), Tup()))), NuFunDef(None, getVal, None, [], PolyType(List(),TypeName(Str))), NuFunDef(None, getVal, None, [], StrLit()))), NuTypeDef(class, Numeric, (), Tup(i: Var(Int)), (Var(Exp)), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(), App(Var(Numeric), Tup(_: IntLit(0))))), NuFunDef(None, getVal, None, [], App(Var(toString), Tup(_: Var(i)))))), NuTypeDef(class, Variable, (), Tup(nm: Var(Str)), (Var(Exp)), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(), App(Var(Numeric), Tup(_: IntLit(1))))), NuFunDef(None, getVal, None, [], Var(nm)))), NuTypeDef(class, Sum, (), Tup(lhs: Var(Exp), rhs: Var(Exp)), (Var(Exp)), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(), App(Var(Sum), Tup(_: App(Sel(Var(lhs), derive), Tup()), _: App(Sel(Var(rhs), derive), Tup()))))), NuFunDef(None, getVal, None, [], App(App(Var(concat), Tup(_: StrLit(())), Tup(_: App(App(Var(concat), Tup(_: App(App(Var(concat), Tup(_: App(App(Var(concat), Tup(_: Sel(Var(lhs), getVal))), Tup(_: StrLit( + ))))), Tup(_: Sel(Var(rhs), getVal))))), Tup(_: StrLit())))))))), NuTypeDef(class, Mul, (), Tup(lhs: Var(Exp), rhs: Var(Exp)), (Var(Exp)), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(), App(Var(Sum), Tup(_: App(Var(Mul), Tup(_: App(Sel(Var(lhs), derive), Tup()), _: Var(rhs))), _: App(Var(Mul), Tup(_: Var(lhs), _: App(Sel(Var(rhs), derive), Tup()))))))), NuFunDef(None, getVal, None, [], App(App(Var(concat), Tup(_: StrLit(())), Tup(_: App(App(Var(concat), Tup(_: App(App(Var(concat), Tup(_: App(App(Var(concat), Tup(_: Sel(Var(lhs), getVal))), Tup(_: StrLit( * ))))), Tup(_: Sel(Var(rhs), getVal))))), Tup(_: StrLit())))))))), App(Sel(App(Var(Sum), Tup(_: App(Var(Variable), Tup(_: StrLit(y))), _: App(Var(Variable), Tup(_: StrLit(x))))), derive), Tup()))
 //│ Lifted:
-//│ TypingUnit(NuTypeDef(class, Exp$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, derive, None, [], PolyType(List(),Function(Tuple(List()),TypeName(Exp$1)))), NuFunDef(None, derive, None, [], Lam(Tup(), App(Var(Exp$1), Tup()))))), NuTypeDef(class, Numeric$2, (), Tup(i: Var(Int)), (App(Var(Exp$1), Tup())), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(), App(Var(Numeric$2), Tup(_: IntLit(0))))), NuFunDef(None, getVal, None, [], Sel(Var(this), i)))), NuTypeDef(class, Variable$3, (), Tup(x: Var(Str)), (App(Var(Exp$1), Tup())), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(), App(Var(Numeric$2), Tup(_: IntLit(1))))))), Sel(App(Var(Numeric$2), Tup(_: IntLit(1))), getVal))
+//│ TypingUnit(NuTypeDef(class, Exp$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, derive, None, [], PolyType(List(),Function(Tuple(List()),TypeName(Exp$1)))), NuFunDef(None, derive, None, [], Lam(Tup(), App(Var(Exp$1), Tup()))), NuFunDef(None, getVal, None, [], PolyType(List(),TypeName(Str))), NuFunDef(None, getVal, None, [], StrLit()))), NuTypeDef(class, Numeric$2, (), Tup(i: Var(Int)), (App(Var(Exp$1), Tup())), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(), App(Var(Numeric$2), Tup(_: IntLit(0))))), NuFunDef(None, getVal, None, [], App(Var(toString), Tup(_: Sel(Var(this), i)))))), NuTypeDef(class, Variable$3, (), Tup(nm: Var(Str)), (App(Var(Exp$1), Tup())), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(), App(Var(Numeric$2), Tup(_: IntLit(1))))), NuFunDef(None, getVal, None, [], Sel(Var(this), nm)))), NuTypeDef(class, Sum$4, (), Tup(lhs: Var(Exp$1), rhs: Var(Exp$1)), (App(Var(Exp$1), Tup())), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(), App(Var(Sum$4), Tup(_: App(Sel(Sel(Var(this), lhs), derive), Tup()), _: App(Sel(Sel(Var(this), rhs), derive), Tup()))))), NuFunDef(None, getVal, None, [], App(App(Var(concat), Tup(_: StrLit(())), Tup(_: App(App(Var(concat), Tup(_: App(App(Var(concat), Tup(_: App(App(Var(concat), Tup(_: Sel(Sel(Var(this), lhs), getVal))), Tup(_: StrLit( + ))))), Tup(_: Sel(Sel(Var(this), rhs), getVal))))), Tup(_: StrLit())))))))), NuTypeDef(class, Mul$5, (), Tup(lhs: Var(Exp$1), rhs: Var(Exp$1)), (App(Var(Exp$1), Tup())), None, None, TypingUnit(NuFunDef(None, derive, None, [], Lam(Tup(), App(Var(Sum$4), Tup(_: App(Var(Mul$5), Tup(_: App(Sel(Sel(Var(this), lhs), derive), Tup()), _: Sel(Var(this), rhs))), _: App(Var(Mul$5), Tup(_: Sel(Var(this), lhs), _: App(Sel(Sel(Var(this), rhs), derive), Tup()))))))), NuFunDef(None, getVal, None, [], App(App(Var(concat), Tup(_: StrLit(())), Tup(_: App(App(Var(concat), Tup(_: App(App(Var(concat), Tup(_: App(App(Var(concat), Tup(_: Sel(Sel(Var(this), lhs), getVal))), Tup(_: StrLit( * ))))), Tup(_: Sel(Sel(Var(this), rhs), getVal))))), Tup(_: StrLit())))))))), App(Sel(App(Var(Sum$4), Tup(_: App(Var(Variable$3), Tup(_: StrLit(y))), _: App(Var(Variable$3), Tup(_: StrLit(x))))), derive), Tup()))
 //│ TypingUnit {
-//│   class Exp$1([]) {fun derive = () -> Exp$1; fun derive = () => Exp$1()}
-//│   class Numeric$2([i: Int,]): Exp$1() {fun derive = () => Numeric$2(0,); fun getVal = (this).i}
-//│   class Variable$3([x: Str,]): Exp$1() {fun derive = () => Numeric$2(1,)}
-//│   Code(List((Numeric$2(1,)).getVal))
+//│   class Exp$1([]) {
+//│     fun derive = () -> Exp$1
+//│     fun derive = () => Exp$1()
+//│     fun getVal = Str
+//│     fun getVal = ""
+//│   }
+//│   class Numeric$2([i: Int,]): Exp$1() {
+//│     fun derive = () => Numeric$2(0,)
+//│     fun getVal = toString((this).i,)
+//│   }
+//│   class Variable$3([nm: Str,]): Exp$1() {fun derive = () => Numeric$2(1,); fun getVal = (this).nm}
+//│   class Sum$4([lhs: Exp$1, rhs: Exp$1,]): Exp$1() {
+//│     fun derive = () => Sum$4(((this).lhs).derive(), ((this).rhs).derive(),)
+//│     fun getVal = concat("(",)(concat(concat(concat(((this).lhs).getVal,)(" + ",),)(((this).rhs).getVal,),)(")",),)
+//│   }
+//│   class Mul$5([lhs: Exp$1, rhs: Exp$1,]): Exp$1() {
+//│     fun derive = () => Sum$4(Mul$5(((this).lhs).derive(), (this).rhs,), Mul$5((this).lhs, ((this).rhs).derive(),),)
+//│     fun getVal = concat("(",)(concat(concat(concat(((this).lhs).getVal,)(" * ",),)(((this).rhs).getVal,),)(")",),)
+//│   }
+//│   Code(List((Sum$4(Variable$3("y",), Variable$3("x",),)).derive()))
 //│ }
 //│ Mono:
-//│ TypingUnit(NuTypeDef(class, Numeric$2, (), Tup(i: Var(Int)), (App(Var(Exp$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Variable$3, (), Tup(x: Var(Str)), (App(Var(Exp$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Exp$1, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, getVal$Numeric$2, None, [], Lam(Tup(_: Var(this)), Blk(NuFunDef(Some(false), obj, None, [], Var(this)); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Numeric$2), IntLit(1)))), None)))), NuFunDef(None, main$$3, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], App(Var(Numeric$2), Tup(_: IntLit(1)))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Numeric$2), App(Var(getVal$Numeric$2), Tup(_: Var(obj)))))), None)))), App(Var(main$$3), Tup()))
+//│ TypingUnit(NuTypeDef(class, Numeric$2, (), Tup(i: Var(Int)), (App(Var(Exp$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Sum$4, (), Tup(lhs: Var(Exp$1), rhs: Var(Exp$1)), (App(Var(Exp$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Mul$5, (), Tup(lhs: Var(Exp$1), rhs: Var(Exp$1)), (App(Var(Exp$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Variable$3, (), Tup(nm: Var(Str)), (App(Var(Exp$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Exp$1, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, derive$Sum$4, None, [], Lam(Tup(_: Var(this)), App(Var(Sum$4), Tup(_: Blk(NuFunDef(Some(false), obj, None, [], Blk(NuFunDef(Some(false), obj, None, [], Var(this)); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Sum$4), Sel(Var(obj), lhs)))), None))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Variable$3), App(Var(derive$Variable$3), Tup(_: Var(obj)))))), None)), _: Blk(NuFunDef(Some(false), obj, None, [], Blk(NuFunDef(Some(false), obj, None, [], Var(this)); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Sum$4), Sel(Var(obj), rhs)))), None))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Variable$3), App(Var(derive$Variable$3), Tup(_: Var(obj)))))), None)))))), NuFunDef(None, main$$5, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], App(Var(Sum$4), Tup(_: App(Var(Variable$3), Tup(_: StrLit(y))), _: App(Var(Variable$3), Tup(_: StrLit(x)))))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Sum$4), App(Var(derive$Sum$4), Tup(_: Var(obj)))))), None)))), NuFunDef(None, derive$Variable$3, None, [], Lam(Tup(_: Var(this)), App(Var(Numeric$2), Tup(_: IntLit(1))))), App(Var(main$$5), Tup()))
 //│ TypingUnit {
 //│   class Numeric$2([i: Int,]): Exp$1() {}
-//│   class Variable$3([x: Str,]): Exp$1() {}
+//│   class Sum$4([lhs: Exp$1, rhs: Exp$1,]): Exp$1() {}
+//│   class Mul$5([lhs: Exp$1, rhs: Exp$1,]): Exp$1() {}
+//│   class Variable$3([nm: Str,]): Exp$1() {}
 //│   class Exp$1([]) {}
-//│   fun getVal$Numeric$2 = (this,) => {let obj = this; if obj is ‹(Numeric$2) then 1›}
-//│   fun main$$3 = () => {let obj = Numeric$2(1,); if obj is ‹(Numeric$2) then getVal$Numeric$2(obj,)›}
-//│   Code(List(main$$3()))
+//│   fun derive$Sum$4 = (this,) => Sum$4({let obj = {let obj = this; if obj is ‹(Sum$4) then (obj).lhs›}; if obj is ‹(Variable$3) then derive$Variable$3(obj,)›}, {let obj = {let obj = this; if obj is ‹(Sum$4) then (obj).rhs›}; if obj is ‹(Variable$3) then derive$Variable$3(obj,)›},)
+//│   fun main$$5 = () => {let obj = Sum$4(Variable$3("y",), Variable$3("x",),); if obj is ‹(Sum$4) then derive$Sum$4(obj,)›}
+//│   fun derive$Variable$3 = (this,) => Numeric$2(1,)
+//│   Code(List(main$$5()))
 //│ }
+//│ ╔══[ERROR] Parameter 'lhs' cannot be accessed as a field
+//│ ║  l.21: 	    fun derive() = Sum(lhs.derive(), rhs.derive())
+//│ ║        	                       ^^^
+//│ ╟── Either make the parameter a `val` or access it through destructuring
+//│ ║  l.20: 	class Sum(lhs: Exp, rhs: Exp) extends Exp {
+//│ ╙──      	          ^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ╟── field selection of type `Exp$1` is not an instance of type `Variable$3`
+//│ ║  l.21: 	    fun derive() = Sum(lhs.derive(), rhs.derive())
+//│ ╙──      	                       ^^^
+//│ ╔══[ERROR] Parameter 'rhs' cannot be accessed as a field
+//│ ║  l.21: 	    fun derive() = Sum(lhs.derive(), rhs.derive())
+//│ ║        	                                     ^^^
+//│ ╟── Either make the parameter a `val` or access it through destructuring
+//│ ║  l.20: 	class Sum(lhs: Exp, rhs: Exp) extends Exp {
+//│ ╙──      	                    ^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ╟── field selection of type `Exp$1` is not an instance of type `Variable$3`
+//│ ║  l.21: 	    fun derive() = Sum(lhs.derive(), rhs.derive())
+//│ ╙──      	                                     ^^^
 //│ class Numeric$2(i: Int) extends Exp$1
-//│ class Variable$3(x: Str) extends Exp$1
+//│ class Sum$4(lhs: Exp$1, rhs: Exp$1) extends Exp$1
+//│ class Mul$5(lhs: Exp$1, rhs: Exp$1) extends Exp$1
+//│ class Variable$3(nm: Str) extends Exp$1
 //│ class Exp$1()
-//│ fun getVal$Numeric$2: Numeric$2 -> 1
-//│ fun main$$3: () -> 1
-//│ 1
+//│ fun derive$Sum$4: Sum$4 -> Sum$4
+//│ fun main$$5: () -> Sum$4
+//│ fun derive$Variable$3: anything -> Numeric$2
+//│ Sum$4
 //│ res
-//│     = 1
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
