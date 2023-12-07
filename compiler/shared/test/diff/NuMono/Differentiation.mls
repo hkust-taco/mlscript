@@ -1,7 +1,6 @@
 :NewDefs
 
 :nm
-:dd
 class Exp() {
     virtual fun derive(): Exp
     virtual fun derive() = Exp()
@@ -25,40 +24,20 @@ Numeric(1).getVal
 //│   Code(List((Numeric$2(1,)).getVal))
 //│ }
 //│ Mono:
-//│ Queue: HashSet(main$$3)
-//│ Evaluating main$$3
-//│ ╓Eval Sel(App(Var(Numeric$2), Tup(_: IntLit(1))), getVal):
-//│ ║╓Eval App(Var(Numeric$2), Tup(_: IntLit(1))):
-//│ ║║╓Eval Var(Numeric$2):
-//│ ║║╙Result List(TypeVal(Numeric$2)):
-//│ ║║╓Eval Tup(_: IntLit(1)):
-//│ ║║║╓Eval IntLit(1):
-//│ ║║║╙Result List(LiteralVal(Left(1))):
-//│ ║║╙Result List(TupVal(Map(0 -> LiteralVal(Left(1))))):
-//│ ║╙Result List(ObjVal(Numeric$2, HashMap(i -> LiteralVal(Left(1))))):
-//│ ╙Result List(FuncVal(getVal$Numeric$2, None, List((this,ObjVal(Numeric$2, HashMap(i -> LiteralVal(Left(1)))))))):
-//│ No change in bounds of main$$3
-//│ ========DEFUNC PHASE========
-//│ Expanding List()
-//│ Expanding List(ObjVal(Numeric$2, HashMap(i -> LiteralVal(Left(1)))))
-//│ Expanding List()
-//│ TypingUnit(NuTypeDef(class, Numeric$2, (), Tup(i: Var(Int)), (App(Var(Exp$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Variable$3, (), Tup(x: Var(Str)), (App(Var(Exp$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Exp$1, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, getVal$Numeric$2, None, [], Lam(Tup(_: Var(this)), Blk(NuFunDef(Some(false), obj, None, [], Var(this)); If(IfOpApp(Var(obj), Var(is), IfBlock()), None)))), NuFunDef(None, main$$3, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], App(Var(Numeric$2), Tup(_: IntLit(1)))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Numeric$2), App(Var(getVal$Numeric$2), Tup(_: Var(obj)))))), None)))), App(Var(main$$3), Tup()))
+//│ TypingUnit(NuTypeDef(class, Numeric$2, (), Tup(i: Var(Int)), (App(Var(Exp$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Variable$3, (), Tup(x: Var(Str)), (App(Var(Exp$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Exp$1, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, getVal$Numeric$2, None, [], Lam(Tup(_: Var(this)), Blk(NuFunDef(Some(false), obj, None, [], Var(this)); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Numeric$2), IntLit(1)))), None)))), NuFunDef(None, main$$3, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], App(Var(Numeric$2), Tup(_: IntLit(1)))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Numeric$2), App(Var(getVal$Numeric$2), Tup(_: Var(obj)))))), None)))), App(Var(main$$3), Tup()))
 //│ TypingUnit {
 //│   class Numeric$2([i: Int,]): Exp$1() {}
 //│   class Variable$3([x: Str,]): Exp$1() {}
 //│   class Exp$1([]) {}
-//│   fun getVal$Numeric$2 = (this,) => {let obj = this; if obj is ‹›}
+//│   fun getVal$Numeric$2 = (this,) => {let obj = this; if obj is ‹(Numeric$2) then 1›}
 //│   fun main$$3 = () => {let obj = Numeric$2(1,); if obj is ‹(Numeric$2) then getVal$Numeric$2(obj,)›}
 //│   Code(List(main$$3()))
 //│ }
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
-//│ 	at: mlscript.utils.package$.die(package.scala:208)
-//│ 	at: mlscript.ucs.Desugarer.$anonfun$checkExhaustive$2(Desugarer.scala:697)
-//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
-//│ 	at: mlscript.ucs.Desugarer.traceUCS(Desugarer.scala:19)
-//│ 	at: mlscript.ucs.Desugarer.checkExhaustive(Desugarer.scala:774)
-//│ 	at: mlscript.ucs.Desugarer.$anonfun$desugarIf$2(Desugarer.scala:392)
-//│ 	at: mlscript.ucs.Desugarer.traceUCS(Desugarer.scala:19)
-//│ 	at: mlscript.ucs.Desugarer.desugarIf(Desugarer.scala:361)
-//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1250)
+//│ class Numeric$2(i: Int) extends Exp$1
+//│ class Variable$3(x: Str) extends Exp$1
+//│ class Exp$1()
+//│ fun getVal$Numeric$2: Numeric$2 -> 1
+//│ fun main$$3: () -> 1
+//│ 1
+//│ res
+//│     = 1

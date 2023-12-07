@@ -252,7 +252,11 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
           case obj: ObjVal => 
             obj.fields.get(fieldName.name) match
               case Some(fld) => fld
-              case None => monoer.nuGetFieldVal(obj, fieldName.name)
+              case None => 
+                monoer.nuGetFieldVal(obj, fieldName.name).getValue.map {
+                  case FuncVal(name, None, ctx) => monoer.nuGetFuncRetVal(name, Some(ctx.unzip._2))(using dbgIndent = "║"++dbgIndent)
+                  case other => BoundedTerm(other)
+                }.fold(BoundedTerm())(_ ++ _)
           case tup: TupVal =>
             tup.fields.get(fieldName) match
               case Some(fld) => fld
@@ -416,7 +420,6 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
       case App(sel@Sel(receiver, field), args) => 
         val nuReceiver = nuDefunctionalize(receiver)
         val nuArgs = nuDefunctionalize(args)
-        debug.writeLine(s"${showStructure(receiver)}")
         val ifBlockLines = valSetToBranches(receiver.evaledTerm.getValue.toList)(using field, Some(extractFuncArgs(nuArgs)))
         val ifBlk = IfBlock(ifBlockLines)
         Blk(NuFunDef(Some(false), Var("obj"), None, Nil, Left(nuReceiver))(None, None, None, None, false) ::

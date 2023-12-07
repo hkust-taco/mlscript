@@ -1,7 +1,6 @@
 :NewDefs
 
 :nm
-:dd
 class Foo() {fun f = 0}
 module x { val y = Foo() }
 x.y.f
@@ -15,26 +14,27 @@ x.y.f
 //│   Code(List(((x$2()).y).f))
 //│ }
 //│ Mono:
-//│ Queue: HashSet(main$$2)
-//│ Evaluating main$$2
-//│ ╓Eval Sel(Sel(App(Var(x$2), Tup()), y), f):
-//│ ║╓Eval Sel(App(Var(x$2), Tup()), y):
-//│ ║║╓Eval App(Var(x$2), Tup()):
-//│ ║║║╓Eval Var(x$2):
-//│ ║║║╙Result List(TypeVal(x$2)):
-//│ ║║║╓Eval Tup():
-//│ ║║║╙Result List(TupVal(Map())):
-//│ ║║╙Result List(ObjVal(x$2, HashMap())):
-//│ ║╙Result List(FuncVal(y$x$2, None, List((this,ObjVal(x$2, HashMap()))))):
-//│ Cannot select from non-object value FuncVal(y$x$2, None, List((this,ObjVal(x$2, HashMap()))))
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.DiffTests.$anonfun$new$30(DiffTests.scala:453)
-//│ 	at: scala.Option.getOrElse(Option.scala:201)
-//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:453)
-//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1080)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
-//│ 	at: org.scalatest.Transformer.apply(Transformer.scala:22)
-//│ 	at: org.scalatest.Transformer.apply(Transformer.scala:20)
+//│ TypingUnit(NuTypeDef(module, x$2, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Foo$1, (), Tup(), (), None, None, TypingUnit()), NuFunDef(Some(false), y$x$2, None, [], Lam(Tup(_: Var(this)), App(Var(Foo$1), Tup()))), NuFunDef(None, f$Foo$1, None, [], Lam(Tup(_: Var(this)), IntLit(0))), NuFunDef(None, main$$2, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], Blk(NuFunDef(Some(false), obj, None, [], App(Var(x$2), Tup())); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(x$2), App(Var(y$x$2), Tup(_: Var(obj)))))), None))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Foo$1), App(Var(f$Foo$1), Tup(_: Var(obj)))))), None)))), App(Var(main$$2), Tup()))
+//│ TypingUnit {
+//│   module x$2([]) {}
+//│   class Foo$1([]) {}
+//│   let y$x$2 = (this,) => Foo$1()
+//│   fun f$Foo$1 = (this,) => 0
+//│   fun main$$2 = () => {let obj = {let obj = x$2(); if obj is ‹(x$2) then y$x$2(obj,)›}; if obj is ‹(Foo$1) then f$Foo$1(obj,)›}
+//│   Code(List(main$$2()))
+//│ }
+//│ ╔══[ERROR] Module parameters are not supported
+//│ ╙──
+//│ ╔══[ERROR] Parameterized modules are not yet supported
+//│ ╙──
+//│ module x$2()
+//│ class Foo$1()
+//│ let y$x$2: anything -> Foo$1
+//│ fun f$Foo$1: anything -> 0
+//│ fun main$$2: () -> 0
+//│ 0
+//│ y$x$2
+//│       = [Function: y$x$21]
+//│ res
+//│ Runtime error:
+//│   TypeError: x$2 is not a function
