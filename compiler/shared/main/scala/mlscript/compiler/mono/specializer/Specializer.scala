@@ -407,6 +407,9 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
               throw MonomorphError(s"Selection of field ${field} from object ${o} results in unhandled case ${other}")
           }
           valSetToBranches(next, Left(branchCase) :: acc)
+        // case t@TupVal(fields) =>
+        //   val selValue = fields.getOrElse(field, throw MonomorphError(s"Invalid field selection ${field} from Tuple"))
+
 
     val ret = term match
       case x: (Lit | Var) => x
@@ -428,12 +431,17 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
       case If(IfThen(expr, rhs), els) => If(IfThen(nuDefunctionalize(expr), nuDefunctionalize(rhs)), els.map(nuDefunctionalize))
       case New(Some((constructor, args)), body) => New(Some((constructor, nuDefunctionalize(args))), body)
       case Sel(receiver, fieldName) => 
-        //Sel(nuDefunctionalize(receiver), fieldName)
         val nuReceiver = nuDefunctionalize(receiver)
-        val ifBlockLines = valSetToBranches(receiver.evaledTerm.getValue.toList)(using fieldName, None)
-        val ifBlk = IfBlock(ifBlockLines)
-        Blk(NuFunDef(Some(false), Var("obj"), None, Nil, Left(nuReceiver))(None, None, None, None, false) ::
-            List(If(IfOpApp(Var("obj"), Var("is"), ifBlk), None)))
+        if (receiver.evaledTerm.getValue.forall(_.isInstanceOf[ObjVal]))
+        then
+          val ifBlockLines = valSetToBranches(receiver.evaledTerm.getValue.toList)(using fieldName, None)
+          val ifBlk = IfBlock(ifBlockLines)
+          Blk(
+            NuFunDef(Some(false), Var("obj"), None, Nil, Left(nuReceiver))(None, None, None, None, false) ::
+            List(If(IfOpApp(Var("obj"), Var("is"), ifBlk), None))
+          )
+        else 
+          Sel(nuReceiver, fieldName)
       case _ => throw MonomorphError(s"Cannot Defunctionalize ${showStructure(term)}")
     ret
   }

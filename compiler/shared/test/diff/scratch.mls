@@ -2,57 +2,6 @@
 
 :nm
 :dd
-class Foo() {fun f() = 0}
-[Foo()].0.f()
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, Foo, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(), IntLit(0))))), App(Sel(Sel(Tup(_: App(Var(Foo), Tup())), 0), f), Tup()))
-//│ Lifted:
-//│ TypingUnit(NuTypeDef(class, Foo$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(), IntLit(0))))), App(Sel(Sel(Tup(_: App(Var(Foo$1), Tup())), 0), f), Tup()))
-//│ TypingUnit {
-//│   class Foo$1([]) {fun f = () => 0}
-//│   Code(List((([Foo$1(),]).0).f()))
-//│ }
-//│ Mono:
-//│ Queue: HashSet(main$$1)
-//│ Evaluating main$$1
-//│ ╓Eval App(Sel(Sel(Tup(_: App(Var(Foo$1), Tup())), 0), f), Tup()):
-//│ ║╓Eval Sel(Sel(Tup(_: App(Var(Foo$1), Tup())), 0), f):
-//│ ║║╓Eval Sel(Tup(_: App(Var(Foo$1), Tup())), 0):
-//│ ║║║╓Eval Tup(_: App(Var(Foo$1), Tup())):
-//│ ║║║║╓Eval App(Var(Foo$1), Tup()):
-//│ ║║║║║╓Eval Var(Foo$1):
-//│ ║║║║║╙Result List(TypeVal(Foo$1)):
-//│ ║║║║║╓Eval Tup():
-//│ ║║║║║╙Result List(TupVal(Map())):
-//│ ║║║║╙Result List(ObjVal(Foo$1, HashMap())):
-//│ ║║║╙Result List(TupVal(Map(0 -> ObjVal(Foo$1, HashMap())))):
-//│ ║║╙Result List(ObjVal(Foo$1, HashMap())):
-//│ ║╙Result List(FuncVal(f$Foo$1, (), List((this,ObjVal(Foo$1, HashMap()))))):
-//│ ║╓Eval Tup():
-//│ ║╙Result List(TupVal(Map())):
-//│ ║Apply Function f$Foo$1
-//│ ║Evaluating f$Foo$1
-//│ ║╓Eval IntLit(0):
-//│ ║╙Result List(LiteralVal(Left(0))):
-//│ ║No change in bounds of f$Foo$1
-//│ ╙Result List(LiteralVal(Left(0))):
-//│ No change in bounds of main$$1
-//│ ========DEFUNC PHASE========
-//│ Expanding List(TupVal(Map(0 -> ObjVal(Foo$1, HashMap()))))
-//│ /!!!\ Uncaught error: scala.MatchError: TupVal(Map(0 -> ObjVal(Foo$1, HashMap()))) (of class mlscript.TupVal)
-//│ 	at: mlscript.compiler.mono.specializer.Specializer.valSetToBranches$1(Specializer.scala:409)
-//│ 	at: mlscript.compiler.mono.specializer.Specializer.nuDefunctionalize(Specializer.scala:433)
-//│ 	at: mlscript.compiler.mono.specializer.Specializer.nuDefunctionalize(Specializer.scala:414)
-//│ 	at: mlscript.compiler.mono.Monomorph.nuDefunctionalize$$anonfun$1(Monomorph.scala:219)
-//│ 	at: scala.collection.mutable.HashMap.mapValuesInPlaceImpl(HashMap.scala:547)
-//│ 	at: scala.collection.mutable.MapOps.mapValuesInPlace(Map.scala:203)
-//│ 	at: scala.collection.mutable.MapOps.mapValuesInPlace$(Map.scala:201)
-//│ 	at: scala.collection.mutable.AbstractMap.mapValuesInPlace(Map.scala:268)
-//│ 	at: mlscript.compiler.mono.Monomorph.nuDefunctionalize(Monomorph.scala:223)
-//│ 	at: mlscript.compiler.DiffTestCompiler.postProcess(Test.scala:47)
-
-:nm
-:dd
 class Foo() {fun f = 0}
 module x { val y = Foo() }
 x.y.f
@@ -89,4 +38,3 @@ x.y.f
 //│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
 //│ 	at: org.scalatest.Transformer.apply(Transformer.scala:22)
 //│ 	at: org.scalatest.Transformer.apply(Transformer.scala:20)
-
