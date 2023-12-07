@@ -203,7 +203,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
   /*
     Evaluate a Term given an evaluation Context and populate its EvaledTerm
   */
-  val builtInOps: Set[String] = Set("+", "-", ">", "<", "*") 
+  val builtInOps: Set[String] = Set("+", "-", ">", "<", "*", "==") 
   def nuEvaluate(term: Term)(using evalCtx: Map[String, BoundedTerm], callingStack: List[String], dbgIndent: String = ""): Term =
     debug.writeLine(s"${dbgIndent}╓Eval ${mlscript.codegen.Helpers.inspect(term)}:")
     val res = term match
