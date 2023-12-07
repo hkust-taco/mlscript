@@ -735,7 +735,10 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     val nCtx = freeVs.addT(nTps)
     val nParams = 
       outer.map(x => List(toFldsEle(Var(genParName(x.liftedNm.name))))).getOrElse(Nil)
-      ++ params.fold(Nil)(t => t.fields)
+      ++ params.fold(Nil)(t => t.fields.map{
+        case (Some(nm), Fld(flags, Var(name))) => (Some(nm), Fld(flags, cache.get(TypeName(name)).map(_.liftedNm.toVar).getOrElse(Var(name))))
+        case other => other
+      })
       ++ freeVs.vSet.map(toFldsEle) 
     val nPars = pars.map(liftTerm(_)(using emptyCtx, nCache, globFuncs, nOuter)).unzip
     val nFuncs = funcList.map(liftMemberFunc(_)(using emptyCtx, nCache, globFuncs, nOuter)).unzip

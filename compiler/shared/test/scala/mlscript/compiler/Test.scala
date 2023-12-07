@@ -66,7 +66,11 @@ class DiffTestCompiler extends DiffTests {
       }
       // outputBuilder ++= treeDebug.getLines.mkString("\n")
     }
-    (outputBuilder.toString().linesIterator.toList, None)
+    if (mode.lift) {
+      (outputBuilder.toString().linesIterator.toList, Some(rstUnit))  
+    } else {
+      (outputBuilder.toString().linesIterator.toList, None)
+    }
   
   override protected lazy val files = allFiles.filter { file =>
       val fileName = file.baseName
