@@ -25,7 +25,7 @@ class DiffTestCompiler extends DiffTests {
     var rstUnit = unit;
     try
       val lifter = ClassLifter(mode.fullExceptionStack)
-      rstUnit = lifter.liftTypingUnit(unit)
+      if (!mode.nolift) rstUnit = lifter.liftTypingUnit(unit)
       output(s"${showStructure(rstUnit)}")
       output(PrettyPrinter.showTypingUnit(rstUnit))
       //outputBuilder ++= s"${mlscript.codegen.Helpers.inspect(rstUnit)}\n"

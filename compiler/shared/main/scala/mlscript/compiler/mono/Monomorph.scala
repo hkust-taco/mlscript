@@ -7,7 +7,7 @@ import mlscript.{App, Asc, Assign, Bind, Blk, Bra, CaseOf, Lam, Let, Lit,
                  New, Rcd, Sel, Subs, Term, Test, Tup, With, Var, Fld, FldFlags, If}
 import mlscript.{IfThen, IfElse, IfLet, IfOpApp, IfOpsApp, IfBlock, Statement}
 import mlscript.{IntLit, DecLit, StrLit, UnitLit}
-import scala.collection.immutable.{HashMap}
+import scala.collection.immutable.{HashMap, ListMap}
 import scala.collection.mutable.{Map as MutMap, Set as MutSet}
 import scala.collection.mutable.ListBuffer
 import mlscript.Cls
@@ -476,7 +476,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
         val ags = (params match
           case Some(p) => extractObjParams(p).map(_._2.name).zip(args).toList // FIXME: Different structure for Obj Params
           case None => Nil)
-        ObjVal(tpName, MutMap(ags: _*)) // TODO: parent object fields
+        ObjVal(tpName, ListMap(ags: _*)) // TODO: parent object fields
       case None => throw MonomorphError(s"TypeName ${tpName} not found in implementations ${nuAllTypeImpls}")
 
   def createTupVal(fields: List[BoundedTerm]): TupVal = 

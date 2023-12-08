@@ -53,37 +53,31 @@ Sum(Variable("y"), Variable("x")).derive()
 //│   Code(List((Sum$4(Variable$3("y",), Variable$3("x",),)).derive()))
 //│ }
 //│ Mono:
-//│ TypingUnit(NuTypeDef(class, Numeric$2, (), Tup(i: Var(Int)), (App(Var(Exp$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Sum$4, (), Tup(lhs: Var(Exp$1), rhs: Var(Exp$1)), (App(Var(Exp$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Mul$5, (), Tup(lhs: Var(Exp$1), rhs: Var(Exp$1)), (App(Var(Exp$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Variable$3, (), Tup(nm: Var(Str)), (App(Var(Exp$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Exp$1, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, derive$Sum$4, None, [], Lam(Tup(_: Var(this)), App(Var(Sum$4), Tup(_: Blk(NuFunDef(Some(false), obj, None, [], Blk(NuFunDef(Some(false), obj, None, [], Var(this)); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Sum$4), Sel(Var(obj), lhs)))), None))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Variable$3), App(Var(derive$Variable$3), Tup(_: Var(obj)))))), None)), _: Blk(NuFunDef(Some(false), obj, None, [], Blk(NuFunDef(Some(false), obj, None, [], Var(this)); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Sum$4), Sel(Var(obj), rhs)))), None))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Variable$3), App(Var(derive$Variable$3), Tup(_: Var(obj)))))), None)))))), NuFunDef(None, main$$5, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], App(Var(Sum$4), Tup(_: App(Var(Variable$3), Tup(_: StrLit(y))), _: App(Var(Variable$3), Tup(_: StrLit(x)))))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Sum$4), App(Var(derive$Sum$4), Tup(_: Var(obj)))))), None)))), NuFunDef(None, derive$Variable$3, None, [], Lam(Tup(_: Var(this)), App(Var(Numeric$2), Tup(_: IntLit(1))))), App(Var(main$$5), Tup()))
+//│ TypingUnit(NuTypeDef(class, Numeric$2, (), Tup(i: Var(Int)), (App(Var(Exp$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Sum$4, (), Tup(lhs: Var(Exp$1), rhs: Var(Exp$1)), (App(Var(Exp$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Mul$5, (), Tup(lhs: Var(Exp$1), rhs: Var(Exp$1)), (App(Var(Exp$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Variable$3, (), Tup(nm: Var(Str)), (App(Var(Exp$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Exp$1, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, derive$Sum$4, None, [], Lam(Tup(_: Var(this)), App(Var(Sum$4), Tup(_: Let(false, obj, Let(false, obj, Var(this), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(App(Var(Sum$4), Tup(_: Var(lhs), _: Var(rhs))), Var(lhs)))), None)), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Variable$3), App(Var(derive$Variable$3), Tup(_: Var(obj)))))), None)), _: Let(false, obj, Let(false, obj, Var(this), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(App(Var(Sum$4), Tup(_: Var(lhs), _: Var(rhs))), Var(rhs)))), None)), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Variable$3), App(Var(derive$Variable$3), Tup(_: Var(obj)))))), None)))))), NuFunDef(None, main$$5, None, [], Lam(Tup(), Let(false, obj, App(Var(Sum$4), Tup(_: App(Var(Variable$3), Tup(_: StrLit(y))), _: App(Var(Variable$3), Tup(_: StrLit(x))))), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Sum$4), App(Var(derive$Sum$4), Tup(_: Var(obj)))))), None)))), NuFunDef(None, derive$Variable$3, None, [], Lam(Tup(_: Var(this)), App(Var(Numeric$2), Tup(_: IntLit(1))))), App(Var(main$$5), Tup()))
 //│ TypingUnit {
 //│   class Numeric$2([i: Int,]): Exp$1() {}
 //│   class Sum$4([lhs: Exp$1, rhs: Exp$1,]): Exp$1() {}
 //│   class Mul$5([lhs: Exp$1, rhs: Exp$1,]): Exp$1() {}
 //│   class Variable$3([nm: Str,]): Exp$1() {}
 //│   class Exp$1([]) {}
-//│   fun derive$Sum$4 = (this,) => Sum$4({let obj = {let obj = this; if obj is ‹(Sum$4) then (obj).lhs›}; if obj is ‹(Variable$3) then derive$Variable$3(obj,)›}, {let obj = {let obj = this; if obj is ‹(Sum$4) then (obj).rhs›}; if obj is ‹(Variable$3) then derive$Variable$3(obj,)›},)
-//│   fun main$$5 = () => {let obj = Sum$4(Variable$3("y",), Variable$3("x",),); if obj is ‹(Sum$4) then derive$Sum$4(obj,)›}
+//│   fun derive$Sum$4 = (this,) => Sum$4(let obj = let obj = this in if obj is ‹(Sum$4(lhs, rhs,)) then lhs› in if obj is ‹(Variable$3) then derive$Variable$3(obj,)›, let obj = let obj = this in if obj is ‹(Sum$4(lhs, rhs,)) then rhs› in if obj is ‹(Variable$3) then derive$Variable$3(obj,)›,)
+//│   fun main$$5 = () => let obj = Sum$4(Variable$3("y",), Variable$3("x",),) in if obj is ‹(Sum$4) then derive$Sum$4(obj,)›
 //│   fun derive$Variable$3 = (this,) => Numeric$2(1,)
 //│   Code(List(main$$5()))
 //│ }
-//│ ╔══[ERROR] Parameter 'lhs' cannot be accessed as a field
-//│ ║  l.21: 	    fun derive() = Sum(lhs.derive(), rhs.derive())
-//│ ║        	                       ^^^
-//│ ╟── Either make the parameter a `val` or access it through destructuring
-//│ ║  l.20: 	class Sum(lhs: Exp, rhs: Exp) extends Exp {
-//│ ╙──      	          ^^^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ╟── field selection of type `Exp$1` is not an instance of type `Variable$3`
-//│ ║  l.21: 	    fun derive() = Sum(lhs.derive(), rhs.derive())
+//│ ║  l.49: 	class Sum(lhs: Exp, rhs: Exp) extends Exp {
+//│ ║        	          ^^^
+//│ ╟── but it flows into reference with expected type `Variable$3`
+//│ ║  l.50: 	    fun derive() = Sum(lhs.derive(), rhs.derive())
 //│ ╙──      	                       ^^^
-//│ ╔══[ERROR] Parameter 'rhs' cannot be accessed as a field
-//│ ║  l.21: 	    fun derive() = Sum(lhs.derive(), rhs.derive())
-//│ ║        	                                     ^^^
-//│ ╟── Either make the parameter a `val` or access it through destructuring
-//│ ║  l.20: 	class Sum(lhs: Exp, rhs: Exp) extends Exp {
-//│ ╙──      	                    ^^^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ╟── field selection of type `Exp$1` is not an instance of type `Variable$3`
-//│ ║  l.21: 	    fun derive() = Sum(lhs.derive(), rhs.derive())
+//│ ║  l.49: 	class Sum(lhs: Exp, rhs: Exp) extends Exp {
+//│ ║        	                    ^^^
+//│ ╟── but it flows into reference with expected type `Variable$3`
+//│ ║  l.50: 	    fun derive() = Sum(lhs.derive(), rhs.derive())
 //│ ╙──      	                                     ^^^
 //│ class Numeric$2(i: Int) extends Exp$1
 //│ class Sum$4(lhs: Exp$1, rhs: Exp$1) extends Exp$1
@@ -95,5 +89,4 @@ Sum(Variable("y"), Variable("x")).derive()
 //│ fun derive$Variable$3: anything -> Numeric$2
 //│ Sum$4
 //│ res
-//│ Runtime error:
-//│   Error: non-exhaustive case expression
+//│     = Sum$4 {}

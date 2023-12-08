@@ -2,6 +2,7 @@ package mlscript
 
 import mlscript.utils._, shorthands._
 import scala.collection.mutable.{Map => MutMap}
+import scala.collection.immutable.ListMap
 
 
 // Terms
@@ -266,7 +267,7 @@ object VarianceInfo {
 
 abstract class MonoVal extends MonoValImpl
 final case class TypeVal(name: String) extends MonoVal
-final case class ObjVal(name: String, fields: MutMap[String, BoundedTerm]) extends MonoVal with ObjValImpl
+final case class ObjVal(name: String, fields: ListMap[String, BoundedTerm]) extends MonoVal with ObjValImpl
 final case class FuncVal(name: String, params: Option[List[String]], ctx: List[(String, BoundedTerm)]) extends MonoVal
 final case class UnknownVal() extends MonoVal
 // Terribly unintuitive implementation, should attempt to refactor.

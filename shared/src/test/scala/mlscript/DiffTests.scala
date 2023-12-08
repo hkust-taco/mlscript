@@ -45,6 +45,7 @@ abstract class ModeType {
   def revConv: Bool
   def numono: Bool
   def lift: Bool
+  def nolift: Bool
 }
 
 class DiffTests
@@ -176,6 +177,7 @@ class DiffTests
       revConv: Bool = false,
       numono: Bool = false,
       lift: Bool = false,
+      nolift: Bool = false,
       // noProvs: Bool = false,
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
@@ -281,6 +283,7 @@ class DiffTests
           case "rc" => {mode.copy(revConv = true)}
           case "nm" => {mode.copy(numono = true)}
           case "lift" => {mode.copy(lift = true)}
+          case "nolift" => {mode.copy(nolift = true)}
           case "exit" =>
             out.println(exitMarker)
             ls.dropWhile(_ =:= exitMarker).tails.foreach {

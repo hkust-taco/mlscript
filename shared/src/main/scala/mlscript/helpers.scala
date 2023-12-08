@@ -2,6 +2,8 @@ package mlscript
 
 import scala.util.chaining._
 import scala.collection.mutable.{Map => MutMap, SortedMap => SortedMutMap, Set => MutSet, Buffer}
+import scala.collection.immutable.ListMap
+
 
 import math.Ordered.orderingToOrdered
 
@@ -1105,7 +1107,7 @@ trait ObjValImpl { self: ObjVal =>
         (k -> s1)
       else (k -> (s1 ++ s2))
     })
-    ObjVal(self.name, MutMap(nFlds.toSeq: _*))
+    ObjVal(self.name, ListMap(nFlds.toSeq: _*))
   }
 
 }

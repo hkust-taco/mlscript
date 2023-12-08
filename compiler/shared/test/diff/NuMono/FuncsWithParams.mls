@@ -27,7 +27,7 @@ getArith(2).use(4,6)
 //│   Code(List((getArith$1(2,)).use(4, 6,)))
 //│ }
 //│ Mono:
-//│ TypingUnit(NuTypeDef(class, Arithmetic$1, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Sub$3, (), Tup(), (App(Var(Arithmetic$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Add$2, (), Tup(), (App(Var(Arithmetic$1), Tup())), None, None, TypingUnit()), NuFunDef(None, getArith$1, None, [], Lam(Tup(_: Var(choice)), If(IfThen(App(Var(==), Tup(_: Var(choice), _: IntLit(1))), App(Var(Add$2), Tup())), Some(App(Var(Sub$3), Tup()))))), NuFunDef(None, use$Add$2, None, [], Lam(Tup(_: Var(this), _: Var(num1), _: Var(num2)), App(Var(+), Tup(_: Var(num1), _: Var(num2))))), NuFunDef(None, use$Sub$3, None, [], Lam(Tup(_: Var(this), _: Var(num1), _: Var(num2)), App(Var(-), Tup(_: Var(num1), _: Var(num2))))), NuFunDef(None, main$$5, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], App(Var(getArith$1), Tup(_: IntLit(2)))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Sub$3), App(Var(use$Sub$3), Tup(_: Var(obj), _: IntLit(4), _: IntLit(6))));IfThen(Var(Add$2), App(Var(use$Add$2), Tup(_: Var(obj), _: IntLit(4), _: IntLit(6)))))), None)))), NuFunDef(None, main$$4, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), obj, None, [], App(Var(getArith$1), Tup(_: IntLit(1)))); If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Sub$3), App(Var(use$Sub$3), Tup(_: Var(obj), _: IntLit(4), _: IntLit(6))));IfThen(Var(Add$2), App(Var(use$Add$2), Tup(_: Var(obj), _: IntLit(4), _: IntLit(6)))))), None)))), App(Var(main$$4), Tup()), App(Var(main$$5), Tup()))
+//│ TypingUnit(NuTypeDef(class, Arithmetic$1, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Sub$3, (), Tup(), (App(Var(Arithmetic$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Add$2, (), Tup(), (App(Var(Arithmetic$1), Tup())), None, None, TypingUnit()), NuFunDef(None, getArith$1, None, [], Lam(Tup(_: Var(choice)), If(IfThen(App(Var(==), Tup(_: Var(choice), _: IntLit(1))), App(Var(Add$2), Tup())), Some(App(Var(Sub$3), Tup()))))), NuFunDef(None, use$Add$2, None, [], Lam(Tup(_: Var(this), _: Var(num1), _: Var(num2)), App(Var(+), Tup(_: Var(num1), _: Var(num2))))), NuFunDef(None, use$Sub$3, None, [], Lam(Tup(_: Var(this), _: Var(num1), _: Var(num2)), App(Var(-), Tup(_: Var(num1), _: Var(num2))))), NuFunDef(None, main$$5, None, [], Lam(Tup(), Let(false, obj, App(Var(getArith$1), Tup(_: IntLit(2))), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Sub$3), App(Var(use$Sub$3), Tup(_: Var(obj), _: IntLit(4), _: IntLit(6))));IfThen(Var(Add$2), App(Var(use$Add$2), Tup(_: Var(obj), _: IntLit(4), _: IntLit(6)))))), None)))), NuFunDef(None, main$$4, None, [], Lam(Tup(), Let(false, obj, App(Var(getArith$1), Tup(_: IntLit(1))), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Sub$3), App(Var(use$Sub$3), Tup(_: Var(obj), _: IntLit(4), _: IntLit(6))));IfThen(Var(Add$2), App(Var(use$Add$2), Tup(_: Var(obj), _: IntLit(4), _: IntLit(6)))))), None)))), App(Var(main$$4), Tup()), App(Var(main$$5), Tup()))
 //│ TypingUnit {
 //│   class Arithmetic$1([]) {}
 //│   class Sub$3([]): Arithmetic$1() {}
@@ -35,8 +35,8 @@ getArith(2).use(4,6)
 //│   fun getArith$1 = (choice,) => if (==(choice, 1,)) then Add$2() else Sub$3()
 //│   fun use$Add$2 = (this, num1, num2,) => +(num1, num2,)
 //│   fun use$Sub$3 = (this, num1, num2,) => -(num1, num2,)
-//│   fun main$$5 = () => {let obj = getArith$1(2,); if obj is ‹(Sub$3) then use$Sub$3(obj, 4, 6,); (Add$2) then use$Add$2(obj, 4, 6,)›}
-//│   fun main$$4 = () => {let obj = getArith$1(1,); if obj is ‹(Sub$3) then use$Sub$3(obj, 4, 6,); (Add$2) then use$Add$2(obj, 4, 6,)›}
+//│   fun main$$5 = () => let obj = getArith$1(2,) in if obj is ‹(Sub$3) then use$Sub$3(obj, 4, 6,); (Add$2) then use$Add$2(obj, 4, 6,)›
+//│   fun main$$4 = () => let obj = getArith$1(1,) in if obj is ‹(Sub$3) then use$Sub$3(obj, 4, 6,); (Add$2) then use$Add$2(obj, 4, 6,)›
 //│   Code(List(main$$4()))
 //│   Code(List(main$$5()))
 //│ }

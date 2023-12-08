@@ -395,13 +395,13 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
       vals match
       case Nil => acc
       case head :: next => head match
-        case o@ObjVal(name, _) =>
+        case o@ObjVal(name, fields) =>
           val selValue = monoer.nuGetFieldVal(o, field.name)
           debug.writeLine(s"selected value: ${selValue.asValue}")
           val branchCase = selValue.asValue match {
             case Some(f: FuncVal) =>
               IfThen(Var(name), App(Var(f.name), toTuple(Var("obj") :: args.getOrElse(Nil))))
-            case Some(o@ObjVal(subName, fields)) => 
+            case Some(o@ObjVal(subName, subFields)) => 
               args match
                 case Some(a) => //FIXME: Unverified
                   val scrut = Sel(Var("obj"), field)
@@ -415,7 +415,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
                   IfOpApp(scrut, Var("is"), IfBlock(branches))
                 case None => 
                   //throw MonomorphError("Hey")
-                  IfThen(Var(name), Sel(Var("obj"), field))
+                  IfThen(App(Var(name), toTuple(fields.keys.map(k => Var(k)).toList)), field)
             case Some(LiteralVal(v)) =>
               IfThen(Var(name), v match
                 case Left(lit) => lit
@@ -437,8 +437,8 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
         val nuArgs = nuDefunctionalize(args)
         val ifBlockLines = valSetToBranches(receiver.evaledTerm.getValue.toList)(using field, Some(extractFuncArgs(nuArgs)))
         val ifBlk = IfBlock(ifBlockLines)
-        val res = Blk(NuFunDef(Some(false), Var("obj"), None, Nil, Left(nuReceiver))(None, None, None, None, false) ::
-            List(If(IfOpApp(Var("obj"), Var("is"), ifBlk), None)))
+        val res = Let(false, Var("obj"), nuReceiver,
+            If(IfOpApp(Var("obj"), Var("is"), ifBlk), None))
         debug.writeLine(s"Result: ${showStructure(res)}")
         debug.outdent()
         res
@@ -459,9 +459,8 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
           debug.indent()
           val ifBlockLines = valSetToBranches(receiver.evaledTerm.getValue.toList)(using fieldName, None)
           val ifBlk = IfBlock(ifBlockLines)
-          val res = Blk(
-            NuFunDef(Some(false), Var("obj"), None, Nil, Left(nuReceiver))(None, None, None, None, false) ::
-            List(If(IfOpApp(Var("obj"), Var("is"), ifBlk), None))
+          val res = Let(false, Var("obj"), nuReceiver,
+            If(IfOpApp(Var("obj"), Var("is"), ifBlk), None)
           )
           debug.writeLine(s"Result: ${showStructure(res)}")
           debug.outdent()
