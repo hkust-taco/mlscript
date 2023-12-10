@@ -1,6 +1,4 @@
-package mlscript
-package compiler
-
+package mlscript.compiler.optimizer
 
 enum Document:
   case Indented(content: Document)

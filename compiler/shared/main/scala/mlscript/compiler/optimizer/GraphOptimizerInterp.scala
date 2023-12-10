@@ -1,7 +1,8 @@
-package mlscript.compiler
+package mlscript.compiler.optimizer
 
 import mlscript.*
 import mlscript.compiler.*
+import mlscript.compiler.optimizer.*
 import mlscript.utils.*
 import shorthands.*
 import scala.collection.immutable.*

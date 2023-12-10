@@ -9,6 +9,8 @@ import mlscript.compiler.debug.TreeDebug
 import mlscript.compiler.mono.Monomorph
 import mlscript.compiler.printer.ExprPrinter
 import mlscript.compiler.mono.MonomorphError
+import mlscript.compiler.optimizer.GraphOptimizer
+import mlscript.compiler.optimizer.GOInterpreter
 
 class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*
@@ -64,7 +66,7 @@ class DiffTestCompiler extends DiffTests {
         outputBuilder ++= s"\n\nFuel used: ${fuel_limit - fuel}"
 
         if (fuel == 0)
-          throw GraphOptimizingError("Fuel exhausted")
+          throw optimizer.GraphOptimizingError("Fuel exhausted")
 
       catch
         case err: Exception =>

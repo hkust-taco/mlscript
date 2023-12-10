@@ -1,17 +1,14 @@
-package mlscript
-package compiler
+package mlscript.compiler.optimizer
 
 import mlscript.utils.*
 import mlscript.utils.shorthands.*
 
-import collection.mutable.{Map as MutMap, Set as MutSet}
+import collection.mutable.{Map as MutMap, Set as MutSet, HashMap, ListBuffer}
 import mlscript.*
+import mlscript.compiler.optimizer.*
 
-import scala.annotation.unused
-import scala.util.Sorting
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.ListBuffer
+import annotation.unused
+import util.Sorting
 
 // -----------------------------------------------
 

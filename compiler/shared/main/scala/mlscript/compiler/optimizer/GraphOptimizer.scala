@@ -1,4 +1,4 @@
-package mlscript.compiler
+package mlscript.compiler.optimizer
 
 import mlscript.*
 import mlscript.compiler.*
@@ -390,9 +390,9 @@ class GraphOptimizer:
   import Intro._
 
   private class EliminationAnalysis extends GOIterator:
-    val elims = MutHMap[Str, MutSet[Elim]]()
-    val defcount = MutHMap[Str, Int]()
-    val visited = MutHSet[Str]()
+    private val elims = MutHMap[Str, MutSet[Elim]]()
+    private val defcount = MutHMap[Str, Int]()
+    private val visited = MutHSet[Str]()
 
     private def addElim(x: Str, elim: Elim) =
       if (defcount.getOrElse(x, 0) <= 1)
@@ -686,8 +686,11 @@ class GraphOptimizer:
   private class SplittingTargetAnalysis extends GOIterator:
     private val split_defn_params_map = MutHMap[Str, MutHSet[Str]]()
     private val indir_defn_params_map = MutHMap[Str, MutHSet[Str]]()
-    private val mixing_defn_set = MutHSet[Str]()
+    private val defn_mixing_variables_map = MutHMap[Str, MutHSet[Str]]()
+    private val mixing_defn_results = MutHSet[Str]()
     private val name_defn_map = MutHMap[Str, Str]()
+
+    private var cur_defn: Opt[GODef] = None
     
     private var intros = Map.empty[Str, Intro]
     private val visited = MutHSet[Str]()
@@ -695,8 +698,9 @@ class GraphOptimizer:
     def run(x: GOProgram) =
       x.accept_iterator(this)
       (split_defn_params_map.map { (k, v) => k -> v.toSet }.toMap,
-      indir_defn_params_map.map { (k, v) => k -> v.toSet }.toMap,
-      mixing_defn_set.toSet)
+       indir_defn_params_map.map { (k, v) => k -> v.toSet }.toMap,
+       defn_mixing_variables_map.map { (k, v) => k -> v.toSet }.toMap,
+       mixing_defn_results.toSet)
     
     private def addSplitTarget(name: Str, target: Str) =
       split_defn_params_map.getOrElseUpdate(name, MutHSet.empty) += target
@@ -704,8 +708,9 @@ class GraphOptimizer:
     private def addIndirTarget(name: Str, target: Str) =
       indir_defn_params_map.getOrElseUpdate(name, MutHSet.empty) += target
   
-    private def addMixingTarget(name: Str) =
-      mixing_defn_set.add(name)
+    private def addMixingTarget(caller_name: Str, val_name: Str, callee_name: Str) =
+      defn_mixing_variables_map.getOrElseUpdate(caller_name, MutHSet.empty) += val_name
+      mixing_defn_results += callee_name
     
     private def checkTargets(name: Str, intros: Map[Str, Intro], args: Ls[TrivialExpr], params: Ls[Name], active: Ls[Set[Elim]]) =
       args.map { 
@@ -728,7 +733,7 @@ class GraphOptimizer:
       case Case(x, cases) =>
         IntroductionAnalysis.getIntro(Ref(x): TrivialExpr, intros) match
           case Some(IMix(_))  => name_defn_map.get(x.str) match
-            case Some(defn_name) => addMixingTarget(defn_name)
+            case Some(defn_name) => addMixingTarget(cur_defn.get.getName, x.str, defn_name)
             case None =>
           case _ => 
         cases foreach { (cls, arm) => arm.accept_iterator(this) }
@@ -759,6 +764,7 @@ class GraphOptimizer:
     override def iterate(x: GODef): Unit =
       visited.clear()
       name_defn_map.clear()
+      cur_defn = Some(x)
       intros = x.specialized.map(bindIntroInfoUsingInput(Map.empty, _, x.params)).getOrElse(Map.empty)
       x.body.accept_iterator(this)
     
@@ -911,6 +917,27 @@ class GraphOptimizer:
         x.classes,
         defs, main
       )
+
+  private class LocalMixingSplittingCallSiteReplacement(
+    cls_ctx: Map[Str, ClassInfo],
+    pre_map: Map[(Str, Str), (Str, Ls[Str])],
+    post_map: Map[(Str, Str), Map[Str, (Str, Ls[Str])]],
+    targets: Set[Str],
+  ) extends GOVisitor:
+    var intros = Map.empty[Str, Intro]
+    var changed = false
+    
+    override def visit(x: LetExpr) = x match
+      case LetExpr(x, e1, e2) =>
+        intros = IntroductionAnalysis.getIntro(e1, intros).map { y => Map(x.str -> y) }.getOrElse(intros)
+        LetExpr(x, e1, e2.accept_visitor(this))
+    
+    override def visit(x: LetCall) = x match
+      case LetCall(xs, defnref, as, e) =>
+        
+        
+        ???
+    
   
   private class CommuteConversion(
     cls_ctx: Map[Str, ClassInfo],
@@ -1029,7 +1056,7 @@ class GraphOptimizer:
   private object Splitting extends GOVisitor:
     override def visit(x: GOProgram) =
       val sta = SplittingTargetAnalysis()
-      val (fsl, fisl, mfsl) = sta.run(x)
+      val (fsl, fisl, mixing_map, mfsl) = sta.run(x)
       val fs = FunctionSplitting(fsl, mfsl)
       val fis = FunctionIndirectSplitting(fisl)
       x.accept_iterator(fs)
@@ -1060,11 +1087,11 @@ class GraphOptimizer:
         fixCrossReferences(y.main, y.defs)
         validate(y.main, y.defs)
         activeAnalyze(y)
-        y = y.accept_visitor(cc)
-        fixCrossReferences(y.main, y.defs)
-        validate(y.main, y.defs)
-        activeAnalyze(y)
-        changed = scsr.changed | iscsr.changed | cc.changed
+        // y = y.accept_visitor(cc)
+        // fixCrossReferences(y.main, y.defs)
+        // validate(y.main, y.defs)
+        // activeAnalyze(y)
+        changed = scsr.changed | iscsr.changed // | cc.changed
       y
 
   def splitFunction(prog: GOProgram) = prog.accept_visitor(Splitting)
