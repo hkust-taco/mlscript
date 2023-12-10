@@ -1,7 +1,7 @@
 :NewParser
 :ParseOnly
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class Pair(x, y)
 fun mktup2(x, y) = mktup(x, y)
@@ -79,7 +79,7 @@ foo()
 //│ 
 //│ Fuel used: 1
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class Pair(x, y)
 fun foo(pair) =
@@ -175,7 +175,7 @@ bar()
 
 
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class Pair(x, y) {}
 fun silly(pair) =
@@ -328,7 +328,7 @@ foo()
 
 
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class Pair(x, y)
 fun inc_fst(pair) =
@@ -425,7 +425,7 @@ foo()
 //│ 
 //│ Fuel used: 2
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class Pair(x, y)
 fun inc_fst(pair) =
@@ -521,7 +521,7 @@ foo()
 //│ 
 //│ Fuel used: 2
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class Left(x)
 class Right(y)
@@ -632,7 +632,7 @@ bar()
 //│ 
 //│ Fuel used: 2
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class True
 class False
@@ -724,7 +724,7 @@ bar()
 //│ Fuel used: 2
 
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class C1(x, y)
 class C2(z)
@@ -812,7 +812,7 @@ bar()
 //│ 
 //│ Fuel used: 2
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class Pair(x, y)
 fun foo(a, b) =
@@ -991,7 +991,7 @@ baz()
 //│ 
 //│ Fuel used: 3
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class Pair(x, y)
 fun foo() =
@@ -1041,7 +1041,7 @@ foo()
 //│ 
 //│ Fuel used: 1
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class S(s)
 class O

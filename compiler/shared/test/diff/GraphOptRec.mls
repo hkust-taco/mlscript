@@ -1,7 +1,7 @@
 :NewParser
 :ParseOnly
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class True
 class False
@@ -64,7 +64,7 @@ fib(20)
 //│ 
 //│ Fuel used: 1
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class True
 class False
@@ -164,7 +164,7 @@ foo()
 //│ 
 //│ Fuel used: 1
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class True
 class False
@@ -401,7 +401,7 @@ main()
 //│ 
 //│ Fuel used: 4
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class True
 class False
@@ -768,7 +768,7 @@ main()
 //│ Fuel used: 4
 
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class True
 class False
@@ -1411,7 +1411,7 @@ foo()
 //│ 
 //│ Fuel used: 11
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class True
 class False
@@ -1545,7 +1545,7 @@ foo()
 //│ 
 //│ Fuel used: 1
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class True
 class False
@@ -1868,7 +1868,7 @@ foo()
 //│ 
 //│ Fuel used: 4
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class True
 class False
@@ -2417,7 +2417,7 @@ main()
 //│ 
 //│ Fuel used: 5
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class True
 class False
@@ -2575,185 +2575,15 @@ main(False)
 //│ 404
 //│ 
 //│ 
-//│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
-//│ Def(0, aaa, [], [],
-//│ S: None,
-//│ I: [],
-//│ [None], 1, 
-//│ let x%4 = +(1,2)
-//│   in let x%5 = -(x%4,3)
-//│     in let x%6 = +(x%5,4)
-//│       in x%6
-//│ )
-//│ Def(1, bbb, [], [],
-//│ S: None,
-//│ I: [],
-//│ [None], 1, 
-//│ let* (x%7) = aaa()
-//│   in let x%8 = *(x%7,100)
-//│     in let x%9 = +(x%8,4)
-//│       in x%9
-//│ )
-//│ Def(2, not, [x%10], [{EDestruct,EDirect}],
-//│ S: None,
-//│ I: [],
-//│ [Some(IMix(ICtor(False),ICtor(True)))], 1, 
-//│ if x%10
-//│   true => let x%11 = False()
-//│     in x%11
-//│   false => let x%12 = True()
-//│     in x%12
-//│ )
-//│ Def(3, foo, [x%14], [{EDestruct,EDirect,EIndirectDestruct}],
-//│ S: None,
-//│ I: [[Some(IMix(ICtor(False),ICtor(True)))]],
-//│ [Some(IMix(ICtor(A),ICtor(B)))], 1, 
-//│ if x%14
-//│   true => let x%15 = A()
-//│     in x%15
-//│   false => let* (x%16) = not(x%14)
-//│     in let* (x%17) = foo(x%16)
-//│       in let x%18 = B(x%17)
-//│         in x%18
-//│ )
-//│ Def(4, main, [flag%0], [{EDestruct,EDirect,EIndirectDestruct}],
-//│ S: None,
-//│ I: [],
-//│ [None], 1, 
-//│ if flag%0
-//│   true => let* (x%28) = foo$D%0()
-//│     in jump main$Q%0(x%28)
-//│   false => let* (x%29) = foo$D%1(flag%0)
-//│     in jump main$Q%0(x%29)
-//│ )
-//│ Def(9, foo$D%0, [], [],
-//│ S: None,
-//│ I: [],
-//│ [Some(ICtor(A))], 1, 
-//│ let x%15 = A()
-//│   in x%15
-//│ )
-//│ Def(10, foo$D%1, [x%14], [{EDirect,EIndirectDestruct}],
-//│ S: None,
-//│ I: [],
-//│ [Some(ICtor(B))], 1, 
-//│ let* (x%16) = not(x%14)
-//│   in let* (x%17) = foo(x%16)
-//│     in let x%18 = B(x%17)
-//│       in x%18
-//│ )
-//│ Def(11, @join main$Q%0, [x%20], [{EDestruct,EDirect}],
-//│ S: None,
-//│ I: [[Some(ICtor(A))],[Some(ICtor(B))]],
-//│ [None], 1, 
-//│ case x%20 of
-//│   A => let* (x%21) = aaa()
-//│     in x%21
-//│   B => let* (x%23) = bbb()
-//│     in x%23
-//│ )
-//│ },
-//│ let x%25 = False()
-//│   in let* (x%26) = main(x%25)
-//│     in x%26)
-//│ 
-//│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
-//│ Def(0, aaa, [], [],
-//│ S: None,
-//│ I: [],
-//│ [None], 1, 
-//│ let x%4 = +(1,2)
-//│   in let x%5 = -(x%4,3)
-//│     in let x%6 = +(x%5,4)
-//│       in x%6
-//│ )
-//│ Def(1, bbb, [], [],
-//│ S: None,
-//│ I: [],
-//│ [None], 1, 
-//│ let* (x%7) = aaa()
-//│   in let x%8 = *(x%7,100)
-//│     in let x%9 = +(x%8,4)
-//│       in x%9
-//│ )
-//│ Def(2, not, [x%10], [{EDestruct,EDirect}],
-//│ S: None,
-//│ I: [],
-//│ [Some(IMix(ICtor(False),ICtor(True)))], 1, 
-//│ if x%10
-//│   true => let x%11 = False()
-//│     in x%11
-//│   false => let x%12 = True()
-//│     in x%12
-//│ )
-//│ Def(3, foo, [x%14], [{EDestruct,EDirect,EIndirectDestruct}],
-//│ S: None,
-//│ I: [[Some(IMix(ICtor(False),ICtor(True)))]],
-//│ [Some(IMix(ICtor(A),ICtor(B)))], 1, 
-//│ if x%14
-//│   true => let x%15 = A()
-//│     in x%15
-//│   false => let* (x%16) = not(x%14)
-//│     in let* (x%17) = foo(x%16)
-//│       in let x%18 = B(x%17)
-//│         in x%18
-//│ )
-//│ Def(4, main, [flag%0], [{EDestruct,EDirect,EIndirectDestruct}],
-//│ S: None,
-//│ I: [],
-//│ [None], 1, 
-//│ if flag%0
-//│   true => let* (x%28) = foo$D%0()
-//│     in jump main$Q%0$D%0()
-//│   false => let* (x%29) = foo$D%1(flag%0)
-//│     in jump main$Q%0$D%1()
-//│ )
-//│ Def(9, foo$D%0, [], [],
-//│ S: None,
-//│ I: [],
-//│ [Some(ICtor(A))], 1, 
-//│ let x%15 = A()
-//│   in x%15
-//│ )
-//│ Def(10, foo$D%1, [x%14], [{EDirect,EIndirectDestruct}],
-//│ S: None,
-//│ I: [],
-//│ [Some(ICtor(B))], 1, 
-//│ let* (x%16) = not(x%14)
-//│   in let* (x%17) = foo(x%16)
-//│     in let x%18 = B(x%17)
-//│       in x%18
-//│ )
-//│ Def(13, main$Q%0$D%0, [], [],
-//│ S: None,
-//│ I: [],
-//│ [None], 1, 
-//│ let* (x%21) = aaa()
-//│   in x%21
-//│ )
-//│ Def(14, main$Q%0$D%1, [], [],
-//│ S: None,
-//│ I: [],
-//│ [None], 1, 
-//│ let* (x%23) = bbb()
-//│   in x%23
-//│ )
-//│ },
-//│ let x%25 = False()
-//│   in let* (x%26) = main(x%25)
-//│     in x%26)
-//│ 
 //│ 
 //│ Interpreted ------------------------------
 //│ 404
 //│ 
 //│ 
-//│ Fuel used: 3
+//│ Fuel used: 1
 
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class True
 class False
@@ -2891,8 +2721,8 @@ main()
 //│ S: Some([Some(ICtor(Cons))]),
 //│ I: [[Some(ICtor(Cons))]],
 //│ [Some(IMix(ICtor(False),ICtor(True)))], 1, 
-//│ let x%22 = l%1.h
-//│   in let* (x%5) = head_opt$D%1$S%0(x%22)
+//│ let x%19 = l%1.h
+//│   in let* (x%5) = head_opt$D%1$S%0(x%19)
 //│     in case x%5 of
 //│       None => let x%6 = True()
 //│         in x%6
@@ -2910,7 +2740,7 @@ main()
 //│     Some => let x%8 = False()
 //│       in x%8
 //│ )
-//│ Def(11, head_opt$D%1$S%0, [l%0_h], [{EDirect}],
+//│ Def(10, head_opt$D%1$S%0, [l%0_h], [{EDirect}],
 //│ S: None,
 //│ I: [],
 //│ [Some(ICtor(Some))], 1, 
@@ -2950,14 +2780,14 @@ main()
 //│     Some => let x%8 = False()
 //│       in x%8
 //│ )
-//│ Def(11, head_opt$D%1$S%0, [l%0_h], [{EDirect}],
+//│ Def(10, head_opt$D%1$S%0, [l%0_h], [{EDirect}],
 //│ S: None,
 //│ I: [],
 //│ [Some(ICtor(Some))], 1, 
 //│ let x%3 = Some(l%0_h)
 //│   in x%3
 //│ )
-//│ Def(12, is_empty$C%0$S%0, [l%1_h], [{EDirect}],
+//│ Def(11, is_empty$C%0$S%0, [l%1_h], [{EDirect}],
 //│ S: None,
 //│ I: [],
 //│ [Some(IMix(ICtor(False),ICtor(True)))], 1, 
@@ -2979,7 +2809,7 @@ main()
 //│ 
 //│ Fuel used: 3
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class True
 class False
@@ -3068,141 +2898,9 @@ head_opt()
 //│ Some(10)
 //│ 
 //│ 
-//│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(0, mk_list, [n%0], [{EDirect}],
-//│ S: None,
-//│ I: [],
-//│ [Some(IMix(ICtor(Cons),ICtor(Nil)))], 1, 
-//│ let x%0 = ==(n%0,0)
-//│   in if x%0
-//│     true => let x%1 = Nil()
-//│       in x%1
-//│     false => let x%2 = -(n%0,1)
-//│       in let* (x%3) = mk_list(x%2)
-//│         in let x%4 = Cons(n%0,x%3)
-//│           in x%4
-//│ )
-//│ Def(1, head_opt, [], [],
-//│ S: None,
-//│ I: [],
-//│ [Some(IMix(ICtor(None),ICtor(Some)))], 1, 
-//│ let* (x%13,x%14) = mk_list$P%0(10)
-//│   in if x%14
-//│     true => let* (x%15) = mk_list$D%0()
-//│       in jump head_opt$Q%0(x%15)
-//│     false => let* (x%16) = mk_list$D%1(x%13)
-//│       in jump head_opt$Q%0(x%16)
-//│ )
-//│ Def(4, mk_list$P%0, [n%0], [{EDirect}],
-//│ S: None,
-//│ I: [],
-//│ [None,None], 2, 
-//│ let x%0 = ==(n%0,0)
-//│   in n%0,x%0
-//│ )
-//│ Def(5, mk_list$D%0, [], [],
-//│ S: None,
-//│ I: [],
-//│ [Some(ICtor(Nil))], 1, 
-//│ let x%1 = Nil()
-//│   in x%1
-//│ )
-//│ Def(6, mk_list$D%1, [n%0], [{EDirect}],
-//│ S: None,
-//│ I: [],
-//│ [Some(ICtor(Cons))], 1, 
-//│ let x%2 = -(n%0,1)
-//│   in let* (x%3) = mk_list(x%2)
-//│     in let x%4 = Cons(n%0,x%3)
-//│       in x%4
-//│ )
-//│ Def(7, @join head_opt$Q%0, [x%6], [{EDestruct,EDirect,ESelect(h)}],
-//│ S: None,
-//│ I: [[Some(ICtor(Nil))],[Some(ICtor(Cons))]],
-//│ [Some(IMix(ICtor(None),ICtor(Some)))], 1, 
-//│ case x%6 of
-//│   Nil => let x%7 = None()
-//│     in x%7
-//│   Cons => let x%9 = x%6.h
-//│     in let x%10 = Some(x%9)
-//│       in x%10
-//│ )
-//│ },
-//│ let* (x%12) = head_opt()
-//│   in x%12)
-//│ 
-//│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(0, mk_list, [n%0], [{EDirect}],
-//│ S: None,
-//│ I: [],
-//│ [Some(IMix(ICtor(Cons),ICtor(Nil)))], 1, 
-//│ let x%0 = ==(n%0,0)
-//│   in if x%0
-//│     true => let x%1 = Nil()
-//│       in x%1
-//│     false => let x%2 = -(n%0,1)
-//│       in let* (x%3) = mk_list(x%2)
-//│         in let x%4 = Cons(n%0,x%3)
-//│           in x%4
-//│ )
-//│ Def(1, head_opt, [], [],
-//│ S: None,
-//│ I: [],
-//│ [Some(IMix(ICtor(None),ICtor(Some)))], 1, 
-//│ let* (x%13,x%14) = mk_list$P%0(10)
-//│   in if x%14
-//│     true => let* (x%15) = mk_list$D%0()
-//│       in jump head_opt$Q%0$D%0()
-//│     false => let* (x%16) = mk_list$D%1(x%13)
-//│       in jump head_opt$Q%0$D%1(x%16)
-//│ )
-//│ Def(4, mk_list$P%0, [n%0], [{EDirect}],
-//│ S: None,
-//│ I: [],
-//│ [None,None], 2, 
-//│ let x%0 = ==(n%0,0)
-//│   in n%0,x%0
-//│ )
-//│ Def(5, mk_list$D%0, [], [],
-//│ S: None,
-//│ I: [],
-//│ [Some(ICtor(Nil))], 1, 
-//│ let x%1 = Nil()
-//│   in x%1
-//│ )
-//│ Def(6, mk_list$D%1, [n%0], [{EDirect}],
-//│ S: None,
-//│ I: [],
-//│ [Some(ICtor(Cons))], 1, 
-//│ let x%2 = -(n%0,1)
-//│   in let* (x%3) = mk_list(x%2)
-//│     in let x%4 = Cons(n%0,x%3)
-//│       in x%4
-//│ )
-//│ Def(9, head_opt$Q%0$D%0, [], [],
-//│ S: None,
-//│ I: [],
-//│ [Some(ICtor(None))], 1, 
-//│ let x%7 = None()
-//│   in x%7
-//│ )
-//│ Def(10, head_opt$Q%0$D%1, [x%6], [{ESelect(h)}],
-//│ S: None,
-//│ I: [[Some(ICtor(Cons))]],
-//│ [Some(ICtor(Some))], 1, 
-//│ let x%9 = x%6.h
-//│   in let x%10 = Some(x%9)
-//│     in x%10
-//│ )
-//│ },
-//│ let* (x%12) = head_opt()
-//│   in x%12)
-//│ 
 //│ 
 //│ Interpreted ------------------------------
 //│ Some(10)
 //│ 
 //│ 
-//│ Fuel used: 3
+//│ Fuel used: 1

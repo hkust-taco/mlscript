@@ -1,7 +1,7 @@
 :NewParser
 :ParseOnly
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class A(x, y, z)
 class B(m, n)
@@ -170,7 +170,7 @@ bar()
 //│ 
 //│ Fuel used: 2
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class A(w, x)
 class B(y)
@@ -421,7 +421,7 @@ bar()
 //│ 
 //│ Fuel used: 2
 
-:GOInterp
+:GraphInterp
 :GraphOpt
 class A(w, x)
 class B(y)
