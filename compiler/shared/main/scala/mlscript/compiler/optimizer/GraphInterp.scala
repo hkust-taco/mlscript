@@ -8,9 +8,9 @@ import shorthands.*
 import scala.collection.immutable.*
 import scala.annotation.*
 
-final case class GOInterpreterError(message: String) extends Exception(message)
+final case class GraphInterpreterError(message: String) extends Exception(message)
 
-object GOInterpreter:
+object GraphInterpreter:
   private case class Program(
     classes: Set[ClassInfo],
     defs: Set[Def],
@@ -131,7 +131,7 @@ object GOInterpreter:
     case GOExpr.CtorApp(name, args) => CtorApp(name, args |> convert_args)
     case GOExpr.Select(name, cls, field) => Select(name, cls, field)
     case GOExpr.BasicOp(name, args) => BasicOp(name, args |> convert_args)
-    case _ => throw GOInterpreterError("unexpected expr")
+    case _ => throw GraphInterpreterError("unexpected expr")
 
   private def convert(node: GONode): Node = node match
     case GONode.Result(xs) => Result(xs |> convert_args)
@@ -139,7 +139,7 @@ object GOInterpreter:
     case GONode.Case(scrut, cases) => Case(scrut, cases.map{(cls, node) => (cls, node |> convert)})
     case GONode.LetExpr(name, expr, body) => LetExpr(name, expr |> convert, body |> convert)
     case GONode.LetJoin(defnref, params, rhs, body) =>
-      throw GOInterpreterError("unexpected let join")
+      throw GraphInterpreterError("unexpected let join")
     case GONode.LetCall(xs, defnref, args, body) =>
       LetCall(xs, DefRef(Right(defnref.getName)), args |> convert_args, body |> convert)
 
@@ -222,20 +222,20 @@ object GOInterpreter:
         case CtorApp(cls2, xs) if cls == cls2 =>
           xs.zip(cls2.fields).find{_._2 == field} match
             case Some((x, _)) => x
-            case None => throw GOInterpreterError("unable to find selected field")
-        case _ => throw GOInterpreterError("unexpected node")
+            case None => throw GraphInterpreterError("unable to find selected field")
+        case _ => throw GraphInterpreterError("unexpected node")
       }.toLeft(expr)
     case BasicOp(name, args) =>
       val xs = eval_args_may_not_progress(args)
       val x = name match
         case "+" | "-" | "*" | "/" | "==" | "!=" | "<=" | ">=" | "<" | ">" => 
           eval(using ctx, clsctx)(name, xs.head, xs.tail.head)
-        case _ => throw GOInterpreterError("unexpected basic operation")
+        case _ => throw GraphInterpreterError("unexpected basic operation")
       x.toLeft(expr)
 
   private def expect_def(r: DefRef) = r.defn match
     case Left(value) => value
-    case Right(value) => throw GOInterpreterError("only has the name of definition")
+    case Right(value) => throw GraphInterpreterError("only has the name of definition")
 
   private def eval_may_not_progress(using ctx: Ctx, clsctx: ClassCtx)(node: Node) = eval(node) match
     case Left(x) => x
@@ -255,11 +255,11 @@ object GOInterpreter:
     case Case(scrut, cases) =>
       val CtorApp(cls, xs) = (Ref(scrut):Expr) |> eval_may_not_progress(using ctx, clsctx) match {
         case x: CtorApp => x
-        case x => throw GOInterpreterError(s"not a class $x")
+        case x => throw GraphInterpreterError(s"not a class $x")
       }
       val arm = cases.find{_._1 == cls} match {
         case Some((_, x)) => x
-        case _ => throw GOInterpreterError(s"can not find the matched case, $cls expected")
+        case _ => throw GraphInterpreterError(s"can not find the matched case, $cls expected")
       }
       eval(arm)
     case LetExpr(name, expr, body) =>
@@ -272,11 +272,11 @@ object GOInterpreter:
       val ctx1 = ctx ++ defn.params.map{_.str}.zip(ys)
       val res = eval_may_not_progress(using ctx1, clsctx)(defn.body) match {
         case Result(xs) => xs
-        case _ => throw GOInterpreterError("unexpected node")
+        case _ => throw GraphInterpreterError("unexpected node")
       }
       val ctx2 = ctx ++ xs.map{_.str}.zip(res)
       eval(using ctx2, clsctx)(body)
-    case _ => throw GOInterpreterError("unexpected node")
+    case _ => throw GraphInterpreterError("unexpected node")
 
   private def interpret(prog: Program): Node =
     val Program(classes, defs, main) = prog

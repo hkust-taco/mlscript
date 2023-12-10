@@ -13,381 +13,14 @@ import scala.collection.mutable.{MultiMap, Queue}
 
 final case class GraphOptimizingError(message: String) extends Exception(message)
 
-class GraphOptimizer:
-  private type Ctx = Map[Str, Name]
-  private type ClassCtx = Map[Str, ClassInfo]
-  private type FieldCtx = Map[Str, (Str, ClassInfo)]
-  private type FnCtx = Set[Str]
-  private type OpCtx = (Unit, Set[Str])
-  
+class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
   import GOExpr._
   import GONode._
-
-  private val counter = MutHMap[Str, Int]()
-  private def gensym(s: Str = "x") = {
-    val n = s.lastIndexOf('%')
-    val (ts, suffix) = s.splitAt(if n == -1 then s.length() else n)
-    var x = if suffix.stripPrefix("%").forall(_.isDigit) then ts else s
-    val count = counter.getOrElse(x, 0)
-    val tmp = s"$x%$count"
-    counter.update(x, count + 1)
-    Name(tmp)
-  }
-
-  private var fid = 0
-  private def genfid() = {
-    val tmp = fid
-    fid += 1
-    tmp
-  }
-
-  private var cid = 0
-  private def gencid() = {
-    val tmp = cid
-    cid += 1
-    tmp
-  }
-
-  private final val ref = x => Ref(x)
-  final val result = x => Result(x)
-  private final val sresult = (x: TrivialExpr) => Result(List(x))
-  private final val unexpected_node = (x: GONode) => throw GraphOptimizingError(s"unsupported node $x")
-  private final val unexpected_term = (x: Term) => throw GraphOptimizingError(s"unsupported term $x")
-
-  private def buildBinding
-    (using ctx: Ctx, clsctx: ClassCtx, fldctx: FieldCtx, fnctx: FnCtx, opctx: OpCtx)
-    (name: Str, e: Term, body: Term)
-    (k: GONode => GONode): GONode =
-    buildResultFromTerm(e) {
-      case Result((r: Ref) :: Nil) =>
-        given Ctx = ctx + (name -> r.name)
-        buildResultFromTerm(body)(k)
-      case Result((lit: Literal) :: Nil) =>
-        val v = gensym()
-        given Ctx = ctx + (name -> v)
-        LetExpr(v,
-          lit,
-          buildResultFromTerm(body)(k))
-      case node @ _ => node |> unexpected_node
-    }
-
-  private def buildResultFromTup
-    (using ctx: Ctx, clsctx: ClassCtx, fldctx: FieldCtx, fnctx: FnCtx, opctx: OpCtx)
-    (tup: Tup)(k: GONode => GONode): GONode =
-    tup match
-      case Tup(N -> Fld(FldFlags.empty, x) :: xs) => buildResultFromTerm(x) {
-        case Result(x :: Nil) =>
-          buildResultFromTup(Tup(xs)) {
-            case Result(xs) => x :: xs |> result |> k
-            case node @ _ => node |> unexpected_node
-          }
-        case node @ _ => node |> unexpected_node
-      }
-
-      case Tup(Nil) => Nil |> result |> k
-
-  private def bindingPatternVariables
-    (scrut: Str, tup: Tup, cls: ClassInfo, rhs: Term): Term =
-    val params = tup.fields.map {
-      case N -> Fld(FldFlags.empty, Var(name)) => name
-      case _ => throw GraphOptimizingError("unsupported field")
-    }
-    val fields = cls.fields
-    val tm = params.zip(fields).foldLeft(rhs) {
-      case (tm, (param, field)) => 
-        Let(false, Var(param), Sel(Var(scrut), Var(field)), tm)
-    }
-
-    tm
-
-  private def buildResultFromTerm
-    (using ctx: Ctx, clsctx: ClassCtx, fldctx: FieldCtx, fnctx: FnCtx, opctx: OpCtx)
-    (tm: Term)(k: GONode => GONode): GONode =
-    val res = tm match
-      case lit: Lit => Literal(lit) |> sresult |> k
-      case v @ Var(name) =>
-        if (name.isCapitalized)
-          val v = gensym()
-          LetExpr(v,
-            CtorApp(clsctx(name), Nil),
-            v |> ref |> sresult |> k)
-        else
-          ctx.get(name) match {
-            case Some(x) => x |> ref |> sresult |> k
-            case _ => throw GraphOptimizingError(s"unknown name $name in $ctx")
-          }
-
-      case Lam(Tup(fields), body) =>
-        val xs = fields map {
-          case N -> Fld(FldFlags.empty, Var(x)) => Name(x)
-          case fld @ _ => throw GraphOptimizingError(s"not supported tuple field $fld")
-        }
-        val bindings = xs map {
-          case x @ Name(str) => str -> x
-        }
-        val v = gensym()
-        given Ctx = ctx ++ bindings 
-        LetExpr(v,
-          Lambda(xs, buildResultFromTerm(body){ x => x }),
-          v |> ref |> sresult |> k)
-  
-      case App(
-        App(Var(name), Tup((_ -> Fld(_, e1)) :: Nil)), 
-        Tup((_ -> Fld(_, e2)) :: Nil)) if opctx._2.contains(name) =>
-        buildResultFromTerm(e1) {
-          case Result(v1 :: Nil) =>
-            buildResultFromTerm(e2) {
-              case Result(v2 :: Nil) =>
-                val v = gensym()
-                LetExpr(v,
-                  BasicOp(name, List(v1, v2)),
-                  v |> ref |> sresult |> k)
-              case node @ _ => node |> unexpected_node
-            }
-          case node @ _ => node |> unexpected_node
-        }
-        
-      case App(Var(name), xs @ Tup(_)) if name.isCapitalized =>
-        buildResultFromTerm(xs) {
-          case Result(args) => 
-            val v = gensym()
-            LetExpr(v,
-              CtorApp(clsctx(name), args),
-              v |> ref |> sresult |> k)
-          case node @ _ => node |> unexpected_node
-        }
-
-      case App(f, xs @ Tup(_)) =>
-        buildResultFromTerm(f) {
-        case Result(Ref(f) :: Nil) if fnctx.contains(f.str) => buildResultFromTerm(xs) {
-          case Result(args) =>
-            val v = gensym()
-            LetCall(List(v), GODefRef(Right(f.str)), args, v |> ref |> sresult |> k)
-          case node @ _ => node |> unexpected_node
-        }
-        case Result(Ref(f) :: Nil) => buildResultFromTerm(xs) {
-          case Result(args) =>
-            val v = gensym()
-            LetExpr(v,
-              Apply(f, args),
-              v |> ref |> sresult |> k)
-          case node @ _ => node |> unexpected_node
-        }
-        case node @ _ => node |> unexpected_node
-      }
-
-      case Let(false, Var(name), rhs, body) => 
-        buildBinding(name, rhs, body)(k)
-
-      case If(IfThen(cond, tru), Some(fls)) => 
-        buildResultFromTerm(cond) {
-          case Result(Ref(cond) :: Nil) => 
-            val jp = gensym("j")
-            val tru2 = buildResultFromTerm(tru) {
-              case Result(xs) => Jump(GODefRef(Right(jp.str)), xs)
-              case node @ _ => node |> unexpected_node
-            }
-            val fls2 = buildResultFromTerm(fls) {
-              case Result(xs) => Jump(GODefRef(Right(jp.str)), xs)
-              case node @ _ => node |> unexpected_node
-            }
-            val res = gensym()
-            if ( !clsctx.contains("True") || !clsctx.contains("False"))
-              throw GraphOptimizingError("True or False class not found, unable to use 'if then else'")
-            LetJoin(jp,
-              Ls(res),
-              res |> ref |> sresult |> k,
-              Case(cond, Ls((clsctx("True"), tru2), (clsctx("False"), fls2))))
-          case node @ _ => node |> unexpected_node
-        }
-        
-      case If(IfOpApp(lhs, Var("is"), IfBlock(lines)), N)
-        if lines forall {
-          case L(IfThen(App(Var(ctor), Tup((N -> Fld(FldFlags.empty, _: Var)) :: _)), _)) => ctor.isCapitalized
-          case L(IfThen(Var(ctor), _)) => ctor.isCapitalized || ctor == "_"
-          case _ => false
-        }
-        => buildResultFromTerm(lhs) {
-          case Result(Ref(scrut) :: Nil) =>
-            val jp = gensym("j")
-            val cases: Ls[(ClassInfo, GONode)] = lines map {
-              case L(IfThen(App(Var(ctor), params: Tup), rhs)) =>
-                clsctx(ctor) -> {
-                  // need this because we have built terms (selections in case arms) containing names that are not in the original term
-                  given Ctx = ctx + (scrut.str -> scrut) 
-                  buildResultFromTerm(
-                    bindingPatternVariables(scrut.str, params, clsctx(ctor), rhs)) {
-                      case Result(xs) => Jump(GODefRef(Right(jp.str)), xs)
-                      case node @ _ => node |> unexpected_node
-                    }
-                }
-              case L(IfThen(Var(ctor), rhs)) =>
-                clsctx(ctor) -> buildResultFromTerm(rhs) {
-                  case Result(xs) => Jump(GODefRef(Right(jp.str)), xs)
-                  case node @ _ => node |> unexpected_node
-                }
-              case _ => throw GraphOptimizingError(s"not supported UCS")
-            }
-            val res = gensym()
-            LetJoin(jp,
-              Ls(res),
-              res |> ref |> sresult |> k, 
-              Case(scrut, cases)  
-            )
-          case node @ _ => node |> unexpected_node
-        }
-
-      case Bra(false, tm) => buildResultFromTerm(tm)(k)
-
-      case Blk((tm: Term) :: Nil) => buildResultFromTerm(tm)(k)
-      
-      case Blk((tm: Term) :: xs) => buildBinding("_", tm, Blk(xs))(k)
-
-      case Blk(NuFunDef(S(false), Var(name), None, _, L(tm)) :: Nil) =>
-        buildBinding(name, tm, Var(name))(k)
-
-      case Blk(NuFunDef(S(false), Var(name), None, _, L(tm)) :: xs) =>
-        buildBinding(name, tm, Blk(xs))(k)
-
-      case Sel(tm @ Var(name), Var(fld)) =>
-        buildResultFromTerm(tm) {
-          case Result(Ref(res) :: Nil) =>
-            val v = gensym()
-            val cls = fldctx(fld)._2
-            LetExpr(v,
-              Select(res, cls, fld),
-              v |> ref |> sresult |> k) 
-          case node @ _ => node |> unexpected_node
-        }
-
-      case tup: Tup => buildResultFromTup(tup)(k)
-
-      case term => term |> unexpected_term
-    
-    res
-
-  private def buildDefFromNuFunDef
-    (using ctx: Ctx, clsctx: ClassCtx, fldctx: FieldCtx, fnctx: FnCtx, opctx: OpCtx)
-    (nfd: Statement): GODef = nfd match
-    case NuFunDef(_, Var(name), None, Nil, L(Lam(Tup(fields), body))) =>
-      val strs = fields map {
-          case N -> Fld(FldFlags.empty, Var(x)) => x
-          case _ => throw GraphOptimizingError("unsupported field") 
-        }
-      val names = strs.map { x => gensym(x) }
-      given Ctx = ctx ++ strs.zip(names)
-      GODef(
-        genfid(),
-        name,
-        false,
-        names,
-        1,
-        None,
-        buildResultFromTerm(body) { x => x }
-      )
-    case _ => throw GraphOptimizingError("unsupported NuFunDef")
-
-  private def getClassInfo(ntd: Statement): ClassInfo = ntd match
-    case NuTypeDef(Cls, TypeName(name), Nil, S(Tup(args)), N, N, Nil, N, N, TypingUnit(Nil)) =>
-      ClassInfo(gencid(),
-        name, 
-        args map {
-          case N -> Fld(FldFlags.empty, Var(name)) => name
-          case _ => throw GraphOptimizingError("unsupported field")
-        }
-      )
-    case NuTypeDef(Cls, TypeName(name), Nil, N, N, N, Nil, N, N, TypingUnit(Nil)) =>
-      ClassInfo(gencid(),
-        name,
-        Ls(),
-      )
-    case x @ _ => throw GraphOptimizingError(f"unsupported NuTypeDef $x")
-
-  private def checkDuplicateField(ctx: Set[Str], cls: ClassInfo): Set[Str] =
-    val u = cls.fields.toSet intersect ctx
-    if (u.nonEmpty)
-      throw GraphOptimizingError(f"duplicate class field $u")
-    cls.fields.toSet union ctx
-
-  private def getDefinitionName(nfd: Statement): Str = nfd match
-    case NuFunDef(_, Var(name), _, _, _) => name
-    case _ => throw GraphOptimizingError("unsupported NuFunDef")
-
-  def buildGraph(unit: TypingUnit): GOProgram = unit match
-    case TypingUnit(entities) =>
-      val grouped = entities groupBy {
-        case ntd: NuTypeDef => 0
-        case nfd: NuFunDef => 1
-        case tm: Term => 2
-        case _ => throw GraphOptimizingError("unsupported entity")
-      }
-
-      import scala.collection.mutable.{ HashSet => MutHSet }
-
-      val ops = Set("+", "-", "*", "/", ">", "<", ">=", "<=", "!=", "==")
-      val cls = grouped.getOrElse(0, Nil).map(getClassInfo)
-      
-      val init: Set[Str] = Set.empty
-      cls.foldLeft(init) {
-        case (ctx, cls) => checkDuplicateField(ctx, cls)
-      }
-
-      val clsinfo = cls.toSet
-      val clsctx: ClassCtx = cls.map{ case ClassInfo(_, name, _) => name }.zip(cls).toMap
-      val fldctx: FieldCtx = cls.flatMap { case ClassInfo(_, name, fields) => fields.map { fld => (fld, (name, clsctx(name))) } }.toMap
-      val namestrs = grouped.getOrElse(1, Nil).map(getDefinitionName)
-      val fnctx = namestrs.toSet
-      var ctx = namestrs.zip(namestrs.map(x => Name(x))).toMap
-      ctx = ctx ++ ops.map { op => (op, Name(op)) }.toList
-
-      given Ctx = ctx
-      given ClassCtx = clsctx
-      given FieldCtx = fldctx
-      given FnCtx = fnctx
-      given OpCtx = ((), ops)
-      val defs: Set[GODef] = grouped.getOrElse(1, Nil).map(buildDefFromNuFunDef).toSet
-     
-      val terms: Ls[Term] = grouped.getOrElse(2, Nil).map( {
-        case tm: Term => tm
-        case _ => ??? /* unreachable */
-      })
-
-      val main = buildResultFromTerm (terms match {
-        case x :: Nil => x
-        case _ => throw GraphOptimizingError("only one term is allowed in the top level scope")
-      }) { k => k }
-      
-      fixCrossReferences(main, defs, true)
-      validate(main, defs, false)
-      GOProgram(clsinfo, defs, main)
-
-  private class FixCrossReferences(defs: Set[GODef], allow_inline_jp: Bool) extends GOIterator:
-    override def iterate(x: LetCall) = x match
-      case LetCall(resultNames, defnref, args, body) =>
-        defs.find{_.getName == defnref.getName} match
-          case Some(defn) => defnref.defn = Left(defn)
-          case None => throw GraphOptimizingError(f"unknown function ${defnref.getName} in ${defs.map{_.getName}.mkString(",")}")
-        body.accept_iterator(this)
-    override def iterate(x: Jump) = x match
-      case Jump(defnref, _) =>
-        // maybe not promoted yet
-        defs.find{_.getName == defnref.getName} match
-          case Some(defn) => defnref.defn = Left(defn)
-          case None =>
-            if (!allow_inline_jp)
-              throw GraphOptimizingError(f"unknown function ${defnref.getName} in ${defs.map{_.getName}.mkString(",")}")
-
-
-  private def fixCrossReferences(entry: GONode, defs: Set[GODef], allow_inline_jp: Bool = false): Unit  =
-    val it = FixCrossReferences(defs, allow_inline_jp)
-    entry.accept_iterator(it)
-    defs.foreach(_.body.accept_iterator(it))
-
-
-  // --------------------------------
-
   import Elim._
   import Intro._
+
+  private type ClassCtx = Map[Str, ClassInfo]
+  private type FieldCtx = Map[Str, (Str, ClassInfo)]
 
   private class EliminationAnalysis extends GOIterator:
     private val elims = MutHMap[Str, MutSet[Elim]]()
@@ -591,9 +224,9 @@ class GraphOptimizer:
 
         if (fv_retvals.nonEmpty)
           val pre_body = accu(Result(fv_retvals))
-          val pre_name = gensym(defn.name + "$P")
+          val pre_name = fresh.make(defn.name + "$P")
           val pre_defn = GODef(
-            genfid(),
+            fn_uid.make,
             pre_name.str,
             false,
             defn.params,
@@ -606,11 +239,11 @@ class GraphOptimizer:
         
         cases.zip(arm_fv).foreach {
           case ((cls, body), fv) =>
-            val post_name = gensym(defn.name + "$D")
+            val post_name = fresh.make(defn.name + "$D")
             val post_params_list = fv.toList
             val post_params = post_params_list.map(Name(_))
             val new_defn = GODef(
-              genfid(),
+              fn_uid.make,
               post_name.str,
               false,
               post_params,
@@ -807,7 +440,7 @@ class GraphOptimizer:
         val (post_f, post_params) = post_map((name, param))(cls)
         pre_map.get((name, param)) match {
           case Some((pre_f, pre_retvals)) =>
-            val new_names = pre_retvals.map { _ => gensym() }
+            val new_names = pre_retvals.map { _ => fresh.make }
             val names_map = pre_retvals.zip(new_names).toMap
             LetCall(new_names, GODefRef(Right(pre_f)), as,
               Jump(GODefRef(Right(post_f)), post_params.map{x => Ref(names_map(x))}))
@@ -829,7 +462,7 @@ class GraphOptimizer:
         val (post_f, post_params) = post_map((name, param))(cls)
         pre_map.get((name, param)) match {
           case Some((pre_f, pre_retvals)) =>
-            val new_names = pre_retvals.map { _ => gensym() }
+            val new_names = pre_retvals.map { _ => fresh.make }
             val names_map = pre_retvals.zip(new_names).toMap
             LetCall(new_names, GODefRef(Right(pre_f)), as,
               LetCall(xs, GODefRef(Right(post_f)), post_params.map{x => Ref(names_map(x))},
@@ -852,7 +485,7 @@ class GraphOptimizer:
     override def visit(x: GOProgram) =
       val defs = x.defs.map(_.accept_visitor(this))
       val main = x.main.accept_visitor(this)
-      fixCrossReferences(main, defs)
+      relink(main, defs)
       validate(main, defs)
       GOProgram(
         x.classes,
@@ -911,7 +544,7 @@ class GraphOptimizer:
     override def visit(x: GOProgram) =
       val defs = x.defs.map(_.accept_visitor(this))
       val main = x.main.accept_visitor(this)
-      fixCrossReferences(main, defs)
+      relink(main, defs)
       validate(main, defs)
       GOProgram(
         x.classes,
@@ -975,7 +608,7 @@ class GraphOptimizer:
             var scrut_new_name: Opt[Name] = None
 
             val new_names = pre_retvals.map { retval => 
-              val name = gensym()
+              val name = fresh.make
               if (scrut == retval) scrut_new_name = Some(name)
               name
             }
@@ -985,9 +618,9 @@ class GraphOptimizer:
             val fv = FreeVarAnalysis().run(c)
             val fv_list = fv.toList
 
-            val case_jp_name = gensym(cur_defn.get.getName + "$Q")
+            val case_jp_name = fresh.make(cur_defn.get.getName + "$Q")
             val new_jp = GODef(
-              genfid(),
+              fn_uid.make,
               case_jp_name.str,
               true,
               fv_list.map(Name(_)),
@@ -1000,7 +633,7 @@ class GraphOptimizer:
 
             val outer_cases = new_cases.map {
               case (cls, (post_f, post_params)) =>
-                  val new_names_2 = xs.map { _ => gensym() }
+                  val new_names_2 = xs.map { _ => fresh.make }
                   val names_map_2 = xs.map(_.str).zip(new_names_2).toMap
                   val cls_info = cls_ctx(cls)
                   (cls_info, 
@@ -1032,7 +665,7 @@ class GraphOptimizer:
       var defs = x.defs.map(_.accept_visitor(this))
       val main = x.main
       defs ++= this.defs
-      fixCrossReferences(main, defs)
+      relink(main, defs)
       validate(main, defs)
       GOProgram(
         x.classes,
@@ -1041,9 +674,9 @@ class GraphOptimizer:
 
   private object CopyDefinition extends GOVisitor:
     override def visit(x: GODef) = 
-      val name = gensym(x.name + "$C").str
+      val name = fresh.make(x.name + "$C").str
       val y = GODef(
-        genfid(),
+        fn_uid.make,
         name,
         x.isjp,
         x.params,
@@ -1071,7 +704,7 @@ class GraphOptimizer:
       val dup_defs = fis.dup_defs.toSet
 
       var y = GOProgram(x.classes, x.defs ++ pre_defs ++ post_defs ++ dup_defs, x.main)
-      fixCrossReferences(y.main, y.defs)
+      relink(y.main, y.defs)
       validate(y.main, y.defs)
       val clsctx: ClassCtx = y.classes.map{ case c @ ClassInfo(_, name, _) => (name, c) }.toMap
       var changed = true
@@ -1080,11 +713,11 @@ class GraphOptimizer:
         val iscsr = LocalIndirectSplittingCallSiteReplacement(dup_map)
         val cc = CommuteConversion(clsctx, pre_map, post_map, derived_map)
         y = y.accept_visitor(scsr)
-        fixCrossReferences(y.main, y.defs)
+        relink(y.main, y.defs)
         validate(y.main, y.defs)
         activeAnalyze(y)
         y = y.accept_visitor(iscsr)
-        fixCrossReferences(y.main, y.defs)
+        relink(y.main, y.defs)
         validate(y.main, y.defs)
         activeAnalyze(y)
         // y = y.accept_visitor(cc)
@@ -1156,7 +789,7 @@ class GraphOptimizer:
     
     def run(x: GOProgram) =
       x.accept_iterator(this)
-      name_map = ctx.map { (k, _) => k -> gensym(k + "$S").str }.toMap
+      name_map = ctx.map { (k, _) => k -> fresh.make(k + "$S").str }.toMap
       ctx.map { (k, v) => k -> v.toMap }.toMap
 
   private enum ParamSubst:
@@ -1201,7 +834,7 @@ class GraphOptimizer:
         val new_params = newParams(x.params, targets)
         val new_name = name_map(x.name)
         val new_def = GODef(
-          genfid(),
+          fn_uid.make,
           new_name,
           x.isjp, 
           new_params,
@@ -1227,7 +860,7 @@ class GraphOptimizer:
           case ParamKeep => None
           case ParamFieldOf(orig, field) =>
             val orig_arg = expectTexprIsRef(argMap(orig)).str
-            val new_var = gensym()
+            val new_var = fresh.make
             sel_ctx.addOne((orig_arg, field) -> new_var.str)
             Some((new_var, orig_arg, field))
         }
@@ -1267,7 +900,7 @@ class GraphOptimizer:
       val clsctx: ClassCtx = x.classes.map{ case c @ ClassInfo(_, name, _) => (name, c) }.toMap
       fldctx = x.classes.flatMap { case ClassInfo(_, name, fields) => fields.map { fld => (fld, (name, clsctx(name))) } }.toMap
       val y = GOProgram(x.classes, x.defs.map(_.accept_visitor(this)), x.main.accept_visitor(this))
-      fixCrossReferences(y.main, y.defs)
+      relink(y.main, y.defs)
       y
 
   private def expectTexprIsRef(expr: TrivialExpr): Name = expr match {
@@ -1297,7 +930,7 @@ class GraphOptimizer:
     var rctx: Map[Str, TrivialExpr] = Map.empty
     override def visit(x: GOProgram) =
       val new_defs = x.defs.map(x => { rctx = Map.empty; x.accept_visitor(this)})
-      fixCrossReferences(x.main, new_defs)
+      relink(x.main, new_defs)
       GOProgram(x.classes, new_defs, x.main)
     override def visit(node: LetExpr) = node match
       case LetExpr(x, Ref(Name(z)), e2) if rctx.contains(z) =>
@@ -1325,7 +958,7 @@ class GraphOptimizer:
     var cctx: Map[Str, Map[Str, TrivialExpr]] = Map.empty
     override def visit(x: GOProgram) =
       val new_defs = x.defs.map(x => { cctx = Map.empty; x.accept_visitor(this)})
-      fixCrossReferences(x.main, new_defs)
+      relink(x.main, new_defs)
       GOProgram(x.classes, new_defs, x.main)
     override def visit(node: LetExpr) = node match
       case LetExpr(x, sel @ Select(y, cls, field), e2) if cctx.contains(y.str) =>
@@ -1373,7 +1006,7 @@ class GraphOptimizer:
       x.accept_iterator(ua)
       val defs = GODefRevPreOrdering.ordered(x.main, x.defs)
       val new_defs = defs.map(_.accept_visitor(this)).toSet
-      fixCrossReferences(x.main, new_defs)
+      relink(x.main, new_defs)
       validate(x.main, new_defs)
       GOProgram(x.classes, new_defs, x.main)
 
@@ -1388,7 +1021,7 @@ class GraphOptimizer:
       params.map(param_to_arg(_, map))
     override def visit(x: GOProgram) =
       val new_defs = x.defs.map(_.accept_visitor(this))
-      fixCrossReferences(x.main, new_defs)
+      relink(x.main, new_defs)
       GOProgram(x.classes, new_defs, x.main)
     
     override def visit(x: Jump) = x match
@@ -1421,7 +1054,7 @@ class GraphOptimizer:
       val entry = x.main
       var visited = GODefRevPostOrdering.ordered_names(entry, defs).toSet
       val new_defs = defs.filter(x => visited.contains(x.name))
-      fixCrossReferences(x.main, new_defs)
+      relink(x.main, new_defs)
       GOProgram(x.classes, new_defs, x.main)
 
   private object Identity extends GOVisitor:
@@ -1455,7 +1088,7 @@ class GraphOptimizer:
     override def iterate(x: LetJoin) = x match
       case LetJoin(Name(jp), xs, e1, e2) => 
         val new_def = GODef(
-          genfid(), jp,
+          fn_uid.make, jp,
           true, xs, 1,
           None,
           e1,
@@ -1475,76 +1108,13 @@ class GraphOptimizer:
       val defs2 = defs ++ accu
       val defs3 = defs2.map(_.accept_visitor(this)) 
 
-      fixCrossReferences(main, defs3)
+      relink(main, defs3)
       validate(main, defs3)
       GOProgram(classes, defs3, main)
     }
 
   def promoteJoinPoints(prog: GOProgram): GOProgram =
     prog.accept_visitor(PromoteJoinPoints())
-
-  private class DefRefInSet(defs: Set[GODef]) extends GOIterator:
-    override def iterate(x: LetCall) = x match
-      case LetCall(res, defnref, args, body) =>
-        defnref.getDefn match {
-          case Some(real_defn) => if (!defs.exists(_ eq real_defn)) throw GraphOptimizingError("ref is not in the set")
-          case _ =>
-        }
-        body.accept_iterator(this)
-
-  private object ParamsArgsAreConsistent extends GOIterator:
-    override def iterate(x: LetCall) = x match
-      case LetCall(res, defnref, args, body) => 
-        defnref.getDefn match {
-          case Some(real_defn) =>
-            if (real_defn.params.length != args.length) 
-              val x = real_defn.params.length
-              val y = args.length
-              throw GraphOptimizingError(s"inconsistent arguments($y) and parameters($x) number in a call to ${real_defn.name}")
-          case _ =>
-        }
-    override def iterate(x: Jump) = x match
-      case Jump(defnref, xs) => 
-        defnref.getDefn match {
-          case Some(jdef) =>
-            val x = xs.length
-            val y = jdef.params.length
-            if (x != y)
-              throw GraphOptimizingError(s"inconsistent arguments($x) and parameters($y) number in a jump to ${jdef.getName}")
-          case _ =>
-        }
-
-  private class NoVarShadowing extends GOIterator:
-    val ctx = MutSet[Str]()
-    override def iterate_param(x: Name) =
-      if (ctx(x.str))
-        throw GraphOptimizingError(s"parameter shadows $x")
-      else
-        ctx += x.str
-    override def iterate_name_def(x: Name) = 
-      if (ctx(x.str))
-        throw GraphOptimizingError(s"name def shadows $x")
-      else
-        ctx += x.str
-
-  private def ensureDefRefInSet(defs: Set[GODef]): Unit =
-    val it = DefRefInSet(defs)
-    defs.foreach { _.body.accept_iterator(it) }
-
-  private def ensureParamsArgsConsistent(defs: Set[GODef]): Unit =
-    val it = ParamsArgsAreConsistent
-    defs.foreach { _.body.accept_iterator(it) }
-  
-  private def ensureVarNoShadowing(entry: GONode, defs: Set[GODef]): Unit =
-    val it = NoVarShadowing()
-    val defs2 = GODefRevPostOrdering.ordered(entry, defs)
-    defs2.foreach { _.body.accept_iterator(it) }
-
-  private def validate(entry: GONode, defs: Set[GODef], cross_ref_is_ok: Bool = true, no_shadow: Bool = false): Unit =
-    ensureDefRefInSet(defs)
-    ensureParamsArgsConsistent(defs)
-    if (cross_ref_is_ok && no_shadow)
-       ensureVarNoShadowing(entry, defs)
 
   def activeAnalyze(prog: GOProgram): GOProgram =
     prog.accept_iterator(EliminationAnalysis())

@@ -9,8 +9,8 @@ import mlscript.compiler.debug.TreeDebug
 import mlscript.compiler.mono.Monomorph
 import mlscript.compiler.printer.ExprPrinter
 import mlscript.compiler.mono.MonomorphError
-import mlscript.compiler.optimizer.GraphOptimizer
-import mlscript.compiler.optimizer.GOInterpreter
+import mlscript.compiler.optimizer.{GraphOptimizer, GraphInterpreter, Fresh, FreshInt}
+import mlscript.compiler.optimizer.GraphBuilder
 
 class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*
@@ -22,25 +22,21 @@ class DiffTestCompiler extends DiffTests {
     if (mode.graphOpt)
       try
         outputBuilder ++= "\n\nGraphOpt:\n"
-        val go = GraphOptimizer()
-        val graph = go.buildGraph(unit)
+        val f1 = Fresh()
+        val f2 = FreshInt()
+        val f3 = FreshInt()
+        val gb = GraphBuilder(f1, f2, f3)
+        val go = GraphOptimizer(f1, f2, f3)
+        val graph = gb.buildGraph(unit)
         outputBuilder ++= graph.toString()
         outputBuilder ++= "\n\nPromoted ------------------------------------\n"
         val graph2 = go.simplifyProgram(go.promoteJoinPoints(graph))
         val graph3 = go.activeAnalyze(graph2)
         outputBuilder ++= graph3.toString()
-        if (mode.goInterp)
+        if (mode.graphInterp)
           outputBuilder ++= "\n\nInterpreted ------------------------------\n"
-          outputBuilder ++= GOInterpreter.interpret(graph3)
+          outputBuilder ++= GraphInterpreter.interpret(graph3)
           outputBuilder ++= "\n"
-        // outputBuilder ++= "\n\nSplitted ------------------------------------\n"
-        // val graph4 = go.simplifyProgram(go.splitFunction(graph3))
-        // val graph5 = go.activeAnalyze(graph4)
-        // outputBuilder ++= graph5.toString()
-        // outputBuilder ++= "\n\nScalarReplaced ------------------------------\n"
-        // val graph6 = go.simplifyProgram(go.replaceScalar(graph5))
-        // val graph7 = go.activeAnalyze(graph6)
-        // outputBuilder ++= graph7.toString()
        
         var changed = true
         var g = graph3
@@ -58,9 +54,9 @@ class DiffTestCompiler extends DiffTests {
 
         outputBuilder ++= "\n"
 
-        if (mode.goInterp)
+        if (mode.graphInterp)
           outputBuilder ++= "\n\nInterpreted ------------------------------\n"
-          outputBuilder ++= GOInterpreter.interpret(g)
+          outputBuilder ++= GraphInterpreter.interpret(g)
           outputBuilder ++= "\n"
 
         outputBuilder ++= s"\n\nFuel used: ${fuel_limit - fuel}"
