@@ -61,7 +61,28 @@ case class Name(val str: Str):
     case Name(s2) => str == s2
     case _ => false
   }
-  override def toString: String = str
+
+  private var intro: Opt[Intro] = None
+  private var elim: Set[Elim] = Set.empty
+
+  def updateIntro(i: Intro): Unit = intro = Some(i)
+  def resetIntro(): Unit = intro = None
+  def updateElim(e: Elim): Unit = elim += e
+  def resetElim(): Unit = elim = Set.empty
+  
+  private def show_intro = intro match
+    case Some(i) => "+" + i.toShortString
+    case None => ""
+
+  private def show_elim = elim match
+    case e if e.isEmpty => ""
+    case e => "-" + e.toSeq.sorted.map(_.toShortString).mkString
+
+  def show = toString
+  
+  override def toString: String = 
+    val x = s"$show_intro$show_elim"
+    if x != "" then s"$str[$x]" else str
   def accept_def_visitor(v: GONameVisitor) = v.visit_name_def(this)
   def accept_use_visitor(v: GONameVisitor) = v.visit_name_use(this)
   def accept_param_visitor(v: GONameVisitor) = v.visit_param(this)
@@ -106,6 +127,13 @@ enum Elim:
     case EIndirectDestruct => s"EIndirectDestruct"
     case ESelect(x: Str) => s"ESelect($x)"
 
+  def toShortString: String = this match
+    case EDirect => "T"
+    case EApp(n) => s"A$n"
+    case EDestruct => s"D"
+    case EIndirectDestruct => s"I"
+    case ESelect(x: Str) => s"S($x)"
+
 implicit object ElimOrdering extends Ordering[Elim]:
   override def compare(a: Elim, b: Elim) = a.toString.compare(b.toString)
 
@@ -120,6 +148,12 @@ enum Intro:
     case ILam(n) => s"ILam($n)"
     case IMulti(n) => s"IMulti($n)"
     case IMix(i) => s"IMix(${i.toSeq.sorted.mkString(",")})"
+  
+  def toShortString: String = this match
+    case ICtor(c) => s"C($c)"
+    case ILam(n) => s"L$n"
+    case IMulti(n) => s"M$n"
+    case IMix(i) => s"X(${i.toSeq.map(_.toShortString).sorted.mkString})"
 
   override def equals(o: Any): Boolean = o match
     case o: Intro if this.isInstanceOf[Intro] =>
@@ -165,7 +199,7 @@ class GODef(
   def accept_iterator(v: GOIterator) = v.iterate(this)
   override def toString: String =
     val name2 = if (isjp) s"@join $name" else s"$name"
-    val ps = params.map(_.toString()).mkString("[", ",", "]")
+    val ps = params.map(_.show).mkString("[", ",", "]")
     val aps = activeParams.map(_.toSeq.sorted.mkString("{", ",", "}")).mkString("[", ",", "]")
     val ais = activeInputs.map(_.toSeq.sorted.mkString("[", ",", "]")).mkString("[", ",", "]")
     val ars = activeResults.map(_.toString()).mkString("[", ",", "]")
@@ -203,20 +237,20 @@ enum GOExpr:
     toDocument.print
   
   def toDocument: Document = this match
-    case Ref(Name(s)) => s |> raw
+    case Ref(s) => s.show |> raw
     case Literal(lit) => s"$lit" |> raw
     case CtorApp(ClassInfo(_, name, _), args) =>
       raw(name) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
-    case Select(Name(s), _, fld) =>
-      raw(s) <#> raw(".") <#> raw(fld)
+    case Select(s, _, fld) =>
+      raw(s.show) <#> raw(".") <#> raw(fld)
     case BasicOp(name: Str, args) =>
       raw(name) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
     case Lambda(name, body) =>
-      raw(name map { case Name(str) => str} mkString ",")
+      raw(name map { _.show } mkString ",")
       <:> raw("=>")
       <:> raw(s"$body")
-    case Apply(Name(name), args) =>
-      raw(name) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
+    case Apply(name, args) =>
+      raw(name.str) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
 
   def accept_visitor(v: GOVisitor): GOExpr = this match
     case x: Ref => v.visit(x).to_expr
@@ -243,8 +277,8 @@ enum GONode:
   case Case(scrut: Name, cases: Ls[(ClassInfo, GONode)])
   // Intermediate forms:
   case LetExpr(name: Name, expr: GOExpr, body: GONode)
-  case LetJoin(joinName: Name, params: Ls[Name], rhs: GONode, body: GONode)
-  case LetCall(resultNames: Ls[Name], defn: GODefRef, args: Ls[TrivialExpr], body: GONode)
+  case LetJoin(jp: Name, params: Ls[Name], rhs: GONode, body: GONode)
+  case LetCall(names: Ls[Name], defn: GODefRef, args: Ls[TrivialExpr], body: GONode)
 
   override def toString: String = show
 
@@ -259,30 +293,30 @@ enum GONode:
       <#> raw("(")
       <#> raw(args |> show_args)
       <#> raw(")") 
-    case Case(Name(x), Ls((tcls, tru), (fcls, fls))) if tcls.ident == "True" && fcls.ident == "False" =>
-      val first = raw("if") <:> raw(x)
+    case Case(x, Ls((tcls, tru), (fcls, fls))) if tcls.ident == "True" && fcls.ident == "False" =>
+      val first = raw("if") <:> raw(x.toString)
       val tru2 = indent(raw("true") <:> raw ("=>") <:> tru.toDocument)
       val fls2 = indent(raw("false") <:> raw ("=>") <:> fls.toDocument)
       Document.Stacked(Ls(first, tru2, fls2))
-    case Case(Name(x), cases) =>
-      val first = raw("case") <:> raw(x) <:> raw("of")
+    case Case(x, cases) =>
+      val first = raw("case") <:> raw(x.toString) <:> raw("of")
       val other = cases map {
         case (ClassInfo(_, name, _), node) =>
           indent(raw(name) <:> raw("=>") <:> node.toDocument)
       }
       Document.Stacked(first :: other)
-    case LetExpr(Name(x), expr, body) => 
+    case LetExpr(x, expr, body) => 
       stack(
         raw("let")
-          <:> raw(x)
+          <:> raw(x.show)
           <:> raw("=")
           <:> expr.toDocument,
         raw("in") <:> body.toDocument |> indent)
-    case LetJoin(Name(x), params, rhs, body) =>
+    case LetJoin(x, params, rhs, body) =>
       stack(
         raw("let")
           <:> raw("join")
-          <:> raw(x)
+          <:> raw(x.show)
           <#> raw("(")
           <#> raw(params.map{ x => x.toString }.mkString(","))
           <#> raw(")")
@@ -290,11 +324,11 @@ enum GONode:
           <:> (rhs.toDocument |> indent |> indent),
         raw("in") <:> body.toDocument |> indent
       )
-    case LetCall(resultNames, defn, args, body) => 
+    case LetCall(xs, defn, args, body) => 
       stack(
         raw("let*")
           <:> raw("(")
-          <#> raw(resultNames.map{ x => x.toString }.mkString(","))
+          <#> raw(xs.map(_.show).mkString(","))
           <#> raw(")")
           <:> raw("=")
           <:> raw(defn.getName)

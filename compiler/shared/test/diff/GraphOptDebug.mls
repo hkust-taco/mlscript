@@ -104,52 +104,52 @@ main(False)
 //│ S: None,
 //│ I: [],
 //│ [None], 1, 
-//│ let x%4 = +(1,2)
-//│   in let x%5 = -(x%4,3)
-//│     in let x%6 = +(x%5,4)
-//│       in x%6
+//│ let x%4[-T] = +(1,2)
+//│   in let x%5[-T] = -(x%4[-T],3)
+//│     in let x%6[-T] = +(x%5[-T],4)
+//│       in x%6[-T]
 //│ )
 //│ Def(1, bbb, [], [],
 //│ S: None,
 //│ I: [],
 //│ [None], 1, 
-//│ let* (x%7) = aaa()
-//│   in let x%8 = *(x%7,100)
-//│     in let x%9 = +(x%8,4)
-//│       in x%9
+//│ let* (x%7[-T]) = aaa()
+//│   in let x%8[-T] = *(x%7[-T],100)
+//│     in let x%9[-T] = +(x%8[-T],4)
+//│       in x%9[-T]
 //│ )
-//│ Def(2, not, [x%10], [{EDestruct,EDirect}],
+//│ Def(2, not, [x%10[-DT]], [{EDestruct,EDirect}],
 //│ S: None,
 //│ I: [],
 //│ [Some(IMix(ICtor(False),ICtor(True)))], 1, 
-//│ if x%10
-//│   true => let x%11 = False()
-//│     in x%11
-//│   false => let x%12 = True()
-//│     in x%12
+//│ if x%10[-DT]
+//│   true => let x%11[+C(False)-T] = False()
+//│     in x%11[+C(False)-T]
+//│   false => let x%12[+C(True)-T] = True()
+//│     in x%12[+C(True)-T]
 //│ )
-//│ Def(3, foo, [x%14], [{EDestruct,EDirect,EIndirectDestruct}],
+//│ Def(3, foo, [x%14[-DTI]], [{EDestruct,EDirect,EIndirectDestruct}],
 //│ S: None,
 //│ I: [[Some(IMix(ICtor(False),ICtor(True)))]],
 //│ [Some(IMix(ICtor(A),ICtor(B)))], 1, 
-//│ if x%14
-//│   true => let x%15 = A()
-//│     in x%15
-//│   false => let* (x%16) = not(x%14)
-//│     in let* (x%17) = foo(x%16)
-//│       in let x%18 = B(x%17)
-//│         in x%18
+//│ if x%14[-DTI]
+//│   true => let x%15[+C(A)-T] = A()
+//│     in x%15[+C(A)-T]
+//│   false => let* (x%16[+X(C(False)C(True))-TI]) = not(x%14[-DTI])
+//│     in let* (x%17[+X(C(A)C(B))-T]) = foo(x%16[+X(C(False)C(True))-TI])
+//│       in let x%18[+C(B)-T] = B(x%17[+X(C(A)C(B))-T])
+//│         in x%18[+C(B)-T]
 //│ )
-//│ Def(4, main, [flag%0], [{EDirect,EIndirectDestruct}],
+//│ Def(4, main, [flag%0[-TI]], [{EDirect,EIndirectDestruct}],
 //│ S: None,
 //│ I: [],
 //│ [None], 1, 
-//│ let* (x%20) = foo(flag%0)
-//│   in case x%20 of
-//│     A => let* (x%21) = aaa()
-//│       in x%21
-//│     B => let* (x%23) = bbb()
-//│       in x%23
+//│ let* (x%20[+X(C(A)C(B))-DT]) = foo(flag%0[-TI])
+//│   in case x%20[+X(C(A)C(B))-DT] of
+//│     A => let* (x%21[-T]) = aaa()
+//│       in x%21[-T]
+//│     B => let* (x%23[-T]) = bbb()
+//│       in x%23[-T]
 //│ )
 //│ },
 //│ let x%25 = False()

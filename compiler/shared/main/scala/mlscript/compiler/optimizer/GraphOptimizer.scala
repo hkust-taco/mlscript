@@ -13,7 +13,7 @@ import scala.collection.mutable.{MultiMap, Queue}
 
 final case class GraphOptimizingError(message: String) extends Exception(message)
 
-class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
+class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbose: Bool = false):
   import GOExpr._
   import GONode._
   import Elim._
@@ -27,37 +27,39 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
     private val defcount = MutHMap[Str, Int]()
     private val visited = MutHSet[Str]()
 
-    private def addElim(x: Str, elim: Elim) =
-      if (defcount.getOrElse(x, 0) <= 1)
-        elims.getOrElseUpdate(x, MutHSet.empty) += elim
+    private def addElim(x: Name, elim: Elim) =
+      if (defcount.getOrElse(x.str, 0) <= 1)
+        elims.getOrElseUpdate(x.str, MutHSet.empty) += elim
+        x.updateElim(elim)
     
-    private def addBackwardElim(x: Str, elim: Elim) =
-      if (defcount.getOrElse(x, 0) <= 1)
+    private def addBackwardElim(x: Name, elim: Elim) =
+      if (defcount.getOrElse(x.str, 0) <= 1)
         val elim2 = elim match
           case EDestruct => EIndirectDestruct
           case _ => elim
-        elims.getOrElseUpdate(x, MutHSet.empty) += elim2          
+        elims.getOrElseUpdate(x.str, MutHSet.empty) += elim2  
+        x.updateElim(elim2)   
 
     override def iterate_param(x: Name): Unit = 
       defcount.update(x.str, defcount.getOrElse(x.str, 0) + 1)
     override def iterate_name_def(x: Name) =
       defcount.update(x.str, defcount.getOrElse(x.str, 0) + 1)
     override def iterate_name_use(x: Name) =
-      addElim(x.str, EDirect)
+      addElim(x, EDirect)
     override def iterate(x: Case) = x match
       case Case(x, cases) =>
         x.accept_use_iterator(this)
-        addElim(x.str, EDestruct)
+        addElim(x, EDestruct)
         cases foreach { (cls, arm) => arm.accept_iterator(this) }
     override def iterate(x: Select) = x match
       case Select(x, cls, field) =>
-        addElim(x.str, ESelect(field))
+        addElim(x, ESelect(field))
     override def iterate(x: Jump) = x match
       case Jump(defnref, args) => 
         args.foreach(_.accept_iterator(this))
         val defn = defnref.expectDefn
         args.zip(defn.activeParams).foreach {
-          case (Ref(Name(x)), ys) => ys.foreach { y => addBackwardElim(x, y) }
+          case (Ref(x), ys) => ys.foreach { y => addBackwardElim(x, y) }
           case _ => 
         }
         if (!visited.contains(defn.name))
@@ -69,8 +71,8 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
         args.foreach(_.accept_iterator(this))
         val defn = defnref.expectDefn 
         args.zip(defn.activeParams).foreach {
-          case (Ref(Name(x)), ys) => ys.foreach { y => addBackwardElim(x, y) }
-          case _ => 
+          case (Ref(x), ys) => ys.foreach { y => addBackwardElim(x, y) }
+          case _ =>
         }
         if (!visited.contains(defn.name))
           visited.add(defn.name)
@@ -125,7 +127,11 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
         defn.activeInputs = updateInputInfo(defn, intros, args)
         getIntro(body, intros2)
       case LetExpr(name, expr, body) => 
-        val intros2 = getIntro(expr, intros).map { x => intros + (name.str -> x) }.getOrElse(intros)
+        val intros2 = getIntro(expr, intros) match
+          case None => intros
+          case Some(x) =>
+            name.updateIntro(x)
+            intros + (name.str -> x)
         getIntro(body, intros2)
       case LetJoin(joinName, params, rhs, body) =>
         throw GraphOptimizingError(f"join points after promotion: $node")
@@ -288,7 +294,9 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
   
   private def updateIntroInfo(defn: GODef, intros: Map[Str, Intro], xs: Ls[Name]) =
     defn.activeResults.zip(xs).foldLeft(intros) { 
-      case (intros, (Some(i), name)) => intros + (name.str -> i)
+      case (intros, (Some(i), name)) =>
+        name.updateIntro(i)
+        intros + (name.str -> i)
       case (intros, _) => intros
     }
 
@@ -296,8 +304,11 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
     defn.activeResults.zip(xs).foldLeft(intros) { 
       case (intros, (Some(i @ IMix(_)), name)) =>
         out += (name.str -> defn.name)
+        name.updateIntro(i)
         intros + (name.str -> i)
-      case (intros, (Some(i), name)) => intros + (name.str -> i)
+      case (intros, (Some(i), name)) => 
+        name.updateIntro(i)
+        intros + (name.str -> i)
       case (intros, _) => intros
     }
     
@@ -559,7 +570,8 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
   ) extends GOVisitor:
     var intros = Map.empty[Str, Intro]
     var changed = false
-    
+    private val name_defn_map = MutHMap[Str, Str]()
+
     override def visit(x: LetExpr) = x match
       case LetExpr(x, e1, e2) =>
         intros = IntroductionAnalysis.getIntro(e1, intros).map { y => Map(x.str -> y) }.getOrElse(intros)
@@ -567,11 +579,13 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
     
     override def visit(x: LetCall) = x match
       case LetCall(xs, defnref, as, e) =>
-        
-        
-        ???
+        val defn = defnref.expectDefn
+        intros = updateIntroInfoAndMaintainMixingIntros(name_defn_map, defn, intros, xs)
+        LetCall(xs, defnref, as, e.accept_visitor(this))
+    
     
   
+
   private class CommuteConversion(
     cls_ctx: Map[Str, ClassInfo],
     pre_map: Map[(Str, Str), (Str, Ls[Str])],
