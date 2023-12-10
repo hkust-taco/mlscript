@@ -1099,7 +1099,7 @@ trait LitValImpl { self: LiteralVal =>
 
 trait ObjValImpl { self: ObjVal =>
   def merge(other: ObjVal)(implicit instackExps: Set[Int]): ObjVal = {
-    val allKeys = self.fields.keySet
+    val allKeys = self.fields.keys
     val nFlds = allKeys.map(k => {
       val s1 = self.fields.get(k).get
       val s2 = other.fields.get(k).get
@@ -1107,7 +1107,7 @@ trait ObjValImpl { self: ObjVal =>
         (k -> s1)
       else (k -> (s1 ++ s2))
     })
-    ObjVal(self.name, ListMap(nFlds.toSeq: _*))
+    ObjVal(self.name, ListMap(nFlds.toList: _*))
   }
 
 }
@@ -1182,9 +1182,10 @@ trait BoundedTermImpl { self: BoundedTerm =>
       })
 
       var ret2 = restVals1 ++ restVals2
-      if(ret2.count(x => (x.isInstanceOf[LiteralVal] || x.isInstanceOf[PrimVal])) > 1){
-        ret2 = ret2.filterNot(_.isInstanceOf[LiteralVal])// + PrimVal()
-      }
+      // TODO: eliminate redundant values
+      // if(ret2.count(x => (x.isInstanceOf[LiteralVal] || x.isInstanceOf[PrimVal])) > 1){
+      //   ret2 = ret2.filterNot(_.isInstanceOf[LiteralVal])// + PrimVal()
+      // }
       val retVals = BoundedTerm(ret ++ ret2)
       // retVals.updateCnt = this.updateCnt
       // if(this.compare(retVals)) retVals.updateCnt += 1

@@ -100,6 +100,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
       ret
     }
     def update(v: VarVal, s: BoundedTerm): Unit = {
+      debug.writeLine(s"Updating vMap ${v.vx} with ${s}")
       vMap.update(v.vx, s)
     }
   }
@@ -249,7 +250,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
 
   private def nuUpdateFunction(funcName: String): Unit = {
     val updateCount = nuEvalCnt.get(funcName).getOrElse(0)
-    if(updateCount <= 10){
+    if(updateCount <= 3){
       nuEvalCnt.update(funcName, updateCount+1)
       nuUpdateFunc(funcName)
     }
@@ -327,6 +328,9 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
             val mergedArgs = oldArgs.map(old => (old zip (args.map(_.map(_.unfoldVars)).get)).map(_ ++ _).zip(params.get).map(
               (x,y) => if(y._1.spec) then x else x.literals2Prims
             ))
+            debug.writeLine(s"old args ${oldArgs}")
+            debug.writeLine(s"new args ${args}")
+            debug.writeLine(s"merged args ${mergedArgs}")
             // FIXME: do paramless funcs need multiple evaluations? currently only eval paramless funcs once
             if (!nuEvalCnt.contains(name) || (hasArgs && (oldArgs.get zip mergedArgs.get).exists(x => x._1.compare(x._2)))) {
               nuFunImpls.update(name, (funDef, mp, mergedArgs, vals))
@@ -380,6 +384,8 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
         val oldExp = VarValMap.get(nuFunImpls.get(funcName).get._4)
         if (oldExp.compare(nuBody.evaledTerm)) {
           debug.writeLine(s"Bounds of ${funcName} changed, adding dependent functions to evalQueue")
+          debug.writeLine(s"Before: ${oldExp}")
+          debug.writeLine(s"After : ${nuBody.evaledTerm}")
           nuFunDependence.get(funcName).get.foreach(x => if !nuEvalQueue.contains(x) then {
             debug.writeLine(s"Added ${x}")
             nuEvalQueue.add(x)

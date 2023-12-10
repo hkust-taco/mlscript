@@ -238,7 +238,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
               monoer.nuGetFuncRetVal(name, Some(ctx.unzip._2 ++ extractFuncArgs(nuRhs).map(_.evaledTerm))) // Unzipping ctx gives implicit "this"
             case other => throw MonomorphError(s"Encountered unknown value ${other} when evaluating object application")
           case TypeVal(name) => 
-            BoundedTerm(monoer.nuCreateObjValue(name, extractFuncArgs(nuRhs).map(_.evaledTerm).toList))
+            BoundedTerm(monoer.nuCreateObjValue(name, extractFuncArgs(nuRhs).map(_.evaledTerm.unfoldVars).toList))
           case l@LiteralVal(i) => BoundedTerm(l)
         }.fold(BoundedTerm())(_ ++ _)
         res
@@ -258,10 +258,15 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
                 fld
               case None => 
                 debug.writeLine("other select")
-                monoer.nuGetFieldVal(obj, fieldName.name).getValue.map {
-                  case FuncVal(name, None, ctx) => monoer.nuGetFuncRetVal(name, Some(ctx.unzip._2))
+                debug.indent()
+                val res = monoer.nuGetFieldVal(obj, fieldName.name).getValue.map {
+                  case f@FuncVal(name, None, ctx) => 
+                    debug.writeLine(s"got paramless func ${f}")
+                    monoer.nuGetFuncRetVal(name, Some(ctx.unzip._2))
                   case other => BoundedTerm(other)
                 }.fold(BoundedTerm())(_ ++ _)
+                debug.outdent()
+                res
           case tup: TupVal =>
             tup.fields.get(fieldName) match
               case Some(fld) => fld
@@ -319,7 +324,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
         val res = Tup(fields.map{
           case (name, Fld(flags, value)) => (name, Fld(flags, nuEvaluate(value)))
         }) 
-        res.evaledTerm = BoundedTerm(monoer.createTupVal(res.fields.map{case (name, Fld(flags, value)) => value.evaledTerm}))
+        res.evaledTerm = BoundedTerm(monoer.createTupVal(res.fields.map{case (name, Fld(flags, value)) => value.evaledTerm.unfoldVars}))
         res
       // case Bra(rcd, term) => ???
       // case _: Bind => ???
@@ -420,8 +425,11 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
               IfThen(Var(name), v match
                 case Left(lit) => lit
                 case Right(bool) => if bool then Var("true") else Var("false"))
-            case other =>
-              throw MonomorphError(s"Selection of field ${field} from object ${o} results in unhandled case ${other}")
+            case None =>
+              if selValue.size > 1 
+              then 
+                IfThen(App(Var(name), toTuple(fields.keys.map(k => Var(k)).toList)), field)
+              else throw MonomorphError(s"Selection of field ${field} from object ${o} results in no values")
           }
           valSetToBranches(next, Left(branchCase) :: acc)
         // case t@TupVal(fields) =>
