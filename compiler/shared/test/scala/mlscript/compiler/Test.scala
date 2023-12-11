@@ -26,11 +26,11 @@ class DiffTestCompiler extends DiffTests {
         val f2 = FreshInt()
         val f3 = FreshInt()
         val gb = GraphBuilder(f1, f2, f3)
-        val go = GraphOptimizer(f1, f2, f3, mode.graphVerbose)
+        val go = GraphOptimizer(f1, f2, f3)
         val graph = gb.buildGraph(unit)
         outputBuilder ++= graph.toString()
         outputBuilder ++= "\n\nPromoted ------------------------------------\n"
-        val graph2 = go.simplifyProgram(go.promoteJoinPoints(graph))
+        val graph2 = go.simplifyProgram(graph)
         val graph3 = go.activeAnalyze(graph2)
         outputBuilder ++= graph3.toString()
         if (mode.graphInterp)
@@ -40,7 +40,7 @@ class DiffTestCompiler extends DiffTests {
        
         var changed = true
         var g = graph3
-        val fuel_limit = 100
+        val fuel_limit = 20
         var fuel = fuel_limit
         while (changed && fuel > 0)
           val new_g = go.optimize(g)

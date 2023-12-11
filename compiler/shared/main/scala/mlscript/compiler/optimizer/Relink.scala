@@ -10,7 +10,6 @@ private final class Relink(defs: Set[GODef], allow_inline_jp: Bool):
     case Result(res) =>
     case Case(scrut, cases) => cases map { (_, body) => f(body) }
     case LetExpr(name, expr, body) => f(body)
-    case LetJoin(joinName, params, rhs, body) => f(body)
     case LetCall(resultNames, defnref, args, body) =>
       defs.find{_.getName == defnref.getName} match
         case Some(defn) => defnref.defn = Left(defn)

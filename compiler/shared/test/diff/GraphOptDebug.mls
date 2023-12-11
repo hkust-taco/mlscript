@@ -1,168 +1,279 @@
 :NewParser
 :ParseOnly
 
+
 :GraphInterp
 :GraphOpt
-class True
-class False
-class A()
-class B(b)
-fun aaa() =
-  let m = 1
-  let n = 2
-  let p = 3
-  let q = 4
-  m + n - p + q
-fun bbb() =
-  let x = aaa()
-  x * 100 + 4
-fun not(x) =
-  if x then False else True
-fun foo(x) =
-  if x then A
-       else B(foo(not(x)))
-fun main(flag) =
-  let x = foo(flag)
-  if x is
-    A then aaa()
-    B(b1) then bbb()
-main(False)
-//│ |#class| |True|↵|#class| |False|↵|#class| |A|(||)|↵|#class| |B|(|b|)|↵|#fun| |aaa|(||)| |#=|→|#let| |m| |#=| |1|↵|#let| |n| |#=| |2|↵|#let| |p| |#=| |3|↵|#let| |q| |#=| |4|↵|m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |bbb|(||)| |#=|→|#let| |x| |#=| |aaa|(||)|↵|x| |*| |100| |+| |4|←|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A|→|#else| |B|(|foo|(|not|(|x|)|)|)|←|←|↵|#fun| |main|(|flag|)| |#=|→|#let| |x| |#=| |foo|(|flag|)|↵|#if| |x| |is|→|A| |#then| |aaa|(||)|↵|B|(|b1|)| |#then| |bbb|(||)|←|←|↵|main|(|False|)|
-//│ Parsed: {class True {}; class False {}; class A() {}; class B(b,) {}; fun aaa = () => {let m = 1; let n = 2; let p = 3; let q = 4; +(-(+(m,)(n,),)(p,),)(q,)}; fun bbb = () => {let x = aaa(); +(*(x,)(100,),)(4,)}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = (flag,) => {let x = foo(flag,); if x is ‹(A) then aaa(); (B(b1,)) then bbb()›}; main(False,)}
+class A(w, x)
+class B(y)
+class C(z)
+fun complex_foo(t) =
+  let a = 1 + 2 // 3
+  let b = 1 * 2 // 2
+  let x = if t is // x = A(9, B(10))
+    A(x, y) then y
+    B(x) then B(x + b)
+    C(x) then C(0)
+  let z = A(5, x) // z = A(5, A(9, B(10))
+  let v = B(6) // v = B(6)
+  let y = if x is // 14
+    A(x, y) then
+      let m = x + a + b // 9 + 3 + 2 = 14
+      if y is
+        A(x, y) then x
+        B(x) then m // 14
+        C(x) then 0
+    B(x) then 2
+    C(x) then 3
+  if z is // 5
+    A(x, y) then x
+    B(x) then 4
+    C(x) then
+      if v is
+        A(x, y) then x
+        B(x) then 7
+        C(x) then 8
+fun bar() =
+  complex_foo(A(10, A(9, B(10))))
+bar()
+//│ |#class| |A|(|w|,| |x|)|↵|#class| |B|(|y|)|↵|#class| |C|(|z|)|↵|#fun| |complex_foo|(|t|)| |#=|→|#let| |a| |#=| |1| |+| |2| |/* 3*/|↵|#let| |b| |#=| |1| |*| |2| |/* 2*/|↵|#let| |x| |#=| |#if| |t| |is| |/* x = A(9, B(10))*/|→|A|(|x|,| |y|)| |#then| |y|↵|B|(|x|)| |#then| |B|(|x| |+| |b|)|↵|C|(|x|)| |#then| |C|(|0|)|←|↵|#let| |z| |#=| |A|(|5|,| |x|)| |/* z = A(5, A(9, B(10))*/|↵|#let| |v| |#=| |B|(|6|)| |/* v = B(6)*/|↵|#let| |y| |#=| |#if| |x| |is| |/* 14*/|→|A|(|x|,| |y|)| |#then|→|#let| |m| |#=| |x| |+| |a| |+| |b| |/* 9 + 3 + 2 = 14*/|↵|#if| |y| |is|→|A|(|x|,| |y|)| |#then| |x|↵|B|(|x|)| |#then| |m| |/* 14*/|↵|C|(|x|)| |#then| |0|←|←|↵|B|(|x|)| |#then| |2|↵|C|(|x|)| |#then| |3|←|↵|#if| |z| |is| |/* 5*/|→|A|(|x|,| |y|)| |#then| |x|↵|B|(|x|)| |#then| |4|↵|C|(|x|)| |#then|→|#if| |v| |is|→|A|(|x|,| |y|)| |#then| |x|↵|B|(|x|)| |#then| |7|↵|C|(|x|)| |#then| |8|←|←|←|←|↵|#fun| |bar|(||)| |#=|→|complex_foo|(|A|(|10|,| |A|(|9|,| |B|(|10|)|)|)|)|←|↵|bar|(||)|
+//│ Parsed: {class A(w, x,) {}; class B(y,) {}; class C(z,) {}; fun complex_foo = (t,) => {let a = +(1,)(2,); let b = *(1,)(2,); let x = if t is ‹(A(x, y,)) then y; (B(x,)) then B(+(x,)(b,),); (C(x,)) then C(0,)›; let z = A(5, x,); let v = B(6,); let y = if x is ‹(A(x, y,)) then {let m = +(+(x,)(a,),)(b,); if y is ‹(A(x, y,)) then x; (B(x,)) then m; (C(x,)) then 0›}; (B(x,)) then 2; (C(x,)) then 3›; if z is ‹(A(x, y,)) then x; (B(x,)) then 4; (C(x,)) then {if v is ‹(A(x, y,)) then x; (B(x,)) then 7; (C(x,)) then 8›}›}; fun bar = () => {complex_foo(A(10, A(9, B(10,),),),)}; bar()}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, B, (), Tup(_: Var(b)), (), None, None, TypingUnit()), NuFunDef(None, aaa, None, [], Lam(Tup(), Blk(...))), NuFunDef(None, bbb, None, [], Lam(Tup(), Blk(...))), NuFunDef(None, not, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, main, None, [], Lam(Tup(_: Var(flag)), Blk(...))), App(Var(main), Tup(_: Var(False))))
+//│ TypingUnit(NuTypeDef(class, A, (), Tup(_: Var(w), _: Var(x)), (), None, None, TypingUnit()), NuTypeDef(class, B, (), Tup(_: Var(y)), (), None, None, TypingUnit()), NuTypeDef(class, C, (), Tup(_: Var(z)), (), None, None, TypingUnit()), NuFunDef(None, complex_foo, None, [], Lam(Tup(_: Var(t)), Blk(...))), NuFunDef(None, bar, None, [], Lam(Tup(), Blk(...))), App(Var(bar), Tup()))
 //│ 
 //│ GraphOpt:
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
-//│ Def(0, aaa, [], [{}],
+//│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
+//│ Def(0, complex_foo, [t%0], [{}],
 //│ S: None,
 //│ I: [],
 //│ [None], 1, 
-//│ let x%0 = 1
-//│   in let x%1 = 2
-//│     in let x%2 = 3
-//│       in let x%3 = 4
-//│         in let x%4 = +(x%0,x%1)
-//│           in let x%5 = -(x%4,x%2)
-//│             in let x%6 = +(x%5,x%3)
-//│               in x%6
+//│ let x%0 = +(1,2)
+//│   in let x%1 = *(1,2)
+//│     in case t%0 of
+//│       A => let x%2 = t%0.x
+//│         in let x%3 = t%0.w
+//│           in jump j%0(x%2)
+//│       B => let x%4 = t%0.y
+//│         in let x%5 = +(x%4,x%1)
+//│           in let x%6 = B(x%5)
+//│             in jump j%0(x%6)
+//│       C => let x%7 = t%0.z
+//│         in let x%8 = C(0)
+//│           in jump j%0(x%8)
 //│ )
-//│ Def(1, bbb, [], [{}],
+//│ Def(1, @join j%0, [x%9], [{}],
 //│ S: None,
 //│ I: [],
 //│ [None], 1, 
-//│ let* (x%7) = aaa()
-//│   in let x%8 = *(x%7,100)
-//│     in let x%9 = +(x%8,4)
-//│       in x%9
+//│ let x%10 = A(5,x%9)
+//│   in let x%11 = B(6)
+//│     in case x%9 of
+//│       A => let x%12 = x%9.x
+//│         in let x%13 = x%9.w
+//│           in let x%14 = +(x%13,x%0)
+//│             in let x%15 = +(x%14,x%1)
+//│               in case x%12 of
+//│                 A => let x%16 = x%12.x
+//│                   in let x%17 = x%12.w
+//│                     in jump j%2(x%17)
+//│                 B => let x%18 = x%12.y
+//│                   in jump j%2(x%15)
+//│                 C => let x%19 = x%12.z
+//│                   in jump j%2(0)
+//│       B => let x%21 = x%9.y
+//│         in jump j%1(2)
+//│       C => let x%22 = x%9.z
+//│         in jump j%1(3)
 //│ )
-//│ Def(2, not, [x%10], [{}],
+//│ Def(2, @join j%2, [x%20], [{}],
 //│ S: None,
 //│ I: [],
 //│ [None], 1, 
-//│ let join j%0(x%13) = x%13
-//│   in if x%10
-//│     true => let x%11 = False()
-//│       in jump j%0(x%11)
-//│     false => let x%12 = True()
-//│       in jump j%0(x%12)
+//│ jump j%1(x%20)
 //│ )
-//│ Def(3, foo, [x%14], [{}],
+//│ Def(3, @join j%1, [x%23], [{}],
 //│ S: None,
 //│ I: [],
 //│ [None], 1, 
-//│ let join j%1(x%19) = x%19
-//│   in if x%14
-//│     true => let x%15 = A()
-//│       in jump j%1(x%15)
-//│     false => let* (x%16) = not(x%14)
-//│       in let* (x%17) = foo(x%16)
-//│         in let x%18 = B(x%17)
-//│           in jump j%1(x%18)
+//│ case x%10 of
+//│   A => let x%24 = x%10.x
+//│     in let x%25 = x%10.w
+//│       in jump j%3(x%25)
+//│   B => let x%26 = x%10.y
+//│     in jump j%3(4)
+//│   C => let x%27 = x%10.z
+//│     in case x%11 of
+//│       A => let x%28 = x%11.x
+//│         in let x%29 = x%11.w
+//│           in jump j%4(x%29)
+//│       B => let x%30 = x%11.y
+//│         in jump j%4(7)
+//│       C => let x%31 = x%11.z
+//│         in jump j%4(8)
 //│ )
-//│ Def(4, main, [flag%0], [{}],
+//│ Def(4, @join j%4, [x%32], [{}],
 //│ S: None,
 //│ I: [],
 //│ [None], 1, 
-//│ let* (x%20) = foo(flag%0)
-//│   in let join j%2(x%24) = x%24
-//│     in case x%20 of
-//│       A => let* (x%21) = aaa()
-//│         in jump j%2(x%21)
-//│       B => let x%22 = x%20.b
-//│         in let* (x%23) = bbb()
-//│           in jump j%2(x%23)
+//│ jump j%3(x%32)
+//│ )
+//│ Def(5, @join j%3, [x%33], [{}],
+//│ S: None,
+//│ I: [],
+//│ [None], 1, 
+//│ x%33
+//│ )
+//│ Def(6, bar, [], [{}],
+//│ S: None,
+//│ I: [],
+//│ [None], 1, 
+//│ let x%34 = B(10)
+//│   in let x%35 = A(9,x%34)
+//│     in let x%36 = A(10,x%35)
+//│       in let* (x%37) = complex_foo(x%36)
+//│         in x%37
 //│ )
 //│ },
-//│ let x%25 = False()
-//│   in let* (x%26) = main(x%25)
-//│     in x%26)
+//│ let* (x%38) = bar()
+//│   in x%38)
 //│ 
 //│ Promoted ------------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
-//│ Def(0, aaa, [], [],
+//│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
+//│ Def(0, complex_foo, [t%0], [{EDestruct,EDirect,ESelect(x),ESelect(y)}],
+//│ S: None,
+//│ I: [[Some(ICtor(A))]],
+//│ [None], 1, 
+//│ let x%0 = +(1,2)
+//│   in let x%1 = *(1,2)
+//│     in case t%0 of
+//│       A => let x%2 = t%0.x
+//│         in jump j%0(x%2)
+//│       B => let x%4 = t%0.y
+//│         in let x%5 = +(x%4,x%1)
+//│           in let x%6 = B(x%5)
+//│             in jump j%0(x%6)
+//│       C => let x%8 = C(0)
+//│         in jump j%0(x%8)
+//│ )
+//│ Def(1, @join j%0, [x%9], [{EDestruct,EDirect,ESelect(w),ESelect(x)}],
+//│ S: None,
+//│ I: [[Some(ICtor(B))],[Some(ICtor(C))]],
+//│ [None], 1, 
+//│ let x%10 = A(5,x%9)
+//│   in let x%11 = B(6)
+//│     in case x%9 of
+//│       A => let x%12 = x%9.x
+//│         in let x%13 = x%9.w
+//│           in let x%14 = +(x%13,x%0)
+//│             in let x%15 = +(x%14,x%1)
+//│               in case x%12 of
+//│                 A => let x%17 = x%12.w
+//│                   in jump j%1(x%17)
+//│                 B => jump j%1(x%15)
+//│                 C => jump j%1(0)
+//│       B => jump j%1(2)
+//│       C => jump j%1(3)
+//│ )
+//│ Def(3, @join j%1, [x%23], [{}],
 //│ S: None,
 //│ I: [],
 //│ [None], 1, 
-//│ let x%4[-T] = +(1,2)
-//│   in let x%5[-T] = -(x%4[-T],3)
-//│     in let x%6[-T] = +(x%5[-T],4)
-//│       in x%6[-T]
+//│ case x%10 of
+//│   A => let x%25 = x%10.w
+//│     in x%25
+//│   B => 4
+//│   C => case x%11 of
+//│     A => let x%29 = x%11.w
+//│       in x%29
+//│     B => 7
+//│     C => 8
 //│ )
-//│ Def(1, bbb, [], [],
+//│ Def(6, bar, [], [],
 //│ S: None,
 //│ I: [],
 //│ [None], 1, 
-//│ let* (x%7[-T]) = aaa()
-//│   in let x%8[-T] = *(x%7[-T],100)
-//│     in let x%9[-T] = +(x%8[-T],4)
-//│       in x%9[-T]
-//│ )
-//│ Def(2, not, [x%10[-DT]], [{EDestruct,EDirect}],
-//│ S: None,
-//│ I: [],
-//│ [Some(IMix(ICtor(False),ICtor(True)))], 1, 
-//│ if x%10[-DT]
-//│   true => let x%11[+C(False)-T] = False()
-//│     in x%11[+C(False)-T]
-//│   false => let x%12[+C(True)-T] = True()
-//│     in x%12[+C(True)-T]
-//│ )
-//│ Def(3, foo, [x%14[-DTI]], [{EDestruct,EDirect,EIndirectDestruct}],
-//│ S: None,
-//│ I: [[Some(IMix(ICtor(False),ICtor(True)))]],
-//│ [Some(IMix(ICtor(A),ICtor(B)))], 1, 
-//│ if x%14[-DTI]
-//│   true => let x%15[+C(A)-T] = A()
-//│     in x%15[+C(A)-T]
-//│   false => let* (x%16[+X(C(False)C(True))-TI]) = not(x%14[-DTI])
-//│     in let* (x%17[+X(C(A)C(B))-T]) = foo(x%16[+X(C(False)C(True))-TI])
-//│       in let x%18[+C(B)-T] = B(x%17[+X(C(A)C(B))-T])
-//│         in x%18[+C(B)-T]
-//│ )
-//│ Def(4, main, [flag%0[-TI]], [{EDirect,EIndirectDestruct}],
-//│ S: None,
-//│ I: [],
-//│ [None], 1, 
-//│ let* (x%20[+X(C(A)C(B))-DT]) = foo(flag%0[-TI])
-//│   in case x%20[+X(C(A)C(B))-DT] of
-//│     A => let* (x%21[-T]) = aaa()
-//│       in x%21[-T]
-//│     B => let* (x%23[-T]) = bbb()
-//│       in x%23[-T]
+//│ let x%34 = B(10)
+//│   in let x%35 = A(9,x%34)
+//│     in let x%36 = A(10,x%35)
+//│       in let* (x%37) = complex_foo(x%36)
+//│         in x%37
 //│ )
 //│ },
-//│ let x%25 = False()
-//│   in let* (x%26) = main(x%25)
-//│     in x%26)
+//│ let* (x%38) = bar()
+//│   in x%38)
 //│ 
 //│ Interpreted ------------------------------
-//│ 404
+//│ 5
 //│ 
+//│ 
+//│ Optimized ------------------------------
+//│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
+//│ Def(1, @join j%0, [x%9], [{EDestruct,EDirect,ESelect(w),ESelect(x)}],
+//│ S: None,
+//│ I: [],
+//│ [None], 1, 
+//│ let x%10 = A(5,x%9)
+//│   in let x%11 = B(6)
+//│     in case x%9 of
+//│       A => let x%12 = x%9.x
+//│         in let x%13 = x%9.w
+//│           in let x%14 = +(x%13,x%0)
+//│             in let x%15 = +(x%14,x%1)
+//│               in case x%12 of
+//│                 A => let x%17 = x%12.w
+//│                   in jump j%1(x%17)
+//│                 B => jump j%1(x%15)
+//│                 C => jump j%1(0)
+//│       B => jump j%1(2)
+//│       C => jump j%1(3)
+//│ )
+//│ Def(3, @join j%1, [x%23], [{}],
+//│ S: None,
+//│ I: [],
+//│ [None], 1, 
+//│ case x%10 of
+//│   A => let x%25 = x%10.w
+//│     in x%25
+//│   B => 4
+//│   C => case x%11 of
+//│     A => let x%29 = x%11.w
+//│       in x%29
+//│     B => 7
+//│     C => 8
+//│ )
+//│ Def(6, bar, [], [],
+//│ S: None,
+//│ I: [],
+//│ [None], 1, 
+//│ let x%34 = B(10)
+//│   in let x%35 = A(9,x%34)
+//│     in let x%36 = A(10,x%35)
+//│       in let* (x%54,x%55,x%56) = complex_foo$P%0(x%36)
+//│         in let* (x%37) = complex_foo$D%0(x%54,x%55,x%56)
+//│           in x%37
+//│ )
+//│ Def(11, complex_foo$P%0, [t%0], [{EDirect}],
+//│ S: None,
+//│ I: [[Some(ICtor(A))]],
+//│ [None,None,None], 3, 
+//│ let x%0 = +(1,2)
+//│   in let x%1 = *(1,2)
+//│     in t%0,x%0,x%1
+//│ )
+//│ Def(12, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(x)},{EDirect},{EDirect}],
+//│ S: None,
+//│ I: [],
+//│ [None], 1, 
+//│ let x%2 = t%0.x
+//│   in jump j%0(x%2)
+//│ )
+//│ },
+//│ let* (x%38) = bar()
+//│   in x%38)
 //│ 
 //│ 
 //│ Interpreted ------------------------------
-//│ 404
+//│ 5
 //│ 
 //│ 
-//│ Fuel used: 1
+//│ Fuel used: 2

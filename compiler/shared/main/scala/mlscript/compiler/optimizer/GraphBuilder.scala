@@ -4,6 +4,7 @@ import mlscript.compiler.optimizer._
 import mlscript.utils.shorthands._
 import mlscript.utils._
 import mlscript._
+import collection.mutable.ListBuffer
 
 final val ops = Set("+", "-", "*", "/", ">", "<", ">=", "<=", "!=", "==")
 
@@ -23,6 +24,7 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
     val field_ctx: FieldCtx = Map.empty,
     val fn_ctx: FnCtx = Set.empty,
     val op_ctx: OpCtx = Set.empty,
+    var jp_acc: ListBuffer[GODef],
   )
 
   private def ref(x: Name) = Ref(x)
@@ -85,19 +87,7 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
           }
 
       case Lam(Tup(fields), body) =>
-        val xs = fields map {
-          case N -> Fld(FldFlags.empty, Var(x)) => Name(x)
-          case fld @ _ => throw GraphOptimizingError(s"not supported tuple field $fld")
-        }
-        val bindings = xs map {
-          case x @ Name(str) => str -> x
-        }
-        val v = fresh.make
-        given Ctx = ctx.copy(name_ctx = ctx.name_ctx ++ bindings)
-        LetExpr(v,
-          Lambda(xs, buildResultFromTerm(body){ x => x }),
-          v |> ref |> sresult |> k)
-  
+        throw GraphOptimizingError("not supported: lambda")
       case App(
         App(Var(name), Tup((_ -> Fld(_, e1)) :: Nil)), 
         Tup((_ -> Fld(_, e2)) :: Nil)) if ctx.op_ctx.contains(name) =>
@@ -134,10 +124,7 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
         }
         case Result(Ref(f) :: Nil) => buildResultFromTerm(xs) {
           case Result(args) =>
-            val v = fresh.make
-            LetExpr(v,
-              Apply(f, args),
-              v |> ref |> sresult |> k)
+            throw GraphOptimizingError(s"not supported: apply")
           case node @ _ => node |> unexpected_node
         }
         case node @ _ => node |> unexpected_node
@@ -159,12 +146,19 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
               case node @ _ => node |> unexpected_node
             }
             val res = fresh.make
-            if ( !ctx.class_ctx.contains("True") || !ctx.class_ctx.contains("False"))
+            if (!ctx.class_ctx.contains("True") || !ctx.class_ctx.contains("False"))
               throw GraphOptimizingError("True or False class not found, unable to use 'if then else'")
-            LetJoin(jp,
-              Ls(res),
-              res |> ref |> sresult |> k,
-              Case(cond, Ls((ctx.class_ctx("True"), tru2), (ctx.class_ctx("False"), fls2))))
+            val jpdef = GODef(
+              fn_uid.make,
+              jp.str,
+              isjp = true,
+              params = Ls(res),
+              resultNum = 1,
+              specialized = None,
+              res |> ref |> sresult |> k
+            )
+            ctx.jp_acc.addOne(jpdef)
+            Case(cond, Ls((ctx.class_ctx("True"), tru2), (ctx.class_ctx("False"), fls2)))
           case node @ _ => node |> unexpected_node
         }
         
@@ -196,11 +190,17 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
               case _ => throw GraphOptimizingError(s"not supported UCS")
             }
             val res = fresh.make
-            LetJoin(jp,
-              Ls(res),
-              res |> ref |> sresult |> k, 
-              Case(scrut, cases)  
+            val jpdef = GODef(
+              fn_uid.make,
+              jp.str,
+              isjp = true,
+              params = Ls(res),
+              resultNum = 1,
+              specialized = None,
+              res |> ref |> sresult |> k
             )
+            ctx.jp_acc.addOne(jpdef)
+            Case(scrut, cases)
           case node @ _ => node |> unexpected_node
         }
 
@@ -300,15 +300,17 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
       val fn_ctx: FnCtx = defn_names.toSet
       var name_ctx: NameCtx = defn_names.zip(defn_names.map(Name(_))).toMap ++ ops.map { op => (op, Name(op)) }.toList
 
+      val jp_acc = ListBuffer.empty[GODef]
       given Ctx = Ctx(
         name_ctx = name_ctx,
         class_ctx = class_ctx,
         field_ctx = field_ctx,
         fn_ctx = fn_ctx,
         op_ctx = ops,
+        jp_acc = jp_acc,
       )
 
-      val defs: Set[GODef] = grouped.getOrElse(1, Nil).map(buildDefFromNuFunDef).toSet
+      var defs: Set[GODef] = grouped.getOrElse(1, Nil).map(buildDefFromNuFunDef).toSet
       val terms: Ls[Term] = grouped.getOrElse(2, Nil).map {
         case tm: Term => tm
         case _ => ??? /* unreachable */
@@ -318,6 +320,8 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
         case x :: Nil => x
         case _ => throw GraphOptimizingError("only one term is allowed in the top level scope")
       }) { k => k }
+
+      defs ++= jp_acc.toList
       
       relink(main, defs, true)
       validate(main, defs)

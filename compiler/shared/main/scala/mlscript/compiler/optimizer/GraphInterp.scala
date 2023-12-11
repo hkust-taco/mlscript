@@ -131,15 +131,12 @@ object GraphInterpreter:
     case GOExpr.CtorApp(name, args) => CtorApp(name, args |> convert_args)
     case GOExpr.Select(name, cls, field) => Select(name, cls, field)
     case GOExpr.BasicOp(name, args) => BasicOp(name, args |> convert_args)
-    case _ => throw GraphInterpreterError("unexpected expr")
 
   private def convert(node: GONode): Node = node match
     case GONode.Result(xs) => Result(xs |> convert_args)
     case GONode.Jump(defnref, args) => Jump(DefRef(Right(defnref.getName)), args |> convert_args)
     case GONode.Case(scrut, cases) => Case(scrut, cases.map{(cls, node) => (cls, node |> convert)})
     case GONode.LetExpr(name, expr, body) => LetExpr(name, expr |> convert, body |> convert)
-    case GONode.LetJoin(defnref, params, rhs, body) =>
-      throw GraphInterpreterError("unexpected let join")
     case GONode.LetCall(xs, defnref, args, body) =>
       LetCall(xs, DefRef(Right(defnref.getName)), args |> convert_args, body |> convert)
 

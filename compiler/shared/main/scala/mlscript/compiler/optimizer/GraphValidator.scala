@@ -11,7 +11,6 @@ private final class DefRefInSet(defs: Set[GODef]):
     case Jump(defn, args) =>
     case Case(scrut, cases) => cases map { (_, body) => f(body) }
     case LetExpr(name, expr, body) => f(body)
-    case LetJoin(defnref, params, rhs, body) => f(body)
     case LetCall(res, defnref, args, body) =>
       defnref.getDefn match {
         case Some(real_defn) => if (!defs.exists(_ eq real_defn)) throw GraphOptimizingError("ref is not in the set")
@@ -30,7 +29,6 @@ private object ParamsArgsAreConsistent extends GOIterator:
     case Result(res) => 
     case Case(scrut, cases) => cases map { (_, body) => f(body) }
     case LetExpr(name, expr, body) => f(body)
-    case LetJoin(defnref, params, rhs, body) => f(body)
     case LetCall(res, defnref, args, body) => 
       defnref.getDefn match {
         case Some(real_defn) =>
