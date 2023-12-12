@@ -212,6 +212,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
         term.evaledTerm = BoundedTerm(LiteralVal(Left(lit)))
         term
       case Var(name) => 
+        debug.writeLine(s"evalCtx: ${evalCtx}")
         term.evaledTerm = 
           if name == "true"
           then BoundedTerm(LiteralVal(Right(true)))
@@ -238,7 +239,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
               monoer.nuGetFuncRetVal(name, Some(ctx.unzip._2 ++ extractFuncArgs(nuRhs).map(_.evaledTerm))) // Unzipping ctx gives implicit "this"
             case other => throw MonomorphError(s"Encountered unknown value ${other} when evaluating object application")
           case TypeVal(name) => 
-            BoundedTerm(monoer.nuCreateObjValue(name, extractFuncArgs(nuRhs).map(_.evaledTerm.unfoldVars).toList))
+            BoundedTerm(monoer.nuCreateObjValue(name, extractFuncArgs(nuRhs).map(_.evaledTerm).toList))
           case l@LiteralVal(i) => BoundedTerm(l)
         }.fold(BoundedTerm())(_ ++ _)
         res
@@ -324,7 +325,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
         val res = Tup(fields.map{
           case (name, Fld(flags, value)) => (name, Fld(flags, nuEvaluate(value)))
         }) 
-        res.evaledTerm = BoundedTerm(monoer.createTupVal(res.fields.map{case (name, Fld(flags, value)) => value.evaledTerm.unfoldVars}))
+        res.evaledTerm = BoundedTerm(monoer.createTupVal(res.fields.map{case (name, Fld(flags, value)) => value.evaledTerm}))
         res
       // case Bra(rcd, term) => ???
       // case _: Bind => ???
@@ -426,7 +427,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
                 case Left(lit) => lit
                 case Right(bool) => if bool then Var("true") else Var("false"))
             case None =>
-              if selValue.size > 1 
+              if selValue.getValue.size > 1 
               then 
                 IfThen(App(Var(name), toTuple(fields.keys.map(k => Var(k)).toList)), field)
               else throw MonomorphError(s"Selection of field ${field} from object ${o} results in no values")
@@ -475,6 +476,11 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
           res
         else 
           Sel(nuReceiver, fieldName)
+      case Blk(stmts) => 
+        Blk(stmts.map{
+          case t: Term => nuDefunctionalize(t)
+          case other => other
+        })
       case _ => throw MonomorphError(s"Cannot Defunctionalize ${showStructure(term)}")
     ret
   }

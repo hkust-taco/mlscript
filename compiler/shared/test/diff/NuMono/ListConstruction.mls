@@ -1,0 +1,60 @@
+:NewDefs
+
+:nm
+class List {
+    fun getRes: Str
+    fun getRes = ""
+}
+class Cons(x: Int, xs: List) extends List {
+    fun getRes = concat(concat(toString(x))(" :: "))(xs.getRes)
+}
+class Nil() extends List {
+    fun getRes = "Nil"
+}
+fun mkList(len: Int) =
+    if len == 0 then Nil()
+    else Cons(len, mkList(len-1))
+//Cons(1, Cons(2, Cons(3, Nil))).getRes
+mkList(5).getRes
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, List, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, getRes, None, [], PolyType(List(),TypeName(Str))), NuFunDef(None, getRes, None, [], StrLit()))), NuTypeDef(class, Cons, (), Tup(x: Var(Int), xs: Var(List)), (Var(List)), None, None, TypingUnit(NuFunDef(None, getRes, None, [], App(App(Var(concat), Tup(_: App(App(Var(concat), Tup(_: App(Var(toString), Tup(_: Var(x))))), Tup(_: StrLit( :: ))))), Tup(_: Sel(Var(xs), getRes)))))), NuTypeDef(class, Nil, (), Tup(), (Var(List)), None, None, TypingUnit(NuFunDef(None, getRes, None, [], StrLit(Nil)))), NuFunDef(None, mkList, None, [], Lam(Tup(len: Var(Int)), Blk(If(IfThen(App(Var(==), Tup(_: Var(len), _: IntLit(0))), App(Var(Nil), Tup())), Some(App(Var(Cons), Tup(_: Var(len), _: App(Var(mkList), Tup(_: App(Var(-), Tup(_: Var(len), _: IntLit(1)))))))))))), Sel(App(Var(mkList), Tup(_: IntLit(5))), getRes))
+//│ Lifted:
+//│ TypingUnit(NuTypeDef(class, List$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, getRes, None, [], PolyType(List(),TypeName(Str))), NuFunDef(None, getRes, None, [], StrLit()))), NuTypeDef(class, Cons$2, (), Tup(x: Var(Int), xs: Var(List$1)), (App(Var(List$1), Tup())), None, None, TypingUnit(NuFunDef(None, getRes, None, [], App(App(Var(concat), Tup(_: App(App(Var(concat), Tup(_: App(Var(toString), Tup(_: Sel(Var(this), x))))), Tup(_: StrLit( :: ))))), Tup(_: Sel(Sel(Var(this), xs), getRes)))))), NuTypeDef(class, Nil$3, (), Tup(), (App(Var(List$1), Tup())), None, None, TypingUnit(NuFunDef(None, getRes, None, [], StrLit(Nil)))), NuFunDef(None, mkList$1, None, [], Lam(Tup(len: Var(Int)), Blk(If(IfThen(App(Var(==), Tup(_: Var(len), _: IntLit(0))), App(Var(Nil$3), Tup())), Some(App(Var(Cons$2), Tup(_: Var(len), _: App(Var(mkList$1), Tup(_: App(Var(-), Tup(_: Var(len), _: IntLit(1)))))))))))), Sel(App(Var(mkList$1), Tup(_: IntLit(5))), getRes))
+//│ TypingUnit {
+//│   class List$1([]) {fun getRes = Str; fun getRes = ""}
+//│   class Cons$2([x: Int, xs: List$1,]): List$1() {
+//│     fun getRes = concat(concat(toString((this).x,),)(" :: ",),)(((this).xs).getRes,)
+//│   }
+//│   class Nil$3([]): List$1() {fun getRes = "Nil"}
+//│   fun mkList$1 = (len: Int,) => {if (==(len, 0,)) then Nil$3() else Cons$2(len, mkList$1(-(len, 1,),),)}
+//│   Code(List((mkList$1(5,)).getRes))
+//│ }
+//│ Mono:
+//│ TypingUnit(NuTypeDef(class, List$1, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Cons$2, (), Tup(x: Var(Int), xs: Var(List$1)), (App(Var(List$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Nil$3, (), Tup(), (App(Var(List$1), Tup())), None, None, TypingUnit()), NuFunDef(None, mkList$1, None, [], Lam(Tup(len: Var(Int)), Blk(If(IfThen(App(Var(==), Tup(_: Var(len), _: IntLit(0))), App(Var(Nil$3), Tup())), Some(App(Var(Cons$2), Tup(_: Var(len), _: App(Var(mkList$1), Tup(_: App(Var(-), Tup(_: Var(len), _: IntLit(1)))))))))))), NuFunDef(None, getRes$Nil$3, None, [], Lam(Tup(_: Var(this)), StrLit(Nil))), NuFunDef(None, getRes$Cons$2, None, [], Lam(Tup(_: Var(this)), App(App(Var(concat), Tup(_: App(App(Var(concat), Tup(_: App(Var(toString), Tup(_: Let(false, obj, Var(this), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(App(Var(Cons$2), Tup(_: Var(x), _: Var(xs))), Var(x)))), None)))))), Tup(_: StrLit( :: ))))), Tup(_: Let(false, obj, Let(false, obj, Var(this), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(App(Var(Cons$2), Tup(_: Var(x), _: Var(xs))), Var(xs)))), None)), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Cons$2), App(Var(getRes$Cons$2), Tup(_: Var(obj))));IfThen(Var(Nil$3), App(Var(getRes$Nil$3), Tup(_: Var(obj)))))), None)))))), NuFunDef(None, main$$4, None, [], Lam(Tup(), Let(false, obj, App(Var(mkList$1), Tup(_: IntLit(5))), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Cons$2), App(Var(getRes$Cons$2), Tup(_: Var(obj))));IfThen(Var(Nil$3), App(Var(getRes$Nil$3), Tup(_: Var(obj)))))), None)))), App(Var(main$$4), Tup()))
+//│ TypingUnit {
+//│   class List$1([]) {}
+//│   class Cons$2([x: Int, xs: List$1,]): List$1() {}
+//│   class Nil$3([]): List$1() {}
+//│   fun mkList$1 = (len: Int,) => {if (==(len, 0,)) then Nil$3() else Cons$2(len, mkList$1(-(len, 1,),),)}
+//│   fun getRes$Nil$3 = (this,) => "Nil"
+//│   fun getRes$Cons$2 = (this,) => concat(concat(toString(let obj = this in if obj is ‹(Cons$2(x, xs,)) then x›,),)(" :: ",),)(let obj = let obj = this in if obj is ‹(Cons$2(x, xs,)) then xs› in if obj is ‹(Cons$2) then getRes$Cons$2(obj,); (Nil$3) then getRes$Nil$3(obj,)›,)
+//│   fun main$$4 = () => let obj = mkList$1(5,) in if obj is ‹(Cons$2) then getRes$Cons$2(obj,); (Nil$3) then getRes$Nil$3(obj,)›
+//│   Code(List(main$$4()))
+//│ }
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ╟── field selection of type `List$1` does not match type `Cons$2 | Nil$3`
+//│ ║  l.8: 	class Cons(x: Int, xs: List) extends List {
+//│ ║       	                   ^^
+//│ ╟── but it flows into reference with expected type `Cons$2 | Nil$3`
+//│ ║  l.9: 	    fun getRes = concat(concat(toString(x))(" :: "))(xs.getRes)
+//│ ╙──     	                                                     ^^
+//│ class List$1()
+//│ class Cons$2(x: Int, xs: List$1) extends List$1
+//│ class Nil$3() extends List$1
+//│ fun mkList$1: (len: Int) -> (Cons$2 | Nil$3)
+//│ fun getRes$Nil$3: anything -> "Nil"
+//│ fun getRes$Cons$2: Cons$2 -> Str
+//│ fun main$$4: () -> Str
+//│ Str
+//│ res
+//│     = '5 :: 4 :: 3 :: 2 :: 1 :: Nil'

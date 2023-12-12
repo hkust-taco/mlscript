@@ -22,7 +22,7 @@ import mlscript.compiler.printer.ExprPrinter
 import mlscript.compiler.mono.specializer.BoundedExpr
 import mlscript.compiler.mono.specializer.{MonoValue, TypeValue, ObjectValue, UnknownValue, FunctionValue, VariableValue}
 import mlscript.{MonoVal, TypeVal, ObjVal, FuncVal, LiteralVal, PrimVal, VarVal, TupVal, UnknownVal, BoundedTerm}
-
+ 
 class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   import Helpers._
   import Monomorph._
@@ -250,7 +250,8 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
 
   private def nuUpdateFunction(funcName: String): Unit = {
     val updateCount = nuEvalCnt.get(funcName).getOrElse(0)
-    if(updateCount <= 3){
+    if(updateCount <= 10){
+      debug.writeLine(s"updating ${funcName} for ${updateCount}th time")
       nuEvalCnt.update(funcName, updateCount+1)
       nuUpdateFunc(funcName)
     }
@@ -325,8 +326,8 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
             nuFunDependence.update(name, nuFunDependence.getOrElse(name, Set()) ++ callingStack.headOption)
             val hasArgs = oldArgs.isDefined
             val params = extractLamParams(body)
-            val mergedArgs = oldArgs.map(old => (old zip (args.map(_.map(_.unfoldVars)).get)).map(_ ++ _).zip(params.get).map(
-              (x,y) => if(y._1.spec) then x else x.literals2Prims
+            val mergedArgs = oldArgs.map(old => (old zip (args.get)).map(_ ++ _).zip(params.get).map(
+              (x,y) => /*if(y._1.spec) then x else x.literals2Prims*/ x // TODO: Specialization for literals
             ))
             debug.writeLine(s"old args ${oldArgs}")
             debug.writeLine(s"new args ${args}")
@@ -336,8 +337,12 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
               nuFunImpls.update(name, (funDef, mp, mergedArgs, vals))
               if(!nuEvalQueue.contains(name))
                 if(!nuEvalCnt.contains(name))
-                  then nuUpdateFunc(name)
-                  else nuEvalQueue.add(name)
+                  then 
+                    debug.writeLine(s"first time eval function ${name}")
+                    nuUpdateFunction(name)
+                  else 
+                    debug.writeLine(s"new arg eval function ${name}")
+                    nuEvalQueue.add(name)
             }
             BoundedTerm(nuFunImpls.get(name).get._4)
           case Right(tp) => ???
@@ -367,6 +372,7 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   private def nuUpdateFunc(funcName: String): Unit = {
     debug.writeLine(s"Evaluating ${funcName}")
     val (func, mps, args, res) = nuFunImpls.get(funcName).get
+    debug.writeLine(s"args = ${args}")
     func.rhs match
       case Left(value) =>
         val params = extractLamParams(value) 
@@ -374,7 +380,10 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
           case Some(_) => extractLamBody(value) 
           case None => value
         val ctx = params match
-          case Some(p) => (p.map(_._2.name) zip args.get).toMap
+          case Some(p) => 
+            if p.length != args.get.length
+            then throw MonomorphError("Argument length mismatch in function update")
+            else (p.map(_._2.name) zip args.get).toMap
           case None => Map()
         val nuRhs = specializer.nuEvaluate(body)(using ctx, List(func.name))
         val nuBody = params match
@@ -480,7 +489,9 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
     nuAllTypeImpls.get(tpName) match
       case Some(NuTypeDef(kind, nme, tparams, params, ctor, sig, parents, _, _, body)) => 
         val ags = (params match
-          case Some(p) => extractObjParams(p).map(_._2.name).zip(args).toList // FIXME: Different structure for Obj Params
+          case Some(p) => 
+            if (extractObjParams(p).length != args.length) throw MonomorphError("ObjValue param mismatch")
+            extractObjParams(p).map(_._2.name).zip(args).toList // FIXME: Different structure for Obj Params
           case None => Nil)
         ObjVal(tpName, ListMap(ags: _*)) // TODO: parent object fields
       case None => throw MonomorphError(s"TypeName ${tpName} not found in implementations ${nuAllTypeImpls}")

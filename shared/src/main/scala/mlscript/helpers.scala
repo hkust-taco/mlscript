@@ -1083,7 +1083,7 @@ trait MonoValImpl { self: MonoVal =>
     case UnknownVal() =>  s"UnknownVal"
     case PrimVal() => s"PrimVal()"
     case VarVal(vx, version, _) => s"VarVal(${vx})"
-  }
+      }
 }
 
 trait VarValImpl { 
@@ -1118,7 +1118,7 @@ trait BoundedTermImpl { self: BoundedTerm =>
     // case FunctionValue(name, body, prm, ctx) => Some(name)
     case ObjVal(name, _) => Some(name)
     case _ => None
-  }.toSet
+  }
 
   private def splitSpecifiedObjects(vs: Set[MonoVal], nms: Set[String]): (Set[MonoVal], Map[String, ObjVal]) = {
       val ret = vs.map{
