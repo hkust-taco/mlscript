@@ -1,6 +1,7 @@
 :NewDefs
 
 :e // FIXME
+:w 
 :nm
 class Foo() {fun f = 0}
 module x { val y = Foo() }
@@ -15,18 +16,20 @@ x.y.f
 //│   Code(List(((x$2()).y).f))
 //│ }
 //│ Mono:
-//│ TypingUnit(NuTypeDef(module, x$2, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Foo$1, (), Tup(), (), None, None, TypingUnit()), NuFunDef(Some(false), y$x$2, None, [], Lam(Tup(_: Var(this)), App(Var(Foo$1), Tup()))), NuFunDef(None, f$Foo$1, None, [], Lam(Tup(_: Var(this)), IntLit(0))), NuFunDef(None, main$$2, None, [], Lam(Tup(), Let(false, obj, Let(false, obj, App(Var(x$2), Tup()), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(x$2), App(Var(y$x$2), Tup(_: Var(obj)))))), None)), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Foo$1), App(Var(f$Foo$1), Tup(_: Var(obj)))))), None)))), App(Var(main$$2), Tup()))
+//│ TypingUnit(NuTypeDef(module, x$2, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Foo$1, (), Tup(), (), None, None, TypingUnit()), NuFunDef(Some(false), y$x$2, None, [], Lam(Tup(_: Var(this)), App(Var(Foo$1), Tup()))), NuFunDef(None, f$Foo$1, None, [], Lam(Tup(_: Var(this)), IntLit(0))), NuFunDef(None, main$$2, None, [], Lam(Tup(), Let(false, obj, Let(false, obj, App(Var(x$2), Tup()), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(x$2), App(Var(y$x$2), Tup(_: Var(obj))));IfElse(Var(error)))), None)), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Foo$1), App(Var(f$Foo$1), Tup(_: Var(obj))));IfElse(Var(error)))), None)))), App(Var(main$$2), Tup()))
 //│ TypingUnit {
 //│   module x$2([]) {}
 //│   class Foo$1([]) {}
 //│   let y$x$2 = (this,) => Foo$1()
 //│   fun f$Foo$1 = (this,) => 0
-//│   fun main$$2 = () => let obj = let obj = x$2() in if obj is ‹(x$2) then y$x$2(obj,)› in if obj is ‹(Foo$1) then f$Foo$1(obj,)›
+//│   fun main$$2 = () => let obj = let obj = x$2() in if obj is ‹(x$2) then y$x$2(obj,); else error› in if obj is ‹(Foo$1) then f$Foo$1(obj,); else error›
 //│   Code(List(main$$2()))
 //│ }
 //│ ╔══[ERROR] Module parameters are not supported
 //│ ╙──
 //│ ╔══[ERROR] Parameterized modules are not yet supported
+//│ ╙──
+//│ ╔══[WARNING] Found a redundant else branch
 //│ ╙──
 //│ module x$2()
 //│ class Foo$1()

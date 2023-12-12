@@ -396,7 +396,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
 
   def nuDefunctionalize(term: Term): Term = {
     // TODO: Change to use basic pattern match instead of UCS
-    def valSetToBranches(vals: List[MonoVal], acc: List[Either[IfBody,Statement]] = List())(using field: Var, args: Option[List[Term]]): List[Either[IfBody,Statement]] = 
+    def valSetToBranches(vals: List[MonoVal], acc: List[Either[IfBody,Statement]] = List(Left(IfElse(Var("error")))))(using field: Var, args: Option[List[Term]]): List[Either[IfBody,Statement]] = 
       debug.writeLine(s"Expanding ${vals}")
       vals match
       case Nil => acc
