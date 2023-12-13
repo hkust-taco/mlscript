@@ -1,0 +1,44 @@
+:NewDefs
+
+:nm
+class Sup {
+    fun add(num1, num2) = num1+num2
+}
+class Sub1() extends Sup {}
+class Sub2() extends Sub1() {}
+Sub1().add(3,4)
+Sub2().add(5,6)
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, Sup, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, add, None, [], Lam(Tup(_: Var(num1), _: Var(num2)), App(Var(+), Tup(_: Var(num1), _: Var(num2))))))), NuTypeDef(class, Sub1, (), Tup(), (Var(Sup)), None, None, TypingUnit()), NuTypeDef(class, Sub2, (), Tup(), (App(Var(Sub1), Tup())), None, None, TypingUnit()), App(Sel(App(Var(Sub1), Tup()), add), Tup(_: IntLit(3), _: IntLit(4))), App(Sel(App(Var(Sub2), Tup()), add), Tup(_: IntLit(5), _: IntLit(6))))
+//│ Lifted:
+//│ TypingUnit(NuTypeDef(class, Sup$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, add, None, [], Lam(Tup(_: Var(num1), _: Var(num2)), App(Var(+), Tup(_: Var(num1), _: Var(num2))))))), NuTypeDef(class, Sub1$2, (), Tup(), (App(Var(Sup$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Sub2$3, (), Tup(), (App(Var(Sub1$2), Tup())), None, None, TypingUnit()), App(Sel(App(Var(Sub1$2), Tup()), add), Tup(_: IntLit(3), _: IntLit(4))), App(Sel(App(Var(Sub2$3), Tup()), add), Tup(_: IntLit(5), _: IntLit(6))))
+//│ TypingUnit {
+//│   class Sup$1([]) {fun add = (num1, num2,) => +(num1, num2,)}
+//│   class Sub1$2([]): Sup$1() {}
+//│   class Sub2$3([]): Sub1$2() {}
+//│   Code(List((Sub1$2()).add(3, 4,)))
+//│   Code(List((Sub2$3()).add(5, 6,)))
+//│ }
+//│ Mono:
+//│ TypingUnit(NuTypeDef(class, Sub2$3, (), Tup(), (App(Var(Sub1$2), Tup())), None, None, TypingUnit()), NuTypeDef(class, Sup$1, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Sub1$2, (), Tup(), (App(Var(Sup$1), Tup())), None, None, TypingUnit()), NuFunDef(None, add$Sup$1, None, [], Lam(Tup(_: Var(this), _: Var(num1), _: Var(num2)), App(Var(+), Tup(_: Var(num1), _: Var(num2))))), NuFunDef(None, main$$4, None, [], Lam(Tup(), Let(false, obj, App(Var(Sub2$3), Tup()), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Sub2$3), App(Var(add$Sup$1), Tup(_: Var(obj), _: IntLit(5), _: IntLit(6))));IfElse(Var(error)))), None)))), NuFunDef(None, main$$3, None, [], Lam(Tup(), Let(false, obj, App(Var(Sub1$2), Tup()), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Sub1$2), App(Var(add$Sup$1), Tup(_: Var(obj), _: IntLit(3), _: IntLit(4))));IfElse(Var(error)))), None)))), App(Var(main$$3), Tup()), App(Var(main$$4), Tup()))
+//│ TypingUnit {
+//│   class Sub2$3([]): Sub1$2() {}
+//│   class Sup$1([]) {}
+//│   class Sub1$2([]): Sup$1() {}
+//│   fun add$Sup$1 = (this, num1, num2,) => +(num1, num2,)
+//│   fun main$$4 = () => let obj = Sub2$3() in if obj is ‹(Sub2$3) then add$Sup$1(obj, 5, 6,); else error›
+//│   fun main$$3 = () => let obj = Sub1$2() in if obj is ‹(Sub1$2) then add$Sup$1(obj, 3, 4,); else error›
+//│   Code(List(main$$3()))
+//│   Code(List(main$$4()))
+//│ }
+//│ class Sub2$3() extends Sub1$2, Sup$1
+//│ class Sup$1()
+//│ class Sub1$2() extends Sup$1
+//│ fun add$Sup$1: (anything, Int, Int) -> Int
+//│ fun main$$4: () -> Int
+//│ fun main$$3: () -> Int
+//│ Int
+//│ res
+//│     = 7
+//│ res
+//│     = 11

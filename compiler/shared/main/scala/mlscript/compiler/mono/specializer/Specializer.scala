@@ -386,13 +386,13 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
       vals match
       case Nil => acc
       case head :: next => head match
-        case o@ObjVal(name, fields) =>
+        case o@ObjVal(name, params, fields) =>
           val selValue = monoer.nuGetFieldVal(o, field.name)
           debug.writeLine(s"selected value: ${selValue.asValue}")
           val branchCase = selValue.asValue match {
             case Some(f: FuncVal) =>
               IfThen(Var(name), App(Var(f.name), toTuple(Var("obj") :: args.getOrElse(Nil))))
-            case Some(o@ObjVal(subName, subFields)) => 
+            case Some(o@ObjVal(subName, subParams, subFields)) => 
               args match
                 case Some(a) => //FIXME: Unverified
                   val scrut = Sel(Var("obj"), field)
@@ -406,7 +406,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
                   IfOpApp(scrut, Var("is"), IfBlock(branches))
                 case None => 
                   //throw MonomorphError("Hey")
-                  IfThen(App(Var(name), toTuple(fields.keys.map(k => Var(k)).toList)), field)
+                  IfThen(App(Var(name), toTuple(params.map(k => Var(k)).toList)), field)
             case Some(LiteralVal(v)) =>
               IfThen(Var(name), v match
                 case lit: Lit => lit
@@ -414,7 +414,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
             case None =>
               if selValue.getValue.size > 1 
               then 
-                IfThen(App(Var(name), toTuple(fields.keys.map(k => Var(k)).toList)), field)
+                IfThen(App(Var(name), toTuple(params.map(k => Var(k)).toList)), field)
               else throw MonomorphError(s"Selection of field ${field} from object ${o} results in no values")
           }
           valSetToBranches(next, Left(branchCase) :: acc)

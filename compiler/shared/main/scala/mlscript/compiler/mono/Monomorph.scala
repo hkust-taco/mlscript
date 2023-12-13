@@ -495,7 +495,16 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
             if (extractObjParams(p).length != args.length) throw MonomorphError("ObjValue param mismatch")
             extractObjParams(p).map(_._2.name).zip(args).toList // FIXME: Different structure for Obj Params
           case None => Nil)
-        ObjVal(tpName, ListMap(ags: _*)) // TODO: parent object fields
+        val obj = ObjVal(tpName, ags.map((p, _) => p), MutMap(ags: _*)) // TODO: parent object fields
+        val parentObjs = parents.map{
+          case Var(name) => BoundedTerm(nuCreateObjValue(name, Nil))
+          case App(Var(name), t: Tup) => 
+            specializer.nuEvaluate(t)(using Map("this"->BoundedTerm(obj)) ++ ags, List(tpName), evaluationMap)
+            BoundedTerm(nuCreateObjValue(name, extractFuncArgs(t).map(getRes)))
+          case other => throw MonomorphError(s"Unexpected parent object format ${other}")
+        }
+        obj.fields.addAll(parentObjs.zipWithIndex.map((e, i) => s"sup$$$i" -> e))
+        obj
       case None => throw MonomorphError(s"TypeName ${tpName} not found in implementations ${nuAllTypeImpls}")
 
   def createTupVal(fields: List[BoundedTerm]): TupVal = 
@@ -561,10 +570,23 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
           } 
           BoundedTerm(FuncVal(nuFuncName, extractLamParams(body).map(_.map(_._2.name).toList), List("this" -> BoundedTerm(obj))))
         case _ => 
-          debug.writeLine(s"did not find func")
+          debug.writeLine(s"did not find func, try obj fields")
           obj.fields.get(field) match
           case Some(value) => value
-          case None => throw MonomorphError(s"Field value ${field} not found in ObjectValue ${obj}") // TODO: Superclass fields
+          case None => 
+            debug.writeLine(s"did not find in fields, try superclass")
+            obj.fields.flatMap(x => {
+              if (x._1.matches("sup\\$[0-9]+")) {
+                x._2.asValue match{
+                  case Some(o: ObjVal) => 
+                    Some(nuGetFieldVal(o, field))
+                  case _ => None
+                }
+              }
+              else None
+            }).headOption match
+              case Some(value) => value
+              case None => throw MonomorphError(s"Field value ${field} not found in ObjectValue ${obj}")
 
 object Monomorph:
   class SpecializationMap[T <: Item](val prototype: T):

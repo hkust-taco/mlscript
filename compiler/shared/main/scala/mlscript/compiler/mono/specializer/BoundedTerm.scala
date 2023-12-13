@@ -6,7 +6,7 @@ import scala.collection.immutable.ListMap
 
 abstract class MonoVal extends MonoValImpl
 final case class TypeVal(name: String) extends MonoVal
-final case class ObjVal(name: String, fields: ListMap[String, BoundedTerm]) extends MonoVal with ObjValImpl
+final case class ObjVal(name: String, params: List[String], fields: MutMap[String, BoundedTerm]) extends MonoVal with ObjValImpl
 final case class FuncVal(name: String, params: Option[List[String]], ctx: List[(String, BoundedTerm)]) extends MonoVal
 final case class UnknownVal() extends MonoVal
 // Terribly unintuitive implementation, should attempt to refactor.
@@ -28,7 +28,7 @@ trait MonoValImpl { self: MonoVal =>
   override def toString: String = this match {
     case FuncVal(name, params, ctx) => s"FuncVal(${name}, ${params.map(_.mkString("(",",",")")).getOrElse("None")}, ${ctx})"
     case LiteralVal(i) => s"LiteralVal(${i})"
-    case ObjVal(name, fields) => s"ObjVal(${name}, ${fields})"
+    case ObjVal(name, params, fields) => s"ObjVal(${name}, ${fields})"
     case TypeVal(name) => s"TypeVal(${name})"
     case TupVal(fields) => s"TupVal(${fields})"
     case UnknownVal() =>  s"UnknownVal"
@@ -58,7 +58,7 @@ trait ObjValImpl { self: ObjVal =>
         (k -> s1)
       else (k -> (s1 ++ s2))
     })
-    ObjVal(self.name, ListMap(nFlds.toList: _*))
+    ObjVal(self.name, self.params, MutMap(nFlds.toList: _*))
   }
 
 }
@@ -67,13 +67,13 @@ trait BoundedTermImpl { self: BoundedTerm =>
   override def toString: String = self.values.map(_.toString).mkString(";")
   def getObjNames(): Set[String] = self.values.flatMap{
     // case FunctionValue(name, body, prm, ctx) => Some(name)
-    case ObjVal(name, _) => Some(name)
+    case ObjVal(name, _, _) => Some(name)
     case _ => None
   }
 
   private def splitSpecifiedObjects(vs: Set[MonoVal], nms: Set[String]): (Set[MonoVal], Map[String, ObjVal]) = {
       val ret = vs.map{
-        case o@ObjVal(name, fields) => 
+        case o@ObjVal(name, params, fields) => 
           if (nms.contains(name)) {
             (None, Some(name -> o))
           } else {

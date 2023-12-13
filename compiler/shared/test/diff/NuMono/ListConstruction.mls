@@ -1,53 +1,74 @@
 :NewDefs
 
+:e // FIXME: new new syntax
 :nm
 class List {
     fun getRes: Str
     fun getRes = ""
+    fun map(f) = error
 }
 class Cons(x: Int, xs: List) extends List {
     fun getRes = concat(concat(toString(x))(" :: "))(xs.getRes)
+    fun map(f) = Cons(f(x), xs.map(f))
 }
 class Nil() extends List {
     fun getRes = "Nil"
+    fun map(f) = Nil()
 }
 fun mkList(len: Int) =
     if len == 0 then Nil()
     else Cons(len, mkList(len-1))
-//Cons(1, Cons(2, Cons(3, Nil))).getRes
-mkList(5).getRes
+mkList(5).map((x) => x*2).getRes
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, List, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, getRes, None, [], PolyType(List(),TypeName(Str))), NuFunDef(None, getRes, None, [], StrLit()))), NuTypeDef(class, Cons, (), Tup(x: Var(Int), xs: Var(List)), (Var(List)), None, None, TypingUnit(NuFunDef(None, getRes, None, [], App(App(Var(concat), Tup(_: App(App(Var(concat), Tup(_: App(Var(toString), Tup(_: Var(x))))), Tup(_: StrLit( :: ))))), Tup(_: Sel(Var(xs), getRes)))))), NuTypeDef(class, Nil, (), Tup(), (Var(List)), None, None, TypingUnit(NuFunDef(None, getRes, None, [], StrLit(Nil)))), NuFunDef(None, mkList, None, [], Lam(Tup(len: Var(Int)), Blk(If(IfThen(App(Var(==), Tup(_: Var(len), _: IntLit(0))), App(Var(Nil), Tup())), Some(App(Var(Cons), Tup(_: Var(len), _: App(Var(mkList), Tup(_: App(Var(-), Tup(_: Var(len), _: IntLit(1)))))))))))), Sel(App(Var(mkList), Tup(_: IntLit(5))), getRes))
+//│ TypingUnit(NuTypeDef(class, List, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, getRes, None, [], PolyType(List(),TypeName(Str))), NuFunDef(None, getRes, None, [], StrLit()), NuFunDef(None, map, None, [], Lam(Tup(_: Var(f)), Var(error))))), NuTypeDef(class, Cons, (), Tup(x: Var(Int), xs: Var(List)), (Var(List)), None, None, TypingUnit(NuFunDef(None, getRes, None, [], App(App(Var(concat), Tup(_: App(App(Var(concat), Tup(_: App(Var(toString), Tup(_: Var(x))))), Tup(_: StrLit( :: ))))), Tup(_: Sel(Var(xs), getRes)))), NuFunDef(None, map, None, [], Lam(Tup(_: Var(f)), App(Var(Cons), Tup(_: App(Var(f), Tup(_: Var(x))), _: App(Sel(Var(xs), map), Tup(_: Var(f))))))))), NuTypeDef(class, Nil, (), Tup(), (Var(List)), None, None, TypingUnit(NuFunDef(None, getRes, None, [], StrLit(Nil)), NuFunDef(None, map, None, [], Lam(Tup(_: Var(f)), App(Var(Nil), Tup()))))), NuFunDef(None, mkList, None, [], Lam(Tup(len: Var(Int)), Blk(If(IfThen(App(Var(==), Tup(_: Var(len), _: IntLit(0))), App(Var(Nil), Tup())), Some(App(Var(Cons), Tup(_: Var(len), _: App(Var(mkList), Tup(_: App(Var(-), Tup(_: Var(len), _: IntLit(1)))))))))))), Sel(App(Sel(App(Var(mkList), Tup(_: IntLit(5))), map), Tup(_: Lam(Tup(_: Bra(rcd = false, Var(x))), App(Var(*), Tup(_: Var(x), _: IntLit(2)))))), getRes))
 //│ Lifted:
-//│ TypingUnit(NuTypeDef(class, List$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, getRes, None, [], PolyType(List(),TypeName(Str))), NuFunDef(None, getRes, None, [], StrLit()))), NuTypeDef(class, Cons$2, (), Tup(x: Var(Int), xs: Var(List$1)), (App(Var(List$1), Tup())), None, None, TypingUnit(NuFunDef(None, getRes, None, [], App(App(Var(concat), Tup(_: App(App(Var(concat), Tup(_: App(Var(toString), Tup(_: Sel(Var(this), x))))), Tup(_: StrLit( :: ))))), Tup(_: Sel(Sel(Var(this), xs), getRes)))))), NuTypeDef(class, Nil$3, (), Tup(), (App(Var(List$1), Tup())), None, None, TypingUnit(NuFunDef(None, getRes, None, [], StrLit(Nil)))), NuFunDef(None, mkList$1, None, [], Lam(Tup(len: Var(Int)), Blk(If(IfThen(App(Var(==), Tup(_: Var(len), _: IntLit(0))), App(Var(Nil$3), Tup())), Some(App(Var(Cons$2), Tup(_: Var(len), _: App(Var(mkList$1), Tup(_: App(Var(-), Tup(_: Var(len), _: IntLit(1)))))))))))), Sel(App(Var(mkList$1), Tup(_: IntLit(5))), getRes))
+//│ TypingUnit(NuTypeDef(class, List$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, getRes, None, [], PolyType(List(),TypeName(Str))), NuFunDef(None, getRes, None, [], StrLit()), NuFunDef(None, map, None, [], Lam(Tup(_: Var(f)), Var(error))))), NuTypeDef(class, Cons$2, (), Tup(x: Var(Int), xs: Var(List$1)), (App(Var(List$1), Tup())), None, None, TypingUnit(NuFunDef(None, getRes, None, [], App(App(Var(concat), Tup(_: App(App(Var(concat), Tup(_: App(Var(toString), Tup(_: Sel(Var(this), x))))), Tup(_: StrLit( :: ))))), Tup(_: Sel(Sel(Var(this), xs), getRes)))), NuFunDef(None, map, None, [], Lam(Tup(_: Var(f)), App(Var(Cons$2), Tup(_: App(Var(f), Tup(_: Sel(Var(this), x))), _: App(Sel(Sel(Var(this), xs), map), Tup(_: Var(f))))))))), NuTypeDef(class, Nil$3, (), Tup(), (App(Var(List$1), Tup())), None, None, TypingUnit(NuFunDef(None, getRes, None, [], StrLit(Nil)), NuFunDef(None, map, None, [], Lam(Tup(_: Var(f)), App(Var(Nil$3), Tup()))))), NuTypeDef(class, Lambda1$2$4, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, apply, None, [], Lam(Tup(_: Bra(rcd = false, Var(x))), App(Var(*), Tup(_: Var(x), _: IntLit(2))))))), NuFunDef(None, mkList$1, None, [], Lam(Tup(len: Var(Int)), Blk(If(IfThen(App(Var(==), Tup(_: Var(len), _: IntLit(0))), App(Var(Nil$3), Tup())), Some(App(Var(Cons$2), Tup(_: Var(len), _: App(Var(mkList$1), Tup(_: App(Var(-), Tup(_: Var(len), _: IntLit(1)))))))))))), Sel(App(Sel(App(Var(mkList$1), Tup(_: IntLit(5))), map), Tup(_: Blk(New(Some((TypeName(Lambda1$2$4),[])), TypingUnit())))), getRes))
 //│ TypingUnit {
-//│   class List$1([]) {fun getRes = Str; fun getRes = ""}
+//│   class List$1([]) {
+//│     fun getRes = Str
+//│     fun getRes = ""
+//│     fun map = (f,) => error
+//│   }
 //│   class Cons$2([x: Int, xs: List$1,]): List$1() {
 //│     fun getRes = concat(concat(toString((this).x,),)(" :: ",),)(((this).xs).getRes,)
+//│     fun map = (f,) => Cons$2(f((this).x,), ((this).xs).map(f,),)
 //│   }
-//│   class Nil$3([]): List$1() {fun getRes = "Nil"}
+//│   class Nil$3([]): List$1() {fun getRes = "Nil"; fun map = (f,) => Nil$3()}
+//│   class Lambda1$2$4([]) {fun apply = ('(' x ')',) => *(x, 2,)}
 //│   fun mkList$1 = (len: Int,) => {if (==(len, 0,)) then Nil$3() else Cons$2(len, mkList$1(-(len, 1,),),)}
-//│   Code(List((mkList$1(5,)).getRes))
+//│   Code(List(((mkList$1(5,)).map({new Lambda1$2$4([]) {}},)).getRes))
 //│ }
 //│ Mono:
-//│ TypingUnit(NuTypeDef(class, List$1, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Cons$2, (), Tup(x: Var(Int), xs: Var(List$1)), (App(Var(List$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Nil$3, (), Tup(), (App(Var(List$1), Tup())), None, None, TypingUnit()), NuFunDef(None, mkList$1, None, [], Lam(Tup(len: Var(Int)), Blk(If(IfThen(App(Var(==), Tup(_: Var(len), _: IntLit(0))), App(Var(Nil$3), Tup())), Some(App(Var(Cons$2), Tup(_: Var(len), _: App(Var(mkList$1), Tup(_: App(Var(-), Tup(_: Var(len), _: IntLit(1)))))))))))), NuFunDef(None, getRes$Nil$3, None, [], Lam(Tup(_: Var(this)), StrLit(Nil))), NuFunDef(None, getRes$Cons$2, None, [], Lam(Tup(_: Var(this)), App(App(Var(concat), Tup(_: App(App(Var(concat), Tup(_: App(Var(toString), Tup(_: Let(false, obj, Var(this), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(App(Var(Cons$2), Tup(_: Var(x), _: Var(xs))), Var(x));IfElse(Var(error)))), None)))))), Tup(_: StrLit( :: ))))), Tup(_: Let(false, obj, Let(false, obj, Var(this), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(App(Var(Cons$2), Tup(_: Var(x), _: Var(xs))), Var(xs));IfElse(Var(error)))), None)), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Cons$2), App(Var(getRes$Cons$2), Tup(_: Var(obj))));IfThen(Var(Nil$3), App(Var(getRes$Nil$3), Tup(_: Var(obj))));IfElse(Var(error)))), None)))))), NuFunDef(None, main$$4, None, [], Lam(Tup(), Let(false, obj, App(Var(mkList$1), Tup(_: IntLit(5))), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Cons$2), App(Var(getRes$Cons$2), Tup(_: Var(obj))));IfThen(Var(Nil$3), App(Var(getRes$Nil$3), Tup(_: Var(obj))));IfElse(Var(error)))), None)))), App(Var(main$$4), Tup()))
+//│ TypingUnit(NuTypeDef(class, Lambda1$2$4, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, List$1, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Cons$2, (), Tup(x: Var(Int), xs: Var(List$1)), (App(Var(List$1), Tup())), None, None, TypingUnit()), NuTypeDef(class, Nil$3, (), Tup(), (App(Var(List$1), Tup())), None, None, TypingUnit()), NuFunDef(None, mkList$1, None, [], Lam(Tup(len: Var(Int)), Blk(If(IfThen(App(Var(==), Tup(_: Var(len), _: IntLit(0))), App(Var(Nil$3), Tup())), Some(App(Var(Cons$2), Tup(_: Var(len), _: App(Var(mkList$1), Tup(_: App(Var(-), Tup(_: Var(len), _: IntLit(1)))))))))))), NuFunDef(None, map$Nil$3, None, [], Lam(Tup(_: Var(this), _: Var(f)), App(Var(Nil$3), Tup()))), NuFunDef(None, getRes$Nil$3, None, [], Lam(Tup(_: Var(this)), StrLit(Nil))), NuFunDef(None, getRes$Cons$2, None, [], Lam(Tup(_: Var(this)), App(App(Var(concat), Tup(_: App(App(Var(concat), Tup(_: App(Var(toString), Tup(_: Let(false, obj, Var(this), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(App(Var(Cons$2), Tup(_: Var(x), _: Var(xs))), Var(x));IfElse(Var(error)))), None)))))), Tup(_: StrLit( :: ))))), Tup(_: Let(false, obj, Let(false, obj, Var(this), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(App(Var(Cons$2), Tup(_: Var(x), _: Var(xs))), Var(xs));IfElse(Var(error)))), None)), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Cons$2), App(Var(getRes$Cons$2), Tup(_: Var(obj))));IfThen(Var(Nil$3), App(Var(getRes$Nil$3), Tup(_: Var(obj))));IfElse(Var(error)))), None)))))), NuFunDef(None, main$$5, None, [], Lam(Tup(), Let(false, obj, Let(false, obj, App(Var(mkList$1), Tup(_: IntLit(5))), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Cons$2), App(Var(map$Cons$2), Tup(_: Var(obj), _: Blk(New(Some((TypeName(Lambda1$2$4),[])), TypingUnit())))));IfThen(Var(Nil$3), App(Var(map$Nil$3), Tup(_: Var(obj), _: Blk(New(Some((TypeName(Lambda1$2$4),[])), TypingUnit())))));IfElse(Var(error)))), None)), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Cons$2), App(Var(getRes$Cons$2), Tup(_: Var(obj))));IfThen(Var(Nil$3), App(Var(getRes$Nil$3), Tup(_: Var(obj))));IfElse(Var(error)))), None)))), NuFunDef(None, map$Cons$2, None, [], Lam(Tup(_: Var(this), _: Var(f)), App(Var(Cons$2), Tup(_: Let(false, obj, Var(f), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Lambda1$2$4), App(Var(apply$Lambda1$2$4), Tup(_: Var(obj), _: Let(false, obj, Var(this), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(App(Var(Cons$2), Tup(_: Var(x), _: Var(xs))), Var(x));IfElse(Var(error)))), None)))));IfElse(Var(error)))), None)), _: Let(false, obj, Let(false, obj, Var(this), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(App(Var(Cons$2), Tup(_: Var(x), _: Var(xs))), Var(xs));IfElse(Var(error)))), None)), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Cons$2), App(Var(map$Cons$2), Tup(_: Var(obj), _: Var(f))));IfThen(Var(Nil$3), App(Var(map$Nil$3), Tup(_: Var(obj), _: Var(f))));IfElse(Var(error)))), None)))))), NuFunDef(None, apply$Lambda1$2$4, None, [], Lam(Tup(_: Var(this), _: Bra(rcd = false, Var(x))), App(Var(*), Tup(_: Var(x), _: IntLit(2))))), App(Var(main$$5), Tup()))
 //│ TypingUnit {
+//│   class Lambda1$2$4([]) {}
 //│   class List$1([]) {}
 //│   class Cons$2([x: Int, xs: List$1,]): List$1() {}
 //│   class Nil$3([]): List$1() {}
 //│   fun mkList$1 = (len: Int,) => {if (==(len, 0,)) then Nil$3() else Cons$2(len, mkList$1(-(len, 1,),),)}
+//│   fun map$Nil$3 = (this, f,) => Nil$3()
 //│   fun getRes$Nil$3 = (this,) => "Nil"
 //│   fun getRes$Cons$2 = (this,) => concat(concat(toString(let obj = this in if obj is ‹(Cons$2(x, xs,)) then x; else error›,),)(" :: ",),)(let obj = let obj = this in if obj is ‹(Cons$2(x, xs,)) then xs; else error› in if obj is ‹(Cons$2) then getRes$Cons$2(obj,); (Nil$3) then getRes$Nil$3(obj,); else error›,)
-//│   fun main$$4 = () => let obj = mkList$1(5,) in if obj is ‹(Cons$2) then getRes$Cons$2(obj,); (Nil$3) then getRes$Nil$3(obj,); else error›
-//│   Code(List(main$$4()))
+//│   fun main$$5 = () => let obj = let obj = mkList$1(5,) in if obj is ‹(Cons$2) then map$Cons$2(obj, {new Lambda1$2$4([]) {}},); (Nil$3) then map$Nil$3(obj, {new Lambda1$2$4([]) {}},); else error› in if obj is ‹(Cons$2) then getRes$Cons$2(obj,); (Nil$3) then getRes$Nil$3(obj,); else error›
+//│   fun map$Cons$2 = (this, f,) => Cons$2(let obj = f in if obj is ‹(Lambda1$2$4) then apply$Lambda1$2$4(obj, let obj = this in if obj is ‹(Cons$2(x, xs,)) then x; else error›,); else error›, let obj = let obj = this in if obj is ‹(Cons$2(x, xs,)) then xs; else error› in if obj is ‹(Cons$2) then map$Cons$2(obj, f,); (Nil$3) then map$Nil$3(obj, f,); else error›,)
+//│   fun apply$Lambda1$2$4 = (this, '(' x ')',) => *(x, 2,)
+//│   Code(List(main$$5()))
 //│ }
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ╙──
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ╙──
+//│ class Lambda1$2$4()
 //│ class List$1()
 //│ class Cons$2(x: Int, xs: List$1) extends List$1
 //│ class Nil$3() extends List$1
 //│ fun mkList$1: (len: Int) -> (Cons$2 | Nil$3)
+//│ fun map$Nil$3: (anything, anything) -> Nil$3
 //│ fun getRes$Nil$3: anything -> "Nil"
 //│ fun getRes$Cons$2: Object -> Str
-//│ fun main$$4: () -> Str
+//│ fun main$$5: () -> Str
+//│ fun map$Cons$2: (Object, Object) -> Cons$2
+//│ fun apply$Lambda1$2$4: (anything, Int) -> Int
 //│ Str
 //│ res
-//│     = '5 :: 4 :: 3 :: 2 :: 1 :: Nil'
+//│     = '10 :: 8 :: 6 :: 4 :: 2 :: Nil'
