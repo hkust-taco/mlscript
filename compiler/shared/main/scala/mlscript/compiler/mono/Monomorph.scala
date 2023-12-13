@@ -21,8 +21,10 @@ import mlscript.codegen.Helpers.inspect as showStructure
 import mlscript.compiler.printer.ExprPrinter
 import mlscript.compiler.mono.specializer.BoundedExpr
 import mlscript.compiler.mono.specializer.{MonoValue, TypeValue, ObjectValue, UnknownValue, FunctionValue, VariableValue}
-import mlscript.{MonoVal, TypeVal, ObjVal, FuncVal, LiteralVal, PrimVal, VarVal, TupVal, UnknownVal, BoundedTerm}
- 
+import mlscript.compiler.mono.specializer.{MonoVal, TypeVal, ObjVal, FuncVal, LiteralVal, PrimVal, VarVal, TupVal, UnknownVal, BoundedTerm}
+import java.util.IdentityHashMap
+import scala.collection.JavaConverters._
+
 class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   import Helpers._
   import Monomorph._
@@ -104,6 +106,9 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
       vMap.update(v.vx, s)
     }
   }
+
+  val evaluationMap = new IdentityHashMap[Term, BoundedTerm]().asScala
+  def getRes(term: Term): BoundedTerm = evaluationMap.getOrElse(term, throw MonomorphError(s"Bounds for ${term} not found."))
 
   private def addNewFunction(func: Item.FuncDecl): Unit = {
     funImpls.addOne(func.name.name, (func, MutMap(), func.params match
@@ -218,9 +223,9 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
       case (_, (func@NuFunDef(isLetRec, nm, sn, tp, rhs), mp, la, lr)) =>
         rhs match 
           case Left(Lam(lhs, rhs)) =>
-            (NuFunDef(isLetRec, nm, sn, tp, Left(Lam(lhs,specializer.nuDefunctionalize(rhs))))(None, None, None, None, false), mp, la, lr)
+            (NuFunDef(isLetRec, nm, sn, tp, Left(Lam(lhs,specializer.nuDefunctionalize(rhs)(using evaluationMap))))(None, None, None, None, false), mp, la, lr)
           case Left(body) => 
-            (NuFunDef(isLetRec, nm, sn, tp, Left(specializer.nuDefunctionalize(body)))(None, None, None, None, false), mp, la, lr)
+            (NuFunDef(isLetRec, nm, sn, tp, Left(specializer.nuDefunctionalize(body)(using evaluationMap)))(None, None, None, None, false), mp, la, lr)
           case Right(tp) => ???
     }
     val ret = nuGetResult(nuTerms)
@@ -385,16 +390,13 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
             then throw MonomorphError("Argument length mismatch in function update")
             else (p.map(_._2.name) zip args.get).toMap
           case None => Map()
-        val nuRhs = specializer.nuEvaluate(body)(using ctx, List(func.name))
-        val nuBody = params match
-          case Some(p) => Lam(paramToTuple(p.toList), nuRhs)
-          case None => nuRhs
-        nuBody.evaledTerm = nuRhs.evaledTerm
+        specializer.nuEvaluate(body)(using ctx, List(func.name), evaluationMap)
+        evaluationMap.addOne(value, getRes(body))
         val oldExp = VarValMap.get(nuFunImpls.get(funcName).get._4)
-        if (oldExp.compare(nuBody.evaledTerm)) {
+        if (oldExp.compare(getRes(value))) {
           debug.writeLine(s"Bounds of ${funcName} changed, adding dependent functions to evalQueue")
           debug.writeLine(s"Before: ${oldExp}")
-          debug.writeLine(s"After : ${nuBody.evaledTerm}")
+          debug.writeLine(s"After : ${getRes(value)}")
           nuFunDependence.get(funcName).get.foreach(x => if !nuEvalQueue.contains(x) then {
             debug.writeLine(s"Added ${x}")
             nuEvalQueue.add(x)
@@ -404,8 +406,8 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
         }
         //debug.writeLine(s"old body: ${showStructure(value)} => new body: ${showStructure(nuBody)}")
         nuFunImpls.updateWith(funcName)(_.map(x => {
-          VarValMap.update(x._4, nuBody.evaledTerm)
-          (x._1.copy(rhs = Left(nuBody))(None, None, None, None, false), x._2, x._3, x._4)
+          VarValMap.update(x._4, getRes(value))
+          (x._1, x._2, x._3, x._4)
         }))
       case Right(value) => throw MonomorphError("Should not update function typeDef")
   }

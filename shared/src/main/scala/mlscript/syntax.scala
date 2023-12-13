@@ -1,8 +1,6 @@
 package mlscript
 
 import mlscript.utils._, shorthands._
-import scala.collection.mutable.{Map => MutMap}
-import scala.collection.immutable.ListMap
 
 
 // Terms
@@ -265,39 +263,3 @@ object VarianceInfo {
   val in: VarianceInfo = VarianceInfo(false, false)
 }
 
-abstract class MonoVal extends MonoValImpl
-final case class TypeVal(name: String) extends MonoVal
-final case class ObjVal(name: String, fields: ListMap[String, BoundedTerm]) extends MonoVal with ObjValImpl
-final case class FuncVal(name: String, params: Option[List[String]], ctx: List[(String, BoundedTerm)]) extends MonoVal
-final case class UnknownVal() extends MonoVal
-// Terribly unintuitive implementation, should attempt to refactor.
-final case class VarVal(vx: Int, version: Int, val getter: VarVal => BoundedTerm) extends MonoVal with VarValImpl
-final case class LiteralVal(i: Lit \/ Boolean) extends MonoVal with LitValImpl
-final case class PrimVal() extends MonoVal
-final case class TupVal(fields: Map[Var, BoundedTerm]) extends MonoVal
-
-// object VarVal {
-//   var vxCnt: Int = 0
-//   val vMap: MutMap[Int, BoundedTerm] = MutMap[Int, BoundedTerm]()
-//   def get(v: VarVal): BoundedTerm = vMap.get(v.vx) match {
-//     case Some(value) => value
-//     case None => ???
-//   }
-//   def refresh(): VarVal = {
-//     vxCnt += 1
-//     val ret = VarVal(vxCnt, 0)
-//     vMap.addOne(vxCnt -> BoundedTerm(ret))
-//     ret
-//   }
-//   def update(v: VarVal, s: BoundedTerm): Unit = {
-//     vMap.update(v.vx, s)
-//   }
-// }
-
-class BoundedTerm(val values: Set[MonoVal]) extends BoundedTermImpl
-
-object BoundedTerm {
-  def apply(): BoundedTerm = new BoundedTerm(Set())
-  def apply(singleVal: MonoVal): BoundedTerm = new BoundedTerm(Set(singleVal))
-  def apply(valSet: Set[MonoVal]): BoundedTerm = new BoundedTerm(valSet)
-}
