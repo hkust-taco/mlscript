@@ -696,9 +696,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         consume
         val bs = bindings(Nil)
         val body = yeetSpaces match {
-          case (KEYWORD("in" | ";"), _) :: _ =>
+          // case (KEYWORD("in" | ";"), _) :: _ =>
+          case (KEYWORD(";"), _) :: _ =>
             consume
             exprOrIf(0)
+            // exprOrIf(1)
           case (NEWLINE, _) :: _ =>
             consume
             exprOrIf(0)
@@ -855,8 +857,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                     err(msg"record literal expected here; found ${rhs.describe}" -> rhs.toLoc :: Nil)
                     acc
                 }
-              case ";" =>
-                Blk(acc :: rhs :: Nil)
+              // case ";" =>
+              //   Blk(acc :: rhs :: Nil)
               case _ =>
                 if (newDefs) App(v, PlainTup(acc, rhs))
                 else App(App(v, PlainTup(acc)), PlainTup(rhs))
