@@ -11,13 +11,6 @@ fun foo() =
 foo()
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), Blk(...))), App(Var(foo), Tup()))
-//│ Lifted:
-//│ TypingUnit {
-//│   class Foo$1([x,]) {fun bar = () => +((this).x, foo$1(),)}
-//│   let local$2 = (x,) => {('(' new Foo$1([x,]) {} ')').bar}
-//│   fun foo$1 = () => {local$2(1,)}
-//│   Code(List(foo$1()))
-//│ }
 //│ fun foo: () -> Int
 //│ Int
 //│ res
@@ -29,12 +22,6 @@ fun foo(f) =
 foo(x => x+1)
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(_: Var(f)), Blk(...))), App(Var(foo), Tup(_: Lam(Tup(_: Var(x)), App(Var(+), Tup(_: Var(x), _: IntLit(1)))))))
-//│ Lifted:
-//│ TypingUnit {
-//│   class Lambda1$2$1([]) {fun apply = (x,) => +(x, 1,)}
-//│   fun foo$1 = (f,) => {f(1,)}
-//│   Code(List(foo$1({new Lambda1$2$1([]) {}},)))
-//│ }
 //│ fun foo: forall 'a. (1 -> 'a) -> 'a
 //│ Int
 //│ res
@@ -47,13 +34,6 @@ fun foo(x) =
 foo(1)
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), Blk(...))), App(Var(foo), Tup(_: IntLit(1))))
-//│ Lifted:
-//│ TypingUnit {
-//│   class Lambda1$3$1([x,]) {fun apply = (y,) => +(y, (this).x,)}
-//│   let bar$2 = (f, x,) => {f(x,)}
-//│   fun foo$1 = (x,) => {bar$2({new Lambda1$3$1([x,]) {}}, x,)}
-//│   Code(List(foo$1(1,)))
-//│ }
 //│ fun foo: Int -> Int
 //│ Int
 //│ res
@@ -69,14 +49,6 @@ fun app(a) =
 app(new A(1))
 //│ Parsed:
 //│ TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(_: Var(f)), Blk(...))), NuTypeDef(class, A, (), Tup(y: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, bar, None, [], Lam(Tup(_: Var(z)), App(Var(+), Tup(_: Var(y), _: Var(z))))))), NuFunDef(None, app, None, [], Lam(Tup(_: Var(a)), Blk(...))), App(Var(app), Tup(_: New(Some((TypeName(A),[1,])), TypingUnit()))))
-//│ Lifted:
-//│ TypingUnit {
-//│   class A$1([y: Int,]) {fun bar = (z,) => +((this).y, z,)}
-//│   class Lambda1$3$2([a,]) {fun apply = (z,) => ((this).a).bar(z,)}
-//│   fun foo$2 = (f,) => {f(1,)}
-//│   fun app$1 = (a,) => {foo$2({new Lambda1$3$2([a,]) {}},)}
-//│   Code(List(app$1(new A$1([1,]) {},)))
-//│ }
 //│ fun foo: forall 'a. (1 -> 'a) -> 'a
 //│ class A(y: Int) {
 //│   fun bar: Int -> Int
