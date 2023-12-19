@@ -1,7 +1,6 @@
 package mlscript
 
 import mlscript.utils._, shorthands._, algorithms._
-import mlscript.codegen.Helpers._
 import mlscript.codegen._
 import scala.collection.mutable.{ListBuffer, HashMap, HashSet}
 import mlscript.{JSField, JSLit}
@@ -69,7 +68,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     case Inst(bod) => translatePattern(bod)
     case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign
         | If(_, _) | New(_, _)  | NuNew(_) | _: Splc | _: Forall | _: Where | _: Super | _: Eqn | _: AdtMatchWith | _: Rft =>
-      throw CodeGenError(s"term ${inspect(t)} is not a valid pattern")
+      throw CodeGenError(s"term ${inspect.deep(t)} is not a valid pattern")
   }
 
   private def translateParams(t: Term)(implicit scope: Scope): Ls[JSPattern] = t match {
@@ -172,7 +171,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
       }
       callee(args map { case (_, Fld(_, arg)) => translateTerm(arg) }: _*)
     case App(trm, splice) => ??? // TODO represents `trm(...splice)`
-    case _ => throw CodeGenError(s"ill-formed application ${inspect(term)}")
+    case _ => throw CodeGenError(s"ill-formed application ${inspect.deep(term)}")
   }
 
   /**
@@ -299,7 +298,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
         case _: Subs | _: Sel | _: Var =>
           JSCommaExpr(JSAssignExpr(translateTerm(lhs), translateTerm(value)) :: JSArray(Nil) :: Nil)
         case _ =>
-          throw CodeGenError(s"illegal assignemnt left-hand side: ${inspect(lhs)}")
+          throw CodeGenError(s"illegal assignemnt left-hand side: ${inspect.deep(lhs)}")
       }
     case Inst(bod) => translateTerm(bod)
     case iff: If =>
@@ -312,7 +311,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
             case n: JSNew => n
             case t => JSNew(t)
           }
-        case _ => throw CodeGenError(s"Unsupported `new` class term: ${inspect(cls)}")
+        case _ => throw CodeGenError(s"Unsupported `new` class term: ${inspect.deep(cls)}")
       }
       // * Would not be quite correct:
       // JSNew(translateTerm(cls))
@@ -330,7 +329,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     case Eqn(Var(name), _) =>
       throw CodeGenError(s"assignment of $name is not supported outside a constructor")
     case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: AdtMatchWith | _: Rft =>
-      throw CodeGenError(s"cannot generate code for term ${inspect(term)}")
+      throw CodeGenError(s"cannot generate code for term ${inspect.deep(term)}")
   }
 
   private def translateCaseBranch(scrut: JSExpr, branch: CaseBranches)(implicit

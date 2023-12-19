@@ -7,7 +7,7 @@ import scala.collection.mutable.StringBuilder as StringBuilder
 import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
 import scala.collection.mutable.ArrayBuffer as ArrayBuffer
-import mlscript.codegen.Helpers.inspect as showStructure
+import inspect.deep as showStructure
 import mlscript.codegen.CodeGenError
 import mlscript.compiler.mono.MonomorphError
 

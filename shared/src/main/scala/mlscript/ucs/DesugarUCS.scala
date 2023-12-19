@@ -4,7 +4,6 @@ import collection.mutable.{Map => MutMap}
 import mlscript.ucs.stages._
 import mlscript.pretyper.{PreTyper, Scope, ScrutineeSymbol, Symbol, ValueSymbol}
 import mlscript._, utils._, shorthands._
-import mlscript.codegen.Helpers.inspect
 import mlscript.Message, Message.MessageContext
 
 // TODO: Rename to `Desugarer` once the old desugarer is removed.

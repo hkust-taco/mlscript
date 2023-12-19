@@ -4,7 +4,7 @@ data Test a b
 //│ Parsed: data Test(...a)(...b);
 //│ Desugared: class Test[a, b]: {a: a, b: b}
 //│ Desugared: def Test: forall a b. (...a) -> (...b) -> Test[a, b]
-//│ AST: Def(false, Test, PolyType(List(Left(TypeName(a)), Left(TypeName(b))),Function(TypeName(a),Function(TypeName(b),AppliedType(TypeName(Test),List(TypeName(a), TypeName(b)))))), true)
+//│ AST: Def(false, Var("Test"), R(PolyType(Ls(TypeName("a"), TypeName("b")), Function(TypeName("a"), Function(TypeName("b"), AppliedType(TypeName("Test"), TypeName("a") :: TypeName("b") :: Nil))))), true)
 //│ Defined class Test[+a, +b]
 //│ Test: 'a -> 'b -> Test['a, 'b]
 
@@ -13,7 +13,7 @@ data Person(name: string, age: int)
 //│ Parsed: data Person(...'(' {[name: string, age: int,]} ')');
 //│ Desugared: class Person: {age: int, name: string}
 //│ Desugared: def Person: (name: string, age: int) -> Person[]
-//│ AST: Def(false, Person, PolyType(List(),Function(Tuple(List((Some(name),Field(None,TypeName(string))), (Some(age),Field(None,TypeName(int))))),AppliedType(TypeName(Person),List()))), true)
+//│ AST: Def(false, Var("Person"), R(PolyType(Ls(), Function(Tuple(S(name) -> Fld(N, TypeName("string")), S(age) -> Fld(N, TypeName("int"))), AppliedType(TypeName("Person"), Nil)))), true)
 //│ Defined class Person
 //│ Person: (name: string, age: int,) -> Person
 

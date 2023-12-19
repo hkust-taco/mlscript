@@ -2,7 +2,6 @@ package mlscript.pretyper
 
 import mlscript.ucs.DesugarUCS
 import mlscript._, utils._, shorthands._
-import mlscript.codegen.Helpers.inspect
 
 class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Traceable with DesugarUCS {
   protected def raise(diagnostics: Ls[Diagnostic]): Unit = ()
@@ -24,9 +23,9 @@ class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Trac
     case PlainTup(arguments @ _*) =>
       arguments.map {
         case nme: Var => new ValueSymbol(nme, false)
-        case other => println("Unknown parameters: " + inspect(other)); ??? // TODO: bad
+        case other => println("Unknown parameters: " + inspect.deep(other)); ??? // TODO: bad
       }.toList
-    case other => println("Unknown parameters: " + inspect(other)); ??? // TODO: bad
+    case other => println("Unknown parameters: " + inspect.deep(other)); ??? // TODO: bad
   }
 
   // `traverseIf` is meaningless because it represents patterns with terms.

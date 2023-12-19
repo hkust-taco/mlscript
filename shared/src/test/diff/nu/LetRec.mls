@@ -129,7 +129,7 @@ let rec lol = () => lol
 :p
 let rec f = 1
 //│ |#let| |#rec| |f| |#=| |1|
-//│ AST: TypingUnit(NuFunDef(Some(true), f, None, [], IntLit(1)))
+//│ AST: TypingUnit(NuFunDef(Some(true), f, N, Nil, L(IntLit(1))))
 //│ Parsed: let rec f = 1;
 //│ let rec f: 1
 //│ f
