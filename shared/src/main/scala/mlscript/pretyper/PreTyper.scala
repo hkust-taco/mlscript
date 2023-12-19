@@ -103,6 +103,11 @@ class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Trac
         case v: Var => traverseVar(v)
         case AdtMatchWith(cond, arms) => ??? // TODO: How?
         case Inst(body) => traverseTerm(body)
+        case NuNew(cls) => traverseTerm(cls)
+        case Rft(base, decls) => // For object refinement
+          traverseTerm(base)
+          traverseTypingUnit(decls, "Rft", scope)
+          ()
       }
     }(_ => s"traverseTerm ==> ${shortName(term)}")
 

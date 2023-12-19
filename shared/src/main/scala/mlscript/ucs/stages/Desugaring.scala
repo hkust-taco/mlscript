@@ -97,6 +97,7 @@ trait Desugaring { self: mlscript.pretyper.Traceable =>
           mkBinOp(nme, Var("=="), pattern.literal, true),
           c.Branch(scrutinee, truePattern, next) :: c.Split.Nil
         )
+      case (Some((nme, pattern)), next) => ??? // Other patterns are not implemented yet.
     })
   }
 
