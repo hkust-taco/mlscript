@@ -30,7 +30,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
     private def addElim(x: Name, elim: Elim) =
       if (defcount.getOrElse(x.str, 0) <= 1)
         elims.getOrElseUpdate(x.str, MutHSet.empty) += elim
-        x.updateElim(elim)
     
     private def addBackwardElim(x: Name, elim: Elim) =
       if (defcount.getOrElse(x.str, 0) <= 1)
@@ -38,7 +37,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
           case EDestruct => EIndirectDestruct
           case _ => elim
         elims.getOrElseUpdate(x.str, MutHSet.empty) += elim2  
-        x.updateElim(elim2)   
 
     override def iterate_param(x: Name): Unit = 
       defcount.update(x.str, defcount.getOrElse(x.str, 0) + 1)
@@ -79,16 +77,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
           defn.accept_iterator(this)
         body.accept_iterator(this)
 
-    private def resetAllElims(prog: GOProgram) =
-      prog.defs.foreach(resetDefAllElims(_))
-      prog.main.resetElims()
-  
-    private def resetDefAllElims(defn: GODef) =
-      defn.params.foreach(_.resetElim())
-      defn.body.resetElims()
-
     override def iterate(x: GOProgram) =
-      resetAllElims(x)
       var changed = true
       while (changed)
         changed = false
@@ -100,13 +89,11 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
           defn.accept_iterator(this)
           defn.activeParams = defn.params.map {
             param =>
-              param.resetElim()
               val e = elims.get(param.str) match {
                 case Some(elims) => 
                   elims.toSet
                 case None => Set()
               }
-              param.updateElims(e)
               e
           }
           changed |= (old != defn.activeParams)
@@ -148,7 +135,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
         val intros2 = getIntro(expr, intros) match
           case None => intros
           case Some(x) =>
-            name.updateIntro(x)
             intros + (name.str -> x)
         getIntro(body, intros2)
       case Result(res) => 
@@ -244,7 +230,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
             fn_uid.make,
             pre_name.str,
             false,
-            defn.params.map(_.copy),
+            defn.params,
             all_fv.size,
             None,
             pre_body)
@@ -302,7 +288,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
   private def updateIntroInfo(defn: GODef, intros: Map[Str, Intro], xs: Ls[Name]) =
     defn.activeResults.zip(xs).foldLeft(intros) { 
       case (intros, (Some(i), name)) =>
-        name.updateIntro(i)
         intros + (name.str -> i)
       case (intros, _) => intros
     }
@@ -311,10 +296,8 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
     defn.activeResults.zip(xs).foldLeft(intros) { 
       case (intros, (Some(i @ IMix(_)), name)) =>
         out += (name.str -> defn.name)
-        name.updateIntro(i)
         intros + (name.str -> i)
       case (intros, (Some(i), name)) => 
-        name.updateIntro(i)
         intros + (name.str -> i)
       case (intros, _) => intros
     }
@@ -323,7 +306,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
   private def bindIntroInfoUsingInput(intros: Map[Str, Intro], input: Ls[Opt[Intro]], params: Ls[Name]) =
     input.zip(params).foldLeft(intros) {
       case (accu, (Some(i), param)) => 
-        param.updateIntro(i)
         accu + (param.str -> i)
       case (accu, _) => accu
     }
@@ -370,9 +352,9 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
         case Ref(x) => intros.get(x.str)
         case _ => None
       }.zip(params).zip(active).foreach {
-        case ((Some(ICtor(cls)), param), elim) if param.getElim.contains(EDestruct) =>
+        case ((Some(ICtor(cls)), param), elim) if elim.contains(EDestruct) =>
           addSplitTarget(name, param.str)
-        case ((Some(ICtor(cls)), param), elim) if param.getElim.contains(EIndirectDestruct) =>
+        case ((Some(ICtor(cls)), param), elim) if elim.contains(EIndirectDestruct) =>
           addIndirTarget(name, param.str)
         case _ =>
       }
@@ -750,10 +732,10 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
     
     private def checkTargets(name: Str, intros: Map[Str, Intro], args: Ls[TrivialExpr], params: Ls[Name], active: Ls[Set[Elim]]) =
       args.map { 
-        case Ref(x) => x.getIntro 
+        case Ref(x) => intros.get(x.str)
         case _ => None
       }.zip(params).zip(active).foreach {
-        case ((Some(ICtor(cls)), param), elim) if param.getElim.exists(isESelect) && !param.getElim.contains(EDirect) =>
+        case ((Some(ICtor(cls)), param), elim) if elim.exists(isESelect) && !elim.contains(EDirect) =>
           elim.foreach {
             case ESelect(field) => addTarget(name, field, param.str)
             case _ =>
@@ -1018,20 +1000,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
         cur_defn = Some(x)  
         x.accept_visitor(this)
       }.toSet
-      relink(x.main, new_defs)
-      validate(x.main, new_defs)
-      GOProgram(x.classes, new_defs, x.main)
-
-  private class DeadCodeElimination2 extends GOVisitor:
-    override def visit(y: LetExpr) = y match
-      case LetExpr(x, e1, e2) =>
-        if x.getElim.nonEmpty then
-          LetExpr(x, e1, e2.accept_visitor(this)) 
-        else
-          e2.accept_visitor(this)
-
-    override def visit(x: GOProgram) =
-      val new_defs = x.defs.map(_.accept_visitor(this)).toSet
       relink(x.main, new_defs)
       validate(x.main, new_defs)
       GOProgram(x.classes, new_defs, x.main)

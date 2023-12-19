@@ -65,13 +65,6 @@ case class Name(val str: Str):
   private var intro: Opt[Intro] = None
   private var elim: Set[Elim] = Set.empty
 
-  def getIntro = intro
-  def updateIntro(i: Intro): Unit = intro = Some(i)
-  def resetIntro(): Unit = intro = None
-  def getElim = elim
-  def updateElim(e: Elim): Unit = elim += e
-  def updateElims(e: IterableOnce[Elim]): Unit = elim ++= e
-  def resetElim(): Unit = elim = Set.empty
   def copy: Name = Name(str)
   def trySubst(map: Map[Str, Name]) = map.getOrElse(str, this)
   
@@ -89,6 +82,7 @@ case class Name(val str: Str):
   
   override def toString: String =
     str
+
   def accept_def_visitor(v: GONameVisitor) = v.visit_name_def(this)
   def accept_use_visitor(v: GONameVisitor) = v.visit_name_use(this)
   def accept_param_visitor(v: GONameVisitor) = v.visit_param(this)
@@ -287,11 +281,6 @@ enum GONode:
   case LetCall(names: Ls[Name], defn: GODefRef, args: Ls[TrivialExpr], body: GONode)
 
   override def toString: String = show
-
-  def resetElims() = map_name { x =>
-    x.resetElim()
-    x
-  }
 
   def show: String =
     toDocument.print
