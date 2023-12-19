@@ -613,7 +613,7 @@ b1.x <- 1 + 2 <- 4
 //│ ║  l.550: 	b1.x <- 1 + 2 <- 4
 //│ ╙──       	            ^
 //│ Code generation encountered an error:
-//│   illegal assignemnt left-hand side: Bra(rcd = false, Assign(Sel(Var(mt1), 0), Sel(Var(b1), t)))
+//│   illegal assignemnt left-hand side: Bra(rcd = false, Assign(Sel(Var("mt1"), 0), Sel(Var("b1"), t)))
 
 def f : {mut 0 : int} -> int -> unit
 def g : (mut int, bool) -> int -> unit

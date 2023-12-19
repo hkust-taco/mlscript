@@ -14,7 +14,7 @@ Some(x) => x
 //│ ╙──     	           ^
 //│ error -> error
 //│ Code generation encountered an error:
-//│   term App(Var(Some), Tup(_: Var(x))) is not a valid pattern
+//│   term App(Var("Some"), Tup((N, Var("x")))) is not a valid pattern
 
 :js
 // FIXME type

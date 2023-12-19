@@ -1,7 +1,7 @@
 package mlscript
 package compiler
 
-import mlscript.codegen.Helpers.inspect as showStructure
+import mlscript.utils.inspect.deep as showStructure
 import mlscript.compiler.mono.{Monomorph, MonomorphError}
 import scala.collection.mutable.ArrayBuffer
 
