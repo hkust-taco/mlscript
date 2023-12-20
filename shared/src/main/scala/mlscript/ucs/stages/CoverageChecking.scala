@@ -200,13 +200,13 @@ object CoverageChecking {
         val withoutSymbol = cases - classLikePattern
         val relatedPatterns = withoutSymbol.filter {
           case (Pattern.ClassLike(otherSymbol), _) => otherSymbol.baseTypes.contains(classLikeSymbol)
-          case (_: Pattern.Tuple | _: Pattern.Literal) -> _ => false
+          case ((_: Pattern.Tuple | _: Pattern.Literal), _) => false
         } ++ classLikeSymbol.sealedDerivedTypes.iterator.map { symbol =>
           Pattern.ClassLike(symbol) -> symbol.defn.nme.toLoc.toList
         }
         val unrelatedPatterns = withoutSymbol.filter {
           case (Pattern.ClassLike(otherSymbol), _) => !otherSymbol.baseTypes.contains(classLikeSymbol)
-          case (_: Pattern.Tuple | _: Pattern.Literal) -> _ => true
+          case ((_: Pattern.Tuple | _: Pattern.Literal), _) => true
         }
         (locations, copy(relatedPatterns), copy(unrelatedPatterns))
       }
