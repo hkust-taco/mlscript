@@ -2,46 +2,102 @@ package mlscript.pretyper
 
 import collection.immutable.Map
 import mlscript.utils._, shorthands._
-import mlscript.Var
+import mlscript.{Mod, NuTypeDef, TypeName, TypingUnit, Var}
+import scala.annotation.tailrec
+import symbol._
 
-class Scope(val enclosing: Opt[Scope], val entries: Map[String, Symbol]) {
+final class Scope(val enclosing: Opt[Scope], val types: Map[Str, TypeSymbol], val terms: Map[Str, TermSymbol]) {
+  import Scope._
+
+
+  @tailrec
+  final def getTypeSymbol(name: Str): Opt[TypeSymbol] =
+    types.get(name) match {
+      case entry @ S(_) => entry
+      case N => enclosing match {
+        case N => N
+        case S(scope) => scope.getTypeSymbol(name)
+      }
+    }
+
+  @tailrec
+  final def getTermSymbol(name: Str): Opt[TermSymbol] =
+    terms.get(name) match {
+      case entry @ S(_) => entry
+      case N => enclosing match {
+        case N => N
+        case S(scope) => scope.getTermSymbol(name)
+      }
+    }
+  
+  final def getSymbols(name: Str): Ls[Symbol] = Ls.concat(getTypeSymbol(name), getTermSymbol(name))
+
   @inline
-  def get(name: String): Opt[Symbol] = entries.get(name) match {
-    case Some(sym) => S(sym)
-    case None => enclosing.fold(N: Opt[Symbol])(_.get(name))
+  def +(sym: Symbol): Scope = sym match {
+    case symbol: TypeSymbol => new Scope(enclosing, types + (symbol.name -> symbol), terms)
+    case symbol @ FunctionSymbol(Var(name), S(Var(operator)), _) =>
+        new Scope(enclosing, types, terms + (name -> symbol) + (operator -> symbol))
+    case symbol: TermSymbol => new Scope(enclosing, types, terms + (symbol.name -> symbol))
   }
 
   @inline
-  def +(sym: Symbol): Scope = new Scope(S(this), entries + (sym.name -> sym))
+  def ++(symbols: IterableOnce[Symbol]): Scope = {
+    val (newTypes, newTerms) = partitionSymbols((types, terms), symbols)
+    new Scope(enclosing, newTypes, newTerms)
+  }
+
+  def withEntries(syms: IterableOnce[Var -> Symbol]): Scope = {
+    val (newTypes, newTerms) = syms.iterator.foldLeft((types, terms)) {
+      case ((types, terms), (nme, symbol: TypeSymbol)) => (types + (nme.name -> symbol), terms)
+      case ((types, terms), (nme, symbol: TermSymbol)) => (types, terms + (nme.name -> symbol))
+    }
+    new Scope(enclosing, newTypes, newTerms)
+  }
 
   @inline
-  def ++(syms: IterableOnce[Symbol]): Scope =
-    new Scope(S(this), entries ++ syms.iterator.map(sym => sym.name -> sym))
+  def symbols: Iterator[Symbol] = Iterator.concat[Symbol](types.values, terms.values)
 
-  def withEntries(syms: IterableOnce[Var -> Symbol]): Scope =
-    new Scope(S(this), entries ++ syms.iterator.map {
-      case (nme, sym) => nme.name -> sym
-    })
+  def derive: Scope = new Scope(S(this), Map.empty, Map.empty)
 
-  @inline
-  def symbols: Iterable[Symbol] = entries.values
+  def derive(symbols: IterableOnce[Symbol]): Scope = {
+    val (newTypes, newTerms) = partitionSymbols((types, terms), symbols)
+    new Scope(S(this), newTypes, newTerms)
+  }
 
-  def derive: Scope = new Scope(S(this), Map.empty)
-
-  def showLocalSymbols: Str = entries.iterator.map(_._1).mkString(", ")
+  def showLocalSymbols: Str = symbols.iterator.map(_.name).mkString(", ")
 }
 
 object Scope {
-  def from(symbols: IterableOnce[Symbol]): Scope =
-    new Scope(N, Map.from(symbols.iterator.map(sym => sym.name -> sym)))
+  def partitionSymbols(
+      z: (Map[Str, TypeSymbol], Map[Str, TermSymbol]),
+      symbols: IterableOnce[Symbol]
+  ): (Map[Str, TypeSymbol], Map[Str, TermSymbol]) =
+    symbols.iterator.foldLeft((z._1, z._2)) {
+      case ((types, terms), symbol: TypeSymbol) => (types + (symbol.name -> symbol), terms)
+      case ((types, terms), symbol @ FunctionSymbol(Var(name), S(Var(operator)), _)) =>
+        (types, terms + (name -> symbol) + (operator -> symbol))
+      case ((types, terms), symbol: TermSymbol) => (types, terms + (symbol.name -> symbol))
+    }
 
-  val global: Scope = Scope.from(
-    """true,false,document,window,typeof,toString,not,succ,log,discard,negate,
-      |round,add,sub,mul,div,sqrt,lt,le,gt,ge,slt,sle,sgt,sge,length,concat,eq,
-      |ne,error,id,if,emptyArray,+,-,*,%,/,<,>,<=,>=,==,===,<>,&&,||"""
-      .stripMargin
-      .split(",")
-      .iterator
-      .map(name => new ValueSymbol(Var(name), false))
-  )
+  def from(symbols: IterableOnce[Symbol]): Scope = {
+    val (newTypes, newTerms) = partitionSymbols((Map.empty, Map.empty), symbols)
+    new Scope(N, newTypes, newTerms)
+  }
+
+  val global: Scope = {
+    val trueDefn = NuTypeDef(Mod, TypeName("true"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N)
+    val falseDefn = NuTypeDef(Mod, TypeName("false"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N)
+    val trueSymbol = new ModuleSymbol(trueDefn)
+    val falseSymbol = new ModuleSymbol(falseDefn)
+    Scope.from(
+      """true,false,document,window,typeof,toString,not,succ,log,discard,negate,
+        |round,add,sub,mul,div,sqrt,lt,le,gt,ge,slt,sle,sgt,sge,length,concat,eq,
+        |ne,error,id,if,emptyArray,+,-,*,%,/,<,>,<=,>=,==,===,<>,&&,||"""
+        .stripMargin
+        .split(",")
+        .iterator
+        .map(name => new ValueSymbol(Var(name), false))
+        .concat(trueSymbol :: falseSymbol :: Nil)
+    )
+  }
 }

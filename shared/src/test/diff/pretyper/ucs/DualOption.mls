@@ -1,13 +1,13 @@
 :NewDefs
 :PreTyper
 
-class Some[T](value: T)
-module None
-type Option[T] = Some[T] | None
+abstract class Option[T]
+class Some[T](value: T) extends Option[T]
+module None extends Option[nothing]
 class Pair[A, B](x: A, y: B)
-//│ class Some[T](value: T)
-//│ module None
-//│ type Option[T] = None | Some[T]
+//│ abstract class Option[T]
+//│ class Some[T](value: T) extends Option
+//│ module None extends Option
 //│ class Pair[A, B](x: A, y: B)
 
 // All `add_n` functions should be inferred to have the same type.

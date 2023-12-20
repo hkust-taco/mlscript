@@ -1,0 +1,76 @@
+:PreTyper
+
+class Point(x: Int, y: Int)
+abstract class Shape: (Circle | Rectangle | LineSegment)
+class Circle(center: Point, radius: Int) extends Shape
+class Rectangle(position: Point, width: Int, height: Int) extends Shape
+class LineSegment(start: Point, end: Point) extends Shape
+//│ class Point(x: Int, y: Int)
+//│ abstract class Shape: Circle | LineSegment | Rectangle
+//│ class Circle(center: Point, radius: Int) extends Shape
+//│ class Rectangle(position: Point, width: Int, height: Int) extends Shape
+//│ class LineSegment(start: Point, end: Point) extends Shape
+
+fun hidden(p) = if p is Circle then true else false
+//│ fun hidden: Object -> Bool
+
+fun this_is_sealed(x: Shape) =
+  if x is
+    Circle(_, _) then "Circle"
+    Rectangle(_, _, _) then "Rectangle"
+    LineSegment(_, _) then "LineSegment"
+//│ fun this_is_sealed: (x: Shape) -> ("Circle" | "LineSegment" | "Rectangle")
+
+// TODO
+fun missing_a_case(x: Shape) =
+  if x is
+    Circle(_, _) then "Circle"
+    Rectangle(_, _, _) then "Rectangle"
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.26: 	  if x is
+//│ ║        	     ^^^^
+//│ ║  l.27: 	    Circle(_, _) then "Circle"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.28: 	    Rectangle(_, _, _) then "Rectangle"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `LineSegment` is not an instance of type `Rectangle`
+//│ ║  l.25: 	fun missing_a_case(x: Shape) =
+//│ ║        	                      ^^^^^
+//│ ╟── but it flows into reference with expected type `Rectangle`
+//│ ║  l.26: 	  if x is
+//│ ║        	     ^
+//│ ╟── Note: constraint arises from class pattern:
+//│ ║  l.28: 	    Rectangle(_, _, _) then "Rectangle"
+//│ ╙──      	    ^^^^^^^^^
+//│ fun missing_a_case: (x: Shape) -> ("Circle" | "Rectangle")
+
+fun missing_a_case(x: Shape) =
+  if x is
+    Circle(_, _) then "Circle"
+    Rectangle(_, _, _) then "Rectangle"
+    else x
+//│ fun missing_a_case: (x: Shape) -> ("Circle" | "Rectangle" | LineSegment)
+
+// TODO
+fun countLineSegments(x) =
+  if x is
+    Shape and hidden(x) then "bro"
+    Rectangle(_, _, _) then "bro"
+    LineSegment(_, _) then "bro"
+    Circle(_, _) then "bro"
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.56: 	  if x is
+//│ ║        	     ^^^^
+//│ ║  l.57: 	    Shape and hidden(x) then "bro"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.58: 	    Rectangle(_, _, _) then "bro"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.59: 	    LineSegment(_, _) then "bro"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.60: 	    Circle(_, _) then "bro"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `Shape & ~#LineSegment & ~#Rectangle` is not an instance of type `Circle`
+//│ ╟── Note: constraint arises from class pattern:
+//│ ║  l.60: 	    Circle(_, _) then "bro"
+//│ ╙──      	    ^^^^^^
+//│ fun countLineSegments: Shape -> "bro"

@@ -76,7 +76,7 @@ object inspect {
           case Wildcard(body) => s"Wildcard(${apply(body)})"
           case NoCases        => "NoCases"
         }
-        s"CaseOf(${apply(trm)}, ${inspectCaseBranches(cases)}"
+        s"CaseOf(${apply(trm)}, ${inspectCaseBranches(cases)})"
       case IntLit(value)  => s"IntLit($value)"
       case DecLit(value)  => s"DecLit($value)"
       case StrLit(value)  => s"StrLit($value)"

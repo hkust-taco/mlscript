@@ -2,7 +2,8 @@ package mlscript.ucs
 
 import collection.mutable.{Map => MutMap}
 import mlscript.ucs.stages._
-import mlscript.pretyper.{PreTyper, Scope, ScrutineeSymbol, Symbol, ValueSymbol}
+import mlscript.pretyper.{PreTyper, Scope}
+import mlscript.pretyper.symbol._
 import mlscript._, utils._, shorthands._
 import mlscript.Message, Message.MessageContext
 
@@ -12,7 +13,6 @@ trait DesugarUCS extends Transformation
                     with Normalization
                     with PostProcessing 
                     with CoverageChecking { self: PreTyper =>
-  
 
   protected def traverseIf(`if`: If)(implicit scope: Scope): Unit =
     trace("traverseIf") {
@@ -70,7 +70,7 @@ trait DesugarUCS extends Transformation
       }
     }()
 
-  private def traversePattern(scrutinee: Var, pattern: core.Pattern): List[Var -> Symbol] =
+  private def traversePattern(scrutinee: Var, pattern: core.Pattern)(implicit scope: Scope): List[Var -> Symbol] =
     trace(s"traversePattern <== $pattern") {
       lazy val scrutineeSymbol = scrutinee.symbol match {
         case symbol: ScrutineeSymbol => symbol
@@ -82,29 +82,47 @@ trait DesugarUCS extends Transformation
         case core.Pattern.Name(nme) =>
           nme.symbol = scrutineeSymbol
           nme -> scrutineeSymbol :: Nil
-        case core.Pattern.Class(nme, N) =>
-          scrutineeSymbol.matchedClasses += nme
-          Nil
-        case core.Pattern.Class(nme, S(parameters)) =>
-          scrutineeSymbol.matchedClasses += nme
-          parameters.iterator.zipWithIndex.flatMap { 
-            case (N, _) => N
-            case (S(parameter), index) =>
-              val symbol = scrutineeSymbol.addSubScrutinee(nme, index, parameter)
-              parameter.symbol = symbol; S(parameter -> symbol)
-          }.toList
+        case core.Pattern.Class(nme, maybeParameters) =>
+          println(s"name has location: ${nme.toLoc.isDefined}")
+          // Resolve `nme`. It can either be a class, a trait, or a module.
+          val symbol = scope.getTypeSymbol(nme.name) match {
+            case S(symbol: TraitSymbol) => println(s"${nme.name} is a trait"); symbol
+            case S(symbol: ClassSymbol) => println(s"${nme.name} is a class"); symbol
+            case S(symbol: ModuleSymbol) => println(s"${nme.name} is a module"); symbol
+            case S(symbol: MixinSymbol) =>
+              throw new DesugaringException(msg"Mixins are not allowed in pattern" -> nme.toLoc :: Nil)
+            case S(symbol: TypeAliasSymbol) =>
+              throw new DesugaringException(msg"Type alias is not allowed in pattern" -> nme.toLoc :: Nil)
+            // case S(symbol: TermSymbol) =>
+            //   throw new DesugaringException(msg"Only classes, modules, and traits can be matched against." -> nme.toLoc :: Nil)
+            case N =>
+              throw new DesugaringException(msg"Undefined symbol found in patterns." -> nme.toLoc :: Nil)
+          }
+          nme.symbol = symbol
+          // Add the class to the list of matched classes.
+          scrutineeSymbol.addMatchedClass(symbol, nme.toLoc)
+          maybeParameters match {
+            case N => Nil
+            case S(parameters) =>
+              parameters.iterator.zipWithIndex.flatMap { 
+                case (N, _) => N
+                case (S(parameter), index) =>
+                  val symbol = scrutineeSymbol.addSubScrutinee(nme, index, parameter, parameter.toLoc)
+                  parameter.symbol = symbol; S(parameter -> symbol)
+              }.toList
+          }
         case core.Pattern.Tuple(elements) => elements.flatMap {
           case N => Nil
           case S(pattern) => elements.iterator.zipWithIndex.flatMap {
             case (N, _) => N
             case (S(element), index) =>
-              val symbol = scrutineeSymbol.addSubScrutinee(index)
+              val symbol = scrutineeSymbol.addSubScrutinee(index, element.toLoc)
               element.symbol = symbol; S(element -> symbol)
           }.toList
         }
         case core.Pattern.Record(entries) =>
           entries.iterator.zipWithIndex.map { case ((fieldName, bindingName), _) =>
-            val symbol = scrutineeSymbol.addSubScrutinee(fieldName)
+            val symbol = scrutineeSymbol.addSubScrutinee(fieldName, bindingName.toLoc)
             bindingName.symbol = symbol; bindingName -> symbol
           }.toList
       }

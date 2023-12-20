@@ -45,6 +45,12 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
             }
           case _ => rare
         }
+      case IfOpApp(lhs, Var("and"), rhs) =>
+        splitAnd(lhs).foldRight(transformIfBody(rhs)) {
+          case (OperatorIs(scrutinee, pattern), acc) =>
+            TermBranch.Match(scrutinee, PatternBranch(transformPattern(pattern), acc) |> Split.single) |> Split.single
+          case (test, acc) => TermBranch.Boolean(test, acc) |> Split.single
+        }
       case IfOpApp(lhs, op, rhs) => 
         splitAnd(lhs) match {
           case init :+ last =>

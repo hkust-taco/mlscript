@@ -1,9 +1,16 @@
 package mlscript.pretyper
 
+import collection.mutable.{Set => MutSet}
 import mlscript.ucs.DesugarUCS
+import symbol._
 import mlscript._, utils._, shorthands._
+import scala.annotation.tailrec
+import mlscript.Message, Message.MessageContext
 
 class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Traceable with DesugarUCS {
+  import PreTyper._
+
+  protected def raise(diagnostics: Diagnostic): Unit = ()
   protected def raise(diagnostics: Ls[Diagnostic]): Unit = ()
 
   private def extractParameters(fields: Term): Ls[ValueSymbol] = fields match {
@@ -32,24 +39,28 @@ class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Trac
 
   protected def resolveVar(v: Var)(implicit scope: Scope): Unit =
     trace(s"resolveVar(name = \"$v\")") {
-      scope.get(v.name) match {
-        case Some(sym: ValueSymbol) =>
+      scope.getTermSymbol(v.name) match {
+        case S(sym: ValueSymbol) =>
           println(s"Resolve variable $v to a value.", 2)
           v.symbol = sym
-        case Some(sym: SubValueSymbol) =>
+        case S(sym: SubValueSymbol) =>
           println(s"Resolve variable $v to a value.", 2)
           v.symbol = sym
-        case Some(sym: FunctionSymbol) =>
+        case S(sym: FunctionSymbol) =>
           println(s"Resolve variable $v to a function.", 2)
           v.symbol = sym
-        case Some(sym: TypeSymbol) =>
-          if (sym.defn.kind == Cls) {
-            println(s"Resolve variable $v to a class.", 2)
-            v.symbol = sym
-          } else {
-            throw new Exception(s"Name $v refers to a type")
+        case N => 
+          scope.getTypeSymbol(v.name) match {
+            case S(sym: ClassSymbol) =>
+              if (sym.defn.kind == Cls) {
+                println(s"Resolve variable $v to a class.", 2)
+                v.symbol = sym
+              } else {
+                throw new Exception(s"Name $v refers to a type")
+              }
+            case S(_) => throw new Exception(s"Name $v refers to a type")
+            case N => throw new Exception(s"Variable $v not found in scope")
           }
-        case None => throw new Exception(s"Variable $v not found in scope")
       }
     }()
 
@@ -57,16 +68,16 @@ class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Trac
     trace(s"traverseVar(name = \"$v\")") {
       v.symbolOption match {
         case N => resolveVar(v)
-        case S(symbol) => scope.get(v.name) match {
-          case S(other) if other === symbol => ()
-          case S(other) => throw new Exception(s"Variable $v refers to a different symbol")
-          case N => throw new Exception(s"Variable $v not found in scope. It is possibly a free variable.")
+        case S(symbol) => scope.getSymbols(v.name) match {
+          case Nil => throw new Exception(s"Variable $v not found in scope. It is possibly a free variable.")
+          case symbols if symbols.contains(symbol) => ()
+          case _ => throw new Exception(s"Variable $v refers to a different symbol")
         }
       }
     }()
 
   protected def traverseTerm(term: Term)(implicit scope: Scope): Unit =
-    trace(s"traverseTerm <== ${shortName(term)}") {
+    trace(s"traverseTerm <== ${inspect.shallow(term)}") {
       term match {
         case Assign(lhs, rhs) => traverseTerm(lhs); traverseTerm(rhs)
         case Bra(_, trm) => traverseTerm(trm)
@@ -108,22 +119,28 @@ class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Trac
           traverseTerm(base)
           traverseTypingUnit(decls, "Rft", scope)
           ()
+        case NuNew(cls) => traverseTerm(cls)
+        case Rft(base, decls) =>
+          traverseTerm(base)
+          traverseTypingUnit(decls, "Rft", scope)
+          ()
       }
-    }(_ => s"traverseTerm ==> ${shortName(term)}")
+    }(_ => s"traverseTerm ==> ${inspect.shallow(term)}")
 
-  private def traverseNuTypeDef(symbol: TypeSymbol, defn: NuTypeDef)(implicit scope: Scope): Unit =
-    trace(s"traverseNuTypeDef <== ${defn.kind} ${defn.nme.name}") {
+  private def traverseTypeDefinition(symbol: TypeSymbol, defn: NuTypeDef)(implicit scope: Scope): Unit =
+    trace(s"traverseTypeDefinition <== ${defn.describe}") {
       traverseTypingUnit(defn.body, defn.nme.name, scope)
       ()
-    }(_ => s"traverseNuTypeDef <== ${defn.kind} ${defn.nme.name}")
+    }(_ => s"traverseTypeDefinition <== ${defn.describe}")
 
   private def traverseFunction(symbol: FunctionSymbol, defn: NuFunDef)(implicit scope: Scope): Unit =
     trace(s"traverseFunction <== ${defn.nme.name}") {
+      require(defn.isLetRec.isEmpty) // Make sure it's defined via `fun`.
       defn.rhs match {
         case Left(term) => 
           val subScope = if (defn.isLetRec === S(false)) scope else scope + symbol
           traverseTerm(term)(subScope)
-        case Right(value) => ()
+        case Right(ty) => println(s"found a pure declaration: $ty")
       }
     }(_ => s"traverseFunction ==> ${defn.nme.name}")
 
@@ -141,17 +158,68 @@ class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Trac
         case (acc, defn: NuTypeDef) =>
           val `var` = Var(defn.nme.name).withLoc(defn.nme.toLoc)
           // Create a type symbol but do not visit its inner members
-          acc ++ (new TypeSymbol(defn.nme, defn) ::
+          val symbol = defn.kind match {
+            case Cls => new ClassSymbol(defn)
+            case Als => new TypeAliasSymbol(defn)
+            case Mxn => new MixinSymbol(defn)
+            case Trt => new TraitSymbol(defn)
+            case Mod => new ModuleSymbol(defn)
+          }
+          println("parent types: " + defn.parents.iterator.map(inspect.deep(_)).mkString("; "))
+          acc ++ (symbol ::
             (defn.kind match {
               case Mod => new ValueSymbol(`var`, true) :: Nil
               case Als | Cls | Mxn | Trt => Nil
             }))
-        case (acc, defn: NuFunDef) if defn.isLetRec.isEmpty =>
-          acc + new FunctionSymbol(defn.nme, defn)
+        case (acc, defn: NuFunDef) if defn.isLetRec.isEmpty => acc + new FunctionSymbol(defn)
         case (acc, _: NuFunDef) => acc
         case (acc, _: Constructor | _: DataDefn | _: DatatypeDefn | _: Def | _: LetS | _: TypeDef) => ??? // TODO: When?
       }
-      println(hoistedScope.symbols.map(_.name).mkString("1. scope = {", ", ", "}"))
+      // Resolve base types.
+      val subtypingRelations = typingUnit.entities.foldLeft(Map.empty[Var, Ls[Var]]) {
+        case (acc, defn: NuTypeDef) =>
+          val thisType = Var(defn.nme.name).withLoc(defn.nme.toLoc)
+          val superTypes = extractSuperTypes(defn.parents)
+          acc + (thisType -> superTypes)
+        case (acc, _: Term | _: NuFunDef) => acc
+        case (acc, _: Constructor | _: DataDefn | _: DatatypeDefn | _: Def | _: LetS | _: TypeDef) => ??? // TODO: When?
+      }
+      val superTypes = transitiveClosure(subtypingRelations)
+      printGraph(subtypingRelations, println, "Subtyping relations", "->")
+      superTypes.foreachEntry { case (thisType, baseTypes) =>
+        hoistedScope.getTypeSymbol(thisType.name) match {
+          case S(symbol) => symbol.baseTypes =
+            baseTypes.map(baseType => hoistedScope.getTypeSymbol(baseType.name).getOrElse(???))
+          case N => ???
+        } // FIXME: Generate proper diagnostics.
+      }
+      // Resolve sealed types.
+      println("Resolve sealed signature types")
+      hoistedScope.types.foreachEntry {
+        case _ -> (_: MixinSymbol | _: TypeAliasSymbol) => ()
+        case (name, symbol) => symbol.defn.sig.foreach { unions =>
+          def rec(acc: Ls[TypeName], ty: Type): Ls[TypeName] = ty match {
+            case tn: TypeName => tn :: acc
+            case AppliedType(tn: TypeName, _) => tn :: acc
+            case Union(lhs, tn: TypeName) => rec(tn :: acc, lhs)
+            case Union(lhs, AppliedType(tn: TypeName, _)) => rec(tn :: acc, lhs)
+            case other => println(s"Unknown type: $other"); ???
+          }
+          val derivedTypes = try rec(Nil, unions) catch { case _: NotImplementedError => Nil }
+          symbol.sealedDerivedTypes = derivedTypes.flatMap { derivedType =>
+            val maybeSymbol = hoistedScope.getTypeSymbol(derivedType.name)
+            if (maybeSymbol.isEmpty) raise(ErrorReport(
+              msg"Undefined type $derivedType" -> derivedType.toLoc :: Nil,
+              true,
+              Diagnostic.PreTyping
+            ))
+            maybeSymbol
+          }
+          println(s">>> $name: ${symbol.sealedDerivedTypes.iterator.map(_.name).mkString(", ")}")
+        }
+      }
+      println(hoistedScope.symbols.map(_.name).mkString("(hoisted) scope = {", ", ", "}"))
+      // 
       // Pass 2: Visit non-hoisted and build a complete scope.
       val completeScope = typingUnit.entities.foldLeft[Scope](hoistedScope) {
         case (acc, term: Term) => traverseTerm(term)(acc); acc
@@ -164,29 +232,74 @@ class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Trac
         case (acc, _: NuFunDef) => acc
         case (acc, _: Constructor | _: DataDefn | _: DatatypeDefn | _: Def | _: LetS | _: TypeDef) => ??? // TODO: When?
       }
-      println(hoistedScope.symbols.map(_.name).mkString("2. scope = {", ", ", "}"))
-      import pretyper.TypeSymbol
+      println(hoistedScope.symbols.map(_.name).mkString("(complete) scope = {", ", ", "}"))
       // Pass 3: Visit hoisted symbols.
+      val visitedSymbol = MutSet.empty[FunctionSymbol]
       completeScope.symbols.foreach {
         case symbol: TypeSymbol =>
           val innerScope = symbol.defn.kind match {
             case Cls =>
-              completeScope.derive ++ (symbol.defn.params match {
-                case N => Nil
-                case S(fields) => extractParameters(fields)
-              })
+              completeScope.derive(
+                new ValueSymbol(Var("this"), false) ::
+                  (symbol.defn.params match {
+                    case N => Nil
+                    case S(fields) => extractParameters(fields)
+                  })
+              )
             case Als | Mod | Mxn | Trt => completeScope
           }
-          traverseNuTypeDef(symbol, symbol.defn)(innerScope)
-        case symbol: FunctionSymbol => traverseFunction(symbol, symbol.defn)(completeScope)
-        case _: ValueSymbol => ()
-        case _: SubValueSymbol => ()
+          traverseTypeDefinition(symbol, symbol.defn)(innerScope)
+        case symbol: FunctionSymbol if !visitedSymbol(symbol) =>
+          visitedSymbol += symbol
+          traverseFunction(symbol, symbol.defn)(completeScope)
+        case _: FunctionSymbol | _: ValueSymbol | _: SubValueSymbol => ()
       }
       (completeScope, new TypeContents)
-    }({ case (scope, contents) => s"traverseTypingUnit ==> ${scope.showLocalSymbols}" })
+    }({ case (scope, contents) => s"traverseTypingUnit ==> Scope {${scope.showLocalSymbols}}" })
 
   def process(typingUnit: TypingUnit, scope: Scope, name: Str): (Scope, TypeContents) =
     trace(s"process <== $name: ${typingUnit.describe}") {
       traverseTypingUnit(typingUnit, name, scope)
     }({ case (scope, contents) => s"process ==> ${scope.showLocalSymbols}" })
+}
+
+object PreTyper {
+
+  def extractSuperTypes(parents: Ls[Term]): Ls[Var] = {
+    @tailrec
+    def rec(results: Ls[Var], waitlist: Ls[Term]): Ls[Var] =
+      waitlist match {
+        case Nil => results.reverse
+        case (nme: Var) :: tail => rec(nme :: results, tail)
+        case (TyApp(ty, _)) :: tail => rec(results, ty :: tail)
+        case other :: _ => ???
+      }
+    rec(Nil, parents)
+  }
+
+  def transitiveClosure(graph: Map[Var, List[Var]]): Map[Var, List[Var]] = {
+    def dfs(vertex: Var, visited: Set[Var]): Set[Var] = {
+      if (visited.contains(vertex)) visited
+      else graph.getOrElse(vertex, List())
+        .foldLeft(visited + vertex)((acc, v) => dfs(v, acc))
+    }
+
+    graph.keys.map { vertex =>
+      val closure = dfs(vertex, Set())
+      vertex -> (closure - vertex).toList
+    }.toMap
+  }
+
+  def printGraph(graph: Map[Var, List[Var]], print: (=> Any) => Unit, title: String, arrow: String): Unit = {
+    print(s"• $title")
+    if (graph.isEmpty)
+      print("  + <Empty>")
+    else
+      graph.foreachEntry { (source, targets) =>
+        print(s"  + $source $arrow " + {
+          if (targets.isEmpty) s"{}"
+          else targets.mkString("{ ", ", ", " }")
+        })
+      }
+  }
 }

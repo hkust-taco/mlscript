@@ -9,37 +9,133 @@ class Pair[A, B](x: A, y: B)
 //│ type Option[T] = None | Some[T]
 //│ class Pair[A, B](x: A, y: B)
 
-fun failed_add_1(x, y) =
+fun good_add_1(x, y) =
   if
     x is Some(xv) and y is Some(yv) then xv + yv
     x is Some(xv) and y is None     then xv
     x is None     and y is Some(yv) then yv
-//│ ╔══[ERROR] missing a case where x is None, and y is None
-//│ ╟── missing the condition
-//│ ║  l.15: 	    x is Some(xv) and y is None     then xv
-//│ ║        	                           ^^^^
-//│ ╟── when x is None
-//│ ║  l.16: 	    x is None     and y is Some(yv) then yv
-//│ ╙──      	         ^^^^
-//│ fun failed_add_1: forall 'a. (None | Some[Int], Some[Int & 'a]) -> (Int | 'a)
+    x is None     and y is None     then 0
+//│ fun good_add_1: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)
 
-fun failed_add_2(x, y) =
+:e
+fun bad_add_missing_SS(x, y) =
   if
     x is Some(xv) and y is None     then xv
     x is None     and y is Some(yv) then yv
-//│ ╔══[ERROR] missing a case where x is Some, and y is Some
-//│ ╟── missing the condition
-//│ ║  l.29: 	    x is None     and y is Some(yv) then yv
-//│ ║        	                           ^^^^
-//│ ╟── when x is Some
-//│ ║  l.28: 	    x is Some(xv) and y is None     then xv
-//│ ╙──      	         ^^^^
-//│ ╔══[ERROR] missing a case where x is None, and y is None
-//│ ╟── missing the condition
-//│ ║  l.28: 	    x is Some(xv) and y is None     then xv
-//│ ║        	                           ^^^^
-//│ ╟── when x is None
-//│ ║  l.29: 	    x is None     and y is Some(yv) then yv
-//│ ╙──      	         ^^^^
-//│ fun failed_add_2: forall 'a. (None | Some['a], nothing) -> 'a
+    x is None     and y is None     then 0
+//│ ╔══[ERROR] When scrutinee `x` is `Some`
+//│ ║  l.23: 	    x is Some(xv) and y is None     then xv
+//│ ║        	         ^^^^
+//│ ╟── Scrutinee `y` has 1 missing case
+//│ ║  l.21: 	fun bad_add_missing_SS(x, y) =
+//│ ║        	                          ^
+//│ ╟── It can be class `Some`
+//│ ║  l.24: 	    x is None     and y is Some(yv) then yv
+//│ ╙──      	                           ^^^^
+//│ fun bad_add_missing_SS: forall 'a. (None | Some['a], None) -> (0 | 'a)
 
+:e
+fun bad_add_missing_SN(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    x is None     and y is Some(yv) then yv
+    x is None     and y is None     then 0
+//│ ╔══[ERROR] When scrutinee `x` is `Some`
+//│ ║  l.40: 	    x is Some(xv) and y is Some(yv) then xv + yv
+//│ ║        	         ^^^^
+//│ ╟── Scrutinee `y` has 1 missing case
+//│ ║  l.38: 	fun bad_add_missing_SN(x, y) =
+//│ ║        	                          ^
+//│ ╟── It can be module `None`
+//│ ║  l.42: 	    x is None     and y is None     then 0
+//│ ╙──      	                           ^^^^
+//│ fun bad_add_missing_SN: forall 'a. (None | Some[Int], Some[Int & 'a]) -> (Int | 'a)
+
+:e
+fun bad_add_missing_NS(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    x is Some(xv) and y is None     then xv
+    x is None     and y is None     then 0
+//│ ╔══[ERROR] When scrutinee `x` is `None`
+//│ ║  l.59: 	    x is None     and y is None     then 0
+//│ ║        	         ^^^^
+//│ ╟── Scrutinee `y` has 1 missing case
+//│ ║  l.55: 	fun bad_add_missing_NS(x, y) =
+//│ ║        	                          ^
+//│ ╟── It can be class `Some`
+//│ ║  l.57: 	    x is Some(xv) and y is Some(yv) then xv + yv
+//│ ╙──      	                           ^^^^
+//│ fun bad_add_missing_NS: (None | Some[Int], None) -> Int
+
+:e
+fun bad_add_missing_NN(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    x is Some(xv) and y is None     then xv
+    x is None     and y is Some(yv) then yv
+//│ ╔══[ERROR] When scrutinee `x` is `None`
+//│ ║  l.76: 	    x is None     and y is Some(yv) then yv
+//│ ║        	         ^^^^
+//│ ╟── Scrutinee `y` has 1 missing case
+//│ ║  l.72: 	fun bad_add_missing_NN(x, y) =
+//│ ║        	                          ^
+//│ ╟── It can be module `None`
+//│ ║  l.75: 	    x is Some(xv) and y is None     then xv
+//│ ╙──      	                           ^^^^
+//│ fun bad_add_missing_NN: forall 'a. (None | Some[Int], Some[Int & 'a]) -> (Int | 'a)
+
+:e
+fun bad_add_missing_SS_NN(x, y) =
+  if
+    x is Some(xv) and y is None     then xv
+    x is None     and y is Some(yv) then yv
+//│ ╔══[ERROR] When scrutinee `x` is `Some`
+//│ ║  l.91: 	    x is Some(xv) and y is None     then xv
+//│ ║        	         ^^^^
+//│ ╟── Scrutinee `y` has 1 missing case
+//│ ║  l.89: 	fun bad_add_missing_SS_NN(x, y) =
+//│ ║        	                             ^
+//│ ╟── It can be class `Some`
+//│ ║  l.92: 	    x is None     and y is Some(yv) then yv
+//│ ╙──      	                           ^^^^
+//│ ╔══[ERROR] When scrutinee `x` is `None`
+//│ ║  l.92: 	    x is None     and y is Some(yv) then yv
+//│ ║        	         ^^^^
+//│ ╟── Scrutinee `y` has 1 missing case
+//│ ║  l.89: 	fun bad_add_missing_SS_NN(x, y) =
+//│ ║        	                             ^
+//│ ╟── It can be module `None`
+//│ ║  l.91: 	    x is Some(xv) and y is None     then xv
+//│ ╙──      	                           ^^^^
+//│ fun bad_add_missing_SS_NN: forall 'a. (None | Some['a], nothing) -> 'a
+
+:e
+fun bad_add_missing_SN_NS(x, y) =
+  if
+    x is Some(xv) and y is Some(yv) then xv + yv
+    x is None     and y is None     then 0
+//│ ╔══[ERROR] When scrutinee `x` is `Some`
+//│ ║  l.116: 	    x is Some(xv) and y is Some(yv) then xv + yv
+//│ ║         	         ^^^^
+//│ ╟── Scrutinee `y` has 1 missing case
+//│ ║  l.114: 	fun bad_add_missing_SN_NS(x, y) =
+//│ ║         	                             ^
+//│ ╟── It can be module `None`
+//│ ║  l.117: 	    x is None     and y is None     then 0
+//│ ╙──       	                           ^^^^
+//│ ╔══[ERROR] When scrutinee `x` is `None`
+//│ ║  l.117: 	    x is None     and y is None     then 0
+//│ ║         	         ^^^^
+//│ ╟── Scrutinee `y` has 1 missing case
+//│ ║  l.114: 	fun bad_add_missing_SN_NS(x, y) =
+//│ ║         	                             ^
+//│ ╟── It can be class `Some`
+//│ ║  l.116: 	    x is Some(xv) and y is Some(yv) then xv + yv
+//│ ╙──       	                           ^^^^
+//│ fun bad_add_missing_SN_NS: (None | Some[Int], nothing) -> Int
+
+fun actually_fine_add(x, y) =
+  if
+    x is Some(xv) and y is None then xv
+//│ fun actually_fine_add: forall 'a. (Some['a], None) -> 'a

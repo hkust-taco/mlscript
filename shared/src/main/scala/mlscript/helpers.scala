@@ -502,7 +502,7 @@ trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
   def targs: Ls[Type] = Nil
   def compare(that: TypeName): Int = this.name compare that.name
   lazy val toVar: Var = Var(name).withLocOf(this)
-  var symbol: Opt[pretyper.TypeSymbol] = N
+  var symbol: Opt[pretyper.symbol.TypeSymbol] = N
 }
 
 trait FldImpl extends Located { self: Fld =>
@@ -743,7 +743,7 @@ trait VarImpl { self: Var =>
   var uid: Opt[Int] = N
 
   // PreTyper additions
-  import pretyper.{Symbol}
+  import pretyper.symbol.Symbol
 
   private var _symbol: Opt[Symbol] = N
   def symbolOption: Opt[Symbol] = _symbol
@@ -753,9 +753,8 @@ trait VarImpl { self: Var =>
       case N => _symbol = S(symbol)
       case S(_) => ???
     }
-  // TODO: Remove this methods if they are useless.
   // def withSymbol: Var = { symbol = S(new ValueSymbol(this, false)); this }
-  // def withSymbol(s: TermSymbol): Var = { symbol = S(s); this }
+  def withSymbol(symbol: Symbol): Var = { this.symbol = symbol; this }
 }
 
 trait TupImpl { self: Tup =>

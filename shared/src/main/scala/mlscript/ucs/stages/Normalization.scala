@@ -4,7 +4,8 @@ package mlscript.ucs.stages
 import mlscript.ucs.{Lines, LinesOps}
 import mlscript.ucs.core._
 import mlscript.ucs.helpers._
-import mlscript.pretyper.Symbol
+import mlscript.pretyper.Scope
+import mlscript.pretyper.symbol._
 import mlscript.{App, CaseOf, Fld, FldFlags, Let, Loc, Sel, Term, Tup, Var, StrLit}
 import mlscript.{CaseBranches, Case, Wildcard, NoCases}
 import mlscript.Message, Message.MessageContext
@@ -19,30 +20,30 @@ trait Normalization { self: mlscript.pretyper.Traceable =>
     * @param split the split to normalize
     * @return the normalized term
     */ 
-  @inline def normalize(split: Split): Term = normalizeToTerm(split)
+  @inline def normalize(split: Split)(implicit scope: Scope): Term = normalizeToTerm(split)
 
-  private def normalizeToTerm(split: Split): Term = trace("normalizeToTerm") {
+  private def normalizeToTerm(split: Split)(implicit scope: Scope): Term = trace("normalizeToTerm") {
     split match {
       case Split.Cons(Branch(scrutinee, Pattern.Name(nme), continuation), tail) =>
         println(s"alias $scrutinee => $nme")
         Let(false, nme, scrutinee, normalizeToTerm(continuation ++ tail))
       case Split.Cons(Branch(scrutinee, pattern @ Pattern.Literal(literal), continuation), tail) =>
-        val trueBranch = normalizeToTerm(specialize(continuation ++ tail, Yes)(scrutinee.symbol, pattern))
-        val falseBranch = normalizeToCaseBranches(specialize(tail, No)(scrutinee.symbol, pattern))
+        val trueBranch = normalizeToTerm(specialize(continuation ++ tail, Yes)(scrutinee.symbol, pattern, scope))
+        val falseBranch = normalizeToCaseBranches(specialize(tail, No)(scrutinee.symbol, pattern, scope))
         CaseOf(scrutinee, Case(literal, trueBranch, falseBranch))
       // No class parameters. Easy
       case Split.Cons(Branch(scrutinee, pattern @ Pattern.Class(nme, N), continuation), tail) =>
-        println(s"match $scrutinee with $nme")
-        val trueBranch = normalizeToTerm(specialize(continuation ++ tail, Yes)(scrutinee.symbol, pattern))
-        val falseBranch = normalizeToCaseBranches(specialize(tail, No)(scrutinee.symbol, pattern))
+        println(s"match $scrutinee with $nme (has location: ${nme.toLoc.isDefined})")
+        val trueBranch = normalizeToTerm(specialize(continuation ++ tail, Yes)(scrutinee.symbol, pattern, scope))
+        val falseBranch = normalizeToCaseBranches(specialize(tail, No)(scrutinee.symbol, pattern, scope))
         CaseOf(scrutinee, Case(nme, trueBranch, falseBranch))
       case Split.Cons(Branch(scrutinee, pattern @ Pattern.Class(nme, S(parameters)), continuation), tail) =>
         println(s"match $scrutinee with $pattern")
         val trueBranch = trace("compute true branch"){
-          normalizeToTerm(specialize(continuation ++ tail, Yes)(scrutinee.symbol, pattern))
+          normalizeToTerm(specialize(continuation ++ tail, Yes)(scrutinee.symbol, pattern, scope))
         }()
         val falseBranch = trace("compute false branch"){
-          normalizeToCaseBranches(specialize(tail, No)(scrutinee.symbol, pattern))
+          normalizeToCaseBranches(specialize(tail, No)(scrutinee.symbol, pattern, scope))
         }()
         val unappliedVar = Var(s"args_${scrutinee.name}$$${nme.name}")
         val trueBranchWithBindings = Let(
@@ -62,11 +63,11 @@ trait Normalization { self: mlscript.pretyper.Traceable =>
         throw new NormalizationException((msg"Unsupported pattern: ${pattern.toString}" -> pattern.toLoc) :: Nil)
       case Split.Let(rec, nme, rhs, tail) => Let(rec, nme, rhs, normalizeToTerm(tail))
       case Split.Else(default) => default
-      case Split.Nil => StrLit("test") // FIXME
+      case Split.Nil => println("unexpected empty split"); ???
     }
   }()
 
-  private def normalizeToCaseBranches(split: Split): CaseBranches = trace("normalizeToCaseBranches") {
+  private def normalizeToCaseBranches(split: Split)(implicit scope: Scope): CaseBranches = trace("normalizeToCaseBranches") {
     split match {
       // case Split.Cons(head, Split.Nil) => Case(head.pattern, normalizeToTerm(head.continuation), NoCases)
       case other @ (Split.Cons(_, _) | Split.Let(_, _, _, _)) => Wildcard(normalizeToTerm(other))
@@ -78,7 +79,7 @@ trait Normalization { self: mlscript.pretyper.Traceable =>
   // Specialize `split` with the assumption that `scrutinee` matches `pattern`.
   private def specialize
       (split: Split, matchOrNot: MatchOrNot)
-      (implicit scrutinee: Symbol, pattern: Pattern): Split =
+      (implicit scrutinee: Symbol, pattern: Pattern, scope: Scope): Split =
   trace(s"S${matchOrNot} <== ${scrutinee.name} is ${pattern}") {
     (matchOrNot, split) match {
       // Name patterns are translated to let bindings.
@@ -133,8 +134,17 @@ trait Normalization { self: mlscript.pretyper.Traceable =>
                   case (_, _) => specialize(continuation ++ tail, Yes)
                 } // END match
               } else {
-                println(s"class name: $className =/= $otherClassName")
-                specializedTail
+                (otherClassName.symbolOption, className.symbolOption) match {
+                  case (S(otherClassSymbol: TypeSymbol), S(classSymbol: TypeSymbol)) if (
+                    otherClassSymbol.baseTypes contains classSymbol
+                  ) =>
+                    println(s"class name: $otherClassName <: $className")
+                    split
+                  case (there, here) =>
+                    println(s"class name: $className =/= $otherClassName")
+                    println(s"class symbols: ${there.fold("_")(_.name)} ${here.fold("_")(_.name)}")
+                    specializedTail
+                }
               }
             case _ => throw new NormalizationException((msg"Incompatible: ${pattern.toString}" -> pattern.toLoc) :: Nil)
           }
@@ -159,11 +169,20 @@ trait Normalization { self: mlscript.pretyper.Traceable =>
                 println(s"class name: $className === $otherClassName")
                 specialize(tail, No) // TODO: Subsitute parameters to otherParameters
               } else {
-                println(s"class name: $className =/= $otherClassName")
-                split.copy(
-                  // head = head.copy(continuation = specialize(continuation, No)),
-                  tail = specialize(tail, No)
-                )
+                (otherClassName.symbolOption, className.symbolOption) match {
+                  case (S(otherClassSymbol: TypeSymbol), S(classSymbol: TypeSymbol)) if (
+                    otherClassSymbol.baseTypes contains classSymbol
+                  ) =>
+                    println(s"class name: $otherClassName <: $className")
+                    Split.Nil
+                  case (there, here) =>
+                    println(s"class name: $className =/= $otherClassName")
+                    println(s"class symbols: ${there.fold("_")(_.name)} ${here.fold("_")(_.name)}")
+                    split.copy(
+                      // head = head.copy(continuation = specialize(continuation, No)),
+                      tail = specialize(tail, No)
+                    )
+                }
               }
             case _ => throw new NormalizationException((msg"Incompatible: ${pattern.toString}" -> pattern.toLoc) :: Nil)
           }
@@ -198,7 +217,11 @@ object Normalization {
   }
 
   /**
-    * Convert a normalized term to a string with indentation.
+    * Convert a normalized term to a string with indentation. It makes use of
+    * some special markers.
+    *
+    * - `*` if the variable is associated with a symbol,
+    * - `†` if the class name has a location.
     */
   def showNormalizedTerm(term: Term): String = {
     def showTerm(term: Term): Lines = term match {
@@ -213,12 +236,15 @@ object Normalization {
     def showCaseBranches(caseBranches: CaseBranches): Lines =
       caseBranches match {
         case Case(pat, rhs, tail) =>
-          (s"case $pat =>" @: showTerm(rhs)) ++ showCaseBranches(tail)
+          // If the class name has a location, mark it with a dagger †.
+          // This is to track the location information.
+          val marker = if (pat.toLoc.isDefined) "†" else ""
+          (s"case $pat$marker =>" @: showTerm(rhs)) ++ showCaseBranches(tail)
         case Wildcard(term) => s"case _ =>" @: showTerm(term)
         case NoCases => Nil
       }
     def showVar(`var`: Var): Str =
-      // If the variable is associated with a symbol, mark it with an asterisk.
+      // If the variable is associated with a symbol, mark it with an asterisk *.
       `var`.name + (`var`.symbolOption.fold("")(_ => "*"))
     def showLet(let: Let): Lines = {
       val Let(rec, nme, rhs, body) = let

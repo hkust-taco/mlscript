@@ -4,7 +4,7 @@ import mlscript.{App, Asc, Fld, Term, Var, TypeName}
 import mlscript.ucs.{syntax => s, core => c, PartialTerm}
 import mlscript.ucs.helpers.mkBinOp
 import mlscript.utils._, shorthands._
-import mlscript.pretyper.{ScrutineeSymbol, SubValueSymbol, ValueSymbol}
+import mlscript.pretyper.symbol._
 import mlscript.ucs.DesugaringException
 import mlscript.Message, Message.MessageContext
 

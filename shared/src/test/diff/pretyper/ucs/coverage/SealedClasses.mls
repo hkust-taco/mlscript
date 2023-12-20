@@ -1,0 +1,58 @@
+:PreTyper
+
+abstract class Term: Abs | App | Var
+class Var(name: Str) extends Term
+class Abs(param: Str, body: Term) extends Term
+class App(func: Term, arg: Term) extends Term
+//│ abstract class Term: Abs | App | Var
+//│ class Var(name: Str) extends Term
+//│ class Abs(param: Str, body: Term) extends Term
+//│ class App(func: Term, arg: Term) extends Term
+
+// FIXME
+fun is_value(term) =
+  if term is Term and term is
+    Abs(_, _) then true
+    Var(_) then false
+    App(_, _) then false
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.14: 	  if term is Term and term is
+//│ ║        	                      ^^^^^^^
+//│ ║  l.15: 	    Abs(_, _) then true
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.16: 	    Var(_) then false
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.17: 	    App(_, _) then false
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `Term & ~#Abs & ~#Var` is not an instance of type `App`
+//│ ╟── Note: constraint arises from class pattern:
+//│ ║  l.17: 	    App(_, _) then false
+//│ ╙──      	    ^^^
+//│ fun is_value: Term -> Bool
+
+:e
+fun is_value(term) =
+  if term is Term and term is
+    Abs(_, _) then true
+    Var(_) then false
+//│ ╔══[ERROR] When scrutinee `term` is `Term`
+//│ ║  l.35: 	  if term is Term and term is
+//│ ║        	             ^^^^
+//│ ╟── Scrutinee `term` has 1 missing case
+//│ ║  l.34: 	fun is_value(term) =
+//│ ║        	             ^^^^
+//│ ╟── It can be class `App`
+//│ ║  l.6: 	class App(func: Term, arg: Term) extends Term
+//│ ╙──     	      ^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.35: 	  if term is Term and term is
+//│ ║        	                      ^^^^^^^
+//│ ║  l.36: 	    Abs(_, _) then true
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.37: 	    Var(_) then false
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `Term & ~#Abs` is not an instance of type `Var`
+//│ ╟── Note: constraint arises from class pattern:
+//│ ║  l.37: 	    Var(_) then false
+//│ ╙──      	    ^^^
+//│ fun is_value: Term -> Bool
