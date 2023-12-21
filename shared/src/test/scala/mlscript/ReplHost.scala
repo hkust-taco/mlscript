@@ -1,5 +1,6 @@
 package mlscript
 
+import mlscript.utils._
 import mlscript.utils.shorthands._
 
 /**
@@ -31,7 +32,12 @@ final case class ReplHost() {
   private def collectUntilPrompt(): ReplHost.Reply = {
     val buffer = new StringBuilder()
     while (!buffer.endsWith("\n> ")) {
-      buffer.append(stdout.read().toChar)
+      // if (!stdout.()) lastWords(s"ReplHost ")
+      val c = stdout.read()
+      if (c === -1) lastWords(s"ReplHost could not read more from NodeJS stdout.")
+      // println(c, c.toChar)
+      // if (!stdout.ready()) lastWords(s"ReplHost ")
+      buffer.append(c.toChar)
     }
     // Remove the trailing `"\n> "`
     buffer.delete(buffer.length - 3, buffer.length)
