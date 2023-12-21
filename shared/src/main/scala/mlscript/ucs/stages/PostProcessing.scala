@@ -34,6 +34,11 @@ trait PostProcessing { self: mlscript.pretyper.Traceable =>
         println(s"found a UNARY case: $scrutinee is $className")
         println("post-processing the body")
         top.copy(cases = fst.copy(body = postProcess(body)))
+      case top @ CaseOf(scrutinee, fst @ Case(Var("true"), trueBranch, Wildcard(falseBranch))) =>
+        println(s"found a if-then-else case: $scrutinee is true")
+        val processedTrueBranch = postProcess(trueBranch)
+        val processedFalseBranch = postProcess(falseBranch)
+        top.copy(cases = fst.copy(body = processedTrueBranch, rest = Wildcard(processedFalseBranch)))
       case top @ CaseOf(scrutinee: Var, fst @ Case(className: Var, trueBranch, Wildcard(falseBranch))) =>
         println(s"found a BINARY case: $scrutinee is $className")
         val scrutineeSymbol = scrutinee.symbol match {

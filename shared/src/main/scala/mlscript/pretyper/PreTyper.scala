@@ -15,6 +15,7 @@ class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Trac
 
   private def extractParameters(fields: Term): Ls[ValueSymbol] = fields match {
     case Tup(arguments) =>
+      println(s"arguments: ${inspect.deep(fields)}")
       if (useNewDefs) {
         arguments.map {
           case (S(nme: Var), Fld(_, _)) => new ValueSymbol(nme, false)
@@ -229,6 +230,9 @@ class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Trac
           val scopeWithVar = acc + symbol
           traverseLetBinding(symbol, rec, rhs)(if (rec) { scopeWithVar } else { acc })
           scopeWithVar
+        case (acc, defn @ NuFunDef(Some(rec), nme, _, _, R(ty))) =>
+          val symbol = new ValueSymbol(defn.nme, true)
+          acc + symbol
         case (acc, _: NuFunDef) => acc
         case (acc, _: Constructor | _: DataDefn | _: DatatypeDefn | _: Def | _: LetS | _: TypeDef) => ??? // TODO: When?
       }

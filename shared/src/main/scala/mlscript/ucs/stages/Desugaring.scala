@@ -24,7 +24,7 @@ trait Desugaring { self: mlscript.pretyper.Traceable =>
   private def freshScrutinee(parentScrutinee: Var, parentClassName: Var, index: Int): Var =
     Var(s"${parentScrutinee}$$${parentClassName}_${index.toString}")
 
-  private val truePattern = c.Pattern.Class(Var("true"), N)
+  private def truePattern = c.Pattern.Class(Var("true"), N)
 
   private def flattenClassParameters(parentScrutinee: Var, parentClassName: Var, parameters: Opt[Ls[Opt[s.Pattern]]]): Opt[Ls[Opt[Var]]] -> Ls[Opt[Var -> s.Pattern]] =
     parameters match {

@@ -74,9 +74,15 @@ package object symbol {
     def toLoc: Opt[Loc]
 
     val matchedClasses: MutMap[TypeSymbol, Buffer[Loc]] = MutMap.empty
+    val unappliedVarMap: MutMap[TypeSymbol, Var] = MutMap.empty
+    // Hmm, maybe we can merge these two maps into one.
 
     def addMatchedClass(symbol: TypeSymbol, loc: Opt[Loc]): Unit = {
       matchedClasses.getOrElseUpdate(symbol, Buffer.empty) ++= loc
+    }
+
+    def addUnappliedVar(symbol: TypeSymbol, nme: Var): Unit = {
+      unappliedVarMap += symbol -> nme
     }
 
     /**

@@ -82,8 +82,11 @@ trait DesugarUCS extends Transformation
         case core.Pattern.Name(nme) =>
           nme.symbol = scrutineeSymbol
           nme -> scrutineeSymbol :: Nil
+        // case core.Pattern.Class(nme @ Var("true"), N) =>
+        //   println(s"found true pattern")
+        //   nme -> scrutineeSymbol :: Nil
         case core.Pattern.Class(nme, maybeParameters) =>
-          println(s"name has location: ${nme.toLoc.isDefined}")
+          println(s"`$nme` has location: ${nme.toLoc.isDefined}")
           // Resolve `nme`. It can either be a class, a trait, or a module.
           val symbol = scope.getTypeSymbol(nme.name) match {
             case S(symbol: TraitSymbol) => println(s"${nme.name} is a trait"); symbol

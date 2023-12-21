@@ -39,13 +39,25 @@ trait Normalization { self: mlscript.pretyper.Traceable =>
         CaseOf(scrutinee, Case(nme, trueBranch, falseBranch))
       case Split.Cons(Branch(scrutinee, pattern @ Pattern.Class(nme, S(parameters)), continuation), tail) =>
         println(s"match $scrutinee with $pattern")
+        val unappliedVar = Var(s"args_${scrutinee.name}$$${nme.name}")
+        println(s"make unapplied var: $unappliedVar")
+        // Update the scrutinee symbol. The variable will be used in merging
+        // branches of the same pattern later.
+        scrutinee.symbol match {
+          case symbol: ScrutineeSymbol =>
+            nme.symbolOption.flatMap(_.typeSymbolOption) match {
+              case N => throw new NormalizationException(msg"class name is not resolved" -> nme.toLoc :: Nil)
+              case S(typeSymbol) =>
+                println(s"add unapplied var for ${typeSymbol.name}")
+                symbol.addUnappliedVar(typeSymbol, unappliedVar)
+            }
+          case _ =>
+            // FIXME: I guess this should not happen.
+            throw new NormalizationException(msg"Scrutinee is not a scrutinee symbol" -> scrutinee.toLoc :: Nil)
+        }
         val trueBranch = trace("compute true branch"){
           normalizeToTerm(specialize(continuation ++ tail, Yes)(scrutinee.symbol, pattern, scope))
         }()
-        val falseBranch = trace("compute false branch"){
-          normalizeToCaseBranches(specialize(tail, No)(scrutinee.symbol, pattern, scope))
-        }()
-        val unappliedVar = Var(s"args_${scrutinee.name}$$${nme.name}")
         val trueBranchWithBindings = Let(
           isRec = false,
           name = unappliedVar,
@@ -58,6 +70,9 @@ trait Normalization { self: mlscript.pretyper.Traceable =>
             case ((S(parameter), i), next) => Let(false, parameter, Sel(unappliedVar, Var(i.toString)), next)
           }
         )
+        val falseBranch = trace("compute false branch"){
+          normalizeToCaseBranches(specialize(tail, No)(scrutinee.symbol, pattern, scope))
+        }()
         CaseOf(scrutinee, Case(nme, trueBranchWithBindings, falseBranch))
       case Split.Cons(Branch(scrutinee, pattern, continuation), tail) =>
         throw new NormalizationException((msg"Unsupported pattern: ${pattern.toString}" -> pattern.toLoc) :: Nil)
@@ -87,6 +102,10 @@ trait Normalization { self: mlscript.pretyper.Traceable =>
         Split.Let(false, alias, otherScrutineeVar, specialize(continuation, matchOrNot))
       // Class pattern. Positive.
       case (Yes, split @ Split.Cons(head @ Branch(otherScrutineeVar, Pattern.Class(otherClassName, otherParameters), continuation), tail)) =>
+        val otherClassSymbol = otherClassName.symbolOption.flatMap(_.typeSymbolOption) match {
+          case N => throw new NormalizationException(msg"class name is not resolved" -> otherClassName.toLoc :: Nil)
+          case S(typeSymbol) => typeSymbol
+        }
         val otherScrutinee = otherScrutineeVar.symbol
         lazy val specializedTail = {
           println(s"specialized next")
@@ -96,7 +115,7 @@ trait Normalization { self: mlscript.pretyper.Traceable =>
           println(s"scrutinee: ${scrutinee.name} === ${otherScrutinee.name}")
           pattern match {
             case Pattern.Class(className, parameters) =>
-              if (className === otherClassName) {
+              if (className === otherClassName) { // FIXME: Use class symbol.
                 println(s"class name: $className === $otherClassName")
                 (parameters, otherParameters) match {
                   case (S(parameters), S(otherParameters)) =>
@@ -106,7 +125,21 @@ trait Normalization { self: mlscript.pretyper.Traceable =>
                       // Generate a function that generates bindings.
                       // TODO: Hygienic problems.
                       val addLetBindings = parameters.iterator.zip(otherParameters).zipWithIndex.foldLeft[Split => Split](identity) {
-                        case (acc, N -> S(otherParameter) -> index) => ??? // TODO: How can we get the unapplied variable?
+                        case (acc, N -> S(otherParameter) -> index) =>
+                          scrutinee match {
+                            case symbol: ScrutineeSymbol =>
+                              symbol.unappliedVarMap.get(otherClassSymbol) match {
+                                case N =>
+                                  println(symbol.unappliedVarMap)
+                                  die
+                                case S(unappliedVar) =>
+                                  println(s"we can create binding for ${otherParameter.name} at $index")
+                                  tail => Split.Let(false, otherParameter, Sel(unappliedVar, Var(index.toString)), tail)
+                              }
+                            case _ =>
+                              println(s"we can't create binding for ${otherParameter.name} at $index")
+                              die
+                          }
                         case (acc, S(parameter) -> S(otherParameter) -> index) if parameter.name =/= otherParameter.name =>
                           println(s"different parameter names at $index: ${parameter.name} =/= ${otherParameter.name}")
                           tail => Split.Let(false, otherParameter, parameter, tail)
