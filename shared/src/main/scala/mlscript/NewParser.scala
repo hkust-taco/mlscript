@@ -821,7 +821,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         // ???
         consume
         val rhs = expr(prec) // TODO exprOrIf?
-        R(Blk(acc :: rhs :: Nil))
+        // R(Blk(acc :: rhs :: Nil))
+        R(App(Var(",").withLoc(S(l0)), PlainTup(acc, rhs)))
       case (KEYWORD(opStr @ "=>"), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>
         consume
         val rhs = Blk(typingUnit.entities)

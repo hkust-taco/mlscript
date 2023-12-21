@@ -411,7 +411,7 @@ final case class JSArrowFn(params: Ls[JSPattern], body: JSExpr \/ Ls[JSStmt]) ex
           case pattern             => pattern.toSourceCode
         }) ++ (if (i === params.length - 1) SourceCode.empty else SourceCode(", "))
       }
-      .parenthesized ++ SourceCode(" => ") ++ (body match {
+      .parenthesized ++ SourceCode.fatArrow ++ (body match {
       // TODO: Figure out how `=>` competes with other operators.
       case L(expr: JSRecord) => expr.toSourceCode.parenthesized
       case L(expr)  => expr.embed
@@ -534,7 +534,8 @@ object JSBinary {
       "&&" -> 5,
       // infixl 4
       "||" -> 4,
-      "??" -> 4
+      "??" -> 4,
+      "," -> 1,
     )
   
   val operators: Set[Str] = opPrecMap.keySet
