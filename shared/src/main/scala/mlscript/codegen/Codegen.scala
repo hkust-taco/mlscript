@@ -444,7 +444,7 @@ final case class JSImmEvalFn(
     case None =>
       (SourceCode(s"${JSExpr.params(params)} => ") ++ (body match {
         case Left(expr: JSRecord) => expr.toSourceCode.parenthesized
-        case Left(expr) => expr.toSourceCode
+        case Left(expr) => expr.embed(parentPrecedence = 2)
         case Right(stmts) =>
           stmts.foldLeft(SourceCode.empty) { _ + _.toSourceCode }.block
       })).parenthesized ++ JSExpr.arguments(arguments)

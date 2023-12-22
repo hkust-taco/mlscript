@@ -56,12 +56,13 @@ let a = 1; 2
 //│     = 1
 
 :pe // ?
+:w
 (1,2;3)
 //│ ╔══[PARSE ERROR] Unexpected ';' here
-//│ ║  l.59: 	(1,2;3)
+//│ ║  l.60: 	(1,2;3)
 //│ ╙──      	    ^
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.59: 	(1,2;3)
+//│ ║  l.60: 	(1,2;3)
 //│ ╙──      	 ^
 //│ 2
 //│ res
@@ -80,7 +81,7 @@ fun foo(x) = x
 :pe // ?
 foo(1;2)
 //│ ╔══[PARSE ERROR] Unexpected ';' here
-//│ ║  l.81: 	foo(1;2)
+//│ ║  l.82: 	foo(1;2)
 //│ ╙──      	     ^
 //│ 1
 //│ res
@@ -98,21 +99,41 @@ foo(let x = log(0), 1; log(x), x + 1)
 //│ class TypingUnit12 {}
 //│ const typing_unit12 = new TypingUnit12;
 //│ // Query 1
-//│ res = foo(((x) => log(x) , x + 1)(log(0) , 1));
+//│ res = foo(((x) => (log(x) , x + 1))(log(0) , 1));
 //│ // End of generated code
 //│ res
-//│ Runtime error:
-//│   ReferenceError: x is not defined
+//│     = NaN
+//│ // Output
+//│ 0
+//│ undefined
+
+:js
+foo((1, 2))
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.99: 	foo((1, 2))
+//│ ╙──      	     ^
+//│ 2
+//│ // Prelude
+//│ class TypingUnit13 {}
+//│ const typing_unit13 = new TypingUnit13;
+//│ // Query 1
+//│ res = foo((() => {
+//│   1;
+//│   return 2;
+//│ })());
+//│ // End of generated code
+//│ res
+//│     = 2
 
 foo(let x = 1; x + 1)
 //│ Int
 //│ res
 //│     = 2
 
-:e
+:pe
 foo(let x = 1 in x + 1)
 //│ ╔══[PARSE ERROR] Unexpected 'in' keyword here
-//│ ║  l.113: 	foo(let x = 1 in x + 1)
+//│ ║  l.119: 	foo(let x = 1 in x + 1)
 //│ ╙──       	              ^^
 //│ ()
 //│ res
@@ -134,7 +155,7 @@ foo(1), 2
 
 let x = 2 in log(x), x + 1
 //│ ╔══[PARSE ERROR] Expected end of input; found 'in' keyword instead
-//│ ║  l.135: 	let x = 2 in log(x), x + 1
+//│ ║  l.141: 	let x = 2 in log(x), x + 1
 //│ ╙──       	          ^^
 //│ let x: 2
 //│ x
@@ -172,16 +193,16 @@ foo(log(1),2)
 :e
 foo(log(1);2)
 //│ ╔══[PARSE ERROR] Unexpected ';' here
-//│ ║  l.173: 	foo(log(1);2)
+//│ ║  l.179: 	foo(log(1);2)
 //│ ╙──       	          ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.173: 	foo(log(1);2)
+//│ ║  l.179: 	foo(log(1);2)
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── argument of type `[?a]` does not match type `[?b, ?c]`
-//│ ║  l.173: 	foo(log(1);2)
+//│ ║  l.179: 	foo(log(1);2)
 //│ ║         	   ^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.156: 	fun foo(x, y) = [x, y]
+//│ ║  l.162: 	fun foo(x, y) = [x, y]
 //│ ╙──       	       ^^^^^^
 //│ error | [nothing, nothing]
 //│ res
@@ -192,13 +213,13 @@ foo(log(1);2)
 :e
 foo((log(1),2))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.193: 	foo((log(1),2))
+//│ ║  l.199: 	foo((log(1),2))
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── argument of type `[2]` does not match type `[?a, ?b]`
-//│ ║  l.193: 	foo((log(1),2))
+//│ ║  l.199: 	foo((log(1),2))
 //│ ║         	   ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.156: 	fun foo(x, y) = [x, y]
+//│ ║  l.162: 	fun foo(x, y) = [x, y]
 //│ ╙──       	       ^^^^^^
 //│ error | [nothing, nothing]
 //│ res
@@ -209,38 +230,42 @@ foo((log(1),2))
 foo((let x = log(0), 1; log(x), x + 1), 2)
 //│ [Int, 2]
 //│ res
-//│ Runtime error:
-//│   ReferenceError: x is not defined
+//│     = [ NaN, 2 ]
+//│ // Output
+//│ 0
+//│ undefined
 
 :e
 foo(let x = log(0), 1; log(x), x + 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.216: 	foo(let x = log(0), 1; log(x), x + 1)
+//│ ║  l.224: 	foo(let x = log(0), 1; log(x), x + 1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── argument of type `[?a]` does not match type `[?b, ?c]`
-//│ ║  l.216: 	foo(let x = log(0), 1; log(x), x + 1)
+//│ ║  l.224: 	foo(let x = log(0), 1; log(x), x + 1)
 //│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.156: 	fun foo(x, y) = [x, y]
+//│ ║  l.162: 	fun foo(x, y) = [x, y]
 //│ ╙──       	       ^^^^^^
 //│ error | [nothing, nothing]
 //│ res
-//│ Runtime error:
-//│   ReferenceError: x is not defined
+//│     = [ NaN, undefined ]
+//│ // Output
+//│ 0
+//│ undefined
 
 :e
 foo(let x = log(0), 1 in log(x), x + 1)
 //│ ╔══[PARSE ERROR] Unexpected 'in' keyword here
-//│ ║  l.232: 	foo(let x = log(0), 1 in log(x), x + 1)
+//│ ║  l.242: 	foo(let x = log(0), 1 in log(x), x + 1)
 //│ ╙──       	                      ^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.232: 	foo(let x = log(0), 1 in log(x), x + 1)
+//│ ║  l.242: 	foo(let x = log(0), 1 in log(x), x + 1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── argument of type `[()]` does not match type `[?a, ?b]`
-//│ ║  l.232: 	foo(let x = log(0), 1 in log(x), x + 1)
+//│ ║  l.242: 	foo(let x = log(0), 1 in log(x), x + 1)
 //│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.156: 	fun foo(x, y) = [x, y]
+//│ ║  l.162: 	fun foo(x, y) = [x, y]
 //│ ╙──       	       ^^^^^^
 //│ error | [nothing, nothing]
 //│ res
@@ -251,20 +276,21 @@ foo(let x = log(0), 1 in log(x), x + 1)
 :e
 foo(let x = log(0), 1; log(x), 1 + 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.252: 	foo(let x = log(0), 1; log(x), 1 + 1)
+//│ ║  l.262: 	foo(let x = log(0), 1; log(x), 1 + 1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── argument of type `[?a]` does not match type `[?b, ?c]`
-//│ ║  l.252: 	foo(let x = log(0), 1; log(x), 1 + 1)
+//│ ║  l.262: 	foo(let x = log(0), 1; log(x), 1 + 1)
 //│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.156: 	fun foo(x, y) = [x, y]
+//│ ║  l.162: 	fun foo(x, y) = [x, y]
 //│ ╙──       	       ^^^^^^
 //│ error | [nothing, nothing]
 //│ res
-//│ Runtime error:
-//│   TypeError: ((intermediate value) , 2) is not a function
+//│     = [ 2, undefined ]
 //│ // Output
 //│ 0
+//│ undefined
+
 
 
 
