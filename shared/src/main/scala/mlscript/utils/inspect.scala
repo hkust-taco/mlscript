@@ -15,6 +15,15 @@ object inspect {
         if (arity === 0) { name } else s"${name}(${(", _" * arity).drop(2)})"
     }
 
+    def apply(body: IfBody): Str = body match {
+      case IfOpApp(lhs, op, rhs) => s"IfOpApp(${apply(lhs)}, ${apply(op)}, _)"
+      case IfLet(isRec, name, rhs, body) => s"IfLet($isRec, $name, _, _)"
+      case IfThen(expr, rhs) => s"IfThen(${apply(expr)}, _)"
+      case IfOpsApp(lhs, opsRhss) => s"IfOpsApp(${apply(lhs)}, ${opsRhss.map { case (op, body) => s"$op -> _" }.mkString("; ")})"
+      case IfBlock(lines) => s"IfBlock(_)"
+      case IfElse(expr) => s"IfElse(${apply(expr)})"
+    }
+
     def apply(d: TypingUnit): Str = d.entities.iterator
       .map(apply)
       .mkString("{", ", ", "}")

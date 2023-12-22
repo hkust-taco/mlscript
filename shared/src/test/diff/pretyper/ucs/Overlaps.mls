@@ -21,27 +21,25 @@ fun this_is_sealed(x: Shape) =
     LineSegment(_, _) then "LineSegment"
 //│ fun this_is_sealed: (x: Shape) -> ("Circle" | "LineSegment" | "Rectangle")
 
-// TODO
+// The error message here makes some sense right now.
+:e
 fun missing_a_case(x: Shape) =
   if x is
     Circle(_, _) then "Circle"
     Rectangle(_, _, _) then "Rectangle"
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.26: 	  if x is
+//│ ║  l.27: 	  if x is
 //│ ║        	     ^^^^
-//│ ║  l.27: 	    Circle(_, _) then "Circle"
+//│ ║  l.28: 	    Circle(_, _) then "Circle"
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.28: 	    Rectangle(_, _, _) then "Rectangle"
+//│ ║  l.29: 	    Rectangle(_, _, _) then "Rectangle"
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `LineSegment` is not an instance of type `Rectangle`
-//│ ║  l.25: 	fun missing_a_case(x: Shape) =
+//│ ╟── type `Circle | LineSegment | Rectangle` does not match type `Circle | Rectangle`
+//│ ║  l.26: 	fun missing_a_case(x: Shape) =
 //│ ║        	                      ^^^^^
-//│ ╟── but it flows into reference with expected type `Rectangle`
-//│ ║  l.26: 	  if x is
-//│ ║        	     ^
-//│ ╟── Note: constraint arises from class pattern:
-//│ ║  l.28: 	    Rectangle(_, _, _) then "Rectangle"
-//│ ╙──      	    ^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `Circle | Rectangle`
+//│ ║  l.27: 	  if x is
+//│ ╙──      	     ^
 //│ fun missing_a_case: (x: Shape) -> ("Circle" | "Rectangle")
 
 fun missing_a_case(x: Shape) =
@@ -51,7 +49,7 @@ fun missing_a_case(x: Shape) =
     else x
 //│ fun missing_a_case: (x: Shape) -> ("Circle" | "Rectangle" | LineSegment)
 
-// TODO
+// TODO: Why doesn't `Shape` match `Circle | Rectangle | LineSegment`?
 fun countLineSegments(x) =
   if x is
     Shape and hidden(x) then "bro"
@@ -59,18 +57,20 @@ fun countLineSegments(x) =
     LineSegment(_, _) then "bro"
     Circle(_, _) then "bro"
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.56: 	  if x is
+//│ ║  l.54: 	  if x is
 //│ ║        	     ^^^^
-//│ ║  l.57: 	    Shape and hidden(x) then "bro"
+//│ ║  l.55: 	    Shape and hidden(x) then "bro"
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.58: 	    Rectangle(_, _, _) then "bro"
+//│ ║  l.56: 	    Rectangle(_, _, _) then "bro"
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.59: 	    LineSegment(_, _) then "bro"
+//│ ║  l.57: 	    LineSegment(_, _) then "bro"
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.60: 	    Circle(_, _) then "bro"
+//│ ║  l.58: 	    Circle(_, _) then "bro"
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `Shape & ~#LineSegment & ~#Rectangle` is not an instance of type `Circle`
-//│ ╟── Note: constraint arises from class pattern:
-//│ ║  l.60: 	    Circle(_, _) then "bro"
-//│ ╙──      	    ^^^^^^
+//│ ╟── class pattern of type `Shape` does not match type `Circle | LineSegment | Rectangle`
+//│ ║  l.55: 	    Shape and hidden(x) then "bro"
+//│ ║        	    ^^^^^
+//│ ╟── but it flows into reference with expected type `Circle | LineSegment | Rectangle`
+//│ ║  l.54: 	  if x is
+//│ ╙──      	     ^
 //│ fun countLineSegments: Shape -> "bro"

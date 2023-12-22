@@ -110,12 +110,12 @@ package object syntax {
 
   def printTermSplit(split: TermSplit): Str = {
     // TODO: tailrec
-    def termSplit(split: TermSplit, isFirst: Bool, isTopLevel: Bool): Lines = split match {
+    def termSplit(split: TermSplit, isFirst: Bool, isAfterAnd: Bool): Lines = split match {
       case Split.Cons(head, tail) => (termBranch(head) match {
-        case (n, line) :: tail => (n, (if (isTopLevel) "" else "and ") + s"$line") :: tail
+        case (n, line) :: tail => (n, (if (isAfterAnd) "" else "and ") + s"$line") :: tail
         case Nil => Nil
-      }) ::: termSplit(tail, false, isTopLevel)
-      case Split.Let(_, nme, rhs, tail) => (0, s"let $nme = $rhs") :: termSplit(tail, false, isTopLevel)
+      }) ::: termSplit(tail, false, isAfterAnd)
+      case Split.Let(_, nme, rhs, tail) => (0, s"let $nme = $rhs") :: termSplit(tail, false, isAfterAnd)
       case Split.Else(term) => (if (isFirst) (0, s"then $term") else (0, s"else $term")) :: Nil
       case Split.Nil => Nil
     }
@@ -142,7 +142,7 @@ package object syntax {
     def operatorBranch(branch: OperatorBranch): Lines =
       s"${branch.operator}" #: (branch match {
         case OperatorBranch.Match(_, continuation) => patternSplit(continuation)
-        case OperatorBranch.Binary(_, continuation) => termSplit(continuation, true, false)
+        case OperatorBranch.Binary(_, continuation) => termSplit(continuation, true, true)
       })
     def patternBranch(branch: PatternBranch): Lines = {
       val PatternBranch(pattern, continuation) = branch

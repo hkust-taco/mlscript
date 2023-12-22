@@ -7,7 +7,7 @@ import mlscript._, utils._, shorthands._
 import scala.annotation.tailrec
 import mlscript.Message, Message.MessageContext
 
-class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Traceable with DesugarUCS {
+class PreTyper(override val debugTopics: Opt[Set[Str]], useNewDefs: Bool) extends Traceable with DesugarUCS {
   import PreTyper._
 
   protected def raise(diagnostics: Diagnostic): Unit = ()
@@ -42,19 +42,19 @@ class PreTyper(override val debugLevel: Opt[Int], useNewDefs: Bool) extends Trac
     trace(s"resolveVar(name = \"$v\")") {
       scope.getTermSymbol(v.name) match {
         case S(sym: ValueSymbol) =>
-          println(s"Resolve variable $v to a value.", 2)
+          println(s"Resolve variable $v to a value.")
           v.symbol = sym
         case S(sym: SubValueSymbol) =>
-          println(s"Resolve variable $v to a value.", 2)
+          println(s"Resolve variable $v to a value.")
           v.symbol = sym
         case S(sym: FunctionSymbol) =>
-          println(s"Resolve variable $v to a function.", 2)
+          println(s"Resolve variable $v to a function.")
           v.symbol = sym
         case N => 
           scope.getTypeSymbol(v.name) match {
             case S(sym: ClassSymbol) =>
               if (sym.defn.kind == Cls) {
-                println(s"Resolve variable $v to a class.", 2)
+                println(s"Resolve variable $v to a class.")
                 v.symbol = sym
               } else {
                 throw new Exception(s"Name $v refers to a type")

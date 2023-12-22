@@ -151,7 +151,7 @@ class DiffTests
       explainErrors: Bool = false,
       dbg: Bool = false,
       dbgParsing: Bool = false,
-      dbgPreTyper: Opt[Int] = N,
+      dbgPreTyper: Opt[Set[Str]] = N,
       dbgSimplif: Bool = false,
       dbgUCS: Bool = false,
       fullExceptionStack: Bool = false,
@@ -215,7 +215,7 @@ class DiffTests
           case "p" => mode.copy(showParse = true)
           case "d" => mode.copy(dbg = true)
           case "dp" => mode.copy(dbgParsing = true)
-          case PreTyperOption(nv) => mode.copy(dbgPreTyper = S(nv))
+          case PreTyperFlags(ts) => mode.copy(dbgPreTyper = S(ts))
           case "ds" => mode.copy(dbgSimplif = true)
           case "ducs" => mode.copy(dbg = true, dbgUCS = true)
           case "s" => mode.copy(fullExceptionStack = true)
@@ -526,7 +526,7 @@ class DiffTests
               if (usePreTyper) {
                 val preTyper = new PreTyper(mode.dbgPreTyper, newDefs) {
                   override protected def raise(diagnostics: Ls[Diagnostic]): Unit = report(diagnostics)
-                  override def emitDbg(str: String): Unit = output(str)
+                  override def emitString(str: String): Unit = output(str)
                 }
                 // This should be passed to code generation somehow.
                 preTyperScope = preTyper.process(rootTypingUnit, preTyperScope, "<root>")._1
@@ -1162,12 +1162,17 @@ object DiffTests {
       // file.segments.toList.init.lastOption.contains("parser")
   }
 
-  object PreTyperOption {
-    def unapply(str: String): Option[Int] = str match {
-      case "dpt" => Some(0)
-      case "dpt:v" => Some(1)
-      case "dpt:vv" => Some(2)
-      case _ => None
-    }
+  object PreTyperFlags {
+    private val pattern = "^dpt(?::\\s*([A-Za-z]+)(,\\s*[A-Za-z]+)*)?$".r
+    def unapply(flags: Str): Opt[Set[Str]] =
+      flags match {
+        case pattern(head, tail) =>
+          (Option(head), Option(tail)) match {
+            case (N, _) => S(Set.empty)
+            case (S(head), N) => S(Set.single(head))
+            case (S(head), S(tail)) => S(Set.from(head :: tail.split(",").drop(1).toList))
+          }
+        case _ => N
+      }
   }
 }

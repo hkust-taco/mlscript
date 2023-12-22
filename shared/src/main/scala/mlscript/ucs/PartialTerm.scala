@@ -27,7 +27,12 @@ sealed abstract class PartialTerm {
   def get: Term = this match {
     case Empty => throw new PartialTermError(this, "expect a term but nothing was given")
     case Total(term, fragments) => term
-    case Half(lhs, op, fragments) => throw new PartialTermError(this, "expect an operator but nothing was given")
+    case Half(lhs, op, fragments) => throw new PartialTermError(this, "incomplete term")
+  }
+  override def toString(): String = this match {
+    case Empty => "<empty>"
+    case Total(term, fragments) => s"<total> $term"
+    case Half(lhs, op, fragments) => s"<half> $lhs $op"
   }
 }
 

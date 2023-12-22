@@ -4,11 +4,15 @@ import mlscript.Diagnostic
 import mlscript.utils._, shorthands._
 
 trait Traceable {
-  // Override this to change the base indentation level.
-  def baseIndent: Int = 0
+  /** The set of topics to debug. Empty set indicates all topics. */
+  protected val debugTopics: Opt[Set[Str]] = N
+  protected var indent = 0
+  private var topic: Opt[Str] = N
 
-  protected val debugLevel: Opt[Int] = N // The number of verbose.
-  protected var indent = baseIndent
+  def emitString(str: String): Unit = scala.Predef.println(str)
+  
+  @inline private def printLineByLine(x: => Any): Unit =
+    x.toString.linesIterator.foreach { line => emitString("| " * indent + line) }
 
   def trace[T](pre: => String)(thunk: => T)(post: T => String = Traceable.noPostTrace): T = {
     println(pre)
@@ -18,21 +22,21 @@ trait Traceable {
     res
   }
 
+  def traceWithTopic[T](topic: Str)(thunk: => T): T = {
+    this.topic = S(topic)
+    val res = thunk
+    this.topic = N
+    res
+  }
+
   @inline def traceNot[T](pre: => String)(thunk: => T)(post: T => String = Traceable.noPostTrace): T =
     thunk
   
-  def emitDbg(str: String): Unit = scala.Predef.println(str)
-  
-  @inline
-  protected def println(msg: => Any): Unit = println(msg, 0)
-  
-  @inline 
-  protected def println(msg: => Any, level: Int): Unit =
-    if (debugLevel exists (_ >= level)) printLineByLine(msg)
-
-  @inline
-  private def printLineByLine(msg: => Any): Unit =
-    msg.toString.linesIterator.foreach { line => emitDbg("| " * indent + line) }
+  @inline protected def println(x: => Any): Unit =
+    topic match {
+      case N => if (debugTopics.isDefined) printLineByLine(x)
+      case S(topic) => if (debugTopics.fold(false)(ts => ts.isEmpty || ts.contains(topic))) printLineByLine(x)
+    }
 }
 
 object Traceable {

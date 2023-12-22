@@ -17,39 +17,50 @@ trait DesugarUCS extends Transformation
   protected def traverseIf(`if`: If)(implicit scope: Scope): Unit =
     trace("traverseIf") {
       // Stage 0: Transformation
-      println("STEP 0")
-      val transformed = transform(`if`, true)
-      println("Transformed UCS term:")
-      println(transformed.toString, 2)
-      println(ucs.syntax.printTermSplit(transformed))
+      val transformed = traceWithTopic("transform") {
+        println("STEP 0")
+        val transformed = transform(`if`, true)
+        println("Transformed UCS term:")
+        println(ucs.syntax.printTermSplit(transformed))
+        transformed
+      }
       // Stage 1: Desugaring
-      // This stage will generate new names based on the position of the scrutinee.
-      // Therefore, we need to call `traverseSplit` to associate these newly generated
-      // names with symbols.
-      println("STEP 1")
-      val desugared = desugar(transformed)
-      println(desugared.toString, 2)
-      println("Desugared UCS term:")
-      println(ucs.core.printSplit(desugared))
-      traverseSplit(desugared)
+      val desugared = traceWithTopic("desugar") {
+        println("STEP 1")
+        val desugared = desugar(transformed)
+        println("Desugared UCS term:")
+        println(ucs.core.printSplit(desugared))
+        desugared
+      }
+      traceWithTopic("traverse") {
+        println("STEP 1.5")
+        traverseSplit(desugared)
+      }
       // Stage 2: Normalization
-      println("STEP 2")
-      val normalized = normalize(desugared)
-      println(normalized.toString, 2)
-      println("Normalized UCS term:")
-      printNormalizedTerm(normalized)
+      val normalized = traceWithTopic("normalize") {
+        println("STEP 2")
+        val normalized = normalize(desugared)
+        println("Normalized UCS term:")
+        printNormalizedTerm(normalized)
+        normalized
+      }
       // Stage 3: Post-processing
-      println("STEP 3")
-      val postProcessed = postProcess(normalized)
-      println("Post-processed UCS term:")
-      printNormalizedTerm(postProcessed)
+      val postProcessed = traceWithTopic("postprocess") {
+        println("STEP 3")
+        val postProcessed = postProcess(normalized)
+        println("Post-processed UCS term:")
+        printNormalizedTerm(postProcessed)
+        postProcessed
+      }
       // Stage 4: Coverage checking
-      println("STEP 4")
-      val diagnostics = checkCoverage(postProcessed)
-      println(s"Coverage checking result: ${diagnostics.size} errors")
-      raise(diagnostics)
+      traceWithTopic("coverage") {
+        val checked = println("STEP 4")
+        val diagnostics = checkCoverage(postProcessed)
+        println(s"Coverage checking result: ${diagnostics.size} errors")
+        raise(diagnostics)
+      }
       // Epilogue
-      `if`.desugaredTerm = S(normalized)
+      `if`.desugaredTerm = S(postProcessed)
     }(_ => "traverseIf ==> ()")
   
   private def traverseSplit(split: core.Split)(implicit scope: Scope): Unit =

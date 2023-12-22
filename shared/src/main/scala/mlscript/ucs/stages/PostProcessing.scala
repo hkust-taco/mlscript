@@ -34,8 +34,8 @@ trait PostProcessing { self: mlscript.pretyper.Traceable =>
         println(s"found a UNARY case: $scrutinee is $className")
         println("post-processing the body")
         top.copy(cases = fst.copy(body = postProcess(body)))
-      case top @ CaseOf(scrutinee, fst @ Case(Var("true"), trueBranch, Wildcard(falseBranch))) =>
-        println(s"found a if-then-else case: $scrutinee is true")
+      case top @ CaseOf(test: Var, fst @ Case(Var("true"), trueBranch, Wildcard(falseBranch))) if Desugaring.isTestVar(test) =>
+        println(s"found a if-then-else case: $test is true")
         val processedTrueBranch = postProcess(trueBranch)
         val processedFalseBranch = postProcess(falseBranch)
         top.copy(cases = fst.copy(body = processedTrueBranch, rest = Wildcard(processedFalseBranch)))
@@ -187,7 +187,7 @@ trait PostProcessing { self: mlscript.pretyper.Traceable =>
                 println("no cases, STOP")
                 NoCases -> NoCases
               case wildcard @ Wildcard(body) =>
-                println("found a wildcard, stop")
+                println("found a wildcard, go deeper")
                 val (n, y) = disentangle(body, scrutinee, classSymbol)
                 (wildcard.copy(body = n), y.fold(NoCases: CaseBranches)(Wildcard(_)))
               case kase @ Case(_, body, rest) =>
@@ -200,7 +200,7 @@ trait PostProcessing { self: mlscript.pretyper.Traceable =>
                 }))
             }
             val (n, y) = rec(cases)
-            (top.copy(cases = y), (if (n === NoCases) N else S(top.copy(cases = n))))
+            (top.copy(cases = n), (if (y === NoCases) N else S(top.copy(cases = y))))
           }
         case let @ Let(_, _, _, body) =>
           val (n, y) = disentangle(body, scrutinee, classSymbol)

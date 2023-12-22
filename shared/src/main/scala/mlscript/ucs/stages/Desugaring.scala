@@ -11,15 +11,11 @@ import mlscript.Message, Message.MessageContext
 trait Desugaring { self: mlscript.pretyper.Traceable =>
   @inline def desugar(term: s.TermSplit): c.Split = desugarTermSplit(term)(PartialTerm.Empty)
 
-  private var nextScrutineeIndex: Int = 0
+  import Desugaring._
 
-  private def freshName(): Str = {
-    val thisIndex = nextScrutineeIndex
-    nextScrutineeIndex += 1
-    s"scrut$$$thisIndex" // FIXME: use `freeVars` to avoid name collision.
-  }
-
-  private def freshScrutinee(): Var = Var(freshName())
+  private val freshCache = new VariableGenerator(cachePrefix)
+  private val freshScrutinee = new VariableGenerator(scrutineePrefix)
+  private val freshTest = new VariableGenerator(testPrefix)
 
   private def freshScrutinee(parentScrutinee: Var, parentClassName: Var, index: Int): Var =
     Var(s"${parentScrutinee}$$${parentClassName}_${index.toString}")
@@ -52,36 +48,49 @@ trait Desugaring { self: mlscript.pretyper.Traceable =>
       case s.Split.Nil => c.Split.Nil
     }
 
+  // This function does not need to can `withCachedTermPart` because all branches assume that
+  // `termPart` is either empty or waiting for an RHS.
   private def desugarTermBranch(branch: s.TermBranch)(implicit termPart: PartialTerm): c.Split =
-    // Note: `Branch` is `(Term, Pattern, Either[Split, Term])`.
-    branch match {
-      case s.TermBranch.Boolean(condition, continuation) =>
-        val `var` = freshScrutinee()
-        c.Split.Let(
-          rec = false,
-          name = `var`,
-          term = Asc(condition, TypeName("Bool")),
-          tail = c.Branch(`var`, truePattern, desugarTermSplit(continuation)) :: c.Split.Nil
-        )
-      case s.TermBranch.Match(scrutinee, split) =>
-        desugarPatternSplit(split)(termPart.addTerm(scrutinee, true).get)
-      case s.TermBranch.Left(left, continuation) =>
-        desugarOperatorSplit(continuation)(termPart.addTerm(left, true))
+    trace(s"desugarTermBranch <== $termPart") {
+      branch match {
+        case s.TermBranch.Boolean(testPart, continuation) =>
+          val test = freshTest()
+          c.Split.Let(
+            rec = false,
+            name = test,
+            term = Asc(termPart.addTerm(testPart, true).get, TypeName("Bool")),
+            tail = c.Branch(test, truePattern, desugarTermSplit(continuation)(PartialTerm.Empty)) :: c.Split.Nil
+          )
+        case s.TermBranch.Match(scrutinee, split) =>
+          desugarPatternSplit(split)(termPart.addTerm(scrutinee, true).get)
+        case s.TermBranch.Left(left, continuation) =>
+          desugarOperatorSplit(continuation)(termPart.addTerm(left, true))
+      }
+    }()
+
+  private def withCachedTermPart[B <: s.Branch](desugar: (PartialTerm) => c.Split)(implicit termPart: PartialTerm): c.Split =
+    termPart.get match {
+      case v: Var => desugar(termPart) // No need to cache variables.
+      case rhs =>
+        val cache = freshCache()
+        c.Split.Let(false, cache, rhs, desugar(PartialTerm.Total(cache, Nil)))
     }
 
   private def desugarOperatorSplit(split: s.OperatorSplit)(implicit termPart: PartialTerm): c.Split =
-    split match {
-      case s.Split.Cons(head, tail) => desugarOperatorBranch(head) ++ desugarOperatorSplit(tail)
-      case s.Split.Let(rec, nme, rhs, tail) => c.Split.Let(rec, nme, rhs, desugarOperatorSplit(tail))
+    withCachedTermPart { termPart => split match {
+      case s.Split.Cons(head, tail) => desugarOperatorBranch(head)(termPart) ++ desugarOperatorSplit(tail)(termPart)
+      case s.Split.Let(rec, nme, rhs, tail) => c.Split.Let(rec, nme, rhs, desugarOperatorSplit(tail)(termPart))
       case s.Split.Else(default) => c.Split.Else(default)
       case s.Split.Nil => c.Split.Nil
-    }
+    }}
 
   private def desugarOperatorBranch(branch: s.OperatorBranch)(implicit termPart: PartialTerm): c.Split =
-    branch match {
-      case s.OperatorBranch.Binary(op, split) => desugarTermSplit(split)(termPart.addOp(op))
-      case s.OperatorBranch.Match(_, split) => desugarPatternSplit(split)(termPart.get)
-    }
+    trace(s"desugarOperatorBranch <== $termPart") {
+      branch match {
+        case s.OperatorBranch.Binary(op, split) => desugarTermSplit(split)(termPart.addOp(op))
+        case s.OperatorBranch.Match(_, split) => desugarPatternSplit(split)(termPart.get)
+      }
+    }()
 
   private def flattenNestedPattern(pattern: s.ClassPattern, scrutinee: Var, next: c.Split): c.Branch = {
     val (parameterBindings, subPatterns) = flattenClassParameters(scrutinee, pattern.nme, pattern.parameters)
@@ -132,4 +141,24 @@ trait Desugaring { self: mlscript.pretyper.Traceable =>
         c.Split.Let(false, alias, scrutinee, rec(alias, split))
     }
   }
+}
+
+object Desugaring {
+  class VariableGenerator(prefix: Str) {
+    private var nextIndex = 0
+
+    def apply(): Var = {
+      val thisIndex = nextIndex
+      nextIndex += 1
+      Var(s"$prefix$thisIndex")
+    }
+  }
+
+  val cachePrefix = "cache$"
+  val scrutineePrefix = "scrut$"
+  val testPrefix = "test$"
+
+  def isCacheVar(nme: Var): Bool = nme.name.startsWith(cachePrefix)
+  def isScrutineeVar(nme: Var): Bool = nme.name.startsWith(scrutineePrefix)
+  def isTestVar(nme: Var): Bool = nme.name.startsWith(testPrefix)
 }

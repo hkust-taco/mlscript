@@ -23,9 +23,7 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
   def transform(`if`: If, useNewDefs: Bool = true): TermSplit =
     transformIfBody(`if`.body)(useNewDefs) ++ `if`.els.fold(Split.empty)(Split.default)
 
-  import helpers.splitAnd
-
-  private def transformIfBody(body: IfBody)(implicit useNewDefs: Bool): TermSplit = {
+  private def transformIfBody(body: IfBody)(implicit useNewDefs: Bool): TermSplit = trace(s"transformIfBody <== ${inspect.shallow(body)}") {
     body match {
       case IfThen(expr, rhs) =>
         splitAnd(expr).foldRight(Split.then(rhs)) {
@@ -73,9 +71,18 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
             throw new TransformException(msg"Unexpected statement in an if block", statement.toLoc)
         }
       case IfOpsApp(lhs, opsRhss) =>
-        TermBranch.Left(lhs, Split.from(opsRhss.map(transformOperatorBranch))) |> Split.single
+        splitAnd(lhs) match {
+          case init :+ last =>
+            val first = TermBranch.Left(last, Split.from(opsRhss.map(transformOperatorBranch))) |> Split.single
+            init.foldRight[TermSplit](first) {
+              case (OperatorIs(scrutinee, pattern), acc) =>
+                TermBranch.Match(scrutinee, PatternBranch(transformPattern(pattern), acc) |> Split.single) |> Split.single
+              case (test, acc) => TermBranch.Boolean(test, acc) |> Split.single
+            }
+          case _ => rare
+        }
     }
-  }
+  }(_ => "transformIfBody ==> ")
   
   private def transformOperatorBranch(opsRhs: Var -> IfBody)(implicit useNewDefs: Bool): OperatorBranch =
     opsRhs match {
@@ -137,6 +144,20 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
   }
 
   private def rare: Nothing = throw new TransformException(msg"Wow, a rare case.", N)
+
+  private def splitAnd(t: Term): Ls[Term] = trace(s"splitAnd <== ${inspect.deep(t)}") {
+    t match {
+      case App(
+        App(Var("and"),
+            Tup((_ -> Fld(_, lhs)) :: Nil)),
+        Tup((_ -> Fld(_, rhs)) :: Nil)
+      ) => // * Old-style operators
+        splitAnd(lhs) :+ rhs
+      case App(Var("and"), PlainTup(lhs, rhs)) =>
+        splitAnd(lhs) :+ rhs
+      case _ => t :: Nil
+    }
+  }(r => "splitAnd ==> " + r.iterator.map(_.toString).mkString(" ∧ "))
 }
 
 object Transformation {
