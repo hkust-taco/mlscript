@@ -118,7 +118,16 @@ fun fromList(l) =
       Cons(x, xs') then fromList'(insert(t, x), xs')
       Nil then Empty
   fromList'(Empty, l)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[ERROR] Cannot use `val` or `fun` in local block; use `let` instead.
+//│ ║  l.116: 	  fun fromList'(t, xs) =
+//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.117: 	    if xs is
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.118: 	      Cons(x, xs') then fromList'(insert(t, x), xs')
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.119: 	      Nil then Empty
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^
+//│ fun fromList: (Cons[Num] | Nil) -> Empty
 
 fun fromList(t, xs) =
   if xs is

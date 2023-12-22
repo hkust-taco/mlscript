@@ -62,11 +62,13 @@ object inspect {
       case Var(name)     => s"Var(\"$name\")"
       case Lam(lhs, rhs) => s"Lam(${apply(lhs)}, ${apply(rhs)})"
       case App(lhs, rhs) => s"App(${apply(lhs)}, ${apply(rhs)})"
+      case Tup(Nil) => "Tup(Nil)"
       case Tup(fields) =>
-        fields.iterator.map {
-          case (S(name), Fld(_, value)) => s"(S(${apply(name)}), ${apply(value)})"
-          case (N, Fld(_, value))       => s"(N, ${apply(value)})"
-        }.mkString("Tup(", ", ", ")")
+        fields.iterator.map { case (maybeName, Fld(flags, value)) =>
+          val first = maybeName.fold("N") { name => s"S($name)" }
+          val second = s"Fld(_, ${apply(value)})"
+          s"($first, $second)"
+        }.mkString("Tup(", " :: ", " :: Nil)")
       case Rcd(fields) =>
         fields.iterator.map { case k -> Fld(_, v) => s"${apply(k)} = ${apply(v)}" }.mkString("Rcd(", ", ", ")")
       case Sel(receiver, fieldName)    => s"Sel(${apply(receiver)}, $fieldName)"

@@ -7,34 +7,30 @@ import mlscript._, utils._, shorthands._
 import scala.annotation.tailrec
 import mlscript.Message, Message.MessageContext
 
-class PreTyper(override val debugTopics: Opt[Set[Str]], useNewDefs: Bool) extends Traceable with DesugarUCS {
+class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with DesugarUCS {
   import PreTyper._
 
   protected def raise(diagnostics: Diagnostic): Unit = ()
   protected def raise(diagnostics: Ls[Diagnostic]): Unit = ()
 
-  private def extractParameters(fields: Term): Ls[ValueSymbol] = fields match {
-    case Tup(arguments) =>
-      println(s"arguments: ${inspect.deep(fields)}")
-      if (useNewDefs) {
-        arguments.map {
-          case (S(nme: Var), Fld(_, _)) => new ValueSymbol(nme, false)
-          case (_, Fld(_, nme: Var)) => new ValueSymbol(nme, false)
-          case (_, Fld(_, x)) => println(x.toString); ???
-        }
-      } else {
-        arguments.map {
-          case (_, Fld(_, nme: Var)) => new ValueSymbol(nme, false)
-          case (_, Fld(_, x)) => println(x.toString); ???
-        }
-      }
-    case PlainTup(arguments @ _*) =>
-      arguments.map {
-        case nme: Var => new ValueSymbol(nme, false)
+  private def extractParameters(fields: Term): Ls[ValueSymbol] =
+    trace(s"extractParameters <== ${inspect.deep(fields)}") {
+      fields match {
+        case Tup(arguments) =>
+          arguments.map {
+            case (S(nme: Var), Fld(_, _)) => new ValueSymbol(nme, false)
+            case (_, Fld(_, nme: Var)) => new ValueSymbol(nme, false)
+            case (_, Fld(_, Bra(false, nme: Var))) => new ValueSymbol(nme, false)
+            case (_, _) => ???
+          }
+        case PlainTup(arguments @ _*) =>
+          arguments.map {
+            case nme: Var => new ValueSymbol(nme, false)
+            case other => println("Unknown parameters: " + inspect.deep(other)); ??? // TODO: bad
+          }.toList
         case other => println("Unknown parameters: " + inspect.deep(other)); ??? // TODO: bad
-      }.toList
-    case other => println("Unknown parameters: " + inspect.deep(other)); ??? // TODO: bad
-  }
+      }
+    }(rs => s"extractParameters ==> ${rs.iterator.map(_.name).mkString(", ")}")
 
   // `traverseIf` is meaningless because it represents patterns with terms.
 
@@ -94,10 +90,9 @@ class PreTyper(override val debugTopics: Opt[Set[Str]], useNewDefs: Bool) extend
         case ef @ If(_, _) => traverseIf(ef)(scope)
         case TyApp(lhs, targs) => // TODO: When?
         case Eqn(lhs, rhs) => ??? // TODO: How?
-        case Blk(stmts) => stmts.foreach {
-          case t: Term => traverseTerm(t)
-          case _ => ??? // TODO: When?
-        }
+        case Blk(stmts) =>
+          traverseStatements(stmts, "block", scope)
+          ()
         case Subs(arr, idx) => traverseTerm(arr); traverseTerm(idx)
         case Bind(lhs, rhs) => traverseTerm(lhs); traverseTerm(rhs)
         case Splc(fields) => fields.foreach {
@@ -118,14 +113,14 @@ class PreTyper(override val debugTopics: Opt[Set[Str]], useNewDefs: Bool) extend
         case NuNew(cls) => traverseTerm(cls)
         case Rft(base, decls) => // For object refinement
           traverseTerm(base)
-          traverseTypingUnit(decls, "Rft", scope)
+          traverseStatements(decls.entities, "Rft", scope)
           ()
       }
     }(_ => s"traverseTerm ==> ${inspect.shallow(term)}")
 
   private def traverseTypeDefinition(symbol: TypeSymbol, defn: NuTypeDef)(implicit scope: Scope): Unit =
     trace(s"traverseTypeDefinition <== ${defn.describe}") {
-      traverseTypingUnit(defn.body, defn.nme.name, scope)
+      traverseStatements(defn.body.entities, defn.nme.name, scope)
       ()
     }(_ => s"traverseTypeDefinition <== ${defn.describe}")
 
@@ -145,11 +140,11 @@ class PreTyper(override val debugTopics: Opt[Set[Str]], useNewDefs: Bool) extend
 
     }()
 
-  private def traverseTypingUnit(typingUnit: TypingUnit, name: Str, parentScope: Scope): (Scope, TypeContents) =
-    trace(s"traverseTypingUnit <== $name: ${typingUnit.describe}") {
+  private def traverseStatements(statements: Ls[Statement], name: Str, parentScope: Scope): (Scope, TypeContents) =
+    trace(s"traverseStatements <== $name: ${"statement".pluralize(statements.size, true)}") {
       import mlscript.{Cls, Trt, Mxn, Als, Mod}
       // Pass 1: Build a scope with hoisted symbols.
-      val hoistedScope = typingUnit.entities.foldLeft(parentScope.derive) {
+      val hoistedScope = statements.foldLeft(parentScope.derive) {
         case (acc, _: Term) => acc // Skip
         case (acc, defn: NuTypeDef) =>
           val `var` = Var(defn.nme.name).withLoc(defn.nme.toLoc)
@@ -172,7 +167,7 @@ class PreTyper(override val debugTopics: Opt[Set[Str]], useNewDefs: Bool) extend
         case (acc, _: Constructor | _: DataDefn | _: DatatypeDefn | _: Def | _: LetS | _: TypeDef) => ??? // TODO: When?
       }
       // Resolve base types.
-      val subtypingRelations = typingUnit.entities.foldLeft(Map.empty[Var, Ls[Var]]) {
+      val subtypingRelations = statements.foldLeft(Map.empty[Var, Ls[Var]]) {
         case (acc, defn: NuTypeDef) =>
           val thisType = Var(defn.nme.name).withLoc(defn.nme.toLoc)
           val superTypes = extractSuperTypes(defn.parents)
@@ -217,7 +212,7 @@ class PreTyper(override val debugTopics: Opt[Set[Str]], useNewDefs: Bool) extend
       println(hoistedScope.symbols.map(_.name).mkString("(hoisted) scope = {", ", ", "}"))
       // 
       // Pass 2: Visit non-hoisted and build a complete scope.
-      val completeScope = typingUnit.entities.foldLeft[Scope](hoistedScope) {
+      val completeScope = statements.foldLeft[Scope](hoistedScope) {
         case (acc, term: Term) => traverseTerm(term)(acc); acc
         case (acc, defn: NuTypeDef) => acc
         case (acc, defn @ NuFunDef(Some(rec), nme, _, _, L(rhs))) =>
@@ -254,11 +249,11 @@ class PreTyper(override val debugTopics: Opt[Set[Str]], useNewDefs: Bool) extend
         case _: FunctionSymbol | _: ValueSymbol | _: SubValueSymbol => ()
       }
       (completeScope, new TypeContents)
-    }({ case (scope, contents) => s"traverseTypingUnit ==> Scope {${scope.showLocalSymbols}}" })
+    }({ case (scope, contents) => s"traverseStatements ==> Scope {${scope.showLocalSymbols}}" })
 
   def process(typingUnit: TypingUnit, scope: Scope, name: Str): (Scope, TypeContents) =
     trace(s"process <== $name: ${typingUnit.describe}") {
-      traverseTypingUnit(typingUnit, name, scope)
+      traverseStatements(typingUnit.entities, name, scope)
     }({ case (scope, contents) => s"process ==> ${scope.showLocalSymbols}" })
 }
 

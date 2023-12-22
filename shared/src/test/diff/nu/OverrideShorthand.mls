@@ -10,7 +10,7 @@ class Pair(lhs: Int, rhs: Int)
 :e
 fun f(override Pair(x, y)) = x + y
 //│ |#fun| |f|(|#override| |Pair|(|x|,| |y|)|)| |#=| |x| |+| |y|
-//│ AST: TypingUnit(NuFunDef(None, f, N, Nil, L(Lam(Tup((N, Var("_$0"))), If(IfOpApp(Var("_$0"), Var("is"), IfThen(App(Var("Pair"), Tup((N, Var("x")), (N, Var("y")))), App(Var("+"), Tup((N, Var("x")), (N, Var("y")))), Some(App(Sel(Super(), f), Tup((N, Var("_$0"))))))))))
+//│ AST: TypingUnit(NuFunDef(None, f, N, Nil, L(Lam(Tup((N, Fld(_, Var("_$0"))) :: Nil), If(IfOpApp(Var("_$0"), Var("is"), IfThen(App(Var("Pair"), Tup((N, Fld(_, Var("x"))) :: (N, Fld(_, Var("y"))) :: Nil)), App(Var("+"), Tup((N, Fld(_, Var("x"))) :: (N, Fld(_, Var("y"))) :: Nil)), Some(App(Sel(Super(), f), Tup((N, Fld(_, Var("_$0"))) :: Nil))))))))
 //│ Parsed: fun f = (_$0,) => if _$0 is (Pair(x, y,)) then +(x, y,) else (super).f(_$0,);
 //│ ╔══[ERROR] identifier not found: super
 //│ ║  l.11: 	fun f(override Pair(x, y)) = x + y
@@ -46,7 +46,7 @@ fun f(override Pair(x, y), z) = x + y
 //│ ╙──      	                                    ^
 //│ fun f: (error, anything) -> Int
 //│ Code generation encountered an error:
-//│   term App(Var("Pair"), Tup((N, Var("x")), (N, Var("y")))) is not a valid pattern
+//│   term App(Var("Pair"), Tup((N, Fld(_, Var("x"))) :: (N, Fld(_, Var("y"))) :: Nil)) is not a valid pattern
 
 
 // TODO

@@ -524,7 +524,7 @@ class DiffTests
               val vars: Map[Str, typer.SimpleType] = Map.empty
               val rootTypingUnit = TypingUnit(p.tops)
               if (usePreTyper) {
-                val preTyper = new PreTyper(mode.dbgPreTyper, newDefs) {
+                val preTyper = new PreTyper(mode.dbgPreTyper) {
                   override protected def raise(diagnostics: Ls[Diagnostic]): Unit = report(diagnostics)
                   override def emitString(str: String): Unit = output(str)
                 }
