@@ -58,7 +58,7 @@ let a = 1; 2
 
 :pe // TODO support; make `;` have even less precedence than `,`
 (1;2)
-//│ ╔══[PARSE ERROR] Unexpected ';' here
+//│ ╔══[PARSE ERROR] Unexpected semicolon here
 //│ ║  l.60: 	(1;2)
 //│ ╙──      	  ^
 //│ 1
@@ -68,7 +68,7 @@ let a = 1; 2
 :pe // ?
 // :w
 (1,2;3)
-//│ ╔══[PARSE ERROR] Unexpected ';' here
+//│ ╔══[PARSE ERROR] Unexpected semicolon here
 //│ ║  l.70: 	(1,2;3)
 //│ ╙──      	    ^
 //│ 2
@@ -87,7 +87,7 @@ fun foo(x) = x
 
 :pe // ?
 foo(1;2)
-//│ ╔══[PARSE ERROR] Unexpected ';' here
+//│ ╔══[PARSE ERROR] Unexpected semicolon here
 //│ ║  l.89: 	foo(1;2)
 //│ ╙──      	     ^
 //│ 1
@@ -194,7 +194,7 @@ foo(log(1),2)
 :pe
 :e
 foo(log(1);2)
-//│ ╔══[PARSE ERROR] Unexpected ';' here
+//│ ╔══[PARSE ERROR] Unexpected semicolon here
 //│ ║  l.196: 	foo(log(1);2)
 //│ ╙──       	          ^
 //│ ╔══[ERROR] Type mismatch in application:

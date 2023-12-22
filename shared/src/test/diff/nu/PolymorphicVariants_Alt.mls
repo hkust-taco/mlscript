@@ -17,9 +17,12 @@ class List<out A> {
 }
 let Nil: () => List<'a>
 let Cons: (head: 'a, tail: List<'a>) => List<'a>
+//│ ╔══[ERROR] Not a recognized type
+//│ ║  l.15: 	  fun match: forall 'res: (ifNil: () => 'res, ifCons: (A, List[A]) => 'res) => 'res
+//│ ╙──      	                                              ^^^^^^
 //│ class List[A] {
 //│   constructor()
-//│   fun match: forall 'res. (ifNil: () -> 'res, ifCons: (A, List[A]) -> 'res) -> 'res
+//│   fun match: anything
 //│ }
 //│ let Nil: () -> List[nothing]
 //│ let Cons: forall 'a. (head: 'a, tail: List['a]) -> List['a]
@@ -41,7 +44,20 @@ fun list_assoc(s, l: List<'a>) =
       if eq(s, h.0) then Success(h.1)
       else list_assoc(s, t)
   )
-//│ fun list_assoc: forall 'A. (Str, l: List[{0: Str, 1: 'A}]) -> (NotFound | Success['A])
+//│ ╔══[PARSE ERROR] Unexpected newline in expression position
+//│ ║  l.42: 	    ifNil: () => NotFound,
+//│ ║        	                          ^
+//│ ║  l.43: 	    ifCons: (h, t) =>
+//│ ╙──      	^^^^
+//│ ╔══[ERROR] Not a recognized type
+//│ ║  l.44: 	      if eq(s, h.0) then Success(h.1)
+//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.45: 	      else list_assoc(s, t)
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `?match` for applying named arguments
+//│ ║  l.41: 	  l.match(
+//│ ╙──      	  ^^^^^^^
+//│ fun list_assoc: (anything, l: List[anything]) -> error
 
 list_assoc : (Str, List<{ 0: Str, 1: 'b }>) => (NotFound | Success['b])
 //│ (Str, List[{0: Str, 1: 'b}]) -> (NotFound | Success['b])
@@ -127,7 +143,7 @@ Test1.eval(Cons(["c", Var("d")], Nil()), App(Abs("b", Var("b")), Var("c")))
 Test1.eval(Cons(["c", Abs("d", Var("d"))], Nil()), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Abs[Var] | Var
+//│     'a :> Abs['a] | Abs[Var] | Var | App['a]
 
 class Numb(n: Int)
 class Add<out A>(l: A, r: A)
@@ -142,7 +158,7 @@ fun map_expr(f, v) =
     Numb then v
     Add(l, r) then Add(f(l), f(r))
     Mul(l, r) then Mul(f(l), f(r))
-//│ fun map_expr: forall 'a 'A 'b 'A0. ('b -> 'A0 & 'a -> 'A, Add['b] | Mul['a] | Numb | Var) -> (Add['A0] | Mul['A] | Numb | Var)
+//│ fun map_expr: forall 'a 'A 'b 'A0. ('a -> 'A & 'b -> 'A0, Add['a] | Mul['b] | Numb | Var) -> (Add['A] | Mul['A0] | Numb | Var)
 
 mixin EvalExpr {
   fun eval(sub, v) =
@@ -162,7 +178,7 @@ mixin EvalExpr {
 
 module Test2 extends EvalVar, EvalExpr
 //│ module Test2 {
-//│   fun eval: forall 'a. (List[{0: Str, 1: Object & 'b}], 'a & (Add['c] | Mul['c] | Numb | Var)) -> (Numb | Var | 'b | 'a | 'c)
+//│   fun eval: forall 'a. (List[{0: Str, 1: Object & 'b}], 'a & (Add['c] | Mul['c] | Numb | Var)) -> (Numb | Var | 'a | 'c | 'b)
 //│ }
 //│ where
 //│   'c <: Add['c] | Mul['c] | Numb | Var
@@ -186,7 +202,7 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│ where
 //│   'a :> 'c
 //│      <: Object
-//│   'c :> App['c] | Abs['c] | Numb | Var | 'a | 'd
+//│   'c :> App['c] | Abs['c] | Numb | Var | 'd | 'a
 //│   'd <: Add['b] | Mul['b] | Numb | Var
 //│   'b <: Abs['b] | App['b & (Abs['b] | Object & ~#Abs)] | Object & 'd & ~#Abs & ~#App
 

@@ -101,7 +101,7 @@ Test1.eval(Nil, Var("a"))
 Test1.eval(Nil, Abs("b", Var("a")))
 //│ 'a
 //│   where
-//│     'a :> Var | App['A] | Abs['A0]
+//│     'a :> Abs['A] | Var | App['A0]
 //│     'A0 :> 'a
 //│     'A :> 'a
 //│ res

@@ -83,6 +83,9 @@ class Test { this: { x: Int};; fun test = this.x }
 //│ ╟── but it flows into expression in statement position with expected type `()`
 //│ ║  l.68: 	class Test { this: { x: Int};; fun test = this.x }
 //│ ╙──      	             ^^^^
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.68: 	class Test { this: { x: Int};; fun test = this.x }
+//│ ╙──      	                             ^
 //│ class Test {
 //│   constructor()
 //│   fun test: error

@@ -83,65 +83,87 @@ v1.x <- 1
 
 :pe
 let v2: (mut Int)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.85: 	let v2: (mut Int)
-//│ ╙──      	        ^^^^^^^^^
-//│ let v2: [mut Int]
-//│ v2
-//│    = <missing implementation>
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$7(NewParser.scala:672)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$2(NewParser.scala:668)
+//│ 	at: mlscript.NewParser.wrap(NewParser.scala:66)
+//│ 	at: mlscript.NewParser.exprOrIf(NewParser.scala:599)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$2(NewParser.scala:603)
+//│ 	at: mlscript.NewParser.wrap(NewParser.scala:66)
+//│ 	at: mlscript.NewParser.exprOrIf(NewParser.scala:599)
+//│ 	at: mlscript.NewParser.$anonfun$expr$2(NewParser.scala:587)
 
 :pe
 let v2 = (mut 1)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.94: 	let v2 = (mut 1)
-//│ ╙──      	         ^^^^^^^
-//│ let v2: [mut 'a]
-//│   where
-//│     'a :> 1
-//│ v2
-//│    = [ 1 ]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$7(NewParser.scala:672)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$2(NewParser.scala:668)
+//│ 	at: mlscript.NewParser.wrap(NewParser.scala:66)
+//│ 	at: mlscript.NewParser.exprOrIf(NewParser.scala:599)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$2(NewParser.scala:603)
+//│ 	at: mlscript.NewParser.wrap(NewParser.scala:66)
+//│ 	at: mlscript.NewParser.exprOrIf(NewParser.scala:599)
+//│ 	at: mlscript.NewParser.$anonfun$expr$2(NewParser.scala:587)
 
 :pe
 let v2: (mut x: Int)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.105: 	let v2: (mut x: Int)
-//│ ╙──       	        ^^^^^^^^^^^^
-//│ let v2: [mut x: Int]
-//│ v2
-//│    = <missing implementation>
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$7(NewParser.scala:672)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$2(NewParser.scala:668)
+//│ 	at: mlscript.NewParser.wrap(NewParser.scala:66)
+//│ 	at: mlscript.NewParser.exprOrIf(NewParser.scala:599)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$2(NewParser.scala:603)
+//│ 	at: mlscript.NewParser.wrap(NewParser.scala:66)
+//│ 	at: mlscript.NewParser.exprOrIf(NewParser.scala:599)
+//│ 	at: mlscript.NewParser.$anonfun$expr$2(NewParser.scala:587)
 
 :pe
 let v2 = (mut 1)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.114: 	let v2 = (mut 1)
-//│ ╙──       	         ^^^^^^^
-//│ let v2: [mut 'a]
-//│   where
-//│     'a :> 1
-//│ v2
-//│    = [ 1 ]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$7(NewParser.scala:672)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$2(NewParser.scala:668)
+//│ 	at: mlscript.NewParser.wrap(NewParser.scala:66)
+//│ 	at: mlscript.NewParser.exprOrIf(NewParser.scala:599)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$2(NewParser.scala:603)
+//│ 	at: mlscript.NewParser.wrap(NewParser.scala:66)
+//│ 	at: mlscript.NewParser.exprOrIf(NewParser.scala:599)
+//│ 	at: mlscript.NewParser.$anonfun$expr$2(NewParser.scala:587)
 
 :pe
 let v2 = (mut x: 1)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.125: 	let v2 = (mut x: 1)
-//│ ╙──       	         ^^^^^^^^^^
-//│ let v2: [mut x: 'x]
-//│   where
-//│     'x :> 1
-//│ v2
-//│    = [ 1 ]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$7(NewParser.scala:672)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$2(NewParser.scala:668)
+//│ 	at: mlscript.NewParser.wrap(NewParser.scala:66)
+//│ 	at: mlscript.NewParser.exprOrIf(NewParser.scala:599)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$2(NewParser.scala:603)
+//│ 	at: mlscript.NewParser.wrap(NewParser.scala:66)
+//│ 	at: mlscript.NewParser.exprOrIf(NewParser.scala:599)
+//│ 	at: mlscript.NewParser.$anonfun$expr$2(NewParser.scala:587)
 
 :pe
 let v2 = (mut y: 1)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.136: 	let v2 = (mut y: 1)
-//│ ╙──       	         ^^^^^^^^^^
-//│ let v2: [mut y: 'y]
-//│   where
-//│     'y :> 1
-//│ v2
-//│    = [ 1 ]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$7(NewParser.scala:672)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$2(NewParser.scala:668)
+//│ 	at: mlscript.NewParser.wrap(NewParser.scala:66)
+//│ 	at: mlscript.NewParser.exprOrIf(NewParser.scala:599)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$2(NewParser.scala:603)
+//│ 	at: mlscript.NewParser.wrap(NewParser.scala:66)
+//│ 	at: mlscript.NewParser.exprOrIf(NewParser.scala:599)
+//│ 	at: mlscript.NewParser.$anonfun$expr$2(NewParser.scala:587)
 
 
 let v2: [mut Int]

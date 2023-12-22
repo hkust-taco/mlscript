@@ -227,24 +227,26 @@ fun f(val x: Int) = x + 1
 :pe
 :e
 (val x: 1)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.229: 	(val x: 1)
-//│ ╙──       	^^^^^^^^^^
-//│ ╔══[ERROR] Cannot use `val` in this position
-//│ ║  l.229: 	(val x: 1)
-//│ ╙──       	     ^^^^
-//│ [x: 1]
-//│ res
-//│     = [ 1 ]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$7(NewParser.scala:672)
+//│ 	at: scala.collection.immutable.List.map(List.scala:246)
+//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$2(NewParser.scala:668)
+//│ 	at: mlscript.NewParser.wrap(NewParser.scala:66)
+//│ 	at: mlscript.NewParser.exprOrIf(NewParser.scala:599)
+//│ 	at: mlscript.NewParser.block(NewParser.scala:540)
+//│ 	at: mlscript.NewParser.typingUnit(NewParser.scala:228)
+//│ 	at: mlscript.DiffTests.$anonfun$new$27(DiffTests.scala:427)
+//│ 	at: mlscript.NewParser.parseAll(NewParser.scala:73)
 
 :pe
 :e
 (val x: 1) =>
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.242: 	(val x: 1) =>
+//│ ║  l.244: 	(val x: 1) =>
 //│ ╙──       	             ^
 //│ ╔══[ERROR] Cannot use `val` in this position
-//│ ║  l.242: 	(val x: 1) =>
+//│ ║  l.244: 	(val x: 1) =>
 //│ ╙──       	     ^^^^
 //│ (x: 1) -> ()
 //│ res
@@ -253,7 +255,7 @@ fun f(val x: Int) = x + 1
 :e
 (val x: 1) => ()
 //│ ╔══[ERROR] Cannot use `val` in this position
-//│ ║  l.254: 	(val x: 1) => ()
+//│ ║  l.256: 	(val x: 1) => ()
 //│ ╙──       	     ^^^^
 //│ (x: 1) -> ()
 //│ res

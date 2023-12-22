@@ -17,7 +17,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   private val isOpChar = Set(
     '!', '#', '%', '&', '*', '+', '-', '/', ':', '<', '=', '>', '?', '@', '\\', '^', '|', '~' , '.',
     // ',', 
-    ';'
+    // ';'
   )
   def isIdentFirstChar(c: Char): Bool =
     c.isLetter || c === '_' || c === '\''
@@ -110,6 +110,9 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         val j = i + 1
         // go(j, COMMA)
         lex(j, ind, next(j, COMMA))
+      case ';' =>
+        val j = i + 1
+        lex(j, ind, next(j, SEMI))
       case '"' =>
         val j = i + 1
         val (chars, k) = str(j, false)
@@ -342,6 +345,7 @@ object NewLexer {
   def printToken(tl: TokLoc): Str = tl match {
     case (SPACE, _) => " "
     case (COMMA, _) => ","
+    case (SEMI, _) => ";"
     case (NEWLINE, _) => "↵"
     case (INDENT, _) => "→"
     case (DEINDENT, _) => "←"

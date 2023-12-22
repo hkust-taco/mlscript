@@ -550,29 +550,23 @@ if true
 :pe
 if true then;
 //│ |#if| |true| |#then|;|
-//│ ╔══[PARSE ERROR] Unexpected operator in expression position
-//│ ║  l.551: 	if true then;
-//│ ╙──       	            ^
-//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.551: 	if true then;
-//│ ╙──       	             ^
 //│ Parsed: {if (true) then undefined}
 
 if true then;;
-//│ |#if| |true| |#then|#;;|
-//│ Parsed: {if (true) then undefined}
+//│ |#if| |true| |#then|;|;|
+//│ Parsed: {if (true) then undefined; undefined}
 
 :pe
 if true then;; else;;
-//│ |#if| |true| |#then|#;;| |#else|#;;|
+//│ |#if| |true| |#then|;|;| |#else|;|;|
 //│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
-//│ ║  l.566: 	if true then;; else;;
-//│ ╙──       	               ^^^^^^
-//│ Parsed: {if (true) then undefined; undefined}
+//│ ║  l.560: 	if true then;; else;;
+//│ ╙──       	               ^^^^^
+//│ Parsed: {if (true) then undefined; undefined; undefined; undefined}
 
 if true then () else;;
-//│ |#if| |true| |#then| |(||)| |#else|#;;|
-//│ Parsed: {if (true) then undefined else undefined}
+//│ |#if| |true| |#then| |(||)| |#else|;|;|
+//│ Parsed: {if (true) then undefined else undefined; undefined}
 
 
 

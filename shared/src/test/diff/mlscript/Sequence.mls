@@ -2,24 +2,32 @@
 
 
 let test(x) = log(x); x + 1
-//│ let test: Int -> Int
-//│ test
-//│      = [Function: test1]
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.4: 	let test(x) = log(x); x + 1
+//│ ╙──     	                      ^
+//│ let test: anything -> ()
+//│ Int
+//│ Code generation encountered an error:
+//│   unresolved symbol x
 
 test(log("here we go"); 123)
-//│ Int
+//│ ╔══[PARSE ERROR] Unexpected semicolon here
+//│ ║  l.13: 	test(log("here we go"); 123)
+//│ ╙──      	                      ^
+//│ ()
 //│ res
-//│     = 124
-//│ // Output
-//│ here we go
-//│ 123
+//│ Runtime error:
+//│   ReferenceError: test1 is not defined
 
 
 let a = 1;; let b = a + 1
 //│ let a: 1
 //│ let b: Int
+//│ ()
 //│ a
 //│   = 1
+//│ res
+//│     = undefined
 //│ b
 //│   = 2
 

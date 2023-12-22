@@ -85,6 +85,9 @@ C2.test
 
 class C1() extends M1, M2 { val factor: Int;; val factor = 2 }
 C1().test
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.86: 	class C1() extends M1, M2 { val factor: Int;; val factor = 2 }
+//│ ╙──      	                                            ^
 //│ class C1() {
 //│   val factor: Int
 //│   fun test: Int

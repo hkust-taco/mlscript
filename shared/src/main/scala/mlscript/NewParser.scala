@@ -109,7 +109,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       "",
       "",
       // ^ for keywords
-      ";",
+      // ";",
       ",",
       "=",
       "@",
@@ -373,7 +373,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             def otherParents: Ls[Term] = yeetSpaces match {
               case (COMMA, _) :: _ =>
                 consume
-                expr(0) :: otherParents
+                // expr(0) :: otherParents
+                expr(1) :: otherParents // TODO 1 is prec of `,` 
               case _ => Nil
             }
             val sigTrm = yeetSpaces match {
@@ -391,7 +392,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
               //   expr(0) :: otherParents
               case (KEYWORD("extends"), _) :: _ =>
                 consume
-                expr(0) :: otherParents
+                // expr(0) :: otherParents
+                expr(1) :: otherParents // TODO 1 is prec of `,`
               case _ => Nil
             }
             val (sigTrm2, ps2, fullTu) = curlyTypingUnit.fold {
@@ -547,7 +549,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           case _ => t
         }
         yeetSpaces match {
-          case (KEYWORD(";"), _) :: _ => consume; finalTerm :: block
+          // case (KEYWORD(";"), _) :: _ => consume; finalTerm :: block
+          case (SEMI, _) :: _ => consume; finalTerm :: block
           case (NEWLINE, _) :: _ => consume; finalTerm :: block
           case _ => finalTerm :: Nil
         }
@@ -703,7 +706,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         val bs = bindings(Nil)
         val body = yeetSpaces match {
           // case (KEYWORD("in" | ";"), _) :: _ =>
-          case (KEYWORD(";"), _) :: _ =>
+          // case (KEYWORD(";"), _) :: _ =>
+          case (SEMI, _) :: _ =>
             consume
             exprOrIf(0)
             // exprOrIf(1)
@@ -794,7 +798,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case Nil =>
         err(msg"Unexpected end of $description; an expression was expected here" -> lastLoc :: Nil)
         R(errExpr)
-      case ((KEYWORD(";") /* | NEWLINE */ /* | BRACKETS(Curly, _) */, l0) :: _) =>
+      case ((SEMI /* | NEWLINE */ /* | BRACKETS(Curly, _) */, l0) :: _) =>
         R(UnitLit(true).withLoc(S(l0)))
         // R(errExpr) // TODO
       case (IDENT("-", true), l0) :: _ /*if opPrec("-")._1 > prec*/ => // Unary minus
@@ -916,7 +920,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         val tu = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.typingUnitMaybeIndented).withLoc(S(loc))
         exprCont(Rft(acc, tu), prec, allowNewlines)
         
-      case (COMMA | NEWLINE | KEYWORD("then" | "else" | "in" | ";" | "=")
+      case (COMMA | SEMI | NEWLINE | KEYWORD("then" | "else" | "in" | "=")
         | IDENT(_, true) | BRACKETS(Curly, _), _) :: _ => R(acc)
       
       case (KEYWORD("of"), _) :: _ if prec <= 1 =>
@@ -994,9 +998,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         exprCont(res, prec, allowNewlines)
           
       case c @ (h :: _) if (h._1 match {
-        case KEYWORD(";" | ":" | "of" | "where" | "extends") | BRACKETS(Round | Square, _)
+        case KEYWORD(":" | "of" | "where" | "extends") | SEMI | BRACKETS(Round | Square, _)
           | BRACKETS(Indent, (
-              KEYWORD(";" | "of")
+              KEYWORD("of") | SEMI
               | BRACKETS(Round | Square, _)
               | SELECT(_)
             , _) :: _)
@@ -1244,7 +1248,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (SPACE, _) :: _ =>
         consume
         bindings(acc)
-      case (NEWLINE | IDENT(_, true) | KEYWORD(";"), _) :: _ => // TODO: | ...
+      case (NEWLINE | IDENT(_, true) | SEMI, _) :: _ => // TODO: | ...
         acc.reverse
       case (IDENT(id, false), l0) :: _ =>
         consume

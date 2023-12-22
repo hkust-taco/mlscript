@@ -73,9 +73,9 @@ succ = s
 
 :e // * Since "sound extrusion"
 succ n f = n f
-//│ 'a -> (forall 'b 'c. 'c -> 'b
+//│ 'a -> (forall 'b 'c. 'b -> 'c
 //│   where
-//│     'a <: 'c -> 'b)
+//│     'a <: 'b -> 'c)
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type error in def definition
@@ -142,9 +142,9 @@ rec def to_ch n =
 //│ ╙──
 //│ to_ch: number -> 'a
 //│   where
-//│     'a :> forall 'b. 'b -> (forall 'c 'd. 'd -> 'c
+//│     'a :> forall 'b. 'b -> (forall 'c 'd. 'c -> 'd
 //│       where
-//│         'a <: 'b -> 'd -> 'c) | ChurchInt
+//│         'a <: 'b -> 'c -> 'd) | ChurchInt
 //│      = <no result>
 //│        zero is not implemented
 
@@ -254,15 +254,15 @@ to_church = to_ch
 def to_ch n =
   if true then z
   else s (to_church n)
-//│ to_ch: int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd. ('b & 'd) -> ('d | 'c)
+//│ to_ch: int -> (forall 'a. 'a -> (forall 'b 'a 'c 'd. ('c & 'b) -> ('b | 'd)
 //│   where
-//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c))
+//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'c -> 'd))
 //│      = <no result>
 //│        to_church, to_ch and zero are not implemented
 
 :e // * Since "sound extrusion"
 to_church = to_ch
-//│ int -> (forall 'a. 'a -> (forall 'b 'c 'd 'a. ('b & 'd) -> ('d | 'c)
+//│ int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd. ('b & 'd) -> ('d | 'c)
 //│   where
 //│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c))
 //│   <:  to_church:
@@ -580,9 +580,9 @@ to_church = to_ch
 //│   where
 //│     'd <: 'a -> 'b -> 'c)
 //│ where
-//│   'd :> forall 'e 'f 'g 'h. 'e -> (('h & 'f) -> ('h | 'g)
+//│   'd :> forall 'e 'f 'g 'h. 'f -> (('e & 'g) -> ('e | 'h)
 //│     where
-//│       'd <: 'e -> 'f -> 'g)
+//│       'd <: 'f -> 'g -> 'h)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_ch. ?to_ch <: int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)` exceeded recursion depth limit (250)
@@ -614,9 +614,9 @@ rec def to_ch_weird n =
 to_church = to_ch
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b 'c 'd 'e. (? & 'e) -> (('d & 'b) -> ('d | 'c)
+//│     'a :> forall 'b 'c 'd 'e. (? & 'b) -> (('e & 'c) -> ('e | 'd)
 //│       where
-//│         'a <: 'e -> 'b -> 'c)
+//│         'a <: 'b -> 'c -> 'd)
 //│ ╙──
 //│ int -> 'a -> ('b -> ('b | 'c)
 //│   where

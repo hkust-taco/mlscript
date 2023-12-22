@@ -273,7 +273,16 @@ fun hasFree(t, n) =
 
 fun showHasFree(t, n) =
   concat4(showTerm(t), if hasFree(t, n) then " has " else " DOES NOT have ", "free variable ", n)
-//│ showHasFree: (Abs & 'a & 'b | App & 'c & 'd | Var, string,) -> string
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.275: 	  concat4(showTerm(t), if hasFree(t, n) then " has " else " DOES NOT have ", "free variable ", n)
+//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── argument list of type `(?a, " has " | ?b,)` does not match type `(?c, ?d, ?e, ?f,)`
+//│ ║  l.275: 	  concat4(showTerm(t), if hasFree(t, n) then " has " else " DOES NOT have ", "free variable ", n)
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from tuple literal:
+//│ ║  l.5: 	fun concat4(a, b, c, d) = concat2(a, concat3(b, c, d))
+//│ ╙──     	           ^^^^^^^^^^^^
+//│ showHasFree: (Abs & 'a & 'b | App & 'c & 'd | Var, anything,) -> (error | string)
 //│   where
 //│     'b <: {lhs: anything, rhs: Abs & 'b | App & 'd | Var | ~Abs & ~App & ~Var}
 //│     'd <: {
@@ -299,30 +308,30 @@ showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "x")
 showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
 showHasFree(App(Abs(Var("x"), Var("x")), Var("y")), "y")
 showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
-//│ res: string
-//│    = 'x has free variable x'
-//│ res: string
-//│    = 'x DOES NOT have free variable y'
-//│ res: string
-//│    = '&x. x DOES NOT have free variable x'
-//│ res: string
-//│    = '&x. x DOES NOT have free variable y'
-//│ res: string
-//│    = '&x. y DOES NOT have free variable x'
-//│ res: string
-//│    = '&x. y has free variable y'
-//│ res: string
-//│    = '(x y) has free variable x'
-//│ res: string
-//│    = '(x y) has free variable y'
-//│ res: string
-//│    = '((&x. x) x) has free variable x'
-//│ res: string
-//│    = '((&x. x) x) DOES NOT have free variable y'
-//│ res: string
-//│    = '((&x. x) y) has free variable y'
-//│ res: string
-//│    = '((&x. x) x) DOES NOT have free variable y'
+//│ res: error | string
+//│    = 'x has NaN'
+//│ res: error | string
+//│    = 'xyNaN'
+//│ res: error | string
+//│    = '&x. xxNaN'
+//│ res: error | string
+//│    = '&x. xyNaN'
+//│ res: error | string
+//│    = '&x. yxNaN'
+//│ res: error | string
+//│    = '&x. y has NaN'
+//│ res: error | string
+//│    = '(x y) has NaN'
+//│ res: error | string
+//│    = '(x y) has NaN'
+//│ res: error | string
+//│    = '((&x. x) x) has NaN'
+//│ res: error | string
+//│    = '((&x. x) x)yNaN'
+//│ res: error | string
+//│    = '((&x. x) y) has NaN'
+//│ res: error | string
+//│    = '((&x. x) x)yNaN'
 
 fun fv(t) =
   if t is
@@ -491,18 +500,18 @@ fun showSubst(t, n, v) =
 //│       lhs: App & 'l | Var | 'h & (Abs & 'h | Abs & ~#Abs),
 //│       rhs: Abs & 'h | App & 'l | Var
 //│     }
-//│     'b <: Abs & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'b & 'f | App & 'j & 'd | Var & 'e} & 'f & 'g | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'b & 'f | App & 'j & 'd | Var & 'e} & 'e | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'b & 'f | App & 'j & 'd | Var & 'e} & 'n & ~#Var | 'j & 'k & (App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'b & 'f | App & 'j & 'd | Var & 'e} & 'd | App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'b & 'f | App & 'j & 'd | Var & 'e} & 'n & ~#App)
+//│     'b <: Abs & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'b & 'f | App & 'j & 'd | Var & 'e} & 'f & 'g | App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'b & 'f | App & 'j & 'd | Var & 'e} & 'j & 'd & 'k | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'b & 'f | App & 'j & 'd | Var & 'e} & 'e | 'n & (App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'b & 'f | App & 'j & 'd | Var & 'e} & 'j & 'k & ~#App | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'b & 'f | App & 'j & 'd | Var & 'e} & ~#Var)
 //│     'd <: {
 //│       lhs: Abs & 'b | App & 'd | Var & 'e | 'n & ~#Abs & ~#App & ~#Var,
 //│       rhs: Abs & 'b | App & 'd | Var & 'e | 'n & ~#Abs & ~#App & ~#Var
 //│     }
-//│     'e <: Var | 'j & 'k & (App & {name: anything} & 'd | App & {name: anything} & 'n & ~#App) | 'f & 'g & (Abs & {name: anything} & 'n & ~#Abs | Abs & {name: anything} & 'b)
-//│     'n <: Var & ~#Var | Var & 'e | 'j & 'k & (App & ~#App | App & 'd) | 'f & 'g & (Abs & ~#Abs | Abs & 'b)
+//│     'e <: Abs & {name: anything} & 'b & 'f & 'g | App & {name: anything} & 'j & 'd & 'k | Var | 'n & (Abs & {name: anything} & 'f & 'g & ~#Abs | App & {name: anything} & 'j & 'k & ~#App)
+//│     'n <: Var & ~#Var | Var & 'e | 'k & 'j & (App & ~#App | App & 'd) | 'g & 'f & (Abs & ~#Abs | Abs & 'b)
+//│     'g <: {lhs: Abs & 'g | App & 'k | Var, rhs: Abs & 'g | App & 'k | Var}
 //│     'k <: {
 //│       lhs: App & 'k | Var | 'g & (Abs & ~#Abs | Abs & 'g),
 //│       rhs: Abs & 'g | App & 'k | Var
 //│     }
-//│     'g <: {lhs: Abs & 'g | App & 'k | Var, rhs: Abs & 'g | App & 'k | Var}
 //│     'f <: {lhs: Var, rhs: Abs & 'f | App & 'j | Var}
 //│     'j <: {lhs: Abs & 'f | App & 'j | Var, rhs: Abs & 'f | App & 'j | Var}
 //│     'a <: {lhs: Abs & 'a | App & 'c | Var, rhs: Abs & 'a | App & 'c | Var}
@@ -552,19 +561,19 @@ fun stepByValue(t) =
 //│     lhs: Var & {name: string},
 //│     rhs: Var & {name: string} | 'rhs0 | 'rhs | 'b | 'c | 'd | 'e
 //│   }
-//│      <: Abs & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & 'g | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & 'b | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & 'e & ~#Var | 'h & (App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & 'f | App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & 'e & ~#App)
+//│      <: Abs & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & 'g | App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & 'h & 'f | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & 'b | 'e & (App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & 'h & ~#App | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'c & 'g | App & 'h & 'f | Var & 'b} & ~#Var)
 //│   'rhs0 :> Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e
-//│   'd :> Var & {name: string} | 'rhs | 'b | 'c | 'e | Abs & {lhs: Var & {name: string}, rhs: 'rhs0} | App & {
+//│   'd :> Var & {name: string} | 'rhs | 'b | 'c | 'e | App & {
 //│     lhs: Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e,
 //│     rhs: Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e
-//│   }
+//│   } | Abs & {lhs: Var & {name: string}, rhs: 'rhs0}
 //│   'rhs <: Abs & 'c & 'g & 'i | App & 'a & 'h & 'f & 'j | Var & 'b
 //│   'f <: {
 //│     lhs: Abs & 'c | App & 'f | Var & 'b | 'e & ~#Abs & ~#App & ~#Var,
 //│     rhs: Abs & 'c | App & 'f | Var & 'b | 'e & ~#Abs & ~#App & ~#Var
 //│   }
 //│   'b :> Var & {name: string}
-//│      <: Var | 'h & (App & {name: anything} & 'f | App & {name: anything} & 'e & ~#App) | 'g & (Abs & {name: anything} & 'e & ~#Abs | Abs & {name: anything} & 'c)
+//│      <: Abs & {name: anything} & 'c & 'g | App & {name: anything} & 'h & 'f | Var | 'e & (Abs & {name: anything} & 'g & ~#Abs | App & {name: anything} & 'h & ~#App)
 //│   'e <: Var & ~#Var | Var & 'b | 'h & (App & ~#App | App & 'f) | 'g & (Abs & ~#Abs | Abs & 'c)
 //│   'i <: {lhs: anything, rhs: Abs & 'i | App & 'j | Var | ~Abs & ~App & ~Var}
 //│   'j <: {
@@ -591,13 +600,13 @@ fun showStepByValue(t) =
 //│       lhs: Abs & 'k | App & 'm | Var | ~Abs & ~App & ~Var,
 //│       rhs: Abs & 'k | App & 'm | Var | ~Abs & ~App & ~Var
 //│     }
-//│     'f <: Abs & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'f & 'j | App & 'l & 'g | Var & 'h} & 'j & 'e | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'f & 'j | App & 'l & 'g | Var & 'h} & 'h | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'f & 'j | App & 'l & 'g | Var & 'h} & 'i & ~#Var | 'l & 'd & (App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'f & 'j | App & 'l & 'g | Var & 'h} & 'g | App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'f & 'j | App & 'l & 'g | Var & 'h} & 'i & ~#App)
+//│     'f <: Abs & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'f & 'j | App & 'l & 'g | Var & 'h} & 'j & 'e | App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'f & 'j | App & 'l & 'g | Var & 'h} & 'l & 'g & 'd | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'f & 'j | App & 'l & 'g | Var & 'h} & 'h | 'i & (App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'f & 'j | App & 'l & 'g | Var & 'h} & 'l & 'd & ~#App | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'f & 'j | App & 'l & 'g | Var & 'h} & ~#Var)
 //│     'g <: {
 //│       lhs: Abs & 'f | App & 'g | Var & 'h | 'i & ~#Abs & ~#App & ~#Var,
 //│       rhs: Abs & 'f | App & 'g | Var & 'h | 'i & ~#Abs & ~#App & ~#Var
 //│     }
-//│     'h <: Var | 'l & 'd & (App & {name: anything} & 'g | App & {name: anything} & 'i & ~#App) | 'j & 'e & (Abs & {name: anything} & 'i & ~#Abs | Abs & {name: anything} & 'f)
-//│     'i <: Var & ~#Var | Var & 'h | 'l & 'd & (App & ~#App | App & 'g) | 'j & 'e & (Abs & ~#Abs | Abs & 'f)
+//│     'h <: Abs & {name: anything} & 'f & 'j & 'e | App & {name: anything} & 'l & 'g & 'd | Var | 'i & (Abs & {name: anything} & 'j & 'e & ~#Abs | App & {name: anything} & 'l & 'd & ~#App)
+//│     'i <: Var & ~#Var | Var & 'h | 'd & 'l & (App & ~#App | App & 'g) | 'e & 'j & (Abs & ~#Abs | Abs & 'f)
 //│     'j <: {lhs: Var, rhs: Abs & 'j | App & 'l | Var}
 //│     'l <: {lhs: Abs & 'j | App & 'l | Var, rhs: Abs & 'j | App & 'l | Var}
 //│     'd <: {

@@ -15,10 +15,16 @@ fun f3([[x, y,],],) = x + y
 
 :pe
 fun f3([(x, y,),],) = x + y
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ╔══[ERROR] Unsupported pattern shape:
 //│ ║  l.17: 	fun f3([(x, y,),],) = x + y
 //│ ╙──      	        ^^^^^^^
-//│ fun f3: ([[Int, Int]]) -> Int
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.17: 	fun f3([(x, y,),],) = x + y
+//│ ╙──      	                      ^
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.17: 	fun f3([(x, y,),],) = x + y
+//│ ╙──      	                          ^
+//│ fun f3: ([error]) -> Int
 
 
 class Pair(lhs: Int, rhs: Int)
@@ -27,13 +33,13 @@ class Pair(lhs: Int, rhs: Int)
 :e // * TODO
 fun f(Pair(x, y)) = x + y
 //│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.28: 	fun f(Pair(x, y)) = x + y
+//│ ║  l.34: 	fun f(Pair(x, y)) = x + y
 //│ ╙──      	      ^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.28: 	fun f(Pair(x, y)) = x + y
+//│ ║  l.34: 	fun f(Pair(x, y)) = x + y
 //│ ╙──      	                    ^
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.28: 	fun f(Pair(x, y)) = x + y
+//│ ║  l.34: 	fun f(Pair(x, y)) = x + y
 //│ ╙──      	                        ^
 //│ fun f: error -> Int
 

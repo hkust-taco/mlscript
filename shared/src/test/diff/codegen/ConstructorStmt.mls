@@ -306,6 +306,9 @@ class Q() {
   fun qq =
     let f = (x: Int) => {q: x + q};; f(1)
 }
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.307: 	    let f = (x: Int) => {q: x + q};; f(1)
+//│ ╙──       	                                   ^
 //│ class Q() {
 //│   let q: 42
 //│   fun qq: {q: Int}
@@ -328,6 +331,7 @@ class Q() {
 //│           const qualifier1 = this;
 //│           return ((() => {
 //│             let f = (x) => ({ q: x + qualifier1.#q });
+//│             undefined;
 //│             return f(1);
 //│           })());
 //│         }

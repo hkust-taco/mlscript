@@ -91,73 +91,85 @@ f([1, 2])
 
 :pe
 let f = ((x, y)) => x + y
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ╔══[ERROR] Unsupported pattern shape:
 //│ ║  l.93: 	let f = ((x, y)) => x + y
 //│ ╙──      	         ^^^^^^
-//│ let f: ([Int, Int]) -> Int
-//│ f
-//│   = [Function: f7]
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.93: 	let f = ((x, y)) => x + y
+//│ ╙──      	                    ^
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.93: 	let f = ((x, y)) => x + y
+//│ ╙──      	                        ^
+//│ let f: error -> Int
+//│ Code generation encountered an error:
+//│   term App(Var(,), Tup(_: Var(x), _: Var(y))) is not a valid pattern
 
 :e
 f(1, 2)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.102: 	f(1, 2)
+//│ ║  l.108: 	f(1, 2)
 //│ ║         	^^^^^^^
-//│ ╟── argument list of type `[1, 2]` does not match type `[[?a, ?b]]`
-//│ ║  l.102: 	f(1, 2)
+//│ ╟── argument list of type `[1, 2]` does not match type `[error]`
+//│ ║  l.108: 	f(1, 2)
 //│ ╙──       	 ^^^^^^
 //│ Int | error
 //│ res
 //│ Runtime error:
-//│   TypeError: number 1 is not iterable (cannot read property Symbol(Symbol.iterator))
+//│   ReferenceError: f6 is not defined
 
 :pe
 f((1, 2))
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.115: 	f((1, 2))
-//│ ╙──       	  ^^^^^^
 //│ Int
 //│ res
-//│     = 3
+//│ Runtime error:
+//│   ReferenceError: f6 is not defined
 
 f([1, 2])
 //│ Int
 //│ res
-//│     = 3
+//│ Runtime error:
+//│   ReferenceError: f6 is not defined
 
 :e
 f[1, 2]
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.129: 	f[1, 2]
+//│ ║  l.134: 	f[1, 2]
 //│ ╙──       	^^^^^^^
-//│ ([Int, Int]) -> Int
+//│ error -> Int
 //│ res
-//│     = [Function: f7]
+//│ Runtime error:
+//│   ReferenceError: f6 is not defined
 
 
 :pe
 let f = (((x, y))) => x + y
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.139: 	let f = (((x, y))) => x + y
+//│ ╔══[ERROR] Unsupported pattern shape:
+//│ ║  l.145: 	let f = (((x, y))) => x + y
 //│ ╙──       	          ^^^^^^
-//│ let f: ([Int, Int]) -> Int
-//│ f
-//│   = [Function: f9]
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.145: 	let f = (((x, y))) => x + y
+//│ ╙──       	                      ^
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.145: 	let f = (((x, y))) => x + y
+//│ ╙──       	                          ^
+//│ let f: error -> Int
+//│ Code generation encountered an error:
+//│   term App(Var(,), Tup(_: Var(x), _: Var(y))) is not a valid pattern
 
 
 // * TODO maybe parse as type lambda?
 let f = [x, y] => x + y
 //│ let f: ([Int, Int]) -> Int
 //│ f
-//│   = [Function: f11]
+//│   = [Function: f9]
 
 :e
 f(1, 2)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.155: 	f(1, 2)
+//│ ║  l.167: 	f(1, 2)
 //│ ║         	^^^^^^^
 //│ ╟── argument list of type `[1, 2]` does not match type `[[?a, ?b]]`
-//│ ║  l.155: 	f(1, 2)
+//│ ║  l.167: 	f(1, 2)
 //│ ╙──       	 ^^^^^^
 //│ Int | error
 //│ res
@@ -173,7 +185,7 @@ f([1, 2])
 let f = ([x, y]) => x + y
 //│ let f: ([Int, Int]) -> Int
 //│ f
-//│   = [Function: f13]
+//│   = [Function: f11]
 
 f([1, 2])
 //│ Int
@@ -183,10 +195,10 @@ f([1, 2])
 :e
 f(1, 2)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.184: 	f(1, 2)
+//│ ║  l.196: 	f(1, 2)
 //│ ║         	^^^^^^^
 //│ ╟── argument list of type `[1, 2]` does not match type `[[?a, ?b]]`
-//│ ║  l.184: 	f(1, 2)
+//│ ║  l.196: 	f(1, 2)
 //│ ╙──       	 ^^^^^^
 //│ Int | error
 //│ res
@@ -197,15 +209,15 @@ f(1, 2)
 let f = [[[x, y]]] => x + y
 //│ let f: ([[[Int, Int]]]) -> Int
 //│ f
-//│   = [Function: f15]
+//│   = [Function: f13]
 
 :e
 f([[1, 2]])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.203: 	f([[1, 2]])
+//│ ║  l.215: 	f([[1, 2]])
 //│ ║         	^^^^^^^^^^^
 //│ ╟── tuple literal of type `[1, 2]` does not match type `[[?a, ?b]]`
-//│ ║  l.203: 	f([[1, 2]])
+//│ ║  l.215: 	f([[1, 2]])
 //│ ╙──       	   ^^^^^^
 //│ Int | error
 //│ res

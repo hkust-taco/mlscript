@@ -193,6 +193,9 @@ B.x
 
 
 abstract class Foo[A](val x: A) { fun y = x;; fun i: A -> A }
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.195: 	abstract class Foo[A](val x: A) { fun y = x;; fun i: A -> A }
+//│ ╙──       	                                            ^
 //│ abstract class Foo[A](x: A) {
 //│   fun i: A -> A
 //│   fun y: A
@@ -223,13 +226,13 @@ module Bazz extends Foo(0) {
   val x: 2
 }
 //│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
-//│ ║  l.223: 	  val x: 2
+//│ ║  l.226: 	  val x: 2
 //│ ║         	  ^^^^^^^^
 //│ ╟── Originally declared here:
 //│ ║  l.195: 	abstract class Foo[A](val x: A) { fun y = x;; fun i: A -> A }
 //│ ╙──       	                          ^
 //│ ╔══[ERROR] Member `i` is declared (or its declaration is inherited) but is not implemented in `Bazz`
-//│ ║  l.222: 	module Bazz extends Foo(0) {
+//│ ║  l.225: 	module Bazz extends Foo(0) {
 //│ ║         	       ^^^^
 //│ ╟── Declared here:
 //│ ║  l.195: 	abstract class Foo[A](val x: A) { fun y = x;; fun i: A -> A }

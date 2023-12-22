@@ -34,6 +34,9 @@ Bar : Foo['X]
 
 
 trait Foo[A] { fun foo: A;; fun bar: A -> A }
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.36: 	trait Foo[A] { fun foo: A;; fun bar: A -> A }
+//│ ╙──      	                          ^
 //│ trait Foo[A] {
 //│   fun bar: A -> A
 //│   fun foo: A
@@ -108,22 +111,22 @@ module Bar extends T1, Foo[Int | Str] {
   fun bar(x) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in definition of method bar:
-//│ ║  l.108: 	  fun bar(x) = x + 1
+//│ ║  l.111: 	  fun bar(x) = x + 1
 //│ ║         	      ^^^^^^^^^^^^^^
 //│ ╟── type `Bool` is not an instance of `Int`
-//│ ║  l.64: 	trait T1 extends Foo[Int | Bool]
+//│ ║  l.67: 	trait T1 extends Foo[Int | Bool]
 //│ ║        	                           ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.108: 	  fun bar(x) = x + 1
+//│ ║  l.111: 	  fun bar(x) = x + 1
 //│ ╙──       	               ^
 //│ ╔══[ERROR] Type mismatch in definition of method bar:
-//│ ║  l.108: 	  fun bar(x) = x + 1
+//│ ║  l.111: 	  fun bar(x) = x + 1
 //│ ║         	      ^^^^^^^^^^^^^^
 //│ ╟── type `Str` is not an instance of `Int`
-//│ ║  l.106: 	module Bar extends T1, Foo[Int | Str] {
+//│ ║  l.109: 	module Bar extends T1, Foo[Int | Str] {
 //│ ║         	                                 ^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.108: 	  fun bar(x) = x + 1
+//│ ║  l.111: 	  fun bar(x) = x + 1
 //│ ╙──       	               ^
 //│ module Bar extends Foo, T1 {
 //│   fun bar: Int -> Int
@@ -134,6 +137,9 @@ module Bar extends T1, Foo[Int | Str] {
 trait Base[A] { fun foo: A;; fun bar: A -> A }
 trait Derived1[A] extends Base[A]
 trait Derived2 extends Base[[Int | Str, Int | Str]]
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.137: 	trait Base[A] { fun foo: A;; fun bar: A -> A }
+//│ ╙──       	                           ^
 //│ trait Base[A] {
 //│   fun bar: A -> A
 //│   fun foo: A

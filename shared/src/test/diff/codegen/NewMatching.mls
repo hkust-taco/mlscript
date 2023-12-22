@@ -129,33 +129,42 @@ fun foo(s) =
   if s is
     Some(t) then let b = s2.value in b + t.x
     _ then 0  
-//│ fun foo: (Object & ~#Some | Some[{x: Int}]) -> Int
+//│ ╔══[PARSE ERROR] Unexpected 'in' keyword here
+//│ ║  l.130: 	    Some(t) then let b = s2.value in b + t.x
+//│ ╙──       	                                  ^^
+//│ fun foo: Some[anything] -> ()
 //│ // Prelude
 //│ class TypingUnit8 {}
 //│ const typing_unit8 = new TypingUnit8;
 //│ // Query 1
 //│ globalThis.foo = function foo(s) {
 //│   return ((() => {
-//│     return s instanceof Some.class ? (([t]) => ((b) => b + t.x)(s21.value))(Some.unapply(s)) : 0;
+//│     let a;
+//│     return (a = s, a instanceof Some.class ? (([t]) => ((b) => undefined)(s21.value))(Some.unapply(s)) : (() => {
+//│       throw new Error("non-exhaustive case expression");
+//│     })());
 //│   })());
 //│ };
 //│ // End of generated code
 
 foo(Some(V1(12)))
-//│ Int
+//│ ()
 //│ res
-//│     = 13
+//│     = undefined
 
 fun bar(s) =
   if s is
     Some(_) then let b = s2.value in b + 1
     _ then 0
-//│ fun bar: (Object & ~#Some | Some[anything]) -> Int
+//│ ╔══[PARSE ERROR] Unexpected 'in' keyword here
+//│ ║  l.157: 	    Some(_) then let b = s2.value in b + 1
+//│ ╙──       	                                  ^^
+//│ fun bar: Some[anything] -> ()
 
 bar(Some(V1(12)))
-//│ Int
+//│ ()
 //│ res
-//│     = 2
+//│     = undefined
 
 :js
 class FooBar {
@@ -219,7 +228,7 @@ fun ft(x) =
     FooBar(x) then x
     _ then 0
 //│ ╔══[ERROR] class FooBar expects 0 parameter but found 1 parameter
-//│ ║  l.219: 	    FooBar(x) then x
+//│ ║  l.228: 	    FooBar(x) then x
 //│ ╙──       	    ^^^^^^^^^
 //│ fun ft: anything -> error
 //│ Code generation encountered an error:
@@ -265,7 +274,7 @@ fun c(x) =
     VVC(x, y, z) then x + y + z
     _ then 0
 //│ ╔══[ERROR] class VVC expects 2 parameters but found 3 parameters
-//│ ║  l.265: 	    VVC(x, y, z) then x + y + z
+//│ ║  l.274: 	    VVC(x, y, z) then x + y + z
 //│ ╙──       	    ^^^^^^^^^^^^
 //│ class VVC(v: Int, vc: Int)
 //│ fun c: anything -> error

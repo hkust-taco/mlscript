@@ -33,10 +33,7 @@ class Foo extends Bar, Baz
 :pe
 class Foo: Bar, Baz
 //│ |#class| |Foo|#:| |Bar|,| |Baz|
-//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
-//│ ║  l.34: 	class Foo: Bar, Baz
-//│ ╙──      	              ^
-//│ Parsed: {class Foo: Bar {}}
+//│ Parsed: {class Foo: ,[Bar, Baz] {}}
 
 class Foo: Bar { fun f = 0 }
 //│ |#class| |Foo|#:| |Bar| |{| |#fun| |f| |#=| |0| |}|
@@ -49,10 +46,10 @@ class Foo extends Bar, Baz { fun f = 0 }
 :pe
 class Foo: Bar, Baz { fun f = 0 }
 //│ |#class| |Foo|#:| |Bar|,| |Baz| |{| |#fun| |f| |#=| |0| |}|
-//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
-//│ ║  l.50: 	class Foo: Bar, Baz { fun f = 0 }
-//│ ╙──      	              ^
-//│ Parsed: {class Foo: Bar {}}
+//│ ╔══[ERROR] Not a recognized type
+//│ ║  l.47: 	class Foo: Bar, Baz { fun f = 0 }
+//│ ╙──      	                ^^^^^^^^^^^^^^^^^
+//│ Parsed: {class Foo: anything {}}
 
 // * Pretty confusing... better reject this:
 :pe
@@ -62,15 +59,15 @@ class Foo: Bar { fun f = 0
 }
 //│ |#class| |Foo|#:| |Bar| |{| |#fun| |f| |#=| |0|→|#fun| |bar| |#=| |1|←|↵|}|
 //│ ╔══[PARSE ERROR] Unexpected 'fun' keyword in expression position
-//│ ║  l.61: 	  fun bar = 1
+//│ ║  l.58: 	  fun bar = 1
 //│ ╙──      	  ^^^
 //│ ╔══[PARSE ERROR] Unexpected '=' here
-//│ ║  l.61: 	  fun bar = 1
+//│ ║  l.58: 	  fun bar = 1
 //│ ╙──      	          ^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.60: 	class Foo: Bar { fun f = 0
+//│ ║  l.57: 	class Foo: Bar { fun f = 0
 //│ ║        	                         ^
-//│ ║  l.61: 	  fun bar = 1
+//│ ║  l.58: 	  fun bar = 1
 //│ ╙──      	^^^^^^^^^
 //│ Parsed: {class Foo: Bar {fun f = 0(bar,)}}
 

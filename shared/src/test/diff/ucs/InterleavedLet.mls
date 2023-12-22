@@ -263,17 +263,21 @@ fun mapPartition(f, xs) =
 //│             = [Function: mapPartition]
 
 mapPartition(x => if x % 2 == 0 then Left(x) else Right(x), zeroToThree)
-//│ res: Pair & {
-//│   fst: forall 'a 'b. Nil | 'b | 'a,
-//│   snd: Nil | Cons & {head: 0 | 1 | 2 | 3, tail: Nil}
-//│ }
-//│ where
-//│   'a :> Cons & {head: 0 | 1 | 2 | 3, tail: forall 'c. Nil | 'c}
-//│   'b :> Cons & {head: 0 | 1 | 2 | 3, tail: forall 'c. Nil | 'c}
-//│    = Pair {
-//│        fst: Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } },
-//│        snd: Cons { head: 1, tail: Cons { head: 3, tail: Nil {} } }
-//│      }
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.265: 	mapPartition(x => if x % 2 == 0 then Left(x) else Right(x), zeroToThree)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── argument of type `(forall ?a ?b ?c. ?c -> (?a | ?b),)` does not match type `(?d, ?e,)`
+//│ ║  l.265: 	mapPartition(x => if x % 2 == 0 then Left(x) else Right(x), zeroToThree)
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from tuple literal:
+//│ ║  l.249: 	fun mapPartition(f, xs) =
+//│ ╙──       	                ^^^^^^^
+//│ res: Pair & {fst: forall 'a 'b. Nil | 'b | 'a, snd: Nil | Cons & {head: nothing, tail: Nil}} | error
+//│   where
+//│     'a :> Cons & {head: nothing, tail: forall 'c. Nil | 'c}
+//│     'b :> Cons & {head: nothing, tail: forall 'c. Nil | 'c}
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
 
 // This should be the desugaring of the above:
 fun mapPartition2(f, xs) =
@@ -300,24 +304,31 @@ fun mapPartition2(f, xs) =
 //│              = [Function: mapPartition2]
 
 mapPartition2(x => if x % 2 == 0 then Left(x) else Right(x), zeroToThree)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.306: 	mapPartition2(x => if x % 2 == 0 then Left(x) else Right(x), zeroToThree)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── argument of type `(forall ?a ?b ?c. ?b -> (?c | ?a),)` does not match type `(?d, ?e,)`
+//│ ║  l.306: 	mapPartition2(x => if x % 2 == 0 then Left(x) else Right(x), zeroToThree)
+//│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from tuple literal:
+//│ ║  l.283: 	fun mapPartition2(f, xs) =
+//│ ╙──       	                 ^^^^^^^
 //│ res: Pair & {
 //│   fst: forall 'a. Cons & {
-//│     head: 0,
-//│     tail: forall 'b. Nil | 'b | Cons & {head: 1 | 2 | 3, tail: forall 'fst. Nil | 'fst}
-//│   } | Nil | 'a | Cons & {head: 1 | 2 | 3, tail: forall 'fst0. Nil | 'fst0},
-//│   snd: Cons & {head: 0, tail: Nil | Cons & {head: 1 | 2 | 3, tail: Nil}} | Nil | Cons & {head: 1 | 2 | 3, tail: Nil}
-//│ }
+//│     head: nothing,
+//│     tail: forall 'b. Nil | 'b | Cons & {head: nothing, tail: forall 'fst. Nil | 'fst}
+//│   } | Nil | 'a | Cons & {head: nothing, tail: forall 'fst0. Nil | 'fst0},
+//│   snd: Cons & {head: nothing, tail: Nil | Cons & {head: nothing, tail: Nil}} | Nil | Cons & {head: nothing, tail: Nil}
+//│ } | error
 //│ where
-//│   'a :> Cons & {head: 1 | 2 | 3, tail: forall 'fst0. Nil | 'fst0}
+//│   'a :> Cons & {head: nothing, tail: forall 'fst0. Nil | 'fst0}
 //│   'fst0 :> forall 'c. Nil | 'c
-//│   'c :> Cons & {head: 1 | 2 | 3, tail: forall 'fst0. Nil | 'fst0}
-//│   'b :> Cons & {head: 1 | 2 | 3, tail: forall 'fst. Nil | 'fst}
+//│   'c :> Cons & {head: nothing, tail: forall 'fst0. Nil | 'fst0}
+//│   'b :> Cons & {head: nothing, tail: forall 'fst. Nil | 'fst}
 //│   'fst :> forall 'd. Nil | 'd
-//│   'd :> Cons & {head: 1 | 2 | 3, tail: forall 'fst. Nil | 'fst}
-//│    = Pair {
-//│        fst: Cons { head: 0, tail: Cons { head: 2, tail: Nil {} } },
-//│        snd: Cons { head: 1, tail: Cons { head: 3, tail: Nil {} } }
-//│      }
+//│   'd :> Cons & {head: nothing, tail: forall 'fst. Nil | 'fst}
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
 
 fun log(x) = ()
 //│ log: anything -> undefined

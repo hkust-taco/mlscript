@@ -74,10 +74,30 @@ mkString of filtermap(x => (if
   x % 2 == 0 then Fals
   x % 3 == 0 then Pair(Tru, x / 3)
   else Tru), list)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.71: 	mkString of filtermap(x => if x % 2 == 0 then Tru else Fals, list)
+//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── argument of type `[forall ?a ?b. ?a -> (Tru | ?b)]` does not match type `[?c, ?d]`
+//│ ║  l.71: 	mkString of filtermap(x => if x % 2 == 0 then Tru else Fals, list)
+//│ ║        	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from tuple literal:
+//│ ║  l.46: 	fun filtermap(f, xs) = if xs is
+//│ ╙──      	             ^^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.72: 	mkString of filtermap(x => if x % 2 == 0 then Fals else Tru, list)
+//│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── argument of type `[forall ?a ?b. ?a -> (Fals | ?b)]` does not match type `[?c, ?d]`
+//│ ║  l.72: 	mkString of filtermap(x => if x % 2 == 0 then Fals else Tru, list)
+//│ ║        	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from tuple literal:
+//│ ║  l.46: 	fun filtermap(f, xs) = if xs is
+//│ ╙──      	             ^^^^^^^
 //│ Str
 //│ res
-//│     = '1, 3, 5, 7'
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
 //│ res
-//│     = '2, 4, 6'
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
 //│ res
 //│     = '2, 1, 4, 6'

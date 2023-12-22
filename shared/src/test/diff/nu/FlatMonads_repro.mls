@@ -175,29 +175,41 @@ fun loop =
 
 
 val x: Bind['A, 'B] where undefined : 'A;; 'A : 'B
-//│ val x: forall 'A 'B. Bind['A, 'B]
-//│   where
-//│     'A :> ()
-//│        <: 'B
-//│     'B :> ()
+//│ ╔══[ERROR] Not a recognized type
+//│ ║  l.177: 	val x: Bind['A, 'B] where undefined : 'A;; 'A : 'B
+//│ ╙──       	                                         ^
+//│ val x: anything
 //│ x
 //│   = <missing implementation>
 
 x.run
-//│ ()
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.185: 	x.run
+//│ ║         	^^^^^
+//│ ╟── reference of type `anything` does not have field 'run'
+//│ ║  l.185: 	x.run
+//│ ╙──       	^
+//│ error
 //│ res
 //│     = <no result>
 //│       x is not implemented
 
 val x: Bind['A, 'B] where 'A : undefined;; 'A : 'B
-//│ val x: forall 'A 'B. Bind['A, 'B]
-//│   where
-//│     'A <: () & 'B
+//│ ╔══[ERROR] Not a recognized type
+//│ ║  l.197: 	val x: Bind['A, 'B] where 'A : undefined;; 'A : 'B
+//│ ╙──       	                                         ^
+//│ val x: anything
 //│ x
 //│   = <missing implementation>
 
 x.run
-//│ nothing
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.205: 	x.run
+//│ ║         	^^^^^
+//│ ╟── reference of type `anything` does not have field 'run'
+//│ ║  l.205: 	x.run
+//│ ╙──       	^
+//│ error
 //│ res
 //│     = <no result>
 //│       x is not implemented
