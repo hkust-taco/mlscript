@@ -658,10 +658,16 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                     // err((
                     //   msg"Expected '=>' or '->' after this parameter section" -> S(loc) :: Nil))
                     // Tup(fs)
-                    Blk(res.map {
+                    // Blk(res.map {
+                    //   case N -> Fld(FldFlags.empty, t) => t
+                    //   case _ => ???
+                    // })
+                    res.map {
+                      // case (N -> Fld(FldFlags.empty, t), acc) => App(Var(","), PlainTup(t, acc))
+                      // case (f, acc) => ???
                       case N -> Fld(FldFlags.empty, t) => t
-                      case _ => ???
-                    })
+                      case f => ???
+                    }.reduceRight((t, acc) => App(Var(","), PlainTup(t, acc)))
                 }
             }
           case _ =>
