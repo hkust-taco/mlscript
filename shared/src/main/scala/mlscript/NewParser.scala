@@ -854,8 +854,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 else App(App(v, PlainTup(acc)), PlainTup(rhs))
             }, prec, allowNewlines)
         }
-      case (KEYWORD(":"), l0) :: _ if prec <= outer.prec(':') =>
-        consume
+      case (KEYWORD("as" | ":"), l0) :: _ if prec <= outer.prec(':') =>
+        consume // use both "as" and ":"
         R(Asc(acc, typ(0)))
       case (KEYWORD("where"), l0) :: _ if prec <= 1 =>
         consume

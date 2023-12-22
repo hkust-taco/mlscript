@@ -447,13 +447,7 @@ let Some(x) = v
 // TODO support?
 v as Some(x)
 //│ |v| |#as| |Some|(|x|)|
-//│ ╔══[PARSE ERROR] Unexpected 'as' keyword in expression position
-//│ ║  l.448: 	v as Some(x)
-//│ ╙──       	  ^^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.448: 	v as Some(x)
-//│ ╙──       	^^^^^^^^^^^^
-//│ Parsed: {v(Some(x,),)}
+//│ Parsed: {v : Some[x]}
 
 
 
@@ -464,7 +458,7 @@ if true
   + 1
 //│ |#if| |true|→|#then| |0|↵|+| |1|←|
 //│ ╔══[PARSE ERROR] Unexpected operator here
-//│ ║  l.464: 	  + 1
+//│ ║  l.458: 	  + 1
 //│ ╙──       	  ^
 //│ Parsed: {if (true) then 0}
 
@@ -493,7 +487,7 @@ if true
   + 1
 //│ |#if| |true|→|#then| |0|←|→|+| |1|←|
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.493: 	  + 1
+//│ ║  l.487: 	  + 1
 //│ ╙──       	^^
 //│ Parsed: {if (true) then 0}
 
@@ -504,7 +498,7 @@ if true
   + 1
 //│ |#if| |true|→|#then| |0|↵|#else| |0|←|→|+| |1|←|
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.504: 	  + 1
+//│ ║  l.498: 	  + 1
 //│ ╙──       	^^
 //│ Parsed: {if (true) then 0 else 0}
 
@@ -539,10 +533,10 @@ if true
 (if true)
 //│ |(|#if| |true|)|
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found reference instead
-//│ ║  l.539: 	(if true)
+//│ ║  l.533: 	(if true)
 //│ ║         	    ^^^^
 //│ ╟── Note: 'if' expression starts here:
-//│ ║  l.539: 	(if true)
+//│ ║  l.533: 	(if true)
 //│ ╙──       	 ^^
 //│ Parsed: {'(' if (true) then undefined ')'}
 
@@ -550,7 +544,7 @@ if true
 (if true then)
 //│ |(|#if| |true| |#then|)|
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
-//│ ║  l.550: 	(if true then)
+//│ ║  l.544: 	(if true then)
 //│ ╙──       	             ^
 //│ Parsed: {'(' if (true) then undefined ')'}
 
@@ -558,10 +552,10 @@ if true
 if true then;
 //│ |#if| |true| |#then|;|
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
-//│ ║  l.558: 	if true then;
+//│ ║  l.552: 	if true then;
 //│ ╙──       	            ^
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.558: 	if true then;
+//│ ║  l.552: 	if true then;
 //│ ╙──       	             ^
 //│ Parsed: {if (true) then undefined}
 
@@ -573,7 +567,7 @@ if true then;;
 if true then;; else;;
 //│ |#if| |true| |#then|#;;| |#else|#;;|
 //│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
-//│ ║  l.573: 	if true then;; else;;
+//│ ║  l.567: 	if true then;; else;;
 //│ ╙──       	               ^^^^^^
 //│ Parsed: {if (true) then undefined; undefined}
 

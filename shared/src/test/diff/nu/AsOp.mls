@@ -1,0 +1,54 @@
+:NewDefs
+
+abstract class Foo[type T]: Bar | Baz
+class Bar extends Foo[Int]
+class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ abstract class Foo[T]: Bar | Baz[?]
+//│ class Bar extends Foo {
+//│   constructor()
+//│ }
+//│ class Baz[T](x: Foo[T]) extends Foo
+
+fun foo: Foo['T] -> Int
+fun foo[T](f: Foo[T]): Int = if f is
+    Bar then 0
+    Baz(x) then foo(x as Foo[x.T])
+//│ fun foo: forall 'T. (f: Foo['T]) -> Int
+//│ fun foo: forall 'T0. Foo['T0] -> Int
+
+1 as Int
+"hi" as Str
+//│ Str
+//│ res
+//│     = 1
+//│ res
+//│     = 'hi'
+
+:e
+1 as 2
+"hello" as Int
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.28: 	1 as 2
+//│ ║        	^
+//│ ╟── integer literal of type `1` does not match type `2`
+//│ ╟── Note: constraint arises from literal type:
+//│ ║  l.28: 	1 as 2
+//│ ╙──      	     ^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.29: 	"hello" as Int
+//│ ║        	^^^^^^^
+//│ ╟── string literal of type `"hello"` is not an instance of type `Int`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.29: 	"hello" as Int
+//│ ╙──      	           ^^^
+//│ Int
+//│ res
+//│     = 1
+//│ res
+//│     = 'hello'
+
+// what ?
+0as Int
+//│ Int
+//│ res
+//│     = 0
