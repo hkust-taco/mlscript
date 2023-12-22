@@ -120,11 +120,6 @@ class PreTyper(override val debugTopics: Opt[Set[Str]], useNewDefs: Bool) extend
           traverseTerm(base)
           traverseTypingUnit(decls, "Rft", scope)
           ()
-        case NuNew(cls) => traverseTerm(cls)
-        case Rft(base, decls) =>
-          traverseTerm(base)
-          traverseTypingUnit(decls, "Rft", scope)
-          ()
       }
     }(_ => s"traverseTerm ==> ${inspect.shallow(term)}")
 
