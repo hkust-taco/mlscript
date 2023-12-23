@@ -2,7 +2,9 @@
 
 // This test file is to track possible name collision during specialization.
 
+fun (~~>) check(x, y) = if x === y then "passed" else error
 class Pair[out A, out B](val first: A, val second: B)
+//│ fun (~~>) check: forall 'a. (Eql['a], 'a) -> "passed"
 //│ class Pair[A, B](first: A, second: B)
 
 fun p1(x) = x < 0
@@ -41,10 +43,27 @@ fun example3(t) =
     else 42
 //│ fun example3: Base -> Int
 
-// FIXME
 fun example4(t, x) =
   if t is
     Base(x) and p1(x) then x
-    Derived(y) then y + x // Oh no, x is captured by Base! Because this branch is absorbed by the previous one.
+    Derived(y) then y + x
+    //                  ^
+    // Oh no, x is captured by x from Base!
+    // Because the branch is absorbed by the previous one.
     else 42
 //│ fun example4: (Base, anything) -> Int
+
+example4(Base(-1), 0) ~~> -1
+example4(Base(1), 2) ~~> 42
+//│ "passed"
+//│ res
+//│     = 'passed'
+//│ res
+//│     = 'passed'
+
+// FIXME: Caused by variable shadowing during speicalization.
+example4(Derived(1), 4) ~~> 5
+//│ "passed"
+//│ res
+//│ Runtime error:
+//│   Error: an error was thrown
