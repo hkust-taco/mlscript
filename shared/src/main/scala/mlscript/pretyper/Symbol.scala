@@ -110,12 +110,6 @@ package object symbol {
         val synthesizedName = s"${name}$$tuple${index.toString}"
         new SubValueSymbol(this, N -> S(index), synthesizedName, loc)
       })
-
-    /**
-      * This buffer contains alias variables which created by "let" bindings or
-      * alias patterns.
-      */
-    val aliases: Buffer[Var] = Buffer.empty
   }
 
   final class ValueSymbol(val nme: Var, val hoisted: Bool) extends ScrutineeSymbol(nme.name) {

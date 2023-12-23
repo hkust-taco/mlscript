@@ -266,7 +266,8 @@ object PreTyper {
         case Nil => results.reverse
         case (nme: Var) :: tail => rec(nme :: results, tail)
         case (TyApp(ty, _)) :: tail => rec(results, ty :: tail)
-        case other :: _ => ???
+        case (App(nme @ Var(_), Tup(_))) :: tail => rec(nme :: results, tail)
+        case other :: _ => println(s"Unknown parent type: ${inspect.deep(other)}"); ???
       }
     rec(Nil, parents)
   }

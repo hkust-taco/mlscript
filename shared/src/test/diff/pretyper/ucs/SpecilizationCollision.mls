@@ -1,0 +1,50 @@
+:PreTyper
+
+// This test file is to track possible name collision during specialization.
+
+class Pair[out A, out B](val first: A, val second: B)
+//│ class Pair[A, B](first: A, second: B)
+
+fun p1(x) = x < 0
+fun p2(x) = x > 0
+fun p3(x) = x == 0
+//│ fun p1: Num -> Bool
+//│ fun p2: Num -> Bool
+//│ fun p3: Num -> Bool
+
+fun example1(p) =
+  if p is
+    Pair(x, y) and p1(x) and p1(y) then "both negative"
+    Pair(a, b) and p2(a) and p2(b) then "both positive"
+    else "nah"
+//│ fun example1: (Object & ~#Pair | Pair[Num, Num]) -> ("both negative" | "both positive" | "nah")
+
+// FIXME: The error should be handled gracefully.
+fun example2(p) =
+  if p is
+    Pair(x, y) and p1(x) and p1(y) then "both negative"
+    Pair(a, b) and p2(a) and p2(b) then x + y
+    else "nah"
+//│ /!!!\ Uncaught error: java.lang.Exception: Variable x not found in scope
+
+// Next, let's check the name collision between a class and its super class.
+
+class Base(x: Int)
+class Derived(y: Int) extends Base(y + 1)
+//│ class Base(x: Int)
+//│ class Derived(y: Int) extends Base
+
+fun example3(t) =
+  if t is
+    Base(x) and p1(x) then x
+    Derived(y) then y
+    else 42
+//│ fun example3: Base -> Int
+
+// FIXME
+fun example4(t, x) =
+  if t is
+    Base(x) and p1(x) then x
+    Derived(y) then y + x // Oh no, x is captured by Base! Because this branch is absorbed by the previous one.
+    else 42
+//│ fun example4: (Base, anything) -> Int

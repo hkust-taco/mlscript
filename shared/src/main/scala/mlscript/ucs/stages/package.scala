@@ -15,14 +15,15 @@ package object stages {
     }
   }
 
-  private[stages] sealed abstract class MatchOrNot {
-    override def toString(): String = this match {
-      case Yes => "+"
-      case No => "-"
+  object ScrutineeOnly {
+    def unapply(term: Term): Opt[ScrutineeSymbol] = term match {
+      case v: Var => v.symbol match {
+        case symbol: ScrutineeSymbol => S(symbol)
+        case _ => N
+      }
+      case _ => N
     }
   }
-  private[stages] final case object Yes extends MatchOrNot
-  private[stages] final case object No extends MatchOrNot
 
   sealed abstract class CasePattern {
     override def toString(): String = this match {
