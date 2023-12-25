@@ -50,7 +50,7 @@ trait Normalization { self: mlscript.pretyper.Traceable =>
         println(s"alias $scrutinee => $nme")
         Let(false, nme, scrutinee, normalizeToTerm(concat(continuation, tail)))
       // Skip Boolean conditions as scrutinees, because they only appear once.
-      case Split.Cons(Branch(test, pattern @ Pattern.Class(nme @ Var("true"), N), continuation), tail) if Desugaring.isTestVar(test) =>
+      case Split.Cons(Branch(test, pattern @ Pattern.Class(nme @ Var("true")), continuation), tail) if Desugaring.isTestVar(test) =>
         val trueBranch = normalizeToTerm(concat(continuation, tail))
         val falseBranch = normalizeToCaseBranches(tail)
         CaseOf(test, Case(nme, trueBranch, falseBranch))
@@ -59,48 +59,11 @@ trait Normalization { self: mlscript.pretyper.Traceable =>
         val falseBranch = normalizeToCaseBranches(specialize(tail, false)(scrutinee.symbol, pattern, scope))
         CaseOf(scrutinee, Case(literal, trueBranch, falseBranch))
       // false class parameters. Easy
-      case Split.Cons(Branch(scrutinee, pattern @ Pattern.Class(nme, N), continuation), tail) =>
+      case Split.Cons(Branch(scrutinee, pattern @ Pattern.Class(nme), continuation), tail) =>
         println(s"match $scrutinee with $nme (has location: ${nme.toLoc.isDefined})")
         val trueBranch = normalizeToTerm(specialize(concat(continuation, tail), true)(scrutinee.symbol, pattern, scope))
         val falseBranch = normalizeToCaseBranches(specialize(tail, false)(scrutinee.symbol, pattern, scope))
         CaseOf(scrutinee, Case(nme, trueBranch, falseBranch))
-      case Split.Cons(Branch(scrutinee, pattern @ Pattern.Class(nme, S(parameters)), continuation), tail) =>
-        println(s"match $scrutinee with $pattern")
-        val unappliedVar = Var(s"args_${scrutinee.name}$$${nme.name}")
-        println(s"make unapplied var: $unappliedVar")
-        // Update the scrutinee symbol. The variable will be used in merging
-        // branches of the same pattern later.
-        scrutinee.symbol match {
-          case symbol: ScrutineeSymbol =>
-            nme.symbolOption.flatMap(_.typeSymbolOption) match {
-              case N => throw new NormalizationException(msg"class name is not resolved" -> nme.toLoc :: Nil)
-              case S(typeSymbol) =>
-                println(s"add unapplied var for ${typeSymbol.name}")
-                symbol.addUnappliedVar(typeSymbol, unappliedVar)
-            }
-          case _ =>
-            // FIXME: I guess this should not happen.
-            throw new NormalizationException(msg"Scrutinee is not a scrutinee symbol" -> scrutinee.toLoc :: Nil)
-        }
-        val trueBranch = trace("compute true branch"){
-          normalizeToTerm(specialize(concat(continuation, tail), true)(scrutinee.symbol, pattern, scope))
-        }()
-        val trueBranchWithBindings = Let(
-          isRec = false,
-          name = unappliedVar,
-          rhs = {
-            val arguments = N -> Fld(FldFlags.empty, scrutinee) :: Nil
-            App(Sel(nme, Var("unapply")), Tup(arguments))
-          }, 
-          body = parameters.zipWithIndex.foldRight(trueBranch) {
-            case ((N, i), next) => next
-            case ((S(parameter), i), next) => Let(false, parameter, Sel(unappliedVar, Var(i.toString)), next)
-          }
-        )
-        val falseBranch = trace("compute false branch"){
-          normalizeToCaseBranches(specialize(tail, false)(scrutinee.symbol, pattern, scope))
-        }()
-        CaseOf(scrutinee, Case(nme, trueBranchWithBindings, falseBranch))
       case Split.Cons(Branch(scrutinee, pattern, continuation), tail) =>
         throw new NormalizationException((msg"Unsupported pattern: ${pattern.toString}" -> pattern.toLoc) :: Nil)
       case Split.Let(rec, Var("_"), rhs, tail) => normalizeToTerm(tail)
@@ -123,13 +86,13 @@ trait Normalization { self: mlscript.pretyper.Traceable =>
   private def specialize
       (split: Split, matchOrNot: Bool)
       (implicit scrutinee: Symbol, pattern: Pattern, scope: Scope): Split =
-  trace(s"S${if (matchOrNot) "+" else "-"} <== ${scrutinee.name} is ${pattern}") {
+  trace[Split](s"S${if (matchOrNot) "+" else "-"} <== ${scrutinee.name} is ${pattern}") {
     (matchOrNot, split) match {
       // Name patterns are translated to let bindings.
       case (true | false, Split.Cons(Branch(otherScrutineeVar, Pattern.Name(alias), continuation), tail)) =>
         Split.Let(false, alias, otherScrutineeVar, specialize(continuation, matchOrNot))
       // Class pattern. Positive.
-      case (true, split @ Split.Cons(head @ Branch(ScrutineeOnly(otherScrutinee), Pattern.Class(otherClassName, otherParameters), continuation), tail)) =>
+      case (true, split @ Split.Cons(head @ Branch(ScrutineeOnly(otherScrutinee), Pattern.Class(otherClassName), continuation), tail)) =>
         val otherClassSymbol = getClassLikeSymbol(otherClassName)
         lazy val specializedTail = {
           println(s"specialized next")
@@ -138,67 +101,19 @@ trait Normalization { self: mlscript.pretyper.Traceable =>
         if (scrutinee === otherScrutinee) {
           println(s"scrutinee: ${scrutinee.name} === ${otherScrutinee.name}")
           pattern match {
-            case Pattern.Class(className, parameters) =>
+            case Pattern.Class(className) =>
               val classSymbol = getClassLikeSymbol(className)
               if (classSymbol === otherClassSymbol) {
                 println(s"Case 1: class name: $className === $otherClassName")
-                (parameters, otherParameters) match {
-                  case (S(parameters), S(otherParameters)) =>
-                    if (parameters.length === otherParameters.length) {
-                      println(s"same number of parameters: ${parameters.length}")
-                      val addLetBindings = parameters.iterator.zip(otherParameters).zipWithIndex.foldLeft[Split => Split](identity) {
-                        case (acc, N -> S(otherParameter) -> index) =>
-                          scrutinee match { // Well, it's a mistake to create a dedicated symbol for scrutinees.
-                            case symbol: ScrutineeSymbol =>
-                              symbol.unappliedVarMap.get(otherClassSymbol) match {
-                                case N =>
-                                  println(symbol.unappliedVarMap)
-                                  die
-                                case S(unappliedVar) =>
-                                  println(s"we can create binding for ${otherParameter.name} at $index")
-                                  tail => Split.Let(false, otherParameter, Sel(unappliedVar, Var(index.toString)), acc(tail))
-                              }
-                            case _ =>
-                              println(s"we can't create binding for ${otherParameter.name} at $index")
-                              die
-                          }
-                        case (acc, S(parameter) -> S(otherParameter) -> index) if parameter.name =/= otherParameter.name =>
-                          println(s"different parameter names at $index: ${parameter.name} =/= ${otherParameter.name}")
-                          tail => Split.Let(false, otherParameter, parameter, acc(tail))
-                        case (acc, _) =>
-                          println(s"other cases")
-                          acc
-                      }
-                      // addLetBindings(specialize(continuation ++ tail, true))
-                      val specialized = addLetBindings(specialize(continuation, true))
-                      if (specialized.hasElse) {
-                        println("tail is discarded")
-                        specialized.withDiagnostic(
-                          msg"Discarded split because of else branch" -> None // TODO: Synthesize locations
-                        )
-                      } else {
-                        specialized ++ specialize(tail, true)
-                      }
-                    } else {
-                      throw new NormalizationException({
-                        msg"Mismatched numbers of parameters of ${className.name}:" -> otherClassName.toLoc ::
-                          msg"There are ${"parameters".pluralize(parameters.length, true)}." -> Pattern.getParametersLoc(parameters) ::
-                          msg"But there are ${"parameters".pluralize(otherParameters.length, true)}." -> Pattern.getParametersLoc(otherParameters) ::
-                          Nil
-                      })
-                    }
-                  // TODO: Other cases
-                  case (_, _) =>
-                    val specialized = specialize(continuation, true)
-                    if (specialized.hasElse) {
-                      println("tail is discarded")
-                      specialized.withDiagnostic(
-                        msg"Discarded split because of else branch" -> None // TODO: Synthesize locations
-                      )
-                    } else {
-                      specialized ++ specialize(tail, true)
-                    }
-                } // END match
+                val specialized = specialize(continuation, true)
+                if (specialized.hasElse) {
+                  println("tail is discarded")
+                  specialized.withDiagnostic(
+                    msg"Discarded split because of else branch" -> None // TODO: Synthesize locations
+                  )
+                } else {
+                  specialized ++ specialize(tail, true)
+                }
               } else if (otherClassSymbol.baseTypes contains classSymbol) {
                 println(s"Case 2: $otherClassName <: $className")
                 split
@@ -216,18 +131,15 @@ trait Normalization { self: mlscript.pretyper.Traceable =>
           )
         }
       // Class pattern. Negative
-      case (false, split @ Split.Cons(head @ Branch(ScrutineeOnly(otherScrutinee), Pattern.Class(otherClassName, otherParameters), continuation), tail)) =>
+      case (false, split @ Split.Cons(head @ Branch(ScrutineeOnly(otherScrutinee), Pattern.Class(otherClassName), continuation), tail)) =>
         val otherClassSymbol = getClassLikeSymbol(otherClassName)
         if (scrutinee === otherScrutinee) {
           println(s"scrutinee: ${scrutinee.name} === ${otherScrutinee.name}")
           pattern match {
-            case Pattern.Class(className, parameters) =>
+            case Pattern.Class(className) =>
               val classSymbol = getClassLikeSymbol(className)
               if (className === otherClassName) {
                 println(s"Case 1: class name: $otherClassName === $className")
-                println(s"parameters:")
-                println(s"  LHS: ${otherParameters.fold("N")(_.iterator.map(_.fold("N")(_.name)).mkString(", "))}")
-                println(s"  RHS: ${parameters.fold("N")(_.iterator.map(_.fold("N")(_.name)).mkString(", "))}")
                 specialize(tail, false) // TODO: Subsitute parameters to otherParameters
               } else if (otherClassSymbol.baseTypes contains classSymbol) {
                 println(s"Case 2: class name: $otherClassName <: $className")

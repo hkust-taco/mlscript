@@ -105,7 +105,7 @@ trait Desugaring { self: PreTyper =>
     * A shorthand for making a true pattern, which is useful in desugaring
     * Boolean conditions.
     */
-  private def truePattern(implicit scope: Scope) = c.Pattern.Class(Var("true").withResolvedTypeSymbol, N)
+  private def truePattern(implicit scope: Scope) = c.Pattern.Class(Var("true").withResolvedTypeSymbol)
 
   private def freshSymbol(nme: Var): ValueSymbol = new ValueSymbol(nme, false)
 
@@ -260,7 +260,7 @@ trait Desugaring { self: PreTyper =>
       case N => (initialScope, identity(_: c.Split))
     }
     // Last, return the scope with all bindings and a function that adds all matches and bindings to a split.
-    (scopeWithAll, split => c.Branch(scrutinee, c.Pattern.Class(pattern.nme, N), bindAll(split)))
+    (scopeWithAll, split => c.Branch(scrutinee, c.Pattern.Class(pattern.nme), bindAll(split)))
   }
 
   private def desugarPatternSplit(split: s.PatternSplit)(implicit scrutinee: Term, scope: Scope): c.Split = {
