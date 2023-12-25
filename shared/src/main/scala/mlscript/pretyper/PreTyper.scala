@@ -40,9 +40,6 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
         case S(sym: ValueSymbol) =>
           println(s"Resolve variable $v to a value.")
           v.symbol = sym
-        case S(sym: SubValueSymbol) =>
-          println(s"Resolve variable $v to a value.")
-          v.symbol = sym
         case S(sym: FunctionSymbol) =>
           println(s"Resolve variable $v to a function.")
           v.symbol = sym
@@ -246,7 +243,7 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
         case symbol: FunctionSymbol if !visitedSymbol(symbol) =>
           visitedSymbol += symbol
           traverseFunction(symbol, symbol.defn)(completeScope)
-        case _: FunctionSymbol | _: ValueSymbol | _: SubValueSymbol => ()
+        case _: FunctionSymbol | _: ValueSymbol => ()
       }
       (completeScope, new TypeContents)
     }({ case (scope, contents) => s"traverseStatements ==> Scope {${scope.showLocalSymbols}}" })

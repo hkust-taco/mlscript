@@ -28,4 +28,9 @@ package object ucs {
       }
     }
   }
+
+  /** If the variable is associated with a symbol, mark it with an asterisk.
+    * If the variable has a location, mark it with a dagger. */
+  private[ucs] def showVar(`var`: Var): String =
+    `var`.name + (`var`.symbolOption.fold("")(_ => "*")) + (`var`.toLoc.fold("")(_ => "†"))
 }

@@ -3,6 +3,10 @@ package mlscript.ucs
 import collection.mutable.Buffer
 import mlscript.{Diagnostic, Lit, Loc, Located, Message, Term, Var}
 import mlscript.utils._, shorthands._
+import mlscript.ucs.core.Split.Cons
+import mlscript.ucs.core.Split.Let
+import mlscript.ucs.core.Split.Else
+import mlscript.ucs.stages.Desugaring
 
 package object core {
   sealed abstract class Pattern extends Located {
@@ -74,6 +78,27 @@ package object core {
       case Split.Nil => false
     }
 
+    lazy val freeVars: Set[Var] = this match {
+      case Split.Cons(Branch(scrutinee, pattern, continuation), tail) =>
+        // FIXME: It is safe to ignore `pattern` for now.
+        continuation.freeVars ++ tail.freeVars
+      case Split.Let(true, nme, rhs, tail) => tail.freeVars ++ rhs.freeVars - nme
+      case Split.Let(false, nme, rhs, tail) => tail.freeVars - nme ++ rhs.freeVars
+      case Split.Else(term) => term.freeVars
+      case Split.Nil => Set.empty
+    }
+
+    /**
+      * Remove duplicated bindings.
+      */
+    def withoutBindings(vars: Set[Var]): Split = this match {
+      case self @ Cons(head @ Branch(_, _, continuation), tail) =>
+        self.copy(head.copy(continuation = continuation.withoutBindings(vars)), tail.withoutBindings(vars))
+      case self @ Let(_, name, _, tail) if vars contains name => tail.withoutBindings(vars)
+      case self @ Let(_, _, _, tail) => self.copy(tail = tail.withoutBindings(vars))
+      case Else(_) | Split.Nil => this
+    }
+
     private val diagnostics: Buffer[Message -> Opt[Loc]] = Buffer.empty
 
     def withDiagnostic(diagnostic: Message -> Opt[Loc]): this.type = {
@@ -107,13 +132,13 @@ package object core {
         case (n, line) :: tail => (n, (if (isTopLevel) "" else "") + s"$line") :: tail
         case Nil => Nil
       }) ::: split(tail, false, isTopLevel)
-      case Split.Let(_, nme, rhs, tail) => (0, s"let $nme = $rhs") :: split(tail, false, isTopLevel)
+      case Split.Let(_, nme, rhs, tail) => (0, s"let ${showVar(nme)} = $rhs") :: split(tail, false, isTopLevel)
       case Split.Else(term) => (if (isFirst) (0, s"then $term") else (0, s"else $term")) :: Nil
       case Split.Nil => Nil
     }
     def branch(b: Branch): Lines = {
       val Branch(scrutinee, pattern, continuation) = b
-      s"$scrutinee is $pattern" #: split(continuation, true, false)
+      s"${showVar(scrutinee)} is $pattern" #: split(continuation, true, false)
     }
     val lines = split(s, true, true)
     (if (prefix.isEmpty) lines else prefix #: lines)

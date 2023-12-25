@@ -751,6 +751,7 @@ trait VarImpl { self: Var =>
   def symbol_=(symbol: Symbol): Unit =
     _symbol match {
       case N => _symbol = S(symbol)
+      case S(`symbol`) => ()
       case S(_) => ???
     }
   // def withSymbol: Var = { symbol = S(new ValueSymbol(this, false)); this }
@@ -787,6 +788,17 @@ trait Located {
   
   lazy val freeVars: Set[Var] = this match {
     case v: Var => Set.single(v)
+    case Let(true, nme, rhs, body) => body.freeVars ++ rhs.freeVars - nme
+    case Let(false, nme, rhs, body) => body.freeVars - nme ++ rhs.freeVars
+    case Lam(tup: Tup, body) => body.freeVars -- tup.freeVars
+    case Tup(fields) => fields.iterator.flatMap(_._2.value.freeVars.iterator).toSet
+    case Blk(stmts) => stmts.iterator.foldRight(Set.empty[Var]) {
+      case (NuFunDef(isLetRec, nme, _, _, L(rhs)), fvs) => fvs - nme ++ (isLetRec match {
+        case N | S(true) => rhs.freeVars - nme
+        case S(false) => rhs.freeVars
+      })
+      case (statement, fvs) => fvs ++ statement.freeVars
+    }
     case _ => children.iterator.flatMap(_.freeVars.iterator).toSet
   }
   

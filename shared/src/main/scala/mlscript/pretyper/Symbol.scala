@@ -70,64 +70,54 @@ package object symbol {
       }
   }
 
+  // FIXME:
+  // We should remove `ScrutineeSymbol` ASAP. There are too many reasons. The
+  // most important one I can remember right now is that multiple variables
+  // may share the same scrutinee symbol. But for now symbol must have a unique
+  // name. We should use a dedicated symbol for tracking scrutinees.
   sealed abstract class ScrutineeSymbol(name: Str) extends TermSymbol(name) {
     def toLoc: Opt[Loc]
 
     val matchedClasses: MutMap[TypeSymbol, Buffer[Loc]] = MutMap.empty
     val unappliedVarMap: MutMap[TypeSymbol, Var] = MutMap.empty
-    // Hmm, maybe we can merge these two maps into one.
+    val subScrutineeMap: MutMap[TypeSymbol, MutMap[Int, MutMap[Var, ValueSymbol]]] = MutMap.empty
+    // Hmm, maybe we can merge these three maps into one.
+    // Urgh, let's do this in the next refactor.
+    // I really should move these imperative and stateful functions to a
+    // separate class!
+
+    def getSubScrutineeSymbolOrElse(
+        classLikeSymbol: TypeSymbol,
+        index: Int,
+        name: Var, // <-- Remove this parameter after we remove `ScrutineeSymbol`.
+        default: => ValueSymbol
+    ): ValueSymbol =
+      subScrutineeMap.getOrElseUpdate(classLikeSymbol, MutMap.empty)
+                     .getOrElseUpdate(index, MutMap.empty)
+                     .getOrElseUpdate(name, default)
 
     def addMatchedClass(symbol: TypeSymbol, loc: Opt[Loc]): Unit = {
       matchedClasses.getOrElseUpdate(symbol, Buffer.empty) ++= loc
     }
 
+    def getUnappliedVarOrElse(classLikeSymbol: TypeSymbol, default: => Var): Var =
+      unappliedVarMap.getOrElseUpdate(classLikeSymbol, default)
+
     def addUnappliedVar(symbol: TypeSymbol, nme: Var): Unit = {
       unappliedVarMap += symbol -> nme
     }
 
-    /**
-      * This map contains the sub-scrutinee symbols when this scrutinee is matched
-      * against class patterns.
-      */
-    val classParameterScrutineeMap: MutMap[Var -> Int, SubValueSymbol] = MutMap.empty
-    val tupleElementScrutineeMap: MutMap[Int, SubValueSymbol] = MutMap.empty
-    val recordValueScrutineeMap: MutMap[Var, SubValueSymbol] = MutMap.empty
-
-    def addSubScrutinee(className: Var, index: Int, parameter: Var, loc: Opt[Loc]): SubValueSymbol = {
-      classParameterScrutineeMap.getOrElseUpdate(className -> index, {
-        new SubValueSymbol(this, S(className) -> S(index), parameter.name, loc)
-      })
-    }
-
-    def addSubScrutinee(fieldName: Var, loc: Opt[Loc]): SubValueSymbol =
-      recordValueScrutineeMap.getOrElseUpdate(fieldName, {
-        val synthesizedName = s"${name}$$record${fieldName}"
-        new SubValueSymbol(this, S(fieldName) -> N, synthesizedName, loc)
-      })
-    
-    def addSubScrutinee(index: Int, loc: Opt[Loc]): SubValueSymbol =
-      tupleElementScrutineeMap.getOrElseUpdate(index, {
-        val synthesizedName = s"${name}$$tuple${index.toString}"
-        new SubValueSymbol(this, N -> S(index), synthesizedName, loc)
-      })
+    // Store the symbol of the parent scrutinee. I doubt if this is necessary.
+    private var maybeParentSymbol: Opt[ScrutineeSymbol] = N
+    def parentSymbol: Opt[ScrutineeSymbol] = maybeParentSymbol
+    def withParentSymbol(parentSymbol: ScrutineeSymbol): this.type =
+      maybeParentSymbol match {
+        case N => maybeParentSymbol = S(parentSymbol); this
+        case S(_) => throw new IllegalStateException("Parent symbol is already set.")
+      }
   }
 
   final class ValueSymbol(val nme: Var, val hoisted: Bool) extends ScrutineeSymbol(nme.name) {
     override def toLoc: Opt[Loc] = nme.toLoc
-  }
-
-  final class SubValueSymbol(
-    val parentSymbol: ScrutineeSymbol,
-    /**
-      * TODO: This becomes useless now.
-      * Class patterns: (S(className), S(index))
-      * Record patterns: (S(fieldName), N)
-      * Tuple patterns: (N, S(index))
-      */
-    val accessor: (Opt[Var], Opt[Int]),
-    override val name: Str,
-    override val toLoc: Opt[Loc]
-  ) extends ScrutineeSymbol(name) {
-    lazy val toVar: Var = Var(name)
   }
 }

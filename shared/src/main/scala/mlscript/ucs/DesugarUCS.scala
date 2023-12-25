@@ -75,7 +75,7 @@ trait DesugarUCS extends Transformation
           traverseSplit(tail)
         case Split.Let(_, name, _, tail) =>
           println(s"found let binding: \"$name\"")
-          traverseSplit(tail)(scope + new ValueSymbol(name, false))
+          traverseSplit(tail)(scope + name.symbol)
         case Split.Else(default) => traverseTerm(default)
         case Split.Nil => println("the end")
       }
@@ -90,55 +90,11 @@ trait DesugarUCS extends Transformation
       }
       pattern match {
         case core.Pattern.Literal(literal) => Nil
-        case core.Pattern.Name(nme) =>
-          nme.symbol = scrutineeSymbol
-          nme -> scrutineeSymbol :: Nil
-        // case core.Pattern.Class(nme @ Var("true"), N) =>
-        //   println(s"found true pattern")
-        //   nme -> scrutineeSymbol :: Nil
-        case core.Pattern.Class(nme, maybeParameters) =>
-          println(s"`$nme` has location: ${nme.toLoc.isDefined}")
-          // Resolve `nme`. It can either be a class, a trait, or a module.
-          val symbol = scope.getTypeSymbol(nme.name) match {
-            case S(symbol: TraitSymbol) => println(s"${nme.name} is a trait"); symbol
-            case S(symbol: ClassSymbol) => println(s"${nme.name} is a class"); symbol
-            case S(symbol: ModuleSymbol) => println(s"${nme.name} is a module"); symbol
-            case S(symbol: MixinSymbol) =>
-              throw new DesugaringException(msg"Mixins are not allowed in pattern" -> nme.toLoc :: Nil)
-            case S(symbol: TypeAliasSymbol) =>
-              throw new DesugaringException(msg"Type alias is not allowed in pattern" -> nme.toLoc :: Nil)
-            // case S(symbol: TermSymbol) =>
-            //   throw new DesugaringException(msg"Only classes, modules, and traits can be matched against." -> nme.toLoc :: Nil)
-            case N =>
-              throw new DesugaringException(msg"Undefined symbol found in patterns." -> nme.toLoc :: Nil)
-          }
-          nme.symbol = symbol
-          // Add the class to the list of matched classes.
-          scrutineeSymbol.addMatchedClass(symbol, nme.toLoc)
-          maybeParameters match {
-            case N => Nil
-            case S(parameters) =>
-              parameters.iterator.zipWithIndex.flatMap { 
-                case (N, _) => N
-                case (S(parameter), index) =>
-                  val symbol = scrutineeSymbol.addSubScrutinee(nme, index, parameter, parameter.toLoc)
-                  parameter.symbol = symbol; S(parameter -> symbol)
-              }.toList
-          }
-        case core.Pattern.Tuple(elements) => elements.flatMap {
-          case N => Nil
-          case S(pattern) => elements.iterator.zipWithIndex.flatMap {
-            case (N, _) => N
-            case (S(element), index) =>
-              val symbol = scrutineeSymbol.addSubScrutinee(index, element.toLoc)
-              element.symbol = symbol; S(element -> symbol)
-          }.toList
-        }
-        case core.Pattern.Record(entries) =>
-          entries.iterator.zipWithIndex.map { case ((fieldName, bindingName), _) =>
-            val symbol = scrutineeSymbol.addSubScrutinee(fieldName, bindingName.toLoc)
-            bindingName.symbol = symbol; bindingName -> symbol
-          }.toList
+        case core.Pattern.Name(nme) => nme -> nme.symbol :: Nil
+        // For now, there should only be parameter-less class patterns.
+        case core.Pattern.Class(nme, maybeParameters) => Nil
+        case core.Pattern.Tuple(_) => ???
+        case core.Pattern.Record(_) => ???
       }
     }(_.iterator.map(_._1.name).mkString("traversePattern ==> [", ", ", "]"))
 }
