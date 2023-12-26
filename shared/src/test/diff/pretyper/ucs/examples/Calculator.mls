@@ -201,9 +201,8 @@ fun scanToken(text: StringOps, at: Int): [Token, Int] =
       45 then [BinaryOperator("-", 10, at'), at' + 1]
       47 then [BinaryOperator("/", 20, at'), at' + 1]
     (48 <= head) && (head <= 57) and
-      scanInt(text, at') is Some(res) then
-        let at'' = res.1
-        [IntegerLiteral(res.0, Span(at', at'')), at'']
+      scanInt(text, at') is Some([n, at'']) then
+        [IntegerLiteral(n, Span(at', at'')), at'']
     else [UnknownInput(text.slice(at'), at', text.length - at'), at']
 //│ fun scanToken: (text: StringOps, at: Int) -> [Token, Int]
 
@@ -223,11 +222,8 @@ scanToken("  42" |> toStringOps, 0)
 
 fun tokenize(str: Str): List[Token] =
   let text = str |> toStringOps
-  let aux(acc, at) = if
-    let res = scanToken(text, at) // TODO: Tuple pattern
-    let token = res.0
-    let at' = res.1
-    token is
+  let aux(acc, at) =
+    if scanToken(text, at) is [token, at'] and token is
       UnknownInput then (token :: acc) |> reverse
       EndOfInput then acc |> reverse
       else aux(token :: acc, at')
@@ -330,33 +326,27 @@ fun parseAtom(ts: List[Token]): ParseResult[[Expression, List[Token]]] =
   if ts is
     Cons(IntegerLiteral(n, span), ts') then Some([IntegerLiteral(n, span), ts'])
     Cons(LeftParen, ts') and parseExpression(0, ts') is
-      Some(res) and res.1 is
-        Cons(RightParen, ts'') then Some([res.0, ts''])
-        else Failed("Expected a right parenthesis at " ++ toString(lastPosition of res.0))
+      Some([body, Cons(RightParen, ts'')]) then Some([body, ts''])
+      Some([body, _]) then Failed("Expected a right parenthesis at " ++ toString(lastPosition of body))
       failed then failed
     Cons(token, _) then Failed("Unexpected token " ++ toString(token) ++ " at " ++ toString(token.span.start))
     Nil then Failed("Unexpected end of input")
 fun parseExpression(bp: Int, ts: List[Token]): ParseResult[[Expression, List[Token]]] =
   if parseAtom(ts) is
-    Some(res) then
+    Some([leftmost, ts']) then
       let aux(left, ts) = if ts is
         Cons(BinaryOperator(op, bp', opAt), ts') and bp < bp' and
           parseExpression(bp', ts') is
-            Some(res) then
-              let right = res.0
-              let ts'' = res.1
+            Some([right, ts'']) then
               aux(BinaryExpression(BinaryOperator(op, bp', opAt), left, right), ts'')
             failed then failed
         else Some([left, ts])
-      let leftmost = res.0
-      let ts' = res.1
       aux(leftmost, ts')
     failed then failed
 fun parse(source: Str): ParseResult[Expression] =
   if parseExpression(0, tokenize(source)) is
-    Some(res) and res.1 is
-      Nil then Some(res.0)
-      else Failed("Unexpected token: " ++ showList(res.1) ++ " at " ++ toString(lastPosition of res.0))
+    Some([expr, Nil]) then Some(expr)
+    Some([expr, rest]) then Failed("Unexpected token: " ++ showList(rest) ++ " at " ++ toString(lastPosition of expr))
     failed then failed
 //│ fun parseAtom: (ts: List[Token]) -> ParseResult[[Expression, List[Token]]]
 //│ fun parseExpression: (bp: Int, ts: List[Token]) -> ParseResult[[Expression, List[Token]]]

@@ -17,11 +17,12 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
     trace(s"extractParameters <== ${inspect.deep(fields)}") {
       fields match {
         case Tup(arguments) =>
-          arguments.map {
-            case (S(nme: Var), Fld(_, _)) => new ValueSymbol(nme, false)
-            case (_, Fld(_, nme: Var)) => new ValueSymbol(nme, false)
-            case (_, Fld(_, Bra(false, nme: Var))) => new ValueSymbol(nme, false)
-            case (_, _) => ???
+          arguments.flatMap {
+            case (S(nme: Var), Fld(_, _)) => new ValueSymbol(nme, false) :: Nil
+            case (_, Fld(_, nme: Var)) => new ValueSymbol(nme, false) :: Nil
+            case (_, Fld(_, Bra(false, nme: Var))) => new ValueSymbol(nme, false) :: Nil
+            case (_, Fld(_, tuple @ Tup(_))) => extractParameters(tuple)
+            case (_, Fld(_, _)) => ???
           }
         case PlainTup(arguments @ _*) =>
           arguments.map {

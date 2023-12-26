@@ -1,0 +1,94 @@
+:PreTyper
+
+// We test the support for simple tuple patterns in this file.
+// Splice tuple patterns will be implement in the future.
+
+fun sum(x, y) = x + y
+sum(1, 2)
+//│ fun sum: (Int, Int) -> Int
+//│ Int
+//│ res
+//│     = 3
+
+fun sum'([x, y]) = x + y
+sum'([1, 2])
+//│ fun sum': ([Int, Int]) -> Int
+//│ Int
+//│ res
+//│     = 3
+
+fun sum''(pair) =
+  if pair is [x, y] then x + y
+sum'([1, 2])
+//│ fun sum'': {0: Int, 1: Int} -> Int
+//│ Int
+//│ res
+//│     = 3
+
+// We need native support for tuple patterns in MLscript syntax.
+// Otherwise the following cases work.
+
+fun test(thing) =
+  if thing is [] then 0
+test("")
+test(12)
+//│ fun test: anything -> 0
+//│ 0
+//│ res
+//│     = 0
+//│ res
+//│     = 0
+
+// Since pattern destruction is desugared to let bindings, matching with other
+// classes after the tuple pattern will not work.
+class Point(x: Int, y: Int)
+fun discarded_cases(thing) =
+  if thing is
+    [x, y] then x + y
+    Point(x, y) then x + y
+//│ class Point(x: Int, y: Int)
+//│ fun discarded_cases: {0: Int, 1: Int} -> Int
+
+:e
+discarded_cases(Point(0, 0))
+//│ ╔══[ERROR] Type `Point` does not contain member `1`
+//│ ║  l.47: 	    [x, y] then x + y
+//│ ╙──      	        ^
+//│ Int | error
+//│ res
+//│     = NaN
+
+// A workaround is to move the tuple pattern to the last case.
+fun working_cases(thing) =
+  if thing is
+    Point(x, y) then x + y
+    [x, y] then x + y
+//│ fun working_cases: (Object & {0: Int, 1: Int} & ~#Point | Point) -> Int
+
+working_cases(Point(0, 0))
+//│ Int
+//│ res
+//│     = 0
+
+// However, the `Object` type forbids tuples to be used.
+:e
+working_cases([0, 0])
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.75: 	working_cases([0, 0])
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── tuple literal of type `[0, 0]` is not an instance of type `Object`
+//│ ║  l.75: 	working_cases([0, 0])
+//│ ║        	              ^^^^^^
+//│ ╟── Note: constraint arises from `case` expression:
+//│ ║  l.63: 	  if thing is
+//│ ║        	     ^^^^^^^^
+//│ ║  l.64: 	    Point(x, y) then x + y
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.65: 	    [x, y] then x + y
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.63: 	  if thing is
+//│ ╙──      	     ^^^^^
+//│ Int | error
+//│ res
+//│     = 0

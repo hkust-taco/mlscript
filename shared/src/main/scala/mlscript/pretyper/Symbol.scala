@@ -85,6 +85,10 @@ package object symbol {
     // Urgh, let's do this in the next refactor.
     // I really should move these imperative and stateful functions to a
     // separate class!
+    val tupleSubScrutineeMap: MutMap[Int, MutMap[Var, ValueSymbol]] = MutMap.empty
+    // Note that the innermost map is a map from variable names to symbols.
+    // Sometimes a class parameter may have many names. We maintain the
+    // uniqueness of the symbol for now.
 
     def getSubScrutineeSymbolOrElse(
         classLikeSymbol: TypeSymbol,
@@ -95,6 +99,14 @@ package object symbol {
       subScrutineeMap.getOrElseUpdate(classLikeSymbol, MutMap.empty)
                      .getOrElseUpdate(index, MutMap.empty)
                      .getOrElseUpdate(name, default)
+    
+    def getTupleSubScrutineeSymbolOrElse(
+        index: Int,
+        name: Var, // <-- Remove this parameter after we remove `ScrutineeSymbol`.
+        default: => ValueSymbol
+    ): ValueSymbol =
+      tupleSubScrutineeMap.getOrElseUpdate(index, MutMap.empty)
+                          .getOrElseUpdate(name, default)
 
     def addMatchedClass(symbol: TypeSymbol, loc: Opt[Loc]): Unit = {
       matchedClasses.getOrElseUpdate(symbol, Buffer.empty) ++= loc
