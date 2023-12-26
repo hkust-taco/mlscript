@@ -36,8 +36,8 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
       case IfElse(expr) => Split.then(expr)
       case IfOpApp(lhs, Var("is"), rhs) =>
         splitAnd(lhs) match {
-          case init :+ last =>
-            init.foldRight[TermSplit](TermBranch.Match(last, transformPatternMatching(rhs)) |> Split.single) {
+          case tests :+ scrutinee =>
+            tests.foldRight[TermSplit](TermBranch.Match(scrutinee, transformPatternMatching(rhs)) |> Split.single) {
               case (OperatorIs(scrutinee, pattern), acc) =>
                 TermBranch.Match(scrutinee, PatternBranch(transformPattern(pattern), acc) |> Split.single) |> Split.single
               case (test, acc) => TermBranch.Boolean(test, acc) |> Split.single
@@ -90,35 +90,40 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
       case (op, rhs) => OperatorBranch.Binary(op, transformIfBody(rhs))
     }
 
-  private def transformPatternMatching(body: IfBody)(implicit useNewDefs: Bool): PatternSplit = {
-    body match {
-      case IfThen(expr, rhs) => 
-        separatePattern(expr) match {
-          case (pattern, S(extraTest)) =>
-            PatternBranch(pattern, transformIfBody(IfThen(extraTest, rhs))) |> Split.single
-          case (pattern, N) =>
-            PatternBranch(pattern, Split.default(rhs)) |> Split.single
+  /**
+    * Transform an `IfBody` into a `PatternSplit`.
+    */
+  private def transformPatternMatching(body: IfBody)(implicit useNewDefs: Bool): PatternSplit =
+    trace(s"transformPatternMatching <== ${inspect.shallow(body)}") {
+      body match {
+        case IfThen(expr, rhs) => 
+          separatePattern(expr) match {
+            case (pattern, S(extraTest)) =>
+              PatternBranch(pattern, transformIfBody(IfThen(extraTest, rhs))) |> Split.single
+            case (pattern, N) =>
+              PatternBranch(pattern, Split.default(rhs)) |> Split.single
+          }
+        case IfOpApp(lhs, Var("and"), rhs) =>
+          println(s"lhs: ${inspect.deep(lhs)}")
+          separatePattern(lhs) match {
+            case (pattern, S(extraTest)) =>
+              PatternBranch(pattern, TermBranch.Boolean(extraTest, transformIfBody(rhs)) |> Split.single) |> Split.single
+            case (pattern, N) =>
+              PatternBranch(pattern, transformIfBody(rhs)) |> Split.single
+          }
+        case IfOpApp(lhs, op, rhs) => ??? // <-- Syntactic split of patterns are not supported.
+        case IfOpsApp(lhs, opsRhss) => ??? // <-- Syntactic split of patterns are not supported.
+        case IfLet(rec, nme, rhs, body) => rare
+        case IfBlock(lines) => lines.foldLeft(Split.empty[PatternBranch]) {
+          case (acc, L(body)) => acc ++ transformPatternMatching(body)
+          case (acc, R(NuFunDef(S(rec), nme, _, _, L(rhs)))) =>
+            acc ++ Split.Let(rec, nme, rhs, Split.Nil)
+          case (acc, R(statement)) =>
+            throw new TransformException(msg"Unexpected statement in an if block", statement.toLoc)
         }
-      case IfOpApp(lhs, Var("and"), rhs) =>
-        separatePattern(lhs) match {
-          case (pattern, S(extraTest)) =>
-            PatternBranch(transformPattern(lhs), ???) |> Split.single
-          case (pattern, N) =>
-            PatternBranch(transformPattern(lhs), transformIfBody(rhs)) |> Split.single
-        }
-      case IfOpApp(lhs, op, rhs) => ???
-      case IfOpsApp(lhs, opsRhss) => ???
-      case IfLet(rec, nme, rhs, body) => rare
-      case IfBlock(lines) => lines.foldLeft(Split.empty[PatternBranch]) {
-        case (acc, L(body)) => acc ++ transformPatternMatching(body)
-        case (acc, R(NuFunDef(S(rec), nme, _, _, L(rhs)))) =>
-          acc ++ Split.Let(rec, nme, rhs, Split.Nil)
-        case (acc, R(statement)) =>
-          throw new TransformException(msg"Unexpected statement in an if block", statement.toLoc)
+        case IfElse(expr) => Split.default(expr)
       }
-      case IfElse(expr) => Split.default(expr)
-    }
-  }
+    }(_ => "transformPatternMatching ==>")
 
   private def transformPattern(term: Term)(implicit useNewDefs: Bool): Pattern = term match {
     case nme @ Var("true" | "false") => ConcretePattern(nme)
@@ -135,11 +140,15 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
       case _ -> Fld(_, t       ) => S(transformPattern(t))
     })
     // TODO: Support more patterns.
-    case _ => throw new TransformException(msg"Unknown pattern", term.toLoc)
+    case _ =>
+      println(s"unknown pattern: $term")
+      throw new TransformException(msg"Unknown pattern", term.toLoc)
   }
 
   private def separatePattern(term: Term)(implicit useNewDefs: Bool): (Pattern, Opt[Term]) = {
     val (rawPattern, extraTest) = helpers.separatePattern(term, useNewDefs)
+    println("rawPattern: " + inspect.deep(rawPattern))
+    println("extraTest: " + inspect.deep(extraTest))
     (transformPattern(rawPattern), extraTest)
   }
 

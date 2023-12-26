@@ -73,8 +73,10 @@ trait DesugarUCS extends Transformation
           val patternSymbols = traversePattern(scrutinee, pattern)
           traverseSplit(continuation)(scope.withEntries(patternSymbols))
           traverseSplit(tail)
-        case Split.Let(_, name, _, tail) =>
+        case Split.Let(_, name, rhs, tail) =>
           println(s"found let binding: \"$name\"")
+          println(s"traverse rhs: $rhs")
+          traverseTerm(rhs)
           traverseSplit(tail)(scope + name.symbol)
         case Split.Else(default) => traverseTerm(default)
         case Split.Nil => println("the end")

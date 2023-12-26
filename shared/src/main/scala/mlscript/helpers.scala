@@ -788,6 +788,7 @@ trait Located {
   
   lazy val freeVars: Set[Var] = this match {
     case v: Var => Set.single(v)
+    case Sel(receiver, _) => receiver.freeVars
     case Let(true, nme, rhs, body) => body.freeVars ++ rhs.freeVars - nme
     case Let(false, nme, rhs, body) => body.freeVars - nme ++ rhs.freeVars
     case Lam(tup: Tup, body) => body.freeVars -- tup.freeVars

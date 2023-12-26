@@ -134,7 +134,7 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
 
   private def traverseLetBinding(symbol: ValueSymbol, rec: Bool, rhs: Term)(implicit scope: Scope): Unit =
     trace(s"traverseLetBinding(rec = $rec, ${symbol.name})") {
-
+      traverseTerm(rhs)(scope + symbol)
     }()
 
   private def traverseStatements(statements: Ls[Statement], name: Str, parentScope: Scope): (Scope, TypeContents) =

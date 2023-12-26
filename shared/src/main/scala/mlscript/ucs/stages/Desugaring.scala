@@ -14,7 +14,8 @@ import mlscript.Message, Message.MessageContext
   * syntax into core abstract syntax, which is more concise. We will make
   * following changes during this stage:
   * 
-  * 1. Flatten nested patterns and generated bindings for nameless parameters.
+  * 1. Flatten nested patterns and generated bindings for nameless scrutinees
+  *    and parameters of class-like patterns.
   * 2. Desugar variable patterns to plain let bindings.
   * 3. Desugar literal patterns to equivalent boolean expressions.
   * 4. Reassemble partial terms that are broken by "conditional splits".
@@ -285,9 +286,10 @@ trait Desugaring { self: PreTyper =>
             desugarTermSplit(head.continuation)(PartialTerm.Empty, scope) ++ rec(scrutinee, tail)
           case s.NamePattern(nme) =>
             // Share the scrutinee's symbol with its aliases.
-            nme.symbol = scrutinee.symbol
+            // nme.symbol = scrutinee.symbol // <-- This currently causes a bug, reuse this line after we remove `ScrutineeSymbol`.
+            nme.symbol = new ValueSymbol(nme, false)
             val continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scope + nme.symbol)
-            c.Branch(scrutinee, c.Pattern.Name(nme), continuation) :: rec(scrutinee, tail)
+            c.Branch(scrutinee, c.Pattern.Name(nme), continuation) :: rec(scrutinee, tail)(scope + nme.symbol)
           case pattern @ s.ClassPattern(nme, fields) =>
             println(s"find term symbol of $scrutinee in ${scope.showLocalSymbols}")
             scrutinee.symbol = scope.getTermSymbol(scrutinee.name).getOrElse(???)
