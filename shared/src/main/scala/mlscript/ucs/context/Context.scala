@@ -28,7 +28,7 @@ class Context(originalTerm: If) {
   val freshCache: VariableGenerator = new VariableGenerator(cachePrefix)
   val freshScrutineeVar: VariableGenerator = new VariableGenerator(scrutineePrefix)
   val freshTest: VariableGenerator = new VariableGenerator(testPrefix)
-  val freshShadowed: VariableGenerator = new VariableGenerator("shadowed$")
+  val freshShadowed: VariableGenerator = new VariableGenerator(shadowPrefix)
 
   /** The buffer contains all `ScrutineeData` created within this context. */
   private val scrutineeBuffer: Buffer[ScrutineeData] = Buffer.empty
