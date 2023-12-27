@@ -1,14 +1,11 @@
 package mlscript.ucs.stages
 
-import annotation.tailrec
-import collection.mutable.ListBuffer
 import mlscript.{Case, CaseBranches, CaseOf, Let, Lit, Loc, NoCases, Term, Var, Wildcard}
-import mlscript.ucs.{Context, ScrutineeData}
+import mlscript.{Diagnostic, ErrorReport, WarningReport}
+import mlscript.Message, Message.MessageContext
+import mlscript.ucs.context.{Context, CaseSet, NamedScrutineeData, MatchRegistry, ScrutineeData, SeenRegistry}
 import mlscript.pretyper.symbol._
 import mlscript.utils._, shorthands._
-import mlscript.Message, Message.MessageContext
-import mlscript.{SimpleTerm, Diagnostic, ErrorReport, WarningReport}
-import mlscript.ucs.context.{CaseSet, NamedScrutineeData, MatchRegistry, SeenRegistry}
 
 trait CoverageChecking { self: mlscript.pretyper.Traceable =>
   import CoverageChecking._

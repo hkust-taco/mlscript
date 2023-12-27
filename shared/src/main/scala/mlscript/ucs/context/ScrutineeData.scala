@@ -1,4 +1,4 @@
-package mlscript.ucs
+package mlscript.ucs.context
 
 import collection.mutable.{Buffer, Map => MutMap, SortedMap => MutSortedMap, SortedSet => MutSortedSet}
 import mlscript.{Loc, Located, NuFunDef, NuTypeDef, TypeName, Var}

@@ -4,7 +4,7 @@ import collection.mutable.{Buffer, Map => MutMap, Set => MutSet}
 import mlscript.{Loc, NuFunDef, NuTypeDef, TypeName, Var}
 import mlscript.{Cls, Trt, Mxn, Als, Mod}
 import mlscript.utils._, shorthands._
-import mlscript.ucs.{Context, ScrutineeData}
+import mlscript.ucs.context.{Context, ScrutineeData}
 
 package object symbol {
   sealed abstract class Symbol(val name: Str) {

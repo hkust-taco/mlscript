@@ -1,7 +1,8 @@
 package mlscript.ucs
 
-import mlscript.ucs.{Context, Lines, LinesOps, ScrutineeData}
+import mlscript.ucs.{Lines, LinesOps}
 import mlscript.ucs.{core, syntax}
+import mlscript.ucs.context.{Context}
 import mlscript.pretyper.symbol.{TermSymbol, TypeSymbol}
 import mlscript.{App, CaseOf, Fld, FldFlags, Let, Loc, Sel, SimpleTerm, Term, Tup, Var}
 import mlscript.{CaseBranches, Case, Wildcard, NoCases}

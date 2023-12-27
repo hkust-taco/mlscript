@@ -2,12 +2,12 @@ package mlscript.ucs
 
 import collection.mutable.{Map => MutMap}
 import mlscript.ucs.stages._
-import mlscript.ucs.display.showNormalizedTerm
+import mlscript.ucs.context.{Context, ScrutineeData}
+import mlscript.ucs.display.{showNormalizedTerm, showSplit}
 import mlscript.pretyper.{PreTyper, Scope}
 import mlscript.pretyper.symbol._
 import mlscript._, utils._, shorthands._
 import mlscript.Message, Message.MessageContext
-import mlscript.ucs.display.showSplit
 
 // TODO: Rename to `Desugarer` once the old desugarer is removed.
 trait DesugarUCS extends Transformation

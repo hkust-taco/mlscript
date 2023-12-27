@@ -1,7 +1,8 @@
 package mlscript.ucs.stages
 
 import mlscript.{Case, CaseBranches, CaseOf, Let, Loc, NoCases, Term, Var, Wildcard}
-import mlscript.ucs.{Context, DesugarUCS, ScrutineeData}
+import mlscript.ucs.DesugarUCS
+import mlscript.ucs.context.{Context, ScrutineeData}
 import mlscript.pretyper.symbol._
 import mlscript.utils._, shorthands._
 import mlscript.Message, Message.MessageContext

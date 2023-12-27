@@ -1,12 +1,11 @@
-package mlscript.ucs
+package mlscript.ucs.context
 
 import collection.mutable.{Buffer, Map => MutMap, SortedMap => MutSortedMap}
-import mlscript.{If, Loc, NuFunDef, NuTypeDef, TypeName, Var}
-import mlscript.{Cls, Trt, Mxn, Als, Mod}
+import mlscript.{If, Loc, Var}
 import mlscript.pretyper.symbol.TypeSymbol
 import mlscript.pretyper.Scope
+import mlscript.ucs.VariableGenerator
 import mlscript.utils._, shorthands._
-import mlscript.ucs.context.MatchRegistry
 
 class Context(originalTerm: If) {
   private val prefix = Context.freshPrefix()

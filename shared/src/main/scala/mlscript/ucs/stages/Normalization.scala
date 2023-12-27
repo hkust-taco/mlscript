@@ -1,17 +1,17 @@
 
 package mlscript.ucs.stages
 
-import mlscript.ucs.{Context, Lines, LinesOps, ScrutineeData, VariableGenerator}
+import mlscript.ucs.{Lines, LinesOps, VariableGenerator}
+import mlscript.ucs.context.{Context, ScrutineeData}
 import mlscript.ucs.core._
+import mlscript.ucs.display.{showNormalizedTerm, showSplit}
 import mlscript.ucs.helpers._
-import mlscript.ucs.display.showNormalizedTerm
 import mlscript.pretyper.Scope
 import mlscript.pretyper.symbol._
 import mlscript.{App, CaseOf, Fld, FldFlags, Let, Loc, Sel, Term, Tup, Var, StrLit}
 import mlscript.{CaseBranches, Case, Wildcard, NoCases}
 import mlscript.Message, Message.MessageContext
 import mlscript.utils._, shorthands._
-import mlscript.ucs.display.showSplit
 
 trait Normalization { self: mlscript.pretyper.Traceable =>
   import Normalization._

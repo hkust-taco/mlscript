@@ -1,14 +1,14 @@
 package mlscript.ucs.stages
 
 import mlscript.{App, Asc, Fld, FldFlags, Lit, Sel, Term, Tup, TypeName, Var}
-import mlscript.ucs.{syntax => s, core => c, Context, PartialTerm}
+import mlscript.ucs.{syntax => s, core => c, PartialTerm}
+import mlscript.ucs.context.{Context, ScrutineeData}
 import mlscript.ucs.helpers.mkBinOp
 import mlscript.utils._, shorthands._
 import mlscript.pretyper.symbol._
 import mlscript.pretyper.{PreTyper, Scope}
 import mlscript.ucs.DesugaringException
 import mlscript.Message, Message.MessageContext
-import mlscript.ucs.ScrutineeData
 
 /**
   * The desugaring stage of UCS. In this stage, we transform the source abstract
