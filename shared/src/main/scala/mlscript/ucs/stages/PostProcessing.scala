@@ -1,38 +1,20 @@
 package mlscript.ucs.stages
 
 import mlscript.{Case, CaseBranches, CaseOf, Let, Loc, NoCases, Term, Var, Wildcard}
-import mlscript.ucs.Context
+import mlscript.ucs.{Context, DesugarUCS, ScrutineeData}
 import mlscript.pretyper.symbol._
 import mlscript.utils._, shorthands._
 import mlscript.Message, Message.MessageContext
 import scala.annotation.tailrec
 
-trait PostProcessing { self: mlscript.pretyper.Traceable =>
+trait PostProcessing { self: DesugarUCS with mlscript.pretyper.Traceable =>
   import PostProcessing._
-
-  /**
-    * If the given `Var` represents a class name, get its `ClassSymbol`.
-    *
-    * @param className the class name variable
-    */
-  def getClassSymbolFromVar(className: Var): TypeSymbol =
-    trace(s"getClassSymbolFromVar <== ${inspect.shallow(className)}") {
-      className.symbolOption match {
-        case S(symbol: ClassSymbol) => symbol
-        case S(symbol: TraitSymbol) => symbol
-        case S(symbol: ModuleSymbol) => symbol
-        case S(symbol: Symbol) => throw new PostProcessingException(
-          msg"variable ${className.name} is not associated with a class symbol" -> N :: Nil)
-        case N => throw new PostProcessingException(
-          msg"variable ${className.name} is not associated with any symbols" -> N :: Nil)
-      }
-    }(symbol => s"getClassSymbolFromVar ==> ${symbol.name}")
 
   def postProcess(term: Term)(implicit context: Context): Term = trace(s"postProcess <== ${inspect.shallow(term)}") {
     // Normalized terms are constructed using `Let` and `CaseOf`.
     term match {
-      case top @ CaseOf(scrutinee: Var, fst @ Case(className: Var, body, NoCases)) =>
-        println(s"found a UNARY case: $scrutinee is $className")
+      case top @ CaseOf(scrutineeVar: Var, fst @ Case(className: Var, body, NoCases)) =>
+        println(s"found a UNARY case: $scrutineeVar is $className")
         println("post-processing the body")
         top.copy(cases = fst.copy(body = postProcess(body)))
       case top @ CaseOf(test: Var, fst @ Case(Var("true"), trueBranch, Wildcard(falseBranch))) if context.isTestVar(test) =>
@@ -40,35 +22,34 @@ trait PostProcessing { self: mlscript.pretyper.Traceable =>
         val processedTrueBranch = postProcess(trueBranch)
         val processedFalseBranch = postProcess(falseBranch)
         top.copy(cases = fst.copy(body = processedTrueBranch, rest = Wildcard(processedFalseBranch)))
-      case top @ CaseOf(scrutinee: Var, fst @ Case(className: Var, trueBranch, Wildcard(falseBranch))) =>
-        println(s"found a BINARY case: $scrutinee is $className")
-        val scrutineeSymbol = scrutinee.symbol match {
-          case symbol: ScrutineeSymbol => symbol
-          case _ => throw new PostProcessingException(
-            msg"variable ${scrutinee.name} is not a scrutinee" -> N :: Nil
+      case top @ CaseOf(ScrutineeData.WithVar(scrutinee, scrutineeVar), fst @ Case(className: Var, trueBranch, Wildcard(falseBranch))) =>
+        println(s"found a BINARY case: $scrutineeVar is $className")
+        val classSymbol = className.getClassLikeSymbol
+        println(s"matched classes: ${scrutinee.patterns.mkString(", ")}")
+        val classPattern = scrutinee.getClassPattern(classSymbol).getOrElse {
+          throw new PostProcessingException(
+            msg"cannot find class pattern for ${className.name}" -> className.toLoc :: Nil
           )
         }
-        val classSymbol = getClassSymbolFromVar(className)
-        println(s"`${scrutinee}`'s matched classes: ${scrutineeSymbol.matchedClasses.keysIterator.map(_.name).mkString("[", ", ", "]")}")
+        println(s"patterns of `${scrutineeVar}`: ${scrutinee.patterns.mkString("{", ", ", "}")}")
         // Post-process the true branch.
         println("post-processing the first branch")
         val processedTrueBranch = postProcess(trueBranch)
         // Post-process the false branch.
         println("post-processing the false branch")
-        println(s"searching for cases: " + scrutineeSymbol.matchedClasses.keysIterator.filter(_ =/= classSymbol).map(_.name).mkString("[", ", ", "]"))
-        val (default, cases) = scrutineeSymbol.matchedClasses.iterator.filter(_._1 =/= classSymbol)
+        val (default, cases) = scrutinee.classLikePatternsIterator.filter(_._1 =/= classSymbol)
           // For each case class name, distangle case branch body terms from the false branch.
           .foldLeft[Opt[Term] -> Ls[(TypeSymbol, Opt[Loc], Term)]](S(falseBranch) -> Nil) {
-            case ((S(remainingTerm), cases), (classSymbol -> locations)) =>
+            case ((S(remainingTerm), cases), (classSymbol -> classPattern)) =>
               println(s"searching for case: ${classSymbol.name}")
-              val (leftoverTerm, extracted) = disentangle(remainingTerm, scrutineeSymbol, classSymbol)
+              val (leftoverTerm, extracted) = disentangle(remainingTerm, scrutineeVar, scrutinee, classSymbol)
               trimEmptyTerm(leftoverTerm) -> (extracted match {
                 case N =>
                   println(s"no extracted term about ${classSymbol.name}")
                   cases
                 case terms @ S(extractedTerm) => 
                   println(s"extracted a term about ${classSymbol.name}")
-                  (classSymbol, locations.headOption, postProcess(extractedTerm)) :: cases
+                  (classSymbol, classPattern.firstOccurrence, postProcess(extractedTerm)) :: cases
               })
             case ((N, cases), _) => (N, cases) 
           }
@@ -148,29 +129,27 @@ trait PostProcessing { self: mlscript.pretyper.Traceable =>
     * @param className the class name
     * @return the remaining term and the disentangled term
     */
-  def disentangle(term: Term, scrutinee: ScrutineeSymbol, classSymbol: TypeSymbol): (Term, Opt[Term]) =
-    trace[(Term, Opt[Term])](s"disentangle <== ${scrutinee.name}: ${classSymbol.name}") {
+  def disentangle(term: Term, scrutineeVar: Var, scrutinee: ScrutineeData, classSymbol: TypeSymbol)(implicit context: Context): (Term, Opt[Term]) =
+    trace[(Term, Opt[Term])](s"disentangle <== ${scrutineeVar.name}: ${classSymbol.name}") {
       term match {
-        case top @ CaseOf(scrutineeVar: Var, cases) =>
-          if (scrutineeVar.symbol match {
-            case s: ScrutineeSymbol => s === scrutinee; case _ => false
-          }) {
-            println(s"found a `CaseOf` that matches on `${scrutinee.name}`")
+        case top @ CaseOf(ScrutineeData.WithVar(otherScrutinee, otherScrutineeVar), cases) =>
+          if (scrutinee === otherScrutinee) {
+            println(s"found a `CaseOf` that matches on `${scrutineeVar.name}`")
             def rec(cases: CaseBranches): (CaseBranches, Opt[Term]) = cases match {
               case NoCases =>
                 println("no cases, STOP")
                 NoCases -> N
               case wildcard @ Wildcard(body) =>
                 println("found a wildcard, go deeper")
-                val (n, y) = disentangle(body, scrutinee, classSymbol)
+                val (n, y) = disentangle(body, scrutineeVar, scrutinee, classSymbol)
                 wildcard.copy(body = n) -> y
               case kase @ Case(className: Var, body, rest) =>
                 println(s"found a case branch matching against $className")
-                val otherClassSymbol = getClassSymbolFromVar(className)
+                val otherClassSymbol = className.getClassLikeSymbol
                 if (otherClassSymbol === classSymbol) {
                   rest -> S(body)
                 } else {
-                  val (n1, y1) = disentangle(body, scrutinee, classSymbol)
+                  val (n1, y1) = disentangle(body, scrutineeVar, scrutinee, classSymbol)
                   val (n2, y2) = rec(rest)
                   (kase.copy(body = n1, rest = n2), mergeTerms(y1, y2))
                 }
@@ -182,18 +161,18 @@ trait PostProcessing { self: mlscript.pretyper.Traceable =>
             val (n, y) = rec(cases)
             (top.copy(cases = n), y)
           } else {
-            println(s"found a `CaseOf` that does NOT match on ${scrutinee.name}")
+            println(s"found a `CaseOf` that does NOT match on ${scrutineeVar.name}")
             def rec(cases: CaseBranches): (CaseBranches, CaseBranches) = cases match {
               case NoCases =>
                 println("no cases, STOP")
                 NoCases -> NoCases
               case wildcard @ Wildcard(body) =>
                 println("found a wildcard, go deeper")
-                val (n, y) = disentangle(body, scrutinee, classSymbol)
+                val (n, y) = disentangle(body, scrutineeVar, scrutinee, classSymbol)
                 (wildcard.copy(body = n), y.fold(NoCases: CaseBranches)(Wildcard(_)))
               case kase @ Case(_, body, rest) =>
                 println(s"found a case branch")
-                val (n1, y1) = disentangle(body, scrutinee, classSymbol)
+                val (n1, y1) = disentangle(body, scrutineeVar, scrutinee, classSymbol)
                 val (n2, y2) = rec(rest)
                 (kase.copy(body = n1, rest = n2), (y1 match {
                   case S(term) => kase.copy(body = term, rest = y2)
@@ -204,7 +183,7 @@ trait PostProcessing { self: mlscript.pretyper.Traceable =>
             (top.copy(cases = n), (if (y === NoCases) N else S(top.copy(cases = y))))
           }
         case let @ Let(_, _, _, body) =>
-          val (n, y) = disentangle(body, scrutinee, classSymbol)
+          val (n, y) = disentangle(body, scrutineeVar, scrutinee, classSymbol)
           (let.copy(body = n), y.map(t => let.copy(body = t)))
         case other =>
           println(s"cannot disentangle ${inspect.shallow(other)}. STOP")
@@ -212,18 +191,19 @@ trait PostProcessing { self: mlscript.pretyper.Traceable =>
       }
     }({ case (n, y) => s"disentangle ==> `${inspect.deep(n)}` and `${y.fold("<empty>")(inspect.deep(_))}`" })
 
-  def cascadeConsecutiveCaseOf(term: Term): Term = trace(s"cascade consecutive CaseOf <== ${term.describe}") {
+  // FIXME: What? Is this seemingly useful function useless?
+  def cascadeCaseTerm(term: Term): Term = trace(s"cascadeCaseTerm <== ${term.describe}") {
     // Normalized terms are constructed using `Let` and `CaseOf`.
     term match {
       case top @ CaseOf(scrutinee: Var, fst @ Case(pattern, body, NoCases)) =>
         println(s"found a UNARY case: $scrutinee is $pattern")
-        top.copy(cases = fst.copy(body = cascadeConsecutiveCaseOf(body)))
+        top.copy(cases = fst.copy(body = cascadeCaseTerm(body)))
       case top @ CaseOf(scrutinee: Var, fst @ Case(pattern, trueBranch, snd @ Wildcard(falseBranch))) =>
         println(s"found a BINARY case: $scrutinee is $pattern")
         println("cascading the true branch")
-        val processedTrueBranch = cascadeConsecutiveCaseOf(trueBranch)
+        val processedTrueBranch = cascadeCaseTerm(trueBranch)
         println("cascading the false branch")
-        val processedFalseBranch = cascadeConsecutiveCaseOf(falseBranch)
+        val processedFalseBranch = cascadeCaseTerm(falseBranch)
         // Check if the false branch is another `CaseOf` with the same scrutinee.
         processedFalseBranch match {
           case CaseOf(otherScrutinee: Var, actualFalseBranch) =>
@@ -242,11 +222,11 @@ trait PostProcessing { self: mlscript.pretyper.Traceable =>
           case other => top
         }
       // We recursively process the body of `Let` bindings.
-      case let @ Let(_, _, _, body) => let.copy(body = cascadeConsecutiveCaseOf(body))
+      case let @ Let(_, _, _, body) => let.copy(body = cascadeCaseTerm(body))
       // Otherwise, this is not a part of a normalized term.
       case other => println(s"CANNOT cascade"); other
     }
-  }()
+  }(_ => "cascadeCaseTerm ==> ")
 }
 
 object PostProcessing {

@@ -120,26 +120,4 @@ package object core {
 
     def just(term: Term): Split = Else(term)
   }
-
-  @inline def printSplit(s: Split): Str = showSplit("if", s)
-
-  def showSplit(prefix: Str, s: Split): Str = {
-    // TODO: tailrec
-    def split(s: Split, isFirst: Bool, isTopLevel: Bool): Lines = s match {
-      case Split.Cons(head, tail) => (branch(head) match {
-        case (n, line) :: tail => (n, (if (isTopLevel) "" else "") + s"$line") :: tail
-        case Nil => Nil
-      }) ::: split(tail, false, isTopLevel)
-      case Split.Let(_, nme, rhs, tail) => (0, s"let ${showVar(nme)} = $rhs") :: split(tail, false, isTopLevel)
-      case Split.Else(term) => (if (isFirst) (0, s"then $term") else (0, s"else $term")) :: Nil
-      case Split.Nil => Nil
-    }
-    def branch(b: Branch): Lines = {
-      val Branch(scrutinee, pattern, continuation) = b
-      s"${showVar(scrutinee)} is $pattern" #: split(continuation, true, false)
-    }
-    val lines = split(s, true, true)
-    (if (prefix.isEmpty) lines else prefix #: lines)
-      .iterator.map { case (n, line) => "  " * n + line }.mkString("\n")
-  }
 }

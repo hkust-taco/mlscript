@@ -1,15 +1,15 @@
 package mlscript.ucs
 
-import collection.mutable.{Buffer, Map => MutMap, SortedMap => MutSortedMap, Set => MutSet}
+import collection.mutable.{Buffer, Map => MutMap, SortedMap => MutSortedMap}
 import mlscript.{If, Loc, NuFunDef, NuTypeDef, TypeName, Var}
 import mlscript.{Cls, Trt, Mxn, Als, Mod}
 import mlscript.pretyper.symbol.TypeSymbol
 import mlscript.pretyper.Scope
 import mlscript.utils._, shorthands._
+import mlscript.ucs.context.MatchRegistry
 
 class Context(originalTerm: If) {
-  val prefix: Str = Context.freshPrefix().name
-
+  private val prefix = Context.freshPrefix()
   private val cachePrefix = prefix + "$cache$"
   private val scrutineePrefix = prefix + "$scrut$"
   private val testPrefix = prefix + "$test$"
@@ -27,11 +27,39 @@ class Context(originalTerm: If) {
   // I plan to mix the unique identifiers of UCS expressions into the prefixes.
   // So that the generated variables will definitely not conflict with others.
   val freshCache: VariableGenerator = new VariableGenerator(cachePrefix)
-  val freshScrutinee: VariableGenerator = new VariableGenerator(scrutineePrefix)
+  val freshScrutineeVar: VariableGenerator = new VariableGenerator(scrutineePrefix)
   val freshTest: VariableGenerator = new VariableGenerator(testPrefix)
   val freshShadowed: VariableGenerator = new VariableGenerator("shadowed$")
+
+  /** The buffer contains all `ScrutineeData` created within this context. */
+  private val scrutineeBuffer: Buffer[ScrutineeData] = Buffer.empty
+
+  // TODO: Mark this two files as package private.
+  def freshScrutinee: ScrutineeData = {
+    val scrutinee = new ScrutineeData(this, N)
+    scrutineeBuffer += scrutinee
+    scrutinee
+  }
+
+  // TODO: Mark this two files as package private.
+  def freshScrutinee(parent: ScrutineeData): ScrutineeData = {
+    val scrutinee = new ScrutineeData(this, S(parent))
+    scrutineeBuffer += scrutinee
+    scrutinee
+  }
+
+  /**
+    * Create a `MatchRegistry` from the current context.
+    */
+  def toMatchRegistry: MatchRegistry =
+    scrutineeBuffer.iterator.flatMap { scrutinee =>
+      val caseSet = scrutinee.toCaseSet
+      scrutinee.aliasesIterator.map(alias => (alias -> scrutinee) -> caseSet)
+    }.toMap
 }
 
 object Context {
-  private val freshPrefix = new VariableGenerator("ucs")
+  // TODO: Generate fresh prefix in a determinstic way. I tried to use a counter,
+  // but the produced value is not stable across different runs.
+  def freshPrefix(): Str = "ucs"
 }

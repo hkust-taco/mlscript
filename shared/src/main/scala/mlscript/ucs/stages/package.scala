@@ -5,26 +5,6 @@ import mlscript.pretyper.symbol._
 import mlscript.utils._, shorthands._
 
 package object stages {
-  object Scrutinee {
-    def unapply(term: Term): Opt[(Var, ScrutineeSymbol)] = term match {
-      case v @ Var(_) => v.symbol match {
-        case symbol: ScrutineeSymbol => S(v, symbol)
-        case _ => N
-      }
-      case _ => N
-    }
-  }
-
-  object ScrutineeOnly {
-    def unapply(term: Term): Opt[ScrutineeSymbol] = term match {
-      case v: Var => v.symbol match {
-        case symbol: ScrutineeSymbol => S(symbol)
-        case _ => N
-      }
-      case _ => N
-    }
-  }
-
   sealed abstract class CasePattern {
     override def toString(): String = this match {
       case CasePattern.Class(symbol) => symbol.name

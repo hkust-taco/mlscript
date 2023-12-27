@@ -41,8 +41,8 @@ fun is_value'(term) =
 //│ ║  l.37: 	  if term is Term and term is
 //│ ║        	             ^^^^
 //│ ╟── Scrutinee `term` has 1 missing case
-//│ ║  l.36: 	fun is_value'(term) =
-//│ ║        	              ^^^^
+//│ ║  l.37: 	  if term is Term and term is
+//│ ║        	                      ^^^^
 //│ ╟── It can be class `App`
 //│ ║  l.6: 	class App(func: Term, arg: Term) extends Term
 //│ ╙──     	      ^^^
