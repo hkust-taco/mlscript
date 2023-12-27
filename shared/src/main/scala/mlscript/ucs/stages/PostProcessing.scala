@@ -1,6 +1,7 @@
 package mlscript.ucs.stages
 
 import mlscript.{Case, CaseBranches, CaseOf, Let, Loc, NoCases, Term, Var, Wildcard}
+import mlscript.ucs.Context
 import mlscript.pretyper.symbol._
 import mlscript.utils._, shorthands._
 import mlscript.Message, Message.MessageContext
@@ -27,14 +28,14 @@ trait PostProcessing { self: mlscript.pretyper.Traceable =>
       }
     }(symbol => s"getClassSymbolFromVar ==> ${symbol.name}")
 
-  def postProcess(term: Term): Term = trace(s"postProcess <== ${inspect.shallow(term)}") {
+  def postProcess(term: Term)(implicit context: Context): Term = trace(s"postProcess <== ${inspect.shallow(term)}") {
     // Normalized terms are constructed using `Let` and `CaseOf`.
     term match {
       case top @ CaseOf(scrutinee: Var, fst @ Case(className: Var, body, NoCases)) =>
         println(s"found a UNARY case: $scrutinee is $className")
         println("post-processing the body")
         top.copy(cases = fst.copy(body = postProcess(body)))
-      case top @ CaseOf(test: Var, fst @ Case(Var("true"), trueBranch, Wildcard(falseBranch))) if Desugaring.isTestVar(test) =>
+      case top @ CaseOf(test: Var, fst @ Case(Var("true"), trueBranch, Wildcard(falseBranch))) if context.isTestVar(test) =>
         println(s"found a if-then-else case: $test is true")
         val processedTrueBranch = postProcess(trueBranch)
         val processedFalseBranch = postProcess(falseBranch)

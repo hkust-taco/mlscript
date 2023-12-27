@@ -3,6 +3,16 @@ package mlscript
 import scala.annotation.tailrec
 
 package object ucs {
+  class VariableGenerator(prefix: String) {
+    private var nextIndex = 0
+
+    def apply(): Var = {
+      val thisIndex = nextIndex
+      nextIndex += 1
+      Var(s"$prefix$thisIndex")
+    }
+  }
+
   type Lines = List[(Int, String)]
 
   implicit class LinesOps(private val lines: Lines) extends AnyVal {

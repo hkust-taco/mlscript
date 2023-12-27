@@ -14,12 +14,13 @@ trait DesugarUCS extends Transformation
                     with PostProcessing 
                     with CoverageChecking { self: PreTyper =>
 
-  protected def traverseIf(`if`: If)(implicit scope: Scope): Unit =
+  protected def traverseIf(`if`: If)(implicit scope: Scope): Unit = {
+    implicit val context: Context = new Context(`if`)
     trace("traverseIf") {
       // Stage 0: Transformation
       val transformed = traceWithTopic("transform") {
         println("STEP 0")
-        val transformed = transform(`if`, true)
+        val transformed = transform(`if`)
         println("Transformed UCS term:")
         println(ucs.syntax.printTermSplit(transformed))
         transformed
@@ -62,6 +63,7 @@ trait DesugarUCS extends Transformation
       // Epilogue
       `if`.desugaredTerm = S(postProcessed)
     }(_ => "traverseIf ==> ()")
+  }
   
   private def traverseSplit(split: core.Split)(implicit scope: Scope): Unit =
     trace(s"traverseSplit <== [${scope.showLocalSymbols}]") {

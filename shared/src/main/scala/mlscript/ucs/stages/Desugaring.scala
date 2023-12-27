@@ -1,7 +1,7 @@
 package mlscript.ucs.stages
 
 import mlscript.{App, Asc, Fld, FldFlags, Lit, Sel, Term, Tup, TypeName, Var}
-import mlscript.ucs.{syntax => s, core => c, PartialTerm}
+import mlscript.ucs.{syntax => s, core => c, Context, PartialTerm}
 import mlscript.ucs.helpers.mkBinOp
 import mlscript.utils._, shorthands._
 import mlscript.pretyper.symbol._
@@ -27,17 +27,17 @@ import mlscript.Message, Message.MessageContext
   * continuation.
   */
 trait Desugaring { self: PreTyper =>
-  @inline def desugar(term: s.TermSplit)(implicit scope: Scope): c.Split =
-    desugarTermSplit(term)(PartialTerm.Empty, scope)
-
-  import Desugaring._
-
-  // Call these objects to generate fresh variables for different purposes.
-  // I plan to mix the unique identifiers of UCS expressions into the prefixes.
-  // So that the generated variables will definitely not conflict with others.
-  private val freshCache = new VariableGenerator(cachePrefix)
-  private val freshScrutinee = new VariableGenerator(scrutineePrefix)
-  private val freshTest = new VariableGenerator(testPrefix)
+  /**
+    * The entry point of the desugaring stage.
+    *
+    * @param term the root of source abstrax syntax term, obtained from the
+    *             transformation stage
+    * @param context the scope is for resolving type symbols. The scope should
+    *              contains a TypeSymbol for `true` literal.
+    * @return the root of desugared core abstract syntax term
+    */
+  @inline def desugar(term: s.TermSplit)(implicit scope: Scope, context: Context): c.Split =
+    desugarTermSplit(term)(PartialTerm.Empty, scope, context)
 
   /**
     * Coin a fresh name for a destructed parameter. The name consists of three
@@ -57,8 +57,8 @@ trait Desugaring { self: PreTyper =>
     * Parameters `hd` and `tl` are obtained by selecting `.1` and `.2` from
     * `args_x$Cons`.
     */
-  private def makeUnappliedVar(scrutinee: Var, className: Var): Var =
-    Var(s"$unappliedPrefix${scrutinee.name}$$${className.name}")
+  private def makeUnappliedVar(scrutinee: Var, className: Var)(implicit context: Context): Var =
+    Var(s"${context.unappliedPrefix}${scrutinee.name}$$${className.name}")
 
   // I plan to integrate scrutinee symbols into a field of `ValueSymbol`.
   // Because each `ValueSymbol` can be matched in multiple UCS expressions.
@@ -110,57 +110,57 @@ trait Desugaring { self: PreTyper =>
 
   private def freshSymbol(nme: Var): ValueSymbol = new ValueSymbol(nme, false)
 
-  private def desugarTermSplit(split: s.TermSplit)(implicit termPart: PartialTerm, scope: Scope): c.Split =
+  private def desugarTermSplit(split: s.TermSplit)(implicit termPart: PartialTerm, scope: Scope, context: Context): c.Split =
     split match {
       case s.Split.Cons(head, tail) => desugarTermBranch(head) ++ desugarTermSplit(tail)
       case s.Split.Let(rec, nme, rhs, tail) =>
-        c.Split.Let(rec, nme, rhs, desugarTermSplit(tail)(termPart, scope + nme.withFreshSymbol.symbol)) // <-- Weird use.
+        c.Split.Let(rec, nme, rhs, desugarTermSplit(tail)(termPart, scope + nme.withFreshSymbol.symbol, context)) // <-- Weird use.
       case s.Split.Else(default) => c.Split.Else(default); 
       case s.Split.Nil => c.Split.Nil
     }
 
   // This function does not need to can `withCachedTermPart` because all branches assume that
   // `termPart` is either empty or waiting for an RHS.
-  private def desugarTermBranch(branch: s.TermBranch)(implicit termPart: PartialTerm, scope: Scope): c.Split =
+  private def desugarTermBranch(branch: s.TermBranch)(implicit termPart: PartialTerm, scope: Scope, context: Context): c.Split =
     trace(s"desugarTermBranch <== $termPart") {
       branch match {
         case s.TermBranch.Boolean(testPart, continuation) =>
-          val test = freshTest().withFreshSymbol
+          val test = context.freshTest().withFreshSymbol
           c.Split.Let(
             rec = false,
             name = test,
             term = Asc(termPart.addTerm(testPart, true).get, TypeName("Bool")),
-            tail = c.Branch(test, truePattern, desugarTermSplit(continuation)(PartialTerm.Empty, scope + test.symbol)) :: c.Split.Nil
+            tail = c.Branch(test, truePattern, desugarTermSplit(continuation)(PartialTerm.Empty, scope + test.symbol, context)) :: c.Split.Nil
           )
         case s.TermBranch.Match(scrutinee, split) =>
-          desugarPatternSplit(split)(termPart.addTerm(scrutinee, true).get, scope)
+          desugarPatternSplit(termPart.addTerm(scrutinee, true).get, split)
         case s.TermBranch.Left(left, continuation) =>
-          desugarOperatorSplit(continuation)(termPart.addTerm(left, true), scope)
+          desugarOperatorSplit(continuation)(termPart.addTerm(left, true), scope, context)
       }
     }()
 
-  private def withCachedTermPart[B <: s.Branch](desugar: (PartialTerm, Scope) => c.Split)(implicit termPart: PartialTerm, scope: Scope): c.Split =
+  private def withCachedTermPart[B <: s.Branch](desugar: (PartialTerm, Scope) => c.Split)(implicit termPart: PartialTerm, scope: Scope, context: Context): c.Split =
     termPart.get match {
       case v: Var => desugar(termPart, scope) // No need to cache variables.
       case rhs =>
-        val cache = freshCache().withFreshSymbol
+        val cache = context.freshCache().withFreshSymbol
         c.Split.Let(false, cache, rhs, desugar(PartialTerm.Total(cache, Nil), scope + cache.symbol))
     }
 
-  private def desugarOperatorSplit(split: s.OperatorSplit)(implicit termPart: PartialTerm, scope: Scope): c.Split =
+  private def desugarOperatorSplit(split: s.OperatorSplit)(implicit termPart: PartialTerm, scope: Scope, context: Context): c.Split =
     withCachedTermPart { (termPart, scope) => split match {
-      case s.Split.Cons(head, tail) => desugarOperatorBranch(head)(termPart, scope) ++ desugarOperatorSplit(tail)(termPart, scope)
+      case s.Split.Cons(head, tail) => desugarOperatorBranch(head)(termPart, scope, context) ++ desugarOperatorSplit(tail)(termPart, scope, context)
       case s.Split.Let(rec, nme, rhs, tail) =>
-        c.Split.Let(rec, nme, rhs, desugarOperatorSplit(tail)(termPart, scope + nme.withFreshSymbol.symbol)) // <-- Weird use.
+        c.Split.Let(rec, nme, rhs, desugarOperatorSplit(tail)(termPart, scope + nme.withFreshSymbol.symbol, context)) // <-- Weird use.
       case s.Split.Else(default) => c.Split.Else(default)
       case s.Split.Nil => c.Split.Nil
     }}
 
-  private def desugarOperatorBranch(branch: s.OperatorBranch)(implicit termPart: PartialTerm, scope: Scope): c.Split =
+  private def desugarOperatorBranch(branch: s.OperatorBranch)(implicit termPart: PartialTerm, scope: Scope, context: Context): c.Split =
     trace(s"desugarOperatorBranch <== $termPart") {
       branch match {
-        case s.OperatorBranch.Binary(op, split) => desugarTermSplit(split)(termPart.addOp(op), scope)
-        case s.OperatorBranch.Match(_, split) => desugarPatternSplit(split)(termPart.get, scope)
+        case s.OperatorBranch.Binary(op, split) => desugarTermSplit(split)(termPart.addOp(op), scope, context)
+        case s.OperatorBranch.Match(_, split) => desugarPatternSplit(termPart.get, split)(scope, context)
       }
     }()
 
@@ -211,7 +211,7 @@ trait Desugaring { self: PreTyper =>
     * @param initialScope the scope before flattening the class pattern
     * @return a tuple of the augmented scope and a function that wrap a split
     */
-  private def desugarClassPattern(pattern: s.ClassPattern, scrutinee: Var, initialScope: Scope): (Scope, c.Split => c.Branch) = {
+  private def desugarClassPattern(pattern: s.ClassPattern, scrutinee: Var, initialScope: Scope)(implicit context: Context): (Scope, c.Split => c.Branch) = {
     val scrutineeSymbol = scrutinee.getScrutineeSymbol
     val patternClassSymbol = pattern.nme.resolveTypeSymbol(initialScope)
     // Most importantly, we need to add the class to the list of matched classes.
@@ -257,7 +257,7 @@ trait Desugaring { self: PreTyper =>
       nestedPatterns: Ls[Opt[Var -> Opt[s.Pattern]]],
       scopeWithScrutinees: Scope,
       bindScrutinees: c.Split => c.Split
-  ): (Scope, c.Split => c.Split) = {
+  )(implicit context: Context): (Scope, c.Split => c.Split) = {
     nestedPatterns.foldLeft((scopeWithScrutinees, bindScrutinees)) {
       // If this parameter is not matched with a sub-pattern, then we do
       // nothing and pass on scope and binder.
@@ -271,7 +271,7 @@ trait Desugaring { self: PreTyper =>
         val (scopeWithNestedAll, bindNestedAll) = desugarClassPattern(pattern, nme, scope)
         (scopeWithNestedAll, split => bindPrevious(bindNestedAll(split) :: c.Split.Nil))
       case ((scope, bindPrevious), S(nme -> S(pattern: s.LiteralPattern))) =>
-        val test = freshTest().withFreshSymbol
+        val test = context.freshTest().withFreshSymbol
         (scope + test.symbol, makeLiteralTest(test, nme, pattern.literal)(scope).andThen(bindPrevious))
       case ((scope, bindPrevious), S(nme -> S(s.TuplePattern(fields)))) =>
         val (scopeWithNestedAll, bindNestedAll) = desugarTuplePattern(fields, nme, scope)
@@ -301,7 +301,7 @@ trait Desugaring { self: PreTyper =>
       case _ => ???
     }.toList
 
-  private def desugarTuplePattern(fields: Ls[Opt[s.Pattern]], scrutinee: Var, initialScope: Scope): (Scope, c.Split => c.Split) = {
+  private def desugarTuplePattern(fields: Ls[Opt[s.Pattern]], scrutinee: Var, initialScope: Scope)(implicit context: Context): (Scope, c.Split => c.Split) = {
     val scrutineeSymbol = scrutinee.getScrutineeSymbol
     val nestedPatterns = flattenTupleFields(scrutinee, fields)
     val bindTupleFields = nestedPatterns.iterator.zipWithIndex.foldRight[c.Split => c.Split](identity) {
@@ -314,14 +314,14 @@ trait Desugaring { self: PreTyper =>
     desugarNestedPatterns(nestedPatterns, scopeWithTupleFields, bindTupleFields)
   }
 
-  private def desugarPatternSplit(split: s.PatternSplit)(implicit scrutinee: Term, scope: Scope): c.Split = {
+  private def desugarPatternSplit(scrutinee: Term, split: s.PatternSplit)(implicit scope: Scope, context: Context): c.Split = {
     def rec(scrutinee: Var, split: s.PatternSplit)(implicit scope: Scope): c.Split = split match {
       case s.Split.Cons(head, tail) => 
         head.pattern match {
           case s.AliasPattern(nme, pattern) => ???
           case s.LiteralPattern(literal) => ???
           case s.ConcretePattern(nme) => 
-            val test = freshTest().withFreshSymbol
+            val test = context.freshTest().withFreshSymbol
             c.Split.Let(
               rec = false,
               name = test,
@@ -329,27 +329,27 @@ trait Desugaring { self: PreTyper =>
               tail = c.Branch(
                 scrutinee = test,
                 pattern = truePattern,
-                continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scope + test.symbol)
+                continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scope + test.symbol, context)
               ) :: rec(scrutinee, tail)
             )
           case s.NamePattern(Var("_")) =>
-            desugarTermSplit(head.continuation)(PartialTerm.Empty, scope) ++ rec(scrutinee, tail)
+            desugarTermSplit(head.continuation)(PartialTerm.Empty, scope, context) ++ rec(scrutinee, tail)
           case s.NamePattern(nme) =>
             // Share the scrutinee's symbol with its aliases.
             // nme.symbol = scrutinee.symbol // <-- This currently causes a bug, reuse this line after we remove `ScrutineeSymbol`.
             nme.symbol = new ValueSymbol(nme, false)
-            val continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scope + nme.symbol)
+            val continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scope + nme.symbol, context)
             c.Branch(scrutinee, c.Pattern.Name(nme), continuation) :: rec(scrutinee, tail)(scope + nme.symbol)
           case pattern @ s.ClassPattern(nme, fields) =>
             println(s"find term symbol of $scrutinee in ${scope.showLocalSymbols}")
             scrutinee.symbol = scope.getTermSymbol(scrutinee.name).getOrElse(???)
             val (scopeWithAll, bindAll) = desugarClassPattern(pattern, scrutinee, scope)
-            val continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scopeWithAll)
+            val continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scopeWithAll, context)
             bindAll(continuation) :: rec(scrutinee, tail)
           case s.TuplePattern(fields) =>
             scrutinee.symbol = scope.getTermSymbol(scrutinee.name).getOrElse(???)
             val (scopeWithAll, bindAll) = desugarTuplePattern(fields, scrutinee, scope)
-            val continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scopeWithAll)
+            val continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scopeWithAll, context)
             val withBindings = bindAll(continuation)
             if (withBindings.hasElse) {
               withBindings
@@ -366,32 +366,8 @@ trait Desugaring { self: PreTyper =>
     scrutinee match {
       case nme: Var => rec(nme, split)
       case other =>
-        val alias = freshScrutinee().withFreshSymbol
+        val alias = context.freshScrutinee().withFreshSymbol
         c.Split.Let(false, alias, scrutinee, rec(alias, split)(scope + alias.symbol))
     }
   }
-}
-
-object Desugaring {
-  class VariableGenerator(prefix: Str) {
-    private var nextIndex = 0
-
-    def apply(): Var = {
-      val thisIndex = nextIndex
-      nextIndex += 1
-      Var(s"$prefix$thisIndex")
-    }
-  }
-
-  val cachePrefix = "cache$"
-  val scrutineePrefix = "scrut$"
-  val testPrefix = "test$"
-  val unappliedPrefix = "args_"
-
-  def isCacheVar(nme: Var): Bool = nme.name.startsWith(cachePrefix)
-  def isScrutineeVar(nme: Var): Bool = nme.name.startsWith(scrutineePrefix)
-  def isTestVar(nme: Var): Bool = nme.name.startsWith(testPrefix)
-  def isUnappliedVar(nme: Var): Bool = nme.name.startsWith(unappliedPrefix)
-  def isGeneratedVar(nme: Var): Bool =
-    isCacheVar(nme) || isScrutineeVar(nme) || isTestVar(nme) || isUnappliedVar(nme)
 }

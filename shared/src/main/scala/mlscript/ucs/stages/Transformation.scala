@@ -20,10 +20,10 @@ import scala.collection.immutable
 trait Transformation { self: mlscript.pretyper.Traceable =>
   import Transformation._
 
-  def transform(`if`: If, useNewDefs: Bool = true): TermSplit =
-    transformIfBody(`if`.body)(useNewDefs) ++ `if`.els.fold(Split.empty)(Split.default)
+  def transform(`if`: If): TermSplit =
+    transformIfBody(`if`.body) ++ `if`.els.fold(Split.empty)(Split.default)
 
-  private def transformIfBody(body: IfBody)(implicit useNewDefs: Bool): TermSplit = trace(s"transformIfBody <== ${inspect.shallow(body)}") {
+  private def transformIfBody(body: IfBody): TermSplit = trace(s"transformIfBody <== ${inspect.shallow(body)}") {
     body match {
       case IfThen(expr, rhs) =>
         splitAnd(expr).foldRight(Split.then(rhs)) {
@@ -84,7 +84,7 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
     }
   }(_ => "transformIfBody ==> ")
   
-  private def transformOperatorBranch(opsRhs: Var -> IfBody)(implicit useNewDefs: Bool): OperatorBranch =
+  private def transformOperatorBranch(opsRhs: Var -> IfBody): OperatorBranch =
     opsRhs match {
       case (op @ Var("is"), rhs) => OperatorBranch.Match(op, transformPatternMatching(rhs))
       case (op, rhs) => OperatorBranch.Binary(op, transformIfBody(rhs))
@@ -93,7 +93,7 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
   /**
     * Transform an `IfBody` into a `PatternSplit`.
     */
-  private def transformPatternMatching(body: IfBody)(implicit useNewDefs: Bool): PatternSplit =
+  private def transformPatternMatching(body: IfBody): PatternSplit =
     trace(s"transformPatternMatching <== ${inspect.shallow(body)}") {
       body match {
         case IfThen(expr, rhs) => 
@@ -125,7 +125,7 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
       }
     }(_ => "transformPatternMatching ==>")
 
-  private def transformPattern(term: Term)(implicit useNewDefs: Bool): Pattern = term match {
+  private def transformPattern(term: Term): Pattern = term match {
     case nme @ Var("true" | "false") => ConcretePattern(nme)
     case nme @ Var(name) if name.headOption.exists(_.isUpper) => ClassPattern(nme, N)
     case nme: Var => NamePattern(nme)
@@ -145,8 +145,8 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
       throw new TransformException(msg"Unknown pattern", term.toLoc)
   }
 
-  private def separatePattern(term: Term)(implicit useNewDefs: Bool): (Pattern, Opt[Term]) = {
-    val (rawPattern, extraTest) = helpers.separatePattern(term, useNewDefs)
+  private def separatePattern(term: Term): (Pattern, Opt[Term]) = {
+    val (rawPattern, extraTest) = helpers.separatePattern(term, true)
     println("rawPattern: " + inspect.deep(rawPattern))
     println("extraTest: " + inspect.deep(extraTest))
     (transformPattern(rawPattern), extraTest)
@@ -171,8 +171,8 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
 
 object Transformation {
   private object OperatorIs {
-    def unapply(term: Term)(implicit useNewDefs: Bool): Opt[(Term, Term)] = term match {
-      case App(App(Var("is"), Tup(_ -> Fld(_, scrutinee) :: Nil)), Tup(_ -> Fld(_, pattern) :: Nil)) if !useNewDefs => S(scrutinee -> pattern)
+    def unapply(term: Term): Opt[(Term, Term)] = term match {
+      // case App(App(Var("is"), Tup(_ -> Fld(_, scrutinee) :: Nil)), Tup(_ -> Fld(_, pattern) :: Nil)) if !useNewDefs => S(scrutinee -> pattern)
       case App(Var("is"), PlainTup(scrutinee, pattern)) => S(scrutinee -> pattern)
       case _ => N
     }
