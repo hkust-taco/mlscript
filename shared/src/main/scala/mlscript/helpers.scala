@@ -688,8 +688,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     // case Test(trm, ty) => ???
     // case With(trm, fieldNme, fieldVal) => ???
     // case CaseOf(trm, cases) => ???
-    case WildcardType() =>
-      TypeName("?") // really?
+    case WildcardType() => TypeName("?")
     case _ => throw new NotAType(this)
   }).withLocOf(this)
   

@@ -142,7 +142,6 @@ fun foo(f: Foo[?]): Int = f.a : f.A
 //│   where
 //│     'a <: Int
 
-// * TODO infer (f: 'f) -> 'b where 'f <: { a: 'a;; A: 'a..'b }, 'a <: 'b
 fun foo(f) = f.a : f.A
 //│ fun foo: forall 'A 'A0. {A :> 'A <: 'A0, a: 'A} -> 'A0
 
@@ -155,16 +154,16 @@ foo(Foo(1))
 :e
 foo(Foo(true))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.156: 	foo(Foo(true))
+//│ ║  l.155: 	foo(Foo(true))
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
-//│ ║  l.156: 	foo(Foo(true))
+//│ ║  l.155: 	foo(Foo(true))
 //│ ║         	        ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.149: 	fun foo(f): Int = f.a : f.A
+//│ ║  l.148: 	fun foo(f): Int = f.a : f.A
 //│ ║         	            ^^^
 //│ ╟── from type selection:
-//│ ║  l.149: 	fun foo(f): Int = f.a : f.A
+//│ ║  l.148: 	fun foo(f): Int = f.a : f.A
 //│ ╙──       	                         ^^
 //│ Int | error
 
@@ -183,14 +182,14 @@ module Baz extends Foo[Str]
 :e
 "bad": Bar.A
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.184: 	"bad": Bar.A
+//│ ║  l.183: 	"bad": Bar.A
 //│ ║         	^^^^^
 //│ ╟── string literal of type `"bad"` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.172: 	module Bar extends Foo[Int]
+//│ ║  l.171: 	module Bar extends Foo[Int]
 //│ ║         	                       ^^^
 //│ ╟── from type selection:
-//│ ║  l.184: 	"bad": Bar.A
+//│ ║  l.183: 	"bad": Bar.A
 //│ ╙──       	          ^^
 //│ Int
 
@@ -218,14 +217,13 @@ fun test(f: Foo['a]) = if f is Bar then 123 : f.A else error
 fun test(f: Foo[Int]) = if f is Bar then 123 : f.A else error
 //│ fun test: (f: Foo[Int]) -> Int
 
-// FIXME
 fun test(f: Foo) = if f is Bar then 123 : f.A else error
 //│ fun test: (f: Foo[in anything out nothing]) -> Int
 
 // FIXME
 fun test(f: Foo[?]) = if f is Bar then 123 : f.A else error
 //│ ╔══[ERROR] wildcard type notation currently unsupported
-//│ ║  l.226: 	fun test(f: Foo[?]) = if f is Bar then 123 : f.A else error
+//│ ║  l.224: 	fun test(f: Foo[?]) = if f is Bar then 123 : f.A else error
 //│ ╙──       	                ^
 //│ fun test: forall 'a. (f: Foo['a]) -> (Int & 'a)
 
@@ -234,21 +232,20 @@ fun test(f: Foo) = if f is
   Bar then 123 : f.A
   Baz then "hello" : f.A
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.233: 	fun test(f: Foo) = if f is
+//│ ║  l.231: 	fun test(f: Foo) = if f is
 //│ ║         	                      ^^^^
-//│ ║  l.234: 	  Bar then 123 : f.A
+//│ ║  l.232: 	  Bar then 123 : f.A
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.235: 	  Baz then "hello" : f.A
+//│ ║  l.233: 	  Baz then "hello" : f.A
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Foo[?]` does not match type `Bar | Baz`
-//│ ║  l.233: 	fun test(f: Foo) = if f is
+//│ ║  l.231: 	fun test(f: Foo) = if f is
 //│ ║         	            ^^^
 //│ ╟── but it flows into reference with expected type `Bar | Baz`
-//│ ║  l.233: 	fun test(f: Foo) = if f is
+//│ ║  l.231: 	fun test(f: Foo) = if f is
 //│ ╙──       	                      ^
 //│ fun test: (f: Foo[in anything out nothing]) -> (Int | Str)
 
-// FIXME
 [test(Bar), test(Baz)]
 //│ [Int | Str, Int | Str]
 
@@ -256,7 +253,7 @@ fun test(f: Foo[?]) = if f is
   Bar then 123 : f.A
   Baz then "hello" : f.A
 //│ ╔══[ERROR] wildcard type notation currently unsupported
-//│ ║  l.255: 	fun test(f: Foo[?]) = if f is
+//│ ║  l.252: 	fun test(f: Foo[?]) = if f is
 //│ ╙──       	                ^
 //│ fun test: forall 'a. (f: Foo['a]) -> ('a & (Int | Str))
 
@@ -269,10 +266,10 @@ fun test[T](f: Foo[T]): T = if f is
 class Foo[type A]
 class Bar[type A] extends Foo[A]
 //│ ╔══[ERROR] Inherited parameter named `A` is not virtual and cannot be overridden
-//│ ║  l.270: 	class Bar[type A] extends Foo[A]
+//│ ║  l.267: 	class Bar[type A] extends Foo[A]
 //│ ║         	               ^
 //│ ╟── Originally declared here:
-//│ ║  l.269: 	class Foo[type A]
+//│ ║  l.266: 	class Foo[type A]
 //│ ╙──       	               ^
 //│ class Foo[A] {
 //│   constructor()
@@ -289,10 +286,10 @@ class Foo[type A]
 :e
 class Bar[type A] extends Foo[A -> A]
 //│ ╔══[ERROR] Inherited parameter named `A` is not virtual and cannot be overridden
-//│ ║  l.290: 	class Bar[type A] extends Foo[A -> A]
+//│ ║  l.287: 	class Bar[type A] extends Foo[A -> A]
 //│ ║         	               ^
 //│ ╟── Originally declared here:
-//│ ║  l.284: 	class Foo[type A]
+//│ ║  l.281: 	class Foo[type A]
 //│ ╙──       	               ^
 //│ class Bar[A] extends Foo {
 //│   constructor()
@@ -301,10 +298,10 @@ class Bar[type A] extends Foo[A -> A]
 :e
 class Bar[type A] extends Foo[Int]
 //│ ╔══[ERROR] Inherited parameter named `A` is not virtual and cannot be overridden
-//│ ║  l.302: 	class Bar[type A] extends Foo[Int]
+//│ ║  l.299: 	class Bar[type A] extends Foo[Int]
 //│ ║         	               ^
 //│ ╟── Originally declared here:
-//│ ║  l.284: 	class Foo[type A]
+//│ ║  l.281: 	class Foo[type A]
 //│ ╙──       	               ^
 //│ class Bar[A] extends Foo {
 //│   constructor()
@@ -322,10 +319,10 @@ class Foo[A]
 // Would be nice:
 fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
 //│ ╔══[ERROR] Type `Foo['a]` does not contain member `A`
-//│ ║  l.323: 	fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
+//│ ║  l.320: 	fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
 //│ ╙──       	                              ^^
 //│ ╔══[ERROR] Type mismatch in type selection:
-//│ ║  l.323: 	fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
+//│ ║  l.320: 	fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
 //│ ║         	                              ^^
 //│ ╙── expression of type `Foo['a]` does not have field 'A'
 //│ fun foo: forall 'a. (x: Foo['a], anything) -> error
@@ -336,7 +333,7 @@ fun foo(x, y) = y : x.A
 // FIXME
 fun bar(f: Foo['a], y) = foo(f, y)
 //│ ╔══[ERROR] Type `Foo['a]` does not contain member `A`
-//│ ║  l.333: 	fun foo(x, y) = y : x.A
+//│ ║  l.330: 	fun foo(x, y) = y : x.A
 //│ ╙──       	                     ^^
 //│ fun bar: forall 'a. (f: Foo['a], anything) -> error
 

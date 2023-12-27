@@ -432,15 +432,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         })
         .toRight(ctx.get(name) match {
             case Some(VarSymbol(ty, vr)) => 
-              println(s"ty var: $vr : $ty")
-              // ! unintended outcome ? can use variable as its type
+              println(s"ty var: $vr : $ty") // select type from variable
               () => ty
             case S(CompletedTypeInfo(ty@TypedNuFun(_,_,_))) =>
-              // ? select types from (possibly) let binding/function, really
-              () => 
-                // err(s"cannot use variable $name as type", loc)(raise)
-                // err(s"as defined in here", ty.toLoc)(raise)
-                ty.typeSignature
+              // select types from (possibly) let binding/function, really
+              () => ty.typeSignature
             case r => () => err(s"type identifier not found: " + name, loc)(raise) })
     val localVars = mutable.Map.empty[TypeVar, TypeVariable]
     def tyTp(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N) =
@@ -1541,14 +1537,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           if (newDefs) {
             val res = freshVar(provTODO, N, N)
             newCtx.copy(lvl = newCtx.lvl + 1) |> { implicit ctx =>
-              s_ty.unwrapProxies match {
-                case _ : TypeVariable => 
-                  println(s"var rfn: ${v.name} :: ${tagTy} & ${patTyIntl}")
-                  newCtx += v.name -> VarSymbol(tagTy & patTyIntl, v)
-                case scrt => 
-                  println(s"var rfn: ${v.name} :: ${scrt} & ${tagTy} & ${patTyIntl}")
-                  newCtx += v.name -> VarSymbol(scrt & tagTy & patTyIntl, v)
+              val scrt = s_ty.unwrapProxies match {
+                case _ : TypeVariable => TopType
+                case scrt => scrt
               }
+              println(s"var rfn: ${v.name} :: ${scrt} & ${tagTy} & ${patTyIntl}")
+              newCtx += v.name -> VarSymbol(scrt & tagTy & patTyIntl, v)
               val bod_ty = typeTerm(bod)(ctx, raise, vars, genLambdas)
               implicit val tp: TP = provTODO
               constrain(bod_ty, res)
