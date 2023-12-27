@@ -1,5 +1,4 @@
 :NewDefs
-// :GADTs
 
 fun fst([x, y]) = x
 fun snd([x, y]) = y 
@@ -37,16 +36,16 @@ equal(new IntRep, 1+1, 2)
 :e
 equal(new BoolRep, 1+1, true)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.38: 	equal(new BoolRep, 1+1, true)
+//│ ║  l.37: 	equal(new BoolRep, 1+1, true)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `Int` is not an instance of `Bool`
-//│ ║  l.38: 	equal(new BoolRep, 1+1, true)
+//│ ║  l.37: 	equal(new BoolRep, 1+1, true)
 //│ ║        	                   ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.13: 	class BoolRep extends Rep[Bool]
+//│ ║  l.12: 	class BoolRep extends Rep[Bool]
 //│ ║        	                          ^^^^
 //│ ╟── from type variable:
-//│ ║  l.24: 	fun equal: (Rep['T], 'T, 'T) -> Bool
+//│ ║  l.23: 	fun equal: (Rep['T], 'T, 'T) -> Bool
 //│ ╙──      	                     ^^
 //│ error | false | true
 //│ res
@@ -100,16 +99,16 @@ let test1 = Node(Node(Leaf(1), Leaf(2)), Node(Leaf(3), Leaf(4)))
 :e
 let test2 = Node(Leaf(1), Node(Leaf(2), Leaf(3)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.101: 	let test2 = Node(Leaf(1), Node(Leaf(2), Leaf(3)))
+//│ ║  l.100: 	let test2 = Node(Leaf(1), Node(Leaf(2), Leaf(3)))
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `[?A, ?A]` is not an instance of type `Int`
-//│ ║  l.69: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
+//│ ║  l.68: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
 //│ ║        	                                                                    ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.68: 	class Leaf(val a: Int) extends Perfect[Int]
+//│ ║  l.67: 	class Leaf(val a: Int) extends Perfect[Int]
 //│ ║        	                                       ^^^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.69: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
+//│ ║  l.68: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
 //│ ╙──      	           ^
 //│ let test2: Node[out Int | [Int, Int]] | error
 //│ test2
@@ -118,16 +117,16 @@ let test2 = Node(Leaf(1), Node(Leaf(2), Leaf(3)))
 :e
 head(Node(Node(Leaf(1), Leaf(2)), Leaf(3)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.119: 	head(Node(Node(Leaf(1), Leaf(2)), Leaf(3)))
+//│ ║  l.118: 	head(Node(Node(Leaf(1), Leaf(2)), Leaf(3)))
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Int` is not a 2-element tuple
-//│ ║  l.68: 	class Leaf(val a: Int) extends Perfect[Int]
+//│ ║  l.67: 	class Leaf(val a: Int) extends Perfect[Int]
 //│ ║        	                                       ^^^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.69: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
+//│ ║  l.68: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
 //│ ║        	                                                                    ^^^^^^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.69: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
+//│ ║  l.68: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
 //│ ╙──      	           ^
 //│ Int
 //│ res

@@ -1,7 +1,4 @@
 :NewDefs
-:GADTs
-
-
 
 // * Notice that when doing pattern matching,
 // * we can recover the type argument of the Bar case
@@ -38,13 +35,13 @@ fun foo(x: Foo['a]) = if x is
 :e
 (error : Foo[Int]) : Bar['a] | Int
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.39: 	(error : Foo[Int]) : Bar['a] | Int
+//│ ║  l.36: 	(error : Foo[Int]) : Bar['a] | Int
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `S` leaks out of its scope
-//│ ║  l.39: 	(error : Foo[Int]) : Bar['a] | Int
+//│ ║  l.36: 	(error : Foo[Int]) : Bar['a] | Int
 //│ ║        	                         ^^
 //│ ╟── back into type variable `S`
-//│ ║  l.24: 	class Bar[type S](val a: S) extends Foo[S]
+//│ ║  l.21: 	class Bar[type S](val a: S) extends Foo[S]
 //│ ╙──      	               ^
 //│ Bar['a] | Int
 //│   where

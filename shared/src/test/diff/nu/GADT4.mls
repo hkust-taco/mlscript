@@ -1,5 +1,4 @@
 :NewDefs
-// :GADTs
 
 fun fst([x, y]) = x
 fun snd([x, y]) = y 
@@ -53,22 +52,22 @@ fmt(test)(114)(false)
 :e
 fmt(test)("hello")("world")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.54: 	fmt(test)("hello")("world")
+//│ ║  l.53: 	fmt(test)("hello")("world")
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"hello"` is not an instance of type `Int`
-//│ ║  l.54: 	fmt(test)("hello")("world")
+//│ ║  l.53: 	fmt(test)("hello")("world")
 //│ ║        	          ^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.14: 	class D[F](fmt: Format[F]) extends Format[Int -> F]
+//│ ║  l.13: 	class D[F](fmt: Format[F]) extends Format[Int -> F]
 //│ ╙──      	                                          ^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.54: 	fmt(test)("hello")("world")
+//│ ║  l.53: 	fmt(test)("hello")("world")
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"world"` is not an instance of type `Bool`
-//│ ║  l.54: 	fmt(test)("hello")("world")
+//│ ║  l.53: 	fmt(test)("hello")("world")
 //│ ║        	                   ^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.15: 	class B[F](fmt: Format[F]) extends Format[Bool -> F]
+//│ ║  l.14: 	class B[F](fmt: Format[F]) extends Format[Bool -> F]
 //│ ╙──      	                                          ^^^^
 //│ Str | error
 //│ res
@@ -126,13 +125,13 @@ eval(If(Equals(Lit(3), Plus(Lit(1), Lit(1))), Fst(Pair(Lit(1), Lit(2))), Lit(3))
 :e
 eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.127: 	eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
+//│ ║  l.126: 	eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Bool` is not an instance of `Int`
-//│ ║  l.93: 	class Equals(a: Expr[Int], b: Expr[Int]) extends Expr[Bool]
+//│ ║  l.92: 	class Equals(a: Expr[Int], b: Expr[Int]) extends Expr[Bool]
 //│ ║        	                                                      ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.92: 	class Plus(a: Expr[Int], b: Expr[Int]) extends Expr[Int]
+//│ ║  l.91: 	class Plus(a: Expr[Int], b: Expr[Int]) extends Expr[Int]
 //│ ╙──      	                   ^^^
 //│ Int
 //│ res

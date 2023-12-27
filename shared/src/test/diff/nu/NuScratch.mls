@@ -1,5 +1,4 @@
 :NewDefs
-:GADTs
 
 class Ty[type T]
 //│ class Ty[T] {
@@ -45,16 +44,16 @@ f(A)
 :e
 f(B)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.46: 	f(B)
+//│ ║  l.45: 	f(B)
 //│ ║        	^^^^
 //│ ╟── integer literal of type `2` is not an instance of type `Bool`
-//│ ║  l.35: 	    B then 2 : x.T
+//│ ║  l.34: 	    B then 2 : x.T
 //│ ║        	           ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.28: 	module B extends S[Bool]
+//│ ║  l.27: 	module B extends S[Bool]
 //│ ║        	                   ^^^^
 //│ ╟── Note: type parameter T is defined at:
-//│ ║  l.26: 	abstract class S[type T]: A | B
+//│ ║  l.25: 	abstract class S[type T]: A | B
 //│ ╙──      	                      ^
 //│ 2 | error | false | true
 //│ res
@@ -63,10 +62,10 @@ f(B)
 :e
 fun f(x: S): x.T = if x is A then 1 else 0
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.64: 	fun f(x: S): x.T = if x is A then 1 else 0
+//│ ║  l.63: 	fun f(x: S): x.T = if x is A then 1 else 0
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `T` leaks out of its scope
-//│ ║  l.64: 	fun f(x: S): x.T = if x is A then 1 else 0
+//│ ║  l.63: 	fun f(x: S): x.T = if x is A then 1 else 0
 //│ ╙──      	                                  ^
 //│ fun f: (x: S[in anything out nothing]) -> ??T
 
@@ -76,7 +75,7 @@ fun f(x: S[?]): x.T = if x is
     B then true : x.T
     _ then error
 //│ ╔══[ERROR] wildcard type notation currently unsupported
-//│ ║  l.74: 	fun f(x: S[?]): x.T = if x is 
+//│ ║  l.73: 	fun f(x: S[?]): x.T = if x is 
 //│ ╙──      	           ^
 //│ fun f: forall 'a. (x: S['a]) -> ('a & (Int | false | true))
 
@@ -88,7 +87,7 @@ f(A)
 :e
 let y: ? = 1
 //│ ╔══[ERROR] wildcard type notation currently unsupported
-//│ ║  l.89: 	let y: ? = 1
+//│ ║  l.88: 	let y: ? = 1
 //│ ╙──      	       ^
 //│ let y: 1
 //│ y
@@ -97,7 +96,7 @@ let y: ? = 1
 :e
 let x = ?
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.98: 	let x = ?
+//│ ║  l.97: 	let x = ?
 //│ ╙──      	        ^
 //│ let x: error
 //│ Code generation encountered an error:
@@ -106,7 +105,7 @@ let x = ?
 :e
 if x is ? then 1
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.107: 	if x is ? then 1
+//│ ║  l.106: 	if x is ? then 1
 //│ ╙──       	        ^
 //│ error
 //│ Code generation encountered an error:
@@ -158,7 +157,7 @@ Foo.a
 :e
 123 { 4 }
 //│ ╔══[ERROR] Refinement terms are not yet supported
-//│ ║  l.159: 	123 { 4 }
+//│ ║  l.158: 	123 { 4 }
 //│ ╙──       	^^^^^^^^^
 //│ error
 //│ Code generation encountered an error:
@@ -173,7 +172,7 @@ class A
 :e
 new A { }
 //│ ╔══[ERROR] Refinement terms are not yet supported
-//│ ║  l.174: 	new A { }
+//│ ║  l.173: 	new A { }
 //│ ╙──       	^^^^^^^^^
 //│ error
 //│ Code generation encountered an error:
@@ -185,7 +184,7 @@ new A { }
 :w
 class Foo { constructor(x: Int){};; val y = 2 }
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.186: 	class Foo { constructor(x: Int){};; val y = 2 }
+//│ ║  l.185: 	class Foo { constructor(x: Int){};; val y = 2 }
 //│ ╙──       	                                 ^^
 //│ class Foo {
 //│   constructor(x: Int)
@@ -196,13 +195,13 @@ class Foo { constructor(x: Int){};; val y = 2 }
 :e
 class Foo { constructor(x: Int){}; val y = 2 }
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
-//│ ║  l.197: 	class Foo { constructor(x: Int){}; val y = 2 }
+//│ ║  l.196: 	class Foo { constructor(x: Int){}; val y = 2 }
 //│ ╙──       	                                 ^
 //│ ╔══[PARSE ERROR] Unexpected 'val' keyword in expression position
-//│ ║  l.197: 	class Foo { constructor(x: Int){}; val y = 2 }
+//│ ║  l.196: 	class Foo { constructor(x: Int){}; val y = 2 }
 //│ ╙──       	                                   ^^^
 //│ ╔══[ERROR] Unexpected equation in this position
-//│ ║  l.197: 	class Foo { constructor(x: Int){}; val y = 2 }
+//│ ║  l.196: 	class Foo { constructor(x: Int){}; val y = 2 }
 //│ ╙──       	                                       ^^^^^
 //│ class Foo {
 //│   constructor(x: Int)
@@ -222,7 +221,7 @@ class Foo {
 :e
 Foo
 //│ ╔══[ERROR] Construction of unparameterized class Foo should use the `new` keyword
-//│ ║  l.223: 	Foo
+//│ ║  l.222: 	Foo
 //│ ╙──       	^^^
 //│ (x: Int) -> Foo
 //│ res
@@ -232,10 +231,10 @@ Foo
 :e
 new Foo
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.233: 	new Foo
+//│ ║  l.232: 	new Foo
 //│ ║         	    ^^^
 //│ ╟── argument list of type `[]` does not match type `[x: Int]`
-//│ ║  l.233: 	new Foo
+//│ ║  l.232: 	new Foo
 //│ ╙──       	       ^
 //│ Foo | error
 //│ res
@@ -244,10 +243,10 @@ new Foo
 :e
 let f = new Foo
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.245: 	let f = new Foo
+//│ ║  l.244: 	let f = new Foo
 //│ ║         	            ^^^
 //│ ╟── argument list of type `[]` does not match type `[x: Int]`
-//│ ║  l.245: 	let f = new Foo
+//│ ║  l.244: 	let f = new Foo
 //│ ╙──       	               ^
 //│ let f: Foo | error
 //│ f
@@ -256,18 +255,18 @@ let f = new Foo
 :e
 f(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.257: 	f(1)
+//│ ║  l.256: 	f(1)
 //│ ║         	^^^^
 //│ ╟── application of type `Foo` is not a function
-//│ ║  l.245: 	let f = new Foo
+//│ ║  l.244: 	let f = new Foo
 //│ ║         	            ^^^
 //│ ╟── but it flows into reference with expected type `1 -> ?a`
-//│ ║  l.257: 	f(1)
+//│ ║  l.256: 	f(1)
 //│ ╙──       	^
 //│ error
 //│ res
 //│ Runtime error:
-//│   TypeError: f3 is not a function
+//│   TypeError: f4 is not a function
 
 
 new Foo(2)
@@ -280,10 +279,10 @@ new Foo(2)
 :e
 new Foo()
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.281: 	new Foo()
+//│ ║  l.280: 	new Foo()
 //│ ║         	^^^^^^^^^
 //│ ╟── argument list of type `[]` does not match type `[x: Int]`
-//│ ║  l.281: 	new Foo()
+//│ ║  l.280: 	new Foo()
 //│ ╙──       	       ^^
 //│ Foo | error
 //│ res

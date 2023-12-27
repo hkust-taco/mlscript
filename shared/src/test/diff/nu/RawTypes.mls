@@ -1,5 +1,4 @@
 :NewDefs
-:GADTs
 
 // * currently
 // Foo => Foo[?] ? is rigid can be uncovered in pattern matching
@@ -12,29 +11,29 @@ class Foo[type A](val a: A)
 :e
 fun foo(f: Foo): Int = f.a : f.A
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.13: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.12: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ║        	                       ^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.13: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.12: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ║        	                       ^^^
 //│ ╟── back into type variable `A`
-//│ ║  l.13: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.12: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ╙──      	                              ^^
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.13: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.12: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ║        	                       ^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.13: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.12: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ║        	                              ^^
 //│ ╟── into type `Int`
-//│ ║  l.13: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.12: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ╙──      	                 ^^^
 //│ fun foo: (f: Foo[anything]) -> Int
 
 // TODO
 fun foo(f: Foo[?]) = f.a : f.A
 //│ ╔══[ERROR] wildcard type notation currently unsupported
-//│ ║  l.35: 	fun foo(f: Foo[?]) = f.a : f.A
+//│ ║  l.34: 	fun foo(f: Foo[?]) = f.a : f.A
 //│ ╙──      	               ^
 //│ fun foo: forall 'A. (f: Foo['A]) -> 'A
 
@@ -53,20 +52,20 @@ fun foo(f: Foo[Int]) = f.a
 // FIXME
 fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.54: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.53: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ║        	                          ^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.54: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.53: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ║        	                                                ^^
 //│ ╟── into type `Int | ~??A`
-//│ ║  l.54: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.53: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ╙──      	                 ^^^
 //│ fun foo: (f: Foo[anything]) -> Int
 
 // TODO
 fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ╔══[ERROR] wildcard type notation currently unsupported
-//│ ║  l.67: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║  l.66: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ╙──      	               ^
 //│ fun foo: forall 'A. (f: Foo['A]) -> Int
 
@@ -109,7 +108,7 @@ class Bar(val b: Int) extends Foo[Int]
 // TODO
 fun foo(x: Foo[?]) = if x is Bar then x.b : x.T
 //│ ╔══[ERROR] wildcard type notation currently unsupported
-//│ ║  l.110: 	fun foo(x: Foo[?]) = if x is Bar then x.b : x.T
+//│ ║  l.109: 	fun foo(x: Foo[?]) = if x is Bar then x.b : x.T
 //│ ╙──       	               ^
 //│ fun foo: forall 'a. (x: Foo['a]) -> (Int & 'a)
 

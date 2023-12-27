@@ -1,5 +1,4 @@
 :NewDefs
-// :GADTs
 
 abstract class Option[type T]: None | Some[T]
 module None extends Option[nothing]

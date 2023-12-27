@@ -1,6 +1,4 @@
 :NewDefs
-:GADTs
-
 
 abstract class Foo0[type T] {
   fun x: T
@@ -40,13 +38,13 @@ abstract class Baz extends Foo[Str]
 :e // Expected
 fun test(f: Foo) = f.f(f.x)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.41: 	fun test(f: Foo) = f.f(f.x)
+//│ ║  l.39: 	fun test(f: Foo) = f.f(f.x)
 //│ ║        	                   ^^^^^^^^
 //│ ╟── type variable `T` leaks out of its scope
-//│ ║  l.19: 	  fun x: T
+//│ ║  l.17: 	  fun x: T
 //│ ║        	      ^^^^
 //│ ╟── back into type variable `T`
-//│ ║  l.18: 	abstract class Foo[type T]: (Bar | Baz) {
+//│ ║  l.16: 	abstract class Foo[type T]: (Bar | Baz) {
 //│ ╙──      	                        ^
 //│ fun test: (f: Foo[in anything out nothing]) -> (Int | error)
 
@@ -118,17 +116,17 @@ fun test(f: Foo) = if f is
     Bar then 123 : f.T
     Baz then error
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.117: 	fun test(f: Foo) = if f is
+//│ ║  l.115: 	fun test(f: Foo) = if f is
 //│ ║         	                      ^^^^
-//│ ║  l.118: 	    Bar then 123 : f.T
+//│ ║  l.116: 	    Bar then 123 : f.T
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.119: 	    Baz then error
+//│ ║  l.117: 	    Baz then error
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Foo[?]` does not match type `Bar | Baz`
-//│ ║  l.117: 	fun test(f: Foo) = if f is
+//│ ║  l.115: 	fun test(f: Foo) = if f is
 //│ ║         	            ^^^
 //│ ╟── but it flows into reference with expected type `Bar | Baz`
-//│ ║  l.117: 	fun test(f: Foo) = if f is
+//│ ║  l.115: 	fun test(f: Foo) = if f is
 //│ ╙──       	                      ^
 //│ fun test: (f: Foo[in anything out nothing]) -> Int
 
@@ -160,13 +158,13 @@ fun test(f: Foo['a]): f.T = if f is
 :e // expected
 test(error, 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.161: 	test(error, 1)
+//│ ║  l.159: 	test(error, 1)
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── argument list of type `[nothing, 1]` does not match type `[f: Foo['a]]`
-//│ ║  l.161: 	test(error, 1)
+//│ ║  l.159: 	test(error, 1)
 //│ ║         	    ^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.155: 	fun test(f: Foo['a]): f.T = if f is
+//│ ║  l.153: 	fun test(f: Foo['a]): f.T = if f is
 //│ ╙──       	        ^^^^^^^^^^^^
 //│ error
 //│ res

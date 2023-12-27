@@ -65,7 +65,7 @@ f of [1, 2]
 let f = (x, y) => x + y
 //│ let f: (Int, Int) -> Int
 //│ f
-//│   = [Function: f4]
+//│   = [Function: f5]
 
 f(1, 2)
 //│ Int
@@ -96,7 +96,7 @@ let f = ((x, y)) => x + y
 //│ ╙──      	         ^^^^^^
 //│ let f: ([Int, Int]) -> Int
 //│ f
-//│   = [Function: f5]
+//│   = [Function: f7]
 
 :e
 f(1, 2)
@@ -132,7 +132,7 @@ f[1, 2]
 //│ ╙──       	^^^^^^^
 //│ ([Int, Int]) -> Int
 //│ res
-//│     = [Function: f5]
+//│     = [Function: f7]
 
 
 :pe
@@ -142,14 +142,14 @@ let f = (((x, y))) => x + y
 //│ ╙──       	          ^^^^^^
 //│ let f: ([Int, Int]) -> Int
 //│ f
-//│   = [Function: f6]
+//│   = [Function: f9]
 
 
 // * TODO maybe parse as type lambda?
 let f = [x, y] => x + y
 //│ let f: ([Int, Int]) -> Int
 //│ f
-//│   = [Function: f7]
+//│   = [Function: f11]
 
 :e
 f(1, 2)
@@ -173,7 +173,7 @@ f([1, 2])
 let f = ([x, y]) => x + y
 //│ let f: ([Int, Int]) -> Int
 //│ f
-//│   = [Function: f8]
+//│   = [Function: f13]
 
 f([1, 2])
 //│ Int
@@ -197,7 +197,7 @@ f(1, 2)
 let f = [[[x, y]]] => x + y
 //│ let f: ([[[Int, Int]]]) -> Int
 //│ f
-//│   = [Function: f9]
+//│   = [Function: f15]
 
 :e
 f([[1, 2]])

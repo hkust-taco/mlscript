@@ -1,5 +1,4 @@
 :NewDefs
-// :GADTs
 
 // natural numbers for index //
 
@@ -82,13 +81,13 @@ fun toList(xs) = if xs is
 :e
 head(new Nil)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.83: 	head(new Nil)
+//│ ║  l.82: 	head(new Nil)
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── type `Z` is not an instance of `S['l]`
-//│ ║  l.18: 	class Nil[T] extends Vec[Z, T]
+//│ ║  l.17: 	class Nil[T] extends Vec[Z, T]
 //│ ║        	                         ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.28: 	fun head[T](xs: Vec[S['l], T]): T =
+//│ ║  l.27: 	fun head[T](xs: Vec[S['l], T]): T =
 //│ ╙──      	                    ^^^^^
 //│ error
 //│ res
@@ -98,13 +97,13 @@ head(new Nil)
 :e
 tail(new Nil)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.99: 	tail(new Nil)
+//│ ║  l.98: 	tail(new Nil)
 //│ ║        	^^^^^^^^^^^^^
 //│ ╟── type `Z` is not an instance of `S[?L]`
-//│ ║  l.18: 	class Nil[T] extends Vec[Z, T]
+//│ ║  l.17: 	class Nil[T] extends Vec[Z, T]
 //│ ║        	                         ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.32: 	fun tail[L, T](xs: Vec[S[L], T]): Vec[L, T] =
+//│ ║  l.31: 	fun tail[L, T](xs: Vec[S[L], T]): Vec[L, T] =
 //│ ╙──      	                       ^^^^
 //│ Vec['L, 'T] | error
 //│ res
@@ -136,16 +135,16 @@ len(Cons(1, Cons(2, new Nil)))
 :e
 zip(Cons(1, new Nil), new Nil)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.137: 	zip(Cons(1, new Nil), new Nil)
+//│ ║  l.136: 	zip(Cons(1, new Nil), new Nil)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Z` is not an instance of `S[?L]`
-//│ ║  l.18: 	class Nil[T] extends Vec[Z, T]
+//│ ║  l.17: 	class Nil[T] extends Vec[Z, T]
 //│ ║        	                         ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.19: 	class Cons[L, T](val h: T, val t: Vec[L, T]) extends Vec[S[L], T]
+//│ ║  l.18: 	class Cons[L, T](val h: T, val t: Vec[L, T]) extends Vec[S[L], T]
 //│ ║        	                                                         ^^^^
 //│ ╟── from type variable:
-//│ ║  l.54: 	fun zip: (Vec['L, 'A], Vec['L, 'B]) -> Vec['L, ['A, 'B]]
+//│ ║  l.53: 	fun zip: (Vec['L, 'A], Vec['L, 'B]) -> Vec['L, ['A, 'B]]
 //│ ╙──      	                           ^^
 //│ Vec[out S[Z] | Z, ['A, 'B]] | error
 //│   where
@@ -177,13 +176,13 @@ vec1 : Vec['l, Int]
 :e
 vec1 : Vec[Z, Int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.178: 	vec1 : Vec[Z, Int]
+//│ ║  l.177: 	vec1 : Vec[Z, Int]
 //│ ║         	^^^^
 //│ ╟── type `S[?L]` is not an instance of `Z`
-//│ ║  l.19: 	class Cons[L, T](val h: T, val t: Vec[L, T]) extends Vec[S[L], T]
+//│ ║  l.18: 	class Cons[L, T](val h: T, val t: Vec[L, T]) extends Vec[S[L], T]
 //│ ║        	                                                         ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.178: 	vec1 : Vec[Z, Int]
+//│ ║  l.177: 	vec1 : Vec[Z, Int]
 //│ ╙──       	           ^
 //│ Vec[Z, Int]
 //│ res

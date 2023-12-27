@@ -1,5 +1,4 @@
 :NewDefs
-// :GADTs
 
 abstract class Foo[type T]: Bar | Baz
 class Bar extends Foo[Int]
@@ -15,33 +14,33 @@ fun foo[T](f: Foo[T]): Int = if f is
     Bar then 0
     Baz(x) then foo(x : Foo[x.T])
 //│ ╔══[ERROR] Subtyping constraint of the form `([?a]) -> ?b <: ?c -> ?d` exceeded recursion depth limit (250)
-//│ ║  l.14: 	fun foo[T](f: Foo[T]): Int = if f is
+//│ ║  l.13: 	fun foo[T](f: Foo[T]): Int = if f is
 //│ ║        	                                ^^^^
-//│ ║  l.15: 	    Bar then 0
+//│ ║  l.14: 	    Bar then 0
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.16: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║  l.15: 	    Baz(x) then foo(x : Foo[x.T])
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Type error in definition
-//│ ║  l.14: 	fun foo[T](f: Foo[T]): Int = if f is
+//│ ║  l.13: 	fun foo[T](f: Foo[T]): Int = if f is
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.15: 	    Bar then 0
+//│ ║  l.14: 	    Bar then 0
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.16: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║  l.15: 	    Baz(x) then foo(x : Foo[x.T])
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `T` leaks out of its scope
-//│ ║  l.16: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║  l.15: 	    Baz(x) then foo(x : Foo[x.T])
 //│ ║        	                             ^^
 //│ ╙── into expression of type `T | ~(Int & ??T)`
 //│ ╔══[ERROR] Type error in definition
-//│ ║  l.14: 	fun foo[T](f: Foo[T]): Int = if f is
+//│ ║  l.13: 	fun foo[T](f: Foo[T]): Int = if f is
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.15: 	    Bar then 0
+//│ ║  l.14: 	    Bar then 0
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.16: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║  l.15: 	    Baz(x) then foo(x : Foo[x.T])
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `T` leaks out of its scope
-//│ ║  l.6: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
 //│ ╙──     	          ^
 //│ fun foo: forall 'T. (f: Foo['T]) -> Int
 
@@ -101,17 +100,17 @@ fun foo(x) = if x is
     C1(c) then c : x.T
     C2    then 0 : x.T
 //│ ╔══[ERROR] Type error in definition
-//│ ║  l.100: 	fun foo(x) = if x is
-//│ ║         	    ^^^^^^^^^^^^^^^^
-//│ ║  l.101: 	    C1(c) then c : x.T
+//│ ║  l.99: 	fun foo(x) = if x is
+//│ ║        	    ^^^^^^^^^^^^^^^^
+//│ ║  l.100: 	    C1(c) then c : x.T
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.102: 	    C2    then 0 : x.T
+//│ ║  l.101: 	    C2    then 0 : x.T
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.101: 	    C1(c) then c : x.T
+//│ ║  l.100: 	    C1(c) then c : x.T
 //│ ║         	                    ^^
 //│ ╟── into type `'T | ~??A`
-//│ ║  l.99: 	fun foo: C['T] -> 'T
+//│ ║  l.98: 	fun foo: C['T] -> 'T
 //│ ╙──      	                  ^^
 //│ fun foo: forall 'A. (C1['A] | C2) -> (Int | ??A & 'A)
 //│ fun foo: forall 'T. C['T] -> 'T

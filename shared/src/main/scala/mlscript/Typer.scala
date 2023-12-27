@@ -21,7 +21,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   def doFactorize: Bool = false
   def showAllErrors: Bool = false // TODO enable?
   def maxSuccessiveErrReports: Int = 3
-  def GADTs: Bool = false // legacy flag
   
   var generalizeCurriedFunctions: Boolean = false
   var approximateNegativeFunction: Boolean = false
@@ -579,7 +578,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           implicit val prov: TypeProvenance = tyTp(nme.toLoc, "type selection")
           val ub = freshVar(prov, N, S(nme.name))
           val lb = freshVar(prov, N, S(nme.name))
-          // if (!GADTs) lb.upperBounds ::= ub
           val res = RecordType.mk((nme.toVar, FieldType(S(lb), ub)(prov)) :: Nil)(prov)
           constrain(ty, res)
           TypeBounds(lb, ub)(prov)
@@ -594,9 +592,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               case R(als: TypedNuAls) =>
                 if (als.tparams.nonEmpty) ??? // TODO
                 als.body
-              // case R(m) => err(msg"Illegal selection of ${m.kind.str} member in type position", nme.toLoc)
-              // case L(d) => err(d)
-              case _ => constrTB(ct)
+              case _ => constrTB(ct) // fallback
             }
           case b_ty => constrTB(b_ty)
             
