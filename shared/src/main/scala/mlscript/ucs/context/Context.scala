@@ -33,15 +33,13 @@ class Context(originalTerm: If) {
   /** The buffer contains all `ScrutineeData` created within this context. */
   private val scrutineeBuffer: Buffer[ScrutineeData] = Buffer.empty
 
-  // TODO: Mark this two files as package private.
   def freshScrutinee: ScrutineeData = {
     val scrutinee = new ScrutineeData(this, N)
     scrutineeBuffer += scrutinee
     scrutinee
   }
 
-  // TODO: Mark this two files as package private.
-  def freshScrutinee(parent: ScrutineeData): ScrutineeData = {
+  private[context] def freshScrutinee(parent: ScrutineeData): ScrutineeData = {
     val scrutinee = new ScrutineeData(this, S(parent))
     scrutineeBuffer += scrutinee
     scrutinee

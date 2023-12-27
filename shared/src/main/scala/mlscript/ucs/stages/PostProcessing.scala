@@ -191,43 +191,6 @@ trait PostProcessing { self: DesugarUCS with mlscript.pretyper.Traceable =>
           other -> N
       }
     }({ case (n, y) => s"disentangle ==> `${inspect.deep(n)}` and `${y.fold("<empty>")(inspect.deep(_))}`" })
-
-  // FIXME: What? Is this seemingly useful function useless?
-  def cascadeCaseTerm(term: Term): Term = trace(s"cascadeCaseTerm <== ${term.describe}") {
-    // Normalized terms are constructed using `Let` and `CaseOf`.
-    term match {
-      case top @ CaseOf(scrutinee: Var, fst @ Case(pattern, body, NoCases)) =>
-        println(s"found a UNARY case: $scrutinee is $pattern")
-        top.copy(cases = fst.copy(body = cascadeCaseTerm(body)))
-      case top @ CaseOf(scrutinee: Var, fst @ Case(pattern, trueBranch, snd @ Wildcard(falseBranch))) =>
-        println(s"found a BINARY case: $scrutinee is $pattern")
-        println("cascading the true branch")
-        val processedTrueBranch = cascadeCaseTerm(trueBranch)
-        println("cascading the false branch")
-        val processedFalseBranch = cascadeCaseTerm(falseBranch)
-        // Check if the false branch is another `CaseOf` with the same scrutinee.
-        processedFalseBranch match {
-          case CaseOf(otherScrutinee: Var, actualFalseBranch) =>
-            if (scrutinee.symbol === otherScrutinee.symbol) {
-              println(s"identical: $scrutinee === $otherScrutinee")
-              if (scrutinee.name =/= otherScrutinee.name) {
-                // TODO: solve name collision by creating a lifted `Let`
-                ???
-              }
-              println(s"actual false branch: $actualFalseBranch")
-              top.copy(cases = fst.copy(body = processedTrueBranch, rest = actualFalseBranch))
-            } else {
-              println(s"different: $scrutinee =/= $otherScrutinee")
-              top.copy(cases = fst.copy(body = processedTrueBranch, rest = snd.copy(body = processedFalseBranch)))
-            }
-          case other => top
-        }
-      // We recursively process the body of `Let` bindings.
-      case let @ Let(_, _, _, body) => let.copy(body = cascadeCaseTerm(body))
-      // Otherwise, this is not a part of a normalized term.
-      case other => println(s"CANNOT cascade"); other
-    }
-  }(_ => "cascadeCaseTerm ==> ")
 }
 
 object PostProcessing {

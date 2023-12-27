@@ -27,12 +27,8 @@ object Pattern {
   * with the locations where these patterns appear.
   *
   * @param patterns a set of patterns that the scrutinee is matched with.
-  * @param hasWildcard if the scrutinee is matched with a wildcard pattern.
   */
-final case class CaseSet(val cases: Map[Pattern, Ls[Loc]], val hasWildcard: Bool) {
-  /** TODO: This seems useless. */
-  @inline def withWildcard: CaseSet = if (hasWildcard) this else copy(hasWildcard = true)
-
+final case class CaseSet(val cases: Map[Pattern, Ls[Loc]]) {
   /**
     * Split the pattern set into two pattern sets.
     * 
@@ -93,5 +89,5 @@ final case class CaseSet(val cases: Map[Pattern, Ls[Loc]], val hasWildcard: Bool
 }
 
 object CaseSet {
-  lazy val empty: CaseSet = CaseSet(Map.empty, false)
+  def empty: CaseSet = CaseSet(Map.empty)
 }

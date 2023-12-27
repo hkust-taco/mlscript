@@ -132,7 +132,7 @@ class ScrutineeData(val context: Context, parent: Opt[ScrutineeData]) {
     val tuplePattern = tuplePatternOpt.map { tuplePattern =>
       Pattern.Tuple() -> tuplePattern.locations
     }.toMap[Pattern, Ls[Loc]]
-    CaseSet(cases ++ tuplePattern, false)
+    CaseSet(cases ++ tuplePattern)
   }
 }
 

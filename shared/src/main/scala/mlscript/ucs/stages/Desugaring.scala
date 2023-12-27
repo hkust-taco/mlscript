@@ -20,8 +20,7 @@ import mlscript.Message, Message.MessageContext
   * 2. Desugar variable patterns to plain let bindings.
   * 3. Desugar literal patterns to equivalent boolean expressions.
   * 4. Reassemble partial terms that are broken by "conditional splits".
-  * 5. Associate each scrutinee with a unique "scrutinee symbol".
-  *    TODO: `ScrutineeSymbol` will be removed in the future.
+  * 5. Associate each scrutinee with a unique `ScrutineeData`.
   * 
   * Desugared UCS terms (core abstract syntax) are in the form of `Split`, which
   * is a list of branches. Each branch consists of a scrutinee, a pattern, and a

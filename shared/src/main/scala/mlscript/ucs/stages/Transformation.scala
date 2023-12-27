@@ -139,7 +139,6 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
       case _ -> Fld(_, Var("_")) => N // Consider "_" as wildcard.
       case _ -> Fld(_, t       ) => S(transformPattern(t))
     })
-    // TODO: Support more patterns.
     case _ =>
       println(s"unknown pattern: $term")
       throw new TransformException(msg"Unknown pattern", term.toLoc)
