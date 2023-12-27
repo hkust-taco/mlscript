@@ -570,10 +570,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         implicit val gl: GenLambdas = false
         val base_ty = rec(base)
         def constrTB(ty: ST): TypeBounds = {
-          println(s"Type selection : ${ty}")
+          println(s"Type selection : ${ty} lvl = ${ty.level}")
           implicit val prov: TypeProvenance = tyTp(nme.toLoc, "type selection")
-          val ub = freshVar(prov, N, S(nme.name))
           val lb = freshVar(prov, N, S(nme.name))
+          val ub = freshVar(prov, N, S(nme.name))
           val res = RecordType.mk((nme.toVar, FieldType(S(lb), ub)(prov)) :: Nil)(prov)
           constrain(ty, res)
           TypeBounds(lb, ub)(prov)

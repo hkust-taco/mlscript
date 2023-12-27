@@ -1345,20 +1345,20 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           nv.upperBounds = tv.upperBounds.map(extrude(_, lowerLvl, false, upperLvl))
           nv
         })
+      case tv: TypeVariable => cache.getOrElse(tv -> pol, {
+          val nv = freshVar(tv.prov, S(tv), tv.nameHint)(lowerLvl)
+          cache += tv -> pol -> nv
+          if (pol) {
+            tv.upperBounds ::= nv
+            nv.lowerBounds = tv.lowerBounds.map(extrude(_, lowerLvl, pol, upperLvl))
+          } else {
+            tv.lowerBounds ::= nv
+            nv.upperBounds = tv.upperBounds.map(extrude(_, lowerLvl, pol, upperLvl))
+          }
+          nv
+        })
       case t @ SpliceType(fs) => 
         t.updateElems(extrude(_, lowerLvl, pol, upperLvl), extrude(_, lowerLvl, !pol, upperLvl), extrude(_, lowerLvl, pol, upperLvl), t.prov)
-      case tv: TypeVariable => cache.getOrElse(tv -> pol, {
-        val nv = freshVar(tv.prov, S(tv), tv.nameHint)(lowerLvl)
-        cache += tv -> pol -> nv
-        if (pol) {
-          tv.upperBounds ::= nv
-          nv.lowerBounds = tv.lowerBounds.map(extrude(_, lowerLvl, pol, upperLvl))
-        } else {
-          tv.lowerBounds ::= nv
-          nv.upperBounds = tv.upperBounds.map(extrude(_, lowerLvl, pol, upperLvl))
-        }
-        nv
-      })
       case n @ NegType(neg) => NegType(extrude(neg, lowerLvl, pol, upperLvl))(n.prov)
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(extrude(und, lowerLvl, pol, upperLvl))(p.prov)
