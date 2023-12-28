@@ -239,7 +239,8 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
           case (t: Term, index)                                  => JSExprStmt(translateTerm(t)(blkScope))
           case (NuFunDef(isLetRec, Var(nme), symNme, _, L(rhs)), _) =>
             val symb = symNme.map(_.name)
-            val pat = blkScope.declareValue(nme, isLetRec, isLetRec.isEmpty, symb)
+            val isLocalFunction = isLetRec.isEmpty || (rhs match { case _: Lam => true; case _ => false })
+            val pat = blkScope.declareValue(nme, isLetRec, isLocalFunction, symb)
             JSLetDecl(Ls(pat.runtimeName -> S(translateTerm(rhs)(blkScope))))
           case (nt: NuTypeDef, _) => translateLocalNewType(nt)(blkScope)
           // TODO: find out if we need to support this.
