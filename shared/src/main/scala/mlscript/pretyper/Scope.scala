@@ -34,9 +34,14 @@ final class Scope(val enclosing: Opt[Scope], val types: Map[Str, TypeSymbol], va
 
   @inline
   def +(sym: Symbol): Scope = sym match {
+    case symbol: ModuleSymbol => new Scope(enclosing, types + (symbol.name -> symbol), terms + (symbol.name -> symbol))
     case symbol: TypeSymbol => new Scope(enclosing, types + (symbol.name -> symbol), terms)
-    case symbol @ FunctionSymbol(Var(name), S(Var(operator)), _) =>
-        new Scope(enclosing, types, terms + (name -> symbol) + (operator -> symbol))
+    case symbol: DefinedTermSymbol =>
+      val newTerms = terms + (symbol.name -> symbol)
+      new Scope(enclosing, types, symbol.operatorAlias match {
+        case N => newTerms
+        case S(alias) => newTerms + (alias.name -> symbol)
+      })
     case symbol: TermSymbol => new Scope(enclosing, types, terms + (symbol.name -> symbol))
   }
 
@@ -48,6 +53,7 @@ final class Scope(val enclosing: Opt[Scope], val types: Map[Str, TypeSymbol], va
 
   def withEntries(syms: IterableOnce[Var -> Symbol]): Scope = {
     val (newTypes, newTerms) = syms.iterator.foldLeft((types, terms)) {
+      case ((types, terms), (nme, symbol: ModuleSymbol)) => (types + (nme.name -> symbol), terms + (nme.name -> symbol))
       case ((types, terms), (nme, symbol: TypeSymbol)) => (types + (nme.name -> symbol), terms)
       case ((types, terms), (nme, symbol: TermSymbol)) => (types, terms + (nme.name -> symbol))
     }
@@ -73,9 +79,10 @@ object Scope {
       symbols: IterableOnce[Symbol]
   ): (Map[Str, TypeSymbol], Map[Str, TermSymbol]) =
     symbols.iterator.foldLeft((z._1, z._2)) {
+      case ((types, terms), symbol: ModuleSymbol) => (types + (symbol.name -> symbol), terms + (symbol.name -> symbol))
       case ((types, terms), symbol: TypeSymbol) => (types + (symbol.name -> symbol), terms)
-      case ((types, terms), symbol @ FunctionSymbol(Var(name), S(Var(operator)), _)) =>
-        (types, terms + (name -> symbol) + (operator -> symbol))
+      case ((types, terms), symbol: DefinedTermSymbol) =>
+        (types, terms + (symbol.name -> symbol) ++ symbol.operatorAlias.map(_.name -> symbol))
       case ((types, terms), symbol: TermSymbol) => (types, terms + (symbol.name -> symbol))
     }
 
@@ -92,11 +99,11 @@ object Scope {
     Scope.from(
       """true,false,document,window,typeof,toString,not,succ,log,discard,negate,
         |round,add,sub,mul,div,sqrt,lt,le,gt,ge,slt,sle,sgt,sge,length,concat,eq,
-        |ne,error,id,if,emptyArray,+,-,*,%,/,<,>,<=,>=,==,===,<>,&&,||"""
+        |ne,error,id,if,emptyArray,+,-,*,%,/,<,>,<=,>=,==,===,<>,&&,||,and"""
         .stripMargin
         .split(",")
         .iterator
-        .map(name => new ValueSymbol(Var(name), false))
+        .map(name => new LocalTermSymbol(Var(name)))
         .concat(trueSymbol :: falseSymbol :: Nil)
     )
   }

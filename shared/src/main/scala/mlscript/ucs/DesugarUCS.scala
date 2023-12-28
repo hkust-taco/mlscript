@@ -16,7 +16,7 @@ trait DesugarUCS extends Transformation
                     with PostProcessing 
                     with CoverageChecking { self: PreTyper =>
 
-  protected def freshSymbol(nme: Var): ValueSymbol = new ValueSymbol(nme, false)
+  protected def freshSymbol(nme: Var): LocalTermSymbol = new LocalTermSymbol(nme)
 
   /** Common operations of `Var` which can be shared within all stages. */
   protected implicit class VarOps(nme: Var) {

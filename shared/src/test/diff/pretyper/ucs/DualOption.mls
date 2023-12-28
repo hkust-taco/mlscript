@@ -124,6 +124,7 @@ fun add_5(x, y) =
     y is None     and x is None     then 0
 //│ fun add_5: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)
 
+
 add_5(None, None)
 add_5(Some(5), None)
 add_5(None, Some(9))
@@ -146,6 +147,7 @@ fun add_6(x, y) =
     [None,     Some(yv)] then yv
     [None,     None]     then 0
 //│ fun add_6: forall 'a. (None | Some[Int], None | Some[Int & 'a]) -> (Int | 'a)
+
 
 add_6(None, None)
 add_6(Some(5), None)

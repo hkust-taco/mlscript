@@ -34,7 +34,7 @@ trait Desugaring { self: PreTyper =>
     *
     * @param term the root of source abstrax syntax term, obtained from the
     *             transformation stage
-    * @param context the scope is for resolving type symbols. The scope should
+    * @param scope the scope is for resolving type symbols. The scope should
     *              contains a TypeSymbol for `true` literal.
     * @return the root of desugared core abstract syntax term
     */
@@ -126,7 +126,7 @@ trait Desugaring { self: PreTyper =>
     next => c.Split.Let(
       rec = false,
       name = test,
-      term = mkBinOp(scrutinee, Var("=="), literal, true),
+      term = mkBinOp(scrutinee, Var("==="), literal, true),
       tail = c.Branch(test, truePattern, next) :: c.Split.Nil
     )
 
@@ -145,7 +145,7 @@ trait Desugaring { self: PreTyper =>
           S(name.withFreshSymbol.withScrutinee(subScrutinee) -> N)
         case (S(parameterPattern @ (s.ClassPattern(_, _) | s.LiteralPattern(_) | s.TuplePattern(_))), index) =>
           val subScrutineeVar = freshSubScrutinee(parentScrutineeVar, parentClassLikeSymbol.name, index)
-          val symbol = new ValueSymbol(subScrutineeVar, false)
+          val symbol = new LocalTermSymbol(subScrutineeVar)
           symbol.addScrutinee(classPattern.getParameter(index).withAlias(subScrutineeVar))
           S(subScrutineeVar.withSymbol(symbol) -> S(parameterPattern))
         case _ => ??? // Other patterns are not implemented yet.
@@ -184,7 +184,7 @@ trait Desugaring { self: PreTyper =>
         // duplicated bindings during normalization.
         lazy val unapp = classPattern.getUnappliedVar {
           val vari = makeUnappliedVar(scrutineeVar, pattern.nme)
-          vari.withSymbol(new ValueSymbol(vari, false))
+          vari.withSymbol(new LocalTermSymbol(vari))
         }
         val nestedPatterns = flattenClassParameters(scrutineeVar, patternClassSymbol, parameters)
         // First, handle bindings of parameters of the current class pattern.
@@ -261,7 +261,7 @@ trait Desugaring { self: PreTyper =>
       case (S(parameterPattern @ (s.ClassPattern(_, _) | s.LiteralPattern(_) | s.TuplePattern(_))), index) =>
         val arity = fields.length
         val subScrutineeVar = freshSubScrutinee(parentScrutineeVar, s"Tuple$$$arity", index)
-        val symbol = new ValueSymbol(subScrutineeVar, false)
+        val symbol = new LocalTermSymbol(subScrutineeVar)
         symbol.addScrutinee(tuplePattern.getField(index).withAlias(subScrutineeVar))
         S(subScrutineeVar.withSymbol(symbol) -> S(parameterPattern))
       case _ => ???
@@ -286,7 +286,18 @@ trait Desugaring { self: PreTyper =>
       case s.Split.Cons(head, tail) => 
         head.pattern match {
           case s.AliasPattern(nme, pattern) => ???
-          case s.LiteralPattern(literal) => ???
+          case s.LiteralPattern(literal) =>
+            val test = context.freshTest().withFreshSymbol
+            c.Split.Let(
+              rec = false,
+              name = test,
+              term = mkBinOp(scrutineeVar, Var("==="), literal, true),
+              tail = c.Branch(
+                scrutinee = test,
+                pattern = truePattern,
+                continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scope + test.symbol, context)
+              ) :: rec(scrutineeVar, tail)
+            )
           case s.ConcretePattern(nme) => 
             val test = context.freshTest().withFreshSymbol
             c.Split.Let(
@@ -303,7 +314,7 @@ trait Desugaring { self: PreTyper =>
             desugarTermSplit(head.continuation)(PartialTerm.Empty, scope, context) ++ rec(scrutineeVar, tail)
           case s.NamePattern(nme) =>
             // Create a symbol for the binding.
-            val symbol = new ValueSymbol(nme, false)
+            val symbol = new LocalTermSymbol(nme)
             // Share the scrutineeVar's symbol with its aliases.
             symbol.addScrutinee(scrutineeVar.getOrCreateScrutinee.withAlias(nme))
             // Associate the symbol with the binding.

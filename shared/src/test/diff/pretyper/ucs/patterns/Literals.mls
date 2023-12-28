@@ -10,7 +10,7 @@ class Pair[A, B](x: A, y: B)
 //│ class Pair[A, B](x: A, y: B)
 
 fun f(x) = if x is Some(1) then true else false
-//│ fun f: (Object & ~#Some | Some[Num]) -> Bool
+//│ fun f: (Object & ~#Some | Some[Eql[1]]) -> Bool
 
 fun g(x) = if x then 1 else 2
 //│ fun g: Bool -> (1 | 2)

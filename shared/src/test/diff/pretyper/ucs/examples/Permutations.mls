@@ -15,13 +15,13 @@ fun (:::) appendAll(xs: List['A], ys: List['A]): List['A] =
     Cons(x, xs') then x :: (xs' ::: ys)
 fun (:+) append(xs, x): List['A] = xs ::: (x :: Nil)
 fun reverse(xs) =
-  let aux(acc, xs) =
+  let rec aux(acc, xs) =
     if xs is
       Nil then acc
       Cons(x, xs') then aux(x :: acc, xs')
   aux(Nil, xs)
 fun join(sep) =
-  let aux(acc, xs) =
+  let rec aux(acc, xs) =
     if xs is
       Nil then acc
       Cons(x, xs') then aux(acc ++ sep ++ toString(x), xs')
@@ -31,7 +31,7 @@ fun join(sep) =
       Nil then ""
 fun showList(xs) = "[" ++ join(", ")(xs) ++ "]"
 fun foldLeft(f)(z) =
-  let aux(acc, xs) =
+  let rec aux(acc, xs) =
     if xs is
       Nil then acc
       Cons(x, xs') then aux(f(acc, x), xs')
@@ -50,19 +50,23 @@ fun showListList(xs) = "[" ++ join(", ")(map(showList, xs)) ++ "]"
 //│ fun reverse: (Cons[anything] | Nil) -> (Cons[nothing] | Nil)
 //│ fun join: Str -> (Cons[anything] | Nil) -> Str
 //│ fun showList: (Cons[anything] | Nil) -> Str
-//│ fun foldLeft: forall 'a 'b 'c. (('a, 'b) -> ('a & 'c)) -> ('a & 'c) -> (Cons['b] | Nil) -> 'c
-//│ fun map: forall 'd 'T2. ('d -> 'T2, Cons['d] | Nil) -> (Cons['T2] | Nil)
+//│ fun foldLeft: forall 'a 'b. (('a, 'b) -> 'a) -> 'a -> (Cons['b] | Nil) -> 'a
+//│ fun map: forall 'c 'T2. ('c -> 'T2, Cons['c] | Nil) -> (Cons['T2] | Nil)
 //│ fun showListList: (Cons[Cons[anything] | Nil] | Nil) -> Str
 
 fun insertAllPositions(z) =
-  let aux(prev, acc, xs) =
+  let rec aux(prev, acc, xs) =
     if xs is
       Nil then ((prev :+ z) :: acc) |> reverse
       Cons(head, tail) then
         let nu = ((prev :+ z) ::: xs)
         aux(prev :+ head, nu :: acc, tail)
   xs => aux(Nil, Nil, xs)
-//│ fun insertAllPositions: forall 'a. 'a -> (forall 'A. (Cons['A] | Nil) -> (Cons[List['a | 'A]] & {Cons#T <: List['a | 'A]} | Nil))
+//│ fun insertAllPositions: forall 'a. 'a -> (forall 'A 'A0. (Cons['A & 'A0] | Nil) -> (Cons[List['A0 | 'a]] & {Cons#T <: List['A0 | 'a]} | Nil))
+//│   where
+//│     'A <: 'A0
+//│     'A0 :> 'a
+//│         <: 'A
 
 insertAllPositions(0)(1 :: 2 :: 3 :: Nil) |> showListList
 //│ Str
@@ -74,7 +78,7 @@ fun permutations(xs) =
     Nil then Nil
     Cons(x, Nil) then (x :: Nil) :: Nil
     Cons(x, xs') then foldLeft((acc, ys) => acc ::: insertAllPositions(x)(ys))(Nil)(permutations(xs'))
-//│ fun permutations: forall 'T 'A. (Cons['T] | Nil) -> (Cons[Cons['T]] | List[List['T & 'A]] | Nil)
+//│ fun permutations: forall 'T 'A. (Cons['T] | Nil) -> (Cons[Cons['T]] | List[List['A]] | Nil)
 //│   where
 //│     'T <: 'A
 //│     'A := 'T

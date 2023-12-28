@@ -1,13 +1,15 @@
 package mlscript.pretyper
 
 import collection.mutable.{Buffer, Map => MutMap, Set => MutSet}
-import mlscript.{Loc, NuFunDef, NuTypeDef, TypeName, Var}
+import mlscript.{Loc, NuFunDef, NuTypeDef, Term, Type, TypeName, Var}
 import mlscript.{Cls, Trt, Mxn, Als, Mod}
 import mlscript.utils._, shorthands._
-import mlscript.ucs.context.{Context, ScrutineeData}
+import mlscript.ucs.context.Matchable
 
 package object symbol {
-  sealed abstract class Symbol(val name: Str) {
+  sealed trait Symbol {
+    def name: Str
+
     def typeSymbolOption: Opt[TypeSymbol] = this match {
       case symbol: TypeSymbol => S(symbol)
       case _ => N
@@ -18,7 +20,11 @@ package object symbol {
     }
   }
 
-  sealed abstract class TypeSymbol(val defn: NuTypeDef) extends Symbol(defn.name) {
+  sealed trait TypeSymbol extends Symbol {
+    val defn: NuTypeDef
+    
+    override def name: Str = defn.name
+
     def scope: Scope = ???
     def contents: Map[Str, Symbol] = ???
 
@@ -30,61 +36,55 @@ package object symbol {
     @inline def hasSuperType(superType: TypeSymbol): Bool = baseTypes.exists(_ === superType)
   }
 
-  final class ClassSymbol(/* enclosingScope: Scope, */ defn: NuTypeDef) extends TypeSymbol(defn) {
-    require(defn.kind === Cls)
-    // lazy val (scope, contents) = (enclosingScope.derive, Map.empty[Str, Symbol])
-  }
-
-  final class TraitSymbol(/* enclosingScope: Scope, */ defn: NuTypeDef) extends TypeSymbol(defn) {
-    require(defn.kind === Trt)
-    // lazy val (scope, contents) = (enclosingScope.derive, Map.empty[Str, Symbol])
-  }
-
-  final class MixinSymbol(/* enclosingScope: Scope, */ defn: NuTypeDef) extends TypeSymbol(defn) {
-    require(defn.kind === Mxn)
-    // lazy val (scope, contents) = (enclosingScope.derive, Map.empty[Str, Symbol])
-  }
-
-  final class TypeAliasSymbol(/* enclosingScope: Scope, */ defn: NuTypeDef) extends TypeSymbol(defn) {
-    require(defn.kind === Als)
-    // lazy val (scope, contents) = (enclosingScope.derive, Map.empty[Str, Symbol])
-  }
-
-  final class ModuleSymbol(/* enclosingScope: Scope, */ defn: NuTypeDef) extends TypeSymbol(defn) {
-    require(defn.kind === Mod)
-    // lazy val (scope, contents) = (enclosingScope.derive, Map.empty[Str, Symbol])
-  }
-
-  sealed abstract class TermSymbol(name: String) extends Symbol(name) {
-    private val scrutinees: MutMap[Context, ScrutineeData] = MutMap.empty
-    
-    def getOrCreateScrutinee(implicit context: Context): ScrutineeData =
-      scrutinees.getOrElseUpdate(context, context.freshScrutinee)
-
-    def getScrutinee(implicit context: Context): Opt[ScrutineeData] =
-      scrutinees.get(context)
-
-    def isScrutinee(implicit context: Context): Bool = scrutinees.contains(context)
-
-    def addScrutinee(scrutinee: ScrutineeData)(implicit context: Context): Unit = {
-      require(!isScrutinee)
-      scrutinees += context -> scrutinee
-    }
-  }
-
-  final class FunctionSymbol(val defn: NuFunDef) extends TermSymbol(defn.nme.name) {
-    require(defn.isLetRec.isEmpty)
-    val nme: Var = defn.nme
-    val operator: Opt[Var] = defn.symbolicNme
-  }
-
-  object FunctionSymbol {
-    def unapply(symbol: TermSymbol): Opt[(Var, Opt[Var], NuFunDef)] =
-      symbol match {
-        case fs: FunctionSymbol => S(fs.nme, fs.operator, fs.defn)
-        case _ => N
+  object TypeSymbol {
+    def apply(defn: NuTypeDef): TypeSymbol =
+      defn.kind match {
+        case Cls => new ClassSymbol(defn)
+        case Als => new TypeAliasSymbol(defn)
+        case Mxn => new MixinSymbol(defn)
+        case Trt => new TraitSymbol(defn)
+        case Mod => new ModuleSymbol(defn)
       }
+    def unapply(symbol: TypeSymbol): Opt[NuTypeDef] = S(symbol.defn)
   }
 
-  final class ValueSymbol(val nme: Var, val hoisted: Bool) extends TermSymbol(nme.name)
+  final class ClassSymbol(override val defn: NuTypeDef) extends TypeSymbol {
+    require(defn.kind === Cls)
+  }
+
+  final class TraitSymbol(override val defn: NuTypeDef) extends TypeSymbol {
+    require(defn.kind === Trt)
+  }
+
+  final class MixinSymbol(override val defn: NuTypeDef) extends TypeSymbol {
+    require(defn.kind === Mxn)
+  }
+
+  final class TypeAliasSymbol(override val defn: NuTypeDef) extends TypeSymbol {
+    require(defn.kind === Als)
+  }
+
+  final class ModuleSymbol(override val defn: NuTypeDef) extends TypeSymbol with TermSymbol {
+    require(defn.kind === Mod)
+  }
+
+  sealed trait TermSymbol extends Symbol with Matchable
+
+  class DefinedTermSymbol(defn: NuFunDef) extends TermSymbol {
+    override def name: Str = defn.name
+
+    def body: Term \/ Type = defn.rhs
+
+    def isFunction: Bool = defn.isLetRec.isEmpty
+
+    def isRecursive: Bool = defn.isLetRec.getOrElse(true)
+
+    def isDeclaration: Bool = defn.rhs.isRight
+
+    def operatorAlias: Opt[Var] = defn.symbolicNme
+  }
+
+  class LocalTermSymbol(val nme: Var) extends TermSymbol {
+    override def name: Str = nme.name
+  }
 }

@@ -64,7 +64,7 @@ fun (::) cons(head, tail) = Cons(head, tail)
 //│ fun (::) cons: forall 'A. ('A, List['A]) -> Cons['A]
 
 fun join(sep) =
-  let aux(acc, xs) =
+  let rec aux(acc, xs) =
     if xs is
       Nil then acc
       Cons(x, xs') then aux(acc ++ sep ++ toString(x), xs')
@@ -128,7 +128,7 @@ exclude("x" :: "y" :: "z" :: Nil, "w") |> showList
 //│     = '[x, y, z]'
 
 fun reverse(xs: List['B]): List['B] =
-  let aux(acc: List['B], ys: List['B]): List['B] =
+  let rec aux(acc: List['B], ys: List['B]): List['B] =
     if ys is
       Nil then acc
       Cons(y, ys') then aux(Cons(y, acc), ys')
@@ -321,7 +321,7 @@ fun search(f: 'A -> Option['B], xs: List['A]): Option['B] =
 //│     'B <: 'A0
 
 // The removal of type annotations will cause running out of fuel.
-fun combinations(n: Int, acc: List['A], alphabet: List['A], xs: List[Str]): Option[Str] =
+fun combinations(n: Int, acc: List['T], alphabet: List['T], xs: List[Str]): Option[Str] =
   if
     n <= 0 and
       let x = reverse(acc) |> join("")
@@ -329,11 +329,11 @@ fun combinations(n: Int, acc: List['A], alphabet: List['A], xs: List[Str]): Opti
       else Some(x)
     else
       search((x) => combinations(n - 1, x :: acc, alphabet, xs), alphabet)
-//│ fun combinations: forall 'A 'A0 'A1. (n: Int, acc: List['A], alphabet: List['A1], xs: List[Str]) -> Option[Str]
+//│ fun combinations: forall 'T 'A 'T0. (n: Int, acc: List['T], alphabet: List['T0], xs: List[Str]) -> Option[Str]
 //│   where
-//│     'A1 <: 'A & 'A0
-//│     'A :> 'A0
-//│     'A0 := 'A
+//│     'T0 <: 'T & 'A
+//│     'T :> 'A
+//│     'A := 'T
 
 combinations(1, Nil, 1 :: 2 :: 3 :: Nil, Nil) |> showOption
 combinations(2, Nil, 1 :: 2 :: 3 :: Nil, Nil) |> showOption
@@ -357,7 +357,7 @@ combinations(3, Nil, 1 :: 2 :: 3 :: Nil, "111" :: "112" :: "113" :: "121" :: Nil
 
 fun freshVar(t: Term): Str =
   let fvs = freeVars(t)
-  let aux(n: Int): Str =
+  let rec aux(n: Int): Str =
     if combinations(n, Nil, alphabet, fvs) is
       Some(x) then x
       None then aux(n + 1)
@@ -484,7 +484,7 @@ toString of stepByValue of App(Abs(Var("x"), Var("x")), Abs(Var("y"), Var("y")))
 //
 
 fun eval(step) =
-  let aux(t) =
+  let rec aux(t) =
     if step(t) is result and result is
       Stepped(_, t') then aux(t')
       else result

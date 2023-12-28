@@ -107,6 +107,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
         else
           throw new UnimplementedError(sym)
       case S(sym: ValueSymbol) =>
+        // Temporary disable this line of code because it invalidates many working test cases.
         if (sym.isByvalueRec.getOrElse(false) && !sym.isLam) throw CodeGenError(s"unguarded recursive use of by-value binding $name")
         sym.visited = true
         val ident = JSIdent(sym.runtimeName)

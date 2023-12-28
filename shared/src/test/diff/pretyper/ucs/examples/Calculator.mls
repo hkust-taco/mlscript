@@ -59,13 +59,13 @@ class Cons[A](head: A, tail: List[A])
 module Nil
 fun (::) cons(head, tail) = Cons(head, tail)
 fun reverse(xs) =
-  let aux(acc, xs) =
+  let rec aux(acc, xs) =
     if xs is
       Nil then acc
       Cons(x, xs') then aux(x :: acc, xs')
   aux(Nil, xs)
 fun join(sep) =
-  let aux(acc, xs) =
+  let rec aux(acc, xs) =
     if xs is
       Nil then acc
       Cons(x, xs') then aux(acc ++ sep ++ toString(x), xs')
@@ -97,7 +97,7 @@ fun isBlank(n) = (n === 32) || (n === 9) || (n === 10) || (n === 13)
 //│ fun isBlank: Eql[10 | 13 | 32 | 9] -> Bool
 
 fun scanInt(text: StringOps, at: Int): Option[[Int, Int]] =
-  let aux(acc, i: Int): Option[[Int, Int]] = if
+  let rec aux(acc, i: Int): Option[[Int, Int]] = if
     i < 0 then None
     i >= text.length then mapOption(n => [n, i], acc)
     let c = text.charCodeAt(i)
@@ -124,7 +124,7 @@ scanInt("a123" |> toStringOps, 4) |> showOption
 //│     = 'None'
 
 fun skipBlank(text: StringOps, at: Int): Int =
-  let aux(i: Int): Int = if
+  let rec aux(i: Int): Int = if
     i >= text.length then i
     isBlank(text.charCodeAt(i)) then aux(i + 1)
     else i
@@ -222,7 +222,7 @@ scanToken("  42" |> toStringOps, 0)
 
 fun tokenize(str: Str): List[Token] =
   let text = str |> toStringOps
-  let aux(acc, at) =
+  let rec aux(acc, at) =
     if scanToken(text, at) is [token, at'] and token is
       UnknownInput then (token :: acc) |> reverse
       EndOfInput then acc |> reverse
@@ -334,7 +334,7 @@ fun parseAtom(ts: List[Token]): ParseResult[[Expression, List[Token]]] =
 fun parseExpression(bp: Int, ts: List[Token]): ParseResult[[Expression, List[Token]]] =
   if parseAtom(ts) is
     Some([leftmost, ts']) then
-      let aux(left, ts) = if ts is
+      let rec aux(left, ts) = if ts is
         Cons(BinaryOperator(op, bp', opAt), ts') and bp < bp' and
           parseExpression(bp', ts') is
             Some([right, ts'']) then

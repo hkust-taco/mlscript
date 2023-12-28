@@ -23,7 +23,7 @@ let oneTwoThree = 1 :: 2 :: 3 :: Nil
 // Note that JavaScript doesn't have tail call optimization. Therefore, this
 // implementation is still inefficient in practice.
 fun join(sep) =
-  let aux(acc, xs) =
+  let rec aux(acc, xs) =
     if xs is
       Nil then acc
       Cons(x, xs') then aux(acc ++ sep ++ toString(x), xs')
@@ -56,7 +56,7 @@ fun (:::) appendAll(xs, ys) =
 //│     = '[1, 2, 3, 4, 5, 6]'
 
 fun reverse(xs) =
-  let aux(acc, xs) =
+  let rec aux(acc, xs) =
     if xs is
       Nil then acc
       Cons(x, xs') then aux(x :: acc, xs')
@@ -79,12 +79,12 @@ reverse(1 :: 2 :: 3 :: Nil) |> showList
 //
 
 fun foldLeft(f)(z) =
-  let aux(acc, xs) =
+  let rec aux(acc, xs) =
     if xs is
       Nil then acc
       Cons(x, xs') then aux(f(acc, x), xs')
   (xs) => aux(z, xs)
-//│ fun foldLeft: forall 'a 'b 'c. (('a, 'b) -> ('a & 'c)) -> ('a & 'c) -> (Cons['b] | Nil) -> 'c
+//│ fun foldLeft: forall 'a 'b. (('a, 'b) -> 'a) -> 'a -> (Cons['b] | Nil) -> 'a
 
 let sum = foldLeft((acc, x) => acc + x)(0)
 sum(Nil)
@@ -143,7 +143,7 @@ reverse'(1 :: 2 :: 3 :: Nil) |> showList
 //                            |___/
 
 fun foldRight(f)(z) =
-  let aux(acc, xs) =
+  let rec aux(acc, xs) =
     if xs is
       Nil then acc
       Cons(x, xs') then f(x, aux(acc, xs'))
