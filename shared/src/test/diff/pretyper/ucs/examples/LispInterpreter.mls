@@ -12,11 +12,52 @@ fun (=/=) objectNotEqual(x, y) = not(x =:= y)
 //│ objectEqual
 //│             = [Function: is]
 
+type NStr = Str & {
+  length: Int,
+  at: Int -> NStr,
+  charAt: Int -> NStr,
+  charCodeAt: Int -> Int,
+  slice: (Int, Int) -> NStr,
+  startsWith: Str -> Bool,
+  endsWith: Str -> Bool,
+  split: Str -> Array[NStr],
+  trim: () -> NStr,
+  trimStart: () -> NStr,
+  trimEnd: () -> NStr,
+  padStart: (Int, Str) -> NStr,
+  padEnd: (Int, Str) -> NStr,
+  repeat: Int -> NStr,
+  indexOf: Str -> Int,
+  lastIndexOf: Str -> Int,
+  includes: Str -> Bool,
+}
+declare fun String: anything -> NStr
+fun (++) strcat(a, b) = String of concat(a)(b)
+//│ type NStr = Str & {
+//│   at: Int -> NStr,
+//│   charAt: Int -> NStr,
+//│   charCodeAt: Int -> Int,
+//│   endsWith: Str -> Bool,
+//│   includes: Str -> Bool,
+//│   indexOf: Str -> Int,
+//│   lastIndexOf: Str -> Int,
+//│   length: Int,
+//│   padEnd: (Int, Str) -> NStr,
+//│   padStart: (Int, Str) -> NStr,
+//│   repeat: Int -> NStr,
+//│   slice: (Int, Int) -> NStr,
+//│   split: Str -> Array[NStr],
+//│   startsWith: Str -> Bool,
+//│   trim: () -> NStr,
+//│   trimEnd: () -> NStr,
+//│   trimStart: () -> NStr
+//│ }
+//│ fun (++) strcat: (Str, Str) -> NStr
+//│ fun String: anything -> NStr
+
 fun (!==) notEqual(x, y) = not(x === y)
-fun (++) concatOp(a, b) = concat(a)(b)
 declare fun parseInt: (Str, Int) -> Int
 //│ fun (!==) notEqual: forall 'a. (Eql['a], 'a) -> Bool
-//│ fun (++) concatOp: (Str, Str) -> Str
 //│ fun parseInt: (Str, Int) -> Int
 
 // `List` and its utilities:
@@ -48,8 +89,8 @@ module None extends Option
 //│ module Nil extends List
 //│ fun (::) cons: forall 'T. (head: 'T, tail: List['T]) -> List['T]
 //│ fun reverse: forall 'A. (l: List['A]) -> List['A]
-//│ fun join: (sep: Str, xs: List[anything]) -> Str
-//│ fun showList: (xs: List[anything]) -> Str
+//│ fun join: (sep: Str, xs: List[anything]) -> (Str | NStr)
+//│ fun showList: (xs: List[anything]) -> NStr
 //│ fun map: forall 'D 'T0. (f: 'D -> 'T0, xs: List['D]) -> List['T0]
 //│ fun equalList: forall 'A0. (xs: List['A0], ys: List['A0], equal: ('A0, 'A0) -> Bool) -> Bool
 //│ abstract class Option[A]: None | Some[A]
@@ -130,29 +171,15 @@ fun showData(d: Data): Str = if d is
 //   |_| \___/ |_|\_\\___||_| |_||_|/___|\___||_|
 //
 
-type StringOps = {
-  length: Int,
-  charAt: Int => Str,
-  charCodeAt: Int => Int,
-  slice: Int => Str
-}
-declare fun String: nothing
-let toStringOps: anything => StringOps = String
-//│ type StringOps = {charAt: Int -> Str, charCodeAt: Int -> Int, length: Int, slice: Int -> Str}
-//│ let toStringOps: anything -> StringOps
-//│ fun String: nothing
-//│ toStringOps
-//│             = [Function: String]
-
-fun skipBlank(s: StringOps, i: Int): Int =
+fun skipBlank(s: NStr, i: Int): Int =
   if
     i < 0 then skipBlank(s, 0)
     i >= s.length then s.length
     s.charCodeAt(i) == 32 then skipBlank(s, i + 1)
     else i
-//│ fun skipBlank: (s: StringOps, i: Int) -> Int
+//│ fun skipBlank: (s: NStr, i: Int) -> Int
 
-fun scanWhile(s: StringOps, i: Int, p: Str -> Bool): Option[[Str, Int]] =
+fun scanWhile(s: NStr, i: Int, p: Str -> Bool): Option[[Str, Int]] =
   let rec aux(acc, i) =
     if i < s.length and s.charAt(i) is ch and p of ch then
       aux(acc ++ ch, i + 1)
@@ -161,21 +188,21 @@ fun scanWhile(s: StringOps, i: Int, p: Str -> Bool): Option[[Str, Int]] =
   if aux("", i) is
     ["", _] then None
     [acc, i] then Some([acc, i])
-//│ fun scanWhile: (s: StringOps, i: Int, p: Str -> Bool) -> Option[[Str, Int]]
+//│ fun scanWhile: (s: NStr, i: Int, p: Str -> Bool) -> Option[[Str, Int]]
 
-fun isDelimiter(ch) = (ch !== " ") && (ch !== "(") && (ch !== ")")
+fun isDelimiter(ch) = ch !== " " and ch !== "(" and ch !== ")"
 //│ fun isDelimiter: Eql[" " | "(" | ")"] -> Bool
 
-fun nextToken(s: StringOps, i: Int): Option[[Str, Int]] =
+fun nextToken(s: NStr, i: Int): Option[[Str, Int]] =
   let i' = skipBlank(s, i)
   if s.charAt(i') is
     "(" then Some(["(", i' + 1])
     ")" then Some([")", i' + 1])
     else scanWhile(s, i', isDelimiter)
-//│ fun nextToken: (s: StringOps, i: Int) -> Option[[Str, Int]]
+//│ fun nextToken: (s: NStr, i: Int) -> Option[[Str, Int]]
 
 fun tokenize(s: Str): List[Str] =
-  let s' = toStringOps(s)
+  let s' = String(s)
   let rec aux(acc, i) =
     if nextToken(s', i) is
       None then reverse(acc)
@@ -188,7 +215,7 @@ showList of tokenize("12")
 showList of tokenize("x")
 showList of tokenize("(quote (cons 1 nil))")
 showList of tokenize("(+ 1 2)")
-//│ Str
+//│ NStr
 //│ res
 //│     = '[]'
 //│ res
@@ -209,7 +236,7 @@ showList of tokenize("(+ 1 2)")
 
 fun isDigit(n) = 48 <= n and n <= 57
 fun isDigits(s: Str): Bool =
-  let s' = toStringOps(s)
+  let s' = String(s)
   let rec aux(i) =
     if i < s'.length and isDigit of s'.charCodeAt(i) then
       aux(i + 1)
