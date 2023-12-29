@@ -99,10 +99,12 @@ object Scope {
     Scope.from(
       """true,false,document,window,typeof,toString,not,succ,log,discard,negate,
         |round,add,sub,mul,div,sqrt,lt,le,gt,ge,slt,sle,sgt,sge,length,concat,eq,
-        |ne,error,id,if,emptyArray,+,-,*,%,/,<,>,<=,>=,==,===,<>,&&,||,and"""
+        |ne,error,id,if,emptyArray,+,-,*,%,/,**,<,>,<=,>=,==,===,<>,&&,||,and,
+        |numAdd,numSub,numMul"""
         .stripMargin
         .split(",")
         .iterator
+        .map(_.trim)
         .map(name => new LocalTermSymbol(Var(name)))
         .concat(trueSymbol :: falseSymbol :: Nil)
     )
