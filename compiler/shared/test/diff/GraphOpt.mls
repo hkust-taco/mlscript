@@ -251,14 +251,8 @@ foo()
 //│   Pair => case pair%0 of
 //│     Pair => let x%4 = pair%0.x
 //│       in let x%5 = +(x%4,1)
-//│         in jump j%0(x%5)
-//│ )
-//│ Def(2, @join j%0, [x%7], [{EDirect}],
-//│ S: None,
-//│ I: [],
-//│ [None], 1, 
-//│ let x%8 = +(x%7,1)
-//│   in x%8
+//│         in let x%8 = +(x%5,1)
+//│           in x%8
 //│ )
 //│ Def(3, foo, [], [],
 //│ S: None,
@@ -278,13 +272,6 @@ foo()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(2, @join j%0, [x%7], [{EDirect}],
-//│ S: None,
-//│ I: [],
-//│ [None], 1, 
-//│ let x%8 = +(x%7,1)
-//│   in x%8
-//│ )
 //│ Def(3, foo, [], [],
 //│ S: None,
 //│ I: [],
@@ -300,7 +287,8 @@ foo()
 //│ case pair%0 of
 //│   Pair => let x%4 = pair%0.x
 //│     in let x%5 = +(x%4,1)
-//│       in jump j%0(x%5)
+//│       in let x%8 = +(x%5,1)
+//│         in x%8
 //│ )
 //│ },
 //│ let* (x%11) = foo()
@@ -308,13 +296,6 @@ foo()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(2, @join j%0, [x%7], [{EDirect}],
-//│ S: None,
-//│ I: [],
-//│ [None], 1, 
-//│ let x%8 = +(x%7,1)
-//│   in x%8
-//│ )
 //│ Def(3, foo, [], [],
 //│ S: None,
 //│ I: [],
@@ -327,7 +308,8 @@ foo()
 //│ I: [],
 //│ [None], 1, 
 //│ let x%5 = +(pair%0_x,1)
-//│   in jump j%0(x%5)
+//│   in let x%8 = +(x%5,1)
+//│     in x%8
 //│ )
 //│ },
 //│ let* (x%11) = foo()

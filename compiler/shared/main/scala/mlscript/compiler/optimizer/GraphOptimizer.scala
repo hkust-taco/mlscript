@@ -1074,8 +1074,8 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
             Result(params_to_args(ys, parammap))
           case Jump(defnref, as) =>
             Jump(defnref, params_to_args(as, parammap))
-          // case le @ LetExpr(y, e1, Result(Ref(z) :: Nil)) if y == z =>
-          //  subst_let_expr(le, parammap)
+          case le @ LetExpr(y, e1, Result(Ref(z) :: Nil)) if y == z =>
+            subst_let_expr(le, parammap)
           case _ => x
 
     override def visit(x: LetCall) = x match
