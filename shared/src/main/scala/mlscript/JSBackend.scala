@@ -1594,7 +1594,7 @@ object JSBackend {
   def isSafeInteger(value: BigInt): Boolean =
     MinimalSafeInteger <= value && value <= MaximalSafeInteger
 
-    // Temporary measurement until we adopt the new tuple index.
+  // Temporary measure until we adopt the new tuple index.
   object TupleIndex {
     def unapply(fieldName: Var): Opt[Int] = {
       val name = fieldName.name
