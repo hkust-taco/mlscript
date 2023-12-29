@@ -23,6 +23,12 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     c.isLetter || c === '_' || c === '\''
   def isIdentChar(c: Char): Bool =
     isIdentFirstChar(c) || isDigit(c) || c === '\''
+  def isHexDigit(c: Char): Bool =
+    isDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')
+  def isOctDigit(c: Char): Bool =
+    c >= '0' && c <= '7'
+  def isBinDigit(c: Char): Bool =
+    c === '0' || c === '1'
   def isDigit(c: Char): Bool =
     c >= '0' && c <= '9'
   
@@ -59,15 +65,52 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     if (i < length && pred(bytes(i))) takeWhile(i + 1, bytes(i) :: cur)(pred)
     else (cur.reverseIterator.mkString, i)
 
+  final def int(i: Int): (BigInt, Int) = {
+    def radix(i: Int, radix: Int, desc: Str, pred: Char => Bool): (BigInt, Int) = {
+      val (str, j) = takeWhile(i)(pred)
+      if (str.isEmpty) {
+        raise(ErrorReport(msg"Expect at least one $desc digit" -> S(loc(i, i + 2)) :: Nil,
+          newDefs = true, source = Lexing))
+        (BigInt(0), j)
+      }
+      else (BigInt(str, radix), j)
+    }
+    if (i < length) {
+      if (bytes(i) === '0') {
+        if (i + 1 < length) {
+          bytes(i + 1) match {
+            case 'x' => radix(i + 2, 16, "hexadecimal", isHexDigit)
+            case 'o' => radix(i + 2, 8, "octal", isOctDigit)
+            case 'b' => radix(i + 2, 2, "binary", isBinDigit)
+            case _ =>
+              val (str, j) = takeWhile(i + 1, '0' :: Nil)(isDigit)
+              (BigInt(str), j)
+          }
+        } else {
+          (BigInt(0), i + 1)
+        }
+      } else {
+        radix(i, 10, "decimal", isDigit)
+      }
+    } else {
+      raise(ErrorReport(msg"Expect a integer literal" -> S(loc(i, i + 1)) :: Nil,
+        newDefs = true, source = Lexing))
+      (BigInt(0), i)
+    }
+  }
+
   @tailrec final
   def str(i: Int, escapeMode: Bool, cur: Ls[Char] = Nil): (Str, Int) =
     if (escapeMode)
       if (i < length)
         bytes(i) match {
+          case '\\' => str(i + 1, false, '\\' :: cur)
           case '"' => str(i + 1, false, '"' :: cur)
           case 'n' => str(i + 1, false, '\n' :: cur)
           case 't' => str(i + 1, false, '\t' :: cur)
           case 'r' => str(i + 1, false, '\r' :: cur)
+          case 'b' => str(i + 1, false, '\b' :: cur)
+          case 'f' => str(i + 1, false, '\f' :: cur)
           case ch =>
             raise(WarningReport(msg"Found invalid escape character" -> S(loc(i, i + 1)) :: Nil,
               newDefs = true, source = Lexing))
@@ -190,9 +233,9 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         // else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
         else lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))
       case _ if isDigit(c) =>
-        val (str, j) = takeWhile(i)(isDigit)
+        val (value, j) = int(i)
         // go(j, LITVAL(IntLit(BigInt(str))))
-        lex(j, ind, next(j, LITVAL(IntLit(BigInt(str)))))
+        lex(j, ind, next(j, LITVAL(IntLit(value))))
       case _ =>
         pe(msg"unexpected character '${escapeChar(c)}'")
         // go(i + 1, ERROR)
