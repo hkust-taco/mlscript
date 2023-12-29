@@ -136,7 +136,7 @@ fun foo(s) =
 //│ // Query 1
 //│ globalThis.foo = function foo(s) {
 //│   return ((() => {
-//│     return s instanceof Some.class ? (([t]) => ((b) => b + t.x)(s21.value))(Some.unapply(s)) : 0;
+//│     return s instanceof Some.class ? (([t]) => ((b) => b + t.x)(s2.value))(Some.unapply(s)) : 0;
 //│   })());
 //│ };
 //│ // End of generated code

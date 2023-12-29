@@ -1407,7 +1407,7 @@ abstract class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
         val isByvalueRecIn = if (isByname) None else Some(true)
         val bodyIsLam = body match { case _: Lam => true case _ => false }
         val symb = symNme.map(_.name)
-        scope.declareValue(nme, isByvalueRecIn, bodyIsLam, symb)
+        scope.declareValue(nme, isByvalueRecIn, bodyIsLam, symb, true)
       case _ => ()
     }
     
