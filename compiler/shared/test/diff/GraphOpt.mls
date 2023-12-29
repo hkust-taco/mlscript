@@ -43,26 +43,12 @@ foo()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, mktup2, [x%0,y%0], [{EDirect},{EDirect}],
-//│ S: None,
-//│ I: [],
-//│ [Some(ICtor(Pair))], 1, 
-//│ let* (x%1) = mktup(x%0,y%0)
-//│   in x%1
-//│ )
-//│ Def(1, mktup, [x%2,y%1], [{EDirect},{EDirect}],
-//│ S: None,
-//│ I: [],
-//│ [Some(ICtor(Pair))], 1, 
-//│ let x%3 = Pair(x%2,y%1)
-//│   in x%3
-//│ )
 //│ Def(2, foo, [], [],
 //│ S: None,
 //│ I: [],
 //│ [Some(ICtor(Pair))], 1, 
-//│ let* (x%4) = mktup2(1,2)
-//│   in x%4
+//│ let x%3 = Pair(1,2)
+//│   in x%3
 //│ )
 //│ },
 //│ let* (x%5) = foo()
@@ -157,14 +143,7 @@ bar()
 //│ S: None,
 //│ I: [],
 //│ [Some(ICtor(Pair))], 1, 
-//│ let* (x%5) = foo$D%0$S%0(2,1)
-//│   in x%5
-//│ )
-//│ Def(5, foo$D%0$S%0, [pair%0_y,pair%0_x], [{EDirect},{EDirect}],
-//│ S: None,
-//│ I: [],
-//│ [Some(ICtor(Pair))], 1, 
-//│ let x%2 = Pair(pair%0_x,pair%0_y)
+//│ let x%2 = Pair(1,2)
 //│   in x%2
 //│ )
 //│ },
@@ -406,14 +385,7 @@ foo()
 //│ S: None,
 //│ I: [],
 //│ [None], 1, 
-//│ let* (x%6) = inc_fst$D%0$S%0(0)
-//│   in x%6
-//│ )
-//│ Def(5, inc_fst$D%0$S%0, [pair%0_x], [{EDirect}],
-//│ S: None,
-//│ I: [],
-//│ [None], 1, 
-//│ let x%3 = +(pair%0_x,2)
+//│ let x%3 = +(0,2)
 //│   in x%3
 //│ )
 //│ },
@@ -507,14 +479,7 @@ foo()
 //│ S: None,
 //│ I: [],
 //│ [None], 1, 
-//│ let* (x%6) = inc_fst$D%0$S%0(1)
-//│   in x%6
-//│ )
-//│ Def(5, inc_fst$D%0$S%0, [pair%0_y], [{EDirect}],
-//│ S: None,
-//│ I: [],
-//│ [None], 1, 
-//│ let x%3 = +(pair%0_y,1)
+//│ let x%3 = +(1,1)
 //│   in x%3
 //│ )
 //│ },
@@ -719,14 +684,7 @@ bar()
 //│ S: None,
 //│ I: [],
 //│ [None], 1, 
-//│ let* (x%4) = foo$S%0(0,1)
-//│   in x%4
-//│ )
-//│ Def(2, foo$S%0, [a%0_y,a%0_x], [{EDirect},{EDirect}],
-//│ S: None,
-//│ I: [],
-//│ [None], 1, 
-//│ let x%2 = +(a%0_x,a%0_y)
+//│ let x%2 = +(1,0)
 //│   in x%2
 //│ )
 //│ },
@@ -1158,28 +1116,6 @@ foo()
 //│ Def(0, foo, [], [],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
-//│ let x%0 = O()
-//│   in let x%1 = S(x%0)
-//│     in let* (x%2) = bar$C%0(x%1)
-//│       in x%2
-//│ )
-//│ Def(7, bar$C%0, [x%3], [{ESelect(s)}],
-//│ S: Some([Some(ICtor(S))]),
-//│ I: [[Some(ICtor(S))]],
-//│ [None], 1, 
-//│ let x%10 = x%3.s
-//│   in x%10
-//│ )
-//│ },
-//│ let* (x%8) = foo()
-//│   in x%8)
-//│ 
-//│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, S, [s]),ClassInfo(1, O, [])}, {
-//│ Def(0, foo, [], [],
-//│ S: None,
-//│ I: [],
 //│ [Some(ICtor(O))], 1, 
 //│ let x%0 = O()
 //│   in x%0
@@ -1193,4 +1129,4 @@ foo()
 //│ O()
 //│ 
 //│ 
-//│ Fuel used: 3
+//│ Fuel used: 2

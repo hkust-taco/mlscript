@@ -1037,7 +1037,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
 
   private class RemoveTrivialCallAndJump extends GOVisitor:
 
-    private def subst_let_expr(le: LetExpr, map: Map[Name, TrivialExpr]): GONode =  
+    private def subst_let_expr(le: LetExpr, map: Map[Name, TrivialExpr]): (Ls[(Name, TrivialExpr)], LetExpr) =  
       var let_list = Ls[(Name, TrivialExpr)]()
       val new_expr = le.expr.map_name {
         x => map.get(x) match
@@ -1049,7 +1049,12 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
             y
         
       }
-      let_list.foldLeft(LetExpr(le.name, new_expr, le.body)) {
+      val kernel: LetExpr = LetExpr(le.name, new_expr, le.body)
+      (let_list, kernel)
+
+    private def subst_let_expr_to_node(le: LetExpr, map: Map[Name, TrivialExpr]): GONode =
+      val (let_list, kernel) = subst_let_expr(le, map)
+      let_list.foldLeft(kernel) {
         case (accu, (name, value)) => LetExpr(name, value.to_expr, accu)
       }
 
@@ -1075,7 +1080,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
           case Jump(defnref, as) =>
             Jump(defnref, params_to_args(as, parammap))
           case le @ LetExpr(y, e1, Result(Ref(z) :: Nil)) if y == z =>
-            subst_let_expr(le, parammap)
+            subst_let_expr_to_node(le, parammap)
           case _ => x
 
     override def visit(x: LetCall) = x match
@@ -1089,8 +1094,14 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
               case ((name, retval), node) =>
                 LetExpr(name, param_to_arg(retval, parammap).to_expr, node)
             }
-         // case le @ LetExpr(y, e1, Result(Ref(z) :: Nil)) if y == z =>
-         //   subst_let_expr(le, parammap)
+          case le @ LetExpr(y, e1, Result(Ref(z) :: Nil)) if y == z =>
+            val (let_list, kernel) = subst_let_expr(le, parammap)
+            let_list.foldLeft(
+              LetExpr(kernel.name, kernel.expr,
+                LetExpr(xs.head, Ref(kernel.name), e.accept_visitor(this)))) {
+              case (accu, (name, value)) => LetExpr(name, value.to_expr, accu)
+            }
+
           case _ => LetCall(xs, defnref, as, e.accept_visitor(this))  
 
   private object Identity extends GOVisitor:
