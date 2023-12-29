@@ -326,7 +326,7 @@ fun lookup(env, name: Str): 'A = env(name)
 //│ let emptyEnv: Str -> nothing
 //│ fun lookup: forall 'A. (Str -> 'A, name: Str) -> 'A
 //│ emptyEnv
-//│          = [Function: emptyEnv1]
+//│          = [Function: emptyEnv]
 
 // It is tricky to write an annotation that simplifies the inferred type.
 fun (+:) extend(env, [name, expr]: [Str, 'A]) =
