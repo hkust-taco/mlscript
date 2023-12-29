@@ -97,6 +97,7 @@ export declare module TyperDebug {
 //| | | Params 
 //| | | 0. Typing term A(42,)
 //| | | | 0. Typing term A
+//| | | | | params: Some(List((x,Int))) None
 //| | | | 0. : ((x: Int,) -> #A<Object>)
 //| | | | 0. Typing term 42
 //| | | | 0. : #42<Int,Num,Object>

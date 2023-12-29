@@ -201,7 +201,7 @@ module Base1(base: Int, misc: string) extends Foo
 
 :e
 Base1.test
-//│ ╔══[ERROR] Parameterized modules are not supported
+//│ ╔══[ERROR] Parameterized modules are not yet supported
 //│ ║  l.203: 	Base1.test
 //│ ╙──       	^^^^^
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -316,11 +316,9 @@ let wd = w(1)
 //│ wd
 //│    = [ [ [ 1 ] ] ]
 
-// TODO implement _1
-wd._1._1._1 + 1
+wd.0.0.0 + 1
 //│ Int
 //│ res
-//│ Runtime error:
-//│   TypeError: Cannot read properties of undefined (reading '_1')
+//│     = 2
 
 

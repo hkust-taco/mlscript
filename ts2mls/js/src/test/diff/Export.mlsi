@@ -22,7 +22,7 @@ export declare module Export {
 //| ╔══[ERROR] type identifier not found: IBar
 //| ║  l.11: 	    export val baz: IBar
 //| ╙──      	                    ^^^^
-//| ╔══[ERROR] Class E cannot be instantiated as it exposes no such constructor
+//| ╔══[ERROR] Class E cannot be instantiated as it exposes no constructor
 //| ║  l.15: 	  export val F = E
 //| ╙──      	                 ^
 //| ╔══[ERROR] Access to class member not yet supported

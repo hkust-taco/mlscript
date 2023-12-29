@@ -10,12 +10,12 @@ fooid = foo id
 //│ fooid: (1, true,)
 //│      = [ 1, true ]
 
-fooid._1
-fooid._2
+fooid.0
+fooid.1
 //│ res: 1
-//│    = undefined
+//│    = 1
 //│ res: true
-//│    = undefined
+//│    = true
 
 def foo(f: (forall 'A. 'A -> 'A) -> (forall 'B. 'B -> 'B)) =
   id f id (f id)

@@ -154,7 +154,7 @@ f_2 = f_1
 
 
 
-def test: (string, 1) & { _1: "hello" }
+def test: (string, 1) & { 0: "hello" }
 //│ test: ("hello", 1,)
 //│     = <missing implementation>
 
@@ -170,8 +170,8 @@ test = ("hi", 1)
 //│ ║  l.162: 	test = ("hi", 1)
 //│ ║         	        ^^^^
 //│ ╟── Note: constraint arises from literal type:
-//│ ║  l.157: 	def test: (string, 1) & { _1: "hello" }
-//│ ╙──       	                              ^^^^^^^
+//│ ║  l.157: 	def test: (string, 1) & { 0: "hello" }
+//│ ╙──       	                             ^^^^^^^
 //│     = [ 'hi', 1 ]
 
 test = ("hello", 1)
@@ -184,8 +184,8 @@ test = ("hello", 1)
 //│ res: string
 //│    = 'hello'
 
-test: { _1: 'a }
-//│ res: {_1: "hello"}
+test: { 0: 'a }
+//│ res: {0: "hello"}
 //│    = [ 'hello', 1 ]
 
 test: ('a, 1)
@@ -200,7 +200,7 @@ class A: (1,2)
 
 
 :re
-error: Array[1] & { _1: int }
-//│ res: Array[1] & {_1: int}
+error: Array[1] & { 0: int }
+//│ res: Array[1] & {0: int}
 //│ Runtime error:
 //│   Error: an error was thrown

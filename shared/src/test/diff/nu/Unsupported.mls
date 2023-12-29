@@ -24,7 +24,7 @@ foo.x // ok! 42 is supported!
 //│ 42
 //│ res
 //│ Runtime error:
-//│   ReferenceError: foo is not defined
+//│   ReferenceError: foo1 is not defined
 
 :e
 :re
@@ -41,7 +41,7 @@ foo.index("abc")
 //│ error
 //│ res
 //│ Runtime error:
-//│   ReferenceError: foo is not defined
+//│   ReferenceError: foo1 is not defined
 
 :e
 :re

@@ -7,6 +7,8 @@ import mlscript.codegen.Helpers._
 import ts2mls.TSPathResolver
 
 class JSDriverBackend extends JSBackend(allowUnresolvedSymbols = false) {
+  def oldDefs = false
+
   def declarePredef(pgrm: Pgrm): Unit = {
     val (typeDefs, otherStmts) = pgrm.tops.partitionMap {
       case ot: Terms => R(ot)

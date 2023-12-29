@@ -13,11 +13,11 @@ export declare module InterfaceMember {
   declare trait IEvent {
     declare fun callback(): (x: Num) => unit
   }
-  declare trait SearchFunc: (args0: Str, args1: Str) => (false) | (true) {}
+  declare trait SearchFunc: ((args0: Str, args1: Str) => (false) | (true)) {}
   declare trait StringArray {
     val __index: unsupported["[index: number]: string;", "InterfaceMember.ts", 28, 23]
   }
-  declare trait Counter: (args0: Num) => Str {
+  declare trait Counter: ((args0: Num) => Str) {
     val interval: Num
     declare fun reset(): unit
   }

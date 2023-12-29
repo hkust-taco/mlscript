@@ -53,44 +53,44 @@ test f =
 //│     = [Function: test2]
 
 :e // * Due to lack of precision
-(test id)._1 + 1
+(test id).0 + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.56: 	(test id)._1 + 1
-//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.56: 	(test id).0 + 1
+//│ ║        	^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of type `int`
 //│ ║  l.4: 	True = true
 //│ ║       	       ^^^^
 //│ ╟── but it flows into field selection with expected type `int`
-//│ ║  l.56: 	(test id)._1 + 1
-//│ ╙──      	^^^^^^^^^^^^
+//│ ║  l.56: 	(test id).0 + 1
+//│ ╙──      	^^^^^^^^^^^
 //│ res: error | int
-//│    = NaN
+//│    = 1
 
 :e // * Due to lack of precision
-not (test id)._2
+not (test id).1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.70: 	not (test id)._2
-//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.70: 	not (test id).1
+//│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `0` is not an instance of type `bool`
 //│ ║  l.51: 	  in (r 0, r True)
 //│ ║        	        ^
 //│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.70: 	not (test id)._2
-//│ ╙──      	    ^^^^^^^^^^^^
+//│ ║  l.70: 	not (test id).1
+//│ ╙──      	    ^^^^^^^^^^^
 //│ res: bool | error
-//│    = true
+//│    = false
 
 :e // * Legit
-not (test id)._1
+not (test id).0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.84: 	not (test id)._1
-//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.84: 	not (test id).0
+//│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `0` is not an instance of type `bool`
 //│ ║  l.51: 	  in (r 0, r True)
 //│ ║        	        ^
 //│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.84: 	not (test id)._1
-//│ ╙──      	    ^^^^^^^^^^^^
+//│ ║  l.84: 	not (test id).0
+//│ ╙──      	    ^^^^^^^^^^^
 //│ res: bool | error
 //│    = true
 
@@ -126,25 +126,25 @@ test
 
 // * We can tell the type is still precise enough because these work:
 
-(test id)._1 + 1
+(test id).0 + 1
 //│ res: int
-//│    = NaN
+//│    = 1
 
-not (test id)._2
+not (test id).1
 //│ res: bool
-//│    = true
+//│    = false
 
 :e // * Legit
-not (test id)._1
+not (test id).0
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.138: 	not (test id)._1
-//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.138: 	not (test id).0
+//│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `0` is not an instance of type `bool`
 //│ ║  l.112: 	  in (r 0, r True)
 //│ ║         	        ^
 //│ ╟── but it flows into field selection with expected type `bool`
-//│ ║  l.138: 	not (test id)._1
-//│ ╙──       	    ^^^^^^^^^^^^
+//│ ║  l.138: 	not (test id).0
+//│ ╙──       	    ^^^^^^^^^^^
 //│ res: bool | error
 //│    = true
 

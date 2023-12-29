@@ -102,7 +102,7 @@ object Converter {
             val prefix = s"${indent}${exp}declare "
             val inheritance = convertParents(parents)
             val tp = if (typeVars.isEmpty) "" else s"[${typeVars.map((tv) => tv.name).reduceLeft((p, s) => s"$p, $s")}]"
-            s"${prefix}trait ${escapeIdent(name)}$tp: ${convert(cs)}$inheritance ${convertRecord(members, Nil, Nil, Map(), List(), false)}"
+            s"${prefix}trait ${escapeIdent(name)}$tp: (${convert(cs)})$inheritance ${convertRecord(members, Nil, Nil, Map(), List(), false)}"
           case _ =>
             val body = convertRecord(members, typeVars, parents, Map(), List(), false)
             val typeName = s"trait ${escapeIdent(name)}"

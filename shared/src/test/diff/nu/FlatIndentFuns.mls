@@ -20,7 +20,7 @@ y =>
 x + y
 //│ let r: Int -> Int -> Int
 //│ r
-//│   = [Function: r]
+//│   = [Function: r1]
 
 r(1)(2)
 //│ Int
@@ -59,6 +59,6 @@ x + y
 //│ ╙──      	
 //│ let r: Int -> Int -> Int
 //│ r
-//│   = [Function: r1]
+//│   = [Function: r3]
 
 

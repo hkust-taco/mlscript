@@ -7,6 +7,6 @@ export declare module TS {
 //| ╔══[ERROR] Access to class member not yet supported
 //| ║  l.3: 	let tspt = MyPrint.DatePrint
 //| ╙──     	                  ^^^^^^^^^^
-//| ╔══[ERROR] Cannot use `new` on non-class variable of type ?DatePrint
+//| ╔══[ERROR] type identifier not found: tspt
 //| ║  l.4: 	let printer = new tspt("love from ts")
-//| ╙──     	              ^^^^^^^^^^^^^^^^^^^^^^^^
+//| ╙──     	                  ^^^^

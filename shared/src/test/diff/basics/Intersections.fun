@@ -6,7 +6,7 @@ let foo = _ as (_: (Int => Int) & (Bool => Bool))
 
 :ns
 let foo = _ as (_: (Int => Int) & (Bool => Bool))
-let foo = (_ as (_: (Int => Int) & (Bool => Bool)))._1
+let foo = (_ as (_: (Int => Int) & (Bool => Bool))).0
 //│ foo: forall 'a. (_: 'a,)
 //│   where
 //│     'a <: int -> int & bool -> bool

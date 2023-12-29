@@ -35,7 +35,7 @@ declare class Object {
   declare fun isPrototypeOf(args0: Object): (false) | (true)
   declare fun toString(): Str
 }
-declare trait ObjectConstructor: (args0: anything) => anything {
+declare trait ObjectConstructor: ((args0: anything) => anything) {
   declare fun getOwnPropertyNames(args0: anything): MutArray[Str]
   declare fun isFrozen(args0: anything): (false) | (true)
   declare fun getPrototypeOf(args0: anything): anything
@@ -62,7 +62,7 @@ declare trait Function {
   val caller: Function
   val arguments: anything
 }
-declare trait FunctionConstructor: (args0: (Str) | (MutArray[Str])) => Function {
+declare trait FunctionConstructor: ((args0: (Str) | (MutArray[Str])) => Function) {
   val __new: unsupported["new(...args: string[]): Function;", "ES5.d.ts", 291, 31]
   val prototype: Function
 }
@@ -107,7 +107,7 @@ declare trait String {
   declare fun search(args0: (Str) | (RegExp)): Num
   declare fun charAt(args0: Num): Str
 }
-declare trait StringConstructor: (args0: (anything) | (undefined)) => Str {
+declare trait StringConstructor: ((args0: (anything) | (undefined)) => Str) {
   val __new: unsupported["new(value?: any): String;", "ES5.d.ts", 503, 29]
   val prototype: String
   declare fun fromCharCode(args0: (Num) | (MutArray[Num])): Str
@@ -115,7 +115,7 @@ declare trait StringConstructor: (args0: (anything) | (undefined)) => Str {
 declare class Bool {
   declare fun valueOf(): (false) | (true)
 }
-declare trait BooleanConstructor: forall 'T: (args0: ('T) | (undefined)) => (false) | (true) {
+declare trait BooleanConstructor: (forall 'T: (args0: ('T) | (undefined)) => (false) | (true)) {
   val __new: unsupported["new(value?: any): Bool;", "ES5.d.ts", 520, 30]
   val prototype: Bool
 }
@@ -127,7 +127,7 @@ declare trait Number {
   declare fun toFixed(args0: (Num) | (undefined)): Str
   declare fun toPrecision(args0: (Num) | (undefined)): Str
 }
-declare trait NumberConstructor: (args0: (anything) | (undefined)) => Num {
+declare trait NumberConstructor: ((args0: (anything) | (undefined)) => Num) {
   val NaN: Num
   val MIN_VALUE: Num
   val __new: unsupported["new(value?: any): Number;", "ES5.d.ts", 557, 29]
@@ -219,7 +219,7 @@ declare trait Date {
   declare fun setUTCHours(args0: Num, args1: (Num) | (undefined), args2: (Num) | (undefined), args3: (Num) | (undefined)): Num
   declare fun toJSON(args0: (anything) | (undefined)): Str
 }
-declare trait DateConstructor: () => Str {
+declare trait DateConstructor: (() => Str) {
   declare fun UTC(args0: Num, args1: Num, args2: (Num) | (undefined), args3: (Num) | (undefined), args4: (Num) | (undefined), args5: (Num) | (undefined), args6: (Num) | (undefined)): Num
   val __new: unsupported["new(year: number, monthIndex: number, date?: number, hours?: number, minutes?: number, seconds?: number, ms?: number): Date;", "ES5.d.ts", 887, 38]
   declare fun now(): Num
@@ -246,7 +246,7 @@ declare trait RegExp {
   val ignoreCase: (false) | (true)
   declare fun exec(args0: Str): RegExpExecArray
 }
-declare trait RegExpConstructor: (args0: Str, args1: (Str) | (undefined)) => RegExp {
+declare trait RegExpConstructor: ((args0: Str, args1: (Str) | (undefined)) => RegExp) {
   val id"$4": Str
   val rightContext: Str
   val lastParen: Str
@@ -274,37 +274,37 @@ declare trait Error {
   val message: Str
   val stack: (Str) | (undefined)
 }
-declare trait ErrorConstructor: (args0: (Str) | (undefined)) => Error {
+declare trait ErrorConstructor: ((args0: (Str) | (undefined)) => Error) {
   val __new: unsupported["new(message?: string): Error;", "ES5.d.ts", 1042, 28]
   val prototype: Error
 }
 declare trait EvalError extends Error {}
-declare trait EvalErrorConstructor: (args0: (Str) | (undefined)) => EvalError extends ErrorConstructor {
+declare trait EvalErrorConstructor: ((args0: (Str) | (undefined)) => EvalError) extends ErrorConstructor {
   val __new: unsupported["new(message?: string): EvalError;", "ES5.d.ts", 1053, 57]
   val prototype: EvalError
 }
 declare trait RangeError extends Error {}
-declare trait RangeErrorConstructor: (args0: (Str) | (undefined)) => RangeError extends ErrorConstructor {
+declare trait RangeErrorConstructor: ((args0: (Str) | (undefined)) => RangeError) extends ErrorConstructor {
   val __new: unsupported["new(message?: string): RangeError;", "ES5.d.ts", 1064, 58]
   val prototype: RangeError
 }
 declare trait ReferenceError extends Error {}
-declare trait ReferenceErrorConstructor: (args0: (Str) | (undefined)) => ReferenceError extends ErrorConstructor {
+declare trait ReferenceErrorConstructor: ((args0: (Str) | (undefined)) => ReferenceError) extends ErrorConstructor {
   val __new: unsupported["new(message?: string): ReferenceError;", "ES5.d.ts", 1075, 62]
   val prototype: ReferenceError
 }
 declare trait SyntaxError extends Error {}
-declare trait SyntaxErrorConstructor: (args0: (Str) | (undefined)) => SyntaxError extends ErrorConstructor {
+declare trait SyntaxErrorConstructor: ((args0: (Str) | (undefined)) => SyntaxError) extends ErrorConstructor {
   val __new: unsupported["new(message?: string): SyntaxError;", "ES5.d.ts", 1086, 59]
   val prototype: SyntaxError
 }
 declare trait TypeError extends Error {}
-declare trait TypeErrorConstructor: (args0: (Str) | (undefined)) => TypeError extends ErrorConstructor {
+declare trait TypeErrorConstructor: ((args0: (Str) | (undefined)) => TypeError) extends ErrorConstructor {
   val __new: unsupported["new(message?: string): TypeError;", "ES5.d.ts", 1097, 57]
   val prototype: TypeError
 }
 declare trait URIError extends Error {}
-declare trait URIErrorConstructor: (args0: (Str) | (undefined)) => URIError extends ErrorConstructor {
+declare trait URIErrorConstructor: ((args0: (Str) | (undefined)) => URIError) extends ErrorConstructor {
   val __new: unsupported["new(message?: string): URIError;", "ES5.d.ts", 1108, 56]
   val prototype: URIError
 }
@@ -361,7 +361,7 @@ declare trait Array['T] {
   declare fun some(args0: (value: 'T, index: Num, array: MutArray['T]) => anything, args1: (anything) | (undefined)): (false) | (true)
   declare fun indexOf(args0: 'T, args1: (Num) | (undefined)): Num
 }
-declare trait ArrayConstructor: forall 'T: (args0: ('T) | (MutArray['T])) => MutArray['T] {
+declare trait ArrayConstructor: (forall 'T: (args0: ('T) | (MutArray['T])) => MutArray['T]) {
   val __new: unsupported["new <T>(...items: T[]): T[];", "ES5.d.ts", 1470, 38]
   declare fun isArray(args0: anything): (false) | (true)
   val prototype: MutArray[anything]

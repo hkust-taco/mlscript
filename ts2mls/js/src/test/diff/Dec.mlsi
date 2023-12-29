@@ -1,7 +1,7 @@
 export declare module Dec {
   declare fun getName(id: (Str) | (Num)): Str
   declare fun render(callback: (() => unit) | (undefined)): Str
-  declare trait Get: (args0: Str) => Str {}
+  declare trait Get: ((args0: Str) => Str) {}
   declare class Person {
     constructor(name: Str, age: Num)
     declare fun getName(args0: Num): Str

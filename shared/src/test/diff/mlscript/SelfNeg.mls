@@ -120,7 +120,7 @@ r
 //│    = <no result>
 //│      r and bar are not implemented
 
-r._1 : nothing
+r.0 : nothing
 //│ res: nothing
 //│    = <no result>
 //│      r and bar are not implemented
