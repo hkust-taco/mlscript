@@ -66,8 +66,20 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     else (cur.reverseIterator.mkString, i)
 
   final def int(i: Int): (BigInt, Int) = {
+    @tailrec def takeDigits(i: Int, cur: Ls[Char], lastSep: Bool, pred: Char => Bool): (Str, Bool, Int) =
+      if (i < length) {
+        val c = bytes(i)
+        if (pred(c)) takeDigits(i + 1, c :: cur, false, pred)
+        else if (c === '_') takeDigits(i + 1, cur, true, pred)
+        else (cur.reverseIterator.mkString, lastSep, i)
+      }
+      else (cur.reverseIterator.mkString, lastSep, i)
     def radix(i: Int, radix: Int, desc: Str, pred: Char => Bool): (BigInt, Int) = {
-      val (str, j) = takeWhile(i)(pred)
+      val (str, lastSep, j) = takeDigits(i, Nil, false, pred)
+      if (lastSep) raise(WarningReport(
+        msg"Trailing separator is not allowed" -> S(loc(j - 1, j)) :: Nil,
+        newDefs = true, source = Lexing
+      ))
       if (str.isEmpty) {
         raise(ErrorReport(msg"Expect at least one $desc digit" -> S(loc(i, i + 2)) :: Nil,
           newDefs = true, source = Lexing))
@@ -93,7 +105,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         radix(i, 10, "decimal", isDigit)
       }
     } else {
-      raise(ErrorReport(msg"Expect a integer literal" -> S(loc(i, i + 1)) :: Nil,
+      raise(ErrorReport(msg"Expect an integer literal" -> S(loc(i, i + 1)) :: Nil,
         newDefs = true, source = Lexing))
       (BigInt(0), i)
     }
