@@ -70,26 +70,28 @@
 
 :pe
 0b
-0x
-0o
 //│ ╔══[LEXICAL ERROR] Expect at least one binary digit
 //│ ║  l.72: 	0b
-//│ ║        	  ^
-//│ ║  l.73: 	0x
-//│ ╙──      	^
-//│ ╔══[LEXICAL ERROR] Expect at least one hexadecimal digit
-//│ ║  l.73: 	0x
-//│ ║        	  ^
-//│ ║  l.74: 	0o
-//│ ╙──      	^
-//│ ╔══[LEXICAL ERROR] Expect at least one octal digit
-//│ ║  l.74: 	0o
 //│ ╙──      	  ^^
 //│ 0
 //│ res
 //│     = 0
+
+:pe
+0x
+//│ ╔══[LEXICAL ERROR] Expect at least one hexadecimal digit
+//│ ║  l.81: 	0x
+//│ ╙──      	  ^^
+//│ 0
 //│ res
 //│     = 0
+
+:pe
+0o
+//│ ╔══[LEXICAL ERROR] Expect at least one octal digit
+//│ ║  l.90: 	0o
+//│ ╙──      	  ^^
+//│ 0
 //│ res
 //│     = 0
 
@@ -110,10 +112,10 @@
 0b00000000010_
 0xCAFE_____
 //│ ╔══[WARNING] Trailing separator is not allowed
-//│ ║  l.110: 	0b00000000010_
+//│ ║  l.112: 	0b00000000010_
 //│ ╙──       	             ^
 //│ ╔══[WARNING] Trailing separator is not allowed
-//│ ║  l.111: 	0xCAFE_____
+//│ ║  l.113: 	0xCAFE_____
 //│ ╙──       	          ^
 //│ 51966
 //│ res

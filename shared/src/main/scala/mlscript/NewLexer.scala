@@ -65,49 +65,98 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     if (i < length && pred(bytes(i))) takeWhile(i + 1, bytes(i) :: cur)(pred)
     else (cur.reverseIterator.mkString, i)
 
-  final def int(i: Int): (BigInt, Int) = {
-    @tailrec def takeDigits(i: Int, cur: Ls[Char], lastSep: Bool, pred: Char => Bool): (Str, Bool, Int) =
-      if (i < length) {
-        val c = bytes(i)
-        if (pred(c)) takeDigits(i + 1, c :: cur, false, pred)
-        else if (c === '_') takeDigits(i + 1, cur, true, pred)
-        else (cur.reverseIterator.mkString, lastSep, i)
-      }
-      else (cur.reverseIterator.mkString, lastSep, i)
-    def radix(i: Int, radix: Int, desc: Str, pred: Char => Bool): (BigInt, Int) = {
-      val (str, lastSep, j) = takeDigits(i, Nil, false, pred)
-      if (lastSep) raise(WarningReport(
-        msg"Trailing separator is not allowed" -> S(loc(j - 1, j)) :: Nil,
-        newDefs = true, source = Lexing
-      ))
-      if (str.isEmpty) {
-        raise(ErrorReport(msg"Expect at least one $desc digit" -> S(loc(i, i + 2)) :: Nil,
-          newDefs = true, source = Lexing))
-        (BigInt(0), j)
-      }
-      else (BigInt(str, radix), j)
+  final def num(i: Int): (Lit, Int) = {
+    def zero: IntLit = IntLit(BigInt(0))
+    /** Take a sequence of digits interleaved with underscores. */
+    def takeDigits(i: Int, pred: Char => Bool): (Opt[Str], Int) = {
+      @tailrec def rec(i: Int, acc: Ls[Char], firstSep: Bool, lastSep: Bool): (Str, Bool, Bool, Int) =
+        if (i < length) {
+          val c = bytes(i)
+          if (pred(c)) rec(i + 1, c :: acc, firstSep, false)
+          else if (c === '_') rec(i + 1, acc, acc.isEmpty, true)
+          else (acc.reverseIterator.mkString, firstSep, lastSep, i)
+        }
+        else (acc.reverseIterator.mkString, firstSep, lastSep, i)
+      val (str, firstSep, lastSep, j) = rec(i, Nil, false, false)
+      if (firstSep)
+        raise(WarningReport(
+          msg"Leading separator is not allowed" -> S(loc(i - 1, i)) :: Nil,
+          newDefs = true,
+          source = Lexing
+        ))
+      if (lastSep)
+        raise(WarningReport(
+          msg"Trailing separator is not allowed" -> S(loc(j - 1, j)) :: Nil,
+          newDefs = true,
+          source = Lexing
+        ))
+      (if (str.isEmpty) N else S(str), j)
     }
-    if (i < length) {
-      if (bytes(i) === '0') {
-        if (i + 1 < length) {
-          bytes(i + 1) match {
-            case 'x' => radix(i + 2, 16, "hexadecimal", isHexDigit)
-            case 'o' => radix(i + 2, 8, "octal", isOctDigit)
-            case 'b' => radix(i + 2, 2, "binary", isBinDigit)
-            case _ =>
-              val (str, j) = takeWhile(i + 1, '0' :: Nil)(isDigit)
-              (BigInt(str), j)
-          }
+    /** Take an integer and coverts to `BigInt`. Also checks if it is empty. */
+    def integer(i: Int, radix: Int, desc: Str, pred: Char => Bool): (IntLit, Int) = {
+      takeDigits(i, pred) match {
+        case (N, j) =>
+          raise(ErrorReport(msg"Expect at least one $desc digit" -> S(loc(i, i + 2)) :: Nil,
+            newDefs = true, source = Lexing))
+          (zero, j)
+        case (S(str), j) => (IntLit(BigInt(str, radix)), j)
+      }
+    }
+    def isDecimalStart(ch: Char) = ch === '.' || ch === 'e' || ch === 'E'
+    /** Take a fraction part with an optional exponent part. Call at periods. */
+    def decimal(i: Int, integral: Str): (DecLit, Int) = {
+      val (fraction, j) = if (i < length && bytes(i) === '.') {
+        takeDigits(i + 1, isDigit) match {
+          case (N, j) =>
+            raise(ErrorReport(msg"Expect at least one digit after the decimal point" -> S(loc(i + 1, i + 2)) :: Nil,
+              newDefs = true, source = Lexing))
+            ("", j)
+          case (S(digits), j) => ("." + digits, j)
+        }
+      } else ("", i)
+      val (exponent, k) = if (j < length && (bytes(j) === 'e' || bytes(j) === 'E')) {
+        val (sign, k) = if (j + 1 < length && (bytes(j + 1) === '+' || bytes(j + 1) === '-')) {
+          (bytes(j + 1), j + 2)
         } else {
-          (BigInt(0), i + 1)
+          ('+', j + 1)
+        }
+        takeDigits(k, isDigit) match {
+          case (N, l) =>
+            raise(ErrorReport(msg"Expect at least one digit after the exponent sign" -> S(loc(l - 1, l)) :: Nil,
+              newDefs = true, source = Lexing))
+            ("", l)
+          case (S(digits), l) => ("E" + sign + digits, l)
         }
       } else {
-        radix(i, 10, "decimal", isDigit)
+        ("", j)
+      }
+      (DecLit(BigDecimal(integral + fraction + exponent)), k)
+    }
+    if (i < length) {
+      bytes(i) match {
+        case '0' if i + 1 < length => bytes(i + 1) match {
+          case 'x' => integer(i + 2, 16, "hexadecimal", isHexDigit)
+          case 'o' => integer(i + 2, 8, "octal", isOctDigit)
+          case 'b' => integer(i + 2, 2, "binary", isBinDigit)
+          case '.' | 'E' | 'e' => decimal(i + 1, "0")
+          case _ => integer(i, 10, "decimal", isDigit)
+        }
+        case '0' => (zero, i + 1)
+        // case '.' => decimal(i, "0")
+        case _ => takeDigits(i, isDigit) match {
+          case (N, j) =>
+            raise(ErrorReport(msg"Expect a numeric literal" -> S(loc(i, i + 1)) :: Nil,
+              newDefs = true, source = Lexing))
+            (zero, i)
+          case (S(integral), j) =>
+            if (j < length && isDecimalStart(bytes(j))) decimal(j, integral)
+            else (IntLit(BigInt(integral)), j)
+        }
       }
     } else {
-      raise(ErrorReport(msg"Expect an integer literal" -> S(loc(i, i + 1)) :: Nil,
+      raise(ErrorReport(msg"Expect a numeric literal instead of end of input" -> S(loc(i, i + 1)) :: Nil,
         newDefs = true, source = Lexing))
-      (BigInt(0), i)
+      (zero, i)
     }
   }
 
@@ -244,10 +293,10 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         }
         // else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
         else lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))
-      case _ if isDigit(c) =>
-        val (value, j) = int(i)
+      case _ if isDigit(c) || c === '.' =>
+        val (lit, j) = num(i)
         // go(j, LITVAL(IntLit(BigInt(str))))
-        lex(j, ind, next(j, LITVAL(IntLit(value))))
+        lex(j, ind, next(j, LITVAL(lit)))
       case _ =>
         pe(msg"unexpected character '${escapeChar(c)}'")
         // go(i + 1, ERROR)
