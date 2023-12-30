@@ -64,7 +64,7 @@ object inspect {
       case Let(isRec, name, rhs, body) => s"Let($isRec, $name, ${apply(rhs)}, ${apply(body)})"
       case Blk(stmts)                  => s"Blk(${stmts.iterator.map(apply).mkString(", ")})"
       case Bra(rcd, trm)               => s"Bra(rcd = $rcd, ${apply(trm)})"
-      case Asc(trm, ty)                => s"Asc(${apply(trm)}, $ty)"
+      case Asc(trm, ty)                => s"Asc(${apply(trm)}, ${apply(ty)})"
       case Bind(lhs, rhs)              => s"Bind(${apply(lhs)}, ${apply(rhs)})"
       case Test(trm, ty)               => s"Test(${apply(trm)}, ${apply(ty)})"
       case With(trm, fields) =>

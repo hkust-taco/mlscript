@@ -125,7 +125,7 @@ class Parent<T, U, V>(x) {
 //│ |#class| |Parent|‹|T|,| |U|,| |V|›|(|x|)| |{| |→|#fun| |foo|(|x|#:| |Int|)|#:| |T| |#=| |x|+|1|↵|#class| |Inner|‹|W|›|(|y|#:| |Int|)|{|→|#fun| |bar|(|z|#:| |U|)| |#=| |foo|(|y|)|↵|#fun| |boo|(|z|#:| |W|)| |#=| |z|←|↵|}|←|↵|}|
 //│ Parsed: {class Parent‹T, U, V›(x,) {fun foo = (x: Int,) => +(x, 1,) : T; class Inner‹W›(y: Int,) {fun bar = (z: U,) => foo(y,); fun boo = (z: W,) => z}}}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(Cls, TypeName("Parent"), Ls(N -> TypeName("T"), N -> TypeName("U"), N -> TypeName("V")), S(Tup((N, Var("x")))), N, N, Ls(), N, N, TypingUnit(NuFunDef(None, foo, N, Nil, L(Lam(Tup((S(Var("x")), Var("Int"))), Asc(App(Var("+"), Tup((N, Var("x")), (N, IntLit(1)))), TypeName(T))))), NuTypeDef(Cls, TypeName("Inner"), Ls(N -> TypeName("W")), S(Tup((S(Var("y")), Var("Int")))), N, N, Ls(), N, N, TypingUnit(NuFunDef(None, bar, N, Nil, L(Lam(Tup((S(Var("z")), Var("U"))), App(Var("foo"), Tup((N, Var("y"))))))), NuFunDef(None, boo, N, Nil, L(Lam(Tup((S(Var("z")), Var("W"))), Var("z")))))))))
+//│ TypingUnit(NuTypeDef(Cls, TypeName("Parent"), Ls(N -> TypeName("T"), N -> TypeName("U"), N -> TypeName("V")), S(Tup((N, Var("x")))), N, N, Ls(), N, N, TypingUnit(NuFunDef(None, foo, N, Nil, L(Lam(Tup((S(Var("x")), Var("Int"))), Asc(App(Var("+"), Tup((N, Var("x")), (N, IntLit(1)))), TypeName("T"))))), NuTypeDef(Cls, TypeName("Inner"), Ls(N -> TypeName("W")), S(Tup((S(Var("y")), Var("Int")))), N, N, Ls(), N, N, TypingUnit(NuFunDef(None, bar, N, Nil, L(Lam(Tup((S(Var("z")), Var("U"))), App(Var("foo"), Tup((N, Var("y"))))))), NuFunDef(None, boo, N, Nil, L(Lam(Tup((S(Var("z")), Var("W"))), Var("z")))))))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class Parent$1_Inner$2[W,U]([par$Parent$1, y: Int,]) {
@@ -213,7 +213,7 @@ new A(0) {
 //│ |#class| |A|(|x|#:| |Int|)| |{|→|#fun| |getA|#:| |Int| |#=| |0|↵|#fun| |getA1| |#=| |1|←|↵|}|↵|#new| |A|(|0|)| |{|→|#fun| |getA| |#=| |3|↵|#fun| |getA2| |#=| |2|←|↵|}|
 //│ Parsed: {class A(x: Int,) {fun getA = 0 : Int; fun getA1 = 1}; (new A)(0,) { ‹fun getA = 3; fun getA2 = 2› }}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(Cls, TypeName("A"), Ls(), S(Tup((S(Var("x")), Var("Int")))), N, N, Ls(), N, N, TypingUnit(NuFunDef(None, getA, N, Nil, L(Asc(IntLit(0), TypeName(Int)))), NuFunDef(None, getA1, N, Nil, L(IntLit(1))))), Rft(App(NuNew(Var("A")), Tup((N, IntLit(0)))), TypingUnit(NuFunDef(None, getA, N, Nil, L(IntLit(3))), NuFunDef(None, getA2, N, Nil, L(IntLit(2))))))
+//│ TypingUnit(NuTypeDef(Cls, TypeName("A"), Ls(), S(Tup((S(Var("x")), Var("Int")))), N, N, Ls(), N, N, TypingUnit(NuFunDef(None, getA, N, Nil, L(Asc(IntLit(0), TypeName("Int")))), NuFunDef(None, getA1, N, Nil, L(IntLit(1))))), Rft(App(NuNew(Var("A")), Tup((N, IntLit(0)))), TypingUnit(NuFunDef(None, getA, N, Nil, L(IntLit(3))), NuFunDef(None, getA2, N, Nil, L(IntLit(2))))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class A$1([x: Int,]) {fun getA = () => 0 : Int; fun getA1 = () => 1}

@@ -19,7 +19,7 @@ class A{
 //│ |#class| |A|{|→|#class| |B| |{||}|↵|#fun| |foo|(|x|#:| |B|)| |#=| |(|x| |#:| |B|)|←|↵|}|
 //│ Parsed: {class A {class B {}; fun foo = (x: B,) => '(' x : B ')'}}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(Cls, TypeName("A"), Ls(), N, N, N, Ls(), N, N, TypingUnit(NuTypeDef(Cls, TypeName("B"), Ls(), N, N, N, Ls(), N, N, TypingUnit()), NuFunDef(None, foo, N, Nil, L(Lam(Tup((S(Var("x")), Var("B"))), Bra(rcd = false, Asc(Var("x"), TypeName(B)))))))))
+//│ TypingUnit(NuTypeDef(Cls, TypeName("A"), Ls(), N, N, N, Ls(), N, N, TypingUnit(NuTypeDef(Cls, TypeName("B"), Ls(), N, N, N, Ls(), N, N, TypingUnit()), NuFunDef(None, foo, N, Nil, L(Lam(Tup((S(Var("x")), Var("B"))), Bra(rcd = false, Asc(Var("x"), TypeName("B")))))))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class A$1_B$2([par$A$1,]) {}
@@ -233,7 +233,7 @@ fun foo<T, U>(x: T): string =
 //│ |#fun| |foo|‹|T|,| |U|›|(|x|#:| |T|)|#:| |string| |#=| |→|#class| |A|(|y|)| |#extends| |B|‹|T|›|,| |C|(|y|#:| |U|)| |{|→|#fun| |bar| |#=| |this|←|↵|}|↵|"rua"|←|
 //│ Parsed: {fun foo = (x: T,) => {class A(y,): B‹T›, C(y: U,) {fun bar = this}; "rua"} : string}
 //│ Parsed:
-//│ TypingUnit(NuFunDef(None, foo, N, TypeName("T") :: TypeName("U") :: Nil, L(Lam(Tup((S(Var("x")), Var("T"))), Asc(Blk(NuTypeDef(Cls, TypeName("A"), Ls(), S(Tup((N, Var("y")))), N, N, Ls(TyApp(Var("B"), List(TypeName(T))), App(Var("C"), Tup((S(Var("y")), Var("U"))))), N, N, TypingUnit(NuFunDef(None, bar, N, Nil, L(Var("this"))))), StrLit(rua)), TypeName(string))))))
+//│ TypingUnit(NuFunDef(None, foo, N, TypeName("T") :: TypeName("U") :: Nil, L(Lam(Tup((S(Var("x")), Var("T"))), Asc(Blk(NuTypeDef(Cls, TypeName("A"), Ls(), S(Tup((N, Var("y")))), N, N, Ls(TyApp(Var("B"), List(TypeName(T))), App(Var("C"), Tup((S(Var("y")), Var("U"))))), N, N, TypingUnit(NuFunDef(None, bar, N, Nil, L(Var("this"))))), StrLit(rua)), TypeName("string"))))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class A$1[T,U]([y,]): B‹T›, C(y: U,) {fun bar = () => this}
