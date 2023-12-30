@@ -10,7 +10,7 @@ fun foo() =
   local(1)
 foo()
 //│ Parsed:
-//│ TypingUnit(NuFunDef(None, foo, N, Nil, L(Lam(Tup(), Blk(NuFunDef(Some(false), local, N, Nil, L(Lam(Tup((N, Var("x"))), Blk(NuTypeDef(Cls, TypeName("Foo"), Ls(), N, N, N, Ls(), N, N, TypingUnit(NuFunDef(None, bar, N, Nil, L(App(Var("+"), Tup((N, Var("x")), (N, App(Var("foo"), Tup())))))))), Sel(Bra(rcd = false, App(NuNew(Var("Foo")), Tup())), bar))))), App(Var("local"), Tup((N, IntLit(1)))))))), App(Var("foo"), Tup()))
+//│ TypingUnit(List(NuFunDef(None,Var(foo),None,List(),Left(Lam(Tup(List()),Blk(List(NuFunDef(Some(false),Var(local),None,List(),Left(Lam(Tup(List((None,Fld(FldFlags(false,false,false),Var(x))))),Blk(List(NuTypeDef(Cls,TypeName(Foo),List(),None,None,None,List(),None,None,TypingUnit(List(NuFunDef(None,Var(bar),None,List(),Left(App(Var(+),Tup(List((None,Fld(FldFlags(false,false,false),Var(x))), (None,Fld(FldFlags(false,false,false),App(Var(foo),Tup(List())))))))))))), Sel(Bra(false,App(NuNew(Var(Foo)),Tup(List()))),Var(bar))))))), App(Var(local),Tup(List((None,Fld(FldFlags(false,false,false),IntLit(1))))))))))), App(Var(foo),Tup(List()))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class Foo$1([x,]) {fun bar = () => +((this).x, foo$1(),)}
@@ -28,7 +28,7 @@ fun foo(f) =
   f(1)
 foo(x => x+1)
 //│ Parsed:
-//│ TypingUnit(NuFunDef(None, foo, N, Nil, L(Lam(Tup((N, Var("f"))), Blk(App(Var("f"), Tup((N, IntLit(1)))))))), App(Var("foo"), Tup((N, Lam(Tup((N, Var("x"))), App(Var("+"), Tup((N, Var("x")), (N, IntLit(1)))))))))
+//│ TypingUnit(List(NuFunDef(None,Var(foo),None,List(),Left(Lam(Tup(List((None,Fld(FldFlags(false,false,false),Var(f))))),Blk(List(App(Var(f),Tup(List((None,Fld(FldFlags(false,false,false),IntLit(1))))))))))), App(Var(foo),Tup(List((None,Fld(FldFlags(false,false,false),Lam(Tup(List((None,Fld(FldFlags(false,false,false),Var(x))))),App(Var(+),Tup(List((None,Fld(FldFlags(false,false,false),Var(x))), (None,Fld(FldFlags(false,false,false),IntLit(1))))))))))))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class Lambda1$2$1([]) {fun apply = (x,) => +(x, 1,)}
@@ -46,7 +46,7 @@ fun foo(x) =
   bar(y => y+x)
 foo(1)
 //│ Parsed:
-//│ TypingUnit(NuFunDef(None, foo, N, Nil, L(Lam(Tup((N, Var("x"))), Blk(NuFunDef(Some(false), bar, N, Nil, L(Lam(Tup((N, Var("f"))), Blk(App(Var("f"), Tup((N, Var("x")))))))), App(Var("bar"), Tup((N, Lam(Tup((N, Var("y"))), App(Var("+"), Tup((N, Var("y")), (N, Var("x")))))))))))), App(Var("foo"), Tup((N, IntLit(1)))))
+//│ TypingUnit(List(NuFunDef(None,Var(foo),None,List(),Left(Lam(Tup(List((None,Fld(FldFlags(false,false,false),Var(x))))),Blk(List(NuFunDef(Some(false),Var(bar),None,List(),Left(Lam(Tup(List((None,Fld(FldFlags(false,false,false),Var(f))))),Blk(List(App(Var(f),Tup(List((None,Fld(FldFlags(false,false,false),Var(x))))))))))), App(Var(bar),Tup(List((None,Fld(FldFlags(false,false,false),Lam(Tup(List((None,Fld(FldFlags(false,false,false),Var(y))))),App(Var(+),Tup(List((None,Fld(FldFlags(false,false,false),Var(y))), (None,Fld(FldFlags(false,false,false),Var(x))))))))))))))))), App(Var(foo),Tup(List((None,Fld(FldFlags(false,false,false),IntLit(1))))))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class Lambda1$3$1([x,]) {fun apply = (y,) => +(y, (this).x,)}
@@ -68,7 +68,7 @@ fun app(a) =
   foo(z => a.bar(z))
 app(new A(1))
 //│ Parsed:
-//│ TypingUnit(NuFunDef(None, foo, N, Nil, L(Lam(Tup((N, Var("f"))), Blk(App(Var("f"), Tup((N, IntLit(1)))))))), NuTypeDef(Cls, TypeName("A"), Ls(), S(Tup((S(Var("y")), Var("Int")))), N, N, Ls(), N, N, TypingUnit(NuFunDef(None, bar, N, Nil, L(Lam(Tup((N, Var("z"))), App(Var("+"), Tup((N, Var("y")), (N, Var("z"))))))))), NuFunDef(None, app, N, Nil, L(Lam(Tup((N, Var("a"))), Blk(App(Var("foo"), Tup((N, Lam(Tup((N, Var("z"))), App(Sel(Var("a"), bar), Tup((N, Var("z")))))))))))), App(Var("app"), Tup((N, App(NuNew(Var("A")), Tup((N, IntLit(1))))))))
+//│ TypingUnit(List(NuFunDef(None,Var(foo),None,List(),Left(Lam(Tup(List((None,Fld(FldFlags(false,false,false),Var(f))))),Blk(List(App(Var(f),Tup(List((None,Fld(FldFlags(false,false,false),IntLit(1))))))))))), NuTypeDef(Cls,TypeName(A),List(),Some(Tup(List((Some(Var(y)),Fld(FldFlags(false,false,false),Var(Int)))))),None,None,List(),None,None,TypingUnit(List(NuFunDef(None,Var(bar),None,List(),Left(Lam(Tup(List((None,Fld(FldFlags(false,false,false),Var(z))))),App(Var(+),Tup(List((None,Fld(FldFlags(false,false,false),Var(y))), (None,Fld(FldFlags(false,false,false),Var(z)))))))))))), NuFunDef(None,Var(app),None,List(),Left(Lam(Tup(List((None,Fld(FldFlags(false,false,false),Var(a))))),Blk(List(App(Var(foo),Tup(List((None,Fld(FldFlags(false,false,false),Lam(Tup(List((None,Fld(FldFlags(false,false,false),Var(z))))),App(Sel(Var(a),Var(bar)),Tup(List((None,Fld(FldFlags(false,false,false),Var(z))))))))))))))))), App(Var(app),Tup(List((None,Fld(FldFlags(false,false,false),App(NuNew(Var(A)),Tup(List((None,Fld(FldFlags(false,false,false),IntLit(1)))))))))))))
 //│ Lifted:
 //│ TypingUnit {
 //│   class A$1([y: Int,]) {fun bar = (z,) => +((this).y, z,)}
