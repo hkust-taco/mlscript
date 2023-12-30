@@ -123,7 +123,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
       val xst = xs.transpose
       if (xst.exists(x => x.exists(_ != x.head)))
         xst.map {
-          ys => 
+          ys =>
             val z = ys.flatMap {
               case None => Set()
               case Some(IMix(i)) => i
@@ -761,7 +761,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
       }
     
     private def checkTargets(name: Str, intros: Map[Str, Intro], args: Ls[TrivialExpr], params: Ls[Name], active: Ls[Set[Elim]]) =
-      args.map { 
+      args.map {
         case Ref(x) => intros.get(x.str)
         case _ => None
       }.zip(params).zip(active).foreach {
