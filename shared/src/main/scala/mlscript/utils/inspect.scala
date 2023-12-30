@@ -60,8 +60,8 @@ object inspect {
         }.mkString("Tup(", ", ", ")")
       case Rcd(fields) =>
         fields.iterator.map { case k -> Fld(_, v) => s"${apply(k)} = ${apply(v)}" }.mkString("Rcd(", ", ", ")")
-      case Sel(receiver, fieldName)    => s"Sel(${apply(receiver)}, $fieldName)"
-      case Let(isRec, name, rhs, body) => s"Let($isRec, $name, ${apply(rhs)}, ${apply(body)})"
+      case Sel(receiver, fieldName)    => s"Sel(${apply(receiver)}, ${fieldName.name})"
+      case Let(isRec, name, rhs, body) => s"Let($isRec, ${name.name}, ${apply(rhs)}, ${apply(body)})"
       case Blk(stmts)                  => s"Blk(${stmts.iterator.map(apply).mkString(", ")})"
       case Bra(rcd, trm)               => s"Bra(rcd = $rcd, ${apply(trm)})"
       case Asc(trm, ty)                => s"Asc(${apply(trm)}, ${apply(ty)})"
@@ -126,10 +126,10 @@ object inspect {
       case Union(lhs, rhs) => s"Union(${apply(lhs)}, ${apply(rhs)})"
       case Inter(lhs, rhs) => s"Inter(${apply(lhs)}, ${apply(rhs)})"
       case Function(lhs, rhs) => s"Function(${apply(lhs)}, ${apply(rhs)})"
-      case Record(fields) => s"Record(${fields.iterator.map { case (nme, ty) => s"$nme: ${apply(ty)}" }.mkString(", ")})"
+      case Record(fields) => s"Record(${fields.iterator.map { case (nme, ty) => s"${nme.name}: ${apply(ty)}" }.mkString(", ")})"
       case Tuple(fields) => s"Tuple(${fields.iterator.map {
         case N -> field => s"N -> ${apply(field)}"
-        case S(nme) -> field => s"S($nme) -> ${apply(field)}"
+        case S(Var(name)) -> field => s"S($name) -> ${apply(field)}"
       }.mkString(", ")})"
       case Recursive(uv, body) => s"Recursive(${apply(uv)}, ${apply(body)})"
       case AppliedType(base, targs) => s"AppliedType(${apply(base)}, ${apply(targs)})"
@@ -147,7 +147,7 @@ object inspect {
       }}), ${apply(where)})"
       case Top => "Top"
       case Bot => "Bot"
-      case Literal(lit) => s"Literal(${lit.toString})"
+      case Literal(lit) => s"Literal(${lit.showDbg})"
       case TypeName(name) => s"TypeName(\"$name\")"
       case TypeTag(name) => s"TypeTag($name)"
       case TypeVar(identifier, nameHint) => s"TypeVar(${identifier match {

@@ -427,7 +427,7 @@ class DiffTests
             val res = p.parseAll(p.typingUnit)
             
             if (parseOnly)
-              output("Parsed: " + res.showDbg)
+              output("Parsed: " + res.showDbgTop)
             
             if (mode.showParse)
               output("AST: " + inspect.deep(res))
@@ -459,7 +459,7 @@ class DiffTests
           case Success(p, index) =>
             if (mode.expectParseErrors && !newParser)
               failures += blockLineNum
-            if (mode.showParse || mode.dbgParsing) output("Parsed: " + p)
+            if (mode.showParse || mode.dbgParsing) output("Parsed: " + p.showDbg)
             // if (mode.isDebugging) typer.resetState()
             if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg
@@ -619,9 +619,9 @@ class DiffTests
               report(diags)
               
               if (mode.showParse) {
-                typeDefs.foreach(td => output("Desugared: " + td))
+                typeDefs.foreach(td => output("Desugared: " + td.showDbg))
                 stmts.foreach { s =>
-                  output("Desugared: " + s)
+                  output("Desugared: " + s.showDbg)
                   output("AST: " + inspect.deep(s))
                 }
               }
@@ -769,7 +769,7 @@ class DiffTests
                   declared += nme.name -> ty_sch
                   val exp = getType(ty_sch, N)
                   if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
-                  S(nme.name -> (s"$nme: ${exp.show(newDefs)}" :: Nil))
+                  S(nme.name -> (s"${nme.name}: ${exp.show(newDefs)}" :: Nil))
                   
                 // statement is defined and has a body/definition
                 case d @ Def(isrec, nme, L(rhs), isByname) =>
@@ -784,7 +784,7 @@ class DiffTests
                     case N =>
                       ctx += nme.name -> typer.VarSymbol(ty_sch, nme)
                       if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
-                      s"$nme: ${exp.show(newDefs)}" :: Nil
+                      s"${nme.name}: ${exp.show(newDefs)}" :: Nil
                       
                     // statement has a body and a declared type
                     // both are used to compute a subsumption (What is this??)
@@ -796,7 +796,7 @@ class DiffTests
                       typer.subsume(ty_sch, sign)(ctx, raiseToBuffer, typer.TypeProvenance(d.toLoc, "def definition"))
                       if (mode.generateTsDeclarations) tsTypegenCodeBuilder.addTypeGenTermDefinition(exp, Some(nme.name))
                       typeBeforeDiags = true
-                      exp.show(newDefs) :: s"  <:  $nme:" :: sign_exp.show(newDefs) :: Nil
+                      exp.show(newDefs) :: s"  <:  ${nme.name}:" :: sign_exp.show(newDefs) :: Nil
                   }))
                 case desug: DesugaredStatement =>
                   typer.dbg = mode.dbg
@@ -1051,7 +1051,7 @@ class DiffTests
               err.getStackTrace().take(
                 if (mode.fullExceptionStack) Int.MaxValue
                 else if (mode.fixme || err.isInstanceOf[StackOverflowError]) 0
-                else 10
+                else 50
               ).map("\n" + "\tat: " + _).mkString)
         } finally {
           typer.dbg = false

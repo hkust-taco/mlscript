@@ -368,7 +368,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
           }
         }
         case lit: Lit =>
-          JSBinary("===", scrut, JSLit(lit.idStr))
+          JSBinary("===", scrut, translateTerm(lit))
       },
       _,
       _
