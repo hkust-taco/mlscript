@@ -17,13 +17,13 @@ class TSProgram(
   typer: (FileInfo, JSWriter) => Unit,
   gitHelper: Option[JSGitHelper]
 ) {
-  private implicit val configContent = TypeScript.parseOption(file.workDir, tsconfig)
+  private implicit val configContent: js.Dynamic = TypeScript.parseOption(file.workDir, tsconfig)
   private val program = TypeScript.createProgram(Seq(
     if (file.isNodeModule) file.resolve
     else file.filename
   ))
   private val cache = new HashMap[String, TSSourceFile]()
-  private implicit val checker = TSTypeChecker(program.getTypeChecker())
+  private implicit val checker: TSTypeChecker = TSTypeChecker(program.getTypeChecker())
 
   import TSPathResolver.{basename, extname, isLocal, resolve, dirname, relative, normalize}
 
@@ -73,7 +73,8 @@ class TSProgram(
       generate(imp, None)(filename :: stack) || r
     })
 
-    if (!dependentRecompile && !shouldRecompile(filename, interfaceFilename)) return false
+    if (file.isNodeModule && JSFileSystem.exists(interfaceFilename)) return false // * We do not check files in node modules if the interfaces exist
+    else if (!dependentRecompile && !shouldRecompile(filename, interfaceFilename)) return false
     System.out.println(s"generating interface for ${file.filename}...")
     sourceFile.parse
     
