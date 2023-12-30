@@ -110,6 +110,15 @@ fun test =
 //│   where
 //│     'lol :> () -> 'lol
 
+fun testWithAsc =
+  let rec aux: Int -> Int = x => if x <= 0 then 1 else x * aux(x - 1)
+  aux(10)
+testWithAsc
+//│ fun testWithAsc: Int
+//│ Int
+//│ res
+//│     = 3628800
+
 let rec lol = () => lol
 //│ let rec lol: forall 'lol. 'lol
 //│   where
