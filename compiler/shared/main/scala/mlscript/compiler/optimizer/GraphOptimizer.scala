@@ -238,20 +238,19 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
         val all_fv_list = all_fv.toList
         val fv_retvals = all_fv_list.map { x => Ref(Name(x)) }
 
-        if (fv_retvals.nonEmpty)
-          val pre_body = accu(Result(fv_retvals))
-          val pre_name = fresh.make(defn.name + "$P")
-          val pre_defn = GODef(
-            fn_uid.make,
-            pre_name.str,
-            false,
-            defn.params,
-            all_fv.size,
-            None,
-            pre_body)
-          pre_map.update((defn.name, scrut.str), (pre_name.str, all_fv_list))
-          pre_defs.add(pre_defn)
-          derived_defs.getOrElseUpdate(defn.name, MutHSet.empty) += pre_name.str
+        val pre_body = accu(Result(fv_retvals))
+        val pre_name = fresh.make(defn.name + "$P")
+        val pre_defn = GODef(
+          fn_uid.make,
+          pre_name.str,
+          false,
+          defn.params,
+          all_fv.size,
+          None,
+          pre_body)
+        pre_map.update((defn.name, scrut.str), (pre_name.str, all_fv_list))
+        pre_defs.add(pre_defn)
+        derived_defs.getOrElseUpdate(defn.name, MutHSet.empty) += pre_name.str
         
         cases.zip(arm_fv).foreach {
           case ((cls, body), fv) =>
