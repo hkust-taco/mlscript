@@ -23,6 +23,6 @@ jobs:
     - name: Install TypeScript
       run: npm ci
     - name: Run tests
-      run: sbt test
+      run: sbt -J-Xmx4096M test
     - name: Check no changes
       run: git diff-files -p --exit-code
