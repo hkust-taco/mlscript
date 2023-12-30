@@ -293,7 +293,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         }
         // else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
         else lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))
-      case _ if isDigit(c) || c === '.' =>
+      case _ if isDigit(c) =>
         val (lit, j) = num(i)
         // go(j, LITVAL(IntLit(BigInt(str))))
         lex(j, ind, next(j, LITVAL(lit)))
