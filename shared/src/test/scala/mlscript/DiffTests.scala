@@ -430,7 +430,7 @@ class DiffTests
               output("Parsed: " + res.showDbgTop)
             
             if (mode.showParse)
-              output("AST: " + inspect.deep(res))
+              output(s"AST: $res")
             
             postProcess(mode, basePath, testName, res).foreach(output)
             
@@ -622,7 +622,7 @@ class DiffTests
                 typeDefs.foreach(td => output("Desugared: " + td.showDbg))
                 stmts.foreach { s =>
                   output("Desugared: " + s.showDbg)
-                  output("AST: " + inspect.deep(s))
+                  output(s"AST: $s")
                 }
               }
               

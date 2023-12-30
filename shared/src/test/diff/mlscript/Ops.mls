@@ -3,7 +3,7 @@
 2 + 2
 //│ Parsed: +(2,)(2,);
 //│ Desugared: +(2,)(2,)
-//│ AST: App(App(Var("+"), Tup((N, IntLit(2)))), Tup((N, IntLit(2))))
+//│ AST: App(App(Var(+),Tup(List((None,Fld(FldFlags(false,false,false),IntLit(2)))))),Tup(List((None,Fld(FldFlags(false,false,false),IntLit(2))))))
 //│ res: int
 //│    = 4
 
@@ -11,7 +11,7 @@
 1 + 2 * 2 + 3
 //│ Parsed: +(+(1,)(*(2,)(2,),),)(3,);
 //│ Desugared: +(+(1,)(*(2,)(2,),),)(3,)
-//│ AST: App(App(Var("+"), Tup((N, App(App(Var("+"), Tup((N, IntLit(1)))), Tup((N, App(App(Var("*"), Tup((N, IntLit(2)))), Tup((N, IntLit(2)))))))))), Tup((N, IntLit(3))))
+//│ AST: App(App(Var(+),Tup(List((None,Fld(FldFlags(false,false,false),App(App(Var(+),Tup(List((None,Fld(FldFlags(false,false,false),IntLit(1)))))),Tup(List((None,Fld(FldFlags(false,false,false),App(App(Var(*),Tup(List((None,Fld(FldFlags(false,false,false),IntLit(2)))))),Tup(List((None,Fld(FldFlags(false,false,false),IntLit(2)))))))))))))))),Tup(List((None,Fld(FldFlags(false,false,false),IntLit(3))))))
 //│ res: int
 //│    = 8
 
@@ -20,7 +20,7 @@
 1 + 2 / 2 + 3
 //│ Parsed: +(+(1,)(/(2,)(2,),),)(3,);
 //│ Desugared: +(+(1,)(/(2,)(2,),),)(3,)
-//│ AST: App(App(Var("+"), Tup((N, App(App(Var("+"), Tup((N, IntLit(1)))), Tup((N, App(App(Var("/"), Tup((N, IntLit(2)))), Tup((N, IntLit(2)))))))))), Tup((N, IntLit(3))))
+//│ AST: App(App(Var(+),Tup(List((None,Fld(FldFlags(false,false,false),App(App(Var(+),Tup(List((None,Fld(FldFlags(false,false,false),IntLit(1)))))),Tup(List((None,Fld(FldFlags(false,false,false),App(App(Var(/),Tup(List((None,Fld(FldFlags(false,false,false),IntLit(2)))))),Tup(List((None,Fld(FldFlags(false,false,false),IntLit(2)))))))))))))))),Tup(List((None,Fld(FldFlags(false,false,false),IntLit(3))))))
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.20: 	1 + 2 / 2 + 3
 //│ ║        	^^^^^^^^^
@@ -36,7 +36,7 @@
 1 |> 2 || 3
 //│ Parsed: ||(|>(1,)(2,),)(3,);
 //│ Desugared: ||(|>(1,)(2,),)(3,)
-//│ AST: App(App(Var("||"), Tup((N, App(App(Var("|>"), Tup((N, IntLit(1)))), Tup((N, IntLit(2))))))), Tup((N, IntLit(3))))
+//│ AST: App(App(Var(||),Tup(List((None,Fld(FldFlags(false,false,false),App(App(Var(|>),Tup(List((None,Fld(FldFlags(false,false,false),IntLit(1)))))),Tup(List((None,Fld(FldFlags(false,false,false),IntLit(2))))))))))),Tup(List((None,Fld(FldFlags(false,false,false),IntLit(3))))))
 //│ ╔══[ERROR] identifier not found: |>
 //│ ║  l.36: 	1 |> 2 || 3
 //│ ╙──      	  ^^
@@ -54,7 +54,7 @@
 true || false && true || false
 //│ Parsed: ||(||(true,)(&&(false,)(true,),),)(false,);
 //│ Desugared: ||(||(true,)(&&(false,)(true,),),)(false,)
-//│ AST: App(App(Var("||"), Tup((N, App(App(Var("||"), Tup((N, Var("true")))), Tup((N, App(App(Var("&&"), Tup((N, Var("false")))), Tup((N, Var("true")))))))))), Tup((N, Var("false"))))
+//│ AST: App(App(Var(||),Tup(List((None,Fld(FldFlags(false,false,false),App(App(Var(||),Tup(List((None,Fld(FldFlags(false,false,false),Var(true)))))),Tup(List((None,Fld(FldFlags(false,false,false),App(App(Var(&&),Tup(List((None,Fld(FldFlags(false,false,false),Var(false)))))),Tup(List((None,Fld(FldFlags(false,false,false),Var(true)))))))))))))))),Tup(List((None,Fld(FldFlags(false,false,false),Var(false))))))
 //│ res: bool
 //│    = true
 

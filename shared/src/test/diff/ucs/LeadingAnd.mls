@@ -23,7 +23,7 @@ fun f(a, b) = if a is Some(av)
     and b is Some(bv)
     then av + bv
 //│ |#fun| |f|(|a|,| |b|)| |#=| |#if| |a| |is| |Some|(|av|)|→|and| |b| |is| |Some|(|bv|)|↵|#then| |av| |+| |bv|←|
-//│ AST: TypingUnit(NuFunDef(None, f, N, Nil, L(Lam(Tup((N, Var("a")), (N, Var("b"))), If(IfOpApp(Var("a"), Var("is"), I; f; O; p; s; A; p; p; (; A; p; p; (; V; a; r; (; "; S; o; m; e; "; ); ,;  ; T; u; p; (; (; N; ,;  ; V; a; r; (; "; a; v; "; ); ); ); ); ,;  ; <; i; t; e; r; a; t; o; r; >, None)))))
+//│ AST: TypingUnit(List(NuFunDef(None,Var(f),None,List(),Left(Lam(Tup(List((None,Fld(FldFlags(false,false,false),Var(a))), (None,Fld(FldFlags(false,false,false),Var(b))))),If(IfOpApp(Var(a),Var(is),IfOpsApp(App(Var(Some),Tup(List((None,Fld(FldFlags(false,false,false),Var(av)))))),List((Var(and),IfThen(App(Var(is),Tup(List((None,Fld(FldFlags(false,false,false),Var(b))), (None,Fld(FldFlags(false,false,false),App(Var(Some),Tup(List((None,Fld(FldFlags(false,false,false),Var(bv))))))))))),App(Var(+),Tup(List((None,Fld(FldFlags(false,false,false),Var(av))), (None,Fld(FldFlags(false,false,false),Var(bv))))))))))),None))))))
 //│ Parsed: fun f = (a, b,) => if a is Some(av,) ‹· and (is(b, Some(bv,),)) then +(av, bv,)›;
 //│ fun f: (Some[Int], Some[Int]) -> Int
 
@@ -34,7 +34,7 @@ fun f(a, b) = if a is
     and b is Some(bv)
     then av + bv
 //│ |#fun| |f|(|a|,| |b|)| |#=| |#if| |a| |is|→|Some|(|av|)|→|and| |b| |is| |Some|(|bv|)|↵|#then| |av| |+| |bv|←|←|
-//│ AST: TypingUnit(NuFunDef(None, f, N, Nil, L(Lam(Tup((N, Var("a")), (N, Var("b"))), If(IfOpApp(Var("a"), Var("is"), IfBlock(Ls(I; f; O; p; s; A; p; p; (; A; p; p; (; V; a; r; (; "; S; o; m; e; "; ); ,;  ; T; u; p; (; (; N; ,;  ; V; a; r; (; "; a; v; "; ); ); ); ); ,;  ; <; i; t; e; r; a; t; o; r; >)), None)))))
+//│ AST: TypingUnit(List(NuFunDef(None,Var(f),None,List(),Left(Lam(Tup(List((None,Fld(FldFlags(false,false,false),Var(a))), (None,Fld(FldFlags(false,false,false),Var(b))))),If(IfOpApp(Var(a),Var(is),IfBlock(List(Left(IfOpsApp(App(Var(Some),Tup(List((None,Fld(FldFlags(false,false,false),Var(av)))))),List((Var(and),IfThen(App(Var(is),Tup(List((None,Fld(FldFlags(false,false,false),Var(b))), (None,Fld(FldFlags(false,false,false),App(Var(Some),Tup(List((None,Fld(FldFlags(false,false,false),Var(bv))))))))))),App(Var(+),Tup(List((None,Fld(FldFlags(false,false,false),Var(av))), (None,Fld(FldFlags(false,false,false),Var(bv)))))))))))))),None))))))
 //│ Parsed: fun f = (a, b,) => if a is ‹Some(av,) ‹· and (is(b, Some(bv,),)) then +(av, bv,)››;
 //│ ╔══[ERROR] Illegal pattern `and`
 //│ ║  l.34: 	    and b is Some(bv)
