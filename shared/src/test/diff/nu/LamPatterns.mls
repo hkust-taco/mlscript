@@ -14,7 +14,7 @@ Some(x) => x
 //│ ╙──     	           ^
 //│ error -> error
 //│ Code generation encountered an error:
-//│   term App(Var(Some),Tup(List((None,Fld(FldFlags(false,false,false),Var(x)))))) is not a valid pattern
+//│   term App(Var(Some),Tup(List((None,Fld(_,Var(x)))))) is not a valid pattern
 
 :js
 // FIXME type

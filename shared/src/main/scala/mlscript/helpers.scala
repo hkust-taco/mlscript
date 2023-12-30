@@ -504,6 +504,15 @@ trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
   lazy val toVar: Var = Var(name).withLocOf(this)
 }
 
+trait FldFlagsImpl extends Located { self: FldFlags =>
+  def children: Ls[Located] = Nil
+  override def toString(): String = {
+    val FldFlags(m, s, g) = this
+    val res = (if (m) "m" else "") + (if (s) "s" else "") + (if (g) "g" else "")
+    if (res.isEmpty) "_" else res
+  }
+}
+
 trait FldImpl extends Located { self: Fld =>
   def children: Ls[Located] = self.value :: Nil
   def describe: Str =

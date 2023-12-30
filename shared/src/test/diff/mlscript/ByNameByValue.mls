@@ -16,7 +16,7 @@ def incr x = x.a <- x.a + 1
 def gensym = let n = { mut a = 0 } in fun () -> (incr n, n)
 //│ Parsed: def gensym: let n = {mut a: 0} in () => [incr(n,), n,];
 //│ Desugared: def gensym: let n = {mut a: 0} in () => [incr(n,), n,]
-//│ AST: Def(false,Var(gensym),Left(Let(false,Var(n),Rcd(List((Var(a),Fld(FldFlags(true,false,false),IntLit(0))))),Lam(Tup(List()),Tup(List((None,Fld(FldFlags(false,false,false),App(Var(incr),Tup(List((None,Fld(FldFlags(false,false,false),Var(n)))))))), (None,Fld(FldFlags(false,false,false),Var(n)))))))),true)
+//│ AST: Def(false,Var(gensym),Left(Let(false,Var(n),Rcd(List((Var(a),Fld(m,IntLit(0))))),Lam(Tup(List()),Tup(List((None,Fld(_,App(Var(incr),Tup(List((None,Fld(_,Var(n)))))))), (None,Fld(_,Var(n)))))))),true)
 //│ // Query 1
 //│ globalThis.gensym = function gensym() {
 //│   return (((n) => () => [
@@ -35,7 +35,7 @@ def gensym = let n = { mut a = 0 } in fun () -> (incr n, n)
 gensym1 = let n = { mut a = 0 } in fun () -> (incr n, n)
 //│ Parsed: let gensym1 = let n = {mut a: 0} in () => [incr(n,), n,];
 //│ Desugared: def gensym1: let n = {mut a: 0} in () => [incr(n,), n,]
-//│ AST: Def(false,Var(gensym1),Left(Let(false,Var(n),Rcd(List((Var(a),Fld(FldFlags(true,false,false),IntLit(0))))),Lam(Tup(List()),Tup(List((None,Fld(FldFlags(false,false,false),App(Var(incr),Tup(List((None,Fld(FldFlags(false,false,false),Var(n)))))))), (None,Fld(FldFlags(false,false,false),Var(n)))))))),false)
+//│ AST: Def(false,Var(gensym1),Left(Let(false,Var(n),Rcd(List((Var(a),Fld(m,IntLit(0))))),Lam(Tup(List()),Tup(List((None,Fld(_,App(Var(incr),Tup(List((None,Fld(_,Var(n)))))))), (None,Fld(_,Var(n)))))))),false)
 //│ // Query 1
 //│ globalThis.gensym1 = ((n) => () => [
 //│   incr(n),

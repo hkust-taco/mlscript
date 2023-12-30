@@ -75,9 +75,9 @@ f = fun (x, y) -> add x y
 f(1, 2)
 //│ Parsed: let f = (x, y,) => add(x,)(y,); f(1, 2,);
 //│ Desugared: def f: (x, y,) => add(x,)(y,)
-//│ AST: Def(false,Var(f),Left(Lam(Tup(List((None,Fld(FldFlags(false,false,false),Var(x))), (None,Fld(FldFlags(false,false,false),Var(y))))),App(App(Var(add),Tup(List((None,Fld(FldFlags(false,false,false),Var(x)))))),Tup(List((None,Fld(FldFlags(false,false,false),Var(y)))))))),false)
+//│ AST: Def(false,Var(f),Left(Lam(Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y))))),App(App(Var(add),Tup(List((None,Fld(_,Var(x)))))),Tup(List((None,Fld(_,Var(y)))))))),false)
 //│ Desugared: f(1, 2,)
-//│ AST: App(Var(f),Tup(List((None,Fld(FldFlags(false,false,false),IntLit(1))), (None,Fld(FldFlags(false,false,false),IntLit(2))))))
+//│ AST: App(Var(f),Tup(List((None,Fld(_,IntLit(1))), (None,Fld(_,IntLit(2))))))
 //│ f: (int, int,) -> int
 //│  = [Function: f]
 //│ res: int
@@ -119,9 +119,9 @@ f = fun ((x, y)) -> add x y
 f((1, 2))
 //│ Parsed: let f = ('(' [x, y,] ')',) => add(x,)(y,); f('(' [1, 2,] ')',);
 //│ Desugared: def f: ('(' [x, y,] ')',) => add(x,)(y,)
-//│ AST: Def(false,Var(f),Left(Lam(Tup(List((None,Fld(FldFlags(false,false,false),Bra(false,Tup(List((None,Fld(FldFlags(false,false,false),Var(x))), (None,Fld(FldFlags(false,false,false),Var(y)))))))))),App(App(Var(add),Tup(List((None,Fld(FldFlags(false,false,false),Var(x)))))),Tup(List((None,Fld(FldFlags(false,false,false),Var(y)))))))),false)
+//│ AST: Def(false,Var(f),Left(Lam(Tup(List((None,Fld(_,Bra(false,Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y)))))))))),App(App(Var(add),Tup(List((None,Fld(_,Var(x)))))),Tup(List((None,Fld(_,Var(y)))))))),false)
 //│ Desugared: f('(' [1, 2,] ')',)
-//│ AST: App(Var(f),Tup(List((None,Fld(FldFlags(false,false,false),Bra(false,Tup(List((None,Fld(FldFlags(false,false,false),IntLit(1))), (None,Fld(FldFlags(false,false,false),IntLit(2)))))))))))
+//│ AST: App(Var(f),Tup(List((None,Fld(_,Bra(false,Tup(List((None,Fld(_,IntLit(1))), (None,Fld(_,IntLit(2)))))))))))
 //│ f: ((int, int,),) -> int
 //│  = [Function: f1]
 //│ res: int
