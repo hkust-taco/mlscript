@@ -81,9 +81,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
       if (firstSep)
         raise(WarningReport(
           msg"Leading separator is not allowed" -> S(loc(i - 1, i)) :: Nil,
-          newDefs = true,
-          source = Lexing
-        ))
+          newDefs = true, source = Lexing))
       if (lastSep)
         raise(WarningReport(
           msg"Trailing separator is not allowed" -> S(loc(j - 1, j)) :: Nil,
