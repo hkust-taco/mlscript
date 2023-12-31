@@ -1100,7 +1100,7 @@ foo()
 //│ Def(0, foo, [], [],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ [Some(IMix(ICtor(O)))], 1, 
 //│ let x%0 = O()
 //│   in let x%1 = S(x%0)
 //│     in let* (x%2) = bar(x%1)
@@ -1109,14 +1109,14 @@ foo()
 //│ Def(1, bar, [x%3], [{EDirect,EIndirectDestruct,ESelect(s)}],
 //│ S: None,
 //│ I: [[Some(ICtor(S))]],
-//│ [None], 1, 
+//│ [Some(IMix(ICtor(O)))], 1, 
 //│ let* (x%4) = baz(x%3)
 //│   in x%4
 //│ )
 //│ Def(2, baz, [x%5], [{EDestruct,EDirect,ESelect(s)}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ [Some(IMix(ICtor(O)))], 1, 
 //│ case x%5 of
 //│   S => let x%6 = x%5.s
 //│     in x%6

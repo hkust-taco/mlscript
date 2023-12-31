@@ -135,7 +135,9 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
         xs.head
     def getIntro(node: GONode, intros: Map[Str, Intro]): Ls[Opt[Intro]] = node match
       case Case(scrut, cases) => 
-        val cases_intros = cases.map { case (cls, node) => getIntro(node, intros) }
+        val cases_intros = cases.map {
+          (cls, node) => getIntro(node, intros + (scrut.str -> ICtor(cls.ident)))
+        }
         combine_intros(cases_intros)
       case Jump(defnref, args) =>
         val jpdef = defnref.expectDefn
@@ -388,8 +390,12 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
           case Some(IMix(_))  => name_defn_map.get(x.str) match
             case Some(defn_name) => addMixingTarget(cur_defn.get.getName, x.str, defn_name)
             case None =>
-          case _ => 
-        cases foreach { (cls, arm) => arm.accept_iterator(this) }
+          case _ =>
+        cases foreach {
+          (cls, arm) => 
+          intros = intros + (x.str -> ICtor(cls.ident))
+          arm.accept_iterator(this)
+        }
 
     override def iterate(x: Jump): Unit = x match
       case Jump(defnref, as) =>
@@ -507,7 +513,16 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
                 e.accept_visitor(this)))
           case None => LetCall(xs, GODefRef(Right(post_f)), post_params.map(x => Ref(Name(x))), e.accept_visitor(this))
         }
-    
+
+    override def visit(x: Case) = x match
+      case Case(x, cases) =>
+        Case(x,
+          cases map {
+            (cls, arm) => 
+              intros = intros + (x.str -> ICtor(cls.ident))
+              (cls, arm.accept_visitor(this))
+          })
+
     override def visit(x: GODef) =
       intros = x.specialized.map(bindIntroInfoUsingInput(Map.empty, _, x.params)).getOrElse(Map.empty)
       GODef(
@@ -566,7 +581,15 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
             LetCall(xs, GODefRef(Right(new_name)), as, e.accept_visitor(this))
           case None =>
             LetCall(xs, defnref, as, e.accept_visitor(this))
-    
+
+    override def visit(x: Case) = x match
+      case Case(x, cases) =>
+        Case(x,
+          cases map {
+            (cls, arm) => 
+              intros = intros + (x.str -> ICtor(cls.ident))
+              (cls, arm.accept_visitor(this))
+          })
     override def visit(x: GODef) =
       intros = x.specialized.map(bindIntroInfoUsingInput(Map.empty, _, x.params)).getOrElse(Map.empty)
       GODef(
@@ -671,6 +694,14 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
         intros = updateIntroInfoAndMaintainMixingIntros(name_defn_map, defn, intros, xs)
         LetCall(xs, defnref, as, e.accept_visitor(this))
 
+    override def visit(x: Case) = x match
+      case Case(x, cases) =>
+        Case(x,
+          cases map {
+            (cls, arm) => 
+              intros = intros + (x.str -> ICtor(cls.ident))
+              (cls, arm.accept_visitor(this))
+          })
     override def visit(x: GODef) =
       intros = x.specialized.map(bindIntroInfoUsingInput(Map.empty, _, x.params)).getOrElse(Map.empty)
       cur_defn = Some(x)
@@ -801,6 +832,14 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
           intros = bindIntroInfo(intros, as, defn.params)
           defn.body.accept_iterator(this)
         e.accept_iterator(this)
+
+    override def iterate(x: Case) = x match
+      case Case(x, cases) =>
+        cases foreach {
+          (cls, arm) => 
+            intros = intros + (x.str -> ICtor(cls.ident))
+            arm.accept_iterator(this)
+        }
     
     override def iterate(x: GODef): Unit =
       intros = Map.empty
