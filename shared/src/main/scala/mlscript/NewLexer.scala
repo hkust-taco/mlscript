@@ -87,9 +87,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
       if (lastSep)
         raise(WarningReport(
           msg"Trailing separator is not allowed" -> S(loc(j - 1, j)) :: Nil,
-          newDefs = true,
-          source = Lexing
-        ))
+          newDefs = true, source = Lexing))
       (if (str.isEmpty) N else S(str), j)
     }
     /** Take an integer and coverts to `BigInt`. Also checks if it is empty. */
