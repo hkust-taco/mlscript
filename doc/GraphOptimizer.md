@@ -21,7 +21,7 @@ let z = foo(y)
 -- splitting target: (foo, x)
 ```
 
-### Definitions with one of its parameters being destructed in its callees' scopes.
+### Definitions with one of its parameters being destructed in its callee's scopes.
 
 (To be specialized on a specific input)
 
@@ -45,7 +45,7 @@ let z = bar(y)
 -- specialization target: (bar, x2)
 ```
 
-### Definitions with mixing constructors as return values and the return values are destructed in the same scope
+### Definitions with mixing constructors as return values and the return values are destructed
 
 (To be split directly)
 
