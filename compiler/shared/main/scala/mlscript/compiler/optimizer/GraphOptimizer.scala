@@ -363,13 +363,17 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
     
     private def checkTargets(name: Str, intros: Map[Str, Intro], args: Ls[TrivialExpr], params: Ls[Name], active: Ls[Set[Elim]]) =
       args.map { 
-        case Ref(x) => intros.get(x.str)
-        case _ => None
+        case Ref(x) => (Some(x), intros.get(x.str))
+        case _ => (None, None)
       }.zip(params).zip(active).foreach {
-        case ((Some(ICtor(cls)), param), elim) if elim.contains(EDestruct) =>
+        case (((_, Some(ICtor(cls))), param), elim) if elim.contains(EDestruct) =>
           addSplitTarget(name, param.str)
-        case ((Some(ICtor(cls)), param), elim) if elim.contains(EIndirectDestruct) =>
+        case (((_, Some(ICtor(cls))), param), elim) if elim.contains(EIndirectDestruct) =>
           addIndirTarget(name, param.str)
+        case (((Some(arg), Some(IMix(_))), param), elim) if elim.contains(EDestruct) || elim.contains(EIndirectDestruct) =>
+          name_defn_map.get(arg.str) match
+            case Some(defn_name) => addMixingTarget(cur_defn.get.getName, arg.str, defn_name)
+            case None =>
         case _ =>
       }
 
@@ -380,7 +384,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
 
     override def iterate(x: Case): Unit = x match
       case Case(x, cases) =>
-        IntroductionAnalysis.getIntro(Ref(x): TrivialExpr, intros) match
+        intros.get(x.str) match
           case Some(IMix(_))  => name_defn_map.get(x.str) match
             case Some(defn_name) => addMixingTarget(cur_defn.get.getName, x.str, defn_name)
             case None =>
@@ -611,7 +615,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
       case LetCall(xs @ Ls(x), defnref, as, e) =>
         val defn = defnref.expectDefn
         intros = updateIntroInfoAndMaintainMixingIntros(name_defn_map, defn, intros, xs)
-        IntroductionAnalysis.getIntro(Ref(x): TrivialExpr, intros) match
+        intros.get(x.str) match
           case Some(IMix(_)) =>
             val defn_name = defn.getName
             val can_split = for {
