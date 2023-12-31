@@ -1115,7 +1115,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
       val tbs = TrivialBindingSimplification()
       val rtcj = RemoveTrivialCallAndJump()
       val dce = DeadCodeElimination()
-      val rdd = RemoveDeadDefn
       val s0 = s.accept_visitor(ss)
       activeAnalyze(s0)
       val s1 = s0.accept_visitor(tbs)
@@ -1124,9 +1123,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
       activeAnalyze(s2)
       val s3 = s2.accept_visitor(dce)
       activeAnalyze(s3)
-      val s4 = rdd.run(s3)
-      activeAnalyze(s4)
-      val sf = s4
+      val sf = s3
       validate(sf.main, sf.defs)
       changed = s.defs != sf.defs
       s = sf

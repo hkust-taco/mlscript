@@ -601,6 +601,25 @@ bar()
 //│ S: None,
 //│ I: [],
 //│ [None], 1, 
+//│ let* (x%10) = foo$D%1(2)
+//│   in x%10
+//│ )
+//│ Def(9, foo$D%1, [b%0], [{EDirect}],
+//│ S: None,
+//│ I: [],
+//│ [None], 1, 
+//│ b%0
+//│ )
+//│ },
+//│ let* (x%11) = bar()
+//│   in x%11)
+//│ 
+//│ Optimized ------------------------------
+//│ GOProgram({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
+//│ Def(3, bar, [], [],
+//│ S: None,
+//│ I: [],
+//│ [None], 1, 
 //│ 2
 //│ )
 //│ },
@@ -612,7 +631,7 @@ bar()
 //│ 2
 //│ 
 //│ 
-//│ Fuel used: 2
+//│ Fuel used: 3
 
 :GraphInterp
 :GraphOpt

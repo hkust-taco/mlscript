@@ -2825,10 +2825,11 @@ main()
 //│ S: None,
 //│ I: [],
 //│ [Some(IMix(ICtor(False),ICtor(True)))], 1, 
-//│ let* (x%13) = is_empty$C%0$S%0(1)
-//│   in let x%14 = Nil()
-//│     in let* (x%15) = is_empty$C%1(x%14)
-//│       in x%15
+//│ let x%10 = Nil()
+//│   in let* (x%13) = is_empty$C%0$S%0(1)
+//│     in let x%14 = Nil()
+//│       in let* (x%15) = is_empty$C%1(x%14)
+//│         in x%15
 //│ )
 //│ Def(9, is_empty$C%1, [l%1], [{}],
 //│ S: Some([Some(ICtor(Nil))]),
@@ -3064,3 +3065,125 @@ head_opt()
 //│ 
 //│ 
 //│ Fuel used: 3
+
+:GraphInterp
+:GraphOpt
+class True
+class False
+class Cons(h, t)
+class Nil
+class Some(x)
+class None
+fun mk_list(n) =
+  if n == 0 then Nil else Cons(n, mk_list(n - 1))
+fun tail_opt(l) =
+  if l is
+    Nil then None
+    Cons(h, t) then tail_opt(t)
+fun main() =
+  tail_opt(mk_list(10))
+main()
+//│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |tail_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |tail_opt|(|t|)|←|←|↵|#fun| |main|(||)| |#=|→|tail_opt|(|mk_list|(|10|)|)|←|↵|main|(||)|
+//│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun mk_list = (n,) => {if (==(n,)(0,)) then Nil else Cons(n, mk_list(-(n,)(1,),),)}; fun tail_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then tail_opt(t,)›}; fun main = () => {tail_opt(mk_list(10,),)}; main()}
+//│ Parsed:
+//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Cons, (), Tup(_: Var(h), _: Var(t)), (), None, None, TypingUnit()), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Some, (), Tup(_: Var(x)), (), None, None, TypingUnit()), NuTypeDef(class, None, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, mk_list, None, [], Lam(Tup(_: Var(n)), Blk(...))), NuFunDef(None, tail_opt, None, [], Lam(Tup(_: Var(l)), Blk(...))), NuFunDef(None, main, None, [], Lam(Tup(), Blk(...))), App(Var(main), Tup()))
+//│ 
+//│ GraphOpt:
+//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Def(0, mk_list, [n%0], [{}],
+//│ S: None,
+//│ I: [],
+//│ [None], 1, 
+//│ let x%0 = ==(n%0,0)
+//│   in if x%0
+//│     true => let x%1 = Nil()
+//│       in jump j%0(x%1)
+//│     false => let x%2 = -(n%0,1)
+//│       in let* (x%3) = mk_list(x%2)
+//│         in let x%4 = Cons(n%0,x%3)
+//│           in jump j%0(x%4)
+//│ )
+//│ Def(1, @join j%0, [x%5], [{}],
+//│ S: None,
+//│ I: [],
+//│ [None], 1, 
+//│ x%5
+//│ )
+//│ Def(2, tail_opt, [l%0], [{}],
+//│ S: None,
+//│ I: [],
+//│ [None], 1, 
+//│ case l%0 of
+//│   Nil => let x%6 = None()
+//│     in jump j%1(x%6)
+//│   Cons => let x%7 = l%0.t
+//│     in let x%8 = l%0.h
+//│       in let* (x%9) = tail_opt(x%7)
+//│         in jump j%1(x%9)
+//│ )
+//│ Def(3, @join j%1, [x%10], [{}],
+//│ S: None,
+//│ I: [],
+//│ [None], 1, 
+//│ x%10
+//│ )
+//│ Def(4, main, [], [{}],
+//│ S: None,
+//│ I: [],
+//│ [None], 1, 
+//│ let* (x%11) = mk_list(10)
+//│   in let* (x%12) = tail_opt(x%11)
+//│     in x%12
+//│ )
+//│ },
+//│ let* (x%13) = main()
+//│   in x%13)
+//│ 
+//│ Promoted ------------------------------------
+//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Def(0, mk_list, [n%0], [{EDirect}],
+//│ S: None,
+//│ I: [],
+//│ [Some(IMix(ICtor(Cons),ICtor(Nil)))], 1, 
+//│ let x%0 = ==(n%0,0)
+//│   in if x%0
+//│     true => let x%1 = Nil()
+//│       in x%1
+//│     false => let x%2 = -(n%0,1)
+//│       in let* (x%3) = mk_list(x%2)
+//│         in let x%4 = Cons(n%0,x%3)
+//│           in x%4
+//│ )
+//│ Def(2, tail_opt, [l%0], [{EDestruct,EDirect,ESelect(t)}],
+//│ S: None,
+//│ I: [[Some(IMix(ICtor(Cons),ICtor(Nil)))]],
+//│ [Some(IMix(ICtor(None)))], 1, 
+//│ case l%0 of
+//│   Nil => let x%6 = None()
+//│     in x%6
+//│   Cons => let x%7 = l%0.t
+//│     in let* (x%9) = tail_opt(x%7)
+//│       in x%9
+//│ )
+//│ Def(4, main, [], [],
+//│ S: None,
+//│ I: [],
+//│ [Some(IMix(ICtor(None)))], 1, 
+//│ let* (x%11) = mk_list(10)
+//│   in let* (x%12) = tail_opt(x%11)
+//│     in x%12
+//│ )
+//│ },
+//│ let* (x%13) = main()
+//│   in x%13)
+//│ 
+//│ Interpreted ------------------------------
+//│ None()
+//│ 
+//│ 
+//│ 
+//│ Interpreted ------------------------------
+//│ None()
+//│ 
+//│ 
+//│ Fuel used: 1

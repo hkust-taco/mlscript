@@ -185,13 +185,7 @@ class GODef(
 
   override def equals(o: Any): Bool = o match {
     case o: GODef if this.isInstanceOf[GODef] =>
-      o.id == id &&
-      o.name == name &&
-      o.isjp == isjp
-      o.params == params &&
-      o.resultNum == resultNum &&
-      o.specialized == specialized &&
-      o.body == body
+      o.id == id
     case _ => false
   }
   override def hashCode: Int = id
