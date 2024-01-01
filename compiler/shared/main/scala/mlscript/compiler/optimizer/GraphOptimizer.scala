@@ -1047,19 +1047,36 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
   }
 
   private class UsefulnessAnalysis extends GOIterator:
-    val uses = MutHMap[Name, Int]() 
+    val uses = MutHMap[(Name, Int), Int]()
+    val defs = MutHMap[Name, Int]()
+    override def iterate_name_def(x: Name) = 
+      defs.update(x, defs.getOrElse(x, 0) + 1)
+    override def iterate_param(x: Name) = 
+      iterate_name_def(x)
     override def iterate_name_use(x: Name) =
-      uses.update(x, uses.getOrElse(x, 0) + 1)
+      val key = (x, defs(x))
+      uses.update(key, uses.getOrElse(key, 0) + 1)
     override def iterate(x: GOProgram) =
-      val defs = GODefRevPreOrdering.ordered(x.main, x.defs)
-      defs.foreach(_.accept_iterator(this))
+      val xdefs = GODefRevPostOrdering.ordered(x.main, x.defs)
+      xdefs.foreach(_.accept_iterator(this))
 
   private class DeadCodeElimination extends GOVisitor:
     val ua = UsefulnessAnalysis()
     var cur_defn: Opt[GODef] = None
+    val defs = MutHMap[Name, Int]()
+
+    override def visit_name_def(x: Name) = 
+      defs.update(x, defs.getOrElse(x, 0) + 1)
+      x
+
+    override def visit_param(x: Name) = 
+      visit_name_def(x)
+
     override def visit(y: LetExpr) = y match
       case LetExpr(x, e1, e2) =>
-        ua.uses.get(x) match
+        x.accept_def_visitor(this)
+        e1.accept_visitor(this)
+        ua.uses.get((x, defs(x))) match
           case Some(n) =>
             // if x.getElim.size == 0 then throw GraphOptimizingError(s"$x $n ${cur_defn.get}")
             LetExpr(x, e1, e2.accept_visitor(this)) 
@@ -1068,7 +1085,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
 
     override def visit(x: GOProgram) =
       x.accept_iterator(ua)
-      val defs = GODefRevPreOrdering.ordered(x.main, x.defs)
+      val defs = GODefRevPostOrdering.ordered(x.main, x.defs)
       val new_defs = defs.map { x =>
         cur_defn = Some(x)  
         x.accept_visitor(this)

@@ -604,7 +604,7 @@ bar()
 //│ let* (x%10) = foo$D%1(2)
 //│   in x%10
 //│ )
-//│ Def(9, foo$D%1, [b%0], [{EDirect}],
+//│ Def(6, foo$D%1, [b%0], [{EDirect}],
 //│ S: None,
 //│ I: [],
 //│ [None], 1, 

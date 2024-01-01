@@ -420,7 +420,7 @@ bar()
 //│         in let* (x%37) = complex_foo$D%0(x%54,x%55,x%56)
 //│           in x%37
 //│ )
-//│ Def(11, complex_foo$P%0, [t%0], [{EDirect}],
+//│ Def(7, complex_foo$P%0, [t%0], [{EDirect}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))]],
 //│ [None,None,None], 3, 
@@ -428,7 +428,7 @@ bar()
 //│   in let x%1 = *(1,2)
 //│     in t%0,x%0,x%1
 //│ )
-//│ Def(12, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(x)},{EDirect},{EDirect}],
+//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(x)},{EDirect},{EDirect}],
 //│ S: None,
 //│ I: [],
 //│ [None], 1, 
@@ -681,7 +681,25 @@ bar()
 //│         in let* (x%39) = complex_foo$D%0(x%61,x%62,x%63)
 //│           in x%39
 //│ )
-//│ Def(7, j%0$P%0, [x%11], [{EDirect}],
+//│ Def(7, complex_foo$P%0, [t%0], [{EDirect}],
+//│ S: None,
+//│ I: [[Some(ICtor(A))]],
+//│ [None,None,None], 3, 
+//│ let x%0 = +(1,2)
+//│   in let x%1 = *(1,2)
+//│     in t%0,x%0,x%1
+//│ )
+//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(w)},{EDirect},{EDirect}],
+//│ S: None,
+//│ I: [],
+//│ [None], 1, 
+//│ let x%3 = t%0.w
+//│   in let x%4 = C(0)
+//│     in let x%5 = A(x%3,x%4)
+//│       in let* (x%69,x%70,x%71,x%72,x%73) = j%0$P%0(x%5)
+//│         in jump j%0$D%0(x%69,x%70,x%71,x%72,x%73)
+//│ )
+//│ Def(11, j%0$P%0, [x%11], [{EDirect}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))]],
 //│ [Some(ICtor(A)),None,None,Some(ICtor(B)),None], 5, 
@@ -689,7 +707,7 @@ bar()
 //│   in let x%13 = B(6)
 //│     in x%12,x%1,x%0,x%13,x%11
 //│ )
-//│ Def(8, j%0$D%0, [x%12,x%1,x%0,x%13,x%11], [{EDestruct,EDirect,ESelect(w)},{EDirect},{EDirect},{EDestruct,EDirect,ESelect(w)},{ESelect(w),ESelect(x)}],
+//│ Def(12, j%0$D%0, [x%12,x%1,x%0,x%13,x%11], [{EDestruct,EDirect,ESelect(w)},{EDirect},{EDirect},{EDestruct,EDirect,ESelect(w)},{ESelect(w),ESelect(x)}],
 //│ S: None,
 //│ I: [[None,None,None,Some(ICtor(A)),Some(ICtor(B))]],
 //│ [None], 1, 
@@ -702,24 +720,6 @@ bar()
 //│             in jump j%1(x%19)
 //│           B => jump j%1(x%17)
 //│           C => jump j%1(0)
-//│ )
-//│ Def(11, complex_foo$P%0, [t%0], [{EDirect}],
-//│ S: None,
-//│ I: [[Some(ICtor(A))]],
-//│ [None,None,None], 3, 
-//│ let x%0 = +(1,2)
-//│   in let x%1 = *(1,2)
-//│     in t%0,x%0,x%1
-//│ )
-//│ Def(12, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(w)},{EDirect},{EDirect}],
-//│ S: None,
-//│ I: [],
-//│ [None], 1, 
-//│ let x%3 = t%0.w
-//│   in let x%4 = C(0)
-//│     in let x%5 = A(x%3,x%4)
-//│       in let* (x%69,x%70,x%71,x%72,x%73) = j%0$P%0(x%5)
-//│         in jump j%0$D%0(x%69,x%70,x%71,x%72,x%73)
 //│ )
 //│ },
 //│ let* (x%40) = bar()

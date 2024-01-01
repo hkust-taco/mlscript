@@ -252,7 +252,7 @@ bar()
 //│         in let* (x%37) = complex_foo$D%0(x%54,x%55,x%56)
 //│           in x%37
 //│ )
-//│ Def(11, complex_foo$P%0, [t%0], [{EDirect}],
+//│ Def(7, complex_foo$P%0, [t%0], [{EDirect}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))]],
 //│ [None,None,None], 3, 
@@ -260,7 +260,7 @@ bar()
 //│   in let x%1 = *(1,2)
 //│     in t%0,x%0,x%1
 //│ )
-//│ Def(12, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(x)},{EDirect},{EDirect}],
+//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(x)},{EDirect},{EDirect}],
 //│ S: None,
 //│ I: [],
 //│ [None], 1, 
