@@ -50,7 +50,12 @@ sealed class ValueSymbol(
     val runtimeName: Str,
     val isByvalueRec: Option[Boolean],
     val isLam: Boolean,
-    /** Workaround for the first pass traversal with new definition typing. */
+    /**
+      * Workaround for the first pass traversal with new definition typing.
+      * "Dry run" here means that we haven't generated the code for the symbol
+      * yet in the new-definition-typing mode, so the symbol is just defined
+      * for the sake of code generation of classes/mixins/modules.
+      */
     val forNewDefsDryRun: Boolean
 ) extends RuntimeSymbol {
   override def toString: Str = s"value $lexicalName"
