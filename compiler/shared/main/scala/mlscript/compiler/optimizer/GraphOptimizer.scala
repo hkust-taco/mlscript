@@ -121,7 +121,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
   private object IntroductionAnalysis extends GOIterator:
     private def combine_intros(xs: Ls[Ls[Opt[Intro]]]): Ls[Opt[Intro]] =
       val xst = xs.transpose
-      if (xst.exists(x => x.exists(_ != x.head)))
+      // if (xst.exists(x => x.exists(_ != x.head)))
         xst.map {
           ys =>
             val z = ys.flatMap {
@@ -131,8 +131,8 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
             }.toSet
             if z.nonEmpty then Some(IMix(z)) else None
         }
-      else
-        xs.head
+      // else
+      //   xs.head
     def getIntro(node: GONode, intros: Map[Str, Intro]): Ls[Opt[Intro]] = node match
       case Case(scrut, cases) => 
         val cases_intros = cases.map {

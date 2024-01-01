@@ -114,7 +114,7 @@ bar()
 //│ Def(0, foo, [pair%0], [{EDestruct,EDirect,ESelect(x),ESelect(y)}],
 //│ S: None,
 //│ I: [[Some(ICtor(Pair))]],
-//│ [Some(ICtor(Pair))], 1, 
+//│ [Some(IMix(ICtor(Pair)))], 1, 
 //│ case pair%0 of
 //│   Pair => let x%0 = pair%0.y
 //│     in let x%1 = pair%0.x
@@ -124,7 +124,7 @@ bar()
 //│ Def(2, bar, [], [],
 //│ S: None,
 //│ I: [],
-//│ [Some(ICtor(Pair))], 1, 
+//│ [Some(IMix(ICtor(Pair)))], 1, 
 //│ let x%4 = Pair(1,2)
 //│   in let* (x%5) = foo(x%4)
 //│     in x%5
