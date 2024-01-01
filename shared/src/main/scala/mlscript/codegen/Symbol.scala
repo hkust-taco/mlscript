@@ -55,6 +55,9 @@ sealed class ValueSymbol(
       * "Dry run" here means that we haven't generated the code for the symbol
       * yet in the new-definition-typing mode, so the symbol is just defined
       * for the sake of code generation of classes/mixins/modules.
+      * 
+      * This field should be deprecated after the `PreTyper` is done. See [PR
+      * #197](https://github.com/hkust-taco/mlscript/pull/197) for more details. 
       */
     val forNewDefsDryRun: Boolean
 ) extends RuntimeSymbol {
