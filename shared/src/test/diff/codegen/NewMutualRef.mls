@@ -70,3 +70,39 @@ class Bar {
 //│ Int
 //│ res
 //│     = 1
+
+fun foo: Int -> Int
+fun foo = x => x + 1
+class Bar { fun calc(x) = foo(x) }
+//│ fun foo: Int -> Int
+//│ class Bar {
+//│   constructor()
+//│   fun calc: Int -> Int
+//│ }
+//│ fun foo: Int -> Int
+
+foo(0)
+new Bar().calc(0)
+//│ Int
+//│ res
+//│     = 1
+//│ res
+//│     = 1
+
+class Bar { fun calc(x) = foo }
+fun foo: Int
+fun foo = 123
+//│ class Bar {
+//│   constructor()
+//│   fun calc: anything -> Int
+//│ }
+//│ fun foo: 123
+//│ fun foo: Int
+
+foo
+new Bar().calc(0)
+//│ Int
+//│ res
+//│     = 123
+//│ res
+//│     = 123
