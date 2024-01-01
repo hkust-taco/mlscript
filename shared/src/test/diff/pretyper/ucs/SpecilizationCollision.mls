@@ -48,8 +48,9 @@ fun example4(t, x) =
     Base(x) and p1(x) then x
     Derived(y) then y + x
     //                  ^
-    // Oh no, x is captured by x from Base!
-    // Because the branch is absorbed by the previous one.
+    // Note that this branch will be absorbed by the previous one. As the
+    // previous branch shadows the variable `x`, a correct implementation
+    // should restore the original value of `x` in this branch.
     else 42
 //│ fun example4: (Base, Int) -> Int
 

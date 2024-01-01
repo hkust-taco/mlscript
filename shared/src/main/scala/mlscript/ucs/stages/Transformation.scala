@@ -125,20 +125,20 @@ trait Transformation { self: mlscript.pretyper.Traceable =>
       }
     }(_ => "transformPatternMatching ==>")
 
+  private def transformTupleTerm(tuple: Tup): Ls[Opt[Pattern]] =
+    tuple.fields.map {
+      case _ -> Fld(_, Var("_")) => N // Consider "_" as wildcard.
+      case _ -> Fld(_, t) => S(transformPattern(t))
+    }
+
   private def transformPattern(term: Term): Pattern = term match {
     case nme @ Var("true" | "false") => ConcretePattern(nme)
     case nme @ Var(name) if name.headOption.exists(_.isUpper) => ClassPattern(nme, N)
     case nme: Var => NamePattern(nme)
     case literal: Lit => LiteralPattern(literal)
-    case App(classNme @ Var(_), Tup(parameters)) =>
-      ClassPattern(classNme, S(parameters.map {
-        case (_, Fld(_, Var("_"))) => N // Consider "_" as wildcard.
-        case (_, Fld(_, t)) => S(transformPattern(t))
-      }))
-    case Tup(fields) => TuplePattern(fields.map {
-      case _ -> Fld(_, Var("_")) => N // Consider "_" as wildcard.
-      case _ -> Fld(_, t       ) => S(transformPattern(t))
-    })
+    case App(classNme @ Var(_), parameters: Tup) =>
+      ClassPattern(classNme, S(transformTupleTerm(parameters)))
+    case tuple: Tup => TuplePattern(transformTupleTerm(tuple))
     case _ =>
       println(s"unknown pattern: $term")
       throw new TransformException(msg"Unknown pattern", term.toLoc)

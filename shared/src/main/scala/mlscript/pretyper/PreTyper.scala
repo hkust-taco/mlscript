@@ -4,7 +4,6 @@ import collection.mutable.{Set => MutSet}
 import mlscript.ucs.DesugarUCS
 import symbol._
 import mlscript._, utils._, shorthands._
-import mlscript.{Cls, Trt, Mxn, Als, Mod}
 import scala.annotation.tailrec
 import mlscript.Message, Message.MessageContext
 

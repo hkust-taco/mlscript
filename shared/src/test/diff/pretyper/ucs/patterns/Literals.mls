@@ -12,13 +12,24 @@ class Pair[A, B](x: A, y: B)
 fun f(x) = if x is Some(1) then true else false
 //│ fun f: (Object & ~#Some | Some[Eql[1]]) -> Bool
 
+:e
+// TODO: Proper diagnostic information reporting.
+fun f(x) = if x is Some(1) then true
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.17: 	fun f(x) = if x is Some(1) then true
+//│ ║        	                                ^^^^
+//│ ╟── application of type `Bool` is not an instance of type `true`
+//│ ║  l.17: 	fun f(x) = if x is Some(1) then true
+//│ ╙──      	                        ^
+//│ fun f: Some[Eql[1]] -> true
+
 fun g(x) = if x then 1 else 2
 //│ fun g: Bool -> (1 | 2)
 
 :e
 fun test_must_be_boolean(x) = if 0 then 1 else 2
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.19: 	fun test_must_be_boolean(x) = if 0 then 1 else 2
+//│ ║  l.30: 	fun test_must_be_boolean(x) = if 0 then 1 else 2
 //│ ║        	                                 ^
 //│ ╙── integer literal of type `0` is not an instance of type `Bool`
 //│ fun test_must_be_boolean: anything -> (1 | 2)
