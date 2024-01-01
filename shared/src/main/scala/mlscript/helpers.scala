@@ -402,7 +402,7 @@ object OpApp {
 trait DeclImpl extends Located { self: Decl =>
   val body: Located
   def showBody: Str = this match {
-    case Def(_, _, rhs, isByname) => rhs.fold(_.showDbg, _.showDbg2)
+    case d: Def => d.rhs.fold(_.showDbg, _.showDbg2)
     case td: TypeDef => td.body.showDbg2
   }
   def describe: Str = this match {
@@ -433,7 +433,7 @@ trait NuDeclImpl extends Located { self: NuDecl =>
   }
   def name: Str = nameVar.name
   def showBody: Str = this match {
-    case NuFunDef(_, _, _, _, rhs) => rhs.fold(_.print(false), _.showDbg2)
+    case fd: NuFunDef => fd.rhs.fold(_.print(false), _.showDbg2)
     case td: NuTypeDef => td.body.showDbgTop
   }
   def describe: Str = this match {
@@ -1019,12 +1019,11 @@ trait StatementImpl extends Located { self: Statement =>
     case Constructor(params, body) => s"constructor(${params.showElems}) ${body.showDbg}"
     case t: Term => t.print(false)
     case d: Decl => d.showHead + (d match {
-      case TypeDef(Als, _, _, _, _, _, _, _) => " = ";
+      case n: TypeDef if n.kind is Als => " = "
       case _ => ": "
     }) + d.showBody
     case n: NuDecl => n.showHead + (n match {
-      case NuFunDef(_, _, _, _, L(_)) => " = "
-      case NuFunDef(_, _, _, _, R(_)) => ": "
+      case n: NuFunDef => if (n.rhs.isLeft) " = " else ": "
       case _: NuTypeDef => " "
     }) + n.showBody
   }
