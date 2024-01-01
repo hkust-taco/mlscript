@@ -118,12 +118,21 @@
 //│     = 4378
 
 :pe
+5.
+//│ ╔══[LEXICAL ERROR] Expect at least one digit after the decimal point
+//│ ║  l.121: 	5.
+//│ ╙──       	  ^
+//│ 5
+//│ res
+//│     = 5
+
+:pe
 789.E
 //│ ╔══[LEXICAL ERROR] Expect at least one digit after the decimal point
-//│ ║  l.121: 	789.E
+//│ ║  l.130: 	789.E
 //│ ╙──       	    ^
 //│ ╔══[LEXICAL ERROR] Expect at least one digit after the exponent sign
-//│ ║  l.121: 	789.E
+//│ ║  l.130: 	789.E
 //│ ╙──       	    ^
 //│ 789
 //│ res

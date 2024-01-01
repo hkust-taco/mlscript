@@ -66,6 +66,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     else (cur.reverseIterator.mkString, i)
 
   final def num(i: Int): (Lit, Int) = {
+    def test(i: Int, p: Char => Bool): Bool = i < length && p(bytes(i))
     def zero: IntLit = IntLit(BigInt(0))
     /** Take a sequence of digits interleaved with underscores. */
     def takeDigits(i: Int, pred: Char => Bool): (Opt[Str], Int) = {
@@ -101,7 +102,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     def isDecimalStart(ch: Char) = ch === '.' || ch === 'e' || ch === 'E'
     /** Take a fraction part with an optional exponent part. Call at periods. */
     def decimal(i: Int, integral: Str): (DecLit, Int) = {
-      val (fraction, j) = if (i < length && bytes(i) === '.') {
+      val (fraction, j) = if (test(i, _ === '.')) {
         takeDigits(i + 1, isDigit) match {
           case (N, j) =>
             raise(ErrorReport(msg"Expect at least one digit after the decimal point" -> S(loc(i + 1, i + 2)) :: Nil,
@@ -110,8 +111,8 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           case (S(digits), j) => ("." + digits, j)
         }
       } else ("", i)
-      val (exponent, k) = if (j < length && (bytes(j) === 'e' || bytes(j) === 'E')) {
-        val (sign, k) = if (j + 1 < length && (bytes(j + 1) === '+' || bytes(j + 1) === '-')) {
+      val (exponent, k) = if (test(j, ch => ch === 'e' || ch === 'E')) {
+        val (sign, k) = if (test(j + 1, ch => ch === '+' || ch === '-')) {
           (bytes(j + 1), j + 2)
         } else {
           ('+', j + 1)
@@ -138,7 +139,6 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           case _ => integer(i, 10, "decimal", isDigit)
         }
         case '0' => (zero, i + 1)
-        // case '.' => decimal(i, "0")
         case _ => takeDigits(i, isDigit) match {
           case (N, j) =>
             raise(ErrorReport(msg"Expect a numeric literal" -> S(loc(i, i + 1)) :: Nil,
