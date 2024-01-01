@@ -71,6 +71,7 @@ class Bar {
 //│ res
 //│     = 1
 
+:js
 fun foo: Int -> Int
 fun foo = x => x + 1
 class Bar { fun calc(x) = foo(x) }
@@ -80,6 +81,34 @@ class Bar { fun calc(x) = foo(x) }
 //│   fun calc: Int -> Int
 //│ }
 //│ fun foo: Int -> Int
+//│ // Prelude
+//│ class TypingUnit2 {
+//│   #Bar;
+//│   constructor() {
+//│   }
+//│   get Bar() {
+//│     const qualifier = this;
+//│     if (this.#Bar === undefined) {
+//│       class Bar {
+//│         constructor() {
+//│         }
+//│         calc(x) {
+//│           return foo1(x);
+//│         }
+//│       };
+//│       this.#Bar = Bar;
+//│     }
+//│     return this.#Bar;
+//│   }
+//│ }
+//│ const typing_unit2 = new TypingUnit2;
+//│ globalThis.Bar = typing_unit2.Bar;
+//│ // Query 1 is empty
+//│ // Query 2
+//│ globalThis.foo1 = function foo1(x) {
+//│   return x + 1;
+//│ };
+//│ // End of generated code
 
 foo(0)
 new Bar().calc(0)
@@ -89,6 +118,7 @@ new Bar().calc(0)
 //│ res
 //│     = 1
 
+:js
 class Bar { fun calc(x) = foo }
 fun foo: Int
 fun foo = 123
@@ -98,6 +128,34 @@ fun foo = 123
 //│ }
 //│ fun foo: 123
 //│ fun foo: Int
+//│ // Prelude
+//│ class TypingUnit4 {
+//│   #Bar;
+//│   constructor() {
+//│   }
+//│   get Bar() {
+//│     const qualifier = this;
+//│     if (this.#Bar === undefined) {
+//│       class Bar {
+//│         constructor() {
+//│         }
+//│         calc(x) {
+//│           return foo2();
+//│         }
+//│       };
+//│       this.#Bar = Bar;
+//│     }
+//│     return this.#Bar;
+//│   }
+//│ }
+//│ const typing_unit4 = new TypingUnit4;
+//│ globalThis.Bar = typing_unit4.Bar;
+//│ // Query 1 is empty
+//│ // Query 2
+//│ globalThis.foo2 = function foo2() {
+//│   return 123;
+//│ };
+//│ // End of generated code
 
 foo
 new Bar().calc(0)
