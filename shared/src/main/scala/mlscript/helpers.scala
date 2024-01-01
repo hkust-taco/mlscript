@@ -409,8 +409,6 @@ trait DeclImpl extends Located { self: Decl =>
     case _: Def => "definition"
     case _: TypeDef => "type declaration"
   }
-  override def showDbg: Str = showHead + (this match {
-    case TypeDef(Als, _, _, _, _, _, _, _) => " = "; case _ => ": " }) + showBody
   def showHead: Str = this match {
     case Def(true, n, b, isByname) => s"rec def ${n.showDbg}"
     case Def(false, n, b, isByname) => s"def ${n.showDbg}"
@@ -442,11 +440,6 @@ trait NuDeclImpl extends Located { self: NuDecl =>
     case _: NuFunDef => "definition"
     case _: NuTypeDef => "type declaration"
   }
-  override def showDbg: Str = showHead + (this match {
-    case NuFunDef(_, _, _, _, L(_)) => " = "
-    case NuFunDef(_, _, _, _, R(_)) => ": "
-    case _: NuTypeDef => " "
-  }) + showBody
   def showHead: Str = this match {
     case NuFunDef(N, n, snme, _, b) => s"fun${snme.fold("")(" ("+_.name+")")} ${n.name}"
     case NuFunDef(S(false), n, snme, _, b) => s"let${snme.fold("")(" "+_.name+")")} ${n.name}"
@@ -494,7 +487,6 @@ trait ConstructorImpl { self: Constructor =>
   // def children: List[Located] = fields.map(_._2)
   def describe: Str = "constructor"
   // def showDbg: Str = s"constructor(${fields.map(_._1.name).mkString(", ")})"
-  override def showDbg: Str = s"constructor(${this.params.showElems}) ${this.body.showDbg}"
 }
 
 trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
@@ -1024,7 +1016,17 @@ trait StatementImpl extends Located { self: Statement =>
     case LetS(isRec, name, rhs) => s"let${if (isRec) " rec" else ""} ${name.showDbg} = ${rhs.showDbg}"
     case DatatypeDefn(head, body) => s"data type ${head.showDbg} of ${body.showDbg}"
     case DataDefn(head) => s"data ${head.showDbg}"
-    case _: Constructor | _: Term | _: Decl | _: NuDecl => ??? // Implemented in subclasses
+    case Constructor(params, body) => s"constructor(${params.showElems}) ${body.showDbg}"
+    case t: Term => t.print(false)
+    case d: Decl => d.showHead + (d match {
+      case TypeDef(Als, _, _, _, _, _, _, _) => " = ";
+      case _ => ": "
+    }) + d.showBody
+    case n: NuDecl => n.showHead + (n match {
+      case NuFunDef(_, _, _, _, L(_)) => " = "
+      case NuFunDef(_, _, _, _, R(_)) => ": "
+      case _: NuTypeDef => " "
+    }) + n.showBody
   }
 }
 
