@@ -1051,7 +1051,7 @@ class DiffTests
               err.getStackTrace().take(
                 if (mode.fullExceptionStack) Int.MaxValue
                 else if (mode.fixme || err.isInstanceOf[StackOverflowError]) 0
-                else 50
+                else 10
               ).map("\n" + "\tat: " + _).mkString)
         } finally {
           typer.dbg = false
