@@ -13,8 +13,6 @@ class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*
   override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit): List[Str] = 
     val outputBuilder = StringBuilder()
-    outputBuilder ++= "Parsed:\n"
-    outputBuilder ++= unit.toString
 
     outputBuilder ++= "\nLifted:\n"
     var rstUnit = unit;
