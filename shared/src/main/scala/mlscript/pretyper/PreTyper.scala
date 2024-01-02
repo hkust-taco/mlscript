@@ -11,13 +11,17 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
   private def extractParameters(fields: Term): Ls[LocalTermSymbol] =
     trace(s"extractParameters <== ${inspect.deep(fields)}") {
       fields match {
+        case nme: Var => new LocalTermSymbol(nme) :: Nil
         case Tup(arguments) =>
           arguments.flatMap {
             case (S(nme: Var), Fld(_, _)) => new LocalTermSymbol(nme) :: Nil
             case (_, Fld(_, nme: Var)) => new LocalTermSymbol(nme) :: Nil
-            case (_, Fld(_, Bra(false, nme: Var))) => new LocalTermSymbol(nme) :: Nil
+            case (_, Fld(_, Bra(false, term))) => extractParameters(term)
             case (_, Fld(_, tuple @ Tup(_))) => extractParameters(tuple)
             case (_, Fld(_, Asc(term, _))) => extractParameters(term)
+            case (_, Fld(_, _: Lit)) => Nil
+            case (_, Fld(_, App(Var(name), parameters))) if name.headOption.forall(_.isUpper) =>
+              extractParameters(parameters)
             case (_, Fld(_, parameter)) =>
               println(s"unknown parameter: ${inspect.deep(parameter)}")
               ???
@@ -98,7 +102,7 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
           case L(t) => traverseTerm(t)
           case R(Fld(_, t)) => traverseTerm(t)
         }
-        case Forall(params, body) => ??? // TODO: When?
+        case Forall(params, body) => traverseTerm(body)
         case Rcd(fields) => fields.foreach { case (_, Fld(_, t)) => traverseTerm(t) }
         case CaseOf(trm, cases) => 
         case With(trm, fields) => traverseTerm(trm); traverseTerm(fields)
