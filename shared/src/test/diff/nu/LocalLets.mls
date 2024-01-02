@@ -24,11 +24,14 @@ class E(x: Int)
 
 :e // TODO support (currently parsed as a function definition named E)
 let E(x) = new E(1)
-//│ ╔══[ERROR] Value E cannot be used in `new` expression
+//│ ╔══[ERROR] value E cannot be used as a type
 //│ ║  l.26: 	let E(x) = new E(1)
-//│ ╙──      	           ^^^^^^^^
-//│ let E: anything ->{error} error
+//│ ╙──      	               ^
+//│ ╔══[ERROR] type identifier not found: E
+//│ ║  l.26: 	let E(x) = new E(1)
+//│ ╙──      	               ^
+//│ let E: anything -> error
 //│ E
-//│   = [Function: E1]
+//│   = [Function: E2]
 
 

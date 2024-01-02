@@ -6,7 +6,7 @@ def foo(f: (~'a) -> 'a, a: 'a) =
 //│    = [Function: foo]
 
 def foo(fa: ((~'a) -> 'a, 'a)) =
-  fa._1 fa._2
+  fa.0 fa.1
 //│ foo: ((~'a -> 'a, 'a,),) -> 'a
 //│    = [Function: foo1]
 

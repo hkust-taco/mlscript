@@ -359,7 +359,7 @@ class C2 extends T3[Int]
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
 //│ ║  l.356: 	  val r = C2().x
 //│ ╙──       	  ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Class C2 cannot be instantiated as it exposes no such constructor
+//│ ╔══[ERROR] Class C2 cannot be instantiated as it exposes no constructor
 //│ ║  l.356: 	  val r = C2().x
 //│ ╙──       	          ^^
 //│ trait T3[A] {
@@ -383,7 +383,7 @@ class C3 extends T3[Int]
 //│   val r: error
 //│ }
 
-(new C3) : T3['X]
+new C3 : T3['X]
 //│ T3[Int]
 
 

@@ -79,7 +79,7 @@ module None extends Option[nothing]
 //│ class Some[A](value: A) extends Option
 //│ module None extends Option
 
-abstract class List[out A]: Cons[A] | Nil { virtual val length: Int }
+abstract class List[out A]: (Cons[A] | Nil) { virtual val length: Int }
 class Cons[out A](val head: A, val tail: List[A]) extends List[A] {
   val length: Int
   val length = tail.length + 1

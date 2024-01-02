@@ -147,7 +147,7 @@ let rec f =
 let foo = foo
 //│ let foo: nothing
 //│ Code generation encountered an error:
-//│   unresolved symbol foo
+//│   unguarded recursive use of by-value binding foo
 
 
 // FIXME should work
@@ -165,15 +165,14 @@ let foo = foo + 1
 // FIXME
 let foo = foo.x
 //│ let foo: nothing
-//│ foo
-//│     = undefined
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding foo
 
 // :e // FIXME
-:re
+:ge
 foo()()
 //│ nothing
-//│ res
-//│ Runtime error:
-//│   TypeError: foo2 is not a function
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding foo
 
 

@@ -276,7 +276,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             }
             }()
           }
-          members.foreach {
+          members.foreachEntry {
             case (_, m: NuParam) if m.isType =>
             case (_, m) => Trav.applyMem(PolMap.pos)(m)
           }
@@ -475,18 +475,18 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         )(provTODO)
     else if ((td.kind is Cls) || (td.kind is Mod)) {
       if (td.kind is Mod)
-        err(msg"Parameterized modules are not supported", loco)
-      val psOpt: Opt[Params] = (
-        if (usesNew) acParams.map(_.mapValues(_.toUpper(noProv))).orElse(params)
-        else params.orElse {
-          acParams.map { ps =>
-            err(msg"Construction of unparameterized class ${td.nme.name} should use the `new` keyword", loco)
-            ps.mapValues(_.toUpper(noProv))
-          }
-        }
-      )
-      val ps = psOpt.getOrElse {
-        return err(msg"Class ${td.nme.name} cannot be instantiated as it exposes no such constructor", loco)
+        err(msg"Parameterized modules are not yet supported", loco)
+      println(s"params: $params $acParams")
+      if (!usesNew)
+        if (params.isEmpty)
+          if (acParams.isEmpty)
+            return err(msg"Class ${td.nme.name} cannot be instantiated as it exposes no constructor", loco)
+          else err(msg"Construction of unparameterized class ${td.nme.name} should use the `new` keyword", loco)
+        else if (acParams.isDefined)
+          err(msg"Construction of class with auxiliary constructor should use the `new` keyword", loco)
+      val ps: Params = acParams match {
+        case S(acParams) => acParams.mapValues(_.toUpper(noProv))
+        case N => params.getOrElse(Nil)
       }
       PolymorphicType.mk(level,
         FunctionType(
@@ -1823,7 +1823,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           // * We want to avoid forcing completion of types needlessly
           // * OTOH we need the type to be completed to use its aux ctor (whose param types are optional)
           // * TODO: avoid forcing when the aux ctor has type-annotated params
-          if (usesNew && (td.ctor.isDefined || !td.params.isDefined)) complete() match {
+          if (td.ctor.isDefined) complete() match {
             case cls: TypedNuCls =>
               cls.typeSignature(usesNew, loco)
             case _: TypedNuDummy => errType

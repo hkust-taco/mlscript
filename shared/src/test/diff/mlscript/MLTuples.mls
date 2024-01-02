@@ -27,7 +27,7 @@ Hey t
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.26: 	Hey t
 //│ ║        	^^^^^
-//│ ╟── tuple literal of type `{_1: 1, _2: 2, _3: 3}` does not have field 'x'
+//│ ╟── tuple literal of type `{0: 1, 1: 2, 2: 3}` does not have field 'x'
 //│ ║  l.2: 	t = (1, 2, 3)
 //│ ║       	    ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{x: int}`
@@ -158,13 +158,13 @@ if bool then (1,) else (2,)
 
 :ge
 if bool then (1,) else (2, 3)
-//│ res: Array[1 | 2 | 3] & {_1: 1 | 2}
+//│ res: Array[1 | 2 | 3] & {0: 1 | 2}
 //│ Code generation encountered an error:
 //│   type alias bool is not a valid expression
 
 :ge
 if bool then (1,) with { a = 1; b = 2 } else (2, 3) with { b = 3; c = 4 }
-//│ res: Array[1 | 2 | 3] & {_1: 1 | 2, b: 2 | 3}
+//│ res: Array[1 | 2 | 3] & {0: 1 | 2, b: 2 | 3}
 //│ Code generation encountered an error:
 //│   type alias bool is not a valid expression
 
@@ -176,12 +176,12 @@ if bool then (1,) else fun x -> x
 
 
 
-t._1
-t._2
+t.0
+t.1
 //│ res: 1
-//│    = undefined
+//│    = 1
 //│ res: 2
-//│    = undefined
+//│    = 2
 
 
 t = (1, 2, 3) with {x = 1}
@@ -193,32 +193,32 @@ t.x
 //│ res: 1
 //│    = 1
 
-t._1
-t._2
+t.0
+t.1
 //│ res: 1
-//│    = undefined
+//│    = 1
 //│ res: 2
-//│    = undefined
+//│    = 2
 
 
-t = (1, 2, 3) with {_1 = "oops"}
-//│ t: {_1: "oops", _2: 2, _3: 3}
-//│  = [ 1, 2, 3, _1: 'oops' ]
+t = (1, 2, 3) with {0 = "oops"}
+//│ t: {0: "oops", 1: 2, 2: 3}
+//│  = [ 'oops', 2, 3 ]
 
 // TODO (https://github.com/hkust-taco/mlscript/issues/69)
 :e
-(t: ("oops",int,int,))._1
+(t: ("oops",int,int,)).0
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.210: 	(t: ("oops",int,int,))._1
+//│ ║  l.210: 	(t: ("oops",int,int,)).0
 //│ ║         	 ^
-//│ ╟── `with` extension of type `{_1: "oops", _2: 2, _3: 3}` is not a 3-element tuple
-//│ ║  l.204: 	t = (1, 2, 3) with {_1 = "oops"}
-//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── `with` extension of type `{0: "oops", 1: 2, 2: 3}` is not a 3-element tuple
+//│ ║  l.204: 	t = (1, 2, 3) with {0 = "oops"}
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `("oops", int, int,)`
-//│ ║  l.210: 	(t: ("oops",int,int,))._1
+//│ ║  l.210: 	(t: ("oops",int,int,)).0
 //│ ║         	 ^
 //│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.210: 	(t: ("oops",int,int,))._1
+//│ ║  l.210: 	(t: ("oops",int,int,)).0
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^
 //│ res: "oops"
 //│    = 'oops'

@@ -190,10 +190,10 @@ class Test1_1 {
 class Test1_2 {
   fun b = Test1_1().a
 }
-//│ ╔══[ERROR] Class Test1_2 cannot be instantiated as it exposes no such constructor
+//│ ╔══[ERROR] Class Test1_2 cannot be instantiated as it exposes no constructor
 //│ ║  l.188: 	  fun a = Test1_2().b
 //│ ╙──       	          ^^^^^^^
-//│ ╔══[ERROR] Class Test1_1 cannot be instantiated as it exposes no such constructor
+//│ ╔══[ERROR] Class Test1_1 cannot be instantiated as it exposes no constructor
 //│ ║  l.191: 	  fun b = Test1_1().a
 //│ ╙──       	          ^^^^^^^
 //│ class Test1_1 {
@@ -229,13 +229,9 @@ class Test1_1 {
 class Test1_2 {
   fun b = (new Test1_1).a
 }
-//│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.226: 	class Test1_1 {
-//│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.227: 	  fun a = (new Test1_2).b
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.228: 	}
-//│ ╙──       	^
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.230: 	  fun b = (new Test1_1).a
+//│ ╙──       	                       ^^
 //│ class Test1_1 {
 //│   constructor()
 //│   fun a: error
@@ -243,6 +239,22 @@ class Test1_2 {
 //│ class Test1_2 {
 //│   constructor()
 //│   fun b: error
+//│ }
+
+class Test1_1 {
+  fun a: Int
+  fun a = (new Test1_2).b
+}
+class Test1_2 {
+  fun b = (new Test1_1).a
+}
+//│ class Test1_1 {
+//│   constructor()
+//│   fun a: Int
+//│ }
+//│ class Test1_2 {
+//│   constructor()
+//│   fun b: Int
 //│ }
 
 
@@ -259,7 +271,7 @@ module Test2_2 {
   fun e = Test2_1.n
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.258: 	  fun c = Test2_1.a
+//│ ║  l.270: 	  fun c = Test2_1.a
 //│ ╙──       	                 ^^
 //│ module Test2_1 {
 //│   fun a: 123 | error

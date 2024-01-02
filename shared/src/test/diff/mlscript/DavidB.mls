@@ -10,7 +10,7 @@ tuple2 = (4, 5)
 //│       = [ 4, 5 ]
 
 if true then tuple1 else tuple2
-//│ res: Array[1 | 2 | 3 | 4 | 5] & {_1: 1 | 4, _2: 2 | 5}
+//│ res: Array[1 | 2 | 3 | 4 | 5] & {0: 1 | 4, 1: 2 | 5}
 //│    = [ 1, 2, 3 ]
 
 arr = tuple1 : Array[int]
