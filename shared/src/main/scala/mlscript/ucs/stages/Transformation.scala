@@ -29,7 +29,7 @@ trait Transformation { self: Traceable with Diagnosable =>
   /**
     * Transform a conjunction of terms into a nested split. The conjunction is
     * of the following form.
-    * ```
+    * ```bnf
     * conjunction ::= term "is" term conjunction-tail
     *               | "_" conjunction-tail
     *               | term conjunction-tail
@@ -74,10 +74,35 @@ trait Transformation { self: Traceable with Diagnosable =>
             acc
         }
       case IfOpsApp(lhs, opsRhss) =>
-        val (init, last) = extractLast(splitAnd(lhs))
-        transformConjunction(init, TermBranch.Left(last, Split.from(opsRhss.map(transformOperatorBranch))).toSplit, false)
+        splitAnd(lhs) match {
+          case init :+ (scrutinee is pattern) =>
+            // If `last` is in the form of `scrutinee is pattern`, the `op` in
+            // `opsRhss` must be `and`. Otherwise, it's a syntax error.
+            val innermost = transformBrokenIfOpsApp(opsRhss)
+            val inner = TermBranch.Match(scrutinee, PatternBranch(transformPattern(pattern), innermost).toSplit).toSplit
+            transformConjunction(init, inner, false)
+          case init :+ last =>
+            transformConjunction(init, TermBranch.Left(last, Split.from(opsRhss.map(transformOperatorBranch))).toSplit, false)
+          case _ => rare
+        }
     }
   }(_ => "transformIfBody ==> ")
+
+  /**
+    * Transform the case where `lhs` of `IfOpsApp` concludes pattern matching
+    * and we need to handle its `opsRhss`. This is special, because the first
+    * field of elements of `opsRhss` must be `and`.
+    */
+  private def transformBrokenIfOpsApp(opsRhss: Ls[Var -> IfBody]): TermSplit = {
+    opsRhss.iterator.flatMap {
+      case Var("and") -> rhs => S(transformIfBody(rhs))
+      case op -> rhs =>
+        raiseError(PreTyping,
+          msg"cannot transform due to an illegal split operator ${op.name}" -> op.toLoc,
+          msg"the following branch will be discarded" -> rhs.toLoc)
+        N
+    }.foldLeft(Split.Nil: TermSplit)(_ ++ _)
+  }
   
   private def transformOperatorBranch(opsRhs: Var -> IfBody): OperatorBranch =
     opsRhs match {
@@ -107,7 +132,48 @@ trait Transformation { self: Traceable with Diagnosable =>
               PatternBranch(pattern, transformIfBody(rhs)).toSplit
           }
         case IfOpApp(lhs, op, rhs) => ??? // <-- Syntactic split of patterns are not supported.
-        case IfOpsApp(lhs, opsRhss) => ??? // <-- Syntactic split of patterns are not supported.
+        case IfOpsApp(lhs, opsRhss) =>
+          // BEGIN TEMPORARY PATCH
+          // Generally, syntactic split of patterns are not supported. Examples
+          // like the following code is impossible.
+          // ```
+          // fun pairwise(xs) =
+          //   if xs is Cons of
+          //     x, Nil then [x, x]
+          //     x, Cons of x', tail then [x, x'] :: pairwise of tail
+          //     else Nil
+          // ```
+          // We could support this in future but it's disallowed for now. But I
+          // found some mis-parsed examples. For example, as in `zipWith.mls:76`.
+          // ```
+          // fun zipWith_wrong(f, xs, ys) =
+          //   if  xs is Cons(x, xs)
+          //     and ys is Cons(y, ys)
+          //     and zipWith_wrong(f, xs, ys) is Some(tail) then Some(Cons(f(x, y), tail))
+          //   else None
+          // ```
+          // This is parsed as `{ and ( Cons x xs ) [ is ys ( Cons y ys ) ] }`.
+          // I think it's not very well-formed. But I still implement it for not
+          // breaking existing tests.
+          splitAnd(lhs) match {
+            case Nil => rare // It's impossible to be empty.
+            case pattern :: tail =>
+              // Here, `pattern` will be `( Cons x xs )` and `tail` will be
+              // `[ is ys (Cons y ys) ]`. We can make a new `IfOpsApp`.
+              println(s"lol, pattern is $pattern")
+              println(s"lol, tail is $tail")
+              tail match {
+                case init :+ last =>
+                  println(s"lol, init is $init")
+                  println(s"lol, last is $last")
+                  val remake = IfOpsApp(last, opsRhss)
+                  val following = transformConjunction(init, transformIfBody(remake), true)
+                  PatternBranch(transformPattern(pattern), following).toSplit
+                case _ => // This can only be `Nil`.
+                  PatternBranch(transformPattern(pattern), transformBrokenIfOpsApp(opsRhss)).toSplit
+              }
+          }
+          // END TEMPORARY PATCH
         case IfLet(rec, nme, rhs, body) => rare
         case IfBlock(lines) => lines.foldLeft(Split.empty[PatternBranch]) {
           case (acc, L(body)) => acc ++ transformPatternMatching(body)
@@ -153,7 +219,9 @@ trait Transformation { self: Traceable with Diagnosable =>
     (transformPattern(rawPattern), extraTest)
   }
 
-  private def splitAnd(t: Term): Ls[Term] = trace(s"splitAnd <== ${inspect.deep(t)}") {
+  // TODO: Maybe we can change the return type to `::[Term]` so that it will not
+  // empty.
+  private def splitAnd(t: Term): List[Term] = trace(s"splitAnd <== ${inspect.deep(t)}") {
     t match {
       case App(
         App(Var("and"),
