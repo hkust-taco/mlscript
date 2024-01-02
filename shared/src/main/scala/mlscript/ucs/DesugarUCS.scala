@@ -138,7 +138,7 @@ trait DesugarUCS extends Transformation
         val checked = println("STEP 4")
         val diagnostics = checkCoverage(postProcessed)
         println(s"Coverage checking result: ${diagnostics.size} errors")
-        raise(diagnostics)
+        raiseMany(diagnostics)
       }
       // Epilogue
       `if`.desugaredTerm = S(postProcessed)

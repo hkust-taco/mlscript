@@ -525,11 +525,11 @@ class DiffTests
               val rootTypingUnit = TypingUnit(p.tops)
               if (usePreTyper) {
                 val preTyper = new PreTyper(mode.dbgPreTyper) {
-                  override protected def raise(diagnostics: Ls[Diagnostic]): Unit = report(diagnostics)
                   override def emitString(str: String): Unit = output(str)
                 }
                 // This should be passed to code generation somehow.
                 preTyperScope = preTyper.process(rootTypingUnit, preTyperScope, "<root>")._1
+                report(preTyper.getDiagnostics)
               }
               val tpd = typer.typeTypingUnit(rootTypingUnit, N)(ctx, raise, vars)
               

@@ -1,0 +1,26 @@
+package mlscript.pretyper
+
+import scala.collection.mutable.Buffer
+import mlscript.{Diagnostic, ErrorReport, Loc, Message, WarningReport}, Diagnostic.Source, Message.MessageContext
+import mlscript.utils._, shorthands._
+
+/**
+  * A trait containing a mutable buffer of diagnostics.
+  */
+trait Diagnosable {
+  private val diagnosticBuffer = Buffer.empty[Diagnostic]
+  
+  protected def raise(diagnostics: Diagnostic): Unit =
+    diagnosticBuffer += diagnostics
+
+  protected def raiseMany(diagnostics: IterableOnce[Diagnostic]): Unit =
+    diagnosticBuffer ++= diagnostics
+
+  protected def raiseError(source: Source, messages: (Message -> Opt[Loc])*): Unit =
+    raise(ErrorReport(messages.toList, newDefs = true, source))
+
+  protected def raiseWarning(source: Source, messages: (Message -> Opt[Loc])*): Unit =
+    raise(WarningReport(messages.toList, newDefs = true, source))
+
+  def getDiagnostics: Ls[Diagnostic] = diagnosticBuffer.toList
+}

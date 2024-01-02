@@ -12,10 +12,11 @@ package object syntax {
       case LiteralPattern(literal) => literal.toString
       case ConcretePattern(nme) => s"`${nme.name}`"
       case NamePattern(nme) => nme.toString
+      case EmptyPattern(_) => "•"
       case ClassPattern(Var(name), N) => name
       case ClassPattern(Var(name), S(parameters)) =>
-        parameters.iterator.map(_.fold("_")(_.toString)).mkString(s"$name(", ", ", ")")
-      case TuplePattern(fields) => fields.iterator.map(_.fold("_")(_.toString)).mkString("(", ", ", ")")
+        parameters.mkString(s"$name(", ", ", ")")
+      case TuplePattern(fields) => fields.mkString("(", ", ", ")")
       case RecordPattern(Nil) => "{}"
       case RecordPattern(entries) => entries.iterator.map { case (nme, als) => s"$nme: $als" }.mkString("{ ", ", ", " }")
     }
@@ -32,11 +33,18 @@ package object syntax {
   final case class NamePattern(nme: Var) extends Pattern {
     override def children: List[Located] = nme :: Nil
   }
-  final case class ClassPattern(val nme: Var, val parameters: Opt[List[Opt[Pattern]]]) extends Pattern {
-    override def children: List[Located] = nme :: parameters.fold(List.empty[Located])(_.flatten)
+  /**
+    * Represents wildcard patterns or missing patterns which match everything.
+    * Should be transformed from `Var("_")` or unrecognized terms.
+    */
+  final case class EmptyPattern(source: Term) extends Pattern {
+    override def children: List[Located] = source :: Nil
   }
-  final case class TuplePattern(fields: List[Opt[Pattern]]) extends Pattern {
-    override def children: List[Located] = fields.flatten
+  final case class ClassPattern(val nme: Var, val parameters: Opt[List[Pattern]]) extends Pattern {
+    override def children: List[Located] = nme :: parameters.getOrElse(Nil)
+  }
+  final case class TuplePattern(fields: List[Pattern]) extends Pattern {
+    override def children: List[Located] = fields
   }
   final case class RecordPattern(entries: List[(Var -> Pattern)]) extends Pattern {
     override def children: List[Located] = entries.iterator.flatMap { case (nme, als) => nme :: als :: Nil }.toList
@@ -76,7 +84,9 @@ package object syntax {
 
   sealed abstract class Branch extends Located
 
-  sealed abstract class TermBranch extends Branch
+  sealed abstract class TermBranch extends Branch {
+    final def toSplit: TermSplit = Split.single(this)
+  }
   object TermBranch {
     final case class Boolean(test: Term, continuation: TermSplit) extends TermBranch {
       override def children: List[Located] = test :: continuation :: Nil
@@ -92,6 +102,7 @@ package object syntax {
 
   sealed abstract class OperatorBranch extends Branch {
     val operator: Var
+    final def toSplit: OperatorSplit = Split.single(this)
   }
   object OperatorBranch {
     final case class Match(override val operator: Var, continuation: PatternSplit) extends OperatorBranch {
@@ -105,6 +116,7 @@ package object syntax {
 
   final case class PatternBranch(val pattern: Pattern, val continuation: TermSplit) extends Branch {
     override def children: List[Located] = pattern :: continuation :: Nil
+    final def toSplit: PatternSplit = Split.single(this)
   }
   type PatternSplit = Split[PatternBranch]
 }

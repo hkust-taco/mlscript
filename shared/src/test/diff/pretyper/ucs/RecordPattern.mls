@@ -5,4 +5,4 @@ fun take_1(p) =
   if p is
     { x, y } then x + y
     else 0
-//│ /!!!\ Uncaught error: mlscript.ucs.stages.Transformation$TransformException
+//│ /!!!\ Uncaught error: java.lang.Exception: Variable x not found in scope

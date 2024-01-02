@@ -133,17 +133,17 @@ trait Desugaring { self: PreTyper =>
   private def flattenClassParameters(
       parentScrutineeVar: Var,
       parentClassLikeSymbol: TypeSymbol,
-      parameters: Ls[Opt[s.Pattern]]
+      parameters: Ls[s.Pattern]
   )(implicit context: Context): Ls[Opt[Var -> Opt[s.Pattern]]] =
     trace(s"flattenClassParameters <== ${parentScrutineeVar.name} is ${parentClassLikeSymbol.name}") {
       // Make it `lazy` so that it will not be created if all fields are wildcards.
       lazy val classPattern = parentScrutineeVar.getOrCreateScrutinee.getOrCreateClassPattern(parentClassLikeSymbol)
       parameters.iterator.zipWithIndex.map {
-        case (N, _) => N
-        case (S(s.NamePattern(name)), index) =>
+        case (_: s.EmptyPattern, _) => N
+        case (s.NamePattern(name), index) =>
           val subScrutinee = classPattern.getParameter(index).withAlias(name)
           S(name.withFreshSymbol.withScrutinee(subScrutinee) -> N)
-        case (S(parameterPattern @ (s.ClassPattern(_, _) | s.LiteralPattern(_) | s.TuplePattern(_))), index) =>
+        case (parameterPattern @ (s.ClassPattern(_, _) | s.LiteralPattern(_) | s.TuplePattern(_)), index) =>
           val subScrutineeVar = freshSubScrutinee(parentScrutineeVar, parentClassLikeSymbol.name, index)
           val symbol = new LocalTermSymbol(subScrutineeVar)
           symbol.addScrutinee(classPattern.getParameter(index).withAlias(subScrutineeVar))
@@ -251,14 +251,14 @@ trait Desugaring { self: PreTyper =>
       }
     }()
 
-  private def flattenTupleFields(parentScrutineeVar: Var, fields: Ls[Opt[s.Pattern]])(implicit context: Context): Ls[Opt[Var -> Opt[s.Pattern]]] = {
+  private def flattenTupleFields(parentScrutineeVar: Var, fields: Ls[s.Pattern])(implicit context: Context): Ls[Opt[Var -> Opt[s.Pattern]]] = {
     // Make it `lazy` so that it will not be created if all fields are wildcards.
     lazy val tuplePattern = parentScrutineeVar.getOrCreateScrutinee.getOrCreateTuplePattern
     fields.iterator.zipWithIndex.map {
-      case (N, _) => N
-      case (S(s.NamePattern(name)), index) =>
+      case (_: s.EmptyPattern, _) => N
+      case (s.NamePattern(name), index) =>
         S(name.withFreshSymbol.withScrutinee(tuplePattern.getField(index)) -> N)
-      case (S(parameterPattern @ (s.ClassPattern(_, _) | s.LiteralPattern(_) | s.TuplePattern(_))), index) =>
+      case (parameterPattern @ (s.ClassPattern(_, _) | s.LiteralPattern(_) | s.TuplePattern(_)), index) =>
         val arity = fields.length
         val subScrutineeVar = freshSubScrutinee(parentScrutineeVar, s"Tuple$$$arity", index)
         val symbol = new LocalTermSymbol(subScrutineeVar)
@@ -268,7 +268,7 @@ trait Desugaring { self: PreTyper =>
     }.toList
   }
 
-  private def desugarTuplePattern(fields: Ls[Opt[s.Pattern]], scrutineeVar: Var, initialScope: Scope)(implicit context: Context): (Scope, c.Split => c.Split) = {
+  private def desugarTuplePattern(fields: Ls[s.Pattern], scrutineeVar: Var, initialScope: Scope)(implicit context: Context): (Scope, c.Split => c.Split) = {
     val scrutinee = scrutineeVar.getOrCreateScrutinee.withAlias(scrutineeVar)
     val nestedPatterns = flattenTupleFields(scrutineeVar, fields)
     val bindFields = nestedPatterns.iterator.zipWithIndex.foldRight[c.Split => c.Split](identity) {
@@ -310,7 +310,7 @@ trait Desugaring { self: PreTyper =>
                 continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scope + test.symbol, context)
               ) :: rec(scrutineeVar, tail)
             )
-          case s.NamePattern(Var("_")) =>
+          case s.EmptyPattern(_) | s.NamePattern(Var("_")) =>
             desugarTermSplit(head.continuation)(PartialTerm.Empty, scope, context) ++ rec(scrutineeVar, tail)
           case s.NamePattern(nme) =>
             // Create a symbol for the binding.

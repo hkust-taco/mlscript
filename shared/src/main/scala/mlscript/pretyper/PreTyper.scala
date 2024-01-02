@@ -7,11 +7,8 @@ import mlscript._, utils._, shorthands._
 import scala.annotation.tailrec
 import mlscript.Message, Message.MessageContext
 
-class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with DesugarUCS {
+class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with Diagnosable with DesugarUCS {
   import PreTyper._
-
-  protected def raise(diagnostics: Diagnostic): Unit = ()
-  protected def raise(diagnostics: Ls[Diagnostic]): Unit = ()
 
   private def extractParameters(fields: Term): Ls[LocalTermSymbol] =
     trace(s"extractParameters <== ${inspect.deep(fields)}") {
@@ -218,6 +215,16 @@ object PreTyper {
     rec(Nil, parents)
   }
 
+  /**
+    * Extract types in class signatures. For example, for this piece of code
+    * ```mls
+    * abstract class Option[A]: Some[A] | None
+    * ```
+    * this function returns, `Some` and `None`.
+    *
+    * @param ty a type obtained from `NuTypeDef.sig`
+    * @return a list of type names, without any parameters
+    */
   def extractSignatureTypes(ty: Type): Ls[TypeName] = {
     @tailrec
     def rec(acc: Ls[TypeName], ty: Type): Ls[TypeName] = ty match {
