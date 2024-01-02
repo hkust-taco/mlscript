@@ -83,9 +83,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     def getMthDefn(parent: Str, nme: Str): Opt[MethodType] = getMth(L(parent, nme))
     private def containsMth(key: (Str, Str) \/ (Opt[Str], Str)): Bool = mthEnv.contains(key) || parent.exists(_.containsMth(key))
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
-    def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, handlers = this.handlers.clone(), penv = MutMap.empty)
-    def nestEffect: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, effVars = MutSet.empty, handlers = this.handlers.clone(), penv = MutMap.empty)
+    def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, handlers = MutMap.empty, penv = MutMap.empty)
+    def nestEffect: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, effVars = MutSet.empty, handlers = MutMap.empty, penv = MutMap.empty)
     def pget(t: Term): Opt[TypeVariable] = penv.get(t) orElse parent.dlof(_.pget(t))(N)
+    def hget(name: Str): Opt[SkolemTag] = handlers.get(name) orElse parent.dlof(_.hget(name))(N)
     def eff: ST = effVars.foldLeft[ST](BotType)(_ | _)
     def nextLevel[R](k: Ctx => R)(implicit raise: Raise, prov: TP): R = {
       val newCtx = copy(lvl = lvl + 1, extrCtx = MutMap.empty)
@@ -1157,8 +1158,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         val handle_ty = a_ty.unwrapProxies match {
           case TupleType(args) => args.foldLeft[ST](BotType)((res, arg) => arg match {
             case (_, FieldType(_, ty)) => ty.unwrapProxies match {
-              case ClassTag(Var(name), _) =>
-                ctx.handlers.get(name).fold(res)(h => res | h)
+              case ClassTag(Var(name), _) => ctx.hget(name).fold(res)(h => res | h)
               case _ => res
             }
             case _ => res

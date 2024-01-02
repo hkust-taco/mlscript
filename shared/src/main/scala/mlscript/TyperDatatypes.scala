@@ -187,7 +187,10 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       case TupleType((N, FieldType(N, f: TupleType)) :: Nil) => "[" + f.showInner + "]"
       case TupleType((N, f) :: Nil) => f.toString
       case lhs => lhs
-    }} ->{$eff} $rhs)"
+    }} ->${eff match {
+      case BotType => ""
+      case _ => s"{$eff}"
+    }} $rhs)"
   }
   
   case class Overload(alts: Ls[FunctionType])(val prov: TypeProvenance) extends MiscBaseType {

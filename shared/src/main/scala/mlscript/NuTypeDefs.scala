@@ -940,7 +940,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               TypeProvenance(tp._2.toLoc, "type parameter",
                 S(tp._2.name),
                 isType = true),
-              N, S(tp._2.name)), tp._1)) ++ (effectTy match {
+              N, S(tp._2.name)), tp._1)) ++ (effectTy match { // * Add `Eff` type variable for effects
                 case S(ty) => (ty._1, ty._2, N) :: Nil
                 case _ => Nil
               })
@@ -1097,17 +1097,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     }
 
     def getEffectType(fd: NuFunDef)(implicit ctx: Ctx): ST =
-      fd.effects.map(ty => ctx.get(ty.name) match {
-        case S(ti @ CompletedTypeInfo(cls: TypedNuCls)) => typeType(ty)
-        case S(ti: DelayedTypeInfo) => typeType(ty)
-        case _ => // * Allow type variables
-          tparams.find(_._1.name === ty.name).map(_._2) match {
-            case S(tv) => tv
-            case _ =>
-              err(msg"Invalid effect $ty", ty.toLoc)
-              BotType
-          }
-      }).foldLeft[ST](BotType)((res, t) => res | t)
+      fd.effects.map(ty => typeType(ty)).foldLeft[ST](BotType)((res, t) => res | t)
     
     def complete()(implicit raise: Raise): TypedNuDecl = result.getOrElse {
       if (isComputing) {

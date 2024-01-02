@@ -112,8 +112,10 @@ class NormalForms extends TyperDatatypes { self: Typer =>
                 lazy val l_GT_lhs = ft.lhs <:< l
                 lazy val r_LT_rhs = r <:< ft.rhs
                 lazy val r_GT_rhs = ft.rhs <:< r
-                if (l_LT_lhs && r_GT_rhs) ft :: alts
-                else if (l_GT_lhs && r_LT_rhs) f :: alts
+                lazy val e_GT_eff = ft.eff <:< e
+                lazy val e_LT_eff = e <:< ft.eff
+                if (l_LT_lhs && r_GT_rhs && e_GT_eff) ft :: alts
+                else if (l_GT_lhs && r_LT_rhs && e_LT_eff) f :: alts
                 else if (l_LT_lhs && l_GT_lhs) FunctionType(l, r & ft.rhs, e)(f.prov) :: alts
                 else if (r_LT_rhs && r_GT_rhs) FunctionType(l | ft.lhs, r, e)(f.prov) :: alts
                 else f :: go(alts)

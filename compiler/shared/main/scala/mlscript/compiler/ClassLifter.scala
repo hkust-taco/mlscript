@@ -611,12 +611,12 @@ class ClassLifter(logDebugMsg: Boolean = false) {
         val lctx = getFreeVars(lhs)(using emptyCtx, cache, globFuncs, None)
         val lret = liftTuple(lhs)(using ctx.addV(lctx.vSet) ++ globFuncs.get(nm).get._2, cache, globFuncs)
         val ret = liftTerm(rhs)(using ctx.addV(lctx.vSet) ++ globFuncs.get(nm).get._2, cache, globFuncs)
-        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, Nil, Left(Lam(Tup(lret._1.fields ++ tmp), ret._1)))(N, N, N, N, true) //TODO: Use proper arguments
+        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, effs, Left(Lam(Tup(lret._1.fields ++ tmp), ret._1)))(N, N, N, N, true) //TODO: Use proper arguments
       case Left(rhs) => 
         // will be treated as Lam(Tup(Nil), rhs)
         val tmp = globFuncs.get(nm).get._2.vSet.toList.map(toFldsEle)
         val ret = liftTerm(rhs)(using ctx ++ globFuncs.get(nm).get._2, cache, globFuncs)
-        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, Nil, Left(Lam(Tup(tmp), ret._1)))(N, N, N, N, true) //TODO: Use proper arguments
+        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, effs, Left(Lam(Tup(tmp), ret._1)))(N, N, N, N, true) //TODO: Use proper arguments
         // val ret = liftTermNew(value)(using ctx.addV(nm) ++ globFuncs.get(nm).get._2, cache, globFuncs)
         // NuFunDef(rec, globFuncs.get(nm).get._1, nTpVs, Left(ret._1))
       case Right(PolyType(targs, body)) => 
@@ -626,7 +626,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
             liftTypeName(tn)(using ctx.addT(nTpVs), cache, globFuncs, None) match
               case (tn, ctx) => (L(tn), ctx)
           case R(tv) => R(tv) -> emptyCtx}).unzip
-        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, Nil, Right(PolyType(nTargs._1, nBody._1)))(N, N, N, N, true) //TODO: Use proper arguments
+        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, effs, Right(PolyType(nTargs._1, nBody._1)))(N, N, N, N, true) //TODO: Use proper arguments
       case _ => throw MonomorphError(s"Unimplemented liftGlobalFunc: ${func}")
     })
   }

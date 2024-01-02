@@ -1269,7 +1269,7 @@ c_i9_ = c_pred_ c_i10_
 //│      = [Function (anonymous)]
 //│ constrain calls  : 3910
 //│ annoying  calls  : 0
-//│ subtyping calls  : 31912
+//│ subtyping calls  : 31914
 
 :stats
 :e
@@ -1307,7 +1307,7 @@ c_98_ = c_pred_ c_99_
 //│      = [Function (anonymous)]
 //│ constrain calls  : 18324
 //│ annoying  calls  : 0
-//│ subtyping calls  : 178103
+//│ subtyping calls  : 178136
 :ResetFuel
 
 

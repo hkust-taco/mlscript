@@ -327,7 +327,7 @@ t_ id succ 0
 //│    = 6
 //│ constrain calls  : 355
 //│ annoying  calls  : 0
-//│ subtyping calls  : 3165
+//│ subtyping calls  : 3202
 
 
 // let t (z : 0) = let x = (fun (y: ['t > 0] 'a -> 't) -> y z y) in x x;;

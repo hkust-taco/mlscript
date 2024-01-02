@@ -16,9 +16,9 @@ declare fun write: (Str, Str) ->{io, exn} ()
 
 :e
 declare fun foo: () ->{bar} ()
-//│ ╔══[ERROR] Invalid effect bar
+//│ ╔══[ERROR] type identifier not found: bar
 //│ ╙──
-//│ fun foo: () -> ()
+//│ fun foo: () ->{error} ()
 
 effect MyEffect[A](x: A) {
   fun print: Str ->{io} ()
