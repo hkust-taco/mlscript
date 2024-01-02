@@ -517,10 +517,11 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       Constrained(nBase, nTargs, bounds2) ->
         ((nCtx ++ nCtx2).fold(emptyCtx)(_ ++ _) ++ bCtx)
     case Constrained(_, _, _) => die
-    case Function(lhs, rhs) =>
+    case Function(lhs, rhs, eff) =>
       val nlhs = liftType(lhs)
       val nrhs = liftType(rhs)
-      Function(nlhs._1, nrhs._1) -> (nlhs._2 ++ nrhs._2)
+      val neff = liftType(eff)
+      Function(nlhs._1, nrhs._1, neff._1) -> (nlhs._2 ++ nrhs._2 ++ neff._2)
     case Neg(base) =>
       val ret = liftType(base)
       Neg(ret._1) -> ret._2
