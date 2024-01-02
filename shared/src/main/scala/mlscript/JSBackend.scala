@@ -380,8 +380,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
             case _ => throw new CodeGenError(s"unknown match case: $name")
           }
         }
-        case lit: Lit =>
-          JSBinary("===", scrut, JSLit(lit.idStr))
+        case lit: Lit => JSBinary("===", scrut, translateTerm(lit))
       },
       _,
       _

@@ -18,7 +18,7 @@ trait PostProcessing { self: DesugarUCS with mlscript.pretyper.Traceable =>
         println(s"found a UNARY case: $scrutineeVar is $className")
         println("post-processing the body")
         top.copy(cases = fst.copy(body = postProcess(body)))
-      case top @ CaseOf(test: Var, fst @ Case(Var("true"), trueBranch, Wildcard(falseBranch))) if context.isTestVar(test) =>
+      case top @ CaseOf(test: Var, fst @ Case(Var("true"), trueBranch, Wildcard(falseBranch))) =>
         println(s"found a if-then-else case: $test is true")
         val processedTrueBranch = postProcess(trueBranch)
         val processedFalseBranch = postProcess(falseBranch)

@@ -67,6 +67,16 @@ trait DesugarUCS extends Transformation
       )
     }
 
+    def withResolvedTermSymbol(implicit scope: Scope): Var = {
+      nme.symbol = nme.resolveTermSymbol
+      nme
+    }
+
+    def resolveTermSymbol(implicit scope: Scope): TermSymbol =
+      scope.getTermSymbol(nme.name).getOrElse {
+        throw new DesugaringException(msg"Undefined symbol found in patterns." -> nme.toLoc :: Nil)
+      }
+
     def withResolvedTypeSymbol(implicit scope: Scope): Var = {
       nme.symbol = nme.resolveTypeSymbol
       nme

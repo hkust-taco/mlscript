@@ -48,7 +48,7 @@ trait Desugaring { self: PreTyper =>
     * `Cons(hd, tl)`, then the name of `hd` will be `x$Cons_0` and the name of
     * `tl` will be `x$Cons_1`.
     */
-  private def freshSubScrutinee(parentScrutinee: Var, parentClassName: Str, index: Int): Var =
+  private def freshSubScrutineeVar(parentScrutinee: Var, parentClassName: Str, index: Int): Var =
     Var(s"${parentScrutinee}$$${parentClassName}_${index.toString}")
 
   /**
@@ -67,6 +67,7 @@ trait Desugaring { self: PreTyper =>
     * Boolean conditions.
     */
   private def truePattern(implicit scope: Scope) = c.Pattern.Class(Var("true").withResolvedTypeSymbol)
+  private def falsePattern(implicit scope: Scope) = c.Pattern.Class(Var("false").withResolvedTypeSymbol)
 
   private def desugarTermSplit(split: s.TermSplit)(implicit termPart: PartialTerm, scope: Scope, context: Context): c.Split =
     split match {
@@ -139,7 +140,7 @@ trait Desugaring { self: PreTyper =>
           val subScrutinee = classPattern.getParameter(index).withAlias(name)
           S(name.withFreshSymbol.withScrutinee(subScrutinee) -> N)
         case (parameterPattern @ (s.ClassPattern(_, _) | s.LiteralPattern(_) | s.TuplePattern(_)), index) =>
-          val subScrutineeVar = freshSubScrutinee(parentScrutineeVar, parentClassLikeSymbol.name, index)
+          val subScrutineeVar = freshSubScrutineeVar(parentScrutineeVar, parentClassLikeSymbol.name, index)
           val symbol = new LocalTermSymbol(subScrutineeVar)
           symbol.addScrutinee(classPattern.getParameter(index).withAlias(subScrutineeVar))
           S(subScrutineeVar.withSymbol(symbol) -> S(parameterPattern))
@@ -264,7 +265,7 @@ trait Desugaring { self: PreTyper =>
         S(name.withFreshSymbol.withScrutinee(tuplePattern.getField(index)) -> N)
       case (parameterPattern @ (s.ClassPattern(_, _) | s.LiteralPattern(_) | s.TuplePattern(_)), index) =>
         val arity = fields.length
-        val subScrutineeVar = freshSubScrutinee(parentScrutineeVar, s"Tuple$$$arity", index)
+        val subScrutineeVar = freshSubScrutineeVar(parentScrutineeVar, s"Tuple$$$arity", index)
         val symbol = new LocalTermSymbol(subScrutineeVar)
         symbol.addScrutinee(tuplePattern.getField(index).withAlias(subScrutineeVar))
         S(subScrutineeVar.withSymbol(symbol) -> S(parameterPattern))
@@ -304,7 +305,17 @@ trait Desugaring { self: PreTyper =>
               pattern = c.Pattern.Literal(literal),
               continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scope, context)
             ) :: rec(scrutineeVar, tail)
-          case s.ConcretePattern(nme) => 
+          case s.ConcretePattern(nme @ (Var("true") | Var("false"))) => 
+            scrutineeVar.getOrCreateScrutinee
+                        .withAlias(scrutineeVar)
+                        .getOrCreateBooleanPattern(nme.name === "true")
+                        .addLocation(nme)
+            c.Branch(
+              scrutinee = scrutineeVar,
+              pattern = c.Pattern.Class(nme.withResolvedTypeSymbol),
+              continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scope, context)
+            ) :: rec(scrutineeVar, tail)
+          case s.ConcretePattern(nme) =>
             val test = context.freshTest().withFreshSymbol
             c.Split.Let(
               rec = false,
@@ -354,7 +365,7 @@ trait Desugaring { self: PreTyper =>
       case s.Split.Nil => c.Split.Nil
     }
     scrutineeTerm match {
-      case nme: Var => rec(nme, split)
+      case nme: Var => rec(nme.withResolvedTermSymbol, split)
       case other =>
         val alias = context.freshScrutineeVar().withFreshSymbol
         c.Split.Let(false, alias, other, rec(alias, split)(scope + alias.symbol))

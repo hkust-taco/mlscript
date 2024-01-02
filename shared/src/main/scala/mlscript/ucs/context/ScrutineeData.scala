@@ -59,6 +59,16 @@ class LiteralPatternInfo extends PatternInfo {
   override def arity: Opt[Int] = N
 }
 
+/**
+  * This can be actually merged with `LiteralPatternInfo`. However, there's no
+  * `Lit` sub-classes for Boolean types, so the representation is a little bit
+  * awkward, also, it makes sense to consider Boolean patterns separately
+  * because we can check the Boolean exhaustiveness with them.
+  */
+class BooleanPatternInfo extends PatternInfo {
+  override def arity: Opt[Int] = N
+}
+
 class ScrutineeData(val context: Context, parent: Opt[ScrutineeData]) {
   private val locations: Buffer[Loc] = Buffer.empty
   private var generatedVarOpt: Opt[Var] = N
@@ -73,6 +83,7 @@ class ScrutineeData(val context: Context, parent: Opt[ScrutineeData]) {
   private var alisesSet: MutSortedSet[Var] = MutSortedSet.empty
 
   private val literalPatterns: MutMap[Lit, LiteralPatternInfo] = MutMap.empty
+  private val booleanPatterns: MutMap[Bool, BooleanPatternInfo] = MutMap.empty
 
   def +=(alias: Var): Unit = alisesSet += alias
 
@@ -119,6 +130,9 @@ class ScrutineeData(val context: Context, parent: Opt[ScrutineeData]) {
   /** Get the tuple pattern and create a new one if there isn't. */
   def getOrCreateLiteralPattern(literal: Lit): LiteralPatternInfo =
     literalPatterns.getOrElseUpdate(literal, new LiteralPatternInfo)
+
+  def getOrCreateBooleanPattern(value: Bool): BooleanPatternInfo =
+    booleanPatterns.getOrElseUpdate(value, new BooleanPatternInfo)
 
   def classLikePatternsIterator: Iterator[TypeSymbol -> ClassPatternInfo] = classLikePatterns.iterator
 
