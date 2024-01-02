@@ -1,11 +1,9 @@
 package mlscript.pretyper
 
 import collection.mutable.{Set => MutSet}
-import mlscript.ucs.DesugarUCS
 import symbol._
-import mlscript._, utils._, shorthands._
+import mlscript._, utils._, shorthands._, Diagnostic.PreTyping, Message.MessageContext, ucs.DesugarUCS
 import scala.annotation.tailrec
-import mlscript.Message, Message.MessageContext
 
 class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with Diagnosable with DesugarUCS {
   import PreTyper._
@@ -52,8 +50,10 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
             case S(sym: ClassSymbol) =>
               println(s"Resolve variable $v to a class.")
               v.symbol = sym
-            case S(_) => throw new Exception(s"Name $v refers to a type")
-            case N => throw new Exception(s"Variable $v not found in scope")
+            case S(_) =>
+              raiseError(PreTyping, msg"Name ${v.name} refers to a type" -> v.toLoc)
+            case N =>
+              raiseError(PreTyping, msg"Variable ${v.name} not found in scope" -> v.toLoc)
           }
       }
     }()
@@ -63,9 +63,10 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
       v.symbolOption match {
         case N => resolveVar(v)
         case S(symbol) => scope.getSymbols(v.name) match {
-          case Nil => throw new Exception(s"Variable $v not found in scope. It is possibly a free variable.")
+          case Nil => raiseError(PreTyping, msg"Variable ${v.name} not found in scope. It is possibly a free variable." -> v.toLoc)
           case symbols if symbols.contains(symbol) => ()
-          case _ => throw new Exception(s"Variable $v refers to a different symbol")
+          case _ =>
+            raiseError(PreTyping, msg"Variable ${v.name} refers to different symbols." -> v.toLoc)
         }
       }
     }()
@@ -223,7 +224,7 @@ object PreTyper {
     * this function returns, `Some` and `None`.
     *
     * @param ty a type obtained from `NuTypeDef.sig`
-    * @return a list of type names, without any parameters
+    * @return a list of type names, without any p
     */
   def extractSignatureTypes(ty: Type): Ls[TypeName] = {
     @tailrec

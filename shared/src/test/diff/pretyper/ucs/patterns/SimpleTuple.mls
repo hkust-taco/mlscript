@@ -92,3 +92,36 @@ working_cases([0, 0])
 //│ Int | error
 //│ res
 //│     = 0
+
+fun not_working(x) =
+  if x is
+    [a, b, c] then
+      a + b + c
+    else
+      0
+//│ fun not_working: {0: Int, 1: Int, 2: Int} -> Int
+
+not_working([1, 2, 3])
+//│ Int
+//│ res
+//│     = 6
+
+:e
+not_working([1, 2])
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.110: 	not_working([1, 2])
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ╟── tuple literal of type `{0: 1, 1: 2}` does not have field '2'
+//│ ║  l.110: 	not_working([1, 2])
+//│ ║         	            ^^^^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.97: 	  if x is
+//│ ║        	     ^^^^
+//│ ║  l.98: 	    [a, b, c] then
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── from reference:
+//│ ║  l.97: 	  if x is
+//│ ╙──      	     ^
+//│ Int | error
+//│ res
+//│     = NaN

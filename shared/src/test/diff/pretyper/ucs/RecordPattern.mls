@@ -1,8 +1,25 @@
 :PreTyper
 
-// FIXME
+:e
 fun take_1(p) =
   if p is
     { x, y } then x + y
     else 0
-//│ /!!!\ Uncaught error: java.lang.Exception: Variable x not found in scope
+//│ ╔══[ERROR] Unknown pattern '{' {x: x, y: y} '}'
+//│ ║  l.6: 	    { x, y } then x + y
+//│ ╙──     	    ^^^^^^^^
+//│ ╔══[ERROR] Variable x not found in scope
+//│ ║  l.6: 	    { x, y } then x + y
+//│ ╙──     	                  ^
+//│ ╔══[ERROR] Variable y not found in scope
+//│ ║  l.6: 	    { x, y } then x + y
+//│ ╙──     	                      ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.6: 	    { x, y } then x + y
+//│ ╙──     	                  ^
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.6: 	    { x, y } then x + y
+//│ ╙──     	                      ^
+//│ fun take_1: anything -> Int
+//│ Code generation encountered an error:
+//│   unresolved symbol x

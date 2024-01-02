@@ -52,25 +52,25 @@ fun missing_a_case(x: Shape) =
 // TODO: Why doesn't `Shape` match `Circle | Rectangle | LineSegment`?
 fun countLineSegments(x) =
   if x is
-    Shape and hidden(x) then "bro"
-    Rectangle(_, _, _) then "bro"
-    LineSegment(_, _) then "bro"
-    Circle(_, _) then "bro"
+    Shape and hidden(x) then "1"
+    Rectangle(_, _, _) then "2"
+    LineSegment(_, _) then "3"
+    Circle(_, _) then "4"
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.54: 	  if x is
 //│ ║        	     ^^^^
-//│ ║  l.55: 	    Shape and hidden(x) then "bro"
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.56: 	    Rectangle(_, _, _) then "bro"
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.57: 	    LineSegment(_, _) then "bro"
+//│ ║  l.55: 	    Shape and hidden(x) then "1"
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.58: 	    Circle(_, _) then "bro"
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.56: 	    Rectangle(_, _, _) then "2"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.57: 	    LineSegment(_, _) then "3"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.58: 	    Circle(_, _) then "4"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── class pattern of type `Shape` does not match type `Circle | LineSegment | Rectangle`
-//│ ║  l.55: 	    Shape and hidden(x) then "bro"
+//│ ║  l.55: 	    Shape and hidden(x) then "1"
 //│ ║        	    ^^^^^
 //│ ╟── but it flows into reference with expected type `Circle | LineSegment | Rectangle`
 //│ ║  l.54: 	  if x is
 //│ ╙──      	     ^
-//│ fun countLineSegments: Shape -> "bro"
+//│ fun countLineSegments: Shape -> ("1" | "2" | "3" | "4")

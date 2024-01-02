@@ -21,13 +21,27 @@ fun example1(p) =
     else "nah"
 //│ fun example1: (Object & ~#Pair | Pair[Num, Num]) -> ("both negative" | "both positive" | "nah")
 
-// FIXME: The error should be handled gracefully.
+:e
 fun example2(p) =
   if p is
     Pair(x, y) and p1(x) and p1(y) then "both negative"
     Pair(a, b) and p2(a) and p2(b) then x + y
     else "nah"
-//│ /!!!\ Uncaught error: java.lang.Exception: Variable x not found in scope
+//│ ╔══[ERROR] Variable x not found in scope
+//│ ║  l.28: 	    Pair(a, b) and p2(a) and p2(b) then x + y
+//│ ╙──      	                                        ^
+//│ ╔══[ERROR] Variable y not found in scope
+//│ ║  l.28: 	    Pair(a, b) and p2(a) and p2(b) then x + y
+//│ ╙──      	                                            ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.27: 	    Pair(x, y) and p1(x) and p1(y) then "both negative"
+//│ ╙──      	         ^
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.27: 	    Pair(x, y) and p1(x) and p1(y) then "both negative"
+//│ ╙──      	            ^
+//│ fun example2: (Object & ~#Pair | Pair[Num, Num]) -> ("both negative" | "nah" | Int)
+//│ Code generation encountered an error:
+//│   unresolved symbol y
 
 // Next, let's check the name collision between a class and its super class.
 

@@ -1,9 +1,0 @@
-:PreTyper
-
-fun flex(x) =
-  if x is
-    [a, b, c] then
-      a + b + c
-    else
-      0
-//│ fun flex: {0: Int, 1: Int, 2: Int} -> Int

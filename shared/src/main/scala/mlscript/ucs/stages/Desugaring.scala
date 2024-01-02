@@ -7,7 +7,7 @@ import mlscript.ucs.helpers.mkBinOp
 import mlscript.utils._, shorthands._
 import mlscript.pretyper.symbol._
 import mlscript.pretyper.{PreTyper, Scope}
-import mlscript.ucs.DesugaringException
+import mlscript.Diagnostic.PreTyping
 import mlscript.Message, Message.MessageContext
 
 /**
@@ -148,7 +148,9 @@ trait Desugaring { self: PreTyper =>
           val symbol = new LocalTermSymbol(subScrutineeVar)
           symbol.addScrutinee(classPattern.getParameter(index).withAlias(subScrutineeVar))
           S(subScrutineeVar.withSymbol(symbol) -> S(parameterPattern))
-        case _ => ??? // Other patterns are not implemented yet.
+        case (pattern, _) =>
+          raiseError(PreTyping, msg"unsupported pattern" -> pattern.toLoc)
+          N
       }.toList
     }(r => s"flattenClassParameters ==> ${r.mkString(", ")}")
 
@@ -244,7 +246,9 @@ trait Desugaring { self: PreTyper =>
           val (scopeWithNestedAll, bindNestedAll) = desugarTuplePattern(fields, nme, scope)
           (scopeWithNestedAll, bindNestedAll.andThen(bindPrevious))
         // Well, other patterns are not supported yet.
-        case (acc, S((nme, pattern))) => ???
+        case (acc, S(nme -> S(pattern))) =>
+          raiseError(PreTyping, msg"unsupported pattern is" -> pattern.toLoc)
+          acc
         // If this parameter is empty (e.g. produced by wildcard), then we do
         // nothing and pass on scope and binder.
         case (acc, N) => acc
@@ -264,7 +268,9 @@ trait Desugaring { self: PreTyper =>
         val symbol = new LocalTermSymbol(subScrutineeVar)
         symbol.addScrutinee(tuplePattern.getField(index).withAlias(subScrutineeVar))
         S(subScrutineeVar.withSymbol(symbol) -> S(parameterPattern))
-      case _ => ???
+      case (pattern, _) =>
+        raiseError(PreTyping, msg"unsupported pattern" -> pattern.toLoc)
+        N
     }.toList
   }
 
@@ -285,7 +291,9 @@ trait Desugaring { self: PreTyper =>
     def rec(scrutineeVar: Var, split: s.PatternSplit)(implicit scope: Scope): c.Split = split match {
       case s.Split.Cons(head, tail) => 
         head.pattern match {
-          case s.AliasPattern(nme, pattern) => ???
+          case pattern @ s.AliasPattern(_, _) =>
+            raiseError(PreTyping, msg"alias pattern is not supported for now" -> pattern.toLoc)
+            rec(scrutineeVar, tail)
           case s.LiteralPattern(literal) =>
             val test = context.freshTest().withFreshSymbol
             c.Split.Let(
@@ -338,7 +346,9 @@ trait Desugaring { self: PreTyper =>
             } else {
               withBindings ++ rec(scrutineeVar, tail)
             }
-          case s.RecordPattern(entries) => ???
+          case pattern @ s.RecordPattern(_) =>
+            raiseError(PreTyping, msg"record pattern is not supported for now" -> pattern.toLoc)
+            rec(scrutineeVar, tail)
         }
       case s.Split.Let(isRec, nme, rhs, tail) =>
         c.Split.Let(isRec, nme, rhs, rec(scrutineeVar, tail)(scope + nme.withFreshSymbol.symbol)) // <-- Weird use.
