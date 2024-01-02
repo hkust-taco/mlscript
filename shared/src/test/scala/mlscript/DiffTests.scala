@@ -427,7 +427,7 @@ class DiffTests
             val res = p.parseAll(p.typingUnit)
             
             if (parseOnly)
-              output("Parsed: " + res.showDbgTop)
+              output(s"Parsed: ${res.showDbg}")
             
             if (mode.showParse)
               output(s"AST: $res")

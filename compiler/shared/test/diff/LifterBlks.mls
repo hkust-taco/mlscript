@@ -52,7 +52,7 @@ class A(y){}
 let f = x => new A(0){fun bar = x+y}
 f(0)
 //│ |#class| |A|(|y|)|{||}|↵|#let| |f| |#=| |x| |#=>| |#new| |A|(|0|)|{|#fun| |bar| |#=| |x|+|y|}|↵|f|(|0|)|
-//│ Parsed: {class A(y,) {}; let f = (x,) => (new A)(0,) { ‹fun bar = +(x, y,)› }; f(0,)}
+//│ Parsed: {class A(y,) {}; let f = (x,) => (new A)(0,) {fun bar = +(x, y,)}; f(0,)}
 //│ 
 //│ Lifted:
 //│ TypingUnit {
@@ -74,7 +74,7 @@ class A(x){
     }
 }
 //│ |#class| |A|(|x|)|{|→|#fun| |w| |#=| |x|↵|#fun| |foo|(|y|)| |#=| |→|#class| |B|(|z|)|{|→|#fun| |bar| |#=| |x|+|y|+|z|←|↵|}|↵|#new| |B|(|0|)|{|→|#fun| |bar| |#=| |w|+|y|+|z|←|↵|}|←|←|↵|}|
-//│ Parsed: {class A(x,) {fun w = x; fun foo = (y,) => {class B(z,) {fun bar = +(+(x, y,), z,)}; (new B)(0,) { ‹fun bar = +(+(w, y,), z,)› }}}}
+//│ Parsed: {class A(x,) {fun w = x; fun foo = (y,) => {class B(z,) {fun bar = +(+(x, y,), z,)}; (new B)(0,) {fun bar = +(+(w, y,), z,)}}}}
 //│ 
 //│ Lifted:
 //│ TypingUnit {
@@ -276,7 +276,7 @@ fun ctx(a,b) =
     fun apply(x) = a+x
   }, b)
 //│ |#class| |Func|‹|T|,| |U|›| |{|→|#fun| |apply|#:| |T| |#=>| |U|←|↵|}|↵|#class| |Lambda|‹|T|,| |U|›| |#:| |Func|‹|T|,| |U|›| |{||}|↵|#fun| |ctx|(|a|,|b|)| |#=|→|#fun| |foo|(|f|#:| |Func|,| |x|)| |#=| |→|f|.apply|(|x|)|←|↵|foo|(|#new| |Lambda|{|→|#fun| |apply|(|x|)| |#=| |a|+|x|←|↵|}|,| |b|)|←|
-//│ Parsed: {class Func‹T, U› {fun apply: T -> U}; class Lambda‹T, U›: Func[T, U] {}; fun ctx = (a, b,) => {fun foo = (f: Func, x,) => {(f).apply(x,)}; foo(new Lambda { ‹fun apply = (x,) => +(a, x,)› }, b,)}}
+//│ Parsed: {class Func‹T, U› {fun apply: T -> U}; class Lambda‹T, U›: Func[T, U] {}; fun ctx = (a, b,) => {fun foo = (f: Func, x,) => {(f).apply(x,)}; foo(new Lambda {fun apply = (x,) => +(a, x,)}, b,)}}
 //│ 
 //│ Lifted:
 //│ TypingUnit {

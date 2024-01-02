@@ -434,7 +434,7 @@ trait NuDeclImpl extends Located { self: NuDecl =>
   def name: Str = nameVar.name
   def showBody: Str = this match {
     case fd: NuFunDef => fd.rhs.fold(_.print(false), _.showDbg2)
-    case td: NuTypeDef => td.body.showDbgTop
+    case td: NuTypeDef => td.body.showDbg
   }
   def describe: Str = this match {
     case _: NuFunDef => "definition"
@@ -467,13 +467,6 @@ trait NuDeclImpl extends Located { self: NuDecl =>
 
 trait TypingUnitImpl extends Located { self: TypingUnit =>
   def showDbg: Str = entities.iterator.map {
-    case t: Term => t.print(false)
-    case d: NuDecl => d.showDbg
-    case c: Constructor => c.showDbg
-    case e => lastWords(s"Unexpected typing unit entity: $e")
-  }.mkString("‹", "; ", "›")
-
-  def showDbgTop: Str = entities.iterator.map {
     case t: Term => t.print(false)
     case d: NuDecl => d.showDbg
     case c: Constructor => c.showDbg
@@ -613,8 +606,8 @@ trait TermImpl extends StatementImpl { self: Term =>
       s"case ${s.showDbg} of { ${c.print(true)} }" |> bra
     case Subs(a, i) => s"(${a.showDbg})[${i.showDbg}]"
     case Assign(lhs, rhs) => s" ${lhs.showDbg} <- ${rhs.showDbg}" |> bra
-    case New(S((at, ar)), bod) => s"new ${at.showDbg2}(${ar.showDbg}) ${bod.showDbgTop}" |> bra
-    case New(N, bod) => s"new ${bod.showDbgTop}" |> bra
+    case New(S((at, ar)), bod) => s"new ${at.showDbg2}(${ar.showDbg}) ${bod.showDbg}" |> bra
+    case New(N, bod) => s"new ${bod.showDbg}" |> bra
     case NuNew(cls) => s"new ${cls.showDbg}" |> bra
     case If(body, els) => s"if ${body.showDbg}" + els.fold("")(" else " + _.showDbg) |> bra
     case TyApp(lhs, targs) => s"${lhs.showDbg}‹${targs.iterator.map(_.showDbg2).mkString(", ")}›"
@@ -625,7 +618,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Eqn(lhs, rhs) => s"${lhs.showDbg} = ${rhs.showDbg}"
     case AdtMatchWith(cond, arms) =>
       s"match ${cond.showDbg} with ${arms.map (patmat => s"${patmat.pat.showDbg} -> ${patmat.rhs.showDbg}").mkString (" | ") }"
-    case Rft(bse, tu) => s"${bse.showDbg} { ${tu.showDbg} }"
+    case Rft(bse, tu) => s"${bse.showDbg} ${tu.showDbg}"
   }}
   
   def toTypeRaise(implicit raise: Raise): Type = toType match {
