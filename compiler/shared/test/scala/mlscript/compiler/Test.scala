@@ -32,14 +32,15 @@ class DiffTestCompiler extends DiffTests {
         outputBuilder ++= "\n\nPromoted ------------------------------------\n"
         val graph2 = go.simplifyProgram(graph)
         val graph3 = go.activeAnalyze(graph2)
-        outputBuilder ++= graph3.toString()
+        val graph4 = go.recBoundaryAnalyze(graph3)
+        outputBuilder ++= graph4.toString()
         if (mode.graphInterp)
           outputBuilder ++= "\n\nInterpreted ------------------------------\n"
-          outputBuilder ++= GraphInterpreter.interpret(graph3)
+          outputBuilder ++= GraphInterpreter.interpret(graph4)
           outputBuilder ++= "\n"
        
         var changed = true
-        var g = graph3
+        var g = graph4
         val fuel_limit = 20
         var fuel = fuel_limit
         while (changed && fuel > 0)

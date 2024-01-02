@@ -325,4 +325,5 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
       
       relink(main, defs, true)
       validate(main, defs)
+      
       GOProgram(clsinfo, defs, main)

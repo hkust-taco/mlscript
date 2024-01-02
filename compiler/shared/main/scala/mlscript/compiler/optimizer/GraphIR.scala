@@ -176,12 +176,12 @@ class GODef(
   val params: Ls[Name],
   val resultNum: Int,
   var specialized: Opt[Ls[Opt[Intro]]],
-  var body: GONode,
-  // TODO rec boundaries
+  var body: GONode
 ):
   var activeParams: Ls[Set[Elim]] = Ls(Set())
   var activeInputs: Set[Ls[Opt[Intro]]] = Set()
   var activeResults: Ls[Opt[Intro]] = Ls(None)
+  var recBoundary: Opt[Int] = None
 
   override def equals(o: Any): Bool = o match {
     case o: GODef if this.isInstanceOf[GODef] =>
@@ -199,7 +199,7 @@ class GODef(
     val ais = activeInputs.map(_.toSeq.sorted.mkString("[", ",", "]")).mkString("[", ",", "]")
     val ars = activeResults.map(_.toString()).mkString("[", ",", "]")
     val spec = specialized.map(_.toSeq.sorted.mkString("[", ",", "]")).toString()
-    s"Def($id, $name2, $ps, $aps,\nS: $spec,\nI: $ais,\n$ars, $resultNum, \n$body\n)"
+    s"Def($id, $name2, $ps, $aps,\nS: $spec,\nI: $ais,\nR: $ars,\nRec: $recBoundary,\n$resultNum, \n$body\n)"
 
 
 sealed trait TrivialExpr:

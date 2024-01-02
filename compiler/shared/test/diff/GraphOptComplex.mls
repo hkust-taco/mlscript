@@ -28,7 +28,9 @@ bar()
 //│ Def(0, complex_foo, [t%0], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ case t%0 of
 //│   A => let x%0 = t%0.z
 //│     in let x%1 = t%0.y
@@ -44,7 +46,9 @@ bar()
 //│ Def(1, @join j%0, [x%8], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%9 = B(1,2)
 //│   in case x%9 of
 //│     A => let x%10 = x%9.z
@@ -58,14 +62,18 @@ bar()
 //│ Def(2, @join j%1, [x%15], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%16 = +(x%8,x%15)
 //│   in x%16
 //│ )
 //│ Def(3, bar, [], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%17 = A(6,7,8)
 //│   in let* (x%18) = complex_foo(x%17)
 //│     in let x%19 = B(9,10)
@@ -81,7 +89,9 @@ bar()
 //│ Def(0, complex_foo, [t%0], [{EDestruct,EDirect,ESelect(m),ESelect(n),ESelect(x),ESelect(y),ESelect(z)}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))],[Some(ICtor(B))]],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ case t%0 of
 //│   A => let x%0 = t%0.z
 //│     in let x%1 = t%0.y
@@ -97,7 +107,9 @@ bar()
 //│ Def(1, @join j%0, [x%8], [{EDirect}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%9 = B(1,2)
 //│   in case x%9 of
 //│     A => let x%16 = +(x%8,3)
@@ -108,7 +120,9 @@ bar()
 //│ Def(3, bar, [], [],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%17 = A(6,7,8)
 //│   in let* (x%18) = complex_foo(x%17)
 //│     in let x%19 = B(9,10)
@@ -128,7 +142,9 @@ bar()
 //│ Def(1, @join j%0, [x%8], [{EDirect}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%9 = B(1,2)
 //│   in case x%9 of
 //│     A => let x%16 = +(x%8,3)
@@ -139,7 +155,9 @@ bar()
 //│ Def(3, bar, [], [],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let* (x%18) = complex_foo$D%0$S%0(8,7,6)
 //│   in let* (x%20) = complex_foo$D%1$S%0(9,10)
 //│     in x%20
@@ -147,14 +165,18 @@ bar()
 //│ Def(7, complex_foo$D%1$S%0, [t%0_m,t%0_n], [{EDirect},{EDirect}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%7 = -(t%0_m,t%0_n)
 //│   in jump j%0(x%7)
 //│ )
 //│ Def(8, complex_foo$D%0$S%0, [t%0_z,t%0_y,t%0_x], [{EDirect},{EDirect},{EDirect}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%3 = *(t%0_y,t%0_z)
 //│   in let x%4 = +(t%0_x,x%3)
 //│     in jump j%0(x%4)
@@ -214,7 +236,9 @@ bar()
 //│ Def(0, complex_foo, [t%0], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%0 = +(1,2)
 //│   in let x%1 = *(1,2)
 //│     in case t%0 of
@@ -232,7 +256,9 @@ bar()
 //│ Def(1, @join j%0, [x%9], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%10 = A(5,x%9)
 //│   in let x%11 = B(6)
 //│     in case x%9 of
@@ -256,13 +282,17 @@ bar()
 //│ Def(2, @join j%2, [x%20], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ jump j%1(x%20)
 //│ )
 //│ Def(3, @join j%1, [x%23], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ case x%10 of
 //│   A => let x%24 = x%10.x
 //│     in let x%25 = x%10.w
@@ -282,19 +312,25 @@ bar()
 //│ Def(4, @join j%4, [x%32], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ jump j%3(x%32)
 //│ )
 //│ Def(5, @join j%3, [x%33], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ x%33
 //│ )
 //│ Def(6, bar, [], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%34 = B(10)
 //│   in let x%35 = A(9,x%34)
 //│     in let x%36 = A(10,x%35)
@@ -310,7 +346,9 @@ bar()
 //│ Def(0, complex_foo, [t%0], [{EDestruct,EDirect,ESelect(x),ESelect(y)}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))]],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%0 = +(1,2)
 //│   in let x%1 = *(1,2)
 //│     in case t%0 of
@@ -326,7 +364,9 @@ bar()
 //│ Def(1, @join j%0, [x%9], [{EDestruct,EDirect,ESelect(w),ESelect(x)}],
 //│ S: None,
 //│ I: [[Some(ICtor(B))],[Some(ICtor(C))]],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%10 = A(5,x%9)
 //│   in let x%11 = B(6)
 //│     in case x%9 of
@@ -345,7 +385,9 @@ bar()
 //│ Def(3, @join j%1, [x%23], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ case x%10 of
 //│   A => let x%25 = x%10.w
 //│     in x%25
@@ -359,7 +401,9 @@ bar()
 //│ Def(6, bar, [], [],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%34 = B(10)
 //│   in let x%35 = A(9,x%34)
 //│     in let x%36 = A(10,x%35)
@@ -379,7 +423,9 @@ bar()
 //│ Def(1, @join j%0, [x%9], [{EDestruct,EDirect,ESelect(w),ESelect(x)}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%10 = A(5,x%9)
 //│   in let x%11 = B(6)
 //│     in case x%9 of
@@ -398,7 +444,9 @@ bar()
 //│ Def(3, @join j%1, [x%23], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ case x%10 of
 //│   A => let x%25 = x%10.w
 //│     in x%25
@@ -412,7 +460,9 @@ bar()
 //│ Def(6, bar, [], [],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%34 = B(10)
 //│   in let x%35 = A(9,x%34)
 //│     in let x%36 = A(10,x%35)
@@ -423,7 +473,9 @@ bar()
 //│ Def(7, complex_foo$P%0, [t%0], [{EDirect}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))]],
-//│ [None,None,None], 3, 
+//│ R: [None,None,None],
+//│ Rec: None,
+//│ 3, 
 //│ let x%0 = +(1,2)
 //│   in let x%1 = *(1,2)
 //│     in t%0,x%0,x%1
@@ -431,7 +483,9 @@ bar()
 //│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(x)},{EDirect},{EDirect}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%2 = t%0.x
 //│   in jump j%0(x%2)
 //│ )
@@ -490,7 +544,9 @@ bar()
 //│ Def(0, complex_foo, [t%0], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%0 = +(1,2)
 //│   in let x%1 = *(1,2)
 //│     in case t%0 of
@@ -510,7 +566,9 @@ bar()
 //│ Def(1, @join j%0, [x%11], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%12 = A(5,x%11)
 //│   in let x%13 = B(6)
 //│     in case x%11 of
@@ -534,13 +592,17 @@ bar()
 //│ Def(2, @join j%2, [x%22], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ jump j%1(x%22)
 //│ )
 //│ Def(3, @join j%1, [x%25], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ case x%12 of
 //│   A => let x%26 = x%12.x
 //│     in let x%27 = x%12.w
@@ -560,19 +622,25 @@ bar()
 //│ Def(4, @join j%4, [x%34], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ jump j%3(x%34)
 //│ )
 //│ Def(5, @join j%3, [x%35], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ x%35
 //│ )
 //│ Def(6, bar, [], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%36 = B(10)
 //│   in let x%37 = A(9,x%36)
 //│     in let x%38 = A(10,x%37)
@@ -588,7 +656,9 @@ bar()
 //│ Def(0, complex_foo, [t%0], [{EDestruct,EDirect,ESelect(w),ESelect(y)}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))]],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%0 = +(1,2)
 //│   in let x%1 = *(1,2)
 //│     in case t%0 of
@@ -606,7 +676,9 @@ bar()
 //│ Def(1, @join j%0, [x%11], [{EDestruct,EDirect,ESelect(w),ESelect(x)}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))],[Some(ICtor(B))],[Some(ICtor(C))]],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%12 = A(5,x%11)
 //│   in let x%13 = B(6)
 //│     in case x%11 of
@@ -625,7 +697,9 @@ bar()
 //│ Def(3, @join j%1, [x%25], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ case x%12 of
 //│   A => let x%27 = x%12.w
 //│     in x%27
@@ -639,7 +713,9 @@ bar()
 //│ Def(6, bar, [], [],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%36 = B(10)
 //│   in let x%37 = A(9,x%36)
 //│     in let x%38 = A(10,x%37)
@@ -659,7 +735,9 @@ bar()
 //│ Def(3, @join j%1, [x%25], [{}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ case x%12 of
 //│   A => let x%27 = x%12.w
 //│     in x%27
@@ -673,7 +751,9 @@ bar()
 //│ Def(6, bar, [], [],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%36 = B(10)
 //│   in let x%37 = A(9,x%36)
 //│     in let x%38 = A(10,x%37)
@@ -684,7 +764,9 @@ bar()
 //│ Def(7, complex_foo$P%0, [t%0], [{EDirect}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))]],
-//│ [None,None,None], 3, 
+//│ R: [None,None,None],
+//│ Rec: None,
+//│ 3, 
 //│ let x%0 = +(1,2)
 //│   in let x%1 = *(1,2)
 //│     in t%0,x%0,x%1
@@ -692,7 +774,9 @@ bar()
 //│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(w)},{EDirect},{EDirect}],
 //│ S: None,
 //│ I: [],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%3 = t%0.w
 //│   in let x%4 = C(0)
 //│     in let x%5 = A(x%3,x%4)
@@ -702,7 +786,9 @@ bar()
 //│ Def(11, j%0$P%0, [x%11], [{EDirect}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))]],
-//│ [Some(ICtor(A)),None,None,Some(ICtor(B)),None], 5, 
+//│ R: [Some(ICtor(A)),None,None,Some(ICtor(B)),None],
+//│ Rec: None,
+//│ 5, 
 //│ let x%12 = A(5,x%11)
 //│   in let x%13 = B(6)
 //│     in x%12,x%1,x%0,x%13,x%11
@@ -710,7 +796,9 @@ bar()
 //│ Def(12, j%0$D%0, [x%12,x%1,x%0,x%13,x%11], [{EDestruct,EDirect,ESelect(w)},{EDirect},{EDirect},{EDestruct,EDirect,ESelect(w)},{ESelect(w),ESelect(x)}],
 //│ S: None,
 //│ I: [[None,None,None,Some(ICtor(A)),Some(ICtor(B))]],
-//│ [None], 1, 
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
 //│ let x%14 = x%11.x
 //│   in let x%15 = x%11.w
 //│     in let x%16 = +(x%15,x%0)

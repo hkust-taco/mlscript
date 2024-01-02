@@ -760,6 +760,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
       relink(y.main, y.defs)
       validate(y.main, y.defs)
       activeAnalyze(y)
+      recBoundaryAnalyze(y)
       val clsctx: ClassCtx = y.classes.map{ case c @ ClassInfo(_, name, _) => (name, c) }.toMap
       var changed = true
       while (changed)
@@ -770,14 +771,17 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
         relink(y.main, y.defs)
         validate(y.main, y.defs)
         activeAnalyze(y)
+        recBoundaryAnalyze(y)
         y = y.accept_visitor(iscsr)
         relink(y.main, y.defs)
         validate(y.main, y.defs)
         activeAnalyze(y)
+        recBoundaryAnalyze(y)
         y = y.accept_visitor(mscsr)
         relink(y.main, y.defs)
         validate(y.main, y.defs)
         activeAnalyze(y)
+        recBoundaryAnalyze(y)
         changed = scsr.changed | iscsr.changed | mscsr.changed
       y
 
@@ -1199,30 +1203,118 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
   def optimize(prog: GOProgram): GOProgram = {
     var g = simplifyProgram(prog)
     g = activeAnalyze(g)
+    g = recBoundaryAnalyze(g)
 
     g = splitFunction(g)
     g = activeAnalyze(g)
+    g = recBoundaryAnalyze(g)
 
     g = simplifyProgram(g)
     g = activeAnalyze(g)
+    g = recBoundaryAnalyze(g)
     
     g = replaceScalar(g)
     g = activeAnalyze(g)
+    g = recBoundaryAnalyze(g)
     
     g = simplifyProgram(g)
     g = activeAnalyze(g)
+    g = recBoundaryAnalyze(g)
+
     g
   }
 
-  private object RemoveDeadDefn:
+  def recBoundaryAnalyze(prog: GOProgram): GOProgram =
+    RecursiveBoundaryAnalysis.run(prog)
+    prog
+
+  private object RecursiveBoundaryAnalysis extends GOIterator:
+    import GOExpr._
+    import GONode._
+    import Elim._
+    import Intro._
+    var count = 0
     def run(x: GOProgram) =
-      val defs = x.defs
-      val entry = x.main
-      var visited = GODefRevPostOrdering.ordered_names(entry, defs).toSet
-      val new_defs = defs.filter(x => visited.contains(x.name))
-      relink(x.main, new_defs)
-      validate(x.main, new_defs)
-      GOProgram(x.classes, new_defs, x.main)
+      count += 10
+      val ca = CallAnalysis()
+      val cg = ca.call_graph(x)
+      val sccs = ca.scc()
+      var scc_group = Map.empty[Str, Int]
+      var scc_group_size = Map.empty[Int, Int]
+      sccs.zipWithIndex.foreach { 
+        (scc, i) => scc.foreach { 
+          x => 
+            scc_group += x -> i
+            scc_group_size += i -> (scc_group_size.getOrElse(i, 0) + 1)
+        }}
+      x.defs.foreach { defn =>
+        val group = scc_group(defn.name)
+        val size = scc_group_size(group)
+
+        defn.recBoundary = Some(group)
+        if size == 1 && !cg.getOrElse(defn.name, Set.empty).contains(defn.name) then
+          defn.recBoundary = None
+      }
+
+  private class CallAnalysis extends GOIterator:
+    val cg = MutHMap[Str, MutHSet[Str]]()
+    private var cur_defn: Opt[GODef] = None
+    override def iterate(x: LetCall): Unit =
+      if cur_defn.nonEmpty then
+        cg.getOrElseUpdate(cur_defn.get.getName, MutHSet.empty) += x.defn.getName
+        x.body.accept_iterator(this)
+    override def iterate(x: Jump): Unit =
+      if cur_defn.nonEmpty then
+        cg.getOrElseUpdate(cur_defn.get.getName, MutHSet.empty) += x.defn.getName
+    override def iterate(x: GODef): Unit =
+      cur_defn = Some(x)
+      x.body.accept_iterator(this)
+      cur_defn = None
+
+    def call_graph(x: GOProgram): Map[Str, Set[Str]] = 
+      cg.clear()
+      cg.addAll(x.defs.map(x => x.getName -> MutHSet.empty))
+      x.accept_iterator(this)
+      cg.map { (k, v) => k -> v.toSet }.toMap
+
+    def scc(): List[Set[Str]] =
+      var cur_index = 0
+      var index = Map.empty[Str, Int]
+      var low = Map.empty[Str, Int]
+      var stack = Ls[Str]()
+      var on_stack = Set.empty[Str]
+      var sccs = Ls[Set[Str]]()
+
+      def f(v: Str): Unit = {
+        index += (v -> cur_index)
+        low += (v -> cur_index)
+        cur_index += 1
+        stack ::= v
+        on_stack += v
+
+        cg.getOrElse(v, MutHSet.empty).foreach {
+          w =>
+            if (!index.contains(w)) {
+              f(w)
+              low += v -> low(v).min(low(w))
+            } else if (on_stack.contains(w)) {
+              low += v -> low(v).min(index(w))
+            }
+        }
+
+        if (low(v) == index(v))
+          val (scc, new_stack) = stack.splitAt(stack.indexOf(v) + 1)
+          stack = new_stack
+          scc.foreach { x => on_stack -= x }
+          sccs ::= scc.toSet
+      }
+
+      cg.keys.foreach {
+        x => if (!index.contains(x)) f(x)
+      }
+      
+      sccs
+
 
   def copyParamsAndBuildMap(params: Ls[Name]) = 
     val new_params = params.map(_.copy)
