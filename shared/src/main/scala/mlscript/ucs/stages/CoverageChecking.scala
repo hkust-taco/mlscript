@@ -87,9 +87,11 @@ trait CoverageChecking { self: mlscript.pretyper.Traceable =>
                     case N => ErrorReport("unvisited scrutinee", Nil, Diagnostic.PreTyping)
                   }))
               }
-            case (diagnostics, (_: Lit) -> _) =>
-              println("CANNOT check literal patterns")
-              diagnostics
+            case ((unseenPatterns, diagnostics), (literal: Lit) -> body) =>
+              (
+                unseenPatterns.remove(literal),
+                diagnostics ++ checkCoverage(body, newPending, working - namedScrutinee, seen)
+              )
           }) {
             case ((missingCases, diagnostics), N) =>
               println("remaining cases should are not covered")

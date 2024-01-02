@@ -122,13 +122,8 @@ trait Desugaring { self: PreTyper =>
       }
     }()
 
-  private def makeLiteralTest(test: Var, scrutinee: Var, literal: Lit)(implicit scope: Scope): c.Split => c.Split =
-    next => c.Split.Let(
-      rec = false,
-      name = test,
-      term = mkBinOp(scrutinee, Var("==="), literal, true),
-      tail = c.Branch(test, truePattern, next) :: c.Split.Nil
-    )
+  private def makeLiteralTest(scrutinee: Var, literal: Lit)(implicit scope: Scope): c.Split => c.Split =
+    next => c.Branch(scrutinee, c.Pattern.Literal(literal), next) :: c.Split.Nil
 
   private def flattenClassParameters(
       parentScrutineeVar: Var,
@@ -189,12 +184,15 @@ trait Desugaring { self: PreTyper =>
           vari.withSymbol(new LocalTermSymbol(vari))
         }
         val nestedPatterns = flattenClassParameters(scrutineeVar, patternClassSymbol, parameters)
+        println(s"nestedPatterns = $nestedPatterns")
         // First, handle bindings of parameters of the current class pattern.
+        val identity = (split: c.Split) => split
         val bindParameters = nestedPatterns.iterator.zipWithIndex.foldRight[c.Split => c.Split](identity) {
           case ((N, _), bindNextParameter) => bindNextParameter
           case ((S(parameter -> _), index), bindNextParameter) => 
             bindNextParameter.andThen { c.Split.Let(false, parameter, Sel(unapp, Var(index.toString)), _) }
         }
+        println(s"bindParameters === identity: ${bindParameters === identity}")
         val bindAll = if (bindParameters === identity) bindParameters else bindParameters.andThen {
           c.Split.Let(false, unapp, makeUnapplyCall(scrutineeVar, pattern.nme), _): c.Split
         }
@@ -239,9 +237,11 @@ trait Desugaring { self: PreTyper =>
           val (scopeWithNestedAll, bindNestedAll) = desugarClassPattern(pattern, nme, scope)
           (scopeWithNestedAll, split => bindPrevious(bindNestedAll(split) :: c.Split.Nil))
         case ((scope, bindPrevious), S(nme -> S(pattern: s.LiteralPattern))) =>
-          val test = context.freshTest().withFreshSymbol
-          println(s"fresh test var: ${test.name}")
-          (scope + test.symbol, makeLiteralTest(test, nme, pattern.literal)(scope).andThen(bindPrevious))
+          nme.getOrCreateScrutinee
+             .withAlias(nme)
+             .getOrCreateLiteralPattern(pattern.literal)
+             .addLocation(pattern.literal)
+          (scope, makeLiteralTest(nme, pattern.literal)(scope).andThen(bindPrevious))
         case ((scope, bindPrevious), S(nme -> S(s.TuplePattern(fields)))) =>
           val (scopeWithNestedAll, bindNestedAll) = desugarTuplePattern(fields, nme, scope)
           (scopeWithNestedAll, bindNestedAll.andThen(bindPrevious))
@@ -295,17 +295,15 @@ trait Desugaring { self: PreTyper =>
             raiseError(PreTyping, msg"alias pattern is not supported for now" -> pattern.toLoc)
             rec(scrutineeVar, tail)
           case s.LiteralPattern(literal) =>
-            val test = context.freshTest().withFreshSymbol
-            c.Split.Let(
-              rec = false,
-              name = test,
-              term = mkBinOp(scrutineeVar, Var("==="), literal, true),
-              tail = c.Branch(
-                scrutinee = test,
-                pattern = truePattern,
-                continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scope + test.symbol, context)
-              ) :: rec(scrutineeVar, tail)
-            )
+            scrutineeVar.getOrCreateScrutinee
+                        .withAlias(scrutineeVar)
+                        .getOrCreateLiteralPattern(literal)
+                        .addLocation(literal)
+            c.Branch(
+              scrutinee = scrutineeVar,
+              pattern = c.Pattern.Literal(literal),
+              continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scope, context)
+            ) :: rec(scrutineeVar, tail)
           case s.ConcretePattern(nme) => 
             val test = context.freshTest().withFreshSymbol
             c.Split.Let(

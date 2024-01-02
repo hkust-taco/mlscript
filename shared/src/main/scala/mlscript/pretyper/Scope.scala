@@ -100,7 +100,7 @@ object Scope {
       """true,false,document,window,typeof,toString,not,succ,log,discard,negate,
         |round,add,sub,mul,div,sqrt,lt,le,gt,ge,slt,sle,sgt,sge,length,concat,eq,
         |ne,error,id,if,emptyArray,+,-,*,%,/,**,<,>,<=,>=,==,===,<>,&&,||,and,
-        |numAdd,numSub,numMul"""
+        |numAdd,numSub,numMul,NaN"""
         .stripMargin
         .split(",")
         .iterator

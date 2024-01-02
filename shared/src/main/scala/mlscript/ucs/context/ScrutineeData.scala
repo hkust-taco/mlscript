@@ -1,14 +1,26 @@
 package mlscript.ucs.context
 
 import collection.mutable.{Buffer, Map => MutMap, SortedMap => MutSortedMap, SortedSet => MutSortedSet}
-import mlscript.{Loc, Located, NuFunDef, NuTypeDef, TypeName, Var}
-import mlscript.{Cls, Trt, Mxn, Als, Mod}
+import mlscript.{Lit, Loc, Located, NuFunDef, NuTypeDef, TypeName, Var}
 import mlscript.pretyper.symbol.TypeSymbol
 import mlscript.utils._, shorthands._
 import mlscript.ucs.context.CaseSet
 
-class ClassPatternInfo(scrutinee: ScrutineeData) {
+abstract class PatternInfo {
   private val locationsBuffer: Buffer[Loc] = Buffer.empty
+
+  def addLocation(located: Located): Unit = located.getLoc.foreach(locationsBuffer += _)
+
+  def addLocation(location: Opt[Loc]): Unit = locationsBuffer ++= location
+
+  def firstOccurrence: Option[Loc] = locationsBuffer.headOption
+
+  def locations: Ls[Loc] = locationsBuffer.toList
+
+  def arity: Opt[Int]
+}
+
+class ClassPatternInfo(scrutinee: ScrutineeData) extends PatternInfo {
   private var unappliedVarOpt: Opt[Var] = N
   private val parameters: MutSortedMap[Int, ScrutineeData] = MutSortedMap.empty
 
@@ -24,10 +36,6 @@ class ClassPatternInfo(scrutinee: ScrutineeData) {
     parameters.getOrElseUpdate(index, scrutinee.freshSubScrutinee)
   }
 
-  def addLocation(located: Located): Unit = located.getLoc.foreach(locationsBuffer += _)
-
-  def addLocation(location: Opt[Loc]): Unit = locationsBuffer ++= location
-
   def getUnappliedVar(default: => Var): Var =
     unappliedVarOpt.getOrElse {
       val unappliedVar = default
@@ -35,23 +43,20 @@ class ClassPatternInfo(scrutinee: ScrutineeData) {
       unappliedVar
     }
 
-  def arity: Opt[Int] = parameters.keysIterator.maxOption.map(_ + 1)
-
-  def firstOccurrence: Option[Loc] = locationsBuffer.headOption
-
-  def locations: Ls[Loc] = locationsBuffer.toList
+  override def arity: Opt[Int] = parameters.keysIterator.maxOption.map(_ + 1)
 }
 
-class TuplePatternInfo(scrutinee: ScrutineeData) {
-  private val locationsBuffer: Buffer[Loc] = Buffer.empty
+class TuplePatternInfo(scrutinee: ScrutineeData) extends PatternInfo {
   private val fields: MutSortedMap[Int, ScrutineeData] = MutSortedMap.empty
 
   def getField(index: Int): ScrutineeData =
     fields.getOrElseUpdate(index, scrutinee.freshSubScrutinee)
 
-  def arity: Opt[Int] = fields.keysIterator.maxOption.map(_ + 1)
+  override def arity: Opt[Int] = fields.keysIterator.maxOption.map(_ + 1)
+}
 
-  def locations: Ls[Loc] = locationsBuffer.toList
+class LiteralPatternInfo extends PatternInfo {
+  override def arity: Opt[Int] = N
 }
 
 class ScrutineeData(val context: Context, parent: Opt[ScrutineeData]) {
@@ -66,6 +71,8 @@ class ScrutineeData(val context: Context, parent: Opt[ScrutineeData]) {
   // map's type.
   private var tuplePatternOpt: Opt[TuplePatternInfo] = N
   private var alisesSet: MutSortedSet[Var] = MutSortedSet.empty
+
+  private val literalPatterns: MutMap[Lit, LiteralPatternInfo] = MutMap.empty
 
   def +=(alias: Var): Unit = alisesSet += alias
 
@@ -109,6 +116,10 @@ class ScrutineeData(val context: Context, parent: Opt[ScrutineeData]) {
       tuplePattern
     }
 
+  /** Get the tuple pattern and create a new one if there isn't. */
+  def getOrCreateLiteralPattern(literal: Lit): LiteralPatternInfo =
+    literalPatterns.getOrElseUpdate(literal, new LiteralPatternInfo)
+
   def classLikePatternsIterator: Iterator[TypeSymbol -> ClassPatternInfo] = classLikePatterns.iterator
 
   /** Get the name representation of patterns. Only for debugging. */
@@ -131,6 +142,9 @@ class ScrutineeData(val context: Context, parent: Opt[ScrutineeData]) {
     }.toMap[Pattern, Ls[Loc]]
     val tuplePattern = tuplePatternOpt.map { tuplePattern =>
       Pattern.Tuple() -> tuplePattern.locations
+    }.toMap[Pattern, Ls[Loc]]
+    val literalPatterns = this.literalPatterns.iterator.map { case (literal, pattern) =>
+      Pattern.Literal(literal) -> pattern.locations
     }.toMap[Pattern, Ls[Loc]]
     CaseSet(cases ++ tuplePattern)
   }

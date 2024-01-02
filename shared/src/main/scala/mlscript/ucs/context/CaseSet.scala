@@ -71,13 +71,9 @@ final case class CaseSet(val cases: Map[Pattern, Ls[Loc]]) {
     }
   }
 
-  /** Add a type sysmbol as a class like pattern to the set. */
-  def add(classLikeSymbol: TypeSymbol, location: Opt[Loc]): CaseSet = {
-    val classLikePattern = Pattern.ClassLike(classLikeSymbol)
-    copy(cases = cases.updatedWith(classLikePattern) {
-      case N => S(location.toList)
-      case S(locations) => S(location.toList ++ locations)
-    })
+  def remove(literal: Lit): CaseSet = {
+    val literalPattern = Pattern.Literal(literal)
+    copy(cases - literalPattern)
   }
 
   /** Get an iterator of only patterns. */
