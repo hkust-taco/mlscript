@@ -6,9 +6,9 @@ data type Boolean of Tru, Fals
 //│ Desugared: class Tru: {}
 //│ Desugared: class Fals: {}
 //│ Desugared: def Tru: Tru[]
-//│ AST: Def(false, Var("Tru"), R(PolyType(Ls(), AppliedType(TypeName("Tru"), Nil))), true)
+//│ AST: Def(false,Var(Tru),Right(PolyType(List(),AppliedType(TypeName(Tru),List()))),true)
 //│ Desugared: def Fals: Fals[]
-//│ AST: Def(false, Var("Fals"), R(PolyType(Ls(), AppliedType(TypeName("Fals"), Nil))), true)
+//│ AST: Def(false,Var(Fals),Right(PolyType(List(),AppliedType(TypeName(Fals),List()))),true)
 //│ Defined type alias Boolean
 //│ Defined class Tru
 //│ Defined class Fals
@@ -29,7 +29,7 @@ data type Bool2 of True2 & False2
 //│ Desugared: type alias Bool2 = &[True2, False2]
 //│ Desugared: class &[True2, False2]: {False2 <: False2, True2 <: True2}
 //│ Desugared: def &: forall True2 False2. (...True2) -> (...False2) -> &[True2, False2]
-//│ AST: Def(false, Var("&"), R(PolyType(Ls(TypeName("True2"), TypeName("False2")), Function(TypeName("True2"), Function(TypeName("False2"), AppliedType(TypeName("&"), TypeName("True2") :: TypeName("False2") :: Nil))))), true)
+//│ AST: Def(false,Var(&),Right(PolyType(List(Left(TypeName(True2)), Left(TypeName(False2))),Function(TypeName(True2),Function(TypeName(False2),AppliedType(TypeName(&),List(TypeName(True2), TypeName(False2))))))),true)
 //│ ╔══[ERROR] type identifier not found: True2
 //│ ║  l.27: 	data type Bool2 of True2 & False2
 //│ ╙──      	                   ^^^^^
@@ -122,9 +122,9 @@ data type List a of
 //│ Desugared: class Nil[a]: {}
 //│ Desugared: class Cons[a]: {head: a, tail: anything}
 //│ Desugared: def Nil: forall a. Nil[a]
-//│ AST: Def(false, Var("Nil"), R(PolyType(Ls(TypeName("a")), AppliedType(TypeName("Nil"), TypeName("a") :: Nil))), true)
+//│ AST: Def(false,Var(Nil),Right(PolyType(List(Left(TypeName(a))),AppliedType(TypeName(Nil),List(TypeName(a))))),true)
 //│ Desugared: def Cons: forall a. (head: a) -> (tail: anything) -> Cons[a]
-//│ AST: Def(false, Var("Cons"), R(PolyType(Ls(TypeName("a")), Function(Tuple(S(head) -> Fld(N, TypeName("a"))), Function(Tuple(S(tail) -> Fld(N, Top)), AppliedType(TypeName("Cons"), TypeName("a") :: Nil))))), true)
+//│ AST: Def(false,Var(Cons),Right(PolyType(List(Left(TypeName(a))),Function(Tuple(List((Some(Var(head)),Field(None,TypeName(a))))),Function(Tuple(List((Some(Var(tail)),Field(None,Top)))),AppliedType(TypeName(Cons),List(TypeName(a))))))),true)
 //│ Defined type alias List[+a]
 //│ Defined class Nil[±a]
 //│ Defined class Cons[+a]
@@ -144,7 +144,7 @@ data type Ls of LsA a
 //│ Desugared: type alias Ls = LsA[a]
 //│ Desugared: class LsA[a]: {a: a}
 //│ Desugared: def LsA: forall a. (...a) -> LsA[a]
-//│ AST: Def(false, Var("LsA"), R(PolyType(Ls(TypeName("a")), Function(TypeName("a"), AppliedType(TypeName("LsA"), TypeName("a") :: Nil)))), true)
+//│ AST: Def(false,Var(LsA),Right(PolyType(List(Left(TypeName(a))),Function(TypeName(a),AppliedType(TypeName(LsA),List(TypeName(a)))))),true)
 //│ ╔══[ERROR] type identifier not found: a
 //│ ║  l.142: 	data type Ls of LsA a
 //│ ╙──       	                    ^
@@ -159,7 +159,7 @@ data type Ls2 of LsA2 `a
 //│ Desugared: type alias Ls2 = LsA2[]
 //│ Desugared: class LsA2: {`a: 'a}
 //│ Desugared: def LsA2: (...'a) -> LsA2[]
-//│ AST: Def(false, Var("LsA2"), R(PolyType(Ls(), Function(TypeVar(R(a), N), AppliedType(TypeName("LsA2"), Nil)))), true)
+//│ AST: Def(false,Var(LsA2),Right(PolyType(List(),Function(a,AppliedType(TypeName(LsA2),List())))),true)
 //│ ╔══[ERROR] cannot inherit from a polymorphic type
 //│ ║  l.157: 	data type Ls2 of LsA2 `a
 //│ ╙──       	                 ^^^^^^^

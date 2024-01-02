@@ -49,7 +49,7 @@ trait Desugaring { self: PreTyper =>
     * `tl` will be `x$Cons_1`.
     */
   private def freshSubScrutineeVar(parentScrutinee: Var, parentClassName: Str, index: Int): Var =
-    Var(s"${parentScrutinee}$$${parentClassName}_${index.toString}")
+    Var(s"${parentScrutinee.name}$$${parentClassName}_${index.toString}")
 
   /**
     * Coin a fresh name for the result of `unapply` method. The name begins with

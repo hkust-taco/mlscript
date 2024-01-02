@@ -93,10 +93,10 @@ fun f(a, b, c) =
   if a
     == 0 and b is B() and c is C() then 0
 //│ |#fun| |f|(|a|,| |b|,| |c|)| |#=|→|#if| |a|→|==| |0| |and| |b| |is| |B|(||)| |and| |c| |is| |C|(||)| |#then| |0|←|←|
-//│ AST: TypingUnit(NuFunDef(None, f, N, Nil, L(Lam(Tup((N, Fld(_, Var("a"))) :: (N, Fld(_, Var("b"))) :: (N, Fld(_, Var("c"))) :: Nil), Blk(If(I; f; O; p; s; A; p; p; (; V; a; r; (; "; a; "; ); ,;  ; <; i; t; e; r; a; t; o; r; >, None))))))
+//│ AST: TypingUnit(List(NuFunDef(None,Var(f),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(a))), (None,Fld(_,Var(b))), (None,Fld(_,Var(c))))),Blk(List(If(IfOpsApp(Var(a),List((Var(==),IfThen(App(App(Var(and),Tup(List((None,Fld(_,App(App(Var(and),Tup(List((None,Fld(_,IntLit(0)))))),Tup(List((None,Fld(_,App(App(Var(is),Tup(List((None,Fld(_,Var(b)))))),Tup(List((None,Fld(_,App(Var(B),Tup(List()))))))))))))))))),Tup(List((None,Fld(_,App(App(Var(is),Tup(List((None,Fld(_,Var(c)))))),Tup(List((None,Fld(_,App(Var(C),Tup(List())))))))))))),IntLit(0))))),None))))))))
 //│ Parsed: fun f = (a, b, c,) => {if a ‹· == (and(and(0,)(is(b,)(B(),),),)(is(c,)(C(),),)) then 0›};
 //│ Desugared: rec def f: (a, b, c,) => {if a ‹· == (and(and(0,)(is(b,)(B(),),),)(is(c,)(C(),),)) then 0›}
-//│ AST: Def(true, Var("f"), L(Lam(Tup((N, Fld(_, Var("a"))) :: (N, Fld(_, Var("b"))) :: (N, Fld(_, Var("c"))) :: Nil), Blk(If(I; f; O; p; s; A; p; p; (; V; a; r; (; "; a; "; ); ,;  ; <; i; t; e; r; a; t; o; r; >, None)))), true)
+//│ AST: Def(true,Var(f),Left(Lam(Tup(List((None,Fld(_,Var(a))), (None,Fld(_,Var(b))), (None,Fld(_,Var(c))))),Blk(List(If(IfOpsApp(Var(a),List((Var(==),IfThen(App(App(Var(and),Tup(List((None,Fld(_,App(App(Var(and),Tup(List((None,Fld(_,IntLit(0)))))),Tup(List((None,Fld(_,App(App(Var(is),Tup(List((None,Fld(_,Var(b)))))),Tup(List((None,Fld(_,App(Var(B),Tup(List()))))))))))))))))),Tup(List((None,Fld(_,App(App(Var(is),Tup(List((None,Fld(_,Var(c)))))),Tup(List((None,Fld(_,App(Var(C),Tup(List())))))))))))),IntLit(0))))),None))))),true)
 //│ ╔══[ERROR] The case when this is false is not handled: ==(a,)(0,)
 //│ ║  l.93: 	  if a
 //│ ║        	     ^

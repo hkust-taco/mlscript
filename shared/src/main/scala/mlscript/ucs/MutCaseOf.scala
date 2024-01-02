@@ -62,7 +62,7 @@ sealed abstract class MutCaseOf extends WithBindings {
 
 object MutCaseOf {
   def showScrutinee(scrutinee: Scrutinee): Str =
-    s"«${scrutinee.term}»" + (scrutinee.local match {
+    s"«${scrutinee.term.showDbg}»" + (scrutinee.local match {
       case N => ""
       case S(Var(alias)) => s" as $alias"
     })
@@ -72,15 +72,15 @@ object MutCaseOf {
     def rec(t: MutCaseOf, indent: Int): Unit = {
       val baseIndent = "  " * indent
       lazy val bindingLines = t.getBindings.iterator.map {
-        case LetBinding(_, recursive, name, term) =>
+        case LetBinding(_, recursive, Var(name), term) =>
           // Show bindings
-          s"[binding $name = $term]"
+          s"[binding $name = ${term.showDbg}]"
       }.toList
       t match {
         case IfThenElse(condition, whenTrue, whenFalse) =>
           // Output the `whenTrue` with the prefix "if".
           bindingLines.foreach { lines += baseIndent + _ }
-          lines += baseIndent + s"if «$condition»"
+          lines += baseIndent + s"if «${condition.showDbg}»"
           rec(whenTrue, indent + 1)
           // Output the `whenFalse` case with the prefix "else".
           lines += s"${baseIndent}else"
@@ -90,13 +90,13 @@ object MutCaseOf {
           lines += baseIndent + showScrutinee(scrutinee) + " match"
           branches.foreach {
             case MutCase.Literal(literal, consequent) =>
-              lines += s"$baseIndent  case $literal =>"
+              lines += s"$baseIndent  case ${literal.showDbg} =>"
               rec(consequent, indent + 1)
             case MutCase.Constructor(Var(className) -> fields, consequent) =>
               lines += s"$baseIndent  case $className =>"
               fields.foreach { case (field, Var(alias)) =>
                 // Show pattern bindings.
-                lines += s"$baseIndent    [pattern $alias = ${scrutinee.reference}.$field]"
+                lines += s"$baseIndent    [pattern $alias = ${scrutinee.reference.showDbg}.$field]"
               }
               rec(consequent, indent + 2)
           }
@@ -106,7 +106,7 @@ object MutCaseOf {
           }
         case Consequent(term) =>
           bindingLines.foreach { lines += baseIndent + _ }
-          lines += s"$baseIndent«$term»"
+          lines += s"$baseIndent«${term.showDbg}»"
         case MissingCase =>
           bindingLines.foreach { lines += baseIndent + _ }
           lines += s"$baseIndent<missing case>"
@@ -210,7 +210,7 @@ object MutCaseOf {
   // A short-hand for pattern matchings with only true and false branches.
   final case class IfThenElse(condition: Term, var whenTrue: MutCaseOf, var whenFalse: MutCaseOf) extends MutCaseOf {
     def describe: Str =
-      s"IfThenElse($condition, whenTrue = ${whenTrue.kind}, whenFalse = ${whenFalse.kind})"
+      s"IfThenElse(${condition.showDbg}, whenTrue = ${whenTrue.kind}, whenFalse = ${whenFalse.kind})"
 
     def duplicate(): MutCaseOf =
       IfThenElse(condition, whenTrue.duplicate(), whenFalse.duplicate())
@@ -469,7 +469,7 @@ object MutCaseOf {
     }
   }
   final case class Consequent(term: Term) extends MutCaseOf {
-    def describe: Str = s"Consequent($term)"
+    def describe: Str = s"Consequent(${term.showDbg})"
 
     override def fill(subTree: MutCaseOf): Unit = ()
 

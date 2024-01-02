@@ -75,9 +75,9 @@ f = fun (x, y) -> add x y
 f(1, 2)
 //│ Parsed: let f = (x, y,) => add(x,)(y,); f(1, 2,);
 //│ Desugared: def f: (x, y,) => add(x,)(y,)
-//│ AST: Def(false, Var("f"), L(Lam(Tup((N, Fld(_, Var("x"))) :: (N, Fld(_, Var("y"))) :: Nil), App(App(Var("add"), Tup((N, Fld(_, Var("x"))) :: Nil)), Tup((N, Fld(_, Var("y"))) :: Nil)))), false)
+//│ AST: Def(false,Var(f),Left(Lam(Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y))))),App(App(Var(add),Tup(List((None,Fld(_,Var(x)))))),Tup(List((None,Fld(_,Var(y)))))))),false)
 //│ Desugared: f(1, 2,)
-//│ AST: App(Var("f"), Tup((N, Fld(_, IntLit(1))) :: (N, Fld(_, IntLit(2))) :: Nil))
+//│ AST: App(Var(f),Tup(List((None,Fld(_,IntLit(1))), (None,Fld(_,IntLit(2))))))
 //│ f: (int, int,) -> int
 //│  = [Function: f]
 //│ res: int
@@ -119,9 +119,9 @@ f = fun ((x, y)) -> add x y
 f((1, 2))
 //│ Parsed: let f = ('(' [x, y,] ')',) => add(x,)(y,); f('(' [1, 2,] ')',);
 //│ Desugared: def f: ('(' [x, y,] ')',) => add(x,)(y,)
-//│ AST: Def(false, Var("f"), L(Lam(Tup((N, Fld(_, Bra(rcd = false, Tup((N, Fld(_, Var("x"))) :: (N, Fld(_, Var("y"))) :: Nil)))) :: Nil), App(App(Var("add"), Tup((N, Fld(_, Var("x"))) :: Nil)), Tup((N, Fld(_, Var("y"))) :: Nil)))), false)
+//│ AST: Def(false,Var(f),Left(Lam(Tup(List((None,Fld(_,Bra(false,Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y)))))))))),App(App(Var(add),Tup(List((None,Fld(_,Var(x)))))),Tup(List((None,Fld(_,Var(y)))))))),false)
 //│ Desugared: f('(' [1, 2,] ')',)
-//│ AST: App(Var("f"), Tup((N, Fld(_, Bra(rcd = false, Tup((N, Fld(_, IntLit(1))) :: (N, Fld(_, IntLit(2))) :: Nil)))) :: Nil))
+//│ AST: App(Var(f),Tup(List((None,Fld(_,Bra(false,Tup(List((None,Fld(_,IntLit(1))), (None,Fld(_,IntLit(2)))))))))))
 //│ f: ((int, int,),) -> int
 //│  = [Function: f1]
 //│ res: int

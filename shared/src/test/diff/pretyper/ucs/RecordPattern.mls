@@ -5,7 +5,7 @@ fun take_1(p) =
   if p is
     { x, y } then x + y
     else 0
-//│ ╔══[ERROR] Unknown pattern '{' {x: x, y: y} '}'
+//│ ╔══[ERROR] Unknown pattern Bra(true,Rcd(List((Var(x),Fld(_,Var(x))), (Var(y),Fld(_,Var(y))))))
 //│ ║  l.6: 	    { x, y } then x + y
 //│ ╙──     	    ^^^^^^^^
 //│ ╔══[ERROR] Variable x not found in scope

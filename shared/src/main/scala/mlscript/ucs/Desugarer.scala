@@ -379,7 +379,7 @@ class Desugarer extends TypeDefs { self: Typer =>
           patternMap.foreachEntry { (pattern, locations) =>
             val first = pattern match {
               case Left(tupleArity) => s"()^$tupleArity"
-              case Right(litOrCls) => litOrCls.toString()
+              case Right(litOrCls) => litOrCls.showDbg
             }
             val second = locations.mkString("[", ", ", "]")
             printlnUCS(s"    + $first -> $second")
@@ -689,7 +689,7 @@ class Desugarer extends TypeDefs { self: Typer =>
         parentOpt match {
           case S(IfThenElse(test, whenTrue, whenFalse)) =>
             if (whenFalse === t)
-              throw new DesugaringException(msg"The case when this is false is not handled: ${test.toString}", test.toLoc)
+              throw new DesugaringException(msg"The case when this is false is not handled: ${test.showDbg}", test.toLoc)
             else
               lastWords("`MissingCase` are not supposed to be the true branch of `IfThenElse`")
           case S(Match(_, _, _)) =>
@@ -755,7 +755,7 @@ class Desugarer extends TypeDefs { self: Typer =>
                   missingCases.iterator.zipWithIndex.flatMap { case ((pattern, locations), index) =>
                     val patternName = pattern match {
                       case L(tupleArity) => s"$tupleArity-ary tuple"
-                      case R(litOrCls) => litOrCls.toString()
+                      case R(litOrCls) => litOrCls.showDbg
                     }
                     val progress = s"[Missing Case ${index + 1}/$numMissingCases]"
                     (msg"$progress `$patternName`" -> N) ::

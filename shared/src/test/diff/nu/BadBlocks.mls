@@ -176,5 +176,5 @@ fun test = (new {
 //│ ╙──       	^
 //│ fun test: error
 //│ Code generation encountered an error:
-//│   Unsupported `new` class term: Bra(rcd = true, Rcd(Var("res") = Var("res")))
+//│   Unsupported `new` class term: Bra(true,Rcd(List((Var(res),Fld(g,Var(res))))))
 

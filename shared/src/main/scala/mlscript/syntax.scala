@@ -104,7 +104,7 @@ final case class IfOpsApp(lhs: Term, opsRhss: Ls[Var -> IfBody]) extends IfBody
 final case class IfBlock(lines: Ls[IfBody \/ Statement]) extends IfBody
 // final case class IfApp(fun: Term, opsRhss: Ls[Var -> IfBody]) extends IfBody
 
-final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool)
+final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool) extends FldFlagsImpl
 final case class Fld(flags: FldFlags, value: Term) extends FldImpl
 
 object FldFlags { val empty: FldFlags = FldFlags(false, false, false) }

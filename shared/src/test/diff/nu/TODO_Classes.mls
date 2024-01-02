@@ -80,7 +80,7 @@ new C { val x = 1 }
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ error
 //│ Code generation encountered an error:
-//│   cannot generate code for term Rft(NuNew(Var("C")), TypingUnit(NuFunDef(Some(false), x, N, Nil, L(IntLit(1)))))
+//│   cannot generate code for term Rft(NuNew(Var(C)),TypingUnit(List(NuFunDef(Some(false),Var(x),None,List(),Left(IntLit(1))))))
 
 
 

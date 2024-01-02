@@ -73,6 +73,7 @@ insertAllPositions(0)(1 :: 2 :: 3 :: Nil) |> showListList
 //│ res
 //│     = '[[0, 1, 2, 3], [1, 0, 2, 3], [1, 2, 0, 3], [1, 2, 3, 0]]'
 
+:js
 fun permutations(xs) =
   if xs is
     Nil then Nil
@@ -82,6 +83,19 @@ fun permutations(xs) =
 //│   where
 //│     'T <: 'A
 //│     'A := 'T
+//│ // Prelude
+//│ class TypingUnit4 {}
+//│ const typing_unit4 = new TypingUnit4;
+//│ // Query 1
+//│ globalThis.permutations = function permutations(xs) {
+//│   return ((() => {
+//│     let a;
+//│     return (a = xs, a instanceof Nil.class ? Nil : a instanceof Cons.class ? ((ucs$args_xs$Cons) => ((x) => ((xs$Cons_1) => xs$Cons_1 instanceof Nil.class ? cons(cons(x, Nil), Nil) : ((xs$) => foldLeft((acc, ys) => appendAll(acc, insertAllPositions(x)(ys)))(Nil)(permutations(xs$)))(ucs$args_xs$Cons[1]))(ucs$args_xs$Cons[1]))(ucs$args_xs$Cons[0]))(Cons.unapply(xs)) : (() => {
+//│       throw new Error("non-exhaustive case expression");
+//│     })());
+//│   })());
+//│ };
+//│ // End of generated code
 
 permutations(Nil) |> showListList
 permutations(1 :: Nil) |> showListList

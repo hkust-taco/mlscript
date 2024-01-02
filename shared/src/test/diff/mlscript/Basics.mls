@@ -96,7 +96,7 @@ def f (x y z) = add x y
 //│ ╙──      	       ^^^^^
 //│ f: error -> int
 //│ Code generation encountered an error:
-//│   term App(App(Var("x"), Tup((N, Fld(_, Var("y"))) :: Nil)), Tup((N, Fld(_, Var("z"))) :: Nil)) is not a valid pattern
+//│   term App(App(Var(x),Tup(List((None,Fld(_,Var(y)))))),Tup(List((None,Fld(_,Var(z)))))) is not a valid pattern
 
 f 1
 //│ res: int

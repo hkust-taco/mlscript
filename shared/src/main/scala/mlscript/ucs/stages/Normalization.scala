@@ -62,7 +62,7 @@ trait Normalization { self: Traceable with Diagnosable =>
         println(s"normalizing name pattern ${scrutinee.name} is ${nme.name}")
         Let(false, nme, scrutinee, normalizeToTerm(concat(continuation, tail)))
       // Skip Boolean conditions as scrutinees, because they only appear once.
-      case Split.Cons(Branch(test, pattern @ Pattern.Class(nme @ Var("true")), continuation), tail) if context.isTestVar(test) =>
+      case Split.Cons(Branch(test, pattern @ Pattern.Class(nme @ Var("true")), continuation), tail) =>
         println(s"normalizing true pattern: ${test.name} is true")
         val trueBranch = normalizeToTerm(concat(continuation, tail))
         val falseBranch = normalizeToCaseBranches(tail)
@@ -82,7 +82,7 @@ trait Normalization { self: Traceable with Diagnosable =>
         val falseBranch = normalizeToCaseBranches(specialize(tail, false)(scrutineeVar, scrutinee, pattern, context))
         CaseOf(scrutineeVar, Case(nme, trueBranch, falseBranch))
       case Split.Cons(Branch(scrutinee, pattern, continuation), tail) =>
-        println(s"unknown pattern ${pattern.getClass().getSimpleName()}")
+        println(s"unknown pattern $pattern")
         throw new NormalizationException((msg"Unsupported pattern: ${pattern.toString}" -> pattern.toLoc) :: Nil)
       case Split.Let(rec, Var("_"), rhs, tail) => normalizeToTerm(tail)
       case Split.Let(_, nme, _, tail) if context.isScrutineeVar(nme) && generatedVars.contains(nme) =>
