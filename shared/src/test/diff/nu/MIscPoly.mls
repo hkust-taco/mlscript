@@ -69,7 +69,7 @@ r()
 //│ nothing
 //│ res
 //│ Runtime error:
-//│   TypeError: r1 is not a function
+//│   TypeError: r is not a function
 
 
 
