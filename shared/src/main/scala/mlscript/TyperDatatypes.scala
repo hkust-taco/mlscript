@@ -659,7 +659,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
           constraints.filterInPlace { constrs =>
             val ty = constrs(index)
             val dnf = DNF.mk(MaxLevel, Nil, ty & ub.neg(), true)
-            dnf.isBot
+            dnf.isBot || dnf.cs.forall(c => !(c.vars.isEmpty && c.nvars.isEmpty))
           }
       }
       go(ub)
