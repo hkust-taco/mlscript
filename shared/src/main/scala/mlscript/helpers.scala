@@ -30,6 +30,10 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
   }
   private def showFields(fs: Ls[Opt[Var] -> Field], ctx: ShowCtx): Ls[Str] =
     fs.map(nt => s"${nt._2.mutStr}${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)}")
+  private def showEffect(e: Type, ctx: ShowCtx) = e match {
+    case Bot => ""
+    case _ => s"{${e.showIn(ctx, 30)}}"
+  }
   def showIn(ctx: ShowCtx, outerPrec: Int): Str = this match {
   // TODO remove obsolete pretty-printing hacks
     case Top => "anything"
@@ -48,11 +52,11 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
           val inner = showFields(fs, ctx)
           if (ctx.newDefs) inner.mkString("(", ", ", ")") else inner.mkString("(", ", ", ",)")
       }
-      parensIf(innerStr + s" ->${ e match {case Bot => ""; case _ => s"{${e.showIn(ctx, 30)}}"} } " + r.showIn(ctx, 30), outerPrec > 30)
+      parensIf(innerStr + s" ->${showEffect(e, ctx)} " + r.showIn(ctx, 30), outerPrec > 30)
     case Function(l, r, e) if ctx.newDefs =>
-      parensIf("(..." + l.showIn(ctx, 0) + s") ->${ e match {case Bot => ""; case _ => s"{${e.showIn(ctx, 30)}}"} } " + r.showIn(ctx, 30), outerPrec > 30)
+      parensIf("(..." + l.showIn(ctx, 0) + s") ->${showEffect(e, ctx)} " + r.showIn(ctx, 30), outerPrec > 30)
     case Function(l, r, e) =>
-      parensIf(l.showIn(ctx, 31) + s" ->${ e match {case Bot => ""; case _ => s"{${e.showIn(ctx, 30)}}"} } " + r.showIn(ctx, 30), outerPrec > 30)
+      parensIf(l.showIn(ctx, 31) + s" ->${showEffect(e, ctx)} " + r.showIn(ctx, 30), outerPrec > 30)
     case Neg(t) => s"~${t.showIn(ctx, 100)}"
     case Record(fs) =>
       val strs = fs.map { nt =>

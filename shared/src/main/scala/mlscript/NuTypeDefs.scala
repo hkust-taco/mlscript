@@ -1095,7 +1095,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       }
       refreshHelper2(raw: PolyNuDecl, v: Var, parTargs.map(_.map(typeType(_))))
     }
-
     def complete()(implicit raise: Raise): TypedNuDecl = result.getOrElse {
       if (isComputing) {
         err(msg"Unhandled cyclic definition", decl.toLoc)
