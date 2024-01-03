@@ -512,17 +512,21 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                   val newBody = transformBody.fold(body)(_(body))
                   val annotatedBody = asc.fold(newBody)(ty => Asc(newBody, ty._1))
                   R(NuFunDef(
-                      isLetRec, v, opStr, tparams, Nil, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))
+                      isLetRec, v, opStr, tparams, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))
                     )(isDecl, isVirtual, N, N, genField).withLoc(S(l0 ++ annotatedBody.toLoc)))
                 case c =>
                   asc match {
                     case S((ty, effs)) =>
                       if (transformBody.nonEmpty) die // TODO
                       val effTy = if (effs.isEmpty) Bot else effs.reduceLeft[Type]((r, e) => Union(r, e))
-                      R(NuFunDef(isLetRec, v, opStr, tparams, effs, R(PolyType(Nil, ps.foldRight(ty)((p, r) => Function(p.toType match {
+                      val effFun = ty match {
+                        case Function(lhs, rhs, _) => Function(lhs, rhs, effTy)
+                        case _ => ty
+                      }
+                      R(NuFunDef(isLetRec, v, opStr, tparams, R(PolyType(Nil, ps.foldRight(effFun)((p, r) => Function(p.toType match {
                         case L(diag) => raise(diag); Top // TODO better
                         case R(tp) => tp
-                      }, r, effTy)))))(isDecl, isVirtual, N, N, genField).withLoc(S(l0 ++ ty.toLoc)))
+                      }, r, Bot)))))(isDecl, isVirtual, N, N, genField).withLoc(S(l0 ++ ty.toLoc)))
                       // TODO rm PolyType after FCP is merged
                     case N =>
                       // TODO dedup:
@@ -532,7 +536,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                       consume
                       val bod = errExpr
                       R(NuFunDef(
-                          isLetRec, v, opStr, Nil, Nil, L(ps.foldRight(bod: Term)((i, acc) => Lam(i, acc)))
+                          isLetRec, v, opStr, Nil, L(ps.foldRight(bod: Term)((i, acc) => Lam(i, acc)))
                         )(isDecl, isVirtual, N, N, genField).withLoc(S(l0 ++ bod.toLoc)))
                   }
               }

@@ -61,7 +61,7 @@ object Helpers:
           case term: Term => Some(term2Expr(term))
           case tyDef: NuTypeDef => throw MonomorphError(s"Unimplemented term2Expr ${term}")
           case funDef: NuFunDef => 
-            val NuFunDef(_, nme, sn, targs, effs, rhs) = funDef
+            val NuFunDef(_, nme, sn, targs, rhs) = funDef
             val ret: Item.FuncDecl | Item.FuncDefn = rhs match
               case Left(Lam(params, body)) =>
                 Item.FuncDecl(Expr.Ref(nme.name), toFuncParams(params).toList, term2Expr(body))
@@ -136,7 +136,7 @@ object Helpers:
     }
   
   def func2Item(funDef: NuFunDef): Item.FuncDecl | Item.FuncDefn =
-      val NuFunDef(_, nme, sn, targs, effs, rhs) = funDef
+      val NuFunDef(_, nme, sn, targs, rhs) = funDef
       rhs match
         case Left(Lam(params, body)) =>
           Item.FuncDecl(Expr.Ref(nme.name), toFuncParams(params).toList, term2Expr(body))

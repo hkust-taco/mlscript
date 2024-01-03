@@ -547,7 +547,7 @@ class Desugarer extends TypeDefs { self: Typer =>
         case L(IfLet(_, _, _, _)) =>
           TODO("please add this rare case to test files")
         // This case handles interleaved lets.
-        case R(NuFunDef(S(isRec), nameVar, _, _, _, L(term))) =>
+        case R(NuFunDef(S(isRec), nameVar, _, _, L(term))) =>
           interleavedLets += (LetBinding(LetBinding.Kind.InterleavedLet, isRec, nameVar, term))
         // Other statements are considered to be ill-formed.
         case R(statement) => throw new DesugaringException({
@@ -617,7 +617,7 @@ class Desugarer extends TypeDefs { self: Typer =>
         case IfBlock(lines) =>
           lines.foreach {
             case L(subBody) => desugarIfBody(subBody, expr, acc)
-            case R(NuFunDef(S(isRec), nameVar, _, _, _, L(term))) =>
+            case R(NuFunDef(S(isRec), nameVar, _, _, L(term))) =>
               printlnUCS(s"Found interleaved binding ${nameVar.name}")
               interleavedLets += LetBinding(LetBinding.Kind.InterleavedLet, isRec, nameVar, term)
             case R(_) =>

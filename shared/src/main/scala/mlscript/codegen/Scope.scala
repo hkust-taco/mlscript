@@ -263,12 +263,12 @@ class Scope(val name: Str, enclosing: Opt[Scope]) {
     val finalName =
       if (allowRenaming) allocateRuntimeName(lexicalName) else lexicalName
     val (mths, rest) = stmts.partitionMap {
-      case NuFunDef(isLetRec, Var(nme), _, tys, _, Left(rhs)) if (isLetRec.isEmpty || isLetRec.getOrElse(false)) =>
+      case NuFunDef(isLetRec, Var(nme), _, tys, Left(rhs)) if (isLetRec.isEmpty || isLetRec.getOrElse(false)) =>
         Left(MethodDef[Left[Term, Type]](isLetRec.getOrElse(false), TypeName(finalName), Var(nme), tys, Left(rhs)))
       case s => Right(s)
     }
     val (signatures, ctor) = rest.partitionMap {
-      case NuFunDef(isLetRec, Var(nme), _, tys, _, Right(rhs)) if (isLetRec.isEmpty || isLetRec.getOrElse(false)) =>
+      case NuFunDef(isLetRec, Var(nme), _, tys, Right(rhs)) if (isLetRec.isEmpty || isLetRec.getOrElse(false)) =>
         Left(MethodDef[Right[Term, Type]](isLetRec.getOrElse(false), TypeName(finalName), Var(nme), tys, Right(rhs)))
       case s => Right(s)
     }

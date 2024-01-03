@@ -1237,7 +1237,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                 case S(ti: DelayedTypeInfo) => ti.decl.genUnapply
                 case _ => N
               }) match {
-                case S(NuFunDef(_, _, _, _, _, L(unapplyMtd))) => typePolymorphicTerm(unapplyMtd)
+                case S(NuFunDef(_, _, _, _, L(unapplyMtd))) => typePolymorphicTerm(unapplyMtd)
                 case _ => mthCallOrSel(obj, fieldName)
               }
             else mthCallOrSel(obj, fieldName)
@@ -1801,7 +1801,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           )(td.declareLoc, td.abstractLoc, td.effectLoc)
         }
       case tf @ TypedNuFun(level, fd, bodyTy) =>
-        NuFunDef(fd.isLetRec, fd.nme, fd.symbolicNme, Nil, fd.effects, R(go(tf.typeSignature)))(fd.declareLoc, fd.virtualLoc, fd.signature, fd.outer, fd.genField)
+        NuFunDef(fd.isLetRec, fd.nme, fd.symbolicNme, Nil, R(go(tf.typeSignature)))(fd.declareLoc, fd.virtualLoc, fd.signature, fd.outer, fd.genField)
       case p: NuParam =>
         ??? // TODO
       case TypedNuDummy(d) =>

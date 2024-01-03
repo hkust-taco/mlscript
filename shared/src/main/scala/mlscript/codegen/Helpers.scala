@@ -70,7 +70,7 @@ object Helpers {
     case IfBlock(lines) => s"IfBlock(${
       lines.iterator.map {
         case L(body) => inspect(body)
-        case R(NuFunDef(S(isRec), nme, _, _, _, L(rhs))) =>
+        case R(NuFunDef(S(isRec), nme, _, _, L(rhs))) =>
           s"Let($isRec, ${nme.name}, ${inspect(rhs)})"
         case R(_) => ???
       }.mkString(";")
@@ -87,10 +87,10 @@ object Helpers {
   def inspect(t: TypingUnit): Str = t.entities.iterator
     .map {
       case term: Term => inspect(term)
-      case NuFunDef(lt, nme, symNme, targs, effs, L(term)) =>
-        s"NuFunDef(${lt}, ${nme.name}, $symNme, ${targs.mkString("[", ", ", "]")}, ${effs.mkString("{", ",", "}")}, ${inspect(term)})"
-      case NuFunDef(lt, nme, symNme, targs, effs, R(ty)) =>
-        s"NuFunDef(${lt}, ${nme.name}, $symNme, ${targs.mkString("[", ", ", "]")}, ${effs.mkString("{", ",", "}")}, $ty)"
+      case NuFunDef(lt, nme, symNme, targs, L(term)) =>
+        s"NuFunDef(${lt}, ${nme.name}, $symNme, ${targs.mkString("[", ", ", "]")}, ${inspect(term)})"
+      case NuFunDef(lt, nme, symNme, targs, R(ty)) =>
+        s"NuFunDef(${lt}, ${nme.name}, $symNme, ${targs.mkString("[", ", ", "]")}, $ty)"
       case NuTypeDef(kind, nme, tparams, params, ctor, sig, parents, sup, ths, body) =>
         s"NuTypeDef(${kind.str}, ${nme.name}, ${tparams.mkString("(", ", ", ")")}, ${
           inspect(params.getOrElse(Tup(Nil)))}, ${parents.map(inspect).mkString("(", ", ", ")")}, $sup, $ths, ${inspect(body)})"

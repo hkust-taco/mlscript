@@ -224,7 +224,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
       val blkScope = scope.derive("Blk")
       val flattened = stmts.iterator.flatMap {
         case nt: NuTypeDef => nt :: Nil
-        case nf @ NuFunDef(_, Var(nme), symNme, _, _, _) =>
+        case nf @ NuFunDef(_, Var(nme), symNme, _, _) =>
           val symb = symNme.map(_.name)
           blkScope.declareStubValue(nme, symb)(true)
           nf.desugared._2
@@ -236,7 +236,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
         R(blkScope.tempVars `with` (flattened.iterator.zipWithIndex.map {
           case (t: Term, index) if index + 1 == flattened.length => translateTerm(t)(blkScope).`return`
           case (t: Term, index)                                  => JSExprStmt(translateTerm(t)(blkScope))
-          case (NuFunDef(isLetRec, Var(nme), symNme, _, _, L(rhs)), _) =>
+          case (NuFunDef(isLetRec, Var(nme), symNme, _, L(rhs)), _) =>
             val symb = symNme.map(_.name)
             val pat = blkScope.declareValue(nme, isLetRec, isLetRec.isEmpty, symb)
             JSLetDecl(Ls(pat.runtimeName -> S(translateTerm(rhs)(blkScope))))
@@ -759,7 +759,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
       md => memberList += bodyScope.declareStubValue(md.nme.name, N)(true)
     )
     sym.ctor.foreach {
-      case nd @ NuFunDef(rec, Var(nme), _, _, _, _) =>
+      case nd @ NuFunDef(rec, Var(nme), _, _, _) =>
         memberList += NewClassMemberSymbol(nme, rec, false, !nd.genField, qualifier).tap(bodyScope.register)
       case _ => ()
     }
@@ -810,7 +810,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
         JSConstDecl(constructorScope.declareValue(name, S(false), false, N).runtimeName, JSIdent(s"this.#$name"))
       )
       case s: Term => JSExprStmt(translateTerm(s)(constructorScope)) :: Nil
-      case nd @ NuFunDef(_, Var(nme), _, _, _, Left(rhs)) =>
+      case nd @ NuFunDef(_, Var(nme), _, _, Left(rhs)) =>
         if (nd.genField) {
           getters += nme
           Ls[JSStmt](
@@ -1008,20 +1008,20 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
       val body = pars.map(tt).foldRight(Record(params): Type)(Inter)
       val implemented = new HashSet[Str]()
       val members = unit.entities.collect {
-        case NuFunDef(isLetRec, mnme, _, tys, effects, Left(rhs)) if (isLetRec.isEmpty || isLetRec.getOrElse(false)) =>
+        case NuFunDef(isLetRec, mnme, _, tys, Left(rhs)) if (isLetRec.isEmpty || isLetRec.getOrElse(false)) =>
           implemented.add(mnme.name)
           MethodDef[Left[Term, Type]](isLetRec.getOrElse(false), TypeName(nme), mnme, tys, Left(rhs))
       }
 
       val signatures = unit.entities.collect {
-        case nd @ NuFunDef(isLetRec, mnme, _, tys, effects, Right(rhs)) if nd.genField && !implemented.contains(mnme.name) =>
+        case nd @ NuFunDef(isLetRec, mnme, _, tys, Right(rhs)) if nd.genField && !implemented.contains(mnme.name) =>
           MethodDef[Right[Term, Type]](isLetRec.getOrElse(false), TypeName(nme), mnme, tys, Right(rhs))
       }
 
       val stmts = unit.entities.filter {
         case Asc(Var("this"), _) => false
         case Asc(Super(), _) => false
-        case NuFunDef(S(false), _, _, _, _, Left(rhs)) => true
+        case NuFunDef(S(false), _, _, _, Left(rhs)) => true
         case _: Term => true
         case _ => false
       }
@@ -1059,7 +1059,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
         val (body, members, signatures, stmts, nested, publicCtors) = prepare(nme, tup.getOrElse(Tup(Nil)).fields, pars, unit)
         val sym =
           NewClassSymbol(nme, tps map { _._2.name }, params, body, members, td.genUnapply match {
-            case S(NuFunDef(isLetRec, mnme, _, tys, effects, Left(rhs))) =>
+            case S(NuFunDef(isLetRec, mnme, _, tys, Left(rhs))) =>
               S(MethodDef[Left[Term, Type]](isLetRec.getOrElse(false), TypeName(nme), mnme, tys, Left(rhs)))
             case _ => N
           }, signatures, preStmts ++ stmts, pars, publicCtors, nested, qualifier, td.isPlainJSClass).tap(scope.register)
@@ -1225,7 +1225,7 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
         // <results>.push(<name>);
         // ```
         .concat(otherStmts.flatMap {
-          case NuFunDef(isLetRec, nme @ Var(name), symNme, tys, effects, rhs @ L(body)) =>
+          case NuFunDef(isLetRec, nme @ Var(name), symNme, tys, rhs @ L(body)) =>
             val recursive = isLetRec.getOrElse(true)
             val isByname = isLetRec.isEmpty
             val bodyIsLam = body match { case _: Lam => true case _ => false }
@@ -1249,7 +1249,7 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
             resultNames += sym.runtimeName
             topLevelScope.tempVars `with` JSConstDecl(sym.runtimeName, translatedBody) ::
               JSInvoke(resultsIdent("push"), JSIdent(sym.runtimeName) :: Nil).stmt :: Nil
-          case fd @ NuFunDef(isLetRec, Var(name), _, tys, _, R(ty)) =>
+          case fd @ NuFunDef(isLetRec, Var(name), _, tys, R(ty)) =>
             Nil
           case _: Def | _: TypeDef | _: Constructor =>
             throw CodeGenError("Def and TypeDef are not supported in NewDef files.")
@@ -1402,7 +1402,7 @@ abstract class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
     }
 
     otherStmts.foreach {
-      case fd @ NuFunDef(isLetRec, Var(nme), symNme, _, _, L(body)) =>
+      case fd @ NuFunDef(isLetRec, Var(nme), symNme, _, L(body)) =>
         val isByname = isLetRec.isEmpty
         val isByvalueRecIn = if (isByname) None else Some(true)
         val bodyIsLam = body match { case _: Lam => true case _ => false }
@@ -1432,7 +1432,7 @@ abstract class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
     
     // Generate statements.
     val queries = otherStmts.map {
-      case NuFunDef(isLetRec, nme @ Var(name), symNme, tys, effects, rhs @ L(body)) =>
+      case NuFunDef(isLetRec, nme @ Var(name), symNme, tys, rhs @ L(body)) =>
         val recursive = isLetRec.getOrElse(true)
         val isByname = isLetRec.isEmpty
         val bodyIsLam = body match { case _: Lam => true case _ => false }
@@ -1483,7 +1483,7 @@ abstract class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
             )
           case L(reason) => JSTestBackend.AbortedQuery(reason)
         }
-      case fd @ NuFunDef(isLetRec, Var(name), symNme, tys, effects, R(ty)) =>
+      case fd @ NuFunDef(isLetRec, Var(name), symNme, tys, R(ty)) =>
         val symb = symNme.map(_.name)
         scope.declareStubValue(name, symb)(allowEscape || fd.isDecl)
         JSTestBackend.EmptyQuery
