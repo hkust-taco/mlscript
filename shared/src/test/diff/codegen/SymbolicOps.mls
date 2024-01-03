@@ -14,7 +14,7 @@ let r = succ >> succ
 //│ class TypingUnit1 {}
 //│ const typing_unit1 = new TypingUnit1;
 //│ // Query 1
-//│ globalThis.r1 = compose(succ, succ);
+//│ globalThis.r = compose(succ, succ);
 //│ // End of generated code
 //│ r
 //│   = [Function (anonymous)]
@@ -65,7 +65,7 @@ let f = (>>)
 //│ class TypingUnit7 {}
 //│ const typing_unit7 = new TypingUnit7;
 //│ // Query 1
-//│ globalThis.f1 = compose;
+//│ globalThis.f = compose;
 //│ // End of generated code
 //│ f
 //│   = [Function: compose]
@@ -315,7 +315,7 @@ fun (:-D) dd(a, b) = a + b
 val (->) f(x, y) = [x, y]
 //│ val (->) f: forall 'a 'b. ('a, 'b) -> ['a, 'b]
 //│ f
-//│   = [Function: f3]
+//│   = [Function: f1]
 
 12 -> 34
 //│ [12, 34]
@@ -326,7 +326,7 @@ val (->) f(x, y) = [x, y]
 let (->) _ = f
 //│ let (->) _: forall 'a 'b. ('a, 'b) -> ['a, 'b]
 //│ _
-//│   = [Function: f3]
+//│   = [Function: f1]
 
 :js
 12 -> 34
@@ -335,7 +335,7 @@ let (->) _ = f
 //│ class TypingUnit42 {}
 //│ const typing_unit42 = new TypingUnit42;
 //│ // Query 1
-//│ res = _1(12, 34);
+//│ res = _(12, 34);
 //│ // End of generated code
 //│ res
 //│     = [ 12, 34 ]

@@ -75,7 +75,7 @@ foo: () -> ()
 //│ ╙──      	            ^^^^^^^^^^^^
 //│ () -> ()
 //│ res
-//│     = [Function: foo3]
+//│     = [Function: foo2]
 
 fun foo: () ->{io} ()
 fun foo() = ()
@@ -111,7 +111,7 @@ foo: () -> ()
 //│ fun foo: () ->{io} ()
 //│ () -> ()
 //│ res
-//│     = [Function: foo6]
+//│     = [Function: foo4]
 
 
 :e
@@ -128,7 +128,7 @@ foo: Int -> ()
 //│ fun foo: Int ->{io} ()
 //│ Int -> ()
 //│ res
-//│     = [Function: foo7]
+//│     = [Function: foo5]
 
 
 abstract class A[out E]() {
@@ -224,7 +224,7 @@ half: Num -> Num
 //│ ╙── expression of type `io` does not match type `nothing`
 //│ Num -> Num
 //│ res
-//│     = [Function: half1]
+//│     = [Function: half]
 
 
 fun boom() =

@@ -244,7 +244,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       RecordType(fields.filterNot(f => shadowing(f._1)) ++ fs)(prov)
     }
     def sorted: RecordType = RecordType(fields.sortBy(_._1))(prov)
-    override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
+    override def toString = s"{${fields.map(f => s"${f._1.name}: ${f._2}").mkString(", ")}}"
   }
   object RecordType {
     def empty: RecordType = RecordType(Nil)(noProv)
