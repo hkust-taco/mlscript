@@ -2944,18 +2944,19 @@ fun head_opt(l) =
   if l is
     Nil then None
     Cons(h, t) then Some(h)
-fun is_empty(l) =
-  if head_opt(l) is
+fun is_none(o) =
+  if o is
     None then True
-    Some(x) then False  
+    Some(x) then False
+fun is_empty(l) =
+  is_none(head_opt(l))
 fun main() =
   is_empty(Cons(1, Cons(2, Nil)))
-  is_empty(Nil)
 main()
-//│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|#if| |head_opt|(|l|)| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False| |←|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|Cons|(|1|,| |Cons|(|2|,| |Nil|)|)|)|↵|is_empty|(|Nil|)|←|↵|main|(||)|
-//│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_empty = (l,) => {if head_opt(l,) is ‹(None) then True; (Some(x,)) then False›}; fun main = () => {is_empty(Cons(1, Cons(2, Nil,),),); is_empty(Nil,)}; main()}
+//│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|Cons|(|1|,| |Cons|(|2|,| |Nil|)|)|)|←|↵|main|(||)|
+//│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(Cons(1, Cons(2, Nil,),),)}; main()}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Cons, (), Tup(_: Var(h), _: Var(t)), (), None, None, TypingUnit()), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Some, (), Tup(_: Var(x)), (), None, None, TypingUnit()), NuTypeDef(class, None, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, head_opt, None, [], Lam(Tup(_: Var(l)), Blk(...))), NuFunDef(None, is_empty, None, [], Lam(Tup(_: Var(l)), Blk(...))), NuFunDef(None, main, None, [], Lam(Tup(), Blk(...))), App(Var(main), Tup()))
+//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Cons, (), Tup(_: Var(h), _: Var(t)), (), None, None, TypingUnit()), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Some, (), Tup(_: Var(x)), (), None, None, TypingUnit()), NuTypeDef(class, None, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, head_opt, None, [], Lam(Tup(_: Var(l)), Blk(...))), NuFunDef(None, is_none, None, [], Lam(Tup(_: Var(o)), Blk(...))), NuFunDef(None, is_empty, None, [], Lam(Tup(_: Var(l)), Blk(...))), NuFunDef(None, main, None, [], Lam(Tup(), Blk(...))), App(Var(main), Tup()))
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
@@ -2981,45 +2982,52 @@ main()
 //│ 1, 
 //│ x%4
 //│ )
-//│ Def(2, is_empty, [l%1], [{}],
+//│ Def(2, is_none, [o%0], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%5) = head_opt(l%1)
-//│   in case x%5 of
-//│     None => let x%6 = True()
-//│       in jump j%1(x%6)
-//│     Some => let x%7 = x%5.x
-//│       in let x%8 = False()
-//│         in jump j%1(x%8)
+//│ case o%0 of
+//│   None => let x%5 = True()
+//│     in jump j%1(x%5)
+//│   Some => let x%6 = o%0.x
+//│     in let x%7 = False()
+//│       in jump j%1(x%7)
 //│ )
-//│ Def(3, @join j%1, [x%9], [{}],
+//│ Def(3, @join j%1, [x%8], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x%9
+//│ x%8
 //│ )
-//│ Def(4, main, [], [{}],
+//│ Def(4, is_empty, [l%1], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%10 = Nil()
-//│   in let x%11 = Cons(2,x%10)
-//│     in let x%12 = Cons(1,x%11)
-//│       in let* (x%13) = is_empty(x%12)
-//│         in let x%14 = Nil()
-//│           in let* (x%15) = is_empty(x%14)
-//│             in x%15
+//│ let* (x%9) = head_opt(l%1)
+//│   in let* (x%10) = is_none(x%9)
+//│     in x%10
+//│ )
+//│ Def(5, main, [], [{}],
+//│ S: None,
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x%11 = Nil()
+//│   in let x%12 = Cons(2,x%11)
+//│     in let x%13 = Cons(1,x%12)
+//│       in let* (x%14) = is_empty(x%13)
+//│         in x%14
 //│ )
 //│ },
-//│ let* (x%16) = main()
-//│   in x%16)
+//│ let* (x%15) = main()
+//│   in x%15)
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
@@ -3036,88 +3044,108 @@ main()
 //│     in let x%3 = Some(x%2)
 //│       in x%3
 //│ )
-//│ Def(2, is_empty, [l%1], [{EDirect,EIndirectDestruct,ESelect(h)}],
+//│ Def(2, is_none, [o%0], [{EDestruct,EDirect}],
 //│ S: None,
-//│ I: [[Some(ICtor(Cons))],[Some(ICtor(Nil))]],
+//│ I: [[Some(IMix(ICtor(None),ICtor(Some)))]],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%5) = head_opt(l%1)
-//│   in case x%5 of
-//│     None => let x%6 = True()
-//│       in x%6
-//│     Some => let x%8 = False()
-//│       in x%8
+//│ case o%0 of
+//│   None => let x%5 = True()
+//│     in x%5
+//│   Some => let x%7 = False()
+//│     in x%7
 //│ )
-//│ Def(4, main, [], [],
+//│ Def(4, is_empty, [l%1], [{EDirect,EIndirectDestruct,ESelect(h)}],
+//│ S: None,
+//│ I: [[Some(ICtor(Cons))]],
+//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
+//│ Rec: None,
+//│ 1, 
+//│ let* (x%9) = head_opt(l%1)
+//│   in let* (x%10) = is_none(x%9)
+//│     in x%10
+//│ )
+//│ Def(5, main, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%10 = Nil()
-//│   in let x%11 = Cons(2,x%10)
-//│     in let x%12 = Cons(1,x%11)
-//│       in let* (x%13) = is_empty(x%12)
-//│         in let x%14 = Nil()
-//│           in let* (x%15) = is_empty(x%14)
-//│             in x%15
+//│ let x%11 = Nil()
+//│   in let x%12 = Cons(2,x%11)
+//│     in let x%13 = Cons(1,x%12)
+//│       in let* (x%14) = is_empty(x%13)
+//│         in x%14
 //│ )
 //│ },
-//│ let* (x%16) = main()
-//│   in x%16)
+//│ let* (x%15) = main()
+//│   in x%15)
 //│ 
 //│ Interpreted ------------------------------
-//│ True()
+//│ False()
 //│ 
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(4, main, [], [],
+//│ Def(2, is_none, [o%0], [{EDestruct,EDirect}],
 //│ S: None,
-//│ I: [],
-//│ R: [Some(ICtor(True))],
+//│ I: [[Some(ICtor(Some))]],
+//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%10 = Nil()
-//│   in let x%11 = Cons(2,x%10)
-//│     in let x%12 = Cons(1,x%11)
-//│       in let* (x%13) = is_empty$C%0(x%12)
-//│         in let x%6 = True()
-//│           in x%6
+//│ case o%0 of
+//│   None => let x%5 = True()
+//│     in x%5
+//│   Some => let x%7 = False()
+//│     in x%7
 //│ )
-//│ Def(8, is_empty$C%0, [l%1], [{ESelect(h)}],
+//│ Def(5, main, [], [],
+//│ S: None,
+//│ I: [],
+//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
+//│ Rec: None,
+//│ 1, 
+//│ let x%11 = Nil()
+//│   in let x%12 = Cons(2,x%11)
+//│     in let x%13 = Cons(1,x%12)
+//│       in let* (x%14) = is_empty$C%0(x%13)
+//│         in x%14
+//│ )
+//│ Def(9, is_empty$C%0, [l%1], [{ESelect(h)}],
 //│ S: Some([Some(ICtor(Cons))]),
 //│ I: [[Some(ICtor(Cons))]],
+//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
+//│ Rec: None,
+//│ 1, 
+//│ let x%20 = l%1.h
+//│   in let x%3 = Some(x%20)
+//│     in let* (x%10) = is_none(x%3)
+//│       in x%10
+//│ )
+//│ },
+//│ let* (x%15) = main()
+//│   in x%15)
+//│ 
+//│ Optimized ------------------------------
+//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Def(5, main, [], [],
+//│ S: None,
+//│ I: [],
 //│ R: [Some(ICtor(False))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%22 = l%1.h
-//│   in let x%8 = False()
-//│     in x%8
+//│ let x%11 = Nil()
+//│   in let x%7 = False()
+//│     in x%7
 //│ )
 //│ },
-//│ let* (x%16) = main()
-//│   in x%16)
-//│ 
-//│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(4, main, [], [],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(ICtor(True))],
-//│ Rec: None,
-//│ 1, 
-//│ let x%6 = True()
-//│   in x%6
-//│ )
-//│ },
-//│ let* (x%16) = main()
-//│   in x%16)
+//│ let* (x%15) = main()
+//│   in x%15)
 //│ 
 //│ 
 //│ Interpreted ------------------------------
-//│ True()
+//│ False()
 //│ 
 //│ 
 //│ Fuel used: 3
@@ -3132,15 +3160,23 @@ class Some(x)
 class None
 fun mk_list(n) =
   if n == 0 then Nil else Cons(n, mk_list(n - 1))
-fun head_opt() =
-  if mk_list(10) is
+fun head_opt(l) =
+  if l is
     Nil then None
     Cons(h, t) then Some(h)
-head_opt()
-//│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |head_opt|(||)| |#=|→|#if| |mk_list|(|10|)| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|head_opt|(||)|
-//│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun mk_list = (n,) => {if (==(n,)(0,)) then Nil else Cons(n, mk_list(-(n,)(1,),),)}; fun head_opt = () => {if mk_list(10,) is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; head_opt()}
+fun is_none(o) =
+  if o is
+    None then True
+    Some(x) then False
+fun is_empty(l) =
+  is_none(head_opt(l))
+fun main() =
+  is_empty(mk_list(10))
+main()
+//│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|mk_list|(|10|)|)|←|↵|main|(||)|
+//│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun mk_list = (n,) => {if (==(n,)(0,)) then Nil else Cons(n, mk_list(-(n,)(1,),),)}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(mk_list(10,),)}; main()}
 //│ Parsed:
-//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Cons, (), Tup(_: Var(h), _: Var(t)), (), None, None, TypingUnit()), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Some, (), Tup(_: Var(x)), (), None, None, TypingUnit()), NuTypeDef(class, None, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, mk_list, None, [], Lam(Tup(_: Var(n)), Blk(...))), NuFunDef(None, head_opt, None, [], Lam(Tup(), Blk(...))), App(Var(head_opt), Tup()))
+//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Cons, (), Tup(_: Var(h), _: Var(t)), (), None, None, TypingUnit()), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Some, (), Tup(_: Var(x)), (), None, None, TypingUnit()), NuTypeDef(class, None, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, mk_list, None, [], Lam(Tup(_: Var(n)), Blk(...))), NuFunDef(None, head_opt, None, [], Lam(Tup(_: Var(l)), Blk(...))), NuFunDef(None, is_none, None, [], Lam(Tup(_: Var(o)), Blk(...))), NuFunDef(None, is_empty, None, [], Lam(Tup(_: Var(l)), Blk(...))), NuFunDef(None, main, None, [], Lam(Tup(), Blk(...))), App(Var(main), Tup()))
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
@@ -3167,32 +3203,72 @@ head_opt()
 //│ 1, 
 //│ x%5
 //│ )
-//│ Def(2, head_opt, [], [{}],
+//│ Def(2, head_opt, [l%0], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%6) = mk_list(10)
-//│   in case x%6 of
-//│     Nil => let x%7 = None()
-//│       in jump j%1(x%7)
-//│     Cons => let x%8 = x%6.t
-//│       in let x%9 = x%6.h
-//│         in let x%10 = Some(x%9)
-//│           in jump j%1(x%10)
+//│ case l%0 of
+//│   Nil => let x%6 = None()
+//│     in jump j%1(x%6)
+//│   Cons => let x%7 = l%0.t
+//│     in let x%8 = l%0.h
+//│       in let x%9 = Some(x%8)
+//│         in jump j%1(x%9)
 //│ )
-//│ Def(3, @join j%1, [x%11], [{}],
+//│ Def(3, @join j%1, [x%10], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x%11
+//│ x%10
+//│ )
+//│ Def(4, is_none, [o%0], [{}],
+//│ S: None,
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ case o%0 of
+//│   None => let x%11 = True()
+//│     in jump j%2(x%11)
+//│   Some => let x%12 = o%0.x
+//│     in let x%13 = False()
+//│       in jump j%2(x%13)
+//│ )
+//│ Def(5, @join j%2, [x%14], [{}],
+//│ S: None,
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ x%14
+//│ )
+//│ Def(6, is_empty, [l%1], [{}],
+//│ S: None,
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let* (x%15) = head_opt(l%1)
+//│   in let* (x%16) = is_none(x%15)
+//│     in x%16
+//│ )
+//│ Def(7, main, [], [{}],
+//│ S: None,
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let* (x%17) = mk_list(10)
+//│   in let* (x%18) = is_empty(x%17)
+//│     in x%18
 //│ )
 //│ },
-//│ let* (x%12) = head_opt()
-//│   in x%12)
+//│ let* (x%19) = main()
+//│   in x%19)
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
@@ -3200,7 +3276,7 @@ head_opt()
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(Cons),ICtor(Nil)))],
-//│ Rec: Some(1),
+//│ Rec: Some(4),
 //│ 1, 
 //│ let x%0 = ==(n%0,0)
 //│   in if x%0
@@ -3211,34 +3287,173 @@ head_opt()
 //│         in let x%4 = Cons(n%0,x%3)
 //│           in x%4
 //│ )
-//│ Def(2, head_opt, [], [],
+//│ Def(2, head_opt, [l%0], [{EDestruct,EDirect,ESelect(h)}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(None),ICtor(Some)))],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%6) = mk_list(10)
-//│   in case x%6 of
-//│     Nil => let x%7 = None()
-//│       in x%7
-//│     Cons => let x%9 = x%6.h
-//│       in let x%10 = Some(x%9)
-//│         in x%10
+//│ case l%0 of
+//│   Nil => let x%6 = None()
+//│     in x%6
+//│   Cons => let x%8 = l%0.h
+//│     in let x%9 = Some(x%8)
+//│       in x%9
+//│ )
+//│ Def(4, is_none, [o%0], [{EDestruct,EDirect}],
+//│ S: None,
+//│ I: [[Some(IMix(ICtor(None),ICtor(Some)))]],
+//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
+//│ Rec: None,
+//│ 1, 
+//│ case o%0 of
+//│   None => let x%11 = True()
+//│     in x%11
+//│   Some => let x%13 = False()
+//│     in x%13
+//│ )
+//│ Def(6, is_empty, [l%1], [{EDirect,EIndirectDestruct,ESelect(h)}],
+//│ S: None,
+//│ I: [[Some(IMix(ICtor(Cons),ICtor(Nil)))]],
+//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
+//│ Rec: None,
+//│ 1, 
+//│ let* (x%15) = head_opt(l%1)
+//│   in let* (x%16) = is_none(x%15)
+//│     in x%16
+//│ )
+//│ Def(7, main, [], [],
+//│ S: None,
+//│ I: [],
+//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
+//│ Rec: None,
+//│ 1, 
+//│ let* (x%17) = mk_list(10)
+//│   in let* (x%18) = is_empty(x%17)
+//│     in x%18
 //│ )
 //│ },
-//│ let* (x%12) = head_opt()
-//│   in x%12)
+//│ let* (x%19) = main()
+//│   in x%19)
 //│ 
 //│ Interpreted ------------------------------
-//│ Some(10)
+//│ False()
 //│ 
+//│ 
+//│ Optimized ------------------------------
+//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Def(0, mk_list, [n%0], [{EDirect}],
+//│ S: None,
+//│ I: [],
+//│ R: [Some(IMix(ICtor(Cons),ICtor(Nil)))],
+//│ Rec: Some(4),
+//│ 1, 
+//│ let x%0 = ==(n%0,0)
+//│   in if x%0
+//│     true => let x%1 = Nil()
+//│       in x%1
+//│     false => let x%2 = -(n%0,1)
+//│       in let* (x%3) = mk_list(x%2)
+//│         in let x%4 = Cons(n%0,x%3)
+//│           in x%4
+//│ )
+//│ Def(4, is_none, [o%0], [{EDestruct,EDirect}],
+//│ S: None,
+//│ I: [],
+//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
+//│ Rec: None,
+//│ 1, 
+//│ case o%0 of
+//│   None => let x%11 = True()
+//│     in x%11
+//│   Some => let x%13 = False()
+//│     in x%13
+//│ )
+//│ Def(6, is_empty, [l%1], [{EDestruct,EDirect,ESelect(h)}],
+//│ S: None,
+//│ I: [[Some(IMix(ICtor(Cons),ICtor(Nil)))]],
+//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
+//│ Rec: None,
+//│ 1, 
+//│ case l%1 of
+//│   Nil => let x%6 = None()
+//│     in jump is_empty$M%0(x%6)
+//│   Cons => let x%23 = l%1.h
+//│     in let x%9 = Some(x%23)
+//│       in jump is_empty$M%0(x%9)
+//│ )
+//│ Def(7, main, [], [],
+//│ S: None,
+//│ I: [],
+//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
+//│ Rec: None,
+//│ 1, 
+//│ let* (x%17) = mk_list(10)
+//│   in let* (x%18) = is_empty(x%17)
+//│     in x%18
+//│ )
+//│ Def(14, @join is_empty$M%0, [x%15], [{EDirect,EIndirectDestruct}],
+//│ S: None,
+//│ I: [[Some(ICtor(None))],[Some(ICtor(Some))]],
+//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
+//│ Rec: None,
+//│ 1, 
+//│ let* (x%16) = is_none(x%15)
+//│   in x%16
+//│ )
+//│ },
+//│ let* (x%19) = main()
+//│   in x%19)
+//│ 
+//│ Optimized ------------------------------
+//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Def(0, mk_list, [n%0], [{EDirect}],
+//│ S: None,
+//│ I: [],
+//│ R: [Some(IMix(ICtor(Cons),ICtor(Nil)))],
+//│ Rec: Some(2),
+//│ 1, 
+//│ let x%0 = ==(n%0,0)
+//│   in if x%0
+//│     true => let x%1 = Nil()
+//│       in x%1
+//│     false => let x%2 = -(n%0,1)
+//│       in let* (x%3) = mk_list(x%2)
+//│         in let x%4 = Cons(n%0,x%3)
+//│           in x%4
+//│ )
+//│ Def(6, is_empty, [l%1], [{EDestruct,EDirect}],
+//│ S: None,
+//│ I: [[Some(IMix(ICtor(Cons),ICtor(Nil)))]],
+//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
+//│ Rec: None,
+//│ 1, 
+//│ case l%1 of
+//│   Nil => let x%11 = True()
+//│     in x%11
+//│   Cons => let x%13 = False()
+//│     in x%13
+//│ )
+//│ Def(7, main, [], [],
+//│ S: None,
+//│ I: [],
+//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
+//│ Rec: None,
+//│ 1, 
+//│ let* (x%17) = mk_list(10)
+//│   in let* (x%18) = is_empty(x%17)
+//│     in x%18
+//│ )
+//│ },
+//│ let* (x%19) = main()
+//│   in x%19)
 //│ 
 //│ 
 //│ Interpreted ------------------------------
-//│ Some(10)
+//│ False()
 //│ 
 //│ 
-//│ Fuel used: 1
+//│ Fuel used: 3
 
 :GraphInterp
 :GraphOpt
