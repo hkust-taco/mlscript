@@ -1,5 +1,3 @@
-
-
 ## Find Splitting Targets
 
 ### Definitions with one of its parameters being destructed in its scope.
@@ -326,6 +324,23 @@ let z = foo$S(p, q, r)
     let result = ...
     result
   ```
+
+## Destruct Simplification
+
+```haskell
+let y = C(a = aaa, b = bbb, c = ccc)
+...
+case y of
+  A(...) -> ...
+  B(...) -> ...
+  C(a, b, c) -> ddd
+
+-- -->
+
+let y = C(a = aaa, b = bbb, c = ccc)
+...
+ddd
+```
 
 ## Selection Simplification
 

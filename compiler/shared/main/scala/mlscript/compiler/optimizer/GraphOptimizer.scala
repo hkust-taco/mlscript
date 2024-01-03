@@ -1033,6 +1033,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
     override def visit(x: GOProgram) =
       val new_defs = x.defs.map(x => { cctx = Map.empty; x.accept_visitor(this)})
       relink(x.main, new_defs)
+      validate(x.main, new_defs)
       GOProgram(x.classes, new_defs, x.main)
     override def visit(node: LetExpr) = node match
       case LetExpr(x, sel @ Select(y, cls, field), e2) if cctx.contains(y.str) =>
@@ -1050,6 +1051,31 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
         LetExpr(x, y, e2.accept_visitor(this))
       case LetExpr(x, e1, e2) =>
         LetExpr(x, e1.accept_visitor(this), e2.accept_visitor(this))
+
+  private class DestructSimplification extends GOVisitor:
+    var cctx: Map[Str, Str] = Map.empty
+    override def visit(x: GOProgram) =
+      val new_defs = x.defs.map(x => { cctx = Map.empty; x.accept_visitor(this)})
+      relink(x.main, new_defs)
+      validate(x.main, new_defs)
+      GOProgram(x.classes, new_defs, x.main)
+    override def visit(expr: LetExpr) = expr match
+      case LetExpr(x, y @ CtorApp(cls, args), e2) =>
+        cctx = cctx + (x.str -> cls.ident)
+        LetExpr(x, y, e2.accept_visitor(this))
+      case LetExpr(x, e1, e2) =>
+        LetExpr(x, e1.accept_visitor(this), e2.accept_visitor(this))
+    
+    override def visit(x: Case) = x match
+      case Case(scrut, cases) if cctx.contains(scrut.str) =>
+        cctx.get(scrut.str) match
+          case Some(cls) =>
+            val arm = cases.find(_._1.ident == cls).get._2
+            arm.accept_visitor(this)
+          case None =>
+            Case(scrut, cases map { (cls, arm) => (cls, arm.accept_visitor(this)) })
+      case Case(scrut, cases) =>
+        Case(scrut, cases map { (cls, arm) => (cls, arm.accept_visitor(this)) })
 
   private def argsToStrs(args: Ls[TrivialExpr]) = {
     args.flatMap {
@@ -1183,19 +1209,22 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
     var changed = true
     var s = prog
     while (changed) {
+      val ds = DestructSimplification()
       val ss = SelectionSimplification()
       val tbs = TrivialBindingSimplification()
       val rtcj = RemoveTrivialCallAndJump()
       val dce = DeadCodeElimination()
-      val s0 = s.accept_visitor(ss)
-      activeAnalyze(s0)
-      val s1 = s0.accept_visitor(tbs)
-      activeAnalyze(s1)
-      val s2 = s1.accept_visitor(rtcj)
-      activeAnalyze(s2)
-      val s3 = s2.accept_visitor(dce)
-      activeAnalyze(s3)
-      val sf = s3
+      var sf = s
+      sf = sf.accept_visitor(ds)
+      activeAnalyze(sf)
+      sf = sf.accept_visitor(ss)
+      activeAnalyze(sf)
+      sf = sf.accept_visitor(tbs)
+      activeAnalyze(sf)
+      sf = sf.accept_visitor(rtcj)
+      activeAnalyze(sf)
+      sf = sf.accept_visitor(dce)
+      activeAnalyze(sf)
       validate(sf.main, sf.defs)
       changed = s.defs != sf.defs
       s = sf

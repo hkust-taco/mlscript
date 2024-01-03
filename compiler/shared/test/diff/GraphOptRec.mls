@@ -3076,43 +3076,25 @@ main()
 //│ Def(4, main, [], [],
 //│ S: None,
 //│ I: [],
-//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
+//│ R: [Some(ICtor(True))],
 //│ Rec: None,
 //│ 1, 
 //│ let x%10 = Nil()
 //│   in let x%11 = Cons(2,x%10)
 //│     in let x%12 = Cons(1,x%11)
 //│       in let* (x%13) = is_empty$C%0(x%12)
-//│         in let x%14 = Nil()
-//│           in let* (x%15) = is_empty$C%1(x%14)
-//│             in x%15
+//│         in let x%6 = True()
+//│           in x%6
 //│ )
 //│ Def(8, is_empty$C%0, [l%1], [{ESelect(h)}],
 //│ S: Some([Some(ICtor(Cons))]),
 //│ I: [[Some(ICtor(Cons))]],
-//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
+//│ R: [Some(ICtor(False))],
 //│ Rec: None,
 //│ 1, 
 //│ let x%22 = l%1.h
-//│   in let x%3 = Some(x%22)
-//│     in case x%3 of
-//│       None => let x%6 = True()
-//│         in x%6
-//│       Some => let x%8 = False()
-//│         in x%8
-//│ )
-//│ Def(9, is_empty$C%1, [l%1], [{}],
-//│ S: Some([Some(ICtor(Nil))]),
-//│ I: [[Some(ICtor(Nil))]],
-//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: None,
-//│ 1, 
-//│ let x%0 = None()
-//│   in case x%0 of
-//│     None => let x%6 = True()
-//│       in x%6
-//│     Some => let x%8 = False()
-//│       in x%8
+//│   in let x%8 = False()
+//│     in x%8
 //│ )
 //│ },
 //│ let* (x%16) = main()
@@ -3123,40 +3105,11 @@ main()
 //│ Def(4, main, [], [],
 //│ S: None,
 //│ I: [],
-//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
+//│ R: [Some(ICtor(True))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%10 = Nil()
-//│   in let* (x%13) = is_empty$C%0$S%0(1)
-//│     in let x%14 = Nil()
-//│       in let* (x%15) = is_empty$C%1(x%14)
-//│         in x%15
-//│ )
-//│ Def(9, is_empty$C%1, [l%1], [{}],
-//│ S: Some([Some(ICtor(Nil))]),
-//│ I: [[Some(ICtor(Nil))]],
-//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: None,
-//│ 1, 
-//│ let x%0 = None()
-//│   in case x%0 of
-//│     None => let x%6 = True()
-//│       in x%6
-//│     Some => let x%8 = False()
-//│       in x%8
-//│ )
-//│ Def(12, is_empty$C%0$S%0, [l%1_h], [{EDirect}],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: None,
-//│ 1, 
-//│ let x%3 = Some(l%1_h)
-//│   in case x%3 of
-//│     None => let x%6 = True()
-//│       in x%6
-//│     Some => let x%8 = False()
-//│       in x%8
+//│ let x%6 = True()
+//│   in x%6
 //│ )
 //│ },
 //│ let* (x%16) = main()
