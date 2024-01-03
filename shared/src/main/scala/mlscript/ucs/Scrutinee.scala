@@ -26,5 +26,5 @@ final case class Scrutinee(var local: Opt[Var], term: Term)(val matchRootLoc: Op
     (local match {
       case N => ""
       case S(Var(alias)) => s"$alias @ "
-    }) + s"$term"
+    }) + s"${term.showDbg}"
 }

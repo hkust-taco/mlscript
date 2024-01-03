@@ -30,37 +30,37 @@ run(x `=> x)(42)
 :p
 `1 `* `2 `+ `3
 //│ |`|1| |`|*| |`|2| |`|+| |`|3|
-//│ AST: TypingUnit(Quoted(App(Var(+), Tup(_: Unquoted(Quoted(App(Var(*), Tup(_: Unquoted(Quoted(IntLit(1))), _: Unquoted(Quoted(IntLit(2))))))), _: Unquoted(Quoted(IntLit(3)))))))
-//│ Parsed: code"+(${code"*(${code"1"}, ${code"2"},)"}, ${code"3"},)";
+//│ AST: TypingUnit(List(Quoted(App(Var(+),Tup(List((None,Fld(_,Unquoted(Quoted(App(Var(*),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(1))))), (None,Fld(_,Unquoted(Quoted(IntLit(2)))))))))))), (None,Fld(_,Unquoted(Quoted(IntLit(3)))))))))))
+//│ Parsed: code"App(Var(+),Tup(List((None,Fld(_,Unquoted(Quoted(App(Var(*),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(1))))), (None,Fld(_,Unquoted(Quoted(IntLit(2)))))))))))), (None,Fld(_,Unquoted(Quoted(IntLit(3))))))))";
 //│ Code[Int, nothing]
 
 :p
 `1 `* `2 `+ `3 `- `4
 //│ |`|1| |`|*| |`|2| |`|+| |`|3| |`|-| |`|4|
-//│ AST: TypingUnit(Quoted(App(Var(-), Tup(_: Unquoted(Quoted(App(Var(+), Tup(_: Unquoted(Quoted(App(Var(*), Tup(_: Unquoted(Quoted(IntLit(1))), _: Unquoted(Quoted(IntLit(2))))))), _: Unquoted(Quoted(IntLit(3))))))), _: Unquoted(Quoted(IntLit(4)))))))
-//│ Parsed: code"-(${code"+(${code"*(${code"1"}, ${code"2"},)"}, ${code"3"},)"}, ${code"4"},)";
+//│ AST: TypingUnit(List(Quoted(App(Var(-),Tup(List((None,Fld(_,Unquoted(Quoted(App(Var(+),Tup(List((None,Fld(_,Unquoted(Quoted(App(Var(*),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(1))))), (None,Fld(_,Unquoted(Quoted(IntLit(2)))))))))))), (None,Fld(_,Unquoted(Quoted(IntLit(3)))))))))))), (None,Fld(_,Unquoted(Quoted(IntLit(4)))))))))))
+//│ Parsed: code"App(Var(-),Tup(List((None,Fld(_,Unquoted(Quoted(App(Var(+),Tup(List((None,Fld(_,Unquoted(Quoted(App(Var(*),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(1))))), (None,Fld(_,Unquoted(Quoted(IntLit(2)))))))))))), (None,Fld(_,Unquoted(Quoted(IntLit(3)))))))))))), (None,Fld(_,Unquoted(Quoted(IntLit(4))))))))";
 //│ Code[Int, nothing]
 
 :p
 `1 `+ `2 `* `3
 //│ |`|1| |`|+| |`|2| |`|*| |`|3|
-//│ AST: TypingUnit(Quoted(App(Var(+), Tup(_: Unquoted(Quoted(IntLit(1))), _: Unquoted(Quoted(App(Var(*), Tup(_: Unquoted(Quoted(IntLit(2))), _: Unquoted(Quoted(IntLit(3)))))))))))
-//│ Parsed: code"+(${code"1"}, ${code"*(${code"2"}, ${code"3"},)"},)";
+//│ AST: TypingUnit(List(Quoted(App(Var(+),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(1))))), (None,Fld(_,Unquoted(Quoted(App(Var(*),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(2))))), (None,Fld(_,Unquoted(Quoted(IntLit(3))))))))))))))))))
+//│ Parsed: code"App(Var(+),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(1))))), (None,Fld(_,Unquoted(Quoted(App(Var(*),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(2))))), (None,Fld(_,Unquoted(Quoted(IntLit(3)))))))))))))))";
 //│ Code[Int, nothing]
 
 :p
 `1 `+ `2 `* `3 `+ `4
 //│ |`|1| |`|+| |`|2| |`|*| |`|3| |`|+| |`|4|
-//│ AST: TypingUnit(Quoted(App(Var(+), Tup(_: Unquoted(Quoted(App(Var(+), Tup(_: Unquoted(Quoted(IntLit(1))), _: Unquoted(Quoted(App(Var(*), Tup(_: Unquoted(Quoted(IntLit(2))), _: Unquoted(Quoted(IntLit(3))))))))))), _: Unquoted(Quoted(IntLit(4)))))))
-//│ Parsed: code"+(${code"+(${code"1"}, ${code"*(${code"2"}, ${code"3"},)"},)"}, ${code"4"},)";
+//│ AST: TypingUnit(List(Quoted(App(Var(+),Tup(List((None,Fld(_,Unquoted(Quoted(App(Var(+),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(1))))), (None,Fld(_,Unquoted(Quoted(App(Var(*),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(2))))), (None,Fld(_,Unquoted(Quoted(IntLit(3))))))))))))))))))), (None,Fld(_,Unquoted(Quoted(IntLit(4)))))))))))
+//│ Parsed: code"App(Var(+),Tup(List((None,Fld(_,Unquoted(Quoted(App(Var(+),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(1))))), (None,Fld(_,Unquoted(Quoted(App(Var(*),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(2))))), (None,Fld(_,Unquoted(Quoted(IntLit(3))))))))))))))))))), (None,Fld(_,Unquoted(Quoted(IntLit(4))))))))";
 //│ Code[Int, nothing]
 
 :e
 :p
 1 + `2 `+ `3
 //│ |1| |+| |`|2| |`|+| |`|3|
-//│ AST: TypingUnit(Quoted(App(Var(+), Tup(_: Unquoted(App(Var(+), Tup(_: IntLit(1), _: Quoted(IntLit(2))))), _: Unquoted(Quoted(IntLit(3)))))))
-//│ Parsed: code"+(${+(1, code"2",)}, ${code"3"},)";
+//│ AST: TypingUnit(List(Quoted(App(Var(+),Tup(List((None,Fld(_,Unquoted(App(Var(+),Tup(List((None,Fld(_,IntLit(1))), (None,Fld(_,Quoted(IntLit(2)))))))))), (None,Fld(_,Unquoted(Quoted(IntLit(3)))))))))))
+//│ Parsed: code"App(Var(+),Tup(List((None,Fld(_,Unquoted(App(Var(+),Tup(List((None,Fld(_,IntLit(1))), (None,Fld(_,Quoted(IntLit(2)))))))))), (None,Fld(_,Unquoted(Quoted(IntLit(3))))))))";
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.60: 	1 + `2 `+ `3
 //│ ║        	^^^^^^
@@ -77,8 +77,8 @@ run(x `=> x)(42)
 :p
 `1 `+ `2 + 3
 //│ |`|1| |`|+| |`|2| |+| |3|
-//│ AST: TypingUnit(App(Var(+), Tup(_: Quoted(App(Var(+), Tup(_: Unquoted(Quoted(IntLit(1))), _: Unquoted(Quoted(IntLit(2)))))), _: IntLit(3))))
-//│ Parsed: +(code"+(${code"1"}, ${code"2"},)", 3,);
+//│ AST: TypingUnit(List(App(Var(+),Tup(List((None,Fld(_,Quoted(App(Var(+),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(1))))), (None,Fld(_,Unquoted(Quoted(IntLit(2))))))))))), (None,Fld(_,IntLit(3))))))))
+//│ Parsed: +(code"App(Var(+),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(1))))), (None,Fld(_,Unquoted(Quoted(IntLit(2))))))))", 3,);
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.78: 	`1 `+ `2 + 3
 //│ ║        	^^^^^^^^^^^^

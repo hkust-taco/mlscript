@@ -11,9 +11,9 @@ let b = code"40 + ${a}"
 //│ class TypingUnit {}
 //│ const typing_unit = new TypingUnit;
 //│ // Query 1
-//│ globalThis.a1 = App(Var("+"), IntLit(1), IntLit(1));
+//│ globalThis.a = App(Var("+"), IntLit(1), IntLit(1));
 //│ // Query 2
-//│ globalThis.b1 = App(Var("+"), IntLit(40), a1);
+//│ globalThis.b = App(Var("+"), IntLit(40), a);
 //│ // End of generated code
 
 :ne
@@ -80,7 +80,7 @@ let power10 = run(code"x => ${power'(code"x", 10)}")
 //│ class TypingUnit8 {}
 //│ const typing_unit8 = new TypingUnit8;
 //│ // Query 1
-//│ globalThis.power101 = run(((x1) => Lam(Var(x1), power$(Var(x1), 10)))(freshName("x")));
+//│ globalThis.power10 = run(((x1) => Lam(Var(x1), power$(Var(x1), 10)))(freshName("x")));
 //│ // End of generated code
 
 

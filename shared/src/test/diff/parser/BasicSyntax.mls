@@ -319,18 +319,18 @@ f[1, 2, 3]
 
 f{}
 //│ |f|{||}|
-//│ Parsed: {f { ‹› }}
+//│ Parsed: {f {}}
 
 f{1}
 //│ |f|{|1|}|
-//│ Parsed: {f { ‹1› }}
+//│ Parsed: {f {1}}
 
 f{1, 2, 3}
 //│ |f|{|1|,| |2|,| |3|}|
 //│ ╔══[PARSE ERROR] Unexpected comma here
 //│ ║  l.328: 	f{1, 2, 3}
 //│ ╙──       	   ^
-//│ Parsed: {f { ‹1› }}
+//│ Parsed: {f {1}}
 
 
 f 1,, 2

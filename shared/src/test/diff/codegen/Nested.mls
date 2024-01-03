@@ -78,9 +78,9 @@ bb.b
 //│ class TypingUnit1 {}
 //│ const typing_unit1 = new TypingUnit1;
 //│ // Query 1
-//│ globalThis.bb1 = A.B(A.a);
+//│ globalThis.bb = A.B(A.a);
 //│ // Query 2
-//│ res = bb1.b;
+//│ res = bb.b;
 //│ // End of generated code
 //│ bb
 //│    = B {}
@@ -241,9 +241,9 @@ ee.x
 //│ class TypingUnit5 {}
 //│ const typing_unit5 = new TypingUnit5;
 //│ // Query 1
-//│ globalThis.ee1 = D.createE(42);
+//│ globalThis.ee = D.createE(42);
 //│ // Query 2
-//│ res = ee1.x;
+//│ res = ee.x;
 //│ // End of generated code
 //│ ee
 //│    = E {}
@@ -361,13 +361,13 @@ gg.sum
 //│ class TypingUnit7 {}
 //│ const typing_unit7 = new TypingUnit7;
 //│ // Query 1
-//│ globalThis.es1 = E(1);
+//│ globalThis.es = E(1);
 //│ // Query 2
-//│ globalThis.fff1 = es1.F(2);
+//│ globalThis.fff = es.F(2);
 //│ // Query 3
-//│ globalThis.gg1 = fff1.G(3);
+//│ globalThis.gg = fff.G(3);
 //│ // Query 4
-//│ res = gg1.sum;
+//│ res = gg.sum;
 //│ // End of generated code
 //│ es
 //│    = E {}
@@ -559,11 +559,11 @@ i.x
 //│ class TypingUnit10 {}
 //│ const typing_unit10 = new TypingUnit10;
 //│ // Query 1
-//│ globalThis.jj1 = G.H.J(42);
+//│ globalThis.jj = G.H.J(42);
 //│ // Query 2
-//│ globalThis.i1 = jj1.ii(2);
+//│ globalThis.i = jj.ii(2);
 //│ // Query 3
-//│ res = i1.x;
+//│ res = i.x;
 //│ // End of generated code
 //│ jj
 //│    = J {}
@@ -666,9 +666,9 @@ j.i.x
 //│ class TypingUnit12 {}
 //│ const typing_unit12 = new TypingUnit12;
 //│ // Query 1
-//│ globalThis.j1 = H.J(42);
+//│ globalThis.j = H.J(42);
 //│ // Query 2
-//│ res = j1.i.x;
+//│ res = j.i.x;
 //│ // End of generated code
 //│ j
 //│   = J {}
@@ -757,11 +757,11 @@ ij.incY
 //│ const typing_unit13 = new TypingUnit13;
 //│ globalThis.I = typing_unit13.I;
 //│ // Query 1
-//│ globalThis.i3 = I(1);
+//│ globalThis.i1 = I(1);
 //│ // Query 2
-//│ globalThis.ij1 = i3.J(0);
+//│ globalThis.ij = i1.J(0);
 //│ // Query 3
-//│ res = ij1.incY;
+//│ res = ij.incY;
 //│ // End of generated code
 //│ i
 //│   = I {}
@@ -890,9 +890,9 @@ let n = J.N(2)
 //│ class TypingUnit15 {}
 //│ const typing_unit15 = new TypingUnit15;
 //│ // Query 1
-//│ globalThis.m1 = J.M();
+//│ globalThis.m = J.M();
 //│ // Query 2
-//│ globalThis.n1 = J.N(2);
+//│ globalThis.n = J.N(2);
 //│ // End of generated code
 //│ m
 //│   = M {}

@@ -101,7 +101,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case AppliedType(n, args) =>
       s"${n.name}${args.map(_.showIn(ctx, 0)).mkString(ctx.<, ", ", ctx.>)}"
     case Selection(b, n) => b.showIn(ctx, 100) + "." + n.name
-    case Rem(b, ns) => s"${b.showIn(ctx, 90)}${ns.map("\\"+_).mkString}"
+    case Rem(b, ns) => s"${b.showIn(ctx, 90)}${ns.map("\\"+_.name).mkString}"
     case Literal(IntLit(n)) => n.toString
     case Literal(DecLit(n)) => n.toString
     case Literal(StrLit(s)) => "\"" + s + "\""
@@ -173,7 +173,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
         case _ => ""
       }}${sig.fold("")(": " + _.showIn(bodyCtx, 0))}${parents match {
         case Nil => ""
-        case ps => " extends " + ps.mkString(", ") // TODO pp parent terms...
+        case ps => " extends " + ps.iterator.map(_.print(false)).mkString(", ") // TODO pp parent terms...
       }}${if (body.entities.isEmpty && sup.isEmpty && ths.isEmpty) "" else
         " {\n" + sup.fold("")(s"${bodyCtx.indStr}super: " + _.showIn(bodyCtx, 0) + "\n") +
         ths.fold("")(s"${bodyCtx.indStr}this: " + _.showIn(bodyCtx, 0) + "\n") +
@@ -386,7 +386,8 @@ trait PgrmImpl { self: Pgrm =>
    }
     diags.toList -> res
   }
-  override def toString = tops.map("" + _ + ";").mkString(" ")
+
+  def showDbg: Str = tops.iterator.map("" + _.showDbg + ";").mkString(" ")
 }
 
 object OpApp {
@@ -401,18 +402,16 @@ object OpApp {
 trait DeclImpl extends Located { self: Decl =>
   val body: Located
   def showBody: Str = this match {
-    case Def(_, _, rhs, isByname) => rhs.fold(_.toString, _.showDbg2)
+    case d: Def => d.rhs.fold(_.showDbg, _.showDbg2)
     case td: TypeDef => td.body.showDbg2
   }
   def describe: Str = this match {
     case _: Def => "definition"
     case _: TypeDef => "type declaration"
   }
-  def showDbg: Str = showHead + (this match {
-    case TypeDef(Als, _, _, _, _, _, _, _) => " = "; case _ => ": " }) + showBody
   def showHead: Str = this match {
-    case Def(true, n, b, isByname) => s"rec def $n"
-    case Def(false, n, b, isByname) => s"def $n"
+    case Def(true, n, b, isByname) => s"rec def ${n.showDbg}"
+    case Def(false, n, b, isByname) => s"def ${n.showDbg}"
     case TypeDef(k, n, tps, b, _, _, pos, _) =>
       s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_.name).mkString("[", ", ", "]")}${
         if (pos.isEmpty) "" else pos.mkString("(", ", ", ")")
@@ -434,27 +433,22 @@ trait NuDeclImpl extends Located { self: NuDecl =>
   }
   def name: Str = nameVar.name
   def showBody: Str = this match {
-    case NuFunDef(_, _, _, _, rhs) => rhs.fold(_.toString, _.showDbg2)
+    case fd: NuFunDef => fd.rhs.fold(_.print(false), _.showDbg2)
     case td: NuTypeDef => td.body.showDbg
   }
   def describe: Str = this match {
     case _: NuFunDef => "definition"
     case _: NuTypeDef => "type declaration"
   }
-  def showDbg: Str = showHead + (this match {
-    case NuFunDef(_, _, _, _, L(_)) => " = "
-    case NuFunDef(_, _, _, _, R(_)) => ": "
-    case _: NuTypeDef => " "
-  }) + showBody
   def showHead: Str = this match {
-    case NuFunDef(N, n, snme, _, b) => s"fun${snme.fold("")(" ("+_+")")} $n"
-    case NuFunDef(S(false), n, snme, _, b) => s"let${snme.fold("")(" "+_+")")} $n"
-    case NuFunDef(S(true), n, snme, _, b) => s"let rec${snme.fold("")(" "+_+")")} $n"
+    case NuFunDef(N, n, snme, _, b) => s"fun${snme.fold("")(" ("+_.name+")")} ${n.name}"
+    case NuFunDef(S(false), n, snme, _, b) => s"let${snme.fold("")(" "+_.name+")")} ${n.name}"
+    case NuFunDef(S(true), n, snme, _, b) => s"let rec${snme.fold("")(" "+_.name+")")} ${n.name}"
     case NuTypeDef(k, n, tps, sps, ctor, sig, parents, sup, ths, bod) =>
       s"${k.str} ${n.name}${if (tps.isEmpty) "" else tps.map(_._2.name).mkString("‹", ", ", "›")}${
           sps.fold("")("(" + _.showElems + ")")
         }${sig.fold("")(": " + _.showDbg2)}${
-          if (parents.isEmpty) "" else if (k === Als) " = " else ": "}${parents.mkString(", ")}"
+          if (parents.isEmpty) "" else if (k === Als) " = " else ": "}${parents.iterator.map(_.showDbg).mkString(", ")}"
   }
   lazy val genUnapply: Opt[NuFunDef] = this match {
     case td: NuTypeDef if td.kind is Cls => td.params.map { tup =>
@@ -472,13 +466,13 @@ trait NuDeclImpl extends Located { self: NuDecl =>
 }
 
 trait TypingUnitImpl extends Located { self: TypingUnit =>
-  def showDbg: Str = entities.map {
-    case t: Term => t.toString
+  def showDbg: Str = entities.iterator.map {
+    case t: Term => t.print(false)
     case d: NuDecl => d.showDbg
-    case c: Constructor => c.toString
+    case c: Constructor => c.showDbg
     case e => lastWords(s"Unexpected typing unit entity: $e")
   }.mkString("{", "; ", "}")
-  override def toString: String = s"‹${entities.mkString("; ")}›"
+
   lazy val children: List[Located] = entities
 
   def showIn(ctx: ShowCtx): Str = {
@@ -503,6 +497,15 @@ trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
   def targs: Ls[Type] = Nil
   def compare(that: TypeName): Int = this.name compare that.name
   lazy val toVar: Var = Var(name).withLocOf(this)
+}
+
+trait FldFlagsImpl extends Located { self: FldFlags =>
+  def children: Ls[Located] = Nil
+  override def toString(): String = {
+    val FldFlags(m, s, g) = this
+    val res = (if (m) "m" else "") + (if (s) "s" else "") + (if (g) "g" else "")
+    if (res.isEmpty) "_" else res
+  }
 }
 
 trait FldImpl extends Located { self: Fld =>
@@ -573,31 +576,31 @@ trait TermImpl extends StatementImpl { self: Term =>
       case Unquoted(_) => "unquote"
     }
   }
-  
-  override def toString: Str = print(false)
+
+  override def showDbg: Str = print(false)
   
   def print(brackets: Bool): Str = {
       def bra(str: Str): Str = if (brackets) s"($str)" else str
       this match {
-    case Bra(true, trm) => s"'{' $trm '}'"
-    case Bra(false, trm) => s"'(' $trm ')'"
-    case Blk(stmts) => stmts.mkString("{", "; ", "}")
+    case Bra(true, trm) => s"'{' ${trm.showDbg} '}'"
+    case Bra(false, trm) => s"'(' ${trm.showDbg} ')'"
+    case Blk(stmts) => stmts.iterator.map(_.showDbg).mkString("{", "; ", "}")
     case IntLit(value) => value.toString
     case DecLit(value) => value.toString
     case StrLit(value) => '"'.toString + value + '"'
     case UnitLit(value) => if (value) "undefined" else "null"
     case v @ Var(name) => name + v.uid.fold("")("::"+_.toString)
-    case Asc(trm, ty) => s"$trm : ${ty.showDbg2}"  |> bra
-    case Lam(pat: Tup, rhs) => s"(${pat.showElems}) => $rhs" |> bra
-    case Lam(pat, rhs) => s"(...$pat) => $rhs" |> bra
+    case Asc(trm, ty) => s"${trm.showDbg} : ${ty.showDbg2}"  |> bra
+    case Lam(pat: Tup, rhs) => s"(${pat.showElems}) => ${rhs.showDbg}" |> bra
+    case Lam(pat, rhs) => s"(...${pat.showDbg}) => ${rhs.showDbg}" |> bra
     case App(lhs, rhs: Tup) => s"${lhs.print(!lhs.isInstanceOf[App])}(${rhs.showElems})" |> bra
     case App(lhs, rhs) => s"${lhs.print(!lhs.isInstanceOf[App])}(...${rhs.print(true)})" |> bra
     case Rcd(fields) =>
       fields.iterator.map(nv =>
-        (if (nv._2.flags.mut) "mut " else "") + nv._1.name + ": " + nv._2.value).mkString("{", ", ", "}")
-    case Sel(receiver, fieldName) => "(" + receiver.toString + ")." + fieldName
-    case Let(isRec, name, rhs, body) =>
-      s"let${if (isRec) " rec" else ""} $name = $rhs in $body" |> bra
+        (if (nv._2.flags.mut) "mut " else "") + nv._1.name + ": " + nv._2.value.showDbg).mkString("{", ", ", "}")
+    case Sel(receiver, fieldName) => "(" + receiver.showDbg + ")." + fieldName.showDbg
+    case Let(isRec, Var(name), rhs, body) =>
+      s"let${if (isRec) " rec" else ""} $name = ${rhs.showDbg} in ${body.showDbg}" |> bra
     case tup: Tup => "[" + tup.showElems + "]"
     case Splc(fields) => fields.map{
       case L(l) => s"...$l"
@@ -608,28 +611,28 @@ trait TermImpl extends StatementImpl { self: Term =>
         + r
       )
     }.mkString("(", ", ", ")")
-    case Bind(l, r) => s"$l as $r" |> bra
-    case Test(l, r) => s"$l is $r" |> bra
-    case With(t, fs) =>  s"$t with $fs" |> bra
+    case Bind(l, r) => s"${l.showDbg} as ${r.showDbg}" |> bra
+    case Test(l, r) => s"${l.showDbg} is ${r.showDbg}" |> bra
+    case With(t, fs) => s"${t.showDbg} with ${fs.showDbg}" |> bra
     case CaseOf(s, c) =>
-      s"case $s of { ${c.print(true)} }" |> bra
-    case Subs(a, i) => s"($a)[$i]"
-    case Assign(lhs, rhs) => s" $lhs <- $rhs" |> bra
-    case New(S((at, ar)), bod) => s"new ${at.showDbg2}($ar) ${bod.showDbg}" |> bra
+      s"case ${s.showDbg} of { ${c.print(true)} }" |> bra
+    case Subs(a, i) => s"(${a.showDbg})[${i.showDbg}]"
+    case Assign(lhs, rhs) => s" ${lhs.showDbg} <- ${rhs.showDbg}" |> bra
+    case New(S((at, ar)), bod) => s"new ${at.showDbg2}(${ar.showDbg}) ${bod.showDbg}" |> bra
     case New(N, bod) => s"new ${bod.showDbg}" |> bra
-    case NuNew(cls) => s"new ${cls.print(false)}" |> bra
-    case If(body, els) => s"if $body" + els.fold("")(" else " + _) |> bra
-    case TyApp(lhs, targs) => s"$lhs‹${targs.map(_.showDbg2).mkString(", ")}›"
-    case Where(bod, wh) => s"${bod} where {${wh.mkString("; ")}}"
-    case Forall(ps, bod) => s"forall ${ps.mkString(", ")}. ${bod}"
+    case NuNew(cls) => s"new ${cls.showDbg}" |> bra
+    case If(body, els) => s"if ${body.showDbg}" + els.fold("")(" else " + _.showDbg) |> bra
+    case TyApp(lhs, targs) => s"${lhs.showDbg}‹${targs.iterator.map(_.showDbg2).mkString(", ")}›"
+    case Where(bod, wh) => s"${bod.showDbg} where {${wh.iterator.map(_.showDbg).mkString("; ")}}"
+    case Forall(ps, bod) => s"forall ${ps.mkString(", ")}. ${bod.showDbg}"
     case Inst(bod) => s"${bod.print(true)}!"
     case Super() => "super"
-    case Eqn(lhs, rhs) => s"${lhs} = ${rhs}"
+    case Eqn(lhs, rhs) => s"${lhs.showDbg} = ${rhs.showDbg}"
     case AdtMatchWith(cond, arms) =>
-      s"match ${cond} with ${arms.map (patmat => s"${patmat.pat} -> ${patmat.rhs}").mkString (" | ") }"
+      s"match ${cond.showDbg} with ${arms.map (patmat => s"${patmat.pat.showDbg} -> ${patmat.rhs.showDbg}").mkString (" | ") }"
     case Quoted(b) => s"code\"$b\""
     case Unquoted(b) => s"$${$b}"
-    case Rft(bse, tu) => s"${bse} { ${tu} }"
+    case Rft(bse, tu) => s"${bse.showDbg} ${tu.showDbg}"
   }}
 
   def show(newDefs: Bool): Str = showIn(ShowCtx.mk(Nil, newDefs), false)
@@ -819,7 +822,7 @@ trait TupImpl { self: Tup =>
       (if (t.flags.mut) "mut " else "")
       + (if (t.flags.genGetter) "val " else "")
       + (if (t.flags.spec) "#" else "")
-      + n.fold("")(_.name + ": ") + t.value + ","
+      + n.fold("")(_.name + ": ") + t.value.print(false) + ","
     )}.mkString(" ")
 
   def showIn(ctx: ShowCtx): Str =
@@ -835,7 +838,7 @@ trait SimpleTermImpl extends Ordered[SimpleTerm] { self: SimpleTerm =>
   def compare(that: SimpleTerm): Int = this.idStr compare that.idStr
   val idStr: Str = this match {
     case Var(name) => name
-    case lit: Lit => lit.toString
+    case lit: Lit => lit.showDbg
   }
 }
 
@@ -905,6 +908,8 @@ trait Located {
 
 trait DesugaredStatementImpl extends Located { self: DesugaredStatement =>
   def describe: Str
+
+  def showDbg: Str
 }
 
 trait StatementImpl extends Located { self: Statement =>
@@ -924,7 +929,7 @@ trait StatementImpl extends Located { self: Statement =>
         case v @ Var(nme) => R(TypeName(nme).withLocOf(v))
         case t =>
           import Message._
-          L(ErrorReport(msg"illegal datatype type parameter shape: ${t.toString}" -> t.toLoc :: Nil, newDefs=false))
+          L(ErrorReport(msg"illegal datatype type parameter shape: ${t.showDbg}" -> t.toLoc :: Nil, newDefs=false))
       }
       val (diags2, cs) = desugarCases(bod, targs)
       val dataDefs = cs.collect{case td: TypeDef => td}
@@ -1090,15 +1095,20 @@ trait StatementImpl extends Located { self: Statement =>
     case Unquoted(body) => body :: Nil
   }
   
-  
-  override def toString: Str = this match {
-    case LetS(isRec, name, rhs) => s"let${if (isRec) " rec" else ""} $name = $rhs"
-    case DatatypeDefn(head, body) => s"data type $head of $body"
-    case DataDefn(head) => s"data $head"
-    case Constructor(params, bod) => s"constructor(${params.showElems}) $bod"
-    case _: Term => super.toString
-    case d: Decl => d.showDbg
-    case d: NuDecl => d.showDbg
+  def showDbg: Str = this match {
+    case LetS(isRec, name, rhs) => s"let${if (isRec) " rec" else ""} ${name.showDbg} = ${rhs.showDbg}"
+    case DatatypeDefn(head, body) => s"data type ${head.showDbg} of ${body.showDbg}"
+    case DataDefn(head) => s"data ${head.showDbg}"
+    case Constructor(params, body) => s"constructor(${params.showElems}) ${body.showDbg}"
+    case t: Term => t.print(false)
+    case d: Decl => d.showHead + (d match {
+      case n: TypeDef if n.kind is Als => " = "
+      case _ => ": "
+    }) + d.showBody
+    case n: NuDecl => n.showHead + (n match {
+      case n: NuFunDef => if (n.rhs.isLeft) " = " else ": "
+      case _: NuTypeDef => " "
+    }) + n.showBody
   }
 }
 
@@ -1155,13 +1165,13 @@ trait IfBodyImpl extends Located { self: IfBody =>
     case IfOpsApp(t, ops) => t :: ops.flatMap(x => x._1 :: x._2 :: Nil)
   }
   
-  override def toString: String = this match {
-    case IfThen(lhs, rhs) => s"($lhs) then $rhs"
-    case IfElse(trm) => s"else $trm"
-    case IfBlock(ts) => s"‹${ts.map(_.fold(identity, identity)).mkString("; ")}›"
-    case IfOpApp(lhs, op, ib) => s"$lhs $op $ib"
-    case IfOpsApp(lhs, ops) => s"$lhs ‹${ops.iterator.map{case(v, r) => s"· $v $r"}.mkString("; ")}›"
-    case IfLet(isRec, v, r, b) => s"${if (isRec) "rec " else ""}let $v = $r in $b"
+  def showDbg: String = this match {
+    case IfThen(lhs, rhs) => s"(${lhs.showDbg}) then ${rhs.showDbg}"
+    case IfElse(trm) => s"else ${trm.showDbg}"
+    case IfBlock(ts) => s"‹${ts.iterator.map(_.fold(_.showDbg, _.showDbg)).mkString("; ")}›"
+    case IfOpApp(lhs, op, ib) => s"${lhs.showDbg} ${op.showDbg} ${ib.showDbg}"
+    case IfOpsApp(lhs, ops) => s"${lhs.showDbg} ‹${ops.iterator.map{case(v, r) => s"· ${v.showDbg} ${r.showDbg}"}.mkString("; ")}›"
+    case IfLet(isRec, v, r, b) => s"${if (isRec) "rec " else ""}let ${v.showDbg} = ${r.showDbg} in ${b.showDbg}"
   }
 
   def showIn(ctx: ShowCtx): Str = this match {
