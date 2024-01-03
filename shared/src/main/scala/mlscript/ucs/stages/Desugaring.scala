@@ -296,20 +296,14 @@ trait Desugaring { self: PreTyper =>
             raiseError(PreTyping, msg"alias pattern is not supported for now" -> pattern.toLoc)
             rec(scrutineeVar, tail)
           case s.LiteralPattern(literal) =>
-            scrutineeVar.getOrCreateScrutinee
-                        .withAlias(scrutineeVar)
-                        .getOrCreateLiteralPattern(literal)
-                        .addLocation(literal)
+            scrutineeVar.getOrCreateScrutinee.withAlias(scrutineeVar).getOrCreateLiteralPattern(literal).addLocation(literal)
             c.Branch(
               scrutinee = scrutineeVar,
               pattern = c.Pattern.Literal(literal),
               continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scope, context)
             ) :: rec(scrutineeVar, tail)
           case s.ConcretePattern(nme @ (Var("true") | Var("false"))) => 
-            scrutineeVar.getOrCreateScrutinee
-                        .withAlias(scrutineeVar)
-                        .getOrCreateBooleanPattern(nme.name === "true")
-                        .addLocation(nme)
+            scrutineeVar.getOrCreateScrutinee.withAlias(scrutineeVar).getOrCreateBooleanPattern(nme.name === "true").addLocation(nme)
             c.Branch(
               scrutinee = scrutineeVar,
               pattern = c.Pattern.Class(nme.withResolvedTypeSymbol),
