@@ -70,7 +70,7 @@ fun map(f) = case
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
 //│ ║  l.69: 	  None as n then n
 //│ ╙──      	          ^^^^^^^^
-//│ ╔══[ERROR] Illegal interleaved statement None : ()
+//│ ╔══[ERROR] Illegal interleaved statement Asc(Var(None),Literal(UnitLit(true)))
 //│ ║  l.69: 	  None as n then n
 //│ ╙──      	  ^^^^
 //│ fun map: anything -> anything -> error

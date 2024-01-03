@@ -9,7 +9,7 @@ class Baz[T](val x: Foo[T]) extends Foo[[T]]
 //│ }
 //│ class Baz[T](x: Foo[T]) extends Foo
 
-// TODO
+// FIXME
 fun foo[T](f: Foo[T]): Int = if f is
     Bar then 0
     Baz(x) then foo(x : Foo[x.T])
@@ -43,6 +43,13 @@ fun foo[T](f: Foo[T]): Int = if f is
 //│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
 //│ ╙──     	          ^
 //│ fun foo: forall 'T. (f: Foo['T]) -> Int
+
+fun foo: Foo['a] -> Int
+fun foo(f: Foo['a]) = if f is
+    Bar then 0
+    Baz(x) then foo(x as Foo[x.T])
+//│ fun foo: forall 'a. (f: Foo['a]) -> Int
+//│ fun foo: forall 'a0. Foo['a0] -> Int
 
 fun foo: Foo['a] -> Int
 fun foo(f) = if f is
@@ -93,25 +100,24 @@ class C2 extends C[Int]
 //│   constructor()
 //│ }
 
-// :d
 :e // Needs type annot on parameter for GADT reasoning
 fun foo: C['T] -> 'T
 fun foo(x) = if x is
     C1(c) then c : x.T
     C2    then 0 : x.T
 //│ ╔══[ERROR] Type error in definition
-//│ ║  l.99: 	fun foo(x) = if x is
-//│ ║        	    ^^^^^^^^^^^^^^^^
-//│ ║  l.100: 	    C1(c) then c : x.T
+//│ ║  l.105: 	fun foo(x) = if x is
+//│ ║         	    ^^^^^^^^^^^^^^^^
+//│ ║  l.106: 	    C1(c) then c : x.T
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.101: 	    C2    then 0 : x.T
+//│ ║  l.107: 	    C2    then 0 : x.T
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.100: 	    C1(c) then c : x.T
+//│ ║  l.106: 	    C1(c) then c : x.T
 //│ ║         	                    ^^
 //│ ╟── into type `'T | ~??A`
-//│ ║  l.98: 	fun foo: C['T] -> 'T
-//│ ╙──      	                  ^^
+//│ ║  l.104: 	fun foo: C['T] -> 'T
+//│ ╙──       	                  ^^
 //│ fun foo: forall 'A. (C1['A] | C2) -> (Int | ??A & 'A)
 //│ fun foo: forall 'T. C['T] -> 'T
 

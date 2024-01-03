@@ -100,7 +100,7 @@ let x = ?
 //│ ╙──      	        ^
 //│ let x: error
 //│ Code generation encountered an error:
-//│   cannot generate code for term ?
+//│   cannot generate code for term WildcardType()
 
 :e
 if x is ? then 1
@@ -161,7 +161,7 @@ Foo.a
 //│ ╙──       	^^^^^^^^^
 //│ error
 //│ Code generation encountered an error:
-//│   cannot generate code for term Rft(IntLit(123), ...)
+//│   cannot generate code for term Rft(IntLit(123),TypingUnit(List(IntLit(4))))
 
 
 class A
@@ -176,7 +176,7 @@ new A { }
 //│ ╙──       	^^^^^^^^^
 //│ error
 //│ Code generation encountered an error:
-//│   cannot generate code for term Rft(NuNew(Var(A)), ...)
+//│   cannot generate code for term Rft(NuNew(Var(A)),TypingUnit(List()))
 
 
 
@@ -266,7 +266,7 @@ f(1)
 //│ error
 //│ res
 //│ Runtime error:
-//│   TypeError: f4 is not a function
+//│   TypeError: f3 is not a function
 
 
 new Foo(2)

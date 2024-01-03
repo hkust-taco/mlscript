@@ -361,3 +361,11 @@ c2.i: c2.A
 //│ Int
 
 
+let f = (t, x: t.A) => x + t.i
+//│ let f: forall 'A. ({A :> 'A <: Int, i: Int}, x: 'A) -> Int
+
+f(C2(1), 2)
+//│ Int
+
+let g = (t, x: t) => t && x
+//│ let g: (Bool, x: Bool) -> Bool
