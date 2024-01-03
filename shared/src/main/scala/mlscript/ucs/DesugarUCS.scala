@@ -108,7 +108,7 @@ trait DesugarUCS extends Transformation
     implicit val context: Context = new Context(`if`)
     trace("traverseIf") {
       // Stage 0: Transformation
-      val transformed = traceWithTopic("transform") {
+      val transformed = traceWithTopic("ucs.transform") {
         println("STEP 0")
         val transformed = transform(`if`)
         println("Transformed UCS term:")
@@ -150,9 +150,11 @@ trait DesugarUCS extends Transformation
         println(s"Coverage checking result: ${diagnostics.size} errors")
         raiseMany(diagnostics)
       }
+      traceWithTopic("desugared") {
+        println(s"Desugared term: ${postProcessed.showDbg}")
+      }
       // Epilogue
       `if`.desugaredTerm = S(postProcessed)
-      println(s"Desugared term: ${postProcessed.showDbg}")
     }(_ => "traverseIf ==> ()")
   }
   

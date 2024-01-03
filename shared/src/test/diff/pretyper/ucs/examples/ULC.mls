@@ -320,20 +320,46 @@ fun search(f: 'A -> Option['B], xs: List['A]): Option['B] =
 //│   where
 //│     'B <: 'A0
 
-// The removal of type annotations will cause running out of fuel.
+// =============================================================================
+// TO BE INVESTIGATED: The following version does not have a stable type.
+// The desugared term look like this:
+// let ucs$test$0 = <=(n, 0,) : Bool in
+// case ucs$test$0 of {
+//   true =>
+//     let x = |>(reverse(acc,), join("",),) in
+//     let ucs$test$1 = contains(xs, x,) : Bool in
+//     case ucs$test$1 of {
+//       true => None;
+//       _ => Some(x,)
+//     };
+//   _ => {
+//     search(('(' x ')',) => combinations(-(n, 1,), ::(x, acc,), alphabet, xs,), alphabet,)
+//   }
+// }
+// fun combinations(n: Int, acc: List['T], alphabet: List['T], xs: List[Str]): Option[Str] =
+//   if
+//     n <= 0 and
+//       let x = reverse(acc) |> join("")
+//       contains(xs, x) then None
+//       else Some(x)
+//     else
+//       search((x) => combinations(n - 1, x :: acc, alphabet, xs), alphabet)
+// //│ fun combinations: forall 'T 'A 'T0. (n: Int, acc: List['T], alphabet: List['T0], xs: List[Str]) -> Option[Str]
+// //│   where
+// //│     'T0 <: 'T & 'A
+// //│     'T :> 'A
+// //│     'A := 'T
+// =============================================================================
+
+fun combinations: forall 'a: (Int, List['a], List['a], List[Str]) -> Option[Str]
 fun combinations(n: Int, acc: List['T], alphabet: List['T], xs: List[Str]): Option[Str] =
-  if
-    n <= 0 and
-      let x = reverse(acc) |> join("")
-      contains(xs, x) then None
-      else Some(x)
-    else
-      search((x) => combinations(n - 1, x :: acc, alphabet, xs), alphabet)
-//│ fun combinations: forall 'T 'A 'T0. (n: Int, acc: List['T], alphabet: List['T0], xs: List[Str]) -> Option[Str]
-//│   where
-//│     'T0 <: 'T & 'A
-//│     'T :> 'A
-//│     'A := 'T
+  if n <= 0 then
+    let x = reverse(acc) |> join("")
+    if contains(xs, x) then None else Some(x)
+  else
+    search((x) => combinations(n - 1, x :: acc, alphabet, xs), alphabet)
+//│ fun combinations: forall 'T. (n: Int, acc: List['T], alphabet: List['T], xs: List[Str]) -> Option[Str]
+//│ fun combinations: forall 'a. (Int, List['a], List['a], List[Str]) -> Option[Str]
 
 combinations(1, Nil, 1 :: 2 :: 3 :: Nil, Nil) |> showOption
 combinations(2, Nil, 1 :: 2 :: 3 :: Nil, Nil) |> showOption
