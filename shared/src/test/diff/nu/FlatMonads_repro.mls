@@ -48,7 +48,7 @@ let ri(f) = Bind(Pure(42), f)
 //│   where
 //│     'CC :> 42
 //│ ri
-//│    = [Function: ri1]
+//│    = [Function: ri]
 
 ri(Pure)
 //│ Bind['CC, 'AA]

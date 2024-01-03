@@ -14,7 +14,7 @@ Some(x) => x
 //│ ╙──     	           ^
 //│ error -> error
 //│ Code generation encountered an error:
-//│   term App(Var(Some), Tup(_: Var(x))) is not a valid pattern
+//│   term App(Var(Some),Tup(List((None,Fld(_,Var(x)))))) is not a valid pattern
 
 :js
 // FIXME type
@@ -24,12 +24,12 @@ let f = Some => 0
 //│ class TypingUnit2 {}
 //│ const typing_unit2 = new TypingUnit2;
 //│ // Query 1
-//│ globalThis.f1 = function f1(Some) {
+//│ globalThis.f = function f(Some) {
 //│   return 0;
 //│ };
 //│ // End of generated code
 //│ f
-//│   = [Function: f1]
+//│   = [Function: f]
 
 // :e // TODO
 f(Some)

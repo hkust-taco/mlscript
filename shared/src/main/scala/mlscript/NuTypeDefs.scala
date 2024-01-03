@@ -561,7 +561,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       case fd @ NuFunDef(_, nme, snme, tparams, R(rhs)) =>
         funSigs.updateWith(nme.name) {
           case S(s) =>
-            err(s"A type signature for '$nme' was already given", fd.toLoc)
+            err(s"A type signature for '${nme.name}' was already given", fd.toLoc)
             S(s)
           case N => S(fd)
         }
