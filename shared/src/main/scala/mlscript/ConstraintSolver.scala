@@ -620,7 +620,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               rec(b.inner.ub, ar.inner.ub, false)
             case (LhsRefined(S(b: ArrayBase), ts, r, _), _) => reportError()
             case (LhsRefined(S(ov: Overload), ts, r, trs), _) =>
-              annoying(Nil, LhsRefined(S(ov.approximatePos), ts, r, trs), Nil, done_rs) // TODO remove approx. with ambiguous constraints
+              val t = TupleSetConstraints.mk(ov)
+              annoying(Nil, LhsRefined(S(t), ts, r, trs), Nil, done_rs)
+              // annoying(Nil, LhsRefined(S(ov.approximatePos), ts, r, trs), Nil, done_rs) // TODO remove approx. with ambiguous constraints
             case (LhsRefined(S(Without(b, ns)), ts, r, _), RhsBases(pts, N | S(L(_)), _)) =>
               rec(b, done_rs.toType(), true)
             case (_, RhsBases(pts, S(L(Without(base, ns))), _)) =>
@@ -818,6 +820,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             lhs.upperBounds ::= newBound // update the bound
+            lhs.tsc.foreach { case (tsc, i) => tsc.filterUB(i, rhs) }
             lhs.lowerBounds.foreach(rec(_, rhs, true)) // propagate from the bound
             
           case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>

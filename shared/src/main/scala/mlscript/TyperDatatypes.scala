@@ -534,6 +534,8 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       require(value.forall(_.level <= level))
       _assignedTo = value
     }
+
+    var tsc: Opt[(TupleSetConstraints, Int)] = N
     
     // * Bounds should always be disregarded when `equatedTo` is defined, as they are then irrelevant:
     def lowerBounds: List[SimpleType] = { require(assignedTo.isEmpty, this); _lowerBounds }
@@ -646,5 +648,86 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     lazy val underlying: SimpleType = tt.neg()
     val prov = noProv
   }
-  
+
+  class TupleSetConstraints(val constraints: MutSet[Ls[ST]], var tvs: Ls[TV])(val prov: TypeProvenance) {
+    def filterUB(index: Int, ub: ST)(implicit raise: Raise, ctx: Ctx): Unit = {
+      def go(ub: ST): Unit = ub match {
+        case ub: TV =>
+          ub.upperBounds.foreach(go)
+          ub.tsc = S(this, index)
+        case _ =>
+          constraints.filterInPlace { constrs =>
+            val ty = constrs(index)
+            val dnf = DNF.mk(MaxLevel, Nil, ty & ub.neg(), true)
+            dnf.isBot
+          }
+      }
+      go(ub)
+      println(s"TSC filterUB: $tvs in $constraints")
+      if (constraints.sizeCompare(1) === 0) {
+        constraints.head.zip(tvs).foreach {
+          case (ty, tv) =>
+            tv.tsc = N
+            constrain(tv, ty)(raise, prov, ctx)
+            constrain(ty, tv)(raise, prov, ctx)
+        }
+      }
+    }
+  }
+  object TupleSetConstraints {
+    def lcgField(a: FieldType, b: FieldType)
+      (implicit prov: TypeProvenance, lvl: Level)
+        : (FieldType, Ls[TV], Ls[Ls[ST]]) = {
+      val (ub, tvs, constrs) = lcg(a.ub, b.ub)
+      if (a.lb.isEmpty && b.lb.isEmpty) {
+        (FieldType(N, ub)(prov), tvs, constrs)
+      } else {
+        val (lb, ltvs, lconstrs) = lcg(a.lb.getOrElse(BotType), b.lb.getOrElse(BotType))
+        (FieldType(S(lb), ub)(prov), tvs ++ ltvs, constrs ++ lconstrs)
+      }
+    }
+    def lcg(a: ST, b: ST)
+      (implicit prov: TypeProvenance, lvl: Level)
+        : (ST, Ls[TV], Ls[Ls[ST]]) = (a, b) match {
+      case (_, b: ProvType) => lcg(a, b.underlying)
+      case (a: ProvType, _) => lcg(a.underlying, b)
+      case (a: FT, b: FT) => lcgFunction(a, b)
+      case (a: ArrayType, b: ArrayType) =>
+        val (t, tvs, constrs) = lcgField(a.inner, b.inner)
+        (ArrayType(t)(prov), tvs, constrs)
+      case (a: TupleType, b: TupleType) if a.fields.sizeCompare(b.fields.size) === 0 =>
+        val (fts, tvss, constrss) = a.fields.map(_._2).zip(b.fields.map(_._2)).map {
+          case (a, b) => lcgField(a, b)
+        }.unzip3
+        (TupleType(fts.map(N -> _))(prov), tvss.flatten, constrss.flatten)
+      case (a: TR, b: TR) if a.defn === b.defn && a.targs.sizeCompare(b.targs.size) === 0 =>
+        val (ts, tvss, constrss) = a.targs.zip(b.targs).map {
+          case (a, b) => lcg(a, b)
+        }.unzip3
+        (TypeRef(a.defn, ts)(prov), tvss.flatten, constrss.flatten)
+      case (a: TV, b: TV) if a.compare(b) === 0 => (a, Nil, Nil)
+      case (a: ExtrType, b: ExtrType) if a.pol === b.pol => (a, Nil, Nil)
+      case _ =>
+        val tv = freshVar(prov, N)
+        (tv, List(tv), List(List(a, b)))
+    }
+    def lcgFunction(a: FT, b: FT)
+      (implicit prov: TypeProvenance, lvl: Level)
+        : (FT, Ls[TV], Ls[Ls[ST]]) = {
+      val (lhs, ltvs, lconstrs) = lcg(a.lhs, b.lhs)
+      val (rhs, rtvs, rconstrs) = lcg(a.rhs, b.rhs)
+      (FunctionType(lhs, rhs)(prov), ltvs ++ rtvs, lconstrs ++ rconstrs)
+    }
+    def mk(ov: Overload)(implicit lvl: Level): FunctionType = {
+      val (t, tvs, constrs) =
+        ov.alts.tail.foldLeft((ov.alts.head, Nil: Ls[TV], Nil: Ls[Ls[ST]])) {
+          case ((a, tvs, constrs), b) => lcgFunction(a, b)(ov.prov, lvl)
+        }
+      // val (t, tvs, constrs) = lcgFunction(ov.alts.head, ov.alts.tail)(ov.prov, lvl)
+      val tsc = new TupleSetConstraints(MutSet.empty ++ constrs.transpose, tvs)(ov.prov)
+      tvs.zipWithIndex.foreach { case (tv, i) => tv.tsc = S((tsc, i)) }
+      println(s"TSC mk: ${tsc.tvs} in ${tsc.constraints}")
+      t
+    }
+  }
 }
