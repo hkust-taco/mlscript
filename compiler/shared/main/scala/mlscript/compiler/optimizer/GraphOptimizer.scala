@@ -623,6 +623,11 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
     private var cur_defn: Opt[GODef] = None
     private val name_defn_map = MutHMap[Str, Str]()
 
+    private def recBoundaryMatched(producer: Opt[Int], consumer: Opt[Int]) =
+      (producer, consumer) match
+        case (Some(_), _) => false
+        case _ => true
+
     private def getFirstDestructedSplitting(defn: GODef, intros: Map[Str, Intro]): Opt[Str] =
       for {
         param <- DestructAnalysis().firstDestructed(defn.body)
@@ -649,7 +654,10 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
             } yield (scrut, pre_f, pre_retvals, cases)
 
             can_split match
-              case None => LetCall(xs, defnref, as, e.accept_visitor(this))
+              case None => 
+                LetCall(xs, defnref, as, e.accept_visitor(this))
+              case Some(_) if !recBoundaryMatched(defnref.expectDefn.recBoundary, cur_defn.get.recBoundary) =>
+                LetCall(xs, defnref, as, e.accept_visitor(this))
               case Some((scrut, pre_f, pre_retvals, cases)) =>
                 var scrut_new_name: Opt[Name] = None
                 val new_names = pre_retvals.map { retval => 
