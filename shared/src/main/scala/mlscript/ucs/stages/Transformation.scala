@@ -55,7 +55,7 @@ trait Transformation { self: Traceable with Diagnosable =>
   private def transformIfBody(body: IfBody): TermSplit = trace(s"transformIfBody <== ${inspect.shallow(body)}") {
     body match {
       case IfThen(expr, rhs) => transformConjunction(splitAnd(expr), Split.then(rhs), true)
-      case IfLet(isRec, name, rhs, body) => rare
+      case IfLet(isRec, name, rhs, body) => die
       case IfElse(expr) => Split.then(expr)
       case IfOpApp(lhs, Var("is"), rhs) =>
         val (tests, scrutinee) = extractLast(splitAnd(lhs))
@@ -83,7 +83,7 @@ trait Transformation { self: Traceable with Diagnosable =>
             transformConjunction(init, inner, false)
           case init :+ last =>
             transformConjunction(init, TermBranch.Left(last, Split.from(opsRhss.map(transformOperatorBranch))).toSplit, false)
-          case _ => rare
+          case _ => die
         }
     }
   }(_ => "transformIfBody ==> ")
@@ -156,7 +156,7 @@ trait Transformation { self: Traceable with Diagnosable =>
           // I think it's not very well-formed. But I still implement it for not
           // breaking existing tests.
           splitAnd(lhs) match {
-            case Nil => rare // It's impossible to be empty.
+            case Nil => die // It's impossible to be empty.
             case pattern :: tail =>
               // Here, `pattern` will be `( Cons x xs )` and `tail` will be
               // `[ is ys (Cons y ys) ]`. We can make a new `IfOpsApp`.
@@ -174,7 +174,7 @@ trait Transformation { self: Traceable with Diagnosable =>
               }
           }
           // END TEMPORARY PATCH
-        case IfLet(rec, nme, rhs, body) => rare
+        case IfLet(rec, nme, rhs, body) => die
         case IfBlock(lines) => lines.foldLeft(Split.empty[PatternBranch]) {
           case (acc, L(body)) => acc ++ transformPatternMatching(body)
           case (acc, R(NuFunDef(S(rec), nme, _, _, L(rhs)))) =>
@@ -237,11 +237,9 @@ trait Transformation { self: Traceable with Diagnosable =>
 }
 
 object Transformation {
-  private def rare: Nothing = lastWords("found a very rare case during desugaring UCS terms")
-
   private def extractLast[T](xs: List[T]): (List[T], T) = xs match {
     case init :+ last => init -> last
-    case _ => rare
+    case _ => die
   }
 
   private object is {
