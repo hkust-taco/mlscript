@@ -9,7 +9,7 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
   import PreTyper._
 
   private def extractParameters(fields: Term): Ls[LocalTermSymbol] =
-    trace(s"extractParameters <== ${inspect.deep(fields)}") {
+    trace(s"extractParameters <== $fields") {
       fields match {
         case nme: Var => new LocalTermSymbol(nme) :: Nil
         case Tup(arguments) =>
@@ -23,15 +23,15 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
             case (_, Fld(_, App(Var(name), parameters))) if name.headOption.forall(_.isUpper) =>
               extractParameters(parameters)
             case (_, Fld(_, parameter)) =>
-              println(s"unknown parameter: ${inspect.deep(parameter)}")
+              println(s"unknown parameter: $parameter")
               ???
           }
         case PlainTup(arguments @ _*) =>
           arguments.map {
             case nme: Var => new LocalTermSymbol(nme)
-            case other => println("Unknown parameters: " + inspect.deep(other)); ??? // TODO: bad
+            case other => println("Unknown parameters: " + other.toString); ??? // TODO: bad
           }.toList
-        case other => println("Unknown parameters: " + inspect.deep(other)); ??? // TODO: bad
+        case other => println("Unknown parameters: " + other.toString); ??? // TODO: bad
       }
     }(rs => s"extractParameters ==> ${rs.iterator.map(_.name).mkString(", ")}")
 
@@ -76,7 +76,7 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
     }()
 
   protected def traverseTerm(term: Term)(implicit scope: Scope): Unit =
-    trace(s"traverseTerm <== ${inspect.shallow(term)}") {
+    trace(s"traverseTerm <== ${term.showDbg}") {
       term match {
         case Assign(lhs, rhs) => traverseTerm(lhs); traverseTerm(rhs)
         case Bra(_, trm) => traverseTerm(trm)
@@ -119,7 +119,7 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
           traverseStatements(decls.entities, "Rft", scope)
           ()
       }
-    }(_ => s"traverseTerm ==> ${inspect.shallow(term)}")
+    }(_ => s"traverseTerm ==> ${term.showDbg}")
 
   private def traverseTypeDefinition(symbol: TypeSymbol, defn: NuTypeDef)(implicit scope: Scope): Unit =
     trace(s"traverseTypeDefinition <== ${defn.describe}") {
@@ -176,14 +176,14 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
           acc
       }
       println(thingsToTraverse.iterator.map {
-        case (L(term), _) => inspect.shallow(term)
+        case (L(term), _) => term.showDbg
         case (R(symbol), _) => symbol.name
       }.mkString("to be traversed: {", ", ", "}"))
       // Pass 3: Traverse terms collected from the last pass.
       println("Pass 3")
       thingsToTraverse.foreach {
         case (L(term), scope) =>
-          println("traverseTerm: " + inspect.shallow(term))
+          println("traverseTerm: " + term.showDbg)
           println("scope: " + scope.showLocalSymbols)
           traverseTerm(term)(scope)
         case (R(symbol), scope) => symbol.body match {
@@ -215,7 +215,7 @@ object PreTyper {
         case (nme: Var) :: tail => rec(nme :: results, tail)
         case (TyApp(ty, _)) :: tail => rec(results, ty :: tail)
         case (App(nme @ Var(_), Tup(_))) :: tail => rec(nme :: results, tail)
-        case other :: _ => println(s"Unknown parent type: ${inspect.deep(other)}"); ???
+        case other :: _ => println(s"Unknown parent type: $other"); ???
       }
     rec(Nil, parents)
   }

@@ -22,7 +22,7 @@ trait CoverageChecking { self: mlscript.pretyper.Traceable =>
       working: MatchRegistry,
       seen: SeenRegistry
   )(implicit context: Context): Ls[Diagnostic] =
-    trace(s"checkCoverage <== ${inspect.shallow(term)}, ${pending.size} pending, ${working.size} working, ${seen.size} seen") {
+    trace(s"checkCoverage <== ${term.showDbg}, ${pending.size} pending, ${working.size} working, ${seen.size} seen") {
       println(s"seen: " + (if (seen.isEmpty) "empty" else
         seen.iterator.map { case ((k, _), (s, _, _)) => s"${k.name} is ${s.name}" }.mkString(", ")
       ))

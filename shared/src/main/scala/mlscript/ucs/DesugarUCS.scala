@@ -29,7 +29,7 @@ trait DesugarUCS extends Transformation
       * @param className the class name variable
       */
     def getClassLikeSymbol: TypeSymbol =
-      trace(s"getClassLikeSymbol <== ${inspect.shallow(nme)}") {
+      trace(s"getClassLikeSymbol <== ${nme.showDbg}") {
         nme.symbolOption match {
           case S(symbol: ClassSymbol) => symbol
           case S(symbol: TraitSymbol) => symbol
@@ -152,6 +152,7 @@ trait DesugarUCS extends Transformation
       }
       // Epilogue
       `if`.desugaredTerm = S(postProcessed)
+      println(s"Desugared term: ${postProcessed.showDbg}")
     }(_ => "traverseIf ==> ()")
   }
   

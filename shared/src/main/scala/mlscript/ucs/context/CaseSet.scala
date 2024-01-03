@@ -8,7 +8,7 @@ sealed abstract class Pattern {
   override def toString(): String = this match {
     case Pattern.ClassLike(symbol) => s"${symbol.defn.kind.str} `${symbol.name}`"
     case Pattern.Tuple() => "tuple"
-    case Pattern.Literal(literal) => s"literal ${inspect.deep(literal)}"
+    case Pattern.Literal(literal) => s"literal $literal"
   }
 }
 

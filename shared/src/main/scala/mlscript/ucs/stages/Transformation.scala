@@ -52,7 +52,7 @@ trait Transformation { self: Traceable with Diagnosable =>
       case (test, following) => TermBranch.Boolean(test, following).toSplit
     }
 
-  private def transformIfBody(body: IfBody): TermSplit = trace(s"transformIfBody <== ${inspect.shallow(body)}") {
+  private def transformIfBody(body: IfBody): TermSplit = trace(s"transformIfBody <== ${body.showDbg}") {
     body match {
       case IfThen(expr, rhs) => transformConjunction(splitAnd(expr), Split.then(rhs), true)
       case IfLet(isRec, name, rhs, body) => die
@@ -114,7 +114,7 @@ trait Transformation { self: Traceable with Diagnosable =>
     * Transform an `IfBody` into a `PatternSplit`.
     */
   private def transformPatternMatching(body: IfBody): PatternSplit =
-    trace(s"transformPatternMatching <== ${inspect.shallow(body)}") {
+    trace(s"transformPatternMatching <== ${body.showDbg}") {
       body match {
         case IfThen(expr, rhs) => 
           separatePattern(expr) match {
@@ -124,7 +124,7 @@ trait Transformation { self: Traceable with Diagnosable =>
               PatternBranch(pattern, Split.default(rhs)).toSplit
           }
         case IfOpApp(lhs, Var("and"), rhs) =>
-          println(s"lhs: ${inspect.deep(lhs)}")
+          println(s"lhs: $lhs")
           separatePattern(lhs) match {
             case (pattern, S(extraTest)) =>
               PatternBranch(pattern, TermBranch.Boolean(extraTest, transformIfBody(rhs)).toSplit).toSplit
@@ -214,14 +214,14 @@ trait Transformation { self: Traceable with Diagnosable =>
 
   private def separatePattern(term: Term): (Pattern, Opt[Term]) = {
     val (rawPattern, extraTest) = helpers.separatePattern(term, true)
-    println("rawPattern: " + inspect.deep(rawPattern))
-    println("extraTest: " + inspect.deep(extraTest))
+    println("rawPattern: " + rawPattern.toString)
+    println("extraTest: " + extraTest.toString)
     (transformPattern(rawPattern), extraTest)
   }
 
   // TODO: Maybe we can change the return type to `::[Term]` so that it will not
   // empty.
-  private def splitAnd(t: Term): List[Term] = trace(s"splitAnd <== ${inspect.deep(t)}") {
+  private def splitAnd(t: Term): List[Term] = trace(s"splitAnd <== $t") {
     t match {
       case App(
         App(Var("and"),

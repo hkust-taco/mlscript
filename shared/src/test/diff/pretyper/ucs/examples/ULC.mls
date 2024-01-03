@@ -329,11 +329,11 @@ fun combinations(n: Int, acc: List['T], alphabet: List['T], xs: List[Str]): Opti
       else Some(x)
     else
       search((x) => combinations(n - 1, x :: acc, alphabet, xs), alphabet)
-//│ fun combinations: forall 'T 'T0 'A. (n: Int, acc: List['T0], alphabet: List['T], xs: List[Str]) -> Option[Str]
+//│ fun combinations: forall 'T 'A 'T0. (n: Int, acc: List['T], alphabet: List['T0], xs: List[Str]) -> Option[Str]
 //│   where
-//│     'T <: 'T0 & 'A
-//│     'T0 :> 'A
-//│     'A := 'T0
+//│     'T0 <: 'T & 'A
+//│     'T :> 'A
+//│     'A := 'T
 
 combinations(1, Nil, 1 :: 2 :: 3 :: Nil, Nil) |> showOption
 combinations(2, Nil, 1 :: 2 :: 3 :: Nil, Nil) |> showOption

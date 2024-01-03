@@ -11,7 +11,7 @@ import scala.annotation.tailrec
 trait PostProcessing { self: DesugarUCS with mlscript.pretyper.Traceable =>
   import PostProcessing._
 
-  def postProcess(term: Term)(implicit context: Context): Term = trace(s"postProcess <== ${inspect.shallow(term)}") {
+  def postProcess(term: Term)(implicit context: Context): Term = trace(s"postProcess <== ${term.showDbg}") {
     // Normalized terms are constructed using `Let` and `CaseOf`.
     term match {
       case top @ CaseOf(scrutineeVar: Var, fst @ Case(className: Var, body, NoCases)) =>
@@ -100,16 +100,16 @@ trait PostProcessing { self: DesugarUCS with mlscript.pretyper.Traceable =>
     }
 
   private def mergeTerms(t1: Term, t2: Term): Term =
-    trace(s"mergeTerms <== ${inspect.shallow(t1)} ${inspect.shallow(t2)}") {
+    trace(s"mergeTerms <== ${t1.showDbg} ${t2.showDbg}") {
       t1 match {
         case t1 @ Let(_, _, _, body) => t1.copy(body = mergeTerms(body, t2))
         case t1 @ CaseOf(scrutinee: Var, cases) =>
           t1.copy(cases = mergeTermIntoCaseBranches(t2, cases))
         case _ =>
-          println(s"CANNOT merge. Discard ${inspect.shallow(t2)}.")
+          println(s"CANNOT merge. Discard ${t2.showDbg}.")
           t1
       }
-    }(merged => s"mergedTerms ==> ${inspect.shallow(merged)}")
+    }(merged => s"mergedTerms ==> ${merged.showDbg}")
 
   private def mergeTermIntoCaseBranches(term: Term, cases: CaseBranches): CaseBranches =
     trace(s"mergeTermIntoCaseBranches <== ${term.describe} ${cases}") {
@@ -187,10 +187,10 @@ trait PostProcessing { self: DesugarUCS with mlscript.pretyper.Traceable =>
           val (n, y) = disentangle(body, scrutineeVar, scrutinee, classSymbol)
           (let.copy(body = n), y.map(t => let.copy(body = t)))
         case other =>
-          println(s"cannot disentangle ${inspect.shallow(other)}. STOP")
+          println(s"cannot disentangle ${other.showDbg}. STOP")
           other -> N
       }
-    }({ case (n, y) => s"disentangle ==> `${inspect.deep(n)}` and `${y.fold("<empty>")(inspect.deep(_))}`" })
+    }({ case (n, y) => s"disentangle ==> `$n` and `${y.fold("<empty>")(_.toString)}`" })
 }
 
 object PostProcessing {
