@@ -38,19 +38,19 @@ new A of 1, 2, 3
 
 new A { fun x = 1 }
 //│ |#new| |A| |{| |#fun| |x| |#=| |1| |}|
-//│ Parsed: {new A { ‹fun x = 1› }}
+//│ Parsed: {new A {fun x = 1}}
 
 new A() { fun x = 1 }
 //│ |#new| |A|(||)| |{| |#fun| |x| |#=| |1| |}|
-//│ Parsed: {(new A)() { ‹fun x = 1› }}
+//│ Parsed: {(new A)() {fun x = 1}}
 
 new A(1, 2, 3) { fun x = 1 }
 //│ |#new| |A|(|1|,| |2|,| |3|)| |{| |#fun| |x| |#=| |1| |}|
-//│ Parsed: {(new A)(1, 2, 3,) { ‹fun x = 1› }}
+//│ Parsed: {(new A)(1, 2, 3,) {fun x = 1}}
 
 new A of 1, 2, 3 { fun x = 1 }
 //│ |#new| |A| |#of| |1|,| |2|,| |3| |{| |#fun| |x| |#=| |1| |}|
-//│ Parsed: {new A(1, 2, 3 { ‹fun x = 1› },)}
+//│ Parsed: {new A(1, 2, 3 {fun x = 1},)}
 
 
 :pe

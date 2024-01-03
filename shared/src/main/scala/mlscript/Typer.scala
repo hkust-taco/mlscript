@@ -1385,7 +1385,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             //   ()
             // and others
             case pat =>
-              lastWords(s"Cannot handle pattern ${pat}")
+              lastWords(s"Cannot handle pattern ${pat.showDbg}")
           }
 
           handlePat(pat, cond_ty)

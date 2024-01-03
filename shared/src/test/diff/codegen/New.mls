@@ -46,7 +46,7 @@ let c = C
 //│ class TypingUnit3 {}
 //│ const typing_unit3 = new TypingUnit3;
 //│ // Query 1
-//│ globalThis.c1 = C;
+//│ globalThis.c = C;
 //│ // End of generated code
 //│ c
 //│   = [class C]
@@ -93,7 +93,7 @@ let c = C
 //│ class TypingUnit8 {}
 //│ const typing_unit8 = new TypingUnit8;
 //│ // Query 1
-//│ globalThis.c3 = C;
+//│ globalThis.c1 = C;
 //│ // End of generated code
 //│ c
 //│   = [Function (anonymous)] {

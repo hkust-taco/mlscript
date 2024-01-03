@@ -306,7 +306,8 @@ class Driver(options: DriverOptions) {
               val res = packTopModule(Some(file.moduleName), `type`(TypingUnit(definitions), false, mlsiWriter.writeErr).show(true))
               res
             }
-          val interfaces = otherList.map(s => Import(file.translateImportToInterface(s), false)).foldRight(expStr)((imp, itf) => s"$imp\n$itf")
+          val interfaces = otherList.map(s =>
+            Import(file.translateImportToInterface(s), false)).foldRight(expStr)((imp, itf) => s"""import "${imp.path}"\n$itf""")
 
           mlsiWriter.write(interfaces)
           mlsiWriter.close()

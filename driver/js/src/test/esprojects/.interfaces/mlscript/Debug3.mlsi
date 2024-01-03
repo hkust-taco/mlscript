@@ -1,33 +1,33 @@
 export declare module Debug3 {
   let z: 1
 }
-//| 0. Typing ‹let z = 1›
-//| | 0. Created lazy type info for let z = 1
+//| 0. Typing TypingUnit(List(NuFunDef(Some(false),Var(z),None,List(),Left(IntLit(1)))))
+//| | 0. Created lazy type info for NuFunDef(Some(false),Var(z),None,List(),Left(IntLit(1)))
 //| | Completing let z = 1
 //| | | Type params 
 //| | | Params 
-//| | | 0. Typing term 1
+//| | | 0. Typing term IntLit(1)
 //| | | 0. : #1<Int,Num,Object>
 //| | | CONSTRAIN #1<Int,Num,Object> <! z1570'
 //| | |   where 
 //| | | 1. C #1<Int,Num,Object> <! z1570'    (0)
 //| | | | NEW z1570' LB (0)
-//| | Completed TypedNuFun(0,let z = 1,#1<Int,Num,Object>) where 
+//| | Completed TypedNuFun(0,NuFunDef(Some(false),Var(z),None,List(),Left(IntLit(1))),#1<Int,Num,Object>) where 
 //| | Typing unit statements
 //| | : None
 //| ⬤ Initial: TypedTypingUnit(
-//|   TypedNuFun(0,let z = 1,#1<Int,Num,Object>)
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(z),None,List(),Left(IntLit(1))),#1<Int,Num,Object>)
 //|   None)
 //|  where: 
 //| allVarPols: 
 //| ⬤ Cleaned up: TypedTypingUnit(
-//|   TypedNuFun(0,let z = 1,#1<Int,Num,Object>)
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(z),None,List(),Left(IntLit(1))),#1<Int,Num,Object>)
 //|   None)
 //|  where: 
 //| allVarPols: 
 //| consed: Map()
 //| ⬤ Unskid: TypedTypingUnit(
-//|   TypedNuFun(0,let z = 1,#1<Int,Num,Object>)
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(z),None,List(),Left(IntLit(1))),#1<Int,Num,Object>)
 //|   None)
 //|  where: 
 //| analyze1[+] #1<Int,Num,Object>
@@ -43,29 +43,29 @@ export declare module Debug3 {
 //| transform[+] #1<Int,Num,Object>   ()  +  None
 //| ~> #1<Int,Num,Object>
 //| ⬤ Type after simplification: TypedTypingUnit(
-//|   TypedNuFun(0,let z = 1,#1<Int,Num,Object>)
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(z),None,List(),Left(IntLit(1))),#1<Int,Num,Object>)
 //|   None)
 //|  where: 
 //| allVarPols: 
 //| normLike[+] TypedTypingUnit(
-//|   TypedNuFun(0,let z = 1,#1<Int,Num,Object>)
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(z),None,List(),Left(IntLit(1))),#1<Int,Num,Object>)
 //|   None)
 //| | norm[+] #1<Int,Num,Object>
 //| | | DNF: DNF(0, #1<Int,Num,Object>{})
 //| | ~> #1<Int,Num,Object>
 //| ⬤ Normalized: TypedTypingUnit(
-//|   TypedNuFun(0,let z = 1,#1<Int,Num,Object>)
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(z),None,List(),Left(IntLit(1))),#1<Int,Num,Object>)
 //|   None)
 //|  where: 
 //| allVarPols: 
 //| ⬤ Cleaned up: TypedTypingUnit(
-//|   TypedNuFun(0,let z = 1,#1<Int,Num,Object>)
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(z),None,List(),Left(IntLit(1))),#1<Int,Num,Object>)
 //|   None)
 //|  where: 
 //| allVarPols: 
 //| consed: Map()
 //| ⬤ Unskid: TypedTypingUnit(
-//|   TypedNuFun(0,let z = 1,#1<Int,Num,Object>)
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(z),None,List(),Left(IntLit(1))),#1<Int,Num,Object>)
 //|   None)
 //|  where: 
 //| analyze1[+] #1<Int,Num,Object>
@@ -81,12 +81,12 @@ export declare module Debug3 {
 //| transform[+] #1<Int,Num,Object>   ()  +  None
 //| ~> #1<Int,Num,Object>
 //| ⬤ Resim: TypedTypingUnit(
-//|   TypedNuFun(0,let z = 1,#1<Int,Num,Object>)
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(z),None,List(),Left(IntLit(1))),#1<Int,Num,Object>)
 //|   None)
 //|  where: 
 //| allVarPols: 
 //| [subs] HashMap()
 //| ⬤ Factored: TypedTypingUnit(
-//|   TypedNuFun(0,let z = 1,#1<Int,Num,Object>)
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(z),None,List(),Left(IntLit(1))),#1<Int,Num,Object>)
 //|   None)
 //|  where: 

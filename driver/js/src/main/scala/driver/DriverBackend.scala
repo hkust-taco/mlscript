@@ -3,7 +3,6 @@ package driver
 import mlscript._
 import mlscript.codegen._
 import mlscript.utils._, shorthands._, algorithms._
-import mlscript.codegen.Helpers._
 import ts2mls.TSPathResolver
 
 class JSDriverBackend extends JSBackend(allowUnresolvedSymbols = false) {
