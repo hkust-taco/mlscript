@@ -92,6 +92,7 @@ x
 a, b
 //│ |a|,| |b|
 //│ Parsed: {,(a, b,)}
+//│ TEST CASE FAILURE: There was an unexpected lack of parse error
 
 
 a .b .c
@@ -133,10 +134,10 @@ a +
   .c
 //│ |a| |+|→|b|↵|.c|←|
 //│ ╔══[PARSE ERROR] Unexpected selector in expression position
-//│ ║  l.133: 	  .c
+//│ ║  l.134: 	  .c
 //│ ╙──       	  ^^
 //│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
-//│ ║  l.133: 	  .c
+//│ ║  l.134: 	  .c
 //│ ╙──       	    ^
 //│ Parsed: {+(a,)({b; undefined},)}
 
@@ -184,7 +185,7 @@ a
     of c
 //│ |a|→|.b| |+|→|1|↵|#of| |c|←|←|
 //│ ╔══[PARSE ERROR] Unexpected 'of' keyword in expression position
-//│ ║  l.184: 	    of c
+//│ ║  l.185: 	    of c
 //│ ╙──       	    ^^
 //│ Parsed: {+((a).b,)({1; c},)}
 
@@ -223,7 +224,7 @@ a
   .b
 //│ |a|→|+|1|↵|*|2|↵|.b|←|
 //│ ╔══[PARSE ERROR] Unexpected selector in operator block
-//│ ║  l.223: 	  .b
+//│ ║  l.224: 	  .b
 //│ ╙──       	  ^^
 //│ Parsed: {*(+(a, 1,), 2,)}
 
@@ -248,7 +249,7 @@ a
 1 .+a 2
 //│ |1| |.+|a| |2|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.248: 	1 .+a 2
+//│ ║  l.249: 	1 .+a 2
 //│ ╙──       	    ^^^
 //│ Parsed: {.+(1,)(a(2,),)}
 

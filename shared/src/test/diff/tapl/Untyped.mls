@@ -282,6 +282,7 @@ fun showHasFree(t, n) =
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.5: 	fun concat4(a, b, c, d) = concat2(a, concat3(b, c, d))
 //│ ╙──     	           ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ showHasFree: (Abs & 'a & 'b | App & 'c & 'd | Var, anything,) -> (error | string)
 //│   where
 //│     'b <: {lhs: anything, rhs: Abs & 'b | App & 'd | Var | ~Abs & ~App & ~Var}

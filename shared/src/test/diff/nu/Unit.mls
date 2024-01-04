@@ -117,6 +117,7 @@ fun x = 1
 //│ ╔══[PARSE ERROR] Unexpected semicolon here
 //│ ║  l.116: 	(log(1); 2)
 //│ ╙──       	       ^
+//│ TEST CASE FAILURE: There was an unexpected parse error
 //│ ()
 //│ res
 //│     = undefined
@@ -125,8 +126,9 @@ fun x = 1
 
 (log(1); ())
 //│ ╔══[PARSE ERROR] Unexpected semicolon here
-//│ ║  l.126: 	(log(1); ())
+//│ ║  l.127: 	(log(1); ())
 //│ ╙──       	       ^
+//│ TEST CASE FAILURE: There was an unexpected parse error
 //│ ()
 //│ res
 //│     = undefined
@@ -192,13 +194,13 @@ f of 1, 2
 :e
 f of (1, 2)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.193: 	f of (1, 2)
+//│ ║  l.195: 	f of (1, 2)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── argument of type `[?a]` does not match type `[?b, ?c]`
-//│ ║  l.193: 	f of (1, 2)
+//│ ║  l.195: 	f of (1, 2)
 //│ ║         	     ^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.179: 	fun f(x, y) = x + y
+//│ ║  l.181: 	fun f(x, y) = x + y
 //│ ╙──       	     ^^^^^^
 //│ Int | error
 //│ res
@@ -217,7 +219,7 @@ f of (1, 2)
 fun f =
   0; 0
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.218: 	  0; 0
+//│ ║  l.220: 	  0; 0
 //│ ╙──       	  ^
 //│ fun f: 0
 
@@ -227,7 +229,7 @@ fun f =
 //│ ╔══[WARNING] Expression in statement position should have type `unit`.
 //│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
 //│ ╟── Type mismatch in application:
-//│ ║  l.226: 	  succ(0); 0
+//│ ║  l.228: 	  succ(0); 0
 //│ ║         	  ^^^^^^^
 //│ ╙── application of type `Int` does not match type `()`
 //│ fun f: 0
@@ -267,7 +269,7 @@ x => x; ()
 fun f =
   x => x; ()
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.268: 	  x => x; ()
+//│ ║  l.270: 	  x => x; ()
 //│ ╙──       	  ^^^^^^
 //│ fun f: ()
 
@@ -280,7 +282,7 @@ fun f =
   x => x
   ()
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.280: 	  x => x
+//│ ║  l.282: 	  x => x
 //│ ╙──       	  ^^^^^^
 //│ fun f: ()
 
@@ -290,7 +292,7 @@ module Test {
   123
 }
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.290: 	  123
+//│ ║  l.292: 	  123
 //│ ╙──       	  ^^^
 //│ module Test
 
@@ -300,10 +302,10 @@ module Test {
   456
 }
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.299: 	  123
+//│ ║  l.301: 	  123
 //│ ╙──       	  ^^^
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.300: 	  456
+//│ ║  l.302: 	  456
 //│ ╙──       	  ^^^
 //│ module Test
 
@@ -312,7 +314,7 @@ module Test {
   x => x
 }
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.312: 	  x => x
+//│ ║  l.314: 	  x => x
 //│ ╙──       	  ^^^^^^
 //│ module Test
 
@@ -323,15 +325,15 @@ fun foo =
   let tmp = 0
 foo + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.324: 	foo + 1
+//│ ║  l.326: 	foo + 1
 //│ ║         	^^^^^^^
 //│ ╟── definition of method foo of type `()` is not an instance of type `Int`
-//│ ║  l.322: 	fun foo =
+//│ ║  l.324: 	fun foo =
 //│ ║         	    ^^^^^
-//│ ║  l.323: 	  let tmp = 0
+//│ ║  l.325: 	  let tmp = 0
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.324: 	foo + 1
+//│ ║  l.326: 	foo + 1
 //│ ╙──       	^^^
 //│ fun foo: ()
 //│ Int | error

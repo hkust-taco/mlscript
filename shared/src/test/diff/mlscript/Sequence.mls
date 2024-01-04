@@ -5,6 +5,7 @@ let test(x) = log(x); x + 1
 //│ ╔══[ERROR] identifier not found: x
 //│ ║  l.4: 	let test(x) = log(x); x + 1
 //│ ╙──     	                      ^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ let test: anything -> ()
 //│ Int
 //│ Code generation encountered an error:
@@ -12,10 +13,12 @@ let test(x) = log(x); x + 1
 
 test(log("here we go"); 123)
 //│ ╔══[PARSE ERROR] Unexpected semicolon here
-//│ ║  l.13: 	test(log("here we go"); 123)
+//│ ║  l.14: 	test(log("here we go"); 123)
 //│ ╙──      	                      ^
+//│ TEST CASE FAILURE: There was an unexpected parse error
 //│ ()
 //│ res
+//│ TEST CASE FAILURE: There was an unexpected runtime error
 //│ Runtime error:
 //│   ReferenceError: test is not defined
 

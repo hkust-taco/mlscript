@@ -83,6 +83,7 @@ mkString of filtermap(x => (if
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.46: 	fun filtermap(f, xs) = if xs is
 //│ ╙──      	             ^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.72: 	mkString of filtermap(x => if x % 2 == 0 then Fals else Tru, list)
 //│ ║        	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -92,11 +93,14 @@ mkString of filtermap(x => (if
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.46: 	fun filtermap(f, xs) = if xs is
 //│ ╙──      	             ^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ Str
 //│ res
+//│ TEST CASE FAILURE: There was an unexpected runtime error
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 //│ res
+//│ TEST CASE FAILURE: There was an unexpected runtime error
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 //│ res

@@ -132,6 +132,7 @@ fun foo(s) =
 //│ ╔══[PARSE ERROR] Unexpected 'in' keyword here
 //│ ║  l.130: 	    Some(t) then let b = s2.value in b + t.x
 //│ ╙──       	                                  ^^
+//│ TEST CASE FAILURE: There was an unexpected parse error
 //│ fun foo: Some[anything] -> ()
 //│ // Prelude
 //│ class TypingUnit8 {}
@@ -157,8 +158,9 @@ fun bar(s) =
     Some(_) then let b = s2.value in b + 1
     _ then 0
 //│ ╔══[PARSE ERROR] Unexpected 'in' keyword here
-//│ ║  l.157: 	    Some(_) then let b = s2.value in b + 1
+//│ ║  l.158: 	    Some(_) then let b = s2.value in b + 1
 //│ ╙──       	                                  ^^
+//│ TEST CASE FAILURE: There was an unexpected parse error
 //│ fun bar: Some[anything] -> ()
 
 bar(Some(V1(12)))
@@ -228,7 +230,7 @@ fun ft(x) =
     FooBar(x) then x
     _ then 0
 //│ ╔══[ERROR] class FooBar expects 0 parameter but found 1 parameter
-//│ ║  l.228: 	    FooBar(x) then x
+//│ ║  l.230: 	    FooBar(x) then x
 //│ ╙──       	    ^^^^^^^^^
 //│ fun ft: anything -> error
 //│ Code generation encountered an error:
@@ -274,7 +276,7 @@ fun c(x) =
     VVC(x, y, z) then x + y + z
     _ then 0
 //│ ╔══[ERROR] class VVC expects 2 parameters but found 3 parameters
-//│ ║  l.274: 	    VVC(x, y, z) then x + y + z
+//│ ║  l.276: 	    VVC(x, y, z) then x + y + z
 //│ ╙──       	    ^^^^^^^^^^^^
 //│ class VVC(v: Int, vc: Int)
 //│ fun c: anything -> error
