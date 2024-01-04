@@ -24,7 +24,7 @@ fun optionApply(x, y, f) =
       Some(yv) then Some(f(xv, yv))
       None then None
     None then None
-//│ fun optionApply: forall 'a 'b 'A. (None | Some['a], None | Some['b], ('a, 'b) -> 'A) -> (None | Some['A])
+//│ fun optionApply: forall 'a 'b 'c 'A. (None | Some['b], None | Some['c], ('b, 'c) ->{'a} 'A) ->{'a} (None | Some['A])
 
 let zeroToThree = Cons(0, Cons(1, Cons(2, Cons(3, Nil))))
 //│ let zeroToThree: Cons['A]
@@ -41,7 +41,7 @@ fun mapPartition(f, xs) = if xs is
   Cons(x, xs) and mapPartition(f, xs) is Pair(l, r) and f(x) is
     Left(v)  then Pair(Cons(v, l), r)
     Right(v) then Pair(l, Cons(v, r))
-//│ fun mapPartition: forall 'A 'A0 'A1. ('A -> (Left['A0] | Right['A1]), Cons['A] | Nil) -> Pair[Cons['A0] | Nil, Cons['A1] | Nil]
+//│ fun mapPartition: forall 'a 'A 'A0 'A1. ('A ->{'a} (Left['A0] | Right['A1]), Cons['A] | Nil) ->{'a} Pair[Cons['A0] | Nil, Cons['A1] | Nil]
 
 mapPartition(x => Left(x + 1), zeroToThree)
 //│ Pair[Cons['A] | Nil, Cons['A0] | Nil]
@@ -65,7 +65,7 @@ fun mapPartition(f, xs) = if xs is
     mapPartition(f, xs) is Pair(l, r) and f(x) is
       Left(v)  then Pair(Cons(v, l), r)
       Right(v) then Pair(l, Cons(v, r))
-//│ fun mapPartition: forall 'A 'A0 'A1. ('A -> (Left['A0] | Right['A1]), Cons['A] | Nil) -> Pair[Cons['A0] | Nil, Cons['A1] | Nil]
+//│ fun mapPartition: forall 'A 'A0 'A1 'a. ('A ->{'a} (Left['A0] | Right['A1]), Cons['A] | Nil) ->{'a} Pair[Cons['A0] | Nil, Cons['A1] | Nil]
 
 mapPartition(f, zeroToThree)
 //│ Pair[Cons['A] | Nil, Cons['A0] | Nil]
@@ -87,7 +87,7 @@ fun mapPartition(f, xs) = if xs is
             Pair(Cons(v, l), r)
           Right(v) then
             Pair(l, Cons(v, r))
-//│ fun mapPartition: forall 'A 'A0 'A1. ('A -> (Left['A0] | Right['A1]), Cons['A] | Nil) -> Pair[Cons['A0] | Nil, Cons['A1] | Nil]
+//│ fun mapPartition: forall 'A 'A0 'A1 'a. ('A ->{'a} (Left['A0] | Right['A1]), Cons['A] | Nil) ->{'a} Pair[Cons['A0] | Nil, Cons['A1] | Nil]
 
 mapPartition(f, zeroToThree)
 //│ Pair[Cons['A] | Nil, Cons['A0] | Nil]

@@ -24,7 +24,7 @@ class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO[B] {
 //│   fun run: A
 //│ }
 //│ class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO {
-//│   fun bind: forall 'B1. (B -> IO['B1]) -> Bind[in B & 'A0 out B, 'B1]
+//│   fun bind: forall 'B1. ('A0 -> IO['B1]) -> Bind['A0, 'B1]
 //│   fun run: B
 //│ }
 //│ where
@@ -194,9 +194,9 @@ val main =
 fun (>>) compose(f, g) = x => g(f(x))
 fun (#>>) bind(x, f) = x.bind(f)
 fun (#>) map(x, f) = x.bind(f >> Pure)
-//│ fun (>>) compose: forall 'a 'b 'c. ('a -> 'b, 'b -> 'c) -> 'a -> 'c
-//│ fun (#>>) bind: forall 'd 'e. ({bind: 'd -> 'e}, 'd) -> 'e
-//│ fun (#>) map: forall 'f 'g 'A. ({bind: ('g -> Pure['A]) -> 'f}, 'g -> 'A) -> 'f
+//│ fun (>>) compose: forall 'a 'b 'c 'd. ('b ->{'d} 'c, 'c ->{'d} 'a) -> 'b ->{'d} 'a
+//│ fun (#>>) bind: forall 'e 'f 'g. ({bind: 'e ->{'g} 'f}, 'e) ->{'g} 'f
+//│ fun (#>) map: forall 'h 'i 'j 'k 'A. ({bind: ('k ->{'h} Pure['A]) ->{'j} 'i}, 'k ->{'h} 'A) ->{'j} 'i
 
 val main =
   printLine("Hi! Input two numbers: ") #>> _ =>
@@ -244,11 +244,11 @@ fun main(ctx) =
   val sum = n + m
   ctx.printLine(concat("The sum is: ")(String of sum)) #>> _ =>
   ctx.pure(sum)
-//│ fun main: forall 'a 'b 'c 'd 'e. {
-//│   printLine: "Hi! Input two numbers: " -> {bind: (anything -> 'd) -> 'e} & Str -> {bind: (anything -> 'a) -> 'b},
-//│   pure: Int -> 'a,
-//│   readInt: {bind: (Int -> 'c) -> 'd & (Int -> 'b) -> 'c}
-//│ } -> 'e
+//│ fun main: forall 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j. {
+//│   printLine: "Hi! Input two numbers: " ->{'a} {bind: (anything ->{'f} 'h) ->{'a} 'c} & Str ->{'j} {bind: (anything ->{'g} 'i) ->{'j} 'e},
+//│   pure: Int ->{'g} 'i,
+//│   readInt: {bind: (Int ->{'d} 'b) ->{'f} 'h & (Int ->{'j} 'e) ->{'d} 'b}
+//│ } ->{'a} 'c
 
 val defaultCtx = {printLine, readInt, pure: Pure}
 //│ val defaultCtx: {
@@ -281,11 +281,11 @@ fun loop(ctx) =
   ctx.printLine("Input a positive number: ") #>> _ =>
   ctx.readInt #>> n =>
   if n < 0 then loop(ctx) else ctx.pure(n)
-//│ fun loop: forall 'a 'b 'c 'd. {
-//│   printLine: "Input a positive number: " -> {bind: (anything -> 'a) -> 'b},
-//│   pure: 'c -> 'd,
-//│   readInt: {bind: ((Num & 'c) -> ('d | 'b)) -> 'a}
-//│ } -> 'b
+//│ fun loop: forall 'a 'b 'c 'd 'e 'f 'g. {
+//│   printLine: "Input a positive number: " ->{'e} {bind: (anything ->{'c} 'g) ->{'e} 'a},
+//│   pure: 'd ->{'b} 'f,
+//│   readInt: {bind: ((Num & 'd) ->{('b | 'e)} ('f | 'a)) ->{'c} 'g}
+//│ } ->{'e} 'a
 
 let r = loop(defaultCtx)
 //│ let r: Bind[(), 'B]

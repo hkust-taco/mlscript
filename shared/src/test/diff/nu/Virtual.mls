@@ -48,8 +48,8 @@ class T() extends X, XX
 //│   fun f: Int -> Int
 //│ }
 //│ mixin XX() {
-//│   super: {f: 'a -> Int}
-//│   fun f: 'a -> Int
+//│   super: {f: 'a ->{'b} Int}
+//│   fun f: 'a ->{'b} Int
 //│ }
 //│ class T() {
 //│   fun f: Int -> Int

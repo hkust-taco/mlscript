@@ -83,9 +83,9 @@ class NormalForms extends TyperDatatypes { self: Typer =>
             // println(s"!GLB! $this $that ${p0.glb(p1)}")
             p0.glb(p1)
           
-          case (S(l @ FunctionType(l0, r0)), FunctionType(l1, r1))
+          case (S(l @ FunctionType(l0, r0, e0)), FunctionType(l1, r1, e1))
           if approximateNegativeFunction && !pol =>
-            S(FunctionType(l0 | l1, r0 & r1)(l.prov))
+            S(FunctionType(l0 | l1, r0 & r1, e0 & e1)(l.prov))
           
           // * Note: it also feels natural to simplify `f: int -> int & nothing -> string`
           // * to just `f: int -> int`, but these types are not strictly-speaking equivalent;
@@ -95,14 +95,14 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           // * Still, it seems making this approximation is morally correct even in negative positions,
           // * at least in a CBV setting, since the only way to use the bad function component is
           // * by passing a non-returning computation. So this should be semantically sound.
-          case (S(FunctionType(AliasOf(TupleType(fs)), _)), _: Overload | _: FT)
+          case (S(FunctionType(AliasOf(TupleType(fs)), _, _)), _: Overload | _: FT)
           if fs.exists(_._2.ub.isBot) => S(that)
-          case (sov @ S(Overload(alts)), FunctionType(AliasOf(TupleType(fs)), _))
+          case (sov @ S(Overload(alts)), FunctionType(AliasOf(TupleType(fs)), _, _))
           if fs.exists(_._2.ub.isBot) => sov
           
           case (S(ov @ Overload(alts)), ft: FunctionType) =>
             def go(alts: Ls[FT]): Ls[FT] = alts match {
-              case (f @ FunctionType(l, r)) :: alts =>
+              case (f @ FunctionType(l, r, e)) :: alts =>
                 /* // * Note: A simpler version that gets most of the way there:
                 if (l >:< ft.lhs) FunctionType(l, r & ft.rhs)(f.prov) :: alts
                 else if (r >:< ft.rhs) FunctionType(l | ft.lhs, r)(f.prov) :: alts
@@ -112,10 +112,12 @@ class NormalForms extends TyperDatatypes { self: Typer =>
                 lazy val l_GT_lhs = ft.lhs <:< l
                 lazy val r_LT_rhs = r <:< ft.rhs
                 lazy val r_GT_rhs = ft.rhs <:< r
-                if (l_LT_lhs && r_GT_rhs) ft :: alts
-                else if (l_GT_lhs && r_LT_rhs) f :: alts
-                else if (l_LT_lhs && l_GT_lhs) FunctionType(l, r & ft.rhs)(f.prov) :: alts
-                else if (r_LT_rhs && r_GT_rhs) FunctionType(l | ft.lhs, r)(f.prov) :: alts
+                lazy val e_GT_eff = ft.eff <:< e
+                lazy val e_LT_eff = e <:< ft.eff
+                if (l_LT_lhs && r_GT_rhs && e_GT_eff) ft :: alts
+                else if (l_GT_lhs && r_LT_rhs && e_LT_eff) f :: alts
+                else if (l_LT_lhs && l_GT_lhs) FunctionType(l, r & ft.rhs, e)(f.prov) :: alts
+                else if (r_LT_rhs && r_GT_rhs) FunctionType(l | ft.lhs, r, e)(f.prov) :: alts
                 else f :: go(alts)
               case Nil => ft :: Nil
             }
@@ -358,12 +360,12 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       // * `(A -> B) & (C -> D) =:= (A | C) -> (B & D)`,
       // * I think we do still have `(A -> B) | (C -> D) =:= (A & C) -> (B | D)`,
       // * because these two types still have no other meaningful LUB.
-      case (RhsBases(ps, S(L(FunctionType(l0, r0))), trs), FunctionType(l1, r1)) =>
-        S(RhsBases(ps, S(L(FunctionType(l0 & l1, r0 | r1)(noProv))), trs))
-      case (RhsBases(ps, S(L(ov @ Overload(fts))), trs), FunctionType(l2, r2)) =>
+      case (RhsBases(ps, S(L(FunctionType(l0, r0, e0))), trs), FunctionType(l1, r1, e1)) =>
+        S(RhsBases(ps, S(L(FunctionType(l0 & l1, r0 | r1, e0 | e1)(noProv))), trs))
+      case (RhsBases(ps, S(L(ov @ Overload(fts))), trs), FunctionType(l2, r2, e2)) =>
         S(RhsBases(ps, S(L(Overload(fts.map {
-          case ft1  @FunctionType(l1, r1) =>
-            FunctionType(l1 & l2, r1 | r2)(ft1.prov)
+          case ft1  @FunctionType(l1, r1, e1) =>
+            FunctionType(l1 & l2, r1 | r2, e1 | e2)(ft1.prov)
         })(ov.prov))), trs))
       case (RhsBases(ps, S(L(ft: FunctionType)), trs), ov: Overload) =>
         RhsBases(ps, S(L(ov)), trs) | ft
@@ -534,9 +536,9 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         //    (A -> B | C -> D) & (A -> B | {S}) & ({R} | C -> D) & ({R} | {S})
         //    == ((A & C) -> (B | D)) & Top & Top & ({R} | {S})
         (bse1, bse2) match {
-          case (S(FunctionType(l1, r1)), S(FunctionType(l2, r2))) => // TODO Q: records ok here?!
+          case (S(FunctionType(l1, r1, e1)), S(FunctionType(l2, r2, e2))) => // TODO Q: records ok here?!
             S(Conjunct(
-              LhsRefined(S(FunctionType(l1 & l2, r1 | r2)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
+              LhsRefined(S(FunctionType(l1 & l2, r1 | r2, e1 | e2)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))
           case (S(tup1 @ TupleType(fs1)), S(tup2 @ TupleType(fs2))) => // TODO Q: records ok here?!
             if (fs1.size =/= fs2.size) S(Conjunct(
               LhsRefined(S(ArrayType(tup1.inner || tup2.inner)(noProv)), ts, rcdU, trs1), vs1, RhsBot, nvs1))

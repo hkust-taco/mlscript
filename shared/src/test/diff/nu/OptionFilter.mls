@@ -20,7 +20,7 @@ module None extends Option[nothing] {
 //│   fun filter: (p: T -> Bool) -> Option[T]
 //│ }
 //│ class Some[T](value: T) extends Option {
-//│   fun filter: (T -> Object) -> (None | Some[T])
+//│   fun filter: (T ->{'a} Object) ->{'a} (None | Some[T])
 //│ }
 //│ module None extends Option {
 //│   fun filter: anything -> None

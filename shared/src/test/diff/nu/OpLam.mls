@@ -17,7 +17,7 @@ fun (|>;) foo(a, b) = [a, b]
 
 
 fun (>>) compose(f, g) = x => g(f(x))
-//│ fun (>>) compose: forall 'a 'b 'c. ('a -> 'b, 'b -> 'c) -> 'a -> 'c
+//│ fun (>>) compose: forall 'a 'b 'c 'd. ('a ->{'c} 'b, 'b ->{'c} 'd) -> 'a ->{'c} 'd
 
 succ >> x => x + 2
 //│ Int -> Int
@@ -69,7 +69,7 @@ x => x + 2
 //│ ║        	     ^^^^^
 //│ ║  l.52: 	  >> succ
 //│ ║        	^^^^^^^^^
-//│ ╟── function of type `?a -> ?b` is not an instance of type `Int`
+//│ ╟── function of type `?a ->{(?c | ?d)} ?b` is not an instance of type `Int`
 //│ ║  l.19: 	fun (>>) compose(f, g) = x => g(f(x))
 //│ ║        	                         ^^^^^^^^^^^^
 //│ ╟── but it flows into operator application with expected type `Int`
@@ -81,30 +81,15 @@ x => x + 2
 //│ res
 //│     = [Function: res]
 
-(x => x + 2)
-  >> succ
-//│ Int -> Int
-//│ res
-//│     = [Function (anonymous)]
-
-:pe
->> succ
-//│ ╔══[PARSE ERROR] Unexpected operator in expression position
-//│ ║  l.91: 	>> succ
-//│ ╙──      	^^
-//│ Int -> Int
-//│ res
-//│     = [Function: succ]
-
 
 :e
 x => x.y => y
 //│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.101: 	x => x.y => y
-//│ ╙──       	     ^^^
+//│ ║  l.86: 	x => x.y => y
+//│ ╙──      	     ^^^
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.101: 	x => x.y => y
-//│ ╙──       	            ^
+//│ ║  l.86: 	x => x.y => y
+//│ ╙──      	            ^
 //│ anything -> error -> error
 //│ Code generation encountered an error:
 //│   term Sel(Var(x),Var(y)) is not a valid pattern

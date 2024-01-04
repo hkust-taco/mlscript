@@ -19,8 +19,8 @@ mapi of ["a", "", "bb"], (x, i) => [i, length of x]
 //│     = [ [ 0, 1 ], [ 1, 0 ], [ 2, 2 ] ]
 
 
-fun map(xs, f) = mapi(xs, (x, i) => f(x))
-//│ fun map: forall 'a 'b. (Array['a], 'a -> 'b) -> Array['b]
+fun map(xs, f: 'a -> 'b) = mapi(xs, (x, i) => f(x))
+//│ fun map: forall 'a 'b. (Array['a], f: 'a -> 'b) -> Array['b]
 
 map of ["a", "", "bb"], x => length of x
 //│ Array[Int]
@@ -33,7 +33,7 @@ fun zip(xs, ys) = mapi of xs, (x, i) =>
   if ys.[i] is
     undefined then error
     y then [x, y]
-//│ fun zip: forall 'c 'd. (Array['c], Array[Object & 'd & ~()]) -> Array[['c, 'd]]
+//│ fun zip: forall 'c 'd. (Array['d], Array[Object & 'c & ~()]) -> Array[['d, 'c]]
 //│ fun zip: forall 'a 'b. (Array['a], Array[Object & 'b & ~()]) -> Array[['a, 'b]]
 
 

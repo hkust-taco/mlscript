@@ -32,14 +32,14 @@ type NonBlocking[out A, out E] = Effectful[A, E \ Block]
 
 // * Example use of NonBlocking in an annotation; the type arguments are inferred
 fun f(x) = x : NonBlocking
-//│ fun f: forall 'a 'b. NonBlocking['a, 'b] -> NonBlocking['a, 'b]
+//│ fun f: forall 'a 'b. NonBlocking['b, 'a] -> NonBlocking['b, 'a]
 
 
 // * the `listener` callback should be non-blocking
-fun onMousePressed(listener) =
+fun onMousePressed(listener: (0 | 1) -> NonBlocking[anything, 'a]) =
   let l(e) = listener(e) : NonBlocking
   l(0).flatMap of a => l(1).flatMap of b => pure of ()
-//│ fun onMousePressed: forall 'a. ((0 | 1) -> NonBlocking[anything, 'a]) -> Effectful[(), 'a & ~Block]
+//│ fun onMousePressed: forall 'a. (listener: (0 | 1) -> NonBlocking[anything, 'a]) -> Effectful[(), 'a & ~Block]
 
 
 // * OK: `println` does not block
@@ -72,7 +72,7 @@ module Register
 fun onMousePressed(listener) =
   let l(e: MouseEvent) = listener(e) : Effectful[(), 'e \ Block \ Register]
   ()
-//│ fun onMousePressed: (MouseEvent -> Effectful[(), ~Block & ~Register]) -> ()
+//│ fun onMousePressed: (MouseEvent ->{anything} Effectful[(), ~Block & ~Register]) -> ()
 
 // def onMouseClick ( f : Event -> Unit \ { ef - Register }): Unit \ { Register }
 fun onMouseClick(f: Event -> Effectful[(), 'e \ Register]): Effectful[(), Register]

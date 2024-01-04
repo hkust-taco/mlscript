@@ -28,9 +28,9 @@ module A {
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ module A {
 //│   fun f: nothing
-//│   fun g: forall 'a 'b. ('a -> 'b & 'a) -> 'b
+//│   fun g: forall 'a 'b 'c. ('a ->{'c} 'b & 'a) ->{'c} 'b
 //│   fun h: error
-//│   fun i: forall 'c. 'c -> 'c
+//│   fun i: forall 'd. 'd -> 'd
 //│ }
 
 // * Note this permutation works: currently we generalize check functions in the source code order...
@@ -42,12 +42,12 @@ module A {
 }
 //│ module A {
 //│   fun f: nothing
-//│   fun g: forall 'a 'b. 'b -> 'a
-//│   fun h: forall 'a. 'a
-//│   fun i: forall 'c. 'c -> 'c
+//│   fun g: forall 'a 'b 'c. 'a ->{'b} 'c
+//│   fun h: forall 'c. 'c
+//│   fun i: forall 'd. 'd -> 'd
 //│ }
 //│ where
-//│   'b := 'b -> 'a
+//│   'a := 'a ->{'b} 'c
 
 :ns
 A.i
@@ -62,9 +62,9 @@ A.i
 A.f
 //│ 'f
 //│   where
-//│     'f :> forall 'f0 'a. 'a
+//│     'f :> forall 'f0 'a 'b. 'a
 //│     'a <: 'f0
-//│     'f0 <: 'f0 -> 'a
+//│     'f0 <: 'f0 ->{'b} 'a
 //│ res
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -73,10 +73,11 @@ A.f
 A.g
 //│ 'g
 //│   where
-//│     'g :> forall 'a 'b 'c 'h. 'a -> 'b
-//│     'a := 'a -> 'b
+//│     'g :> forall 'a 'h 'b 'c 'd 'e. 'a ->{'b} 'e
+//│     'a := 'a ->{'b} 'e
 //│     'b <: 'c
-//│     'c <: 'h
+//│     'e <: 'd
+//│     'd <: 'h
 //│ res
 //│     = [Function: g]
 
@@ -85,7 +86,7 @@ A.g
 A.h
 //│ 'h
 //│   where
-//│     'h :> forall 'a 'h0. 'a
+//│     'h :> forall 'h0 'a. 'a
 //│     'a <: 'h0
 //│ res
 //│ Runtime error:

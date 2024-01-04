@@ -2,7 +2,7 @@
 
 
 fun (>>) compose(f, g) = x => g(f(x))
-//│ fun (>>) compose: forall 'a 'b 'c. ('a -> 'b, 'b -> 'c) -> 'a -> 'c
+//│ fun (>>) compose: forall 'a 'b 'c 'd. ('a ->{'c} 'b, 'b ->{'c} 'd) -> 'a ->{'c} 'd
 
 :js 
 let r = succ >> succ
@@ -60,7 +60,7 @@ succ >> succ of 3
 
 :js
 let f = (>>)
-//│ let f: forall 'a 'b 'c. ('a -> 'b, 'b -> 'c) -> 'a -> 'c
+//│ let f: forall 'a 'b 'c 'd. ('a ->{'c} 'b, 'b ->{'c} 'd) -> 'a ->{'c} 'd
 //│ // Prelude
 //│ class TypingUnit7 {}
 //│ const typing_unit7 = new TypingUnit7;
@@ -228,7 +228,7 @@ fun (>>)(f, g) = x => g(f(x))
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.4: 	fun (>>) compose(f, g) = x => g(f(x))
 //│ ╙──     	                ^^^^^^
-//│ fun (>>) <error>: anything -> error
+//│ fun (>>) <error>: anything ->{error} error
 //│ Code generation encountered an error:
 //│   unresolved symbol g
 
@@ -237,7 +237,7 @@ fun compose(>>)(f, g) = x => g(f(x))
 //│ ╔══[PARSE ERROR] Unexpected operator here
 //│ ║  l.236: 	fun compose(>>)(f, g) = x => g(f(x))
 //│ ╙──       	            ^^
-//│ fun compose: forall 'a 'b 'c. () -> ('a -> 'b, 'b -> 'c) -> 'a -> 'c
+//│ fun compose: forall 'a 'b 'c 'd. () -> ('a ->{'c} 'b, 'b ->{'c} 'd) -> 'a ->{'c} 'd
 
 
 :pe

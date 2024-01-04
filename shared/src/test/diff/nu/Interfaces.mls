@@ -745,7 +745,7 @@ class Eh3 extends Bs(false), Test
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
 //│ ║  l.658: 	  virtual fun foo(x) = x + 1
 //│ ║         	              ^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b. ?b)` is not an instance of type `Int`
+//│ ╟── function of type `?a ->{?c} (forall ?b. ?b)` is not an instance of type `Int`
 //│ ║  l.658: 	  virtual fun foo(x) = x + 1
 //│ ║         	                 ^^^^^^^^^^^
 //│ ╟── but it flows into definition of method foo with expected type `Int`

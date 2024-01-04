@@ -61,19 +61,19 @@ mixin Mx {
   fun id1(x) = this.id2(x)
 }
 //│ mixin Mx() {
-//│   this: {id2: 'a -> 'b}
-//│   fun id1: 'a -> 'b
+//│   this: {id2: 'a ->{'c} 'b}
+//│   fun id1: 'a ->{'c} 'b
 //│ }
 
 :e
 module M extends Mx {
   this.id1(0)
 }
-//│ ╔══[ERROR] Type `#M & {id1: ?a -> ?b}` does not contain member `id2`
+//│ ╔══[ERROR] Type `#M & {id1: ?a ->{?c} ?b}` does not contain member `id2`
 //│ ║  l.61: 	  fun id1(x) = this.id2(x)
 //│ ╙──      	                   ^^^^
 //│ module M {
-//│   fun id1: anything -> error
+//│   fun id1: anything ->{error} error
 //│ }
 //│ Runtime error:
 //│   TypeError: qualifier1.id2 is not a function
@@ -87,7 +87,7 @@ module M extends Mx {
 //│ ║  l.61: 	  fun id1(x) = this.id2(x)
 //│ ╙──      	                   ^^^^
 //│ module M {
-//│   fun id1: anything -> error
+//│   fun id1: anything ->{error} error
 //│   fun id2: forall 'a. 'a -> ['a, 'a]
 //│ }
 
@@ -256,7 +256,7 @@ module M {
 //│ ║  l.240: 	  mut val m = None
 //│ ╙──       	          ^^^^^^^^
 //│ module M {
-//│   fun oops: anything -> error
+//│   fun oops: anything ->{error} error
 //│ }
 //│ Code generation encountered an error:
 //│   unresolved symbol :=

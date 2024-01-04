@@ -17,11 +17,11 @@ fun bind(x: Code['a, 'c], k: (forall 'cc: Code['a, 'cc] -> Code['b, 'cc])): Code
 
 
 // * Note: extrusion
-fun test(f) =
+fun test(f: Code[Int, 'a] -> ()) =
   bind of IntLit(42), n =>
   f(n)
   Add(n, IntLit(1))
-//│ fun test: (Code[Int, ??cc] -> ()) -> Code[Int, nothing]
+//│ fun test: (f: Code[Int, ??cc] -> ()) -> Code[Int, nothing]
 
 
 abstract class Test[C] {

@@ -135,7 +135,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
         (this.parents ::: that.parents).distinct, isInherited = true)(prov)
     }
     val toPT: PolymorphicType =
-      body.fold(PolymorphicType(MinLevel, errType))(b => PolymorphicType(level, FunctionType(singleTup(b._1), b._2)(prov)))
+      body.fold(PolymorphicType(MinLevel, errType))(b => PolymorphicType(level, FunctionType(singleTup(b._1), b._2, BotType)(prov)))
     val bodyPT: PolymorphicType =
       body.fold(PolymorphicType(MinLevel, errType))(b => PolymorphicType(level, ProvType(b._2)(prov)))
   }
@@ -178,29 +178,33 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
   
   type FT = FunctionType
   
-  case class FunctionType(lhs: SimpleType, rhs: SimpleType)(val prov: TypeProvenance) extends MiscBaseType {
+  case class FunctionType(lhs: SimpleType, rhs: SimpleType, eff: SimpleType)(val prov: TypeProvenance) extends MiscBaseType {
     lazy val level: Int = lhs.level max rhs.level
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = lhs.levelBelow(ub) max rhs.levelBelow(ub)
     def freshenAboveImpl(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST]): FunctionType =
-      FunctionType(lhs.freshenAbove(lim, rigidify), rhs.freshenAbove(lim, rigidify))(prov)
+      FunctionType(lhs.freshenAbove(lim, rigidify), rhs.freshenAbove(lim, rigidify), if (newDefs) eff.freshenAbove(lim, rigidify) else BotType)(prov)
     override def toString = s"(${lhs match {
       case TupleType((N, FieldType(N, f: TupleType)) :: Nil) => "[" + f.showInner + "]"
       case TupleType((N, f) :: Nil) => f.toString
       case lhs => lhs
-    }} -> $rhs)"
+    }} ->${eff match {
+      case BotType => ""
+      case _ => s"{$eff}"
+    }} $rhs)"
   }
   
   case class Overload(alts: Ls[FunctionType])(val prov: TypeProvenance) extends MiscBaseType {
     require(alts.lengthIs > 0)
     def mapAlts(lf: ST => ST)(rf: ST => ST): Overload =
-      Overload(alts.map(ft => FunctionType(lf(ft.lhs), rf(ft.rhs))(ft.prov)))(prov)
+      Overload(alts.map(ft => FunctionType(lf(ft.lhs), rf(ft.rhs), rf(ft.eff))(ft.prov)))(prov)
     def mapAltsPol(pol: Opt[Bool])(f: (Opt[Bool], SimpleType) => SimpleType): Overload =
-      Overload(alts.map(ft => FunctionType(f(pol.map(!_), ft.lhs), f(pol, ft.rhs))(ft.prov)))(prov)
+      Overload(alts.map(ft => FunctionType(f(pol.map(!_), ft.lhs), f(pol, ft.rhs), f(pol, ft.eff))(ft.prov)))(prov)
     def mapAltsPol(pol: PolMap)(f: (PolMap, SimpleType) => SimpleType): Overload =
-      Overload(alts.map(ft => FunctionType(f(pol.contravar, ft.lhs), f(pol, ft.rhs))(ft.prov)))(prov)
+      Overload(alts.map(ft => FunctionType(f(pol.contravar, ft.lhs), f(pol, ft.rhs), f(pol, ft.eff))(ft.prov)))(prov)
     def approximatePos: FunctionType = {
       val (lhss, rhss) = alts.map(ft => ft.lhs -> ft.rhs).unzip
-      FunctionType(lhss.reduce(_ | _), rhss.reduce(_ | _))(prov)
+      val effs = alts.map(ft => ft.eff)
+      FunctionType(lhss.reduce(_ | _), rhss.reduce(_ | _), effs.reduce(_ | _))(prov)
       // * Note: technically the following is another valid (but probably less useful)
       // * approximation of the same function type:
       // FunctionType(lhss.reduce(_ & _), rhss.reduce(_ & _))(prov)

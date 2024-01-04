@@ -95,12 +95,12 @@ final class TsTypegenCodeBuilder {
   def addMethodDeclaration(declTypeParams: Set[String], methodName: String, methodType: Type): SourceCode = {
     // unwrap method function type to remove implicit this
     val methodSourceCode = methodType match {
-      case Function(lhs, rhs) => {
+      case Function(lhs, rhs, _) => {
         // Create a mapping from type var to their friendly name for lookup
         val typegenCtx = TypegenContext(rhs)
 
         rhs match {
-          case f@Function(lhs, rhs) =>
+          case f@Function(lhs, rhs, _) =>
             val lhsTypeSource = toTypegenFunctionLhs(lhs, true)(typegenCtx, Some(false))
             val rhsTypeSource = toTsType(rhs)(typegenCtx, Some(true))
 
@@ -459,7 +459,7 @@ final class TsTypegenCodeBuilder {
 
       // these types may mutate typegen context by argCounter, or
       // by creating new type aliases
-      case f@Function(lhs, rhs) =>
+      case f@Function(lhs, rhs, _) =>
         // flip polarity for input type of function
         // lhs translates to the complete argument list
         // method definition only affects source code representation of top level function

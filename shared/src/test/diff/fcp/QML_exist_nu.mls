@@ -51,10 +51,10 @@ class BaseImpl[A]() extends ArraysImpl[A, A] {
     fun fold  (r, b, f) = f(r)(b)
 }
 //│ class BaseImpl[A]() extends ArraysImpl {
-//│   fun fold: forall 'a 'b 'c. ('a, 'b, 'a -> 'b -> 'c) -> 'c
-//│   fun init: forall 'd. 'd -> 'd
-//│   fun sub: forall 'e. ('e, anything) -> 'e
-//│   fun update: forall 'f. (anything, anything, 'f) -> 'f
+//│   fun fold: forall 'a 'b 'c 'd. ('a, 'b, 'a ->{'d} 'b ->{'d} 'c) ->{'d} 'c
+//│   fun init: forall 'e. 'e -> 'e
+//│   fun sub: forall 'f. ('f, anything) -> 'f
+//│   fun update: forall 'g. (anything, anything, 'g) -> 'g
 //│ }
 
 class StepImpl[A, R](underlying: ArraysImpl[A, R]) extends ArraysImpl[A, [R, R]] {
@@ -84,7 +84,7 @@ class Base[A]() extends Arrays[A] {
 }
 //│ class Base[A]() extends Arrays {
 //│   val impl: BaseImpl[A]
-//│   fun use: forall 'a. (BaseImpl[A] -> 'a) -> 'a
+//│   fun use: forall 'a 'b. (BaseImpl[A] ->{'a} 'b) ->{'a} 'b
 //│ }
 
 class Step[A](from: Arrays[A]) extends Arrays[A] {
@@ -245,7 +245,7 @@ class StepAlt'[A](from: Arrays[A]) extends Arrays[A] {
 //│ ║  l.211: 	  val use = from.use of impl =>
 //│ ╙──       	            ^^^^^^^^
 //│ class StepAlt'[A](from: Arrays[A]) extends Arrays {
-//│   val use: forall 'R 'a. error | (StepImpl[A, 'R] -> 'a) -> 'a
+//│   val use: forall 'R 'a 'b. error | (StepImpl[A, 'R] ->{'b} 'a) ->{'b} 'a
 //│ }
 //│ where
 //│   'R :> ??rep

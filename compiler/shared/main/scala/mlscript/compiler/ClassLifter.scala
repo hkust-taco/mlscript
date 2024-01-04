@@ -321,7 +321,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val nTpNm = TypeName(genAnoName("Lambda"+prmCnt))
       val anoCls = NuTypeDef(
         Cls, nTpNm, Nil, S(Tup(Nil)), N, N, Nil, N, N, 
-        TypingUnit(List(NuFunDef(None, Var("apply"), N, Nil, Left(Lam(lhs, rhs)))(N, N, N, N, false))))(N, N) //TODO: Use Proper Arguments
+        TypingUnit(List(NuFunDef(None, Var("apply"), N, Nil, Left(Lam(lhs, rhs)))(N, N, N, N, false))))(N, N, N) //TODO: Use Proper Arguments
       val nSta = New(Some((nTpNm, Tup(Nil))), TypingUnit(Nil))
       val ret = liftEntities(List(anoCls, nSta))
       (Blk(ret._1), ret._2)
@@ -414,13 +414,13 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val cls = cache.get(t).get
       val supArgs = Tup(cls.body.params.fold(Nil)(t => t.fields).flatMap(tupleEntityToVar).map(toFldsEle))
       val anoCls = NuTypeDef(Cls, nTpNm, Nil, cls.body.params, None, None,
-                    List(App(Var(t.name), supArgs)), None, None, tu)(None, None)
+                    List(App(Var(t.name), supArgs)), None, None, tu)(None, None, None)
       val nSta = New(Some((nTpNm, prm)), TypingUnit(Nil))
       val ret = liftEntities(List(anoCls, nSta))
       (Blk(ret._1), ret._2)
     case New(None, tu) =>
       val nTpNm = TypeName(genAnoName())
-      val anoCls = NuTypeDef(Cls, nTpNm, Nil, None, None, None, Nil, None, None, tu)(None, None)
+      val anoCls = NuTypeDef(Cls, nTpNm, Nil, None, None, None, Nil, None, None, tu)(None, None, None)
       val nSta = New(Some((nTpNm, Tup(Nil))), TypingUnit(Nil))
       val ret = liftEntities(List(anoCls, nSta))
       (Blk(ret._1), ret._2)
@@ -516,10 +516,11 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       Constrained(nBase, nTargs, bounds2) ->
         ((nCtx ++ nCtx2).fold(emptyCtx)(_ ++ _) ++ bCtx)
     case Constrained(_, _, _) => die
-    case Function(lhs, rhs) =>
+    case Function(lhs, rhs, eff) =>
       val nlhs = liftType(lhs)
       val nrhs = liftType(rhs)
-      Function(nlhs._1, nrhs._1) -> (nlhs._2 ++ nrhs._2)
+      val neff = liftType(eff)
+      Function(nlhs._1, nrhs._1, neff._1) -> (nlhs._2 ++ nrhs._2 ++ neff._2)
     case Neg(base) =>
       val ret = liftType(base)
       Neg(ret._1) -> ret._2
@@ -742,7 +743,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     clsList.foreach(x => liftTypeDef(x)(using nCache, globFuncs, nOuter))
     retSeq = retSeq.appended(NuTypeDef(
       kind, nName, nTps.map((None, _)), S(Tup(nParams)), None, None, nPars._1,
-      None, None, TypingUnit(nFuncs._1 ++ nTerms._1))(None, None))
+      None, None, TypingUnit(nFuncs._1 ++ nTerms._1))(None, None, None))
   }
 
   def liftTypingUnit(rawUnit: TypingUnit): TypingUnit = {

@@ -30,8 +30,8 @@ mixin Contains {
     if a is Union then this.contains(a.a)
 }
 //│ mixin Contains() {
-//│   this: {contains: 'a -> 'b}
-//│   fun contains: Union['a] -> 'b
+//│   this: {contains: 'a ->{'c} 'b}
+//│   fun contains: Union['a] ->{'c} 'b
 //│ }
 
 module TestContains extends Contains

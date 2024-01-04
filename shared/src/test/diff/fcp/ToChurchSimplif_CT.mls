@@ -73,9 +73,9 @@ succ = s
 
 :e // * Since "sound extrusion"
 succ n f = n f
-//│ 'a -> (forall 'b 'c. 'c -> 'b
+//│ 'a -> (forall 'b 'c. 'b -> 'c
 //│   where
-//│     'a <: 'c -> 'b)
+//│     'a <: 'b -> 'c)
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type error in def definition
@@ -142,9 +142,9 @@ rec def to_ch n =
 //│ ╙──
 //│ to_ch: number -> 'a
 //│   where
-//│     'a :> forall 'b. 'b -> (forall 'c 'd. 'd -> 'c
+//│     'a :> forall 'b. 'b -> (forall 'c 'd. 'c -> 'd
 //│       where
-//│         'a <: 'b -> 'd -> 'c) | ChurchInt
+//│         'a <: 'b -> 'c -> 'd) | ChurchInt
 //│      = <no result>
 //│        zero is not implemented
 
@@ -262,7 +262,7 @@ def to_ch n =
 
 :e // * Since "sound extrusion"
 to_church = to_ch
-//│ int -> (forall 'a. 'a -> (forall 'b 'c 'd 'a. ('b & 'd) -> ('d | 'c)
+//│ int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd. ('b & 'd) -> ('d | 'c)
 //│   where
 //│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c))
 //│   <:  to_church:
@@ -448,9 +448,9 @@ to_church = to_ch
 
 rec def to_ch n =
   s (to_church n)
-//│ to_ch: int -> (forall 'a. 'a -> (forall 'b 'c. 'b -> 'c
+//│ to_ch: int -> (forall 'a. 'a -> (forall 'b 'c. 'c -> 'b
 //│   where
-//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c))
+//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'c -> 'b))
 //│      = <no result>
 //│        to_church, to_ch, to_church, to_ch, to_church, to_ch, to_church, to_ch and zero are not implemented
 
@@ -494,9 +494,9 @@ def to_ch =
 
 :e
 to_church = to_ch
-//│ 'a -> (forall 'b 'c. 'b -> 'c
+//│ 'a -> (forall 'b 'c. 'c -> 'b
 //│   where
-//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c)
+//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'c -> 'b)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -563,18 +563,18 @@ rec def to_ch n =
 //│   where
 //│     'd <: 'a -> 'b -> 'c)
 //│ where
-//│   'd :> forall 'e 'f 'g 'h. 'e -> (('h & 'f) -> ('h | 'g)
+//│   'd :> forall 'e 'f 'g 'h. 'g -> (('f & 'h) -> ('f | 'e)
 //│     where
-//│       'd <: 'e -> 'f -> 'g)
+//│       'd <: 'g -> 'h -> 'e)
 //│      = [Function: to_ch7]
 
 :e // * Since the removal of "recursive definition hacks"
 to_church = to_ch
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b 'c 'd 'e. (? & 'b) -> (('e & 'c) -> ('e | 'd)
+//│     'a :> forall 'b 'c 'd 'e. (? & 'c) -> (('b & 'd) -> ('b | 'e)
 //│       where
-//│         'a <: 'b -> 'c -> 'd)
+//│         'a <: 'c -> 'd -> 'e)
 //│ ╙──
 //│ int -> 'a -> ('b -> ('b | 'c)
 //│   where
@@ -614,9 +614,9 @@ rec def to_ch_weird n =
 to_church = to_ch
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b 'c 'd 'e. (? & 'e) -> (('d & 'b) -> ('d | 'c)
+//│     'a :> forall 'b 'c 'd 'e. (? & 'd) -> (('c & 'e) -> ('c | 'b)
 //│       where
-//│         'a <: 'e -> 'b -> 'c)
+//│         'a <: 'd -> 'e -> 'b)
 //│ ╙──
 //│ int -> 'a -> ('b -> ('b | 'c)
 //│   where

@@ -6,7 +6,7 @@ fun f(y) =
     discard of y(x) + 1
     x
   y
-//│ fun f: forall 'a. (??A -> Int & 'a) -> 'a
+//│ fun f: forall 'a. (??A ->{anything} Int & 'a) -> 'a
 
 :e
 f(id)

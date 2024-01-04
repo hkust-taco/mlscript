@@ -19,9 +19,9 @@ arg = if true then Some{value = 42} with {payload = 23} else None {}
 flatMap3 (fun x -> add x.value x.payload) arg
 //│ res: None | int
 //│    = 65
-//│ constrain calls  : 94
+//│ constrain calls  : 98
 //│ annoying  calls  : 23
-//│ subtyping calls  : 458
+//│ subtyping calls  : 462
 
 
 arg = if true then Some{value = 42} else None {}

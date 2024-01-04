@@ -33,7 +33,7 @@ foo(x => x+1)
 //│   fun foo$1 = (f,) => {f(1,)}
 //│   Code(List(foo$1({new Lambda1$2$1([]) {}},)))
 //│ }
-//│ fun foo: forall 'a. (1 -> 'a) -> 'a
+//│ fun foo: forall 'a 'b. (1 ->{'b} 'a) ->{'b} 'a
 //│ Int
 //│ res
 //│     = 2
@@ -73,11 +73,11 @@ app(new A(1))
 //│   fun app$1 = (a,) => {foo$2({new Lambda1$3$2([a,]) {}},)}
 //│   Code(List(app$1(new A$1([1,]) {},)))
 //│ }
-//│ fun foo: forall 'a. (1 -> 'a) -> 'a
+//│ fun foo: forall 'a 'b. (1 ->{'b} 'a) ->{'b} 'a
 //│ class A(y: Int) {
 //│   fun bar: Int -> Int
 //│ }
-//│ fun app: forall 'b. {bar: 1 -> 'b} -> 'b
+//│ fun app: forall 'c 'd. {bar: 1 ->{'d} 'c} ->{'d} 'c
 //│ Int
 //│ res
 //│     = 2

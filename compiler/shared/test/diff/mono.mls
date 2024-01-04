@@ -397,7 +397,7 @@ foo(generate(1))
 //│ class Nil() {
 //│   fun count: () -> 0
 //│ }
-//│ fun foo: forall 'a. {count: () -> 'a} -> 'a
+//│ fun foo: forall 'a 'b. {count: () ->{'b} 'a} ->{'b} 'a
 //│ fun generate: Int -> (List | Nil)
 //│ Int
 //│ res
@@ -570,12 +570,12 @@ foo(new Lambda2(2))
 //│   fun count: () -> 0
 //│ }
 //│ class Lambda() {
-//│   fun apply: forall 'a. {count: () -> 'a} -> 'a
+//│   fun apply: forall 'a 'b. {count: () ->{'b} 'a} ->{'b} 'a
 //│ }
 //│ class Lambda2(a: Int) {
 //│   fun apply: (Cons | Nil) -> Int
 //│ }
-//│ fun foo: {apply: (Cons | Nil) -> Int} -> Int
+//│ fun foo: {apply: (Cons | Nil) ->{'c} Int} ->{'c} Int
 //│ Int
 //│ res
 //│     = 1
@@ -643,7 +643,7 @@ foo(l => (new Cons(2, l)).count())
 //│ class Nil() {
 //│   fun count: () -> 0
 //│ }
-//│ fun foo: ((Cons | Nil) -> Int) -> Int
+//│ fun foo: ((Cons | Nil) ->{'a} Int) ->{'a} Int
 //│ Int
 //│ res
 //│     = 1

@@ -18,7 +18,7 @@ class Pure[A](value: A) extends IO[A] {
 //│   fun run: A
 //│ }
 //│ class Bind[CC, AA](underlying: IO[CC], f: CC -> IO[AA]) extends IO {
-//│   fun bind: forall 'AA0. ('A -> IO['AA0]) -> Bind['A, 'AA0]
+//│   fun bind: forall 'AA0. (AA -> IO['AA0]) -> Bind[in AA & 'A out AA, 'AA0]
 //│   fun hey: IO['A]
 //│   fun run: AA
 //│ }
@@ -163,7 +163,7 @@ fun loop3 = readInt.bind of (x => Pure(x) : IO[Int])
 //│   'AA :> Int
 
 fun (#>>) bindOp(x, f) = x.bind(f)
-//│ fun (#>>) bindOp: forall 'a 'b. ({bind: 'a -> 'b}, 'a) -> 'b
+//│ fun (#>>) bindOp: forall 'a 'b 'c. ({bind: 'a ->{'c} 'b}, 'a) ->{'c} 'b
 
 fun loop =
   readInt #>> n =>

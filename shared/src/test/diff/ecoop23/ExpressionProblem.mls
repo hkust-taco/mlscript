@@ -29,8 +29,8 @@ mixin EvalBase {
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   this: {eval: 'a -> Int}
-//│   fun eval: (Add['a] | Lit) -> Int
+//│   this: {eval: 'a ->{'b} Int}
+//│   fun eval: (Add['a] | Lit) ->{'b} Int
 //│ }
 
 
@@ -69,15 +69,15 @@ module TestLang extends EvalNothing, EvalAddLit
 //│   fun eval: nothing -> nothing
 //│ }
 //│ mixin EvalAddLit() {
-//│   super: {eval: 'a -> 'b}
-//│   this: {eval: 'c -> Int}
-//│   fun eval: (Add['c] | Lit | Object & 'a & ~#Add & ~#Lit) -> (Int | 'b)
+//│   super: {eval: 'a ->{'c} 'b}
+//│   this: {eval: 'd ->{'c} Int}
+//│   fun eval: (Add['d] | Lit | Object & 'a & ~#Add & ~#Lit) ->{'c} (Int | 'b)
 //│ }
 //│ module TestLang {
-//│   fun eval: (Add['d] | Lit) -> Int
+//│   fun eval: (Add['e] | Lit) -> Int
 //│ }
 //│ where
-//│   'd <: Add['d] | Lit
+//│   'e <: Add['e] | Lit
 
 TestLang.eval
 //│ (Add['a] | Lit) -> Int
@@ -107,9 +107,9 @@ mixin EvalNeg {
     else super.eval(e)
 }
 //│ mixin EvalNeg() {
-//│   super: {eval: 'a -> 'b}
-//│   this: {eval: 'c -> Int}
-//│   fun eval: (Neg['c] | Object & 'a & ~#Neg) -> (Int | 'b)
+//│   super: {eval: 'a ->{'c} 'b}
+//│   this: {eval: 'd ->{'c} Int}
+//│   fun eval: (Neg['d] | Object & 'a & ~#Neg) ->{'c} (Int | 'b)
 //│ }
 
 
@@ -175,9 +175,9 @@ mixin EvalNegNeg_0 {
     // else super.eval(e)
 }
 //│ mixin EvalNegNeg_0() {
-//│   super: {eval: (Neg[nothing] | 'a) -> 'b}
-//│   this: {eval: 'c -> 'b}
-//│   fun eval: (Neg[Neg['c] | Object & ~#Neg] | Object & 'a & ~#Neg) -> 'b
+//│   super: {eval: (Neg[nothing] | 'a) ->{'c} 'b}
+//│   this: {eval: 'd ->{'c} 'b}
+//│   fun eval: (Neg[Neg['d] | Object & ~#Neg] | Object & 'a & ~#Neg) ->{'c} 'b
 //│ }
 
 // * Concise alternative, usign syntax sugar:
@@ -185,9 +185,9 @@ mixin EvalNegNeg {
   fun eval(override Neg(Neg(d))) = this.eval(d)
 }
 //│ mixin EvalNegNeg() {
-//│   super: {eval: (Neg[nothing] | 'a) -> 'b}
-//│   this: {eval: 'c -> 'b}
-//│   fun eval: (Neg[Neg['c] | Object & ~#Neg] | Object & 'a & ~#Neg) -> 'b
+//│   super: {eval: (Neg[nothing] | 'a) ->{'c} 'b}
+//│   this: {eval: 'd ->{'c} 'b}
+//│   fun eval: (Neg[Neg['d] | Object & ~#Neg] | Object & 'a & ~#Neg) ->{'c} 'b
 //│ }
 
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg

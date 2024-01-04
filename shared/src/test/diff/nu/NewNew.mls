@@ -97,7 +97,7 @@ f(1)
 //│ ╟── application of type `Foo` is not a function
 //│ ║  l.81: 	let f = new Foo
 //│ ║        	            ^^^
-//│ ╟── but it flows into reference with expected type `1 -> ?a`
+//│ ╟── but it flows into reference with expected type `1 ->{?b} ?a`
 //│ ║  l.93: 	f(1)
 //│ ╙──      	^
 //│ error

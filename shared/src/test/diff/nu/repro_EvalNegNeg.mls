@@ -19,8 +19,8 @@ mixin EvalBase {
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   this: {eval: 'a -> 'b & ('c | 'd) -> Int}
-//│   fun eval: (Add['d] | Lit | Neg['c & (Neg['a] | Object & ~#Neg)]) -> (Int | 'b)
+//│   this: {eval: 'a ->{'c} 'b & ('d | 'e) ->{'c} Int}
+//│   fun eval: (Add['e] | Lit | Neg['d & (Neg['a] | Object & ~#Neg)]) ->{'c} (Int | 'b)
 //│ }
 
 // module TestLang extends EvalBase, EvalNeg
@@ -46,8 +46,8 @@ TestLang.eval(mk(0))
 //│ Int
 //│ res
 //│     = 0
-//│ constrain calls  : 190
+//│ constrain calls  : 194
 //│ annoying  calls  : 47
-//│ subtyping calls  : 1376
+//│ subtyping calls  : 1390
 
 

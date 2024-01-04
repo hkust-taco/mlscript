@@ -6,9 +6,9 @@ data R x
 //│ Desugared: class L[x]: {x: x}
 //│ Desugared: class R[x]: {x: x}
 //│ Desugared: def L: forall x. (...x) -> L[x]
-//│ AST: Def(false,Var(L),Right(PolyType(List(Left(TypeName(x))),Function(TypeName(x),AppliedType(TypeName(L),List(TypeName(x)))))),true)
+//│ AST: Def(false,Var(L),Right(PolyType(List(Left(TypeName(x))),Function(TypeName(x),AppliedType(TypeName(L),List(TypeName(x))),Bot))),true)
 //│ Desugared: def R: forall x. (...x) -> R[x]
-//│ AST: Def(false,Var(R),Right(PolyType(List(Left(TypeName(x))),Function(TypeName(x),AppliedType(TypeName(R),List(TypeName(x)))))),true)
+//│ AST: Def(false,Var(R),Right(PolyType(List(Left(TypeName(x))),Function(TypeName(x),AppliedType(TypeName(R),List(TypeName(x))),Bot))),true)
 //│ Defined class L[+x]
 //│ Defined class R[+x]
 //│ L: 'a -> L['a]

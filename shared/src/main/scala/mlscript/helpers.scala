@@ -30,6 +30,10 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
   }
   private def showFields(fs: Ls[Opt[Var] -> Field], ctx: ShowCtx): Ls[Str] =
     fs.map(nt => s"${nt._2.mutStr}${nt._1.fold("")(_.name + ": ")}${showField(nt._2, ctx)}")
+  private def showEffect(e: Type, ctx: ShowCtx) = e match {
+    case Bot => ""
+    case _ => s"{${e.showIn(ctx, 30)}}"
+  }
   def showIn(ctx: ShowCtx, outerPrec: Int): Str = this match {
   // TODO remove obsolete pretty-printing hacks
     case Top => "anything"
@@ -40,7 +44,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case uv: TypeVar => ctx.vs(uv)
     case Recursive(n, b) => parensIf(s"${b.showIn(ctx, 2)} as ${ctx.vs(n)}", outerPrec > 1)
     case WithExtension(b, r) => parensIf(s"${b.showIn(ctx, 2)} with ${r.showIn(ctx, 0)}", outerPrec > 1)
-    case Function(Tuple(fs), r) =>
+    case Function(Tuple(fs), r, e) =>
       val innerStr = fs match {
         case Nil => "()"
         case N -> Field(N, f) :: Nil if !f.isInstanceOf[Tuple] => f.showIn(ctx, 31)
@@ -48,10 +52,11 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
           val inner = showFields(fs, ctx)
           if (ctx.newDefs) inner.mkString("(", ", ", ")") else inner.mkString("(", ", ", ",)")
       }
-      parensIf(innerStr + " -> " + r.showIn(ctx, 30), outerPrec > 30)
-    case Function(l, r) if ctx.newDefs =>
-      parensIf("(..." + l.showIn(ctx, 0) + ") -> " + r.showIn(ctx, 30), outerPrec > 30)
-    case Function(l, r) => parensIf(l.showIn(ctx, 31) + " -> " + r.showIn(ctx, 30), outerPrec > 30)
+      parensIf(innerStr + s" ->${showEffect(e, ctx)} " + r.showIn(ctx, 30), outerPrec > 30)
+    case Function(l, r, e) if ctx.newDefs =>
+      parensIf("(..." + l.showIn(ctx, 0) + s") ->${showEffect(e, ctx)} " + r.showIn(ctx, 30), outerPrec > 30)
+    case Function(l, r, e) =>
+      parensIf(l.showIn(ctx, 31) + s" ->${showEffect(e, ctx)} " + r.showIn(ctx, 30), outerPrec > 30)
     case Neg(t) => s"~${t.showIn(ctx, 100)}"
     case Record(fs) =>
       val strs = fs.map { nt =>
@@ -191,7 +196,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
   
   def childrenTypes: List[TypeLike] = this match {
     case _: NullaryType => Nil
-    case Function(l, r) => l :: r :: Nil
+    case Function(l, r, e) => l :: r :: e :: Nil
     case Bounds(l, r) => l :: r :: Nil
     case Neg(b) => b :: Nil
     case Record(fs) => fs.flatMap(f => f._2.in.toList ++ (f._2.out :: Nil))
@@ -425,7 +430,15 @@ trait NuDeclImpl extends Located { self: NuDecl =>
   val declareLoc: Opt[Loc]
   val abstractLoc: Opt[Loc]
   def isDecl: Bool = declareLoc.nonEmpty
-  def isAbstract: Bool = abstractLoc.nonEmpty
+  def isAbstract: Bool = abstractLoc.nonEmpty || isEffect
+  def isEffect: Bool = self match {
+    case td: NuTypeDef => (td.kind is Cls) && td.effectLoc.nonEmpty
+    case _ => false
+  }
+  def isHandler: Bool = self match {
+    case td: NuTypeDef => (td.kind is Mod) && td.effectLoc.nonEmpty
+    case _ => false
+  }
   def declStr: Str = if (isDecl) "declare " else ""
   val nameVar: Var = self match {
     case td: NuTypeDef => td.nme.toVar
@@ -637,9 +650,9 @@ trait TermImpl extends StatementImpl { self: Term =>
     case lit: Lit => Literal(lit)
     case App(Var("->"), PlainTup(lhs @ (_: Tup | Bra(false, _: Tup)), rhs)) =>
     // * ^ Note: don't think the plain _: Tup without a Bra can actually occur
-      Function(lhs.toType_!, rhs.toType_!)
+      Function(lhs.toType_!, rhs.toType_!, Bot)
     case App(Var("->"), PlainTup(lhs, rhs)) =>
-      Function(Tuple(N -> Field(N, lhs.toType_!) :: Nil), rhs.toType_!)
+      Function(Tuple(N -> Field(N, lhs.toType_!) :: Nil), rhs.toType_!, Bot)
     case App(Var("|"), PlainTup(lhs, rhs)) =>
       Union(lhs.toType_!, rhs.toType_!)
     case App(Var("&"), PlainTup(lhs, rhs)) =>
@@ -647,7 +660,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case ty @ App(v @ Var("\\"), PlainTup(lhs, rhs)) =>
       Inter(lhs.toType_!, Neg(rhs.toType_!).withLoc(Loc(v :: rhs :: Nil))).withLoc(ty.toCoveringLoc)
     case App(Var("~"), rhs) => Neg(rhs.toType_!)
-    case Lam(lhs, rhs) => Function(lhs.toType_!, rhs.toType_!)
+    case Lam(lhs, rhs) => Function(lhs.toType_!, rhs.toType_!, Bot)
     case App(lhs, PlainTup(fs @ _*)) =>
       lhs.toType_! match {
         case tn: TypeName => AppliedType(tn, fs.iterator.map(_.toType_!).toList)
@@ -954,7 +967,7 @@ trait StatementImpl extends Located { self: Statement =>
           val clsNme = TypeName(v.name).withLocOf(v)
           val tps = tparams.toList
           val ctor = Def(false, v, R(PolyType(tps.map(L(_)),
-            params.foldRight(AppliedType(clsNme, tps):Type)(Function(_, _)))), true).withLocOf(stmt)
+            params.foldRight(AppliedType(clsNme, tps):Type)(Function(_, _, Bot)))), true).withLocOf(stmt)
           val td = TypeDef(Cls, clsNme, tps, Record(fields.toList.mapValues(Field(None, _))), Nil, Nil, Nil, N).withLocOf(stmt)
           td :: ctor :: cs
         case _ => ??? // TODO methods in data type defs? nested data type defs?

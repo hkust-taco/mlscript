@@ -150,8 +150,8 @@ trait TypeSimplifier { self: Typer =>
             PolymorphicType.mk(plvl, res)
         }
       
-      case ft @ FunctionType(l, r) =>
-        FunctionType(process(l, N), process(r, N, canDistribForall = canDistribForall))(ft.prov)
+      case ft @ FunctionType(l, r, e) =>
+        FunctionType(process(l, N), process(r, N, canDistribForall = canDistribForall), process(e, N, canDistribForall = canDistribForall))(ft.prov)
       
       case _ =>
         
@@ -418,10 +418,12 @@ trait TypeSimplifier { self: Typer =>
                     }.toList
                     S(TupleType(tupleComponents)(tt.prov)) -> rcdFields.mapValues(_.update(go(_, pol.map(!_)), go(_, pol)))
                   case S(ct: ClassTag) => S(ct) -> nFields
-                  case S(ft @ FunctionType(l, r)) =>
+                  case S(ft @ FunctionType(l, r, e)) =>
                     S(FunctionType(
                       go(l, pol.map(!_)),
                       go(r, pol, canDistribForall =
+                        canDistribForall.orElse(Option.when(dnf.isPolymorphic)(dnf.polymLevel))),
+                      go(e, pol, canDistribForall =
                         canDistribForall.orElse(Option.when(dnf.isPolymorphic)(dnf.polymLevel)))
                     )(ft.prov)) -> nFields
                   case S(ot @ Overload(alts)) =>
@@ -946,9 +948,9 @@ trait TypeSimplifier { self: Typer =>
       case sp @ SpliceType(elems) => SpliceType(elems map {
         case L(l) => L(transform(l, pol, semp)) 
         case R(r) => R(transformField(r))})(st.prov)
-      case FunctionType(l, r) =>
+      case FunctionType(l, r, e) =>
         FunctionType(transform(l, pol.contravar, semp),
-          transform(r, pol, semp, canDistribForall))(st.prov)
+          transform(r, pol, semp, canDistribForall), transform(e, pol, semp, canDistribForall))(st.prov)
       case ot @ Overload(as) =>
         ot.mapAltsPol(pol)((p, t) => transform(t, p, parents, canDistribForall))
       case SkolemTag(id) => transform(id, pol, parents)
@@ -1211,7 +1213,7 @@ trait TypeSimplifier { self: Typer =>
                         case (ArrayType(inner1), ArrayType(inner2)) => unifyF(inner1, inner2)
                         case (TupleType(fields1), TupleType(fields2)) =>
                           (fields1.size === fields2.size || nope) && fields1.map(_._2).lazyZip(fields2.map(_._2)).forall(unifyF)
-                        case (FunctionType(lhs1, rhs1), FunctionType(lhs2, rhs2)) => unify(lhs1, lhs2) && unify(rhs1, rhs2)
+                        case (FunctionType(lhs1, rhs1, e1), FunctionType(lhs2, rhs2, e2)) => unify(lhs1, lhs2) && unify(rhs1, rhs2) && unify(e1, e2)
                         case (Without(base1, names1), Without(base2, names2)) => unify(base1, base2) && (names1 === names2 || nope)
                         case (TraitTag(id1, _), TraitTag(id2, _)) => id1 === id2 || nope
                         case (SkolemTag(id1), SkolemTag(id2)) => id1 === id2 || nope
