@@ -136,7 +136,7 @@ fun foo(x: C['a]): x.T = if x is
     C2    then 0 : x.T
 //│ fun foo: forall 'a. (x: C['a]) -> ('a & (Int | ??A))
 
-abstract class Option[type T]: None | Some[T]
+abstract class Option[type out T]: None | Some[T]
 module None extends Option[nothing]
 class Some[A](get: A) extends Option[A]
 //│ abstract class Option[T]: None | Some[T]
@@ -162,4 +162,9 @@ fun get(x) = if x is Some(r) then r else error
 //│ fun get: forall 'A. (Object & ~#Some | Some['A]) -> (??A & 'A)
 
 fun get(x: Option['a]): x.T = if x is Some(r) then r else error
-//│ fun get: forall 'a. (x: Option['a]) -> 'a
+//│ fun get: forall 'a. (x: Option[~??A & 'a]) -> 'a
+
+None as Option[Int]
+//│ Option[Int]
+//│ res
+//│     = None { class: [class None extends Option] }

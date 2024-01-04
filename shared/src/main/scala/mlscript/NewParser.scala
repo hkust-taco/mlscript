@@ -1055,21 +1055,24 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   
   // TODO support line-broken param lists; share logic with args/argsOrIf
   def typeParams(implicit fe: FoundErr, et: ExpectThen): Ls[(TypeParamInfo, TypeName)] = {
+    val visinfo = yeetSpaces match {
+      case (KEYWORD("type"), l0) :: _ =>
+        consume
+        (true, S(l0))
+      case _ => (false, N)
+    }
     val vinfo = yeetSpaces match {
       case (KEYWORD("in"), l0) :: (KEYWORD("out"), l1) :: _ =>
         consume
-        (TypeParamInfo(S(VarianceInfo.in), false), S(l0++l1))
+        (S(VarianceInfo.in), S(l0++l1))
       case (KEYWORD("in"), l0) :: _ =>
         consume
-        (TypeParamInfo(S(VarianceInfo.contra), false), S(l0))
+        (S(VarianceInfo.contra), S(l0))
       case (KEYWORD("out"), l0) :: _ =>
         consume
-        (TypeParamInfo(S(VarianceInfo.co), false), S(l0))
-      case (KEYWORD("type"), l0) :: _ =>
-        consume
-        (TypeParamInfo(N, true), S(l0)) // visible type member
+        (S(VarianceInfo.co), S(l0))
       case _ =>
-        (TypeParamInfo(N, false), N)
+        (N, N)
     }
     yeetSpaces match {
       case (IDENT(nme, false), l0) :: _ =>
@@ -1078,15 +1081,15 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         yeetSpaces match {
           case (COMMA, l0) :: _ =>
             consume
-            vinfo._1 -> tyNme :: typeParams
+            TypeParamInfo(vinfo._1, visinfo._1) -> tyNme :: typeParams
           case _ =>
-            vinfo._1 -> tyNme :: Nil
+            TypeParamInfo(vinfo._1, visinfo._1) -> tyNme :: Nil
         }
       case _ =>
-        vinfo match {
-          case (TypeParamInfo(S(_), _), S(loc)) =>
+        (visinfo, vinfo) match {
+          case (_, (S(_), S(loc))) =>
             err(msg"dangling variance information" -> S(loc) :: Nil)
-          case (TypeParamInfo(N, true), S(loc)) =>
+          case ((true, S(loc)), _) =>
             err(msg"dangling visible type member" -> S(loc) :: Nil)
           case _ =>
         }
