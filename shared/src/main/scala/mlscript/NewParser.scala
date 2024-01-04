@@ -669,7 +669,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                       // case (N -> Fld(FldFlags.empty, t), acc) => App(Var(","), PlainTup(t, acc))
                       // case (f, acc) => ???
                       case N -> Fld(FldFlags.empty, t) => t
-                      case f => ???
+                      // case f => ???
+                      case no -> Fld(_, t) =>
+                        err((msg"Illegal position for field specification" -> Loc(no.toList :+ t) :: Nil))
+                        t
                     }.reduceRight((t, acc) => App(Var(","), PlainTup(t, acc)))
                 }
             }

@@ -214,7 +214,15 @@ M.id1
 
 // FIXME? parsing/semantics of this, currently treated as a named tuple...
 (M: C)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[PARSE ERROR] Illegal position for field specification
+//│ ║  l.216: 	(M: C)
+//│ ╙──       	 ^^^^
+//│ ╔══[ERROR] Construction of unparameterized class C should use the `new` keyword
+//│ ║  l.216: 	(M: C)
+//│ ╙──       	    ^
+//│ () -> C
+//│ res
+//│     = [class C]
 
 
 
@@ -230,19 +238,19 @@ module M {
   fun oops(x) = m := x
 }
 //│ ╔══[PARSE ERROR] Unexpected 'mut' keyword in expression position
-//│ ║  l.229: 	  mut val m = None
+//│ ║  l.237: 	  mut val m = None
 //│ ╙──       	  ^^^
 //│ ╔══[PARSE ERROR] Unexpected 'val' keyword in expression position
-//│ ║  l.229: 	  mut val m = None
+//│ ║  l.237: 	  mut val m = None
 //│ ╙──       	      ^^^
 //│ ╔══[ERROR] identifier not found: :=
-//│ ║  l.230: 	  fun oops(x) = m := x
+//│ ║  l.238: 	  fun oops(x) = m := x
 //│ ╙──       	                  ^^
 //│ ╔══[ERROR] identifier not found: m
-//│ ║  l.230: 	  fun oops(x) = m := x
+//│ ║  l.238: 	  fun oops(x) = m := x
 //│ ╙──       	                ^
 //│ ╔══[ERROR] Unexpected equation in this position
-//│ ║  l.229: 	  mut val m = None
+//│ ║  l.237: 	  mut val m = None
 //│ ╙──       	          ^^^^^^^^
 //│ module M {
 //│   fun oops: anything -> error

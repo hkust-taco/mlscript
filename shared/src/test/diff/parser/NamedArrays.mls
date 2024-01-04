@@ -59,90 +59,54 @@
 
 (x: 1)
 //│ |(|x|#:| |1|)|
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$7(NewParser.scala:672)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$2(NewParser.scala:668)
-//│ 	at: mlscript.NewParser.wrap(NewParser.scala:66)
-//│ 	at: mlscript.NewParser.exprOrIf(NewParser.scala:599)
-//│ 	at: mlscript.NewParser.block(NewParser.scala:540)
-//│ 	at: mlscript.NewParser.typingUnit(NewParser.scala:228)
-//│ 	at: mlscript.DiffTests.$anonfun$new$27(DiffTests.scala:427)
-//│ 	at: mlscript.NewParser.parseAll(NewParser.scala:73)
+//│ ╔══[PARSE ERROR] Illegal position for field specification
+//│ ║  l.60: 	(x: 1)
+//│ ╙──      	 ^^^^
+//│ Parsed: {1}
 
 (x:)
 //│ |(|x|#:|)|
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
-//│ ║  l.74: 	(x:)
+//│ ║  l.67: 	(x:)
 //│ ╙──      	   ^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$7(NewParser.scala:672)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$2(NewParser.scala:668)
-//│ 	at: mlscript.NewParser.wrap(NewParser.scala:66)
-//│ 	at: mlscript.NewParser.exprOrIf(NewParser.scala:599)
-//│ 	at: mlscript.NewParser.block(NewParser.scala:540)
-//│ 	at: mlscript.NewParser.typingUnit(NewParser.scala:228)
-//│ 	at: mlscript.DiffTests.$anonfun$new$27(DiffTests.scala:427)
-//│ 	at: mlscript.NewParser.parseAll(NewParser.scala:73)
+//│ ╔══[PARSE ERROR] Illegal position for field specification
+//│ ║  l.67: 	(x:)
+//│ ╙──      	 ^^
+//│ Parsed: {undefined}
 
 (x: 1,)
 //│ |(|x|#:| |1|,|)|
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$7(NewParser.scala:672)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$2(NewParser.scala:668)
-//│ 	at: mlscript.NewParser.wrap(NewParser.scala:66)
-//│ 	at: mlscript.NewParser.exprOrIf(NewParser.scala:599)
-//│ 	at: mlscript.NewParser.block(NewParser.scala:540)
-//│ 	at: mlscript.NewParser.typingUnit(NewParser.scala:228)
-//│ 	at: mlscript.DiffTests.$anonfun$new$27(DiffTests.scala:427)
-//│ 	at: mlscript.NewParser.parseAll(NewParser.scala:73)
+//│ ╔══[PARSE ERROR] Illegal position for field specification
+//│ ║  l.77: 	(x: 1,)
+//│ ╙──      	 ^^^^
+//│ Parsed: {1}
 
 (x: 1, 2, 3)
 //│ |(|x|#:| |1|,| |2|,| |3|)|
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$7(NewParser.scala:672)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$2(NewParser.scala:668)
-//│ 	at: mlscript.NewParser.wrap(NewParser.scala:66)
-//│ 	at: mlscript.NewParser.exprOrIf(NewParser.scala:599)
-//│ 	at: mlscript.NewParser.block(NewParser.scala:540)
-//│ 	at: mlscript.NewParser.typingUnit(NewParser.scala:228)
-//│ 	at: mlscript.DiffTests.$anonfun$new$27(DiffTests.scala:427)
-//│ 	at: mlscript.NewParser.parseAll(NewParser.scala:73)
+//│ ╔══[PARSE ERROR] Illegal position for field specification
+//│ ║  l.84: 	(x: 1, 2, 3)
+//│ ╙──      	 ^^^^
+//│ Parsed: {,(1, ,(2, 3,),)}
 
 (1, y: 2, 3)
 //│ |(|1|,| |y|#:| |2|,| |3|)|
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$7(NewParser.scala:672)
-//│ 	at: scala.collection.immutable.List.map(List.scala:250)
-//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$2(NewParser.scala:668)
-//│ 	at: mlscript.NewParser.wrap(NewParser.scala:66)
-//│ 	at: mlscript.NewParser.exprOrIf(NewParser.scala:599)
-//│ 	at: mlscript.NewParser.block(NewParser.scala:540)
-//│ 	at: mlscript.NewParser.typingUnit(NewParser.scala:228)
-//│ 	at: mlscript.DiffTests.$anonfun$new$27(DiffTests.scala:427)
-//│ 	at: mlscript.NewParser.parseAll(NewParser.scala:73)
+//│ ╔══[PARSE ERROR] Illegal position for field specification
+//│ ║  l.91: 	(1, y: 2, 3)
+//│ ╙──      	    ^^^^
+//│ Parsed: {,(1, ,(2, 3,),)}
 
 (x: 1, y: 2, z: 3)
 //│ |(|x|#:| |1|,| |y|#:| |2|,| |z|#:| |3|)|
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$7(NewParser.scala:672)
-//│ 	at: scala.collection.immutable.List.map(List.scala:246)
-//│ 	at: mlscript.NewParser.$anonfun$exprOrIf$2(NewParser.scala:668)
-//│ 	at: mlscript.NewParser.wrap(NewParser.scala:66)
-//│ 	at: mlscript.NewParser.exprOrIf(NewParser.scala:599)
-//│ 	at: mlscript.NewParser.block(NewParser.scala:540)
-//│ 	at: mlscript.NewParser.typingUnit(NewParser.scala:228)
-//│ 	at: mlscript.DiffTests.$anonfun$new$27(DiffTests.scala:427)
-//│ 	at: mlscript.NewParser.parseAll(NewParser.scala:73)
+//│ ╔══[PARSE ERROR] Illegal position for field specification
+//│ ║  l.98: 	(x: 1, y: 2, z: 3)
+//│ ╙──      	 ^^^^
+//│ ╔══[PARSE ERROR] Illegal position for field specification
+//│ ║  l.98: 	(x: 1, y: 2, z: 3)
+//│ ╙──      	       ^^^^
+//│ ╔══[PARSE ERROR] Illegal position for field specification
+//│ ║  l.98: 	(x: 1, y: 2, z: 3)
+//│ ╙──      	             ^^^^
+//│ Parsed: {,(1, ,(2, 3,),)}
 
 
 1
@@ -156,14 +120,14 @@ x: 1
 1,
 //│ |1|,|
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.156: 	1,
+//│ ║  l.120: 	1,
 //│ ╙──       	  ^
 //│ Parsed: {,(1, undefined,)}
 
 x: 1,
 //│ |x|#:| |1|,|
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.163: 	x: 1,
+//│ ║  l.127: 	x: 1,
 //│ ╙──       	     ^
 //│ Parsed: {x : ,[1, ()]}
 
@@ -201,10 +165,10 @@ f of
   z: 3
 //│ |f| |#of|→|x|#:| |1|↵|y|#:| |2|↵|z|#:| |3|←|
 //│ ╔══[PARSE ERROR] Unexpected named argument name here
-//│ ║  l.199: 	  x: 1
+//│ ║  l.163: 	  x: 1
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Unexpected named argument name here
-//│ ║  l.200: 	  y: 2
+//│ ║  l.164: 	  y: 2
 //│ ╙──       	  ^
 //│ Parsed: {f(z: {1; 2; 3},)}
 
@@ -214,7 +178,7 @@ f of
   z: 3
 //│ |f| |#of|→|x|#:| |1|↵|2|↵|z|#:| |3|←|
 //│ ╔══[PARSE ERROR] Unexpected named argument name here
-//│ ║  l.212: 	  x: 1
+//│ ║  l.176: 	  x: 1
 //│ ╙──       	  ^
 //│ Parsed: {f(z: {1; 2; 3},)}
 
@@ -224,10 +188,10 @@ f of
   3
 //│ |f| |#of|→|x|#:| |1|↵|y|#:| |2|↵|3|←|
 //│ ╔══[PARSE ERROR] Unexpected named argument name here
-//│ ║  l.222: 	  x: 1
+//│ ║  l.186: 	  x: 1
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Unexpected named argument name here
-//│ ║  l.223: 	  y: 2
+//│ ║  l.187: 	  y: 2
 //│ ╙──       	  ^
 //│ Parsed: {f({1; 2; 3},)}
 
