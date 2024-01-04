@@ -140,7 +140,7 @@ fun foo(s) =
 //│ globalThis.foo = function foo(s) {
 //│   return ((() => {
 //│     let a;
-//│     return (a = s, a instanceof Some.class ? (([t]) => ((b) => undefined)(s21.value))(Some.unapply(s)) : (() => {
+//│     return (a = s, a instanceof Some.class ? (([t]) => ((b) => undefined)(s2.value))(Some.unapply(s)) : (() => {
 //│       throw new Error("non-exhaustive case expression");
 //│     })());
 //│   })());

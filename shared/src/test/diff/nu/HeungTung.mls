@@ -202,7 +202,7 @@ type Res = M(T)
 let f = x => [x, x]
 //│ let f: forall 'a. 'a -> ['a, 'a]
 //│ f
-//│   = [Function: f3]
+//│   = [Function: f1]
 
 [f(1), f(true)]
 //│ [[1, 1], [true, true]]

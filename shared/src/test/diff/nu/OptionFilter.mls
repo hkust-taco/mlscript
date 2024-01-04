@@ -1,0 +1,27 @@
+:NewDefs
+
+// FIXME: this looks like a bug about mutually-referential definitions
+abstract class Option[out T]: (Some[T] | None) {
+  virtual fun filter: (p: T -> Bool) -> Option[T]
+}
+class Some[out T](val value: T) extends Option[T] {
+  fun filter(p) = if p of value then Some(value) else None
+}
+module None extends Option[nothing] {
+  fun filter(_) = None
+}
+//│ ╔══[ERROR] Type `#Some & {Some#T <: ?T}` does not contain member `Option#T`
+//│ ║  l.4: 	abstract class Option[out T]: (Some[T] | None) {
+//│ ╙──     	                          ^
+//│ ╔══[ERROR] Type `#None` does not contain member `Option#T`
+//│ ║  l.4: 	abstract class Option[out T]: (Some[T] | None) {
+//│ ╙──     	                          ^
+//│ abstract class Option[T]: None | Some[T] {
+//│   fun filter: (p: T -> Bool) -> Option[T]
+//│ }
+//│ class Some[T](value: T) extends Option {
+//│   fun filter: (T -> Object) -> (None | Some[T])
+//│ }
+//│ module None extends Option {
+//│   fun filter: anything -> None
+//│ }

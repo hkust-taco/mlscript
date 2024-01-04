@@ -112,6 +112,6 @@ x => x.y => y
 //│ ╙──       	            ^
 //│ anything -> error -> error
 //│ Code generation encountered an error:
-//│   term Sel(Var(x), y) is not a valid pattern
+//│   term Sel(Var(x),Var(y)) is not a valid pattern
 
 

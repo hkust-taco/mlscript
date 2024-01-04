@@ -17,7 +17,7 @@ test(log("here we go"); 123)
 //│ ()
 //│ res
 //│ Runtime error:
-//│   ReferenceError: test1 is not defined
+//│   ReferenceError: test is not defined
 
 
 let a = 1;; let b = a + 1

@@ -1,7 +1,6 @@
 package mlscript
 package compiler
 
-import mlscript.codegen.Helpers.inspect as showStructure
 import mlscript.compiler.mono.{Monomorph, MonomorphError}
 import scala.collection.mutable.ArrayBuffer
 
@@ -16,7 +15,7 @@ object Helpers:
       case (None, Fld(FldFlags(_, spec, _), Var(name))) => Some((spec, Expr.Ref(name)))
       case (Some(Var(name)), Fld(FldFlags(_, spec, _), _)) => Some((spec, Expr.Ref(name)))
       case _ => throw new MonomorphError(
-        s"only `Var` can be parameters but we meet ${showStructure(term)}"
+        s"only `Var` can be parameters but we meet $term"
       )
     }
     case _ => throw MonomorphError("expect the list of parameters to be a `Tup`")

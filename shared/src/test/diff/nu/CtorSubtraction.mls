@@ -16,12 +16,12 @@ fun x = case
 x : Int -> Int
 //│ Int -> Int
 //│ res
-//│     = [Function: x1]
+//│     = [Function: x]
 
 x : Cls -> nothing
 //│ Cls -> nothing
 //│ res
-//│     = [Function: x1]
+//│     = [Function: x]
 
 
 fun x: (Int | Str | Cls) \ Cls
