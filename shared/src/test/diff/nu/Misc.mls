@@ -89,7 +89,7 @@ f([1, 2])
 
 
 
-:pe
+:e
 let f = ((x, y)) => x + y
 //│ ╔══[ERROR] Unsupported pattern shape:
 //│ ║  l.93: 	let f = ((x, y)) => x + y
@@ -117,13 +117,14 @@ f(1, 2)
 //│ Runtime error:
 //│   ReferenceError: f5 is not defined
 
-:pe
+:re
 f((1, 2))
 //│ Int
 //│ res
 //│ Runtime error:
 //│   ReferenceError: f5 is not defined
 
+:re
 f([1, 2])
 //│ Int
 //│ res
@@ -133,7 +134,7 @@ f([1, 2])
 :e
 f[1, 2]
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.134: 	f[1, 2]
+//│ ║  l.135: 	f[1, 2]
 //│ ╙──       	^^^^^^^
 //│ error -> Int
 //│ res
@@ -141,16 +142,16 @@ f[1, 2]
 //│   ReferenceError: f5 is not defined
 
 
-:pe
+:e
 let f = (((x, y))) => x + y
 //│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.145: 	let f = (((x, y))) => x + y
+//│ ║  l.146: 	let f = (((x, y))) => x + y
 //│ ╙──       	          ^^^^^^
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.145: 	let f = (((x, y))) => x + y
+//│ ║  l.146: 	let f = (((x, y))) => x + y
 //│ ╙──       	                      ^
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.145: 	let f = (((x, y))) => x + y
+//│ ║  l.146: 	let f = (((x, y))) => x + y
 //│ ╙──       	                          ^
 //│ let f: error -> Int
 //│ Code generation encountered an error:
@@ -166,10 +167,10 @@ let f = [x, y] => x + y
 :e
 f(1, 2)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.167: 	f(1, 2)
+//│ ║  l.168: 	f(1, 2)
 //│ ║         	^^^^^^^
 //│ ╟── argument list of type `[1, 2]` does not match type `[[?a, ?b]]`
-//│ ║  l.167: 	f(1, 2)
+//│ ║  l.168: 	f(1, 2)
 //│ ╙──       	 ^^^^^^
 //│ Int | error
 //│ res
@@ -195,10 +196,10 @@ f([1, 2])
 :e
 f(1, 2)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.196: 	f(1, 2)
+//│ ║  l.197: 	f(1, 2)
 //│ ║         	^^^^^^^
 //│ ╟── argument list of type `[1, 2]` does not match type `[[?a, ?b]]`
-//│ ║  l.196: 	f(1, 2)
+//│ ║  l.197: 	f(1, 2)
 //│ ╙──       	 ^^^^^^
 //│ Int | error
 //│ res
@@ -214,10 +215,10 @@ let f = [[[x, y]]] => x + y
 :e
 f([[1, 2]])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.215: 	f([[1, 2]])
+//│ ║  l.216: 	f([[1, 2]])
 //│ ║         	^^^^^^^^^^^
 //│ ╟── tuple literal of type `[1, 2]` does not match type `[[?a, ?b]]`
-//│ ║  l.215: 	f([[1, 2]])
+//│ ║  l.216: 	f([[1, 2]])
 //│ ╙──       	   ^^^^^^
 //│ Int | error
 //│ res

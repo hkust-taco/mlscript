@@ -11,9 +11,9 @@
 //│     = 1
 
 // TODO?
-:e
+:pe
 1 : Int : Int
-//│ ╔══[ERROR] Not a recognized type
+//│ ╔══[PARSE ERROR] Not a recognized type
 //│ ║  l.15: 	1 : Int : Int
 //│ ╙──      	    ^^^
 //│ anything

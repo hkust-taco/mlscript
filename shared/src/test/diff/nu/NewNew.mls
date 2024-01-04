@@ -236,14 +236,16 @@ new
 //│ Code generation encountered an error:
 //│   Unsupported `new` class term: UnitLit(true)
 
-:e // support?
+// Support?
+:pe
+:e
 new
   x: 0
-//│ ╔══[ERROR] Not a recognized type
-//│ ║  l.241: 	  x: 0
+//│ ╔══[PARSE ERROR] Not a recognized type
+//│ ║  l.243: 	  x: 0
 //│ ╙──       	  ^
 //│ ╔══[ERROR] Unexpected type `nothing` after `new` keyword
-//│ ║  l.241: 	  x: 0
+//│ ║  l.243: 	  x: 0
 //│ ╙──       	  ^
 //│ error
 //│ Code generation encountered an error:
@@ -258,7 +260,7 @@ fun f(x) = {x}
 :e
 new f(1)
 //│ ╔══[ERROR] type identifier not found: f
-//│ ║  l.259: 	new f(1)
+//│ ║  l.261: 	new f(1)
 //│ ╙──       	    ^
 //│ error
 //│ res
@@ -271,7 +273,7 @@ module Oops
 :e
 new Oops
 //│ ╔══[ERROR] Module Oops cannot be used in `new` expression
-//│ ║  l.272: 	new Oops
+//│ ║  l.274: 	new Oops
 //│ ╙──       	    ^^^^
 //│ error
 //│ res
@@ -282,7 +284,7 @@ new Oops
 new Oops2
 trait Oops2
 //│ ╔══[ERROR] Trait Oops2 cannot be used in `new` expression
-//│ ║  l.282: 	new Oops2
+//│ ║  l.284: 	new Oops2
 //│ ╙──       	    ^^^^^
 //│ trait Oops2
 //│ error

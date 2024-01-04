@@ -13,7 +13,7 @@ fun f3([[x, y,],],) = x + y
 //│ fun f2: ([Int, Int]) -> Int
 //│ fun f3: ([[Int, Int]]) -> Int
 
-:pe
+:e
 fun f3([(x, y,),],) = x + y
 //│ ╔══[ERROR] Unsupported pattern shape:
 //│ ║  l.17: 	fun f3([(x, y,),],) = x + y

@@ -16,6 +16,66 @@ object NewParser {
   final def expectThen(implicit ptr: ExpectThen): Bool = ptr === true
   final def foundErr(implicit ptr: FoundErr): Bool = ptr === true
   
+  type TokLoc = (Stroken, Loc)
+  
+  type LTL = Ls[TokLoc]
+  
+  private val MinPrec = 0
+  private val NoElsePrec = MinPrec + 1
+  
+  private val prec: Map[Char,Int] =
+    List(
+      "", // 0 is the virtual precedence of 'else'
+      "",
+      "",
+      "",
+      "",
+      "",
+      // ^ for keywords
+      // ";",
+      ",",
+      "=",
+      "@",
+      ":",
+      "|",
+      "/ \\",
+      "^",
+      "&",
+      // "= !",
+      "!",
+      "< >",
+      "+ -",
+      // "* / %",
+      "* %",
+      "", // Precedence of application
+      ".",
+    ).zipWithIndex.flatMap {
+      case (cs, i) => cs.filterNot(_ === ' ').map(_ -> (i + 1))
+    }.toMap.withDefaultValue(Int.MaxValue)
+  
+  private val AppPrec = prec('.') - 1
+  
+  final def opCharPrec(opChar: Char): Int = prec(opChar)
+  final def opPrec(opStr: Str): (Int, Int) = opStr match {
+    case "is" => (4, 4)
+    case "and" => (3, 3)
+    case "or" => (2, 2)
+    case "=>" =>
+      // * The lambda operator is special:
+      // *  it should associate veyr strongly on the left and very loosely on the right
+      // *  so that we can write things like `f() |> x => x is 0` ie `(f()) |> (x => (x is 0))`
+      val eqPrec = prec('.') // * We pick the tightest precedence
+      (eqPrec, 1)
+      // * Note: we used to do this instead which broke the example above on both sides:
+      // val eqPrec = prec('=')
+      // (eqPrec, eqPrec - 1)
+    case _ if opStr.exists(_.isLetter) =>
+      (5, 5)
+    case _ =>
+      val r = opStr.last
+      (prec(opStr.head), prec(r) - (if (r === '@' || r === '/' || r === ',' || r === ':') 1 else 0))
+  }
+  
 }
 import NewParser._
 
@@ -90,67 +150,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }
     printDbg(s"Concluded with $res")
     res
-  }
-  final def nil: Unit = ()
-  
-  type TokLoc = (Stroken, Loc)
-  
-  type LTL = Ls[TokLoc]
-  
-  private val MinPrec = 0
-  private val NoElsePrec = MinPrec + 1
-  
-  private val prec: Map[Char,Int] =
-    List(
-      "", // 0 is the virtual precedence of 'else'
-      "",
-      "",
-      "",
-      "",
-      "",
-      // ^ for keywords
-      // ";",
-      ",",
-      "=",
-      "@",
-      ":",
-      "|",
-      "/ \\",
-      "^",
-      "&",
-      // "= !",
-      "!",
-      "< >",
-      "+ -",
-      // "* / %",
-      "* %",
-      "", // Precedence of application
-      ".",
-    ).zipWithIndex.flatMap {
-      case (cs, i) => cs.filterNot(_ === ' ').map(_ -> (i + 1))
-    }.toMap.withDefaultValue(Int.MaxValue)
-  
-  private val AppPrec = prec('.') - 1
-  
-  final def opCharPrec(opChar: Char): Int = prec(opChar)
-  final def opPrec(opStr: Str): (Int, Int) = opStr match {
-    case "is" => (4, 4)
-    case "and" => (3, 3)
-    case "or" => (2, 2)
-    case "=>" =>
-      // * The lambda operator is special:
-      // *  it should associate veyr strongly on the left and very loosely on the right
-      // *  so that we can write things like `f() |> x => x is 0` ie `(f()) |> (x => (x is 0))`
-      val eqPrec = prec('.') // * We pick the tightest precedence
-      (eqPrec, 1)
-      // * Note: we used to do this instead which broke the example above on both sides:
-      // val eqPrec = prec('=')
-      // (eqPrec, eqPrec - 1)
-    case _ if opStr.exists(_.isLetter) =>
-      (5, 5)
-    case _ =>
-      val r = opStr.last
-      (prec(opStr.head), prec(r) - (if (r === '@' || r === '/' || r === ',' || r === ':') 1 else 0))
   }
   
   // def pe(msg: Message, l: Loc, rest: (Message, Opt[Loc])*): Unit =
@@ -647,7 +646,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             yeetSpaces match {
               case (KEYWORD("=>"), l1) :: _ =>
                 consume
-                val e = expr(0)
+                // val e = expr(0)
+                // val e = expr(NewParser.prec('.'))
+                val e = expr(NewParser.opPrec("=>")._2)
                 Lam(Tup(res), e)
               case (IDENT("->", true), l1) :: _ =>
                 consume
@@ -726,7 +727,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         }
       case (KEYWORD("new"), l0) :: c =>
         consume
-        val body = expr(outer.prec('.'))
+        val body = expr(NewParser.prec('.'))
         exprCont(NuNew(body).withLoc(S(l0 ++ body.toLoc)), prec, allowNewlines = false)
       case (KEYWORD("else"), l0) :: _ =>
         consume
@@ -780,7 +781,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                       // S(thn, S(nested.concludeWith(_.expr(0))))
                       S(nested.concludeWith(_.expr(0)))
                     case _ =>
-                      nested.concludeWith(_.nil)
+                      nested.concludeWith(_ => ())
                       // S(thn, N)
                       N
                   }
@@ -878,7 +879,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 else App(App(v, PlainTup(acc)), PlainTup(rhs))
             }, prec, allowNewlines)
         }
-      case (KEYWORD(":"), l0) :: _ if prec <= outer.prec(':') =>
+      case (KEYWORD(":"), l0) :: _ if prec <= NewParser.prec(':') =>
         consume
         R(Asc(acc, typ(0)))
       case (KEYWORD("where"), l0) :: _ if prec <= 1 =>

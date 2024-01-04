@@ -76,7 +76,6 @@ fun x = 1
 //│ res
 //│     = 1
 
-:pe
 (1,2)
 //│ 2
 //│ res
@@ -90,7 +89,7 @@ fun x = 1
 :pe
 (let x = 1 in)
 //│ ╔══[PARSE ERROR] Unexpected 'in' keyword here
-//│ ║  l.91: 	(let x = 1 in)
+//│ ║  l.90: 	(let x = 1 in)
 //│ ╙──      	           ^^
 //│ ()
 //│ res
@@ -106,7 +105,7 @@ fun x = 1
 :pe
 (log(1);)
 //│ ╔══[PARSE ERROR] Unexpected semicolon here
-//│ ║  l.107: 	(log(1);)
+//│ ║  l.106: 	(log(1);)
 //│ ╙──       	       ^
 //│ ()
 //│ res
@@ -116,7 +115,7 @@ fun x = 1
 
 (log(1); 2)
 //│ ╔══[PARSE ERROR] Unexpected semicolon here
-//│ ║  l.117: 	(log(1); 2)
+//│ ║  l.116: 	(log(1); 2)
 //│ ╙──       	       ^
 //│ ()
 //│ res
@@ -126,7 +125,7 @@ fun x = 1
 
 (log(1); ())
 //│ ╔══[PARSE ERROR] Unexpected semicolon here
-//│ ║  l.127: 	(log(1); ())
+//│ ║  l.126: 	(log(1); ())
 //│ ╙──       	       ^
 //│ ()
 //│ res
@@ -143,7 +142,6 @@ fun x = 1
 
 
 
-:pe
 (1, 2)
 //│ 2
 //│ res
@@ -172,7 +170,6 @@ x => x
 //│     = [Function: res]
 
 
-:pe
 1 => (2, 3)
 //│ 1 -> 3
 //│ res
@@ -192,17 +189,16 @@ f of 1, 2
 //│ res
 //│     = 3
 
-:pe
 :e
 f of (1, 2)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.197: 	f of (1, 2)
+//│ ║  l.193: 	f of (1, 2)
 //│ ║         	^^^^^^^^^^^
 //│ ╟── argument of type `[?a]` does not match type `[?b, ?c]`
-//│ ║  l.197: 	f of (1, 2)
+//│ ║  l.193: 	f of (1, 2)
 //│ ║         	     ^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.182: 	fun f(x, y) = x + y
+//│ ║  l.179: 	fun f(x, y) = x + y
 //│ ╙──       	     ^^^^^^
 //│ Int | error
 //│ res
@@ -210,7 +206,6 @@ f of (1, 2)
 
 
 
-:w
 0; 0
 //│ 0
 //│ res
@@ -219,34 +214,39 @@ f of (1, 2)
 //│     = 0
 
 :w
-succ(0); 0
-//│ 0
-//│ res
-//│     = 1
-//│ res
-//│     = 0
+fun f =
+  0; 0
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.218: 	  0; 0
+//│ ╙──       	  ^
+//│ fun f: 0
 
-discard(succ(0)); 0
-//│ 0
-//│ res
-//│     = undefined
-//│ res
-//│     = 0
+:w
+fun f =
+  succ(0); 0
+//│ ╔══[WARNING] Expression in statement position should have type `unit`.
+//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╟── Type mismatch in application:
+//│ ║  l.226: 	  succ(0); 0
+//│ ║         	  ^^^^^^^
+//│ ╙── application of type `Int` does not match type `()`
+//│ fun f: 0
 
-discard of succ(0); 0
-//│ 0
-//│ res
-//│     = undefined
-//│ res
-//│     = 0
+fun f =
+  discard(succ(0)); 0
+//│ fun f: 0
 
-let _ = succ(0); 0
-//│ let _: Int
-//│ 0
-//│ _
-//│   = 1
-//│ res
-//│     = 0
+fun f =
+  discard of succ(0); 0
+//│ fun f: 0
+
+fun f =
+  let _ = succ(0); 0
+//│ fun f: 0
+
+fun f =
+  succ(0), 0
+//│ fun f: 0
 
 
 x => x; ()
