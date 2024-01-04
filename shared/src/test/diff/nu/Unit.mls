@@ -113,22 +113,22 @@ fun x = 1
 //│ // Output
 //│ 1
 
+:pe // support?
 (log(1); 2)
 //│ ╔══[PARSE ERROR] Unexpected semicolon here
-//│ ║  l.116: 	(log(1); 2)
+//│ ║  l.117: 	(log(1); 2)
 //│ ╙──       	       ^
-//│ TEST CASE FAILURE: There was an unexpected parse error
 //│ ()
 //│ res
 //│     = undefined
 //│ // Output
 //│ 1
 
+:pe // support?
 (log(1); ())
 //│ ╔══[PARSE ERROR] Unexpected semicolon here
-//│ ║  l.127: 	(log(1); ())
+//│ ║  l.128: 	(log(1); ())
 //│ ╙──       	       ^
-//│ TEST CASE FAILURE: There was an unexpected parse error
 //│ ()
 //│ res
 //│     = undefined

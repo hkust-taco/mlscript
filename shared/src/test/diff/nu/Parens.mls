@@ -28,19 +28,15 @@
 //│ res
 //│     = 1
 
-:pe
 (1, 2)
 //│ 2
 //│ res
 //│     = 2
-//│ TEST CASE FAILURE: There was an unexpected lack of parse error
 
-:pe
 (1, 2,)
 //│ 2
 //│ res
 //│     = 2
-//│ TEST CASE FAILURE: There was an unexpected lack of parse error
 
 
 let x: ()
@@ -51,10 +47,10 @@ let x: ()
 :pe
 let x: (,)
 //│ ╔══[PARSE ERROR] Unexpected comma in expression position
-//│ ║  l.52: 	let x: (,)
+//│ ║  l.48: 	let x: (,)
 //│ ╙──      	        ^
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
-//│ ║  l.52: 	let x: (,)
+//│ ║  l.48: 	let x: (,)
 //│ ╙──      	         ^
 //│ let x: ()
 //│ x
@@ -70,24 +66,20 @@ let x: (1,)
 //│ x
 //│   = <missing implementation>
 
-:pe
+:e
 let x: (1, 2)
 //│ ╔══[ERROR] type identifier not found: ,
-//│ ║  l.74: 	let x: (1, 2)
+//│ ║  l.70: 	let x: (1, 2)
 //│ ╙──      	       ^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
 //│ let x: error
 //│ x
 //│   = <missing implementation>
-//│ TEST CASE FAILURE: There was an unexpected lack of parse error
 
-:pe
+:e
 let x: (1, 2,)
 //│ ╔══[ERROR] type identifier not found: ,
-//│ ║  l.85: 	let x: (1, 2,)
+//│ ║  l.79: 	let x: (1, 2,)
 //│ ╙──      	       ^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
 //│ let x: error
 //│ x
 //│   = <missing implementation>
-//│ TEST CASE FAILURE: There was an unexpected lack of parse error

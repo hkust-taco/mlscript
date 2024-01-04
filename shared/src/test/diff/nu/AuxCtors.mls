@@ -195,19 +195,21 @@ class Foo { constructor(x: Int){}; val y = 2 }
 //│   val y: 2
 //│ }
 
-:pe
-:e
+:w
 class Foo { constructor(x: Int){}; val y = 2 }
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.200: 	class Foo { constructor(x: Int){}; val y = 2 }
+//│ ║  l.199: 	class Foo { constructor(x: Int){}; val y = 2 }
 //│ ╙──       	                                 ^
-//│ TEST CASE FAILURE: There was an unexpected warning
 //│ class Foo {
 //│   constructor(x: Int)
 //│   val y: 2
 //│ }
-//│ TEST CASE FAILURE: There was an unexpected lack of parse error
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
+
+class Foo { constructor(x: Int){} val y = 2 }
+//│ class Foo {
+//│   constructor(x: Int)
+//│   val y: 2
+//│ }
 
 class Foo {
   constructor(x: Int){}

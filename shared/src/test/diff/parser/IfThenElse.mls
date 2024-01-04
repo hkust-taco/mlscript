@@ -547,11 +547,9 @@ if true
 //│ ╙──       	             ^
 //│ Parsed: {'(' if (true) then undefined ')'}
 
-:pe
 if true then;
 //│ |#if| |true| |#then|;|
 //│ Parsed: {if (true) then undefined}
-//│ TEST CASE FAILURE: There was an unexpected lack of parse error
 
 if true then;
 //│ |#if| |true| |#then|;|
@@ -561,7 +559,7 @@ if true then;
 if true then; else;
 //│ |#if| |true| |#then|;| |#else|;|
 //│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
-//│ ║  l.561: 	if true then; else;
+//│ ║  l.559: 	if true then; else;
 //│ ╙──       	              ^^^^^
 //│ Parsed: {if (true) then undefined; undefined}
 

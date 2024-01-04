@@ -7,11 +7,11 @@ x => x is 42
 //│     = [Function: res]
 
 
+:pe
 fun (|>;) foo(a, b) = [a, b]
 //│ ╔══[PARSE ERROR] Unexpected semicolon after symbolic name
-//│ ║  l.10: 	fun (|>;) foo(a, b) = [a, b]
+//│ ║  l.11: 	fun (|>;) foo(a, b) = [a, b]
 //│ ╙──      	       ^
-//│ TEST CASE FAILURE: There was an unexpected parse error
 //│ fun (|>) foo: forall 'a 'b. ('a, 'b) -> ['a, 'b]
 
 42 |>; x => x

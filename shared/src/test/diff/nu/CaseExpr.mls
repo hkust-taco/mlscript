@@ -144,15 +144,14 @@ case x, y then x + y
 //│ Code generation encountered an error:
 //│   unresolved symbol x
 
-:pe
 :e
 case (x, y) then x + y
 //│ ╔══[ERROR] Illegal pattern `,`
-//│ ╙──
+//│ ║  l.148: 	case (x, y) then x + y
+//│ ╙──       	      ^^^^
 //│ anything -> error
 //│ Code generation encountered an error:
 //│   if expression was not desugared
-//│ TEST CASE FAILURE: There was an unexpected lack of parse error
 
 :e // * FIXME[UCS]
 case [x, y] then x + y

@@ -1,26 +1,57 @@
 :NewDefs
 
 
+:e
 let test(x) = log(x); x + 1
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.4: 	let test(x) = log(x); x + 1
+//│ ║  l.5: 	let test(x) = log(x); x + 1
 //│ ╙──     	                      ^
-//│ TEST CASE FAILURE: There was an unexpected type error
 //│ let test: anything -> ()
 //│ Int
 //│ Code generation encountered an error:
 //│   unresolved symbol x
 
+let test(x) = log(x), x + 1
+//│ let test: Int -> Int
+//│ test
+//│      = [Function: test1]
+
+test(1)
+//│ Int
+//│ res
+//│     = 2
+//│ // Output
+//│ 1
+
+:pe
+:e
 test(log("here we go"); 123)
 //│ ╔══[PARSE ERROR] Unexpected semicolon here
-//│ ║  l.14: 	test(log("here we go"); 123)
+//│ ║  l.28: 	test(log("here we go"); 123)
 //│ ╙──      	                      ^
-//│ TEST CASE FAILURE: There was an unexpected parse error
-//│ ()
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.28: 	test(log("here we go"); 123)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `()` is not an instance of type `Int`
+//│ ║  l.28: 	test(log("here we go"); 123)
+//│ ║        	     ^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.14: 	let test(x) = log(x), x + 1
+//│ ╙──      	                      ^
+//│ Int | error
 //│ res
-//│ TEST CASE FAILURE: There was an unexpected runtime error
-//│ Runtime error:
-//│   ReferenceError: test is not defined
+//│     = NaN
+//│ // Output
+//│ here we go
+//│ undefined
+
+test((log("here we go"), 123))
+//│ Int
+//│ res
+//│     = 124
+//│ // Output
+//│ here we go
+//│ 123
 
 
 let a = 1; let b = a + 1
