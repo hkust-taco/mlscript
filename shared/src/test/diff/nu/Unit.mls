@@ -88,9 +88,9 @@ fun x = 1
 
 :pe
 (let x = 1 in)
-//│ ╔══[PARSE ERROR] Unexpected 'in' keyword here
+//│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
 //│ ║  l.90: 	(let x = 1 in)
-//│ ╙──      	           ^^
+//│ ╙──      	             ^
 //│ ()
 //│ res
 //│     = undefined

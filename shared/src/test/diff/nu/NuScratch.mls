@@ -132,14 +132,10 @@ foo(let x = 1; x + 1)
 //│ res
 //│     = 2
 
-:pe
 foo(let x = 1 in x + 1)
-//│ ╔══[PARSE ERROR] Unexpected 'in' keyword here
-//│ ║  l.136: 	foo(let x = 1 in x + 1)
-//│ ╙──       	              ^^
-//│ ()
+//│ Int
 //│ res
-//│     = undefined
+//│     = 2
 
 foo((log(1), 2))
 //│ 2
@@ -154,15 +150,29 @@ foo(1), 2
 //│     = 2
 
 
+:ge // FIXME
+let rec x() = x() in x
+//│ nothing
+//│ Code generation encountered an error:
+//│   recursive non-function definition x is not supported
+
+
+:pe
+let x[T] = 1 in x
+//│ ╔══[PARSE ERROR] Expected function parameter list; found square bracket section instead
+//│ ║  l.161: 	let x[T] = 1 in x
+//│ ╙──       	     ^^^
+//│ 1
+//│ res
+//│     = 1
+
 
 let x = 2 in log(x), x + 1
-//│ ╔══[PARSE ERROR] Expected end of input; found 'in' keyword instead
-//│ ║  l.158: 	let x = 2 in log(x), x + 1
-//│ ╙──       	          ^^
-//│ TEST CASE FAILURE: There was an unexpected parse error
-//│ let x: 2
-//│ x
-//│   = 2
+//│ Int
+//│ res
+//│     = 3
+//│ // Output
+//│ 2
 
 let x = 2; log(x), x + 1
 //│ let x: 2
@@ -196,16 +206,16 @@ foo(log(1),2)
 :e
 foo(log(1);2)
 //│ ╔══[PARSE ERROR] Unexpected semicolon here
-//│ ║  l.197: 	foo(log(1);2)
+//│ ║  l.207: 	foo(log(1);2)
 //│ ╙──       	          ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.197: 	foo(log(1);2)
+//│ ║  l.207: 	foo(log(1);2)
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── argument of type `[?a]` does not match type `[?b, ?c]`
-//│ ║  l.197: 	foo(log(1);2)
+//│ ║  l.207: 	foo(log(1);2)
 //│ ║         	   ^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.180: 	fun foo(x, y) = [x, y]
+//│ ║  l.190: 	fun foo(x, y) = [x, y]
 //│ ╙──       	       ^^^^^^
 //│ error | [nothing, nothing]
 //│ res
@@ -216,13 +226,13 @@ foo(log(1);2)
 :e
 foo((log(1),2))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.217: 	foo((log(1),2))
+//│ ║  l.227: 	foo((log(1),2))
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── argument of type `[?a]` does not match type `[?b, ?c]`
-//│ ║  l.217: 	foo((log(1),2))
+//│ ║  l.227: 	foo((log(1),2))
 //│ ║         	   ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.180: 	fun foo(x, y) = [x, y]
+//│ ║  l.190: 	fun foo(x, y) = [x, y]
 //│ ╙──       	       ^^^^^^
 //│ error | [nothing, nothing]
 //│ res
@@ -241,13 +251,13 @@ foo((let x = log(0), 1; log(x), x + 1), 2)
 :e
 foo(let x = log(0), 1; log(x), x + 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.242: 	foo(let x = log(0), 1; log(x), x + 1)
+//│ ║  l.252: 	foo(let x = log(0), 1; log(x), x + 1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── argument of type `[?a]` does not match type `[?b, ?c]`
-//│ ║  l.242: 	foo(let x = log(0), 1; log(x), x + 1)
+//│ ║  l.252: 	foo(let x = log(0), 1; log(x), x + 1)
 //│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.180: 	fun foo(x, y) = [x, y]
+//│ ║  l.190: 	fun foo(x, y) = [x, y]
 //│ ╙──       	       ^^^^^^
 //│ error | [nothing, nothing]
 //│ res
@@ -258,35 +268,32 @@ foo(let x = log(0), 1; log(x), x + 1)
 
 :e
 foo(let x = log(0), 1 in log(x), x + 1)
-//│ ╔══[PARSE ERROR] Unexpected 'in' keyword here
-//│ ║  l.260: 	foo(let x = log(0), 1 in log(x), x + 1)
-//│ ╙──       	                      ^^
-//│ TEST CASE FAILURE: There was an unexpected parse error
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.260: 	foo(let x = log(0), 1 in log(x), x + 1)
+//│ ║  l.270: 	foo(let x = log(0), 1 in log(x), x + 1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── argument of type `[()]` does not match type `[?a, ?b]`
-//│ ║  l.260: 	foo(let x = log(0), 1 in log(x), x + 1)
+//│ ╟── argument of type `[?a]` does not match type `[?b, ?c]`
+//│ ║  l.270: 	foo(let x = log(0), 1 in log(x), x + 1)
 //│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.180: 	fun foo(x, y) = [x, y]
+//│ ║  l.190: 	fun foo(x, y) = [x, y]
 //│ ╙──       	       ^^^^^^
 //│ error | [nothing, nothing]
 //│ res
-//│     = [ undefined, undefined ]
+//│     = [ 2, undefined ]
 //│ // Output
 //│ 0
+//│ 1
 
 :e
 foo(let x = log(0), 1; log(x), 1 + 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.281: 	foo(let x = log(0), 1; log(x), 1 + 1)
+//│ ║  l.288: 	foo(let x = log(0), 1; log(x), 1 + 1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── argument of type `[?a]` does not match type `[?b, ?c]`
-//│ ║  l.281: 	foo(let x = log(0), 1; log(x), 1 + 1)
+//│ ║  l.288: 	foo(let x = log(0), 1; log(x), 1 + 1)
 //│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.180: 	fun foo(x, y) = [x, y]
+//│ ║  l.190: 	fun foo(x, y) = [x, y]
 //│ ╙──       	       ^^^^^^
 //│ error | [nothing, nothing]
 //│ res

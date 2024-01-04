@@ -510,9 +510,18 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                   val body = expr(0)
                   val newBody = transformBody.fold(body)(_(body))
                   val annotatedBody = asc.fold(newBody)(ty => Asc(newBody, ty))
-                  R(NuFunDef(
-                      isLetRec, v, opStr, tparams, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))
-                    )(isDecl, isVirtual, N, N, genField).withLoc(S(l0 ++ annotatedBody.toLoc)))
+                  yeetSpaces match {
+                    case (KEYWORD("in"), l1) :: _ if kwStr === "let" =>
+                      consume
+                      if (tparams.nonEmpty) err(msg"Unsupported type parameters on 'let' binding" -> S(l1) :: Nil)
+                      // val rest = exprCont()
+                      val rest = expr(0)
+                      R(Let(isLetRec.getOrElse(die), v, body, rest).withLoc(S(l0 ++ annotatedBody.toLoc)))
+                    case _ =>
+                      R(NuFunDef(
+                          isLetRec, v, opStr, tparams, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))
+                        )(isDecl, isVirtual, N, N, genField).withLoc(S(l0 ++ annotatedBody.toLoc)))
+                  }
                 case c =>
                   asc match {
                     case S(ty) =>
@@ -711,7 +720,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         val body = yeetSpaces match {
           // case (KEYWORD("in" | ";"), _) :: _ =>
           // case (KEYWORD(";"), _) :: _ =>
-          case (SEMI, _) :: _ =>
+          case (KEYWORD("in") | SEMI, _) :: _ =>
             consume
             exprOrIf(0)
             // exprOrIf(1)
