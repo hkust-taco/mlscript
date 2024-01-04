@@ -9,35 +9,36 @@ class Baz[T](val x: Foo[T]) extends Foo[[T]]
 //│ }
 //│ class Baz[T](x: Foo[T]) extends Foo
 
+// * this loop can be broken by giving a type signature
 // FIXME
 fun foo[T](f: Foo[T]): Int = if f is
     Bar then 0
     Baz(x) then foo(x : Foo[x.T])
 //│ ╔══[ERROR] Subtyping constraint of the form `([?a]) -> ?b <: ?c -> ?d` exceeded recursion depth limit (250)
-//│ ║  l.13: 	fun foo[T](f: Foo[T]): Int = if f is
+//│ ║  l.14: 	fun foo[T](f: Foo[T]): Int = if f is
 //│ ║        	                                ^^^^
-//│ ║  l.14: 	    Bar then 0
+//│ ║  l.15: 	    Bar then 0
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.15: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║  l.16: 	    Baz(x) then foo(x : Foo[x.T])
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Type error in definition
-//│ ║  l.13: 	fun foo[T](f: Foo[T]): Int = if f is
+//│ ║  l.14: 	fun foo[T](f: Foo[T]): Int = if f is
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.14: 	    Bar then 0
+//│ ║  l.15: 	    Bar then 0
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.15: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║  l.16: 	    Baz(x) then foo(x : Foo[x.T])
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `T` leaks out of its scope
-//│ ║  l.15: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║  l.16: 	    Baz(x) then foo(x : Foo[x.T])
 //│ ║        	                             ^^
 //│ ╙── into expression of type `T | ~(Int & ??T)`
 //│ ╔══[ERROR] Type error in definition
-//│ ║  l.13: 	fun foo[T](f: Foo[T]): Int = if f is
+//│ ║  l.14: 	fun foo[T](f: Foo[T]): Int = if f is
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.14: 	    Bar then 0
+//│ ║  l.15: 	    Bar then 0
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.15: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║  l.16: 	    Baz(x) then foo(x : Foo[x.T])
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `T` leaks out of its scope
 //│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
@@ -106,17 +107,17 @@ fun foo(x) = if x is
     C1(c) then c : x.T
     C2    then 0 : x.T
 //│ ╔══[ERROR] Type error in definition
-//│ ║  l.105: 	fun foo(x) = if x is
+//│ ║  l.106: 	fun foo(x) = if x is
 //│ ║         	    ^^^^^^^^^^^^^^^^
-//│ ║  l.106: 	    C1(c) then c : x.T
+//│ ║  l.107: 	    C1(c) then c : x.T
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.107: 	    C2    then 0 : x.T
+//│ ║  l.108: 	    C2    then 0 : x.T
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.106: 	    C1(c) then c : x.T
+//│ ║  l.107: 	    C1(c) then c : x.T
 //│ ║         	                    ^^
 //│ ╟── into type `'T | ~??A`
-//│ ║  l.104: 	fun foo: C['T] -> 'T
+//│ ║  l.105: 	fun foo: C['T] -> 'T
 //│ ╙──       	                  ^^
 //│ fun foo: forall 'A. (C1['A] | C2) -> (Int | ??A & 'A)
 //│ fun foo: forall 'T. C['T] -> 'T

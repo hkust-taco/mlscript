@@ -1,0 +1,83 @@
+:NewDefs
+
+abstract class Option[type out T]: None | Some[T]
+class None extends Option[nothing]
+class Some[A](get: A) extends Option[A]
+//│ abstract class Option[T]: None | Some[T]
+//│ class None extends Option {
+//│   constructor()
+//│ }
+//│ class Some[A](get: A) extends Option
+
+class Box[type A](val get: A)
+//│ class Box[A](get: A)
+
+// * possibly the smallest loop case
+
+abstract class F[type A]: MkF
+class MkF[T](t: T) extends F[Box[T]]
+//│ abstract class F[A]: MkF[anything]
+//│ class MkF[T](t: T) extends F
+
+// FIXME
+fun f[T](x: F[T]): T = if x is MkF(t) then Box(t) as x.A
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: ?b` exceeded recursion depth limit (250)
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ fun f: forall 'T. (x: F['T]) -> 'T
+
+// * 
+
+abstract class H[type A]: HI | HB | HG
+module HI extends H[Option[Int]]
+module HB extends H[Box[Bool]]
+class HG[T](t: T) extends H[Option[Box[T]]]
+//│ abstract class H[A]: HB | HG[anything] | HI
+//│ module HI extends H
+//│ module HB extends H
+//│ class HG[T](t: T) extends H
+
+// FIXME
+fun h[A](x: H[A]): A = if x is
+    HI then Some(1) as x.A
+    HB then Box(false) as x.A
+    HG(t) then Some(Box(t)) as x.A
+//│ ╔══[ERROR] Subtyping constraint of the form `?a <: ?b` exceeded recursion depth limit (250)
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ fun h: forall 'A. (x: H['A]) -> 'A
+
+h(HG(1))
+//│ Option[Box['T]]
+//│   where
+//│     'T :> 1
+//│ res
+//│     = Some {}
+
+abstract class F[type A, type B]: MkF
+class MkF[X](x: X) extends F[X, Some[Box[Int]]]
+//│ abstract class F[A, B]: MkF[anything]
+//│ class MkF[X](x: X) extends F
+
+// * not sure if we can make it check by adding annotations
+// TODO 
+fun f[T](x: F[T, T]): Int = if x is
+    MkF(Some(Box(a))) then a
+//│ ╔══[ERROR] Type error in `case` expression
+//│ ║  l.62: 	fun f[T](x: F[T, T]): Int = if x is
+//│ ║        	                               ^^^^
+//│ ║  l.63: 	    MkF(Some(Box(a))) then a
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `X` leaks out of its scope
+//│ ║  l.56: 	class MkF[X](x: X) extends F[X, Some[Box[Int]]]
+//│ ║        	          ^
+//│ ╟── into `case` expression of type `Object | ~??X`
+//│ ║  l.63: 	    MkF(Some(Box(a))) then a
+//│ ║        	        ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.56: 	class MkF[X](x: X) extends F[X, Some[Box[Int]]]
+//│ ╙──      	             ^
+//│ fun f: forall 'T. (x: F['T, 'T]) -> Int
+
+f(MkF(Some(Box(1))))
+//│ Int
+//│ res
+//│     = 1

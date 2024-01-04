@@ -118,7 +118,7 @@ g(MkF(new None))
 
 // FIXME
 fun g[T](x: F[Option[T], Option[T]]): Option[T] = if x is
-    MkF(None) then new None : x.B // ! level of x.B is 3 here
+    MkF(None) then new None : x.B
     else error
 //│ ╔══[ERROR] Subtyping constraint of the form `?B <: ?a` exceeded recursion depth limit (250)
 //│ ╙── Note: use flag `:ex` to see internal error info.
