@@ -110,13 +110,7 @@ let y: c.A = c.x
 // *** GADTs *** //
 
 
-class Cls[A] { fun x: A = x;; fun g: A -> Int;; fun g = g }
-//│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.113: 	class Cls[A] { fun x: A = x;; fun g: A -> Int;; fun g = g }
-//│ ╙──       	                            ^
-//│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.113: 	class Cls[A] { fun x: A = x;; fun g: A -> Int;; fun g = g }
-//│ ╙──       	                                              ^
+class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
 //│ class Cls[A] {
 //│   constructor()
 //│   fun g: A -> Int
@@ -129,14 +123,14 @@ fun test(a: Object) = if a is
   Cls then a.x
   else error
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.128: 	fun test(a: Object) = if a is
+//│ ║  l.122: 	fun test(a: Object) = if a is
 //│ ║         	                         ^^^^
-//│ ║  l.129: 	  Cls then a.x
+//│ ║  l.123: 	  Cls then a.x
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.130: 	  else error
+//│ ║  l.124: 	  else error
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.113: 	class Cls[A] { fun x: A = x;; fun g: A -> Int;; fun g = g }
+//│ ║  l.113: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
 //│ ╙──       	          ^
 //│ fun test: (a: Object) -> (error | ??A)
 
@@ -145,14 +139,14 @@ fun test(a: Object) = if a is
   Cls then a.g(a.x) // a.x : a.A ; a.g : a.A -> a.A
   else 0
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.144: 	fun test(a: Object) = if a is
+//│ ║  l.138: 	fun test(a: Object) = if a is
 //│ ║         	                         ^^^^
-//│ ║  l.145: 	  Cls then a.g(a.x) // a.x : a.A ; a.g : a.A -> a.A
+//│ ║  l.139: 	  Cls then a.g(a.x) // a.x : a.A ; a.g : a.A -> a.A
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.146: 	  else 0
+//│ ║  l.140: 	  else 0
 //│ ║         	^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.113: 	class Cls[A] { fun x: A = x;; fun g: A -> Int;; fun g = g }
+//│ ║  l.113: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
 //│ ╙──       	          ^
 //│ fun test: (a: Object) -> Int
 

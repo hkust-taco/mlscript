@@ -426,10 +426,7 @@ M: Cls['a]
 //│     = M { class: [class M extends Cls] }
 
 
-class Cls[A](val x: A) { fun g: A -> Int;; fun g(x) = 42 }
-//│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.429: 	class Cls[A](val x: A) { fun g: A -> Int;; fun g(x) = 42 }
-//│ ╙──       	                                         ^
+class Cls[A](val x: A) { fun g: A -> Int; fun g(x) = 42 }
 //│ class Cls[A](x: A) {
 //│   fun g: A -> Int
 //│ }

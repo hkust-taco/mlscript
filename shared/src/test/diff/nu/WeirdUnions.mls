@@ -11,7 +11,7 @@ fun f: [Str] | [Str, Int]
 fun f: (Str | [Str, Int])
 //│ fun f: Str | [Str, Int]
 
-:pe
+:e
 fun f: Str | (Str, Int)
 //│ ╔══[ERROR] type identifier not found: ,
 //│ ║  l.15: 	fun f: Str | (Str, Int)
@@ -22,7 +22,7 @@ fun f: Str | (Str, Int)
 fun f: Str | ([Str, Int])
 //│ fun f: Str | [Str, Int]
 
-:pe
+:e
 fun f: Str | ((Str, Int))
 //│ ╔══[ERROR] type identifier not found: ,
 //│ ║  l.26: 	fun f: Str | ((Str, Int))

@@ -20,14 +20,11 @@ test(log("here we go"); 123)
 //│   ReferenceError: test is not defined
 
 
-let a = 1;; let b = a + 1
+let a = 1; let b = a + 1
 //│ let a: 1
 //│ let b: Int
-//│ ()
 //│ a
 //│   = 1
-//│ res
-//│     = undefined
 //│ b
 //│   = 2
 

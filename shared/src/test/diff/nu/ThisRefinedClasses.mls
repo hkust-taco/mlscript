@@ -65,27 +65,24 @@ class Foo {
 
 // TODO
 // * All on one line:
-class Test { this: { x: Int};; fun test = this.x }
+class Test { this: { x: Int}; fun test = this.x }
 //│ ╔══[ERROR] Type `#Test` does not contain member `x`
-//│ ║  l.68: 	class Test { this: { x: Int};; fun test = this.x }
-//│ ╙──      	                                              ^^
+//│ ║  l.68: 	class Test { this: { x: Int}; fun test = this.x }
+//│ ╙──      	                                             ^^
 //│ ╔══[ERROR] Type `#Test` does not contain member `x`
-//│ ║  l.68: 	class Test { this: { x: Int};; fun test = this.x }
+//│ ║  l.68: 	class Test { this: { x: Int}; fun test = this.x }
 //│ ╙──      	                     ^
 //│ ╔══[WARNING] Expression in statement position should have type `unit`.
 //│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
 //│ ╟── Type mismatch in type ascription:
-//│ ║  l.68: 	class Test { this: { x: Int};; fun test = this.x }
+//│ ║  l.68: 	class Test { this: { x: Int}; fun test = this.x }
 //│ ║        	             ^^^^
 //│ ╟── type `{x: Int}` does not match type `()`
-//│ ║  l.68: 	class Test { this: { x: Int};; fun test = this.x }
+//│ ║  l.68: 	class Test { this: { x: Int}; fun test = this.x }
 //│ ║        	                   ^^^^^^^^^
 //│ ╟── but it flows into expression in statement position with expected type `()`
-//│ ║  l.68: 	class Test { this: { x: Int};; fun test = this.x }
+//│ ║  l.68: 	class Test { this: { x: Int}; fun test = this.x }
 //│ ╙──      	             ^^^^
-//│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.68: 	class Test { this: { x: Int};; fun test = this.x }
-//│ ╙──      	                             ^
 //│ class Test {
 //│   constructor()
 //│   fun test: error

@@ -233,22 +233,18 @@ discard(succ(0)); 0
 //│ res
 //│     = 0
 
-discard of succ(0);; 0
+discard of succ(0); 0
 //│ 0
-//│ res
-//│     = undefined
 //│ res
 //│     = undefined
 //│ res
 //│     = 0
 
-let _ = succ(0);; 0
+let _ = succ(0); 0
 //│ let _: Int
 //│ 0
 //│ _
 //│   = 1
-//│ res
-//│     = undefined
 //│ res
 //│     = 0
 
@@ -260,31 +256,23 @@ x => x; ()
 //│ res
 //│     = undefined
 
-x => x;; ()
+x => x; ()
 //│ ()
 //│ res
 //│     = [Function: res]
 //│ res
 //│     = undefined
-//│ res
-//│     = undefined
 
 :w
 fun f =
-  x => x;; ()
+  x => x; ()
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.274: 	  x => x;; ()
+//│ ║  l.268: 	  x => x; ()
 //│ ╙──       	  ^^^^^^
-//│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.274: 	  x => x;; ()
-//│ ╙──       	         ^
 //│ fun f: ()
 
 fun f =
-  discard of x => x;; ()
-//│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.284: 	  discard of x => x;; ()
-//│ ╙──       	                    ^
+  discard of x => x; ()
 //│ fun f: ()
 
 :w
@@ -292,7 +280,7 @@ fun f =
   x => x
   ()
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.292: 	  x => x
+//│ ║  l.280: 	  x => x
 //│ ╙──       	  ^^^^^^
 //│ fun f: ()
 
@@ -302,7 +290,7 @@ module Test {
   123
 }
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.302: 	  123
+//│ ║  l.290: 	  123
 //│ ╙──       	  ^^^
 //│ module Test
 
@@ -312,10 +300,10 @@ module Test {
   456
 }
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.311: 	  123
+//│ ║  l.299: 	  123
 //│ ╙──       	  ^^^
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.312: 	  456
+//│ ║  l.300: 	  456
 //│ ╙──       	  ^^^
 //│ module Test
 
@@ -324,7 +312,7 @@ module Test {
   x => x
 }
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.324: 	  x => x
+//│ ║  l.312: 	  x => x
 //│ ╙──       	  ^^^^^^
 //│ module Test
 
@@ -335,15 +323,15 @@ fun foo =
   let tmp = 0
 foo + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.336: 	foo + 1
+//│ ║  l.324: 	foo + 1
 //│ ║         	^^^^^^^
 //│ ╟── definition of method foo of type `()` is not an instance of type `Int`
-//│ ║  l.334: 	fun foo =
+//│ ║  l.322: 	fun foo =
 //│ ║         	    ^^^^^
-//│ ║  l.335: 	  let tmp = 0
+//│ ║  l.323: 	  let tmp = 0
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.336: 	foo + 1
+//│ ║  l.324: 	foo + 1
 //│ ╙──       	^^^
 //│ fun foo: ()
 //│ Int | error
