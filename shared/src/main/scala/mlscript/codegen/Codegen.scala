@@ -387,7 +387,6 @@ final case class JSCommaExpr(exprs: Ls[JSExpr]) extends JSExpr {
 
 object JSCommaExpr {
   val outerPrecedence: Int = 2
-  // val outerPrecedence: Int = 3
 }
 
 final case class JSAssignExpr(lhs: JSExpr, rhs: JSExpr) extends JSExpr {
@@ -470,7 +469,6 @@ final case class JSInvoke(callee: JSExpr, arguments: Ls[JSExpr]) extends JSExpr 
     callee.embed(precedence) ++ arguments.zipWithIndex
       .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
         x ++ y.embed(JSCommaExpr.outerPrecedence) ++
-        // x ++ y.embed(3) ++
         (if (i === arguments.length - 1) SourceCode.empty else SourceCode(", "))
       }
       .parenthesized

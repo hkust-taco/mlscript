@@ -372,8 +372,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             def otherParents: Ls[Term] = yeetSpaces match {
               case (COMMA, _) :: _ =>
                 consume
-                // expr(0) :: otherParents
-                expr(1) :: otherParents // TODO 1 is prec of `,` 
+                expr(prec(',')) :: otherParents // we don't want to parse parent lists as including comma expressions
               case _ => Nil
             }
             val sigTrm = yeetSpaces match {
@@ -391,8 +390,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
               //   expr(0) :: otherParents
               case (KEYWORD("extends"), _) :: _ =>
                 consume
-                // expr(0) :: otherParents
-                expr(1) :: otherParents // TODO 1 is prec of `,`
+                expr(prec(',')) :: otherParents // we don't want to parse parent lists as including comma expressions
               case _ => Nil
             }
             val (sigTrm2, ps2, fullTu) = curlyTypingUnit.fold {
@@ -514,7 +512,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                     case (KEYWORD("in"), l1) :: _ if kwStr === "let" =>
                       consume
                       if (tparams.nonEmpty) err(msg"Unsupported type parameters on 'let' binding" -> S(l1) :: Nil)
-                      // val rest = exprCont()
                       val rest = expr(0)
                       R(Let(isLetRec.getOrElse(die), v, body, rest).withLoc(S(l0 ++ annotatedBody.toLoc)))
                     case _ =>
