@@ -1,0 +1,34 @@
+export declare module Namespace {
+  declare module N1 {
+    export declare fun f(x: anything): Num
+    declare fun ff(y: anything): Num
+    export declare class C {
+      declare fun f(): unit
+    }
+    declare trait I {
+      declare fun f(): Num
+    }
+    export declare module N2 {
+      export declare fun fff(x: (false) | (true)): Num
+      declare fun gg(c: C): C
+      declare class BBB extends C {}
+    }
+  }
+  declare module AA {
+    export declare fun f(x: anything): Str
+    export declare class C {
+      declare fun f(): unit
+    }
+    export declare trait I {
+      declare fun f(): Num
+    }
+    export declare module N2 {
+    }
+  }
+  declare fun f1(x: N1.C): N1.C
+  declare fun f2(x: AA.C): AA.C
+}
+//| ╔══[ERROR] type identifier not found: N1
+//| ║  l.28: 	  declare fun f1(x: N1.C): N1.C
+//| ╙──      	                    ^^
+//| scala.NotImplementedError: an implementation is missing

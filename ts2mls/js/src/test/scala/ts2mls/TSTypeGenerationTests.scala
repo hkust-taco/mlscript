@@ -4,38 +4,22 @@ import org.scalatest.funsuite.AnyFunSuite
 
 class TSTypeGenerationTest extends AnyFunSuite {
   import TSTypeGenerationTest._
-  
-  testsData.foreach((data) => test(data._2) {
-    val program = TSProgram(tsPath(data._1))
-    var writer = JSWriter(diffPath(data._2))
-    program.generate(writer)
-    writer.close()
+
+  testsData.foreach((filename) => test(filename) {
+    val program = TSProgram(
+      FileInfo("./ts2mls/js/src/test/typescript", filename, "../../../../../driver/npm/lib/predefs"),
+      false, None, (file: FileInfo, writer: JSWriter) => (), None) // No need for builtin check
+    program.generate
   })
 }
 
 object TSTypeGenerationTest {
-  private def tsPath(filenames: Seq[String]) = filenames.map((fn) => s"ts2mls/js/src/test/typescript/$fn")
-  private def diffPath(filename: String) = s"ts2mls/js/src/test/diff/$filename"
-
+  // We only generate type information for builtin declarations here.
+  // User-defined scripts may contain errors and printing error messages can lead to test failure
+  // if we use the two-pass test.
+  // Builtin declarations should never contain an error.
   private val testsData = List(
-    (Seq("Array.ts"), "Array.d.mls"),
-    (Seq("BasicFunctions.ts"), "BasicFunctions.d.mls"),
-    (Seq("ClassMember.ts"), "ClassMember.d.mls"),
-    (Seq("Dec.d.ts"), "Dec.d.mls"),
-    (Seq("Enum.ts"), "Enum.d.mls"),
-    (Seq("Heritage.ts"), "Heritage.d.mls"),
-    (Seq("HighOrderFunc.ts"), "HighOrderFunc.d.mls"),
-    (Seq("InterfaceMember.ts"), "InterfaceMember.d.mls"),
-    (Seq("Intersection.ts"), "Intersection.d.mls"),
-    (Seq("Literal.ts"), "Literal.d.mls"),
-    (Seq("Multi1.ts", "Multi2.ts", "Multi3.ts"), "MultiFiles.d.mls"),
-    (Seq("Namespace.ts"), "Namespace.d.mls"),
-    (Seq("Optional.ts"), "Optional.d.mls"),
-    (Seq("Overload.ts"), "Overload.d.mls"),
-    (Seq("Tuple.ts"), "Tuple.d.mls"),
-    (Seq("Type.ts"), "Type.d.mls"),
-    (Seq("TypeParameter.ts"), "TypeParameter.d.mls"),
-    (Seq("Union.ts"), "Union.d.mls"),
-    (Seq("Variables.ts"), "Variables.d.mls"),
+    "./Dom.d.ts",
+    "./ES5.d.ts",
   )
 }

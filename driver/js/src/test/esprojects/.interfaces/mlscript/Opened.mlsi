@@ -1,0 +1,5 @@
+import "./tools/Inc.mlsi"
+export declare module Opened {
+  fun hello: (x: Int) -> ()
+  ()
+}

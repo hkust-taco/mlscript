@@ -1,0 +1,5 @@
+export declare module Enum {
+  declare fun pass(c: Int): (false) | (true)
+  declare fun stop(): Int
+  declare fun g(x: Int): Int
+}

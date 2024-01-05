@@ -172,6 +172,14 @@ module M {
   fun a: M.A
   fun a = 1
 }
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[ERROR] Module `M` has a cyclic type dependency that is not supported yet.
+//│ ║  l.172: 	  fun a: M.A
+//│ ╙──       	          ^^
+//│ module M {
+//│   class A {
+//│     constructor()
+//│   }
+//│   fun a: error
+//│ }
 
 

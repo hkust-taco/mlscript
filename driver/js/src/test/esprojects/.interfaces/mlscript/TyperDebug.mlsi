@@ -1,0 +1,517 @@
+export declare module TyperDebug {
+  class A(x: Int) {
+    fun add: (y: Int) -> Int
+  }
+  let aa: A
+  unit
+}
+//| 0. Typing TypingUnit(List(NuTypeDef(Cls,TypeName(A),List(),Some(Tup(List((Some(Var(x)),Fld(_,Var(Int)))))),None,None,List(),None,None,TypingUnit(List(NuFunDef(None,Var(add),None,List(),Left(Lam(Tup(List((Some(Var(y)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y)))))))))))), NuFunDef(Some(false),Var(aa),None,List(),Left(App(Var(A),Tup(List((None,Fld(_,IntLit(42)))))))), App(Sel(Var(console),Var(log)),Tup(List((None,Fld(_,App(Sel(Var(aa),Var(add)),Tup(List((None,Fld(_,IntLit(6)))))))))))))
+//| | 0. Created lazy type info for NuTypeDef(Cls,TypeName(A),List(),Some(Tup(List((Some(Var(x)),Fld(_,Var(Int)))))),None,None,List(),None,None,TypingUnit(List(NuFunDef(None,Var(add),None,List(),Left(Lam(Tup(List((Some(Var(y)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y))))))))))))
+//| | 0. Created lazy type info for NuFunDef(Some(false),Var(aa),None,List(),Left(App(Var(A),Tup(List((None,Fld(_,IntLit(42))))))))
+//| | Completing class A(x: Int,) {fun add = (y: Int,) => +(x, y,)}
+//| | | Type params 
+//| | | Typing type TypeName(Int)
+//| | | | vars=Map() newDefsInfo=Map()
+//| | | | 1. type TypeName(Int)
+//| | | | => Int
+//| | | => Int ——— 
+//| | | Params List((Var(x),Int))
+//| | | Done inheriting: Pack({},List(NuParam(Var(x),Int,false)),None,List(),List(),Map())
+//| | | 1. Finalizing inheritance with ({} w/ {x: Int} & #A<Object>) <: a536'
+//| | | | CONSTRAIN ({} w/ {x: Int} & #A<Object>) <! a536'
+//| | | |   where 
+//| | | | 1. C ({} w/ {x: Int} & #A<Object>) <! a536'    (0)
+//| | | | | NEW a536' LB (0)
+//| | | 1. Typing TypingUnit(List(NuFunDef(None,Var(add),None,List(),Left(Lam(Tup(List((Some(Var(y)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y)))))))))))
+//| | | | 1. Created lazy type info for NuFunDef(None,Var(add),None,List(),Left(Lam(Tup(List((Some(Var(y)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y)))))))))
+//| | | | Completing fun add = (y: Int,) => +(x, y,)
+//| | | | | Type params 
+//| | | | | Params 
+//| | | | | 2. Typing term Lam(Tup(List((Some(Var(y)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y)))))))
+//| | | | | | 2. Typing pattern Tup(List((Some(Var(y)),Fld(_,Var(Int)))))
+//| | | | | | | 2. Typing pattern Asc(Var(y),TypeName(Int))
+//| | | | | | | | Typing type TypeName(Int)
+//| | | | | | | | | vars=Map() newDefsInfo=Map()
+//| | | | | | | | | 2. type TypeName(Int)
+//| | | | | | | | | => Int
+//| | | | | | | | => Int ——— 
+//| | | | | | | 2. : Int
+//| | | | | | 2. : (y: Int,)
+//| | | | | | 2. Typing term App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y))))))
+//| | | | | | | 2. Typing term Var(+)
+//| | | | | | | 2. : ((Int, Int,) -> Int)
+//| | | | | | | 2. Typing term Var(x)
+//| | | | | | | 2. : Int
+//| | | | | | | 2. Typing term Var(y)
+//| | | | | | | 2. : Int
+//| | | | | | | CONSTRAIN ((Int, Int,) -> Int) <! ((Int, Int,) -> α537'')
+//| | | | | | |   where 
+//| | | | | | | 2. C ((Int, Int,) -> Int) <! ((Int, Int,) -> α537'')    (0)
+//| | | | | | | | 2. C ((Int, Int,) -> Int) <! ((Int, Int,) -> α537'')    (0)
+//| | | | | | | | | 2. C ((Int, Int,) -> Int) <! ((Int, Int,) -> α537'')    (0)
+//| | | | | | | | | | 2. C (Int, Int,) <! (Int, Int,)    (1)
+//| | | | | | | | | | | Already a subtype by <:<
+//| | | | | | | | | | 2. C Int <! α537''    (1)
+//| | | | | | | | | | | NEW α537'' LB (0)
+//| | | | | | 2. : α537''
+//| | | | | 2. : ((y: Int,) -> α537'')
+//| | | | | CONSTRAIN ((y: Int,) -> α537'') <! add538''
+//| | | | |   where 
+//|     α537'' :> Int
+//| | | | | 2. C ((y: Int,) -> α537'') <! add538''    (0)
+//| | | | | | 2. C ((y: Int,) -> α537'') <! add538''    (0)
+//| | | | | | | NEW add538'' LB (2)
+//| | | | Completed TypedNuFun(1,NuFunDef(None,Var(add),None,List(),Left(Lam(Tup(List((Some(Var(y)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y))))))))),((y: Int,) -> α537'')) where 
+//|     α537'' :> Int
+//| | | | Typing unit statements
+//| | | | : None
+//| | | baseClsImplemMembers List()
+//| | | Checking `this` accesses...
+//| | | Checking base class implementations against inherited signatures...
+//| | | Checking new implementations against inherited signatures...
+//| | | | Checking overriding for TypedNuFun(1,NuFunDef(None,Var(add),None,List(),Left(Lam(Tup(List((Some(Var(y)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y))))))))),((y: Int,) -> α537'')) against None...
+//| | | | Checking overriding for NuParam(Var(x),Int,false) against None...
+//| | | Checking new signatures against inherited signatures...
+//| | | allMembers Map(add -> TypedNuFun(1,NuFunDef(None,Var(add),None,List(),Left(Lam(Tup(List((Some(Var(y)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y))))))))),((y: Int,) -> α537'')), x -> NuParam(Var(x),Int,false))
+//| | | Computing variances of A
+//| | | | Trav(+)(((y: Int,) -> α537''))
+//| | | | | Trav(+)(((y: Int,) -> α537''))
+//| | | | | | Trav(+;-)((y: Int,))
+//| | | | | | | Trav(+;-)(Int)
+//| | | | | | Trav(+)(α537'')
+//| | | | | | | Trav(+;@[+](0))(Int)
+//| | | | | | | | Trav(+;@[+](0))(Int)
+//| | | | | | | | | Trav(+;@[+](0))(Int)
+//| | | | Trav(+)(Int)
+//| | | = HashMap(α537'' -> +)
+//| | Completed TypedNuCls(0, TypeName(A),
+//|   List(),
+//|   Some(List((Var(x),Int))),
+//|   this: ⊤, 
+//|   (add,TypedNuFun(1,NuFunDef(None,Var(add),None,List(),Left(Lam(Tup(List((Some(Var(y)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y))))))))),((y: Int,) -> α537'')))
+//|   (x,NuParam(Var(x),Int,false)),
+//|   : ⊤, Set(), Map()) where 
+//|     α537'' :> Int
+//| | Completing let aa = A(42,)
+//| | | Type params 
+//| | | Params 
+//| | | 0. Typing term App(Var(A),Tup(List((None,Fld(_,IntLit(42))))))
+//| | | | 0. Typing term Var(A)
+//| | | | | params: Some(List((Var(x),Int))) None
+//| | | | 0. : ((x: Int,) -> #A<Object>)
+//| | | | 0. Typing term IntLit(42)
+//| | | | 0. : #42<Int,Num,Object>
+//| | | | CONSTRAIN ((x: Int,) -> #A<Object>) <! ((#42<Int,Num,Object>,) -> α539)
+//| | | |   where 
+//| | | | 0. C ((x: Int,) -> #A<Object>) <! ((#42<Int,Num,Object>,) -> α539)    (0)
+//| | | | | 0. C ((x: Int,) -> #A<Object>) <! ((#42<Int,Num,Object>,) -> α539)    (0)
+//| | | | | | 0. C ((x: Int,) -> #A<Object>) <! ((#42<Int,Num,Object>,) -> α539)    (0)
+//| | | | | | | 0. C (#42<Int,Num,Object>,) <! (x: Int,)    (1)
+//| | | | | | | | Already a subtype by <:<
+//| | | | | | | 0. C #A<Object> <! α539    (1)
+//| | | | | | | | NEW α539 LB (0)
+//| | | 0. : α539
+//| | | CONSTRAIN α539 <! aa540'
+//| | |   where 
+//|     α539 :> #A<Object>
+//| | | 1. C α539 <! aa540'    (0)
+//| | | | NEW aa540' LB (0)
+//| | Completed TypedNuFun(0,NuFunDef(Some(false),Var(aa),None,List(),Left(App(Var(A),Tup(List((None,Fld(_,IntLit(42)))))))),α539) where 
+//|     α539 :> #A<Object>
+//| | Typing unit statements
+//| | | 0. Typing term App(Sel(Var(console),Var(log)),Tup(List((None,Fld(_,App(Sel(Var(aa),Var(add)),Tup(List((None,Fld(_,IntLit(6)))))))))))
+//| | | | 0. Typing term Sel(Var(console),Var(log))
+//| | | | | 0. Typing term Var(console)
+//| | | | | 0. : ‹∀ 0. Console›
+//| | | | | CONSTRAIN ‹∀ 0. Console› <! {log: log541}
+//| | | | |   where 
+//| | | | | 0. C ‹∀ 0. Console› <! {log: log541}    (0)
+//| | | | | | 0. C ‹∀ 0. Console› <! {log: log541}    (0)
+//| | | | | | | 0. C ‹∀ 0. Console› <! {log: log541}    (0)
+//| | | | | | | | 0. ARGH  DNF(0, {}∧#Console<>)  <!  DNF(0, {log: log541})
+//| | | | | | | | | DNF DISCHARGE CONSTRAINTS
+//| | | | | | | | | Consider {}∧#Console<> <: DNF(0, {log: log541})
+//| | | | | | | | | Possible: List({log: log541})
+//| | | | | | | | | 0. A  {}∧#Console<>  %  List()  <!  List({log: log541})  %  ⊥
+//| | | | | | | | | | 0. A  {}∧#Console<>  %  List()  <!  List()  %  {Var(log):log541}
+//| | | | | | | | | | | 0. A  {}∧#Console<>  %  List()  <!  List()  %  |{Var(log):log541}
+//| | | | | | | | | | | | Looking up field log in None & TreeSet(#Console<>) & {...}
+//| | | | | | | | | | | | | Lookup Console.log : Some(((args0: (Anything | MutArray[Anything]),) -> Unit)) where 
+//| | | | | | | | | | | | | Fresh[0] Console.log : Some(((args0: (Anything | MutArray[Anything]),) -> Unit)) where Some()
+//| | | | | | | | | | | | |   & None  (from refinement)
+//| | | | | | | | | | | | 0. C ((args0: (Anything | MutArray[Anything]),) -> Unit) <! log541    (1)
+//| | | | | | | | | | | | | 0. C ((args0: (Anything | MutArray[Anything]),) -> Unit) <! log541    (1)
+//| | | | | | | | | | | | | | NEW log541 LB (0)
+//| | | | 0. : log541
+//| | | | 0. Typing term App(Sel(Var(aa),Var(add)),Tup(List((None,Fld(_,IntLit(6))))))
+//| | | | | 0. Typing term Sel(Var(aa),Var(add))
+//| | | | | | 0. Typing term Var(aa)
+//| | | | | | 0. : α539
+//| | | | | | CONSTRAIN α539 <! {add: add542}
+//| | | | | |   where 
+//|     α539 :> #A<Object>
+//| | | | | | 0. C α539 <! {add: add542}    (0)
+//| | | | | | | 0. C α539 <! {add: add542}    (0)
+//| | | | | | | | 0. C α539 <! {add: add542}    (0)
+//| | | | | | | | | NEW α539 UB (0)
+//| | | | | | | | | 0. C #A<Object> <! {add: add542}    (2)
+//| | | | | | | | | | 0. C #A<Object> <! {add: add542}    (2)
+//| | | | | | | | | | | Looking up field add in Some(A) & TreeSet() & {...}
+//| | | | | | | | | | | | Lookup A.add : Some(‹∀ 1. ((y: Int,) -> α537'')›) where 
+//|     α537'' :> Int
+//| | | | | | | | | | | | Fresh[0] A.add : Some(‹∀ 1. ((y: Int,) -> α537'')›) where Some(
+//|     α537'' :> Int)
+//| | | | | | | | | | | |   & None  (from refinement)
+//| | | | | | | | | | | 0. C ‹∀ 1. ((y: Int,) -> α537'')› <! add542    (2)
+//| | | | | | | | | | | | NEW add542 LB (0)
+//| | | | | 0. : add542
+//| | | | | 0. Typing term IntLit(6)
+//| | | | | 0. : #6<Int,Num,Object>
+//| | | | | CONSTRAIN add542 <! ((#6<Int,Num,Object>,) -> α543)
+//| | | | |   where 
+//|     α537'' :> Int
+//|     add542 :> ‹∀ 1. ((y: Int,) -> α537'')›
+//| | | | | 0. C add542 <! ((#6<Int,Num,Object>,) -> α543)    (0)
+//| | | | | | 0. C add542 <! ((#6<Int,Num,Object>,) -> α543)    (0)
+//| | | | | | | NEW add542 UB (0)
+//| | | | | | | 0. C ‹∀ 1. ((y: Int,) -> α537'')› <! ((#6<Int,Num,Object>,) -> α543)    (2)
+//| | | | | | | | 0. C ‹∀ 1. ((y: Int,) -> α537'')› <! ((#6<Int,Num,Object>,) -> α543)    (2)
+//| | | | | | | | | 0. C ‹∀ 1. ((y: Int,) -> α537'')› <! ((#6<Int,Num,Object>,) -> α543)    (2)
+//| | | | | | | | | | INST [1]   ‹∀ 1. ((y: Int,) -> α537'')›
+//| | | | | | | | | |   where  
+//|     α537'' :> Int
+//| | | | | | | | | | TO [0] ~>  ((y: Int,) -> α537_544)
+//| | | | | | | | | |   where  
+//|     α537_544 :> Int
+//| | | | | | | | | | 0. C ((y: Int,) -> α537_544) <! ((#6<Int,Num,Object>,) -> α543)    (4)
+//| | | | | | | | | | | 0. C ((y: Int,) -> α537_544) <! ((#6<Int,Num,Object>,) -> α543)    (4)
+//| | | | | | | | | | | | 0. C (#6<Int,Num,Object>,) <! (y: Int,)    (3)
+//| | | | | | | | | | | | | Already a subtype by <:<
+//| | | | | | | | | | | | 0. C α537_544 <! α543    (3)
+//| | | | | | | | | | | | | NEW α537_544 UB (0)
+//| | | | | | | | | | | | | 0. C Int <! α543    (6)
+//| | | | | | | | | | | | | | 0. C Int <! α543    (6)
+//| | | | | | | | | | | | | | | 0. C Int <! α543    (6)
+//| | | | | | | | | | | | | | | | NEW α543 LB (0)
+//| | | | 0. : α543
+//| | | | CONSTRAIN log541 <! ((α543,) -> α545)
+//| | | |   where 
+//|     log541 :> ((args0: (Anything | MutArray[Anything]),) -> Unit)
+//|     α543 :> Int
+//| | | | 0. C log541 <! ((α543,) -> α545)    (0)
+//| | | | | 0. C log541 <! ((α543,) -> α545)    (0)
+//| | | | | | NEW log541 UB (0)
+//| | | | | | 0. C ((args0: (Anything | MutArray[Anything]),) -> Unit) <! ((α543,) -> α545)    (2)
+//| | | | | | | 0. C ((args0: (Anything | MutArray[Anything]),) -> Unit) <! ((α543,) -> α545)    (2)
+//| | | | | | | | 0. C ((args0: (Anything | MutArray[Anything]),) -> Unit) <! ((α543,) -> α545)    (2)
+//| | | | | | | | | 0. C ((args0: (Anything | MutArray[Anything]),) -> Unit) <! ((α543,) -> α545)    (2)
+//| | | | | | | | | | 0. C (α543,) <! (args0: (Anything | MutArray[Anything]),)    (2)
+//| | | | | | | | | | | 0. C (α543,) <! (args0: (Anything | MutArray[Anything]),)    (2)
+//| | | | | | | | | | | | 0. C α543 <! (Anything | MutArray[Anything])    (3)
+//| | | | | | | | | | | | | NEW α543 UB (0)
+//| | | | | | | | | | | | | 0. C Int <! (Anything | MutArray[Anything])    (5)
+//| | | | | | | | | | | | | | Already a subtype by <:<
+//| | | | | | | | | | 0. C Unit <! α545    (2)
+//| | | | | | | | | | | NEW α545 LB (0)
+//| | | 0. : α545
+//| | : Some(α545)
+//| ⬤ Initial: TypedTypingUnit(
+//|   TypedNuCls(0, TypeName(A),
+//|     List(),
+//|     Some(List((Var(x),Int))),
+//|     this: ⊤, 
+//|     (add,TypedNuFun(1,NuFunDef(None,Var(add),None,List(),Left(Lam(Tup(List((Some(Var(y)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y))))))))),((y: Int,) -> α537'')))
+//|     (x,NuParam(Var(x),Int,false)),
+//|     : ⊤, Set(), Map())
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(aa),None,List(),Left(App(Var(A),Tup(List((None,Fld(_,IntLit(42)))))))),α539)
+//|   Some(α545))
+//|  where: 
+//|     α537'' :> Int
+//|     α539 :> #A<Object> <: {add: add542}
+//|     add542 :> ‹∀ 1. ((y: Int,) -> α537'')› <: ((#6<Int,Num,Object>,) -> α543)
+//|     α543 :> Int <: (Anything | MutArray[Anything])
+//|     α545 :> Unit
+//| allVarPols: +α537'', +α539, +α545
+//| Renewed α537'' ~> α537_546''
+//| Renewed α539 ~> α539_547
+//| Renewed α545 ~> α545_548
+//| ⬤ Cleaned up: TypedTypingUnit(
+//|   TypedNuCls(0, TypeName(A),
+//|     List(),
+//|     Some(List((Var(x),Int))),
+//|     this: ⊤, 
+//|     (add,TypedNuFun(1,NuFunDef(None,Var(add),None,List(),Left(Lam(Tup(List((Some(Var(y)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y))))))))),((y: Int,) -> α537_546'')))
+//|     (x,NuParam(Var(x),Int,false)),
+//|     : ⊤, Set(), Map())
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(aa),None,List(),Left(App(Var(A),Tup(List((None,Fld(_,IntLit(42)))))))),α539_547)
+//|   Some(α545_548))
+//|  where: 
+//|     α537_546'' :> Int
+//|     α539_547 :> #A<Object>
+//|     α545_548 :> Unit
+//| allVarPols: +α537_546'', +α539_547, +α545_548
+//| consed: Map()
+//| ⬤ Unskid: TypedTypingUnit(
+//|   TypedNuCls(0, TypeName(A),
+//|     List(),
+//|     Some(List((Var(x),Int))),
+//|     this: ⊤, 
+//|     (add,TypedNuFun(1,NuFunDef(None,Var(add),None,List(),Left(Lam(Tup(List((Some(Var(y)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y))))))))),((y: Int,) -> α537_546'')))
+//|     (x,NuParam(Var(x),Int,false)),
+//|     : ⊤, Set(), Map())
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(aa),None,List(),Left(App(Var(A),Tup(List((None,Fld(_,IntLit(42)))))))),α539_547)
+//|   Some(α545_548))
+//|  where: 
+//|     α537_546'' :> Int
+//|     α539_547 :> #A<Object>
+//|     α545_548 :> Unit
+//| analyze1[+] Int
+//| analyze1[+] ((y: Int,) -> α537_546'')
+//| | analyze1[+;-] (y: Int,)
+//| | | analyze1[+;-] Int
+//| | analyze1[+] α537_546''
+//| | | analyze1[+;@[+](0)] Int
+//| analyze1[+] Int
+//| analyze1[+;-] ⊤
+//| analyze1[+;-] ⊤
+//| analyze1[+] α539_547
+//| | analyze1[+;@[+](0)] #A<Object>
+//| analyze1[+] α545_548
+//| | analyze1[+;@[+](0)] Unit
+//| [inv] 
+//| [nums] +α537_546'' 1 ; +α539_547 1 ; +α545_548 1
+//| analyze2[+] Int
+//| analyze2[+] ((y: Int,) -> α537_546'')
+//| | analyze2[+;-] (y: Int,)
+//| | | analyze2[+;-] Int
+//| | analyze2[+] α537_546''
+//| | | >> Processing α537_546'' at [+]
+//| | | go α537_546''   ()
+//| | | | go Int   (α537_546'')
+//| | | >> Occurrences HashSet(α537_546'', Int)
+//| | | >>>> occs[+α537_546''] := HashSet(α537_546'', Int)  <~ None
+//| | | analyze2[+] Int
+//| analyze2[+] Int
+//| analyze2[+;-] ⊤
+//| analyze2[+;-] ⊤
+//| analyze2[+] α539_547
+//| | >> Processing α539_547 at [+]
+//| | go α539_547   ()
+//| | | go #A<Object>   (α539_547)
+//| | >> Occurrences HashSet(α539_547, #A<Object>)
+//| | >>>> occs[+α539_547] := HashSet(α539_547, #A<Object>)  <~ None
+//| | analyze2[+] #A<Object>
+//| analyze2[+] α545_548
+//| | >> Processing α545_548 at [+]
+//| | go α545_548   ()
+//| | | go Unit   (α545_548)
+//| | >> Occurrences HashSet(α545_548, Unit)
+//| | >>>> occs[+α545_548] := HashSet(α545_548, Unit)  <~ None
+//| | analyze2[+] Unit
+//| [occs] +α537_546'' {α537_546'',Int} ; +α539_547 {α539_547,#A<Object>} ; +α545_548 {α545_548,Unit}
+//| [vars] TreeSet(α537_546'', α539_547, α545_548)
+//| [rec] Set()
+//| 0[1] α537_546''
+//| 0[1] α539_547
+//| 0[1] α545_548
+//| 1[!] α537_546''
+//| 1[!] α539_547
+//| 1[!] α545_548
+//| [sub] α537_546'' -> None, α539_547 -> None, α545_548 -> None
+//| [bounds] 
+//|     α537_546'' :> Int
+//|     α539_547 :> #A<Object>
+//|     α545_548 :> Unit
+//| [rec] Set()
+//| transform[+] Int   ()  +  None
+//| ~> Int
+//| transform[+] ((y: Int,) -> α537_546'')   ()  +  None
+//| | transform[-] (y: Int,)   ()  +;-  None
+//| | | transform[-] Int   ()  +;-  None
+//| | | ~> Int
+//| | ~> (y: Int,)
+//| | transform[+] α537_546''   ()  +  None
+//| | | -> bound Some(true)
+//| | | transform[+] Int   (α537_546'')  +;@[+](0)  None
+//| | | ~> Int
+//| | ~> Int
+//| ~> ((y: Int,) -> Int)
+//| transform[+] Int   ()  +  None
+//| ~> Int
+//| transform[-] ⊤   ()  +;-  None
+//| ~> ⊤
+//| transform[+] ⊤   ()  +  None
+//| ~> ⊤
+//| transform[+] α539_547   ()  +  None
+//| | -> bound Some(true)
+//| | transform[+] #A<Object>   (α539_547)  +;@[+](0)  None
+//| | ~> #A<Object>
+//| ~> #A<Object>
+//| transform[+] α545_548   ()  +  None
+//| | -> bound Some(true)
+//| | transform[+] Unit   (α545_548)  +;@[+](0)  None
+//| | ~> Unit
+//| ~> Unit
+//| ⬤ Type after simplification: TypedTypingUnit(
+//|   TypedNuCls(0, TypeName(A),
+//|     List(),
+//|     Some(List((Var(x),Int))),
+//|     this: ⊤, 
+//|     (add,TypedNuFun(1,NuFunDef(None,Var(add),None,List(),Left(Lam(Tup(List((Some(Var(y)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y))))))))),((y: Int,) -> Int)))
+//|     (x,NuParam(Var(x),Int,false)),
+//|     : ⊤, Set(), Map())
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(aa),None,List(),Left(App(Var(A),Tup(List((None,Fld(_,IntLit(42)))))))),#A<Object>)
+//|   Some(Unit))
+//|  where: 
+//| allVarPols: 
+//| normLike[+] TypedTypingUnit(
+//|   TypedNuCls(0, TypeName(A),
+//|     List(),
+//|     Some(List((Var(x),Int))),
+//|     this: ⊤, 
+//|     (add,TypedNuFun(1,NuFunDef(None,Var(add),None,List(),Left(Lam(Tup(List((Some(Var(y)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y))))))))),((y: Int,) -> Int)))
+//|     (x,NuParam(Var(x),Int,false)),
+//|     : ⊤, Set(), Map())
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(aa),None,List(),Left(App(Var(A),Tup(List((None,Fld(_,IntLit(42)))))))),#A<Object>)
+//|   Some(Unit))
+//| | norm[+] Int
+//| | | DNF: DNF(0, #Int<Object,Num>{})
+//| | ~> #Int<Object,Num>
+//| | norm[+] ((y: Int,) -> Int)
+//| | | DNF: DNF(0, ((y: Int,) -> Int){})
+//| | | norm[-] (y: Int,)
+//| | | | DNF: DNF(0, (y: Int,){})
+//| | | | norm[-] Int
+//| | | | | DNF: DNF(0, #Int<Object,Num>{})
+//| | | | ~> #Int<Object,Num>
+//| | | ~> (y: #Int<Object,Num>,)
+//| | | norm[+] Int
+//| | | | DNF: DNF(0, #Int<Object,Num>{})
+//| | | ~> #Int<Object,Num>
+//| | ~> ((y: #Int<Object,Num>,) -> #Int<Object,Num>)
+//| | norm[+] Int
+//| | | DNF: DNF(0, #Int<Object,Num>{})
+//| | ~> #Int<Object,Num>
+//| | norm[-] ⊤
+//| | | DNF: DNF(0, )
+//| | ~> ⊤
+//| | norm[+] ⊤
+//| | | DNF: DNF(0, )
+//| | ~> ⊤
+//| | norm[+] #A<Object>
+//| | | DNF: DNF(0, #A<Object>{})
+//| | | rcd2 {}
+//| | | typeRef A
+//| | | clsFields 
+//| | ~> A
+//| | norm[+] Unit
+//| | | DNF: DNF(0, #unit<>{})
+//| | ~> #unit<>
+//| ⬤ Normalized: TypedTypingUnit(
+//|   TypedNuCls(0, TypeName(A),
+//|     List(),
+//|     Some(List((Var(x),#Int<Object,Num>))),
+//|     this: ⊤, 
+//|     (add,TypedNuFun(1,NuFunDef(None,Var(add),None,List(),Left(Lam(Tup(List((Some(Var(y)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y))))))))),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
+//|     (x,NuParam(Var(x),#Int<Object,Num>,false)),
+//|     : ⊤, Set(), Map())
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(aa),None,List(),Left(App(Var(A),Tup(List((None,Fld(_,IntLit(42)))))))),A)
+//|   Some(#unit<>))
+//|  where: 
+//| allVarPols: 
+//| ⬤ Cleaned up: TypedTypingUnit(
+//|   TypedNuCls(0, TypeName(A),
+//|     List(),
+//|     Some(List((Var(x),#Int<Object,Num>))),
+//|     this: ⊤, 
+//|     (add,TypedNuFun(1,NuFunDef(None,Var(add),None,List(),Left(Lam(Tup(List((Some(Var(y)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y))))))))),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
+//|     (x,NuParam(Var(x),#Int<Object,Num>,false)),
+//|     : ⊤, Set(), Map())
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(aa),None,List(),Left(App(Var(A),Tup(List((None,Fld(_,IntLit(42)))))))),A)
+//|   Some(#unit<>))
+//|  where: 
+//| allVarPols: 
+//| consed: Map()
+//| ⬤ Unskid: TypedTypingUnit(
+//|   TypedNuCls(0, TypeName(A),
+//|     List(),
+//|     Some(List((Var(x),#Int<Object,Num>))),
+//|     this: ⊤, 
+//|     (add,TypedNuFun(1,NuFunDef(None,Var(add),None,List(),Left(Lam(Tup(List((Some(Var(y)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y))))))))),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
+//|     (x,NuParam(Var(x),#Int<Object,Num>,false)),
+//|     : ⊤, Set(), Map())
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(aa),None,List(),Left(App(Var(A),Tup(List((None,Fld(_,IntLit(42)))))))),A)
+//|   Some(#unit<>))
+//|  where: 
+//| analyze1[+] #Int<Object,Num>
+//| analyze1[+] ((y: #Int<Object,Num>,) -> #Int<Object,Num>)
+//| | analyze1[+;-] (y: #Int<Object,Num>,)
+//| | | analyze1[+;-] #Int<Object,Num>
+//| | analyze1[+] #Int<Object,Num>
+//| analyze1[+] #Int<Object,Num>
+//| analyze1[+;-] ⊤
+//| analyze1[+;-] ⊤
+//| analyze1[+] A
+//| analyze1[+] #unit<>
+//| [inv] 
+//| [nums] 
+//| analyze2[+] #Int<Object,Num>
+//| analyze2[+] ((y: #Int<Object,Num>,) -> #Int<Object,Num>)
+//| | analyze2[+;-] (y: #Int<Object,Num>,)
+//| | | analyze2[+;-] #Int<Object,Num>
+//| | analyze2[+] #Int<Object,Num>
+//| analyze2[+] #Int<Object,Num>
+//| analyze2[+;-] ⊤
+//| analyze2[+;-] ⊤
+//| analyze2[+] A
+//| analyze2[+] #unit<>
+//| [occs] 
+//| [vars] TreeSet()
+//| [rec] Set()
+//| [sub] 
+//| [bounds] 
+//| [rec] Set()
+//| transform[+] #Int<Object,Num>   ()  +  None
+//| ~> #Int<Object,Num>
+//| transform[+] ((y: #Int<Object,Num>,) -> #Int<Object,Num>)   ()  +  None
+//| | transform[-] (y: #Int<Object,Num>,)   ()  +;-  None
+//| | | transform[-] #Int<Object,Num>   ()  +;-  None
+//| | | ~> #Int<Object,Num>
+//| | ~> (y: #Int<Object,Num>,)
+//| | transform[+] #Int<Object,Num>   ()  +  None
+//| | ~> #Int<Object,Num>
+//| ~> ((y: #Int<Object,Num>,) -> #Int<Object,Num>)
+//| transform[+] #Int<Object,Num>   ()  +  None
+//| ~> #Int<Object,Num>
+//| transform[-] ⊤   ()  +;-  None
+//| ~> ⊤
+//| transform[+] ⊤   ()  +  None
+//| ~> ⊤
+//| transform[+] A   ()  +  None
+//| ~> A
+//| transform[+] #unit<>   ()  +  None
+//| ~> #unit<>
+//| ⬤ Resim: TypedTypingUnit(
+//|   TypedNuCls(0, TypeName(A),
+//|     List(),
+//|     Some(List((Var(x),#Int<Object,Num>))),
+//|     this: ⊤, 
+//|     (add,TypedNuFun(1,NuFunDef(None,Var(add),None,List(),Left(Lam(Tup(List((Some(Var(y)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y))))))))),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
+//|     (x,NuParam(Var(x),#Int<Object,Num>,false)),
+//|     : ⊤, Set(), Map())
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(aa),None,List(),Left(App(Var(A),Tup(List((None,Fld(_,IntLit(42)))))))),A)
+//|   Some(#unit<>))
+//|  where: 
+//| allVarPols: 
+//| [subs] HashMap()
+//| ⬤ Factored: TypedTypingUnit(
+//|   TypedNuCls(0, TypeName(A),
+//|     List(),
+//|     Some(List((Var(x),#Int<Object,Num>))),
+//|     this: ⊤, 
+//|     (add,TypedNuFun(1,NuFunDef(None,Var(add),None,List(),Left(Lam(Tup(List((Some(Var(y)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y))))))))),((y: #Int<Object,Num>,) -> #Int<Object,Num>)))
+//|     (x,NuParam(Var(x),#Int<Object,Num>,false)),
+//|     : ⊤, Set(), Map())
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(aa),None,List(),Left(App(Var(A),Tup(List((None,Fld(_,IntLit(42)))))))),A)
+//|   Some(#unit<>))
+//|  where: 

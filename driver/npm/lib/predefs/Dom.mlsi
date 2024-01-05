@@ -1,0 +1,23 @@
+declare trait Console {
+  declare fun assert(args0: ((false) | (true)) | (undefined), args1: (anything) | (MutArray[anything])): unit
+  declare fun count(args0: (Str) | (undefined)): unit
+  declare fun timeEnd(args0: (Str) | (undefined)): unit
+  declare fun clear(): unit
+  declare fun timeStamp(args0: (Str) | (undefined)): unit
+  declare fun info(args0: (anything) | (MutArray[anything])): unit
+  declare fun debug(args0: (anything) | (MutArray[anything])): unit
+  declare fun countReset(args0: (Str) | (undefined)): unit
+  declare fun dir(args0: (anything) | (undefined), args1: (anything) | (undefined)): unit
+  declare fun error(args0: (anything) | (MutArray[anything])): unit
+  declare fun timeLog(args0: (Str) | (undefined), args1: (anything) | (MutArray[anything])): unit
+  declare fun time(args0: (Str) | (undefined)): unit
+  declare fun group(args0: (anything) | (MutArray[anything])): unit
+  declare fun table(args0: (anything) | (undefined), args1: (MutArray[Str]) | (undefined)): unit
+  declare fun trace(args0: (anything) | (MutArray[anything])): unit
+  declare fun warn(args0: (anything) | (MutArray[anything])): unit
+  declare fun groupCollapsed(args0: (anything) | (MutArray[anything])): unit
+  declare fun dirxml(args0: (anything) | (MutArray[anything])): unit
+  declare fun log(args0: (anything) | (MutArray[anything])): unit
+  declare fun groupEnd(): unit
+}
+val console: Console

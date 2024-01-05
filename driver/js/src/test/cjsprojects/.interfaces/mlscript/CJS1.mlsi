@@ -1,0 +1,4 @@
+import "./CJS2.mlsi"
+export declare module CJS1 {
+  unit
+}

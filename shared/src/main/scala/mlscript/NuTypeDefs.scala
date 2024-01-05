@@ -28,6 +28,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def toLoc: Opt[Loc]
     def level: Level
     def isImplemented: Bool
+    def isDecl: Bool
     def isPublic: Bool
     def isPrivate: Bool = !isPublic // * We currently don't support `protected`
     
@@ -64,6 +65,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def kind: DeclKind =
       if (isType) Als // FIXME?
       else Val
+
+    def isDecl: Bool = false
     def toLoc: Opt[Loc] = nme.toLoc
     def isImplemented: Bool = true
     def isVirtual: Bool = false // TODO allow annotating parameters with `virtual`
@@ -120,6 +123,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   {
     def decl: NuTypeDef = td
     def kind: DeclKind = td.kind
+    def isDecl: Bool = td.isDecl
     def name: Str = nme.name
     def nme: mlscript.TypeName = td.nme
     def members: Map[Str, NuMember] = Map.empty
@@ -167,6 +171,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   {
     def decl: NuTypeDef = td
     def kind: DeclKind = td.kind
+    def isDecl: Bool = td.isDecl
     def nme: TypeName = td.nme
     def name: Str = nme.name
     def isImplemented: Bool = true
@@ -227,6 +232,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   {
     def decl: NuTypeDef = td
     def kind: DeclKind = td.kind
+    def isDecl: Bool = td.isDecl
     def nme: TypeName = td.nme
     def name: Str = nme.name
     def isImplemented: Bool = true
@@ -349,6 +355,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   {
     def decl: NuTypeDef = td
     def kind: DeclKind = td.kind
+    def isDecl: Bool = td.isDecl
     def nme: TypeName = td.nme
     def name: Str = nme.name
     def isImplemented: Bool = true
@@ -392,6 +399,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   case class TypedNuDummy(d: NuDecl) extends TypedNuDecl with TypedNuTermDef {
     def level = MinLevel
     def kind: DeclKind = Val
+    def isDecl: Bool = d.isDecl
     def toLoc: Opt[Loc] = N
     def name: Str = d.name
     def isImplemented: Bool = true
@@ -420,6 +428,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   case class TypedNuFun(level: Level, fd: NuFunDef, bodyType: ST)(val isImplemented: Bool)
       extends TypedNuDecl with TypedNuTermDef {
     def kind: DeclKind = Val
+    def isDecl: Bool = fd.isDecl
     def name: Str = fd.nme.name
     def symbolicName: Opt[Str] = fd.symbolicNme.map(_.name)
     def toLoc: Opt[Loc] = fd.toLoc
@@ -530,7 +539,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   /** Type checks a typing unit, which is a sequence of possibly-mutually-recursive type and function definitions
    *  interleaved with plain statements. */
-  def typeTypingUnit(tu: TypingUnit, outer: Opt[Outer])
+  def typeTypingUnit(tu: TypingUnit, outer: Opt[Outer], isPredef: Bool = false)
         (implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType]): TypedTypingUnit =
       trace(s"${ctx.lvl}. Typing $tu")
   {
@@ -584,12 +593,12 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             assert(fd.signature.isEmpty)
             funSigs.get(fd.nme.name) match {
               case S(sig) =>
-                fd.copy()(fd.declareLoc, fd.virtualLoc, S(sig), outer, fd.genField)
+                fd.copy()(fd.declareLoc, fd.exportLoc, fd.virtualLoc, S(sig), outer, fd.genField)
               case _ =>
-                fd.copy()(fd.declareLoc, fd.virtualLoc, fd.signature, outer, fd.genField)
+                fd.copy()(fd.declareLoc, fd.exportLoc, fd.virtualLoc, fd.signature, outer, fd.genField)
             }
           case td: NuTypeDef =>
-            if (td.nme.name in reservedTypeNames)
+            if ((td.nme.name in reservedTypeNames) && !isPredef)
               err(msg"Type name '${td.nme.name}' is reserved", td.toLoc)
             td
         }
@@ -1305,7 +1314,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       val fd = NuFunDef((a.fd.isLetRec, b.fd.isLetRec) match {
                         case (S(a), S(b)) => S(a || b)
                         case _ => N // if one is fun, then it will be fun
-                      }, a.fd.nme, N/*no sym name?*/, a.fd.tparams, a.fd.rhs)(a.fd.declareLoc, a.fd.virtualLoc, N, a.fd.outer orElse b.fd.outer, a.fd.genField)
+                      }, a.fd.nme, N/*no sym name?*/, a.fd.tparams, a.fd.rhs)(a.fd.declareLoc, a.fd.exportLoc, a.fd.virtualLoc, N, a.fd.outer orElse b.fd.outer, a.fd.genField)
                       S(TypedNuFun(a.level, fd, a.bodyType & b.bodyType)(a.isImplemented || b.isImplemented))
                     case (a: NuParam, S(b: NuParam)) => 
                       if (!a.isPublic) S(b) else if (!b.isPublic) S(a)
@@ -1642,7 +1651,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     
                     implemCheck(impltdMems,
                       (clsSigns.iterator ++ ifaceMembers.iterator)
-                      .distinctBy(_.name).filterNot(_.isImplemented).toList)
+                      .distinctBy(_.name).filterNot(m => m.isImplemented || m.isDecl).toList)
                     
                     val allMembers =
                       (ifaceMembers ++ impltdMems).map(d => d.name -> d).toMap ++ typedSignatureMembers

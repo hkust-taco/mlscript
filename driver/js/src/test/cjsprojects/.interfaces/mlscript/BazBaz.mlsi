@@ -1,0 +1,12 @@
+import "../ts/Baz.mlsi"
+export declare module BazBaz {
+  class BazBaz()
+  let bazbaz: BazBaz
+  error
+}
+//| ╔══[ERROR] Unsupported parent specification
+//| ║  l.3: 	class BazBaz() extends Baz.Baz(2)
+//| ╙──     	                       ^^^^^^^^^^
+//| ╔══[ERROR] Type `BazBaz` does not contain member `baz`
+//| ║  l.6: 	bazbaz.baz()
+//| ╙──     	      ^^^^

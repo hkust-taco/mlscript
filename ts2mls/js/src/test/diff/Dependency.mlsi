@@ -1,0 +1,15 @@
+export declare module Dependency {
+  export declare class A {
+    val a: Num
+  }
+  export declare class B {
+    val b: Num
+  }
+  export declare class C {
+    val c: Num
+  }
+  export declare class D {
+    val d: Num
+  }
+  declare fun default(): Num
+}

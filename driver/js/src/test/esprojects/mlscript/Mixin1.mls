@@ -1,0 +1,17 @@
+import "./Mixin2.mls"
+
+class Neg<A>(expr: A)
+
+mixin EvalNeg {
+  fun eval(e) =
+    if e is Neg(d) then 0 - this.eval(d)
+    else super.eval(e)
+}
+
+module MyLang extends Mixin2.EvalBase, EvalNeg
+
+fun show =
+  let program = Mixin2.Add(Mixin2.Lit(48), Neg(Mixin2.Lit(6)))
+  console.log(MyLang.eval(program))
+
+show

@@ -952,7 +952,7 @@ trait TypeSimplifier { self: Typer =>
       case ot @ Overload(as) =>
         ot.mapAltsPol(pol)((p, t) => transform(t, p, parents, canDistribForall))
       case SkolemTag(id) => transform(id, pol, parents)
-      case _: ObjectTag | _: Extruded | _: ExtrType => st
+      case _: ObjectTag | _: Extruded | _: ExtrType | _: UnusableLike => st
       case tv: TypeVariable if parents(tv) =>
         pol(tv) match {
           case S(true) => BotType

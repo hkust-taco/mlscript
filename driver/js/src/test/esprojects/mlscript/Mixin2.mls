@@ -1,0 +1,14 @@
+export class Add<E>(lhs: E, rhs: E)
+export class Lit(n: Int)
+
+fun eval(e) =
+  if e is
+    Lit(n) then n
+    Add(l, r) then eval(l) + eval(r)
+
+export mixin EvalBase {
+  fun eval(e) =
+    if e is
+      Lit(n) then n: Int
+      Add(l, r) then this.eval(l) + this.eval(r)
+}

@@ -1,0 +1,24 @@
+export declare module ClassMember {
+  declare class Student {
+    constructor(s: Str, age: Num)
+    val name: Str
+    declare fun isFriend(args0: Student): (false) | (true)
+    declare fun addScore(args0: Str, args1: Num): unit
+    declare fun getID(): Num
+  }
+  declare class Foo['T] {
+    declare fun bar(args0: 'T): unit
+  }
+  declare class EZ {
+    declare fun inc(args0: Num): Num
+  }
+  declare class Outer {
+    declare class Inner {
+      val a: Num
+    }
+  }
+  declare class TTT['T] {
+    declare fun ttt(args0: 'T): 'T
+    declare fun ttt2(x: 'T): 'T
+  }
+}

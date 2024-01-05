@@ -1,0 +1,23 @@
+export declare module Variables {
+  val URI: Str
+  val URI2: Str
+  val foo: Num
+  val bar: false
+  declare class FooBar {}
+  val fb: FooBar
+  declare module ABC {
+    export declare class DEF {}
+  }
+  val d: ABC.DEF
+  declare module DD {
+    export val foo: Num
+    val bar: Num
+  }
+}
+//| ╔══[ERROR] type identifier not found: FooBar
+//| ║  l.7: 	  val fb: FooBar
+//| ╙──     	          ^^^^^^
+//| ╔══[ERROR] type identifier not found: ABC
+//| ║  l.11: 	  val d: ABC.DEF
+//| ╙──      	         ^^^
+//| scala.NotImplementedError: an implementation is missing

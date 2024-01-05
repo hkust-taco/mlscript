@@ -1,0 +1,29 @@
+:NewDefs
+
+
+export class A()
+//│ class A()
+
+
+module M {
+  export fun g = A()
+  fun f = A()
+}
+//│ module M {
+//│   fun f: A
+//│   fun g: A
+//│ }
+
+let a = M.g
+//│ let a: A
+//│ a
+//│   = A {}
+
+// TODO reject
+// :e
+let a = M.f
+//│ let a: A
+//│ a
+//│   = A {}
+
+

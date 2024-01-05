@@ -19,8 +19,8 @@ jobs:
     - uses: actions/setup-node@v3
       with:
         node-version: '17.x'
-    - name: Install TypeScript
-      run: npm ci
+    - name: Prepare TypeScript
+      run: ./scripts/ts-prepare.sh
     - name: Run tests
       run: sbt -J-Xmx4096M -J-Xss4M test
     - name: Check no changes

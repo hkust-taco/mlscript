@@ -172,46 +172,29 @@ new C(1, 2)
 //│ [ 1, 1 ]
 
 :pe
-:w
 class C { constructor(x: Int);; constructor(y: Int) }
 //│ ╔══[PARSE ERROR] A class may have at most one explicit constructor
-//│ ║  l.176: 	class C { constructor(x: Int);; constructor(y: Int) }
+//│ ║  l.175: 	class C { constructor(x: Int);; constructor(y: Int) }
 //│ ╙──       	^^^^^
-//│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.176: 	class C { constructor(x: Int);; constructor(y: Int) }
-//│ ╙──       	                             ^^
 //│ class C {
 //│   constructor(x: Int)
 //│ }
 
 
-:w // * FIXME
 class Foo { constructor(x: Int){};; val y = 2 }
-//│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.189: 	class Foo { constructor(x: Int){};; val y = 2 }
-//│ ╙──       	                                 ^^
 //│ class Foo {
 //│   constructor(x: Int)
 //│   val y: 2
 //│ }
 
 :pe
-:e
 class Foo { constructor(x: Int){}; val y = 2 }
-//│ ╔══[PARSE ERROR] Unexpected operator in expression position
-//│ ║  l.200: 	class Foo { constructor(x: Int){}; val y = 2 }
+//│ ╔══[PARSE ERROR] Unexpected operator here
+//│ ║  l.191: 	class Foo { constructor(x: Int){}; val y = 2 }
 //│ ╙──       	                                 ^
-//│ ╔══[PARSE ERROR] Unexpected 'val' keyword in expression position
-//│ ║  l.200: 	class Foo { constructor(x: Int){}; val y = 2 }
-//│ ╙──       	                                   ^^^
-//│ ╔══[ERROR] Unexpected equation in this position
-//│ ║  l.200: 	class Foo { constructor(x: Int){}; val y = 2 }
-//│ ╙──       	                                       ^^^^^
 //│ class Foo {
 //│   constructor(x: Int)
 //│ }
-//│ Syntax error:
-//│   Private field '#y' must be declared in an enclosing class
 
 class Foo {
   constructor(x: Int){}

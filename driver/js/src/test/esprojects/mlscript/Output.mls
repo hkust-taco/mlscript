@@ -1,0 +1,4 @@
+import "../ts/ConfigGen.ts"
+
+let res = ConfigGen.generate("foo")
+log(res)

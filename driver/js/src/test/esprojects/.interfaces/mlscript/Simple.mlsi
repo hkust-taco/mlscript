@@ -1,0 +1,15 @@
+import "./Opened.mlsi"
+export declare module Simple {
+  mixin B() {
+    this: {n: 'n}
+    fun foo: 'n
+  }
+  class A(n: Int) {
+    fun foo: Int
+  }
+  let a: A
+  module C {
+    let b: 1
+  }
+  ()
+}

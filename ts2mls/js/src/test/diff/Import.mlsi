@@ -1,0 +1,9 @@
+import "./Dependency.mlsi"
+export declare module Import {
+  val t: Num
+  val a: Dependency.A
+  val b: Dependency.B
+  val c: Dependency.C
+  val d: Dependency.D
+  val dd: Num
+}

@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "outDir": "js/ts",
+    "module": "CommonJS",
+    "target": "ES2015",
+    "moduleResolution": "node",
+    "allowJs": true,
+    "esModuleInterop": true
+  },
+  "include": ["ts/*"],
+}

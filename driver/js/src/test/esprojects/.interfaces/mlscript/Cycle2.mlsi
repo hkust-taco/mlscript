@@ -1,0 +1,5 @@
+import "./Cycle1.mlsi"
+export declare module Cycle2 {
+  fun g: (x: Int) -> Int
+  ()
+}

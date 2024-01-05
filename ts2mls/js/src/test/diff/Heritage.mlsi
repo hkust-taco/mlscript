@@ -1,0 +1,11 @@
+export declare module Heritage {
+  declare module Five {
+    export declare class ROTK {
+      val wu: Str
+    }
+  }
+  declare class Y extends Five.ROTK {}
+}
+//| ╔══[ERROR] Unsupported parent specification
+//| ║  l.7: 	  declare class Y extends Five.ROTK {}
+//| ╙──     	                          ^^^^^^^^^

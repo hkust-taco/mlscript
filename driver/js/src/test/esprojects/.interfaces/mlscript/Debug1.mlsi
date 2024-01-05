@@ -1,0 +1,5 @@
+import "./Debug2.mlsi"
+import "./Debug4.mlsi"
+export declare module Debug1 {
+  let x: 42
+}

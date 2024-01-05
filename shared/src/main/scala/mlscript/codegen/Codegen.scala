@@ -598,7 +598,7 @@ object JSMember {
   def apply(`object`: JSExpr, property: JSExpr): JSMember = new JSMember(`object`, property)
 }
 
-class JSField(`object`: JSExpr, val property: JSIdent) extends JSMember(`object`, property) {
+class JSField(val `object`: JSExpr, val property: JSIdent) extends JSMember(`object`, property) {
   override def toSourceCode: SourceCode =
     `object`.toSourceCode.parenthesized(
       `object`.precedence < precedence || `object`.isInstanceOf[JSRecord]
@@ -920,6 +920,24 @@ final case class JSClassNewDecl(
   }
 
   private val fieldsSet = collection.immutable.HashSet.from(fields)
+}
+
+final case class JSExport(module: JSConstDecl \/ JSIdent) extends JSStmt {
+  def toSourceCode: SourceCode = module match {
+    case L(dec) => SourceCode(s"export ${dec.toSourceCode}")
+    case R(name) => SourceCode(s"module.exports = ${name.toSourceCode};")
+  }
+}
+
+// None: mls module, Some(true): ES module, Some(false): common JS module
+final case class JSImport(name: Str, path: Str, isESModule: Opt[Bool], genRequire: Bool) extends JSStmt {
+  def toSourceCode: SourceCode =
+    if (genRequire) SourceCode(s"const $name = require(\"$path\")\n")
+    else isESModule match {
+      case N => SourceCode(s"import { $name } from \"$path\"\n")
+      case S(true) => SourceCode(s"import * as $name from \"$path\"\n")
+      case S(false) => SourceCode(s"import $name from \"$path\"\n")
+    }
 }
 
 final case class JSComment(text: Str) extends JSStmt {

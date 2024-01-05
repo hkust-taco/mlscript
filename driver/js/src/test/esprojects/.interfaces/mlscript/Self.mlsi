@@ -1,0 +1,4 @@
+export declare module Self {
+  class Foo()
+}
+//| Cannot import driver/js/src/test/esprojects/mlscript/Self.mls from itself

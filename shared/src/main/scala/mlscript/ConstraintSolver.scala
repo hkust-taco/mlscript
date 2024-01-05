@@ -36,8 +36,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     val info = ctx.tyDefs2.getOrElse(clsNme, ???/*TODO*/)
     
     if (info.isComputing) {
-      
-      ??? // TODO support?
+
+      L(ErrorReport(
+        // TODO improve
+        msg"${info.decl.kind.str.capitalize} `${info.decl.name}` has a cyclic type dependency that is not supported yet." -> fld.toLoc :: Nil, newDefs))
       
     } else info.complete() match {
       
@@ -577,7 +579,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               if (pts.exists(p => (p.id === pt.id) || l.allTags.contains(p.id)))
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
               // else f.fold(reportError())(f => annoying(Nil, done_ls, Nil, f))
-              else annoying(Nil, LhsRefined(N, ts, r, trs), Nil, RhsBases(Nil, bf, trs2))
+              else annoying(pt.id match {
+                  case _: IntLit => IntType :: Nil
+                  case _: DecLit => DecType :: Nil
+                  case _: StrLit => StrType :: Nil
+                  case _: UnitLit => Nil
+                  case _: Var => Nil
+                }, LhsRefined(N, ts, r, trs), Nil, RhsBases(Nil, bf, trs2))
             case (lr @ LhsRefined(bo, ts, r, _), rf @ RhsField(n, t2)) =>
               // Reuse the case implemented below:  (this shortcut adds a few more annoying calls in stats)
               annoying(Nil, lr, Nil, RhsBases(Nil, S(R(rf)), SortedMap.empty))
@@ -783,7 +791,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_, TypeBounds(lb, ub)) => rec(lhs, lb, true)
           case (p @ ProvType(und), _) => rec(und, rhs, true)
           case (_, p @ ProvType(und)) => rec(lhs, und, true)
-          case (_: TypeTag, _: TypeTag) if lhs === rhs => ()
+          case (_: TypeTag, _: TypeTag) if lhs === rhs => () // required to allow signature overriding checks in declarations
+          case (lhs: Unsupported, rhs: Unsupported) => ()
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs, true)
           
           case (ClassTag(Var(nme), _), rt: RecordType) if newDefs && nme.isCapitalized =>
@@ -1064,6 +1073,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       
       def doesntMatch(ty: SimpleType) = msg"does not match type `${ty.expNeg}`"
       def doesntHaveField(n: Str) = msg"does not have field '$n'"
+      def doesntSupport(uns: Unsupported) = msg"(TypeScript type ${uns.showTSType}) is not supported"
       
       val lhsChain: List[ST] = cctx._1
       val rhsChain: List[ST] = cctx._2
@@ -1196,6 +1206,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 }
               )
           return raise(ErrorReport(msgs ::: mk_constraintProvenanceHints, newDefs))
+        case (lhs: Unsupported, _) => doesntSupport(lhs)
+        case (_, rhs: Unsupported) => doesntSupport(rhs)
         case (_: TV | _: ProxyType, _) => doesntMatch(rhs)
         case (RecordType(fs0), RecordType(fs1)) =>
           (fs1.map(_._1).toSet -- fs0.map(_._1).toSet)
@@ -1376,7 +1388,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             new Extruded(!pol, tt)(
               tt.prov.copy(desc = "extruded type variable reference"), reason)
         } else die // shouldn't happen
-      case _: ClassTag | _: TraitTag | _: Extruded => ty
+      case _: ClassTag | _: TraitTag | _: Extruded | _: UnusableLike => ty
       case tr @ TypeRef(d, ts) =>
         TypeRef(d, tr.mapTargs(S(pol)) {
           case (N, targ) =>
@@ -1581,7 +1593,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case p @ ProxyType(und) => freshen(und)
       case s @ SkolemTag(id) if s.level > above && s.level <= below =>
         freshen(id)
-      case _: ClassTag | _: TraitTag | _: SkolemTag | _: Extruded => ty
+      case _: ClassTag | _: TraitTag | _: SkolemTag | _: UnusableLike => ty
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)
       case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov)
       case pt @ PolymorphicType(polyLvl, bod) if pt.level <= above => pt // is this really useful?

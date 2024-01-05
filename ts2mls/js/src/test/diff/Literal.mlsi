@@ -1,0 +1,5 @@
+export declare module Literal {
+  val a: {a: "A",b: "B",}
+  val num: {y: 114,}
+  declare fun foo(x: {xx: "X",}): {yy: "Y",}
+}

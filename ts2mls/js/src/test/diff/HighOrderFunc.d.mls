@@ -1,8 +1,0 @@
-:NewDefs
-:ParseOnly
-fun h1(inc: (number) => number, num: number): number
-fun h2(hint: string): unit => string
-fun h3(f: (number) => number, g: (number) => number): (number) => number
-//│ |#fun| |h1|(|inc|#:| |(|number|)| |#=>| |number|,| |num|#:| |number|)|#:| |number|↵|#fun| |h2|(|hint|#:| |string|)|#:| |unit| |#=>| |string|↵|#fun| |h3|(|f|#:| |(|number|)| |#=>| |number|,| |g|#:| |(|number|)| |#=>| |number|)|#:| |(|number|)| |#=>| |number|
-//│ Parsed: {fun h1: (inc: number -> number, num: number) -> number; fun h2: (hint: string) -> unit -> string; fun h3: (f: number -> number, g: number -> number) -> number -> number}
-//│ 

@@ -1,0 +1,14 @@
+import "./Opened.mls"
+
+mixin B { fun foo = this.n }
+
+class A(val n: Int) extends B
+let a = A(42)
+
+log(a.foo)
+
+module C {
+  let b = 1
+}
+
+Opened.hello(a.n)

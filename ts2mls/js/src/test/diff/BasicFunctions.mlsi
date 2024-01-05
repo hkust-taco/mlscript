@@ -1,0 +1,38 @@
+export declare module BasicFunctions {
+  declare fun hello(): unit
+  declare fun add(x: Num, y: Num): Num
+  declare fun sub(x: Num, y: Num): Num
+  declare fun foo(): Num
+  declare fun id(x: anything): anything
+  declare fun odd(x: Num): (false) | (true)
+  declare fun isnull(x: anything): (false) | (true)
+  declare fun bar(): anything
+  declare fun nu(n: null): null
+  declare fun un(n: undefined): undefined
+  declare fun fail(): nothing
+  declare fun create(): Object
+  declare fun pa(x: Num): Num
+  declare fun wtf(x: anything): unit
+  declare class Foooooo {
+    val ooooooo: Num
+  }
+  declare fun inn(f: Foooooo): unit
+  declare fun out1(): Foooooo
+  declare trait Barrrrrrrrr {
+    val rrrrrrr: Num
+  }
+  declare fun inn2(b: Barrrrrrrrr): unit
+  declare fun out2(): Barrrrrrrrr
+}
+//| ╔══[ERROR] type identifier not found: Foooooo
+//| ║  l.19: 	  declare fun inn(f: Foooooo): unit
+//| ╙──      	                     ^^^^^^^
+//| ╔══[ERROR] type identifier not found: Foooooo
+//| ║  l.20: 	  declare fun out1(): Foooooo
+//| ╙──      	                      ^^^^^^^
+//| ╔══[ERROR] type identifier not found: Barrrrrrrrr
+//| ║  l.24: 	  declare fun inn2(b: Barrrrrrrrr): unit
+//| ╙──      	                      ^^^^^^^^^^^
+//| ╔══[ERROR] type identifier not found: Barrrrrrrrr
+//| ║  l.25: 	  declare fun out2(): Barrrrrrrrr
+//| ╙──      	                      ^^^^^^^^^^^

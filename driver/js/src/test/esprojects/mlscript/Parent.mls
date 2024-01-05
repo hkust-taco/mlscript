@@ -1,0 +1,7 @@
+export class Parent1(val x: Int) {
+  fun inc = x + 1
+}
+
+export class Parent2 {
+  fun x = 42
+}

@@ -1,0 +1,20 @@
+import "./Parent.mlsi"
+export declare module Child {
+  class Child1(x: Int)
+  class Child2(y: Int)
+  let c1: Child1
+  let c2: Child2
+  unit
+}
+//| ╔══[ERROR] Unsupported parent specification
+//| ║  l.3: 	class Child1(val x: Int) extends Parent.Parent1(x + 1)
+//| ╙──     	                                 ^^^^^^^^^^^^^^^^^^^^^
+//| ╔══[ERROR] Unsupported parent specification
+//| ║  l.4: 	class Child2(val y: Int) extends Parent.Parent2
+//| ╙──     	                                 ^^^^^^^^^^^^^^
+//| ╔══[ERROR] Type `Child1` does not contain member `inc`
+//| ║  l.8: 	console.log(c1.inc)
+//| ╙──     	              ^^^^
+//| ╔══[ERROR] Type `Child2` does not contain member `x`
+//| ║  l.9: 	console.log(c2.x)
+//| ╙──     	              ^^

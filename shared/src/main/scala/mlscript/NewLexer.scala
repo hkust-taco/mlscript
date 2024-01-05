@@ -52,13 +52,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     // ">",
   )
   
-  private val isAlphaOp = Set(
-    "with",
-    "and",
-    "or",
-    "is",
-    "as",
-  )
+  private val isAlphaOp = alpahOp
   
   @tailrec final
   def takeWhile(i: Int, cur: Ls[Char] = Nil)(pred: Char => Bool): (Str, Int) =
@@ -200,6 +194,13 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     // @inline 
     // def go(j: Int, tok: Token) = lex(j, ind, (tok, loc(i, j)) :: acc)
     def next(j: Int, tok: Token) = (tok, loc(i, j)) :: acc
+    def isIdentEscape(i: Int): Bool = i + 2 < length && bytes(i) === 'i' && bytes(i + 1) === 'd' && bytes(i + 2) === '"'
+    def takeIdentFromEscape(i: Int, ctor: Str => Token) = {
+      val (n, j) = takeWhile(i + 3)(_ != '"')
+      if (j < length && bytes(j) === '"') (ctor(n), j + 1)
+      else { pe(msg"unfinished identifier escape"); (ERROR, j + 1) }
+    }
+
     c match {
       case ' ' =>
         val (_, j) = takeWhile(i)(_ === ' ')
@@ -263,6 +264,9 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
             else (NEWLINE, loc(i, k)) :: acc
           )
         }
+      case _ if isIdentEscape(i) =>
+        val (tok, n) = takeIdentFromEscape(i, s => IDENT(s, false))
+        lex(n, ind, next(n, tok))
       case _ if isIdentFirstChar(c) =>
         val (n, j) = takeWhile(i)(isIdentChar)
         // go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)))
@@ -271,7 +275,11 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         val (n, j) = takeWhile(i)(isOpChar)
         if (n === "." && j < length) {
           val nc = bytes(j)
-          if (isIdentFirstChar(nc)) {
+          if (isIdentFirstChar(bytes(j)) && isIdentEscape(j)) {
+            val (body, m) = takeIdentFromEscape(j, SELECT)
+            lex(m, ind, next(m, body))
+          }
+          else if (isIdentFirstChar(nc)) {
             val (name, k) = takeWhile(j)(isIdentChar)
             // go(k, SELECT(name))
             lex(k, ind, next(k, SELECT(name)))
@@ -415,6 +423,7 @@ object NewLexer {
     // "all",
     "mut",
     "declare",
+    "export",
     "class",
     "trait",
     "mixin",
@@ -431,11 +440,22 @@ object NewLexer {
     "exists",
     "in",
     "out",
+    "weak",
+    "import",
     "null",
     "undefined",
     "abstract",
     "constructor",
-    "virtual"
+    "virtual",
+    "unsupported"
+  )
+
+  val alpahOp: Set[Str] = Set(
+    "with",
+    "and",
+    "or",
+    "is",
+    "as",
   )
   
   def printToken(tl: TokLoc): Str = tl match {

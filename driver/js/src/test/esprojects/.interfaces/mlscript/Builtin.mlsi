@@ -1,0 +1,5 @@
+export declare module Builtin {
+  let s: "abc"
+  let n: Num
+  unit
+}

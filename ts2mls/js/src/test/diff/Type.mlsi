@@ -1,0 +1,36 @@
+export declare module Type {
+  declare trait None {
+    val _tag: "None"
+  }
+  declare trait Some['A] {
+    val _tag: "Some"
+    val value: 'A
+  }
+  type Option['A] = (None) | (Some['A])
+  type Func = (x: Num) => Num
+  type S2 = [Str, Str, ]
+  declare trait I1 {}
+  declare trait I2 {}
+  type I3 = (I1) & (I2)
+  type StringArray = Array[Str]
+  type SomeInterface = {x: Num,y: Num,}
+  declare class ABC {}
+  type DEF = ABC
+  type TP['A, 'B, 'C] = ['A, 'B, 'C, ]
+  declare module NA {
+    declare fun fb(b: Str): unit
+    export type B = Str
+  }
+  declare class NC {
+    val b: Str
+  }
+  type G = ABC
+  val none: {_tag: "None",}
+  declare fun some['A](a: 'A): (None) | (Some['A])
+}
+//| ╔══[ERROR] type identifier not found: None
+//| ║  l.29: 	  declare fun some['A](a: 'A): (None) | (Some['A])
+//| ╙──      	                               ^^^^^^
+//| ╔══[ERROR] type identifier not found: Some
+//| ║  l.29: 	  declare fun some['A](a: 'A): (None) | (Some['A])
+//| ╙──      	                                        ^^^^^^^^^^

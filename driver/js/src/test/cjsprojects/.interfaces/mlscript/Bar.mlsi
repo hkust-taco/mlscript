@@ -1,0 +1,9 @@
+import "../ts/Foo.mlsi"
+export declare module Bar {
+  class Bar() extends Foo {
+    fun bar: "bar"
+    fun foo: () -> Str
+  }
+  let bf: Bar
+  unit
+}

@@ -1,0 +1,5 @@
+import "../ts/ConfigGen.mlsi"
+export declare module Output {
+  let res: Str
+  ()
+}

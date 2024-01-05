@@ -73,6 +73,7 @@ object Helpers:
           case mlscript.Def(_, _, _, _) => throw MonomorphError("unsupported Def")
           case mlscript.LetS(_, _, _) => throw MonomorphError("unsupported LetS")
           case mlscript.Constructor(_, _) => throw MonomorphError("unsupported Constructor")
+          case _: mlscript.Import => throw MonomorphError("unsupported import")
         })
         case Bra(rcd, term) => term2Expr(term)
         case Asc(term, ty) => Expr.As(term2Expr(term), ty)

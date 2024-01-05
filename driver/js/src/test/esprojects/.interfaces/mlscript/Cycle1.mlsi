@@ -1,0 +1,6 @@
+declare module Cycle2 {
+  fun g: (x: Int) -> Int
+}
+export declare module Cycle1 {
+  fun f: (0 | Int & ~0) -> Int
+}

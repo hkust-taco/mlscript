@@ -1,0 +1,11 @@
+declare module Cycle1 {
+  export declare class A {}
+  val b: Cycle2.B
+}
+export declare module Cycle2 {
+  export declare class B {}
+  val a: Cycle1.A
+}
+//| ╔══[ERROR] Module `Cycle1` has a cyclic type dependency that is not supported yet.
+//| ║  l.7: 	  val a: Cycle1.A
+//| ╙──     	               ^^

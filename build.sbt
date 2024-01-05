@@ -13,7 +13,7 @@ ThisBuild / scalacOptions ++= Seq(
 )
 
 lazy val root = project.in(file("."))
-  .aggregate(mlscriptJS, mlscriptJVM, ts2mlsTest, compilerJVM)
+  .aggregate(mlscriptJS, mlscriptJVM, driverTest, compilerJVM)
   .settings(
     publish := {},
     publishLocal := {},
@@ -91,3 +91,27 @@ lazy val compiler = crossProject(JSPlatform, JVMPlatform).in(file("compiler"))
 lazy val compilerJVM = compiler.jvm
 lazy val compilerJS = compiler.js
 
+lazy val driver = crossProject(JSPlatform, JVMPlatform).in(file("driver"))
+  .settings(
+    name := "mlscript-driver",
+    scalaVersion := "2.13.8",
+    scalacOptions ++= Seq(
+      "-deprecation"
+    )
+  )
+  .jvmSettings()
+  .jsSettings(
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.1.0",
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.12" % "test",
+    Compile / fastOptJS / artifactPath := baseDirectory.value / ".." / ".." / "driver" / "npm" / "lib" / "index.js",
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
+  )
+  .dependsOn(mlscript % "compile->compile;test->test")
+  .dependsOn(ts2mls % "compile->compile;test->test")
+
+lazy val driverJS = driver.js
+lazy val driverTest = project.in(file("driver"))
+  .settings(
+    scalaVersion := "2.13.8",
+    Test / test := ((driverJS / Test / test) dependsOn (ts2mlsJS / Test / test)).value
+  )

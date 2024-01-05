@@ -1,0 +1,93 @@
+import "./Debug3.mlsi"
+export declare module Debug2 {
+  let y: 42
+}
+//| 0. Typing TypingUnit(List(NuFunDef(Some(false),Var(y),None,List(),Left(IntLit(42)))))
+//| | 0. Created lazy type info for NuFunDef(Some(false),Var(y),None,List(),Left(IntLit(42)))
+//| | Completing let y = 42
+//| | | Type params 
+//| | | Params 
+//| | | 0. Typing term IntLit(42)
+//| | | 0. : #42<Int,Num,Object>
+//| | | CONSTRAIN #42<Int,Num,Object> <! y1572'
+//| | |   where 
+//| | | 1. C #42<Int,Num,Object> <! y1572'    (0)
+//| | | | NEW y1572' LB (0)
+//| | Completed TypedNuFun(0,NuFunDef(Some(false),Var(y),None,List(),Left(IntLit(42))),#42<Int,Num,Object>) where 
+//| | Typing unit statements
+//| | : None
+//| ⬤ Initial: TypedTypingUnit(
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(y),None,List(),Left(IntLit(42))),#42<Int,Num,Object>)
+//|   None)
+//|  where: 
+//| allVarPols: 
+//| ⬤ Cleaned up: TypedTypingUnit(
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(y),None,List(),Left(IntLit(42))),#42<Int,Num,Object>)
+//|   None)
+//|  where: 
+//| allVarPols: 
+//| consed: Map()
+//| ⬤ Unskid: TypedTypingUnit(
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(y),None,List(),Left(IntLit(42))),#42<Int,Num,Object>)
+//|   None)
+//|  where: 
+//| analyze1[+] #42<Int,Num,Object>
+//| [inv] 
+//| [nums] 
+//| analyze2[+] #42<Int,Num,Object>
+//| [occs] 
+//| [vars] TreeSet()
+//| [rec] Set()
+//| [sub] 
+//| [bounds] 
+//| [rec] Set()
+//| transform[+] #42<Int,Num,Object>   ()  +  None
+//| ~> #42<Int,Num,Object>
+//| ⬤ Type after simplification: TypedTypingUnit(
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(y),None,List(),Left(IntLit(42))),#42<Int,Num,Object>)
+//|   None)
+//|  where: 
+//| allVarPols: 
+//| normLike[+] TypedTypingUnit(
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(y),None,List(),Left(IntLit(42))),#42<Int,Num,Object>)
+//|   None)
+//| | norm[+] #42<Int,Num,Object>
+//| | | DNF: DNF(0, #42<Int,Num,Object>{})
+//| | ~> #42<Int,Num,Object>
+//| ⬤ Normalized: TypedTypingUnit(
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(y),None,List(),Left(IntLit(42))),#42<Int,Num,Object>)
+//|   None)
+//|  where: 
+//| allVarPols: 
+//| ⬤ Cleaned up: TypedTypingUnit(
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(y),None,List(),Left(IntLit(42))),#42<Int,Num,Object>)
+//|   None)
+//|  where: 
+//| allVarPols: 
+//| consed: Map()
+//| ⬤ Unskid: TypedTypingUnit(
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(y),None,List(),Left(IntLit(42))),#42<Int,Num,Object>)
+//|   None)
+//|  where: 
+//| analyze1[+] #42<Int,Num,Object>
+//| [inv] 
+//| [nums] 
+//| analyze2[+] #42<Int,Num,Object>
+//| [occs] 
+//| [vars] TreeSet()
+//| [rec] Set()
+//| [sub] 
+//| [bounds] 
+//| [rec] Set()
+//| transform[+] #42<Int,Num,Object>   ()  +  None
+//| ~> #42<Int,Num,Object>
+//| ⬤ Resim: TypedTypingUnit(
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(y),None,List(),Left(IntLit(42))),#42<Int,Num,Object>)
+//|   None)
+//|  where: 
+//| allVarPols: 
+//| [subs] HashMap()
+//| ⬤ Factored: TypedTypingUnit(
+//|   TypedNuFun(0,NuFunDef(Some(false),Var(y),None,List(),Left(IntLit(42))),#42<Int,Num,Object>)
+//|   None)
+//|  where: 

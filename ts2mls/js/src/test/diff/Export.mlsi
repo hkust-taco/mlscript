@@ -1,0 +1,30 @@
+import "./Dependency.mlsi"
+export declare module Export {
+  export declare module Foo {
+    export declare fun Baz(aa: Str): IBar
+    declare trait IBar {
+      val a: Str
+    }
+    export declare class Bar extends IBar {
+      val a: Str
+    }
+    export val baz: IBar
+  }
+  declare fun default(x: anything): anything
+  export declare class E {}
+  export val F = E
+  export val G = Dependency.B
+  export val H = Dependency
+}
+//| ╔══[ERROR] type identifier not found: IBar
+//| ║  l.4: 	    export declare fun Baz(aa: Str): IBar
+//| ╙──     	                                     ^^^^
+//| ╔══[ERROR] type identifier not found: IBar
+//| ║  l.11: 	    export val baz: IBar
+//| ╙──      	                    ^^^^
+//| ╔══[ERROR] Class E cannot be instantiated as it exposes no constructor
+//| ║  l.15: 	  export val F = E
+//| ╙──      	                 ^
+//| ╔══[ERROR] Access to class member not yet supported
+//| ║  l.16: 	  export val G = Dependency.B
+//| ╙──      	                           ^^

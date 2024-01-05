@@ -307,15 +307,25 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = MinLevel
     override def toString = if (pol) "⊥" else "⊤"
   }
+
+  sealed abstract class UnusableLike extends AbstractTag
   
   /** Represents a type variable skolem that was extruded outsdie its polym level.
     * The goal is to retain precise information to produce good errors,
     * but still have this be functionally equivalent to `ExtrType(pol)`. */
-  case class Extruded(pol: Bool, underlying: SkolemTag)(val prov: TypeProvenance, val reason: Ls[Ls[ST]]) extends AbstractTag with TypeVarOrRigidVar {
+  case class Extruded(pol: Bool, underlying: SkolemTag)(val prov: TypeProvenance, val reason: Ls[Ls[ST]]) extends UnusableLike with TypeVarOrRigidVar {
     val level: Level = MinLevel
     val id = underlying.id
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = 0
     override def toString = if (pol) s"⊥(${underlying})" else s"⊤(${underlying})"
+  }
+
+  case class Unsupported(tp: Str, file: Str, line: BigInt, col: BigInt)(val prov: TypeProvenance) extends UnusableLike {
+    val id = StrLit(showTSType)
+    val level: Level = MinLevel
+    def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = 0
+    override def toString = s"Unsupported($showTSType)"
+    def showTSType: Str = s"\"$tp\" at $file, $line, $col"
   }
   
   /** Polarity `pol` being `true` means union; `false` means intersection. */
@@ -393,10 +403,13 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       case (obj1: ObjectTag, obj2: ObjectTag) => obj1.id compare obj2.id
       case (SkolemTag(id1), SkolemTag(id2)) => id1 compare id2
       case (Extruded(_, id1), Extruded(_, id2)) => id1 compare id2
+      case (uns1: Unsupported, uns2: Unsupported) => 0
       case (_: ObjectTag, _: SkolemTag | _: Extruded) => -1
       case (_: SkolemTag | _: Extruded, _: ObjectTag) => 1
       case (_: SkolemTag, _: Extruded) => -1
       case (_: Extruded, _: SkolemTag) => 1
+      case (_, _: UnusableLike) => -1
+      case (_: UnusableLike, _) => 1
     }
   }
   

@@ -1,0 +1,35 @@
+export declare module InterfaceMember {
+  declare trait IFoo {
+    val a: Str
+    declare fun b(x: Num): Num
+    declare fun c(): (false) | (true)
+    declare fun d(x: Str): unit
+  }
+  declare trait II['T] {
+    declare fun test(x: 'T): Num
+  }
+  declare fun create(): {v: Num,}
+  declare fun get(x: {t: Str,}): Str
+  declare trait IEvent {
+    declare fun callback(): (x: Num) => unit
+  }
+  declare trait SearchFunc: ((args0: Str, args1: Str) => (false) | (true)) {}
+  declare trait StringArray {
+    val __index: unsupported["[index: number]: string;", "InterfaceMember.ts", 28, 23]
+  }
+  declare trait Counter: ((args0: Num) => Str) {
+    val interval: Num
+    declare fun reset(): unit
+  }
+  declare trait Simple {
+    val a: Num
+    declare fun b(x: (false) | (true)): Str
+  }
+  declare trait Simple2['T] {
+    val abc: 'T
+  }
+  declare trait Next extends Simple {}
+  declare trait TTT['T] {
+    declare fun ttt(x: 'T): 'T
+  }
+}

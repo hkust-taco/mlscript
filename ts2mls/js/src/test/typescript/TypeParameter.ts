@@ -56,3 +56,6 @@ function fff(p: FFF<string>, s: string) {
 function getFFF(): FFF<number> {
   return new FFF<number>();
 }
+
+type PolyToString = <T>(x: T) => string
+type PolyID = <T>(x: T) => T

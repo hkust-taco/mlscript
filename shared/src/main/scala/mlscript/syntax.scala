@@ -128,6 +128,12 @@ final case class LetS(isRec: Bool, pat: Term, rhs: Term) extends Statement
 final case class DataDefn(body: Term)                    extends Statement
 final case class DatatypeDefn(head: Term, body: Term)    extends Statement
 
+class Import(val path: Str, val weak: Bool)              extends Statement
+
+object Import {
+  def apply(path: Str, weak: Bool): Import = new Import(path, weak)
+}
+
 sealed trait DesugaredStatement extends Statement with DesugaredStatementImpl
 
 sealed trait Terms extends DesugaredStatement
@@ -205,7 +211,7 @@ final case class NuTypeDef(
   superAnnot: Opt[Type],
   thisAnnot: Opt[Type],
   body: TypingUnit
-)(val declareLoc: Opt[Loc], val abstractLoc: Opt[Loc])
+)(val declareLoc: Opt[Loc], val exportLoc: Opt[Loc], val abstractLoc: Opt[Loc])
   extends NuDecl with Statement with Outer {
     def isPlainJSClass: Bool = params.isEmpty
   }
@@ -218,6 +224,7 @@ final case class NuFunDef(
   rhs: Term \/ Type,
 )(
   val declareLoc: Opt[Loc],
+  val exportLoc: Opt[Loc],
   val virtualLoc: Opt[Loc], // Some(Loc) means that the function is modified by keyword `virtual`
   val signature: Opt[NuFunDef],
   val outer: Opt[Outer],

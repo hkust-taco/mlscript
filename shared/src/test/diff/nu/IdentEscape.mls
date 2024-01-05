@@ -1,0 +1,85 @@
+:NewDefs
+
+let id"of" = 42
+fun id"fun"(x: Int) = x + 1
+fun id"declare"(id"if": Int) = id"of" + id"if"
+//│ let of: 42
+//│ fun fun: (x: Int) -> Int
+//│ fun declare: (if: Int) -> Int
+//│ of
+//│    = 42
+
+id"fun"(id"of")
+id"declare"(id"of")
+//│ Int
+//│ res
+//│     = 43
+//│ res
+//│     = 84
+
+let id"if" = 1
+id"if" + 1
+//│ let if: 1
+//│ Int
+//│ if
+//│    = 1
+//│ res
+//│     = 2
+
+
+class Foo(id"class": Int) {
+  fun id"mixin"(x: Int) = id"class" + x
+}
+let foo = Foo(2)
+foo.id"mixin"(3)
+//│ class Foo(class: Int) {
+//│   fun mixin: (x: Int) -> Int
+//│ }
+//│ let foo: Foo
+//│ Int
+//│ foo
+//│     = Foo {}
+//│ res
+//│     = 5
+
+:pe
+id""
+//│ ╔══[PARSE ERROR] empty identifier escaped.
+//│ ║  l.46: 	id""
+//│ ╙──      	^^^^
+//│ ()
+//│ res
+//│     = undefined
+
+:pe
+id"id
+//│ ╔══[LEXICAL ERROR] unfinished identifier escape
+//│ ║  l.55: 	id"id
+//│ ╙──      	^
+//│ ╔══[PARSE ERROR] Unexpected error in expression position
+//│ ║  l.55: 	id"id
+//│ ╙──      	^^^^^^
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.55: 	id"id
+//│ ╙──      	      ^
+//│ ()
+//│ res
+//│     = undefined
+
+class id"of"
+//│ class of {
+//│   constructor()
+//│ }
+
+:ge
+class id"class"
+//│ class class {
+//│   constructor()
+//│ }
+//│ Code generation encountered an error:
+//│   class is a reserved keyword in ECMAScript and can not be used as type name.
+
+let id"$4" = 4
+//│ let $4: 4
+//│ $4
+//│    = 4

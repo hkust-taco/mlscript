@@ -423,10 +423,13 @@ trait NuDeclImpl extends Located { self: NuDecl =>
   val body: Located
   def kind: DeclKind
   val declareLoc: Opt[Loc]
+  val exportLoc: Opt[Loc]
   val abstractLoc: Opt[Loc]
   def isDecl: Bool = declareLoc.nonEmpty
   def isAbstract: Bool = abstractLoc.nonEmpty
   def declStr: Str = if (isDecl) "declare " else ""
+  def isExported: Bool = exportLoc.isDefined
+  def exportStr: Str = if (isExported) "export " else ""
   val nameVar: Var = self match {
     case td: NuTypeDef => td.nme.toVar
     case fd: NuFunDef => fd.nme
@@ -459,7 +462,7 @@ trait NuDeclImpl extends Located { self: NuDecl =>
       }))
       NuFunDef(N, Var("unapply"), N, Nil, L(Lam(
         Tup(N -> Fld(FldFlags.empty, Var("x")) :: Nil),
-        ret)))(N, N, N, N, true)
+        ret)))(N, N, N, N, N, true)
     }
     case _ => N
   }
@@ -828,9 +831,12 @@ trait StatementImpl extends Located { self: Statement =>
   
   lazy val desugared = doDesugar
   private def doDesugar: Ls[Diagnostic] -> Ls[DesugaredStatement] = this match {
-    // case ctor: Constructor =>
-    //   import Message._
-    //   (ErrorReport(msg"constructor must be in a class." -> ctor.toLoc :: Nil, newDefs=true) :: Nil) -> Nil
+    case ctor: Constructor =>
+      import Message._
+      (ErrorReport(msg"constructor must be in a class." -> ctor.toLoc :: Nil, newDefs=true) :: Nil) -> Nil
+    case imp: Import =>
+      import Message._
+      (ErrorReport(msg"unexpected import statement." -> imp.toLoc :: Nil, newDefs=true) :: Nil) -> Nil
     case l @ LetS(isrec, pat, rhs) =>
       val (diags, v, args) = desugDefnPattern(pat, Nil)
       diags -> (Def(isrec, v, L(args.foldRight(rhs)(Lam(_, _))), false).withLocOf(l) :: Nil) // TODO use v, not v.name
@@ -998,6 +1004,7 @@ trait StatementImpl extends Located { self: Statement =>
     case Forall(ps, bod) => ps ::: bod :: Nil
     case Inst(bod) => bod :: Nil
     case Super() => Nil
+    case _: Import => Nil
     case Constructor(params, body) => params :: body :: Nil
     case Eqn(lhs, rhs) => lhs :: rhs :: Nil
     case NuTypeDef(k, nme, tps, ps, ctor, sig, pars, sup, ths, bod) =>
@@ -1019,6 +1026,7 @@ trait StatementImpl extends Located { self: Statement =>
       case n: NuFunDef => if (n.rhs.isLeft) " = " else ": "
       case _: NuTypeDef => " "
     }) + n.showBody
+    case imp: Import => s"${if (imp.weak) "weak " else ""}import ${imp.path}"
   }
 }
 

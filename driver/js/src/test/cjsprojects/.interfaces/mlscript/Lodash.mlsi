@@ -1,0 +1,5 @@
+import "lodash/fp.mlsi"
+export declare module Lodash {
+  fun inc: (x: Int) -> Int
+  unit
+}

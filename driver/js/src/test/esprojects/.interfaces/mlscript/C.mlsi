@@ -1,0 +1,18 @@
+import "./B.mlsi"
+export declare module C {
+  let a: error
+  let b: error
+  unit
+}
+//| ╔══[ERROR] Access to class member not yet supported
+//| ║  l.4: 	let b = A.Foo(0) // not allowed, unless we import "A.mls"
+//| ╙──     	         ^^^^
+//| ╔══[ERROR] Type mismatch in field selection:
+//| ║  l.5: 	console.log(a.x)
+//| ║       	            ^^^
+//| ╟── type `error` does not have field 'x'
+//| ║  l.3: 	  fun foo: error
+//| ║       	           ^^^^^
+//| ╟── but it flows into reference with expected type `{x: ?x}`
+//| ║  l.5: 	console.log(a.x)
+//| ╙──     	            ^

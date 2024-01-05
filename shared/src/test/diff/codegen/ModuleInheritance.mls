@@ -1,0 +1,284 @@
+:NewParser
+:NewDefs
+
+module A {
+  class B(x: Int) {
+    fun add(y: Int) = x + y
+  }
+  class C {}
+}
+//│ module A {
+//│   class B(x: Int) {
+//│     fun add: (y: Int) -> Int
+//│   }
+//│   class C {
+//│     constructor()
+//│   }
+//│ }
+
+:e
+:js
+class C() extends A.B(1)
+class CC() extends A.C
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.21: 	class C() extends A.B(1)
+//│ ╙──      	                  ^^^^^^
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.22: 	class CC() extends A.C
+//│ ╙──      	                   ^^^
+//│ class C()
+//│ class CC()
+//│ // Prelude
+//│ class TypingUnit1 {
+//│   #C;
+//│   #CC;
+//│   constructor() {
+//│   }
+//│   get C() {
+//│     const qualifier = this;
+//│     if (this.#C === undefined) {
+//│       class C extends A.B.class {
+//│         constructor() {
+//│           super(1);
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [];
+//│         }
+//│       };
+//│       this.#C = (() => Object.freeze(new C()));
+//│       this.#C.class = C;
+//│       this.#C.unapply = C.unapply;
+//│     }
+//│     return this.#C;
+//│   }
+//│   get CC() {
+//│     const qualifier = this;
+//│     if (this.#CC === undefined) {
+//│       class CC extends A.C {
+//│         constructor() {
+//│           super();
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [];
+//│         }
+//│       };
+//│       this.#CC = (() => Object.freeze(new CC()));
+//│       this.#CC.class = CC;
+//│       this.#CC.unapply = CC.unapply;
+//│     }
+//│     return this.#CC;
+//│   }
+//│ }
+//│ const typing_unit1 = new TypingUnit1;
+//│ globalThis.C = typing_unit1.C;
+//│ globalThis.CC = typing_unit1.CC;
+//│ // End of generated code
+
+:e
+C().add(3)
+//│ ╔══[ERROR] Type `C` does not contain member `add`
+//│ ║  l.80: 	C().add(3)
+//│ ╙──      	   ^^^^
+//│ error
+//│ res
+//│     = 4
+
+:e
+:js
+module B {
+  class C()
+  class D() extends B.C {
+    val x = 42
+  }
+}
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.92: 	  class D() extends B.C {
+//│ ╙──      	                    ^^^
+//│ module B {
+//│   class C()
+//│   class D() {
+//│     val x: 42
+//│   }
+//│ }
+//│ // Prelude
+//│ class TypingUnit3 {
+//│   #B;
+//│   constructor() {
+//│   }
+//│   get B() {
+//│     const qualifier = this;
+//│     if (this.#B === undefined) {
+//│       class B {
+//│         #C;
+//│         #D;
+//│         constructor() {
+//│         }
+//│         get C() {
+//│           const qualifier1 = this;
+//│           if (this.#C === undefined) {
+//│             class C {
+//│               constructor() {
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [];
+//│               }
+//│             };
+//│             this.#C = (() => Object.freeze(new C()));
+//│             this.#C.class = C;
+//│             this.#C.unapply = C.unapply;
+//│           }
+//│           return this.#C;
+//│         }
+//│         get D() {
+//│           const qualifier1 = this;
+//│           if (this.#D === undefined) {
+//│             class D extends qualifier.B.C.class {
+//│               #x;
+//│               get x() { return this.#x; }
+//│               constructor() {
+//│                 super();
+//│                 this.#x = 42;
+//│                 const x = this.#x;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [];
+//│               }
+//│             };
+//│             this.#D = (() => Object.freeze(new D()));
+//│             this.#D.class = D;
+//│             this.#D.unapply = D.unapply;
+//│           }
+//│           return this.#D;
+//│         }
+//│       }
+//│       this.#B = new B();
+//│       this.#B.class = B;
+//│     }
+//│     return this.#B;
+//│   }
+//│ }
+//│ const typing_unit3 = new TypingUnit3;
+//│ globalThis.B = typing_unit3.B;
+//│ // End of generated code
+
+:e
+let dd = B.D()
+dd.x
+//│ ╔══[ERROR] Access to class member not yet supported
+//│ ║  l.169: 	let dd = B.D()
+//│ ╙──       	          ^^
+//│ let dd: error
+//│ error
+//│ dd
+//│    = D {}
+//│ res
+//│     = 42
+
+:e
+:js
+module C {
+  module D {
+    class E()
+  }
+  class F(val x: Int) extends D.E
+}
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.187: 	  class F(val x: Int) extends D.E
+//│ ╙──       	                              ^^^
+//│ module C {
+//│   module D {
+//│     class E()
+//│   }
+//│   class F(x: Int)
+//│ }
+//│ // Prelude
+//│ class TypingUnit5 {
+//│   #C;
+//│   constructor() {
+//│   }
+//│   get C() {
+//│     const qualifier = this;
+//│     if (this.#C === undefined) {
+//│       class C {
+//│         #F;
+//│         #D;
+//│         constructor() {
+//│         }
+//│         get D() {
+//│           const qualifier1 = this;
+//│           if (this.#D === undefined) {
+//│             class D {
+//│               #E;
+//│               constructor() {
+//│               }
+//│               get E() {
+//│                 const qualifier2 = this;
+//│                 if (this.#E === undefined) {
+//│                   class E {
+//│                     constructor() {
+//│                     }
+//│                   static
+//│                     unapply(x) {
+//│                       return [];
+//│                     }
+//│                   };
+//│                   this.#E = (() => Object.freeze(new E()));
+//│                   this.#E.class = E;
+//│                   this.#E.unapply = E.unapply;
+//│                 }
+//│                 return this.#E;
+//│               }
+//│             }
+//│             this.#D = new D();
+//│             this.#D.class = D;
+//│           }
+//│           return this.#D;
+//│         }
+//│         get F() {
+//│           const qualifier1 = this;
+//│           if (this.#F === undefined) {
+//│             class F extends qualifier1.D.E.class {
+//│               #x;
+//│               get x() { return this.#x; }
+//│               constructor(x) {
+//│                 super();
+//│                 this.#x = x;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x];
+//│               }
+//│             };
+//│             this.#F = ((x) => Object.freeze(new F(x)));
+//│             this.#F.class = F;
+//│             this.#F.unapply = F.unapply;
+//│           }
+//│           return this.#F;
+//│         }
+//│       }
+//│       this.#C = new C();
+//│       this.#C.class = C;
+//│     }
+//│     return this.#C;
+//│   }
+//│ }
+//│ const typing_unit5 = new TypingUnit5;
+//│ globalThis.C = typing_unit5.C;
+//│ // End of generated code
+
+:e
+let fff = C.F(24)
+fff.x
+//│ ╔══[ERROR] Access to class member not yet supported
+//│ ║  l.274: 	let fff = C.F(24)
+//│ ╙──       	           ^^
+//│ let fff: error
+//│ error
+//│ fff
+//│     = F {}
+//│ res
+//│     = 24

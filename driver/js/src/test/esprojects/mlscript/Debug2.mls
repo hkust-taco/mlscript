@@ -1,0 +1,5 @@
+//:d
+
+import "./Debug3.mls"
+
+let y = 42

@@ -1,0 +1,40 @@
+import "./Mixin2.mlsi"
+export declare module Mixin1 {
+  class Neg[A](expr: A)
+  mixin EvalNeg() {
+    super: {eval: 'a -> 'b}
+    this: {eval: 'c -> Int}
+    fun eval: (Neg['c] | Object & 'a & ~#Neg) -> (Int | 'b)
+  }
+  module MyLang {
+    fun eval: (Neg['d] | Object & ~#Neg) -> Int
+  }
+  fun show: unit
+  unit
+  where
+    'd <: Neg['d] | Object & ~#Neg
+}
+//| ╔══[ERROR] Unsupported parent specification
+//| ║  l.11: 	module MyLang extends Mixin2.EvalBase, EvalNeg
+//| ╙──      	                      ^^^^^^^^^^^^^^^
+//| ╔══[ERROR] Type mismatch in type declaration:
+//| ║  l.11: 	module MyLang extends Mixin2.EvalBase, EvalNeg
+//| ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//| ╟── Object of type `anything` does not have field 'eval'
+//| ║  l.11: 	module MyLang extends Mixin2.EvalBase, EvalNeg
+//| ║        	                      ^
+//| ╟── Note: constraint arises from field selection:
+//| ║  l.8: 	    else super.eval(e)
+//| ║       	         ^^^^^^^^^^
+//| ╟── from reference:
+//| ║  l.8: 	    else super.eval(e)
+//| ╙──     	         ^^^^^
+//| ╔══[ERROR] Access to class member not yet supported
+//| ║  l.14: 	  let program = Mixin2.Add(Mixin2.Lit(48), Neg(Mixin2.Lit(6)))
+//| ╙──      	                      ^^^^
+//| ╔══[ERROR] Access to class member not yet supported
+//| ║  l.14: 	  let program = Mixin2.Add(Mixin2.Lit(48), Neg(Mixin2.Lit(6)))
+//| ╙──      	                                 ^^^^
+//| ╔══[ERROR] Access to class member not yet supported
+//| ║  l.14: 	  let program = Mixin2.Add(Mixin2.Lit(48), Neg(Mixin2.Lit(6)))
+//| ╙──      	                                                     ^^^^

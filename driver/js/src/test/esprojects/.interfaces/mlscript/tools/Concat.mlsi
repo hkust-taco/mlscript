@@ -1,0 +1,4 @@
+export declare module Concat {
+  fun concat2: (Str, Str) -> Str
+  fun concat3: (Str, Str, Str) -> Str
+}

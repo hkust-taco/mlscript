@@ -60,11 +60,7 @@ class DiffTests
 
   // scala test will not execute a test if the test class has constructor parameters.
   // override this to get the correct paths of test files.
-  protected lazy val files = allFiles.filter { file =>
-      val fileName = file.baseName
-      // validExt(file.ext) && filter(fileName)
-      validExt(file.ext) && filter(file.relativeTo(pwd))
-  }
+  protected lazy val files = gitHelper.getFiles(allFiles)
   
   val timeLimit = TimeLimit
   
@@ -338,59 +334,16 @@ class DiffTests
                 src match {
                   case Diagnostic.Lexing =>
                     totalParseErrors += 1
-                    s"╔══[LEXICAL ERROR] "
                   case Diagnostic.Parsing =>
                     totalParseErrors += 1
-                    s"╔══[PARSE ERROR] "
                   case _ => // TODO customize too
                     totalTypeErrors += 1
-                    s"╔══[ERROR] "
                 }
               case WarningReport(msg, loco, src) =>
                 totalWarnings += 1
-                s"╔══[WARNING] "
             }
-            val lastMsgNum = diag.allMsgs.size - 1
-            var globalLineNum = blockLineNum  // solely used for reporting useful test failure messages
-            diag.allMsgs.zipWithIndex.foreach { case ((msg, loco), msgNum) =>
-              val isLast = msgNum =:= lastMsgNum
-              val msgStr = msg.showIn(sctx)
-              if (msgNum =:= 0) output(headStr + msgStr)
-              else output(s"${if (isLast && loco.isEmpty) "╙──" else "╟──"} ${msgStr}")
-              if (loco.isEmpty && diag.allMsgs.size =:= 1) output("╙──")
-              loco.foreach { loc =>
-                val (startLineNum, startLineStr, startLineCol) =
-                  loc.origin.fph.getLineColAt(loc.spanStart)
-                if (globalLineNum =:= 0) globalLineNum += startLineNum - 1
-                val (endLineNum, endLineStr, endLineCol) =
-                  loc.origin.fph.getLineColAt(loc.spanEnd)
-                var l = startLineNum
-                var c = startLineCol
-                while (l <= endLineNum) {
-                  val globalLineNum = loc.origin.startLineNum + l - 1
-                  val relativeLineNum = globalLineNum - blockLineNum + 1
-                  val shownLineNum =
-                    if (showRelativeLineNums && relativeLineNum > 0) s"l.+$relativeLineNum"
-                    else "l." + globalLineNum
-                  val prepre = "║  "
-                  val pre = s"$shownLineNum: "
-                  val curLine = loc.origin.fph.lines(l - 1)
-                  output(prepre + pre + "\t" + curLine)
-                  val tickBuilder = new StringBuilder()
-                  tickBuilder ++= (
-                    (if (isLast && l =:= endLineNum) "╙──" else prepre)
-                    + " " * pre.length + "\t" + " " * (c - 1))
-                  val lastCol = if (l =:= endLineNum) endLineCol else curLine.length + 1
-                  while (c < lastCol) { tickBuilder += ('^'); c += 1 }
-                  if (c =:= startLineCol) tickBuilder += ('^')
-                  output(tickBuilder.toString)
-                  c = 1
-                  l += 1
-                }
-              }
-            }
-            if (diag.allMsgs.isEmpty) output("╙──")
-            
+            val globalLineNum = blockLineNum
+            Diagnostic.report(diag, output, blockLineNum, showRelativeLineNums, newDefs)
             if (!mode.fixme) {
               if (!allowTypeErrors
                   && !mode.expectTypeErrors && diag.isInstanceOf[ErrorReport] && diag.source =:= Diagnostic.Typing)
@@ -1098,52 +1051,6 @@ object DiffTests {
   
   private val pwd = os.pwd
   private val dir = pwd/"shared"/"src"/"test"/"diff"
-  
   private val allFiles = os.walk(dir).filter(_.toIO.isFile)
-  
-  private val validExt = Set("fun", "mls")
-  
-  // Aggregate unstaged modified files to only run the tests on them, if there are any
-  private val modified: Set[os.RelPath] =
-    try os.proc("git", "status", "--porcelain", dir).call().out.lines().iterator.flatMap { gitStr =>
-      println(" [git] " + gitStr)
-      val prefix = gitStr.take(2)
-      val filePath = os.RelPath(gitStr.drop(3))
-      if (prefix =:= "A " || prefix =:= "M " || prefix =:= "R " || prefix =:= "D ")
-        N // * Disregard modified files that are staged
-      else S(filePath)
-    }.toSet catch {
-      case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
-      Set.empty
-    }
-  
-  // Allow overriding which specific tests to run, sometimes easier for development:
-  private val focused = Set[Str](
-    // "LetRec"
-    // "Ascribe",
-    // "Repro",
-    // "RecursiveTypes",
-    // "Simple",
-    // "Inherit",
-    // "Basics",
-    // "Paper",
-    // "Negations",
-    // "RecFuns",
-    // "With",
-    // "Annoying",
-    // "Tony",
-    // "Lists",
-    // "Traits",
-    // "BadTraits",
-    // "TraitMatching",
-    // "Subsume",
-    // "Methods",
-  ).map(os.RelPath(_))
-  // private def filter(name: Str): Bool =
-  def filter(file: os.RelPath): Bool = {
-    if (focused.nonEmpty) focused(file) else modified(file) || modified.isEmpty &&
-      true
-      // name.startsWith("new/")
-      // file.segments.toList.init.lastOption.contains("parser")
-  }
+  private val gitHelper = JVMGitHelper(pwd, dir)
 }

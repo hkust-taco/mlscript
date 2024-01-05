@@ -8,6 +8,7 @@ import mlscript.compiler.debug.TreeDebug
 import mlscript.compiler.mono.Monomorph
 import mlscript.compiler.printer.ExprPrinter
 import mlscript.compiler.mono.MonomorphError
+import mlscript.JVMGitHelper
 
 class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*
@@ -41,10 +42,7 @@ class DiffTestCompiler extends DiffTests {
     }
     outputBuilder.toString().linesIterator.toList
   
-  override protected lazy val files = allFiles.filter { file =>
-      val fileName = file.baseName
-      validExt(file.ext) && filter(file.relativeTo(pwd))
-  }
+  override protected lazy val files = gitHelper.getFiles(allFiles)
 }
 
 object DiffTestCompiler {
@@ -55,7 +53,5 @@ object DiffTestCompiler {
   private val allFiles = os.walk(dir).filter(_.toIO.isFile)
   
   private val validExt = Set("fun", "mls")
-
-  private def filter(file: os.RelPath) = DiffTests.filter(file)
-  
+  private val gitHelper = JVMGitHelper(pwd, dir)
 }

@@ -1,0 +1,4 @@
+import "./A.mls"
+
+// FIXME: access to class member not yet supported
+export fun foo = A.Foo(12)

@@ -1,0 +1,5 @@
+import "./tools/Inc.mls"
+
+export fun hello(x: Int) = log(["hello!", Inc.inc(x)])
+
+hello(114513)
