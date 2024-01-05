@@ -723,7 +723,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   }
   
   // TODO also prevent rebinding of "not"
-  val reservedVarNames: Set[Str] = Set("|", "&", "~", /* ",", */ "neg", "and", "or", "is")
+  val reservedVarNames: Set[Str] = Set("|", "&", "~", "neg", "and", "or", "is")
   
   object ValidVar {
     def unapply(v: Var)(implicit raise: Raise): S[Str] = S {

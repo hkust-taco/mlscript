@@ -554,7 +554,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           case _ => t
         }
         yeetSpaces match {
-          // case (KEYWORD(";"), _) :: _ => consume; finalTerm :: block
           case (SEMI, _) :: _ => consume; finalTerm :: block
           case (NEWLINE, _) :: _ => consume; finalTerm :: block
           case _ => finalTerm :: Nil
@@ -652,8 +651,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             yeetSpaces match {
               case (KEYWORD("=>"), l1) :: _ =>
                 consume
-                // val e = expr(0)
-                // val e = expr(NewParser.prec('.'))
                 val e = expr(NewParser.opPrec("=>")._2)
                 Lam(Tup(res), e)
               case (IDENT("->", true), l1) :: _ =>
@@ -665,22 +662,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                   case Nil =>
                     UnitLit(true)
                   case _ =>
-                    // err((
-                    //   msg"Expected '=>' or '->' after this parameter section" -> S(loc) :: Nil))
-                    // Tup(fs)
-                    // Blk(res.map {
-                    //   case N -> Fld(FldFlags.empty, t) => t
-                    //   case _ => ???
-                    // })
                     res.map {
-                      // case (N -> Fld(FldFlags.empty, t), acc) => App(Var(","), PlainTup(t, acc))
-                      // case (f, acc) => ???
                       case N -> Fld(FldFlags.empty, t) => t
-                      // case f => ???
                       case no -> Fld(_, t) =>
                         err((msg"Illegal position for field specification" -> Loc(no.toList :+ t) :: Nil))
                         t
-                    }.reduceRight((t, acc) => App(Var(",").withLoc(Loc(t :: acc :: Nil)), PlainTup(t, acc)))
+                    }.reduceRight((t, acc) =>
+                      App(Var(",").withLoc(Loc(t :: acc :: Nil)), PlainTup(t, acc)))
                 }
             }
           case _ =>
@@ -715,12 +703,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         consume
         val bs = bindings(Nil)
         val body = yeetSpaces match {
-          // case (KEYWORD("in" | ";"), _) :: _ =>
-          // case (KEYWORD(";"), _) :: _ =>
           case (KEYWORD("in") | SEMI, _) :: _ =>
             consume
             exprOrIf(0)
-            // exprOrIf(1)
           case (NEWLINE, _) :: _ =>
             consume
             exprOrIf(0)
@@ -835,13 +820,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   
   final def exprCont(acc: Term, prec: Int, allowNewlines: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, s"`$acc`", allowNewlines) { l =>
     cur match {
-      // case (KEYWORD(opStr @ ","), l0) :: _ if prec === 0 =>
       case (COMMA, l0) :: _ if prec === 0 =>
-      // case (COMMA, l0) :: _ if prec <= 1 =>
-        // ???
         consume
-        val rhs = expr(prec) // TODO exprOrIf?
-        // R(Blk(acc :: rhs :: Nil))
+        val rhs = expr(prec) // TODO support exprOrIf for comma operators
         R(App(Var(",").withLoc(S(l0)), PlainTup(acc, rhs)))
       case (KEYWORD(opStr @ "=>"), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>
         consume
@@ -878,8 +859,6 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                     err(msg"record literal expected here; found ${rhs.describe}" -> rhs.toLoc :: Nil)
                     acc
                 }
-              // case ";" =>
-              //   Blk(acc :: rhs :: Nil)
               case _ =>
                 if (newDefs) App(v, PlainTup(acc, rhs))
                 else App(App(v, PlainTup(acc)), PlainTup(rhs))

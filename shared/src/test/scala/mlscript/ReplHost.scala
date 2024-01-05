@@ -1,7 +1,6 @@
 package mlscript
 
-import mlscript.utils._
-import mlscript.utils.shorthands._
+import mlscript.utils._, shorthands._
 
 /**
  * A helper class to manipulate an interactive Node.js process.
@@ -32,11 +31,8 @@ final case class ReplHost() {
   private def collectUntilPrompt(): ReplHost.Reply = {
     val buffer = new StringBuilder()
     while (!buffer.endsWith("\n> ")) {
-      // if (!stdout.()) lastWords(s"ReplHost ")
       val c = stdout.read()
       if (c === -1) lastWords(s"ReplHost could not read more from NodeJS stdout.")
-      // println(c, c.toChar)
-      // if (!stdout.ready()) lastWords(s"ReplHost ")
       buffer.append(c.toChar)
     }
     // Remove the trailing `"\n> "`
