@@ -47,8 +47,8 @@ class Foo {
 //│ ╔══[ERROR] Type `#Foo` does not contain member `x`
 //│ ║  l.44: 	  this: { x: 'a }
 //│ ╙──      	          ^
-//│ ╔══[WARNING] Expression in statement position should have type `unit`.
-//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╔══[WARNING] Expression in statement position should have type `()`.
+//│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
 //│ ╟── Type mismatch in type ascription:
 //│ ║  l.44: 	  this: { x: 'a }
 //│ ║        	  ^^^^
@@ -72,8 +72,8 @@ class Test { this: { x: Int}; fun test = this.x }
 //│ ╔══[ERROR] Type `#Test` does not contain member `x`
 //│ ║  l.68: 	class Test { this: { x: Int}; fun test = this.x }
 //│ ╙──      	                     ^
-//│ ╔══[WARNING] Expression in statement position should have type `unit`.
-//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╔══[WARNING] Expression in statement position should have type `()`.
+//│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
 //│ ╟── Type mismatch in type ascription:
 //│ ║  l.68: 	class Test { this: { x: Int}; fun test = this.x }
 //│ ║        	             ^^^^

@@ -226,8 +226,8 @@ fun f =
 :w
 fun f =
   succ(0); 0
-//│ ╔══[WARNING] Expression in statement position should have type `unit`.
-//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╔══[WARNING] Expression in statement position should have type `()`.
+//│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
 //│ ╟── Type mismatch in application:
 //│ ║  l.228: 	  succ(0); 0
 //│ ║         	  ^^^^^^^

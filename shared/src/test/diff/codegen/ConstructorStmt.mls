@@ -147,8 +147,8 @@ class Foo {
 //│ ╔══[ERROR] Type `#Foo` does not contain member `x`
 //│ ║  l.145: 	  this: { x: Int }
 //│ ╙──       	          ^
-//│ ╔══[WARNING] Expression in statement position should have type `unit`.
-//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╔══[WARNING] Expression in statement position should have type `()`.
+//│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
 //│ ╟── Type mismatch in type ascription:
 //│ ║  l.145: 	  this: { x: Int }
 //│ ║         	  ^^^^
@@ -191,8 +191,8 @@ class Bar {
 //│ ╔══[ERROR] Type `#Bar` does not contain member `x`
 //│ ║  l.186: 	  super: { x: Int }
 //│ ╙──       	           ^
-//│ ╔══[WARNING] Expression in statement position should have type `unit`.
-//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╔══[WARNING] Expression in statement position should have type `()`.
+//│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
 //│ ╟── Type mismatch in type ascription:
 //│ ║  l.186: 	  super: { x: Int }
 //│ ║         	  ^^^^^
