@@ -62,7 +62,7 @@ object NewParser {
     case "or" => (2, 2)
     case "=>" =>
       // * The lambda operator is special:
-      // *  it should associate veyr strongly on the left and very loosely on the right
+      // *  it should associate very strongly on the left and very loosely on the right
       // *  so that we can write things like `f() |> x => x is 0` ie `(f()) |> (x => (x is 0))`
       val eqPrec = prec('.') // * We pick the tightest precedence
       (eqPrec, 1)
