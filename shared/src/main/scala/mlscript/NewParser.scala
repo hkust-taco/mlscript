@@ -822,6 +822,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     cur match {
       case (COMMA, l0) :: _ if prec === 0 =>
         consume
+        yeetSpaces match {
+          case (NEWLINE, _) :: _ => consume
+          case _ =>
+        }
         val rhs = expr(prec) // TODO support exprOrIf for comma operators
         R(App(Var(",").withLoc(S(l0)), PlainTup(acc, rhs)))
       case (KEYWORD(opStr @ "=>"), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>

@@ -9,23 +9,13 @@ b
 a,
 b
 //│ |a|,|↵|b|
-//│ ╔══[PARSE ERROR] Unexpected newline in expression position
-//│ ║  l.9: 	a,
-//│ ║       	  ^
-//│ ║  l.10: 	b
-//│ ╙──      	
 //│ Parsed: {,(a, b,)}
 
 a,
 b,
 //│ |a|,|↵|b|,|
-//│ ╔══[PARSE ERROR] Unexpected newline in expression position
-//│ ║  l.19: 	a,
-//│ ║        	  ^
-//│ ║  l.20: 	b,
-//│ ╙──      	
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.20: 	b,
+//│ ║  l.15: 	b,
 //│ ╙──      	  ^
 //│ Parsed: {,(a, ,(b, undefined,),)}
 
@@ -33,16 +23,6 @@ a,
 b,
 c
 //│ |a|,|↵|b|,|↵|c|
-//│ ╔══[PARSE ERROR] Unexpected newline in expression position
-//│ ║  l.32: 	a,
-//│ ║        	  ^
-//│ ║  l.33: 	b,
-//│ ╙──      	
-//│ ╔══[PARSE ERROR] Unexpected newline in expression position
-//│ ║  l.33: 	b,
-//│ ║        	  ^
-//│ ║  l.34: 	c
-//│ ╙──      	
 //│ Parsed: {,(a, ,(b, c,),)}
 
 foo
@@ -50,11 +30,11 @@ foo
   b
 //│ |foo|→|a|↵|b|←|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.48: 	foo
+//│ ║  l.28: 	foo
 //│ ║        	^^^
-//│ ║  l.49: 	  a
+//│ ║  l.29: 	  a
 //│ ║        	^^^
-//│ ║  l.50: 	  b
+//│ ║  l.30: 	  b
 //│ ╙──      	^^^
 //│ Parsed: {foo({a; b},)}
 
@@ -85,9 +65,9 @@ foo(
 )
 //│ |foo|(|→|a|←|→|b|←|↵|)|
 //│ ╔══[PARSE ERROR] Unexpected indented block here
-//│ ║  l.84: 	  b
+//│ ║  l.64: 	  b
 //│ ║        	^^^
-//│ ║  l.85: 	)
+//│ ║  l.65: 	)
 //│ ╙──      	^
 //│ Parsed: {foo(a,)}
 
@@ -98,10 +78,10 @@ foo of
   b
 //│ |foo| |#of|→|a|↵|#fun| |f| |#=| |1|↵|b|←|
 //│ ╔══[PARSE ERROR] Unexpected 'fun' keyword in expression position
-//│ ║  l.97: 	  fun f = 1
+//│ ║  l.77: 	  fun f = 1
 //│ ╙──      	  ^^^
 //│ ╔══[PARSE ERROR] Unexpected '=' here
-//│ ║  l.97: 	  fun f = 1
+//│ ║  l.77: 	  fun f = 1
 //│ ╙──      	        ^
 //│ Parsed: {foo({a; f},)}
 
@@ -132,11 +112,11 @@ foo of
   c
 //│ |foo| |#of|→|a|↵|boo|→|x|↵|y|←|↵|c|←|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.129: 	  boo
+//│ ║  l.109: 	  boo
 //│ ║         	  ^^^
-//│ ║  l.130: 	    x
+//│ ║  l.110: 	    x
 //│ ║         	^^^^^
-//│ ║  l.131: 	    y
+//│ ║  l.111: 	    y
 //│ ╙──       	^^^^^
 //│ Parsed: {foo({a; boo({x; y},); c},)}
 
@@ -198,7 +178,7 @@ a = 1; log(a)
 f(a) = 1
 //│ |f|(|a|)| |#=| |1|
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' instead
-//│ ║  l.198: 	f(a) = 1
+//│ ║  l.178: 	f(a) = 1
 //│ ╙──       	     ^
 //│ Parsed: {f(a,)}
 
