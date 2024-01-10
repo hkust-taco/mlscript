@@ -891,7 +891,7 @@ class Der1 extends Base[Int] { fun f(x) = x + 1 }
 class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [x, y] }
 //│ class Der2[A, B] extends Base {
 //│   constructor()
-//│   fun f: forall 'a 'b. (['b, 'a]) -> ['b, 'a]
+//│   fun f: forall 'a 'b. (['a, 'b]) -> ['a, 'b]
 //│ }
 
 :e
@@ -1034,7 +1034,7 @@ class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ╙──        	           ^
 //│ class Der2[A, B] extends Base {
 //│   constructor()
-//│   fun f: forall 'a 'b. (['b, 'a]) -> ['a, 'b]
+//│   fun f: forall 'a 'b. (['a, 'b]) -> ['b, 'a]
 //│ }
 
 trait Ta[T] {

@@ -303,7 +303,7 @@ module TestElim extends Eliminate
 //│ }
 //│ where
 //│   'a <: Intersect['a] | Object & 'b & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | Outside['a & (Object & ~#Outside | Outside['a])] | Scale['a] | Translate['a] | Union['a]
-//│   'b :> Outside['b] | Union['b] | Intersect['b] | Translate['b] | Scale['b]
+//│   'b :> Union['b] | Intersect['b] | Translate['b] | Scale['b] | Outside['b]
 
 TestElim.eliminate(Outside(Outside(Univ())))
 //│ 'a
@@ -315,7 +315,7 @@ TestElim.eliminate(Outside(Outside(Univ())))
 TestElim.eliminate(circles)
 //│ 'a
 //│   where
-//│     'a :> Circle | Translate[Circle | 'a] | Scale[Circle | 'a] | Outside[Circle | 'a] | Union[Circle | 'a] | Intersect['a]
+//│     'a :> Circle | Scale[Circle | 'a] | Outside[Circle | 'a] | Union[Circle | 'a] | Intersect['a] | Translate[Circle | 'a]
 //│ res
 //│     = Union {}
 

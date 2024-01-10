@@ -51,7 +51,7 @@ class BaseImpl[A]() extends ArraysImpl[A, A] {
     fun fold  (r, b, f) = f(r)(b)
 }
 //│ class BaseImpl[A]() extends ArraysImpl {
-//│   fun fold: forall 'a 'b 'c. ('b, 'c, 'b -> 'c -> 'a) -> 'a
+//│   fun fold: forall 'a 'b 'c. ('a, 'b, 'a -> 'b -> 'c) -> 'c
 //│   fun init: forall 'd. 'd -> 'd
 //│   fun sub: forall 'e. ('e, anything) -> 'e
 //│   fun update: forall 'f. (anything, anything, 'f) -> 'f

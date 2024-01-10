@@ -64,7 +64,7 @@ def base: Arrays['a]
 // * so we do not need first-class parametric polymorphism to type check the definition.
 def base f = f baseImpl
 //│ ({
-//│   fold: forall 'a 'b 'c. ('a -> 'b -> 'c) -> 'b -> 'a -> 'c,
+//│   fold: forall 'a 'b 'c. ('c -> 'a -> 'b) -> 'a -> 'c -> 'b,
 //│   init: forall 'd. 'd -> 'd,
 //│   sub: forall 'e. 'e -> anything -> 'e,
 //│   update: anything -> anything -> (forall 'f. 'f -> 'f)
@@ -187,7 +187,7 @@ def step (arr: Arrays['a]) = arr helper
 //│ Arrays['a] -> error
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
-//│ ╔══[ERROR] Subtyping constraint of the form `Arrays['a] <: (forall 'a0 'rep. ArraysImpl['a0, 'rep] -> (forall ?a 'b 'res. ArraysImplConsumer['b, 'res] -> ?a)) -> ?b` took too many steps and ran out of fuel (10000)
+//│ ╔══[ERROR] Subtyping constraint of the form `Arrays['a] <: (forall 'a0 'rep. ArraysImpl['a0, 'rep] -> (forall ?a 'res 'b. ArraysImplConsumer['b, 'res] -> ?a)) -> ?b` took too many steps and ran out of fuel (10000)
 //│ ║  l.186: 	def step (arr: Arrays['a]) = arr helper
 //│ ║         	                             ^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -386,7 +386,7 @@ def helper = forall 'a 'rep. fun (impl: ArraysImpl['a, 'rep]) -> fun (k: ArraysI
 //│       = [Function: helper11]
 
 def step arr = arr helper
-//│ ((forall 'rep 'a. ArraysImpl['a, 'rep] -> (forall 'b. ArraysImplConsumer['a, 'b] -> 'b)) -> 'c) -> 'c
+//│ ((forall 'a 'rep. ArraysImpl['a, 'rep] -> (forall 'b. ArraysImplConsumer['a, 'b] -> 'b)) -> 'c) -> 'c
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step12]
@@ -583,19 +583,19 @@ def s arr (k: ArraysImplConsumer['a, 'rep]) = arr (fun impl -> k (stepImpl_ty im
 // * We can see it shouldn't be simplified to nothing:
 :ns
 s
-//│ res: forall 'b 'rep 'a 'a0 'c. 'c -> (forall 'd 'a1 'rep0. ArraysImplConsumer['a1, 'rep0] -> 'd)
+//│ res: forall 'b 'a 'a0 'rep 'c. 'c -> (forall 'd 'a1 'rep0. ArraysImplConsumer['a1, 'rep0] -> 'd)
 //│   where
 //│     'd :> 'b
 //│     'rep0 <: 'rep
-//│     'a1 :> 'a
-//│         <: 'a0
-//│     'c <: (forall 'r 'e 'a2 'f. 'e -> 'f) -> 'b
+//│     'a1 :> 'a0
+//│         <: 'a
+//│     'c <: (forall 'e 'a2 'f 'r. 'e -> 'f) -> 'b
 //│     'f :> 'rep
 //│     'e <: ArraysImpl['a2, 'r]
-//│     'a2 :> 'a0
-//│         <: 'a
-//│     'a0 <: 'a
+//│     'a2 :> 'a
+//│         <: 'a0
 //│     'a <: 'a0
+//│     'a0 <: 'a
 //│    = [Function: s]
 
 // * BTW: this doesn't work (same reason as before: k needs an annotation)

@@ -399,7 +399,7 @@ E q = q id
 // shallow (not (not true))        -- Shallow encoding.
 // λid.id(λb t f.b f t)(id(λb t f.b f t)(λx y.x))
 sh id = (id not) ((id not) tru)
-//│ sh: ((forall 'a 'b 'c. ('c -> 'a -> 'b) -> 'a -> 'c -> 'b) -> ('d -> 'e & (forall 'f. 'f -> anything -> 'f) -> 'd)) -> 'e
+//│ sh: ((forall 'a 'b 'c. ('b -> 'c -> 'a) -> 'c -> 'b -> 'a) -> ('d -> 'e & (forall 'f. 'f -> anything -> 'f) -> 'd)) -> 'e
 //│   = [Function: sh]
 
 // E[forall X.X->X->X](shallow (not( not true)))

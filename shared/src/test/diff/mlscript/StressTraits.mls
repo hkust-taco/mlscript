@@ -160,7 +160,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 82
 //│ annoying  calls  : 90
-//│ subtyping calls  : 3988
+//│ subtyping calls  : 4004
 
 
 // ====== 4 ====== //
@@ -226,7 +226,7 @@ foo (arg with { x = 1; y = 2; z = 3 })
 //│ res: error
 //│ constrain calls  : 77
 //│ annoying  calls  : 128
-//│ subtyping calls  : 4785
+//│ subtyping calls  : 4801
 
 
 // ====== 5 ====== //
@@ -257,7 +257,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 106
 //│ annoying  calls  : 131
-//│ subtyping calls  : 5581
+//│ subtyping calls  : 5565
 
 
 // ====== 6 ====== //
@@ -388,6 +388,6 @@ foo arg
 //│ res: error
 //│ constrain calls  : 118
 //│ annoying  calls  : 131
-//│ subtyping calls  : 6726
+//│ subtyping calls  : 6710
 
 

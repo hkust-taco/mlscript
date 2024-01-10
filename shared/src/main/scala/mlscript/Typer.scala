@@ -283,6 +283,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     if (funkyTuples) ty else TupleType((N, ty.toUpper(ty.prov) ) :: Nil)(noProv)
   def pair(ty1: ST, ty2: ST): ST =
     TupleType(N -> ty1.toUpper(ty1.prov) :: N -> ty2.toUpper(ty2.prov) :: Nil)(noProv)
+  private val sharedVar = freshVar(noProv, N)(1)
   val builtinBindings: Bindings = {
     val tv = freshVar(noProv, N)(1)
     import FunctionType.{ apply => fun }
@@ -339,7 +340,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       },
       "error" -> BotType,
       "," -> {
-        val v = freshVar(noProv, N)(1)
+        val v = sharedVar
         PolymorphicType(MinLevel, fun(TupleType(N -> TopType.toUpper(provTODO) :: N -> v.toUpper(provTODO) :: Nil)(noProv), v)(noProv))
       },
       "+" -> intBinOpTy,
@@ -353,7 +354,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       ">=" -> numberBinPred,
       "==" -> numberBinPred,
       "===" -> {
-        val v = freshVar(noProv, N)(1)
+        val v = sharedVar
         val eq = TypeRef(TypeName("Eql"), v :: Nil)(noProv)
         PolymorphicType(MinLevel, fun(pair(eq, v), BoolType)(noProv))
       },
