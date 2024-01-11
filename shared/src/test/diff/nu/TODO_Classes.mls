@@ -214,8 +214,8 @@ class OopsLit() extends Expr[Bool]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `#OopsLit` does not match type `BoolLit | IntLit`
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.199: 	abstract class Expr[A]: IntLit | BoolLit {}
-//│ ╙──       	                        ^^^^^^^^^^^^^^^^
+//│ ║  l.199: 	abstract class Expr[A]: (IntLit | BoolLit) {}
+//│ ╙──       	                        ^^^^^^^^^^^^^^^^^^
 //│ class OopsLit() extends Expr
 
 fun test(a) = if a is

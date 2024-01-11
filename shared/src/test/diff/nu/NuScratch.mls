@@ -2,12 +2,10 @@
 
 
 
-class C0: C1 | C2
+abstract class C0: C1 | C2
 module C1 extends C0
 class C2() extends C0
-//│ class C0: C1 | C2 {
-//│   constructor()
-//│ }
+//│ abstract class C0: C1 | C2
 //│ module C1 extends C0
 //│ class C2() extends C0
 
@@ -21,14 +19,18 @@ fun foo(x: C0) = x : C1 | C2
 
 
 
-class Foo(): Int
-//│ class Foo(): Int
+abstract class Foo(): Int
+//│ abstract class Foo(): Int
 
 
 fun foo(x: Foo) = x : Int
 //│ fun foo: (x: Foo) -> Int
 
+:e
 let f = Foo() : Foo
+//│ ╔══[ERROR] Class Foo is abstract and cannot be instantiated
+//│ ║  l.30: 	let f = Foo() : Foo
+//│ ╙──      	        ^^^
 //│ let f: Foo
 //│ f
 //│   = Foo {}
@@ -53,7 +55,7 @@ f : Int
 //│ | | | CONSTRAIN Foo <! Int
 //│ | | |   where 
 //│ | | | 0. C Foo <! Int    (0)
-//│ | | | | 0. C (#Foo<Object> & ⊤..Int) <! #Int<Object,Num>    (2)
+//│ | | | | 0. C (#Foo<Object> & Int) <! #Int<Object,Num>    (2)
 //│ | | | | | Already a subtype by <:<
 //│ | | 0. : Int
 //│ | : Some(Int)
@@ -66,12 +68,18 @@ f : Int
 
 // FIXME
 Foo() + 1
+//│ ╔══[ERROR] Class Foo is abstract and cannot be instantiated
+//│ ║  l.71: 	Foo() + 1
+//│ ╙──      	^^^
 //│ Int
 //│ res
 //│     = '[object Object]1'
 
 // FIXME
 (Foo() : Foo) + 1
+//│ ╔══[ERROR] Class Foo is abstract and cannot be instantiated
+//│ ║  l.80: 	(Foo() : Foo) + 1
+//│ ╙──      	 ^^^
 //│ Int
 //│ res
 //│     = '[object Object]1'
@@ -81,11 +89,18 @@ Foo() + 1
 // FIXME
 module Foo: Int
 Foo + 1
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.91: 	module Foo: Int
+//│ ║        	^^^^^^^^^^
+//│ ╟── expression of type `#Foo` is not an instance of type `Int`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.91: 	module Foo: Int
+//│ ╙──      	            ^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.83: 	Foo + 1
+//│ ║  l.92: 	Foo + 1
 //│ ║        	^^^^^^^
 //│ ╟── reference of type `Foo` is not an instance of type `Int`
-//│ ║  l.83: 	Foo + 1
+//│ ║  l.92: 	Foo + 1
 //│ ╙──      	^^^
 //│ module Foo: Int
 //│ Int | error

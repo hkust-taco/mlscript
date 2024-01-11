@@ -29,18 +29,20 @@ declare trait FooPoly: forall 'a: (x: 'a) => 'a
 :e // TODO signatures are currently unchecked
 class Oops(y: Str) extends Foo
 //│ class Oops(y: Str) extends Foo
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 :e // TODO
 module Oops extends FooPoly
 //│ module Oops extends FooPoly
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 :e
 Oops(123)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.38: 	Oops(123)
+//│ ║  l.40: 	Oops(123)
 //│ ║        	^^^^^^^^^
 //│ ╟── reference of type `Oops` is not a function
-//│ ║  l.38: 	Oops(123)
+//│ ║  l.40: 	Oops(123)
 //│ ╙──      	^^^^
 //│ error
 //│ res
@@ -50,14 +52,14 @@ Oops(123)
 :e
 (Oops : FooPoly)(123)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.51: 	(Oops : FooPoly)(123)
+//│ ║  l.53: 	(Oops : FooPoly)(123)
 //│ ║        	 ^^^^
 //│ ╟── reference of type `Oops` is not a function
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.20: 	declare trait FooPoly: forall 'a: (x: 'a) => 'a
-//│ ║        	                                      ^^^^^^^^^
+//│ ║        	                                  ^^^^^^^
 //│ ╟── from type reference:
-//│ ║  l.51: 	(Oops : FooPoly)(123)
+//│ ║  l.53: 	(Oops : FooPoly)(123)
 //│ ╙──      	        ^^^^^^^
 //│ 123
 //│ res

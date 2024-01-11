@@ -98,7 +98,7 @@ trait Base2: Foo['FigureItOut]
 //│     = [Function: res]
 
 
-// TODO reject
+// :e // * TODO reject
 class Impl extends Base2
 //│ class Impl extends Base2 {
 //│   constructor()
@@ -120,6 +120,7 @@ class Impl extends Base2
 //│ ╟── from type reference:
 //│ ║  l.107: 	(x: Impl) => x : Base2
 //│ ╙──       	                 ^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ (x: Impl) -> Base2
 //│ res
 //│     = [Function: res]
@@ -127,7 +128,7 @@ class Impl extends Base2
 :e
 class Impl() extends Base2, Foo
 //│ ╔══[ERROR] Member `x` is declared (or its declaration is inherited) but is not implemented in `Impl`
-//│ ║  l.128: 	class Impl() extends Base2, Foo
+//│ ║  l.129: 	class Impl() extends Base2, Foo
 //│ ║         	      ^^^^
 //│ ╟── Declared here:
 //│ ║  l.5: 	trait Foo[A] { fun x: A }
@@ -150,22 +151,24 @@ Impl().x
 
 Impl() : Base2
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.151: 	Impl() : Base2
+//│ ║  l.152: 	Impl() : Base2
 //│ ║         	^^^^^^
 //│ ╟── type variable `'FigureItOut` leaks out of its scope
-//│ ║  l.140: 	  fun x = 1
+//│ ║  l.141: 	  fun x = 1
 //│ ╙──       	          ^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ Base2
 //│ res
 //│     = Impl {}
 
 (Impl() : Base2).x
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.162: 	(Impl() : Base2).x
+//│ ║  l.164: 	(Impl() : Base2).x
 //│ ║         	 ^^^^^^
 //│ ╟── type variable `'FigureItOut` leaks out of its scope
-//│ ║  l.140: 	  fun x = 1
+//│ ║  l.141: 	  fun x = 1
 //│ ╙──       	          ^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ ??FigureItOut
 //│ res
 //│     = 1
@@ -179,11 +182,12 @@ class Impl2() extends Base2, Foo[Int] {
 
 (Impl2() : Base2).x
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.180: 	(Impl2() : Base2).x
+//│ ║  l.183: 	(Impl2() : Base2).x
 //│ ║         	 ^^^^^^^
 //│ ╟── type variable `'FigureItOut` leaks out of its scope
-//│ ║  l.173: 	class Impl2() extends Base2, Foo[Int] {
+//│ ║  l.176: 	class Impl2() extends Base2, Foo[Int] {
 //│ ╙──       	                                 ^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ ??FigureItOut
 //│ res
 //│     = 1
