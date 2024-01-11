@@ -1283,6 +1283,34 @@ foo()
 //│ Def(0, foo, [], [],
 //│ S: None,
 //│ I: [],
+//│ R: [Some(IMix(ICtor(O)))],
+//│ Rec: None,
+//│ 1, 
+//│ let x%0 = O()
+//│   in let x%1 = S(x%0)
+//│     in let* (x%2) = bar(x%1)
+//│       in x%2
+//│ )
+//│ Def(1, bar, [x%3], [{EDestruct,EDirect,ESelect(s)}],
+//│ S: None,
+//│ I: [[Some(ICtor(S))]],
+//│ R: [Some(IMix(ICtor(O)))],
+//│ Rec: None,
+//│ 1, 
+//│ case x%3 of
+//│   S => let x%6 = x%3.s
+//│     in x%6
+//│   O => x%3
+//│ )
+//│ },
+//│ let* (x%8) = foo()
+//│   in x%8)
+//│ 
+//│ Optimized ------------------------------
+//│ GOProgram({ClassInfo(0, S, [s]),ClassInfo(1, O, [])}, {
+//│ Def(0, foo, [], [],
+//│ S: None,
+//│ I: [],
 //│ R: [Some(ICtor(O))],
 //│ Rec: None,
 //│ 1, 
@@ -1298,4 +1326,4 @@ foo()
 //│ O()
 //│ 
 //│ 
-//│ Fuel used: 2
+//│ Fuel used: 3

@@ -245,8 +245,8 @@ let z = foo$S(p, q, r)
 ## Trivial Call & Jump Simplification
 
 - ```haskell
-  let t(x, ...) =
-    x, ...
+  let t(x, y, z) =
+    x, 1, True
     
   let foo() =
     ...
@@ -260,7 +260,9 @@ let z = foo$S(p, q, r)
     
   let foo() =
     ...
-    let z, ... = x, ...
+    let tmp1 = 1
+    let tmp2 = True
+    let z, ... = y, tmp1, tmp2
     ...
   ```
 
