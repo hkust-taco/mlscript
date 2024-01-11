@@ -88,7 +88,7 @@ sum(42)
 //│ res
 //│     = -1
 
-class Some[T](val value: T)
+class Some[out T](val value: T)
 //│ class Some[T](value: T)
 
 :js
@@ -120,9 +120,7 @@ get1(Some(V0()))
 //│     = V0 {}
 
 let s2 = Some(1)
-//│ let s2: Some['T]
-//│   where
-//│     'T :> 1
+//│ let s2: Some[1]
 //│ s2
 //│    = Some {}
 
@@ -221,7 +219,7 @@ fun ft(x) =
     FooBar(x) then x
     _ then 0
 //│ ╔══[ERROR] class FooBar expects 0 parameter but found 1 parameter
-//│ ║  l.221: 	    FooBar(x) then x
+//│ ║  l.219: 	    FooBar(x) then x
 //│ ╙──       	    ^^^^^^^^^
 //│ fun ft: anything -> error
 //│ Code generation encountered an error:
@@ -267,7 +265,7 @@ fun c(x) =
     VVC(x, y, z) then x + y + z
     _ then 0
 //│ ╔══[ERROR] class VVC expects 2 parameters but found 3 parameters
-//│ ║  l.267: 	    VVC(x, y, z) then x + y + z
+//│ ║  l.265: 	    VVC(x, y, z) then x + y + z
 //│ ╙──       	    ^^^^^^^^^^^^
 //│ class VVC(v: Int, vc: Int)
 //│ fun c: anything -> error

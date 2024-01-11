@@ -1,8 +1,8 @@
 :NewDefs
 
-class Some[T](value: T)
-class Left[T](value: T)
-class Right[T](value: T)
+class Some[out T](value: T)
+class Left[out T](value: T)
+class Right[out T](value: T)
 //│ class Some[T](value: T)
 //│ class Left[T](value: T)
 //│ class Right[T](value: T)
@@ -14,9 +14,7 @@ fun foo(x) = if x is
 //│ fun foo: forall 'a. Some['a & (Left[anything] | Object & ~#Left)] -> 'a
 
 foo(Some(Left(1)))
-//│ Left['T]
-//│   where
-//│     'T :> 1
+//│ Left[1]
 //│ res
 //│     = Left {}
 

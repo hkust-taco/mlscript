@@ -4,15 +4,13 @@
 // * Motivating paper example, demonstrating the expression problem solution
 
 
-class Add<E>(lhs: E, rhs: E)
+class Add<out E>(lhs: E, rhs: E)
 class Lit(n: Int)
 //│ class Add[E](lhs: E, rhs: E)
 //│ class Lit(n: Int)
 
 fun add11 = Add(Lit(1), Lit(2))
-//│ fun add11: forall 'E. Add['E]
-//│   where
-//│     'E :> Lit
+//│ fun add11: Add[Lit]
 
 
 fun eval(e) =
@@ -38,13 +36,13 @@ mixin EvalBase {
 
 module TestLang extends EvalBase
 //│ module TestLang {
-//│   fun eval: (Add['a] | Lit) -> Int
+//│   fun eval: 'a -> Int
 //│ }
 //│ where
 //│   'a <: Add['a] | Lit
 
 TestLang.eval
-//│ (Add['a] | Lit) -> Int
+//│ 'a -> Int
 //│   where
 //│     'a <: Add['a] | Lit
 //│ res
@@ -76,13 +74,13 @@ module TestLang extends EvalNothing, EvalAddLit
 //│   fun eval: (Add['c] | Lit | Object & 'a & ~#Add & ~#Lit) -> (Int | 'b)
 //│ }
 //│ module TestLang {
-//│   fun eval: (Add['d] | Lit) -> Int
+//│   fun eval: 'd -> Int
 //│ }
 //│ where
 //│   'd <: Add['d] | Lit
 
 TestLang.eval
-//│ (Add['a] | Lit) -> Int
+//│ 'a -> Int
 //│   where
 //│     'a <: Add['a] | Lit
 //│ res
@@ -94,15 +92,11 @@ TestLang.eval(add11)
 //│     = 3
 
 
-class Neg<A>(expr: A)
+class Neg<out A>(expr: A)
 //│ class Neg[A](expr: A)
 
 let add2negadd11 = Add(Lit(2), Neg(add11))
-//│ let add2negadd11: Add['E]
-//│   where
-//│     'E :> Lit | Neg['A]
-//│     'A :> forall 'E0. Add['E0]
-//│     'E0 :> Lit
+//│ let add2negadd11: Add[Lit | Neg[Add[Lit]]]
 //│ add2negadd11
 //│              = Add {}
 
@@ -121,17 +115,15 @@ mixin EvalNeg {
 
 module TestLang extends EvalBase, EvalNeg
 //│ module TestLang {
-//│   fun eval: (Neg['a] | Object & 'b & ~#Neg) -> Int
+//│   fun eval: 'a -> Int
 //│ }
 //│ where
-//│   'a <: Neg['a] | Object & 'b & ~#Neg
-//│   'b <: Add['a] | Lit
+//│   'a <: Neg['a] | Object & (Add['a] | Lit) & ~#Neg
 
 TestLang.eval
-//│ (Neg['a] | Object & 'b & ~#Neg) -> Int
+//│ 'a -> Int
 //│   where
-//│     'a <: Neg['a] | Object & 'b & ~#Neg
-//│     'b <: Add['a] | Lit
+//│     'a <: Neg['a] | Object & (Add['a] | Lit) & ~#Neg
 //│ res
 //│     = [Function: eval]
 
@@ -201,7 +193,7 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│   fun eval: (Neg['A] | Object & 'a & ~#Neg) -> Int
 //│ }
 //│ where
-//│   'A <: Neg['A & 'b] | Neg['A] & ~#Neg | Object & 'a & ~#Neg
+//│   'A <: 'b & (Neg['b] | Object & ~#Neg)
 //│   'b <: Neg['A] | Object & 'a & ~#Neg
 //│   'a <: Add['b] | Lit | Neg['b]
 
@@ -209,16 +201,14 @@ fun mk(n) = if n is
   0 then Lit(0)
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
-//│ fun mk: forall 'a 'A 'E. Object -> (Lit | 'a)
+//│ fun mk: forall 'a. Object -> (Lit | 'a)
 //│   where
-//│     'a :> Neg['A] | Add['E]
-//│     'E :> Lit | 'a
-//│     'A :> Lit | 'a
+//│     'a :> Neg[Lit | 'a] | Add[Lit | 'a]
 
 TestLang.eval
 //│ (Neg['A] | Object & 'a & ~#Neg) -> Int
 //│   where
-//│     'A <: Neg['A & 'b] | Neg['A] & ~#Neg | Object & 'a & ~#Neg
+//│     'A <: 'b & (Neg['b] | Object & ~#Neg)
 //│     'b <: Neg['A] | Object & 'a & ~#Neg
 //│     'a <: Add['b] | Lit | Neg['b]
 //│ res

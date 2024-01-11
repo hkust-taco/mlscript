@@ -134,51 +134,47 @@ new Foo()
 
 
 
-class PoInt[A](x: A, y: A)
+class PoInt[out A](x: A, y: A)
 //│ class PoInt[A](x: A, y: A)
 
 new PoInt(1, 2)
-//│ PoInt['A]
-//│   where
-//│     'A :> 1 | 2
+//│ PoInt[1 | 2]
 //│ res
 //│     = PoInt {}
 
 :e
 new PoInt
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.148: 	new PoInt
+//│ ║  l.146: 	new PoInt
 //│ ║         	    ^^^^^
 //│ ╟── argument list of type `[]` does not match type `[x: ?A, y: ?A]`
-//│ ║  l.148: 	new PoInt
+//│ ║  l.146: 	new PoInt
 //│ ╙──       	         ^
-//│ PoInt['A] | error
+//│ PoInt[nothing] | error
 //│ res
 //│     = PoInt {}
 
 :e
 new PoInt['_]
 //│ ╔══[ERROR] Type arguments in `new` expressions are not yet supported
-//│ ║  l.160: 	new PoInt['_]
+//│ ║  l.158: 	new PoInt['_]
 //│ ╙──       	    ^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.160: 	new PoInt['_]
+//│ ║  l.158: 	new PoInt['_]
 //│ ║         	    ^^^^^^^^^
 //│ ╟── argument list of type `[]` does not match type `[x: ?A, y: ?A]`
-//│ ║  l.160: 	new PoInt['_]
+//│ ║  l.158: 	new PoInt['_]
 //│ ╙──       	             ^
-//│ PoInt['A] | error
+//│ PoInt[nothing] | error
 //│ Code generation encountered an error:
 //│   Unsupported `new` class term: TyApp(Var(PoInt),List('_))
 
 :e
 new PoInt[Str](0, 0)
 //│ ╔══[ERROR] Type arguments in `new` expressions are not yet supported
-//│ ║  l.175: 	new PoInt[Str](0, 0)
+//│ ║  l.173: 	new PoInt[Str](0, 0)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^
-//│ PoInt['A]
-//│   where
-//│     'A :> 0
+//│ PoInt[0]
 //│ Code generation encountered an error:
 //│   Unsupported `new` class term: TyApp(Var(PoInt),List(TypeName(Str)))
 
@@ -188,38 +184,32 @@ type T = PoInt[Str]
 :e
 new T(0, 0)
 //│ ╔══[ERROR] Type alias T cannot be used in `new` expression
-//│ ║  l.189: 	new T(0, 0)
+//│ ║  l.185: 	new T(0, 0)
 //│ ╙──       	^^^^^^^^^^^
 //│ error
 //│ Code generation encountered an error:
 //│   type alias T is not a valid expression
 
 let origin = new PoInt(0, 0)
-//│ let origin: PoInt['A]
-//│   where
-//│     'A :> 0
+//│ let origin: PoInt[0]
 //│ origin
 //│        = PoInt {}
 
 :e // TODO support
 let origin = PoInt[Int](0, 0)
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.205: 	let origin = PoInt[Int](0, 0)
+//│ ║  l.199: 	let origin = PoInt[Int](0, 0)
 //│ ╙──       	             ^^^^^^^^^^
-//│ let origin: PoInt['A]
-//│   where
-//│     'A :> 0
+//│ let origin: PoInt[0]
 //│ origin
 //│        = PoInt {}
 
 :e // TODO support
 let origin = new PoInt[Int](0, 0)
 //│ ╔══[ERROR] Type arguments in `new` expressions are not yet supported
-//│ ║  l.216: 	let origin = new PoInt[Int](0, 0)
+//│ ║  l.208: 	let origin = new PoInt[Int](0, 0)
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^
-//│ let origin: PoInt['A]
-//│   where
-//│     'A :> 0
+//│ let origin: PoInt[0]
 //│ Code generation encountered an error:
 //│   Unsupported `new` class term: TyApp(Var(PoInt),List(TypeName(Int)))
 
@@ -227,7 +217,7 @@ let origin = new PoInt[Int](0, 0)
 :e // TODO support
 new {}
 //│ ╔══[ERROR] Unexpected type `anything` after `new` keyword
-//│ ║  l.228: 	new {}
+//│ ║  l.218: 	new {}
 //│ ╙──       	    ^^
 //│ error
 //│ Code generation encountered an error:
@@ -237,10 +227,10 @@ new {}
 :e
 new
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.238: 	new
+//│ ║  l.228: 	new
 //│ ╙──       	   ^
 //│ ╔══[ERROR] Unexpected type `()` after `new` keyword
-//│ ║  l.238: 	new
+//│ ║  l.228: 	new
 //│ ╙──       	   ^
 //│ error
 //│ Code generation encountered an error:
@@ -252,10 +242,10 @@ new
 new
   x: 0
 //│ ╔══[PARSE ERROR] Not a recognized type
-//│ ║  l.253: 	  x: 0
+//│ ║  l.243: 	  x: 0
 //│ ╙──       	  ^
 //│ ╔══[ERROR] Unexpected type `nothing` after `new` keyword
-//│ ║  l.253: 	  x: 0
+//│ ║  l.243: 	  x: 0
 //│ ╙──       	  ^
 //│ error
 //│ Code generation encountered an error:
@@ -270,7 +260,7 @@ fun f(x) = {x}
 :e
 new f(1)
 //│ ╔══[ERROR] type identifier not found: f
-//│ ║  l.271: 	new f(1)
+//│ ║  l.261: 	new f(1)
 //│ ╙──       	    ^
 //│ error
 //│ res
@@ -283,7 +273,7 @@ module Oops
 :e
 new Oops
 //│ ╔══[ERROR] Module Oops cannot be used in `new` expression
-//│ ║  l.284: 	new Oops
+//│ ║  l.274: 	new Oops
 //│ ╙──       	    ^^^^
 //│ error
 //│ res
@@ -294,7 +284,7 @@ new Oops
 new Oops2
 trait Oops2
 //│ ╔══[ERROR] Trait Oops2 cannot be used in `new` expression
-//│ ║  l.294: 	new Oops2
+//│ ║  l.284: 	new Oops2
 //│ ╙──       	    ^^^^^
 //│ trait Oops2
 //│ error

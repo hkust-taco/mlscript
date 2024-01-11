@@ -29,8 +29,8 @@ fun stringLength(s: Str) = makeString(s).length
 //│ anythingToString
 //│                  = [Function: toString]
 
-type Option[A] = Some[A] | None
-class Some[A](value: A) {
+type Option[out A] = Some[A] | None
+class Some[out A](value: A) {
   fun toString() = "Some(" ++ anythingToString(value) ++ ")"
 }
 module None {
@@ -75,9 +75,7 @@ fun findFirst(list, p) =
     Cons(x, xs) and
       p(x) then Some(x)
       else findFirst(xs, p)
-//│ fun findFirst: forall 'A 'A0. (Cons['A] | Nil, 'A -> Object) -> (None | Some['A0])
-//│   where
-//│     'A <: 'A0
+//│ fun findFirst: forall 'A. (Cons['A] | Nil, 'A -> Object) -> (None | Some['A])
 
 fun listConcat(xs, ys) =
   if xs is
@@ -270,9 +268,7 @@ fun tryNextAlphabet(initialCode, currentCode, freeNames) =
     let name = fromCharCode(currentCode)
     listContains(freeNames, name) then tryNextAlphabet(initialCode, currentCode + 1, freeNames)
     _ then Some(name)
-//│ fun tryNextAlphabet: forall 'A 'A0. (Num, Int, Cons['A] | Nil) -> (None | Some['A0])
-//│   where
-//│     'A0 :> Str
+//│ fun tryNextAlphabet: forall 'A. (Num, Int, Cons['A] | Nil) -> (None | Some[Str])
 
 tryNextAlphabet(97, 97, list1("a")).toString()
 tryNextAlphabet(97, 98, list1("a")).toString()

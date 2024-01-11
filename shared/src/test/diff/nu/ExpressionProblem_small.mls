@@ -2,8 +2,8 @@
 :NoJS
 
 
-class Neg[A](expr: A)
-class Add[E](lhs: E, rhs: E)
+class Neg[out A](expr: A)
+class Add[out E](lhs: E, rhs: E)
 class Lit(n: Int)
 //│ class Neg[A](expr: A)
 //│ class Add[E](lhs: E, rhs: E)
@@ -11,12 +11,8 @@ class Lit(n: Int)
 
 let add11 = Add(Lit(1), Lit(2))
 let add2negadd11 = Add(Lit(2), Neg(add11))
-//│ let add11: Add['E]
-//│ let add2negadd11: Add['E0]
-//│ where
-//│   'E0 :> Lit | Neg['A]
-//│   'A :> Add['E]
-//│   'E :> Lit
+//│ let add11: Add[Lit]
+//│ let add2negadd11: Add[Lit | Neg[Add[Lit]]]
 
 mixin EvalNothing {
   fun eval(e: nothing) = e
@@ -49,16 +45,14 @@ mixin EvalNeg {
 
 module TestLang extends EvalNothing, EvalAddLit, EvalNeg
 //│ module TestLang {
-//│   fun eval: (Neg['a] | Object & 'b & ~#Neg) -> Int
+//│   fun eval: 'a -> Int
 //│ }
 //│ where
-//│   'a <: Neg['a] | Object & 'b & ~#Neg
-//│   'b <: Add['a] | Lit
+//│   'a <: Neg['a] | Object & (Add['a] | Lit) & ~#Neg
 
 TestLang.eval
-//│ (Neg['a] | Object & 'b & ~#Neg) -> Int
+//│ 'a -> Int
 //│   where
-//│     'a <: Neg['a] | Object & 'b & ~#Neg
-//│     'b <: Add['a] | Lit
+//│     'a <: Neg['a] | Object & (Add['a] | Lit) & ~#Neg
 
 

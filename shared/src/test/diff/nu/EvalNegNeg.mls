@@ -1,7 +1,7 @@
 :NewDefs
 
 
-class Add<E>(lhs: E, rhs: E)
+class Add<out E>(lhs: E, rhs: E)
 class Lit(n: Int)
 //│ class Add[E](lhs: E, rhs: E)
 //│ class Lit(n: Int)
@@ -19,7 +19,7 @@ mixin EvalBase {
 //│ }
 
 
-class Neg<A>(expr: A)
+class Neg<out A>(expr: A)
 //│ class Neg[A](expr: A)
 
 
@@ -52,7 +52,7 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│   fun eval: (Neg['A] | Object & 'a & ~#Neg) -> Int
 //│ }
 //│ where
-//│   'A <: Neg['A & 'b] | Neg['A] & ~#Neg | Object & 'a & ~#Neg
+//│   'A <: 'b & (Neg['b] | Object & ~#Neg)
 //│   'b <: Neg['A] | Object & 'a & ~#Neg
 //│   'a <: Add['b] | Lit | Neg['b]
 
@@ -61,11 +61,9 @@ fun mk(n) = if n is
   0 then Lit(3)
   1 then Neg(mk(n - 1))
   _ then Add(mk(n - 1), mk(n - 1))
-//│ fun mk: forall 'a 'A 'E. (0 | 1 | Int & ~0 & ~1) -> (Lit | 'a)
+//│ fun mk: forall 'a. (0 | 1 | Int & ~0 & ~1) -> (Lit | 'a)
 //│   where
-//│     'a :> Neg['A] | Add['E]
-//│     'E :> Lit | 'a
-//│     'A :> Lit | 'a
+//│     'a :> Neg[Lit | 'a] | Add[Lit | 'a]
 
 TestLang.eval(mk(0))
 //│ Int

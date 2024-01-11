@@ -50,14 +50,12 @@ Cls2(0) === Cls2(1)
 
 
 
-class Pair[A](val fst: A, val snd: A)
+class Pair[out A](val fst: A, val snd: A)
 //  extends (A <: Eql[A]) => Eql[Pair[A]]
 //│ class Pair[A](fst: A, snd: A)
 
 let p = Pair(1, 2)
-//│ let p: Pair['A]
-//│   where
-//│     'A :> 1 | 2
+//│ let p: Pair[1 | 2]
 //│ p
 //│   = Pair {}
 
@@ -73,10 +71,7 @@ x => p === x
 //│     = [Function: res]
 
 x => x === p
-//│ Eql[Pair['A]] -> Bool
-//│   where
-//│     'A :> 1 | 2
-//│        <: Eql['A] & Num
+//│ Eql[Pair[1 | 2]] -> Bool
 //│ res
 //│     = [Function: res]
 
@@ -88,10 +83,10 @@ p === { fst: 1, snd: 2 }
 :e
 { fst: 1, snd: 2 } === p
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.89: 	{ fst: 1, snd: 2 } === p
+//│ ║  l.84: 	{ fst: 1, snd: 2 } === p
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{fst: 1, snd: 2}` is not an instance of type `Eql`
-//│ ║  l.89: 	{ fst: 1, snd: 2 } === p
+//│ ║  l.84: 	{ fst: 1, snd: 2 } === p
 //│ ╙──      	       ^^^^^^^^^
 //│ error | false | true
 //│ res
@@ -111,10 +106,10 @@ r : {x: Int}
 :e
 x => { a: 0 } === x
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.112: 	x => { a: 0 } === x
+//│ ║  l.107: 	x => { a: 0 } === x
 //│ ║         	     ^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{a: 0}` is not an instance of type `Eql`
-//│ ║  l.112: 	x => { a: 0 } === x
+//│ ║  l.107: 	x => { a: 0 } === x
 //│ ╙──       	          ^
 //│ anything -> (error | false | true)
 //│ res
@@ -129,33 +124,28 @@ x => x === { a: 0 }
 
 
 let q = Pair(1, "oops")
-//│ let q: Pair['A]
-//│   where
-//│     'A :> "oops" | 1
+//│ let q: Pair["oops" | 1]
 //│ q
 //│   = Pair {}
 
 :e
 q === q
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.139: 	q === q
+//│ ║  l.132: 	q === q
 //│ ║         	^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `Str`
-//│ ║  l.131: 	let q = Pair(1, "oops")
+//│ ║  l.126: 	let q = Pair(1, "oops")
 //│ ╙──       	             ^
 //│ error | false | true
 //│ res
 //│     = true
 
 
-class Pair2[A, B](val fst: A, val snd: B)
+class Pair2[out A, out B](val fst: A, val snd: B)
 //│ class Pair2[A, B](fst: A, snd: B)
 
 let q = Pair2(1, "oops")
-//│ let q: Pair2['A, 'B]
-//│   where
-//│     'B :> "oops"
-//│     'A :> 1
+//│ let q: Pair2[1, "oops"]
 //│ q
 //│   = Pair2 {}
 
@@ -166,13 +156,11 @@ q === q
 
 
 
-class MP[Col](val color: Col)
+class MP[out Col](val color: Col)
 //│ class MP[Col](color: Col)
 
 val mp = MP(1)
-//│ val mp: MP['Col]
-//│   where
-//│     'Col :> 1
+//│ val mp: MP[1]
 //│ mp
 //│    = MP {}
 

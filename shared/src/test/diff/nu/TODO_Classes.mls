@@ -87,14 +87,14 @@ new C { val x = 1 }
 // *** Path-dependent types *** //
 
 
-class Cls[A] { fun x: A = x }
+class Cls[out A] { fun x: A = x }
 //│ class Cls[A] {
 //│   constructor()
 //│   fun x: A
 //│ }
 
 let c = new Cls
-//│ let c: forall 'A. Cls['A]
+//│ let c: Cls[nothing]
 //│ c
 //│   = Cls {}
 

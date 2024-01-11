@@ -46,11 +46,10 @@ not(Foo().x)
 trait B
 //│ trait B
 
-// :e // TODO check classes against their signatures
+// :e // TODO check classes against their signatures!
 class A(): B
 //│ class A(): B
 
-// :e
 A() : B
 //│ B
 //│ res
@@ -62,7 +61,7 @@ abstract class A(): B
 :e
 A() : B
 //│ ╔══[ERROR] Class A is abstract and cannot be instantiated
-//│ ║  l.63: 	A() : B
+//│ ║  l.62: 	A() : B
 //│ ╙──      	^
 //│ B
 //│ res

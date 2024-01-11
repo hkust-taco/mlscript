@@ -2,7 +2,7 @@
 :NewDefs
 
 :js
-class Add<E>(lhs: E, rhs: E)
+class Add<out E>(lhs: E, rhs: E)
 class Lit(n: Int)
 //│ class Add[E](lhs: E, rhs: E)
 //│ class Lit(n: Int)
@@ -103,7 +103,7 @@ mixin EvalBase {
 //│ // End of generated code
 
 :js
-class Neg<A>(expr: A)
+class Neg<out A>(expr: A)
 //│ class Neg[A](expr: A)
 //│ // Prelude
 //│ class TypingUnit2 {
@@ -208,7 +208,7 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│   fun eval: (Neg['A] | Object & 'a & ~#Neg) -> Int
 //│ }
 //│ where
-//│   'A <: Neg['A & 'b] | Neg['A] & ~#Neg | Object & 'a & ~#Neg
+//│   'A <: 'b & (Neg['b] | Object & ~#Neg)
 //│   'b <: Neg['A] | Object & 'a & ~#Neg
 //│   'a <: Add['b] | Lit | Neg['b]
 //│ // Prelude
@@ -239,12 +239,10 @@ fun mk(n) = if n is
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
 TestLang.eval(mk(0))
-//│ fun mk: forall 'a 'A 'E. Object -> (Lit | 'a)
+//│ fun mk: forall 'a. Object -> (Lit | 'a)
 //│ Int
 //│ where
-//│   'a :> Neg['A] | Add['E]
-//│   'E :> Lit | 'a
-//│   'A :> Lit | 'a
+//│   'a :> Neg[Lit | 'a] | Add[Lit | 'a]
 //│ res
 //│     = 0
 
@@ -374,7 +372,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.374: 	  fun x = y
+//│ ║  l.372: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error
