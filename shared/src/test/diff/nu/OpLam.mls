@@ -7,17 +7,23 @@ x => x is 42
 //│     = [Function: res]
 
 
+:pe
 fun (|>;) foo(a, b) = [a, b]
-//│ fun (|>;) foo: forall 'a 'b. ('a, 'b) -> ['a, 'b]
+//│ ╔══[PARSE ERROR] Unexpected semicolon after symbolic name
+//│ ║  l.11: 	fun (|>;) foo(a, b) = [a, b]
+//│ ╙──      	       ^
+//│ fun (|>) foo: forall 'a 'b. ('a, 'b) -> ['a, 'b]
 
 42 |>; x => x
-//│ [42, forall 'a. 'a -> 'a]
+//│ forall 'a. 'a -> 'a
 //│ res
-//│     = [ 42, [Function (anonymous)] ]
+//│     = [ 42, undefined ]
+//│ res
+//│     = [Function: res]
 
 
 fun (>>) compose(f, g) = x => g(f(x))
-//│ fun (>>) compose: forall 'a 'b 'c. ('a -> 'b, 'b -> 'c) -> 'a -> 'c
+//│ fun (>>) compose: forall 'a 'b 'c. ('c -> 'a, 'a -> 'b) -> 'c -> 'b
 
 succ >> x => x + 2
 //│ Int -> Int
@@ -27,16 +33,16 @@ succ >> x => x + 2
 :e
 x => x + 2 >> succ
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.28: 	x => x + 2 >> succ
+//│ ║  l.34: 	x => x + 2 >> succ
 //│ ║        	     ^^^^^^^^^^^^^
 //│ ╟── operator application of type `Int` is not a function
-//│ ║  l.28: 	x => x + 2 >> succ
+//│ ║  l.34: 	x => x + 2 >> succ
 //│ ║        	     ^^^^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.19: 	fun (>>) compose(f, g) = x => g(f(x))
+//│ ║  l.25: 	fun (>>) compose(f, g) = x => g(f(x))
 //│ ║        	                                ^^^^
 //│ ╟── from reference:
-//│ ║  l.19: 	fun (>>) compose(f, g) = x => g(f(x))
+//│ ║  l.25: 	fun (>>) compose(f, g) = x => g(f(x))
 //│ ╙──      	                                ^
 //│ Int -> (error | anything -> Int)
 //│ res
@@ -47,43 +53,66 @@ x => x + 2 >> succ
 //│ res
 //│     = [Function (anonymous)]
 
-:e // FIXME parsing
+:e
 x => x + 2
   >> succ
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.51: 	x => x + 2
+//│ ║  l.57: 	x => x + 2
 //│ ║        	         ^
-//│ ║  l.52: 	  >> succ
-//│ ║        	^^^^
-//│ ╟── integer literal of type `2` is not a 2-element tuple
-//│ ║  l.51: 	x => x + 2
-//│ ║        	         ^
-//│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.19: 	fun (>>) compose(f, g) = x => g(f(x))
-//│ ╙──      	                ^^^^^^
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.51: 	x => x + 2
-//│ ║        	         ^
-//│ ║  l.52: 	  >> succ
+//│ ║  l.58: 	  >> succ
 //│ ║        	^^^^^^^^^^
-//│ ╟── reference of type `Int -> Int` is not a 1-element tuple
-//│ ║  l.52: 	  >> succ
-//│ ╙──      	     ^^^^
+//│ ╟── integer literal of type `2` is not a function
+//│ ║  l.57: 	x => x + 2
+//│ ║        	         ^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.25: 	fun (>>) compose(f, g) = x => g(f(x))
+//│ ║        	                                ^^^^
+//│ ╟── from reference:
+//│ ║  l.25: 	fun (>>) compose(f, g) = x => g(f(x))
+//│ ╙──      	                                ^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.57: 	x => x + 2
+//│ ║        	     ^^^^^
+//│ ║  l.58: 	  >> succ
+//│ ║        	^^^^^^^^^
+//│ ╟── function of type `?a -> ?b` is not an instance of type `Int`
+//│ ║  l.25: 	fun (>>) compose(f, g) = x => g(f(x))
+//│ ║        	                         ^^^^^^^^^^^^
+//│ ╟── but it flows into operator application with expected type `Int`
+//│ ║  l.57: 	x => x + 2
+//│ ║        	         ^
+//│ ║  l.58: 	  >> succ
+//│ ╙──      	^^^^^^^^^^
+//│ Int -> (Int | error)
+//│ res
+//│     = [Function: res]
+
+(x => x + 2)
+  >> succ
 //│ Int -> Int
-//│ Code generation encountered an error:
-//│   ill-formed application App(App(Var(>>), IntLit(2)), Var(succ))
+//│ res
+//│     = [Function (anonymous)]
+
+:pe
+>> succ
+//│ ╔══[PARSE ERROR] Unexpected operator in expression position
+//│ ║  l.97: 	>> succ
+//│ ╙──      	^^
+//│ Int -> Int
+//│ res
+//│     = [Function: succ]
 
 
 :e
 x => x.y => y
 //│ ╔══[ERROR] Unsupported pattern shape:
-//│ ║  l.78: 	x => x.y => y
-//│ ╙──      	     ^^^
+//│ ║  l.107: 	x => x.y => y
+//│ ╙──       	     ^^^
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.78: 	x => x.y => y
-//│ ╙──      	            ^
+//│ ║  l.107: 	x => x.y => y
+//│ ╙──       	            ^
 //│ anything -> error -> error
 //│ Code generation encountered an error:
-//│   term Sel(Var(x), y) is not a valid pattern
+//│   term Sel(Var(x),Var(y)) is not a valid pattern
 
 

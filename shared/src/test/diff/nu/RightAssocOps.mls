@@ -30,7 +30,7 @@ fun (++) conc(xs, ys) = [xs, ys]
 :p
 1 +: "a" ++ "b" :+ 2
 //│ |1| |+:| |"a"| |++| |"b"| |:+| |2|
-//│ AST: TypingUnit(App(Var(+:), Tup(_: IntLit(1), _: App(Var(:+), Tup(_: App(Var(++), Tup(_: StrLit(a), _: StrLit(b))), _: IntLit(2))))))
+//│ AST: TypingUnit(List(App(Var(+:),Tup(List((None,Fld(_,IntLit(1))), (None,Fld(_,App(Var(:+),Tup(List((None,Fld(_,App(Var(++),Tup(List((None,Fld(_,StrLit(a))), (None,Fld(_,StrLit(b)))))))), (None,Fld(_,IntLit(2)))))))))))))
 //│ Parsed: +:(1, :+(++("a", "b",), 2,),);
 //│ [[Int], [["a", "b"], [Int]]]
 //│ res
@@ -39,7 +39,7 @@ fun (++) conc(xs, ys) = [xs, ys]
 :p
 1 +: "a" :+ 2 ++ "b"
 //│ |1| |+:| |"a"| |:+| |2| |++| |"b"|
-//│ AST: TypingUnit(App(Var(+:), Tup(_: IntLit(1), _: App(Var(++), Tup(_: App(Var(:+), Tup(_: StrLit(a), _: IntLit(2))), _: StrLit(b))))))
+//│ AST: TypingUnit(List(App(Var(+:),Tup(List((None,Fld(_,IntLit(1))), (None,Fld(_,App(Var(++),Tup(List((None,Fld(_,App(Var(:+),Tup(List((None,Fld(_,StrLit(a))), (None,Fld(_,IntLit(2)))))))), (None,Fld(_,StrLit(b)))))))))))))
 //│ Parsed: +:(1, ++(:+("a", 2,), "b",),);
 //│ [[Int], [["a", [Int]], "b"]]
 //│ res
@@ -49,14 +49,14 @@ fun (++) conc(xs, ys) = [xs, ys]
 :e
 1 +: "a" ++ 2 +: "b"
 //│ |1| |+:| |"a"| |++| |2| |+:| |"b"|
-//│ AST: TypingUnit(App(Var(+:), Tup(_: IntLit(1), _: App(Var(+:), Tup(_: App(Var(++), Tup(_: StrLit(a), _: IntLit(2))), _: StrLit(b))))))
+//│ AST: TypingUnit(List(App(Var(+:),Tup(List((None,Fld(_,IntLit(1))), (None,Fld(_,App(Var(+:),Tup(List((None,Fld(_,App(Var(++),Tup(List((None,Fld(_,StrLit(a))), (None,Fld(_,IntLit(2)))))))), (None,Fld(_,StrLit(b)))))))))))))
 //│ Parsed: +:(1, +:(++("a", 2,), "b",),);
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.50: 	1 +: "a" ++ 2 +: "b"
 //│ ║        	     ^^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `[?a, ?b]` is not an instance of type `Int`
 //│ ║  l.9: 	fun (++) conc(xs, ys) = [xs, ys]
-//│ ║       	                         ^^^^^^
+//│ ║       	                        ^^^^^^^^
 //│ ╟── but it flows into operator application with expected type `Int`
 //│ ║  l.50: 	1 +: "a" ++ 2 +: "b"
 //│ ║        	     ^^^^^^^^

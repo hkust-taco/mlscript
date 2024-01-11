@@ -15,9 +15,9 @@ class D(x: Int)
 
 :e
 fun foo(c) = new c
-//│ ╔══[ERROR] Cannot use `new` on non-class variable of type ?a
+//│ ╔══[ERROR] type identifier not found: c
 //│ ║  l.17: 	fun foo(c) = new c
-//│ ╙──      	             ^^^^^
+//│ ╙──      	                 ^
 //│ fun foo: anything -> error
 
 :re
@@ -39,9 +39,9 @@ foo(C)
 
 :e
 fun bar(c) = new c(123)
-//│ ╔══[ERROR] Cannot use `new` on non-class variable of type ?a
+//│ ╔══[ERROR] type identifier not found: c
 //│ ║  l.41: 	fun bar(c) = new c(123)
-//│ ╙──      	             ^^^^^^^^^^
+//│ ╙──      	                 ^
 //│ fun bar: anything -> error
 
 :re
@@ -73,14 +73,14 @@ class C
 //│   constructor()
 //│ }
 
-:e // TODO
+:e // TODO support
 new C { val x = 1 }
-//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ╔══[ERROR] Refinement terms are not yet supported
 //│ ║  l.77: 	new C { val x = 1 }
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^
 //│ error
 //│ Code generation encountered an error:
-//│   custom class body is not supported yet
+//│   cannot generate code for term Rft(NuNew(Var(C)),TypingUnit(List(NuFunDef(Some(false),Var(x),None,List(),Left(IntLit(1))))))
 
 
 
@@ -94,7 +94,7 @@ class Cls[A] { fun x: A = x }
 //│ }
 
 let c = new Cls
-//│ let c: forall 'A. Cls['A]
+//│ let c: Cls[nothing]
 //│ c
 //│   = Cls {}
 
@@ -110,7 +110,7 @@ let y: c.A = c.x
 // *** GADTs *** //
 
 
-class Cls[A] { fun x: A = x;; fun g: A -> Int;; fun g = g }
+class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
 //│ class Cls[A] {
 //│   constructor()
 //│   fun g: A -> Int
@@ -130,7 +130,7 @@ fun test(a: Object) = if a is
 //│ ║  l.124: 	  else error
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.113: 	class Cls[A] { fun x: A = x;; fun g: A -> Int;; fun g = g }
+//│ ║  l.113: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
 //│ ╙──       	          ^
 //│ fun test: (a: Object) -> (error | ??A)
 
@@ -146,7 +146,7 @@ fun test(a: Object) = if a is
 //│ ║  l.140: 	  else 0
 //│ ║         	^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.113: 	class Cls[A] { fun x: A = x;; fun g: A -> Int;; fun g = g }
+//│ ║  l.113: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
 //│ ╙──       	          ^
 //│ fun test: (a: Object) -> Int
 
@@ -196,7 +196,7 @@ test(0).x
 //    IntLit then x.n // in Scala, compiler sees x.n : Int = x.T <: T
 //    BoolLit then x.b
 
-abstract class Expr[A]: IntLit | BoolLit {}
+abstract class Expr[A]: (IntLit | BoolLit) {}
 class IntLit() extends Expr[Int]
 class BoolLit() extends Expr[Bool]
 //│ abstract class Expr[A]: BoolLit | IntLit

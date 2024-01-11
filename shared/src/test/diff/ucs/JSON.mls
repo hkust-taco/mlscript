@@ -247,9 +247,15 @@ fun expect(scanner, ch) =
       eq(ch)(ch') then ParseSuccess((), scanner.advance)
       else ParseFailure(concat4("expect '", ch, "' but found ", ch'), scanner)
     None then ParseFailure(concat3("expect '", ch, "' but found EOF"), scanner)
+<<<<<<< HEAD
 //│ fun expect: forall 'T. (Scanner & {advance: Scanner}, Str) -> (ParseFailure | ParseSuccess['T])
 //│   where
 //│     'T :> []
+||||||| b14bd8d83
+//│ fun expect: (Scanner & {advance: Scanner}, Str) -> (ParseFailure | ParseSuccess[[]])
+=======
+//│ fun expect: (Scanner & {advance: Scanner}, Str) -> (ParseFailure | ParseSuccess[()])
+>>>>>>> new-definition-typing
 
 fun expectWord(scanner, word, result) =
   if

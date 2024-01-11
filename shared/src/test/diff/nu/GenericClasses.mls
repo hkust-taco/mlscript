@@ -324,13 +324,31 @@ class TestBad<A>() {
   fun foo2(x: A) = x + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
+<<<<<<< HEAD
 //│ ║  l.324: 	  fun foo2(x: A) = x + 1
+||||||| b14bd8d83
+//│ ║  l.298: 	  fun foo2(x: A) = x + 1
+=======
+//│ ║  l.302: 	  fun foo2(x: A) = x + 1
+>>>>>>> new-definition-typing
 //│ ║         	                   ^^^^^
 //│ ╟── reference of type `A` is not an instance of type `Int`
+<<<<<<< HEAD
 //│ ║  l.324: 	  fun foo2(x: A) = x + 1
+||||||| b14bd8d83
+//│ ║  l.298: 	  fun foo2(x: A) = x + 1
+=======
+//│ ║  l.302: 	  fun foo2(x: A) = x + 1
+>>>>>>> new-definition-typing
 //│ ║         	                   ^
 //│ ╟── Note: type parameter A is defined at:
+<<<<<<< HEAD
 //│ ║  l.322: 	class TestBad<A>() {
+||||||| b14bd8d83
+//│ ║  l.296: 	class TestBad<A>() {
+=======
+//│ ║  l.300: 	class TestBad<A>() {
+>>>>>>> new-definition-typing
 //│ ╙──       	              ^
 //│ class TestBad[A]() {
 //│   fun foo1: (x: A) -> A
@@ -421,11 +439,50 @@ not(w.x.n)
 :e
 not(w.x.a)
 //│ ╔══[ERROR] Type `C['a]` does not contain member `a`
+<<<<<<< HEAD
 //│ ║  l.422: 	not(w.x.a)
+||||||| b14bd8d83
+//│ ║  l.396: 	not(w.x.a)
+=======
+//│ ║  l.400: 	not(w.x.a)
+>>>>>>> new-definition-typing
 //│ ╙──       	       ^^
 //│ Bool
 //│ res
 //│     = false
+
+
+
+abstract class Cls[A](val x: A) { fun g: A -> Int }
+//│ abstract class Cls[A](x: A) {
+//│   fun g: A -> Int
+//│ }
+
+module M extends Cls(123) { fun g = id }
+//│ module M extends Cls {
+//│   fun g: forall 'a. 'a -> 'a
+//│ }
+
+M: Cls['a]
+//│ Cls['a]
+//│   where
+//│     'a :> 123
+//│        <: Int
+//│ res
+//│     = M { class: [class M extends Cls] }
+
+
+class Cls[A](val x: A) { fun g: A -> Int; fun g(x) = 42 }
+//│ class Cls[A](x: A) {
+//│   fun g: A -> Int
+//│ }
+
+Cls(123)
+//│ Cls['A]
+//│   where
+//│     'A :> 123
+//│ res
+//│     = Cls {}
 
 
 

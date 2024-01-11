@@ -3,7 +3,7 @@
 
 class Exp[A]: Pair | Lit
 class Lit(n: Int) extends Exp[Int]
-class Pair[L, R](val lhs: L, val rhs: R) extends Exp[(L, R)]
+class Pair[L, R](val lhs: L, val rhs: R) extends Exp[[L, R]]
 //│ class Exp[A]: Lit | Pair[anything, anything] {
 //│   constructor()
 //│ }

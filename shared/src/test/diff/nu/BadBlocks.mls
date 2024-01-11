@@ -8,10 +8,10 @@ fun test =
 //│ ╔══[ERROR] Cannot use `val` or `fun` in local block; use `let` instead.
 //│ ║  l.6: 	  fun lol = log("ok")
 //│ ╙──     	  ^^^^^^^^^^^^^^^^^^^
-//│ fun test: [undefined, undefined]
+//│ fun test: [(), ()]
 
 test
-//│ [undefined, undefined]
+//│ [(), ()]
 //│ res
 //│     = [ undefined, undefined ]
 //│ // Output
@@ -162,7 +162,10 @@ fun test = (new {
 //│ ╔══[PARSE ERROR] Unexpected '=' here
 //│ ║  l.159: 	  val res = a + 1
 //│ ╙──       	          ^
-//│ ╔══[PARSE ERROR] Unexpected record after `new` keyword
+//│ ╔══[ERROR] type identifier not found: res
+//│ ║  l.159: 	  val res = a + 1
+//│ ╙──       	      ^^^
+//│ ╔══[ERROR] Unexpected type `{res: error}` after `new` keyword
 //│ ║  l.158: 	fun test = (new {
 //│ ║         	                ^
 //│ ║  l.159: 	  val res = a + 1
@@ -171,8 +174,7 @@ fun test = (new {
 //│ ║         	^^^^^^^^^^^^^
 //│ ║  l.161: 	}).res
 //│ ╙──       	^
-//│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.158: 	fun test = (new {
-//│ ╙──       	            ^^^
 //│ fun test: error
+//│ Code generation encountered an error:
+//│   Unsupported `new` class term: Bra(true,Rcd(List((Var(res),Fld(g,Var(res))))))
 

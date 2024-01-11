@@ -15,7 +15,7 @@ class App[A](s: A, t: A)
 fun eval(sub, v) =
   if v is
     Abs(x, t) then
-      eval(Cons((error, error), Nil), error)
+      eval(Cons([error, error], Nil), error)
       eval(Cons(error, sub), error)
       error
 //│ fun eval: (Cons[anything] | Nil, Abs[anything]) -> nothing
@@ -24,12 +24,12 @@ mixin EvalLambda {
   fun eval(sub, v) =
     if v is
       Abs(x, t) then
-        this.eval(Cons((error, error), Nil), error)
-        this.eval(Cons((x, error), sub), error)
+        this.eval(Cons([error, error], Nil), error)
+        this.eval(Cons([x, error], sub), error)
         error
 }
 //│ mixin EvalLambda() {
-//│   this: {eval: (Cons[[string, nothing] | 'A], nothing) -> anything}
+//│   this: {eval: (Cons[[string, nothing] | 'A], nothing) -> ()}
 //│   fun eval: (Cons['A] | Nil, Abs[anything]) -> nothing
 //│ }
 

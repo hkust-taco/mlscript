@@ -37,11 +37,23 @@ fun mk(n) = if n is
   0 then Lit(0)
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
+<<<<<<< HEAD
 //│ fun mk: forall 'a 'A 'E. Object -> (Lit | 'a)
+||||||| b14bd8d83
+//│ fun mk: forall 'E. Object -> 'E
+=======
+//│ fun mk: forall 'a. Object -> (Lit | 'a)
+>>>>>>> new-definition-typing
 //│   where
+<<<<<<< HEAD
 //│     'a :> Neg['A] | Add['E]
 //│     'E :> Lit | 'a
 //│     'A :> Lit | 'a
+||||||| b14bd8d83
+//│     'E :> Add['E] | Lit | Neg['E]
+=======
+//│     'a :> Neg[Lit | 'a] | Add[Lit | 'a]
+>>>>>>> new-definition-typing
 
 :stats
 TestLang.eval(mk(0))

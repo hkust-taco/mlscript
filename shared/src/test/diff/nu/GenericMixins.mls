@@ -112,8 +112,8 @@ class C[A] extends Test[Array[A]] {
 mixin Test[A] {
   fun foo: A -> A
   fun foo = id
-  fun bar: (A, A)
-  fun bar = (this.arg, this.arg)
+  fun bar: [A, A]
+  fun bar = [this.arg, this.arg]
   fun baz = foo(this.arg)
 }
 //│ mixin Test[A]() {
@@ -163,10 +163,10 @@ class C extends Test { // it also fails with Test[Int]...
 //│ ║  l.117: 	  fun baz = foo(this.arg)
 //│ ╙──       	                    ^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.116: 	  fun bar = (this.arg, this.arg)
+//│ ║  l.116: 	  fun bar = [this.arg, this.arg]
 //│ ╙──       	                           ^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.116: 	  fun bar = (this.arg, this.arg)
+//│ ║  l.116: 	  fun bar = [this.arg, this.arg]
 //│ ╙──       	                 ^^^^
 //│ class C {
 //│   constructor()

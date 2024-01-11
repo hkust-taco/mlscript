@@ -32,8 +32,8 @@ foo
 fun main =
   log("Hello")
 main
-//│ fun main: undefined
-//│ undefined
+//│ fun main: ()
+//│ ()
 //│ res
 //│     = undefined
 //│ // Output
@@ -41,10 +41,10 @@ main
 
 fun main =
   log("Hello")
-//│ fun main: undefined
+//│ fun main: ()
 
 main
-//│ undefined
+//│ ()
 //│ res
 //│     = undefined
 //│ // Output
@@ -57,8 +57,8 @@ fun main =
   module M extends B
   log(2)
 main
-//│ fun main: undefined
-//│ undefined
+//│ fun main: ()
+//│ ()
 //│ res
 //│     = undefined
 //│ // Output

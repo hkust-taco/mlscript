@@ -158,7 +158,7 @@ class Impl2() extends Base2, Foo[Int] {
 
 
 trait Test1[A] { fun x: A }
-trait Test2[A]: Test1[(A, A)]
+trait Test2[A]: Test1[[A, A]]
 //│ trait Test1[A] {
 //│   fun x: A
 //│ }

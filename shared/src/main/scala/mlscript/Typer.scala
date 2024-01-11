@@ -283,6 +283,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     if (funkyTuples) ty else TupleType((N, ty.toUpper(ty.prov) ) :: Nil)(noProv)
   def pair(ty1: ST, ty2: ST): ST =
     TupleType(N -> ty1.toUpper(ty1.prov) :: N -> ty2.toUpper(ty2.prov) :: Nil)(noProv)
+  private val sharedVar = freshVar(noProv, N)(1)
   val builtinBindings: Bindings = {
     val tv = freshVar(noProv, N)(1)
     import FunctionType.{ apply => fun }
@@ -338,6 +339,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         PolymorphicType(MinLevel, fun(singleTup(v), fun(singleTup(v), BoolType)(noProv))(noProv))
       },
       "error" -> BotType,
+      "," -> {
+        val v = sharedVar
+        PolymorphicType(MinLevel, fun(TupleType(N -> TopType.toUpper(provTODO) :: N -> v.toUpper(provTODO) :: Nil)(noProv), v)(noProv))
+      },
       "+" -> intBinOpTy,
       "-" -> intBinOpTy,
       "*" -> intBinOpTy,
@@ -349,7 +354,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       ">=" -> numberBinPred,
       "==" -> numberBinPred,
       "===" -> {
-        val v = freshVar(noProv, N)(1)
+        val v = sharedVar
         val eq = TypeRef(TypeName("Eql"), v :: Nil)(noProv)
         PolymorphicType(MinLevel, fun(pair(eq, v), BoolType)(noProv))
       },
@@ -719,7 +724,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   }
   
   // TODO also prevent rebinding of "not"
-  val reservedVarNames: Set[Str] = Set("|", "&", "~", ",", "neg", "and", "or", "is")
+  val reservedVarNames: Set[Str] = Set("|", "&", "~", "neg", "and", "or", "is")
   
   object ValidVar {
     def unapply(v: Var)(implicit raise: Raise): S[Str] = S {
@@ -1005,6 +1010,46 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         val body_ty = typeTerm(body)(newCtx, raise, vars,
           generalizeCurriedFunctions || doGenLambdas)
         FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
+      case NuNew(cls) => typeMonomorphicTerm(App(NuNew(cls), Tup(Nil).withLoc(term.toLoc.map(_.right))))
+      case app @ App(nw @ NuNew(cls), args) =>
+        cls match {
+          case _: TyApp => // * TODO improve (hacky)
+            err(msg"Type arguments in `new` expressions are not yet supported", prov.loco)
+          case _ => 
+        }
+        val cls_ty = typeType(cls.toTypeRaise)
+        def process(clsNme: Str) = {
+            println(clsNme, ctx.tyDefs2.get(clsNme))
+            ctx.tyDefs2.get(clsNme) match {
+              case N =>
+                err(msg"Type `${clsNme}` cannot be used in `new` expression", term.toLoc)
+              case S(lti) =>
+                def checkNotAbstract(decl: NuDecl) =
+                  if (decl.isAbstract)
+                    err(msg"Class ${decl.name} is abstract and cannot be instantiated", term.toLoc)
+                lti match {
+                  case dti: DelayedTypeInfo if !(dti.kind is Cls) =>
+                    err(msg"${dti.kind.str.capitalize} ${dti.name} cannot be used in `new` expression",
+                      prov.loco)
+                  case dti: DelayedTypeInfo =>
+                    checkNotAbstract(dti.decl)
+                    dti.typeSignature(true, prov.loco)
+                }
+            }
+        }
+        val new_ty = cls_ty.unwrapProxies match {
+          case TypeRef(clsNme, targs) =>
+            // FIXME don't disregard `targs`
+            process(clsNme.name)
+          case err @ ClassTag(ErrTypeId, _) => err
+          case ClassTag(Var(clsNme), _) => process(clsNme)
+          case _ =>
+            // * Debug with: ${cls_ty.getClass.toString}
+            err(msg"Unexpected type `${cls_ty.expPos}` after `new` keyword" -> cls.toLoc :: Nil)
+        }
+        val res = freshVar(prov, N)
+        val argProv = tp(args.toLoc, "argument list")
+        con(new_ty, FunctionType(typeTerm(args).withProv(argProv), res)(noProv), res)
       case App(App(Var("is"), _), _) => // * Old-style operators
         val desug = If(IfThen(term, Var("true")), S(Var("false")))
         term.desugaredTerm = S(desug)
@@ -1101,7 +1146,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         //   Returns a function expecting an additional argument of type `Class` before the method arguments
         def rcdSel(obj: Term, fieldName: Var) = {
           val o_ty = typeMonomorphicTerm(obj)
-          val res = freshVar(prov, N, Opt.when(!fieldName.name.startsWith("_"))(fieldName.name))
+          val res = freshVar(prov, N, Opt.when(!fieldName.name.startsWith("_") && !fieldName.isIndex)(fieldName.name))
           val obj_ty = mkProxy(o_ty, tp(obj.toCoveringLoc, "receiver"))
           val rcd_ty = RecordType.mk(
             fieldName -> res.toUpper(tp(fieldName.toLoc, "field selector")) :: Nil)(prov)
@@ -1340,7 +1385,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             //   ()
             // and others
             case pat =>
-              lastWords(s"Cannot handle pattern ${pat}")
+              lastWords(s"Cannot handle pattern ${pat.showDbg}")
           }
 
           handlePat(pat, cond_ty)
@@ -1349,42 +1394,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           }
         }
         ret_ty
-      case New(S((nmedTy, trm)), TypingUnit(Nil)) if !newDefs =>
-        typeMonomorphicTerm(App(Var(nmedTy.base.name).withLocOf(nmedTy), trm))
-      case nw @ New(S((nmedTy, trm: Tup)), TypingUnit(Nil)) if newDefs =>
-        typeMonomorphicTerm(App(New(S((nmedTy, UnitLit(true))), TypingUnit(Nil)).withLocOf(nw), trm))
-      case New(S((nmedTy, UnitLit(true))), TypingUnit(Nil)) if newDefs =>
-        if (nmedTy.targs.nonEmpty)
-          err(msg"Type arguments in `new` expressions are not yet supported", prov.loco)
-        ctx.get(nmedTy.base.name).fold(err("identifier not found: " + nmedTy.base, term.toLoc): ST) {
-          case AbstractConstructor(absMths, traitWithMths) => die
-          case VarSymbol(ty, _) =>
-            err(msg"Cannot use `new` on non-class variable of type ${ty.expPos}", term.toLoc)
-          case lti: LazyTypeInfo =>
-            def checkNotAbstract(decl: NuDecl) =
-              if (decl.isAbstract)
-                err(msg"Class ${decl.name} is abstract and cannot be instantiated", term.toLoc)
-            lti match {
-              case ti: CompletedTypeInfo =>
-                ti.member match {
-                  case _: TypedNuFun | _: NuParam =>
-                    err(msg"${ti.member.kind.str.capitalize} ${ti.member.name
-                      } cannot be used in `new` expression", prov.loco)
-                  case ti: TypedNuCls =>
-                    checkNotAbstract(ti.decl)
-                    ti.typeSignature(true, prov.loco)
-                  case ti: TypedNuDecl =>
-                    err(msg"${ti.kind.str.capitalize} ${ti.name
-                      } cannot be used in term position", prov.loco)
-                }
-              case dti: DelayedTypeInfo if !(dti.kind is Cls) =>
-                    err(msg"${dti.kind.str.capitalize} ${dti.name
-                      } cannot be used in `new` expression", prov.loco)
-              case dti: DelayedTypeInfo =>
-                checkNotAbstract(dti.decl)
-                dti.typeSignature(true, prov.loco)
-            }
-        }
       case New(base, args) => err(msg"Currently unsupported `new` syntax", term.toCoveringLoc)
       case TyApp(base, _) =>
         err(msg"Type application syntax is not yet supported", term.toLoc) // TODO handle
@@ -1418,6 +1427,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         res
       case Eqn(lhs, rhs) =>
         err(msg"Unexpected equation in this position", term.toLoc)
+      case Rft(bse, tu) =>
+        err(msg"Refinement terms are not yet supported", term.toLoc)
     }
   }(r => s"$lvl. : ${r}")
   

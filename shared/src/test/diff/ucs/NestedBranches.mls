@@ -1,6 +1,7 @@
 :NewParser
 :NewDefs
 
+
 class Some[A](val value: A)
 module None
 class Left[A](val leftValue: A)
@@ -15,6 +16,7 @@ class Pair[A, B](val fst: A, val snd: B)
 //│ module Nil
 //│ class Cons[A](head: A, tail: Cons[A] | Nil)
 //│ class Pair[A, B](fst: A, snd: B)
+
 
 fun optionApply(x, y, f) =
   if x is
@@ -140,43 +142,103 @@ mapPartition(f, zeroToThree)
 //│ res
 //│     = Pair {}
 
-// TODO make this one work (needs tuple support)
+:e // TODO make this one work (needs tuple support)
 fun mapPartition(f, xs) = if xs is
-  Nil then (Nil, Nil)
-  Cons(x, xs) and mapPartition(f, xs) is (l, r) and f(x) is
-    Left(v)  then (Cons(v, l), r)
-    Right(v) then (l, Cons(v, r))
+  Nil then [Nil, Nil]
+  Cons(x, xs) and mapPartition(f, xs) is [l, r] and f(x) is
+    Left(v)  then [Cons(v, l), r]
+    Right(v) then [l, Cons(v, r)]
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
 //│ ╔══[ERROR] Type mismatch in definition:
+<<<<<<< HEAD
 //│ ║  l.144: 	fun mapPartition(f, xs) = if xs is
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.145: 	  Nil then (Nil, Nil)
+||||||| b14bd8d83
+//│ ║  l.99: 	fun mapPartition(f, xs) = if xs is
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.100: 	  Nil then (Nil, Nil)
+=======
+//│ ║  l.101: 	fun mapPartition(f, xs) = if xs is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.102: 	  Nil then [Nil, Nil]
+>>>>>>> new-definition-typing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
+<<<<<<< HEAD
 //│ ║  l.146: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r) and f(x) is
+||||||| b14bd8d83
+//│ ║  l.101: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r) and f(x) is
+=======
+//│ ║  l.103: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r] and f(x) is
+>>>>>>> new-definition-typing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<<<<<<< HEAD
 //│ ║  l.147: 	    Left(v)  then (Cons(v, l), r)
+||||||| b14bd8d83
+//│ ║  l.102: 	    Left(v)  then (Cons(v, l), r)
+=======
+//│ ║  l.104: 	    Left(v)  then [Cons(v, l), r]
+>>>>>>> new-definition-typing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<<<<<<< HEAD
 //│ ║  l.148: 	    Right(v) then (l, Cons(v, r))
+||||||| b14bd8d83
+//│ ║  l.103: 	    Right(v) then (l, Cons(v, r))
+=======
+//│ ║  l.105: 	    Right(v) then [l, Cons(v, r)]
+>>>>>>> new-definition-typing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `[Nil, Nil]` is not an instance of type `Object`
+<<<<<<< HEAD
 //│ ║  l.145: 	  Nil then (Nil, Nil)
 //│ ║         	            ^^^^^^^^
+||||||| b14bd8d83
+//│ ║  l.100: 	  Nil then (Nil, Nil)
+//│ ║         	            ^^^^^^^^
+=======
+//│ ║  l.102: 	  Nil then [Nil, Nil]
+//│ ║         	           ^^^^^^^^^^
+>>>>>>> new-definition-typing
 //│ ╟── Note: constraint arises from `case` expression:
+<<<<<<< HEAD
 //│ ║  l.146: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r) and f(x) is
+||||||| b14bd8d83
+//│ ║  l.101: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r) and f(x) is
+=======
+//│ ║  l.103: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r] and f(x) is
+>>>>>>> new-definition-typing
 //│ ║         	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<<<<<<< HEAD
 //│ ║  l.147: 	    Left(v)  then (Cons(v, l), r)
+||||||| b14bd8d83
+//│ ║  l.102: 	    Left(v)  then (Cons(v, l), r)
+=======
+//│ ║  l.104: 	    Left(v)  then [Cons(v, l), r]
+>>>>>>> new-definition-typing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<<<<<<< HEAD
 //│ ║  l.148: 	    Right(v) then (l, Cons(v, r))
+||||||| b14bd8d83
+//│ ║  l.103: 	    Right(v) then (l, Cons(v, r))
+=======
+//│ ║  l.105: 	    Right(v) then [l, Cons(v, r)]
+>>>>>>> new-definition-typing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from application:
+<<<<<<< HEAD
 //│ ║  l.146: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r) and f(x) is
+||||||| b14bd8d83
+//│ ║  l.101: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r) and f(x) is
+=======
+//│ ║  l.103: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r] and f(x) is
+>>>>>>> new-definition-typing
 //│ ╙──       	                  ^^^^^^^^^^^^^^^^^^^
 //│ fun mapPartition: forall 'A. (anything, Cons['A] | Nil) -> (error | [Nil, Nil])
 //│ Code generation encountered an error:
 //│   unknown match case: Tuple#2
 
-// TODO
+:re // TODO
 mapPartition(f, zeroToThree)
 //│ error | [Nil, Nil]
 //│ res
@@ -190,44 +252,125 @@ mapPartition(f, zeroToThree)
 :e
 :ge
 fun mapPartition(f, xs) = if xs is
-  Nil then (Nil, Nil)
-  Cons(x, xs) and mapPartition(f, xs) is (l, r)
-          and f(x) is Left(v)  then (Cons(v, l), r)
-                      Right(v) then (l, Cons(v, r))
+  Nil then [Nil, Nil]
+  Cons(x, xs) and mapPartition(f, xs) is [l, r]
+          and f(x) is Left(v)  then [Cons(v, l), r]
+                      Right(v) then [l, Cons(v, r)]
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
+<<<<<<< HEAD
 //│ ║  l.196: 	                      Right(v) then (l, Cons(v, r))
+||||||| b14bd8d83
+//│ ║  l.151: 	                      Right(v) then (l, Cons(v, r))
+=======
+//│ ║  l.153: 	                      Right(v) then [l, Cons(v, r)]
+>>>>>>> new-definition-typing
 //│ ╙──       	                               ^^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+<<<<<<< HEAD
 //│ ║  l.195: 	          and f(x) is Left(v)  then (Cons(v, l), r)
+||||||| b14bd8d83
+//│ ║  l.150: 	          and f(x) is Left(v)  then (Cons(v, l), r)
+=======
+//│ ║  l.152: 	          and f(x) is Left(v)  then [Cons(v, l), r]
+>>>>>>> new-definition-typing
 //│ ║         	                                    ^^^^^^^^^^^^^^^
+<<<<<<< HEAD
 //│ ║  l.196: 	                      Right(v) then (l, Cons(v, r))
+||||||| b14bd8d83
+//│ ║  l.151: 	                      Right(v) then (l, Cons(v, r))
+=======
+//│ ║  l.153: 	                      Right(v) then [l, Cons(v, r)]
+>>>>>>> new-definition-typing
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
 //│ ╔══[ERROR] Type mismatch in definition:
+<<<<<<< HEAD
 //│ ║  l.192: 	fun mapPartition(f, xs) = if xs is
+||||||| b14bd8d83
+//│ ║  l.147: 	fun mapPartition(f, xs) = if xs is
+=======
+//│ ║  l.149: 	fun mapPartition(f, xs) = if xs is
+>>>>>>> new-definition-typing
 //│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<<<<<<< HEAD
 //│ ║  l.193: 	  Nil then (Nil, Nil)
+||||||| b14bd8d83
+//│ ║  l.148: 	  Nil then (Nil, Nil)
+=======
+//│ ║  l.150: 	  Nil then [Nil, Nil]
+>>>>>>> new-definition-typing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
+<<<<<<< HEAD
 //│ ║  l.194: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r)
+||||||| b14bd8d83
+//│ ║  l.149: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r)
+=======
+//│ ║  l.151: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r]
+>>>>>>> new-definition-typing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<<<<<<< HEAD
 //│ ║  l.195: 	          and f(x) is Left(v)  then (Cons(v, l), r)
+||||||| b14bd8d83
+//│ ║  l.150: 	          and f(x) is Left(v)  then (Cons(v, l), r)
+=======
+//│ ║  l.152: 	          and f(x) is Left(v)  then [Cons(v, l), r]
+>>>>>>> new-definition-typing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<<<<<<< HEAD
 //│ ║  l.196: 	                      Right(v) then (l, Cons(v, r))
+||||||| b14bd8d83
+//│ ║  l.151: 	                      Right(v) then (l, Cons(v, r))
+=======
+//│ ║  l.153: 	                      Right(v) then [l, Cons(v, r)]
+>>>>>>> new-definition-typing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `[Nil, Nil]` is not an instance of type `Object`
+<<<<<<< HEAD
 //│ ║  l.193: 	  Nil then (Nil, Nil)
 //│ ║         	            ^^^^^^^^
+||||||| b14bd8d83
+//│ ║  l.148: 	  Nil then (Nil, Nil)
+//│ ║         	            ^^^^^^^^
+=======
+//│ ║  l.150: 	  Nil then [Nil, Nil]
+//│ ║         	           ^^^^^^^^^^
+>>>>>>> new-definition-typing
 //│ ╟── Note: constraint arises from `case` expression:
+<<<<<<< HEAD
 //│ ║  l.194: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r)
+||||||| b14bd8d83
+//│ ║  l.149: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r)
+=======
+//│ ║  l.151: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r]
+>>>>>>> new-definition-typing
 //│ ║         	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<<<<<<< HEAD
 //│ ║  l.195: 	          and f(x) is Left(v)  then (Cons(v, l), r)
+||||||| b14bd8d83
+//│ ║  l.150: 	          and f(x) is Left(v)  then (Cons(v, l), r)
+=======
+//│ ║  l.152: 	          and f(x) is Left(v)  then [Cons(v, l), r]
+>>>>>>> new-definition-typing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+<<<<<<< HEAD
 //│ ║  l.196: 	                      Right(v) then (l, Cons(v, r))
+||||||| b14bd8d83
+//│ ║  l.151: 	                      Right(v) then (l, Cons(v, r))
+=======
+//│ ║  l.153: 	                      Right(v) then [l, Cons(v, r)]
+>>>>>>> new-definition-typing
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from application:
+<<<<<<< HEAD
 //│ ║  l.194: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r)
+||||||| b14bd8d83
+//│ ║  l.149: 	  Cons(x, xs) and mapPartition(f, xs) is (l, r)
+=======
+//│ ║  l.151: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r]
+>>>>>>> new-definition-typing
 //│ ╙──       	                  ^^^^^^^^^^^^^^^^^^^
 //│ fun mapPartition: forall 'A. (anything, Cons['A] | Nil) -> (error | [Nil, Nil])
 //│ Code generation encountered an error:
 //│   unknown match case: Tuple#2
+

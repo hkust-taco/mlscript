@@ -1,0 +1,126 @@
+:NewDefs
+
+
+type Option[out A] = Some[A] | None
+class Some[out A](val value: A)
+module None
+//│ type Option[A] = None | Some[A]
+//│ class Some[A](value: A)
+//│ module None
+
+
+fun test(x: Option[Int]) =
+  if x is None then [0, 0] else
+  log(x.value)
+  // ...
+  // do other things on the happy path
+  // ...
+  [x.value - 1, x.value + 1]
+//│ fun test: (x: Option[Int]) -> [Int, Int]
+
+test(Some(10))
+//│ [Int, Int]
+//│ res
+//│     = [ 9, 11 ]
+//│ // Output
+//│ 10
+
+
+fun test(x: Option[Int]) =
+  if x is
+    None then [0, 0]
+    Some(value) then
+      log(value)
+      [value - 1, value + 1]
+//│ fun test: (x: Option[Int]) -> [Int, Int]
+
+fun test(x: Option[Int]) =
+  if x is
+    None then [0, 0]
+    Some(value)
+    then
+      log(value)
+      [value - 1, value + 1]
+//│ fun test: (x: Option[Int]) -> [Int, Int]
+
+fun test(x: Option[Int]) =
+  if x is
+    None then [0, 0]
+    Some(value)
+    then
+    log(value)
+    [value - 1, value + 1]
+//│ fun test: (x: Option[Int]) -> [Int, Int]
+
+fun test(x: Option[Int]) =
+  if x is
+    None then [0, 0]
+    Some(value) then
+    log(value)
+    [value - 1, value + 1]
+//│ fun test: (x: Option[Int]) -> [Int, Int]
+
+:pe // TODO support
+fun test(x: Option[Int]) =
+  if x is
+  None then [0, 0]
+  Some(value) then [value - 1, value + 1]
+//│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
+//│ ║  l.65: 	  if x is
+//│ ║        	     ^^^^
+//│ ║  l.66: 	  None then [0, 0]
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.67: 	  Some(value) then [value - 1, value + 1]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ fun test: (x: Option[Int]) -> ()
+
+:pe // TODO support
+fun test(x: Option[Int]) =
+  if x is
+  None then [0, 0]
+  Some(value) then
+  log(value)
+  [value - 1, value + 1]
+//│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
+//│ ║  l.79: 	  if x is
+//│ ║        	     ^^^^
+//│ ║  l.80: 	  None then [0, 0]
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.81: 	  Some(value) then
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.82: 	  log(value)
+//│ ║        	^^^^^^^^^^^^
+//│ ║  l.83: 	  [value - 1, value + 1]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ fun test: (x: Option[Int]) -> ()
+
+// Q: Support?
+:pe
+:e
+fun test(x: Option[Int]) =
+  if x is
+    None then [0, 0]
+    Some(value)
+  then
+    log(value)
+    [value - 1, value + 1]
+//│ ╔══[PARSE ERROR] Unexpected 'then' keyword in expression position
+//│ ║  l.104: 	  then
+//│ ╙──       	  ^^^^
+//│ ╔══[ERROR] Illegal interleaved statement App(Var(Some),Tup(List((None,Fld(_,Var(value))))))
+//│ ║  l.103: 	    Some(value)
+//│ ╙──       	    ^^^^^^^^^^^
+//│ ╔══[ERROR] identifier not found: value
+//│ ║  l.105: 	    log(value)
+//│ ╙──       	        ^^^^^
+//│ ╔══[ERROR] identifier not found: value
+//│ ║  l.106: 	    [value - 1, value + 1]
+//│ ╙──       	     ^^^^^
+//│ ╔══[ERROR] identifier not found: value
+//│ ║  l.106: 	    [value - 1, value + 1]
+//│ ╙──       	                ^^^^^
+//│ fun test: (x: Option[Int]) -> [Int, Int]
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+

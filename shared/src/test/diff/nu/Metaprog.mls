@@ -21,7 +21,7 @@ fun test(f) =
   bind of IntLit(42), n =>
   f(n)
   Add(n, IntLit(1))
-//│ fun test: (Code[Int, ??cc] -> anything) -> Code[Int, nothing]
+//│ fun test: (Code[Int, ??cc] -> ()) -> Code[Int, nothing]
 
 
 abstract class Test[C] {

@@ -13,7 +13,7 @@ type A = A | Int
 
 // TODO check regularity
 // :e
-type Foo[A] = { x: A, y: Foo[(A, A)] }
+type Foo[A] = { x: A, y: Foo[[A, A]] }
 //│ type Foo[A] = {x: A, y: Foo[[A, A]]}
 
 

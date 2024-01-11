@@ -217,6 +217,17 @@ class Annots(base: 0 | 1) {
   a: Int
   fun a = base
 }
+//│ ╔══[WARNING] Expression in statement position should have type `()`.
+//│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
+//│ ╟── Type mismatch in type ascription:
+//│ ║  l.217: 	  a: Int
+//│ ║         	  ^
+//│ ╟── type `Int` does not match type `()`
+//│ ║  l.217: 	  a: Int
+//│ ║         	     ^^^
+//│ ╟── but it flows into expression in statement position with expected type `()`
+//│ ║  l.217: 	  a: Int
+//│ ╙──       	  ^
 //│ class Annots(base: 0 | 1) {
 //│   fun a: 0 | 1
 //│ }

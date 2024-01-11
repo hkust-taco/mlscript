@@ -1,0 +1,316 @@
+:NewDefs
+
+
+
+trait A
+trait B
+//│ trait A
+//│ trait B
+
+module AA extends A, B
+//│ module AA extends A, B
+
+fun x: A & B
+fun x = AA
+//│ fun x: AA
+//│ fun x: A & B
+
+x : A
+//│ A
+//│ res
+//│     = AA { class: [class AA extends Object] }
+
+
+
+abstract class Foo[A, B] { fun x: A & B }
+//│ abstract class Foo[A, B] {
+//│   fun x: A & B
+//│ }
+
+module Bar extends Foo[Int, Bool] { fun x = x }
+//│ module Bar extends Foo {
+//│   fun x: nothing
+//│ }
+
+module Bar extends Foo { fun x = () }
+//│ module Bar extends Foo {
+//│   fun x: ()
+//│ }
+
+Bar : Foo['a, 'b]
+//│ Foo['a, 'b]
+//│   where
+//│     'b :> ()
+//│     'a :> ()
+//│ res
+//│     = Bar { class: [class Bar extends Foo] }
+
+
+// * An overloaded function type
+fun f: (Int -> Int) & (Bool -> Bool)
+fun f = id
+//│ fun f: forall 'a. 'a -> 'a
+//│ fun f: Int -> Int & Bool -> Bool
+
+
+// * Widen the results
+fun h: (Int -> (Int | Bool)) & (Bool -> (Int | Bool))
+fun h = f
+//│ fun h: Int -> Int & Bool -> Bool
+//│ fun h: (Bool | Int) -> (Int | false | true)
+
+// * Merge intersected functions with same domain
+fun g: (Int | Bool) -> (Int | Bool)
+fun g = h
+//│ fun g: (Bool | Int) -> (Int | false | true)
+//│ fun g: (Bool | Int) -> (Int | false | true)
+
+// * In one step
+fun g: (Int | Bool) -> (Int | Bool)
+fun g = f
+//│ fun g: Int -> Int & Bool -> Bool
+//│ fun g: (Bool | Int) -> (Int | false | true)
+
+
+// * Can also widen into intersection
+fun i: ((Int & Bool) -> Int) & ((Int & Bool) -> Bool)
+fun i = f
+//│ fun i: Int -> Int & Bool -> Bool
+//│ fun i: nothing -> nothing
+
+// * Merge intersected functions with same codomain
+fun j: (Int & Bool) -> (Int & Bool)
+fun j = i
+//│ fun j: nothing -> nothing
+//│ fun j: nothing -> nothing
+
+:e // * Note: currently it doesn't work when done in a single step
+fun j: (Int & Bool) -> (Int & Bool)
+fun j = f
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.89: 	fun j = f
+//│ ║        	    ^^^^^
+//│ ╙── expression of type `Int` does not match type `nothing`
+//│ fun j: Int -> Int & Bool -> Bool
+//│ fun j: nothing -> nothing
+
+
+// * Or widen even further with both an intersection and a union, into this
+fun g: (Int & Bool) -> (Int | Bool)
+fun g = f
+//│ fun g: Int -> Int & Bool -> Bool
+//│ fun g: nothing -> (Int | false | true)
+
+
+// * Note: we currently approximate uses of overloaded function types!
+// * With match-type-based constraint solving, we could return Int here
+
+f(0)
+//│ Int | false | true
+//│ res
+//│     = 0
+
+// f(0) : case 0 of { Int => Int; Bool => Bool } == Int
+
+
+x => f(x)
+//│ (Bool | Int) -> (Int | false | true)
+//│ res
+//│     = [Function: res]
+
+// : forall 'a: 'a -> case 'a of { Int => Int; Bool => Bool } where 'a <: Int | Bool
+
+
+f(if true then 0 else false)
+//│ Int | false | true
+//│ res
+//│     = 0
+
+// * With match-type-based constraint solving, we could *also* return Int here
+
+:e // TODO implement this syntax
+:w
+f(refined if true then 0 else false) // this one can be precise again!
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.133: 	f(refined if true then 0 else false) // this one can be precise again!
+//│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] identifier not found: refined
+//│ ║  l.133: 	f(refined if true then 0 else false) // this one can be precise again!
+//│ ╙──       	  ^^^^^^^
+//│ Int | false | true
+//│ Code generation encountered an error:
+//│   unresolved symbol refined
+
+
+
+// * Notes on constraint solving
+
+
+// * Easy:
+
+// ?a -> ?b <: (Int -> Int) & (Bool -> Bool)
+// to:
+// ?a -> ?b <: (Int -> Int) AND ?a -> ?b <: (Bool -> Bool)
+
+// * Hard; but can solve with match types:
+
+// (Int -> Int) & (Bool -> Bool) <: ?a -> ?b
+// to:
+// ?a <: Int | Bool AND (case ?a of { Int => Int; Bool => Bool }) <: ?b
+
+// We can still widen if needed; consider:
+// ?a := Int | Bool
+// then:
+// (case (Int | Bool) of { Int => Int; Bool => Bool }) <: ?b
+// to:
+// Int <: ?b AND Bool <: ?b
+
+// An simple match-type constraint example:
+// (case ?a of { Int => Int; Bool => Bool }) <: Int
+// to:
+// ?a <: Int
+
+// A more complicated match-type constraint example:
+// (case ?a of { Int => ?b; Bool => ?c }) <: T
+// to:
+// ?b <: (case ?a of { Int => T; Bool => Top }) AND ?c <: (case ?a of { Int => Top; Bool => T })
+
+
+
+class List[A]
+//│ class List[A] {
+//│   constructor()
+//│ }
+
+// * Note: match type `T match { case List[t] => ... t ... }` could be encoded as:
+
+type M = (forall 't: List['t] => 't)
+//│ type M = forall 't. List['t] -> 't
+
+type T = List[Int]
+//│ type T = List[Int]
+
+:e // TODO application types
+type Res = M(T)
+//│ ╔══[ERROR] Wrong number of type arguments – expected 0, found 1
+//│ ║  l.194: 	type Res = M(T)
+//│ ╙──       	           ^^^^
+//│ type Res = M
+
+
+
+let f = x => [x, x]
+//│ let f: forall 'a. 'a -> ['a, 'a]
+//│ f
+//│   = [Function: f1]
+
+[f(1), f(true)]
+//│ [[1, 1], [true, true]]
+//│ res
+//│     = [ [ 1, 1 ], [ true, true ] ]
+
+
+
+:e // TODO support
+fun f: Int -> Int
+fun f: Bool -> Bool
+fun f = id
+//│ ╔══[ERROR] A type signature for 'f' was already given
+//│ ║  l.216: 	fun f: Bool -> Bool
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^
+//│ fun f: forall 'a. 'a -> 'a
+//│ fun f: Int -> Int
+
+:e // TODO support
+f: (Int -> Int) & (Bool -> Bool)
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.225: 	f: (Int -> Int) & (Bool -> Bool)
+//│ ║         	^
+//│ ╟── type `Bool` is not an instance of `Int`
+//│ ║  l.225: 	f: (Int -> Int) & (Bool -> Bool)
+//│ ║         	                   ^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.215: 	fun f: Int -> Int
+//│ ╙──       	       ^^^
+//│ Int -> Int & Bool -> Bool
+//│ res
+//│     = [Function: id]
+
+//   t: S  t: T
+// -------------
+//   t: S & T
+
+
+
+// * Weird MLstruct rule (only sound when we don't have FCP):
+// forall 'a: 'a -> 'a <: (Int -> Int) & (Bool -> Bool) == (Int | Bool) -> (Int & Bool)
+// ~{ a: Int } <: Str -> Str
+
+// * Notice: in positive position, this is equivalent to Bottom
+fun x: ~{ a: Int }
+//│ fun x: nothing
+
+
+class A()
+class B()
+//│ class A()
+//│ class B()
+
+A() : ~B
+//│ ~B
+//│ res
+//│     = A {}
+
+// A <: ~B
+// <=>
+// A <: ~B | Bot
+// <=>
+// A & B <: Bot
+
+fun x: A & B
+//│ fun x: nothing
+
+
+fun test(x) = if x is
+  A then 0
+  _ then x
+//│ fun test: forall 'a. (A | Object & 'a & ~#A) -> (0 | 'a)
+
+test(B())
+//│ 0 | B
+//│ res
+//│     = B {}
+
+test(A())
+//│ 0
+//│ res
+//│     = 0
+
+// A <: A | Object & 'a & ~A
+// A & ~A <: Object & 'a & ~A
+// Bot <: Object & 'a & ~A
+
+
+:e // TODO implement this syntax
+:w
+fun test(x) = refined if x is
+  A then 0
+  B then 1
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.296: 	fun test(x) = refined if x is
+//│ ║         	              ^^^^^^^^^^^^^^^
+//│ ║  l.297: 	  A then 0
+//│ ║         	^^^^^^^^^^
+//│ ║  l.298: 	  B then 1
+//│ ╙──       	^^^^^^^^^^
+//│ ╔══[ERROR] identifier not found: refined
+//│ ║  l.296: 	fun test(x) = refined if x is
+//│ ╙──       	              ^^^^^^^
+//│ fun test: (A | B) -> error
+//│ Code generation encountered an error:
+//│   unresolved symbol refined
+
+// forall 'a: 'a -> (case 'a of A -> 0, B & ~A -> 1)
+
+
+

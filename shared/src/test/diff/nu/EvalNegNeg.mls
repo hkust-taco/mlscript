@@ -49,23 +49,35 @@ mixin EvalNegNeg {
 
 module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ module TestLang {
-//│   fun eval: 'a -> Int
+//│   fun eval: (Neg['A] | Object & 'a & ~#Neg) -> Int
 //│ }
 //│ where
-//│   'a <: Neg['A] | Object & 'b & ~#Neg
-//│   'A <: Neg['a & 'A] | Neg['A] & ~#Neg | Object & 'b & ~#Neg
-//│   'b <: Add['a] | Lit | Neg['a]
+//│   'A <: Neg['A & 'b] | Neg['A] & ~#Neg | Object & 'a & ~#Neg
+//│   'b <: Neg['A] | Object & 'a & ~#Neg
+//│   'a <: Add['b] | Lit | Neg['b]
 
 
 fun mk(n) = if n is
   0 then Lit(3)
   1 then Neg(mk(n - 1))
   _ then Add(mk(n - 1), mk(n - 1))
+<<<<<<< HEAD
 //│ fun mk: forall 'a 'A 'E. (0 | 1 | Int & ~0 & ~1) -> (Lit | 'a)
+||||||| b14bd8d83
+//│ fun mk: forall 'E. (0 | 1 | Int & ~0 & ~1) -> 'E
+=======
+//│ fun mk: forall 'a. (0 | 1 | Int & ~0 & ~1) -> (Lit | 'a)
+>>>>>>> new-definition-typing
 //│   where
+<<<<<<< HEAD
 //│     'a :> Neg['A] | Add['E]
 //│     'E :> Lit | 'a
 //│     'A :> Lit | 'a
+||||||| b14bd8d83
+//│     'E :> Add['E] | Lit | Neg['E]
+=======
+//│     'a :> Neg[Lit | 'a] | Add[Lit | 'a]
+>>>>>>> new-definition-typing
 
 TestLang.eval(mk(0))
 //│ Int

@@ -8,10 +8,10 @@ case 0 then true
 
 :pe // TODO support
 case 0 then true, 1 then false
-//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
+//│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
 //│ ║  l.10: 	case 0 then true, 1 then false
-//│ ╙──      	                ^
-//│ 0 -> true
+//│ ╙──      	                  ^^^^^^^^^^^^
+//│ 0 -> ()
 //│ res
 //│     = [Function: res]
 
@@ -120,5 +120,46 @@ case then 1 else 0
 //│ anything -> 1
 //│ res
 //│     = [Function: res]
+
+
+
+// TODO:
+
+:pe
+:e
+case x, y then x + y
+//│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
+//│ ║  l.130: 	case x, y then x + y
+//│ ╙──       	        ^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'case'; found operator application instead
+//│ ║  l.130: 	case x, y then x + y
+//│ ║         	     ^^^^^^^^^^^^^^^
+//│ ╟── Note: 'case' expression starts here:
+//│ ║  l.130: 	case x, y then x + y
+//│ ╙──       	^^^^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.130: 	case x, y then x + y
+//│ ╙──       	     ^
+//│ anything -> ()
+//│ Code generation encountered an error:
+//│   unresolved symbol x
+
+:e
+case (x, y) then x + y
+//│ ╔══[ERROR] Illegal pattern `,`
+//│ ║  l.148: 	case (x, y) then x + y
+//│ ╙──       	      ^^^^
+//│ anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+:e // * FIXME[UCS]
+case [x, y] then x + y
+//│ ╔══[ERROR] type identifier not found: Tuple#2
+//│ ╙──
+//│ nothing -> error
+//│ Code generation encountered an error:
+//│   unknown match case: Tuple#2
+
 
 

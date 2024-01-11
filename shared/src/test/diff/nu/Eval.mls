@@ -21,14 +21,41 @@ fun (<|) pepi(f, x) = f(x)
 declare class throw(arg: anything): nothing
 //│ declare class throw(arg: anything): nothing
 
+:w // * Due to current limitations of self types
+fun raise(err) =
+  throw(err)
+  error
+//│ ╔══[WARNING] Expression in statement position should have type `()`.
+//│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
+//│ ╟── Type mismatch in application:
+//│ ║  l.26: 	  throw(err)
+//│ ║        	  ^^^^^^^^^^
+//│ ╙── application of type `throw` does not match type `()`
+//│ fun raise: anything -> nothing
+
 :re
-throw(1); 0
+raise(1); 0
 //│ 0
 //│ res
 //│ Runtime error:
 //│   1
+//│ res
+//│     = 0
 
-fun test = throw(1); 0
+fun test = raise(1); 0
+//│ fun test: nothing
+//│ 0
+//│ res
+//│     = 0
+
+:re
+test
+//│ nothing
+//│ res
+//│ Runtime error:
+//│   1
+
+fun test = raise(1), 0
 //│ fun test: 0
 
 :re
@@ -39,7 +66,7 @@ test
 //│   1
 
 fun test =
-  throw(1)
+  raise(1)
   error
 //│ fun test: nothing
 
@@ -58,7 +85,7 @@ module None extends Option[nothing]
 //│ class Some[A](value: A) extends Option
 //│ module None extends Option
 
-abstract class List[out A]: Cons[A] | Nil { virtual val length: Int }
+abstract class List[out A]: (Cons[A] | Nil) { virtual val length: Int }
 class Cons[out A](val head: A, val tail: List[A]) extends List[A] {
   val length: Int
   val length = tail.length + 1
@@ -162,9 +189,16 @@ type Value = Lam | Lit | Rcd[Value]
 //│ type Value = Lam | Lit[anything] | Rcd[Value]
 
 
+:w
 fun err(msg) =
   throw(concat("Evaluation error: " ++ msg))
   error
+//│ ╔══[WARNING] Expression in statement position should have type `()`.
+//│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
+//│ ╟── Type mismatch in application:
+//│ ║  l.194: 	  throw(concat("Evaluation error: " ++ msg))
+//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── application of type `throw` does not match type `()`
 //│ fun err: Str -> nothing
 
 fun eval(t, env) = if t is
@@ -187,12 +221,24 @@ fun eval(t, env) = if t is
     else err(String(pree) ++ " does not have field " ++ nme)
   Rcd(fs) then
     Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
-//│ fun eval: forall 'a 'A 'b 'Sub. ('a, Cons[{key: Eql[Str], value: 'b}] & {List#A <: {key: Eql[Str], value: 'b}} & List[{key: Eql[Str], value: 'b}] | Nil & {List#A <: {key: Eql[Str], value: 'b}} & List[{key: Eql[Str], value: 'b}]) -> 'Sub
+//│ fun eval: forall 'a 'b 'c. ('b, Cons[{key: Eql[Str], value: 'c}] & {List#A <: {key: Eql[Str], value: 'c}} & List[{key: Eql[Str], value: 'c}] | Nil & {List#A <: {key: Eql[Str], value: 'c}} & List[{key: Eql[Str], value: 'c}]) -> 'a
 //│   where
+<<<<<<< HEAD
 //│     'b :> 'Sub
 //│        <: Object & ~#Rcd | Rcd['b]
 //│     'Sub :> Lam | Lit['A] | 'b
 //│     'a <: App | Lam | Lit['A] | Rcd['a] | Sel | Var
+||||||| b14bd8d83
+//│     'b :> 'Sub
+//│        <: Object & ~#Rcd | Rcd['b]
+//│     'Sub :> Lam | Lit['A] | Rcd['Sub] | 'b
+//│     'a <: App | Lam | Lit['A] | Rcd['a] | Sel | Var
+=======
+//│     'c :> 'a
+//│        <: Object & ~#Rcd | Rcd['c]
+//│     'a :> 'c | Lam | Lit[nothing] | Rcd[Lam | Lit[nothing] | 'a]
+//│     'b <: App | Lam | Lit[anything] | Rcd['b] | Sel | Var
+>>>>>>> new-definition-typing
 
 eval : (Term, List[{key: Str, value: Value}]) -> Value
 //│ (Term, List[{key: Str, value: Value}]) -> Value
@@ -205,23 +251,23 @@ let rcd = Rcd({key: "a", value: IntLit(0)} :: Nil)
 //│     = Rcd {}
 
 eval of rcd, Nil
-//│ 'Sub
+//│ 'a
 //│   where
-//│     'Sub :> Lam | Lit[Int] | Rcd['Sub]
+//│     'a :> Lam | Lit[Int] | Rcd[Lam | Lit[Int] | 'a]
 //│ res
 //│     = Rcd {}
 
 eval of Sel(rcd, "a"), Nil
-//│ 'Sub
+//│ 'a
 //│   where
-//│     'Sub :> Lam | Lit[nothing] | Rcd['Sub]
+//│     'a :> Lam | Lit[nothing] | Rcd[Lam | Lit[nothing] | 'a]
 //│ res
 //│     = IntLit {}
 
 eval of App(Lam("x" :: Nil, Sel(Var("x"), "a")), rcd :: Nil), Nil
-//│ 'Sub
+//│ 'a
 //│   where
-//│     'Sub :> Lam | Lit[nothing] | Rcd['Sub]
+//│     'a :> Lam | Lit[nothing] | Rcd[Lam | Lit[nothing] | 'a]
 //│ res
 //│     = IntLit {}
 

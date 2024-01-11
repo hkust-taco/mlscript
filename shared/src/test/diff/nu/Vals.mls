@@ -18,14 +18,15 @@ val d = 1
 //│ val c: Int
 //│ val d: 1
 //│ Code generation encountered an error:
-//│   unresolved symbol d
+//│   unguarded recursive use of by-value binding d
 
 
 // :e // FIXME should not type check
+:ge
 val a = a
 //│ val a: nothing
-//│ a
-//│   = 1
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding a
 
 
 val f(x) = x

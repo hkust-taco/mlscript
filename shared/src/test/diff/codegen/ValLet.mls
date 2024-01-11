@@ -224,14 +224,36 @@ fun f(val x: Int) = x + 1
 //│ ╙──       	          ^^^^^^
 //│ fun f: (x: Int) -> Int
 
-:e
+:pe
 (val x: 1)
-//│ ╔══[ERROR] Cannot use `val` in this position
+//│ ╔══[PARSE ERROR] Illegal position for field specification
 //│ ║  l.228: 	(val x: 1)
 //│ ╙──       	     ^^^^
-//│ [x: 1]
+//│ 1
 //│ res
-//│     = [ 1 ]
+//│     = 1
+
+:pe
+:e
+(val x: 1) =>
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.238: 	(val x: 1) =>
+//│ ╙──       	             ^
+//│ ╔══[ERROR] Cannot use `val` in this position
+//│ ║  l.238: 	(val x: 1) =>
+//│ ╙──       	     ^^^^
+//│ (x: 1) -> ()
+//│ res
+//│     = [Function: res]
+
+:e
+(val x: 1) => ()
+//│ ╔══[ERROR] Cannot use `val` in this position
+//│ ║  l.250: 	(val x: 1) => ()
+//│ ╙──       	     ^^^^
+//│ (x: 1) -> ()
+//│ res
+//│     = [Function: res]
 
 class D(x: Int) {
   let x = 1

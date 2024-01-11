@@ -2,8 +2,8 @@
 
 
 mixin Test[A] {
-  fun bar: (A, A)
-  fun bar = (this.a, this.a)
+  fun bar: [A, A]
+  fun bar = [this.a, this.a]
 }
 //│ mixin Test[A]() {
 //│   this: {a: A}
@@ -18,20 +18,20 @@ class A(val a: Int) extends Test
 :e
 class A(a: Int) extends Test
 //│ ╔══[ERROR] Parameter 'a' cannot tbe accessed as a field
-//│ ║  l.6: 	  fun bar = (this.a, this.a)
+//│ ║  l.6: 	  fun bar = [this.a, this.a]
 //│ ╙──     	                         ^^
 //│ ╔══[ERROR] Parameter 'a' cannot tbe accessed as a field
-//│ ║  l.6: 	  fun bar = (this.a, this.a)
+//│ ║  l.6: 	  fun bar = [this.a, this.a]
 //│ ╙──     	                 ^^
 //│ class A(a: Int) {
 //│   fun bar: [Int, Int]
 //│ }
 
 mixin Test2[S, T] {
-  fun x: (S, T)
-  fun x = (this.s, this.t)
-  fun fb: S => (S, S)
-  fun fb(h: S) = (this.s, h)
+  fun x: [S, T]
+  fun x = [this.s, this.t]
+  fun fb: S => [S, S]
+  fun fb(h: S) = [this.s, h]
 }
 //│ mixin Test2[S, T]() {
 //│   this: {s: S, t: T}
@@ -184,7 +184,7 @@ trait Foo[type A] { fun foo(x: A): A }
 //│ }
 
 
-trait Foo[A] { fun a: A;; fun foo(x: A): A }
+trait Foo[A] { fun a: A; fun foo(x: A): A }
 //│ trait Foo[A] {
 //│   fun a: A
 //│   fun foo: (x: A) -> A
