@@ -762,7 +762,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         case (p, v @ Var(parNme), lti, parTargs, parArgs) =>
           trace(s"${lvl}. Typing parent spec $p") {
             val info = lti.complete()
-            println(s"!!! $info")
             info match {
               
               case rawMxn: TypedNuMxn =>
@@ -1052,11 +1051,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       case td: NuTypeDef =>
         (td.params.getOrElse(Tup(Nil)).fields.iterator.flatMap(_._1) ++ td.body.entities.iterator.collect {
           case fd: NuFunDef => fd.nme
-        }).toSet ++ inheritedFields ++ /* (this match {
-          case tpd: TypedNuCls => virtualMembers.keysIterator
-          case _ => Nil
-        }) */
-        tparams.map {
+        }).toSet ++ inheritedFields ++ tparams.map {
           case (nme @ TypeName(name), tv, _) =>
             Var(td.nme.name+"#"+name).withLocOf(nme)
         }
@@ -1064,12 +1059,10 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     }
     
     lazy val typedFields: Map[Var, FieldType] = {
-      // println(("privateFields"),privateParams)
       (typedParams.getOrElse(Nil).toMap
         // -- privateFields
         -- inheritedFields /* parameters can be overridden by inherited fields/methods */
       ) ++ typedSignatures.iterator.map(fd_ty => fd_ty._1.nme -> fd_ty._2.toUpper(noProv)) ++
-        // typedParents.flatMap(_._3).map(kv => Var(kv._1) -> kv._2.toUpper(noProv))
         typedParents.flatMap(_._3).flatMap {
           case (k, p: NuParam) => Var(k) -> p.ty :: Nil
           case _ => Nil
