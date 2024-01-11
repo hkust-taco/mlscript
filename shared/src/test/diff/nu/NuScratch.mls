@@ -40,10 +40,10 @@ f : Int | 0
 
 :d
 f : Int
-//│ 0. Typing ‹f : Int›
+//│ 0. Typing TypingUnit(List(Asc(Var(f),TypeName(Int))))
 //│ | Typing unit statements
-//│ | | 0. Typing term f : Int
-//│ | | | 0. Typing term f
+//│ | | 0. Typing term Asc(Var(f),TypeName(Int))
+//│ | | | 0. Typing term Var(f)
 //│ | | | 0. : Foo
 //│ | | | Typing type TypeName(Int)
 //│ | | | | vars=Map() newDefsInfo=Map()

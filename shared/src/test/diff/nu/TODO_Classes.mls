@@ -94,7 +94,7 @@ class Cls[A] { fun x: A = x }
 //│ }
 
 let c = new Cls
-//│ let c: Cls[nothing]
+//│ let c: forall 'A. Cls['A]
 //│ c
 //│   = Cls {}
 

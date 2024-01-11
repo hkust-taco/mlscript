@@ -186,21 +186,9 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│ where
 //│   'a :> 'c
 //│      <: Object
-<<<<<<< HEAD
-//│   'A :> 'a | 'b | 'd
-//│   'd <: Add['c] | Mul['c] | Numb | Var
-//│   'c <: Abs['c] | App['c & (Abs['c] | Object & ~#Abs)] | Object & 'd & ~#Abs & ~#App
-//│   'a :> App['A] | Abs['A]
-||||||| b14bd8d83
-//│   'A :> 'a | Numb | Var | 'b | 'd
-//│   'd <: Add['c] | Mul['c] | Numb | Var
-//│   'c <: Abs['c] | App['c & (Abs['c] | Object & ~#Abs)] | Object & 'd & ~#Abs & ~#App
-//│   'a :> App['A] | Abs['A]
-=======
-//│   'c :> App['c] | Abs['c] | Numb | Var | 'a | 'd
+//│   'c :> App['c] | Abs['c] | 'a | 'd
 //│   'd <: Add['b] | Mul['b] | Numb | Var
 //│   'b <: Abs['b] | App['b & (Abs['b] | Object & ~#Abs)] | Object & 'd & ~#Abs & ~#App
->>>>>>> new-definition-typing
 
 Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil()), Abs("a", Var("a")))
 //│ 'a
@@ -214,28 +202,11 @@ Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil()), App(Abs("a", Var("a")), Add(N
 
 module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ module Test3 {
-<<<<<<< HEAD
-//│   fun eval: (List[{_1: Str, _2: 'a}], 'a & (Add['b] | Mul['b] | Numb | Var)) -> (Numb | 'a | 'b)
-||||||| b14bd8d83
-//│   fun eval: (List[{_1: Str, _2: 'a}], 'a & (Add['b] | Mul['b] | Numb | Var)) -> ('A | 'a | 'b)
-=======
-//│   fun eval: (List[{0: Str, 1: 'a}], 'a & (Add['b] | Mul['b] | Numb | Var)) -> ('a | 'b | 'c)
->>>>>>> new-definition-typing
+//│   fun eval: (List[{0: Str, 1: 'a}], 'a & (Add['b] | Mul['b] | Numb | Var)) -> (Numb | 'a | 'b | 'c)
 //│ }
 //│ where
-<<<<<<< HEAD
-//│   'a :> 'b
-||||||| b14bd8d83
-//│   'a :> 'b | 'A
-=======
 //│   'a :> 'b | 'c
->>>>>>> new-definition-typing
 //│      <: Object
-<<<<<<< HEAD
-||||||| b14bd8d83
-//│   'A :> Numb | 'a | Abs['A] | App['A] | Var
-=======
-//│   'c :> Abs[Numb | 'a | 'c] | App[Numb | 'a | 'c] | Numb | Var | 'a
->>>>>>> new-definition-typing
+//│   'c :> Abs['a | 'c] | App['a | 'c] | 'a
 //│   'b <: Add['b] | Mul['b] | Numb | Var
 

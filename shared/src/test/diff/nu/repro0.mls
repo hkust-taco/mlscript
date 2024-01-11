@@ -10,25 +10,13 @@ module EvalAddLit {
 }
 let res = EvalAddLit.eval(add11)
 //│ class Add[E](lhs: E)
-//│ val add11: 'a
+//│ val add11: Add['E]
 //│ module EvalAddLit {
 //│   fun eval: forall 'A. (e: Add['A]) -> nothing
 //│ }
 //│ let res: nothing
 //│ where
-<<<<<<< HEAD
-//│   'lhs <: Add['A]
-//│   'A <: 'lhs
-//│   'a :> Add['E]
-//│   'E :> 'a
-//│      <: Add['E]
-||||||| b14bd8d83
-//│   'lhs <: Add['A]
-//│   'A <: 'lhs
-//│   'E :> Add['E]
-=======
 //│   'A <: Add['A]
-//│   'E :> Add['E]
->>>>>>> new-definition-typing
+//│   'E := Add['E]
 
 

@@ -861,13 +861,13 @@ class Bc31(baz: Bool) extends Bc3
 //│ ║         	                ^^^^
 //│ ╟── type `Bool` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.836: 	  let baz : Int
+//│ ║  l.828: 	  let baz : Int
 //│ ║         	            ^^^
 //│ ╟── from signature of member `baz`:
-//│ ║  l.836: 	  let baz : Int
+//│ ║  l.828: 	  let baz : Int
 //│ ╙──       	      ^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in type reference:
-//│ ║  l.873: 	class Bc31(baz: Bool) extends Bc3
+//│ ║  l.858: 	class Bc31(baz: Bool) extends Bc3
 //│ ║         	                ^^^^
 //│ ╟── type `Bool` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
@@ -881,22 +881,6 @@ class Bc31(baz: Bool) extends Bc3
 class Bc11 extends Bc1(1) {
   let foo = true
 }
-<<<<<<< HEAD
-//│ ╔══[ERROR] Inherited parameter named `foo` is not virtual and cannot be overridden
-//│ ║  l.898: 	  let foo = true
-//│ ║         	      ^^^^^^^^^^
-//│ ╟── Originally declared here:
-//│ ║  l.833: 	class Bc1(foo: Int)
-//│ ╙──       	          ^^^
-||||||| b14bd8d83
-//│ ╔══[ERROR] Inherited parameter named `foo` is not virtual and cannot be overridden
-//│ ║  l.888: 	  let foo = true
-//│ ║         	      ^^^^^^^^^^
-//│ ╟── Originally declared here:
-//│ ║  l.833: 	class Bc1(foo: Int)
-//│ ╙──       	          ^^^
-=======
->>>>>>> new-definition-typing
 //│ class Bc11 extends Bc1 {
 //│   constructor()
 //│   let foo: true
@@ -925,13 +909,7 @@ trait BInt extends Base[Int] {
   fun f = error
 }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
-<<<<<<< HEAD
-//│ ║  l.931: 	  fun f = error
-||||||| b14bd8d83
-//│ ║  l.921: 	  fun f = error
-=======
-//│ ║  l.899: 	  fun f = error
->>>>>>> new-definition-typing
+//│ ║  l.909: 	  fun f = error
 //│ ╙──       	  ^^^^^^^^^^^^^
 //│ trait BInt extends Base {
 //│   fun f: nothing
@@ -962,13 +940,7 @@ bp: Base[[Int, Bool]]
 :e
 bp: Base[[Int, Int]]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-<<<<<<< HEAD
-//│ ║  l.963: 	bp: Base[(Int, Int)]
-||||||| b14bd8d83
-//│ ║  l.953: 	bp: Base[(Int, Int)]
-=======
-//│ ║  l.931: 	bp: Base[[Int, Int]]
->>>>>>> new-definition-typing
+//│ ║  l.941: 	bp: Base[[Int, Int]]
 //│ ║         	^^
 //│ ╙── expression of type `true` is not an instance of type `Int`
 //│ Base[[Int, Int]]
@@ -1029,35 +1001,13 @@ trait BInfer2 extends Base {
 :e
 class DerBad1 extends Base[Int, Int]
 //│ ╔══[ERROR] trait Base expects 1 type parameter(s); got 2
-<<<<<<< HEAD
-//│ ║  l.1024: 	class DerBad1 extends Base[Int, Int]
+//│ ║  l.1002: 	class DerBad1 extends Base[Int, Int]
 //│ ╙──        	                      ^^^^^^^^^^^^^
-||||||| b14bd8d83
-//│ ║  l.1014: 	class DerBad1 extends Base[Int, Int]
-//│ ╙──        	                      ^^^^^^^^^^^^^
-=======
-//│ ║  l.992: 	class DerBad1 extends Base[Int, Int]
-//│ ╙──       	                      ^^^^^^^^^^^^^
->>>>>>> new-definition-typing
 //│ ╔══[ERROR] Member `f` is declared (or its declaration is inherited) but is not implemented in `DerBad1`
-<<<<<<< HEAD
-//│ ║  l.1024: 	class DerBad1 extends Base[Int, Int]
+//│ ║  l.1002: 	class DerBad1 extends Base[Int, Int]
 //│ ║          	      ^^^^^^^
-||||||| b14bd8d83
-//│ ║  l.1014: 	class DerBad1 extends Base[Int, Int]
-//│ ║          	      ^^^^^^^
-=======
-//│ ║  l.992: 	class DerBad1 extends Base[Int, Int]
-//│ ║         	      ^^^^^^^
->>>>>>> new-definition-typing
 //│ ╟── Declared here:
-<<<<<<< HEAD
-//│ ║  l.912: 	trait Base[A] { fun f: A -> A }
-||||||| b14bd8d83
-//│ ║  l.902: 	trait Base[A] { fun f: A -> A }
-=======
-//│ ║  l.880: 	trait Base[A] { fun f: A -> A }
->>>>>>> new-definition-typing
+//│ ║  l.890: 	trait Base[A] { fun f: A -> A }
 //│ ╙──       	                ^^^^^^^^^^^^^
 //│ class DerBad1 extends Base {
 //│   constructor()
@@ -1069,76 +1019,28 @@ class DerBad1 extends Base[Int, Int]
 :e
 class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ╔══[ERROR] Type mismatch in definition of method f:
-<<<<<<< HEAD
-//│ ║  l.1042: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
-||||||| b14bd8d83
-//│ ║  l.1032: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
-=======
-//│ ║  l.1010: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
->>>>>>> new-definition-typing
+//│ ║  l.1020: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ║          	                                            ^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `B` does not match type `A`
-<<<<<<< HEAD
-//│ ║  l.1042: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
-||||||| b14bd8d83
-//│ ║  l.1032: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
-=======
-//│ ║  l.1010: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
->>>>>>> new-definition-typing
+//│ ║  l.1020: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ║          	                                                         ^
 //│ ╟── Note: constraint arises from type parameter:
-<<<<<<< HEAD
-//│ ║  l.1042: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
-||||||| b14bd8d83
-//│ ║  l.1032: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
-=======
-//│ ║  l.1010: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
->>>>>>> new-definition-typing
+//│ ║  l.1020: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ║          	           ^
 //│ ╟── Note: type parameter B is defined at:
-<<<<<<< HEAD
-//│ ║  l.1042: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
-||||||| b14bd8d83
-//│ ║  l.1032: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
-=======
-//│ ║  l.1010: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
->>>>>>> new-definition-typing
+//│ ║  l.1020: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ╙──        	              ^
 //│ ╔══[ERROR] Type mismatch in definition of method f:
-<<<<<<< HEAD
-//│ ║  l.1042: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
-||||||| b14bd8d83
-//│ ║  l.1032: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
-=======
-//│ ║  l.1010: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
->>>>>>> new-definition-typing
+//│ ║  l.1020: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ║          	                                            ^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `A` does not match type `B`
-<<<<<<< HEAD
-//│ ║  l.1042: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
-||||||| b14bd8d83
-//│ ║  l.1032: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
-=======
-//│ ║  l.1010: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
->>>>>>> new-definition-typing
+//│ ║  l.1020: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ║          	                                                            ^
 //│ ╟── Note: constraint arises from type parameter:
-<<<<<<< HEAD
-//│ ║  l.1042: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
-||||||| b14bd8d83
-//│ ║  l.1032: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
-=======
-//│ ║  l.1010: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
->>>>>>> new-definition-typing
+//│ ║  l.1020: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ║          	              ^
 //│ ╟── Note: type parameter A is defined at:
-<<<<<<< HEAD
-//│ ║  l.1042: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
-||||||| b14bd8d83
-//│ ║  l.1032: 	class Der2[A, B] extends Base[(A, B)] { fun f((x, y)) = (y, x) }
-=======
-//│ ║  l.1010: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
->>>>>>> new-definition-typing
+//│ ║  l.1020: 	class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ╙──        	           ^
 //│ class Der2[A, B] extends Base {
 //│   constructor()
@@ -1190,13 +1092,7 @@ trait Tb extends Ta[Int] {
   virtual val p = false
 }
 //│ ╔══[ERROR] Method implementations in traits are not yet supported
-<<<<<<< HEAD
-//│ ║  l.1114: 	  virtual val p = false
-||||||| b14bd8d83
-//│ ║  l.1104: 	  virtual val p = false
-=======
-//│ ║  l.1082: 	  virtual val p = false
->>>>>>> new-definition-typing
+//│ ║  l.1092: 	  virtual val p = false
 //│ ╙──        	          ^^^^^^^^^^^^^
 //│ trait Tb extends Ta {
 //│   val g: 'T
@@ -1231,42 +1127,24 @@ trait Oz {
 :e
 class Fischl(age: Bool) extends Oz
 //│ ╔══[ERROR] Type mismatch in type reference:
-<<<<<<< HEAD
-//│ ║  l.1150: 	class Fischl(age: Bool) extends Oz
-||||||| b14bd8d83
-//│ ║  l.1140: 	class Fischl(age: Bool) extends Oz
-=======
-//│ ║  l.1118: 	class Fischl(age: Bool) extends Oz
->>>>>>> new-definition-typing
+//│ ║  l.1128: 	class Fischl(age: Bool) extends Oz
 //│ ║          	                  ^^^^
 //│ ╟── type `Bool` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
-<<<<<<< HEAD
-//│ ║  l.1143: 	  let age: Int
-||||||| b14bd8d83
-//│ ║  l.1133: 	  let age: Int
-=======
-//│ ║  l.1111: 	  let age: Int
->>>>>>> new-definition-typing
+//│ ║  l.1121: 	  let age: Int
 //│ ║          	           ^^^
 //│ ╟── from signature of member `age`:
-<<<<<<< HEAD
-//│ ║  l.1143: 	  let age: Int
+//│ ║  l.1121: 	  let age: Int
 //│ ╙──        	      ^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in type reference:
-//│ ║  l.1150: 	class Fischl(age: Bool) extends Oz
+//│ ║  l.1128: 	class Fischl(age: Bool) extends Oz
 //│ ║          	                  ^^^^
 //│ ╟── type `Bool` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.1143: 	  let age: Int
+//│ ║  l.1121: 	  let age: Int
 //│ ║          	           ^^^
 //│ ╟── from signature of member `age`:
-//│ ║  l.1143: 	  let age: Int
-||||||| b14bd8d83
-//│ ║  l.1133: 	  let age: Int
-=======
-//│ ║  l.1111: 	  let age: Int
->>>>>>> new-definition-typing
+//│ ║  l.1121: 	  let age: Int
 //│ ╙──        	      ^^^^^^^^
 //│ class Fischl(age: Bool) extends Oz
 
@@ -1286,77 +1164,29 @@ class Go extends Fate {
     fun foo(x) = x && true
 }
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-<<<<<<< HEAD
-//│ ║  l.1186: 	    fun foo(x) = x && true
-||||||| b14bd8d83
-//│ ║  l.1166: 	    fun foo(x) = x && true
-=======
-//│ ║  l.1144: 	    fun foo(x) = x && true
->>>>>>> new-definition-typing
+//│ ║  l.1164: 	    fun foo(x) = x && true
 //│ ║          	        ^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Int & ?a` is not an instance of type `Bool`
 //│ ╟── Note: constraint arises from reference:
-<<<<<<< HEAD
-//│ ║  l.1186: 	    fun foo(x) = x && true
-||||||| b14bd8d83
-//│ ║  l.1166: 	    fun foo(x) = x && true
-=======
-//│ ║  l.1144: 	    fun foo(x) = x && true
->>>>>>> new-definition-typing
+//│ ║  l.1164: 	    fun foo(x) = x && true
 //│ ╙──        	                 ^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-<<<<<<< HEAD
-//│ ║  l.1186: 	    fun foo(x) = x && true
-||||||| b14bd8d83
-//│ ║  l.1166: 	    fun foo(x) = x && true
-=======
-//│ ║  l.1144: 	    fun foo(x) = x && true
->>>>>>> new-definition-typing
+//│ ║  l.1164: 	    fun foo(x) = x && true
 //│ ║          	        ^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `Bool` does not match type `Int | ?a`
-<<<<<<< HEAD
-//│ ║  l.1186: 	    fun foo(x) = x && true
-||||||| b14bd8d83
-//│ ║  l.1166: 	    fun foo(x) = x && true
-=======
-//│ ║  l.1144: 	    fun foo(x) = x && true
->>>>>>> new-definition-typing
+//│ ║  l.1164: 	    fun foo(x) = x && true
 //│ ║          	                 ^^^^^^^^^
 //│ ╟── Note: constraint arises from operator application:
-<<<<<<< HEAD
-//│ ║  l.1177: 	    virtual fun foo(x) = x + 1
-||||||| b14bd8d83
-//│ ║  l.1157: 	    virtual fun foo(x) = x + 1
-=======
-//│ ║  l.1135: 	    virtual fun foo(x) = x + 1
->>>>>>> new-definition-typing
+//│ ║  l.1155: 	    virtual fun foo(x) = x + 1
 //│ ╙──        	                         ^^^^^
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
-<<<<<<< HEAD
-//│ ║  l.1186: 	    fun foo(x) = x && true
-||||||| b14bd8d83
-//│ ║  l.1166: 	    fun foo(x) = x && true
-=======
-//│ ║  l.1144: 	    fun foo(x) = x && true
->>>>>>> new-definition-typing
+//│ ║  l.1164: 	    fun foo(x) = x && true
 //│ ║          	        ^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `Bool` does not match type `Int | ?a`
-<<<<<<< HEAD
-//│ ║  l.1186: 	    fun foo(x) = x && true
-||||||| b14bd8d83
-//│ ║  l.1166: 	    fun foo(x) = x && true
-=======
-//│ ║  l.1144: 	    fun foo(x) = x && true
->>>>>>> new-definition-typing
+//│ ║  l.1164: 	    fun foo(x) = x && true
 //│ ║          	                 ^^^^^^^^^
 //│ ╟── Note: constraint arises from operator application:
-<<<<<<< HEAD
-//│ ║  l.1177: 	    virtual fun foo(x) = x + 1
-||||||| b14bd8d83
-//│ ║  l.1157: 	    virtual fun foo(x) = x + 1
-=======
-//│ ║  l.1135: 	    virtual fun foo(x) = x + 1
->>>>>>> new-definition-typing
+//│ ║  l.1155: 	    virtual fun foo(x) = x + 1
 //│ ╙──        	                         ^^^^^
 //│ class Go extends Fate {
 //│   constructor()
@@ -1375,30 +1205,18 @@ class Haha(x: 1 | 2) extends Ha
 :e
 class Ohhh(x: Bool) extends Ha
 //│ ╔══[ERROR] Type mismatch in type reference:
-<<<<<<< HEAD
-//│ ║  l.1228: 	class Ohhh(x: Bool) extends Ha
+//│ ║  l.1206: 	class Ohhh(x: Bool) extends Ha
 //│ ║          	              ^^^^
 //│ ╟── type `Bool` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.1218: 	class Ha { virtual val x: Int = 1 }
+//│ ║  l.1196: 	class Ha { virtual val x: Int = 1 }
 //│ ╙──        	                          ^^^
 //│ ╔══[ERROR] Type mismatch in type reference:
-//│ ║  l.1228: 	class Ohhh(x: Bool) extends Ha
-||||||| b14bd8d83
-//│ ║  l.1208: 	class Ohhh(x: Bool) extends Ha
-=======
-//│ ║  l.1186: 	class Ohhh(x: Bool) extends Ha
->>>>>>> new-definition-typing
+//│ ║  l.1206: 	class Ohhh(x: Bool) extends Ha
 //│ ║          	              ^^^^
 //│ ╟── type `Bool` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
-<<<<<<< HEAD
-//│ ║  l.1218: 	class Ha { virtual val x: Int = 1 }
-||||||| b14bd8d83
-//│ ║  l.1198: 	class Ha { virtual val x: Int = 1 }
-=======
-//│ ║  l.1176: 	class Ha { virtual val x: Int = 1 }
->>>>>>> new-definition-typing
+//│ ║  l.1196: 	class Ha { virtual val x: Int = 1 }
 //│ ╙──        	                          ^^^
 //│ class Ohhh(x: Bool) extends Ha
 

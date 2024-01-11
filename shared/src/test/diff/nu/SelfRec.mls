@@ -126,16 +126,8 @@ Foo3(1).foo
 class Foo4 {
   fun test = [Foo4.test]
 }
-<<<<<<< HEAD
-//│ ╔══[ERROR] Class Foo4 cannot be instantiated as it exposes no such constructor
-//│ ║  l.127: 	  fun test = [Foo4.test]
-||||||| b14bd8d83
-//│ ╔══[ERROR] Class Foo4 cannot be instantiated as it exposes no such constructor
-//│ ║  l.123: 	  fun test = [Foo4.test]
-=======
 //│ ╔══[ERROR] Class Foo4 cannot be instantiated as it exposes no constructor
 //│ ║  l.127: 	  fun test = [Foo4.test]
->>>>>>> new-definition-typing
 //│ ╙──       	              ^^^^
 //│ class Foo4 {
 //│   constructor()
@@ -256,13 +248,7 @@ module Nil extends List[nothing](0)
 //│ ║  l.245: 	class Cons[out A](val head: A, val tail: List[A]) extends List[A](tail.length + 1)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-<<<<<<< HEAD
-//│ ║  l.242: 	class Cons[out A](val head: A, val tail: List[A]) extends List[A](tail.length + 1)
-||||||| b14bd8d83
-//│ ║  l.238: 	class Cons[out A](val head: A, val tail: List[A]) extends List[A](tail.length + 1)
-=======
 //│ ║  l.245: 	class Cons[out A](val head: A, val tail: List[A]) extends List[A](tail.length + 1)
->>>>>>> new-definition-typing
 //│ ╙──       	                                                                      ^^^^^^^
 //│ abstract class List[A](length: Int): Cons[A] | Nil
 //│ class Cons[A](head: A, tail: List[A]) extends List

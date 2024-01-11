@@ -239,24 +239,12 @@ fun mk(n) = if n is
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
 TestLang.eval(mk(0))
-<<<<<<< HEAD
 //│ fun mk: forall 'a 'A 'E. Object -> (Lit | 'a)
-||||||| b14bd8d83
-//│ fun mk: forall 'E. Object -> 'E
-=======
-//│ fun mk: forall 'a. Object -> (Lit | 'a)
->>>>>>> new-definition-typing
 //│ Int
 //│ where
-<<<<<<< HEAD
 //│   'a :> Neg['A] | Add['E]
 //│   'E :> Lit | 'a
 //│   'A :> Lit | 'a
-||||||| b14bd8d83
-//│   'E :> Add['E] | Lit | Neg['E]
-=======
-//│   'a :> Neg[Lit | 'a] | Add[Lit | 'a]
->>>>>>> new-definition-typing
 //│ res
 //│     = 0
 

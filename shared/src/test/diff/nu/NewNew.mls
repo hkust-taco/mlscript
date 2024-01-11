@@ -138,43 +138,47 @@ class PoInt[A](x: A, y: A)
 //│ class PoInt[A](x: A, y: A)
 
 new PoInt(1, 2)
-//│ PoInt[1 | 2]
+//│ PoInt['A]
+//│   where
+//│     'A :> 1 | 2
 //│ res
 //│     = PoInt {}
 
 :e
 new PoInt
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.146: 	new PoInt
+//│ ║  l.148: 	new PoInt
 //│ ║         	    ^^^^^
 //│ ╟── argument list of type `[]` does not match type `[x: ?A, y: ?A]`
-//│ ║  l.146: 	new PoInt
+//│ ║  l.148: 	new PoInt
 //│ ╙──       	         ^
-//│ PoInt[nothing] | error
+//│ PoInt['A] | error
 //│ res
 //│     = PoInt {}
 
 :e
 new PoInt['_]
 //│ ╔══[ERROR] Type arguments in `new` expressions are not yet supported
-//│ ║  l.158: 	new PoInt['_]
+//│ ║  l.160: 	new PoInt['_]
 //│ ╙──       	    ^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.158: 	new PoInt['_]
+//│ ║  l.160: 	new PoInt['_]
 //│ ║         	    ^^^^^^^^^
 //│ ╟── argument list of type `[]` does not match type `[x: ?A, y: ?A]`
-//│ ║  l.158: 	new PoInt['_]
+//│ ║  l.160: 	new PoInt['_]
 //│ ╙──       	             ^
-//│ PoInt[nothing] | error
+//│ PoInt['A] | error
 //│ Code generation encountered an error:
 //│   Unsupported `new` class term: TyApp(Var(PoInt),List('_))
 
 :e
 new PoInt[Str](0, 0)
 //│ ╔══[ERROR] Type arguments in `new` expressions are not yet supported
-//│ ║  l.173: 	new PoInt[Str](0, 0)
+//│ ║  l.175: 	new PoInt[Str](0, 0)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^
-//│ PoInt[0]
+//│ PoInt['A]
+//│   where
+//│     'A :> 0
 //│ Code generation encountered an error:
 //│   Unsupported `new` class term: TyApp(Var(PoInt),List(TypeName(Str)))
 
@@ -184,7 +188,7 @@ type T = PoInt[Str]
 :e
 new T(0, 0)
 //│ ╔══[ERROR] Type alias T cannot be used in `new` expression
-//│ ║  l.185: 	new T(0, 0)
+//│ ║  l.189: 	new T(0, 0)
 //│ ╙──       	^^^^^^^^^^^
 //│ error
 //│ Code generation encountered an error:
@@ -200,77 +204,31 @@ let origin = new PoInt(0, 0)
 :e // TODO support
 let origin = PoInt[Int](0, 0)
 //│ ╔══[ERROR] Type application syntax is not yet supported
-<<<<<<< HEAD
-//│ ║  l.39: 	let origin = PoInt[Int](0, 0)
-//│ ╙──      	             ^^^^^^^^^^
+//│ ║  l.205: 	let origin = PoInt[Int](0, 0)
+//│ ╙──       	             ^^^^^^^^^^
 //│ let origin: PoInt['A]
 //│   where
 //│     'A :> 0
-||||||| b14bd8d83
-//│ ║  l.37: 	let origin = PoInt[Int](0, 0)
-//│ ╙──      	             ^^^^^^^^^^
-//│ let origin: PoInt[0]
-=======
-//│ ║  l.199: 	let origin = PoInt[Int](0, 0)
-//│ ╙──       	             ^^^^^^^^^^
-//│ let origin: PoInt[0]
->>>>>>> new-definition-typing
 //│ origin
 //│        = PoInt {}
 
 :e // TODO support
 let origin = new PoInt[Int](0, 0)
-<<<<<<< HEAD
-//│ ╔══[PARSE ERROR] Unexpected application after `new` keyword
-//│ ║  l.50: 	let origin = new PoInt[Int](0, 0)
-//│ ╙──      	                 ^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.50: 	let origin = new PoInt[Int](0, 0)
-//│ ╙──      	             ^^^
-//│ let origin: error
-//│ origin
-//│        = {}
-||||||| b14bd8d83
-//│ ╔══[PARSE ERROR] Unexpected application after `new` keyword
-//│ ║  l.46: 	let origin = new PoInt[Int](0, 0)
-//│ ╙──      	                 ^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.46: 	let origin = new PoInt[Int](0, 0)
-//│ ╙──      	             ^^^
-//│ let origin: error
-//│ origin
-//│        = {}
-=======
 //│ ╔══[ERROR] Type arguments in `new` expressions are not yet supported
-//│ ║  l.208: 	let origin = new PoInt[Int](0, 0)
+//│ ║  l.216: 	let origin = new PoInt[Int](0, 0)
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^
-//│ let origin: PoInt[0]
+//│ let origin: PoInt['A]
+//│   where
+//│     'A :> 0
 //│ Code generation encountered an error:
 //│   Unsupported `new` class term: TyApp(Var(PoInt),List(TypeName(Int)))
->>>>>>> new-definition-typing
 
 
 :e // TODO support
 new {}
-<<<<<<< HEAD
-//│ ╔══[PARSE ERROR] Unexpected record after `new` keyword
-//│ ║  l.63: 	new {}
-//│ ╙──      	    ^^
-//│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.63: 	new {}
-//│ ╙──      	^^^
-||||||| b14bd8d83
-//│ ╔══[PARSE ERROR] Unexpected record after `new` keyword
-//│ ║  l.59: 	new {}
-//│ ╙──      	    ^^
-//│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.59: 	new {}
-//│ ╙──      	^^^
-=======
 //│ ╔══[ERROR] Unexpected type `anything` after `new` keyword
-//│ ║  l.218: 	new {}
+//│ ║  l.228: 	new {}
 //│ ╙──       	    ^^
->>>>>>> new-definition-typing
 //│ error
 //│ Code generation encountered an error:
 //│   Unsupported `new` class term: Bra(true,Rcd(List()))
@@ -279,25 +237,11 @@ new {}
 :e
 new
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-<<<<<<< HEAD
-//│ ║  l.75: 	new
-//│ ╙──      	   ^
-//│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.75: 	new
-//│ ╙──      	^^^
-||||||| b14bd8d83
-//│ ║  l.71: 	new
-//│ ╙──      	   ^
-//│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.71: 	new
-//│ ╙──      	^^^
-=======
-//│ ║  l.228: 	new
+//│ ║  l.238: 	new
 //│ ╙──       	   ^
 //│ ╔══[ERROR] Unexpected type `()` after `new` keyword
-//│ ║  l.228: 	new
+//│ ║  l.238: 	new
 //│ ╙──       	   ^
->>>>>>> new-definition-typing
 //│ error
 //│ Code generation encountered an error:
 //│   Unsupported `new` class term: UnitLit(true)
@@ -307,28 +251,12 @@ new
 :e
 new
   x: 0
-<<<<<<< HEAD
-//│ ╔══[PARSE ERROR] Unexpected type ascription after `new` keyword
-//│ ║  l.88: 	  x: 0
-//│ ╙──      	  ^
-//│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.87: 	new
-//│ ╙──      	^^^
-||||||| b14bd8d83
-//│ ╔══[PARSE ERROR] Unexpected type ascription after `new` keyword
-//│ ║  l.84: 	  x: 0
-//│ ╙──      	  ^
-//│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.83: 	new
-//│ ╙──      	^^^
-=======
 //│ ╔══[PARSE ERROR] Not a recognized type
-//│ ║  l.243: 	  x: 0
+//│ ║  l.253: 	  x: 0
 //│ ╙──       	  ^
 //│ ╔══[ERROR] Unexpected type `nothing` after `new` keyword
-//│ ║  l.243: 	  x: 0
+//│ ║  l.253: 	  x: 0
 //│ ╙──       	  ^
->>>>>>> new-definition-typing
 //│ error
 //│ Code generation encountered an error:
 //│   Unsupported `new` class term: Blk(List(Asc(Var(x),Literal(IntLit(0)))))
@@ -341,19 +269,9 @@ fun f(x) = {x}
 
 :e
 new f(1)
-<<<<<<< HEAD
-//│ ╔══[ERROR] Value f cannot be used in `new` expression
-//│ ║  l.106: 	new f(1)
-//│ ╙──       	^^^^^^^^
-||||||| b14bd8d83
-//│ ╔══[ERROR] Value f cannot be used in `new` expression
-//│ ║  l.102: 	new f(1)
-//│ ╙──       	^^^^^^^^
-=======
 //│ ╔══[ERROR] type identifier not found: f
-//│ ║  l.261: 	new f(1)
+//│ ║  l.271: 	new f(1)
 //│ ╙──       	    ^
->>>>>>> new-definition-typing
 //│ error
 //│ res
 //│     = { x: 1 }
@@ -364,21 +282,9 @@ module Oops
 
 :e
 new Oops
-<<<<<<< HEAD
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.119: 	new Oops
-//│ ║         	^^^^^^^^
-//│ ╙── applied expression of type `Oops` is not a function
-||||||| b14bd8d83
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.115: 	new Oops
-//│ ║         	^^^^^^^^
-//│ ╙── applied expression of type `Oops` is not a function
-=======
 //│ ╔══[ERROR] Module Oops cannot be used in `new` expression
-//│ ║  l.274: 	new Oops
+//│ ║  l.284: 	new Oops
 //│ ╙──       	    ^^^^
->>>>>>> new-definition-typing
 //│ error
 //│ res
 //│     = Oops {}
@@ -387,19 +293,9 @@ new Oops
 :e
 new Oops2
 trait Oops2
-<<<<<<< HEAD
-//│ ╔══[ERROR] Trait Oops2 cannot be used in term position
-//│ ║  l.130: 	new Oops2
-//│ ╙──       	^^^^^^^^^
-||||||| b14bd8d83
-//│ ╔══[ERROR] Trait Oops2 cannot be used in term position
-//│ ║  l.126: 	new Oops2
-//│ ╙──       	^^^^^^^^^
-=======
 //│ ╔══[ERROR] Trait Oops2 cannot be used in `new` expression
-//│ ║  l.284: 	new Oops2
+//│ ║  l.294: 	new Oops2
 //│ ╙──       	    ^^^^^
->>>>>>> new-definition-typing
 //│ trait Oops2
 //│ error
 //│ Code generation encountered an error:
