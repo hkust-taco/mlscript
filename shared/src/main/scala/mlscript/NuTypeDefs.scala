@@ -667,8 +667,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 case _ =>
                   constrain(mkProxy(ty, TypeProvenance(t.toCoveringLoc, "expression in statement position")), UnitType)(
                     raise = err => raise(WarningReport( // Demote constraint errors from this to warnings
-                      msg"Expression in statement position should have type `unit`." -> N ::
-                      msg"Use the `discard` function to discard non-unit values, making the intent clearer." -> N ::
+                      msg"Expression in statement position should have type `()`." -> N ::
+                      msg"Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer." -> N ::
                       err.allMsgs, newDefs)),
                     prov = TypeProvenance(t.toLoc, t.describe), ctx)
               }

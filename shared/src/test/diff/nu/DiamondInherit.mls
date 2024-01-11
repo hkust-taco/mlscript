@@ -33,7 +33,7 @@ Bar : Foo['X]
 //│     = 123
 
 
-trait Foo[A] { fun foo: A;; fun bar: A -> A }
+trait Foo[A] { fun foo: A; fun bar: A -> A }
 //│ trait Foo[A] {
 //│   fun bar: A -> A
 //│   fun foo: A
@@ -131,7 +131,7 @@ module Bar extends T1, Foo[Int | Str] {
 //│ }
 
 
-trait Base[A] { fun foo: A;; fun bar: A -> A }
+trait Base[A] { fun foo: A; fun bar: A -> A }
 trait Derived1[A] extends Base[A]
 trait Derived2 extends Base[[Int | Str, Int | Str]]
 //│ trait Base[A] {

@@ -68,8 +68,8 @@ mkString of list
 //│ res
 //│     = '1, 2, 3, 4, 5, 6, 7'
 
-mkString of filtermap(x => if x % 2 == 0 then Tru else Fals, list)
-mkString of filtermap(x => if x % 2 == 0 then Fals else Tru, list)
+mkString of filtermap(x => (if x % 2 == 0 then Tru else Fals), list)
+mkString of filtermap(x => (if x % 2 == 0 then Fals else Tru), list)
 mkString of filtermap(x => (if
   x % 2 == 0 then Fals
   x % 3 == 0 then Pair(Tru, x / 3)
