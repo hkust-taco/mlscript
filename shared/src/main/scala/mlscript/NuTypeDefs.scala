@@ -172,6 +172,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def isImplemented: Bool = true
     def isPublic = true // TODO
     
+    // TODO dedup with the one in TypedNuCls
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
       case (nme @ TypeName(name), tv, _) => 
         td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO), isPublic = true)(level)
@@ -357,7 +358,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
       case (nme @ TypeName(name), tv, _) => 
         td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO), isPublic = false)(level)
-    } 
+    }
     
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, freshened: MutMap[TV,ST])
@@ -748,11 +749,16 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
      *  the map of members is for the inherited virtual type argument members. */
     type TypedParentSpec = (TypedNuTypeDef, Ls[NuParam], Map[Str, NuMember], Opt[Loc])
     
+    private var typingParents = false
     lazy val typedParents: Ls[TypedParentSpec] = ctx.nest.nextLevel { implicit ctx =>
       
       ctx ++= paramSymbols
       
-      parentSpecs.flatMap {
+      if (typingParents === true) {
+        err(msg"Unhandled cyclic parent specification", decl.toLoc)
+        Nil
+      } else
+      try {typingParents = true; parentSpecs}.flatMap {
         case (p, v @ Var(parNme), lti, parTargs, parArgs) =>
           trace(s"${lvl}. Typing parent spec $p") {
             val info = lti.complete()
@@ -890,7 +896,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 
             }
           }()
-      }
+      } finally { typingParents = false }
       
     }
     
@@ -1045,15 +1051,22 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       case td: NuTypeDef =>
         (td.params.getOrElse(Tup(Nil)).fields.iterator.flatMap(_._1) ++ td.body.entities.iterator.collect {
           case fd: NuFunDef => fd.nme
-        }).toSet ++ inheritedFields
+        }).toSet ++ inheritedFields ++ tparams.map {
+          case (nme @ TypeName(name), tv, _) =>
+            Var(td.nme.name+"#"+name).withLocOf(nme)
+        }
       case _: NuFunDef => Set.empty
     }
     
-    lazy val typedFields: Map[Var, FieldType] = {println(("privateFields"),privateParams)
+    lazy val typedFields: Map[Var, FieldType] = {
       (typedParams.getOrElse(Nil).toMap
         // -- privateFields
         -- inheritedFields /* parameters can be overridden by inherited fields/methods */
-      ) ++ typedSignatures.iterator.map(fd_ty => fd_ty._1.nme -> fd_ty._2.toUpper(noProv))
+      ) ++ typedSignatures.iterator.map(fd_ty => fd_ty._1.nme -> fd_ty._2.toUpper(noProv)) ++
+        typedParents.flatMap(_._3).flatMap {
+          case (k, p: NuParam) => Var(k) -> p.ty :: Nil
+          case _ => Nil
+        }
     }
     lazy val mutRecTV: TV = freshVar(
       TypeProvenance(decl.toLoc, decl.describe, S(decl.name), decl.isInstanceOf[NuTypeDef]),
