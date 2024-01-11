@@ -184,7 +184,7 @@ trait Foo[type A] { fun foo(x: A): A }
 //│ }
 
 
-trait Foo[A] { fun a: A;; fun foo(x: A): A }
+trait Foo[A] { fun a: A; fun foo(x: A): A }
 //│ trait Foo[A] {
 //│   fun a: A
 //│   fun foo: (x: A) -> A
