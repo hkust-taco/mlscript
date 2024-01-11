@@ -1057,11 +1057,17 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       case _: NuFunDef => Set.empty
     }
     
-    lazy val typedFields: Map[Var, FieldType] = {println(("privateFields"),privateParams)
+    lazy val typedFields: Map[Var, FieldType] = {
+      // println(("privateFields"),privateParams)
       (typedParams.getOrElse(Nil).toMap
         // -- privateFields
         -- inheritedFields /* parameters can be overridden by inherited fields/methods */
-      ) ++ typedSignatures.iterator.map(fd_ty => fd_ty._1.nme -> fd_ty._2.toUpper(noProv))
+      ) ++ typedSignatures.iterator.map(fd_ty => fd_ty._1.nme -> fd_ty._2.toUpper(noProv)) ++
+        // typedParents.flatMap(_._3).map(kv => Var(kv._1) -> kv._2.toUpper(noProv))
+        typedParents.flatMap(_._3).flatMap {
+          case (k, p: NuParam) => Var(k) -> p.ty :: Nil
+          case _ => Nil
+        }
     }
     lazy val mutRecTV: TV = freshVar(
       TypeProvenance(decl.toLoc, decl.describe, S(decl.name), decl.isInstanceOf[NuTypeDef]),

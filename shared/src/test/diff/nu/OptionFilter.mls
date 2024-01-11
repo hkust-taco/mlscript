@@ -1,170 +1,7 @@
 :NewDefs
 
 
-
-:d
-abstract class Option[out T]: (None | ()) {
-  virtual fun filter: Option[T]
-}
-module None extends Option[nothing] {
-  fun filter = None
-}
-//│ 0. Typing TypingUnit(List(NuTypeDef(Cls,TypeName(Option),List((Some(+),TypeName(T))),None,None,Some(Union(TypeName(None),Literal(UnitLit(true)))),List(),None,None,TypingUnit(List(NuFunDef(None,Var(filter),None,List(),Right(PolyType(List(),AppliedType(TypeName(Option),List(TypeName(T))))))))), NuTypeDef(Mod,TypeName(None),List(),None,None,None,List(TyApp(Var(Option),List(TypeName(nothing)))),None,None,TypingUnit(List(NuFunDef(None,Var(filter),None,List(),Left(Var(None))))))))
-//│ | 0. Created lazy type info for NuTypeDef(Cls,TypeName(Option),List((Some(+),TypeName(T))),None,None,Some(Union(TypeName(None),Literal(UnitLit(true)))),List(),None,None,TypingUnit(List(NuFunDef(None,Var(filter),None,List(),Right(PolyType(List(),AppliedType(TypeName(Option),List(TypeName(T)))))))))
-//│ | 0. Created lazy type info for NuTypeDef(Mod,TypeName(None),List(),None,None,None,List(TyApp(Var(Option),List(TypeName(nothing)))),None,None,TypingUnit(List(NuFunDef(None,Var(filter),None,List(),Left(Var(None))))))
-//│ | Completing class Option‹T›: None | () {fun filter: Option[T]}
-//│ | | Type params (TypeName(T),T29',Some(+))
-//│ | | Params 
-//│ | | Typing type PolyType(List(),AppliedType(TypeName(Option),List(TypeName(T))))
-//│ | | | vars=Map(T -> ‘T29') newDefsInfo=Map()
-//│ | | | 2. type PolyType(List(),AppliedType(TypeName(Option),List(TypeName(T))))
-//│ | | | | 3. type AppliedType(TypeName(Option),List(TypeName(T)))
-//│ | | | | | 3. type TypeName(T)
-//│ | | | | | => ‘T29'
-//│ | | | | => Option[‘T29']
-//│ | | | | Inferred poly constr: Option[‘T29']  —— where 
-//│ | | | => Option[‘T29']
-//│ | | => Option[‘T29'] ——— 
-//│ | | Inferred poly constr: Option[‘T29']  —— where 
-//│ | | Typing type Union(TypeName(None),Literal(UnitLit(true)))
-//│ | | | vars=Map(T -> ‘T29') newDefsInfo=Map()
-//│ | | | 2. type Union(TypeName(None),Literal(UnitLit(true)))
-//│ | | | | 2. type TypeName(None)
-//│ | | | | => None
-//│ | | | | 2. type Literal(UnitLit(true))
-//│ | | | | => #undefined<Object>
-//│ | | | => (None | #undefined<Object>)
-//│ | | => (None | #undefined<Object>) ——— 
-//│ | | CONSTRAIN (None | #undefined<Object>) <! α30'
-//│ | |   where 
-//│ | | 1. C (None | #undefined<Object>) <! α30'    (0)
-//│ | | | NEW α30' LB (0)
-//│ | | Done inheriting: Pack({},List(NuParam(TypeName(Option#T),mut ‘T29'..‘T29',true)),None,List(),List(),Map())
-//│ | | 1. Finalizing inheritance with ((({} w/ {} & #Option<Object>) & {Option#T: mut ‘T29'..‘T29'}) & ⊤..(None | #undefined<Object>)) <: option31'
-//│ | | | CONSTRAIN ((({} w/ {} & #Option<Object>) & {Option#T: mut ‘T29'..‘T29'}) & ⊤..(None | #undefined<Object>)) <! option31'
-//│ | | |   where 
-//│ | | | 1. C ((({} w/ {} & #Option<Object>) & {Option#T: mut ‘T29'..‘T29'}) & ⊤..(None | #undefined<Object>)) <! option31'    (0)
-//│ | | | | NEW option31' LB (1)
-//│ | | 1. Typing TypingUnit(List(NuFunDef(None,Var(filter),None,List(),Right(PolyType(List(),AppliedType(TypeName(Option),List(TypeName(T))))))))
-//│ | | | Typing unit statements
-//│ | | | : None
-//│ | | baseClsImplemMembers List()
-//│ | | Checking `this` accesses...
-//│ | | Checking base class implementations against inherited signatures...
-//│ | | Checking new implementations against inherited signatures...
-//│ | | | Checking overriding for NuParam(TypeName(Option#T),mut ‘T29'..‘T29',true) against None...
-//│ | | Checking new signatures against inherited signatures...
-//│ | | | Checking overriding for TypedNuFun(1,NuFunDef(None,Var(filter),None,List(),Right(PolyType(List(),AppliedType(TypeName(Option),List(TypeName(T)))))),Option[‘T29']) against None...
-//│ | | allMembers Map(Option#T -> NuParam(TypeName(Option#T),mut ‘T29'..‘T29',true), filter -> TypedNuFun(1,NuFunDef(None,Var(filter),None,List(),Right(PolyType(List(),AppliedType(TypeName(Option),List(TypeName(T)))))),Option[‘T29']))
-//│ | | Computing variances of Option
-//│ | | | Trav(+)(Option[‘T29'])
-//│ | | | | Trav(+)(‘T29')
-//│ | | | | | Trav(+)(T29')
-//│ | | = HashMap(T29' -> +)
-//│ | Completed TypedNuCls(0, TypeName(Option),
-//│ 	List((TypeName(T),T29',Some(+))),
-//│ 	None,
-//│ 	this: ⊤, 
-//│ 	(Option#T,NuParam(TypeName(Option#T),mut ‘T29'..‘T29',true))
-//│ 	(filter,TypedNuFun(1,NuFunDef(None,Var(filter),None,List(),Right(PolyType(List(),AppliedType(TypeName(Option),List(TypeName(T)))))),Option[‘T29'])),
-//│ 	: ⊤..(None | #undefined<Object>), Set(), Map()) where 
-//│ | Completing module None: Option‹nothing› {fun filter = None}
-//│ | | Type params 
-//│ | | Params 
-//│ | | 1. Typing parent spec Var(Option)
-//│ | | | Typing type TypeName(nothing)
-//│ | | | | vars=Map() newDefsInfo=Map()
-//│ | | | | 1. type TypeName(nothing)
-//│ | | | | => Nothing
-//│ | | | => Nothing ——— 
-//│ | | | Assigning T :: T29' := Nothing where 
-//│ | | | Set T29_33 ~> T29'
-//│ | | | Class arg members List()
-//│ | | => Inheriting from TypedNuCls(0, TypeName(Option),
-//│ 	List((TypeName(T),T29_33#,Some(+))),
-//│ 	None,
-//│ 	this: ⊤, 
-//│ 	(Option#T,NuParam(TypeName(Option#T),mut T29_33#..T29_33#,true))
-//│ 	(filter,TypedNuFun(1,NuFunDef(None,Var(filter),None,List(),Right(PolyType(List(),AppliedType(TypeName(Option),List(TypeName(T)))))),Option[T29_33#])),
-//│ 	: ⊤..(None | #undefined<Object>), Set(), Map())
-//│ | | argMembs List()
-//│ | | Done inheriting: Pack({},List(),Some(Option),List(NuParam(TypeName(Option#T),mut T29_33#..T29_33#,true), TypedNuFun(1,NuFunDef(None,Var(filter),None,List(),Right(PolyType(List(),AppliedType(TypeName(Option),List(TypeName(T)))))),Option[T29_33#])),List(),Map(Option#T -> NuParam(TypeName(T),mut T29_33#..T29_33#,true)))
-//│ | | 1. Finalizing inheritance with ({} w/ {} & #None<Object,Option>) <: none32'
-//│ | | | CONSTRAIN ({} w/ {} & #None<Object,Option>) <! none32'
-//│ | | |   where 
-//│ | | | 1. C ({} w/ {} & #None<Object,Option>) <! none32'    (0)
-//│ | | | | NEW none32' LB (0)
-//│ | | 1. Typing TypingUnit(List(NuFunDef(None,Var(filter),None,List(),Left(Var(None)))))
-//│ | | | 1. Created lazy type info for NuFunDef(None,Var(filter),None,List(),Left(Var(None)))
-//│ | | | Completing fun filter = None
-//│ | | | | Type params 
-//│ | | | | Params 
-//│ | | | | 2. Typing term Var(None)
-//│ | | | | 2. : #None<Option,Object>
-//│ | | | | CONSTRAIN #None<Option,Object> <! filter34''
-//│ | | | |   where 
-//│ | | | | 2. C #None<Option,Object> <! filter34''    (0)
-//│ | | | | | NEW filter34'' LB (0)
-//│ | | | Completed TypedNuFun(1,NuFunDef(None,Var(filter),None,List(),Left(Var(None))),#None<Option,Object>) where 
-//│ | | | Typing unit statements
-//│ | | | : None
-//│ | | baseClsImplemMembers List(NuParam(TypeName(Option#T),mut T29_33#..T29_33#,true))
-//│ | | Checking `this` accesses...
-//│ | | Checking base class implementations against inherited signatures...
-//│ | | | Checking overriding for NuParam(TypeName(Option#T),mut T29_33#..T29_33#,true) against None...
-//│ | | Checking new implementations against inherited signatures...
-//│ | | | Checking overriding for TypedNuFun(1,NuFunDef(None,Var(filter),None,List(),Left(Var(None))),#None<Option,Object>) against Some(TypedNuFun(1,NuFunDef(None,Var(filter),None,List(),Right(PolyType(List(),AppliedType(TypeName(Option),List(TypeName(T)))))),Option[T29_33#]))...
-//│ | | | CONSTRAIN #None<Option,Object> <! Option[T29_33#]
-//│ | | |   where 
-//│ 		T29_33# := Nothing
-//│ | | | 1. C #None<Option,Object> <! Option[T29_33#]    (0)
-//│ | | | | Passing T :: T29' <=< T29_33#
-//│ | | | | 1. C #None<Option,Object> <! ((#Option<Object> & ⊤..(None | #undefined<Object>)) & {Option#T: T29_33#})    (2)
-//│ | | | | | 1. C #None<Option,Object> <! (#Option<Object> & ⊤..(None | #undefined<Object>))    (4)
-//│ | | | | | | Already a subtype by <:<
-//│ | | | | | 1. C #None<Option,Object> <! {Option#T: T29_33#}    (4)
-//│ | | | | | | Looking up field Option#T in Some(None) & TreeSet() & {...}
-//│ | | | | | | | (privateFields,Set())
-//│ | | | | | | | Lookup None.Option#T : None where 
-//│ | | | | | | | Fresh[0] None.Option#T : None where None
-//│ | | | | | | |   & None  (from refinement)
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.6: 	abstract class Option[out T]: (None | ()) {
-//│ ╙──     	                          ^
-//│ | | | | | | 1. C #error<> <! T29_33#    (3)
-//│ | | | | | | | 1. C #error<> <! Nothing    (5)
-//│ | | Checking new signatures against inherited signatures...
-//│ | | allMembers Map(Option#T -> NuParam(TypeName(Option#T),mut T29_33#..T29_33#,true), filter -> TypedNuFun(1,NuFunDef(None,Var(filter),None,List(),Left(Var(None))),#None<Option,Object>))
-//│ | | Computing variances of None
-//│ | | | Trav(+)(#None<Option,Object>)
-//│ | | = HashMap()
-//│ | Completed TypedNuCls(0, TypeName(None),
-//│ 	List(),
-//│ 	None,
-//│ 	this: ⊤, 
-//│ 	(Option#T,NuParam(TypeName(Option#T),mut T29_33#..T29_33#,true))
-//│ 	(filter,TypedNuFun(1,NuFunDef(None,Var(filter),None,List(),Left(Var(None))),#None<Option,Object>)),
-//│ 	: ⊤, Set(TypeName(Option)), Map(Option#T -> NuParam(TypeName(T),mut T29_33#..T29_33#,true))) where 
-//│ 		T29_33# := Nothing
-//│ | Typing unit statements
-//│ | : None
-//│ ======== TYPED ========
-//│ class Option
-//│   this: ⊤ 
-//│ class None
-//│   this: ⊤ 
-//│ abstract class Option[T]: None | () {
-//│   fun filter: Option[T]
-//│ }
-//│ module None extends Option {
-//│   fun filter: None
-//│ }
-
-
-
-:exit
-====================================================================================================
-
+// * Minimization of code that used to cause a problem:
 
 abstract class Option[T]: (None | ()) {
   virtual fun filter: Option[T]
@@ -172,24 +9,6 @@ abstract class Option[T]: (None | ()) {
 module None extends Option[nothing] {
   fun filter = None
 }
-//│ ╔══[ERROR] Type `#None` does not contain member `Option#T`
-//│ ║  l.48: 	abstract class Option[T]: (None | ()) {
-//│ ╙──      	                      ^
-//│ ╔══[ERROR] Type mismatch in definition of method filter:
-//│ ║  l.52: 	  fun filter = None
-//│ ║        	      ^^^^^^^^^^^^^
-//│ ╟── reference of type `#None` does not have field 'Option#T'
-//│ ║  l.52: 	  fun filter = None
-//│ ║        	               ^^^^
-//│ ╟── but it flows into definition of method filter with expected type `{Option#T = ?T}`
-//│ ║  l.52: 	  fun filter = None
-//│ ║        	      ^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.49: 	  virtual fun filter: Option[T]
-//│ ║        	                      ^^^^^^^^^
-//│ ╟── from signature of member `filter`:
-//│ ║  l.49: 	  virtual fun filter: Option[T]
-//│ ╙──      	              ^^^^^^^^^^^^^^^^^
 //│ abstract class Option[T]: None | () {
 //│   fun filter: Option[T]
 //│ }
@@ -198,14 +17,8 @@ module None extends Option[nothing] {
 //│ }
 
 
+// * Original code:
 
-
-
-
-
-
-
-// FIXME: this looks like a bug about mutually-referential definitions
 abstract class Option[out T]: (Some[T] | None) {
   virtual fun filter: (p: T -> Bool) -> Option[T]
 }
@@ -215,12 +28,6 @@ class Some[out T](val value: T) extends Option[T] {
 module None extends Option[nothing] {
   fun filter(_) = None
 }
-//│ ╔══[ERROR] Type `#Some & {Some#T <: ?T}` does not contain member `Option#T`
-//│ ║  l.5: 	abstract class Option[out T]: (Some[T] | None) {
-//│ ╙──     	                          ^
-//│ ╔══[ERROR] Type `#None` does not contain member `Option#T`
-//│ ║  l.5: 	abstract class Option[out T]: (Some[T] | None) {
-//│ ╙──     	                          ^
 //│ abstract class Option[T]: None | Some[T] {
 //│   fun filter: (p: T -> Bool) -> Option[T]
 //│ }
@@ -230,4 +37,5 @@ module None extends Option[nothing] {
 //│ module None extends Option {
 //│   fun filter: anything -> None
 //│ }
+
 
