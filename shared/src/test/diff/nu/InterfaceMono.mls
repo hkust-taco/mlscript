@@ -393,7 +393,7 @@ class C2(foo: Int, bar: Str) extends T4
 //│ ╔══[ERROR] Type mismatch in type reference:
 //│ ║  l.382: 	class C2(foo: Int, bar: Str) extends T4
 //│ ║         	                        ^^^
-//│ ╟── type `Str` does not match type `Bool | Int`
+//│ ╟── type `Str` does not match type `Int | false | true`
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.333: 	    let bar : Int | Bool
 //│ ║         	              ^^^^^^^^^^

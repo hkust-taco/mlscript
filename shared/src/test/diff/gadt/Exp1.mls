@@ -1,33 +1,63 @@
 :NewDefs
 
 
-class Exp[A]: Pair | Lit
+abstract class Exp[A]: Pair | Lit
 class Lit(n: Int) extends Exp[Int]
+//│ ╔══[ERROR] type identifier not found: Pair
+//│ ║  l.4: 	abstract class Exp[A]: Pair | Lit
+//│ ╙──     	                       ^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ abstract class Exp[A]: Lit | error
+//│ class Lit(n: Int) extends Exp
+<<<<<<<
 class Pair[L, R](val lhs: L, val rhs: R) extends Exp[[L, R]]
 //│ class Exp[A]: Lit | Pair[anything, anything] {
 //│   constructor()
 //│ }
-//│ class Lit(n: Int) extends Exp
-//│ class Pair[L, R](lhs: L, rhs: R) extends Exp
+||||||| b14bd8d83
+class Pair[L, R](val lhs: L, val rhs: R) extends Exp[(L, R)]
+//│ class Exp[A]: Lit | Pair[anything, anything] {
+//│   constructor()
+//│ }
+=======
+class Pair[L, R](val lhs: L, val rhs: R) extends Exp[(L, R)]
+//│ abstract class Exp[A]: Lit | Pair[anything, anything]
+>>>>>>>
 
 
 fun f(p: Pair['a, 'b]) = p.lhs
-//│ fun f: forall 'a 'b. (p: Pair['a, 'b]) -> 'a
+//│ ╔══[ERROR] type identifier not found: Pair
+//│ ║  l.28: 	fun f(p: Pair['a, 'b]) = p.lhs
+//│ ╙──      	         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ fun f: (p: error) -> error
 
 
 fun f(e) = if e is
   Pair(l, r) then [l, r]
-//│ fun f: forall 'a 'b. Pair['a, 'b] -> ['a, 'b]
+//│ ╔══[ERROR] Illegal pattern `Pair`
+//│ ║  l.37: 	  Pair(l, r) then [l, r]
+//│ ╙──      	  ^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ fun f: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
 // f: (Exp['a] & Pair) -> 0
 
 
 fun f(e) = if e is
   Pair(l, r) then [l, r]
   Lit(n) then n
-//│ fun f: forall 'a 'b. (Lit | Pair['a, 'b]) -> (Int | ['a, 'b])
+//│ ╔══[ERROR] Illegal pattern `Pair`
+//│ ║  l.49: 	  Pair(l, r) then [l, r]
+//│ ╙──      	  ^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ fun f: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
 
 (e: Exp['X]) => f(e)
-//│ forall 'X. (e: Exp['X]) -> (Int | [??L, ??R])
+//│ forall 'X. (e: Exp['X]) -> error
 //│ res
 //│     = [Function: res]
 
@@ -36,7 +66,7 @@ fun f(e) = if e is
 fun f(e) = if e is
   Pair['a, 'b](l, r) then [l, r]
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.37: 	  Pair['a, 'b](l, r) then [l, r]
+//│ ║  l.67: 	  Pair['a, 'b](l, r) then [l, r]
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^
 //│ fun f: anything -> error
 //│ Code generation encountered an error:
@@ -48,18 +78,12 @@ fun f(e) = if e is
   Pair(l: a, r) then
     fun f(x: a) = x
     f(l)
-//│ ╔══[ERROR] Cannot use `val` or `fun` in local block; use `let` instead.
-//│ ║  l.49: 	    fun f(x: a) = x
-//│ ╙──      	    ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] type identifier not found: a
-//│ ║  l.49: 	    fun f(x: a) = x
-//│ ╙──      	             ^
-//│ ╔══[ERROR] identifier not found: l
-//│ ║  l.50: 	    f(l)
-//│ ╙──      	      ^
-//│ fun f: Pair[anything, anything] -> error
+//│ ╔══[ERROR] Illegal pattern `Pair`
+//│ ║  l.78: 	  Pair(l: a, r) then
+//│ ╙──      	  ^^^^
+//│ fun f: anything -> error
 //│ Code generation encountered an error:
-//│   unresolved symbol l
+//│   if expression was not desugared
 // fun f: forall 'lhs 'rhs. Pair['lhs, 'rhs] -> ('lhs, 'rhs,)
 
 

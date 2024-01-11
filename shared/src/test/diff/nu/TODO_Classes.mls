@@ -207,7 +207,15 @@ fun test(f: ((IntLit | BoolLit) -> Int)) =
   f : Expr[anything] -> Int
 //│ fun test: (f: (BoolLit | IntLit) -> Int) -> Expr[anything] -> Int
 
+:e
 class OopsLit() extends Expr[Bool]
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.211: 	class OopsLit() extends Expr[Bool]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `#OopsLit` does not match type `BoolLit | IntLit`
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.199: 	abstract class Expr[A]: IntLit | BoolLit {}
+//│ ╙──       	                        ^^^^^^^^^^^^^^^^
 //│ class OopsLit() extends Expr
 
 fun test(a) = if a is

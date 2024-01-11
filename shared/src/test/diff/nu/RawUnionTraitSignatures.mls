@@ -105,6 +105,21 @@ class Impl extends Base2
 //│ }
 
 (x: Impl) => x : Base2
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.107: 	(x: Impl) => x : Base2
+//│ ║         	             ^
+//│ ╟── type `Impl` is not an instance of type `Foo`
+//│ ║  l.107: 	(x: Impl) => x : Base2
+//│ ║         	    ^^^^
+//│ ╟── but it flows into reference with expected type `#Foo`
+//│ ║  l.107: 	(x: Impl) => x : Base2
+//│ ║         	             ^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.78: 	trait Base2: Foo['FigureItOut]
+//│ ║        	             ^^^^^^^^^^^^^^^^^
+//│ ╟── from type reference:
+//│ ║  l.107: 	(x: Impl) => x : Base2
+//│ ╙──       	                 ^^^^^
 //│ (x: Impl) -> Base2
 //│ res
 //│     = [Function: res]
@@ -112,7 +127,7 @@ class Impl extends Base2
 :e
 class Impl() extends Base2, Foo
 //│ ╔══[ERROR] Member `x` is declared (or its declaration is inherited) but is not implemented in `Impl`
-//│ ║  l.113: 	class Impl() extends Base2, Foo
+//│ ║  l.128: 	class Impl() extends Base2, Foo
 //│ ║         	      ^^^^
 //│ ╟── Declared here:
 //│ ║  l.5: 	trait Foo[A] { fun x: A }
@@ -134,11 +149,23 @@ Impl().x
 //│     = 1
 
 Impl() : Base2
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.151: 	Impl() : Base2
+//│ ║         	^^^^^^
+//│ ╟── type variable `'FigureItOut` leaks out of its scope
+//│ ║  l.140: 	  fun x = 1
+//│ ╙──       	          ^
 //│ Base2
 //│ res
 //│     = Impl {}
 
 (Impl() : Base2).x
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.162: 	(Impl() : Base2).x
+//│ ║         	 ^^^^^^
+//│ ╟── type variable `'FigureItOut` leaks out of its scope
+//│ ║  l.140: 	  fun x = 1
+//│ ╙──       	          ^
 //│ ??FigureItOut
 //│ res
 //│     = 1
@@ -151,6 +178,12 @@ class Impl2() extends Base2, Foo[Int] {
 //│ }
 
 (Impl2() : Base2).x
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.180: 	(Impl2() : Base2).x
+//│ ║         	 ^^^^^^^
+//│ ╟── type variable `'FigureItOut` leaks out of its scope
+//│ ║  l.173: 	class Impl2() extends Base2, Foo[Int] {
+//│ ╙──       	                                 ^^^
 //│ ??FigureItOut
 //│ res
 //│     = 1

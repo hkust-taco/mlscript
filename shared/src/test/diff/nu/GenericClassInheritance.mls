@@ -77,6 +77,18 @@ class WrongRoom extends Room[Bool]("wrong") {
 //│ ╟── from reference:
 //│ ║  l.4: 	    virtual fun foo(x: A) = x
 //│ ╙──     	                            ^
+//│ ╔══[ERROR] Type mismatch in definition of method foo:
+//│ ║  l.48: 	    fun foo(x) = x + 1
+//│ ║        	        ^^^^^^^^^^^^^^
+//│ ╟── operator application of type `Int` does not match type `Bool`
+//│ ║  l.48: 	    fun foo(x) = x + 1
+//│ ║        	                 ^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.47: 	class WrongRoom extends Room[Bool]("wrong") {
+//│ ║        	                             ^^^^
+//│ ╟── from reference:
+//│ ║  l.4: 	    virtual fun foo(x: A) = x
+//│ ╙──     	                            ^
 //│ class WrongRoom extends Room {
 //│   constructor()
 //│   fun foo: Int -> Int
@@ -162,14 +174,24 @@ class B2[A](val a: Int => A) extends M2
 :e
 class E1(val a: Int) extends M2[Bool]
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.163: 	class E1(val a: Int) extends M2[Bool]
+//│ ║  l.175: 	class E1(val a: Int) extends M2[Bool]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `Int` is not an instance of type `Bool`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.163: 	class E1(val a: Int) extends M2[Bool]
+//│ ║  l.175: 	class E1(val a: Int) extends M2[Bool]
 //│ ║         	                                ^^^^
 //│ ╟── from field selection:
-//│ ║  l.145: 	    fun m: A = this.a
+//│ ║  l.157: 	    fun m: A = this.a
+//│ ╙──       	               ^^^^^^
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.175: 	class E1(val a: Int) extends M2[Bool]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `Int` does not match type `Bool`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.175: 	class E1(val a: Int) extends M2[Bool]
+//│ ║         	                                ^^^^
+//│ ╟── from field selection:
+//│ ║  l.157: 	    fun m: A = this.a
 //│ ╙──       	               ^^^^^^
 //│ class E1(a: Int) {
 //│   fun m: Bool
