@@ -587,14 +587,27 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }
   }
   
+  private def unexpectedThenElse(loc: Opt[Loc]) = {
+    err(msg"Expected an expression; found a 'then'/'else' clause instead" -> loc :: Nil)
+    errExpr
+  }
+  
   final def expr(prec: Int, allowSpace: Bool = true)(implicit fe: FoundErr, l: Line): Term = wrap(prec,allowSpace) { l =>
     exprOrIf(prec, allowSpace)(et = false, fe = fe, l = implicitly) match {
       case R(e) => e
-      case L(e) =>
-        err(msg"Expected an expression; found a 'then'/'else' clause instead" -> e.toLoc :: Nil)
-        errExpr
+      case L(e) => unexpectedThenElse(e.toLoc)
     }
   }
+  
+  def exprOrBlockContinuation(implicit et: ExpectThen, fe: FoundErr, l: Line): Term =
+    yeetSpaces match {
+      case (NEWLINE, l0) :: _ =>
+        consume
+        val stmts = block
+        val es = stmts.map { case L(t) => unexpectedThenElse(t.toLoc); case R(e) => e }
+        Blk(es)
+      case _ => expr(0)
+    }
   
   private def warnDbg(msg: Any, loco: Opt[Loc] = curLoc): Unit =
     raise(WarningReport(msg"[${cur.headOption.map(_._1).mkString}] ${""+msg}" -> loco :: Nil,
@@ -722,8 +735,14 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         exprCont(NuNew(body).withLoc(S(l0 ++ body.toLoc)), prec, allowNewlines = false)
       case (KEYWORD("else"), l0) :: _ =>
         consume
-        val e = expr(0)
-        L(IfElse(e).withLoc(S(l0 ++ e.toLoc)))
+        yeetSpaces match {
+          case (NEWLINE, l0) :: _ =>
+            consume
+            ??? // TODO
+          case _ =>
+            val e = expr(0)
+            L(IfElse(e).withLoc(S(l0 ++ e.toLoc)))
+        }
       case (KEYWORD("case"), l0) :: _ =>
         consume
         exprOrIf(0)(et = true, fe = fe, l = implicitly) match {
@@ -744,7 +763,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
               val els = yeetSpaces match {
                 case (KEYWORD("else"), _) :: _ =>
                   consume
-                  S(expr(0))
+                  S(exprOrBlockContinuation)
                 case (NEWLINE, _) :: (KEYWORD("else"), _) :: _ =>
                   consume
                   consume
@@ -847,7 +866,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (IDENT(opStr, true), l0) :: _ if /* isInfix(opStr) && */ opPrec(opStr)._1 > prec =>
         consume
         val v = Var(opStr).withLoc(S(l0))
-        // printDbg(s">>> $opStr ${opPrec(opStr)}")
+        yeetSpaces match {
+          case (NEWLINE, l0) :: _ => consume
+          case _ =>
+        }
         exprOrIf(opPrec(opStr)._2) match {
           case L(rhs) =>
             L(IfOpApp(acc, v, rhs))
@@ -897,13 +919,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (KEYWORD("then"), _) :: _ if /* expectThen && */ prec === 0 =>
       // case (KEYWORD("then"), _) :: _ if /* expectThen && */ prec <= 1 =>
         consume
-        val e = expr(0)
-        L(IfThen(acc, e))
+        L(IfThen(acc, exprOrBlockContinuation))
       case (NEWLINE, _) :: (KEYWORD("then"), _) :: _ if /* expectThen && */ prec === 0 =>
         consume
         consume
-        val e = expr(0)
-        L(IfThen(acc, e))
+        L(IfThen(acc, exprOrBlockContinuation))
       case (NEWLINE, _) :: _ if allowNewlines =>
         consume
         exprCont(acc, 0, allowNewlines)
@@ -989,7 +1009,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         // val as = argsOrIf(Nil) // TODO
         val res = App(acc, Tup(as))
         exprCont(res, prec, allowNewlines)
-          
+        
       case c @ (h :: _) if (h._1 match {
         case KEYWORD(":" | "of" | "where" | "extends") | SEMI | BRACKETS(Round | Square, _)
           | BRACKETS(Indent, (
