@@ -229,11 +229,7 @@ class Foo8[A](x: A) {
 :e // * FIXME this is caused by the self-annotation...
 abstract class List(val length: Int): Cons
 class Cons(tail: List) extends List(tail.length + 1)
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.231: 	class Cons(tail: List) extends List(tail.length + 1)
-//│ ╙──       	                                        ^^^^^^^
-//│ abstract class List(length: Int): Cons
-//│ class Cons(tail: List) extends List
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 // * Note: full (non-minimized) definitions:
 
@@ -241,11 +237,6 @@ class Cons(tail: List) extends List(tail.length + 1)
 abstract class List[out A](val length: Int): Cons[A] | Nil
 class Cons[out A](val head: A, val tail: List[A]) extends List[A](tail.length + 1)
 module Nil extends List[nothing](0)
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.242: 	class Cons[out A](val head: A, val tail: List[A]) extends List[A](tail.length + 1)
-//│ ╙──       	                                                                      ^^^^^^^
-//│ abstract class List[A](length: Int): Cons[A] | Nil
-//│ class Cons[A](head: A, tail: List[A]) extends List
-//│ module Nil extends List
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 
