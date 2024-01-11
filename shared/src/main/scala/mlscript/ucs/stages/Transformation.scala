@@ -200,11 +200,16 @@ trait Transformation { self: Traceable with Diagnosable =>
   private def transformPattern(term: Term): Pattern = term match {
     case wildcard @ Var("_") => EmptyPattern(wildcard) // The case for wildcard.
     case nme @ Var("true" | "false") => ConcretePattern(nme)
-    case nme @ Var(name) if name.headOption.exists(_.isUpper) => ClassPattern(nme, N)
+    case nme @ Var(name) if name.headOption.exists(_.isUpper) => ClassPattern(nme, N, refined = false)
     case nme: Var => NamePattern(nme)
     case literal: Lit => LiteralPattern(literal)
+    case App(Var("refined"), PlainTup(p)) =>
+      transformPattern(p) match {
+        case cp: ClassPattern => cp.copy(refined = true).withLocOf(cp)
+        case _ => ??? // TODO error
+      }
     case App(classNme @ Var(_), parameters: Tup) =>
-      ClassPattern(classNme, S(transformTupleTerm(parameters)))
+      ClassPattern(classNme, S(transformTupleTerm(parameters)), refined = false)
     case tuple: Tup => TuplePattern(transformTupleTerm(tuple))
     case other =>
       println(s"other $other")

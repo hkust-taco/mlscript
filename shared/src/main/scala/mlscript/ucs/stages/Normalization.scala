@@ -62,11 +62,11 @@ trait Normalization { self: Traceable with Diagnosable =>
         println(s"normalizing name pattern ${scrutinee.name} is ${nme.name}")
         Let(false, nme, scrutinee, normalizeToTerm(concat(continuation, tail)))
       // Skip Boolean conditions as scrutinees, because they only appear once.
-      case Split.Cons(Branch(test, pattern @ Pattern.Class(nme @ Var("true")), continuation), tail) =>
+      case Split.Cons(Branch(test, pattern @ Pattern.Class(nme @ Var("true"), _), continuation), tail) =>
         println(s"normalizing true pattern: ${test.name} is true")
         val trueBranch = normalizeToTerm(concat(continuation, tail))
         val falseBranch = normalizeToCaseBranches(tail)
-        CaseOf(test, Case(nme, trueBranch, falseBranch))
+        CaseOf(test, Case(nme, trueBranch, falseBranch)(refined = false))
       case Split.Cons(Branch(ScrutineeData.WithVar(scrutinee, scrutineeVar), pattern @ Pattern.Literal(literal), continuation), tail) =>
         println(s"normalizing literal pattern: ${scrutineeVar.name} is $literal")
         val concatenatedTrueBranch = concat(continuation, tail)
@@ -74,13 +74,13 @@ trait Normalization { self: Traceable with Diagnosable =>
         val trueBranch = normalizeToTerm(specialize(concatenatedTrueBranch, true)(scrutineeVar, scrutinee, pattern, context))
         println(s"false branch: ${showSplit(tail)}")
         val falseBranch = normalizeToCaseBranches(specialize(tail, false)(scrutineeVar, scrutinee, pattern, context))
-        CaseOf(scrutineeVar, Case(literal, trueBranch, falseBranch))
-      case Split.Cons(Branch(ScrutineeData.WithVar(scrutinee, scrutineeVar), pattern @ Pattern.Class(nme), continuation), tail) =>
+        CaseOf(scrutineeVar, Case(literal, trueBranch, falseBranch)(refined = false))
+      case Split.Cons(Branch(ScrutineeData.WithVar(scrutinee, scrutineeVar), pattern @ Pattern.Class(nme, rfd), continuation), tail) =>
         println(s"normalizing class pattern: ${scrutineeVar.name} is ${nme.name}")
         // println(s"match ${scrutineeVar.name} with $nme (has location: ${nme.toLoc.isDefined})")
         val trueBranch = normalizeToTerm(specialize(concat(continuation, tail), true)(scrutineeVar, scrutinee, pattern, context))
         val falseBranch = normalizeToCaseBranches(specialize(tail, false)(scrutineeVar, scrutinee, pattern, context))
-        CaseOf(scrutineeVar, Case(nme, trueBranch, falseBranch))
+        CaseOf(scrutineeVar, Case(nme, trueBranch, falseBranch)(refined = rfd))
       case Split.Cons(Branch(scrutinee, pattern, continuation), tail) =>
         println(s"unknown pattern $pattern")
         throw new NormalizationException((msg"Unsupported pattern: ${pattern.toString}" -> pattern.toLoc) :: Nil)
@@ -130,13 +130,13 @@ trait Normalization { self: Traceable with Diagnosable =>
       // Name patterns are translated to let bindings.
       case (_, Split.Cons(Branch(otherScrutineeVar, Pattern.Name(alias), continuation), tail)) =>
         Split.Let(false, alias, otherScrutineeVar, specialize(continuation, matchOrNot))
-      case (_, split @ Split.Cons(head @ Branch(test, Pattern.Class(Var("true")), continuation), tail)) if context.isTestVar(test) =>
+      case (_, split @ Split.Cons(head @ Branch(test, Pattern.Class(Var("true"), _), continuation), tail)) if context.isTestVar(test) =>
         println(s"found a Boolean test: $test is true")
         val trueBranch = specialize(continuation, matchOrNot)
         val falseBranch = specialize(tail, matchOrNot)
         split.copy(head = head.copy(continuation = trueBranch), tail = falseBranch)
       // Class pattern. Positive.
-      case (true, split @ Split.Cons(head @ Branch(ScrutineeData.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Class(otherClassName), continuation), tail)) =>
+      case (true, split @ Split.Cons(head @ Branch(ScrutineeData.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Class(otherClassName, rfd), continuation), tail)) =>
         val otherClassSymbol = getClassLikeSymbol(otherClassName)
         lazy val specializedTail = {
           println(s"specialized next")
@@ -145,7 +145,8 @@ trait Normalization { self: Traceable with Diagnosable =>
         if (scrutinee === otherScrutinee) {
           println(s"scrutinee: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
           pattern match {
-            case Pattern.Class(className) =>
+            case Pattern.Class(className, rfd2) =>
+              assert(rfd === rfd2) // TODO: raise warning instead of crash
               val classSymbol = getClassLikeSymbol(className)
               if (classSymbol === otherClassSymbol) {
                 println(s"Case 1: class name: $className === $otherClassName")
@@ -175,12 +176,13 @@ trait Normalization { self: Traceable with Diagnosable =>
           )
         }
       // Class pattern. Negative
-      case (false, split @ Split.Cons(head @ Branch(ScrutineeData.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Class(otherClassName), continuation), tail)) =>
+      case (false, split @ Split.Cons(head @ Branch(ScrutineeData.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Class(otherClassName, rfd), continuation), tail)) =>
         val otherClassSymbol = getClassLikeSymbol(otherClassName)
         if (scrutinee === otherScrutinee) {
           println(s"scrutinee: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
           pattern match {
-            case Pattern.Class(className) =>
+            case Pattern.Class(className, rfd2) =>
+              assert(rfd === rfd2) // TODO: raise warning instead of crash
               val classSymbol = getClassLikeSymbol(className)
               if (className === otherClassName) {
                 println(s"Case 1: class name: $otherClassName === $className")

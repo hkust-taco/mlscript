@@ -723,7 +723,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   }
   
   // TODO also prevent rebinding of "not"
-  val reservedVarNames: Set[Str] = Set("|", "&", "~", ",", "neg", "and", "or", "is")
+  val reservedVarNames: Set[Str] =
+    Set("|", "&", "~", ",", "neg", "and", "or", "is", "refined")
   
   object ValidVar {
     def unapply(v: Var)(implicit raise: Raise): S[Str] = S {
@@ -1449,7 +1450,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         case _ =>
           (fv -> TopType :: Nil) -> typeTerm(b)
       }
-    case Case(pat, bod, rest) =>
+    case cse @ Case(pat, bod, rest) =>
       val (tagTy, patTy) : (ST, ST) = pat match {
         case lit: Lit =>
           val t = ClassTag(lit,
@@ -1479,8 +1480,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                   lti match {
                     case dti: DelayedTypeInfo =>
                       val tag = clsNameToNomTag(dti.decl match { case decl: NuTypeDef => decl; case _ => die })(prov, ctx)
-                      println(s"CASE $tag")
-                      val ty =
+                      val ty = // TODO update as below for refined
                         RecordType.mk(dti.tparams.map {
                           case (tn, tv, vi) =>
                             val nv = freshVar(tv.prov, S(tv), tv.nameHint)
@@ -1491,7 +1491,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                       tag -> ty
                     case CompletedTypeInfo(cls: TypedNuCls) =>
                       val tag = clsNameToNomTag(cls.td)(prov, ctx)
-                      val ty =
+                      println(s"CASE $tag ${cse.refined}")
+                      val ty = if (cse.refined) freshVar(tp(v.toLoc, "refined scrutinee"), N) else
                         RecordType.mk(cls.tparams.map {
                           case (tn, tv, vi) =>
                             val nv = freshVar(tv.prov, S(tv), tv.nameHint)

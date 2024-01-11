@@ -13,7 +13,7 @@ package object core {
     override def toString(): String = this match {
       case Pattern.Literal(literal) => literal.toString
       case Pattern.Name(Var(name)) => name
-      case Pattern.Class(Var(name)) => name
+      case Pattern.Class(Var(name), rfd) => (if (rfd) "refined " else "") + name
       case Pattern.Tuple(fields) => fields.iterator.map(_.fold("_")(_.name)).mkString("(", ", ", ")")
       case Pattern.Record(Nil) => "{}"
       case Pattern.Record(entries) => entries.iterator.map { case (nme, als) => s"$nme: $als" }.mkString("{ ", ", ", " }")
@@ -26,7 +26,7 @@ package object core {
     final case class Name(nme: Var) extends Pattern {
       override def children: Ls[Located] = nme :: Nil
     }
-    final case class Class(nme: Var) extends Pattern {
+    final case class Class(nme: Var, refined: Bool) extends Pattern {
       override def children: Ls[Located] = nme :: Nil
     }
     final case class Tuple(elements: List[Opt[Var]]) extends Pattern {

@@ -13,9 +13,10 @@ package object syntax {
       case ConcretePattern(nme) => s"`${nme.name}`"
       case NamePattern(nme) => nme.toString
       case EmptyPattern(_) => "•"
-      case ClassPattern(Var(name), N) => name
-      case ClassPattern(Var(name), S(parameters)) =>
-        parameters.mkString(s"$name(", ", ", ")")
+      case ClassPattern(Var(name), ps, rfd) => (if (rfd) "refined " else "") + (ps match {
+        case N => name
+        case S(parameters) => parameters.mkString(s"$name(", ", ", ")")
+      })
       case TuplePattern(fields) => fields.mkString("(", ", ", ")")
       case RecordPattern(Nil) => "{}"
       case RecordPattern(entries) => entries.iterator.map { case (nme, als) => s"$nme: $als" }.mkString("{ ", ", ", " }")
@@ -40,7 +41,7 @@ package object syntax {
   final case class EmptyPattern(source: Term) extends Pattern {
     override def children: List[Located] = source :: Nil
   }
-  final case class ClassPattern(val nme: Var, val parameters: Opt[List[Pattern]]) extends Pattern {
+  final case class ClassPattern(nme: Var, parameters: Opt[List[Pattern]], refined: Bool) extends Pattern {
     override def children: List[Located] = nme :: parameters.getOrElse(Nil)
   }
   final case class TuplePattern(fields: List[Pattern]) extends Pattern {

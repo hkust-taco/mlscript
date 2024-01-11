@@ -17,12 +17,13 @@ trait PostProcessing { self: DesugarUCS with mlscript.pretyper.Traceable =>
       case top @ CaseOf(scrutineeVar: Var, fst @ Case(className: Var, body, NoCases)) =>
         println(s"found a UNARY case: $scrutineeVar is $className")
         println("post-processing the body")
-        top.copy(cases = fst.copy(body = postProcess(body)))
+        top.copy(cases = fst.copy(body = postProcess(body))(refined = fst.refined))
       case top @ CaseOf(test: Var, fst @ Case(Var("true"), trueBranch, Wildcard(falseBranch))) =>
         println(s"found a if-then-else case: $test is true")
         val processedTrueBranch = postProcess(trueBranch)
         val processedFalseBranch = postProcess(falseBranch)
-        top.copy(cases = fst.copy(body = processedTrueBranch, rest = Wildcard(processedFalseBranch)))
+        top.copy(cases = fst.copy(body = processedTrueBranch, rest = Wildcard(processedFalseBranch)
+          )(refined = fst.refined))
       case top @ CaseOf(ScrutineeData.WithVar(scrutinee, scrutineeVar), fst @ Case(className: Var, trueBranch, Wildcard(falseBranch))) =>
         println(s"found a BINARY case: $scrutineeVar is $className")
         val classSymbol = className.getClassLikeSymbol
@@ -62,10 +63,11 @@ trait PostProcessing { self: DesugarUCS with mlscript.pretyper.Traceable =>
         ) { case ((classSymbol, loc, body), rest) =>
           // TODO: Why not just keep the class name?
           val className = Var(classSymbol.name).withLoc(loc).withSymbol(classSymbol)
-          Case(className, body, rest)
+          Case(className, body, rest)(refined = false/*FIXME?*/)
         }
         // Assemble the final `CaseOf`.
-        top.copy(cases = fst.copy(body = processedTrueBranch, rest = actualFalseBranch))
+        top.copy(cases = fst.copy(body = processedTrueBranch, rest = actualFalseBranch)
+          (refined = fst.refined))
       // We recursively process the body of as`Let` bindings.
       case let @ Let(_, _, _, body) => let.copy(body = postProcess(body))
       // Otherwise, this is not a part of a normalized term.
@@ -85,9 +87,9 @@ trait PostProcessing { self: DesugarUCS with mlscript.pretyper.Traceable =>
     case k @ Case(_, body, rest) =>
       (trimEmptyTerm(body), trimEmptyCaseBranches(rest)) match {
         case (N, N) => N
-        case (S(body), N) => S(k.copy(body = body, rest = NoCases))
+        case (S(body), N) => S(k.copy(body = body, rest = NoCases)(refined = k.refined))
         case (N, S(rest)) => S(rest)
-        case (S(body), S(rest)) => S(k.copy(body = body, rest = rest))
+        case (S(body), S(rest)) => S(k.copy(body = body, rest = rest)(refined = k.refined))
       }
   }
 
@@ -116,7 +118,8 @@ trait PostProcessing { self: DesugarUCS with mlscript.pretyper.Traceable =>
       cases match {
         case NoCases => Wildcard(term).withLocOf(term)
         case Wildcard(body) => Wildcard(mergeTerms(body, term))
-        case cases @ Case(_, _, rest) => cases.copy(rest = mergeTermIntoCaseBranches(term, rest))
+        case cases @ Case(_, _, rest) =>
+          cases.copy(rest = mergeTermIntoCaseBranches(term, rest))(refined = cases.refined)
       }
     }()
 
@@ -152,12 +155,12 @@ trait PostProcessing { self: DesugarUCS with mlscript.pretyper.Traceable =>
                 } else {
                   val (n1, y1) = disentangle(body, scrutineeVar, scrutinee, classSymbol)
                   val (n2, y2) = rec(rest)
-                  (kase.copy(body = n1, rest = n2), mergeTerms(y1, y2))
+                  (kase.copy(body = n1, rest = n2)(refined = kase.refined), mergeTerms(y1, y2))
                 }
               case kase @ Case(otherClassName, body, rest) =>
                 println(s"found another case branch matching against $otherClassName")
                 val (n, y) = rec(rest)
-                kase.copy(rest = n) -> y
+                kase.copy(rest = n)(refined = kase.refined) -> y
             }
             val (n, y) = rec(cases)
             (top.copy(cases = n), y)
@@ -175,8 +178,8 @@ trait PostProcessing { self: DesugarUCS with mlscript.pretyper.Traceable =>
                 println(s"found a case branch")
                 val (n1, y1) = disentangle(body, scrutineeVar, scrutinee, classSymbol)
                 val (n2, y2) = rec(rest)
-                (kase.copy(body = n1, rest = n2), (y1 match {
-                  case S(term) => kase.copy(body = term, rest = y2)
+                (kase.copy(body = n1, rest = n2)(refined = kase.refined), (y1 match {
+                  case S(term) => kase.copy(body = term, rest = y2)(refined = kase.refined)
                   case N => y2
                 }))
             }

@@ -184,7 +184,7 @@ trait DesugarUCS extends Transformation
         case core.Pattern.Literal(literal) => Nil
         case core.Pattern.Name(nme) => nme -> nme.symbol :: Nil
         // For now, there should only be parameter-less class patterns.
-        case core.Pattern.Class(nme) => Nil
+        case core.Pattern.Class(nme, _) => Nil
         case core.Pattern.Tuple(_) => ???
         case core.Pattern.Record(_) => ???
       }
