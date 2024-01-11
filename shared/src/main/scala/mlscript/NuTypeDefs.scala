@@ -1540,7 +1540,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                           
                           inherit(ps, pack.copy(
                             traitMembers = membersInter(pack.traitMembers, trt.members.valuesIterator.filterNot(_.isValueParam).toList),
-                            tparamMembers = pack.tparamMembers ++ tpms
+                            tparamMembers = pack.tparamMembers ++ tpms,
+                            selfSig = pack.selfSig & trt.sign
                           ))
                         
                         case cls: TypedNuCls =>
