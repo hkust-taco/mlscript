@@ -749,14 +749,20 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
      *  the map of members is for the inherited virtual type argument members. */
     type TypedParentSpec = (TypedNuTypeDef, Ls[NuParam], Map[Str, NuMember], Opt[Loc])
     
+    private var typingParents = false
     lazy val typedParents: Ls[TypedParentSpec] = ctx.nest.nextLevel { implicit ctx =>
       
       ctx ++= paramSymbols
       
-      parentSpecs.flatMap {
+      if (typingParents === true) {
+        err(msg"Unhandled cyclic parent specification", decl.toLoc)
+        Nil
+      } else
+      try {typingParents = true; parentSpecs}.flatMap {
         case (p, v @ Var(parNme), lti, parTargs, parArgs) =>
           trace(s"${lvl}. Typing parent spec $p") {
             val info = lti.complete()
+            println(s"!!! $info")
             info match {
               
               case rawMxn: TypedNuMxn =>
@@ -891,7 +897,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 
             }
           }()
-      }
+      } finally { typingParents = false }
       
     }
     
