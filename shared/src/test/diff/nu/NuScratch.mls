@@ -69,7 +69,7 @@ f : Int
 // FIXME
 Foo() + 1
 //│ ╔══[ERROR] Class Foo is abstract and cannot be instantiated
-//│ ║  l.71: 	Foo() + 1
+//│ ║  l.70: 	Foo() + 1
 //│ ╙──      	^^^
 //│ Int
 //│ res
@@ -78,7 +78,7 @@ Foo() + 1
 // FIXME
 (Foo() : Foo) + 1
 //│ ╔══[ERROR] Class Foo is abstract and cannot be instantiated
-//│ ║  l.80: 	(Foo() : Foo) + 1
+//│ ║  l.79: 	(Foo() : Foo) + 1
 //│ ╙──      	 ^^^
 //│ Int
 //│ res
@@ -90,17 +90,17 @@ Foo() + 1
 module Foo: Int
 Foo + 1
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.91: 	module Foo: Int
+//│ ║  l.90: 	module Foo: Int
 //│ ║        	^^^^^^^^^^
 //│ ╟── expression of type `#Foo` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.91: 	module Foo: Int
+//│ ║  l.90: 	module Foo: Int
 //│ ╙──      	            ^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.92: 	Foo + 1
+//│ ║  l.91: 	Foo + 1
 //│ ║        	^^^^^^^
 //│ ╟── reference of type `Foo` is not an instance of type `Int`
-//│ ║  l.92: 	Foo + 1
+//│ ║  l.91: 	Foo + 1
 //│ ╙──      	^^^
 //│ module Foo: Int
 //│ Int | error

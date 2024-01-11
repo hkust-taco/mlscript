@@ -167,6 +167,7 @@ ls |> Lists.assoc("a")
 // * Our little language:
 
 
+:e // * We don't yet support upper bounds on type parameters, so we can't provide the needed `out Sub <: Term`
 abstract class Term: Var | App | Lam | Sel | Rcd[Term] | Lit
 class Var(val name: Str) extends Term
 class App(val lhs: Term, val args: List[Term]) extends Term
@@ -177,32 +178,29 @@ abstract class Lit[out A](val value: A): IntLit | StrLit extends Term
 class IntLit(v: Int) extends Lit[Int](v)
 class StrLit(v: Str) extends Lit[Str](v)
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.174: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
+//│ ║  l.175: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Sub` is not an instance of type `Term`
-//│ ║  l.174: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
+//│ ║  l.175: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
 //│ ║         	              ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.170: 	abstract class Term: Var | App | Lam | Sel | Rcd[Term] | Lit
+//│ ║  l.171: 	abstract class Term: Var | App | Lam | Sel | Rcd[Term] | Lit
 //│ ╙──       	                                                 ^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.174: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
+//│ ║  l.175: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Sub` does not match type `App | Lam | #Lit | Rcd[Term] | Sel | Var`
-//│ ║  l.174: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
+//│ ║  l.175: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
 //│ ║         	              ^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.170: 	abstract class Term: Var | App | Lam | Sel | Rcd[Term] | Lit
+//│ ║  l.171: 	abstract class Term: Var | App | Lam | Sel | Rcd[Term] | Lit
 //│ ║         	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
-//│ ║  l.170: 	abstract class Term: Var | App | Lam | Sel | Rcd[Term] | Lit
+//│ ║  l.171: 	abstract class Term: Var | App | Lam | Sel | Rcd[Term] | Lit
 //│ ╙──       	                                                 ^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
 //│ ╔══[ERROR] Type `Sub` does not contain member `Rcd#Sub`
-//│ ║  l.174: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
+//│ ║  l.175: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
 //│ ╙──       	              ^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
 //│ abstract class Term: App | Lam | Lit[anything] | Rcd[Term] | Sel | Var
 //│ class Var(name: Str) extends Term
 //│ class App(lhs: Term, args: List[Term]) extends Term
@@ -212,6 +210,26 @@ class StrLit(v: Str) extends Lit[Str](v)
 //│ abstract class Lit[A](value: A): IntLit | StrLit extends Term
 //│ class IntLit(v: Int) extends Lit, Term
 //│ class StrLit(v: Str) extends Lit, Term
+
+// * Workaround/alternative:
+type Term = Var | App | Lam | Sel | Rcd[Term] | Lit
+class Var(val name: Str)
+class App(val lhs: Term, val args: List[Term])
+class Lam(val params: List[Str], val body: Term)
+class Rcd[out Sub](val fields: List[{key: Str, value: Sub}])
+class Sel(val prefix: Term, val fieldName: Str)
+abstract class Lit[out A](val value: A): IntLit | StrLit
+class IntLit(v: Int) extends Lit[Int](v)
+class StrLit(v: Str) extends Lit[Str](v)
+//│ type Term = App | Lam | Lit[anything] | Rcd[Term] | Sel | Var
+//│ class Var(name: Str)
+//│ class App(lhs: Term, args: List[Term])
+//│ class Lam(params: List[Str], body: Term)
+//│ class Rcd[Sub](fields: List[{key: Str, value: Sub}])
+//│ class Sel(prefix: Term, fieldName: Str)
+//│ abstract class Lit[A](value: A): IntLit | StrLit
+//│ class IntLit(v: Int) extends Lit
+//│ class StrLit(v: Str) extends Lit
 
 type Value = Lam | Lit | Rcd[Value]
 //│ type Value = Lam | Lit[anything] | Rcd[Value]
@@ -242,12 +260,12 @@ fun eval(t, env) = if t is
     else err(String(pree) ++ " does not have field " ++ nme)
   Rcd(fs) then
     Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
-//│ fun eval: forall 'a 'b 'c. ('a, Cons[{key: Eql[Str], value: 'b}] & {List#A <: {key: Eql[Str], value: 'b}} & List[{key: Eql[Str], value: 'b}] | Nil & {List#A <: {key: Eql[Str], value: 'b}} & List[{key: Eql[Str], value: 'b}]) -> 'c
+//│ fun eval: forall 'a 'b 'c. ('c, Cons[{key: Eql[Str], value: 'a}] & {List#A <: {key: Eql[Str], value: 'a}} & List[{key: Eql[Str], value: 'a}] | Nil & {List#A <: {key: Eql[Str], value: 'a}} & List[{key: Eql[Str], value: 'a}]) -> 'b
 //│   where
-//│     'b :> 'c
-//│        <: Object & ~#Rcd | Rcd['b]
-//│     'c :> 'b | Rcd[Lam | Lit[??A] | 'c] | Lam | Lit[??A]
-//│     'a <: App | Lam | Lit[anything] | Rcd['a] | Sel | Var
+//│     'a :> 'b
+//│        <: Object & ~#Rcd | Rcd['a]
+//│     'b :> 'a | Rcd[Lam | Lit[??A] | 'b] | Lam | Lit[??A]
+//│     'c <: App | Lam | Lit[anything] | Rcd['c] | Sel | Var
 
 eval : (Term, List[{key: Str, value: Value}]) -> Value
 //│ (Term, List[{key: Str, value: Value}]) -> Value
