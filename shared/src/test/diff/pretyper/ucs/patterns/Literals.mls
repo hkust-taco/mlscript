@@ -61,7 +61,7 @@ fun mix(x) = if x is
   true then "true"
   Some(value) then "Some"
   0 then "zero"
-//│ fun mix: (0 | Some[anything]) -> ("Some" | "true" | "zero")
+//│ fun mix: (0 | Some[anything] | true) -> ("Some" | "true" | "zero")
 
 [mix(true), mix(Some(1)), mix(0)]
 //│ ["Some" | "true" | "zero", "Some" | "true" | "zero", "Some" | "true" | "zero"]

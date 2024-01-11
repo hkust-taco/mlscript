@@ -1458,7 +1458,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         case v @ Var(nme) =>
           val tpr = tp(pat.toLoc, "type pattern")
           ctx.tyDefs.get(nme) match {
-            case None =>
+            case Some(td) if !newDefs =>
+              td.kind match {
+                case Als | Mod | Mxn => val t = err(msg"can only match on classes and traits", pat.toLoc)(raise); t -> t
+                case Cls => val t = clsNameToNomTag(td)(tp(pat.toLoc, "class pattern"), ctx); t -> t
+                case Trt => val t = trtNameToNomTag(td)(tp(pat.toLoc, "trait pattern"), ctx); t -> t
+              }
+            case _ =>
               val bail = () => {
                 val e = ClassTag(ErrTypeId, Set.empty)(tpr)
                 return ((e -> e) :: Nil) -> e
@@ -1473,6 +1479,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                   lti match {
                     case dti: DelayedTypeInfo =>
                       val tag = clsNameToNomTag(dti.decl match { case decl: NuTypeDef => decl; case _ => die })(prov, ctx)
+                      println(s"CASE $tag")
                       val ty =
                         RecordType.mk(dti.tparams.map {
                           case (tn, tv, vi) =>
@@ -1499,12 +1506,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                 case _ =>
                   err("type identifier not found: " + nme, pat.toLoc)(raise)
                   bail()
-              }
-            case Some(td) =>
-              td.kind match {
-                case Als | Mod | Mxn => val t = err(msg"can only match on classes and traits", pat.toLoc)(raise); t -> t
-                case Cls => val t = clsNameToNomTag(td)(tp(pat.toLoc, "class pattern"), ctx); t -> t
-                case Trt => val t = trtNameToNomTag(td)(tp(pat.toLoc, "trait pattern"), ctx); t -> t
               }
           }
       }
