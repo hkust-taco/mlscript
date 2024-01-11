@@ -172,6 +172,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def isImplemented: Bool = true
     def isPublic = true // TODO
     
+    // TODO dedup with the one in TypedNuCls
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
       case (nme @ TypeName(name), tv, _) => 
         td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO), isPublic = true)(level)
@@ -357,7 +358,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
       case (nme @ TypeName(name), tv, _) => 
         td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO), isPublic = false)(level)
-    } 
+    }
     
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, freshened: MutMap[TV,ST])
@@ -1045,7 +1046,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       case td: NuTypeDef =>
         (td.params.getOrElse(Tup(Nil)).fields.iterator.flatMap(_._1) ++ td.body.entities.iterator.collect {
           case fd: NuFunDef => fd.nme
-        }).toSet ++ inheritedFields
+        }).toSet ++ inheritedFields ++ /* (this match {
+          case tpd: TypedNuCls => virtualMembers.keysIterator
+          case _ => Nil
+        }) */
+        tparams.map {
+          case (nme @ TypeName(name), tv, _) =>
+            Var(td.nme.name+"#"+name).withLocOf(nme)
+        }
       case _: NuFunDef => Set.empty
     }
     
