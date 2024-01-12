@@ -83,7 +83,9 @@ fun findFirst(list, p) =
     Cons(x, xs) and
       p(x) then Some(x)
       else findFirst(xs, p)
-//│ fun findFirst: forall 'A. (Cons['A] | Nil, 'A -> Bool) -> (None | Some['A])
+//│ fun findFirst: forall 'A 'A0. (Cons['A] | Nil, 'A -> Bool) -> (None | Some['A0])
+//│   where
+//│     'A <: 'A0
 
 fun (:::) listConcat(xs, ys) =
   if xs is

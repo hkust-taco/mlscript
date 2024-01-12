@@ -1,6 +1,5 @@
 :PreTyper
 
-// FIXME: Finish this example after the relevant issue is fixed.
 abstract class MyOption[out T]: (MySome[T] | MyNone) {
   virtual fun filter: (p: T -> Bool) -> MyOption[T]
 }
@@ -10,12 +9,6 @@ class MySome[out T](val value: T) extends MyOption[T] {
 module MyNone extends MyOption[nothing] {
   fun filter(_) = MyNone
 }
-//│ ╔══[ERROR] Type `#MySome & {MySome#T <: ?T}` does not contain member `MyOption#T`
-//│ ║  l.4: 	abstract class MyOption[out T]: (MySome[T] | MyNone) {
-//│ ╙──     	                            ^
-//│ ╔══[ERROR] Type `#MyNone` does not contain member `MyOption#T`
-//│ ║  l.4: 	abstract class MyOption[out T]: (MySome[T] | MyNone) {
-//│ ╙──     	                            ^
 //│ abstract class MyOption[T]: MyNone | MySome[T] {
 //│   fun filter: (p: T -> Bool) -> MyOption[T]
 //│ }

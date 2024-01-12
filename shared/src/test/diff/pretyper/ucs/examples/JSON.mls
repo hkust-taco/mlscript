@@ -74,7 +74,7 @@ declare fun parseInt: (Str, Int) -> Int
 
 // `List` and its utilities:
 abstract class List[out T]: Cons[T] | Nil
-class Cons[T](head: T, tail: List[T]) extends List[T]
+class Cons[out T](head: T, tail: List[T]) extends List[T]
 module Nil extends List
 fun (::) cons(head: 'T, tail: List['T]): List['T] = Cons(head, tail)
 fun reverse(l: List['A]): List['A] =
@@ -96,11 +96,11 @@ fun equalList(xs: List['A], ys: List['A], equal: ('A, 'A) -> Bool): Bool = if xs
 //│ class Cons[T](head: T, tail: List[T]) extends List
 //│ module Nil extends List
 //│ fun (::) cons: forall 'T. (head: 'T, tail: List['T]) -> List['T]
-//│ fun reverse: forall 'A. (l: List['A]) -> List['A]
+//│ fun reverse: forall 'T0. (l: List['T0]) -> List['T0]
 //│ fun join: (sep: Str, xs: List[anything]) -> (Str | NStr)
 //│ fun showList: (xs: List[anything]) -> NStr
-//│ fun map: forall 'D 'T0. (f: 'D -> 'T0, xs: List['D]) -> List['T0]
-//│ fun equalList: forall 'A0. (xs: List['A0], ys: List['A0], equal: ('A0, 'A0) -> Bool) -> Bool
+//│ fun map: forall 'D 'T1. (f: 'D -> 'T1, xs: List['D]) -> List['T1]
+//│ fun equalList: forall 'A. (xs: List['A], ys: List['A], equal: ('A, 'A) -> Bool) -> Bool
 
 // `Option` and its utilities:
 abstract class Option[out A]: Some[A] | None
@@ -136,7 +136,7 @@ fun showMap(map) =
 //│ class ConsMap[K, V](head: [K, V], tail: ListMap[K, V]) extends ListMap
 //│ module NilMap extends ListMap
 //│ fun containsKey: forall 'K 'a. (map: ListMap['K, anything], key: 'a) -> Bool
-//│ fun (:+) insert: forall 'K0 'b 'V. (ConsMap['K0, 'V] | NilMap, ['K0 & 'b, 'V]) -> ConsMap['K0, 'V]
+//│ fun (:+) insert: forall 'b 'V 'K0. (ConsMap['K0, 'V] | NilMap, ['K0 & 'b, 'V]) -> ConsMap['K0, 'V]
 //│ fun showMap: forall 'K1. (ConsMap['K1, anything] | NilMap) -> NStr
 //│ where
 //│   'K0 <: Eql['b]
@@ -294,7 +294,7 @@ fun parseNumber(state: ParserState): ParseResult[Num] =
       parseFraction(state).flatMap of (fraction, state) =>
         parseExponent(state).flatMap of (exponent, state) =>
           let value = (integral +. fraction) *. exponent
-          Success(if negative then (0 -. value) else value, state)
+          Success of (if negative then (0 -. value) else value), state
 //│ fun parseNumber: (state: ParserState) -> ParseResult[Num]
 
 showParseResult of parseNumber of ParserState of String("0"), 0
@@ -419,7 +419,7 @@ fun parseObjectEntry(state: ParserState): ParseResult[[Str, JsonValue]] =
       None then Failure("expected ':' instead of end of input")
     else Failure("expected ':' instead of end of input")
 fun parseObject(state: ParserState): ParseResult[ListMap[Str, JsonValue]] =
-  let rec parseObjectTail(acc, state) =
+  let rec parseObjectTail(acc: ListMap[Str, JsonValue], state: ParserState) =
     let state' = skipWhiteSpace(state)
     if state'.peek is
       Some(",") then

@@ -62,7 +62,7 @@ declare fun parseInt: (Str, Int) -> Int
 
 // `List` and its utilities:
 abstract class List[out T]: Cons[T] | Nil
-class Cons[T](head: T, tail: List[T]) extends List[T]
+class Cons[out T](head: T, tail: List[T]) extends List[T]
 module Nil extends List
 fun (::) cons(head: 'T, tail: List['T]): List['T] = Cons(head, tail)
 fun reverse(l: List['A]): List['A] =
@@ -81,18 +81,18 @@ fun equalList(xs: List['A], ys: List['A], equal: ('A, 'A) -> Bool): Bool = if xs
   Nil and ys is Nil then true
   else false
 // `Option` and its utilities:
-abstract class Option[A]: Some[A] | None
+abstract class Option[out A]: Some[A] | None
 class Some[out A](value: A) extends Option[A]
 module None extends Option
 //│ abstract class List[T]: Cons[T] | Nil
 //│ class Cons[T](head: T, tail: List[T]) extends List
 //│ module Nil extends List
 //│ fun (::) cons: forall 'T. (head: 'T, tail: List['T]) -> List['T]
-//│ fun reverse: forall 'A. (l: List['A]) -> List['A]
+//│ fun reverse: forall 'T0. (l: List['T0]) -> List['T0]
 //│ fun join: (sep: Str, xs: List[anything]) -> (Str | NStr)
 //│ fun showList: (xs: List[anything]) -> NStr
-//│ fun map: forall 'D 'T0. (f: 'D -> 'T0, xs: List['D]) -> List['T0]
-//│ fun equalList: forall 'A0. (xs: List['A0], ys: List['A0], equal: ('A0, 'A0) -> Bool) -> Bool
+//│ fun map: forall 'D 'T1. (f: 'D -> 'T1, xs: List['D]) -> List['T1]
+//│ fun equalList: forall 'A. (xs: List['A], ys: List['A], equal: ('A, 'A) -> Bool) -> Bool
 //│ abstract class Option[A]: None | Some[A]
 //│ class Some[A](value: A) extends Option
 //│ module None extends Option
@@ -489,7 +489,6 @@ fun showEval(source: Str): Str =
     [Failure(error), _] then "Error: " ++ error
 //│ fun showEval: (source: Str) -> Str
 
-// FIXME
 showEval("1")
 showEval("(+ 1 2)")
 showEval("(val x 7 (val y 6 (* x y)))")
@@ -503,28 +502,21 @@ showEval("(def id (lambda (x) x) (id 42))")
 //│ res
 //│     = 'Ok: 1'
 //│ res
-//│ Runtime error:
-//│   TypeError: ((intermediate value) , (intermediate value)(...)) is not a function
+//│     = 'Ok: 3'
 //│ res
-//│ Runtime error:
-//│   TypeError: ((intermediate value) , (intermediate value)(...)) is not a function
+//│     = 'Ok: 42'
 //│ res
 //│     = 'Ok: x'
 //│ res
-//│ Runtime error:
-//│   TypeError: ((intermediate value) , (intermediate value)(...)) is not a function
+//│     = 'Ok: (1)'
 //│ res
-//│ Runtime error:
-//│   TypeError: ((intermediate value) , (intermediate value)(...)) is not a function
+//│     = 'Ok: 1'
 //│ res
-//│ Runtime error:
-//│   TypeError: ((intermediate value) , (intermediate value)(...)) is not a function
+//│     = 'Ok: 0'
 //│ res
-//│ Runtime error:
-//│   TypeError: ((intermediate value) , (intermediate value)(...)) is not a function
+//│     = 'Ok: 1'
 //│ res
-//│ Runtime error:
-//│   TypeError: ((intermediate value) , (intermediate value)(...)) is not a function
+//│     = 'Ok: 42'
 
 // showEval("(def fact (lambda (n) (if (eq n 0) 1 (* n (fact (- n 1))))) (fact 5))")
 // showEval("(def fib (lambda (n) (if (eq n 0) 0 (if (eq n 1) 1 (+ (fib (- n 1)) (fib (- n 2)))))) (fib 10))")

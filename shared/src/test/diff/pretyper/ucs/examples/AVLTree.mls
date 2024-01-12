@@ -42,7 +42,7 @@ fun (::) cons(head, tail) = Cons(head, tail)
 //│ fun (::) cons: forall 'T. ('T, List['T]) -> Cons['T]
 
 abstract class Tree[out A]: (Empty | Node[A])
-class Node[A](value: A, left: Tree[A], right: Tree[A], height: Int) extends Tree[A]
+class Node[out A](value: A, left: Tree[A], right: Tree[A], height: Int) extends Tree[A]
 module Empty extends Tree[nothing]
 //│ abstract class Tree[A]: Empty | Node[A]
 //│ class Node[A](value: A, left: Tree[A], right: Tree[A], height: Int) extends Tree

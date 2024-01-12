@@ -43,7 +43,7 @@ fun (::) cons(head, tail) = Cons(head, tail)
 //│ fun (::) cons: forall 'T. ('T, List['T]) -> Cons['T]
 
 abstract class Tree[out A]: (Empty | Node[A])
-class Node[A](value: A, left: Tree[A], right: Tree[A], rank: Int) extends Tree[A]
+class Node[out A](value: A, left: Tree[A], right: Tree[A], rank: Int) extends Tree[A]
 module Empty extends Tree[nothing]
 //│ abstract class Tree[A]: Empty | Node[A]
 //│ class Node[A](value: A, left: Tree[A], right: Tree[A], rank: Int) extends Tree
@@ -164,7 +164,7 @@ fun drain(t) =
   if getMin(t) is
     None then Nil
     Some(x) then x :: drain(deleteMin(t))
-//│ fun drain: forall 'T. (Empty | Node[Num & 'T]) -> (Cons[Num | 'T] | Nil)
+//│ fun drain: (Empty | Node[Num]) -> (Cons[Num] | Nil)
 
 fun sorted(xs) = fromList(Empty, xs) |> drain
 //│ fun sorted: (Cons[Num] | Nil) -> (Cons[Num] | Nil)
