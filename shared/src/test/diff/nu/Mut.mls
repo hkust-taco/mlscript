@@ -83,65 +83,57 @@ v1.x <- 1
 
 :pe
 let v2: (mut Int)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ╔══[PARSE ERROR] Illegal position for field specification
 //│ ║  l.85: 	let v2: (mut Int)
-//│ ╙──      	        ^^^^^^^^^
-//│ let v2: [mut Int]
+//│ ╙──      	             ^^^
+//│ let v2: Int
 //│ v2
 //│    = <missing implementation>
 
 :pe
 let v2 = (mut 1)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ╔══[PARSE ERROR] Illegal position for field specification
 //│ ║  l.94: 	let v2 = (mut 1)
-//│ ╙──      	         ^^^^^^^
-//│ let v2: [mut 'a]
-//│   where
-//│     'a :> 1
+//│ ╙──      	              ^
+//│ let v2: 1
 //│ v2
-//│    = [ 1 ]
+//│    = 1
 
 :pe
 let v2: (mut x: Int)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.105: 	let v2: (mut x: Int)
-//│ ╙──       	        ^^^^^^^^^^^^
-//│ let v2: [mut x: Int]
+//│ ╔══[PARSE ERROR] Illegal position for field specification
+//│ ║  l.103: 	let v2: (mut x: Int)
+//│ ╙──       	             ^^^^^^
+//│ let v2: Int
 //│ v2
 //│    = <missing implementation>
 
 :pe
 let v2 = (mut 1)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.114: 	let v2 = (mut 1)
-//│ ╙──       	         ^^^^^^^
-//│ let v2: [mut 'a]
-//│   where
-//│     'a :> 1
+//│ ╔══[PARSE ERROR] Illegal position for field specification
+//│ ║  l.112: 	let v2 = (mut 1)
+//│ ╙──       	              ^
+//│ let v2: 1
 //│ v2
-//│    = [ 1 ]
+//│    = 1
 
 :pe
 let v2 = (mut x: 1)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.125: 	let v2 = (mut x: 1)
-//│ ╙──       	         ^^^^^^^^^^
-//│ let v2: [mut x: 'x]
-//│   where
-//│     'x :> 1
+//│ ╔══[PARSE ERROR] Illegal position for field specification
+//│ ║  l.121: 	let v2 = (mut x: 1)
+//│ ╙──       	              ^^^^
+//│ let v2: 1
 //│ v2
-//│    = [ 1 ]
+//│    = 1
 
 :pe
 let v2 = (mut y: 1)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.136: 	let v2 = (mut y: 1)
-//│ ╙──       	         ^^^^^^^^^^
-//│ let v2: [mut y: 'y]
-//│   where
-//│     'y :> 1
+//│ ╔══[PARSE ERROR] Illegal position for field specification
+//│ ║  l.130: 	let v2 = (mut y: 1)
+//│ ╙──       	              ^^^^
+//│ let v2: 1
 //│ v2
-//│    = [ 1 ]
+//│    = 1
 
 
 let v2: [mut Int]

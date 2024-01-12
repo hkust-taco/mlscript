@@ -145,9 +145,6 @@ module M extends C {
 module M extends C {
   fun g = (this.id2(true), this.id2(0))
 }
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.146: 	  fun g = (this.id2(true), this.id2(0))
-//│ ╙──       	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
 //│ ║  l.146: 	  fun g = (this.id2(true), this.id2(0))
 //│ ╙──       	               ^^^^
@@ -156,7 +153,7 @@ module M extends C {
 //│ ╙──       	                               ^^^^
 //│ module M extends C {
 //│   fun f: [error, error]
-//│   fun g: [error, error]
+//│   fun g: error
 //│   fun id1: forall 'a. 'a -> 'a
 //│   fun id2: forall 'b. 'b -> 'b
 //│ }
@@ -177,9 +174,9 @@ M.f
 //│     = [ true, 0 ]
 
 M.g
-//│ [error, error]
+//│ error
 //│ res
-//│     = [ true, 0 ]
+//│     = 0
 
 
 :e
@@ -187,11 +184,11 @@ module M extends C {
   fun id1 = succ
 }
 //│ ╔══[ERROR] Type mismatch in definition of method id1:
-//│ ║  l.187: 	  fun id1 = succ
+//│ ║  l.184: 	  fun id1 = succ
 //│ ║         	      ^^^^^^^^^^
 //│ ╙── variable of type `?a` is not an instance of type `Int`
 //│ ╔══[ERROR] Type mismatch in definition of method id1:
-//│ ║  l.187: 	  fun id1 = succ
+//│ ║  l.184: 	  fun id1 = succ
 //│ ║         	      ^^^^^^^^^^
 //│ ╟── expression of type `Int` does not match type `?a`
 //│ ╟── Note: constraint arises from reference:
@@ -217,15 +214,15 @@ M.id1
 
 // FIXME? parsing/semantics of this, currently treated as a named tuple...
 (M: C)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.219: 	(M: C)
-//│ ╙──       	^^^^^^
+//│ ╔══[PARSE ERROR] Illegal position for field specification
+//│ ║  l.216: 	(M: C)
+//│ ╙──       	 ^^^^
 //│ ╔══[ERROR] Construction of unparameterized class C should use the `new` keyword
-//│ ║  l.219: 	(M: C)
+//│ ║  l.216: 	(M: C)
 //│ ╙──       	    ^
-//│ [M: () -> C]
+//│ () -> C
 //│ res
-//│     = [ [class C] ]
+//│     = [class C]
 
 
 
@@ -241,19 +238,19 @@ module M {
   fun oops(x) = m := x
 }
 //│ ╔══[PARSE ERROR] Unexpected 'mut' keyword in expression position
-//│ ║  l.240: 	  mut val m = None
+//│ ║  l.237: 	  mut val m = None
 //│ ╙──       	  ^^^
 //│ ╔══[PARSE ERROR] Unexpected 'val' keyword in expression position
-//│ ║  l.240: 	  mut val m = None
+//│ ║  l.237: 	  mut val m = None
 //│ ╙──       	      ^^^
 //│ ╔══[ERROR] identifier not found: :=
-//│ ║  l.241: 	  fun oops(x) = m := x
+//│ ║  l.238: 	  fun oops(x) = m := x
 //│ ╙──       	                  ^^
 //│ ╔══[ERROR] identifier not found: m
-//│ ║  l.241: 	  fun oops(x) = m := x
+//│ ║  l.238: 	  fun oops(x) = m := x
 //│ ╙──       	                ^
 //│ ╔══[ERROR] Unexpected equation in this position
-//│ ║  l.240: 	  mut val m = None
+//│ ║  l.237: 	  mut val m = None
 //│ ╙──       	          ^^^^^^^^
 //│ module M {
 //│   fun oops: anything -> error

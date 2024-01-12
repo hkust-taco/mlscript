@@ -48,5 +48,5 @@ bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 
 
 
 fun foo(dbg) =
-  code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
-//│ fun foo: forall 'a 'b. (Code[() -> 'a, ??x | 'b] -> Code['a, ??x0 | 'b]) -> Code[() -> 'a, 'b]
+  code"x => ${let c = code"(${x}, ${foo(dbg)})" in dbg(c)}"
+//│ fun foo: forall 'a 'b. (Code[anything -> 'b, ??x | 'a] -> Code['b, ??x0 | 'a]) -> Code[anything -> 'b, 'a]

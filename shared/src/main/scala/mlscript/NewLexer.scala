@@ -17,7 +17,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   private val isOpChar = Set(
     '!', '#', '%', '&', '*', '+', '-', '/', ':', '<', '=', '>', '?', '@', '\\', '^', '|', '~' , '.',
     // ',', 
-    ';'
+    // ';'
   )
   def isIdentFirstChar(c: Char): Bool =
     c.isLetter || c === '_' || c === '\''
@@ -45,7 +45,8 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     "=>",
     "=",
     ":",
-    ";;",
+    ";",
+    // ",",
     "#",
     "`"
     // ".",
@@ -231,6 +232,9 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
       case '$' if i + 1 < length && isIdentFirstChar(bytes(i + 1)) =>
         val (n, j) = takeWhile(i + 1)(isIdentChar)
         lex(j, ind, next(j, BRACKETS(BracketKind.Unquote, (if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)), loc(i + 1, j)) :: Nil)(loc(i, j))))
+      case ';' =>
+        val j = i + 1
+        lex(j, ind, next(j, SEMI))
       case '"' =>
         val (isTripleQQ, cons) = qqList match {
           case h :: t => (h === BracketKind.QuasiquoteTriple, t)
@@ -478,6 +482,7 @@ object NewLexer {
   def printToken(tl: TokLoc): Str = tl match {
     case (SPACE, _) => " "
     case (COMMA, _) => ","
+    case (SEMI, _) => ";"
     case (NEWLINE, _) => "↵"
     case (INDENT, _) => "→"
     case (DEINDENT, _) => "←"

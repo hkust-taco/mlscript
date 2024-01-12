@@ -150,14 +150,13 @@ code"let x = ${Const(42)} in ${code"x"}"
 
 :js
 :ne
-code"let x = 1 in (discard(x + 1); x + 2)"
+code"let x = 1 in (x + 1, x + 2)"
 //│ Code[Int, nothing]
 //│ // Prelude
-//│ function discard(x) {}
 //│ class TypingUnit12 {}
 //│ const typing_unit12 = new TypingUnit12;
 //│ // Query 1
-//│ res = ((x1) => Let(Var(x1), IntLit(1), Bra(Blk(App(Var(discard), Tup(Fld(App(Var("+"), Var(x1), IntLit(1)), false, false, false))), App(Var("+"), Var(x1), IntLit(2))))))(freshName("x"));
+//│ res = ((x1) => Let(Var(x1), IntLit(1), App(Var(","), App(Var("+"), Var(x1), IntLit(1)), App(Var("+"), Var(x1), IntLit(2)))))(freshName("x"));
 //│ // End of generated code
 
 
@@ -249,7 +248,7 @@ code"${Const(42)}"
 :e
 code"code"42""
 //│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.250: 	code"code"42""
+//│ ║  l.249: 	code"code"42""
 //│ ╙──       	     ^^^^^^^^
 //│ Code[error, nothing]
 //│ // Prelude
@@ -343,7 +342,7 @@ fun test(cde, f) =
 
 :js
 :ne
-code"""let x = ${log("foo"); Const(0)} in x + 1"""
+code"""let x = ${log("foo"), Const(0)} in x + 1"""
 //│ Code[Int, nothing]
 //│ // Prelude
 //│ function log(x) {
@@ -352,10 +351,7 @@ code"""let x = ${log("foo"); Const(0)} in x + 1"""
 //│ class TypingUnit26 {}
 //│ const typing_unit26 = new TypingUnit26;
 //│ // Query 1
-//│ res = ((x1) => Let(Var(x1), (() => {
-//│   log("foo");
-//│   return Const(0);
-//│ })(), App(Var("+"), Var(x1), IntLit(1))))(freshName("x"));
+//│ res = ((x1) => Let(Var(x1), (log("foo") , Const(0)), App(Var("+"), Var(x1), IntLit(1))))(freshName("x"));
 //│ // End of generated code
 
 :ne

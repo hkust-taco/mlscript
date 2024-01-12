@@ -13,7 +13,7 @@ It is okay for draft PRs to contain work-in-progress changes that are not expect
 You can ask my opinion on your changes or on specific design considerations,
 but you should not expect a full and detailed review from me if your PR is a draft.
 
-### For Non-Drafy PRs
+### For Non-Draft PRs
 
 I am an extremely detail-oriented person,
 and I will usually look at every single line of changed source code in your PR.

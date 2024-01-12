@@ -165,7 +165,7 @@ let codeB = code"y + y"
 //│ let codeB: Code[Int, nothing]
 
 
-let both = code"discard(${codeA}); ${codeB}"
+let both = code"${codeA}, ${codeB}"
 //│ let both: Code[Int, nothing]
 
 :e

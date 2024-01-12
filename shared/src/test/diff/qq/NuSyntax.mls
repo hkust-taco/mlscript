@@ -124,10 +124,10 @@ fun f(x: Code[Int, nothing]) =
 //│ fun f: (x: Code[Int, nothing]) -> Code[Int, nothing]
 
 :e
-`let x = `0, y = 1 in x `+ y
+`let x = `0 in `let y = 1 in x `+ y
 //│ ╔══[ERROR] Type mismatch in unquote:
-//│ ║  l.127: 	`let x = `0, y = 1 in x `+ y
-//│ ║         	                 ^
+//│ ║  l.127: 	`let x = `0 in `let y = 1 in x `+ y
+//│ ║         	                        ^
 //│ ╙── integer literal of type `1` is not an instance of type `Code`
 //│ Code[Int, nothing]
 
@@ -135,7 +135,7 @@ fun f(x: Code[Int, nothing]) =
 f `=> a `=> f`(a)
 //│ Code[forall 'a 'b. ('a -> 'b) -> 'a -> 'b, nothing]
 
-`let app = (f, a) `=> f`(a), id = x `=> x in app`(id, `42)
+`let app = (f, a) `=> f`(a) in `let id = x `=> x in app`(id, `42)
 //│ Code[42, nothing]
 
 

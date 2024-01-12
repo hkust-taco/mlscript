@@ -83,7 +83,7 @@ C2.test
 //│     = 42
 
 
-class C1() extends M1, M2 { val factor: Int;; val factor = 2 }
+class C1() extends M1, M2 { val factor: Int; val factor = 2 }
 C1().test
 //│ class C1() {
 //│   val factor: Int
