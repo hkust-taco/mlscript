@@ -41,8 +41,8 @@ fun crazy(v) =
 :e
 fun f(x) =
   if x is
-    (0, 0) then "zeros"
-    (1, 1) then "ones"
+    [0, 0] then "zeros"
+    [1, 1] then "ones"
     _      then "bruh"
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
@@ -51,9 +51,9 @@ fun f(x) =
 :e
 fun f(x) =
   if x is
-    (0, 0) then "zeros"
-    (1, 1) then "ones"
-    (y, 1) then x
+    [0, 0] then "zeros"
+    [1, 1] then "ones"
+    [y, 1] then x
     _      then "que?"
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
@@ -62,9 +62,22 @@ fun f(x) =
 :e
 fun f(p) =
   if p is
-    Some((x, y)) then x + y
+    Some([x, y]) then x + y
     None()       then 0
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
 //│ f: (None | Some) -> (0 | error)
+
+class Union(a, b)
+//│ Defined class Union
+//│ Union: ('a, 'b,) -> (Union & {a: 'a, b: 'b})
+
+// Name conflict between the scrutinee and the positionals.
+// Desugar result: let tmp13 = x in case tmp13 of { Union => let x = (tmp13).a in let y = (tmp13).b in x }
+fun hmm(x) =
+  if x is Union(x, y) then x
+//│ hmm: (Union & {a: 'a}) -> 'a
+
+hmm(Union(1, 2))
+//│ res: 1
 

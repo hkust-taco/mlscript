@@ -48,7 +48,7 @@ type Option[A] = Some[A] | None
 
 
 fun x -> case x of { int -> safeDiv 1 x | _ -> None{} }
-//│ res: (int & ~0 | ~int) -> (int | None)
+//│ res: (int & ~0 | ~int) -> (None | int)
 //│    = [Function: res]
 
 :e // we no longer refine x's type here, as that was rather unexpected

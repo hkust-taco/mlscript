@@ -4,11 +4,11 @@ import scala.language.implicitConversions
 import mlscript.utils._, shorthands._
 
 final case class Message(bits: Ls[Message.Bit]) {
-  def show: Str = {
-    val ctx = ShowCtx.mk(typeBits)
+  def show(newDefs: Bool): Str = {
+    val ctx = ShowCtx.mk(typeBits, newDefs)
     showIn(ctx)
   }
-  def typeBits: Ls[Type] = bits.collect{ case Message.Code(t) => t }
+  def typeBits: Ls[TypeLike] = bits.collect{ case Message.Code(t) => t }
   def showIn(ctx: ShowCtx): Str = {
     bits.map {
       case Message.Code(ty) => ty.showIn(ctx, 0)
@@ -25,15 +25,15 @@ final case class Message(bits: Ls[Message.Bit]) {
 }
 object Message {
   
-  def mkCtx(msgs: IterableOnce[Message], pre: Str = "'"): ShowCtx =
-    ShowCtx.mk(msgs.iterator.flatMap(_.typeBits), pre)
+  def mkCtx(msgs: IterableOnce[Message], newDefs: Bool,pre: Str = "'"): ShowCtx =
+    ShowCtx.mk(msgs.iterator.flatMap(_.typeBits), newDefs, pre)
   
   def join(msgs: Seq[Message]): Message = Message(msgs.iterator.flatMap(_.bits).toList)
   
   sealed abstract class Bit
   final case class Text(str: Str) extends Bit
-  final case class Code(ty: Type) extends Bit
-  implicit def fromType(ty: Type): Message = Message(Code(ty)::Nil)
+  final case class Code(ty: TypeLike) extends Bit
+  implicit def fromType(ty: TypeLike): Message = Message(Code(ty)::Nil)
   implicit def fromStr(str: Str): Message = Message(Text(str)::Nil)
   
   implicit class MessageContext(private val ctx: StringContext) {

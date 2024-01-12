@@ -97,7 +97,7 @@ rec def length l =
 //│ List[?] -> int
 //│   <:  length:
 //│ List[?] -> int
-//│       = [Function: length]
+//│       = [Function: length1]
 
 def id: forall 'a. 'a -> 'a
 def id x = x

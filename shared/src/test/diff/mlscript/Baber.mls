@@ -13,9 +13,9 @@ def f e = case e of
 
 :ns
 f
-//│ res: forall 'y 'a 'b 'c 'z 'd. 'c -> ('y | 'z | 'b)
+//│ res: forall 'a 'b 'z 'c 'd 'y. 'b -> ('y | 'z | 'c)
 //│   where
-//│     'c <: #Foo & 'a | (#Foo & 'd | 'b & ~#Foo) & ~#Foo
+//│     'b <: #Foo & 'a | (#Foo & 'd | 'c & ~#Foo) & ~#Foo
 //│     'd <: {z: 'z}
 //│     'a <: {y: 'y}
 //│    = [Function: f]

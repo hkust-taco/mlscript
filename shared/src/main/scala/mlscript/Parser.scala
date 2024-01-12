@@ -39,13 +39,18 @@ class Parser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   def NAME[p: P]: P[Var] = locate(ident.map(Var(_)))
   
-  def ident[p: P] = Lexer.identifier | "(" ~ operator.! ~ ")"
+  def ident[p: P]: P[String] = Lexer.identifier | "(" ~ operator.! ~ ")"
   
   def NUMBER[p: P]: P[Lit] = locate(
     P( Lexer.longinteger | Lexer.integer ).map(IntLit) |
     P( Lexer.floatnumber ).map(DecLit)
   )
   def STRING[p: P]: P[StrLit] = locate(Lexer.stringliteral.map(StrLit(_)))
+
+  def FIELD[p: P]: P[Var] = locate(
+    P( Lexer.identifier ).map(Var(_)) |
+    P( Lexer.decimalinteger ).map(n => Var(n.toString))
+  )
   
   def expr[p: P]: P[Term] = P( ite | basicExpr ).opaque("expression")
   
@@ -101,7 +106,7 @@ class Parser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     Index ~~ (NAME ~ ":" ~ (noCommas | suite) | noCommas.map(Var("") -> _)).rep(1, ",").map(_.toList) ~ ",".!.? ~~ Index
   ).map {
     case (_, (Var(""), x) :: Nil, N, _) => x
-    case (i0, xs, _, i1) => Tup(xs.map { case (n, t) => (n optionIf (_.name.nonEmpty), Fld(false, false, t)) }).withLoc(i0, i1, origin)
+    case (i0, xs, _, i1) => Tup(xs.map { case (n, t) => (n optionIf (_.name.nonEmpty), Fld(FldFlags.empty, t)) }).withLoc(i0, i1, origin)
   }
   
   def booleans[p: P]: P[Term] = P(binops rep (1, kw("and")) rep (1, kw("or"))) // TODO locs
@@ -174,7 +179,7 @@ class Parser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     case (as, ao) => (as ++ ao.toList).reduceLeft((f, a) => App(f, toParams(a)))
   }
   
-  def atomOrSelect[p: P]: P[Term] = P(atom ~ (Index ~~ "." ~ NAME ~~ Index).rep).map {
+  def atomOrSelect[p: P]: P[Term] = P(atom ~ (Index ~~ "." ~ FIELD ~~ Index).rep).map {
     case (lhs, sels) => sels.foldLeft(lhs) {
       case (acc, (i0,str,i1)) => Sel(lhs, str).withLoc(i0, i1, origin)
     }

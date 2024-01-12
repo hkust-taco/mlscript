@@ -72,7 +72,7 @@ T A
 //│ ╟── Note: class constructor A is defined at:
 //│ ║  l.1: 	class A
 //│ ╙──     	      ^
-//│ res: anything -> A & #T | error
+//│ res: error | anything -> A & #T
 //│    = [Function (anonymous)]
 
 :e
@@ -99,7 +99,7 @@ T (B {})
 t = T error
 //│ t: nothing
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 :re
 t: nothing

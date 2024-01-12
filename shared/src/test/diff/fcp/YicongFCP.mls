@@ -68,7 +68,7 @@ foo id
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.52: 	  forall 'T. fun (x: 'T) -> esc x : 'T
 //│ ╙──      	                            ^^^^^
-//│ res: 'T -> 'T | error
+//│ res: error | 'T -> 'T
 //│    = [Function (anonymous)]
 
 foo (fun x -> error)

@@ -1,66 +1,85 @@
-:NewParser
+:NewDefs
 
 
 ()
-//│ res: ()
-//│    = []
+//│ ()
+//│ res
+//│     = undefined
 
 :pe
 (,)
 //│ ╔══[PARSE ERROR] Unexpected comma in expression position
-//│ ║  l.9: 	(,)
-//│ ╙──     	 ^
+//│ ║  l.10: 	(,)
+//│ ╙──      	 ^
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
-//│ ║  l.9: 	(,)
-//│ ╙──     	  ^
-//│ res: (undefined,)
-//│    = [ undefined ]
+//│ ║  l.10: 	(,)
+//│ ╙──      	  ^
+//│ ()
+//│ res
+//│     = undefined
 
-// FIXME shouldn't parse like a 1-tuple...
 (1)
-//│ res: (1,)
-//│    = [ 1 ]
+//│ 1
+//│ res
+//│     = 1
 
 (1,)
-//│ res: (1,)
-//│    = [ 1 ]
+//│ 1
+//│ res
+//│     = 1
 
 (1, 2)
-//│ res: (1, 2,)
-//│    = [ 1, 2 ]
+//│ 2
+//│ res
+//│     = 2
 
 (1, 2,)
-//│ res: (1, 2,)
-//│    = [ 1, 2 ]
+//│ 2
+//│ res
+//│     = 2
 
 
 let x: ()
-//│ x: ()
-//│  = <missing implementation>
+//│ let x: ()
+//│ x
+//│   = <missing implementation>
 
 :pe
 let x: (,)
 //│ ╔══[PARSE ERROR] Unexpected comma in expression position
-//│ ║  l.42: 	let x: (,)
+//│ ║  l.48: 	let x: (,)
 //│ ╙──      	        ^
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
-//│ ║  l.42: 	let x: (,)
+//│ ║  l.48: 	let x: (,)
 //│ ╙──      	         ^
-//│ x: (undefined,)
-//│  = <missing implementation>
+//│ let x: ()
+//│ x
+//│   = <missing implementation>
 
 let x: (1)
-//│ x: (1,)
-//│  = <missing implementation>
+//│ let x: 1
+//│ x
+//│   = <missing implementation>
 
 let x: (1,)
-//│ x: (1,)
-//│  = <missing implementation>
+//│ let x: 1
+//│ x
+//│   = <missing implementation>
 
+:e
 let x: (1, 2)
-//│ x: (1, 2,)
-//│  = <missing implementation>
+//│ ╔══[ERROR] type identifier not found: ,
+//│ ║  l.70: 	let x: (1, 2)
+//│ ╙──      	       ^^^^^^
+//│ let x: error
+//│ x
+//│   = <missing implementation>
 
+:e
 let x: (1, 2,)
-//│ x: (1, 2,)
-//│  = <missing implementation>
+//│ ╔══[ERROR] type identifier not found: ,
+//│ ║  l.79: 	let x: (1, 2,)
+//│ ╙──      	       ^^^^^^^
+//│ let x: error
+//│ x
+//│   = <missing implementation>

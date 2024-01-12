@@ -1,0 +1,165 @@
+:NewDefs
+
+
+case 0 then true
+//│ 0 -> true
+//│ res
+//│     = [Function: res]
+
+:pe // TODO support
+case 0 then true, 1 then false
+//│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
+//│ ║  l.10: 	case 0 then true, 1 then false
+//│ ╙──      	                  ^^^^^^^^^^^^
+//│ 0 -> ()
+//│ res
+//│     = [Function: res]
+
+case
+  0 then true
+  1 then false
+//│ (0 | 1) -> Bool
+//│ res
+//│     = [Function: res]
+
+
+fun foo = case
+  0 then true
+  1 then false
+//│ fun foo: (0 | 1) -> Bool
+
+[foo(0), foo(1)]
+//│ [Bool, Bool]
+//│ res
+//│     = [ true, false ]
+
+
+
+abstract class Option[out A]
+class Some[out A](val value: A) extends Option[A]
+module None extends Option[nothing]
+//│ abstract class Option[A]
+//│ class Some[A](value: A) extends Option
+//│ module None extends Option
+
+
+fun map(f) = case
+  Some(x) then Some(f(x))
+  None    then None
+//│ fun map: forall 'a 'A. ('a -> 'A) -> (None | Some['a]) -> (None | Some['A])
+
+map(succ) of Some of 123
+//│ None | Some[Int]
+//│ res
+//│     = Some {}
+
+map(succ) of None
+//│ None | Some[Int]
+//│ res
+//│     = None { class: [class None extends Option] }
+
+
+:e // TODO support
+fun map(f) = case
+  Some(x)   then Some(f(x))
+  None as n then n
+//│ ╔══[ERROR] Illegal pattern `as`
+//│ ║  l.65: 	  None as n then n
+//│ ╙──      	       ^^
+//│ fun map: anything -> anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+
+:pe
+case 1
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'case'; found integer literal instead
+//│ ║  l.75: 	case 1
+//│ ║        	     ^
+//│ ╟── Note: 'case' expression starts here:
+//│ ║  l.75: 	case 1
+//│ ╙──      	^^^^
+//│ anything -> 1
+//│ res
+//│     = [Function: res]
+
+:pe
+case (1 then true)
+//│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
+//│ ║  l.87: 	case (1 then true)
+//│ ╙──      	        ^^^^
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'case'; found integer literal instead
+//│ ║  l.87: 	case (1 then true)
+//│ ║        	     ^^^^^^^^^^^^^
+//│ ╟── Note: 'case' expression starts here:
+//│ ║  l.87: 	case (1 then true)
+//│ ╙──      	^^^^
+//│ anything -> 1
+//│ res
+//│     = [Function: res]
+
+case else 0
+//│ anything -> 0
+//│ res
+//│     = [Function: res]
+
+:pe
+case then 1 else 0
+//│ ╔══[PARSE ERROR] Unexpected 'then' keyword in expression position
+//│ ║  l.107: 	case then 1 else 0
+//│ ╙──       	     ^^^^
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'case'; found integer literal instead
+//│ ║  l.107: 	case then 1 else 0
+//│ ║         	          ^
+//│ ╟── Note: 'case' expression starts here:
+//│ ║  l.107: 	case then 1 else 0
+//│ ╙──       	^^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found 'else' keyword instead
+//│ ║  l.107: 	case then 1 else 0
+//│ ╙──       	            ^^^^
+//│ anything -> 1
+//│ res
+//│     = [Function: res]
+
+
+
+// TODO:
+
+:pe
+:e
+case x, y then x + y
+//│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
+//│ ║  l.130: 	case x, y then x + y
+//│ ╙──       	        ^^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'case'; found operator application instead
+//│ ║  l.130: 	case x, y then x + y
+//│ ║         	     ^^^^^^^^^^^^^^^
+//│ ╟── Note: 'case' expression starts here:
+//│ ║  l.130: 	case x, y then x + y
+//│ ╙──       	^^^^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.130: 	case x, y then x + y
+//│ ╙──       	     ^
+//│ anything -> ()
+//│ Code generation encountered an error:
+//│   unresolved symbol x
+
+:e
+case (x, y) then x + y
+//│ ╔══[ERROR] Illegal pattern `,`
+//│ ║  l.148: 	case (x, y) then x + y
+//│ ╙──       	      ^^^^
+//│ anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+:e // * FIXME[UCS]
+case [x, y] then x + y
+//│ ╔══[ERROR] type identifier not found: Tuple#2
+//│ ╙──
+//│ nothing -> error
+//│ Code generation encountered an error:
+//│   unknown match case: Tuple#2
+
+
+

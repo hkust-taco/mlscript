@@ -287,15 +287,15 @@ sp_ty = sp
 //│      = [Function (anonymous)]
 
 p01 = pair (()) Z
-//│ p01: (() -> (forall 'a. anything -> 'a -> 'a) -> 'b) -> 'b
+//│ p01: (((),) -> (forall 'a. anything -> 'a -> 'a) -> 'b) -> 'b
 //│    = [Function (anonymous)]
 
 p = pair (())
-//│ p: 'a -> (() -> 'a -> 'b) -> 'b
+//│ p: 'a -> (((),) -> 'a -> 'b) -> 'b
 //│  = [Function (anonymous)]
 
 p01 = p Z
-//│ p01: (() -> (forall 'a. anything -> 'a -> 'a) -> 'b) -> 'b
+//│ p01: (((),) -> (forall 'a. anything -> 'a -> 'a) -> 'b) -> 'b
 //│    = [Function (anonymous)]
 
 
@@ -399,7 +399,7 @@ E q = q id
 // shallow (not (not true))        -- Shallow encoding.
 // λid.id(λb t f.b f t)(id(λb t f.b f t)(λx y.x))
 sh id = (id not) ((id not) tru)
-//│ sh: ((forall 'a 'b 'c. ('a -> 'b -> 'c) -> 'b -> 'a -> 'c) -> ('d -> 'e & (forall 'f. 'f -> anything -> 'f) -> 'd)) -> 'e
+//│ sh: ((forall 'a 'b 'c. ('b -> 'c -> 'a) -> 'c -> 'b -> 'a) -> ('d -> 'e & (forall 'f. 'f -> anything -> 'f) -> 'd)) -> 'e
 //│   = [Function: sh]
 
 // E[forall X.X->X->X](shallow (not( not true)))
@@ -423,7 +423,7 @@ pu sh_pu
 //│ ║  l.421: 	pu sh_pu
 //│ ║         	^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ res: anything -> anything -> anything -> nothing | error
+//│ res: error | anything -> anything -> anything -> nothing
 //│    = [Function (anonymous)]
 
 // * "Of course, self-application of self-application ((\x.x x)(\x.x x)) remains untypable, because it has no normal form."

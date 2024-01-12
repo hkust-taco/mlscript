@@ -1,0 +1,1502 @@
+:NewParser
+:NewDefs
+
+:js
+module A {
+  val a = 42
+  class B(x: Int) {
+    fun b = x + 1
+  }
+}
+//│ module A {
+//│   class B(x: Int) {
+//│     fun b: Int
+//│   }
+//│   val a: 42
+//│ }
+//│ // Prelude
+//│ let res;
+//│ class TypingUnit {
+//│   #A;
+//│   constructor() {
+//│   }
+//│   get A() {
+//│     const qualifier = this;
+//│     if (this.#A === undefined) {
+//│       class A {
+//│         #B;
+//│         #a;
+//│         get a() { return this.#a; }
+//│         constructor() {
+//│           this.#a = 42;
+//│           const a = this.#a;
+//│         }
+//│         get B() {
+//│           const qualifier1 = this;
+//│           if (this.#B === undefined) {
+//│             class B {
+//│               #x;
+//│               constructor(x) {
+//│                 this.#x = x;
+//│               }
+//│               get b() {
+//│                 const x = this.#x;
+//│                 return x + 1;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x];
+//│               }
+//│             };
+//│             this.#B = ((x) => Object.freeze(new B(x)));
+//│             this.#B.class = B;
+//│             this.#B.unapply = B.unapply;
+//│           }
+//│           return this.#B;
+//│         }
+//│       }
+//│       this.#A = new A();
+//│       this.#A.class = A;
+//│     }
+//│     return this.#A;
+//│   }
+//│ }
+//│ const typing_unit = new TypingUnit;
+//│ globalThis.A = typing_unit.A;
+//│ // End of generated code
+
+:e
+:js
+let bb = A.B(A.a)
+bb.b
+//│ ╔══[ERROR] Access to class member not yet supported
+//│ ║  l.70: 	let bb = A.B(A.a)
+//│ ╙──      	          ^^
+//│ let bb: error
+//│ error
+//│ // Prelude
+//│ class TypingUnit1 {}
+//│ const typing_unit1 = new TypingUnit1;
+//│ // Query 1
+//│ globalThis.bb = A.B(A.a);
+//│ // Query 2
+//│ res = bb.b;
+//│ // End of generated code
+//│ bb
+//│    = B {}
+//│ res
+//│     = 43
+
+
+:e
+class B(x: Int) {
+  val outer = 42
+  class C(y: Int) {
+    val outer1 = outer + outer
+  }
+  class D(val outer: Int)
+}
+let b = B(1)
+b.outer
+let c = b.C(1)
+c.outer1
+let d = b.D(1)
+d.outer
+//│ ╔══[ERROR] Access to class member not yet supported
+//│ ║  l.101: 	let c = b.C(1)
+//│ ╙──       	         ^^
+//│ ╔══[ERROR] Access to class member not yet supported
+//│ ║  l.103: 	let d = b.D(1)
+//│ ╙──       	         ^^
+//│ class B(x: Int) {
+//│   class C(y: Int) {
+//│     val outer1: Int
+//│   }
+//│   class D(outer: Int)
+//│   val outer: 42
+//│ }
+//│ let b: B
+//│ let c: error
+//│ let d: error
+//│ error
+//│ b
+//│   = B {}
+//│ res
+//│     = 42
+//│ c
+//│   = C {}
+//│ res
+//│     = 84
+//│ d
+//│   = D {}
+//│ res
+//│     = 1
+
+:js
+mixin C() {
+  mixin D() {
+    mixin E() {}
+  }
+}
+//│ mixin C() {
+//│   mixin D() {
+//│     mixin E()
+//│   }
+//│ }
+//│ // Prelude
+//│ class TypingUnit3 {
+//│   constructor() {
+//│   }
+//│   C(base) {
+//│     const qualifier = this;
+//│     return (class C extends base {
+//│       constructor(...rest) {
+//│         super(...rest);
+//│       }
+//│       D(base) {
+//│         const qualifier1 = this;
+//│         return (class D extends base {
+//│           constructor(...rest) {
+//│             super(...rest);
+//│           }
+//│           E(base) {
+//│             const qualifier2 = this;
+//│             return (class E extends base {
+//│               constructor(...rest) {
+//│                 super(...rest);
+//│               }
+//│             });
+//│           }
+//│         });
+//│       }
+//│     });
+//│   }
+//│ }
+//│ const typing_unit3 = new TypingUnit3;
+//│ globalThis.C = ((base) => typing_unit3.C(base));
+//│ // End of generated code
+
+:js
+module D {
+  class E(val x: Int) {}
+  fun createE(x: Int) = E(x + 1)
+}
+//│ module D {
+//│   class E(x: Int)
+//│   fun createE: (x: Int) -> E
+//│ }
+//│ // Prelude
+//│ class TypingUnit4 {
+//│   #D;
+//│   constructor() {
+//│   }
+//│   get D() {
+//│     const qualifier = this;
+//│     if (this.#D === undefined) {
+//│       class D {
+//│         #E;
+//│         constructor() {
+//│         }
+//│         createE(x) {
+//│           const qualifier1 = this;
+//│           return qualifier1.E(x + 1);
+//│         }
+//│         get E() {
+//│           const qualifier1 = this;
+//│           if (this.#E === undefined) {
+//│             class E {
+//│               #x;
+//│               get x() { return this.#x; }
+//│               constructor(x) {
+//│                 this.#x = x;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x];
+//│               }
+//│             };
+//│             this.#E = ((x) => Object.freeze(new E(x)));
+//│             this.#E.class = E;
+//│             this.#E.unapply = E.unapply;
+//│           }
+//│           return this.#E;
+//│         }
+//│       }
+//│       this.#D = new D();
+//│       this.#D.class = D;
+//│     }
+//│     return this.#D;
+//│   }
+//│ }
+//│ const typing_unit4 = new TypingUnit4;
+//│ globalThis.D = typing_unit4.D;
+//│ // End of generated code
+
+:js
+let ee = D.createE(42)
+ee.x
+//│ let ee: E
+//│ Int
+//│ // Prelude
+//│ class TypingUnit5 {}
+//│ const typing_unit5 = new TypingUnit5;
+//│ // Query 1
+//│ globalThis.ee = D.createE(42);
+//│ // Query 2
+//│ res = ee.x;
+//│ // End of generated code
+//│ ee
+//│    = E {}
+//│ res
+//│     = 43
+
+:js
+class E(x: Int) {
+  class F(y: Int) {
+    fun sum = x + y
+    class G(z: Int) {
+      fun sum = x + y + z
+    }
+  }
+}
+//│ class E(x: Int) {
+//│   class F(y: Int) {
+//│     class G(z: Int) {
+//│       fun sum: Int
+//│     }
+//│     fun sum: Int
+//│   }
+//│ }
+//│ // Prelude
+//│ class TypingUnit6 {
+//│   #E;
+//│   constructor() {
+//│   }
+//│   get E() {
+//│     const qualifier = this;
+//│     if (this.#E === undefined) {
+//│       class E {
+//│         #F;
+//│         #x;
+//│         constructor(x) {
+//│           this.#x = x;
+//│         }
+//│         get F() {
+//│           const qualifier1 = this;
+//│           if (this.#F === undefined) {
+//│             class F {
+//│               #G;
+//│               #y;
+//│               constructor(y) {
+//│                 this.#y = y;
+//│               }
+//│               get sum() {
+//│                 const y = this.#y;
+//│                 return qualifier1.#x + y;
+//│               }
+//│               get G() {
+//│                 const qualifier2 = this;
+//│                 if (this.#G === undefined) {
+//│                   class G {
+//│                     #z;
+//│                     constructor(z) {
+//│                       this.#z = z;
+//│                     }
+//│                     get sum() {
+//│                       const z = this.#z;
+//│                       return qualifier1.#x + qualifier2.#y + z;
+//│                     }
+//│                   static
+//│                     unapply(x) {
+//│                       return [x.#z];
+//│                     }
+//│                   };
+//│                   this.#G = ((z) => Object.freeze(new G(z)));
+//│                   this.#G.class = G;
+//│                   this.#G.unapply = G.unapply;
+//│                 }
+//│                 return this.#G;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#y];
+//│               }
+//│             };
+//│             this.#F = ((y) => Object.freeze(new F(y)));
+//│             this.#F.class = F;
+//│             this.#F.unapply = F.unapply;
+//│           }
+//│           return this.#F;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#x];
+//│         }
+//│       };
+//│       this.#E = ((x) => Object.freeze(new E(x)));
+//│       this.#E.class = E;
+//│       this.#E.unapply = E.unapply;
+//│     }
+//│     return this.#E;
+//│   }
+//│ }
+//│ const typing_unit6 = new TypingUnit6;
+//│ globalThis.E = typing_unit6.E;
+//│ // End of generated code
+
+:e
+:js
+let es = E(1)
+let fff = es.F(2)
+let gg = fff.G(3)
+gg.sum
+//│ ╔══[ERROR] Access to class member not yet supported
+//│ ║  l.350: 	let fff = es.F(2)
+//│ ╙──       	            ^^
+//│ let es: E
+//│ let fff: error
+//│ let gg: error
+//│ error
+//│ // Prelude
+//│ class TypingUnit7 {}
+//│ const typing_unit7 = new TypingUnit7;
+//│ // Query 1
+//│ globalThis.es = E(1);
+//│ // Query 2
+//│ globalThis.fff = es.F(2);
+//│ // Query 3
+//│ globalThis.gg = fff.G(3);
+//│ // Query 4
+//│ res = gg.sum;
+//│ // End of generated code
+//│ es
+//│    = E {}
+//│ fff
+//│     = F {}
+//│ gg
+//│    = G {}
+//│ res
+//│     = 6
+
+:js
+class F() {
+  let x = 42
+  class G() {
+    let x1 = x + 1
+  }
+}
+//│ class F() {
+//│   class G() {
+//│     let x1: Int
+//│   }
+//│   let x: 42
+//│ }
+//│ // Prelude
+//│ class TypingUnit8 {
+//│   #F;
+//│   constructor() {
+//│   }
+//│   get F() {
+//│     const qualifier = this;
+//│     if (this.#F === undefined) {
+//│       class F {
+//│         #G;
+//│         #x;
+//│         constructor() {
+//│           this.#x = 42;
+//│           const x = this.#x;
+//│         }
+//│         get G() {
+//│           const qualifier1 = this;
+//│           if (this.#G === undefined) {
+//│             class G {
+//│               constructor() {
+//│                 const x1 = qualifier1.#x + 1;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [];
+//│               }
+//│             };
+//│             this.#G = (() => Object.freeze(new G()));
+//│             this.#G.class = G;
+//│             this.#G.unapply = G.unapply;
+//│           }
+//│           return this.#G;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [];
+//│         }
+//│       };
+//│       this.#F = (() => Object.freeze(new F()));
+//│       this.#F.class = F;
+//│       this.#F.unapply = F.unapply;
+//│     }
+//│     return this.#F;
+//│   }
+//│ }
+//│ const typing_unit8 = new TypingUnit8;
+//│ globalThis.F = typing_unit8.F;
+//│ // End of generated code
+
+
+:js
+module G {
+  class I(val x: Int) {}
+  module H {
+    fun i1(x: Int) = I(x + 1)
+    class J(x: Int) {
+      fun ii(a: Int) = I(x + a)
+    }
+  }
+}
+//│ module G {
+//│   module H {
+//│     class J(x: Int) {
+//│       fun ii: (a: Int) -> I
+//│     }
+//│     fun i1: (x: Int) -> I
+//│   }
+//│   class I(x: Int)
+//│ }
+//│ // Prelude
+//│ class TypingUnit9 {
+//│   #G;
+//│   constructor() {
+//│   }
+//│   get G() {
+//│     const qualifier = this;
+//│     if (this.#G === undefined) {
+//│       class G {
+//│         #I;
+//│         #H;
+//│         constructor() {
+//│         }
+//│         get H() {
+//│           const qualifier1 = this;
+//│           if (this.#H === undefined) {
+//│             class H {
+//│               #J;
+//│               constructor() {
+//│               }
+//│               i1(x) {
+//│                 return qualifier1.I(x + 1);
+//│               }
+//│               get J() {
+//│                 const qualifier2 = this;
+//│                 if (this.#J === undefined) {
+//│                   class J {
+//│                     #x;
+//│                     constructor(x) {
+//│                       this.#x = x;
+//│                     }
+//│                     ii(a) {
+//│                       const x = this.#x;
+//│                       return qualifier1.I(x + a);
+//│                     }
+//│                   static
+//│                     unapply(x) {
+//│                       return [x.#x];
+//│                     }
+//│                   };
+//│                   this.#J = ((x) => Object.freeze(new J(x)));
+//│                   this.#J.class = J;
+//│                   this.#J.unapply = J.unapply;
+//│                 }
+//│                 return this.#J;
+//│               }
+//│             }
+//│             this.#H = new H();
+//│             this.#H.class = H;
+//│           }
+//│           return this.#H;
+//│         }
+//│         get I() {
+//│           const qualifier1 = this;
+//│           if (this.#I === undefined) {
+//│             class I {
+//│               #x;
+//│               get x() { return this.#x; }
+//│               constructor(x) {
+//│                 this.#x = x;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x];
+//│               }
+//│             };
+//│             this.#I = ((x) => Object.freeze(new I(x)));
+//│             this.#I.class = I;
+//│             this.#I.unapply = I.unapply;
+//│           }
+//│           return this.#I;
+//│         }
+//│       }
+//│       this.#G = new G();
+//│       this.#G.class = G;
+//│     }
+//│     return this.#G;
+//│   }
+//│ }
+//│ const typing_unit9 = new TypingUnit9;
+//│ globalThis.G = typing_unit9.G;
+//│ // End of generated code
+
+
+:e
+:js
+let jj = G.H.J(42)
+let i = jj.ii(2)
+i.x
+//│ ╔══[ERROR] Access to module member not yet supported
+//│ ║  l.549: 	let jj = G.H.J(42)
+//│ ╙──       	          ^^
+//│ let jj: error
+//│ let i: error
+//│ error
+//│ // Prelude
+//│ class TypingUnit10 {}
+//│ const typing_unit10 = new TypingUnit10;
+//│ // Query 1
+//│ globalThis.jj = G.H.J(42);
+//│ // Query 2
+//│ globalThis.i = jj.ii(2);
+//│ // Query 3
+//│ res = i.x;
+//│ // End of generated code
+//│ jj
+//│    = J {}
+//│ i
+//│   = I {}
+//│ res
+//│     = 44
+
+:js
+module H {
+  class I(val x: Int)
+  class J(x: Int) {
+    val i = I(x + 1)
+  }
+}
+//│ module H {
+//│   class I(x: Int)
+//│   class J(x: Int) {
+//│     val i: I
+//│   }
+//│ }
+//│ // Prelude
+//│ class TypingUnit11 {
+//│   #H;
+//│   constructor() {
+//│   }
+//│   get H() {
+//│     const qualifier = this;
+//│     if (this.#H === undefined) {
+//│       class H {
+//│         #I;
+//│         #J;
+//│         constructor() {
+//│         }
+//│         get I() {
+//│           const qualifier1 = this;
+//│           if (this.#I === undefined) {
+//│             class I {
+//│               #x;
+//│               get x() { return this.#x; }
+//│               constructor(x) {
+//│                 this.#x = x;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x];
+//│               }
+//│             };
+//│             this.#I = ((x) => Object.freeze(new I(x)));
+//│             this.#I.class = I;
+//│             this.#I.unapply = I.unapply;
+//│           }
+//│           return this.#I;
+//│         }
+//│         get J() {
+//│           const qualifier1 = this;
+//│           if (this.#J === undefined) {
+//│             class J {
+//│               #x;
+//│               #i;
+//│               get i() { return this.#i; }
+//│               constructor(x) {
+//│                 this.#x = x;
+//│                 this.#i = qualifier1.I(x + 1);
+//│                 const i = this.#i;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x];
+//│               }
+//│             };
+//│             this.#J = ((x) => Object.freeze(new J(x)));
+//│             this.#J.class = J;
+//│             this.#J.unapply = J.unapply;
+//│           }
+//│           return this.#J;
+//│         }
+//│       }
+//│       this.#H = new H();
+//│       this.#H.class = H;
+//│     }
+//│     return this.#H;
+//│   }
+//│ }
+//│ const typing_unit11 = new TypingUnit11;
+//│ globalThis.H = typing_unit11.H;
+//│ // End of generated code
+
+
+:e
+:js
+let j = H.J(42)
+j.i.x
+//│ ╔══[ERROR] Access to class member not yet supported
+//│ ║  l.658: 	let j = H.J(42)
+//│ ╙──       	         ^^
+//│ let j: error
+//│ error
+//│ // Prelude
+//│ class TypingUnit12 {}
+//│ const typing_unit12 = new TypingUnit12;
+//│ // Query 1
+//│ globalThis.j = H.J(42);
+//│ // Query 2
+//│ res = j.i.x;
+//│ // End of generated code
+//│ j
+//│   = J {}
+//│ res
+//│     = 43
+
+:js
+:e
+class I(x: Int) {
+  let y = x + 1
+  class J(x: Int) {
+    let y = x + 2
+    fun incY = y + 1
+  }
+}
+let i = I(1)
+let ij = i.J(0)
+ij.incY
+//│ ╔══[ERROR] Access to class member not yet supported
+//│ ║  l.688: 	let ij = i.J(0)
+//│ ╙──       	          ^^
+//│ class I(x: Int) {
+//│   class J(x: Int) {
+//│     fun incY: Int
+//│     let y: Int
+//│   }
+//│   let y: Int
+//│ }
+//│ let i: I
+//│ let ij: error
+//│ error
+//│ // Prelude
+//│ class TypingUnit13 {
+//│   #I;
+//│   constructor() {
+//│   }
+//│   get I() {
+//│     const qualifier = this;
+//│     if (this.#I === undefined) {
+//│       class I {
+//│         #J;
+//│         #x;
+//│         constructor(x) {
+//│           this.#x = x;
+//│           const y = x + 1;
+//│         }
+//│         get J() {
+//│           const qualifier1 = this;
+//│           if (this.#J === undefined) {
+//│             class J {
+//│               #y;
+//│               #x;
+//│               constructor(x) {
+//│                 this.#x = x;
+//│                 this.#y = x + 2;
+//│                 const y = this.#y;
+//│               }
+//│               get incY() {
+//│                 const x = this.#x;
+//│                 const qualifier2 = this;
+//│                 return qualifier2.#y + 1;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x];
+//│               }
+//│             };
+//│             this.#J = ((x) => Object.freeze(new J(x)));
+//│             this.#J.class = J;
+//│             this.#J.unapply = J.unapply;
+//│           }
+//│           return this.#J;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#x];
+//│         }
+//│       };
+//│       this.#I = ((x) => Object.freeze(new I(x)));
+//│       this.#I.class = I;
+//│       this.#I.unapply = I.unapply;
+//│     }
+//│     return this.#I;
+//│   }
+//│ }
+//│ const typing_unit13 = new TypingUnit13;
+//│ globalThis.I = typing_unit13.I;
+//│ // Query 1
+//│ globalThis.i1 = I(1);
+//│ // Query 2
+//│ globalThis.ij = i1.J(0);
+//│ // Query 3
+//│ res = ij.incY;
+//│ // End of generated code
+//│ i
+//│   = I {}
+//│ ij
+//│    = J {}
+//│ res
+//│     = 3
+
+
+:js
+module J {
+  class K(x: Int) {}
+  mixin L() {}
+  class M() extends K(1) {}
+  class N(x2: Int) extends K(x2 + 2), L
+}
+//│ module J {
+//│   class K(x: Int)
+//│   mixin L()
+//│   class M() extends K
+//│   class N(x2: Int) extends K
+//│ }
+//│ // Prelude
+//│ class TypingUnit14 {
+//│   #J;
+//│   constructor() {
+//│   }
+//│   get J() {
+//│     const qualifier = this;
+//│     if (this.#J === undefined) {
+//│       class J {
+//│         #K;
+//│         #M;
+//│         #N;
+//│         constructor() {
+//│         }
+//│         L(base) {
+//│           const qualifier1 = this;
+//│           return (class L extends base {
+//│             constructor(...rest) {
+//│               super(...rest);
+//│             }
+//│           });
+//│         }
+//│         get K() {
+//│           const qualifier1 = this;
+//│           if (this.#K === undefined) {
+//│             class K {
+//│               #x;
+//│               constructor(x) {
+//│                 this.#x = x;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x];
+//│               }
+//│             };
+//│             this.#K = ((x) => Object.freeze(new K(x)));
+//│             this.#K.class = K;
+//│             this.#K.unapply = K.unapply;
+//│           }
+//│           return this.#K;
+//│         }
+//│         get M() {
+//│           const qualifier1 = this;
+//│           if (this.#M === undefined) {
+//│             class M extends qualifier1.K.class {
+//│               constructor() {
+//│                 super(1);
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [];
+//│               }
+//│             };
+//│             this.#M = (() => Object.freeze(new M()));
+//│             this.#M.class = M;
+//│             this.#M.unapply = M.unapply;
+//│           }
+//│           return this.#M;
+//│         }
+//│         get N() {
+//│           const qualifier1 = this;
+//│           if (this.#N === undefined) {
+//│             class N extends qualifier1.L(qualifier1.K.class) {
+//│               #x2;
+//│               constructor(x2) {
+//│                 super(x2 + 2);
+//│                 this.#x2 = x2;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x2];
+//│               }
+//│             };
+//│             this.#N = ((x2) => Object.freeze(new N(x2)));
+//│             this.#N.class = N;
+//│             this.#N.unapply = N.unapply;
+//│           }
+//│           return this.#N;
+//│         }
+//│       }
+//│       this.#J = new J();
+//│       this.#J.class = J;
+//│     }
+//│     return this.#J;
+//│   }
+//│ }
+//│ const typing_unit14 = new TypingUnit14;
+//│ globalThis.J = typing_unit14.J;
+//│ // End of generated code
+
+:e
+:js
+let m = J.M()
+let n = J.N(2)
+//│ ╔══[ERROR] Access to class member not yet supported
+//│ ║  l.879: 	let m = J.M()
+//│ ╙──       	         ^^
+//│ ╔══[ERROR] Access to class member not yet supported
+//│ ║  l.880: 	let n = J.N(2)
+//│ ╙──       	         ^^
+//│ let m: error
+//│ let n: error
+//│ // Prelude
+//│ class TypingUnit15 {}
+//│ const typing_unit15 = new TypingUnit15;
+//│ // Query 1
+//│ globalThis.m = J.M();
+//│ // Query 2
+//│ globalThis.n = J.N(2);
+//│ // End of generated code
+//│ m
+//│   = M {}
+//│ n
+//│   = N {}
+
+
+module K {
+  let x = 1
+  module L {
+    let x = 42
+    class M() {
+      fun f = x
+    }
+  }
+}
+//│ module K {
+//│   module L {
+//│     class M() {
+//│       fun f: 42
+//│     }
+//│     let x: 42
+//│   }
+//│   let x: 1
+//│ }
+
+:e
+let m = K.L.M()
+m.f
+//│ ╔══[ERROR] Access to module member not yet supported
+//│ ║  l.923: 	let m = K.L.M()
+//│ ╙──       	         ^^
+//│ let m: error
+//│ error
+//│ m
+//│   = M {}
+//│ res
+//│     = 42
+
+module L {
+  class M(val x: Int) {}
+  module N {
+    module O {
+      class P(y: Int) extends M(y + 1) {}
+    }
+  }
+}
+//│ module L {
+//│   class M(x: Int)
+//│   module N {
+//│     module O {
+//│       class P(y: Int) extends M
+//│     }
+//│   }
+//│ }
+
+:e
+let op = L.N.O.P(0)
+op.x
+//│ ╔══[ERROR] Access to module member not yet supported
+//│ ║  l.953: 	let op = L.N.O.P(0)
+//│ ╙──       	          ^^
+//│ let op: error
+//│ error
+//│ op
+//│    = P {}
+//│ res
+//│     = 1
+
+:js
+:e
+module M {
+  module N {
+    fun op(x) = if x is
+      O then 0
+      P then 1
+      _ then 2
+  }
+  class O()
+  class P()
+  fun op(x) = if x is
+    O then 0
+    P then 1
+    _ then 2
+}
+M.N.op(M.P())
+//│ ╔══[ERROR] Access to module member not yet supported
+//│ ║  l.981: 	M.N.op(M.P())
+//│ ╙──       	 ^^
+//│ ╔══[ERROR] Access to class member not yet supported
+//│ ║  l.981: 	M.N.op(M.P())
+//│ ╙──       	        ^^
+//│ module M {
+//│   module N {
+//│     fun op: Object -> (0 | 1 | 2)
+//│   }
+//│   class O()
+//│   class P()
+//│   fun op: Object -> (0 | 1 | 2)
+//│ }
+//│ error
+//│ // Prelude
+//│ class TypingUnit20 {
+//│   #M;
+//│   constructor() {
+//│   }
+//│   get M() {
+//│     const qualifier = this;
+//│     if (this.#M === undefined) {
+//│       class M {
+//│         #O;
+//│         #P;
+//│         #N;
+//│         constructor() {
+//│         }
+//│         op(x) {
+//│           let a;
+//│           const qualifier1 = this;
+//│           return a = x, a instanceof qualifier1.O.class ? 0 : a instanceof qualifier1.P.class ? 1 : 2;
+//│         }
+//│         get N() {
+//│           const qualifier1 = this;
+//│           if (this.#N === undefined) {
+//│             class N {
+//│               constructor() {
+//│               }
+//│               op(x) {
+//│                 let a;
+//│                 return a = x, a instanceof qualifier1.O.class ? 0 : a instanceof qualifier1.P.class ? 1 : 2;
+//│               }
+//│             }
+//│             this.#N = new N();
+//│             this.#N.class = N;
+//│           }
+//│           return this.#N;
+//│         }
+//│         get O() {
+//│           const qualifier1 = this;
+//│           if (this.#O === undefined) {
+//│             class O {
+//│               constructor() {
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [];
+//│               }
+//│             };
+//│             this.#O = (() => Object.freeze(new O()));
+//│             this.#O.class = O;
+//│             this.#O.unapply = O.unapply;
+//│           }
+//│           return this.#O;
+//│         }
+//│         get P() {
+//│           const qualifier1 = this;
+//│           if (this.#P === undefined) {
+//│             class P {
+//│               constructor() {
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [];
+//│               }
+//│             };
+//│             this.#P = (() => Object.freeze(new P()));
+//│             this.#P.class = P;
+//│             this.#P.unapply = P.unapply;
+//│           }
+//│           return this.#P;
+//│         }
+//│       }
+//│       this.#M = new M();
+//│       this.#M.class = M;
+//│     }
+//│     return this.#M;
+//│   }
+//│ }
+//│ const typing_unit20 = new TypingUnit20;
+//│ globalThis.M = typing_unit20.M;
+//│ // Query 1
+//│ res = M.N.op(M.P());
+//│ // End of generated code
+//│ res
+//│     = 1
+
+:js
+module N {
+  module O {
+    class P() extends Q
+  }
+  class Q()
+}
+//│ module N {
+//│   module O {
+//│     class P() extends Q
+//│   }
+//│   class Q()
+//│ }
+//│ // Prelude
+//│ class TypingUnit21 {
+//│   #N;
+//│   constructor() {
+//│   }
+//│   get N() {
+//│     const qualifier = this;
+//│     if (this.#N === undefined) {
+//│       class N {
+//│         #Q;
+//│         #O;
+//│         constructor() {
+//│         }
+//│         get O() {
+//│           const qualifier1 = this;
+//│           if (this.#O === undefined) {
+//│             class O {
+//│               #P;
+//│               constructor() {
+//│               }
+//│               get P() {
+//│                 const qualifier2 = this;
+//│                 if (this.#P === undefined) {
+//│                   class P extends qualifier1.Q.class {
+//│                     constructor() {
+//│                       super();
+//│                     }
+//│                   static
+//│                     unapply(x) {
+//│                       return [];
+//│                     }
+//│                   };
+//│                   this.#P = (() => Object.freeze(new P()));
+//│                   this.#P.class = P;
+//│                   this.#P.unapply = P.unapply;
+//│                 }
+//│                 return this.#P;
+//│               }
+//│             }
+//│             this.#O = new O();
+//│             this.#O.class = O;
+//│           }
+//│           return this.#O;
+//│         }
+//│         get Q() {
+//│           const qualifier1 = this;
+//│           if (this.#Q === undefined) {
+//│             class Q {
+//│               constructor() {
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [];
+//│               }
+//│             };
+//│             this.#Q = (() => Object.freeze(new Q()));
+//│             this.#Q.class = Q;
+//│             this.#Q.unapply = Q.unapply;
+//│           }
+//│           return this.#Q;
+//│         }
+//│       }
+//│       this.#N = new N();
+//│       this.#N.class = N;
+//│     }
+//│     return this.#N;
+//│   }
+//│ }
+//│ const typing_unit21 = new TypingUnit21;
+//│ globalThis.N = typing_unit21.N;
+//│ // End of generated code
+
+:e
+N.O.P()
+//│ ╔══[ERROR] Access to module member not yet supported
+//│ ║  l.1167: 	N.O.P()
+//│ ╙──        	 ^^
+//│ error
+//│ res
+//│     = P {}
+
+:js
+:e
+class I(x: Int) {
+  let y = x + 1
+  class J(z: Int) {
+    val a = [x, y, z] 
+  }
+}
+I(1).J(3).a
+//│ ╔══[ERROR] Access to class member not yet supported
+//│ ║  l.1183: 	I(1).J(3).a
+//│ ╙──        	    ^^
+//│ class I(x: Int) {
+//│   class J(z: Int) {
+//│     val a: [Int, Int, Int]
+//│   }
+//│   let y: Int
+//│ }
+//│ error
+//│ // Prelude
+//│ class TypingUnit23 {
+//│   #I;
+//│   constructor() {
+//│   }
+//│   get I() {
+//│     const qualifier = this;
+//│     if (this.#I === undefined) {
+//│       class I {
+//│         #J;
+//│         #y;
+//│         #x;
+//│         constructor(x) {
+//│           this.#x = x;
+//│           this.#y = x + 1;
+//│           const y = this.#y;
+//│         }
+//│         get J() {
+//│           const qualifier1 = this;
+//│           if (this.#J === undefined) {
+//│             class J {
+//│               #z;
+//│               #a;
+//│               get a() { return this.#a; }
+//│               constructor(z) {
+//│                 this.#z = z;
+//│                 this.#a = [
+//│                   qualifier1.#x,
+//│                   qualifier1.#y,
+//│                   z
+//│                 ];
+//│                 const a = this.#a;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#z];
+//│               }
+//│             };
+//│             this.#J = ((z) => Object.freeze(new J(z)));
+//│             this.#J.class = J;
+//│             this.#J.unapply = J.unapply;
+//│           }
+//│           return this.#J;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#x];
+//│         }
+//│       };
+//│       this.#I = ((x) => Object.freeze(new I(x)));
+//│       this.#I.class = I;
+//│       this.#I.unapply = I.unapply;
+//│     }
+//│     return this.#I;
+//│   }
+//│ }
+//│ const typing_unit23 = new TypingUnit23;
+//│ globalThis.I = typing_unit23.I;
+//│ // Query 1
+//│ res = I(1).J(3).a;
+//│ // End of generated code
+//│ res
+//│     = [ 1, 2, 3 ]
+
+
+:js
+fun main =
+  let f(x: Int): Int = if x is
+    0 then 1
+    else g(x - 1)
+  let g(x: Int): Int = f(x)
+  f
+//│ fun main: (x: Int) -> Int
+//│ // Prelude
+//│ class TypingUnit24 {}
+//│ const typing_unit24 = new TypingUnit24;
+//│ // Query 1
+//│ globalThis.main = function main() {
+//│   return ((() => {
+//│     let f = (x) => x === 0 ? 1 : g(x - 1);
+//│     let g = (x) => f(x);
+//│     return f;
+//│   })());
+//│ };
+//│ // End of generated code
+
+:js
+fun mian =
+  class A(x: Int)
+  mixin B()
+  module C
+  A(42)
+//│ fun mian: A
+//│ // Prelude
+//│ class TypingUnit25 {}
+//│ const typing_unit25 = new TypingUnit25;
+//│ // Query 1
+//│ globalThis.mian = function mian() {
+//│   return ((() => {
+//│     const A = (() => {
+//│       class A {
+//│         #x;
+//│         constructor(x) {
+//│           this.#x = x;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#x];
+//│         }
+//│       }
+//│       let ctor;
+//│       ctor = ((x) => new A(x));
+//│       ctor.class = A;
+//│       return ctor;
+//│     })();
+//│     const B = (base) => {
+//│       return (class B extends base {
+//│         constructor(...rest) {
+//│           super(...rest);
+//│         }
+//│       });
+//│     };
+//│     const C = (() => {
+//│       class C {}
+//│       let ins;
+//│       ins = new C();
+//│       ins.class = C;
+//│       return ins;
+//│     })();
+//│     return A(42);
+//│   })());
+//│ };
+//│ // End of generated code
+
+:js
+fun mian =
+  mixin B()
+  class A(x: Int) extends B
+  module C extends B
+  [A, C]
+//│ fun mian: [(x: Int) -> A, C]
+//│ // Prelude
+//│ class TypingUnit26 {}
+//│ const typing_unit26 = new TypingUnit26;
+//│ // Query 1
+//│ globalThis.mian1 = function mian1() {
+//│   return ((() => {
+//│     const B = (base) => {
+//│       return (class B extends base {
+//│         constructor(...rest) {
+//│           super(...rest);
+//│         }
+//│       });
+//│     };
+//│     const A = (() => {
+//│       class A extends B(Object) {
+//│         #x;
+//│         constructor(x) {
+//│           super();
+//│           this.#x = x;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#x];
+//│         }
+//│       }
+//│       let ctor;
+//│       ctor = ((x) => new A(x));
+//│       ctor.class = A;
+//│       return ctor;
+//│     })();
+//│     const C = (() => {
+//│       class C extends B(Object) {
+//│         constructor() {
+//│           super();
+//│         }
+//│       }
+//│       let ins;
+//│       ins = new C();
+//│       ins.class = C;
+//│       return ins;
+//│     })();
+//│     return ([
+//│       A,
+//│       C
+//│     ]);
+//│   })());
+//│ };
+//│ // End of generated code
+
+:js
+fun main(arg) =
+  let x = arg + 1
+  let foo(y) = x + y
+  class C(u: Int) { fun z = [foo(u), bar] }
+  let bar = x
+  C(123)
+//│ fun main: Int -> C
+//│ // Prelude
+//│ class TypingUnit27 {}
+//│ const typing_unit27 = new TypingUnit27;
+//│ // Query 1
+//│ globalThis.main1 = function main1(arg) {
+//│   return ((() => {
+//│     let x = arg + 1;
+//│     let foo = (y) => x + y;
+//│     const C = (() => {
+//│       class C {
+//│         #u;
+//│         constructor(u) {
+//│           this.#u = u;
+//│         }
+//│         get z() {
+//│           const u = this.#u;
+//│           return ([
+//│             foo(u),
+//│             bar
+//│           ]);
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#u];
+//│         }
+//│       }
+//│       let ctor;
+//│       ctor = ((u) => new C(u));
+//│       ctor.class = C;
+//│       return ctor;
+//│     })();
+//│     let bar = x;
+//│     return C(123);
+//│   })());
+//│ };
+//│ // End of generated code
+
+module Test {
+  log(0)
+  module Foo { log(2) }
+  log(1)
+  discard(Foo)
+  log(3)
+  discard(Foo)
+}
+//│ module Test {
+//│   module Foo
+//│ }
+
+:js
+class Outer1(outer: Int) {
+  log(outer)
+  class Outer2(x: Int) {
+    let outer = x + 1
+  }
+}
+//│ class Outer1(outer: Int) {
+//│   class Outer2(x: Int) {
+//│     let outer: Int
+//│   }
+//│ }
+//│ // Prelude
+//│ class TypingUnit29 {
+//│   #Outer1;
+//│   constructor() {
+//│   }
+//│   get Outer1() {
+//│     const qualifier = this;
+//│     if (this.#Outer1 === undefined) {
+//│       class Outer1 {
+//│         #Outer2;
+//│         #outer;
+//│         constructor(outer) {
+//│           this.#outer = outer;
+//│           log(outer);
+//│         }
+//│         get Outer2() {
+//│           const qualifier1 = this;
+//│           if (this.#Outer2 === undefined) {
+//│             class Outer2 {
+//│               #x;
+//│               constructor(x) {
+//│                 this.#x = x;
+//│                 const outer = x + 1;
+//│               }
+//│             static
+//│               unapply(x) {
+//│                 return [x.#x];
+//│               }
+//│             };
+//│             this.#Outer2 = ((x) => Object.freeze(new Outer2(x)));
+//│             this.#Outer2.class = Outer2;
+//│             this.#Outer2.unapply = Outer2.unapply;
+//│           }
+//│           return this.#Outer2;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#outer];
+//│         }
+//│       };
+//│       this.#Outer1 = ((outer) => Object.freeze(new Outer1(outer)));
+//│       this.#Outer1.class = Outer1;
+//│       this.#Outer1.unapply = Outer1.unapply;
+//│     }
+//│     return this.#Outer1;
+//│   }
+//│ }
+//│ const typing_unit29 = new TypingUnit29;
+//│ globalThis.Outer1 = typing_unit29.Outer1;
+//│ // End of generated code

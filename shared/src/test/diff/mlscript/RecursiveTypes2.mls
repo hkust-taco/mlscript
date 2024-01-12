@@ -11,7 +11,7 @@ error : T1 : T2
 //│ res: T2
 //│ constrain calls  : 6
 //│ annoying  calls  : 4
-//│ subtyping calls  : 29
+//│ subtyping calls  : 24
 
 type T3 = { x: T2 & { x: T3 } | T3 & { x: T2 } }
 //│ Defined type alias T3
@@ -21,14 +21,14 @@ error : T1 : T3
 //│ res: T3
 //│ constrain calls  : 7
 //│ annoying  calls  : 12
-//│ subtyping calls  : 457
+//│ subtyping calls  : 408
 
 :stats
 error : T2 : T3
 //│ res: T3
 //│ constrain calls  : 10
 //│ annoying  calls  : 12
-//│ subtyping calls  : 423
+//│ subtyping calls  : 389
 
 def f: T3 & { x: T1 & 'a } as 'a
 //│ f: 'a
@@ -40,9 +40,9 @@ f.x
 //│ res: 'a & (T1 & T3 & {x: T2} | T1 & T2 & {x: T3})
 //│   where
 //│     'a :> T3 & {x: T1 & 'a}
-//│ constrain calls  : 6
+//│ constrain calls  : 4
 //│ annoying  calls  : 4
-//│ subtyping calls  : 148
+//│ subtyping calls  : 102
 
 g = error : T1 & { x: T2 | 'a } as 'a
 //│ g: 'a
@@ -54,9 +54,9 @@ g.x
 //│ res: T1 & {x: T1} & 'a | T1 & T2 & {x: T1}
 //│   where
 //│     'a :> T1 & {x: 'a | T2}
-//│ constrain calls  : 6
+//│ constrain calls  : 4
 //│ annoying  calls  : 4
-//│ subtyping calls  : 85
+//│ subtyping calls  : 71
 
 :stats
 f = g
@@ -67,8 +67,8 @@ f = g
 //│ 'a
 //│   where
 //│     'a :> T3 & {x: T1 & 'a}
-//│ constrain calls  : 69
-//│ annoying  calls  : 95
-//│ subtyping calls  : 3476
+//│ constrain calls  : 48
+//│ annoying  calls  : 60
+//│ subtyping calls  : 1977
 
 

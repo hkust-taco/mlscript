@@ -113,7 +113,7 @@ rec def length l =
 //│ List[?] -> int
 //│   <:  length:
 //│ List[?] -> int
-//│       = [Function: length]
+//│       = [Function: length1]
 
 def id: 'a -> 'a
 def id x = x
@@ -250,7 +250,7 @@ def fst: forall 'a 'b. Pair['a, 'b] -> 'a
 def fst((x, y)) = x
 //│ fst: Pair['a, ?] -> 'a
 //│    = <missing implementation>
-//│ ('a, anything,) -> 'a
+//│ (('a, anything,),) -> 'a
 //│   <:  fst:
 //│ Pair['a, ?] -> 'a
 //│    = [Function: fst]
@@ -612,13 +612,11 @@ rec def id1 x = if true then x else id1 id1 x
 //│ ║  l.601: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ id1: 'id1
+//│ id1: 'a -> 'b
 //│   where
-//│     'id1 :> 'a -> 'b
-//│     'a :> 'id1
+//│     'a :> 'a -> 'b
 //│        <: 'b
-//│     'b :> 'id1
-//│        <: 'a -> 'b
+//│     'b := 'a -> 'b
 //│    = [Function: id11]
 
 :e
@@ -666,8 +664,8 @@ id1 id1
 //│     'c := 'b -> 'c
 //│ ║  l.601: 	rec def id1 x = if true then x else id1 id1 x
 //│ ╙──       	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d ?e ?id1. ?id1 <: (forall ?f ?g ?id10 ?h ?i ?j. ?id10) -> ?k` exceeded recursion depth limit (250)
-//│ ║  l.626: 	id1 id1
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?id1. ?id1 <: (forall ?id10. ?id10) -> ?a` exceeded recursion depth limit (250)
+//│ ║  l.624: 	id1 id1
 //│ ║         	^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -677,7 +675,7 @@ id1 id1
 :e
 auto auto
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.678: 	auto auto
+//│ ║  l.676: 	auto auto
 //│ ║         	^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
@@ -688,7 +686,7 @@ auto auto
 //│ ╟── Note: quantified type variable 'a is defined at:
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 //│ ╙──       	                   ^^
-//│ res: 'b -> 'b | error
+//│ res: error | 'b -> 'b
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
@@ -696,7 +694,7 @@ auto auto
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c ?d. ?c -> ?d) -> ?e` exceeded recursion depth limit (250)
-//│ ║  l.697: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.695: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -1010,19 +1008,17 @@ rec def id1 x = if true then x else id1 id1 x
 //│        <: 'c
 //│     'c :> 'b -> 'c
 //│        <: 'a
-//│ ║  l.1005: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1003: 	rec def id1 x = if true then x else id1 id1 x
 //│ ╙──        	                                    ^^^^^^^
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: ?id1` exceeded recursion depth limit (250)
-//│ ║  l.1005: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1003: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║          	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ id1: 'id1
+//│ id1: 'a -> 'b
 //│   where
-//│     'id1 :> 'a -> 'b
-//│     'a :> 'id1
+//│     'a :> 'a -> 'b
 //│        <: 'b
-//│     'b :> 'id1
-//│        <: 'a -> 'b
+//│     'b := 'a -> 'b
 //│    = [Function: id12]
 
 :e
@@ -1068,10 +1064,10 @@ id1 id1
 //│     'b :> 'b -> 'c
 //│        <: 'c
 //│     'c := 'b -> 'c
-//│ ║  l.1005: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1003: 	rec def id1 x = if true then x else id1 id1 x
 //│ ╙──        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?id1 ?b ?c ?d ?e. ?id1 <: (forall ?f ?g ?id10 ?h ?i ?j. ?id10) -> ?k` exceeded recursion depth limit (250)
-//│ ║  l.1030: 	id1 id1
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?id1. ?id1 <: (forall ?id10. ?id10) -> ?a` exceeded recursion depth limit (250)
+//│ ║  l.1026: 	id1 id1
 //│ ║          	^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -1081,7 +1077,7 @@ id1 id1
 :e
 auto auto
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1082: 	auto auto
+//│ ║  l.1078: 	auto auto
 //│ ║          	^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
@@ -1092,7 +1088,7 @@ auto auto
 //│ ╟── Note: quantified type variable 'a is defined at:
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 //│ ╙──       	                   ^^
-//│ res: 'b -> 'b | error
+//│ res: error | 'b -> 'b
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
@@ -1100,7 +1096,7 @@ auto auto
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c ?d. ?c -> ?d) -> ?e` exceeded recursion depth limit (250)
-//│ ║  l.1101: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.1097: 	(fun x -> x x) (fun x -> x x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -1414,19 +1410,17 @@ rec def id1 x = if true then x else id1 id1 x
 //│        <: 'c
 //│     'c :> 'b -> 'c
 //│        <: 'a
-//│ ║  l.1409: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1405: 	rec def id1 x = if true then x else id1 id1 x
 //│ ╙──        	                                    ^^^^^^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.1409: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1405: 	rec def id1 x = if true then x else id1 id1 x
 //│ ║          	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ id1: 'id1
+//│ id1: 'a -> 'b
 //│   where
-//│     'id1 :> 'a -> 'b
-//│     'a :> 'id1
+//│     'a :> 'a -> 'b
 //│        <: 'b
-//│     'b :> 'id1
-//│        <: 'a -> 'b
+//│     'b := 'a -> 'b
 //│    = [Function: id13]
 
 :e
@@ -1449,10 +1443,10 @@ id1 id1
 //│     'b :> 'b -> 'c
 //│        <: 'c
 //│     'c := 'b -> 'c
-//│ ║  l.1409: 	rec def id1 x = if true then x else id1 id1 x
+//│ ║  l.1405: 	rec def id1 x = if true then x else id1 id1 x
 //│ ╙──        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1434: 	id1 id1
+//│ ║  l.1428: 	id1 id1
 //│ ║          	^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -1462,7 +1456,7 @@ id1 id1
 :e
 auto auto
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1463: 	auto auto
+//│ ║  l.1457: 	auto auto
 //│ ║          	^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
@@ -1473,7 +1467,7 @@ auto auto
 //│ ╟── Note: quantified type variable 'a is defined at:
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 //│ ╙──       	                   ^^
-//│ res: 'b -> 'b | error
+//│ res: error | 'b -> 'b
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
@@ -1481,7 +1475,7 @@ auto auto
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1482: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.1476: 	(fun x -> x x) (fun x -> x x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
@@ -1787,35 +1781,29 @@ to_ch: int -> ChurchInt
 
 // G8
 rec def id1 x = if true then x else id1 id1 x
-//│ id1: 'id1
+//│ id1: 'a -> 'b
 //│   where
-//│     'id1 :> 'a -> 'b
-//│     'a :> 'id1
+//│     'a :> 'a -> 'b
 //│        <: 'b
-//│     'b :> 'id1
-//│        <: 'a -> 'b
+//│     'b := 'a -> 'b
 //│    = [Function: id14]
 
 // G9
 id1 id1
-//│ res: 'a -> 'b | 'id1
+//│ res: ('a & 'b) -> 'a
 //│   where
-//│     'a :> forall 'id1 'c 'd. 'a -> 'b | 'id1
-//│        <: 'b
-//│     'b :> forall 'id1 'c 'd. 'id1
-//│        <: 'a -> 'b
-//│     'id1 :> 'c -> 'd
-//│     'c :> 'id1
+//│     'a :> forall 'c 'd. ('a & 'b & 'c) -> ('a | 'd)
+//│        <: ((forall 'c 'd. 'c -> 'd) | 'b) -> 'a
+//│     'c :> 'c -> 'd
 //│        <: 'd
-//│     'd :> 'id1
-//│        <: 'c -> 'd
+//│     'd := 'c -> 'd
 //│    = [Function: id14]
 
 // Gn
 :e
 auto auto
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1816: 	auto auto
+//│ ║  l.1804: 	auto auto
 //│ ║          	^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
@@ -1826,7 +1814,7 @@ auto auto
 //│ ╟── Note: quantified type variable 'a is defined at:
 //│ ║  l.163: 	def auto : (forall 'a. 'a -> 'a) -> (forall 'b. 'b -> 'b)
 //│ ╙──       	                   ^^
-//│ res: 'b -> 'b | error
+//│ res: error | 'b -> 'b
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
@@ -1834,7 +1822,7 @@ auto auto
 :e
 (fun x -> x x) (fun x -> x x)
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
-//│ ║  l.1835: 	(fun x -> x x) (fun x -> x x)
+//│ ║  l.1823: 	(fun x -> x x) (fun x -> x x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error

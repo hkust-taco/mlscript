@@ -8,17 +8,25 @@ class Pair(fst, snd)
 
 
 
+Pair(0, 1) is Pair
+//│ res: Bool
+//│    = true
+
 Pair(0, 1) is Pair(a, b)
-//│ res: bool
+//│ res: Bool
+//│    = true
+
+Pair(0, 1) is Pair(0, _)
+//│ res: Bool
 //│    = true
 
 if Pair(0, 1) is Pair(a, b) then true else false
-//│ res: bool
+//│ res: Bool
 //│    = true
 
 
 fun foo(x) = x is Pair(a, b)
-//│ foo: anything -> bool
+//│ foo: anything -> Bool
 //│    = [Function: foo]
 
 
@@ -39,5 +47,57 @@ fun foo(x) = if x is Pair(a, b) then a > b else false
 //│ foo: (Pair & {fst: number, snd: number} | ~Pair) -> bool
 //│    = [Function: foo2]
 
+
+// TODO proper error
+fun foo(x) = x is
+  Pair
+  Int
+//│ ╔══[ERROR] illegal pattern
+//│ ║  l.53: 	  Pair
+//│ ║        	  ^^^^
+//│ ║  l.54: 	  Int
+//│ ╙──      	^^^^^
+//│ foo: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+// TODO proper error
+fun foo(x) = x is
+  Pair(a, b) and a > b
+  Int
+//│ ╔══[ERROR] illegal pattern
+//│ ║  l.66: 	  Pair(a, b) and a > b
+//│ ║        	  ^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.67: 	  Int
+//│ ╙──      	^^^^^
+//│ foo: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+// TODO support `|`
+fun foo(x) = x is Pair(a, b) | Int
+fun foo(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╔══[ERROR] Cannot find operator `|` in the context
+//│ ║  l.78: 	fun foo(x) = x is Pair(a, b) | Int
+//│ ╙──      	                             ^
+//│ foo: anything -> error
+//│ ╔══[ERROR] Cannot find operator `|` in the context
+//│ ║  l.79: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╙──      	                                         ^
+//│ foo: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+
+
+class A(arg)
+//│ Defined class A
+//│ A: 'arg -> (A & {arg: 'arg})
+//│  = [Function: A1]
+
+// TODO make `is` lower precedence than `=>`
+x => (x is A(_))
+//│ res: anything -> Bool
+//│    = [Function: res]
 
 

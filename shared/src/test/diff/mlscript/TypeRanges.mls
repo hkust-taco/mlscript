@@ -17,7 +17,7 @@ def set3: MutArray[number..int] -> 'b -> ()
 //│ ╔══[ERROR] Type mismatch in type bounds:
 //│ ║  l.16: 	def set3: MutArray[number..int] -> 'b -> ()
 //│ ║        	                   ^^^^^^^^^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.16: 	def set3: MutArray[number..int] -> 'b -> ()
 //│ ║        	                   ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -39,10 +39,10 @@ fun x -> set2 x 0
 // :ns
 fun x -> set0 x 0
 fun x -> set1 x 0
-//│ res: MutArray[in 'b | 0 out 'b] -> ()
+//│ res: MutArray[in 0 | 'b out 'b] -> ()
 //│    = <no result>
 //│      set0 is not implemented
-//│ res: MutArray[in 'b | 0 out 'b] -> ()
+//│ res: MutArray[in 0 | 'b out 'b] -> ()
 //│    = <no result>
 //│      set1 is not implemented
 
@@ -60,7 +60,7 @@ foo = foo
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.56: 	foo = foo
 //│ ║        	^^^^^^^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.50: 	def foo: MutArray[int..number]
 //│ ║        	                       ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -80,7 +80,7 @@ foo = (mut 0,)
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.74: 	foo = (mut 0,)
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.50: 	def foo: MutArray[int..number]
 //│ ║        	                       ^^^^^^
 //│ ╟── but it flows into mutable tuple field with expected type `int`
@@ -99,7 +99,7 @@ set0 foo
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.98: 	set0 foo
 //│ ║        	^^^^^^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.50: 	def foo: MutArray[int..number]
 //│ ║        	                       ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -108,7 +108,7 @@ set0 foo
 //│ ╟── from type bounds:
 //│ ║  l.50: 	def foo: MutArray[int..number]
 //│ ╙──      	                  ^^^^^^^^^^^
-//│ res: int -> () | error
+//│ res: error | int -> ()
 //│    = <no result>
 //│      set0 is not implemented
 
@@ -117,7 +117,7 @@ set2 foo
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.116: 	set2 foo
 //│ ║         	^^^^^^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.50: 	def foo: MutArray[int..number]
 //│ ║        	                       ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -126,7 +126,7 @@ set2 foo
 //│ ╟── from type bounds:
 //│ ║  l.11: 	def set2: MutArray[int..number] -> int -> ()
 //│ ╙──      	                   ^^^^^^^^^^^
-//│ res: int -> () | error
+//│ res: error | int -> ()
 //│    = <no result>
 //│      set2 is not implemented
 
@@ -135,7 +135,7 @@ foo : MutArray['a]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.134: 	foo : MutArray['a]
 //│ ║         	^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.50: 	def foo: MutArray[int..number]
 //│ ║        	                       ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -159,7 +159,7 @@ foo[0] <- 1
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.158: 	foo[0] <- 1
 //│ ║         	^^^^^^^^^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.50: 	def foo: MutArray[int..number]
 //│ ║        	                       ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -205,7 +205,7 @@ foo2 = foo : MutArray['a..'b]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.204: 	foo2 = foo : MutArray['a..'b]
 //│ ║         	       ^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.50: 	def foo: MutArray[int..number]
 //│ ║        	                       ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -214,7 +214,7 @@ foo2 = foo : MutArray['a..'b]
 //│ ╟── from type bounds:
 //│ ║  l.50: 	def foo: MutArray[int..number]
 //│ ╙──      	                  ^^^^^^^^^^^
-//│ foo2: MutArray[in int & 'b out 'b | number]
+//│ foo2: MutArray[in int & 'b out number | 'b]
 //│     = [ 1 ]
 
 foo2[0]
@@ -244,7 +244,7 @@ def foo: MutArray[number..int]
 //│ ╔══[ERROR] Type mismatch in type bounds:
 //│ ║  l.243: 	def foo: MutArray[number..int]
 //│ ║         	                  ^^^^^^^^^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.243: 	def foo: MutArray[number..int]
 //│ ║         	                  ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -313,7 +313,7 @@ maf ((mut error,))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.312: 	maf ((mut error,))
 //│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.295: 	def maf: MutArray[int..number] -> MutArray[int..number]
 //│ ║         	                       ^^^^^^
 //│ ╟── but it flows into mutable tuple field with expected type `int`
@@ -325,7 +325,7 @@ maf ((mut error,))
 //│ ╟── from type bounds:
 //│ ║  l.295: 	def maf: MutArray[int..number] -> MutArray[int..number]
 //│ ╙──       	                  ^^^^^^^^^^^
-//│ res: MutArray[in int out number] | error
+//│ res: error | MutArray[in int out number]
 //│    = <no result>
 //│      maf is not implemented
 
@@ -334,7 +334,7 @@ fun x -> maf ((mut x,))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.333: 	fun x -> maf ((mut x,))
 //│ ║         	         ^^^^^^^^^^^^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.295: 	def maf: MutArray[int..number] -> MutArray[int..number]
 //│ ║         	                       ^^^^^^
 //│ ╟── but it flows into mutable tuple field with expected type `int`
@@ -346,7 +346,7 @@ fun x -> maf ((mut x,))
 //│ ╟── from type bounds:
 //│ ║  l.295: 	def maf: MutArray[int..number] -> MutArray[int..number]
 //│ ╙──       	                  ^^^^^^^^^^^
-//│ res: int -> (MutArray[in int out number] | error)
+//│ res: int -> (error | MutArray[in int out number])
 //│    = <no result>
 //│      maf is not implemented
 
@@ -361,7 +361,7 @@ def maf: MutArray[number..int] -> MutArray[int..number]
 //│ ╔══[ERROR] Type mismatch in type bounds:
 //│ ║  l.360: 	def maf: MutArray[number..int] -> MutArray[int..number]
 //│ ║         	                  ^^^^^^^^^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.360: 	def maf: MutArray[number..int] -> MutArray[int..number]
 //│ ║         	                  ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -403,7 +403,7 @@ foo: R['a]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.402: 	foo: R['a]
 //│ ║         	^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.388: 	def foo: R[int..number]
 //│ ║         	                ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -414,7 +414,7 @@ foo: R['a]
 //│ ╙──       	           ^^^^^^^^^^^
 //│ res: R['a]
 //│   where
-//│     'a :> error | number
+//│     'a :> number
 //│        <: int
 //│    = { get: 0, set: [Function: set] }
 
@@ -423,7 +423,7 @@ foo: R['a..'b]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.422: 	foo: R['a..'b]
 //│ ║         	^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.388: 	def foo: R[int..number]
 //│ ║         	                ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -432,12 +432,12 @@ foo: R['a..'b]
 //│ ╟── from type bounds:
 //│ ║  l.388: 	def foo: R[int..number]
 //│ ╙──       	           ^^^^^^^^^^^
-//│ res: R[in int & 'b out 'b | error | number]
+//│ res: R[in int & 'b out number | 'b]
 //│    = { get: 0, set: [Function: set] }
 
 // * FIXME
 res.get
-//│ res: error | number
+//│ res: number
 //│    = 0
 
 type S[A] = { get: A; set: A -> () }
@@ -448,7 +448,7 @@ foo: S['a]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.447: 	foo: S['a]
 //│ ║         	^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.388: 	def foo: R[int..number]
 //│ ║         	                ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -459,7 +459,7 @@ foo: S['a]
 //│ ╙──       	           ^^^^^^^^^^^
 //│ res: S['a]
 //│   where
-//│     'a :> error | number
+//│     'a :> number
 //│        <: int
 //│    = { get: 0, set: [Function: set] }
 
@@ -468,7 +468,7 @@ foo: S['a..'b]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.467: 	foo: S['a..'b]
 //│ ║         	^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.388: 	def foo: R[int..number]
 //│ ║         	                ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -477,7 +477,7 @@ foo: S['a..'b]
 //│ ╟── from type bounds:
 //│ ║  l.388: 	def foo: R[int..number]
 //│ ╙──       	           ^^^^^^^^^^^
-//│ res: S[in int & 'b out 'b | error | number]
+//│ res: S[in int & 'b out number | 'b]
 //│    = { get: 0, set: [Function: set] }
 
 foo: { get: number; set: int -> () }
@@ -489,7 +489,7 @@ foo: { get: int }
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.488: 	foo: { get: int }
 //│ ║         	^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.388: 	def foo: R[int..number]
 //│ ║         	                ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -503,7 +503,7 @@ foo: { set: number -> () }
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.502: 	foo: { set: number -> () }
 //│ ║         	^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.502: 	foo: { set: number -> () }
 //│ ║         	            ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -524,7 +524,7 @@ foo2: S['a]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.523: 	foo2: S['a]
 //│ ║         	^^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.388: 	def foo: R[int..number]
 //│ ║         	                ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -535,7 +535,7 @@ foo2: S['a]
 //│ ╙──       	                            ^^
 //│ res: S['a]
 //│   where
-//│     'a :> error | number
+//│     'a :> number
 //│        <: int
 //│    = { get: 0, set: [Function: set] }
 
@@ -544,7 +544,7 @@ foo2: S['a..'b]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.543: 	foo2: S['a..'b]
 //│ ║         	^^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.388: 	def foo: R[int..number]
 //│ ║         	                ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -553,7 +553,7 @@ foo2: S['a..'b]
 //│ ╟── from type variable:
 //│ ║  l.518: 	foo2 = foo: { get: 'a; set: 'b -> () }
 //│ ╙──       	                            ^^
-//│ res: S[in int & 'b out 'b | error | number]
+//│ res: S[in int & 'b out number | 'b]
 //│    = { get: 0, set: [Function: set] }
 
 

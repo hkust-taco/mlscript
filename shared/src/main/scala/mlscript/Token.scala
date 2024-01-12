@@ -8,12 +8,14 @@ sealed abstract class Token {
   def describe: Str = this match {
     case SPACE => "space"
     case COMMA => "comma"
+    case SEMI => "semicolon"
     case NEWLINE => "newline"
     case INDENT => "indentation"
     case DEINDENT => "deindentation"
     case ERROR => "error"
     case LITVAL(value) => "literal"
-    case KEYWORD(name) => s"'$name' keyword"
+    case KEYWORD(name) =>
+      if (name.headOption.exists(_.isLetter)) s"'$name' keyword" else s"'$name'"
     case IDENT(name, symbolic) => if (symbolic) "operator" else "identifier"
     case SELECT(name) => "selector"
     case OPEN_BRACKET(k) => s"opening ${k.name}"
@@ -30,6 +32,7 @@ sealed trait Stroken extends Token
 
 case object SPACE extends Token with Stroken
 case object COMMA extends Token with Stroken
+case object SEMI extends Token with Stroken
 case object NEWLINE extends Token with Stroken // TODO rm
 case object INDENT extends Token
 case object DEINDENT extends Token

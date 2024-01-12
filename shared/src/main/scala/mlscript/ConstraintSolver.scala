@@ -24,6 +24,166 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   
   protected var currentConstrainingRun = 0
   
+  
+  private def noSuchMember(info: DelayedTypeInfo, fld: Var): Diagnostic =
+    ErrorReport(
+      msg"${info.decl.kind.str.capitalize} `${info.decl.name}` does not contain member `${fld.name}`" -> fld.toLoc :: Nil, newDefs)
+  
+  def lookupMember(clsNme: Str, rfnt: Var => Opt[FieldType], fld: Var)
+        (implicit ctx: Ctx, raise: Raise)
+        : Either[Diagnostic, NuMember]
+        = {
+    val info = ctx.tyDefs2.getOrElse(clsNme, ???/*TODO*/)
+    
+    if (info.isComputing) {
+      
+      ??? // TODO support?
+      
+    } else info.complete() match {
+      
+      case cls: TypedNuCls =>
+        cls.members.get(fld.name) match {
+          case S(m) => R(m)
+          case N => L(noSuchMember(info, fld))
+        }
+        
+      case _ => ??? // TODO
+      
+    }
+    
+  }
+  
+  
+  /** Note: `mkType` is just for reporting errors. */
+  def lookupField(mkType: () => ST, clsNme: Opt[Str], rfnt: Var => Opt[FieldType],
+        tags: SortedSet[AbstractTag], _fld: Var)
+        (implicit ctx: Ctx, raise: Raise)
+        : FieldType
+        = trace(s"Looking up field ${_fld.name} in $clsNme & ${tags} & {...}") {
+    
+    // * Field selections with field names starting with `#` are a typer hack to access private members.
+    val (fld, allowPrivateAccess) =
+      if (_fld.name.startsWith("#")) (Var(_fld.name.tail).withLocOf(_fld), true)
+      else (_fld, false)
+    
+    val fromRft = rfnt(fld)
+    
+    var foundRec: Opt[Diagnostic] = N
+    
+    def getFieldType(info: DelayedTypeInfo): Opt[FieldType] = {
+      
+      // * The raw type of this member, with original references to the class' type variables/type parameters
+      val raw = (if (info.isComputed) N else info.typedFields.get(fld)) match {
+        
+        case S(fty) =>
+          if (info.privateParams.contains(fld) && !allowPrivateAccess)
+            err(msg"Parameter '${fld.name}' cannot tbe accessed as a field" -> fld.toLoc :: Nil)
+          S(fty)
+        
+        case N if info.isComputing =>
+          
+          if (info.allFields.contains(fld)) // TODO don't report this if the field can be found somewhere else!
+            foundRec = S(ErrorReport(
+              msg"Indirectly-recursive member should have type annotation" -> fld.toLoc :: Nil, newDefs))
+          
+          N
+        
+        case N =>
+          
+          def handle(virtualMembers: Map[Str, NuMember]): Opt[FieldType] =
+            virtualMembers.get(fld.name) match {
+              case S(d: TypedNuFun) =>
+                S(d.typeSignature.toUpper(provTODO))
+              case S(p: NuParam) =>
+                if (!allowPrivateAccess && !p.isPublic)
+                  err(msg"Parameter '${p.nme.name}' cannot tbe accessed as a field" -> fld.toLoc ::
+                    msg"Either make the parameter a `val` or access it through destructuring" -> p.nme.toLoc ::
+                    Nil)
+                S(p.ty)
+              case S(m) =>
+                S(err(msg"Access to ${m.kind.str} member not yet supported", fld.toLoc).toUpper(noProv))
+              case N => N
+            }
+          
+          info.complete() match {
+            case cls: TypedNuCls => handle(cls.virtualMembers)
+            case trt: TypedNuTrt => handle(trt.virtualMembers)
+            case mxn: TypedNuMxn => handle(mxn.virtualMembers)
+            case TypedNuDummy(d) => N
+            case _ => ??? // TODO
+          }
+          
+      }
+      
+      println(s"Lookup ${info.decl.name}.${fld.name} : $raw where ${raw.fold("")(_.ub.showBounds)}")
+      
+      val freshenedRaw = raw.map { raw =>
+        
+        implicit val freshened: MutMap[TV, ST] = MutMap.empty
+        implicit val shadows: Shadows = Shadows.empty
+        
+        info.tparams.foreach { case (tn, _tv, vi) =>
+          val targ = rfnt(Var(info.decl.name + "#" + tn.name)) match {
+            // * TODO to avoid infinite recursion due to ever-expanding type args,
+            // *  we should set the shadows of the targ to be the same as that of the parameter it replaces... 
+            case S(fty) if vi === S(VarianceInfo.co) => fty.ub
+            case S(fty) if vi === S(VarianceInfo.contra) => fty.lb.getOrElse(BotType)
+            case S(fty) =>
+              TypeBounds.mk(
+                fty.lb.getOrElse(BotType),
+                fty.ub,
+              )
+            case N =>
+              TypeBounds(
+                // _tv.lowerBounds.foldLeft(BotType: ST)(_ | _),
+                // _tv.upperBounds.foldLeft(TopType: ST)(_ & _),
+                _tv.lowerBounds.foldLeft(
+                  Extruded(true, SkolemTag(_tv)(provTODO))(provTODO, Nil): ST
+                  // ^ TODO provide extrusion reason?
+                )(_ | _),
+                _tv.upperBounds.foldLeft(
+                  Extruded(false, SkolemTag(_tv)(provTODO))(provTODO, Nil): ST
+                  // ^ TODO provide extrusion reason?
+                )(_ & _),
+              )(_tv.prov)
+          }
+          freshened += _tv -> targ
+        }
+        
+        raw.freshenAbove(info.level, rigidify = false)
+      }
+      
+      println(s"Fresh[${info.level}] ${info.decl.name}.${fld.name} : $freshenedRaw where ${freshenedRaw.map(_.ub.showBounds)}")
+      
+      freshenedRaw
+    }
+    
+    val fromCls = clsNme.flatMap(clsNme => getFieldType(ctx.tyDefs2(clsNme)))
+    
+    val fromTrts = tags.toList.collect {
+      case TraitTag(nme, iht) =>
+        getFieldType(ctx.tyDefs2(nme.name))
+    }.flatten
+    
+    val fields = fromRft.toList ::: fromCls.toList ::: fromTrts
+    
+    println(s"  & ${fromRft}  (from refinement)")
+    
+    fields match {
+      case x :: xs =>
+        xs.foldRight(x)(_ && _)
+      case Nil =>
+        foundRec match {
+          case S(d) => err(d).toUpper(noProv)
+          case N =>
+            err(msg"Type `${mkType().expPos}` does not contain member `${fld.name}`" ->
+              fld.toLoc :: Nil).toUpper(noProv)
+        }
+    }
+    
+  }()
+  
+  
   // * Each type has a shadow which identifies all variables created from copying
   // * variables that existed at the start of constraining.
   // * The intent is to make the total number of shadows in a given constraint
@@ -261,6 +421,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       annoyingImpl(ls, done_ls, rs, done_rs)
     }
     
+    // TODO improve by moving things to the right side *before* branching out in the search!
     def annoyingImpl(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
           (implicit cctx: ConCtx, prevCctxs: Ls[ConCtx], ctx: Ctx, shadows: Shadows, dbgHelp: Str = "Case")
           : Unit =
@@ -347,7 +508,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case (LhsRefined(_, ts, _, trs), RhsBases(pts, _, _)) if ts.exists(pts.contains) => ()
             
             case (LhsRefined(bo, ts, r, trs), _) if trs.nonEmpty =>
-              annoying(trs.valuesIterator.map(_.expand).toList, LhsRefined(bo, ts, r, SortedMap.empty), Nil, done_rs)
+              annoying(trs.valuesIterator.map { tr => tr.expand }.toList,
+                LhsRefined(bo, ts, r, SortedMap.empty), Nil, done_rs)
             
             case (_, RhsBases(pts, bf, trs)) if trs.nonEmpty =>
               annoying(Nil, done_ls, trs.valuesIterator.map(_.expand).toList, RhsBases(pts, bf, SortedMap.empty))
@@ -367,15 +529,64 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               rec(f0, f1, true)
             case (LhsRefined(S(f: FunctionType), ts, r, trs), RhsBases(pts, _, _)) =>
               annoying(Nil, LhsRefined(N, ts, r, trs), Nil, done_rs)
-            case (LhsRefined(S(pt: ClassTag), ts, r, trs), RhsBases(pts, bf, trs2)) =>
-              if (pts.contains(pt) || pts.exists(p => pt.parentsST.contains(p.id)))
+            
+            // * Note: We could avoid the need for this rule by adding `Eql` to *all* class tag parent sets,
+            // *  but I chose not to for performance reasons (better keep parent sets small).
+            case (LhsRefined(S(ct: ClassTag), ts, r, trs0),
+                  RhsBases(ots, _, trs)) if EqlTag in ots =>
+              println(s"OK ~ magic Eql ~")
+            
+            // * These deal with the implicit Eql type member in primitive types.
+            // * (Originally I added this to all such types,
+            // *  but it requires not expanding primitive type refs,
+            // *  which causes regressions in simplification
+            // *  because we don't yet simplify unexpanded type refs...)
+            case (LhsRefined(S(ct @ ClassTag(lit: Lit, _)), ts, r, trs0),
+                  RhsBases(ots, S(R(RhsField(Var("Eql#A"), fldTy))), trs)) =>
+              lit match {
+                case _: IntLit |  _: DecLit => rec(fldTy.lb.getOrElse(TopType), DecType, false)
+                case _: StrLit => rec(fldTy.lb.getOrElse(TopType), StrType, false)
+                case _: UnitLit => reportError()
+              }
+              
+            // * This deals with the implicit Eql type member for user-defined classes.
+            case (LhsRefined(S(ClassTag(Var(nme), _)), ts, r, trs0),
+                  RhsBases(ots, S(R(RhsField(fldNme, fldTy))), trs))
+            if ctx.tyDefs2.contains(nme) => if (newDefs && nme =/= "Eql" && fldNme.name === "Eql#A") {
+              val info = ctx.tyDefs2(nme)
+              if (info.typedParams.isEmpty && !primitiveTypes.contains(nme))
+                // TODO shoudl actually reject all non-data classes...
+                err(msg"${info.decl.kind.str.capitalize} '${info.decl.name
+                  }' does not support equality comparison because it does not have a parameter list", prov.loco)
+              info.typedParams
+                .getOrElse(Nil) // FIXME?... prim type
+                .foreach { p =>
+                  val fty = lookupField(() => done_ls.toType(sort = true), S(nme), r.fields.toMap.get, ts, p._1)
+                  rec(fldTy.lb.getOrElse(die), RecordType(p._1 -> TypeRef(TypeName("Eql"),
+                      fty.ub // FIXME check mutable?
+                      :: Nil
+                    )(provTODO).toUpper(provTODO) :: Nil)(provTODO), false)
+                }
+            } else {
+              val fty = lookupField(() => done_ls.toType(sort = true), S(nme), r.fields.toMap.get, ts, fldNme)
+              rec(fty.ub, fldTy.ub, false)
+              recLb(fldTy, fty)
+            }
+            case (l @ LhsRefined(S(pt: ClassTag), ts, r, trs), RhsBases(pts, bf, trs2)) =>
+              println(s"class checking $pt $pts")
+              if (pts.exists(p => (p.id === pt.id) || l.allTags.contains(p.id)))
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
               // else f.fold(reportError())(f => annoying(Nil, done_ls, Nil, f))
               else annoying(Nil, LhsRefined(N, ts, r, trs), Nil, RhsBases(Nil, bf, trs2))
             case (lr @ LhsRefined(bo, ts, r, _), rf @ RhsField(n, t2)) =>
               // Reuse the case implemented below:  (this shortcut adds a few more annoying calls in stats)
               annoying(Nil, lr, Nil, RhsBases(Nil, S(R(rf)), SortedMap.empty))
+            case (LhsRefined(N, ts, r, _), RhsBases(ots, S(R(RhsField(fldNme, fldTy))), trs)) if newDefs =>
+              val fty = lookupField(() => done_ls.toType(sort = true), N, r.fields.toMap.get, ts, fldNme)
+              rec(fty.ub, fldTy.ub, false)
+              recLb(fldTy, fty)
             case (LhsRefined(bo, ts, r, _), RhsBases(ots, S(R(RhsField(n, t2))), trs)) =>
+              // TODO simplify - merge with above?
               r.fields.find(_._1 === n) match {
                 case S(nt1) =>
                   recLb(t2, nt1._2)
@@ -388,7 +599,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                     case _ => reportError()
                   }
               }
-            case (LhsRefined(N, ts, r, _), RhsBases(pts, N | S(L(_: FunctionType | _: ArrayBase)), _)) =>
+            case (LhsRefined(N, ts, r, trs), RhsBases(pts, N, trs2))  =>
+              println(s"Tag checking ${ts} ${pts}")
+              if (pts.exists(p => ts.iterator.flatMap {
+                case TraitTag(n, h) => n :: h.toList.map(n => Var(n.name))
+                case _ => Nil
+              }.contains(p.id)))
+                println(s"OK $ts <: $pts")
+              else reportError()
+            case (LhsRefined(N, ts, r, _), RhsBases(pts, S(L(_: FunctionType | _: ArrayBase)), _)) =>
               reportError()
             case (LhsRefined(S(b: TupleType), ts, r, _), RhsBases(pts, S(L(ty: TupleType)), _))
               if b.fields.size === ty.fields.size =>
@@ -567,6 +786,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (_: TypeTag, _: TypeTag) if lhs === rhs => ()
           case (NegType(lhs), NegType(rhs)) => rec(rhs, lhs, true)
           
+          case (ClassTag(Var(nme), _), rt: RecordType) if newDefs && nme.isCapitalized =>
+            val lti = ctx.tyDefs2(nme)
+            rt.fields.foreach {
+              case (fldNme @ Var("Eql#A"), fldTy) =>
+                goToWork(lhs, RecordType(fldNme -> fldTy :: Nil)(noProv))
+              case (fldNme, fldTy) =>
+                val fty = lookupField(() => lhs, S(nme), _ => N, SortedSet.empty, fldNme)
+                rec(fty.ub, fldTy.ub, false)
+                recLb(fldTy, fty)
+            }
+          
           // * Note: at this point, it could be that a polymorphic type could be distribbed
           // *  out of `r1`, but this would likely not result in something useful, since the
           // *  LHS is a normal non-polymorphic function type...
@@ -677,21 +907,51 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(tup.toRecord, rhs, true) // Q: really support this? means we'd put names into tuple reprs at runtime
           case (err @ ClassTag(ErrTypeId, _), RecordType(fs1)) =>
             fs1.foreach(f => rec(err, f._2.ub, false))
+          case (_, RecordType(fs1)) =>
+            goToWork(lhs, rhs)
           case (RecordType(fs1), err @ ClassTag(ErrTypeId, _)) =>
             fs1.foreach(f => rec(f._2.ub, err, false))
             
-          case (tr1: TypeRef, tr2: TypeRef) if tr1.defn.name =/= "Array" =>
+          case (tr1: TypeRef, tr2: TypeRef)
+          if tr1.defn.name =/= "Array" && tr2.defn.name =/= "Eql" =>
             if (tr1.defn === tr2.defn) {
               assert(tr1.targs.sizeCompare(tr2.targs) === 0)
-              val td = ctx.tyDefs(tr1.defn.name)
-              val tvv = td.getVariancesOrDefault
-              td.tparamsargs.unzip._2.lazyZip(tr1.targs).lazyZip(tr2.targs).foreach { (tv, targ1, targ2) =>
-                val v = tvv(tv)
-                if (!v.isContravariant) rec(targ1, targ2, false)
-                if (!v.isCovariant) rec(targ2, targ1, false)
+              ctx.tyDefs.get(tr1.defn.name) match {
+                case S(td) =>
+                  val tvv = td.getVariancesOrDefault
+                  td.tparamsargs.unzip._2.lazyZip(tr1.targs).lazyZip(tr2.targs).foreach { (tv, targ1, targ2) =>
+                    val v = tvv(tv)
+                    if (!v.isContravariant) rec(targ1, targ2, false)
+                    if (!v.isCovariant) rec(targ2, targ1, false)
+                  }
+                case N =>
+                  /* 
+                  ctx.tyDefs2(tr1.defn.name).complete() match {
+                    case cls: TypedNuCls =>
+                      cls.tparams.map(_._2).lazyZip(tr1.targs).lazyZip(tr2.targs).foreach {
+                        (tv, targ1, targ2) =>
+                          val v = cls.varianceOf(tv)
+                          if (!v.isContravariant) rec(targ1, targ2, false)
+                          if (!v.isCovariant) rec(targ2, targ1, false)
+                      }
+                    // case _ => ???
+                  }
+                  */
+                  ctx.tyDefs2.get(tr1.defn.name) match {
+                    case S(lti) =>
+                      lti.tparams.map(_._2).lazyZip(tr1.targs).lazyZip(tr2.targs).foreach {
+                        (tv, targ1, targ2) =>
+                          val v = lti.varianceOf(tv)
+                          if (!v.isContravariant) rec(targ1, targ2, false)
+                          if (!v.isCovariant) rec(targ2, targ1, false)
+                      }
+                    case N =>
+                      ??? // TODO
+                  }
               }
             } else {
-              (tr1.mkTag, tr2.mkTag) match {
+              if (tr1.mayHaveTransitiveSelfType) rec(tr1.expand, tr2.expand, true)
+              else (tr1.mkClsTag, tr2.mkClsTag) match {
                 case (S(tag1), S(tag2)) if !(tag1 <:< tag2) =>
                   reportError()
                 case _ =>
@@ -699,7 +959,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               }
             }
           case (tr: TypeRef, _) => rec(tr.expand, rhs, true)
-          case (_, tr: TypeRef) => rec(lhs, tr.expand, true)
+          case (err @ ClassTag(ErrTypeId, _), tr: TypeRef) =>
+            // rec(tr.copy(targs = tr.targs.map(_ => err))(noProv), tr, true)
+            // * ^ Nicely propagates more errors to the result,
+            // * but can incur vast amounts of unnecessary constraining in the context of recursive types!
+            ()
+          case (_, tr: TypeRef) =>
+            rec(lhs, tr.expand, true)
           
           case (ClassTag(ErrTypeId, _), _) => ()
           case (_, ClassTag(ErrTypeId, _)) => ()
@@ -729,7 +995,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           // * Simple case when the parameter type vars don't need to be split
           case (AliasOf(PolymorphicType(plvl, AliasOf(FunctionType(param, bod)))), _)
           if distributeForalls
-          && param.level <= plvl =>
+          && param.level <= plvl
+          && bod.level > plvl =>
             val newLhs = FunctionType(param, PolymorphicType(plvl, bod))(rhs.prov)
             println(s"DISTRIB-L  ~>  $newLhs")
             rec(newLhs, rhs, true)
@@ -782,6 +1049,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // * TODO: remove approx. through use of ambiguous constraints
             rec(ov.approximatePos, rhs, true)
           case (_: NegType | _: Without, _) | (_, _: NegType | _: Without) =>
+            goToWork(lhs, rhs)
+          case (_: ClassTag | _: TraitTag, _: TraitTag) =>
             goToWork(lhs, rhs)
           case _ => reportError()
       }}
@@ -927,7 +1196,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   case _ => Nil
                 }
               )
-          return raise(ErrorReport(msgs ::: mk_constraintProvenanceHints))
+          return raise(ErrorReport(msgs ::: mk_constraintProvenanceHints, newDefs))
         case (_: TV | _: ProxyType, _) => doesntMatch(rhs)
         case (RecordType(fs0), RecordType(fs1)) =>
           (fs1.map(_._1).toSet -- fs0.map(_._1).toSet)
@@ -998,7 +1267,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         detailedContext,
       ).flatten
       
-      raise(ErrorReport(msgs))
+      raise(ErrorReport(msgs, newDefs))
     }
     
     rec(lhs, rhs, true)(raise, Nil -> Nil, Nil, outerCtx, shadows)
@@ -1144,7 +1413,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     err(msg -> loco :: Nil)
   }
   def err(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise): SimpleType = {
-    raise(ErrorReport(msgs))
+    err(ErrorReport(msgs, newDefs))
+  }
+  def err(diag: Diagnostic)(implicit raise: Raise): SimpleType = {
+    raise(diag)
     errType
   }
   def errType: SimpleType = ClassTag(ErrTypeId, Set.empty)(noProv)
@@ -1153,7 +1425,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     warn(msg -> loco :: Nil)
 
   def warn(msgs: List[Message -> Opt[Loc]])(implicit raise: Raise): Unit =
-    raise(WarningReport(msgs))
+    raise(WarningReport(msgs, newDefs))
   
   
   
@@ -1246,8 +1518,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case Some(tv) => tv
         case None if rigidify && tv.level <= below =>
           // * Rigid type variables (ie, skolems) are encoded as SkolemTag-s
-          val rv = SkolemTag(freshVar(noProv, N, tv.nameHint.orElse(S("_"))))(tv.prov)
-          if (tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty) {
+          val rv = SkolemTag(freshVar(noProv, S(tv), tv.nameHint/* .orElse(S("_"))*/))(tv.prov)
+          println(s"New skolem: $tv ~> $rv")
+          if (tv.lowerBounds.nonEmpty || tv.upperBounds.nonEmpty) { // TODO just add bounds to skolems! should lead to simpler constraints
             // The bounds of `tv` may be recursive (refer to `tv` itself),
             //    so here we create a fresh variabe that will be able to tie the presumed recursive knot
             //    (if there is no recursion, it will just be a useless type variable)
@@ -1260,16 +1533,19 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             //    where rv is the rigidified variables.
             // Now, since there may be recursive bounds, we do the same
             //    but through the indirection of a type variable tv2:
-            tv2.lowerBounds ::= tv.lowerBounds.map(freshen).foldLeft(rv: ST)(_ & _)
-            tv2.upperBounds ::= tv.upperBounds.map(freshen).foldLeft(rv: ST)(_ | _)
+            tv2.lowerBounds ::= tv.upperBounds.map(freshen).foldLeft(rv: ST)(_ & _)
+            println(s"$tv2 :> ${tv2.lowerBounds}")
+            tv2.upperBounds ::= tv.lowerBounds.map(freshen).foldLeft(rv: ST)(_ | _)
+            println(s"$tv2 <: ${tv2.upperBounds}")
             tv2
           } else {
+            // NOTE: tv.level may be different from lvl; is that OK?
             freshened += tv -> rv
             rv
           }
         case None =>
           val v = freshVar(tv.prov, S(tv), tv.nameHint)(if (tv.level > below) tv.level else {
-            assert(lvl <= below, "this condition should not be true for the result to be correct")
+            assert(lvl <= below, "this condition should be false for the result to be correct")
             lvl
           })
           freshened += tv -> v
@@ -1311,7 +1587,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov)
       case pt @ PolymorphicType(polyLvl, bod) if pt.level <= above => pt // is this really useful?
       case pt @ PolymorphicType(polyLvl, bod) =>
-        if (lvl > polyLvl) freshen(pt.raiseLevelTo(lvl))
+        if (lvl > polyLvl) freshen(pt.raiseLevelToImpl(lvl, leaveAlone))
         else PolymorphicType(polyLvl, freshenImpl(bod, below = below min polyLvl))
       case ct @ ConstrainedType(cs, bod) =>
         val cs2 = cs.map(lu => freshen(lu._1) -> freshen(lu._2))

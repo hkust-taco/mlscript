@@ -44,9 +44,9 @@ def app p q = p q
 def mul r s = r (app s) id
 //│ mul: 'a -> ('b -> 'c
 //│   where
-//│     'a <: (forall 'd 'e. ('d -> 'e
-//│   where
-//│     'b <: 'd -> 'e)) -> (forall 'f. 'f -> 'f) -> 'c)
+//│     'a <: (forall 'd 'e. 'd -> 'e
+//│       where
+//│         'b <: 'd -> 'e) -> (forall 'f. 'f -> 'f) -> 'c)
 //│    = [Function: mul]
 
 :e
@@ -68,9 +68,9 @@ mul id {}
 //│   TypeError: p is not a function
 
 def fact t = mul t {}
-//│ fact: ((forall 'a 'b. ('a -> 'b
+//│ fact: ((forall 'a 'b. 'a -> 'b
 //│   where
-//│     anything <: 'a -> 'b)) -> (forall 'c. 'c -> 'c) -> 'd) -> 'd
+//│     anything <: 'a -> 'b) -> (forall 'c. 'c -> 'c) -> 'd) -> 'd
 //│     = [Function: fact]
 
 :e
@@ -91,9 +91,9 @@ fact id
 def mul r s = r (app s)
 //│ mul: 'a -> ('b -> 'c
 //│   where
-//│     'a <: (forall 'd 'e. ('d -> 'e
-//│   where
-//│     'b <: 'd -> 'e)) -> 'c)
+//│     'a <: (forall 'd 'e. 'd -> 'e
+//│       where
+//│         'b <: 'd -> 'e) -> 'c)
 //│    = [Function: mul1]
 
 mul id id {}
@@ -118,20 +118,20 @@ def succ n f x = f (n f x)
 //│     = <missing implementation>
 //│ 'a -> 'b -> ('c -> 'd
 //│   where
-//│     'b <: (forall 'e. ('e
-//│   where
-//│     'a <: 'b -> 'c -> 'e)) -> 'd)
+//│     'b <: (forall 'e. 'e
+//│       where
+//│         'a <: 'b -> 'c -> 'e) -> 'd)
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│     = [Function: succ1]
 
 :ns
 def add n m = n succ m
-//│ add: forall 'a. 'a -> (forall 'b 'c 'd. ('b -> 'd
+//│ add: forall 'a. 'a -> (forall 'b 'c 'd. 'b -> 'd
 //│   where
-//│     'a <: (ChurchInt -> ChurchInt) -> 'c))
-//│   where
-//│     'c <: 'b -> 'd
+//│     'a <: (ChurchInt -> ChurchInt) -> 'c)
+//│ where
+//│   'c <: 'b -> 'd
 //│    = [Function: add]
 
 add
@@ -142,13 +142,13 @@ add
 
 :ns
 def f x y = add x y
-//│ f: forall 'a. 'a -> (forall 'b 'c 'd 'e 'f. ('f -> 'd
+//│ f: forall 'a. 'a -> (forall 'b 'c 'd 'e 'f. 'e -> 'f
 //│   where
-//│     'a <: (ChurchInt -> ChurchInt) -> 'e))
-//│   where
-//│     'f <: 'b
-//│     'e <: 'b -> 'c
-//│     'c <: 'd
+//│     'a <: (ChurchInt -> ChurchInt) -> 'b)
+//│ where
+//│   'e <: 'c
+//│   'b <: 'c -> 'd
+//│   'd <: 'f
 //│  = [Function: f]
 
 // :ds

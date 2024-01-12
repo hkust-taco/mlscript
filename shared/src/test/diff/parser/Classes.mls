@@ -1,19 +1,18 @@
-:AllowParseErrors
 
 
 class Foo
 //│ |#class| |Foo|
-//│ Parsed: {class Foo() {}}
+//│ Parsed: {class Foo {}}
 
 class Foo {}
 //│ |#class| |Foo| |{||}|
-//│ Parsed: {class Foo() {}}
+//│ Parsed: {class Foo {}}
 
 class Foo {
   fun foo: int
 }
 //│ |#class| |Foo| |{|→|#fun| |foo|#:| |int|←|↵|}|
-//│ Parsed: {class Foo() {fun foo: int}}
+//│ Parsed: {class Foo {fun foo: int}}
 
 class Foo {
   class Bar {
@@ -21,41 +20,55 @@ class Foo {
   }
 }
 //│ |#class| |Foo| |{|→|#class| |Bar| |{|→|#class| |Baz|←|↵|}|←|↵|}|
-//│ Parsed: {class Foo() {class Bar() {class Baz() {}}}}
+//│ Parsed: {class Foo {class Bar {class Baz {}}}}
 
 class Foo: Bar
 //│ |#class| |Foo|#:| |Bar|
-//│ Parsed: {class Foo(): Bar {}}
+//│ Parsed: {class Foo: Bar {}}
+
+class Foo extends Bar, Baz
+//│ |#class| |Foo| |#extends| |Bar|,| |Baz|
+//│ Parsed: {class Foo: Bar, Baz {}}
 
 class Foo: Bar, Baz
 //│ |#class| |Foo|#:| |Bar|,| |Baz|
-//│ Parsed: {class Foo(): Bar, Baz {}}
+//│ Parsed: {class Foo: ,[Bar, Baz] {}}
 
 class Foo: Bar { fun f = 0 }
 //│ |#class| |Foo|#:| |Bar| |{| |#fun| |f| |#=| |0| |}|
-//│ Parsed: {class Foo(): Bar {fun f = 0}}
+//│ Parsed: {class Foo: Bar {fun f = 0}}
 
+class Foo extends Bar, Baz { fun f = 0 }
+//│ |#class| |Foo| |#extends| |Bar|,| |Baz| |{| |#fun| |f| |#=| |0| |}|
+//│ Parsed: {class Foo: Bar, Baz {fun f = 0}}
+
+:pe
 class Foo: Bar, Baz { fun f = 0 }
 //│ |#class| |Foo|#:| |Bar|,| |Baz| |{| |#fun| |f| |#=| |0| |}|
-//│ Parsed: {class Foo(): Bar, Baz {fun f = 0}}
+//│ ╔══[PARSE ERROR] Not a recognized type
+//│ ║  l.46: 	class Foo: Bar, Baz { fun f = 0 }
+//│ ╙──      	                ^^^^^^^^^^^^^^^^^
+//│ Parsed: {class Foo: anything {}}
 
 // * Pretty confusing... better reject this:
+:pe
+:w
 class Foo: Bar { fun f = 0
   fun bar = 1
 }
 //│ |#class| |Foo|#:| |Bar| |{| |#fun| |f| |#=| |0|→|#fun| |bar| |#=| |1|←|↵|}|
 //│ ╔══[PARSE ERROR] Unexpected 'fun' keyword in expression position
-//│ ║  l.44: 	  fun bar = 1
+//│ ║  l.57: 	  fun bar = 1
 //│ ╙──      	  ^^^
-//│ ╔══[PARSE ERROR] Unexpected '=' keyword here
-//│ ║  l.44: 	  fun bar = 1
+//│ ╔══[PARSE ERROR] Unexpected '=' here
+//│ ║  l.57: 	  fun bar = 1
 //│ ╙──      	          ^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.43: 	class Foo: Bar { fun f = 0
+//│ ║  l.56: 	class Foo: Bar { fun f = 0
 //│ ║        	                         ^
-//│ ║  l.44: 	  fun bar = 1
+//│ ║  l.57: 	  fun bar = 1
 //│ ╙──      	^^^^^^^^^
-//│ Parsed: {class Foo(): Bar {fun f = 0 (bar,)}}
+//│ Parsed: {class Foo: Bar {fun f = 0(bar,)}}
 
 // TODO disallow? (i.e., require unindent before closing brace)
 // :e
@@ -64,14 +77,14 @@ class Foo: Bar {
   fun bar = 1
   }
 //│ |#class| |Foo|#:| |Bar| |{|→|#fun| |f| |#=| |0|↵|#fun| |bar| |#=| |1|↵|←|}|
-//│ Parsed: {class Foo(): Bar {fun f = 0; fun bar = 1}}
+//│ Parsed: {class Foo: Bar {fun f = 0; fun bar = 1}}
 
 class Foo: Bar {
   fun f = 0
   fun bar = 1
 }
 //│ |#class| |Foo|#:| |Bar| |{|→|#fun| |f| |#=| |0|↵|#fun| |bar| |#=| |1|←|↵|}|
-//│ Parsed: {class Foo(): Bar {fun f = 0; fun bar = 1}}
+//│ Parsed: {class Foo: Bar {fun f = 0; fun bar = 1}}
 
 class Foo: Bar {
   
@@ -81,20 +94,20 @@ class Foo: Bar {
   
 }
 //│ |#class| |Foo|#:| |Bar| |{|→|#fun| |f| |#=| |0|↵|#fun| |bar| |#=| |1|←|↵|}|
-//│ Parsed: {class Foo(): Bar {fun f = 0; fun bar = 1}}
+//│ Parsed: {class Foo: Bar {fun f = 0; fun bar = 1}}
 
 class Foo: Bar {
   
 }
 //│ |#class| |Foo|#:| |Bar| |{|↵|}|
-//│ Parsed: {class Foo(): Bar {}}
+//│ Parsed: {class Foo: Bar {}}
 
 fun foo =
   class Foo: Bar {
   
   }
 //│ |#fun| |foo| |#=|→|#class| |Foo|#:| |Bar| |{|↵|}|←|
-//│ Parsed: {fun foo = {class Foo(): Bar {}}}
+//│ Parsed: {fun foo = {class Foo: Bar {}}}
 
 class Foo()
 //│ |#class| |Foo|(||)|
@@ -107,16 +120,16 @@ class Foo(x, y, z)
 
 class Foo(x, y, z): Bar(z, x)
 //│ |#class| |Foo|(|x|,| |y|,| |z|)|#:| |Bar|(|z|,| |x|)|
-//│ Parsed: {class Foo(x, y, z,): Bar (z, x,) {}}
+//│ Parsed: {class Foo(x, y, z,): Bar[z, x] {}}
 
 class Foo(x, y, z): Bar(z, x) {
   fun blah(x) = x + y
 }
 //│ |#class| |Foo|(|x|,| |y|,| |z|)|#:| |Bar|(|z|,| |x|)| |{|→|#fun| |blah|(|x|)| |#=| |x| |+| |y|←|↵|}|
-//│ Parsed: {class Foo(x, y, z,): Bar (z, x,) {fun blah = (x,) => + (x,) (y,)}}
+//│ Parsed: {class Foo(x, y, z,): Bar[z, x] {fun blah = (x,) => +(x,)(y,)}}
 
-class Foo(x, y): Bar(y, x), Baz(x + y)
-//│ |#class| |Foo|(|x|,| |y|)|#:| |Bar|(|y|,| |x|)|,| |Baz|(|x| |+| |y|)|
-//│ Parsed: {class Foo(x, y,): Bar (y, x,), Baz (+ (x,) (y,),) {}}
+class Foo(x, y) extends Bar(y, x), Baz(x + y)
+//│ |#class| |Foo|(|x|,| |y|)| |#extends| |Bar|(|y|,| |x|)|,| |Baz|(|x| |+| |y|)|
+//│ Parsed: {class Foo(x, y,): Bar(y, x,), Baz(+(x,)(y,),) {}}
 
 

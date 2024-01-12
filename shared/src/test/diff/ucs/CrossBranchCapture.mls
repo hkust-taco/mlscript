@@ -1,0 +1,60 @@
+:NewDefs
+
+
+class Numb(n: Int)
+//│ class Numb(n: Int)
+
+
+// * FIXME should be rejected
+fun process(e) =
+  if e is
+    Numb(n) and n > 0 then n
+    Numb(m) then n
+//│ fun process: Numb -> Int
+
+process(Numb(-10))
+//│ Int
+//│ res
+//│     = -10
+
+
+// * FIXME wrong result
+fun process(e, n) =
+  if e is
+    Numb(n) and n > 0 then n
+    Numb(m) then n + m
+//│ fun process: (Numb, anything) -> Int
+
+process(Numb(0), 10)
+//│ Int
+//│ res
+//│     = 0
+
+
+class Vec(xs: Array[Numb | Vec])
+class Pair[A,B](a: A, b: B)
+//│ class Vec(xs: Array[Numb | Vec])
+//│ class Pair[A, B](a: A, b: B)
+
+// * FIXME should be rejected
+fun process(e) =
+  if e is
+    Pair(Numb(n), Numb(m)) then Numb(n + m)
+    Pair(Vec(xs), Vec(ys))  then n
+    Pair(Vec(n),  Numb(n)) then n
+    Pair(Numb(n), Vec(n))  then n
+//│ fun process: Pair[Numb | Vec, Numb | Vec] -> (Int | Numb | Array[Numb | Vec])
+
+
+// * FIXME should warn, be rejected, or compare both values for equality
+fun process(e) =
+  if e is
+    Pair(Numb(n), Numb(n)) then n
+//│ fun process: Pair[Numb, Numb] -> Int
+
+process(Pair(Numb(1), Numb(2)))
+//│ Int
+//│ res
+//│     = 2
+
+

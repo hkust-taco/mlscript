@@ -1,26 +1,26 @@
 
 :p
 2 + 2
-//│ Parsed: + (2,) (2,);
-//│ Desugared: + (2,) (2,)
-//│ AST: App(App(Var(+), Tup(_: IntLit(2))), Tup(_: IntLit(2)))
+//│ Parsed: +(2,)(2,);
+//│ Desugared: +(2,)(2,)
+//│ AST: App(App(Var(+),Tup(List((None,Fld(_,IntLit(2)))))),Tup(List((None,Fld(_,IntLit(2))))))
 //│ res: int
 //│    = 4
 
 :p
 1 + 2 * 2 + 3
-//│ Parsed: + (+ (1,) (* (2,) (2,),),) (3,);
-//│ Desugared: + (+ (1,) (* (2,) (2,),),) (3,)
-//│ AST: App(App(Var(+), Tup(_: App(App(Var(+), Tup(_: IntLit(1))), Tup(_: App(App(Var(*), Tup(_: IntLit(2))), Tup(_: IntLit(2))))))), Tup(_: IntLit(3)))
+//│ Parsed: +(+(1,)(*(2,)(2,),),)(3,);
+//│ Desugared: +(+(1,)(*(2,)(2,),),)(3,)
+//│ AST: App(App(Var(+),Tup(List((None,Fld(_,App(App(Var(+),Tup(List((None,Fld(_,IntLit(1)))))),Tup(List((None,Fld(_,App(App(Var(*),Tup(List((None,Fld(_,IntLit(2)))))),Tup(List((None,Fld(_,IntLit(2)))))))))))))))),Tup(List((None,Fld(_,IntLit(3))))))
 //│ res: int
 //│    = 8
 
 :e
 :p
 1 + 2 / 2 + 3
-//│ Parsed: + (+ (1,) (/ (2,) (2,),),) (3,);
-//│ Desugared: + (+ (1,) (/ (2,) (2,),),) (3,)
-//│ AST: App(App(Var(+), Tup(_: App(App(Var(+), Tup(_: IntLit(1))), Tup(_: App(App(Var(/), Tup(_: IntLit(2))), Tup(_: IntLit(2))))))), Tup(_: IntLit(3)))
+//│ Parsed: +(+(1,)(/(2,)(2,),),)(3,);
+//│ Desugared: +(+(1,)(/(2,)(2,),),)(3,)
+//│ AST: App(App(Var(+),Tup(List((None,Fld(_,App(App(Var(+),Tup(List((None,Fld(_,IntLit(1)))))),Tup(List((None,Fld(_,App(App(Var(/),Tup(List((None,Fld(_,IntLit(2)))))),Tup(List((None,Fld(_,IntLit(2)))))))))))))))),Tup(List((None,Fld(_,IntLit(3))))))
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.20: 	1 + 2 / 2 + 3
 //│ ║        	^^^^^^^^^
@@ -34,9 +34,9 @@
 :ge
 :p
 1 |> 2 || 3
-//│ Parsed: || (|> (1,) (2,),) (3,);
-//│ Desugared: || (|> (1,) (2,),) (3,)
-//│ AST: App(App(Var(||), Tup(_: App(App(Var(|>), Tup(_: IntLit(1))), Tup(_: IntLit(2))))), Tup(_: IntLit(3)))
+//│ Parsed: ||(|>(1,)(2,),)(3,);
+//│ Desugared: ||(|>(1,)(2,),)(3,)
+//│ AST: App(App(Var(||),Tup(List((None,Fld(_,App(App(Var(|>),Tup(List((None,Fld(_,IntLit(1)))))),Tup(List((None,Fld(_,IntLit(2))))))))))),Tup(List((None,Fld(_,IntLit(3))))))
 //│ ╔══[ERROR] identifier not found: |>
 //│ ║  l.36: 	1 |> 2 || 3
 //│ ╙──      	  ^^
@@ -52,9 +52,9 @@
 
 :p
 true || false && true || false
-//│ Parsed: || (|| (true,) (&& (false,) (true,),),) (false,);
-//│ Desugared: || (|| (true,) (&& (false,) (true,),),) (false,)
-//│ AST: App(App(Var(||), Tup(_: App(App(Var(||), Tup(_: Var(true))), Tup(_: App(App(Var(&&), Tup(_: Var(false))), Tup(_: Var(true))))))), Tup(_: Var(false)))
+//│ Parsed: ||(||(true,)(&&(false,)(true,),),)(false,);
+//│ Desugared: ||(||(true,)(&&(false,)(true,),),)(false,)
+//│ AST: App(App(Var(||),Tup(List((None,Fld(_,App(App(Var(||),Tup(List((None,Fld(_,Var(true)))))),Tup(List((None,Fld(_,App(App(Var(&&),Tup(List((None,Fld(_,Var(false)))))),Tup(List((None,Fld(_,Var(true)))))))))))))))),Tup(List((None,Fld(_,Var(false))))))
 //│ res: bool
 //│    = true
 

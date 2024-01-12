@@ -104,7 +104,7 @@ undef = error
 //│   <:  undef:
 //│ int -> 'a -> 'a
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 // swizzle :: Int → ∀ a. a → a
 // swizzle = undef

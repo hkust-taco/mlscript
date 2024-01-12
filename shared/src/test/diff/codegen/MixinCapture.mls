@@ -1,0 +1,71 @@
+:NewDefs
+
+:js
+class Lit(n: Int)
+mixin EvalAddLit {
+  fun eval(e) =
+    if e is
+      Lit(n) then n
+}
+//│ class Lit(n: Int)
+//│ mixin EvalAddLit() {
+//│   fun eval: Lit -> Int
+//│ }
+//│ // Prelude
+//│ let res;
+//│ class TypingUnit {
+//│   #Lit;
+//│   constructor() {
+//│   }
+//│   EvalAddLit(base) {
+//│     const qualifier = this;
+//│     return (class EvalAddLit extends base {
+//│       constructor(...rest) {
+//│         super(...rest);
+//│       }
+//│       eval(e) {
+//│         return ((() => {
+//│           let a;
+//│           return (a = e, a instanceof qualifier.Lit.class ? (([n]) => n)(qualifier.Lit.unapply(e)) : (() => {
+//│             throw new Error("non-exhaustive case expression");
+//│           })());
+//│         })());
+//│       }
+//│     });
+//│   }
+//│   get Lit() {
+//│     const qualifier = this;
+//│     if (this.#Lit === undefined) {
+//│       class Lit {
+//│         #n;
+//│         constructor(n) {
+//│           this.#n = n;
+//│         }
+//│       static
+//│         unapply(x) {
+//│           return [x.#n];
+//│         }
+//│       };
+//│       this.#Lit = ((n) => Object.freeze(new Lit(n)));
+//│       this.#Lit.class = Lit;
+//│       this.#Lit.unapply = Lit.unapply;
+//│     }
+//│     return this.#Lit;
+//│   }
+//│ }
+//│ const typing_unit = new TypingUnit;
+//│ globalThis.Lit = typing_unit.Lit;
+//│ globalThis.EvalAddLit = ((base) => typing_unit.EvalAddLit(base));
+//│ // End of generated code
+
+module TestLang extends EvalAddLit
+//│ module TestLang {
+//│   fun eval: Lit -> Int
+//│ }
+
+TestLang.eval(Lit(0))
+//│ Int
+//│ res
+//│     = 0
+
+

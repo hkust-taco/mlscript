@@ -127,7 +127,7 @@ found = find(ls, 1)
 match found with
   | None -> ("???", false)
   | Some(r) -> (r id "!!!", r id true)
-//│ res: ("!!!" | "???", bool,)
+//│ res: ("!!!" | "???", Bool,)
 
 
 use fnd = match fnd with
@@ -136,7 +136,7 @@ use fnd = match fnd with
 //│ use: Option[(forall 'a. 'a -> 'a) -> ("!!!" -> 'b & true -> 'c)] -> ("???" | 'b, false | 'c,)
 
 use found
-//│ res: ("!!!" | "???", bool,)
+//│ res: ("!!!" | "???", Bool,)
 
 
 

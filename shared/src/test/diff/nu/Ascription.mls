@@ -1,45 +1,51 @@
-:NewParser
+:NewDefs
 
-1: int
-//│ res: int
-//│    = 1
+1: Int
+//│ Int
+//│ res
+//│     = 1
 
-1 : int
-//│ res: int
-//│    = 1
+1 : Int
+//│ Int
+//│ res
+//│     = 1
 
 // TODO?
-:e
-1 : int : int
-//│ ╔══[ERROR] not a recognized type: int : int
-//│ ║  l.13: 	1 : int : int
+:pe
+1 : Int : Int
+//│ ╔══[PARSE ERROR] Not a recognized type
+//│ ║  l.15: 	1 : Int : Int
 //│ ╙──      	    ^^^
-//│ res: anything
-//│    = 1
+//│ anything
+//│ res
+//│     = 1
 
-// FIXME
-:w
+fun foo(x: Int) = x + 1
+//│ fun foo: (x: Int) -> Int
+
+fun foo(x : Int) = x + 1
+//│ fun foo: Int -> Int
+
+foo(123 : Int) : Int
+//│ Int
+//│ res
+//│     = 124
+
 :e
-fun foo(x: int) = x + 1
-//│ ╔══[WARNING] Variable name 'int' already names a symbol in scope. If you want to refer to that symbol, you can use `scope.int`; if not, give your future readers a break and use another name :^)
-//│ ║  l.23: 	fun foo(x: int) = x + 1
-//│ ╙──      	           ^^^
-//│ ╔══[ERROR] identifier not found: x
-//│ ║  l.23: 	fun foo(x: int) = x + 1
-//│ ╙──      	                  ^
-//│ foo: (x: anything,) -> int
+foo(123: Int): Int
+//│ ╔══[ERROR] Cannot use named arguments as the function type has untyped arguments
+//│ ║  l.35: 	foo(123: Int): Int
+//│ ╙──      	   ^^^^^^^^^^
+//│ Int
 //│ Code generation encountered an error:
-//│   unresolved symbol x
+//│   unresolved symbol Int
 
-fun foo(x : int) = x + 1
-//│ foo: int -> int
-//│    = [Function: foo1]
-
-foo(123 : int) : int
-//│ res: int
-//│    = 124
-
-foo(123:int):int
-//│ res: int
-//│    = 124
+:e
+foo(123:Int):Int
+//│ ╔══[ERROR] Cannot use named arguments as the function type has untyped arguments
+//│ ║  l.44: 	foo(123:Int):Int
+//│ ╙──      	   ^^^^^^^^^
+//│ Int
+//│ Code generation encountered an error:
+//│   unresolved symbol Int
 

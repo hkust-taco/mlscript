@@ -19,7 +19,7 @@ let object2 = { x: 17, y: false }
 
 let pick_an_object = b =>
   if b then object1 else object2
-//│ pick_an_object: bool -> {x: 17 | 42, y: forall 'a. 'a -> 'a | false}
+//│ pick_an_object: bool -> {x: 17 | 42, y: forall 'a. false | 'a -> 'a}
 
 let rec recursive_monster = x =>
   { thing: x, self: recursive_monster x }

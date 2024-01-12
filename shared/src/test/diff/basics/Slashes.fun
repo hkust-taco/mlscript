@@ -21,9 +21,9 @@ x => succ / succ / x + 1
 
 :p
 foo / x => succ / succ / x
-//│ Parsed: foo ((x) => succ (succ x));
-//│ Desugared: foo ((x) => succ (succ x))
-//│ AST: App(Var(foo), Lam(Var(x), App(Var(succ), App(Var(succ), Var(x)))))
+//│ Parsed: foo(...((...x) => succ(...(succ(...x)))));
+//│ Desugared: foo(...((...x) => succ(...(succ(...x)))))
+//│ AST: App(Var(foo),Lam(Var(x),App(Var(succ),App(Var(succ),Var(x)))))
 //│ res: int
 
 :e

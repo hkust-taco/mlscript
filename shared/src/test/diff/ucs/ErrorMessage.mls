@@ -15,7 +15,7 @@ fun f(p) =
 //│ ╙──      	    ^^^^^^^^^^^^^^
 //│ f: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared
 
 :e
 :ge
@@ -27,4 +27,4 @@ fun g(xs) =
 //│ ╙──      	         ^^
 //│ g: anything -> error
 //│ Code generation encountered an error:
-//│   if expression has not been desugared
+//│   if expression was not desugared

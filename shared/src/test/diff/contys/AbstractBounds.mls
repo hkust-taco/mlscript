@@ -83,9 +83,9 @@ class Test3[A, B]
 //│ Defined Test3.Bar3: Test3['A, 'B] -> 'A -> 'B
 
 fun x -> fun y -> x.Foo3 y
-//│ res: 'a -> (forall 'A 'b. ('A -> 'b
+//│ res: 'a -> (forall 'A 'b. 'A -> 'b
 //│   where
-//│     'a <: Test3['A, 'b]))
+//│     'a <: Test3['A, 'b])
 //│    = [Function: res]
 
 
@@ -95,27 +95,27 @@ class Test4[A, B]
   method Bar4 i (a: A) = i a : B
   method Baz4 = this.Bar4 id
 //│ Defined class Test4[=A, =B]
-//│ Defined Test4.Bar4: Test4['A, 'B] -> (forall 'a. 'a -> (forall 'a. ('A -> 'B
+//│ Defined Test4.Bar4: Test4['A, 'B] -> (forall 'a. 'a -> (forall 'a. 'A -> 'B
 //│   where
-//│     'a <: 'A -> 'B)))
+//│     'a <: 'A -> 'B))
 //│ Defined Test4.Baz4: Test4['A, 'B] -> ('A -> 'B
 //│   where
 //│     forall 'a. 'a -> 'a <: 'A -> 'B)
 
 fun x -> fun y -> x.Bar4 y id
-//│ res: 'a -> (forall 'A 'B. (('A -> 'B) -> 'B
+//│ res: 'a -> (forall 'A 'B. ('A -> 'B) -> 'B
 //│   where
-//│     'a <: Test4['A, 'B]))
-//│   where
-//│     'A :> forall 'b. 'b -> 'b
+//│     'a <: Test4['A, 'B])
+//│ where
+//│   'A :> forall 'b. 'b -> 'b
 //│    = [Function: res]
 
 fun x -> fun y -> x.Baz4 y
-//│ res: 'a -> (forall 'A 'B. (('A & 'B) -> 'B
+//│ res: 'a -> (forall 'A 'B. ('A & 'B) -> 'B
 //│   where
-//│     'a <: Test4['A, 'B]))
-//│   where
-//│     'A <: 'B
+//│     'a <: Test4['A, 'B])
+//│ where
+//│   'A <: 'B
 //│    = [Function: res]
 
 

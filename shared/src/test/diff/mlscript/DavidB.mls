@@ -10,7 +10,7 @@ tuple2 = (4, 5)
 //│       = [ 4, 5 ]
 
 if true then tuple1 else tuple2
-//│ res: Array[1 | 2 | 3 | 4 | 5] & {_1: 1 | 4, _2: 2 | 5}
+//│ res: Array[1 | 2 | 3 | 4 | 5] & {0: 1 | 4, 1: 2 | 5}
 //│    = [ 1, 2, 3 ]
 
 arr = tuple1 : Array[int]
@@ -98,7 +98,7 @@ list2 = C { h = 3; t = () }
 //│      = C { h: 3, t: [] }
 
 ls = if true then list1 else list2
-//│ ls: C[1 | 2 | 3] with {h: 1 | 3, t: () | (C[2] with {t: ()})}
+//│ ls: C[1 | 2 | 3] with {h: 1 | 3, t: (C[2] with {t: ()}) | ()}
 //│   = C { h: 1, t: C { h: 2, t: [] } }
 
 ls : List0[int]
@@ -123,7 +123,7 @@ list2 = (4, (5, ()))
 //│      = [ 4, [ 5, [] ] ]
 
 if true then list1 else list2
-//│ res: (1 | 4, (2 | 5, Array[() | 3],),)
+//│ res: (1 | 4, (2 | 5, Array[3 | ()],),)
 //│    = [ 1, [ 2, [ 3, [] ] ] ]
 
 
@@ -151,31 +151,31 @@ rec def foo xs = case xs of
     let tmp = foo xs.t.t in
     if xs.h then Con { h = xs.t.h; t = tmp } else tmp,
   N -> xs
-//│ foo: 'a -> 'T
+//│ foo: 'a -> 'b
 //│   where
-//│     'a <: Con[?, ?] & {h: bool, t: {h: 'h, t: 'a}} | N & 'T
-//│     'T :> Con['h, 'T]
+//│     'a <: Con[?, ?] & {h: bool, t: {h: 'h, t: 'a}} | N & 'b
+//│     'b :> Con['h, 'b]
 //│    = [Function: foo1]
 
 rec def foo xs = case xs of
   Con -> if xs.h then Con { h = xs.t.h; t = foo xs.t.t } else foo xs.t.t,
   N -> xs
-//│ foo: 'a -> 'T
+//│ foo: 'a -> 'b
 //│   where
-//│     'a <: Con[?, ?] & {h: bool, t: {h: 'h, t: 'a}} | N & 'T
-//│     'T :> Con['h, 'T]
+//│     'a <: Con[?, ?] & {h: bool, t: {h: 'h, t: 'a}} | N & 'b
+//│     'b :> Con['h, 'b]
 //│    = [Function: foo2]
 
 foo (N{})
-//│ res: 'T
+//│ res: 'a
 //│   where
-//│     'T :> Con[nothing, 'T] | N
+//│     'a :> Con[nothing, 'a] | N
 //│    = N {}
 
 foo (Con{ h = true; t = Con{ h = 0; t = N{} } })
-//│ res: 'T
+//│ res: 'a
 //│   where
-//│     'T :> Con[0, 'T] | N
+//│     'a :> Con[0, 'a] | N
 //│    = Con { h: 0, t: N {} }
 
 def inf: Con[true, Con[0, 'I]] as 'I
@@ -185,9 +185,9 @@ def inf: Con[true, Con[0, 'I]] as 'I
 //│    = <missing implementation>
 
 foo inf
-//│ res: 'T
+//│ res: 'a
 //│   where
-//│     'T :> Con[0, 'T]
+//│     'a :> Con[0, 'a]
 //│    = <no result>
 //│      inf is not implemented
 
@@ -195,12 +195,12 @@ foo inf
 rec def foo2 xs = case xs of
   Con -> if xs.h then Con { h = xs.t.h; t = foo xs.t.t } else foo xs.t.t,
   N -> N{}
-//│ foo2: (Con[?, ?] & {h: bool, t: {h: 'h, t: 'a & 'b}} | N) -> ('T | Con['h, forall 'T0. 'T0] | N)
+//│ foo2: (Con[?, ?] & {h: bool, t: {h: 'h, t: 'a & 'b}} | N) -> (Con['h, forall 'c. 'c | 'd] | N | 'e)
 //│   where
-//│     'T0 :> Con['h0, 'T0] | 'c
-//│     'b <: Con[?, ?] & {h: bool, t: {h: 'h1, t: 'b}} | N & 'T
-//│     'T :> Con['h1, 'T]
-//│     'a <: Con[?, ?] & {h: bool, t: {h: 'h0, t: 'a}} | N & 'c
+//│     'c :> Con['h0, 'c | 'd] | 'd
+//│     'b <: Con[?, ?] & {h: bool, t: {h: 'h1, t: 'b}} | N & 'e
+//│     'e :> Con['h1, 'e]
+//│     'a <: Con[?, ?] & {h: bool, t: {h: 'h0, t: 'a}} | N & 'd
 //│     = [Function: foo21]
 
 

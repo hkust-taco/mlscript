@@ -212,7 +212,7 @@ def f a b = if gt a b then a else b
 //│  = [Function: f3]
 
 f 1 
-//│ res: (int & 'a) -> ('a | 1)
+//│ res: (int & 'a) -> (1 | 'a)
 //│    = [Function (anonymous)]
 
 :e
@@ -235,7 +235,7 @@ def f a b = if gt a b then a else b b // mistake!
 //│  = [Function: f4]
 
 f 1 
-//│ res: (int & 'a) -> ('a | 1)
+//│ res: (int & 'a) -> (1 | 'a)
 //│    = [Function (anonymous)]
 
 :re

@@ -7,25 +7,25 @@ if true then 1 else 2
 if a == 0
 then "false" else 2
 //│ |#if| |a| |==| |0|↵|#then| |"false"| |#else| |2|
-//│ Parsed: {if (== (a,) (0,)) then "false" else 2}
+//│ Parsed: {if (==(a,)(0,)) then "false" else 2}
 
 if a == 0
 then "false"
 else 2
 //│ |#if| |a| |==| |0|↵|#then| |"false"|↵|#else| |2|
-//│ Parsed: {if (== (a,) (0,)) then "false" else 2}
+//│ Parsed: {if (==(a,)(0,)) then "false" else 2}
 
 if a == 0
   then "false"
   else 2
 //│ |#if| |a| |==| |0|→|#then| |"false"|↵|#else| |2|←|
-//│ Parsed: {if (== (a,) (0,)) then "false" else 2}
+//│ Parsed: {if (==(a,)(0,)) then "false" else 2}
 
 if a == 0
 then "false"
   else 2
 //│ |#if| |a| |==| |0|↵|#then| |"false"|→|#else| |2|←|
-//│ Parsed: {if (== (a,) (0,)) then "false" else 2}
+//│ Parsed: {if (==(a,)(0,)) then "false" else 2}
 
 :pe
 if a == 0
@@ -35,19 +35,19 @@ else 2
 //│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
 //│ ║  l.33: 	else 2
 //│ ╙──      	^^^^^^
-//│ Parsed: {if (== (a,) (0,)) then "false"; undefined}
+//│ Parsed: {if (==(a,)(0,)) then "false"; undefined}
 
 if a == 0
   then "false"
 print of "ok!"
 //│ |#if| |a| |==| |0|→|#then| |"false"|←|↵|print| |#of| |"ok!"|
-//│ Parsed: {if (== (a,) (0,)) then "false"; print ("ok!",)}
+//│ Parsed: {if (==(a,)(0,)) then "false"; print("ok!",)}
 
 if a == 0 then "false"
   else 2
 print of "ok!"
 //│ |#if| |a| |==| |0| |#then| |"false"|→|#else| |2|←|↵|print| |#of| |"ok!"|
-//│ Parsed: {if (== (a,) (0,)) then "false" else 2; print ("ok!",)}
+//│ Parsed: {if (==(a,)(0,)) then "false" else 2; print("ok!",)}
 
 if
   true  then "true"
@@ -59,13 +59,13 @@ if
   a == 1 then "true"
   b == 2 then "false"
 //│ |#if|→|a| |==| |1| |#then| |"true"|↵|b| |==| |2| |#then| |"false"|←|
-//│ Parsed: {if ‹(== (a,) (1,)) then "true"; (== (b,) (2,)) then "false"›}
+//│ Parsed: {if ‹(==(a,)(1,)) then "true"; (==(b,)(2,)) then "false"›}
 
 if
   a == 0 then "false"
   a == 1 then "true"
 //│ |#if|→|a| |==| |0| |#then| |"false"|↵|a| |==| |1| |#then| |"true"|←|
-//│ Parsed: {if ‹(== (a,) (0,)) then "false"; (== (a,) (1,)) then "true"›}
+//│ Parsed: {if ‹(==(a,)(0,)) then "false"; (==(a,)(1,)) then "true"›}
 
 if a ==
   0 then "false"
@@ -149,7 +149,7 @@ if a is
   Some(x) then "defined"
   None    then "undefined"
 //│ |#if| |a| |is|→|Some|(|x|)| |#then| |"defined"|↵|None| |#then| |"undefined"|←|
-//│ Parsed: {if a is ‹(Some (x,)) then "defined"; (None) then "undefined"›}
+//│ Parsed: {if a is ‹(Some(x,)) then "defined"; (None) then "undefined"›}
 
 if a is
   Some(x) and x is
@@ -157,45 +157,45 @@ if a is
     Right(b) then "right-defined"
   None       then "undefined"
 //│ |#if| |a| |is|→|Some|(|x|)| |and| |x| |is|→|Left|(|a|)| |#then| |"left-defined"|↵|Right|(|b|)| |#then| |"right-defined"|←|↵|None| |#then| |"undefined"|←|
-//│ Parsed: {if a is ‹Some (x,) and x is ‹(Left (a,)) then "left-defined"; (Right (b,)) then "right-defined"›; (None) then "undefined"›}
+//│ Parsed: {if a is ‹Some(x,) and x is ‹(Left(a,)) then "left-defined"; (Right(b,)) then "right-defined"›; (None) then "undefined"›}
 
 if a is
   Some of x then "defined"
   None      then "undefined"
 //│ |#if| |a| |is|→|Some| |#of| |x| |#then| |"defined"|↵|None| |#then| |"undefined"|←|
-//│ Parsed: {if a is ‹(Some (x,)) then "defined"; (None) then "undefined"›}
+//│ Parsed: {if a is ‹(Some(x,)) then "defined"; (None) then "undefined"›}
 
 if a is
   Some(x) then "defined"
   _       then "unknown"
 //│ |#if| |a| |is|→|Some|(|x|)| |#then| |"defined"|↵|_| |#then| |"unknown"|←|
-//│ Parsed: {if a is ‹(Some (x,)) then "defined"; (_) then "unknown"›}
+//│ Parsed: {if a is ‹(Some(x,)) then "defined"; (_) then "unknown"›}
 
 if a is
   Some(x) then "defined"
   else "unknown"
 //│ |#if| |a| |is|→|Some|(|x|)| |#then| |"defined"|↵|#else| |"unknown"|←|
-//│ Parsed: {if a is ‹(Some (x,)) then "defined"; else "unknown"›}
+//│ Parsed: {if a is ‹(Some(x,)) then "defined"; else "unknown"›}
 
 if a is
   Some(x) then "defined"
   else "unknown"
   else "unreachable?!"
 //│ |#if| |a| |is|→|Some|(|x|)| |#then| |"defined"|↵|#else| |"unknown"|↵|#else| |"unreachable?!"|←|
-//│ Parsed: {if a is ‹(Some (x,)) then "defined"; else "unknown"; else "unreachable?!"›}
+//│ Parsed: {if a is ‹(Some(x,)) then "defined"; else "unknown"; else "unreachable?!"›}
 
 a == 1 and b == 2
 //│ |a| |==| |1| |and| |b| |==| |2|
-//│ Parsed: {and (== (a,) (1,),) (== (b,) (2,),)}
+//│ Parsed: {and(==(a,)(1,),)(==(b,)(2,),)}
 
 
 :pe
 if lol
 //│ |#if| |lol|
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found reference instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found reference instead
 //│ ║  l.193: 	if lol
 //│ ║         	   ^^^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.193: 	if lol
 //│ ╙──       	^^
 //│ Parsed: {if (lol) then undefined}
@@ -232,51 +232,42 @@ if lol
 then
 else
 //│ |#if| |lol|↵|#then|↵|#else|
-//│ ╔══[PARSE ERROR] Unexpected newline in expression position
-//│ ║  l.232: 	then
-//│ ║         	    ^
-//│ ║  l.233: 	else
-//│ ╙──       	
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
 //│ ║  l.233: 	else
 //│ ╙──       	    ^
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
 //│ ║  l.233: 	else
 //│ ╙──       	^^^^
-//│ Parsed: {if (lol) then undefined}
+//│ Parsed: {if (lol) then {undefined}}
 
 :pe
 if lol else 2
 //│ |#if| |lol| |#else| |2|
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found reference followed by 'else' keyword instead
-//│ ║  l.249: 	if lol else 2
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found reference followed by 'else' keyword instead
+//│ ║  l.244: 	if lol else 2
 //│ ║         	   ^^^^^^^^
-//│ ╟── Note: 'if' expression started here:
-//│ ║  l.249: 	if lol else 2
+//│ ╟── Note: 'if' expression starts here:
+//│ ║  l.244: 	if lol else 2
 //│ ╙──       	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found 'else' keyword instead
-//│ ║  l.249: 	if lol else 2
+//│ ║  l.244: 	if lol else 2
 //│ ╙──       	       ^^^^
 //│ Parsed: {if (lol) then undefined}
 
 
-:pe
 x = if true then false else maybe
 //│ |x| |#=| |#if| |true| |#then| |false| |#else| |maybe|
-//│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.264: 	x = if true then false else maybe
-//│ ╙──       	  ^
-//│ Parsed: {x}
+//│ Parsed: {x = if (true) then false else maybe}
 
 :pe
 x =
   if true then
 y = 1
 //│ |x| |#=|→|#if| |true| |#then|←|↵|y| |#=| |1|
-//│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.272: 	x =
-//│ ╙──       	  ^
-//│ Parsed: {x}
+//│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
+//│ ║  l.264: 	  if true then
+//│ ╙──       	              ^
+//│ Parsed: {x = {if (true) then undefined}; y = 1}
 
 if a ==
   0 and b ==
@@ -291,23 +282,23 @@ if a ==
 2 and b then ""
 //│ |2| |and| |b| |#then| |""|
 //│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
-//│ ║  l.291: 	2 and b then ""
+//│ ║  l.282: 	2 and b then ""
 //│ ╙──       	^^^^^^^^^^^^^^^
 //│ Parsed: {undefined}
 
 2 and b == 0
 //│ |2| |and| |b| |==| |0|
-//│ Parsed: {and (2,) (== (b,) (0,),)}
+//│ Parsed: {and(2,)(==(b,)(0,),)}
 
 if x ==
   2 and b then ""
 //│ |#if| |x| |==|→|2| |and| |b| |#then| |""|←|
-//│ Parsed: {if x == ‹(and (2,) (b,)) then ""›}
+//│ Parsed: {if x == ‹(and(2,)(b,)) then ""›}
 
 if x ==
   2 and b == 1 then ""
 //│ |#if| |x| |==|→|2| |and| |b| |==| |1| |#then| |""|←|
-//│ Parsed: {if x == ‹(and (2,) (== (b,) (1,),)) then ""›}
+//│ Parsed: {if x == ‹(and(2,)(==(b,)(1,),)) then ""›}
 
 if
   x == 0 then "x"
@@ -316,13 +307,13 @@ if
     2 and z == 0 then "z = 0"
     3 then "y = 3"
 //│ |#if|→|x| |==| |0| |#then| |"x"|↵|y| |==|→|1| |#then| |"y = 1"|↵|2| |and| |z| |==| |0| |#then| |"z = 0"|↵|3| |#then| |"y = 3"|←|←|
-//│ Parsed: {if ‹(== (x,) (0,)) then "x"; y == ‹(1) then "y = 1"; (and (2,) (== (z,) (0,),)) then "z = 0"; (3) then "y = 3"››}
+//│ Parsed: {if ‹(==(x,)(0,)) then "x"; y == ‹(1) then "y = 1"; (and(2,)(==(z,)(0,),)) then "z = 0"; (3) then "y = 3"››}
 
 :pe
 else 1
 //│ |#else| |1|
 //│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
-//│ ║  l.322: 	else 1
+//│ ║  l.313: 	else 1
 //│ ╙──       	^^^^^^
 //│ Parsed: {undefined}
 
@@ -330,7 +321,7 @@ else 1
 1 else 2
 //│ |1| |#else| |2|
 //│ ╔══[PARSE ERROR] Expected end of input; found 'else' keyword instead
-//│ ║  l.330: 	1 else 2
+//│ ║  l.321: 	1 else 2
 //│ ╙──       	  ^^^^
 //│ Parsed: {1}
 
@@ -349,7 +340,7 @@ if a is
   let y = a + 1
   Right(0) then y
 //│ |#if| |a| |is|→|Left|(|x|)| |#then| |x|↵|#let| |y| |#=| |a| |+| |1|↵|Right|(|0|)| |#then| |y|←|
-//│ Parsed: {if a is ‹(Left (x,)) then x; let y = + (a,) (1,); (Right (0,)) then y›}
+//│ Parsed: {if a is ‹(Left(x,)) then x; let y = +(a,)(1,); (Right(0,)) then y›}
 
 if a is
   Some(v) and v is
@@ -359,7 +350,7 @@ if a is
     Right(x) then x + y
   else 0
 //│ |#if| |a| |is|→|Some|(|v|)| |and| |v| |is|→|Left|(|x|)| |#then| |x|↵|#let| |y| |#=| |v| |+| |1|↵|Right|(|0|)| |#then| |y|↵|Right|(|x|)| |#then| |x| |+| |y|←|↵|#else| |0|←|
-//│ Parsed: {if a is ‹Some (v,) and v is ‹(Left (x,)) then x; let y = + (v,) (1,); (Right (0,)) then y; (Right (x,)) then + (x,) (y,)›; else 0›}
+//│ Parsed: {if a is ‹Some(v,) and v is ‹(Left(x,)) then x; let y = +(v,)(1,); (Right(0,)) then y; (Right(x,)) then +(x,)(y,)›; else 0›}
 
 if a is
   Some(x) and x is
@@ -368,16 +359,16 @@ if a is
     Right(b) then "right-defined"
   None       then "undefined"
 //│ |#if| |a| |is|→|Some|(|x|)| |and| |x| |is|→|Left|(|a|)| |#then| |"left-defined"|↵|#let| |y| |#=| |x| |+| |1|↵|Right|(|b|)| |#then| |"right-defined"|←|↵|None| |#then| |"undefined"|←|
-//│ Parsed: {if a is ‹Some (x,) and x is ‹(Left (a,)) then "left-defined"; let y = + (x,) (1,); (Right (b,)) then "right-defined"›; (None) then "undefined"›}
+//│ Parsed: {if a is ‹Some(x,) and x is ‹(Left(a,)) then "left-defined"; let y = +(x,)(1,); (Right(b,)) then "right-defined"›; (None) then "undefined"›}
 
 :w
 if a is
   Left x then x
 //│ |#if| |a| |is|→|Left| |x| |#then| |x|←|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.375: 	  Left x then x
+//│ ║  l.366: 	  Left x then x
 //│ ╙──       	  ^^^^^^
-//│ Parsed: {if a is ‹(Left (x,)) then x›}
+//│ Parsed: {if a is ‹(Left(x,)) then x›}
 
 // TODO
 if a is
@@ -386,11 +377,11 @@ if a is
   then y
 //│ |#if| |a| |is|→|Left|(|x|)| |#then| |x|↵|#let| |y| |#=| |a| |+| |1|↵|#then| |y|←|
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
-//│ ║  l.385: 	  let y = a + 1
+//│ ║  l.376: 	  let y = a + 1
 //│ ║         	          ^^^^^
-//│ ║  l.386: 	  then y
+//│ ║  l.377: 	  then y
 //│ ╙──       	^^^^^^^^
-//│ Parsed: {if a is ‹(Left (x,)) then x; let y = undefined›}
+//│ Parsed: {if a is ‹(Left(x,)) then x; let y = undefined›}
 
 
 
@@ -400,20 +391,20 @@ if a is
 :pe
 if let Some(x) = v then 123
 //│ |#if| |#let| |Some|(|x|)| |#=| |v| |#then| |123|
-//│ ╔══[PARSE ERROR] Expected '=' keyword; found parenthesis section instead
-//│ ║  l.401: 	if let Some(x) = v then 123
+//│ ╔══[PARSE ERROR] Expected '='; found parenthesis section instead
+//│ ║  l.392: 	if let Some(x) = v then 123
 //│ ╙──       	           ^^^
-//│ ╔══[PARSE ERROR] Unexpected '=' keyword in expression position
-//│ ║  l.401: 	if let Some(x) = v then 123
+//│ ╔══[PARSE ERROR] Unexpected '=' in expression position
+//│ ║  l.392: 	if let Some(x) = v then 123
 //│ ╙──       	               ^
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
-//│ ║  l.401: 	if let Some(x) = v then 123
+//│ ║  l.392: 	if let Some(x) = v then 123
 //│ ╙──       	                 ^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found let binding instead
-//│ ║  l.401: 	if let Some(x) = v then 123
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found let binding instead
+//│ ║  l.392: 	if let Some(x) = v then 123
 //│ ║         	                           ^
-//│ ╟── Note: 'if' expression started here:
-//│ ║  l.401: 	if let Some(x) = v then 123
+//│ ╟── Note: 'if' expression starts here:
+//│ ║  l.392: 	if let Some(x) = v then 123
 //│ ╙──       	^^
 //│ Parsed: {if (let Some = undefined in undefined) then undefined}
 
@@ -421,27 +412,27 @@ if let Some(x) = v then 123
 :pe
 if let Some(x) = v and cond then 123
 //│ |#if| |#let| |Some|(|x|)| |#=| |v| |and| |cond| |#then| |123|
-//│ ╔══[PARSE ERROR] Expected '=' keyword; found parenthesis section instead
-//│ ║  l.422: 	if let Some(x) = v and cond then 123
+//│ ╔══[PARSE ERROR] Expected '='; found parenthesis section instead
+//│ ║  l.413: 	if let Some(x) = v and cond then 123
 //│ ╙──       	           ^^^
-//│ ╔══[PARSE ERROR] Unexpected '=' keyword in expression position
-//│ ║  l.422: 	if let Some(x) = v and cond then 123
+//│ ╔══[PARSE ERROR] Unexpected '=' in expression position
+//│ ║  l.413: 	if let Some(x) = v and cond then 123
 //│ ╙──       	               ^
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
-//│ ║  l.422: 	if let Some(x) = v and cond then 123
+//│ ║  l.413: 	if let Some(x) = v and cond then 123
 //│ ╙──       	                 ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found let binding instead
-//│ ║  l.422: 	if let Some(x) = v and cond then 123
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found let binding instead
+//│ ║  l.413: 	if let Some(x) = v and cond then 123
 //│ ║         	                                    ^
-//│ ╟── Note: 'if' expression started here:
-//│ ║  l.422: 	if let Some(x) = v and cond then 123
+//│ ╟── Note: 'if' expression starts here:
+//│ ║  l.413: 	if let Some(x) = v and cond then 123
 //│ ╙──       	^^
 //│ Parsed: {if (let Some = undefined in undefined) then undefined}
 
 // MLscript:
 if v is Some(x) and x is Left(y) then 123
 //│ |#if| |v| |is| |Some|(|x|)| |and| |x| |is| |Left|(|y|)| |#then| |123|
-//│ Parsed: {if (and (is (v,) (Some (x,),),) (is (x,) (Left (y,),),)) then 123}
+//│ Parsed: {if (and(is(v,)(Some(x,),),)(is(x,)(Left(y,),),)) then 123}
 
 // ML:
 let Some(x) = v
@@ -450,7 +441,7 @@ let Some(x) = v
 
 v as Some(x)
 //│ |v| |as| |Some|(|x|)|
-//│ Parsed: {as (v,) (Some (x,),)}
+//│ Parsed: {as(v,)(Some(x,),)}
 
 
 
@@ -461,7 +452,7 @@ if true
   + 1
 //│ |#if| |true|→|#then| |0|↵|+| |1|←|
 //│ ╔══[PARSE ERROR] Unexpected operator here
-//│ ║  l.461: 	  + 1
+//│ ║  l.452: 	  + 1
 //│ ╙──       	  ^
 //│ Parsed: {if (true) then 0}
 
@@ -469,7 +460,7 @@ if true
   then 0
     + 1
 //│ |#if| |true|→|#then| |0|→|+| |1|←|←|
-//│ Parsed: {if (true) then + 0 1}
+//│ Parsed: {if (true) then +(0, 1,)}
 
 if true
   then 0
@@ -482,7 +473,7 @@ if true
   else 0
     + 1
 //│ |#if| |true|→|#then| |0|↵|#else| |0|→|+| |1|←|←|
-//│ Parsed: {if (true) then 0 else + 0 1}
+//│ Parsed: {if (true) then 0 else +(0, 1,)}
 
 :pe
 if true
@@ -490,7 +481,7 @@ if true
   + 1
 //│ |#if| |true|→|#then| |0|←|→|+| |1|←|
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.490: 	  + 1
+//│ ║  l.481: 	  + 1
 //│ ╙──       	^^
 //│ Parsed: {if (true) then 0}
 
@@ -501,19 +492,19 @@ if true
   + 1
 //│ |#if| |true|→|#then| |0|↵|#else| |0|←|→|+| |1|←|
 //│ ╔══[PARSE ERROR] Expected end of input; found indented block instead
-//│ ║  l.501: 	  + 1
+//│ ║  l.492: 	  + 1
 //│ ╙──       	^^
 //│ Parsed: {if (true) then 0 else 0}
 
 if true then 0
   + 1
 //│ |#if| |true| |#then| |0|→|+| |1|←|
-//│ Parsed: {if (true) then + 0 1}
+//│ Parsed: {if (true) then +(0, 1,)}
 
 if true then 0 else 0
   + 1
 //│ |#if| |true| |#then| |0| |#else| |0|→|+| |1|←|
-//│ Parsed: {if (true) then 0 else + 0 1}
+//│ Parsed: {if (true) then 0 else +(0, 1,)}
 
 
 // TODO deal with meaningless whitespace:
@@ -535,29 +526,41 @@ if true
 :pe
 (if true)
 //│ |(|#if| |true|)|
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found reference instead
-//│ ║  l.536: 	(if true)
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found reference instead
+//│ ║  l.527: 	(if true)
 //│ ║         	    ^^^^
-//│ ╟── Note: 'if' expression started here:
-//│ ║  l.536: 	(if true)
+//│ ╟── Note: 'if' expression starts here:
+//│ ║  l.527: 	(if true)
 //│ ╙──       	 ^^
-//│ Parsed: {'(' if (true) then undefined, ')'}
+//│ Parsed: {'(' if (true) then undefined ')'}
 
 :pe
 (if true then)
 //│ |(|#if| |true| |#then|)|
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
-//│ ║  l.547: 	(if true then)
+//│ ║  l.538: 	(if true then)
 //│ ╙──       	             ^
-//│ Parsed: {'(' if (true) then undefined, ')'}
+//│ Parsed: {'(' if (true) then undefined ')'}
+
+if true then;
+//│ |#if| |true| |#then|;|
+//│ Parsed: {if (true) then undefined}
+
+if true then;
+//│ |#if| |true| |#then|;|
+//│ Parsed: {if (true) then undefined}
 
 :pe
-if true then;
-//│ |#if| |true| |#then|#;|
-//│ ╔══[PARSE ERROR] Expected end of input; found ';' keyword instead
-//│ ║  l.555: 	if true then;
-//│ ╙──       	            ^
-//│ Parsed: {if (true) then undefined}
+if true then; else;
+//│ |#if| |true| |#then|;| |#else|;|
+//│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
+//│ ║  l.554: 	if true then; else;
+//│ ╙──       	              ^^^^^
+//│ Parsed: {if (true) then undefined; undefined}
+
+if true then () else;
+//│ |#if| |true| |#then| |(||)| |#else|;|
+//│ Parsed: {if (true) then undefined else undefined}
 
 
 

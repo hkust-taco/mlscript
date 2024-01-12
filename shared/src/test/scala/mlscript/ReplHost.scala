@@ -1,6 +1,6 @@
 package mlscript
 
-import mlscript.utils.shorthands._
+import mlscript.utils._, shorthands._
 
 /**
  * A helper class to manipulate an interactive Node.js process.
@@ -31,13 +31,21 @@ final case class ReplHost() {
   private def collectUntilPrompt(): ReplHost.Reply = {
     val buffer = new StringBuilder()
     while (!buffer.endsWith("\n> ")) {
-      buffer.append(stdout.read().toChar)
+      val c = stdout.read()
+      if (c === -1) lastWords(s"ReplHost could not read more from NodeJS stdout.")
+      buffer.append(c.toChar)
     }
     // Remove the trailing `"\n> "`
     buffer.delete(buffer.length - 3, buffer.length)
     val reply = buffer.toString()
     reply.linesIterator.find(_.startsWith(ReplHost.syntaxErrorHead)) match {
-      case None => ReplHost.Result(reply, None)
+      case None => reply.linesIterator.find(_.startsWith(ReplHost.uncaughtErrorHead)) match {
+        case None => ReplHost.Result(reply, None)
+        case Some(uncaughtErrorLine) => {
+          val message = uncaughtErrorLine.substring(ReplHost.uncaughtErrorHead.length)
+          ReplHost.Error(false, message)
+        }
+      }
       case Some(syntaxErrorLine) =>
         val message = syntaxErrorLine.substring(ReplHost.syntaxErrorHead.length)
         ReplHost.Error(true, message)
@@ -141,6 +149,7 @@ object ReplHost {
     * The syntax error beginning text from Node.js.
     */
   private val syntaxErrorHead = "Uncaught SyntaxError: "
+  private val uncaughtErrorHead = "Uncaught "
 
   /**
     * The base class of all kinds of REPL replies.

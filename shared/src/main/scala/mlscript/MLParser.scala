@@ -23,7 +23,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   }
   
   def toParam(t: Term): Tup =
-    Tup((N, Fld(false, false, t)) :: Nil)
+    Tup((N, Fld(FldFlags.empty, t)) :: Nil)
   
   def toParams(t: Term): Tup = t match {
     case t: Tup => t
@@ -41,6 +41,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def number[p: P]: P[Int] = P( CharIn("0-9").repX(1).!.map(_.toInt) )
   def ident[p: P]: P[String] =
     P( (letter | "_") ~~ (letter | digit | "_" | "'").repX ).!.filter(!keywords(_))
+  def index[p: P]: P[String] = P( "0" | CharIn("1-9") ~~ digit.repX ).!.map(_.toString)
   
   def termOrAssign[p: P]: P[Statement] = P( term ~ ("=" ~ term).? ).map {
     case (expr, N) => expr
@@ -58,6 +59,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     | P(kw("undefined")).map(x => UnitLit(true)) | P(kw("null")).map(x => UnitLit(false)))
   
   def variable[p: P]: P[Var] = locate(ident.map(Var))
+  def fieldName[p: P]: P[Var] = locate( (ident | index).map(Var) )
 
   def parenCell[p: P]: P[Either[Term, (Term, Boolean)]] = (("..." | kw("mut")).!.? ~ term).map {
     case (Some("..."), t) => Left(t)
@@ -67,14 +69,14 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
 
   def parens[p: P]: P[Term] = locate(P( "(" ~/ parenCell.rep(0, ",") ~ ",".!.? ~ ")" ).map {
     case (Seq(Right(t -> false)), N) => Bra(false, t)
-    case (Seq(Right(t -> true)), N) => Tup(N -> Fld(true, false, t) :: Nil) // ? single tuple with mutable
+    case (Seq(Right(t -> true)), N) => Tup(N -> Fld(FldFlags(true, false, false), t) :: Nil) // ? single tuple with mutable
     case (ts, _) => 
       if (ts.forall(_.isRight)) Tup(ts.iterator.map {
-        case R(f) => N -> Fld(f._2, false, f._1)
+        case R(f) => N -> Fld(FldFlags(f._2, false, false), f._1)
         case _ => die // left unreachable
       }.toList)
       else Splc(ts.map {
-        case R((v, m)) => R(Fld(m, false, v))
+        case R((v, m)) => R(Fld(FldFlags(m, false, false), v))
         case L(spl) => L(spl)
       }.toList)
   })
@@ -83,7 +85,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   
   def subterm[p: P]: P[Term] = P( Index ~~ subtermNoSel ~ (
     // Fields:
-    ("." ~/ (variable | locate(("(" ~/ ident ~ "." ~ ident ~ ")")
+    ("." ~/ (fieldName | locate(("(" ~/ ident ~ "." ~ ident ~ ")")
       .map {case (prt, id) => Var(s"${prt}.${id}")})))
       .map {(t: Var) => Left(t)} |
     // Array subscripts:
@@ -101,11 +103,11 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
     }
 
   def record[p: P]: P[Rcd] = locate(P(
-      "{" ~/ (kw("mut").!.? ~ variable ~ "=" ~ term map L.apply).|(kw("mut").!.? ~
+      "{" ~/ (kw("mut").!.? ~ fieldName ~ "=" ~ term map L.apply).|(kw("mut").!.? ~
         variable map R.apply).rep(sep = ";" | ",") ~ "}"
     ).map { fs => Rcd(fs.map{ 
-        case L((mut, v, t)) => v -> Fld(mut.isDefined, false, t)
-        case R(mut -> id) => id -> Fld(mut.isDefined, false, id) }.toList)})
+        case L((mut, v, t)) => v -> Fld(FldFlags(mut.isDefined, false, false), t)
+        case R(mut -> id) => id -> Fld(FldFlags(mut.isDefined, false, false), id) }.toList)})
   
   def fun[p: P]: P[Term] = locate(P( kw("fun") ~/ term ~ "->" ~ term ).map(nb => Lam(toParams(nb._1), nb._2)))
   
@@ -219,7 +221,8 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
           ms.collect { case R(md) => md }, ms.collect{ case L(md) => md }, Nil, N)
       }
       case (k @ Als, id, ts) => "=" ~ ty map (bod => TypeDef(k, id, ts, bod, Nil, Nil, Nil, N))
-      case (k @ Nms, _, _) => throw new NotImplementedError("Namespaces are not supported yet.")
+      case (k @ Mod, _, _) => throw new NotImplementedError("Namespaces are not supported yet.")
+      case (k @ Mxn, _, _) => throw new NotImplementedError("Mixins are not supported yet.")
     })
   def tyParams[p: P]: P[Ls[TypeName]] =
     ("[" ~ tyName.rep(0, ",") ~ "]").?.map(_.toList.flatten)
@@ -252,7 +255,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   // Note: field removal types are not supposed to be explicitly used by programmers,
   //    and they won't work in negative positions,
   //    but parsing them is useful in tests (such as shared/src/test/diff/mlscript/Annoying.mls)
-  def tyNoFun[p: P]: P[Type] = P( (rcd | ctor | parTy) ~ ("\\" ~ variable).rep(0) ) map {
+  def tyNoFun[p: P]: P[Type] = P( (rcd | ctor | parTy) ~ ("\\" ~ fieldName).rep(0) ) map {
     case (ty, Nil) => ty
     case (ty, ids) => Rem(ty, ids.toList)
   }
@@ -269,7 +272,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   ))
   def tyWild[p: P]: P[Bounds] = locate(P("?".! map (_ => Bounds(Bot, Top))))
   def rcd[p: P]: P[Record] =
-    locate(P( "{" ~/ ( kw("mut").!.? ~ variable ~ ":" ~ ty).rep(sep = ";") ~ "}" )
+    locate(P( "{" ~/ ( kw("mut").!.? ~ fieldName ~ ":" ~ ty).rep(sep = ";") ~ "}" )
       .map(_.toList.map {
         case (None, v, t) => v -> Field(None, t)
         case (Some(_), v, t) => v -> Field(Some(t), t)
@@ -346,9 +349,9 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
         val constructors = bodies.map(cls => adtTyConstructors(cls, alsName, tparams))
         val parent = TypeDef(Cls, alsName, tparams, Top, constructors.map {
           case Def(_, nme, R(body), _) =>
-            val ctorParams = body.body match {
-              case Function(lhs, _) => lhs
-              case _: TypeName | _: AppliedType => Top
+            val ctorParams = body match {
+              case PolyType(_, Function(lhs, _)) => lhs
+              case PolyType(_, _: TypeName | _: AppliedType) => Top
               case _ => die
             }
             MethodDef(false, alsName, nme, Nil, R(ctorParams))

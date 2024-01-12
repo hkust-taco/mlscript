@@ -35,10 +35,9 @@ rec def id x = let tmp = id id x in x
 //│        <: ? & 'a
 //│ ║  l.30: 	rec def id x = let tmp = id id x in x
 //│ ╙──      	                         ^^^^^
-//│ id: 'id
+//│ id: 'a -> 'a
 //│   where
-//│     'id :> 'a -> 'a
-//│     'a :> 'id
+//│     'a :> 'a -> 'a
 //│        <: 'a -> anything
 //│   = [Function: id1]
 
@@ -48,15 +47,15 @@ id 1
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
 //│     'a <: 'b -> ?
-//│     'b :> 'b -> 'b | 1
+//│     'b :> 1 | 'b -> 'b
 //│        <: ? & 'a
 //│ ║  l.30: 	rec def id x = let tmp = id id x in x
 //│ ╙──      	                         ^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.47: 	id 1
+//│ ║  l.46: 	id 1
 //│ ║        	^^^^
 //│ ╟── integer literal of type `1` is not a function
-//│ ║  l.47: 	id 1
+//│ ║  l.46: 	id 1
 //│ ║        	   ^
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.30: 	rec def id x = let tmp = id id x in x
@@ -64,9 +63,9 @@ id 1
 //│ ╟── from reference:
 //│ ║  l.30: 	rec def id x = let tmp = id id x in x
 //│ ╙──      	                                    ^
-//│ res: 'a -> 'a | 1 | error | 'b
+//│ res: 1 | error | 'a -> 'a | 'b
 //│   where
-//│     'a :> 'a -> 'a | 1
+//│     'a :> 1 | 'a -> 'a
 //│        <: 'a -> anything & 'b
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -80,15 +79,14 @@ id_ty = id
 //│        <: ? & 'a
 //│ ║  l.30: 	rec def id x = let tmp = id id x in x
 //│ ╙──      	                         ^^^^^
-//│ 'id
+//│ 'a -> 'a
 //│   where
-//│     'id :> 'a -> 'a
-//│     'a :> 'id
+//│     'a :> 'a -> 'a
 //│        <: 'a -> anything
 //│   <:  id_ty:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.75: 	id_ty = id
+//│ ║  l.74: 	id_ty = id
 //│ ║        	^^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.4: 	def id_ty: forall 'a. 'a -> 'a
@@ -133,19 +131,17 @@ rec def id x = if true then x else id id x
 //│        <: 'c
 //│     'c :> 'b -> 'c
 //│        <: 'a
-//│ ║  l.128: 	rec def id x = if true then x else id id x
+//│ ║  l.126: 	rec def id x = if true then x else id id x
 //│ ╙──       	                                   ^^^^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.128: 	rec def id x = if true then x else id id x
+//│ ║  l.126: 	rec def id x = if true then x else id id x
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ id: 'id
+//│ id: 'a -> 'b
 //│   where
-//│     'id :> 'a -> 'b
-//│     'a :> 'id
+//│     'a :> 'a -> 'b
 //│        <: 'b
-//│     'b :> 'id
-//│        <: 'a -> 'b
+//│     'b := 'a -> 'b
 //│   = [Function: id3]
 
 :e
@@ -157,28 +153,26 @@ id_ty = id
 //│     'c :> 'a | 'c -> 'b
 //│        <: 'a
 //│     'a <: 'b
-//│ ║  l.128: 	rec def id x = if true then x else id id x
+//│ ║  l.126: 	rec def id x = if true then x else id id x
 //│ ╙──       	                  ^^^^^^^^^^^^^^^^^^^^^^^^
-//│ 'id
+//│ 'a -> 'b
 //│   where
-//│     'id :> 'a -> 'b
-//│     'a :> 'id
+//│     'a :> 'a -> 'b
 //│        <: 'b
-//│     'b :> 'id
-//│        <: 'a -> 'b
+//│     'b := 'a -> 'b
 //│   <:  id_ty:
 //│ 'a -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.152: 	id_ty = id
+//│ ║  l.148: 	id_ty = id
 //│ ║         	^^^^^^^^^^
 //│ ╟── type `'a` is not a function
 //│ ║  l.4: 	def id_ty: forall 'a. 'a -> 'a
 //│ ║       	                      ^^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.128: 	rec def id x = if true then x else id id x
+//│ ║  l.126: 	rec def id x = if true then x else id id x
 //│ ║         	                                   ^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.128: 	rec def id x = if true then x else id id x
+//│ ║  l.126: 	rec def id x = if true then x else id id x
 //│ ║         	                            ^
 //│ ╟── Note: quantified type variable 'a is defined at:
 //│ ║  l.4: 	def id_ty: forall 'a. 'a -> 'a
@@ -195,47 +189,35 @@ def choose: 'a -> 'a -> 'a
 //│ choose: 'a -> 'a -> 'a
 
 rec def id1 x = choose x (id1 id1 x)
-//│ id1: 'id1
+//│ id1: 'a -> 'b
 //│   where
-//│     'id1 :> 'a -> 'b
-//│     'a :> 'id1
+//│     'a :> 'a -> 'b
 //│        <: 'b
-//│     'b :> 'id1
-//│        <: 'a -> 'b
+//│     'b := 'a -> 'b
 
 id1 id
-//│ res: 'a -> 'b | 'id
+//│ res: ('a & 'b) -> 'a
 //│   where
-//│     'a :> forall 'id 'c 'd. 'a -> 'b | 'id
-//│        <: 'b
-//│     'b :> forall 'id 'c 'd. 'id
-//│        <: 'a -> 'b
-//│     'id :> 'c -> 'd
-//│     'c :> 'id
-//│        <: 'd
-//│     'd :> 'id
-//│        <: 'c -> 'd
+//│     'a :> forall 'c 'd. ('a & 'b & 'd) -> 'a
+//│        <: ((forall 'c 'd. 'd -> 'c) | 'b) -> 'a
+//│     'd :> 'd -> 'c
+//│        <: 'c
+//│     'c := 'd -> 'c
 
 rec def id1 x = if true then x else id1 id1 x
-//│ id1: 'id1
+//│ id1: 'a -> 'b
 //│   where
-//│     'id1 :> 'a -> 'b
-//│     'a :> 'id1
+//│     'a :> 'a -> 'b
 //│        <: 'b
-//│     'b :> 'id1
-//│        <: 'a -> 'b
+//│     'b := 'a -> 'b
 
 id1 id
-//│ res: 'a -> 'b | 'id
+//│ res: ('a & 'b) -> 'a
 //│   where
-//│     'a :> forall 'id 'c 'd. 'a -> 'b | 'id
-//│        <: 'b
-//│     'b :> forall 'id 'c 'd. 'id
-//│        <: 'a -> 'b
-//│     'id :> 'c -> 'd
-//│     'c :> 'id
+//│     'a :> forall 'c 'd. ('a & 'b & 'c) -> 'a
+//│        <: ((forall 'c 'd. 'c -> 'd) | 'b) -> 'a
+//│     'c :> 'c -> 'd
 //│        <: 'd
-//│     'd :> 'id
-//│        <: 'c -> 'd
+//│     'd := 'c -> 'd
 
 

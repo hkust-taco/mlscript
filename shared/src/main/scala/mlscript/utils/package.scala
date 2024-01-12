@@ -12,12 +12,14 @@ package object utils {
     "org.wartremover.warts.Equals",
     "org.wartremover.warts.AsInstanceOf"))
   implicit final class AnyOps[A](self: A) {
-    def ===(other: A): Boolean = self == other
-    def =/=(other: A): Boolean = self != other
-    def is(other: AnyRef): Boolean = self.asInstanceOf[AnyRef] eq other
-    def isnt(other: AnyRef): Boolean = !(self.asInstanceOf[AnyRef] eq other)
+    def ===(other: A): Bool = self == other
+    def =/=(other: A): Bool = self != other
+    def is(other: A): Bool = self.asInstanceOf[AnyRef] eq other.asInstanceOf[AnyRef]
+    def isnt(other: AnyRef): Bool = !(self.asInstanceOf[AnyRef] eq other)
     /** An alternative to === when in ScalaTest, which shadows our === */
-    def =:=(other: A): Boolean = self == other
+    def =:=(other: A): Bool = self == other
+    def in(xs: A => Bool): Bool = xs(self)
+    def in(xs: Seq[_ >: A]): Bool = xs.exists(_ === self)
   }
   
   implicit class StringOps(private val self: String) extends AnyVal {
@@ -30,6 +32,10 @@ package object utils {
     def mapLines(f: String => String): String = splitSane('\n') map f mkString "\n"
     def indent(pre: String): String = mapLines(pre + _)
     def indent: String = indent("\t")
+    def indentNewLines(pre: String = "\t"): String = splitSane('\n').toList match {
+      case head :: (rest @ _ :: _)  => head + "\n" + rest.map(pre + _).mkString("\n")
+      case _ => self
+    }
     def truncate(maxChars: Int, replace: String): String = {
       val newStr = self.take(maxChars)
       if (newStr.length < self.length) newStr + replace
@@ -48,8 +54,12 @@ package object utils {
   implicit class IterableOps[A](private val self: IterableOnce[A]) extends AnyVal {
     def mkStringOr(
       sep: String = "", start: String = "", end: String = "", els: String = ""
-    ): String =
-      if (self.iterator.nonEmpty) self.iterator.mkString(start, sep, end) else els
+    ): String = {
+      val ite = self.iterator
+      if (ite.nonEmpty) ite.mkString(start, sep, end) else els
+    }
+    def lnIndent(pre: String = "\t"): Str =
+      self.iterator.map("\n" + _.toString.indent(pre)).mkString
     def collectLast[B](f: Paf[A, B]): Opt[B] = self.iterator.collect(f).foldLeft[Opt[B]](N)((_, a) => S(a))
     def toSortedSet(implicit ord: Ordering[A]): SortedSet[A] =
       SortedSet.from(self)
@@ -62,6 +72,8 @@ package object utils {
     def mapValues[C](f: B => C): List[A -> C] = mapValuesIter(f).toList
     def mapKeysIter[C](f: A => C): Iterator[C -> B] = self.iterator.map(p => f(p._1) -> p._2)
     def mapValuesIter[C](f: B => C): Iterator[A -> C] = self.iterator.map(p => p._1 -> f(p._2))
+    def keys: Iterator[A] = self.iterator.map(_._1)
+    def values: Iterator[B] = self.iterator.map(_._2)
     def toSortedMap(implicit ord: Ordering[A]): SortedMap[A, B] =
       SortedMap.from(self)
   }
@@ -195,6 +207,7 @@ package object utils {
   def TODO(msg: String): Nothing = throw new NotImplementedError(msg)
   def die: Nothing = lastWords("Program reached and unexpected state.")
   def lastWords(msg: String): Nothing = throw new Exception(s"Internal Error: $msg")
+  def wat(msg: String, wat: Any): Nothing = lastWords(s"$msg ($wat)")
   
   /** To make Scala unexhaustivity warnings believed to be spurious go away,
    * while clearly indicating the intent. */

@@ -52,7 +52,7 @@ r1 id
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.18: 	def foo: forall 'x. ('x -> 'x, 'x -> 'x)
 //│ ╙──      	                               ^^
-//│ res: 'a -> 'a | error | ??y
+//│ res: error | 'a -> 'a | ??y
 
 :e
 r2 id
@@ -72,6 +72,6 @@ r2 id
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.18: 	def foo: forall 'x. ('x -> 'x, 'x -> 'x)
 //│ ╙──      	                               ^^
-//│ res: 'a -> 'a | error | ??y
+//│ res: error | 'a -> 'a | ??y
 
 

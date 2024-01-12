@@ -9,61 +9,55 @@ b
 a,
 b
 //│ |a|,|↵|b|
-//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
-//│ ║  l.9: 	a,
-//│ ╙──     	 ^
-//│ Parsed: {a}
+//│ Parsed: {,(a, b,)}
 
 a,
 b,
 //│ |a|,|↵|b|,|
-//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
-//│ ║  l.17: 	a,
-//│ ╙──      	 ^
-//│ Parsed: {a}
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.15: 	b,
+//│ ╙──      	  ^
+//│ Parsed: {,(a, ,(b, undefined,),)}
 
 a,
 b,
 c
 //│ |a|,|↵|b|,|↵|c|
-//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
-//│ ║  l.25: 	a,
-//│ ╙──      	 ^
-//│ Parsed: {a}
+//│ Parsed: {,(a, ,(b, c,),)}
 
 foo
   a
   b
 //│ |foo|→|a|↵|b|←|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.34: 	foo
+//│ ║  l.28: 	foo
 //│ ║        	^^^
-//│ ║  l.35: 	  a
+//│ ║  l.29: 	  a
 //│ ║        	^^^
-//│ ║  l.36: 	  b
+//│ ║  l.30: 	  b
 //│ ╙──      	^^^
-//│ Parsed: {foo ({a; b},)}
+//│ Parsed: {foo({a; b},)}
 
 foo(
   a,
   b
 )
 //│ |foo|(|→|a|,|↵|b|←|↵|)|
-//│ Parsed: {foo (a, b,)}
+//│ Parsed: {foo(a, b,)}
 
 foo(
   a,
   b,
 )
 //│ |foo|(|→|a|,|↵|b|,|←|↵|)|
-//│ Parsed: {foo (a, b,)}
+//│ Parsed: {foo(a, b,)}
 
 foo(
   a
   b
 )
 //│ |foo|(|→|a|↵|b|←|↵|)|
-//│ Parsed: {foo ({a; b},)}
+//│ Parsed: {foo({a; b},)}
 
 foo(
     a
@@ -71,11 +65,11 @@ foo(
 )
 //│ |foo|(|→|a|←|→|b|←|↵|)|
 //│ ╔══[PARSE ERROR] Unexpected indented block here
-//│ ║  l.70: 	  b
+//│ ║  l.64: 	  b
 //│ ║        	^^^
-//│ ║  l.71: 	)
+//│ ║  l.65: 	)
 //│ ╙──      	^
-//│ Parsed: {foo (a,)}
+//│ Parsed: {foo(a,)}
 
 // TODO
 foo of
@@ -84,31 +78,31 @@ foo of
   b
 //│ |foo| |#of|→|a|↵|#fun| |f| |#=| |1|↵|b|←|
 //│ ╔══[PARSE ERROR] Unexpected 'fun' keyword in expression position
-//│ ║  l.83: 	  fun f = 1
+//│ ║  l.77: 	  fun f = 1
 //│ ╙──      	  ^^^
-//│ ╔══[PARSE ERROR] Unexpected '=' keyword here
-//│ ║  l.83: 	  fun f = 1
+//│ ╔══[PARSE ERROR] Unexpected '=' here
+//│ ║  l.77: 	  fun f = 1
 //│ ╙──      	        ^
-//│ Parsed: {foo ({a; f},)}
+//│ Parsed: {foo({a; f},)}
 
 foo +
   a
   b
 //│ |foo| |+|→|a|↵|b|←|
-//│ Parsed: {+ (foo,) ({a; b},)}
+//│ Parsed: {+(foo,)({a; b},)}
 
 
 foo(a, b, c)
 foo of a, b, c
 //│ |foo|(|a|,| |b|,| |c|)|↵|foo| |#of| |a|,| |b|,| |c|
-//│ Parsed: {foo (a, b, c,); foo (a, b, c,)}
+//│ Parsed: {foo(a, b, c,); foo(a, b, c,)}
 
 foo of
   aaaaa,
   bbbbb,
   ccccc
 //│ |foo| |#of|→|aaaaa|,|↵|bbbbb|,|↵|ccccc|←|
-//│ Parsed: {foo (aaaaa, bbbbb, ccccc,)}
+//│ Parsed: {foo(aaaaa, bbbbb, ccccc,)}
 
 foo of
   a
@@ -118,20 +112,20 @@ foo of
   c
 //│ |foo| |#of|→|a|↵|boo|→|x|↵|y|←|↵|c|←|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.115: 	  boo
+//│ ║  l.109: 	  boo
 //│ ║         	  ^^^
-//│ ║  l.116: 	    x
+//│ ║  l.110: 	    x
 //│ ║         	^^^^^
-//│ ║  l.117: 	    y
+//│ ║  l.111: 	    y
 //│ ╙──       	^^^^^
-//│ Parsed: {foo ({a; boo ({x; y},); c},)}
+//│ Parsed: {foo({a; boo({x; y},); c},)}
 
 
 fun foo =
   print("ok")
   print("ko")
 //│ |#fun| |foo| |#=|→|print|(|"ok"|)|↵|print|(|"ko"|)|←|
-//│ Parsed: {fun foo = {print ("ok",); print ("ko",)}}
+//│ Parsed: {fun foo = {print("ok",); print("ko",)}}
 
 fun foo =
   
@@ -140,14 +134,14 @@ fun foo =
   print("ko")
   
 //│ |#fun| |foo| |#=|→|print|(|"ok"|)|↵|print|(|"ko"|)|↵|←|
-//│ Parsed: {fun foo = {print ("ok",); print ("ko",)}}
+//│ Parsed: {fun foo = {print("ok",); print("ko",)}}
 
 fun foo =
   fun local(x) = x + 1
   print(local(1))
   class Foo
 //│ |#fun| |foo| |#=|→|#fun| |local|(|x|)| |#=| |x| |+| |1|↵|print|(|local|(|1|)|)|↵|#class| |Foo|←|
-//│ Parsed: {fun foo = {fun local = (x,) => + (x,) (1,); print (local (1,),); class Foo() {}}}
+//│ Parsed: {fun foo = {fun local = (x,) => +(x,)(1,); print(local(1,),); class Foo {}}}
 
 fun foo =
   fun local(x) =
@@ -161,6 +155,31 @@ fun foo =
   print of local of 0 + local of 1
   fun tmp = 2
 //│ |#fun| |foo| |#=|→|#fun| |local|(|x|)| |#=|→|#class| |Foo| |{|→|#fun| |bar| |#=| |x| |+| |1|←|↵|}|↵|Foo|(||)|.bar|←|↵|print| |#of| |local|(|0|)| |+| |local|(|1|)|↵|print| |#of| |(|local| |#of| |0|)| |+| |local| |#of| |1|↵|#fun| |tmp| |#=| |1|↵|print| |#of| |local| |#of| |0| |+| |local| |#of| |1|↵|#fun| |tmp| |#=| |2|←|
-//│ Parsed: {fun foo = {fun local = (x,) => {class Foo() {fun bar = + (x,) (1,)}; (Foo ()).bar}; print (+ (local (0,),) (local (1,),),); print (+ (local (0,),) (local (1,),),); fun tmp = 1; print (local (+ (0,) (local (1,),),),); fun tmp = 2}}
+//│ Parsed: {fun foo = {fun local = (x,) => {class Foo {fun bar = +(x,)(1,)}; (Foo()).bar}; print(+(local(0,),)(local(1,),),); print(+('(' local(0,) ')',)(local(1,),),); fun tmp = 1; print(local(+(0,)(local(1,),),),); fun tmp = 2}}
+
+
+
+log(1); log(a)
+//│ |log|(|1|)|;| |log|(|a|)|
+//│ Parsed: {log(1,); log(a,)}
+
+constructor(){
+  a = 1
+  a = 2
+}
+//│ |#constructor|(||)|{|→|a| |#=| |1|↵|a| |#=| |2|←|↵|}|
+//│ Parsed: {constructor() {a = 1; a = 2}}
+
+a = 1; log(a)
+//│ |a| |#=| |1|;| |log|(|a|)|
+//│ Parsed: {a = 1; log(a,)}
+
+:pe
+f(a) = 1
+//│ |f|(|a|)| |#=| |1|
+//│ ╔══[PARSE ERROR] Expected end of input; found '=' instead
+//│ ║  l.178: 	f(a) = 1
+//│ ╙──       	     ^
+//│ Parsed: {f(a,)}
 
 

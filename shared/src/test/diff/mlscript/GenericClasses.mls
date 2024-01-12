@@ -33,9 +33,9 @@ res.value
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.32: 	res.value
 //│ ║        	^^^^^^^^^
-//│ ╟── type `None` does not have field 'value'
-//│ ║  l.21: 	type Option[A] = Some[A] | None
-//│ ║        	                           ^^^^
+//│ ╟── type `Option[int]` does not have field 'value'
+//│ ║  l.25: 	Some 42 : Option[int]
+//│ ║        	          ^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{value: ?value}`
 //│ ║  l.32: 	res.value
 //│ ╙──      	^^^
@@ -122,7 +122,7 @@ Foo2
 error: Foo2[int]
 //│ res: Foo2[int]
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 f = fun x -> case x of { Foo2 -> x }
 //│ f: (Foo2[?] & 'a) -> 'a
@@ -136,7 +136,7 @@ f (Foo2 {})
 error: (Foo2[?] & 'a) -> 'a
 //│ res: (Foo2[?] & 'a) -> 'a
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 f: (Foo2[?] & 'a) -> 'a
 //│ res: (Foo2[?] & 'a) -> 'a
@@ -225,7 +225,7 @@ Foo2_Co
 error: Foo2_Co[int]
 //│ res: Foo2_Co[int]
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 f = fun x -> case x of { Foo2_Co -> x }
 //│ f: (Foo2_Co[?] & 'a) -> 'a
@@ -239,7 +239,7 @@ f (Foo2_Co {})
 error: (Foo2_Co[?] & 'a) -> 'a
 //│ res: (Foo2_Co[nothing] & 'a) -> 'a
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 f: (Foo2_Co[?] & 'a) -> 'a
 //│ res: (Foo2_Co[nothing] & 'a) -> 'a
@@ -294,7 +294,7 @@ Foo2_Bi
 error: Foo2_Bi[int]
 //│ res: Foo2_Bi[?]
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 f = fun x -> case x of { Foo2_Bi -> x }
 //│ f: (Foo2_Bi[?] & 'a) -> 'a
@@ -308,7 +308,7 @@ f (Foo2_Bi {})
 error: (Foo2_Bi[?] & 'a) -> 'a
 //│ res: (Foo2_Bi[?] & 'a) -> 'a
 //│ Runtime error:
-//│   Error: unexpected runtime error
+//│   Error: an error was thrown
 
 f: (Foo2_Bi[?] & 'a) -> 'a
 //│ res: (Foo2_Bi[?] & 'a) -> 'a

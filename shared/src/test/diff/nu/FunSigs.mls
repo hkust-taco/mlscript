@@ -1,48 +1,89 @@
-:NewParser
+:NewDefs
 
 
-fun log(msg: string): unit
-//│ log: (msg: string,) -> unit
-//│    = <missing implementation>
+
+fun log(msg: Str): ()
+//│ fun log: (msg: Str) -> ()
 
 let f =
   log("ok")
   123
-//│ f: 123
-//│  = <no result>
-//│    log is not implemented
+//│ let f: 123
+//│ f
+//│   = <no result>
+//│     log is not implemented
 
-// FIXME
-fun log: string -> unit
-//│ ╔══[PARSE ERROR] Unexpected '->' keyword in expression position
-//│ ║  l.16: 	fun log: string -> unit
-//│ ╙──      	                ^^
-//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.16: 	fun log: string -> unit
-//│ ╙──      	         ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Wrong number of type arguments – expected 0, found 1
-//│ ║  l.16: 	fun log: string -> unit
-//│ ╙──      	         ^^^^^^^^^^^^^^
-//│ log: string
-//│    = <missing implementation>
+fun log: Str -> unit
+//│ fun log: Str -> unit
 
-fun log: string => unit
-//│ log: string -> unit
-//│    = <missing implementation>
+fun log: Str => unit
+//│ fun log: Str -> unit
 
 log("ok")
-//│ = <no result>
-//│   log is not implemented
+//│ unit
+//│ res
+//│     = <no result>
+//│       log is not implemented
 
 
-fun con: string => string => string
-//│ con: string -> string -> string
-//│    = <missing implementation>
+
+fun con: Str => Str => Str
+fun con = concat
+//│ fun con: Str -> Str -> Str
+//│ fun con: Str -> Str -> Str
+
+con("aa")("bbb")
+//│ Str
+//│ res
+//│     = 'aabbb'
+
+
+fun con: Str => Str => Str
+//│ fun con: Str -> Str -> Str
 
 fun con = concat
-//│ string -> string -> string
-//│   <:  con:
-//│ string -> string -> string
-//│    = [Function: con]
+//│ fun con: Str -> Str -> Str
+
+con("aa")("bbb")
+//│ Str
+//│ res
+//│     = 'aabbb'
+
+
+
+fun oops: Str => Str
+//│ fun oops: Str -> Str
+
+fun oops = 0
+//│ fun oops: 0
+
+oops
+//│ 0
+//│ res
+//│     = 0
+
+
+:e
+fun oops: Str => Str
+fun oops = 0
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.68: 	fun oops = 0
+//│ ║        	    ^^^^^^^^
+//│ ╟── integer literal of type `0` is not a function
+//│ ║  l.68: 	fun oops = 0
+//│ ║        	           ^
+//│ ╟── but it flows into definition of method oops with expected type `Str -> Str`
+//│ ║  l.68: 	fun oops = 0
+//│ ║        	    ^^^^^^^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.67: 	fun oops: Str => Str
+//│ ╙──      	          ^^^^^^^^^^
+//│ fun oops: 0
+//│ fun oops: Str -> Str
+
+oops
+//│ Str -> Str
+//│ res
+//│     = 0
 
 

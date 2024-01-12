@@ -1,0 +1,109 @@
+:NewParser
+:NewDefs
+
+
+
+fun f(x, y) = if x ===
+    0 then true
+    1 then false
+  else if y ===
+    0 then true
+    1 then false
+  else false
+//│ fun f: (Eql[0 | 1], Eql[0 | 1]) -> Bool
+
+fun f(x, y) = if x ===
+    0 then true
+    1 then false
+  else if y ===
+    0 then true
+    _ then false
+//│ fun f: (Eql[0 | 1], Eql[0]) -> Bool
+
+module Tru
+module Fals
+//│ module Tru
+//│ module Fals
+
+:e
+:ge
+fun f(x, y) = if x is
+    Tru and y is Tru then true
+    Fals and y is Fals then false
+//│ ╔══[ERROR] The match is not exhaustive.
+//│ ║  l.31: 	    Tru and y is Tru then true
+//│ ║        	            ^^^^^^^^
+//│ ╟── The scrutinee at this position misses 1 case.
+//│ ║  l.31: 	    Tru and y is Tru then true
+//│ ║        	            ^
+//│ ╟── [Missing Case 1/1] `Fals`
+//│ ╟── It first appears here.
+//│ ║  l.32: 	    Fals and y is Fals then false
+//│ ╙──      	                  ^^^^
+//│ fun f: (anything, anything) -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+// The base case.
+fun f(x, y) = if x is
+    Tru and y is Tru then true
+    Fals and y is Fals then false
+    Tru and y is Fals then true
+    Fals and y is Tru then true
+//│ fun f: (Fals | Tru, Fals | Tru) -> Bool
+
+// Replace the `x is Fals` with `_`
+fun f(x, y) = if x is
+    Tru and y is Tru then true
+    Fals and y is Fals then false
+    _ and y is
+      Tru then true
+      Fals then false
+//│ fun f: (Object, Fals | Tru) -> Bool
+
+f(Tru, Tru)
+f(Tru, Fals)
+f(Fals, Tru)
+f(Fals, Fals)
+//│ Bool
+//│ res
+//│     = true
+//│ res
+//│     = false
+//│ res
+//│     = true
+//│ res
+//│     = false
+
+// Test with real booleans
+fun g(x, y) = if x is
+  true and y is true then true
+  false and y is false then false
+  _ and y is
+    true then true
+    false then false
+//│ fun g: (Object, nothing) -> Bool
+
+// Chained UCS terms
+fun f(x, y) = if x is
+    Tru and y is Tru then true
+    Fals and y is Fals then false
+  else if y is
+    Tru then true
+    Fals then false
+//│ fun f: (Object, Fals | Tru) -> Bool
+
+fun f(x, y) = if x is
+    Tru and y is Tru then true
+    Fals and y is Fals then false
+  else if y is
+    Tru and x is Fals then true
+    Fals and x is Tru then false
+//│ fun f: (Fals | Tru, Fals | Tru) -> Bool
+
+fun h(x, y, p) = if
+  x and p(x) then 0
+  y is
+    Tru then 1
+    Fals then 2
+//│ fun h: (Object, Fals | Tru, true -> Object) -> (0 | 1 | 2)

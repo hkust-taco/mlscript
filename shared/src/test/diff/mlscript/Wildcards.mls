@@ -210,7 +210,7 @@ f e
 //│ ╟── Note: constraint arises from type wildcard:
 //│ ║  l.196: 	def f: Expr[?] -> Expr[?]
 //│ ╙──       	            ^
-//│ res: error | Expr[?]
+//│ res: Expr[?] | error
 
 
 
@@ -265,7 +265,7 @@ foo.Foo1
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.229: 	def foo: Foo[?]
 //│ ╙──       	             ^
-//│ res: Foo['A] -> Foo['A] | error
+//│ res: error | Foo['A] -> Foo['A]
 //│   where
 //│     'A :> anything
 //│        <: nothing
@@ -281,7 +281,7 @@ foo1 foo
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.229: 	def foo: Foo[?]
 //│ ╙──       	             ^
-//│ res: Foo['A] -> Foo['A] | error
+//│ res: error | Foo['A] -> Foo['A]
 //│   where
 //│     'A :> anything
 //│        <: nothing
@@ -308,7 +308,7 @@ foo2.Id
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.218: 	class Foo[A]
 //│ ╙──       	          ^
-//│ res: nothing -> anything | error
+//│ res: error | nothing -> anything
 
 :e
 foo3 = foo2 : Foo['a]
@@ -334,7 +334,7 @@ foo3.Id
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.218: 	class Foo[A]
 //│ ╙──       	          ^
-//│ res: nothing -> anything | error
+//│ res: error | nothing -> anything
 
 
 :e
@@ -409,7 +409,7 @@ bar.Bid
 //│ ╟── type `anything` does not match type `nothing`
 //│ ║  l.380: 	def bar: Bar[?]
 //│ ╙──       	             ^
-//│ res: nothing -> anything | error
+//│ res: error | nothing -> anything
 
 :e
 bar: Bar['a..'b]

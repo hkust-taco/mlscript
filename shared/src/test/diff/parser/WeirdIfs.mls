@@ -17,15 +17,15 @@ if x is
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
 //│ ║  l.12: 	  else e
 //│ ╙──      	  ^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found operator application instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found operator application instead
 //│ ║  l.11: 	if x is
 //│ ║        	   ^^^^
 //│ ║  l.12: 	  else e
 //│ ║        	^^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.11: 	if x is
 //│ ╙──      	^^
-//│ Parsed: {if (is (x,) (undefined,)) then undefined}
+//│ Parsed: {if (is(x,)(undefined,)) then undefined}
 
 :pe
 if x is
@@ -34,15 +34,15 @@ if x is
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
 //│ ║  l.32: 	  P else e
 //│ ╙──      	    ^^^^
-//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause; found operator application instead
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found operator application instead
 //│ ║  l.31: 	if x is
 //│ ║        	   ^^^^
 //│ ║  l.32: 	  P else e
 //│ ║        	^^^^
-//│ ╟── Note: 'if' expression started here:
+//│ ╟── Note: 'if' expression starts here:
 //│ ║  l.31: 	if x is
 //│ ╙──      	^^
-//│ Parsed: {if (is (x,) ({P},)) then undefined}
+//│ Parsed: {if (is(x,)({P},)) then undefined}
 
 
 // TODO(Luyu): move to another test file
@@ -51,7 +51,7 @@ if x is
   Some(xv) and y is Right(yv2) then xv + yv2
   else els
 //│ |#if| |x| |is|→|Some|(|xv|)| |and| |y| |is| |Left|(|yv|)| |#then| |xv| |+| |yv|↵|Some|(|xv|)| |and| |y| |is| |Right|(|yv2|)| |#then| |xv| |+| |yv2|↵|#else| |els|←|
-//│ Parsed: {if x is ‹(and (Some (xv,),) (is (y,) (Left (yv,),),)) then + (xv,) (yv,); (and (Some (xv,),) (is (y,) (Right (yv2,),),)) then + (xv,) (yv2,); else els›}
+//│ Parsed: {if x is ‹(and(Some(xv,),)(is(y,)(Left(yv,),),)) then +(xv,)(yv,); (and(Some(xv,),)(is(y,)(Right(yv2,),),)) then +(xv,)(yv2,); else els›}
 
 
 
