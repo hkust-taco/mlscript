@@ -63,7 +63,7 @@ class C(val x: Int) { constructor(y: Str) { x = y } }
 //│ ╔══[ERROR] Type mismatch in auxiliary class constructor:
 //│ ║  l.62: 	class C(val x: Int) { constructor(y: Str) { x = y } }
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Str` is not an instance of `Int`
+//│ ╟── type `Str` is not an instance of type `Int`
 //│ ║  l.62: 	class C(val x: Int) { constructor(y: Str) { x = y } }
 //│ ║        	                                     ^^^
 //│ ╟── but it flows into reference with expected type `Int`

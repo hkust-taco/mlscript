@@ -28,7 +28,7 @@ class C0 extends M0(true)
 //│ ╔══[ERROR] Type mismatch in type declaration:
 //│ ║  l.27: 	class C0 extends M0(true)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `true` is not an instance of type `Int`
+//│ ╟── reference of type `true` is not an instance of `Int`
 //│ ║  l.27: 	class C0 extends M0(true)
 //│ ║        	                    ^^^^
 //│ ╟── Note: constraint arises from type reference:

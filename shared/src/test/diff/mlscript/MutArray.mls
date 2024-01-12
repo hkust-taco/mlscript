@@ -97,7 +97,7 @@ def bar x = (mut x,) : MutArray[int] & MutArray[string]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.96: 	def bar x = (mut x,) : MutArray[int] & MutArray[string]
 //│ ║        	            ^^^^^^^^
-//│ ╟── type `string` is not an instance of `int`
+//│ ╟── type `string` is not an instance of type `int`
 //│ ║  l.96: 	def bar x = (mut x,) : MutArray[int] & MutArray[string]
 //│ ║        	                                                ^^^^^^
 //│ ╟── Note: constraint arises from type reference:

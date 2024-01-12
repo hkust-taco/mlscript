@@ -29,8 +29,8 @@ fun stringLength(s: Str) = makeString(s).length
 //│ anythingToString
 //│                  = [Function: toString]
 
-type Option[A] = Some[A] | None
-class Some[A](value: A) {
+type Option[out A] = Some[A] | None
+class Some[out A](value: A) {
   fun toString() = "Some(" ++ anythingToString(value) ++ ")"
 }
 module None {

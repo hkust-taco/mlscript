@@ -65,7 +65,7 @@ Test2(0).inc.n
 //│ res
 //│     = 1
 
-class C[A](n: A) {
+class C[out A](n: A) {
   fun f = g
   fun g = n
 }
