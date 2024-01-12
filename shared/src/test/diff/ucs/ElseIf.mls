@@ -82,7 +82,7 @@ fun g(x, y) = if x is
   _ and y is
     true then true
     false then false
-//│ fun g: (Object, nothing) -> Bool
+//│ fun g: (Object, Bool) -> Bool
 
 // Chained UCS terms
 fun f(x, y) = if x is

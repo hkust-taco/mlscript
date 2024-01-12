@@ -824,10 +824,10 @@ class Desugarer extends TypeDefs { self: Typer =>
               )
             case _ => mkLetFromFields(scrutinee, fields.filter(_._2.name =/= "_").toList, consequent)
           }
-          Case(className, body, rec2(next))
+          Case(className, body, rec2(next))(refined = false)
         case MutCase.Literal(literal, cases) :: next =>
           printlnUCS(s"• Literal pattern: $literal")
-          Case(literal, rec(cases), rec2(next))
+          Case(literal, rec(cases), rec2(next))(refined = false)
         case Nil =>
           wildcard match {
             case None => 
@@ -906,7 +906,7 @@ class Desugarer extends TypeDefs { self: Typer =>
           val falseBody = mkBindings(whenFalse.getBindings.toList, rec(whenFalse)(defs ++ whenFalse.getBindings.iterator.map(_.name)), defs)
           val trueBody = mkBindings(whenTrue.getBindings.toList, rec(whenTrue)(defs ++ whenTrue.getBindings.iterator.map(_.name)), defs)
           val falseBranch = Wildcard(falseBody)
-          val trueBranch = Case(Var("true"), trueBody, falseBranch)
+          val trueBranch = Case(Var("true"), trueBody, falseBranch)(refined = false)
           CaseOf(condition, trueBranch)
       }
     }()

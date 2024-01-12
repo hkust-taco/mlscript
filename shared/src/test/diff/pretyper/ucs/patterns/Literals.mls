@@ -62,7 +62,7 @@ fun mix(x) = if x is
   Some(value) then "Some"
   0 then "zero"
 //│ ╙──
-//│ fun mix: (0 | Some[anything]) -> ("Some" | "true" | "zero")
+//│ fun mix: (0 | Some[anything] | true) -> ("Some" | "true" | "zero")
 
 [mix(true), mix(Some(1)), mix(0)]
 //│ ["Some" | "true" | "zero", "Some" | "true" | "zero", "Some" | "true" | "zero"]
@@ -119,7 +119,7 @@ fun bool_patterns(x) =
     false then 2
 //│ ╙──
 //│ ╙──
-//│ fun bool_patterns: nothing -> (1 | 2)
+//│ fun bool_patterns: Bool -> (1 | 2)
 
 fun dual_patterns(x, y) =
   if

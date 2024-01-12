@@ -1089,9 +1089,9 @@ trait CaseBranchesImpl extends Located { self: CaseBranches =>
   }
   
   def print(isFirst: Bool): Str = this match {
-    case Case(pat, body, rest) =>
+    case c @ Case(pat, body, rest) =>
       (if (isFirst) { "" } else { "; " }) +
-      pat.print(false) + " => " + body.print(false) + rest.print(false)
+      (if (c.refined) "refined " else "") + pat.print(false) + " => " + body.print(false) + rest.print(false)
     case Wildcard(body) => 
       (if (isFirst) { "" } else { "; " }) +
       "_ => " + body.print(false)

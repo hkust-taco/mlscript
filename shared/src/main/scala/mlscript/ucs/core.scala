@@ -12,7 +12,7 @@ package object core {
     override def toString(): String = this match {
       case Pattern.Literal(literal) => literal.idStr
       case Pattern.Name(Var(name)) => name
-      case Pattern.Class(Var(name)) => name
+      case Pattern.Class(Var(name), rfd) => (if (rfd) "refined " else "") + name
     }
   }
   object Pattern {
@@ -22,7 +22,7 @@ package object core {
     final case class Name(nme: Var) extends Pattern {
       override def children: Ls[Located] = nme :: Nil
     }
-    final case class Class(nme: Var) extends Pattern {
+    final case class Class(nme: Var, refined: Bool) extends Pattern {
       override def children: Ls[Located] = nme :: Nil
     }
 

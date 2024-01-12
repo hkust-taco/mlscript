@@ -16,7 +16,7 @@ fun mixed_literals(v) =
 //│ | | | | | | | Desugared term: case v of { true => "true"; false => "false"; 2 => "2"; 1 => "1" }
 //│ ╙──
 //│ ╙──
-//│ fun mixed_literals: (1 | 2) -> ("1" | "2" | "false" | "true")
+//│ fun mixed_literals: (1 | 2 | false | true) -> ("1" | "2" | "false" | "true")
 
 :dpt:postprocess.result
 fun separated_by_and(v) =
@@ -30,7 +30,7 @@ fun separated_by_and(v) =
 //│ | | | | | | |   false*† -> "false"
 //│ ╙──
 //│ ╙──
-//│ fun separated_by_and: nothing -> ("false" | "true")
+//│ fun separated_by_and: Bool -> ("false" | "true")
 
 :dpt:postprocess.result
 fun dual_patterns(x, y) =
