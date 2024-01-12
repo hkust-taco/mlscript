@@ -583,33 +583,7 @@ class DiffTests
               
               output(expStr.stripSuffix("\n"))
               
-              // // val exp = getType(typer.PolymorphicType(0, res_ty))
-              // // output(s"Typed: ${exp}")
-              // tpd.result.foreach { res_ty =>
-              //   val exp = getType(typer.PolymorphicType(0, res_ty))
-              //   output(s"Typed: ${exp.show}")
-              // }
-              // // */
-              
-              /* 
-              import typer._
-              
-              val mod = NuTypeDef(Nms, TypeName("ws"), Nil, Tup(Nil), Nil, TypingUnit(p.tops))
-              val info = new LazyTypeInfo(ctx.lvl, mod)(ctx, Map.empty)
-              // val modTpe = DeclType(ctx.lvl, info)
-              info.force()(raise)
-               */
-              
-              // val tpd = info
-              
-              
-              // val exp = typer.expandType(modTpe)(ctx)
-              // FirstClassDefn()
-              
-              
-              // (Nil, Nil, N)
               (Nil, Nil, S(p.tops.collect {
-                // case LetS(isRec, pat, bod) => ("res", Nil, Nil, false)
                 case NuFunDef(isLet, nme, snme, tparams, bod) =>
                   (nme.name + " ", nme.name :: Nil, Nil, false, isLet.isEmpty)
                 case t: Term => ("res ", "res" :: Nil, Nil, false, false)
@@ -628,10 +602,7 @@ class DiffTests
                 }
               }
               
-              typer.ctx = 
-                // if (newParser) typer.typeTypingUnit(tu)
-                // else 
-                typer.processTypeDefs(typeDefs)(ctx, raise)
+              typer.ctx = typer.processTypeDefs(typeDefs)(ctx, raise)
               
               (typeDefs, stmts, N)
             }
@@ -946,7 +917,7 @@ class DiffTests
                         { output("TEST CASE FAILURE: There was an unexpected runtime error"); failures += blockLineNum }
                     }
                     if (isSyntaxError) {
-                      // If there is syntax error in the generated code,
+                      // If there is a syntax error in the generated code,
                       // it should be a code generation error.
                       output("Syntax error:")
                       totalCodeGenErrors += 1
