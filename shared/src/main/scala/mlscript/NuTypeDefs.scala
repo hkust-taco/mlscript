@@ -1598,7 +1598,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                           
                         }()
                         
-                        // TODOne mv self-sig here?
                         if (!td.isAbstract) trace(s"Checking self signature...") {
                           constrain(thisType, pack.selfSig)
                         }()
@@ -1757,7 +1756,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         typedParams.isEmpty && (td.kind is Cls) && !td.isAbstract)(Nil)),
                       allMembers,
                       TopType,
-                      sig_ty,
+                      if (td.isAbstract) selfSig else sig_ty,
                       // selfSig, // FIXME causes SOF in NF
                       inheritedTags,
                       tparamMembers

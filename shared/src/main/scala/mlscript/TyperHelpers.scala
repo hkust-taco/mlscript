@@ -1165,12 +1165,14 @@ abstract class TyperHelpers { Typer: Typer =>
     } //tap { res => println(s"Expand $this => $res") }
     private var tag: Opt[Opt[ClassTag]] = N
     def expansionFallback(implicit ctx: Ctx): Opt[ST] = mkClsTag
-    def hasSelfType(implicit ctx: Ctx): Bool = ctx.tyDefs2.get(defn.name) match {
-      case S(lti) => lti.decl match { // TODO less syntactic
-        case td: NuTypeDef => td.sig.nonEmpty
-        case _ => false
+    def mayHaveTransitiveSelfType(implicit ctx: Ctx): Bool = ctx.tyDefs2.get(defn.name) match {
+      // * Self types can be inherited from parents if the definition is abstract
+      // * (if it is not abstract, then the class is already known to subtype the inherited self-type)
+      case S(lti) => lti.decl match {
+        case td: NuTypeDef if !td.isAbstract => td.sig.nonEmpty
+        case _ => true
       }
-      case _ => false
+      case _ => true
     }
     def mkClsTag(implicit ctx: Ctx): Opt[ClassTag] = tag.getOrElse {
       val res = ctx.tyDefs.get(defn.name) match {

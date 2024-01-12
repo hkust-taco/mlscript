@@ -28,7 +28,7 @@ F() : Foo
 abstract class H extends Foo
 class I() extends H, C
 I() : Foo
-//│ abstract class H extends Foo
+//│ abstract class H: C extends Foo
 //│ class I() extends C, Foo, H
 //│ Foo
 //│ res

@@ -113,46 +113,56 @@ class C() extends B
 //│ class B() extends A
 //│ class C() extends A, B
 
+
 :e
 abstract class A(): C
 class B() extends A
 class C() extends B
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.118: 	class B() extends A
+//│ ║  l.119: 	class B() extends A
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `#B` is not an instance of type `C`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.117: 	abstract class A(): C
+//│ ║  l.118: 	abstract class A(): C
 //│ ╙──       	                    ^
 //│ abstract class A(): C
 //│ class B() extends A
 //│ class C() extends A, B
 
+
 abstract class A(): C
 abstract class B() extends A
 class C() extends B
 //│ abstract class A(): C
-//│ abstract class B() extends A
+//│ abstract class B(): C extends A
 //│ class C() extends A, B
 
-// :e // FIXME transitivity of self types
+
+// * Transitively-inherited self-types are checked
+
+:e
 class D() extends B
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.144: 	class D() extends B
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `#D` is not an instance of type `C`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.133: 	abstract class A(): C
+//│ ╙──       	                    ^
 //│ class D() extends A, B
 
-:e // FIXME transitivity of self types
+
+// * Transitively-inherited self-types can be leveraged
+
 fun test(x: B): C = x
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.143: 	fun test(x: B): C = x
-//│ ║         	                    ^
-//│ ╟── type `B` is not an instance of `C`
-//│ ║  l.143: 	fun test(x: B): C = x
-//│ ║         	            ^
-//│ ╟── but it flows into reference with expected type `C`
-//│ ║  l.143: 	fun test(x: B): C = x
-//│ ║         	                    ^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.143: 	fun test(x: B): C = x
-//│ ╙──       	                ^
 //│ fun test: (x: B) -> C
+
+fun test[A](x: B & A): C = x
+//│ fun test: (x: B) -> C
+
+trait T
+fun test(x: B & T): C = x
+//│ trait T
+//│ fun test: (x: B & T) -> C
 
 
