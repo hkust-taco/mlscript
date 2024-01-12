@@ -1401,25 +1401,26 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     ctx ++= typedSignatures.map(nt => nt._1.name -> VarSymbol(nt._2, nt._1.nme))
                     ctx += "this" -> VarSymbol(thisTV, Var("this"))
                     
-                    val sig_ty = td.sig.fold(TopType: ST)(typeTypeSignature) // TODO include parents' sigs
-                    
-                    def inherit(parents: Ls[TypedParentSpec], tags: ST, members: Ls[NuMember], tparamMembs: Map[Str, NuMember])
-                          : (ST, Ls[NuMember], Map[Str, NuMember]) =
+                    def inherit(parents: Ls[TypedParentSpec], tags: ST, members: Ls[NuMember],
+                            tparamMembs: Map[Str, NuMember], sig_ty: ST)
+                          : (ST, Ls[NuMember], Map[Str, NuMember], ST) =
                         parents match {
                       case (trt: TypedNuTrt, argMembs, tpms, loc) :: ps =>
                         assert(argMembs.isEmpty, argMembs)
                         inherit(ps,
                           tags & trt.sign,
                           membersInter(members, trt.members.values.toList),
-                          tparamMembs ++ tpms   // with type members of parent class
+                          tparamMembs ++ tpms,   // with type members of parent class
+                          sig_ty & trt.sign,
                         )
                       case (_, _, _, loc) :: ps => 
                         err(msg"A trait can only inherit from other traits", loc)
-                        inherit(ps, tags, members, tparamMembs)
-                      case Nil => (tags, members, tparamMembs)
+                        inherit(ps, tags, members, tparamMembs, sig_ty)
+                      case Nil => (tags, members, tparamMembs, sig_ty)
                     }
-                    val (tags, trtMembers, tparamMembs) =
-                      inherit(typedParents, trtNameToNomTag(td)(noProv, ctx), Nil, Map.empty)
+                    val (tags, trtMembers, tparamMembs, sig_ty) =
+                      inherit(typedParents, trtNameToNomTag(td)(noProv, ctx), Nil, Map.empty,
+                        td.sig.fold(TopType: ST)(typeTypeSignature))
                     
                     td.body.entities.foreach {
                       case fd @ NuFunDef(_, _, _, _, L(_)) =>

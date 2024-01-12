@@ -48,6 +48,47 @@ class J extends Foo
 //│ }
 
 
+class C1
+trait T1: C1
+trait T2 extends T1
+//│ class C1 {
+//│   constructor()
+//│ }
+//│ trait T1: C1
+//│ trait T2: C1 extends T1
+
+:e
+class C2 extends T1
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.61: 	class C2 extends T1
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `#C2` is not an instance of type `C1`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.52: 	trait T1: C1
+//│ ╙──      	          ^^
+//│ class C2 extends T1 {
+//│   constructor()
+//│ }
+
+:e
+class C2 extends T2
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.74: 	class C2 extends T2
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `#C2` is not an instance of type `C1`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.52: 	trait T1: C1
+//│ ╙──      	          ^^
+//│ class C2 extends T1, T2 {
+//│   constructor()
+//│ }
+
+class C2 extends C1, T2
+//│ class C2 extends C1, T1, T2 {
+//│   constructor()
+//│ }
+
+
 
 // * Interfaces that are "callable" are important to support for TS/JS interop
 
@@ -77,22 +118,22 @@ declare trait FooPoly: forall 'a: (x: 'a) => 'a
 :e
 class Oops(y: Str) extends Foo
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.78: 	class Oops(y: Str) extends Foo
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.119: 	class Oops(y: Str) extends Foo
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `#Oops & {y: Str}` is not a function
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.55: 	declare trait Foo: ((x: Num) => Num) {
+//│ ║  l.96: 	declare trait Foo: ((x: Num) => Num) {
 //│ ╙──      	                   ^^^^^^^^^^^^^^^^^
 //│ class Oops(y: Str) extends Foo
 
 :e
 Oops("")(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.89: 	Oops("")(1)
-//│ ║        	^^^^^^^^^^^
+//│ ║  l.130: 	Oops("")(1)
+//│ ║         	^^^^^^^^^^^
 //│ ╟── application of type `Oops` is not a function
-//│ ║  l.89: 	Oops("")(1)
-//│ ╙──      	^^^^^^^^
+//│ ║  l.130: 	Oops("")(1)
+//│ ╙──       	^^^^^^^^
 //│ error
 //│ res
 //│ Runtime error:
@@ -101,21 +142,21 @@ Oops("")(1)
 :e
 module Oops extends FooPoly
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.102: 	module Oops extends FooPoly
+//│ ║  l.143: 	module Oops extends FooPoly
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `#Oops` is not a function
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.68: 	declare trait FooPoly: forall 'a: (x: 'a) => 'a
-//│ ╙──      	                                  ^^^^^^^
+//│ ║  l.109: 	declare trait FooPoly: forall 'a: (x: 'a) => 'a
+//│ ╙──       	                                  ^^^^^^^
 //│ module Oops extends FooPoly
 
 :e
 Oops(123)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.113: 	Oops(123)
+//│ ║  l.154: 	Oops(123)
 //│ ║         	^^^^^^^^^
 //│ ╟── reference of type `Oops` is not a function
-//│ ║  l.113: 	Oops(123)
+//│ ║  l.154: 	Oops(123)
 //│ ╙──       	^^^^
 //│ error
 //│ res
@@ -125,14 +166,14 @@ Oops(123)
 :e
 (Oops : FooPoly)(123)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.126: 	(Oops : FooPoly)(123)
+//│ ║  l.167: 	(Oops : FooPoly)(123)
 //│ ║         	 ^^^^
 //│ ╟── reference of type `Oops` is not a function
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.68: 	declare trait FooPoly: forall 'a: (x: 'a) => 'a
-//│ ║        	                                  ^^^^^^^
+//│ ║  l.109: 	declare trait FooPoly: forall 'a: (x: 'a) => 'a
+//│ ║         	                                  ^^^^^^^
 //│ ╟── from type reference:
-//│ ║  l.126: 	(Oops : FooPoly)(123)
+//│ ║  l.167: 	(Oops : FooPoly)(123)
 //│ ╙──       	        ^^^^^^^
 //│ 123
 //│ res
