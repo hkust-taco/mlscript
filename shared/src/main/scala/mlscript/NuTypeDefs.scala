@@ -1469,6 +1469,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       err(msg"${td.kind.str.capitalize} parameters are not supported",
                         typedParams.fold(td.nme.toLoc)(tp => Loc(tp.iterator.map(_._1))))
                     
+                    if (!td.isAbstract && !td.isDecl) td.sig match {
+                      case S(sig) => warn(
+                        msg"Self-type annotations have no effects on non-abstract ${td.kind.str} definitions" -> sig.toLoc
+                        :: msg"Did you mean to use `extends` and inherit from a parent class?" -> N
+                        :: Nil)
+                      case N =>
+                    }
+                    
                     ctx ++= paramSymbols
                     ctx ++= typedSignatures.map(nt => nt._1.name -> VarSymbol(nt._2, nt._1.nme))
                     

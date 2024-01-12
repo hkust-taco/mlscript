@@ -40,27 +40,145 @@ Foo() + 1
 //│     = '[object Object]1'
 
 
+:w
 :e
 module Foo: Int
+//│ ╔══[WARNING] Self-type annotations have no effects on non-abstract module definitions
+//│ ║  l.45: 	module Foo: Int
+//│ ║        	            ^^^
+//│ ╙── Did you mean to use `extends` and inherit from a parent class?
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.44: 	module Foo: Int
+//│ ║  l.45: 	module Foo: Int
 //│ ║        	^^^^^^^^^^
 //│ ╟── expression of type `#Foo` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.44: 	module Foo: Int
+//│ ║  l.45: 	module Foo: Int
 //│ ╙──      	            ^^^
 //│ module Foo: Int
 
 :e
 Foo + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.55: 	Foo + 1
+//│ ║  l.60: 	Foo + 1
 //│ ║        	^^^^^^^
 //│ ╟── reference of type `Foo` is not an instance of type `Int`
-//│ ║  l.55: 	Foo + 1
+//│ ║  l.60: 	Foo + 1
 //│ ╙──      	^^^
 //│ Int | error
 //│ res
 //│     = '[object Object]1'
+
+
+:w
+class Foo(): {}
+//│ ╔══[WARNING] Self-type annotations have no effects on non-abstract class definitions
+//│ ║  l.73: 	class Foo(): {}
+//│ ║        	             ^^
+//│ ╙── Did you mean to use `extends` and inherit from a parent class?
+//│ class Foo()
+
+:w
+class Foo(): {} {
+  fun x = 0
+}
+//│ ╔══[WARNING] Self-type annotations have no effects on non-abstract class definitions
+//│ ║  l.81: 	class Foo(): {} {
+//│ ║        	             ^^
+//│ ╙── Did you mean to use `extends` and inherit from a parent class?
+//│ class Foo() {
+//│   fun x: 0
+//│ }
+
+:w
+:e
+class Foo(): { x: Int } {
+  fun x = 0
+}
+//│ ╔══[WARNING] Self-type annotations have no effects on non-abstract class definitions
+//│ ║  l.94: 	class Foo(): { x: Int } {
+//│ ║        	             ^^^^^^^^^^
+//│ ╙── Did you mean to use `extends` and inherit from a parent class?
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.94: 	class Foo(): { x: Int } {
+//│ ╙──      	               ^
+//│ class Foo(): {x: Int} {
+//│   fun x: 0
+//│ }
+
+abstract class Foo(): { x: Int } {
+  fun x = 0
+}
+//│ abstract class Foo(): {x: Int} {
+//│   fun x: 0
+//│ }
+
+:e
+module FooM extends Foo
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.108: 	abstract class Foo(): { x: Int } {
+//│ ╙──       	                        ^
+//│ module FooM extends Foo {
+//│   fun x: 0
+//│ }
+
+abstract class Foo(): { x: Int } {
+  fun x: Int
+  fun x = 0
+}
+//│ abstract class Foo(): {x: Int} {
+//│   fun x: Int
+//│ }
+
+:e // TODO should work?
+module FooM extends Foo
+//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ║  l.124: 	abstract class Foo(): { x: Int } {
+//│ ╙──       	                        ^
+//│ module FooM extends Foo {
+//│   fun x: Int
+//│ }
+
+:w
+:e
+class Foo(): { x: 'FigureItOut } {
+  fun x: Int
+  fun x = 0
+}
+//│ ╔══[WARNING] Self-type annotations have no effects on non-abstract class definitions
+//│ ║  l.143: 	class Foo(): { x: 'FigureItOut } {
+//│ ║         	             ^^^^^^^^^^^^^^^^^^^
+//│ ╙── Did you mean to use `extends` and inherit from a parent class?
+//│ ╔══[ERROR] Type error in type declaration
+//│ ║  l.143: 	class Foo(): { x: 'FigureItOut } {
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.144: 	  fun x: Int
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.145: 	  fun x = 0
+//│ ║         	^^^^^^^^^^^
+//│ ║  l.146: 	}
+//│ ║         	^
+//│ ╟── type variable `'FigureItOut` leaks out of its scope
+//│ ║  l.144: 	  fun x: Int
+//│ ╙──       	         ^^^
+//│ class Foo(): {x: ??FigureItOut} {
+//│   fun x: Int
+//│ }
+
+:e
+not(Foo().x)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.168: 	not(Foo().x)
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── field selection of type `Int & ??FigureItOut` is not an instance of type `Bool`
+//│ ║  l.168: 	not(Foo().x)
+//│ ╙──       	    ^^^^^^^
+//│ error | false | true
+//│ res
+//│     = true
+
+(f: Foo) => f.x
+//│ (f: Foo) -> (Int & ??FigureItOut)
+//│ res
+//│     = [Function: res]
 
 
