@@ -83,7 +83,7 @@ module M extends Mx {
   fun id2(x) = [x, x]
   this.id1(0)
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.61: 	  fun id1(x) = this.id2(x)
 //│ ╙──      	                   ^^^^
 //│ module M {
@@ -111,10 +111,10 @@ class C {
   fun f = [this.id1(true), this.id1(0)]
   fun id2(x) = x
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.111: 	  fun f = [this.id1(true), this.id1(0)]
 //│ ╙──       	               ^^^^
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.111: 	  fun f = [this.id1(true), this.id1(0)]
 //│ ╙──       	                               ^^^^
 //│ class C {
@@ -129,7 +129,7 @@ class C {
 module M extends C {
   this.id2(true)
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.130: 	  this.id2(true)
 //│ ╙──       	      ^^^^
 //│ ╔══[ERROR] Cannot access `this` during object initialization
@@ -145,10 +145,10 @@ module M extends C {
 module M extends C {
   fun g = (this.id2(true), this.id2(0))
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.146: 	  fun g = (this.id2(true), this.id2(0))
 //│ ╙──       	               ^^^^
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.146: 	  fun g = (this.id2(true), this.id2(0))
 //│ ╙──       	                               ^^^^
 //│ module M extends C {

@@ -143,7 +143,7 @@ module M2 {
 //│ ╔══[ERROR] Cannot use `val` or `fun` in local block; use `let` instead.
 //│ ║  l.140: 	    fun bar(x) = x + y + this.m
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.140: 	    fun bar(x) = x + y + this.m
 //│ ╙──       	                             ^^
 //│ module M2 {

@@ -162,7 +162,7 @@ class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.151: 	}
 //│ ╙──       	^
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.150: 	    Pair(l, r) then l.test + r.test
 //│ ╙──       	                     ^^^^^
 //│ abstract class Exp: Lit | Pair {

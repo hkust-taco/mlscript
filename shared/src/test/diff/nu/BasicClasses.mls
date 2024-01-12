@@ -80,7 +80,7 @@ class Base0(val n) {
 //│ ╔══[ERROR] Class parameters currently need type annotations
 //│ ║  l.74: 	class Base0(val n) {
 //│ ╙──      	                ^
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.78: 	  fun oops = this.my
 //│ ╙──      	                 ^^^
 //│ class Base0(n: error) {
