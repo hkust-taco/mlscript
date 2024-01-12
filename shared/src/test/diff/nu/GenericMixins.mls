@@ -82,7 +82,7 @@ C.foo(false)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.81: 	C.foo(false)
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── reference of type `false` is not an instance of type `Int`
+//│ ╟── reference of type `false` is not an instance of `Int`
 //│ ║  l.81: 	C.foo(false)
 //│ ║        	      ^^^^^
 //│ ╟── Note: constraint arises from type reference:

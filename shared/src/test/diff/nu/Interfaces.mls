@@ -395,7 +395,7 @@ class E2 extends Test {
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
 //│ ║  l.392: 	  fun foo = true
 //│ ║         	      ^^^^^^^^^^
-//│ ╟── reference of type `true` is not an instance of type `Int`
+//│ ╟── reference of type `true` is not an instance of `Int`
 //│ ║  l.392: 	  fun foo = true
 //│ ║         	            ^^^^
 //│ ╟── but it flows into definition of method foo with expected type `Int`

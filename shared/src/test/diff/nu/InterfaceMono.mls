@@ -306,7 +306,7 @@ class C extends MyTrait[Int] { fun a = false }
 //│ ╔══[ERROR] Type mismatch in definition of method a:
 //│ ║  l.305: 	class C extends MyTrait[Int] { fun a = false }
 //│ ║         	                                   ^^^^^^^^^
-//│ ╟── reference of type `false` is not an instance of type `Int`
+//│ ╟── reference of type `false` is not an instance of `Int`
 //│ ║  l.305: 	class C extends MyTrait[Int] { fun a = false }
 //│ ║         	                                       ^^^^^
 //│ ╟── but it flows into definition of method a with expected type `Int`

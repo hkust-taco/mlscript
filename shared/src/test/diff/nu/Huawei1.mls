@@ -44,7 +44,7 @@ bar(C(true))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.43: 	bar(C(true))
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── reference of type `true` is not an instance of type `Int`
+//│ ╟── reference of type `true` is not an instance of `Int`
 //│ ║  l.43: 	bar(C(true))
 //│ ║        	      ^^^^
 //│ ╟── Note: constraint arises from reference:

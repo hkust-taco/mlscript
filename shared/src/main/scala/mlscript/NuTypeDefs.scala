@@ -471,9 +471,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       (implicit raise: Raise)
       : ST = 
     if ((td.kind is Mod) && params.isEmpty)
-      ClassTag(Var(td.nme.name),
-          ihtags + TN("Object")
-        )(provTODO)
+      // ClassTag(Var(td.nme.name),
+      //     ihtags + TN("Object")
+      //   )(provTODO)
+      if (tparams.isEmpty) 
+        TypeRef(td.nme, Nil)(provTODO)
+      else PolymorphicType.mk(level,
+        TypeRef(td.nme, tparams.map(_._2))(provTODO))
     else if ((td.kind is Cls) || (td.kind is Mod)) {
       if (td.kind is Mod)
         err(msg"Parameterized modules are not yet supported", loco)
