@@ -10,19 +10,26 @@
   <div id="content">
     <textarea id="mlscript-input" class="panel" spellcheck="false">
 type List[A] = Cons[A] | Nil
-
 class Cons[out A](head: A, tail: List[A])
 module Nil { fun size = 0 }
+
+fun (::) cons(x, xs) = Cons(x, xs)
 
 fun map(f, xs) = if xs is
   Cons(h, t) then Cons(f(h), map(f, t))
   Nil        then Nil
 
-let c = Cons(id, Cons(([x, y]) => [y, x], Nil))
+fun show(xs) =
+  let rec go(xs) = if xs is
+    Cons(h, t) then join(String(h), ", ", show(t))
+    Nil        then ""
+  join("[", go(xs), "]")
 
-let m1 = map(f => f([0, 1]), c)
+let xs = 1 :: 2 :: 3 :: Nil
 
-let m2 = map(f => f([true, false]), c)
+show(xs)
+
+show(map of x => x + 1, xs)
 </textarea>
 <!-- let rec recursive_monster = fun x ->
   { thing = x;

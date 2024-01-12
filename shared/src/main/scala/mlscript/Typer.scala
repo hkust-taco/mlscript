@@ -309,6 +309,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       "window" -> BotType,
       "typeof" -> fun(singleTup(TopType), StrType)(noProv),
       "toString" -> fun(singleTup(TopType), StrType)(noProv),
+      "String" -> fun(singleTup(TopType), StrType)(noProv),
       "not" -> fun(singleTup(BoolType), BoolType)(noProv),
       "succ" -> fun(singleTup(IntType), IntType)(noProv),
       "log" -> PolymorphicType(MinLevel, fun(singleTup(tv), UnitType)(noProv)),
@@ -330,6 +331,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       "sge" -> stringBinPred,
       "length" -> fun(singleTup(StrType), IntType)(noProv),
       "concat" -> fun(singleTup(StrType), fun(singleTup(StrType), StrType)(noProv))(noProv),
+      "join" -> fun(ArrayType(StrType.toUpper(noProv))(noProv), StrType)(noProv),
       "eq" -> {
         val v = freshVar(noProv, N)(1)
         PolymorphicType(MinLevel, fun(singleTup(v), fun(singleTup(v), BoolType)(noProv))(noProv))
