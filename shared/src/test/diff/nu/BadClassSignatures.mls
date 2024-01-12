@@ -1,0 +1,66 @@
+:NewDefs
+
+
+abstract class Foo(): Int
+//│ abstract class Foo(): Int
+
+fun foo(x: Foo) = x : Int
+//│ fun foo: (x: Foo) -> Int
+
+:e
+let f = Foo() : Foo
+//│ ╔══[ERROR] Class Foo is abstract and cannot be instantiated
+//│ ║  l.11: 	let f = Foo() : Foo
+//│ ╙──      	        ^^^
+//│ let f: Foo
+//│ f
+//│   = Foo {}
+
+f + 1
+//│ Int
+//│ res
+//│     = '[object Object]1'
+
+:e
+Foo() + 1
+//│ ╔══[ERROR] Class Foo is abstract and cannot be instantiated
+//│ ║  l.25: 	Foo() + 1
+//│ ╙──      	^^^
+//│ Int
+//│ res
+//│     = '[object Object]1'
+
+:e
+(Foo() : Foo) + 1
+//│ ╔══[ERROR] Class Foo is abstract and cannot be instantiated
+//│ ║  l.34: 	(Foo() : Foo) + 1
+//│ ╙──      	 ^^^
+//│ Int
+//│ res
+//│     = '[object Object]1'
+
+
+:e
+module Foo: Int
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.44: 	module Foo: Int
+//│ ║        	^^^^^^^^^^
+//│ ╟── expression of type `#Foo` is not an instance of type `Int`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.44: 	module Foo: Int
+//│ ╙──      	            ^^^
+//│ module Foo: Int
+
+:e
+Foo + 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.55: 	Foo + 1
+//│ ║        	^^^^^^^
+//│ ╟── reference of type `Foo` is not an instance of type `Int`
+//│ ║  l.55: 	Foo + 1
+//│ ╙──      	^^^
+//│ Int | error
+//│ res
+//│     = '[object Object]1'
+
+

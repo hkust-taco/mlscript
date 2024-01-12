@@ -8,10 +8,29 @@ module C2 extends C0
 //│ class C1() extends C0
 //│ module C2 extends C0
 
+fun foo(x: C0) = if x is
+  C1 then 1
+  C2 then 2
+//│ fun foo: (x: C0) -> (1 | 2)
+
+fun foo(x: C0) = x : C1 | C2
+//│ fun foo: (x: C0) -> (C1 | C2)
+
+fun foo(x) = if x is
+  C1 then 1
+  C2 then 2
+//│ fun foo: (C1 | C2) -> (1 | 2)
+
+foo(C1()) + foo(C2)
+//│ Int
+//│ res
+//│     = 3
+
+
 :e
 class C3 extends C0
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.12: 	class C3 extends C0
+//│ ║  l.31: 	class C3 extends C0
 //│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `#C3` does not match type `C1 | C2`
 //│ ╟── Note: constraint arises from union type:
@@ -37,7 +56,7 @@ class Foo(): { x: Int } {
   fun x = 0
 }
 //│ ╔══[ERROR] Indirectly-recursive member should have type annotation
-//│ ║  l.36: 	class Foo(): { x: Int } {
+//│ ║  l.55: 	class Foo(): { x: Int } {
 //│ ╙──      	               ^
 //│ class Foo(): {x: Int} {
 //│   fun x: 0
@@ -57,16 +76,16 @@ class Foo(): { x: 'FigureItOut } {
   fun x = 0
 }
 //│ ╔══[ERROR] Type error in type declaration
-//│ ║  l.55: 	class Foo(): { x: 'FigureItOut } {
+//│ ║  l.74: 	class Foo(): { x: 'FigureItOut } {
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.56: 	  fun x: Int
+//│ ║  l.75: 	  fun x: Int
 //│ ║        	^^^^^^^^^^^^
-//│ ║  l.57: 	  fun x = 0
+//│ ║  l.76: 	  fun x = 0
 //│ ║        	^^^^^^^^^^^
-//│ ║  l.58: 	}
+//│ ║  l.77: 	}
 //│ ║        	^
 //│ ╟── type variable `'FigureItOut` leaks out of its scope
-//│ ║  l.56: 	  fun x: Int
+//│ ║  l.75: 	  fun x: Int
 //│ ╙──      	         ^^^
 //│ class Foo(): {x: ??FigureItOut} {
 //│   fun x: Int
@@ -75,10 +94,10 @@ class Foo(): { x: 'FigureItOut } {
 :e
 not(Foo().x)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.76: 	not(Foo().x)
+//│ ║  l.95: 	not(Foo().x)
 //│ ║        	^^^^^^^^^^^^
 //│ ╟── field selection of type `Int & ??FigureItOut` is not an instance of type `Bool`
-//│ ║  l.76: 	not(Foo().x)
+//│ ║  l.95: 	not(Foo().x)
 //│ ╙──      	    ^^^^^^^
 //│ error | false | true
 //│ res
@@ -96,12 +115,12 @@ trait B
 :e
 class A(): B
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.97: 	class A(): B
-//│ ║        	^^^^^^^^^
+//│ ║  l.116: 	class A(): B
+//│ ║         	^^^^^^^^^
 //│ ╟── expression of type `#A` is not an instance of type `B`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.97: 	class A(): B
-//│ ╙──      	           ^
+//│ ║  l.116: 	class A(): B
+//│ ╙──       	           ^
 //│ class A(): B
 
 A() : B
@@ -115,7 +134,7 @@ abstract class A(): B
 :e
 A() : B
 //│ ╔══[ERROR] Class A is abstract and cannot be instantiated
-//│ ║  l.116: 	A() : B
+//│ ║  l.135: 	A() : B
 //│ ╙──       	^
 //│ B
 //│ res
@@ -137,18 +156,18 @@ class A(): C
 class B() extends A
 class C() extends B
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.136: 	class A(): C
+//│ ║  l.155: 	class A(): C
 //│ ║         	^^^^^^^^^
 //│ ╟── expression of type `#A` is not an instance of type `C`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.136: 	class A(): C
+//│ ║  l.155: 	class A(): C
 //│ ╙──       	           ^
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.137: 	class B() extends A
+//│ ║  l.156: 	class B() extends A
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `#B` is not an instance of type `C`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.136: 	class A(): C
+//│ ║  l.155: 	class A(): C
 //│ ╙──       	           ^
 //│ class A(): C
 //│ class B() extends A
@@ -159,11 +178,11 @@ abstract class A(): C
 class B() extends A
 class C() extends B
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.159: 	class B() extends A
+//│ ║  l.178: 	class B() extends A
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `#B` is not an instance of type `C`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.158: 	abstract class A(): C
+//│ ║  l.177: 	abstract class A(): C
 //│ ╙──       	                    ^
 //│ abstract class A(): C
 //│ class B() extends A
@@ -183,16 +202,16 @@ class D() extends B
 :e // FIXME transitivity of self types
 fun test(x: B): C = x
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.184: 	fun test(x: B): C = x
+//│ ║  l.203: 	fun test(x: B): C = x
 //│ ║         	                    ^
 //│ ╟── type `B` is not an instance of `C`
-//│ ║  l.184: 	fun test(x: B): C = x
+//│ ║  l.203: 	fun test(x: B): C = x
 //│ ║         	            ^
 //│ ╟── but it flows into reference with expected type `C`
-//│ ║  l.184: 	fun test(x: B): C = x
+//│ ║  l.203: 	fun test(x: B): C = x
 //│ ║         	                    ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.184: 	fun test(x: B): C = x
+//│ ║  l.203: 	fun test(x: B): C = x
 //│ ╙──       	                ^
 //│ fun test: (x: B) -> C
 
