@@ -57,19 +57,19 @@ fun f = id
 fun h: (Int -> (Int | Bool)) & (Bool -> (Int | Bool))
 fun h = f
 //│ fun h: Int -> Int & Bool -> Bool
-//│ fun h: (Bool | Int) -> (Int | false | true)
+//│ fun h: (Int | false | true) -> (Int | false | true)
 
 // * Merge intersected functions with same domain
 fun g: (Int | Bool) -> (Int | Bool)
 fun g = h
-//│ fun g: (Bool | Int) -> (Int | false | true)
-//│ fun g: (Bool | Int) -> (Int | false | true)
+//│ fun g: (Int | false | true) -> (Int | false | true)
+//│ fun g: (Int | false | true) -> (Int | false | true)
 
 // * In one step
 fun g: (Int | Bool) -> (Int | Bool)
 fun g = f
 //│ fun g: Int -> Int & Bool -> Bool
-//│ fun g: (Bool | Int) -> (Int | false | true)
+//│ fun g: (Int | false | true) -> (Int | false | true)
 
 
 // * Can also widen into intersection
@@ -114,7 +114,7 @@ f(0)
 
 
 x => f(x)
-//│ (Bool | Int) -> (Int | false | true)
+//│ (Int | false | true) -> (Int | false | true)
 //│ res
 //│     = [Function: res]
 

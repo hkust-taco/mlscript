@@ -401,13 +401,13 @@ class DiffTests
             if (!mode.fixme) {
               if (!allowTypeErrors
                   && !mode.expectTypeErrors && diag.isInstanceOf[ErrorReport] && diag.source =:= Diagnostic.Typing)
-                failures += globalLineNum
+                { output("TEST CASE FAILURE: There was an unexpected type error"); failures += globalLineNum }
               if (!allowParseErrors
                   && !mode.expectParseErrors && diag.isInstanceOf[ErrorReport] && (diag.source =:= Diagnostic.Lexing || diag.source =:= Diagnostic.Parsing))
-                failures += globalLineNum
+                { output("TEST CASE FAILURE: There was an unexpected parse error"); failures += globalLineNum }
               if (!allowTypeErrors && !allowParseErrors
                   && !mode.expectWarnings && diag.isInstanceOf[WarningReport])
-                failures += globalLineNum
+                { output("TEST CASE FAILURE: There was an unexpected warning"); failures += globalLineNum }
             }
             
             ()
@@ -415,6 +415,8 @@ class DiffTests
         }
         
         val raise: Raise = d => report(d :: Nil)
+        
+        val legacyParser = file.ext =:= "fun"
         
         // try to parse block of text into mlscript ast
         val ans = try {
@@ -448,7 +450,7 @@ class DiffTests
             
           }
           else parse(processedBlockStr, p =>
-            if (file.ext =:= "fun") new Parser(Origin(testName, globalStartLineNum, fph)).pgrm(p)
+            if (legacyParser) new Parser(Origin(testName, globalStartLineNum, fph)).pgrm(p)
             else new MLParser(Origin(testName, globalStartLineNum, fph)).pgrm(p),
             verboseFailures = true
           )
@@ -458,14 +460,14 @@ class DiffTests
             val (lineNum, lineStr, col) = fph.getLineColAt(index)
             val globalLineNum = (allLines.size - lines.size) + lineNum
             if (!mode.expectParseErrors && !mode.fixme)
-              failures += globalLineNum
+              { output("TEST CASE FAILURE: There was an unexpected parse error"); failures += globalLineNum }
             output("/!\\ Parse error: " + extra.trace().msg +
               s" at l.$globalLineNum:$col: $lineStr")
             
           // successfully parsed block into a valid syntactically valid program
           case Success(p, index) =>
-            if (mode.expectParseErrors && !newParser)
-              failures += blockLineNum
+            if (mode.expectParseErrors && !newParser && !legacyParser)
+              { output("TEST CASE FAILURE: There was an unexpected parse success"); failures += blockLineNum }
             if (mode.showParse || mode.dbgParsing) output("Parsed: " + p.showDbg)
             // if (mode.isDebugging) typer.resetState()
             if (mode.stats) typer.resetStats()
@@ -596,33 +598,7 @@ class DiffTests
               
               output(expStr.stripSuffix("\n"))
               
-              // // val exp = getType(typer.PolymorphicType(0, res_ty))
-              // // output(s"Typed: ${exp}")
-              // tpd.result.foreach { res_ty =>
-              //   val exp = getType(typer.PolymorphicType(0, res_ty))
-              //   output(s"Typed: ${exp.show}")
-              // }
-              // // */
-              
-              /* 
-              import typer._
-              
-              val mod = NuTypeDef(Nms, TypeName("ws"), Nil, Tup(Nil), Nil, TypingUnit(p.tops))
-              val info = new LazyTypeInfo(ctx.lvl, mod)(ctx, Map.empty)
-              // val modTpe = DeclType(ctx.lvl, info)
-              info.force()(raise)
-               */
-              
-              // val tpd = info
-              
-              
-              // val exp = typer.expandType(modTpe)(ctx)
-              // FirstClassDefn()
-              
-              
-              // (Nil, Nil, N)
               (Nil, Nil, S(p.tops.collect {
-                // case LetS(isRec, pat, bod) => ("res", Nil, Nil, false)
                 case NuFunDef(isLet, nme, snme, tparams, bod) =>
                   (nme.name + " ", nme.name :: Nil, Nil, false, isLet.isEmpty)
                 case t: Term => ("res ", "res" :: Nil, Nil, false, false)
@@ -641,10 +617,7 @@ class DiffTests
                 }
               }
               
-              typer.ctx = 
-                // if (newParser) typer.typeTypingUnit(tu)
-                // else 
-                typer.processTypeDefs(typeDefs)(ctx, raise)
+              typer.ctx = typer.processTypeDefs(typeDefs)(ctx, raise)
               
               (typeDefs, stmts, N)
             }
@@ -953,13 +926,13 @@ class DiffTests
                     if (!mode.expectTypeErrors && !mode.fixme) {
                       // We don't expect code generation errors and it is.
                       if (!mode.expectCodeGenErrors && isSyntaxError)
-                        failures += blockLineNum
+                        { output("TEST CASE FAILURE: There was an unexpected codegen error"); failures += blockLineNum }
                       // We don't expect runtime errors and it's a runtime error.
                       if (!mode.expectRuntimeErrors && !allowRuntimeErrors && !isSyntaxError)
-                        failures += blockLineNum
+                        { output("TEST CASE FAILURE: There was an unexpected runtime error"); failures += blockLineNum }
                     }
                     if (isSyntaxError) {
-                      // If there is syntax error in the generated code,
+                      // If there is a syntax error in the generated code,
                       // it should be a code generation error.
                       output("Syntax error:")
                       totalCodeGenErrors += 1
@@ -1047,15 +1020,15 @@ class DiffTests
             }
             
             if (mode.expectParseErrors && totalParseErrors =:= 0)
-              failures += blockLineNum
+              { output("TEST CASE FAILURE: There was an unexpected lack of parse error"); failures += blockLineNum }
             if (mode.expectTypeErrors && totalTypeErrors =:= 0)
-              failures += blockLineNum
+              { output("TEST CASE FAILURE: There was an unexpected lack of type error"); failures += blockLineNum }
             if (mode.expectWarnings && totalWarnings =:= 0)
-              failures += blockLineNum
+              { output("TEST CASE FAILURE: There was an unexpected lack of warning"); failures += blockLineNum }
             if (mode.expectCodeGenErrors && totalCodeGenErrors =:= 0)
-              failures += blockLineNum
+              { output("TEST CASE FAILURE: There was an unexpected lack of codegen error"); failures += blockLineNum }
             if (mode.expectRuntimeErrors && totalRuntimeErrors =:= 0)
-              failures += blockLineNum
+              { output("TEST CASE FAILURE: There was an unexpected lack of runtime error"); failures += blockLineNum }
         } catch {
           case oh_noes: ThreadDeath => throw oh_noes
           case err: Throwable =>

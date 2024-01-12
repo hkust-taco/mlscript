@@ -158,6 +158,9 @@ object Polyfill {
       "length", fn(_, param("x")) { `return` { id("x").member("length") } }
     )
     buffer += BuiltinFunc("concat", makeBinaryFunc("+"))
+    buffer += BuiltinFunc("join",
+      fn(_, param("...xs")) { `return` {
+        id("xs")("join").apply(JSLit(JSLit.makeStringLiteral(""))) } })
     buffer += BuiltinFunc("add", makeBinaryFunc("+"))
     buffer += BuiltinFunc("sub", makeBinaryFunc("-"))
     buffer += BuiltinFunc("mul", makeBinaryFunc("*"))

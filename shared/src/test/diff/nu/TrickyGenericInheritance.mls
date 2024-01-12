@@ -70,7 +70,7 @@ c1.f
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.69: 	(c1 : T1['X]).f(false)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `false` is not an instance of type `Int`
+//│ ╟── reference of type `false` is not an instance of `Int`
 //│ ║  l.69: 	(c1 : T1['X]).f(false)
 //│ ║        	                ^^^^^
 //│ ╟── Note: constraint arises from type reference:

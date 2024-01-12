@@ -217,8 +217,8 @@ class Annots(base: 0 | 1) {
   a: Int
   fun a = base
 }
-//│ ╔══[WARNING] Expression in statement position should have type `unit`.
-//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╔══[WARNING] Expression in statement position should have type `()`.
+//│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
 //│ ╟── Type mismatch in type ascription:
 //│ ║  l.217: 	  a: Int
 //│ ║         	  ^

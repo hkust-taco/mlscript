@@ -283,6 +283,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     if (funkyTuples) ty else TupleType((N, ty.toUpper(ty.prov) ) :: Nil)(noProv)
   def pair(ty1: ST, ty2: ST): ST =
     TupleType(N -> ty1.toUpper(ty1.prov) :: N -> ty2.toUpper(ty2.prov) :: Nil)(noProv)
+  private val sharedVar = freshVar(noProv, N)(1)
   val builtinBindings: Bindings = {
     val tv = freshVar(noProv, N)(1)
     import FunctionType.{ apply => fun }
@@ -308,6 +309,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       "window" -> BotType,
       "typeof" -> fun(singleTup(TopType), StrType)(noProv),
       "toString" -> fun(singleTup(TopType), StrType)(noProv),
+      "String" -> fun(singleTup(TopType), StrType)(noProv),
       "not" -> fun(singleTup(BoolType), BoolType)(noProv),
       "succ" -> fun(singleTup(IntType), IntType)(noProv),
       "log" -> PolymorphicType(MinLevel, fun(singleTup(tv), UnitType)(noProv)),
@@ -332,6 +334,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       "sge" -> stringBinPred,
       "length" -> fun(singleTup(StrType), IntType)(noProv),
       "concat" -> fun(singleTup(StrType), fun(singleTup(StrType), StrType)(noProv))(noProv),
+      "join" -> fun(ArrayType(StrType.toUpper(noProv))(noProv), StrType)(noProv),
       "eq" -> {
         val v = freshVar(noProv, N)(1)
         PolymorphicType(MinLevel, fun(singleTup(v), fun(singleTup(v), BoolType)(noProv))(noProv))
@@ -341,6 +344,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         PolymorphicType(MinLevel, fun(singleTup(v), fun(singleTup(v), BoolType)(noProv))(noProv))
       },
       "error" -> BotType,
+      "," -> {
+        val v = sharedVar
+        PolymorphicType(MinLevel, fun(TupleType(N -> TopType.toUpper(provTODO) :: N -> v.toUpper(provTODO) :: Nil)(noProv), v)(noProv))
+      },
       "+" -> intBinOpTy,
       "-" -> intBinOpTy,
       "*" -> intBinOpTy,
@@ -353,7 +360,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       ">=" -> numberBinPred,
       "==" -> numberBinPred,
       "===" -> {
-        val v = freshVar(noProv, N)(1)
+        val v = sharedVar
         val eq = TypeRef(TypeName("Eql"), v :: Nil)(noProv)
         PolymorphicType(MinLevel, fun(pair(eq, v), BoolType)(noProv))
       },
@@ -724,7 +731,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   
   // TODO also prevent rebinding of "not"
   val reservedVarNames: Set[Str] =
-    Set("|", "&", "~", ",", "neg", "and", "or", "is", "refined")
+    Set("|", "&", "~", "neg", "and", "or", "is", "refined")
   
   object ValidVar {
     def unapply(v: Var)(implicit raise: Raise): S[Str] = S {
