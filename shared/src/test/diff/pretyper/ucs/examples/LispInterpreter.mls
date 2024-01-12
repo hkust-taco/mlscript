@@ -518,7 +518,16 @@ showEval("(def id (lambda (x) x) (id 42))")
 //│ res
 //│     = 'Ok: 42'
 
-// showEval("(def fact (lambda (n) (if (eq n 0) 1 (* n (fact (- n 1))))) (fact 5))")
-// showEval("(def fib (lambda (n) (if (eq n 0) 0 (if (eq n 1) 1 (+ (fib (- n 1)) (fib (- n 2)))))) (fib 10))")
-// showEval("(def sum (lambda (n) (if (eq n 0) 0 (+ n (sum (- n 1))))) (sum 50))")
-// showEval("(def ack (lambda (m n) (if (eq m 0) (+ n 1) (if (eq n 0) (ack (- m 1) 1) (ack (- m 1) (ack m (- n 1)))))) (ack 3 2))")
+showEval("(def fact (lambda (n) (if (eq n 0) 1 (* n (fact (- n 1))))) (fact 5))")
+showEval("(def fib (lambda (n) (if (eq n 0) 0 (if (eq n 1) 1 (+ (fib (- n 1)) (fib (- n 2)))))) (fib 10))")
+showEval("(def sum (lambda (n) (if (eq n 0) 0 (+ n (sum (- n 1))))) (sum 50))")
+showEval("(def ack (lambda (m n) (if (eq m 0) (+ n 1) (if (eq n 0) (ack (- m 1) 1) (ack (- m 1) (ack m (- n 1)))))) (ack 3 2))")
+//│ Str
+//│ res
+//│     = 'Ok: 120'
+//│ res
+//│     = 'Ok: 55'
+//│ res
+//│     = 'Ok: 1275'
+//│ res
+//│     = 'Ok: 29'
