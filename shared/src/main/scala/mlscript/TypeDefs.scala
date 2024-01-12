@@ -158,7 +158,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
   {
     ty match {
       case tr @ TypeRef(td, targs) =>
-        fieldsOf(tr.expandWith(paramTags), paramTags)
+        fieldsOf(tr.expandWith(paramTags, selfTy = false), paramTags)
       case ComposedType(false, l, r) =>
         mergeMap(fieldsOf(l, paramTags), fieldsOf(r, paramTags))(_ && _)
       case RecordType(fs) => fs.toMap
@@ -384,7 +384,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
         }
         def checkRegular(ty: SimpleType)(implicit reached: Map[Str, Ls[SimpleType]]): Bool = ty match {
           case tr @ TypeRef(defn, targs) => reached.get(defn.name) match {
-            case None => checkRegular(tr.expandWith(false))(reached + (defn.name -> targs))
+            case None => checkRegular(tr.expandWith(false, selfTy = false))(reached + (defn.name -> targs))
             case Some(tys) =>
               // Note: this check *has* to be relatively syntactic because
               //    the termination of constraint solving relies on recursive type occurrences
