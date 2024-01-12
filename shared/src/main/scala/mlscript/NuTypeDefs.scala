@@ -471,9 +471,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       (implicit raise: Raise)
       : ST = 
     if ((td.kind is Mod) && params.isEmpty)
-      // ClassTag(Var(td.nme.name),
-      //     ihtags + TN("Object")
-      //   )(provTODO)
       if (tparams.isEmpty) 
         TypeRef(td.nme, Nil)(provTODO)
       else PolymorphicType.mk(level,
@@ -496,19 +493,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       PolymorphicType.mk(level,
         FunctionType(
           TupleType(ps.mapKeys(some))(provTODO),
-          /* 
-          ClassTag(Var(td.nme.name),
-            ihtags + TN("Object")
-          )(provTODO) & RecordType.mk(
-            // * ^ Note: we used to include the self type here (& selfTy),
-            // *  but it doesn't seem to be needed – if the class has a constructor,
-            // *  then surely it satisfies the self type (once we check it).
-            tparams.map { case (tn, tv, vi) =>
-              // TODO also use computed variance info when available!
-              Var(td.nme.name + "#" + tn.name).withLocOf(tn) ->
-                FieldType.mk(vi.getOrElse(VarianceInfo.in), tv, tv)(provTODO) }
-          )(provTODO)
-          */
           TypeRef(td.nme, tparams.map(_._2))(provTODO)
         )(provTODO)
       )
@@ -1619,10 +1603,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       NuParam(f._1, f._2, isPublic = !privateParams.contains(f._1))(lvl))
                     
                     val Pack(thisType, mxnMembers, _, baseClsMembers, traitMembers, tparamMembers, selfSig) =
-                      // inherit(typedParents, Pack(baseType, tparamMems ++ paramMems, N, Nil, Nil, Map.empty, TopType))
                       inherit(typedParents, Pack(baseType, tparamMems ++ paramMems, N, Nil, Nil, Map.empty, sig_ty))
                     
-                    // println(s"Final self-type: ${sig_ty}")
+                    // println(s"Final self-type: ${selfSig}")
                     
                     ctx += "this" -> VarSymbol(thisTV, Var("this"))
                     ctx += "super" -> VarSymbol(thisType, Var("super"))
@@ -1750,10 +1733,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       case N => N
                     }
                     
-                    // if (!td.isAbstract) trace(s"Checking self signature...") {
-                    //   constrain(thisTV, selfSig)
-                    // }()
-                    
                     TypedNuCls(outerCtx.lvl, td,
                       tparams,
                       typedParams,
@@ -1762,7 +1741,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       allMembers,
                       TopType,
                       if (td.isAbstract) selfSig else sig_ty,
-                      // selfSig, // FIXME causes SOF in NF
                       inheritedTags,
                       tparamMembers
                     ).tap(_.variances) // * Force variance computation
