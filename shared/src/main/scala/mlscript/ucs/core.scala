@@ -1,22 +1,18 @@
 package mlscript.ucs
 
-import collection.mutable.Buffer
 import mlscript.{Diagnostic, Lit, Loc, Located, Message, Term, Var}
 import mlscript.utils._, shorthands._
-import mlscript.ucs.core.Split.Cons
-import mlscript.ucs.core.Split.Let
-import mlscript.ucs.core.Split.Else
-import mlscript.ucs.stages.Desugaring
 
 package object core {
   sealed abstract class Pattern extends Located {
+    def declaredVars: Iterator[Var] = this match {
+      case _: Pattern.Literal | _: Pattern.Class => Iterator.empty
+      case Pattern.Name(nme) => Iterator.single(nme)
+    }
     override def toString(): String = this match {
-      case Pattern.Literal(literal) => literal.toString
+      case Pattern.Literal(literal) => literal.idStr
       case Pattern.Name(Var(name)) => name
       case Pattern.Class(Var(name)) => name
-      case Pattern.Tuple(fields) => fields.iterator.map(_.fold("_")(_.name)).mkString("(", ", ", ")")
-      case Pattern.Record(Nil) => "{}"
-      case Pattern.Record(entries) => entries.iterator.map { case (nme, als) => s"$nme: $als" }.mkString("{ ", ", ", " }")
     }
   }
   object Pattern {
@@ -28,12 +24,6 @@ package object core {
     }
     final case class Class(nme: Var) extends Pattern {
       override def children: Ls[Located] = nme :: Nil
-    }
-    final case class Tuple(elements: List[Opt[Var]]) extends Pattern {
-      override def children: Ls[Located] = elements.flatten
-    }
-    final case class Record(entries: List[(Var -> Var)]) extends Pattern {
-      override def children: Ls[Located] = entries.iterator.flatMap { case (nme, als) => nme :: als :: Nil }.toList
     }
 
     def getParametersLoc(parameters: List[Opt[Var]]): Opt[Loc] =
@@ -49,9 +39,11 @@ package object core {
       parameters.fold("empty")(_.map(_.fold("_")(_.name)).mkString("[", ", ", "]"))
   }
 
-  final case class Branch(scrutinee: Var, pattern: Pattern, continuation: Split)
+  final case class Branch(scrutinee: Var, pattern: Pattern, continuation: Split) extends Located {
+    override def children: List[Located] = scrutinee :: pattern :: continuation :: Nil
+  }
 
-  sealed abstract class Split {
+  sealed abstract class Split extends Located {
     @inline
     def ::(head: Branch): Split = Split.Cons(head, this)
 
@@ -76,7 +68,7 @@ package object core {
       case Split.Nil => false
     }
 
-    lazy val freeVars: Set[Var] = this match {
+    override lazy val freeVars: Set[Var] = this match {
       case Split.Cons(Branch(scrutinee, pattern, continuation), tail) =>
         // FIXME: It is safe to ignore `pattern` for now.
         continuation.freeVars ++ tail.freeVars
@@ -90,26 +82,19 @@ package object core {
       * Remove duplicated bindings.
       */
     def withoutBindings(vars: Set[Var]): Split = this match {
-      case self @ Cons(head @ Branch(_, _, continuation), tail) =>
+      case self @ Split.Cons(head @ Branch(_, _, continuation), tail) =>
         self.copy(head.copy(continuation = continuation.withoutBindings(vars)), tail.withoutBindings(vars))
-      case self @ Let(_, name, _, tail) if vars contains name => tail.withoutBindings(vars)
-      case self @ Let(_, _, _, tail) => self.copy(tail = tail.withoutBindings(vars))
-      case Else(_) | Split.Nil => this
+      case self @ Split.Let(_, name, _, tail) if vars contains name => tail.withoutBindings(vars)
+      case self @ Split.Let(_, _, _, tail) => self.copy(tail = tail.withoutBindings(vars))
+      case Split.Else(_) | Split.Nil => this
     }
 
-    private val diagnostics: Buffer[Message -> Opt[Loc]] = Buffer.empty
-
-    def withDiagnostic(diagnostic: Message -> Opt[Loc]): this.type = {
-      diagnostics += diagnostic
-      this
+    final override def children: Ls[Located] = this match {
+      case Split.Cons(head, tail) => head :: tail :: Nil
+      case Split.Let(rec, name, term, tail) => name :: term :: tail :: Nil
+      case Split.Else(default) => default :: Nil
+      case Split.Nil => Nil
     }
-
-    def collectDiagnostics(): Ls[Message -> Opt[Loc]] =
-      diagnostics.toList ++ (this match {
-        case Split.Cons(_, tail) => tail.collectDiagnostics()
-        case Split.Let(_, _, _, tail) => tail.collectDiagnostics()
-        case Split.Else(_) | Split.Nil => Nil
-      })
   }
 
   object Split {
@@ -117,7 +102,5 @@ package object core {
     final case class Let(rec: Bool, name: Var, term: Term, tail: Split) extends Split
     final case class Else(default: Term) extends Split
     final case object Nil extends Split
-
-    def just(term: Term): Split = Else(term)
   }
 }

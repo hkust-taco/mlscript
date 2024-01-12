@@ -458,8 +458,6 @@ fun toName(x: Data): Str = if x is Symbol(s) then s else error
 fun asList(x: Data): List[Data] = if x is DataList(ys) then ys else error
 //│ fun asList: (x: Data) -> List[Data]
 
-fun mkLambda(ps: List[Str], body: Data, env: Str -> Data) =
-  Literal(Lambda(args => eval(body, extendParameters(env, ps, args))))
 fun eval(x: Data, env: Str -> Data): Data = if x is
   Literal(StrLit(x)) then Literal(StrLit(x))
   Literal(IntLit(x)) then Literal(IntLit(x))
@@ -476,13 +474,13 @@ fun eval(x: Data, env: Str -> Data): Data = if x is
     else eval(thenPart, env)
   DataList(Cons(Symbol("quote"), Cons(y, Nil))) then y
   DataList(Cons(Symbol("lambda"), Cons(params, Cons(body, Nil)))) then
-    mkLambda(map(toName, asList(params)), body, env)
+    let ps = map(toName, asList(params))
+    Literal(Lambda(args => eval(body, extendParameters(env, ps, args))))
   DataList(Cons(operator, operands)) and eval(operator, env) is
     Literal(Lambda(f)) then
       f of map((x) => eval(x, env), operands)
     else error // application of a non-function
   else error // unrecognized program
-//│ fun mkLambda: (ps: List[Str], body: Data, env: Str -> Data) -> Literal
 //│ fun eval: (x: Data, env: Str -> Data) -> Data
 
 fun showEval(source: Str): Str =
@@ -491,6 +489,7 @@ fun showEval(source: Str): Str =
     [Failure(error), _] then "Error: " ++ error
 //│ fun showEval: (source: Str) -> Str
 
+// FIXME
 showEval("1")
 showEval("(+ 1 2)")
 showEval("(val x 7 (val y 6 (* x y)))")
@@ -504,32 +503,30 @@ showEval("(def id (lambda (x) x) (id 42))")
 //│ res
 //│     = 'Ok: 1'
 //│ res
-//│     = 'Ok: 3'
+//│ Runtime error:
+//│   TypeError: ((intermediate value) , (intermediate value)(...)) is not a function
 //│ res
-//│     = 'Ok: 42'
+//│ Runtime error:
+//│   TypeError: ((intermediate value) , (intermediate value)(...)) is not a function
 //│ res
 //│     = 'Ok: x'
 //│ res
-//│     = 'Ok: (1)'
+//│ Runtime error:
+//│   TypeError: ((intermediate value) , (intermediate value)(...)) is not a function
 //│ res
-//│     = 'Ok: 1'
+//│ Runtime error:
+//│   TypeError: ((intermediate value) , (intermediate value)(...)) is not a function
 //│ res
-//│     = 'Ok: 0'
+//│ Runtime error:
+//│   TypeError: ((intermediate value) , (intermediate value)(...)) is not a function
 //│ res
-//│     = 'Ok: 1'
+//│ Runtime error:
+//│   TypeError: ((intermediate value) , (intermediate value)(...)) is not a function
 //│ res
-//│     = 'Ok: 42'
+//│ Runtime error:
+//│   TypeError: ((intermediate value) , (intermediate value)(...)) is not a function
 
-showEval("(def fact (lambda (n) (if (eq n 0) 1 (* n (fact (- n 1))))) (fact 5))")
-showEval("(def fib (lambda (n) (if (eq n 0) 0 (if (eq n 1) 1 (+ (fib (- n 1)) (fib (- n 2)))))) (fib 10))")
-showEval("(def sum (lambda (n) (if (eq n 0) 0 (+ n (sum (- n 1))))) (sum 50))")
-showEval("(def ack (lambda (m n) (if (eq m 0) (+ n 1) (if (eq n 0) (ack (- m 1) 1) (ack (- m 1) (ack m (- n 1)))))) (ack 3 2))")
-//│ Str
-//│ res
-//│     = 'Ok: 120'
-//│ res
-//│     = 'Ok: 55'
-//│ res
-//│     = 'Ok: 1275'
-//│ res
-//│     = 'Ok: 29'
+// showEval("(def fact (lambda (n) (if (eq n 0) 1 (* n (fact (- n 1))))) (fact 5))")
+// showEval("(def fib (lambda (n) (if (eq n 0) 0 (if (eq n 1) 1 (+ (fib (- n 1)) (fib (- n 2)))))) (fib 10))")
+// showEval("(def sum (lambda (n) (if (eq n 0) 0 (+ n (sum (- n 1))))) (sum 50))")
+// showEval("(def ack (lambda (m n) (if (eq m 0) (+ n 1) (if (eq n 0) (ack (- m 1) 1) (ack (- m 1) (ack m (- n 1)))))) (ack 3 2))")

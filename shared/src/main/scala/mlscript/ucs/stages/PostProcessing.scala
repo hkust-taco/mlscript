@@ -1,8 +1,8 @@
 package mlscript.ucs.stages
 
-import mlscript.{Case, CaseBranches, CaseOf, Let, Loc, NoCases, Term, Var, Wildcard}
+import mlscript.{Case, CaseBranches, CaseOf, Let, Lit, Loc, NoCases, Term, Var, Wildcard}
 import mlscript.ucs.DesugarUCS
-import mlscript.ucs.context.{Context, ScrutineeData}
+import mlscript.ucs.context.{Context, PatternInfo, ScrutineeData}
 import mlscript.pretyper.symbol._
 import mlscript.utils._, shorthands._
 import mlscript.Message, Message.MessageContext
@@ -14,62 +14,58 @@ trait PostProcessing { self: DesugarUCS with mlscript.pretyper.Traceable =>
   def postProcess(term: Term)(implicit context: Context): Term = trace(s"postProcess <== ${term.showDbg}") {
     // Normalized terms are constructed using `Let` and `CaseOf`.
     term match {
+      case top @ CaseOf(ScrutineeData(_), Wildcard(body)) => body
       case top @ CaseOf(scrutineeVar: Var, fst @ Case(className: Var, body, NoCases)) =>
-        println(s"found a UNARY case: $scrutineeVar is $className")
+        println(s"found a UNARY case: ${scrutineeVar.name} is $className")
         println("post-processing the body")
         top.copy(cases = fst.copy(body = postProcess(body)))
-      case top @ CaseOf(test: Var, fst @ Case(Var("true"), trueBranch, Wildcard(falseBranch))) =>
-        println(s"found a if-then-else case: $test is true")
-        val processedTrueBranch = postProcess(trueBranch)
-        val processedFalseBranch = postProcess(falseBranch)
-        top.copy(cases = fst.copy(body = processedTrueBranch, rest = Wildcard(processedFalseBranch)))
-      case top @ CaseOf(ScrutineeData.WithVar(scrutinee, scrutineeVar), fst @ Case(className: Var, trueBranch, Wildcard(falseBranch))) =>
-        println(s"found a BINARY case: $scrutineeVar is $className")
-        val classSymbol = className.getClassLikeSymbol
-        println(s"matched classes: ${scrutinee.patterns.mkString(", ")}")
-        val classPattern = scrutinee.getClassPattern(classSymbol).getOrElse {
-          throw new PostProcessingException(
-            msg"cannot find class pattern for ${className.name}" -> className.toLoc :: Nil
-          )
-        }
-        println(s"patterns of `${scrutineeVar}`: ${scrutinee.patterns.mkString("{", ", ", "}")}")
+      // case top @ CaseOf(test: Var, fst @ Case(Var("true"), trueBranch, Wildcard(falseBranch))) =>
+      //   println(s"found a if-then-else case: $test is true")
+      //   val processedTrueBranch = postProcess(trueBranch)
+      //   val processedFalseBranch = postProcess(falseBranch)
+      //   top.copy(cases = fst.copy(body = processedTrueBranch, rest = Wildcard(processedFalseBranch)))
+      case top @ CaseOf(ScrutineeData.WithVar(scrutinee, scrutineeVar), fst @ Case(pat, trueBranch, Wildcard(falseBranch))) =>
+        println(s"BINARY: ${scrutineeVar.name} is ${pat.showDbg}")
+        println(s"patterns of `${scrutineeVar.name}`: ${scrutinee.showPatternsDbg}")
         // Post-process the true branch.
         println("post-processing the first branch")
         val processedTrueBranch = postProcess(trueBranch)
         // Post-process the false branch.
         println("post-processing the false branch")
-        val (default, cases) = scrutinee.classLikePatternsIterator.filter(_._1 =/= classSymbol)
+        // Get all patterns, except the current one `pat`.
+        val patternInfoList = scrutinee.patternsIterator.filter(!_.matches(pat)).toList
+        println(s"found ${patternInfoList.length} patterns to distentangle: ${patternInfoList.iterator.map(_.showDbg).mkString(", ")}")
+        val (default, cases) = patternInfoList
           // For each case class name, distangle case branch body terms from the false branch.
-          .foldLeft[Opt[Term] -> Ls[(TypeSymbol, Opt[Loc], Term)]](S(falseBranch) -> Nil) {
-            case ((S(remainingTerm), cases), (classSymbol -> classPattern)) =>
-              println(s"searching for case: ${classSymbol.name}")
-              val (leftoverTerm, extracted) = disentangle(remainingTerm, scrutineeVar, scrutinee, classSymbol)
+          .foldLeft[Opt[Term] -> Ls[(PatternInfo, Opt[Loc], Term)]](S(falseBranch) -> Nil) {
+            case ((S(remainingTerm), cases), pattern) =>
+              println(s"searching for case: ${pattern.showDbg}")
+              val (leftoverTerm, extracted) = disentangleTerm(remainingTerm)(
+                context, scrutineeVar, scrutinee, pattern)
               trimEmptyTerm(leftoverTerm) -> (extracted match {
                 case N =>
-                  println(s"no extracted term about ${classSymbol.name}")
+                  println(s"no extracted term about ${pattern.showDbg}")
                   cases
                 case terms @ S(extractedTerm) => 
-                  println(s"extracted a term about ${classSymbol.name}")
-                  (classSymbol, classPattern.firstOccurrence, postProcess(extractedTerm)) :: cases
+                  println(s"extracted a term about ${pattern.showDbg}")
+                  (pattern, pattern.firstOccurrence, postProcess(extractedTerm)) :: cases
               })
-            case ((N, cases), _) => (N, cases) 
+            case ((N, cases), _) => (N, cases)
           }
         println(s"found ${cases.length} case branches")
         val postProcessedDefault = default.map(postProcess)
         // Assemble a `CaseBranches`.
         val actualFalseBranch = cases.foldRight[CaseBranches](
           postProcessedDefault.fold[CaseBranches](NoCases)(Wildcard(_))
-        ) { case ((classSymbol, loc, body), rest) =>
-          // TODO: Why not just keep the class name?
-          val className = Var(classSymbol.name).withLoc(loc).withSymbol(classSymbol)
-          Case(className, body, rest)
+        ) { case ((pattern, loc, body), rest) =>
+          Case(pattern.toCasePattern, body, rest)
         }
         // Assemble the final `CaseOf`.
         top.copy(cases = fst.copy(body = processedTrueBranch, rest = actualFalseBranch))
       // We recursively process the body of as`Let` bindings.
       case let @ Let(_, _, _, body) => let.copy(body = postProcess(body))
       // Otherwise, this is not a part of a normalized term.
-      case other => println(s"CANNOT post-process"); other
+      case other => println(s"CANNOT post-process ${other.showDbg}"); other
     }
   }(_ => "postProcess ==> ")
 
@@ -124,77 +120,108 @@ trait PostProcessing { self: DesugarUCS with mlscript.pretyper.Traceable =>
     * Disentangle case branches that match `scrutinee` against `className` from `term`.
     * The `term` should be obtained from _normalization_. Because there may exists multiple
     * `CaseOf`s which contains such case branches, we merge them on the fly.
-    *
+    * 
     * @param term the term to disentangle from
     * @param scrutinee the symbol of the scrutinee variable
     * @param className the class name
     * @return the remaining term and the disentangled term
     */
-  def disentangle(term: Term, scrutineeVar: Var, scrutinee: ScrutineeData, classSymbol: TypeSymbol)(implicit context: Context): (Term, Opt[Term]) =
-    trace[(Term, Opt[Term])](s"disentangle <== ${scrutineeVar.name}: ${classSymbol.name}") {
+  private def disentangleTerm(term: Term)(implicit
+      context: Context,
+      scrutineeVar: Var,
+      scrutinee: ScrutineeData,
+      pattern: PatternInfo
+  ): (Term, Opt[Term]) = {
+    def rec(term: Term): (Term, Opt[Term]) =
       term match {
         case top @ CaseOf(ScrutineeData.WithVar(otherScrutinee, otherScrutineeVar), cases) =>
           if (scrutinee === otherScrutinee) {
             println(s"found a `CaseOf` that matches on `${scrutineeVar.name}`")
-            def rec(cases: CaseBranches): (CaseBranches, Opt[Term]) = cases match {
-              case NoCases =>
-                println("no cases, STOP")
-                NoCases -> N
-              case wildcard @ Wildcard(body) =>
-                println("found a wildcard, go deeper")
-                val (n, y) = disentangle(body, scrutineeVar, scrutinee, classSymbol)
-                wildcard.copy(body = n) -> y
-              case kase @ Case(className: Var, body, rest) =>
-                println(s"found a case branch matching against $className")
-                val otherClassSymbol = className.getClassLikeSymbol
-                if (otherClassSymbol === classSymbol) {
-                  rest -> S(body)
-                } else {
-                  val (n1, y1) = disentangle(body, scrutineeVar, scrutinee, classSymbol)
-                  val (n2, y2) = rec(rest)
-                  (kase.copy(body = n1, rest = n2), mergeTerms(y1, y2))
-                }
-              case kase @ Case(otherClassName, body, rest) =>
-                println(s"found another case branch matching against $otherClassName")
-                val (n, y) = rec(rest)
-                kase.copy(rest = n) -> y
-            }
-            val (n, y) = rec(cases)
+            val (n, y) = disentangleMatchedCaseBranches(cases)
             (top.copy(cases = n), y)
           } else {
             println(s"found a `CaseOf` that does NOT match on ${scrutineeVar.name}")
-            def rec(cases: CaseBranches): (CaseBranches, CaseBranches) = cases match {
-              case NoCases =>
-                println("no cases, STOP")
-                NoCases -> NoCases
-              case wildcard @ Wildcard(body) =>
-                println("found a wildcard, go deeper")
-                val (n, y) = disentangle(body, scrutineeVar, scrutinee, classSymbol)
-                (wildcard.copy(body = n), y.fold(NoCases: CaseBranches)(Wildcard(_)))
-              case kase @ Case(_, body, rest) =>
-                println(s"found a case branch")
-                val (n1, y1) = disentangle(body, scrutineeVar, scrutinee, classSymbol)
-                val (n2, y2) = rec(rest)
-                (kase.copy(body = n1, rest = n2), (y1 match {
-                  case S(term) => kase.copy(body = term, rest = y2)
-                  case N => y2
-                }))
-            }
-            val (n, y) = rec(cases)
+            val (n, y) = disentangleUnmatchedCaseBranches(cases)
             (top.copy(cases = n), (if (y === NoCases) N else S(top.copy(cases = y))))
           }
+        // For let bindings, we just go deeper.
         case let @ Let(_, _, _, body) =>
-          val (n, y) = disentangle(body, scrutineeVar, scrutinee, classSymbol)
+          val (n, y) = rec(body)
           (let.copy(body = n), y.map(t => let.copy(body = t)))
+        // Otherwise, the scrutinee does not belong to the UCS term.
         case other =>
           println(s"cannot disentangle ${other.showDbg}. STOP")
           other -> N
       }
-    }({ case (n, y) => s"disentangle ==> `$n` and `${y.fold("<empty>")(_.toString)}`" })
+    trace[(Term, Opt[Term])](s"disentangleTerm <== ${scrutineeVar.name}: ${pattern.showDbg}") {
+      rec(term)
+    }({ case (n, y) => s"disentangleTerm ==> `${n.showDbg}` and `${y.fold("<empty>")(_.showDbg)}`" })
+  }
+
+  /** Helper function for `disentangleTerm`. */
+  private def disentangleMatchedCaseBranches(cases: CaseBranches)(implicit
+      context: Context,
+      scrutineeVar: Var,
+      scrutinee: ScrutineeData,
+      pattern: PatternInfo
+  ): (CaseBranches, Opt[Term]) =
+    cases match {
+      case NoCases => NoCases -> N
+      case wildcard @ Wildcard(body) =>
+        println("found a wildcard, go deeper")
+        val (n, y) = disentangleTerm(body)
+        wildcard.copy(body = n) -> y
+      case kase @ Case(pat, body, rest) =>
+        println(s"found a case branch matching against ${pat.showDbg}")
+        if (pattern.matches(pat)) {
+          rest -> S(body)
+        } else {
+          val (n1, y1) = disentangleTerm(body)
+          val (n2, y2) = disentangleMatchedCaseBranches(rest)
+          (kase.copy(body = n1, rest = n2), mergeTerms(y1, y2))
+        }
+      // case kase @ Case(otherClassName, body, rest) =>
+      //   println(s"found another case branch matching against $otherClassName")
+      //   val (n, y) = disentangleMatchedCaseBranches(rest)
+      //   kase.copy(rest = n) -> y
+    }
+
+
+  /** Helper function for `disentangleTerm`. */
+  private def disentangleUnmatchedCaseBranches(cases: CaseBranches)(implicit
+      context: Context,
+      scrutineeVar: Var,
+      scrutinee: ScrutineeData,
+      pattern: PatternInfo
+  ): (CaseBranches, CaseBranches) =
+    cases match {
+      case NoCases => NoCases -> NoCases
+      case wildcard @ Wildcard(body) =>
+        println("found a wildcard, go deeper")
+        val (n, y) = disentangleTerm(body)
+        (wildcard.copy(body = n), y.fold(NoCases: CaseBranches)(Wildcard(_)))
+      case kase @ Case(_, body, rest) =>
+        println(s"found a case branch")
+        val (n1, y1) = disentangleTerm(body)
+        val (n2, y2) = disentangleUnmatchedCaseBranches(rest)
+        (kase.copy(body = n1, rest = n2), (y1 match {
+          case S(term) => kase.copy(body = term, rest = y2)
+          case N => y2
+        }))
+    }
 }
 
 object PostProcessing {
   class PostProcessingException(val messages: Ls[Message -> Opt[Loc]]) extends Throwable {
     def this(message: Message, location: Opt[Loc]) = this(message -> location :: Nil)
+  }
+
+  private object typeSymbolOrdering extends Ordering[TypeSymbol] {
+    override def compare(x: TypeSymbol, y: TypeSymbol): Int = {
+      (x.defn.toLoc, y.defn.toLoc) match {
+        case (S(xLoc), S(yLoc)) => xLoc.spanStart.compare(yLoc.spanStart)
+        case (_, _) => x.defn.name.compare(y.defn.name)
+      }
+    }
   }
 }

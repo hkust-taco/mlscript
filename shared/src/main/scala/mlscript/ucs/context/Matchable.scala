@@ -35,5 +35,11 @@ trait Matchable {
   private[ucs] def addScrutinee(scrutinee: ScrutineeData)(implicit context: Context): Unit = {
     require(!isScrutinee) // It should be impossible to add a scrutinee twice.
     scrutinees += context -> scrutinee
-    }
+  }
+
+  /** Associate the symbol with a scrutinee in the given context and returns the current object. */
+  private[ucs] def withScrutinee(scrutinee: ScrutineeData)(implicit context: Context): this.type = {
+    addScrutinee(scrutinee)
+    this
+  }
 }

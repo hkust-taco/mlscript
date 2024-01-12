@@ -66,8 +66,8 @@ trait Desugaring { self: PreTyper =>
     * A shorthand for making a true pattern, which is useful in desugaring
     * Boolean conditions.
     */
-  private def truePattern(implicit scope: Scope) = c.Pattern.Class(Var("true").withResolvedTypeSymbol)
-  private def falsePattern(implicit scope: Scope) = c.Pattern.Class(Var("false").withResolvedTypeSymbol)
+  private def truePattern(implicit scope: Scope) = c.Pattern.Class(Var("true").withResolvedClassLikeSymbol)
+  private def falsePattern(implicit scope: Scope) = c.Pattern.Class(Var("false").withResolvedClassLikeSymbol)
 
   private def desugarTermSplit(split: s.TermSplit)(implicit termPart: PartialTerm, scope: Scope, context: Context): c.Split =
     split match {
@@ -170,7 +170,7 @@ trait Desugaring { self: PreTyper =>
     */
   private def desugarClassPattern(pattern: s.ClassPattern, scrutineeVar: Var, initialScope: Scope)(implicit context: Context): (Scope, c.Split => c.Branch) = {
     val scrutinee = scrutineeVar.getOrCreateScrutinee.withAlias(scrutineeVar)
-    val patternClassSymbol = pattern.nme.resolveTypeSymbol(initialScope)
+    val patternClassSymbol = pattern.nme.resolveClassLikeSymbol(initialScope)
     val classPattern = scrutinee.getOrCreateClassPattern(patternClassSymbol)
     println(s"desugarClassPattern: ${scrutineeVar.name} is ${pattern.nme.name}")
     classPattern.addLocation(pattern.nme)
@@ -202,7 +202,7 @@ trait Desugaring { self: PreTyper =>
       // If there is no parameter, then we are done.
       case N => (initialScope, identity(_: c.Split))
     }
-    println(s"${scrutineeVar.name}: ${scrutinee.patterns.mkString(", ")}")
+    println(s"${scrutineeVar.name}: ${scrutinee.showPatternsDbg}")
     // Last, return the scope with all bindings and a function that adds all matches and bindings to a split.
     (scopeWithAll, split => c.Branch(scrutineeVar, c.Pattern.Class(pattern.nme), bindAll(split)))
   }
@@ -303,10 +303,10 @@ trait Desugaring { self: PreTyper =>
               continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scope, context)
             ) :: rec(scrutineeVar, tail)
           case s.ConcretePattern(nme @ (Var("true") | Var("false"))) => 
-            scrutineeVar.getOrCreateScrutinee.withAlias(scrutineeVar).getOrCreateBooleanPattern(nme.name === "true").addLocation(nme)
+            scrutineeVar.getOrCreateScrutinee.withAlias(scrutineeVar).getOrCreateBooleanPattern(nme).addLocation(nme)
             c.Branch(
               scrutinee = scrutineeVar,
-              pattern = c.Pattern.Class(nme.withResolvedTypeSymbol),
+              pattern = c.Pattern.Class(nme.withResolvedClassLikeSymbol),
               continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scope, context)
             ) :: rec(scrutineeVar, tail)
           case s.ConcretePattern(nme) =>

@@ -585,7 +585,11 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Blk(stmts) => stmts.iterator.map(_.showDbg).mkString("{", "; ", "}")
     case IntLit(value) => value.toString
     case DecLit(value) => value.toString
-    case StrLit(value) => '"'.toString + value + '"'
+    case StrLit(value) => value.iterator.map {
+      case '\\' => "\\\\"; case '"' => "\\\""; case '\'' => "\\'"
+      case '\n' => "\\n"; case '\r' => "\\r"; case '\t' => "\\t"
+      case '\f' => "\\f"; case '\b' => "\\b"; case c => c.toString()
+    }.mkString("\"", "", "\"")
     case UnitLit(value) => if (value) "undefined" else "null"
     case v @ Var(name) => name + v.uid.fold("")("::"+_.toString)
     case Asc(trm, ty) => s"${trm.showDbg} : ${ty.showDbg2}"  |> bra

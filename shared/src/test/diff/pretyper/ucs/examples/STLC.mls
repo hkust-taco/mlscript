@@ -96,7 +96,7 @@ fun typeEqual(t1, t2) =
     t1 is FunctionType(lhs1, rhs1) and t2 is FunctionType(lhs2, rhs2) then
       typeEqual(lhs1, lhs2) and typeEqual(rhs1, rhs2)
     _ then false
-//│ fun typeEqual: (FunctionType | Object & ~#FunctionType & ~#PrimitiveType | PrimitiveType, Object) -> Bool
+//│ fun typeEqual: (Object, Object) -> Bool
 
 fun showTerm(t) =
   if t is

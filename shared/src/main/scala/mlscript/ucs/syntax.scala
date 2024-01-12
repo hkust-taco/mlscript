@@ -9,9 +9,9 @@ package object syntax {
   sealed abstract class Pattern extends Located {
     override def toString(): String = this match {
       case AliasPattern(nme, pattern) => s"$nme @ $pattern"
-      case LiteralPattern(literal) => literal.toString
+      case LiteralPattern(literal) => literal.idStr
       case ConcretePattern(nme) => s"`${nme.name}`"
-      case NamePattern(nme) => nme.toString
+      case NamePattern(nme) => nme.name
       case EmptyPattern(_) => "•"
       case ClassPattern(Var(name), N) => name
       case ClassPattern(Var(name), S(parameters)) =>

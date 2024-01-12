@@ -67,10 +67,8 @@ fun countLineSegments(x) =
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.58: 	    Circle(_, _) then "4"
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── class pattern of type `Shape` does not match type `Circle | LineSegment | Rectangle`
-//│ ║  l.55: 	    Shape and hidden(x) then "1"
-//│ ║        	    ^^^^^
-//│ ╟── but it flows into reference with expected type `Circle | LineSegment | Rectangle`
-//│ ║  l.54: 	  if x is
-//│ ╙──      	     ^
+//│ ╟── expression of type `Shape & ~#LineSegment & ~#Rectangle` is not an instance of type `Circle`
+//│ ╟── Note: constraint arises from class pattern:
+//│ ║  l.58: 	    Circle(_, _) then "4"
+//│ ╙──      	    ^^^^^^
 //│ fun countLineSegments: Shape -> ("1" | "2" | "3" | "4")

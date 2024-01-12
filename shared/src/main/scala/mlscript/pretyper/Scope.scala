@@ -2,7 +2,7 @@ package mlscript.pretyper
 
 import collection.immutable.Map
 import mlscript.utils._, shorthands._
-import mlscript.{Mod, NuTypeDef, TypeName, TypingUnit, Var}
+import mlscript.{Als, Mod, NuTypeDef, TypeName, TypingUnit, Var}
 import scala.annotation.tailrec
 import symbol._
 
@@ -94,8 +94,10 @@ object Scope {
   val global: Scope = {
     val trueDefn = NuTypeDef(Mod, TypeName("true"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N)
     val falseDefn = NuTypeDef(Mod, TypeName("false"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N)
+    val nothingDefn = NuTypeDef(Als, TypeName("nothing"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N)
     val trueSymbol = new ModuleSymbol(trueDefn)
     val falseSymbol = new ModuleSymbol(falseDefn)
+    val nothingSymbol = new TypeAliasSymbol(nothingDefn)
     Scope.from(
       """true,false,document,window,typeof,toString,not,succ,log,discard,negate,
         |round,add,sub,mul,div,sqrt,lt,le,gt,ge,slt,sle,sgt,sge,length,concat,eq,
@@ -106,7 +108,7 @@ object Scope {
         .iterator
         .map(_.trim)
         .map(name => new LocalTermSymbol(Var(name)))
-        .concat(trueSymbol :: falseSymbol :: Nil)
+        .concat(trueSymbol :: falseSymbol :: nothingSymbol :: Nil)
     )
   }
 }

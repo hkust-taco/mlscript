@@ -34,6 +34,8 @@ package object symbol {
     var sealedDerivedTypes: Ls[TypeSymbol] = Nil
 
     @inline def hasSuperType(superType: TypeSymbol): Bool = baseTypes.exists(_ === superType)
+
+    def showDbg: Str = s"${defn.kind.str} $name"
   }
 
   object TypeSymbol {

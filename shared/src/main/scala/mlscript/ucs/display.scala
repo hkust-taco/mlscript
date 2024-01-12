@@ -31,8 +31,10 @@ package object display {
         case (n, line) :: tail => (n, (if (isAfterAnd) "" else "and ") + s"$line") :: tail
         case Nil => Nil
       }) ::: termSplit(tail, false, isAfterAnd)
-      case syntax.Split.Let(_, nme, rhs, tail) => (0, s"let $nme = $rhs") :: termSplit(tail, false, isAfterAnd)
-      case syntax.Split.Else(term) => (if (isFirst) (0, s"then $term") else (0, s"else $term")) :: Nil
+      case syntax.Split.Let(_, nme, rhs, tail) =>
+        (0, s"let ${nme.name} = ${rhs.showDbg}") :: termSplit(tail, false, isAfterAnd)
+      case syntax.Split.Else(term) =>
+        (if (isFirst) (0, s"then ${term.showDbg}") else (0, s"else ${term.showDbg}")) :: Nil
       case syntax.Split.Nil => Nil
     }
     def termBranch(branch: syntax.TermBranch): Lines = branch match {
@@ -45,14 +47,16 @@ package object display {
     }
     def patternSplit(split: syntax.PatternSplit): Lines = split match {
       case syntax.Split.Cons(head, tail) => patternBranch(head) ::: patternSplit(tail)
-      case syntax.Split.Let(rec, nme, rhs, tail) => (0, s"let $nme = $rhs") :: patternSplit(tail)
-      case syntax.Split.Else(term) => (0, s"else $term") :: Nil
+      case syntax.Split.Let(rec, nme, rhs, tail) =>
+        (0, s"let ${nme.name} = ${rhs.showDbg}") :: patternSplit(tail)
+      case syntax.Split.Else(term) => (0, s"else ${term.showDbg}") :: Nil
       case syntax.Split.Nil => Nil
     }
     def operatorSplit(split: syntax.OperatorSplit): Lines = split match {
       case syntax.Split.Cons(head, tail) => operatorBranch(head) ::: operatorSplit(tail)
-      case syntax.Split.Let(rec, nme, rhs, tail) => (0, s"let $nme = $rhs") :: operatorSplit(tail)
-      case syntax.Split.Else(term) => (0, s"else $term") :: Nil
+      case syntax.Split.Let(rec, nme, rhs, tail) =>
+        (0, s"let ${nme.name} = ${rhs.showDbg}") :: operatorSplit(tail)
+      case syntax.Split.Else(term) => (0, s"else ${term.showDbg}") :: Nil
       case syntax.Split.Nil => Nil
     }
     def operatorBranch(branch: syntax.OperatorBranch): Lines =
@@ -79,8 +83,10 @@ package object display {
         case (n, line) :: tail => (n, (if (isTopLevel) "" else "") + s"$line") :: tail
         case Nil => Nil
       }) ::: split(tail, false, isTopLevel)
-      case core.Split.Let(_, nme, rhs, tail) => (0, s"let ${showVar(nme)} = $rhs") :: split(tail, false, isTopLevel)
-      case core.Split.Else(term) => (if (isFirst) (0, s"then $term") else (0, s"else $term")) :: Nil
+      case core.Split.Let(_, nme, rhs, tail) =>
+        (0, s"let ${showVar(nme)} = ${rhs.showDbg}") :: split(tail, false, isTopLevel)
+      case core.Split.Else(term) =>
+        (if (isFirst) (0, s"then ${term.showDbg}") else (0, s"else ${term.showDbg}")) :: Nil
       case core.Split.Nil => Nil
     }
     def branch(b: core.Branch): Lines = {
@@ -104,15 +110,15 @@ package object display {
     def showTerm(term: Term): Lines = term match {
       case let: Let => showLet(let)
       case caseOf: CaseOf => showCaseOf(caseOf)
-      case other => (0, other.toString) :: Nil
+      case other => (0, other.showDbg) :: Nil
     }
     def showScrutinee(term: Term): Str = term match {
       case vari: Var => showVar(vari)
-      case _ => term.toString
+      case _ => term.showDbg
     }
     def showPattern(pat: SimpleTerm): Str = pat match {
       case vari: Var => showVar(vari)
-      case _ => pat.toString
+      case _ => pat.showDbg
     }
     def showCaseOf(caseOf: CaseOf): Lines = {
       val CaseOf(trm, cases) = caseOf
@@ -127,7 +133,7 @@ package object display {
       }
     def showLet(let: Let): Lines = {
       val Let(rec, nme, rhs, body) = let
-      (0, s"let ${showVar(nme)} = $rhs") :: showTerm(body)
+      (0, s"let ${showVar(nme)} = ${rhs.showDbg}") :: showTerm(body)
     }
     showTerm(term).map { case (n, line) => "  " * n + line }.mkString("\n")
   }

@@ -1,89 +1,36 @@
 package mlscript.ucs.context
 
-import collection.mutable.{Buffer, Map => MutMap, SortedMap => MutSortedMap, SortedSet => MutSortedSet}
-import mlscript.{Lit, Loc, Located, NuFunDef, NuTypeDef, TypeName, Var}
+import collection.mutable.{Buffer, SortedMap => MutSortedMap, SortedSet => MutSortedSet}
+import mlscript.{Lit, Loc, Var}
 import mlscript.pretyper.symbol.TypeSymbol
 import mlscript.utils._, shorthands._
 import mlscript.ucs.context.CaseSet
-
-abstract class PatternInfo {
-  private val locationsBuffer: Buffer[Loc] = Buffer.empty
-
-  def addLocation(located: Located): Unit = located.getLoc.foreach(locationsBuffer += _)
-
-  def addLocation(location: Opt[Loc]): Unit = locationsBuffer ++= location
-
-  def firstOccurrence: Option[Loc] = locationsBuffer.headOption
-
-  def locations: Ls[Loc] = locationsBuffer.toList
-
-  def arity: Opt[Int]
-}
-
-class ClassPatternInfo(scrutinee: ScrutineeData) extends PatternInfo {
-  private var unappliedVarOpt: Opt[Var] = N
-  private val parameters: MutSortedMap[Int, ScrutineeData] = MutSortedMap.empty
-
-  /**
-    * Get or create a sub-scrutinee for the given parameter index.
-    *
-    * @param index the index of the parameter.
-    * @return a `ScrutineeData` for the parameter whose parent scrutinee is the
-    *         current scrutinee
-    */
-  def getParameter(index: Int): ScrutineeData = {
-    require(index >= 0)
-    parameters.getOrElseUpdate(index, scrutinee.freshSubScrutinee)
-  }
-
-  def getUnappliedVar(default: => Var): Var =
-    unappliedVarOpt.getOrElse {
-      val unappliedVar = default
-      unappliedVarOpt = S(unappliedVar)
-      unappliedVar
-    }
-
-  override def arity: Opt[Int] = parameters.keysIterator.maxOption.map(_ + 1)
-}
-
-class TuplePatternInfo(scrutinee: ScrutineeData) extends PatternInfo {
-  private val fields: MutSortedMap[Int, ScrutineeData] = MutSortedMap.empty
-
-  def getField(index: Int): ScrutineeData =
-    fields.getOrElseUpdate(index, scrutinee.freshSubScrutinee)
-
-  override def arity: Opt[Int] = fields.keysIterator.maxOption.map(_ + 1)
-}
-
-class LiteralPatternInfo extends PatternInfo {
-  override def arity: Opt[Int] = N
-}
-
-/**
-  * This can be actually merged with `LiteralPatternInfo`. However, there's no
-  * `Lit` sub-classes for Boolean types, so the representation is a little bit
-  * awkward, also, it makes sense to consider Boolean patterns separately
-  * because we can check the Boolean exhaustiveness with them.
-  */
-class BooleanPatternInfo extends PatternInfo {
-  override def arity: Opt[Int] = N
-}
+import mlscript.DecLit
+import mlscript.IntLit
+import mlscript.StrLit
+import mlscript.UnitLit
 
 class ScrutineeData(val context: Context, parent: Opt[ScrutineeData]) {
+  import ScrutineeData._
+
   private val locations: Buffer[Loc] = Buffer.empty
   private var generatedVarOpt: Opt[Var] = N
-  private val classLikePatterns: MutMap[TypeSymbol, ClassPatternInfo] = MutMap.empty
+  private val classLikePatterns: MutSortedMap[TypeSymbol, PatternInfo.ClassLike] = MutSortedMap.empty(classLikeSymbolOrdering)
   // Currently we only support simple tuple patterns, so there is only _one_
   // slot for tuple patterns. After we support complex tuple patterns, we need
-  // to extend this fields to a map from tuple arity to `TuplePatternInfo`.
-  //    private val tuplePatterns: MutMap[Int, TuplePatternInfo] = MutMap.empty
+  // to extend this fields to a map from tuple arity to `PatternInfo.Tuple`.
+  //    private val tuplePatterns: MutMap[Int, PatternInfo.Tuple] = MutMap.empty
   // If we support tuple pattern splice, we need a more expressive key in the
   // map's type.
-  private var tuplePatternOpt: Opt[TuplePatternInfo] = N
+  private var tuplePatternOpt: Opt[PatternInfo.Tuple] = N
   private var alisesSet: MutSortedSet[Var] = MutSortedSet.empty
 
-  private val literalPatterns: MutMap[Lit, LiteralPatternInfo] = MutMap.empty
-  private val booleanPatterns: MutMap[Bool, BooleanPatternInfo] = MutMap.empty
+  private val literalPatterns: MutSortedMap[Lit, PatternInfo.Literal] = MutSortedMap.empty(literalOrdering)
+  /**
+    * The key should be either `Var("true")` or `Var("false")`. We want to keep
+    * the type symbol of the variable so that it still work in following stages.
+    */
+  private val booleanPatterns: MutSortedMap[Var, PatternInfo.Boolean] = MutSortedMap.empty(varNameOrdering)
 
   def +=(alias: Var): Unit = alisesSet += alias
 
@@ -92,23 +39,23 @@ class ScrutineeData(val context: Context, parent: Opt[ScrutineeData]) {
   def aliasesIterator: Iterator[Var] = alisesSet.iterator
 
   /**
-    * If there is already a `ClassPatternInfo` for the given symbol, return it.
-    * Otherwise, create a new `ClassPatternInfo` and return it.
+    * If there is already a `PatternInfo.ClassLike` for the given symbol, return it.
+    * Otherwise, create a new `PatternInfo.ClassLike` and return it.
     */
-  def getOrCreateClassPattern(classLikeSymbol: TypeSymbol): ClassPatternInfo =
-    classLikePatterns.getOrElseUpdate(classLikeSymbol, new ClassPatternInfo(this))
+  def getOrCreateClassPattern(classLikeSymbol: TypeSymbol): PatternInfo.ClassLike =
+    classLikePatterns.getOrElseUpdate(classLikeSymbol, new PatternInfo.ClassLike(classLikeSymbol, this))
 
   /**
     * Get the class pattern but DO NOT create a new one if there isn't. This
     * function is mainly used in post-processing because we don't want to
     * accidentally create new patterns.
     */
-  def getClassPattern(classLikeSymbol: TypeSymbol): Opt[ClassPatternInfo] =
+  def getClassPattern(classLikeSymbol: TypeSymbol): Opt[PatternInfo.ClassLike] =
     classLikePatterns.get(classLikeSymbol)
 
   /**
-   * If there is already a `TuplePatternInfo`, return it. Otherwise, create a
-   * new `TuplePatternInfo` and return it.
+   * If there is already a `PatternInfo.Tuple`, return it. Otherwise, create a
+   * new `PatternInfo.Tuple` and return it.
    * 
    * **NOTE**: There's only one slot for tuple patterns because we cannot
    * differentiate tuple types in underlying MLscript case terms. In the future,
@@ -116,35 +63,42 @@ class ScrutineeData(val context: Context, parent: Opt[ScrutineeData]) {
    * a signature like this.
    * 
    * ```scala
-   * def getOrCreateTuplePattern(dimension: TupleDimension): TuplePatternInfo
+   * def getOrCreateTuplePattern(dimension: TupleDimension): PatternInfo.Tuple
    * case class TupleDimension(knownArity: Int, hasSplice: Bool)
    * ```
    */
-  def getOrCreateTuplePattern: TuplePatternInfo =
+  def getOrCreateTuplePattern: PatternInfo.Tuple =
     tuplePatternOpt.getOrElse {
-      val tuplePattern = new TuplePatternInfo(this)
+      val tuplePattern = new PatternInfo.Tuple(this)
       tuplePatternOpt = S(tuplePattern)
       tuplePattern
     }
 
   /** Get the tuple pattern and create a new one if there isn't. */
-  def getOrCreateLiteralPattern(literal: Lit): LiteralPatternInfo =
-    literalPatterns.getOrElseUpdate(literal, new LiteralPatternInfo)
+  def getOrCreateLiteralPattern(literal: Lit): PatternInfo.Literal =
+    literalPatterns.getOrElseUpdate(literal, new PatternInfo.Literal(literal))
 
-  def getOrCreateBooleanPattern(value: Bool): BooleanPatternInfo =
-    booleanPatterns.getOrElseUpdate(value, new BooleanPatternInfo)
+  /**
+    * The key should be either `Var("true")` or `Var("false")`. We want to keep
+    * the type symbol of the variable so that it still work in following stages.
+    */
+  def getOrCreateBooleanPattern(value: Var): PatternInfo.Boolean =
+    booleanPatterns.getOrElseUpdate(value, new PatternInfo.Boolean(value))
 
-  def classLikePatternsIterator: Iterator[TypeSymbol -> ClassPatternInfo] = classLikePatterns.iterator
+  def classLikePatternsIterator: Iterator[PatternInfo.ClassLike] = classLikePatterns.valuesIterator
 
-  /** Get the name representation of patterns. Only for debugging. */
-  def patterns: Iterator[Str] = {
+  def patternsIterator: Iterator[PatternInfo] =
+    classLikePatterns.valuesIterator ++ literalPatterns.valuesIterator ++ booleanPatterns.valuesIterator
+
+  /** Get a list of string representation of patterns. Only for debugging. */
+  private[ucs] def showPatternsDbg: Str = {
     val classLikePatternsStr = classLikePatterns.iterator.map { case (symbol, pattern) =>
       s"${symbol.name}(${pattern.arity.fold("?")(_.toString)})"
     }
     val tuplePatternStr = tuplePatternOpt.iterator.map { tuplePattern =>
       s"tuple(${tuplePattern.arity.fold("?")(_.toString)})"
     }
-    classLikePatternsStr ++ tuplePatternStr
+    (classLikePatternsStr ++ tuplePatternStr).mkString(", ")
   }
 
   def freshSubScrutinee: ScrutineeData = context.freshScrutinee(this)
@@ -187,5 +141,30 @@ object ScrutineeData {
       }
       case _ => N
     }
+  }
+
+  private def literalInternalOrder(literal: Lit): Int = literal match {
+    case UnitLit(true) => 0
+    case UnitLit(false) => 1
+    case _: DecLit => 2
+    case _: IntLit => 3
+    case _: StrLit => 4
+  }
+
+  private implicit val classLikeSymbolOrdering: Ordering[TypeSymbol] = new Ordering[TypeSymbol] {
+    override def compare(x: TypeSymbol, y: TypeSymbol): Int = x.defn.name.compareTo(y.defn.name)
+  }
+
+  private implicit val literalOrdering: Ordering[Lit] = new Ordering[Lit] {
+    override def compare(x: Lit, y: Lit): Int = (x, y) match {
+      case (DecLit(x), DecLit(y)) => x.compare(y)
+      case (IntLit(x), IntLit(y)) => x.compare(y)
+      case (StrLit(x), StrLit(y)) => x.compare(y)
+      case _ => literalInternalOrder(x).compare(literalInternalOrder(y))
+    }
+  }
+
+  private implicit val varNameOrdering: Ordering[Var] = new Ordering[Var] {
+    override def compare(x: Var, y: Var): Int = x.name.compareTo(y.name)
   }
 }

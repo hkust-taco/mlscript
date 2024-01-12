@@ -215,7 +215,7 @@ class DiffTests
           case "p" => mode.copy(showParse = true)
           case "d" => mode.copy(dbg = true)
           case "dp" => mode.copy(dbgParsing = true)
-          case PreTyperFlags(ts) => mode.copy(dbgPreTyper = S(ts))
+          case PreTyperFlags(ts) => mode.copy(dbgPreTyper = mode.dbgPreTyper.fold(S(ts))(ts0 => S(ts0 ++ ts)))
           case "ds" => mode.copy(dbgSimplif = true)
           case "ducs" => mode.copy(dbg = true, dbgUCS = true)
           case "s" => mode.copy(fullExceptionStack = true)
@@ -1163,7 +1163,7 @@ object DiffTests {
   }
 
   object PreTyperFlags {
-    private val pattern = "^dpt(?::\\s*([A-Za-z]+)(,\\s*[A-Za-z]+)*)?$".r
+    private val pattern = "^dpt(?::\\s*([A-Za-z\\.-]+)(,\\s*[A-Za-z\\.-]+)*)?$".r
     def unapply(flags: Str): Opt[Set[Str]] =
       flags match {
         case pattern(head, tail) =>

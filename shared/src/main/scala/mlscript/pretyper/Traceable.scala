@@ -7,7 +7,7 @@ trait Traceable {
   /** The set of topics to debug. Empty set indicates all topics. */
   protected val debugTopics: Opt[Set[Str]] = N
   protected var indent = 0
-  private var topic: Opt[Str] = N
+  private var currentTopic: Opt[Str] = N
 
   def emitString(str: String): Unit = scala.Predef.println(str)
   
@@ -22,10 +22,10 @@ trait Traceable {
     res
   }
 
-  def traceWithTopic[T](topic: Str)(thunk: => T): T = {
-    this.topic = S(topic)
+  def traceWithTopic[T](currentTopic: Str)(thunk: => T): T = {
+    this.currentTopic = S(currentTopic)
     val res = thunk
-    this.topic = N
+    this.currentTopic = N
     res
   }
 
@@ -33,9 +33,9 @@ trait Traceable {
     thunk
   
   @inline protected def println(x: => Any): Unit =
-    topic match {
-      case N => if (debugTopics.isDefined) printLineByLine(x)
-      case S(topic) => if (debugTopics.fold(false)(ts => ts.isEmpty || ts.contains(topic))) printLineByLine(x)
+    debugTopics match {
+      case S(someTopics) if someTopics.isEmpty || currentTopic.fold(false)(someTopics) => printLineByLine(x)
+      case N | S(_) => ()
     }
 }
 
