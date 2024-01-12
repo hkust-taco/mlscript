@@ -21,8 +21,9 @@ fun map(f, xs) = if xs is
 
 fun show(xs) =
   let rec go(xs) = if xs is
-    Cons(h, t) then join(String(h), ", ", show(t))
-    Nil        then ""
+    Cons(h, Nil) then String(h)
+    Cons(h, t)   then join(String(h), ", ", go(t))
+    Nil          then ""
   join("[", go(xs), "]")
 
 let xs = 1 :: 2 :: 3 :: Nil
