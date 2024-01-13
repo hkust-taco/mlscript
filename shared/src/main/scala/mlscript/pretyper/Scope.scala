@@ -98,6 +98,7 @@ object Scope {
     val trueSymbol = new ModuleSymbol(trueDefn)
     val falseSymbol = new ModuleSymbol(falseDefn)
     val nothingSymbol = new TypeAliasSymbol(nothingDefn)
+    val commaSymbol = new LocalTermSymbol(Var(","))
     Scope.from(
       """true,false,document,window,typeof,toString,not,succ,log,discard,negate,
         |round,add,sub,mul,div,sqrt,lt,le,gt,ge,slt,sle,sgt,sge,length,concat,eq,
@@ -108,7 +109,7 @@ object Scope {
         .iterator
         .map(_.trim)
         .map(name => new LocalTermSymbol(Var(name)))
-        .concat(trueSymbol :: falseSymbol :: nothingSymbol :: Nil)
+        .concat(trueSymbol :: falseSymbol :: nothingSymbol :: commaSymbol :: Nil)
     )
   }
 }

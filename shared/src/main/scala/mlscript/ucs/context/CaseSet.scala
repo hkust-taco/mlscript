@@ -3,10 +3,16 @@ package mlscript.ucs.context
 import mlscript.{Lit, Loc}
 import mlscript.pretyper.symbol.TypeSymbol
 import mlscript.utils._, shorthands._
+import mlscript.pretyper.symbol.DummyClassSymbol
 
 sealed abstract class Pattern {
   override def toString(): String = this match {
-    case Pattern.ClassLike(symbol) => s"${symbol.defn.kind.str} `${symbol.name}`"
+    case Pattern.ClassLike(symbol) =>
+      val kind = symbol match {
+        case _: DummyClassSymbol => "dummy class"
+        case _ => symbol.defn.kind.str
+      }
+      s"$kind `${symbol.name}`"
     case Pattern.Tuple() => "tuple"
     case Pattern.Literal(literal) => s"literal $literal"
   }

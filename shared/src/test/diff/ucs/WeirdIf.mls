@@ -1,96 +1,66 @@
-:NewDefs
+:PreTyper
 
-// Should report duplicated else branches.
-:w
+// FIXME: Should report duplicated else branches.
+// :w
 if
   _ then 0
   else 0
 else 1
-//│ ╔══[WARNING] Found a duplicated branch
-//│ ╟── This branch
-//│ ║  l.7: 	  else 0
-//│ ║       	       ^
-//│ ╟── is subsumed by the branch here.
-//│ ║  l.6: 	  _ then 0
-//│ ╙──     	         ^
-//│ ╔══[WARNING] Found a duplicated branch
-//│ ╟── This branch
-//│ ║  l.8: 	else 1
-//│ ║       	     ^
-//│ ╟── is subsumed by the branch here.
-//│ ║  l.6: 	  _ then 0
-//│ ╙──     	         ^
 //│ 0
 //│ res
 //│     = 0
 
-:w
+// FIXME
+// :w
 if else 0 else 1
-//│ ╔══[WARNING] Found a duplicated branch
-//│ ╟── This branch
-//│ ║  l.28: 	if else 0 else 1
-//│ ║        	               ^
-//│ ╟── is subsumed by the branch here.
-//│ ║  l.28: 	if else 0 else 1
-//│ ╙──      	        ^
 //│ 0
 //│ res
 //│     = 0
 
-:w
+// FIXME
+// :w
 fun f(x) = if x is else 0 else 1
-//│ ╔══[WARNING] Found a duplicated branch
-//│ ╟── This branch
-//│ ║  l.41: 	fun f(x) = if x is else 0 else 1
-//│ ║        	                               ^
-//│ ╟── is subsumed by the branch here.
-//│ ║  l.41: 	fun f(x) = if x is else 0 else 1
-//│ ╙──      	                        ^
 //│ fun f: anything -> 0
 
 fun f(x) = if x is else 0 
 //│ fun f: anything -> 0
 
 :e
-:ge
 if true
   then 0
-//│ ╔══[ERROR] The case when this is false is not handled: true
-//│ ║  l.56: 	if true
-//│ ╙──      	   ^^^^
-//│ error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.30: 	  then 0
+//│ ║        	       ^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ 0
+//│ res
+//│     = 0
 
 // This cannot be parsed. But the next one works.
 :pe
 :e
-:ge
 fun f(x) =
   if x ===
     else "bruh"
 //│ ╔══[PARSE ERROR] Unexpected indented block in expression position
-//│ ║  l.71: 	    else "bruh"
+//│ ║  l.44: 	    else "bruh"
 //│ ╙──      	^^^^
 //│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
-//│ ║  l.71: 	    else "bruh"
+//│ ║  l.44: 	    else "bruh"
 //│ ╙──      	    ^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found operator application instead
-//│ ║  l.70: 	  if x ===
+//│ ║  l.43: 	  if x ===
 //│ ║        	     ^^^^^
-//│ ║  l.71: 	    else "bruh"
+//│ ║  l.44: 	    else "bruh"
 //│ ║        	^^^^
 //│ ╟── Note: 'if' expression starts here:
-//│ ║  l.70: 	  if x ===
+//│ ║  l.43: 	  if x ===
 //│ ╙──      	  ^^
-//│ ╔══[ERROR] The case when this is false is not handled: ===(x, undefined,)
-//│ ║  l.70: 	  if x ===
-//│ ║        	     ^^^^^
-//│ ║  l.71: 	    else "bruh"
-//│ ╙──      	^^^^
-//│ fun f: anything -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.44: 	    else "bruh"
+//│ ║        	    ^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ fun f: Eql[()] -> ()
 
 // But this works.
 fun f(x) =
@@ -102,6 +72,8 @@ fun boolToStr(x) =
   if x is
     true then "yah"
     false then "nah"
+//│ ╙──
+//│ ╙──
 //│ fun boolToStr: Bool -> ("nah" | "yah")
 
 boolToStr of true

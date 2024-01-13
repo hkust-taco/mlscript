@@ -1,4 +1,4 @@
-:NewDefs
+:PreTyper
 
 
 case 0 then true
@@ -63,21 +63,27 @@ map(succ) of None
 fun map(f) = case
   Some(x)   then Some(f(x))
   None as n then n
-//│ ╔══[ERROR] Illegal pattern `as`
+//│ ╔══[ERROR] type identifier `as` not found
 //│ ║  l.65: 	  None as n then n
 //│ ╙──      	       ^^
-//│ fun map: anything -> anything -> error
+//│ ╔══[ERROR] identifier `as` not found
+//│ ║  l.65: 	  None as n then n
+//│ ╙──      	       ^^
+//│ ╔══[ERROR] type identifier not found: as
+//│ ║  l.65: 	  None as n then n
+//│ ╙──      	       ^^
+//│ fun map: forall 'a 'A. ('a -> 'A) -> Some['a] -> (Some['A] | error)
 //│ Code generation encountered an error:
-//│   if expression was not desugared
+//│   unresolved symbol as
 
 
 :pe
 case 1
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'case'; found integer literal instead
-//│ ║  l.75: 	case 1
+//│ ║  l.81: 	case 1
 //│ ║        	     ^
 //│ ╟── Note: 'case' expression starts here:
-//│ ║  l.75: 	case 1
+//│ ║  l.81: 	case 1
 //│ ╙──      	^^^^
 //│ anything -> 1
 //│ res
@@ -86,13 +92,13 @@ case 1
 :pe
 case (1 then true)
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.87: 	case (1 then true)
+//│ ║  l.93: 	case (1 then true)
 //│ ╙──      	        ^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'case'; found integer literal instead
-//│ ║  l.87: 	case (1 then true)
+//│ ║  l.93: 	case (1 then true)
 //│ ║        	     ^^^^^^^^^^^^^
 //│ ╟── Note: 'case' expression starts here:
-//│ ║  l.87: 	case (1 then true)
+//│ ║  l.93: 	case (1 then true)
 //│ ╙──      	^^^^
 //│ anything -> 1
 //│ res
@@ -106,16 +112,16 @@ case else 0
 :pe
 case then 1 else 0
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in expression position
-//│ ║  l.107: 	case then 1 else 0
+//│ ║  l.113: 	case then 1 else 0
 //│ ╙──       	     ^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'case'; found integer literal instead
-//│ ║  l.107: 	case then 1 else 0
+//│ ║  l.113: 	case then 1 else 0
 //│ ║         	          ^
 //│ ╟── Note: 'case' expression starts here:
-//│ ║  l.107: 	case then 1 else 0
+//│ ║  l.113: 	case then 1 else 0
 //│ ╙──       	^^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found 'else' keyword instead
-//│ ║  l.107: 	case then 1 else 0
+//│ ║  l.113: 	case then 1 else 0
 //│ ╙──       	            ^^^^
 //│ anything -> 1
 //│ res
@@ -129,16 +135,19 @@ case then 1 else 0
 :e
 case x, y then x + y
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
-//│ ║  l.130: 	case x, y then x + y
+//│ ║  l.136: 	case x, y then x + y
 //│ ╙──       	        ^^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'case'; found operator application instead
-//│ ║  l.130: 	case x, y then x + y
+//│ ║  l.136: 	case x, y then x + y
 //│ ║         	     ^^^^^^^^^^^^^^^
 //│ ╟── Note: 'case' expression starts here:
-//│ ║  l.130: 	case x, y then x + y
+//│ ║  l.136: 	case x, y then x + y
 //│ ╙──       	^^^^
+//│ ╔══[ERROR] identifier `x` not found
+//│ ║  l.136: 	case x, y then x + y
+//│ ╙──       	     ^
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.130: 	case x, y then x + y
+//│ ║  l.136: 	case x, y then x + y
 //│ ╙──       	     ^
 //│ anything -> ()
 //│ Code generation encountered an error:
@@ -146,20 +155,28 @@ case x, y then x + y
 
 :e
 case (x, y) then x + y
-//│ ╔══[ERROR] Illegal pattern `,`
-//│ ║  l.148: 	case (x, y) then x + y
+//│ ╔══[ERROR] type identifier `,` not found
+//│ ║  l.157: 	case (x, y) then x + y
 //│ ╙──       	      ^^^^
-//│ anything -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
-
-:e // * FIXME[UCS]
-case [x, y] then x + y
-//│ ╔══[ERROR] type identifier not found: Tuple#2
-//│ ╙──
+//│ ╔══[ERROR] identifier , refers to different symbols.
+//│ ║  l.157: 	case (x, y) then x + y
+//│ ║         	      ^^^^
+//│ ╟── it is resolved to `,`
+//│ ╙── it was previously resolved to local `,`
+//│ ╔══[ERROR] type identifier not found: ,
+//│ ║  l.157: 	case (x, y) then x + y
+//│ ╙──       	      ^^^^
 //│ nothing -> error
 //│ Code generation encountered an error:
-//│   unknown match case: Tuple#2
+//│   unresolved symbol ,
 
 
+let foo = case [x, y] then x + y
+//│ let foo: {0: Int, 1: Int} -> Int
+//│ foo
+//│     = [Function: foo1]
 
+foo([1, 2])
+//│ Int
+//│ res
+//│     = 3

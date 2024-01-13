@@ -1,5 +1,4 @@
-:NewParser
-:NewDefs
+:PreTyper
 
 
 
@@ -26,23 +25,28 @@ module Fals
 //│ module Fals
 
 :e
-:ge
 fun f(x, y) = if x is
     Tru and y is Tru then true
     Fals and y is Fals then false
-//│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.31: 	    Tru and y is Tru then true
-//│ ║        	            ^^^^^^^^
-//│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.31: 	    Tru and y is Tru then true
+//│ ╔══[ERROR] When scrutinee `x` is `Tru`
+//│ ║  l.29: 	    Tru and y is Tru then true
+//│ ║        	    ^^^
+//│ ╟── Scrutinee `y` has 1 missing case
+//│ ║  l.29: 	    Tru and y is Tru then true
 //│ ║        	            ^
-//│ ╟── [Missing Case 1/1] `Fals`
-//│ ╟── It first appears here.
-//│ ║  l.32: 	    Fals and y is Fals then false
+//│ ╟── It can be module `Fals`
+//│ ║  l.30: 	    Fals and y is Fals then false
 //│ ╙──      	                  ^^^^
-//│ fun f: (anything, anything) -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[ERROR] When scrutinee `x` is `Fals`
+//│ ║  l.30: 	    Fals and y is Fals then false
+//│ ║        	    ^^^^
+//│ ╟── Scrutinee `y` has 1 missing case
+//│ ║  l.30: 	    Fals and y is Fals then false
+//│ ║        	             ^
+//│ ╟── It can be module `Tru`
+//│ ║  l.29: 	    Tru and y is Tru then true
+//│ ╙──      	                 ^^^
+//│ fun f: (Fals | Tru, nothing) -> Bool
 
 // The base case.
 fun f(x, y) = if x is
@@ -82,6 +86,7 @@ fun g(x, y) = if x is
   _ and y is
     true then true
     false then false
+//│ ╙──
 //│ fun g: (Object, Bool) -> Bool
 
 // Chained UCS terms
@@ -93,12 +98,55 @@ fun f(x, y) = if x is
     Fals then false
 //│ fun f: (Object, Fals | Tru) -> Bool
 
+:e
 fun f(x, y) = if x is
     Tru and y is Tru then true
     Fals and y is Fals then false
   else if y is
     Tru and x is Fals then true
     Fals and x is Tru then false
+//│ ╔══[ERROR] When scrutinee `y` is `Tru`
+//│ ║  l.106: 	    Tru and x is Fals then true
+//│ ║         	    ^^^
+//│ ╟── Scrutinee `x` has 1 missing case
+//│ ║  l.106: 	    Tru and x is Fals then true
+//│ ║         	            ^
+//│ ╟── It can be module `Tru`
+//│ ║  l.107: 	    Fals and x is Tru then false
+//│ ╙──       	                  ^^^
+//│ ╔══[ERROR] When scrutinee `y` is `Fals`
+//│ ║  l.107: 	    Fals and x is Tru then false
+//│ ║         	    ^^^^
+//│ ╟── Scrutinee `x` has 1 missing case
+//│ ║  l.107: 	    Fals and x is Tru then false
+//│ ║         	             ^
+//│ ╟── It can be module `Fals`
+//│ ║  l.106: 	    Tru and x is Fals then true
+//│ ╙──       	                 ^^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.106: 	    Tru and x is Fals then true
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^
+//│ ╟── class pattern of type `Tru` is not an instance of type `Fals`
+//│ ║  l.103: 	    Tru and y is Tru then true
+//│ ║         	    ^^^
+//│ ╟── but it flows into reference with expected type `Fals`
+//│ ║  l.106: 	    Tru and x is Fals then true
+//│ ║         	            ^
+//│ ╟── Note: constraint arises from class pattern:
+//│ ║  l.106: 	    Tru and x is Fals then true
+//│ ╙──       	                 ^^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.107: 	    Fals and x is Tru then false
+//│ ║         	             ^^^^^^^^^^^^^^^^^^^
+//│ ╟── class pattern of type `Fals` is not an instance of type `Tru`
+//│ ║  l.104: 	    Fals and y is Fals then false
+//│ ║         	    ^^^^
+//│ ╟── but it flows into reference with expected type `Tru`
+//│ ║  l.107: 	    Fals and x is Tru then false
+//│ ║         	             ^
+//│ ╟── Note: constraint arises from class pattern:
+//│ ║  l.107: 	    Fals and x is Tru then false
+//│ ╙──       	                  ^^^
 //│ fun f: (Fals | Tru, Fals | Tru) -> Bool
 
 fun h(x, y, p) = if
@@ -106,4 +154,4 @@ fun h(x, y, p) = if
   y is
     Tru then 1
     Fals then 2
-//│ fun h: (Object, Fals | Tru, true -> Object) -> (0 | 1 | 2)
+//│ fun h: forall 'a. ('a & Bool, Fals | Tru, 'a -> Bool) -> (0 | 1 | 2)

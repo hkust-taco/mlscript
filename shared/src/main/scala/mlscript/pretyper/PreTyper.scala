@@ -1,6 +1,7 @@
 package mlscript.pretyper
 
 import collection.mutable.{Set => MutSet}
+import collection.immutable.SortedMap
 import symbol._
 import mlscript._, utils._, shorthands._, Diagnostic.PreTyping, Message.MessageContext, ucs.DesugarUCS
 import scala.annotation.tailrec
@@ -8,69 +9,86 @@ import scala.annotation.tailrec
 class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with Diagnosable with DesugarUCS {
   import PreTyper._
 
-  private def extractParameters(fields: Term): Ls[LocalTermSymbol] =
-    trace(s"extractParameters <== $fields") {
-      fields match {
-        case nme: Var => new LocalTermSymbol(nme) :: Nil
-        case Tup(arguments) =>
-          arguments.flatMap {
-            case (S(nme: Var), Fld(_, _)) => new LocalTermSymbol(nme) :: Nil
-            case (_, Fld(_, nme: Var)) => new LocalTermSymbol(nme) :: Nil
-            case (_, Fld(_, Bra(false, term))) => extractParameters(term)
-            case (_, Fld(_, tuple @ Tup(_))) => extractParameters(tuple)
-            case (_, Fld(_, Asc(term, _))) => extractParameters(term)
-            case (_, Fld(_, _: Lit)) => Nil
-            case (_, Fld(_, App(Var(name), parameters))) if name.headOption.forall(_.isUpper) =>
-              extractParameters(parameters)
-            case (_, Fld(_, parameter)) =>
-              println(s"unknown parameter: $parameter")
-              ???
-          }
-        case PlainTup(arguments @ _*) =>
-          arguments.map {
-            case nme: Var => new LocalTermSymbol(nme)
-            case other => println("Unknown parameters: " + other.toString); ??? // TODO: bad
-          }.toList
-        case other => println("Unknown parameters: " + other.toString); ??? // TODO: bad
-      }
-    }(rs => s"extractParameters ==> ${rs.iterator.map(_.name).mkString(", ")}")
+  /** A shorthand function to raise errors without specifying the source. */
+  protected override def raiseError(messages: (Message -> Opt[Loc])*): Unit =
+    raiseError(PreTyping, messages: _*)
 
-  // `traverseIf` is meaningless because it represents patterns with terms.
+  /** A shorthand function to raise warnings without specifying the source. */
+  protected override def raiseWarning(messages: (Message -> Opt[Loc])*): Unit =
+    raiseWarning(PreTyping, messages: _*)
+
+  private def extractParameters(fields: Term): Ls[LocalTermSymbol] = {
+    def rec(term: Term): Iterator[LocalTermSymbol] = term match {
+      case nme: Var => Iterator.single(new LocalTermSymbol(nme))
+      case Bra(false, term) => rec(term)
+      case Bra(true, Rcd(fields)) =>
+        fields.iterator.flatMap { case (_, Fld(_, pat)) => rec(pat) }
+      case Asc(term, _) => rec(term)
+      case literal: Lit =>
+        raiseWarning(msg"literal patterns are ignored" -> literal.toLoc)
+        Iterator.empty
+      case App(Var(name), parameters) if name.isCapitalized => rec(parameters)
+      case Tup(arguments) =>
+        arguments.iterator.flatMap {
+          case (S(nme: Var), Fld(_, _)) => Iterator.single(new LocalTermSymbol(nme))
+          case (N, Fld(_, term)) => rec(term)
+        }
+      case PlainTup(arguments @ _*) => arguments.iterator.flatMap(extractParameters)
+      case other =>
+        raiseError(msg"unsupported pattern shape" -> other.toLoc)
+        Iterator.empty
+    }
+    val rs = rec(fields).toList
+    println(s"extractParameters ${fields.showDbg} ==> ${rs.iterator.map(_.name).mkString(", ")}")
+    rs
+  }
 
   protected def resolveVar(v: Var)(implicit scope: Scope): Unit =
-    trace(s"resolveVar(name = \"$v\")") {
-      scope.getTermSymbol(v.name) match {
-        case S(sym: LocalTermSymbol) =>
-          println(s"Resolve variable $v to a local term.")
-          v.symbol = sym
-        case S(sym: DefinedTermSymbol) =>
-          println(s"Resolve variable $v to a defined term.")
-          v.symbol = sym
-        case S(sym: ModuleSymbol) =>
-          println(s"Resolve variable $v to a module.")
-          v.symbol = sym
-        case N => 
-          scope.getTypeSymbol(v.name) match {
-            case S(sym: ClassSymbol) =>
-              println(s"Resolve variable $v to a class.")
-              v.symbol = sym
-            case S(_) =>
-              raiseError(PreTyping, msg"Name ${v.name} refers to a type" -> v.toLoc)
-            case N =>
-              raiseError(PreTyping, msg"Variable ${v.name} not found in scope" -> v.toLoc)
-          }
-      }
-    }()
+    scope.getTermSymbol(v.name) match {
+      case S(sym: LocalTermSymbol) =>
+        println(s"resolveVar `${v.name}` ==> local term")
+        v.symbol = sym
+      case S(sym: DefinedTermSymbol) =>
+        println(s"resolveVar `${v.name}` ==> defined term")
+        v.symbol = sym
+      case S(sym: ModuleSymbol) =>
+        println(s"resolveVar `${v.name}` ==> module")
+        v.symbol = sym
+      case N => 
+        scope.getTypeSymbol(v.name) match {
+          case S(sym: ClassSymbol) =>
+            println(s"resolveVar `${v.name}` ==> class")
+            v.symbol = sym
+          case S(_) =>
+            raiseError(PreTyping, msg"identifier `${v.name}` is resolved to a type" -> v.toLoc)
+          case N =>
+            raiseError(PreTyping, msg"identifier `${v.name}` not found" -> v.toLoc)
+        }
+    }
 
   protected def traverseVar(v: Var)(implicit scope: Scope): Unit =
-    trace(s"traverseVar(name = \"$v\")") {
+    trace(s"traverseVar(name = \"${v.name}\")") {
       v.symbolOption match {
         case N => resolveVar(v)
         case S(symbol) => scope.getSymbols(v.name) match {
-          case Nil => raiseError(PreTyping, msg"Variable ${v.name} not found in scope. It is possibly a free variable." -> v.toLoc)
+          case Nil => raiseError(PreTyping, msg"identifier `${v.name}` not found" -> v.toLoc)
           case symbols if symbols.contains(symbol) => ()
-          case _ =>
-            raiseError(PreTyping, msg"Variable ${v.name} refers to different symbols." -> v.toLoc)
+          case symbols =>
+            def toNameLoc(symbol: Symbol): (Str, Opt[Loc]) = symbol match {
+              case ds: DummyClassSymbol => s"`${ds.name}`" -> N
+              case ts: TypeSymbol => s"`${ts.name}`" -> ts.defn.toLoc
+              case ls: LocalTermSymbol => s"local `${ls.name}`" -> ls.nme.toLoc
+              case dt: DefinedTermSymbol => s"`${dt.name}`" -> dt.defn.toLoc
+            }
+            val (name, loc) = toNameLoc(symbol)
+            raiseError(PreTyping,
+              (msg"identifier ${v.name} refers to different symbols." -> v.toLoc ::
+                msg"it is resolved to $name" -> loc ::
+                symbols.map { s =>
+                  val (name, loc) = toNameLoc(s)
+                  msg"it was previously resolved to $name" -> loc
+                }): _*
+            )
         }
       }
     }()
@@ -107,6 +125,30 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
         case CaseOf(trm, cases) => 
         case With(trm, fields) => traverseTerm(trm); traverseTerm(fields)
         case Where(body, where) => ??? // TODO: When?
+        // begin UCS shorthands
+        //  * Old-style operators
+        case App(App(Var("is"), _), _) =>
+          println(s"found UCS shorthand: ${term.showDbg}")
+          val desugared = If(IfThen(term, Var("true")), S(Var("false")))
+          traverseIf(desugared)
+          term.desugaredTerm = desugared.desugaredTerm
+        case App(Var("is"), _) =>
+          println(s"found UCS shorthand: ${term.showDbg}")
+          val desugared = If(IfThen(term, Var("true")), S(Var("false")))
+          traverseIf(desugared)
+          term.desugaredTerm = desugared.desugaredTerm
+        //  * Old-style operators
+        case App(App(Var("and"), PlainTup(lhs)), PlainTup(rhs)) =>
+          println(s"found UCS shorthand: ${term.showDbg}")
+          val desugared = If(IfThen(lhs, rhs), S(Var("false")))
+          traverseIf(desugared)
+          term.desugaredTerm = desugared.desugaredTerm
+        case App(Var("and"), PlainTup(lhs, rhs)) =>
+          println(s"found UCS shorthand: ${term.showDbg}")
+          val desugared = If(IfThen(lhs, rhs), S(Var("false")))
+          traverseIf(desugared)
+          term.desugaredTerm = desugared.desugaredTerm
+        // end UCS shorthands
         case App(lhs, rhs) => traverseTerm(lhs); traverseTerm(rhs)
         case Test(trm, ty) => traverseTerm(trm)
         case _: Lit | _: Super => ()
@@ -136,9 +178,22 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
       println(typeSymbols.iterator.map(_.name).mkString("type symbols: {", ", ", "}"))
       // val scopeWithTypes = statements.iterator.flatMap(filterNuTypeDef).foldLeft(parentScope.derive)(_ + TypeSymbol(_))
       // Pass 1.1: Resolve subtyping relations. Build a graph and compute base types of each type.
-      val edges = typeSymbols.foldLeft(Map.empty[TypeSymbol, Ls[TypeSymbol]]) { case (acc, self) =>
-        acc + (self -> extractSuperTypes(self.defn.parents).map { nme =>
-          scopeWithTypes.getTypeSymbol(nme.name).getOrElse(???) })
+      // Keep a stable ordering of type symbols when printing the graph.
+      implicit val ord: Ordering[TypeSymbol] = new Ordering[TypeSymbol] {
+        override def compare(x: TypeSymbol, y: TypeSymbol): Int =
+          x.name.compareTo(y.name)
+      }
+      // Collect inheritance relations, represented by a map from a type symbol
+      // to its base types. If a type symbol is not found, we will ignore it
+      // and report the error (but not fatal).
+      val edges = typeSymbols.foldLeft(SortedMap.empty[TypeSymbol, Ls[TypeSymbol]]) { case (acc, self) =>
+        acc + (self -> extractSuperTypes(self.defn.parents).flatMap { nme =>
+          val maybeSymbol = scopeWithTypes.getTypeSymbol(nme.name)
+          if (maybeSymbol.isEmpty) {
+            raiseError(PreTyping, msg"could not find definition `${nme.name}`" -> nme.toLoc)
+          }
+          maybeSymbol
+        })
       }
       printGraph(edges, println, "inheritance relations", "->")
       transitiveClosure(edges).foreachEntry { (self, bases) =>
@@ -174,6 +229,12 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
         case (acc, other @ (_: Constructor | _: DataDefn | _: DatatypeDefn | _: Def | _: LetS | _: TypeDef)) =>
           println(s"unknown statement: ${other.getClass.getSimpleName}")
           acc
+      }
+      // Pass 2.5: Traverse type definitions
+      statements.iterator.flatMap { case defn: NuTypeDef => S(defn); case _ => N }.foreach { defn =>
+        val parameters = defn.params.map(extractParameters).getOrElse(Nil)
+        val thisSymbol = new LocalTermSymbol(Var("this"))
+        traverseTypeDefinition(TypeSymbol(defn), defn)(completeScope ++ (thisSymbol :: parameters))
       }
       println(thingsToTraverse.iterator.map {
         case (L(term), _) => term.showDbg
@@ -214,7 +275,7 @@ object PreTyper {
         case Nil => results.reverse
         case (nme: Var) :: tail => rec(nme :: results, tail)
         case (TyApp(ty, _)) :: tail => rec(results, ty :: tail)
-        case (App(nme @ Var(_), Tup(_))) :: tail => rec(nme :: results, tail)
+        case (App(term, Tup(_))) :: tail => rec(results, term :: tail)
         case other :: _ => println(s"Unknown parent type: $other"); ???
       }
     rec(Nil, parents)
@@ -242,7 +303,7 @@ object PreTyper {
     rec(Nil, ty).reverse
   }
 
-  def transitiveClosure[A](graph: Map[A, List[A]]): Map[A, List[A]] = {
+  def transitiveClosure[A](graph: Map[A, List[A]])(implicit ord: Ordering[A]): SortedMap[A, List[A]] = {
     def dfs(vertex: A, visited: Set[A]): Set[A] = {
       if (visited.contains(vertex)) visited
       else graph.getOrElse(vertex, List())
@@ -251,7 +312,7 @@ object PreTyper {
     graph.keys.map { vertex =>
       val closure = dfs(vertex, Set())
       vertex -> (closure - vertex).toList
-    }.toMap
+    }.toSortedMap
   }
 
   def printGraph(graph: Map[TypeSymbol, List[TypeSymbol]], print: (=> Any) => Unit, title: String, arrow: String): Unit = {

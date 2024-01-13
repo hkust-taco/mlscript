@@ -1,4 +1,4 @@
-:NewDefs
+:PreTyper
 
 
 :js
@@ -145,6 +145,9 @@ let rec f =
 // :e // FIXME
 :ge
 let foo = foo
+//│ ╔══[ERROR] identifier `foo` not found
+//│ ║  l.147: 	let foo = foo
+//│ ╙──       	          ^^^
 //│ let foo: nothing
 //│ Code generation encountered an error:
 //│   unguarded recursive use of by-value binding foo

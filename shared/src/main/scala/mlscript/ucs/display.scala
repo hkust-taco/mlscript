@@ -106,10 +106,13 @@ package object display {
     * - `‡` if the variable is associated with a term symbol and has a scrutinee.
     */
   def showNormalizedTerm(term: Term)(implicit context: Context): String = {
-    def showTerm(term: Term): Lines = term match {
-      case let: Let => showLet(let)
-      case caseOf: CaseOf => showCaseOf(caseOf)
-      case other => (0, other.showDbg) :: Nil
+    def showTerm(term: Term): Lines = term.desugaredTerm match {
+      case N => term match {
+        case let: Let => showLet(let)
+        case caseOf: CaseOf => showCaseOf(caseOf)
+        case other => (0, other.showDbg) :: Nil
+      }
+      case S(desugaredTerm) => "[desugared]" @: showTerm(desugaredTerm)
     }
     def showScrutinee(term: Term): Str = term match {
       case vari: Var => showVar(vari)

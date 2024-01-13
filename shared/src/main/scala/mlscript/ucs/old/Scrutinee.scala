@@ -1,4 +1,4 @@
-package mlscript.ucs
+package mlscript.ucs.old
 
 import mlscript.{Loc, SimpleTerm, Term, Var}
 import mlscript.utils.lastWords

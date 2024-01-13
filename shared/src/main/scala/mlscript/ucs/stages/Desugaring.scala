@@ -66,9 +66,9 @@ trait Desugaring { self: PreTyper =>
     * A shorthand for making a true pattern, which is useful in desugaring
     * Boolean conditions.
     */
-  private def truePattern(implicit scope: Scope) =
+  private def truePattern(implicit scope: Scope, context: Context) =
     c.Pattern.Class(Var("true").withResolvedClassLikeSymbol, false)
-  private def falsePattern(implicit scope: Scope) =
+  private def falsePattern(implicit scope: Scope, context: Context) =
     c.Pattern.Class(Var("false").withResolvedClassLikeSymbol, false)
 
   private def desugarTermSplit(split: s.TermSplit)(implicit termPart: PartialTerm, scope: Scope, context: Context): c.Split =
@@ -170,9 +170,13 @@ trait Desugaring { self: PreTyper =>
     * @param initialScope the scope before flattening the class pattern
     * @return a tuple of the augmented scope and a function that wrap a split
     */
-  private def desugarClassPattern(pattern: s.ClassPattern, scrutineeVar: Var, initialScope: Scope, refined: Bool)(implicit context: Context): (Scope, c.Split => c.Branch) = {
+  private def desugarClassPattern(
+      pattern: s.ClassPattern,
+      scrutineeVar: Var,
+      initialScope: Scope,
+      refined: Bool)(implicit context: Context): (Scope, c.Split => c.Branch) = {
     val scrutinee = scrutineeVar.getOrCreateScrutinee.withAlias(scrutineeVar)
-    val patternClassSymbol = pattern.nme.resolveClassLikeSymbol(initialScope)
+    val patternClassSymbol = pattern.nme.resolveClassLikeSymbol(initialScope, context)
     val classPattern = scrutinee.getOrCreateClassPattern(patternClassSymbol)
     println(s"desugarClassPattern: ${scrutineeVar.name} is ${pattern.nme.name}")
     classPattern.addLocation(pattern.nme)
@@ -292,6 +296,9 @@ trait Desugaring { self: PreTyper =>
 
   private def desugarPatternSplit(scrutineeTerm: Term, split: s.PatternSplit)(implicit scope: Scope, context: Context): c.Split = {
     def rec(scrutineeVar: Var, split: s.PatternSplit)(implicit scope: Scope): c.Split = split match {
+      // TODO: We should resolve `scrutineeVar`'s symbol and make sure it is a term symbol in the
+      // beginning. So that we can call methods on the symbol directly. Now there are too many
+      // helper functions on `VarOps`.
       case s.Split.Cons(head, tail) =>
         head.pattern match {
           case pattern @ s.AliasPattern(_, _) =>
@@ -336,13 +343,12 @@ trait Desugaring { self: PreTyper =>
             val continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scope + nme.symbol, context)
             c.Branch(scrutineeVar, c.Pattern.Name(nme), continuation) :: rec(scrutineeVar, tail)(scope + nme.symbol)
           case pattern @ s.ClassPattern(nme, fields, rfd) =>
-            println(s"find term symbol of $scrutineeVar in ${scope.showLocalSymbols}")
-            scrutineeVar.symbol = scope.getTermSymbol(scrutineeVar.name).getOrElse(???/*FIXME*/)
+            val scrutineeSymbol = scrutineeVar.getOrResolveTermSymbol // TODO: Useless.
             val (scopeWithAll, bindAll) = desugarClassPattern(pattern, scrutineeVar, scope, rfd)
             val continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scopeWithAll, context)
             bindAll(continuation) :: rec(scrutineeVar, tail)
           case s.TuplePattern(fields) =>
-            scrutineeVar.symbol = scope.getTermSymbol(scrutineeVar.name).getOrElse(???/*FIXME*/)
+            val scrutineeSymbol = scrutineeVar.getOrResolveTermSymbol // TODO: Useless.
             val (scopeWithAll, bindAll) = desugarTuplePattern(fields, scrutineeVar, scope)
             val continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scopeWithAll, context)
             val withBindings = bindAll(continuation)

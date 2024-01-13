@@ -5,6 +5,16 @@ fun f(x) =
     let v = 0
     v then v
     else 0
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.4: 	  if x ==
+//│ ║       	     ^^^^
+//│ ║  l.5: 	    let v = 0
+//│ ║       	^^^^^^^^^^^^^
+//│ ║  l.6: 	    v then v
+//│ ║       	^^^^^^^^^^^^
+//│ ║  l.7: 	    else 0
+//│ ╙──     	^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ f: number -> 0
 //│  = [Function: f]
 
@@ -36,6 +46,10 @@ class Right(rightValue): Either
 fun q(x) =
   if
     x is Some and x is Some and x is Some then 0
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.48: 	    x is Some and x is Some and x is Some then 0
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ q: Some -> 0
 //│  = [Function: q]
 
@@ -45,12 +59,19 @@ fun p(x, y) =
     x is Some and y is None then 0
     y is Some and x is Some then 1
     x is Some and y is Some then 0
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.59: 	    x is Some and y is None then 0
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.60: 	    y is Some and x is Some then 1
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.61: 	    x is Some and y is Some then 0
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[WARNING] Found a duplicated branch
 //│ ╟── This branch
-//│ ║  l.47: 	    x is Some and y is Some then 0
+//│ ║  l.61: 	    x is Some and y is Some then 0
 //│ ║        	                                 ^
 //│ ╟── is subsumed by the branch here.
-//│ ║  l.46: 	    y is Some and x is Some then 1
+//│ ║  l.60: 	    y is Some and x is Some then 1
 //│ ╙──      	                                 ^
 //│ p: (Some, None | Some,) -> (0 | 1)
 //│  = [Function: p]
@@ -60,6 +81,16 @@ fun h(x, y) =
     None then y
     let y_square = y * y
     Some(z) then z + y_square
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.80: 	  if x is
+//│ ║        	     ^^^^
+//│ ║  l.81: 	    None then y
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ║  l.82: 	    let y_square = y * y
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.83: 	    Some(z) then z + y_square
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ h: (None | Some & {value: int}, int,) -> int
 //│  = [Function: h]
 
@@ -72,6 +103,16 @@ fun h(x, y) =
     None then y
     let y_square = y * y
     Some(y_square) then 0
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.102: 	  if x is
+//│ ║         	     ^^^^
+//│ ║  l.103: 	    None then y
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.104: 	    let y_square = y * y
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.105: 	    Some(y_square) then 0
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ h: (None | Some, int & 'a,) -> (0 | 'a)
 //│  = [Function: h1]
 
@@ -82,6 +123,20 @@ fun f(a, y) =
       let y = v + 1
       Right(x) then x + y
     else 0
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.120: 	  if a is
+//│ ║         	     ^^^^
+//│ ║  l.121: 	    Some(v) and v is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.122: 	      Left(x) then x
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.123: 	      let y = v + 1
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.124: 	      Right(x) then x + y
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.125: 	    else 0
+//│ ╙──       	^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ f: (Some & {value: int} | ~Some, anything,) -> int
 //│  = [Function: f1]
 
@@ -92,10 +147,20 @@ fun q(a) =
     let y = a + 1
     then y
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
-//│ ║  l.92: 	    let y = a + 1
-//│ ║        	            ^^^^^
-//│ ║  l.93: 	    then y
-//│ ╙──      	^^^^^^^^^^
+//│ ║  l.147: 	    let y = a + 1
+//│ ║         	            ^^^^^
+//│ ║  l.148: 	    then y
+//│ ╙──       	^^^^^^^^^^
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.145: 	  if a is
+//│ ║         	     ^^^^
+//│ ║  l.146: 	    Left(x) then x
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.147: 	    let y = a + 1
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.148: 	    then y
+//│ ╙──       	^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ q: (Left & {leftValue: 'leftValue}) -> 'leftValue
 //│  = [Function: q1]
 
@@ -114,6 +179,16 @@ fun w() =
     let y = 0
     B then "B"
     else "?"
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.178: 	    A then "A"
+//│ ║         	    ^^^^^^^^^^
+//│ ║  l.179: 	    let y = 0
+//│ ║         	^^^^^^^^^^^^^
+//│ ║  l.180: 	    B then "B"
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.181: 	    else "?"
+//│ ╙──       	^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ w: () -> ("?" | "A" | "B")
 //│  = [Function: w]
 
@@ -126,6 +201,16 @@ fun i(x) =
     A() then "A"
     let y = 0
     B() then "B"
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.200: 	  if x is
+//│ ║         	     ^^^^
+//│ ║  l.201: 	    A() then "A"
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.202: 	    let y = 0
+//│ ║         	^^^^^^^^^^^^^
+//│ ║  l.203: 	    B() then "B"
+//│ ╙──       	^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ i: (A | B) -> ("A" | "B")
 //│  = [Function: i]
 
@@ -138,6 +223,16 @@ fun qq(x, z) =
     let y = inc(z)
     y * y then 0
     else 0
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.222: 	  if x ==
+//│ ║         	     ^^^^
+//│ ║  l.223: 	    let y = inc(z)
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.224: 	    y * y then 0
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.225: 	    else 0
+//│ ╙──       	^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ qq: (number, int,) -> 0
 //│   = [Function: qq]
 
@@ -146,6 +241,14 @@ fun bruh(x) =
     x == 0 then 0
     let y = 1
     else y
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.241: 	    x == 0 then 0
+//│ ║         	    ^^^^^^^^^^^^^
+//│ ║  l.242: 	    let y = 1
+//│ ║         	^^^^^^^^^^^^^
+//│ ║  l.243: 	    else y
+//│ ╙──       	^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ bruh: number -> (0 | 1)
 //│     = [Function: bruh]
 
@@ -164,6 +267,20 @@ fun ff(x) =
     z == 1 then 1
     z == 2 then 2
     else 0
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.264: 	    x == 0 then 0
+//│ ║         	    ^^^^^^^^^^^^^
+//│ ║  l.265: 	    let y = f1(x)
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.266: 	    let z = f2(x, y)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.267: 	    z == 1 then 1
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.268: 	    z == 2 then 2
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.269: 	    else 0
+//│ ╙──       	^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ ff: int -> (0 | 1 | 2)
 //│   = [Function: ff]
 
@@ -172,6 +289,16 @@ fun ip(y) =
     let z = inc(y)
     y == z * z then "bruh"
   else "rocks"
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.288: 	  if q(y) and
+//│ ║         	     ^^^^^^^^
+//│ ║  l.289: 	    let z = inc(y)
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.290: 	    y == z * z then "bruh"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.291: 	  else "rocks"
+//│ ╙──       	^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ ip: nothing -> ("bruh" | "rocks")
 //│   = [Function: ip]
 
@@ -180,6 +307,16 @@ fun tr(x) =
     Some(v) then v
     let tmp = 1
     None then tmp
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.306: 	  if x is
+//│ ║         	     ^^^^
+//│ ║  l.307: 	    Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.308: 	    let tmp = 1
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.309: 	    None then tmp
+//│ ╙──       	^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ tr: (None | Some & {value: 'value}) -> (1 | 'value)
 //│   = [Function: tr]
 
@@ -227,6 +364,16 @@ fun showList(xs) =
 //│   })());
 //│ };
 //│ // End of generated code
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.349: 	  if xs is
+//│ ║         	     ^^^^^
+//│ ║  l.350: 	    Nil              then ""
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.351: 	    Cons(head, Nil())  then toString(head)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.352: 	    Cons(head, tail) then cat3(toString(head), ", ", showList(tail))
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ showList: (Cons & 'a | Nil) -> string
 //│   where
 //│     'a <: {head: anything, tail: Cons & 'a | Nil}
@@ -255,6 +402,24 @@ fun mapPartition(f, xs) =
       let r = res.snd
       Left(v)  then Pair(Cons(v, l), r)
       Right(v) then Pair(l, Cons(v, r))
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.397: 	  if xs is
+//│ ║         	     ^^^^^
+//│ ║  l.398: 	    Nil then Pair(Nil(), Nil())
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.399: 	    Cons(x, xs) and f(x) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.400: 	      let res = mapPartition(f, xs)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.401: 	      let l = res.fst
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.402: 	      let r = res.snd
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.403: 	      Left(v)  then Pair(Cons(v, l), r)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.404: 	      Right(v) then Pair(l, Cons(v, r))
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ mapPartition: ('head -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'rightValue}), Cons & 'a | Nil,) -> (Pair & {fst: forall 'b 'c. Nil | 'c | 'b, snd: Nil | Cons & {head: 'rightValue, tail: Nil}})
 //│   where
 //│     'b :> Cons & {head: 'leftValue, tail: forall 'd. Nil | 'd}
@@ -263,6 +428,10 @@ fun mapPartition(f, xs) =
 //│             = [Function: mapPartition]
 
 mapPartition(x => (if x % 2 == 0 then Left(x) else Right(x)), zeroToThree)
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.430: 	mapPartition(x => (if x % 2 == 0 then Left(x) else Right(x)), zeroToThree)
+//│ ╙──       	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ res: Pair & {
 //│   fst: forall 'a 'b. Nil | 'b | 'a,
 //│   snd: Nil | Cons & {head: 0 | 1 | 2 | 3, tail: Nil}
@@ -282,6 +451,18 @@ fun mapPartition2(f, xs) =
     Cons(x, xs) and mapPartition(f, xs) is res and res.fst is l and res.snd is r and f(x) is
       Left(v)  then Pair(Cons(v, l), r)
       Right(v) then Pair(l, Cons(v, r))
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.449: 	  if xs is
+//│ ║         	     ^^^^^
+//│ ║  l.450: 	    Nil then Pair(Nil(), Nil())
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.451: 	    Cons(x, xs) and mapPartition(f, xs) is res and res.fst is l and res.snd is r and f(x) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.452: 	      Left(v)  then Pair(Cons(v, l), r)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.453: 	      Right(v) then Pair(l, Cons(v, r))
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ mapPartition2: ('head -> (Left & {leftValue: 'leftValue} | Right & {rightValue: 'rightValue}) & 'head0 -> (Left & {leftValue: 'leftValue0} | Right & {rightValue: 'rightValue0}), Cons & {head: 'head0, tail: Cons & 'a | Nil} | Nil,) -> (Pair & {
 //│   fst: forall 'b. Cons & {
 //│     head: 'leftValue0,
@@ -300,6 +481,10 @@ fun mapPartition2(f, xs) =
 //│              = [Function: mapPartition2]
 
 mapPartition2(x => (if x % 2 == 0 then Left(x) else Right(x)), zeroToThree)
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.483: 	mapPartition2(x => (if x % 2 == 0 then Left(x) else Right(x)), zeroToThree)
+//│ ╙──       	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ res: Pair & {
 //│   fst: forall 'a. Cons & {
 //│     head: 0,
@@ -333,6 +518,26 @@ fun mn(a) =
         2 then "b is 3"
       Right(b) then "right-defined"
     None       then "undefined"
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.512: 	  if a is
+//│ ║         	     ^^^^
+//│ ║  l.513: 	    Some(x) and x is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.514: 	      Left(b) and b is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.515: 	        0 then "b is 1"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.516: 	        let _ = log(b)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.517: 	        1 then "b is 2"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.518: 	        2 then "b is 3"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.519: 	      Right(b) then "right-defined"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.520: 	    None       then "undefined"
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ mn: (None | Some & {value: Left & {leftValue: 0 | 1 | 2} | Right}) -> ("b is 1" | "b is 2" | "b is 3" | "right-defined" | "undefined")
 //│   = [Function: mn]
 

@@ -1,10 +1,10 @@
 package mlscript.ucs.stages
 
-import mlscript.ucs.helpers
+import mlscript.ucs.{DesugarUCS, helpers}
 import mlscript.{If, IfBody, IfBlock, IfElse, IfLet, IfOpApp, IfOpsApp, IfThen}
 import mlscript.{Term, Var, App, Tup, Lit, Fld, Loc}
 import mlscript.Diagnostic.PreTyping
-import mlscript.pretyper.{Diagnosable, Traceable}
+import mlscript.pretyper.Traceable
 import mlscript.ucs.syntax._
 import mlscript.Message, Message._
 import mlscript.utils._, shorthands._
@@ -19,7 +19,7 @@ import scala.collection.immutable
   * The AST in the paper is more flexible. For example, it allows interleaved
   * `let` bindings in operator splits.
   */
-trait Transformation { self: Traceable with Diagnosable =>
+trait Transformation { self: DesugarUCS with Traceable =>
   import Transformation._
 
   /** The entry point of transformation. */
@@ -70,7 +70,7 @@ trait Transformation { self: Traceable with Diagnosable =>
           case (acc, R(NuFunDef(S(rec), nme, _, _, L(rhs)))) =>
             acc ++ Split.Let(rec, nme, rhs, Split.Nil)
           case (acc, R(statement)) =>
-            raiseError(PreTyping, msg"Unexpected statement in an if block" -> statement.toLoc)
+            raiseError(msg"Unexpected statement in an if block" -> statement.toLoc)
             acc
         }
       case IfOpsApp(lhs, opsRhss) =>
@@ -97,7 +97,7 @@ trait Transformation { self: Traceable with Diagnosable =>
     opsRhss.iterator.flatMap {
       case Var("and") -> rhs => S(transformIfBody(rhs))
       case op -> rhs =>
-        raiseError(PreTyping,
+        raiseError(
           msg"cannot transform due to an illegal split operator ${op.name}" -> op.toLoc,
           msg"the following branch will be discarded" -> rhs.toLoc)
         N
@@ -131,7 +131,9 @@ trait Transformation { self: Traceable with Diagnosable =>
             case (pattern, N) =>
               PatternBranch(pattern, transformIfBody(rhs)).toSplit
           }
-        case IfOpApp(lhs, op, rhs) => ??? // <-- Syntactic split of patterns are not supported.
+        case IfOpApp(lhs, op, rhs) =>
+          raiseError(msg"Syntactic split of patterns are not supported" -> op.toLoc)
+          Split.Nil
         case IfOpsApp(lhs, opsRhss) =>
           // BEGIN TEMPORARY PATCH
           // Generally, syntactic split of patterns are not supported. Examples
@@ -180,7 +182,7 @@ trait Transformation { self: Traceable with Diagnosable =>
           case (acc, R(NuFunDef(S(rec), nme, _, _, L(rhs)))) =>
             acc ++ Split.Let(rec, nme, rhs, Split.Nil)
           case (acc, R(statement)) =>
-            raiseError(PreTyping, msg"Unexpected statement in an if block" -> statement.toLoc)
+            raiseError(msg"Unexpected statement in an if block" -> statement.toLoc)
             acc
         }
         case IfElse(expr) => Split.default(expr)
@@ -213,7 +215,7 @@ trait Transformation { self: Traceable with Diagnosable =>
     case tuple: Tup => TuplePattern(transformTupleTerm(tuple))
     case other =>
       println(s"other $other")
-      raiseError(PreTyping, msg"Unknown pattern ${other.toString}" -> other.toLoc)
+      raiseError(msg"Unknown pattern ${other.showDbg}" -> other.toLoc)
       EmptyPattern(other)
   }
 

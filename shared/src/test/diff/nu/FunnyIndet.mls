@@ -1,4 +1,4 @@
-:NewDefs
+:PreTyper
 
 
 2 +
@@ -31,12 +31,12 @@
 :e // TODO support
 2 is
   2
-//│ ╔══[ERROR] illegal pattern
+//│ ╔══[ERROR] Unknown pattern {2}
 //│ ║  l.33: 	  2
 //│ ╙──      	  ^
-//│ error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ true
+//│ res
+//│     = true
 
 if 2 is 2 then true
 //│ true

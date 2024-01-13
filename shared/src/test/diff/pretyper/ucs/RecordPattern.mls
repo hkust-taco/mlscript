@@ -5,13 +5,13 @@ fun take_1(p) =
   if p is
     { x, y } then x + y
     else 0
-//│ ╔══[ERROR] Unknown pattern Bra(true,Rcd(List((Var(x),Fld(_,Var(x))), (Var(y),Fld(_,Var(y))))))
+//│ ╔══[ERROR] Unknown pattern '{' {x: x, y: y} '}'
 //│ ║  l.6: 	    { x, y } then x + y
 //│ ╙──     	    ^^^^^^^^
-//│ ╔══[ERROR] Variable x not found in scope
+//│ ╔══[ERROR] identifier `x` not found
 //│ ║  l.6: 	    { x, y } then x + y
 //│ ╙──     	                  ^
-//│ ╔══[ERROR] Variable y not found in scope
+//│ ╔══[ERROR] identifier `y` not found
 //│ ║  l.6: 	    { x, y } then x + y
 //│ ╙──     	                      ^
 //│ ╔══[ERROR] identifier not found: x

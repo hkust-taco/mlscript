@@ -12,7 +12,7 @@ import mlscript.{App, CaseOf, Fld, FldFlags, Let, Loc, Sel, Term, Tup, Var, StrL
 import mlscript.{CaseBranches, Case, Wildcard, NoCases}
 import mlscript.Message, Message.MessageContext
 import mlscript.utils._, shorthands._
-import mlscript.pretyper.Traceable
+import mlscript.pretyper.{Diagnosable, Traceable}
 
 trait Normalization { self: DesugarUCS with Traceable =>
   import Normalization._

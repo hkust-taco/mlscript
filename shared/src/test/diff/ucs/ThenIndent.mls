@@ -1,4 +1,4 @@
-:NewDefs
+:PreTyper
 
 
 // FIXME
@@ -19,13 +19,12 @@ x => if x ==
 //│ ╟── Note: 'if' expression starts here:
 //│ ║  l.5: 	x => if x ==
 //│ ╙──     	     ^^
-//│ ╔══[ERROR] The case when this is false is not handled: ==(x, {0},)
-//│ ║  l.5: 	x => if x ==
-//│ ║       	        ^^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.6: 	  0
-//│ ╙──     	^^^
-//│ anything -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ║       	  ^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ Num -> ()
+//│ res
+//│     = [Function: res]
 
 

@@ -15,7 +15,7 @@ import mlscript.Message._
  *  In order to turn the resulting CompactType into a mlscript.Type, we use `expandCompactType`.
  */
 class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val newDefs: Bool)
-    extends ucs.Desugarer with TypeSimplifier {
+    extends mlscript.ucs.old.Desugarer with TypeSimplifier {
   
   def funkyTuples: Bool = false
   def doFactorize: Bool = false
@@ -1058,21 +1058,29 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         val argProv = tp(args.toLoc, "argument list")
         con(new_ty, FunctionType(typeTerm(args).withProv(argProv), res)(noProv), res)
       case App(App(Var("is"), _), _) => // * Old-style operators
-        val desug = If(IfThen(term, Var("true")), S(Var("false")))
-        term.desugaredTerm = S(desug)
-        typeTerm(desug)
+        typeTerm(term.desugaredTerm.getOrElse {
+          val desug = If(IfThen(term, Var("true")), S(Var("false")))
+          term.desugaredTerm = S(desug)
+          desug
+        })
       case App(Var("is"), _) =>
-        val desug = If(IfThen(term, Var("true")), S(Var("false")))
-        term.desugaredTerm = S(desug)
-        typeTerm(desug)
+        typeTerm(term.desugaredTerm.getOrElse {
+          val desug = If(IfThen(term, Var("true")), S(Var("false")))
+          term.desugaredTerm = S(desug)
+          desug
+        })
       case App(App(Var("and"), PlainTup(lhs)), PlainTup(rhs)) => // * Old-style operators
-        val desug = If(IfThen(lhs, rhs), S(Var("false")))
-        term.desugaredTerm = S(desug)
-        typeTerm(desug)
+        typeTerm(term.desugaredTerm.getOrElse {
+          val desug = If(IfThen(lhs, rhs), S(Var("false")))
+          term.desugaredTerm = S(desug)
+          desug
+        })
       case App(Var("and"), PlainTup(lhs, rhs)) =>
-        val desug = If(IfThen(lhs, rhs), S(Var("false")))
-        term.desugaredTerm = S(desug)
-        typeTerm(desug)
+        typeTerm(term.desugaredTerm.getOrElse {
+          val desug = If(IfThen(lhs, rhs), S(Var("false")))
+          term.desugaredTerm = S(desug)
+          desug
+        })
       case App(f: Term, a @ Tup(fields)) if (fields.exists(x => x._1.isDefined)) =>
         def getLowerBoundFunctionType(t: SimpleType): List[FunctionType] = t.unwrapProvs match {
           case PolymorphicType(_, AliasOf(fun_ty @ FunctionType(_, _))) =>

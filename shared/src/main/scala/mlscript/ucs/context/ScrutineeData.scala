@@ -152,7 +152,7 @@ object ScrutineeData {
   }
 
   private implicit val classLikeSymbolOrdering: Ordering[TypeSymbol] = new Ordering[TypeSymbol] {
-    override def compare(x: TypeSymbol, y: TypeSymbol): Int = x.defn.name.compareTo(y.defn.name)
+    override def compare(x: TypeSymbol, y: TypeSymbol): Int = x.name.compareTo(y.name)
   }
 
   private implicit val literalOrdering: Ordering[Lit] = new Ordering[Lit] {

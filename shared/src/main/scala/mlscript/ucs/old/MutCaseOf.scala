@@ -1,4 +1,4 @@
-package mlscript.ucs
+package mlscript.ucs.old
 
 import mlscript._
 import mlscript.utils._
@@ -6,11 +6,11 @@ import mlscript.utils.shorthands._
 import scala.collection.immutable.Set
 import scala.collection.mutable.{Map => MutMap, Set => MutSet, Buffer}
 
-import helpers._
-import mlscript.ucs.MutCaseOf.Consequent
+import mlscript.ucs.helpers._
+import MutCaseOf.Consequent
 import scala.collection.immutable
 import Desugarer.{ExhaustivenessMap, SuperClassMap}
-import mlscript.ucs.Clause.MatchAny
+import Clause.MatchAny
 
 sealed abstract class MutCaseOf extends WithBindings {
   def kind: Str = {

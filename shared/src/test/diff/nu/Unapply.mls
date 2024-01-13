@@ -1,6 +1,6 @@
 // *** Explicit unapply tests *** //
 
-:NewDefs
+:PreTyper
 
 
 // * Unapply's current compilation strategy:

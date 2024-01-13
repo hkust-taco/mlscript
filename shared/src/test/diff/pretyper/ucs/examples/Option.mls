@@ -13,7 +13,7 @@ module MyNone extends MyOption[nothing] {
 //│   fun filter: (p: T -> Bool) -> MyOption[T]
 //│ }
 //│ class MySome[T](value: T) extends MyOption {
-//│   fun filter: (T -> Object) -> (MyNone | MySome[T])
+//│   fun filter: (T -> Bool) -> (MyNone | MySome[T])
 //│ }
 //│ module MyNone extends MyOption {
 //│   fun filter: anything -> MyNone
@@ -81,7 +81,7 @@ module None extends Option[nothing] {
 //│   fun map: forall 'b0. (T -> 'b0) -> Option['b0]
 //│ }
 //│ class Some[T](value: T) extends Option {
-//│   fun filter: (T -> Object) -> Option[T]
+//│   fun filter: (T -> Bool) -> Option[T]
 //│   fun flatMap: forall 'c. (T -> 'c) -> 'c
 //│   fun get: T
 //│   fun isDefined: true

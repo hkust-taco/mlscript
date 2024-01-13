@@ -1,4 +1,4 @@
-:NewDefs
+:PreTyper
 
 trait Expr[A]: LitInt | LitBool | Add | Cond | Pair | Fst | Snd
 class LitInt(n: Int) extends Expr[Int]

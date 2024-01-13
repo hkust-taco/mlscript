@@ -30,7 +30,7 @@ test(D(123))
 
 :e
 refined
-//│ ╔══[ERROR] Variable refined not found in scope
+//│ ╔══[ERROR] identifier `refined` not found
 //│ ║  l.32: 	refined
 //│ ╙──      	^^^^^^^
 //│ ╔══[ERROR] Illegal use of reserved operator: refined

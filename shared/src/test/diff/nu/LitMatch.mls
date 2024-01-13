@@ -1,4 +1,4 @@
-:NewDefs
+:PreTyper
 
 
 let r = false : Bool
@@ -22,17 +22,21 @@ b : true | false
 //│     = false
 
 if false is false then 0
+//│ ╙──
 //│ 0
 //│ res
 //│     = 0
 
 fun foo(x) = if x is
   false then 0
+//│ ╙──
 //│ fun foo: false -> 0
 
 fun foo(x) = if x is
   false then 0
   true  then 1
+//│ ╙──
+//│ ╙──
 //│ fun foo: Bool -> (0 | 1)
 
 

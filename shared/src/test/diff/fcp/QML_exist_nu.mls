@@ -1,6 +1,6 @@
 // * TODO also a GADT version of this where we use `Arrays[A]: ArraysImpl[A, ?]`
 
-:NewDefs
+:PreTyper
 
 :DontDistributeForalls // * Also works without this
 

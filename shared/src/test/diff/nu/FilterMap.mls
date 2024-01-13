@@ -1,4 +1,4 @@
-:NewDefs
+:PreTyper
 
 
 // * From https://arxiv.org/abs/2302.12783
@@ -28,11 +28,10 @@ fun filtermap(f, xs) = if xs is
     false then filtermap(f, ys)
     true then Cons(y, filtermap(f, ys))
     [true, z] then Cons(y, filtermap(f, ys))
-//│ ╔══[ERROR] type identifier not found: Tuple#2
-//│ ╙──
-//│ fun filtermap: ((Cons[nothing] | Nil) -> Bool, Cons[anything] | Nil) -> (Cons[nothing] | Nil | error)
-//│ Code generation encountered an error:
-//│   unknown match case: Tuple#2
+//│ ╔══[ERROR] unsupported pattern
+//│ ║  l.30: 	    [true, z] then Cons(y, filtermap(f, ys))
+//│ ╙──      	     ^^^^
+//│ fun filtermap: ((Cons[nothing] | Nil) -> (Object & {1: anything} & ~false & ~true | false | true), Cons[anything] | Nil) -> (Cons[nothing] | Nil)
 
 
 module Tru

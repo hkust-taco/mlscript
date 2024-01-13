@@ -1,4 +1,4 @@
-:NewDefs
+:PreTyper
 
 
 declare fun String: anything -> Str
@@ -120,7 +120,11 @@ printLine("").bind of () => error
 //│ res
 //│     = Bind {}
 
+:w
 printLine("").bind of (()) => error
+//│ ╔══[WARNING] literal patterns are ignored
+//│ ║  l.124: 	printLine("").bind of (()) => error
+//│ ╙──       	                       ^^
 //│ Bind[(), 'B]
 //│ res
 //│     = Bind {}
@@ -304,13 +308,13 @@ let r = loop(defaultCtx).run
 :e
 not(r)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.305: 	not(r)
+//│ ║  l.309: 	not(r)
 //│ ║         	^^^^^^
 //│ ╟── type `Int` is not an instance of type `Bool`
 //│ ║  l.34: 	module readInt extends IO[Int] { fun run: Int = 42 }
 //│ ║        	                          ^^^
 //│ ╟── but it flows into reference with expected type `Bool`
-//│ ║  l.305: 	not(r)
+//│ ║  l.309: 	not(r)
 //│ ╙──       	    ^
 //│ error | false | true
 //│ res
@@ -354,16 +358,20 @@ main
 //│     = Bind {}
 
 
+:w
 :e
 let r = printLine("").bind of 0 => Pure(1)
+//│ ╔══[WARNING] literal patterns are ignored
+//│ ║  l.363: 	let r = printLine("").bind of 0 => Pure(1)
+//│ ╙──       	                              ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.358: 	let r = printLine("").bind of 0 => Pure(1)
+//│ ║  l.363: 	let r = printLine("").bind of 0 => Pure(1)
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `()` does not match type `0`
-//│ ║  l.323: 	class printLine(str: Str) extends IO { fun run = log(str) }
+//│ ║  l.327: 	class printLine(str: Str) extends IO { fun run = log(str) }
 //│ ║         	                                                 ^^^^^^^^
 //│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.358: 	let r = printLine("").bind of 0 => Pure(1)
+//│ ║  l.363: 	let r = printLine("").bind of 0 => Pure(1)
 //│ ╙──       	                              ^
 //│ let r: Bind[in 0 & 'A out () | 'A, 'B] | error
 //│   where
@@ -376,20 +384,20 @@ let r = printLine("").bind of x =>
 log(x.a)
 Pure(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.375: 	let r = printLine("").bind of x =>
+//│ ║  l.383: 	let r = printLine("").bind of x =>
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.376: 	log(x.a)
+//│ ║  l.384: 	log(x.a)
 //│ ║         	^^^^^^^^^
-//│ ║  l.377: 	Pure(1)
+//│ ║  l.385: 	Pure(1)
 //│ ║         	^^^^^^^
 //│ ╟── application of type `()` does not have field 'a'
-//│ ║  l.323: 	class printLine(str: Str) extends IO { fun run = log(str) }
+//│ ║  l.327: 	class printLine(str: Str) extends IO { fun run = log(str) }
 //│ ║         	                                                 ^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.376: 	log(x.a)
+//│ ║  l.384: 	log(x.a)
 //│ ║         	    ^^^
 //│ ╟── from reference:
-//│ ║  l.376: 	log(x.a)
+//│ ║  l.384: 	log(x.a)
 //│ ╙──       	    ^
 //│ let r: Bind[in {a: anything} & 'A out () | 'A, 'B] | error
 //│   where

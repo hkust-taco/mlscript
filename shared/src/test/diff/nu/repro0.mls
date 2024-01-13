@@ -1,4 +1,4 @@
-:NewDefs
+:PreTyper
 :NoJS
 
 
@@ -9,6 +9,9 @@ module EvalAddLit {
     if e is Add then eval(e.lhs)
 }
 let res = EvalAddLit.eval(add11)
+//│ ╔══[ERROR] identifier `add11` not found
+//│ ║  l.6: 	val add11 = Add(add11)
+//│ ╙──     	                ^^^^^
 //│ class Add[E](lhs: E)
 //│ val add11: 'E
 //│ module EvalAddLit {

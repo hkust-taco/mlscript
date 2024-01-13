@@ -1,4 +1,4 @@
-:NewDefs
+:PreTyper
 :NoJS
 
 // FIXME
@@ -33,7 +33,13 @@ fun foo(x, y) = if x is
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
 //│ ║  l.32: 	  Z() and y is O() then 0 else 1
 //│ ╙──      	                          ^^^^
-//│ ╔══[ERROR] Illegal pattern `Z`
+//│ ╔══[ERROR] type identifier `Z` not found
 //│ ║  l.32: 	  Z() and y is O() then 0 else 1
 //│ ╙──      	  ^
-//│ fun foo: (anything, anything) -> error
+//│ ╔══[ERROR] type identifier `O` not found
+//│ ║  l.32: 	  Z() and y is O() then 0 else 1
+//│ ╙──      	               ^
+//│ ╔══[ERROR] type identifier not found: Z
+//│ ║  l.32: 	  Z() and y is O() then 0 else 1
+//│ ╙──      	  ^
+//│ fun foo: (nothing, anything) -> error

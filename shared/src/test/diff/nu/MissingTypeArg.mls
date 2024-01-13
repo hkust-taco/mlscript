@@ -1,6 +1,6 @@
 // * This is an example program where the error we get is really not ideal
 
-:NewDefs
+:PreTyper
 
 
 // * An example recursive definition:

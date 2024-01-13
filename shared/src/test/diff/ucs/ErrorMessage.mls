@@ -10,6 +10,12 @@ class Point(x, y)
 fun f(p) =
   if p is
     Point(x, y, z) then x + y + z
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.11: 	  if p is
+//│ ║        	     ^^^^
+//│ ║  l.12: 	    Point(x, y, z) then x + y + z
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ ╔══[ERROR] class Point expects 2 parameters but found 3 parameters
 //│ ║  l.12: 	    Point(x, y, z) then x + y + z
 //│ ╙──      	    ^^^^^^^^^^^^^^
@@ -22,8 +28,14 @@ fun f(p) =
 fun g(xs) =
   if xs is
     head :: _ then head
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.29: 	  if xs is
+//│ ║        	     ^^^^^
+//│ ║  l.30: 	    head :: _ then head
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ ╔══[ERROR] Cannot find operator `::` in the context
-//│ ║  l.24: 	    head :: _ then head
+//│ ║  l.30: 	    head :: _ then head
 //│ ╙──      	         ^^
 //│ g: anything -> error
 //│ Code generation encountered an error:

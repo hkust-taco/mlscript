@@ -13,10 +13,18 @@ let f = Foo(1)
 // let f = new Foo(1)
 
 if f is Foo then 1 else 0
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.15: 	if f is Foo then 1 else 0
+//│ ╙──      	   ^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ res: 0 | 1
 //│    = 1
 
 if f is Foo(a) then a else 0
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.23: 	if f is Foo(a) then a else 0
+//│ ╙──      	   ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ res: 0 | 1
 //│    = 1
 
@@ -31,6 +39,10 @@ if f is Foo(a) then a else 0
 
 
 fun test(x) = if x is Foo(a) then a
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.41: 	fun test(x) = if x is Foo(a) then a
+//│ ╙──      	                 ^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ test: (Foo & {x: 'x}) -> 'x
 //│     = [Function: test]
 

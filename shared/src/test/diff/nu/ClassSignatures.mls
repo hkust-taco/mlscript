@@ -1,4 +1,4 @@
-:NewDefs
+:PreTyper
 
 
 abstract class C0: C1 | C2

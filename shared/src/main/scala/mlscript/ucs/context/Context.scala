@@ -6,8 +6,10 @@ import mlscript.pretyper.symbol.TypeSymbol
 import mlscript.pretyper.Scope
 import mlscript.ucs.VariableGenerator
 import mlscript.utils._, shorthands._
+import mlscript.pretyper.symbol.DummyClassSymbol
 
 class Context(originalTerm: If) {
+  /** The prefix of all prefixes. */
   private val prefix = Context.freshPrefix()
   private val cachePrefix = prefix + "$cache$"
   private val scrutineePrefix = prefix + "$scrut$"
@@ -29,6 +31,16 @@ class Context(originalTerm: If) {
   val freshScrutineeVar: VariableGenerator = new VariableGenerator(scrutineePrefix)
   val freshTest: VariableGenerator = new VariableGenerator(testPrefix)
   val freshShadowed: VariableGenerator = new VariableGenerator(shadowPrefix)
+
+  // Symbol Management
+  // =================
+
+  private val dummyClassSymbols: MutMap[Var, DummyClassSymbol] = MutMap.empty
+  def getOrCreateDummyClassSymbol(nme: Var): DummyClassSymbol =
+    dummyClassSymbols.getOrElseUpdate(nme, new DummyClassSymbol(nme))
+
+  // Scrutinee Management
+  // ====================
 
   /** The buffer contains all `ScrutineeData` created within this context. */
   private val scrutineeBuffer: Buffer[ScrutineeData] = Buffer.empty

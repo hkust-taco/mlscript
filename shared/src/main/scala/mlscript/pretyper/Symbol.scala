@@ -21,7 +21,7 @@ package object symbol {
   }
 
   sealed trait TypeSymbol extends Symbol {
-    val defn: NuTypeDef
+    def defn: NuTypeDef
     
     override def name: Str = defn.name
 
@@ -50,6 +50,18 @@ package object symbol {
     def unapply(symbol: TypeSymbol): Opt[NuTypeDef] = S(symbol.defn)
   }
 
+  /**
+    * When a type symbol is not defined and we must need a symbol in some
+    * scenarios, we use a dummy symbol to represent it.
+    *
+    * @param nme the name of the expect type symbol.
+    */
+  final class DummyClassSymbol(val nme: Var) extends TypeSymbol {
+    override def defn: NuTypeDef = die
+
+    override def name: Str = nme.name
+  }
+
   final class ClassSymbol(override val defn: NuTypeDef) extends TypeSymbol {
     require(defn.kind === Cls)
   }
@@ -72,7 +84,7 @@ package object symbol {
 
   sealed trait TermSymbol extends Symbol with Matchable
 
-  class DefinedTermSymbol(defn: NuFunDef) extends TermSymbol {
+  class DefinedTermSymbol(val defn: NuFunDef) extends TermSymbol {
     override def name: Str = defn.name
 
     def body: Term \/ Type = defn.rhs

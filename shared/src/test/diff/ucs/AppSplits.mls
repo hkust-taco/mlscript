@@ -1,4 +1,4 @@
-:NewDefs
+:PreTyper
 
 
 fun foo(x) = x > 1
@@ -20,14 +20,14 @@ if foo of
 //│ ╟── Note: 'if' expression starts here:
 //│ ║  l.9: 	if foo of
 //│ ╙──     	^^
-//│ ╔══[ERROR] The case when this is false is not handled: foo(0,)
-//│ ║  l.9: 	if foo of
-//│ ║       	   ^^^^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.10: 	  0 then "a"
-//│ ╙──      	^^^^
-//│ error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ║        	  ^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ ()
+//│ res
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
 
 :pe // TODO
 :e
@@ -47,14 +47,24 @@ if foo of 1,
 //│ ╟── Note: 'if' expression starts here:
 //│ ║  l.34: 	if foo of 1,
 //│ ╙──      	^^
-//│ ╔══[ERROR] The case when this is false is not handled: foo(1, undefined,)
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.34: 	if foo of 1,
 //│ ║        	   ^^^^^^^^^
 //│ ║  l.35: 	  0 then "a"
+//│ ║        	^^
+//│ ╟── argument list of type `[1, ()]` does not match type `[?a]`
+//│ ║  l.34: 	if foo of 1,
+//│ ║        	          ^^
+//│ ║  l.35: 	  0 then "a"
 //│ ╙──      	^^
-//│ error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.35: 	  0 then "a"
+//│ ║        	  ^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ ()
+//│ res
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
 
 :pe // TODO
 :e
@@ -62,15 +72,15 @@ if foo
   (0) then "a"
   (1) then "b"
 //│ ╔══[PARSE ERROR] Unexpected parenthesis section here
-//│ ║  l.63: 	  (1) then "b"
+//│ ║  l.73: 	  (1) then "b"
 //│ ╙──      	  ^^^
-//│ ╔══[ERROR] The case when this is false is not handled: foo(0,)
-//│ ║  l.61: 	if foo
-//│ ║        	   ^^^
-//│ ║  l.62: 	  (0) then "a"
-//│ ╙──      	^^^^^
-//│ error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.72: 	  (0) then "a"
+//│ ║        	           ^^^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ "a"
+//│ res
+//│ Runtime error:
+//│   Error: non-exhaustive case expression
 
 

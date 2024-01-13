@@ -7,10 +7,18 @@ class Foo(x)
 //│    = [Function: Foo1]
 
 if 1 is 1 then 1 else 0
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.9: 	if 1 is 1 then 1 else 0
+//│ ╙──     	   ^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ res: 0 | 1
 //│    = 1
 
 fun test(x) = if x is 1 then 0 else 1
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.17: 	fun test(x) = if x is 1 then 0 else 1
+//│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ test: anything -> (0 | 1)
 //│     = [Function: test]
 
@@ -19,12 +27,19 @@ fun test(x) = if x is 1 then 0 else 1
 fun testF(x) = if x is
   Foo(a) then a
   Foo(a) then a
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.27: 	fun testF(x) = if x is
+//│ ║        	                  ^^^^
+//│ ║  l.28: 	  Foo(a) then a
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ║  l.29: 	  Foo(a) then a
+//│ ╙──      	^^^^^^^^^^^^^^^
 //│ ╔══[WARNING] Found a duplicated branch
 //│ ╟── This branch
-//│ ║  l.21: 	  Foo(a) then a
+//│ ║  l.29: 	  Foo(a) then a
 //│ ║        	              ^
 //│ ╟── is subsumed by the branch here.
-//│ ║  l.20: 	  Foo(a) then a
+//│ ║  l.28: 	  Foo(a) then a
 //│ ╙──      	              ^
 //│ testF: (Foo & {x: 'x}) -> 'x
 //│      = [Function: testF]
@@ -37,6 +52,14 @@ class Bar(y, z)
 fun test(f) = if f is
   Foo(a) then a
   Bar(b, c) then b + c
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.52: 	fun test(f) = if f is
+//│ ║        	                 ^^^^
+//│ ║  l.53: 	  Foo(a) then a
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ║  l.54: 	  Bar(b, c) then b + c
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ test: (Bar & {y: int, z: int} | Foo & {x: 'x}) -> (int | 'x)
 //│     = [Function: test1]
 
@@ -52,6 +75,18 @@ fun f(x) =
     Pair(1, 1) then "ones"
     Pair(y, 1) then x
     _          then "nah"
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.73: 	  if x is
+//│ ║        	     ^^^^
+//│ ║  l.74: 	    Pair(0, 0) then "zeros"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.75: 	    Pair(1, 1) then "ones"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.76: 	    Pair(y, 1) then x
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.77: 	    _          then "nah"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ f: (Pair & 'a | ~Pair) -> ("nah" | "ones" | "zeros" | 'a)
 //│  = [Function: f]
 
@@ -70,16 +105,24 @@ class O()
 fun foo(x) = if x is
   Pair(Z(), Z()) then "zeros"
   Pair(O(), O()) then "ones"
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.105: 	fun foo(x) = if x is
+//│ ║         	                ^^^^
+//│ ║  l.106: 	  Pair(Z(), Z()) then "zeros"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.107: 	  Pair(O(), O()) then "ones"
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.70: 	fun foo(x) = if x is
-//│ ║        	                ^^^^
+//│ ║  l.105: 	fun foo(x) = if x is
+//│ ║         	                ^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.71: 	  Pair(Z(), Z()) then "zeros"
-//│ ║        	            ^^^
+//│ ║  l.106: 	  Pair(Z(), Z()) then "zeros"
+//│ ║         	            ^^^
 //│ ╟── [Missing Case 1/1] `O`
 //│ ╟── It first appears here.
-//│ ║  l.72: 	  Pair(O(), O()) then "ones"
-//│ ╙──      	            ^^^
+//│ ║  l.107: 	  Pair(O(), O()) then "ones"
+//│ ╙──       	            ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
 //│   if expression was not desugared
@@ -90,16 +133,24 @@ fun foo(x) = if x is
 fun foo(x) = if x is
   [Z(), Z()] then "zeros"
   [O(), O()] then "ones"
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.133: 	fun foo(x) = if x is
+//│ ║         	                ^^^^
+//│ ║  l.134: 	  [Z(), Z()] then "zeros"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.135: 	  [O(), O()] then "ones"
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.90: 	fun foo(x) = if x is
-//│ ║        	                ^^^^
+//│ ║  l.133: 	fun foo(x) = if x is
+//│ ║         	                ^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.91: 	  [Z(), Z()] then "zeros"
-//│ ║        	        ^^^
+//│ ║  l.134: 	  [Z(), Z()] then "zeros"
+//│ ║         	        ^^^
 //│ ╟── [Missing Case 1/1] `O`
 //│ ╟── It first appears here.
-//│ ║  l.92: 	  [O(), O()] then "ones"
-//│ ╙──      	        ^^^
+//│ ║  l.135: 	  [O(), O()] then "ones"
+//│ ╙──       	        ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
 //│   if expression was not desugared
@@ -110,6 +161,44 @@ fun foo(x) = if x is
       Z() then "zeros"
     O() then if b is
       O() then "ones"
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.158: 	fun foo(x) = if x is
+//│ ║         	                ^^^^
+//│ ║  l.159: 	  Pair(a, b) then if a is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.160: 	    Z() then if b is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.161: 	      Z() then "zeros"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.162: 	    O() then if b is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.163: 	      O() then "ones"
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.159: 	  Pair(a, b) then if a is
+//│ ║         	                     ^^^^
+//│ ║  l.160: 	    Z() then if b is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.161: 	      Z() then "zeros"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.162: 	    O() then if b is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.163: 	      O() then "ones"
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.160: 	    Z() then if b is
+//│ ║         	                ^^^^
+//│ ║  l.161: 	      Z() then "zeros"
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.162: 	    O() then if b is
+//│ ║         	                ^^^^
+//│ ║  l.163: 	      O() then "ones"
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ foo: (Pair & {fst: O | Z, snd: nothing}) -> ("ones" | "zeros")
 //│    = [Function: foo2]
 
@@ -120,6 +209,50 @@ fun foo(x) = if x is
       else "???"
     O() then if b is
       O() then "ones"
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.205: 	fun foo(x) = if x is
+//│ ║         	                ^^^^
+//│ ║  l.206: 	  Pair(a, b) then if a is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.207: 	    Z() then if b is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.208: 	      Z() then "zeros"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.209: 	      else "???"
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.210: 	    O() then if b is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.211: 	      O() then "ones"
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.206: 	  Pair(a, b) then if a is
+//│ ║         	                     ^^^^
+//│ ║  l.207: 	    Z() then if b is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.208: 	      Z() then "zeros"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.209: 	      else "???"
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.210: 	    O() then if b is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.211: 	      O() then "ones"
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.207: 	    Z() then if b is
+//│ ║         	                ^^^^
+//│ ║  l.208: 	      Z() then "zeros"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.209: 	      else "???"
+//│ ╙──       	^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.210: 	    O() then if b is
+//│ ║         	                ^^^^
+//│ ║  l.211: 	      O() then "ones"
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ foo: (Pair & {fst: O | Z, snd: O}) -> ("???" | "ones" | "zeros")
 //│    = [Function: foo3]
 
@@ -131,6 +264,56 @@ fun foo(x) = if x is
     O() then if b is
       O() then "zeros"
       else "???"
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.259: 	fun foo(x) = if x is
+//│ ║         	                ^^^^
+//│ ║  l.260: 	  Pair(a, b) then if a is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.261: 	    Z() then if b is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.262: 	      Z() then "zeros"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.263: 	      else "???"
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.264: 	    O() then if b is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.265: 	      O() then "zeros"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.266: 	      else "???"
+//│ ╙──       	^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.260: 	  Pair(a, b) then if a is
+//│ ║         	                     ^^^^
+//│ ║  l.261: 	    Z() then if b is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.262: 	      Z() then "zeros"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.263: 	      else "???"
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.264: 	    O() then if b is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.265: 	      O() then "zeros"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.266: 	      else "???"
+//│ ╙──       	^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.261: 	    Z() then if b is
+//│ ║         	                ^^^^
+//│ ║  l.262: 	      Z() then "zeros"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.263: 	      else "???"
+//│ ╙──       	^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.264: 	    O() then if b is
+//│ ║         	                ^^^^
+//│ ║  l.265: 	      O() then "zeros"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.266: 	      else "???"
+//│ ╙──       	^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ foo: (Pair & {fst: O | Z}) -> ("???" | "zeros")
 //│    = [Function: foo4]
 
@@ -148,6 +331,52 @@ fun foo(x) = if x is
     O() then if b is
       O() then "zeros"
       else "???"
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.326: 	fun foo(x) = if x is
+//│ ║         	                ^^^^
+//│ ║  l.327: 	  Pair(a, b) then if a is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.328: 	    Z() then if b is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.329: 	      S(x) then x
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.330: 	      else "???"
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.331: 	    O() then if b is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.332: 	      O() then "zeros"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.333: 	      else "???"
+//│ ╙──       	^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.327: 	  Pair(a, b) then if a is
+//│ ║         	                     ^^^^
+//│ ║  l.328: 	    Z() then if b is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.329: 	      S(x) then x
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.330: 	      else "???"
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.331: 	    O() then if b is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.332: 	      O() then "zeros"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.333: 	      else "???"
+//│ ╙──       	^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.328: 	    Z() then if b is
+//│ ║         	                ^^^^
+//│ ║  l.329: 	      S(x) then x
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.330: 	      else "???"
+//│ ╙──       	^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.331: 	    O() then if b is
+//│ ║         	                ^^^^
+//│ ║  l.332: 	      O() then "zeros"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.333: 	      else "???"
+//│ ╙──       	^^^^^^^^^^^^^^^^^
 //│ foo: (Pair & {fst: O | Z, snd: S & {pred: 'pred} | ~S}) -> ("???" | "zeros" | 'pred)
 //│    = [Function: foo5]
 
@@ -161,21 +390,35 @@ fun foo(x) = if x is
   Pair(Z(), Z()) then "zeros"
   Pair(O(), O()) then "ones"
   Pair(y, O()) then x
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.389: 	fun foo(x) = if x is
+//│ ║         	                ^^^^
+//│ ║  l.390: 	  Pair(Z(), Z()) then "zeros"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.391: 	  Pair(O(), O()) then "ones"
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.392: 	  Pair(y, O()) then x
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.160: 	fun foo(x) = if x is
+//│ ║  l.389: 	fun foo(x) = if x is
 //│ ║         	                ^^^^
 //│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.161: 	  Pair(Z(), Z()) then "zeros"
+//│ ║  l.390: 	  Pair(Z(), Z()) then "zeros"
 //│ ║         	            ^^^
 //│ ╟── [Missing Case 1/1] `Z`
 //│ ╟── It first appears here.
-//│ ║  l.161: 	  Pair(Z(), Z()) then "zeros"
+//│ ║  l.390: 	  Pair(Z(), Z()) then "zeros"
 //│ ╙──       	            ^^^
 //│ foo: anything -> error
 //│ Code generation encountered an error:
 //│   if expression was not desugared
 
 fun foo(x, y) = if x is Z() and y is O() then 0 else 1
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.417: 	fun foo(x, y) = if x is Z() and y is O() then 0 else 1
+//│ ╙──       	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ foo: (anything, anything,) -> (0 | 1)
 //│    = [Function: foo7]
 
@@ -183,5 +426,13 @@ fun foo(x, y) =
   if x is
     Z() and y is O() then 0
     else 1
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.426: 	  if x is
+//│ ║         	     ^^^^
+//│ ║  l.427: 	    Z() and y is O() then 0
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.428: 	    else 1
+//│ ╙──       	^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ foo: (anything, anything,) -> (0 | 1)
 //│    = [Function: foo8]

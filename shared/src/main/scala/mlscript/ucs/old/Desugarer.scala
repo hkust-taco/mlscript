@@ -1,12 +1,13 @@
-package mlscript.ucs
+package mlscript.ucs.old
 
 import scala.collection.mutable.{Map => MutMap, HashMap}
 import scala.collection.mutable.Buffer
 
 import mlscript._, utils._, shorthands._
-import helpers._
+import mlscript.ucs.{DesugaringException, PartialTerm}
+import mlscript.ucs.helpers._, helpers._
 import Message.MessageContext
-import mlscript.ucs.MutCaseOf.MutCase.Constructor
+import MutCaseOf.MutCase.Constructor
 import scala.collection.mutable.ListBuffer
 
 /**
@@ -359,6 +360,7 @@ class Desugarer extends TypeDefs { self: Typer =>
     * @return the desugared term
     */
   def desugarIf(elf: If)(implicit ctx: Ctx, raise: Raise): Term = traceUCS("[desugarIf]") {
+    raise(WarningReport(msg"old desugarer used" -> elf.toLoc :: Nil, false))
     val superClassMap = getClassHierarchy()
     Desugarer.printGraph(superClassMap, printlnUCS, "Super-class map", "<:")
     val subClassMap = Desugarer.reverseGraph(superClassMap)

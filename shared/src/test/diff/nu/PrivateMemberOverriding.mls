@@ -1,4 +1,4 @@
-:NewDefs
+:PreTyper
 
 
 class Foo(x: Int)

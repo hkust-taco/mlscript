@@ -32,12 +32,19 @@ trait DesugarUCS extends Transformation
     /** Associate the given `Var` with a fresh `ValueSymbol`. */
     def withFreshSymbol: Var = nme.withSymbol(freshSymbol(nme))
 
-    private def requireClassLikeSymbol(symbol: TypeSymbol): TypeSymbol = symbol match {
-      case symbol @ (_: TraitSymbol | _: ClassSymbol | _: ModuleSymbol) => symbol
+    /**
+      * Expect the given `symbol` to be a class-like symbol. If it is not, we
+      * get or create a dummy class symbol for it. The desugaring can continue
+      * and `Typer` will throw an error for this miuse.
+      */
+    private def requireClassLikeSymbol(symbol: TypeSymbol)(implicit context: Context): TypeSymbol = symbol match {
+      case symbol @ (_: TraitSymbol | _: ClassSymbol | _: ModuleSymbol | _: DummyClassSymbol) => symbol
       case symbol: MixinSymbol =>
-        throw new DesugaringException(msg"Mixins are not allowed in pattern" -> nme.toLoc :: Nil)
+        raiseError(msg"Mixins are not allowed in pattern" -> nme.toLoc)
+        context.getOrCreateDummyClassSymbol(nme)
       case symbol: TypeAliasSymbol =>
-        throw new DesugaringException(msg"Type alias is not allowed in pattern" -> nme.toLoc :: Nil)
+        raiseError(msg"Type alias is not allowed in pattern" -> nme.toLoc)
+        context.getOrCreateDummyClassSymbol(nme)
     }
 
     /**
@@ -45,13 +52,15 @@ trait DesugarUCS extends Transformation
       *
       * @param className the class name variable
       */
-    def getClassLikeSymbol: TypeSymbol = {
+    def getClassLikeSymbol(implicit context: Context): TypeSymbol = {
       val symbol = nme.symbolOption match {
         case S(symbol: TypeSymbol) => requireClassLikeSymbol(symbol)
-        case S(symbol: TermSymbol) => throw new DesugaringException(
-          msg"variable ${nme.name} is not associated with a class symbol" -> nme.toLoc :: Nil)
-        case N => throw new DesugaringException(
-          msg"variable ${nme.name} is not associated with any symbols" -> nme.toLoc :: Nil)
+        case S(symbol: TermSymbol) =>
+          raiseError(msg"variable ${nme.name} is not associated with a class symbol" -> nme.toLoc)
+          context.getOrCreateDummyClassSymbol(nme)
+        case N =>
+          raiseError(msg"variable ${nme.name} is not associated with any symbols" -> nme.toLoc)
+          context.getOrCreateDummyClassSymbol(nme)
       }
       println(s"getClassLikeSymbol: ${nme.name} ==> ${symbol.showDbg}")
       symbol
@@ -82,10 +91,25 @@ trait DesugarUCS extends Transformation
       )
     }
 
+    /**
+      * If the `Var` is associated with a term symbol, returns it. Otherwise,
+      * resolve the term symbol and associate the `Var` with the term symbol.
+      */
+    def getOrResolveTermSymbol(implicit scope: Scope): TermSymbol = {
+      nme.symbolOption match {
+        case N => resolveTermSymbol
+        case S(symbol: TermSymbol) => symbol
+        case S(otherSymbol) =>
+          raiseError(msg"identifier `${nme.name}` should be a term" -> nme.toLoc)
+          freshSymbol(nme) // TODO: Maybe we should maintain a "lost" symbol map.
+      }
+    }
+
     /** Associate the `Var` with a term symbol and returns the term symbol. */
     def resolveTermSymbol(implicit scope: Scope): TermSymbol = {
       val symbol = scope.getTermSymbol(nme.name).getOrElse {
-        throw new DesugaringException(msg"Undefined symbol found in patterns." -> nme.toLoc :: Nil)
+        raiseError(msg"identifier `${nme.name}` not found" -> nme.toLoc)
+        freshSymbol(nme) // TODO: Maybe we should maintain a "lost" symbol map.
       }
       nme.symbol = symbol
       symbol
@@ -95,17 +119,23 @@ trait DesugarUCS extends Transformation
     def withResolvedTermSymbol(implicit scope: Scope): Var = { nme.resolveTermSymbol; nme }
 
     /** Associate the `Var` with a class like symbol and returns the class like symbol. */
-    def resolveClassLikeSymbol(implicit scope: Scope): TypeSymbol = {
+    def resolveClassLikeSymbol(implicit scope: Scope, context: Context): TypeSymbol = {
       val symbol = scope.getTypeSymbol(nme.name) match {
         case S(symbol) => requireClassLikeSymbol(symbol)
-        case N => throw new DesugaringException(msg"Undefined symbol found in patterns." -> nme.toLoc :: Nil)
+        case N =>
+          raiseError(msg"type identifier `${nme.name}` not found" -> nme.toLoc)
+          context.getOrCreateDummyClassSymbol(nme)
       }
       nme.symbol = symbol
       symbol
     }
 
-    /** Associate the `Var` with a class like symbol and returns the same `Var`. */
-    def withResolvedClassLikeSymbol(implicit scope: Scope): Var = { nme.resolveClassLikeSymbol; nme }
+    /**
+      * Associate the `Var` with a class like symbol and returns the same `Var`.
+      * We might be able to remove this function. Currently, it is only used for
+      * resolving `Var("true")` and `Var("false")` in `Desugaring`. */
+    def withResolvedClassLikeSymbol(implicit scope: Scope, context: Context): Var =
+      { nme.resolveClassLikeSymbol; nme }
   }
 
   protected def traverseIf(`if`: If)(implicit scope: Scope): Unit = {
@@ -177,9 +207,9 @@ trait DesugarUCS extends Transformation
           traverseSplit(continuation)(scope.withEntries(patternSymbols))
           traverseSplit(tail)
         case Split.Let(isRec, name, rhs, tail) =>
-          val scopeWithName = scope + name.symbol
-          traverseTerm(rhs)(if (isRec) scopeWithName else scope)
-          traverseSplit(tail)(scopeWithName)
+          val recScope = scope + name.symbol
+          traverseTerm(rhs)(if (isRec) recScope else scope)
+          traverseSplit(tail)(recScope)
         case Split.Else(default) => traverseTerm(default)
         case Split.Nil => ()
       }

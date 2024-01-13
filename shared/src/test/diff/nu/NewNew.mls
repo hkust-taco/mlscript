@@ -1,4 +1,4 @@
-:NewDefs
+:PreTyper
 
 
 class Foo(val x: Int)
@@ -183,6 +183,9 @@ type T = PoInt[Str]
 
 :e
 new T(0, 0)
+//│ ╔══[ERROR] identifier `T` is resolved to a type
+//│ ║  l.185: 	new T(0, 0)
+//│ ╙──       	    ^
 //│ ╔══[ERROR] Type alias T cannot be used in `new` expression
 //│ ║  l.185: 	new T(0, 0)
 //│ ╙──       	^^^^^^^^^^^
@@ -198,7 +201,7 @@ let origin = new PoInt(0, 0)
 :e // TODO support
 let origin = PoInt[Int](0, 0)
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.199: 	let origin = PoInt[Int](0, 0)
+//│ ║  l.202: 	let origin = PoInt[Int](0, 0)
 //│ ╙──       	             ^^^^^^^^^^
 //│ let origin: PoInt[0]
 //│ origin
@@ -207,7 +210,7 @@ let origin = PoInt[Int](0, 0)
 :e // TODO support
 let origin = new PoInt[Int](0, 0)
 //│ ╔══[ERROR] Type arguments in `new` expressions are not yet supported
-//│ ║  l.208: 	let origin = new PoInt[Int](0, 0)
+//│ ║  l.211: 	let origin = new PoInt[Int](0, 0)
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^
 //│ let origin: PoInt[0]
 //│ Code generation encountered an error:
@@ -217,7 +220,7 @@ let origin = new PoInt[Int](0, 0)
 :e // TODO support
 new {}
 //│ ╔══[ERROR] Unexpected type `anything` after `new` keyword
-//│ ║  l.218: 	new {}
+//│ ║  l.221: 	new {}
 //│ ╙──       	    ^^
 //│ error
 //│ Code generation encountered an error:
@@ -227,10 +230,10 @@ new {}
 :e
 new
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.228: 	new
+//│ ║  l.231: 	new
 //│ ╙──       	   ^
 //│ ╔══[ERROR] Unexpected type `()` after `new` keyword
-//│ ║  l.228: 	new
+//│ ║  l.231: 	new
 //│ ╙──       	   ^
 //│ error
 //│ Code generation encountered an error:
@@ -241,11 +244,14 @@ new
 :e
 new
   x: 0
+//│ ╔══[ERROR] identifier `x` not found
+//│ ║  l.246: 	  x: 0
+//│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Not a recognized type
-//│ ║  l.243: 	  x: 0
+//│ ║  l.246: 	  x: 0
 //│ ╙──       	  ^
 //│ ╔══[ERROR] Unexpected type `nothing` after `new` keyword
-//│ ║  l.243: 	  x: 0
+//│ ║  l.246: 	  x: 0
 //│ ╙──       	  ^
 //│ error
 //│ Code generation encountered an error:
@@ -260,7 +266,7 @@ fun f(x) = {x}
 :e
 new f(1)
 //│ ╔══[ERROR] type identifier not found: f
-//│ ║  l.261: 	new f(1)
+//│ ║  l.267: 	new f(1)
 //│ ╙──       	    ^
 //│ error
 //│ res
@@ -273,7 +279,7 @@ module Oops
 :e
 new Oops
 //│ ╔══[ERROR] Module Oops cannot be used in `new` expression
-//│ ║  l.274: 	new Oops
+//│ ║  l.280: 	new Oops
 //│ ╙──       	    ^^^^
 //│ error
 //│ res
@@ -283,8 +289,11 @@ new Oops
 :e
 new Oops2
 trait Oops2
+//│ ╔══[ERROR] identifier `Oops2` is resolved to a type
+//│ ║  l.290: 	new Oops2
+//│ ╙──       	    ^^^^^
 //│ ╔══[ERROR] Trait Oops2 cannot be used in `new` expression
-//│ ║  l.284: 	new Oops2
+//│ ║  l.290: 	new Oops2
 //│ ╙──       	    ^^^^^
 //│ trait Oops2
 //│ error

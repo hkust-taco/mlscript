@@ -14,6 +14,16 @@ fun f(x) =
     is
       A then 0
       B then 1
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.13: 	  if x
+//│ ║        	     ^
+//│ ║  l.14: 	    is
+//│ ║        	^^^^^^
+//│ ║  l.15: 	      A then 0
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.16: 	      B then 1
+//│ ╙──      	^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ f: (A | B) -> (0 | 1)
 //│  = [Function: f]
 
@@ -24,17 +34,27 @@ fun f(x) =
     1
       + 2 then 0
       + _ then 1
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.23: 	  if x ==
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.33: 	  if x ==
 //│ ║        	     ^^^^
-//│ ║  l.24: 	    1
+//│ ║  l.34: 	    1
 //│ ║        	^^^^^^
-//│ ║  l.25: 	      + 2 then 0
+//│ ║  l.35: 	      + 2 then 0
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.36: 	      + _ then 1
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.33: 	  if x ==
+//│ ║        	     ^^^^
+//│ ║  l.34: 	    1
+//│ ║        	^^^^^^
+//│ ║  l.35: 	      + 2 then 0
 //│ ║        	^^^^^^^
 //│ ╟── operator application of type `bool` is not an instance of type `int`
-//│ ║  l.23: 	  if x ==
+//│ ║  l.33: 	  if x ==
 //│ ║        	     ^^^^
-//│ ║  l.24: 	    1
+//│ ║  l.34: 	    1
 //│ ╙──      	^^^^^^
 //│ f: number -> (0 | 1)
 //│  = [Function: f1]
@@ -45,5 +65,17 @@ fun f(x, s, t) =
       and t then 0
       and s then 0
     is _ then 1
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.63: 	  if x
+//│ ║        	     ^
+//│ ║  l.64: 	    is A()
+//│ ║        	^^^^^^^^^^
+//│ ║  l.65: 	      and t then 0
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.66: 	      and s then 0
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.67: 	    is _ then 1
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ f: (anything, anything, anything,) -> (0 | 1)
 //│  = [Function: f2]

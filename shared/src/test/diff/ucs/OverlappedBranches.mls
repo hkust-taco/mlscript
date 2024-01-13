@@ -23,6 +23,15 @@ fun f1(x) = if x is
   Base then "b"
   Derived1 then "d1"
   Derived2 then "d2"
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.22: 	fun f1(x) = if x is
+//│ ║        	               ^^^^
+//│ ║  l.23: 	  Base then "b"
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.24: 	  Derived1 then "d1"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.25: 	  Derived2 then "d2"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[WARNING] Found a duplicated branch
 //│ ╟── This branch
 //│ ║  l.24: 	  Derived1 then "d1"
@@ -75,6 +84,18 @@ fun f2(x, p) = if x is
   Derived1 then "d1"
   Derived2 then "d2"
   else "otherwise"
+//│ ╔══[WARNING] old desugarer used
+//│ ║  l.82: 	fun f2(x, p) = if x is
+//│ ║        	                  ^^^^
+//│ ║  l.83: 	  Base and p(x) then "b and p"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.84: 	  Derived1 then "d1"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.85: 	  Derived2 then "d2"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.86: 	  else "otherwise"
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected warning
 //│ f2: (Base & 'a | ~Base, 'a -> anything,) -> ("b and p" | "d1" | "d2" | "otherwise")
 //│   = [Function: f2]
 

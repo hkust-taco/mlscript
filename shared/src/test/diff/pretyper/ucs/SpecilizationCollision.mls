@@ -27,10 +27,10 @@ fun example2(p) =
     Pair(x, y) and p1(x) and p1(y) then "both negative"
     Pair(a, b) and p2(a) and p2(b) then x + y
     else "nah"
-//│ ╔══[ERROR] Variable x not found in scope
+//│ ╔══[ERROR] identifier `x` not found
 //│ ║  l.28: 	    Pair(a, b) and p2(a) and p2(b) then x + y
 //│ ╙──      	                                        ^
-//│ ╔══[ERROR] Variable y not found in scope
+//│ ╔══[ERROR] identifier `y` not found
 //│ ║  l.28: 	    Pair(a, b) and p2(a) and p2(b) then x + y
 //│ ╙──      	                                            ^
 //│ ╔══[ERROR] identifier not found: x

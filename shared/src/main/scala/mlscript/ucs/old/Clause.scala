@@ -1,4 +1,4 @@
-package mlscript.ucs
+package mlscript.ucs.old
 
 import mlscript._
 import mlscript.utils._
