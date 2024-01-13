@@ -15,24 +15,17 @@ trait PostProcessing { self: DesugarUCS with mlscript.pretyper.Traceable =>
     // Normalized terms are constructed using `Let` and `CaseOf`.
     term match {
       case top @ CaseOf(ScrutineeData(_), Wildcard(body)) => body
-      case top @ CaseOf(scrutineeVar: Var, fst @ Case(className: Var, body, NoCases)) =>
-        println(s"found a UNARY case: ${scrutineeVar.name} is $className")
-        println("post-processing the body")
+      case top @ CaseOf(ScrutineeData.WithVar(scrutinee, scrutineeVar), fst @ Case(className: Var, body, NoCases)) =>
+        println(s"UNARY: ${scrutineeVar.name} is ${className.name}")
         top.copy(cases = fst.copy(body = postProcess(body))(refined = fst.refined))
-      // case top @ CaseOf(test: Var, fst @ Case(Var("true"), trueBranch, Wildcard(falseBranch))) =>
-      //   println(s"found a if-then-else case: $test is true")
-      //   val processedTrueBranch = postProcess(trueBranch)
-      //   val processedFalseBranch = postProcess(falseBranch)
-      //   top.copy(cases = fst.copy(body = processedTrueBranch, rest = Wildcard(processedFalseBranch)
-      //     )(refined = fst.refined))
       case top @ CaseOf(ScrutineeData.WithVar(scrutinee, scrutineeVar), fst @ Case(pat, trueBranch, Wildcard(falseBranch))) =>
         println(s"BINARY: ${scrutineeVar.name} is ${pat.showDbg}")
         println(s"patterns of `${scrutineeVar.name}`: ${scrutinee.showPatternsDbg}")
         // Post-process the true branch.
-        println("post-processing the first branch")
+        println("TRUE")
         val processedTrueBranch = postProcess(trueBranch)
         // Post-process the false branch.
-        println("post-processing the false branch")
+        println("FALSE")
         // Get all patterns, except the current one `pat`.
         val patternInfoList = scrutinee.patternsIterator.filter(!_.matches(pat)).toList
         println(s"found ${patternInfoList.length} patterns to distentangle: ${patternInfoList.iterator.map(_.showDbg).mkString(", ")}")
@@ -69,7 +62,7 @@ trait PostProcessing { self: DesugarUCS with mlscript.pretyper.Traceable =>
       // Otherwise, this is not a part of a normalized term.
       case other => println(s"CANNOT post-process ${other.showDbg}"); other
     }
-  }(_ => "postProcess ==> ")
+  }(res => s"postProcess ==> ${res.showDbg}")
 
   private def trimEmptyTerm(term: Term): Opt[Term] = term match {
     case k @ CaseOf(_, cases) => trimEmptyCaseBranches(cases).map(c => k.copy(cases = c))

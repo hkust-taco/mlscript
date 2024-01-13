@@ -1,7 +1,6 @@
 package mlscript.ucs
 
-import mlscript.ucs.{Lines, LinesOps}
-import mlscript.ucs.{core, syntax}
+import mlscript.ucs.{core => c, syntax => s}
 import mlscript.ucs.context.{Context}
 import mlscript.pretyper.symbol.{TermSymbol, TypeSymbol}
 import mlscript.{App, CaseOf, Fld, FldFlags, Let, Loc, Sel, SimpleTerm, Term, Tup, Var}
@@ -24,48 +23,48 @@ package object display {
     `var`.name + (`var`.symbolOption.fold("")(_ => "*")) + postfix
   }
 
-  def showSplit(split: syntax.TermSplit)(implicit context: Context): Str = {
+  def showSplit(split: s.TermSplit)(implicit context: Context): Str = {
     // TODO: tailrec
-    def termSplit(split: syntax.TermSplit, isFirst: Bool, isAfterAnd: Bool): Lines = split match {
-      case syntax.Split.Cons(head, tail) => (termBranch(head) match {
+    def termSplit(split: s.TermSplit, isFirst: Bool, isAfterAnd: Bool): Lines = split match {
+      case s.Split.Cons(head, tail) => (termBranch(head) match {
         case (n, line) :: tail => (n, (if (isAfterAnd) "" else "and ") + s"$line") :: tail
         case Nil => Nil
       }) ::: termSplit(tail, false, isAfterAnd)
-      case syntax.Split.Let(_, nme, rhs, tail) =>
+      case s.Split.Let(_, nme, rhs, tail) =>
         (0, s"let ${nme.name} = ${rhs.showDbg}") :: termSplit(tail, false, isAfterAnd)
-      case syntax.Split.Else(term) =>
+      case s.Split.Else(term) =>
         (if (isFirst) (0, s"then ${term.showDbg}") else (0, s"else ${term.showDbg}")) :: Nil
-      case syntax.Split.Nil => Nil
+      case s.Split.Nil => Nil
     }
-    def termBranch(branch: syntax.TermBranch): Lines = branch match {
-      case syntax.TermBranch.Boolean(test, continuation) => 
+    def termBranch(branch: s.TermBranch): Lines = branch match {
+      case s.TermBranch.Boolean(test, continuation) => 
         s"$test" #: termSplit(continuation, true, false)
-      case syntax.TermBranch.Match(scrutinee, continuation) =>
+      case s.TermBranch.Match(scrutinee, continuation) =>
         s"$scrutinee is" #: patternSplit(continuation)
-      case syntax.TermBranch.Left(left, continuation) =>
+      case s.TermBranch.Left(left, continuation) =>
         s"$left" #: operatorSplit(continuation)
     }
-    def patternSplit(split: syntax.PatternSplit): Lines = split match {
-      case syntax.Split.Cons(head, tail) => patternBranch(head) ::: patternSplit(tail)
-      case syntax.Split.Let(rec, nme, rhs, tail) =>
+    def patternSplit(split: s.PatternSplit): Lines = split match {
+      case s.Split.Cons(head, tail) => patternBranch(head) ::: patternSplit(tail)
+      case s.Split.Let(rec, nme, rhs, tail) =>
         (0, s"let ${nme.name} = ${rhs.showDbg}") :: patternSplit(tail)
-      case syntax.Split.Else(term) => (0, s"else ${term.showDbg}") :: Nil
-      case syntax.Split.Nil => Nil
+      case s.Split.Else(term) => (0, s"else ${term.showDbg}") :: Nil
+      case s.Split.Nil => Nil
     }
-    def operatorSplit(split: syntax.OperatorSplit): Lines = split match {
-      case syntax.Split.Cons(head, tail) => operatorBranch(head) ::: operatorSplit(tail)
-      case syntax.Split.Let(rec, nme, rhs, tail) =>
+    def operatorSplit(split: s.OperatorSplit): Lines = split match {
+      case s.Split.Cons(head, tail) => operatorBranch(head) ::: operatorSplit(tail)
+      case s.Split.Let(rec, nme, rhs, tail) =>
         (0, s"let ${nme.name} = ${rhs.showDbg}") :: operatorSplit(tail)
-      case syntax.Split.Else(term) => (0, s"else ${term.showDbg}") :: Nil
-      case syntax.Split.Nil => Nil
+      case s.Split.Else(term) => (0, s"else ${term.showDbg}") :: Nil
+      case s.Split.Nil => Nil
     }
-    def operatorBranch(branch: syntax.OperatorBranch): Lines =
+    def operatorBranch(branch: s.OperatorBranch): Lines =
       s"${branch.operator}" #: (branch match {
-        case syntax.OperatorBranch.Match(_, continuation) => patternSplit(continuation)
-        case syntax.OperatorBranch.Binary(_, continuation) => termSplit(continuation, true, true)
+        case s.OperatorBranch.Match(_, continuation) => patternSplit(continuation)
+        case s.OperatorBranch.Binary(_, continuation) => termSplit(continuation, true, true)
       })
-    def patternBranch(branch: syntax.PatternBranch): Lines = {
-      val syntax.PatternBranch(pattern, continuation) = branch
+    def patternBranch(branch: s.PatternBranch): Lines = {
+      val s.PatternBranch(pattern, continuation) = branch
       termSplit(continuation, true, false) match {
         case (0, line) :: lines => (0, s"$pattern $line") :: lines
         case lines => (0, pattern.toString) :: lines
@@ -74,23 +73,23 @@ package object display {
     ("if" #: termSplit(split, true, true)).iterator.map { case (n, line) => "  " * n + line }.mkString("\n")
   }
 
-  @inline def showSplit(s: core.Split)(implicit context: Context): Str = showSplit("if", s)
+  @inline def showSplit(s: c.Split)(implicit context: Context): Str = showSplit("if", s)
 
-  def showSplit(prefix: Str, s: core.Split)(implicit context: Context): Str = {
+  def showSplit(prefix: Str, s: c.Split)(implicit context: Context): Str = {
     // TODO: tailrec
-    def split(s: core.Split, isFirst: Bool, isTopLevel: Bool): Lines = s match {
-      case core.Split.Cons(head, tail) => (branch(head) match {
+    def split(s: c.Split, isFirst: Bool, isTopLevel: Bool): Lines = s match {
+      case c.Split.Cons(head, tail) => (branch(head) match {
         case (n, line) :: tail => (n, (if (isTopLevel) "" else "") + s"$line") :: tail
         case Nil => Nil
       }) ::: split(tail, false, isTopLevel)
-      case core.Split.Let(_, nme, rhs, tail) =>
+      case c.Split.Let(_, nme, rhs, tail) =>
         (0, s"let ${showVar(nme)} = ${rhs.showDbg}") :: split(tail, false, isTopLevel)
-      case core.Split.Else(term) =>
+      case c.Split.Else(term) =>
         (if (isFirst) (0, s"then ${term.showDbg}") else (0, s"else ${term.showDbg}")) :: Nil
-      case core.Split.Nil => Nil
+      case c.Split.Nil => Nil
     }
-    def branch(b: core.Branch): Lines = {
-      val core.Branch(scrutinee, pattern, continuation) = b
+    def branch(b: c.Branch): Lines = {
+      val c.Branch(scrutinee, pattern, continuation) = b
       s"${showVar(scrutinee)} is $pattern" #: split(continuation, true, false)
     }
     val lines = split(s, true, true)
@@ -126,8 +125,8 @@ package object display {
     }
     def showCaseBranches(caseBranches: CaseBranches): Lines =
       caseBranches match {
-        case Case(pat, rhs, tail) =>
-          (s"${showPattern(pat)} ->" @: showTerm(rhs)) ++ showCaseBranches(tail)
+        case k @ Case(pat, rhs, tail) =>
+          (s"${if (k.refined) "refined " else ""}${showPattern(pat)} ->" @: showTerm(rhs)) ++ showCaseBranches(tail)
         case Wildcard(term) => s"_ ->" @: showTerm(term)
         case NoCases => Nil
       }

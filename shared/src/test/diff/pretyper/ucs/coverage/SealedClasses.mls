@@ -9,28 +9,44 @@ class App(func: Term, arg: Term) extends Term
 //│ class Abs(param: Str, body: Term) extends Term
 //│ class App(func: Term, arg: Term) extends Term
 
-// TODO: Why doesn't `Term` match `Abs | App | Var`?
-fun is_value(term) =
+:dpt:desugar.result
+fun is_value_explicit_refinement(term) =
+  if term is refined(Term) and term is
+    Abs(_, _) then true
+    Var(_) then false
+    App(_, _) then false
+//│ | | | | | | | Desugared UCS term:
+//│ | | | | | | | if term*‡ is refined Term
+//│ | | | | | | |   term*‡ is Abs then true
+//│ | | | | | | |   term*‡ is Var then false
+//│ | | | | | | |   term*‡ is App then false
+//│ fun is_value_explicit_refinement: (Abs | App | Var) -> Bool
+
+:dpt:normalize.result,postprocess.result
+fun is_value_automatic_refinement(term) =
   if term is Term and term is
     Abs(_, _) then true
     Var(_) then false
     App(_, _) then false
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.14: 	  if term is Term and term is
-//│ ║        	                      ^^^^^^^
-//│ ║  l.15: 	    Abs(_, _) then true
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.16: 	    Var(_) then false
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.17: 	    App(_, _) then false
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── class pattern of type `Term` does not match type `Abs | App | Var`
-//│ ║  l.14: 	  if term is Term and term is
-//│ ║        	             ^^^^
-//│ ╟── but it flows into reference with expected type `Abs | App | Var`
-//│ ║  l.14: 	  if term is Term and term is
-//│ ╙──      	                      ^^^^
-//│ fun is_value: Term -> Bool
+//│ | | | | | | | Normalized UCS term:
+//│ | | | | | | | case term*‡ of
+//│ | | | | | | |   refined Term*◊ ->
+//│ | | | | | | |     case term*‡ of
+//│ | | | | | | |       Abs*◊ -> true
+//│ | | | | | | |       _ ->
+//│ | | | | | | |         case term*‡ of
+//│ | | | | | | |           Var*◊ -> false
+//│ | | | | | | |           _ ->
+//│ | | | | | | |             case term*‡ of
+//│ | | | | | | |               App*◊ -> false
+//│ | | | | | | | Post-processed UCS term:
+//│ | | | | | | | case term*‡ of
+//│ | | | | | | |   refined Term*◊ ->
+//│ | | | | | | |     case term*‡ of
+//│ | | | | | | |       Abs*◊ -> true
+//│ | | | | | | |       Var*◊ -> false
+//│ | | | | | | |       App*◊ -> false
+//│ fun is_value_automatic_refinement: (Abs | App | Var) -> Bool
 
 :e
 fun is_value'(term) =
@@ -38,25 +54,12 @@ fun is_value'(term) =
     Abs(_, _) then true
     Var(_) then false
 //│ ╔══[ERROR] When scrutinee `term` is `Term`
-//│ ║  l.37: 	  if term is Term and term is
+//│ ║  l.53: 	  if term is Term and term is
 //│ ║        	             ^^^^
 //│ ╟── Scrutinee `term` has 1 missing case
-//│ ║  l.37: 	  if term is Term and term is
+//│ ║  l.53: 	  if term is Term and term is
 //│ ║        	                      ^^^^
 //│ ╟── It can be class `App`
 //│ ║  l.6: 	class App(func: Term, arg: Term) extends Term
 //│ ╙──     	      ^^^
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.37: 	  if term is Term and term is
-//│ ║        	                      ^^^^^^^
-//│ ║  l.38: 	    Abs(_, _) then true
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.39: 	    Var(_) then false
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── class pattern of type `Term` does not match type `Abs | Var`
-//│ ║  l.37: 	  if term is Term and term is
-//│ ║        	             ^^^^
-//│ ╟── but it flows into reference with expected type `Abs | Var`
-//│ ║  l.37: 	  if term is Term and term is
-//│ ╙──      	                      ^^^^
-//│ fun is_value': Term -> Bool
+//│ fun is_value': (Abs | Var) -> Bool

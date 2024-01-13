@@ -98,7 +98,7 @@ trait Normalization { self: DesugarUCS with Traceable =>
         // println(s"match ${scrutineeVar.name} with $nme (has location: ${nme.toLoc.isDefined})")
         val trueBranch = normalizeToTerm(specialize(continuation.fill(tail, deep = false), true)(scrutineeVar, scrutinee, pattern, context))
         val falseBranch = normalizeToCaseBranches(specialize(tail, false)(scrutineeVar, scrutinee, pattern, context))
-        CaseOf(scrutineeVar, Case(nme, trueBranch, falseBranch)(refined = rfd))
+        CaseOf(scrutineeVar, Case(nme, trueBranch, falseBranch)(refined = pattern.refined))
       case Split.Cons(Branch(scrutinee, pattern, continuation), tail) =>
         raiseError(msg"Unsupported pattern: ${pattern.toString}" -> pattern.toLoc)
         errorTerm
@@ -159,25 +159,41 @@ trait Normalization { self: DesugarUCS with Traceable =>
         val falseBranch = specialize(tail, matchOrNot)
         split.copy(head = head.copy(continuation = trueBranch), tail = falseBranch)
       // Class pattern. Positive.
-      case (true, split @ Split.Cons(head @ Branch(ScrutineeData.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Class(otherClassName, rfd), continuation), tail)) =>
+      case (true, split @ Split.Cons(head @ Branch(ScrutineeData.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Class(otherClassName, otherRefined), continuation), tail)) =>
         val otherClassSymbol = otherClassName.getClassLikeSymbol
         if (scrutinee === otherScrutinee) {
           println(s"scrutinee: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
           pattern match {
-            case Pattern.Class(className, rfd2) =>
-              assert(rfd === rfd2) // TODO: raise warning instead of crash
+            case classPattern @ Pattern.Class(className, refined) =>
               val classSymbol = className.getClassLikeSymbol
               if (classSymbol === otherClassSymbol) {
                 println(s"Case 1: class name: ${className.name} === ${otherClassName.name}")
+                if (otherRefined =/= refined) {
+                  def be(value: Bool): Str = if (value) "is" else "is not"
+                  raiseWarning(
+                    msg"inconsistent refined case branches" -> pattern.toLoc,
+                    msg"class pattern ${className.name} ${be(refined)} refined" -> className.toLoc,
+                    msg"but class pattern ${otherClassName.name} ${be(otherRefined)} refined" -> otherClassName.toLoc
+                  )
+                }
                 specialize(continuation, true) :++ specialize(tail, true)
-              } else if (otherClassSymbol.baseTypes contains classSymbol) {
+              } else if (otherClassSymbol hasSuperType classSymbol) {
                 println(s"Case 2: ${otherClassName.name} <: ${className.name}")
+                println(s"${otherClassSymbol.name} is refining ${className.name}")
+                // We should mark `pattern` as refined.
+                classPattern.refined = true
                 split
               } else {
                 println(s"Case 3: ${className.name} and ${otherClassName.name} are unrelated")
                 specialize(tail, true)
               }
-            case _ => throw new NormalizationException((msg"Incompatible: ${pattern.toString}" -> pattern.toLoc) :: Nil)
+            case _ =>
+              // TODO: Make a case for this. Check if this is a valid case.
+              raiseError(
+                msg"pattern ${pattern.toString}" -> pattern.toLoc,
+                msg"is incompatible with class pattern ${otherClassName.name}" -> otherClassName.toLoc,
+              )
+              split
           }
         } else {
           // println(s"scrutinee: ${scrutineeVar.name} =/= ${otherScrutineeVar.name}")
@@ -187,14 +203,21 @@ trait Normalization { self: DesugarUCS with Traceable =>
           )
         }
       // Class pattern. Negative
-      case (false, split @ Split.Cons(head @ Branch(ScrutineeData.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Class(otherClassName, rfd), continuation), tail)) =>
+      case (false, split @ Split.Cons(head @ Branch(ScrutineeData.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Class(otherClassName, otherRefined), continuation), tail)) =>
         val otherClassSymbol = otherClassName.getClassLikeSymbol
         if (scrutinee === otherScrutinee) {
           println(s"scrutinee: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
           pattern match {
-            case Pattern.Class(className, rfd2) =>
+            case Pattern.Class(className, refined) =>
               println("both of them are class patterns")
-              assert(rfd === rfd2) // TODO: raise warning instead of crash
+              if (otherRefined =/= refined) {
+                def be(value: Bool): Str = if (value) "is" else "is not"
+                raiseWarning(
+                  msg"inconsistent refined case branches" -> pattern.toLoc,
+                  msg"class pattern ${className.name} ${be(refined)} refined" -> className.toLoc,
+                  msg"but class pattern ${otherClassName.name} ${be(otherRefined)} refined" -> otherClassName.toLoc
+                )
+              }
               val classSymbol = className.getClassLikeSymbol
               if (className === otherClassName) {
                 println(s"Case 1: class name: ${otherClassName.name} === ${className.name}")
@@ -252,9 +275,9 @@ trait Normalization { self: DesugarUCS with Traceable =>
           )
         }
       // Other patterns. Not implemented.
-      case (_, Split.Cons(Branch(otherScrutineeVar, pattern, continuation), tail)) =>
-        println(s"unsupported pattern: $pattern")
-        throw new NormalizationException((msg"Unsupported pattern: ${pattern.toString}" -> pattern.toLoc) :: Nil)
+      case (_, split @ Split.Cons(Branch(otherScrutineeVar, pattern, continuation), tail)) =>
+        raiseError(msg"found unsupported pattern: ${pattern.toString}" -> pattern.toLoc)
+        split
       case (_, let @ Split.Let(_, nme, _, tail)) =>
         println(s"let binding ${nme.name}, go next")
         let.copy(tail = specialize(tail, matchOrNot))
@@ -265,14 +288,4 @@ trait Normalization { self: DesugarUCS with Traceable =>
   // }(showSplit(s"S${if (matchOrNot) "+" else "-"} ==>", _))
 }
 
-object Normalization {
-  // private def getClassLikeSymbol(className: Var): TypeSymbol =
-  //   className.symbolOption.flatMap(_.typeSymbolOption) match {
-  //     case N => throw new NormalizationException(msg"class name is not resolved" -> className.toLoc :: Nil)
-  //     case S(typeSymbol) => typeSymbol
-  //   }
-
-  class NormalizationException(val messages: Ls[Message -> Opt[Loc]]) extends Throwable {
-    def this(message: Message, location: Opt[Loc]) = this(message -> location :: Nil)
-  }
-}
+object Normalization

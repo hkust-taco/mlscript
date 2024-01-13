@@ -67,9 +67,9 @@ trait Desugaring { self: PreTyper =>
     * Boolean conditions.
     */
   private def truePattern(implicit scope: Scope) =
-    c.Pattern.Class(Var("true").withResolvedClassLikeSymbol, refined = false)
+    c.Pattern.Class(Var("true").withResolvedClassLikeSymbol, false)
   private def falsePattern(implicit scope: Scope) =
-    c.Pattern.Class(Var("false").withResolvedClassLikeSymbol, refined = false)
+    c.Pattern.Class(Var("false").withResolvedClassLikeSymbol, false)
 
   private def desugarTermSplit(split: s.TermSplit)(implicit termPart: PartialTerm, scope: Scope, context: Context): c.Split =
     split match {
@@ -308,7 +308,7 @@ trait Desugaring { self: PreTyper =>
             scrutineeVar.getOrCreateScrutinee.withAlias(scrutineeVar).getOrCreateBooleanPattern(nme).addLocation(nme)
             c.Branch(
               scrutinee = scrutineeVar,
-              pattern = c.Pattern.Class(nme.withResolvedClassLikeSymbol, refined = false),
+              pattern = c.Pattern.Class(nme.withResolvedClassLikeSymbol, false),
               continuation = desugarTermSplit(head.continuation)(PartialTerm.Empty, scope, context)
             ) :: rec(scrutineeVar, tail)
           case s.ConcretePattern(nme) =>

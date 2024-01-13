@@ -55,7 +55,7 @@ fun example3(t) =
     Base(x) and p1(x) then x
     Derived(y) then y
     else 42
-//│ fun example3: Base -> Int
+//│ fun example3: forall 'a. (Base & {#x: Num & 'a}) -> (Int | 'a)
 
 fun example4(t, x) =
   if t is
@@ -66,7 +66,7 @@ fun example4(t, x) =
     // previous branch shadows the variable `x`, a correct implementation
     // should restore the original value of `x` in this branch.
     else 42
-//│ fun example4: (Base, Int) -> Int
+//│ fun example4: forall 'a. (Base & {#x: Num & 'a}, Int) -> (Int | 'a)
 
 example4(Base(-1), 0) ~~> -1
 example4(Base(1), 2) ~~> 42

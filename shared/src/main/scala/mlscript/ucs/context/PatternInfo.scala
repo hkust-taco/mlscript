@@ -61,7 +61,11 @@ object PatternInfo {
 
     override def matches(pat: SimpleTerm): Bool =
       pat match {
-        case pat: Var => pat.symbolOption.exists(_ === classLikeSymbol)
+        case pat: Var => pat.symbolOption match {
+          case S(patternSymbol: TypeSymbol) =>
+            patternSymbol === classLikeSymbol || patternSymbol.hasSuperType(classLikeSymbol)
+          case S(_) | N => false
+        }
         case _: Lit => false
       }
 

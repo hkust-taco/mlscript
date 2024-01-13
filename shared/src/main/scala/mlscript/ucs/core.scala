@@ -22,8 +22,16 @@ package object core {
     final case class Name(nme: Var) extends Pattern {
       override def children: Ls[Located] = nme :: Nil
     }
-    final case class Class(nme: Var, refined: Bool) extends Pattern {
+    /**
+      * TODO: Consider make `refined` immutable.
+      * @param nme the name of the class-like symbol
+      * @param originallyRefined whether the class is marked as refined from
+      *                          in source code
+      */
+    final case class Class(nme: Var, val originallyRefined: Bool) extends Pattern {
       override def children: Ls[Located] = nme :: Nil
+
+      var refined: Bool = originallyRefined
     }
 
     def getParametersLoc(parameters: List[Opt[Var]]): Opt[Loc] =
