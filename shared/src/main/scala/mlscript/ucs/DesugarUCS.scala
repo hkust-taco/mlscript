@@ -142,7 +142,7 @@ trait DesugarUCS extends Transformation
     implicit val context: Context = new Context(`if`)
     try trace("traverseIf") {
       // Stage 0: Transformation
-      val transformed = traceWithTopic("ucs.transform") {
+      val transformed = traceWithTopic("transform") {
         println("STEP 0")
         val transformed = transform(`if`)
         println("Transformed UCS term:")

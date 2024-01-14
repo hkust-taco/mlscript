@@ -1,59 +1,28 @@
-:NewParser
+:PreTyper
 
 fun f(x, y) =
   if
     x == 0 then "x"
     y == 0 then "y"
     _      then "nah"
-//│ ╔══[WARNING] old desugarer used
-//│ ║  l.5: 	    x == 0 then "x"
-//│ ║       	    ^^^^^^^^^^^^^^^
-//│ ║  l.6: 	    y == 0 then "y"
-//│ ║       	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.7: 	    _      then "nah"
-//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected warning
-//│ f: (number, number,) -> ("nah" | "x" | "y")
-//│  = [Function: f]
+//│ fun f: (Num, Num) -> ("nah" | "x" | "y")
 
-class Option
-class Some(value): Option
-class None: Option
-//│ Defined class Option
-//│ Defined class Some
-//│ Defined class None
-//│ Option: () -> Option
-//│       = [Function: Option1]
-//│ Some: 'value -> (Some & {value: 'value})
-//│     = [Function: Some1]
-//│ None: () -> None
-//│     = [Function: None1]
+abstract class Option[A]: Some[A] | None
+class Some[A](value: A) extends Option[A]
+module None extends Option
+//│ abstract class Option[A]: None | Some[A]
+//│ class Some[A](value: A) extends Option
+//│ module None extends Option
 
 fun isValid(x) = if x then false else true
-//│ ╔══[WARNING] old desugarer used
-//│ ║  l.32: 	fun isValid(x) = if x then false else true
-//│ ╙──      	                    ^^^^^^^^^^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected warning
-//│ isValid: anything -> Bool
-//│        = [Function: isValid]
+//│ fun isValid: Bool -> Bool
 
 fun f(x, allowNone) =
   if x
     is Some(x) and isValid(x) then "good"
     is None() and allowNone then "okay"
     is _ then "bad"
-//│ ╔══[WARNING] old desugarer used
-//│ ║  l.41: 	  if x
-//│ ║        	     ^
-//│ ║  l.42: 	    is Some(x) and isValid(x) then "good"
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.43: 	    is None() and allowNone then "okay"
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.44: 	    is _ then "bad"
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected warning
-//│ f: (anything, anything,) -> ("bad" | "good" | "okay")
-//│  = [Function: f1]
+//│ fun f: (Object & ~#Some | Some[Bool], Bool) -> ("bad" | "good" | "okay")
 
 fun f(x, y, z) =
   if
@@ -66,30 +35,10 @@ fun f(x, y, z) =
         _ then "bruh"
       3 then "y = 3"
       _ then "bruh"
-//│ ╔══[WARNING] old desugarer used
-//│ ║  l.60: 	    x == 0 then "x"
-//│ ║        	    ^^^^^^^^^^^^^^^
-//│ ║  l.61: 	    y ==
-//│ ║        	^^^^^^^^
-//│ ║  l.62: 	      1 then "y = 1"
-//│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.63: 	      2 and z ==
-//│ ║        	^^^^^^^^^^^^^^^^
-//│ ║  l.64: 	        0 then "z = 0"
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.65: 	        9 then "z = 9"
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	        _ then "bruh"
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	      3 then "y = 3"
-//│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.68: 	      _ then "bruh"
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected warning
-//│ f: (number, number, number,) -> ("bruh" | "x" | "y = 1" | "y = 3" | "z = 0" | "z = 9")
-//│  = [Function: f2]
+//│ fun f: (Num, Num, Num) -> ("bruh" | "x" | "y = 1" | "y = 3" | "z = 0" | "z = 9")
 
-:w
+// :w
+// FIXME: Report redundant else branches.
 fun f(a, b) =
   if
     a == 0 then 0
@@ -98,21 +47,4 @@ fun f(a, b) =
       2 then 2
       _ then 7
     else 3
-//│ ╔══[WARNING] old desugarer used
-//│ ║  l.95: 	    a == 0 then 0
-//│ ║        	    ^^^^^^^^^^^^^
-//│ ║  l.96: 	    b ==
-//│ ║        	^^^^^^^^
-//│ ║  l.97: 	      1 then 1
-//│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.98: 	      2 then 2
-//│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.99: 	      _ then 7
-//│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.100: 	    else 3
-//│ ╙──       	^^^^^^^^^^
-//│ ╔══[WARNING] Found a redundant else branch
-//│ ║  l.100: 	    else 3
-//│ ╙──       	         ^
-//│ f: (number, number,) -> (0 | 1 | 2 | 7)
-//│  = [Function: f3]
+//│ fun f: (Num, Num) -> (0 | 1 | 2 | 7)

@@ -38,11 +38,11 @@ package object display {
     }
     def termBranch(branch: s.TermBranch): Lines = branch match {
       case s.TermBranch.Boolean(test, continuation) => 
-        s"$test" #: termSplit(continuation, true, false)
+        s"${test.showDbg}" #: termSplit(continuation, true, false)
       case s.TermBranch.Match(scrutinee, continuation) =>
-        s"$scrutinee is" #: patternSplit(continuation)
+        s"${scrutinee.showDbg} is" #: patternSplit(continuation)
       case s.TermBranch.Left(left, continuation) =>
-        s"$left" #: operatorSplit(continuation)
+        s"${left.showDbg}" #: operatorSplit(continuation)
     }
     def patternSplit(split: s.PatternSplit): Lines = split match {
       case s.Split.Cons(head, tail) => patternBranch(head) ::: patternSplit(tail)
@@ -59,7 +59,7 @@ package object display {
       case s.Split.Nil => Nil
     }
     def operatorBranch(branch: s.OperatorBranch): Lines =
-      s"${branch.operator}" #: (branch match {
+      s"${branch.operator.name}" #: (branch match {
         case s.OperatorBranch.Match(_, continuation) => patternSplit(continuation)
         case s.OperatorBranch.Binary(_, continuation) => termSplit(continuation, true, true)
       })
@@ -70,7 +70,7 @@ package object display {
         case lines => (0, pattern.toString) :: lines
       }
     }
-    ("if" #: termSplit(split, true, true)).iterator.map { case (n, line) => "  " * n + line }.mkString("\n")
+    ("if" #: termSplit(split, true, true)).toIndentedString
   }
 
   @inline def showSplit(s: c.Split)(implicit context: Context): Str = showSplit("if", s)
@@ -93,8 +93,7 @@ package object display {
       s"${showVar(scrutinee)} is $pattern" #: split(continuation, true, false)
     }
     val lines = split(s, true, true)
-    (if (prefix.isEmpty) lines else prefix #: lines)
-      .iterator.map { case (n, line) => "  " * n + line }.mkString("\n")
+    (if (prefix.isEmpty) lines else prefix #: lines).toIndentedString
   }
 
   /**
@@ -137,6 +136,6 @@ package object display {
       val Let(rec, nme, rhs, body) = let
       (0, s"let ${showVar(nme)} = ${rhs.showDbg}") :: showTerm(body)
     }
-    showTerm(term).map { case (n, line) => "  " * n + line }.mkString("\n")
+    showTerm(term).toIndentedString
   }
 }

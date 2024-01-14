@@ -55,7 +55,7 @@ problems located by test cases.
 - [x] shared/src/test/diff/nu/LitMatch.mls
 - [x] shared/src/test/diff/nu/MissingTypeArg.mls
 - [x] shared/src/test/diff/nu/NamedArgs.mls
-- [ ] shared/src/test/diff/nu/New.mls **OLD**
+- [x] shared/src/test/diff/nu/New.mls **OLD**
 - [x] shared/src/test/diff/nu/NewNew.mls
 - [x] shared/src/test/diff/nu/Object.mls
 - [x] shared/src/test/diff/nu/OpLam.mls
@@ -73,7 +73,7 @@ problems located by test cases.
 - [x] shared/src/test/diff/nu/UndefMatching.mls
 - [x] shared/src/test/diff/nu/WeirdUnions.mls
 - [x] shared/src/test/diff/nu/i180.mls
-- [ ] shared/src/test/diff/nu/repro0.mls
+- [x] shared/src/test/diff/nu/repro0.mls
       - `PreTyper` does not accept top-level `val` bindings.
 - [x] shared/src/test/diff/nu/repro1.mls
 - [x] shared/src/test/diff/nu/repro_EvalNegNeg.mls
@@ -86,27 +86,43 @@ problems located by test cases.
 - [x] shared/src/test/diff/ucs/CrossBranchCapture.mls
       Fix the mentioned problems.
       TODO: Warn duplicated pattern bindings.
-- [ ] shared/src/test/diff/ucs/DirectLines.mls **OLD**
+- [x] shared/src/test/diff/ucs/DirectLines.mls **OLD**
+      TODO: Warn duplicated else branches.
 - [x] shared/src/test/diff/ucs/ElseIf.mls
-- [ ] shared/src/test/diff/ucs/ErrorMessage.mls **OLD**
+- [x] shared/src/test/diff/ucs/ErrorMessage.mls **OLD**
 - [x] shared/src/test/diff/ucs/Exhaustiveness.mls
-- [ ] shared/src/test/diff/ucs/Humiliation.mls **OLD**
+- [x] shared/src/test/diff/ucs/Humiliation.mls **OLD**
+      TODO: Improve scrutinee name display.
+      Generated names should be polished.
 - [x] shared/src/test/diff/ucs/Hygiene.mls
       Problem fixed!
 - [ ] shared/src/test/diff/ucs/HygienicBindings.mls
-- [ ] shared/src/test/diff/ucs/InterleavedLet.mls **OLD**
+      We should fix the shadowing parameters.
+- [x] shared/src/test/diff/ucs/InterleavedLet.mls **OLD**
+      The transformation cannot handle the following case.
+      ```
+      fun mapPartition2(f, xs) =
+        if xs is
+        Nil then Pair(Nil, Nil)
+        Cons(x, xs) and mapPartition(f, xs) is Pair(l, r) and f(x) is
+              Left(v)  then Pair(Cons(v, l), r)
+              Right(v) then Pair(l, Cons(v, r))
+      ```
+      To be specific, `Cons(x, xs) and mapPartition(f, xs) is Pair(l, r)` are
+      not separated. I re-implemented `splitAnd` function.
 - [x] shared/src/test/diff/ucs/JSON.mls
       Deleted. This one is not completed and we have a new version.
 - [x] shared/src/test/diff/ucs/LeadingAnd.mls
 - [x] shared/src/test/diff/ucs/LitUCS.mls
 - [x] shared/src/test/diff/ucs/MultiwayIf.mls
-- [ ] shared/src/test/diff/ucs/NestedBranches.mls
+- [x] shared/src/test/diff/ucs/NestedBranches.mls
       Found a bug in transformation.
 - [x] shared/src/test/diff/ucs/NestedOpSplits.mls
 - [x] shared/src/test/diff/ucs/NestedPattern.mls
 - [x] shared/src/test/diff/ucs/NuPlainConditionals.mls
 - [x] shared/src/test/diff/ucs/Or.mls
-- [ ] shared/src/test/diff/ucs/OverlappedBranches.mls **OLD**
+- [x] shared/src/test/diff/ucs/OverlappedBranches.mls **OLD**
+      Should report unreachable cases.
 - [x] shared/src/test/diff/ucs/ParseFailures.mls
 - [x] shared/src/test/diff/ucs/PlainConditionals.mls
       Maybe we should keep this old one...
@@ -115,7 +131,7 @@ problems located by test cases.
       Remove a `???` and raise error during transformation.
 - [x] shared/src/test/diff/ucs/SplitAfterOp.mls
       Wrap tests in functions so that errors are clearer.
-- [ ] shared/src/test/diff/ucs/SplitAnd.mls
+- [x] shared/src/test/diff/ucs/SplitAnd.mls
       Should report missing else branches.
 - [x] shared/src/test/diff/ucs/SplitAroundOp.mls
 - [x] shared/src/test/diff/ucs/SplitBeforeOp.mls

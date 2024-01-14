@@ -25,7 +25,10 @@ fun optionApply(x, y, f) =
     None then None
 //│ fun optionApply: forall 'a 'b 'A. (None | Some['a], None | Some['b], ('a, 'b) -> 'A) -> (None | Some['A])
 
-let zeroToThree = Cons(0, Cons(1, Cons(2, Cons(3, Nil))))
+fun (::) cons(h, t) = Cons(h, t)
+//│ fun (::) cons: forall 'A. ('A, Cons['A] | Nil) -> Cons['A]
+
+let zeroToThree = 0 :: 1 :: 2 :: 3 :: Nil
 //│ let zeroToThree: Cons[0 | 1 | 2 | 3]
 //│ zeroToThree
 //│             = Cons {}
@@ -33,61 +36,25 @@ let zeroToThree = Cons(0, Cons(1, Cons(2, Cons(3, Nil))))
 fun f(x) = if x % 2 == 0 then Left(x) else Right(x)
 //│ fun f: forall 'A. (Int & 'A) -> (Left['A] | Right['A])
 
-// FIXME: Looks like a transformation bug.
+
 fun mapPartition(f, xs) = if xs is
   Nil then Pair(Nil, Nil)
   Cons(x, xs) and mapPartition(f, xs) is Pair(l, r) and f(x) is
     Left(v)  then Pair(Cons(v, l), r)
     Right(v) then Pair(l, Cons(v, r))
-//│ ╔══[ERROR] identifier `l` not found
-//│ ║  l.40: 	    Left(v)  then Pair(Cons(v, l), r)
-//│ ╙──      	                               ^
-//│ ╔══[ERROR] identifier `r` not found
-//│ ║  l.40: 	    Left(v)  then Pair(Cons(v, l), r)
-//│ ╙──      	                                   ^
-//│ ╔══[ERROR] identifier `l` not found
-//│ ║  l.41: 	    Right(v) then Pair(l, Cons(v, r))
-//│ ╙──      	                       ^
-//│ ╔══[ERROR] identifier `r` not found
-//│ ║  l.41: 	    Right(v) then Pair(l, Cons(v, r))
-//│ ╙──      	                                  ^
-//│ ╔══[ERROR] identifier not found: l
-//│ ║  l.40: 	    Left(v)  then Pair(Cons(v, l), r)
-//│ ╙──      	                               ^
-//│ ╔══[ERROR] identifier not found: r
-//│ ║  l.40: 	    Left(v)  then Pair(Cons(v, l), r)
-//│ ╙──      	                                   ^
-//│ ╔══[ERROR] identifier not found: l
-//│ ║  l.41: 	    Right(v) then Pair(l, Cons(v, r))
-//│ ╙──      	                       ^
-//│ ╔══[ERROR] identifier not found: r
-//│ ║  l.41: 	    Right(v) then Pair(l, Cons(v, r))
-//│ ╙──      	                                  ^
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.39: 	  Cons(x, xs) and mapPartition(f, xs) is Pair(l, r) and f(x) is
-//│ ║        	                                                        ^^^^^^^
-//│ ║  l.40: 	    Left(v)  then Pair(Cons(v, l), r)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.41: 	    Right(v) then Pair(l, Cons(v, r))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `Bool` is not an instance of type `true`
-//│ fun mapPartition: forall 'a 'A 'A0. ('a -> (Left['A] | Right['A0]), Cons['a] | Nil) -> Pair[Cons['A] | Nil | error, Cons['A0] | Nil | error]
-//│ Code generation encountered an error:
-//│   unresolved symbol l
+//│ fun mapPartition: forall 'A 'A0 'a. ('a -> (Left['A] | Right['A0]), Cons['a] | Nil) -> Pair[Cons['A] | Nil, Cons['A0] | Nil]
 
-:re
+
 mapPartition(x => Left(x + 1), zeroToThree)
-//│ Pair[Cons[Int] | Nil | error, Cons[nothing] | Nil | error]
+//│ Pair[Cons[Int] | Nil, Cons[nothing] | Nil]
 //│ res
-//│ Runtime error:
-//│   ReferenceError: mapPartition is not defined
+//│     = Pair {}
 
-:re
+
 mapPartition(f, zeroToThree)
-//│ Pair[Cons[0 | 1 | 2 | 3] | Nil | error, Cons[0 | 1 | 2 | 3] | Nil | error]
+//│ Pair[Cons[0 | 1 | 2 | 3] | Nil, Cons[0 | 1 | 2 | 3] | Nil]
 //│ res
-//│ Runtime error:
-//│   ReferenceError: mapPartition is not defined
+//│     = Pair {}
 
 
 fun mapPartition(f, xs) = if xs is
@@ -122,55 +89,18 @@ mapPartition(f, zeroToThree)
 //│ res
 //│     = Pair {}
 
-:e // TODO make this one work (needs tuple support)
 fun mapPartition(f, xs) = if xs is
   Nil then [Nil, Nil]
   Cons(x, xs) and mapPartition(f, xs) is [l, r] and f(x) is
     Left(v)  then [Cons(v, l), r]
     Right(v) then [l, Cons(v, r)]
-//│ ╔══[ERROR] identifier `l` not found
-//│ ║  l.129: 	    Left(v)  then [Cons(v, l), r]
-//│ ╙──       	                           ^
-//│ ╔══[ERROR] identifier `r` not found
-//│ ║  l.129: 	    Left(v)  then [Cons(v, l), r]
-//│ ╙──       	                               ^
-//│ ╔══[ERROR] identifier `l` not found
-//│ ║  l.130: 	    Right(v) then [l, Cons(v, r)]
-//│ ╙──       	                   ^
-//│ ╔══[ERROR] identifier `r` not found
-//│ ║  l.130: 	    Right(v) then [l, Cons(v, r)]
-//│ ╙──       	                              ^
-//│ ╔══[ERROR] identifier not found: l
-//│ ║  l.129: 	    Left(v)  then [Cons(v, l), r]
-//│ ╙──       	                           ^
-//│ ╔══[ERROR] identifier not found: r
-//│ ║  l.129: 	    Left(v)  then [Cons(v, l), r]
-//│ ╙──       	                               ^
-//│ ╔══[ERROR] identifier not found: l
-//│ ║  l.130: 	    Right(v) then [l, Cons(v, r)]
-//│ ╙──       	                   ^
-//│ ╔══[ERROR] identifier not found: r
-//│ ║  l.130: 	    Right(v) then [l, Cons(v, r)]
-//│ ╙──       	                              ^
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.128: 	  Cons(x, xs) and mapPartition(f, xs) is [l, r] and f(x) is
-//│ ║         	                                                    ^^^^^^^
-//│ ║  l.129: 	    Left(v)  then [Cons(v, l), r]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.130: 	    Right(v) then [l, Cons(v, r)]
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `Bool` is not an instance of type `true`
-//│ fun mapPartition: forall 'a 'A 'A0. ('a -> (Left['A] | Right['A0]), Cons['a] | Nil) -> [Cons['A] | Nil | error, Cons['A0] | Nil | error]
-//│ Code generation encountered an error:
-//│   unresolved symbol l
+//│ fun mapPartition: forall 'a 'A 'A0. ('a -> (Left['A] | Right['A0]), Cons['a] | Nil) -> [Cons['A] | Nil, Cons['A0] | Nil]
 
-:re // TODO
+
 mapPartition(f, zeroToThree)
-//│ [Cons[0 | 1 | 2 | 3] | Nil | error, Cons[0 | 1 | 2 | 3] | Nil | error]
+//│ [Cons[0 | 1 | 2 | 3] | Nil, Cons[0 | 1 | 2 | 3] | Nil]
 //│ res
-//│ Runtime error:
-//│   ReferenceError: mapPartition3 is not defined
-
+//│     = [ Cons {}, Cons {} ]
 
 // * Vertical alignment is not allowed! (good)
 :pe
@@ -182,20 +112,20 @@ fun mapPartition(f, xs) = if xs is
           and f(x) is Left(v)  then [Cons(v, l), r]
                       Right(v) then [l, Cons(v, r)]
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.183: 	                      Right(v) then [l, Cons(v, r)]
+//│ ║  l.113: 	                      Right(v) then [l, Cons(v, r)]
 //│ ╙──       	                               ^^^^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.182: 	          and f(x) is Left(v)  then [Cons(v, l), r]
+//│ ║  l.112: 	          and f(x) is Left(v)  then [Cons(v, l), r]
 //│ ║         	                                    ^^^^^^^^^^^^^^^
-//│ ║  l.183: 	                      Right(v) then [l, Cons(v, r)]
+//│ ║  l.113: 	                      Right(v) then [l, Cons(v, r)]
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.182: 	          and f(x) is Left(v)  then [Cons(v, l), r]
+//│ ║  l.112: 	          and f(x) is Left(v)  then [Cons(v, l), r]
 //│ ║         	                                    ^^^^^^^^^^^^^^^
-//│ ║  l.183: 	                      Right(v) then [l, Cons(v, r)]
+//│ ║  l.113: 	                      Right(v) then [l, Cons(v, r)]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `[?a, ?b]` is not a function
-//│ ║  l.182: 	          and f(x) is Left(v)  then [Cons(v, l), r]
+//│ ║  l.112: 	          and f(x) is Left(v)  then [Cons(v, l), r]
 //│ ╙──       	                                    ^^^^^^^^^^^^^^^
 //│ fun mapPartition: forall 'a. ('a -> Left[anything], Cons['a] | Nil) -> (error | [Nil, Nil])
 

@@ -11,6 +11,8 @@ import mlscript.utils._, shorthands._
 import mlscript.NuFunDef
 import mlscript.PlainTup
 import scala.collection.immutable
+import scala.annotation.tailrec
+import scala.util.chaining._
 
 /**
   * Transform the parsed AST into an AST similar to the one in the paper.
@@ -124,13 +126,8 @@ trait Transformation { self: DesugarUCS with Traceable =>
               PatternBranch(pattern, Split.default(rhs)).toSplit
           }
         case IfOpApp(lhs, Var("and"), rhs) =>
-          println(s"lhs: $lhs")
-          separatePattern(lhs) match {
-            case (pattern, S(extraTest)) =>
-              PatternBranch(pattern, TermBranch.Boolean(extraTest, transformIfBody(rhs)).toSplit).toSplit
-            case (pattern, N) =>
-              PatternBranch(pattern, transformIfBody(rhs)).toSplit
-          }
+          val ::(head, tail) = splitAnd(lhs)
+          PatternBranch(transformPattern(head), transformConjunction(tail, transformIfBody(rhs), false)).toSplit
         case IfOpApp(lhs, op, rhs) =>
           raiseError(msg"Syntactic split of patterns are not supported" -> op.toLoc)
           Split.Nil
@@ -157,23 +154,16 @@ trait Transformation { self: DesugarUCS with Traceable =>
           // This is parsed as `{ and ( Cons x xs ) [ is ys ( Cons y ys ) ] }`.
           // I think it's not very well-formed. But I still implement it for not
           // breaking existing tests.
-          splitAnd(lhs) match {
-            case Nil => die // It's impossible to be empty.
-            case pattern :: tail =>
-              // Here, `pattern` will be `( Cons x xs )` and `tail` will be
-              // `[ is ys (Cons y ys) ]`. We can make a new `IfOpsApp`.
-              println(s"lol, pattern is $pattern")
-              println(s"lol, tail is $tail")
-              tail match {
-                case init :+ last =>
-                  println(s"lol, init is $init")
-                  println(s"lol, last is $last")
-                  val remake = IfOpsApp(last, opsRhss)
-                  val following = transformConjunction(init, transformIfBody(remake), true)
-                  PatternBranch(transformPattern(pattern), following).toSplit
-                case _ => // This can only be `Nil`.
-                  PatternBranch(transformPattern(pattern), transformBrokenIfOpsApp(opsRhss)).toSplit
-              }
+          val ::(pattern, tail) = splitAnd(lhs)
+          // Here, `pattern` will be `( Cons x xs )` and `tail` will be
+          // `[ is ys (Cons y ys) ]`. We can make a new `IfOpsApp`.
+          tail match {
+            case init :+ last =>
+              val remake = IfOpsApp(last, opsRhss)
+              val following = transformConjunction(init, transformIfBody(remake), true)
+              PatternBranch(transformPattern(pattern), following).toSplit
+            case _ => // This can only be `Nil`.
+              PatternBranch(transformPattern(pattern), transformBrokenIfOpsApp(opsRhss)).toSplit
           }
           // END TEMPORARY PATCH
         case IfLet(rec, nme, rhs, body) => die
@@ -202,13 +192,15 @@ trait Transformation { self: DesugarUCS with Traceable =>
   private def transformPattern(term: Term): Pattern = term match {
     case wildcard @ Var("_") => EmptyPattern(wildcard) // The case for wildcard.
     case nme @ Var("true" | "false") => ConcretePattern(nme)
-    case nme @ Var(name) if name.headOption.exists(_.isUpper) => ClassPattern(nme, N, refined = false)
+    case nme @ Var(name) if name.isCapitalized => ClassPattern(nme, N, refined = false)
     case nme: Var => NamePattern(nme)
     case literal: Lit => LiteralPattern(literal)
     case App(Var("refined"), PlainTup(p)) =>
       transformPattern(p) match {
         case cp: ClassPattern => cp.copy(refined = true).withLocOf(cp)
-        case _ => ??? // TODO error
+        case p =>
+          raiseError(msg"only class patterns can be refined" -> p.toLoc)
+          p
       }
     case App(classNme @ Var(_), parameters: Tup) =>
       ClassPattern(classNme, S(transformTupleTerm(parameters)), refined = false)
@@ -221,26 +213,29 @@ trait Transformation { self: DesugarUCS with Traceable =>
 
   private def separatePattern(term: Term): (Pattern, Opt[Term]) = {
     val (rawPattern, extraTest) = helpers.separatePattern(term, true)
-    println("rawPattern: " + rawPattern.toString)
-    println("extraTest: " + extraTest.toString)
+    println(s"pattern: ${rawPattern.showDbg} ;; test: ${extraTest.fold("_")(_.showDbg)}")
     (transformPattern(rawPattern), extraTest)
   }
 
-  // TODO: Maybe we can change the return type to `::[Term]` so that it will not
-  // empty.
-  private def splitAnd(t: Term): List[Term] = trace(s"splitAnd <== $t") {
-    t match {
-      case App(
-        App(Var("and"),
-            Tup((_ -> Fld(_, lhs)) :: Nil)),
-        Tup((_ -> Fld(_, rhs)) :: Nil)
-      ) => // * Old-style operators
-        splitAnd(lhs) :+ rhs
-      case App(Var("and"), PlainTup(lhs, rhs)) =>
-        splitAnd(lhs) :+ rhs
-      case _ => t :: Nil
+  /**
+    * Split a term into a list of terms. Note that the return type is `::[Term]`
+    * because there should be at least one term even we don't split. It used to
+    * split right-associate `and` terms, but it turned out that `and` may
+    * nested in a left-associate manner. Therefore, the function now traverse
+    * the entire term and split all `and` terms.
+    */
+  private def splitAnd(t: Term): ::[Term] = {
+    @tailrec def rec(acc: Ls[Term], rest: ::[Term]): ::[Term] = rest.head match {
+      case lhs and rhs => rec(acc, ::(rhs, lhs :: rest.tail))
+      case sole => rest.tail match {
+        case Nil => ::(sole, acc)
+        case more @ ::(_, _) => rec(sole :: acc, more)
+      }
     }
-  }(r => "splitAnd ==> " + r.iterator.map(_.toString).mkString(" ∧ "))
+    rec(Nil, ::(t, Nil)).tap { rs =>
+      println(s"splitAnd ${t.showDbg} ==> ${rs.iterator.map(_.showDbg).mkString(" ∧ ")}")
+    }
+  }
 }
 
 object Transformation {
@@ -249,9 +244,18 @@ object Transformation {
     case _ => die
   }
 
+  /** Matches terms like `x is y`. */
   private object is {
-    def unapply(term: Term): Opt[(Term, Term)] = term match {
+    def unapply(term: Term): Opt[Term -> Term] = term match {
       case App(Var("is"), PlainTup(scrutinee, pattern)) => S(scrutinee -> pattern)
+      case _ => N
+    }
+  }
+
+  /** Matches terms like `x and y` */
+  private object and {
+    def unapply(term: Term): Opt[(Term, Term)] = term match {
+      case App(Var("and"), PlainTup(lhs, rhs)) => S((lhs, rhs))
       case _ => N
     }
   }

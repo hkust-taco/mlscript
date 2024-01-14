@@ -102,7 +102,6 @@ trait Normalization { self: DesugarUCS with Traceable =>
       case Split.Cons(Branch(scrutinee, pattern, continuation), tail) =>
         raiseError(msg"Unsupported pattern: ${pattern.toString}" -> pattern.toLoc)
         errorTerm
-      case Split.Let(rec, Var("_"), rhs, tail) => normalizeToTerm(tail)
       case Split.Let(_, nme, _, tail) if context.isScrutineeVar(nme) && generatedVars.contains(nme) =>
         println(s"normalizing let binding of generated variable: ${nme.name}")
         normalizeToTerm(tail)
@@ -124,7 +123,6 @@ trait Normalization { self: DesugarUCS with Traceable =>
       split match {
         // case Split.Cons(head, Split.Nil) => Case(head.pattern, normalizeToTerm(head.continuation), NoCases)
         case other: Split.Cons => Wildcard(normalizeToTerm(other))
-        case Split.Let(rec, Var("_"), rhs, tail) => normalizeToCaseBranches(tail)
         case Split.Let(_, nme, _, tail) if context.isScrutineeVar(nme) && generatedVars.contains(nme) =>
           normalizeToCaseBranches(tail)
         case Split.Let(rec, nme, rhs, tail) =>

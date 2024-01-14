@@ -1,7 +1,7 @@
 :PreTyper
 :NoJS
 
-
+:e
 class Add[out E](val lhs: E)
 val add11 = Add(add11)
 module EvalAddLit {

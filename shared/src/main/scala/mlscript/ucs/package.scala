@@ -39,5 +39,7 @@ package object ucs {
         case lines => (0, prefix) :: lines.indent
       }
     }
+    def toIndentedString: String =
+      lines.iterator.map { case (n, line) => "  " * n + line }.mkString("\n")
   }
 }
