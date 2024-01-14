@@ -1,4 +1,4 @@
-package mlscript.ucs
+package mlscript.ucs.syntax
 
 import mlscript.{Diagnostic, Lit, Loc, Located, Message, Term, Var}
 import mlscript.utils._, shorthands._

@@ -5,7 +5,7 @@ import mlscript.{If, IfBody, IfBlock, IfElse, IfLet, IfOpApp, IfOpsApp, IfThen}
 import mlscript.{Blk, Term, Var, App, Tup, Lit, Fld, Loc}
 import mlscript.Diagnostic.PreTyping
 import mlscript.pretyper.Traceable
-import mlscript.ucs.syntax._
+import mlscript.ucs.syntax.source._
 import mlscript.Message, Message._
 import mlscript.utils._, shorthands._
 import mlscript.NuFunDef

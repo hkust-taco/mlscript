@@ -31,25 +31,6 @@ object helpers {
     else App(App(op, mkMonuple(lhs)), mkMonuple(rhs))
 
   /**
-    * Split a term joined by `and` into a list of terms.
-    * E.g. `x and y and z` will be split into `x`, `y`, and `z`.
-    *
-    * @return a list of sub-terms of `t`
-    */
-  def splitAnd(t: Term): Ls[Term] =
-    t match {
-      case App(
-        App(Var("and"),
-            Tup((_ -> Fld(_, lhs)) :: Nil)),
-        Tup((_ -> Fld(_, rhs)) :: Nil)
-      ) => // * Old-style operators
-        splitAnd(lhs) :+ rhs
-      case App(Var("and"), PlainTup(lhs, rhs)) =>
-        splitAnd(lhs) :+ rhs
-      case _ => t :: Nil
-    }
-
-  /**
     * Split a term into two parts: the pattern and the extra test.
     * This is used to extract patterns from UCS conjunctions. For example,
     * the second line results in `IfThen(Some(xv) and xv == 0, ...)`

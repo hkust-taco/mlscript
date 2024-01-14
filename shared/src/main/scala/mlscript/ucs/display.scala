@@ -1,11 +1,12 @@
 package mlscript.ucs
 
-import mlscript.ucs.{core => c, syntax => s}
+import mlscript.ucs.syntax.{core => c, source => s}
 import mlscript.ucs.context.{Context}
 import mlscript.pretyper.symbol.{TermSymbol, TypeSymbol}
 import mlscript.{App, CaseOf, Fld, FldFlags, Let, Loc, Sel, SimpleTerm, Term, Tup, Var}
 import mlscript.{CaseBranches, Case, Wildcard, NoCases}
 import mlscript.utils._, shorthands._
+import syntax.core.{Branch, Split}
 
 /** All the pretty-printing stuff go here. */
 package object display {

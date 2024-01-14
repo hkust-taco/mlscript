@@ -1,12 +1,13 @@
 package mlscript.ucs
 
 import collection.mutable.{Map => MutMap}
-import mlscript.ucs.{syntax => s, core => c}, stages._, context.{Context, ScrutineeData}
+import syntax.{source => s, core => c}, stages._, context.{Context, ScrutineeData}
 import mlscript.ucs.display.{showNormalizedTerm, showSplit}
 import mlscript.pretyper.{PreTyper, Scope}
 import mlscript.pretyper.symbol._
 import mlscript.{If, Loc, Message, Var}, Message.MessageContext, mlscript.Diagnostic.PreTyping
 import mlscript.utils._, shorthands._
+import syntax.core.{Branch, Split}
 
 // TODO: Rename to `Desugarer` once the old desugarer is removed.
 trait DesugarUCS extends Transformation
@@ -230,9 +231,9 @@ trait DesugarUCS extends Transformation
     }
   }
   
-  private def traverseSplit(split: core.Split)(implicit scope: Scope): Unit =
+  private def traverseSplit(split: syntax.core.Split)(implicit scope: Scope): Unit =
     trace(s"traverseSplit <== [${scope.showLocalSymbols}]") {
-      import core._
+      
       split match {
         case Split.Cons(Branch(scrutinee, pattern, continuation), tail) => 
           traverseTerm(scrutinee)

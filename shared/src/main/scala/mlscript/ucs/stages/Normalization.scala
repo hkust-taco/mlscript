@@ -1,18 +1,19 @@
 
 package mlscript.ucs.stages
 
-import mlscript.ucs.{DesugarUCS, Lines, LinesOps, VariableGenerator}
-import mlscript.ucs.context.{Context, ScrutineeData}
-import mlscript.ucs.core._
-import mlscript.ucs.display.{showNormalizedTerm, showSplit}
-import mlscript.ucs.helpers._
-import mlscript.pretyper.Scope
-import mlscript.pretyper.symbol._
 import mlscript.{App, CaseOf, Fld, FldFlags, Let, Loc, Sel, Term, Tup, Var, StrLit}
 import mlscript.{CaseBranches, Case, Wildcard, NoCases}
 import mlscript.Message, Message.MessageContext
 import mlscript.utils._, shorthands._
-import mlscript.pretyper.{Diagnosable, Traceable}
+import mlscript.ucs, mlscript.pretyper
+import ucs.{DesugarUCS, Lines, LinesOps, VariableGenerator}
+import ucs.context.{Context, ScrutineeData}
+import ucs.display.{showNormalizedTerm, showSplit}
+import ucs.helpers._
+import ucs.syntax.core.{Pattern, Branch, Split}
+import pretyper.Scope
+import pretyper.symbol._
+import pretyper.{Diagnosable, Traceable}
 
 trait Normalization { self: DesugarUCS with Traceable =>
   import Normalization._

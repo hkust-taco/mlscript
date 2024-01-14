@@ -1,11 +1,11 @@
-package mlscript.ucs
+package mlscript.ucs.syntax
 
 import mlscript.{Lit, Located, Term, Var}
 import mlscript.utils._, shorthands._
 import scala.annotation.tailrec
 import scala.collection.immutable
 
-package object syntax {
+package object source {
   sealed abstract class Pattern extends Located {
     override def toString(): String = this match {
       case AliasPattern(nme, pattern) => s"$nme @ $pattern"
