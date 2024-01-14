@@ -1,45 +1,46 @@
 :PreTyper
 
+fun (~~>) expect(a, b) = if a is b then () else error
+//│ fun (~~>) expect: (anything, anything) -> ()
 
 class Numb(n: Int)
 //│ class Numb(n: Int)
 
 
 :e
-:ge
 fun process(e) =
   if e is
     Numb(n) and n > 0 then n
     Numb(m) then n
 //│ ╔══[ERROR] identifier `n` not found
-//│ ║  l.13: 	    Numb(m) then n
+//│ ║  l.14: 	    Numb(m) then n
 //│ ╙──      	                 ^
-//│ ╔══[ERROR] identifier not found: n
-//│ ║  l.12: 	    Numb(n) and n > 0 then n
-//│ ╙──      	         ^
-//│ fun process: Numb -> (Int | error)
-//│ Code generation encountered an error:
-//│   unresolved symbol n
+//│ fun process: Numb -> Int
 
-:re
+
 process(Numb(-10))
-//│ Int | error
+//│ Int
 //│ res
-//│ Runtime error:
-//│   TypeError: process is not a function
+//│     = -10
 
 
-// * FIXME wrong result
+
 fun process(e, n) =
   if e is
     Numb(n) and n > 0 then n
     Numb(m) then n + m
 //│ fun process: (Numb, Int) -> Int
 
-process(Numb(0), 10)
-//│ Int
+process(Numb(0), 10) ~~> 10
+process(Numb(-1), 10) ~~> 9
+process(Numb(1), 10) ~~> 1
+//│ ()
 //│ res
-//│     = 10
+//│     = undefined
+//│ res
+//│     = undefined
+//│ res
+//│     = undefined
 
 
 class Vec(xs: Array[Numb | Vec])
@@ -57,15 +58,12 @@ fun process(e) =
     Pair(Vec(n),  Numb(n)) then n
     Pair(Numb(n), Vec(n))  then n
 //│ ╔══[ERROR] identifier `n` not found
-//│ ║  l.56: 	    Pair(Vec(xs), Vec(ys))  then n
+//│ ║  l.57: 	    Pair(Vec(xs), Vec(ys))  then n
 //│ ╙──      	                                 ^
 //│ ╔══[ERROR] identifier not found: n
-//│ ║  l.55: 	    Pair(Numb(n), Numb(m)) then Numb(n + m)
-//│ ╙──      	              ^
-//│ ╔══[ERROR] identifier not found: n
-//│ ║  l.56: 	    Pair(Vec(xs), Vec(ys))  then n
+//│ ║  l.57: 	    Pair(Vec(xs), Vec(ys))  then n
 //│ ╙──      	                                 ^
-//│ fun process: Pair[Numb | Vec, Numb | Vec] -> (Int | Numb | error | Array[Numb | Vec])
+//│ fun process: Pair[Numb | Vec, Numb | Vec] -> (Int | Numb | error)
 //│ Code generation encountered an error:
 //│   unresolved symbol n
 

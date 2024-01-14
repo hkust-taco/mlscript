@@ -18,7 +18,11 @@ trait Normalization { self: DesugarUCS with Traceable =>
   import Normalization._
 
   // TODO: We might not need the case where `deep` is `false`.
-  private def fillImpl(these: Split, those: Split, deep: Bool)(implicit context: Context, generatedVars: Set[Var]): Split =
+  private def fillImpl(these: Split, those: Split, deep: Bool)(implicit
+      scope: Scope,
+      context: Context,
+      generatedVars: Set[Var]
+  ): Split =
     if (these.hasElse) these else (these match {
       case these @ Split.Cons(head, tail) =>
         if (head.continuation.hasElse || !deep) {
@@ -30,13 +34,13 @@ trait Normalization { self: DesugarUCS with Traceable =>
         }
       case these @ Split.Let(_, nme, _, tail) =>
         println(s"fill let binding ${nme.name}")
-        if (those.freeVars contains nme) {
+        if (scope.getTermSymbol(nme.name).isDefined && (those.freeVars contains nme)) {
           val fresh = context.freshShadowed()
           val thoseWithShadowed = Split.Let(false, nme, fresh, those)
           val concatenated = these.copy(tail = fillImpl(tail, thoseWithShadowed, deep))
           Split.Let(false, fresh, nme, concatenated)
         } else {
-          these.copy(tail = fillImpl(tail, those, deep)(context, generatedVars + nme))
+          these.copy(tail = fillImpl(tail, those, deep)(scope, context, generatedVars + nme))
         }
       case _: Split.Else => these
       case Split.Nil =>
@@ -45,7 +49,7 @@ trait Normalization { self: DesugarUCS with Traceable =>
     })
 
   private implicit class SplitOps(these: Split) {
-    def fill(those: Split, deep: Bool)(implicit context: Context, generatedVars: Set[Var]): Split =
+    def fill(those: Split, deep: Bool)(implicit scope: Scope, context: Context, generatedVars: Set[Var]): Split =
       trace(s"fill <== ${generatedVars.iterator.map(_.name).mkString("{", ", ", "}")}") {
         println(s"LHS: ${showSplit(these)}")
         println(s"RHS: ${showSplit(those)}")

@@ -1,8 +1,7 @@
 package mlscript.ucs
 
 import collection.mutable.{Map => MutMap}
-import mlscript.ucs.stages._
-import mlscript.ucs.context.{Context, ScrutineeData}
+import mlscript.ucs.{syntax => s, core => c}, stages._, context.{Context, ScrutineeData}
 import mlscript.ucs.display.{showNormalizedTerm, showSplit}
 import mlscript.pretyper.{PreTyper, Scope}
 import mlscript.pretyper.symbol._
@@ -136,6 +135,36 @@ trait DesugarUCS extends Transformation
       * resolving `Var("true")` and `Var("false")` in `Desugaring`. */
     def withResolvedClassLikeSymbol(implicit scope: Scope, context: Context): Var =
       { nme.resolveClassLikeSymbol; nme }
+  }
+
+  protected implicit class SourceSplitOps[+B <: s.Branch](these: s.Split[B]) {
+    def ++[BB >: B <: s.Branch](those: s.Split[BB]): s.Split[BB] = these match {
+      case s.Split.Cons(head, tail) => s.Split.Cons(head, tail ++ those)
+      case s.Split.Let(rec, nme, rhs, tail) => s.Split.Let(rec, nme, rhs, tail ++ those)
+      case s.Split.Else(_) =>
+        raiseWarning(msg"unreachable case" -> these.toLoc)
+        these
+      case s.Split.Nil => those
+    }
+  }
+
+  protected implicit class CoreSplitOps(these: c.Split) {
+    /**
+      * Concatenates two splits. Beware that `that` may be discarded if `this`
+      * has an else branch. Make sure to make diagnostics for discarded `that`.
+      */
+    def ++(those: c.Split): c.Split =
+      if (those === c.Split.Nil) these else (these match {
+        case me: c.Split.Cons => me.copy(tail = me.tail ++ those)
+        case me: c.Split.Let => me.copy(tail = me.tail ++ those)
+        case _: c.Split.Else =>
+          raiseWarning(
+            msg"the case is unreachable" -> those.toLoc,
+            msg"because this branch covers the case" -> these.toLoc
+          )
+          these
+        case c.Split.Nil => those
+      })
   }
 
   protected def traverseIf(`if`: If)(implicit scope: Scope): Unit = {

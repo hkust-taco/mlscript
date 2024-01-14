@@ -54,17 +54,6 @@ package object core {
   sealed abstract class Split extends Located {
     @inline
     def ::(head: Branch): Split = Split.Cons(head, this)
-
-    /**
-      * Concatenates two splits. Beware that `that` may be discarded if `this`
-      * has an else branch. Make sure to make diagnostics for discarded `that`.
-      */
-    def ++(that: Split): Split = this match {
-      case me: Split.Cons => me.copy(tail = me.tail ++ that)
-      case me: Split.Let => me.copy(tail = me.tail ++ that)
-      case _: Split.Else => this
-      case Split.Nil => that
-    }
     
     /**
       * Returns true if the split has an else branch.

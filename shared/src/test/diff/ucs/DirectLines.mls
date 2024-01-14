@@ -20,7 +20,7 @@ fun isValid(x) = if x then false else true
 fun f(x, allowNone) =
   if x
     is Some(x) and isValid(x) then "good"
-    is None() and allowNone then "okay"
+    is None and allowNone then "okay"
     is _ then "bad"
 //│ fun f: (Object & ~#Some | Some[Bool], Bool) -> ("bad" | "good" | "okay")
 
@@ -37,8 +37,7 @@ fun f(x, y, z) =
       _ then "bruh"
 //│ fun f: (Num, Num, Num) -> ("bruh" | "x" | "y = 1" | "y = 3" | "z = 0" | "z = 9")
 
-// :w
-// FIXME: Report redundant else branches.
+:w
 fun f(a, b) =
   if
     a == 0 then 0
@@ -47,4 +46,10 @@ fun f(a, b) =
       2 then 2
       _ then 7
     else 3
+//│ ╔══[WARNING] the case is unreachable
+//│ ║  l.48: 	    else 3
+//│ ║        	         ^
+//│ ╟── because this branch covers the case
+//│ ║  l.47: 	      _ then 7
+//│ ╙──      	             ^
 //│ fun f: (Num, Num) -> (0 | 1 | 2 | 7)
