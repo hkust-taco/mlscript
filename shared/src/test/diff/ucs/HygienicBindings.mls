@@ -1,5 +1,8 @@
 :PreTyper
 
+fun (~~>) expect(a, b) = if a is b then () else error
+//│ fun (~~>) expect: (anything, anything) -> ()
+
 type Option[out T] = None | Some[T]
 module None
 class Some[out T](val value: T)
@@ -21,6 +24,11 @@ class Cons[out A](head: A, tail: List[A])
 //│ module Nil
 //│ class Cons[A](head: A, tail: List[A])
 
+fun justTrue(_) = true
+fun justFalse(_) = false
+//│ fun justTrue: anything -> true
+//│ fun justFalse: anything -> false
+
 fun h0(a) =
   if
     a is Some(Left(y)) then y
@@ -28,15 +36,14 @@ fun h0(a) =
     a is None then 0
 //│ fun h0: forall 'a. (None | Some[Left['a] | Right['a]]) -> (0 | 'a)
 
-// Precise scrutinee identification (easy)
-// =======================================
-// The desugarer should be able to identify pattern matching on the first
-// parameter of `Some` even if they are bound to different variables.
+// If a class parameter is bound to the same variable in different branches,
+// the bindings can be merged and can be typed and coverage checked. See the
+// desugared version below.
 :dpt:postprocess.result
-fun h1(a) =
+fun h0'(a) =
   if
     a is Some(x) and x is Left(y) then y
-    a is Some(y) and y is Right(z) then z
+    a is Some(x) and x is Right(z) then z
     a is None then 0
 //│ | | | | | | | Post-processed UCS term:
 //│ | | | | | | | case a*‡ of
@@ -49,74 +56,33 @@ fun h1(a) =
 //│ | | | | | | |         let y*‡ = (ucs$args_x$Left).0
 //│ | | | | | | |         y
 //│ | | | | | | |       Right*◊ ->
-//│ | | | | | | |         let y*‡ = (ucs$args_a$Some).0
-//│ | | | | | | |         let ucs$args_y$Right*† = (Right).unapply(y,)
-//│ | | | | | | |         let z*‡ = (ucs$args_y$Right).0
+//│ | | | | | | |         let ucs$args_x$Right*† = (Right).unapply(x,)
+//│ | | | | | | |         let z*‡ = (ucs$args_x$Right).0
 //│ | | | | | | |         z
 //│ | | | | | | |   None*† -> 0
+//│ fun h0': forall 'a. (None | Some[Left['a] | Right['a]]) -> (0 | 'a)
+
+// However, if the class parameter is bound to different variables in different
+// branches, the bindings cannot be merged and the type will miss the latter
+// branch. See the desugared version below.
+fun h1(a) =
+  if
+    a is Some(x) and x is Left(y) then y
+    a is Some(y) and y is Right(z) then z
+    a is None then 0
 //│ fun h1: forall 'a. (None | Some[Right[anything] & {#rightValue: 'a}]) -> (0 | 'a)
 
 // FIXME
 h1(Some(Left(0)))
 //│ ╔══[ERROR] Type `Left[?A]` does not contain member `rightValue`
-//│ ║  l.12: 	class Right[B](val rightValue: B)
+//│ ║  l.15: 	class Right[B](val rightValue: B)
 //│ ╙──      	                   ^^^^^^^^^^
 //│ 0 | error
 //│ res
 //│     = 0
 
-// This is the desugared version of the test case above.
-fun h1'(a) =
-  if a is
-    Some then
-      let x = a.value
-      let y = a.value
-      if x is
-        Left then
-          let y = x.leftValue
-          y
-        _ then
-          if y is
-            Right then
-              let z = y.rightValue
-              z
-    None then 0
-//│ fun h1': forall 'leftValue. (None | Some[Right['leftValue]]) -> (0 | 'leftValue)
-
-// FIXME
-h1'(Some(Left(0)))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.87: 	h1'(Some(Left(0)))
-//│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Left[?A]` is not an instance of type `Right`
-//│ ║  l.87: 	h1'(Some(Left(0)))
-//│ ║        	         ^^^^^^^
-//│ ╟── Note: constraint arises from class pattern:
-//│ ║  l.80: 	            Right then
-//│ ║        	            ^^^^^
-//│ ╟── from field selection:
-//│ ║  l.73: 	      let y = a.value
-//│ ║        	              ^^^^^^^
-//│ ╟── Note: type parameter T is defined at:
-//│ ║  l.5: 	class Some[out T](val value: T)
-//│ ╙──     	               ^
-//│ 0 | error
-//│ res
-//│     = 0
-
-fun h1''(a) =
-  if
-    a is Some(x) and x is Left(y) then y
-    a is Some(x) and x is Right(z) then z
-    a is None then 0
-//│ fun h1'': forall 'a. (None | Some[Left['a] | Right['a]]) -> (0 | 'a)
-
-h1''(Some(Left(0)))
-//│ 0
-//│ res
-//│     = 0
-
-// FIXME: Precise scrutinee identification (hard)
+// FIXME: It is also impossible to merge bindings of different variables if one
+// of them is bound via a let binding.
 fun h2(a) =
   if
     a is Some(x) and x is x' and x' is Left(y) then y
@@ -126,26 +92,39 @@ fun h2(a) =
     a is None then 0
 //│ fun h2: forall 'a. (None | Some[Left['a]]) -> (0 | 'a)
 
-// FIXME: Some results are wrong.
+:dpt:postprocess.result
 fun h3(x, y, f, p) =
   if x is
     _ and f(x) is y and p(x) then y
     None then y
     _ then "anyway"
-h3("anything", "not me", _ => "should be me", _ => true)
-h3(None, "should be me", _ => "not me", _ => false)
-h3("anything", "anything", _ => "not me", _ => false)
-//│ fun h3: forall 'a 'b. (Object & 'a, anything, 'a -> 'b, 'a -> Bool) -> ("anyway" | 'b)
-//│ "anyway" | "not me"
-//│ res
-//│     = 'should be me'
-//│ res
-//│     = 'not me'
-//│ res
-//│     = 'anyway'
+//│ | | | | | | | Post-processed UCS term:
+//│ | | | | | | | let ucs$scrut$0*‡ = f(x,)
+//│ | | | | | | | let ucs$shadow$0 = y
+//│ | | | | | | | let y*‡ = ucs$scrut$0
+//│ | | | | | | | let ucs$test$0*† = p(x,) : Bool
+//│ | | | | | | | case ucs$test$0*† of
+//│ | | | | | | |   true*† -> y
+//│ | | | | | | |   _ ->
+//│ | | | | | | |     let y*‡ = ucs$shadow$0
+//│ | | | | | | |     case x*‡ of
+//│ | | | | | | |       None*† -> y
+//│ | | | | | | |       _ -> "anyway"
+//│ fun h3: forall 'a 'b. (Object & 'a, 'b, 'a -> 'b, 'a -> Bool) -> ("anyway" | 'b)
 
 
-// FIXME: We still haven't fixed all shadowing problems.
+h3("anything", "not me", _ => "should be me", _ => true) ~~> "should be me"
+h3(None, "should be me", _ => "not me", _ => false) ~~> "should be me"
+h3("anything", "anything", _ => "not me", _ => false) ~~> "anyway"
+//│ ()
+//│ res
+//│     = undefined
+//│ res
+//│     = undefined
+//│ res
+//│     = undefined
+
+
 :dpt:postprocess.result
 fun h4(x, y, p) =
   if x is
@@ -153,26 +132,70 @@ fun h4(x, y, p) =
     None then y
     _ then "default"
 //│ | | | | | | | Post-processed UCS term:
+//│ | | | | | | | let ucs$shadow$0 = y
 //│ | | | | | | | let y*‡ = x
 //│ | | | | | | | let ucs$test$0*† = p(x,) : Bool
 //│ | | | | | | | case ucs$test$0*† of
 //│ | | | | | | |   true*† -> y
 //│ | | | | | | |   _ ->
+//│ | | | | | | |     let y*‡ = ucs$shadow$0
 //│ | | | | | | |     case x*‡ of
 //│ | | | | | | |       None*† -> y
 //│ | | | | | | |       _ -> "default"
-//│ fun h4: forall 'a. (Object & 'a, anything, 'a -> Bool) -> ("default" | 'a)
+//│ fun h4: forall 'a 'b. (Object & 'a, 'b, 'a -> Bool) -> ("default" | 'a | 'b)
 
-h4("should be me", "not me", _ => true)
-h4(None, "not me", _ => true)
-h4(None, "should be me", _ => false)
-h4("anything", "not me", _ => false)
-//│ "anything" | "default"
+h4("should be me", "not me", _ => true) ~~> "should be me"
+h4(None, "not me", _ => true) ~~> None
+h4(None, "should be me", _ => false) ~~> "should be me"
+h4("anything", "not me", _ => false) ~~> "default"
+//│ ()
 //│ res
-//│     = 'should be me'
+//│     = undefined
 //│ res
-//│     = None { class: [class None] }
+//│     = undefined
 //│ res
-//│     = None { class: [class None] }
+//│     = undefined
 //│ res
-//│     = 'default'
+//│     = undefined
+
+:dpt:postprocess.result
+fun h5(x, y, p) =
+  if x is
+    Some(y) and p(x) then y
+    None then y
+    _ then y
+//│ | | | | | | | Post-processed UCS term:
+//│ | | | | | | | case x*‡ of
+//│ | | | | | | |   Some*◊ ->
+//│ | | | | | | |     let ucs$args_x$Some*† = (Some).unapply(x,)
+//│ | | | | | | |     let ucs$shadow$0 = y
+//│ | | | | | | |     let y*‡ = (ucs$args_x$Some).0
+//│ | | | | | | |     let ucs$test$0*† = p(x,) : Bool
+//│ | | | | | | |     case ucs$test$0*† of
+//│ | | | | | | |       true*† -> y
+//│ | | | | | | |       _ ->
+//│ | | | | | | |         let y*‡ = ucs$shadow$0
+//│ | | | | | | |         y
+//│ | | | | | | |   None*† -> y
+//│ | | | | | | |   _ -> y
+//│ fun h5: forall 'a. (Object & ~#Some | Some['a], 'a, Some[nothing] -> Bool) -> 'a
+
+h5(Some(1), 2, justTrue) ~~> 1
+h5(Some(1), 2, justFalse) ~~> 2
+h5(None, 0, justTrue) ~~> 0
+h5(None, 0, justFalse) ~~> 0
+h5("foo", 42, justTrue) ~~> 42
+h5("foo", 42, justFalse) ~~> 42
+//│ ()
+//│ res
+//│     = undefined
+//│ res
+//│     = undefined
+//│ res
+//│     = undefined
+//│ res
+//│     = undefined
+//│ res
+//│     = undefined
+//│ res
+//│     = undefined

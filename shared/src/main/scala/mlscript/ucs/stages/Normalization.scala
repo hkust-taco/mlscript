@@ -29,6 +29,7 @@ trait Normalization { self: DesugarUCS with Traceable =>
           these.copy(head = newHead, tail = fillImpl(tail, those, deep))
         }
       case these @ Split.Let(_, nme, _, tail) =>
+        println(s"fill let binding ${nme.name}")
         if (those.freeVars contains nme) {
           val fresh = context.freshShadowed()
           val thoseWithShadowed = Split.Let(false, nme, fresh, those)
@@ -69,23 +70,31 @@ trait Normalization { self: DesugarUCS with Traceable =>
     * @param split the split to normalize
     * @return the normalized term
     */ 
-  @inline protected def normalize(split: Split)(implicit context: Context): Term = normalizeToTerm(split)(context, Set.empty)
+  @inline protected def normalize(split: Split)(implicit
+      scope: Scope,
+      context: Context
+  ): Term = normalizeToTerm(split)(scope, context, Set.empty)
 
   private def errorTerm: Term = Var("error")
 
-  private def normalizeToTerm(split: Split)(implicit context: Context, generatedVars: Set[Var]): Term = trace("normalizeToTerm <==") {
+  private def normalizeToTerm(split: Split)(implicit
+      scope: Scope,
+      context: Context,
+      generatedVars: Set[Var],
+  ): Term = trace("normalizeToTerm <==") {
     split match {
       case Split.Cons(Branch(scrutinee, Pattern.Name(nme), continuation), tail) =>
-        println(s"normalizing name pattern ${scrutinee.name} is ${nme.name}")
-        Let(false, nme, scrutinee, normalizeToTerm(continuation.fill(tail, deep = false)))
+        println(s"ALIAS: ${scrutinee.name} is ${nme.name}")
+        val (wrap, realTail) = preventShadowing(nme, tail)
+        wrap(Let(false, nme, scrutinee, normalizeToTerm(continuation.fill(realTail, deep = false))))
       // Skip Boolean conditions as scrutinees, because they only appear once.
       case Split.Cons(Branch(test, pattern @ Pattern.Class(nme @ Var("true"), _), continuation), tail) =>
-        println(s"normalizing true pattern: ${test.name} is true")
+        println(s"TRUE: ${test.name} is true")
         val trueBranch = normalizeToTerm(continuation.fill(tail, deep = false))
         val falseBranch = normalizeToCaseBranches(tail)
         CaseOf(test, Case(nme, trueBranch, falseBranch)(refined = false))
       case Split.Cons(Branch(ScrutineeData.WithVar(scrutinee, scrutineeVar), pattern @ Pattern.Literal(literal), continuation), tail) =>
-        println(s"normalizing literal pattern: ${scrutineeVar.name} is ${literal.idStr}")
+        println(s"LITERAL: ${scrutineeVar.name} is ${literal.idStr}")
         println(s"entire split: ${showSplit(split)}")
         val concatenatedTrueBranch = continuation.fill(tail, deep = false)
         // println(s"true branch: ${showSplit(concatenatedTrueBranch)}")
@@ -94,31 +103,37 @@ trait Normalization { self: DesugarUCS with Traceable =>
         val falseBranch = normalizeToCaseBranches(specialize(tail, false)(scrutineeVar, scrutinee, pattern, context))
         CaseOf(scrutineeVar, Case(literal, trueBranch, falseBranch)(refined = false))
       case Split.Cons(Branch(ScrutineeData.WithVar(scrutinee, scrutineeVar), pattern @ Pattern.Class(nme, rfd), continuation), tail) =>
-        println(s"normalizing class pattern: ${scrutineeVar.name} is ${nme.name}")
+        println(s"CLASS: ${scrutineeVar.name} is ${nme.name}")
         // println(s"match ${scrutineeVar.name} with $nme (has location: ${nme.toLoc.isDefined})")
         val trueBranch = normalizeToTerm(specialize(continuation.fill(tail, deep = false), true)(scrutineeVar, scrutinee, pattern, context))
         val falseBranch = normalizeToCaseBranches(specialize(tail, false)(scrutineeVar, scrutinee, pattern, context))
         CaseOf(scrutineeVar, Case(nme, trueBranch, falseBranch)(refined = pattern.refined))
       case Split.Cons(Branch(scrutinee, pattern, continuation), tail) =>
-        raiseError(msg"Unsupported pattern: ${pattern.toString}" -> pattern.toLoc)
+        raiseError(msg"unsupported pattern: ${pattern.toString}" -> pattern.toLoc)
         errorTerm
       case Split.Let(_, nme, _, tail) if context.isScrutineeVar(nme) && generatedVars.contains(nme) =>
-        println(s"normalizing let binding of generated variable: ${nme.name}")
+        println(s"LET: SKIP already declared scrutinee ${nme.name}")
         normalizeToTerm(tail)
+      case Split.Let(rec, nme, rhs, tail) if context.isGeneratedVar(nme) =>
+        println(s"LET: generated ${nme.name}")
+        Let(rec, nme, rhs, normalizeToTerm(tail)(scope, context, generatedVars + nme))
       case Split.Let(rec, nme, rhs, tail) =>
-        println(s"normalizing let binding ${nme.name}")
-        val newDeclaredBindings = if (context.isGeneratedVar(nme)) generatedVars + nme else generatedVars
-        Let(rec, nme, rhs, normalizeToTerm(tail)(context, newDeclaredBindings))
+        println(s"LET: ${nme.name}")
+        Let(rec, nme, rhs, normalizeToTerm(tail))
       case Split.Else(default) =>
-        println(s"normalizing default: ${default.showDbg}")
+        println(s"DFLT: ${default.showDbg}")
         default
       case Split.Nil =>
-        raiseError(msg"Found unexpected empty split" -> N)
+        raiseError(msg"unexpected empty split found" -> N)
         errorTerm
     }
   }(split => "normalizeToTerm ==> " + showNormalizedTerm(split))
 
-  private def normalizeToCaseBranches(split: Split)(implicit context: Context, generatedVars: Set[Var]): CaseBranches =
+  private def normalizeToCaseBranches(split: Split)(implicit
+      scope: Scope,
+      context: Context,
+      generatedVars: Set[Var]
+  ): CaseBranches =
     trace(s"normalizeToCaseBranches <==") {
       split match {
         // case Split.Cons(head, Split.Nil) => Case(head.pattern, normalizeToTerm(head.continuation), NoCases)
@@ -127,7 +142,7 @@ trait Normalization { self: DesugarUCS with Traceable =>
           normalizeToCaseBranches(tail)
         case Split.Let(rec, nme, rhs, tail) =>
           val newDeclaredBindings = if (context.isGeneratedVar(nme)) generatedVars + nme else generatedVars
-          normalizeToCaseBranches(tail)(context, newDeclaredBindings) match {
+          normalizeToCaseBranches(tail)(scope, context, newDeclaredBindings) match {
             case NoCases => Wildcard(rhs)
             case Wildcard(term) => Wildcard(Let(rec, nme, rhs, term))
             case _: Case => die
@@ -284,6 +299,21 @@ trait Normalization { self: DesugarUCS with Traceable =>
     }
   }()
   // }(showSplit(s"S${if (matchOrNot) "+" else "-"} ==>", _))
+
+  /**
+    * If you want to prepend `tail` to another `Split` where the `nme` takes
+    * effects, you should use this function to prevent shadowing.
+    */
+  private def preventShadowing(nme: Var, tail: Split)(implicit
+      scope: Scope,
+      context: Context
+  ): (Term => Term, Split) = scope.getTermSymbol(nme.name) match {
+    case S(symbol) if tail.freeVars contains nme =>
+      val stashVar = context.freshShadowed()
+      ((body: Term) => Let(false, stashVar, nme, body)) ->
+        Split.Let(false, nme, stashVar, tail)
+    case S(_) | N => identity[Term] _ -> tail
+  }
 }
 
 object Normalization

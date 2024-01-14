@@ -78,7 +78,6 @@ package object core {
 
     override lazy val freeVars: Set[Var] = this match {
       case Split.Cons(Branch(scrutinee, pattern, continuation), tail) =>
-        // FIXME: It is safe to ignore `pattern` for now.
         continuation.freeVars ++ tail.freeVars
       case Split.Let(true, nme, rhs, tail) => tail.freeVars ++ rhs.freeVars - nme
       case Split.Let(false, nme, rhs, tail) => tail.freeVars - nme ++ rhs.freeVars
