@@ -264,6 +264,31 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
     trace(s"process <== $name: ${typingUnit.describe}") {
       traverseStatements(typingUnit.entities, name, scope)
     }({ case (scope, contents) => s"process ==> ${scope.showLocalSymbols}" })
+  
+  /**
+    * Extract types in class signatures. For example, for this piece of code
+    * ```mls
+    * abstract class Option[A]: Some[A] | None
+    * ```
+    * this function returns, `Some` and `None`.
+    *
+    * @param ty a type obtained from `NuTypeDef.sig`
+    * @return a list of type names, without any p
+    */
+  private def extractSignatureTypes(ty: Type): Ls[TypeName] = {
+    @tailrec
+    def rec(acc: Ls[TypeName], ty: Type): Ls[TypeName] = ty match {
+      case tn: TypeName => tn :: acc
+      case AppliedType(tn: TypeName, _) => tn :: acc
+      case Union(lhs, tn: TypeName) => rec(tn :: acc, lhs)
+      case Union(lhs, AppliedType(tn: TypeName, _)) => rec(tn :: acc, lhs)
+      case other =>
+        // Let's not raise warning for now.
+        // raiseWarning(msg"unknown type in signature" -> other.toLoc)
+        Nil
+    }
+    rec(Nil, ty).reverse
+  }
 }
 
 object PreTyper {
@@ -279,28 +304,6 @@ object PreTyper {
         case other :: _ => println(s"Unknown parent type: $other"); ???
       }
     rec(Nil, parents)
-  }
-
-  /**
-    * Extract types in class signatures. For example, for this piece of code
-    * ```mls
-    * abstract class Option[A]: Some[A] | None
-    * ```
-    * this function returns, `Some` and `None`.
-    *
-    * @param ty a type obtained from `NuTypeDef.sig`
-    * @return a list of type names, without any p
-    */
-  def extractSignatureTypes(ty: Type): Ls[TypeName] = {
-    @tailrec
-    def rec(acc: Ls[TypeName], ty: Type): Ls[TypeName] = ty match {
-      case tn: TypeName => tn :: acc
-      case AppliedType(tn: TypeName, _) => tn :: acc
-      case Union(lhs, tn: TypeName) => rec(tn :: acc, lhs)
-      case Union(lhs, AppliedType(tn: TypeName, _)) => rec(tn :: acc, lhs)
-      case other => println(s"Unknown type in signature: $other"); ???
-    }
-    rec(Nil, ty).reverse
   }
 
   def transitiveClosure[A](graph: Map[A, List[A]])(implicit ord: Ordering[A]): SortedMap[A, List[A]] = {

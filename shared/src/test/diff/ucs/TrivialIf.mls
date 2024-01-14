@@ -1,130 +1,92 @@
-:NewParser
+:PreTyper
 :NoJS
 
 fun abs(x) = if x < 0 then 0 - x else x
-//│ ╔══[WARNING] old desugarer used
-//│ ║  l.4: 	fun abs(x) = if x < 0 then 0 - x else x
-//│ ╙──     	                ^^^^^^^^^^^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected warning
-//│ abs: int -> int
+//│ fun abs: Int -> Int
 
-class Option
-class Some(value): Option
-class None: Option
-//│ Defined class Option
-//│ Defined class Some
-//│ Defined class None
-//│ Option: () -> Option
-//│ Some: 'value -> (Some & {value: 'value})
-//│ None: () -> None
+abstract class Option[A]: Some[A] | None
+class Some[A](value: A) extends Option[A]
+module None extends Option
+//│ abstract class Option[A]: None | Some[A]
+//│ class Some[A](value: A) extends Option
+//│ module None extends Option
 
 fun getOrElse(opt, default) =
   if opt is
     Some(value) then value
     None then default
-//│ ╔══[WARNING] old desugarer used
-//│ ║  l.22: 	  if opt is
-//│ ║        	     ^^^^^^
-//│ ║  l.23: 	    Some(value) then value
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.24: 	    None then default
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected warning
-//│ getOrElse: (None | Some & {value: 'value}, 'value,) -> 'value
+//│ fun getOrElse: forall 'a. (None | Some['a], 'a) -> 'a
 
-getOrElse(None(), 0)
-//│ res: 0
+getOrElse(None, 0)
+//│ 0
 
 getOrElse(Some(42), 0)
-//│ res: 0 | 42
+//│ 0 | 42
 
 fun map(v, f) =
   if v is
     Some(x) then Some(f(x))
-    None then None()
-//│ ╔══[WARNING] old desugarer used
-//│ ║  l.42: 	  if v is
-//│ ║        	     ^^^^
-//│ ║  l.43: 	    Some(x) then Some(f(x))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.44: 	    None then None()
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected warning
-//│ map: (None | Some & {value: 'value}, 'value -> 'value0,) -> (None | Some & {value: 'value0})
+    None then None
+//│ fun map: forall 'a 'A. (None | Some['a], 'a -> 'A) -> (None | Some['A])
 
 fun inc(x) = x + 5
-//│ inc: int -> int
+//│ fun inc: Int -> Int
 
 map(Some(5), x => x + 5)
-//│ res: None | Some & {value: int}
+//│ None | Some['A]
+//│   where
+//│     'A :> Int
 
-map(None(), inc)
-//│ res: None | Some & {value: int}
+map(None, inc)
+//│ None | Some['A]
+//│   where
+//│     'A :> Int
 
 :e
 fun f(a, b) = if a and b then 0
-//│ ╔══[WARNING] old desugarer used
-//│ ║  l.65: 	fun f(a, b) = if a and b then 0
-//│ ╙──      	                 ^^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected warning
-//│ ╔══[ERROR] The case when this is false is not handled: a
-//│ ║  l.65: 	fun f(a, b) = if a and b then 0
-//│ ╙──      	                 ^
-//│ f: (anything, anything,) -> error
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.46: 	fun f(a, b) = if a and b then 0
+//│ ║        	                              ^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.46: 	fun f(a, b) = if a and b then 0
+//│ ║        	                       ^^^^^^^^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ fun f: (Bool, Bool) -> 0
 
 :e
 fun f(x, y) =
   if x == y + 5 then 0
   else if x == y + 7 then 0
-//│ ╔══[WARNING] old desugarer used
-//│ ║  l.77: 	  if x == y + 5 then 0
-//│ ║        	     ^^^^^^^^^^^^^^^^^
-//│ ║  l.78: 	  else if x == y + 7 then 0
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected warning
-//│ ╔══[ERROR] The case when this is false is not handled: ==(x,)(+(y,)(7,),)
-//│ ║  l.78: 	  else if x == y + 7 then 0
-//│ ╙──      	          ^^^^^^^^^^
-//│ f: (anything, anything,) -> error
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.60: 	  else if x == y + 7 then 0
+//│ ║        	                          ^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ fun f: (Num, Int) -> 0
 
 // TODO support
 fun foo(x) = if x is Some
   (0) then 0
   (1) then 1
 //│ ╔══[PARSE ERROR] Unexpected parenthesis section here
-//│ ║  l.93: 	  (1) then 1
+//│ ║  l.70: 	  (1) then 1
 //│ ╙──      	  ^^^
-//│ ╔══[WARNING] old desugarer used
-//│ ║  l.91: 	fun foo(x) = if x is Some
-//│ ║        	                ^^^^^^^^^
-//│ ║  l.92: 	  (0) then 0
-//│ ╙──      	^^^^^^^^^^^^
-//│ ╔══[ERROR] The case when this is false is not handled: is(x,)(Some,)(0,)
-//│ ║  l.91: 	fun foo(x) = if x is Some
-//│ ║        	                ^^^^^^^^^
-//│ ║  l.92: 	  (0) then 0
-//│ ╙──      	^^^^^
-//│ foo: anything -> error
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 // TODO support
 fun foo(x) = if x is Some of
   0 then 0
   1 then 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.111: 	  0 then 0
-//│ ╙──       	    ^^^^
+//│ ║  l.79: 	  0 then 0
+//│ ╙──      	    ^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found operator application instead
-//│ ║  l.110: 	fun foo(x) = if x is Some of
-//│ ║         	                ^^^^^^^^^^^^
-//│ ║  l.111: 	  0 then 0
-//│ ║         	^^^
+//│ ║  l.78: 	fun foo(x) = if x is Some of
+//│ ║        	                ^^^^^^^^^^^^
+//│ ║  l.79: 	  0 then 0
+//│ ║        	^^^
 //│ ╟── Note: 'if' expression starts here:
-//│ ║  l.110: 	fun foo(x) = if x is Some of
-//│ ╙──       	             ^^
-//│ ╔══[WARNING] old desugarer used
-//│ ║  l.110: 	fun foo(x) = if x is Some of
-//│ ║         	                ^^^^^^^^^^^^
-//│ ║  l.111: 	  0 then 0
-//│ ╙──       	^^^
-//│ foo: (Some & {value: 0}) -> undefined
+//│ ║  l.78: 	fun foo(x) = if x is Some of
+//│ ╙──      	             ^^
+//│ fun foo: Some[0] -> ()
 

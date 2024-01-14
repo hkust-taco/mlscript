@@ -23,41 +23,13 @@ fun w1(x, e_0, e_1) =
       Left(Some(lv)) then concat("Left of Some of ")(toString(lv))
       _ and e_1 is y_1 and x is
         Right(Some(rv)) then concat("Right of Some of ")(toString(rv))
-//│ ╔══[ERROR] Found unexpected empty split
-//│ ╙──
-//│ ╔══[ERROR] Found unexpected empty split
-//│ ╙──
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ╙── expression of type `Bool` is not an instance of type `true`
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.23: 	      Left(Some(lv)) then concat("Left of Some of ")(toString(lv))
-//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.24: 	      _ and e_1 is y_1 and x is
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `Bool` is not an instance of type `true`
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.25: 	        Right(Some(rv)) then concat("Right of Some of ")(toString(rv))
-//│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `Bool` is not an instance of type `true`
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.24: 	      _ and e_1 is y_1 and x is
-//│ ║        	            ^^^^^^^^^^^^^^^^^^^
-//│ ║  l.25: 	        Right(Some(rv)) then concat("Right of Some of ")(toString(rv))
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `Bool` is not an instance of type `true`
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ╙── expression of type `Bool` is not an instance of type `true`
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.24: 	      _ and e_1 is y_1 and x is
-//│ ║        	            ^^^^^^^^^^
-//│ ╙── expression of type `Bool` is not an instance of type `true`
-//│ fun w1: (Left[None | Object & ~#None & ~#Some | Some[anything]] | Object & ~#Left & ~#Right | Right[None | Some[anything]], anything, anything) -> (Str | error)
+//│ fun w1: forall 'a. (Left[None | Object & ~#None & ~#Some | Some[anything]] | Object & ~#Left & ~#Right | Right[None | Some[anything]], anything, 'a) -> (Str | 'a)
 
 w1(Left(None), "a", "b")
 w1(Right(None), "a", "b")
 w1(Left(Some(0)), "a", "b")
 w1(Right(Some(0)), "a", "b")
-//│ Str | error
+//│ Str
 //│ res
 //│     = 'Left of None'
 //│ res

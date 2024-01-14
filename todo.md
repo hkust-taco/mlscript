@@ -1,6 +1,19 @@
 This file will be deleted after we migrate all test cases and fixed all
 problems located by test cases.
 
+### Remaining Tasks
+
+- Report redundant cases
+  - shared/src/test/diff/ucs/CrossBranchCapture.mls
+  - shared/src/test/diff/ucs/DirectLines.mls **OLD**
+  - shared/src/test/diff/ucs/SplitAnd.mls
+  - shared/src/test/diff/ucs/WeirdIf.mls
+  - shared/src/test/diff/ucs/Wildcard.mls
+- Hygenic bindings
+  - shared/src/test/diff/ucs/HygienicBindings.mls
+
+### Test Checklist
+
 - [x] shared/src/test/diff/codegen/AuxiliaryConstructors.mls
 - [x] shared/src/test/diff/codegen/Mixin.mls
       Fix that `PreTyper` does not traverse type definitions.
@@ -96,7 +109,7 @@ problems located by test cases.
       Generated names should be polished.
 - [x] shared/src/test/diff/ucs/Hygiene.mls
       Problem fixed!
-- [ ] shared/src/test/diff/ucs/HygienicBindings.mls
+- [x] shared/src/test/diff/ucs/HygienicBindings.mls
       We should fix the shadowing parameters.
 - [x] shared/src/test/diff/ucs/InterleavedLet.mls **OLD**
       The transformation cannot handle the following case.
@@ -140,10 +153,11 @@ problems located by test cases.
       Fixed.
 - [x] shared/src/test/diff/ucs/ThenIndent.mls
 - [x] shared/src/test/diff/ucs/Tree.mls
-- [ ] shared/src/test/diff/ucs/TrivialIf.mls **OLD**
-- [ ] shared/src/test/diff/ucs/WeirdIf.mls
+- [x] shared/src/test/diff/ucs/TrivialIf.mls **OLD**
+- [x] shared/src/test/diff/ucs/WeirdIf.mls
       Should report redundant cases.
-- [ ] shared/src/test/diff/ucs/WeirdSplit.mls **OLD**
-- [ ] shared/src/test/diff/ucs/Wildcard.mls
+- [x] shared/src/test/diff/ucs/WeirdSplit.mls **OLD**
+- [x] shared/src/test/diff/ucs/Wildcard.mls
       Some unexpected empty splits.
 - [x] shared/src/test/diff/ucs/zipWith.mls
+
