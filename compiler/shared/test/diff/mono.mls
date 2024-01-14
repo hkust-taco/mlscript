@@ -1,18 +1,18 @@
 
-:NewDefs
+:PreTyper
 
 :mono
-fun f(x: Int) = if x then 42 else 1337
+fun f(x: Int) = if not of x == 0 then 42 else 1337
 //│ 
 //│ Lifted:
 //│ TypingUnit {
-//│   fun f$1 = (x: Int,) => if (x) then 42 else 1337
+//│   fun f$1 = (x: Int,) => if (not(==(x, 0,),)) then 42 else 1337
 //│ }
 //│ Mono:
 //│ 
 //│ Defunc result: 
 //│ fun f$1(x) =
-//│   if x then #42 else #1337
+//│   if not(==(x, #0)) then #42 else #1337
 //│ fun f: (x: Int) -> (1337 | 42)
 
 :mono
@@ -47,7 +47,7 @@ let b = foo(23, false)
 //│   if b then x else #1337
 //│ fun a$1() =
 //│   foo$3(#42, true)
-//│ fun foo: forall 'a. ('a, Object) -> (1337 | 'a)
+//│ fun foo: forall 'a. ('a, Bool) -> (1337 | 'a)
 //│ let a: 1337 | 42
 //│ let b: 1337 | 23
 //│ a
@@ -116,19 +116,19 @@ if 1+1 > 1 then 1 - 1 else 1*1
 //│     = 0
 
 :mono
-if(b) then 1 else 2
+if not of b == 0 then 1 else 2
 //│ 
 //│ Lifted:
-//│ TypingUnit {Code(List(if ('(' b ')') then 1 else 2))}
+//│ TypingUnit {Code(List(if (not(==(b, 0,),)) then 1 else 2))}
 //│ Mono:
 //│ 
 //│ Defunc result: 
 //│ main$$0()
 //│ fun main$$0() =
-//│   if b then #1 else #2
+//│   if not(==(b, #0)) then #1 else #2
 //│ 1 | 2
 //│ res
-//│     = 2
+//│     = 1
 
 :mono
 ((f, g) => f(g))(f => f, true)
@@ -263,7 +263,7 @@ count(new List(new List(new Nil(undefined, false), true), true))
 //│ fun count: forall 'a. 'a -> Int
 //│ Int
 //│ where
-//│   'a <: {hasTail: Object, l: Object & 'a & ~() | ()}
+//│   'a <: {hasTail: Bool, l: Object & 'a & ~() | ()}
 //│ res
 //│     = 2
 
@@ -952,13 +952,13 @@ class OneInt(a: Int){
 class OneBool(b: Bool){
   fun get = () -> b
 }
-(if b then new OneInt(1) else new OneBool(true)).get()
+(if not of b == 0 then new OneInt(1) else new OneBool(true)).get()
 //│ 
 //│ Lifted:
 //│ TypingUnit {
 //│   class OneInt$1([a: Int,]) {fun get = () => (this).a}
 //│   class OneBool$2([b: Bool,]) {fun get = () => (this).b}
-//│   Code(List(('(' if (b) then new OneInt$1([1,]) {} else new OneBool$2([true,]) {} ')').get()))
+//│   Code(List(('(' if (not(==(b, 0,),)) then new OneInt$1([1,]) {} else new OneBool$2([true,]) {} ')').get()))
 //│ }
 //│ Mono:
 //│ 
@@ -969,7 +969,7 @@ class OneBool(b: Bool){
 //│ fun get$OneBool$2(this) =
 //│   this.b
 //│ fun main$$2() =
-//│   if b then new OneInt$1 (#1)  else new OneBool$2 (true)  match {case obj: OneInt$1 => get$OneInt$1(obj); case obj: OneBool$2 => get$OneBool$2(obj)}
+//│   if not(==(b, #0)) then new OneInt$1 (#1)  else new OneBool$2 (true)  match {case obj: OneInt$1 => get$OneInt$1(obj); case obj: OneBool$2 => get$OneBool$2(obj)}
 //│ class OneInt$1(a) {
 //│ }
 //│ class OneBool$2(b) {
@@ -982,7 +982,7 @@ class OneBool(b: Bool){
 //│ }
 //│ Int | false | true
 //│ res
-//│     = true
+//│     = 1
 
 :mono
 class Bar(x: Int) {
