@@ -144,23 +144,19 @@ fun h4(x, y, p) =
 //│ | | | | | | |       _ -> "default"
 //│ fun h4: forall 'a 'b. (Object & 'a, 'b, 'a -> Bool) -> ("default" | 'a | 'b)
 
-h4("should be me", "not me", _ => true) ~~> "should be me"
+h4("should be me", "not me", _ => true)
 h4(None, "not me", _ => true)
-h4(None, "should be me", _ => false) ~~> "should be me"
-h4("anything", "not me", _ => false) ~~> "default"
-//│ ╔══[ERROR] Module 'None' does not support equality comparison because it does not have a parameter list
-//│ ║  l.149: 	h4(None, "should be me", _ => false) ~~> "should be me"
-//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ ()
+h4(None, "should be me", _ => false)
+h4("anything", "not me", _ => false)
+//│ "anything" | "default" | "not me"
 //│ res
-//│     = undefined
+//│     = 'should be me'
 //│ res
 //│     = None { class: [class None] }
 //│ res
-//│     = undefined
+//│     = 'should be me'
 //│ res
-//│     = undefined
+//│     = 'default'
 
 :dpt:postprocess.result
 fun h5(x, y, p) =

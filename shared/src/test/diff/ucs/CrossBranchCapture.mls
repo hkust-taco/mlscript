@@ -13,7 +13,7 @@ fun process(e) =
     Numb(n) and n > 0 then n
     Numb(m) then n
 //│ ╔══[ERROR] identifier `n` not found
-//│ ║  l.21: 	    Numb(m) then n
+//│ ║  l.14: 	    Numb(m) then n
 //│ ╙──      	                 ^
 //│ fun process: Numb -> Int
 
@@ -58,10 +58,10 @@ fun process(e) =
     Pair(Vec(n),  Numb(n)) then n
     Pair(Numb(n), Vec(n))  then n
 //│ ╔══[ERROR] identifier `n` not found
-//│ ║  l.64: 	    Pair(Vec(xs), Vec(ys))  then n
+//│ ║  l.57: 	    Pair(Vec(xs), Vec(ys))  then n
 //│ ╙──      	                                 ^
 //│ ╔══[ERROR] identifier not found: n
-//│ ║  l.64: 	    Pair(Vec(xs), Vec(ys))  then n
+//│ ║  l.57: 	    Pair(Vec(xs), Vec(ys))  then n
 //│ ╙──      	                                 ^
 //│ fun process: Pair[Numb | Vec, Numb | Vec] -> (Int | Numb | error)
 //│ Code generation encountered an error:
