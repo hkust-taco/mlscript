@@ -76,7 +76,6 @@ trait TypeSimplifier { self: Typer =>
                 .reduceOption(_ &- _).filterNot(_.isTop).toList
             else Nil
         }
-        
         nv
         
       case ComposedType(true, l, r) =>

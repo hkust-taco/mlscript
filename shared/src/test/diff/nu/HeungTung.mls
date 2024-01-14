@@ -66,8 +66,16 @@ fun g = h
 //│ fun g: (Bool | Int) -> (Int | false | true)
 
 // * In one step
+:e // TODO: argument of union type
 fun g: (Int | Bool) -> (Int | Bool)
 fun g = f
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.71: 	fun g = f
+//│ ║        	    ^^^^^
+//│ ╟── expression of type `Int | false | true` does not match type `?a`
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.50: 	fun f: (Int -> Int) & (Bool -> Bool)
+//│ ╙──      	                      ^^^^^^^^^^^^^^
 //│ fun g: Int -> Int & Bool -> Bool
 //│ fun g: (Bool | Int) -> (Int | false | true)
 
@@ -88,9 +96,11 @@ fun j = i
 fun j: (Int & Bool) -> (Int & Bool)
 fun j = f
 //│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.89: 	fun j = f
+//│ ║  l.97: 	fun j = f
 //│ ║        	    ^^^^^
-//│ ╙── expression of type `Int` does not match type `nothing`
+//│ ╟── type `?a` does not match type `nothing`
+//│ ║  l.50: 	fun f: (Int -> Int) & (Bool -> Bool)
+//│ ╙──      	                      ^^^^^^^^^^^^^^
 //│ fun j: Int -> Int & Bool -> Bool
 //│ fun j: nothing -> nothing
 
@@ -106,7 +116,7 @@ fun g = f
 // * With match-type-based constraint solving, we could return Int here
 
 f(0)
-//│ Int | false | true
+//│ Int
 //│ res
 //│     = 0
 
@@ -114,15 +124,22 @@ f(0)
 
 
 x => f(x)
-//│ (Bool | Int) -> (Int | false | true)
+//│ anything -> nothing
 //│ res
 //│     = [Function: res]
 
 // : forall 'a: 'a -> case 'a of { Int => Int; Bool => Bool } where 'a <: Int | Bool
 
-
+:e
 f(if true then 0 else false)
-//│ Int | false | true
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.134: 	f(if true then 0 else false)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `0 | false` does not match type `?a`
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.50: 	fun f: (Int -> Int) & (Bool -> Bool)
+//│ ╙──      	                      ^^^^^^^^^^^^^^
+//│ error
 //│ res
 //│     = 0
 
@@ -132,12 +149,21 @@ f(if true then 0 else false)
 :w
 f(refined if true then 0 else false) // this one can be precise again!
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.133: 	f(refined if true then 0 else false) // this one can be precise again!
+//│ ║  l.150: 	f(refined if true then 0 else false) // this one can be precise again!
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: refined
-//│ ║  l.133: 	f(refined if true then 0 else false) // this one can be precise again!
+//│ ║  l.150: 	f(refined if true then 0 else false) // this one can be precise again!
 //│ ╙──       	  ^^^^^^^
-//│ Int | false | true
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.150: 	f(refined if true then 0 else false) // this one can be precise again!
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `error` does not match type `?a`
+//│ ║  l.150: 	f(refined if true then 0 else false) // this one can be precise again!
+//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.50: 	fun f: (Int -> Int) & (Bool -> Bool)
+//│ ╙──      	                      ^^^^^^^^^^^^^^
+//│ error
 //│ Code generation encountered an error:
 //│   unresolved symbol refined
 
@@ -193,7 +219,7 @@ type T = List[Int]
 :e // TODO application types
 type Res = M(T)
 //│ ╔══[ERROR] Wrong number of type arguments – expected 0, found 1
-//│ ║  l.194: 	type Res = M(T)
+//│ ║  l.220: 	type Res = M(T)
 //│ ╙──       	           ^^^^
 //│ type Res = M
 
@@ -216,7 +242,7 @@ fun f: Int -> Int
 fun f: Bool -> Bool
 fun f = id
 //│ ╔══[ERROR] A type signature for 'f' was already given
-//│ ║  l.216: 	fun f: Bool -> Bool
+//│ ║  l.242: 	fun f: Bool -> Bool
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ fun f: forall 'a. 'a -> 'a
 //│ fun f: Int -> Int
@@ -224,13 +250,13 @@ fun f = id
 :e // TODO support
 f: (Int -> Int) & (Bool -> Bool)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.225: 	f: (Int -> Int) & (Bool -> Bool)
+//│ ║  l.251: 	f: (Int -> Int) & (Bool -> Bool)
 //│ ║         	^
 //│ ╟── type `Bool` is not an instance of `Int`
-//│ ║  l.225: 	f: (Int -> Int) & (Bool -> Bool)
+//│ ║  l.251: 	f: (Int -> Int) & (Bool -> Bool)
 //│ ║         	                   ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.215: 	fun f: Int -> Int
+//│ ║  l.241: 	fun f: Int -> Int
 //│ ╙──       	       ^^^
 //│ Int -> Int & Bool -> Bool
 //│ res
@@ -297,14 +323,14 @@ fun test(x) = refined if x is
   A then 0
   B then 1
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.296: 	fun test(x) = refined if x is
+//│ ║  l.322: 	fun test(x) = refined if x is
 //│ ║         	              ^^^^^^^^^^^^^^^
-//│ ║  l.297: 	  A then 0
+//│ ║  l.323: 	  A then 0
 //│ ║         	^^^^^^^^^^
-//│ ║  l.298: 	  B then 1
+//│ ║  l.324: 	  B then 1
 //│ ╙──       	^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: refined
-//│ ║  l.296: 	fun test(x) = refined if x is
+//│ ║  l.322: 	fun test(x) = refined if x is
 //│ ╙──       	              ^^^^^^^
 //│ fun test: (A | B) -> error
 //│ Code generation encountered an error:

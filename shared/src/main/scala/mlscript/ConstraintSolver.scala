@@ -820,7 +820,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             lhs.upperBounds ::= newBound // update the bound
-            lhs.tsc.foreach { case (tsc, i) => tsc.filterUB(i, rhs) }
+            lhs.lbtsc.foreach {
+              case (tsc, i) =>
+                tsc.filterUB(i, rhs)
+                if (tsc.constraints.isEmpty) reportError()
+            }
             lhs.lowerBounds.foreach(rec(_, rhs, true)) // propagate from the bound
             
           case (lhs, rhs: TypeVariable) if lhs.level <= rhs.level =>
@@ -828,6 +832,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             rhs.lowerBounds ::= newBound // update the bound
+            rhs.ubtsc.foreach {
+              case (tsc, i) =>
+                tsc.filterLB(i, lhs)
+                if (tsc.constraints.isEmpty) reportError()
+            }
             rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
             
             

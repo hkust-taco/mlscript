@@ -535,7 +535,8 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       _assignedTo = value
     }
 
-    var tsc: Opt[(TupleSetConstraints, Int)] = N
+    var lbtsc: Opt[(TupleSetConstraints, Int)] = N
+    var ubtsc: Opt[(TupleSetConstraints, Int)] = N
     
     // * Bounds should always be disregarded when `equatedTo` is defined, as they are then irrelevant:
     def lowerBounds: List[SimpleType] = { require(assignedTo.isEmpty, this); _lowerBounds }
@@ -654,7 +655,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       def go(ub: ST): Unit = ub match {
         case ub: TV =>
           ub.upperBounds.foreach(go)
-          ub.tsc = S(this, index)
+          ub.lbtsc = S(this, index)
         case _ =>
           constraints.filterInPlace { constrs =>
             val ty = constrs(index)
@@ -667,7 +668,25 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       if (constraints.sizeCompare(1) === 0) {
         constraints.head.zip(tvs).foreach {
           case (ty, tv) =>
-            tv.tsc = N
+            tv.lbtsc = N
+            tv.ubtsc = N
+            constrain(tv, ty)(raise, prov, ctx)
+            constrain(ty, tv)(raise, prov, ctx)
+        }
+      }
+    }
+    def filterLB(index: Int, lb: ST)(implicit raise: Raise, ctx: Ctx): Unit = {
+      constraints.filterInPlace { constrs =>
+        val ty = constrs(index)
+        val dnf = DNF.mk(MaxLevel, Nil, lb & ty.neg(), true)
+        dnf.isBot || dnf.cs.forall(c => !(c.vars.isEmpty && c.nvars.isEmpty))
+      }
+      println(s"TSC filterLB: $tvs in $constraints")
+      if (constraints.sizeCompare(1) === 0) {
+        constraints.head.zip(tvs).foreach {
+          case (ty, tv) =>
+            tv.lbtsc = N
+            tv.ubtsc = N
             constrain(tv, ty)(raise, prov, ctx)
             constrain(ty, tv)(raise, prov, ctx)
         }
@@ -675,57 +694,63 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     }
   }
   object TupleSetConstraints {
-    def lcgField(a: FieldType, b: FieldType)
+    def lcgField(first: FieldType, rest: Ls[FieldType])
       (implicit prov: TypeProvenance, lvl: Level)
         : (FieldType, Ls[TV], Ls[Ls[ST]]) = {
-      val (ub, tvs, constrs) = lcg(a.ub, b.ub)
-      if (a.lb.isEmpty && b.lb.isEmpty) {
+      val (ub, tvs, constrs) = lcg(first.ub, rest.map(_.ub))
+      if (first.lb.isEmpty && rest.forall(_.lb.isEmpty)) {
         (FieldType(N, ub)(prov), tvs, constrs)
       } else {
-        val (lb, ltvs, lconstrs) = lcg(a.lb.getOrElse(BotType), b.lb.getOrElse(BotType))
+        val (lb, ltvs, lconstrs) = lcg(first.lb.getOrElse(BotType), rest.map(_.lb.getOrElse(BotType)))
         (FieldType(S(lb), ub)(prov), tvs ++ ltvs, constrs ++ lconstrs)
       }
     }
-    def lcg(a: ST, b: ST)
+    def lcg(first: ST, rest: Ls[ST])
       (implicit prov: TypeProvenance, lvl: Level)
-        : (ST, Ls[TV], Ls[Ls[ST]]) = (a, b) match {
-      case (_, b: ProvType) => lcg(a, b.underlying)
-      case (a: ProvType, _) => lcg(a.underlying, b)
-      case (a: FT, b: FT) => lcgFunction(a, b)
-      case (a: ArrayType, b: ArrayType) =>
-        val (t, tvs, constrs) = lcgField(a.inner, b.inner)
+        : (ST, Ls[TV], Ls[Ls[ST]]) = first match {
+      case a: FunctionType if rest.forall(_.isInstanceOf[FunctionType]) =>
+        val (lhss, rhss) = rest.collect {
+          case FunctionType(lhs, rhs) => lhs -> rhs
+        }.unzip
+        val (lhs, ltvs, lconstrs) = lcg(a.lhs, lhss)
+        val (rhs, rtvs, rconstrs) = lcg(a.rhs, rhss)
+        (FunctionType(lhs, rhs)(prov), ltvs ++ rtvs, lconstrs ++ rconstrs)
+      case a: ArrayType if rest.forall(_.isInstanceOf[ArrayType]) =>
+        val inners = rest.collect { case b: ArrayType => b.inner }
+        val (t, tvs, constrs) = lcgField(a.inner, inners)
         (ArrayType(t)(prov), tvs, constrs)
-      case (a: TupleType, b: TupleType) if a.fields.sizeCompare(b.fields.size) === 0 =>
-        val (fts, tvss, constrss) = a.fields.map(_._2).zip(b.fields.map(_._2)).map {
-          case (a, b) => lcgField(a, b)
-        }.unzip3
+      case a: TupleType if rest.forall { case b: TupleType => a.fields.sizeCompare(b.fields.size) === 0; case _ => false } =>
+        val fields =  rest.collect { case TupleType(fields) => fields.map(_._2) }
+        val (fts, tvss, constrss) = a.fields.map(_._2).zip(fields.transpose).map { case (a, bs) => lcgField(a, bs) }.unzip3
         (TupleType(fts.map(N -> _))(prov), tvss.flatten, constrss.flatten)
-      case (a: TR, b: TR) if a.defn === b.defn && a.targs.sizeCompare(b.targs.size) === 0 =>
-        val (ts, tvss, constrss) = a.targs.zip(b.targs).map {
-          case (a, b) => lcg(a, b)
-        }.unzip3
+      case a: TR if rest.forall { case b: TR => a.defn === b.defn && a.targs.sizeCompare(b.targs.size) === 0; case _ => false } =>
+        val targs = rest.collect { case b: TR => b.targs }
+        val (ts, tvss, constrss) = a.targs.zip(targs.transpose).map { case (a, bs) => lcg(a, bs) }.unzip3
         (TypeRef(a.defn, ts)(prov), tvss.flatten, constrss.flatten)
-      case (a: TV, b: TV) if a.compare(b) === 0 => (a, Nil, Nil)
-      case (a: ExtrType, b: ExtrType) if a.pol === b.pol => (a, Nil, Nil)
+      case a: TV if rest.forall { case b: TV => a.compare(b) === 0; case _ => false } => (a, Nil, Nil)
+      case a if rest.forall(_ === a) => (a, Nil, Nil)
       case _ =>
         val tv = freshVar(prov, N)
-        (tv, List(tv), List(List(a, b)))
+        (tv, List(tv), List(first :: rest))
     }
-    def lcgFunction(a: FT, b: FT)
-      (implicit prov: TypeProvenance, lvl: Level)
-        : (FT, Ls[TV], Ls[Ls[ST]]) = {
-      val (lhs, ltvs, lconstrs) = lcg(a.lhs, b.lhs)
-      val (rhs, rtvs, rconstrs) = lcg(a.rhs, b.rhs)
+    def lcgFunction(first: FunctionType, rest: Ls[FunctionType])(implicit prov: TypeProvenance, lvl: Level)
+        : (FunctionType, Ls[TV], Ls[Ls[ST]]) = {
+      val (lhss, rhss) = rest.map {
+        case FunctionType(lhs, rhs) => lhs -> rhs
+      }.unzip
+      val (lhs, ltvs, lconstrs) = lcg(first.lhs, lhss)
+      val (rhs, rtvs, rconstrs) = lcg(first.rhs, rhss)
       (FunctionType(lhs, rhs)(prov), ltvs ++ rtvs, lconstrs ++ rconstrs)
     }
     def mk(ov: Overload)(implicit lvl: Level): FunctionType = {
-      val (t, tvs, constrs) =
-        ov.alts.tail.foldLeft((ov.alts.head, Nil: Ls[TV], Nil: Ls[Ls[ST]])) {
-          case ((a, tvs, constrs), b) => lcgFunction(a, b)(ov.prov, lvl)
-        }
-      // val (t, tvs, constrs) = lcgFunction(ov.alts.head, ov.alts.tail)(ov.prov, lvl)
+      def unwrap(t: ST): ST = t.map(unwrap)
+      val f = ov.mapAlts(unwrap)(unwrap)
+      val (t, tvs, constrs) = lcgFunction(f.alts.head, f.alts.tail)(ov.prov, lvl)
       val tsc = new TupleSetConstraints(MutSet.empty ++ constrs.transpose, tvs)(ov.prov)
-      tvs.zipWithIndex.foreach { case (tv, i) => tv.tsc = S((tsc, i)) }
+      tvs.zipWithIndex.foreach { case (tv, i) =>
+        tv.lbtsc = S((tsc, i))
+        tv.ubtsc = S((tsc, i))
+      }
       println(s"TSC mk: ${tsc.tvs} in ${tsc.constraints}")
       t
     }
