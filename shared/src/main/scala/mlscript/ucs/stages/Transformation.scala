@@ -2,7 +2,7 @@ package mlscript.ucs.stages
 
 import mlscript.ucs.{DesugarUCS, helpers}
 import mlscript.{If, IfBody, IfBlock, IfElse, IfLet, IfOpApp, IfOpsApp, IfThen}
-import mlscript.{Term, Var, App, Tup, Lit, Fld, Loc}
+import mlscript.{Blk, Term, Var, App, Tup, Lit, Fld, Loc}
 import mlscript.Diagnostic.PreTyping
 import mlscript.pretyper.Traceable
 import mlscript.ucs.syntax._
@@ -205,9 +205,10 @@ trait Transformation { self: DesugarUCS with Traceable =>
     case App(classNme @ Var(_), parameters: Tup) =>
       ClassPattern(classNme, S(transformTupleTerm(parameters)), refined = false)
     case tuple: Tup => TuplePattern(transformTupleTerm(tuple))
+    case Blk((term: Term) :: Nil) => transformPattern(term) // A speical case for FunnyIndet.mls
     case other =>
       println(s"other $other")
-      raiseError(msg"Unknown pattern ${other.showDbg}" -> other.toLoc)
+      raiseError(msg"unknown pattern ${other.showDbg}" -> other.toLoc)
       EmptyPattern(other)
   }
 

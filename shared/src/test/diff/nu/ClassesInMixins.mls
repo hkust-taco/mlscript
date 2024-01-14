@@ -41,7 +41,7 @@ M.Foo
 
 :e // TODO support
 fun foo(x) = if x is M.Foo then 1
-//│ ╔══[ERROR] Unknown pattern (M).Foo
+//│ ╔══[ERROR] unknown pattern (M).Foo
 //│ ║  l.43: 	fun foo(x) = if x is M.Foo then 1
 //│ ╙──      	                     ^^^^^
 //│ fun foo: anything -> 1

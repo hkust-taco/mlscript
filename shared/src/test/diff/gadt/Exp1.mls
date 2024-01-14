@@ -33,7 +33,7 @@ fun f(e) = if e is
 :e // TODO support
 fun f(e) = if e is
   Pair['a, 'b](l, r) then [l, r]
-//│ ╔══[ERROR] Unknown pattern Pair‹'a, 'b›(l, r,)
+//│ ╔══[ERROR] unknown pattern Pair‹'a, 'b›(l, r,)
 //│ ║  l.35: 	  Pair['a, 'b](l, r) then [l, r]
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] identifier `l` not found

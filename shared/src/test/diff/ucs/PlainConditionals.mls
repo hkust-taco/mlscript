@@ -53,7 +53,7 @@ fun foo(x) = if x is Pair(a, b) then a > b else false
 fun foo(x) = x is
   Pair
   Int
-//│ ╔══[ERROR] Unknown pattern {Pair; Int}
+//│ ╔══[ERROR] unknown pattern {Pair; Int}
 //│ ║  l.54: 	  Pair
 //│ ║        	  ^^^^
 //│ ║  l.55: 	  Int
@@ -66,7 +66,7 @@ fun foo(x) = x is
 fun foo(x) = x is
   Pair(a, b) and a > b
   Int
-//│ ╔══[ERROR] Unknown pattern {and(Pair(a, b,), >(a, b,),); Int}
+//│ ╔══[ERROR] unknown pattern {and(Pair(a, b,), >(a, b,),); Int}
 //│ ║  l.67: 	  Pair(a, b) and a > b
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.68: 	  Int
@@ -78,7 +78,7 @@ fun foo(x) = x is
 // TODO support `|`
 fun foo(x) = x is Pair(a, b) | Int
 fun foo(x) = x is (Pair(a, b) and a > b) | Int
-//│ ╔══[ERROR] Unknown pattern '(' and(Pair(a, b,), >(a, b,),) ')'
+//│ ╔══[ERROR] unknown pattern '(' and(Pair(a, b,), >(a, b,),) ')'
 //│ ║  l.80: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
 //│ ╙──      	                  ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] type identifier `|` not found

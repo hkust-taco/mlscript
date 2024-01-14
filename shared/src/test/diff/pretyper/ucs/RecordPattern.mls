@@ -6,7 +6,7 @@ fun take_1(p) =
   if p is
     { x, y } then x + y
     else 0
-//│ ╔══[ERROR] Unknown pattern '{' {x: x, y: y} '}'
+//│ ╔══[ERROR] unknown pattern '{' {x: x, y: y} '}'
 //│ ║  l.7: 	    { x, y } then x + y
 //│ ╙──     	    ^^^^^^^^
 //│ ╔══[WARNING] the case is unreachable
