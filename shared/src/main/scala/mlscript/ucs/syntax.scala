@@ -52,12 +52,6 @@ package object syntax {
   }
 
   sealed abstract class Split[+SomeBranch <: Branch] extends Located {
-    def ++[OtherBranch >: SomeBranch <: Branch](that: Split[OtherBranch]): Split[OtherBranch] = this match {
-      case Split.Cons(head, tail) => Split.Cons(head, tail ++ that)
-      case Split.Let(rec, nme, rhs, tail) => Split.Let(rec, nme, rhs, tail ++ that)
-      case Split.Else(_) => this
-      case Split.Nil => that
-    }
     def ::[OtherBranch >: SomeBranch <: Branch](head: OtherBranch): Split[OtherBranch] = Split.Cons(head, this)
   }
   object Split {

@@ -1,5 +1,8 @@
 :PreTyper
 
+fun (++) strcat(a, b) = concat(a)(b)
+//│ fun (++) strcat: (Str, Str) -> Str
+
 type Option[T] = None | Some[T]
 module None
 class Some[T](val value: T)
@@ -14,15 +17,15 @@ class Right[B](val rightValue: B)
 //│ class Left[A](leftValue: A)
 //│ class Right[B](rightValue: B)
 
-// FIXME
+
 fun w1(x, e_0, e_1) =
   if x is
     Left(None) then "Left of None"
     Right(None) then "Right of None"
     _ and e_0 is y_0 and x is
-      Left(Some(lv)) then concat("Left of Some of ")(toString(lv))
+      Left(Some(lv)) then "Left of Some of " ++ toString(lv)
       _ and e_1 is y_1 and x is
-        Right(Some(rv)) then concat("Right of Some of ")(toString(rv))
+        Right(Some(rv)) then "Right of Some of " ++ toString(rv)
 //│ fun w1: forall 'a. (Left[None | Object & ~#None & ~#Some | Some[anything]] | Object & ~#Left & ~#Right | Right[None | Some[anything]], anything, 'a) -> (Str | 'a)
 
 w1(Left(None), "a", "b")
@@ -63,7 +66,7 @@ w2(0, x => false)
 
 fun w3(x, p) = if x is
   _ and p(x) then "r1"
-  Some(xv) then concat("r2: ")(toString(xv))
+  Some(xv) then "r2: " ++ toString(xv)
   None then "r3"
   _ then "r4"
 //│ fun w3: forall 'a. ('a & (Object & ~#Some | Some[anything]), 'a -> Bool) -> Str
@@ -105,10 +108,10 @@ w3(0, _ => false)
 fun w3_1(x, f) =
   if f(x) is _ then 0 else 1
 //│ ╔══[WARNING] the case is unreachable
-//│ ║  l.106: 	  if f(x) is _ then 0 else 1
+//│ ║  l.109: 	  if f(x) is _ then 0 else 1
 //│ ║         	                           ^
 //│ ╟── because this branch covers the case
-//│ ║  l.106: 	  if f(x) is _ then 0 else 1
+//│ ║  l.109: 	  if f(x) is _ then 0 else 1
 //│ ╙──       	                    ^
 //│ fun w3_1: forall 'a. ('a, 'a -> anything) -> 0
 
@@ -120,10 +123,15 @@ w3_1(0, _ => false)
 //│ res
 //│     = 0
 
-// :w
-// FIXME: Should warn redundant case
+:w
 fun w3_1_1(x, f) =
   if f(x) is a then a else 0
+//│ ╔══[WARNING] the case is unreachable
+//│ ║  l.128: 	  if f(x) is a then a else 0
+//│ ║         	                           ^
+//│ ╟── because this branch already covers the case
+//│ ║  l.128: 	  if f(x) is a then a else 0
+//│ ╙──       	                    ^
 //│ fun w3_1_1: forall 'a 'b. ('a, 'a -> 'b) -> 'b
 
 w3_1_1(0, x => x)
@@ -140,7 +148,7 @@ w3_1_1(0, x => x + 1)
 // + «x is None» => "r3"
 fun w4(x, p) = if x is
   a and p(x) then "r1"
-  Some(xv) then concat("r2: ")(toString(xv))
+  Some(xv) then "r2: " ++ toString(xv)
   None then "r3"
   _ then "r4"
 //│ fun w4: forall 'a. ('a & (Object & ~#Some | Some[anything]), 'a -> Bool) -> Str
@@ -187,6 +195,7 @@ class Delta()
 
 // This should generate only one case expression instead of a chain of case
 // expressions. DO check the desugared term!
+:dpt:postprocess.result
 fun w5(y) =
   if y is
     Alpha then "alpha"
@@ -197,6 +206,17 @@ fun w5(y) =
         _ and y is
           Delta then "delta"
           _ then "unknown"
+//│ | | | | | | | Post-processed UCS term:
+//│ | | | | | | | case y*‡ of
+//│ | | | | | | |   Alpha*◊ -> "alpha"
+//│ | | | | | | |   Gamma*◊ -> "gamma"
+//│ | | | | | | |   Delta*◊ -> "delta"
+//│ | | | | | | |   Beta*◊ -> "beta"
+//│ | | | | | | |   _ ->
+//│ | | | | | | |     case y*‡ of
+//│ | | | | | | |       _ ->
+//│ | | | | | | |         case y*‡ of
+//│ | | | | | | |           _ -> "unknown"
 //│ fun w5: (Alpha | Beta | Delta | Gamma | Object & ~#Alpha & ~#Beta & ~#Delta & ~#Gamma) -> ("alpha" | "beta" | "delta" | "gamma" | "unknown")
 
 w5(0)
@@ -235,8 +255,7 @@ w6("42", "42")
 //│ res
 //│     = '42'
 
-// FIXME
-// Should report warnings.
+
 fun w7(x, f) =
   if x is
     _ and f(x) is
@@ -263,3 +282,14 @@ w7(Right(99), _ => None) // => Right(99)
 //│     = 0
 //│ res
 //│     = Right {}
+
+w7(Left(99), _ => "test")
+w7(Right(99), _ => "test")
+//│ Int | Right['B]
+//│   where
+//│     'B :> 99
+//│        <: Int
+//│ res
+//│     = 100
+//│ res
+//│     = 101

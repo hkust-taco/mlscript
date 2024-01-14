@@ -1,7 +1,7 @@
 :PreTyper
 
-fun (~~>) expect(a, b) = if a is b then () else error
-//│ fun (~~>) expect: (anything, anything) -> ()
+fun (~~>) expect(a, b) = if a === b then () else error
+//│ fun (~~>) expect: forall 'a. (Eql['a], 'a) -> ()
 
 type Option[out T] = None | Some[T]
 module None
@@ -145,14 +145,18 @@ fun h4(x, y, p) =
 //│ fun h4: forall 'a 'b. (Object & 'a, 'b, 'a -> Bool) -> ("default" | 'a | 'b)
 
 h4("should be me", "not me", _ => true) ~~> "should be me"
-h4(None, "not me", _ => true) ~~> None
+h4(None, "not me", _ => true)
 h4(None, "should be me", _ => false) ~~> "should be me"
 h4("anything", "not me", _ => false) ~~> "default"
+//│ ╔══[ERROR] Module 'None' does not support equality comparison because it does not have a parameter list
+//│ ║  l.149: 	h4(None, "should be me", _ => false) ~~> "should be me"
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ ()
 //│ res
 //│     = undefined
 //│ res
-//│     = undefined
+//│     = None { class: [class None] }
 //│ res
 //│     = undefined
 //│ res

@@ -3,11 +3,13 @@ package mlscript.ucs.stages
 import mlscript.{Case, CaseBranches, CaseOf, Let, Lit, Loc, NoCases, Term, Var, Wildcard}
 import mlscript.{Diagnostic, ErrorReport, WarningReport}
 import mlscript.Message, Message.MessageContext
+import mlscript.ucs.DesugarUCS
 import mlscript.ucs.context.{Context, CaseSet, NamedScrutineeData, MatchRegistry, ScrutineeData, SeenRegistry}
+import mlscript.pretyper.Traceable
 import mlscript.pretyper.symbol._
 import mlscript.utils._, shorthands._
 
-trait CoverageChecking { self: mlscript.pretyper.Traceable =>
+trait CoverageChecking { self: DesugarUCS with Traceable =>
   import CoverageChecking._
 
   def checkCoverage(term: Term)(implicit context: Context): Ls[Diagnostic] = {
@@ -28,6 +30,9 @@ trait CoverageChecking { self: mlscript.pretyper.Traceable =>
       ))
       term match {
         case Let(_, _, _, body) => checkCoverage(body, pending, working, seen)
+        case CaseOf(scrutineeVar: Var, Case(Var("true"), body, NoCases)) if context.isTestVar(scrutineeVar) =>
+          raiseError(msg"missing else branch" -> body.toLoc)
+          Nil
         case CaseOf(ScrutineeData.WithVar(scrutinee, scrutineeVar), cases) =>
           println(s"scrutinee: ${scrutineeVar.name}")
           // If the scrutinee is still pending (i.e., not matched yet), then we

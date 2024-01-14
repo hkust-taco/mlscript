@@ -138,14 +138,18 @@ trait DesugarUCS extends Transformation
   }
 
   protected implicit class SourceSplitOps[+B <: s.Branch](these: s.Split[B]) {
-    def ++[BB >: B <: s.Branch](those: s.Split[BB]): s.Split[BB] = these match {
-      case s.Split.Cons(head, tail) => s.Split.Cons(head, tail ++ those)
-      case s.Split.Let(rec, nme, rhs, tail) => s.Split.Let(rec, nme, rhs, tail ++ those)
-      case s.Split.Else(_) =>
-        raiseWarning(msg"unreachable case" -> these.toLoc)
-        these
-      case s.Split.Nil => those
-    }
+    def ++[BB >: B <: s.Branch](those: s.Split[BB]): s.Split[BB] =
+      if (those === s.Split.Nil) these else (these match {
+        case s.Split.Cons(head, tail) => s.Split.Cons(head, tail ++ those)
+        case s.Split.Let(rec, nme, rhs, tail) => s.Split.Let(rec, nme, rhs, tail ++ those)
+        case s.Split.Else(_) =>
+          raiseWarning(
+            msg"unreachable case" -> those.toLoc,
+            msg"because this branch covers the case" -> these.toLoc
+          )
+          these
+        case s.Split.Nil => those
+      })
   }
 
   protected implicit class CoreSplitOps(these: c.Split) {

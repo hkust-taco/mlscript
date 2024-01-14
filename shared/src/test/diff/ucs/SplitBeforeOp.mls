@@ -7,6 +7,9 @@ if x
 //│ ╔══[ERROR] identifier `x` not found
 //│ ║  l.5: 	if x
 //│ ╙──     	   ^
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.6: 	  == 0 then 0
+//│ ╙──     	            ^
 //│ ╔══[ERROR] identifier not found: x
 //│ ║  l.5: 	if x
 //│ ╙──     	   ^
@@ -24,22 +27,25 @@ if x
   is A and
     y then 0
 //│ ╔══[ERROR] identifier `x` not found
-//│ ║  l.23: 	if x
+//│ ║  l.26: 	if x
 //│ ╙──      	   ^
 //│ ╔══[ERROR] type identifier `A` not found
-//│ ║  l.24: 	  is A and
+//│ ║  l.27: 	  is A and
 //│ ╙──      	     ^
 //│ ╔══[ERROR] identifier `x` not found
-//│ ║  l.23: 	if x
+//│ ║  l.26: 	if x
 //│ ╙──      	   ^
 //│ ╔══[ERROR] identifier `y` not found
-//│ ║  l.25: 	    y then 0
+//│ ║  l.28: 	    y then 0
 //│ ╙──      	    ^
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.28: 	    y then 0
+//│ ╙──      	           ^
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.23: 	if x
+//│ ║  l.26: 	if x
 //│ ╙──      	   ^
 //│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.24: 	  is A and
+//│ ║  l.27: 	  is A and
 //│ ╙──      	     ^
 //│ error
 //│ Code generation encountered an error:
@@ -52,22 +58,22 @@ if x
     y then 0
 else 1
 //│ ╔══[ERROR] identifier `x` not found
-//│ ║  l.50: 	if x
+//│ ║  l.56: 	if x
 //│ ╙──      	   ^
 //│ ╔══[ERROR] type identifier `A` not found
-//│ ║  l.51: 	  is A and
+//│ ║  l.57: 	  is A and
 //│ ╙──      	     ^
 //│ ╔══[ERROR] identifier `x` not found
-//│ ║  l.50: 	if x
+//│ ║  l.56: 	if x
 //│ ╙──      	   ^
 //│ ╔══[ERROR] identifier `y` not found
-//│ ║  l.52: 	    y then 0
+//│ ║  l.58: 	    y then 0
 //│ ╙──      	    ^
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.50: 	if x
+//│ ║  l.56: 	if x
 //│ ╙──      	   ^
 //│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.51: 	  is A and
+//│ ║  l.57: 	  is A and
 //│ ╙──      	     ^
 //│ error
 //│ Code generation encountered an error:
@@ -81,31 +87,31 @@ if x
     A() then "A"
     B() then "B"
 //│ ╔══[ERROR] identifier `x` not found
-//│ ║  l.78: 	if x
+//│ ║  l.84: 	if x
 //│ ╙──      	   ^
 //│ ╔══[ERROR] type identifier `A` not found
-//│ ║  l.81: 	    A() then "A"
+//│ ║  l.87: 	    A() then "A"
 //│ ╙──      	    ^
 //│ ╔══[ERROR] type identifier `B` not found
-//│ ║  l.82: 	    B() then "B"
+//│ ║  l.88: 	    B() then "B"
 //│ ╙──      	    ^
 //│ ╔══[ERROR] identifier `x` not found
-//│ ║  l.78: 	if x
+//│ ║  l.84: 	if x
 //│ ╙──      	   ^
 //│ ╔══[ERROR] identifier `x` not found
-//│ ║  l.78: 	if x
+//│ ║  l.84: 	if x
 //│ ╙──      	   ^
 //│ ╔══[ERROR] identifier `x` not found
-//│ ║  l.78: 	if x
+//│ ║  l.84: 	if x
 //│ ╙──      	   ^
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.78: 	if x
+//│ ║  l.84: 	if x
 //│ ╙──      	   ^
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.78: 	if x
+//│ ║  l.84: 	if x
 //│ ╙──      	   ^
 //│ ╔══[ERROR] type identifier not found: A
-//│ ║  l.81: 	    A() then "A"
+//│ ║  l.87: 	    A() then "A"
 //│ ╙──      	    ^
 //│ 0 | error
 //│ Code generation encountered an error:

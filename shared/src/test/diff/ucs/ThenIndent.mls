@@ -19,6 +19,9 @@ x => if x ==
 //│ ╟── Note: 'if' expression starts here:
 //│ ║  l.5: 	x => if x ==
 //│ ╙──     	     ^^
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.6: 	  0
+//│ ╙──     	  ^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.6: 	  0
 //│ ║       	  ^

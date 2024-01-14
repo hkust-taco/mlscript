@@ -1,18 +1,25 @@
 :PreTyper
 
-// FIXME: Should report duplicated else branches.
-// :w
+:w
 if
   _ then 0
   else 0
 else 1
+//│ ╔══[WARNING] unreachable case
+//│ ║  l.5: 	  _ then 0
+//│ ╙──     	         ^
+//│ ╔══[WARNING] unreachable case
+//│ ║  l.5: 	  _ then 0
+//│ ╙──     	         ^
 //│ 0
 //│ res
 //│     = 0
 
-// FIXME
-// :w
+:w
 if else 0 else 1
+//│ ╔══[WARNING] unreachable case
+//│ ║  l.19: 	if else 0 else 1
+//│ ╙──      	        ^
 //│ 0
 //│ res
 //│     = 0
@@ -20,10 +27,10 @@ if else 0 else 1
 :w
 fun f(x) = if x is else 0 else 1
 //│ ╔══[WARNING] the case is unreachable
-//│ ║  l.21: 	fun f(x) = if x is else 0 else 1
+//│ ║  l.28: 	fun f(x) = if x is else 0 else 1
 //│ ║        	                               ^
 //│ ╟── because this branch covers the case
-//│ ║  l.21: 	fun f(x) = if x is else 0 else 1
+//│ ║  l.28: 	fun f(x) = if x is else 0 else 1
 //│ ╙──      	                        ^
 //│ fun f: anything -> 0
 
@@ -33,8 +40,11 @@ fun f(x) = if x is else 0
 :e
 if true
   then 0
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.42: 	  then 0
+//│ ╙──      	       ^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.35: 	  then 0
+//│ ║  l.42: 	  then 0
 //│ ║        	       ^
 //│ ╙── expression of type `Bool` is not an instance of type `true`
 //│ 0
@@ -48,21 +58,24 @@ fun f(x) =
   if x ===
     else "bruh"
 //│ ╔══[PARSE ERROR] Unexpected indented block in expression position
-//│ ║  l.49: 	    else "bruh"
+//│ ║  l.59: 	    else "bruh"
 //│ ╙──      	^^^^
 //│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
-//│ ║  l.49: 	    else "bruh"
+//│ ║  l.59: 	    else "bruh"
 //│ ╙──      	    ^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found operator application instead
-//│ ║  l.48: 	  if x ===
+//│ ║  l.58: 	  if x ===
 //│ ║        	     ^^^^^
-//│ ║  l.49: 	    else "bruh"
+//│ ║  l.59: 	    else "bruh"
 //│ ║        	^^^^
 //│ ╟── Note: 'if' expression starts here:
-//│ ║  l.48: 	  if x ===
+//│ ║  l.58: 	  if x ===
 //│ ╙──      	  ^^
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.59: 	    else "bruh"
+//│ ╙──      	    ^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.49: 	    else "bruh"
+//│ ║  l.59: 	    else "bruh"
 //│ ║        	    ^
 //│ ╙── expression of type `Bool` is not an instance of type `true`
 //│ fun f: Eql[()] -> ()

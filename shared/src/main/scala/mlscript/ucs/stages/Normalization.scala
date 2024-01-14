@@ -21,9 +21,18 @@ trait Normalization { self: DesugarUCS with Traceable =>
   private def fillImpl(these: Split, those: Split, deep: Bool)(implicit
       scope: Scope,
       context: Context,
-      generatedVars: Set[Var]
+      generatedVars: Set[Var],
+      shouldReportDiscarded: Bool
   ): Split =
-    if (these.hasElse) these else (these match {
+    if (these.hasElse) {
+      if (those =/= Split.Nil && shouldReportDiscarded) {
+        raiseWarning(
+          msg"the case is unreachable" -> those.toLoc,
+          msg"because this branch already covers the case" -> these.toLoc
+        )
+      }
+      these
+    } else (these match {
       case these @ Split.Cons(head, tail) =>
         if (head.continuation.hasElse || !deep) {
           these.copy(tail = fillImpl(tail, those, deep))
@@ -40,7 +49,7 @@ trait Normalization { self: DesugarUCS with Traceable =>
           val concatenated = these.copy(tail = fillImpl(tail, thoseWithShadowed, deep))
           Split.Let(false, fresh, nme, concatenated)
         } else {
-          these.copy(tail = fillImpl(tail, those, deep)(scope, context, generatedVars + nme))
+          these.copy(tail = fillImpl(tail, those, deep)(scope, context, generatedVars + nme, false))
         }
       case _: Split.Else => these
       case Split.Nil =>
@@ -49,11 +58,25 @@ trait Normalization { self: DesugarUCS with Traceable =>
     })
 
   private implicit class SplitOps(these: Split) {
-    def fill(those: Split, deep: Bool)(implicit scope: Scope, context: Context, generatedVars: Set[Var]): Split =
+    /**
+      * Fill the split into the previous split. 
+      *
+      * @param those the split to append
+      * @param deep whether we should also fill the leading branches
+      * @param shouldReportDiscarded whether we should raise an error if the given
+      *                        split is discarded because of the else branch
+      * @param generatedVars the generated variables which have been declared
+      * @return the concatenated split
+      */
+    def fill(those: Split, deep: Bool, shouldReportDiscarded: Bool)(implicit
+        scope: Scope,
+        context: Context,
+        generatedVars: Set[Var],
+    ): Split =
       trace(s"fill <== ${generatedVars.iterator.map(_.name).mkString("{", ", ", "}")}") {
         println(s"LHS: ${showSplit(these)}")
         println(s"RHS: ${showSplit(those)}")
-        fillImpl(these, those, deep)
+        fillImpl(these, those, deep)(scope, context, generatedVars, shouldReportDiscarded)
       }(sp => s"fill ==> ${showSplit(sp)}")
 
     def :++(tail: => Split): Split = {
@@ -90,17 +113,17 @@ trait Normalization { self: DesugarUCS with Traceable =>
       case Split.Cons(Branch(scrutinee, Pattern.Name(nme), continuation), tail) =>
         println(s"ALIAS: ${scrutinee.name} is ${nme.name}")
         val (wrap, realTail) = preventShadowing(nme, tail)
-        wrap(Let(false, nme, scrutinee, normalizeToTerm(continuation.fill(realTail, deep = false))))
+        wrap(Let(false, nme, scrutinee, normalizeToTerm(continuation.fill(realTail, false, true))))
       // Skip Boolean conditions as scrutinees, because they only appear once.
       case Split.Cons(Branch(test, pattern @ Pattern.Class(nme @ Var("true"), _), continuation), tail) =>
         println(s"TRUE: ${test.name} is true")
-        val trueBranch = normalizeToTerm(continuation.fill(tail, deep = false))
+        val trueBranch = normalizeToTerm(continuation.fill(tail, false, false))
         val falseBranch = normalizeToCaseBranches(tail)
         CaseOf(test, Case(nme, trueBranch, falseBranch)(refined = false))
       case Split.Cons(Branch(ScrutineeData.WithVar(scrutinee, scrutineeVar), pattern @ Pattern.Literal(literal), continuation), tail) =>
         println(s"LITERAL: ${scrutineeVar.name} is ${literal.idStr}")
         println(s"entire split: ${showSplit(split)}")
-        val concatenatedTrueBranch = continuation.fill(tail, deep = false)
+        val concatenatedTrueBranch = continuation.fill(tail, false, false)
         // println(s"true branch: ${showSplit(concatenatedTrueBranch)}")
         val trueBranch = normalizeToTerm(specialize(concatenatedTrueBranch, true)(scrutineeVar, scrutinee, pattern, context))
         // println(s"false branch: ${showSplit(tail)}")
@@ -109,7 +132,7 @@ trait Normalization { self: DesugarUCS with Traceable =>
       case Split.Cons(Branch(ScrutineeData.WithVar(scrutinee, scrutineeVar), pattern @ Pattern.Class(nme, rfd), continuation), tail) =>
         println(s"CLASS: ${scrutineeVar.name} is ${nme.name}")
         // println(s"match ${scrutineeVar.name} with $nme (has location: ${nme.toLoc.isDefined})")
-        val trueBranch = normalizeToTerm(specialize(continuation.fill(tail, deep = false), true)(scrutineeVar, scrutinee, pattern, context))
+        val trueBranch = normalizeToTerm(specialize(continuation.fill(tail, false, false), true)(scrutineeVar, scrutinee, pattern, context))
         val falseBranch = normalizeToCaseBranches(specialize(tail, false)(scrutineeVar, scrutinee, pattern, context))
         CaseOf(scrutineeVar, Case(nme, trueBranch, falseBranch)(refined = pattern.refined))
       case Split.Cons(Branch(scrutinee, pattern, continuation), tail) =>

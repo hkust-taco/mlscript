@@ -21,6 +21,9 @@ fun f(x) =
     is Left(v) then 0
     is Right(v) then 1
     <> undefined then 2
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.23: 	    <> undefined then 2
+//│ ╙──      	                      ^
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.20: 	  if x
 //│ ║        	     ^
@@ -48,25 +51,25 @@ fun f(x) =
     is Some(xv) and y is Some(yv) then xv + yv
     is None() and y is None() then 0
 //│ ╔══[ERROR] identifier `y` not found
-//│ ║  l.48: 	    is Some(xv) and y is Some(yv) then xv + yv
+//│ ║  l.51: 	    is Some(xv) and y is Some(yv) then xv + yv
 //│ ╙──      	                    ^
 //│ ╔══[ERROR] identifier `y` not found
-//│ ║  l.49: 	    is None() and y is None() then 0
+//│ ║  l.52: 	    is None() and y is None() then 0
 //│ ╙──      	                  ^
 //│ ╔══[ERROR] identifier `y` not found
-//│ ║  l.48: 	    is Some(xv) and y is Some(yv) then xv + yv
+//│ ║  l.51: 	    is Some(xv) and y is Some(yv) then xv + yv
 //│ ╙──      	                    ^
 //│ ╔══[ERROR] identifier `y` not found
-//│ ║  l.48: 	    is Some(xv) and y is Some(yv) then xv + yv
+//│ ║  l.51: 	    is Some(xv) and y is Some(yv) then xv + yv
 //│ ╙──      	                    ^
 //│ ╔══[ERROR] identifier `y` not found
-//│ ║  l.49: 	    is None() and y is None() then 0
+//│ ║  l.52: 	    is None() and y is None() then 0
 //│ ╙──      	                  ^
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.48: 	    is Some(xv) and y is Some(yv) then xv + yv
+//│ ║  l.51: 	    is Some(xv) and y is Some(yv) then xv + yv
 //│ ╙──      	                    ^
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.49: 	    is None() and y is None() then 0
+//│ ║  l.52: 	    is None() and y is None() then 0
 //│ ╙──      	                  ^
 //│ fun f: (None | Some[Int]) -> Int
 //│ Code generation encountered an error:
@@ -89,8 +92,11 @@ class C()
 fun f(a, b, c) =
   if a
     == 0 and b is B() and c is C() then 0
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.94: 	    == 0 and b is B() and c is C() then 0
+//│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.91: 	    == 0 and b is B() and c is C() then 0
+//│ ║  l.94: 	    == 0 and b is B() and c is C() then 0
 //│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `Bool` is not an instance of type `true`
 //│ fun f: (Num, B, C) -> 0

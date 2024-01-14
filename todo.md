@@ -3,11 +3,11 @@ problems located by test cases.
 
 ### Remaining Tasks
 
-- [ ] Report unreachable or redundant cases
+- [x] Report unreachable or redundant cases
   - [x] shared/src/test/diff/ucs/DirectLines.mls **OLD**
-  - [ ] shared/src/test/diff/ucs/SplitAnd.mls
-  - [ ] shared/src/test/diff/ucs/WeirdIf.mls
-  - [ ] shared/src/test/diff/ucs/Wildcard.mls
+  - [x] shared/src/test/diff/ucs/SplitAnd.mls
+  - [x] shared/src/test/diff/ucs/WeirdIf.mls
+  - [x] shared/src/test/diff/ucs/Wildcard.mls
 - [x] Hygenic bindings
   - [ ] shared/src/test/diff/ucs/CrossBranchCapture.mls
   - [x] shared/src/test/diff/ucs/HygienicBindings.mls
