@@ -185,7 +185,7 @@ final case class PolyType(targs: Ls[TypeName \/ TypeVar], body: Type) extends Ty
 
 // New Definitions AST
 
-final case class TypingUnit(entities: Ls[Statement]) extends TypingUnitImpl
+final case class TypingUnit(rawEntities: Ls[Statement]) extends TypingUnitImpl
 // final case class TypingUnit(entities: Ls[Statement]) extends TypeLike with PgrmOrTypingUnit with TypingUnitImpl
 
 final case class Signature(members: Ls[NuDecl], result: Opt[Type]) extends TypeLike with SignatureImpl

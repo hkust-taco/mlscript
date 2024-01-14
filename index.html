@@ -10,14 +10,16 @@
   <div id="content">
     <textarea id="mlscript-input" class="panel" spellcheck="false">
 type List[A] = Cons[A] | Nil
-class Cons[out A](head: A, tail: List[A])
-module Nil { fun size = 0 }
+
+class Cons[out A](head: A, tail: List[A]) {
+  fun map: (A -> 'B) -> List['B]
+  map(f) = Cons of f(head), tail.map(f)
+}
+module Nil {
+  fun map(f) = Nil
+}
 
 fun (::) cons(x, xs) = Cons(x, xs)
-
-fun map(f, xs) = if xs is
-  Cons(h, t) then Cons(f(h), map(f, t))
-  Nil        then Nil
 
 fun show(xs) =
   let rec go(xs) = if xs is
@@ -30,7 +32,7 @@ let xs = 1 :: 2 :: 3 :: Nil
 
 show(xs)
 
-show(map of x => succ(x), xs)
+show(xs.map of x => succ(x))
 </textarea>
 <!-- let rec recursive_monster = fun x ->
   { thing = x;
