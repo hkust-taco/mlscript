@@ -78,15 +78,15 @@ fun foo(x) = if x is Some of
   0 then 0
   1 then 1
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.79: 	  0 then 0
+//│ ║  l.78: 	  0 then 0
 //│ ╙──      	    ^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found operator application instead
-//│ ║  l.78: 	fun foo(x) = if x is Some of
+//│ ║  l.77: 	fun foo(x) = if x is Some of
 //│ ║        	                ^^^^^^^^^^^^
-//│ ║  l.79: 	  0 then 0
+//│ ║  l.78: 	  0 then 0
 //│ ║        	^^^
 //│ ╟── Note: 'if' expression starts here:
-//│ ║  l.78: 	fun foo(x) = if x is Some of
+//│ ║  l.77: 	fun foo(x) = if x is Some of
 //│ ╙──      	             ^^
 //│ fun foo: Some[0] -> ()
 

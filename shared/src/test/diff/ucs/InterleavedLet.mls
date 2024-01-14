@@ -37,7 +37,7 @@ fun p(x, y) =
     x is Some and y is None then 0
     y is Some and x is Some then 1
     x is Some and y is Some then 0
-//│ ╔══[ERROR] Found unexpected empty split
+//│ ╔══[ERROR] unexpected empty split found
 //│ ╙──
 //│ ╔══[ERROR] Scrutinee `y` has 1 missing case
 //│ ║  l.38: 	    y is Some and x is Some then 1

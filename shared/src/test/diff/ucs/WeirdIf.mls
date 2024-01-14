@@ -17,9 +17,14 @@ if else 0 else 1
 //│ res
 //│     = 0
 
-// FIXME
-// :w
+:w
 fun f(x) = if x is else 0 else 1
+//│ ╔══[WARNING] the case is unreachable
+//│ ║  l.21: 	fun f(x) = if x is else 0 else 1
+//│ ║        	                               ^
+//│ ╟── because this branch covers the case
+//│ ║  l.21: 	fun f(x) = if x is else 0 else 1
+//│ ╙──      	                        ^
 //│ fun f: anything -> 0
 
 fun f(x) = if x is else 0 
@@ -29,7 +34,7 @@ fun f(x) = if x is else 0
 if true
   then 0
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.30: 	  then 0
+//│ ║  l.35: 	  then 0
 //│ ║        	       ^
 //│ ╙── expression of type `Bool` is not an instance of type `true`
 //│ 0
@@ -43,21 +48,21 @@ fun f(x) =
   if x ===
     else "bruh"
 //│ ╔══[PARSE ERROR] Unexpected indented block in expression position
-//│ ║  l.44: 	    else "bruh"
+//│ ║  l.49: 	    else "bruh"
 //│ ╙──      	^^^^
 //│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
-//│ ║  l.44: 	    else "bruh"
+//│ ║  l.49: 	    else "bruh"
 //│ ╙──      	    ^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found operator application instead
-//│ ║  l.43: 	  if x ===
+//│ ║  l.48: 	  if x ===
 //│ ║        	     ^^^^^
-//│ ║  l.44: 	    else "bruh"
+//│ ║  l.49: 	    else "bruh"
 //│ ║        	^^^^
 //│ ╟── Note: 'if' expression starts here:
-//│ ║  l.43: 	  if x ===
+//│ ║  l.48: 	  if x ===
 //│ ╙──      	  ^^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.44: 	    else "bruh"
+//│ ║  l.49: 	    else "bruh"
 //│ ║        	    ^
 //│ ╙── expression of type `Bool` is not an instance of type `true`
 //│ fun f: Eql[()] -> ()

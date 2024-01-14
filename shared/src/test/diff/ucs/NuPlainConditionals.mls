@@ -58,6 +58,8 @@ fun foo(x) = x is
 //│ ║        	  ^^^^
 //│ ║  l.55: 	  Int
 //│ ╙──      	^^^^^
+//│ ╔══[WARNING] the case is unreachable
+//│ ╙── because this branch covers the case
 //│ fun foo: anything -> true
 
 // TODO proper error
@@ -65,41 +67,43 @@ fun foo(x) = x is
   Pair(a, b) and a > b
   Int
 //│ ╔══[ERROR] Unknown pattern {and(Pair(a, b,), >(a, b,),); Int}
-//│ ║  l.65: 	  Pair(a, b) and a > b
+//│ ║  l.67: 	  Pair(a, b) and a > b
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.66: 	  Int
+//│ ║  l.68: 	  Int
 //│ ╙──      	^^^^^
+//│ ╔══[WARNING] the case is unreachable
+//│ ╙── because this branch covers the case
 //│ fun foo: anything -> true
 
 // TODO support `|`
 fun foo1(x) = x is Pair(a, b) | Int
 fun foo2(x) = x is (Pair(a, b) and a > b) | Int
 //│ ╔══[ERROR] Unknown pattern '(' and(Pair(a, b,), >(a, b,),) ')'
-//│ ║  l.76: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
+//│ ║  l.80: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
 //│ ╙──      	                   ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] type identifier `|` not found
-//│ ║  l.76: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
+//│ ║  l.80: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
 //│ ╙──      	                                          ^
 //│ ╔══[ERROR] type identifier `Int` not found
-//│ ║  l.76: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
+//│ ║  l.80: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
 //│ ╙──      	                                            ^^^
 //│ ╔══[ERROR] identifier `|` not found
-//│ ║  l.76: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
+//│ ║  l.80: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
 //│ ╙──      	                                          ^
 //│ ╔══[ERROR] type identifier `|` not found
-//│ ║  l.75: 	fun foo1(x) = x is Pair(a, b) | Int
+//│ ║  l.79: 	fun foo1(x) = x is Pair(a, b) | Int
 //│ ╙──      	                              ^
 //│ ╔══[ERROR] type identifier `Int` not found
-//│ ║  l.75: 	fun foo1(x) = x is Pair(a, b) | Int
+//│ ║  l.79: 	fun foo1(x) = x is Pair(a, b) | Int
 //│ ╙──      	                                ^^^
 //│ ╔══[ERROR] identifier `|` not found
-//│ ║  l.75: 	fun foo1(x) = x is Pair(a, b) | Int
+//│ ║  l.79: 	fun foo1(x) = x is Pair(a, b) | Int
 //│ ╙──      	                              ^
 //│ ╔══[ERROR] type identifier not found: |
-//│ ║  l.75: 	fun foo1(x) = x is Pair(a, b) | Int
+//│ ║  l.79: 	fun foo1(x) = x is Pair(a, b) | Int
 //│ ╙──      	                              ^
 //│ ╔══[ERROR] type identifier not found: |
-//│ ║  l.76: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
+//│ ║  l.80: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
 //│ ╙──      	                                          ^
 //│ fun foo1: nothing -> error
 //│ fun foo2: nothing -> error

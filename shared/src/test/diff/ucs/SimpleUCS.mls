@@ -326,7 +326,7 @@ fun f(x) =
 //│ ╔══[ERROR] Syntactic split of patterns are not supported
 //│ ║  l.324: 	    0 ::
 //│ ╙──       	      ^^
-//│ ╔══[ERROR] Found unexpected empty split
+//│ ╔══[ERROR] unexpected empty split found
 //│ ╙──
 //│ fun f: anything -> nothing
 

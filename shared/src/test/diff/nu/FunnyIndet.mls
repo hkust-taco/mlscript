@@ -29,11 +29,14 @@
 
 
 :e // TODO support
+:w
 2 is
   2
 //│ ╔══[ERROR] Unknown pattern {2}
-//│ ║  l.33: 	  2
+//│ ║  l.34: 	  2
 //│ ╙──      	  ^
+//│ ╔══[WARNING] the case is unreachable
+//│ ╙── because this branch covers the case
 //│ true
 //│ res
 //│     = true
@@ -61,7 +64,7 @@ if 2 is
 2 then true
 1 then false
 //│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
-//│ ║  l.62: 	1 then false
+//│ ║  l.65: 	1 then false
 //│ ╙──      	^^^^^^^^^^^^
 //│ ()
 //│ res

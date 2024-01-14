@@ -41,6 +41,7 @@ reachable_1(None)
 //│ res
 //│     = 'tan'
 
+:w
 fun unreachable_1(x) =
   if x is
     _ and
@@ -48,4 +49,20 @@ fun unreachable_1(x) =
       else "screen"
     Some(xv) then "sin"
     None then "tan"
+//│ ╔══[WARNING] the case is unreachable
+//│ ║  l.46: 	  if x is
+//│ ║        	     ^^^^
+//│ ║  l.47: 	    _ and
+//│ ║        	^^^^^^^^^
+//│ ║  l.48: 	      f(x) then "tmux"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.49: 	      else "screen"
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.50: 	    Some(xv) then "sin"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.51: 	    None then "tan"
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╟── because this branch covers the case
+//│ ║  l.49: 	      else "screen"
+//│ ╙──      	           ^^^^^^^^
 //│ fun unreachable_1: (Object & ~#Some | Some[Eql[1]]) -> ("screen" | "tmux")

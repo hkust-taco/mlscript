@@ -1,24 +1,31 @@
 :PreTyper
 
 :e
+:w
 fun take_1(p) =
   if p is
     { x, y } then x + y
     else 0
 //│ ╔══[ERROR] Unknown pattern '{' {x: x, y: y} '}'
-//│ ║  l.6: 	    { x, y } then x + y
+//│ ║  l.7: 	    { x, y } then x + y
 //│ ╙──     	    ^^^^^^^^
+//│ ╔══[WARNING] the case is unreachable
+//│ ║  l.8: 	    else 0
+//│ ║       	         ^
+//│ ╟── because this branch covers the case
+//│ ║  l.7: 	    { x, y } then x + y
+//│ ╙──     	                  ^^^^^
 //│ ╔══[ERROR] identifier `x` not found
-//│ ║  l.6: 	    { x, y } then x + y
+//│ ║  l.7: 	    { x, y } then x + y
 //│ ╙──     	                  ^
 //│ ╔══[ERROR] identifier `y` not found
-//│ ║  l.6: 	    { x, y } then x + y
+//│ ║  l.7: 	    { x, y } then x + y
 //│ ╙──     	                      ^
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.6: 	    { x, y } then x + y
+//│ ║  l.7: 	    { x, y } then x + y
 //│ ╙──     	                  ^
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.6: 	    { x, y } then x + y
+//│ ║  l.7: 	    { x, y } then x + y
 //│ ╙──     	                      ^
 //│ fun take_1: anything -> Int
 //│ Code generation encountered an error:
