@@ -39,7 +39,7 @@ fun h0(a) =
 // If a class parameter is bound to the same variable in different branches,
 // the bindings can be merged and can be typed and coverage checked. See the
 // desugared version below.
-:dpt:postprocess.result
+:ucs:postprocess.result
 fun h0'(a) =
   if
     a is Some(x) and x is Left(y) then y
@@ -92,7 +92,7 @@ fun h2(a) =
     a is None then 0
 //│ fun h2: forall 'a. (None | Some[Left['a]]) -> (0 | 'a)
 
-:dpt:postprocess.result
+:ucs:postprocess.result
 fun h3(x, y, f, p) =
   if x is
     _ and f(x) is y and p(x) then y
@@ -125,7 +125,7 @@ h3("anything", "anything", _ => "not me", _ => false) ~~> "anyway"
 //│     = undefined
 
 
-:dpt:postprocess.result
+:ucs:postprocess.result
 fun h4(x, y, p) =
   if x is
     y and p(x) then y
@@ -158,7 +158,7 @@ h4("anything", "not me", _ => false)
 //│ res
 //│     = 'default'
 
-:dpt:postprocess.result
+:ucs:postprocess.result
 fun h5(x, y, p) =
   if x is
     Some(y) and p(x) then y

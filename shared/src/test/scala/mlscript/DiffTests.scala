@@ -6,7 +6,6 @@ import fastparse.Parsed.Success
 import sourcecode.Line
 import scala.collection.mutable
 import scala.collection.mutable.{Map => MutMap}
-import scala.collection.immutable
 import mlscript.utils._, shorthands._
 import mlscript.codegen.typescript.TsTypegenCodeBuilder
 import org.scalatest.{funsuite, ParallelTestExecution}
@@ -1136,7 +1135,7 @@ object DiffTests {
   }
 
   object PreTyperFlags {
-    private val pattern = "^dpt(?::\\s*([A-Za-z\\.-]+)(,\\s*[A-Za-z\\.-]+)*)?$".r
+    private val pattern = "^ucs(?::\\s*([A-Za-z\\.-]+)(,\\s*[A-Za-z\\.-]+)*)?$".r
     def unapply(flags: Str): Opt[Set[Str]] =
       flags match {
         case pattern(head, tail) =>

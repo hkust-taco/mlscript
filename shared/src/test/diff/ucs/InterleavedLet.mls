@@ -21,7 +21,7 @@ class Right[B](rightValue: B) extends Either[nothing, B]
 //│ class Left[A](leftValue: A) extends Either
 //│ class Right[B](rightValue: B) extends Either
 
-:dpt:normalize.result
+:ucs:normalize.result
 fun q(x) =
   if
     x is Some and x is Some and x is Some then 0
