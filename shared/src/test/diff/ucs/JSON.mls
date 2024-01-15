@@ -109,9 +109,9 @@ fun listJoin(xs, sep) =
 //│ where
 //│   'A <: 'A0
 
-type TreeMap[A] = Node[A] | Empty
+type TreeMap[out A] = Node[A] | Empty
 module Empty
-class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
+class Node[out A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
 fun insert(t, k, v) =
   if t is
     Node(k', _, l, r) and
@@ -136,7 +136,7 @@ fun traverse(t, f) =
 //│ class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
 //│ fun insert: forall 'A. (Empty | Node['A], Str, 'A) -> Node['A]
 //│ fun find: forall 'A0. (Empty | Node['A0], Str) -> (None | Some['A0])
-//│ fun traverse: forall 'A1 'A2. (Empty | Node['A1], (Str, 'A1) -> 'A2) -> (Cons['A2] | Nil)
+//│ fun traverse: forall 'a 'A1. (Empty | Node['a], (Str, 'a) -> 'A1) -> (Cons['A1] | Nil)
 
 type JsonValue = JsonNull | JsonNumber | JsonString | JsonBoolean | JsonObject | JsonArray
 module JsonNull {
@@ -245,7 +245,9 @@ fun expect(scanner, ch) =
       eq(ch)(ch') then ParseSuccess((), scanner.advance)
       else ParseFailure(concat4("expect '", ch, "' but found ", ch'), scanner)
     None then ParseFailure(concat3("expect '", ch, "' but found EOF"), scanner)
-//│ fun expect: (Scanner & {advance: Scanner}, Str) -> (ParseFailure | ParseSuccess[()])
+//│ fun expect: forall 'T. (Scanner & {advance: Scanner}, Str) -> (ParseFailure | ParseSuccess['T])
+//│   where
+//│     'T :> ()
 
 fun expectWord(scanner, word, result) =
   if
@@ -307,7 +309,7 @@ fun parse(scanner) =
 //│ fun parseElements: Scanner -> ParseResult[List[JsonValue]]
 //│ fun parseStringContent: anything -> ParseResult[Str]
 //│ fun parseNumber: anything -> ParseResult[JsonNumber]
-//│ fun parse: Scanner -> (ParseFailure | ParseSuccess[JsonArray | JsonBoolean | JsonNull | JsonObject | JsonString] | ParseResult[JsonNumber])
+//│ fun parse: forall 'T. Scanner -> (ParseFailure | ParseSuccess[in JsonValue & 'T out JsonNull | 'T | JsonBoolean | JsonString | JsonObject | JsonArray] | ParseResult[JsonNumber])
 
 :ng
 toString of parse of scan of "    true"

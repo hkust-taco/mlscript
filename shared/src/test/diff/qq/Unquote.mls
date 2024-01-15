@@ -40,7 +40,7 @@ code"a + a"
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.39: 	code"a + a"
 //│ ║        	     ^^^^^
-//│ ╟── code fragment of type `Code[error, nothing]` is not an instance of `Int`
+//│ ╟── code fragment of type `Code[error, nothing]` is not an instance of type `Int`
 //│ ║  l.26: 	let a = code"x"
 //│ ║        	        ^^^^^^^
 //│ ╟── but it flows into reference with expected type `Int`
@@ -54,7 +54,7 @@ code"a + b"
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.53: 	code"a + b"
 //│ ║        	     ^^^^^
-//│ ╟── code fragment of type `Code[error, nothing]` is not an instance of `Int`
+//│ ╟── code fragment of type `Code[error, nothing]` is not an instance of type `Int`
 //│ ║  l.26: 	let a = code"x"
 //│ ║        	        ^^^^^^^
 //│ ╟── but it flows into reference with expected type `Int`
@@ -170,7 +170,7 @@ code"y => ${c}"
 
 
 fun f(x, y) = [code"[${x}, ${y}]", x, y]
-//│ fun f: forall 'a 'b 'c 'd 'e. (Code['c, 'b] & 'a, Code['e, 'b] & 'd) -> [Code[['c, 'e], 'b], 'a, 'd]
+//│ fun f: forall 'a 'b 'c 'd 'e. (Code['d, 'b] & 'a, Code['c, 'b] & 'e) -> [Code[['d, 'c], 'b], 'a, 'e]
 
 
 

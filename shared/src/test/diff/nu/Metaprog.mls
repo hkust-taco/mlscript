@@ -9,7 +9,7 @@ class Code[out A, out Ctx]
 class IntLit(value: Int) extends Code[Int, nothing]
 //│ class IntLit(value: Int) extends Code
 
-class Add[C](lhs: Code[Int, C], rhs: Code[Int, C]) extends Code[Int, C]
+class Add[out C](lhs: Code[Int, C], rhs: Code[Int, C]) extends Code[Int, C]
 //│ class Add[C](lhs: Code[Int, C], rhs: Code[Int, C]) extends Code
 
 fun bind(x: Code['a, 'c], k: (forall 'cc: Code['a, 'cc] -> Code['b, 'cc])): Code['b, 'c] = k(x)

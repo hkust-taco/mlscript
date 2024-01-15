@@ -236,7 +236,7 @@ v1_tty = cons_ty2 1 nil_ty
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.235: 	v1_tty = cons_ty2 1 nil_ty
 //│ ║         	         ^^^^^^^^^^^^^^^^^
-//│ ╟── type `Z` is not an instance of `S['n & 'p]`
+//│ ╟── type `Z` is not an instance of type `S`
 //│ ║  l.39: 	nil_ty = nil : Vec[int, Z]
 //│ ║        	                        ^
 //│ ╟── Note: constraint arises from applied type reference:
@@ -403,7 +403,7 @@ sum v1_ty
 //│ ╟── type `Cons[int, Z]` is not a function
 //│ ║  l.187: 	v1_ty = v1_ : Cons[int, Z]
 //│ ║         	              ^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(forall ?a ?b. ?a -> ?b) -> ?c`
+//│ ╟── but it flows into reference with expected type `(forall ?a ?b. ?b -> ?a) -> ?c`
 //│ ║  l.+1: 	sum v1_ty
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from application:

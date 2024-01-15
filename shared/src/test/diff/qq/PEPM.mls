@@ -125,7 +125,7 @@ code"x => ${ test(run) }"
 //│ ╟── • this reference:
 //│ ║  l.113: 	  code"x => x + ${f(code"x + 1")}"
 //│ ╙──       	                  ^
-//│ Code[anything -> Int -> Int, nothing]
+//│ Code[anything -> nothing, nothing]
 
 :ne
 fun assertNotZero(x) =

@@ -8,7 +8,7 @@ code"x => y => 100 + ${Const(x + y)}"
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.7: 	code"x => y => 100 + ${Const(x + y)}"
 //│ ║       	                             ^^^^^
-//│ ╟── reference of type `Var[?a, ?x]` is not an instance of `Int`
+//│ ╟── reference of type `Var[?a, ?x]` is not an instance of type `Int`
 //│ ║  l.7: 	code"x => y => 100 + ${Const(x + y)}"
 //│ ╙──     	                             ^
 //│ Code[anything -> anything -> Int, nothing]

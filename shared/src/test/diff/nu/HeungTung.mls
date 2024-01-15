@@ -57,19 +57,19 @@ fun f = id
 fun h: (Int -> (Int | Bool)) & (Bool -> (Int | Bool))
 fun h = f
 //│ fun h: Int -> Int & Bool -> Bool
-//│ fun h: (Bool | Int) -> (Int | false | true)
+//│ fun h: (Int | false | true) -> (Int | false | true)
 
 // * Merge intersected functions with same domain
 fun g: (Int | Bool) -> (Int | Bool)
 fun g = h
-//│ fun g: (Bool | Int) -> (Int | false | true)
-//│ fun g: (Bool | Int) -> (Int | false | true)
+//│ fun g: (Int | false | true) -> (Int | false | true)
+//│ fun g: (Int | false | true) -> (Int | false | true)
 
 // * In one step
 fun g: (Int | Bool) -> (Int | Bool)
 fun g = f
 //│ fun g: Int -> Int & Bool -> Bool
-//│ fun g: (Bool | Int) -> (Int | false | true)
+//│ fun g: (Int | false | true) -> (Int | false | true)
 
 
 // * Can also widen into intersection
@@ -114,7 +114,7 @@ f(0)
 
 
 x => f(x)
-//│ (Bool | Int) -> (Int | false | true)
+//│ (Int | false | true) -> (Int | false | true)
 //│ res
 //│     = [Function: res]
 
@@ -226,7 +226,7 @@ f: (Int -> Int) & (Bool -> Bool)
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.225: 	f: (Int -> Int) & (Bool -> Bool)
 //│ ║         	^
-//│ ╟── type `Bool` is not an instance of `Int`
+//│ ╟── type `Bool` is not an instance of type `Int`
 //│ ║  l.225: 	f: (Int -> Int) & (Bool -> Bool)
 //│ ║         	                   ^^^^
 //│ ╟── Note: constraint arises from type reference:

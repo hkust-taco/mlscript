@@ -12,7 +12,7 @@ class TSProgram(filenames: Seq[String]) {
 
   val globalNamespace = TSNamespace()
   
-  implicit val checker = TSTypeChecker(program.getTypeChecker())
+  implicit val checker: TSTypeChecker = TSTypeChecker(program.getTypeChecker())
   filenames.foreach(filename => TSSourceFile(program.getSourceFile(filename), globalNamespace))
 
   def generate(writer: JSWriter): Unit = globalNamespace.generate(writer, "")

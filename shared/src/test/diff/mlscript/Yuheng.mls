@@ -40,7 +40,7 @@ f a2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.39: 	f a2
 //│ ║        	^^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.34: 	a2 = A { x = 0: number }
 //│ ║        	                ^^^^^^
 //│ ╟── Note: constraint arises from type reference:

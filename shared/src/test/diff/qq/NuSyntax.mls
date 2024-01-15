@@ -64,14 +64,14 @@ run(x `=> x)(42)
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.60: 	1 + `2 `+ `3
 //│ ║        	^^^^^^
-//│ ╟── code fragment of type `Code[2, nothing]` is not an instance of `Int`
+//│ ╟── code fragment of type `Code[2, nothing]` is not an instance of type `Int`
 //│ ║  l.60: 	1 + `2 `+ `3
 //│ ╙──      	    ^^
 //│ ╔══[ERROR] Type mismatch in unquote:
 //│ ║  l.60: 	1 + `2 `+ `3
 //│ ║        	^^^^^^
-//│ ╙── operator application of type `Int` is not an instance of `Code[?a, ?b]`
-//│ Code[Int, nothing]
+//│ ╙── operator application of type `Int` is not an instance of type `Code`
+//│ Code[Int, error]
 
 :e
 :p
@@ -82,7 +82,7 @@ run(x `=> x)(42)
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.78: 	`1 `+ `2 + 3
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── code fragment of type `Code[?a, ?b | ?c]` is not an instance of `Int`
+//│ ╟── code fragment of type `Code[?a, ?b | ?c]` is not an instance of type `Int`
 //│ ║  l.78: 	`1 `+ `2 + 3
 //│ ╙──      	^^^^^^^^
 //│ Int | error
@@ -98,13 +98,13 @@ z `=> z + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.97: 	z `=> z + 1
 //│ ║        	      ^^^^^
-//│ ╟── reference of type `Var[?a, ?z]` is not an instance of `Int`
+//│ ╟── reference of type `Var[?a, ?z]` is not an instance of type `Int`
 //│ ║  l.97: 	z `=> z + 1
 //│ ╙──      	      ^
 //│ ╔══[ERROR] Type mismatch in unquote:
 //│ ║  l.97: 	z `=> z + 1
 //│ ║        	      ^^^^^
-//│ ╙── operator application of type `Int` is not an instance of `Code[?a, ?b]`
+//│ ╙── operator application of type `Int` is not an instance of type `Code`
 //│ Code[anything -> error, nothing]
 
 

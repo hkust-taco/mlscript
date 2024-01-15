@@ -327,7 +327,7 @@ fun mk(n) = if n is
   _ then Scale(Vector(0, 0), mk(n))
 //│ fun mk: forall 'a. Object -> 'a
 //│   where
-//│     'a :> Outside['a] | Translate['a] | Scale['a] | Union['a] | Intersect['a]
+//│     'a :> Outside['a] | Intersect['a] | Translate['a] | Scale['a] | Union['a]
 
 :re
 TestElim.eliminate(mk(100))

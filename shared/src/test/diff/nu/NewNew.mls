@@ -134,7 +134,7 @@ new Foo()
 
 
 
-class PoInt[A](x: A, y: A)
+class PoInt[out A](x: A, y: A)
 //│ class PoInt[A](x: A, y: A)
 
 new PoInt(1, 2)

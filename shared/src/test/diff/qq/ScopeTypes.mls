@@ -78,7 +78,7 @@ code"x => ${ test(myrun) }"
 //│ ╟── • this reference:
 //│ ║  l.63: 	  code"x => x + ${f(code"x + 1")}"
 //│ ╙──      	                  ^
-//│ Code[anything -> Int -> Int, nothing]
+//│ Code[anything -> nothing, nothing]
 
 :e
 code"x => ${ test(c => run(c), code"0") }"
@@ -96,7 +96,7 @@ code"x => ${ test(c => run(c), code"x") }"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.95: 	code"x => ${ test(c => run(c), code"x") }"
 //│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── argument list of type `[forall ?a ?b. ?b -> ?a, Code[?c, ?x]]` does not match type `[?d]`
+//│ ╟── argument list of type `[forall ?a ?b. ?a -> ?b, Code[?c, ?x]]` does not match type `[?d]`
 //│ ║  l.95: 	code"x => ${ test(c => run(c), code"x") }"
 //│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^
 //│ Code[anything -> Int -> Int, nothing]
@@ -107,7 +107,7 @@ fun test2(a) = code"x => ${ test(c => run(c), a) }"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.106: 	fun test2(a) = code"x => ${ test(c => run(c), a) }"
 //│ ║         	                            ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── argument list of type `[forall ?a ?b. ?a -> ?b, ?c]` does not match type `[?d]`
+//│ ╟── argument list of type `[forall ?a ?b. ?b -> ?a, ?c]` does not match type `[?d]`
 //│ ║  l.106: 	fun test2(a) = code"x => ${ test(c => run(c), a) }"
 //│ ╙──       	                                ^^^^^^^^^^^^^^^^
 //│ fun test2: anything -> Code[anything -> Int -> Int, nothing]
