@@ -108,7 +108,7 @@ u(MkU(1, true))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.107: 	u(MkU(1, true))
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ╟── reference of type `true` is not an instance of type `Int`
+//│ ╟── reference of type `true` is not an instance of `Int`
 //│ ║  l.107: 	u(MkU(1, true))
 //│ ║         	         ^^^^
 //│ ╟── Note: constraint arises from type reference:

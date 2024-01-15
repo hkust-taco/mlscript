@@ -1080,13 +1080,13 @@ abstract class TyperHelpers { Typer: Typer =>
           }
         case N =>
       }
-      expandWith(paramTags = true)
+      expandWith(paramTags = true, selfTy = true)
     }
     def expandOrCrash(implicit ctx: Ctx): SimpleType = {
       require(canExpand)
-      expandWith(paramTags = true)
+      expandWith(paramTags = true, selfTy = true)
     }
-    def expandWith(paramTags: Bool)(implicit ctx: Ctx): SimpleType =
+    def expandWith(paramTags: Bool, selfTy: Bool)(implicit ctx: Ctx): SimpleType =
       ctx.tyDefs2.get(defn.name).map { info =>
         lazy val mkTparamRcd = RecordType(info.tparams.lazyZip(targs).map {
             case ((tn, tv, vi), ta) =>
@@ -1104,7 +1104,7 @@ abstract class TyperHelpers { Typer: Typer =>
             assert(td.tparams.size === targs.size)
             // println(s"EXP ${td.sign}")
             val (freshenMap, _) = refreshHelper2(td, Var(td.name).withLoc(prov.loco), S(targs)) // infer ty args if not provided
-            val freshSelf = {
+            val freshSelf = if (!selfTy) TopType else {
               implicit val freshened: MutMap[TV, ST] = freshenMap
               implicit val shadows: Shadows = Shadows.empty
               td.sign.freshenAbove(td.level, rigidify = false)
@@ -1116,7 +1116,7 @@ abstract class TyperHelpers { Typer: Typer =>
           case S(td: TypedNuCls) =>
             assert(td.tparams.size === targs.size)
             val (freshenMap, _) = refreshHelper2(td, Var(td.name).withLoc(prov.loco), S(targs)) // infer ty args if not provided
-            val freshSelf = {
+            val freshSelf = if (!selfTy) TopType else {
               implicit val freshened: MutMap[TV, ST] = freshenMap
               implicit val shadows: Shadows = Shadows.empty
               td.sign.freshenAbove(td.level, rigidify = false)
@@ -1166,6 +1166,15 @@ abstract class TyperHelpers { Typer: Typer =>
     } //tap { res => println(s"Expand $this => $res") }
     private var tag: Opt[Opt[ClassTag]] = N
     def expansionFallback(implicit ctx: Ctx): Opt[ST] = mkClsTag
+    /** Note: self types can be inherited from parents if the definition is abstract
+      * (if it is not abstract, then the class is already known to subtype the inherited self-type) */
+    def mayHaveTransitiveSelfType(implicit ctx: Ctx): Bool = ctx.tyDefs2.get(defn.name) match {
+      case S(lti) => lti.decl match {
+        case td: NuTypeDef if !td.isAbstract => td.sig.nonEmpty
+        case _ => true
+      }
+      case _ => true
+    }
     def mkClsTag(implicit ctx: Ctx): Opt[ClassTag] = tag.getOrElse {
       val res = ctx.tyDefs.get(defn.name) match {
         case S(td: TypeDef) if (td.kind is Cls) || (td.kind is Mod) =>

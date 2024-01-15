@@ -562,7 +562,7 @@ class QQ(qq: Str) {
 //│ ║         	^^^^^^^^^^^^
 //│ ║  l.548: 	  }
 //│ ║         	^^^
-//│ ╟── type `Int` is not an instance of `Str`
+//│ ╟── type `Int` is not an instance of type `Str`
 //│ ║  l.545: 	  constructor(foo: Int) {
 //│ ║         	                   ^^^
 //│ ╟── but it flows into reference with expected type `Str`

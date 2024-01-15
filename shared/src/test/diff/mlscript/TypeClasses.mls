@@ -257,23 +257,23 @@ class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+5: 	    Complex (this.base.Add self.real that.real) (this.base.Add self.imaginary that.imaginary)
 //│ ║        	             ^^^^^^^^^^^^^
-//│ ╟── type `Monoid[A]` is not an instance of `ComplexMonoid_bad_2[?A]`
+//│ ╟── type `Monoid[A]` is not an instance of type `ComplexMonoid_bad_2`
 //│ ║  l.+1: 	class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║        	                                                           ^^^^^^^^^
-//│ ╟── but it flows into field selection with expected type `ComplexMonoid_bad_2[?A]`
+//│ ╟── but it flows into field selection with expected type `ComplexMonoid_bad_2[?]`
 //│ ║  l.+5: 	    Complex (this.base.Add self.real that.real) (this.base.Add self.imaginary that.imaginary)
 //│ ╙──      	             ^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.+5: 	    Complex (this.base.Add self.real that.real) (this.base.Add self.imaginary that.imaginary)
 //│ ║        	                                                 ^^^^^^^^^^^^^
-//│ ╟── type `Monoid[A]` is not an instance of `ComplexMonoid_bad_2[?A]`
+//│ ╟── type `Monoid[A]` is not an instance of type `ComplexMonoid_bad_2`
 //│ ║  l.+1: 	class ComplexMonoid_bad_2[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║        	                                                           ^^^^^^^^^
-//│ ╟── but it flows into field selection with expected type `ComplexMonoid_bad_2[?A]`
+//│ ╟── but it flows into field selection with expected type `ComplexMonoid_bad_2[?]`
 //│ ║  l.+5: 	    Complex (this.base.Add self.real that.real) (this.base.Add self.imaginary that.imaginary)
 //│ ╙──      	                                                 ^^^^^^^^^
 //│ Defined class ComplexMonoid_bad_2[=A]
 //│ Defined ComplexMonoid_bad_2.Add: ComplexMonoid_bad_2['A] -> {imaginary: 'A, real: 'A} -> {imaginary: 'A, real: 'A} -> Complex['A]
-//│ Defined ComplexMonoid_bad_2.Add2: ComplexMonoid_bad_2['A] -> Complex[{imaginary: 'A0, real: 'A0}] -> Complex[{imaginary: 'A0, real: 'A0}] -> (Complex[Complex['A0] | error] & {imaginary: Complex['A0] | error, real: Complex['A0] | error})
+//│ Defined ComplexMonoid_bad_2.Add2: ComplexMonoid_bad_2['A] -> Complex[?] -> Complex[?] -> Complex[error]
 
 

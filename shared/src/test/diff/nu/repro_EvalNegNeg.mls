@@ -1,9 +1,9 @@
 :NewDefs
 
 
-class Add<E>(lhs: E, rhs: E)
+class Add<out E>(lhs: E, rhs: E)
 class Lit(n: Int)
-class Neg<A>(expr: A)
+class Neg<out A>(expr: A)
 //│ class Add[E](lhs: E, rhs: E)
 //│ class Lit(n: Int)
 //│ class Neg[A](expr: A)
@@ -46,8 +46,8 @@ TestLang.eval(mk(0))
 //│ Int
 //│ res
 //│     = 0
-//│ constrain calls  : 292
-//│ annoying  calls  : 96
-//│ subtyping calls  : 4395
+//│ constrain calls  : 310
+//│ annoying  calls  : 54
+//│ subtyping calls  : 3200
 
 

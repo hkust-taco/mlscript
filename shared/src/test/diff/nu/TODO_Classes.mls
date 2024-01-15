@@ -87,7 +87,7 @@ new C { val x = 1 }
 // *** Path-dependent types *** //
 
 
-class Cls[A] { fun x: A = x }
+class Cls[out A] { fun x: A = x }
 //│ class Cls[A] {
 //│   constructor()
 //│   fun x: A
@@ -117,6 +117,53 @@ let y: c.A = c.x
 
 
 // *** GADTs *** //
+
+
+class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
+//│ class Cls[A] {
+//│   constructor()
+//│   fun g: A -> Int
+//│   fun x: A
+//│ }
+
+
+:e // TODO
+fun test(a: Object) = if a is
+  Cls then a.x
+  else error
+//│ fun test: (a: Object) -> (??A & ??A0)
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
+
+:e // TODO
+fun test(a: Object) = if a is
+  Cls then a.g(a.x) // a.x : a.A ; a.g : a.A -> a.A
+  else 0
+//│ fun test: (a: Object) -> Int
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
+
+
+class Cls[out A] { fun x: A = x }
+//│ class Cls[A] {
+//│   constructor()
+//│   fun x: A
+//│ }
+
+fun test(a: Object) = if a is
+  Cls then a.x
+  else error
+//│ fun test: (a: Object) -> (??A & ??A0)
+
+fun test(a: Object) = if a is
+  Cls then a
+  else error
+//│ fun test: (a: Object) -> Cls[??A & ??A0]
+
+:re
+test(0).x
+//│ ??A & ??A0
+//│ res
+//│ Runtime error:
+//│   Error: an error was thrown
 
 
 // class Expr[T] {
@@ -151,7 +198,15 @@ fun test(f: ((IntLit | BoolLit) -> Int)) =
   f : Expr[anything] -> Int
 //│ fun test: (f: (BoolLit | IntLit) -> Int) -> Expr[anything] -> Int
 
+:e
 class OopsLit() extends Expr[Bool]
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.202: 	class OopsLit() extends Expr[Bool]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `#OopsLit` does not match type `BoolLit | IntLit`
+//│ ╟── Note: constraint arises from union type:
+//│ ║  l.190: 	abstract class Expr[A]: (IntLit | BoolLit) {}
+//│ ╙──       	                        ^^^^^^^^^^^^^^^^^^
 //│ class OopsLit() extends Expr
 
 fun test(a) = if a is

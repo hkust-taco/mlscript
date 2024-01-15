@@ -1,12 +1,47 @@
 :NewDefs
 
 
-class Exp[A]: Pair | Lit
+
+// * Variant:
+
+abstract class Exp[out A]: Pair | Lit
+class Lit(val n: Int) extends Exp[Int]
+class Pair[out L, out R](val lhs: Exp[L], val rhs: Exp[R]) extends Exp[[L, R]]
+//│ abstract class Exp[A]: Lit | Pair[anything, anything]
+//│ class Lit(n: Int) extends Exp
+//│ class Pair[L, R](lhs: Exp[L], rhs: Exp[R]) extends Exp
+
+
+fun f(p: Pair['a, 'b]) = p.lhs
+//│ fun f: forall 'a. (p: Pair['a, anything]) -> Exp['a]
+
+fun f(e) = if e is
+  Pair(l, r) then [l, r]
+//│ fun f: forall 'L 'R. Pair['L, 'R] -> [Exp[??L & 'L], Exp[??R & 'R]]
+// f: (Exp['a] & Pair) -> 0
+
+fun f(e) = if e is
+  Pair(l, r) then [l, r]
+  Lit(n) then n
+//│ fun f: forall 'L 'R. (Lit | Pair['L, 'R]) -> (Int | [Exp[??L & 'L], Exp[??R & 'R]])
+
+(e: Exp['X]) => f(e)
+//│ (e: Exp[anything]) -> (Int | [Exp[??L & ??L0], Exp[??R & ??R0]])
+//│ res
+//│     = [Function: res]
+
+fun f(e) = if e is
+  Pair(l, r) then f(l) + f(r)
+  Lit(n) then n
+//│ fun f: (Lit | Pair[anything, anything]) -> Int
+
+
+// * Invariant:
+
+abstract class Exp[A]: Pair | Lit
 class Lit(val n: Int) extends Exp[Int]
 class Pair[L, R](val lhs: Exp[L], val rhs: Exp[R]) extends Exp[[L, R]]
-//│ class Exp[A]: Lit | Pair[?, ?] {
-//│   constructor()
-//│ }
+//│ abstract class Exp[A]: Lit | Pair[?, ?]
 //│ class Lit(n: Int) extends Exp
 //│ class Pair[L, R](lhs: Exp[L], rhs: Exp[R]) extends Exp
 
@@ -14,29 +49,27 @@ class Pair[L, R](val lhs: Exp[L], val rhs: Exp[R]) extends Exp[[L, R]]
 fun f(p: Pair['a, 'b]) = p.lhs
 //│ fun f: forall 'a 'b. (p: Pair['a, 'b]) -> Exp['a]
 
-
 fun f(e) = if e is
   Pair(l, r) then [l, r]
-//│ fun f: forall 'L 'L0 'R 'R0. (Pair[in 'L out 'L0, in 'R out 'R0] & {Pair#L :> 'L0 <: 'L, Pair#R :> 'R0 <: 'R}) -> [Exp[in 'L0 & 'L | ??L out ??L0 & 'L], Exp[in 'R0 & 'R | ??R out ??R0 & 'R]]
+//│ fun f: forall 'R 'L 'L0 'R0. (Pair[in 'L out 'L0, in 'R0 out 'R] & {Pair#L :> 'L0 <: 'L, Pair#R :> 'R <: 'R0}) -> [Exp[in 'L0 & 'L | ??L out ??L0 & 'L], Exp[in 'R & 'R0 | ??R out ??R0 & 'R0]]
 // f: (Exp['a] & Pair) -> 0
-
 
 fun f(e) = if e is
   Pair(l, r) then [l, r]
   Lit(n) then n
-//│ fun f: forall 'L 'R 'R0 'L0. (Lit | Pair[in 'L0 out 'L, in 'R out 'R0] & {Pair#L :> 'L <: 'L0, Pair#R :> 'R0 <: 'R}) -> (Int | [Exp[in 'L & 'L0 | ??L out ??L0 & 'L0], Exp[in 'R0 & 'R | ??R out ??R0 & 'R]])
+//│ fun f: forall 'L 'L0 'R 'R0. (Lit | Pair[in 'L out 'L0, in 'R out 'R0] & {Pair#L :> 'L0 <: 'L, Pair#R :> 'R0 <: 'R}) -> (Int | [Exp[in 'L0 & 'L | ??L out ??L0 & 'L], Exp[in 'R0 & 'R | ??R out ??R0 & 'R]])
 
 // :e
 (e: Exp['X]) => f(e)
-//│ forall 'X 'L 'R. (e: Exp['X]) -> (Int | [Exp[in ??L | ??L0 & 'L out ??L1 & ('L | ??L2)], Exp[in ??R | ??R0 & 'R out ??R1 & ('R | ??R2)]])
+//│ forall 'X 'L 'R. (e: Exp['X]) -> (Int | [Exp[in ??L & 'L | ??L0 out ??L1 & (??L2 | 'L)], Exp[in ??R & 'R | ??R0 out ??R1 & (??R2 | 'R)]])
 //│ res
 //│     = [Function: res]
 
-
-// :e
+:e
 fun f(e) = if e is
   Pair(l, r) then f(l) + f(r)
   Lit(n) then n
 //│ fun f: (Lit | Pair[in anything out nothing, in anything out nothing]) -> Int
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 

@@ -953,7 +953,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   }
               }
             } else {
-              (tr1.mkClsTag, tr2.mkClsTag) match {
+              if (tr1.mayHaveTransitiveSelfType) rec(tr1.expand, tr2.expand, true)
+              else (tr1.mkClsTag, tr2.mkClsTag) match {
                 case (S(tag1), S(tag2)) if !(tag1 <:< tag2) =>
                   reportError()
                 case _ =>

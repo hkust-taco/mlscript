@@ -1,12 +1,10 @@
 :NewDefs
 
 
-class Exp[A]: Pair | Lit
+abstract class Exp[A]: Pair | Lit
 class Lit(n: Int) extends Exp[Int]
 class Pair[L, R](val lhs: L, val rhs: R) extends Exp[[L, R]]
-//│ class Exp[A]: Lit | Pair[anything, anything] {
-//│   constructor()
-//│ }
+//│ abstract class Exp[A]: Lit | Pair[anything, anything]
 //│ class Lit(n: Int) extends Exp
 //│ class Pair[L, R](lhs: L, rhs: R) extends Exp
 
@@ -36,7 +34,7 @@ fun f(e) = if e is
 fun f(e) = if e is
   Pair['a, 'b](l, r) then [l, r]
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.37: 	  Pair['a, 'b](l, r) then [l, r]
+//│ ║  l.35: 	  Pair['a, 'b](l, r) then [l, r]
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^
 //│ fun f: anything -> error
 //│ Code generation encountered an error:
@@ -46,13 +44,10 @@ fun f(e) = if e is
 :e // TODO support
 fun f(e) = if e is
   Pair(l: a, r) then
-    fun f(x: a) = x
+    let f(x: a) = x
     f(l)
-//│ ╔══[ERROR] Cannot use `val` or `fun` in local block; use `let` instead.
-//│ ║  l.49: 	    fun f(x: a) = x
-//│ ╙──      	    ^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: l
-//│ ║  l.50: 	    f(l)
+//│ ║  l.48: 	    f(l)
 //│ ╙──      	      ^
 //│ fun f: forall 'L. Pair['L, anything] -> (error | ??L & 'L)
 //│ Code generation encountered an error:

@@ -50,7 +50,7 @@ Cls2(0) === Cls2(1)
 
 
 
-class Pair[A](val fst: A, val snd: A)
+class Pair[out A](val fst: A, val snd: A)
 //  extends (A <: Eql[A]) => Eql[Pair[A]]
 //│ class Pair[A](fst: A, snd: A)
 
@@ -141,7 +141,7 @@ q === q
 //│     = true
 
 
-class Pair2[A, B](val fst: A, val snd: B)
+class Pair2[out A, out B](val fst: A, val snd: B)
 //│ class Pair2[A, B](fst: A, snd: B)
 
 let q = Pair2(1, "oops")
@@ -156,7 +156,7 @@ q === q
 
 
 
-class MP[Col](val color: Col)
+class MP[out Col](val color: Col)
 //│ class MP[Col](color: Col)
 
 val mp = MP(1)

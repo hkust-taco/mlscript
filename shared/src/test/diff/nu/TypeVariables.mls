@@ -17,7 +17,28 @@ fun x: forall 'a: 'a -> 'a = succ
 //│ ╙──     	              ^^
 //│ fun x: forall 'a. 'a -> 'a
 
-fun x: [Int -> Int,] = [id : forall 'a: 'a -> 'a,]
+fun x: [Int -> Int] = [id : forall 'a: 'a -> 'a]
+//│ fun x: [Int -> Int]
+
+:pe
+:e
+fun x: [Int -> Int] = [id : forall 'a: 'a -> 'a,]
+//│ ╔══[PARSE ERROR] Unexpected end of square bracket section; an expression was expected here
+//│ ║  l.25: 	fun x: [Int -> Int] = [id : forall 'a: 'a -> 'a,]
+//│ ╙──      	                                                ^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.25: 	fun x: [Int -> Int] = [id : forall 'a: 'a -> 'a,]
+//│ ║        	                       ^^
+//│ ╙── expression of type `[anything, ?a]` does not match type `[?b]`
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.25: 	fun x: [Int -> Int] = [id : forall 'a: 'a -> 'a,]
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `[Int]` does not match type `[anything, ?a]`
+//│ ║  l.25: 	fun x: [Int -> Int] = [id : forall 'a: 'a -> 'a,]
+//│ ╙──      	        ^^^
+//│ fun x: [Int -> Int]
+
+fun x: [Int -> Int,] = [id : forall 'a: 'a -> 'a]
 //│ fun x: [Int -> Int]
 
 

@@ -14,7 +14,7 @@ C.x
 //│ ╔══[ERROR] Type mismatch in reference:
 //│ ║  l.12: 	module C extends T, M(false)
 //│ ║        	                      ^^^^^
-//│ ╟── reference of type `false` is not an instance of type `Int`
+//│ ╟── reference of type `false` is not an instance of `Int`
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.4: 	trait T { fun x: Int }
 //│ ║       	                 ^^^

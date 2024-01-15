@@ -11,7 +11,7 @@ class A00: S00[int] & T00[string]
 //│ ╔══[ERROR] Type mismatch in type definition:
 //│ ║  l.10: 	class A00: S00[int] & T00[string]
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of `string`
+//│ ╟── type `int` is not an instance of type `string`
 //│ ║  l.10: 	class A00: S00[int] & T00[string]
 //│ ║        	               ^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -20,7 +20,7 @@ class A00: S00[int] & T00[string]
 //│ ╔══[ERROR] Type mismatch in type definition:
 //│ ║  l.10: 	class A00: S00[int] & T00[string]
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `string` is not an instance of `int`
+//│ ╟── type `string` is not an instance of type `int`
 //│ ║  l.10: 	class A00: S00[int] & T00[string]
 //│ ║        	                          ^^^^^^
 //│ ╟── Note: constraint arises from type reference:

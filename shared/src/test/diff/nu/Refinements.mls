@@ -33,7 +33,9 @@ class C[A](val a: A) extends D()
 //│ }
 
 C(1)
-//│ C[1]
+//│ C['A]
+//│   where
+//│     'A :> 1
 //│ res
 //│     = C {}
 
@@ -60,11 +62,11 @@ let r = {}
 :e
 r : Object
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.61: 	r : Object
+//│ ║  l.63: 	r : Object
 //│ ║        	^
 //│ ╟── reference of type `anything` is not an instance of type `Object`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.61: 	r : Object
+//│ ║  l.63: 	r : Object
 //│ ╙──      	    ^^^^^^
 //│ Object
 //│ res
@@ -79,7 +81,7 @@ r with { x: 1 }
 :e // TODO support
 let r = new {}
 //│ ╔══[ERROR] Unexpected type `anything` after `new` keyword
-//│ ║  l.80: 	let r = new {}
+//│ ║  l.82: 	let r = new {}
 //│ ╙──      	            ^^
 //│ let r: error
 //│ Code generation encountered an error:
@@ -106,16 +108,16 @@ let r = { x: 0 }
 :e
 r : Object
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.107: 	r : Object
+//│ ║  l.109: 	r : Object
 //│ ║         	^
 //│ ╟── record literal of type `{x: 0}` is not an instance of type `Object`
-//│ ║  l.101: 	let r = { x: 0 }
+//│ ║  l.103: 	let r = { x: 0 }
 //│ ║         	             ^
 //│ ╟── but it flows into reference with expected type `Object`
-//│ ║  l.107: 	r : Object
+//│ ║  l.109: 	r : Object
 //│ ║         	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.107: 	r : Object
+//│ ║  l.109: 	r : Object
 //│ ╙──       	    ^^^^^^
 //│ Object
 //│ res
@@ -140,16 +142,16 @@ o : {}
 :e
 o : Object
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.141: 	o : Object
+//│ ║  l.143: 	o : Object
 //│ ║         	^
 //│ ╟── type `anything` is not an instance of type `Object`
-//│ ║  l.134: 	fun o : {}
+//│ ║  l.136: 	fun o : {}
 //│ ║         	        ^^
 //│ ╟── but it flows into reference with expected type `Object`
-//│ ║  l.141: 	o : Object
+//│ ║  l.143: 	o : Object
 //│ ║         	^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.141: 	o : Object
+//│ ║  l.143: 	o : Object
 //│ ╙──       	    ^^^^^^
 //│ Object
 
@@ -171,10 +173,10 @@ o : Object
 :e
 let d = D & { f: 0 }
 //│ ╔══[ERROR] Illegal use of reserved operator: &
-//│ ║  l.172: 	let d = D & { f: 0 }
+//│ ║  l.174: 	let d = D & { f: 0 }
 //│ ╙──       	          ^
 //│ ╔══[ERROR] identifier not found: &
-//│ ║  l.172: 	let d = D & { f: 0 }
+//│ ║  l.174: 	let d = D & { f: 0 }
 //│ ╙──       	          ^
 //│ let d: error
 

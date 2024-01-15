@@ -62,6 +62,29 @@ fun foo(f) = if f is
 abstract class Foo[type T]: Bar | Baz[T]
 class Bar extends Foo[Int]
 class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.64: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `T` is not a 1-element tuple
+//│ ║  l.64: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ║        	          ^
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.64: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ║        	                                        ^^^
+//│ ╟── Note: type parameter T is defined at:
+//│ ║  l.62: 	abstract class Foo[type T]: Bar | Baz[T]
+//│ ╙──      	                        ^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.64: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `[T]` does not match type `T`
+//│ ║  l.64: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ║        	                                        ^^^
+//│ ╟── Note: constraint arises from type parameter:
+//│ ║  l.64: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ╙──      	          ^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ abstract class Foo[T]: Bar | Baz[T]
 //│ class Bar extends Foo {
 //│   constructor()
@@ -107,17 +130,17 @@ fun foo(x) = if x is
     C1(c) then c : x.T
     C2    then 0 : x.T
 //│ ╔══[ERROR] Type error in definition
-//│ ║  l.106: 	fun foo(x) = if x is
+//│ ║  l.129: 	fun foo(x) = if x is
 //│ ║         	    ^^^^^^^^^^^^^^^^
-//│ ║  l.107: 	    C1(c) then c : x.T
+//│ ║  l.130: 	    C1(c) then c : x.T
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.108: 	    C2    then 0 : x.T
+//│ ║  l.131: 	    C2    then 0 : x.T
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.107: 	    C1(c) then c : x.T
+//│ ║  l.130: 	    C1(c) then c : x.T
 //│ ║         	                    ^^
 //│ ╟── into type `'T | ~??A`
-//│ ║  l.105: 	fun foo: C['T] -> 'T
+//│ ║  l.128: 	fun foo: C['T] -> 'T
 //│ ╙──       	                  ^^
 //│ fun foo: forall 'A. (C1['A] | C2) -> (Int | ??A & 'A)
 //│ fun foo: forall 'T. C['T] -> 'T

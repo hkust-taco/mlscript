@@ -29,8 +29,8 @@ fun stringLength(s: Str) = makeString(s).length
 //│ anythingToString
 //│                  = [Function: toString]
 
-type Option[A] = Some[A] | None
-class Some[A](value: A) {
+type Option[out A] = Some[A] | None
+class Some[out A](value: A) {
   fun toString() = "Some(" ++ anythingToString(value) ++ ")"
 }
 module None {
@@ -233,7 +233,7 @@ fun fv(t) =
     Var(name) then list1(name)
     Abs(Var(name), body) then listWithout(fv(body), name)
     App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
-//│ fun fv: forall 'A 'A0 'A1. (Abs | App | Var) -> (Cons[in 'A out 'A0] | Cons[in 'A1 out 'A0] | Nil)
+//│ fun fv: forall 'A 'A0 'A1. (Abs | App | Var) -> (Cons[in 'A out 'A0] | Cons[in 'A & 'A1 out 'A0] | Nil)
 //│   where
 //│     'A :> 'A0 | ??A & 'A0 | ??A0 & 'A0
 //│        <: 'A1 | ~??A

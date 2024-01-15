@@ -2,8 +2,8 @@
 :NoJS
 
 
-class Neg[A](expr: A)
-class Add[E](lhs: E, rhs: E)
+class Neg[out A](expr: A)
+class Add[out E](lhs: E, rhs: E)
 class Lit(n: Int)
 //│ class Neg[A](expr: A)
 //│ class Add[E](lhs: E, rhs: E)

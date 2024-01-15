@@ -1,33 +1,65 @@
 :NewDefs
 
 
-:e
+// * TODO generic module definitions need to be restricted so they do not include nay state
+// * to avoid unsoundness...
+
+
+module Test[A] {
+  fun foo: A -> A = id
+}
+//│ module Test[A] {
+//│   fun foo: A -> A
+//│ }
+
+Test.foo(1) + 1
+//│ Int
+//│ res
+//│     = 2
+
+not(Test.foo(true))
+//│ Bool
+//│ res
+//│     = false
+
+Test.foo
+//│ 'A -> 'A
+//│ res
+//│     = [Function: id]
+
+
+// * FIXME merging generic module types, as we currently do, is unsound:
+
+let t = Test : Test[Int] & Test[Str]
+//│ let t: Test[in Int | Str out nothing]
+//│ t
+//│   = Test { class: [class Test] }
+
+t.foo
+//│ (Int | Str) -> nothing
+//│ res
+//│     = [Function: id]
+
+:re
+t.foo(1)(2)
+//│ nothing
+//│ res
+//│ Runtime error:
+//│   TypeError: t.foo(...) is not a function
+
+
+
 module Test<A> {
   fun foo: A => A
+  fun foo = id
   fun bar: A => A = id
   fun baz(x: A) = x
   fun poly0: 'a -> 'a
+  fun poly0 = id
   fun poly1: forall 'a: 'a -> 'a
+  fun poly1 = id
   fun poly2: 'a -> 'a = id
 }
-//│ ╔══[ERROR] Member `foo` is declared (or its declaration is inherited) but is not implemented in `Test`
-//│ ║  l.5: 	module Test<A> {
-//│ ║       	       ^^^^
-//│ ╟── Declared here:
-//│ ║  l.6: 	  fun foo: A => A
-//│ ╙──     	  ^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Member `poly0` is declared (or its declaration is inherited) but is not implemented in `Test`
-//│ ║  l.5: 	module Test<A> {
-//│ ║       	       ^^^^
-//│ ╟── Declared here:
-//│ ║  l.9: 	  fun poly0: 'a -> 'a
-//│ ╙──     	  ^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Member `poly1` is declared (or its declaration is inherited) but is not implemented in `Test`
-//│ ║  l.5: 	module Test<A> {
-//│ ║       	       ^^^^
-//│ ╟── Declared here:
-//│ ║  l.10: 	  fun poly1: forall 'a: 'a -> 'a
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ module Test[A] {
 //│   fun bar: A -> A
 //│   fun baz: (x: A) -> A
@@ -38,58 +70,43 @@ module Test<A> {
 //│ }
 
 Test.foo
-//│ ??A -> ??A0
+//│ 'A -> 'A
 //│ res
-//│     = undefined
+//│     = [Function: id]
 
 Test.bar
-//│ ??A -> ??A0
+//│ 'A -> 'A
 //│ res
 //│     = [Function: id]
 
 Test.baz
-//│ (x: ??A) -> ??A0
+//│ (x: 'A) -> 'A
 //│ res
 //│     = [Function: baz]
 
 Test.poly0
 //│ forall 'a. 'a -> 'a
 //│ res
-//│     = undefined
+//│     = [Function: id]
 
 Test.poly1
 //│ forall 'a. 'a -> 'a
 //│ res
-//│     = undefined
+//│     = [Function: id]
 
 Test.poly2
 //│ forall 'a. 'a -> 'a
 //│ res
 //│     = [Function: id]
 
-:e
 Test.foo(1)
-//│ ╔══[ERROR] Type error in application
-//│ ║  l.71: 	Test.foo(1)
-//│ ║        	^^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.71: 	Test.foo(1)
-//│ ╙──      	         ^
-//│ error | ??A
+//│ 1
 //│ res
-//│ Runtime error:
-//│   TypeError: Test.foo is not a function
+//│     = 1
 
-:e
+:re
 Test.foo(error) + 1
-//│ ╔══[ERROR] Type error in operator application
-//│ ║  l.84: 	Test.foo(error) + 1
-//│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.84: 	Test.foo(error) + 1
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ╙── into expression of type `Int`
-//│ Int | error
+//│ Int
 //│ res
 //│ Runtime error:
 //│   Error: an error was thrown
@@ -97,42 +114,29 @@ Test.foo(error) + 1
 :e
 Test<Int> .foo
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.98: 	Test<Int> .foo
-//│ ╙──      	^^^^^^^^^
-//│ ??A -> ??A0
+//│ ║  l.115: 	Test<Int> .foo
+//│ ╙──       	^^^^^^^^^
+//│ 'A -> 'A
 //│ res
-//│     = undefined
+//│     = [Function: id]
 
 :e
 (Test<Int>).foo
 //│ ╔══[ERROR] Type application syntax is not yet supported
-//│ ║  l.107: 	(Test<Int>).foo
+//│ ║  l.124: 	(Test<Int>).foo
 //│ ╙──       	 ^^^^^^^^^
-//│ ??A -> ??A0
+//│ 'A -> 'A
 //│ res
-//│     = undefined
+//│     = [Function: id]
 
 
 Test
-//│ Test[?]
+//│ forall 'A. Test['A]
 //│ res
 //│     = Test { class: [class Test] }
 
-:e
-Test:  Test<'a>
-//│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.122: 	Test:  Test<'a>
-//│ ║         	^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.122: 	Test:  Test<'a>
-//│ ║         	            ^^
-//│ ╟── back into type variable `A`
-//│ ║  l.5: 	module Test<A> {
-//│ ╙──     	            ^
+Test : Test<'a>
 //│ Test['a]
-//│   where
-//│     'a :> ??A
-//│        <: ??A0
 //│ res
 //│     = Test { class: [class Test] }
 
@@ -140,11 +144,10 @@ Test:  Test<'a>
 fun test(x) = if x is Test then x.foo
 //│ fun test: forall 'A 'A0. (Test[in 'A out 'A0] & {Test#A :> 'A0 <: 'A}) -> ('A0 & 'A | ??A) -> (??A0 & 'A)
 
-// :e
 test(Test)
-//│ (??A & 'A | ??A0) -> (??A1 & (??A2 | 'A))
+//│ ('A | ??A) -> (??A0 & 'A)
 //│ res
-//│     = undefined
+//│     = [Function: id]
 
 
 module Test<A> {
@@ -169,7 +172,7 @@ module Test<A> {
 //│ }
 
 Test.foo
-//│ ??A -> ??A0
+//│ 'A -> 'A
 //│ res
 //│     = [Function: id]
 

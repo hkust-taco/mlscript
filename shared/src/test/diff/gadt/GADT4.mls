@@ -14,6 +14,52 @@ class D[F](fmt: Format[F]) extends Format[Int -> F]
 class B[F](fmt: Format[F]) extends Format[Bool -> F]
 class L[F](s: Str, fmt: Format[F]) extends Format[F]
 module E extends Format[Str]
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.13: 	class D[F](fmt: Format[F]) extends Format[Int -> F]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `F` is not a function
+//│ ║  l.13: 	class D[F](fmt: Format[F]) extends Format[Int -> F]
+//│ ║        	        ^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.13: 	class D[F](fmt: Format[F]) extends Format[Int -> F]
+//│ ║        	                                          ^^^^^^^^
+//│ ╟── Note: type parameter F is defined at:
+//│ ║  l.12: 	abstract class Format[type F]: D[F] | B[F] | L[F] | E
+//│ ╙──      	                           ^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.13: 	class D[F](fmt: Format[F]) extends Format[Int -> F]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Int -> F` does not match type `F`
+//│ ║  l.13: 	class D[F](fmt: Format[F]) extends Format[Int -> F]
+//│ ║        	                                          ^^^^^^^^
+//│ ╟── Note: constraint arises from type parameter:
+//│ ║  l.13: 	class D[F](fmt: Format[F]) extends Format[Int -> F]
+//│ ╙──      	        ^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.14: 	class B[F](fmt: Format[F]) extends Format[Bool -> F]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `F` is not a function
+//│ ║  l.14: 	class B[F](fmt: Format[F]) extends Format[Bool -> F]
+//│ ║        	        ^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.14: 	class B[F](fmt: Format[F]) extends Format[Bool -> F]
+//│ ║        	                                          ^^^^^^^^^
+//│ ╟── Note: type parameter F is defined at:
+//│ ║  l.12: 	abstract class Format[type F]: D[F] | B[F] | L[F] | E
+//│ ╙──      	                           ^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ║  l.14: 	class B[F](fmt: Format[F]) extends Format[Bool -> F]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Bool -> F` does not match type `F`
+//│ ║  l.14: 	class B[F](fmt: Format[F]) extends Format[Bool -> F]
+//│ ║        	                                          ^^^^^^^^^
+//│ ╟── Note: constraint arises from type parameter:
+//│ ║  l.14: 	class B[F](fmt: Format[F]) extends Format[Bool -> F]
+//│ ╙──      	        ^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ abstract class Format[F]: B[F] | D[F] | E | L[F]
 //│ class D[F](fmt: Format[F]) extends Format
 //│ class B[F](fmt: Format[F]) extends Format
@@ -33,45 +79,65 @@ fun fmt(f) = fmtGo("", f)
 //│ fun fmt: forall 'F. Format['F] -> 'F
 
 let test = L("int i = ", D(L(", bool b = ", B(E))))
-//│ let test: L[Int -> 'F]
-//│   where
-//│     'F := Bool -> Str
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.81: 	let test = L("int i = ", D(L(", bool b = ", B(E))))
+//│ ║        	                           ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Bool -> ?F` is not an instance of type `Str`
+//│ ║  l.14: 	class B[F](fmt: Format[F]) extends Format[Bool -> F]
+//│ ║        	                                          ^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.16: 	module E extends Format[Str]
+//│ ║        	                        ^^^
+//│ ╟── Note: type parameter F is defined at:
+//│ ║  l.15: 	class L[F](s: Str, fmt: Format[F]) extends Format[F]
+//│ ╙──      	        ^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.81: 	let test = L("int i = ", D(L(", bool b = ", B(E))))
+//│ ║        	                         ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Str` is not a function
+//│ ║  l.16: 	module E extends Format[Str]
+//│ ║        	                        ^^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.14: 	class B[F](fmt: Format[F]) extends Format[Bool -> F]
+//│ ║        	                                          ^^^^^^^^^
+//│ ╟── Note: type parameter F is defined at:
+//│ ║  l.15: 	class L[F](s: Str, fmt: Format[F]) extends Format[F]
+//│ ╙──      	        ^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.81: 	let test = L("int i = ", D(L(", bool b = ", B(E))))
+//│ ║        	           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Bool -> ?F` is not an instance of type `Str`
+//│ ║  l.14: 	class B[F](fmt: Format[F]) extends Format[Bool -> F]
+//│ ║        	                                          ^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.16: 	module E extends Format[Str]
+//│ ║        	                        ^^^
+//│ ╟── Note: type parameter F is defined at:
+//│ ║  l.13: 	class D[F](fmt: Format[F]) extends Format[Int -> F]
+//│ ╙──      	        ^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ let test: error
 //│ test
 //│      = L {}
 
 fmt(test)
-//│ Int -> Bool -> Str
+//│ nothing
 //│ res
 //│     = [Function (anonymous)]
 
 fmt(test)(114)(false)
-//│ Str
+//│ nothing
 //│ res
 //│     = 'int i = 114, bool b = false'
 
 :e
 fmt(test)("hello")("world")
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.53: 	fmt(test)("hello")("world")
-//│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"hello"` is not an instance of type `Int`
-//│ ║  l.53: 	fmt(test)("hello")("world")
-//│ ║        	          ^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.13: 	class D[F](fmt: Format[F]) extends Format[Int -> F]
-//│ ╙──      	                                          ^^^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.53: 	fmt(test)("hello")("world")
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"world"` is not an instance of type `Bool`
-//│ ║  l.53: 	fmt(test)("hello")("world")
-//│ ║        	                   ^^^^^^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.14: 	class B[F](fmt: Format[F]) extends Format[Bool -> F]
-//│ ╙──      	                                          ^^^^
-//│ Str | error
+//│ nothing
 //│ res
 //│     = 'int i = hello, bool b = world'
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 fun fmtGo[F](acc, f: Format[F]): F = if f is
     D(fmt)    then (i => fmtGo(acc ++ toString(i),fmt)) : f.F
@@ -125,14 +191,14 @@ eval(If(Equals(Lit(3), Plus(Lit(1), Lit(1))), Fst(Pair(Lit(1), Lit(2))), Lit(3))
 :e
 eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.126: 	eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
+//│ ║  l.192: 	eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Bool` is not an instance of `Int`
-//│ ║  l.92: 	class Equals(a: Expr[Int], b: Expr[Int]) extends Expr[Bool]
-//│ ║        	                                                      ^^^^
+//│ ╟── type `Bool` is not an instance of type `Int`
+//│ ║  l.158: 	class Equals(a: Expr[Int], b: Expr[Int]) extends Expr[Bool]
+//│ ║         	                                                      ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.91: 	class Plus(a: Expr[Int], b: Expr[Int]) extends Expr[Int]
-//│ ╙──      	                   ^^^
-//│ Int
+//│ ║  l.157: 	class Plus(a: Expr[Int], b: Expr[Int]) extends Expr[Int]
+//│ ╙──       	                   ^^^
+//│ nothing
 //│ res
 //│     = 3

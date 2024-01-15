@@ -2,7 +2,7 @@
 :NoJS
 
 
-class Add0<E>(lhs: E)
+class Add0<out E>(lhs: E)
 //│ class Add0[E](lhs: E)
 
 fun eval(e) = if e is Add0(l) then eval(l)
@@ -11,7 +11,7 @@ fun eval(e) = if e is Add0(l) then eval(l)
 //│     'E <: Add0['E] | ~??E
 
 
-class Add<E>(lhs: E, rhs: E)
+class Add<out E>(lhs: E, rhs: E)
 class Lit(val value: Int)
 //│ class Add[E](lhs: E, rhs: E)
 //│ class Lit(value: Int)
@@ -112,7 +112,7 @@ add11
 
 
 
-class Neg<A>(expr: A)
+class Neg<out A>(expr: A)
 //│ class Neg[A](expr: A)
 
 let add2negadd11 = Add(Lit(2), Neg(add11))

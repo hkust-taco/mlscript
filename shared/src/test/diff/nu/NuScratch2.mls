@@ -23,11 +23,11 @@ abstract class Baz extends Foo[Str]
 //│   fun f: T -> Int
 //│   fun x: T
 //│ }
-//│ abstract class Bar extends Foo {
+//│ abstract class Bar: Bar | Baz extends Foo {
 //│   fun f: 'T -> Int
 //│   fun x: 'T
 //│ }
-//│ abstract class Baz extends Foo {
+//│ abstract class Baz: Bar | Baz extends Foo {
 //│   fun f: 'T0 -> Int
 //│   fun x: 'T0
 //│ }
@@ -58,9 +58,7 @@ fun test(f: Foo) = if f is
 
 fun test(f: Foo['a]) = if f is
   Foo then f.x : f.T
-//│ fun test: forall 'a. (f: Foo['a]) -> (??T & 'a & (Int | Str))
-//│   where
-//│     'a :> ~??T & ~'a & (Int | Str)
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 
 
@@ -116,17 +114,17 @@ fun test(f: Foo) = if f is
     Bar then 123 : f.T
     Baz then error
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.115: 	fun test(f: Foo) = if f is
+//│ ║  l.113: 	fun test(f: Foo) = if f is
 //│ ║         	                      ^^^^
-//│ ║  l.116: 	    Bar then 123 : f.T
+//│ ║  l.114: 	    Bar then 123 : f.T
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.117: 	    Baz then error
+//│ ║  l.115: 	    Baz then error
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Foo[?]` does not match type `Bar | Baz`
-//│ ║  l.115: 	fun test(f: Foo) = if f is
+//│ ║  l.113: 	fun test(f: Foo) = if f is
 //│ ║         	            ^^^
 //│ ╟── but it flows into reference with expected type `Bar | Baz`
-//│ ║  l.115: 	fun test(f: Foo) = if f is
+//│ ║  l.113: 	fun test(f: Foo) = if f is
 //│ ╙──       	                      ^
 //│ fun test: (f: Foo[in anything out nothing]) -> Int
 
@@ -140,7 +138,7 @@ fun test(f: Foo['a]) = if f is
     Bar then 123 : f.T
     Baz then "hello" : f.T
     _ then error
-//│ fun test: forall 'a. (f: Foo['a]) -> ('a & (Int | Str))
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 fun test(f: Foo, x) = x : f.T
 //│ fun test: (f: Foo[in anything out nothing], ??T) -> ??T0
@@ -148,26 +146,14 @@ fun test(f: Foo, x) = x : f.T
 fun test[A](f: Foo[A]): A = if f is
     Bar then 123 : f.T
     Baz then "hello" : f.T
-//│ fun test: forall 'A. (f: Foo['A]) -> 'A
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 fun test(f: Foo['a]): f.T = if f is
     Bar then 123 : f.T
     Baz then "hello" : f.T
-//│ fun test: forall 'a. (f: Foo['a]) -> ('a & (Int | Str))
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 :e // expected
 test(error, 1)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.159: 	test(error, 1)
-//│ ║         	^^^^^^^^^^^^^^
-//│ ╟── argument list of type `[nothing, 1]` does not match type `[f: Foo['a]]`
-//│ ║  l.159: 	test(error, 1)
-//│ ║         	    ^^^^^^^^^^
-//│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.153: 	fun test(f: Foo['a]): f.T = if f is
-//│ ╙──       	        ^^^^^^^^^^^^
-//│ error
-//│ res
-//│ Runtime error:
-//│   Error: an error was thrown
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 

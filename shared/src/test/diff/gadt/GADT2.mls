@@ -38,7 +38,7 @@ equal(new BoolRep, 1+1, true)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.37: 	equal(new BoolRep, 1+1, true)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` is not an instance of `Bool`
+//│ ╟── operator application of type `Int` is not an instance of type `Bool`
 //│ ║  l.37: 	equal(new BoolRep, 1+1, true)
 //│ ║        	                   ^^^
 //│ ╟── Note: constraint arises from type reference:

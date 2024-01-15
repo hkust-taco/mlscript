@@ -334,7 +334,7 @@ mixin Eliminate {
 
 module TestElim extends Eliminate
 //│ module TestElim {
-//│   fun eliminate: (Intersect['Region] | Object & 'a & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | Outside['Region0] | Scale['Region1] | Translate['Region2] | Union['Region3]) -> 'a
+//│   fun eliminate: (Intersect['Region] | Object & 'a & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | Outside['Region0] | Scale['Region1] | Translate['Region2] | Union['Region3]) -> (Intersect[Outside[nothing] | Union[nothing] | Intersect[nothing] | Translate[nothing] | Scale[nothing] | 'a] | Outside[Outside[nothing] | Union[nothing] | Intersect[nothing] | Translate[nothing] | Scale[nothing] | 'a] | Scale[Outside[nothing] | Union[nothing] | Intersect[nothing] | Translate[nothing] | Scale[nothing] | 'a] | Translate[Outside[nothing] | Union[nothing] | Intersect[nothing] | Translate[nothing] | Scale[nothing] | 'a] | Union[Outside[nothing] | Union[nothing] | Intersect[nothing] | Translate[nothing] | Scale[nothing] | 'a] | Outside[nothing] | Union[nothing] | Intersect[nothing] | Translate[nothing] | Scale[nothing] | 'a)
 //│ }
 //│ where
 //│   'Region <: Intersect['Region] | Outside['Region0] | Scale['Region1] | Translate['Region2] | Union['Region3] | 'a & (Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~??Region) | ~??Region
@@ -342,19 +342,18 @@ module TestElim extends Eliminate
 //│   'Region1 <: Intersect['Region] | Outside['Region0] | Scale['Region1] | Translate['Region2] | Union['Region3] | 'a & (Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~??Region2) | ~??Region2
 //│   'Region2 <: Intersect['Region] | Outside['Region0] | Scale['Region1] | Translate['Region2] | Union['Region3] | 'a & (Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~??Region3) | ~??Region3
 //│   'Region3 <: Intersect['Region] | Outside['Region0] | Scale['Region1] | Translate['Region2] | Union['Region3] | 'a & (Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~??Region4) | ~??Region4
-//│   'a :> Intersect['a] | Translate['a] | Scale['a] | Outside['a] | Union['a]
 
 TestElim.eliminate(Outside(Outside(Univ())))
 //│ Univ & ??Region | Univ & ??Region0 | 'a
 //│   where
-//│     'a :> Univ & ??Region | Univ & ??Region0 | Intersect[Univ & ??Region | Univ & ??Region0 | 'a] | Translate[Univ & ??Region | Univ & ??Region0 | 'a] | Scale[Univ & ??Region | Univ & ??Region0 | 'a] | Outside[Univ & ??Region | Univ & ??Region0 | 'a] | Union[Univ & ??Region | Univ & ??Region0 | 'a]
+//│     'a :> Univ & ??Region | Univ & ??Region0 | Outside[Univ & ??Region | Univ & ??Region0 | 'a] | Union[Univ & ??Region | Univ & ??Region0 | 'a] | Intersect[Univ & ??Region | Univ & ??Region0 | 'a] | Translate[Univ & ??Region | Univ & ??Region0 | 'a] | Scale[Univ & ??Region | Univ & ??Region0 | 'a]
 //│ res
 //│     = Univ {}
 
 TestElim.eliminate(circles)
 //│ 'a
 //│   where
-//│     'a :> Circle | Intersect['a] | Translate[Circle | 'a] | Scale[Circle | 'a] | Outside[Circle | 'a] | Union[Circle | 'a]
+//│     'a :> Circle | Outside[Circle | 'a] | Union[Circle | 'a] | Intersect['a] | Translate[Circle | 'a] | Scale[Circle | 'a]
 //│ res
 //│     = Union {}
 
@@ -366,7 +365,7 @@ fun mk(n) = if n is
   _ then Scale(Vector(0, 0), mk(n))
 //│ fun mk: forall 'a. Object -> 'a
 //│   where
-//│     'a :> Outside['a] | Scale['a] | Union['a] | Intersect['a] | Translate['a]
+//│     'a :> Outside['a] | Intersect['a] | Translate['a] | Scale['a] | Union['a]
 
 :re
 TestElim.eliminate(mk(100))
@@ -382,7 +381,7 @@ TestElim.eliminate(mk(100))
 module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminate
 //│ module Lang {
 //│   fun contains: (Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2], {x: Int, y: Int}) -> Bool
-//│   fun eliminate: (Intersect['Region3] | Object & 'a & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | Outside['Region4] | Scale['Region5] | Translate['Region6] | Union['Region7]) -> 'a
+//│   fun eliminate: (Intersect['Region3] | Object & 'a & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | Outside['Region4] | Scale['Region5] | Translate['Region6] | Union['Region7]) -> (Intersect[Union[nothing] | Intersect[nothing] | Translate[nothing] | Scale[nothing] | Outside[nothing] | 'a] | Outside[Union[nothing] | Intersect[nothing] | Translate[nothing] | Scale[nothing] | Outside[nothing] | 'a] | Scale[Union[nothing] | Intersect[nothing] | Translate[nothing] | Scale[nothing] | Outside[nothing] | 'a] | Translate[Union[nothing] | Intersect[nothing] | Translate[nothing] | Scale[nothing] | Outside[nothing] | 'a] | Union[Union[nothing] | Intersect[nothing] | Translate[nothing] | Scale[nothing] | Outside[nothing] | 'a] | Union[nothing] | Intersect[nothing] | Translate[nothing] | Scale[nothing] | Outside[nothing] | 'a)
 //│   fun isEmpty: (Intersect['Region8] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['Region9] | Scale['Region10] | Translate['Region11] | Union['Region12] | Univ) -> Bool
 //│   fun isUniv: (Intersect['Region13] | Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~#Univ | Outside['Region14] | Scale['Region15] | Translate['Region16] | Union['Region17] | Univ) -> Bool
 //│   fun size: (Empty | Object & 'b & ~#Empty & ~#Scale & ~#Univ | Scale['Region18] | Univ) -> Int
@@ -406,7 +405,6 @@ module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminat
 //│   'Region5 <: Intersect['Region3] | Outside['Region4] | Scale['Region5] | Translate['Region6] | Union['Region7] | 'a & (Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~??Region21) | ~??Region21
 //│   'Region6 <: Intersect['Region3] | Outside['Region4] | Scale['Region5] | Translate['Region6] | Union['Region7] | 'a & (Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~??Region22) | ~??Region22
 //│   'Region7 <: Intersect['Region3] | Outside['Region4] | Scale['Region5] | Translate['Region6] | Union['Region7] | 'a & (Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~??Region23) | ~??Region23
-//│   'a :> Scale['a] | Outside['a] | Union['a] | Intersect['a] | Translate['a]
 //│   'Region <: Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2] | ~??Region24
 //│   'Region0 <: Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2] | ~??Region25
 //│   'Region1 <: Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2] | ~??Region26
@@ -453,10 +451,10 @@ Lang.size(mk(100))
 :re
 Lang.contains(mk(100), Vector(0, 0))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.454: 	Lang.contains(mk(100), Vector(0, 0))
+//│ ║  l.452: 	Lang.contains(mk(100), Vector(0, 0))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Scale[?Region]` does not match type `Circle | Intersect[?Region0] | Outside[?Region1] | Translate[?Region2] | Union[?Region3] | ~??Region`
-//│ ║  l.366: 	  _ then Scale(Vector(0, 0), mk(n))
+//│ ║  l.365: 	  _ then Scale(Vector(0, 0), mk(n))
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.116: 	    if a is
@@ -476,13 +474,13 @@ Lang.contains(mk(100), Vector(0, 0))
 :re
 Lang.text(mk(100))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.477: 	Lang.text(mk(100))
+//│ ║  l.475: 	Lang.text(mk(100))
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Scale[?Region]` does not match type `Circle | Intersect[?Region0] | Outside[?Region1] | Translate[?Region2] | Union[?Region3]`
-//│ ║  l.366: 	  _ then Scale(Vector(0, 0), mk(n))
+//│ ║  l.365: 	  _ then Scale(Vector(0, 0), mk(n))
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `Circle | Intersect[?Region4] | Outside[?Region5] | Translate[?Region6] | Union[?Region7]`
-//│ ║  l.477: 	Lang.text(mk(100))
+//│ ║  l.475: 	Lang.text(mk(100))
 //│ ║         	          ^^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.164: 	    if e is

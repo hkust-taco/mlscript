@@ -10,9 +10,30 @@ class RC(x: Str) extends R[Str]
 //│ class RC(x: Str) extends R
 
 fun f1(e) = [ if e is RI(i) then i , if e is RB(i) then i , if e is RC(i) then i ]
-//│ fun f1: nothing -> [Int, Bool, Str]
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.12: 	fun f1(e) = [ if e is RI(i) then i , if e is RB(i) then i , if e is RC(i) then i ]
+//│ ║        	                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── class pattern of type `RI` is not an instance of type `RB`
+//│ ║  l.12: 	fun f1(e) = [ if e is RI(i) then i , if e is RB(i) then i , if e is RC(i) then i ]
+//│ ║        	                      ^^
+//│ ╟── but it flows into reference with expected type `RB`
+//│ ║  l.12: 	fun f1(e) = [ if e is RI(i) then i , if e is RB(i) then i , if e is RC(i) then i ]
+//│ ║        	                                        ^
+//│ ╟── Note: constraint arises from class pattern:
+//│ ║  l.12: 	fun f1(e) = [ if e is RI(i) then i , if e is RB(i) then i , if e is RC(i) then i ]
+//│ ╙──      	                                             ^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ fun f1: RI -> [error]
 
 fun f1[A](e: R[A]): [A, A, A] = [ if e is RI(i) then i as e.A else error , if e is RB(i) then i as e.A else error , if e is RC(i) then i as e.A else error ]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.28: 	fun f1[A](e: R[A]): [A, A, A] = [ if e is RI(i) then i as e.A else error , if e is RB(i) then i as e.A else error , if e is RC(i) then i as e.A else error ]
+//│ ║        	                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `[?a | ?b]` does not match type `[A, A, A]`
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.28: 	fun f1[A](e: R[A]): [A, A, A] = [ if e is RI(i) then i as e.A else error , if e is RB(i) then i as e.A else error , if e is RC(i) then i as e.A else error ]
+//│ ╙──      	                    ^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ fun f1: forall 'A. (e: R['A]) -> ['A, 'A, 'A]
 
 fun h1[A](x: R[A], y: A) = (if x is
@@ -20,7 +41,7 @@ fun h1[A](x: R[A], y: A) = (if x is
     RB(_) then RB as (x.A => R[x.A])
     else error
   ) (y as x.A)
-//│ fun h1: forall 'A. (x: R['A], y: 'A) -> R[in Int & 'A0 | 'A0 & (Bool | 'A0) | 'A out 'A & (Int | false | true | 'A0)]
+//│ fun h1: forall 'A. (x: R['A], y: 'A) -> R[in Int & 'A0 | 'A | 'A0 & (Bool | 'A | 'A0) out 'A & (Int | false | true | 'A0)]
 
 h1(RI(1), 1)
 //│ R[in Int | 'A | 'A0 & (Bool | 'A | 'A0) out Int | 'A & (Bool | 'A0)]
@@ -30,18 +51,18 @@ h1(RI(1), 1)
 :e
 h1(RC("hi"), true)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.31: 	h1(RC("hi"), true)
+//│ ║  l.52: 	h1(RC("hi"), true)
 //│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `true` is not an instance of type `Str`
-//│ ║  l.31: 	h1(RC("hi"), true)
+//│ ╟── reference of type `true` is not an instance of `Str`
+//│ ║  l.52: 	h1(RC("hi"), true)
 //│ ║        	             ^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.6: 	class RC(x: Str) extends R[Str]
 //│ ║       	                           ^^^
 //│ ╟── Note: method type parameter A is defined at:
-//│ ║  l.18: 	fun h1[A](x: R[A], y: A) = (if x is
+//│ ║  l.39: 	fun h1[A](x: R[A], y: A) = (if x is
 //│ ╙──      	       ^
-//│ R[in Int & 'A | Str | true | 'A0 | 'A1 & (Bool | Str | 'A0 | 'A) out Str & 'A1 | Str & 'A | true | 'A0 & (Int | false | 'A | 'A1)] | error
+//│ R[in Int & 'A | Str | true | 'A0 | 'A1 & (Str | false | 'A0 | 'A) out Str & 'A1 | Str & 'A | true | 'A0 & (Int | false | 'A | 'A1)] | error
 //│ res
 //│ Runtime error:
 //│   Error: an error was thrown
@@ -55,7 +76,7 @@ fun h2[A](x: R[A], y: R[A]) = (if x is
     RB(a) then (a as y.A) as x.A
     else error
   )
-//│ fun h2: forall 'A. (x: R['A], y: R['A]) -> R[in Int & 'A0 | 'A0 & (Bool | 'A0) | 'A out 'A & (Int | false | true | 'A0)]
+//│ fun h2: forall 'A. (x: R['A], y: R['A]) -> R[in Int & 'A0 | 'A | 'A0 & (Bool | 'A | 'A0) out 'A & (Int | false | true | 'A0)]
 
 h2(RI(1), RI(2))
 //│ R[in Int | 'A | 'A0 & (Bool | 'A | 'A0) out Int | 'A & (Bool | 'A0)]
@@ -65,18 +86,18 @@ h2(RI(1), RI(2))
 :e
 h2(RB(true), RI(0))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.66: 	h2(RB(true), RI(0))
+//│ ║  l.87: 	h2(RB(true), RI(0))
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Int` is not an instance of `Bool`
+//│ ╟── type `Int` is not an instance of type `Bool`
 //│ ║  l.4: 	class RI(x: Int) extends R[Int]
 //│ ║       	                           ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.5: 	class RB(x: Bool) extends R[Bool]
 //│ ║       	                            ^^^^
 //│ ╟── Note: method type parameter A is defined at:
-//│ ║  l.49: 	fun h2[A](x: R[A], y: R[A]) = (if x is
+//│ ║  l.70: 	fun h2[A](x: R[A], y: R[A]) = (if x is
 //│ ╙──      	       ^
-//│ R[in Bool | Int | 'A | 'A0 & ('A | 'A0) out Int | false | true | 'A & 'A0] | error
+//│ error
 //│ res
 //│     = RB {}
 

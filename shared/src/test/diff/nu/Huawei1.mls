@@ -1,7 +1,7 @@
 :NewDefs
 
 
-class C[A](x: A) {
+class C[out A](x: A) {
   fun foo = x
 }
 //│ class C[A](x: A) {
@@ -51,11 +51,11 @@ bar(C(true))
 //│ ║  l.32: 	    C(y) then y + 1
 //│ ║        	              ^
 //│ ╟── from field selection:
-//│ ║  l.4: 	class C[A](x: A) {
-//│ ║       	           ^
+//│ ║  l.4: 	class C[out A](x: A) {
+//│ ║       	               ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.4: 	class C[A](x: A) {
-//│ ╙──     	        ^
+//│ ║  l.4: 	class C[out A](x: A) {
+//│ ╙──     	            ^
 //│ Int | error
 //│ res
 //│     = 2

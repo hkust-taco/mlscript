@@ -105,7 +105,7 @@ def open p t = p t
 
 // Altered from
 // let f = {exists 'a. 'a * ('a -> 'a) * ('a -> int)} (0, (fun x -> x + 1) , (fun x -> x));
-// open {exists 'a. a * ('a -> 'a) * ('a -> int)} g = f in (snd (snd g)) (fst g);;
+// open {exists 'a. a * ('a -> 'a) * ('a -> int)} g = f in (snd (snd g)) (fst g);
 let f = pack ((0, (fun x -> x + 1, fun x -> x),),) in
   open f (fun x -> (snd (snd x)) (fst x))
 //│ res: 0

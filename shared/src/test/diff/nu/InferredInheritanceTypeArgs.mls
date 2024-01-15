@@ -41,7 +41,7 @@ mixin Test2[S, T] {
 
 class A1[B](val s: Bool, val t: B) extends Test2[Bool, B]
 //│ class A1[B](s: Bool, t: B) {
-//│   fun fb: (Bool & 'S) -> [Bool | 'S, Bool | 'S]
+//│   fun fb: ('S & Bool) -> [Bool | 'S, Bool | 'S]
 //│   fun x: [Bool | 'S, B]
 //│ }
 
@@ -180,13 +180,13 @@ trait Foo[type A] { fun foo(x: A): A }
 //│ }
 
 
-trait Foo[A] { fun a: A;; fun foo(x: A): A }
+trait Foo[A] { fun a: A; fun foo(x: A): A }
 //│ trait Foo[A] {
 //│   fun a: A
 //│   fun foo: (x: A) -> A
 //│ }
 
-class Bar[B](a: B) extends Foo { fun foo(x) = x }
+class Bar[out B](a: B) extends Foo { fun foo(x) = x }
 //│ class Bar[B](a: B) extends Foo {
 //│   fun foo: forall 'a. 'a -> 'a
 //│ }

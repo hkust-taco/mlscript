@@ -5,11 +5,9 @@
 // * even though it was left off in the self-signature clause:
 
 
-class Foo[type T]: Bar | Int
+abstract class Foo[type T]: Bar | Int
 class Bar[S](val a: S) extends Foo[S]
-//│ class Foo[T]: Bar[anything] | Int {
-//│   constructor()
-//│ }
+//│ abstract class Foo[T]: Bar[anything] | Int
 //│ class Bar[S](a: S) extends Foo
 
 fun foo(x: Foo['a]) = if x is
@@ -17,11 +15,9 @@ fun foo(x: Foo['a]) = if x is
 //│ fun foo: forall 'a. (x: Foo['a]) -> (??S & ??S0 & 'a)
 
 
-class Foo[type T]: Bar
+abstract class Foo[type T]: Bar
 class Bar[type S](val a: S) extends Foo[S]
-//│ class Foo[T]: Bar[anything] {
-//│   constructor()
-//│ }
+//│ abstract class Foo[T]: Bar[anything]
 //│ class Bar[S](a: S) extends Foo
 
 fun foo(x: Foo['a]) = if x is
@@ -35,13 +31,13 @@ fun foo(x: Foo['a]) = if x is
 :e
 (error : Foo[Int]) : Bar['a] | Int
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.36: 	(error : Foo[Int]) : Bar['a] | Int
+//│ ║  l.32: 	(error : Foo[Int]) : Bar['a] | Int
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `S` leaks out of its scope
-//│ ║  l.36: 	(error : Foo[Int]) : Bar['a] | Int
+//│ ║  l.32: 	(error : Foo[Int]) : Bar['a] | Int
 //│ ║        	                         ^^
 //│ ╟── back into type variable `S`
-//│ ║  l.21: 	class Bar[type S](val a: S) extends Foo[S]
+//│ ║  l.19: 	class Bar[type S](val a: S) extends Foo[S]
 //│ ╙──      	               ^
 //│ Bar['a] | Int
 //│   where
@@ -55,9 +51,9 @@ fun foo(x: Foo['a]) = if x is
 
 // * Some other tests:
 
-class Foo[T](val x: T): Bar
+abstract class Foo[T](val x: T): Bar
 class Bar extends Foo[Int](42)
-//│ class Foo[T](x: T): Bar
+//│ abstract class Foo[T](x: T): Bar
 //│ class Bar extends Foo {
 //│   constructor()
 //│ }

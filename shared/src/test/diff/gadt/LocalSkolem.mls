@@ -2,7 +2,7 @@
 
 
 
-abstract class Cls[A] { fun x: A;; fun g: A -> Int }
+abstract class Cls[A] { fun x: A; fun g: A -> Int }
 //│ abstract class Cls[A] {
 //│   fun g: A -> Int
 //│   fun x: A
@@ -80,7 +80,7 @@ r : [Int, Int]
 
 
 
-class Cls[A](val x: A) { fun g: A -> Int;; fun g(x) = 42 }
+class Cls[A](val x: A) { fun g: A -> Int; fun g(x) = 42 }
 //│ class Cls[A](x: A) {
 //│   fun g: A -> Int
 //│ }
@@ -140,11 +140,10 @@ test(0).x
 
 
 
-class Foo[A]: (Bar | Baz) { fun f: A -> A;; fun f = id }
+abstract class Foo[A]: (Bar | Baz) { fun f: A -> A; fun f = id }
 module Bar extends Foo[Int]
 module Baz extends Foo[Str]
-//│ class Foo[A]: Bar | Baz {
-//│   constructor()
+//│ abstract class Foo[A]: Bar | Baz {
 //│   fun f: A -> A
 //│ }
 //│ module Bar extends Foo {
@@ -179,13 +178,13 @@ fun test[A](f: Foo[A]) = if f is
 :e // * Expected: we lost the locally-known fact that `foo`'s branches each returned an `A`
 test : forall 'A: Foo['A] -> 'A
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.180: 	test : forall 'A: Foo['A] -> 'A
+//│ ║  l.179: 	test : forall 'A: Foo['A] -> 'A
 //│ ║         	^^^^
 //│ ╟── integer literal of type `123` does not match type `'A`
-//│ ║  l.175: 	  Bar then 123
+//│ ║  l.174: 	  Bar then 123
 //│ ║         	           ^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.180: 	test : forall 'A: Foo['A] -> 'A
+//│ ║  l.179: 	test : forall 'A: Foo['A] -> 'A
 //│ ╙──       	                             ^^
 //│ forall 'A. Foo['A] -> 'A
 //│ res
@@ -203,18 +202,18 @@ fun test[A](f: Foo[A]) = if f is // here `f : Bar & { Foo#A = A }`
   Bar then 123 : A  // here `f : Bar & { Foo#A = Int | A .. Int & A }`
   Baz then "hello" : A
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.203: 	  Bar then 123 : A  // here `f : Bar & { Foo#A = Int | A .. Int & A }`
+//│ ║  l.202: 	  Bar then 123 : A  // here `f : Bar & { Foo#A = Int | A .. Int & A }`
 //│ ║         	           ^^^
 //│ ╟── integer literal of type `123` does not match type `A`
 //│ ╟── Note: constraint arises from method type parameter:
-//│ ║  l.202: 	fun test[A](f: Foo[A]) = if f is // here `f : Bar & { Foo#A = A }`
+//│ ║  l.201: 	fun test[A](f: Foo[A]) = if f is // here `f : Bar & { Foo#A = A }`
 //│ ╙──       	         ^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.204: 	  Baz then "hello" : A
+//│ ║  l.203: 	  Baz then "hello" : A
 //│ ║         	           ^^^^^^^
 //│ ╟── string literal of type `"hello"` does not match type `A`
 //│ ╟── Note: constraint arises from method type parameter:
-//│ ║  l.202: 	fun test[A](f: Foo[A]) = if f is // here `f : Bar & { Foo#A = A }`
+//│ ║  l.201: 	fun test[A](f: Foo[A]) = if f is // here `f : Bar & { Foo#A = A }`
 //│ ╙──       	         ^
 //│ fun test: forall 'A. (f: Foo['A]) -> 'A
 
@@ -223,17 +222,17 @@ fun test[A](f: Foo[A]) = (if f is
   Bar then 123
   Baz then "hello") : A
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.222: 	fun test[A](f: Foo[A]) = (if f is
+//│ ║  l.221: 	fun test[A](f: Foo[A]) = (if f is
 //│ ║         	                         ^^^^^^^^
-//│ ║  l.223: 	  Bar then 123
+//│ ║  l.222: 	  Bar then 123
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.224: 	  Baz then "hello") : A
+//│ ║  l.223: 	  Baz then "hello") : A
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `123` does not match type `A`
-//│ ║  l.223: 	  Bar then 123
+//│ ║  l.222: 	  Bar then 123
 //│ ║         	           ^^^
 //│ ╟── Note: constraint arises from method type parameter:
-//│ ║  l.222: 	fun test[A](f: Foo[A]) = (if f is
+//│ ║  l.221: 	fun test[A](f: Foo[A]) = (if f is
 //│ ╙──       	         ^
 //│ fun test: forall 'A. (f: Foo['A]) -> 'A
 
@@ -249,21 +248,21 @@ fun test[A](f: Foo[A]) = f.f(if f is
   Bar then 123
   Baz then "hello")
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.248: 	fun test[A](f: Foo[A]) = f.f(if f is
+//│ ║  l.247: 	fun test[A](f: Foo[A]) = f.f(if f is
 //│ ║         	                         ^^^^^^^^^^^
-//│ ║  l.249: 	  Bar then 123
+//│ ║  l.248: 	  Bar then 123
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.250: 	  Baz then "hello")
+//│ ║  l.249: 	  Baz then "hello")
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `123` is not an instance of type `Str`
-//│ ║  l.249: 	  Bar then 123
+//│ ║  l.248: 	  Bar then 123
 //│ ║         	           ^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.145: 	module Baz extends Foo[Str]
 //│ ║         	                       ^^^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.143: 	class Foo[A]: (Bar | Baz) { fun f: A -> A;; fun f = id }
-//│ ╙──       	          ^
+//│ ║  l.143: 	abstract class Foo[A]: (Bar | Baz) { fun f: A -> A; fun f = id }
+//│ ╙──       	                   ^
 //│ fun test: forall 'A. (f: Foo['A]) -> (Int | Str | error)
 
 

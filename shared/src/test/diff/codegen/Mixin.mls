@@ -2,7 +2,7 @@
 :NewDefs
 
 :js
-class Add<E>(lhs: E, rhs: E)
+class Add<out E>(lhs: E, rhs: E)
 class Lit(n: Int)
 //│ class Add[E](lhs: E, rhs: E)
 //│ class Lit(n: Int)
@@ -103,7 +103,7 @@ mixin EvalBase {
 //│ // End of generated code
 
 :js
-class Neg<A>(expr: A)
+class Neg<out A>(expr: A)
 //│ class Neg[A](expr: A)
 //│ // Prelude
 //│ class TypingUnit2 {

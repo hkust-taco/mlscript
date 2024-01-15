@@ -10,7 +10,7 @@ class Some[T](get: T) extends Option[T]
 fun map(f, x) = if x is
     None then None
     Some(g) then Some(f(g))
-//│ fun map: forall 'T 'a. ((??T & 'T) -> 'a, None | Some['T]) -> (None | Some['a])
+//│ fun map: forall 'T 'T0. ((??T & 'T) -> 'T0, None | Some['T]) -> (None | Some['T0])
 
 fun map[A, B](f: A -> B, x: Option[A]) = if x is
     None then None
