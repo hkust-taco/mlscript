@@ -983,7 +983,7 @@ abstract class TyperHelpers { Typer: Typer =>
     def getVars: SortedSet[TypeVariable] = getVarsImpl(includeBounds = true)
     
     def showBounds: String =
-      getVars.iterator.filter(tv => tv.assignedTo.nonEmpty || (tv.upperBounds ++ tv.lowerBounds).nonEmpty || (tv.lbtsc.fold(false)(!_._1.tvs.contains(tv)))).map {
+      getVars.iterator.filter(tv => tv.assignedTo.nonEmpty || (tv.upperBounds ++ tv.lowerBounds).nonEmpty || (tv.lbtsc.isDefined && tv.ubtsc.isEmpty)).map {
       case tv @ AssignedVariable(ty) => "\n\t\t" + tv.toString + " := " + ty
       case tv => ("\n\t\t" + tv.toString
           + (if (tv.lowerBounds.isEmpty) "" else " :> " + tv.lowerBounds.mkString(" | "))
@@ -991,7 +991,7 @@ abstract class TyperHelpers { Typer: Typer =>
           + tv.lbtsc.fold(""){ case (tsc, i) => " :> " + tsc.tvs(i) } )
       }.mkString + {
         val visited: MutSet[TV] = MutSet.empty
-        getVars.iterator.filter(tv => tv.lbtsc.fold(false)(_._1.tvs.contains(tv))).map {
+        getVars.iterator.filter(tv => tv.ubtsc.isDefined).map {
           case tv if visited.contains(tv) => ""
           case tv =>
             visited ++= tv.lbtsc.fold(Nil: Ls[TV])(_._1.tvs)

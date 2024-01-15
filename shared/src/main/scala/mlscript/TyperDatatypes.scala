@@ -744,15 +744,17 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     }
     def mk(ov: Overload)(implicit lvl: Level): FunctionType = {
       def unwrap(t: ST): ST = t.map(unwrap)
-      val f = ov.mapAlts(unwrap)(unwrap)
-      val (t, tvs, constrs) = lcgFunction(f.alts.head, f.alts.tail)(ov.prov, lvl)
-      val tsc = new TupleSetConstraints(MutSet.empty ++ constrs.transpose, tvs)(ov.prov)
-      tvs.zipWithIndex.foreach { case (tv, i) =>
-        tv.lbtsc = S((tsc, i))
-        tv.ubtsc = S((tsc, i))
+      if (ov.alts.tail.isEmpty) ov.alts.head else {
+        val f = ov.mapAlts(unwrap)(unwrap)
+        val (t, tvs, constrs) = lcgFunction(f.alts.head, f.alts.tail)(ov.prov, lvl)
+        val tsc = new TupleSetConstraints(MutSet.empty ++ constrs.transpose, tvs)(ov.prov)
+        tvs.zipWithIndex.foreach { case (tv, i) =>
+          tv.lbtsc = S((tsc, i))
+          tv.ubtsc = S((tsc, i))
+        }
+        println(s"TSC mk: ${tsc.tvs} in ${tsc.constraints}")
+        t
       }
-      println(s"TSC mk: ${tsc.tvs} in ${tsc.constraints}")
-      t
     }
   }
 }

@@ -155,7 +155,7 @@ module A {
 //│ }
 
 A.g(0)
-//│ Int | Str
+//│ Int
 //│ res
 //│     = 0
 
