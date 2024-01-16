@@ -92,24 +92,31 @@ object Scope {
   }
 
   val global: Scope = {
-    val trueDefn = NuTypeDef(Mod, TypeName("true"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N)
-    val falseDefn = NuTypeDef(Mod, TypeName("false"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N)
-    val nothingDefn = NuTypeDef(Als, TypeName("nothing"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N)
-    val trueSymbol = new ModuleSymbol(trueDefn)
-    val falseSymbol = new ModuleSymbol(falseDefn)
-    val nothingSymbol = new TypeAliasSymbol(nothingDefn)
+    def mod(name: Str) = NuTypeDef(Mod, TypeName(name), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N)
+    // def cls(name: Str) = NuTypeDef(Trt, TypeName(name), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N)
+    def als(name: Str) = NuTypeDef(Als, TypeName(name), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N)
+    val builtinTypes = Ls(
+      new ModuleSymbol(mod("true")),
+      new ModuleSymbol(mod("false")),
+      new TypeAliasSymbol(als("nothing")),
+      new DummyClassSymbol(Var("Int")),
+      new DummyClassSymbol(Var("Num")),
+      new DummyClassSymbol(Var("Str")),
+      new DummyClassSymbol(Var("Bool")),
+    )
     val commaSymbol = new LocalTermSymbol(Var(","))
     Scope.from(
       """true,false,document,window,typeof,toString,not,succ,log,discard,negate,
-        |round,add,sub,mul,div,sqrt,lt,le,gt,ge,slt,sle,sgt,sge,length,concat,eq,
-        |ne,error,id,if,emptyArray,+,-,*,%,/,**,<,>,<=,>=,==,===,<>,&&,||,and,
+        |round,add,sub,mul,div,sqrt,lt,le,gt,ge,slt,sle,sgt,sge,length,concat,
+        |join,eq,ne,error,id,if,emptyArray,
+        |+,-,*,%,/,**,<,>,<=,>=,==,===,<>,&&,||,and,
         |numAdd,numSub,numMul,NaN"""
         .stripMargin
         .split(",")
         .iterator
         .map(_.trim)
         .map(name => new LocalTermSymbol(Var(name)))
-        .concat(trueSymbol :: falseSymbol :: nothingSymbol :: commaSymbol :: Nil)
+        .concat(commaSymbol :: builtinTypes)
     )
   }
 }

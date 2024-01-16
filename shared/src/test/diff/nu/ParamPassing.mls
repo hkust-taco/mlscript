@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 
 class Foo(x: Int)
@@ -66,12 +66,6 @@ Foo(1).x
 
 :e
 Foo(1).#x
-//│ ╔══[ERROR] identifier `.#` not found
-//│ ║  l.68: 	Foo(1).#x
-//│ ╙──      	      ^^
-//│ ╔══[ERROR] identifier `x` not found
-//│ ║  l.68: 	Foo(1).#x
-//│ ╙──      	        ^
 //│ ╔══[ERROR] identifier not found: .#
 //│ ║  l.68: 	Foo(1).#x
 //│ ╙──      	      ^^
@@ -105,20 +99,20 @@ if Foo(1) is Foo(x) then x
 :e
 class Bar(x: Int) extends Foo(x)
 //│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
-//│ ║  l.106: 	class Bar(x: Int) extends Foo(x)
+//│ ║  l.100: 	class Bar(x: Int) extends Foo(x)
 //│ ║         	          ^
 //│ ╟── Originally declared here:
-//│ ║  l.91: 	class Foo(val x: Int)
+//│ ║  l.85: 	class Foo(val x: Int)
 //│ ╙──      	              ^
 //│ class Bar(x: Int) extends Foo
 
 :e
 Bar(11).x
 //│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
-//│ ║  l.116: 	Bar(11).x
+//│ ║  l.110: 	Bar(11).x
 //│ ║         	       ^^
 //│ ╟── Either make the parameter a `val` or access it through destructuring
-//│ ║  l.106: 	class Bar(x: Int) extends Foo(x)
+//│ ║  l.100: 	class Bar(x: Int) extends Foo(x)
 //│ ╙──       	          ^
 //│ Int | error
 //│ res
@@ -128,10 +122,10 @@ Bar(11).x
 :e
 class Bar(val x: Int) extends Foo(x + 1)
 //│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
-//│ ║  l.129: 	class Bar(val x: Int) extends Foo(x + 1)
+//│ ║  l.123: 	class Bar(val x: Int) extends Foo(x + 1)
 //│ ║         	              ^
 //│ ╟── Originally declared here:
-//│ ║  l.91: 	class Foo(val x: Int)
+//│ ║  l.85: 	class Foo(val x: Int)
 //│ ╙──      	              ^
 //│ class Bar(x: Int) extends Foo
 
@@ -143,10 +137,10 @@ Bar(11).x
 :e
 class Bar extends Foo(1) { val x: 2 }
 //│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
-//│ ║  l.144: 	class Bar extends Foo(1) { val x: 2 }
+//│ ║  l.138: 	class Bar extends Foo(1) { val x: 2 }
 //│ ║         	                           ^^^^^^^^
 //│ ╟── Originally declared here:
-//│ ║  l.91: 	class Foo(val x: Int)
+//│ ║  l.85: 	class Foo(val x: Int)
 //│ ╙──      	              ^
 //│ class Bar extends Foo {
 //│   constructor()
@@ -156,10 +150,10 @@ class Bar extends Foo(1) { val x: 2 }
 :e
 module Bar extends Foo(1) { fun x = 2 }
 //│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
-//│ ║  l.157: 	module Bar extends Foo(1) { fun x = 2 }
+//│ ║  l.151: 	module Bar extends Foo(1) { fun x = 2 }
 //│ ║         	                                ^^^^^
 //│ ╟── Originally declared here:
-//│ ║  l.91: 	class Foo(val x: Int)
+//│ ║  l.85: 	class Foo(val x: Int)
 //│ ╙──      	              ^
 //│ module Bar extends Foo {
 //│   fun x: 2
@@ -187,10 +181,10 @@ module B extends A(42)
 :e
 B.x
 //│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
-//│ ║  l.188: 	B.x
+//│ ║  l.182: 	B.x
 //│ ║         	 ^^
 //│ ╟── Either make the parameter a `val` or access it through destructuring
-//│ ║  l.181: 	class A(x: Int)
+//│ ║  l.175: 	class A(x: Int)
 //│ ╙──       	        ^
 //│ Int | error
 //│ res
@@ -229,16 +223,16 @@ module Bazz extends Foo(0) {
   val x: 2
 }
 //│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
-//│ ║  l.229: 	  val x: 2
+//│ ║  l.223: 	  val x: 2
 //│ ║         	  ^^^^^^^^
 //│ ╟── Originally declared here:
-//│ ║  l.201: 	abstract class Foo[A](val x: A) { fun y = x; fun i: A -> A }
+//│ ║  l.195: 	abstract class Foo[A](val x: A) { fun y = x; fun i: A -> A }
 //│ ╙──       	                          ^
 //│ ╔══[ERROR] Member `i` is declared (or its declaration is inherited) but is not implemented in `Bazz`
-//│ ║  l.228: 	module Bazz extends Foo(0) {
+//│ ║  l.222: 	module Bazz extends Foo(0) {
 //│ ║         	       ^^^^
 //│ ╟── Declared here:
-//│ ║  l.201: 	abstract class Foo[A](val x: A) { fun y = x; fun i: A -> A }
+//│ ║  l.195: 	abstract class Foo[A](val x: A) { fun y = x; fun i: A -> A }
 //│ ╙──       	                                             ^^^^^^^^^^^^^
 //│ module Bazz extends Foo {
 //│   fun i: 'A -> 'A

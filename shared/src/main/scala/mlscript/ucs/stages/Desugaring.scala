@@ -8,7 +8,6 @@ import mlscript.ucs.helpers.mkBinOp
 import mlscript.utils._, shorthands._
 import mlscript.pretyper.symbol._
 import mlscript.pretyper.{PreTyper, Scope}
-import mlscript.Diagnostic.PreTyping
 import mlscript.Message, Message.MessageContext
 
 /**
@@ -148,7 +147,7 @@ trait Desugaring { self: PreTyper =>
           symbol.addScrutinee(classPattern.getParameter(index).withAlias(subScrutineeVar))
           S(subScrutineeVar.withSymbol(symbol) -> S(parameterPattern))
         case (pattern, _) =>
-          raiseError(PreTyping, msg"unsupported pattern" -> pattern.toLoc)
+          raiseDesugaringError(msg"unsupported pattern" -> pattern.toLoc)
           N
       }.toList
     }(r => s"flattenClassParameters ==> ${r.mkString(", ")}")
@@ -255,7 +254,7 @@ trait Desugaring { self: PreTyper =>
           (scopeWithNestedAll, bindNestedAll.andThen(bindPrevious))
         // Well, other patterns are not supported yet.
         case (acc, S(nme -> S(pattern))) =>
-          raiseError(PreTyping, msg"unsupported pattern is" -> pattern.toLoc)
+          raiseDesugaringError(msg"unsupported pattern is" -> pattern.toLoc)
           acc
         // If this parameter is empty (e.g. produced by wildcard), then we do
         // nothing and pass on scope and binder.
@@ -277,7 +276,7 @@ trait Desugaring { self: PreTyper =>
         symbol.addScrutinee(tuplePattern.getField(index).withAlias(subScrutineeVar))
         S(subScrutineeVar.withSymbol(symbol) -> S(parameterPattern))
       case (pattern, _) =>
-        raiseError(PreTyping, msg"unsupported pattern" -> pattern.toLoc)
+        raiseDesugaringError(msg"unsupported pattern" -> pattern.toLoc)
         N
     }.toList
   }
@@ -303,7 +302,7 @@ trait Desugaring { self: PreTyper =>
       case s.Split.Cons(head, tail) =>
         head.pattern match {
           case pattern @ s.AliasPattern(_, _) =>
-            raiseError(PreTyping, msg"alias pattern is not supported for now" -> pattern.toLoc)
+            raiseDesugaringError(msg"alias pattern is not supported for now" -> pattern.toLoc)
             rec(scrutineeVar, tail)
           case s.LiteralPattern(literal) =>
             scrutineeVar.getOrCreateScrutinee.withAlias(scrutineeVar).getOrCreateLiteralPattern(literal).addLocation(literal)
@@ -359,7 +358,7 @@ trait Desugaring { self: PreTyper =>
               withBindings ++ rec(scrutineeVar, tail)
             }
           case pattern @ s.RecordPattern(_) =>
-            raiseError(PreTyping, msg"record pattern is not supported for now" -> pattern.toLoc)
+            raiseDesugaringError(msg"record pattern is not supported for now" -> pattern.toLoc)
             rec(scrutineeVar, tail)
         }
       case s.Split.Let(isRec, nme, rhs, tail) =>

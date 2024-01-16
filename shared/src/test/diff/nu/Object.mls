@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 
 
@@ -88,9 +88,6 @@ fun foo = forall 'a; (x: 'a) => if x is A then true else false
 
 :e
 Object
-//│ ╔══[ERROR] identifier `Object` not found
-//│ ║  l.90: 	Object
-//│ ╙──      	^^^^^^
 //│ ╔══[ERROR] Class Object is abstract and cannot be instantiated
 //│ ║  l.90: 	Object
 //│ ╙──      	^^^^^^
@@ -103,14 +100,11 @@ Object
 
 :e
 Object()
-//│ ╔══[ERROR] identifier `Object` not found
-//│ ║  l.105: 	Object()
-//│ ╙──       	^^^^^^
 //│ ╔══[ERROR] Class Object is abstract and cannot be instantiated
-//│ ║  l.105: 	Object()
+//│ ║  l.102: 	Object()
 //│ ╙──       	^^^^^^
 //│ ╔══[ERROR] Class Object cannot be instantiated as it exposes no constructor
-//│ ║  l.105: 	Object()
+//│ ║  l.102: 	Object()
 //│ ╙──       	^^^^^^
 //│ error
 //│ Code generation encountered an error:
@@ -118,11 +112,8 @@ Object()
 
 :e
 new Object
-//│ ╔══[ERROR] identifier `Object` not found
-//│ ║  l.120: 	new Object
-//│ ╙──       	    ^^^^^^
 //│ ╔══[ERROR] Class Object is abstract and cannot be instantiated
-//│ ║  l.120: 	new Object
+//│ ║  l.114: 	new Object
 //│ ╙──       	    ^^^^^^
 //│ Object
 //│ Code generation encountered an error:
@@ -132,9 +123,6 @@ new Object
 
 // TODO
 class B() extends Object
-//│ ╔══[ERROR] could not find definition `Object`
-//│ ║  l.134: 	class B() extends Object
-//│ ╙──       	                  ^^^^^^
 //│ class B() extends Object
 //│ Code generation encountered an error:
 //│   unresolved parent Object.

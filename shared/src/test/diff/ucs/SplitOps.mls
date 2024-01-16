@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 abstract class Option[A]: Some[A] | None
 class Some[A](value: A) extends Option[A]
@@ -56,15 +56,6 @@ fun f(x) =
 //│ ╔══[ERROR] identifier `y` not found
 //│ ║  l.52: 	    is None() and y is None() then 0
 //│ ╙──      	                  ^
-//│ ╔══[ERROR] identifier `y` not found
-//│ ║  l.51: 	    is Some(xv) and y is Some(yv) then xv + yv
-//│ ╙──      	                    ^
-//│ ╔══[ERROR] identifier `y` not found
-//│ ║  l.51: 	    is Some(xv) and y is Some(yv) then xv + yv
-//│ ╙──      	                    ^
-//│ ╔══[ERROR] identifier `y` not found
-//│ ║  l.52: 	    is None() and y is None() then 0
-//│ ╙──      	                  ^
 //│ ╔══[ERROR] identifier not found: y
 //│ ║  l.51: 	    is Some(xv) and y is Some(yv) then xv + yv
 //│ ╙──      	                    ^
@@ -93,10 +84,10 @@ fun f(a, b, c) =
   if a
     == 0 and b is B() and c is C() then 0
 //│ ╔══[ERROR] missing else branch
-//│ ║  l.94: 	    == 0 and b is B() and c is C() then 0
+//│ ║  l.85: 	    == 0 and b is B() and c is C() then 0
 //│ ╙──      	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.94: 	    == 0 and b is B() and c is C() then 0
+//│ ║  l.85: 	    == 0 and b is B() and c is C() then 0
 //│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `Bool` is not an instance of type `true`
 //│ fun f: (Num, B, C) -> 0

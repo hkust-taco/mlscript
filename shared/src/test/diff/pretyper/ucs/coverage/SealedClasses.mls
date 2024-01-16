@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 abstract class Term: Abs | App | Var
 class Var(name: Str) extends Term

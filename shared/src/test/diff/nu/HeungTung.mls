@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 
 
@@ -134,9 +134,6 @@ f(refined if true then 0 else false) // this one can be precise again!
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.133: 	f(refined if true then 0 else false) // this one can be precise again!
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] identifier `refined` not found
-//│ ║  l.133: 	f(refined if true then 0 else false) // this one can be precise again!
-//│ ╙──       	  ^^^^^^^
 //│ ╔══[ERROR] Illegal use of reserved operator: refined
 //│ ║  l.133: 	f(refined if true then 0 else false) // this one can be precise again!
 //│ ╙──       	  ^^^^^^^
@@ -199,7 +196,7 @@ type T = List[Int]
 :e // TODO application types
 type Res = M(T)
 //│ ╔══[ERROR] Wrong number of type arguments – expected 0, found 1
-//│ ║  l.200: 	type Res = M(T)
+//│ ║  l.197: 	type Res = M(T)
 //│ ╙──       	           ^^^^
 //│ type Res = M
 
@@ -222,7 +219,7 @@ fun f: Int -> Int
 fun f: Bool -> Bool
 fun f = id
 //│ ╔══[ERROR] A type signature for 'f' was already given
-//│ ║  l.222: 	fun f: Bool -> Bool
+//│ ║  l.219: 	fun f: Bool -> Bool
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ fun f: forall 'a. 'a -> 'a
 //│ fun f: Int -> Int
@@ -230,13 +227,13 @@ fun f = id
 :e // TODO support
 f: (Int -> Int) & (Bool -> Bool)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.231: 	f: (Int -> Int) & (Bool -> Bool)
+//│ ║  l.228: 	f: (Int -> Int) & (Bool -> Bool)
 //│ ║         	^
 //│ ╟── type `Bool` is not an instance of type `Int`
-//│ ║  l.231: 	f: (Int -> Int) & (Bool -> Bool)
+//│ ║  l.228: 	f: (Int -> Int) & (Bool -> Bool)
 //│ ║         	                   ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.221: 	fun f: Int -> Int
+//│ ║  l.218: 	fun f: Int -> Int
 //│ ╙──       	       ^^^
 //│ Int -> Int & Bool -> Bool
 //│ res
@@ -303,20 +300,17 @@ fun test(x) = refined if x is
   A then 0
   B then 1
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.302: 	fun test(x) = refined if x is
+//│ ║  l.299: 	fun test(x) = refined if x is
 //│ ║         	              ^^^^^^^^^^^^^^^
-//│ ║  l.303: 	  A then 0
+//│ ║  l.300: 	  A then 0
 //│ ║         	^^^^^^^^^^
-//│ ║  l.304: 	  B then 1
+//│ ║  l.301: 	  B then 1
 //│ ╙──       	^^^^^^^^^^
-//│ ╔══[ERROR] identifier `refined` not found
-//│ ║  l.302: 	fun test(x) = refined if x is
-//│ ╙──       	              ^^^^^^^
 //│ ╔══[ERROR] Illegal use of reserved operator: refined
-//│ ║  l.302: 	fun test(x) = refined if x is
+//│ ║  l.299: 	fun test(x) = refined if x is
 //│ ╙──       	              ^^^^^^^
 //│ ╔══[ERROR] identifier not found: refined
-//│ ║  l.302: 	fun test(x) = refined if x is
+//│ ║  l.299: 	fun test(x) = refined if x is
 //│ ╙──       	              ^^^^^^^
 //│ fun test: (A | B) -> error
 //│ Code generation encountered an error:

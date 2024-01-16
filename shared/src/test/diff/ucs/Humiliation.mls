@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 
 class Foo[T](x: T)

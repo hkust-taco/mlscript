@@ -150,7 +150,7 @@ class DiffTests
       explainErrors: Bool = false,
       dbg: Bool = false,
       dbgParsing: Bool = false,
-      dbgPreTyper: Opt[Set[Str]] = N,
+      dbgNuUCS: Opt[Set[Str]] = N,
       dbgSimplif: Bool = false,
       dbgUCS: Bool = false,
       fullExceptionStack: Bool = false,
@@ -189,7 +189,8 @@ class DiffTests
     var noRecursiveTypes = false
     var constrainedTypes = false
     var irregularTypes = false
-    var usePreTyper = false
+    // Enable this to see the errors from unfinished `PreTyper`.
+    var showPreTyperErrors = false
     
     // * This option makes some test cases pass which assume generalization should happen in arbitrary arguments
     // * but it's way too aggressive to be ON by default, as it leads to more extrusion, cycle errors, etc.
@@ -214,7 +215,7 @@ class DiffTests
           case "p" => mode.copy(showParse = true)
           case "d" => mode.copy(dbg = true)
           case "dp" => mode.copy(dbgParsing = true)
-          case PreTyperFlags(ts) => mode.copy(dbgPreTyper = mode.dbgPreTyper.fold(S(ts))(ts0 => S(ts0 ++ ts)))
+          case DebugUCSFlags(ts) => mode.copy(dbgNuUCS = mode.dbgNuUCS.fold(S(ts))(ts0 => S(ts0 ++ ts)))
           case "ds" => mode.copy(dbgSimplif = true)
           case "ducs" => mode.copy(dbg = true, dbgUCS = true)
           case "s" => mode.copy(fullExceptionStack = true)
@@ -259,9 +260,8 @@ class DiffTests
             // println("'"+line.drop(str.length + 2)+"'")
             typer.startingFuel = line.drop(str.length + 2).toInt; mode
           case "ResetFuel" => typer.startingFuel = typer.defaultStartingFuel; mode
-          // I believe `PreTyper` will become a part of new definition typing.
-          // So, this will be removed after `PreTyper` is done.
-          case "PreTyper" => newParser = true; newDefs = true; usePreTyper = true; mode
+          // Enable this to see the errors from unfinished `PreTyper`.
+          case "ShowPreTyperErrors" => newParser = true; newDefs = true; showPreTyperErrors = true; mode
           case "ne" => mode.copy(noExecution = true)
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
@@ -524,14 +524,15 @@ class DiffTests
             val (typeDefs, stmts, newDefsResults) = if (newDefs) {
               val vars: Map[Str, typer.SimpleType] = Map.empty
               val rootTypingUnit = TypingUnit(p.tops)
-              if (usePreTyper) {
-                val preTyper = new PreTyper(mode.dbgPreTyper) {
-                  override def emitString(str: String): Unit = output(str)
-                }
-                // This should be passed to code generation somehow.
-                preTyperScope = preTyper.process(rootTypingUnit, preTyperScope, "<root>")._1
-                report(preTyper.getDiagnostics)
+              val preTyper = new PreTyper {
+                override def debugTopicFilters = mode.dbgNuUCS
+                override def emitString(str: String): Unit = output(str)
               }
+              // This scope will be passed to typer and code generator after
+              // pretyper is completed.
+              preTyperScope = preTyper(rootTypingUnit, preTyperScope, "<root>")
+              report(preTyper.filterDiagnostics(_.source is Diagnostic.Desugaring))
+              if (showPreTyperErrors) report(preTyper.filterDiagnostics(_.source is Diagnostic.PreTyping))
               val tpd = typer.typeTypingUnit(rootTypingUnit, N)(ctx, raise, vars)
               
               def showTTU(ttu: typer.TypedTypingUnit, ind: Int): Unit = {
@@ -1134,7 +1135,7 @@ object DiffTests {
       // file.segments.toList.init.lastOption.contains("parser")
   }
 
-  object PreTyperFlags {
+  object DebugUCSFlags {
     private val pattern = "^ucs(?::\\s*([A-Za-z\\.-]+)(,\\s*[A-Za-z\\.-]+)*)?$".r
     def unapply(flags: Str): Opt[Set[Str]] =
       flags match {

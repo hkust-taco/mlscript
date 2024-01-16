@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 class Point(x: Int, y: Int)
 //│ class Point(x: Int, y: Int)
@@ -24,9 +24,6 @@ fun g(xs) =
   if xs is
     head :: _ then head
 //│ ╔══[ERROR] type identifier `::` not found
-//│ ║  l.25: 	    head :: _ then head
-//│ ╙──      	         ^^
-//│ ╔══[ERROR] identifier `::` not found
 //│ ║  l.25: 	    head :: _ then head
 //│ ╙──      	         ^^
 //│ ╔══[ERROR] type identifier not found: ::

@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 
 abstract class Exp[A]: Pair | Lit
@@ -36,12 +36,6 @@ fun f(e) = if e is
 //│ ╔══[ERROR] unknown pattern Pair‹'a, 'b›(l, r,)
 //│ ║  l.35: 	  Pair['a, 'b](l, r) then [l, r]
 //│ ╙──      	  ^^^^^^^^^^^^^^^^^^
-//│ ╔══[ERROR] identifier `l` not found
-//│ ║  l.35: 	  Pair['a, 'b](l, r) then [l, r]
-//│ ╙──      	                           ^
-//│ ╔══[ERROR] identifier `r` not found
-//│ ║  l.35: 	  Pair['a, 'b](l, r) then [l, r]
-//│ ╙──      	                              ^
 //│ ╔══[ERROR] identifier not found: l
 //│ ║  l.35: 	  Pair['a, 'b](l, r) then [l, r]
 //│ ╙──      	                           ^
@@ -58,14 +52,11 @@ fun f(e) = if e is
   Pair(l: a, r) then
     let f(x: a) = x
     f(l)
-//│ ╔══[ERROR] identifier `l` not found
-//│ ║  l.60: 	    f(l)
-//│ ╙──      	      ^
 //│ ╔══[ERROR] type identifier not found: a
-//│ ║  l.59: 	    let f(x: a) = x
+//│ ║  l.53: 	    let f(x: a) = x
 //│ ╙──      	             ^
 //│ ╔══[ERROR] identifier not found: l
-//│ ║  l.60: 	    f(l)
+//│ ║  l.54: 	    f(l)
 //│ ╙──      	      ^
 //│ fun f: Pair[anything, anything] -> error
 //│ Code generation encountered an error:

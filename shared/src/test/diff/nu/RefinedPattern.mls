@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 
 class C
@@ -30,9 +30,6 @@ test(D(123))
 
 :e
 refined
-//│ ╔══[ERROR] identifier `refined` not found
-//│ ║  l.32: 	refined
-//│ ╙──      	^^^^^^^
 //│ ╔══[ERROR] Illegal use of reserved operator: refined
 //│ ║  l.32: 	refined
 //│ ╙──      	^^^^^^^

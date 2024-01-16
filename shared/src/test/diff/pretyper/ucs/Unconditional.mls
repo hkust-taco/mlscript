@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 class Point(x: Int, y: Int)
 class Rectangle(x: Int, y: Int, width: Int, height: Int)

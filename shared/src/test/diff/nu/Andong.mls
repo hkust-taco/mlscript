@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 
 class Union<Region>(a: Region, b: Region)

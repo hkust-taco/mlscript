@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 // Test that reprduces subtle type simplification bug
 

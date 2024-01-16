@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 :js
 class Add<out E>(lhs: E, rhs: E)
@@ -367,9 +367,6 @@ Barr.y
 mixin Base {
   fun x = y
 }
-//│ ╔══[ERROR] identifier `y` not found
-//│ ║  l.368: 	  fun x = y
-//│ ╙──       	          ^
 //│ ╔══[ERROR] identifier not found: y
 //│ ║  l.368: 	  fun x = y
 //│ ╙──       	          ^

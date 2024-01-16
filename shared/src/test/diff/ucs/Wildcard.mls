@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 fun (++) strcat(a, b) = concat(a)(b)
 //│ fun (++) strcat: (Str, Str) -> Str

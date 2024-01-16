@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 
 class Pair[A](fst: A, snd: A)
@@ -84,19 +84,7 @@ fun foo2(x) = x is (Pair(a, b) and a > b) | Int
 //│ ╔══[ERROR] type identifier `|` not found
 //│ ║  l.80: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
 //│ ╙──      	                                          ^
-//│ ╔══[ERROR] type identifier `Int` not found
-//│ ║  l.80: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
-//│ ╙──      	                                            ^^^
-//│ ╔══[ERROR] identifier `|` not found
-//│ ║  l.80: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
-//│ ╙──      	                                          ^
 //│ ╔══[ERROR] type identifier `|` not found
-//│ ║  l.79: 	fun foo1(x) = x is Pair(a, b) | Int
-//│ ╙──      	                              ^
-//│ ╔══[ERROR] type identifier `Int` not found
-//│ ║  l.79: 	fun foo1(x) = x is Pair(a, b) | Int
-//│ ╙──      	                                ^^^
-//│ ╔══[ERROR] identifier `|` not found
 //│ ║  l.79: 	fun foo1(x) = x is Pair(a, b) | Int
 //│ ╙──      	                              ^
 //│ ╔══[ERROR] type identifier not found: |

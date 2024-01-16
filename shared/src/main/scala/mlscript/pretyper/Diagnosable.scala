@@ -22,5 +22,8 @@ trait Diagnosable {
   protected def raiseWarning(source: Source, messages: (Message -> Opt[Loc])*): Unit =
     raise(WarningReport(messages.toList, newDefs = true, source))
 
-  def getDiagnostics: Ls[Diagnostic] = diagnosticBuffer.toList
+  @inline final def filterDiagnostics(f: Diagnostic => Bool): Ls[Diagnostic] =
+    diagnosticBuffer.iterator.filter(f).toList
+
+  @inline final def getDiagnostics: Ls[Diagnostic] = diagnosticBuffer.toList
 }

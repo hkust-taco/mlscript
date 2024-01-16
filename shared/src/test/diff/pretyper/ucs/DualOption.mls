@@ -1,5 +1,5 @@
 :NewDefs
-:PreTyper
+:NewDefs
 
 abstract class Option[T]
 class Some[T](value: T) extends Option[T]

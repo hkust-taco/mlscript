@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 
 fun (++) stringConcat(a, b) = concat(a)(b)

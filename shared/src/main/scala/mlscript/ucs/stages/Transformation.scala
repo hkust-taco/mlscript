@@ -1,18 +1,13 @@
 package mlscript.ucs.stages
 
+import mlscript.ucs.syntax.source._
 import mlscript.ucs.{DesugarUCS, helpers}
 import mlscript.{If, IfBody, IfBlock, IfElse, IfLet, IfOpApp, IfOpsApp, IfThen}
-import mlscript.{Blk, Term, Var, App, Tup, Lit, Fld, Loc}
-import mlscript.Diagnostic.PreTyping
+import mlscript.{Blk, Term, Var, App, Tup, Lit, Fld, Loc, NuFunDef, PlainTup}
 import mlscript.pretyper.Traceable
-import mlscript.ucs.syntax.source._
 import mlscript.Message, Message._
 import mlscript.utils._, shorthands._
-import mlscript.NuFunDef
-import mlscript.PlainTup
-import scala.collection.immutable
-import scala.annotation.tailrec
-import scala.util.chaining._
+import scala.collection.immutable, scala.annotation.tailrec, scala.util.chaining._
 
 /**
   * Transform the parsed AST into an AST similar to the one in the paper.
@@ -72,7 +67,7 @@ trait Transformation { self: DesugarUCS with Traceable =>
           case (acc, R(NuFunDef(S(rec), nme, _, _, L(rhs)))) =>
             acc ++ Split.Let(rec, nme, rhs, Split.Nil)
           case (acc, R(statement)) =>
-            raiseError(msg"Unexpected statement in an if block" -> statement.toLoc)
+            raiseDesugaringError(msg"Unexpected statement in an if block" -> statement.toLoc)
             acc
         }
       case IfOpsApp(lhs, opsRhss) =>
@@ -99,7 +94,7 @@ trait Transformation { self: DesugarUCS with Traceable =>
     opsRhss.iterator.flatMap {
       case Var("and") -> rhs => S(transformIfBody(rhs))
       case op -> rhs =>
-        raiseError(
+        raiseDesugaringError(
           msg"cannot transform due to an illegal split operator ${op.name}" -> op.toLoc,
           msg"the following branch will be discarded" -> rhs.toLoc)
         N
@@ -129,7 +124,7 @@ trait Transformation { self: DesugarUCS with Traceable =>
           val ::(head, tail) = splitAnd(lhs)
           PatternBranch(transformPattern(head), transformConjunction(tail, transformIfBody(rhs), false)).toSplit
         case IfOpApp(lhs, op, rhs) =>
-          raiseError(msg"Syntactic split of patterns are not supported" -> op.toLoc)
+          raiseDesugaringError(msg"Syntactic split of patterns are not supported" -> op.toLoc)
           Split.Nil
         case IfOpsApp(lhs, opsRhss) =>
           // BEGIN TEMPORARY PATCH
@@ -172,7 +167,7 @@ trait Transformation { self: DesugarUCS with Traceable =>
           case (acc, R(NuFunDef(S(rec), nme, _, _, L(rhs)))) =>
             acc ++ Split.Let(rec, nme, rhs, Split.Nil)
           case (acc, R(statement)) =>
-            raiseError(msg"Unexpected statement in an if block" -> statement.toLoc)
+            raiseDesugaringError(msg"Unexpected statement in an if block" -> statement.toLoc)
             acc
         }
         case IfElse(expr) => Split.default(expr)
@@ -199,7 +194,7 @@ trait Transformation { self: DesugarUCS with Traceable =>
       transformPattern(p) match {
         case cp: ClassPattern => cp.copy(refined = true).withLocOf(cp)
         case p =>
-          raiseError(msg"only class patterns can be refined" -> p.toLoc)
+          raiseDesugaringError(msg"only class patterns can be refined" -> p.toLoc)
           p
       }
     case App(classNme @ Var(_), parameters: Tup) =>
@@ -208,7 +203,7 @@ trait Transformation { self: DesugarUCS with Traceable =>
     case Blk((term: Term) :: Nil) => transformPattern(term) // A speical case for FunnyIndet.mls
     case other =>
       println(s"other $other")
-      raiseError(msg"unknown pattern ${other.showDbg}" -> other.toLoc)
+      raiseDesugaringError(msg"unknown pattern ${other.showDbg}" -> other.toLoc)
       EmptyPattern(other)
   }
 

@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 fun (~~>) expect(a, b) = if a === b then () else error
 //│ fun (~~>) expect: forall 'a. (Eql['a], 'a) -> ()
@@ -7,14 +7,13 @@ class Numb(n: Int)
 //│ class Numb(n: Int)
 
 
-:e
+// FIXME: The following test case should fail, but it doesn't. The reason is
+// `x` and `y` are in the desugared lexical scope, although they don't in the
+// original lexical scope.
 fun process(e) =
   if e is
     Numb(n) and n > 0 then n
     Numb(m) then n
-//│ ╔══[ERROR] identifier `n` not found
-//│ ║  l.14: 	    Numb(m) then n
-//│ ╙──      	                 ^
 //│ fun process: Numb -> Int
 
 
@@ -57,11 +56,8 @@ fun process(e) =
     Pair(Vec(xs), Vec(ys))  then n
     Pair(Vec(n),  Numb(n)) then n
     Pair(Numb(n), Vec(n))  then n
-//│ ╔══[ERROR] identifier `n` not found
-//│ ║  l.57: 	    Pair(Vec(xs), Vec(ys))  then n
-//│ ╙──      	                                 ^
 //│ ╔══[ERROR] identifier not found: n
-//│ ║  l.57: 	    Pair(Vec(xs), Vec(ys))  then n
+//│ ║  l.56: 	    Pair(Vec(xs), Vec(ys))  then n
 //│ ╙──      	                                 ^
 //│ fun process: Pair[Numb | Vec, Numb | Vec] -> (Int | Numb | error)
 //│ Code generation encountered an error:

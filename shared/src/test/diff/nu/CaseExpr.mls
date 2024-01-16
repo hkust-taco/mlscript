@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 
 case 0 then true
@@ -66,9 +66,6 @@ fun map(f) = case
 //│ ╔══[ERROR] type identifier `as` not found
 //│ ║  l.65: 	  None as n then n
 //│ ╙──      	       ^^
-//│ ╔══[ERROR] identifier `as` not found
-//│ ║  l.65: 	  None as n then n
-//│ ╙──      	       ^^
 //│ ╔══[ERROR] type identifier not found: as
 //│ ║  l.65: 	  None as n then n
 //│ ╙──      	       ^^
@@ -80,10 +77,10 @@ fun map(f) = case
 :pe
 case 1
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'case'; found integer literal instead
-//│ ║  l.81: 	case 1
+//│ ║  l.78: 	case 1
 //│ ║        	     ^
 //│ ╟── Note: 'case' expression starts here:
-//│ ║  l.81: 	case 1
+//│ ║  l.78: 	case 1
 //│ ╙──      	^^^^
 //│ anything -> 1
 //│ res
@@ -92,13 +89,13 @@ case 1
 :pe
 case (1 then true)
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.93: 	case (1 then true)
+//│ ║  l.90: 	case (1 then true)
 //│ ╙──      	        ^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'case'; found integer literal instead
-//│ ║  l.93: 	case (1 then true)
+//│ ║  l.90: 	case (1 then true)
 //│ ║        	     ^^^^^^^^^^^^^
 //│ ╟── Note: 'case' expression starts here:
-//│ ║  l.93: 	case (1 then true)
+//│ ║  l.90: 	case (1 then true)
 //│ ╙──      	^^^^
 //│ anything -> 1
 //│ res
@@ -112,16 +109,16 @@ case else 0
 :pe
 case then 1 else 0
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in expression position
-//│ ║  l.113: 	case then 1 else 0
+//│ ║  l.110: 	case then 1 else 0
 //│ ╙──       	     ^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'case'; found integer literal instead
-//│ ║  l.113: 	case then 1 else 0
+//│ ║  l.110: 	case then 1 else 0
 //│ ║         	          ^
 //│ ╟── Note: 'case' expression starts here:
-//│ ║  l.113: 	case then 1 else 0
+//│ ║  l.110: 	case then 1 else 0
 //│ ╙──       	^^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found 'else' keyword instead
-//│ ║  l.113: 	case then 1 else 0
+//│ ║  l.110: 	case then 1 else 0
 //│ ╙──       	            ^^^^
 //│ anything -> 1
 //│ res
@@ -135,19 +132,16 @@ case then 1 else 0
 :e
 case x, y then x + y
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
-//│ ║  l.136: 	case x, y then x + y
+//│ ║  l.133: 	case x, y then x + y
 //│ ╙──       	        ^^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'case'; found operator application instead
-//│ ║  l.136: 	case x, y then x + y
+//│ ║  l.133: 	case x, y then x + y
 //│ ║         	     ^^^^^^^^^^^^^^^
 //│ ╟── Note: 'case' expression starts here:
-//│ ║  l.136: 	case x, y then x + y
+//│ ║  l.133: 	case x, y then x + y
 //│ ╙──       	^^^^
-//│ ╔══[ERROR] identifier `x` not found
-//│ ║  l.136: 	case x, y then x + y
-//│ ╙──       	     ^
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.136: 	case x, y then x + y
+//│ ║  l.133: 	case x, y then x + y
 //│ ╙──       	     ^
 //│ anything -> ()
 //│ Code generation encountered an error:
@@ -156,15 +150,10 @@ case x, y then x + y
 :e
 case (x, y) then x + y
 //│ ╔══[ERROR] type identifier `,` not found
-//│ ║  l.157: 	case (x, y) then x + y
+//│ ║  l.151: 	case (x, y) then x + y
 //│ ╙──       	      ^^^^
-//│ ╔══[ERROR] identifier , refers to different symbols.
-//│ ║  l.157: 	case (x, y) then x + y
-//│ ║         	      ^^^^
-//│ ╟── it is resolved to `,`
-//│ ╙── it was previously resolved to local `,`
 //│ ╔══[ERROR] type identifier not found: ,
-//│ ║  l.157: 	case (x, y) then x + y
+//│ ║  l.151: 	case (x, y) then x + y
 //│ ╙──       	      ^^^^
 //│ nothing -> error
 //│ Code generation encountered an error:

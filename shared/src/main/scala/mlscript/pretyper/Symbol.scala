@@ -25,11 +25,6 @@ package object symbol {
     
     override def name: Str = defn.name
 
-    def scope: Scope = ???
-    def contents: Map[Str, Symbol] = ???
-
-    def complete(scope: Scope, contents: Map[Str, Symbol]): Unit = ???
-
     var baseTypes: Ls[TypeSymbol] = Nil
     var sealedDerivedTypes: Ls[TypeSymbol] = Nil
 
@@ -60,6 +55,8 @@ package object symbol {
     override def defn: NuTypeDef = die
 
     override def name: Str = nme.name
+
+    override def showDbg: Str = s"dummy class $name"
   }
 
   final class ClassSymbol(override val defn: NuTypeDef) extends TypeSymbol {

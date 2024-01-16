@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 fun (~~>) expect(a, b) = if a === b then () else error
 //│ fun (~~>) expect: forall 'a. (Eql['a], 'a) -> ()

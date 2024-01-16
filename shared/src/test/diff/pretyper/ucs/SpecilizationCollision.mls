@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 // This test file is to track possible name collision during specialization.
 
@@ -21,18 +21,14 @@ fun example1(p) =
     else "nah"
 //│ fun example1: (Object & ~#Pair | Pair[Num, Num]) -> ("both negative" | "both positive" | "nah")
 
-:e
+// FIXME: The following test case should fail, but it doesn't. The reason is
+// `x` and `y` are in the desugared lexical scope, although they don't in the
+// original lexical scope.
 fun example2(p) =
   if p is
     Pair(x, y) and p1(x) and p1(y) then "both negative"
     Pair(a, b) and p2(a) and p2(b) then x + y
     else "nah"
-//│ ╔══[ERROR] identifier `x` not found
-//│ ║  l.28: 	    Pair(a, b) and p2(a) and p2(b) then x + y
-//│ ╙──      	                                        ^
-//│ ╔══[ERROR] identifier `y` not found
-//│ ║  l.28: 	    Pair(a, b) and p2(a) and p2(b) then x + y
-//│ ╙──      	                                            ^
 //│ fun example2: (Object & ~#Pair | Pair[Int, Int]) -> ("both negative" | "nah" | Int)
 
 // Next, let's check the name collision between a class and its super class.

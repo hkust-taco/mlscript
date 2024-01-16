@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 // Summon the underlying JavaScript `Object.is` function so that we can compare
 // any objects. For example, functions do not conforms to `Eql` so we cannot

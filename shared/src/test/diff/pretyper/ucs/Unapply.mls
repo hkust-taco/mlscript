@@ -1,5 +1,4 @@
 :NewDefs
-:PreTyper
 
 class Point(x: Int, y: Int, z: Int)
 //│ class Point(x: Int, y: Int, z: Int)

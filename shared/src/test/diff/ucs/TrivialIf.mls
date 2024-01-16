@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 :NoJS
 
 fun abs(x) = if x < 0 then 0 - x else x

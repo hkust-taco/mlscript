@@ -1,20 +1,17 @@
 package mlscript.pretyper
 
-import collection.mutable.{Set => MutSet}
-import collection.immutable.SortedMap
-import symbol._
-import mlscript._, utils._, shorthands._, Diagnostic.PreTyping, Message.MessageContext, ucs.DesugarUCS
-import scala.annotation.tailrec
+import annotation.tailrec, collection.mutable.{Set => MutSet}, collection.immutable.SortedMap, util.chaining._
+import mlscript._, utils._, shorthands._, Diagnostic.PreTyping, Message.MessageContext, symbol._, ucs.DesugarUCS
 
-class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with Diagnosable with DesugarUCS {
+class PreTyper extends Traceable with Diagnosable with DesugarUCS {
   import PreTyper._
 
   /** A shorthand function to raise errors without specifying the source. */
-  protected override def raiseError(messages: (Message -> Opt[Loc])*): Unit =
+  protected def raiseError(messages: (Message -> Opt[Loc])*): Unit =
     raiseError(PreTyping, messages: _*)
 
   /** A shorthand function to raise warnings without specifying the source. */
-  protected override def raiseWarning(messages: (Message -> Opt[Loc])*): Unit =
+  protected def raiseWarning(messages: (Message -> Opt[Loc])*): Unit =
     raiseWarning(PreTyping, messages: _*)
 
   private def extractParameters(fields: Term): Ls[LocalTermSymbol] = {
@@ -38,9 +35,9 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
         raiseError(msg"unsupported pattern shape" -> other.toLoc)
         Iterator.empty
     }
-    val rs = rec(fields).toList
-    println(s"extractParameters ${fields.showDbg} ==> ${rs.iterator.map(_.name).mkString(", ")}")
-    rs
+    rec(fields).tap { rs =>
+      println(s"extractParameters ${fields.showDbg} ==> ${rs.map(_.name).mkString(", ")}")
+    }.toList
   }
 
   protected def resolveVar(v: Var)(implicit scope: Scope): Unit =
@@ -60,9 +57,9 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
             println(s"resolveVar `${v.name}` ==> class")
             v.symbol = sym
           case S(_) =>
-            raiseError(PreTyping, msg"identifier `${v.name}` is resolved to a type" -> v.toLoc)
+            raiseError(msg"identifier `${v.name}` is resolved to a type" -> v.toLoc)
           case N =>
-            raiseError(PreTyping, msg"identifier `${v.name}` not found" -> v.toLoc)
+            raiseError(msg"identifier `${v.name}` not found" -> v.toLoc)
         }
     }
 
@@ -71,7 +68,7 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
       v.symbolOption match {
         case N => resolveVar(v)
         case S(symbol) => scope.getSymbols(v.name) match {
-          case Nil => raiseError(PreTyping, msg"identifier `${v.name}` not found" -> v.toLoc)
+          case Nil => raiseError(msg"identifier `${v.name}` not found" -> v.toLoc)
           case symbols if symbols.contains(symbol) => ()
           case symbols =>
             def toNameLoc(symbol: Symbol): (Str, Opt[Loc]) = symbol match {
@@ -81,7 +78,7 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
               case dt: DefinedTermSymbol => s"`${dt.name}`" -> dt.defn.toLoc
             }
             val (name, loc) = toNameLoc(symbol)
-            raiseError(PreTyping,
+            raiseError(
               (msg"identifier ${v.name} refers to different symbols." -> v.toLoc ::
                 msg"it is resolved to $name" -> loc ::
                 symbols.map { s =>
@@ -106,16 +103,26 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
           traverseTerm(body)(scope + new LocalTermSymbol(nme))
         case New(head, body) =>
           // `new C(...)` or `new C(){...}` or `new{...}`
-        case Tup(fields) => fields.foreach { case (_, Fld(_, t)) => traverseTerm(t) }
+        case Tup(fields) => fields.foreach {
+          case (S(t), Fld(_, _)) => traverseTerm(t)
+          case (N, Fld(_, t)) => traverseTerm(t)
+        }
         case Asc(trm, ty) => traverseTerm(trm)
         case ef @ If(_, _) => traverseIf(ef)(scope)
-        case TyApp(lhs, targs) => // TODO: When?
-        case Eqn(lhs, rhs) => ??? // TODO: How?
+        case TyApp(lhs, targs) =>
+          // Be consistent with the error message from `Typer`.
+          raiseError(msg"type application syntax is not yet supported" -> term.toLoc)
+        case Eqn(lhs, rhs) =>
+          raiseWarning(msg"unsupported `Eqn`: ${term.showDbg}" -> term.toLoc)
         case Blk(stmts) =>
           traverseStatements(stmts, "block", scope)
           ()
-        case Subs(arr, idx) => traverseTerm(arr); traverseTerm(idx)
-        case Bind(lhs, rhs) => traverseTerm(lhs); traverseTerm(rhs)
+        case Subs(arr, idx) =>
+          traverseTerm(arr)
+          traverseTerm(idx)
+        case Bind(lhs, rhs) =>
+          traverseTerm(lhs)
+          traverseTerm(rhs)
         case Splc(fields) => fields.foreach {
           case L(t) => traverseTerm(t)
           case R(Fld(_, t)) => traverseTerm(t)
@@ -124,8 +131,9 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
         case Rcd(fields) => fields.foreach { case (_, Fld(_, t)) => traverseTerm(t) }
         case CaseOf(trm, cases) => 
         case With(trm, fields) => traverseTerm(trm); traverseTerm(fields)
-        case Where(body, where) => ??? // TODO: When?
-        // begin UCS shorthands
+        case Where(body, where) =>
+          raiseWarning(msg"unsupported `Where`: ${term.showDbg}" -> term.toLoc)
+        // begin UCS shorthands ================================================
         //  * Old-style operators
         case App(App(Var("is"), _), _) =>
           println(s"found UCS shorthand: ${term.showDbg}")
@@ -148,12 +156,16 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
           val desugared = If(IfThen(lhs, rhs), S(Var("false")))
           traverseIf(desugared)
           term.desugaredTerm = desugared.desugaredTerm
-        // end UCS shorthands
+        // end UCS shorthands ==================================================
+        case App(lhs, Tup(fields)) =>
+          traverseTerm(lhs)
+          fields.foreach { _._2.value |> traverseTerm }
         case App(lhs, rhs) => traverseTerm(lhs); traverseTerm(rhs)
         case Test(trm, ty) => traverseTerm(trm)
         case _: Lit | _: Super => ()
         case v: Var => traverseVar(v)
-        case AdtMatchWith(cond, arms) => ??? // TODO: How?
+        case AdtMatchWith(cond, arms) =>
+          raiseWarning(msg"unsupported `AdtMatchWith`: ${term.showDbg}" -> term.toLoc)
         case Inst(body) => traverseTerm(body)
         case NuNew(cls) => traverseTerm(cls)
         case Rft(base, decls) => // For object refinement
@@ -169,7 +181,7 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
       ()
     }(_ => s"traverseTypeDefinition <== ${defn.describe}")
 
-  private def traverseStatements(statements: Ls[Statement], name: Str, parentScope: Scope): (Scope, TypeContents) =
+  private def traverseStatements(statements: Ls[Statement], name: Str, parentScope: Scope): Scope =
     trace(s"traverseStatements <== $name: ${"statement".pluralize(statements.size, true)}") {
       // Pass 1: Build a scope with type symbols only.
       val filterNuTypeDef = { (_: Statement) match { case t: NuTypeDef => S(t); case _ => N } }
@@ -190,7 +202,7 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
         acc + (self -> extractSuperTypes(self.defn.parents).flatMap { nme =>
           val maybeSymbol = scopeWithTypes.getTypeSymbol(nme.name)
           if (maybeSymbol.isEmpty) {
-            raiseError(PreTyping, msg"could not find definition `${nme.name}`" -> nme.toLoc)
+            raiseError(msg"could not find definition `${nme.name}`" -> nme.toLoc)
           }
           maybeSymbol
         })
@@ -208,11 +220,7 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
           val derivedTypes = try extractSignatureTypes(unions) catch { case _: NotImplementedError => Nil }
           symbol.sealedDerivedTypes = derivedTypes.flatMap { derivedType =>
             val maybeSymbol = scopeWithTypes.getTypeSymbol(derivedType.name)
-            if (maybeSymbol.isEmpty) raise(ErrorReport(
-              msg"Undefined type $derivedType" -> derivedType.toLoc :: Nil,
-              true,
-              Diagnostic.PreTyping
-            ))
+            if (maybeSymbol.isEmpty) raiseError(msg"Undefined type $derivedType" -> derivedType.toLoc)
             maybeSymbol
           }
           println(s">>> $name: ${symbol.sealedDerivedTypes.iterator.map(_.name).mkString(", ")}")
@@ -257,13 +265,13 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
           case R(_) => ()
         }
       }
-      (completeScope, new TypeContents)
-    }({ case (scope, contents) => s"traverseStatements ==> Scope {${scope.showLocalSymbols}}" })
+      completeScope
+    }({ scope => s"traverseStatements ==> Scope {${scope.showLocalSymbols}}" })
 
-  def process(typingUnit: TypingUnit, scope: Scope, name: Str): (Scope, TypeContents) =
-    trace(s"process <== $name: ${typingUnit.describe}") {
+  def apply(typingUnit: TypingUnit, scope: Scope, name: Str): Scope =
+    trace(s"PreTyper <== $name: ${typingUnit.describe}") {
       traverseStatements(typingUnit.entities, name, scope)
-    }({ case (scope, contents) => s"process ==> ${scope.showLocalSymbols}" })
+    }({ scope => s"PreTyper ==> ${scope.showLocalSymbols}" })
   
   /**
     * Extract types in class signatures. For example, for this piece of code
@@ -289,23 +297,24 @@ class PreTyper(override val debugTopics: Opt[Set[Str]]) extends Traceable with D
     }
     rec(Nil, ty).reverse
   }
-}
-
-object PreTyper {
 
   def extractSuperTypes(parents: Ls[Term]): Ls[Var] = {
     @tailrec
-    def rec(results: Ls[Var], waitlist: Ls[Term]): Ls[Var] =
-      waitlist match {
-        case Nil => results.reverse
-        case (nme: Var) :: tail => rec(nme :: results, tail)
-        case (TyApp(ty, _)) :: tail => rec(results, ty :: tail)
-        case (App(term, Tup(_))) :: tail => rec(results, term :: tail)
-        case other :: _ => println(s"Unknown parent type: $other"); ???
+    def rec(acc: Ls[Var], rest: Ls[Term]): Ls[Var] =
+      rest match {
+        case Nil => acc.reverse
+        case (nme: Var) :: tail => rec(nme :: acc, tail)
+        case (TyApp(ty, _)) :: tail => rec(acc, ty :: tail)
+        case (App(term, Tup(_))) :: tail => rec(acc, term :: tail)
+        case head :: tail =>
+          raiseWarning(msg"unknown type in parent types: ${head.showDbg}" -> head.toLoc)
+          rec(acc, tail)
       }
     rec(Nil, parents)
   }
+}
 
+object PreTyper {
   def transitiveClosure[A](graph: Map[A, List[A]])(implicit ord: Ordering[A]): SortedMap[A, List[A]] = {
     def dfs(vertex: A, visited: Set[A]): Set[A] = {
       if (visited.contains(vertex)) visited

@@ -31,7 +31,7 @@ trait CoverageChecking { self: DesugarUCS with Traceable =>
       term match {
         case Let(_, _, _, body) => checkCoverage(body, pending, working, seen)
         case CaseOf(scrutineeVar: Var, Case(Var("true"), body, NoCases)) if context.isTestVar(scrutineeVar) =>
-          raiseError(msg"missing else branch" -> body.toLoc)
+          raiseDesugaringError(msg"missing else branch" -> body.toLoc)
           Nil
         case CaseOf(ScrutineeData.WithVar(scrutinee, scrutineeVar), cases) =>
           println(s"scrutinee: ${scrutineeVar.name}")
@@ -87,9 +87,9 @@ trait CoverageChecking { self: DesugarUCS with Traceable =>
                   )
                 case N =>
                   unseenPatterns -> (diagnostics :+ (seen.get(namedScrutinee) match {
-                    case S((`classSymbol`, _, _)) => WarningReport("tautology", Nil, Diagnostic.PreTyping)
-                    case S(_) => ErrorReport("contradiction", Nil, Diagnostic.PreTyping)
-                    case N => ErrorReport("unvisited scrutinee", Nil, Diagnostic.PreTyping)
+                    case S((`classSymbol`, _, _)) => WarningReport("tautology", Nil, Diagnostic.Desugaring)
+                    case S(_) => ErrorReport("contradiction", Nil, Diagnostic.Desugaring)
+                    case N => ErrorReport("unvisited scrutinee", Nil, Diagnostic.Desugaring)
                   }))
               }
             case ((unseenPatterns, diagnostics), (literal: Lit) -> body) =>
@@ -131,7 +131,7 @@ object CoverageChecking {
             msg"${prologue}scrutinee `${scrutinee._1.name}` is `${classSymbol.name}`$epilogue" -> locations.headOption
           }.toList ::: lines
         }
-      }, true, Diagnostic.PreTyping))
+      }, true, Diagnostic.Desugaring))
     }
 
   /** A helper function that prints entries from the given registry line by line. */

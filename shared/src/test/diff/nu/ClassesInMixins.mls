@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 
 
@@ -48,9 +48,6 @@ fun foo(x) = if x is M.Foo then 1
 
 :e
 mixin Test2 { let f = Foo(1) }
-//│ ╔══[ERROR] identifier `Foo` not found
-//│ ║  l.50: 	mixin Test2 { let f = Foo(1) }
-//│ ╙──      	                      ^^^
 //│ ╔══[ERROR] identifier not found: Foo
 //│ ║  l.50: 	mixin Test2 { let f = Foo(1) }
 //│ ╙──      	                      ^^^
@@ -63,10 +60,10 @@ mixin Test2 { let f = Foo(1) }
 :e
 mixin Test3 { fun f(x) = if x is Foo then 1 }
 //│ ╔══[ERROR] type identifier `Foo` not found
-//│ ║  l.64: 	mixin Test3 { fun f(x) = if x is Foo then 1 }
+//│ ║  l.61: 	mixin Test3 { fun f(x) = if x is Foo then 1 }
 //│ ╙──      	                                 ^^^
 //│ ╔══[ERROR] type identifier not found: Foo
-//│ ║  l.64: 	mixin Test3 { fun f(x) = if x is Foo then 1 }
+//│ ║  l.61: 	mixin Test3 { fun f(x) = if x is Foo then 1 }
 //│ ╙──      	                                 ^^^
 //│ mixin Test3() {
 //│   fun f: nothing -> error
@@ -87,10 +84,10 @@ mixin Test {
     Add(l, r) then this.size(l) + this.size(r)
 }
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.84: 	    fun cached = size(this)
+//│ ║  l.81: 	    fun cached = size(this)
 //│ ║        	                 ^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.82: 	  class Add<A>(lhs: A, rhs: A) {
+//│ ║  l.79: 	  class Add<A>(lhs: A, rhs: A) {
 //│ ╙──      	            ^
 //│ mixin Test() {
 //│   this: {size: (??A | 'a) -> Int}

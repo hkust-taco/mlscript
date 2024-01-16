@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 fun (|>) pipe(x, f) = f(x)
 fun (++) strcat(s1, s2) = concat(s1)(s2)

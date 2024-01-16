@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 :js
 module A {
@@ -1262,9 +1262,6 @@ fun main =
     else g(x - 1)
   let g(x: Int): Int = f(x)
   f
-//│ ╔══[ERROR] identifier `g` not found
-//│ ║  l.1262: 	    else g(x - 1)
-//│ ╙──        	         ^
 //│ fun main: (x: Int) -> Int
 //│ // Prelude
 //│ class TypingUnit24 {}

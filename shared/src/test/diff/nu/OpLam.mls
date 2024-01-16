@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 
 x => x is 42
@@ -105,12 +105,6 @@ x => x + 2
 
 :e
 x => x.y => y
-//│ ╔══[ERROR] unsupported pattern shape
-//│ ║  l.107: 	x => x.y => y
-//│ ╙──       	     ^^^
-//│ ╔══[ERROR] identifier `y` not found
-//│ ║  l.107: 	x => x.y => y
-//│ ╙──       	            ^
 //│ ╔══[ERROR] Unsupported pattern shape:
 //│ ║  l.107: 	x => x.y => y
 //│ ╙──       	     ^^^

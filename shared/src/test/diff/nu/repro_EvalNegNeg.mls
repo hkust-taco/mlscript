@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 
 class Add<out E>(lhs: E, rhs: E)

@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 
 type Option[out A] = Some[A] | None
@@ -108,15 +108,6 @@ fun test(x: Option[Int]) =
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in expression position
 //│ ║  l.105: 	  then
 //│ ╙──       	  ^^^^
-//│ ╔══[ERROR] identifier `value` not found
-//│ ║  l.107: 	    [value - 1, value + 1]
-//│ ╙──       	     ^^^^^
-//│ ╔══[ERROR] identifier `value` not found
-//│ ║  l.107: 	    [value - 1, value + 1]
-//│ ╙──       	                ^^^^^
-//│ ╔══[ERROR] identifier `value` not found
-//│ ║  l.106: 	    log(value)
-//│ ╙──       	        ^^^^^
 //│ ╔══[ERROR] Unexpected statement in an if block
 //│ ║  l.104: 	    Some(value)
 //│ ╙──       	    ^^^^^^^^^^^

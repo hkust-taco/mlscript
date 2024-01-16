@@ -27,7 +27,7 @@ trait Normalization { self: DesugarUCS with Traceable =>
   ): Split =
     if (these.hasElse) {
       if (those =/= Split.Nil && shouldReportDiscarded) {
-        raiseWarning(
+        raiseDesugaringWarning(
           msg"the case is unreachable" -> those.toLoc,
           msg"because this branch already covers the case" -> these.toLoc
         )
@@ -83,7 +83,7 @@ trait Normalization { self: DesugarUCS with Traceable =>
     def :++(tail: => Split): Split = {
       if (these.hasElse) {
         println("tail is discarded")
-        // raiseWarning(msg"Discarded split because of else branch" -> these.toLoc)
+        // raiseDesugaringWarning(msg"Discarded split because of else branch" -> these.toLoc)
         these
       } else {
         these ++ tail
@@ -137,7 +137,7 @@ trait Normalization { self: DesugarUCS with Traceable =>
         val falseBranch = normalizeToCaseBranches(specialize(tail, false)(scrutineeVar, scrutinee, pattern, context))
         CaseOf(scrutineeVar, Case(nme, trueBranch, falseBranch)(refined = pattern.refined))
       case Split.Cons(Branch(scrutinee, pattern, continuation), tail) =>
-        raiseError(msg"unsupported pattern: ${pattern.toString}" -> pattern.toLoc)
+        raiseDesugaringError(msg"unsupported pattern: ${pattern.toString}" -> pattern.toLoc)
         errorTerm
       case Split.Let(_, nme, _, tail) if context.isScrutineeVar(nme) && generatedVars.contains(nme) =>
         println(s"LET: SKIP already declared scrutinee ${nme.name}")
@@ -152,7 +152,7 @@ trait Normalization { self: DesugarUCS with Traceable =>
         println(s"DFLT: ${default.showDbg}")
         default
       case Split.Nil =>
-        raiseError(msg"unexpected empty split found" -> N)
+        raiseDesugaringError(msg"unexpected empty split found" -> N)
         errorTerm
     }
   }(split => "normalizeToTerm ==> " + showNormalizedTerm(split))
@@ -211,7 +211,7 @@ trait Normalization { self: DesugarUCS with Traceable =>
                 println(s"Case 1: class name: ${className.name} === ${otherClassName.name}")
                 if (otherRefined =/= refined) {
                   def be(value: Bool): Str = if (value) "is" else "is not"
-                  raiseWarning(
+                  raiseDesugaringWarning(
                     msg"inconsistent refined case branches" -> pattern.toLoc,
                     msg"class pattern ${className.name} ${be(refined)} refined" -> className.toLoc,
                     msg"but class pattern ${otherClassName.name} ${be(otherRefined)} refined" -> otherClassName.toLoc
@@ -230,7 +230,7 @@ trait Normalization { self: DesugarUCS with Traceable =>
               }
             case _ =>
               // TODO: Make a case for this. Check if this is a valid case.
-              raiseError(
+              raiseDesugaringError(
                 msg"pattern ${pattern.toString}" -> pattern.toLoc,
                 msg"is incompatible with class pattern ${otherClassName.name}" -> otherClassName.toLoc,
               )
@@ -253,7 +253,7 @@ trait Normalization { self: DesugarUCS with Traceable =>
               println("both of them are class patterns")
               if (otherRefined =/= refined) {
                 def be(value: Bool): Str = if (value) "is" else "is not"
-                raiseWarning(
+                raiseDesugaringWarning(
                   msg"inconsistent refined case branches" -> pattern.toLoc,
                   msg"class pattern ${className.name} ${be(refined)} refined" -> className.toLoc,
                   msg"but class pattern ${otherClassName.name} ${be(otherRefined)} refined" -> otherClassName.toLoc
@@ -317,7 +317,7 @@ trait Normalization { self: DesugarUCS with Traceable =>
         }
       // Other patterns. Not implemented.
       case (_, split @ Split.Cons(Branch(otherScrutineeVar, pattern, continuation), tail)) =>
-        raiseError(msg"found unsupported pattern: ${pattern.toString}" -> pattern.toLoc)
+        raiseDesugaringError(msg"found unsupported pattern: ${pattern.toString}" -> pattern.toLoc)
         split
       case (_, let @ Split.Let(_, nme, _, tail)) =>
         println(s"let binding ${nme.name}, go next")

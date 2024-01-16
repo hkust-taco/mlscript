@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 class Base()
 class Derived1() extends Base()

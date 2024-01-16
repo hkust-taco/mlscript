@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 abstract class Option[A]: Some[A] | None
 class Some[A](value: A) extends Option[A]

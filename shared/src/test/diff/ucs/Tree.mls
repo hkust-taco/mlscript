@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 type Option[out A] = Some[A] | None
 class Some[out A](value: A)

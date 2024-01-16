@@ -1,4 +1,4 @@
-:PreTyper
+:NewDefs
 
 
 1; 2
@@ -208,9 +208,6 @@ foo(1), 2
 
 :ge // FIXME
 let rec x() = x() in x
-//│ ╔══[ERROR] identifier `x` not found
-//│ ║  l.210: 	let rec x() = x() in x
-//│ ╙──       	              ^
 //│ nothing
 //│ Code generation encountered an error:
 //│   recursive non-function definition x is not supported
@@ -219,7 +216,7 @@ let rec x() = x() in x
 :pe
 let x[T] = 1 in x
 //│ ╔══[PARSE ERROR] Expected function parameter list; found square bracket section instead
-//│ ║  l.220: 	let x[T] = 1 in x
+//│ ║  l.217: 	let x[T] = 1 in x
 //│ ╙──       	     ^^^
 //│ 1
 //│ res
@@ -284,16 +281,16 @@ foo(
 :e
 foo(log(1);2)
 //│ ╔══[PARSE ERROR] Unexpected semicolon here
-//│ ║  l.285: 	foo(log(1);2)
+//│ ║  l.282: 	foo(log(1);2)
 //│ ╙──       	          ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.285: 	foo(log(1);2)
+//│ ║  l.282: 	foo(log(1);2)
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── argument of type `[?a]` does not match type `[?b, ?c]`
-//│ ║  l.285: 	foo(log(1);2)
+//│ ║  l.282: 	foo(log(1);2)
 //│ ║         	   ^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.248: 	fun foo(x, y) = [x, y]
+//│ ║  l.245: 	fun foo(x, y) = [x, y]
 //│ ╙──       	       ^^^^^^
 //│ error | [nothing, nothing]
 //│ res
@@ -304,13 +301,13 @@ foo(log(1);2)
 :e
 foo((log(1),2))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.305: 	foo((log(1),2))
+//│ ║  l.302: 	foo((log(1),2))
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── argument of type `[?a]` does not match type `[?b, ?c]`
-//│ ║  l.305: 	foo((log(1),2))
+//│ ║  l.302: 	foo((log(1),2))
 //│ ║         	   ^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.248: 	fun foo(x, y) = [x, y]
+//│ ║  l.245: 	fun foo(x, y) = [x, y]
 //│ ╙──       	       ^^^^^^
 //│ error | [nothing, nothing]
 //│ res
@@ -329,13 +326,13 @@ foo((let x = log(0), 1; log(x), x + 1), 2)
 :e
 foo(let x = log(0), 1; log(x), x + 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.330: 	foo(let x = log(0), 1; log(x), x + 1)
+//│ ║  l.327: 	foo(let x = log(0), 1; log(x), x + 1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── argument of type `[?a]` does not match type `[?b, ?c]`
-//│ ║  l.330: 	foo(let x = log(0), 1; log(x), x + 1)
+//│ ║  l.327: 	foo(let x = log(0), 1; log(x), x + 1)
 //│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.248: 	fun foo(x, y) = [x, y]
+//│ ║  l.245: 	fun foo(x, y) = [x, y]
 //│ ╙──       	       ^^^^^^
 //│ error | [nothing, nothing]
 //│ res
@@ -347,13 +344,13 @@ foo(let x = log(0), 1; log(x), x + 1)
 :e
 foo(let x = log(0), 1 in log(x), x + 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.348: 	foo(let x = log(0), 1 in log(x), x + 1)
+//│ ║  l.345: 	foo(let x = log(0), 1 in log(x), x + 1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── argument of type `[?a]` does not match type `[?b, ?c]`
-//│ ║  l.348: 	foo(let x = log(0), 1 in log(x), x + 1)
+//│ ║  l.345: 	foo(let x = log(0), 1 in log(x), x + 1)
 //│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.248: 	fun foo(x, y) = [x, y]
+//│ ║  l.245: 	fun foo(x, y) = [x, y]
 //│ ╙──       	       ^^^^^^
 //│ error | [nothing, nothing]
 //│ res
@@ -365,13 +362,13 @@ foo(let x = log(0), 1 in log(x), x + 1)
 :e
 foo(let x = log(0), 1; log(x), 1 + 1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.366: 	foo(let x = log(0), 1; log(x), 1 + 1)
+//│ ║  l.363: 	foo(let x = log(0), 1; log(x), 1 + 1)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── argument of type `[?a]` does not match type `[?b, ?c]`
-//│ ║  l.366: 	foo(let x = log(0), 1; log(x), 1 + 1)
+//│ ║  l.363: 	foo(let x = log(0), 1; log(x), 1 + 1)
 //│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.248: 	fun foo(x, y) = [x, y]
+//│ ║  l.245: 	fun foo(x, y) = [x, y]
 //│ ╙──       	       ^^^^^^
 //│ error | [nothing, nothing]
 //│ res
@@ -383,13 +380,13 @@ foo(let x = log(0), 1; log(x), 1 + 1)
 :e
 foo(if true then 1 else 2, 3)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.384: 	foo(if true then 1 else 2, 3)
+//│ ║  l.381: 	foo(if true then 1 else 2, 3)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── argument of type `[1 | ?a]` does not match type `[?b, ?c]`
-//│ ║  l.384: 	foo(if true then 1 else 2, 3)
+//│ ║  l.381: 	foo(if true then 1 else 2, 3)
 //│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.248: 	fun foo(x, y) = [x, y]
+//│ ║  l.245: 	fun foo(x, y) = [x, y]
 //│ ╙──       	       ^^^^^^
 //│ error | [nothing, nothing]
 //│ res
@@ -403,13 +400,13 @@ foo((if true then 1 else 2), 3)
 :e
 foo(if true then log("ok"), 1 else log("nok"), 2, 3)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.404: 	foo(if true then log("ok"), 1 else log("nok"), 2, 3)
+//│ ║  l.401: 	foo(if true then log("ok"), 1 else log("nok"), 2, 3)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── argument of type `[?a | ?b]` does not match type `[?c, ?d]`
-//│ ║  l.404: 	foo(if true then log("ok"), 1 else log("nok"), 2, 3)
+//│ ║  l.401: 	foo(if true then log("ok"), 1 else log("nok"), 2, 3)
 //│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.248: 	fun foo(x, y) = [x, y]
+//│ ║  l.245: 	fun foo(x, y) = [x, y]
 //│ ╙──       	       ^^^^^^
 //│ error | [nothing, nothing]
 //│ res
