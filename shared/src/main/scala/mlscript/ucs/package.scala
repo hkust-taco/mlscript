@@ -43,10 +43,4 @@ package object ucs {
     def toIndentedString: Str =
       lines.iterator.map { case (n, line) => "  " * n + line }.mkString("\n")
   }
-
-  // TODO: Remove this exception. The desugarer should work in a non-fatal way.
-  // We may call `lastWords` if unrecoverable errors are found.
-  class DesugaringException(val messages: Ls[Message -> Opt[Loc]]) extends Throwable {
-    def this(message: Message, location: Opt[Loc]) = this(message -> location :: Nil)
-  }
 }

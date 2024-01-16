@@ -74,10 +74,10 @@ trait Desugarer extends Transformation
       */
     def getOrCreateScrutinee(implicit context: Context): Scrutinee = nme.symbolOption match {
       case S(symbol: TermSymbol) => symbol.getOrCreateScrutinee
-      case S(otherSymbol) => throw new DesugaringException(
-        msg"Expected scrutinee symbol, found ${nme.symbol.name}" -> nme.toLoc :: Nil
-      )
-      case N => throw new DesugaringException(msg"Scrutinee symbol not found" -> nme.toLoc :: Nil)
+      case S(otherSymbol) =>
+        raiseDesugaringError(msg"cannot identifier `${nme.name}` with a scrutinee" -> nme.toLoc)
+        context.freshScrutinee // TODO
+      case N => lastWords(s"`${nme.name}` should be assoicated with a symbol")
     }
 
     /** Associate the `Var` with a scrutinee and returns the same `Var`. */
@@ -85,12 +85,10 @@ trait Desugarer extends Transformation
       case S(symbol: TermSymbol) =>
         symbol.addScrutinee(scrutinee)
         nme
-      case S(otherSymbol) => throw new DesugaringException(
-        msg"Expected scrutinee symbol, found ${nme.symbol.name}" -> nme.toLoc :: Nil
-      )
-      case N => throw new DesugaringException(
-        msg"Scrutinee symbol not found" -> nme.toLoc :: Nil
-      )
+      case S(otherSymbol) =>
+        raiseDesugaringError(msg"cannot identifier `${nme.name}` with a scrutinee" -> nme.toLoc)
+        nme
+      case N => lastWords(s"`${nme.name}` should be assoicated with a symbol")
     }
 
     /**
@@ -201,7 +199,7 @@ trait Desugarer extends Transformation
     */
   protected def traverseIf(`if`: If)(implicit scope: Scope): Unit = {
     implicit val context: Context = new Context(`if`)
-    try trace("traverseIf") {
+    trace("traverseIf") {
       // Stage 0: Transformation
       val transformed = traceWithTopic("transform") {
         println("STEP 0")
@@ -254,9 +252,7 @@ trait Desugarer extends Transformation
       }
       // Epilogue
       `if`.desugaredTerm = S(postProcessed)
-    }(_ => "traverseIf ==> ()") catch {
-      case e: DesugaringException => raiseDesugaringError(e.messages: _*)
-    }
+    }(_ => "traverseIf ==> ()")
   }
   
   /**
