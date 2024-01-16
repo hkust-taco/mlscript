@@ -42,6 +42,7 @@ abstract class ModeType {
   def mono: Bool
   def graphOpt: Bool
   def graphInterp: Bool
+  def graphOptVerbose: Bool
 }
 
 class DiffTests
@@ -170,6 +171,7 @@ class DiffTests
       // noProvs: Bool = false,
       graphOpt: Bool = false,
       graphInterp: Bool = false,
+      graphOptVerbose: Bool = false,
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
     }
@@ -277,6 +279,7 @@ class DiffTests
             return ()
           case "GraphOpt" => mode.copy(graphOpt = true)
           case "GraphInterp" => mode.copy(graphInterp = true)
+          case "GraphOptVerbose" => mode.copy(graphOptVerbose = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
