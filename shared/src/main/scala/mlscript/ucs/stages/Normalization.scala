@@ -9,7 +9,6 @@ import mlscript.ucs, mlscript.pretyper
 import ucs.{Desugarer, Lines, LinesOps, VariableGenerator}
 import ucs.context.{Context, ScrutineeData}
 import ucs.display.{showNormalizedTerm, showSplit}
-import ucs.helpers._
 import ucs.syntax.core.{Pattern, Branch, Split}
 import pretyper.Scope
 import pretyper.symbol._

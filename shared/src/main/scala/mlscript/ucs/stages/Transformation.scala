@@ -1,13 +1,12 @@
 package mlscript.ucs.stages
 
-import mlscript.ucs.syntax.source._
-import mlscript.ucs.{Desugarer, helpers}
+import mlscript.ucs, ucs.Desugarer, ucs.syntax.source._
 import mlscript.{If, IfBody, IfBlock, IfElse, IfLet, IfOpApp, IfOpsApp, IfThen}
 import mlscript.{Blk, Term, Var, App, Tup, Lit, Fld, Loc, NuFunDef, PlainTup}
 import mlscript.pretyper.Traceable
 import mlscript.Message, Message._
 import mlscript.utils._, shorthands._
-import scala.collection.immutable, scala.annotation.tailrec, scala.util.chaining._
+import collection.immutable, annotation.tailrec, util.chaining._
 
 /**
   * Transform the parsed AST into an AST similar to the one in the paper.
@@ -114,12 +113,8 @@ trait Transformation { self: Desugarer with Traceable =>
     trace(s"transformPatternMatching <== ${body.showDbg}") {
       body match {
         case IfThen(expr, rhs) => 
-          separatePattern(expr) match {
-            case (pattern, S(extraTest)) =>
-              PatternBranch(pattern, transformIfBody(IfThen(extraTest, rhs))).toSplit
-            case (pattern, N) =>
-              PatternBranch(pattern, Split.default(rhs)).toSplit
-          }
+          val ::(head, tail) = splitAnd(expr)
+          PatternBranch(transformPattern(head), transformConjunction(tail, Split.then(rhs), false)).toSplit
         case IfOpApp(lhs, Var("and"), rhs) =>
           val ::(head, tail) = splitAnd(lhs)
           PatternBranch(transformPattern(head), transformConjunction(tail, transformIfBody(rhs), false)).toSplit
@@ -205,12 +200,6 @@ trait Transformation { self: Desugarer with Traceable =>
       println(s"other $other")
       raiseDesugaringError(msg"unknown pattern ${other.showDbg}" -> other.toLoc)
       EmptyPattern(other)
-  }
-
-  private def separatePattern(term: Term): (Pattern, Opt[Term]) = {
-    val (rawPattern, extraTest) = helpers.separatePattern(term, true)
-    println(s"pattern: ${rawPattern.showDbg} ;; test: ${extraTest.fold("_")(_.showDbg)}")
-    (transformPattern(rawPattern), extraTest)
   }
 
   /**

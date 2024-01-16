@@ -51,8 +51,8 @@ trait Traceable {
   @inline def traceNot[T](pre: => Str)(thunk: => T)(post: T => Str = Traceable.noPostTrace): T =
     thunk
   
-  @inline protected def println(x: => Any, withIndent: Bool = true): Unit =
-    if (matchTopicFilters) printLineByLine(x, withIndent)
+  @inline protected def println(x: => Any, withIndent: Bool = true, force: Bool = false): Unit =
+    if (force || matchTopicFilters) printLineByLine(x, withIndent)
 }
 
 object Traceable {
