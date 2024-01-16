@@ -1,10 +1,8 @@
 package mlscript.ucs.stages
 
 import mlscript.{App, Asc, Fld, FldFlags, Lit, Sel, Term, Tup, TypeName, Var}
-import mlscript.ucs.PartialTerm
 import mlscript.ucs.syntax.{core => c, source => s}
 import mlscript.ucs.context.{Context, ScrutineeData}
-import mlscript.ucs.helpers.mkBinOp
 import mlscript.utils._, shorthands._
 import mlscript.pretyper.symbol._
 import mlscript.pretyper.{PreTyper, Scope}
@@ -71,7 +69,7 @@ trait Desugaring { self: PreTyper =>
   private def falsePattern(implicit scope: Scope, context: Context) =
     c.Pattern.Class(Var("false").withResolvedClassLikeSymbol, false)
 
-  private def desugarTermSplit(split: s.TermSplit)(implicit termPart: PartialTerm, scope: Scope, context: Context): c.Split =
+  private def desugarTermSplit(split: s.TermSplit)(implicit termPart: PartialTerm.Incomplete, scope: Scope, context: Context): c.Split =
     split match {
       case s.Split.Cons(head, tail) => desugarTermBranch(head) ++ desugarTermSplit(tail)
       case s.Split.Let(rec, nme, rhs, tail) =>
@@ -82,7 +80,7 @@ trait Desugaring { self: PreTyper =>
 
   // This function does not need to can `withCachedTermPart` because all branches assume that
   // `termPart` is either empty or waiting for an RHS.
-  private def desugarTermBranch(branch: s.TermBranch)(implicit termPart: PartialTerm, scope: Scope, context: Context): c.Split =
+  private def desugarTermBranch(branch: s.TermBranch)(implicit termPart: PartialTerm.Incomplete, scope: Scope, context: Context): c.Split =
     trace(s"desugarTermBranch <== $termPart") {
       branch match {
         case s.TermBranch.Boolean(testPart, continuation) =>
@@ -90,17 +88,17 @@ trait Desugaring { self: PreTyper =>
           c.Split.Let(
             rec = false,
             name = test,
-            term = Asc(termPart.addTerm(testPart, true).get, TypeName("Bool")),
+            term = Asc(termPart.addTerm(testPart).get, TypeName("Bool")),
             tail = c.Branch(test, truePattern, desugarTermSplit(continuation)(PartialTerm.Empty, scope + test.symbol, context)) :: c.Split.Nil
           )
         case s.TermBranch.Match(scrutinee, split) =>
-          desugarPatternSplit(termPart.addTerm(scrutinee, true).get, split)
+          desugarPatternSplit(termPart.addTerm(scrutinee).get, split)
         case s.TermBranch.Left(left, continuation) =>
-          desugarOperatorSplit(continuation)(termPart.addTerm(left, true), scope, context)
+          desugarOperatorSplit(continuation)(termPart.addTerm(left), scope, context)
       }
     }()
 
-  private def withCachedTermPart[B <: s.Branch](desugar: (PartialTerm, Scope) => c.Split)(implicit termPart: PartialTerm, scope: Scope, context: Context): c.Split =
+  private def withCachedTermPart[B <: s.Branch](desugar: (PartialTerm.Total, Scope) => c.Split)(implicit termPart: PartialTerm.Total, scope: Scope, context: Context): c.Split =
     termPart.get match {
       case v: Var => desugar(termPart, scope) // No need to cache variables.
       case rhs =>
@@ -108,7 +106,7 @@ trait Desugaring { self: PreTyper =>
         c.Split.Let(false, cache, rhs, desugar(PartialTerm.Total(cache, Nil), scope + cache.symbol))
     }
 
-  private def desugarOperatorSplit(split: s.OperatorSplit)(implicit termPart: PartialTerm, scope: Scope, context: Context): c.Split =
+  private def desugarOperatorSplit(split: s.OperatorSplit)(implicit termPart: PartialTerm.Total, scope: Scope, context: Context): c.Split =
     withCachedTermPart { (termPart, scope) => split match {
       case s.Split.Cons(head, tail) => desugarOperatorBranch(head)(termPart, scope, context) ++ desugarOperatorSplit(tail)(termPart, scope, context)
       case s.Split.Let(rec, nme, rhs, tail) =>
@@ -117,7 +115,7 @@ trait Desugaring { self: PreTyper =>
       case s.Split.Nil => c.Split.Nil
     }}
 
-  private def desugarOperatorBranch(branch: s.OperatorBranch)(implicit termPart: PartialTerm, scope: Scope, context: Context): c.Split =
+  private def desugarOperatorBranch(branch: s.OperatorBranch)(implicit termPart: PartialTerm.Total, scope: Scope, context: Context): c.Split =
     trace(s"desugarOperatorBranch <== $termPart") {
       branch match {
         case s.OperatorBranch.Binary(op, split) => desugarTermSplit(split)(termPart.addOp(op), scope, context)

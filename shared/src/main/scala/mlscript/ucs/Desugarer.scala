@@ -11,13 +11,12 @@ import syntax.core.{Branch, Split}
 
 /**
   * The main class of the UCS desugaring.
-  * TODO: Rename to `Desugarer` once the old desugarer is removed.
   */
-trait DesugarUCS extends Transformation
-                    with Desugaring
-                    with Normalization
-                    with PostProcessing 
-                    with CoverageChecking { self: PreTyper =>
+trait Desugarer extends Transformation
+                with Desugaring
+                with Normalization
+                with PostProcessing 
+                with CoverageChecking { self: PreTyper =>
 
   /** A shorthand function to raise _desugaring_ errors without specifying the source. */
   protected def raiseDesugaringError(messages: (Message -> Opt[Loc])*): Unit =

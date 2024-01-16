@@ -15,7 +15,7 @@ import mlscript.Message._
  *  In order to turn the resulting CompactType into a mlscript.Type, we use `expandCompactType`.
  */
 class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val newDefs: Bool)
-    extends mlscript.ucs.old.Desugarer with TypeSimplifier {
+    extends TypeDefs with TypeSimplifier {
   
   def funkyTuples: Bool = false
   def doFactorize: Bool = false
@@ -1269,9 +1269,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case elf: If =>
         elf.desugaredTerm match {
           case S(desugared) => typeTerm(desugared)
-          case N => try typeTerm(desugarIf(elf)) catch {
-            case e: ucs.DesugaringException => err(e.messages)
-          }
+          case N => err(msg"not desugared UCS term found", elf.toLoc)
         }
       case AdtMatchWith(cond, arms) =>
         println(s"typed condition term ${cond}")

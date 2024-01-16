@@ -6,7 +6,7 @@ import mlscript.{CaseBranches, Case, Wildcard, NoCases}
 import mlscript.Message, Message.MessageContext
 import mlscript.utils._, shorthands._
 import mlscript.ucs, mlscript.pretyper
-import ucs.{DesugarUCS, Lines, LinesOps, VariableGenerator}
+import ucs.{Desugarer, Lines, LinesOps, VariableGenerator}
 import ucs.context.{Context, ScrutineeData}
 import ucs.display.{showNormalizedTerm, showSplit}
 import ucs.helpers._
@@ -15,7 +15,7 @@ import pretyper.Scope
 import pretyper.symbol._
 import pretyper.{Diagnosable, Traceable}
 
-trait Normalization { self: DesugarUCS with Traceable =>
+trait Normalization { self: Desugarer with Traceable =>
   import Normalization._
 
   // TODO: We might not need the case where `deep` is `false`.

@@ -1,6 +1,6 @@
 :NewDefs
 
-:ucs:postprocess.result,desugared
+:ducs:postprocess.result,desugared
 fun mixed_literals(v) =
   if v is
     true then "true"
@@ -18,7 +18,7 @@ fun mixed_literals(v) =
 //│ ╙──
 //│ fun mixed_literals: (1 | 2 | false | true) -> ("1" | "2" | "false" | "true")
 
-:ucs:postprocess.result
+:ducs:postprocess.result
 fun separated_by_and(v) =
   if v is
     true then "true"
@@ -32,7 +32,7 @@ fun separated_by_and(v) =
 //│ ╙──
 //│ fun separated_by_and: Bool -> ("false" | "true")
 
-:ucs:postprocess.result
+:ducs:postprocess.result
 fun dual_patterns(x, y) =
   if
     x is "some" and y is "none" then 0
@@ -51,7 +51,7 @@ fun dual_patterns(x, y) =
 //│ | | | | | | |       "none" -> 3
 //│ fun dual_patterns: ("none" | "some", "none" | "some") -> (0 | 1 | 2 | 3)
 
-:ucs:postprocess.result
+:ducs:postprocess.result
 fun unordered_dual_patterns(x, y) =
   if
     x is "some" and y is "none" then 0

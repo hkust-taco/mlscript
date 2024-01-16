@@ -1,7 +1,7 @@
 package mlscript.ucs.stages
 
 import mlscript.ucs.syntax.source._
-import mlscript.ucs.{DesugarUCS, helpers}
+import mlscript.ucs.{Desugarer, helpers}
 import mlscript.{If, IfBody, IfBlock, IfElse, IfLet, IfOpApp, IfOpsApp, IfThen}
 import mlscript.{Blk, Term, Var, App, Tup, Lit, Fld, Loc, NuFunDef, PlainTup}
 import mlscript.pretyper.Traceable
@@ -16,7 +16,7 @@ import scala.collection.immutable, scala.annotation.tailrec, scala.util.chaining
   * The AST in the paper is more flexible. For example, it allows interleaved
   * `let` bindings in operator splits.
   */
-trait Transformation { self: DesugarUCS with Traceable =>
+trait Transformation { self: Desugarer with Traceable =>
   import Transformation._
 
   /** The entry point of transformation. */

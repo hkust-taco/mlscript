@@ -22,7 +22,7 @@ fun sum(acc, xs) =
 
 // FIXME: Remove redundant `_ -> (ucs$args_xs$Some_0$Cons).1`.
 // Why are they everywhere?
-:ucs:postprocess.result
+:ducs:postprocess.result
 fun test(xs) =
   if xs is
     Some(Cons("add", Cons(x, Cons(y, Nil)))) then x + y

@@ -1,14 +1,14 @@
 package mlscript.ucs.stages
 
 import mlscript.{Case, CaseBranches, CaseOf, Let, Lit, Loc, NoCases, Term, Var, Wildcard}
-import mlscript.ucs.DesugarUCS
+import mlscript.ucs.Desugarer
 import mlscript.ucs.context.{Context, PatternInfo, ScrutineeData}
 import mlscript.pretyper.symbol._
 import mlscript.utils._, shorthands._
 import mlscript.Message, Message.MessageContext
 import scala.annotation.tailrec
 
-trait PostProcessing { self: DesugarUCS with mlscript.pretyper.Traceable =>
+trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
   import PostProcessing._
 
   def postProcess(term: Term)(implicit context: Context): Term = trace(s"postProcess <== ${term.showDbg}") {

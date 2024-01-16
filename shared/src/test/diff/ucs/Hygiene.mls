@@ -7,7 +7,7 @@ class Right[out T](value: T)
 //│ class Left[T](value: T)
 //│ class Right[T](value: T)
 
-:ucs:postprocess.result
+:ducs:postprocess.result
 fun foo(x) = if x is
   Some(Left(y)) then x
   Some(x) then x

@@ -3,13 +3,13 @@ package mlscript.ucs.stages
 import mlscript.{Case, CaseBranches, CaseOf, Let, Lit, Loc, NoCases, Term, Var, Wildcard}
 import mlscript.{Diagnostic, ErrorReport, WarningReport}
 import mlscript.Message, Message.MessageContext
-import mlscript.ucs.DesugarUCS
+import mlscript.ucs.Desugarer
 import mlscript.ucs.context.{Context, CaseSet, NamedScrutineeData, MatchRegistry, ScrutineeData, SeenRegistry}
 import mlscript.pretyper.Traceable
 import mlscript.pretyper.symbol._
 import mlscript.utils._, shorthands._
 
-trait CoverageChecking { self: DesugarUCS with Traceable =>
+trait CoverageChecking { self: Desugarer with Traceable =>
   import CoverageChecking._
 
   def checkCoverage(term: Term)(implicit context: Context): Ls[Diagnostic] = {

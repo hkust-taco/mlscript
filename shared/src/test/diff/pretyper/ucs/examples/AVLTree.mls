@@ -262,7 +262,7 @@ fun bf(t) =
 //   than placed in parallel, otherwise, the later branches will appear in the
 //   else branch of all its previous branches. **WORK IN PROGRESS**
 //
-// :ucs:postprocess
+// :ducs:postprocess
 fun balance(t: Tree['A]): Tree['A] =
   if t is
     Node(x, l, r, _) and height(r) - height(l)

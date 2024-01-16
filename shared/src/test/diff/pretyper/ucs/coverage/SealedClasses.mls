@@ -9,7 +9,7 @@ class App(func: Term, arg: Term) extends Term
 //│ class Abs(param: Str, body: Term) extends Term
 //│ class App(func: Term, arg: Term) extends Term
 
-:ucs:desugar.result
+:ducs:desugar.result
 fun is_value_explicit_refinement(term) =
   if term is refined(Term) and term is
     Abs(_, _) then true
@@ -22,7 +22,7 @@ fun is_value_explicit_refinement(term) =
 //│ | | | | | | |   term*‡ is App then false
 //│ fun is_value_explicit_refinement: (Abs | App | Var) -> Bool
 
-:ucs:normalize.result,postprocess.result
+:ducs:normalize.result,postprocess.result
 fun is_value_automatic_refinement(term) =
   if term is Term and term is
     Abs(_, _) then true

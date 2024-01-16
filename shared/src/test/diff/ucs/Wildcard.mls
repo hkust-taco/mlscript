@@ -195,7 +195,7 @@ class Delta()
 
 // This should generate only one case expression instead of a chain of case
 // expressions. DO check the desugared term!
-:ucs:postprocess.result
+:ducs:postprocess.result
 fun w5(y) =
   if y is
     Alpha then "alpha"

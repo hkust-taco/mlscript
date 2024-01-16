@@ -25,7 +25,7 @@ abstract class ModeType {
   def dbg: Bool
   def dbgParsing: Bool
   def dbgSimplif: Bool
-  def dbgUCS: Bool
+  def dbgUCS: Opt[Set[Str]]
   def fullExceptionStack: Bool
   def stats: Bool
   def stdout: Bool
@@ -150,9 +150,8 @@ class DiffTests
       explainErrors: Bool = false,
       dbg: Bool = false,
       dbgParsing: Bool = false,
-      dbgNuUCS: Opt[Set[Str]] = N,
       dbgSimplif: Bool = false,
-      dbgUCS: Bool = false,
+      dbgUCS: Opt[Set[Str]] = N,
       fullExceptionStack: Bool = false,
       stats: Bool = false,
       stdout: Bool = false,
@@ -215,9 +214,8 @@ class DiffTests
           case "p" => mode.copy(showParse = true)
           case "d" => mode.copy(dbg = true)
           case "dp" => mode.copy(dbgParsing = true)
-          case DebugUCSFlags(ts) => mode.copy(dbgNuUCS = mode.dbgNuUCS.fold(S(ts))(ts0 => S(ts0 ++ ts)))
+          case DebugUCSFlags(x) => mode.copy(dbgUCS = mode.dbgUCS.fold(S(x))(y => S(y ++ x)))
           case "ds" => mode.copy(dbgSimplif = true)
-          case "ducs" => mode.copy(dbg = true, dbgUCS = true)
           case "s" => mode.copy(fullExceptionStack = true)
           case "v" | "verbose" => mode.copy(verbose = true)
           case "ex" | "explain" => mode.copy(expectTypeErrors = true, explainErrors = true)
@@ -471,7 +469,6 @@ class DiffTests
             // if (mode.isDebugging) typer.resetState()
             if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg
-            typer.dbgUCS = mode.dbgUCS
             // typer.recordProvenances = !noProvs
             typer.recordProvenances = !noProvs && !mode.dbg && !mode.dbgSimplif || mode.explainErrors
             typer.generalizeCurriedFunctions = generalizeCurriedFunctions
@@ -525,7 +522,7 @@ class DiffTests
               val vars: Map[Str, typer.SimpleType] = Map.empty
               val rootTypingUnit = TypingUnit(p.tops)
               val preTyper = new PreTyper {
-                override def debugTopicFilters = mode.dbgNuUCS
+                override def debugTopicFilters = mode.dbgUCS
                 override def emitString(str: String): Unit = output(str)
               }
               // This scope will be passed to typer and code generator after
@@ -1136,7 +1133,8 @@ object DiffTests {
   }
 
   object DebugUCSFlags {
-    private val pattern = "^ucs(?::\\s*([A-Za-z\\.-]+)(,\\s*[A-Za-z\\.-]+)*)?$".r
+    // E.g. "ducs", "ducs:foo", "ducs:foo,bar", "ducs:a.b.c,foo"
+    private val pattern = "^ducs(?::\\s*([A-Za-z\\.-]+)(,\\s*[A-Za-z\\.-]+)*)?$".r
     def unapply(flags: Str): Opt[Set[Str]] =
       flags match {
         case pattern(head, tail) =>
