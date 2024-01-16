@@ -1,5 +1,5 @@
 
-:PreTyper
+:NewDefs
 
 :mono
 fun f(x: Int) = if not of x == 0 then 42 else 1337
