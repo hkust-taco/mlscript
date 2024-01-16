@@ -5,9 +5,9 @@ import mlscript.pretyper.symbol.TypeSymbol
 import mlscript.utils._, shorthands._
 
 package object context {
-  type NamedScrutineeData = (Var -> ScrutineeData)
+  type NamedScrutinee = (Var -> Scrutinee)
 
-  type MatchRegistry = Map[NamedScrutineeData, CaseSet]
+  type MatchRegistry = Map[NamedScrutinee, CaseSet]
 
-  type SeenRegistry = Map[NamedScrutineeData, (TypeSymbol, Ls[Loc], CaseSet)]  
+  type SeenRegistry = Map[NamedScrutinee, (TypeSymbol, Ls[Loc], CaseSet)]  
 }

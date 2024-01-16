@@ -4,7 +4,7 @@ import mlscript.{Case, CaseBranches, CaseOf, Let, Lit, Loc, NoCases, Term, Var, 
 import mlscript.{Diagnostic, ErrorReport, WarningReport}
 import mlscript.Message, Message.MessageContext
 import mlscript.ucs.Desugarer
-import mlscript.ucs.context.{Context, CaseSet, NamedScrutineeData, MatchRegistry, ScrutineeData, SeenRegistry}
+import mlscript.ucs.context.{Context, CaseSet, NamedScrutinee, MatchRegistry, Scrutinee, SeenRegistry}
 import mlscript.pretyper.Traceable
 import mlscript.pretyper.symbol._
 import mlscript.utils._, shorthands._
@@ -33,7 +33,7 @@ trait CoverageChecking { self: Desugarer with Traceable =>
         case CaseOf(scrutineeVar: Var, Case(Var("true"), body, NoCases)) if context.isTestVar(scrutineeVar) =>
           raiseDesugaringError(msg"missing else branch" -> body.toLoc)
           Nil
-        case CaseOf(ScrutineeData.WithVar(scrutinee, scrutineeVar), cases) =>
+        case CaseOf(Scrutinee.WithVar(scrutinee, scrutineeVar), cases) =>
           println(s"scrutinee: ${scrutineeVar.name}")
           // If the scrutinee is still pending (i.e., not matched yet), then we
           // remove it from the pending list. If the scrutinee is matched, and
@@ -113,7 +113,7 @@ trait CoverageChecking { self: Desugarer with Traceable =>
 
 object CoverageChecking {
   /** Create an `ErrorReport` that explains missing cases. */
-  private def explainMissingCases(scrutinee: NamedScrutineeData, seen: SeenRegistry, missingCases: CaseSet): Opt[ErrorReport] =
+  private def explainMissingCases(scrutinee: NamedScrutinee, seen: SeenRegistry, missingCases: CaseSet): Opt[ErrorReport] =
     if (missingCases.isEmpty) {
       N
     } else {

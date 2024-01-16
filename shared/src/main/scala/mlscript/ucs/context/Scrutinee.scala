@@ -10,8 +10,8 @@ import mlscript.IntLit
 import mlscript.StrLit
 import mlscript.UnitLit
 
-class ScrutineeData(val context: Context, parent: Opt[ScrutineeData]) {
-  import ScrutineeData._
+class Scrutinee(val context: Context, parent: Opt[Scrutinee]) {
+  import Scrutinee._
 
   private val locations: Buffer[Loc] = Buffer.empty
   private var generatedVarOpt: Opt[Var] = N
@@ -34,7 +34,7 @@ class ScrutineeData(val context: Context, parent: Opt[ScrutineeData]) {
 
   def +=(alias: Var): Unit = alisesSet += alias
 
-  def withAlias(alias: Var): ScrutineeData = { this += alias; this }
+  def withAlias(alias: Var): Scrutinee = { this += alias; this }
 
   def aliasesIterator: Iterator[Var] = alisesSet.iterator
 
@@ -101,7 +101,7 @@ class ScrutineeData(val context: Context, parent: Opt[ScrutineeData]) {
     (classLikePatternsStr ++ tuplePatternStr).mkString(", ")
   }
 
-  def freshSubScrutinee: ScrutineeData = context.freshScrutinee(this)
+  def freshSubScrutinee: Scrutinee = context.freshScrutinee(this)
 
   def toCaseSet: CaseSet = {
     import mlscript.ucs.context.Pattern
@@ -118,14 +118,14 @@ class ScrutineeData(val context: Context, parent: Opt[ScrutineeData]) {
   }
 }
 
-object ScrutineeData {
+object Scrutinee {
   // We might need to move these method to a private `VarOps` because they may
   // emit diagnostics.
 
   import mlscript.Term
   import mlscript.pretyper.symbol.TermSymbol
 
-  def unapply(term: Term)(implicit context: Context): Opt[ScrutineeData] = term match {
+  def unapply(term: Term)(implicit context: Context): Opt[Scrutinee] = term match {
     case v: Var => v.symbol match {
       case symbol: TermSymbol => symbol.getScrutinee
       case _ => N
@@ -134,7 +134,7 @@ object ScrutineeData {
   }
 
   object WithVar {
-    def unapply(term: Term)(implicit context: Context): Opt[(ScrutineeData, Var)] = term match {
+    def unapply(term: Term)(implicit context: Context): Opt[(Scrutinee, Var)] = term match {
       case v @ Var(_) => v.symbol match {
         case symbol: TermSymbol => symbol.getScrutinee.map(_ -> v)
         case _ => N

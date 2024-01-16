@@ -2,7 +2,7 @@ package mlscript.ucs.stages
 
 import mlscript.{Case, CaseBranches, CaseOf, Let, Lit, Loc, NoCases, Term, Var, Wildcard}
 import mlscript.ucs.Desugarer
-import mlscript.ucs.context.{Context, PatternInfo, ScrutineeData}
+import mlscript.ucs.context.{Context, PatternInfo, Scrutinee}
 import mlscript.pretyper.symbol._
 import mlscript.utils._, shorthands._
 import mlscript.Message, Message.MessageContext
@@ -14,11 +14,11 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
   def postProcess(term: Term)(implicit context: Context): Term = trace(s"postProcess <== ${term.showDbg}") {
     // Normalized terms are constructed using `Let` and `CaseOf`.
     term match {
-      case top @ CaseOf(ScrutineeData(_), Wildcard(body)) => body
-      case top @ CaseOf(ScrutineeData.WithVar(scrutinee, scrutineeVar), fst @ Case(className: Var, body, NoCases)) =>
+      case top @ CaseOf(Scrutinee(_), Wildcard(body)) => body
+      case top @ CaseOf(Scrutinee.WithVar(scrutinee, scrutineeVar), fst @ Case(className: Var, body, NoCases)) =>
         println(s"UNARY: ${scrutineeVar.name} is ${className.name}")
         top.copy(cases = fst.copy(body = postProcess(body))(refined = fst.refined))
-      case top @ CaseOf(ScrutineeData.WithVar(scrutinee, scrutineeVar), fst @ Case(pat, trueBranch, Wildcard(falseBranch))) =>
+      case top @ CaseOf(Scrutinee.WithVar(scrutinee, scrutineeVar), fst @ Case(pat, trueBranch, Wildcard(falseBranch))) =>
         println(s"BINARY: ${scrutineeVar.name} is ${pat.showDbg}")
         println(s"patterns of `${scrutineeVar.name}`: ${scrutinee.showPatternsDbg}")
         // Post-process the true branch.
@@ -125,12 +125,12 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
   private def disentangleTerm(term: Term)(implicit
       context: Context,
       scrutineeVar: Var,
-      scrutinee: ScrutineeData,
+      scrutinee: Scrutinee,
       pattern: PatternInfo
   ): (Term, Opt[Term]) = {
     def rec(term: Term): (Term, Opt[Term]) =
       term match {
-        case top @ CaseOf(ScrutineeData.WithVar(otherScrutinee, otherScrutineeVar), cases) =>
+        case top @ CaseOf(Scrutinee.WithVar(otherScrutinee, otherScrutineeVar), cases) =>
           if (scrutinee === otherScrutinee) {
             println(s"found a `CaseOf` that matches on `${scrutineeVar.name}`")
             val (n, y) = disentangleMatchedCaseBranches(cases)
@@ -158,7 +158,7 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
   private def disentangleMatchedCaseBranches(cases: CaseBranches)(implicit
       context: Context,
       scrutineeVar: Var,
-      scrutinee: ScrutineeData,
+      scrutinee: Scrutinee,
       pattern: PatternInfo
   ): (CaseBranches, Opt[Term]) =
     cases match {
@@ -187,7 +187,7 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
   private def disentangleUnmatchedCaseBranches(cases: CaseBranches)(implicit
       context: Context,
       scrutineeVar: Var,
-      scrutinee: ScrutineeData,
+      scrutinee: Scrutinee,
       pattern: PatternInfo
   ): (CaseBranches, CaseBranches) =
     cases match {

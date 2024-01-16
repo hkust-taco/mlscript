@@ -43,16 +43,16 @@ class Context(originalTerm: If) {
   // ====================
 
   /** The buffer contains all `ScrutineeData` created within this context. */
-  private val scrutineeBuffer: Buffer[ScrutineeData] = Buffer.empty
+  private val scrutineeBuffer: Buffer[Scrutinee] = Buffer.empty
 
-  def freshScrutinee: ScrutineeData = {
-    val scrutinee = new ScrutineeData(this, N)
+  def freshScrutinee: Scrutinee = {
+    val scrutinee = new Scrutinee(this, N)
     scrutineeBuffer += scrutinee
     scrutinee
   }
 
-  private[context] def freshScrutinee(parent: ScrutineeData): ScrutineeData = {
-    val scrutinee = new ScrutineeData(this, S(parent))
+  private[context] def freshScrutinee(parent: Scrutinee): Scrutinee = {
+    val scrutinee = new Scrutinee(this, S(parent))
     scrutineeBuffer += scrutinee
     scrutinee
   }

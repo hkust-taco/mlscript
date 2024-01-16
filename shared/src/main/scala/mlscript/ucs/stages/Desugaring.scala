@@ -2,7 +2,7 @@ package mlscript.ucs.stages
 
 import mlscript.{App, Asc, Fld, FldFlags, Lit, Sel, Term, Tup, TypeName, Var}
 import mlscript.ucs.syntax.{core => c, source => s}
-import mlscript.ucs.context.{Context, ScrutineeData}
+import mlscript.ucs.context.{Context, Scrutinee}
 import mlscript.utils._, shorthands._
 import mlscript.pretyper.symbol._
 import mlscript.pretyper.{PreTyper, Scope}

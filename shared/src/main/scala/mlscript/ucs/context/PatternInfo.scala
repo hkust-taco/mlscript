@@ -32,9 +32,9 @@ abstract class PatternInfo {
 }
 
 object PatternInfo {
-  class ClassLike(val classLikeSymbol: TypeSymbol, scrutinee: ScrutineeData) extends PatternInfo {
+  class ClassLike(val classLikeSymbol: TypeSymbol, scrutinee: Scrutinee) extends PatternInfo {
     private var unappliedVarOpt: Opt[Var] = N
-    private val parameters: MutSortedMap[Int, ScrutineeData] = MutSortedMap.empty
+    private val parameters: MutSortedMap[Int, Scrutinee] = MutSortedMap.empty
 
     /**
       * Get or create a sub-scrutinee for the given parameter index.
@@ -43,7 +43,7 @@ object PatternInfo {
       * @return a `ScrutineeData` for the parameter whose parent scrutinee is the
       *         current scrutinee
       */
-    def getParameter(index: Int): ScrutineeData = {
+    def getParameter(index: Int): Scrutinee = {
       require(index >= 0)
       parameters.getOrElseUpdate(index, scrutinee.freshSubScrutinee)
     }
@@ -73,10 +73,10 @@ object PatternInfo {
       Var(classLikeSymbol.name).withLoc(firstOccurrence).withSymbol(classLikeSymbol)
   }
 
-  class Tuple(scrutinee: ScrutineeData) extends PatternInfo {
-    private val fields: MutSortedMap[Int, ScrutineeData] = MutSortedMap.empty
+  class Tuple(scrutinee: Scrutinee) extends PatternInfo {
+    private val fields: MutSortedMap[Int, Scrutinee] = MutSortedMap.empty
 
-    def getField(index: Int): ScrutineeData =
+    def getField(index: Int): Scrutinee =
       fields.getOrElseUpdate(index, scrutinee.freshSubScrutinee)
 
     override def arity: Opt[Int] = fields.keysIterator.maxOption.map(_ + 1)

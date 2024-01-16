@@ -1,7 +1,7 @@
 package mlscript.ucs
 
 import collection.mutable.{Map => MutMap}
-import syntax.{source => s, core => c}, stages._, context.{Context, ScrutineeData}
+import syntax.{source => s, core => c}, stages._, context.{Context, Scrutinee}
 import mlscript.ucs.display.{showNormalizedTerm, showSplit}
 import mlscript.pretyper.{PreTyper, Scope}
 import mlscript.pretyper.symbol._
@@ -72,7 +72,7 @@ trait Desugarer extends Transformation
       * A short hand for `nme.symbol.getScrutinee` but add a diagnostic message
       * to a local diagnostic archive (TODO) if there's any error.
       */
-    def getOrCreateScrutinee(implicit context: Context): ScrutineeData = nme.symbolOption match {
+    def getOrCreateScrutinee(implicit context: Context): Scrutinee = nme.symbolOption match {
       case S(symbol: TermSymbol) => symbol.getOrCreateScrutinee
       case S(otherSymbol) => throw new DesugaringException(
         msg"Expected scrutinee symbol, found ${nme.symbol.name}" -> nme.toLoc :: Nil
@@ -81,7 +81,7 @@ trait Desugarer extends Transformation
     }
 
     /** Associate the `Var` with a scrutinee and returns the same `Var`. */
-    def withScrutinee(scrutinee: ScrutineeData)(implicit context: Context): Var = nme.symbolOption match {
+    def withScrutinee(scrutinee: Scrutinee)(implicit context: Context): Var = nme.symbolOption match {
       case S(symbol: TermSymbol) =>
         symbol.addScrutinee(scrutinee)
         nme

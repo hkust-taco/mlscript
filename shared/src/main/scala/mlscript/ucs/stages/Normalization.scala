@@ -7,7 +7,7 @@ import mlscript.Message, Message.MessageContext
 import mlscript.utils._, shorthands._
 import mlscript.ucs, mlscript.pretyper
 import ucs.{Desugarer, Lines, LinesOps, VariableGenerator}
-import ucs.context.{Context, ScrutineeData}
+import ucs.context.{Context, Scrutinee}
 import ucs.display.{showNormalizedTerm, showSplit}
 import ucs.syntax.core.{Pattern, Branch, Split}
 import pretyper.Scope
@@ -120,7 +120,7 @@ trait Normalization { self: Desugarer with Traceable =>
         val trueBranch = normalizeToTerm(continuation.fill(tail, false, false))
         val falseBranch = normalizeToCaseBranches(tail)
         CaseOf(test, Case(nme, trueBranch, falseBranch)(refined = false))
-      case Split.Cons(Branch(ScrutineeData.WithVar(scrutinee, scrutineeVar), pattern @ Pattern.Literal(literal), continuation), tail) =>
+      case Split.Cons(Branch(Scrutinee.WithVar(scrutinee, scrutineeVar), pattern @ Pattern.Literal(literal), continuation), tail) =>
         println(s"LITERAL: ${scrutineeVar.name} is ${literal.idStr}")
         println(s"entire split: ${showSplit(split)}")
         val concatenatedTrueBranch = continuation.fill(tail, false, false)
@@ -129,7 +129,7 @@ trait Normalization { self: Desugarer with Traceable =>
         // println(s"false branch: ${showSplit(tail)}")
         val falseBranch = normalizeToCaseBranches(specialize(tail, false)(scrutineeVar, scrutinee, pattern, context))
         CaseOf(scrutineeVar, Case(literal, trueBranch, falseBranch)(refined = false))
-      case Split.Cons(Branch(ScrutineeData.WithVar(scrutinee, scrutineeVar), pattern @ Pattern.Class(nme, rfd), continuation), tail) =>
+      case Split.Cons(Branch(Scrutinee.WithVar(scrutinee, scrutineeVar), pattern @ Pattern.Class(nme, rfd), continuation), tail) =>
         println(s"CLASS: ${scrutineeVar.name} is ${nme.name}")
         // println(s"match ${scrutineeVar.name} with $nme (has location: ${nme.toLoc.isDefined})")
         val trueBranch = normalizeToTerm(specialize(continuation.fill(tail, false, false), true)(scrutineeVar, scrutinee, pattern, context))
@@ -187,7 +187,7 @@ trait Normalization { self: Desugarer with Traceable =>
     */
   private def specialize
       (split: Split, matchOrNot: Bool)
-      (implicit scrutineeVar: Var, scrutinee: ScrutineeData, pattern: Pattern, context: Context): Split =
+      (implicit scrutineeVar: Var, scrutinee: Scrutinee, pattern: Pattern, context: Context): Split =
   trace[Split](s"S${if (matchOrNot) "+" else "-"} <== ${scrutineeVar.name} is ${pattern}") {
     (matchOrNot, split) match {
       // Name patterns are translated to let bindings.
@@ -199,7 +199,7 @@ trait Normalization { self: Desugarer with Traceable =>
         val falseBranch = specialize(tail, matchOrNot)
         split.copy(head = head.copy(continuation = trueBranch), tail = falseBranch)
       // Class pattern. Positive.
-      case (true, split @ Split.Cons(head @ Branch(ScrutineeData.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Class(otherClassName, otherRefined), continuation), tail)) =>
+      case (true, split @ Split.Cons(head @ Branch(Scrutinee.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Class(otherClassName, otherRefined), continuation), tail)) =>
         val otherClassSymbol = otherClassName.getClassLikeSymbol
         if (scrutinee === otherScrutinee) {
           println(s"scrutinee: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
@@ -243,7 +243,7 @@ trait Normalization { self: Desugarer with Traceable =>
           )
         }
       // Class pattern. Negative
-      case (false, split @ Split.Cons(head @ Branch(ScrutineeData.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Class(otherClassName, otherRefined), continuation), tail)) =>
+      case (false, split @ Split.Cons(head @ Branch(Scrutinee.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Class(otherClassName, otherRefined), continuation), tail)) =>
         val otherClassSymbol = otherClassName.getClassLikeSymbol
         if (scrutinee === otherScrutinee) {
           println(s"scrutinee: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
@@ -281,7 +281,7 @@ trait Normalization { self: Desugarer with Traceable =>
           )
         }
       // Literal pattern. Positive.
-      case (true, split @ Split.Cons(head @ Branch(ScrutineeData.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Literal(otherLiteral), continuation), tail)) =>
+      case (true, split @ Split.Cons(head @ Branch(Scrutinee.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Literal(otherLiteral), continuation), tail)) =>
         if (scrutinee === otherScrutinee) {
           println(s"scrutinee: ${scrutineeVar.name} is ${otherScrutineeVar.name}")
           pattern match {
@@ -297,7 +297,7 @@ trait Normalization { self: Desugarer with Traceable =>
           )
         }
       // Literal pattern. Negative.
-      case (false, split @ Split.Cons(head @ Branch(ScrutineeData.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Literal(otherLiteral), continuation), tail)) =>
+      case (false, split @ Split.Cons(head @ Branch(Scrutinee.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Literal(otherLiteral), continuation), tail)) =>
         if (scrutinee === otherScrutinee) {
           println(s"scrutinee: ${scrutineeVar.name} is ${otherScrutineeVar.name}")
           pattern match {
