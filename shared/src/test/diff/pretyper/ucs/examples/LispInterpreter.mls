@@ -459,8 +459,8 @@ fun asList(x: Data): List[Data] = if x is DataList(ys) then ys else error
 //│ fun asList: (x: Data) -> List[Data]
 
 fun eval(x: Data, env: Str -> Data): Data = if x is
-  Literal(StrLit(x)) then Literal(StrLit(x))
-  Literal(IntLit(x)) then Literal(IntLit(x))
+  Literal(StrLit(_)) as lit then lit
+  Literal(IntLit(_)) as lit then lit
   Symbol(name) then env(name)
   DataList(Cons(Symbol("val"), tail)) and tail is
     Cons(param, Cons(expr, Cons(rest, Nil))) then
@@ -477,8 +477,7 @@ fun eval(x: Data, env: Str -> Data): Data = if x is
     let ps = map(toName, asList(params))
     Literal(Lambda(args => eval(body, extendParameters(env, ps, args))))
   DataList(Cons(operator, operands)) and eval(operator, env) is
-    Literal(Lambda(f)) then
-      f of map((x) => eval(x, env), operands)
+    Literal(Lambda(f)) then f of map((x) => eval(x, env), operands)
     else error // application of a non-function
   else error // unrecognized program
 //│ fun eval: (x: Data, env: Str -> Data) -> Data

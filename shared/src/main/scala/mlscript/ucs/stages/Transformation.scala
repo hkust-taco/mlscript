@@ -192,6 +192,13 @@ trait Transformation { self: Desugarer with Traceable =>
           raiseDesugaringError(msg"only class patterns can be refined" -> p.toLoc)
           p
       }
+    case App(Var("as"), PlainTup(pattern, alias)) =>
+      alias match {
+        case nme @ Var(_) => AliasPattern(nme, transformPattern(pattern))
+        case other =>
+          raiseDesugaringError(msg"the pattern alias must be a variable" -> other.toLoc)
+          transformPattern(pattern)
+      }
     case App(TyApp(classNme @ Var(_), targs), parameters: Tup) =>
       raiseDesugaringWarning(msg"type parameters in patterns are currently ignored" -> Loc(targs))
       ClassPattern(classNme, S(transformTupleTerm(parameters)), refined = false)

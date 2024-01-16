@@ -306,10 +306,10 @@ trait Desugaring { self: PreTyper =>
         def desugarRight(implicit scope: Scope) =
           desugarTermSplit(head.continuation)(PartialTerm.Empty, scope, context)
         def desugarTail(implicit scope: Scope) = rec(scrutineeVar, tail)
-        head.pattern match {
-          case pattern @ s.AliasPattern(_, _) =>
-            raiseDesugaringError(msg"alias pattern is not supported for now" -> pattern.toLoc)
-            desugarTail
+        def desugarPatternBranch(pattern: s.Pattern): c.Split = pattern match {
+          case pattern @ s.AliasPattern(aliasVar, nestedPattern) =>
+            scrutinee.addAliasVar(aliasVar.withFreshSymbol)
+            c.Split.Let(false, aliasVar, scrutineeVar, desugarPatternBranch(nestedPattern))
           case s.LiteralPattern(literal) =>
             scrutinee.getOrCreateLiteralPattern(literal).addLocation(literal)
             c.Branch(scrutineeVar, c.Pattern.Literal(literal), desugarRight) :: desugarTail
@@ -342,6 +342,7 @@ trait Desugaring { self: PreTyper =>
             raiseDesugaringError(msg"record pattern is not supported for now" -> pattern.toLoc)
             desugarTail
         }
+        desugarPatternBranch(head.pattern)
       case s.Split.Let(isRec, nme, rhs, tail) =>
         c.Split.Let(isRec, nme, rhs, rec(scrutineeVar, tail)(scope + nme.withFreshSymbol.symbol)) // <-- Weird use.
       case s.Split.Else(default) => c.Split.Else(default)
