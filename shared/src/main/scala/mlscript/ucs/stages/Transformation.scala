@@ -2,7 +2,7 @@ package mlscript.ucs.stages
 
 import mlscript.ucs, ucs.Desugarer, ucs.syntax.source._
 import mlscript.{If, IfBody, IfBlock, IfElse, IfLet, IfOpApp, IfOpsApp, IfThen}
-import mlscript.{Blk, Term, Var, App, Tup, Lit, Fld, Loc, NuFunDef, PlainTup}
+import mlscript.{Blk, Term, Var, App, Tup, Lit, Fld, Loc, NuFunDef, TyApp, PlainTup}
 import mlscript.pretyper.Traceable
 import mlscript.Message, Message._
 import mlscript.utils._, shorthands._
@@ -192,6 +192,9 @@ trait Transformation { self: Desugarer with Traceable =>
           raiseDesugaringError(msg"only class patterns can be refined" -> p.toLoc)
           p
       }
+    case App(TyApp(classNme @ Var(_), targs), parameters: Tup) =>
+      raiseDesugaringWarning(msg"type parameters in patterns are currently ignored" -> Loc(targs))
+      ClassPattern(classNme, S(transformTupleTerm(parameters)), refined = false)
     case App(classNme @ Var(_), parameters: Tup) =>
       ClassPattern(classNme, S(transformTupleTerm(parameters)), refined = false)
     case tuple: Tup => TuplePattern(transformTupleTerm(tuple))
