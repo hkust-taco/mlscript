@@ -224,10 +224,14 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
 
     def run(node: GONode) = f(using Set.empty)(node, Set.empty)
 
-  private class DestructSite(val name: Str, val scrut: Str)
-  private class CallSite(val name: Str, callee: Str, val number: Int)
-  private case class PreFunction(val name: Str, val retvals: Ls[Str])
-  private case class PostFunction(val name: Str, val params: Ls[Str])
+  private case class DestructSite(val name: Str, val scrut: Str):
+    override def toString = s"D($name, $scrut)"
+  private case class CallSite(val name: Str, callee: Str, val number: Int):
+    override def toString = s"C($name, $callee, $number)"
+  private case class PreFunction(val name: Str, val retvals: Ls[Str]):
+    override def toString = s"Pre($name, [$retvals])"
+  private case class PostFunction(val name: Str, val params: Ls[Str]):
+    override def toString = s"Post($name, [$params])"
 
   private object SplitResult:
     def case_from_mutable(
@@ -522,8 +526,8 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
     private var cur_defn: Opt[GODef] = None
     var changed = false
 
-    private def pre_map = case_split_result.pre_map
-    private def post_map = case_split_result.post_map
+    private val pre_map = case_split_result.pre_map
+    private val post_map = case_split_result.post_map
 
     override def visit(x: LetExpr) = x match
       case LetExpr(x, e1, e2) =>
