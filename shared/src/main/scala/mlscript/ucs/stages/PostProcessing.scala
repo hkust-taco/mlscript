@@ -176,10 +176,6 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
           val (n2, y2) = disentangleMatchedCaseBranches(rest)
           (kase.copy(body = n1, rest = n2)(kase.refined), mergeTerms(y1, y2))
         }
-      // case kase @ Case(otherClassName, body, rest) =>
-      //   println(s"found another case branch matching against $otherClassName")
-      //   val (n, y) = disentangleMatchedCaseBranches(rest)
-      //   kase.copy(rest = n) -> y
     }
 
 

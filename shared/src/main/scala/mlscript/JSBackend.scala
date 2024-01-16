@@ -116,7 +116,6 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
         else
           throw new UnimplementedError(sym)
       case S(sym: ValueSymbol) =>
-        // Temporary disable this line of code because it invalidates many working test cases.
         if (sym.isByvalueRec.getOrElse(false) && !sym.isLam) throw CodeGenError(s"unguarded recursive use of by-value binding $name")
         sym.visited = true
         val ident = JSIdent(sym.runtimeName)
@@ -200,8 +199,6 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
       JSRecord(fields map { case (key, Fld(_, value)) =>
         key.name -> translateTerm(value)
       })
-    case Sel(receiver, JSBackend.TupleIndex(n)) =>
-      JSField(translateTerm(receiver), n.toString)
     case Sel(receiver, fieldName) =>
       JSField(translateTerm(receiver), fieldName.name)
     // Turn let into an IIFE.
@@ -1596,17 +1593,4 @@ object JSBackend {
 
   def isSafeInteger(value: BigInt): Boolean =
     MinimalSafeInteger <= value && value <= MaximalSafeInteger
-
-  // Temporary measure until we adopt the new tuple index.
-  object TupleIndex {
-    def unapply(fieldName: Var): Opt[Int] = {
-      val name = fieldName.name
-      if (name.startsWith("_") && name.forall(_.isDigit))
-        name.drop(1).toIntOption match {
-          case S(n) if n > 0 => S(n - 1)
-          case _ => N
-        }
-      else N
-    }
-  }
 }
