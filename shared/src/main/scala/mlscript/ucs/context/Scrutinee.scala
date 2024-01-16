@@ -23,7 +23,7 @@ class Scrutinee(val context: Context, parent: Opt[Scrutinee]) {
   // If we support tuple pattern splice, we need a more expressive key in the
   // map's type.
   private var tuplePatternOpt: Opt[PatternInfo.Tuple] = N
-  private var alisesSet: MutSortedSet[Var] = MutSortedSet.empty
+  private var aliasVarSet: MutSortedSet[Var] = MutSortedSet.empty
 
   private val literalPatterns: MutSortedMap[Lit, PatternInfo.Literal] = MutSortedMap.empty(literalOrdering)
   /**
@@ -32,11 +32,11 @@ class Scrutinee(val context: Context, parent: Opt[Scrutinee]) {
     */
   private val booleanPatterns: MutSortedMap[Var, PatternInfo.Boolean] = MutSortedMap.empty(varNameOrdering)
 
-  def +=(alias: Var): Unit = alisesSet += alias
+  def addAliasVar(alias: Var): Unit = aliasVarSet += alias
 
-  def withAlias(alias: Var): Scrutinee = { this += alias; this }
+  def withAliasVar(alias: Var): Scrutinee = { addAliasVar(alias); this }
 
-  def aliasesIterator: Iterator[Var] = alisesSet.iterator
+  def aliasesIterator: Iterator[Var] = aliasVarSet.iterator
 
   /**
     * If there is already a `PatternInfo.ClassLike` for the given symbol, return it.

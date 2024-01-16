@@ -25,7 +25,6 @@ package object display {
   }
 
   def showSplit(split: s.TermSplit)(implicit context: Context): Str = {
-    // TODO: tailrec
     def termSplit(split: s.TermSplit, isFirst: Bool, isAfterAnd: Bool): Lines = split match {
       case s.Split.Cons(head, tail) => (termBranch(head) match {
         case (n, line) :: tail => (n, (if (isAfterAnd) "" else "and ") + s"$line") :: tail
@@ -77,7 +76,6 @@ package object display {
   @inline def showSplit(s: c.Split)(implicit context: Context): Str = showSplit("if", s)
 
   def showSplit(prefix: Str, s: c.Split)(implicit context: Context): Str = {
-    // TODO: tailrec
     def split(s: c.Split, isFirst: Bool, isTopLevel: Bool): Lines = s match {
       case c.Split.Cons(head, tail) => (branch(head) match {
         case (n, line) :: tail => (n, (if (isTopLevel) "" else "") + s"$line") :: tail
