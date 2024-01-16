@@ -207,7 +207,7 @@ class PreTyper extends Traceable with Diagnosable with Desugarer {
           maybeSymbol
         })
       }
-      printGraph(edges, println, "inheritance relations", "->")
+      printGraph(edges, println(_), "inheritance relations", "->")
       transitiveClosure(edges).foreachEntry { (self, bases) =>
         self.baseTypes = bases
         println(s"base types of `${self.name}`: ${bases.iterator.map(_.name).mkString(", ")}")

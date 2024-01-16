@@ -205,10 +205,11 @@ trait Desugarer extends Transformation
       // Stage 0: Transformation
       val transformed = traceWithTopic("transform") {
         println("STEP 0")
-        val transformed = transform(`if`)
-        println("Transformed UCS term:")
-        println(showSplit(transformed))
-        transformed
+        transform(`if`)
+      }
+      traceWithTopic("transform.result") {
+        println("Transformed UCS term:", withIndent = false)
+        println(showSplit(transformed), withIndent = false)
       }
       // Stage 1: Desugaring
       val desugared = traceWithTopic("desugar") {
@@ -216,8 +217,8 @@ trait Desugarer extends Transformation
         desugar(transformed)
       }
       traceWithTopic("desugar.result") {
-        println("Desugared UCS term:")
-        println(showSplit(desugared))
+        println("Desugared UCS term:", withIndent = false)
+        println(showSplit(desugared), withIndent = false)
       }
       traceWithTopic("traverse") {
         println("STEP 1.5")
@@ -229,8 +230,8 @@ trait Desugarer extends Transformation
         normalize(desugared)
       }
       traceWithTopic("normalize.result") {
-        println("Normalized UCS term:")
-        println(showNormalizedTerm(normalized))
+        println("Normalized UCS term:", withIndent = false)
+        println(showNormalizedTerm(normalized), withIndent = false)
       }
       // Stage 3: Post-processing
       val postProcessed = traceWithTopic("postprocess") {
@@ -238,8 +239,8 @@ trait Desugarer extends Transformation
         postProcess(normalized)
       }
       traceWithTopic("postprocess.result") {
-        println("Post-processed UCS term:")
-        println(showNormalizedTerm(postProcessed))
+        println("Post-processed UCS term:", withIndent = false)
+        println(showNormalizedTerm(postProcessed), withIndent = false)
       }
       // Stage 4: Coverage checking
       traceWithTopic("coverage") {
@@ -249,7 +250,7 @@ trait Desugarer extends Transformation
         raiseMany(diagnostics)
       }
       traceWithTopic("desugared") {
-        println(s"Desugared term: ${postProcessed.showDbg}")
+        println(s"Desugared term: ${postProcessed.showDbg}", withIndent = false)
       }
       // Epilogue
       `if`.desugaredTerm = S(postProcessed)

@@ -25,9 +25,9 @@ class Right[B](rightValue: B) extends Either[nothing, B]
 fun q(x) =
   if
     x is Some and x is Some and x is Some then 0
-//│ | | | | | | | Normalized UCS term:
-//│ | | | | | | | case x*‡ of
-//│ | | | | | | |   Some*◊ -> 0
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   Some*◊ -> 0
 //│ fun q: Some[anything] -> 0
 
 :e

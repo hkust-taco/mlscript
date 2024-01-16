@@ -45,21 +45,21 @@ fun h0'(a) =
     a is Some(x) and x is Left(y) then y
     a is Some(x) and x is Right(z) then z
     a is None then 0
-//│ | | | | | | | Post-processed UCS term:
-//│ | | | | | | | case a*‡ of
-//│ | | | | | | |   Some*◊ ->
-//│ | | | | | | |     let ucs$args_a$Some*† = (Some).unapply(a,)
-//│ | | | | | | |     let x*‡ = (ucs$args_a$Some).0
-//│ | | | | | | |     case x*‡ of
-//│ | | | | | | |       Left*◊ ->
-//│ | | | | | | |         let ucs$args_x$Left*† = (Left).unapply(x,)
-//│ | | | | | | |         let y*‡ = (ucs$args_x$Left).0
-//│ | | | | | | |         y
-//│ | | | | | | |       Right*◊ ->
-//│ | | | | | | |         let ucs$args_x$Right*† = (Right).unapply(x,)
-//│ | | | | | | |         let z*‡ = (ucs$args_x$Right).0
-//│ | | | | | | |         z
-//│ | | | | | | |   None*† -> 0
+//│ Post-processed UCS term:
+//│ case a*‡ of
+//│   Some*◊ ->
+//│     let ucs$args_a$Some*† = (Some).unapply(a,)
+//│     let x*‡ = (ucs$args_a$Some).0
+//│     case x*‡ of
+//│       Left*◊ ->
+//│         let ucs$args_x$Left*† = (Left).unapply(x,)
+//│         let y*‡ = (ucs$args_x$Left).0
+//│         y
+//│       Right*◊ ->
+//│         let ucs$args_x$Right*† = (Right).unapply(x,)
+//│         let z*‡ = (ucs$args_x$Right).0
+//│         z
+//│   None*† -> 0
 //│ fun h0': forall 'a. (None | Some[Left['a] | Right['a]]) -> (0 | 'a)
 
 // However, if the class parameter is bound to different variables in different
@@ -98,18 +98,18 @@ fun h3(x, y, f, p) =
     _ and f(x) is y and p(x) then y
     None then y
     _ then "anyway"
-//│ | | | | | | | Post-processed UCS term:
-//│ | | | | | | | let ucs$scrut$0*‡ = f(x,)
-//│ | | | | | | | let ucs$shadow$0 = y
-//│ | | | | | | | let y*‡ = ucs$scrut$0
-//│ | | | | | | | let ucs$test$0*† = p(x,) : Bool
-//│ | | | | | | | case ucs$test$0*† of
-//│ | | | | | | |   true*† -> y
-//│ | | | | | | |   _ ->
-//│ | | | | | | |     let y*‡ = ucs$shadow$0
-//│ | | | | | | |     case x*‡ of
-//│ | | | | | | |       None*† -> y
-//│ | | | | | | |       _ -> "anyway"
+//│ Post-processed UCS term:
+//│ let ucs$scrut$0*‡ = f(x,)
+//│ let ucs$shadow$0 = y
+//│ let y*‡ = ucs$scrut$0
+//│ let ucs$test$0*† = p(x,) : Bool
+//│ case ucs$test$0*† of
+//│   true*† -> y
+//│   _ ->
+//│     let y*‡ = ucs$shadow$0
+//│     case x*‡ of
+//│       None*† -> y
+//│       _ -> "anyway"
 //│ fun h3: forall 'a 'b. (Object & 'a, 'b, 'a -> 'b, 'a -> Bool) -> ("anyway" | 'b)
 
 
@@ -131,17 +131,17 @@ fun h4(x, y, p) =
     y and p(x) then y
     None then y
     _ then "default"
-//│ | | | | | | | Post-processed UCS term:
-//│ | | | | | | | let ucs$shadow$0 = y
-//│ | | | | | | | let y*‡ = x
-//│ | | | | | | | let ucs$test$0*† = p(x,) : Bool
-//│ | | | | | | | case ucs$test$0*† of
-//│ | | | | | | |   true*† -> y
-//│ | | | | | | |   _ ->
-//│ | | | | | | |     let y*‡ = ucs$shadow$0
-//│ | | | | | | |     case x*‡ of
-//│ | | | | | | |       None*† -> y
-//│ | | | | | | |       _ -> "default"
+//│ Post-processed UCS term:
+//│ let ucs$shadow$0 = y
+//│ let y*‡ = x
+//│ let ucs$test$0*† = p(x,) : Bool
+//│ case ucs$test$0*† of
+//│   true*† -> y
+//│   _ ->
+//│     let y*‡ = ucs$shadow$0
+//│     case x*‡ of
+//│       None*† -> y
+//│       _ -> "default"
 //│ fun h4: forall 'a 'b. (Object & 'a, 'b, 'a -> Bool) -> ("default" | 'a | 'b)
 
 h4("should be me", "not me", _ => true)
@@ -164,20 +164,20 @@ fun h5(x, y, p) =
     Some(y) and p(x) then y
     None then y
     _ then y
-//│ | | | | | | | Post-processed UCS term:
-//│ | | | | | | | case x*‡ of
-//│ | | | | | | |   Some*◊ ->
-//│ | | | | | | |     let ucs$args_x$Some*† = (Some).unapply(x,)
-//│ | | | | | | |     let ucs$shadow$0 = y
-//│ | | | | | | |     let y*‡ = (ucs$args_x$Some).0
-//│ | | | | | | |     let ucs$test$0*† = p(x,) : Bool
-//│ | | | | | | |     case ucs$test$0*† of
-//│ | | | | | | |       true*† -> y
-//│ | | | | | | |       _ ->
-//│ | | | | | | |         let y*‡ = ucs$shadow$0
-//│ | | | | | | |         y
-//│ | | | | | | |   None*† -> y
-//│ | | | | | | |   _ -> y
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   Some*◊ ->
+//│     let ucs$args_x$Some*† = (Some).unapply(x,)
+//│     let ucs$shadow$0 = y
+//│     let y*‡ = (ucs$args_x$Some).0
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† -> y
+//│       _ ->
+//│         let y*‡ = ucs$shadow$0
+//│         y
+//│   None*† -> y
+//│   _ -> y
 //│ fun h5: forall 'a. (Object & ~#Some | Some['a], 'a, Some[nothing] -> Bool) -> 'a
 
 h5(Some(1), 2, justTrue) ~~> 1

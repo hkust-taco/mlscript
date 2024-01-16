@@ -30,52 +30,52 @@ fun test(xs) =
     Some(Cons("sum", xs)) then sum(0, xs)
     Some(Nil) then "nothing"
     None then "nothing"
-//│ | | | | | | | Post-processed UCS term:
-//│ | | | | | | | case xs*‡ of
-//│ | | | | | | |   Some*◊ ->
-//│ | | | | | | |     let ucs$args_xs$Some*† = (Some).unapply(xs,)
-//│ | | | | | | |     let xs$Some_0*‡ = (ucs$args_xs$Some).0
-//│ | | | | | | |     case xs$Some_0*‡ of
-//│ | | | | | | |       Cons*◊ ->
-//│ | | | | | | |         let ucs$args_xs$Some_0$Cons*† = (Cons).unapply(xs$Some_0,)
-//│ | | | | | | |         let xs$Some_0$Cons_0*‡ = (ucs$args_xs$Some_0$Cons).0
-//│ | | | | | | |         let xs$Some_0$Cons_1*‡ = (ucs$args_xs$Some_0$Cons).1
-//│ | | | | | | |         case xs$Some_0$Cons_0*‡ of
-//│ | | | | | | |           "add" ->
-//│ | | | | | | |             case xs$Some_0$Cons_1*‡ of
-//│ | | | | | | |               Cons*◊ ->
-//│ | | | | | | |                 let ucs$args_xs$Some_0$Cons_1$Cons*† = (Cons).unapply(xs$Some_0$Cons_1,)
-//│ | | | | | | |                 let x*‡ = (ucs$args_xs$Some_0$Cons_1$Cons).0
-//│ | | | | | | |                 let xs$Some_0$Cons_1$Cons_1*‡ = (ucs$args_xs$Some_0$Cons_1$Cons).1
-//│ | | | | | | |                 case xs$Some_0$Cons_1$Cons_1*‡ of
-//│ | | | | | | |                   Cons*◊ ->
-//│ | | | | | | |                     let ucs$args_xs$Some_0$Cons_1$Cons_1$Cons*† = (Cons).unapply(xs$Some_0$Cons_1$Cons_1,)
-//│ | | | | | | |                     let y*‡ = (ucs$args_xs$Some_0$Cons_1$Cons_1$Cons).0
-//│ | | | | | | |                     let xs$Some_0$Cons_1$Cons_1$Cons_1*‡ = (ucs$args_xs$Some_0$Cons_1$Cons_1$Cons).1
-//│ | | | | | | |                     case xs$Some_0$Cons_1$Cons_1$Cons_1*‡ of
-//│ | | | | | | |                       Nil*† -> +(x, y,)
-//│ | | | | | | |                       _ -> (ucs$args_xs$Some_0$Cons).1
-//│ | | | | | | |                   _ -> (ucs$args_xs$Some_0$Cons).1
-//│ | | | | | | |               _ -> (ucs$args_xs$Some_0$Cons).1
-//│ | | | | | | |           "sum" ->
-//│ | | | | | | |             let xs*‡ = (ucs$args_xs$Some_0$Cons).1
-//│ | | | | | | |             sum(0, xs,)
-//│ | | | | | | |           "mul" ->
-//│ | | | | | | |             case xs$Some_0$Cons_1*‡ of
-//│ | | | | | | |               Cons*◊ ->
-//│ | | | | | | |                 let ucs$args_xs$Some_0$Cons_1$Cons*† = (Cons).unapply(xs$Some_0$Cons_1,)
-//│ | | | | | | |                 let x*‡ = (ucs$args_xs$Some_0$Cons_1$Cons).0
-//│ | | | | | | |                 let xs$Some_0$Cons_1$Cons_1*‡ = (ucs$args_xs$Some_0$Cons_1$Cons).1
-//│ | | | | | | |                 case xs$Some_0$Cons_1$Cons_1*‡ of
-//│ | | | | | | |                   Cons*◊ ->
-//│ | | | | | | |                     let ucs$args_xs$Some_0$Cons_1$Cons_1$Cons*† = (Cons).unapply(xs$Some_0$Cons_1$Cons_1,)
-//│ | | | | | | |                     let y*‡ = (ucs$args_xs$Some_0$Cons_1$Cons_1$Cons).0
-//│ | | | | | | |                     let xs$Some_0$Cons_1$Cons_1$Cons_1*‡ = (ucs$args_xs$Some_0$Cons_1$Cons_1$Cons).1
-//│ | | | | | | |                     case xs$Some_0$Cons_1$Cons_1$Cons_1*‡ of
-//│ | | | | | | |                       Nil*† -> *(x, y,)
-//│ | | | | | | |                       _ -> (ucs$args_xs$Some_0$Cons).1
-//│ | | | | | | |                   _ -> (ucs$args_xs$Some_0$Cons).1
-//│ | | | | | | |               _ -> (ucs$args_xs$Some_0$Cons).1
-//│ | | | | | | |       Nil*† -> "nothing"
-//│ | | | | | | |   None*† -> "nothing"
+//│ Post-processed UCS term:
+//│ case xs*‡ of
+//│   Some*◊ ->
+//│     let ucs$args_xs$Some*† = (Some).unapply(xs,)
+//│     let xs$Some_0*‡ = (ucs$args_xs$Some).0
+//│     case xs$Some_0*‡ of
+//│       Cons*◊ ->
+//│         let ucs$args_xs$Some_0$Cons*† = (Cons).unapply(xs$Some_0,)
+//│         let xs$Some_0$Cons_0*‡ = (ucs$args_xs$Some_0$Cons).0
+//│         let xs$Some_0$Cons_1*‡ = (ucs$args_xs$Some_0$Cons).1
+//│         case xs$Some_0$Cons_0*‡ of
+//│           "add" ->
+//│             case xs$Some_0$Cons_1*‡ of
+//│               Cons*◊ ->
+//│                 let ucs$args_xs$Some_0$Cons_1$Cons*† = (Cons).unapply(xs$Some_0$Cons_1,)
+//│                 let x*‡ = (ucs$args_xs$Some_0$Cons_1$Cons).0
+//│                 let xs$Some_0$Cons_1$Cons_1*‡ = (ucs$args_xs$Some_0$Cons_1$Cons).1
+//│                 case xs$Some_0$Cons_1$Cons_1*‡ of
+//│                   Cons*◊ ->
+//│                     let ucs$args_xs$Some_0$Cons_1$Cons_1$Cons*† = (Cons).unapply(xs$Some_0$Cons_1$Cons_1,)
+//│                     let y*‡ = (ucs$args_xs$Some_0$Cons_1$Cons_1$Cons).0
+//│                     let xs$Some_0$Cons_1$Cons_1$Cons_1*‡ = (ucs$args_xs$Some_0$Cons_1$Cons_1$Cons).1
+//│                     case xs$Some_0$Cons_1$Cons_1$Cons_1*‡ of
+//│                       Nil*† -> +(x, y,)
+//│                       _ -> (ucs$args_xs$Some_0$Cons).1
+//│                   _ -> (ucs$args_xs$Some_0$Cons).1
+//│               _ -> (ucs$args_xs$Some_0$Cons).1
+//│           "sum" ->
+//│             let xs*‡ = (ucs$args_xs$Some_0$Cons).1
+//│             sum(0, xs,)
+//│           "mul" ->
+//│             case xs$Some_0$Cons_1*‡ of
+//│               Cons*◊ ->
+//│                 let ucs$args_xs$Some_0$Cons_1$Cons*† = (Cons).unapply(xs$Some_0$Cons_1,)
+//│                 let x*‡ = (ucs$args_xs$Some_0$Cons_1$Cons).0
+//│                 let xs$Some_0$Cons_1$Cons_1*‡ = (ucs$args_xs$Some_0$Cons_1$Cons).1
+//│                 case xs$Some_0$Cons_1$Cons_1*‡ of
+//│                   Cons*◊ ->
+//│                     let ucs$args_xs$Some_0$Cons_1$Cons_1$Cons*† = (Cons).unapply(xs$Some_0$Cons_1$Cons_1,)
+//│                     let y*‡ = (ucs$args_xs$Some_0$Cons_1$Cons_1$Cons).0
+//│                     let xs$Some_0$Cons_1$Cons_1$Cons_1*‡ = (ucs$args_xs$Some_0$Cons_1$Cons_1$Cons).1
+//│                     case xs$Some_0$Cons_1$Cons_1$Cons_1*‡ of
+//│                       Nil*† -> *(x, y,)
+//│                       _ -> (ucs$args_xs$Some_0$Cons).1
+//│                   _ -> (ucs$args_xs$Some_0$Cons).1
+//│               _ -> (ucs$args_xs$Some_0$Cons).1
+//│       Nil*† -> "nothing"
+//│   None*† -> "nothing"
 //│ fun test: (None | Some[Cons[nothing] | Nil]) -> ("nothing" | Int | List[nothing])

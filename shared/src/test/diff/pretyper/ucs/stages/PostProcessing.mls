@@ -7,13 +7,13 @@ fun mixed_literals(v) =
     false then "false"
     1 then "1"
     2 then "2"
-//│ | | | | | | | Post-processed UCS term:
-//│ | | | | | | | case v*‡ of
-//│ | | | | | | |   true*† -> "true"
-//│ | | | | | | |   false*† -> "false"
-//│ | | | | | | |   2 -> "2"
-//│ | | | | | | |   1 -> "1"
-//│ | | | | | | | Desugared term: case v of { true => "true"; false => "false"; 2 => "2"; 1 => "1" }
+//│ Post-processed UCS term:
+//│ case v*‡ of
+//│   true*† -> "true"
+//│   false*† -> "false"
+//│   2 -> "2"
+//│   1 -> "1"
+//│ Desugared term: case v of { true => "true"; false => "false"; 2 => "2"; 1 => "1" }
 //│ ╙──
 //│ ╙──
 //│ fun mixed_literals: (1 | 2 | false | true) -> ("1" | "2" | "false" | "true")
@@ -24,10 +24,10 @@ fun separated_by_and(v) =
     true then "true"
     _ and v is
       false then "false"
-//│ | | | | | | | Post-processed UCS term:
-//│ | | | | | | | case v*‡ of
-//│ | | | | | | |   true*† -> "true"
-//│ | | | | | | |   false*† -> "false"
+//│ Post-processed UCS term:
+//│ case v*‡ of
+//│   true*† -> "true"
+//│   false*† -> "false"
 //│ ╙──
 //│ ╙──
 //│ fun separated_by_and: Bool -> ("false" | "true")
@@ -39,16 +39,16 @@ fun dual_patterns(x, y) =
     x is "none" and y is "some" then 1
     x is "some" and y is "some" then 2
     x is "none" and y is "none" then 3
-//│ | | | | | | | Post-processed UCS term:
-//│ | | | | | | | case x*‡ of
-//│ | | | | | | |   "some" ->
-//│ | | | | | | |     case y*‡ of
-//│ | | | | | | |       "none" -> 0
-//│ | | | | | | |       "some" -> 2
-//│ | | | | | | |   "none" ->
-//│ | | | | | | |     case y*‡ of
-//│ | | | | | | |       "some" -> 1
-//│ | | | | | | |       "none" -> 3
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   "some" ->
+//│     case y*‡ of
+//│       "none" -> 0
+//│       "some" -> 2
+//│   "none" ->
+//│     case y*‡ of
+//│       "some" -> 1
+//│       "none" -> 3
 //│ fun dual_patterns: ("none" | "some", "none" | "some") -> (0 | 1 | 2 | 3)
 
 :ducs:postprocess.result
@@ -58,14 +58,14 @@ fun unordered_dual_patterns(x, y) =
     y is "some" and x is "none" then 1
     y is "some" and x is "some" then 2
     x is "none" and y is "none" then 3
-//│ | | | | | | | Post-processed UCS term:
-//│ | | | | | | | case x*‡ of
-//│ | | | | | | |   "some" ->
-//│ | | | | | | |     case y*‡ of
-//│ | | | | | | |       "none" -> 0
-//│ | | | | | | |       "some" -> 2
-//│ | | | | | | |   "none" ->
-//│ | | | | | | |     case y*‡ of
-//│ | | | | | | |       "some" -> 1
-//│ | | | | | | |       "none" -> 3
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   "some" ->
+//│     case y*‡ of
+//│       "none" -> 0
+//│       "some" -> 2
+//│   "none" ->
+//│     case y*‡ of
+//│       "some" -> 1
+//│       "none" -> 3
 //│ fun unordered_dual_patterns: ("none" | "some", "none" | "some") -> (0 | 1 | 2 | 3)

@@ -25,8 +25,13 @@ trait Traceable {
   /** Override this function to redirect debug messages. */
   protected def emitString(str: Str): Unit = scala.Predef.println(str)
   
-  @inline private def printLineByLine(x: => Any): Unit =
-    x.toString.linesIterator.foreach { line => emitString("| " * debugIndent + line) }
+  @inline private def printLineByLine(x: => Any, withIndent: Bool): Unit =
+    x.toString.linesIterator.foreach(
+      if (withIndent)
+        line => emitString("| " * debugIndent + line)
+      else
+        emitString
+    )
 
   protected def trace[T](pre: => Str)(thunk: => T)(post: T => Str = Traceable.noPostTrace): T = {
     println(pre)
@@ -46,8 +51,8 @@ trait Traceable {
   @inline def traceNot[T](pre: => Str)(thunk: => T)(post: T => Str = Traceable.noPostTrace): T =
     thunk
   
-  @inline protected def println(x: => Any): Unit =
-    if (matchTopicFilters) printLineByLine(x)
+  @inline protected def println(x: => Any, withIndent: Bool = true): Unit =
+    if (matchTopicFilters) printLineByLine(x, withIndent)
 }
 
 object Traceable {

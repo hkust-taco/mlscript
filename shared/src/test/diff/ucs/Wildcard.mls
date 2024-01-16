@@ -206,17 +206,17 @@ fun w5(y) =
         _ and y is
           Delta then "delta"
           _ then "unknown"
-//│ | | | | | | | Post-processed UCS term:
-//│ | | | | | | | case y*‡ of
-//│ | | | | | | |   Alpha*◊ -> "alpha"
-//│ | | | | | | |   Gamma*◊ -> "gamma"
-//│ | | | | | | |   Delta*◊ -> "delta"
-//│ | | | | | | |   Beta*◊ -> "beta"
-//│ | | | | | | |   _ ->
-//│ | | | | | | |     case y*‡ of
-//│ | | | | | | |       _ ->
-//│ | | | | | | |         case y*‡ of
-//│ | | | | | | |           _ -> "unknown"
+//│ Post-processed UCS term:
+//│ case y*‡ of
+//│   Alpha*◊ -> "alpha"
+//│   Gamma*◊ -> "gamma"
+//│   Delta*◊ -> "delta"
+//│   Beta*◊ -> "beta"
+//│   _ ->
+//│     case y*‡ of
+//│       _ ->
+//│         case y*‡ of
+//│           _ -> "unknown"
 //│ fun w5: (Alpha | Beta | Delta | Gamma | Object & ~#Alpha & ~#Beta & ~#Delta & ~#Gamma) -> ("alpha" | "beta" | "delta" | "gamma" | "unknown")
 
 w5(0)
