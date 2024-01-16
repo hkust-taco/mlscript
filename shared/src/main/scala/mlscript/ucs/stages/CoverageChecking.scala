@@ -113,22 +113,28 @@ trait CoverageChecking { self: Desugarer with Traceable =>
 
 object CoverageChecking {
   /** Create an `ErrorReport` that explains missing cases. */
-  private def explainMissingCases(scrutinee: NamedScrutinee, seen: SeenRegistry, missingCases: CaseSet): Opt[ErrorReport] =
+  private def explainMissingCases(
+      scrutinee: NamedScrutinee,
+      seen: SeenRegistry,
+      missingCases: CaseSet
+  )(implicit context: Context): Opt[ErrorReport] =
     if (missingCases.isEmpty) {
       N
     } else {
       S(ErrorReport({
-        val lines = (msg"Scrutinee `${scrutinee._1.name}` has ${"missing case".pluralize(missingCases.size, true)}" -> scrutinee._1.toLoc) ::
+        val readableName = scrutinee._2.getReadableName(scrutinee._1)
+        val lines = (msg"$readableName has ${"missing case".pluralize(missingCases.size, true)}" -> scrutinee._1.toLoc) ::
           (missingCases.cases.iterator.flatMap { case (pattern, locations) =>
-            (msg"It can be ${pattern.toString}" -> locations.headOption) :: Nil
+            (msg"it can be ${pattern.toString}" -> locations.headOption) :: Nil
           }.toList)
         if (seen.isEmpty) {
           lines
         } else {
-          seen.iterator.zipWithIndex.map { case ((scrutinee, (classSymbol, locations, cases)), i) =>
-            val prologue = if (i === 0) "When " else ""
-            val epilogue = if (seen.size === 1) "" else if (i === seen.size - 1) ", and" else ","
-            msg"${prologue}scrutinee `${scrutinee._1.name}` is `${classSymbol.name}`$epilogue" -> locations.headOption
+          seen.iterator.zipWithIndex.map { case ((scrutineeVar -> scrutinee, (classSymbol, locations, cases)), i) =>
+            val prologue = if (i === 0) "when " else ""
+            val epilogue = if (seen.size === 1) "" else if (i === seen.size - 2) ", and" else ","
+            val scrutineeName = scrutinee.getReadableName(scrutineeVar)
+            msg"$prologue$scrutineeName is `${classSymbol.name}`$epilogue" -> locations.headOption
           }.toList ::: lines
         }
       }, true, Diagnostic.Desugaring))

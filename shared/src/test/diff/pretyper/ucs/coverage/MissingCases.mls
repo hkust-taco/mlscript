@@ -23,13 +23,13 @@ fun bad_add_missing_SS(x, y) =
     x is Some(xv) and y is None     then xv
     x is None     and y is Some(yv) then yv
     x is None     and y is None     then 0
-//│ ╔══[ERROR] When scrutinee `x` is `Some`
+//│ ╔══[ERROR] when `x` is `Some`
 //│ ║  l.23: 	    x is Some(xv) and y is None     then xv
 //│ ║        	         ^^^^
-//│ ╟── Scrutinee `y` has 1 missing case
+//│ ╟── `y` has 1 missing case
 //│ ║  l.23: 	    x is Some(xv) and y is None     then xv
 //│ ║        	                      ^
-//│ ╟── It can be class `Some`
+//│ ╟── it can be class `Some`
 //│ ║  l.24: 	    x is None     and y is Some(yv) then yv
 //│ ╙──      	                           ^^^^
 //│ fun bad_add_missing_SS: forall 'a. (None | Some['a], None) -> (0 | 'a)
@@ -40,13 +40,13 @@ fun bad_add_missing_SN(x, y) =
     x is Some(xv) and y is Some(yv) then xv + yv
     x is None     and y is Some(yv) then yv
     x is None     and y is None     then 0
-//│ ╔══[ERROR] When scrutinee `x` is `Some`
+//│ ╔══[ERROR] when `x` is `Some`
 //│ ║  l.40: 	    x is Some(xv) and y is Some(yv) then xv + yv
 //│ ║        	         ^^^^
-//│ ╟── Scrutinee `y` has 1 missing case
+//│ ╟── `y` has 1 missing case
 //│ ║  l.40: 	    x is Some(xv) and y is Some(yv) then xv + yv
 //│ ║        	                      ^
-//│ ╟── It can be module `None`
+//│ ╟── it can be module `None`
 //│ ║  l.42: 	    x is None     and y is None     then 0
 //│ ╙──      	                           ^^^^
 //│ fun bad_add_missing_SN: forall 'a. (None | Some[Int], Some[Int & 'a]) -> (Int | 'a)
@@ -57,13 +57,13 @@ fun bad_add_missing_NS(x, y) =
     x is Some(xv) and y is Some(yv) then xv + yv
     x is Some(xv) and y is None     then xv
     x is None     and y is None     then 0
-//│ ╔══[ERROR] When scrutinee `x` is `None`
+//│ ╔══[ERROR] when `x` is `None`
 //│ ║  l.59: 	    x is None     and y is None     then 0
 //│ ║        	         ^^^^
-//│ ╟── Scrutinee `y` has 1 missing case
+//│ ╟── `y` has 1 missing case
 //│ ║  l.59: 	    x is None     and y is None     then 0
 //│ ║        	                      ^
-//│ ╟── It can be class `Some`
+//│ ╟── it can be class `Some`
 //│ ║  l.57: 	    x is Some(xv) and y is Some(yv) then xv + yv
 //│ ╙──      	                           ^^^^
 //│ fun bad_add_missing_NS: (None | Some[Int], None) -> Int
@@ -74,13 +74,13 @@ fun bad_add_missing_NN(x, y) =
     x is Some(xv) and y is Some(yv) then xv + yv
     x is Some(xv) and y is None     then xv
     x is None     and y is Some(yv) then yv
-//│ ╔══[ERROR] When scrutinee `x` is `None`
+//│ ╔══[ERROR] when `x` is `None`
 //│ ║  l.76: 	    x is None     and y is Some(yv) then yv
 //│ ║        	         ^^^^
-//│ ╟── Scrutinee `y` has 1 missing case
+//│ ╟── `y` has 1 missing case
 //│ ║  l.76: 	    x is None     and y is Some(yv) then yv
 //│ ║        	                      ^
-//│ ╟── It can be module `None`
+//│ ╟── it can be module `None`
 //│ ║  l.75: 	    x is Some(xv) and y is None     then xv
 //│ ╙──      	                           ^^^^
 //│ fun bad_add_missing_NN: forall 'a. (None | Some[Int], Some[Int & 'a]) -> (Int | 'a)
@@ -90,22 +90,22 @@ fun bad_add_missing_SS_NN(x, y) =
   if
     x is Some(xv) and y is None     then xv
     x is None     and y is Some(yv) then yv
-//│ ╔══[ERROR] When scrutinee `x` is `Some`
+//│ ╔══[ERROR] when `x` is `Some`
 //│ ║  l.91: 	    x is Some(xv) and y is None     then xv
 //│ ║        	         ^^^^
-//│ ╟── Scrutinee `y` has 1 missing case
+//│ ╟── `y` has 1 missing case
 //│ ║  l.91: 	    x is Some(xv) and y is None     then xv
 //│ ║        	                      ^
-//│ ╟── It can be class `Some`
+//│ ╟── it can be class `Some`
 //│ ║  l.92: 	    x is None     and y is Some(yv) then yv
 //│ ╙──      	                           ^^^^
-//│ ╔══[ERROR] When scrutinee `x` is `None`
+//│ ╔══[ERROR] when `x` is `None`
 //│ ║  l.92: 	    x is None     and y is Some(yv) then yv
 //│ ║        	         ^^^^
-//│ ╟── Scrutinee `y` has 1 missing case
+//│ ╟── `y` has 1 missing case
 //│ ║  l.92: 	    x is None     and y is Some(yv) then yv
 //│ ║        	                      ^
-//│ ╟── It can be module `None`
+//│ ╟── it can be module `None`
 //│ ║  l.91: 	    x is Some(xv) and y is None     then xv
 //│ ╙──      	                           ^^^^
 //│ fun bad_add_missing_SS_NN: forall 'a. (None | Some['a], nothing) -> 'a
@@ -115,22 +115,22 @@ fun bad_add_missing_SN_NS(x, y) =
   if
     x is Some(xv) and y is Some(yv) then xv + yv
     x is None     and y is None     then 0
-//│ ╔══[ERROR] When scrutinee `x` is `Some`
+//│ ╔══[ERROR] when `x` is `Some`
 //│ ║  l.116: 	    x is Some(xv) and y is Some(yv) then xv + yv
 //│ ║         	         ^^^^
-//│ ╟── Scrutinee `y` has 1 missing case
+//│ ╟── `y` has 1 missing case
 //│ ║  l.116: 	    x is Some(xv) and y is Some(yv) then xv + yv
 //│ ║         	                      ^
-//│ ╟── It can be module `None`
+//│ ╟── it can be module `None`
 //│ ║  l.117: 	    x is None     and y is None     then 0
 //│ ╙──       	                           ^^^^
-//│ ╔══[ERROR] When scrutinee `x` is `None`
+//│ ╔══[ERROR] when `x` is `None`
 //│ ║  l.117: 	    x is None     and y is None     then 0
 //│ ║         	         ^^^^
-//│ ╟── Scrutinee `y` has 1 missing case
+//│ ╟── `y` has 1 missing case
 //│ ║  l.117: 	    x is None     and y is None     then 0
 //│ ║         	                      ^
-//│ ╟── It can be class `Some`
+//│ ╟── it can be class `Some`
 //│ ║  l.116: 	    x is Some(xv) and y is Some(yv) then xv + yv
 //│ ╙──       	                           ^^^^
 //│ fun bad_add_missing_SN_NS: (None | Some[Int], nothing) -> Int

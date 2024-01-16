@@ -49,24 +49,24 @@ class O()
 fun foo(x) = if x is
   Pair(Z(), Z()) then "zeros"
   Pair(O(), O()) then "ones"
-//│ ╔══[ERROR] When scrutinee `x` is `Pair`,
+//│ ╔══[ERROR] when `x` is `Pair`, and
 //│ ║  l.50: 	  Pair(Z(), Z()) then "zeros"
 //│ ║        	  ^^^^
-//│ ╟── scrutinee `x$Pair_0` is `Z`, and
+//│ ╟── first argument of `Pair` is `Z`,
 //│ ║  l.50: 	  Pair(Z(), Z()) then "zeros"
 //│ ║        	       ^
-//│ ╟── Scrutinee `x$Pair_1` has 1 missing case
-//│ ╟── It can be class `O`
+//│ ╟── second argument of `Pair` has 1 missing case
+//│ ╟── it can be class `O`
 //│ ║  l.51: 	  Pair(O(), O()) then "ones"
 //│ ╙──      	            ^
-//│ ╔══[ERROR] When scrutinee `x` is `Pair`,
+//│ ╔══[ERROR] when `x` is `Pair`, and
 //│ ║  l.50: 	  Pair(Z(), Z()) then "zeros"
 //│ ║        	  ^^^^
-//│ ╟── scrutinee `x$Pair_0` is `O`, and
+//│ ╟── first argument of `Pair` is `O`,
 //│ ║  l.51: 	  Pair(O(), O()) then "ones"
 //│ ║        	       ^
-//│ ╟── Scrutinee `x$Pair_1` has 1 missing case
-//│ ╟── It can be class `Z`
+//│ ╟── second argument of `Pair` has 1 missing case
+//│ ╟── it can be class `Z`
 //│ ║  l.50: 	  Pair(Z(), Z()) then "zeros"
 //│ ╙──      	            ^
 //│ fun foo: Pair[O | Z, nothing] -> ("ones" | "zeros")
@@ -76,11 +76,11 @@ fun foo(x) = if x is
 fun foo(x) = if x is
   [Z(), Z()] then "zeros"
   [O(), O()] then "ones"
-//│ ╔══[ERROR] When scrutinee `x$Tuple$2_0` is `O`
+//│ ╔══[ERROR] when `x$Tuple$2_0` is `O`
 //│ ║  l.78: 	  [O(), O()] then "ones"
 //│ ║        	   ^
-//│ ╟── Scrutinee `x$Tuple$2_1` has 1 missing case
-//│ ╟── It can be class `Z`
+//│ ╟── `x$Tuple$2_1` has 1 missing case
+//│ ╟── it can be class `Z`
 //│ ║  l.77: 	  [Z(), Z()] then "zeros"
 //│ ╙──      	        ^
 //│ fun foo: forall 'a. {0: O | Z, 1: O & 'a} -> ("ones" | "zeros" | 'a)
@@ -136,11 +136,11 @@ fun foo(x) = if x is
   Pair(Z(), Z()) then "zeros"
   Pair(O(), O()) then "ones"
   Pair(y, O()) then x
-//│ ╔══[ERROR] When scrutinee `x` is `Pair`
+//│ ╔══[ERROR] when `x` is `Pair`
 //│ ║  l.136: 	  Pair(Z(), Z()) then "zeros"
 //│ ║         	  ^^^^
-//│ ╟── Scrutinee `x$Pair_1` has 1 missing case
-//│ ╟── It can be class `Z`
+//│ ╟── second argument of `Pair` has 1 missing case
+//│ ╟── it can be class `Z`
 //│ ║  l.136: 	  Pair(Z(), Z()) then "zeros"
 //│ ╙──       	            ^
 //│ fun foo: forall 'B 'A. Pair['A, O & 'B] -> ("ones" | "zeros" | Pair['A, 'B] | 'A)

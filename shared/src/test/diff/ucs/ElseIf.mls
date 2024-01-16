@@ -28,22 +28,22 @@ module Fals
 fun f(x, y) = if x is
     Tru and y is Tru then true
     Fals and y is Fals then false
-//│ ╔══[ERROR] When scrutinee `x` is `Tru`
+//│ ╔══[ERROR] when `x` is `Tru`
 //│ ║  l.29: 	    Tru and y is Tru then true
 //│ ║        	    ^^^
-//│ ╟── Scrutinee `y` has 1 missing case
+//│ ╟── `y` has 1 missing case
 //│ ║  l.29: 	    Tru and y is Tru then true
 //│ ║        	            ^
-//│ ╟── It can be module `Fals`
+//│ ╟── it can be module `Fals`
 //│ ║  l.30: 	    Fals and y is Fals then false
 //│ ╙──      	                  ^^^^
-//│ ╔══[ERROR] When scrutinee `x` is `Fals`
+//│ ╔══[ERROR] when `x` is `Fals`
 //│ ║  l.30: 	    Fals and y is Fals then false
 //│ ║        	    ^^^^
-//│ ╟── Scrutinee `y` has 1 missing case
+//│ ╟── `y` has 1 missing case
 //│ ║  l.30: 	    Fals and y is Fals then false
 //│ ║        	             ^
-//│ ╟── It can be module `Tru`
+//│ ╟── it can be module `Tru`
 //│ ║  l.29: 	    Tru and y is Tru then true
 //│ ╙──      	                 ^^^
 //│ fun f: (Fals | Tru, nothing) -> Bool
@@ -105,22 +105,22 @@ fun f(x, y) = if x is
   else if y is
     Tru and x is Fals then true
     Fals and x is Tru then false
-//│ ╔══[ERROR] When scrutinee `y` is `Tru`
+//│ ╔══[ERROR] when `y` is `Tru`
 //│ ║  l.106: 	    Tru and x is Fals then true
 //│ ║         	    ^^^
-//│ ╟── Scrutinee `x` has 1 missing case
+//│ ╟── `x` has 1 missing case
 //│ ║  l.106: 	    Tru and x is Fals then true
 //│ ║         	            ^
-//│ ╟── It can be module `Tru`
+//│ ╟── it can be module `Tru`
 //│ ║  l.107: 	    Fals and x is Tru then false
 //│ ╙──       	                  ^^^
-//│ ╔══[ERROR] When scrutinee `y` is `Fals`
+//│ ╔══[ERROR] when `y` is `Fals`
 //│ ║  l.107: 	    Fals and x is Tru then false
 //│ ║         	    ^^^^
-//│ ╟── Scrutinee `x` has 1 missing case
+//│ ╟── `x` has 1 missing case
 //│ ║  l.107: 	    Fals and x is Tru then false
 //│ ║         	             ^
-//│ ╟── It can be module `Fals`
+//│ ╟── it can be module `Fals`
 //│ ║  l.106: 	    Tru and x is Fals then true
 //│ ╙──       	                 ^^^^
 //│ ╔══[ERROR] Type mismatch in `case` expression:

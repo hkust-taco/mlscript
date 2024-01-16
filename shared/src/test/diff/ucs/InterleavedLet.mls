@@ -39,10 +39,10 @@ fun p(x, y) =
     x is Some and y is Some then 0
 //│ ╔══[ERROR] unexpected empty split found
 //│ ╙──
-//│ ╔══[ERROR] Scrutinee `y` has 1 missing case
+//│ ╔══[ERROR] `y` has 1 missing case
 //│ ║  l.38: 	    y is Some and x is Some then 1
 //│ ║        	    ^
-//│ ╟── It can be module `None`
+//│ ╟── it can be module `None`
 //│ ║  l.37: 	    x is Some and y is None then 0
 //│ ╙──      	                       ^^^^
 //│ fun p: (Object & ~#Some | Some[anything], Some[anything]) -> (0 | 1)

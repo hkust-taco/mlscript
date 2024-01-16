@@ -189,14 +189,14 @@ fun add(e) =
     Pair(Numbr(n), Numbr(m))    then 0
     Pair(Vectr(xs),  Vectr(ys)) then 1
     Pair(Vectr(xs),  Numbr(n))  then 2
-//│ ╔══[ERROR] When scrutinee `e` is `Pair`,
+//│ ╔══[ERROR] when `e` is `Pair`, and
 //│ ║  l.+3: 	    Pair(Numbr(n), Numbr(m))    then 0
 //│ ║        	    ^^^^
-//│ ╟── scrutinee `e$Pair_0` is `Numbr`, and
+//│ ╟── first argument of `Pair` is `Numbr`,
 //│ ║  l.+3: 	    Pair(Numbr(n), Numbr(m))    then 0
 //│ ║        	         ^^^^^
-//│ ╟── Scrutinee `e$Pair_1` has 1 missing case
-//│ ╟── It can be class `Vectr`
+//│ ╟── second argument of `Pair` has 1 missing case
+//│ ╟── it can be class `Vectr`
 //│ ║  l.+4: 	    Pair(Vectr(xs),  Vectr(ys)) then 1
 //│ ╙──      	                     ^^^^^
 //│ fun add: Pair[Numbr | Vectr, Numbr] -> (0 | 1 | 2)
@@ -206,24 +206,24 @@ fun add(e) =
   if e is
     Pair(Numbr(n), Numbr(m))    then 0
     Pair(Vectr(xs),  Vectr(ys)) then 1
-//│ ╔══[ERROR] When scrutinee `e` is `Pair`,
+//│ ╔══[ERROR] when `e` is `Pair`, and
 //│ ║  l.+3: 	    Pair(Numbr(n), Numbr(m))    then 0
 //│ ║        	    ^^^^
-//│ ╟── scrutinee `e$Pair_0` is `Numbr`, and
+//│ ╟── first argument of `Pair` is `Numbr`,
 //│ ║  l.+3: 	    Pair(Numbr(n), Numbr(m))    then 0
 //│ ║        	         ^^^^^
-//│ ╟── Scrutinee `e$Pair_1` has 1 missing case
-//│ ╟── It can be class `Vectr`
+//│ ╟── second argument of `Pair` has 1 missing case
+//│ ╟── it can be class `Vectr`
 //│ ║  l.+4: 	    Pair(Vectr(xs),  Vectr(ys)) then 1
 //│ ╙──      	                     ^^^^^
-//│ ╔══[ERROR] When scrutinee `e` is `Pair`,
+//│ ╔══[ERROR] when `e` is `Pair`, and
 //│ ║  l.+3: 	    Pair(Numbr(n), Numbr(m))    then 0
 //│ ║        	    ^^^^
-//│ ╟── scrutinee `e$Pair_0` is `Vectr`, and
+//│ ╟── first argument of `Pair` is `Vectr`,
 //│ ║  l.+4: 	    Pair(Vectr(xs),  Vectr(ys)) then 1
 //│ ║        	         ^^^^^
-//│ ╟── Scrutinee `e$Pair_1` has 1 missing case
-//│ ╟── It can be class `Numbr`
+//│ ╟── second argument of `Pair` has 1 missing case
+//│ ╟── it can be class `Numbr`
 //│ ║  l.+3: 	    Pair(Numbr(n), Numbr(m))    then 0
 //│ ╙──      	                   ^^^^^
 //│ fun add: Pair[Numbr | Vectr, nothing] -> (0 | 1)

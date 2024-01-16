@@ -21,6 +21,23 @@ package object utils {
     def in(xs: A => Bool): Bool = xs(self)
     def in(xs: Seq[_ >: A]): Bool = xs.exists(_ === self)
   }
+
+  implicit class IntOps(private val self: Int) extends AnyVal {
+    def toOrdinalWord: String = {
+      require(self >= 0)
+      self + 1 match {
+        case 1 => "first"
+        case 2 => "second"
+        case 3 => "third"
+        case n => self.toString + (n % 10 match {
+          case 1 => "st"
+          case 2 => "nd"
+          case 3 => "rd"
+          case _ => "th"
+        })
+      }
+    }
+  }
   
   implicit class StringOps(private val self: String) extends AnyVal {
     import collection.mutable

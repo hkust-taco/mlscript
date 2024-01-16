@@ -116,6 +116,20 @@ class Scrutinee(val context: Context, parent: Opt[Scrutinee]) {
     }.toMap[Pattern, Ls[Loc]]
     CaseSet(cases ++ tuplePattern)
   }
+
+  def getReadableName(scrutineeVar: Var): Str = {
+    parent match {
+      case N if context.isGeneratedVar(scrutineeVar) => "term"
+      case N => s"`${scrutineeVar.name}`"
+      case S(parentScrutinee) =>
+        parentScrutinee.classLikePatterns.iterator.flatMap { case (symbol, pattern) =>
+          pattern.findSubScrutinee(this).map(_ -> symbol.name)
+        }.nextOption() match {
+          case S(index -> typeName) => s"${index.toOrdinalWord} argument of `${typeName}`"
+          case N => s"`${scrutineeVar.name}`" // Still not the best.
+        }
+    }
+  }
 }
 
 object Scrutinee {

@@ -20,40 +20,40 @@ fun f(x, y) =
     Left(xv) and y is Left(yv) then xv + yv
     Right(xv) and y is Right(yv) then xv * yv
     None and y is None then 0
-//│ ╔══[ERROR] When scrutinee `x` is `Left`
+//│ ╔══[ERROR] when `x` is `Left`
 //│ ║  l.20: 	    Left(xv) and y is Left(yv) then xv + yv
 //│ ║        	    ^^^^
-//│ ╟── Scrutinee `y` has 2 missing cases
+//│ ╟── `y` has 2 missing cases
 //│ ║  l.20: 	    Left(xv) and y is Left(yv) then xv + yv
 //│ ║        	                 ^
-//│ ╟── It can be module `None`
+//│ ╟── it can be module `None`
 //│ ║  l.22: 	    None and y is None then 0
 //│ ║        	                  ^^^^
-//│ ╟── It can be class `Right`
+//│ ╟── it can be class `Right`
 //│ ║  l.21: 	    Right(xv) and y is Right(yv) then xv * yv
 //│ ╙──      	                       ^^^^^
-//│ ╔══[ERROR] When scrutinee `x` is `Right`
+//│ ╔══[ERROR] when `x` is `Right`
 //│ ║  l.21: 	    Right(xv) and y is Right(yv) then xv * yv
 //│ ║        	    ^^^^^
-//│ ╟── Scrutinee `y` has 2 missing cases
+//│ ╟── `y` has 2 missing cases
 //│ ║  l.21: 	    Right(xv) and y is Right(yv) then xv * yv
 //│ ║        	                  ^
-//│ ╟── It can be class `Left`
+//│ ╟── it can be class `Left`
 //│ ║  l.20: 	    Left(xv) and y is Left(yv) then xv + yv
 //│ ║        	                      ^^^^
-//│ ╟── It can be module `None`
+//│ ╟── it can be module `None`
 //│ ║  l.22: 	    None and y is None then 0
 //│ ╙──      	                  ^^^^
-//│ ╔══[ERROR] When scrutinee `x` is `None`
+//│ ╔══[ERROR] when `x` is `None`
 //│ ║  l.22: 	    None and y is None then 0
 //│ ║        	    ^^^^
-//│ ╟── Scrutinee `y` has 2 missing cases
+//│ ╟── `y` has 2 missing cases
 //│ ║  l.22: 	    None and y is None then 0
 //│ ║        	             ^
-//│ ╟── It can be class `Left`
+//│ ╟── it can be class `Left`
 //│ ║  l.20: 	    Left(xv) and y is Left(yv) then xv + yv
 //│ ║        	                      ^^^^
-//│ ╟── It can be class `Right`
+//│ ╟── it can be class `Right`
 //│ ║  l.21: 	    Right(xv) and y is Right(yv) then xv * yv
 //│ ╙──      	                       ^^^^^
 //│ fun f: (Left[Int] | None | Right[Int], nothing) -> Int
@@ -114,22 +114,22 @@ fun f(x, y) =
   if x is
     Some(xv) and y is Some(yv) then xv + yv
     None and y is None then 0
-//│ ╔══[ERROR] When scrutinee `x` is `Some`
+//│ ╔══[ERROR] when `x` is `Some`
 //│ ║  l.115: 	    Some(xv) and y is Some(yv) then xv + yv
 //│ ║         	    ^^^^
-//│ ╟── Scrutinee `y` has 1 missing case
+//│ ╟── `y` has 1 missing case
 //│ ║  l.115: 	    Some(xv) and y is Some(yv) then xv + yv
 //│ ║         	                 ^
-//│ ╟── It can be module `None`
+//│ ╟── it can be module `None`
 //│ ║  l.116: 	    None and y is None then 0
 //│ ╙──       	                  ^^^^
-//│ ╔══[ERROR] When scrutinee `x` is `None`
+//│ ╔══[ERROR] when `x` is `None`
 //│ ║  l.116: 	    None and y is None then 0
 //│ ║         	    ^^^^
-//│ ╟── Scrutinee `y` has 1 missing case
+//│ ╟── `y` has 1 missing case
 //│ ║  l.116: 	    None and y is None then 0
 //│ ║         	             ^
-//│ ╟── It can be class `Some`
+//│ ╟── it can be class `Some`
 //│ ║  l.115: 	    Some(xv) and y is Some(yv) then xv + yv
 //│ ╙──       	                      ^^^^
 //│ fun f: (None | Some[Int], nothing) -> Int
@@ -142,13 +142,13 @@ fun f(x, y) =
       None then xv * 2
     None and y is
       Some(yv) then yv * 3
-//│ ╔══[ERROR] When scrutinee `x` is `None`
+//│ ╔══[ERROR] when `x` is `None`
 //│ ║  l.143: 	    None and y is
 //│ ║         	    ^^^^
-//│ ╟── Scrutinee `y` has 1 missing case
+//│ ╟── `y` has 1 missing case
 //│ ║  l.143: 	    None and y is
 //│ ║         	             ^
-//│ ╟── It can be module `None`
+//│ ╟── it can be module `None`
 //│ ║  l.142: 	      None then xv * 2
 //│ ╙──       	      ^^^^
 //│ fun f: (None | Some[Int], Some[Int]) -> Int

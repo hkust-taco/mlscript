@@ -53,13 +53,13 @@ fun is_value'(term) =
   if term is Term and term is
     Abs(_, _) then true
     Var(_) then false
-//│ ╔══[ERROR] When scrutinee `term` is `Term`
+//│ ╔══[ERROR] when `term` is `Term`
 //│ ║  l.53: 	  if term is Term and term is
 //│ ║        	             ^^^^
-//│ ╟── Scrutinee `term` has 1 missing case
+//│ ╟── `term` has 1 missing case
 //│ ║  l.53: 	  if term is Term and term is
 //│ ║        	                      ^^^^
-//│ ╟── It can be class `App`
+//│ ╟── it can be class `App`
 //│ ║  l.6: 	class App(func: Term, arg: Term) extends Term
 //│ ╙──     	      ^^^
 //│ fun is_value': (Abs | Var) -> Bool

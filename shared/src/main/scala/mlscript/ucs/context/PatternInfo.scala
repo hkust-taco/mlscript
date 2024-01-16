@@ -36,6 +36,9 @@ object PatternInfo {
     private var unappliedVarOpt: Opt[Var] = N
     private val parameters: MutSortedMap[Int, Scrutinee] = MutSortedMap.empty
 
+    private[context] def findSubScrutinee(scrutinee: Scrutinee): Opt[Int] =
+      parameters.find(_._2 === scrutinee).map(_._1)
+
     /**
       * Get or create a sub-scrutinee for the given parameter index.
       *
