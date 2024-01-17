@@ -33,7 +33,9 @@ class C[A](val a: A) extends D()
 //│ }
 
 C(1)
-//│ C[1]
+//│ C['A]
+//│   where
+//│     'A :> 1
 //│ res
 //│     = C {}
 
@@ -60,11 +62,11 @@ let r = {}
 :e
 r : Object
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.61: 	r : Object
+//│ ║  l.63: 	r : Object
 //│ ║        	^
 //│ ╟── reference of type `anything` is not an instance of type `Object`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.61: 	r : Object
+//│ ║  l.63: 	r : Object
 //│ ╙──      	    ^^^^^^
 //│ Object
 //│ res
@@ -76,28 +78,26 @@ r with { x: 1 }
 //│     = { x: 1 }
 
 
-:pe // TODO support
 :e // TODO support
 let r = new {}
-//│ ╔══[PARSE ERROR] Unexpected record after `new` keyword
-//│ ║  l.81: 	let r = new {}
+//│ ╔══[ERROR] Unexpected type `anything` after `new` keyword
+//│ ║  l.82: 	let r = new {}
 //│ ╙──      	            ^^
-//│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ║  l.81: 	let r = new {}
-//│ ╙──      	        ^^^
 //│ let r: error
-//│ r
-//│   = {}
+//│ Code generation encountered an error:
+//│   Unsupported `new` class term: Bra(true,Rcd(List()))
 
+:ge
 r : Object
 //│ Object
-//│ res
-//│     = {}
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding r
 
+:ge
 r with { x: 1 }
 //│ error & {x: 1}
-//│ res
-//│     = { x: 1 }
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding r
 
 
 let r = { x: 0 }

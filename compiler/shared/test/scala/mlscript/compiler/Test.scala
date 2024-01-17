@@ -3,7 +3,6 @@ package mlscript.compiler
 import mlscript.utils.shorthands.*
 import scala.util.control.NonFatal
 import scala.collection.mutable.StringBuilder
-import mlscript.codegen.Helpers.inspect as showStructure
 import mlscript.{DiffTests, ModeType, TypingUnit}
 import mlscript.compiler.debug.TreeDebug
 import mlscript.compiler.mono.Monomorph
@@ -16,8 +15,6 @@ class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*
   override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit): List[Str] = 
     val outputBuilder = StringBuilder()
-    outputBuilder ++= "Parsed:\n"
-    outputBuilder ++= showStructure(unit)
 
     if (mode.graphOpt)
       try

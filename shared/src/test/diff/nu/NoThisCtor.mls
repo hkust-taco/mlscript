@@ -126,7 +126,7 @@ class Bar() {
 class Bar2() extends Bar() {
   val two = this.add(1) // add is final, but it refers to `this`
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.127: 	  val two = this.add(1) // add is final, but it refers to `this`
 //│ ╙──       	                ^^^^
 //│ ╔══[ERROR] Cannot access `this` while initializing field two
@@ -143,7 +143,7 @@ class Bar2() extends Bar() {
 
 // it accesses this in an unusual way!
 :e
-abstract class Foo: Int -> Int {
+abstract class Foo: (Int -> Int) {
   val x = f
   fun f = this(0)
 }

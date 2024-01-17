@@ -26,7 +26,7 @@ trait Product[A, B] extends Into[A] {
 //│   'T := A
 
 class TwoInts(val pair: [Int, Int]) extends Product[Int, Int] {
-    fun Into = pair._1 + pair._2
+    fun Into = pair.0 + pair.1
 }
 //│ class TwoInts(pair: [Int, Int]) extends Into, Product {
 //│   fun Into: Int
@@ -55,7 +55,7 @@ p1: Product[Bool, Int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.54: 	p1: Product[Bool, Int]
 //│ ║        	^^
-//│ ╙── expression of type `Int` is not an instance of type `Bool`
+//│ ╙── expression of type `Int` does not match type `Bool`
 //│ Product[Bool, Int]
 
 p1: Into[Int]
@@ -66,5 +66,5 @@ p1: Into[Bool]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.65: 	p1: Into[Bool]
 //│ ║        	^^
-//│ ╙── expression of type `Int` is not an instance of type `Bool`
+//│ ╙── expression of type `Int` does not match type `Bool`
 //│ Into[Bool]

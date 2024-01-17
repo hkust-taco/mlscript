@@ -41,6 +41,7 @@ class Scope(val name: Str, enclosing: Opt[Scope]) {
       "error",
       "length",
       "concat",
+      "join",
       "add",
       "sub",
       "mul",
@@ -55,6 +56,7 @@ class Scope(val name: Str, enclosing: Opt[Scope]) {
       "sle",
       "typeof",
       "toString",
+      "String",
       "negate",
       "eq",
       "unit",
@@ -313,18 +315,26 @@ class Scope(val name: Str, enclosing: Opt[Scope]) {
     symbol
   }
 
-  def declareValue(lexicalName: Str, isByvalueRec: Option[Boolean], isLam: Boolean, symbolicName: Opt[Str]): ValueSymbol = {
+  def declareValue(
+      lexicalName: Str,
+      isByvalueRec: Option[Boolean],
+      isLam: Boolean,
+      symbolicName: Opt[Str],
+      /** Workaround for the first pass traversal with new definition typing. */
+      forNewDefsDryRun: Bool = false
+  ): ValueSymbol = {
     val runtimeName = lexicalValueSymbols.get(lexicalName) match {
       // If we are implementing a stub symbol and the stub symbol did not shadow any other
       // symbols, it is safe to reuse its `runtimeName`.
-      case S(sym: StubValueSymbol) if !sym.shadowing => sym.runtimeName
-      case S(sym: BuiltinSymbol) if !sym.accessed    => sym.runtimeName
-      case _                                         => allocateRuntimeName(lexicalName)
+      case S(sym: StubValueSymbol) if !sym.shadowing   => sym.runtimeName
+      case S(sym: ValueSymbol) if sym.forNewDefsDryRun => sym.runtimeName
+      case S(sym: BuiltinSymbol) if !sym.accessed      => sym.runtimeName
+      case _                                           => allocateRuntimeName(lexicalName)
     }
-    val symbol = ValueSymbol(lexicalName, runtimeName, isByvalueRec, isLam)
+    val symbol = ValueSymbol(lexicalName, runtimeName, isByvalueRec, isLam, forNewDefsDryRun)
     register(symbol)
     symbolicName.foreach { symbolicName =>
-      register(ValueSymbol(symbolicName, runtimeName, isByvalueRec, isLam))
+      register(ValueSymbol(symbolicName, runtimeName, isByvalueRec, isLam, forNewDefsDryRun))
     }
     symbol
   }
@@ -350,10 +360,16 @@ class Scope(val name: Str, enclosing: Opt[Scope]) {
       allowEscape: Bool
   ): StubValueSymbol = {
     val symbol = lexicalValueSymbols.get(lexicalName) match {
+      // If the existing symbol is a value symbol, but the value symbol is
+      // declared in the dry-run of new definition typing, we can reuse the
+      // runtime name.
+      case S(valueSymbol: ValueSymbol) if valueSymbol.forNewDefsDryRun =>
+        StubValueSymbol(lexicalName, valueSymbol.runtimeName, false, previous)
       // If a stub with the same name has been defined, use the name.
-      case S(value) => StubValueSymbol(lexicalName, value.runtimeName, true, previous)
+      case S(symbol) => StubValueSymbol(lexicalName, symbol.runtimeName, true, previous)
       // Otherwise, we will allocate a new name.
-      case N => StubValueSymbol(lexicalName, allocateRuntimeName(lexicalName), false, previous)
+      case N =>
+        StubValueSymbol(lexicalName, allocateRuntimeName(lexicalName), false, previous)
     }
     register(symbol)
     symbolicName.foreach { symbolicName =>

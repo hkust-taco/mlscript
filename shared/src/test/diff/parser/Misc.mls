@@ -35,16 +35,16 @@ foo of
 //│ ╟── Note: 'if' expression starts here:
 //│ ║  l.10: 	  discard of if f of x is
 //│ ╙──      	             ^^
-//│ ╔══[PARSE ERROR] Unexpected comma here
+//│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
 //│ ║  l.15: 	    None    then 0,  
-//│ ╙──      	                  ^
+//│ ╙──      	                     ^
 //│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
 //│ ║  l.13: 	  if g of y is
 //│ ║        	          ^^^^
 //│ ║  l.14: 	    Some(v) then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.15: 	    None    then 0,  
-//│ ╙──      	^^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found application instead
 //│ ║  l.13: 	  if g of y is
 //│ ║        	     ^^^^^^^^^
@@ -67,16 +67,16 @@ foo of
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.60: 	    Some v then v + 1
 //│ ╙──      	    ^^^^^^
-//│ ╔══[PARSE ERROR] Unexpected comma here
+//│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
 //│ ║  l.61: 	    None   then 0,
-//│ ╙──      	                 ^
+//│ ╙──      	                  ^
 //│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
 //│ ║  l.59: 	  if f of x is
 //│ ║        	          ^^^^
 //│ ║  l.60: 	    Some v then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.61: 	    None   then 0,
-//│ ╙──      	^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found application followed by newline instead
 //│ ║  l.59: 	  if f of x is
 //│ ║        	     ^^^^^^^^^
@@ -98,16 +98,16 @@ foo of
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
 //│ ║  l.63: 	    Some v then v + 1
 //│ ╙──      	    ^^^^^^
-//│ ╔══[PARSE ERROR] Unexpected comma here
+//│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
 //│ ║  l.64: 	    None   then 0,
-//│ ╙──      	                 ^
+//│ ╙──      	                  ^
 //│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
 //│ ║  l.62: 	  if g of y is
 //│ ║        	          ^^^^
 //│ ║  l.63: 	    Some v then v + 1
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.64: 	    None   then 0,
-//│ ╙──      	^^^^^^^^^^^^^^^^^
+//│ ╙──      	^^^^^^^^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found application followed by newline instead
 //│ ║  l.62: 	  if g of y is
 //│ ║        	     ^^^^^^^^^

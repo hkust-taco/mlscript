@@ -240,7 +240,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       RecordType(fields.filterNot(f => shadowing(f._1)) ++ fs)(prov)
     }
     def sorted: RecordType = RecordType(fields.sortBy(_._1))(prov)
-    override def toString = s"{${fields.map(f => s"${f._1}: ${f._2}").mkString(", ")}}"
+    override def toString = s"{${fields.map(f => s"${f._1.name}: ${f._2}").mkString(", ")}}"
   }
   object RecordType {
     def empty: RecordType = RecordType(Nil)(noProv)
@@ -269,7 +269,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     lazy val toArray: ArrayType = ArrayType(inner)(prov)  // upcast to array
     override lazy val toRecord: RecordType =
       RecordType(
-        fields.zipWithIndex.map { case ((_, t), i) => (Var("_"+(i+1)), t) }
+        fields.zipWithIndex.map { case ((_, t), i) => (Var(i.toString), t) }
         // Note: In line with TypeScript, tuple field names are pure type system fictions,
         //    with no runtime existence. Therefore, they should not be included in the record type
         //    corresponding to this tuple type.

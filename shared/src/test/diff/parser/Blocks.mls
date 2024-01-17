@@ -9,38 +9,32 @@ b
 a,
 b
 //│ |a|,|↵|b|
-//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
-//│ ║  l.9: 	a,
-//│ ╙──     	 ^
-//│ Parsed: {a}
+//│ Parsed: {,(a, b,)}
 
 a,
 b,
 //│ |a|,|↵|b|,|
-//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
-//│ ║  l.17: 	a,
-//│ ╙──      	 ^
-//│ Parsed: {a}
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.15: 	b,
+//│ ╙──      	  ^
+//│ Parsed: {,(a, ,(b, undefined,),)}
 
 a,
 b,
 c
 //│ |a|,|↵|b|,|↵|c|
-//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
-//│ ║  l.25: 	a,
-//│ ╙──      	 ^
-//│ Parsed: {a}
+//│ Parsed: {,(a, ,(b, c,),)}
 
 foo
   a
   b
 //│ |foo|→|a|↵|b|←|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.34: 	foo
+//│ ║  l.28: 	foo
 //│ ║        	^^^
-//│ ║  l.35: 	  a
+//│ ║  l.29: 	  a
 //│ ║        	^^^
-//│ ║  l.36: 	  b
+//│ ║  l.30: 	  b
 //│ ╙──      	^^^
 //│ Parsed: {foo({a; b},)}
 
@@ -71,9 +65,9 @@ foo(
 )
 //│ |foo|(|→|a|←|→|b|←|↵|)|
 //│ ╔══[PARSE ERROR] Unexpected indented block here
-//│ ║  l.70: 	  b
+//│ ║  l.64: 	  b
 //│ ║        	^^^
-//│ ║  l.71: 	)
+//│ ║  l.65: 	)
 //│ ╙──      	^
 //│ Parsed: {foo(a,)}
 
@@ -84,10 +78,10 @@ foo of
   b
 //│ |foo| |#of|→|a|↵|#fun| |f| |#=| |1|↵|b|←|
 //│ ╔══[PARSE ERROR] Unexpected 'fun' keyword in expression position
-//│ ║  l.83: 	  fun f = 1
+//│ ║  l.77: 	  fun f = 1
 //│ ╙──      	  ^^^
 //│ ╔══[PARSE ERROR] Unexpected '=' here
-//│ ║  l.83: 	  fun f = 1
+//│ ║  l.77: 	  fun f = 1
 //│ ╙──      	        ^
 //│ Parsed: {foo({a; f},)}
 
@@ -118,11 +112,11 @@ foo of
   c
 //│ |foo| |#of|→|a|↵|boo|→|x|↵|y|←|↵|c|←|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.115: 	  boo
+//│ ║  l.109: 	  boo
 //│ ║         	  ^^^
-//│ ║  l.116: 	    x
+//│ ║  l.110: 	    x
 //│ ║         	^^^^^
-//│ ║  l.117: 	    y
+//│ ║  l.111: 	    y
 //│ ╙──       	^^^^^
 //│ Parsed: {foo({a; boo({x; y},); c},)}
 
@@ -167,7 +161,7 @@ fun foo =
 
 log(1); log(a)
 //│ |log|(|1|)|;| |log|(|a|)|
-//│ Parsed: {{log(1,); log(a,)}}
+//│ Parsed: {log(1,); log(a,)}
 
 constructor(){
   a = 1
@@ -178,14 +172,10 @@ constructor(){
 
 a = 1; log(a)
 //│ |a| |#=| |1|;| |log|(|a|)|
-//│ Parsed: {a = {1; log(a,)}}
+//│ Parsed: {a = 1; log(a,)}
 
-:pe
 f(a) = 1
 //│ |f|(|a|)| |#=| |1|
-//│ ╔══[PARSE ERROR] Expected end of input; found '=' instead
-//│ ║  l.184: 	f(a) = 1
-//│ ╙──       	     ^
-//│ Parsed: {f(a,)}
+//│ Parsed: {f = (a,) => 1}
 
 

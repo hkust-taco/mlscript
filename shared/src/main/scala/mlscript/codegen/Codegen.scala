@@ -374,7 +374,7 @@ object JSExpr {
   def arguments(exprs: Ls[JSExpr]): SourceCode =
     exprs.zipWithIndex
       .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
-        x ++ y.toSourceCode ++ (if (i === exprs.length - 1) SourceCode.empty
+        x ++ y.embed(parentPrecedence = JSCommaExpr.outerPrecedence) ++ (if (i === exprs.length - 1) SourceCode.empty
                                 else SourceCode(", "))
       }
       .parenthesized
@@ -411,7 +411,7 @@ final case class JSArrowFn(params: Ls[JSPattern], body: JSExpr \/ Ls[JSStmt]) ex
           case pattern             => pattern.toSourceCode
         }) ++ (if (i === params.length - 1) SourceCode.empty else SourceCode(", "))
       }
-      .parenthesized ++ SourceCode(" => ") ++ (body match {
+      .parenthesized ++ SourceCode.fatArrow ++ (body match {
       // TODO: Figure out how `=>` competes with other operators.
       case L(expr: JSRecord) => expr.toSourceCode.parenthesized
       case L(expr)  => expr.embed
@@ -444,7 +444,7 @@ final case class JSImmEvalFn(
     case None =>
       (SourceCode(s"${JSExpr.params(params)} => ") ++ (body match {
         case Left(expr: JSRecord) => expr.toSourceCode.parenthesized
-        case Left(expr) => expr.toSourceCode
+        case Left(expr) => expr.embed(parentPrecedence = 2)
         case Right(stmts) =>
           stmts.foldLeft(SourceCode.empty) { _ + _.toSourceCode }.block
       })).parenthesized ++ JSExpr.arguments(arguments)
@@ -534,7 +534,8 @@ object JSBinary {
       "&&" -> 5,
       // infixl 4
       "||" -> 4,
-      "??" -> 4
+      "??" -> 4,
+      "," -> 1,
     )
   
   val operators: Set[Str] = opPrecMap.keySet
@@ -605,9 +606,11 @@ class JSField(`object`: JSExpr, val property: JSIdent) extends JSMember(`object`
     ) ++ SourceCode(
       if (JSField.isValidFieldName(property.name)) {
         s".${property.name}"
-      } else {
-        s"[${JSLit.makeStringLiteral(property.name)}]"
-      }
+      } else
+        property.name.toIntOption match {
+          case S(index) => s"[$index]"
+          case N => s"[${JSLit.makeStringLiteral(property.name)}]"
+        }
     )
 }
 
@@ -922,6 +925,11 @@ final case class JSClassNewDecl(
 
 final case class JSComment(text: Str) extends JSStmt {
   def toSourceCode: SourceCode = SourceCode(s"// $text")
+}
+
+final case class JSParenthesis(exp: JSExpr) extends JSExpr {
+  implicit def precedence: Int = 0
+  def toSourceCode: SourceCode = exp.embed
 }
 
 object JSCodeHelpers {

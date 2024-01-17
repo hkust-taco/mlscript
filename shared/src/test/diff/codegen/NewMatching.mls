@@ -88,7 +88,7 @@ sum(42)
 //│ res
 //│     = -1
 
-class Some[T](val value: T)
+class Some[out T](val value: T)
 //│ class Some[T](value: T)
 
 :js

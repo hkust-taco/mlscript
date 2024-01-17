@@ -103,7 +103,7 @@ class Base2
 class Derived2: Base2
   method Foo3 = (this.Foo2,)
 class DerivedDerived2: Derived2
-  method Foo2 = this.Foo3._1
+  method Foo2 = this.Foo3.0
 //│ Defined class Base2
 //│ Declared Base2.Foo2: (Base2 & 'this) -> (Base2 & 'this)
 //│ Defined class Derived2
@@ -127,7 +127,7 @@ class NewBase
 //│ Defined NewBase.NewBar: (NewBase & 'this) -> (NewBase & 'this,)
 
 class NewDerived: NewBase
-  method NewQux = this.NewBar._1
+  method NewQux = this.NewBar.0
 //│ Defined class NewDerived
 //│ Defined NewDerived.NewQux: (NewDerived & 'this) -> (NewDerived & NewBase & 'this)
 
@@ -155,13 +155,13 @@ NewDerivedDerived.NewQuz
 
 :e
 class NewDerivedDerivedDerived: NewDerivedDerived
-  method NewQux = this.NewBar._1
+  method NewQux = this.NewBar.0
 //│ ╔══[ERROR] Overriding method NewDerived.NewQux without explicit declaration is not allowed.
-//│ ║  l.158: 	  method NewQux = this.NewBar._1
-//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.158: 	  method NewQux = this.NewBar.0
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: method definition inherited from
-//│ ║  l.130: 	  method NewQux = this.NewBar._1
-//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.130: 	  method NewQux = this.NewBar.0
+//│ ╙──       	         ^^^^^^^^^^^^^^^^^^^^^^
 //│ Defined class NewDerivedDerivedDerived
 //│ Defined NewDerivedDerivedDerived.NewQux: (NewDerivedDerivedDerived & 'this) -> (NewDerivedDerivedDerived & NewBase & 'this)
 

@@ -272,7 +272,7 @@ fun hasFree(t, n) =
 //│        = [Function: hasFree]
 
 fun showHasFree(t, n) =
-  concat4(showTerm(t), if hasFree(t, n) then " has " else " DOES NOT have ", "free variable ", n)
+  concat4(showTerm(t), (if hasFree(t, n) then " has " else " DOES NOT have "), "free variable ", n)
 //│ showHasFree: (Abs & 'a & 'b | App & 'c & 'd | Var, string,) -> string
 //│   where
 //│     'b <: {lhs: anything, rhs: Abs & 'b | App & 'd | Var | ~Abs & ~App & ~Var}

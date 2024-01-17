@@ -11,18 +11,28 @@
     <textarea id="mlscript-input" class="panel" spellcheck="false">
 type List[A] = Cons[A] | Nil
 
-class Cons[out A](head: A, tail: List[A])
-module Nil { fun size = 0 }
+class Cons[out A](head: A, tail: List[A]) {
+  fun map: (A -> 'B) -> List['B]
+  map(f) = Cons of f(head), tail.map(f)
+}
+module Nil {
+  fun map(f) = Nil
+}
 
-fun map(f, xs) = if xs is
-  Cons(h, t) then Cons(f(h), map(f, t))
-  Nil        then Nil
+fun (::) cons(x, xs) = Cons(x, xs)
 
-let c = Cons(id, Cons(([x, y]) => [y, x], Nil))
+fun show(xs) =
+  let rec go(xs) = if xs is
+    Cons(h, Nil) then String(h)
+    Cons(h, t)   then join(String(h), ", ", go(t))
+    Nil          then ""
+  join("[", go(xs), "]")
 
-let m1 = map(f => f([0, 1]), c)
+let xs = 1 :: 2 :: 3 :: Nil
 
-let m2 = map(f => f([true, false]), c)
+show(xs)
+
+show(xs.map of x => succ(x))
 </textarea>
 <!-- let rec recursive_monster = fun x ->
   { thing = x;

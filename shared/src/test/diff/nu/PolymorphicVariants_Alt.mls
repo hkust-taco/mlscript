@@ -38,16 +38,16 @@ fun list_assoc(s, l: List<'a>) =
   l.match(
     ifNil: () => NotFound,
     ifCons: (h, t) =>
-      if eq(s, h._1) then Success(h._2)
+      if eq(s, h.0) then Success(h.1)
       else list_assoc(s, t)
   )
-//│ fun list_assoc: forall 'A. (Str, l: List[{_1: Str, _2: 'A}]) -> (NotFound | Success['A])
+//│ fun list_assoc: forall 'A. (Str, l: List[{0: Str, 1: 'A}]) -> (NotFound | Success['A])
 
-list_assoc : (Str, List<{ _1: Str, _2: 'b }>) => (NotFound | Success['b])
-//│ (Str, List[{_1: Str, _2: 'b}]) -> (NotFound | Success['b])
+list_assoc : (Str, List<{ 0: Str, 1: 'b }>) => (NotFound | Success['b])
+//│ (Str, List[{0: Str, 1: 'b}]) -> (NotFound | Success['b])
 
-fun list_assoc(s: Str, l: List<{ _1: Str, _2: 'b }>): NotFound | Success['b]
-//│ fun list_assoc: forall 'b. (s: Str, l: List[{_1: Str, _2: 'b}]) -> (NotFound | Success['b])
+fun list_assoc(s: Str, l: List<{ 0: Str, 1: 'b }>): NotFound | Success['b]
+//│ fun list_assoc: forall 'b. (s: Str, l: List[{0: Str, 1: 'b}]) -> (NotFound | Success['b])
 
 class Var(s: Str)
 //│ class Var(s: Str)
@@ -60,7 +60,7 @@ mixin EvalVar {
         Success(r) then r
 }
 //│ mixin EvalVar() {
-//│   fun eval: (List[{_1: Str, _2: 'a}], Var) -> (Var | 'a)
+//│   fun eval: (List[{0: Str, 1: 'a}], Var) -> (Var | 'a)
 //│ }
 
 class Abs<out A>(x: Str, t: A)
@@ -103,7 +103,7 @@ mixin EvalLambda {
 
 module Test1 extends EvalVar, EvalLambda
 //│ module Test1 {
-//│   fun eval: (List[{_1: Str, _2: 'a}], 'b) -> 'a
+//│   fun eval: (List[{0: Str, 1: 'a}], 'b) -> 'a
 //│ }
 //│ where
 //│   'b <: Abs['b] | App['b & (Abs['b] | Object & ~#Abs)] | Var
@@ -142,7 +142,7 @@ fun map_expr(f, v) =
     Numb then v
     Add(l, r) then Add(f(l), f(r))
     Mul(l, r) then Mul(f(l), f(r))
-//│ fun map_expr: forall 'a 'A 'b 'A0. ('b -> 'A0 & 'a -> 'A, Add['b] | Mul['a] | Numb | Var) -> (Add['A0] | Mul['A] | Numb | Var)
+//│ fun map_expr: forall 'A 'a 'A0 'b. ('a -> 'A0 & 'b -> 'A, Add['a] | Mul['b] | Numb | Var) -> (Add['A0] | Mul['A] | Numb | Var)
 
 mixin EvalExpr {
   fun eval(sub, v) =
@@ -162,7 +162,7 @@ mixin EvalExpr {
 
 module Test2 extends EvalVar, EvalExpr
 //│ module Test2 {
-//│   fun eval: forall 'a. (List[{_1: Str, _2: Object & 'b}], 'a & (Add['c] | Mul['c] | Numb | Var)) -> (Numb | Var | 'b | 'a | 'c)
+//│   fun eval: forall 'a. (List[{0: Str, 1: Object & 'b}], 'a & (Add['c] | Mul['c] | Numb | Var)) -> (Numb | Var | 'b | 'a | 'c)
 //│ }
 //│ where
 //│   'c <: Add['c] | Mul['c] | Numb | Var
@@ -181,12 +181,12 @@ Test2.eval(Cons(["a", Abs("d", Var("d"))], Nil()), Add(Numb(1), Var("a")))
 
 module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│ module Test3 {
-//│   fun eval: (List[{_1: Str, _2: 'a}], 'b) -> 'c
+//│   fun eval: (List[{0: Str, 1: 'a}], 'b) -> 'c
 //│ }
 //│ where
 //│   'a :> 'c
 //│      <: Object
-//│   'c :> App['c] | Abs['c] | Numb | Var | 'a | 'd
+//│   'c :> App['c] | Abs['c] | 'a | 'd
 //│   'd <: Add['b] | Mul['b] | Numb | Var
 //│   'b <: Abs['b] | App['b & (Abs['b] | Object & ~#Abs)] | Object & 'd & ~#Abs & ~#App
 
@@ -202,11 +202,11 @@ Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil()), App(Abs("a", Var("a")), Add(N
 
 module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ module Test3 {
-//│   fun eval: (List[{_1: Str, _2: 'a}], 'a & (Add['b] | Mul['b] | Numb | Var)) -> ('a | 'b | 'c)
+//│   fun eval: (List[{0: Str, 1: 'a}], 'a & (Add['b] | Mul['b] | Numb | Var)) -> (Numb | 'a | 'b | 'c)
 //│ }
 //│ where
 //│   'a :> 'b | 'c
 //│      <: Object
-//│   'c :> Abs[Numb | 'a | 'c] | App[Numb | 'a | 'c] | Numb | Var | 'a
+//│   'c :> Abs['a | 'c] | App['a | 'c] | 'a
 //│   'b <: Add['b] | Mul['b] | Numb | Var
 

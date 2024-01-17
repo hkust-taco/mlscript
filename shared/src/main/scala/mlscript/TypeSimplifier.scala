@@ -287,7 +287,7 @@ trait TypeSimplifier { self: Typer =>
                 })(noProv)
                 println(s"typeRef ${typeRef}")
                 
-                val clsFields = fieldsOf(typeRef.expandWith(paramTags = true), paramTags = true)
+                val clsFields = fieldsOf(typeRef.expandWith(paramTags = true, selfTy = false), paramTags = true)
                 println(s"clsFields ${clsFields.mkString(", ")}")
                 
                 val cleanPrefixes = ps.map(_.name.capitalize) + clsNme ++ traitPrefixes
@@ -373,7 +373,7 @@ trait TypeSimplifier { self: Typer =>
                 })(noProv)
                 println(s"typeRef ${typeRef}")
                 
-                val clsFields = fieldsOf(typeRef.expandWith(paramTags = true), paramTags = true)
+                val clsFields = fieldsOf(typeRef.expandWith(paramTags = true, selfTy = false), paramTags = true)
                 println(s"clsFields ${clsFields.mkString(", ")}")
                 
                 val cleanPrefixes = ps.map(_.name.capitalize) + clsNme ++ traitPrefixes
@@ -411,20 +411,10 @@ trait TypeSimplifier { self: Typer =>
                     val arity = fs.size
                     val (componentFields, rcdFields) = rcd.fields
                       .filterNot(traitPrefixes contains _._1.name.takeWhile(_ =/= '#'))
-                      .partitionMap(f =>
-                        if (f._1.name.length > 1 && f._1.name.startsWith("_")) {
-                          val namePostfix = f._1.name.tail
-                          if (namePostfix.forall(_.isDigit)) {
-                            val index = namePostfix.toInt
-                            if (index <= arity && index > 0) L(index -> f._2)
-                            else R(f)
-                          }
-                          else R(f)
-                        } else R(f)
-                      )
+                      .partitionMap(f => f._1.toIndexOption.filter((0 until arity).contains).map(_ -> f._2).toLeft(f))
                     val componentFieldsMap = componentFields.toMap
                     val tupleComponents = fs.iterator.zipWithIndex.map { case ((nme, ty), i) =>
-                      nme -> (ty && componentFieldsMap.getOrElse(i + 1, TopType.toUpper(noProv))).update(go(_, pol.map(!_)), go(_, pol))
+                      nme -> (ty && componentFieldsMap.getOrElse(i, TopType.toUpper(noProv))).update(go(_, pol.map(!_)), go(_, pol))
                     }.toList
                     S(TupleType(tupleComponents)(tt.prov)) -> rcdFields.mapValues(_.update(go(_, pol.map(!_)), go(_, pol)))
                   case S(ct: ClassTag) => S(ct) -> nFields

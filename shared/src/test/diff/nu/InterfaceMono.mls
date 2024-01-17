@@ -269,7 +269,7 @@ class B extends A { fun x = "A" }
 
 :e
 class C1[A] { virtual fun a: A = this.a }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.271: 	class C1[A] { virtual fun a: A = this.a }
 //│ ╙──       	                                     ^^
 //│ class C1[A] {
@@ -306,7 +306,7 @@ class C extends MyTrait[Int] { fun a = false }
 //│ ╔══[ERROR] Type mismatch in definition of method a:
 //│ ║  l.305: 	class C extends MyTrait[Int] { fun a = false }
 //│ ║         	                                   ^^^^^^^^^
-//│ ╟── reference of type `false` is not an instance of type `Int`
+//│ ╟── reference of type `false` is not an instance of `Int`
 //│ ║  l.305: 	class C extends MyTrait[Int] { fun a = false }
 //│ ║         	                                       ^^^^^
 //│ ╟── but it flows into definition of method a with expected type `Int`
@@ -393,7 +393,7 @@ class C2(foo: Int, bar: Str) extends T4
 //│ ╔══[ERROR] Type mismatch in type reference:
 //│ ║  l.382: 	class C2(foo: Int, bar: Str) extends T4
 //│ ║         	                        ^^^
-//│ ╟── type `Str` does not match type `Bool | Int`
+//│ ╟── type `Str` does not match type `Int | false | true`
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.333: 	    let bar : Int | Bool
 //│ ║         	              ^^^^^^^^^^

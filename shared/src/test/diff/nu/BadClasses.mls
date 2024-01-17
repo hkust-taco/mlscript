@@ -28,7 +28,7 @@ class C0 extends M0(true)
 //│ ╔══[ERROR] Type mismatch in type declaration:
 //│ ║  l.27: 	class C0 extends M0(true)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `true` is not an instance of type `Int`
+//│ ╟── reference of type `true` is not an instance of `Int`
 //│ ║  l.27: 	class C0 extends M0(true)
 //│ ║        	                    ^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -105,8 +105,8 @@ class Foo[A] { 42: A }
 //│ ╟── Note: constraint arises from type parameter:
 //│ ║  l.100: 	class Foo[A] { 42: A }
 //│ ╙──       	          ^
-//│ ╔══[WARNING] Expression in statement position should have type `unit`.
-//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╔══[WARNING] Expression in statement position should have type `()`.
+//│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
 //│ ╟── Type mismatch in type ascription:
 //│ ║  l.100: 	class Foo[A] { 42: A }
 //│ ║         	               ^^

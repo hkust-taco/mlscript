@@ -7,8 +7,8 @@ fun (++) concatOp(a, b) = concat(a)(b)
 fun par(a) = "(" ++ a ++ ")"
 //│ fun par: Str -> Str
 
-type Option[A] = Some[A] | None
-class Some[A](value: A)
+type Option[out A] = Some[A] | None
+class Some[out A](value: A)
 module None
 //│ type Option[A] = None | Some[A]
 //│ class Some[A](value: A)

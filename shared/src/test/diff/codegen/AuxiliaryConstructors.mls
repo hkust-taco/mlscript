@@ -79,21 +79,18 @@ abstract class C
 new C
 //│ ╔══[ERROR] Class C is abstract and cannot be instantiated
 //│ ║  l.79: 	new C
-//│ ╙──      	^^^^^
-//│ ╔══[ERROR] Class C cannot be instantiated as it exposes no such constructor
-//│ ║  l.79: 	new C
-//│ ╙──      	^^^^^
-//│ error
+//│ ╙──      	    ^
+//│ C
 //│ res
 //│     = C {}
 
 :e
 C()
 //│ ╔══[ERROR] Class C is abstract and cannot be instantiated
-//│ ║  l.91: 	C()
+//│ ║  l.88: 	C()
 //│ ╙──      	^
-//│ ╔══[ERROR] Class C cannot be instantiated as it exposes no such constructor
-//│ ║  l.91: 	C()
+//│ ╔══[ERROR] Class C cannot be instantiated as it exposes no constructor
+//│ ║  l.88: 	C()
 //│ ╙──      	^
 //│ error
 //│ res
@@ -135,10 +132,10 @@ class C {
 :e
 let c = new C()
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.136: 	let c = new C()
+//│ ║  l.133: 	let c = new C()
 //│ ║         	        ^^^^^^^
-//│ ╟── argument of type `[]` does not match type `[x: Int]`
-//│ ║  l.136: 	let c = new C()
+//│ ╟── argument list of type `[]` does not match type `[x: Int]`
+//│ ║  l.133: 	let c = new C()
 //│ ╙──       	             ^^
 //│ let c: C | error
 //│ c
@@ -184,7 +181,7 @@ class D(val x: Int) {
 //│           return [x.#x];
 //│         }
 //│       };
-//│       this.#D = ((x) => Object.freeze(new D(x)));
+//│       this.#D = ((y) => Object.freeze(new D(y)));
 //│       this.#D.class = D;
 //│       this.#D.unapply = D.unapply;
 //│     }
@@ -206,7 +203,7 @@ dd.x
 //│ res
 //│     = 42
 
-let dd = D(41)
+let dd = new D(41)
 dd.x
 //│ let dd: D
 //│ Int
@@ -223,7 +220,7 @@ class E {
   constructor(y: Int)
 }
 //│ ╔══[PARSE ERROR] A class may have at most one explicit constructor
-//│ ║  l.221: 	class E {
+//│ ║  l.218: 	class E {
 //│ ╙──       	^^^^^
 //│ class E {
 //│   constructor(x: Int)
@@ -232,7 +229,7 @@ class E {
 :e
 constructor(x: Int)
 //│ ╔══[ERROR] Illegal position for this constructor statement.
-//│ ║  l.233: 	constructor(x: Int)
+//│ ║  l.230: 	constructor(x: Int)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ 
 //│ Code generation encountered an error:
@@ -422,8 +419,8 @@ fun g(x: Int) =
     }
     fun ll = x + y
   }
-  L
-//│ fun g: (x: Int) -> (y: Int) -> L
+  x => new L(x)
+//│ fun g: (x: Int) -> Int -> L
 //│ // Prelude
 //│ class TypingUnit18 {}
 //│ const typing_unit18 = new TypingUnit18;
@@ -447,11 +444,11 @@ fun g(x: Int) =
 //│         }
 //│       }
 //│       let ctor;
-//│       ctor = ((y) => new L(y));
+//│       ctor = ((z) => new L(z));
 //│       ctor.class = L;
 //│       return ctor;
 //│     })();
-//│     return L;
+//│     return (x) => new L.class(x);
 //│   })());
 //│ };
 //│ // End of generated code
@@ -460,7 +457,7 @@ fun g(x: Int) =
 let m = g(1)
 let n = m(2)
 n.ll
-//│ let m: (y: Int) -> L
+//│ let m: Int -> L
 //│ let n: L
 //│ Int
 //│ // Prelude
@@ -474,7 +471,7 @@ n.ll
 //│ res = n.ll;
 //│ // End of generated code
 //│ m
-//│   = [Function: ctor] { class: [class L] }
+//│   = [Function (anonymous)]
 //│ n
 //│   = L {}
 //│ res
@@ -504,7 +501,7 @@ fun h(z: Int) =
   }
   N
 //│ ╔══[ERROR] Construction of unparameterized class N should use the `new` keyword
-//│ ║  l.505: 	  N
+//│ ║  l.502: 	  N
 //│ ╙──       	  ^
 //│ fun h: (z: Int) -> (x: Int) -> N
 
@@ -515,9 +512,9 @@ let hh = h(1)
 
 :e
 new hh(1)
-//│ ╔══[ERROR] Value hh cannot be used in `new` expression
-//│ ║  l.517: 	new hh(1)
-//│ ╙──       	^^^^^^^^^
+//│ ╔══[ERROR] type identifier not found: hh
+//│ ║  l.514: 	new hh(1)
+//│ ╙──       	    ^^
 //│ error
 //│ res
 //│     = N {}
@@ -532,10 +529,10 @@ mixin P {
   constructor(x: Int)
 }
 //│ ╔══[ERROR] Explicit module constructors are not supported
-//│ ║  l.529: 	  constructor(x: Int)
+//│ ║  l.526: 	  constructor(x: Int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Explicit mixin constructors are not supported
-//│ ║  l.532: 	  constructor(x: Int)
+//│ ║  l.529: 	  constructor(x: Int)
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^
 //│ module O {
 //│   constructor(x: Int)
@@ -551,28 +548,28 @@ class QQ(qq: Str) {
   }
 }
 //│ ╔══[ERROR] identifier not found: lol
-//│ ║  l.549: 	    lol
+//│ ║  l.546: 	    lol
 //│ ╙──       	    ^^^
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.549: 	    lol
+//│ ║  l.546: 	    lol
 //│ ╙──       	    ^^^
 //│ ╔══[ERROR] Type mismatch in auxiliary class constructor:
-//│ ║  l.548: 	  constructor(foo: Int) {
+//│ ║  l.545: 	  constructor(foo: Int) {
 //│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.549: 	    lol
+//│ ║  l.546: 	    lol
 //│ ║         	^^^^^^^
-//│ ║  l.550: 	    qq = foo
+//│ ║  l.547: 	    qq = foo
 //│ ║         	^^^^^^^^^^^^
-//│ ║  l.551: 	  }
+//│ ║  l.548: 	  }
 //│ ║         	^^^
-//│ ╟── type `Int` is not an instance of `Str`
-//│ ║  l.548: 	  constructor(foo: Int) {
+//│ ╟── type `Int` is not an instance of type `Str`
+//│ ║  l.545: 	  constructor(foo: Int) {
 //│ ║         	                   ^^^
 //│ ╟── but it flows into reference with expected type `Str`
-//│ ║  l.550: 	    qq = foo
+//│ ║  l.547: 	    qq = foo
 //│ ║         	         ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.547: 	class QQ(qq: Str) {
+//│ ║  l.544: 	class QQ(qq: Str) {
 //│ ╙──       	             ^^^
 //│ class QQ(qq: Str) {
 //│   constructor(foo: Int)

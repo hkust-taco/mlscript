@@ -76,14 +76,10 @@ fun x = 1
 //│ res
 //│     = 1
 
-:pe
 (1,2)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.80: 	(1,2)
-//│ ╙──      	^^^^^
-//│ [1, 2]
+//│ 2
 //│ res
-//│     = [ 1, 2 ]
+//│     = 2
 
 (let x = 1)
 //│ ()
@@ -93,7 +89,7 @@ fun x = 1
 :pe
 (let x = 1 in)
 //│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
-//│ ║  l.94: 	(let x = 1 in)
+//│ ║  l.90: 	(let x = 1 in)
 //│ ╙──      	             ^
 //│ ()
 //│ res
@@ -108,23 +104,31 @@ fun x = 1
 
 :pe
 (log(1);)
-//│ ╔══[PARSE ERROR] Unexpected end of parenthesis section; an expression was expected here
-//│ ║  l.110: 	(log(1);)
-//│ ╙──       	        ^
+//│ ╔══[PARSE ERROR] Unexpected semicolon here
+//│ ║  l.106: 	(log(1);)
+//│ ╙──       	       ^
 //│ ()
 //│ res
 //│     = undefined
 //│ // Output
 //│ 1
 
+:pe // support?
 (log(1); 2)
-//│ 2
+//│ ╔══[PARSE ERROR] Unexpected semicolon here
+//│ ║  l.117: 	(log(1); 2)
+//│ ╙──       	       ^
+//│ ()
 //│ res
-//│     = 2
+//│     = undefined
 //│ // Output
 //│ 1
 
+:pe // support?
 (log(1); ())
+//│ ╔══[PARSE ERROR] Unexpected semicolon here
+//│ ║  l.128: 	(log(1); ())
+//│ ╙──       	       ^
 //│ ()
 //│ res
 //│     = undefined
@@ -140,14 +144,10 @@ fun x = 1
 
 
 
-:pe
 (1, 2)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.144: 	(1, 2)
-//│ ╙──       	^^^^^^
-//│ [1, 2]
+//│ 2
 //│ res
-//│     = [ 1, 2 ]
+//│     = 2
 
 
 x => x
@@ -172,12 +172,8 @@ x => x
 //│     = [Function: res]
 
 
-:pe
 1 => (2, 3)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.176: 	1 => (2, 3)
-//│ ╙──       	     ^^^^^^
-//│ 1 -> [2, 3]
+//│ 1 -> 3
 //│ res
 //│     = [Function: res]
 
@@ -195,75 +191,74 @@ f of 1, 2
 //│ res
 //│     = 3
 
-:pe
 :e
 f of (1, 2)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.200: 	f of (1, 2)
-//│ ╙──       	     ^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.200: 	f of (1, 2)
+//│ ║  l.195: 	f of (1, 2)
 //│ ║         	^^^^^^^^^^^
-//│ ╟── argument of type `[[1, 2]]` does not match type `[?a, ?b]`
-//│ ║  l.200: 	f of (1, 2)
+//│ ╟── argument of type `[?a]` does not match type `[?b, ?c]`
+//│ ║  l.195: 	f of (1, 2)
 //│ ║         	     ^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.185: 	fun f(x, y) = x + y
+//│ ║  l.181: 	fun f(x, y) = x + y
 //│ ╙──       	     ^^^^^^
 //│ Int | error
 //│ res
-//│     = '1,2undefined'
+//│     = NaN
 
 
 
-:w
 0; 0
-//│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.220: 	0; 0
-//│ ╙──       	^
 //│ 0
+//│ res
+//│     = 0
 //│ res
 //│     = 0
 
 :w
-succ(0); 0
-//│ ╔══[WARNING] Expression in statement position should have type `unit`.
-//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+fun f =
+  0; 0
+//│ ╔══[WARNING] Pure expression does nothing in statement position.
+//│ ║  l.220: 	  0; 0
+//│ ╙──       	  ^
+//│ fun f: 0
+
+:w
+fun f =
+  succ(0); 0
+//│ ╔══[WARNING] Expression in statement position should have type `()`.
+//│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
 //│ ╟── Type mismatch in application:
-//│ ║  l.229: 	succ(0); 0
-//│ ║         	^^^^^^^
+//│ ║  l.228: 	  succ(0); 0
+//│ ║         	  ^^^^^^^
 //│ ╙── application of type `Int` does not match type `()`
-//│ 0
-//│ res
-//│     = 0
+//│ fun f: 0
 
-discard(succ(0)); 0
-//│ 0
-//│ res
-//│     = 0
+fun f =
+  discard(succ(0)); 0
+//│ fun f: 0
 
-discard of succ(0);; 0
-//│ 0
-//│ res
-//│     = undefined
-//│ res
-//│     = 0
+fun f =
+  discard of succ(0); 0
+//│ fun f: 0
 
-let _ = succ(0);; 0
-//│ let _: Int
-//│ 0
-//│ _
-//│   = 1
-//│ res
-//│     = 0
+fun f =
+  let _ = succ(0); 0
+//│ fun f: 0
+
+fun f =
+  succ(0), 0
+//│ fun f: 0
 
 
 x => x; ()
-//│ () -> ()
+//│ ()
 //│ res
 //│     = [Function: res]
+//│ res
+//│     = undefined
 
-x => x;; ()
+x => x; ()
 //│ ()
 //│ res
 //│     = [Function: res]
@@ -272,14 +267,14 @@ x => x;; ()
 
 :w
 fun f =
-  x => x;; ()
+  x => x; ()
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.275: 	  x => x;; ()
+//│ ║  l.270: 	  x => x; ()
 //│ ╙──       	  ^^^^^^
 //│ fun f: ()
 
 fun f =
-  discard of x => x;; ()
+  discard of x => x; ()
 //│ fun f: ()
 
 :w
@@ -287,7 +282,7 @@ fun f =
   x => x
   ()
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.287: 	  x => x
+//│ ║  l.282: 	  x => x
 //│ ╙──       	  ^^^^^^
 //│ fun f: ()
 
@@ -297,7 +292,7 @@ module Test {
   123
 }
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.297: 	  123
+//│ ║  l.292: 	  123
 //│ ╙──       	  ^^^
 //│ module Test
 
@@ -307,10 +302,10 @@ module Test {
   456
 }
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.306: 	  123
+//│ ║  l.301: 	  123
 //│ ╙──       	  ^^^
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.307: 	  456
+//│ ║  l.302: 	  456
 //│ ╙──       	  ^^^
 //│ module Test
 
@@ -319,7 +314,7 @@ module Test {
   x => x
 }
 //│ ╔══[WARNING] Pure expression does nothing in statement position.
-//│ ║  l.319: 	  x => x
+//│ ║  l.314: 	  x => x
 //│ ╙──       	  ^^^^^^
 //│ module Test
 
@@ -330,15 +325,15 @@ fun foo =
   let tmp = 0
 foo + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.331: 	foo + 1
+//│ ║  l.326: 	foo + 1
 //│ ║         	^^^^^^^
 //│ ╟── definition of method foo of type `()` is not an instance of type `Int`
-//│ ║  l.329: 	fun foo =
+//│ ║  l.324: 	fun foo =
 //│ ║         	    ^^^^^
-//│ ║  l.330: 	  let tmp = 0
+//│ ║  l.325: 	  let tmp = 0
 //│ ║         	^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.331: 	foo + 1
+//│ ║  l.326: 	foo + 1
 //│ ╙──       	^^^
 //│ fun foo: ()
 //│ Int | error

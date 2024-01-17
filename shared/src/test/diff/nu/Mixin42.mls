@@ -47,7 +47,7 @@ class C1(val factor: Int) extends M1, M2
 
 :e
 class C1() extends M1, M2 { val factor = 2 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.6: 	mixin M2 { fun test = super.test * this.factor }
 //│ ╙──     	                                       ^^^^^^^
 //│ class C1() {
@@ -58,7 +58,7 @@ class C1() extends M1, M2 { val factor = 2 }
 // * Note that this `val` definition is not yet treated as a type signature/annotation
 :e
 class C1() extends M1, M2 { val factor: Int = 2 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.6: 	mixin M2 { fun test = super.test * this.factor }
 //│ ╙──     	                                       ^^^^^^^
 //│ class C1() {
@@ -83,7 +83,7 @@ C2.test
 //│     = 42
 
 
-class C1() extends M1, M2 { val factor: Int;; val factor = 2 }
+class C1() extends M1, M2 { val factor: Int; val factor = 2 }
 C1().test
 //│ class C1() {
 //│   val factor: Int
@@ -101,7 +101,7 @@ abstract class C0 { val factor = 2 }
 
 :e
 class C1() extends C0, M1, M2
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.6: 	mixin M2 { fun test = super.test * this.factor }
 //│ ╙──     	                                       ^^^^^^^
 //│ class C1() extends C0 {
@@ -117,7 +117,7 @@ abstract class C0 { val factor: Int }
 
 :e // * TODO support
 class C1() extends C0, M1, M2 { val factor = 2 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.6: 	mixin M2 { fun test = super.test * this.factor }
 //│ ╙──     	                                       ^^^^^^^
 //│ class C1() extends C0 {

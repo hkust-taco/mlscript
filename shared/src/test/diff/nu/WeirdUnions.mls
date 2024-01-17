@@ -6,34 +6,34 @@ fun f: Str | [Str, Int]
 //│ fun f: Str | [Str, Int]
 
 fun f: [Str] | [Str, Int]
-//│ fun f: Array[Int | Str] & {_1: Str}
+//│ fun f: Array[Int | Str] & {0: Str}
 
 fun f: (Str | [Str, Int])
 //│ fun f: Str | [Str, Int]
 
-:pe
+:e
 fun f: Str | (Str, Int)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ╔══[ERROR] type identifier not found: ,
 //│ ║  l.15: 	fun f: Str | (Str, Int)
 //│ ╙──      	             ^^^^^^^^^^
-//│ fun f: Str | [Str, Int]
+//│ fun f: Str | error
 
 
 fun f: Str | ([Str, Int])
 //│ fun f: Str | [Str, Int]
 
-:pe
+:e
 fun f: Str | ((Str, Int))
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ╔══[ERROR] type identifier not found: ,
 //│ ║  l.26: 	fun f: Str | ((Str, Int))
-//│ ╙──      	              ^^^^^^^^^^
-//│ fun f: Str | [Str, Int]
+//│ ╙──      	             ^^^^^^^^^^^^
+//│ fun f: Str | error
 
 
 
 // * This type merges the input tuples, resulting in the union seen above:
 fun f: (Str => Str) & ((Str, Int) => Str)
-//│ fun f: (...Array[Int | Str] & {_1: Str}) -> Str
+//│ fun f: (...Array[Int | Str] & {0: Str}) -> Str
 
 f("abc", "abc")
 //│ Str

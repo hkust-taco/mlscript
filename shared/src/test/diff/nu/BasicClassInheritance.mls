@@ -66,15 +66,31 @@ class E(val m: Int) extends A {
 //│   fun a2: 2
 //│ }
 
-// * FIXME codegen
+:e
 E(1).m
-//│ Int
+//│ ╔══[ERROR] Construction of class with auxiliary constructor should use the `new` keyword
+//│ ║  l.70: 	E(1).m
+//│ ╙──      	^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.70: 	E(1).m
+//│ ║        	^^^^
+//│ ╟── argument of type `[1]` does not match type `[a: Int, b: Int]`
+//│ ║  l.70: 	E(1).m
+//│ ╙──      	 ^^^
+//│ Int | error
 //│ res
 //│     = NaN
 //│ // Output
 //│ Here's m: NaN
 
 (new E(1, 2)).m
+//│ Int
+//│ res
+//│     = 3
+//│ // Output
+//│ Here's m: 3
+
+new E(1, 2).m
 //│ Int
 //│ res
 //│     = 3
@@ -91,8 +107,8 @@ if new E(1, 2) is E(x) then x
 :e
 module F extends E
 //│ ╔══[ERROR] class E expects 2 parameter(s); got 0
-//│ ║  l.92: 	module F extends E
-//│ ╙──      	                 ^
+//│ ║  l.108: 	module F extends E
+//│ ╙──       	                 ^
 //│ module F extends A, E {
 //│   fun a1: Int
 //│   fun a2: 2
@@ -101,7 +117,7 @@ module F extends E
 :e
 module F extends E(123)
 //│ ╔══[ERROR] class E expects 2 parameter(s); got 1
-//│ ║  l.102: 	module F extends E(123)
+//│ ║  l.118: 	module F extends E(123)
 //│ ╙──       	                 ^^^^^
 //│ module F extends A, E {
 //│   fun a1: Int
@@ -146,13 +162,13 @@ class H extends E {
   }
 }
 //│ ╔══[ERROR] class E expects 2 parameter(s); got 0
-//│ ║  l.143: 	class H extends E {
+//│ ║  l.159: 	class H extends E {
 //│ ╙──       	                ^
 //│ ╔══[ERROR] Illegal use of `super`
-//│ ║  l.145: 	    super(a, b)
+//│ ║  l.161: 	    super(a, b)
 //│ ╙──       	    ^^^^^
 //│ ╔══[ERROR] identifier not found: super
-//│ ║  l.145: 	    super(a, b)
+//│ ║  l.161: 	    super(a, b)
 //│ ╙──       	    ^^^^^
 //│ class H extends A, E {
 //│   constructor(a: Int, b: Int)

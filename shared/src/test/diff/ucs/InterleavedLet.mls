@@ -262,7 +262,7 @@ fun mapPartition(f, xs) =
 //│     'a <: {head: 'head, tail: Cons & 'a | Nil}
 //│             = [Function: mapPartition]
 
-mapPartition(x => if x % 2 == 0 then Left(x) else Right(x), zeroToThree)
+mapPartition(x => (if x % 2 == 0 then Left(x) else Right(x)), zeroToThree)
 //│ res: Pair & {
 //│   fst: forall 'a 'b. Nil | 'b | 'a,
 //│   snd: Nil | Cons & {head: 0 | 1 | 2 | 3, tail: Nil}
@@ -299,7 +299,7 @@ fun mapPartition2(f, xs) =
 //│   'a <: {head: 'head, tail: Cons & 'a | Nil}
 //│              = [Function: mapPartition2]
 
-mapPartition2(x => if x % 2 == 0 then Left(x) else Right(x), zeroToThree)
+mapPartition2(x => (if x % 2 == 0 then Left(x) else Right(x)), zeroToThree)
 //│ res: Pair & {
 //│   fst: forall 'a. Cons & {
 //│     head: 0,

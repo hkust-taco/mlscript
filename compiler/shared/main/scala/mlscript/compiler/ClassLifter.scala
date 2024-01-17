@@ -7,7 +7,6 @@ import scala.collection.mutable.StringBuilder as StringBuilder
 import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
 import scala.collection.mutable.ArrayBuffer as ArrayBuffer
-import mlscript.codegen.Helpers.inspect as showStructure
 import mlscript.codegen.CodeGenError
 import mlscript.compiler.mono.MonomorphError
 
@@ -304,7 +303,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
 
   private def liftTerm(target: Term)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (Term, LocalContext) = 
     log(s"liftTermNew $target in $ctx, $cache, $globFuncs, $outer")
-    target match{
+    target match {
     case v: Var => 
       if(ctx.contains(v) || v.name.equals("this") || primiTypes.contains(v.name))   (v, emptyCtx)
       else if(cache.contains(TypeName(v.name))){
@@ -339,6 +338,18 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val ret = liftTerm(trm)
       val nTy = liftType(ty)
       (Asc(ret._1, nTy._1), ret._2 ++ nTy._2)
+    case NuNew(cls) =>
+      liftTerm(App(NuNew(cls), Tup(Nil)))
+    case App(NuNew(cls), args) =>
+      liftTerm(Rft(App(NuNew(cls), args), TypingUnit(Nil)))
+    case Rft(NuNew(cls), tu) =>
+      liftTerm(Rft(App(NuNew(cls), Tup(Nil)), TypingUnit(Nil)))
+    case Rft(App(NuNew(cls), args), tu) =>
+      (cls, args) match {
+        case (v: Var, args: Tup) =>
+          liftTerm(New(Some((TypeName(v.name), args)), tu))
+        case _ => ???
+      }
     case App(v: Var, prm: Tup) if cache.contains(TypeName(v.name)) =>
       val ret = liftConstr(TypeName(v.name), prm)
       (App(Var(ret._1.name), ret._2), ret._3)
@@ -428,7 +439,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val (bod2, ctx) = liftTerm(bod)
       val (sts2, ctx2) = liftEntities(sts)
       (Where(bod2, sts2), ctx2)
-    case _: Eqn | _: Super => throw MonomorphError(s"Unimplemented liftTerm: ${target}") // TODO
+    case _: Eqn | _: Super | _: Rft => throw MonomorphError(s"Unimplemented liftTerm: ${target}") // TODO
     case patmat: AdtMatchWith => lastWords(s"Cannot liftTermNew ${patmat}")
   }
 
@@ -736,7 +747,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
 
   def liftTypingUnit(rawUnit: TypingUnit): TypingUnit = {
     log("=========================\n")
-    log(s"lifting: \n${showStructure(rawUnit)}\n")
+    log(s"lifting: \n$rawUnit\n")
     retSeq = Nil
     globalFunctions.clear()
     val re = liftEntities(rawUnit.entities)(using emptyCtx, Map(), Map(), None)
