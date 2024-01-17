@@ -9,8 +9,7 @@ fun fib(n) = if n < 2 then n else fib(n-1) + fib(n-2)
 fib(20)
 //│ |#class| |True|↵|#class| |False|↵|#fun| |fib|(|n|)| |#=| |#if| |n| |<| |2| |#then| |n| |#else| |fib|(|n|-|1|)| |+| |fib|(|n|-|2|)|↵|fib|(|20|)|
 //│ Parsed: {class True {}; class False {}; fun fib = (n,) => if (<(n,)(2,)) then n else +(fib(-(n,)(1,),),)(fib(-(n,)(2,),),); fib(20,)}
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, fib, None, [], Lam(Tup(_: Var(n)), If(IfThen(App(App(Var(<), Tup(_: Var(n))), Tup(_: IntLit(2))), Var(n), Some(App(App(Var(+), Tup(_: App(Var(fib), Tup(_: App(App(Var(-), Tup(_: Var(n))), Tup(_: IntLit(1))))))), Tup(_: App(Var(fib), Tup(_: App(App(Var(-), Tup(_: Var(n))), Tup(_: IntLit(2))))))))))), App(Var(fib), Tup(_: IntLit(20))))
+//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
@@ -85,8 +84,7 @@ fun foo() = odd(10)
 foo()
 //│ |#class| |True|↵|#class| |False|↵|#fun| |odd|(|x|)| |#=| |#if| |x| |==| |0| |#then| |False| |#else| |even|(|x|-|1|)|↵|#fun| |even|(|x|)| |#=| |#if| |x| |==| |0| |#then| |True| |#else| |odd|(|x|-|1|)|↵|#fun| |foo|(||)| |#=| |odd|(|10|)|↵|foo|(||)|
 //│ Parsed: {class True {}; class False {}; fun odd = (x,) => if (==(x,)(0,)) then False else even(-(x,)(1,),); fun even = (x,) => if (==(x,)(0,)) then True else odd(-(x,)(1,),); fun foo = () => odd(10,); foo()}
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, odd, None, [], Lam(Tup(_: Var(x)), If(IfThen(App(App(Var(==), Tup(_: Var(x))), Tup(_: IntLit(0))), Var(False), Some(App(Var(even), Tup(_: App(App(Var(-), Tup(_: Var(x))), Tup(_: IntLit(1))))))))), NuFunDef(None, even, None, [], Lam(Tup(_: Var(x)), If(IfThen(App(App(Var(==), Tup(_: Var(x))), Tup(_: IntLit(0))), Var(True), Some(App(Var(odd), Tup(_: App(App(Var(-), Tup(_: Var(x))), Tup(_: IntLit(1))))))))), NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(odd), Tup(_: IntLit(10))))), App(Var(foo), Tup()))
+//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
@@ -216,8 +214,7 @@ fun main() = foo(False)
 main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |A|↵|#class| |B|(|b|)|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A|→|#else| |B|(|foo|(|not|(|x|)|)|)|←|←|↵|#fun| |main|(||)| |#=| |foo|(|False|)|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class A {}; class B(b,) {}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = () => foo(False,); main()}
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, B, (), Tup(_: Var(b)), (), None, None, TypingUnit()), NuFunDef(None, not, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, main, None, [], Lam(Tup(), App(Var(foo), Tup(_: Var(False))))), App(Var(main), Tup()))
+//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
@@ -388,8 +385,7 @@ fun main() =
 main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |A|(||)|↵|#class| |B|(|b|)|↵|#fun| |aaa|(||)| |#=|→|#let| |m| |#=| |1|↵|#let| |n| |#=| |2|↵|#let| |p| |#=| |3|↵|#let| |q| |#=| |4|↵|m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |bbb|(||)| |#=|→|#let| |x| |#=| |aaa|(||)|↵|x| |*| |100| |+| |4|←|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A|→|#else| |B|(|foo|(|not|(|x|)|)|)|←|←|↵|#fun| |main|(||)| |#=|→|#let| |x| |#=| |foo|(|False|)|↵|#if| |x| |is|→|A| |#then| |aaa|(||)|↵|B|(|b1|)| |#then| |bbb|(||)|←|←|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class A() {}; class B(b,) {}; fun aaa = () => {let m = 1; let n = 2; let p = 3; let q = 4; +(-(+(m,)(n,),)(p,),)(q,)}; fun bbb = () => {let x = aaa(); +(*(x,)(100,),)(4,)}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = () => {let x = foo(False,); if x is ‹(A) then aaa(); (B(b1,)) then bbb()›}; main()}
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, B, (), Tup(_: Var(b)), (), None, None, TypingUnit()), NuFunDef(None, aaa, None, [], Lam(Tup(), Blk(...))), NuFunDef(None, bbb, None, [], Lam(Tup(), Blk(...))), NuFunDef(None, not, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, main, None, [], Lam(Tup(), Blk(...))), App(Var(main), Tup()))
+//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
@@ -642,8 +638,7 @@ fun foo() = odd(S(S(S(O))))
 foo()
 //│ |#class| |True|↵|#class| |False|↵|#class| |S|(|s|)|↵|#class| |O|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|S|(|O|)|)|)|)|↵|foo|(||)|
 //│ Parsed: {class True {}; class False {}; class S(s,) {}; class O {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(S(S(S(O,),),),); foo()}
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, S, (), Tup(_: Var(s)), (), None, None, TypingUnit()), NuTypeDef(class, O, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, odd, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, even, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(odd), Tup(_: App(Var(S), Tup(_: App(Var(S), Tup(_: App(Var(S), Tup(_: Var(O))))))))))), App(Var(foo), Tup()))
+//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
@@ -781,8 +776,7 @@ fun foo() = odd(mk(10))
 foo() 
 //│ |#class| |True|↵|#class| |False|↵|#class| |S|(|s|)|↵|#class| |O|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|mk|(|10|)|)|↵|foo|(||)| |
 //│ Parsed: {class True {}; class False {}; class S(s,) {}; class O {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n,)(0,)) then S(mk(-(n,)(1,),),) else O; fun foo = () => odd(mk(10,),); foo()}
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, S, (), Tup(_: Var(s)), (), None, None, TypingUnit()), NuTypeDef(class, O, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, odd, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, even, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, mk, None, [], Lam(Tup(_: Var(n)), If(IfThen(App(App(Var(>), Tup(_: Var(n))), Tup(_: IntLit(0))), App(Var(S), Tup(_: App(Var(mk), Tup(_: App(App(Var(-), Tup(_: Var(n))), Tup(_: IntLit(1))))))), Some(Var(O))))), NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(odd), Tup(_: App(Var(mk), Tup(_: IntLit(10))))))), App(Var(foo), Tup()))
+//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
@@ -952,8 +946,7 @@ fun foo() = odd(S(S(mk(10))))
 foo()
 //│ |#class| |True|↵|#class| |False|↵|#class| |S|(|s|)|↵|#class| |O|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|mk|(|10|)|)|)|)|↵|foo|(||)|
 //│ Parsed: {class True {}; class False {}; class S(s,) {}; class O {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n,)(0,)) then S(mk(-(n,)(1,),),) else O; fun foo = () => odd(S(S(mk(10,),),),); foo()}
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, S, (), Tup(_: Var(s)), (), None, None, TypingUnit()), NuTypeDef(class, O, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, odd, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, even, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, mk, None, [], Lam(Tup(_: Var(n)), If(IfThen(App(App(Var(>), Tup(_: Var(n))), Tup(_: IntLit(0))), App(Var(S), Tup(_: App(Var(mk), Tup(_: App(App(Var(-), Tup(_: Var(n))), Tup(_: IntLit(1))))))), Some(Var(O))))), NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(odd), Tup(_: App(Var(S), Tup(_: App(Var(S), Tup(_: App(Var(mk), Tup(_: IntLit(10))))))))))), App(Var(foo), Tup()))
+//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
@@ -1130,8 +1123,7 @@ fun main() =
 main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |S|(|s|)|↵|#class| |O|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|#if| |10| |>| |0| |#then| |S|(|O|)| |#else| |O|)|↵|#fun| |bar|(||)| |#=| |#if| |10| |>| |0| |#then| |odd|(|S|(|O|)|)| |#else| |odd|(|O|)|↵|#fun| |main|(||)| |#=|→|foo|(||)|↵|bar|(||)|←|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class S(s,) {}; class O {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(if (>(10,)(0,)) then S(O,) else O,); fun bar = () => if (>(10,)(0,)) then odd(S(O,),) else odd(O,); fun main = () => {foo(); bar()}; main()}
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, S, (), Tup(_: Var(s)), (), None, None, TypingUnit()), NuTypeDef(class, O, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, odd, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, even, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, foo, None, [], Lam(Tup(), App(Var(odd), Tup(_: If(IfThen(App(App(Var(>), Tup(_: IntLit(10))), Tup(_: IntLit(0))), App(Var(S), Tup(_: Var(O))), Some(Var(O))))))), NuFunDef(None, bar, None, [], Lam(Tup(), If(IfThen(App(App(Var(>), Tup(_: IntLit(10))), Tup(_: IntLit(0))), App(Var(odd), Tup(_: App(Var(S), Tup(_: Var(O))))), Some(App(Var(odd), Tup(_: Var(O))))))), NuFunDef(None, main, None, [], Lam(Tup(), Blk(...))), App(Var(main), Tup()))
+//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
@@ -1357,8 +1349,7 @@ fun main(flag) =
 main(False)
 //│ |#class| |True|↵|#class| |False|↵|#class| |A|(||)|↵|#class| |B|(|b|)|↵|#fun| |aaa|(||)| |#=|→|#let| |m| |#=| |1|↵|#let| |n| |#=| |2|↵|#let| |p| |#=| |3|↵|#let| |q| |#=| |4|↵|m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |bbb|(||)| |#=|→|#let| |x| |#=| |aaa|(||)|↵|x| |*| |100| |+| |4|←|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A| |#else| |B|(|foo|(|not|(|x|)|)|)|←|↵|#fun| |main|(|flag|)| |#=|→|#let| |x| |#=| |foo|(|flag|)|↵|#if| |x| |is|→|A| |#then| |aaa|(||)|↵|B|(|b1|)| |#then| |bbb|(||)|←|←|↵|main|(|False|)|
 //│ Parsed: {class True {}; class False {}; class A() {}; class B(b,) {}; fun aaa = () => {let m = 1; let n = 2; let p = 3; let q = 4; +(-(+(m,)(n,),)(p,),)(q,)}; fun bbb = () => {let x = aaa(); +(*(x,)(100,),)(4,)}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = (flag,) => {let x = foo(flag,); if x is ‹(A) then aaa(); (B(b1,)) then bbb()›}; main(False,)}
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, B, (), Tup(_: Var(b)), (), None, None, TypingUnit()), NuFunDef(None, aaa, None, [], Lam(Tup(), Blk(...))), NuFunDef(None, bbb, None, [], Lam(Tup(), Blk(...))), NuFunDef(None, not, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), Blk(...))), NuFunDef(None, main, None, [], Lam(Tup(_: Var(flag)), Blk(...))), App(Var(main), Tup(_: Var(False))))
+//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
@@ -1616,8 +1607,7 @@ fun main() =
 main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|Cons|(|1|,| |Cons|(|2|,| |Nil|)|)|)|←|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(Cons(1, Cons(2, Nil,),),)}; main()}
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Cons, (), Tup(_: Var(h), _: Var(t)), (), None, None, TypingUnit()), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Some, (), Tup(_: Var(x)), (), None, None, TypingUnit()), NuTypeDef(class, None, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, head_opt, None, [], Lam(Tup(_: Var(l)), Blk(...))), NuFunDef(None, is_none, None, [], Lam(Tup(_: Var(o)), Blk(...))), NuFunDef(None, is_empty, None, [], Lam(Tup(_: Var(l)), Blk(...))), NuFunDef(None, main, None, [], Lam(Tup(), Blk(...))), App(Var(main), Tup()))
+//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
@@ -1883,8 +1873,7 @@ fun main() =
 main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|mk_list|(|10|)|)|←|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun mk_list = (n,) => {if (==(n,)(0,)) then Nil else Cons(n, mk_list(-(n,)(1,),),)}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(mk_list(10,),)}; main()}
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Cons, (), Tup(_: Var(h), _: Var(t)), (), None, None, TypingUnit()), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Some, (), Tup(_: Var(x)), (), None, None, TypingUnit()), NuTypeDef(class, None, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, mk_list, None, [], Lam(Tup(_: Var(n)), Blk(...))), NuFunDef(None, head_opt, None, [], Lam(Tup(_: Var(l)), Blk(...))), NuFunDef(None, is_none, None, [], Lam(Tup(_: Var(o)), Blk(...))), NuFunDef(None, is_empty, None, [], Lam(Tup(_: Var(l)), Blk(...))), NuFunDef(None, main, None, [], Lam(Tup(), Blk(...))), App(Var(main), Tup()))
+//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
@@ -2241,8 +2230,7 @@ fun main() =
 main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |last_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then|→|#if| |t| |is|→|Nil| |#then| |Some|(|h|)|↵|Cons|(|h2|,| |t2|)| |#then| |last_opt|(|t|)|←|←|←|←|↵|#fun| |main|(||)| |#=|→|last_opt|(|mk_list|(|10|)|)|←|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun mk_list = (n,) => {if (==(n,)(0,)) then Nil else Cons(n, mk_list(-(n,)(1,),),)}; fun last_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then {if t is ‹(Nil) then Some(h,); (Cons(h2, t2,)) then last_opt(t,)›}›}; fun main = () => {last_opt(mk_list(10,),)}; main()}
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, True, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, False, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Cons, (), Tup(_: Var(h), _: Var(t)), (), None, None, TypingUnit()), NuTypeDef(class, Nil, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Some, (), Tup(_: Var(x)), (), None, None, TypingUnit()), NuTypeDef(class, None, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, mk_list, None, [], Lam(Tup(_: Var(n)), Blk(...))), NuFunDef(None, last_opt, None, [], Lam(Tup(_: Var(l)), Blk(...))), NuFunDef(None, main, None, [], Lam(Tup(), Blk(...))), App(Var(main), Tup()))
+//│ 
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {

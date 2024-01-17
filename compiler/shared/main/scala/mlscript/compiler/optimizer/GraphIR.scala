@@ -236,7 +236,10 @@ enum GOExpr:
   
   def toDocument: Document = this match
     case Ref(s) => s.toString |> raw
-    case Literal(lit) => s"$lit" |> raw
+    case Literal(IntLit(lit)) => s"$lit" |> raw
+    case Literal(DecLit(lit)) => s"$lit" |> raw
+    case Literal(StrLit(lit)) => s"$lit" |> raw
+    case Literal(UnitLit(lit)) => s"$lit" |> raw
     case CtorApp(ClassInfo(_, name, _), args) =>
       raw(name) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
     case Select(s, _, fld) =>
