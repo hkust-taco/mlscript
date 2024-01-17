@@ -1,0 +1,146 @@
+:NewDefs
+
+class Ty[type T]
+//│ class Ty[T] {
+//│   constructor()
+//│ }
+
+abstract class Foo[type A](val a: A): Bar | Baz
+module Bar extends Foo[Int](1)
+module Baz extends Foo[Bool](true)
+//│ abstract class Foo[A](a: A): Bar | Baz
+//│ module Bar extends Foo
+//│ module Baz extends Foo
+
+fun foo(t)(x: Foo[t.T]): t.T = if x is 
+    Bar then x.a
+    Baz then x.a
+//│ fun foo: forall 'T 'T0. {T :> 1 | true | 'T <: 'T0} -> (x: Foo[in 'T out 'T0]) -> 'T0
+
+foo(new Ty)(Bar)
+//│ 1 | true
+//│ res
+//│     = 1
+
+abstract class S[type T]: A | B
+module A extends S[Int]
+module B extends S[Bool]
+//│ abstract class S[T]: A | B
+//│ module A extends S
+//│ module B extends S
+
+fun f(x: S['a]) = if x is
+    A then 1 : x.T
+    B then 2 : x.T
+//│ fun f: forall 'a. (x: S['a]) -> ('a & (Int | false | true))
+//│   where
+//│     'a :> 2
+
+f(A)
+//│ Int
+//│ res
+//│     = 1
+
+:e
+f(B)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.45: 	f(B)
+//│ ║        	^^^^
+//│ ╟── integer literal of type `2` is not an instance of type `Bool`
+//│ ║  l.34: 	    B then 2 : x.T
+//│ ║        	           ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.27: 	module B extends S[Bool]
+//│ ║        	                   ^^^^
+//│ ╟── Note: type parameter T is defined at:
+//│ ║  l.25: 	abstract class S[type T]: A | B
+//│ ╙──      	                      ^
+//│ 2 | error | false | true
+//│ res
+//│     = 2
+
+:e
+fun f(x: S): x.T = if x is A then 1 else 0
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.63: 	fun f(x: S): x.T = if x is A then 1 else 0
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `T` leaks out of its scope
+//│ ║  l.63: 	fun f(x: S): x.T = if x is A then 1 else 0
+//│ ╙──      	                                  ^
+//│ fun f: (x: S[in anything out nothing]) -> ??T
+
+// TODO
+fun f(x: S[?]): x.T = if x is 
+    A then 1 : x.T
+    B then true : x.T
+    _ then error
+//│ ╔══[ERROR] wildcard type notation currently unsupported
+//│ ║  l.73: 	fun f(x: S[?]): x.T = if x is 
+//│ ╙──      	           ^
+//│ fun f: forall 'a. (x: S['a]) -> ('a & (Int | false | true))
+
+f(A)
+//│ Int
+//│ res
+//│     = 1
+
+:e
+let y: ? = 1
+//│ ╔══[ERROR] wildcard type notation currently unsupported
+//│ ║  l.88: 	let y: ? = 1
+//│ ╙──      	       ^
+//│ let y: 1
+//│ y
+//│   = 1
+
+:e
+let x = ?
+//│ ╔══[ERROR] Cannot use ? as expression
+//│ ║  l.97: 	let x = ?
+//│ ╙──      	        ^
+//│ let x: error
+//│ Code generation encountered an error:
+//│   cannot generate code for term WildcardType()
+
+:e
+if x is ? then 1
+//│ ╔══[ERROR] illegal pattern
+//│ ║  l.106: 	if x is ? then 1
+//│ ╙──       	        ^
+//│ error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+abstract class C[type S, type T]: R | I
+class R[A] extends C[A, A]
+class I[A](val f: A => Int) extends C[A, Int]
+//│ abstract class C[S, T]: I[nothing] | R[?]
+//│ class R[A] extends C {
+//│   constructor()
+//│ }
+//│ class I[A](f: A -> Int) extends C
+
+fun foo[A, B](x: A, ev: C[A, B]): B = if ev is 
+    R then (x : ev.S) : ev.T
+    I(f) then ev.f(x : ev.S) : ev.T
+//│ fun foo: forall 'A 'B. (x: 'A, ev: C['A, 'B]) -> 'B
+
+foo(true, new R)
+//│ true
+//│ res
+//│     = true
+
+foo(1, I(x => x + 1))
+//│ Int
+//│ res
+//│     = 2
+
+module Foo { val a = 1 }
+//│ module Foo {
+//│   val a: 1
+//│ }
+
+Foo.a
+//│ 1
+//│ res
+//│     = 1
