@@ -128,27 +128,46 @@ trait Desugaring { self: PreTyper =>
 
   private def flattenClassParameters(
       parentScrutineeVar: Var,
+      parentScrutinee: Scrutinee,
       parentClassLikeSymbol: TypeSymbol,
       parameters: Ls[s.Pattern]
-  )(implicit context: Context): Ls[Opt[Var -> Opt[s.Pattern]]] =
-    trace(s"flattenClassParameters <== ${parentScrutineeVar.name} is ${parentClassLikeSymbol.name}") {
-      // Make it `lazy` so that it will not be created if all fields are wildcards.
-      lazy val classPattern = parentScrutineeVar.getOrCreateScrutinee.getOrCreateClassPattern(parentClassLikeSymbol)
-      parameters.iterator.zipWithIndex.map {
-        case (_: s.EmptyPattern, _) => N
-        case (s.NamePattern(name), index) =>
+  )(implicit context: Context): Ls[Opt[(Var, Opt[s.Pattern], Ls[Var])]] = {
+    // Make it `lazy` so that it will not be created if all fields are wildcards.
+    lazy val classPattern = parentScrutinee.getOrCreateClassPattern(parentClassLikeSymbol)
+    def flattenPattern(
+      parameterPattern: s.Pattern,
+      index: Int,
+      subScrutineeVarOpt: Opt[(Var, Scrutinee)],
+      aliasVars: Ls[Var],
+    ): Opt[(Var, Opt[s.Pattern], Ls[Var])] = { // scrutineeVar, subPattern, aliasVars
+      lazy val (subScrutineeVar, subScrutinee) = subScrutineeVarOpt.getOrElse {
+        val subScrutineeVar = freshSubScrutineeVar(parentScrutineeVar, parentClassLikeSymbol.name, index)
+        val symbol = new LocalTermSymbol(subScrutineeVar)
+        val subScrutinee = classPattern.getParameter(index).withAliasVar(subScrutineeVar.withSymbol(symbol))
+        symbol.addScrutinee(subScrutinee)
+        (subScrutineeVar, subScrutinee)
+      }
+      parameterPattern match {
+        case _: s.EmptyPattern => N
+        case s.NamePattern(name) =>
           val subScrutinee = classPattern.getParameter(index).withAliasVar(name)
-          S(name.withFreshSymbol.withScrutinee(subScrutinee) -> N)
-        case (parameterPattern @ (s.ClassPattern(_, _, _) | s.LiteralPattern(_) | s.TuplePattern(_)), index) =>
-          val subScrutineeVar = freshSubScrutineeVar(parentScrutineeVar, parentClassLikeSymbol.name, index)
-          val symbol = new LocalTermSymbol(subScrutineeVar)
-          symbol.addScrutinee(classPattern.getParameter(index).withAliasVar(subScrutineeVar))
-          S(subScrutineeVar.withSymbol(symbol) -> S(parameterPattern))
-        case (pattern, _) =>
+          S((name.withFreshSymbol.withScrutinee(subScrutinee), N, aliasVars.reverse))
+        case parameterPattern @ (s.ClassPattern(_, _, _) | s.LiteralPattern(_) | s.TuplePattern(_)) =>
+          S((subScrutineeVar, S(parameterPattern), aliasVars.reverse))
+        case parameterPattern @ s.AliasPattern(aliasVar, innerPattern) =>
+          println(s"alias pattern found ${subScrutineeVar.name} -> ${aliasVar.name}")
+          flattenPattern(innerPattern, index, S((subScrutineeVar, subScrutinee)), aliasVar.withFreshSymbol.withScrutinee(subScrutinee) :: aliasVars)
+        case pattern =>
           raiseDesugaringError(msg"unsupported pattern" -> pattern.toLoc)
           N
+      }
+    }
+    trace(s"flattenClassParameters <== ${parentScrutineeVar.name} is ${parentClassLikeSymbol.name}") {
+      parameters.iterator.zipWithIndex.map {
+        case (pattern, index) => flattenPattern(pattern, index, N, Nil)
       }.toList
     }(r => s"flattenClassParameters ==> ${r.mkString(", ")}")
+  }
 
   /**
     * Recursively decompose and flatten a possibly nested class pattern. Any
@@ -188,13 +207,13 @@ trait Desugaring { self: PreTyper =>
           val vari = makeUnappliedVar(scrutineeVar, pattern.nme)
           vari.withSymbol(new LocalTermSymbol(vari))
         }
-        val nestedPatterns = flattenClassParameters(scrutineeVar, patternClassSymbol, parameters)
+        val nestedPatterns = flattenClassParameters(scrutineeVar, scrutinee, patternClassSymbol, parameters)
         println(s"nestedPatterns = $nestedPatterns")
         // First, handle bindings of parameters of the current class pattern.
         val identity = (split: c.Split) => split
         val bindParameters = nestedPatterns.iterator.zipWithIndex.foldRight[c.Split => c.Split](identity) {
           case ((N, _), bindNextParameter) => bindNextParameter
-          case ((S(parameter -> _), index), bindNextParameter) => 
+          case ((S((parameter, _, _)), index), bindNextParameter) => 
             bindNextParameter.andThen { c.Split.Let(false, parameter, Sel(unapp, Var(index.toString)), _) }
         }
         println(s"bindParameters === identity: ${bindParameters === identity}")
@@ -223,77 +242,109 @@ trait Desugaring { self: PreTyper =>
     * @param bindScrutinees a function that adds all bindings to a split
     */
   private def desugarNestedPatterns(
-      nestedPatterns: Ls[Opt[Var -> Opt[s.Pattern]]],
+      nestedPatterns: Ls[Opt[(Var, Opt[s.Pattern], Ls[Var])]],
       scopeWithScrutinees: Scope,
       bindScrutinees: c.Split => c.Split
   )(implicit context: Context): (Scope, c.Split => c.Split) =
     trace("desugarNestedPatterns") {
       nestedPatterns.foldLeft((scopeWithScrutinees, bindScrutinees)) {
-        // If this parameter is not matched with a sub-pattern, then we do
+        // If this parameter is empty (e.g. produced by wildcard), then we do
         // nothing and pass on scope and binder.
-        case (acc, S(_ -> N)) => acc
+        case (acc, N) => acc
         // If this sub-pattern is a class pattern, we need to recursively flatten
         // the class pattern. We will get a scope with all bindings and a function
         // that adds all bindings to a split. The scope can be passed on to the
         // next sub-pattern. The binder needs to be composed with the previous
         // binder.
-        case ((scope, bindPrevious), S(nme -> S(pattern: s.ClassPattern))) =>
-          println(s"${nme.name} is ${pattern.nme.name}")
-          val (scopeWithNestedAll, bindNestedAll) = desugarClassPattern(pattern, nme, scope, pattern.refined)
-          (scopeWithNestedAll, split => bindPrevious(bindNestedAll(split) :: c.Split.Nil))
-        case ((scope, bindPrevious), S(nme -> S(pattern @ s.ConcretePattern(Var("true") | Var("false"))))) =>
-          println(s"${nme.name} is ${pattern.nme.name}")
-          val className = pattern.nme.withResolvedClassLikeSymbol(scope, context)
-          (scope, split => bindPrevious(c.Branch(nme, c.Pattern.Class(className, false), (split)) :: c.Split.Nil))
-        case ((scope, bindPrevious), S(nme -> S(pattern: s.LiteralPattern))) =>
-          nme.getOrCreateScrutinee
-             .withAliasVar(nme)
-             .getOrCreateLiteralPattern(pattern.literal)
-             .addLocation(pattern.literal)
-          (scope, makeLiteralTest(nme, pattern.literal)(scope).andThen(bindPrevious))
-        case ((scope, bindPrevious), S(nme -> S(s.TuplePattern(fields)))) =>
-          val (scopeWithNestedAll, bindNestedAll) = desugarTuplePattern(fields, nme, scope)
-          (scopeWithNestedAll, bindNestedAll.andThen(bindPrevious))
-        // Well, other patterns are not supported yet.
-        case (acc, S(nme -> S(pattern))) =>
-          raiseDesugaringError(msg"unsupported pattern" -> pattern.toLoc)
-          acc
-        // If this parameter is empty (e.g. produced by wildcard), then we do
-        // nothing and pass on scope and binder.
-        case (acc, N) => acc
+        case (acc @ (scope, bindPrevious), S((nme, patternOpt, aliasVars))) =>
+          println(s"subScrut = ${nme.name}; aliasVars = ${aliasVars.iterator.map(_.name).mkString("[", ", ", "]")}")
+          val bindAliasVars = aliasVars.foldRight[c.Split => c.Split](identity[c.Split]) {
+            case (aliasVar, bindNext) => (inner: c.Split) => c.Split.Let(false, aliasVar, nme, bindNext(inner))
+          }
+          patternOpt match {
+            // If this parameter is not matched with a sub-pattern, then we do
+            // nothing and pass on scope and binder.
+            case N => (scope, bindAliasVars.andThen(bindPrevious))
+            case S(pattern) => pattern match {
+              case pattern: s.ClassPattern =>
+                println(s"${nme.name} is ${pattern.nme.name}")
+                val (scopeWithNestedAll, bindNestedAll) = desugarClassPattern(pattern, nme, scope, pattern.refined)
+                (scopeWithNestedAll, split => bindPrevious(bindNestedAll(bindAliasVars(split)) :: c.Split.Nil))
+              case pattern @ s.ConcretePattern(Var("true") | Var("false")) =>
+                println(s"${nme.name} is ${pattern.nme.name}")
+                val className = pattern.nme.withResolvedClassLikeSymbol(scope, context)
+                (scope, split => bindPrevious(c.Branch(nme, c.Pattern.Class(className, false), bindAliasVars(split)) :: c.Split.Nil))
+              case s.LiteralPattern(literal) =>
+                nme.getOrCreateScrutinee
+                  .withAliasVar(nme)
+                  .getOrCreateLiteralPattern(literal)
+                  .addLocation(literal)
+                (scope, bindAliasVars.andThen(makeLiteralTest(nme, literal)(scope)).andThen(bindPrevious))
+              case s.TuplePattern(fields) =>
+                val (scopeWithNestedAll, bindNestedAll) = desugarTuplePattern(fields, nme, scope)
+                (scopeWithNestedAll, bindAliasVars.andThen(bindNestedAll).andThen(bindPrevious))
+              // Well, other patterns are not supported yet.
+              case _ =>
+                raiseDesugaringError(msg"unsupported pattern" -> pattern.toLoc)
+                acc
+            }
+          }
       }
     }()
 
-  private def flattenTupleFields(parentScrutineeVar: Var, fields: Ls[s.Pattern])(implicit context: Context): Ls[Opt[Var -> Opt[s.Pattern]]] = {
+  // TODO: `aliasVars` not computed
+  private def flattenTupleFields(
+      parentScrutineeVar: Var,
+      parentScrutinee: Scrutinee,
+      fields: Ls[s.Pattern]
+  )(implicit context: Context): Ls[Opt[(Var, Opt[s.Pattern], Ls[Var])]] = {
     // Make it `lazy` so that it will not be created if all fields are wildcards.
-    lazy val tuplePattern = parentScrutineeVar.getOrCreateScrutinee.getOrCreateTuplePattern
-    fields.iterator.zipWithIndex.map {
-      case (_: s.EmptyPattern, _) => N
-      case (s.NamePattern(name), index) =>
-        S(name.withFreshSymbol.withScrutinee(tuplePattern.getField(index)) -> N)
-      case (parameterPattern @ (s.ClassPattern(_, _, _) | s.LiteralPattern(_) | s.TuplePattern(_)), index) =>
-        val arity = fields.length
-        val subScrutineeVar = freshSubScrutineeVar(parentScrutineeVar, s"Tuple$$$arity", index)
+    lazy val tuplePattern = parentScrutinee.getOrCreateTuplePattern
+    lazy val tupleDummyClassName = s"Tuple$$${fields.length}"
+    def flattenPattern(
+        pattern: s.Pattern,
+        index: Int,
+        subScrutineeVarOpt: Opt[(Var, Scrutinee)],
+        aliasVars: Ls[Var],
+    ): Opt[(Var, Opt[s.Pattern], Ls[Var])] = {
+      lazy val (subScrutineeVar, subScrutinee) = subScrutineeVarOpt.getOrElse {
+        val subScrutineeVar = freshSubScrutineeVar(parentScrutineeVar, tupleDummyClassName, index)
         val symbol = new LocalTermSymbol(subScrutineeVar)
-        symbol.addScrutinee(tuplePattern.getField(index).withAliasVar(subScrutineeVar))
-        S(subScrutineeVar.withSymbol(symbol) -> S(parameterPattern))
-      case (parameterPattern @ s.ConcretePattern(nme @ (Var("true") | Var("false"))), index) =>
-        val subScrutineeVar = freshSubScrutineeVar(parentScrutineeVar, s"Tuple$$${fields.length}", index)
-        val symbol = new LocalTermSymbol(subScrutineeVar)
-        symbol.addScrutinee(tuplePattern.getField(index).withAliasVar(subScrutineeVar))
-        S(subScrutineeVar.withSymbol(symbol) -> S(parameterPattern))
-      case (pattern, _) =>
-        raiseDesugaringError(msg"unsupported pattern ${pattern.getClass().getSimpleName()}" -> pattern.toLoc)
-        N
-    }.toList
+        val subScrutinee = tuplePattern.getField(index).withAliasVar(subScrutineeVar.withSymbol(symbol))
+        symbol.addScrutinee(subScrutinee)
+        (subScrutineeVar, subScrutinee)
+      }
+      pattern match {
+        case _: s.EmptyPattern => N
+        case s.NamePattern(name) =>
+          S((name.withFreshSymbol.withScrutinee(tuplePattern.getField(index)), N, aliasVars.reverse))
+        case parameterPattern @ (s.ClassPattern(_, _, _) | s.LiteralPattern(_) | s.TuplePattern(_)) =>
+          val subScrutineeVar = freshSubScrutineeVar(parentScrutineeVar, tupleDummyClassName, index)
+          val symbol = new LocalTermSymbol(subScrutineeVar)
+          symbol.addScrutinee(tuplePattern.getField(index).withAliasVar(subScrutineeVar))
+          S((subScrutineeVar.withSymbol(symbol), S(parameterPattern), aliasVars.reverse))
+        case parameterPattern @ s.ConcretePattern(nme @ (Var("true") | Var("false"))) =>
+          val subScrutineeVar = freshSubScrutineeVar(parentScrutineeVar, tupleDummyClassName, index)
+          val symbol = new LocalTermSymbol(subScrutineeVar)
+          symbol.addScrutinee(tuplePattern.getField(index).withAliasVar(subScrutineeVar))
+          S((subScrutineeVar.withSymbol(symbol), S(parameterPattern), aliasVars.reverse))
+        case parameterPattern @ s.AliasPattern(aliasVar, innerPattern) =>
+          println(s"alias pattern found ${subScrutineeVar.name} -> ${aliasVar.name}")
+          flattenPattern(innerPattern, index, S((subScrutineeVar, subScrutinee)), aliasVar.withFreshSymbol.withScrutinee(subScrutinee) :: aliasVars)
+        case pattern =>
+          raiseDesugaringError(msg"unsupported pattern" -> pattern.toLoc)
+          N
+      }
+    }
+    fields.iterator.zipWithIndex.map { case (pattern, index) => flattenPattern(pattern, index, N, Nil) }.toList
   }
 
   private def desugarTuplePattern(fields: Ls[s.Pattern], scrutineeVar: Var, initialScope: Scope)(implicit context: Context): (Scope, c.Split => c.Split) = {
     val scrutinee = scrutineeVar.getOrCreateScrutinee.withAliasVar(scrutineeVar)
-    val nestedPatterns = flattenTupleFields(scrutineeVar, fields)
+    val nestedPatterns = flattenTupleFields(scrutineeVar, scrutinee, fields)
     val bindFields = nestedPatterns.iterator.zipWithIndex.foldRight[c.Split => c.Split](identity) {
       case ((N, _), bindNextField) => bindNextField
-      case ((S(parameter -> _), index), bindNextField) => 
+      case ((S((parameter, _, _)), index), bindNextField) => 
         val indexVar = Var(index.toString).withLoc(parameter.toLoc)
         bindNextField.andThen { c.Split.Let(false, parameter, Sel(scrutineeVar, indexVar), _) }
     }

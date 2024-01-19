@@ -8,7 +8,7 @@ import scala.collection.immutable
 package object source {
   sealed abstract class Pattern extends Located {
     override def toString(): String = this match {
-      case AliasPattern(nme, pattern) => s"$nme @ $pattern"
+      case AliasPattern(nme, pattern) => s"${nme.name} @ $pattern"
       case LiteralPattern(literal) => literal.idStr
       case ConcretePattern(nme) => s"`${nme.name}`"
       case NamePattern(nme) => nme.name

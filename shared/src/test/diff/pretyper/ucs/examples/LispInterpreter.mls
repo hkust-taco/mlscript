@@ -258,7 +258,7 @@ isDigits("bruh")
 
 abstract class ParseResult[out A]: Success[A] | Failure
 class Success[out A](value: A) extends ParseResult[A]
-class Failure(error: Str) extends ParseResult
+class Failure(error: Str) extends ParseResult[nothing]
 //│ abstract class ParseResult[A]: Failure | Success[A]
 //│ class Success[A](value: A) extends ParseResult
 //│ class Failure(error: Str) extends ParseResult
@@ -272,15 +272,15 @@ fun parseExpr(tokens: List[Str]): [ParseResult[Data], List[Str]] =
     Cons("(", tail) then parseList(tail)
     Cons(")", _) then [Failure("Unmatched closing parenthesis."), tokens]
     Cons(token, tail) and
-      isDigits(token) then [Success(Literal(IntLit(parseInt(token, 10)))), tail]
-      else [Success(Symbol(token)), tail]
+      isDigits(token) then [(Success of Literal of IntLit of parseInt(token, 10)), tail]
+      else [(Success of Symbol of token), tail]
     Nil then [Failure("Unexpected end of input, expect either `)` or more tokens."), Nil]
 fun parseList(tokens: List[Str]): [ParseResult[DataList], List[Str]] =
   let rec collect(acc, ts) = if ts is
     Cons(")", tail) then [(Success of DataList of reverse of acc), tail]
     Cons and parseExpr(ts) is
       [Success(data), rest] then collect(data :: acc, rest)
-      [Failure(error), rest] then [Failure(error), rest]
+      [Failure(_) as failure, rest] then [failure, rest]
     Nil then [Failure("Unexpected end of input, expect either `)` or more tokens."), Nil]
   collect(Nil, tokens)
 //│ fun parseExpr: (tokens: List[Str]) -> [ParseResult[Data], List[Str]]

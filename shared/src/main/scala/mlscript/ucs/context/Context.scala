@@ -68,7 +68,5 @@ class Context(originalTerm: If) {
 }
 
 object Context {
-  // TODO: Generate fresh prefix in a determinstic way. I tried to use a counter,
-  // but the produced value is not stable across different runs.
-  def freshPrefix(): Str = "ucs"
+  private def freshPrefix(): Str = "ucs"
 }
