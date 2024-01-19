@@ -68,15 +68,14 @@ trait Normalization { self: Desugarer with Traceable =>
       * @param generatedVars the generated variables which have been declared
       * @return the concatenated split
       */
-    def fill(those: Split, deep: Bool, shouldReportDiscarded: Bool)(implicit
+    def fill(those: Split, deep: Bool, declaredVars: Set[Var], shouldReportDiscarded: Bool)(implicit
         scope: Scope,
         context: Context,
-        generatedVars: Set[Var],
     ): Split =
-      trace(s"fill <== ${generatedVars.iterator.map(_.name).mkString("{", ", ", "}")}") {
+      trace(s"fill <== ${declaredVars.iterator.map(_.name).mkString("{", ", ", "}")}") {
         println(s"LHS: ${showSplit(these)}")
         println(s"RHS: ${showSplit(those)}")
-        fillImpl(these, those, deep)(scope, context, generatedVars, shouldReportDiscarded)
+        fillImpl(these, those, deep)(scope, context, declaredVars, shouldReportDiscarded)
       }(sp => s"fill ==> ${showSplit(sp)}")
 
     def :++(tail: => Split): Split = {
@@ -100,53 +99,52 @@ trait Normalization { self: Desugarer with Traceable =>
   @inline protected def normalize(split: Split)(implicit
       scope: Scope,
       context: Context
-  ): Term = normalizeToTerm(split)(scope, context, Set.empty)
+  ): Term = normalizeToTerm(split, Set.empty)(scope, context)
 
   private def errorTerm: Term = Var("error")
 
-  private def normalizeToTerm(split: Split)(implicit
+  private def normalizeToTerm(split: Split, declaredVars: Set[Var])(implicit
       scope: Scope,
       context: Context,
-      generatedVars: Set[Var],
   ): Term = trace("normalizeToTerm <==") {
     split match {
       case Split.Cons(Branch(scrutinee, Pattern.Name(nme), continuation), tail) =>
         println(s"ALIAS: ${scrutinee.name} is ${nme.name}")
         val (wrap, realTail) = preventShadowing(nme, tail)
-        wrap(Let(false, nme, scrutinee, normalizeToTerm(continuation.fill(realTail, false, true))))
+        wrap(Let(false, nme, scrutinee, normalizeToTerm(continuation.fill(realTail, false, declaredVars, true), declaredVars)))
       // Skip Boolean conditions as scrutinees, because they only appear once.
       case Split.Cons(Branch(test, pattern @ Pattern.Class(nme @ Var("true"), _), continuation), tail) if context.isTestVar(test) =>
         println(s"TRUE: ${test.name} is true")
-        val trueBranch = normalizeToTerm(continuation.fill(tail, false, false))
-        val falseBranch = normalizeToCaseBranches(tail)
+        val trueBranch = normalizeToTerm(continuation.fill(tail, false, declaredVars, false), declaredVars)
+        val falseBranch = normalizeToCaseBranches(tail, declaredVars)
         CaseOf(test, Case(nme, trueBranch, falseBranch)(refined = false))
       case Split.Cons(Branch(Scrutinee.WithVar(scrutinee, scrutineeVar), pattern @ Pattern.Literal(literal), continuation), tail) =>
         println(s"LITERAL: ${scrutineeVar.name} is ${literal.idStr}")
         println(s"entire split: ${showSplit(split)}")
-        val concatenatedTrueBranch = continuation.fill(tail, false, false)
+        val concatenatedTrueBranch = continuation.fill(tail, false, declaredVars, false)
         // println(s"true branch: ${showSplit(concatenatedTrueBranch)}")
-        val trueBranch = normalizeToTerm(specialize(concatenatedTrueBranch, true)(scrutineeVar, scrutinee, pattern, context))
+        val trueBranch = normalizeToTerm(specialize(concatenatedTrueBranch, true)(scrutineeVar, scrutinee, pattern, context), declaredVars)
         // println(s"false branch: ${showSplit(tail)}")
-        val falseBranch = normalizeToCaseBranches(specialize(tail, false)(scrutineeVar, scrutinee, pattern, context))
+        val falseBranch = normalizeToCaseBranches(specialize(tail, false)(scrutineeVar, scrutinee, pattern, context), declaredVars)
         CaseOf(scrutineeVar, Case(literal, trueBranch, falseBranch)(refined = false))
       case Split.Cons(Branch(Scrutinee.WithVar(scrutinee, scrutineeVar), pattern @ Pattern.Class(nme, rfd), continuation), tail) =>
         println(s"CLASS: ${scrutineeVar.name} is ${nme.name}")
         // println(s"match ${scrutineeVar.name} with $nme (has location: ${nme.toLoc.isDefined})")
-        val trueBranch = normalizeToTerm(specialize(continuation.fill(tail, false, false), true)(scrutineeVar, scrutinee, pattern, context))
-        val falseBranch = normalizeToCaseBranches(specialize(tail, false)(scrutineeVar, scrutinee, pattern, context))
+        val trueBranch = normalizeToTerm(specialize(continuation.fill(tail, false, declaredVars, false), true)(scrutineeVar, scrutinee, pattern, context), declaredVars)
+        val falseBranch = normalizeToCaseBranches(specialize(tail, false)(scrutineeVar, scrutinee, pattern, context), declaredVars)
         CaseOf(scrutineeVar, Case(nme, trueBranch, falseBranch)(refined = pattern.refined))
       case Split.Cons(Branch(scrutinee, pattern, continuation), tail) =>
         raiseDesugaringError(msg"unsupported pattern: ${pattern.toString}" -> pattern.toLoc)
         errorTerm
-      case Split.Let(_, nme, _, tail) if context.isScrutineeVar(nme) && generatedVars.contains(nme) =>
+      case Split.Let(_, nme, _, tail) if context.isScrutineeVar(nme) && declaredVars.contains(nme) =>
         println(s"LET: SKIP already declared scrutinee ${nme.name}")
-        normalizeToTerm(tail)
+        normalizeToTerm(tail, declaredVars)
       case Split.Let(rec, nme, rhs, tail) if context.isGeneratedVar(nme) =>
         println(s"LET: generated ${nme.name}")
-        Let(rec, nme, rhs, normalizeToTerm(tail)(scope, context, generatedVars + nme))
+        Let(rec, nme, rhs, normalizeToTerm(tail, declaredVars + nme)(scope, context))
       case Split.Let(rec, nme, rhs, tail) =>
         println(s"LET: ${nme.name}")
-        Let(rec, nme, rhs, normalizeToTerm(tail))
+        Let(rec, nme, rhs, normalizeToTerm(tail, declaredVars))
       case Split.Else(default) =>
         println(s"DFLT: ${default.showDbg}")
         default
@@ -156,20 +154,19 @@ trait Normalization { self: Desugarer with Traceable =>
     }
   }(split => "normalizeToTerm ==> " + showNormalizedTerm(split))
 
-  private def normalizeToCaseBranches(split: Split)(implicit
+  private def normalizeToCaseBranches(split: Split, declaredVars: Set[Var])(implicit
       scope: Scope,
       context: Context,
-      generatedVars: Set[Var]
   ): CaseBranches =
     trace(s"normalizeToCaseBranches <==") {
       split match {
         // case Split.Cons(head, Split.Nil) => Case(head.pattern, normalizeToTerm(head.continuation), NoCases)
-        case other: Split.Cons => Wildcard(normalizeToTerm(other))
-        case Split.Let(_, nme, _, tail) if context.isScrutineeVar(nme) && generatedVars.contains(nme) =>
-          normalizeToCaseBranches(tail)
+        case other: Split.Cons => Wildcard(normalizeToTerm(other, declaredVars))
+        case Split.Let(_, nme, _, tail) if context.isScrutineeVar(nme) && declaredVars.contains(nme) =>
+          normalizeToCaseBranches(tail, declaredVars)
         case Split.Let(rec, nme, rhs, tail) =>
-          val newDeclaredBindings = if (context.isGeneratedVar(nme)) generatedVars + nme else generatedVars
-          normalizeToCaseBranches(tail)(scope, context, newDeclaredBindings) match {
+          val newDeclaredVars = if (context.isGeneratedVar(nme)) declaredVars + nme else declaredVars
+          normalizeToCaseBranches(tail, newDeclaredVars)(scope, context) match {
             case NoCases => Wildcard(rhs)
             case Wildcard(term) => Wildcard(Let(rec, nme, rhs, term))
             case _: Case => die
