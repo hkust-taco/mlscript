@@ -241,6 +241,10 @@ trait Desugaring { self: PreTyper =>
           println(s"${nme.name} is ${pattern.nme.name}")
           val (scopeWithNestedAll, bindNestedAll) = desugarClassPattern(pattern, nme, scope, pattern.refined)
           (scopeWithNestedAll, split => bindPrevious(bindNestedAll(split) :: c.Split.Nil))
+        case ((scope, bindPrevious), S(nme -> S(pattern @ s.ConcretePattern(Var("true") | Var("false"))))) =>
+          println(s"${nme.name} is ${pattern.nme.name}")
+          val className = pattern.nme.withResolvedClassLikeSymbol(scope, context)
+          (scope, split => bindPrevious(c.Branch(nme, c.Pattern.Class(className, false), (split)) :: c.Split.Nil))
         case ((scope, bindPrevious), S(nme -> S(pattern: s.LiteralPattern))) =>
           nme.getOrCreateScrutinee
              .withAliasVar(nme)
@@ -252,7 +256,7 @@ trait Desugaring { self: PreTyper =>
           (scopeWithNestedAll, bindNestedAll.andThen(bindPrevious))
         // Well, other patterns are not supported yet.
         case (acc, S(nme -> S(pattern))) =>
-          raiseDesugaringError(msg"unsupported pattern is" -> pattern.toLoc)
+          raiseDesugaringError(msg"unsupported pattern" -> pattern.toLoc)
           acc
         // If this parameter is empty (e.g. produced by wildcard), then we do
         // nothing and pass on scope and binder.
@@ -273,8 +277,13 @@ trait Desugaring { self: PreTyper =>
         val symbol = new LocalTermSymbol(subScrutineeVar)
         symbol.addScrutinee(tuplePattern.getField(index).withAliasVar(subScrutineeVar))
         S(subScrutineeVar.withSymbol(symbol) -> S(parameterPattern))
+      case (parameterPattern @ s.ConcretePattern(nme @ (Var("true") | Var("false"))), index) =>
+        val subScrutineeVar = freshSubScrutineeVar(parentScrutineeVar, s"Tuple$$${fields.length}", index)
+        val symbol = new LocalTermSymbol(subScrutineeVar)
+        symbol.addScrutinee(tuplePattern.getField(index).withAliasVar(subScrutineeVar))
+        S(subScrutineeVar.withSymbol(symbol) -> S(parameterPattern))
       case (pattern, _) =>
-        raiseDesugaringError(msg"unsupported pattern" -> pattern.toLoc)
+        raiseDesugaringError(msg"unsupported pattern ${pattern.getClass().getSimpleName()}" -> pattern.toLoc)
         N
     }.toList
   }
