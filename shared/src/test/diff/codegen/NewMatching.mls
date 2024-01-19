@@ -31,7 +31,7 @@ fun sum(v) =
     Half(_, x) then x
     None(_) then 0
     _ then -1
-//│ fun sum: (Half | None | Object & ~#Half & ~#None & ~#Pos & ~#V0 & ~#V1 & ~#V2 & ~#V22 | Pos | V0 | V1 | V22 | V2) -> Int
+//│ fun sum: Object -> Int
 //│ // Prelude
 //│ class TypingUnit2 {}
 //│ const typing_unit2 = new TypingUnit2;
@@ -39,7 +39,7 @@ fun sum(v) =
 //│ globalThis.sum = function sum(v) {
 //│   return ((() => {
 //│     let a;
-//│     return a = v, a instanceof V0.class ? 0 : a instanceof V22.class ? ((ucs$args_v$V22) => ((v$V22_0) => ((v$V22_1) => v$V22_0 instanceof V2.class ? ((ucs$args_v$V22_0$V2) => ((x1) => ((y1) => v$V22_1 instanceof V2.class ? ((ucs$args_v$V22_1$V2) => ((x2) => ((y2) => x1 + y1 + x2 + y2)(ucs$args_v$V22_1$V2[1]))(ucs$args_v$V22_1$V2[0]))(V2.unapply(v$V22_1)) : -1)(ucs$args_v$V22_0$V2[1]))(ucs$args_v$V22_0$V2[0]))(V2.unapply(v$V22_0)) : -1)(ucs$args_v$V22[1]))(ucs$args_v$V22[0]))(V22.unapply(v)) : a instanceof V2.class ? ((ucs$args_v$V2) => ((a) => ((b) => a + b)(ucs$args_v$V2[1]))(ucs$args_v$V2[0]))(V2.unapply(v)) : a instanceof V1.class ? ((ucs$args_v$V1) => ((a) => a)(ucs$args_v$V1[0]))(V1.unapply(v)) : a instanceof Pos.class ? ((ucs$args_v$Pos) => ((x) => ((ucs$test$0) => ucs$test$0 === true ? x : -1)(x > 0))(ucs$args_v$Pos[0]))(Pos.unapply(v)) : a instanceof None.class ? 0 : a instanceof Half.class ? ((ucs$args_v$Half) => ((x) => x)(ucs$args_v$Half[1]))(Half.unapply(v)) : (v, v, v, v, v, -1);
+//│     return a = v, a instanceof V0.class ? 0 : a instanceof V22.class ? ((ucs$args_v$V22) => ((v$V22_0) => ((v$V22_1) => v$V22_0 instanceof V2.class ? ((ucs$args_v$V22_0$V2) => ((x1) => ((y1) => v$V22_1 instanceof V2.class ? ((ucs$args_v$V22_1$V2) => ((x2) => ((y2) => x1 + y1 + x2 + y2)(ucs$args_v$V22_1$V2[1]))(ucs$args_v$V22_1$V2[0]))(V2.unapply(v$V22_1)) : -1)(ucs$args_v$V22_0$V2[1]))(ucs$args_v$V22_0$V2[0]))(V2.unapply(v$V22_0)) : -1)(ucs$args_v$V22[1]))(ucs$args_v$V22[0]))(V22.unapply(v)) : a instanceof V2.class ? ((ucs$args_v$V2) => ((a) => ((b) => a + b)(ucs$args_v$V2[1]))(ucs$args_v$V2[0]))(V2.unapply(v)) : a instanceof V1.class ? ((ucs$args_v$V1) => ((a) => a)(ucs$args_v$V1[0]))(V1.unapply(v)) : a instanceof Pos.class ? ((ucs$args_v$Pos) => ((x) => ((ucs$test$0) => ucs$test$0 === true ? x : -1)(x > 0))(ucs$args_v$Pos[0]))(Pos.unapply(v)) : a instanceof None.class ? 0 : a instanceof Half.class ? ((ucs$args_v$Half) => ((x) => x)(ucs$args_v$Half[1]))(Half.unapply(v)) : -1;
 //│   })());
 //│ };
 //│ // End of generated code

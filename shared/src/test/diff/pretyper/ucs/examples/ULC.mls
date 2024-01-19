@@ -236,7 +236,7 @@ fun hasFree(t, x) =
     Abs(Var(_), body) then hasFree(body, x)
     App(lhs, rhs) then hasFree(lhs, x) || hasFree(rhs, x)
     _ then false
-//│ fun hasFree: (Abs | App | Object & ~#Abs & ~#App & ~#Var | Var, Eql[Str]) -> Bool
+//│ fun hasFree: (Object, Eql[Str]) -> Bool
 
 fun showHasFree(t, n) =
   showTerm(t) ++ (if hasFree(t, n) then " has " else " DOES NOT have ") ++ "free variable " ++ n

@@ -212,12 +212,8 @@ fun w5(y) =
 //│   Gamma*◊ -> "gamma"
 //│   Delta*◊ -> "delta"
 //│   Beta*◊ -> "beta"
-//│   _ ->
-//│     case y*‡ of
-//│       _ ->
-//│         case y*‡ of
-//│           _ -> "unknown"
-//│ fun w5: (Alpha | Beta | Delta | Gamma | Object & ~#Alpha & ~#Beta & ~#Delta & ~#Gamma) -> ("alpha" | "beta" | "delta" | "gamma" | "unknown")
+//│   _ -> "unknown"
+//│ fun w5: Object -> ("alpha" | "beta" | "delta" | "gamma" | "unknown")
 
 w5(0)
 w5(Alpha())

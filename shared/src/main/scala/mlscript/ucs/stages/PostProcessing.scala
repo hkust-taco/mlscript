@@ -47,6 +47,7 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
             case ((N, cases), _) => (N, cases)
           }
         println(s"found ${cases.length} case branches")
+        println(s"default branch: ${default.fold("<empty>")(_.showDbg)}")
         val postProcessedDefault = default.map(postProcess)
         // Assemble a `CaseBranches`.
         val actualFalseBranch = cases.foldRight[CaseBranches](
@@ -65,7 +66,12 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
   }(res => s"postProcess ==> ${res.showDbg}")
 
   private def trimEmptyTerm(term: Term): Opt[Term] = term match {
-    case k @ CaseOf(_, cases) => trimEmptyCaseBranches(cases).map(c => k.copy(cases = c))
+    case k @ CaseOf(_, cases) =>
+      trimEmptyCaseBranches(cases).flatMap(_ match {
+        case cases: Case => S(k.copy(cases = cases))
+        case NoCases => N
+        case Wildcard(body) => S(body)
+      })
     case let @ Let(_, _, _, body) => trimEmptyTerm(body).map(t => let.copy(body = t))
     case _ => S(term)
   }
