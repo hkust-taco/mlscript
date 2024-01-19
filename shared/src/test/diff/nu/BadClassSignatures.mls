@@ -101,7 +101,7 @@ class Foo(): { x: Int } {
 //│ ║  l.97: 	class Foo(): { x: Int } {
 //│ ║        	             ^^^^^^^^^^
 //│ ╙── Did you mean to use `extends` and inherit from a parent class?
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.97: 	class Foo(): { x: Int } {
 //│ ╙──      	               ^
 //│ class Foo(): {x: Int} {
@@ -117,7 +117,7 @@ abstract class Foo(): { x: Int } {
 
 :e
 module FooM extends Foo
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.111: 	abstract class Foo(): { x: Int } {
 //│ ╙──       	                        ^
 //│ module FooM extends Foo {
@@ -134,7 +134,7 @@ abstract class Foo(): { x: Int } {
 
 :e // TODO should work?
 module FooM extends Foo
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.127: 	abstract class Foo(): { x: Int } {
 //│ ╙──       	                        ^
 //│ module FooM extends Foo {

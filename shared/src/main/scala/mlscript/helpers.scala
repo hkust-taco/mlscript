@@ -474,7 +474,16 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
     case e => lastWords(s"Unexpected typing unit entity: $e")
   }.mkString("{", "; ", "}")
 
-  lazy val children: List[Located] = entities
+  lazy val children: List[Located] = rawEntities
+  
+  lazy val entities = {
+    val declaredValueMembers = rawEntities.collect{ case fd: NuFunDef if fd.rhs.isRight => fd.nme.name }.toSet
+    rawEntities.map {
+      case Eqn(lhs, rhs) if declaredValueMembers(lhs.name) =>
+        NuFunDef(N, lhs, N, Nil, L(rhs))(N, N, N, N, true)
+      case e => e
+    }
+  }
   def describe: Str = entities.iterator.map {
     case term: Term => term.describe
     case NuFunDef(S(rec), nme, _, _, _) =>

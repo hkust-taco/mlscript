@@ -13,7 +13,7 @@ module Nil extends List {
   fun isEmpty: Bool = true
   fun map(f) = Nil
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.10: 	  fun map(f) = Cons(f(head), tail.map(f))
 //│ ╙──      	                                 ^^^^
 //│ abstract class List[A]: Cons[A] | Nil {

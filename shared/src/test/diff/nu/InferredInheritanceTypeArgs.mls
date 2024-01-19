@@ -68,7 +68,7 @@ class P(val p: Int) {
 
 :e // TODO improve type checking
 class C1(a: Int) extends P(a) { fun bar = this.foo(0) }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.70: 	class C1(a: Int) extends P(a) { fun bar = this.foo(0) }
 //│ ╙──      	                                              ^^^^
 //│ class C1(a: Int) extends P {
@@ -80,7 +80,7 @@ class C1(a: Int) extends P(a) { fun bar = this.foo(0) }
 class C2(a: Int, b: Int) extends P(a + b) {
   fun foo(x) = x * this.p + a * b
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.81: 	  fun foo(x) = x * this.p + a * b
 //│ ╙──      	                       ^^
 //│ class C2(a: Int, b: Int) extends P {

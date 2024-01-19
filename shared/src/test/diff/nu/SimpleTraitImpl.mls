@@ -123,7 +123,7 @@ module M extends T1, C1
 module M extends T1, T2, C1 {
   fun x = this.x
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.124: 	  fun x = this.x
 //│ ╙──       	              ^^
 //│ module M extends C1, T1, T2 {

@@ -143,7 +143,7 @@ let c = C(1)
 module D extends C(0) {
   this.foo(false)
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.144: 	  this.foo(false)
 //│ ╙──       	      ^^^^
 //│ ╔══[ERROR] Cannot access `this` during object initialization
@@ -159,13 +159,13 @@ module D extends C(0) {
 class C extends Test { // it also fails with Test[Int]...
   fun arg = 123
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.117: 	  fun baz = foo(this.arg)
 //│ ╙──       	                    ^^^^
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.116: 	  fun bar = [this.arg, this.arg]
 //│ ╙──       	                           ^^^^
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.116: 	  fun bar = [this.arg, this.arg]
 //│ ╙──       	                 ^^^^
 //│ class C {
