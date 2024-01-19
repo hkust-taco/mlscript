@@ -22,6 +22,9 @@ fun f(x, y) =
   if x == y +
     5 then 0
     7 then 0
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.24: 	    7 then 0
+//│ ╙──      	           ^
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.22: 	  if x == y +
 //│ ║        	            ^
@@ -55,40 +58,43 @@ fun f(x, y) =
   if x == y *
     5 then 0
     6 + 7 then 0
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.60: 	    6 + 7 then 0
+//│ ╙──      	               ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.55: 	  if x == y *
+//│ ║  l.58: 	  if x == y *
 //│ ║        	            ^
-//│ ║  l.56: 	    5 then 0
+//│ ║  l.59: 	    5 then 0
 //│ ║        	^^^^^
 //│ ╟── operator application of type `Bool` is not an instance of type `Int`
-//│ ║  l.55: 	  if x == y *
+//│ ║  l.58: 	  if x == y *
 //│ ╙──      	     ^^^^^^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.55: 	  if x == y *
+//│ ║  l.58: 	  if x == y *
 //│ ║        	            ^
-//│ ║  l.56: 	    5 then 0
+//│ ║  l.59: 	    5 then 0
 //│ ║        	^^^^^
 //│ ╙── application of type `Int` is not an instance of type `Bool`
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.55: 	  if x == y *
+//│ ║  l.58: 	  if x == y *
 //│ ║        	            ^
-//│ ║  l.56: 	    5 then 0
+//│ ║  l.59: 	    5 then 0
 //│ ║        	^^^^^^^^^^^^^
-//│ ║  l.57: 	    6 + 7 then 0
+//│ ║  l.60: 	    6 + 7 then 0
 //│ ║        	^^^^^^^^^
 //│ ╟── operator application of type `Bool` is not an instance of type `Int`
-//│ ║  l.55: 	  if x == y *
+//│ ║  l.58: 	  if x == y *
 //│ ╙──      	     ^^^^^^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.55: 	  if x == y *
+//│ ║  l.58: 	  if x == y *
 //│ ║        	            ^
-//│ ║  l.56: 	    5 then 0
+//│ ║  l.59: 	    5 then 0
 //│ ║        	^^^^^^^^^^^^^
-//│ ║  l.57: 	    6 + 7 then 0
+//│ ║  l.60: 	    6 + 7 then 0
 //│ ║        	^^^^^^^^^
 //│ ╙── application of type `Int` is not an instance of type `Bool`
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.57: 	    6 + 7 then 0
+//│ ║  l.60: 	    6 + 7 then 0
 //│ ║        	               ^
 //│ ╙── expression of type `Bool` is not an instance of type `true`
 //│ fun f: (Num, Num) -> 0
@@ -99,32 +105,35 @@ fun f(x, y) =
     y +
       5 then 0
       7 then 0
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.107: 	      7 then 0
+//│ ╙──       	             ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.99: 	    y +
-//│ ║        	      ^
-//│ ║  l.100: 	      5 then 0
+//│ ║  l.105: 	    y +
+//│ ║         	      ^
+//│ ║  l.106: 	      5 then 0
 //│ ║         	^^^^^^^
 //│ ╟── operator application of type `Bool` is not an instance of type `Int`
-//│ ║  l.98: 	  if x ==
-//│ ║        	     ^^^^
-//│ ║  l.99: 	    y +
-//│ ╙──      	^^^^^^
+//│ ║  l.104: 	  if x ==
+//│ ║         	     ^^^^
+//│ ║  l.105: 	    y +
+//│ ╙──       	^^^^^^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.99: 	    y +
-//│ ║        	      ^
-//│ ║  l.100: 	      5 then 0
+//│ ║  l.105: 	    y +
+//│ ║         	      ^
+//│ ║  l.106: 	      5 then 0
 //│ ║         	^^^^^^^
 //│ ╙── application of type `Int` is not an instance of type `Bool`
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.99: 	    y +
-//│ ║        	      ^
-//│ ║  l.100: 	      5 then 0
+//│ ║  l.105: 	    y +
+//│ ║         	      ^
+//│ ║  l.106: 	      5 then 0
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.101: 	      7 then 0
+//│ ║  l.107: 	      7 then 0
 //│ ║         	^^^^^^^
 //│ ╙── application of type `Int` is not an instance of type `Bool`
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.101: 	      7 then 0
+//│ ║  l.107: 	      7 then 0
 //│ ║         	             ^
 //│ ╙── expression of type `Bool` is not an instance of type `true`
 //│ fun f: (Num, Num) -> 0
@@ -134,14 +143,14 @@ fun f(x, b) =
   if x ==
     1 and b then 0
 //│ ╔══[ERROR] missing else branch
-//│ ║  l.135: 	    1 and b then 0
+//│ ║  l.144: 	    1 and b then 0
 //│ ╙──       	          ^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.135: 	    1 and b then 0
+//│ ║  l.144: 	    1 and b then 0
 //│ ║         	                 ^
 //│ ╙── expression of type `Bool` is not an instance of type `true`
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.135: 	    1 and b then 0
+//│ ║  l.144: 	    1 and b then 0
 //│ ║         	          ^^^^^^^^
 //│ ╙── expression of type `Bool` is not an instance of type `true`
 //│ fun f: (Num, Bool) -> 0
@@ -152,16 +161,19 @@ fun toEnglish(x) =
   if x ==
     true then "t"
     0 then "z"
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.163: 	    0 then "z"
+//│ ╙──       	           ^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.152: 	  if x ==
+//│ ║  l.161: 	  if x ==
 //│ ║         	     ^^^^
-//│ ║  l.153: 	    true then "t"
+//│ ║  l.162: 	    true then "t"
 //│ ║         	^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of `Num`
-//│ ║  l.153: 	    true then "t"
+//│ ║  l.162: 	    true then "t"
 //│ ╙──       	    ^^^^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.154: 	    0 then "z"
+//│ ║  l.163: 	    0 then "z"
 //│ ║         	           ^^^
 //│ ╙── expression of type `Bool` is not an instance of type `true`
 //│ fun toEnglish: Num -> ("t" | "z")
@@ -171,18 +183,21 @@ fun toEnglish(x) =
   if x ==
     0 then "z"
     true then "t"
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.185: 	    true then "t"
+//│ ╙──       	              ^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.171: 	  if x ==
+//│ ║  l.183: 	  if x ==
 //│ ║         	     ^^^^
-//│ ║  l.172: 	    0 then "z"
+//│ ║  l.184: 	    0 then "z"
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.173: 	    true then "t"
+//│ ║  l.185: 	    true then "t"
 //│ ║         	^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of `Num`
-//│ ║  l.173: 	    true then "t"
+//│ ║  l.185: 	    true then "t"
 //│ ╙──       	    ^^^^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.173: 	    true then "t"
+//│ ║  l.185: 	    true then "t"
 //│ ║         	              ^^^
 //│ ╙── expression of type `Bool` is not an instance of type `true`
 //│ fun toEnglish: Num -> ("t" | "z")
@@ -192,8 +207,11 @@ fun toEnglish(x) =
   if x ==
     1 then "o"
     0 then "z"
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.209: 	    0 then "z"
+//│ ╙──       	           ^^^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.194: 	    0 then "z"
+//│ ║  l.209: 	    0 then "z"
 //│ ║         	           ^^^
 //│ ╙── expression of type `Bool` is not an instance of type `true`
 //│ fun toEnglish: Num -> ("o" | "z")
@@ -210,32 +228,32 @@ fun toEnglish(x) =
   if x ==
     else 1
 //│ ╔══[PARSE ERROR] Unexpected indented block in expression position
-//│ ║  l.211: 	    else 1
+//│ ║  l.229: 	    else 1
 //│ ╙──       	^^^^
 //│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
-//│ ║  l.211: 	    else 1
+//│ ║  l.229: 	    else 1
 //│ ╙──       	    ^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found operator application instead
-//│ ║  l.210: 	  if x ==
+//│ ║  l.228: 	  if x ==
 //│ ║         	     ^^^^
-//│ ║  l.211: 	    else 1
+//│ ║  l.229: 	    else 1
 //│ ║         	^^^^
 //│ ╟── Note: 'if' expression starts here:
-//│ ║  l.210: 	  if x ==
+//│ ║  l.228: 	  if x ==
 //│ ╙──       	  ^^
 //│ ╔══[ERROR] missing else branch
-//│ ║  l.211: 	    else 1
+//│ ║  l.229: 	    else 1
 //│ ╙──       	    ^
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.210: 	  if x ==
+//│ ║  l.228: 	  if x ==
 //│ ║         	     ^^^^
-//│ ║  l.211: 	    else 1
+//│ ║  l.229: 	    else 1
 //│ ║         	^^^^
 //│ ╟── undefined literal of type `()` is not an instance of type `Num`
-//│ ║  l.211: 	    else 1
+//│ ║  l.229: 	    else 1
 //│ ╙──       	    ^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.211: 	    else 1
+//│ ║  l.229: 	    else 1
 //│ ║         	    ^
 //│ ╙── expression of type `Bool` is not an instance of type `true`
 //│ fun toEnglish: Num -> ()

@@ -174,6 +174,9 @@ fun f(x, y) =
       >  0 then "gt"
       <  0 then "le"
       == 0 then "eq"
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.176: 	      == 0 then "eq"
+//│ ╙──       	                ^^^^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.176: 	      == 0 then "eq"
 //│ ║         	                ^^^^
@@ -243,19 +246,19 @@ fun f(u, v, w) =
       Right(_) then "right-defined"
     None then "undefined"
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.241: 	    Some(x) and x is
+//│ ║  l.244: 	    Some(x) and x is
 //│ ║         	    ^^^^^^^^^^^^^^^^
-//│ ║  l.242: 	      Left(_) then "left-defined"
+//│ ║  l.245: 	      Left(_) then "left-defined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.243: 	      Right(_) then "right-defined"
+//│ ║  l.246: 	      Right(_) then "right-defined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.244: 	    None then "undefined"
+//│ ║  l.247: 	    None then "undefined"
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── operator application of type `Int` does not match type `Left[?A] | Right[?B]`
-//│ ║  l.227: 	  if x - y > 0 then Some(x + y + z) else None
+//│ ║  l.230: 	  if x - y > 0 then Some(x + y + z) else None
 //│ ║         	                         ^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.241: 	    Some(x) and x is
+//│ ║  l.244: 	    Some(x) and x is
 //│ ║         	                ^
 //│ ╟── from field selection:
 //│ ║  l.4: 	class Some[A](value: A) extends Option[A]
@@ -324,7 +327,7 @@ fun f(x) =
     0 ::
       Nil() then "oh"
 //│ ╔══[ERROR] Syntactic split of patterns are not supported
-//│ ║  l.324: 	    0 ::
+//│ ║  l.327: 	    0 ::
 //│ ╙──       	      ^^
 //│ ╔══[ERROR] unexpected empty split found
 //│ ╙──
@@ -369,22 +372,22 @@ test(false)
 test(0)
 test(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.369: 	test(0)
+//│ ║  l.372: 	test(0)
 //│ ║         	^^^^^^^
 //│ ╟── integer literal of type `0` is not an instance of type `Bool`
-//│ ║  l.369: 	test(0)
+//│ ║  l.372: 	test(0)
 //│ ║         	     ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.357: 	fun test(x) = if x then 0 else "oops"
+//│ ║  l.360: 	fun test(x) = if x then 0 else "oops"
 //│ ╙──       	                 ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.370: 	test(1)
+//│ ║  l.373: 	test(1)
 //│ ║         	^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `Bool`
-//│ ║  l.370: 	test(1)
+//│ ║  l.373: 	test(1)
 //│ ║         	     ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.357: 	fun test(x) = if x then 0 else "oops"
+//│ ║  l.360: 	fun test(x) = if x then 0 else "oops"
 //│ ╙──       	                 ^
 //│ "oops" | 0 | error
 //│ res

@@ -1,40 +1,37 @@
 package mlscript.ucs.context
 
-import mlscript.{Lit, Loc}
+import mlscript.{Lit, Loc, Var}
 import mlscript.pretyper.symbol.TypeSymbol
 import mlscript.utils._, shorthands._
 import mlscript.pretyper.symbol.DummyClassSymbol
 
-sealed abstract class Pattern {
-  override def toString(): String = this match {
-    case Pattern.ClassLike(symbol) =>
-      val kind = symbol match {
-        case _: DummyClassSymbol => "dummy class"
-        case _ => symbol.defn.kind.str
-      }
-      s"$kind `${symbol.name}`"
-    case Pattern.Tuple() => "tuple"
-    case Pattern.Literal(literal) => s"literal $literal"
-  }
-}
-
-object Pattern {
-  final case class ClassLike(symbol: TypeSymbol) extends Pattern
-  // Currently, there is only simple tuple pattern, so we cannot differentiate
-  // between tuple patterns of different arity. That's why the parameter list
-  // is empty for now.
-  final case class Tuple() extends Pattern
-  final case class Literal(literal: Lit) extends Pattern
-}
-
 /**
   * A `CaseSet` represents all patterns that a particular scrutinee is
-  * being matched with within a UCS expression. Each Pattern is associated
-  * with the locations where these patterns appear.
+  * being matched with within a UCS expression.
   *
-  * @param patterns a set of patterns that the scrutinee is matched with.
+  * @param patterns a list of patterns.
   */
-final case class CaseSet(val cases: Map[Pattern, Ls[Loc]]) {
+final case class CaseSet(val patterns: List[Pattern]) {
+  def showInDiagnostics: Str =
+    patterns.iterator.map(_.showInDiagnostics).mkString("[", ", ", "]")
+
+  /** Get a iterator of all class-like patterns. */
+  def classLikePatterns: Iterator[Pattern.ClassLike] = patterns.iterator.flatMap {
+    case pattern: Pattern.ClassLike => S(pattern)
+    case _: Pattern.Boolean | _: Pattern.Literal | _: Pattern.Tuple => N
+  }
+
+  /** Separate a class-like pattern if it appears in `patterns`. */
+  def separate(classLikeSymbol: TypeSymbol): Opt[(Pattern.ClassLike, Ls[Pattern.ClassLike])] = {
+    classLikePatterns.foldRight[(Opt[Pattern.ClassLike], Ls[Pattern.ClassLike])]((N, Nil)) {
+      case (pattern, (S(separated), rest)) => (S(separated), pattern :: rest)
+      case (pattern, (N, rest)) if pattern.classLikeSymbol === classLikeSymbol => (S(pattern), rest)
+      case (pattern, (N, rest)) => (N, pattern :: rest)
+    } match {
+      case (N, _) => N
+      case (S(separated), rest) => S((separated, rest))
+    }
+  }
   /**
     * Split the pattern set into two pattern sets.
     * 
@@ -59,37 +56,30 @@ final case class CaseSet(val cases: Map[Pattern, Ls[Loc]]) {
     *         locations where the pattern appears, the related patterns, and
     *         unrelated patterns.
     */
-  def split(classLikeSymbol: TypeSymbol): Opt[(Ls[Loc], CaseSet, CaseSet)] = {
-    val classLikePattern = Pattern.ClassLike(classLikeSymbol)
-    cases.get(classLikePattern).map { locations =>
-      val withoutSymbol = cases - classLikePattern
-      val relatedPatterns = withoutSymbol.filter {
-        case (Pattern.ClassLike(otherSymbol), _) => otherSymbol.baseTypes.contains(classLikeSymbol)
-        case ((_: Pattern.Tuple | _: Pattern.Literal), _) => false
-      } ++ classLikeSymbol.sealedDerivedTypes.iterator.map { symbol =>
-        Pattern.ClassLike(symbol) -> symbol.defn.nme.toLoc.toList
-      }
-      val unrelatedPatterns = withoutSymbol.filter {
-        case (Pattern.ClassLike(otherSymbol), _) => !otherSymbol.baseTypes.contains(classLikeSymbol)
-        case ((_: Pattern.Tuple | _: Pattern.Literal), _) => true
-      }
-      (locations, copy(relatedPatterns), copy(unrelatedPatterns))
+  def split(classLikeSymbol: TypeSymbol): Opt[(Pattern.ClassLike, CaseSet, CaseSet)] = {
+    separate(classLikeSymbol) match {
+      case N => N
+      case S((pattern, patterns)) =>
+        val (unrelated, related) = patterns.partitionMap { pattern =>
+          if (pattern.classLikeSymbol hasBaseClass classLikeSymbol) {
+            R(pattern)
+          } else {
+            L(pattern)
+          }
+        }
+        S((pattern, CaseSet(related), CaseSet(unrelated)))
     }
   }
 
-  def remove(literal: Lit): CaseSet = {
-    val literalPattern = Pattern.Literal(literal)
-    copy(cases - literalPattern)
+  @inline def remove(boolLit: Var): CaseSet = {
+    require(boolLit.name === "true" || boolLit.name === "false")
+    CaseSet(patterns.filter(!_.matches(boolLit)))
   }
 
-  /** Get an iterator of only patterns. */
-  @inline def patterns: Iterator[Pattern] = cases.iterator.map(_._1)
+  @inline def remove(literal: Lit): CaseSet =
+    CaseSet(patterns.filter(!_.matches(literal)))
 
-  @inline def isEmpty: Bool = cases.isEmpty
+  @inline def isEmpty: Bool = patterns.isEmpty
 
-  @inline def size: Int = cases.size
-}
-
-object CaseSet {
-  def empty: CaseSet = CaseSet(Map.empty)
+  @inline def size: Int = patterns.size
 }

@@ -23,18 +23,22 @@ trait CoverageChecking { self: Desugarer with Traceable =>
       pending: MatchRegistry,
       working: MatchRegistry,
       seen: SeenRegistry
-  )(implicit context: Context): Ls[Diagnostic] =
-    trace(s"checkCoverage <== ${term.showDbg}, ${pending.size} pending, ${working.size} working, ${seen.size} seen") {
-      println(s"seen: " + (if (seen.isEmpty) "empty" else
-        seen.iterator.map { case ((k, _), (s, _, _)) => s"${k.name} is ${s.name}" }.mkString(", ")
-      ))
-      term match {
-        case Let(_, _, _, body) => checkCoverage(body, pending, working, seen)
-        case CaseOf(scrutineeVar: Var, Case(Var("true"), body, NoCases)) if context.isTestVar(scrutineeVar) =>
-          raiseDesugaringError(msg"missing else branch" -> body.toLoc)
-          Nil
-        case CaseOf(Scrutinee.WithVar(scrutinee, scrutineeVar), cases) =>
-          println(s"scrutinee: ${scrutineeVar.name}")
+  )(implicit context: Context): Ls[Diagnostic] = {
+    term match {
+      case Let(_, nme, _, body) =>
+        println(s"checkCoverage <== LET `${nme.name}`")
+        checkCoverage(body, pending, working, seen)
+      case CaseOf(scrutineeVar: Var, Case(Var("true"), body, NoCases)) if context.isTestVar(scrutineeVar) =>
+        raiseDesugaringError(msg"missing else branch" -> body.toLoc)
+        Nil
+      case CaseOf(scrutineeVar: Var, Case(Var("true"), whenTrue, Wildcard(whenFalse))) if context.isTestVar(scrutineeVar) =>
+        println(s"checkCoverage <== TEST `${scrutineeVar.name}`")
+        checkCoverage(whenTrue, pending, working, seen) ++
+          checkCoverage(whenFalse, pending, working, seen)
+      case CaseOf(Scrutinee.WithVar(scrutinee, scrutineeVar), cases) =>
+        trace(s"checkCoverage <== ${pending.size} pending, ${working.size} working, ${seen.size} seen") {
+          println(s"CASE ${scrutineeVar.name}")
+          println(s"SEEN: ${seen.showDbg}")
           // If the scrutinee is still pending (i.e., not matched yet), then we
           // remove it from the pending list. If the scrutinee is matched, and
           // there are still classes to be matched, then we find the remaining
@@ -64,28 +68,35 @@ trait CoverageChecking { self: Desugarer with Traceable =>
           // unseen pattern set.
           // Meanwhile, we keep adding diagnostics if we meet warnings and errors.
           cases.foldLeft((unseenPatterns, Nil: Ls[Diagnostic]))({
+            case ((unseenPatterns, diagnostics), (boolLit: Var) -> body)
+                if boolLit.name === "true" || boolLit.name === "false" =>
+              (
+                unseenPatterns.remove(boolLit),
+                diagnostics ++ checkCoverage(body, newPending, working - namedScrutinee, seen)
+              )
             case ((unseenPatterns, diagnostics), (className: Var) -> body) =>
               val classSymbol = className.symbolOption.flatMap(_.typeSymbolOption).getOrElse {
                 throw new Exception(s"$className is not associated with a type symbol")
               }
-              println(s"class symbol: ${classSymbol.name}")
+              println(s"class symbol: `${classSymbol.name}`")
               unseenPatterns.split(classSymbol) match {
-                case S((locations, refiningPatterns, remainingPatterns)) =>
-                  println(s"remove ${className} and it's unrelated patterns from working")
-                  println("unseen patterns: " + unseenPatterns.patterns.mkString("[", ", ", "]"))
-                  println("remaining patterns: " + remainingPatterns.patterns.mkString("[", ", ", "]"))
+                case S((pattern, refiningPatterns, remainingPatterns)) =>
+                  println(s"REMOVE `${className.name}` from working")
+                  println(s"unseen: ${unseenPatterns.showInDiagnostics}")
+                  println(s"remaining: ${remainingPatterns.showInDiagnostics}")
                   // Remove the scrutinee from the working list.
                   val newWorking = if (remainingPatterns.isEmpty)
                     working - namedScrutinee
                   else
                     working.updated(namedScrutinee, remainingPatterns)
                   // Add "`scrutinee` is `className`" to the seen registry.
-                  val newSeen = seen + (namedScrutinee -> (classSymbol, locations, refiningPatterns))
+                  val newSeen = seen + (namedScrutinee -> (classSymbol, pattern.locations, refiningPatterns))
                   (
                     remainingPatterns,
                     diagnostics ++ checkCoverage(body, newPending, newWorking, newSeen)
                   )
                 case N =>
+                  println(s"cannot split the set by ${classSymbol.name}")
                   unseenPatterns -> (diagnostics :+ (seen.get(namedScrutinee) match {
                     case S((`classSymbol`, _, _)) => WarningReport("tautology", Nil, Diagnostic.Desugaring)
                     case S(_) => ErrorReport("contradiction", Nil, Diagnostic.Desugaring)
@@ -99,16 +110,18 @@ trait CoverageChecking { self: Desugarer with Traceable =>
               )
           }) {
             case ((missingCases, diagnostics), N) =>
-              println("remaining cases should are not covered")
-              println("MISSING cases: " + missingCases.patterns.mkString("[", ", ", "]"))
+              println(s"remaining cases are not covered: ${missingCases.showInDiagnostics}")
               diagnostics ++ explainMissingCases(namedScrutinee, seen, missingCases)
             case ((remainingCases, diagnostics), S(default)) =>
               println("remaining cases should be covered by the wildcard")
               checkCoverage(default, newPending, working.updated(namedScrutinee, remainingCases), seen)
           }
-        case other => println("STOP"); Nil
-      }
-    }(ls => s"checkCoverage ==> ${ls.length} diagnostics")
+        }(ls => s"checkCoverage ==> ${ls.length} diagnostics")
+      case other =>
+        println(s"checkCoverage <== TERM ${other.showDbg}")
+        Nil
+    }
+  }
 }
 
 object CoverageChecking {
@@ -124,8 +137,8 @@ object CoverageChecking {
       S(ErrorReport({
         val readableName = scrutinee._2.getReadableName(scrutinee._1)
         val lines = (msg"$readableName has ${"missing case".pluralize(missingCases.size, true)}" -> scrutinee._1.toLoc) ::
-          (missingCases.cases.iterator.flatMap { case (pattern, locations) =>
-            (msg"it can be ${pattern.toString}" -> locations.headOption) :: Nil
+          (missingCases.patterns.iterator.flatMap { pattern =>
+            (msg"it can be ${pattern.showInDiagnostics}" -> pattern.firstOccurrence) :: Nil
           }.toList)
         if (seen.isEmpty) {
           lines
@@ -144,6 +157,6 @@ object CoverageChecking {
   private def showRegistry(registry: MatchRegistry): Str =
     if (registry.isEmpty) "empty" else
       registry.iterator.map { case (scrutineeVar -> scrutinee, matchedClasses) =>
-        matchedClasses.patterns.mkString(s">>> ${scrutineeVar.name} => [", ", ", "]")
+        matchedClasses.patterns.iterator.map(_.showInDiagnostics).mkString(s">>> ${scrutineeVar.name} => [", ", ", "]")
       }.mkString("\n", "\n", "")
 }

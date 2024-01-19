@@ -115,7 +115,7 @@ trait Normalization { self: Desugarer with Traceable =>
         val (wrap, realTail) = preventShadowing(nme, tail)
         wrap(Let(false, nme, scrutinee, normalizeToTerm(continuation.fill(realTail, false, true))))
       // Skip Boolean conditions as scrutinees, because they only appear once.
-      case Split.Cons(Branch(test, pattern @ Pattern.Class(nme @ Var("true"), _), continuation), tail) =>
+      case Split.Cons(Branch(test, pattern @ Pattern.Class(nme @ Var("true"), _), continuation), tail) if context.isTestVar(test) =>
         println(s"TRUE: ${test.name} is true")
         val trueBranch = normalizeToTerm(continuation.fill(tail, false, false))
         val falseBranch = normalizeToCaseBranches(tail)
@@ -217,7 +217,7 @@ trait Normalization { self: Desugarer with Traceable =>
                   )
                 }
                 specialize(continuation, true) :++ specialize(tail, true)
-              } else if (otherClassSymbol hasSuperType classSymbol) {
+              } else if (otherClassSymbol hasBaseClass classSymbol) {
                 println(s"Case 2: ${otherClassName.name} <: ${className.name}")
                 println(s"${otherClassSymbol.name} is refining ${className.name}")
                 // We should mark `pattern` as refined.

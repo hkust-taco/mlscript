@@ -48,18 +48,8 @@ fun is_value_automatic_refinement(term) =
 //│       App*◊ -> false
 //│ fun is_value_automatic_refinement: (Abs | App | Var) -> Bool
 
-:e
 fun is_value'(term) =
   if term is Term and term is
     Abs(_, _) then true
     Var(_) then false
-//│ ╔══[ERROR] when `term` is `Term`
-//│ ║  l.53: 	  if term is Term and term is
-//│ ║        	             ^^^^
-//│ ╟── `term` has 1 missing case
-//│ ║  l.53: 	  if term is Term and term is
-//│ ║        	                      ^^^^
-//│ ╟── it can be class `App`
-//│ ║  l.6: 	class App(func: Term, arg: Term) extends Term
-//│ ╙──     	      ^^^
 //│ fun is_value': (Abs | Var) -> Bool

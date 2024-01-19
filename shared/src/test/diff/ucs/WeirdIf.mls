@@ -99,8 +99,6 @@ fun boolToStr(x) =
   if x is
     true then "yah"
     false then "nah"
-//│ ╙──
-//│ ╙──
 //│ fun boolToStr: Bool -> ("nah" | "yah")
 
 boolToStr of true

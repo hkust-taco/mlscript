@@ -1134,15 +1134,10 @@ object DiffTests {
 
   object DebugUCSFlags {
     // E.g. "ducs", "ducs:foo", "ducs:foo,bar", "ducs:a.b.c,foo"
-    private val pattern = "^ducs(?::\\s*([A-Za-z\\.-]+)(,\\s*[A-Za-z\\.-]+)*)?$".r
-    def unapply(flags: Str): Opt[Set[Str]] =
-      flags match {
-        case pattern(head, tail) =>
-          (Option(head), Option(tail)) match {
-            case (N, _) => S(Set.empty)
-            case (S(head), N) => S(Set.single(head))
-            case (S(head), S(tail)) => S(Set.from(head :: tail.split(",").drop(1).toList))
-          }
+    private val pattern = "^ducs(?::(\\s*(?:[A-Za-z\\.-]+)(?:,\\s*[A-Za-z\\.-]+)*))?$".r
+    def unapply(flagsString: Str): Opt[Set[Str]] =
+      flagsString match {
+        case pattern(flags) => Option(flags).map(_.split(",\\s*").toSet)
         case _ => N
       }
   }

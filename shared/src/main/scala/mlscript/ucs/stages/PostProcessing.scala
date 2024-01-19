@@ -2,7 +2,7 @@ package mlscript.ucs.stages
 
 import mlscript.{Case, CaseBranches, CaseOf, Let, Lit, Loc, NoCases, Term, Var, Wildcard}
 import mlscript.ucs.Desugarer
-import mlscript.ucs.context.{Context, PatternInfo, Scrutinee}
+import mlscript.ucs.context.{Context, Pattern, Scrutinee}
 import mlscript.pretyper.symbol._
 import mlscript.utils._, shorthands._
 import mlscript.Message, Message.MessageContext
@@ -27,11 +27,11 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
         // Post-process the false branch.
         println("FALSE")
         // Get all patterns, except the current one `pat`.
-        val patternInfoList = scrutinee.patternsIterator.filter(!_.matches(pat)).toList
-        println(s"found ${patternInfoList.length} patterns to distentangle: ${patternInfoList.iterator.map(_.showDbg).mkString(", ")}")
-        val (default, cases) = patternInfoList
+        val patternList = scrutinee.patternsIterator.filter(!_.matches(pat)).toList
+        println(s"found ${patternList.length} patterns to distentangle: ${patternList.iterator.map(_.showDbg).mkString(", ")}")
+        val (default, cases) = patternList
           // For each case class name, distangle case branch body terms from the false branch.
-          .foldLeft[Opt[Term] -> Ls[(PatternInfo, Opt[Loc], Term)]](S(falseBranch) -> Nil) {
+          .foldLeft[Opt[Term] -> Ls[(Pattern, Opt[Loc], Term)]](S(falseBranch) -> Nil) {
             case ((S(remainingTerm), cases), pattern) =>
               println(s"searching for case: ${pattern.showDbg}")
               val (leftoverTerm, extracted) = disentangleTerm(remainingTerm)(
@@ -126,7 +126,7 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
       context: Context,
       scrutineeVar: Var,
       scrutinee: Scrutinee,
-      pattern: PatternInfo
+      pattern: Pattern
   ): (Term, Opt[Term]) = {
     def rec(term: Term): (Term, Opt[Term]) =
       term match {
@@ -159,7 +159,7 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
       context: Context,
       scrutineeVar: Var,
       scrutinee: Scrutinee,
-      pattern: PatternInfo
+      pattern: Pattern
   ): (CaseBranches, Opt[Term]) =
     cases match {
       case NoCases => NoCases -> N
@@ -184,7 +184,7 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
       context: Context,
       scrutineeVar: Var,
       scrutinee: Scrutinee,
-      pattern: PatternInfo
+      pattern: Pattern
   ): (CaseBranches, CaseBranches) =
     cases match {
       case NoCases => NoCases -> NoCases

@@ -46,6 +46,9 @@ class Node[A](value: int, left: Tree[A], right: Tree[A]) {
     >= value then right.find(wanted)
     == value then true
 }
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.47: 	    == value then true
+//│ ╙──      	                  ^^^^
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.44: 	  fun contains(wanted) = if wanted
 //│ ║        	                            ^^^^^^

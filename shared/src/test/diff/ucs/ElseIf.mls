@@ -79,6 +79,24 @@ f(Fals, Fals)
 //│ res
 //│     = false
 
+:e
+fun g(x, y) = if x is
+  true and y is true then true
+  false and y is false then false
+//│ ╔══[ERROR] `y` has 1 missing case
+//│ ║  l.84: 	  true and y is true then true
+//│ ║        	           ^
+//│ ╟── it can be Boolean value false
+//│ ║  l.85: 	  false and y is false then false
+//│ ╙──      	                 ^^^^^
+//│ ╔══[ERROR] `y` has 1 missing case
+//│ ║  l.85: 	  false and y is false then false
+//│ ║        	            ^
+//│ ╟── it can be Boolean value true
+//│ ║  l.84: 	  true and y is true then true
+//│ ╙──      	                ^^^^
+//│ fun g: (Bool, nothing) -> Bool
+
 // Test with real booleans
 fun g(x, y) = if x is
   true and y is true then true
@@ -86,7 +104,6 @@ fun g(x, y) = if x is
   _ and y is
     true then true
     false then false
-//│ ╙──
 //│ fun g: (Object, Bool) -> Bool
 
 // Chained UCS terms
@@ -106,46 +123,46 @@ fun f(x, y) = if x is
     Tru and x is Fals then true
     Fals and x is Tru then false
 //│ ╔══[ERROR] when `y` is `Tru`
-//│ ║  l.106: 	    Tru and x is Fals then true
+//│ ║  l.123: 	    Tru and x is Fals then true
 //│ ║         	    ^^^
 //│ ╟── `x` has 1 missing case
-//│ ║  l.106: 	    Tru and x is Fals then true
+//│ ║  l.123: 	    Tru and x is Fals then true
 //│ ║         	            ^
 //│ ╟── it can be module `Tru`
-//│ ║  l.107: 	    Fals and x is Tru then false
+//│ ║  l.124: 	    Fals and x is Tru then false
 //│ ╙──       	                  ^^^
 //│ ╔══[ERROR] when `y` is `Fals`
-//│ ║  l.107: 	    Fals and x is Tru then false
+//│ ║  l.124: 	    Fals and x is Tru then false
 //│ ║         	    ^^^^
 //│ ╟── `x` has 1 missing case
-//│ ║  l.107: 	    Fals and x is Tru then false
+//│ ║  l.124: 	    Fals and x is Tru then false
 //│ ║         	             ^
 //│ ╟── it can be module `Fals`
-//│ ║  l.106: 	    Tru and x is Fals then true
+//│ ║  l.123: 	    Tru and x is Fals then true
 //│ ╙──       	                 ^^^^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.106: 	    Tru and x is Fals then true
+//│ ║  l.123: 	    Tru and x is Fals then true
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^
 //│ ╟── class pattern of type `Tru` is not an instance of type `Fals`
-//│ ║  l.103: 	    Tru and y is Tru then true
+//│ ║  l.120: 	    Tru and y is Tru then true
 //│ ║         	    ^^^
 //│ ╟── but it flows into reference with expected type `Fals`
-//│ ║  l.106: 	    Tru and x is Fals then true
+//│ ║  l.123: 	    Tru and x is Fals then true
 //│ ║         	            ^
 //│ ╟── Note: constraint arises from class pattern:
-//│ ║  l.106: 	    Tru and x is Fals then true
+//│ ║  l.123: 	    Tru and x is Fals then true
 //│ ╙──       	                 ^^^^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.107: 	    Fals and x is Tru then false
+//│ ║  l.124: 	    Fals and x is Tru then false
 //│ ║         	             ^^^^^^^^^^^^^^^^^^^
 //│ ╟── class pattern of type `Fals` is not an instance of type `Tru`
-//│ ║  l.104: 	    Fals and y is Fals then false
+//│ ║  l.121: 	    Fals and y is Fals then false
 //│ ║         	    ^^^^
 //│ ╟── but it flows into reference with expected type `Tru`
-//│ ║  l.107: 	    Fals and x is Tru then false
+//│ ║  l.124: 	    Fals and x is Tru then false
 //│ ║         	             ^
 //│ ╟── Note: constraint arises from class pattern:
-//│ ║  l.107: 	    Fals and x is Tru then false
+//│ ║  l.124: 	    Fals and x is Tru then false
 //│ ╙──       	                  ^^^
 //│ fun f: (Fals | Tru, Fals | Tru) -> Bool
 

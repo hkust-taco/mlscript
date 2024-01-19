@@ -15,22 +15,22 @@ class Scrutinee(val context: Context, parent: Opt[Scrutinee]) {
 
   private val locations: Buffer[Loc] = Buffer.empty
   private var generatedVarOpt: Opt[Var] = N
-  private val classLikePatterns: MutSortedMap[TypeSymbol, PatternInfo.ClassLike] = MutSortedMap.empty(classLikeSymbolOrdering)
+  private val classLikePatterns: MutSortedMap[TypeSymbol, Pattern.ClassLike] = MutSortedMap.empty(classLikeSymbolOrdering)
   // Currently we only support simple tuple patterns, so there is only _one_
   // slot for tuple patterns. After we support complex tuple patterns, we need
-  // to extend this fields to a map from tuple arity to `PatternInfo.Tuple`.
-  //    private val tuplePatterns: MutMap[Int, PatternInfo.Tuple] = MutMap.empty
+  // to extend this fields to a map from tuple arity to `Pattern.Tuple`.
+  //    private val tuplePatterns: MutMap[Int, Pattern.Tuple] = MutMap.empty
   // If we support tuple pattern splice, we need a more expressive key in the
   // map's type.
-  private var tuplePatternOpt: Opt[PatternInfo.Tuple] = N
+  private var tuplePatternOpt: Opt[Pattern.Tuple] = N
   private var aliasVarSet: MutSortedSet[Var] = MutSortedSet.empty
 
-  private val literalPatterns: MutSortedMap[Lit, PatternInfo.Literal] = MutSortedMap.empty(literalOrdering)
+  private val literalPatterns: MutSortedMap[Lit, Pattern.Literal] = MutSortedMap.empty(literalOrdering)
   /**
     * The key should be either `Var("true")` or `Var("false")`. We want to keep
     * the type symbol of the variable so that it still work in following stages.
     */
-  private val booleanPatterns: MutSortedMap[Var, PatternInfo.Boolean] = MutSortedMap.empty(varNameOrdering)
+  private val booleanPatterns: MutSortedMap[Var, Pattern.Boolean] = MutSortedMap.empty(varNameOrdering)
 
   def addAliasVar(alias: Var): Unit = aliasVarSet += alias
 
@@ -39,23 +39,23 @@ class Scrutinee(val context: Context, parent: Opt[Scrutinee]) {
   def aliasesIterator: Iterator[Var] = aliasVarSet.iterator
 
   /**
-    * If there is already a `PatternInfo.ClassLike` for the given symbol, return it.
-    * Otherwise, create a new `PatternInfo.ClassLike` and return it.
+    * If there is already a `Pattern.ClassLike` for the given symbol, return it.
+    * Otherwise, create a new `Pattern.ClassLike` and return it.
     */
-  def getOrCreateClassPattern(classLikeSymbol: TypeSymbol): PatternInfo.ClassLike =
-    classLikePatterns.getOrElseUpdate(classLikeSymbol, new PatternInfo.ClassLike(classLikeSymbol, this))
+  def getOrCreateClassPattern(classLikeSymbol: TypeSymbol): Pattern.ClassLike =
+    classLikePatterns.getOrElseUpdate(classLikeSymbol, Pattern.ClassLike(classLikeSymbol, this))
 
   /**
     * Get the class pattern but DO NOT create a new one if there isn't. This
     * function is mainly used in post-processing because we don't want to
     * accidentally create new patterns.
     */
-  def getClassPattern(classLikeSymbol: TypeSymbol): Opt[PatternInfo.ClassLike] =
+  def getClassPattern(classLikeSymbol: TypeSymbol): Opt[Pattern.ClassLike] =
     classLikePatterns.get(classLikeSymbol)
 
   /**
-   * If there is already a `PatternInfo.Tuple`, return it. Otherwise, create a
-   * new `PatternInfo.Tuple` and return it.
+   * If there is already a `Pattern.Tuple`, return it. Otherwise, create a
+   * new `Pattern.Tuple` and return it.
    * 
    * **NOTE**: There's only one slot for tuple patterns because we cannot
    * differentiate tuple types in underlying MLscript case terms. In the future,
@@ -63,31 +63,31 @@ class Scrutinee(val context: Context, parent: Opt[Scrutinee]) {
    * a signature like this.
    * 
    * ```scala
-   * def getOrCreateTuplePattern(dimension: TupleDimension): PatternInfo.Tuple
+   * def getOrCreateTuplePattern(dimension: TupleDimension): Pattern.Tuple
    * case class TupleDimension(knownArity: Int, hasSplice: Bool)
    * ```
    */
-  def getOrCreateTuplePattern: PatternInfo.Tuple =
+  def getOrCreateTuplePattern: Pattern.Tuple =
     tuplePatternOpt.getOrElse {
-      val tuplePattern = new PatternInfo.Tuple(this)
+      val tuplePattern = Pattern.Tuple(this)
       tuplePatternOpt = S(tuplePattern)
       tuplePattern
     }
 
   /** Get the tuple pattern and create a new one if there isn't. */
-  def getOrCreateLiteralPattern(literal: Lit): PatternInfo.Literal =
-    literalPatterns.getOrElseUpdate(literal, new PatternInfo.Literal(literal))
+  def getOrCreateLiteralPattern(literal: Lit): Pattern.Literal =
+    literalPatterns.getOrElseUpdate(literal, Pattern.Literal(literal))
 
   /**
     * The key should be either `Var("true")` or `Var("false")`. We want to keep
     * the type symbol of the variable so that it still work in following stages.
     */
-  def getOrCreateBooleanPattern(value: Var): PatternInfo.Boolean =
-    booleanPatterns.getOrElseUpdate(value, new PatternInfo.Boolean(value))
+  def getOrCreateBooleanPattern(value: Var): Pattern.Boolean =
+    booleanPatterns.getOrElseUpdate(value, Pattern.Boolean(value))
 
-  def classLikePatternsIterator: Iterator[PatternInfo.ClassLike] = classLikePatterns.valuesIterator
+  def classLikePatternsIterator: Iterator[Pattern.ClassLike] = classLikePatterns.valuesIterator
 
-  def patternsIterator: Iterator[PatternInfo] =
+  def patternsIterator: Iterator[Pattern] =
     classLikePatterns.valuesIterator ++ literalPatterns.valuesIterator ++ booleanPatterns.valuesIterator
 
   /** Get a list of string representation of patterns. Only for debugging. */
@@ -103,19 +103,7 @@ class Scrutinee(val context: Context, parent: Opt[Scrutinee]) {
 
   def freshSubScrutinee: Scrutinee = context.freshScrutinee(this)
 
-  def toCaseSet: CaseSet = {
-    import mlscript.ucs.context.Pattern
-    val cases = classLikePatterns.iterator.map { case (symbol, pattern) =>
-      Pattern.ClassLike(symbol) -> pattern.locations
-    }.toMap[Pattern, Ls[Loc]]
-    val tuplePattern = tuplePatternOpt.map { tuplePattern =>
-      Pattern.Tuple() -> tuplePattern.locations
-    }.toMap[Pattern, Ls[Loc]]
-    val literalPatterns = this.literalPatterns.iterator.map { case (literal, pattern) =>
-      Pattern.Literal(literal) -> pattern.locations
-    }.toMap[Pattern, Ls[Loc]]
-    CaseSet(cases ++ tuplePattern)
-  }
+  def toCaseSet: CaseSet = CaseSet(patternsIterator.toList)
 
   def getReadableName(scrutineeVar: Var): Str = {
     parent match {

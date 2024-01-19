@@ -4,8 +4,9 @@ import collection.mutable.{Buffer, SortedMap => MutSortedMap}
 import mlscript.{Lit, Loc, Located, SimpleTerm, TypeName, Var}
 import mlscript.pretyper.symbol.TypeSymbol
 import mlscript.utils._, shorthands._
+import mlscript.pretyper.symbol.DummyClassSymbol
 
-abstract class PatternInfo {
+sealed abstract class Pattern {
   private val locationsBuffer: Buffer[Loc] = Buffer.empty
 
   def addLocation(located: Located): Unit = located.getLoc.foreach(locationsBuffer += _)
@@ -21,6 +22,9 @@ abstract class PatternInfo {
 
   def showDbg: Str
 
+  /** Get a string suitable for diagnostics. */
+  def showInDiagnostics: Str
+
   /**
     * Checks if the pattern is same as expressed by the given `SimpleTerm`. Note
     * that we should pass `pat` of `Case` to this function.
@@ -31,8 +35,8 @@ abstract class PatternInfo {
   def toCasePattern: SimpleTerm
 }
 
-object PatternInfo {
-  class ClassLike(val classLikeSymbol: TypeSymbol, scrutinee: Scrutinee) extends PatternInfo {
+object Pattern {
+  final case class ClassLike(val classLikeSymbol: TypeSymbol, scrutinee: Scrutinee) extends Pattern {
     private var unappliedVarOpt: Opt[Var] = N
     private val parameters: MutSortedMap[Int, Scrutinee] = MutSortedMap.empty
 
@@ -62,11 +66,16 @@ object PatternInfo {
 
     override def showDbg: Str = s"${classLikeSymbol.name}"
 
+    override def showInDiagnostics: Str = s"${(classLikeSymbol match {
+      case dummySymbol: DummyClassSymbol => "class"
+      case otherSymbol: TypeSymbol => otherSymbol.defn.kind.str
+    })} `${classLikeSymbol.name}`"
+
     override def matches(pat: SimpleTerm): Bool =
       pat match {
         case pat: Var => pat.symbolOption match {
           case S(patternSymbol: TypeSymbol) =>
-            patternSymbol === classLikeSymbol || patternSymbol.hasSuperType(classLikeSymbol)
+            patternSymbol === classLikeSymbol || patternSymbol.hasBaseClass(classLikeSymbol)
           case S(_) | N => false
         }
         case _: Lit => false
@@ -76,7 +85,7 @@ object PatternInfo {
       Var(classLikeSymbol.name).withLoc(firstOccurrence).withSymbol(classLikeSymbol)
   }
 
-  class Tuple(scrutinee: Scrutinee) extends PatternInfo {
+  final case class Tuple(scrutinee: Scrutinee) extends Pattern {
     private val fields: MutSortedMap[Int, Scrutinee] = MutSortedMap.empty
 
     def getField(index: Int): Scrutinee =
@@ -85,6 +94,13 @@ object PatternInfo {
     override def arity: Opt[Int] = fields.keysIterator.maxOption.map(_ + 1)
 
     override def showDbg: Str = s"tuple#${arity.getOrElse("?")}"
+
+    override def showInDiagnostics: Str =
+      "tuple of " + (arity match {
+        case N => "certain number of elements"
+        case S(1) => "1 element"
+        case S(n) => s"${n} elements"
+      })
 
     override def matches(pat: SimpleTerm): Bool = false
 
@@ -96,10 +112,12 @@ object PatternInfo {
     override def toCasePattern: SimpleTerm = ???
   }
 
-  class Literal(val literal: Lit) extends PatternInfo {
+  final case class Literal(val literal: Lit) extends Pattern {
     override def arity: Opt[Int] = N
 
     override def showDbg: Str = literal.idStr
+
+    override def showInDiagnostics: Str = s"literal ${literal.idStr}"
 
     override def matches(pat: SimpleTerm): Bool =
       pat match {
@@ -111,17 +129,19 @@ object PatternInfo {
   }
 
   /**
-    * This can be actually merged with `LiteralPatternInfo`. However, there's no
+    * This can be actually merged with `Pattern.Literal`. However, there's no
     * `Lit` sub-classes for Boolean types, so the representation is a little bit
     * awkward, also, it makes sense to consider Boolean patterns separately
     * because we can check the Boolean exhaustiveness with them.
     */
-  class Boolean(val value: Var) extends PatternInfo {
+  final case class Boolean(val value: Var) extends Pattern {
     require(value.name === "true" || value.name === "false")
 
     override def arity: Opt[Int] = N
 
-    override def showDbg: Str = value.toString
+    override def showDbg: Str = value.name
+
+    override def showInDiagnostics: Str = s"Boolean value ${value.name}"
 
     override def matches(pat: SimpleTerm): Bool =
       pat match {

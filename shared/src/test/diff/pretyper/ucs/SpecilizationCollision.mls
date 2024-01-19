@@ -38,11 +38,60 @@ class Derived(y: Int) extends Base(y + 1)
 //│ class Base(x: Int)
 //│ class Derived(y: Int) extends Base
 
+:ducs:postprocess.result,coverage
 fun example3(t) =
   if t is
     Base(x) and p1(x) then x
     Derived(y) then y
     else 42
+//│ Post-processed UCS term:
+//│ case t*‡ of
+//│   refined Base*◊ ->
+//│     let ucs$args_t$Base*† = (Base).unapply(t,)
+//│     let x*‡ = (ucs$args_t$Base).0
+//│     let ucs$test$0*† = p1(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† -> x
+//│       _ ->
+//│         case t*‡ of
+//│           Derived*◊ ->
+//│             let ucs$args_t$Derived*† = (Derived).unapply(t,)
+//│             let y*‡ = (ucs$args_t$Derived).0
+//│             y
+//│           _ -> 42
+//│ | | | | | | | STEP 4
+//│ | | | | | | | collected match registry: 
+//│ | | | | | | | >>> t => [class `Base`, class `Derived`]
+//│ | | | | | | | >>> x => []
+//│ | | | | | | | >>> y => []
+//│ | | | | | | | checkCoverage <== 0 pending, 3 working, 0 seen
+//│ | | | | | | | | CASE t
+//│ | | | | | | | | SEEN: empty
+//│ | | | | | | | | class symbol: `Base`
+//│ | | | | | | | | REMOVE `Base` from working
+//│ | | | | | | | | unseen: [class `Base`, class `Derived`]
+//│ | | | | | | | | remaining: []
+//│ | | | | | | | | checkCoverage <== LET `ucs$args_t$Base`
+//│ | | | | | | | | checkCoverage <== LET `x`
+//│ | | | | | | | | checkCoverage <== LET `ucs$test$0`
+//│ | | | | | | | | checkCoverage <== TEST `ucs$test$0`
+//│ | | | | | | | | checkCoverage <== TERM x
+//│ | | | | | | | | checkCoverage <== 0 pending, 2 working, 1 seen
+//│ | | | | | | | | | CASE t
+//│ | | | | | | | | | SEEN: t is Base
+//│ | | | | | | | | | class symbol: `Derived`
+//│ | | | | | | | | | REMOVE `Derived` from working
+//│ | | | | | | | | | unseen: [class `Derived`]
+//│ | | | | | | | | | remaining: []
+//│ | | | | | | | | | checkCoverage <== LET `ucs$args_t$Derived`
+//│ | | | | | | | | | checkCoverage <== LET `y`
+//│ | | | | | | | | | checkCoverage <== TERM y
+//│ | | | | | | | | | remaining cases should be covered by the wildcard
+//│ | | | | | | | | | checkCoverage <== TERM 42
+//│ | | | | | | | | checkCoverage ==> 0 diagnostics
+//│ | | | | | | | | remaining cases are not covered: []
+//│ | | | | | | | checkCoverage ==> 0 diagnostics
+//│ | | | | | | | Coverage checking result: 0 errors
 //│ fun example3: forall 'a. (Base & {#x: Num & 'a}) -> (Int | 'a)
 
 fun example4(t, x) =

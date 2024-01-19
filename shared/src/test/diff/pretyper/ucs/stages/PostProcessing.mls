@@ -14,8 +14,6 @@ fun mixed_literals(v) =
 //│   2 -> "2"
 //│   1 -> "1"
 //│ Desugared term: case v of { true => "true"; false => "false"; 2 => "2"; 1 => "1" }
-//│ ╙──
-//│ ╙──
 //│ fun mixed_literals: (1 | 2 | false | true) -> ("1" | "2" | "false" | "true")
 
 :ducs:postprocess.result
@@ -28,8 +26,6 @@ fun separated_by_and(v) =
 //│ case v*‡ of
 //│   true*† -> "true"
 //│   false*† -> "false"
-//│ ╙──
-//│ ╙──
 //│ fun separated_by_and: Bool -> ("false" | "true")
 
 :ducs:postprocess.result
