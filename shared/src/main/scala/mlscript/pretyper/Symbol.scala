@@ -78,12 +78,18 @@ package object symbol {
 
   final class ModuleSymbol(override val defn: NuTypeDef) extends TypeSymbol with TermSymbol {
     require(defn.kind === Mod)
+
+    override def nameVar: Var = defn.nameVar
   }
 
-  sealed trait TermSymbol extends Symbol with Matchable
+  sealed trait TermSymbol extends Symbol with Matchable {
+    def nameVar: Var
+  }
 
   class DefinedTermSymbol(val defn: NuFunDef) extends TermSymbol {
     override def name: Str = defn.name
+
+    override def nameVar: Var = defn.nme
 
     def body: Term \/ Type = defn.rhs
 
@@ -94,9 +100,13 @@ package object symbol {
     def isDeclaration: Bool = defn.rhs.isRight
 
     def operatorAlias: Opt[Var] = defn.symbolicNme
+
+    def declaredLoc: Opt[Loc] = defn.nme.toLoc
   }
 
   class LocalTermSymbol(val nme: Var) extends TermSymbol {
     override def name: Str = nme.name
+
+    override def nameVar: Var = nme
   }
 }

@@ -388,6 +388,18 @@ trait Desugaring { self: PreTyper =>
           case s.EmptyPattern(_) | s.NamePattern(Var("_")) =>
             desugarRight ++ desugarTail
           case s.NamePattern(nme) =>
+            // If the top-level pattern is a name pattern, we need to check if
+            // `nme` shadows any variables in the scope. For example, code
+            // `fun f(x, y) = if x is y then "yes" else "no"` may read like
+            // `if x === y then "yes" else "no"`.
+            scope.getTermSymbol(nme.name) match {
+              case S(shadowed) =>
+                raiseDesugaringWarning(
+                  msg"the outer binding `${nme.name}`" -> shadowed.nameVar.toLoc,
+                  msg"is shadowed by inner binding `${nme.name}`" -> nme.toLoc
+                )
+              case N => ()
+            }
             val symbol = freshSymbol(nme).withScrutinee(scrutinee)
             val scopeWithSymbol = scope + symbol
             c.Branch(scrutineeVar, c.Pattern.Name(nme.withSymbol(symbol)),

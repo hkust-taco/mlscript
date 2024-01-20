@@ -95,8 +95,14 @@ fun foo(x) = if x is M() then 0
 //│ Code generation encountered an error:
 //│   unknown match case: M
 
-
+:w
 fun foo0(x, y) = if x is y then 0
+//│ ╔══[WARNING] the outer binding `y`
+//│ ║  l.99: 	fun foo0(x, y) = if x is y then 0
+//│ ║        	            ^
+//│ ╟── is shadowed by inner binding `y`
+//│ ║  l.99: 	fun foo0(x, y) = if x is y then 0
+//│ ╙──      	                         ^
 //│ fun foo0: (anything, anything) -> 0
 
 
@@ -107,10 +113,10 @@ fun foo = 0
 :ge
 fun foo0(x) = if x is foo() then 0
 //│ ╔══[ERROR] type identifier `foo` not found
-//│ ║  l.108: 	fun foo0(x) = if x is foo() then 0
+//│ ║  l.114: 	fun foo0(x) = if x is foo() then 0
 //│ ╙──       	                      ^^^
 //│ ╔══[ERROR] can only match on classes and traits
-//│ ║  l.108: 	fun foo0(x) = if x is foo() then 0
+//│ ║  l.114: 	fun foo0(x) = if x is foo() then 0
 //│ ╙──       	                      ^^^
 //│ fun foo0: nothing -> error
 //│ Code generation encountered an error:
@@ -121,10 +127,10 @@ fun foo0(x) = if x is foo() then 0
 // FIXME: Typer.scala:1497
 fun foo(x) = if x is foo() then 0
 //│ ╔══[ERROR] type identifier `foo` not found
-//│ ║  l.122: 	fun foo(x) = if x is foo() then 0
+//│ ║  l.128: 	fun foo(x) = if x is foo() then 0
 //│ ╙──       	                     ^^^
 //│ ╔══[ERROR] can only match on classes and traits
-//│ ║  l.122: 	fun foo(x) = if x is foo() then 0
+//│ ║  l.128: 	fun foo(x) = if x is foo() then 0
 //│ ╙──       	                     ^^^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
 
