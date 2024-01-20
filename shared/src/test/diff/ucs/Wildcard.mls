@@ -107,10 +107,10 @@ w3(0, _ => false)
 // +  => 1
 fun w3_1(x, f) =
   if f(x) is _ then 0 else 1
-//│ ╔══[WARNING] the case is unreachable
+//│ ╔══[WARNING] this case is unreachable
 //│ ║  l.109: 	  if f(x) is _ then 0 else 1
 //│ ║         	                           ^
-//│ ╟── because this branch covers the case
+//│ ╟── because it is subsumed by the branch
 //│ ║  l.109: 	  if f(x) is _ then 0 else 1
 //│ ╙──       	                    ^
 //│ fun w3_1: forall 'a. ('a, 'a -> anything) -> 0
@@ -126,10 +126,10 @@ w3_1(0, _ => false)
 :w
 fun w3_1_1(x, f) =
   if f(x) is a then a else 0
-//│ ╔══[WARNING] the case is unreachable
+//│ ╔══[WARNING] this case is unreachable
 //│ ║  l.128: 	  if f(x) is a then a else 0
 //│ ║         	                           ^
-//│ ╟── because this branch already covers the case
+//│ ╟── because it is subsumed by the branch
 //│ ║  l.128: 	  if f(x) is a then a else 0
 //│ ╙──       	                    ^
 //│ fun w3_1_1: forall 'a 'b. ('a, 'a -> 'b) -> 'b

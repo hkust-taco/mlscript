@@ -58,8 +58,8 @@ fun foo(x) = x is
 //│ ║        	  ^^^^
 //│ ║  l.55: 	  Int
 //│ ╙──      	^^^^^
-//│ ╔══[WARNING] the case is unreachable
-//│ ╙── because this branch covers the case
+//│ ╔══[WARNING] this case is unreachable
+//│ ╙── because it is subsumed by the branch
 //│ fun foo: anything -> true
 
 // TODO proper error
@@ -71,8 +71,8 @@ fun foo(x) = x is
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.68: 	  Int
 //│ ╙──      	^^^^^
-//│ ╔══[WARNING] the case is unreachable
-//│ ╙── because this branch covers the case
+//│ ╔══[WARNING] this case is unreachable
+//│ ╙── because it is subsumed by the branch
 //│ fun foo: anything -> true
 
 // TODO support `|`

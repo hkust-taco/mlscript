@@ -5,7 +5,7 @@ import syntax.{source => s, core => c}, stages._, context.{Context, Scrutinee}
 import mlscript.ucs.display.{showNormalizedTerm, showSplit}
 import mlscript.pretyper.{PreTyper, Scope}
 import mlscript.pretyper.symbol._
-import mlscript.{If, Loc, Message, Var}, Message.MessageContext, mlscript.Diagnostic
+import mlscript.{If, Loc, Located, Message, Var}, Message.MessageContext, mlscript.Diagnostic
 import mlscript.utils._, shorthands._
 import syntax.core.{Branch, Split}
 
@@ -21,6 +21,14 @@ trait Desugarer extends Transformation
   /** A shorthand function to raise _desugaring_ errors without specifying the source. */
   protected def raiseDesugaringError(messages: (Message -> Opt[Loc])*): Unit =
     raiseError(Diagnostic.Desugaring, messages: _*)
+
+  protected def reportUnreachableCase[T <: Located](unreachable: Located, subsumedBy: T, onlyIf: Bool = true): T = {
+    if (onlyIf) raiseDesugaringWarning(
+      msg"this case is unreachable" -> unreachable.toLoc,
+      msg"because it is subsumed by the branch" -> subsumedBy.toLoc
+    )
+    subsumedBy
+  }
 
   /** A shorthand function to raise _desugaring_ warnings without specifying the source. */
   protected def raiseDesugaringWarning(messages: (Message -> Opt[Loc])*): Unit =
@@ -153,12 +161,7 @@ trait Desugarer extends Transformation
       if (those === s.Split.Nil) these else (these match {
         case s.Split.Cons(head, tail) => s.Split.Cons(head, tail ++ those)
         case s.Split.Let(rec, nme, rhs, tail) => s.Split.Let(rec, nme, rhs, tail ++ those)
-        case s.Split.Else(_) =>
-          raiseDesugaringWarning(
-            msg"unreachable case" -> those.toLoc,
-            msg"because this branch covers the case" -> these.toLoc
-          )
-          these
+        case s.Split.Else(_) => reportUnreachableCase(those, these)
         case s.Split.Nil => those
       })
   }
@@ -178,12 +181,7 @@ trait Desugarer extends Transformation
       if (those === c.Split.Nil) these else (these match {
         case me: c.Split.Cons => me.copy(tail = me.tail ++ those)
         case me: c.Split.Let => me.copy(tail = me.tail ++ those)
-        case _: c.Split.Else =>
-          raiseDesugaringWarning(
-            msg"the case is unreachable" -> those.toLoc,
-            msg"because this branch covers the case" -> these.toLoc
-          )
-          these
+        case _: c.Split.Else => reportUnreachableCase(those, these)
         case c.Split.Nil => those
       })
   }

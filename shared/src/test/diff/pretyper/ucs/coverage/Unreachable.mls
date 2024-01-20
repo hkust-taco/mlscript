@@ -49,7 +49,7 @@ fun unreachable_1(x) =
       else "screen"
     Some(xv) then "sin"
     None then "tan"
-//│ ╔══[WARNING] the case is unreachable
+//│ ╔══[WARNING] this case is unreachable
 //│ ║  l.46: 	  if x is
 //│ ║        	     ^^^^
 //│ ║  l.47: 	    _ and
@@ -62,7 +62,7 @@ fun unreachable_1(x) =
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.51: 	    None then "tan"
 //│ ║        	^^^^^^^^^^^^^^^^^^^
-//│ ╟── because this branch covers the case
+//│ ╟── because it is subsumed by the branch
 //│ ║  l.49: 	      else "screen"
 //│ ╙──      	           ^^^^^^^^
 //│ fun unreachable_1: (Object & ~#Some | Some[Eql[1]]) -> ("screen" | "tmux")

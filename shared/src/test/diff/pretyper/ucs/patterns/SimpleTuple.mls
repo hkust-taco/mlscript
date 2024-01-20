@@ -47,14 +47,14 @@ fun discarded_cases(thing) =
   if thing is
     [x, y] then x + y
     Point(x, y) then x + y
-//│ ╔══[WARNING] the case is unreachable
+//│ ╔══[WARNING] this case is unreachable
 //│ ║  l.47: 	  if thing is
 //│ ║        	     ^^^^^^^^
 //│ ║  l.48: 	    [x, y] then x + y
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.49: 	    Point(x, y) then x + y
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── because this branch covers the case
+//│ ╟── because it is subsumed by the branch
 //│ ║  l.48: 	    [x, y] then x + y
 //│ ╙──      	                ^^^^^
 //│ class Point(x: Int, y: Int)
@@ -111,10 +111,10 @@ fun not_working(x) =
       a + b + c
     else
       0
-//│ ╔══[WARNING] the case is unreachable
+//│ ╔══[WARNING] this case is unreachable
 //│ ║  l.113: 	      0
 //│ ║         	      ^
-//│ ╟── because this branch covers the case
+//│ ╟── because it is subsumed by the branch
 //│ ║  l.111: 	      a + b + c
 //│ ╙──       	      ^^^^^^^^^
 //│ fun not_working: {0: Int, 1: Int, 2: Int} -> Int

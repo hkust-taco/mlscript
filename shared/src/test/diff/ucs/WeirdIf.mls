@@ -5,16 +5,16 @@ if
   _ then 0
   else 0
 else 1
-//│ ╔══[WARNING] unreachable case
+//│ ╔══[WARNING] this case is unreachable
 //│ ║  l.6: 	  else 0
 //│ ║       	       ^
-//│ ╟── because this branch covers the case
+//│ ╟── because it is subsumed by the branch
 //│ ║  l.5: 	  _ then 0
 //│ ╙──     	         ^
-//│ ╔══[WARNING] unreachable case
+//│ ╔══[WARNING] this case is unreachable
 //│ ║  l.7: 	else 1
 //│ ║       	     ^
-//│ ╟── because this branch covers the case
+//│ ╟── because it is subsumed by the branch
 //│ ║  l.5: 	  _ then 0
 //│ ╙──     	         ^
 //│ 0
@@ -23,10 +23,10 @@ else 1
 
 :w
 if else 0 else 1
-//│ ╔══[WARNING] unreachable case
+//│ ╔══[WARNING] this case is unreachable
 //│ ║  l.25: 	if else 0 else 1
 //│ ║        	               ^
-//│ ╟── because this branch covers the case
+//│ ╟── because it is subsumed by the branch
 //│ ║  l.25: 	if else 0 else 1
 //│ ╙──      	        ^
 //│ 0
@@ -35,10 +35,10 @@ if else 0 else 1
 
 :w
 fun f(x) = if x is else 0 else 1
-//│ ╔══[WARNING] the case is unreachable
+//│ ╔══[WARNING] this case is unreachable
 //│ ║  l.37: 	fun f(x) = if x is else 0 else 1
 //│ ║        	                               ^
-//│ ╟── because this branch covers the case
+//│ ╟── because it is subsumed by the branch
 //│ ║  l.37: 	fun f(x) = if x is else 0 else 1
 //│ ╙──      	                        ^
 //│ fun f: anything -> 0

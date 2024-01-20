@@ -27,24 +27,31 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
         // Post-process the false branch.
         println("FALSE")
         // Get all patterns, except the current one `pat`.
-        val patternList = scrutinee.patternsIterator.filter(!_.matches(pat)).toList
-        println(s"found ${patternList.length} patterns to distentangle: ${patternList.iterator.map(_.showDbg).mkString(", ")}")
-        val (default, cases) = patternList
-          // For each case class name, distangle case branch body terms from the false branch.
+        val patterns = scrutinee.patternsIterator.filter(!_.matches(pat)).toList
+        println(s"found ${patterns.length} patterns to distentangle: ${patterns.iterator.map(_.showDbg).mkString(", ")}")
+        val (default, cases) = patterns
+          // Search each pattern in `falseBranch`. If there exists a branch for
+          // the given pattern, we separate the branch body from the term. The
+          // leftover term will be used in next iteration, until there is no
+          // term left (i.e., `leftoverTerm` is `N`).
           .foldLeft[Opt[Term] -> Ls[(Pattern, Opt[Loc], Term)]](S(falseBranch) -> Nil) {
+            // If the remaining term is not empty, we continue our search.
             case ((S(remainingTerm), cases), pattern) =>
-              println(s"searching for case: ${pattern.showDbg}")
+              println(s"searching for branches of pattern ${pattern.showDbg}")
               val (leftoverTerm, extracted) = disentangleTerm(remainingTerm)(
                 context, scrutineeVar, scrutinee, pattern)
               trimEmptyTerm(leftoverTerm) -> (extracted match {
+                // `remainingTerm` does not have branches for `pattern`.
                 case N =>
-                  println(s"no extracted term about ${pattern.showDbg}")
+                  println(s"cannot extract pattern ${pattern.showDbg}")
                   cases
+                // We extracted a term and it needs to be further post-processed.
                 case terms @ S(extractedTerm) => 
-                  println(s"extracted a term about ${pattern.showDbg}")
+                  println(s"extracted a term of pattern ${pattern.showDbg}")
                   (pattern, pattern.firstOccurrence, postProcess(extractedTerm)) :: cases
               })
-            case ((N, cases), _) => (N, cases)
+            // If no terms are left, we pass on `acc` until the iteration ends.
+            case (acc @ (N, _), _) => acc
           }
         println(s"found ${cases.length} case branches")
         println(s"default branch: ${default.fold("<empty>")(_.showDbg)}")
@@ -58,7 +65,7 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
         // Assemble the final `CaseOf`.
         top.copy(cases = fst.copy(body = processedTrueBranch, rest = actualFalseBranch)
           (refined = fst.refined))
-      // We recursively process the body of as`Let` bindings.
+      // We recursively process the body of `Let` bindings.
       case let @ Let(_, _, _, body) => let.copy(body = postProcess(body))
       // Otherwise, this is not a part of a normalized term.
       case other => println(s"CANNOT post-process ${other.showDbg}"); other
@@ -88,6 +95,10 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
       }
   }
 
+  /**
+    * Merge two optional terms. If both are not empty we will call the other
+    * `mergeTerms`.
+    */
   private def mergeTerms(t1: Opt[Term], t2: Opt[Term]): Opt[Term] =
     (t1, t2) match {
       case (N, N) => N
@@ -96,27 +107,29 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
       case (S(t1), S(t2)) => S(mergeTerms(t1, t2))
     }
 
-  private def mergeTerms(t1: Term, t2: Term): Term =
-    trace(s"mergeTerms <== ${t1.showDbg} ${t2.showDbg}") {
-      t1 match {
-        case t1 @ Let(_, _, _, body) => t1.copy(body = mergeTerms(body, t2))
-        case t1 @ CaseOf(scrutinee: Var, cases) =>
-          t1.copy(cases = mergeTermIntoCaseBranches(t2, cases))
-        case _ =>
-          println(s"CANNOT merge. Discard ${t2.showDbg}.")
-          t1
-      }
+  /**
+    * Merge two terms. In most cases, two terms cannot be merged. This function
+    * replaces `Wildcard` in `t1` with `t2`.
+    */
+  private def mergeTerms(t1: Term, t2: Term): Term = {
+    def recTerm(lhs: Term, rhs: Term): Term = lhs match {
+      case lhs @ Let(_, _, _, body) => lhs.copy(body = mergeTerms(body, rhs))
+      case lhs @ CaseOf(scrutinee: Var, cases) =>
+        lhs.copy(cases = recCaseBranches(cases, rhs))
+      case _ => reportUnreachableCase(rhs, lhs)
+    }
+    def recCaseBranches(lhs: CaseBranches, rhs: Term): CaseBranches = lhs match {
+      case NoCases => Wildcard(rhs).withLocOf(rhs)
+      case Wildcard(body) => Wildcard(mergeTerms(body, rhs))
+      case lhs @ Case(_, _, rest) =>
+        lhs.copy(rest = recCaseBranches(rest, rhs))(refined = lhs.refined)
+    }
+    trace(s"mergeTerms <==") {
+      println(s"LHS: ${t1.showDbg}")
+      println(s"RHS: ${t2.showDbg}")
+      recTerm(t1, t2)
     }(merged => s"mergedTerms ==> ${merged.showDbg}")
-
-  private def mergeTermIntoCaseBranches(term: Term, cases: CaseBranches): CaseBranches =
-    trace(s"mergeTermIntoCaseBranches <== ${term.describe} ${cases}") {
-      cases match {
-        case NoCases => Wildcard(term).withLocOf(term)
-        case Wildcard(body) => Wildcard(mergeTerms(body, term))
-        case cases @ Case(_, _, rest) =>
-          cases.copy(rest = mergeTermIntoCaseBranches(term, rest))(refined = cases.refined)
-      }
-    }()
+  }
 
   /**
     * Disentangle case branches that match `scrutinee` against `className` from `term`.
@@ -160,7 +173,9 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
     }({ case (n, y) => s"disentangleTerm ==> `${n.showDbg}` and `${y.fold("<empty>")(_.showDbg)}`" })
   }
 
-  /** Helper function for `disentangleTerm`. */
+  /**
+    * Helper function for `disentangleTerm`.
+    */
   private def disentangleMatchedCaseBranches(cases: CaseBranches)(implicit
       context: Context,
       scrutineeVar: Var,
@@ -183,7 +198,6 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
           (kase.copy(body = n1, rest = n2)(kase.refined), mergeTerms(y1, y2))
         }
     }
-
 
   /** Helper function for `disentangleTerm`. */
   private def disentangleUnmatchedCaseBranches(cases: CaseBranches)(implicit
@@ -210,10 +224,6 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
 }
 
 object PostProcessing {
-  class PostProcessingException(val messages: Ls[Message -> Opt[Loc]]) extends Throwable {
-    def this(message: Message, location: Opt[Loc]) = this(message -> location :: Nil)
-  }
-
   private object typeSymbolOrdering extends Ordering[TypeSymbol] {
     override def compare(x: TypeSymbol, y: TypeSymbol): Int = {
       (x.defn.toLoc, y.defn.toLoc) match {

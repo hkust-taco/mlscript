@@ -22,13 +22,7 @@ trait Normalization { self: Desugarer with Traceable =>
       shouldReportDiscarded: Bool
   ): Split =
     if (these.hasElse) {
-      if (those =/= Split.Nil && shouldReportDiscarded) {
-        raiseDesugaringWarning(
-          msg"the case is unreachable" -> those.toLoc,
-          msg"because this branch already covers the case" -> these.toLoc
-        )
-      }
-      these
+      reportUnreachableCase(those, these, onlyIf = those =/= Split.Nil && shouldReportDiscarded)
     } else (these match {
       case these @ Split.Cons(head, tail) =>
         these.copy(tail = fillImpl(tail, those))

@@ -46,10 +46,10 @@ fun f(a, b) =
       2 then 2
       _ then 7
     else 3
-//│ ╔══[WARNING] the case is unreachable
+//│ ╔══[WARNING] this case is unreachable
 //│ ║  l.48: 	    else 3
 //│ ║        	         ^
-//│ ╟── because this branch covers the case
+//│ ╟── because it is subsumed by the branch
 //│ ║  l.47: 	      _ then 7
 //│ ╙──      	             ^
 //│ fun f: (Num, Num) -> (0 | 1 | 2 | 7)
