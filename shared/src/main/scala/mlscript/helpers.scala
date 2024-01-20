@@ -802,21 +802,57 @@ trait FieldImpl extends Located { self: Field =>
 trait Located {
   def children: List[Located]
   
-  lazy val freeVars: Set[Var] = this match {
-    case v: Var => Set.single(v)
-    case Sel(receiver, _) => receiver.freeVars
-    case Let(true, nme, rhs, body) => body.freeVars ++ rhs.freeVars - nme
-    case Let(false, nme, rhs, body) => body.freeVars - nme ++ rhs.freeVars
-    case Lam(tup: Tup, body) => body.freeVars -- tup.freeVars
-    case Tup(fields) => fields.iterator.flatMap(_._2.value.freeVars.iterator).toSet
-    case Blk(stmts) => stmts.iterator.foldRight(Set.empty[Var]) {
-      case (NuFunDef(isLetRec, nme, _, _, L(rhs)), fvs) => fvs - nme ++ (isLetRec match {
-        case N | S(true) => rhs.freeVars - nme
-        case S(false) => rhs.freeVars
-      })
-      case (statement, fvs) => fvs ++ statement.freeVars
+  lazy val freeVars: Set[Var] = {
+    def statements(stmts: Ls[Statement]): Set[Var] =
+      stmts.iterator.foldRight(Set.empty[Var]) {
+        case (NuFunDef(isLetRec, nme, _, _, L(rhs)), fvs) => fvs - nme ++ (isLetRec match {
+          case N | S(true) => rhs.freeVars - nme
+          case S(false) => rhs.freeVars
+        })
+        case (td: NuTypeDef, fvs) =>
+          if (td.kind === Mod || td.kind === Cls || td.kind === Trt)
+            fvs - td.nameVar
+          else
+            fvs
+        case (statement, fvs) => fvs ++ statement.freeVars
+      }
+    this match {
+      // TypingUnit
+      case TypingUnit(entities) => statements(entities)
+      // Terms
+      case v: Var => Set.single(v)
+      case Lam(tup: Tup, body) => body.freeVars -- tup.freeVars
+      case App(lhs, rhs) => lhs.freeVars ++ rhs.freeVars
+      case Tup(fields) => fields.iterator.flatMap(_._2.value.freeVars.iterator).toSet
+      case Rcd(fields) => fields.iterator.flatMap(_._2.value.freeVars.iterator).toSet
+      case Sel(receiver, _) => receiver.freeVars
+      case Let(true, nme, rhs, body) => body.freeVars ++ rhs.freeVars - nme
+      case Let(false, nme, rhs, body) => body.freeVars - nme ++ rhs.freeVars
+      case Blk(stmts) => statements(stmts)
+      case Bra(_, trm) => trm.freeVars
+      case Asc(trm, _) => trm.freeVars
+      case Bind(lhs, rhs) => lhs.freeVars ++ rhs.freeVars
+      case Test(trm, _) => trm.freeVars
+      case With(trm, fields) => trm.freeVars ++ fields.freeVars
+      case CaseOf(trm, cases) => cases.foldLeft(trm.freeVars)(_ ++ _._2.freeVars)(_ ++ _.fold(Set.empty[Var])(_.freeVars))
+      case Subs(arr, idx) => arr.freeVars ++ idx.freeVars
+      case Assign(lhs, rhs) => lhs.freeVars ++ rhs.freeVars
+      case Splc(fields) => fields.iterator.flatMap(_.fold(_.freeVars, _.value.freeVars)).toSet
+      case New(head, body) => head.fold(Set.empty[Var])(_._2.freeVars) ++ body.freeVars
+      case NuNew(cls) => cls.freeVars
+      // Because `IfBody` uses the term to represent the pattern, direct
+      // traversal is not correct.
+      case If(_, _) => Set.empty
+      case TyApp(lhs, _) => lhs.freeVars
+      case Where(body, where) => body.freeVars ++ statements(where)
+      case Forall(_, body) => body.freeVars
+      case Inst(body) => body.freeVars
+      case Super() => Set.empty
+      case Eqn(lhs, rhs) => lhs.freeVars ++ rhs.freeVars
+      case Rft(base, decls) => base.freeVars ++ decls.freeVars
+      // Fallback for unsupported terms which is incorrect most of the time.
+      case _ => children.iterator.flatMap(_.freeVars.iterator).toSet
     }
-    case _ => children.iterator.flatMap(_.freeVars.iterator).toSet
   }
   
   private var spanStart: Int = -1
