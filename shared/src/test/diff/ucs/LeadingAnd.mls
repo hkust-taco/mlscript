@@ -30,5 +30,5 @@ fun f(a, b) = if a is
   Some(av)
     and b is Some(bv) then av + bv
     
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ fun f: (Some[Int], Some[Int]) -> Int
 

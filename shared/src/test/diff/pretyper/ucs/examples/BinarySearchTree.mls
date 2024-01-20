@@ -85,14 +85,13 @@ fun insert(t, v) = if t is
   Empty then Node(v, Empty, Empty)
 //│ fun insert: forall 'A. (Empty | Node[Num & 'A], Num & 'A) -> (Node[nothing] | Node['A])
 
-// FIXME
 fun insert'(t, v) = if t is
   Node(v', l, r) and v
     < v' then Node(v', insert(l, v), r)
     > v' then Node(v', l, insert(r, v))
     else t
   Empty then Node(v, Empty, Empty)
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ fun insert': forall 'A. (Empty | Node[Num & 'A], Num & 'A) -> (Node[nothing] | Node['A])
 
 insert(Empty, 0) |> show
 insert(Node(0, Empty, Empty), 0) |> show
@@ -356,9 +355,9 @@ fun extractMin(t) =
       extractMin(l) is Pair(m, l') then
         Pair(m, Node(v, l', r))
     Empty then Pair(None, Empty)
-//│ fun extractMin: forall 'A 'A0 'B 'T 'A1. (Empty | Node['A0 & 'T & 'A1]) -> Pair[in 'A out 'A | None, in Tree['A1] & 'B out Empty | 'B | Node['A1] | Tree['A0]]
+//│ fun extractMin: forall 'A 'B 'T 'A0 'A1. (Empty | Node['A1 & 'T & 'A]) -> Pair[in 'A0 out 'A0 | None, in Tree['A] & 'B out Empty | 'B | Node['A] | Tree['A1]]
 //│   where
-//│     'A :> None | Some['T]
+//│     'A0 :> None | Some['T]
 
 extractMin(example1).first ?? "not found"
 extractMin(example1).second |> show
