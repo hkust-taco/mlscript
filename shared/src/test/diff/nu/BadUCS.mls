@@ -100,7 +100,7 @@ fun foo0(x, y) = if x is y then 0
 //│ ╔══[WARNING] the outer binding `y`
 //│ ║  l.99: 	fun foo0(x, y) = if x is y then 0
 //│ ║        	            ^
-//│ ╟── is shadowed by inner binding `y`
+//│ ╟── is shadowed by name pattern `y`
 //│ ║  l.99: 	fun foo0(x, y) = if x is y then 0
 //│ ╙──      	                         ^
 //│ fun foo0: (anything, anything) -> 0

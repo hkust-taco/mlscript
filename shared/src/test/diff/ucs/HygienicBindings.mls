@@ -114,7 +114,7 @@ fun h3(x, y, f, p) =
 //│ ╔══[WARNING] the outer binding `y`
 //│ ║  l.97: 	fun h3(x, y, f, p) =
 //│ ║        	          ^
-//│ ╟── is shadowed by inner binding `y`
+//│ ╟── is shadowed by name pattern `y`
 //│ ║  l.99: 	    _ and f(x) is y and p(x) then y
 //│ ╙──      	                  ^
 //│ fun h3: forall 'a 'b. (Object & 'a, 'b, 'a -> 'b, 'a -> Bool) -> ("anyway" | 'b)
@@ -153,7 +153,7 @@ fun h4(x, y, p) =
 //│ ╔══[WARNING] the outer binding `y`
 //│ ║  l.137: 	fun h4(x, y, p) =
 //│ ║         	          ^
-//│ ╟── is shadowed by inner binding `y`
+//│ ╟── is shadowed by name pattern `y`
 //│ ║  l.139: 	    y and p(x) then y
 //│ ╙──       	    ^
 //│ fun h4: forall 'a 'b. (Object & 'a, 'b, 'a -> Bool) -> ("default" | 'a | 'b)

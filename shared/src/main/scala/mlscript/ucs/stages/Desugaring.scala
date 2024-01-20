@@ -396,7 +396,7 @@ trait Desugaring { self: PreTyper =>
               case S(shadowed) =>
                 raiseDesugaringWarning(
                   msg"the outer binding `${nme.name}`" -> shadowed.nameVar.toLoc,
-                  msg"is shadowed by inner binding `${nme.name}`" -> nme.toLoc
+                  msg"is shadowed by name pattern `${nme.name}`" -> nme.toLoc
                 )
               case N => ()
             }
