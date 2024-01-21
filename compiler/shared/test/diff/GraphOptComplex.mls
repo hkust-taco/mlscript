@@ -85,7 +85,7 @@ bar()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
-//│ Def(0, complex_foo, [t%0], [{EDestruct,EDirect,ESelect(m),ESelect(n),ESelect(x),ESelect(y),ESelect(z)}],
+//│ Def(0, complex_foo, [t%0], [{<EDestruct@complex_foo:case t%0 of ...>,<EDirect@complex_foo:case t%0 of ...>,<ESelect(m)@complex_foo:let x%6 = ...>,<ESelect(n)@complex_foo:let x%5 = ...>,<ESelect(x)@complex_foo:let x%2 = ...>,<ESelect(y)@complex_foo:let x%1 = ...>,<ESelect(z)@complex_foo:let x%0 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))],[Some(ICtor(B))]],
 //│ R: [None],
@@ -137,7 +137,7 @@ bar()
 //│   in let* (x%20) = complex_foo$D%1$S%0(9,10)
 //│     in x%20
 //│ )
-//│ Def(7, complex_foo$D%1$S%0, [t%0_m,t%0_n], [{EDirect},{EDirect}],
+//│ Def(7, complex_foo$D%1$S%0, [t%0_m,t%0_n], [{<EDirect@complex_foo$D%1$S%0:let x%7 = ...>},{<EDirect@complex_foo$D%1$S%0:let x%7 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -147,7 +147,7 @@ bar()
 //│   in let x%16 = +(x%7,4)
 //│     in x%16
 //│ )
-//│ Def(8, complex_foo$D%0$S%0, [t%0_z,t%0_y,t%0_x], [{EDirect},{EDirect},{EDirect}],
+//│ Def(8, complex_foo$D%0$S%0, [t%0_z,t%0_y,t%0_x], [{<EDirect@complex_foo$D%0$S%0:let x%3 = ...>},{<EDirect@complex_foo$D%0$S%0:let x%3 = ...>},{<EDirect@complex_foo$D%0$S%0:let x%4 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -319,7 +319,7 @@ bar()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
-//│ Def(0, complex_foo, [t%0], [{EDestruct,EDirect,ESelect(x),ESelect(y)}],
+//│ Def(0, complex_foo, [t%0], [{<EDestruct@complex_foo:case t%0 of ...>,<EDirect@complex_foo:case t%0 of ...>,<ESelect(x)@complex_foo:let x%2 = ...>,<ESelect(y)@complex_foo:let x%4 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))]],
 //│ R: [None],
@@ -337,7 +337,7 @@ bar()
 //│       C => let x%8 = C(0)
 //│         in jump j%0(x%8)
 //│ )
-//│ Def(1, @join j%0, [x%9], [{EDestruct,EDirect,EDirect,ESelect(w),ESelect(x)}],
+//│ Def(1, @join j%0, [x%9], [{<EDestruct@j%0:case x%9 of ...>,<EDirect@j%0:case x%9 of ...>,<EDirect@j%0:let x%10 = ...>,<ESelect(w)@j%0:let x%13 = ...>,<ESelect(x)@j%0:let x%12 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(B))],[Some(ICtor(C))]],
 //│ R: [None],
@@ -396,7 +396,7 @@ bar()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
-//│ Def(1, @join j%0, [x%9], [{EDestruct,EDirect,EDirect,ESelect(w),ESelect(x)}],
+//│ Def(1, @join j%0, [x%9], [{<EDestruct@j%0:case x%9 of ...>,<EDirect@j%0:case x%9 of ...>,<EDirect@j%0:let x%10 = ...>,<ESelect(w)@j%0:let x%13 = ...>,<ESelect(x)@j%0:let x%12 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -446,7 +446,7 @@ bar()
 //│         in let* (x%37) = complex_foo$D%0(x%54,x%55,x%56)
 //│           in x%37
 //│ )
-//│ Def(7, complex_foo$P%0, [t%0], [{EDirect}],
+//│ Def(7, complex_foo$P%0, [t%0], [{<EDirect@complex_foo$P%0:...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))]],
 //│ R: [None,None,None],
@@ -456,7 +456,7 @@ bar()
 //│   in let x%1 = *(1,2)
 //│     in t%0,x%0,x%1
 //│ )
-//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(x)},{EDirect},{EDirect}],
+//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{<ESelect(x)@complex_foo$D%0:let x%2 = ...>},{<EDirect@j%0:let x%14 = ...>},{<EDirect@j%0:let x%15 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -628,7 +628,7 @@ bar()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
-//│ Def(0, complex_foo, [t%0], [{EDestruct,EDirect,ESelect(w),ESelect(y)}],
+//│ Def(0, complex_foo, [t%0], [{<EDestruct@complex_foo:case t%0 of ...>,<EDirect@complex_foo:case t%0 of ...>,<ESelect(w)@complex_foo:let x%3 = ...>,<ESelect(y)@complex_foo:let x%6 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))]],
 //│ R: [None],
@@ -648,7 +648,7 @@ bar()
 //│       C => let x%10 = C(0)
 //│         in jump j%0(x%10)
 //│ )
-//│ Def(1, @join j%0, [x%11], [{EDestruct,EDirect,EDirect,ESelect(w),ESelect(x)}],
+//│ Def(1, @join j%0, [x%11], [{<EDestruct@j%0:case x%11 of ...>,<EDirect@j%0:case x%11 of ...>,<EDirect@j%0:let x%12 = ...>,<ESelect(w)@j%0:let x%15 = ...>,<ESelect(x)@j%0:let x%14 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))],[Some(ICtor(B))],[Some(ICtor(C))]],
 //│ R: [None],
@@ -736,7 +736,7 @@ bar()
 //│         in let* (x%39) = complex_foo$D%0(x%61,x%62,x%63)
 //│           in x%39
 //│ )
-//│ Def(7, complex_foo$P%0, [t%0], [{EDirect}],
+//│ Def(7, complex_foo$P%0, [t%0], [{<EDirect@complex_foo$P%0:...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))]],
 //│ R: [None,None,None],
@@ -746,7 +746,7 @@ bar()
 //│   in let x%1 = *(1,2)
 //│     in t%0,x%0,x%1
 //│ )
-//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(w)},{EDirect,EDirect},{EDirect,EDirect}],
+//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{<ESelect(w)@complex_foo$D%0:let x%3 = ...>},{<EDirect@j%0$D%0:let x%16 = ...>,<EDirect@j%0$P%0:...>},{<EDirect@j%0$D%0:let x%17 = ...>,<EDirect@j%0$P%0:...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -758,7 +758,7 @@ bar()
 //│       in let* (x%69,x%70,x%71,x%72,x%73) = j%0$P%0(x%5)
 //│         in jump j%0$D%0(x%69,x%70,x%71,x%72,x%73)
 //│ )
-//│ Def(11, j%0$P%0, [x%11], [{EDirect,EDirect}],
+//│ Def(11, j%0$P%0, [x%11], [{<EDirect@j%0$P%0:...>,<EDirect@j%0$P%0:let x%12 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))]],
 //│ R: [Some(ICtor(A)),None,None,Some(ICtor(B)),None],
@@ -768,7 +768,7 @@ bar()
 //│   in let x%13 = B(6)
 //│     in x%12,x%1,x%0,x%13,x%11
 //│ )
-//│ Def(12, j%0$D%0, [x%12,x%1,x%0,x%13,x%11], [{EDestruct,EDirect,ESelect(w)},{EDirect},{EDirect},{EDestruct,EDirect,ESelect(w)},{ESelect(w),ESelect(x)}],
+//│ Def(12, j%0$D%0, [x%12,x%1,x%0,x%13,x%11], [{<EDestruct@j%1:case x%12 of ...>,<EDirect@j%1:case x%12 of ...>,<ESelect(w)@j%1:let x%27 = ...>},{<EDirect@j%0$D%0:let x%17 = ...>},{<EDirect@j%0$D%0:let x%16 = ...>},{<EDestruct@j%1:case x%13 of ...>,<EDirect@j%1:case x%13 of ...>,<ESelect(w)@j%1:let x%31 = ...>},{<ESelect(w)@j%0$D%0:let x%15 = ...>,<ESelect(x)@j%0$D%0:let x%14 = ...>}],
 //│ S: None,
 //│ I: [[None,None,None,Some(ICtor(A)),Some(ICtor(B))]],
 //│ R: [None],

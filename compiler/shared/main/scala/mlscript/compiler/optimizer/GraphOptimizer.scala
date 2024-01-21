@@ -67,12 +67,18 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
       if (env.defcount.getOrElse(x.str, 0) <= 1)
         env.elims.getOrElseUpdate(x.str, MutHSet.empty) += ElimInfo(elim, DefnLocMarker(env.defn, loc))
     
-    private def addBackwardElim(env: ElimEnv, x: Name, elim: ElimInfo) =
+    private def addBackwardElim(env: ElimEnv, x: Name, elim: ElimInfo, loc: LocMarker) =
       if (env.defcount.getOrElse(x.str, 0) <= 1)
-        val elim2 = elim match
-          case ElimInfo(EDestruct, loc) => ElimInfo(EIndirectDestruct, loc)
-          case _ => elim
-        env.elims.getOrElseUpdate(x.str, MutHSet.empty) += elim2
+        for {
+          elim2 <- elim match {
+            // If a variable is destructed in the callee,
+            // then it is also indirectly destructed by the call to the callee
+            case ElimInfo(EDestruct, _) | ElimInfo(EIndirectDestruct, _) =>  Some(ElimInfo(EIndirectDestruct, DefnLocMarker(env.defn, loc)))
+            case ElimInfo(EDirect, _) => None
+            case _ => Some(elim)
+          }
+          _ = env.elims.getOrElseUpdate(x.str, MutHSet.empty).add(elim2)
+        } yield ()
 
     private def addDef(env: ElimEnv, name: Name) = 
       env.defcount.update(name.str, env.defcount.getOrElse(name.str, 0) + 1)
@@ -96,8 +102,9 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
       case Jump(defnref, args) =>
         args.foreach(f(env, _, x.loc_marker))
         val defn = defnref.expectDefn
+        val loc = x.loc_marker
         args.zip(defn.newActiveParams).foreach {
-          case (Ref(x), ys) => ys.foreach { y => addBackwardElim(env, x, y) }
+          case (Ref(x), ys) => ys.foreach { y => addBackwardElim(env, x, y, loc) }
           case _ =>
         }
         if (!env.visited.contains(defn.name))
@@ -112,10 +119,11 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
         addDef(env, name)
         f(env, body)
       case LetCall(names, defnref, args, body) =>
-        args.foreach(f(env, _, x.loc_marker))
-        val defn = defnref.expectDefn 
+        val loc = x.loc_marker
+        args.foreach(f(env, _, loc))
+        val defn = defnref.expectDefn
         args.zip(defn.newActiveParams).foreach {
-          case (Ref(x), ys) => ys.foreach { y => addBackwardElim(env, x, y) }
+          case (Ref(x), ys) => ys.foreach { y => addBackwardElim(env, x, y, loc) }
           case _ =>
         }
         if (!env.visited.contains(defn.name))
@@ -502,14 +510,152 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
     if all_none then defn.activeInputs else defn.activeInputs + ls
 
   
-  private class NewSplittingTarget(split_first_case: Set[Str], split_at_marker: Set[DefnLocMarker])
+  private class NewSplittingTarget(
+    val split_first_case: Set[Str],
+    val split_at_marker: Set[DefnLocMarker]
+  )
+
+  private class NewSplittingResult(
+    val pre_map: Map[DefnLocMarker, PreFunction],
+    val single_post_map: Map[DefnLocMarker, PostFunction],
+    val mutli_post_map: Map[DefnLocMarker, Map[ClassInfo, PostFunction]],
+  )
+
+  private class NewSplitting():
+    val pre_map = MutHMap[DefnLocMarker, PreFunction]()
+    val single_post_map = MutHMap[DefnLocMarker, PostFunction]()
+    val mutli_post_map = MutHMap[DefnLocMarker, MutHMap[ClassInfo, PostFunction]]()
+    val pre_defs = MutHSet[GODef]()
+    val post_defs = MutHSet[GODef]()
+
+    def run(defs: Set[GODef], targets: NewSplittingTarget) =
+      val defs_map = defs.map(x => (x.name, x)).toMap
+      targets.split_first_case.foreach { name =>
+        val defn = defs_map(name)
+        split_at_first_case(SplitEnv(defn, n => n), defn.body)
+      }
+      targets.split_at_marker.foreach { marker =>
+        val defn = defs_map(marker.defn)
+        split_at_marker(SplitEnv(defn, n => n), defn.body, marker.marker)
+      }
+      val result = NewSplittingResult(pre_map.toMap, single_post_map.toMap, mutli_post_map.map { (k, v) => (k, v.toMap) }.toMap)
+      pre_map.clear()
+      single_post_map.clear()
+      mutli_post_map.clear()
+      pre_defs.clear()
+      post_defs.clear()
+      result
+
+    private case class SplitEnv(
+      val defn: GODef,
+      val accu: GONode => GONode,
+    )
+
+    private def split_at_marker(env: SplitEnv, node: GONode, marker: LocMarker): Unit = node match
+      case Result(res) =>
+      case Jump(defnref, args) =>
+      case Case(scrut, cases) =>
+      case LetExpr(name, expr, body) => split_at_marker(env.copy(accu = n => env.accu(LetExpr(name, expr, n))), body, marker)
+      case LetCall(xs, defnref, args, body) if marker matches node =>
+        val defn = env.defn
+        val dloc = DefnLocMarker(defn.name, marker)
+
+        val all_fv = FreeVarAnalysis().run(body)
+        val all_fv_list = all_fv.toList
+        val fv_retvals = all_fv_list.map { x => Ref(Name(x)) }
+
+        val pre_body = env.accu(Result(fv_retvals))
+        val pre_name = fresh.make(defn.name + "$X")
+        val pre_defn = GODef(
+          fn_uid.make,
+          pre_name.str,
+          false,
+          defn.params,
+          all_fv.size,
+          None,
+          pre_body)
+        pre_map.update(dloc, PreFunction(pre_name.str, all_fv_list))
+        pre_defs.add(pre_defn)
+        
+        val post_name = fresh.make(defn.name + "$Y")
+        val post_params_list = all_fv.toList
+        val post_params = post_params_list.map(Name(_))
+        val new_defn = GODef(
+          fn_uid.make,
+          post_name.str,
+          false,
+          post_params,
+          defn.resultNum,
+          None,
+          body)
+        single_post_map.update(dloc, PostFunction(post_name.str, post_params_list))
+        post_defs.add(new_defn)
+      case LetCall(xs, defnref, args, body) =>
+        split_at_marker(env.copy(accu = n => env.accu(LetCall(xs, defnref, args, n))), body, marker)
+    
+    private def split_at_first_case(env: SplitEnv, node: GONode): Unit = node match
+      case Result(res) => 
+      case Jump(defn, args) =>
+      case Case(scrut, cases) =>
+        val defn = env.defn
+        val loc = node.loc_marker
+        val dloc = DefnLocMarker(defn.name, loc)
+
+        val arm_fv = cases.map(x => FreeVarAnalysis().run(x._2))
+        val all_fv = arm_fv.reduce(_ ++ _) + scrut.str
+        val all_fv_list = all_fv.toList
+        val fv_retvals = all_fv_list.map { x => Ref(Name(x)) }
+
+        val pre_body = env.accu(Result(fv_retvals))
+        val pre_name = fresh.make(defn.name + "$P")
+        val pre_defn = GODef(
+          fn_uid.make,
+          pre_name.str,
+          false,
+          env.defn.params,
+          all_fv.size,
+          None,
+          pre_body)
+        pre_map.update(dloc, PreFunction(pre_name.str, all_fv_list))
+        pre_defs.add(pre_defn)
+        
+        cases.zip(arm_fv).foreach {
+          case ((cls, body), fv) =>
+            val post_name = fresh.make(defn.name + "$D")
+            val post_params_list = fv.toList
+            val post_params = post_params_list.map(Name(_))
+            val new_defn = GODef(
+              fn_uid.make,
+              post_name.str,
+              false,
+              post_params,
+              defn.resultNum,
+              None,
+              body)
+            mutli_post_map
+              .getOrElseUpdate(dloc, MutHMap.empty)
+              .update(cls, PostFunction(post_name.str, post_params_list))
+            post_defs.add(new_defn)
+        }
+      case LetExpr(name, expr, body) =>
+        split_at_first_case(env.copy(accu = n => env.accu(LetExpr(name, expr, n))), body)
+      case LetCall(xs, defnref, args, body) =>
+        split_at_first_case(env.copy(accu = n => env.accu(LetCall(xs, defnref, args, n))), body)
+    
   
   private class NewSplittingTargetAnalysis:
     private val split_first_case = MutHSet[Str]()
     private val split_at_marker = MutHSet[DefnLocMarker]()
     private val name_defn_map = MutHMap[Str, Str]()
 
-    private def checkTargets(defn: GODef, intros: Map[Str, Intro], args: Ls[TrivialExpr]) =
+    private case class SplitTargetEnv(
+      val intros: Map[Str, Intro],
+      val defn: Str,
+      val visited: MutHSet[Str],
+    )
+
+    private def checkTargets(env: SplitTargetEnv, defn: GODef, loc: LocMarker, args: Ls[TrivialExpr]) =
+      val intros = env.intros
       val name = defn.name
       val params = defn.params
       val active = defn.newActiveParams
@@ -519,7 +665,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
       }.zip(params).zip(active).foreach {
         case (((_, Some(ICtor(cls))), param), elim) =>
           elim.foreach {
-            case ElimInfo(EDestruct, loc) =>
+            case ElimInfo(EDestruct, _) =>
               split_first_case += name
             case ElimInfo(EIndirectDestruct, loc) =>
               split_at_marker += loc
@@ -536,17 +682,11 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
         case _ =>
       }
 
-    private case class SplitTargetEnv(
-      val intros: Map[Str, Intro],
-      val defn: Str,
-      val visited: MutHSet[Str],
-    )
-
     private def f(env: SplitTargetEnv, x: GONode): Unit = x match
       case Result(res) =>
       case Jump(defnref, args) =>
         val defn = defnref.expectDefn
-        checkTargets(defn, env.intros, args)
+        checkTargets(env, defn, x.loc_marker, args)
         if (!env.visited.contains(defn.name))
           env.visited.add(defn.name)
           val intros = bindIntroInfo(env.intros, args, defn.params)
@@ -566,7 +706,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
         f(env.copy(intros = intros), e2)
       case LetCall(xs, defnref, args, e) =>
         val defn = defnref.expectDefn
-        checkTargets(defn, env.intros, args)
+        checkTargets(env, defn, x.loc_marker, args)
         if (!env.visited.contains(defn.name))
           env.visited.add(defn.name)
           val intros2 = bindIntroInfo(env.intros, args, defn.params)
@@ -930,8 +1070,13 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
       val nsta = NewSplittingTargetAnalysis()
       val targets = sta.run(x)
       val ntargets = nsta.run(x)
-      log(targets)
-      log(ntargets)
+      log("----------")
+      log(targets.destruct)
+      log(targets.indirect)
+      log(targets.mixing)
+      log("-----")
+      log(ntargets.split_first_case)
+      log(ntargets.split_at_marker)
       val fs = FunctionCaseSplitting(targets)
       x.accept_iterator(fs)
       val case_split_result = SplitResult.case_from_mutable(fs.pre_map, fs.post_map)

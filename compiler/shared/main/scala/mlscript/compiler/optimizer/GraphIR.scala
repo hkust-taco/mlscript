@@ -114,7 +114,7 @@ class GODefRef(var defn: Either[GODef, Str]):
   def accept_iterator(v: GOIterator) = v.iterate(this)
 
 case class ElimInfo(elim: Elim, loc: DefnLocMarker):
-  override def toString: String = s"$elim"
+  override def toString: String = s"<$elim@$loc>"
 
 implicit object ElimInfoOrdering extends Ordering[ElimInfo]:
   override def compare(a: ElimInfo, b: ElimInfo) = a.toString.compare(b.toString)
@@ -214,7 +214,6 @@ class GODef(
     val spec = specialized.map(_.toSeq.sorted.mkString("[", ",", "]")).toString()
     s"Def($id, $name2, $ps, $naps,\nS: $spec,\nI: $ais,\nR: $ars,\nRec: $recBoundary,\n$resultNum, \n$body\n)"
 
-
 sealed trait TrivialExpr:
   import GOExpr._
   override def toString: String
@@ -240,7 +239,7 @@ case class DefnLocMarker(val defn: Str, val marker: LocMarker):
 
 enum LocMarker:
   case MRef(name: Str)
-  case MLit
+  case MLit(lit: Lit)
   case MCtorApp(name: ClassInfo, args: Ls[LocMarker])
   case MSelect(name: Str, cls: ClassInfo, field: Str)
   case MBasicOp(name: Str, args: Ls[LocMarker])
@@ -250,30 +249,74 @@ enum LocMarker:
   case MLetExpr(name: Str, expr: LocMarker)
   case MLetCall(names: Ls[Str], defn: Str, args: Ls[LocMarker])
 
-  override def toString(): String = this match
-    case MRef(name) => s"Ref($name)"
-    case MLit => s"Lit"
-    case MCtorApp(name, args) => s"CtorApp($name, $args)"
-    case MSelect(name, cls, field) => s"Select($name, $cls, $field)"
-    case MBasicOp(name, args) => s"BasicOp($name, $args)"
-    case MResult(res) => s"Result($res)"
-    case MJump(name, args) => s"Jump($name, $args)"
-    case MCase(scrut, cases) => s"Case($scrut, $cases)"
-    case MLetExpr(name, expr) => s"LetExpr($name, $expr)"
-    case MLetCall(names, defn, args) => s"LetCall($names, $defn, $args)"
+  def rebuild_texpr: TrivialExpr =
+    import GOExpr._
+    this match
+    case MRef(name) => Ref(Name(name))
+    case MLit(lit) => Literal(lit)
+    case _ => throw Exception(s"Cannot rebuild non-TrivialExpr")
+
+  def rebuild_expr: GOExpr =
+    import GOExpr._
+    this match
+    case MRef(name) => Ref(Name(name))
+    case MLit(lit) => Literal(lit)
+    case MCtorApp(cls, args) => CtorApp(cls, args.map(_.rebuild_texpr))
+    case MSelect(name, cls, field) => Select(Name(name), cls, field)
+    case MBasicOp(name, args) => BasicOp(name, args.map(_.rebuild_texpr))
+    case _ => throw Exception(s"Cannot rebuild non-GOExpr")
+
+  def rebuild(x: GONode): GONode =
+    import GONode._
+    this match
+      case MResult(res) => Result(res.map(_.rebuild_texpr))
+      case MJump(name, args) => Jump(GODefRef(Right(name)), args.map(_.rebuild_texpr))
+      case MCase(scrut, cases) => Case(Name(scrut), cases.map((_, x)))
+      case MLetExpr(name, expr) => LetExpr(Name(name), expr.rebuild_expr, x)
+      case MLetCall(names, defn, args) => LetCall(names.map(Name(_)), GODefRef(Right(defn)), args.map(_.rebuild_texpr), x)
+      case _ => throw Exception(s"Cannot rebuild non-GONode")
+    
+  def toDocument: Document = this match
+    case MResult(res) => raw("...")
+    case MJump(jp, args) =>
+      raw("jump")
+      <:> raw(jp)
+      <:> raw("...")
+    case MCase(x, Ls(tcls, fcls)) if tcls.ident == "True" && fcls.ident == "False" =>
+      raw("if") <:> raw(x.toString) <:> raw("...")
+    case MCase(x, cases) =>
+      raw("case") <:> raw(x.toString) <:> raw("of") <:> raw("...")
+    case MLetExpr(x, expr) => 
+        raw("let")
+          <:> raw(x.toString)
+          <:> raw("=")
+          <:> raw("...")
+    case MLetCall(xs, defn, args) =>
+        raw("let*")
+          <:> raw("(")
+          <#> raw(xs.map(_.toString).mkString(","))
+          <#> raw(")")
+          <:> raw("=")
+          <:> raw(defn)
+          <:> raw("...")
+    case _ => throw Exception(s"Cannot print LocMarker")
+
+  def show = toDocument.print
+
+  override def toString(): String = show
 
   def matches(x: TrivialExpr): Bool =
     import GOExpr._
     (this, x) match
       case (MRef(name), Ref(name2)) => name == name2.str
-      case (MLit, Literal(_)) => true
+      case (MLit(_), Literal(_)) => true
       case _ => false
 
   def matches(x: GOExpr): Bool =
     import GOExpr._
     (this, x) match
       case (MRef(name), Ref(name2)) => name == name2.str
-      case (MLit, Literal(_)) => true
+      case (MLit(_), Literal(_)) => true
       case (MCtorApp(cls, args), CtorApp(cls2, args2)) => cls == cls2 && args.zip(args2).forall{(x, y) => x matches y}
       case (MSelect(x, cls, field), Select(y, cls2, field2)) => x == y.str && cls == cls2 && field == field2
       case (MBasicOp(name, args), BasicOp(name2, args2)) => name == name2 && args.zip(args2).forall{(x, y) => x matches y}
@@ -337,7 +380,7 @@ enum GOExpr:
 
   def loc_marker: LocMarker = this match
     case Ref(name) => LocMarker.MRef(name.str)
-    case Literal(lit) => LocMarker.MLit
+    case Literal(lit) => LocMarker.MLit(lit)
     case CtorApp(name, args) => LocMarker.MCtorApp(name, args.map(_.to_expr.loc_marker))
     case Select(name, cls, field) => LocMarker.MSelect(name.str, cls, field)
     case BasicOp(name, args) => LocMarker.MBasicOp(name, args.map(_.to_expr.loc_marker))

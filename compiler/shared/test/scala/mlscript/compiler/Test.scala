@@ -16,7 +16,7 @@ class DiffTestCompiler extends DiffTests {
   override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit): List[Str] = 
     val outputBuilder = StringBuilder()
 
-    if (mode.graphOpt)
+    if (mode.graphOpt || mode.graphOptVerbose)
       try
         outputBuilder ++= "\n\nGraphOpt:\n"
         val f1 = Fresh()
