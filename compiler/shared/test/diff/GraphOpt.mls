@@ -992,7 +992,7 @@ baz()
 //│             in let x%6 = +(x%5,x%3)
 //│               in x%6
 //│ )
-//│ Def(1, bar, [c%0], [{EDirect,ESelect(x),ESelect(y)}],
+//│ Def(1, bar, [c%0], [{EDirect,EDirect,ESelect(x),ESelect(x),ESelect(y),ESelect(y)}],
 //│ S: None,
 //│ I: [[Some(ICtor(Pair))]],
 //│ R: [None],
@@ -1027,7 +1027,7 @@ baz()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(1, bar, [c%0], [{ESelect(x),ESelect(y)}],
+//│ Def(1, bar, [c%0], [{ESelect(x),ESelect(x),ESelect(y),ESelect(y)}],
 //│ S: None,
 //│ I: [[Some(ICtor(Pair))]],
 //│ R: [None],
@@ -1089,7 +1089,7 @@ baz()
 //│     in let x%6 = +(x%5,b%0_y)
 //│       in x%6
 //│ )
-//│ Def(4, bar$S%0, [c%0_y,c%0_x], [{EDirect},{EDirect}],
+//│ Def(4, bar$S%0, [c%0_y,c%0_x], [{EDirect,EDirect,EDirect,EDirect},{EDirect,EDirect,EDirect,EDirect}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -1239,7 +1239,7 @@ foo()
 //│     in let* (x%2) = bar(x%1)
 //│       in x%2
 //│ )
-//│ Def(1, bar, [x%3], [{EDirect,EIndirectDestruct,ESelect(s)}],
+//│ Def(1, bar, [x%3], [{EDirect,EDirect,EDirect,EIndirectDestruct,ESelect(s)}],
 //│ S: None,
 //│ I: [[Some(ICtor(S))]],
 //│ R: [Some(IMix(ICtor(O)))],
@@ -1248,7 +1248,7 @@ foo()
 //│ let* (x%4) = baz(x%3)
 //│   in x%4
 //│ )
-//│ Def(2, baz, [x%5], [{EDestruct,EDirect,ESelect(s)}],
+//│ Def(2, baz, [x%5], [{EDestruct,EDirect,EDirect,ESelect(s)}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(O)))],
@@ -1280,7 +1280,7 @@ foo()
 //│     in let* (x%2) = bar(x%1)
 //│       in x%2
 //│ )
-//│ Def(1, bar, [x%3], [{EDestruct,EDirect,ESelect(s)}],
+//│ Def(1, bar, [x%3], [{EDestruct,EDirect,EDirect,ESelect(s)}],
 //│ S: None,
 //│ I: [[Some(ICtor(S))]],
 //│ R: [Some(IMix(ICtor(O)))],

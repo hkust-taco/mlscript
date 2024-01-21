@@ -113,6 +113,12 @@ class GODefRef(var defn: Either[GODef, Str]):
   def accept_visitor(v: GOVisitor) = v.visit(this)
   def accept_iterator(v: GOIterator) = v.iterate(this)
 
+case class ElimInfo(elim: Elim, loc: DefnLocMarker):
+  override def toString: String = s"$elim"
+
+implicit object ElimInfoOrdering extends Ordering[ElimInfo]:
+  override def compare(a: ElimInfo, b: ElimInfo) = a.toString.compare(b.toString)
+
 enum Elim:
   case EDirect
   case EApp(n: Int)
@@ -137,6 +143,9 @@ enum Elim:
 implicit object ElimOrdering extends Ordering[Elim]:
   override def compare(a: Elim, b: Elim) = a.toString.compare(b.toString)
 
+case class IntroInfo(intro: Intro, loc: DefnLocMarker):
+  override def toString: String = s"$intro"
+
 enum Intro:
   case ICtor(c: Str)
   case ILam(n: Int)
@@ -148,7 +157,7 @@ enum Intro:
     case ILam(n) => s"ILam($n)"
     case IMulti(n) => s"IMulti($n)"
     case IMix(i) => s"IMix(${i.toSeq.sorted.mkString(",")})"
-  
+
   def toShortString: String = this match
     case ICtor(c) => s"C($c)"
     case ILam(n) => s"L$n"
@@ -181,6 +190,9 @@ class GODef(
   var activeParams: Ls[Set[Elim]] = Ls(Set())
   var activeInputs: Set[Ls[Opt[Intro]]] = Set()
   var activeResults: Ls[Opt[Intro]] = Ls(None)
+  var newActiveInputs: Set[Ls[Opt[IntroInfo]]] = Set()
+  var newActiveParams: Ls[Set[ElimInfo]] = Ls(Set())
+  var newActiveResults: Ls[Opt[IntroInfo]] = Ls(None)
   var recBoundary: Opt[Int] = None
 
   override def equals(o: Any): Bool = o match {
@@ -196,10 +208,11 @@ class GODef(
     val name2 = if (isjp) s"@join $name" else s"$name"
     val ps = params.map(_.toString).mkString("[", ",", "]")
     val aps = activeParams.map(_.toSeq.sorted.mkString("{", ",", "}")).mkString("[", ",", "]")
+    val naps = newActiveParams.map(_.toSeq.sorted.mkString("{", ",", "}")).mkString("[", ",", "]")
     val ais = activeInputs.map(_.toSeq.sorted.mkString("[", ",", "]")).mkString("[", ",", "]")
     val ars = activeResults.map(_.toString()).mkString("[", ",", "]")
     val spec = specialized.map(_.toSeq.sorted.mkString("[", ",", "]")).toString()
-    s"Def($id, $name2, $ps, $aps,\nS: $spec,\nI: $ais,\nR: $ars,\nRec: $recBoundary,\n$resultNum, \n$body\n)"
+    s"Def($id, $name2, $ps, $naps,\nS: $spec,\nI: $ais,\nR: $ars,\nRec: $recBoundary,\n$resultNum, \n$body\n)"
 
 
 sealed trait TrivialExpr:
@@ -222,10 +235,64 @@ sealed trait TrivialExpr:
 
 private def show_args(args: Ls[TrivialExpr]) = args map (_.show) mkString ","
 
+case class DefnLocMarker(val defn: Str, val marker: LocMarker):
+  override def toString: String = s"$defn:$marker"
+
+enum LocMarker:
+  case MRef(name: Str)
+  case MLit
+  case MCtorApp(name: ClassInfo, args: Ls[LocMarker])
+  case MSelect(name: Str, cls: ClassInfo, field: Str)
+  case MBasicOp(name: Str, args: Ls[LocMarker])
+  case MResult(res: Ls[LocMarker])
+  case MJump(name: Str, args: Ls[LocMarker])
+  case MCase(scrut: Str, cases: Ls[ClassInfo])
+  case MLetExpr(name: Str, expr: LocMarker)
+  case MLetCall(names: Ls[Str], defn: Str, args: Ls[LocMarker])
+
+  override def toString(): String = this match
+    case MRef(name) => s"Ref($name)"
+    case MLit => s"Lit"
+    case MCtorApp(name, args) => s"CtorApp($name, $args)"
+    case MSelect(name, cls, field) => s"Select($name, $cls, $field)"
+    case MBasicOp(name, args) => s"BasicOp($name, $args)"
+    case MResult(res) => s"Result($res)"
+    case MJump(name, args) => s"Jump($name, $args)"
+    case MCase(scrut, cases) => s"Case($scrut, $cases)"
+    case MLetExpr(name, expr) => s"LetExpr($name, $expr)"
+    case MLetCall(names, defn, args) => s"LetCall($names, $defn, $args)"
+
+  def matches(x: TrivialExpr): Bool =
+    import GOExpr._
+    (this, x) match
+      case (MRef(name), Ref(name2)) => name == name2.str
+      case (MLit, Literal(_)) => true
+      case _ => false
+
+  def matches(x: GOExpr): Bool =
+    import GOExpr._
+    (this, x) match
+      case (MRef(name), Ref(name2)) => name == name2.str
+      case (MLit, Literal(_)) => true
+      case (MCtorApp(cls, args), CtorApp(cls2, args2)) => cls == cls2 && args.zip(args2).forall{(x, y) => x matches y}
+      case (MSelect(x, cls, field), Select(y, cls2, field2)) => x == y.str && cls == cls2 && field == field2
+      case (MBasicOp(name, args), BasicOp(name2, args2)) => name == name2 && args.zip(args2).forall{(x, y) => x matches y}
+      case _ => false
+
+  def matches(x: GONode): Bool =
+    import GONode._
+    (this, x) match
+      case (MResult(xs), Result(ys)) => xs.zip(ys).forall{(x, y) => x matches y}
+      case (MJump(jp1, xs), Jump(jp2, ys)) => jp1 == jp2.getName && xs.zip(ys).forall{(x, y) => x matches y}
+      case (MCase(x, classes), Case(y, arms)) => x == y.str && classes.zip(arms.map(_._1)).forall{(x, y) => x == y}
+      case (MLetExpr(x, e1), LetExpr(y, e2, _)) => x == y.str && (e1 matches e2)
+      case (MLetCall(xs, f1, as1), LetCall(ys, f2, as2, _)) => xs.zip(ys).forall{(x, y) => x == y.str } && f1 == f2.getName && as1.zip(as2).forall{(x, y) => x matches y}
+      case _ => false
+
 enum GOExpr:
   case Ref(name: Name) extends GOExpr, TrivialExpr 
   case Literal(lit: Lit) extends GOExpr, TrivialExpr
-  case CtorApp(name: ClassInfo, args: Ls[TrivialExpr]) extends GOExpr
+  case CtorApp(name: ClassInfo, args: Ls[TrivialExpr])
   case Select(name: Name, cls: ClassInfo, field: Str)
   case BasicOp(name: Str, args: Ls[TrivialExpr])
   
@@ -267,7 +334,15 @@ enum GOExpr:
     case x: CtorApp => v.iterate(x)
     case x: Select => v.iterate(x)
     case x: BasicOp => v.iterate(x)
-    
+
+  def loc_marker: LocMarker = this match
+    case Ref(name) => LocMarker.MRef(name.str)
+    case Literal(lit) => LocMarker.MLit
+    case CtorApp(name, args) => LocMarker.MCtorApp(name, args.map(_.to_expr.loc_marker))
+    case Select(name, cls, field) => LocMarker.MSelect(name.str, cls, field)
+    case BasicOp(name, args) => LocMarker.MBasicOp(name, args.map(_.to_expr.loc_marker))
+  
+
 enum GONode:
   // Terminal forms:
   case Result(res: Ls[TrivialExpr])
@@ -354,6 +429,13 @@ enum GONode:
     case x: Case => v.iterate(x)
     case x: LetExpr => v.iterate(x)
     case x: LetCall => v.iterate(x)
+  
+  def loc_marker: LocMarker = this match
+    case Result(res) => LocMarker.MResult(res.map(_.to_expr.loc_marker))
+    case Jump(defn, args) => LocMarker.MJump(defn.getName, args.map(_.to_expr.loc_marker))
+    case Case(scrut, cases) => LocMarker.MCase(scrut.str, cases.map(_._1))
+    case LetExpr(name, expr, _) => LocMarker.MLetExpr(name.str, expr.loc_marker)
+    case LetCall(names, defn, args, _) => LocMarker.MLetCall(names.map(_.str), defn.getName, args.map(_.to_expr.loc_marker))
 
 trait GONameVisitor:
   def visit_name_def(x: Name): Name = x

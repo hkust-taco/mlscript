@@ -23,7 +23,7 @@ class DiffTestCompiler extends DiffTests {
         val f2 = FreshInt()
         val f3 = FreshInt()
         val gb = GraphBuilder(f1, f2, f3)
-        val go = GraphOptimizer(f1, f2, f3)
+        val go = GraphOptimizer(f1, f2, f3, mode.graphOptVerbose)
         val graph = gb.buildGraph(unit)
         outputBuilder ++= graph.toString()
         outputBuilder ++= "\n\nPromoted ------------------------------------\n"

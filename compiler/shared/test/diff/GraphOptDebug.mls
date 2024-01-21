@@ -123,7 +123,7 @@ main()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(0, mk_list, [n%0], [{EDirect}],
+//│ Def(0, mk_list, [n%0], [{EDirect,EDirect,EDirect}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(Cons),ICtor(Nil)))],
@@ -163,7 +163,7 @@ main()
 //│   Some => let x%13 = False()
 //│     in x%13
 //│ )
-//│ Def(6, is_empty, [l%1], [{EDirect,EIndirectDestruct,ESelect(h)}],
+//│ Def(6, is_empty, [l%1], [{EDirect,EDirect,EIndirectDestruct,ESelect(h)}],
 //│ S: None,
 //│ I: [[Some(IMix(ICtor(Cons),ICtor(Nil)))]],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
@@ -193,7 +193,7 @@ main()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(0, mk_list, [n%0], [{EDirect}],
+//│ Def(0, mk_list, [n%0], [{EDirect,EDirect,EDirect}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(Cons),ICtor(Nil)))],
@@ -243,7 +243,7 @@ main()
 //│   in let* (x%18) = is_empty(x%17)
 //│     in x%18
 //│ )
-//│ Def(14, @join is_empty$M%0, [x%15], [{EDirect,EIndirectDestruct}],
+//│ Def(14, @join is_empty$M%0, [x%15], [{EDirect,EDirect,EIndirectDestruct}],
 //│ S: None,
 //│ I: [[Some(ICtor(Some))],[Some(ICtor(None))]],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
@@ -258,7 +258,7 @@ main()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(0, mk_list, [n%0], [{EDirect}],
+//│ Def(0, mk_list, [n%0], [{EDirect,EDirect,EDirect}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(Cons),ICtor(Nil)))],
@@ -314,7 +314,7 @@ main()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(0, mk_list, [n%0], [{EDirect}],
+//│ Def(0, mk_list, [n%0], [{EDirect,EDirect,EDirect}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(Cons),ICtor(Nil)))],

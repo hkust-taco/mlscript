@@ -337,7 +337,7 @@ bar()
 //│       C => let x%8 = C(0)
 //│         in jump j%0(x%8)
 //│ )
-//│ Def(1, @join j%0, [x%9], [{EDestruct,EDirect,ESelect(w),ESelect(x)}],
+//│ Def(1, @join j%0, [x%9], [{EDestruct,EDirect,EDirect,ESelect(w),ESelect(x)}],
 //│ S: None,
 //│ I: [[Some(ICtor(B))],[Some(ICtor(C))]],
 //│ R: [None],
@@ -396,7 +396,7 @@ bar()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
-//│ Def(1, @join j%0, [x%9], [{EDestruct,EDirect,ESelect(w),ESelect(x)}],
+//│ Def(1, @join j%0, [x%9], [{EDestruct,EDirect,EDirect,ESelect(w),ESelect(x)}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -648,7 +648,7 @@ bar()
 //│       C => let x%10 = C(0)
 //│         in jump j%0(x%10)
 //│ )
-//│ Def(1, @join j%0, [x%11], [{EDestruct,EDirect,ESelect(w),ESelect(x)}],
+//│ Def(1, @join j%0, [x%11], [{EDestruct,EDirect,EDirect,ESelect(w),ESelect(x)}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))],[Some(ICtor(B))],[Some(ICtor(C))]],
 //│ R: [None],
@@ -746,7 +746,7 @@ bar()
 //│   in let x%1 = *(1,2)
 //│     in t%0,x%0,x%1
 //│ )
-//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(w)},{EDirect},{EDirect}],
+//│ Def(8, complex_foo$D%0, [t%0,x%0,x%1], [{ESelect(w)},{EDirect,EDirect},{EDirect,EDirect}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -758,7 +758,7 @@ bar()
 //│       in let* (x%69,x%70,x%71,x%72,x%73) = j%0$P%0(x%5)
 //│         in jump j%0$D%0(x%69,x%70,x%71,x%72,x%73)
 //│ )
-//│ Def(11, j%0$P%0, [x%11], [{EDirect}],
+//│ Def(11, j%0$P%0, [x%11], [{EDirect,EDirect}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))]],
 //│ R: [Some(ICtor(A)),None,None,Some(ICtor(B)),None],
