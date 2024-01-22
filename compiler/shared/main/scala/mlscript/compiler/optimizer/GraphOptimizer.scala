@@ -53,7 +53,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
 
     def firstDestructed(node: GONode) =
       f(node)
-
   
   private class NewEliminationAnalysis:
     private case class ElimEnv(

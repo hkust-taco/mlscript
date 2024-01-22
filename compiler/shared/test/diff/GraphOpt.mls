@@ -21,7 +21,7 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%1) = mktup(x%0,y%0)
+//│ let* (x%1) = mktup(x%0,y%0) -- #x
 //│   in x%1
 //│ )
 //│ Def(1, mktup, [x%2,y%1], [{}],
@@ -30,7 +30,7 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%3 = Pair(x%2,y%1)
+//│ let x%3 = Pair(x%2,y%1) -- #x
 //│   in x%3
 //│ )
 //│ Def(2, foo, [], [{}],
@@ -39,11 +39,11 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%4) = mktup2(1,2)
+//│ let* (x%4) = mktup2(1,2) -- #x
 //│   in x%4
 //│ )
 //│ },
-//│ let* (x%5) = foo()
+//│ let* (x%5) = foo() -- #x
 //│   in x%5)
 //│ 
 //│ Promoted ------------------------------------
@@ -54,11 +54,11 @@ foo()
 //│ R: [Some(ICtor(Pair))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%3 = Pair(1,2)
+//│ let x%3 = Pair(1,2) -- #x
 //│   in x%3
 //│ )
 //│ },
-//│ let* (x%5) = foo()
+//│ let* (x%5) = foo() -- #x
 //│   in x%5)
 //│ 
 //│ Interpreted ------------------------------
@@ -93,11 +93,11 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case pair%0 of
-//│   Pair => let x%0 = pair%0.y
-//│     in let x%1 = pair%0.x
-//│       in let x%2 = Pair(x%1,x%0)
-//│         in jump j%0(x%2)
+//│ case pair%0 of -- #x
+//│   Pair => let x%0 = pair%0.y -- #x
+//│     in let x%1 = pair%0.x -- #x
+//│       in let x%2 = Pair(x%1,x%0) -- #x
+//│         in jump j%0(x%2) -- #x
 //│ )
 //│ Def(1, @join j%0, [x%3], [{}],
 //│ S: None,
@@ -113,12 +113,12 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%4 = Pair(1,2)
-//│   in let* (x%5) = foo(x%4)
+//│ let x%4 = Pair(1,2) -- #x
+//│   in let* (x%5) = foo(x%4) -- #x
 //│     in x%5
 //│ )
 //│ },
-//│ let* (x%6) = bar()
+//│ let* (x%6) = bar() -- #x
 //│   in x%6)
 //│ 
 //│ Promoted ------------------------------------
@@ -129,10 +129,10 @@ bar()
 //│ R: [Some(IMix(ICtor(Pair)))],
 //│ Rec: None,
 //│ 1, 
-//│ case pair%0 of
-//│   Pair => let x%0 = pair%0.y
-//│     in let x%1 = pair%0.x
-//│       in let x%2 = Pair(x%1,x%0)
+//│ case pair%0 of -- #x
+//│   Pair => let x%0 = pair%0.y -- #x
+//│     in let x%1 = pair%0.x -- #x
+//│       in let x%2 = Pair(x%1,x%0) -- #x
 //│         in x%2
 //│ )
 //│ Def(2, bar, [], [],
@@ -141,12 +141,12 @@ bar()
 //│ R: [Some(IMix(ICtor(Pair)))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%4 = Pair(1,2)
-//│   in let* (x%5) = foo(x%4)
+//│ let x%4 = Pair(1,2) -- #x
+//│   in let* (x%5) = foo(x%4) -- #x
 //│     in x%5
 //│ )
 //│ },
-//│ let* (x%6) = bar()
+//│ let* (x%6) = bar() -- #x
 //│   in x%6)
 //│ 
 //│ Interpreted ------------------------------
@@ -161,11 +161,11 @@ bar()
 //│ R: [Some(ICtor(Pair))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%2 = Pair(1,2)
+//│ let x%2 = Pair(1,2) -- #x
 //│   in x%2
 //│ )
 //│ },
-//│ let* (x%6) = bar()
+//│ let* (x%6) = bar() -- #x
 //│   in x%6)
 //│ 
 //│ 
@@ -204,15 +204,15 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%0 = 0
-//│   in case pair%0 of
-//│     Pair => let x%1 = pair%0.y
-//│       in let x%2 = pair%0.x
-//│         in case pair%0 of
-//│           Pair => let x%3 = pair%0.y
-//│             in let x%4 = pair%0.x
-//│               in let x%5 = +(x%4,1)
-//│                 in jump j%1(x%5)
+//│ let x%0 = 0 -- #x
+//│   in case pair%0 of -- #x
+//│     Pair => let x%1 = pair%0.y -- #x
+//│       in let x%2 = pair%0.x -- #x
+//│         in case pair%0 of -- #x
+//│           Pair => let x%3 = pair%0.y -- #x
+//│             in let x%4 = pair%0.x -- #x
+//│               in let x%5 = +(x%4,1) -- #x
+//│                 in jump j%1(x%5) -- #x
 //│ )
 //│ Def(1, @join j%1, [x%6], [{}],
 //│ S: None,
@@ -220,7 +220,7 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ jump j%0(x%6)
+//│ jump j%0(x%6) -- #x
 //│ )
 //│ Def(2, @join j%0, [x%7], [{}],
 //│ S: None,
@@ -228,7 +228,7 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%8 = +(x%7,1)
+//│ let x%8 = +(x%7,1) -- #x
 //│   in x%8
 //│ )
 //│ Def(3, foo, [], [{}],
@@ -237,12 +237,12 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%9 = Pair(0,1)
-//│   in let* (x%10) = silly(x%9)
+//│ let x%9 = Pair(0,1) -- #x
+//│   in let* (x%10) = silly(x%9) -- #x
 //│     in x%10
 //│ )
 //│ },
-//│ let* (x%11) = foo()
+//│ let* (x%11) = foo() -- #x
 //│   in x%11)
 //│ 
 //│ Promoted ------------------------------------
@@ -253,11 +253,11 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case pair%0 of
-//│   Pair => case pair%0 of
-//│     Pair => let x%4 = pair%0.x
-//│       in let x%5 = +(x%4,1)
-//│         in let x%8 = +(x%5,1)
+//│ case pair%0 of -- #x
+//│   Pair => case pair%0 of -- #x
+//│     Pair => let x%4 = pair%0.x -- #x
+//│       in let x%5 = +(x%4,1) -- #x
+//│         in let x%8 = +(x%5,1) -- #x
 //│           in x%8
 //│ )
 //│ Def(3, foo, [], [],
@@ -266,12 +266,12 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%9 = Pair(0,1)
-//│   in let* (x%10) = silly(x%9)
+//│ let x%9 = Pair(0,1) -- #x
+//│   in let* (x%10) = silly(x%9) -- #x
 //│     in x%10
 //│ )
 //│ },
-//│ let* (x%11) = foo()
+//│ let* (x%11) = foo() -- #x
 //│   in x%11)
 //│ 
 //│ Interpreted ------------------------------
@@ -286,8 +286,8 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%9 = Pair(0,1)
-//│   in let* (x%10) = silly$D%0(x%9)
+//│ let x%9 = Pair(0,1) -- #x
+//│   in let* (x%10) = silly$D%0(x%9) -- #x
 //│     in x%10
 //│ )
 //│ Def(5, silly$D%0, [pair%0], [{<EDestruct@silly$D%0:case pair%0 of ...>,<EDirect@silly$D%0:case pair%0 of ...>,<ESelect(x)@silly$D%0:let x%4 = ...>}],
@@ -296,14 +296,14 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case pair%0 of
-//│   Pair => let x%4 = pair%0.x
-//│     in let x%5 = +(x%4,1)
-//│       in let x%8 = +(x%5,1)
+//│ case pair%0 of -- #x
+//│   Pair => let x%4 = pair%0.x -- #x
+//│     in let x%5 = +(x%4,1) -- #x
+//│       in let x%8 = +(x%5,1) -- #x
 //│         in x%8
 //│ )
 //│ },
-//│ let* (x%11) = foo()
+//│ let* (x%11) = foo() -- #x
 //│   in x%11)
 //│ 
 //│ Optimized ------------------------------
@@ -314,7 +314,7 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%10) = silly$D%0$D%0$S%0(0)
+//│ let* (x%10) = silly$D%0$D%0$S%0(0) -- #x
 //│   in x%10
 //│ )
 //│ Def(8, silly$D%0$D%0$S%0, [pair%0_x], [{<EDirect@silly$D%0$D%0$S%0:let x%5 = ...>}],
@@ -323,12 +323,12 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%5 = +(pair%0_x,1)
-//│   in let x%8 = +(x%5,1)
+//│ let x%5 = +(pair%0_x,1) -- #x
+//│   in let x%8 = +(x%5,1) -- #x
 //│     in x%8
 //│ )
 //│ },
-//│ let* (x%11) = foo()
+//│ let* (x%11) = foo() -- #x
 //│   in x%11)
 //│ 
 //│ 
@@ -365,12 +365,12 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%0 = 2
-//│   in case pair%0 of
-//│     Pair => let x%1 = pair%0.y
-//│       in let x%2 = pair%0.x
-//│         in let x%3 = +(x%2,x%0)
-//│           in jump j%0(x%3)
+//│ let x%0 = 2 -- #x
+//│   in case pair%0 of -- #x
+//│     Pair => let x%1 = pair%0.y -- #x
+//│       in let x%2 = pair%0.x -- #x
+//│         in let x%3 = +(x%2,x%0) -- #x
+//│           in jump j%0(x%3) -- #x
 //│ )
 //│ Def(1, @join j%0, [x%4], [{}],
 //│ S: None,
@@ -386,12 +386,12 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%5 = Pair(0,1)
-//│   in let* (x%6) = inc_fst(x%5)
+//│ let x%5 = Pair(0,1) -- #x
+//│   in let* (x%6) = inc_fst(x%5) -- #x
 //│     in x%6
 //│ )
 //│ },
-//│ let* (x%7) = foo()
+//│ let* (x%7) = foo() -- #x
 //│   in x%7)
 //│ 
 //│ Promoted ------------------------------------
@@ -402,9 +402,9 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case pair%0 of
-//│   Pair => let x%2 = pair%0.x
-//│     in let x%3 = +(x%2,2)
+//│ case pair%0 of -- #x
+//│   Pair => let x%2 = pair%0.x -- #x
+//│     in let x%3 = +(x%2,2) -- #x
 //│       in x%3
 //│ )
 //│ Def(2, foo, [], [],
@@ -413,12 +413,12 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%5 = Pair(0,1)
-//│   in let* (x%6) = inc_fst(x%5)
+//│ let x%5 = Pair(0,1) -- #x
+//│   in let* (x%6) = inc_fst(x%5) -- #x
 //│     in x%6
 //│ )
 //│ },
-//│ let* (x%7) = foo()
+//│ let* (x%7) = foo() -- #x
 //│   in x%7)
 //│ 
 //│ Interpreted ------------------------------
@@ -433,11 +433,11 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%3 = +(0,2)
+//│ let x%3 = +(0,2) -- #x
 //│   in x%3
 //│ )
 //│ },
-//│ let* (x%7) = foo()
+//│ let* (x%7) = foo() -- #x
 //│   in x%7)
 //│ 
 //│ 
@@ -470,12 +470,12 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%0 = 0
-//│   in case pair%0 of
-//│     Pair => let x%1 = pair%0.y
-//│       in let x%2 = pair%0.x
-//│         in let x%3 = +(x%1,1)
-//│           in jump j%0(x%3)
+//│ let x%0 = 0 -- #x
+//│   in case pair%0 of -- #x
+//│     Pair => let x%1 = pair%0.y -- #x
+//│       in let x%2 = pair%0.x -- #x
+//│         in let x%3 = +(x%1,1) -- #x
+//│           in jump j%0(x%3) -- #x
 //│ )
 //│ Def(1, @join j%0, [x%4], [{}],
 //│ S: None,
@@ -491,12 +491,12 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%5 = Pair(0,1)
-//│   in let* (x%6) = inc_fst(x%5)
+//│ let x%5 = Pair(0,1) -- #x
+//│   in let* (x%6) = inc_fst(x%5) -- #x
 //│     in x%6
 //│ )
 //│ },
-//│ let* (x%7) = foo()
+//│ let* (x%7) = foo() -- #x
 //│   in x%7)
 //│ 
 //│ Promoted ------------------------------------
@@ -507,9 +507,9 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case pair%0 of
-//│   Pair => let x%1 = pair%0.y
-//│     in let x%3 = +(x%1,1)
+//│ case pair%0 of -- #x
+//│   Pair => let x%1 = pair%0.y -- #x
+//│     in let x%3 = +(x%1,1) -- #x
 //│       in x%3
 //│ )
 //│ Def(2, foo, [], [],
@@ -518,12 +518,12 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%5 = Pair(0,1)
-//│   in let* (x%6) = inc_fst(x%5)
+//│ let x%5 = Pair(0,1) -- #x
+//│   in let* (x%6) = inc_fst(x%5) -- #x
 //│     in x%6
 //│ )
 //│ },
-//│ let* (x%7) = foo()
+//│ let* (x%7) = foo() -- #x
 //│   in x%7)
 //│ 
 //│ Interpreted ------------------------------
@@ -538,11 +538,11 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%3 = +(1,1)
+//│ let x%3 = +(1,1) -- #x
 //│   in x%3
 //│ )
 //│ },
-//│ let* (x%7) = foo()
+//│ let* (x%7) = foo() -- #x
 //│   in x%7)
 //│ 
 //│ 
@@ -578,14 +578,14 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case a%0 of
-//│   Left => let x%0 = a%0.x
-//│     in let x%1 = +(x%0,1)
-//│       in let x%2 = Left(x%1)
-//│         in jump j%0(x%2)
-//│   Right => let x%3 = a%0.y
-//│     in let x%4 = Right(b%0)
-//│       in jump j%0(x%4)
+//│ case a%0 of -- #x
+//│   Left => let x%0 = a%0.x -- #x
+//│     in let x%1 = +(x%0,1) -- #x
+//│       in let x%2 = Left(x%1) -- #x
+//│         in jump j%0(x%2) -- #x
+//│   Right => let x%3 = a%0.y -- #x
+//│     in let x%4 = Right(b%0) -- #x
+//│       in jump j%0(x%4) -- #x
 //│ )
 //│ Def(1, @join j%0, [x%5], [{}],
 //│ S: None,
@@ -593,11 +593,11 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x%5 of
-//│   Left => let x%6 = x%5.x
-//│     in jump j%1(x%6)
-//│   Right => let x%7 = x%5.y
-//│     in jump j%1(x%7)
+//│ case x%5 of -- #x
+//│   Left => let x%6 = x%5.x -- #x
+//│     in jump j%1(x%6) -- #x
+//│   Right => let x%7 = x%5.y -- #x
+//│     in jump j%1(x%7) -- #x
 //│ )
 //│ Def(2, @join j%1, [x%8], [{}],
 //│ S: None,
@@ -613,12 +613,12 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%9 = Right(2)
-//│   in let* (x%10) = foo(x%9,2)
+//│ let x%9 = Right(2) -- #x
+//│   in let* (x%10) = foo(x%9,2) -- #x
 //│     in x%10
 //│ )
 //│ },
-//│ let* (x%11) = bar()
+//│ let* (x%11) = bar() -- #x
 //│   in x%11)
 //│ 
 //│ Promoted ------------------------------------
@@ -629,13 +629,13 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case a%0 of
-//│   Left => let x%0 = a%0.x
-//│     in let x%1 = +(x%0,1)
-//│       in let x%2 = Left(x%1)
-//│         in jump j%0(x%2)
-//│   Right => let x%4 = Right(b%0)
-//│     in jump j%0(x%4)
+//│ case a%0 of -- #x
+//│   Left => let x%0 = a%0.x -- #x
+//│     in let x%1 = +(x%0,1) -- #x
+//│       in let x%2 = Left(x%1) -- #x
+//│         in jump j%0(x%2) -- #x
+//│   Right => let x%4 = Right(b%0) -- #x
+//│     in jump j%0(x%4) -- #x
 //│ )
 //│ Def(1, @join j%0, [x%5], [{<EDestruct@j%0:case x%5 of ...>,<EDirect@j%0:case x%5 of ...>,<ESelect(x)@j%0:let x%6 = ...>,<ESelect(y)@j%0:let x%7 = ...>}],
 //│ S: None,
@@ -643,10 +643,10 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x%5 of
-//│   Left => let x%6 = x%5.x
+//│ case x%5 of -- #x
+//│   Left => let x%6 = x%5.x -- #x
 //│     in x%6
-//│   Right => let x%7 = x%5.y
+//│   Right => let x%7 = x%5.y -- #x
 //│     in x%7
 //│ )
 //│ Def(3, bar, [], [],
@@ -655,12 +655,12 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%9 = Right(2)
-//│   in let* (x%10) = foo(x%9,2)
+//│ let x%9 = Right(2) -- #x
+//│   in let* (x%10) = foo(x%9,2) -- #x
 //│     in x%10
 //│ )
 //│ },
-//│ let* (x%11) = bar()
+//│ let* (x%11) = bar() -- #x
 //│   in x%11)
 //│ 
 //│ Interpreted ------------------------------
@@ -675,7 +675,7 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%10) = foo$D%1(2)
+//│ let* (x%10) = foo$D%1(2) -- #x
 //│   in x%10
 //│ )
 //│ Def(6, foo$D%1, [b%0], [{<EDirect@foo$D%1:...>}],
@@ -687,7 +687,7 @@ bar()
 //│ b%0
 //│ )
 //│ },
-//│ let* (x%11) = bar()
+//│ let* (x%11) = bar() -- #x
 //│   in x%11)
 //│ 
 //│ Optimized ------------------------------
@@ -701,7 +701,7 @@ bar()
 //│ 2
 //│ )
 //│ },
-//│ let* (x%11) = bar()
+//│ let* (x%11) = bar() -- #x
 //│   in x%11)
 //│ 
 //│ 
@@ -732,9 +732,9 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%0 = a%0.x
-//│   in let x%1 = a%0.y
-//│     in let x%2 = +(x%0,x%1)
+//│ let x%0 = a%0.x -- #x
+//│   in let x%1 = a%0.y -- #x
+//│     in let x%2 = +(x%0,x%1) -- #x
 //│       in x%2
 //│ )
 //│ Def(1, bar, [], [{}],
@@ -743,12 +743,12 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%3 = Pair(1,0)
-//│   in let* (x%4) = foo(x%3)
+//│ let x%3 = Pair(1,0) -- #x
+//│   in let* (x%4) = foo(x%3) -- #x
 //│     in x%4
 //│ )
 //│ },
-//│ let* (x%5) = bar()
+//│ let* (x%5) = bar() -- #x
 //│   in x%5)
 //│ 
 //│ Promoted ------------------------------------
@@ -759,9 +759,9 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%0 = a%0.x
-//│   in let x%1 = a%0.y
-//│     in let x%2 = +(x%0,x%1)
+//│ let x%0 = a%0.x -- #x
+//│   in let x%1 = a%0.y -- #x
+//│     in let x%2 = +(x%0,x%1) -- #x
 //│       in x%2
 //│ )
 //│ Def(1, bar, [], [],
@@ -770,12 +770,12 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%3 = Pair(1,0)
-//│   in let* (x%4) = foo(x%3)
+//│ let x%3 = Pair(1,0) -- #x
+//│   in let* (x%4) = foo(x%3) -- #x
 //│     in x%4
 //│ )
 //│ },
-//│ let* (x%5) = bar()
+//│ let* (x%5) = bar() -- #x
 //│   in x%5)
 //│ 
 //│ Interpreted ------------------------------
@@ -790,11 +790,11 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%2 = +(1,0)
+//│ let x%2 = +(1,0) -- #x
 //│   in x%2
 //│ )
 //│ },
-//│ let* (x%5) = bar()
+//│ let* (x%5) = bar() -- #x
 //│   in x%5)
 //│ 
 //│ 
@@ -827,12 +827,12 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case a%0 of
-//│   C1 => let x%0 = a%0.y
-//│     in let x%1 = a%0.x
-//│       in jump j%0(x%1)
-//│   C2 => let x%2 = a%0.z
-//│     in jump j%0(x%2)
+//│ case a%0 of -- #x
+//│   C1 => let x%0 = a%0.y -- #x
+//│     in let x%1 = a%0.x -- #x
+//│       in jump j%0(x%1) -- #x
+//│   C2 => let x%2 = a%0.z -- #x
+//│     in jump j%0(x%2) -- #x
 //│ )
 //│ Def(1, @join j%0, [x%3], [{}],
 //│ S: None,
@@ -848,12 +848,12 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%4 = C1(0,1)
-//│   in let* (x%5) = foo(x%4)
+//│ let x%4 = C1(0,1) -- #x
+//│   in let* (x%5) = foo(x%4) -- #x
 //│     in x%5
 //│ )
 //│ },
-//│ let* (x%6) = bar()
+//│ let* (x%6) = bar() -- #x
 //│   in x%6)
 //│ 
 //│ Promoted ------------------------------------
@@ -864,10 +864,10 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case a%0 of
-//│   C1 => let x%1 = a%0.x
+//│ case a%0 of -- #x
+//│   C1 => let x%1 = a%0.x -- #x
 //│     in x%1
-//│   C2 => let x%2 = a%0.z
+//│   C2 => let x%2 = a%0.z -- #x
 //│     in x%2
 //│ )
 //│ Def(2, bar, [], [],
@@ -876,12 +876,12 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%4 = C1(0,1)
-//│   in let* (x%5) = foo(x%4)
+//│ let x%4 = C1(0,1) -- #x
+//│   in let* (x%5) = foo(x%4) -- #x
 //│     in x%5
 //│ )
 //│ },
-//│ let* (x%6) = bar()
+//│ let* (x%6) = bar() -- #x
 //│   in x%6)
 //│ 
 //│ Interpreted ------------------------------
@@ -899,7 +899,7 @@ bar()
 //│ 0
 //│ )
 //│ },
-//│ let* (x%6) = bar()
+//│ let* (x%6) = bar() -- #x
 //│   in x%6)
 //│ 
 //│ 
@@ -937,13 +937,13 @@ baz()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%0 = a%0.x
-//│   in let x%1 = a%0.y
-//│     in let x%2 = b%0.x
-//│       in let x%3 = b%0.y
-//│         in let x%4 = +(x%0,x%1)
-//│           in let x%5 = +(x%4,x%2)
-//│             in let x%6 = +(x%5,x%3)
+//│ let x%0 = a%0.x -- #x
+//│   in let x%1 = a%0.y -- #x
+//│     in let x%2 = b%0.x -- #x
+//│       in let x%3 = b%0.y -- #x
+//│         in let x%4 = +(x%0,x%1) -- #x
+//│           in let x%5 = +(x%4,x%2) -- #x
+//│             in let x%6 = +(x%5,x%3) -- #x
 //│               in x%6
 //│ )
 //│ Def(1, bar, [c%0], [{}],
@@ -952,13 +952,13 @@ baz()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%7 = Pair(0,1)
-//│   in let* (x%8) = foo(x%7,c%0)
-//│     in let x%9 = Pair(2,3)
-//│       in let* (x%10) = foo(c%0,x%9)
-//│         in let x%11 = Pair(0,1)
-//│           in let x%12 = Pair(2,3)
-//│             in let* (x%13) = foo(x%11,x%12)
+//│ let x%7 = Pair(0,1) -- #x
+//│   in let* (x%8) = foo(x%7,c%0) -- #x
+//│     in let x%9 = Pair(2,3) -- #x
+//│       in let* (x%10) = foo(c%0,x%9) -- #x
+//│         in let x%11 = Pair(0,1) -- #x
+//│           in let x%12 = Pair(2,3) -- #x
+//│             in let* (x%13) = foo(x%11,x%12) -- #x
 //│               in x%13
 //│ )
 //│ Def(2, baz, [], [{}],
@@ -967,12 +967,12 @@ baz()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%14 = Pair(4,5)
-//│   in let* (x%15) = bar(x%14)
+//│ let x%14 = Pair(4,5) -- #x
+//│   in let* (x%15) = bar(x%14) -- #x
 //│     in x%15
 //│ )
 //│ },
-//│ let* (x%16) = baz()
+//│ let* (x%16) = baz() -- #x
 //│   in x%16)
 //│ 
 //│ Promoted ------------------------------------
@@ -983,13 +983,13 @@ baz()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%0 = a%0.x
-//│   in let x%1 = a%0.y
-//│     in let x%2 = b%0.x
-//│       in let x%3 = b%0.y
-//│         in let x%4 = +(x%0,x%1)
-//│           in let x%5 = +(x%4,x%2)
-//│             in let x%6 = +(x%5,x%3)
+//│ let x%0 = a%0.x -- #x
+//│   in let x%1 = a%0.y -- #x
+//│     in let x%2 = b%0.x -- #x
+//│       in let x%3 = b%0.y -- #x
+//│         in let x%4 = +(x%0,x%1) -- #x
+//│           in let x%5 = +(x%4,x%2) -- #x
+//│             in let x%6 = +(x%5,x%3) -- #x
 //│               in x%6
 //│ )
 //│ Def(1, bar, [c%0], [{<EDirect@bar:let* (x%10) = foo ...>,<EDirect@bar:let* (x%8) = foo ...>,<ESelect(x)@foo:let x%0 = ...>,<ESelect(x)@foo:let x%2 = ...>,<ESelect(y)@foo:let x%1 = ...>,<ESelect(y)@foo:let x%3 = ...>}],
@@ -998,13 +998,13 @@ baz()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%7 = Pair(0,1)
-//│   in let* (x%8) = foo(x%7,c%0)
-//│     in let x%9 = Pair(2,3)
-//│       in let* (x%10) = foo(c%0,x%9)
-//│         in let x%11 = Pair(0,1)
-//│           in let x%12 = Pair(2,3)
-//│             in let* (x%13) = foo(x%11,x%12)
+//│ let x%7 = Pair(0,1) -- #x
+//│   in let* (x%8) = foo(x%7,c%0) -- #x
+//│     in let x%9 = Pair(2,3) -- #x
+//│       in let* (x%10) = foo(c%0,x%9) -- #x
+//│         in let x%11 = Pair(0,1) -- #x
+//│           in let x%12 = Pair(2,3) -- #x
+//│             in let* (x%13) = foo(x%11,x%12) -- #x
 //│               in x%13
 //│ )
 //│ Def(2, baz, [], [],
@@ -1013,12 +1013,12 @@ baz()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%14 = Pair(4,5)
-//│   in let* (x%15) = bar(x%14)
+//│ let x%14 = Pair(4,5) -- #x
+//│   in let* (x%15) = bar(x%14) -- #x
 //│     in x%15
 //│ )
 //│ },
-//│ let* (x%16) = baz()
+//│ let* (x%16) = baz() -- #x
 //│   in x%16)
 //│ 
 //│ Interpreted ------------------------------
@@ -1033,13 +1033,13 @@ baz()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%17 = c%0.y
-//│   in let x%18 = c%0.x
-//│     in let* (x%8) = foo$S%0(x%17,x%18,1,0)
-//│       in let x%23 = c%0.y
-//│         in let x%24 = c%0.x
-//│           in let* (x%10) = foo$S%0(3,2,x%23,x%24)
-//│             in let* (x%13) = foo$S%0(3,2,1,0)
+//│ let x%17 = c%0.y -- #x
+//│   in let x%18 = c%0.x -- #x
+//│     in let* (x%8) = foo$S%0(x%17,x%18,1,0) -- #x
+//│       in let x%23 = c%0.y -- #x
+//│         in let x%24 = c%0.x -- #x
+//│           in let* (x%10) = foo$S%0(3,2,x%23,x%24) -- #x
+//│             in let* (x%13) = foo$S%0(3,2,1,0) -- #x
 //│               in x%13
 //│ )
 //│ Def(2, baz, [], [],
@@ -1048,8 +1048,8 @@ baz()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%14 = Pair(4,5)
-//│   in let* (x%15) = bar(x%14)
+//│ let x%14 = Pair(4,5) -- #x
+//│   in let* (x%15) = bar(x%14) -- #x
 //│     in x%15
 //│ )
 //│ Def(3, foo$S%0, [b%0_y,b%0_x,a%0_y,a%0_x], [{<EDirect@foo$S%0:let x%6 = ...>},{<EDirect@foo$S%0:let x%5 = ...>},{<EDirect@foo$S%0:let x%4 = ...>},{<EDirect@foo$S%0:let x%4 = ...>}],
@@ -1058,13 +1058,13 @@ baz()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%4 = +(a%0_x,a%0_y)
-//│   in let x%5 = +(x%4,b%0_x)
-//│     in let x%6 = +(x%5,b%0_y)
+//│ let x%4 = +(a%0_x,a%0_y) -- #x
+//│   in let x%5 = +(x%4,b%0_x) -- #x
+//│     in let x%6 = +(x%5,b%0_y) -- #x
 //│       in x%6
 //│ )
 //│ },
-//│ let* (x%16) = baz()
+//│ let* (x%16) = baz() -- #x
 //│   in x%16)
 //│ 
 //│ Optimized ------------------------------
@@ -1075,7 +1075,7 @@ baz()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%15) = bar$S%0(5,4)
+//│ let* (x%15) = bar$S%0(5,4) -- #x
 //│   in x%15
 //│ )
 //│ Def(3, foo$S%0, [b%0_y,b%0_x,a%0_y,a%0_x], [{<EDirect@foo$S%0:let x%6 = ...>},{<EDirect@foo$S%0:let x%5 = ...>},{<EDirect@foo$S%0:let x%4 = ...>},{<EDirect@foo$S%0:let x%4 = ...>}],
@@ -1084,9 +1084,9 @@ baz()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%4 = +(a%0_x,a%0_y)
-//│   in let x%5 = +(x%4,b%0_x)
-//│     in let x%6 = +(x%5,b%0_y)
+//│ let x%4 = +(a%0_x,a%0_y) -- #x
+//│   in let x%5 = +(x%4,b%0_x) -- #x
+//│     in let x%6 = +(x%5,b%0_y) -- #x
 //│       in x%6
 //│ )
 //│ Def(4, bar$S%0, [c%0_y,c%0_x], [{<EDirect@bar$S%0:let* (x%10) = foo$S%0 ...>,<EDirect@bar$S%0:let* (x%8) = foo$S%0 ...>},{<EDirect@bar$S%0:let* (x%10) = foo$S%0 ...>,<EDirect@bar$S%0:let* (x%8) = foo$S%0 ...>}],
@@ -1095,13 +1095,13 @@ baz()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%8) = foo$S%0(c%0_y,c%0_x,1,0)
-//│   in let* (x%10) = foo$S%0(3,2,c%0_y,c%0_x)
-//│     in let* (x%13) = foo$S%0(3,2,1,0)
+//│ let* (x%8) = foo$S%0(c%0_y,c%0_x,1,0) -- #x
+//│   in let* (x%10) = foo$S%0(3,2,c%0_y,c%0_x) -- #x
+//│     in let* (x%13) = foo$S%0(3,2,1,0) -- #x
 //│       in x%13
 //│ )
 //│ },
-//│ let* (x%16) = baz()
+//│ let* (x%16) = baz() -- #x
 //│   in x%16)
 //│ 
 //│ 
@@ -1131,12 +1131,12 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%0 = Pair(0,1)
-//│   in let x%1 = x%0.x
+//│ let x%0 = Pair(0,1) -- #x
+//│   in let x%1 = x%0.x -- #x
 //│     in x%1
 //│ )
 //│ },
-//│ let* (x%2) = foo()
+//│ let* (x%2) = foo() -- #x
 //│   in x%2)
 //│ 
 //│ Promoted ------------------------------------
@@ -1150,7 +1150,7 @@ foo()
 //│ 0
 //│ )
 //│ },
-//│ let* (x%2) = foo()
+//│ let* (x%2) = foo() -- #x
 //│   in x%2)
 //│ 
 //│ Interpreted ------------------------------
@@ -1189,9 +1189,9 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%0 = O()
-//│   in let x%1 = S(x%0)
-//│     in let* (x%2) = bar(x%1)
+//│ let x%0 = O() -- #x
+//│   in let x%1 = S(x%0) -- #x
+//│     in let* (x%2) = bar(x%1) -- #x
 //│       in x%2
 //│ )
 //│ Def(1, bar, [x%3], [{}],
@@ -1200,7 +1200,7 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%4) = baz(x%3)
+//│ let* (x%4) = baz(x%3) -- #x
 //│   in x%4
 //│ )
 //│ Def(2, baz, [x%5], [{}],
@@ -1209,10 +1209,10 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x%5 of
-//│   S => let x%6 = x%5.s
-//│     in jump j%0(x%6)
-//│   O => jump j%0(x%5)
+//│ case x%5 of -- #x
+//│   S => let x%6 = x%5.s -- #x
+//│     in jump j%0(x%6) -- #x
+//│   O => jump j%0(x%5) -- #x
 //│ )
 //│ Def(3, @join j%0, [x%7], [{}],
 //│ S: None,
@@ -1223,7 +1223,7 @@ foo()
 //│ x%7
 //│ )
 //│ },
-//│ let* (x%8) = foo()
+//│ let* (x%8) = foo() -- #x
 //│   in x%8)
 //│ 
 //│ Promoted ------------------------------------
@@ -1234,9 +1234,9 @@ foo()
 //│ R: [Some(IMix(ICtor(O)))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%0 = O()
-//│   in let x%1 = S(x%0)
-//│     in let* (x%2) = bar(x%1)
+//│ let x%0 = O() -- #x
+//│   in let x%1 = S(x%0) -- #x
+//│     in let* (x%2) = bar(x%1) -- #x
 //│       in x%2
 //│ )
 //│ Def(1, bar, [x%3], [{<EDirect@bar:let* (x%4) = baz ...>,<EIndirectDestruct@bar:let* (x%4) = baz ...>,<ESelect(s)@baz:let x%6 = ...>}],
@@ -1245,7 +1245,7 @@ foo()
 //│ R: [Some(IMix(ICtor(O)))],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%4) = baz(x%3)
+//│ let* (x%4) = baz(x%3) -- #x
 //│   in x%4
 //│ )
 //│ Def(2, baz, [x%5], [{<EDestruct@baz:case x%5 of ...>,<EDirect@baz:...>,<EDirect@baz:case x%5 of ...>,<ESelect(s)@baz:let x%6 = ...>}],
@@ -1254,13 +1254,13 @@ foo()
 //│ R: [Some(IMix(ICtor(O)))],
 //│ Rec: None,
 //│ 1, 
-//│ case x%5 of
-//│   S => let x%6 = x%5.s
+//│ case x%5 of -- #x
+//│   S => let x%6 = x%5.s -- #x
 //│     in x%6
 //│   O => x%5
 //│ )
 //│ },
-//│ let* (x%8) = foo()
+//│ let* (x%8) = foo() -- #x
 //│   in x%8)
 //│ 
 //│ Interpreted ------------------------------
@@ -1275,9 +1275,9 @@ foo()
 //│ R: [Some(IMix(ICtor(O)))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%0 = O()
-//│   in let x%1 = S(x%0)
-//│     in let* (x%2) = bar(x%1)
+//│ let x%0 = O() -- #x
+//│   in let x%1 = S(x%0) -- #x
+//│     in let* (x%2) = bar(x%1) -- #x
 //│       in x%2
 //│ )
 //│ Def(1, bar, [x%3], [{<EDestruct@bar:case x%3 of ...>,<EDirect@bar:...>,<EDirect@bar:case x%3 of ...>,<ESelect(s)@bar:let x%6 = ...>}],
@@ -1286,13 +1286,13 @@ foo()
 //│ R: [Some(IMix(ICtor(O)))],
 //│ Rec: None,
 //│ 1, 
-//│ case x%3 of
-//│   S => let x%6 = x%3.s
+//│ case x%3 of -- #x
+//│   S => let x%6 = x%3.s -- #x
 //│     in x%6
 //│   O => x%3
 //│ )
 //│ },
-//│ let* (x%8) = foo()
+//│ let* (x%8) = foo() -- #x
 //│   in x%8)
 //│ 
 //│ Optimized ------------------------------
@@ -1303,11 +1303,11 @@ foo()
 //│ R: [Some(ICtor(O))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%0 = O()
+//│ let x%0 = O() -- #x
 //│   in x%0
 //│ )
 //│ },
-//│ let* (x%8) = foo()
+//│ let* (x%8) = foo() -- #x
 //│   in x%8)
 //│ 
 //│ 
