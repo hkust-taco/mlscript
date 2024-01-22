@@ -1208,12 +1208,21 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
   private def newParams(params: Ls[Name], targets: Map[Str, Set[Str]]) =
       params.filter(x => !targets.contains(x.str)) ++ fieldParamNames(targets)
   
-  private class SelectionReplacement(target_params: Set[Str]) extends GOVisitor:
-    override def visit(x: LetExpr) = x match
+  private class SelectionReplacement(target_params: Set[Str]):
+    def run(node: GONode): GONode = f(node)
+
+    private def f(node: GONode): GONode = node match
+      case Result(res) => node
+      case Jump(defn, args) => node
+      case Case(scrut, cases) =>
+        Case(scrut, cases.map { (cls, arm) => (cls, f(arm)) }).copy_tag(node)
       case LetExpr(x, Select(y,  cls, field), e2) if target_params.contains(y.str) =>
-        LetExpr(x, Ref(fieldParamName(y.str, field)), e2.accept_visitor(this))  
+        LetExpr(x, Ref(fieldParamName(y.str, field)), f(e2)).copy_tag(node)
       case LetExpr(x, e1, e2) =>
-        LetExpr(x.accept_def_visitor(this), e1.accept_visitor(this), e2.accept_visitor(this))
+        LetExpr(x, e1, f(e2)).copy_tag(node)
+      case LetCall(names, defn, args, body) =>
+        LetCall(names, defn, args, f(body)).copy_tag(node)
+    
 
   private class ScalarReplacementDefinitionBuilder(name_map: Map[Str, Str], defn_param_map: Map[Str, Map[Str, Set[Str]]]) extends GOIterator:
     var sr_defs = MutHSet[GODef]()
@@ -1229,12 +1238,13 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
           new_params,
           x.resultNum,
           None,
-          x.body.accept_visitor(SelectionReplacement(targets.keySet)),
+          SelectionReplacement(targets.keySet).run(x.body),
         )
         sr_defs.add(new_def)
 
   private class ScalarReplacementCallSiteReplacement(defn_map: Map[Str, Str], defn_param_map: Map[Str, Map[Str, Set[Str]]]) extends GOVisitor:
     var fldctx = Map.empty[Str, (Str, ClassInfo)]
+
     private def susbtCallsite(defn: GODef, as: Ls[TrivialExpr], f: (Str, Ls[TrivialExpr]) => GONode) =
       val new_name = defn_map(defn.name)
       val targets = defn_param_map(defn.name)
@@ -1298,7 +1308,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
   }
 
   private class ScalarReplacement extends GOVisitor:
-    override def visit(x: GOProgram) =
+    def run(x: GOProgram) =
       val srta = ScalarReplacementTargetAnalysis()
       val worklist = srta.run(x)
       val name_map = srta.name_map
@@ -1313,7 +1323,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
       y.accept_visitor(srcsp)
  
   def replaceScalar(prog: GOProgram): GOProgram =
-    prog.accept_visitor(ScalarReplacement())  
+    ScalarReplacement().run(prog)
 
   private class TrivialBindingSimplification:
     var rctx: Map[Str, TrivialExpr] = Map.empty

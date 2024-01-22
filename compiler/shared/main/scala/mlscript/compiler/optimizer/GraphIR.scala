@@ -12,7 +12,7 @@ import util.Sorting
 
 // -----------------------------------------------
 
-class GOProgram(
+case class GOProgram(
   val classes: Set[ClassInfo],
   val defs: Set[GODef],
   // TODO add a cache of split defs
