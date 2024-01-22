@@ -227,10 +227,10 @@ main()
 //│ Rec: None,
 //│ 1, 
 //│ case l%1 of -- #x
-//│   Cons => let x%23 = l%1.h -- #x
-//│     in let x%9 = Some(x%23) -- #93
+//│   Cons => let x%23 = l%1.h -- #91
+//│     in let x%9 = Some(x%23) -- #94
 //│       in jump is_empty$M%0(x%9) -- #x
-//│   Nil => let x%6 = None() -- #x
+//│   Nil => let x%6 = None() -- #89
 //│     in jump is_empty$M%0(x%6) -- #x
 //│ )
 //│ Def(7, main, [], [],
@@ -303,9 +303,9 @@ main()
 //│ Rec: None,
 //│ 1, 
 //│ case x%15 of -- #x
-//│   Some => let x%13 = False() -- #x
+//│   Some => let x%13 = False() -- #98
 //│     in x%13
-//│   None => let x%11 = True() -- #x
+//│   None => let x%11 = True() -- #102
 //│     in x%11
 //│ )
 //│ },
@@ -336,9 +336,9 @@ main()
 //│ Rec: None,
 //│ 1, 
 //│ case l%1 of -- #x
-//│   Cons => let x%13 = False() -- #x
+//│   Cons => let x%13 = False() -- #104
 //│     in x%13
-//│   Nil => let x%11 = True() -- #x
+//│   Nil => let x%11 = True() -- #106
 //│     in x%11
 //│ )
 //│ Def(7, main, [], [],

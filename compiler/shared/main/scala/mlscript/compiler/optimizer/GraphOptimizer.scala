@@ -1242,7 +1242,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         )
         sr_defs.add(new_def)
 
-  private class ScalarReplacementCallSiteReplacement(defn_map: Map[Str, Str], defn_param_map: Map[Str, Map[Str, Set[Str]]]) extends GOVisitor:
+  private class ScalarReplacementCallSiteReplacement(defn_map: Map[Str, Str], defn_param_map: Map[Str, Map[Str, Set[Str]]]):
     var fldctx = Map.empty[Str, (Str, ClassInfo)]
 
     private def susbtCallsite(defn: GODef, as: Ls[TrivialExpr], f: (Str, Ls[TrivialExpr]) => GONode) =
@@ -1276,30 +1276,35 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
       }
       
       val new_node = f(new_name, new_args)
-      letlist.foldRight(new_node) { case ((x, y, field), node) => LetExpr(x, Select(y, fldctx(field)._2, field), node) }
+      letlist.foldRight(new_node) { case ((x, y, field), node) => 
+        LetExpr(x, Select(y, fldctx(field)._2, field), node).attach_tag_as[LetExpr](tag)
+      }
 
-    override def visit(x: Jump) = x match
+    private def f(node: GONode): GONode = node match
+      case Result(res) => node
       case Jump(defnref, as) =>
         val defn = defnref.expectDefn
         if (defn_param_map.contains(defn.name))
-          susbtCallsite(defn, as, (x, y) => Jump(GODefRef(Right(x)), y))
+          susbtCallsite(defn, as, (x, y) => Jump(GODefRef(Right(x)), y).copy_tag(node))
         else
-          Jump(defnref, as)
-
-
-    override def visit(x: LetCall) = x match
+          node
+      case Case(scrut, cases) =>
+        Case(scrut, cases.map { (cls, arm) => (cls, f(arm)) }).copy_tag(node)
+      case LetExpr(name, expr, body) =>
+        LetExpr(name, expr, f(body)).copy_tag(node)
       case LetCall(xs, defnref, as, e) =>
         val defn = defnref.expectDefn
         if (defn_param_map.contains(defn.name))
-          susbtCallsite(defn, as, (x, y) => LetCall(xs, GODefRef(Right(x)), y, e.accept_visitor(this)))
+          susbtCallsite(defn, as, (x, y) => LetCall(xs, GODefRef(Right(x)), y, f(e)).copy_tag(node))
         else
-          LetCall(xs, defnref, as, e.accept_visitor(this))
+          LetCall(xs, defnref, as, f(e))
   
-    override def visit(x: GOProgram) =
+    def run(x: GOProgram) =
       val clsctx: ClassCtx = x.classes.map{ case c @ ClassInfo(_, name, _) => (name, c) }.toMap
       fldctx = x.classes.flatMap { case ClassInfo(_, name, fields) => fields.map { fld => (fld, (name, clsctx(name))) } }.toMap
-      val y = GOProgram(x.classes, x.defs.map(_.accept_visitor(this)), x.main.accept_visitor(this))
+      val y = GOProgram(x.classes, x.defs.map(x => x.copy(body = f(x. body))), f(x.main))
       relink(y.main, y.defs)
+      validate(y.main, y.defs)
       y
 
   private def expectTexprIsRef(expr: TrivialExpr): Name = expr match {
@@ -1307,7 +1312,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
     case _ => ??? // how is a literal scalar replaced?
   }
 
-  private class ScalarReplacement extends GOVisitor:
+  private class ScalarReplacement:
     def run(x: GOProgram) =
       val srta = ScalarReplacementTargetAnalysis()
       val worklist = srta.run(x)
@@ -1320,7 +1325,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
 
       val srcsp = ScalarReplacementCallSiteReplacement(name_map, worklist)
       val y  = GOProgram(x.classes, new_defs, x.main)
-      y.accept_visitor(srcsp)
+      srcsp.run(y)
  
   def replaceScalar(prog: GOProgram): GOProgram =
     ScalarReplacement().run(prog)

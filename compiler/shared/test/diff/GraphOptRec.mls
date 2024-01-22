@@ -331,7 +331,7 @@ main()
 //│ if x%4 -- #x
 //│   true => let x%5 = A() -- #x
 //│     in x%5
-//│   false => let x%2 = True() -- #x
+//│   false => let x%2 = True() -- #48
 //│     in let* (x%7) = foo(x%2) -- #x
 //│       in let x%8 = B(x%7) -- #x
 //│         in x%8
@@ -589,7 +589,7 @@ main()
 //│ if x%14 -- #x
 //│   true => let x%15 = A() -- #x
 //│     in x%15
-//│   false => let x%12 = True() -- #x
+//│   false => let x%12 = True() -- #102
 //│     in let* (x%17) = foo(x%12) -- #x
 //│       in let x%18 = B(x%17) -- #x
 //│         in x%18
@@ -1553,7 +1553,7 @@ main(False)
 //│ if x%14 -- #x
 //│   true => let x%15 = A() -- #x
 //│     in x%15
-//│   false => let x%12 = True() -- #x
+//│   false => let x%12 = True() -- #104
 //│     in let* (x%17) = foo(x%12) -- #x
 //│       in let x%18 = B(x%17) -- #x
 //│         in x%18
@@ -1758,10 +1758,10 @@ main()
 //│ Rec: None,
 //│ 1, 
 //│ case l%1 of -- #x
-//│   Cons => let x%19 = l%1.h -- #x
-//│     in let x%3 = Some(x%19) -- #74
+//│   Cons => let x%19 = l%1.h -- #72
+//│     in let x%3 = Some(x%19) -- #75
 //│       in jump is_empty$M%0(x%3) -- #x
-//│   Nil => let x%0 = None() -- #x
+//│   Nil => let x%0 = None() -- #70
 //│     in jump is_empty$M%0(x%0) -- #x
 //│ )
 //│ Def(5, main, [], [],
@@ -1808,9 +1808,9 @@ main()
 //│ Rec: None,
 //│ 1, 
 //│ case x%9 of -- #x
-//│   Some => let x%7 = False() -- #x
+//│   Some => let x%7 = False() -- #80
 //│     in x%7
-//│   None => let x%5 = True() -- #x
+//│   None => let x%5 = True() -- #84
 //│     in x%5
 //│ )
 //│ Def(18, is_empty$D%0$S%0, [l%1_h], [{<EDirect@is_empty$D%0$S%0:let x%3 = ...>}],
@@ -1834,7 +1834,7 @@ main()
 //│ R: [Some(ICtor(False))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%7 = False() -- #89
+//│ let x%7 = False() -- #91
 //│   in x%7
 //│ )
 //│ },
@@ -2073,10 +2073,10 @@ main()
 //│ Rec: None,
 //│ 1, 
 //│ case l%1 of -- #x
-//│   Cons => let x%23 = l%1.h -- #x
-//│     in let x%9 = Some(x%23) -- #93
+//│   Cons => let x%23 = l%1.h -- #91
+//│     in let x%9 = Some(x%23) -- #94
 //│       in jump is_empty$M%0(x%9) -- #x
-//│   Nil => let x%6 = None() -- #x
+//│   Nil => let x%6 = None() -- #89
 //│     in jump is_empty$M%0(x%6) -- #x
 //│ )
 //│ Def(7, main, [], [],
@@ -2149,9 +2149,9 @@ main()
 //│ Rec: None,
 //│ 1, 
 //│ case x%15 of -- #x
-//│   Some => let x%13 = False() -- #x
+//│   Some => let x%13 = False() -- #98
 //│     in x%13
-//│   None => let x%11 = True() -- #x
+//│   None => let x%11 = True() -- #102
 //│     in x%11
 //│ )
 //│ },
@@ -2182,9 +2182,9 @@ main()
 //│ Rec: None,
 //│ 1, 
 //│ case l%1 of -- #x
-//│   Cons => let x%13 = False() -- #x
+//│   Cons => let x%13 = False() -- #104
 //│     in x%13
-//│   Nil => let x%11 = True() -- #x
+//│   Nil => let x%11 = True() -- #106
 //│     in x%11
 //│ )
 //│ Def(7, main, [], [],
