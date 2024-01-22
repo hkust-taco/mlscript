@@ -13,7 +13,7 @@ import scala.collection.mutable.{MultiMap, Queue}
 
 final case class GraphOptimizingError(message: String) extends Exception(message)
 
-class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbose: Bool = false):
+class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshInt, verbose: Bool = false):
   import GOExpr._
   import GONode._
   import Elim._
@@ -1315,82 +1315,111 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
   def replaceScalar(prog: GOProgram): GOProgram =
     prog.accept_visitor(ScalarReplacement())  
 
-  private class TrivialBindingSimplification extends GOTrivialExprVisitor, GOVisitor:
+  private class TrivialBindingSimplification:
     var rctx: Map[Str, TrivialExpr] = Map.empty
-    override def visit(x: GOProgram) =
-      val new_defs = x.defs.map(x => { rctx = Map.empty; x.accept_visitor(this)})
+    
+    def run(x: GOProgram) =
+      val new_defs = x.defs.map(x => { rctx = Map.empty; x.copy(body = f(x.body))})
       relink(x.main, new_defs)
       GOProgram(x.classes, new_defs, x.main)
-    override def visit(node: LetExpr) = node match
+
+    private def f(node: GONode): GONode = node match
+      case Result(res) => Result(res.map(f)).copy_tag(node)
+      case Jump(defn, args) => Jump(defn, args.map(f)).copy_tag(node)
+      case Case(scrut, cases) => Case(f(scrut), cases.map { (cls, arm) => (cls, f(arm)) }).copy_tag(node)
       case LetExpr(x, Ref(Name(z)), e2) if rctx.contains(z) =>
         rctx = rctx + (x.str -> rctx(z))
-        e2.accept_visitor(this)
+        f(e2)
       case LetExpr(x, y @ Ref(Name(_)), e2) =>
         rctx = rctx + (x.str -> y)
-        e2.accept_visitor(this)
+        f(e2)
       case LetExpr(x, y @ Literal(_), e2) =>
         rctx = rctx + (x.str -> y)
-        e2.accept_visitor(this)
+        f(e2)
       case LetExpr(x, e1, e2) =>
-        LetExpr(x, e1.accept_visitor(this), e2.accept_visitor(this))
-    override def visit(y: Ref) = y match
+        LetExpr(x, f(e1), f(e2)).copy_tag(node)
+      case LetCall(names, defn, args, body) =>
+        LetCall(names, defn, args.map(f), f(body)).copy_tag(node)
+
+    private def f(x: GOExpr): GOExpr = x match
+      case Ref(name) => f(x)
+      case Literal(lit) => x
+      case CtorApp(name, args) => CtorApp(name, args.map(f))
+      case Select(name, cls, field) => Select(f(name), cls, field)
+      case BasicOp(name, args) => BasicOp(name, args.map(f))
+    
+
+    private def f(y: TrivialExpr): TrivialExpr = y match
       case Ref(Name(x)) if rctx.contains(x) =>
         rctx(x)
       case _ => y
-    override def visit_name_use(z: Name) =
+    
+    private def f(z: Name): Name =
       val Name(x) = z
       rctx.get(x) match 
         case Some(Ref(yy @ Name(y))) => yy
         case _ => z
 
-  private class SelectionSimplification extends GOVisitor:
+  private class SelectionSimplification:
     var cctx: Map[Str, Map[Str, TrivialExpr]] = Map.empty
-    override def visit(x: GOProgram) =
-      val new_defs = x.defs.map(x => { cctx = Map.empty; x.accept_visitor(this)})
+
+    def run(x: GOProgram) =
+      val new_defs = x.defs.map(x => { cctx = Map.empty; x.copy(body = f(x.body)) })
       relink(x.main, new_defs)
       validate(x.main, new_defs)
       GOProgram(x.classes, new_defs, x.main)
-    override def visit(node: LetExpr) = node match
-      case LetExpr(x, sel @ Select(y, cls, field), e2) if cctx.contains(y.str) =>
+
+    private def f(x: GONode): GONode = x match
+      case Result(res) => x
+      case Jump(defn, args) => x
+      case Case(scrut, cases) => Case(scrut, cases map { (cls, arm) => (cls, f(arm)) }).copy_tag(x)
+      case LetExpr(name, sel @ Select(y, cls, field), e2) if cctx.contains(y.str) =>
         cctx.get(y.str) match
           case Some(m) =>
             m.get(field) match 
               case Some(v) =>
-                LetExpr(x, v.to_expr, e2.accept_visitor(this)) 
+                LetExpr(name, v.to_expr, f(e2)) .copy_tag(x)
               case None => 
-                LetExpr(x, sel, e2.accept_visitor(this))
-          case None => LetExpr(x, sel, e2.accept_visitor(this))
-      case LetExpr(x, y @ CtorApp(cls, args), e2) =>
+                LetExpr(name, sel, f(e2)).copy_tag(x)
+          case None => LetExpr(name, sel, f(e2)).copy_tag(x)
+      case LetExpr(name, y @ CtorApp(cls, args), e2) =>
         val m = cls.fields.zip(args).toMap
-        cctx = cctx + (x.str -> m)
-        LetExpr(x, y, e2.accept_visitor(this))
-      case LetExpr(x, e1, e2) =>
-        LetExpr(x, e1.accept_visitor(this), e2.accept_visitor(this))
+        cctx = cctx + (name.str -> m)
+        LetExpr(name, y, f(e2)).copy_tag(x)
+      case LetExpr(name, e1, e2) =>
+        LetExpr(name, e1, f(e2)).copy_tag(x)
+      case LetCall(names, defn, args, body) =>
+        LetCall(names, defn, args, f(body)).copy_tag(x)
 
-  private class DestructSimplification extends GOVisitor:
+  private class DestructSimplification:
     var cctx: Map[Str, Str] = Map.empty
-    override def visit(x: GOProgram) =
-      val new_defs = x.defs.map(x => { cctx = Map.empty; x.accept_visitor(this)})
-      relink(x.main, new_defs)
-      validate(x.main, new_defs)
-      GOProgram(x.classes, new_defs, x.main)
-    override def visit(expr: LetExpr) = expr match
-      case LetExpr(x, y @ CtorApp(cls, args), e2) =>
-        cctx = cctx + (x.str -> cls.ident)
-        LetExpr(x, y, e2.accept_visitor(this))
-      case LetExpr(x, e1, e2) =>
-        LetExpr(x, e1.accept_visitor(this), e2.accept_visitor(this))
-    
-    override def visit(x: Case) = x match
+
+    private def f(x: GONode): GONode = x match
+      case Result(res) => x
+      case Jump(defn, args) => x
       case Case(scrut, cases) if cctx.contains(scrut.str) =>
         cctx.get(scrut.str) match
           case Some(cls) =>
             val arm = cases.find(_._1.ident == cls).get._2
-            arm.accept_visitor(this)
+            f(arm)
           case None =>
-            Case(scrut, cases map { (cls, arm) => (cls, arm.accept_visitor(this)) })
+            Case(scrut, cases map { (cls, arm) => (cls, f(arm)) }).copy_tag(x)
       case Case(scrut, cases) =>
-        Case(scrut, cases map { (cls, arm) => (cls, arm.accept_visitor(this)) })
+        Case(scrut, cases map { (cls, arm) => (cls, f(arm)) }).copy_tag(x)
+      case LetExpr(name, y @ CtorApp(cls, args), e2) =>
+        cctx = cctx + (name.str -> cls.ident)
+        LetExpr(name, y, f(e2)).copy_tag(x)
+      case LetExpr(name, e1, e2) =>
+        LetExpr(name, e1, f(e2)).copy_tag(x)
+      case LetCall(names, defn, args, body) =>
+        LetCall(names, defn, args, f(body)).copy_tag(x)
+
+    def run(x: GOProgram) =
+      val new_defs = x.defs.map(x => { cctx = Map.empty; x.copy(body = f(x.body)) })
+      relink(x.main, new_defs)
+      validate(x.main, new_defs)
+      GOProgram(x.classes, new_defs, x.main)
+
 
   private def argsToStrs(args: Ls[TrivialExpr]) = {
     args.flatMap {
@@ -1413,42 +1442,44 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
       val xdefs = GODefRevPostOrdering.ordered(x.main, x.defs)
       xdefs.foreach(_.accept_iterator(this))
 
-  private class DeadCodeElimination extends GOVisitor:
+  private class DeadCodeElimination:
     val ua = UsefulnessAnalysis()
     var cur_defn: Opt[GODef] = None
     val defs = MutHMap[Name, Int]()
 
-    override def visit_name_def(x: Name) = 
+    private def addDef(x: Name) =
       defs.update(x, defs.getOrElse(x, 0) + 1)
-      x
-
-    override def visit_param(x: Name) = 
-      visit_name_def(x)
-
-    override def visit(y: LetExpr) = y match
-      case LetExpr(x, e1, e2) =>
-        x.accept_def_visitor(this)
-        e1.accept_visitor(this)
-        ua.uses.get((x, defs(x))) match
+    
+    private def f(x: GONode): GONode = x match
+      case Result(res) => x
+      case Jump(defn, args) => x
+      case Case(scrut, cases) => Case(scrut, cases map { (cls, arm) => (cls, f(arm)) }).copy_tag(x)
+      case LetExpr(name, expr, body) =>
+        addDef(name)
+        ua.uses.get((name, defs(name))) match
           case Some(n) =>
-            // if x.getElim.size == 0 then throw GraphOptimizingError(s"$x $n ${cur_defn.get}")
-            LetExpr(x, e1, e2.accept_visitor(this)) 
+            LetExpr(name, expr, f(body)).copy_tag(x)
           case None =>
-            e2.accept_visitor(this)
+            f(body)
+      case LetCall(names, defn, args, body) =>
+        names.foreach(addDef)
+        LetCall(names, defn, args, f(body)).copy_tag(x)
 
-    override def visit(x: GOProgram) =
+    def run(x: GOProgram) =
       x.accept_iterator(ua)
-      val defs = GODefRevPostOrdering.ordered(x.main, x.defs)
-      val new_defs = defs.map { x =>
-        cur_defn = Some(x)  
-        x.accept_visitor(this)
+      val fns = GODefRevPostOrdering.ordered(x.main, x.defs)
+      val new_fns = fns.map { x =>
+        cur_defn = Some(x)
+        x.params.foreach(addDef)
+        val r = f(x.body)
+        cur_defn = None
+        GODef(x.id, x.name, x.isjp, x.params, x.resultNum, x.specialized, r)
       }.toSet
-      relink(x.main, new_defs)
-      validate(x.main, new_defs)
-      GOProgram(x.classes, new_defs, x.main)
+      relink(x.main, new_fns)
+      validate(x.main, new_fns)
+      GOProgram(x.classes, new_fns, x.main)
 
-  private class RemoveTrivialCallAndJump extends GOVisitor:
-
+  private class RemoveTrivialCallAndJump:
     private def subst_let_expr(le: LetExpr, map: Map[Name, TrivialExpr]): (Ls[(Name, TrivialExpr)], LetExpr) =  
       var let_list = Ls[(Name, TrivialExpr)]()
       val new_expr = le.expr.map_name {
@@ -1461,13 +1492,13 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
             y
         
       }
-      val kernel: LetExpr = LetExpr(le.name, new_expr, le.body)
+      val kernel = LetExpr(le.name, new_expr, le.body).attach_tag_as[LetExpr](tag)
       (let_list, kernel)
 
     private def subst_let_expr_to_node(le: LetExpr, map: Map[Name, TrivialExpr]): GONode =
       val (let_list, kernel) = subst_let_expr(le, map)
       let_list.foldLeft(kernel) {
-        case (accu, (name, value)) => LetExpr(name, value.to_expr, accu)
+        case (accu, (name, value)) => LetExpr(name, value.to_expr, accu).attach_tag_as[LetExpr](tag)
       }
 
     private def param_to_arg(param: TrivialExpr, map: Map[Name, TrivialExpr]): TrivialExpr = param match
@@ -1477,47 +1508,46 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
 
     private def params_to_args(params: Ls[TrivialExpr], map: Map[Name, TrivialExpr]): Ls[TrivialExpr] =
       params.map(param_to_arg(_, map))
-    override def visit(x: GOProgram) =
-      val new_defs = x.defs.map(_.accept_visitor(this))
-      relink(x.main, new_defs)
-      GOProgram(x.classes, new_defs, x.main)
-    
-    override def visit(x: Jump) = x match
+
+    private def f(x: GONode): GONode = x match
+      case Result(res) => x
       case Jump(defnref, as) =>
         val defn = defnref.expectDefn 
         val parammap = defn.params.zip(as).toMap
         defn.body match
           case Result(ys) =>
-            Result(params_to_args(ys, parammap))
+            Result(params_to_args(ys, parammap)).attach_tag(tag)
           case Jump(defnref, as) =>
-            Jump(defnref, params_to_args(as, parammap))
+            Jump(defnref, params_to_args(as, parammap)).attach_tag(tag)
           case le @ LetExpr(y, e1, Result(Ref(z) :: Nil)) if y == z =>
             subst_let_expr_to_node(le, parammap)
           case _ => x
-
-    override def visit(x: LetCall) = x match
+      case Case(scrut, cases) => Case(scrut, cases.map { (cls, arm) => (cls, f(arm)) }).copy_tag(x)
+      case LetExpr(name, expr, body) => LetExpr(name, expr, f(body)).copy_tag(x)
       case LetCall(xs, defnref, as, e) =>
         val defn = defnref.expectDefn
         val parammap = defn.params.zip(as).toMap
         defn.body match
           case Result(ys) =>
-            val init = e.accept_visitor(this) 
+            val init = e |> f
             xs.zip(ys).foldRight(init) {
               case ((name, retval), node) =>
-                LetExpr(name, param_to_arg(retval, parammap).to_expr, node)
+                LetExpr(name, param_to_arg(retval, parammap).to_expr, node).attach_tag(tag)
             }
           case le @ LetExpr(y, e1, Result(Ref(z) :: Nil)) if y == z =>
             val (let_list, kernel) = subst_let_expr(le, parammap)
             let_list.foldLeft(
               LetExpr(kernel.name, kernel.expr,
-                LetExpr(xs.head, Ref(kernel.name), e.accept_visitor(this)))) {
-              case (accu, (name, value)) => LetExpr(name, value.to_expr, accu)
+                LetExpr(xs.head, Ref(kernel.name), e |> f).attach_tag(tag)).attach_tag(tag)) {
+              case (accu, (name, value)) => LetExpr(name, value.to_expr, accu).attach_tag(tag)
             }
-          case _ => LetCall(xs, defnref, as, e.accept_visitor(this))  
+          case _ => LetCall(xs, defnref, as, e |> f)  
 
-  private object Identity extends GOVisitor:
-    override def visit(x: GOProgram) = x
-    override def visit(x: GODef) = x
+    def run(x: GOProgram) =
+      val new_defs = x.defs.map{ x => x.copy(body = f(x.body)) }
+      relink(x.main, new_defs)
+      validate(x.main, new_defs)
+      GOProgram(x.classes, new_defs, x.main)
 
   def simplifyProgram(prog: GOProgram): GOProgram = {
     var changed = true
@@ -1529,15 +1559,15 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
       val rtcj = RemoveTrivialCallAndJump()
       val dce = DeadCodeElimination()
       var sf = s
-      sf = sf.accept_visitor(ds)
+      sf = ds.run(sf)
       activeAnalyze(sf)
-      sf = sf.accept_visitor(ss)
+      sf = ss.run(sf)
       activeAnalyze(sf)
-      sf = sf.accept_visitor(tbs)
+      sf = tbs.run(sf)
       activeAnalyze(sf)
-      sf = sf.accept_visitor(rtcj)
+      sf = rtcj.run(sf)
       activeAnalyze(sf)
-      sf = sf.accept_visitor(dce)
+      sf = dce.run(sf)
       activeAnalyze(sf)
       validate(sf.main, sf.defs)
       changed = s.defs != sf.defs
@@ -1580,7 +1610,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
     RecursiveBoundaryAnalysis.run(prog)
     prog
 
-  private object RecursiveBoundaryAnalysis extends GOIterator:
+  private object RecursiveBoundaryAnalysis:
     import GOExpr._
     import GONode._
     import Elim._
@@ -1606,25 +1636,30 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
           defn.recBoundary = None
       }
 
-  private class CallAnalysis extends GOIterator:
+  private class CallAnalysis:
     val cg = MutHMap[Str, MutHSet[Str]]()
     private var cur_defn: Opt[GODef] = None
-    override def iterate(x: LetCall): Unit =
-      if cur_defn.nonEmpty then
-        cg.getOrElseUpdate(cur_defn.get.getName, MutHSet.empty) += x.defn.getName
-        x.body.accept_iterator(this)
-    override def iterate(x: Jump): Unit =
-      if cur_defn.nonEmpty then
-        cg.getOrElseUpdate(cur_defn.get.getName, MutHSet.empty) += x.defn.getName
-    override def iterate(x: GODef): Unit =
-      cur_defn = Some(x)
-      x.body.accept_iterator(this)
-      cur_defn = None
+
+    private def f(x: GONode): Unit = x match
+      case Result(res) => 
+      case Jump(defn, args) => 
+        if cur_defn.nonEmpty then
+          cg.getOrElseUpdate(cur_defn.get.getName, MutHSet.empty) += defn.getName
+      case Case(scrut, cases) => cases foreach { (cls, arm) => f(arm) }
+      case LetExpr(name, expr, body) => f(body)
+      case LetCall(names, defn, args, body) =>
+        if cur_defn.nonEmpty then
+          cg.getOrElseUpdate(cur_defn.get.getName, MutHSet.empty) += defn.getName
+          f(body)
 
     def call_graph(x: GOProgram): Map[Str, Set[Str]] = 
       cg.clear()
       cg.addAll(x.defs.map(x => x.getName -> MutHSet.empty))
-      x.accept_iterator(this)
+      x.defs.foreach{ defn =>
+        cur_defn = Some(defn)
+        f(defn.body)
+        cur_defn = None
+      }
       cg.map { (k, v) => k -> v.toSet }.toMap
 
     def scc(): List[Set[Str]] =
@@ -1664,25 +1699,3 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, verbos
       }
       
       sccs
-
-
-  def copyParamsAndBuildMap(params: Ls[Name]) = 
-    val new_params = params.map(_.copy)
-    val map = params.zip(new_params).map((x, y) => (x.str, y)).toMap
-    (new_params, map)
-
-  private object DuplicateDefinition:
-    import GONode._
-    
-    def run(x: GODef) =
-      val (new_params, map) = copyParamsAndBuildMap(x.params)
-      val y = GODef(
-        fn_uid.make,
-        fresh.make(x.name + "$C").str,
-        x.isjp,
-        new_params,
-        x.resultNum,
-        x.specialized,
-        x.body.copy(map),
-      )
-      y

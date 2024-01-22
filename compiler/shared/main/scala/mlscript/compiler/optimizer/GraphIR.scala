@@ -179,7 +179,7 @@ enum Intro:
 implicit object IntroOrdering extends Ordering[Intro]:
   override def compare(a: Intro, b: Intro) = a.toString.compare(b.toString)
 
-class GODef(
+case class GODef(
   val id: Int,
   val name: Str,
   val isjp: Bool,
@@ -354,7 +354,16 @@ enum GONode:
   case LetExpr(name: Name, expr: GOExpr, body: GONode)
   case LetCall(names: Ls[Name], defn: GODefRef, args: Ls[TrivialExpr], body: GONode)
 
-  val tag = DefnTag(-1)
+  var tag = DefnTag(-1)
+
+  def attach_tag(x: FreshInt): GONode =
+    this.tag = DefnTag(x.make)
+    this
+  def attach_tag_as[V](x: FreshInt): V =
+    attach_tag(x).asInstanceOf[V]
+  def copy_tag(x: GONode) =
+    this.tag = x.tag
+    this
 
   override def toString: String = show
 

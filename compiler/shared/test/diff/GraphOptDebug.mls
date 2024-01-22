@@ -37,14 +37,14 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%0 = ==(n%0,0) -- #x
-//│   in if x%0 -- #x
-//│     true => let x%1 = Nil() -- #x
-//│       in jump j%0(x%1) -- #x
-//│     false => let x%2 = -(n%0,1) -- #x
-//│       in let* (x%3) = mk_list(x%2) -- #x
-//│         in let x%4 = Cons(n%0,x%3) -- #x
-//│           in jump j%0(x%4) -- #x
+//│ let x%0 = ==(n%0,0) -- #24
+//│   in if x%0 -- #23
+//│     true => let x%1 = Nil() -- #5
+//│       in jump j%0(x%1) -- #4
+//│     false => let x%2 = -(n%0,1) -- #21
+//│       in let* (x%3) = mk_list(x%2) -- #20
+//│         in let x%4 = Cons(n%0,x%3) -- #19
+//│           in jump j%0(x%4) -- #18
 //│ )
 //│ Def(1, @join j%0, [x%5], [{}],
 //│ S: None,
@@ -60,13 +60,13 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case l%0 of -- #x
-//│   Nil => let x%6 = None() -- #x
-//│     in jump j%1(x%6) -- #x
-//│   Cons => let x%7 = l%0.t -- #x
-//│     in let x%8 = l%0.h -- #x
-//│       in let x%9 = Some(x%8) -- #x
-//│         in jump j%1(x%9) -- #x
+//│ case l%0 of -- #42
+//│   Nil => let x%6 = None() -- #28
+//│     in jump j%1(x%6) -- #27
+//│   Cons => let x%7 = l%0.t -- #40
+//│     in let x%8 = l%0.h -- #39
+//│       in let x%9 = Some(x%8) -- #38
+//│         in jump j%1(x%9) -- #37
 //│ )
 //│ Def(3, @join j%1, [x%10], [{}],
 //│ S: None,
@@ -82,12 +82,12 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case o%0 of -- #x
-//│   None => let x%11 = True() -- #x
-//│     in jump j%2(x%11) -- #x
-//│   Some => let x%12 = o%0.x -- #x
-//│     in let x%13 = False() -- #x
-//│       in jump j%2(x%13) -- #x
+//│ case o%0 of -- #54
+//│   None => let x%11 = True() -- #46
+//│     in jump j%2(x%11) -- #45
+//│   Some => let x%12 = o%0.x -- #52
+//│     in let x%13 = False() -- #51
+//│       in jump j%2(x%13) -- #50
 //│ )
 //│ Def(5, @join j%2, [x%14], [{}],
 //│ S: None,
@@ -103,8 +103,8 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%15) = head_opt(l%1) -- #x
-//│   in let* (x%16) = is_none(x%15) -- #x
+//│ let* (x%15) = head_opt(l%1) -- #65
+//│   in let* (x%16) = is_none(x%15) -- #64
 //│     in x%16
 //│ )
 //│ Def(7, main, [], [{}],
@@ -113,12 +113,12 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%17) = mk_list(10) -- #x
-//│   in let* (x%18) = is_empty(x%17) -- #x
+//│ let* (x%17) = mk_list(10) -- #76
+//│   in let* (x%18) = is_empty(x%17) -- #75
 //│     in x%18
 //│ )
 //│ },
-//│ let* (x%19) = main() -- #x
+//│ let* (x%19) = main() -- #80
 //│   in x%19)
 //│ 
 //│ Promoted ------------------------------------
@@ -129,13 +129,13 @@ main()
 //│ R: [Some(IMix(ICtor(Cons),ICtor(Nil)))],
 //│ Rec: Some(4),
 //│ 1, 
-//│ let x%0 = ==(n%0,0) -- #x
-//│   in if x%0 -- #x
-//│     true => let x%1 = Nil() -- #x
+//│ let x%0 = ==(n%0,0) -- #24
+//│   in if x%0 -- #23
+//│     true => let x%1 = Nil() -- #5
 //│       in x%1
-//│     false => let x%2 = -(n%0,1) -- #x
+//│     false => let x%2 = -(n%0,1) -- #21
 //│       in let* (x%3) = mk_list(x%2) -- #x
-//│         in let x%4 = Cons(n%0,x%3) -- #x
+//│         in let x%4 = Cons(n%0,x%3) -- #19
 //│           in x%4
 //│ )
 //│ Def(2, head_opt, [l%0], [{<EDestruct@head_opt:case l%0 of ...>,<EDirect@head_opt:case l%0 of ...>,<ESelect(h)@head_opt:let x%8 = ...>}],
@@ -144,11 +144,11 @@ main()
 //│ R: [Some(IMix(ICtor(None),ICtor(Some)))],
 //│ Rec: None,
 //│ 1, 
-//│ case l%0 of -- #x
-//│   Nil => let x%6 = None() -- #x
+//│ case l%0 of -- #42
+//│   Nil => let x%6 = None() -- #28
 //│     in x%6
-//│   Cons => let x%8 = l%0.h -- #x
-//│     in let x%9 = Some(x%8) -- #x
+//│   Cons => let x%8 = l%0.h -- #39
+//│     in let x%9 = Some(x%8) -- #38
 //│       in x%9
 //│ )
 //│ Def(4, is_none, [o%0], [{<EDestruct@is_none:case o%0 of ...>,<EDirect@is_none:case o%0 of ...>}],
@@ -157,10 +157,10 @@ main()
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ case o%0 of -- #x
-//│   None => let x%11 = True() -- #x
+//│ case o%0 of -- #54
+//│   None => let x%11 = True() -- #46
 //│     in x%11
-//│   Some => let x%13 = False() -- #x
+//│   Some => let x%13 = False() -- #51
 //│     in x%13
 //│ )
 //│ Def(6, is_empty, [l%1], [{<EDirect@is_empty:let* (x%15) = head_opt ...>,<EIndirectDestruct@is_empty:let* (x%15) = head_opt ...>,<ESelect(h)@head_opt:let x%8 = ...>}],
@@ -184,7 +184,7 @@ main()
 //│     in x%18
 //│ )
 //│ },
-//│ let* (x%19) = main() -- #x
+//│ let* (x%19) = main() -- #80
 //│   in x%19)
 //│ 
 //│ Interpreted ------------------------------
@@ -228,7 +228,7 @@ main()
 //│ 1, 
 //│ case l%1 of -- #x
 //│   Cons => let x%23 = l%1.h -- #x
-//│     in let x%9 = Some(x%23) -- #x
+//│     in let x%9 = Some(x%23) -- #93
 //│       in jump is_empty$M%0(x%9) -- #x
 //│   Nil => let x%6 = None() -- #x
 //│     in jump is_empty$M%0(x%6) -- #x

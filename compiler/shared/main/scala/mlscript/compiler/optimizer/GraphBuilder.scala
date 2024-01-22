@@ -8,7 +8,7 @@ import collection.mutable.ListBuffer
 
 final val ops = Set("+", "-", "*", "/", ">", "<", ">=", "<=", "!=", "==")
 
-final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
+final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshInt):
   import GONode._
   import GOExpr._
   
@@ -28,8 +28,8 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
   )
 
   private def ref(x: Name) = Ref(x)
-  private def result(x: Ls[TrivialExpr]) = Result(x)
-  private def sresult(x: TrivialExpr) = Result(Ls(x))
+  private def result(x: Ls[TrivialExpr]) = Result(x).attach_tag(tag)
+  private def sresult(x: TrivialExpr) = Result(Ls(x)).attach_tag(tag)
   private def unexpected_node(x: GONode) = throw GraphOptimizingError(s"unsupported node $x")
   private def unexpected_term(x: Term) = throw GraphOptimizingError(s"unsupported term $x")
 
@@ -43,7 +43,7 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
         given Ctx = ctx.copy(name_ctx = ctx.name_ctx + (name -> v))
         LetExpr(v,
           lit,
-          buildResultFromTerm(body)(k))
+          buildResultFromTerm(body)(k)).attach_tag(tag)
       case node @ _ => node |> unexpected_node
     }
   
@@ -79,7 +79,7 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
           val v = fresh.make
           LetExpr(v,
             CtorApp(ctx.class_ctx(name), Nil),
-            v |> ref |> sresult |> k)
+            v |> ref |> sresult |> k).attach_tag(tag)
         else
           ctx.name_ctx.get(name) match {
             case Some(x) => x |> ref |> sresult |> k
@@ -98,7 +98,7 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
                 val v = fresh.make
                 LetExpr(v,
                   BasicOp(name, List(v1, v2)),
-                  v |> ref |> sresult |> k)
+                  v |> ref |> sresult |> k).attach_tag(tag)
               case node @ _ => node |> unexpected_node
             }
           case node @ _ => node |> unexpected_node
@@ -110,7 +110,7 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
             val v = fresh.make
             LetExpr(v,
               CtorApp(ctx.class_ctx(name), args),
-              v |> ref |> sresult |> k)
+              v |> ref |> sresult |> k).attach_tag(tag)
           case node @ _ => node |> unexpected_node
         }
 
@@ -119,7 +119,7 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
         case Result(Ref(f) :: Nil) if ctx.fn_ctx.contains(f.str) => buildResultFromTerm(xs) {
           case Result(args) =>
             val v = fresh.make
-            LetCall(List(v), GODefRef(Right(f.str)), args, v |> ref |> sresult |> k)
+            LetCall(List(v), GODefRef(Right(f.str)), args, v |> ref |> sresult |> k).attach_tag(tag)
           case node @ _ => node |> unexpected_node
         }
         case Result(Ref(f) :: Nil) => buildResultFromTerm(xs) {
@@ -138,11 +138,11 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
           case Result(Ref(cond) :: Nil) => 
             val jp = fresh make "j"
             val tru2 = buildResultFromTerm(tru) {
-              case Result(xs) => Jump(GODefRef(Right(jp.str)), xs)
+              case Result(xs) => Jump(GODefRef(Right(jp.str)), xs).attach_tag(tag)
               case node @ _ => node |> unexpected_node
             }
             val fls2 = buildResultFromTerm(fls) {
-              case Result(xs) => Jump(GODefRef(Right(jp.str)), xs)
+              case Result(xs) => Jump(GODefRef(Right(jp.str)), xs).attach_tag(tag)
               case node @ _ => node |> unexpected_node
             }
             val res = fresh.make
@@ -158,7 +158,7 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
               res |> ref |> sresult |> k
             )
             ctx.jp_acc.addOne(jpdef)
-            Case(cond, Ls((ctx.class_ctx("True"), tru2), (ctx.class_ctx("False"), fls2)))
+            Case(cond, Ls((ctx.class_ctx("True"), tru2), (ctx.class_ctx("False"), fls2))).attach_tag(tag)
           case node @ _ => node |> unexpected_node
         }
         
@@ -178,13 +178,13 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
                   given Ctx = ctx.copy(name_ctx = ctx.name_ctx + (scrut.str -> scrut))
                   buildResultFromTerm(
                     bindingPatternVariables(scrut.str, params, ctx.class_ctx(ctor), rhs)) {
-                      case Result(xs) => Jump(GODefRef(Right(jp.str)), xs)
+                      case Result(xs) => Jump(GODefRef(Right(jp.str)), xs).attach_tag(tag)
                       case node @ _ => node |> unexpected_node
                     }
                 }
               case L(IfThen(Var(ctor), rhs)) =>
                 ctx.class_ctx(ctor) -> buildResultFromTerm(rhs) {
-                  case Result(xs) => Jump(GODefRef(Right(jp.str)), xs)
+                  case Result(xs) => Jump(GODefRef(Right(jp.str)), xs).attach_tag(tag)
                   case node @ _ => node |> unexpected_node
                 }
               case _ => throw GraphOptimizingError(s"not supported UCS")
@@ -200,7 +200,7 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
               res |> ref |> sresult |> k
             )
             ctx.jp_acc.addOne(jpdef)
-            Case(scrut, cases)
+            Case(scrut, cases).attach_tag(tag)
           case node @ _ => node |> unexpected_node
         }
 
@@ -223,7 +223,7 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt):
             val cls = ctx.field_ctx(fld)._2
             LetExpr(v,
               Select(res, cls, fld),
-              v |> ref |> sresult |> k) 
+              v |> ref |> sresult |> k).attach_tag(tag)
           case node @ _ => node |> unexpected_node
         }
 
