@@ -5,6 +5,7 @@ import mlscript.{Lit, Loc, Located, SimpleTerm, TypeName, Var}
 import mlscript.pretyper.symbol.TypeSymbol
 import mlscript.utils._, shorthands._
 import mlscript.pretyper.symbol.DummyClassSymbol
+import mlscript.pretyper.symbol.ModuleSymbol
 
 sealed abstract class Pattern {
   private val locationsBuffer: Buffer[Loc] = Buffer.empty
@@ -68,6 +69,7 @@ object Pattern {
 
     override def showInDiagnostics: Str = s"${(classLikeSymbol match {
       case dummySymbol: DummyClassSymbol => "class"
+      case s: ModuleSymbol if s.name === "true" || s.name === "false" => s"Boolean value"
       case otherSymbol: TypeSymbol => otherSymbol.defn.kind.str
     })} `${classLikeSymbol.name}`"
 
@@ -126,29 +128,5 @@ object Pattern {
       }
 
     override def toCasePattern: SimpleTerm = literal.withLoc(firstOccurrence)
-  }
-
-  /**
-    * This can be actually merged with `Pattern.Literal`. However, there's no
-    * `Lit` sub-classes for Boolean types, so the representation is a little bit
-    * awkward, also, it makes sense to consider Boolean patterns separately
-    * because we can check the Boolean exhaustiveness with them.
-    */
-  final case class Boolean(val value: Var) extends Pattern {
-    require(value.name === "true" || value.name === "false")
-
-    override def arity: Opt[Int] = N
-
-    override def showDbg: Str = value.name
-
-    override def showInDiagnostics: Str = s"Boolean value ${value.name}"
-
-    override def matches(pat: SimpleTerm): Bool =
-      pat match {
-        case Var(name) => value.name === name
-        case _ => false
-      }
-
-    override def toCasePattern: SimpleTerm = value.withLoc(firstOccurrence)
   }
 }

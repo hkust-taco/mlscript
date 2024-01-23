@@ -57,14 +57,7 @@ class Context(originalTerm: If) {
     scrutinee
   }
 
-  /**
-    * Create a `MatchRegistry` from the current context.
-    */
-  def toMatchRegistry: MatchRegistry =
-    scrutineeBuffer.iterator.flatMap { scrutinee =>
-      val caseSet = scrutinee.toCaseSet
-      scrutinee.aliasesIterator.map(alias => (alias -> scrutinee) -> caseSet)
-    }.toMap
+  def scrutinees: Iterator[Scrutinee] = scrutineeBuffer.iterator
 }
 
 object Context {

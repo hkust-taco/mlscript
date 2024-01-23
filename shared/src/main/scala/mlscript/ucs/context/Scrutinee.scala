@@ -4,7 +4,6 @@ import collection.mutable.{Buffer, SortedMap => MutSortedMap, SortedSet => MutSo
 import mlscript.{Lit, Loc, Var}
 import mlscript.pretyper.symbol.TypeSymbol
 import mlscript.utils._, shorthands._
-import mlscript.ucs.context.CaseSet
 import mlscript.DecLit
 import mlscript.IntLit
 import mlscript.StrLit
@@ -26,11 +25,6 @@ class Scrutinee(val context: Context, parent: Opt[Scrutinee]) {
   private var aliasVarSet: MutSortedSet[Var] = MutSortedSet.empty
 
   private val literalPatterns: MutSortedMap[Lit, Pattern.Literal] = MutSortedMap.empty(literalOrdering)
-  /**
-    * The key should be either `Var("true")` or `Var("false")`. We want to keep
-    * the type symbol of the variable so that it still work in following stages.
-    */
-  private val booleanPatterns: MutSortedMap[Var, Pattern.Boolean] = MutSortedMap.empty(varNameOrdering)
 
   def addAliasVar(alias: Var): Unit = aliasVarSet += alias
 
@@ -78,17 +72,10 @@ class Scrutinee(val context: Context, parent: Opt[Scrutinee]) {
   def getOrCreateLiteralPattern(literal: Lit): Pattern.Literal =
     literalPatterns.getOrElseUpdate(literal, Pattern.Literal(literal))
 
-  /**
-    * The key should be either `Var("true")` or `Var("false")`. We want to keep
-    * the type symbol of the variable so that it still work in following stages.
-    */
-  def getOrCreateBooleanPattern(value: Var): Pattern.Boolean =
-    booleanPatterns.getOrElseUpdate(value, Pattern.Boolean(value))
-
   def classLikePatternsIterator: Iterator[Pattern.ClassLike] = classLikePatterns.valuesIterator
 
   def patternsIterator: Iterator[Pattern] =
-    classLikePatterns.valuesIterator ++ literalPatterns.valuesIterator ++ booleanPatterns.valuesIterator
+    classLikePatterns.valuesIterator ++ literalPatterns.valuesIterator
 
   /** Get a list of string representation of patterns. Only for debugging. */
   private[ucs] def showPatternsDbg: Str = {
@@ -102,8 +89,6 @@ class Scrutinee(val context: Context, parent: Opt[Scrutinee]) {
   }
 
   def freshSubScrutinee: Scrutinee = context.freshScrutinee(this)
-
-  def toCaseSet: CaseSet = CaseSet(patternsIterator.toList)
 
   def getReadableName(scrutineeVar: Var): Str = {
     parent match {

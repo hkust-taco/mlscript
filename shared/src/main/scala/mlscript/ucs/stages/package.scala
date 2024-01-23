@@ -1,7 +1,7 @@
 package mlscript.ucs
 
-import mlscript.{App, Fld, FldFlags, Lit, PlainTup, Term, Tup, Var}
-import mlscript.pretyper.symbol._
+import mlscript.{App, DecLit, Fld, FldFlags, IntLit, Lit, PlainTup, StrLit, Term, Tup, Var}
+import mlscript.pretyper.symbol.TypeSymbol
 import mlscript.utils._, shorthands._
 
 package object stages {
@@ -65,4 +65,33 @@ package object stages {
         }
       case _ => (term, N)
     }
+
+  /**
+    * Hard-coded subtyping relations used in normalization and coverage checking.
+    * Pass literals in `L` and pass variables together with `TypeSymbol` in `R`.
+    */
+  private[ucs] def compareCasePattern(
+      lhs: Opt[Lit \/ TypeSymbol],
+      rhs: Opt[Lit \/ TypeSymbol]
+  ): Bool = (lhs, rhs) match {
+    case (S(lhs), S(rhs)) => compareCasePattern(lhs, rhs)
+    case (_, _) => false
+  }
+  /**
+    * Hard-coded subtyping relations used in normalization and coverage checking.
+    * Pass literals in `L` and pass variables together with `TypeSymbol` in `R`.
+    */
+  private[stages] def compareCasePattern(
+      lhs: Lit \/ TypeSymbol,
+      rhs: Lit \/ TypeSymbol
+  ): Bool = (lhs, rhs) match {
+    case (_, R(s)) if s.name === "Object" => true
+    case (R(s1), R(s2)) if (s1.name === "true" || s1.name === "false") && s2.name === "Bool" => true
+    case (R(s1), R(s2)) if s1.name === "Int" && s2.name === "Num" => true
+    case (R(s1), R(s2)) => s1 hasBaseClass s2
+    case (L(IntLit(_)), R(s)) if s.name === "Int" || s.name === "Num" => true
+    case (L(StrLit(_)), R(s)) if s.name === "Str" => true
+    case (L(DecLit(_)), R(s)) if s.name === "Num" => true
+    case (_, _) => false
+  }
 }

@@ -1,6 +1,6 @@
 package mlscript.ucs.stages
 
-import mlscript.{App, CaseOf, DecLit, Fld, FldFlags, IntLit, Let, Loc, Sel, Term, Tup, Var, StrLit}
+import mlscript.{App, CaseOf, DecLit, Fld, FldFlags, IntLit, Let, Lit, Loc, Sel, Term, Tup, Var, StrLit}
 import mlscript.{CaseBranches, Case, Wildcard, NoCases}
 import mlscript.Message, Message.MessageContext
 import mlscript.utils._, shorthands._
@@ -77,16 +77,14 @@ trait Normalization { self: Desugarer with Traceable =>
       case (Pattern.Literal(l1), Pattern.Literal(l2)) => l1 === l2
       case (_, _) => false
     }
-    /** Hard-code sub-typing relations. */
-    def <:<(other: Pattern): Bool = (self, other) match {
-      case (Pattern.Class(Var("true"), _, _), Pattern.Class(Var("Bool"), _, _)) => true
-      case (Pattern.Class(Var("false"), _, _), Pattern.Class(Var("Bool"), _, _)) => true
-      case (Pattern.Class(Var("Int"), _, _), Pattern.Class(Var("Num"), _, _)) => true
-      case (Pattern.Class(_, s1, _), Pattern.Class(_, s2, _)) => s1 hasBaseClass s2
-      case (Pattern.Literal(IntLit(_)), Pattern.Class(Var("Int" | "Num"), _, _)) => true
-      case (Pattern.Literal(StrLit(_)), Pattern.Class(Var("Str"), _, _)) => true
-      case (Pattern.Literal(DecLit(_)), Pattern.Class(Var("Num"), _, _)) => true
-      case (_, _) => false
+    /** Checks if `self` can be subsumed under `other`. */
+    def <:<(other: Pattern): Bool = {
+      def mk(pattern: Pattern): Opt[Lit \/ TypeSymbol] = pattern match {
+        case Pattern.Class(_, s, _) => S(R(s))
+        case Pattern.Literal(l) => S(L(l))
+        case _ => N
+      }
+      compareCasePattern(mk(self), mk(other))
     }
     /**
       * If two class-like patterns has different `refined` flag. Report the

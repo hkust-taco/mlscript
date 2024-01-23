@@ -471,7 +471,7 @@ abstract class Foo: (Int -> Int) {
 
 // Object
 Object
-//│ ╔══[ERROR] identifier `Object` not found
+//│ ╔══[ERROR] identifier `Object` is resolved to a type
 //│ ║  l.473: 	Object
 //│ ╙──       	^^^^^^
 //│ ╔══[ERROR] Class Object is abstract and cannot be instantiated

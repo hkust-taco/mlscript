@@ -151,3 +151,32 @@ fun test(x, p) = if x is
 //│             case x*‡ of
 //│               false*† -> "true"
 //│ fun test: forall 'a. ('a & Bool, (Bool & 'a) -> Bool) -> ("false" | "great" | "true")
+
+:ducs:postprocess.result
+:ge
+fun test(x, p) = if x is
+  Object and p(x) then "great"
+  Bool and p(x) then "great, again"
+  true then "false"
+  false then "true"
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   refined Object*◊ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† -> "great"
+//│       _ ->
+//│         case x*‡ of
+//│           refined Bool*◊ ->
+//│             let ucs$test$1*† = p(x,) : Bool
+//│             case ucs$test$1*† of
+//│               true*† -> "great, again"
+//│               _ ->
+//│                 case x*‡ of
+//│                   true*† -> "false"
+//│                   _ ->
+//│                     case x*‡ of
+//│                       false*† -> "true"
+//│ fun test: forall 'a. ('a & Bool, (Object & 'a) -> Bool) -> ("false" | "great" | "great, again" | "true")
+//│ Code generation encountered an error:
+//│   unknown match case: Object

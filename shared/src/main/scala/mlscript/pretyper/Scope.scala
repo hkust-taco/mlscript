@@ -99,6 +99,7 @@ object Scope {
       new ModuleSymbol(mod("true")),
       new ModuleSymbol(mod("false")),
       new TypeAliasSymbol(als("nothing")),
+      new DummyClassSymbol(Var("Object")),
       new DummyClassSymbol(Var("Int")),
       new DummyClassSymbol(Var("Num")),
       new DummyClassSymbol(Var("Str")),

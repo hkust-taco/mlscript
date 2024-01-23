@@ -380,8 +380,8 @@ trait Desugaring { self: PreTyper =>
             scrutinee.getOrCreateLiteralPattern(literal).addLocation(literal)
             c.Branch(scrutineeVar, c.Pattern.Literal(literal), desugarRight) :: desugarTail
           case s.ConcretePattern(nme @ (Var("true") | Var("false"))) =>
-            scrutinee.getOrCreateBooleanPattern(nme).addLocation(nme)
             val classSymbol = nme.resolveClassLikeSymbol
+            scrutinee.getOrCreateClassPattern(classSymbol).addLocation(nme)
             c.Branch(
               scrutinee = scrutineeVar,
               pattern = c.Pattern.Class(nme, classSymbol, false),

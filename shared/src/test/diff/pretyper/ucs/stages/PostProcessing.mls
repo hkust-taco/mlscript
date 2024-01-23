@@ -10,10 +10,10 @@ fun mixed_literals(v) =
 //│ Post-processed UCS term:
 //│ case v*‡ of
 //│   true*† -> "true"
-//│   false*† -> "false"
 //│   2 -> "2"
 //│   1 -> "1"
-//│ Desugared term: case v of { true => "true"; false => "false"; 2 => "2"; 1 => "1" }
+//│   false*† -> "false"
+//│ Desugared term: case v of { true => "true"; 2 => "2"; 1 => "1"; false => "false" }
 //│ fun mixed_literals: (1 | 2 | false | true) -> ("1" | "2" | "false" | "true")
 
 :ducs:postprocess.result

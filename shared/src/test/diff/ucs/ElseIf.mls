@@ -86,13 +86,13 @@ fun g(x, y) = if x is
 //│ ╔══[ERROR] `y` has 1 missing case
 //│ ║  l.84: 	  true and y is true then true
 //│ ║        	           ^
-//│ ╟── it can be Boolean value false
+//│ ╟── it can be Boolean value `false`
 //│ ║  l.85: 	  false and y is false then false
 //│ ╙──      	                 ^^^^^
 //│ ╔══[ERROR] `y` has 1 missing case
 //│ ║  l.85: 	  false and y is false then false
 //│ ║        	            ^
-//│ ╟── it can be Boolean value true
+//│ ╟── it can be Boolean value `true`
 //│ ║  l.84: 	  true and y is true then true
 //│ ╙──      	                ^^^^
 //│ fun g: (Bool, nothing) -> Bool
