@@ -18,7 +18,7 @@ trait Normalization { self: Desugarer with Traceable =>
   private def fillImpl(these: Split, those: Split)(implicit
       scope: Scope,
       context: Context,
-      generatedVars: Set[Var],
+      declaredVars: Set[Var],
       shouldReportDiscarded: Bool
   ): Split =
     if (these.hasElse) {
@@ -34,12 +34,10 @@ trait Normalization { self: Desugarer with Traceable =>
           val concatenated = these.copy(tail = fillImpl(tail, thoseWithShadowed))
           Split.Let(false, fresh, nme, concatenated)
         } else {
-          these.copy(tail = fillImpl(tail, those)(scope, context, generatedVars + nme, false))
+          these.copy(tail = fillImpl(tail, those)(scope, context, declaredVars + nme, false))
         }
       case _: Split.Else => these
-      case Split.Nil =>
-        // println(s"END, generated vars: ${generatedVars.iterator.map(_.name).mkString(", ")}")
-        those.withoutBindings(generatedVars)
+      case Split.Nil => those.withoutBindings(declaredVars)
     })
 
   private implicit class SplitOps(these: Split) {
@@ -49,7 +47,7 @@ trait Normalization { self: Desugarer with Traceable =>
       * @param those the split to append
       * @param shouldReportDiscarded whether we should raise an error if the given
       *                        split is discarded because of the else branch
-      * @param generatedVars the generated variables which have been declared
+      * @param declaredVars the generated variables which have been declared
       * @return the concatenated split
       */
     def fill(those: Split, declaredVars: Set[Var], shouldReportDiscarded: Bool)(implicit
@@ -306,7 +304,6 @@ trait Normalization { self: Desugarer with Traceable =>
       case (_, end @ (Split.Else(_) | Split.Nil)) => println("the end"); end
     }
   }()
-  // }(showSplit(s"S${if (matchOrNot) "+" else "-"} ==>", _))
 
   /**
     * If you want to prepend `tail` to another `Split` where the `nme` takes

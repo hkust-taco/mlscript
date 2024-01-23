@@ -198,7 +198,7 @@ class DiffTests
     var newParser = basePath.headOption.contains("parser") || basePath.headOption.contains("compiler")
     
     val backend = new JSTestBackend {
-      def oldDefs = !newDefs
+      override def oldDefs: Bool = !newDefs
     }
     val host = ReplHost()
     val codeGenTestHelpers = new CodeGenTestHelpers(file, output)

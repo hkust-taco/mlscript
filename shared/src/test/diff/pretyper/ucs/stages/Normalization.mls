@@ -20,8 +20,6 @@ fun sum(acc, xs) =
     Nil then acc
 //│ fun sum: (Int, Cons[Int] | Nil) -> Int
 
-// FIXME: Remove redundant `_ -> (ucs$args_xs$Some_0$Cons).1`.
-// Why are they everywhere?
 :ducs:postprocess.result
 fun test(xs) =
   if xs is
@@ -79,3 +77,53 @@ fun test(xs) =
 //│       Nil*† -> "nothing"
 //│   None*† -> "nothing"
 //│ fun test: (None | Some[Cons[nothing] | Nil]) -> ("nothing" | Int | List[nothing])
+
+:ducs:postprocess.result
+fun test(x, p) = if x is
+  Int and p(x) then "foo"
+  0 then "bar"
+  else "qax"
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   Int*◊ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† -> "foo"
+//│       _ -> "qax"
+//│   0 -> "bar"
+//│   _ -> "qax"
+//│ fun test: (Object, Int -> Bool) -> ("bar" | "foo" | "qax")
+
+:ducs:postprocess.result
+fun test(x, p) = if x is
+  Str and p(x) then "foo"
+  "lol" then "bar"
+  else "qax"
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   Str*◊ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† -> "foo"
+//│       _ -> "qax"
+//│   "lol" -> "bar"
+//│   _ -> "qax"
+//│ fun test: (Object, Str -> Bool) -> ("bar" | "foo" | "qax")
+
+:ducs:postprocess.result
+fun test(x, p) = if x is
+  Num and p(x) then "great"
+  2.71828 then "E"
+  3.14159 then "PI"
+  else "other"
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   Num*◊ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† -> "great"
+//│       _ -> "other"
+//│   3.14159 -> "PI"
+//│   2.71828 -> "E"
+//│   _ -> "other"
+//│ fun test: (Object, Num -> Bool) -> ("E" | "PI" | "great" | "other")
