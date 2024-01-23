@@ -4,7 +4,7 @@ import mlscript.{Case, CaseBranches, CaseOf, Let, Lit, Loc, NoCases, Term, Var, 
 import mlscript.{Diagnostic, ErrorReport, WarningReport}
 import mlscript.Message, Message.MessageContext
 import mlscript.ucs.Desugarer
-import mlscript.ucs.context.{Context, NamedScrutinee, Pattern, Scrutinee}
+import mlscript.ucs.context.{Context, Pattern, Scrutinee}
 import mlscript.pretyper.Traceable
 import mlscript.pretyper.symbol._
 import mlscript.utils._, shorthands._
@@ -39,7 +39,7 @@ trait CoverageChecking { self: Desugarer with Traceable =>
         println(s"checkCoverage <== TEST `${scrutineeVar.name}`")
         checkCoverage(whenTrue, pending, working, seen) ++
           checkCoverage(whenFalse, pending, working, seen)
-      case CaseOf(Scrutinee.WithVar(scrutinee, scrutineeVar), cases) =>
+      case CaseOf(Scrutinee.WithVar(scrutineeVar, scrutinee), cases) =>
         trace(s"checkCoverage <== ${pending.size} pending, ${working.size} working, ${seen.size} seen") {
           println(s"CASE ${scrutineeVar.name}")
           println(s"SEEN: ${seen.showDbg}")
@@ -131,7 +131,7 @@ trait CoverageChecking { self: Desugarer with Traceable =>
 object CoverageChecking {
   /** Create an `ErrorReport` that explains missing cases. */
   private def explainMissingCases(
-      scrutinee: NamedScrutinee,
+      scrutinee: Scrutinee.WithVar,
       seen: SeenRegistry,
       missingCases: CaseSet
   )(implicit context: Context): Opt[ErrorReport] =
@@ -164,9 +164,9 @@ object CoverageChecking {
         matchedClasses.patterns.iterator.map(_.showInDiagnostics).mkString(s">>> ${scrutineeVar.name} => [", ", ", "]")
       }.mkString("\n", "\n", "")
 
-  type ScrutineePatternSetMap = Map[NamedScrutinee, CaseSet]
+  type ScrutineePatternSetMap = Map[Scrutinee.WithVar, CaseSet]
 
-  type SeenRegistry = Map[NamedScrutinee, (TypeSymbol, Ls[Loc], CaseSet)]
+  type SeenRegistry = Map[Scrutinee.WithVar, (TypeSymbol, Ls[Loc], CaseSet)]
 
   implicit class SeenRegistryOps(val self: SeenRegistry) extends AnyVal {
     def showDbg: Str = if (self.isEmpty) "empty" else

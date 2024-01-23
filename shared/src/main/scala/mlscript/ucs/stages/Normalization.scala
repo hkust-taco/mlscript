@@ -136,7 +136,7 @@ trait Normalization { self: Desugarer with Traceable =>
         val trueBranch = normalizeToTerm(continuation.fill(tail, declaredVars, false), declaredVars)
         val falseBranch = normalizeToCaseBranches(tail, declaredVars)
         CaseOf(test, Case(nme, trueBranch, falseBranch)(refined = false))
-      case Split.Cons(Branch(Scrutinee.WithVar(scrutinee, scrutineeVar), pattern @ Pattern.Literal(literal), continuation), tail) =>
+      case Split.Cons(Branch(Scrutinee.WithVar(scrutineeVar, scrutinee), pattern @ Pattern.Literal(literal), continuation), tail) =>
         println(s"LITERAL: ${scrutineeVar.name} is ${literal.idStr}")
         println(s"entire split: ${showSplit(split)}")
         val concatenatedTrueBranch = continuation.fill(tail, declaredVars, false)
@@ -145,7 +145,7 @@ trait Normalization { self: Desugarer with Traceable =>
         // println(s"false branch: ${showSplit(tail)}")
         val falseBranch = normalizeToCaseBranches(specialize(tail, false)(scrutineeVar, scrutinee, pattern, context), declaredVars)
         CaseOf(scrutineeVar, Case(literal, trueBranch, falseBranch)(refined = false))
-      case Split.Cons(Branch(Scrutinee.WithVar(scrutinee, scrutineeVar), pattern @ Pattern.Class(nme, _, rfd), continuation), tail) =>
+      case Split.Cons(Branch(Scrutinee.WithVar(scrutineeVar, scrutinee), pattern @ Pattern.Class(nme, _, rfd), continuation), tail) =>
         println(s"CLASS: ${scrutineeVar.name} is ${nme.name}")
         // println(s"match ${scrutineeVar.name} with $nme (has location: ${nme.toLoc.isDefined})")
         val trueBranch = normalizeToTerm(specialize(continuation.fill(tail, declaredVars, false), true)(scrutineeVar, scrutinee, pattern, context), declaredVars)
@@ -211,7 +211,7 @@ trait Normalization { self: Desugarer with Traceable =>
       case (m, Split.Cons(head @ Branch(test, Pattern.Class(Var("true"), _, _), continuation), tail)) if context.isTestVar(test) =>
         println(s"TEST: ${test.name} is true")
         head.copy(continuation = specialize(continuation, m)) :: specialize(tail, m)
-      case (true, split @ Split.Cons(head @ Branch(Scrutinee.WithVar(otherScrutinee, otherScrutineeVar), otherPattern, continuation), tail)) =>
+      case (true, split @ Split.Cons(head @ Branch(Scrutinee.WithVar(otherScrutineeVar, otherScrutinee), otherPattern, continuation), tail)) =>
         if (scrutinee === otherScrutinee) {
           println(s"Case 1: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
           if (otherPattern =:= pattern) {
@@ -229,7 +229,7 @@ trait Normalization { self: Desugarer with Traceable =>
           println(s"Case 2: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
           head.copy(continuation = specialize(continuation, true)) :: specialize(tail, true)
         }
-      case (false, split @ Split.Cons(head @ Branch(Scrutinee.WithVar(otherScrutinee, otherScrutineeVar), otherPattern, continuation), tail)) =>
+      case (false, split @ Split.Cons(head @ Branch(Scrutinee.WithVar(otherScrutineeVar, otherScrutinee), otherPattern, continuation), tail)) =>
         if (scrutinee === otherScrutinee) {
           println(s"Case 1: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
           otherPattern reportInconsistentRefinedWith pattern

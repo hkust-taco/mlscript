@@ -1,6 +1,6 @@
 package mlscript.ucs.stages
 
-import mlscript.{App, Asc, Fld, FldFlags, Lit, Sel, Term, Tup, TypeName, Var}
+import mlscript.{App, Asc, Fld, FldFlags, Lit, Sel, PlainTup, Term, Tup, TypeName, Var}
 import mlscript.ucs.syntax.{core => c, source => s}
 import mlscript.ucs.context.{Context, Scrutinee}
 import mlscript.utils._, shorthands._
@@ -388,7 +388,7 @@ trait Desugaring { self: PreTyper =>
             ) :: desugarTail
           case s.ConcretePattern(nme) =>
             val testVar = context.freshTest().withFreshSymbol
-            val testTerm = mkBinOp(scrutineeVar, Var("==="), nme, true)
+            val testTerm = App(Var("==="), PlainTup(scrutineeVar, nme))
             c.Split.Let(false, testVar, testTerm,
               c.Branch(testVar, truePattern, desugarRight(scope + testVar.symbol)) :: desugarTail)
           case s.EmptyPattern(_) | s.NamePattern(Var("_")) =>

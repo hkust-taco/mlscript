@@ -120,10 +120,12 @@ object Scrutinee {
     case _ => N
   }
 
+  type WithVar = Var -> Scrutinee
+
   object WithVar {
-    def unapply(term: Term)(implicit context: Context): Opt[(Scrutinee, Var)] = term match {
+    def unapply(term: Term)(implicit context: Context): Opt[WithVar] = term match {
       case v @ Var(_) => v.symbol match {
-        case symbol: TermSymbol => symbol.getScrutinee.map(_ -> v)
+        case symbol: TermSymbol => symbol.getScrutinee.map(v -> _)
         case _ => N
       }
       case _ => N

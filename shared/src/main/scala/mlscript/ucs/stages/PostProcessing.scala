@@ -18,10 +18,10 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
         println(s"TEST: ${testVar.name}")
         top.copy(cases = fst.copy(body = postProcess(trueBranch), rest = Wildcard(postProcess(falseBranch)))(refined = fst.refined))
       case top @ CaseOf(Scrutinee(_), Wildcard(body)) => body
-      case top @ CaseOf(Scrutinee.WithVar(scrutinee, scrutineeVar), fst @ Case(className: Var, body, NoCases)) =>
+      case top @ CaseOf(Scrutinee.WithVar(scrutineeVar, scrutinee), fst @ Case(className: Var, body, NoCases)) =>
         println(s"UNARY: ${scrutineeVar.name} is ${className.name}")
         top.copy(cases = fst.copy(body = postProcess(body))(refined = fst.refined))
-      case top @ CaseOf(Scrutinee.WithVar(scrutinee, scrutineeVar), fst @ Case(pat, trueBranch, Wildcard(falseBranch))) =>
+      case top @ CaseOf(Scrutinee.WithVar(scrutineeVar, scrutinee), fst @ Case(pat, trueBranch, Wildcard(falseBranch))) =>
         println(s"BINARY: ${scrutineeVar.name} is ${pat.showDbg}")
         println(s"patterns of `${scrutineeVar.name}`: ${scrutinee.showPatternsDbg}")
         // Post-process the true branch.
@@ -152,7 +152,7 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
   ): (Term, Opt[Term]) = {
     def rec(term: Term): (Term, Opt[Term]) =
       term match {
-        case top @ CaseOf(Scrutinee.WithVar(otherScrutinee, otherScrutineeVar), cases) =>
+        case top @ CaseOf(Scrutinee.WithVar(otherScrutineeVar, otherScrutinee), cases) =>
           if (scrutinee === otherScrutinee) {
             println(s"found a `CaseOf` that matches on `${scrutineeVar.name}`")
             val (n, y) = disentangleMatchedCaseBranches(cases)

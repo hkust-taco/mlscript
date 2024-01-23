@@ -1,6 +1,6 @@
 package mlscript.ucs.stages
 
-import mlscript.{Term, Var}, mlscript.utils._, shorthands._
+import mlscript.{App, PlainTup, Term, Var}, mlscript.utils._, shorthands._
 
 /**
   * A `PartialTerm` represents a possibly incomplete term.
@@ -36,11 +36,11 @@ object PartialTerm {
   final case class Half(lhs: Term, op: Var, parts: Ls[Term]) extends Incomplete {
     override def terms: Iterator[Term] = parts.reverseIterator
     def addTerm(rhs: Term): Total = {
-      val (realRhs, extraExprOpt) = separatePattern(rhs, true)
-      val leftmost = mkBinOp(lhs, op, realRhs, true)
+      val (realRhs, extraExprOpt) = separatePattern(rhs)
+      val leftmost = App(op, PlainTup(lhs, realRhs))
       extraExprOpt match {
         case N            => Total(leftmost, parts)
-        case S(extraExpr) => Total(mkBinOp(leftmost, Var("and"), extraExpr, true), extraExpr :: parts)
+        case S(extraExpr) => Total(App(Var("and"), PlainTup(leftmost, extraExpr)), extraExpr :: parts)
       }
     }
   }
