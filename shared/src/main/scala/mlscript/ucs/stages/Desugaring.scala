@@ -64,10 +64,16 @@ trait Desugaring { self: PreTyper =>
     * A shorthand for making a true pattern, which is useful in desugaring
     * Boolean conditions.
     */
-  private def truePattern(implicit scope: Scope, context: Context) =
-    c.Pattern.Class(Var("true").withResolvedClassLikeSymbol, false)
-  private def falsePattern(implicit scope: Scope, context: Context) =
-    c.Pattern.Class(Var("false").withResolvedClassLikeSymbol, false)
+  private def truePattern(implicit scope: Scope, context: Context) = {
+    val className = Var("true")
+    val classSymbol = className.resolveClassLikeSymbol
+    c.Pattern.Class(className, classSymbol, false)
+  }
+  private def falsePattern(implicit scope: Scope, context: Context) = {
+    val className = Var("false")
+    val classSymbol = className.resolveClassLikeSymbol
+    c.Pattern.Class(className, classSymbol, false)
+  }
 
   private def desugarTermSplit(split: s.TermSplit)(implicit termPart: PartialTerm.Incomplete, scope: Scope, context: Context): c.Split =
     split match {
@@ -227,7 +233,7 @@ trait Desugaring { self: PreTyper =>
     }
     println(s"${scrutineeVar.name}: ${scrutinee.showPatternsDbg}")
     // Last, return the scope with all bindings and a function that adds all matches and bindings to a split.
-    (scopeWithAll, split => c.Branch(scrutineeVar, c.Pattern.Class(pattern.nme, refined), bindAll(split)))
+    (scopeWithAll, split => c.Branch(scrutineeVar, c.Pattern.Class(pattern.nme, patternClassSymbol, refined), bindAll(split)))
   }
 
   /**
@@ -272,8 +278,8 @@ trait Desugaring { self: PreTyper =>
                 (scopeWithNestedAll, split => bindPrevious(bindNestedAll(bindAliasVars(split)) :: c.Split.Nil))
               case pattern @ s.ConcretePattern(Var("true") | Var("false")) =>
                 println(s"${nme.name} is ${pattern.nme.name}")
-                val className = pattern.nme.withResolvedClassLikeSymbol(scope, context)
-                (scope, split => bindPrevious(c.Branch(nme, c.Pattern.Class(className, false), bindAliasVars(split)) :: c.Split.Nil))
+                val classSymbol = pattern.nme.resolveClassLikeSymbol(scope, context)
+                (scope, split => bindPrevious(c.Branch(nme, c.Pattern.Class(pattern.nme, classSymbol, false), bindAliasVars(split)) :: c.Split.Nil))
               case s.LiteralPattern(literal) =>
                 nme.getOrCreateScrutinee
                   .withAliasVar(nme)
@@ -375,9 +381,10 @@ trait Desugaring { self: PreTyper =>
             c.Branch(scrutineeVar, c.Pattern.Literal(literal), desugarRight) :: desugarTail
           case s.ConcretePattern(nme @ (Var("true") | Var("false"))) =>
             scrutinee.getOrCreateBooleanPattern(nme).addLocation(nme)
+            val classSymbol = nme.resolveClassLikeSymbol
             c.Branch(
               scrutinee = scrutineeVar,
-              pattern = c.Pattern.Class(nme.withResolvedClassLikeSymbol, false),
+              pattern = c.Pattern.Class(nme, classSymbol, false),
               continuation = desugarRight
             ) :: desugarTail
           case s.ConcretePattern(nme) =>

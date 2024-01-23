@@ -85,14 +85,15 @@ fun test(x, p) = if x is
   else "qax"
 //│ Post-processed UCS term:
 //│ case x*‡ of
-//│   Int*◊ ->
+//│   refined Int*◊ ->
 //│     let ucs$test$0*† = p(x,) : Bool
 //│     case ucs$test$0*† of
 //│       true*† -> "foo"
-//│       _ -> "qax"
-//│   0 -> "bar"
-//│   _ -> "qax"
-//│ fun test: (Object, Int -> Bool) -> ("bar" | "foo" | "qax")
+//│       _ ->
+//│         case x*‡ of
+//│           0 -> "bar"
+//│           _ -> "qax"
+//│ fun test: forall 'a. (Int & 'a, (Int & 'a) -> Bool) -> ("bar" | "foo" | "qax")
 
 :ducs:postprocess.result
 fun test(x, p) = if x is
@@ -101,14 +102,15 @@ fun test(x, p) = if x is
   else "qax"
 //│ Post-processed UCS term:
 //│ case x*‡ of
-//│   Str*◊ ->
+//│   refined Str*◊ ->
 //│     let ucs$test$0*† = p(x,) : Bool
 //│     case ucs$test$0*† of
 //│       true*† -> "foo"
-//│       _ -> "qax"
-//│   "lol" -> "bar"
-//│   _ -> "qax"
-//│ fun test: (Object, Str -> Bool) -> ("bar" | "foo" | "qax")
+//│       _ ->
+//│         case x*‡ of
+//│           "lol" -> "bar"
+//│           _ -> "qax"
+//│ fun test: forall 'a. (Str & 'a, (Str & 'a) -> Bool) -> ("bar" | "foo" | "qax")
 
 :ducs:postprocess.result
 fun test(x, p) = if x is
@@ -118,12 +120,34 @@ fun test(x, p) = if x is
   else "other"
 //│ Post-processed UCS term:
 //│ case x*‡ of
-//│   Num*◊ ->
+//│   refined Num*◊ ->
 //│     let ucs$test$0*† = p(x,) : Bool
 //│     case ucs$test$0*† of
 //│       true*† -> "great"
-//│       _ -> "other"
-//│   3.14159 -> "PI"
-//│   2.71828 -> "E"
-//│   _ -> "other"
-//│ fun test: (Object, Num -> Bool) -> ("E" | "PI" | "great" | "other")
+//│       _ ->
+//│         case x*‡ of
+//│           2.71828 -> "E"
+//│           _ ->
+//│             case x*‡ of
+//│               3.14159 -> "PI"
+//│               _ -> "other"
+//│ fun test: forall 'a. ('a & (2.71828 | Num & ~2.71828), (Num & 'a) -> Bool) -> ("E" | "PI" | "great" | "other")
+
+:ducs:postprocess.result
+fun test(x, p) = if x is
+  Bool and p(x) then "great"
+  true then "false"
+  false then "true"
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   refined Bool*◊ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† -> "great"
+//│       _ ->
+//│         case x*‡ of
+//│           true*† -> "false"
+//│           _ ->
+//│             case x*‡ of
+//│               false*† -> "true"
+//│ fun test: forall 'a. ('a & Bool, (Bool & 'a) -> Bool) -> ("false" | "great" | "true")

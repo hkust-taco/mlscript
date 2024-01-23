@@ -2,6 +2,7 @@ package mlscript.ucs.syntax
 
 import mlscript.{Diagnostic, Lit, Loc, Located, Message, Term, Var}
 import mlscript.utils._, shorthands._
+import mlscript.pretyper.symbol.TypeSymbol
 
 package object core {
   sealed abstract class Pattern extends Located {
@@ -12,7 +13,7 @@ package object core {
     override def toString(): String = this match {
       case Pattern.Literal(literal) => literal.idStr
       case Pattern.Name(Var(name)) => name
-      case Pattern.Class(Var(name), rfd) => (if (rfd) "refined " else "") + name
+      case Pattern.Class(Var(name), _, rfd) => (if (rfd) "refined " else "") + name
     }
   }
   object Pattern {
@@ -28,7 +29,7 @@ package object core {
       * @param originallyRefined whether the class is marked as refined from
       *                          in source code
       */
-    final case class Class(nme: Var, val originallyRefined: Bool) extends Pattern {
+    final case class Class(nme: Var, symbol: TypeSymbol, val originallyRefined: Bool) extends Pattern {
       override def children: Ls[Located] = nme :: Nil
 
       var refined: Bool = originallyRefined

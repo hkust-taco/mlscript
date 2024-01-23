@@ -1,6 +1,6 @@
 package mlscript.ucs.stages
 
-import mlscript.{App, CaseOf, Fld, FldFlags, Let, Loc, Sel, Term, Tup, Var, StrLit}
+import mlscript.{App, CaseOf, DecLit, Fld, FldFlags, IntLit, Let, Loc, Sel, Term, Tup, Var, StrLit}
 import mlscript.{CaseBranches, Case, Wildcard, NoCases}
 import mlscript.Message, Message.MessageContext
 import mlscript.utils._, shorthands._
@@ -13,8 +13,6 @@ import pretyper.symbol._
 import pretyper.{Diagnosable, Scope, Traceable}
 
 trait Normalization { self: Desugarer with Traceable =>
-  import Normalization._
-
   private def fillImpl(these: Split, those: Split)(implicit
       scope: Scope,
       context: Context,
@@ -70,6 +68,46 @@ trait Normalization { self: Desugarer with Traceable =>
       }
     }
   }
+
+  /** We don't care about `Pattern.Name` because they won't appear in `specialize`. */
+  private implicit class PatternOps(val self: Pattern) extends AnyRef {
+    /** Checks if two patterns are the same. */
+    def =:=(other: Pattern): Bool = (self, other) match {
+      case (Pattern.Class(_, s1, _), Pattern.Class(_, s2, _)) => s1 === s2
+      case (Pattern.Literal(l1), Pattern.Literal(l2)) => l1 === l2
+      case (_, _) => false
+    }
+    /** Hard-code sub-typing relations. */
+    def <:<(other: Pattern): Bool = (self, other) match {
+      case (Pattern.Class(Var("true"), _, _), Pattern.Class(Var("Bool"), _, _)) => true
+      case (Pattern.Class(Var("false"), _, _), Pattern.Class(Var("Bool"), _, _)) => true
+      case (Pattern.Class(Var("Int"), _, _), Pattern.Class(Var("Num"), _, _)) => true
+      case (Pattern.Class(_, s1, _), Pattern.Class(_, s2, _)) => s1 hasBaseClass s2
+      case (Pattern.Literal(IntLit(_)), Pattern.Class(Var("Int" | "Num"), _, _)) => true
+      case (Pattern.Literal(StrLit(_)), Pattern.Class(Var("Str"), _, _)) => true
+      case (Pattern.Literal(DecLit(_)), Pattern.Class(Var("Num"), _, _)) => true
+      case (_, _) => false
+    }
+    /**
+      * If two class-like patterns has different `refined` flag. Report the
+      * inconsistency as a warning.
+      */
+    def reportInconsistentRefinedWith(other: Pattern): Unit = (self, other) match {
+      case (Pattern.Class(n1, _, r1), Pattern.Class(n2, _, r2)) if r1 =/= r2 =>
+        def be(value: Bool): Str = if (value) "is" else "is not"
+        raiseDesugaringWarning(
+          msg"inconsistent refined pattern" -> other.toLoc,
+          msg"pattern `${n1.name}` ${be(r1)} refined" -> n1.toLoc,
+          msg"but pattern `${n2.name}` ${be(r2)} refined" -> n2.toLoc
+        )
+      case (_, _) => ()
+    }
+    /** If the pattern is a class-like pattern, override its `refined` flag. */
+    def markAsRefined: Unit = self match {
+      case self: Pattern.Class => self.refined = true
+      case _ => ()
+    }
+  }
   
 
   /**
@@ -95,7 +133,7 @@ trait Normalization { self: Desugarer with Traceable =>
         val (wrap, realTail) = preventShadowing(nme, tail)
         wrap(Let(false, nme, scrutinee, normalizeToTerm(continuation.fill(realTail, declaredVars, true), declaredVars)))
       // Skip Boolean conditions as scrutinees, because they only appear once.
-      case Split.Cons(Branch(test, pattern @ Pattern.Class(nme @ Var("true"), _), continuation), tail) if context.isTestVar(test) =>
+      case Split.Cons(Branch(test, pattern @ Pattern.Class(nme @ Var("true"), _, _), continuation), tail) if context.isTestVar(test) =>
         println(s"TRUE: ${test.name} is true")
         val trueBranch = normalizeToTerm(continuation.fill(tail, declaredVars, false), declaredVars)
         val falseBranch = normalizeToCaseBranches(tail, declaredVars)
@@ -109,7 +147,7 @@ trait Normalization { self: Desugarer with Traceable =>
         // println(s"false branch: ${showSplit(tail)}")
         val falseBranch = normalizeToCaseBranches(specialize(tail, false)(scrutineeVar, scrutinee, pattern, context), declaredVars)
         CaseOf(scrutineeVar, Case(literal, trueBranch, falseBranch)(refined = false))
-      case Split.Cons(Branch(Scrutinee.WithVar(scrutinee, scrutineeVar), pattern @ Pattern.Class(nme, rfd), continuation), tail) =>
+      case Split.Cons(Branch(Scrutinee.WithVar(scrutinee, scrutineeVar), pattern @ Pattern.Class(nme, _, rfd), continuation), tail) =>
         println(s"CLASS: ${scrutineeVar.name} is ${nme.name}")
         // println(s"match ${scrutineeVar.name} with $nme (has location: ${nme.toLoc.isDefined})")
         val trueBranch = normalizeToTerm(specialize(continuation.fill(tail, declaredVars, false), true)(scrutineeVar, scrutinee, pattern, context), declaredVars)
@@ -160,8 +198,8 @@ trait Normalization { self: Desugarer with Traceable =>
 
   /**
     * Specialize `split` with the assumption that `scrutinee` matches `pattern`.
-    * If `matchOrNot` is `true`, the function keeps branches that agree on
-    * `scrutinee` matches `pattern`. Otherwise, the function removes branches
+    * If `matchOrNot` is `true`, the function _keeps_ branches that agree on
+    * `scrutinee` matches `pattern`. Otherwise, the function _removes_ branches
     * that agree on `scrutinee` matches `pattern`.
     */
   private def specialize
@@ -170,137 +208,51 @@ trait Normalization { self: Desugarer with Traceable =>
   trace[Split](s"S${if (matchOrNot) "+" else "-"} <== ${scrutineeVar.name} is ${pattern}") {
     (matchOrNot, split) match {
       // Name patterns are translated to let bindings.
-      case (_, Split.Cons(Branch(otherScrutineeVar, Pattern.Name(alias), continuation), tail)) =>
-        Split.Let(false, alias, otherScrutineeVar, specialize(continuation, matchOrNot))
-      case (_, split @ Split.Cons(head @ Branch(test, Pattern.Class(Var("true"), _), continuation), tail)) if context.isTestVar(test) =>
-        println(s"found a Boolean test: ${test.showDbg} is true")
-        val trueBranch = specialize(continuation, matchOrNot)
-        val falseBranch = specialize(tail, matchOrNot)
-        split.copy(head = head.copy(continuation = trueBranch), tail = falseBranch)
-      // Class pattern. Positive.
-      case (true, split @ Split.Cons(head @ Branch(Scrutinee.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Class(otherClassName, otherRefined), continuation), tail)) =>
-        val otherClassSymbol = otherClassName.getClassLikeSymbol
+      case (m, Split.Cons(Branch(otherScrutineeVar, Pattern.Name(alias), continuation), tail)) =>
+        Split.Let(false, alias, otherScrutineeVar, specialize(continuation, m))
+      case (m, Split.Cons(head @ Branch(test, Pattern.Class(Var("true"), _, _), continuation), tail)) if context.isTestVar(test) =>
+        println(s"TEST: ${test.name} is true")
+        head.copy(continuation = specialize(continuation, m)) :: specialize(tail, m)
+      case (true, split @ Split.Cons(head @ Branch(Scrutinee.WithVar(otherScrutinee, otherScrutineeVar), otherPattern, continuation), tail)) =>
         if (scrutinee === otherScrutinee) {
-          println(s"scrutinee: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
-          pattern match {
-            case classPattern @ Pattern.Class(className, refined) =>
-              val classSymbol = className.getClassLikeSymbol
-              if (classSymbol === otherClassSymbol) {
-                println(s"Case 1: class name: ${className.name} === ${otherClassName.name}")
-                if (otherRefined =/= refined) {
-                  def be(value: Bool): Str = if (value) "is" else "is not"
-                  raiseDesugaringWarning(
-                    msg"inconsistent refined case branches" -> pattern.toLoc,
-                    msg"class pattern ${className.name} ${be(refined)} refined" -> className.toLoc,
-                    msg"but class pattern ${otherClassName.name} ${be(otherRefined)} refined" -> otherClassName.toLoc
-                  )
-                }
-                specialize(continuation, true) :++ specialize(tail, true)
-              } else if (otherClassSymbol hasBaseClass classSymbol) {
-                println(s"Case 2: ${otherClassName.name} <: ${className.name}")
-                println(s"${otherClassSymbol.name} is refining ${className.name}")
-                // We should mark `pattern` as refined.
-                classPattern.refined = true
-                split
-              } else {
-                println(s"Case 3: ${className.name} and ${otherClassName.name} are unrelated")
-                specialize(tail, true)
-              }
-            case _ =>
-              // TODO: Make a case for this. Check if this is a valid case.
-              raiseDesugaringError(
-                msg"pattern ${pattern.toString}" -> pattern.toLoc,
-                msg"is incompatible with class pattern ${otherClassName.name}" -> otherClassName.toLoc,
-              )
-              split
+          println(s"Case 1: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
+          if (otherPattern =:= pattern) {
+            println(s"Case 2.1: $pattern =:= $otherPattern")
+            otherPattern reportInconsistentRefinedWith pattern
+            specialize(continuation, true) :++ specialize(tail, true)
+          } else if (otherPattern <:< pattern) {
+            println(s"Case 2.2: $pattern <:< $otherPattern")
+            pattern.markAsRefined; split
+          } else {
+            println(s"Case 2.3: $pattern are unrelated with $otherPattern")
+            specialize(tail, true)
           }
         } else {
-          // println(s"scrutinee: ${scrutineeVar.name} =/= ${otherScrutineeVar.name}")
-          split.copy(
-            head = head.copy(continuation = specialize(continuation, true)),
-            tail = specialize(tail, true)
-          )
+          println(s"Case 2: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
+          head.copy(continuation = specialize(continuation, true)) :: specialize(tail, true)
         }
-      // Class pattern. Negative
-      case (false, split @ Split.Cons(head @ Branch(Scrutinee.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Class(otherClassName, otherRefined), continuation), tail)) =>
-        val otherClassSymbol = otherClassName.getClassLikeSymbol
+      case (false, split @ Split.Cons(head @ Branch(Scrutinee.WithVar(otherScrutinee, otherScrutineeVar), otherPattern, continuation), tail)) =>
         if (scrutinee === otherScrutinee) {
-          println(s"scrutinee: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
-          pattern match {
-            case Pattern.Class(className, refined) =>
-              println("both of them are class patterns")
-              if (otherRefined =/= refined) {
-                def be(value: Bool): Str = if (value) "is" else "is not"
-                raiseDesugaringWarning(
-                  msg"inconsistent refined case branches" -> pattern.toLoc,
-                  msg"class pattern ${className.name} ${be(refined)} refined" -> className.toLoc,
-                  msg"but class pattern ${otherClassName.name} ${be(otherRefined)} refined" -> otherClassName.toLoc
-                )
-              }
-              val classSymbol = className.getClassLikeSymbol
-              if (className === otherClassName) {
-                println(s"Case 1: class name: ${otherClassName.name} === ${className.name}")
-                specialize(tail, false)
-              } else if (otherClassSymbol.baseTypes contains classSymbol) {
-                println(s"Case 2: class name: ${otherClassName.name} <: ${className.name}")
-                Split.Nil
-              } else {
-                println(s"Case 3: class name: ${otherClassName.name} and ${className.name} are unrelated")
-                split.copy(tail = specialize(tail, false))
-              }
-            case _ =>
-              println(s"different patterns: ${otherClassName.name} and $pattern.toString")
-              split.copy(tail = specialize(tail, false))
+          println(s"Case 1: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
+          otherPattern reportInconsistentRefinedWith pattern
+          if (otherPattern =:= pattern) {
+            println(s"Case 2.1: $pattern =:= $otherPattern")
+            specialize(tail, false)
+          } else if (otherPattern <:< pattern) {
+            println(s"Case 2.2: $pattern <:< $otherPattern")
+            Split.Nil
+          } else {
+            println(s"Case 2.3: $pattern are unrelated with $otherPattern")
+            split.copy(tail = specialize(tail, false))
           }
         } else {
-          println(s"scrutinee: ${scrutineeVar.name} =/= ${otherScrutineeVar.name}")
-          split.copy(
-            head = head.copy(continuation = specialize(continuation, matchOrNot)),
-            tail = specialize(tail, matchOrNot)
-          )
+          println(s"Case 2: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
+          head.copy(continuation = specialize(continuation, false)) :: specialize(tail, false)
         }
-      // Literal pattern. Positive.
-      case (true, split @ Split.Cons(head @ Branch(Scrutinee.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Literal(otherLiteral), continuation), tail)) =>
-        if (scrutinee === otherScrutinee) {
-          println(s"scrutinee: ${scrutineeVar.name} is ${otherScrutineeVar.name}")
-          pattern match {
-            case Pattern.Literal(literal) if literal === otherLiteral =>
-              specialize(continuation, true) :++ specialize(tail, true)
-            case _ => specialize(tail, true)
-          }
-        } else {
-          println(s"scrutinee: ${scrutineeVar.name} is NOT ${otherScrutineeVar.name}")
-          split.copy(
-            head = head.copy(continuation = specialize(continuation, true)),
-            tail = specialize(tail, true)
-          )
-        }
-      // Literal pattern. Negative.
-      case (false, split @ Split.Cons(head @ Branch(Scrutinee.WithVar(otherScrutinee, otherScrutineeVar), Pattern.Literal(otherLiteral), continuation), tail)) =>
-        if (scrutinee === otherScrutinee) {
-          println(s"scrutinee: ${scrutineeVar.name} is ${otherScrutineeVar.name}")
-          pattern match {
-            case Pattern.Literal(literal) if literal === otherLiteral =>
-              specialize(tail, false)
-            case _ =>
-              // No need to check `continuation` because literals don't overlap.
-              split.copy(tail = specialize(tail, false))
-          }
-        } else {
-          println(s"scrutinee: ${scrutineeVar.name} is NOT ${otherScrutineeVar.name}")
-          split.copy(
-            head = head.copy(continuation = specialize(continuation, false)),
-            tail = specialize(tail, false)
-          )
-        }
-      // Other patterns. Not implemented.
-      case (_, split @ Split.Cons(Branch(otherScrutineeVar, pattern, continuation), tail)) =>
-        raiseDesugaringError(msg"found unsupported pattern: ${pattern.toString}" -> pattern.toLoc)
+      case (_, split @ Split.Cons(Branch(_, pattern, _), _)) =>
+        raiseDesugaringError(msg"unsupported pattern" -> pattern.toLoc)
         split
-      case (_, let @ Split.Let(_, nme, _, tail)) =>
-        println(s"let binding ${nme.name}, go next")
-        let.copy(tail = specialize(tail, matchOrNot))
-      // Ending cases remain the same.
+      case (m, let @ Split.Let(_, nme, _, tail)) => let.copy(tail = specialize(tail, m))
       case (_, end @ (Split.Else(_) | Split.Nil)) => println("the end"); end
     }
   }()
@@ -320,5 +272,3 @@ trait Normalization { self: Desugarer with Traceable =>
     case S(_) | N => identity[Term] _ -> tail
   }
 }
-
-object Normalization

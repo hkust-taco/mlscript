@@ -96,7 +96,7 @@ fun foo2(x) = x is (Pair(a, b) and a > b) | Int
 //│ fun foo1: nothing -> error
 //│ fun foo2: nothing -> error
 //│ Code generation encountered an error:
-//│   unknown match case: Int
+//│   unresolved symbol |
 
 
 
