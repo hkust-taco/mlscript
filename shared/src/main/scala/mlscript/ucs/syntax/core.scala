@@ -24,28 +24,21 @@ package object core {
       override def children: Ls[Located] = nme :: Nil
     }
     /**
-      * TODO: Consider make `refined` immutable.
       * @param nme the name of the class-like symbol
       * @param originallyRefined whether the class is marked as refined from
-      *                          in source code
+      *                          in source AST
       */
-    final case class Class(nme: Var, symbol: TypeSymbol, val originallyRefined: Bool) extends Pattern {
+    final case class Class(nme: Var, symbol: TypeSymbol, originallyRefined: Bool) extends Pattern {
       override def children: Ls[Located] = nme :: Nil
 
+      /**
+        * A mutable field to override the refinement status of the class. 
+        * During normalization, if a case can be further refined in its
+        * descendants branches, we should mark it as `refined`. See relevant
+        * tests in `Normalization.mls`.
+        */
       var refined: Bool = originallyRefined
     }
-
-    def getParametersLoc(parameters: List[Opt[Var]]): Opt[Loc] =
-      parameters.foldLeft(None: Opt[Loc]) {
-        case (acc, N) => acc
-        case (N, S(nme)) => nme.toLoc
-        case (S(loc), S(nme)) => S(nme.toLoc.fold(loc)(loc ++ _))
-      }
-    def getParametersLoc(parameters: Opt[List[Opt[Var]]]): Opt[Loc] =
-      parameters.fold(None: Opt[Loc])(getParametersLoc)
-
-    def showParameters(parameters: Opt[List[Opt[Var]]]): Str =
-      parameters.fold("empty")(_.map(_.fold("_")(_.name)).mkString("[", ", ", "]"))
   }
 
   final case class Branch(scrutinee: Var, pattern: Pattern, continuation: Split) extends Located {
@@ -53,8 +46,7 @@ package object core {
   }
 
   sealed abstract class Split extends Located {
-    @inline
-    def ::(head: Branch): Split = Split.Cons(head, this)
+    @inline def ::(head: Branch): Split = Split.Cons(head, this)
     
     /**
       * Returns true if the split has an else branch.

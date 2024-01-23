@@ -298,7 +298,6 @@ trait Desugaring { self: PreTyper =>
       }
     }()
 
-  // TODO: `aliasVars` not computed
   private def flattenTupleFields(
       parentScrutineeVar: Var,
       parentScrutinee: Scrutinee,

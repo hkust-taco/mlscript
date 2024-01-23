@@ -78,13 +78,13 @@ trait Desugarer extends Transformation
 
     /**
       * A short hand for `nme.symbol.getScrutinee` but add a diagnostic message
-      * to a local diagnostic archive (TODO) if there's any error.
+      * to a local diagnostic archive if there's any error.
       */
     def getOrCreateScrutinee(implicit context: Context): Scrutinee = nme.symbolOption match {
       case S(symbol: TermSymbol) => symbol.getOrCreateScrutinee
       case S(otherSymbol) =>
         raiseDesugaringError(msg"cannot identifier `${nme.name}` with a scrutinee" -> nme.toLoc)
-        context.freshScrutinee // TODO
+        context.freshScrutinee
       case N => lastWords(s"`${nme.name}` should be assoicated with a symbol")
     }
 
@@ -109,7 +109,7 @@ trait Desugarer extends Transformation
         case S(symbol: TermSymbol) => symbol
         case S(otherSymbol) =>
           raiseDesugaringError(msg"identifier `${nme.name}` should be a term" -> nme.toLoc)
-          freshSymbol(nme) // TODO: Maybe we should maintain a "lost" symbol map.
+          freshSymbol(nme)
       }
     }
 
@@ -117,7 +117,7 @@ trait Desugarer extends Transformation
     def resolveTermSymbol(implicit scope: Scope): TermSymbol = {
       val symbol = scope.getTermSymbol(nme.name).getOrElse {
         raiseDesugaringError(msg"identifier `${nme.name}` not found" -> nme.toLoc)
-        freshSymbol(nme) // TODO: Maybe we should maintain a "lost" symbol map.
+        freshSymbol(nme)
       }
       nme.symbol = symbol
       symbol
