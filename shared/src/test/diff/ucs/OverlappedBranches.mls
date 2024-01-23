@@ -54,7 +54,7 @@ fun f2(x, p) = if x is
   Derived1 then "d1"
   Derived2 then "d2"
   else "otherwise"
-//│ fun f2: forall 'a. ('a & (Base & ~#Derived1 | Derived1), (Base & 'a) -> Bool) -> ("b and p" | "d1" | "d2" | "otherwise")
+//│ fun f2: forall 'a. ('a & (Base & ~#Derived1 & ~#Derived2 | Derived1 | Derived2), (Base & 'a) -> Bool) -> ("b and p" | "d1" | "d2" | "otherwise")
 
 f2(Base(), _ => true) // => b and p
 f2(Base(), _ => false) // otherwise

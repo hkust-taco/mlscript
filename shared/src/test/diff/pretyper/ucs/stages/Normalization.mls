@@ -127,11 +127,9 @@ fun test(x, p) = if x is
 //│       _ ->
 //│         case x*‡ of
 //│           2.71828 -> "E"
-//│           _ ->
-//│             case x*‡ of
-//│               3.14159 -> "PI"
-//│               _ -> "other"
-//│ fun test: forall 'a. ('a & (2.71828 | Num & ~2.71828), (Num & 'a) -> Bool) -> ("E" | "PI" | "great" | "other")
+//│           3.14159 -> "PI"
+//│           _ -> "other"
+//│ fun test: forall 'a. ('a & (2.71828 | 3.14159 | Num & ~2.71828 & ~3.14159), (Num & 'a) -> Bool) -> ("E" | "PI" | "great" | "other")
 
 :ducs:postprocess.result
 fun test(x, p) = if x is
@@ -147,9 +145,7 @@ fun test(x, p) = if x is
 //│       _ ->
 //│         case x*‡ of
 //│           true*† -> "false"
-//│           _ ->
-//│             case x*‡ of
-//│               false*† -> "true"
+//│           false*† -> "true"
 //│ fun test: forall 'a. ('a & Bool, (Bool & 'a) -> Bool) -> ("false" | "great" | "true")
 
 :ducs:postprocess.result
@@ -174,9 +170,7 @@ fun test(x, p) = if x is
 //│               _ ->
 //│                 case x*‡ of
 //│                   true*† -> "false"
-//│                   _ ->
-//│                     case x*‡ of
-//│                       false*† -> "true"
+//│                   false*† -> "true"
 //│ fun test: forall 'a. ('a & Bool, (Object & 'a) -> Bool) -> ("false" | "great" | "great, again" | "true")
 //│ Code generation encountered an error:
 //│   unknown match case: Object

@@ -14,6 +14,9 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
   def postProcess(term: Term)(implicit context: Context): Term = trace(s"postProcess <== ${term.showDbg}") {
     // Normalized terms are constructed using `Let` and `CaseOf`.
     term match {
+      case top @ CaseOf(testVar: Var, fst @ Case(Var("true"), trueBranch, Wildcard(falseBranch))) if context.isTestVar(testVar) =>
+        println(s"TEST: ${testVar.name}")
+        top.copy(cases = fst.copy(body = postProcess(trueBranch), rest = Wildcard(postProcess(falseBranch)))(refined = fst.refined))
       case top @ CaseOf(Scrutinee(_), Wildcard(body)) => body
       case top @ CaseOf(Scrutinee.WithVar(scrutinee, scrutineeVar), fst @ Case(className: Var, body, NoCases)) =>
         println(s"UNARY: ${scrutineeVar.name} is ${className.name}")
