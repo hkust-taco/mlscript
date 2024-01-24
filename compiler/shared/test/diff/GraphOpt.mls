@@ -54,7 +54,7 @@ foo()
 //│ R: [Some(ICtor(Pair))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%3 = Pair(1,2) -- #32
+//│ let x%3 = Pair(1,2) -- #35
 //│   in x%3 -- #21
 //│ )
 //│ },
@@ -161,8 +161,8 @@ bar()
 //│ R: [Some(ICtor(Pair))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%3 = Pair(1,2) -- #45
-//│   in x%3 -- #39
+//│ let x%3 = Pair(1,2) -- #42
+//│   in x%3 -- #26
 //│ )
 //│ },
 //│ let* (x%6) = bar() -- #32
@@ -291,8 +291,8 @@ foo()
 //│ Rec: None,
 //│ 1, 
 //│ let x%9 = Pair(0,1) -- #43
-//│   in let* (x%13) = silly$D%0(x%9) -- #54
-//│     in x%13 -- #57
+//│   in let* (x%10) = silly$D%0(x%9) -- #53
+//│     in x%10 -- #41
 //│ )
 //│ Def(5, silly$D%0, [pair%0], [{<EDestruct@silly$D%0:#25-case pair%0 of ...>,<EDirect@silly$D%0:#25-case pair%0 of ...>,<ESelect(x)@silly$D%0:#23-let x%7 = ...>}],
 //│ S: None,
@@ -322,10 +322,10 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%15) = silly$D%0$D%0$S%0(0) -- #61
-//│   in x%15 -- #64
+//│ let* (x%10) = silly$D%0$D%0$S%0(0) -- #57
+//│   in x%10 -- #41
 //│ )
-//│ Def(10, silly$D%0$D%0$S%0, [pair%0_x], [{<EDirect@silly$D%0$D%0$S%0:#22-let x%8 = ...>}],
+//│ Def(8, silly$D%0$D%0$S%0, [pair%0_x], [{<EDirect@silly$D%0$D%0$S%0:#22-let x%8 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -445,8 +445,8 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%4 = +(0,2) -- #45
-//│   in x%4 -- #40
+//│ let x%4 = +(0,2) -- #42
+//│   in x%4 -- #27
 //│ )
 //│ },
 //│ let* (x%7) = foo() -- #33
@@ -554,8 +554,8 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%4 = +(1,1) -- #44
-//│   in x%4 -- #39
+//│ let x%4 = +(1,1) -- #41
+//│   in x%4 -- #26
 //│ )
 //│ },
 //│ let* (x%7) = foo() -- #32
@@ -689,80 +689,13 @@ bar()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
-//│ Def(2, @join j%0, [x%0], [{<EDestruct@j%0:#14-case x%0 of ...>,<EDirect@j%0:#14-case x%0 of ...>,<ESelect(x)@j%0:#8-let x%2 = ...>,<ESelect(y)@j%0:#13-let x%3 = ...>}],
-//│ S: None,
-//│ I: [[Some(ICtor(Right))]],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ case x%0 of -- #14
-//│   Left => let x%2 = x%0.x -- #8
-//│     in x%2 -- #53
-//│   Right => let x%3 = x%0.y -- #13
-//│     in x%3 -- #54
-//│ )
 //│ Def(3, bar, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%17) = foo$D%1(2) -- #64
-//│   in x%17 -- #72
-//│ )
-//│ Def(9, foo$D%1, [b%0], [{<EDirect@foo$D%1:#34-let x%8 = ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x%8 = Right(b%0) -- #34
-//│   in jump j%0(x%8) -- #33
-//│ )
-//│ },
-//│ let* (x%11) = bar() -- #52
-//│   in x%11 -- #51)
-//│ 
-//│ Interpreted ------------------------------
-//│ 2
-//│ 
-//│ 
-//│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
-//│ Def(3, bar, [], [],
-//│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x%17) = foo$D%1(2) -- #64
-//│   in x%17 -- #72
-//│ )
-//│ Def(9, foo$D%1, [b%0], [{<EDirect@foo$D%1:#54-...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ b%0 -- #54
-//│ )
-//│ },
-//│ let* (x%11) = bar() -- #52
-//│   in x%11 -- #51)
-//│ 
-//│ Interpreted ------------------------------
-//│ 2
-//│ 
-//│ 
-//│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
-//│ Def(3, bar, [], [],
-//│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 2 -- #72
+//│ 2 -- #46
 //│ )
 //│ },
 //│ let* (x%11) = bar() -- #52
@@ -777,7 +710,7 @@ bar()
 //│ 
 //│ 
 //│ 
-//│ Fuel used: 4
+//│ Fuel used: 2
 
 :GraphInterp
 :GraphOpt
@@ -968,7 +901,7 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ 0 -- #42
+//│ 0 -- #25
 //│ )
 //│ },
 //│ let* (x%6) = bar() -- #31
@@ -1320,51 +1253,10 @@ foo()
 //│ 1, 
 //│ let x%0 = O() -- #10
 //│   in let x%1 = S(x%0) -- #9
-//│     in let* (x%2) = bar(x%1) -- #8
+//│     in let* (x%2) = baz(x%1) -- #31
 //│       in x%2 -- #7
 //│ )
-//│ Def(1, bar, [x%3], [{<EDirect@bar:#16-let* (x%4) = baz ...>,<EIndirectDestruct@bar:#16-let* (x%4) = baz ...>,<ESelect(s)@baz:#23-let x%7 = ...>}],
-//│ S: None,
-//│ I: [[Some(ICtor(S))]],
-//│ R: [Some(IMix(ICtor(O)))],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x%4) = baz(x%3) -- #16
-//│   in x%4 -- #15
-//│ )
-//│ Def(2, baz, [x%5], [{<EDestruct@baz:#26-case x%5 of ...>,<EDirect@baz:#26-case x%5 of ...>,<EDirect@baz:#32-...>,<ESelect(s)@baz:#23-let x%7 = ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(IMix(ICtor(O)))],
-//│ Rec: None,
-//│ 1, 
-//│ case x%5 of -- #26
-//│   S => let x%7 = x%5.s -- #23
-//│     in x%7 -- #31
-//│   O => x%5 -- #32
-//│ )
-//│ },
-//│ let* (x%8) = foo() -- #30
-//│   in x%8 -- #29)
-//│ 
-//│ Interpreted ------------------------------
-//│ O()
-//│ 
-//│ 
-//│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, S, [s]),ClassInfo(1, O, [])}, {
-//│ Def(0, foo, [], [],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(IMix(ICtor(O)))],
-//│ Rec: None,
-//│ 1, 
-//│ let x%0 = O() -- #10
-//│   in let x%1 = S(x%0) -- #9
-//│     in let* (x%2) = bar$C%0(x%1) -- #36
-//│       in x%2 -- #7
-//│ )
-//│ Def(2, baz, [x%5], [{<EDestruct@baz:#26-case x%5 of ...>,<EDirect@baz:#26-case x%5 of ...>,<EDirect@baz:#32-...>,<ESelect(s)@baz:#23-let x%7 = ...>}],
+//│ Def(2, baz, [x%5], [{<EDestruct@baz:#26-case x%5 of ...>,<EDirect@baz:#26-case x%5 of ...>,<EDirect@baz:#34-...>,<ESelect(s)@baz:#23-let x%7 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(S))]],
 //│ R: [Some(IMix(ICtor(O)))],
@@ -1372,49 +1264,8 @@ foo()
 //│ 1, 
 //│ case x%5 of -- #26
 //│   S => let x%7 = x%5.s -- #23
-//│     in x%7 -- #31
-//│   O => x%5 -- #32
-//│ )
-//│ Def(7, bar$C%0, [x%3], [{<EDirect@bar$C%0:#35-let* (x%4) = baz ...>,<EIndirectDestruct@bar$C%0:#35-let* (x%4) = baz ...>,<ESelect(s)@baz:#23-let x%7 = ...>}],
-//│ S: Some([Some(ICtor(S))]),
-//│ I: [[Some(ICtor(S))]],
-//│ R: [Some(IMix(ICtor(O)))],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x%4) = baz(x%3) -- #35
-//│   in x%4 -- #34
-//│ )
-//│ },
-//│ let* (x%8) = foo() -- #30
-//│   in x%8 -- #29)
-//│ 
-//│ Interpreted ------------------------------
-//│ O()
-//│ 
-//│ 
-//│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, S, [s]),ClassInfo(1, O, [])}, {
-//│ Def(0, foo, [], [],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(IMix(ICtor(O)))],
-//│ Rec: None,
-//│ 1, 
-//│ let x%0 = O() -- #10
-//│   in let x%1 = S(x%0) -- #9
-//│     in let* (x%2) = bar$C%0(x%1) -- #36
-//│       in x%2 -- #7
-//│ )
-//│ Def(7, bar$C%0, [x%3], [{<EDestruct@bar$C%0:#55-case x%3 of ...>,<EDirect@bar$C%0:#55-case x%3 of ...>,<EDirect@bar$C%0:#61-...>,<ESelect(s)@bar$C%0:#60-let x%7 = ...>}],
-//│ S: Some([Some(ICtor(S))]),
-//│ I: [[Some(ICtor(S))]],
-//│ R: [Some(IMix(ICtor(O)))],
-//│ Rec: None,
-//│ 1, 
-//│ case x%3 of -- #55
-//│   S => let x%7 = x%3.s -- #60
-//│     in x%7 -- #58
-//│   O => x%3 -- #61
+//│     in x%7 -- #33
+//│   O => x%5 -- #34
 //│ )
 //│ },
 //│ let* (x%8) = foo() -- #30
@@ -1433,7 +1284,7 @@ foo()
 //│ Rec: None,
 //│ 1, 
 //│ let x%0 = O() -- #10
-//│   in x%0 -- #72
+//│   in x%0 -- #7
 //│ )
 //│ },
 //│ let* (x%8) = foo() -- #30
@@ -1448,4 +1299,4 @@ foo()
 //│ 
 //│ 
 //│ 
-//│ Fuel used: 4
+//│ Fuel used: 2
