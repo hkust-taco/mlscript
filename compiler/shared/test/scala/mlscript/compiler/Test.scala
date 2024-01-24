@@ -34,7 +34,7 @@ class DiffTestCompiler extends DiffTests {
         outputBuilder ++= graph4.toString()
         if (mode.graphInterp)
           outputBuilder ++= "\n\nInterpreted ------------------------------\n"
-          outputBuilder ++= GraphInterpreter.interpret(graph4)
+          outputBuilder ++= GraphInterpreter(mode.graphOptVerbose).interpret(graph4)
           outputBuilder ++= "\n"
        
         var changed = true
@@ -55,7 +55,7 @@ class DiffTestCompiler extends DiffTests {
 
         if (mode.graphInterp)
           outputBuilder ++= "\n\nInterpreted ------------------------------\n"
-          outputBuilder ++= GraphInterpreter.interpret(g)
+          outputBuilder ++= GraphInterpreter(mode.graphOptVerbose).interpret(g)
           outputBuilder ++= "\n"
 
         outputBuilder ++= s"\n\nFuel used: ${fuel_limit - fuel}"

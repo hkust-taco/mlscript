@@ -246,6 +246,7 @@ case class DefnTag(inner: Int):
 
 case class DefnLocMarker(val defn: Str, val marker: LocMarker):
   override def toString: String = s"$defn:$marker"
+  def matches = marker.matches _
 
 enum LocMarker:
   case MRef(name: Str)
@@ -285,7 +286,7 @@ enum LocMarker:
         <:> raw("...")
     case _ => throw Exception(s"Cannot print LocMarker")
 
-  def show = toDocument.print
+  def show = s"$tag-" + toDocument.print
 
   override def toString(): String = show
 

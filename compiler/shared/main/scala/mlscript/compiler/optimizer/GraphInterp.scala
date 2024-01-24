@@ -10,7 +10,8 @@ import scala.annotation.*
 
 final case class GraphInterpreterError(message: String) extends Exception(message)
 
-object GraphInterpreter:
+class GraphInterpreter(verbose: Bool):
+  private def log(x: Any) = if verbose then println(x)
   private case class Program(
     classes: Set[ClassInfo],
     defs: Set[Def],
