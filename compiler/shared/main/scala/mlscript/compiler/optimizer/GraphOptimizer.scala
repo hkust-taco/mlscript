@@ -331,7 +331,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         val all_fv_list = all_fv.toList
         val fv_retvals = all_fv_list.map { x => Ref(Name(x)) }
 
-        val pre_body = env.accu(Result(fv_retvals))
+        val pre_body = env.accu(Result(fv_retvals).attach_tag(tag))
         val pre_name = fresh.make(defn.name + "$X")
         val pre_defn = GODef(
           fn_uid.make,
@@ -379,7 +379,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         val all_fv_list = all_fv.toList
         val fv_retvals = all_fv_list.map { x => Ref(Name(x)) }
 
-        val pre_body = env.accu(Result(fv_retvals))
+        val pre_body = env.accu(Result(fv_retvals).attach_tag(tag))
         val pre_name = fresh.make(defn.name + "$P")
         val pre_defn = GODef(
           fn_uid.make,
@@ -443,9 +443,9 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
           elim.foreach {
             case ElimInfo(EDestruct, _) =>
               mixing_consumer += csloc -> name
-              known_case += csloc -> cls
+              if DestructAnalysis().firstDestructed(defn.body) == Some(param) then
+                known_case += csloc -> cls
             case ElimInfo(EIndirectDestruct, loc) =>
-              // at_marker += csloc -> loc
             case _ =>
           }
         case (((Some(arg), Some(IMix(_))), param), elim) =>
@@ -460,7 +460,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
                   mixing_producer += DefnLocMarker(env.defn, loc) -> target
                 case None =>
             case ElimInfo(EIndirectDestruct, elimloc) =>
-              //
             case _ => 
           }
         case _ =>
@@ -491,7 +490,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
           f(env.copy(intros = intros2), arm)
         }
       case LetExpr(x, e1, e2) =>
-        val intros = IntroductionAnalysis.getIntro(e1, env.intros).map { y => Map(x.str -> y) }.getOrElse(env.intros)
+        val intros = IntroductionAnalysis.getIntro(e1, env.intros).map { y => env.intros + (x.str -> y) }.getOrElse(env.intros)
         f(env.copy(intros = intros), e2)
       case LetCall(xs, defnref, args, e) =>
         val defn = defnref.expectDefn
@@ -772,7 +771,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
 
     override def iterate(x: LetExpr): Unit = x match
       case LetExpr(x, e1, e2) =>
-        intros = IntroductionAnalysis.getIntro(e1, intros).map { y => Map(x.str -> y) }.getOrElse(intros)
+        intros = IntroductionAnalysis.getIntro(e1, intros).map { y => intros + (x.str -> y) }.getOrElse(intros)
         e2.accept_iterator(this)
     
     override def iterate(x: LetCall): Unit = x match
@@ -1083,7 +1082,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
           case Some(n) =>
             LetExpr(name, expr, f(body)).copy_tag(x)
           case None =>
-            log(s"dead code: $name $uses $defs")
             f(body)
       case LetCall(names, defn, args, body) =>
         names.foreach(addDef)
@@ -1192,7 +1190,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
       activeAnalyze(sf)
       sf = ss.run(sf)
       activeAnalyze(sf)
-      sf = tbs.run(sf)
+      sf = tbs.run(sf) 
       activeAnalyze(sf)
       sf = rtcj.run(sf)
       activeAnalyze(sf)

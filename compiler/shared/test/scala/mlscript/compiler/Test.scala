@@ -32,9 +32,12 @@ class DiffTestCompiler extends DiffTests {
         val graph3 = go.activeAnalyze(graph2)
         val graph4 = go.recBoundaryAnalyze(graph3)
         outputBuilder ++= graph4.toString()
+        var interp_result: Opt[Str] = None
         if (mode.graphInterp)
           outputBuilder ++= "\n\nInterpreted ------------------------------\n"
-          outputBuilder ++= GraphInterpreter(mode.graphOptVerbose).interpret(graph4)
+          val ir = GraphInterpreter(mode.graphOptVerbose).interpret(graph4)
+          interp_result = Some(ir)
+          outputBuilder ++= ir
           outputBuilder ++= "\n"
        
         var changed = true
@@ -49,15 +52,16 @@ class DiffTestCompiler extends DiffTests {
             outputBuilder ++= "\n\nOptimized ------------------------------\n"
             outputBuilder ++= new_g.toString()
           fuel -= 1
-        
+
+          if (mode.graphInterp)
+            outputBuilder ++= "\n\nInterpreted ------------------------------\n"
+            val ir = GraphInterpreter(mode.graphOptVerbose).interpret(g)
+            outputBuilder ++= ir
+            if ir != interp_result.get then
+              throw optimizer.GraphOptimizingError("Interpreted result changed after optimization")
+            outputBuilder ++= "\n"
 
         outputBuilder ++= "\n"
-
-        if (mode.graphInterp)
-          outputBuilder ++= "\n\nInterpreted ------------------------------\n"
-          outputBuilder ++= GraphInterpreter(mode.graphOptVerbose).interpret(g)
-          outputBuilder ++= "\n"
-
         outputBuilder ++= s"\n\nFuel used: ${fuel_limit - fuel}"
 
         if (fuel == 0)

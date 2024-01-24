@@ -388,7 +388,7 @@ enum GONode:
       LetCall(names_copy, defn, args.map(_.map_name_of_texpr(_.trySubst(ctx))), body.copy(ctx ++ names_copy.map(x => x.str -> x)))
 
   private def toDocument: Document = this match
-    case Result(res) => raw(res |> show_args)
+    case Result(res) => raw(res |> show_args) <:> raw(s"-- $tag")
     case Jump(jp, args) =>
       raw("jump")
       <:> raw(jp.getName)

@@ -224,7 +224,7 @@ class GraphInterpreter(verbose: Bool):
           xs.zip(cls2.fields).find{_._2 == field} match
             case Some((x, _)) => x
             case None => throw GraphInterpreterError("unable to find selected field")
-        case _ => throw GraphInterpreterError("unexpected node")
+        case x @ _ => throw GraphInterpreterError(s"unexpected node: select $field but got $x when eval $expr")
       }.toLeft(expr)
     case BasicOp(name, args) =>
       val xs = eval_args_may_not_progress(args)
