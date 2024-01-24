@@ -687,7 +687,7 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%17) = foo$D%1(2) -- #66
+//│ let* (x%17) = foo$D%1(2) -- #62
 //│   in x%17
 //│ )
 //│ Def(9, foo$D%1, [b%0], [{<EDirect@foo$D%1:#34-let x%8 = ...>}],
@@ -711,7 +711,7 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%17) = foo$D%1(2) -- #66
+//│ let* (x%17) = foo$D%1(2) -- #62
 //│   in x%17
 //│ )
 //│ Def(9, foo$D%1, [b%0], [{<EDirect@foo$D%1:#54-...>}],
