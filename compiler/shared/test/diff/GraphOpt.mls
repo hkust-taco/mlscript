@@ -1361,19 +1361,60 @@ foo()
 //│ 1, 
 //│ let x%0 = O() -- #10
 //│   in let x%1 = S(x%0) -- #9
-//│     in let* (x%2) = bar(x%1) -- #8
+//│     in let* (x%2) = bar$C%0(x%1) -- #36
 //│       in x%2 -- #7
 //│ )
-//│ Def(1, bar, [x%3], [{<EDestruct@bar:#38-case x%3 of ...>,<EDirect@bar:#38-case x%3 of ...>,<EDirect@bar:#44-...>,<ESelect(s)@bar:#43-let x%7 = ...>}],
+//│ Def(2, baz, [x%5], [{<EDestruct@baz:#26-case x%5 of ...>,<EDirect@baz:#26-case x%5 of ...>,<EDirect@baz:#32-...>,<ESelect(s)@baz:#23-let x%7 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(S))]],
 //│ R: [Some(IMix(ICtor(O)))],
 //│ Rec: None,
 //│ 1, 
-//│ case x%3 of -- #38
-//│   S => let x%7 = x%3.s -- #43
-//│     in x%7 -- #41
-//│   O => x%3 -- #44
+//│ case x%5 of -- #26
+//│   S => let x%7 = x%5.s -- #23
+//│     in x%7 -- #31
+//│   O => x%5 -- #32
+//│ )
+//│ Def(7, bar$C%0, [x%3], [{<EDirect@bar$C%0:#35-let* (x%4) = baz ...>,<EIndirectDestruct@bar$C%0:#35-let* (x%4) = baz ...>,<ESelect(s)@baz:#23-let x%7 = ...>}],
+//│ S: Some([Some(ICtor(S))]),
+//│ I: [[Some(ICtor(S))]],
+//│ R: [Some(IMix(ICtor(O)))],
+//│ Rec: None,
+//│ 1, 
+//│ let* (x%4) = baz(x%3) -- #35
+//│   in x%4 -- #34
+//│ )
+//│ },
+//│ let* (x%8) = foo() -- #30
+//│   in x%8 -- #29)
+//│ 
+//│ Interpreted ------------------------------
+//│ O()
+//│ 
+//│ 
+//│ Optimized ------------------------------
+//│ GOProgram({ClassInfo(0, S, [s]),ClassInfo(1, O, [])}, {
+//│ Def(0, foo, [], [],
+//│ S: None,
+//│ I: [],
+//│ R: [Some(IMix(ICtor(O)))],
+//│ Rec: None,
+//│ 1, 
+//│ let x%0 = O() -- #10
+//│   in let x%1 = S(x%0) -- #9
+//│     in let* (x%2) = bar$C%0(x%1) -- #36
+//│       in x%2 -- #7
+//│ )
+//│ Def(7, bar$C%0, [x%3], [{<EDestruct@bar$C%0:#55-case x%3 of ...>,<EDirect@bar$C%0:#55-case x%3 of ...>,<EDirect@bar$C%0:#61-...>,<ESelect(s)@bar$C%0:#60-let x%7 = ...>}],
+//│ S: Some([Some(ICtor(S))]),
+//│ I: [[Some(ICtor(S))]],
+//│ R: [Some(IMix(ICtor(O)))],
+//│ Rec: None,
+//│ 1, 
+//│ case x%3 of -- #55
+//│   S => let x%7 = x%3.s -- #60
+//│     in x%7 -- #58
+//│   O => x%3 -- #61
 //│ )
 //│ },
 //│ let* (x%8) = foo() -- #30
@@ -1392,7 +1433,7 @@ foo()
 //│ Rec: None,
 //│ 1, 
 //│ let x%0 = O() -- #10
-//│   in x%0 -- #55
+//│   in x%0 -- #72
 //│ )
 //│ },
 //│ let* (x%8) = foo() -- #30
@@ -1407,4 +1448,4 @@ foo()
 //│ 
 //│ 
 //│ 
-//│ Fuel used: 3
+//│ Fuel used: 4
