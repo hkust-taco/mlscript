@@ -32,7 +32,7 @@ val a = a
 val f(x) = x
 //│ val f: forall 'a. 'a -> 'a
 //│ f
-//│   = [Function: f1]
+//│   = [Function: f]
 
 f(123)
 //│ 123

@@ -9,10 +9,7 @@ fun foo() =
     (new Foo()).bar
   local(1)
 foo()
-//│ Parsed:
-//│ TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(), Blk(NuFunDef(Some(false), local, None, [], Lam(Tup(_: Var(x)), Blk(NuTypeDef(class, Foo, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, bar, None, [], App(Var(+), Tup(_: Var(x), _: App(Var(foo), Tup())))))); Sel(Bra(rcd = false, App(NuNew(Var(Foo)), Tup())), bar)))); App(Var(local), Tup(_: IntLit(1)))))), App(Var(foo), Tup()))
 //│ Lifted:
-//│ TypingUnit(NuTypeDef(class, Foo$1, (), Tup(_: Var(x)), (), None, None, TypingUnit(NuFunDef(None, bar, None, [], App(Var(+), Tup(_: Sel(Var(this), x), _: App(Var(foo$1), Tup())))))), NuFunDef(Some(false), local$2, None, [], Lam(Tup(_: Var(x)), Blk(Sel(Bra(rcd = false, New(Some((TypeName(Foo$1),[x,])), TypingUnit())), bar)))), NuFunDef(None, foo$1, None, [], Lam(Tup(), Blk(App(Var(local$2), Tup(_: IntLit(1)))))), App(Var(foo$1), Tup()))
 //│ TypingUnit {
 //│   class Foo$1([x,]) {fun bar = +((this).x, foo$1(),)}
 //│   let local$2 = (x,) => {('(' new Foo$1([x,]) {} ')').bar}
@@ -28,10 +25,7 @@ foo()
 fun foo(f) = 
   f(1)
 foo(x => x+1)
-//│ Parsed:
-//│ TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(_: Var(f)), Blk(App(Var(f), Tup(_: IntLit(1)))))), App(Var(foo), Tup(_: Lam(Tup(_: Var(x)), App(Var(+), Tup(_: Var(x), _: IntLit(1)))))))
 //│ Lifted:
-//│ TypingUnit(NuTypeDef(class, Lambda1$2$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, apply, None, [], Lam(Tup(_: Var(x)), App(Var(+), Tup(_: Var(x), _: IntLit(1))))))), NuFunDef(None, foo$1, None, [], Lam(Tup(_: Var(f)), Blk(App(Var(f), Tup(_: IntLit(1)))))), App(Var(foo$1), Tup(_: Blk(New(Some((TypeName(Lambda1$2$1),[])), TypingUnit())))))
 //│ TypingUnit {
 //│   class Lambda1$2$1([]) {fun apply = (x,) => +(x, 1,)}
 //│   fun foo$1 = (f,) => {f(1,)}
@@ -47,10 +41,7 @@ fun foo(x) =
     f(x)
   bar(y => y+x)
 foo(1)
-//│ Parsed:
-//│ TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(_: Var(x)), Blk(NuFunDef(Some(false), bar, None, [], Lam(Tup(_: Var(f)), Blk(App(Var(f), Tup(_: Var(x)))))); App(Var(bar), Tup(_: Lam(Tup(_: Var(y)), App(Var(+), Tup(_: Var(y), _: Var(x))))))))), App(Var(foo), Tup(_: IntLit(1))))
 //│ Lifted:
-//│ TypingUnit(NuTypeDef(class, Lambda1$3$1, (), Tup(_: Var(x)), (), None, None, TypingUnit(NuFunDef(None, apply, None, [], Lam(Tup(_: Var(y)), App(Var(+), Tup(_: Var(y), _: Sel(Var(this), x))))))), NuFunDef(Some(false), bar$2, None, [], Lam(Tup(_: Var(f), _: Var(x)), Blk(App(Var(f), Tup(_: Var(x)))))), NuFunDef(None, foo$1, None, [], Lam(Tup(_: Var(x)), Blk(App(Var(bar$2), Tup(_: Blk(New(Some((TypeName(Lambda1$3$1),[x,])), TypingUnit())), _: Var(x)))))), App(Var(foo$1), Tup(_: IntLit(1))))
 //│ TypingUnit {
 //│   class Lambda1$3$1([x,]) {fun apply = (y,) => +(y, (this).x,)}
 //│   let bar$2 = (f, x,) => {f(x,)}
@@ -70,10 +61,7 @@ class A(y: Int){
 fun app(a) = 
   foo(z => a.bar(z))
 app(new A(1))
-//│ Parsed:
-//│ TypingUnit(NuFunDef(None, foo, None, [], Lam(Tup(_: Var(f)), Blk(App(Var(f), Tup(_: IntLit(1)))))), NuTypeDef(class, A, (), Tup(y: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, bar, None, [], Lam(Tup(_: Var(z)), App(Var(+), Tup(_: Var(y), _: Var(z))))))), NuFunDef(None, app, None, [], Lam(Tup(_: Var(a)), Blk(App(Var(foo), Tup(_: Lam(Tup(_: Var(z)), App(Sel(Var(a), bar), Tup(_: Var(z))))))))), App(Var(app), Tup(_: App(NuNew(Var(A)), Tup(_: IntLit(1))))))
 //│ Lifted:
-//│ TypingUnit(NuTypeDef(class, A$1, (), Tup(y: Var(Int)), (), None, None, TypingUnit(NuFunDef(None, bar, None, [], Lam(Tup(_: Var(z)), App(Var(+), Tup(_: Sel(Var(this), y), _: Var(z))))))), NuTypeDef(class, Lambda1$3$2, (), Tup(_: Var(a)), (), None, None, TypingUnit(NuFunDef(None, apply, None, [], Lam(Tup(_: Var(z)), App(Sel(Sel(Var(this), a), bar), Tup(_: Var(z))))))), NuFunDef(None, foo$2, None, [], Lam(Tup(_: Var(f)), Blk(App(Var(f), Tup(_: IntLit(1)))))), NuFunDef(None, app$1, None, [], Lam(Tup(_: Var(a)), Blk(App(Var(foo$2), Tup(_: Blk(New(Some((TypeName(Lambda1$3$2),[a,])), TypingUnit()))))))), App(Var(app$1), Tup(_: New(Some((TypeName(A$1),[1,])), TypingUnit()))))
 //│ TypingUnit {
 //│   class A$1([y: Int,]) {fun bar = (z,) => +((this).y, z,)}
 //│   class Lambda1$3$2([a,]) {fun apply = (z,) => ((this).a).bar(z,)}

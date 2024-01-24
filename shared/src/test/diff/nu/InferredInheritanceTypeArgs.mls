@@ -17,10 +17,10 @@ class A(val a: Int) extends Test
 
 :e
 class A(a: Int) extends Test
-//│ ╔══[ERROR] Parameter 'a' cannot tbe accessed as a field
+//│ ╔══[ERROR] Parameter 'a' cannot be accessed as a field
 //│ ║  l.6: 	  fun bar = [this.a, this.a]
 //│ ╙──     	                         ^^
-//│ ╔══[ERROR] Parameter 'a' cannot tbe accessed as a field
+//│ ╔══[ERROR] Parameter 'a' cannot be accessed as a field
 //│ ║  l.6: 	  fun bar = [this.a, this.a]
 //│ ╙──     	                 ^^
 //│ class A(a: Int) {
@@ -41,7 +41,7 @@ mixin Test2[S, T] {
 
 class A1[B](val s: Bool, val t: B) extends Test2[Bool, B]
 //│ class A1[B](s: Bool, t: B) {
-//│   fun fb: (Bool & 'S) -> [Bool | 'S, Bool | 'S]
+//│   fun fb: ('S & Bool) -> [Bool | 'S, Bool | 'S]
 //│   fun x: [Bool | 'S, B]
 //│ }
 
@@ -68,7 +68,7 @@ class P(val p: Int) {
 
 :e // TODO improve type checking
 class C1(a: Int) extends P(a) { fun bar = this.foo(0) }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.70: 	class C1(a: Int) extends P(a) { fun bar = this.foo(0) }
 //│ ╙──      	                                              ^^^^
 //│ class C1(a: Int) extends P {
@@ -80,7 +80,7 @@ class C1(a: Int) extends P(a) { fun bar = this.foo(0) }
 class C2(a: Int, b: Int) extends P(a + b) {
   fun foo(x) = x * this.p + a * b
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.81: 	  fun foo(x) = x * this.p + a * b
 //│ ╙──      	                       ^^
 //│ class C2(a: Int, b: Int) extends P {
@@ -184,13 +184,13 @@ trait Foo[type A] { fun foo(x: A): A }
 //│ }
 
 
-trait Foo[A] { fun a: A;; fun foo(x: A): A }
+trait Foo[A] { fun a: A; fun foo(x: A): A }
 //│ trait Foo[A] {
 //│   fun a: A
 //│   fun foo: (x: A) -> A
 //│ }
 
-class Bar[B](a: B) extends Foo { fun foo(x) = x }
+class Bar[out B](a: B) extends Foo { fun foo(x) = x }
 //│ class Bar[B](a: B) extends Foo {
 //│   fun foo: forall 'a. 'a -> 'a
 //│ }

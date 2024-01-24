@@ -3,7 +3,6 @@ package mlscript.compiler
 import mlscript.utils.shorthands.*
 import scala.util.control.NonFatal
 import scala.collection.mutable.StringBuilder
-import mlscript.codegen.Helpers.inspect as showStructure
 import mlscript.{DiffTests, ModeType, TypingUnit}
 import mlscript.compiler.debug.TreeDebug
 import mlscript.compiler.mono.Monomorph
@@ -14,11 +13,9 @@ class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*
   override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (List[Str], Option[TypingUnit]) = 
     val outputBuilder = StringBuilder()
-    output("Parsed:")    
-    output(showStructure(unit))
+    //output("Parsed:")    
+    //output(unit.showDbg)
     if (mode.lift) output(PrettyPrinter.showTypingUnit(unit))
-    //outputBuilder ++= "Parsed:"
-    //outputBuilder ++= showStructure(unit)
 
     output("Lifted:")
     //outputBuilder ++= "\nLifted:\n"
@@ -26,7 +23,7 @@ class DiffTestCompiler extends DiffTests {
     try
       val lifter = ClassLifter(mode.fullExceptionStack)
       if (!mode.nolift) rstUnit = lifter.liftTypingUnit(unit)
-      output(s"${showStructure(rstUnit)}")
+      //output(s"${rstUnit.showDbg}")
       output(PrettyPrinter.showTypingUnit(rstUnit))
       //outputBuilder ++= s"${mlscript.codegen.Helpers.inspect(rstUnit)}\n"
       //outputBuilder ++= PrettyPrinter.showTypingUnit(rstUnit)
@@ -46,7 +43,7 @@ class DiffTestCompiler extends DiffTests {
         if (mode.numono)
           then
             val defuncAST = monomorph.nuDefunctionalize(rstUnit)
-            output(s"${showStructure(defuncAST)}")
+            //output(s"${defuncAST.showDbg}")
             output(PrettyPrinter.showTypingUnit(defuncAST))
             //outputBuilder ++= s"${mlscript.codegen.Helpers.inspect(defuncAST)}\n"
             //outputBuilder ++= PrettyPrinter.showTypingUnit(defuncAST)++"\n"

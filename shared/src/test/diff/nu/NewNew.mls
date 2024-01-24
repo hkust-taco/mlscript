@@ -103,7 +103,7 @@ f(1)
 //│ error
 //│ res
 //│ Runtime error:
-//│   TypeError: f9 is not a function
+//│   TypeError: f4 is not a function
 
 :e
 new Foo("2")
@@ -134,7 +134,7 @@ new Foo()
 
 
 
-class PoInt[A](x: A, y: A)
+class PoInt[out A](x: A, y: A)
 //│ class PoInt[A](x: A, y: A)
 
 new PoInt(1, 2)
@@ -167,7 +167,7 @@ new PoInt['_]
 //│ ╙──       	             ^
 //│ PoInt[nothing] | error
 //│ Code generation encountered an error:
-//│   Unsupported `new` class term: TyApp(Var(PoInt), List('_))
+//│   Unsupported `new` class term: TyApp(Var(PoInt),List('_))
 
 :e
 new PoInt[Str](0, 0)
@@ -176,7 +176,7 @@ new PoInt[Str](0, 0)
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^^
 //│ PoInt[0]
 //│ Code generation encountered an error:
-//│   Unsupported `new` class term: TyApp(Var(PoInt), List(TypeName(Str)))
+//│   Unsupported `new` class term: TyApp(Var(PoInt),List(TypeName(Str)))
 
 type T = PoInt[Str]
 //│ type T = PoInt[Str]
@@ -211,7 +211,7 @@ let origin = new PoInt[Int](0, 0)
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^
 //│ let origin: PoInt[0]
 //│ Code generation encountered an error:
-//│   Unsupported `new` class term: TyApp(Var(PoInt), List(TypeName(Int)))
+//│   Unsupported `new` class term: TyApp(Var(PoInt),List(TypeName(Int)))
 
 
 :e // TODO support
@@ -221,7 +221,7 @@ new {}
 //│ ╙──       	    ^^
 //│ error
 //│ Code generation encountered an error:
-//│   Unsupported `new` class term: Bra(rcd = true, Rcd())
+//│   Unsupported `new` class term: Bra(true,Rcd(List()))
 
 :pe
 :e
@@ -236,18 +236,20 @@ new
 //│ Code generation encountered an error:
 //│   Unsupported `new` class term: UnitLit(true)
 
-:e // support?
+// Support?
+:pe
+:e
 new
   x: 0
-//│ ╔══[ERROR] Not a recognized type
-//│ ║  l.241: 	  x: 0
+//│ ╔══[PARSE ERROR] Not a recognized type
+//│ ║  l.243: 	  x: 0
 //│ ╙──       	  ^
 //│ ╔══[ERROR] Unexpected type `nothing` after `new` keyword
-//│ ║  l.241: 	  x: 0
+//│ ║  l.243: 	  x: 0
 //│ ╙──       	  ^
 //│ error
 //│ Code generation encountered an error:
-//│   Unsupported `new` class term: Blk(...)
+//│   Unsupported `new` class term: Blk(List(Asc(Var(x),Literal(IntLit(0)))))
 
 
 
@@ -258,7 +260,7 @@ fun f(x) = {x}
 :e
 new f(1)
 //│ ╔══[ERROR] type identifier not found: f
-//│ ║  l.259: 	new f(1)
+//│ ║  l.261: 	new f(1)
 //│ ╙──       	    ^
 //│ error
 //│ res
@@ -271,7 +273,7 @@ module Oops
 :e
 new Oops
 //│ ╔══[ERROR] Module Oops cannot be used in `new` expression
-//│ ║  l.272: 	new Oops
+//│ ║  l.274: 	new Oops
 //│ ╙──       	    ^^^^
 //│ error
 //│ res
@@ -282,7 +284,7 @@ new Oops
 new Oops2
 trait Oops2
 //│ ╔══[ERROR] Trait Oops2 cannot be used in `new` expression
-//│ ║  l.282: 	new Oops2
+//│ ║  l.284: 	new Oops2
 //│ ╙──       	    ^^^^^
 //│ trait Oops2
 //│ error
@@ -302,6 +304,6 @@ module A { class B }
 new A.B
 //│ B
 //│ Code generation encountered an error:
-//│   Unsupported `new` class term: Sel(Var(A), B)
+//│   Unsupported `new` class term: Sel(Var(A),Var(B))
 
 

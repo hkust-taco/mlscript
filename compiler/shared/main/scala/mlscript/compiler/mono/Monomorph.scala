@@ -17,7 +17,6 @@ import mlscript.AppliedType.apply
 import mlscript.compiler.mono.specializer.Builtin
 import mlscript.compiler.mono.specializer.Context
 import mlscript.compiler.*
-import mlscript.codegen.Helpers.inspect as showStructure
 import mlscript.compiler.printer.ExprPrinter
 import mlscript.compiler.mono.specializer.BoundedExpr
 import mlscript.compiler.mono.specializer.{MonoValue, TypeValue, ObjectValue, UnknownValue, FunctionValue, VariableValue}

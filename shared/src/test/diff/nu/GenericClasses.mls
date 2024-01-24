@@ -13,7 +13,7 @@ fun f(x) = if x is C then x
 // f(C : #C)
 
 
-class C<A>(val a: A)
+class C<out A>(val a: A)
 //│ class C[A](a: A)
 
 let c = C(1)
@@ -45,7 +45,7 @@ class C[A](val n: A) {
 //│ }
 
 
-class Some<A>(val value: A) {
+class Some<out A>(val value: A) {
   fun get = value
   fun toArray = [value]
   fun map(f) = Some(f(value))
@@ -211,7 +211,7 @@ Test(true)
 
 
 :e
-class Test<A>(n: A) {
+class Test<out A>(n: A) {
   fun foo = n + 1
 }
 //│ ╔══[ERROR] Type mismatch in operator application:
@@ -221,8 +221,8 @@ class Test<A>(n: A) {
 //│ ║  l.215: 	  fun foo = n + 1
 //│ ║         	            ^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.214: 	class Test<A>(n: A) {
-//│ ╙──       	           ^
+//│ ║  l.214: 	class Test<out A>(n: A) {
+//│ ╙──       	               ^
 //│ class Test[A](n: A) {
 //│   fun foo: Int | error
 //│ }
@@ -426,7 +426,7 @@ M: Cls['a]
 //│     = M { class: [class M extends Cls] }
 
 
-class Cls[A](val x: A) { fun g: A -> Int;; fun g(x) = 42 }
+class Cls[A](val x: A) { fun g: A -> Int; fun g(x) = 42 }
 //│ class Cls[A](x: A) {
 //│   fun g: A -> Int
 //│ }

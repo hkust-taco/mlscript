@@ -15,7 +15,6 @@ import mlscript.{App, Asc, Assign, Bind, Blk, Bra, CaseOf, Lam, Let, Lit,
                  New, Rcd, Sel, Subs, Term, Test, Tup, With, Var, Fld, FldFlags, If, PolyType, 
                  IfBody, IfThen, IfElse, IfLet, IfOpApp, IfOpsApp, IfBlock, LetS, Statement}
 import mlscript.UnitLit
-import mlscript.codegen.Helpers.inspect as showStructure
 import mlscript.compiler.mono.MonomorphError
 import mlscript.NuTypeDef
 import mlscript.NuFunDef
@@ -206,7 +205,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
   val builtInOps: Set[String] = Set("+", "-", ">", "<", "*", "==", "concat", "toString") 
   def nuEvaluate(term: Term)(using evalCtx: Map[String, BoundedTerm], callingStack: List[String], termMap: MutMap[Term, BoundedTerm]): Unit =
     def getRes(term: Term): BoundedTerm = termMap.getOrElse(term, throw MonomorphError(s"Bounds for ${term} not found."))
-    debug.writeLine(s"╓Eval ${mlscript.codegen.Helpers.inspect(term)}:")
+    debug.writeLine(s"╓Eval ${term}:")
     debug.indent()
     term match
       case lit: Lit => 
@@ -425,7 +424,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
     val ret = term match
       case x: (Lit | Var) => x
       case App(sel@Sel(receiver, field), args) => 
-        debug.writeLine(s"Specializing ${showStructure(term)}")
+        debug.writeLine(s"Specializing ${term}")
         debug.indent()
         val nuReceiver = nuDefunctionalize(receiver)
         val nuArgs = nuDefunctionalize(args)
@@ -433,7 +432,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
         val ifBlk = IfBlock(ifBlockLines)
         val res = Let(false, Var("obj"), nuReceiver,
             If(IfOpApp(Var("obj"), Var("is"), ifBlk), None))
-        debug.writeLine(s"Result: ${showStructure(res)}")
+        debug.writeLine(s"Result: ${res}")
         debug.outdent()
         res
       case App(op@Var(name), args) if builtInOps.contains(name) =>
@@ -451,14 +450,14 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
         val nuReceiver = nuDefunctionalize(receiver)
         if (getRes(receiver).getValue.forall(_.isInstanceOf[ObjVal]))
         then
-          debug.writeLine(s"Specializing ${showStructure(term)}")
+          debug.writeLine(s"Specializing ${term}")
           debug.indent()
           val ifBlockLines = valSetToBranches(getRes(receiver).getValue.toList)(using fieldName, None)
           val ifBlk = IfBlock(ifBlockLines)
           val res = Let(false, Var("obj"), nuReceiver,
             If(IfOpApp(Var("obj"), Var("is"), ifBlk), None)
           )
-          debug.writeLine(s"Result: ${showStructure(res)}")
+          debug.writeLine(s"Result: ${res}")
           debug.outdent()
           res
         else 
@@ -468,7 +467,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
           case t: Term => nuDefunctionalize(t)
           case other => other
         })
-      case _ => throw MonomorphError(s"Cannot Defunctionalize ${showStructure(term)}")
+      case _ => throw MonomorphError(s"Cannot Defunctionalize ${term}")
     ret
   }
 }

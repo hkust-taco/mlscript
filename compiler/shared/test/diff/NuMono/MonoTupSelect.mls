@@ -5,10 +5,7 @@ class Foo() {fun f() = 0}
 class Bar() {fun f = 0}
 [Foo(), Bar()].0.f()
 [Foo(), Bar()].1.f
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, Foo, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(), IntLit(0))))), NuTypeDef(class, Bar, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, f, None, [], IntLit(0)))), App(Sel(Sel(Tup(_: App(Var(Foo), Tup()), _: App(Var(Bar), Tup())), 0), f), Tup()), Sel(Sel(Tup(_: App(Var(Foo), Tup()), _: App(Var(Bar), Tup())), 1), f))
 //│ Lifted:
-//│ TypingUnit(NuTypeDef(class, Foo$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, f, None, [], Lam(Tup(), IntLit(0))))), NuTypeDef(class, Bar$2, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, f, None, [], IntLit(0)))), App(Sel(Sel(Tup(_: App(Var(Foo$1), Tup()), _: App(Var(Bar$2), Tup())), 0), f), Tup()), Sel(Sel(Tup(_: App(Var(Foo$1), Tup()), _: App(Var(Bar$2), Tup())), 1), f))
 //│ TypingUnit {
 //│   class Foo$1([]) {fun f = () => 0}
 //│   class Bar$2([]) {fun f = 0}
@@ -16,7 +13,6 @@ class Bar() {fun f = 0}
 //│   Code(List((([Foo$1(), Bar$2(),]).1).f))
 //│ }
 //│ Mono:
-//│ TypingUnit(NuTypeDef(class, Foo$1, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Bar$2, (), Tup(), (), None, None, TypingUnit()), NuFunDef(None, f$Bar$2, None, [], Lam(Tup(_: Var(this)), IntLit(0))), NuFunDef(None, main$$3, None, [], Lam(Tup(), Let(false, obj, Sel(Tup(_: App(Var(Foo$1), Tup()), _: App(Var(Bar$2), Tup())), 1), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Bar$2), App(Var(f$Bar$2), Tup(_: Var(obj))));IfElse(Var(error)))), None)))), NuFunDef(None, f$Foo$1, None, [], Lam(Tup(_: Var(this)), IntLit(0))), NuFunDef(None, main$$2, None, [], Lam(Tup(), Let(false, obj, Sel(Tup(_: App(Var(Foo$1), Tup()), _: App(Var(Bar$2), Tup())), 0), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Foo$1), App(Var(f$Foo$1), Tup(_: Var(obj))));IfElse(Var(error)))), None)))), App(Var(main$$2), Tup()), App(Var(main$$3), Tup()))
 //│ TypingUnit {
 //│   class Foo$1([]) {}
 //│   class Bar$2([]) {}

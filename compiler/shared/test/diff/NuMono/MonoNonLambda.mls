@@ -13,10 +13,7 @@ a.x
 a.y()
 a.z
 a.w()
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, A, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(2)), NuFunDef(Some(false), y, None, [], Lam(Tup(), IntLit(3))), NuFunDef(None, z, None, [], IntLit(4)), NuFunDef(None, w, None, [], Lam(Tup(), IntLit(5))))), NuFunDef(Some(false), a, None, [], App(Var(A), Tup())), Sel(Var(a), x), App(Sel(Var(a), y), Tup()), Sel(Var(a), z), App(Sel(Var(a), w), Tup()))
 //│ Lifted:
-//│ TypingUnit(NuTypeDef(class, A$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), x, None, [], IntLit(2)), NuFunDef(Some(false), y, None, [], Lam(Tup(), IntLit(3))), NuFunDef(None, z, None, [], IntLit(4)), NuFunDef(None, w, None, [], Lam(Tup(), IntLit(5))))), NuFunDef(Some(false), a$1, None, [], App(Var(A$1), Tup())), Sel(Var(a$1), x), App(Sel(Var(a$1), y), Tup()), Sel(Var(a$1), z), App(Sel(Var(a$1), w), Tup()))
 //│ TypingUnit {
 //│   class A$1([]) {let x = 2; let y = () => 3; fun z = 4; fun w = () => 5}
 //│   let a$1 = A$1()
@@ -26,7 +23,6 @@ a.w()
 //│   Code(List((a$1).w()))
 //│ }
 //│ Mono:
-//│ TypingUnit(NuTypeDef(class, A$1, (), Tup(), (), None, None, TypingUnit()), NuFunDef(Some(false), y$A$1, None, [], Lam(Tup(_: Var(this)), IntLit(3))), NuFunDef(None, main$$5, None, [], Lam(Tup(), Let(false, obj, Var(a$1), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(A$1), App(Var(w$A$1), Tup(_: Var(obj))));IfElse(Var(error)))), None)))), NuFunDef(None, z$A$1, None, [], Lam(Tup(_: Var(this)), IntLit(4))), NuFunDef(None, main$$4, None, [], Lam(Tup(), Let(false, obj, Var(a$1), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(A$1), App(Var(z$A$1), Tup(_: Var(obj))));IfElse(Var(error)))), None)))), NuFunDef(None, main$$3, None, [], Lam(Tup(), Let(false, obj, Var(a$1), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(A$1), App(Var(y$A$1), Tup(_: Var(obj))));IfElse(Var(error)))), None)))), NuFunDef(Some(false), x$A$1, None, [], Lam(Tup(_: Var(this)), IntLit(2))), NuFunDef(None, main$$2, None, [], Lam(Tup(), Let(false, obj, Var(a$1), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(A$1), App(Var(x$A$1), Tup(_: Var(obj))));IfElse(Var(error)))), None)))), NuFunDef(Some(false), a$1, None, [], App(Var(A$1), Tup())), NuFunDef(None, w$A$1, None, [], Lam(Tup(_: Var(this)), IntLit(5))), App(Var(main$$2), Tup()), App(Var(main$$3), Tup()), App(Var(main$$4), Tup()), App(Var(main$$5), Tup()))
 //│ TypingUnit {
 //│   class A$1([]) {}
 //│   let y$A$1 = (this,) => 3

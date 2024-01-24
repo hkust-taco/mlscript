@@ -105,7 +105,7 @@ let aa = A(42)
 //│ class TypingUnit5 {}
 //│ const typing_unit5 = new TypingUnit5;
 //│ // Query 1
-//│ globalThis.aa1 = A(42);
+//│ globalThis.aa = A(42);
 //│ // End of generated code
 //│ aa
 //│    = A {}
@@ -119,7 +119,7 @@ aa
 //│ class TypingUnit6 {}
 //│ const typing_unit6 = new TypingUnit6;
 //│ // Query 1
-//│ res = aa1;
+//│ res = aa;
 //│ // End of generated code
 //│ res
 //│     = A {}
@@ -131,7 +131,7 @@ let ab = A(0)
 //│ class TypingUnit7 {}
 //│ const typing_unit7 = new TypingUnit7;
 //│ // Query 1
-//│ globalThis.ab1 = A(0);
+//│ globalThis.ab = A(0);
 //│ // End of generated code
 //│ ab
 //│    = A {}
@@ -147,8 +147,8 @@ class Foo {
 //│ ╔══[ERROR] Type `#Foo` does not contain member `x`
 //│ ║  l.145: 	  this: { x: Int }
 //│ ╙──       	          ^
-//│ ╔══[WARNING] Expression in statement position should have type `unit`.
-//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╔══[WARNING] Expression in statement position should have type `()`.
+//│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
 //│ ╟── Type mismatch in type ascription:
 //│ ║  l.145: 	  this: { x: Int }
 //│ ║         	  ^^^^
@@ -191,8 +191,8 @@ class Bar {
 //│ ╔══[ERROR] Type `#Bar` does not contain member `x`
 //│ ║  l.186: 	  super: { x: Int }
 //│ ╙──       	           ^
-//│ ╔══[WARNING] Expression in statement position should have type `unit`.
-//│ ╟── Use the `discard` function to discard non-unit values, making the intent clearer.
+//│ ╔══[WARNING] Expression in statement position should have type `()`.
+//│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
 //│ ╟── Type mismatch in type ascription:
 //│ ║  l.186: 	  super: { x: Int }
 //│ ║         	  ^^^^^
@@ -304,7 +304,7 @@ log([baz.x, baz.y])
 class Q() {
   let q = 42
   fun qq =
-    let f = (x: Int) => {q: x + q};; f(1)
+    let f = (x: Int) => {q: x + q}; f(1)
 }
 //│ class Q() {
 //│   let q: 42
@@ -408,9 +408,9 @@ www.add(42)
 //│ class TypingUnit15 {}
 //│ const typing_unit15 = new TypingUnit15;
 //│ // Query 1
-//│ globalThis.www1 = W();
+//│ globalThis.www = W();
 //│ // Query 2
-//│ res = www1.add(42);
+//│ res = www.add(42);
 //│ // End of generated code
 //│ www
 //│     = W {}

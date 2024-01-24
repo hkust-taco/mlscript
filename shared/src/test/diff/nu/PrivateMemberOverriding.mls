@@ -39,7 +39,7 @@ class Bar(x: Bool) extends Foo(123)
 
 :e // * Expected
 Bar(true).x
-//│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
+//│ ╔══[ERROR] Parameter 'x' cannot be accessed as a field
 //│ ║  l.41: 	Bar(true).x
 //│ ║        	         ^^
 //│ ╟── Either make the parameter a `val` or access it through destructuring

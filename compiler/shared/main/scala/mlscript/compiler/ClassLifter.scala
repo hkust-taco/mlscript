@@ -7,7 +7,6 @@ import scala.collection.mutable.StringBuilder as StringBuilder
 import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
 import scala.collection.mutable.ArrayBuffer as ArrayBuffer
-import mlscript.codegen.Helpers.inspect as showStructure
 import mlscript.codegen.CodeGenError
 import mlscript.compiler.mono.MonomorphError
 
@@ -751,7 +750,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
 
   def liftTypingUnit(rawUnit: TypingUnit): TypingUnit = {
     log("=========================\n")
-    log(s"lifting: \n${showStructure(rawUnit)}\n")
+    log(s"lifting: \n$rawUnit\n")
     retSeq = Nil
     globalFunctions.clear()
     val re = liftEntities(rawUnit.entities)(using emptyCtx, Map(), Map(), None)

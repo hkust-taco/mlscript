@@ -44,7 +44,7 @@ discard / foo
     1
 //│ Parsed: discard(...(foo(...{1})));
 //│ Desugared: discard(...(foo(...{1})))
-//│ AST: App(Var(discard), App(Var(foo), Blk(IntLit(1))))
+//│ AST: App(Var(discard),App(Var(foo),Blk(List(IntLit(1)))))
 
 :e
 discard foo
@@ -81,7 +81,7 @@ id id
   id
 //│ Parsed: id(...id)(...{id});
 //│ Desugared: id(...id)(...{id})
-//│ AST: App(App(Var(id), Var(id)), Blk(Var(id)))
+//│ AST: App(App(Var(id),Var(id)),Blk(List(Var(id))))
 //│ res: 'a -> 'a
 
 :p
@@ -91,7 +91,7 @@ id id id
       id id id
 //│ Parsed: id(...id)(...id)(...{id(...id)(...id)(...{id(...id)(...id)(...{id(...id)(...id)})})});
 //│ Desugared: id(...id)(...id)(...{id(...id)(...id)(...{id(...id)(...id)(...{id(...id)(...id)})})})
-//│ AST: App(App(App(Var(id), Var(id)), Var(id)), Blk(App(App(App(Var(id), Var(id)), Var(id)), Blk(App(App(App(Var(id), Var(id)), Var(id)), Blk(App(App(Var(id), Var(id)), Var(id))))))))
+//│ AST: App(App(App(Var(id),Var(id)),Var(id)),Blk(List(App(App(App(Var(id),Var(id)),Var(id)),Blk(List(App(App(App(Var(id),Var(id)),Var(id)),Blk(List(App(App(Var(id),Var(id)),Var(id)))))))))))
 //│ res: 'a -> 'a
 
 :p
@@ -100,7 +100,7 @@ id id /
     id id
 //│ Parsed: id(...id)(...{id(...id)(...{id(...id)})});
 //│ Desugared: id(...id)(...{id(...id)(...{id(...id)})})
-//│ AST: App(App(Var(id), Var(id)), Blk(App(App(Var(id), Var(id)), Blk(App(Var(id), Var(id))))))
+//│ AST: App(App(Var(id),Var(id)),Blk(List(App(App(Var(id),Var(id)),Blk(List(App(Var(id),Var(id))))))))
 //│ res: 'a -> 'a
 
 :p
@@ -109,7 +109,7 @@ id id
   id id
 //│ Parsed: id(...id)(...{id(...id)})(...{id(...id)});
 //│ Desugared: id(...id)(...{id(...id)})(...{id(...id)})
-//│ AST: App(App(App(Var(id), Var(id)), Blk(App(Var(id), Var(id)))), Blk(App(Var(id), Var(id))))
+//│ AST: App(App(App(Var(id),Var(id)),Blk(List(App(Var(id),Var(id))))),Blk(List(App(Var(id),Var(id)))))
 //│ res: 'a -> 'a
 
 let foo =

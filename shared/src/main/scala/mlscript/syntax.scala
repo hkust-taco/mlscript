@@ -104,7 +104,7 @@ final case class IfOpsApp(lhs: Term, opsRhss: Ls[Var -> IfBody]) extends IfBody
 final case class IfBlock(lines: Ls[IfBody \/ Statement]) extends IfBody
 // final case class IfApp(fun: Term, opsRhss: Ls[Var -> IfBody]) extends IfBody
 
-final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool)
+final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool) extends FldFlagsImpl // TODO make it a Located and use in diagnostics
 final case class Fld(flags: FldFlags, value: Term) extends FldImpl
 
 object FldFlags { val empty: FldFlags = FldFlags(false, false, false) }
@@ -185,7 +185,7 @@ final case class PolyType(targs: Ls[TypeName \/ TypeVar], body: Type) extends Ty
 
 // New Definitions AST
 
-final case class TypingUnit(entities: Ls[Statement]) extends TypingUnitImpl
+final case class TypingUnit(rawEntities: Ls[Statement]) extends TypingUnitImpl
 // final case class TypingUnit(entities: Ls[Statement]) extends TypeLike with PgrmOrTypingUnit with TypingUnitImpl
 
 final case class Signature(members: Ls[NuDecl], result: Opt[Type]) extends TypeLike with SignatureImpl

@@ -45,13 +45,35 @@ sealed trait NuTypeSymbol { sym: TypeSymbol =>
   def isNested: Bool = qualifier.isDefined // is nested in another class/mixin/module
 }
 
-sealed class ValueSymbol(val lexicalName: Str, val runtimeName: Str, val isByvalueRec: Option[Boolean], val isLam: Boolean) extends RuntimeSymbol {
+sealed class ValueSymbol(
+    val lexicalName: Str,
+    val runtimeName: Str,
+    val isByvalueRec: Option[Boolean],
+    val isLam: Boolean,
+    /**
+      * Workaround for the first pass traversal with new definition typing.
+      * "Dry run" here means that we haven't generated the code for the symbol
+      * yet in the new-definition-typing mode, so the symbol is just defined
+      * for the sake of code generation of classes/mixins/modules.
+      * 
+      * This field should be deprecated after the `PreTyper` is done. See [PR
+      * #197](https://github.com/hkust-taco/mlscript/pull/197) for more details. 
+      */
+    val forNewDefsDryRun: Boolean
+) extends RuntimeSymbol {
   override def toString: Str = s"value $lexicalName"
 }
 
 object ValueSymbol {
-  def apply(lexicalName: Str, runtimeName: Str, isByvalueRec: Option[Boolean], isLam: Boolean): ValueSymbol =
-    new ValueSymbol(lexicalName, runtimeName, isByvalueRec, isLam)
+  def apply(
+      lexicalName: Str,
+      runtimeName: Str,
+      isByvalueRec: Option[Boolean],
+      isLam: Boolean,
+      /** Workaround for the first pass traversal with new definition typing. */
+      forNewDefsDryRun: Boolean = false
+  ): ValueSymbol =
+    new ValueSymbol(lexicalName, runtimeName, isByvalueRec, isLam, forNewDefsDryRun)
 }
 
 sealed case class TypeAliasSymbol(

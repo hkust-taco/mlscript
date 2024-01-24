@@ -6,17 +6,13 @@
 class Foo() {fun f = 0}
 module x { val y = Foo() }
 x.y.f
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, Foo, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, f, None, [], IntLit(0)))), NuTypeDef(module, x, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), y, None, [], App(Var(Foo), Tup())))), Sel(Sel(Var(x), y), f))
 //│ Lifted:
-//│ TypingUnit(NuTypeDef(class, Foo$1, (), Tup(), (), None, None, TypingUnit(NuFunDef(None, f, None, [], IntLit(0)))), NuTypeDef(module, x$2, (), Tup(), (), None, None, TypingUnit(NuFunDef(Some(false), y, None, [], App(Var(Foo$1), Tup())))), Sel(Sel(App(Var(x$2), Tup()), y), f))
 //│ TypingUnit {
 //│   class Foo$1([]) {fun f = 0}
 //│   module x$2([]) {let y = Foo$1()}
 //│   Code(List(((x$2()).y).f))
 //│ }
 //│ Mono:
-//│ TypingUnit(NuTypeDef(module, x$2, (), Tup(), (), None, None, TypingUnit()), NuTypeDef(class, Foo$1, (), Tup(), (), None, None, TypingUnit()), NuFunDef(Some(false), y$x$2, None, [], Lam(Tup(_: Var(this)), App(Var(Foo$1), Tup()))), NuFunDef(None, f$Foo$1, None, [], Lam(Tup(_: Var(this)), IntLit(0))), NuFunDef(None, main$$2, None, [], Lam(Tup(), Let(false, obj, Let(false, obj, App(Var(x$2), Tup()), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(x$2), App(Var(y$x$2), Tup(_: Var(obj))));IfElse(Var(error)))), None)), If(IfOpApp(Var(obj), Var(is), IfBlock(IfThen(Var(Foo$1), App(Var(f$Foo$1), Tup(_: Var(obj))));IfElse(Var(error)))), None)))), App(Var(main$$2), Tup()))
 //│ TypingUnit {
 //│   module x$2([]) {}
 //│   class Foo$1([]) {}
@@ -38,7 +34,7 @@ x.y.f
 //│ fun main$$2: () -> 0
 //│ 0
 //│ y$x$2
-//│       = [Function: y$x$21]
+//│       = [Function: y$x$2]
 //│ res
 //│ Runtime error:
 //│   TypeError: x$2 is not a function

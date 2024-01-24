@@ -38,7 +38,7 @@ test(p, p)
 // * BUT... if we forgot to pass the type argument to MyPoint2 (getting a raw/nominal-tag type),
 // * the error is not helpful at all:
 
-class MyPoint2[Col](val color: Col, val parent: MyPoint2 | undefined)
+class MyPoint2[out Col](val color: Col, val parent: MyPoint2 | undefined)
 //│ class MyPoint2[Col](color: Col, parent: MyPoint2[anything] | ())
 
 val p = MyPoint2(0, undefined)
@@ -52,8 +52,8 @@ test(p, p)
 //│ ║  l.50: 	test(p, p)
 //│ ║        	^^^^^^^^^^
 //│ ╟── type variable `Col` leaks out of its scope
-//│ ║  l.41: 	class MyPoint2[Col](val color: Col, val parent: MyPoint2 | undefined)
-//│ ║        	               ^^^
+//│ ║  l.41: 	class MyPoint2[out Col](val color: Col, val parent: MyPoint2 | undefined)
+//│ ║        	                   ^^^
 //│ ╟── into field selection of type `#Eql`
 //│ ║  l.8: 	fun test(pt1, pt2) = pt1.color === pt1.color and
 //│ ╙──     	                     ^^^^^^^^^
@@ -81,8 +81,8 @@ test(p, p)
 //│ ║  l.79: 	test(p, p)
 //│ ║        	^^^^^^^^^^
 //│ ╟── type variable `Col` leaks out of its scope
-//│ ║  l.41: 	class MyPoint2[Col](val color: Col, val parent: MyPoint2 | undefined)
-//│ ║        	               ^^^
+//│ ║  l.41: 	class MyPoint2[out Col](val color: Col, val parent: MyPoint2 | undefined)
+//│ ║        	                   ^^^
 //│ ╟── into field selection of type `#Eql`
 //│ ║  l.68: 	fun test(pt1, pt2) = pt1.color === pt1.color and
 //│ ╙──      	                     ^^^^^^^^^

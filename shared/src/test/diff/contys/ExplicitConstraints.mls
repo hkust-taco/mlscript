@@ -12,7 +12,7 @@ fun f: int => int where int : string
 //│ ╔══[ERROR] Type mismatch in constraint specifiation:
 //│ ║  l.11: 	fun f: int => int where int : string
 //│ ║        	                        ^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of `string`
+//│ ╟── type `int` is not an instance of type `string`
 //│ ║  l.11: 	fun f: int => int where int : string
 //│ ║        	                        ^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -25,7 +25,7 @@ fun f: int => (int where int : string)
 //│ ╔══[ERROR] Type mismatch in constraint specifiation:
 //│ ║  l.24: 	fun f: int => (int where int : string)
 //│ ║        	                         ^^^^^^^^^^^^
-//│ ╟── type `int` is not an instance of `string`
+//│ ╟── type `int` is not an instance of type `string`
 //│ ║  l.24: 	fun f: int => (int where int : string)
 //│ ║        	                         ^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -42,7 +42,7 @@ fun f: 'a => ('a where 'a : string) where int : 'a
 //│ ╔══[ERROR] Type mismatch in constraint specifiation:
 //│ ║  l.41: 	fun f: 'a => ('a where 'a : string) where int : 'a
 //│ ║        	                                          ^^^^^^^^
-//│ ╟── type `int` is not an instance of `string`
+//│ ╟── type `int` is not an instance of type `string`
 //│ ║  l.41: 	fun f: 'a => ('a where 'a : string) where int : 'a
 //│ ║        	                                          ^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -61,7 +61,7 @@ fun f: 'a => 'a where
 //│ ╔══[ERROR] Type mismatch in constraint specifiation:
 //│ ║  l.60: 	  int : 'a
 //│ ║        	  ^^^^^^^^
-//│ ╟── type `int` is not an instance of `string`
+//│ ╟── type `int` is not an instance of type `string`
 //│ ║  l.60: 	  int : 'a
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -81,7 +81,7 @@ fun f: 'a => forall 'b: 'a where
 //│ ╔══[ERROR] Type mismatch in constraint specifiation:
 //│ ║  l.80: 	  int : 'a
 //│ ║        	  ^^^^^^^^
-//│ ╟── type `int` is not an instance of `string`
+//│ ╟── type `int` is not an instance of type `string`
 //│ ║  l.80: 	  int : 'a
 //│ ║        	  ^^^
 //│ ╟── Note: constraint arises from type reference:

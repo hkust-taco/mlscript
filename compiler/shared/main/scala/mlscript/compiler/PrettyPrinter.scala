@@ -5,7 +5,7 @@ import mlscript.compiler.debug.DebugOutput
 
 // For pretty printing terms in debug output.
 object PrettyPrinter:
-  def show(term: Term): DebugOutput = DebugOutput.Code(term.toString.linesIterator.toList)
+  def show(term: Term): DebugOutput = DebugOutput.Code(term.showDbg.linesIterator.toList)
   def show(unit: TypingUnit): DebugOutput = DebugOutput.Code(showTypingUnit(unit, 0).linesIterator.toList)
   def show(funDef: NuFunDef): DebugOutput = DebugOutput.Code(showFunDef(funDef).linesIterator.toList)
   def show(tyDef: NuTypeDef): DebugOutput = DebugOutput.Code(showTypeDef(tyDef, 0).linesIterator.toList)
@@ -16,7 +16,7 @@ object PrettyPrinter:
       case term: Term => show(term)
       case tyDef: NuTypeDef => showTypeDef(tyDef)
       case funDef: NuFunDef => showFunDef(funDef)
-      case others => others.toString()
+      case others => others.showDbg
     }.mkString("{", "; ", "}")
     if (singleLine.length < 60)
       singleLine
@@ -26,7 +26,7 @@ object PrettyPrinter:
         case term: Term => show(term)
         case tyDef: NuTypeDef => showTypeDef(tyDef)
         case funDef: NuFunDef => showFunDef(funDef)
-        case others => others.toString()
+        case others => others.showDbg
       }.map(indentStr + "  " + _).mkString("{\n", "\n", s"\n$indentStr}")
   
   def showFunDef(funDef: NuFunDef): String =
@@ -40,15 +40,15 @@ object PrettyPrinter:
          then ""
          else funDef.tparams.map(_.name).mkString("[", ", ", "]"))
       + " = "
-      + funDef.rhs.fold(_.toString, _.show(newDefs = true))
+      + funDef.rhs.fold(_.showDbg, _.show(newDefs = true))
 
   def showTypeDef(tyDef: NuTypeDef, indent: Int = 0): String =
     s"${tyDef.kind.str} ${tyDef.nme.name}"
       + (if tyDef.tparams.isEmpty
          then ""
          else tyDef.tparams.map(_._2.name).mkString("[", ",", "]"))
-      + tyDef.params.fold("")(params => s"($params)")
+      + tyDef.params.fold("")(params => s"(${params.showDbg})")
       + (if tyDef.parents.isEmpty
          then ""
-         else ": " + tyDef.parents.map(_.toString).mkString(", "))
+         else ": " + tyDef.parents.map(_.showDbg).mkString(", "))
       + showTypingUnit(tyDef.body, indent + 1)

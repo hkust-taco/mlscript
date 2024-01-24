@@ -6,14 +6,11 @@ class X() {
     class Y() {}
 }
 X.Y()
-//│ Parsed:
-//│ TypingUnit(NuTypeDef(class, X, (), Tup(), (), None, None, TypingUnit(NuTypeDef(class, Y, (), Tup(), (), None, None, TypingUnit()))), App(Sel(Var(X), Y), Tup()))
 //│ TypingUnit {
 //│   class X([]) {class Y([]) {}}
 //│   Code(List((X).Y()))
 //│ }
 //│ Lifted:
-//│ TypingUnit(NuTypeDef(class, X$1_Y$2, (), Tup(_: Var(par$X$1)), (), None, None, TypingUnit()), NuTypeDef(class, X$1, (), Tup(), (), None, None, TypingUnit()), App(Sel(App(Var(X$1), Tup()), Y), Tup()))
 //│ TypingUnit {
 //│   class X$1_Y$2([par$X$1,]) {}
 //│   class X$1([]) {}

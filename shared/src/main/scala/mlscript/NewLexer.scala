@@ -17,12 +17,18 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   private val isOpChar = Set(
     '!', '#', '%', '&', '*', '+', '-', '/', ':', '<', '=', '>', '?', '@', '\\', '^', '|', '~' , '.',
     // ',', 
-    ';'
+    // ';'
   )
   def isIdentFirstChar(c: Char): Bool =
     c.isLetter || c === '_' || c === '\''
   def isIdentChar(c: Char): Bool =
     isIdentFirstChar(c) || isDigit(c) || c === '\''
+  def isHexDigit(c: Char): Bool =
+    isDigit(c) || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')
+  def isOctDigit(c: Char): Bool =
+    c >= '0' && c <= '7'
+  def isBinDigit(c: Char): Bool =
+    c === '0' || c === '1'
   def isDigit(c: Char): Bool =
     c >= '0' && c <= '9'
   
@@ -39,7 +45,8 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     "=>",
     "=",
     ":",
-    ";;",
+    ";",
+    // ",",
     "#",
     // ".",
     // "<",
@@ -59,15 +66,109 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     if (i < length && pred(bytes(i))) takeWhile(i + 1, bytes(i) :: cur)(pred)
     else (cur.reverseIterator.mkString, i)
 
+  final def num(i: Int): (Lit, Int) = {
+    def test(i: Int, p: Char => Bool): Bool = i < length && p(bytes(i))
+    def zero: IntLit = IntLit(BigInt(0))
+    /** Take a sequence of digits interleaved with underscores. */
+    def takeDigits(i: Int, pred: Char => Bool): (Opt[Str], Int) = {
+      @tailrec def rec(i: Int, acc: Ls[Char], firstSep: Bool, lastSep: Bool): (Str, Bool, Bool, Int) =
+        if (i < length) {
+          val c = bytes(i)
+          if (pred(c)) rec(i + 1, c :: acc, firstSep, false)
+          else if (c === '_') rec(i + 1, acc, acc.isEmpty, true)
+          else (acc.reverseIterator.mkString, firstSep, lastSep, i)
+        }
+        else (acc.reverseIterator.mkString, firstSep, lastSep, i)
+      val (str, firstSep, lastSep, j) = rec(i, Nil, false, false)
+      if (firstSep)
+        raise(WarningReport(
+          msg"Leading separator is not allowed" -> S(loc(i - 1, i)) :: Nil,
+          newDefs = true, source = Lexing))
+      if (lastSep)
+        raise(WarningReport(
+          msg"Trailing separator is not allowed" -> S(loc(j - 1, j)) :: Nil,
+          newDefs = true, source = Lexing))
+      (if (str.isEmpty) N else S(str), j)
+    }
+    /** Take an integer and coverts to `BigInt`. Also checks if it is empty. */
+    def integer(i: Int, radix: Int, desc: Str, pred: Char => Bool): (IntLit, Int) = {
+      takeDigits(i, pred) match {
+        case (N, j) =>
+          raise(ErrorReport(msg"Expect at least one $desc digit" -> S(loc(i, i + 2)) :: Nil,
+            newDefs = true, source = Lexing))
+          (zero, j)
+        case (S(str), j) => (IntLit(BigInt(str, radix)), j)
+      }
+    }
+    def isDecimalStart(ch: Char) = ch === '.' || ch === 'e' || ch === 'E'
+    /** Take a fraction part with an optional exponent part. Call at periods. */
+    def decimal(i: Int, integral: Str): (DecLit, Int) = {
+      val (fraction, j) = if (test(i, _ === '.')) {
+        takeDigits(i + 1, isDigit) match {
+          case (N, j) =>
+            raise(ErrorReport(msg"Expect at least one digit after the decimal point" -> S(loc(i + 1, i + 2)) :: Nil,
+              newDefs = true, source = Lexing))
+            ("", j)
+          case (S(digits), j) => ("." + digits, j)
+        }
+      } else ("", i)
+      val (exponent, k) = if (test(j, ch => ch === 'e' || ch === 'E')) {
+        val (sign, k) = if (test(j + 1, ch => ch === '+' || ch === '-')) {
+          (bytes(j + 1), j + 2)
+        } else {
+          ('+', j + 1)
+        }
+        takeDigits(k, isDigit) match {
+          case (N, l) =>
+            raise(ErrorReport(msg"Expect at least one digit after the exponent sign" -> S(loc(l - 1, l)) :: Nil,
+              newDefs = true, source = Lexing))
+            ("", l)
+          case (S(digits), l) => ("E" + sign + digits, l)
+        }
+      } else {
+        ("", j)
+      }
+      (DecLit(BigDecimal(integral + fraction + exponent)), k)
+    }
+    if (i < length) {
+      bytes(i) match {
+        case '0' if i + 1 < length => bytes(i + 1) match {
+          case 'x' => integer(i + 2, 16, "hexadecimal", isHexDigit)
+          case 'o' => integer(i + 2, 8, "octal", isOctDigit)
+          case 'b' => integer(i + 2, 2, "binary", isBinDigit)
+          case '.' | 'E' | 'e' => decimal(i + 1, "0")
+          case _ => integer(i, 10, "decimal", isDigit)
+        }
+        case '0' => (zero, i + 1)
+        case _ => takeDigits(i, isDigit) match {
+          case (N, j) =>
+            raise(ErrorReport(msg"Expect a numeric literal" -> S(loc(i, i + 1)) :: Nil,
+              newDefs = true, source = Lexing))
+            (zero, i)
+          case (S(integral), j) =>
+            if (j < length && isDecimalStart(bytes(j))) decimal(j, integral)
+            else (IntLit(BigInt(integral)), j)
+        }
+      }
+    } else {
+      raise(ErrorReport(msg"Expect a numeric literal instead of end of input" -> S(loc(i, i + 1)) :: Nil,
+        newDefs = true, source = Lexing))
+      (zero, i)
+    }
+  }
+
   @tailrec final
   def str(i: Int, escapeMode: Bool, cur: Ls[Char] = Nil): (Str, Int) =
     if (escapeMode)
       if (i < length)
         bytes(i) match {
+          case '\\' => str(i + 1, false, '\\' :: cur)
           case '"' => str(i + 1, false, '"' :: cur)
           case 'n' => str(i + 1, false, '\n' :: cur)
           case 't' => str(i + 1, false, '\t' :: cur)
           case 'r' => str(i + 1, false, '\r' :: cur)
+          case 'b' => str(i + 1, false, '\b' :: cur)
+          case 'f' => str(i + 1, false, '\f' :: cur)
           case ch =>
             raise(WarningReport(msg"Found invalid escape character" -> S(loc(i, i + 1)) :: Nil,
               newDefs = true, source = Lexing))
@@ -109,6 +210,9 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         val j = i + 1
         // go(j, COMMA)
         lex(j, ind, next(j, COMMA))
+      case ';' =>
+        val j = i + 1
+        lex(j, ind, next(j, SEMI))
       case '"' =>
         val j = i + 1
         val (chars, k) = str(j, false)
@@ -190,9 +294,9 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         // else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
         else lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))
       case _ if isDigit(c) =>
-        val (str, j) = takeWhile(i)(isDigit)
+        val (lit, j) = num(i)
         // go(j, LITVAL(IntLit(BigInt(str))))
-        lex(j, ind, next(j, LITVAL(IntLit(BigInt(str)))))
+        lex(j, ind, next(j, LITVAL(lit)))
       case _ =>
         pe(msg"unexpected character '${escapeChar(c)}'")
         // go(i + 1, ERROR)
@@ -341,6 +445,7 @@ object NewLexer {
   def printToken(tl: TokLoc): Str = tl match {
     case (SPACE, _) => " "
     case (COMMA, _) => ","
+    case (SEMI, _) => ";"
     case (NEWLINE, _) => "↵"
     case (INDENT, _) => "→"
     case (DEINDENT, _) => "←"

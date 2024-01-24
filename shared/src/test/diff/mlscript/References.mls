@@ -160,7 +160,7 @@ move ri rn
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.159: 	move ri rn
 //│ ║         	^^^^^^^^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.87: 	rn = r : Ref[number]
 //│ ║        	             ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -214,7 +214,7 @@ swap ri rn
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.202: 	swap ri rn
 //│ ║         	^^^^^^^^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.87: 	rn = r : Ref[number]
 //│ ║        	             ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -351,7 +351,7 @@ refun.Swap
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.348: 	refun.Get
 //│ ║         	^^^^^^^^^
-//│ ╟── type `string` is not an instance of `int`
+//│ ╟── type `string` is not an instance of type `int`
 //│ ║  l.339: 	def refun: Ref[int] | Ref[string]
 //│ ║         	                          ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -366,7 +366,7 @@ refun.Swap
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.349: 	fun x -> refun.Set x
 //│ ║         	         ^^^^^^^^^
-//│ ╟── type `string` is not an instance of `int`
+//│ ╟── type `string` is not an instance of type `int`
 //│ ║  l.339: 	def refun: Ref[int] | Ref[string]
 //│ ║         	                          ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -381,7 +381,7 @@ refun.Swap
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.350: 	refun.Swap
 //│ ║         	^^^^^^^^^^
-//│ ╟── type `string` is not an instance of `int`
+//│ ╟── type `string` is not an instance of type `int`
 //│ ║  l.339: 	def refun: Ref[int] | Ref[string]
 //│ ║         	                          ^^^^^^
 //│ ╟── Note: constraint arises from type reference:

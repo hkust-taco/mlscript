@@ -48,7 +48,7 @@ let ri(f) = Bind(Pure(42), f)
 //│   where
 //│     'CC :> 42
 //│ ri
-//│    = [Function: ri1]
+//│    = [Function: ri]
 
 ri(Pure)
 //│ Bind['CC, 'AA]
@@ -174,7 +174,7 @@ fun loop =
 
 
 
-val x: Bind['A, 'B] where undefined : 'A;; 'A : 'B
+val x: Bind['A, 'B] where undefined : 'A; 'A : 'B
 //│ val x: forall 'A 'B. Bind['A, 'B]
 //│   where
 //│     'A :> ()
@@ -189,7 +189,7 @@ x.run
 //│     = <no result>
 //│       x is not implemented
 
-val x: Bind['A, 'B] where 'A : undefined;; 'A : 'B
+val x: Bind['A, 'B] where 'A : undefined; 'A : 'B
 //│ val x: forall 'A 'B. Bind['A, 'B]
 //│   where
 //│     'A <: () & 'B

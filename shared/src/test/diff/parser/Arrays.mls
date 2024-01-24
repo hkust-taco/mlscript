@@ -31,10 +31,7 @@
 
 (1, 2, 3)
 //│ |(|1|,| |2|,| |3|)|
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
-//│ ║  l.32: 	(1, 2, 3)
-//│ ╙──      	^^^^^^^^^
-//│ Parsed: {[1, 2, 3,]}
+//│ Parsed: {,(1, ,(2, 3,),)}
 
 
 1
@@ -43,17 +40,14 @@
 
 1,
 //│ |1|,|
-//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
-//│ ║  l.44: 	1,
-//│ ╙──      	 ^
-//│ Parsed: {1}
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.41: 	1,
+//│ ╙──      	  ^
+//│ Parsed: {,(1, undefined,)}
 
 1, 2, 3
 //│ |1|,| |2|,| |3|
-//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
-//│ ║  l.51: 	1, 2, 3
-//│ ╙──      	 ^
-//│ Parsed: {1}
+//│ Parsed: {,(1, ,(2, 3,),)}
 
 f of 1, 2, 3
 //│ |f| |#of| |1|,| |2|,| |3|
@@ -86,9 +80,9 @@ let arr =
 ]
 //│ |#let| |arr| |#=|↵|[|↵|]|
 //│ ╔══[PARSE ERROR] Unexpected newline in expression position
-//│ ║  l.84: 	let arr =
+//│ ║  l.78: 	let arr =
 //│ ║        	         ^
-//│ ║  l.85: 	[
+//│ ║  l.79: 	[
 //│ ╙──      	
 //│ Parsed: {let arr = []}
 
