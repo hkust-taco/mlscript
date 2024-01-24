@@ -280,46 +280,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
             changed |= old != defn.activeResults
         }
 
-  private class FreeVarAnalysis:
-    val visited = MutHSet[Str]()
-    private def f(using defined: Set[Str])(defn: GODef, fv: Set[Str]): Set[Str] =
-      val defined2 = defn.params.foldLeft(defined)((acc, param) => acc + param.str)
-      f(using defined2)(defn.body, fv)
-    private def f(using defined: Set[Str])(expr: GOExpr, fv: Set[Str]): Set[Str] = expr match
-      case Ref(name) => if (defined.contains(name.str)) fv else fv + name.str
-      case Literal(lit) => fv
-      case CtorApp(name, args) => args.foldLeft(fv)((acc, arg) => f(using defined)(arg.to_expr, acc))
-      case Select(name, cls, field) => if (defined.contains(name.str)) fv else fv + name.str
-      case BasicOp(name, args) => args.foldLeft(fv)((acc, arg) => f(using defined)(arg.to_expr, acc))
-    private def f(using defined: Set[Str])(node: GONode, fv: Set[Str]): Set[Str] = node match
-      case Result(res) => res.foldLeft(fv)((acc, arg) => f(using defined)(arg.to_expr, acc))
-      case Jump(defnref, args) =>
-        val defn = defnref.expectDefn
-        val defined2 = defn.params.foldLeft(defined)((acc, param) => acc + param.str)
-        var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined2)(arg.to_expr, acc))
-        if (!visited.contains(defn.name))
-          visited.add(defn.name)
-          fv2 = f(using defined2)(defn, fv2)
-        fv2
-      case Case(scrut, cases) =>
-        val fv2 = if (defined.contains(scrut.str)) fv else fv + scrut.str
-        cases.foldLeft(fv2) {
-          case (acc, (cls, body)) => f(using defined)(body, acc)
-        }
-      case LetExpr(name, expr, body) =>
-        val fv2 = f(using defined)(expr, fv)
-        val defined2 = defined + name.str
-        f(using defined2)(body, fv2)
-      case LetCall(resultNames, defnref, args, body) =>
-        var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined)(arg.to_expr, acc))
-        val defined2 = resultNames.foldLeft(defined)((acc, name) => acc + name.str)
-        val defn = defnref.expectDefn
-        if (!visited.contains(defn.name))
-          visited.add(defn.name)
-          fv2 = f(using defined2)(defn, fv2)
-        f(using defined2)(body, fv2)
-
-    def run(node: GONode) = f(using Set.empty)(node, Set.empty)
+  
 
   private case class DestructSite(val name: Str, val scrut: Str):
     override def toString = s"D($name, $scrut)"
@@ -1543,7 +1504,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
     ScalarReplacement().run(prog)
 
   private class TrivialBindingSimplification:
-    var rctx: Map[Str, TrivialExpr] = Map.empty
+    private var rctx: Map[Str, TrivialExpr] = Map.empty
     
     def run(x: GOProgram) =
       val new_defs = x.defs.map(x => { rctx = Map.empty; x.copy(body = f(x.body))})
@@ -1655,27 +1616,9 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
     }
   }
 
-  private class UsefulnessAnalysis extends GOIterator:
-    val uses = MutHMap[(Name, Int), Int]()
-    val defs = MutHMap[Name, Int]()
-    override def iterate_name_def(x: Name) = 
-      defs.update(x, defs.getOrElse(x, 0) + 1)
-    override def iterate_param(x: Name) = 
-      iterate_name_def(x)
-    override def iterate_name_use(x: Name) =
-      val key = (x, defs(x))
-      uses.update(key, uses.getOrElse(key, 0) + 1)
-    override def iterate(x: GOProgram) =
-      val xdefs = GODefRevPostOrdering.ordered(x.main, x.defs)
-      xdefs.foreach{
-        defn => 
-          defn.accept_iterator(this)
-      }
-
   private class DeadCodeElimination:
-    val ua = UsefulnessAnalysis()
-    var cur_defn: Opt[GODef] = None
     val defs = MutHMap[Name, Int]()
+    var uses = Map[(Name, Int), Int]()
 
     private def addDef(x: Name) =
       defs.update(x, defs.getOrElse(x, 0) + 1)
@@ -1686,24 +1629,24 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
       case Case(scrut, cases) => Case(scrut, cases map { (cls, arm) => (cls, f(arm)) }).copy_tag(x)
       case LetExpr(name, expr, body) =>
         addDef(name)
-        ua.uses.get((name, defs(name))) match
+        val ui = uses.get((name, defs(name)))
+        ui match
           case Some(n) =>
             LetExpr(name, expr, f(body)).copy_tag(x)
           case None =>
+            log(s"dead code: $name $uses $defs")
             f(body)
       case LetCall(names, defn, args, body) =>
         names.foreach(addDef)
         LetCall(names, defn, args, f(body)).copy_tag(x)
 
     def run(x: GOProgram) =
-      x.accept_iterator(ua)
       val fns = GODefRevPostOrdering.ordered(x.main, x.defs)
       val new_fns = fns.map { x =>
-        cur_defn = Some(x)
+        defs.clear()
+        uses = UsefulnessAnalysis(verbose).run(x)
         x.params.foreach(addDef)
-        val r = f(x.body)
-        cur_defn = None
-        GODef(x.id, x.name, x.isjp, x.params, x.resultNum, x.specialized, r)
+        x.copy(body = f(x.body))
       }.toSet
       relink(x.main, new_fns)
       validate(x.main, new_fns)
@@ -1799,7 +1742,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
       activeAnalyze(sf)
       sf = ss.run(sf)
       activeAnalyze(sf)
-      sf = sf // tbs.run(sf)
+      sf = tbs.run(sf)
       activeAnalyze(sf)
       sf = rtcj.run(sf)
       activeAnalyze(sf)

@@ -136,28 +136,30 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, ta
       case If(IfThen(cond, tru), Some(fls)) => 
         buildResultFromTerm(cond) {
           case Result(Ref(cond) :: Nil) => 
-            val jp = fresh make "j"
-            val tru2 = buildResultFromTerm(tru) {
-              case Result(xs) => Jump(GODefRef(Right(jp.str)), xs).attach_tag(tag)
-              case node @ _ => node |> unexpected_node
-            }
-            val fls2 = buildResultFromTerm(fls) {
-              case Result(xs) => Jump(GODefRef(Right(jp.str)), xs).attach_tag(tag)
-              case node @ _ => node |> unexpected_node
-            }
-            val res = fresh.make
             if (!ctx.class_ctx.contains("True") || !ctx.class_ctx.contains("False"))
               throw GraphOptimizingError("True or False class not found, unable to use 'if then else'")
+            val jp = fresh make "j"
+            val res = fresh.make
+            val jpbody = res |> ref |> sresult |> k
+            val fvs = FreeVarAnalysis(extended_scope = false).run_with(jpbody, Set(res.str)).toList
             val jpdef = GODef(
               fn_uid.make,
               jp.str,
               isjp = true,
-              params = Ls(res),
+              params = res :: fvs.map(x => Name(x)),
               resultNum = 1,
               specialized = None,
-              res |> ref |> sresult |> k
+              jpbody
             )
             ctx.jp_acc.addOne(jpdef)
+            val tru2 = buildResultFromTerm(tru) {
+              case Result(xs) => Jump(GODefRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attach_tag(tag)
+              case node @ _ => node |> unexpected_node
+            }
+            val fls2 = buildResultFromTerm(fls) {
+              case Result(xs) => Jump(GODefRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attach_tag(tag)
+              case node @ _ => node |> unexpected_node
+            }
             Case(cond, Ls((ctx.class_ctx("True"), tru2), (ctx.class_ctx("False"), fls2))).attach_tag(tag)
           case node @ _ => node |> unexpected_node
         }
@@ -171,6 +173,19 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, ta
         => buildResultFromTerm(lhs) {
           case Result(Ref(scrut) :: Nil) =>
             val jp = fresh make "j"
+            val res = fresh.make
+            val jpbody = res |> ref |> sresult |> k
+            val fvs = FreeVarAnalysis(extended_scope = false).run_with(jpbody, Set(res.str)).toList
+            val jpdef = GODef(
+              fn_uid.make,
+              jp.str,
+              isjp = true,
+              params = res :: fvs.map(x => Name(x)),
+              resultNum = 1,
+              specialized = None,
+              jpbody,
+            )
+            ctx.jp_acc.addOne(jpdef)
             val cases: Ls[(ClassInfo, GONode)] = lines map {
               case L(IfThen(App(Var(ctor), params: Tup), rhs)) =>
                 ctx.class_ctx(ctor) -> {
@@ -178,28 +193,17 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, ta
                   given Ctx = ctx.copy(name_ctx = ctx.name_ctx + (scrut.str -> scrut))
                   buildResultFromTerm(
                     bindingPatternVariables(scrut.str, params, ctx.class_ctx(ctor), rhs)) {
-                      case Result(xs) => Jump(GODefRef(Right(jp.str)), xs).attach_tag(tag)
+                      case Result(xs) => Jump(GODefRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attach_tag(tag)
                       case node @ _ => node |> unexpected_node
                     }
                 }
               case L(IfThen(Var(ctor), rhs)) =>
                 ctx.class_ctx(ctor) -> buildResultFromTerm(rhs) {
-                  case Result(xs) => Jump(GODefRef(Right(jp.str)), xs).attach_tag(tag)
+                  case Result(xs) => Jump(GODefRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attach_tag(tag)
                   case node @ _ => node |> unexpected_node
                 }
               case _ => throw GraphOptimizingError(s"not supported UCS")
             }
-            val res = fresh.make
-            val jpdef = GODef(
-              fn_uid.make,
-              jp.str,
-              isjp = true,
-              params = Ls(res),
-              resultNum = 1,
-              specialized = None,
-              res |> ref |> sresult |> k
-            )
-            ctx.jp_acc.addOne(jpdef)
             Case(scrut, cases).attach_tag(tag)
           case node @ _ => node |> unexpected_node
         }
