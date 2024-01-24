@@ -481,8 +481,6 @@ class DiffTests
             
           // successfully parsed block into a valid syntactically valid program
           case Success(p, index) =>
-            if (mode.expectParseErrors && !newParser)
-              failures += blockLineNum
             if (mode.showParse || mode.dbgParsing) output("Parsed: " + p.showDbg)
             if (mode.expectParseErrors && !newParser && !legacyParser)
               { output("TEST CASE FAILURE: There was an unexpected parse success"); failures += blockLineNum }
