@@ -695,17 +695,17 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
     private def checkTargets(defn: GODef, intros: Map[Str, Intro], args: Ls[TrivialExpr]) =
       val name = defn.name
       val params = defn.params
-      val active = defn.activeParams
+      val active = defn.newActiveParams
       args.map {
         case Ref(x) => intros.get(x.str)
         case _ => None
       }.zip(params).zip(active).foreach {
-        case ((Some(ICtor(cls)), param), elim) if elim.exists(isESelect) && !elim.contains(EDirect) =>
+        case ((Some(ICtor(cls)), param), elim) if elim.exists(_.elim.isInstanceOf[ESelect]) && !elim.exists(_.elim == EDirect) =>
           elim.foreach {
-            case ESelect(field) => addTarget(name, field, param.str)
+            case ElimInfo(ESelect(field), _) => addTarget(name, field, param.str)
             case _ =>
           }
-        case _ =>
+        case x @ ((_, param), elim) =>
       }
 
     override def iterate(x: Jump): Unit = x match
@@ -759,10 +759,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
     case ParamFieldOf(orig: Str, field: Str)
 
   import ParamSubst._
-
-  private def isESelect(elim: Elim) = elim match
-    case ESelect(_) => true
-    case _ => false
 
   private def fieldParamName(name: Str, field: Str) = Name(name + "_" + field)
 

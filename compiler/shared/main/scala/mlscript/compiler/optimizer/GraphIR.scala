@@ -188,7 +188,6 @@ case class GODef(
   var specialized: Opt[Ls[Opt[Intro]]],
   var body: GONode
 ):
-  var activeParams: Ls[Set[Elim]] = Ls(Set())
   var activeInputs: Set[Ls[Opt[Intro]]] = Set()
   var activeResults: Ls[Opt[Intro]] = Ls(None)
   var newActiveInputs: Set[Ls[Opt[IntroInfo]]] = Set()
@@ -208,7 +207,6 @@ case class GODef(
   override def toString: String =
     val name2 = if (isjp) s"@join $name" else s"$name"
     val ps = params.map(_.toString).mkString("[", ",", "]")
-    val aps = activeParams.map(_.toSeq.sorted.mkString("{", ",", "}")).mkString("[", ",", "]")
     val naps = newActiveParams.map(_.toSeq.sorted.mkString("{", ",", "}")).mkString("[", ",", "]")
     val ais = activeInputs.map(_.toSeq.sorted.mkString("[", ",", "]")).mkString("[", ",", "]")
     val ars = activeResults.map(_.toString()).mkString("[", ",", "]")

@@ -197,7 +197,7 @@ main()
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(Cons),ICtor(Nil)))],
-//│ Rec: Some(5),
+//│ Rec: Some(4),
 //│ 1, 
 //│ let x%0 = ==(n%0,0) -- #24
 //│   in if x%0 -- #23
@@ -220,15 +220,16 @@ main()
 //│   Some => let x%14 = False() -- #52
 //│     in x%14
 //│ )
-//│ Def(6, is_empty, [l%1], [{<EDestruct@is_empty:#91-case l%1 of ...>,<EDirect@is_empty:#88-let* (x%21) = head_opt$D%1 ...>,<EDirect@is_empty:#91-case l%1 of ...>,<ESelect(h)@head_opt$D%1:#40-let x%9 = ...>}],
+//│ Def(6, is_empty, [l%1], [{<EDestruct@is_empty:#91-case l%1 of ...>,<EDirect@is_empty:#91-case l%1 of ...>,<ESelect(h)@is_empty:#97-let x%23 = ...>}],
 //│ S: None,
 //│ I: [[Some(IMix(ICtor(Cons),ICtor(Nil)))]],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
 //│ case l%1 of -- #91
-//│   Cons => let* (x%21) = head_opt$D%1(l%1) -- #88
-//│     in jump is_empty$M%0(x%21) -- #87
+//│   Cons => let x%23 = l%1.h -- #97
+//│     in let x%10 = Some(x%23) -- #100
+//│       in jump is_empty$M%0(x%10) -- #87
 //│   Nil => let x%7 = None() -- #95
 //│     in jump is_empty$M%0(x%7) -- #89
 //│ )
@@ -241,16 +242,6 @@ main()
 //│ let* (x%17) = mk_list(10) -- #76
 //│   in let* (x%18) = is_empty(x%17) -- #75
 //│     in x%18
-//│ )
-//│ Def(10, head_opt$D%1, [l%0], [{<ESelect(h)@head_opt$D%1:#40-let x%9 = ...>}],
-//│ S: None,
-//│ I: [[Some(ICtor(Cons))]],
-//│ R: [Some(ICtor(Some))],
-//│ Rec: None,
-//│ 1, 
-//│ let x%9 = l%0.h -- #40
-//│   in let x%10 = Some(x%9) -- #39
-//│     in x%10
 //│ )
 //│ Def(11, @join is_empty$M%0, [x%15], [{<EDirect@is_empty$M%0:#64-let* (x%16) = is_none ...>,<EIndirectDestruct@is_empty$M%0:#64-let* (x%16) = is_none ...>}],
 //│ S: None,
@@ -282,15 +273,16 @@ main()
 //│         in let x%5 = Cons(n%0,x%4) -- #20
 //│           in x%5
 //│ )
-//│ Def(6, is_empty, [l%1], [{<EDestruct@is_empty:#91-case l%1 of ...>,<EDirect@is_empty:#88-let* (x%21) = head_opt$D%1 ...>,<EDirect@is_empty:#91-case l%1 of ...>,<ESelect(h)@head_opt$D%1:#40-let x%9 = ...>}],
+//│ Def(6, is_empty, [l%1], [{<EDestruct@is_empty:#91-case l%1 of ...>,<EDirect@is_empty:#91-case l%1 of ...>,<ESelect(h)@is_empty:#97-let x%23 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
 //│ case l%1 of -- #91
-//│   Cons => let* (x%21) = head_opt$D%1(l%1) -- #88
-//│     in jump is_empty$M%0(x%21) -- #87
+//│   Cons => let x%23 = l%1.h -- #97
+//│     in let x%10 = Some(x%23) -- #100
+//│       in jump is_empty$M%0(x%10) -- #87
 //│   Nil => let x%7 = None() -- #95
 //│     in jump is_empty$M%0(x%7) -- #89
 //│ )
@@ -300,36 +292,26 @@ main()
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%23,x%24) = mk_list$P%0(10) -- #102
-//│   in if x%24 -- #101
-//│     true => let x%2 = Nil() -- #111
-//│       in jump main$M%0(x%2) -- #97
-//│     false => let* (x%26) = mk_list$D%1(x%23) -- #100
-//│       in jump main$M%0(x%26) -- #99
+//│ let* (x%24,x%25) = mk_list$P%0(10) -- #106
+//│   in if x%25 -- #105
+//│     true => let x%2 = Nil() -- #115
+//│       in jump main$M%0(x%2) -- #101
+//│     false => let* (x%27) = mk_list$D%1(x%24) -- #104
+//│       in jump main$M%0(x%27) -- #103
 //│ )
-//│ Def(10, head_opt$D%1, [l%0], [{<ESelect(h)@head_opt$D%1:#40-let x%9 = ...>}],
-//│ S: None,
-//│ I: [[Some(ICtor(Cons))]],
-//│ R: [Some(ICtor(Some))],
-//│ Rec: None,
-//│ 1, 
-//│ let x%9 = l%0.h -- #40
-//│   in let x%10 = Some(x%9) -- #39
-//│     in x%10
-//│ )
-//│ Def(11, @join is_empty$M%0, [x%15], [{<EDestruct@is_empty$M%0:#107-case x%15 of ...>,<EDirect@is_empty$M%0:#107-case x%15 of ...>}],
+//│ Def(11, @join is_empty$M%0, [x%15], [{<EDestruct@is_empty$M%0:#111-case x%15 of ...>,<EDirect@is_empty$M%0:#111-case x%15 of ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(Some))],[Some(ICtor(None))]],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ case x%15 of -- #107
-//│   Some => let x%14 = False() -- #115
+//│ case x%15 of -- #111
+//│   Some => let x%14 = False() -- #119
 //│     in x%14
-//│   None => let x%12 = True() -- #119
+//│   None => let x%12 = True() -- #123
 //│     in x%12
 //│ )
-//│ Def(12, mk_list$P%0, [n%0], [{<EDirect@mk_list$P%0:#24-let x%0 = ...>,<EDirect@mk_list$P%0:#x-...>}],
+//│ Def(13, mk_list$P%0, [n%0], [{<EDirect@mk_list$P%0:#24-let x%0 = ...>,<EDirect@mk_list$P%0:#x-...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [None,None],
@@ -338,7 +320,7 @@ main()
 //│ let x%0 = ==(n%0,0) -- #24
 //│   in n%0,x%0
 //│ )
-//│ Def(14, mk_list$D%1, [n%0], [{<EDirect@mk_list$D%1:#22-let x%3 = ...>}],
+//│ Def(15, mk_list$D%1, [n%0], [{<EDirect@mk_list$D%1:#22-let x%3 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(ICtor(Cons))],
@@ -349,7 +331,7 @@ main()
 //│     in let x%5 = Cons(n%0,x%4) -- #20
 //│       in x%5
 //│ )
-//│ Def(18, @join main$M%0, [x%17], [{<EDirect@main$M%0:#75-let* (x%18) = is_empty ...>,<EIndirectDestruct@main$M%0:#75-let* (x%18) = is_empty ...>,<ESelect(h)@head_opt$D%1:#40-let x%9 = ...>}],
+//│ Def(19, @join main$M%0, [x%17], [{<EDirect@main$M%0:#75-let* (x%18) = is_empty ...>,<EIndirectDestruct@main$M%0:#75-let* (x%18) = is_empty ...>,<ESelect(h)@is_empty:#97-let x%23 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(Nil))],[Some(ICtor(Cons))]],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
@@ -385,36 +367,26 @@ main()
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%23,x%24) = mk_list$P%0(10) -- #102
-//│   in if x%24 -- #101
-//│     true => let x%2 = Nil() -- #111
-//│       in jump main$M%0(x%2) -- #97
-//│     false => let* (x%26) = mk_list$D%1(x%23) -- #100
-//│       in jump main$M%0(x%26) -- #99
+//│ let* (x%24,x%25) = mk_list$P%0(10) -- #106
+//│   in if x%25 -- #105
+//│     true => let x%2 = Nil() -- #115
+//│       in jump main$M%0(x%2) -- #101
+//│     false => let* (x%27) = mk_list$D%1(x%24) -- #104
+//│       in jump main$M%0(x%27) -- #103
 //│ )
-//│ Def(10, head_opt$D%1, [l%0], [{<ESelect(h)@head_opt$D%1:#40-let x%9 = ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(ICtor(Some))],
-//│ Rec: None,
-//│ 1, 
-//│ let x%9 = l%0.h -- #40
-//│   in let x%10 = Some(x%9) -- #39
-//│     in x%10
-//│ )
-//│ Def(11, @join is_empty$M%0, [x%15], [{<EDestruct@is_empty$M%0:#107-case x%15 of ...>,<EDirect@is_empty$M%0:#107-case x%15 of ...>}],
+//│ Def(11, @join is_empty$M%0, [x%15], [{<EDestruct@is_empty$M%0:#111-case x%15 of ...>,<EDirect@is_empty$M%0:#111-case x%15 of ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(Some))],[Some(ICtor(None))]],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ case x%15 of -- #107
-//│   Some => let x%14 = False() -- #115
+//│ case x%15 of -- #111
+//│   Some => let x%14 = False() -- #119
 //│     in x%14
-//│   None => let x%12 = True() -- #119
+//│   None => let x%12 = True() -- #123
 //│     in x%12
 //│ )
-//│ Def(12, mk_list$P%0, [n%0], [{<EDirect@mk_list$P%0:#24-let x%0 = ...>,<EDirect@mk_list$P%0:#x-...>}],
+//│ Def(13, mk_list$P%0, [n%0], [{<EDirect@mk_list$P%0:#24-let x%0 = ...>,<EDirect@mk_list$P%0:#x-...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [None,None],
@@ -423,7 +395,7 @@ main()
 //│ let x%0 = ==(n%0,0) -- #24
 //│   in n%0,x%0
 //│ )
-//│ Def(14, mk_list$D%1, [n%0], [{<EDirect@mk_list$D%1:#22-let x%3 = ...>}],
+//│ Def(15, mk_list$D%1, [n%0], [{<EDirect@mk_list$D%1:#22-let x%3 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(ICtor(Cons))],
@@ -434,28 +406,20 @@ main()
 //│     in let x%5 = Cons(n%0,x%4) -- #20
 //│       in x%5
 //│ )
-//│ Def(18, @join main$M%0, [x%17], [{<EDestruct@main$M%0:#133-case x%17 of ...>,<EDirect@main$M%0:#130-let* (x%33) = is_empty$D%0 ...>,<EDirect@main$M%0:#133-case x%17 of ...>,<ESelect(h)@head_opt$D%1:#40-let x%9 = ...>}],
+//│ Def(19, @join main$M%0, [x%17], [{<EDestruct@main$M%0:#137-case x%17 of ...>,<EDirect@main$M%0:#137-case x%17 of ...>,<ESelect(h)@main$M%0:#148-let x%36 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(Nil))],[Some(ICtor(Cons))]],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ case x%17 of -- #133
-//│   Cons => let* (x%33) = is_empty$D%0(x%17) -- #130
-//│     in x%33
-//│   Nil => let* (x%34) = is_empty$D%1() -- #132
-//│     in x%34
+//│ case x%17 of -- #137
+//│   Cons => let x%36 = x%17.h -- #148
+//│     in let* (x%34) = is_empty$D%0$S%0(x%36) -- #134
+//│       in x%34
+//│   Nil => let* (x%35) = is_empty$D%1() -- #136
+//│     in x%35
 //│ )
-//│ Def(24, is_empty$D%0, [l%1], [{<EDirect@is_empty$D%0:#88-let* (x%21) = head_opt$D%1 ...>,<ESelect(h)@head_opt$D%1:#40-let x%9 = ...>}],
-//│ S: None,
-//│ I: [[Some(ICtor(Cons))]],
-//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x%21) = head_opt$D%1(l%1) -- #88
-//│   in jump is_empty$M%0(x%21) -- #87
-//│ )
-//│ Def(25, is_empty$D%1, [], [],
+//│ Def(26, is_empty$D%1, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
@@ -464,6 +428,15 @@ main()
 //│ let x%7 = None() -- #95
 //│   in jump is_empty$M%0(x%7) -- #89
 //│ )
+//│ Def(28, is_empty$D%0$S%0, [l%1_h], [{<EDirect@is_empty$D%0$S%0:#100-let x%10 = ...>}],
+//│ S: None,
+//│ I: [],
+//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
+//│ Rec: None,
+//│ 1, 
+//│ let x%10 = Some(l%1_h) -- #100
+//│   in jump is_empty$M%0(x%10) -- #87
+//│ )
 //│ },
 //│ let* (x%19) = main() -- #80
 //│   in x%19)
@@ -474,7 +447,7 @@ main()
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(Cons),ICtor(Nil)))],
-//│ Rec: Some(5),
+//│ Rec: Some(2),
 //│ 1, 
 //│ let x%0 = ==(n%0,0) -- #24
 //│   in if x%0 -- #23
@@ -491,132 +464,18 @@ main()
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%23,x%24) = mk_list$P%0(10) -- #102
-//│   in if x%24 -- #101
-//│     true => jump main$M%0$D%1() -- #145
-//│     false => let* (x%26) = mk_list$D%1(x%23) -- #100
-//│       in case x%26 of -- #150
-//│         Cons => jump main$M%0$D%0(x%26) -- #148
-//│         Nil => jump main$M%0$D%1() -- #149
-//│ )
-//│ Def(10, head_opt$D%1, [l%0], [{<ESelect(h)@head_opt$D%1:#40-let x%9 = ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(ICtor(Some))],
-//│ Rec: None,
-//│ 1, 
-//│ let x%9 = l%0.h -- #40
-//│   in let x%10 = Some(x%9) -- #39
-//│     in x%10
-//│ )
-//│ Def(12, mk_list$P%0, [n%0], [{<EDirect@mk_list$P%0:#24-let x%0 = ...>,<EDirect@mk_list$P%0:#x-...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [None,None],
-//│ Rec: None,
-//│ 2, 
-//│ let x%0 = ==(n%0,0) -- #24
-//│   in n%0,x%0
-//│ )
-//│ Def(14, mk_list$D%1, [n%0], [{<EDirect@mk_list$D%1:#22-let x%3 = ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(ICtor(Cons))],
-//│ Rec: None,
-//│ 1, 
-//│ let x%3 = -(n%0,1) -- #22
-//│   in let* (x%4) = mk_list(x%3) -- #21
-//│     in let x%5 = Cons(n%0,x%4) -- #20
-//│       in x%5
-//│ )
-//│ Def(24, is_empty$D%0, [l%1], [{<EDirect@is_empty$D%0:#88-let* (x%21) = head_opt$D%1 ...>,<ESelect(h)@head_opt$D%1:#40-let x%9 = ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x%21) = head_opt$D%1(l%1) -- #88
-//│   in case x%21 of -- #154
-//│     Some => let x%14 = False() -- #162
-//│       in x%14
-//│     None => let x%12 = True() -- #163
+//│ let* (x%24,x%25) = mk_list$P%0(10) -- #106
+//│   in if x%25 -- #105
+//│     true => let x%12 = True() -- #181
 //│       in x%12
-//│ )
-//│ Def(25, is_empty$D%1, [], [],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(ICtor(True))],
-//│ Rec: None,
-//│ 1, 
-//│ let x%12 = True() -- #166
-//│   in x%12
-//│ )
-//│ Def(31, main$M%0$D%0, [x%17], [{<EDirect@main$M%0$D%0:#130-let* (x%33) = is_empty$D%0 ...>,<ESelect(h)@head_opt$D%1:#40-let x%9 = ...>}],
-//│ S: None,
-//│ I: [[Some(ICtor(Cons))]],
-//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x%33) = is_empty$D%0(x%17) -- #130
-//│   in x%33
-//│ )
-//│ Def(32, main$M%0$D%1, [], [],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(ICtor(True))],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x%34) = is_empty$D%1() -- #132
-//│   in x%34
-//│ )
-//│ },
-//│ let* (x%19) = main() -- #80
-//│   in x%19)
-//│ 
-//│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(0, mk_list, [n%0], [{<EDirect@mk_list:#22-let x%3 = ...>,<EDirect@mk_list:#24-let x%0 = ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(IMix(ICtor(Cons),ICtor(Nil)))],
-//│ Rec: Some(3),
-//│ 1, 
-//│ let x%0 = ==(n%0,0) -- #24
-//│   in if x%0 -- #23
-//│     true => let x%2 = Nil() -- #6
-//│       in x%2
-//│     false => let x%3 = -(n%0,1) -- #22
-//│       in let* (x%4) = mk_list(x%3) -- #21
-//│         in let x%5 = Cons(n%0,x%4) -- #20
-//│           in x%5
-//│ )
-//│ Def(7, main, [], [],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x%23,x%24) = mk_list$P%0(10) -- #102
-//│   in if x%24 -- #101
-//│     true => let x%12 = True() -- #171
-//│       in x%12
-//│     false => let* (x%26) = mk_list$D%1(x%23) -- #100
-//│       in case x%26 of -- #150
-//│         Cons => jump main$M%0$D%0(x%26) -- #148
-//│         Nil => let x%12 = True() -- #172
+//│     false => let* (x%27) = mk_list$D%1(x%24) -- #104
+//│       in case x%27 of -- #155
+//│         Cons => let x%14 = False() -- #182
+//│           in x%14
+//│         Nil => let x%12 = True() -- #183
 //│           in x%12
 //│ )
-//│ Def(10, head_opt$D%1, [l%0], [{<ESelect(h)@head_opt$D%1:#40-let x%9 = ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(ICtor(Some))],
-//│ Rec: None,
-//│ 1, 
-//│ let x%9 = l%0.h -- #40
-//│   in let x%10 = Some(x%9) -- #39
-//│     in x%10
-//│ )
-//│ Def(12, mk_list$P%0, [n%0], [{<EDirect@mk_list$P%0:#24-let x%0 = ...>,<EDirect@mk_list$P%0:#x-...>}],
+//│ Def(13, mk_list$P%0, [n%0], [{<EDirect@mk_list$P%0:#24-let x%0 = ...>,<EDirect@mk_list$P%0:#x-...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [None,None],
@@ -625,7 +484,7 @@ main()
 //│ let x%0 = ==(n%0,0) -- #24
 //│   in n%0,x%0
 //│ )
-//│ Def(14, mk_list$D%1, [n%0], [{<EDirect@mk_list$D%1:#22-let x%3 = ...>}],
+//│ Def(15, mk_list$D%1, [n%0], [{<EDirect@mk_list$D%1:#22-let x%3 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(ICtor(Cons))],
@@ -635,28 +494,6 @@ main()
 //│   in let* (x%4) = mk_list(x%3) -- #21
 //│     in let x%5 = Cons(n%0,x%4) -- #20
 //│       in x%5
-//│ )
-//│ Def(24, is_empty$D%0, [l%1], [{<EDirect@is_empty$D%0:#88-let* (x%21) = head_opt$D%1 ...>,<ESelect(h)@head_opt$D%1:#40-let x%9 = ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x%21) = head_opt$D%1(l%1) -- #88
-//│   in case x%21 of -- #154
-//│     Some => let x%14 = False() -- #162
-//│       in x%14
-//│     None => let x%12 = True() -- #163
-//│       in x%12
-//│ )
-//│ Def(31, main$M%0$D%0, [x%17], [{<EDirect@main$M%0$D%0:#130-let* (x%33) = is_empty$D%0 ...>,<ESelect(h)@head_opt$D%1:#40-let x%9 = ...>}],
-//│ S: None,
-//│ I: [[Some(ICtor(Cons))]],
-//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x%33) = is_empty$D%0(x%17) -- #130
-//│   in x%33
 //│ )
 //│ },
 //│ let* (x%19) = main() -- #80
@@ -667,5 +504,5 @@ main()
 //│ False()
 //│ 
 //│ 
-//│ Fuel used: 6
+//│ Fuel used: 5
 
