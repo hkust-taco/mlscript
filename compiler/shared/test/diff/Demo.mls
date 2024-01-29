@@ -262,7 +262,8 @@ main()
 //│     false => let* (x%24) = list_of_n$D%1(x%21) -- #98
 //│       in let x%35 = x%24.h -- #139
 //│         in let x%36 = x%24.t -- #138
-//│           in jump last$D%1$S%0(x%35,x%36) -- #140
+//│           in let* (x%16) = last$D%1$S%0(x%35,x%36) -- #140
+//│             in x%16 -- #110
 //│ )
 //│ Def(6, list_of_n$P%0, [n%0], [{<EDirect@list_of_n$P%0:#24-let x%0 = ...>,<EDirect@list_of_n$P%0:#85-...>}],
 //│ S: None,

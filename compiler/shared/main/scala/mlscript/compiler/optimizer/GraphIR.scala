@@ -9,6 +9,7 @@ import mlscript.compiler.optimizer.*
 
 import annotation.unused
 import util.Sorting
+import scala.collection.immutable.SortedSet
 
 // -----------------------------------------------
 
@@ -184,7 +185,7 @@ case class GODef(
   var activeInputs: Set[Ls[Opt[Intro]]] = Set()
   var activeResults: Ls[Opt[Intro]] = Ls(None)
   var newActiveInputs: Set[Ls[Opt[IntroInfo]]] = Set()
-  var newActiveParams: Ls[Set[ElimInfo]] = Ls(Set())
+  var newActiveParams: Ls[SortedSet[ElimInfo]] = Ls(SortedSet())
   var newActiveResults: Ls[Opt[IntroInfo]] = Ls(None)
   var recBoundary: Opt[Int] = None
 

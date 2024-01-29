@@ -134,7 +134,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
           f(env, defn.body)
           defn.newActiveParams = defn.params.map {
             param =>
-              env.elims.get(param.str).getOrElse(MutHSet.empty).toSet
+              env.elims.get(param.str).getOrElse(MutHSet.empty).toSortedSet
           }
           changed |= (old != defn.newActiveParams)
         }
@@ -1372,7 +1372,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
                 LetExpr(name, param_to_arg(retval, parammap).to_expr, node).attach_tag(tag)
             }         
           case Jump(defnref, as2) =>
-            val node = let_list_to_node(defn.params.zip(as), Jump(defnref, as2).attach_tag(tag))
+            val node = let_list_to_node(defn.params.zip(as), LetCall(xs, defnref, as2, f(e)).attach_tag(tag))
             node
           case le @ LetExpr(y, e1, Result(Ref(z) :: Nil)) if y == z =>
             val (let_list, kernel) = subst_let_expr(le, parammap)
