@@ -145,7 +145,6 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, ta
             val jpdef = GODef(
               fn_uid.make,
               jp.str,
-              isjp = true,
               params = res :: fvs.map(x => Name(x)),
               resultNum = 1,
               specialized = None,
@@ -179,7 +178,6 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, ta
             val jpdef = GODef(
               fn_uid.make,
               jp.str,
-              isjp = true,
               params = res :: fvs.map(x => Name(x)),
               resultNum = 1,
               specialized = None,
@@ -248,7 +246,6 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, ta
       GODef(
         fn_uid.make,
         name,
-        isjp = false,
         params = names,
         resultNum = 1,
         specialized = None,

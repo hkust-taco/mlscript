@@ -42,7 +42,7 @@ bar()
 //│       in let x%16 = -(x%15,x%14) -- #60
 //│         in jump j%0(x%16) -- #59
 //│ )
-//│ Def(1, @join j%1, [x%2,x%0], [{}],
+//│ Def(1, j%1, [x%2,x%0], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -51,7 +51,7 @@ bar()
 //│ let x%3 = +(x%0,x%2) -- #13
 //│   in x%3 -- #12
 //│ )
-//│ Def(2, @join j%0, [x%0], [{}],
+//│ Def(2, j%0, [x%0], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -219,7 +219,7 @@ bar()
 //│         in let x%33 = C(0) -- #136
 //│           in jump j%0(x%33,x%0,x%1) -- #135
 //│ )
-//│ Def(1, @join j%2, [x%6], [{}],
+//│ Def(1, j%2, [x%6], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -227,7 +227,7 @@ bar()
 //│ 1, 
 //│ x%6 -- #21
 //│ )
-//│ Def(2, @join j%3, [x%11], [{}],
+//│ Def(2, j%3, [x%11], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -235,7 +235,7 @@ bar()
 //│ 1, 
 //│ jump j%2(x%11) -- #39
 //│ )
-//│ Def(3, @join j%1, [x%5,x%3,x%4], [{}],
+//│ Def(3, j%1, [x%5,x%3,x%4], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -257,7 +257,7 @@ bar()
 //│       C => let x%15 = x%4.z -- #57
 //│         in jump j%3(8) -- #56
 //│ )
-//│ Def(4, @join j%4, [x%20,x%3,x%4], [{}],
+//│ Def(4, j%4, [x%20,x%3,x%4], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -265,7 +265,7 @@ bar()
 //│ 1, 
 //│ jump j%1(x%20,x%3,x%4) -- #72
 //│ )
-//│ Def(5, @join j%0, [x%2,x%0,x%1], [{}],
+//│ Def(5, j%0, [x%2,x%0,x%1], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -327,7 +327,7 @@ bar()
 //│       C => let x%33 = C(0) -- #136
 //│         in jump j%0(x%33,x%0,x%1) -- #135
 //│ )
-//│ Def(3, @join j%1, [x%5,x%3,x%4], [{},{<EDestruct@j%1:#60-case x%3 of ...>,<EDirect@j%1:#60-case x%3 of ...>,<ESelect(w)@j%1:#28-let x%8 = ...>},{<EDestruct@j%1:#58-case x%4 of ...>,<EDirect@j%1:#58-case x%4 of ...>,<ESelect(w)@j%1:#46-let x%13 = ...>}],
+//│ Def(3, j%1, [x%5,x%3,x%4], [{},{<EDestruct@j%1:#60-case x%3 of ...>,<EDirect@j%1:#60-case x%3 of ...>,<ESelect(w)@j%1:#28-let x%8 = ...>},{<EDestruct@j%1:#58-case x%4 of ...>,<EDirect@j%1:#58-case x%4 of ...>,<ESelect(w)@j%1:#46-let x%13 = ...>}],
 //│ S: None,
 //│ I: [[None,Some(ICtor(A)),Some(ICtor(B))]],
 //│ R: [None],
@@ -343,7 +343,7 @@ bar()
 //│     B => 7 -- #189
 //│     C => 8 -- #190
 //│ )
-//│ Def(5, @join j%0, [x%2,x%0,x%1], [{<EDestruct@j%0:#106-case x%2 of ...>,<EDirect@j%0:#106-case x%2 of ...>,<EDirect@j%0:#108-let x%3 = ...>,<ESelect(w)@j%0:#94-let x%17 = ...>,<ESelect(x)@j%0:#95-let x%16 = ...>},{<EDirect@j%0:#93-let x%18 = ...>},{<EDirect@j%0:#92-let x%19 = ...>}],
+//│ Def(5, j%0, [x%2,x%0,x%1], [{<EDestruct@j%0:#106-case x%2 of ...>,<EDirect@j%0:#106-case x%2 of ...>,<EDirect@j%0:#108-let x%3 = ...>,<ESelect(w)@j%0:#94-let x%17 = ...>,<ESelect(x)@j%0:#95-let x%16 = ...>},{<EDirect@j%0:#93-let x%18 = ...>},{<EDirect@j%0:#92-let x%19 = ...>}],
 //│ S: None,
 //│ I: [[None,None,Some(ICtor(B))],[None,None,Some(ICtor(C))]],
 //│ R: [None],
@@ -386,7 +386,7 @@ bar()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
-//│ Def(5, @join j%0, [x%2,x%0,x%1], [{<EDestruct@j%0:#106-case x%2 of ...>,<EDirect@j%0:#106-case x%2 of ...>,<ESelect(x)@j%0:#95-let x%16 = ...>},{},{}],
+//│ Def(5, j%0, [x%2,x%0,x%1], [{<EDestruct@j%0:#106-case x%2 of ...>,<EDirect@j%0:#106-case x%2 of ...>,<ESelect(x)@j%0:#95-let x%16 = ...>},{},{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -510,7 +510,7 @@ bar()
 //│         in let x%35 = C(0) -- #146
 //│           in jump j%0(x%35,x%0,x%1) -- #145
 //│ )
-//│ Def(1, @join j%2, [x%6], [{}],
+//│ Def(1, j%2, [x%6], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -518,7 +518,7 @@ bar()
 //│ 1, 
 //│ x%6 -- #21
 //│ )
-//│ Def(2, @join j%3, [x%11], [{}],
+//│ Def(2, j%3, [x%11], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -526,7 +526,7 @@ bar()
 //│ 1, 
 //│ jump j%2(x%11) -- #39
 //│ )
-//│ Def(3, @join j%1, [x%5,x%3,x%4], [{}],
+//│ Def(3, j%1, [x%5,x%3,x%4], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -548,7 +548,7 @@ bar()
 //│       C => let x%15 = x%4.z -- #57
 //│         in jump j%3(8) -- #56
 //│ )
-//│ Def(4, @join j%4, [x%20,x%3,x%4], [{}],
+//│ Def(4, j%4, [x%20,x%3,x%4], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -556,7 +556,7 @@ bar()
 //│ 1, 
 //│ jump j%1(x%20,x%3,x%4) -- #72
 //│ )
-//│ Def(5, @join j%0, [x%2,x%0,x%1], [{}],
+//│ Def(5, j%0, [x%2,x%0,x%1], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -620,7 +620,7 @@ bar()
 //│       C => let x%35 = C(0) -- #146
 //│         in jump j%0(x%35,x%0,x%1) -- #145
 //│ )
-//│ Def(3, @join j%1, [x%5,x%3,x%4], [{},{<EDestruct@j%1:#60-case x%3 of ...>,<EDirect@j%1:#60-case x%3 of ...>,<ESelect(w)@j%1:#28-let x%8 = ...>},{<EDestruct@j%1:#58-case x%4 of ...>,<EDirect@j%1:#58-case x%4 of ...>,<ESelect(w)@j%1:#46-let x%13 = ...>}],
+//│ Def(3, j%1, [x%5,x%3,x%4], [{},{<EDestruct@j%1:#60-case x%3 of ...>,<EDirect@j%1:#60-case x%3 of ...>,<ESelect(w)@j%1:#28-let x%8 = ...>},{<EDestruct@j%1:#58-case x%4 of ...>,<EDirect@j%1:#58-case x%4 of ...>,<ESelect(w)@j%1:#46-let x%13 = ...>}],
 //│ S: None,
 //│ I: [[None,Some(ICtor(A)),Some(ICtor(B))]],
 //│ R: [None],
@@ -636,7 +636,7 @@ bar()
 //│     B => 7 -- #199
 //│     C => 8 -- #200
 //│ )
-//│ Def(5, @join j%0, [x%2,x%0,x%1], [{<EDestruct@j%0:#106-case x%2 of ...>,<EDirect@j%0:#106-case x%2 of ...>,<EDirect@j%0:#108-let x%3 = ...>,<ESelect(w)@j%0:#94-let x%17 = ...>,<ESelect(x)@j%0:#95-let x%16 = ...>},{<EDirect@j%0:#93-let x%18 = ...>},{<EDirect@j%0:#92-let x%19 = ...>}],
+//│ Def(5, j%0, [x%2,x%0,x%1], [{<EDestruct@j%0:#106-case x%2 of ...>,<EDirect@j%0:#106-case x%2 of ...>,<EDirect@j%0:#108-let x%3 = ...>,<ESelect(w)@j%0:#94-let x%17 = ...>,<ESelect(x)@j%0:#95-let x%16 = ...>},{<EDirect@j%0:#93-let x%18 = ...>},{<EDirect@j%0:#92-let x%19 = ...>}],
 //│ S: None,
 //│ I: [[None,None,Some(ICtor(A))],[None,None,Some(ICtor(B))],[None,None,Some(ICtor(C))]],
 //│ R: [None],

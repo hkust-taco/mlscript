@@ -99,7 +99,7 @@ bar()
 //│       in let x%3 = Pair(x%2,x%1) -- #13
 //│         in jump j%0(x%3) -- #12
 //│ )
-//│ Def(1, @join j%0, [x%0], [{}],
+//│ Def(1, j%0, [x%0], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -218,7 +218,7 @@ foo()
 //│               in let x%8 = +(x%7,1) -- #22
 //│                 in jump j%1(x%8) -- #21
 //│ )
-//│ Def(1, @join j%0, [x%1], [{}],
+//│ Def(1, j%0, [x%1], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -227,7 +227,7 @@ foo()
 //│ let x%2 = +(x%1,1) -- #6
 //│   in x%2 -- #5
 //│ )
-//│ Def(2, @join j%1, [x%5], [{}],
+//│ Def(2, j%1, [x%5], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -384,7 +384,7 @@ foo()
 //│         in let x%4 = +(x%3,x%0) -- #11
 //│           in jump j%0(x%4) -- #10
 //│ )
-//│ Def(1, @join j%0, [x%1], [{}],
+//│ Def(1, j%0, [x%1], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -493,7 +493,7 @@ foo()
 //│         in let x%4 = +(x%2,1) -- #11
 //│           in jump j%0(x%4) -- #10
 //│ )
-//│ Def(1, @join j%0, [x%1], [{}],
+//│ Def(1, j%0, [x%1], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -607,7 +607,7 @@ bar()
 //│     in let x%8 = Right(b%0) -- #34
 //│       in jump j%0(x%8) -- #33
 //│ )
-//│ Def(1, @join j%1, [x%1], [{}],
+//│ Def(1, j%1, [x%1], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -615,7 +615,7 @@ bar()
 //│ 1, 
 //│ x%1 -- #3
 //│ )
-//│ Def(2, @join j%0, [x%0], [{}],
+//│ Def(2, j%0, [x%0], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -657,7 +657,7 @@ bar()
 //│   Right => let x%8 = Right(b%0) -- #34
 //│     in jump j%0(x%8) -- #33
 //│ )
-//│ Def(2, @join j%0, [x%0], [{<EDestruct@j%0:#14-case x%0 of ...>,<EDirect@j%0:#14-case x%0 of ...>,<ESelect(x)@j%0:#8-let x%2 = ...>,<ESelect(y)@j%0:#13-let x%3 = ...>}],
+//│ Def(2, j%0, [x%0], [{<EDestruct@j%0:#14-case x%0 of ...>,<EDirect@j%0:#14-case x%0 of ...>,<ESelect(x)@j%0:#8-let x%2 = ...>,<ESelect(y)@j%0:#13-let x%3 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(Left))],[Some(ICtor(Right))]],
 //│ R: [None],
@@ -839,7 +839,7 @@ bar()
 //│   C2 => let x%3 = a%0.z -- #14
 //│     in jump j%0(x%3) -- #13
 //│ )
-//│ Def(1, @join j%0, [x%0], [{}],
+//│ Def(1, j%0, [x%0], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -1170,7 +1170,7 @@ foo()
 //│     in jump j%0(x%7) -- #22
 //│   O => jump j%0(x%5) -- #25
 //│ )
-//│ Def(3, @join j%0, [x%6], [{}],
+//│ Def(3, j%0, [x%6], [{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],

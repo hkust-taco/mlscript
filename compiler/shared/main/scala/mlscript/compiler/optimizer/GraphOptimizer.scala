@@ -19,6 +19,8 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
   import Elim._
   import Intro._
 
+  private var split_cache: Opt[NewSplittingResult] = None
+
   private def log(x: Any) = if verbose then println(x)
 
   private type ClassCtx = Map[Str, ClassInfo]
@@ -253,13 +255,13 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
 
   
   private class NewSplittingTarget(
-    val mixing_producer: Map[DefnLocMarker, Str],
+    val mixing_producer: Map[LocMarker, Str],
     val mixing_consumer: Map[LocMarker, Str],
     val specialize: Map[LocMarker, DefnSpecialization],
     val known_case: Map[LocMarker, Str],
   )
 
-  private class NewSplittingResult(
+  private case class NewSplittingResult(
     val targets: NewSplittingTarget,
     val first_case: Map[Str, DefnLocMarker],
     val pre_map: Map[DefnLocMarker, PreFunction],
@@ -267,9 +269,26 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
     val mutli_post_map: Map[DefnLocMarker, Map[ClassInfo, PostFunction]],
     val pre_defs: Map[Str, GODef],
     val post_defs: Map[Str, GODef],
-    val specialized_defs: Map[Str, GODef],
   ):
-    def all_defs = pre_defs.values ++ post_defs.values ++ specialized_defs.values
+    def all_defs = pre_defs.values ++ post_defs.values
+    def into_cache(g: GOProgram) =
+      val new_pre_defs = pre_defs.flatMap((k, v) => g.defs.find(_.name == k).map(x => (k, x)))
+      val new_post_defs = post_defs.flatMap((k, v) => g.defs.find(_.name == k).map(x => (k, x)))
+      val new_pre_defs_names = new_pre_defs.keys.toSet
+      val new_post_defs_names = new_post_defs.keys.toSet
+      val new_pre_map = pre_map.filter((k, v) => new_pre_defs_names.contains(v.name))
+      val new_single_post_map = single_post_map.filter((k, v) => new_post_defs_names.contains(v.name))
+      val new_mutli_post_map = mutli_post_map.map { (k, v) => (k, v.filter((k, v) => new_post_defs_names.contains(v.name))) }
+      val new_first_case = first_case.filter((k, v) => pre_map.contains(v))
+
+      this.copy(
+        first_case = new_first_case,
+        pre_map = new_pre_map,
+        single_post_map = new_single_post_map,
+        mutli_post_map = new_mutli_post_map,
+        pre_defs = new_pre_defs,
+        post_defs = new_post_defs,
+      )
 
   private enum IndirectSplitKind:
     case FirstCase        // a pre and multiple posts
@@ -294,17 +313,27 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
       if loc matches node then Some(CallBeforeCase)
       else get_indirect_split_kind(body, loc)
 
-  private class NewFunctionSplitting():
+  private class NewFunctionSplitting(prev_sr: Opt[NewSplittingResult] = None):
     private val first_case = MutHMap[Str, DefnLocMarker]()
     private val pre_map = MutHMap[DefnLocMarker, PreFunction]()
     private val single_post_map = MutHMap[DefnLocMarker, PostFunction]()
     private val mutli_post_map = MutHMap[DefnLocMarker, MutHMap[ClassInfo, PostFunction]]()
     private val pre_defs = MutHMap[Str, GODef]()
     private val post_defs = MutHMap[Str, GODef]()
-    private val specialized_defs = MutHMap[Str, GODef]()
     private val split_memo = MutHSet[DefnLocMarker]()
 
     def run(defs: Set[GODef], targets: NewSplittingTarget): NewSplittingResult =
+      prev_sr match
+        case None => 
+        case Some(value) =>
+          first_case ++= value.first_case
+          pre_map ++= value.pre_map
+          single_post_map ++= value.single_post_map
+          value.mutli_post_map.foreach((k, v) => mutli_post_map.getOrElseUpdate(k, MutHMap.empty) ++= v)
+          pre_defs ++= value.pre_defs
+          post_defs ++= value.post_defs
+          split_memo ++= value.pre_map.keySet
+
       val defs_map = defs.map(x => (x.name, x)).toMap
       targets.mixing_producer.values.foreach { defn_name =>
         val defn = defs_map(defn_name)
@@ -327,7 +356,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         first_case = first_case.toMap,
         pre_map = pre_map.toMap, single_post_map = single_post_map.toMap,
         mutli_post_map = mutli_post_map.map { (k, v) => (k, v.toMap) }.toMap,
-        pre_defs = pre_defs.toMap, post_defs = post_defs.toMap, specialized_defs = specialized_defs.toMap
+        pre_defs = pre_defs.toMap, post_defs = post_defs.toMap
       )
 
       first_case.clear()
@@ -370,7 +399,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         val pre_defn = GODef(
           fn_uid.make,
           pre_name.str,
-          false,
           defn.params,
           all_fv.size,
           None,
@@ -397,7 +425,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         val pre_defn = GODef(
           fn_uid.make,
           pre_name.str,
-          false,
           defn.params,
           all_fv.size,
           None,
@@ -411,7 +438,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         val new_defn = GODef(
           fn_uid.make,
           post_name.str,
-          false,
           post_params,
           defn.resultNum,
           None,
@@ -445,7 +471,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         val pre_defn = GODef(
           fn_uid.make,
           pre_name.str,
-          false,
           env.defn.params,
           all_fv.size,
           None,
@@ -461,7 +486,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
             val new_defn = GODef(
               fn_uid.make,
               post_name.str,
-              false,
               post_params,
               defn.resultNum,
               None,
@@ -483,7 +507,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
     private val known_case = MutHMap[LocMarker, Str]()
     private val specialize = MutHMap[LocMarker, DefnSpecialization]()
     private val mixing_consumer = MutHMap[LocMarker, Str]()
-    private val mixing_producer = MutHMap[DefnLocMarker, Str]()
+    private val mixing_producer = MutHMap[LocMarker, Str]()
     private val name_defn_map = MutHMap[Str, LocMarker]()
 
     private case class SplitTargetEnv(
@@ -522,16 +546,15 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
           aux
         case (((Some(arg), Some(IMix(_))), param), elim) =>
           elim.foreach {
-            case ElimInfo(EDestruct, _) =>
+            case ElimInfo(EDestruct, _) | ElimInfo(EIndirectDestruct, _) =>
               name_defn_map.get(arg.str) match
                 case Some(loc) => 
                   val target = (
                     loc match
                       case LocMarker.MLetCall(_, defn, _) => defn
                       case _ => throw GraphOptimizingError("Unexpected loc marker"))
-                  mixing_producer += DefnLocMarker(env.defn.name, loc) -> target
+                  mixing_producer += loc -> target
                 case None =>
-            case ElimInfo(EIndirectDestruct, elimloc) =>
             case _ => 
           }
         case _ =>
@@ -552,7 +575,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         env.intros.get(x.str) match
           case Some(IMix(_))  => name_defn_map.get(x.str) match
             case Some(loc) =>
-              mixing_producer += DefnLocMarker(env.defn.name, loc) -> (loc match
+              mixing_producer += loc -> (loc match
                 case LocMarker.MLetCall(_, defn, _) => defn
                 case _ => throw GraphOptimizingError("Unexpected loc marker"))
             case None =>
@@ -664,7 +687,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
       val new_jp = GODef(
         fn_uid.make,
         new_jp_name.str,
-        true,
         fv_list.map(Name(_)),
         env.defn.resultNum,
         None,
@@ -822,9 +844,9 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
           else
             subst_letcall_mixing_cases(env, first_case(target), names, args, body)
           new_node
-        else if names.tail.isEmpty && intros2.get(names.head.str).exists(_.isInstanceOf[IMix]) && targets.mixing_producer.contains(dloc) && first_case.contains(targets.mixing_producer(dloc)) then
+        else if names.tail.isEmpty && intros2.get(names.head.str).exists(_.isInstanceOf[IMix]) && targets.mixing_producer.contains(node.loc_marker) && first_case.contains(targets.mixing_producer(node.loc_marker)) then
           changed = true
-          val target = targets.mixing_producer(dloc)
+          val target = targets.mixing_producer(node.loc_marker)
           val new_node = subst_letcall_mixing_cases(env, first_case(target), names, args, body)
           new_node
         else
@@ -847,7 +869,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
     def run(x: GOProgram) =
       val sta = NewSplittingTargetAnalysis()
       val targets = sta.run(x)
-      val fs = NewFunctionSplitting()
+      val fs = NewFunctionSplitting(split_cache)
       val sr = fs.run(x.defs, targets)
       var y = x.copy(defs = x.defs ++ sr.all_defs)
       relink(y.main, y.defs)
@@ -864,9 +886,9 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         activeAnalyze(y)
         recBoundaryAnalyze(y)
         changed = scsr.changed
-      y
+      (y, sr)
 
-  def splitFunction(prog: GOProgram) = NewSplitting.run(prog)
+  private def splitFunction(prog: GOProgram) = NewSplitting.run(prog)
 
   private class ScalarReplacementTargetAnalysis extends GOIterator:
     val ctx = MutHMap[Str, MutHMap[Str, Set[Str]]]()
@@ -991,7 +1013,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         val new_def = GODef(
           fn_uid.make,
           new_name,
-          x.isjp, 
           new_params,
           x.resultNum,
           None,
@@ -1360,7 +1381,8 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
     g = activeAnalyze(g)
     g = recBoundaryAnalyze(g)
 
-    g = splitFunction(g)
+    val (g2, sr) = splitFunction(g)
+    g = g2
     g = activeAnalyze(g)
     g = recBoundaryAnalyze(g)
 
@@ -1376,6 +1398,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
     g = activeAnalyze(g)
     g = recBoundaryAnalyze(g)
 
+    split_cache = Some(sr.into_cache(g))
     g
   }
 

@@ -182,7 +182,6 @@ implicit object IntroOrdering extends Ordering[Intro]:
 case class GODef(
   val id: Int,
   val name: Str,
-  val isjp: Bool,
   val params: Ls[Name],
   val resultNum: Int,
   var specialized: Opt[Ls[Opt[Intro]]],
@@ -206,13 +205,12 @@ case class GODef(
   def accept_visitor(v: GOVisitor) = v.visit(this)
   def accept_iterator(v: GOIterator) = v.iterate(this)
   override def toString: String =
-    val name2 = if (isjp) s"@join $name" else s"$name"
     val ps = params.map(_.toString).mkString("[", ",", "]")
     val naps = newActiveParams.map(_.toSeq.sorted.mkString("{", ",", "}")).mkString("[", ",", "]")
     val ais = activeInputs.map(_.toSeq.sorted.mkString("[", ",", "]")).mkString("[", ",", "]")
     val ars = activeResults.map(_.toString()).mkString("[", ",", "]")
     val spec = specialized.map(_.toSeq.sorted.mkString("[", ",", "]")).toString()
-    s"Def($id, $name2, $ps, $naps,\nS: $spec,\nI: $ais,\nR: $ars,\nRec: $recBoundary,\n$resultNum, \n$body\n)"
+    s"Def($id, $name, $ps, $naps,\nS: $spec,\nI: $ais,\nR: $ars,\nRec: $recBoundary,\n$resultNum, \n$body\n)"
 
 sealed trait TrivialExpr:
   import GOExpr._
@@ -501,7 +499,6 @@ trait GOVisitor extends GOTrivialExprVisitor:
     GODef(
       x.id,
       x.name,
-      x.isjp,
       x.params.map(_.accept_param_visitor(this)),
       x.resultNum,
       x.specialized,
