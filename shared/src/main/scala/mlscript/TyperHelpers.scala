@@ -693,36 +693,6 @@ abstract class TyperHelpers { Typer: Typer =>
       case _ => this :: Nil
     }
     
-    def childrenPol(pol: Opt[Bool])(implicit ctx: Ctx): List[Opt[Bool] -> SimpleType] = {
-      def childrenPolField(fld: FieldType): List[Opt[Bool] -> SimpleType] =
-        fld.lb.map(pol.map(!_) -> _).toList ::: pol -> fld.ub :: Nil
-      this match {
-        case tv @ AssignedVariable(ty) =>
-          pol -> ty :: Nil
-        case tv: TypeVariable =>
-          (if (pol =/= S(false)) tv.lowerBounds.map(S(true) -> _) else Nil) :::
-          (if (pol =/= S(true)) tv.upperBounds.map(S(false) -> _) else Nil)
-        case FunctionType(l, r) => pol.map(!_) -> l :: pol -> r :: Nil
-        case Overload(as) => as.map(pol -> _)
-        case ComposedType(_, l, r) => pol -> l :: pol -> r :: Nil
-        case RecordType(fs) => fs.unzip._2.flatMap(childrenPolField)
-        case TupleType(fs) => fs.unzip._2.flatMap(childrenPolField)
-        case ArrayType(fld) => childrenPolField(fld)
-        case SpliceType(elems) => elems flatMap {case L(l) => pol -> l :: Nil case R(r) => childrenPolField(r)}
-        case NegType(n) => pol.map(!_) -> n :: Nil
-        case ExtrType(_) => Nil
-        case ProxyType(und) => pol -> und :: Nil
-        // case _: TypeTag => Nil
-        case _: ObjectTag | _: Extruded => Nil
-        case SkolemTag(id) => pol -> id :: Nil
-        case tr: TypeRef => tr.mapTargs(pol)(_ -> _)
-        case Without(b, ns) => pol -> b :: Nil
-        case TypeBounds(lb, ub) => S(false) -> lb :: S(true) -> ub :: Nil
-        case PolymorphicType(_, und) => pol -> und :: Nil
-        case ConstrainedType(cs, bod) =>
-          cs.flatMap(vbs => S(true) -> vbs._1 :: S(false) -> vbs._2 :: Nil) ::: pol -> bod :: Nil
-    }}
-    
     /** (exclusive, inclusive) */
     def varsBetween(lb: Level, ub: Level): Set[TV] = {
       val res = MutSet.empty[TypeVariable]

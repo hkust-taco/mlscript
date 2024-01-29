@@ -40,11 +40,11 @@ fooImpl id
 
 
 fooImpl2 (f: int -> int & string -> string) = f 1
-//│ fooImpl2: (int -> int & string -> string) -> (int | string)
+//│ fooImpl2: (int -> int & string -> string) -> int
 //│         = [Function: fooImpl2]
 
 fooImpl2 id
-//│ res: int | string
+//│ res: int
 //│    = 1
 
 :e

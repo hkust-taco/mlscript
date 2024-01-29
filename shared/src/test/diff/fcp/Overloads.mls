@@ -44,9 +44,12 @@ IISS : BBNN
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.43: 	IISS : BBNN
 //│ ║        	^^^^
-//│ ╟── type `bool` does not match type `int | string`
+//│ ╟── type `bool` does not match type `?a`
 //│ ║  l.6: 	type BBNN = bool -> bool & number -> number
-//│ ╙──     	            ^^^^
+//│ ║       	            ^^^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.12: 	def IISS: int -> int & string -> string
+//│ ╙──      	                       ^^^^^^^^^^^^^^^^
 //│ res: BBNN
 
 
@@ -59,19 +62,20 @@ IISS : (0 | 1) -> number
 //│ res: (0 | 1) -> number
 
 IISS : 'a -> 'a
-//│ res: ('a & (int | string)) -> (int | string | 'a)
+//│ res: 'a -> 'a
 
 IISS 0
-//│ res: int | string
+//│ res: int
 
 (IISS : int -> int) 0
 //│ res: int
 
 (if true then IISS else BBNN) 0
-//│ res: bool | number | string
+//│ res: number
 
+// * TODO: update type simplifier
 fun x -> (if true then IISS else BBNN) x
-//│ res: int -> (bool | number | string)
+//│ res: anything -> nothing
 
 if true then IISS else BBNN
 //│ res: bool -> bool & number -> number | int -> int & string -> string
@@ -85,11 +89,12 @@ if true then IISS else BBNN
 :e
 (if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.86: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.90: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `true` does not match type `int | string`
-//│ ║  l.86: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
-//│ ╙──      	                                         ^^^^
+//│ ╟── expression of type `0 | 1 | true` does not match type `?a`
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.12: 	def IISS: int -> int & string -> string
+//│ ╙──      	                       ^^^^^^^^^^^^^^^^
 //│ res: (0 | 1 | true) -> number
 
 
