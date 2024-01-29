@@ -71,7 +71,10 @@ class DiffTestCompiler extends DiffTests {
         case err: Exception =>
           outputBuilder ++= s"\nGraphOpt failed: ${err.getMessage()}"
           outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
-
+        case err: StackOverflowError =>
+          outputBuilder ++= s"\nGraphOpt failed: ${err.getMessage()}"
+          outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
+      
     outputBuilder.toString().linesIterator.toList
   
   override protected lazy val files = allFiles.filter { file =>
