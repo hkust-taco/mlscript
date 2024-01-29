@@ -331,7 +331,7 @@ main()
 //│ if x%4 -- #30
 //│   true => let x%6 = A() -- #13
 //│     in x%6 -- #44
-//│   false => let x%3 = True() -- #64
+//│   false => let x%3 = True() -- #60
 //│     in let* (x%8) = foo(x%3) -- #28
 //│       in let x%9 = B(x%8) -- #27
 //│         in x%9 -- #45
@@ -343,8 +343,8 @@ main()
 //│ Rec: None,
 //│ 1, 
 //│ let x%10 = False() -- #37
-//│   in let* (x%17) = foo$D%1(x%10) -- #55
-//│     in x%17 -- #70
+//│   in let* (x%11) = foo$D%1(x%10) -- #52
+//│     in x%11 -- #35
 //│ )
 //│ Def(10, foo$D%1, [x%4], [{}],
 //│ S: None,
@@ -352,7 +352,7 @@ main()
 //│ R: [Some(ICtor(B))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%3 = True() -- #60
+//│ let x%3 = True() -- #56
 //│   in let* (x%8) = foo(x%3) -- #28
 //│     in let x%9 = B(x%8) -- #27
 //│       in x%9 -- #45
@@ -374,8 +374,8 @@ main()
 //│ Rec: None,
 //│ 1, 
 //│ let x%10 = False() -- #37
-//│   in let* (x%17) = foo$D%1(x%10) -- #55
-//│     in x%17 -- #70
+//│   in let* (x%11) = foo$D%1(x%10) -- #52
+//│     in x%11 -- #35
 //│ )
 //│ Def(10, foo$D%1, [x%4], [{}],
 //│ S: None,
@@ -383,7 +383,7 @@ main()
 //│ R: [Some(ICtor(B))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%6 = A() -- #81
+//│ let x%6 = A() -- #72
 //│   in let x%9 = B(x%6) -- #27
 //│     in x%9 -- #45
 //│ )
@@ -1979,7 +1979,7 @@ main()
 //│ S: None,
 //│ I: [[Some(ICtor(S))],[Some(ICtor(O))]],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: Some(3),
+//│ Rec: Some(2),
 //│ 1, 
 //│ case x%0 of -- #15
 //│   O => let x%2 = False() -- #4
@@ -1992,7 +1992,7 @@ main()
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: Some(3),
+//│ Rec: Some(2),
 //│ 1, 
 //│ case x%5 of -- #31
 //│   O => let x%7 = True() -- #20
@@ -2000,22 +2000,6 @@ main()
 //│   S => let x%8 = x%5.s -- #30
 //│     in let* (x%9) = odd(x%8) -- #29
 //│       in x%9 -- #96
-//│ )
-//│ Def(4, foo, [], [],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: None,
-//│ 1, 
-//│ let x%10 = >(10,0) -- #52
-//│   in if x%10 -- #51
-//│     true => let x%13 = O() -- #47
-//│       in let x%14 = S(x%13) -- #46
-//│         in let* (x%12) = odd(x%14) -- #98
-//│           in x%12 -- #97
-//│     false => let x%15 = O() -- #50
-//│       in let* (x%12) = odd(x%15) -- #101
-//│         in x%12 -- #100
 //│ )
 //│ Def(6, bar, [], [],
 //│ S: None,
@@ -2039,9 +2023,8 @@ main()
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%23) = foo() -- #86
-//│   in let* (x%24) = bar() -- #85
-//│     in x%24 -- #84
+//│ let* (x%24) = bar() -- #85
+//│   in x%24 -- #84
 //│ )
 //│ },
 //│ let* (x%25) = main() -- #90
@@ -2057,7 +2040,7 @@ main()
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: Some(3),
+//│ Rec: Some(2),
 //│ 1, 
 //│ case x%0 of -- #15
 //│   O => let x%2 = False() -- #4
@@ -2070,7 +2053,7 @@ main()
 //│ S: None,
 //│ I: [[Some(ICtor(O))]],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: Some(3),
+//│ Rec: Some(2),
 //│ 1, 
 //│ case x%5 of -- #31
 //│   O => let x%7 = True() -- #20
@@ -2078,20 +2061,6 @@ main()
 //│   S => let x%8 = x%5.s -- #30
 //│     in let* (x%9) = odd(x%8) -- #29
 //│       in x%9 -- #96
-//│ )
-//│ Def(4, foo, [], [],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: None,
-//│ 1, 
-//│ let x%10 = >(10,0) -- #52
-//│   in if x%10 -- #51
-//│     true => let x%13 = O() -- #47
-//│       in let* (x%12) = even(x%13) -- #126
-//│         in x%12 -- #97
-//│     false => let x%2 = False() -- #120
-//│       in x%2 -- #100
 //│ )
 //│ Def(6, bar, [], [],
 //│ S: None,
@@ -2102,9 +2071,9 @@ main()
 //│ let x%16 = >(10,0) -- #78
 //│   in if x%16 -- #77
 //│     true => let x%18 = O() -- #68
-//│       in let* (x%20) = even(x%18) -- #124
+//│       in let* (x%20) = even(x%18) -- #114
 //│         in x%20 -- #93
-//│     false => let x%2 = False() -- #115
+//│     false => let x%2 = False() -- #111
 //│       in x%2 -- #94
 //│ )
 //│ Def(8, main, [], [],
@@ -2113,9 +2082,8 @@ main()
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%23) = foo() -- #86
-//│   in let* (x%24) = bar() -- #85
-//│     in x%24 -- #84
+//│ let* (x%24) = bar() -- #85
+//│   in x%24 -- #84
 //│ )
 //│ },
 //│ let* (x%25) = main() -- #90
@@ -2127,19 +2095,6 @@ main()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(4, foo, [], [],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: None,
-//│ 1, 
-//│ let x%10 = >(10,0) -- #52
-//│   in if x%10 -- #51
-//│     true => let x%7 = True() -- #139
-//│       in x%7 -- #97
-//│     false => let x%2 = False() -- #120
-//│       in x%2 -- #100
-//│ )
 //│ Def(6, bar, [], [],
 //│ S: None,
 //│ I: [],
@@ -2148,9 +2103,9 @@ main()
 //│ 1, 
 //│ let x%16 = >(10,0) -- #78
 //│   in if x%16 -- #77
-//│     true => let x%7 = True() -- #135
+//│     true => let x%7 = True() -- #121
 //│       in x%7 -- #93
-//│     false => let x%2 = False() -- #115
+//│     false => let x%2 = False() -- #111
 //│       in x%2 -- #94
 //│ )
 //│ Def(8, main, [], [],
@@ -2159,9 +2114,8 @@ main()
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%23) = foo() -- #86
-//│   in let* (x%24) = bar() -- #85
-//│     in x%24 -- #84
+//│ let* (x%24) = bar() -- #85
+//│   in x%24 -- #84
 //│ )
 //│ },
 //│ let* (x%25) = main() -- #90
@@ -2482,7 +2436,7 @@ main(False)
 //│     in let x%9 = +(x%8,4) -- #26
 //│       in x%9 -- #25
 //│ )
-//│ Def(6, main, [flag%0], [{<EDestruct@main:#103-if flag%0 ...>,<EDirect@main:#102-let* (x%30) = foo$D%1 ...>,<EDirect@main:#103-if flag%0 ...>}],
+//│ Def(6, main, [flag%0], [{<EDestruct@main:#103-if flag%0 ...>,<EDirect@main:#103-if flag%0 ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -2491,19 +2445,8 @@ main(False)
 //│ if flag%0 -- #103
 //│   true => let* (x%22) = aaa() -- #140
 //│     in x%22 -- #139
-//│   false => let* (x%30) = foo$D%1(flag%0) -- #102
-//│     in let* (x%24) = bbb() -- #143
-//│       in x%24 -- #142
-//│ )
-//│ Def(10, foo$D%1, [x%14], [{}],
-//│ S: None,
-//│ I: [[Some(ICtor(False))]],
-//│ R: [Some(ICtor(B))],
-//│ Rec: None,
-//│ 1, 
-//│ let x%16 = A() -- #133
-//│   in let x%19 = B(x%16) -- #56
-//│     in x%19 -- #94
+//│   false => let* (x%24) = bbb() -- #143
+//│     in x%24 -- #142
 //│ )
 //│ },
 //│ let x%25 = False() -- #88
@@ -3106,21 +3049,6 @@ main()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(0, mk_list, [n%0], [{<EDirect@mk_list:#22-let x%3 = ...>,<EDirect@mk_list:#24-let x%0 = ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(IMix(ICtor(Cons),ICtor(Nil)))],
-//│ Rec: Some(2),
-//│ 1, 
-//│ let x%0 = ==(n%0,0) -- #24
-//│   in if x%0 -- #23
-//│     true => let x%2 = Nil() -- #6
-//│       in x%2 -- #81
-//│     false => let x%3 = -(n%0,1) -- #22
-//│       in let* (x%4) = mk_list(x%3) -- #21
-//│         in let x%5 = Cons(n%0,x%4) -- #20
-//│           in x%5 -- #82
-//│ )
 //│ Def(7, main, [], [],
 //│ S: None,
 //│ I: [],
@@ -3131,9 +3059,8 @@ main()
 //│   in if x%27 -- #118
 //│     true => let x%12 = True() -- #144
 //│       in x%12 -- #129
-//│     false => let* (x%29) = mk_list$D%1(x%26) -- #117
-//│       in let x%14 = False() -- #148
-//│         in x%14 -- #134
+//│     false => let x%14 = False() -- #148
+//│       in x%14 -- #134
 //│ )
 //│ Def(13, mk_list$P%0, [n%0], [{<EDirect@mk_list$P%0:#108-...>,<EDirect@mk_list$P%0:#24-let x%0 = ...>}],
 //│ S: None,
@@ -3143,17 +3070,6 @@ main()
 //│ 2, 
 //│ let x%0 = ==(n%0,0) -- #24
 //│   in n%0,x%0 -- #108
-//│ )
-//│ Def(15, mk_list$D%1, [n%0], [{<EDirect@mk_list$D%1:#22-let x%3 = ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(ICtor(Cons))],
-//│ Rec: None,
-//│ 1, 
-//│ let x%3 = -(n%0,1) -- #22
-//│   in let* (x%4) = mk_list(x%3) -- #21
-//│     in let x%5 = Cons(n%0,x%4) -- #20
-//│       in x%5 -- #82
 //│ )
 //│ },
 //│ let* (x%19) = main() -- #80

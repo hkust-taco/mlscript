@@ -87,7 +87,7 @@ bar()
 //│ GOProgram({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
 //│ Def(0, complex_foo, [t%0], [{<EDestruct@complex_foo:#63-case t%0 of ...>,<EDirect@complex_foo:#63-case t%0 of ...>,<ESelect(m)@complex_foo:#61-let x%15 = ...>,<ESelect(n)@complex_foo:#62-let x%14 = ...>,<ESelect(x)@complex_foo:#49-let x%11 = ...>,<ESelect(y)@complex_foo:#50-let x%10 = ...>,<ESelect(z)@complex_foo:#51-let x%9 = ...>}],
 //│ S: None,
-//│ I: [[Some(ICtor(A))],[Some(ICtor(B))]],
+//│ I: [[Some(ICtor(B))]],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
@@ -111,11 +111,9 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%17 = A(6,7,8) -- #89
-//│   in let* (x%18) = complex_foo(x%17) -- #88
-//│     in let x%19 = B(9,10) -- #87
-//│       in let* (x%20) = complex_foo(x%19) -- #86
-//│         in x%20 -- #85
+//│ let x%19 = B(9,10) -- #87
+//│   in let* (x%20) = complex_foo(x%19) -- #86
+//│     in x%20 -- #85
 //│ )
 //│ },
 //│ let* (x%21) = bar() -- #93
@@ -133,9 +131,8 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%18) = complex_foo$D%0$S%0(8,7,6) -- #99
-//│   in let* (x%20) = complex_foo$D%1$S%0(9,10) -- #101
-//│     in x%20 -- #85
+//│ let* (x%20) = complex_foo$D%1$S%0(9,10) -- #99
+//│   in x%20 -- #85
 //│ )
 //│ Def(7, complex_foo$D%1$S%0, [t%0_m,t%0_n], [{<EDirect@complex_foo$D%1$S%0:#60-let x%16 = ...>},{<EDirect@complex_foo$D%1$S%0:#60-let x%16 = ...>}],
 //│ S: None,
@@ -146,17 +143,6 @@ bar()
 //│ let x%16 = -(t%0_m,t%0_n) -- #60
 //│   in let x%3 = +(x%16,4) -- #97
 //│     in x%3 -- #12
-//│ )
-//│ Def(8, complex_foo$D%0$S%0, [t%0_z,t%0_y,t%0_x], [{<EDirect@complex_foo$D%0$S%0:#48-let x%12 = ...>},{<EDirect@complex_foo$D%0$S%0:#48-let x%12 = ...>},{<EDirect@complex_foo$D%0$S%0:#47-let x%13 = ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x%12 = *(t%0_y,t%0_z) -- #48
-//│   in let x%13 = +(t%0_x,x%12) -- #47
-//│     in let x%3 = +(x%13,4) -- #96
-//│       in x%3 -- #12
 //│ )
 //│ },
 //│ let* (x%21) = bar() -- #93

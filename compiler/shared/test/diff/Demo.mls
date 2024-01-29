@@ -1864,21 +1864,6 @@ main()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(0, list_of_n, [n%0], [{<EDirect@list_of_n:#22-let x%3 = ...>,<EDirect@list_of_n:#24-let x%0 = ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(IMix(ICtor(Cons),ICtor(Nil)))],
-//│ Rec: Some(3),
-//│ 1, 
-//│ let x%0 = ==(n%0,0) -- #24
-//│   in if x%0 -- #23
-//│     true => let x%2 = Nil() -- #6
-//│       in x%2 -- #81
-//│     false => let x%3 = -(n%0,1) -- #22
-//│       in let* (x%4) = list_of_n(x%3) -- #21
-//│         in let x%5 = Cons(0,x%4) -- #20
-//│           in x%5 -- #82
-//│ )
 //│ Def(7, main, [], [],
 //│ S: None,
 //│ I: [],
@@ -1889,9 +1874,8 @@ main()
 //│   in if x%27 -- #118
 //│     true => let x%12 = True() -- #144
 //│       in x%12 -- #129
-//│     false => let* (x%29) = list_of_n$D%1(x%26) -- #117
-//│       in let x%14 = False() -- #148
-//│         in x%14 -- #134
+//│     false => let x%14 = False() -- #148
+//│       in x%14 -- #134
 //│ )
 //│ Def(13, list_of_n$P%0, [n%0], [{<EDirect@list_of_n$P%0:#108-...>,<EDirect@list_of_n$P%0:#24-let x%0 = ...>}],
 //│ S: None,
@@ -1901,17 +1885,6 @@ main()
 //│ 2, 
 //│ let x%0 = ==(n%0,0) -- #24
 //│   in n%0,x%0 -- #108
-//│ )
-//│ Def(15, list_of_n$D%1, [n%0], [{<EDirect@list_of_n$D%1:#22-let x%3 = ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(ICtor(Cons))],
-//│ Rec: None,
-//│ 1, 
-//│ let x%3 = -(n%0,1) -- #22
-//│   in let* (x%4) = list_of_n(x%3) -- #21
-//│     in let x%5 = Cons(0,x%4) -- #20
-//│       in x%5 -- #82
 //│ )
 //│ },
 //│ let* (x%19) = main() -- #80

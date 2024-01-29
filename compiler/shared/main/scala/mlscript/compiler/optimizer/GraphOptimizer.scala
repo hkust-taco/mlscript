@@ -587,18 +587,8 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
 
   private def recBoundaryMatched(producer: Opt[Int], consumer: Opt[Int]) =
     (producer, consumer) match
-      case (Some(_), _) => false
-      case _ => true
-
-  private def recBoundaryMatchedLease(producer: Opt[Int], consumer: Opt[Int]) =
-    (producer, consumer) match
       case (Some(_), Some(_)) => false
       case _ => true
-
-  private def recBoundaryMatchedOpt(producer: Opt[Int], consumer: Opt[Int]) =
-    (producer, consumer) match
-      case (Some(_), _) => None
-      case _ => Some(())
     
   private class NewSplittingCallSiteReplacement(
     clsctx: ClassCtx,
@@ -1229,7 +1219,11 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
             f(body)
       case LetCall(names, defn, args, body) =>
         names.foreach(addDef)
-        LetCall(names, defn, args, f(body)).copy_tag(x)
+        val uis = names.map(name => uses.get(name, defs(name)))
+        if uis.forall(_.isEmpty) then
+          f(body)
+        else
+          LetCall(names, defn, args, f(body)).copy_tag(x)
 
     def run(x: GOProgram) =
       val fns = GODefRevPostOrdering.ordered(x.main, x.defs)

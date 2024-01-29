@@ -988,7 +988,7 @@ baz()
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
 //│ Def(0, foo, [a%0,b%0], [{<ESelect(x)@foo:#21-let x%0 = ...>,<ESelect(y)@foo:#20-let x%1 = ...>},{<ESelect(x)@foo:#19-let x%2 = ...>,<ESelect(y)@foo:#18-let x%3 = ...>}],
 //│ S: None,
-//│ I: [[None,Some(ICtor(Pair))],[Some(ICtor(Pair)),Some(ICtor(Pair))]],
+//│ I: [[Some(ICtor(Pair)),Some(ICtor(Pair))]],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
@@ -1001,20 +1001,16 @@ baz()
 //│             in let x%6 = +(x%5,x%3) -- #15
 //│               in x%6 -- #14
 //│ )
-//│ Def(1, bar, [c%0], [{<EDirect@bar:#66-let* (x%10) = foo ...>,<EDirect@bar:#68-let* (x%8) = foo ...>,<ESelect(x)@foo:#19-let x%2 = ...>,<ESelect(x)@foo:#21-let x%0 = ...>,<ESelect(y)@foo:#18-let x%3 = ...>,<ESelect(y)@foo:#20-let x%1 = ...>}],
+//│ Def(1, bar, [c%0], [{}],
 //│ S: None,
 //│ I: [[Some(ICtor(Pair))]],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%7 = Pair(0,1) -- #69
-//│   in let* (x%8) = foo(x%7,c%0) -- #68
-//│     in let x%9 = Pair(2,3) -- #67
-//│       in let* (x%10) = foo(c%0,x%9) -- #66
-//│         in let x%11 = Pair(0,1) -- #65
-//│           in let x%12 = Pair(2,3) -- #64
-//│             in let* (x%13) = foo(x%11,x%12) -- #63
-//│               in x%13 -- #62
+//│ let x%11 = Pair(0,1) -- #65
+//│   in let x%12 = Pair(2,3) -- #64
+//│     in let* (x%13) = foo(x%11,x%12) -- #63
+//│       in x%13 -- #62
 //│ )
 //│ Def(2, baz, [], [],
 //│ S: None,
@@ -1036,59 +1032,13 @@ baz()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(1, bar, [c%0], [{<ESelect(x)@bar:#91-let x%23 = ...>,<ESelect(x)@bar:#96-let x%18 = ...>,<ESelect(y)@bar:#90-let x%24 = ...>,<ESelect(y)@bar:#97-let x%17 = ...>}],
-//│ S: None,
-//│ I: [[Some(ICtor(Pair))]],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x%17 = c%0.y -- #97
-//│   in let x%18 = c%0.x -- #96
-//│     in let* (x%8) = foo$S%0(x%17,x%18,0,1) -- #68
-//│       in let x%23 = c%0.x -- #91
-//│         in let x%24 = c%0.y -- #90
-//│           in let* (x%10) = foo$S%0(3,2,x%23,x%24) -- #66
-//│             in let* (x%13) = foo$S%0(3,2,0,1) -- #63
-//│               in x%13 -- #62
-//│ )
 //│ Def(2, baz, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%14 = Pair(4,5) -- #81
-//│   in let* (x%15) = bar(x%14) -- #80
-//│     in x%15 -- #79
-//│ )
-//│ Def(3, foo$S%0, [b%0_y,b%0_x,a%0_x,a%0_y], [{<EDirect@foo$S%0:#15-let x%6 = ...>},{<EDirect@foo$S%0:#16-let x%5 = ...>},{<EDirect@foo$S%0:#17-let x%4 = ...>},{<EDirect@foo$S%0:#17-let x%4 = ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x%4 = +(a%0_x,a%0_y) -- #17
-//│   in let x%5 = +(x%4,b%0_x) -- #16
-//│     in let x%6 = +(x%5,b%0_y) -- #15
-//│       in x%6 -- #14
-//│ )
-//│ },
-//│ let* (x%16) = baz() -- #85
-//│   in x%16 -- #84)
-//│ 
-//│ Interpreted ------------------------------
-//│ 6
-//│ 
-//│ 
-//│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(2, baz, [], [],
-//│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x%15) = bar$S%0(5,4) -- #80
+//│ let* (x%15) = foo$S%0(3,2,0,1) -- #90
 //│   in x%15 -- #79
 //│ )
 //│ Def(3, foo$S%0, [b%0_y,b%0_x,a%0_x,a%0_y], [{<EDirect@foo$S%0:#15-let x%6 = ...>},{<EDirect@foo$S%0:#16-let x%5 = ...>},{<EDirect@foo$S%0:#17-let x%4 = ...>},{<EDirect@foo$S%0:#17-let x%4 = ...>}],
@@ -1102,17 +1052,6 @@ baz()
 //│     in let x%6 = +(x%5,b%0_y) -- #15
 //│       in x%6 -- #14
 //│ )
-//│ Def(4, bar$S%0, [c%0_y,c%0_x], [{<EDirect@bar$S%0:#66-let* (x%10) = foo$S%0 ...>,<EDirect@bar$S%0:#68-let* (x%8) = foo$S%0 ...>},{<EDirect@bar$S%0:#66-let* (x%10) = foo$S%0 ...>,<EDirect@bar$S%0:#68-let* (x%8) = foo$S%0 ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x%8) = foo$S%0(c%0_y,c%0_x,0,1) -- #68
-//│   in let* (x%10) = foo$S%0(3,2,c%0_x,c%0_y) -- #66
-//│     in let* (x%13) = foo$S%0(3,2,0,1) -- #63
-//│       in x%13 -- #62
-//│ )
 //│ },
 //│ let* (x%16) = baz() -- #85
 //│   in x%16 -- #84)
@@ -1126,7 +1065,7 @@ baz()
 //│ 
 //│ 
 //│ 
-//│ Fuel used: 3
+//│ Fuel used: 2
 
 :GraphInterp
 :GraphOpt
