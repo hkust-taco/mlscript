@@ -180,7 +180,7 @@ case class GODef(
   val params: Ls[Name],
   val resultNum: Int,
   var specialized: Opt[Ls[Opt[Intro]]],
-  var body: GONode
+  val body: GONode
 ):
   var activeInputs: Set[Ls[Opt[Intro]]] = Set()
   var activeResults: Ls[Opt[Intro]] = Ls(None)
