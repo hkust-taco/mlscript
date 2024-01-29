@@ -151,10 +151,12 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
             }.toSet
             if z.nonEmpty then Some(IMix(z)) else None
         }
-    def getIntro(node: GONode, intros: Map[Str, Intro]): Ls[Opt[Intro]] = node match
+    def getIntro(n: Int, node: GONode, intros: Map[Str, Intro]): Ls[Opt[Intro]] = node match
       case Case(scrut, cases) => 
         val cases_intros = cases.map {
-          (cls, node) => getIntro(node, intros + (scrut.str -> ICtor(cls.ident)))
+          (cls, node) =>
+            val x = getIntro(n, node, intros + (scrut.str -> ICtor(cls.ident)))
+            x
         }
         combine_intros(cases_intros)
       case Jump(defnref, args) =>
@@ -165,13 +167,13 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         val defn = defnref.expectDefn
         val intros2 = updateIntroInfo(defn, intros, resultNames)
         defn.activeInputs = updateInputInfo(defn, intros, args)
-        getIntro(body, intros2)
+        getIntro(n, body, intros2)
       case LetExpr(name, expr, body) => 
         val intros2 = getIntro(expr, intros) match
           case None => intros
           case Some(x) =>
             intros + (name.str -> x)
-        getIntro(body, intros2)
+        getIntro(n, body, intros2)
       case Result(res) => 
         res.map { x => getIntro(x, intros) }
 
@@ -185,7 +187,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
 
     def getIntro(expr: TrivialExpr): Opt[Intro] = getIntro(expr, Map.empty)
     def getIntro(expr: GOExpr): Opt[Intro] = getIntro(expr, Map.empty)
-    def getIntro(node: GONode): Ls[Opt[Intro]] = getIntro(node, Map.empty)
+    def getIntro(n: Int, node: GONode): Ls[Opt[Intro]] = getIntro(n, node, Map.empty)
 
     override def iterate(x: GOProgram) =
       var changed = true
@@ -195,9 +197,10 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
           defn =>
             val old = defn.activeResults
             defn.activeResults =
-              getIntro(defn.body,
+              getIntro(defn.resultNum, defn.body,
                 defn.specialized.map(bindIntroInfoUsingInput(Map.empty, _, defn.params))
                   .getOrElse(Map.empty))
+            if defn.resultNum != defn.activeResults.length then throw GraphOptimizingError(s"Inconsistent result number for ${defn.name}")
             changed |= old != defn.activeResults
         }
 
@@ -604,7 +607,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
                   if split_kind.isDefined then
                     indirect_consumer += csloc.marker -> IndirectConsumer(name, loc, split_kind.get)
                     if DestructAnalysis().firstDestructed(defn.body) == Some(param) then
-                      known_case += csloc.marker -> cls
+                      // known_case += csloc.marker -> cls
                     return
                 case _ =>
           aux
@@ -640,10 +643,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         val dloc = DefnLocMarker(env.defn.name, node.loc_marker)
         val defn = defnref.expectDefn
         checkTargets(env, defn, dloc, args)
-        if (!env.visited.contains(defn.name))
-          env.visited.add(defn.name)
-          val intros = bindIntroInfo(env.intros, args, defn.params)
-          f(env.copy(intros = intros, defn = defn), defn.body)
       case Case(x, cases) =>
         val dloc = DefnLocMarker(env.defn.name, node.loc_marker)
         env.intros.get(x.str) match
@@ -665,10 +664,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         val defn = defnref.expectDefn
         val dloc = DefnLocMarker(env.defn.name, node.loc_marker)
         checkTargets(env, defn, dloc, args)
-        if (!env.visited.contains(defn.name))
-          env.visited.add(defn.name)
-          val intros2 = bindIntroInfo(env.intros, args, defn.params)
-          f(env.copy(intros = intros2, defn = defn), defn.body)
         val intros2 = updateIntroInfoAndMaintainMixingIntrosNew(name_defn_map, defn, node.loc_marker, env.intros, xs)
         f(env.copy(intros = intros2), e)
 
@@ -774,13 +769,15 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         case (cls, PostFunction(post_f, post_params)) =>
           val new_names_2 = xs.map { _ => fresh.make }
           val names_map_2 = xs.map(_.str).zip(new_names_2).toMap
+          
           (cls, 
             LetCall(new_names_2, GODefRef(Right(post_f)), post_params.map{x => Ref(names_map(x))},
-              Jump(GODefRef(Right(new_jp.name)), fv_list.map{x => Ref(names_map_2(x))}).attach_tag(tag)).attach_tag(tag))
+              Jump(GODefRef(Right(new_jp.name)), fv_list.map{x => Ref(names_map_2.getOrElse(x, Name(x)))}).attach_tag(tag)).attach_tag(tag))
       }
 
-      LetCall(new_names, GODefRef(Right(pre_f)), as,
+      val node = LetCall(new_names, GODefRef(Right(pre_f)), as,
         Case(scrut_new_name.get, new_cases.toList).attach_tag(tag)).attach_tag(tag)
+      node
 
     private def subst_letcall_indirect(env: SubstEnv, ic: IndirectConsumer, xs: Ls[Name], as: Ls[TrivialExpr], body: GONode): GONode =
       val defn_name = ic.defn

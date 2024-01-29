@@ -55,7 +55,26 @@ def validateParamsArgsConsistent(entry: GONode, defs: Set[GODef]): Unit =
   paac.run(entry)
   defs.foreach(paac.run(_))
 
+private object ResultNumConsistent extends GOIterator:
+  private def f(x: GONode): Int = x match
+    case Result(res) => res.length
+    case Case(scrut, cases) =>
+      val cases_result_num = cases map { case (cls: ClassInfo, body: GONode) => f(body) }
+      if (cases_result_num.toSet.size != 1) throw GraphOptimizingError("inconsistent result number in cases")
+      cases_result_num.head
+    case LetExpr(name, expr, body) => f(body)
+    case LetCall(res, defnref, args, body) => f(body)
+    case Jump(defnref, xs) => defnref.expectDefn.resultNum
+  def run(node: GONode) = f(node)
+  def run(defn: GODef) = f(defn.body)
+
+def validateResultNumConsitent(entry: GONode, defs: Set[GODef]): Unit =
+  val rnc = ResultNumConsistent
+  rnc.run(entry)
+  defs.foreach(rnc.run(_))
+
 def validate(entry: GONode, defs: Set[GODef]): Unit =
   validateDefRefInSet(entry, defs)
   validateParamsArgsConsistent(entry, defs)
+  validateResultNumConsitent(entry, defs)
 

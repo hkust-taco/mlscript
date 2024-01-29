@@ -183,10 +183,10 @@ case class GODef(
   val body: GONode
 ):
   var activeInputs: Set[Ls[Opt[Intro]]] = Set()
-  var activeResults: Ls[Opt[Intro]] = Ls(None)
+  var activeResults: Ls[Opt[Intro]] = Ls.fill(resultNum)(None)
   var newActiveInputs: Set[Ls[Opt[IntroInfo]]] = Set()
-  var newActiveParams: Ls[SortedSet[ElimInfo]] = Ls(SortedSet())
-  var newActiveResults: Ls[Opt[IntroInfo]] = Ls(None)
+  var newActiveParams: Ls[SortedSet[ElimInfo]] = Ls.fill(params.length)(SortedSet())
+  var newActiveResults: Ls[Opt[IntroInfo]] = Ls.fill(resultNum)(None)
   var recBoundary: Opt[Int] = None
 
   override def equals(o: Any): Bool = o match {

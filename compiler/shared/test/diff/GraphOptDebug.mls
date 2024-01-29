@@ -107,7 +107,7 @@ main()
 //│   in let* (x%16) = is_none(x%15) -- #64
 //│     in x%16 -- #63
 //│ )
-//│ Def(7, main, [], [{}],
+//│ Def(7, main, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],

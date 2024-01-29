@@ -85,7 +85,7 @@ main()
 //│ 1, 
 //│ jump j%1(x%10) -- #36
 //│ )
-//│ Def(5, main, [], [{}],
+//│ Def(5, main, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -316,7 +316,7 @@ main()
 
 
 :GraphInterp
-:GraphOptVerbose
+:GraphOpt
 class True
 class False
 class Cons(h, t)
@@ -399,7 +399,7 @@ main()
 //│ 1, 
 //│ jump j%1(x%10) -- #36
 //│ )
-//│ Def(5, main, [], [{}],
+//│ Def(5, main, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -651,7 +651,7 @@ foo()
 //│ 1, 
 //│ x%6 -- #17
 //│ )
-//│ Def(4, foo, [], [{}],
+//│ Def(4, foo, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -972,7 +972,7 @@ foo()
 //│ 1, 
 //│ x%11 -- #35
 //│ )
-//│ Def(6, foo, [], [{}],
+//│ Def(6, foo, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -1325,7 +1325,7 @@ main()
 //│   in let* (x%16) = is_none(x%15) -- #64
 //│     in x%16 -- #63
 //│ )
-//│ Def(7, main, [], [{}],
+//│ Def(7, main, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -1612,7 +1612,7 @@ main()
 //│   in let* (x%16) = is_none(x%15) -- #64
 //│     in x%16 -- #63
 //│ )
-//│ Def(7, main, [], [{}],
+//│ Def(7, main, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],

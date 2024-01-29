@@ -15,7 +15,7 @@ foo()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, mktup2, [x%0,y%0], [{}],
+//│ Def(0, mktup2, [x%0,y%0], [{},{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -24,7 +24,7 @@ foo()
 //│ let* (x%1) = mktup(x%0,y%0) -- #7
 //│   in x%1 -- #6
 //│ )
-//│ Def(1, mktup, [x%2,y%1], [{}],
+//│ Def(1, mktup, [x%2,y%1], [{},{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -33,7 +33,7 @@ foo()
 //│ let x%3 = Pair(x%2,y%1) -- #14
 //│   in x%3 -- #13
 //│ )
-//│ Def(2, foo, [], [{}],
+//│ Def(2, foo, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -107,7 +107,7 @@ bar()
 //│ 1, 
 //│ x%0 -- #1
 //│ )
-//│ Def(2, bar, [], [{}],
+//│ Def(2, bar, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -235,7 +235,7 @@ foo()
 //│ 1, 
 //│ jump j%0(x%5) -- #13
 //│ )
-//│ Def(3, foo, [], [{}],
+//│ Def(3, foo, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -392,7 +392,7 @@ foo()
 //│ 1, 
 //│ x%1 -- #2
 //│ )
-//│ Def(2, foo, [], [{}],
+//│ Def(2, foo, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -501,7 +501,7 @@ foo()
 //│ 1, 
 //│ x%1 -- #2
 //│ )
-//│ Def(2, foo, [], [{}],
+//│ Def(2, foo, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -592,7 +592,7 @@ bar()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
-//│ Def(0, foo, [a%0,b%0], [{}],
+//│ Def(0, foo, [a%0,b%0], [{},{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -627,7 +627,7 @@ bar()
 //│   Right => let x%3 = x%0.y -- #13
 //│     in jump j%1(x%3) -- #12
 //│ )
-//│ Def(3, bar, [], [{}],
+//│ Def(3, bar, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -738,7 +738,7 @@ bar()
 //│     in let x%2 = +(x%0,x%1) -- #5
 //│       in x%2 -- #4
 //│ )
-//│ Def(1, bar, [], [{}],
+//│ Def(1, bar, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -847,7 +847,7 @@ bar()
 //│ 1, 
 //│ x%0 -- #1
 //│ )
-//│ Def(2, bar, [], [{}],
+//│ Def(2, bar, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -940,7 +940,7 @@ baz()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, foo, [a%0,b%0], [{}],
+//│ Def(0, foo, [a%0,b%0], [{},{}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -970,7 +970,7 @@ baz()
 //│             in let* (x%13) = foo(x%11,x%12) -- #63
 //│               in x%13 -- #62
 //│ )
-//│ Def(2, baz, [], [{}],
+//│ Def(2, baz, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -1081,7 +1081,7 @@ foo()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, foo, [], [{}],
+//│ Def(0, foo, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -1139,7 +1139,7 @@ foo()
 //│ 
 //│ GraphOpt:
 //│ GOProgram({ClassInfo(0, S, [s]),ClassInfo(1, O, [])}, {
-//│ Def(0, foo, [], [{}],
+//│ Def(0, foo, [], [],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
