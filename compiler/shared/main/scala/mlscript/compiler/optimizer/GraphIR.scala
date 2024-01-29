@@ -31,7 +31,6 @@ case class GOProgram(
     Sorting.quickSort(t1)
     Sorting.quickSort(t2)
     s"GOProgram({${t1.mkString(",")}}, {\n${t2.mkString("\n")}\n},\n$main)"
-  def accept_visitor(v: GOVisitor) = v.visit(this)
   def accept_iterator(v: GOIterator) = v.iterate(this)
 
 implicit object ClassInfoOrdering extends Ordering[ClassInfo] {
@@ -53,7 +52,6 @@ case class ClassInfo(
   override def hashCode: Int = id
   override def toString: String =
     s"ClassInfo($id, $ident, [${fields mkString ","}])"
-  def accept_visitor(v: GOVisitor) = v.visit(this)
   def accept_iterator(v: GOIterator) = v.iterate(this)
 
 case class Name(val str: Str):
@@ -83,9 +81,6 @@ case class Name(val str: Str):
   override def toString: String =
     str
 
-  def accept_def_visitor(v: GONameVisitor) = v.visit_name_def(this)
-  def accept_use_visitor(v: GONameVisitor) = v.visit_name_use(this)
-  def accept_param_visitor(v: GONameVisitor) = v.visit_param(this)
   def accept_def_iterator(v: GONameIterator) = v.iterate_name_def(this)
   def accept_use_iterator(v: GONameIterator) = v.iterate_name_use(this)
   def accept_param_iterator(v: GONameIterator) = v.iterate_param(this)
@@ -110,7 +105,6 @@ class GODefRef(var defn: Either[GODef, Str]):
       o.getName == this.getName
     case _ => false
   }
-  def accept_visitor(v: GOVisitor) = v.visit(this)
   def accept_iterator(v: GOIterator) = v.iterate(this)
 
 case class ElimInfo(elim: Elim, loc: DefnLocMarker):
@@ -202,7 +196,6 @@ case class GODef(
   }
   override def hashCode: Int = id
   def getName: String = name
-  def accept_visitor(v: GOVisitor) = v.visit(this)
   def accept_iterator(v: GOIterator) = v.iterate(this)
   override def toString: String =
     val ps = params.map(_.toString).mkString("[", ",", "]")
@@ -217,9 +210,6 @@ sealed trait TrivialExpr:
   override def toString: String
   def show: String
   def toDocument: Document
-  def accept_visitor(v: GOTrivialExprVisitor): TrivialExpr = this match
-    case x: Ref => v.visit(x)
-    case x: Literal => v.visit(x)
   def accept_iterator(v: GOTrivialExprIterator): Unit = this match
     case x: Ref => v.iterate(x)
     case x: Literal => v.iterate(x)
@@ -330,13 +320,7 @@ enum GOExpr:
     case CtorApp(cls, args) => CtorApp(cls, args.map(_.map_name_of_texpr(f)))
     case Select(x, cls, field) => Select(f(x), cls, field)
     case BasicOp(name, args) => BasicOp(name, args.map(_.map_name_of_texpr(f)))
-  
-  def accept_visitor(v: GOVisitor): GOExpr = this match
-    case x: Ref => v.visit(x).to_expr
-    case x: Literal => v.visit(x).to_expr
-    case x: CtorApp => v.visit(x)
-    case x: Select => v.visit(x)
-    case x: BasicOp => v.visit(x)
+
 
   def accept_iterator(v: GOIterator): Unit = this match
     case x: Ref => v.iterate(x)
@@ -440,13 +424,6 @@ enum GONode:
         raw("in") <:> body.toDocument |> indent
       )
 
-  def accept_visitor(v: GOVisitor): GONode  = this match
-    case x: Result => v.visit(x)
-    case x: Jump => v.visit(x)
-    case x: Case => v.visit(x)
-    case x: LetExpr => v.visit(x)
-    case x: LetCall => v.visit(x)
-
   def accept_iterator(v: GOIterator): Unit  = this match
     case x: Result => v.iterate(x)
     case x: Jump => v.iterate(x)
@@ -464,50 +441,6 @@ enum GONode:
     marker.tag = this.tag
     marker
 
-trait GONameVisitor:
-  def visit_name_def(x: Name): Name = x
-  def visit_name_use(x: Name): Name = x
-  def visit_param(x: Name): Name    = x
-
-trait GOTrivialExprVisitor extends GONameVisitor:
-  import GOExpr._
-  def visit(x: Ref): TrivialExpr     = Ref(x.name.accept_use_visitor(this))   
-  def visit(x: Literal): TrivialExpr = x
-
-trait GOVisitor extends GOTrivialExprVisitor:
-  import GOExpr._
-  import GONode._
-  def visit(x: CtorApp): GOExpr      = x match
-    case CtorApp(cls, xs)            => CtorApp(cls.accept_visitor(this), xs.map(_.accept_visitor(this)))
-  def visit(x: Select): GOExpr       = x match
-    case Select(x, cls, field)       => Select(x.accept_use_visitor(this), cls.accept_visitor(this), field)
-  def visit(x: BasicOp): GOExpr      = x match
-    case BasicOp(op, xs)             => BasicOp(op, xs.map(_.accept_visitor(this)))
-  def visit(x: Result): GONode       = x match
-    case Result(xs)                  => Result(xs.map(_.accept_visitor(this)))
-  def visit(x: Jump): GONode         = x match
-    case Jump(jp, xs)                => Jump(jp.accept_visitor(this), xs.map(_.accept_visitor(this)))
-  def visit(x: Case): GONode         = x match
-    case Case(x, cases)              => Case(x.accept_use_visitor(this), cases map { (cls, arm) => (cls, arm.accept_visitor(this)) })
-  def visit(x: LetExpr): GONode      = x match
-    case LetExpr(x, e1, e2)          => LetExpr(x.accept_def_visitor(this), e1.accept_visitor(this), e2.accept_visitor(this))
-  def visit(x: LetCall): GONode      = x match
-    case LetCall(xs, f, as, e2)      => LetCall(xs.map(_.accept_def_visitor(this)), f.accept_visitor(this), as.map(_.accept_visitor(this)), e2.accept_visitor(this))
-  def visit(x: GODefRef): GODefRef   = x
-  def visit(x: ClassInfo): ClassInfo = x
-  def visit(x: GODef): GODef         =
-    GODef(
-      x.id,
-      x.name,
-      x.params.map(_.accept_param_visitor(this)),
-      x.resultNum,
-      x.specialized,
-      x.body.accept_visitor(this))
-  def visit(x: GOProgram): GOProgram =
-    GOProgram(
-      x.classes.map(_.accept_visitor(this)),
-      x.defs.map(_.accept_visitor(this)),
-      x.main.accept_visitor(this))
 
 trait GONameIterator:
   def iterate_name_def(x: Name): Unit = ()

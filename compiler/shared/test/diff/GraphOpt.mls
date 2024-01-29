@@ -161,7 +161,7 @@ bar()
 //│ R: [Some(ICtor(Pair))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%3 = Pair(1,2) -- #42
+//│ let x%3 = Pair(1,2) -- #46
 //│   in x%3 -- #26
 //│ )
 //│ },
@@ -291,7 +291,7 @@ foo()
 //│ Rec: None,
 //│ 1, 
 //│ let x%9 = Pair(0,1) -- #43
-//│   in let* (x%10) = silly$D%0(x%9) -- #53
+//│   in let* (x%10) = silly$D%0(x%9) -- #56
 //│     in x%10 -- #41
 //│ )
 //│ Def(5, silly$D%0, [pair%0], [{<EDestruct@silly$D%0:#25-case pair%0 of ...>,<EDirect@silly$D%0:#25-case pair%0 of ...>,<ESelect(x)@silly$D%0:#23-let x%7 = ...>}],
@@ -322,7 +322,7 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%10) = silly$D%0$D%0$S%0(0) -- #57
+//│ let* (x%10) = silly$D%0$D%0$S%0(0) -- #64
 //│   in x%10 -- #41
 //│ )
 //│ Def(8, silly$D%0$D%0$S%0, [pair%0_x], [{<EDirect@silly$D%0$D%0$S%0:#22-let x%8 = ...>}],
@@ -445,7 +445,7 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%4 = +(0,2) -- #42
+//│ let x%4 = +(0,2) -- #46
 //│   in x%4 -- #27
 //│ )
 //│ },
@@ -554,7 +554,7 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x%4 = +(1,1) -- #41
+//│ let x%4 = +(1,1) -- #45
 //│   in x%4 -- #26
 //│ )
 //│ },
@@ -1038,10 +1038,10 @@ baz()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%15) = foo$S%0(3,2,0,1) -- #90
+//│ let* (x%15) = foo$S%0(2,3,0,1) -- #90
 //│   in x%15 -- #79
 //│ )
-//│ Def(3, foo$S%0, [b%0_y,b%0_x,a%0_x,a%0_y], [{<EDirect@foo$S%0:#15-let x%6 = ...>},{<EDirect@foo$S%0:#16-let x%5 = ...>},{<EDirect@foo$S%0:#17-let x%4 = ...>},{<EDirect@foo$S%0:#17-let x%4 = ...>}],
+//│ Def(3, foo$S%0, [b%0_x,b%0_y,a%0_x,a%0_y], [{<EDirect@foo$S%0:#16-let x%5 = ...>},{<EDirect@foo$S%0:#15-let x%6 = ...>},{<EDirect@foo$S%0:#17-let x%4 = ...>},{<EDirect@foo$S%0:#17-let x%4 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],

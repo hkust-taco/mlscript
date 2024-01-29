@@ -131,7 +131,7 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%20) = complex_foo$D%1$S%0(9,10) -- #99
+//│ let* (x%20) = complex_foo$D%1$S%0(9,10) -- #103
 //│   in x%20 -- #85
 //│ )
 //│ Def(7, complex_foo$D%1$S%0, [t%0_m,t%0_n], [{<EDirect@complex_foo$D%1$S%0:#60-let x%16 = ...>},{<EDirect@complex_foo$D%1$S%0:#60-let x%16 = ...>}],
@@ -386,20 +386,21 @@ bar()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
-//│ Def(5, j%0, [x%2,x%0,x%1], [{<EDestruct@j%0:#106-case x%2 of ...>,<EDirect@j%0:#106-case x%2 of ...>,<ESelect(x)@j%0:#95-let x%16 = ...>},{},{}],
+//│ Def(5, j%0, [x%2,x%0,x%1], [{<EDirect@j%0:#202-let* (x%42,x%43,x%44,x%45,x%46) = j%0$P%0 ...>},{<EDirect@j%0:#202-let* (x%42,x%43,x%44,x%45,x%46) = j%0$P%0 ...>},{<EDirect@j%0:#202-let* (x%42,x%43,x%44,x%45,x%46) = j%0$P%0 ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x%2 of -- #106
-//│   A => let x%16 = x%2.x -- #95
-//│     in case x%16 of -- #91
-//│       A => 5 -- #180
-//│       B => 5 -- #180
-//│       C => 5 -- #180
-//│   B => 5 -- #180
-//│   C => 5 -- #180
+//│ let* (x%42,x%43,x%44,x%45,x%46) = j%0$P%0(x%2,x%0,x%1) -- #202
+//│   in case x%43 of -- #201
+//│     A => let x%72 = x%43.x -- #247
+//│       in let x%73 = x%42.w -- #246
+//│         in jump j%0$D%0$S%0(x%44,x%45,x%46,x%72,x%73) -- #198
+//│     B => let x%8 = x%42.w -- #244
+//│       in x%8 -- #180
+//│     C => let x%8 = x%42.w -- #245
+//│       in x%8 -- #180
 //│ )
 //│ Def(6, bar, [], [],
 //│ S: None,
@@ -410,8 +411,8 @@ bar()
 //│ let x%34 = B(10) -- #162
 //│   in let x%35 = A(9,x%34) -- #161
 //│     in let x%36 = A(10,x%35) -- #160
-//│       in let* (x%66,x%67,x%68) = complex_foo$P%0(x%36) -- #213
-//│         in let* (x%37) = complex_foo$D%0(x%66,x%67,x%68) -- #212
+//│       in let* (x%56,x%57,x%58) = complex_foo$P%0(x%36) -- #214
+//│         in let* (x%37) = complex_foo$D%0(x%56,x%57,x%58) -- #213
 //│           in x%37 -- #158
 //│ )
 //│ Def(7, complex_foo$P%0, [t%0], [{<EDirect@complex_foo$P%0:#191-...>}],
@@ -432,6 +433,27 @@ bar()
 //│ 1, 
 //│ let x%27 = t%0.x -- #116
 //│   in jump j%0(x%27,x%0,x%1) -- #114
+//│ )
+//│ Def(11, j%0$P%0, [x%2,x%0,x%1], [{<EDirect@j%0$P%0:#108-let x%3 = ...>,<EDirect@j%0$P%0:#197-...>},{<EDirect@j%0$P%0:#197-...>},{<EDirect@j%0$P%0:#197-...>}],
+//│ S: None,
+//│ I: [],
+//│ R: [Some(ICtor(A)),None,None,None,Some(ICtor(B))],
+//│ Rec: None,
+//│ 5, 
+//│ let x%3 = A(5,x%2) -- #108
+//│   in let x%4 = B(6) -- #107
+//│     in x%3,x%2,x%1,x%0,x%4 -- #197
+//│ )
+//│ Def(19, j%0$D%0$S%0, [x%1,x%0,x%4,x%2_x,x%3_w], [{},{},{},{<EDestruct@j%0$D%0$S%0:#91-case x%2_x of ...>,<EDirect@j%0$D%0$S%0:#91-case x%2_x of ...>},{<EDirect@j%0$D%0$S%0:#180-...>}],
+//│ S: None,
+//│ I: [[None,None,None,None,Some(ICtor(B))]],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ case x%2_x of -- #91
+//│   A => x%3_w -- #180
+//│   B => x%3_w -- #180
+//│   C => x%3_w -- #180
 //│ )
 //│ },
 //│ let* (x%38) = bar() -- #166
@@ -688,8 +710,8 @@ bar()
 //│ let x%36 = B(10) -- #172
 //│   in let x%37 = A(9,x%36) -- #171
 //│     in let x%38 = A(10,x%37) -- #170
-//│       in let* (x%68,x%69,x%70) = complex_foo$P%0(x%38) -- #223
-//│         in let* (x%39) = complex_foo$D%0(x%68,x%69,x%70) -- #222
+//│       in let* (x%53,x%54,x%55) = complex_foo$P%0(x%38) -- #222
+//│         in let* (x%39) = complex_foo$D%0(x%53,x%54,x%55) -- #221
 //│           in x%39 -- #168
 //│ )
 //│ Def(7, j%0$P%0, [x%2,x%0,x%1], [{<EDirect@j%0$P%0:#108-let x%3 = ...>,<EDirect@j%0$P%0:#201-...>},{<EDirect@j%0$P%0:#201-...>},{<EDirect@j%0$P%0:#201-...>}],
@@ -702,7 +724,7 @@ bar()
 //│   in let x%4 = B(6) -- #107
 //│     in x%3,x%2,x%1,x%0,x%4 -- #201
 //│ )
-//│ Def(15, complex_foo$P%0, [t%0], [{<EDirect@complex_foo$P%0:#203-...>}],
+//│ Def(15, complex_foo$P%0, [t%0], [{<EDirect@complex_foo$P%0:#213-...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))]],
 //│ R: [None,None,None],
@@ -710,9 +732,9 @@ bar()
 //│ 3, 
 //│ let x%0 = +(1,2) -- #150
 //│   in let x%1 = *(1,2) -- #149
-//│     in t%0,x%0,x%1 -- #203
+//│     in t%0,x%0,x%1 -- #213
 //│ )
-//│ Def(16, complex_foo$D%0, [t%0,x%0,x%1], [{<ESelect(w)@complex_foo$D%0:#125-let x%28 = ...>},{<EDirect@complex_foo$D%0:#231-let* (x%83,x%84,x%85,x%86,x%87) = j%0$P%0 ...>},{<EDirect@complex_foo$D%0:#231-let* (x%83,x%84,x%85,x%86,x%87) = j%0$P%0 ...>}],
+//│ Def(16, complex_foo$D%0, [t%0,x%0,x%1], [{<ESelect(w)@complex_foo$D%0:#125-let x%28 = ...>},{<EDirect@complex_foo$D%0:#230-let* (x%68,x%69,x%70,x%71,x%72) = j%0$P%0 ...>},{<EDirect@complex_foo$D%0:#230-let* (x%68,x%69,x%70,x%71,x%72) = j%0$P%0 ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
@@ -721,9 +743,9 @@ bar()
 //│ let x%28 = t%0.w -- #125
 //│   in let x%29 = C(0) -- #124
 //│     in let x%30 = A(x%28,x%29) -- #123
-//│       in let* (x%83,x%84,x%85,x%86,x%87) = j%0$P%0(x%30,x%0,x%1) -- #231
-//│         in let x%94 = x%83.w -- #268
-//│           in jump j%0$D%0$S%0(x%84,x%85,x%86,x%87,x%94) -- #230
+//│       in let* (x%68,x%69,x%70,x%71,x%72) = j%0$P%0(x%30,x%0,x%1) -- #230
+//│         in let x%79 = x%68.w -- #256
+//│           in jump j%0$D%0$S%0(x%69,x%70,x%71,x%72,x%79) -- #229
 //│ )
 //│ Def(19, j%0$D%0$S%0, [x%2,x%1,x%0,x%4,x%3_w], [{<ESelect(x)@j%0$D%0$S%0:#95-let x%16 = ...>},{},{},{},{<EDirect@j%0$D%0$S%0:#190-...>}],
 //│ S: None,

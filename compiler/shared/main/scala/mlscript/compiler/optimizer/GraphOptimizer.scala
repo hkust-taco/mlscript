@@ -10,6 +10,7 @@ import scala.collection.immutable.*
 import scala.collection.mutable.{HashMap => MutHMap}
 import scala.collection.mutable.{HashSet => MutHSet, Set => MutSet}
 import scala.collection.mutable.{MultiMap, Queue}
+import os.copy.over
 
 final case class GraphOptimizingError(message: String) extends Exception(message)
 
@@ -269,8 +270,11 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
     val mutli_post_map: Map[DefnLocMarker, Map[ClassInfo, PostFunction]],
     val pre_defs: Map[Str, GODef],
     val post_defs: Map[Str, GODef],
+    val overwrite_defs: Map[Str, GODef],
   ):
     def all_defs = pre_defs.values ++ post_defs.values
+    def overwrite(defs: Set[GODef]) =
+      defs.map(x => if overwrite_defs.contains(x.name) then overwrite_defs(x.name) else x)
     def into_cache(g: GOProgram) =
       val new_pre_defs = pre_defs.flatMap((k, v) => g.defs.find(_.name == k).map(x => (k, x)))
       val new_post_defs = post_defs.flatMap((k, v) => g.defs.find(_.name == k).map(x => (k, x)))
@@ -288,6 +292,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         mutli_post_map = new_mutli_post_map,
         pre_defs = new_pre_defs,
         post_defs = new_post_defs,
+        overwrite_defs = Map.empty,
       )
 
   private enum IndirectSplitKind:
@@ -320,6 +325,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
     private val mutli_post_map = MutHMap[DefnLocMarker, MutHMap[ClassInfo, PostFunction]]()
     private val pre_defs = MutHMap[Str, GODef]()
     private val post_defs = MutHMap[Str, GODef]()
+    private val overwrite_defs = MutHMap[Str, GODef]()
     private val split_memo = MutHSet[DefnLocMarker]()
 
     def run(defs: Set[GODef], targets: NewSplittingTarget): NewSplittingResult =
@@ -356,7 +362,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         first_case = first_case.toMap,
         pre_map = pre_map.toMap, single_post_map = single_post_map.toMap,
         mutli_post_map = mutli_post_map.map { (k, v) => (k, v.toMap) }.toMap,
-        pre_defs = pre_defs.toMap, post_defs = post_defs.toMap
+        pre_defs = pre_defs.toMap, post_defs = post_defs.toMap, overwrite_defs = overwrite_defs.toMap,
       )
 
       first_case.clear()
@@ -405,6 +411,15 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
           pre_body)
         pre_map.update(dloc, PreFunction(pre_name.str, all_fv_list))
         pre_defs.update(pre_name.str, pre_defn)
+
+        val new_names = make_new_names_for_free_variables(all_fv_list)
+        val names_map = all_fv_list.zip(new_names).toMap
+        val override_defn =
+          env.defn.copy(body = 
+            LetCall(new_names, GODefRef(Right(pre_name.str)), env.defn.params.map(Ref(_)),
+              Jump(defnref, args.map { case Ref(Name(x)) => Ref(names_map(x)); case x => x }).attach_tag(tag)).attach_tag(tag))
+        overwrite_defs.put(defn.name, override_defn).map(x => throw GraphOptimizingError("Unexpected overwrite"))
+
         Some(dloc)
       case Case(scrut, cases) => None
       case LetExpr(name, expr, body) => split_at_jump_or_letcall(env.copy(accu = n => env.accu(LetExpr(name, expr, n).copy_tag(node))), body, marker)
@@ -444,6 +459,18 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
           body)
         single_post_map.update(dloc, PostFunction(post_name.str, post_params_list))
         post_defs.update(post_name.str, new_defn)
+
+        val new_names = make_new_names_for_free_variables(all_fv_list)
+        val names_map = all_fv_list.zip(new_names).toMap
+        val new_names_2 = make_new_names_for_free_variables(xs.map(_.str))
+        val names_map_2 = names_map ++ xs.map(_.str).zip(new_names_2).toMap
+        val override_defn =
+          env.defn.copy(body = 
+            LetCall(new_names, GODefRef(Right(pre_name.str)), env.defn.params.map(Ref(_)),
+              LetCall(new_names_2, defnref, args.map { case Ref(Name(x)) => Ref(names_map(x)); case x => x },
+                Jump(GODefRef(Right(post_name.str)), post_params.map{x => Ref(names_map_2(x.str))}).attach_tag(tag)).attach_tag(tag)).attach_tag(tag))
+        overwrite_defs.put(defn.name, override_defn).map(x => throw GraphOptimizingError("Unexpected overwrite"))
+        
         Some(dloc)
       case LetCall(xs, defnref, args, body) =>
         split_at_jump_or_letcall(env.copy(accu = n => env.accu(LetCall(xs, defnref, args, n).copy_tag(node))), body, marker)
@@ -478,7 +505,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         pre_map.update(dloc, PreFunction(pre_name.str, all_fv_list))
         pre_defs.update(pre_name.str, pre_defn)
         
-        cases.zip(arm_fv).foreach {
+        val new_cases = cases.zip(arm_fv).map {
           case ((cls, body), fv) =>
             val post_name = fresh.make(defn.name + "$D")
             val post_params_list = fv.toList
@@ -494,7 +521,20 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
               .getOrElseUpdate(dloc, MutHMap.empty)
               .update(cls, PostFunction(post_name.str, post_params_list))
             post_defs.update(post_name.str, new_defn)
+            (cls, (post_name.str, post_params_list))
         }
+
+
+        val (new_names, scrut_new_name) = make_new_names_for_free_variables(all_fv_list, scrut.str)
+        val names_map = all_fv_list.zip(new_names).toMap
+        val overwrite_defn = env.defn.copy(
+          body =
+            LetCall(new_names, GODefRef(Right(pre_name.str)), env.defn.params.map(Ref(_)),
+              Case(scrut_new_name.get, new_cases.map{
+                case (cls, (post_f, post_params)) => (cls, Jump(GODefRef(Right(post_f)), post_params.map{x => Ref(names_map(x))}).attach_tag(tag))
+              }).attach_tag(tag)).attach_tag(tag))
+        overwrite_defs.put(defn.name, overwrite_defn).map(x => throw GraphOptimizingError("Unexpected overwrite"))
+
         Some(dloc)
       case LetExpr(name, expr, body) =>
         split_at_first_case(env.copy(accu = n => env.accu(LetExpr(name, expr, n).copy_tag(node))), body)
@@ -612,7 +652,21 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
     (producer, consumer) match
       case (Some(_), Some(_)) => false
       case _ => true
-    
+  
+  private def make_new_names_for_free_variables(fvs: Ls[Str]) =
+    val new_names = fvs.map { fv => fresh.make }
+    new_names
+
+  private def make_new_names_for_free_variables(fvs: Ls[Str], scrut: Str) =
+    var scrut_new_name: Opt[Name] = None
+    val new_names = fvs.map { fv => 
+      val name = fresh.make
+      if (scrut == fv)
+        scrut_new_name = Some(name)
+      name
+    }
+    (new_names, scrut_new_name)
+
   private class NewSplittingCallSiteReplacement(
     clsctx: ClassCtx,
     split_result: NewSplittingResult,
@@ -633,20 +687,6 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
       val intros: Map[Str, Intro],
       val defn: GODef,
     )
-
-    private def make_new_names_for_free_variables(fvs: Ls[Str]) =
-      val new_names = fvs.map { fv => fresh.make }
-      new_names
-
-    private def make_new_names_for_free_variables(fvs: Ls[Str], scrut: Str) =
-      var scrut_new_name: Opt[Name] = None
-      val new_names = fvs.map { fv => 
-        val name = fresh.make
-        if (scrut == fv)
-          scrut_new_name = Some(name)
-        name
-      }
-      (new_names, scrut_new_name)
 
     private def rebuild_args_from_marker(args: Ls[LocMarker], map: Map[Str, Name]) =
       args.map {
@@ -871,7 +911,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
       val targets = sta.run(x)
       val fs = NewFunctionSplitting(split_cache)
       val sr = fs.run(x.defs, targets)
-      var y = x.copy(defs = x.defs ++ sr.all_defs)
+      var y = x.copy(defs = sr.overwrite(x.defs) ++ sr.all_defs)
       relink(y.main, y.defs)
       validate(y.main, y.defs)
       activeAnalyze(y)
@@ -959,10 +999,16 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
     override def iterate(x: GOProgram): Unit =
       x.defs.foreach { x => x.accept_iterator(this) }
     
+    private def sort_targets(fldctx: Map[Str, (Str, ClassInfo)], targets: Set[Str]) =
+      val cls = fldctx(targets.head)._2
+      cls.fields.filter(targets.contains(_))
+
     def run(x: GOProgram) =
       x.accept_iterator(this)
+      val clsctx = make_class_ctx(x.classes)
+      val fldctx = x.classes.flatMap { case ClassInfo(_, name, fields) => fields.map { fld => (fld, (name, clsctx(name))) } }.toMap
       name_map = ctx.map { (k, _) => k -> fresh.make(k + "$S").str }.toMap
-      ctx.map { (k, v) => k -> v.toMap }.toMap
+      ctx.map { (k, v) => k -> v.map{ (k, v) => (k, sort_targets(fldctx, v)) }.toMap }.toMap
 
   private enum ParamSubst:
     case ParamKeep
@@ -972,10 +1018,10 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
 
   private def fieldParamName(name: Str, field: Str) = Name(name + "_" + field)
 
-  private def fieldParamNames(targets: Map[Str, Set[Str]]) =
+  private def fieldParamNames(targets: Map[Str, Ls[Str]]) =
     targets.flatMap { (k, fields) => fields.map { x => fieldParamName(k, x) } }
 
-  private def paramSubstMap(params: Ls[Name], targets: Map[Str, Set[Str]]) =
+  private def paramSubstMap(params: Ls[Name], targets: Map[Str, Ls[Str]]) =
     params.flatMap { 
       case x if targets.contains(x.str) => None
       case x => Some(x.str -> ParamKeep)
@@ -984,7 +1030,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
     }.toMap
 
 
-  private def newParams(params: Ls[Name], targets: Map[Str, Set[Str]]) =
+  private def newParams(params: Ls[Name], targets: Map[Str, Ls[Str]]) =
       params.filter(x => !targets.contains(x.str)) ++ fieldParamNames(targets)
   
   private class SelectionReplacement(target_params: Set[Str]):
@@ -1003,7 +1049,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         LetCall(names, defn, args, f(body)).copy_tag(node)
     
 
-  private class ScalarReplacementDefinitionBuilder(name_map: Map[Str, Str], defn_param_map: Map[Str, Map[Str, Set[Str]]]) extends GOIterator:
+  private class ScalarReplacementDefinitionBuilder(name_map: Map[Str, Str], defn_param_map: Map[Str, Map[Str, Ls[Str]]]) extends GOIterator:
     var sr_defs = MutHSet[GODef]()
     override def iterate(x: GODef) =
       if (name_map.contains(x.name))
@@ -1020,7 +1066,7 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
         )
         sr_defs.add(new_def)
 
-  private class ScalarReplacementCallSiteReplacement(defn_map: Map[Str, Str], defn_param_map: Map[Str, Map[Str, Set[Str]]]):
+  private class ScalarReplacementCallSiteReplacement(defn_map: Map[Str, Str], defn_param_map: Map[Str, Map[Str, Ls[Str]]]):
     var fldctx = Map.empty[Str, (Str, ClassInfo)]
 
     private def susbtCallsite(defn: GODef, as: Ls[TrivialExpr], f: (Str, Ls[TrivialExpr]) => GONode) =
@@ -1324,7 +1370,10 @@ class GraphOptimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: F
             xs.zip(ys).foldRight(init) {
               case ((name, retval), node) =>
                 LetExpr(name, param_to_arg(retval, parammap).to_expr, node).attach_tag(tag)
-            }
+            }         
+          case Jump(defnref, as2) =>
+            val node = let_list_to_node(defn.params.zip(as), Jump(defnref, as2).attach_tag(tag))
+            node
           case le @ LetExpr(y, e1, Result(Ref(z) :: Nil)) if y == z =>
             val (let_list, kernel) = subst_let_expr(le, parammap)
             let_list.foldLeft(

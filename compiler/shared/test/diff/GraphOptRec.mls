@@ -322,19 +322,16 @@ main()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
-//│ Def(2, foo, [x%4], [{<EDestruct@foo:#30-if x%4 ...>,<EDirect@foo:#30-if x%4 ...>}],
+//│ Def(2, foo, [x%4], [{<EDestruct@foo:#54-if x%4 ...>,<EDirect@foo:#53-jump foo$D%1 ...>,<EDirect@foo:#54-if x%4 ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(True))]],
 //│ R: [Some(IMix(ICtor(A),ICtor(B)))],
-//│ Rec: Some(2),
+//│ Rec: Some(1),
 //│ 1, 
-//│ if x%4 -- #30
-//│   true => let x%6 = A() -- #13
+//│ if x%4 -- #54
+//│   true => let x%6 = A() -- #67
 //│     in x%6 -- #44
-//│   false => let x%3 = True() -- #64
-//│     in let* (x%8) = foo(x%3) -- #28
-//│       in let x%9 = B(x%8) -- #27
-//│         in x%9 -- #45
+//│   false => jump foo$D%1(x%4) -- #53
 //│ )
 //│ Def(4, main, [], [],
 //│ S: None,
@@ -343,16 +340,16 @@ main()
 //│ Rec: None,
 //│ 1, 
 //│ let x%10 = False() -- #37
-//│   in let* (x%17) = foo$D%1(x%10) -- #55
-//│     in x%17 -- #70
+//│   in let* (x%11) = foo$D%1(x%10) -- #58
+//│     in x%11 -- #35
 //│ )
 //│ Def(10, foo$D%1, [x%4], [{}],
 //│ S: None,
 //│ I: [[Some(ICtor(False))]],
 //│ R: [Some(ICtor(B))],
-//│ Rec: None,
+//│ Rec: Some(1),
 //│ 1, 
-//│ let x%3 = True() -- #60
+//│ let x%3 = True() -- #65
 //│   in let* (x%8) = foo(x%3) -- #28
 //│     in let x%9 = B(x%8) -- #27
 //│       in x%9 -- #45
@@ -374,8 +371,8 @@ main()
 //│ Rec: None,
 //│ 1, 
 //│ let x%10 = False() -- #37
-//│   in let* (x%17) = foo$D%1(x%10) -- #55
-//│     in x%17 -- #70
+//│   in let* (x%11) = foo$D%1(x%10) -- #58
+//│     in x%11 -- #35
 //│ )
 //│ Def(10, foo$D%1, [x%4], [{}],
 //│ S: None,
@@ -383,7 +380,7 @@ main()
 //│ R: [Some(ICtor(B))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%6 = A() -- #81
+//│ let x%6 = A() -- #79
 //│   in let x%9 = B(x%6) -- #27
 //│     in x%9 -- #45
 //│ )
@@ -625,19 +622,16 @@ main()
 //│     in let x%9 = +(x%8,4) -- #26
 //│       in x%9 -- #25
 //│ )
-//│ Def(4, foo, [x%14], [{<EDestruct@foo:#59-if x%14 ...>,<EDirect@foo:#59-if x%14 ...>}],
+//│ Def(4, foo, [x%14], [{<EDestruct@foo:#96-if x%14 ...>,<EDirect@foo:#95-jump foo$D%1 ...>,<EDirect@foo:#96-if x%14 ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(True))]],
 //│ R: [Some(IMix(ICtor(A),ICtor(B)))],
-//│ Rec: Some(4),
+//│ Rec: Some(3),
 //│ 1, 
-//│ if x%14 -- #59
-//│   true => let x%16 = A() -- #42
+//│ if x%14 -- #96
+//│   true => let x%16 = A() -- #122
 //│     in x%16 -- #91
-//│   false => let x%13 = True() -- #115
-//│     in let* (x%18) = foo(x%13) -- #57
-//│       in let x%19 = B(x%18) -- #56
-//│         in x%19 -- #92
+//│   false => jump foo$D%1(x%14) -- #95
 //│ )
 //│ Def(6, main, [], [],
 //│ S: None,
@@ -646,16 +640,16 @@ main()
 //│ Rec: None,
 //│ 1, 
 //│ let x%20 = False() -- #82
-//│   in let* (x%30) = foo$D%1(x%20) -- #100
-//│     in jump main$M%0(x%30) -- #99
+//│   in let* (x%32) = foo$D%1(x%20) -- #108
+//│     in jump main$M%0(x%32) -- #107
 //│ )
 //│ Def(10, foo$D%1, [x%14], [{}],
 //│ S: None,
 //│ I: [[Some(ICtor(False))]],
 //│ R: [Some(ICtor(B))],
-//│ Rec: None,
+//│ Rec: Some(3),
 //│ 1, 
-//│ let x%13 = True() -- #107
+//│ let x%13 = True() -- #113
 //│   in let* (x%18) = foo(x%13) -- #57
 //│     in let x%19 = B(x%18) -- #56
 //│       in x%19 -- #92
@@ -710,8 +704,8 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%25) = bbb() -- #136
-//│   in x%25 -- #135
+//│ let* (x%25) = bbb() -- #148
+//│   in x%25 -- #147
 //│ )
 //│ },
 //│ let* (x%26) = main() -- #86
@@ -861,18 +855,18 @@ foo()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x%0], [{<EDestruct@odd:#15-case x%0 of ...>,<EDirect@odd:#15-case x%0 of ...>,<ESelect(s)@odd:#14-let x%3 = ...>}],
+//│ Def(0, odd, [x%0], [{<EDestruct@odd:#62-case x%0 of ...>,<EDirect@odd:#62-case x%0 of ...>,<ESelect(s)@odd:#69-let x%18 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: Some(1),
 //│ 1, 
-//│ case x%0 of -- #15
-//│   O => let x%2 = False() -- #4
+//│ case x%0 of -- #62
+//│   O => let x%2 = False() -- #66
 //│     in x%2 -- #55
-//│   S => let x%3 = x%0.s -- #14
-//│     in let* (x%4) = even(x%3) -- #13
-//│       in x%4 -- #56
+//│   S => let x%18 = x%0.s -- #69
+//│     in let* (x%4) = even(x%18) -- #72
+//│       in x%4 -- #71
 //│ )
 //│ Def(2, even, [x%5], [{<EDestruct@even:#31-case x%5 of ...>,<EDirect@even:#31-case x%5 of ...>,<ESelect(s)@even:#30-let x%8 = ...>}],
 //│ S: None,
@@ -896,7 +890,7 @@ foo()
 //│ let x%10 = O() -- #50
 //│   in let x%11 = S(x%10) -- #49
 //│     in let x%12 = S(x%11) -- #48
-//│       in let* (x%14) = even(x%12) -- #64
+//│       in let* (x%14) = even(x%12) -- #74
 //│         in x%14 -- #45
 //│ )
 //│ },
@@ -909,31 +903,31 @@ foo()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x%0], [{<EDestruct@odd:#15-case x%0 of ...>,<EDirect@odd:#15-case x%0 of ...>,<ESelect(s)@odd:#14-let x%3 = ...>}],
+//│ Def(0, odd, [x%0], [{<EDestruct@odd:#62-case x%0 of ...>,<EDirect@odd:#62-case x%0 of ...>,<ESelect(s)@odd:#69-let x%18 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(S))]],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: Some(1),
 //│ 1, 
-//│ case x%0 of -- #15
-//│   O => let x%2 = False() -- #4
+//│ case x%0 of -- #62
+//│   O => let x%2 = False() -- #66
 //│     in x%2 -- #55
-//│   S => let x%3 = x%0.s -- #14
-//│     in let* (x%4) = even(x%3) -- #13
-//│       in x%4 -- #56
+//│   S => let x%18 = x%0.s -- #69
+//│     in let* (x%4) = even(x%18) -- #72
+//│       in x%4 -- #71
 //│ )
-//│ Def(2, even, [x%5], [{<EDestruct@even:#31-case x%5 of ...>,<EDirect@even:#31-case x%5 of ...>,<ESelect(s)@even:#30-let x%8 = ...>}],
+//│ Def(2, even, [x%5], [{<EDestruct@even:#79-case x%5 of ...>,<EDirect@even:#79-case x%5 of ...>,<ESelect(s)@even:#86-let x%22 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: Some(1),
 //│ 1, 
-//│ case x%5 of -- #31
-//│   O => let x%7 = True() -- #20
+//│ case x%5 of -- #79
+//│   O => let x%7 = True() -- #83
 //│     in x%7 -- #57
-//│   S => let x%8 = x%5.s -- #30
-//│     in let* (x%9) = odd(x%8) -- #29
-//│       in x%9 -- #58
+//│   S => let x%22 = x%5.s -- #86
+//│     in let* (x%9) = odd(x%22) -- #89
+//│       in x%9 -- #88
 //│ )
 //│ Def(4, foo, [], [],
 //│ S: None,
@@ -943,7 +937,7 @@ foo()
 //│ 1, 
 //│ let x%10 = O() -- #50
 //│   in let x%11 = S(x%10) -- #49
-//│     in let* (x%14) = odd(x%11) -- #71
+//│     in let* (x%14) = odd(x%11) -- #91
 //│       in x%14 -- #45
 //│ )
 //│ },
@@ -956,31 +950,31 @@ foo()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x%0], [{<EDestruct@odd:#15-case x%0 of ...>,<EDirect@odd:#15-case x%0 of ...>,<ESelect(s)@odd:#14-let x%3 = ...>}],
+//│ Def(0, odd, [x%0], [{<EDestruct@odd:#96-case x%0 of ...>,<EDirect@odd:#96-case x%0 of ...>,<ESelect(s)@odd:#103-let x%26 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: Some(1),
 //│ 1, 
-//│ case x%0 of -- #15
-//│   O => let x%2 = False() -- #4
+//│ case x%0 of -- #96
+//│   O => let x%2 = False() -- #100
 //│     in x%2 -- #55
-//│   S => let x%3 = x%0.s -- #14
-//│     in let* (x%4) = even(x%3) -- #13
-//│       in x%4 -- #56
+//│   S => let x%26 = x%0.s -- #103
+//│     in let* (x%4) = even(x%26) -- #106
+//│       in x%4 -- #105
 //│ )
-//│ Def(2, even, [x%5], [{<EDestruct@even:#31-case x%5 of ...>,<EDirect@even:#31-case x%5 of ...>,<ESelect(s)@even:#30-let x%8 = ...>}],
+//│ Def(2, even, [x%5], [{<EDestruct@even:#79-case x%5 of ...>,<EDirect@even:#79-case x%5 of ...>,<ESelect(s)@even:#86-let x%22 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(O))]],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: Some(1),
 //│ 1, 
-//│ case x%5 of -- #31
-//│   O => let x%7 = True() -- #20
+//│ case x%5 of -- #79
+//│   O => let x%7 = True() -- #83
 //│     in x%7 -- #57
-//│   S => let x%8 = x%5.s -- #30
-//│     in let* (x%9) = odd(x%8) -- #29
-//│       in x%9 -- #58
+//│   S => let x%22 = x%5.s -- #86
+//│     in let* (x%9) = odd(x%22) -- #89
+//│       in x%9 -- #88
 //│ )
 //│ Def(4, foo, [], [],
 //│ S: None,
@@ -989,7 +983,7 @@ foo()
 //│ Rec: None,
 //│ 1, 
 //│ let x%10 = O() -- #50
-//│   in let* (x%14) = even(x%10) -- #78
+//│   in let* (x%14) = even(x%10) -- #108
 //│     in x%14 -- #45
 //│ )
 //│ },
@@ -1008,7 +1002,7 @@ foo()
 //│ R: [Some(ICtor(True))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%7 = True() -- #85
+//│ let x%7 = True() -- #121
 //│   in x%7 -- #45
 //│ )
 //│ },
@@ -1195,7 +1189,7 @@ foo()
 //│ S: None,
 //│ I: [[Some(ICtor(O))],[Some(ICtor(S))]],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: Some(3),
+//│ Rec: Some(2),
 //│ 1, 
 //│ case x%0 of -- #15
 //│   O => let x%2 = False() -- #4
@@ -1208,7 +1202,7 @@ foo()
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: Some(3),
+//│ Rec: Some(2),
 //│ 1, 
 //│ case x%5 of -- #31
 //│   O => let x%7 = True() -- #20
@@ -1217,19 +1211,16 @@ foo()
 //│     in let* (x%9) = odd(x%8) -- #29
 //│       in x%9 -- #73
 //│ )
-//│ Def(4, mk, [n%0], [{<EDirect@mk:#49-let x%12 = ...>,<EDirect@mk:#54-let x%10 = ...>}],
+//│ Def(4, mk, [n%0], [{<EDirect@mk:#80-let* (x%19,x%20) = mk$P%0 ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(O),ICtor(S)))],
-//│ Rec: Some(2),
+//│ Rec: Some(1),
 //│ 1, 
-//│ let x%10 = >(n%0,0) -- #54
-//│   in if x%10 -- #53
-//│     true => let x%12 = -(n%0,1) -- #49
-//│       in let* (x%13) = mk(x%12) -- #48
-//│         in let x%14 = S(x%13) -- #47
-//│           in x%14 -- #74
-//│     false => let x%15 = O() -- #52
+//│ let* (x%19,x%20) = mk$P%0(n%0) -- #80
+//│   in if x%20 -- #79
+//│     true => jump mk$D%0(x%19) -- #77
+//│     false => let x%15 = O() -- #96
 //│       in x%15 -- #75
 //│ )
 //│ Def(6, foo, [], [],
@@ -1238,14 +1229,14 @@ foo()
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%19,x%20) = mk$P%0(10) -- #82
-//│   in if x%20 -- #81
-//│     true => let* (x%21) = mk$D%0(x%19) -- #78
-//│       in let* (x%17) = odd(x%21) -- #84
-//│         in x%17 -- #83
-//│     false => let x%15 = O() -- #91
-//│       in let* (x%17) = odd(x%15) -- #88
+//│ let* (x%21,x%22) = mk$P%0(10) -- #86
+//│   in if x%22 -- #85
+//│     true => let* (x%23) = mk$D%0(x%21) -- #82
+//│       in let* (x%17) = odd(x%23) -- #88
 //│         in x%17 -- #87
+//│     false => let x%15 = O() -- #95
+//│       in let* (x%17) = odd(x%15) -- #92
+//│         in x%17 -- #91
 //│ )
 //│ Def(7, mk$P%0, [n%0], [{<EDirect@mk$P%0:#54-let x%10 = ...>,<EDirect@mk$P%0:#76-...>}],
 //│ S: None,
@@ -1260,7 +1251,7 @@ foo()
 //│ S: None,
 //│ I: [],
 //│ R: [Some(ICtor(S))],
-//│ Rec: None,
+//│ Rec: Some(1),
 //│ 1, 
 //│ let x%12 = -(n%0,1) -- #49
 //│   in let* (x%13) = mk(x%12) -- #48
@@ -1277,24 +1268,24 @@ foo()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x%0], [{<EDestruct@odd:#15-case x%0 of ...>,<EDirect@odd:#15-case x%0 of ...>,<ESelect(s)@odd:#14-let x%3 = ...>}],
+//│ Def(0, odd, [x%0], [{<EDestruct@odd:#100-case x%0 of ...>,<EDirect@odd:#100-case x%0 of ...>,<ESelect(s)@odd:#113-let x%28 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: Some(3),
+//│ Rec: Some(2),
 //│ 1, 
-//│ case x%0 of -- #15
-//│   O => let x%2 = False() -- #4
+//│ case x%0 of -- #100
+//│   O => let x%2 = False() -- #106
 //│     in x%2 -- #70
-//│   S => let x%3 = x%0.s -- #14
-//│     in let* (x%4) = even(x%3) -- #13
-//│       in x%4 -- #71
+//│   S => let x%28 = x%0.s -- #113
+//│     in let* (x%4) = even(x%28) -- #116
+//│       in x%4 -- #115
 //│ )
 //│ Def(2, even, [x%5], [{<EDestruct@even:#31-case x%5 of ...>,<EDirect@even:#31-case x%5 of ...>,<ESelect(s)@even:#30-let x%8 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: Some(3),
+//│ Rec: Some(2),
 //│ 1, 
 //│ case x%5 of -- #31
 //│   O => let x%7 = True() -- #20
@@ -1303,19 +1294,16 @@ foo()
 //│     in let* (x%9) = odd(x%8) -- #29
 //│       in x%9 -- #73
 //│ )
-//│ Def(4, mk, [n%0], [{<EDirect@mk:#49-let x%12 = ...>,<EDirect@mk:#54-let x%10 = ...>}],
+//│ Def(4, mk, [n%0], [{<EDirect@mk:#80-let* (x%19,x%20) = mk$P%0 ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(O),ICtor(S)))],
-//│ Rec: Some(2),
+//│ Rec: Some(1),
 //│ 1, 
-//│ let x%10 = >(n%0,0) -- #54
-//│   in if x%10 -- #53
-//│     true => let x%12 = -(n%0,1) -- #49
-//│       in let* (x%13) = mk(x%12) -- #48
-//│         in let x%14 = S(x%13) -- #47
-//│           in x%14 -- #74
-//│     false => let x%15 = O() -- #52
+//│ let* (x%19,x%20) = mk$P%0(n%0) -- #80
+//│   in if x%20 -- #79
+//│     true => jump mk$D%0(x%19) -- #77
+//│     false => let x%15 = O() -- #96
 //│       in x%15 -- #75
 //│ )
 //│ Def(6, foo, [], [],
@@ -1324,14 +1312,14 @@ foo()
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%19,x%20) = mk$P%0(10) -- #82
-//│   in if x%20 -- #81
-//│     true => let* (x%21) = mk$D%0(x%19) -- #78
-//│       in let x%25 = x%21.s -- #102
-//│         in let* (x%17) = even(x%25) -- #103
-//│           in x%17 -- #83
-//│     false => let x%2 = False() -- #100
-//│       in x%2 -- #87
+//│ let* (x%21,x%22) = mk$P%0(10) -- #86
+//│   in if x%22 -- #85
+//│     true => let* (x%23) = mk$D%0(x%21) -- #82
+//│       in let x%29 = x%23.s -- #114
+//│         in let* (x%17) = even(x%29) -- #118
+//│           in x%17 -- #87
+//│     false => let x%2 = False() -- #111
+//│       in x%2 -- #91
 //│ )
 //│ Def(7, mk$P%0, [n%0], [{<EDirect@mk$P%0:#54-let x%10 = ...>,<EDirect@mk$P%0:#76-...>}],
 //│ S: None,
@@ -1346,7 +1334,7 @@ foo()
 //│ S: None,
 //│ I: [],
 //│ R: [Some(ICtor(S))],
-//│ Rec: None,
+//│ Rec: Some(1),
 //│ 1, 
 //│ let x%12 = -(n%0,1) -- #49
 //│   in let* (x%13) = mk(x%12) -- #48
@@ -1537,18 +1525,18 @@ foo()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x%0], [{<EDestruct@odd:#15-case x%0 of ...>,<EDirect@odd:#15-case x%0 of ...>,<ESelect(s)@odd:#14-let x%3 = ...>}],
+//│ Def(0, odd, [x%0], [{<EDestruct@odd:#87-case x%0 of ...>,<EDirect@odd:#87-case x%0 of ...>,<ESelect(s)@odd:#94-let x%23 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: Some(2),
 //│ 1, 
-//│ case x%0 of -- #15
-//│   O => let x%2 = False() -- #4
+//│ case x%0 of -- #87
+//│   O => let x%2 = False() -- #91
 //│     in x%2 -- #78
-//│   S => let x%3 = x%0.s -- #14
-//│     in let* (x%4) = even(x%3) -- #13
-//│       in x%4 -- #79
+//│   S => let x%23 = x%0.s -- #94
+//│     in let* (x%4) = even(x%23) -- #97
+//│       in x%4 -- #96
 //│ )
 //│ Def(2, even, [x%5], [{<EDestruct@even:#31-case x%5 of ...>,<EDirect@even:#31-case x%5 of ...>,<ESelect(s)@even:#30-let x%8 = ...>}],
 //│ S: None,
@@ -1586,7 +1574,7 @@ foo()
 //│ 1, 
 //│ let* (x%16) = mk(10) -- #73
 //│   in let x%17 = S(x%16) -- #72
-//│     in let* (x%19) = even(x%17) -- #89
+//│     in let* (x%19) = even(x%17) -- #99
 //│       in x%19 -- #69
 //│ )
 //│ },
@@ -1599,31 +1587,31 @@ foo()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x%0], [{<EDestruct@odd:#15-case x%0 of ...>,<EDirect@odd:#15-case x%0 of ...>,<ESelect(s)@odd:#14-let x%3 = ...>}],
+//│ Def(0, odd, [x%0], [{<EDestruct@odd:#87-case x%0 of ...>,<EDirect@odd:#87-case x%0 of ...>,<ESelect(s)@odd:#94-let x%23 = ...>}],
 //│ S: None,
 //│ I: [[Some(IMix(ICtor(O),ICtor(S)))]],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: Some(2),
 //│ 1, 
-//│ case x%0 of -- #15
-//│   O => let x%2 = False() -- #4
+//│ case x%0 of -- #87
+//│   O => let x%2 = False() -- #91
 //│     in x%2 -- #78
-//│   S => let x%3 = x%0.s -- #14
-//│     in let* (x%4) = even(x%3) -- #13
-//│       in x%4 -- #79
+//│   S => let x%23 = x%0.s -- #94
+//│     in let* (x%4) = even(x%23) -- #97
+//│       in x%4 -- #96
 //│ )
-//│ Def(2, even, [x%5], [{<EDestruct@even:#31-case x%5 of ...>,<EDirect@even:#31-case x%5 of ...>,<ESelect(s)@even:#30-let x%8 = ...>}],
+//│ Def(2, even, [x%5], [{<EDestruct@even:#104-case x%5 of ...>,<EDirect@even:#104-case x%5 of ...>,<ESelect(s)@even:#112-let x%28 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: Some(2),
 //│ 1, 
-//│ case x%5 of -- #31
-//│   O => let x%7 = True() -- #20
+//│ case x%5 of -- #104
+//│   O => let x%7 = True() -- #109
 //│     in x%7 -- #80
-//│   S => let x%8 = x%5.s -- #30
-//│     in let* (x%9) = odd(x%8) -- #29
-//│       in x%9 -- #81
+//│   S => let x%28 = x%5.s -- #112
+//│     in let* (x%9) = odd(x%28) -- #116
+//│       in x%9 -- #115
 //│ )
 //│ Def(4, mk, [n%0], [{<EDirect@mk:#49-let x%12 = ...>,<EDirect@mk:#54-let x%10 = ...>}],
 //│ S: None,
@@ -1647,7 +1635,7 @@ foo()
 //│ Rec: None,
 //│ 1, 
 //│ let* (x%16) = mk(10) -- #73
-//│   in let* (x%19) = odd(x%16) -- #96
+//│   in let* (x%19) = odd(x%16) -- #113
 //│     in x%19 -- #69
 //│ )
 //│ },
@@ -1660,45 +1648,42 @@ foo()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x%0], [{<EDestruct@odd:#15-case x%0 of ...>,<EDirect@odd:#15-case x%0 of ...>,<ESelect(s)@odd:#14-let x%3 = ...>}],
+//│ Def(0, odd, [x%0], [{<EDestruct@odd:#87-case x%0 of ...>,<EDirect@odd:#87-case x%0 of ...>,<ESelect(s)@odd:#94-let x%23 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(O))],[Some(ICtor(S))]],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: Some(3),
+//│ Rec: Some(2),
 //│ 1, 
-//│ case x%0 of -- #15
-//│   O => let x%2 = False() -- #4
+//│ case x%0 of -- #87
+//│   O => let x%2 = False() -- #91
 //│     in x%2 -- #78
-//│   S => let x%3 = x%0.s -- #14
-//│     in let* (x%4) = even(x%3) -- #13
-//│       in x%4 -- #79
+//│   S => let x%23 = x%0.s -- #94
+//│     in let* (x%4) = even(x%23) -- #97
+//│       in x%4 -- #96
 //│ )
-//│ Def(2, even, [x%5], [{<EDestruct@even:#31-case x%5 of ...>,<EDirect@even:#31-case x%5 of ...>,<ESelect(s)@even:#30-let x%8 = ...>}],
+//│ Def(2, even, [x%5], [{<EDestruct@even:#104-case x%5 of ...>,<EDirect@even:#104-case x%5 of ...>,<ESelect(s)@even:#112-let x%28 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: Some(3),
+//│ Rec: Some(2),
 //│ 1, 
-//│ case x%5 of -- #31
-//│   O => let x%7 = True() -- #20
+//│ case x%5 of -- #104
+//│   O => let x%7 = True() -- #109
 //│     in x%7 -- #80
-//│   S => let x%8 = x%5.s -- #30
-//│     in let* (x%9) = odd(x%8) -- #29
-//│       in x%9 -- #81
+//│   S => let x%28 = x%5.s -- #112
+//│     in let* (x%9) = odd(x%28) -- #116
+//│       in x%9 -- #115
 //│ )
-//│ Def(4, mk, [n%0], [{<EDirect@mk:#49-let x%12 = ...>,<EDirect@mk:#54-let x%10 = ...>}],
+//│ Def(4, mk, [n%0], [{<EDirect@mk:#122-let* (x%29,x%30) = mk$P%0 ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(O),ICtor(S)))],
-//│ Rec: Some(2),
+//│ Rec: Some(1),
 //│ 1, 
-//│ let x%10 = >(n%0,0) -- #54
-//│   in if x%10 -- #53
-//│     true => let x%12 = -(n%0,1) -- #49
-//│       in let* (x%13) = mk(x%12) -- #48
-//│         in let x%14 = S(x%13) -- #47
-//│           in x%14 -- #82
-//│     false => let x%15 = O() -- #52
+//│ let* (x%29,x%30) = mk$P%0(n%0) -- #122
+//│   in if x%30 -- #121
+//│     true => jump mk$D%0(x%29) -- #119
+//│     false => let x%15 = O() -- #138
 //│       in x%15 -- #83
 //│ )
 //│ Def(6, foo, [], [],
@@ -1707,29 +1692,29 @@ foo()
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%25,x%26) = mk$P%0(10) -- #104
-//│   in if x%26 -- #103
-//│     true => let* (x%27) = mk$D%0(x%25) -- #100
-//│       in let* (x%19) = odd(x%27) -- #106
-//│         in x%19 -- #105
-//│     false => let x%15 = O() -- #113
-//│       in let* (x%19) = odd(x%15) -- #110
-//│         in x%19 -- #109
+//│ let* (x%31,x%32) = mk$P%0(10) -- #128
+//│   in if x%32 -- #127
+//│     true => let* (x%33) = mk$D%0(x%31) -- #124
+//│       in let* (x%19) = odd(x%33) -- #130
+//│         in x%19 -- #129
+//│     false => let x%15 = O() -- #137
+//│       in let* (x%19) = odd(x%15) -- #134
+//│         in x%19 -- #133
 //│ )
-//│ Def(15, mk$P%0, [n%0], [{<EDirect@mk$P%0:#54-let x%10 = ...>,<EDirect@mk$P%0:#98-...>}],
+//│ Def(15, mk$P%0, [n%0], [{<EDirect@mk$P%0:#118-...>,<EDirect@mk$P%0:#54-let x%10 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [None,None],
 //│ Rec: None,
 //│ 2, 
 //│ let x%10 = >(n%0,0) -- #54
-//│   in n%0,x%10 -- #98
+//│   in n%0,x%10 -- #118
 //│ )
 //│ Def(16, mk$D%0, [n%0], [{<EDirect@mk$D%0:#49-let x%12 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(ICtor(S))],
-//│ Rec: None,
+//│ Rec: Some(1),
 //│ 1, 
 //│ let x%12 = -(n%0,1) -- #49
 //│   in let* (x%13) = mk(x%12) -- #48
@@ -1746,45 +1731,42 @@ foo()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x%0], [{<EDestruct@odd:#15-case x%0 of ...>,<EDirect@odd:#15-case x%0 of ...>,<ESelect(s)@odd:#14-let x%3 = ...>}],
+//│ Def(0, odd, [x%0], [{<EDestruct@odd:#142-case x%0 of ...>,<EDirect@odd:#142-case x%0 of ...>,<ESelect(s)@odd:#155-let x%38 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: Some(3),
+//│ Rec: Some(2),
 //│ 1, 
-//│ case x%0 of -- #15
-//│   O => let x%2 = False() -- #4
+//│ case x%0 of -- #142
+//│   O => let x%2 = False() -- #148
 //│     in x%2 -- #78
-//│   S => let x%3 = x%0.s -- #14
-//│     in let* (x%4) = even(x%3) -- #13
-//│       in x%4 -- #79
+//│   S => let x%38 = x%0.s -- #155
+//│     in let* (x%4) = even(x%38) -- #158
+//│       in x%4 -- #157
 //│ )
-//│ Def(2, even, [x%5], [{<EDestruct@even:#31-case x%5 of ...>,<EDirect@even:#31-case x%5 of ...>,<ESelect(s)@even:#30-let x%8 = ...>}],
+//│ Def(2, even, [x%5], [{<EDestruct@even:#104-case x%5 of ...>,<EDirect@even:#104-case x%5 of ...>,<ESelect(s)@even:#112-let x%28 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
-//│ Rec: Some(3),
+//│ Rec: Some(2),
 //│ 1, 
-//│ case x%5 of -- #31
-//│   O => let x%7 = True() -- #20
+//│ case x%5 of -- #104
+//│   O => let x%7 = True() -- #109
 //│     in x%7 -- #80
-//│   S => let x%8 = x%5.s -- #30
-//│     in let* (x%9) = odd(x%8) -- #29
-//│       in x%9 -- #81
+//│   S => let x%28 = x%5.s -- #112
+//│     in let* (x%9) = odd(x%28) -- #116
+//│       in x%9 -- #115
 //│ )
-//│ Def(4, mk, [n%0], [{<EDirect@mk:#49-let x%12 = ...>,<EDirect@mk:#54-let x%10 = ...>}],
+//│ Def(4, mk, [n%0], [{<EDirect@mk:#122-let* (x%29,x%30) = mk$P%0 ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(O),ICtor(S)))],
-//│ Rec: Some(2),
+//│ Rec: Some(1),
 //│ 1, 
-//│ let x%10 = >(n%0,0) -- #54
-//│   in if x%10 -- #53
-//│     true => let x%12 = -(n%0,1) -- #49
-//│       in let* (x%13) = mk(x%12) -- #48
-//│         in let x%14 = S(x%13) -- #47
-//│           in x%14 -- #82
-//│     false => let x%15 = O() -- #52
+//│ let* (x%29,x%30) = mk$P%0(n%0) -- #122
+//│   in if x%30 -- #121
+//│     true => jump mk$D%0(x%29) -- #119
+//│     false => let x%15 = O() -- #138
 //│       in x%15 -- #83
 //│ )
 //│ Def(6, foo, [], [],
@@ -1793,29 +1775,29 @@ foo()
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%25,x%26) = mk$P%0(10) -- #104
-//│   in if x%26 -- #103
-//│     true => let* (x%27) = mk$D%0(x%25) -- #100
-//│       in let x%31 = x%27.s -- #124
-//│         in let* (x%19) = even(x%31) -- #125
-//│           in x%19 -- #105
-//│     false => let x%2 = False() -- #122
-//│       in x%2 -- #109
+//│ let* (x%31,x%32) = mk$P%0(10) -- #128
+//│   in if x%32 -- #127
+//│     true => let* (x%33) = mk$D%0(x%31) -- #124
+//│       in let x%39 = x%33.s -- #156
+//│         in let* (x%19) = even(x%39) -- #160
+//│           in x%19 -- #129
+//│     false => let x%2 = False() -- #153
+//│       in x%2 -- #133
 //│ )
-//│ Def(15, mk$P%0, [n%0], [{<EDirect@mk$P%0:#54-let x%10 = ...>,<EDirect@mk$P%0:#98-...>}],
+//│ Def(15, mk$P%0, [n%0], [{<EDirect@mk$P%0:#118-...>,<EDirect@mk$P%0:#54-let x%10 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [None,None],
 //│ Rec: None,
 //│ 2, 
 //│ let x%10 = >(n%0,0) -- #54
-//│   in n%0,x%10 -- #98
+//│   in n%0,x%10 -- #118
 //│ )
 //│ Def(16, mk$D%0, [n%0], [{<EDirect@mk$D%0:#49-let x%12 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(ICtor(S))],
-//│ Rec: None,
+//│ Rec: Some(1),
 //│ 1, 
 //│ let x%12 = -(n%0,1) -- #49
 //│   in let* (x%13) = mk(x%12) -- #48
@@ -2029,18 +2011,18 @@ main()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x%0], [{<EDestruct@odd:#15-case x%0 of ...>,<EDirect@odd:#15-case x%0 of ...>,<ESelect(s)@odd:#14-let x%3 = ...>}],
+//│ Def(0, odd, [x%0], [{<EDestruct@odd:#106-case x%0 of ...>,<EDirect@odd:#106-case x%0 of ...>,<ESelect(s)@odd:#119-let x%29 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: Some(2),
 //│ 1, 
-//│ case x%0 of -- #15
-//│   O => let x%2 = False() -- #4
+//│ case x%0 of -- #106
+//│   O => let x%2 = False() -- #112
 //│     in x%2 -- #91
-//│   S => let x%3 = x%0.s -- #14
-//│     in let* (x%4) = even(x%3) -- #13
-//│       in x%4 -- #92
+//│   S => let x%29 = x%0.s -- #119
+//│     in let* (x%4) = even(x%29) -- #122
+//│       in x%4 -- #121
 //│ )
 //│ Def(2, even, [x%5], [{<EDestruct@even:#31-case x%5 of ...>,<EDirect@even:#31-case x%5 of ...>,<ESelect(s)@even:#30-let x%8 = ...>}],
 //│ S: None,
@@ -2064,9 +2046,9 @@ main()
 //│ let x%16 = >(10,0) -- #78
 //│   in if x%16 -- #77
 //│     true => let x%18 = O() -- #68
-//│       in let* (x%20) = even(x%18) -- #114
+//│       in let* (x%20) = even(x%18) -- #124
 //│         in x%20 -- #93
-//│     false => let x%2 = False() -- #111
+//│     false => let x%2 = False() -- #117
 //│       in x%2 -- #94
 //│ )
 //│ Def(8, main, [], [],
@@ -2096,9 +2078,9 @@ main()
 //│ 1, 
 //│ let x%16 = >(10,0) -- #78
 //│   in if x%16 -- #77
-//│     true => let x%7 = True() -- #121
+//│     true => let x%7 = True() -- #135
 //│       in x%7 -- #93
-//│     false => let x%2 = False() -- #111
+//│     false => let x%2 = False() -- #117
 //│       in x%2 -- #94
 //│ )
 //│ Def(8, main, [], [],
@@ -2347,39 +2329,36 @@ main(False)
 //│     in let x%9 = +(x%8,4) -- #26
 //│       in x%9 -- #25
 //│ )
-//│ Def(4, foo, [x%14], [{<EDestruct@foo:#59-if x%14 ...>,<EDirect@foo:#59-if x%14 ...>}],
+//│ Def(4, foo, [x%14], [{<EDestruct@foo:#98-if x%14 ...>,<EDirect@foo:#97-jump foo$D%1 ...>,<EDirect@foo:#98-if x%14 ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(True))]],
 //│ R: [Some(IMix(ICtor(A),ICtor(B)))],
-//│ Rec: Some(4),
+//│ Rec: Some(3),
 //│ 1, 
-//│ if x%14 -- #59
-//│   true => let x%16 = A() -- #42
+//│ if x%14 -- #98
+//│   true => let x%16 = A() -- #124
 //│     in x%16 -- #93
-//│   false => let x%13 = True() -- #117
-//│     in let* (x%18) = foo(x%13) -- #57
-//│       in let x%19 = B(x%18) -- #56
-//│         in x%19 -- #94
+//│   false => jump foo$D%1(x%14) -- #97
 //│ )
-//│ Def(6, main, [flag%0], [{<EDestruct@main:#103-if flag%0 ...>,<EDirect@main:#102-let* (x%30) = foo$D%1 ...>,<EDirect@main:#103-if flag%0 ...>}],
+//│ Def(6, main, [flag%0], [{<EDestruct@main:#111-if flag%0 ...>,<EDirect@main:#110-let* (x%32) = foo$D%1 ...>,<EDirect@main:#111-if flag%0 ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if flag%0 -- #103
-//│   true => let x%16 = A() -- #113
-//│     in jump main$M%0(x%16) -- #99
-//│   false => let* (x%30) = foo$D%1(flag%0) -- #102
-//│     in jump main$M%0(x%30) -- #101
+//│ if flag%0 -- #111
+//│   true => let x%16 = A() -- #119
+//│     in jump main$M%0(x%16) -- #107
+//│   false => let* (x%32) = foo$D%1(flag%0) -- #110
+//│     in jump main$M%0(x%32) -- #109
 //│ )
 //│ Def(10, foo$D%1, [x%14], [{}],
 //│ S: None,
 //│ I: [[Some(ICtor(False))]],
 //│ R: [Some(ICtor(B))],
-//│ Rec: None,
+//│ Rec: Some(3),
 //│ 1, 
-//│ let x%13 = True() -- #109
+//│ let x%13 = True() -- #115
 //│   in let* (x%18) = foo(x%13) -- #57
 //│     in let x%19 = B(x%18) -- #56
 //│       in x%19 -- #94
@@ -2429,17 +2408,17 @@ main(False)
 //│     in let x%9 = +(x%8,4) -- #26
 //│       in x%9 -- #25
 //│ )
-//│ Def(6, main, [flag%0], [{<EDestruct@main:#103-if flag%0 ...>,<EDirect@main:#103-if flag%0 ...>}],
+//│ Def(6, main, [flag%0], [{<EDestruct@main:#111-if flag%0 ...>,<EDirect@main:#111-if flag%0 ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if flag%0 -- #103
-//│   true => let* (x%22) = aaa() -- #140
-//│     in x%22 -- #139
-//│   false => let* (x%24) = bbb() -- #143
-//│     in x%24 -- #142
+//│ if flag%0 -- #111
+//│   true => let* (x%22) = aaa() -- #152
+//│     in x%22 -- #151
+//│   false => let* (x%24) = bbb() -- #155
+//│     in x%24 -- #154
 //│ )
 //│ },
 //│ let x%25 = False() -- #88
@@ -2613,17 +2592,17 @@ main()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(0, head_opt, [l%0], [{<EDestruct@head_opt:#17-case l%0 of ...>,<EDirect@head_opt:#17-case l%0 of ...>,<ESelect(h)@head_opt:#15-let x%3 = ...>}],
+//│ Def(0, head_opt, [l%0], [{<EDestruct@head_opt:#71-case l%0 of ...>,<EDirect@head_opt:#71-case l%0 of ...>,<ESelect(h)@head_opt:#91-let x%21 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(Cons))]],
 //│ R: [Some(IMix(ICtor(None),ICtor(Some)))],
 //│ Rec: None,
 //│ 1, 
-//│ case l%0 of -- #17
-//│   Nil => let x%1 = None() -- #4
+//│ case l%0 of -- #71
+//│   Nil => let x%1 = None() -- #80
 //│     in x%1 -- #64
-//│   Cons => let x%3 = l%0.h -- #15
-//│     in let x%4 = Some(x%3) -- #14
+//│   Cons => let x%21 = l%0.h -- #91
+//│     in let x%4 = Some(x%21) -- #92
 //│       in x%4 -- #65
 //│ )
 //│ Def(2, is_none, [o%0], [{<EDestruct@is_none:#29-case o%0 of ...>,<EDirect@is_none:#29-case o%0 of ...>}],
@@ -2647,8 +2626,8 @@ main()
 //│ let x%11 = Nil() -- #59
 //│   in let x%12 = Cons(2,x%11) -- #58
 //│     in let x%13 = Cons(1,x%12) -- #57
-//│       in let* (x%17) = head_opt(x%13) -- #71
-//│         in let* (x%14) = is_none(x%17) -- #75
+//│       in let* (x%20) = head_opt(x%13) -- #78
+//│         in let* (x%14) = is_none(x%20) -- #82
 //│           in x%14 -- #55
 //│ )
 //│ },
@@ -2679,8 +2658,8 @@ main()
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%4 = Some(1) -- #87
-//│   in let* (x%14) = is_none(x%4) -- #75
+//│ let x%4 = Some(1) -- #106
+//│   in let* (x%14) = is_none(x%4) -- #82
 //│     in x%14 -- #55
 //│ )
 //│ },
@@ -2699,7 +2678,7 @@ main()
 //│ R: [Some(ICtor(False))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%8 = False() -- #94
+//│ let x%8 = False() -- #117
 //│   in x%8 -- #55
 //│ )
 //│ },
@@ -2908,20 +2887,17 @@ main()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(0, mk_list, [n%0], [{<EDirect@mk_list:#22-let x%3 = ...>,<EDirect@mk_list:#24-let x%0 = ...>}],
+//│ Def(0, mk_list, [n%0], [{<EDirect@mk_list:#91-let* (x%20,x%21) = mk_list$P%0 ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(Cons),ICtor(Nil)))],
-//│ Rec: Some(4),
+//│ Rec: Some(3),
 //│ 1, 
-//│ let x%0 = ==(n%0,0) -- #24
-//│   in if x%0 -- #23
-//│     true => let x%2 = Nil() -- #6
+//│ let* (x%20,x%21) = mk_list$P%0(n%0) -- #91
+//│   in if x%21 -- #90
+//│     true => let x%2 = Nil() -- #109
 //│       in x%2 -- #81
-//│     false => let x%3 = -(n%0,1) -- #22
-//│       in let* (x%4) = mk_list(x%3) -- #21
-//│         in let x%5 = Cons(n%0,x%4) -- #20
-//│           in x%5 -- #82
+//│     false => jump mk_list$D%1(x%20) -- #89
 //│ )
 //│ Def(4, is_none, [o%0], [{<EDestruct@is_none:#54-case o%0 of ...>,<EDirect@is_none:#54-case o%0 of ...>}],
 //│ S: None,
@@ -2935,20 +2911,20 @@ main()
 //│   Some => let x%14 = False() -- #52
 //│     in x%14 -- #86
 //│ )
-//│ Def(6, is_empty, [l%1], [{<EDestruct@is_empty:#93-case l%1 of ...>,<EDirect@is_empty:#93-case l%1 of ...>,<ESelect(h)@is_empty:#120-let x%27 = ...>}],
+//│ Def(6, is_empty, [l%1], [{<EDestruct@is_empty:#101-case l%1 of ...>,<EDirect@is_empty:#101-case l%1 of ...>,<ESelect(h)@is_empty:#131-let x%30 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(Nil))],[Some(ICtor(Cons))]],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ case l%1 of -- #93
-//│   Cons => let x%27 = l%1.h -- #120
-//│     in let x%10 = Some(x%27) -- #123
-//│       in let* (x%16) = is_none(x%10) -- #102
-//│         in x%16 -- #101
-//│   Nil => let x%7 = None() -- #109
-//│     in let* (x%16) = is_none(x%7) -- #106
-//│       in x%16 -- #105
+//│ case l%1 of -- #101
+//│   Cons => let x%30 = l%1.h -- #131
+//│     in let x%10 = Some(x%30) -- #134
+//│       in let* (x%16) = is_none(x%10) -- #111
+//│         in x%16 -- #110
+//│   Nil => let x%7 = None() -- #118
+//│     in let* (x%16) = is_none(x%7) -- #115
+//│       in x%16 -- #114
 //│ )
 //│ Def(7, main, [], [],
 //│ S: None,
@@ -2956,14 +2932,14 @@ main()
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%23,x%24) = mk_list$P%0(10) -- #100
-//│   in if x%24 -- #99
-//│     true => let x%2 = Nil() -- #116
-//│       in let* (x%18) = is_empty(x%2) -- #113
-//│         in x%18 -- #112
-//│     false => let* (x%26) = mk_list$D%1(x%23) -- #98
-//│       in let* (x%18) = is_empty(x%26) -- #118
-//│         in x%18 -- #117
+//│ let* (x%26,x%27) = mk_list$P%0(10) -- #108
+//│   in if x%27 -- #107
+//│     true => let x%2 = Nil() -- #127
+//│       in let* (x%18) = is_empty(x%2) -- #124
+//│         in x%18 -- #123
+//│     false => let* (x%29) = mk_list$D%1(x%26) -- #106
+//│       in let* (x%18) = is_empty(x%29) -- #129
+//│         in x%18 -- #128
 //│ )
 //│ Def(8, mk_list$P%0, [n%0], [{<EDirect@mk_list$P%0:#24-let x%0 = ...>,<EDirect@mk_list$P%0:#87-...>}],
 //│ S: None,
@@ -2978,7 +2954,7 @@ main()
 //│ S: None,
 //│ I: [],
 //│ R: [Some(ICtor(Cons))],
-//│ Rec: None,
+//│ Rec: Some(3),
 //│ 1, 
 //│ let x%3 = -(n%0,1) -- #22
 //│   in let* (x%4) = mk_list(x%3) -- #21
@@ -3001,12 +2977,12 @@ main()
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%23,x%24) = mk_list$P%0(10) -- #100
-//│   in if x%24 -- #99
-//│     true => let x%12 = True() -- #158
-//│       in x%12 -- #112
-//│     false => let x%14 = False() -- #161
-//│       in x%14 -- #117
+//│ let* (x%26,x%27) = mk_list$P%0(10) -- #108
+//│   in if x%27 -- #107
+//│     true => let x%12 = True() -- #169
+//│       in x%12 -- #123
+//│     false => let x%14 = False() -- #172
+//│       in x%14 -- #128
 //│ )
 //│ Def(8, mk_list$P%0, [n%0], [{<EDirect@mk_list$P%0:#24-let x%0 = ...>,<EDirect@mk_list$P%0:#87-...>}],
 //│ S: None,
@@ -3184,39 +3160,30 @@ main()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(0, mk_list, [n%0], [{<EDirect@mk_list:#22-let x%3 = ...>,<EDirect@mk_list:#24-let x%0 = ...>}],
+//│ Def(0, mk_list, [n%0], [{<EDirect@mk_list:#89-let* (x%18,x%19) = mk_list$P%0 ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(Cons),ICtor(Nil)))],
-//│ Rec: Some(2),
+//│ Rec: Some(1),
 //│ 1, 
-//│ let x%0 = ==(n%0,0) -- #24
-//│   in if x%0 -- #23
-//│     true => let x%2 = Nil() -- #6
+//│ let* (x%18,x%19) = mk_list$P%0(n%0) -- #89
+//│   in if x%19 -- #88
+//│     true => let x%2 = Nil() -- #103
 //│       in x%2 -- #75
-//│     false => let x%3 = -(n%0,1) -- #22
-//│       in let* (x%4) = mk_list(x%3) -- #21
-//│         in let x%5 = Cons(n%0,x%4) -- #20
-//│           in x%5 -- #76
+//│     false => jump mk_list$D%1(x%18) -- #87
 //│ )
-//│ Def(2, last_opt, [l%0], [{<EDestruct@last_opt:#59-case l%0 of ...>,<EDirect@last_opt:#59-case l%0 of ...>,<ESelect(h)@last_opt:#57-let x%9 = ...>,<ESelect(t)@last_opt:#58-let x%8 = ...>}],
+//│ Def(2, last_opt, [l%0], [{<EDestruct@last_opt:#93-case l%0 of ...>,<EDirect@last_opt:#93-case l%0 of ...>,<ESelect(h)@last_opt:#119-let x%28 = ...>,<ESelect(t)@last_opt:#118-let x%29 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(Nil))],[Some(ICtor(Cons))]],
 //│ R: [Some(IMix(ICtor(None),ICtor(Some)))],
 //│ Rec: None,
 //│ 1, 
-//│ case l%0 of -- #59
-//│   Nil => let x%7 = None() -- #29
+//│ case l%0 of -- #93
+//│   Nil => let x%7 = None() -- #113
 //│     in x%7 -- #77
-//│   Cons => let x%8 = l%0.t -- #58
-//│     in let x%9 = l%0.h -- #57
-//│       in case x%8 of -- #56
-//│         Nil => let x%11 = Some(x%9) -- #42
-//│           in x%11 -- #83
-//│         Cons => let x%26 = x%8.h -- #111
-//│           in let x%27 = x%8.t -- #110
-//│             in let* (x%14) = last_opt$D%1$S%0(x%26,x%27) -- #93
-//│               in x%14 -- #84
+//│   Cons => let x%28 = l%0.h -- #119
+//│     in let x%29 = l%0.t -- #118
+//│       in jump last_opt$D%1$S%0(x%28,x%29) -- #92
 //│ )
 //│ Def(5, main, [], [],
 //│ S: None,
@@ -3224,14 +3191,14 @@ main()
 //│ R: [Some(IMix(ICtor(None),ICtor(Some)))],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%18,x%19) = mk_list$P%0(10) -- #92
-//│   in if x%19 -- #91
-//│     true => let x%2 = Nil() -- #102
-//│       in let* (x%16) = last_opt(x%2) -- #99
-//│         in x%16 -- #98
-//│     false => let* (x%21) = mk_list$D%1(x%18) -- #90
-//│       in let* (x%16) = last_opt(x%21) -- #104
-//│         in x%16 -- #103
+//│ let* (x%21,x%22) = mk_list$P%0(10) -- #100
+//│   in if x%22 -- #99
+//│     true => let x%2 = Nil() -- #109
+//│       in let* (x%16) = last_opt(x%2) -- #106
+//│         in x%16 -- #105
+//│     false => let* (x%24) = mk_list$D%1(x%21) -- #98
+//│       in let* (x%16) = last_opt(x%24) -- #111
+//│         in x%16 -- #110
 //│ )
 //│ Def(6, mk_list$P%0, [n%0], [{<EDirect@mk_list$P%0:#24-let x%0 = ...>,<EDirect@mk_list$P%0:#85-...>}],
 //│ S: None,
@@ -3246,25 +3213,25 @@ main()
 //│ S: None,
 //│ I: [],
 //│ R: [Some(ICtor(Cons))],
-//│ Rec: None,
+//│ Rec: Some(1),
 //│ 1, 
 //│ let x%3 = -(n%0,1) -- #22
 //│   in let* (x%4) = mk_list(x%3) -- #21
 //│     in let x%5 = Cons(n%0,x%4) -- #20
 //│       in x%5 -- #76
 //│ )
-//│ Def(13, last_opt$D%1$S%0, [l%0_h,l%0_t], [{<EDirect@last_opt$D%1$S%0:#42-let x%11 = ...>},{<EDestruct@last_opt$D%1$S%0:#56-case l%0_t of ...>,<EDirect@last_opt$D%1$S%0:#56-case l%0_t of ...>,<ESelect(h)@last_opt$D%1$S%0:#109-let x%24 = ...>,<ESelect(t)@last_opt$D%1$S%0:#108-let x%25 = ...>}],
+//│ Def(13, last_opt$D%1$S%0, [l%0_h,l%0_t], [{<EDirect@last_opt$D%1$S%0:#42-let x%11 = ...>},{<EDestruct@last_opt$D%1$S%0:#56-case l%0_t of ...>,<EDirect@last_opt$D%1$S%0:#56-case l%0_t of ...>,<ESelect(h)@last_opt$D%1$S%0:#117-let x%26 = ...>,<ESelect(t)@last_opt$D%1$S%0:#116-let x%27 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(Some)))],
-//│ Rec: Some(4),
+//│ Rec: Some(3),
 //│ 1, 
 //│ case l%0_t of -- #56
 //│   Nil => let x%11 = Some(l%0_h) -- #42
 //│     in x%11 -- #83
-//│   Cons => let x%24 = l%0_t.h -- #109
-//│     in let x%25 = l%0_t.t -- #108
-//│       in let* (x%14) = last_opt$D%1$S%0(x%24,x%25) -- #95
+//│   Cons => let x%26 = l%0_t.h -- #117
+//│     in let x%27 = l%0_t.t -- #116
+//│       in let* (x%14) = last_opt$D%1$S%0(x%26,x%27) -- #101
 //│         in x%14 -- #84
 //│ )
 //│ },
@@ -3277,20 +3244,17 @@ main()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(0, mk_list, [n%0], [{<EDirect@mk_list:#22-let x%3 = ...>,<EDirect@mk_list:#24-let x%0 = ...>}],
+//│ Def(0, mk_list, [n%0], [{<EDirect@mk_list:#89-let* (x%18,x%19) = mk_list$P%0 ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(Cons),ICtor(Nil)))],
-//│ Rec: Some(3),
+//│ Rec: Some(1),
 //│ 1, 
-//│ let x%0 = ==(n%0,0) -- #24
-//│   in if x%0 -- #23
-//│     true => let x%2 = Nil() -- #6
+//│ let* (x%18,x%19) = mk_list$P%0(n%0) -- #89
+//│   in if x%19 -- #88
+//│     true => let x%2 = Nil() -- #103
 //│       in x%2 -- #75
-//│     false => let x%3 = -(n%0,1) -- #22
-//│       in let* (x%4) = mk_list(x%3) -- #21
-//│         in let x%5 = Cons(n%0,x%4) -- #20
-//│           in x%5 -- #76
+//│     false => jump mk_list$D%1(x%18) -- #87
 //│ )
 //│ Def(5, main, [], [],
 //│ S: None,
@@ -3298,15 +3262,14 @@ main()
 //│ R: [Some(IMix(ICtor(None),ICtor(Some)))],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x%18,x%19) = mk_list$P%0(10) -- #92
-//│   in if x%19 -- #91
-//│     true => let x%7 = None() -- #121
-//│       in x%7 -- #98
-//│     false => let* (x%21) = mk_list$D%1(x%18) -- #90
-//│       in let x%32 = x%21.h -- #125
-//│         in let x%33 = x%21.t -- #124
-//│           in let* (x%16) = last_opt$D%3$S%0(x%32,x%33) -- #117
-//│             in x%16 -- #103
+//│ let* (x%21,x%22) = mk_list$P%0(10) -- #100
+//│   in if x%22 -- #99
+//│     true => let x%7 = None() -- #133
+//│       in x%7 -- #105
+//│     false => let* (x%24) = mk_list$D%1(x%21) -- #98
+//│       in let x%35 = x%24.h -- #139
+//│         in let x%36 = x%24.t -- #138
+//│           in jump last_opt$D%1$S%0(x%35,x%36) -- #140
 //│ )
 //│ Def(6, mk_list$P%0, [n%0], [{<EDirect@mk_list$P%0:#24-let x%0 = ...>,<EDirect@mk_list$P%0:#85-...>}],
 //│ S: None,
@@ -3321,39 +3284,25 @@ main()
 //│ S: None,
 //│ I: [],
 //│ R: [Some(ICtor(Cons))],
-//│ Rec: None,
+//│ Rec: Some(1),
 //│ 1, 
 //│ let x%3 = -(n%0,1) -- #22
 //│   in let* (x%4) = mk_list(x%3) -- #21
 //│     in let x%5 = Cons(n%0,x%4) -- #20
 //│       in x%5 -- #76
 //│ )
-//│ Def(13, last_opt$D%1$S%0, [l%0_h,l%0_t], [{<EDirect@last_opt$D%1$S%0:#42-let x%11 = ...>},{<EDestruct@last_opt$D%1$S%0:#56-case l%0_t of ...>,<EDirect@last_opt$D%1$S%0:#56-case l%0_t of ...>,<ESelect(h)@last_opt$D%1$S%0:#109-let x%24 = ...>,<ESelect(t)@last_opt$D%1$S%0:#108-let x%25 = ...>}],
+//│ Def(13, last_opt$D%1$S%0, [l%0_h,l%0_t], [{<EDirect@last_opt$D%1$S%0:#42-let x%11 = ...>},{<EDestruct@last_opt$D%1$S%0:#56-case l%0_t of ...>,<EDirect@last_opt$D%1$S%0:#56-case l%0_t of ...>,<ESelect(h)@last_opt$D%1$S%0:#117-let x%26 = ...>,<ESelect(t)@last_opt$D%1$S%0:#116-let x%27 = ...>}],
 //│ S: None,
 //│ I: [],
 //│ R: [Some(IMix(ICtor(Some)))],
-//│ Rec: Some(4),
+//│ Rec: Some(2),
 //│ 1, 
 //│ case l%0_t of -- #56
 //│   Nil => let x%11 = Some(l%0_h) -- #42
 //│     in x%11 -- #83
-//│   Cons => let x%24 = l%0_t.h -- #109
-//│     in let x%25 = l%0_t.t -- #108
-//│       in let* (x%14) = last_opt$D%1$S%0(x%24,x%25) -- #95
-//│         in x%14 -- #84
-//│ )
-//│ Def(17, last_opt$D%3$S%0, [l%0_h,l%0_t], [{<EDirect@last_opt$D%3$S%0:#42-let x%11 = ...>},{<EDestruct@last_opt$D%3$S%0:#56-case l%0_t of ...>,<EDirect@last_opt$D%3$S%0:#56-case l%0_t of ...>,<ESelect(h)@last_opt$D%3$S%0:#111-let x%26 = ...>,<ESelect(t)@last_opt$D%3$S%0:#110-let x%27 = ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [Some(IMix(ICtor(Some)))],
-//│ Rec: None,
-//│ 1, 
-//│ case l%0_t of -- #56
-//│   Nil => let x%11 = Some(l%0_h) -- #42
-//│     in x%11 -- #83
-//│   Cons => let x%26 = l%0_t.h -- #111
-//│     in let x%27 = l%0_t.t -- #110
-//│       in let* (x%14) = last_opt$D%1$S%0(x%26,x%27) -- #93
+//│   Cons => let x%26 = l%0_t.h -- #117
+//│     in let x%27 = l%0_t.t -- #116
+//│       in let* (x%14) = last_opt$D%1$S%0(x%26,x%27) -- #101
 //│         in x%14 -- #84
 //│ )
 //│ },
