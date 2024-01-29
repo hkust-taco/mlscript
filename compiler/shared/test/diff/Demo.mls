@@ -1434,9 +1434,22 @@ main()
 //│ 
 //│ Optimized ------------------------------
 //│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Def(2, head, [l%0], [{<EDestruct@head:#42-case l%0 of ...>,<EDirect@head:#42-case l%0 of ...>,<ESelect(h)@head:#40-let x%9 = ...>}],
+//│ S: None,
+//│ I: [[Some(ICtor(Cons))]],
+//│ R: [Some(IMix(ICtor(None),ICtor(Some)))],
+//│ Rec: None,
+//│ 1, 
+//│ case l%0 of -- #42
+//│   Nil => let x%7 = None() -- #29
+//│     in x%7 -- #97
+//│   Cons => let x%9 = l%0.h -- #40
+//│     in let x%10 = Some(x%9) -- #39
+//│       in x%10 -- #98
+//│ )
 //│ Def(4, is_none, [o%0], [{<EDestruct@is_none:#54-case o%0 of ...>,<EDirect@is_none:#54-case o%0 of ...>}],
 //│ S: None,
-//│ I: [[Some(ICtor(Some))]],
+//│ I: [[Some(IMix(ICtor(None),ICtor(Some)))]],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
@@ -1456,19 +1469,41 @@ main()
 //│   in let x%18 = Cons(2,x%17) -- #89
 //│     in let x%19 = Cons(1,x%18) -- #88
 //│       in let x%20 = Cons(0,x%19) -- #87
-//│         in let* (x%21) = is_nil$C%0(x%20) -- #104
-//│           in x%21 -- #85
+//│         in let* (x%25) = head(x%20) -- #106
+//│           in let* (x%21) = is_none(x%25) -- #109
+//│             in x%21 -- #85
 //│ )
-//│ Def(11, is_nil$C%0, [l%1], [{<ESelect(h)@is_nil$C%0:#109-let x%25 = ...>}],
-//│ S: Some([Some(ICtor(Cons))]),
-//│ I: [[Some(ICtor(Cons))]],
+//│ },
+//│ let* (x%22) = main() -- #94
+//│   in x%22 -- #93)
+//│ 
+//│ Interpreted ------------------------------
+//│ False()
+//│ 
+//│ 
+//│ Optimized ------------------------------
+//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Def(4, is_none, [o%0], [{<EDestruct@is_none:#54-case o%0 of ...>,<EDirect@is_none:#54-case o%0 of ...>}],
+//│ S: None,
+//│ I: [[Some(ICtor(Some))]],
 //│ R: [Some(IMix(ICtor(False),ICtor(True)))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%25 = l%1.h -- #109
-//│   in let x%10 = Some(x%25) -- #112
-//│     in let* (x%16) = is_none(x%10) -- #64
-//│       in x%16 -- #63
+//│ case o%0 of -- #54
+//│   None => let x%12 = True() -- #47
+//│     in x%12 -- #99
+//│   Some => let x%14 = False() -- #52
+//│     in x%14 -- #100
+//│ )
+//│ Def(7, main, [], [],
+//│ S: None,
+//│ I: [],
+//│ R: [Some(IMix(ICtor(False),ICtor(True)))],
+//│ Rec: None,
+//│ 1, 
+//│ let x%10 = Some(0) -- #120
+//│   in let* (x%21) = is_none(x%10) -- #109
+//│     in x%21 -- #85
 //│ )
 //│ },
 //│ let* (x%22) = main() -- #94
@@ -1486,7 +1521,7 @@ main()
 //│ R: [Some(ICtor(False))],
 //│ Rec: None,
 //│ 1, 
-//│ let x%14 = False() -- #122
+//│ let x%14 = False() -- #127
 //│   in x%14 -- #85
 //│ )
 //│ },
@@ -1502,7 +1537,7 @@ main()
 //│ 
 //│ 
 //│ 
-//│ Fuel used: 3
+//│ Fuel used: 4
 
 :GraphInterp
 :GraphOpt

@@ -251,7 +251,7 @@ foo()
 //│ 
 //│ Promoted ------------------------------------
 //│ GOProgram({ClassInfo(0, Pair, [x,y])}, {
-//│ Def(0, silly, [pair%0], [{<EDestruct@silly:#28-case pair%0 of ...>,<EDirect@silly:#28-case pair%0 of ...>,<ESelect(x)@silly:#23-let x%7 = ...>}],
+//│ Def(0, silly, [pair%0], [{<EDestruct@silly:#25-case pair%0 of ...>,<EDestruct@silly:#28-case pair%0 of ...>,<EDirect@silly:#25-case pair%0 of ...>,<EDirect@silly:#28-case pair%0 of ...>,<ESelect(x)@silly:#23-let x%7 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(Pair))]],
 //│ R: [None],

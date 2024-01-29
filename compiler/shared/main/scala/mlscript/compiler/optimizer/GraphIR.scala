@@ -283,13 +283,23 @@ enum LocMarker:
         <:> raw("=")
         <:> raw(defn)
         <:> raw("...")
-    case _ => throw Exception(s"Cannot print LocMarker")
+    case MRef(s) => s.toString |> raw
+    case MLit(IntLit(lit)) => s"$lit" |> raw
+    case MLit(DecLit(lit)) => s"$lit" |> raw
+    case MLit(StrLit(lit)) => s"$lit" |> raw
+    case MLit(UnitLit(lit)) => s"$lit" |> raw
+    case _ => raw("...")
 
   def show = s"$tag-" + toDocument.print
 
   override def toString(): String = show
 
   def matches(x: GONode): Bool = this.tag == x.tag
+
+  override def equals(x: Any): Boolean = x match
+    case x: LocMarker if this.isInstanceOf[LocMarker] =>
+      this.tag == x.tag
+    case _ => false
 
 enum GOExpr:
   case Ref(name: Name) extends GOExpr, TrivialExpr 
