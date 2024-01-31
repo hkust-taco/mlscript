@@ -29,7 +29,7 @@ foo(x => x+1)
 //│ TypingUnit {
 //│   class Lambda1$2$1([]) {fun apply = (x,) => +(x, 1,)}
 //│   fun foo$1 = (f,) => {f(1,)}
-//│   Code(List(foo$1({new Lambda1$2$1([]) {}},)))
+//│   Code(List(foo$1({Lambda1$2$1()},)))
 //│ }
 //│ fun foo: forall 'a. (1 -> 'a) -> 'a
 //│ Int
@@ -45,7 +45,7 @@ foo(1)
 //│ TypingUnit {
 //│   class Lambda1$3$1([x,]) {fun apply = (y,) => +(y, (this).x,)}
 //│   let bar$2 = (f, x,) => {f(x,)}
-//│   fun foo$1 = (x,) => {bar$2({new Lambda1$3$1([x,]) {}}, x,)}
+//│   fun foo$1 = (x,) => {bar$2({Lambda1$3$1(x,)}, x,)}
 //│   Code(List(foo$1(1,)))
 //│ }
 //│ fun foo: Int -> Int
@@ -66,7 +66,7 @@ app(new A(1))
 //│   class A$1([y: Int,]) {fun bar = (z,) => +((this).y, z,)}
 //│   class Lambda1$3$2([a,]) {fun apply = (z,) => ((this).a).bar(z,)}
 //│   fun foo$2 = (f,) => {f(1,)}
-//│   fun app$1 = (a,) => {foo$2({new Lambda1$3$2([a,]) {}},)}
+//│   fun app$1 = (a,) => {foo$2({Lambda1$3$2(a,)},)}
 //│   Code(List(app$1(new A$1([1,]) {},)))
 //│ }
 //│ fun foo: forall 'a. (1 -> 'a) -> 'a

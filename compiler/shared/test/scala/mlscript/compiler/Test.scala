@@ -14,7 +14,7 @@ class DiffTestCompiler extends DiffTests {
   override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (List[Str], Option[TypingUnit]) = 
     val outputBuilder = StringBuilder()
     //output("Parsed:")    
-    //output(unit.showDbg)
+    //output(unit.toString())
     if (mode.lift) output(PrettyPrinter.showTypingUnit(unit))
 
     output("Lifted:")
@@ -23,12 +23,12 @@ class DiffTestCompiler extends DiffTests {
     try
       val lifter = ClassLifter(mode.fullExceptionStack)
       if (!mode.nolift) rstUnit = lifter.liftTypingUnit(unit)
-      //output(s"${rstUnit.showDbg}")
+      //output(rstUnit.toString())
       output(PrettyPrinter.showTypingUnit(rstUnit))
       //outputBuilder ++= s"${mlscript.codegen.Helpers.inspect(rstUnit)}\n"
       //outputBuilder ++= PrettyPrinter.showTypingUnit(rstUnit)
       if (mode.dbgLifting) 
-        outputBuilder ++= lifter.getLog
+        output(lifter.getLog)
     catch
       case NonFatal(err) =>
         outputBuilder ++= "Lifting failed: " ++ err.toString()
@@ -43,7 +43,7 @@ class DiffTestCompiler extends DiffTests {
         if (mode.numono)
           then
             val defuncAST = monomorph.nuDefunctionalize(rstUnit)
-            //output(s"${defuncAST.showDbg}")
+            //output(defuncAST.toString())
             output(PrettyPrinter.showTypingUnit(defuncAST))
             //outputBuilder ++= s"${mlscript.codegen.Helpers.inspect(defuncAST)}\n"
             //outputBuilder ++= PrettyPrinter.showTypingUnit(defuncAST)++"\n"

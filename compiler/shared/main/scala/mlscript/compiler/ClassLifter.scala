@@ -325,7 +325,8 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val anoCls = NuTypeDef(
         Cls, nTpNm, Nil, S(Tup(Nil)), N, N, Nil, N, N, 
         TypingUnit(List(NuFunDef(None, Var("apply"), N, Nil, Left(Lam(lhs, rhs)))(N, N, N, N, false))))(N, N) 
-      val nSta = New(Some((nTpNm, Tup(Nil))), TypingUnit(Nil))
+      //val nSta = New(Some((nTpNm, Tup(Nil))), TypingUnit(Nil))
+      val nSta = App(Var(nTpNm.name),Tup(Nil))
       val ret = liftEntities(List(anoCls, nSta))
       (Blk(ret._1), ret._2)
     case t: Tup => 

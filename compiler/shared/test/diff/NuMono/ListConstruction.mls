@@ -1,6 +1,5 @@
 :NewDefs
 
-:e // FIXME: new new syntax
 :nm
 class List {
     fun getRes: Str
@@ -33,7 +32,7 @@ mkList(5).map((x) => x*2).getRes
 //│   class Nil$3([]): List$1() {fun getRes = "Nil"; fun map = (f,) => Nil$3()}
 //│   class Lambda1$2$4([]) {fun apply = ('(' x ')',) => *(x, 2,)}
 //│   fun mkList$1 = (len: Int,) => {if (==(len, 0,)) then Nil$3() else Cons$2(len, mkList$1(-(len, 1,),),)}
-//│   Code(List(((mkList$1(5,)).map({new Lambda1$2$4([]) {}},)).getRes))
+//│   Code(List(((mkList$1(5,)).map({Lambda1$2$4()},)).getRes))
 //│ }
 //│ Mono:
 //│ TypingUnit {
@@ -45,15 +44,11 @@ mkList(5).map((x) => x*2).getRes
 //│   fun map$Nil$3 = (this, f,) => Nil$3()
 //│   fun getRes$Nil$3 = (this,) => "Nil"
 //│   fun getRes$Cons$2 = (this,) => concat(concat(toString(let obj = this in if obj is ‹(Cons$2(x, xs,)) then x; else error›,),)(" :: ",),)(let obj = let obj = this in if obj is ‹(Cons$2(x, xs,)) then xs; else error› in if obj is ‹(Cons$2) then getRes$Cons$2(obj,); (Nil$3) then getRes$Nil$3(obj,); else error›,)
-//│   fun main$$5 = () => let obj = let obj = mkList$1(5,) in if obj is ‹(Cons$2) then map$Cons$2(obj, {new Lambda1$2$4([]) {}},); (Nil$3) then map$Nil$3(obj, {new Lambda1$2$4([]) {}},); else error› in if obj is ‹(Cons$2) then getRes$Cons$2(obj,); (Nil$3) then getRes$Nil$3(obj,); else error›
+//│   fun main$$5 = () => let obj = let obj = mkList$1(5,) in if obj is ‹(Cons$2) then map$Cons$2(obj, {Lambda1$2$4()},); (Nil$3) then map$Nil$3(obj, {Lambda1$2$4()},); else error› in if obj is ‹(Cons$2) then getRes$Cons$2(obj,); (Nil$3) then getRes$Nil$3(obj,); else error›
 //│   fun map$Cons$2 = (this, f,) => Cons$2(let obj = f in if obj is ‹(Lambda1$2$4) then apply$Lambda1$2$4(obj, let obj = this in if obj is ‹(Cons$2(x, xs,)) then x; else error›,); else error›, let obj = let obj = this in if obj is ‹(Cons$2(x, xs,)) then xs; else error› in if obj is ‹(Cons$2) then map$Cons$2(obj, f,); (Nil$3) then map$Nil$3(obj, f,); else error›,)
 //│   fun apply$Lambda1$2$4 = (this, '(' x ')',) => *(x, 2,)
 //│   Code(List(main$$5()))
 //│ }
-//│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ╙──
-//│ ╔══[ERROR] Currently unsupported `new` syntax
-//│ ╙──
 //│ class Lambda1$2$4()
 //│ class List$1()
 //│ class Cons$2(x: Int, xs: List$1) extends List$1
