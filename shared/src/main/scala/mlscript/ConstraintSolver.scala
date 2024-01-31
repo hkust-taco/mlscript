@@ -1357,7 +1357,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }
         nv
       })
-      case n @ NegType(neg) => NegType(extrude(neg, lowerLvl, pol, upperLvl))(n.prov)
+      case n @ NegType(neg) => NegType(extrude(neg, lowerLvl, !pol, upperLvl))(n.prov)
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(extrude(und, lowerLvl, pol, upperLvl))(p.prov)
       case p @ ProxyType(und) => extrude(und, lowerLvl, pol, upperLvl)
