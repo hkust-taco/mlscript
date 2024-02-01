@@ -5,19 +5,9 @@
 
 fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(code"x")}"
 //│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, 'b]) -> Code['c, 'b]
-<<<<<<<
-//│ fun (%>) bind: forall 'a 'b 'c. (Code['b, 'c], Code['b, ??x] -> Code['a, ??x0 | 'c]) -> Code['a, 'c]
-||||||| 84f516b67
-//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, ??x0 | 'b]) -> Code['c, 'b]
 
 fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(x)}"
-//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, ??x0 | 'b]) -> Code['c, 'b]
-=======
-//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, 'b]) -> Code['c, 'b]
-
-fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(x)}"
-//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, 'b]) -> Code['c, 'b]
->>>>>>>
+//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Var['a, in ??x out ??x0] -> Code['c, 'b]) -> Code['c, 'b]
 
 // * Notice the extrusion
 fun foo(k) = code"x => ${k(code"x")}"
@@ -29,21 +19,21 @@ fun (%>) bind(rhs, k) = code"(x => ${k(code"x")})(${rhs})"
 // * Somehow this one does extrude properly:
 fun app = code"(f, x) => f(x)"
 fun (%>) bind(rhs, k) = code"${app}(x => ${k(code"x")}, ${rhs})"
-//│ fun app: Code[forall 'a 'b. ('a -> 'b, 'a) -> 'b, nothing]
+//│ fun app: Code[forall 'a 'b. ('b -> 'a, 'b) -> 'a, nothing]
 //│ fun (%>) bind: forall 'c 'd 'e. (Code['c, 'd], Code['c, ??x] -> Code['e, 'd]) -> Code['e, 'd]
 
 
 fun app(f, x) = f(x)
 fun bind2(rhs, k) = code"app(x => ${k(code"x")}, ${rhs})"
 //│ fun app: forall 'a 'b. ('a -> 'b, 'a) -> 'b
-//│ fun bind2: forall 'c 'd 'e. (Code['c, 'd], Code['c, ??x] -> Code['e, 'd]) -> Code['e, 'd]
+//│ fun bind2: forall 'c 'd 'e. (Code['d, 'e], Code['d, ??x] -> Code['c, 'e]) -> Code['c, 'e]
 
 :e
 fun foo() =
   let bar = 42 // not at top level
   code"bar"
 //│ ╔══[ERROR] identifier not found: bar
-//│ ║  l.44: 	  code"bar"
+//│ ║  l.34: 	  code"bar"
 //│ ╙──      	       ^^^
 //│ fun foo: () -> Code[error, nothing]
 
@@ -53,54 +43,14 @@ code"1 ++ 2"
 //│ Code[Int, nothing]
 
 // G <: ??x | 'a
-<<<<<<<
 fun bind(rhs, k: forall 'C: Code['A, 'C] -> Code['B, 'C | 'G]) = code"let x = ${rhs} in ${k(code"x")}"
-//│ fun bind: forall 'A 'a 'B. (Code['A, 'a], k: forall 'C. Code['A, 'C] -> Code['B, 'C | ??x | 'a]) -> Code['B, 'a]
-||||||| 84f516b67
-fun bind(rhs, k: forall 'C: Code['A, 'C] -> Code['B, 'C | 'G]) = code"let x = ${rhs} in ${k(x)}"
-//│ fun bind: forall 'A 'a 'B. (Code['A, 'a], k: forall 'C. Code['A, 'C] -> Code['B, 'C | ??x | 'a]) -> Code['B, 'a]
-=======
-fun bind(rhs, k: forall 'C: Code['A, 'C] -> Code['B, 'C | 'G]) = code"let x = ${rhs} in ${k(x)}"
-//│ fun bind: forall 'B 'A 'a. (Code['A, 'a], k: forall 'C. Code['A, 'C] -> Code['B, 'C | 'a]) -> Code['B, 'a]
->>>>>>>
+//│ fun bind: forall 'A 'a 'B. (Code['A, 'a], k: forall 'C. Code['A, 'C] -> Code['B, 'C | 'a]) -> Code['B, 'a]
 
 bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
-//│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.67: 	bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
-//│ ║        	^^^^
-//│ ╟── type variable `?x` leaks out of its scope
-//│ ║  l.67: 	bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
-//│ ║        	                                                                ^^
-//│ ╟── into type `'g`
-//│ ║  l.67: 	bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
-//│ ║        	                                                                                                      ^^
-//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this reference:
-//│ ║  l.31: 	fun (%>) bind(rhs, k) = code"${app}(x => ${k(code"x")}, ${rhs})"
-//│ ╙──      	                                           ^
-//│ TEST CASE FAILURE: There was an unexpected type error
 //│ forall 'a 'g. (Code['a, 'g], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
 
 
 fun foo(dbg) =
-//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.85: 	fun foo(dbg) =
-//│ ╙──      	              ^
-//│ TEST CASE FAILURE: There was an unexpected parse error
-//│ fun foo: anything -> ()
-<<<<<<<
   code"x => ${let c = code"(${x}, ${foo(dbg)})" in dbg(c)}"
-//│ fun foo: forall 'a 'b. (Code[anything -> 'b, ??x | 'a] -> Code['b, ??x0 | 'a]) -> Code[anything -> 'b, 'a]
-||||||| 84f516b67
-  code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
-//│ ╔══[ERROR] identifier not found: x
-//│ ║  l.55: 	  code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
-//│ ╙──      	                              ^
-//│ fun foo: forall 'a 'b. (Code[anything -> 'a, 'b] -> Code['a, ??x | 'b]) -> Code[anything -> 'a, 'b]
-=======
-  code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
-//│ ╔══[ERROR] identifier not found: x
-//│ ║  l.55: 	  code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
-//│ ╙──      	                              ^
-//│ fun foo: forall 'a 'b. (Code[anything -> 'a, 'b] -> Code['a, 'b]) -> Code[anything -> 'a, 'b]
->>>>>>>
+//│ fun foo: forall 'a 'b. (Code[anything -> 'a, anything] -> Code['a, 'b]) -> Code[anything -> 'a, 'b]
+

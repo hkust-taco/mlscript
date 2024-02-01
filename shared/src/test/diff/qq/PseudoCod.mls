@@ -51,7 +51,7 @@ let l = lam(x => lam(y => body(x, y)(0)))
 
 // * Expected error: `body` needed polymorphic recursion
 // * TODO improve error locations!
-// :e // FIXME should error
+:e
 run(l)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.55: 	run(l)
@@ -62,7 +62,6 @@ run(l)
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.18: 	fun run: Cod['a, nothing] -> 'a
 //│ ╙──      	                 ^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
 //│ error | 'a -> 'a -> 'a
 
 
