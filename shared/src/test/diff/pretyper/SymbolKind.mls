@@ -1,0 +1,118 @@
+:NewDefs
+:ShowPreTyperErrors
+
+type Type = Int
+mixin Mixin1
+mixin Mixin2()
+trait Trait // Trait doesn't have parameters.
+class Class1
+class Class2()
+module Module
+//│ type Type = Int
+//│ mixin Mixin1()
+//│ mixin Mixin2()
+//│ trait Trait
+//│ class Class1 {
+//│   constructor()
+//│ }
+//│ class Class2()
+//│ module Module
+
+fun f(g) = g()
+//│ fun f: forall 'a. (() -> 'a) -> 'a
+
+:e
+f(Type)
+//│ ╔══[ERROR] identifier `Type` is resolved to a type
+//│ ║  l.25: 	f(Type)
+//│ ╙──      	  ^^^^
+//│ ╔══[ERROR] type alias Type cannot be used in term position
+//│ ║  l.25: 	f(Type)
+//│ ╙──      	  ^^^^
+//│ error
+//│ Code generation encountered an error:
+//│   type alias Type is not a valid expression
+
+:e
+id(Mixin1)
+//│ ╔══[ERROR] identifier `Mixin1` is resolved to a type
+//│ ║  l.37: 	id(Mixin1)
+//│ ╙──      	   ^^^^^^
+//│ ╔══[ERROR] mixin Mixin1 cannot be used in term position
+//│ ║  l.37: 	id(Mixin1)
+//│ ╙──      	   ^^^^^^
+//│ error
+//│ res
+//│     = [Function (anonymous)]
+
+:e
+f(Mixin2)
+//│ ╔══[ERROR] identifier `Mixin2` is resolved to a type
+//│ ║  l.49: 	f(Mixin2)
+//│ ╙──      	  ^^^^^^
+//│ ╔══[ERROR] mixin Mixin2 cannot be used in term position
+//│ ║  l.49: 	f(Mixin2)
+//│ ╙──      	  ^^^^^^
+//│ error
+//│ res
+//│ Runtime error:
+//│   TypeError: Class extends value undefined is not a constructor or null
+
+:e
+f(Trait)
+//│ ╔══[ERROR] identifier `Trait` is resolved to a type
+//│ ║  l.62: 	f(Trait)
+//│ ╙──      	  ^^^^^
+//│ ╔══[ERROR] trait Trait cannot be used in term position
+//│ ║  l.62: 	f(Trait)
+//│ ╙──      	  ^^^^^
+//│ error
+//│ Code generation encountered an error:
+//│   trait used in term position
+
+:e
+f(Class1)
+//│ ╔══[ERROR] Construction of unparameterized class Class1 should use the `new` keyword
+//│ ║  l.74: 	f(Class1)
+//│ ╙──      	  ^^^^^^
+//│ Class1
+//│ res
+//│ Runtime error:
+//│   TypeError: Class constructor Class1 cannot be invoked without 'new'
+
+f(Class2)
+//│ Class2
+//│ res
+//│     = Class2 {}
+
+id(Class2)
+//│ () -> Class2
+//│ res
+//│     = [Function (anonymous)] {
+//│         class: [class Class2],
+//│         unapply: [Function: unapply]
+//│       }
+
+:e
+f(Module)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.97: 	f(Module)
+//│ ║        	^^^^^^^^^
+//│ ╟── reference of type `Module` is not a function
+//│ ║  l.97: 	f(Module)
+//│ ║        	  ^^^^^^
+//│ ╟── Note: constraint arises from application:
+//│ ║  l.21: 	fun f(g) = g()
+//│ ║        	           ^^^
+//│ ╟── from reference:
+//│ ║  l.21: 	fun f(g) = g()
+//│ ╙──      	           ^
+//│ error
+//│ res
+//│ Runtime error:
+//│   TypeError: g is not a function
+
+id(Module)
+//│ Module
+//│ res
+//│     = Module { class: [class Module] }

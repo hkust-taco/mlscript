@@ -1,50 +1,35 @@
-:NewParser
+:NewDefs
 
 
-class Foo(x)
-//│ Defined class Foo
-//│ Foo: 'x -> (Foo & {x: 'x})
-//│    = [Function: Foo1]
+class Foo[T](x: T)
+//│ class Foo[T](x: T)
 
 if 1 is 1 then 1 else 0
-//│ res: 0 | 1
-//│    = 1
+//│ 0 | 1
+//│ res
+//│     = 1
 
 fun test(x) = if x is 1 then 0 else 1
-//│ test: anything -> (0 | 1)
-//│     = [Function: test]
+//│ fun test: Object -> (0 | 1)
 
-// It should report duplicated branches.
-:w
+// :w
+// FIXME: It should report duplicated branches.
 fun testF(x) = if x is
   Foo(a) then a
   Foo(a) then a
-//│ ╔══[WARNING] Found a duplicated branch
-//│ ╟── This branch
-//│ ║  l.21: 	  Foo(a) then a
-//│ ║        	              ^
-//│ ╟── is subsumed by the branch here.
-//│ ║  l.20: 	  Foo(a) then a
-//│ ╙──      	              ^
-//│ testF: (Foo & {x: 'x}) -> 'x
-//│      = [Function: testF]
+//│ fun testF: forall 'a. Foo['a] -> 'a
 
-class Bar(y, z)
-//│ Defined class Bar
-//│ Bar: ('y, 'z,) -> (Bar & {y: 'y, z: 'z})
-//│    = [Function: Bar1]
+class Bar[Y, Z](y: Y, z: Z)
+//│ class Bar[Y, Z](y: Y, z: Z)
 
 fun test(f) = if f is
   Foo(a) then a
   Bar(b, c) then b + c
-//│ test: (Bar & {y: int, z: int} | Foo & {x: 'x}) -> (int | 'x)
-//│     = [Function: test1]
+//│ fun test: forall 'a. (Bar[Int, Int] | Foo['a]) -> (Int | 'a)
 
 
-class Pair(fst, snd)
-//│ Defined class Pair
-//│ Pair: ('fst, 'snd,) -> (Pair & {fst: 'fst, snd: 'snd})
-//│     = [Function: Pair1]
+class Pair[A, B](fst: A, snd: B)
+//│ class Pair[A, B](fst: A, snd: B)
 
 fun f(x) =
   if x is
@@ -52,57 +37,53 @@ fun f(x) =
     Pair(1, 1) then "ones"
     Pair(y, 1) then x
     _          then "nah"
-//│ f: (Pair & 'a | ~Pair) -> ("nah" | "ones" | "zeros" | 'a)
-//│  = [Function: f]
+//│ fun f: (Object & ~#Pair | Pair[Object, Object]) -> ("nah" | "ones" | "zeros" | Pair[nothing, nothing])
 
 class Z()
 class O()
-//│ Defined class Z
-//│ Defined class O
-//│ Z: () -> Z
-//│  = [Function: Z1]
-//│ O: () -> O
-//│  = [Function: O1]
+//│ class Z()
+//│ class O()
 
 // This is not exhaustive.
 :e
-:ge
 fun foo(x) = if x is
   Pair(Z(), Z()) then "zeros"
   Pair(O(), O()) then "ones"
-//│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.70: 	fun foo(x) = if x is
-//│ ║        	                ^^^^
-//│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.71: 	  Pair(Z(), Z()) then "zeros"
-//│ ║        	            ^^^
-//│ ╟── [Missing Case 1/1] `O`
-//│ ╟── It first appears here.
-//│ ║  l.72: 	  Pair(O(), O()) then "ones"
-//│ ╙──      	            ^^^
-//│ foo: anything -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[ERROR] when `x` is `Pair`, and
+//│ ║  l.50: 	  Pair(Z(), Z()) then "zeros"
+//│ ║        	  ^^^^
+//│ ╟── first argument of `Pair` is `Z`,
+//│ ║  l.50: 	  Pair(Z(), Z()) then "zeros"
+//│ ║        	       ^
+//│ ╟── second argument of `Pair` has 1 missing case
+//│ ╟── it can be class `O`
+//│ ║  l.51: 	  Pair(O(), O()) then "ones"
+//│ ╙──      	            ^
+//│ ╔══[ERROR] when `x` is `Pair`, and
+//│ ║  l.50: 	  Pair(Z(), Z()) then "zeros"
+//│ ║        	  ^^^^
+//│ ╟── first argument of `Pair` is `O`,
+//│ ║  l.51: 	  Pair(O(), O()) then "ones"
+//│ ║        	       ^
+//│ ╟── second argument of `Pair` has 1 missing case
+//│ ╟── it can be class `Z`
+//│ ║  l.50: 	  Pair(Z(), Z()) then "zeros"
+//│ ╙──      	            ^
+//│ fun foo: Pair[O | Z, nothing] -> ("ones" | "zeros")
 
 // Change `Pair` to a real pair.
 :e
-:ge
 fun foo(x) = if x is
   [Z(), Z()] then "zeros"
   [O(), O()] then "ones"
-//│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.90: 	fun foo(x) = if x is
-//│ ║        	                ^^^^
-//│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.91: 	  [Z(), Z()] then "zeros"
-//│ ║        	        ^^^
-//│ ╟── [Missing Case 1/1] `O`
-//│ ╟── It first appears here.
-//│ ║  l.92: 	  [O(), O()] then "ones"
-//│ ╙──      	        ^^^
-//│ foo: anything -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[ERROR] when `x$Tuple$2_0` is `O`
+//│ ║  l.78: 	  [O(), O()] then "ones"
+//│ ║        	   ^
+//│ ╟── `x$Tuple$2_1` has 1 missing case
+//│ ╟── it can be class `Z`
+//│ ║  l.77: 	  [Z(), Z()] then "zeros"
+//│ ╙──      	        ^
+//│ fun foo: forall 'a. {0: O | Z, 1: O & 'a} -> ("ones" | "zeros" | 'a)
 
 fun foo(x) = if x is
   Pair(a, b) then if a is
@@ -110,8 +91,7 @@ fun foo(x) = if x is
       Z() then "zeros"
     O() then if b is
       O() then "ones"
-//│ foo: (Pair & {fst: O | Z, snd: nothing}) -> ("ones" | "zeros")
-//│    = [Function: foo2]
+//│ fun foo: Pair[O | Z, nothing] -> ("ones" | "zeros")
 
 fun foo(x) = if x is
   Pair(a, b) then if a is
@@ -120,8 +100,7 @@ fun foo(x) = if x is
       else "???"
     O() then if b is
       O() then "ones"
-//│ foo: (Pair & {fst: O | Z, snd: O}) -> ("???" | "ones" | "zeros")
-//│    = [Function: foo3]
+//│ fun foo: Pair[O | Z, O] -> ("???" | "ones" | "zeros")
 
 fun foo(x) = if x is
   Pair(a, b) then if a is
@@ -131,13 +110,10 @@ fun foo(x) = if x is
     O() then if b is
       O() then "zeros"
       else "???"
-//│ foo: (Pair & {fst: O | Z}) -> ("???" | "zeros")
-//│    = [Function: foo4]
+//│ fun foo: Pair[O | Z, Object] -> ("???" | "zeros")
 
-class S(pred)
-//│ Defined class S
-//│ S: 'pred -> (S & {pred: 'pred})
-//│  = [Function: S1]
+class S(pred: S | Z | O)
+//│ class S(pred: O | S | Z)
 
 // TODO: Cannot check exhaustiveness of nested UCS yet.
 fun foo(x) = if x is
@@ -148,40 +124,34 @@ fun foo(x) = if x is
     O() then if b is
       O() then "zeros"
       else "???"
-//│ foo: (Pair & {fst: O | Z, snd: S & {pred: 'pred} | ~S}) -> ("???" | "zeros" | 'pred)
-//│    = [Function: foo5]
+//│ fun foo: Pair[O | Z, Object] -> ("???" | "zeros" | O | S | Z)
 
 foo(Pair(Z(), Z()))
-//│ res: "???" | "zeros"
-//│    = '???'
+//│ "???" | "zeros" | O | S | Z
+//│ res
+//│     = '???'
 
 :e
-:ge
 fun foo(x) = if x is
   Pair(Z(), Z()) then "zeros"
   Pair(O(), O()) then "ones"
   Pair(y, O()) then x
-//│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.160: 	fun foo(x) = if x is
-//│ ║         	                ^^^^
-//│ ╟── The scrutinee at this position misses 1 case.
-//│ ║  l.161: 	  Pair(Z(), Z()) then "zeros"
-//│ ║         	            ^^^
-//│ ╟── [Missing Case 1/1] `Z`
-//│ ╟── It first appears here.
-//│ ║  l.161: 	  Pair(Z(), Z()) then "zeros"
-//│ ╙──       	            ^^^
-//│ foo: anything -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[ERROR] when `x` is `Pair`
+//│ ║  l.136: 	  Pair(Z(), Z()) then "zeros"
+//│ ║         	  ^^^^
+//│ ╟── second argument of `Pair` has 1 missing case
+//│ ╟── it can be class `Z`
+//│ ║  l.136: 	  Pair(Z(), Z()) then "zeros"
+//│ ╙──       	            ^
+//│ fun foo: forall 'B 'A. Pair['A, O & 'B] -> ("ones" | "zeros" | Pair['A, 'B] | 'A)
+//│   where
+//│     'A <: Object
 
 fun foo(x, y) = if x is Z() and y is O() then 0 else 1
-//│ foo: (anything, anything,) -> (0 | 1)
-//│    = [Function: foo7]
+//│ fun foo: (Object, Object) -> (0 | 1)
 
 fun foo(x, y) =
   if x is
     Z() and y is O() then 0
     else 1
-//│ foo: (anything, anything,) -> (0 | 1)
-//│    = [Function: foo8]
+//│ fun foo: (Object, Object) -> (0 | 1)

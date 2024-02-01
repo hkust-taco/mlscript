@@ -1,0 +1,711 @@
+:NewDefs
+:NoJS
+:ShowPreTyperErrors
+:AllowParseErrors
+:AllowTypeErrors
+
+// This file is used to test the error messages of the _unfinished_ `PreTyper`.
+// The goal is to document `PreTyper` behavior and to make sure that the error
+// messages are clear and helpful. We can delete this file after it is done.
+
+// codegen
+// -------
+
+// Nested
+fun main =
+  let f(x: Int): Int = if x is
+    0 then 1
+    else g(x - 1)
+  let g(x: Int): Int = f(x)
+  f
+//│ ╔══[ERROR] identifier `g` not found
+//│ ║  l.18: 	    else g(x - 1)
+//│ ╙──      	         ^
+//│ fun main: (x: Int) -> Int
+
+// SymbolicOps
+fun (>>)(f, g) = x => g(f(x))
+//│ ╔══[PARSE ERROR] Expected a function name; found parenthesis section instead
+//│ ║  l.27: 	fun (>>)(f, g) = x => g(f(x))
+//│ ╙──      	        ^^^^^^
+//│ ╔══[ERROR] identifier `g` not found
+//│ ║  l.27: 	fun (>>)(f, g) = x => g(f(x))
+//│ ╙──      	                      ^
+//│ ╔══[ERROR] identifier `f` not found
+//│ ║  l.27: 	fun (>>)(f, g) = x => g(f(x))
+//│ ╙──      	                        ^
+//│ fun (>>) <error>: Int -> Int
+
+// mlscript
+// --------
+
+// Sequence
+let test(x) = log(x); x + 1
+//│ ╔══[ERROR] identifier `x` not found
+//│ ║  l.43: 	let test(x) = log(x); x + 1
+//│ ╙──      	                      ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.43: 	let test(x) = log(x); x + 1
+//│ ╙──      	                      ^
+//│ let test: anything -> ()
+//│ Int
+
+// nu
+// --
+
+// Ascription
+foo(123: Int): Int
+//│ ╔══[ERROR] identifier `foo` not found
+//│ ║  l.57: 	foo(123: Int): Int
+//│ ╙──      	^^^
+//│ ╔══[ERROR] identifier `Int` is resolved to a type
+//│ ║  l.57: 	foo(123: Int): Int
+//│ ╙──      	         ^^^
+//│ ╔══[ERROR] identifier not found: foo
+//│ ║  l.57: 	foo(123: Int): Int
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `error` for applying named arguments
+//│ ║  l.57: 	foo(123: Int): Int
+//│ ╙──      	^^^
+//│ Int
+
+// Ascription
+foo(123:Int):Int
+//│ ╔══[ERROR] identifier `foo` not found
+//│ ║  l.73: 	foo(123:Int):Int
+//│ ╙──      	^^^
+//│ ╔══[ERROR] identifier `Int` is resolved to a type
+//│ ║  l.73: 	foo(123:Int):Int
+//│ ╙──      	        ^^^
+//│ ╔══[ERROR] identifier not found: foo
+//│ ║  l.73: 	foo(123:Int):Int
+//│ ╙──      	^^^
+//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `error` for applying named arguments
+//│ ║  l.73: 	foo(123:Int):Int
+//│ ╙──      	^^^
+//│ Int
+
+// BadBlocks
+fun test =
+  let a = b
+  let b = 1
+  a
+//│ ╔══[ERROR] identifier `b` not found
+//│ ║  l.90: 	  let a = b
+//│ ╙──      	          ^
+//│ fun test: 1
+
+// BadBlocks
+fun test =
+  let a() = b
+  let b = 1
+  a()
+//│ ╔══[ERROR] identifier `b` not found
+//│ ║  l.100: 	  let a() = b
+//│ ╙──       	            ^
+//│ fun test: 1
+
+// BadClasses
+hello
+//│ ╔══[ERROR] identifier `hello` not found
+//│ ║  l.109: 	hello
+//│ ╙──       	^^^^^
+//│ ╔══[ERROR] identifier not found: hello
+//│ ║  l.109: 	hello
+//│ ╙──       	^^^^^
+//│ error
+
+// BadFieldInit
+module A {
+  val x = y
+  val y = x
+}
+//│ ╔══[ERROR] identifier `y` not found
+//│ ║  l.120: 	  val x = y
+//│ ╙──       	          ^
+//│ module A {
+//│   val x: nothing
+//│   val y: nothing
+//│ }
+
+// BadFieldInit
+module A {
+  val x = y
+  val y = 1
+}
+//│ ╔══[ERROR] identifier `y` not found
+//│ ║  l.133: 	  val x = y
+//│ ╙──       	          ^
+//│ module A {
+//│   val x: 1
+//│   val y: 1
+//│ }
+
+// BadMixin
+mixin M0
+M0
+//│ ╔══[ERROR] identifier `M0` is resolved to a type
+//│ ║  l.146: 	M0
+//│ ╙──       	^^
+//│ ╔══[ERROR] mixin M0 cannot be used in term position
+//│ ║  l.146: 	M0
+//│ ╙──       	^^
+//│ mixin M0()
+//│ error
+
+// BadScopes
+mixin Foo(x: Int)
+x
+//│ ╔══[ERROR] identifier `x` not found
+//│ ║  l.158: 	x
+//│ ╙──       	^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.158: 	x
+//│ ╙──       	^
+//│ mixin Foo(x: Int)
+//│ error
+
+// BadScopes
+class Foo(x: Int)
+x
+//│ ╔══[ERROR] identifier `x` not found
+//│ ║  l.170: 	x
+//│ ╙──       	^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.170: 	x
+//│ ╙──       	^
+//│ class Foo(x: Int)
+//│ error
+
+// BadScopes
+class Bar { x }
+//│ ╔══[ERROR] identifier `x` not found
+//│ ║  l.181: 	class Bar { x }
+//│ ╙──       	            ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.181: 	class Bar { x }
+//│ ╙──       	            ^
+//│ class Bar {
+//│   constructor()
+//│ }
+
+// BadTraits
+trait Foo
+Foo
+//│ ╔══[ERROR] identifier `Foo` is resolved to a type
+//│ ║  l.194: 	Foo
+//│ ╙──       	^^^
+//│ ╔══[ERROR] trait Foo cannot be used in term position
+//│ ║  l.194: 	Foo
+//│ ╙──       	^^^
+//│ trait Foo
+//│ error
+
+// FunPatterns
+fun f3([(x, y,),],) = x + y
+//│ ╔══[ERROR] unsupported pattern shape
+//│ ║  l.205: 	fun f3([(x, y,),],) = x + y
+//│ ╙──       	        ^^^^^^^
+//│ ╔══[ERROR] identifier `x` not found
+//│ ║  l.205: 	fun f3([(x, y,),],) = x + y
+//│ ╙──       	                      ^
+//│ ╔══[ERROR] identifier `y` not found
+//│ ║  l.205: 	fun f3([(x, y,),],) = x + y
+//│ ╙──       	                          ^
+//│ ╔══[ERROR] Unsupported pattern shape:
+//│ ║  l.205: 	fun f3([(x, y,),],) = x + y
+//│ ╙──       	        ^^^^^^^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.205: 	fun f3([(x, y,),],) = x + y
+//│ ╙──       	                      ^
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.205: 	fun f3([(x, y,),],) = x + y
+//│ ╙──       	                          ^
+//│ fun f3: ([error]) -> Int
+
+// GenericClassInheritance
+class C1[A] extends C0[A] { val a = a }
+//│ ╔══[ERROR] could not find definition `C0`
+//│ ║  l.227: 	class C1[A] extends C0[A] { val a = a }
+//│ ╙──       	                    ^^
+//│ ╔══[ERROR] identifier `a` not found
+//│ ║  l.227: 	class C1[A] extends C0[A] { val a = a }
+//│ ╙──       	                                    ^
+//│ ╔══[ERROR] Could not find definition `C0`
+//│ ║  l.227: 	class C1[A] extends C0[A] { val a = a }
+//│ ╙──       	                    ^^
+//│ class C1[A] {
+//│   constructor()
+//│   val a: nothing
+//│ }
+
+// GenericMethods
+fun foo1 = forall 'A: (x: 'A) => x
+//│ fun foo1: forall 'A. (x: 'A) -> 'A
+
+// GenericMethods
+foo1[Int](42)
+//│ ╔══[ERROR] type application syntax is not yet supported
+//│ ║  l.247: 	foo1[Int](42)
+//│ ╙──       	^^^^^^^^^
+//│ ╔══[ERROR] Type application syntax is not yet supported
+//│ ║  l.247: 	foo1[Int](42)
+//│ ╙──       	^^^^^^^^^
+//│ 42
+
+// GenericMethods
+fun foo2<A>(x: A) = x
+//│ fun foo2: forall 'A. (x: 'A) -> 'A
+
+// GenericMethods
+foo2<Int>(42)
+//│ ╔══[ERROR] type application syntax is not yet supported
+//│ ║  l.261: 	foo2<Int>(42)
+//│ ╙──       	^^^^^^^^^
+//│ ╔══[ERROR] Type application syntax is not yet supported
+//│ ║  l.261: 	foo2<Int>(42)
+//│ ╙──       	^^^^^^^^^
+//│ 42
+
+// GenericMethods
+fun foo3[A](x: A) = x
+//│ fun foo3: forall 'A. (x: 'A) -> 'A
+
+// GenericMethods
+foo3[Int](42)
+//│ ╔══[ERROR] type application syntax is not yet supported
+//│ ║  l.275: 	foo3[Int](42)
+//│ ╙──       	^^^^^^^^^
+//│ ╔══[ERROR] Type application syntax is not yet supported
+//│ ║  l.275: 	foo3[Int](42)
+//│ ╙──       	^^^^^^^^^
+//│ 42
+
+// ImplicitMethodPolym
+module None
+module M {
+  mut val m = None
+  fun oops(x) = m := x
+}
+//│ ╔══[ERROR] identifier `:=` not found
+//│ ║  l.288: 	  fun oops(x) = m := x
+//│ ╙──       	                  ^^
+//│ ╔══[ERROR] identifier not found: :=
+//│ ║  l.288: 	  fun oops(x) = m := x
+//│ ╙──       	                  ^^
+//│ module None
+//│ module M {
+//│   val m: None
+//│   fun oops: anything -> error
+//│ }
+
+// InterfaceMono
+trait What0 extends woooo
+//│ ╔══[ERROR] could not find definition `woooo`
+//│ ║  l.303: 	trait What0 extends woooo
+//│ ╙──       	                    ^^^^^
+//│ ╔══[ERROR] Could not find definition `woooo`
+//│ ║  l.303: 	trait What0 extends woooo
+//│ ╙──       	                    ^^^^^
+//│ trait What0
+
+// Misc
+let f = ((x, y)) => x + y
+//│ ╔══[ERROR] unsupported pattern shape
+//│ ║  l.313: 	let f = ((x, y)) => x + y
+//│ ╙──       	         ^^^^^^
+//│ ╔══[ERROR] identifier `x` not found
+//│ ║  l.313: 	let f = ((x, y)) => x + y
+//│ ╙──       	                    ^
+//│ ╔══[ERROR] identifier `y` not found
+//│ ║  l.313: 	let f = ((x, y)) => x + y
+//│ ╙──       	                        ^
+//│ ╔══[ERROR] Unsupported pattern shape:
+//│ ║  l.313: 	let f = ((x, y)) => x + y
+//│ ╙──       	         ^^^^^^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.313: 	let f = ((x, y)) => x + y
+//│ ╙──       	                    ^
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.313: 	let f = ((x, y)) => x + y
+//│ ╙──       	                        ^
+//│ let f: error -> Int
+
+// Misc
+f[1, 2]
+//│ ╔══[ERROR] type application syntax is not yet supported
+//│ ║  l.335: 	f[1, 2]
+//│ ╙──       	^^^^^^^
+//│ ╔══[ERROR] Type application syntax is not yet supported
+//│ ║  l.335: 	f[1, 2]
+//│ ╙──       	^^^^^^^
+//│ error -> Int
+
+// Misc
+let f = (((x, y))) => x + y
+//│ ╔══[ERROR] unsupported pattern shape
+//│ ║  l.345: 	let f = (((x, y))) => x + y
+//│ ╙──       	          ^^^^^^
+//│ ╔══[ERROR] identifier `x` not found
+//│ ║  l.345: 	let f = (((x, y))) => x + y
+//│ ╙──       	                      ^
+//│ ╔══[ERROR] identifier `y` not found
+//│ ║  l.345: 	let f = (((x, y))) => x + y
+//│ ╙──       	                          ^
+//│ ╔══[ERROR] Unsupported pattern shape:
+//│ ║  l.345: 	let f = (((x, y))) => x + y
+//│ ╙──       	          ^^^^^^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.345: 	let f = (((x, y))) => x + y
+//│ ╙──       	                      ^
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.345: 	let f = (((x, y))) => x + y
+//│ ╙──       	                          ^
+//│ let f: error -> Int
+
+// Mut
+let v1 = {mut 1}
+v1.x <- 1
+//│ ╔══[PARSE ERROR] Record field should have a name
+//│ ║  l.367: 	let v1 = {mut 1}
+//│ ╙──       	              ^
+//│ ╔══[ERROR] identifier `<-` not found
+//│ ║  l.368: 	v1.x <- 1
+//│ ╙──       	     ^^
+//│ ╔══[ERROR] identifier not found: <-
+//│ ║  l.368: 	v1.x <- 1
+//│ ╙──       	     ^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.368: 	v1.x <- 1
+//│ ║         	^^^^
+//│ ╟── record literal of type `{mut <error>: ?<error>}` does not have field 'x'
+//│ ║  l.367: 	let v1 = {mut 1}
+//│ ║         	              ^
+//│ ╟── but it flows into reference with expected type `{x: ?x}`
+//│ ║  l.368: 	v1.x <- 1
+//│ ╙──       	^^
+//│ let v1: {mut <error>: '<error>}
+//│ error
+//│ where
+//│   '<error> :> 1
+
+// Mut
+let v2 = [mut x: 1]
+//│ ╔══[ERROR] identifier `x` not found
+//│ ║  l.393: 	let v2 = [mut x: 1]
+//│ ╙──       	              ^
+//│ let v2: [mut x: 'x]
+//│   where
+//│     'x :> 1
+
+// Mut
+let v2 = [mut y: 1]
+//│ ╔══[ERROR] identifier `y` not found
+//│ ║  l.402: 	let v2 = [mut y: 1]
+//│ ╙──       	              ^
+//│ let v2: [mut y: 'y]
+//│   where
+//│     'y :> 1
+
+// NoThisCtor
+class Foo() {
+  virtual val foo: Int = 42
+}
+//│ class Foo() {
+//│   val foo: Int
+//│ }
+
+// NoThisCtor
+class Foo5() extends Foo() {
+  val foo: Int
+  val x = bar(0)
+  fun bar(y: Int) = this.foo + y
+}
+//│ ╔══[ERROR] identifier `bar` not found
+//│ ║  l.421: 	  val x = bar(0)
+//│ ╙──       	          ^^^
+//│ ╔══[ERROR] Cannot access `this` while initializing field x
+//│ ║  l.421: 	  val x = bar(0)
+//│ ║         	      ^^^^^^^^^^
+//│ ╟── The access to `this` is here
+//│ ║  l.422: 	  fun bar(y: Int) = this.foo + y
+//│ ╙──       	                    ^^^^
+//│ class Foo5() extends Foo {
+//│   fun bar: (y: Int) -> Int
+//│   val foo: Int
+//│   val x: Int
+//│ }
+
+// NoThisCtor
+abstract class Foo: (Int -> Int) {
+  val x = f
+  fun f = this(0)
+}
+//│ ╔══[ERROR] Cannot access `this` while initializing field x
+//│ ║  l.441: 	  val x = f
+//│ ║         	      ^^^^^
+//│ ╟── The access to `this` is here
+//│ ║  l.442: 	  fun f = this(0)
+//│ ╙──       	          ^^^^
+//│ abstract class Foo: Int -> Int {
+//│   fun f: nothing
+//│   val x: nothing
+//│ }
+
+// Object
+Object
+//│ ╔══[ERROR] identifier `Object` is resolved to a type
+//│ ║  l.456: 	Object
+//│ ╙──       	^^^^^^
+//│ ╔══[ERROR] Class Object is abstract and cannot be instantiated
+//│ ║  l.456: 	Object
+//│ ╙──       	^^^^^^
+//│ ╔══[ERROR] Class Object cannot be instantiated as it exposes no constructor
+//│ ║  l.456: 	Object
+//│ ╙──       	^^^^^^
+//│ error
+
+// OpLam
+x => x.y => y
+//│ ╔══[ERROR] unsupported pattern shape
+//│ ║  l.469: 	x => x.y => y
+//│ ╙──       	     ^^^
+//│ ╔══[ERROR] identifier `y` not found
+//│ ║  l.469: 	x => x.y => y
+//│ ╙──       	            ^
+//│ ╔══[ERROR] Unsupported pattern shape:
+//│ ║  l.469: 	x => x.y => y
+//│ ╙──       	     ^^^
+//│ ╔══[ERROR] identifier not found: y
+//│ ║  l.469: 	x => x.y => y
+//│ ╙──       	            ^
+//│ anything -> error -> error
+
+// ParamOverride
+class Base0(n: Num)
+//│ class Base0(n: Num)
+
+// ParamOverride
+class Derived0(n: Int) extends Base
+//│ ╔══[ERROR] could not find definition `Base`
+//│ ║  l.489: 	class Derived0(n: Int) extends Base
+//│ ╙──       	                               ^^^^
+//│ ╔══[ERROR] Could not find definition `Base`
+//│ ║  l.489: 	class Derived0(n: Int) extends Base
+//│ ╙──       	                               ^^^^
+//│ class Derived0(n: Int)
+
+// ParamOverride
+mixin DerivedBad(n: Int) extends Base
+//│ ╔══[ERROR] could not find definition `Base`
+//│ ║  l.499: 	mixin DerivedBad(n: Int) extends Base
+//│ ╙──       	                                 ^^^^
+//│ ╔══[ERROR] mixin definitions cannot yet extend parents
+//│ ║  l.499: 	mixin DerivedBad(n: Int) extends Base
+//│ ╙──       	                                 ^^^^
+//│ mixin DerivedBad(n: Int)
+
+// PartialApp
+fun foo(x, y) = x + y
+//│ fun foo: (Int, Int) -> Int
+
+// PartialApp
+foo(2, _)
+//│ ╔══[ERROR] identifier `_` not found
+//│ ║  l.513: 	foo(2, _)
+//│ ╙──       	       ^
+//│ ╔══[ERROR] Widlcard in expression position.
+//│ ║  l.513: 	foo(2, _)
+//│ ╙──       	       ^
+//│ Int
+
+// PartialApp
+_.foo(1)
+//│ ╔══[ERROR] identifier `_` not found
+//│ ║  l.523: 	_.foo(1)
+//│ ╙──       	^
+//│ ╔══[ERROR] Widlcard in expression position.
+//│ ║  l.523: 	_.foo(1)
+//│ ╙──       	^
+//│ error
+
+// PartialApp
+_ + _
+//│ ╔══[ERROR] identifier `_` not found
+//│ ║  l.533: 	_ + _
+//│ ╙──       	^
+//│ ╔══[ERROR] identifier `_` not found
+//│ ║  l.533: 	_ + _
+//│ ╙──       	    ^
+//│ ╔══[ERROR] Widlcard in expression position.
+//│ ║  l.533: 	_ + _
+//│ ╙──       	^
+//│ ╔══[ERROR] Widlcard in expression position.
+//│ ║  l.533: 	_ + _
+//│ ╙──       	    ^
+//│ Int
+
+// PartialApp
+_2 + _1
+//│ ╔══[ERROR] identifier `_2` not found
+//│ ║  l.549: 	_2 + _1
+//│ ╙──       	^^
+//│ ╔══[ERROR] identifier `_1` not found
+//│ ║  l.549: 	_2 + _1
+//│ ╙──       	     ^^
+//│ ╔══[ERROR] identifier not found: _2
+//│ ║  l.549: 	_2 + _1
+//│ ╙──       	^^
+//│ ╔══[ERROR] identifier not found: _1
+//│ ║  l.549: 	_2 + _1
+//│ ╙──       	     ^^
+//│ Int
+
+// RefinedPatterns
+refined
+//│ ╔══[ERROR] identifier `refined` not found
+//│ ║  l.565: 	refined
+//│ ╙──       	^^^^^^^
+//│ ╔══[ERROR] Illegal use of reserved operator: refined
+//│ ║  l.565: 	refined
+//│ ╙──       	^^^^^^^
+//│ ╔══[ERROR] identifier not found: refined
+//│ ║  l.565: 	refined
+//│ ╙──       	^^^^^^^
+//│ error
+
+// Refinements
+class D() { fun f = 0 }
+//│ class D() {
+//│   fun f: 0
+//│ }
+
+// Refinements
+let d = D & { f: 0 }
+//│ ╔══[ERROR] identifier `&` not found
+//│ ║  l.584: 	let d = D & { f: 0 }
+//│ ╙──       	          ^
+//│ ╔══[ERROR] Illegal use of reserved operator: &
+//│ ║  l.584: 	let d = D & { f: 0 }
+//│ ╙──       	          ^
+//│ ╔══[ERROR] identifier not found: &
+//│ ║  l.584: 	let d = D & { f: 0 }
+//│ ╙──       	          ^
+//│ let d: error
+
+// Res
+x => x + 2
+//│ Int -> Int
+
+// Res
+res(1)
+//│ ╔══[ERROR] identifier `res` not found
+//│ ║  l.601: 	res(1)
+//│ ╙──       	^^^
+//│ ╔══[ERROR] identifier not found: res
+//│ ║  l.601: 	res(1)
+//│ ╙──       	^^^
+//│ error
+
+// Uninstantiable
+Int
+//│ ╔══[ERROR] identifier `Int` is resolved to a type
+//│ ║  l.611: 	Int
+//│ ╙──       	^^^
+//│ ╔══[ERROR] Class Int is abstract and cannot be instantiated
+//│ ║  l.611: 	Int
+//│ ╙──       	^^^
+//│ ╔══[ERROR] Class Int cannot be instantiated as it exposes no constructor
+//│ ║  l.611: 	Int
+//│ ╙──       	^^^
+//│ error
+
+// Uninstantiable
+Int()
+//│ ╔══[ERROR] identifier `Int` is resolved to a type
+//│ ║  l.624: 	Int()
+//│ ╙──       	^^^
+//│ ╔══[ERROR] Class Int is abstract and cannot be instantiated
+//│ ║  l.624: 	Int()
+//│ ╙──       	^^^
+//│ ╔══[ERROR] Class Int cannot be instantiated as it exposes no constructor
+//│ ║  l.624: 	Int()
+//│ ╙──       	^^^
+//│ error
+
+// Uninstantiable
+new Int
+//│ ╔══[ERROR] identifier `Int` is resolved to a type
+//│ ║  l.637: 	new Int
+//│ ╙──       	    ^^^
+//│ ╔══[ERROR] Class Int is abstract and cannot be instantiated
+//│ ║  l.637: 	new Int
+//│ ╙──       	    ^^^
+//│ Int
+
+// Unit
+(1, 2) => 3
+//│ ╔══[WARNING] literal patterns are ignored
+//│ ║  l.647: 	(1, 2) => 3
+//│ ╙──       	 ^
+//│ ╔══[WARNING] literal patterns are ignored
+//│ ║  l.647: 	(1, 2) => 3
+//│ ╙──       	    ^
+//│ (1, 2) -> 3
+
+// Unit
+1 => (2, 3)
+//│ ╔══[WARNING] literal patterns are ignored
+//│ ║  l.657: 	1 => (2, 3)
+//│ ╙──       	^
+//│ 1 -> 3
+
+// Vals
+val c = d + 1
+val d = 1
+//│ val c: Int
+//│ val d: 1
+
+// Varargs
+fun test(...xs) = xs.length
+//│ ╔══[PARSE ERROR] Unexpected operator here
+//│ ║  l.670: 	fun test(...xs) = xs.length
+//│ ╙──       	         ^^^
+//│ ╔══[ERROR] identifier `xs` not found
+//│ ║  l.670: 	fun test(...xs) = xs.length
+//│ ╙──       	                  ^^
+//│ ╔══[ERROR] identifier not found: xs
+//│ ║  l.670: 	fun test(...xs) = xs.length
+//│ ╙──       	                  ^^
+//│ fun test: () -> error
+
+// WeirdDefs
+fun fst[x, _] = x
+//│ ╔══[ERROR] identifier `x` not found
+//│ ║  l.683: 	fun fst[x, _] = x
+//│ ╙──       	                ^
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.683: 	fun fst[x, _] = x
+//│ ╙──       	                ^
+//│ fun fst: error
+
+// repro0
+class Add[out E](val lhs: E)
+val add11 = Add(add11)
+module EvalAddLit {
+  fun eval(e: Add['A]) =
+    if e is Add then eval(e.lhs)
+}
+let res = EvalAddLit.eval(add11)
+//│ ╔══[ERROR] identifier `add11` not found
+//│ ║  l.694: 	val add11 = Add(add11)
+//│ ╙──       	                ^^^^^
+//│ class Add[E](lhs: E)
+//│ val add11: 'E
+//│ module EvalAddLit {
+//│   fun eval: forall 'A. (e: 'A) -> nothing
+//│ }
+//│ let res: nothing
+//│ where
+//│   'A <: Add['A]
+//│   'E :> Add['E]

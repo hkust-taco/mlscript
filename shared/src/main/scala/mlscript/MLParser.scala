@@ -140,7 +140,7 @@ class MLParser(origin: Origin, indent: Int = 0, recordLocations: Bool = true) {
   def matchArms[p: P](sep: Str): P[CaseBranches] = P(
     ( ("_" ~ "->" ~ term).map(Wildcard)
     | ((lit | variable) ~ "->" ~ term ~ matchArms2(sep))
-      .map { case (t, b, rest) => Case(t, b, rest) }
+      .map { case (t, b, rest) => Case(t, b, rest)(refined = false) }
     ).?.map {
       case None => NoCases
       case Some(b) => b

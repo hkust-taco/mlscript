@@ -1,103 +1,118 @@
-:NewParser
+:NewDefs
 
 
-class Pair(fst, snd)
-//│ Defined class Pair
-//│ Pair: ('fst, 'snd,) -> (Pair & {fst: 'fst, snd: 'snd})
-//│     = [Function: Pair1]
+class Pair[A, B](fst: A, snd: B)
+//│ class Pair[A, B](fst: A, snd: B)
 
 
 
 Pair(0, 1) is Pair
-//│ res: Bool
-//│    = true
+//│ Bool
+//│ res
+//│     = true
 
 Pair(0, 1) is Pair(a, b)
-//│ res: Bool
-//│    = true
+//│ Bool
+//│ res
+//│     = true
 
 Pair(0, 1) is Pair(0, _)
-//│ res: Bool
-//│    = true
+//│ Bool
+//│ res
+//│     = true
 
 if Pair(0, 1) is Pair(a, b) then true else false
-//│ res: Bool
-//│    = true
+//│ Bool
+//│ res
+//│     = true
 
 
 fun foo(x) = x is Pair(a, b)
-//│ foo: anything -> Bool
-//│    = [Function: foo]
+//│ fun foo: (Object & ~#Pair | Pair[anything, anything]) -> Bool
 
 
 Pair(0, 1) is Pair(a, b) and a > b
-//│ res: bool
-//│    = false
+//│ Bool
+//│ res
+//│     = false
 
 if Pair(0, 1) is Pair(a, b) then a > b else false
-//│ res: bool
-//│    = false
+//│ Bool
+//│ res
+//│     = false
 
 
 fun foo(x) = x is Pair(a, b) and a > b
-//│ foo: (Pair & {fst: number, snd: number} | ~Pair) -> bool
-//│    = [Function: foo1]
+//│ fun foo: (Object & ~#Pair | Pair[Num, Num]) -> Bool
 
 fun foo(x) = if x is Pair(a, b) then a > b else false
-//│ foo: (Pair & {fst: number, snd: number} | ~Pair) -> bool
-//│    = [Function: foo2]
+//│ fun foo: (Object & ~#Pair | Pair[Num, Num]) -> Bool
 
 
 // TODO proper error
 fun foo(x) = x is
   Pair
   Int
-//│ ╔══[ERROR] illegal pattern
-//│ ║  l.53: 	  Pair
+//│ ╔══[ERROR] unknown pattern {Pair; Int}
+//│ ║  l.54: 	  Pair
 //│ ║        	  ^^^^
-//│ ║  l.54: 	  Int
+//│ ║  l.55: 	  Int
 //│ ╙──      	^^^^^
-//│ foo: anything -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[WARNING] this case is unreachable
+//│ ╙── because it is subsumed by the branch
+//│ fun foo: anything -> true
 
 // TODO proper error
 fun foo(x) = x is
   Pair(a, b) and a > b
   Int
-//│ ╔══[ERROR] illegal pattern
-//│ ║  l.66: 	  Pair(a, b) and a > b
+//│ ╔══[ERROR] unknown pattern {and(Pair(a, b,), >(a, b,),); Int}
+//│ ║  l.67: 	  Pair(a, b) and a > b
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.67: 	  Int
+//│ ║  l.68: 	  Int
 //│ ╙──      	^^^^^
-//│ foo: anything -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[WARNING] this case is unreachable
+//│ ╙── because it is subsumed by the branch
+//│ fun foo: anything -> true
 
 // TODO support `|`
 fun foo(x) = x is Pair(a, b) | Int
 fun foo(x) = x is (Pair(a, b) and a > b) | Int
-//│ ╔══[ERROR] Cannot find operator `|` in the context
-//│ ║  l.78: 	fun foo(x) = x is Pair(a, b) | Int
-//│ ╙──      	                             ^
-//│ foo: anything -> error
-//│ ╔══[ERROR] Cannot find operator `|` in the context
-//│ ║  l.79: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╔══[ERROR] type identifier `|` not found
+//│ ║  l.80: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
 //│ ╙──      	                                         ^
-//│ foo: anything -> error
+//│ ╔══[ERROR] type identifier `and` not found
+//│ ║  l.80: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╙──      	                              ^^^
+//│ ╔══[ERROR] type identifier `>` not found
+//│ ║  l.80: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╙──      	                                    ^
+//│ ╔══[ERROR] type identifier `|` not found
+//│ ║  l.79: 	fun foo(x) = x is Pair(a, b) | Int
+//│ ╙──      	                             ^
+//│ ╔══[ERROR] Redefinition of 'foo'
+//│ ║  l.80: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] type identifier not found: |
+//│ ║  l.79: 	fun foo(x) = x is Pair(a, b) | Int
+//│ ╙──      	                             ^
+//│ ╔══[ERROR] type identifier not found: |
+//│ ║  l.80: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╙──      	                                         ^
+//│ fun foo: nothing -> error
+//│ fun foo: nothing -> error
 //│ Code generation encountered an error:
-//│   if expression was not desugared
+//│   unresolved symbol |
 
 
 
-class A(arg)
-//│ Defined class A
-//│ A: 'arg -> (A & {arg: 'arg})
-//│  = [Function: A1]
+class A[T](arg: T)
+//│ class A[T](arg: T)
 
-// TODO make `is` lower precedence than `=>`
+
 x => (x is A(_))
-//│ res: anything -> Bool
-//│    = [Function: res]
+//│ (A[anything] | Object & ~#A) -> Bool
+//│ res
+//│     = [Function: res]
 
 

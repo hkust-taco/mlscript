@@ -11,11 +11,12 @@ fun f(a, b) = if a is
     and b is Some(v') then v + v'
     or  b is Some(v)  then v
   else 0
-//│ ╔══[ERROR] Illegal pattern `and`
-//│ ║  l.11: 	    and b is Some(v') then v + v'
-//│ ╙──      	    ^^^
-//│ fun f: (anything, anything) -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[ERROR] cannot transform due to an illegal split operator or
+//│ ║  l.12: 	    or  b is Some(v)  then v
+//│ ║        	    ^^
+//│ ╟── the following branch will be discarded
+//│ ║  l.12: 	    or  b is Some(v)  then v
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^
+//│ fun f: (Object & ~#Some | Some[Int], Object & ~#Some | Some[Int]) -> Int
 
 

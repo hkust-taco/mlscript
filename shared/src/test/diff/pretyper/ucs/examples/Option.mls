@@ -1,0 +1,106 @@
+:NewDefs
+
+abstract class MyOption[out T]: (MySome[T] | MyNone) {
+  virtual fun filter: (p: T -> Bool) -> MyOption[T]
+}
+class MySome[out T](val value: T) extends MyOption[T] {
+  fun filter(p) = if p of value then MySome(value) else MyNone
+}
+module MyNone extends MyOption[nothing] {
+  fun filter(_) = MyNone
+}
+//│ abstract class MyOption[T]: MyNone | MySome[T] {
+//│   fun filter: (p: T -> Bool) -> MyOption[T]
+//│ }
+//│ class MySome[T](value: T) extends MyOption {
+//│   fun filter: (T -> Bool) -> (MyNone | MySome[T])
+//│ }
+//│ module MyNone extends MyOption {
+//│   fun filter: anything -> MyNone
+//│ }
+
+// The following code aims to find a workaround that allows the functions
+// operating ADT to be defined as member functions of classes, and also ensures
+// the correct generation of JavaScript code.
+
+// Create an alias constructor for `Some`
+// ======================================
+// // This works:
+fun some: forall 'a: 'a -> Option['a]
+fun some = x => Some(x)
+// // This doesn't work with `map`:
+// let some: forall 'a: 'a -> Option['a] = x => Some(x)
+//
+// Create an alias constructor for `None`
+// ======================================
+// // This works:
+// fun none: forall 'a: () -> Option['a]
+// fun none = () => None
+// // This also works:
+// fun none: Option[nothing]
+// fun none = None
+// This also works:
+let none: () -> Option[nothing] = () => None
+// // This also works but failed in code generation:
+// let none: Option[nothing] = None
+//
+// The class definitions
+// =====================
+abstract class Option[out T]: (Some[T] | None) {
+  virtual fun isEmpty: Bool
+  virtual fun isDefined: Bool
+  virtual fun map: forall 'b: (T -> 'b) -> Option['b]
+  virtual fun flatMap: forall 'b: (T -> Option['b]) -> Option['b]
+  virtual fun filter: (p: T -> Bool) -> Option[T]
+  virtual fun get: T
+}
+class Some[out T](val value: T) extends Option[T] {
+  fun isEmpty = false
+  fun isDefined = true
+  fun map(f) = some(f(value))
+  fun flatMap(f) = f(value)
+  fun filter(p) = if p of value then some(value) else none()
+  fun get = value
+}
+module None extends Option[nothing] {
+  fun isEmpty = true
+  fun isDefined = false
+  fun map(_) = none()
+  fun flatMap(_) = none()
+  fun filter(_) = none()
+  fun get = error
+}
+//│ fun some: forall 'T. 'T -> Some['T]
+//│ let none: () -> Option[nothing]
+//│ abstract class Option[T]: None | Some[T] {
+//│   fun filter: (p: T -> Bool) -> Option[T]
+//│   fun flatMap: forall 'b. (T -> Option['b]) -> Option['b]
+//│   fun get: T
+//│   fun isDefined: Bool
+//│   fun isEmpty: Bool
+//│   fun map: forall 'b0. (T -> 'b0) -> Option['b0]
+//│ }
+//│ class Some[T](value: T) extends Option {
+//│   fun filter: (T -> Bool) -> Option[T]
+//│   fun flatMap: forall 'c. (T -> 'c) -> 'c
+//│   fun get: T
+//│   fun isDefined: true
+//│   fun isEmpty: false
+//│   fun map: forall 'a. (T -> 'a) -> Option['a]
+//│ }
+//│ module None extends Option {
+//│   fun filter: anything -> Option[nothing]
+//│   fun flatMap: anything -> Option[nothing]
+//│   fun get: nothing
+//│   fun isDefined: false
+//│   fun isEmpty: true
+//│   fun map: anything -> Option[nothing]
+//│ }
+//│ fun some: forall 'a0. 'a0 -> Option['a0]
+//│ none
+//│      = [Function: none]
+
+some(0).map(x => x + 1).get
+//│ Int
+//│ res
+//│     = 1

@@ -30,15 +30,13 @@ fun f(e) = if e is
 //│     = [Function: res]
 
 
-:e // TODO support
+:w
 fun f(e) = if e is
   Pair['a, 'b](l, r) then [l, r]
-//│ ╔══[ERROR] illegal pattern
+//│ ╔══[WARNING] type parameters in patterns are currently ignored
 //│ ║  l.35: 	  Pair['a, 'b](l, r) then [l, r]
-//│ ╙──      	  ^^^^^^^^^^^^^^^^^^
-//│ fun f: anything -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╙──      	       ^^^^^^
+//│ fun f: forall 'a 'b. Pair['a, 'b] -> ['a, 'b]
 
 
 :e // TODO support
@@ -47,10 +45,10 @@ fun f(e) = if e is
     let f(x: a) = x
     f(l)
 //│ ╔══[ERROR] type identifier not found: a
-//│ ║  l.47: 	    let f(x: a) = x
+//│ ║  l.45: 	    let f(x: a) = x
 //│ ╙──      	             ^
 //│ ╔══[ERROR] identifier not found: l
-//│ ║  l.48: 	    f(l)
+//│ ║  l.46: 	    f(l)
 //│ ╙──      	      ^
 //│ fun f: Pair[anything, anything] -> error
 //│ Code generation encountered an error:

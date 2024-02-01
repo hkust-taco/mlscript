@@ -39,22 +39,7 @@ fun sum(v) =
 //│ globalThis.sum = function sum(v) {
 //│   return ((() => {
 //│     let a;
-//│     return (a = v, a instanceof V0.class ? 0 : a instanceof V1.class ? (([a]) => a)(V1.unapply(v)) : a instanceof V2.class ? (([
-//│       a,
-//│       b
-//│     ]) => a + b)(V2.unapply(v)) : a instanceof Pos.class ? (([x]) => x > 0 === true ? x : -1)(Pos.unapply(v)) : a instanceof V22.class ? (([
-//│       tmp0,
-//│       tmp1
-//│     ]) => tmp0 instanceof V2.class ? (([
-//│       x1,
-//│       y1
-//│     ]) => tmp1 instanceof V2.class ? (([
-//│       x2,
-//│       y2
-//│     ]) => x1 + y1 + x2 + y2)(V2.unapply(tmp1)) : -1)(V2.unapply(tmp0)) : -1)(V22.unapply(v)) : a instanceof Half.class ? (([
-//│       tmp2,
-//│       x
-//│     ]) => x)(Half.unapply(v)) : a instanceof None.class ? (([tmp3]) => 0)(None.unapply(v)) : -1);
+//│     return a = v, a instanceof V0.class ? 0 : a instanceof V22.class ? ((ucs$args_v$V22) => ((v$V22_0) => ((v$V22_1) => v$V22_0 instanceof V2.class ? ((ucs$args_v$V22_0$V2) => ((x1) => ((y1) => v$V22_1 instanceof V2.class ? ((ucs$args_v$V22_1$V2) => ((x2) => ((y2) => x1 + y1 + x2 + y2)(ucs$args_v$V22_1$V2[1]))(ucs$args_v$V22_1$V2[0]))(V2.unapply(v$V22_1)) : -1)(ucs$args_v$V22_0$V2[1]))(ucs$args_v$V22_0$V2[0]))(V2.unapply(v$V22_0)) : -1)(ucs$args_v$V22[1]))(ucs$args_v$V22[0]))(V22.unapply(v)) : a instanceof V2.class ? ((ucs$args_v$V2) => ((a) => ((b) => a + b)(ucs$args_v$V2[1]))(ucs$args_v$V2[0]))(V2.unapply(v)) : a instanceof V1.class ? ((ucs$args_v$V1) => ((a) => a)(ucs$args_v$V1[0]))(V1.unapply(v)) : a instanceof Pos.class ? ((ucs$args_v$Pos) => ((x) => ((ucs$test$0) => ucs$test$0 === true ? x : -1)(x > 0))(ucs$args_v$Pos[0]))(Pos.unapply(v)) : a instanceof None.class ? 0 : a instanceof Half.class ? ((ucs$args_v$Half) => ((x) => x)(ucs$args_v$Half[1]))(Half.unapply(v)) : -1;
 //│   })());
 //│ };
 //│ // End of generated code
@@ -104,7 +89,7 @@ fun get1(s) =
 //│ globalThis.get1 = function get1(s) {
 //│   return ((() => {
 //│     let a;
-//│     return (a = s, a instanceof Some.class ? (([tmp4]) => ((y) => tmp4 instanceof V1.class ? (([x]) => x)(V1.unapply(tmp4)) : y)(tmp4))(Some.unapply(s)) : (() => {
+//│     return (a = s, a instanceof Some.class ? ((ucs$args_s$Some) => ((s$Some_0) => s$Some_0 instanceof V1.class ? ((ucs$args_s$Some_0$V1) => ((x) => x)(ucs$args_s$Some_0$V1[0]))(V1.unapply(s$Some_0)) : ((y) => y)(ucs$args_s$Some[0]))(ucs$args_s$Some[0]))(Some.unapply(s)) : (() => {
 //│       throw new Error("non-exhaustive case expression");
 //│     })());
 //│   })());
@@ -136,7 +121,7 @@ fun foo(s) =
 //│ // Query 1
 //│ globalThis.foo = function foo(s) {
 //│   return ((() => {
-//│     return s instanceof Some.class ? (([t]) => ((b) => b + t.x)(s2.value))(Some.unapply(s)) : 0;
+//│     return s instanceof Some.class ? ((ucs$args_s$Some) => ((t) => ((b) => b + t.x)(s2.value))(ucs$args_s$Some[0]))(Some.unapply(s)) : 0;
 //│   })());
 //│ };
 //│ // End of generated code
@@ -213,17 +198,18 @@ t(new FooBar())
 //│     = 1
 
 :e
-:ge
 fun ft(x) =
   if x is
     FooBar(x) then x
     _ then 0
-//│ ╔══[ERROR] class FooBar expects 0 parameter but found 1 parameter
-//│ ║  l.219: 	    FooBar(x) then x
-//│ ╙──       	    ^^^^^^^^^
-//│ fun ft: anything -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[ERROR] Construction of unparameterized class FooBar should use the `new` keyword
+//│ ║  l.203: 	    FooBar(x) then x
+//│ ╙──       	    ^^^^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.203: 	    FooBar(x) then x
+//│ ║         	    ^^^^^^
+//│ ╙── reference of type `() -> FooBar` does not have field 'unapply'
+//│ fun ft: Object -> (0 | error)
 
 :js
 module MM
@@ -264,13 +250,17 @@ fun c(x) =
   if x is
     VVC(x, y, z) then x + y + z
     _ then 0
-//│ ╔══[ERROR] class VVC expects 2 parameters but found 3 parameters
-//│ ║  l.265: 	    VVC(x, y, z) then x + y + z
-//│ ╙──       	    ^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ╟── tuple literal of type `{0: ?#v, 1: ?#vc}` does not have field '2'
+//│ ║  l.248: 	class VVC(v: Int, vc: Int)
+//│ ║         	          ^^^^^^^^^^
+//│ ╟── but it flows into operator application with expected type `{2: ?a}`
+//│ ║  l.250: 	  if x is
+//│ ║         	     ^^^^
+//│ ║  l.251: 	    VVC(x, y, z) then x + y + z
+//│ ╙──       	^^^^^^^
 //│ class VVC(v: Int, vc: Int)
-//│ fun c: anything -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ fun c: Object -> Int
 
 
 

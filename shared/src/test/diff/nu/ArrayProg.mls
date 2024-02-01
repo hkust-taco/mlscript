@@ -112,10 +112,10 @@ fun add2(e) =
   if e is
     Pair(Numbr(n), Numbr(m)) then Numbr(m + m)
     Pair(Numbr(n), Vectr(n)) then n
-//│ fun add2: Pair[Numbr, Numbr | Vectr] -> (Numbr | Array[Numbr | Vectr])
+//│ fun add2: Pair[Numbr, Numbr | Vectr] -> (Int | Numbr)
 
 add2(Pair(Numbr(0), Numbr(1)))
-//│ Numbr | Array[Numbr | Vectr]
+//│ Int | Numbr
 //│ res
 //│     = Numbr {}
 
@@ -189,34 +189,44 @@ fun add(e) =
     Pair(Numbr(n), Numbr(m))    then 0
     Pair(Vectr(xs),  Vectr(ys)) then 1
     Pair(Vectr(xs),  Numbr(n))  then 2
-//│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.+2: 	  if e is
-//│ ║        	     ^^^^
-//│ ╟── The scrutinee at this position misses 1 case.
+//│ ╔══[ERROR] when `e` is `Pair`, and
 //│ ║  l.+3: 	    Pair(Numbr(n), Numbr(m))    then 0
-//│ ║        	                   ^^^^^^^^
-//│ ╟── [Missing Case 1/1] `Vectr`
-//│ ╟── It first appears here.
+//│ ║        	    ^^^^
+//│ ╟── first argument of `Pair` is `Numbr`,
+//│ ║  l.+3: 	    Pair(Numbr(n), Numbr(m))    then 0
+//│ ║        	         ^^^^^
+//│ ╟── second argument of `Pair` has 1 missing case
+//│ ╟── it can be class `Vectr`
 //│ ║  l.+4: 	    Pair(Vectr(xs),  Vectr(ys)) then 1
-//│ ╙──      	                     ^^^^^^^^^
-//│ fun add: anything -> error
+//│ ╙──      	                     ^^^^^
+//│ fun add: Pair[Numbr | Vectr, Numbr] -> (0 | 1 | 2)
 
 :e
 fun add(e) =
   if e is
     Pair(Numbr(n), Numbr(m))    then 0
     Pair(Vectr(xs),  Vectr(ys)) then 1
-//│ ╔══[ERROR] The match is not exhaustive.
-//│ ║  l.+2: 	  if e is
-//│ ║        	     ^^^^
-//│ ╟── The scrutinee at this position misses 1 case.
+//│ ╔══[ERROR] when `e` is `Pair`, and
 //│ ║  l.+3: 	    Pair(Numbr(n), Numbr(m))    then 0
-//│ ║        	                   ^^^^^^^^
-//│ ╟── [Missing Case 1/1] `Vectr`
-//│ ╟── It first appears here.
+//│ ║        	    ^^^^
+//│ ╟── first argument of `Pair` is `Numbr`,
+//│ ║  l.+3: 	    Pair(Numbr(n), Numbr(m))    then 0
+//│ ║        	         ^^^^^
+//│ ╟── second argument of `Pair` has 1 missing case
+//│ ╟── it can be class `Vectr`
 //│ ║  l.+4: 	    Pair(Vectr(xs),  Vectr(ys)) then 1
-//│ ╙──      	                     ^^^^^^^^^
-//│ fun add: anything -> error
+//│ ╙──      	                     ^^^^^
+//│ ╔══[ERROR] when `e` is `Pair`, and
+//│ ║  l.+3: 	    Pair(Numbr(n), Numbr(m))    then 0
+//│ ║        	    ^^^^
+//│ ╟── first argument of `Pair` is `Vectr`,
+//│ ║  l.+4: 	    Pair(Vectr(xs),  Vectr(ys)) then 1
+//│ ║        	         ^^^^^
+//│ ╟── second argument of `Pair` has 1 missing case
+//│ ╟── it can be class `Numbr`
+//│ ║  l.+3: 	    Pair(Numbr(n), Numbr(m))    then 0
+//│ ╙──      	                   ^^^^^
+//│ fun add: Pair[Numbr | Vectr, nothing] -> (0 | 1)
 
 :e
 add2(Pair(Vectr(0), Numbr(1)))
@@ -244,6 +254,6 @@ add2(Pair(Vectr(0), Numbr(1)))
 //│ ╟── Note: type parameter A is defined at:
 //│ ║  l.52: 	class Pair[A, B](a: A, b: B)
 //│ ╙──      	           ^
-//│ Numbr | error | Array[Numbr | Vectr]
+//│ Int | Numbr | error
 
 

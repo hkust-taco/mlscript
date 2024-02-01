@@ -165,11 +165,14 @@ class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.150: 	    Pair(l, r) then l.test + r.test
 //│ ╙──       	                     ^^^^^
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
+//│ ║  l.150: 	    Pair(l, r) then l.test + r.test
+//│ ╙──       	                              ^^^^^
 //│ abstract class Exp: Lit | Pair {
-//│   fun test: Int | error
+//│   fun test: Int
 //│ }
 //│ class Lit(n: Int) extends Exp {
-//│   fun test: Int | error
+//│   fun test: Int
 //│ }
 //│ class Pair(lhs: Exp, rhs: Exp) extends Exp
 
@@ -184,17 +187,17 @@ abstract class Exp: (Pair | Lit) {
 class Lit(n: Int) extends Exp
 class Pair(lhs: Exp, rhs: Exp) extends Exp
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.178: 	abstract class Exp: (Pair | Lit) {
+//│ ║  l.181: 	abstract class Exp: (Pair | Lit) {
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.179: 	  fun test : Int
+//│ ║  l.182: 	  fun test : Int
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ║  l.180: 	  fun test = if this is
+//│ ║  l.183: 	  fun test = if this is
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.181: 	    Lit then 0
+//│ ║  l.184: 	    Lit then 0
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.182: 	    Pair(l, r) then l.test + r.test
+//│ ║  l.185: 	    Pair(l, r) then l.test + r.test
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.183: 	}
+//│ ║  l.186: 	}
 //│ ╙──       	^
 //│ abstract class Exp: Lit | Pair {
 //│   fun test: Int
@@ -214,25 +217,25 @@ abstract class Exp[A]: (Pair | Lit) {
 class Lit(n: Int) extends Exp[Int]
 class Pair[L, R](lhs: L, rhs: R) extends Exp[[L, R]]
 //│ ╔══[ERROR] Unhandled cyclic definition
-//│ ║  l.209: 	abstract class Exp[A]: (Pair | Lit) {
+//│ ║  l.212: 	abstract class Exp[A]: (Pair | Lit) {
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.210: 	  fun test = if this is
+//│ ║  l.213: 	  fun test = if this is
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.211: 	    Lit then 0
+//│ ║  l.214: 	    Lit then 0
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.212: 	    Pair then 1
+//│ ║  l.215: 	    Pair then 1
 //│ ║         	^^^^^^^^^^^^^^^
-//│ ║  l.213: 	}
+//│ ║  l.216: 	}
 //│ ╙──       	^
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.210: 	  fun test = if this is
+//│ ║  l.213: 	  fun test = if this is
 //│ ║         	                ^^^^^^^
-//│ ║  l.211: 	    Lit then 0
+//│ ║  l.214: 	    Lit then 0
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.212: 	    Pair then 1
+//│ ║  l.215: 	    Pair then 1
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── type variable `L` leaks out of its scope
-//│ ║  l.215: 	class Pair[L, R](lhs: L, rhs: R) extends Exp[[L, R]]
+//│ ║  l.218: 	class Pair[L, R](lhs: L, rhs: R) extends Exp[[L, R]]
 //│ ╙──       	           ^
 //│ abstract class Exp[A]: Lit | Pair[anything, anything] {
 //│   fun test: 0 | 1

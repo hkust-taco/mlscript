@@ -159,7 +159,7 @@ object Main {
                             |""".stripMargin
 
           val backend = new JSWebBackend()
-          val (lines, resNames) = backend(pgrm, true)
+          val (lines, resNames) = backend(pgrm)
           val code = lines.mkString("\n")
 
           // TODO: add a toggle button to show js code

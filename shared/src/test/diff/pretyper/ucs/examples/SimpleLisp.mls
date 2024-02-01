@@ -1,0 +1,141 @@
+:NewDefs
+
+fun (++) strcat(a: Str, b: Str): Str = concat(a)(b)
+//│ fun (++) strcat: (a: Str, b: Str) -> Str
+
+declare module JSON {
+  fun stringify: (data: anything) -> Str
+}
+declare class Function(source: Str) {
+  fun call: () -> nothing
+}
+fun fatal(message: Str): nothing =
+  let raise = Function("throw new Error(" ++ JSON.stringify(message) ++ ")")
+  raise.call()
+//│ declare module JSON {
+//│   fun stringify: (data: anything) -> Str
+//│ }
+//│ declare class Function(source: Str) {
+//│   fun call: () -> nothing
+//│ }
+//│ fun fatal: (message: Str) -> nothing
+
+abstract class List[A]: Nil | Cons[A]
+class Cons[A](head: A, tail: List[A]) extends List[A]
+module Nil extends List
+fun (::) cons[A](head: A, tail: List[A]): List[A] = Cons(head, tail)
+fun map(f: 'A -> 'B, list: List['A]): List['B] =
+  if list is
+    Nil then Nil
+    Cons(head, tail) then Cons(f(head), map(f, tail))
+fun showList(sep: Str, showItem: 'A -> Str) =
+  let rec aux(list: List['A]) =
+    if list is
+      Nil then ""
+      Cons(head, Nil) then showItem(head)
+      Cons(head, tail) then showItem(head) ++ sep ++ aux(tail)
+  aux
+//│ abstract class List[A]: Cons[A] | Nil
+//│ class Cons[A](head: A, tail: List[A]) extends List
+//│ module Nil extends List
+//│ fun (::) cons: forall 'A. (head: 'A, tail: List['A]) -> List['A]
+//│ fun map: forall 'A0 'A1. (f: 'A0 -> 'A1, list: List['A0]) -> List['A1]
+//│ fun showList: forall 'A2. (sep: Str, showItem: 'A2 -> Str) -> (forall 'A3. (list: List['A3]) -> Str)
+//│ where
+//│   'A3 <: 'A2
+
+abstract class Context: Empty | Bind
+module Empty extends Context
+class Bind(name: Str, data: Data, tail: Context) extends Context
+fun find(name: Str, context: Context): Data =
+  if context is
+    Empty then fatal("undefined symbol " ++ name)
+    Bind(name', data, t) then
+      if name' === name then data
+      else find(name, t)
+abstract class Data: ListData | Quote | Symbol | Literal | Builtin | Thunk
+class ListData(list: List[Data]) extends Data
+class Quote(data: Data) extends Data
+class Symbol(name: Str) extends Data
+class Literal(value: Int) extends Data
+class Builtin(impl: (List[Data], Context) -> Data) extends Data
+class Thunk(impl: (Context) -> Data) extends Data
+//│ abstract class Context: Bind | Empty
+//│ module Empty extends Context
+//│ class Bind(name: Str, data: Data, tail: Context) extends Context
+//│ fun find: (name: Str, context: Context) -> Data
+//│ abstract class Data: Builtin | ListData | Literal | Quote | Symbol | Thunk
+//│ class ListData(list: List[Data]) extends Data
+//│ class Quote(data: Data) extends Data
+//│ class Symbol(name: Str) extends Data
+//│ class Literal(value: Int) extends Data
+//│ class Builtin(impl: (List[Data], Context) -> Data) extends Data
+//│ class Thunk(impl: Context -> Data) extends Data
+
+fun showData(data: Data): Str =
+  if data is
+    ListData(list) then "(" ++ showList(" ", showData)(list) ++ ")"
+    Quote(data) then "'" ++ showData(data)
+    Symbol(name) then name
+    Literal(value) then toString(value)
+    Builtin(impl) then "<builtin>"
+    Thunk(impl) then "<thunk>"
+//│ fun showData: (data: Data) -> Str
+
+fun add(arguments: List[Data], context: Context): Data =
+  if arguments is Cons(Literal(a), Cons(Literal(b), Nil)) then Literal(a + b) else fatal("invalid arguments")
+//│ fun add: (arguments: List[Data], context: Context) -> Data
+
+let context = Bind("+", Builtin(add), Empty)
+//│ let context: Bind
+//│ context
+//│         = Bind {}
+
+fun eval(program: Data, context: Context): Data =
+  if program is
+    Literal(value) then Literal(value)
+    Symbol(name) then find(name, context)
+    Thunk(impl) then impl(context)
+    ListData(Cons(Symbol("let"), Cons(Symbol(name), Cons(data, Cons(rest, Nil))))) then
+      let data' = eval(data, context)
+      let context' = Bind(name, data', context)
+      eval(rest, context')
+    ListData(Cons(Symbol("val"), Cons(Symbol(name), Cons(data, Cons(rest, Nil))))) then
+      let data' = Thunk((context) => eval(data, context))
+      let context' = Bind(name, data', context)
+      eval(rest, context')
+    ListData(Cons(Symbol("if"), Cons(test, Cons(thenPart, Cons(elsePart, Nil))))) and
+      eval(test, context) is Literal(0) then eval(elsePart, context)
+      else eval(thenPart, context)
+    ListData(Cons(Symbol("quote"), Cons(data, Nil))) then data
+    ListData(Cons(Symbol(callee), arguments)) and
+      let callee' = find(callee, context)
+      let arguments' = map(argument => eval(argument, context), arguments)
+      callee' is Builtin(impl) then impl(arguments', context)
+      else fatal("callee is not callable")
+    else fatal("unknown program")
+//│ fun eval: (program: Data, context: Context) -> Data
+
+let data1 = ListData of Symbol("+") :: Literal(1) :: Literal(2) :: Nil
+showData of data1
+showData of eval(data1, context)
+//│ let data1: ListData
+//│ Str
+//│ data1
+//│       = ListData {}
+//│ res
+//│     = '(+ 1 2)'
+//│ res
+//│     = '3'
+
+let data2 = ListData of Symbol("let") :: Symbol("x") :: Literal(1) :: (ListData of Symbol("+") :: Symbol("x") :: Literal(2) :: Nil) :: Nil
+showData of data2
+showData of eval(data2, context)
+//│ let data2: ListData
+//│ Str
+//│ data2
+//│       = ListData {}
+//│ res
+//│     = '(let x 1 (+ x 2))'
+//│ res
+//│     = '3'

@@ -1,39 +1,39 @@
 :NewDefs
 :NoJS
 
-// FIXME
 type Tree[A] = Node[A] | Empty
-module Empty {
-  fun contains(wanted) = false
-}
-class Node[A](value: int, left: Tree[A], right: Tree[A]) {
-  fun contains(wanted) = if wanted
-    <= value then left.find(wanted)
-    >= value then right.find(wanted)
-    else true
-}
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+module Empty
+class Node[A](value: Int, left: Tree[A], right: Tree[A])
+//│ type Tree[A] = Empty | Node[A]
+//│ module Empty
+//│ class Node[A](value: Int, left: Tree[A], right: Tree[A])
 
-// FIXME
-type Tree[A] = Node[A] | Empty
-module Empty {
-  fun contains(wanted) = false
-}
-class Node[A](value: int, left: Tree[A], right: Tree[A]) {
-  fun contains(wanted) = if wanted
-    <= value then left.find(wanted)
-    >= value then right.find(wanted)
-    _ true
-}
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+fun contains(node, wanted) =
+  if node is
+    Node(value, left, right) and wanted
+      <= value then contains(left, wanted)
+      >= value then contains(right, wanted)
+      else true
+    Empty then false
+//│ fun contains: forall 'A. (Empty | Node['A], Num) -> Bool
 
-// FIXME
+fun contains'(node, wanted) =
+  if node is
+    Node(value, left, right) and wanted
+      <= value then contains'(left, wanted)
+      >= value then contains'(right, wanted)
+      _ then true
+    Empty then false
+//│ fun contains': forall 'A. (Empty | Node['A], Num) -> Bool
+
+:pe
+class Z()
+class O()
 fun foo(x, y) = if x is
   Z() and y is O() then 0 else 1
 //│ ╔══[PARSE ERROR] Unexpected 'else' keyword here
-//│ ║  l.32: 	  Z() and y is O() then 0 else 1
+//│ ║  l.33: 	  Z() and y is O() then 0 else 1
 //│ ╙──      	                          ^^^^
-//│ ╔══[ERROR] Illegal pattern `Z`
-//│ ║  l.32: 	  Z() and y is O() then 0 else 1
-//│ ╙──      	  ^
-//│ fun foo: (anything, anything) -> error
+//│ class Z()
+//│ class O()
+//│ fun foo: (Z, O) -> 0

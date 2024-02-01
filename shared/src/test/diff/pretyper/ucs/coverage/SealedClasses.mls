@@ -1,0 +1,55 @@
+:NewDefs
+
+abstract class Term: Abs | App | Var
+class Var(name: Str) extends Term
+class Abs(param: Str, body: Term) extends Term
+class App(func: Term, arg: Term) extends Term
+//│ abstract class Term: Abs | App | Var
+//│ class Var(name: Str) extends Term
+//│ class Abs(param: Str, body: Term) extends Term
+//│ class App(func: Term, arg: Term) extends Term
+
+:ducs:desugar.result
+fun is_value_explicit_refinement(term) =
+  if term is refined(Term) and term is
+    Abs(_, _) then true
+    Var(_) then false
+    App(_, _) then false
+//│ Desugared UCS term:
+//│ if term*‡ is refined Term
+//│   term*‡ is Abs then true
+//│   term*‡ is Var then false
+//│   term*‡ is App then false
+//│ fun is_value_explicit_refinement: (Abs | App | Var) -> Bool
+
+:ducs:normalize.result,postprocess.result
+fun is_value_automatic_refinement(term) =
+  if term is Term and term is
+    Abs(_, _) then true
+    Var(_) then false
+    App(_, _) then false
+//│ Normalized UCS term:
+//│ case term*‡ of
+//│   refined Term*◊ ->
+//│     case term*‡ of
+//│       Abs*◊ -> true
+//│       _ ->
+//│         case term*‡ of
+//│           Var*◊ -> false
+//│           _ ->
+//│             case term*‡ of
+//│               App*◊ -> false
+//│ Post-processed UCS term:
+//│ case term*‡ of
+//│   refined Term*◊ ->
+//│     case term*‡ of
+//│       Abs*◊ -> true
+//│       Var*◊ -> false
+//│       App*◊ -> false
+//│ fun is_value_automatic_refinement: (Abs | App | Var) -> Bool
+
+fun is_value'(term) =
+  if term is Term and term is
+    Abs(_, _) then true
+    Var(_) then false
+//│ fun is_value': (Abs | Var) -> Bool

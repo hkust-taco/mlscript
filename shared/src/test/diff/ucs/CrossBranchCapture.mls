@@ -1,16 +1,21 @@
 :NewDefs
 
+fun (~~>) expect(a, b) = if a === b then () else error
+//│ fun (~~>) expect: forall 'a. (Eql['a], 'a) -> ()
 
 class Numb(n: Int)
 //│ class Numb(n: Int)
 
 
-// * FIXME should be rejected
+// FIXME: The following test case should fail, but it doesn't. The reason is
+// `x` and `y` are in the desugared lexical scope, although they don't in the
+// original lexical scope.
 fun process(e) =
   if e is
     Numb(n) and n > 0 then n
     Numb(m) then n
 //│ fun process: Numb -> Int
+
 
 process(Numb(-10))
 //│ Int
@@ -18,17 +23,23 @@ process(Numb(-10))
 //│     = -10
 
 
-// * FIXME wrong result
+
 fun process(e, n) =
   if e is
     Numb(n) and n > 0 then n
     Numb(m) then n + m
-//│ fun process: (Numb, anything) -> Int
+//│ fun process: (Numb, Int) -> Int
 
-process(Numb(0), 10)
-//│ Int
+process(Numb(0), 10) ~~> 10
+process(Numb(-1), 10) ~~> 9
+process(Numb(1), 10) ~~> 1
+//│ ()
 //│ res
-//│     = 0
+//│     = undefined
+//│ res
+//│     = undefined
+//│ res
+//│     = undefined
 
 
 class Vec(xs: Array[Numb | Vec])
@@ -36,14 +47,21 @@ class Pair[A,B](a: A, b: B)
 //│ class Vec(xs: Array[Numb | Vec])
 //│ class Pair[A, B](a: A, b: B)
 
-// * FIXME should be rejected
+
+:e
+:ge
 fun process(e) =
   if e is
     Pair(Numb(n), Numb(m)) then Numb(n + m)
     Pair(Vec(xs), Vec(ys))  then n
     Pair(Vec(n),  Numb(n)) then n
     Pair(Numb(n), Vec(n))  then n
-//│ fun process: Pair[Numb | Vec, Numb | Vec] -> (Int | Numb | Array[Numb | Vec])
+//│ ╔══[ERROR] identifier not found: n
+//│ ║  l.56: 	    Pair(Vec(xs), Vec(ys))  then n
+//│ ╙──      	                                 ^
+//│ fun process: Pair[Numb | Vec, Numb | Vec] -> (Int | Numb | error)
+//│ Code generation encountered an error:
+//│   unresolved symbol n
 
 
 // * FIXME should warn, be rejected, or compare both values for equality

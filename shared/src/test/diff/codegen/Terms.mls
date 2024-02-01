@@ -66,9 +66,12 @@ z ** 4 * z / (x + 5)
 //│ // Query 1
 //│ res = z() ** 4 * z() / (x() + 5);
 //│ // End of generated code
-//│ ╔══[ERROR] identifier not found: **
+//│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.65: 	z ** 4 * z / (x + 5)
-//│ ╙──      	  ^^
+//│ ║        	^^^^^^^^
+//│ ╟── operator application of type `number` is not an instance of type `int`
+//│ ║  l.65: 	z ** 4 * z / (x + 5)
+//│ ╙──      	^^^^^^
 //│ res: number
 //│    = 6.4
 

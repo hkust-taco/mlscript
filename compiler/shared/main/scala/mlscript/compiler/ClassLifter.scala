@@ -227,14 +227,14 @@ class ClassLifter(logDebugMsg: Boolean = false) {
   }
 
   private def liftCaseBranch(brn: CaseBranches)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (CaseBranches, LocalContext) = brn match{
-    case Case(v: Var, body, rest) => 
+    case k @ Case(v: Var, body, rest) => 
       val nTrm = liftTerm(body)(using ctx.addV(v))
       val nRest = liftCaseBranch(rest)
-      (Case(v, nTrm._1, nRest._1), nTrm._2 ++ nRest._2)
-    case Case(pat, body, rest) =>
+      (Case(v, nTrm._1, nRest._1)(k.refined), nTrm._2 ++ nRest._2)
+    case k @ Case(pat, body, rest) =>
       val nTrm = liftTerm(body)
       val nRest = liftCaseBranch(rest)
-      (Case(pat, nTrm._1, nRest._1), nTrm._2 ++ nRest._2)
+      (Case(pat, nTrm._1, nRest._1)(k.refined), nTrm._2 ++ nRest._2)
     case Wildcard(body) =>
       val nTrm = liftTerm(body)
       (Wildcard(nTrm._1), nTrm._2)

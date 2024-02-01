@@ -361,6 +361,14 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
       pat match {
         case Var("int") =>
           JSInvoke(JSField(JSIdent("Number"), "isInteger"), scrut :: Nil)
+        case Var("Int") if !oldDefs =>
+          JSInvoke(JSField(JSIdent("Number"), "isInteger"), scrut :: Nil)
+        case Var("Num") if !oldDefs =>
+          JSBinary("===", scrut.typeof(), JSLit("number"))
+        case Var("Bool") if !oldDefs =>
+          JSBinary("===", scrut.typeof(), JSLit("boolean"))
+        case Var("Str") if !oldDefs =>
+          JSBinary("===", scrut.typeof(), JSLit("string"))
         case Var("bool") =>
           JSBinary("===", scrut.member("constructor"), JSLit("Boolean"))
         case Var(s @ ("true" | "false")) =>
@@ -380,8 +388,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
             case _ => throw new CodeGenError(s"unknown match case: $name")
           }
         }
-        case lit: Lit =>
-          JSBinary("===", scrut, translateTerm(lit))
+        case lit: Lit => JSBinary("===", scrut, translateTerm(lit))
       },
       _,
       _
@@ -1150,7 +1157,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
 }
 
 class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
-  def oldDefs = false
+  override def oldDefs: Bool = false
   
   // Name of the array that contains execution results
   val resultsName: Str = topLevelScope declareRuntimeSymbol "results"
@@ -1276,8 +1283,8 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
     (JSImmEvalFn(N, Nil, R(polyfill.emit() ::: stmts ::: epilogue), Nil).toSourceCode.toLines, resultNames.toList)
   }
 
-  def apply(pgrm: Pgrm, newDefs: Bool): (Ls[Str], Ls[Str]) =
-    if (newDefs) generateNewDef(pgrm) else generate(pgrm)
+  def apply(pgrm: Pgrm): (Ls[Str], Ls[Str]) =
+    if (!oldDefs) generateNewDef(pgrm) else generate(pgrm)
 }
 
 abstract class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {

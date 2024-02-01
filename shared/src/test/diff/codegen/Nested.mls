@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 :js
@@ -70,7 +69,7 @@ module A {
 let bb = A.B(A.a)
 bb.b
 //│ ╔══[ERROR] Access to class member not yet supported
-//│ ║  l.70: 	let bb = A.B(A.a)
+//│ ║  l.69: 	let bb = A.B(A.a)
 //│ ╙──      	          ^^
 //│ let bb: error
 //│ error
@@ -103,10 +102,10 @@ c.outer1
 let d = b.D(1)
 d.outer
 //│ ╔══[ERROR] Access to class member not yet supported
-//│ ║  l.101: 	let c = b.C(1)
+//│ ║  l.100: 	let c = b.C(1)
 //│ ╙──       	         ^^
 //│ ╔══[ERROR] Access to class member not yet supported
-//│ ║  l.103: 	let d = b.D(1)
+//│ ║  l.102: 	let d = b.D(1)
 //│ ╙──       	         ^^
 //│ class B(x: Int) {
 //│   class C(y: Int) {
@@ -351,7 +350,7 @@ let fff = es.F(2)
 let gg = fff.G(3)
 gg.sum
 //│ ╔══[ERROR] Access to class member not yet supported
-//│ ║  l.350: 	let fff = es.F(2)
+//│ ║  l.349: 	let fff = es.F(2)
 //│ ╙──       	            ^^
 //│ let es: E
 //│ let fff: error
@@ -550,7 +549,7 @@ let jj = G.H.J(42)
 let i = jj.ii(2)
 i.x
 //│ ╔══[ERROR] Access to module member not yet supported
-//│ ║  l.549: 	let jj = G.H.J(42)
+//│ ║  l.548: 	let jj = G.H.J(42)
 //│ ╙──       	          ^^
 //│ let jj: error
 //│ let i: error
@@ -658,7 +657,7 @@ module H {
 let j = H.J(42)
 j.i.x
 //│ ╔══[ERROR] Access to class member not yet supported
-//│ ║  l.658: 	let j = H.J(42)
+//│ ║  l.657: 	let j = H.J(42)
 //│ ╙──       	         ^^
 //│ let j: error
 //│ error
@@ -688,7 +687,7 @@ let i = I(1)
 let ij = i.J(0)
 ij.incY
 //│ ╔══[ERROR] Access to class member not yet supported
-//│ ║  l.688: 	let ij = i.J(0)
+//│ ║  l.687: 	let ij = i.J(0)
 //│ ╙──       	          ^^
 //│ class I(x: Int) {
 //│   class J(x: Int) {
@@ -879,10 +878,10 @@ module J {
 let m = J.M()
 let n = J.N(2)
 //│ ╔══[ERROR] Access to class member not yet supported
-//│ ║  l.879: 	let m = J.M()
+//│ ║  l.878: 	let m = J.M()
 //│ ╙──       	         ^^
 //│ ╔══[ERROR] Access to class member not yet supported
-//│ ║  l.880: 	let n = J.N(2)
+//│ ║  l.879: 	let n = J.N(2)
 //│ ╙──       	         ^^
 //│ let m: error
 //│ let n: error
@@ -923,7 +922,7 @@ module K {
 let m = K.L.M()
 m.f
 //│ ╔══[ERROR] Access to module member not yet supported
-//│ ║  l.923: 	let m = K.L.M()
+//│ ║  l.922: 	let m = K.L.M()
 //│ ╙──       	         ^^
 //│ let m: error
 //│ error
@@ -953,7 +952,7 @@ module L {
 let op = L.N.O.P(0)
 op.x
 //│ ╔══[ERROR] Access to module member not yet supported
-//│ ║  l.953: 	let op = L.N.O.P(0)
+//│ ║  l.952: 	let op = L.N.O.P(0)
 //│ ╙──       	          ^^
 //│ let op: error
 //│ error
@@ -980,10 +979,10 @@ module M {
 }
 M.N.op(M.P())
 //│ ╔══[ERROR] Access to module member not yet supported
-//│ ║  l.981: 	M.N.op(M.P())
+//│ ║  l.980: 	M.N.op(M.P())
 //│ ╙──       	 ^^
 //│ ╔══[ERROR] Access to class member not yet supported
-//│ ║  l.981: 	M.N.op(M.P())
+//│ ║  l.980: 	M.N.op(M.P())
 //│ ╙──       	        ^^
 //│ module M {
 //│   module N {
@@ -1166,7 +1165,7 @@ module N {
 :e
 N.O.P()
 //│ ╔══[ERROR] Access to module member not yet supported
-//│ ║  l.1167: 	N.O.P()
+//│ ║  l.1166: 	N.O.P()
 //│ ╙──        	 ^^
 //│ error
 //│ res
@@ -1182,7 +1181,7 @@ class I(x: Int) {
 }
 I(1).J(3).a
 //│ ╔══[ERROR] Access to class member not yet supported
-//│ ║  l.1183: 	I(1).J(3).a
+//│ ║  l.1182: 	I(1).J(3).a
 //│ ╙──        	    ^^
 //│ class I(x: Int) {
 //│   class J(z: Int) {

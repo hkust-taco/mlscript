@@ -53,41 +53,53 @@ fun foo(x) = if x is Pair(a, b) then a > b else false
 fun foo(x) = x is
   Pair
   Int
-//│ ╔══[ERROR] illegal pattern
+//│ ╔══[ERROR] unknown pattern {Pair; Int}
 //│ ║  l.54: 	  Pair
 //│ ║        	  ^^^^
 //│ ║  l.55: 	  Int
 //│ ╙──      	^^^^^
-//│ fun foo: anything -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[WARNING] this case is unreachable
+//│ ╙── because it is subsumed by the branch
+//│ fun foo: anything -> true
 
 // TODO proper error
 fun foo(x) = x is
   Pair(a, b) and a > b
   Int
-//│ ╔══[ERROR] illegal pattern
+//│ ╔══[ERROR] unknown pattern {and(Pair(a, b,), >(a, b,),); Int}
 //│ ║  l.67: 	  Pair(a, b) and a > b
 //│ ║        	  ^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.68: 	  Int
 //│ ╙──      	^^^^^
-//│ fun foo: anything -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[WARNING] this case is unreachable
+//│ ╙── because it is subsumed by the branch
+//│ fun foo: anything -> true
 
 // TODO support `|`
 fun foo1(x) = x is Pair(a, b) | Int
 fun foo2(x) = x is (Pair(a, b) and a > b) | Int
-//│ ╔══[ERROR] Illegal pattern `|`
-//│ ║  l.79: 	fun foo1(x) = x is Pair(a, b) | Int
-//│ ╙──      	                              ^
-//│ ╔══[ERROR] Illegal pattern `|`
+//│ ╔══[ERROR] type identifier `|` not found
 //│ ║  l.80: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
 //│ ╙──      	                                          ^
-//│ fun foo1: anything -> error
-//│ fun foo2: anything -> error
+//│ ╔══[ERROR] type identifier `and` not found
+//│ ║  l.80: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╙──      	                               ^^^
+//│ ╔══[ERROR] type identifier `>` not found
+//│ ║  l.80: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╙──      	                                     ^
+//│ ╔══[ERROR] type identifier `|` not found
+//│ ║  l.79: 	fun foo1(x) = x is Pair(a, b) | Int
+//│ ╙──      	                              ^
+//│ ╔══[ERROR] type identifier not found: |
+//│ ║  l.79: 	fun foo1(x) = x is Pair(a, b) | Int
+//│ ╙──      	                              ^
+//│ ╔══[ERROR] type identifier not found: |
+//│ ║  l.80: 	fun foo2(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╙──      	                                          ^
+//│ fun foo1: nothing -> error
+//│ fun foo2: nothing -> error
 //│ Code generation encountered an error:
-//│   if expression was not desugared
+//│   unresolved symbol |
 
 
 

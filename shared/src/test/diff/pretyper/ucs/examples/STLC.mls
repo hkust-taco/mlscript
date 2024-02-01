@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 fun (++) concatOp(a, b) = concat(a)(b)
