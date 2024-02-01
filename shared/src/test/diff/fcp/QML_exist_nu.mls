@@ -142,13 +142,7 @@ class Step'[A](from: Arrays[A]) extends Arrays[A] {
 //│ ║  l.124: 	    from.use of impl => k(StepImpl(impl))
 //│ ╙──       	    ^^^^^^^^
 //│ class Step'[A](from: Arrays[A]) extends Arrays {
-<<<<<<< HEAD
-//│   fun use: forall 'R 'a. (StepImpl[A, in ??rep & 'R out 'R | ??rep0] -> 'a) -> 'a
-||||||| 84f516b67
-//│   fun use: forall 'a 'R. (StepImpl[A, in ??rep & 'R out 'R | ??rep0] -> 'a) -> 'a
-=======
 //│   fun use: forall 'a. (StepImpl[A, in ??rep] -> 'a) -> 'a
->>>>>>> newQ-simplif
 //│ }
 //│ Syntax error:
 //│   Unexpected string

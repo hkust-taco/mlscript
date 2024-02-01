@@ -100,25 +100,7 @@ Test.poly2
 //│     = [Function: id]
 
 Test.foo(1)
-<<<<<<< HEAD
 //│ 1
-||||||| 84f516b67
-//│ ╔══[ERROR] Type error in application
-//│ ║  l.71: 	Test.foo(1)
-//│ ║        	^^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.71: 	Test.foo(1)
-//│ ╙──      	         ^
-//│ error | ??A
-=======
-//│ ╔══[ERROR] Type error in application
-//│ ║  l.71: 	Test.foo(1)
-//│ ║        	^^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.71: 	Test.foo(1)
-//│ ╙──      	         ^
-//│ anything
->>>>>>> newQ-simplif
 //│ res
 //│     = 1
 
@@ -163,25 +145,7 @@ fun test(x) = if x is Test then x.foo
 //│ fun test: forall 'A. Test['A] -> 'A -> 'A
 
 test(Test)
-<<<<<<< HEAD
 //│ 'A -> 'A
-||||||| 84f516b67
-//│ ╔══[ERROR] Type error in application
-//│ ║  l.144: 	test(Test)
-//│ ║         	^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.5: 	module Test<A> {
-//│ ╙──     	            ^
-//│ error | (??A & 'A) -> ('A | ??A0)
-=======
-//│ ╔══[ERROR] Type error in application
-//│ ║  l.144: 	test(Test)
-//│ ║         	^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.5: 	module Test<A> {
-//│ ╙──     	            ^
-//│ error | ??A -> anything
->>>>>>> newQ-simplif
 //│ res
 //│     = [Function: id]
 

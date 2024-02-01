@@ -280,7 +280,7 @@ let rcd = Rcd({key: "a", value: IntLit(0)} :: Nil)
 eval of rcd, Nil
 //│ 'a
 //│   where
-//│     'a :> Lam | Lit[Int | ??A] | Rcd[Lam | Lit[Int | ??A] | 'a]
+//│     'a :> Lam | Lit[anything] | Rcd[Lam | Lit[anything] | 'a]
 //│ res
 //│     = Rcd {}
 

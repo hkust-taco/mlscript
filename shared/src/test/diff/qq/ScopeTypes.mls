@@ -21,19 +21,11 @@ fun test(cde) =
 :e
 code"y => ${ run(test(code"y")), code"0" }"
 //│ ╔══[ERROR] Type mismatch in application:
-<<<<<<< HEAD
 //│ ║  l.22: 	code"y => ${ run(test(code"y")), code"0" }"
 //│ ║        	             ^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `?y & ~??x` does not match type `nothing`
-||||||| 84f516b67
-//│ ║  l.22: 	code"y => ${ discard(run(test(code"y"))); code"0" }"
-//│ ║        	                     ^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `?y & ~??x` does not match type `nothing`
-=======
-//│ ║  l.22: 	code"y => ${ discard(run(test(code"y"))); code"0" }"
-//│ ║        	                     ^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `?y` does not match type `nothing`
->>>>>>> newQ-simplif
+//│ ╟── code fragment context type of type `?y` does not match type `nothing`
+//│ ║  l.18: 	  code"x => x + ${cde}"
+//│ ╙──      	                  ^^^
 //│ Code[Int -> 0, nothing]
 
 
@@ -55,41 +47,21 @@ run(test(code"1", id))
 :e
 code"x => ${ run(test(code"x", id)), code"x" }"
 //│ ╔══[ERROR] Type mismatch in application:
-<<<<<<< HEAD
-//│ ║  l.46: 	code"x => ${ run(test(code"x", id)), code"x" }"
+//│ ║  l.48: 	code"x => ${ run(test(code"x", id)), code"x" }"
 //│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `?x & ~??x` does not match type `nothing`
-||||||| 84f516b67
-//│ ║  l.46: 	code"x => ${ discard(run(test(code"x", id))); code"x" }"
-//│ ║        	                     ^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `?x & ~??x` does not match type `nothing`
-=======
-//│ ║  l.46: 	code"x => ${ discard(run(test(code"x", id))); code"x" }"
-//│ ║        	                     ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `?x` does not match type `nothing`
-//│ ║  l.38: 	fun test(cde: Code[Int, 'a], f: forall 'c: Code[Int, 'c] -> Code[Int, 'c]) =
+//│ ║  l.40: 	fun test(cde: Code[Int, 'a], f: forall 'c: Code[Int, 'c] -> Code[Int, 'c]) =
 //│ ╙──      	                        ^^
->>>>>>> newQ-simplif
 //│ Code[forall 'a. (Int & 'a) -> 'a, nothing]
 
 :e
 code"x => ${ let c = code"x" in run(test(c, id)), c }"
 //│ ╔══[ERROR] Type mismatch in application:
-<<<<<<< HEAD
-//│ ║  l.54: 	code"x => ${ let c = code"x" in run(test(c, id)), c }"
+//│ ║  l.58: 	code"x => ${ let c = code"x" in run(test(c, id)), c }"
 //│ ║        	                                ^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `?x & ~??x` does not match type `nothing`
-||||||| 84f516b67
-//│ ║  l.54: 	code"x => ${ let c = code"x" in discard(run(test(c, id))); c }"
-//│ ║        	                                        ^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `?x & ~??x` does not match type `nothing`
-=======
-//│ ║  l.56: 	code"x => ${ let c = code"x" in discard(run(test(c, id))); c }"
-//│ ║        	                                        ^^^^^^^^^^^^^^^^
 //│ ╟── type `?x` does not match type `nothing`
-//│ ║  l.38: 	fun test(cde: Code[Int, 'a], f: forall 'c: Code[Int, 'c] -> Code[Int, 'c]) =
+//│ ║  l.40: 	fun test(cde: Code[Int, 'a], f: forall 'c: Code[Int, 'c] -> Code[Int, 'c]) =
 //│ ╙──      	                        ^^
->>>>>>> newQ-simplif
 //│ Code[forall 'a. (Int & 'a) -> 'a, nothing]
 
 
@@ -104,115 +76,47 @@ let myrun = c => run(c)
 :e
 code"x => ${ test(myrun) }"
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.75: 	code"x => ${ test(myrun) }"
+//│ ║  l.77: 	code"x => ${ test(myrun) }"
 //│ ║        	             ^^^^^^^^^^^
 //│ ╟── type variable `?x` leaks out of its scope
 //│ ╟── into type `nothing`
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
-//│ ║  l.67: 	  code"x => x + ${f(code"x + 1")}"
+//│ ║  l.69: 	  code"x => x + ${f(code"x + 1")}"
 //│ ╙──      	                  ^
 //│ Code[anything -> nothing, nothing]
 
 :e
 code"x => ${ test(c => run(c), code"0") }"
 //│ ╔══[ERROR] Type mismatch in application:
-<<<<<<< HEAD
-//│ ║  l.84: 	code"x => ${ test(c => run(c), code"0") }"
-||||||| 84f516b67
-//│ ║  l.84: 	code"x => ${ test(c => run(c); code"0") }"
-=======
-//│ ║  l.88: 	code"x => ${ test(c => run(c); code"0") }"
->>>>>>> newQ-simplif
+//│ ║  l.90: 	code"x => ${ test(c => run(c), code"0") }"
 //│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-<<<<<<< HEAD
 //│ ╟── argument list of type `[forall ?a ?b. ?b -> ?a, Code[0, nothing]]` does not match type `[?c]`
-//│ ║  l.84: 	code"x => ${ test(c => run(c), code"0") }"
+//│ ║  l.90: 	code"x => ${ test(c => run(c), code"0") }"
 //│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^
-||||||| 84f516b67
-//│ ╟── operator application of type `Int` does not match type `()`
-//│ ║  l.63: 	  code"x => x + ${f(code"x + 1")}"
-//│ ║        	                         ^^^^^
-//│ ╟── Note: constraint arises from expression in statement position:
-//│ ║  l.84: 	code"x => ${ test(c => run(c); code"0") }"
-//│ ╙──      	                       ^^^^^^
-=======
-//│ ╟── operator application of type `Int` does not match type `()`
-//│ ║  l.67: 	  code"x => x + ${f(code"x + 1")}"
-//│ ║        	                         ^^^^^
-//│ ╟── Note: constraint arises from expression in statement position:
-//│ ║  l.88: 	code"x => ${ test(c => run(c); code"0") }"
-//│ ╙──      	                       ^^^^^^
->>>>>>> newQ-simplif
 //│ Code[anything -> Int -> Int, nothing]
 
 
 :e
 code"x => ${ test(c => run(c), code"x") }"
 //│ ╔══[ERROR] Type mismatch in application:
-<<<<<<< HEAD
-//│ ║  l.95: 	code"x => ${ test(c => run(c), code"x") }"
-//│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── argument list of type `[forall ?a ?b. ?a -> ?b, Code[?c, ?x]]` does not match type `[?d]`
-//│ ║  l.95: 	code"x => ${ test(c => run(c), code"x") }"
-//│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^
-//│ Code[anything -> Int -> Int, nothing]
-||||||| 84f516b67
-//│ ║  l.98: 	code"x => ${ test(c => run(c); code"x") }"
-//│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` does not match type `()`
-//│ ║  l.63: 	  code"x => x + ${f(code"x + 1")}"
-//│ ║        	                         ^^^^^
-//│ ╟── Note: constraint arises from expression in statement position:
-//│ ║  l.98: 	code"x => ${ test(c => run(c); code"x") }"
-//│ ╙──      	                       ^^^^^^
-//│ Code[Int -> Int -> Int, nothing]
-=======
-//│ ║  l.102: 	code"x => ${ test(c => run(c); code"x") }"
+//│ ║  l.101: 	code"x => ${ test(c => run(c), code"x") }"
 //│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Int` does not match type `()`
-//│ ║  l.67: 	  code"x => x + ${f(code"x + 1")}"
-//│ ║        	                         ^^^^^
-//│ ╟── Note: constraint arises from expression in statement position:
-//│ ║  l.102: 	code"x => ${ test(c => run(c); code"x") }"
-//│ ╙──       	                       ^^^^^^
-//│ Code[Int -> Int -> Int, nothing]
->>>>>>> newQ-simplif
+//│ ╟── argument list of type `[forall ?a ?b. ?b -> ?a, Code[?c, ?x]]` does not match type `[?d]`
+//│ ║  l.101: 	code"x => ${ test(c => run(c), code"x") }"
+//│ ╙──       	                 ^^^^^^^^^^^^^^^^^^^^^^
+//│ Code[anything -> Int -> Int, nothing]
 
 
 :e
 fun test2(a) = code"x => ${ test(c => run(c), a) }"
 //│ ╔══[ERROR] Type mismatch in application:
-<<<<<<< HEAD
-//│ ║  l.106: 	fun test2(a) = code"x => ${ test(c => run(c), a) }"
-||||||| 84f516b67
-//│ ║  l.112: 	fun test2(a) = code"x => ${ test(c => run(c); a) }"
-=======
-//│ ║  l.116: 	fun test2(a) = code"x => ${ test(c => run(c); a) }"
->>>>>>> newQ-simplif
+//│ ║  l.112: 	fun test2(a) = code"x => ${ test(c => run(c), a) }"
 //│ ║         	                            ^^^^^^^^^^^^^^^^^^^^
-<<<<<<< HEAD
-//│ ╟── argument list of type `[forall ?a ?b. ?b -> ?a, ?c]` does not match type `[?d]`
-//│ ║  l.106: 	fun test2(a) = code"x => ${ test(c => run(c), a) }"
+//│ ╟── argument list of type `[forall ?a ?b. ?a -> ?b, ?c]` does not match type `[?d]`
+//│ ║  l.112: 	fun test2(a) = code"x => ${ test(c => run(c), a) }"
 //│ ╙──       	                                ^^^^^^^^^^^^^^^^
 //│ fun test2: anything -> Code[anything -> Int -> Int, nothing]
-||||||| 84f516b67
-//│ ╟── operator application of type `Int` does not match type `()`
-//│ ║  l.63: 	  code"x => x + ${f(code"x + 1")}"
-//│ ║        	                         ^^^^^
-//│ ╟── Note: constraint arises from expression in statement position:
-//│ ║  l.112: 	fun test2(a) = code"x => ${ test(c => run(c); a) }"
-//│ ╙──       	                                      ^^^^^^
-//│ fun test2: forall 'a. Code[Int, ??x | ??x0 | 'a] -> Code[anything -> Int -> Int, 'a]
-=======
-//│ ╟── operator application of type `Int` does not match type `()`
-//│ ║  l.67: 	  code"x => x + ${f(code"x + 1")}"
-//│ ║        	                         ^^^^^
-//│ ╟── Note: constraint arises from expression in statement position:
-//│ ║  l.116: 	fun test2(a) = code"x => ${ test(c => run(c); a) }"
-//│ ╙──       	                                      ^^^^^^
-//│ fun test2: forall 'a. Code[Int, 'a] -> Code[anything -> Int -> Int, 'a]
->>>>>>> newQ-simplif
 
 type Hide[C] = C & (C | Int)
 //│ type Hide[C] = C

@@ -42,18 +42,28 @@ fun body(x, y) = case
   0 then x
   1 then y
   n then quote([unquote(x), unquote(y)]) %> z => body(x, z)(n - 1)
-//│ fun body: forall 'b 'a. (Cod['b, anything] & 'a, Cod['b, anything] & 'a) -> (0 | 1 | Int & ~0 & ~1) -> (Cod['b, anything] | 'a)
+//│ fun body: forall 'a 'b. (Cod['b, anything] & 'a, Cod['b, anything] & 'a) -> (0 | 1 | Int & ~0 & ~1) -> (Cod['b, anything] | 'a)
 
 // code"(x, y) => ${body(code"x", code"y")(0)}"
 
 let l = lam(x => lam(y => body(x, y)(0)))
-//│ let l: Cod['a -> 'a -> 'a, nothing]
+//│ let l: Cod['a -> 'a -> 'a, ??c & ~??c0]
 
 // * Expected error: `body` needed polymorphic recursion
 // * TODO improve error locations!
 // :e // FIXME should error
 run(l)
-//│ 'a -> 'a -> 'a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.55: 	run(l)
+//│ ║        	^^^^^^
+//│ ╟── type `??c & ~??c0` does not match type `nothing`
+//│ ║  l.24: 	fun lam: (forall 'c: Cod['a, 'c] -> Cod['b, 'c | 'g]) -> Cod['a -> 'b, 'g]
+//│ ║        	                                                                       ^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.18: 	fun run: Cod['a, nothing] -> 'a
+//│ ╙──      	                 ^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ error | 'a -> 'a -> 'a
 
 
 fun body: forall 'g: (Cod[Int, 'g], Cod[Int, 'g]) -> Int -> Cod[Int, 'g]

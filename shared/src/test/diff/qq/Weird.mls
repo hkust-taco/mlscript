@@ -42,7 +42,7 @@ let p3 = y `=>
 
 fun bind(rhs, k: forall 'g : Code['a, 'g] -> Code['b, 'c | 'g]) =
   `let x = rhs in k(x)
-//│ fun bind: forall 'a 'c 'b. (Code['a, 'c], k: forall 'g. Code['a, 'g] -> Code['b, 'g | ??x | 'c]) -> Code['b, 'c]
+//│ fun bind: forall 'a 'c 'b. (Code['a, 'c], k: forall 'g. Code['a, 'g] -> Code['b, 'g | 'c]) -> Code['b, 'c]
 
 
 // fun body: forall 'g : (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
@@ -50,29 +50,25 @@ fun body(x, y) = case
   0 then x
   1 then y
   n then bind of x `+ y, z => body(y, z)(n - 1)
-//│ fun body: forall 'a 'c 'b. (Code[Int, 'a & ('c | ??g)] & 'b, Code[Int, 'a & ('c | ??g)] & 'b) -> (0 | 1 | Int & ~0 & ~1) -> (Code[Int, 'a] | 'b)
-//│   where
-//│     'a :> ??g0
-//│        <: 'c | ??g
-//│     'c <: ??x | 'a
+//│ fun body: forall 'a. (Code[Int, anything] & 'a, Code[Int, anything] & 'a) -> (0 | 1 | Int & ~0 & ~1) -> (Code[Int, anything] | 'a)
 
 
 n => (x, y) `=> body(x, y)(n)
-//│ (0 | 1 | Int & ~0 & ~1) -> Code[(Int, Int) -> Int, ??g & ~??x & ~??y]
+//│ (0 | 1 | Int & ~0 & ~1) -> Code[(Int, Int) -> Int, ??g & ~??y]
 
 fun gib(n) = ((x, y) `=> body(x, y)(n))
-//│ fun gib: (0 | 1 | Int & ~0 & ~1) -> Code[(Int, Int) -> Int, ??g & ~??x & ~??y]
+//│ fun gib: (0 | 1 | Int & ~0 & ~1) -> Code[(Int, Int) -> Int, ??g & ~??y]
 
 
 let g5 = gib(5)
-//│ let g5: Code[(Int, Int) -> Int, ??g & ~??x & ~??y]
+//│ let g5: Code[(Int, Int) -> Int, ??g & ~??y]
 
 :e
 run(g5)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.71: 	run(g5)
+//│ ║  l.67: 	run(g5)
 //│ ║        	^^^^^^^
-//│ ╙── expression of type `??g & ~??x & ~??y` does not match type `nothing`
+//│ ╙── expression of type `??g & ~??y` does not match type `nothing`
 //│ error | (Int, Int) -> Int
 
 x `=> x `+ (x `=> x)`(`42)

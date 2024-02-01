@@ -45,7 +45,7 @@ fun inc(dbg) =
   x `=> let c = x `+ `1 in dbg(c), c
 inc(c => log(show(c)))
 //│ fun show: Code[anything, anything] -> Str
-//│ fun inc: (Code[Int, ??x] -> anything) -> Code[Int -> Int, nothing]
+//│ fun inc: (Code[Int, anything] -> anything) -> Code[Int -> Int, nothing]
 //│ Code[Int -> Int, nothing]
 //│ res
 //│     = '(x_3) =>\n  (x_3 + 1)'
@@ -70,14 +70,14 @@ let gn5 = run(gib_naive(5))
 //│       undefined
 
 fun bind(rhs, k) = `let x = rhs in k(x)
-//│ fun bind: forall 'a 'b 'c. (Code['a, 'b], Var['a, in ??x out ??x0] -> Code['c, ??x | 'b]) -> Code['c, 'b]
+//│ fun bind: forall 'a 'b 'c. (Code['a, 'b], Var['a, in ??x out ??x0] -> Code['c, 'b]) -> Code['c, 'b]
 
 fun bind(rhs, k: forall 'g : Code['a, 'g] -> Code['b, 'c | 'g]) =
   `let x = rhs in k(x)
-//│ fun bind: forall 'a 'c 'b. (Code['a, 'c], k: forall 'g. Code['a, 'g] -> Code['b, 'g | ??x | 'c]) -> Code['b, 'c]
+//│ fun bind: forall 'a 'c 'b. (Code['a, 'c], k: forall 'g. Code['a, 'g] -> Code['b, 'g | 'c]) -> Code['b, 'c]
 
 bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
-//│ forall 'g 'a. (Code['a, 'g], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
+//│ forall 'a 'g. (Code['a, 'g], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
 //│ res
 //│     = [Function: bind1]
 
@@ -88,7 +88,7 @@ fun body(x, y) = case
   n then bind of x `+ y, z => body(y, z)(n - 1)
 fun gib(n) = ((x, y) `=> body(x, y)(n))
 let g5 = run(gib(5))
-//│ fun body: forall 'a 'b. (Code[Int, 'a], Code[Int, 'a] & 'b) -> (0 | 1 | Int & ~0 & ~1) -> (Code[Int, 'a] | 'b)
+//│ fun body: forall 'a. (Code[Int, 'a], Code[Int, 'a]) -> (0 | 1 | Int & ~0 & ~1) -> Code[Int, 'a]
 //│ fun gib: Int -> Code[(Int, Int) -> Int, nothing]
 //│ let g5: (Int, Int) -> Int
 //│ fun body: forall 'g. (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
