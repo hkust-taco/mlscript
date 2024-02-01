@@ -2,7 +2,7 @@ package mlscript.ucs.stages
 
 import mlscript.ucs, ucs.Desugarer, ucs.syntax.source._
 import mlscript.{If, IfBody, IfBlock, IfElse, IfLet, IfOpApp, IfOpsApp, IfThen}
-import mlscript.{Blk, Term, Var, App, Tup, Lit, Fld, Loc, NuFunDef, TyApp, PlainTup}
+import mlscript.{Blk, Bra, Term, Var, App, Tup, Lit, Fld, Loc, NuFunDef, TyApp, PlainTup}
 import mlscript.pretyper.Traceable
 import mlscript.Message, Message._
 import mlscript.utils._, shorthands._
@@ -206,6 +206,7 @@ trait Transformation { self: Desugarer with Traceable =>
       ClassPattern(classNme, S(transformTupleTerm(parameters)), refined = false)
     case tuple: Tup => TuplePattern(transformTupleTerm(tuple))
     case Blk((term: Term) :: Nil) => transformPattern(term) // A speical case for FunnyIndet.mls
+    case Bra(false, term) => transformPattern(term)
     case other =>
       println(s"other $other")
       raiseDesugaringError(msg"unknown pattern ${other.showDbg}" -> other.toLoc)

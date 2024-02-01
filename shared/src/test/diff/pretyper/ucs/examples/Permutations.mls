@@ -62,11 +62,11 @@ fun insertAllPositions(z) =
         let nu = ((prev :+ z) ::: xs)
         aux(prev :+ head, nu :: acc, tail)
   xs => aux(Nil, Nil, xs)
-//│ fun insertAllPositions: forall 'a. 'a -> (forall 'A 'A0. (Cons['A & 'A0] | Nil) -> (Cons[List['A0 | 'a]] | Nil))
+//│ fun insertAllPositions: forall 'a. 'a -> (forall 'A 'A0. (Cons['A0 & 'A] | Nil) -> (Cons[List['A | 'a]] | Nil))
 //│   where
-//│     'A <: 'A0
-//│     'A0 :> 'a
-//│         <: 'A
+//│     'A0 <: 'A
+//│     'A :> 'a
+//│        <: 'A0
 
 insertAllPositions(0)(1 :: 2 :: 3 :: Nil) |> showListList
 //│ Str
@@ -79,7 +79,7 @@ fun permutations(xs) =
     Nil then Nil
     Cons(x, Nil) then (x :: Nil) :: Nil
     Cons(x, xs') then foldLeft((acc, ys) => acc ::: insertAllPositions(x)(ys))(Nil)(permutations(xs'))
-//│ fun permutations: forall 'A 'T. (Cons['T] | Nil) -> (Cons[Cons['T]] | List[List['A]] | Nil)
+//│ fun permutations: forall 'T 'A. (Cons['T] | Nil) -> (Cons[Cons['T]] | List[List['A]] | Nil)
 //│   where
 //│     'T <: 'A
 //│     'A := 'T

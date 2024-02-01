@@ -57,7 +57,7 @@ test(p, p)
 //│ ╟── into field selection of type `#Eql`
 //│ ║  l.8: 	fun test(pt1, pt2) = pt1.color === pt1.color and
 //│ ╙──     	                     ^^^^^^^^^
-//│ error
+//│ error | false | true
 //│ res
 //│     = true
 

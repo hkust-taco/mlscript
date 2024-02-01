@@ -355,9 +355,9 @@ fun extractMin(t) =
       extractMin(l) is Pair(m, l') then
         Pair(m, Node(v, l', r))
     Empty then Pair(None, Empty)
-//│ fun extractMin: forall 'A 'B 'T 'A0 'A1. (Empty | Node['A1 & 'T & 'A]) -> Pair[in 'A0 out 'A0 | None, in Tree['A] & 'B out Empty | 'B | Node['A] | Tree['A1]]
+//│ fun extractMin: forall 'A 'A0 'A1 'B 'T. (Empty | Node['A0 & 'T & 'A1]) -> Pair[in 'A out 'A | None, in Tree['A1] & 'B out Empty | 'B | Node['A1] | Tree['A0]]
 //│   where
-//│     'A0 :> None | Some['T]
+//│     'A :> None | Some['T]
 
 extractMin(example1).first ?? "not found"
 extractMin(example1).second |> show

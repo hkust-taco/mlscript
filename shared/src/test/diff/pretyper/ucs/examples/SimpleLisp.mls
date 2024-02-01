@@ -39,7 +39,7 @@ fun showList(sep: Str, showItem: 'A -> Str) =
 //│ class Cons[A](head: A, tail: List[A]) extends List
 //│ module Nil extends List
 //│ fun (::) cons: forall 'A. (head: 'A, tail: List['A]) -> List['A]
-//│ fun map: forall 'A0 'A1. (f: 'A1 -> 'A0, list: List['A1]) -> List['A0]
+//│ fun map: forall 'A0 'A1. (f: 'A0 -> 'A1, list: List['A0]) -> List['A1]
 //│ fun showList: forall 'A2. (sep: Str, showItem: 'A2 -> Str) -> (forall 'A3. (list: List['A3]) -> Str)
 //│ where
 //│   'A3 <: 'A2

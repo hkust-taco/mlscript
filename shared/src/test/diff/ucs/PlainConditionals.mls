@@ -78,16 +78,19 @@ fun foo(x) = x is
 // TODO support `|`
 fun foo(x) = x is Pair(a, b) | Int
 fun foo(x) = x is (Pair(a, b) and a > b) | Int
-//│ ╔══[ERROR] unknown pattern '(' and(Pair(a, b,), >(a, b,),) ')'
-//│ ║  l.80: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
-//│ ╙──      	                  ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] type identifier `|` not found
 //│ ║  l.80: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
 //│ ╙──      	                                         ^
+//│ ╔══[ERROR] type identifier `and` not found
+//│ ║  l.80: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╙──      	                              ^^^
+//│ ╔══[ERROR] type identifier `>` not found
+//│ ║  l.80: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
+//│ ╙──      	                                    ^
 //│ ╔══[ERROR] type identifier `|` not found
 //│ ║  l.79: 	fun foo(x) = x is Pair(a, b) | Int
 //│ ╙──      	                             ^
-//│ ╔══[ERROR] Refininition of 'foo'
+//│ ╔══[ERROR] Redefinition of 'foo'
 //│ ║  l.80: 	fun foo(x) = x is (Pair(a, b) and a > b) | Int
 //│ ╙──      	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] type identifier not found: |

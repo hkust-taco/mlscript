@@ -23,11 +23,26 @@ Bar().f(40)
 //│     = 42
 
 :e
+class Baz() extends Bar() {
+  fun f(x: Int) = x + 3
+}
+//│ ╔══[ERROR] Value member `f` is not virtual and cannot be overridden
+//│ ║  l.27: 	  fun f(x: Int) = x + 3
+//│ ║        	      ^^^^^^^^^^^^^^^^^
+//│ ╟── Originally declared here:
+//│ ║  l.13: 	  fun f(x: Int) = x + 2
+//│ ╙──      	      ^^^^^^^^^^^^^^^^^
+//│ class Baz() extends Bar, Foo {
+//│   fun f: (x: Int) -> Int
+//│   val g: Int
+//│ }
+
+:e
 class Baz() extends Foo {
   val g = 1
 }
 //│ ╔══[ERROR] Value member `g` is not virtual and cannot be overridden
-//│ ║  l.27: 	  val g = 1
+//│ ║  l.42: 	  val g = 1
 //│ ║        	      ^^^^^
 //│ ╟── Originally declared here:
 //│ ║  l.5: 	  val g: Int = 0
@@ -91,11 +106,11 @@ class V1() {
   fun foo = x // unqualified access!
 }
 //│ ╔══[ERROR] Unqualified access to virtual member x
-//│ ║  l.91: 	  fun foo = x // unqualified access!
-//│ ║        	      ^^^^^^^
+//│ ║  l.106: 	  fun foo = x // unqualified access!
+//│ ║         	      ^^^^^^^
 //│ ╟── Declared here:
-//│ ║  l.90: 	  virtual val x = 42
-//│ ╙──      	              ^^^^^^
+//│ ║  l.105: 	  virtual val x = 42
+//│ ╙──       	              ^^^^^^
 //│ class V1() {
 //│   fun foo: 42
 //│   val x: 42
@@ -120,10 +135,10 @@ class C() {
 }
 C().x
 //│ ╔══[ERROR] Unqualified access to virtual member x
-//│ ║  l.119: 	  fun foo0 = x // should error
+//│ ║  l.134: 	  fun foo0 = x // should error
 //│ ║         	      ^^^^^^^^
 //│ ╟── Declared here:
-//│ ║  l.118: 	  fun x = 1
+//│ ║  l.133: 	  fun x = 1
 //│ ╙──       	      ^^^^^
 //│ class C() {
 //│   fun foo0: 1

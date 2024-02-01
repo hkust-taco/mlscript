@@ -173,7 +173,7 @@ let r = loop.run
 
 fun (>>) compose[A, B, C](f: A -> B, g: B -> C): A -> C = x => g(f(x))
 fun (#>) map[A, B](x: IO[A], f: A -> B): IO[B] = x.bind(f >> Pure)
-//│ fun (>>) compose: forall 'A 'B 'C. (f: 'A -> 'B, g: 'B -> 'C) -> 'A -> 'C
+//│ fun (>>) compose: forall 'C 'A 'B. (f: 'A -> 'B, g: 'B -> 'C) -> 'A -> 'C
 //│ fun (#>) map: forall 'A0 'B0. (x: IO['A0], f: 'A0 -> 'B0) -> IO['B0]
 
 val main =
@@ -197,7 +197,7 @@ fun (#>>) bind(x, f) = x.bind(f)
 fun (#>) map(x, f) = x.bind(f >> Pure)
 //│ fun (>>) compose: forall 'a 'b 'c. ('a -> 'b, 'b -> 'c) -> 'a -> 'c
 //│ fun (#>>) bind: forall 'd 'e. ({bind: 'd -> 'e}, 'd) -> 'e
-//│ fun (#>) map: forall 'f 'g 'A. ({bind: ('g -> Pure['A]) -> 'f}, 'g -> 'A) -> 'f
+//│ fun (#>) map: forall 'f 'A 'g. ({bind: ('f -> Pure['A]) -> 'g}, 'f -> 'A) -> 'g
 
 val main =
   printLine("Hi! Input two numbers: ") #>> _ =>
@@ -246,10 +246,10 @@ fun main(ctx) =
   ctx.printLine(concat("The sum is: ")(String of sum)) #>> _ =>
   ctx.pure(sum)
 //│ fun main: forall 'a 'b 'c 'd 'e. {
-//│   printLine: "Hi! Input two numbers: " -> {bind: (anything -> 'd) -> 'e} & Str -> {bind: (anything -> 'a) -> 'b},
+//│   printLine: "Hi! Input two numbers: " -> {bind: (anything -> 'e) -> 'd} & Str -> {bind: (anything -> 'a) -> 'b},
 //│   pure: Int -> 'a,
-//│   readInt: {bind: (Int -> 'c) -> 'd & (Int -> 'b) -> 'c}
-//│ } -> 'e
+//│   readInt: {bind: (Int -> 'c) -> 'e & (Int -> 'b) -> 'c}
+//│ } -> 'd
 
 val defaultCtx = {printLine, readInt, pure: Pure}
 //│ val defaultCtx: {

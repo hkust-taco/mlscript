@@ -136,7 +136,7 @@ fun showMap(map) =
 //│ class ConsMap[K, V](head: [K, V], tail: ListMap[K, V]) extends ListMap
 //│ module NilMap extends ListMap
 //│ fun containsKey: forall 'K 'a. (map: ListMap['K, anything], key: 'a) -> Bool
-//│ fun (:+) insert: forall 'b 'V 'K0. (ConsMap['K0, 'V] | NilMap, ['K0 & 'b, 'V]) -> ConsMap['K0, 'V]
+//│ fun (:+) insert: forall 'K0 'b 'V. (ConsMap['K0, 'V] | NilMap, ['K0 & 'b, 'V]) -> ConsMap['K0, 'V]
 //│ fun showMap: forall 'K1. (ConsMap['K1, anything] | NilMap) -> NStr
 //│ where
 //│   'K0 <: Eql['b]

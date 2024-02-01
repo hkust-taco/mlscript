@@ -1229,14 +1229,20 @@ class Ohhh(x: Bool) extends Ha
 //│ ╟── type `Bool` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.1215: 	class Ha { virtual val x: Int = 1 }
-//│ ╙──        	                          ^^^
+//│ ║          	                          ^^^
+//│ ╟── from definition of value x:
+//│ ║  l.1215: 	class Ha { virtual val x: Int = 1 }
+//│ ╙──        	                       ^^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in type reference:
 //│ ║  l.1225: 	class Ohhh(x: Bool) extends Ha
 //│ ║          	              ^^^^
 //│ ╟── type `Bool` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.1215: 	class Ha { virtual val x: Int = 1 }
-//│ ╙──        	                          ^^^
+//│ ║          	                          ^^^
+//│ ╟── from definition of value x:
+//│ ║  l.1215: 	class Ha { virtual val x: Int = 1 }
+//│ ╙──        	                       ^^^^^^^^^^
 //│ class Ohhh(x: Bool) extends Ha
 
 trait TA[A] { let a : A }

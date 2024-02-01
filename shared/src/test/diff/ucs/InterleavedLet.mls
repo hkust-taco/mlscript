@@ -258,14 +258,14 @@ fun mapPartition'(f, xs) =
       if f(x) is
         Left(v) then Pair(Cons(v, l), r)
         Right(v) then Pair(l, Cons(v, r))
-//│ fun mapPartition': forall 'a 'A '#fst 'A0 'B 'A1 '#snd. ('a -> (Left['A1] | Right['A0]), Cons['a] | Nil) -> Pair[in '#fst & 'A out 'A | Cons['A1], in '#snd & 'B out 'B | Cons['A0]]
+//│ fun mapPartition': forall 'A '#snd 'a 'A0 '#fst 'B 'A1. ('a -> (Left['A1] | Right['A]), Cons['a] | Nil) -> Pair[in '#fst & 'A0 out 'A0 | Cons['A1], in '#snd & 'B out 'B | Cons['A]]
 //│   where
-//│     '#snd <: List['A0] & 'B
-//│     'B :> Cons['A0] | Nil
+//│     '#snd <: List['A] & 'B
+//│     'B :> Cons['A] | Nil
 //│        <: '#snd
-//│     '#fst <: List['A1] & 'A
-//│     'A :> Cons['A1] | Nil
-//│        <: '#fst
+//│     '#fst <: List['A1] & 'A0
+//│     'A0 :> Cons['A1] | Nil
+//│         <: '#fst
 
 if (mapPartition' of evenness, zeroToThree) is
   Pair(even, odd) then
