@@ -4,26 +4,64 @@
 
 
 fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(code"x")}"
+<<<<<<< HEAD
 //│ fun (%>) bind: forall 'a 'b 'c. (Code['b, 'c], Code['b, ??x] -> Code['a, ??x0 | 'c]) -> Code['a, 'c]
+||||||| 84f516b67
+//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, ??x0 | 'b]) -> Code['c, 'b]
+
+fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(x)}"
+//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, ??x0 | 'b]) -> Code['c, 'b]
+=======
+//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, 'b]) -> Code['c, 'b]
+
+fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(x)}"
+//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, 'b]) -> Code['c, 'b]
+>>>>>>> newQ-simplif
 
 // * Notice the extrusion
 fun foo(k) = code"x => ${k(code"x")}"
+<<<<<<< HEAD
 //│ fun foo: forall 'a 'b 'c. (Code['a, ??x] -> Code['b, ??x0 | 'c]) -> Code['a -> 'b, 'c]
+||||||| 84f516b67
+//│ fun foo: forall 'a 'b 'c. (Code['c, ??x] -> Code['a, ??x0 | 'b]) -> Code['c -> 'a, 'b]
+=======
+//│ fun foo: forall 'a 'b 'c. (Code['a, ??x] -> Code['b, 'c]) -> Code['a -> 'b, 'c]
+>>>>>>> newQ-simplif
 
 fun (%>) bind(rhs, k) = code"(x => ${k(code"x")})(${rhs})"
+<<<<<<< HEAD
 //│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, ??x0 | 'b]) -> Code['c, 'b]
+||||||| 84f516b67
+//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, ??x | 'b], Code['a, ??x0] -> Code['c, ??x | 'b]) -> Code['c, 'b]
+=======
+//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, 'b]) -> Code['c, 'b]
+>>>>>>> newQ-simplif
 
 // * Somehow this one does extrude properly:
 fun app = code"(f, x) => f(x)"
 fun (%>) bind(rhs, k) = code"${app}(x => ${k(code"x")}, ${rhs})"
+<<<<<<< HEAD
 //│ fun app: Code[forall 'a 'b. ('b -> 'a, 'b) -> 'a, nothing]
 //│ fun (%>) bind: forall 'c 'd 'e. (Code['c, 'd], Code['c, ??x] -> Code['e, ??x0 | 'd]) -> Code['e, 'd]
+||||||| 84f516b67
+//│ fun app: Code[forall 'a 'b. ('a -> 'b, 'a) -> 'b, nothing]
+//│ fun (%>) bind: forall 'c 'd 'e. (Code['c, ??x | 'd], Code['c, ??x0] -> Code['e, ??x | 'd]) -> Code['e, 'd]
+=======
+//│ fun app: Code[forall 'a 'b. ('a -> 'b, 'a) -> 'b, nothing]
+//│ fun (%>) bind: forall 'c 'd 'e. (Code['c, 'd], Code['c, ??x] -> Code['e, 'd]) -> Code['e, 'd]
+>>>>>>> newQ-simplif
 
 
 fun app(f, x) = f(x)
 fun bind2(rhs, k) = code"app(x => ${k(code"x")}, ${rhs})"
 //│ fun app: forall 'a 'b. ('a -> 'b, 'a) -> 'b
+<<<<<<< HEAD
 //│ fun bind2: forall 'c 'd 'e. (Code['e, 'c], Code['e, ??x] -> Code['d, ??x0 | 'c]) -> Code['d, 'c]
+||||||| 84f516b67
+//│ fun bind2: forall 'c 'd 'e. (Code['c, ??x | 'd], Code['c, ??x0] -> Code['e, ??x | 'd]) -> Code['e, 'd]
+=======
+//│ fun bind2: forall 'c 'd 'e. (Code['c, 'd], Code['c, ??x] -> Code['e, 'd]) -> Code['e, 'd]
+>>>>>>> newQ-simplif
 
 :e
 fun foo() =
@@ -40,13 +78,35 @@ code"1 ++ 2"
 //│ Code[Int, nothing]
 
 // G <: ??x | 'a
+<<<<<<< HEAD
 fun bind(rhs, k: forall 'C: Code['A, 'C] -> Code['B, 'C | 'G]) = code"let x = ${rhs} in ${k(code"x")}"
 //│ fun bind: forall 'A 'a 'B. (Code['A, 'a], k: forall 'C. Code['A, 'C] -> Code['B, 'C | ??x | 'a]) -> Code['B, 'a]
+||||||| 84f516b67
+fun bind(rhs, k: forall 'C: Code['A, 'C] -> Code['B, 'C | 'G]) = code"let x = ${rhs} in ${k(x)}"
+//│ fun bind: forall 'A 'a 'B. (Code['A, 'a], k: forall 'C. Code['A, 'C] -> Code['B, 'C | ??x | 'a]) -> Code['B, 'a]
+=======
+fun bind(rhs, k: forall 'C: Code['A, 'C] -> Code['B, 'C | 'G]) = code"let x = ${rhs} in ${k(x)}"
+//│ fun bind: forall 'B 'A 'a. (Code['A, 'a], k: forall 'C. Code['A, 'C] -> Code['B, 'C | 'a]) -> Code['B, 'a]
+>>>>>>> newQ-simplif
 
 bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
 //│ forall 'a 'g. (Code['a, 'g], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
 
 
 fun foo(dbg) =
+<<<<<<< HEAD
   code"x => ${let c = code"(${x}, ${foo(dbg)})" in dbg(c)}"
 //│ fun foo: forall 'a 'b. (Code[anything -> 'b, ??x | 'a] -> Code['b, ??x0 | 'a]) -> Code[anything -> 'b, 'a]
+||||||| 84f516b67
+  code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.55: 	  code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
+//│ ╙──      	                              ^
+//│ fun foo: forall 'a 'b. (Code[anything -> 'a, 'b] -> Code['a, ??x | 'b]) -> Code[anything -> 'a, 'b]
+=======
+  code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.55: 	  code"x => ${let c = code"(${x}; ${foo(dbg)})" in dbg(c)}"
+//│ ╙──      	                              ^
+//│ fun foo: forall 'a 'b. (Code[anything -> 'a, 'b] -> Code['a, 'b]) -> Code[anything -> 'a, 'b]
+>>>>>>> newQ-simplif

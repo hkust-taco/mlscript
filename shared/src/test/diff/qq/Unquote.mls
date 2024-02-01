@@ -170,7 +170,13 @@ code"y => ${c}"
 
 
 fun f(x, y) = [code"[${x}, ${y}]", x, y]
+<<<<<<< HEAD
 //│ fun f: forall 'a 'b 'c 'd 'e. (Code['d, 'b] & 'a, Code['c, 'b] & 'e) -> [Code[['d, 'c], 'b], 'a, 'e]
+||||||| 84f516b67
+//│ fun f: forall 'a 'b 'c 'd 'e. (Code['b, 'c] & 'a, Code['d, 'c] & 'e) -> [Code[['b, 'd], 'c], 'a, 'e]
+=======
+//│ fun f: forall 'a 'b 'c 'd 'e. (Code['c, 'e] & 'd, Code['b, 'e] & 'a) -> [Code[['c, 'b], 'e], 'd, 'a]
+>>>>>>> newQ-simplif
 
 
 

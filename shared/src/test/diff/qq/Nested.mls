@@ -1,0 +1,119 @@
+:NewDefs
+:NoJS
+
+
+let res = code"let x = code"1" in code"y => ${x} + 1""
+//│ let res: Code[Code[anything -> Int, nothing], nothing]
+
+run(run(res))(0)
+//│ Int
+
+let t = code"let x = code"2" in code"${x}""
+//│ let t: Code[Code[2, nothing], nothing]
+let res = run(t)
+//│ let res: Code[2, nothing]
+run(res)
+//│ 2
+
+let res = code"let x = code"2" in let y = code"3" in x"
+//│ let res: Code[Code[2, nothing], nothing]
+run(res)
+//│ Code[2, nothing]
+
+let c = code"let y = code"2" in x => y"
+//│ let c: Code[anything -> Code[2, nothing], nothing]
+
+let res = run(c)(0)
+//│ let res: Code[2, nothing]
+
+let res = code"x => x"
+//│ let res: Code[forall 'a. 'a -> 'a, nothing]
+run(res)(0)
+//│ 0
+
+let y = code"1"
+let res = code"""x => x + ${y}"""
+//│ let y: Code[1, nothing]
+//│ let res: Code[Int -> Int, nothing]
+
+run(res)(3)
+//│ Int
+
+let x = code"1"
+let res = code"""x => x + ${x}"""
+//│ let x: Code[1, nothing]
+//│ let res: Code[Int -> Int, nothing]
+
+run(res)(0)
+//│ Int
+
+let x = code"2"
+//│ let x: Code[2, nothing]
+
+let res = code"""x => (let x = 1 in x + ${x})"""
+//│ let res: Code[anything -> Int, nothing]
+
+run(res)("happy")
+//│ Int
+
+let c2 = code"let x = code"1" in code"let x = code"2" in ${x}""
+//│ let c2: Code[Code[Code[2, nothing], nothing], nothing]
+let res = run(c2)
+//│ let res: Code[Code[2, nothing], nothing]
+run(res)
+//│ Code[2, nothing]
+
+let x = code"1"
+let c3 = code"let x1 = code"100" in let x2 = code"200" in code"let y = 100 in ${x}""
+//│ let x: Code[1, nothing]
+//│ let c3: Code[Code[1, nothing], nothing]
+let res = run(c3)
+//│ let res: Code[1, nothing]
+run(res)
+//│ 1
+
+
+let res = code"x => ${code"x + 1"}"
+//│ let res: Code[Int -> Int, nothing]
+
+run(res)(1)
+//│ Int
+
+
+let res = code"x => ${ x }"
+run(res)
+run(code"x => ${ x }")
+//│ let res: Code[forall 'a. 'a -> 'a, nothing]
+//│ forall 'b. 'b -> 'b
+
+f => code"x => ${ let tmp = f(x) in x }"
+//│ forall 'a. (Code['a, ??x] -> anything) -> Code[forall 'b. ('a & 'b) -> 'b, nothing]
+
+let res = code"x => code"${x}""
+//│ let res: Code[forall 'a 'b. Code['a, 'b] -> Code['a, 'b], nothing]
+run(res)(code"1")
+//│ Code[1, nothing]
+
+code"code"code"x => ${x}"""
+//│ Code[Code[Code[forall 'a. 'a -> 'a, nothing], nothing], nothing]
+
+code"x => ${code"${code"${code"x"}"}"}"
+//│ Code[forall 'a. 'a -> 'a, nothing]
+
+fun f(cde) = code"x => ${code"${code"${code"x + ${cde}"}"}"}"
+run(f(Const(114)))(514)
+//│ fun f: forall 'a. Code[Int, 'a] -> Code[Int -> Int, 'a]
+//│ Int
+
+fun f(x) = code"${run(x)} + 1"
+//│ fun f: forall 'a. Code[Code[Int, 'a], nothing] -> Code[Int, 'a]
+
+code"x => ${code"code"code"${x}"""}"
+//│ Code[anything -> Code[Code[1, nothing], nothing], nothing]
+
+:e
+code"xxx => ${code"code"code"${xxx}"""}"
+//│ ╔══[ERROR] identifier not found: xxx
+//│ ║  l.115: 	code"xxx => ${code"code"code"${xxx}"""}"
+//│ ╙──       	                               ^^^
+//│ Code[anything -> Code[Code[nothing, nothing], nothing], nothing]

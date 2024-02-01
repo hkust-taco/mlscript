@@ -507,7 +507,7 @@ if b is Bar(f) then f else 0
 //│ ╟── type variable `B` leaks out of its scope
 //│ ║  l.477: 	class Bar[B](f: B => B) extends Base
 //│ ╙──       	          ^
-//│ 0 | (??B & 'B) -> ('B | ??B0)
+//│ 0 | ??B -> anything
 //│ res
 //│     = 0
 
