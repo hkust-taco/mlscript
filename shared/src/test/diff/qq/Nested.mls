@@ -2,156 +2,145 @@
 :NoJS
 
 
-let res = code"let x = code"1" in code"y => ${x} + 1""
+:e
+let t = code"id(code"123")"
 //│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.5: 	let res = code"let x = code"1" in code"y => ${x} + 1""
-//│ ╙──     	                       ^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.5: 	let res = code"let x = code"1" in code"y => ${x} + 1""
-//│ ╙──     	                                  ^^^^^^^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ let res: Code[error, nothing]
-
-run(run(res))(0)
-//│ nothing
-
-let t = code"let x = code"2" in code"${x}""
-//│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.19: 	let t = code"let x = code"2" in code"${x}""
-//│ ╙──      	                     ^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.19: 	let t = code"let x = code"2" in code"${x}""
-//│ ╙──      	                                ^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ║  l.6: 	let t = code"id(code"123")"
+//│ ╙──     	                ^^^^^^^^^
 //│ let t: Code[error, nothing]
-let res = run(t)
-//│ let res: error
-run(res)
-//│ nothing
 
-let res = code"let x = code"2" in let y = code"3" in x"
-//│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.34: 	let res = code"let x = code"2" in let y = code"3" in x"
-//│ ╙──      	                       ^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.34: 	let res = code"let x = code"2" in let y = code"3" in x"
-//│ ╙──      	                                          ^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ let res: Code[error, nothing]
-run(res)
-//│ error
+let inner0 = code"123"
+let t = code"id(inner0)"
+//│ let inner0: Code[123, nothing]
+//│ let t: Code[Code[123, nothing], nothing]
 
-let c = code"let y = code"2" in x => y"
+let r = run(t)
+let rr = run(r)
+//│ let r: Code[123, nothing]
+//│ let rr: 123
+
+:e
+let t = code"let x = code"1" in code"y => ${x} + 1""
 //│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.47: 	let c = code"let y = code"2" in x => y"
+//│ ║  l.23: 	let t = code"let x = code"1" in code"y => ${x} + 1""
 //│ ╙──      	                     ^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ let c: Code[anything -> error, nothing]
+//│ ╔══[ERROR] Nested quotation is not allowed.
+//│ ║  l.23: 	let t = code"let x = code"1" in code"y => ${x} + 1""
+//│ ╙──      	                                ^^^^^^^^^^^^^^^^^^^
+//│ let t: Code[error, nothing]
 
-let res = run(c)(0)
-//│ let res: error
+let inner1 = code"1"
+let inner2(x) = code"y => ${x} + 1"
+let t = code"let x = inner1 in inner2(x)"
+//│ let inner1: Code[1, nothing]
+//│ let inner2: forall 'a. Code[Int, 'a] -> Code[anything -> Int, 'a]
+//│ let t: Code[Code[anything -> Int, nothing], nothing]
 
-let res = code"x => x"
-//│ let res: Code[forall 'a. 'a -> 'a, nothing]
-run(res)(0)
+run(run(t))(0)
+//│ Int
+
+let r = run(t)
+//│ let r: Code[anything -> Int, nothing]
+run(r)
+//│ anything -> Int
+
+let inner3 = code"2"
+let t = code"let x = inner1 in let y = inner3 in x"
+//│ let inner3: Code[2, nothing]
+//│ let t: Code[Code[1, nothing], nothing]
+run(r)
+//│ anything -> Int
+
+let c1 = code"let y = inner1 in x => y"
+//│ let c1: Code[anything -> Code[1, nothing], nothing]
+
+let r = run(c1)(0)
+//│ let r: Code[1, nothing]
+
+let t = code"x => x"
+//│ let t: Code[forall 'a. 'a -> 'a, nothing]
+run(t)(0)
 //│ 0
 
 let y = code"1"
-let res = code"""x => x + ${y}"""
+let r = code"""x => x + ${y}"""
 //│ let y: Code[1, nothing]
-//│ let res: Code[Int -> Int, nothing]
+//│ let r: Code[Int -> Int, nothing]
 
-run(res)(3)
+run(r)(3)
 //│ Int
 
 let x = code"1"
-let res = code"""x => x + ${x}"""
+let r = code"""x => x + ${x}"""
 //│ let x: Code[1, nothing]
-//│ let res: Code[Int -> Int, nothing]
+//│ let r: Code[Int -> Int, nothing]
 
-run(res)(0)
+run(r)(0)
 //│ Int
 
 let x = code"2"
 //│ let x: Code[2, nothing]
 
-let res = code"""x => (let x = 1 in x + ${x})"""
-//│ let res: Code[anything -> Int, nothing]
+let r = code"""x => (let x = 1 in x + ${x})"""
+//│ let r: Code[anything -> Int, nothing]
 
-run(res)("happy")
+run(r)("happy")
 //│ Int
 
-let c2 = code"let x = code"1" in code"let x = code"2" in ${x}""
-//│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.87: 	let c2 = code"let x = code"1" in code"let x = code"2" in ${x}""
-//│ ╙──      	                      ^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.87: 	let c2 = code"let x = code"1" in code"let x = code"2" in ${x}""
-//│ ╙──      	                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ let c2: Code[error, nothing]
-let res = run(c2)
-//│ let res: error
-run(res)
-//│ nothing
+let inner4(x) = code"let x = inner2 in ${x}"
+let c2 = code"let x = inner1 in inner4(x)"
+//│ let inner4: anything -> Code[forall 'a. Code[Int, 'a] -> Code[anything -> Int, 'a], nothing]
+//│ let c2: Code[Code[forall 'b. Code[Int, 'b] -> Code[anything -> Int, 'b], nothing], nothing]
+let r = run(c2)
+//│ let r: Code[forall 'a. Code[Int, 'a] -> Code[anything -> Int, 'a], nothing]
+let rr = run(r)
+//│ let rr: forall 'a. Code[Int, 'a] -> Code[anything -> Int, 'a]
+rr(code"123")
+//│ Code[anything -> Int, nothing]
 
-let x = code"1"
-let c3 = code"let x1 = code"100" in let x2 = code"200" in code"let y = 100 in ${x}""
-//│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.103: 	let c3 = code"let x1 = code"100" in let x2 = code"200" in code"let y = 100 in ${x}""
-//│ ╙──       	                       ^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.103: 	let c3 = code"let x1 = code"100" in let x2 = code"200" in code"let y = 100 in ${x}""
-//│ ╙──       	                                             ^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.103: 	let c3 = code"let x1 = code"100" in let x2 = code"200" in code"let y = 100 in ${x}""
-//│ ╙──       	                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ let x: Code[1, nothing]
-//│ let c3: Code[error, nothing]
-let res = run(c3)
-//│ let res: error
-run(res)
-//│ nothing
+let inner4(x) = code"let y = 100 in ${x}"
+let c3 = code"let x1 = inner1 in let x2 = inner2 in inner4(x)"
+//│ let inner4: forall 'a 'b. Code['a, 'b] -> Code['a, 'b]
+//│ let c3: Code[Code[2, nothing], nothing]
+let r = run(c3)
+//│ let r: Code[2, nothing]
+run(r)
+//│ 2
 
 
-let res = code"x => ${code"x + 1"}"
-//│ let res: Code[Int -> Int, nothing]
+let r = code"x => ${code"x + 1"}"
+//│ let r: Code[Int -> Int, nothing]
 
-run(res)(1)
+run(r)(1)
 //│ Int
 
 
-let res = code"x => ${ x }"
-run(res)
+let r = code"x => ${ x }"
+run(r)
 run(code"x => ${ x }")
-//│ let res: Code[forall 'a. 'a -> 'a, nothing]
+//│ let r: Code[forall 'a. 'a -> 'a, nothing]
 //│ forall 'b. 'b -> 'b
 
 f => code"x => ${ let tmp = f(x) in x }"
 //│ forall 'a 'b. (Var[in 'a out 'a | 'b, in ??x out ??x0] -> anything) -> Code[forall 'c. ('b & 'c) -> ('a | 'c), nothing]
 
-let res = code"x => code"${x}""
-//│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.140: 	let res = code"x => code"${x}""
-//│ ╙──       	                    ^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ let res: Code[anything -> error, nothing]
-run(res)(code"1")
-//│ error
+let inner5(x) = code"${x}"
+let r = code"x => inner5(x)"
+//│ let inner5: forall 'a 'b. Code['a, 'b] -> Code['a, 'b]
+//│ let r: Code[forall 'c 'd. Code['c, 'd] -> Code['c, 'd], nothing]
+run(r)(code"1")
+//│ Code[1, nothing]
 
+:e
 code"code"code"x => ${x}"""
 //│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.149: 	code"code"code"x => ${x}"""
+//│ ║  l.135: 	code"code"code"x => ${x}"""
 //│ ╙──       	     ^^^^^^^^^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
 //│ Code[error, nothing]
+
+code"r"
+//│ Code[Code[forall 'a 'b. Code['a, 'b] -> Code['a, 'b], nothing], nothing]
+
 
 code"x => ${code"${code"${code"x"}"}"}"
 //│ Code[forall 'a. 'a -> 'a, nothing]
@@ -164,16 +153,18 @@ run(f(Const(114)))(514)
 fun f(x) = code"${run(x)} + 1"
 //│ fun f: forall 'a. Code[Code[Int, 'a], nothing] -> Code[Int, 'a]
 
+:e
 code"x => ${code"code"code"${x}"""}"
 //│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.167: 	code"x => ${code"code"code"${x}"""}"
+//│ ║  l.157: 	code"x => ${code"code"code"${x}"""}"
 //│ ╙──       	                 ^^^^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
 //│ Code[anything -> error, nothing]
 
 :e
 code"xxx => ${code"code"code"${xxx}"""}"
 //│ ╔══[ERROR] Nested quotation is not allowed.
-//│ ║  l.175: 	code"xxx => ${code"code"code"${xxx}"""}"
+//│ ║  l.164: 	code"xxx => ${code"code"code"${xxx}"""}"
 //│ ╙──       	                   ^^^^^^^^^^^^^^^^^^
 //│ Code[anything -> error, nothing]
+
+
