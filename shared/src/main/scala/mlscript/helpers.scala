@@ -473,8 +473,6 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
     case e => lastWords(s"Unexpected typing unit entity: $e")
   }.mkString("{", "; ", "}")
 
-  lazy val children: List[Located] = entities
-
   def showIn(ctx: ShowCtx): Str = {
     val newCtx = ctx.indent
     entities.map{
@@ -483,6 +481,16 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
       case s if !ctx.newDefs => s.toString
       case _ => ???
     }.mkString("{" + newCtx.lnIndStr, newCtx.lnIndStr, ctx.lnIndStr + "}")
+  }
+  lazy val children: List[Located] = rawEntities
+  
+  lazy val entities = {
+    val declaredValueMembers = rawEntities.collect{ case fd: NuFunDef if fd.rhs.isRight => fd.nme.name }.toSet
+    rawEntities.map {
+      case Eqn(lhs, rhs) if declaredValueMembers(lhs.name) =>
+        NuFunDef(N, lhs, N, Nil, L(rhs))(N, N, N, N, true)
+      case e => e
+    }
   }
 }
 

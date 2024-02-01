@@ -84,7 +84,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           
           if (info.allFields.contains(fld)) // TODO don't report this if the field can be found somewhere else!
             foundRec = S(ErrorReport(
-              msg"Indirectly-recursive member should have type annotation" -> fld.toLoc :: Nil, newDefs))
+              msg"Indirectly-recursive member should have a type signature" -> fld.toLoc :: Nil, newDefs))
           
           N
         
@@ -1357,7 +1357,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }
         nv
       })
-      case n @ NegType(neg) => NegType(extrude(neg, lowerLvl, pol, upperLvl))(n.prov)
+      case n @ NegType(neg) => NegType(extrude(neg, lowerLvl, !pol, upperLvl))(n.prov)
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(extrude(und, lowerLvl, pol, upperLvl))(p.prov)
       case p @ ProxyType(und) => extrude(und, lowerLvl, pol, upperLvl)

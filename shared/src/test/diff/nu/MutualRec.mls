@@ -163,7 +163,7 @@ module Test1_1 {
 module Test1_2 {
   fun b = Test1_1.a
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.164: 	  fun b = Test1_1.a
 //│ ╙──       	                 ^^
 //│ module Test1_1 {
@@ -210,7 +210,7 @@ class Test1_1() {
 class Test1_2() {
   fun b = Test1_1().a
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.211: 	  fun b = Test1_1().a
 //│ ╙──       	                   ^^
 //│ class Test1_1() {
@@ -227,7 +227,7 @@ class Test1_1 {
 class Test1_2 {
   fun b = (new Test1_1).a
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.228: 	  fun b = (new Test1_1).a
 //│ ╙──       	                       ^^
 //│ class Test1_1 {
@@ -268,7 +268,7 @@ module Test2_2 {
   fun c = Test2_1.a
   fun e = Test2_1.n
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.268: 	  fun c = Test2_1.a
 //│ ╙──       	                 ^^
 //│ module Test2_1 {

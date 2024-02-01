@@ -551,6 +551,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             case R(v: Var) =>
               consume
               R(Eqn(v, expr(0)))
+            case R(App(v: Var, args)) =>
+              consume
+              R(Eqn(v, Lam(args, expr(0))))
             case _ => t
           }
           case _ => t

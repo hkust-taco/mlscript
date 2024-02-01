@@ -269,7 +269,7 @@ class B extends A { fun x = "A" }
 
 :e
 class C1[A] { virtual fun a: A = this.a }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.271: 	class C1[A] { virtual fun a: A = this.a }
 //│ ╙──       	                                     ^^
 //│ class C1[A] {
