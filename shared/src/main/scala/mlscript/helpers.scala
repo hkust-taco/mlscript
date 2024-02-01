@@ -459,7 +459,7 @@ trait NuDeclImpl extends Located { self: NuDecl =>
       }))
       NuFunDef(N, Var("unapply"), N, Nil, L(Lam(
         Tup(N -> Fld(FldFlags.empty, Var("x")) :: Nil),
-        ret)))(N, N, N, N, true)
+        ret)))(N, N, N, N, N, true)
     }
     case _ => N
   }
@@ -479,7 +479,7 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
     val declaredValueMembers = rawEntities.collect{ case fd: NuFunDef if fd.rhs.isRight => fd.nme.name }.toSet
     rawEntities.map {
       case Eqn(lhs, rhs) if declaredValueMembers(lhs.name) =>
-        NuFunDef(N, lhs, N, Nil, L(rhs))(N, N, N, N, true)
+        NuFunDef(N, lhs, N, Nil, L(rhs))(N, N, N, N, N, true)
       case e => e
     }
   }
@@ -559,6 +559,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       case CaseOf(scrut, cases) =>  "`case` expression" 
       case Subs(arr, idx) => "array access"
       case Assign(lhs, rhs) => "assignment"
+      case While(cnd, bod) => "while loop"
       case Splc(fs) => "splice"
       case New(h, b) => "object instantiation"
       case NuNew(_) => "new instance"
@@ -614,7 +615,8 @@ trait TermImpl extends StatementImpl { self: Term =>
     case CaseOf(s, c) =>
       s"case ${s.showDbg} of { ${c.print(true)} }" |> bra
     case Subs(a, i) => s"(${a.showDbg})[${i.showDbg}]"
-    case Assign(lhs, rhs) => s" ${lhs.showDbg} <- ${rhs.showDbg}" |> bra
+    case Assign(lhs, rhs) => s"${lhs.showDbg} <- ${rhs.showDbg}" |> bra
+    case While(cnd, bod) => s"while ${cnd.showDbg} do ${bod.showDbg}" |> bra
     case New(S((at, ar)), bod) => s"new ${at.showDbg2}(${ar.showDbg}) ${bod.showDbg}" |> bra
     case New(N, bod) => s"new ${bod.showDbg}" |> bra
     case NuNew(cls) => s"new ${cls.showDbg}" |> bra
@@ -996,6 +998,7 @@ trait StatementImpl extends Located { self: Statement =>
     case TypeDef(kind, nme, tparams, body, _, _, pos, _) => nme :: tparams ::: pos ::: body :: Nil
     case Subs(a, i) => a :: i :: Nil
     case Assign(lhs, rhs) => lhs :: rhs :: Nil
+    case While(cnd, bod) => cnd :: bod :: Nil
     case Splc(fields) => fields.map{case L(l) => l case R(r) => r.value}
     case If(body, els) => body :: els.toList
     case d @ NuFunDef(_, v, v2, ts, rhs) => v :: v2.toList ::: ts ::: d.body :: Nil

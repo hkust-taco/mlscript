@@ -176,3 +176,16 @@ foo()()
 //│   unguarded recursive use of by-value binding foo
 
 
+// :e // FIXME wrong static semantics
+:re
+let xf = yf()
+let yf() = xf
+//│ let xf: nothing
+//│ let yf: () -> nothing
+//│ xf
+//│ Runtime error:
+//│   ReferenceError: yf is not defined
+//│ yf
+//│    = [Function: yf]
+
+

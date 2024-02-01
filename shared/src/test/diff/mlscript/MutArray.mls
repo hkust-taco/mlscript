@@ -38,7 +38,7 @@ access0 emptyArray
 //│    = undefined
 
 set0 emptyArray 42
-//│ = []
+//│ = undefined
 
 
 
@@ -65,13 +65,13 @@ update0 0 ((mut 1,))
 //│ ║  l.45: 	def update0 i arr = arr[i] <- arr[i]
 //│ ╙──      	                              ^^^^^^
 //│ res: error | unit
-//│    = []
+//│    = undefined
 
 update1 0 ((mut 1,))
-//│ = []
+//│ = undefined
 
 update2 0 ((mut 1,))
-//│ = []
+//│ = undefined
 
 
 
@@ -121,10 +121,10 @@ access0 foo
 set0 foo "ok"
 //│ res: undefined
 //│    = 42
-//│ = []
+//│ = undefined
 
 update1 0 foo
-//│ = []
+//│ = undefined
 
 foo: MutArray['a]
 //│ res: MutArray['a]

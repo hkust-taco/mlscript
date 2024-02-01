@@ -87,10 +87,11 @@ final case class If(body: IfBody, els: Opt[Term])                    extends Ter
 final case class TyApp(lhs: Term, targs: Ls[Type])                   extends Term
 final case class Where(body: Term, where: Ls[Statement])             extends Term
 final case class Forall(params: Ls[TypeVar], body: Term)             extends Term
-final case class Inst(body: Term)                                    extends Term
+final case class Inst(body: Term)                                    extends Term // Explicit instantiation of polymohic term
 final case class Super()                                             extends Term
 final case class Eqn(lhs: Var, rhs: Term)                            extends Term // equations such as x = y, notably used in constructors; TODO: make lhs a Term
 final case class Rft(base: Term, decls: TypingUnit)                  extends Term
+final case class While(cond: Term, body: Term)                       extends Term
 
 final case class AdtMatchWith(cond: Term, arms: Ls[AdtMatchPat])     extends Term
 final case class AdtMatchPat(pat: Term, rhs: Term)                   extends AdtMatchPatImpl
@@ -219,6 +220,7 @@ final case class NuFunDef(
 )(
   val declareLoc: Opt[Loc],
   val virtualLoc: Opt[Loc], // Some(Loc) means that the function is modified by keyword `virtual`
+  val mutLoc: Opt[Loc],
   val signature: Opt[NuFunDef],
   val outer: Opt[Outer],
   val genField: Bool
@@ -229,6 +231,8 @@ final case class NuFunDef(
 
   // If the member has no implementation, it is virtual automatically
   def isVirtual: Bool = virtualLoc.nonEmpty || rhs.isRight
+  
+  def isMut: Bool = mutLoc.nonEmpty
 }
 
 final case class Constructor(params: Tup, body: Blk) extends DesugaredStatement with ConstructorImpl // constructor(...) { ... }

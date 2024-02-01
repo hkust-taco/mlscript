@@ -97,7 +97,7 @@ if Foo(123) is Foo(a) then a
 :e
 fun D(x: Int) = {x}
 module D { fun unapply(a) = [a.x] }
-//│ ╔══[ERROR] Refininition of 'D'
+//│ ╔══[ERROR] Redefinition of 'D'
 //│ ║  l.99: 	module D { fun unapply(a) = [a.x] }
 //│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ fun D: (x: Int) -> {x: Int}

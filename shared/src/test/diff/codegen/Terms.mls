@@ -385,7 +385,7 @@ a1.x
 //│ // Query 1
 //│ globalThis.a1 = new M({ x: 233 });
 //│ // Query 2
-//│ res = (a1.x = 666, []);
+//│ res = (a1.x = 666, undefined);
 //│ // Query 3
 //│ res = a1.x;
 //│ // End of generated code
@@ -394,7 +394,7 @@ a1.x
 //│     'x :> 233
 //│        <: int
 //│   = M { x: 233 }
-//│ = []
+//│ = undefined
 //│ res: 233
 //│    = 666
 
@@ -416,11 +416,11 @@ t1 = (mut "hello", mut true)
 t1.0 <- "bye"
 t1.0
 //│ // Query 1
-//│ res = (t1[0] = "bye", []);
+//│ res = (t1[0] = "bye", undefined);
 //│ // Query 2
 //│ res = t1[0];
 //│ // End of generated code
-//│ = []
+//│ = undefined
 //│ res: "hello"
 //│    = 'bye'
 
@@ -452,11 +452,11 @@ muta1 = (mut 1, mut 2, mut 3, mut 4)
 muta1[1] <- 233
 muta1
 //│ // Query 1
-//│ res = (muta1[1] = 233, []);
+//│ res = (muta1[1] = 233, undefined);
 //│ // Query 2
 //│ res = muta1;
 //│ // End of generated code
-//│ = []
+//│ = undefined
 //│ res: MutArray[int]
 //│    = [ 1, 233, 3, 4 ]
 
@@ -465,7 +465,7 @@ def xpp rc = (fun _ -> rc) (rc.x <- rc.x + 1)
 xpp a1
 //│ // Query 1
 //│ globalThis.xpp = function xpp(rc) {
-//│   return ((_) => rc)((rc.x = rc.x + 1, []));
+//│   return ((_) => rc)((rc.x = rc.x + 1, undefined));
 //│ };
 //│ // Query 2
 //│ res = xpp(a1);
@@ -489,7 +489,7 @@ tu.1
 //│   2
 //│ ];
 //│ // Query 2
-//│ res = (tu[0] = (tu[1] = 3, []), []);
+//│ res = (tu[0] = (tu[1] = 3, undefined), undefined);
 //│ // Query 3
 //│ res = tu[0];
 //│ // Query 4
@@ -500,8 +500,8 @@ tu.1
 //│     'b :> 2
 //│     'a :> ()
 //│   = [ [], 2 ]
-//│ = []
+//│ = undefined
 //│ res: ()
-//│    = []
+//│    = undefined
 //│ res: 2
 //│    = 3

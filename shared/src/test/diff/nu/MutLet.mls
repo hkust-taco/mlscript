@@ -1,0 +1,143 @@
+:NewDefs
+
+mut let i = 0
+//│ let i: 0
+//│ i
+//│   = 0
+
+set i = 1
+//│ ()
+//│ res
+//│     = undefined
+
+i
+//│ 0 | 1
+//│ res
+//│     = 1
+
+
+mut let f(x) =
+  set f = _ => x
+  x
+//│ let f: forall 'a. 'a -> 'a
+//│ f
+//│   = [Function: f]
+
+f(1)
+//│ 1
+//│ res
+//│     = 1
+
+f(true)
+//│ true
+//│ res
+//│     = true
+
+
+class Some[A](value: A)
+module None
+//│ class Some[A](value: A)
+//│ module None
+
+mut let oops = None
+//│ let oops: None
+//│ oops
+//│      = None { class: [class None] }
+
+fun funny(x) =
+  set oops = Some(x)
+  x
+//│ fun funny: forall 'a. 'a -> 'a
+
+funny(1)
+//│ 1
+//│ res
+//│     = 1
+
+if oops is
+  None then 0
+  Some(v) then v
+//│ 0
+//│ res
+//│     = 1
+
+set oops = Some(123)
+//│ ()
+//│ res
+//│     = undefined
+
+oops
+//│ None | Some[in 'A out 123 | 'A]
+//│ res
+//│     = Some {}
+
+
+
+mut let oops = None
+//│ let oops: None
+//│ oops
+//│      = None { class: [class None] }
+
+fun funny(x) =
+  let tmp = oops
+  set oops = Some(x)
+  tmp
+//│ fun funny: forall 'A. 'A -> (None | Some['A])
+
+funny(123)
+//│ None | Some['A]
+//│   where
+//│     'A :> 123
+//│ res
+//│     = None { class: [class None] }
+
+if funny("hi") is
+  Some(v) then v
+  else 0
+//│ "hi" | 0
+//│ res
+//│     = 123
+
+
+module None
+//│ module None
+
+mut let m = None
+//│ let m: None
+//│ m
+//│   = None { class: [class None] }
+
+mut val m = None
+fun oops(x) = set m = x
+//│ val m: None | 'm
+//│ fun oops: forall 'm. 'm -> ()
+//│ m
+//│   = None { class: [class None] }
+
+
+:e
+let x = 1
+set x = 2
+x
+//│ ╔══[ERROR] definition `x` is not mutable and cannot be reassigned
+//│ ║  l.120: 	set x = 2
+//│ ╙──       	^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in assignment:
+//│ ║  l.120: 	set x = 2
+//│ ║         	^^^^^^^^^
+//│ ╟── integer literal of type `2` does not match type `1`
+//│ ║  l.120: 	set x = 2
+//│ ║         	        ^
+//│ ╟── Note: constraint arises from integer literal:
+//│ ║  l.119: 	let x = 1
+//│ ╙──       	        ^
+//│ let x: 1
+//│ 1
+//│ x
+//│   = 1
+//│ res
+//│     = undefined
+//│ res
+//│     = 2
+
+

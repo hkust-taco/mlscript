@@ -151,9 +151,9 @@ fun x -> move_approx x ri
 move r ri
 move rn r
 move rn ri
-//│ = []
-//│ = []
-//│ = []
+//│ = undefined
+//│ = undefined
+//│ = undefined
 
 :e
 move ri rn
@@ -173,7 +173,7 @@ move ri rn
 //│ ║  l.3: 	class Ref[A]
 //│ ╙──     	          ^
 //│ res: error | unit
-//│    = []
+//│    = undefined
 
 
 def swap a b = let tmp = a.Get in (a.Set b.Get, b.Set tmp)
@@ -193,9 +193,9 @@ swap rn
 swap r ri
 swap ri r
 //│ res: (unit, unit,)
-//│    = [ [], [] ]
+//│    = [ undefined, undefined ]
 //│ res: (unit, unit,)
-//│    = [ [], [] ]
+//│    = [ undefined, undefined ]
 
 :e
 swap rn ri
@@ -210,7 +210,7 @@ swap ri rn
 //│ ║  l.86: 	ri = r : Ref[int]
 //│ ╙──      	             ^^^
 //│ res: error | (unit, unit,)
-//│    = [ [], [] ]
+//│    = [ undefined, undefined ]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.202: 	swap ri rn
 //│ ║         	^^^^^^^^^^
@@ -227,7 +227,7 @@ swap ri rn
 //│ ║  l.3: 	class Ref[A]
 //│ ╙──     	          ^
 //│ res: error | (unit, unit,)
-//│    = [ [], [] ]
+//│    = [ undefined, undefined ]
 
 
 
