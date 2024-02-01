@@ -212,7 +212,7 @@ final case class NuTypeDef(
   }
 
 final case class NuFunDef(
-  isLetRec: Opt[Bool], // None means it's a `fun`, which is always recursive; Some means it's a `let`
+  isLetRec: Opt[Bool], // None means it's a `fun`, which is always recursive; Some means it's a `let` or `val`
   nme: Var,
   symbolicNme: Opt[Var],
   tparams: Ls[TypeName],
@@ -223,7 +223,7 @@ final case class NuFunDef(
   val mutLoc: Opt[Loc],
   val signature: Opt[NuFunDef],
   val outer: Opt[Outer],
-  val genField: Bool
+  val genField: Bool, // true means it's a `val`; false means it's a `let`
 ) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)
   def kind: DeclKind = Val
@@ -233,6 +233,11 @@ final case class NuFunDef(
   def isVirtual: Bool = virtualLoc.nonEmpty || rhs.isRight
   
   def isMut: Bool = mutLoc.nonEmpty
+  
+  def isGeneralized: Bool = isLetRec.isEmpty || (rhs match {
+    case Left(value) => value.isGeneralizableLam
+    case Right(ty) => false
+  })
 }
 
 final case class Constructor(params: Tup, body: Blk) extends DesugaredStatement with ConstructorImpl // constructor(...) { ... }

@@ -703,6 +703,15 @@ trait TermImpl extends StatementImpl { self: Term =>
     case _ => throw new NotAType(this)
   }).withLocOf(this)
   
+  /** Whether this is a lambda that, when let-rec-bound, should be generalized. */
+  def isGeneralizableLam: Bool = this match {
+    case Lam(_, _) => true
+    case Bra(false, that) => that.isGeneralizableLam
+    case Where(that, _) => that.isGeneralizableLam
+    case CaseOf(_, cs) => cs.bodies.forall(_.isGeneralizableLam)
+    case _ => false
+  }
+  
 }
 private class NotAType(val trm: Statement) extends Throwable
 
@@ -1048,6 +1057,12 @@ trait CaseBranchesImpl extends Located { self: CaseBranches =>
 
   def children: List[Located] = this match {
     case Case(pat, body, rest) => pat :: body :: rest :: Nil
+    case Wildcard(body) => body :: Nil
+    case NoCases => Nil
+  }
+  
+  def bodies: List[Term] = this match {
+    case Case(_, body, rest) => body :: rest.bodies
     case Wildcard(body) => body :: Nil
     case NoCases => Nil
   }

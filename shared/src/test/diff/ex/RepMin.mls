@@ -114,8 +114,11 @@ String of walk(tree, 1)
 
 // * An eager walk function using Pair
 
-class Pair[out A, out B](val left: A, right: B)
-//│ class Pair[A, B](left: A, right: B)
+class Pair[out A, out B](val left: A, right: B) {
+  fun toString() = join of "Pair(", String(left), ", ", String(right), ")" }
+//│ class Pair[A, B](left: A, right: B) {
+//│   fun toString: () -> Str
+//│ }
 
 fun walk(t, mn) = if t is
   Leaf(n) then
@@ -129,7 +132,7 @@ fun walk(t, mn) = if t is
 String of walk(tree, 2)
 //│ Str
 //│ res
-//│     = '[object Object]'
+//│     = 'Pair(1, Node(Node(Node(Leaf(1), Leaf(2)), Leaf(3)), Node(Leaf(3), Leaf(2))))'
 
 
 // * A lazy walk function
@@ -148,7 +151,7 @@ fun walkLazy(t, mn) = if t is
 // * One way to tie the recursive knot
 
 class repmin(t: Tree[Int]) {
-  val mn_res = walkLazy of t, Lazy(() => mn_res.0)
+  val mn_res = walkLazy of t, Lazy of () => mn_res.0
   val mn = mn_res.0
   val tree = mn_res.1.get
 }
@@ -169,36 +172,25 @@ let rm = repmin(tree)
 //│ Traversing leaf 3
 //│ Traversing leaf 2
 
-[rm.mn, String of rm.mn_res]
+[rm.mn, String of rm.tree]
 //│ [Int, Str]
 //│ res
 //│     = [
 //│         1,
-//│         '1,Lazy(Node(Node(Node(Leaf(1), Leaf(1)), Leaf(1)), Node(Leaf(1), Leaf(2))))'
+//│         'Node(Node(Node(Leaf(1), Leaf(1)), Leaf(1)), Node(Leaf(1), Leaf(2)))'
 //│       ]
-
-String of rm.tree
-//│ Str
-//│ res
-//│     = 'Node(Node(Node(Leaf(1), Leaf(1)), Leaf(1)), Node(Leaf(1), Leaf(2)))'
 
 
 // * Another way
 
 fun repmin(t) =
   module Rec {
-    val mn_res = walkLazy of t, Lazy(() => mn_res.0)
+    val mn_res = walkLazy of t, Lazy of () => mn_res.0
   }
   [Rec.mn_res.0, Rec.mn_res.1.get]
-//│ fun repmin: forall 'a. (Leaf[Num & 'a] | Node[Num & 'a]) -> ['a, Leaf['a] | Node['a]]
+//│ fun repmin: forall 'a. (Leaf[Int & 'a] | Node[Int & 'a]) -> ['a, Leaf['a] | Node['a]]
 
-// :Fuel 1000000
-// FIXME why does it run out of fuel?!
 String of repmin(tree)
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?get. ?b -> [?a, ?get] <: ?c -> ?d` took too many steps and ran out of fuel (10000)
-//│ ║  l.197: 	String of repmin(tree)
-//│ ║         	          ^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ Str
 //│ res
 //│     = '1,Node(Node(Node(Leaf(1), Leaf(1)), Leaf(1)), Node(Leaf(1), Leaf(2)))'
@@ -248,7 +240,7 @@ fun repmin(t) =
       () => Node of l'(), r'()
   let res = go(t)
   [min, res()]
-//│ fun repmin: forall 'min. (Leaf[Int & 'min] | Node[Int & 'min]) -> [2147483648, Leaf[2147483648 | 'min] | Node[2147483648 | 'min]]
+//│ fun repmin: forall 'min. (Leaf[Int & 'min] | Node[Int & 'min]) -> [2147483648 | 'min, Leaf[2147483648 | 'min] | Node[2147483648 | 'min]]
 
 String of repmin(tree)
 //│ Str
@@ -274,7 +266,7 @@ p => if p is Pair of a, b then a + b
 :e // TODO handle this pattern better in the parser?
 (p, q) => if p is Pair of a, b and q is Pair of a', b' then Pair of a + a', b + b'
 //│ ╔══[ERROR] Illegal pattern `and`
-//│ ║  l.275: 	(p, q) => if p is Pair of a, b and q is Pair of a', b' then Pair of a + a', b + b'
+//│ ║  l.267: 	(p, q) => if p is Pair of a, b and q is Pair of a', b' then Pair of a + a', b + b'
 //│ ╙──       	                               ^^^
 //│ (anything, anything) -> error
 //│ Code generation encountered an error:

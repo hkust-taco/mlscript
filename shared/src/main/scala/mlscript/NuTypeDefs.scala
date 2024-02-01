@@ -1067,10 +1067,33 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           case _ => Nil
         }
     }
-    lazy val mutRecTV: TV = freshVar(
-      TypeProvenance(decl.toLoc, decl.describe, S(decl.name), decl.isInstanceOf[NuTypeDef]),
-      N,
-      S(decl.name))(level + 1)
+    
+    private lazy val isGeneralized: Bool = decl match {
+      case fd: NuFunDef =>
+        println(s"Type ${fd.nme.name} polymorphically? ${fd.isGeneralized} && (${ctx.lvl} === 0 || ${
+          fd.signature.nonEmpty} || ${fd.outer.exists(_.kind isnt Mxn)}")
+        // * We only type polymorphically:
+        // * definitions that can be generalized (ie `fun`s or function-valued `let`s and `val`s); and
+        fd.isGeneralized && (
+              ctx.lvl === 0 // * top-level definitions
+          ||  fd.signature.nonEmpty // * definitions with a provided type signature
+          ||  fd.outer.exists(_.kind isnt Mxn) // * definitions NOT occurring in mixins
+        )
+        // * The reason to not type unannotated mixin methods polymorphically is that
+        // * doing so yields too much extrusion and cycle check failures,
+        // * in the context of inferred precisely-typed open recursion through mixin composition.
+      case _ => die
+    }
+    
+    lazy val mutRecTV: TV = decl match {
+      case fd: NuFunDef =>
+        freshVar(
+          TypeProvenance(decl.toLoc, decl.describe, S(decl.name), decl.isInstanceOf[NuTypeDef]),
+          N,
+          S(decl.name)
+        )(if (isGeneralized) level + 1 else level)
+      case _ => lastWords(s"Not supposed to use mutRecTV for ${decl.kind}")
+    }
     
     private lazy val thisTV: TV =
       freshVar(provTODO, N, S(decl.name.decapitalize))(lvl + 1)
@@ -1117,47 +1140,43 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   TypedNuFun(ctx.lvl, fd, PolymorphicType(ctx.lvl, body_ty))(isImplemented = false)
                 case R(_) => die
                 case L(body) =>
-                  fd.isLetRec match {
-                    case S(true) => // * Let rec bindings
-                      checkNoTyParams()
-                      implicit val gl: GenLambdas = true
-                      TypedNuFun(ctx.lvl, fd, typeTerm(
-                        Let(true, fd.nme, body, fd.nme)
-                      ))(isImplemented = true)
-                    case S(false) => // * Let bindings
-                      checkNoTyParams()
-                      implicit val gl: GenLambdas = true
-                      if (fd.isMut) {
-                        constrain(typeTerm(body), mutRecTV)
-                        TypedNuFun(ctx.lvl, fd, mutRecTV)(isImplemented = true)
+                  if (fd.isLetRec.isDefined) checkNoTyParams()
+                  implicit val gl: GenLambdas =
+                    // * Don't generalize lambdas if we're already in generalization mode;
+                    // * unless the thing is just a simple let binding with functions,
+                    // * as in `let r = if true then id else x => x`
+                    !isGeneralized && fd.isLetRec.isDefined && !fd.genField
+                  val outer_ctx = ctx
+                  val body_ty = if (isGeneralized) {
+                    // * Note:
+                    // * Can't use `ctx.poly` instead of `ctx.nextLevel` here because all the methods
+                    // * in the current typing unit are quantified together.
+                    // * So instead of inserting an individual `forall` in the type of each method,
+                    // * we consider the `forall` to be implicit in the definition of TypedNuFun,
+                    // * and that forall is eschewed while typing mutually-recursive methods
+                    // * in the same typing unit, which will see the method's type through its mutRecTV.
+                    // * This avoids cyclic-looking constraints due to the polymorphic recursion limitation.
+                    // * Subnote: in the future, we should type each mutual-recursion-component independently
+                    // *  and polymorphically wrt to external uses of them.
+                    // *  Currently they are typed in order.
+                    ctx.nextLevel { implicit ctx: Ctx =>
+                      assert(fd.tparams.sizeCompare(tparamsSkolems) === 0, (fd.tparams, tparamsSkolems))
+                      vars ++ tparamsSkolems |> { implicit vars =>
+                        typeTerm(body)
                       }
-                      else TypedNuFun(ctx.lvl, fd, typeTerm(body))(isImplemented = true)
-                    case N =>
-                      // * We don't type functions polymorphically from the point of view of a typing unit
-                      // * to avoid cyclic-looking constraints due to the polymorphic recursion limitation,
-                      // * as these functions are allowed to be mutually-recursive.
-                      // * In the future, we should type each mutual-recursion-component independently
-                      // * and polymorphically wrt to external uses of them.
-                      implicit val gl: GenLambdas = false
-                      val outer_ctx = ctx
-                      val body_ty = ctx.nextLevel { implicit ctx: Ctx =>
-                        // * Note: can't use `ctx.poly` instead of `ctx.nextLevel` because all the methods
-                        // * in the current typing unit are quantified together.
-                        assert(fd.tparams.sizeCompare(tparamsSkolems) === 0, (fd.tparams, tparamsSkolems))
-                        vars ++ tparamsSkolems |> { implicit vars =>
-                          // * Only type methods polymorphically if they're at the top level or if
-                          // * they're annotated with a type signature.
-                          // * Otherwise, we get too much extrusion and cycle check failures
-                          // * especially in the context of open recursion and mixins.
-                          if (ctx.lvl === 1 || fd.signature.nonEmpty || fd.outer.exists(_.kind isnt Mxn))
-                            typeTerm(body)
-                          else outer_ctx |> { implicit ctx: Ctx =>
-                            println(s"Not typing polymorphicall (cf. not top level or not annotated)")
-                            typeTerm(body) }
-                        }
-                      }.withProv(TypeProvenance(fd.toLoc, s"definition of method ${fd.nme.name}"))
-                      TypedNuFun(ctx.lvl, fd, body_ty)(isImplemented = true)
+                    }
+                  } else {
+                    if (fd.isMut) {
+                      constrain(typeTerm(body), mutRecTV)
+                      mutRecTV
+                    }
+                    else typeTerm(body)
                   }
+                  val tp = TypeProvenance(fd.toLoc, s"definition of ${fd.isLetRec match {
+                      case S(_) => if (fd.genField) "value" else "let binding"
+                      case N => "method"
+                    }} ${fd.nme.name}")
+                  TypedNuFun(ctx.lvl, fd, body_ty.withProv(tp))(isImplemented = true)
               }
               ctx.nextLevel { implicit ctx: Ctx => constrain(res_ty.bodyType, mutRecTV) }
               res_ty
