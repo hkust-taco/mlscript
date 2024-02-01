@@ -4,7 +4,7 @@ def incr x = x.a <- x.a + 1
 //│ let res;
 //│ // Query 1
 //│ globalThis.incr = function incr(x) {
-//│   return x.a = x.a + 1, undefined;
+//│   return void(x.a = x.a + 1);
 //│ };
 //│ // End of generated code
 //│ incr: {mut a: int} -> unit

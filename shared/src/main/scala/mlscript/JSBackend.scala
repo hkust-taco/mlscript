@@ -307,7 +307,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     case Assign(lhs, value) =>
       lhs match {
         case _: Subs | _: Sel | _: Var =>
-          JSCommaExpr(JSAssignExpr(translateTerm(lhs), translateTerm(value)) :: JSIdent("undefined") :: Nil)
+          JSUnary("void", JSAssignExpr(translateTerm(lhs), translateTerm(value)))
         case _ =>
           throw CodeGenError(s"illegal assignemnt left-hand side: $lhs")
       }

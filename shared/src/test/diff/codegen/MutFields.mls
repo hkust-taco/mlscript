@@ -62,7 +62,7 @@ set Foo.x = Foo.x + 1
 //│ class TypingUnit3 {}
 //│ const typing_unit3 = new TypingUnit3;
 //│ // Query 1
-//│ res = (Foo.x = Foo.x + 1, undefined);
+//│ res = void(Foo.x = Foo.x + 1);
 //│ // End of generated code
 //│ res
 //│     = undefined
@@ -133,7 +133,7 @@ class Test {
 //│           const qualifier1 = this;
 //│           return ((() => {
 //│             log(qualifier1.x);
-//│             qualifier1.x = qualifier1.x + 1, undefined;
+//│             void(qualifier1.x = qualifier1.x + 1);
 //│             return log(qualifier1.x);
 //│           })());
 //│         }

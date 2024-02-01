@@ -24,7 +24,7 @@ i
 //│   while (i < 10) {
 //│     (() => {
 //│       log(i);
-//│       return i = i + 1, undefined;
+//│       return void(i = i + 1);
 //│     })()
 //│   }
 //│ })();
