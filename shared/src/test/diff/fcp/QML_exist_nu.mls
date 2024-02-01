@@ -245,7 +245,7 @@ class StepAlt'[A](from: Arrays[A]) extends Arrays[A] {
 //│ ║  l.211: 	  val use = from.use of impl =>
 //│ ╙──       	            ^^^^^^^^
 //│ class StepAlt'[A](from: Arrays[A]) extends Arrays {
-//│   val use: forall 'R 'a. error | (StepImpl[A, 'R] -> 'a) -> 'a
+//│   val use: forall 'a 'R. error | (StepImpl[A, 'R] -> 'a) -> 'a
 //│ }
 //│ where
 //│   'R :> ??rep

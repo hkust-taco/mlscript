@@ -362,3 +362,45 @@ module Test3 {
 //│   fun inc: (t: Test2) -> Test2
 //│ }
 
+
+
+mixin Foo {
+  fun f(x) = x(f)
+}
+//│ mixin Foo() {
+//│   fun f: 'a -> 'b
+//│ }
+//│ where
+//│   'a <: ('a -> 'b) -> 'b
+
+mixin Foo {
+  fun f(x) = g(f), x
+  fun g(y) = y(g)
+}
+//│ mixin Foo() {
+//│   fun f: ('a & 'b) -> ('c -> 'b | 'a)
+//│   fun g: 'c -> 'b
+//│ }
+//│ where
+//│   'b :> 'c -> 'b
+//│   'c <: ('c -> 'b) -> 'b
+
+mixin Foo {
+  fun f(x) = g(x), x
+  fun g(y) = f(y)
+}
+//│ mixin Foo() {
+//│   fun f: 'a -> 'a
+//│   fun g: 'a -> 'a
+//│ }
+
+module Foo {
+  fun f(x) = g(x), x
+  fun g(y) = f(y)
+}
+//│ module Foo {
+//│   fun f: forall 'a. 'a -> 'a
+//│   fun g: forall 'a. 'a -> 'a
+//│ }
+
+

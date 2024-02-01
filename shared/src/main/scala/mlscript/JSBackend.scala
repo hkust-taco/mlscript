@@ -77,7 +77,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     case Inst(bod) => translatePattern(bod)
     case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign
         | If(_, _) | New(_, _)  | NuNew(_) | _: Splc | _: Forall | _: Where | _: Super | _: Eqn | _: AdtMatchWith
-        | _: Rft | _: Quoted | _: Unquoted =>
+        | _: Rft | _: While | _: Quoted | _: Unquoted =>
       throw CodeGenError(s"term $t is not a valid pattern")
   }
 
@@ -447,10 +447,12 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
       JSArray(terms map { case (_, Fld(_, term)) => translateTerm(term) })
     case Subs(arr, idx) =>
       JSMember(translateTerm(arr), translateTerm(idx))
+    case While(cond, body) =>
+      JSImmEvalFn(N, Nil, R(JSWhileStmt(translateTerm(cond), translateTerm(body)) :: Nil), Nil)
     case Assign(lhs, value) =>
       lhs match {
         case _: Subs | _: Sel | _: Var =>
-          JSCommaExpr(JSAssignExpr(translateTerm(lhs), translateTerm(value)) :: JSArray(Nil) :: Nil)
+          JSUnary("void", JSAssignExpr(translateTerm(lhs), translateTerm(value)))
         case _ =>
           throw CodeGenError(s"illegal assignemnt left-hand side: $lhs")
       }
@@ -646,7 +648,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
   )(implicit scope: Scope): JSClassDecl = {
     // Translate class methods and getters.
     val classScope = scope.derive(s"class ${classSymbol.lexicalName}")
-    val members = classSymbol.methods.map {
+    val members = classSymbol.methods.flatMap {
       translateClassMember(_)(classScope)
     }
     // Collect class fields.
@@ -891,7 +893,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     val fields = sym.matchingFields ++
       sym.body.collectTypeNames.flatMap(resolveTraitFields)
 
-    val getters = new ListBuffer[Str]()
+    val getters = new ListBuffer[Bool -> Str]() // mut -> name
 
     val ctorParams = sym.ctorParams.fold(
       fields.map { f =>
@@ -902,12 +904,13 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
       )(lst => lst.map { p =>
           if (p._2) { // `constructor(val name)` will also generate a field and a getter
             memberList += NewClassMemberSymbol(p._1, Some(false), false, false, qualifier).tap(bodyScope.register)
-            getters += p._1
+            getters += false -> p._1
           }
           constructorScope.declareValue(p._1, Some(false), false, N).runtimeName // Otherwise, it is only available in the constructor
         })
     
-    val initFields = getters.toList.map(name => JSAssignExpr(JSIdent(s"this.#$name"), JSIdent(name)).stmt)
+    val initFields = getters.toList.map { case (mut, name) =>
+      JSAssignExpr(JSIdent(s"this.#$name"), JSIdent(name)).stmt }
 
     sym.methods.foreach(
       md => memberList += NewClassMemberSymbol(md.nme.name, N, true, false, qualifier).tap(bodyScope.register)
@@ -929,7 +932,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     classSymbols.foreach(s => {memberList += s; typeList += s.name})
     mixinSymbols.foreach(s => {memberList += s;})
     moduleSymbols.foreach(s => {memberList += s; typeList += s.name})
-    val members = sym.methods.map(m => translateNewClassMember(m, fields, qualifier)(memberScopes.getOrElse(m.nme.name, die).memberScope))++
+    val members = sym.methods.map(m => translateNewClassMember(m, fields, qualifier)(memberScopes.getOrElse(m.nme.name, die).memberScope)) ++
       mixinSymbols.map(s => translateMixinDeclaration(s, memberList.toList)(memberScopes.getOrElse(s.name, die).memberScope)) ++
       moduleSymbols.map(s => translateModuleDeclaration(s, memberList.toList)(memberScopes.getOrElse(s.name, die).memberScope)) ++
       classSymbols.map(s => translateNewClassDeclaration(s, memberList.toList)(memberScopes.getOrElse(s.name, die).memberScope))
@@ -969,7 +972,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
       case s: Term => JSExprStmt(translateTerm(s)(constructorScope)) :: Nil
       case nd @ NuFunDef(_, Var(nme), _, _, Left(rhs)) =>
         if (nd.genField) {
-          getters += nme
+          getters += nd.isMut -> nme
           Ls[JSStmt](
             JSExprStmt(JSAssignExpr(JSIdent(s"this.#$nme"), translateTerm(rhs)(constructorScope))),
             JSConstDecl(constructorScope.declareValue(nme, S(false), false, N).runtimeName, JSIdent(s"this.#$nme"))
@@ -1021,7 +1024,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     JSClassNewDecl(
       sym.name,
       fields,
-      fields.filter(sym.publicCtors.contains(_)) ++ getters.toList,
+      fields.filter(sym.publicCtors.contains(_)).map(false -> _) ++ getters.toList,
       privateMems.toList ++ fields,
       base,
       superParameters,
@@ -1041,7 +1044,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
    */
   private def translateClassMember(
       method: MethodDef[Left[Term, Type]],
-  )(implicit scope: Scope): JSClassMemberDecl = {
+  )(implicit scope: Scope): Ls[JSClassMemberDecl] = {
     val name = method.nme.name
     // Create the method/getter scope.
     val memberScope = method.rhs.value match {
@@ -1069,8 +1072,8 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     }
     // Returns members depending on what it is.
     memberParams match {
-      case S(memberParams) => JSClassMethod(name, memberParams, bodyStmts)
-      case N => JSClassGetter(name, bodyStmts)
+      case S(memberParams) => JSClassMethod(name, memberParams, bodyStmts) :: Nil
+      case N => JSClassGetter(name, bodyStmts) :: Nil
     }
   }
 
@@ -1153,7 +1156,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
         case (N, Fld(FldFlags(mut, spec, _), nme: Var)) => nme -> Field(if (mut) S(Bot) else N, Top)
         case _ => die
       }
-      val publicCtors = fs.filter{
+      val publicCtors = fs.filter {
         case (_, Fld(flags, _)) => flags.genGetter
         case _ => false
       }.map {

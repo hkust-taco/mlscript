@@ -1000,6 +1000,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             prov.copy(desc = "prohibited undefined element")) // TODO better reporting for this; the prov isn't actually used
         con(t_a, ArrayType(elemType.toUpper(tp(i.toLoc, "array element")))(prov), elemType) |
           TypeRef(TypeName("undefined"), Nil)(prov.copy(desc = "possibly-undefined array access"))
+      case While(cnd, bod) =>
+        val t_cnd = typeMonomorphicTerm(cnd)
+        con(t_cnd, BoolType, UnitType)
+        typeTerm(Blk(bod :: UnitLit(true) :: Nil))
       case Assign(s @ Sel(r, f), rhs) =>
         val o_ty = typeMonomorphicTerm(r)
         val sprov = tp(s.toLoc, "assigned selection")
@@ -1024,6 +1028,27 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         con(i_ty, IntType, TopType)
         val vl = typeMonomorphicTerm(rhs)
         con(vl, elemType, UnitType.withProv(prov))
+      case Assign(lhs @ (v: Var), rhs) =>
+        val rhs_ty = typeTerm(rhs)
+        def checkMut(fd: NuFunDef) =
+          if (!fd.isMut) err(msg"${fd.describe} `${fd.nme.name
+            }` is not mutable and cannot be reassigned", prov.loco)
+        ctx.get(v.name) match {
+          case S(VarSymbol(ty, vr)) =>
+            con(rhs_ty, ty, UnitType.withProv(prov))
+          case S(CompletedTypeInfo(m: TypedNuFun)) =>
+            checkMut(m.fd)
+            val lhs_ty = m.typeSignature
+            con(rhs_ty, lhs_ty, UnitType.withProv(prov))
+          case S(dti @ DelayedTypeInfo(fd: NuFunDef)) =>
+            checkMut(fd)
+            val lhs_ty = dti.mutRecTV
+            con(rhs_ty, lhs_ty, UnitType.withProv(prov))
+          case _ =>
+            // TODO dedup w/ below
+            err(msg"Illegal assignment" -> prov.loco
+              :: msg"cannot assign to ${lhs.describe}" -> lhs.toLoc :: Nil)
+        }
       case Assign(lhs, rhs) =>
         err(msg"Illegal assignment" -> prov.loco
           :: msg"cannot assign to ${lhs.describe}" -> lhs.toLoc :: Nil)
@@ -1852,7 +1877,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           )(td.declareLoc, td.abstractLoc)
         }
       case tf @ TypedNuFun(level, fd, bodyTy) =>
-        NuFunDef(fd.isLetRec, fd.nme, fd.symbolicNme, Nil, R(go(tf.typeSignature)))(fd.declareLoc, fd.virtualLoc, fd.signature, fd.outer, fd.genField)
+        NuFunDef(fd.isLetRec, fd.nme, fd.symbolicNme, Nil, R(go(tf.typeSignature)))(
+          fd.declareLoc, fd.virtualLoc, fd.mutLoc, fd.signature, fd.outer, fd.genField)
       case p: NuParam =>
         ??? // TODO
       case TypedNuDummy(d) =>

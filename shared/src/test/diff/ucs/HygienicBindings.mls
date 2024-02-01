@@ -53,7 +53,7 @@ fun h1'(a) =
               let z = y.rightValue
               z
     None then 0
-//│ fun h1': forall 'leftValue. (None | Some[Right['leftValue]]) -> (0 | 'leftValue)
+//│ fun h1': forall 'rightValue. (None | Some[Right['rightValue]]) -> (0 | 'rightValue)
 
 // FIXME This seems fine but the desugared term does not merge the cases.
 // See the example below.

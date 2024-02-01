@@ -1,0 +1,280 @@
+:NewDefs
+
+
+// * https://web.cecs.pdx.edu/~sheard/course/CS457-557/Notes/Laziness-6up.pdf
+// * Example Haskell implementation: https://gist.github.com/23Skidoo/3869595
+
+
+class defined[out A](val value: A)
+type Option[A] = defined[A] | ()
+//│ class defined[A](value: A)
+//│ type Option[A] = defined[A] | ()
+
+// * TODO should check the variance; making it covariant should require using private state
+class Lazy[out A](init: () => A) {
+  mut val cached: Option[A] = ()
+  fun get =
+    if cached is defined(v) then v
+    else
+      let v = init()
+      set cached = defined(v)
+      v
+  fun toString() = join of "Lazy(", (if cached is defined(v) then String(v) else "..."), ")"
+}
+//│ class Lazy[A](init: () -> A) {
+//│   val cached: Option[A]
+//│   fun get: A
+//│   fun toString: () -> Str
+//│ }
+
+let l = Lazy(() => (log("Hello!"), 42))
+//│ let l: Lazy[42]
+//│ l
+//│   = Lazy {}
+
+String of l
+//│ Str
+//│ res
+//│     = 'Lazy(...)'
+
+l.get
+//│ 42
+//│ res
+//│     = 42
+//│ // Output
+//│ Hello!
+
+String of l
+//│ Str
+//│ res
+//│     = 'Lazy(42)'
+
+l.get
+//│ 42
+//│ res
+//│     = 42
+
+
+type Tree[out A] = Leaf[A] | Node[A]
+class Leaf[out A](val value: A) { fun toString() = join of "Leaf(", String(value), ")" }
+class Node[out A](val left: Tree[A], val right: Tree[A]) {
+  fun toString() = join of "Node(", String(left), ", ", String(right), ")" }
+//│ type Tree[A] = Leaf[A] | Node[A]
+//│ class Leaf[A](value: A) {
+//│   fun toString: () -> Str
+//│ }
+//│ class Node[A](left: Tree[A], right: Tree[A]) {
+//│   fun toString: () -> Str
+//│ }
+
+String of Leaf(12)
+//│ Str
+//│ res
+//│     = 'Leaf(12)'
+
+fun min(x, y) = if x < y then x else y
+//│ fun min: forall 'a. (Num & 'a, Num & 'a) -> 'a
+
+
+// * An eager walk function just for fun
+
+fun walk(t, mn) = if t is
+  Leaf(n) then [n, Leaf(if n > 2 * mn then mn else n)]
+  Node(l, r) then
+    // * Currently unsupported syntax:
+    // let [mn1, l1] = walk(l, mn)
+    // let [mn2, r1] = walk(r, mn)
+    // [min(mn1, mn2), Node(l1, r1)]
+    let mnl = walk(l, mn)
+    let mnr = walk(r, mn)
+    [min(mnl.0, mnr.0), Node(mnl.1, mnr.1)]
+//│ fun walk: forall 'a 'b. (Leaf[Num & 'a] | Node[Num & 'a], Int & 'b) -> ['a, Leaf['b | 'a] | Node['b | 'a]]
+
+
+let tree = Node of (Node of (Node of Leaf(1), Leaf(5)), Leaf(3)), Node of Leaf(3), Leaf(2)
+//│ let tree: Node[1 | 2 | 3 | 5]
+//│ tree
+//│      = Node {}
+
+String of tree
+//│ Str
+//│ res
+//│     = 'Node(Node(Node(Leaf(1), Leaf(5)), Leaf(3)), Node(Leaf(3), Leaf(2)))'
+
+String of walk(tree, 2)
+//│ Str
+//│ res
+//│     = '1,Node(Node(Node(Leaf(1), Leaf(2)), Leaf(3)), Node(Leaf(3), Leaf(2)))'
+
+String of walk(tree, 1)
+//│ Str
+//│ res
+//│     = '1,Node(Node(Node(Leaf(1), Leaf(1)), Leaf(1)), Node(Leaf(1), Leaf(2)))'
+
+
+// * An eager walk function using Pair
+
+class Pair[out A, out B](val left: A, right: B) {
+  fun toString() = join of "Pair(", String(left), ", ", String(right), ")" }
+//│ class Pair[A, B](left: A, right: B) {
+//│   fun toString: () -> Str
+//│ }
+
+fun walk(t, mn) = if t is
+  Leaf(n) then
+    Pair of n, Leaf(if n > 2 * mn then mn else n)
+  Node(l, r) and walk(l, mn) is Pair(mn1, l1) and walk(r, mn) is Pair(mn2, r1) then
+    Pair of min(mn1, mn2), Node(l1, r1)
+//│ fun walk: forall 'A 'a. (Leaf['A] | Node['A], Int & 'a) -> Pair['A, Leaf['A | 'a] | Node['A | 'a]]
+//│   where
+//│     'A <: Num
+
+String of walk(tree, 2)
+//│ Str
+//│ res
+//│     = 'Pair(1, Node(Node(Node(Leaf(1), Leaf(2)), Leaf(3)), Node(Leaf(3), Leaf(2))))'
+
+
+// * A lazy walk function
+
+fun walkLazy(t, mn) = if t is
+  Leaf(n) then
+    log of join of "Traversing leaf ", String of n
+    [n, Lazy of () => Leaf of if n > 2 * mn.get then mn.get else n]
+  Node(l, r) then
+    let mnl = walkLazy(l, mn)
+    let mnr = walkLazy(r, mn)
+    [min(mnl.0, mnr.0), Lazy of () => Node of mnl.1.get, mnr.1.get]
+//│ fun walkLazy: forall 'a 'get. (Leaf[Num & 'a] | Node[Num & 'a], {get: Int & 'get}) -> ['a, Lazy[Leaf['get | 'a] | Node['get | 'a]]]
+
+
+// * One way to tie the recursive knot
+
+class repmin(t: Tree[Int]) {
+  val mn_res = walkLazy of t, Lazy of () => mn_res.0
+  val mn = mn_res.0
+  val tree = mn_res.1.get
+}
+//│ class repmin(t: Tree[Int]) {
+//│   val mn: Int
+//│   val mn_res: [Int, Lazy[Leaf[Int] | Node[Int]]]
+//│   val tree: Leaf[Int] | Node[Int]
+//│ }
+
+let rm = repmin(tree)
+//│ let rm: repmin
+//│ rm
+//│    = repmin {}
+//│ // Output
+//│ Traversing leaf 1
+//│ Traversing leaf 5
+//│ Traversing leaf 3
+//│ Traversing leaf 3
+//│ Traversing leaf 2
+
+[rm.mn, String of rm.tree]
+//│ [Int, Str]
+//│ res
+//│     = [
+//│         1,
+//│         'Node(Node(Node(Leaf(1), Leaf(1)), Leaf(1)), Node(Leaf(1), Leaf(2)))'
+//│       ]
+
+
+// * Another way
+
+fun repmin(t) =
+  module Rec {
+    val mn_res = walkLazy of t, Lazy of () => mn_res.0
+  }
+  [Rec.mn_res.0, Rec.mn_res.1.get]
+//│ fun repmin: forall 'a. (Leaf[Int & 'a] | Node[Int & 'a]) -> ['a, Leaf['a] | Node['a]]
+
+String of repmin(tree)
+//│ Str
+//│ res
+//│     = '1,Node(Node(Node(Leaf(1), Leaf(1)), Leaf(1)), Node(Leaf(1), Leaf(2)))'
+//│ // Output
+//│ Traversing leaf 1
+//│ Traversing leaf 5
+//│ Traversing leaf 3
+//│ Traversing leaf 3
+//│ Traversing leaf 2
+
+
+// * A way that could work but currently doesn't because of a codegen limitation
+
+:ge
+fun repmin(t) =
+  let rec mn_res = walkLazy of t, Lazy(() => mn_res.0)
+  [mn_res.0, mn_res.1.get]
+//│ fun repmin: forall 'a. (Leaf[Int & 'a] | Node[Int & 'a]) -> ['a, Leaf['a] | Node['a]]
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding mn_res
+
+:re
+String of repmin(tree)
+//│ Str
+//│ res
+//│ Runtime error:
+//│   ReferenceError: repmin2 is not defined
+
+
+// * An alternative solution using mutation and thunks instead of laziness
+
+let IntMax = 2147483648
+//│ let IntMax: 2147483648
+//│ IntMax
+//│        = 2147483648
+
+fun repmin(t) =
+  mut let min = IntMax
+  let rec go(t) = if t is
+    Leaf(n) then
+      log of join of "Traversing leaf ", String of n
+      if n < min then set min = n else ()
+      () => Leaf of if n > 2 * min then min else n
+    Node(l, r) then
+      let l' = go(l)
+      let r' = go(r)
+      () => Node of l'(), r'()
+  let res = go(t)
+  [min, res()]
+//│ fun repmin: forall 'min. (Leaf[Int & 'min] | Node[Int & 'min]) -> [2147483648 | 'min, Leaf[2147483648 | 'min] | Node[2147483648 | 'min]]
+
+String of repmin(tree)
+//│ Str
+//│ res
+//│     = '1,Node(Node(Node(Leaf(1), Leaf(1)), Leaf(1)), Node(Leaf(1), Leaf(2)))'
+//│ // Output
+//│ Traversing leaf 1
+//│ Traversing leaf 5
+//│ Traversing leaf 3
+//│ Traversing leaf 3
+//│ Traversing leaf 2
+
+
+
+
+// * Aside on UCS parsing:
+
+p => if p is Pair of a, b then a + b
+//│ Pair[Int, Int] -> Int
+//│ res
+//│     = [Function: res]
+
+:e // TODO handle this pattern better in the parser?
+(p, q) => if p is Pair of a, b and q is Pair of a', b' then Pair of a + a', b + b'
+//│ ╔══[ERROR] Illegal pattern `and`
+//│ ║  l.267: 	(p, q) => if p is Pair of a, b and q is Pair of a', b' then Pair of a + a', b + b'
+//│ ╙──       	                               ^^^
+//│ (anything, anything) -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+(p, q) => if p is (Pair of a, b) and q is Pair of a', b' then Pair of a + a', b + b'
+//│ (Pair[Int, Int], Pair[Int, Int]) -> Pair[Int, Int]
+//│ res
+//│     = [Function: res]
+
+

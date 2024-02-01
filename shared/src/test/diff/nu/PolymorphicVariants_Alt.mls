@@ -122,7 +122,7 @@ Test1.eval(Nil(), Abs("b", Var("a")))
 Test1.eval(Cons(["c", Var("d")], Nil()), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
-//│     'a :> Abs['a] | Var | App['a]
+//│     'a :> App['a] | Abs['a] | Var
 
 Test1.eval(Cons(["c", Abs("d", Var("d"))], Nil()), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
@@ -142,7 +142,7 @@ fun map_expr(f, v) =
     Numb then v
     Add(l, r) then Add(f(l), f(r))
     Mul(l, r) then Mul(f(l), f(r))
-//│ fun map_expr: forall 'a 'A 'b 'A0. ('b -> 'A0 & 'a -> 'A, Add['b] | Mul['a] | Numb | Var) -> (Add['A0] | Mul['A] | Numb | Var)
+//│ fun map_expr: forall 'a 'A 'b 'A0. ('a -> 'A & 'b -> 'A0, Add['a] | Mul['b] | Numb | Var) -> (Add['A] | Mul['A0] | Numb | Var)
 
 mixin EvalExpr {
   fun eval(sub, v) =

@@ -41,6 +41,9 @@ val x = "oops"
 //│ ╟── string literal of type `"oops"` is not an instance of type `Int`
 //│ ║  l.37: 	val x = "oops"
 //│ ║        	        ^^^^^^
+//│ ╟── but it flows into definition of value x with expected type `Int`
+//│ ║  l.37: 	val x = "oops"
+//│ ║        	    ^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.36: 	val x: Int
 //│ ╙──      	       ^^^

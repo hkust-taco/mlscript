@@ -312,10 +312,11 @@ class Desugarer extends TypeDefs { self: Typer =>
         }
       // This case handles **direct** tuple destructions.
       // x is (a, b, c)
-      case Bra(_, tuple: Tup) => desugarTuplePattern(tuple)
+      case Bra(false, tuple: Tup) => desugarTuplePattern(tuple)
       // This case handles **nested** tuple destructions.
       // x is Cons((x, y), Nil)
       case tuple: Tup => desugarTuplePattern(tuple)
+      case Bra(false, pat) => destructPattern(scrutinee, pat, isTopLevel)
       // What else?
       case _ => throw new DesugaringException(msg"illegal pattern", pattern.toLoc)
     }

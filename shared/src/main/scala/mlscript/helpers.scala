@@ -459,7 +459,7 @@ trait NuDeclImpl extends Located { self: NuDecl =>
       }))
       NuFunDef(N, Var("unapply"), N, Nil, L(Lam(
         Tup(N -> Fld(FldFlags.empty, Var("x")) :: Nil),
-        ret)))(N, N, N, N, true)
+        ret)))(N, N, N, N, N, true)
     }
     case _ => N
   }
@@ -488,7 +488,7 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
     val declaredValueMembers = rawEntities.collect{ case fd: NuFunDef if fd.rhs.isRight => fd.nme.name }.toSet
     rawEntities.map {
       case Eqn(lhs, rhs) if declaredValueMembers(lhs.name) =>
-        NuFunDef(N, lhs, N, Nil, L(rhs))(N, N, N, N, true)
+        NuFunDef(N, lhs, N, Nil, L(rhs))(N, N, N, N, N, true)
       case e => e
     }
   }
@@ -568,6 +568,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       case CaseOf(scrut, cases) =>  "`case` expression" 
       case Subs(arr, idx) => "array access"
       case Assign(lhs, rhs) => "assignment"
+      case While(cnd, bod) => "while loop"
       case Splc(fs) => "splice"
       case New(h, b) => "object instantiation"
       case NuNew(_) => "new instance"
@@ -625,7 +626,8 @@ trait TermImpl extends StatementImpl { self: Term =>
     case CaseOf(s, c) =>
       s"case ${s.showDbg} of { ${c.print(true)} }" |> bra
     case Subs(a, i) => s"(${a.showDbg})[${i.showDbg}]"
-    case Assign(lhs, rhs) => s" ${lhs.showDbg} <- ${rhs.showDbg}" |> bra
+    case Assign(lhs, rhs) => s"${lhs.showDbg} <- ${rhs.showDbg}" |> bra
+    case While(cnd, bod) => s"while ${cnd.showDbg} do ${bod.showDbg}" |> bra
     case New(S((at, ar)), bod) => s"new ${at.showDbg2}(${ar.showDbg}) ${bod.showDbg}" |> bra
     case New(N, bod) => s"new ${bod.showDbg}" |> bra
     case NuNew(cls) => s"new ${cls.showDbg}" |> bra
@@ -690,7 +692,8 @@ trait TermImpl extends StatementImpl { self: Term =>
       case CaseOf(s, c) =>
         s"case ${s.showIn(ctx, false)} of {${c.showIn(ctx.indent)}${ctx.lnIndStr}}" |> bra
       case Subs(a, i) => s"(${a.showIn(ctx, false)})[${i.showIn(ctx, false)}]"
-      case Assign(lhs, rhs) => s" ${lhs.showIn(ctx, false)} <- ${rhs.showIn(ctx, false)}" |> bra
+      case Assign(lhs, rhs) => s"${lhs.showIn(ctx, false)} <- ${rhs.showIn(ctx, false)}" |> bra
+      case While(cnd, bod) => s"while ${cnd.showIn(ctx, false)} do ${bod.showIn(ctx, false)}" |> bra
       case New(S((at, ar)), bod) => s"new ${at.show(ctx.newDefs)}($ar) ${bod.showIn(ctx)}" |> bra
       case New(N, bod) => s"new ${bod.showIn(ctx)}" |> bra
       case NuNew(cls) => s"new ${cls.showIn(ctx, false)}" |> bra
@@ -779,6 +782,15 @@ trait TermImpl extends StatementImpl { self: Term =>
     // case CaseOf(trm, cases) => ???
     case _ => throw new NotAType(this)
   }).withLocOf(this)
+  
+  /** Whether this is a lambda that, when let-rec-bound, should be generalized. */
+  def isGeneralizableLam: Bool = this match {
+    case Lam(_, _) => true
+    case Bra(false, that) => that.isGeneralizableLam
+    case Where(that, _) => that.isGeneralizableLam
+    case CaseOf(_, cs) => cs.bodies.forall(_.isGeneralizableLam)
+    case _ => false
+  }
   
 }
 private class NotAType(val trm: Statement) extends Throwable
@@ -1083,6 +1095,7 @@ trait StatementImpl extends Located { self: Statement =>
     case TypeDef(kind, nme, tparams, body, _, _, pos, _) => nme :: tparams ::: pos ::: body :: Nil
     case Subs(a, i) => a :: i :: Nil
     case Assign(lhs, rhs) => lhs :: rhs :: Nil
+    case While(cnd, bod) => cnd :: bod :: Nil
     case Splc(fields) => fields.map{case L(l) => l case R(r) => r.value}
     case If(body, els) => body :: els.toList
     case d @ NuFunDef(_, v, v2, ts, rhs) => v :: v2.toList ::: ts ::: d.body :: Nil
@@ -1134,6 +1147,12 @@ trait CaseBranchesImpl extends Located { self: CaseBranches =>
 
   def children: List[Located] = this match {
     case Case(pat, body, rest) => pat :: body :: rest :: Nil
+    case Wildcard(body) => body :: Nil
+    case NoCases => Nil
+  }
+  
+  def bodies: List[Term] = this match {
+    case Case(_, body, rest) => body :: rest.bodies
     case Wildcard(body) => body :: Nil
     case NoCases => Nil
   }

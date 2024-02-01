@@ -93,7 +93,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           def handle(virtualMembers: Map[Str, NuMember]): Opt[FieldType] =
             virtualMembers.get(fld.name) match {
               case S(d: TypedNuFun) =>
-                S(d.typeSignature.toUpper(provTODO))
+                val ty = d.typeSignature
+                S(
+                  if (d.fd.isMut) FieldType(S(ty), ty)(d.prov)
+                  else ty.toUpper(d.prov)
+                )
               case S(p: NuParam) =>
                 if (!allowPrivateAccess && !p.isPublic)
                   err(msg"Parameter '${p.nme.name}' cannot tbe accessed as a field" -> fld.toLoc ::
@@ -174,10 +178,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         xs.foldRight(x)(_ && _)
       case Nil =>
         foundRec match {
-          case S(d) => err(d).toUpper(noProv)
+          case S(d) => err(d).toBoth(noProv)
           case N =>
             err(msg"Type `${mkType().expPos}` does not contain member `${fld.name}`" ->
-              fld.toLoc :: Nil).toUpper(noProv)
+              fld.toLoc :: Nil).toBoth(noProv)
         }
     }
     
@@ -639,8 +643,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         (lhs.lb, rhs.lb) match {
           case (Some(l), Some(r)) => rec(l, r, false)
           case (Some(l), None) =>
-            if (lhs.prov.loco.isEmpty || rhs.prov.loco.isEmpty) reportError()
-            else reportError(S(msg"is not mutable"))(
+            println(s"RHS not mutable! in $lhs <- $rhs")
+            reportError(
+              if (lhs.prov.loco.isEmpty || rhs.prov.loco.isEmpty)
+                S(msg"cannot be reassigned")
+              else S(msg"is not mutable")
+            )(
               (rhs.ub.withProv(rhs.prov) :: l.withProv(lhs.prov) :: Nil, l.withProv(noProv) :: Nil), ctx
             )
           case (None, Some(_)) | (None, None) => ()

@@ -25,7 +25,10 @@ class C(a: Int) extends B
 //│ ╟── type `Int` does not match type `"hi"`
 //│ ╟── Note: constraint arises from string literal:
 //│ ║  l.14: 	class B { virtual val a = "hi" }
-//│ ╙──      	                          ^^^^
+//│ ║        	                          ^^^^
+//│ ╟── from definition of value a:
+//│ ║  l.14: 	class B { virtual val a = "hi" }
+//│ ╙──      	                      ^^^^^^^^
 //│ class C(a: Int) extends B
 
 
