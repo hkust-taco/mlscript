@@ -482,6 +482,7 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
       case _ => ???
     }.mkString("{" + newCtx.lnIndStr, newCtx.lnIndStr, ctx.lnIndStr + "}")
   }
+  
   lazy val children: List[Located] = rawEntities
   
   lazy val entities = {
