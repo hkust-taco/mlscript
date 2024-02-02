@@ -1,12 +1,10 @@
 :NewDefs
 
 abstract class Option[out T]: None | Some[T]
-class None extends Option[nothing]
+module None extends Option[nothing]
 class Some[A](get: A) extends Option[A]
 //│ abstract class Option[T]: None | Some[T]
-//│ class None extends Option {
-//│   constructor()
-//│ }
+//│ module None extends Option
 //│ class Some[A](get: A) extends Option
 
 abstract class U[type A]: MkU
@@ -36,7 +34,7 @@ t : F[Option[nothing], Bool]
 //│ res
 //│     = MkF {}
 
-let x: F[Option[nothing], Option[nothing]] = MkF(new None)
+let x: F[Option[nothing], Option[nothing]] = MkF(None)
 //│ let x: F[Option[nothing], Option[nothing]]
 //│ x
 //│   = MkF {}
@@ -44,16 +42,16 @@ let x: F[Option[nothing], Option[nothing]] = MkF(new None)
 :e
 MkF(x) : F[Option[Int], Option[Int]]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.45: 	MkF(x) : F[Option[Int], Option[Int]]
+//│ ║  l.43: 	MkF(x) : F[Option[Int], Option[Int]]
 //│ ║        	^^^^^^
 //│ ╟── type `MkF[?, anything] & {B = Option[nothing], A = Option[nothing]}` is not an instance of type `Option`
-//│ ║  l.39: 	let x: F[Option[nothing], Option[nothing]] = MkF(new None)
+//│ ║  l.37: 	let x: F[Option[nothing], Option[nothing]] = MkF(None)
 //│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Option[anything]`
-//│ ║  l.45: 	MkF(x) : F[Option[Int], Option[Int]]
+//│ ║  l.43: 	MkF(x) : F[Option[Int], Option[Int]]
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.45: 	MkF(x) : F[Option[Int], Option[Int]]
+//│ ║  l.43: 	MkF(x) : F[Option[Int], Option[Int]]
 //│ ╙──      	                        ^^^^^^^^^^^
 //│ F[Option[Int], Option[Int]]
 //│ res
@@ -65,10 +63,10 @@ fun g[T](x: F[T, T]): T = if x is
 //│ fun g: forall 'T. (x: F['T, 'T]) -> 'T
 //│ fun g: forall 'T0. F['T0, 'T0] -> 'T0
 
-g(MkF(new None))
+g(MkF(None))
 //│ None | Option[nothing]
 //│ res
-//│     = None {}
+//│     = None { class: [class None extends Option] }
 
 g(MkF(Some(1)))
 //│ Option['A] | Some['A]
@@ -81,26 +79,26 @@ g(MkF(Some(1)))
 g(MkF(1))
 g(t)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.81: 	g(MkF(1))
+//│ ║  l.79: 	g(MkF(1))
 //│ ║        	^^^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `Option`
-//│ ║  l.81: 	g(MkF(1))
+//│ ║  l.79: 	g(MkF(1))
 //│ ║        	      ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.24: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
+//│ ║  l.22: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
 //│ ║        	                                ^^^^^^^^^
 //│ ╟── from type variable:
-//│ ║  l.62: 	fun g: forall 'T: F['T, 'T] -> 'T
+//│ ║  l.60: 	fun g: forall 'T: F['T, 'T] -> 'T
 //│ ╙──      	                        ^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.82: 	g(t)
+//│ ║  l.80: 	g(t)
 //│ ║        	^^^^
 //│ ╟── expression of type `true` is not an instance of type `Option`
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.24: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
+//│ ║  l.22: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
 //│ ║        	                                ^^^^^^^^^
 //│ ╟── from type variable:
-//│ ║  l.62: 	fun g: forall 'T: F['T, 'T] -> 'T
+//│ ║  l.60: 	fun g: forall 'T: F['T, 'T] -> 'T
 //│ ╙──      	                        ^^
 //│ error
 //│ res
@@ -109,67 +107,63 @@ g(t)
 //│     = true
 
 fun g[T](x: MkF[T, Option[T]]): Option[T] = if x is
-    MkF(None) then new None : x.B
+    MkF(None) then None : x.B
     else error
 //│ fun g: forall 'T. (x: MkF['T, Option['T]]) -> Option['T]
 
-g(MkF(new None))
+g(MkF(None))
 //│ Option[nothing]
 //│ res
-//│     = None {}
+//│     = None { class: [class None extends Option] }
 
 // * nested pattern matching causes recursion depth limit ?
 
 // FIXME
 fun g[T](x: F[Option[T], Option[T]]): Option[T] = if x is
-    MkF(None) then new None : x.B
+    MkF(None) then None : x.B
     else error
-//│ ╔══[ERROR] Subtyping constraint of the form `?B <: ?a` exceeded recursion depth limit (250)
-//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.124: 	fun g[T](x: F[Option[T], Option[T]]): Option[T] = if x is
+//│ ║  l.122: 	fun g[T](x: F[Option[T], Option[T]]): Option[T] = if x is
 //│ ║         	                                                     ^^^^
-//│ ║  l.125: 	    MkF(None) then new None : x.B
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.126: 	    else error
+//│ ║  l.123: 	    MkF(None) then None : x.B
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.124: 	    else error
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── type variable `Y` leaks out of its scope
-//│ ║  l.24: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
+//│ ║  l.22: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
 //│ ║        	             ^
 //│ ╟── into `case` expression of type `Object | ~??Y`
-//│ ║  l.125: 	    MkF(None) then new None : x.B
-//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.126: 	    else error
+//│ ║  l.123: 	    MkF(None) then None : x.B
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.124: 	    else error
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.24: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
+//│ ║  l.22: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
 //│ ╙──      	                ^
 //│ fun g: forall 'T. (x: F[Option['T], Option['T]]) -> Option['T]
 
 // FIXME
 fun g: forall 'T: F['T, 'T] -> 'T
 fun g[T](x: F[T, T]): T = if x is
-    MkF(None) then new None : x.B
+    MkF(None) then None : x.B
     else error
-//│ ╔══[ERROR] Subtyping constraint of the form `?B <: ?a` exceeded recursion depth limit (250)
-//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.151: 	fun g[T](x: F[T, T]): T = if x is
+//│ ║  l.147: 	fun g[T](x: F[T, T]): T = if x is
 //│ ║         	                             ^^^^
-//│ ║  l.152: 	    MkF(None) then new None : x.B
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.153: 	    else error
+//│ ║  l.148: 	    MkF(None) then None : x.B
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.149: 	    else error
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── type variable `Y` leaks out of its scope
-//│ ║  l.24: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
+//│ ║  l.22: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
 //│ ║        	             ^
 //│ ╟── into `case` expression of type `Object | ~??Y`
-//│ ║  l.152: 	    MkF(None) then new None : x.B
-//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.153: 	    else error
+//│ ║  l.148: 	    MkF(None) then None : x.B
+//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.149: 	    else error
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.24: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
+//│ ║  l.22: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
 //│ ╙──      	                ^
 //│ fun g: forall 'T. (x: F['T, 'T]) -> 'T
 //│ fun g: forall 'T0. F['T0, 'T0] -> 'T0
@@ -178,31 +172,29 @@ fun g[T](x: F[T, T]): T = if x is
 fun g: forall 'T: F['T, 'T] -> 'T
 fun g[T](x: F[T, T]): T = if x is
     MkF(m) then if m is
-        None then (new None) as x.B
+        None then None as x.B
         else error
-//│ ╔══[ERROR] Subtyping constraint of the form `?B <: ?a` exceeded recursion depth limit (250)
-//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.179: 	fun g[T](x: F[T, T]): T = if x is
+//│ ║  l.173: 	fun g[T](x: F[T, T]): T = if x is
 //│ ║         	                             ^^^^
-//│ ║  l.180: 	    MkF(m) then if m is
+//│ ║  l.174: 	    MkF(m) then if m is
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.181: 	        None then (new None) as x.B
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.182: 	        else error
+//│ ║  l.175: 	        None then None as x.B
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.176: 	        else error
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `Y` leaks out of its scope
-//│ ║  l.24: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
+//│ ║  l.22: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
 //│ ║        	             ^
 //│ ╟── into `case` expression of type `Object | ~??Y`
-//│ ║  l.180: 	    MkF(m) then if m is
+//│ ║  l.174: 	    MkF(m) then if m is
 //│ ║         	                   ^^^^
-//│ ║  l.181: 	        None then (new None) as x.B
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.182: 	        else error
+//│ ║  l.175: 	        None then None as x.B
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.176: 	        else error
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.24: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
+//│ ║  l.22: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
 //│ ╙──      	                ^
 //│ fun g: forall 'T. (x: F['T, 'T]) -> 'T
 //│ fun g: forall 'T0. F['T0, 'T0] -> 'T0
@@ -214,5 +206,5 @@ class Bar(val a: Option[Int]) extends Foo[Option[Int], Option[Int]]
 
 fun foo[T](x: Foo[T, T]): T = if x is
     Bar(Some(a)) then Some(a) as x.A
-    Bar(None)    then (new None) as x.A
+    Bar(None)    then None as x.A
 //│ fun foo: forall 'T. (x: Foo['T, 'T]) -> 'T

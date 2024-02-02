@@ -1,0 +1,47 @@
+:NewDefs
+
+class Foo[type T](val x: T)
+//│ class Foo[T](x: T)
+
+fun foo(f: Foo[?]) = f.x
+//│ fun foo: (f: Foo[?]) -> anything
+
+// FIXME
+fun foo(f: Foo[?]) = f.x as f.T
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.10: 	fun foo(f: Foo[?]) = f.x as f.T
+//│ ║        	                     ^^^
+//│ ╟── type `anything` does not match type `nothing`
+//│ ║  l.10: 	fun foo(f: Foo[?]) = f.x as f.T
+//│ ║        	               ^
+//│ ╟── but it flows into field selection with expected type `nothing`
+//│ ║  l.10: 	fun foo(f: Foo[?]) = f.x as f.T
+//│ ╙──      	                     ^^^
+//│ fun foo: (f: Foo[?]) -> anything
+
+abstract class Bar[type A]: MkBarInt | MkBarBool
+class MkBarInt() extends Bar[Int]
+class MkBarBool() extends Bar[Bool]
+//│ abstract class Bar[A]: MkBarBool | MkBarInt
+//│ class MkBarInt() extends Bar
+//│ class MkBarBool() extends Bar
+
+fun bar(b: Bar[?]) = if b is
+    MkBarInt then 1 as b.A
+    MkBarBool then true as b.A
+//│ fun bar: (b: Bar[?]) -> (Int | false | true)
+
+// FIXME
+bar(MkBarInt())
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.35: 	bar(MkBarInt())
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╟── type `Int` does not match type `nothing`
+//│ ║  l.23: 	class MkBarInt() extends Bar[Int]
+//│ ║        	                             ^^^
+//│ ╟── Note: constraint arises from wildcard:
+//│ ║  l.29: 	fun bar(b: Bar[?]) = if b is
+//│ ╙──      	               ^
+//│ Int | error | false | true
+//│ res
+//│     = 1

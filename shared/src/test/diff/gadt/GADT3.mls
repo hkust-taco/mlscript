@@ -9,36 +9,50 @@ class Baz[T](val x: Foo[T]) extends Foo[[T]]
 //│ }
 //│ class Baz[T](x: Foo[T]) extends Foo
 
-// * this loop can be broken by giving a type signature
 // FIXME
 fun foo[T](f: Foo[T]): Int = if f is
     Bar then 0
     Baz(x) then foo(x : Foo[x.T])
-//│ ╔══[ERROR] Subtyping constraint of the form `([?a]) -> ?b <: ?c -> ?d` exceeded recursion depth limit (250)
-//│ ║  l.14: 	fun foo[T](f: Foo[T]): Int = if f is
-//│ ║        	                                ^^^^
-//│ ║  l.15: 	    Bar then 0
-//│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.16: 	    Baz(x) then foo(x : Foo[x.T])
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ ╔══[ERROR] Type error in definition
-//│ ║  l.14: 	fun foo[T](f: Foo[T]): Int = if f is
+//│ ║  l.13: 	fun foo[T](f: Foo[T]): Int = if f is
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.15: 	    Bar then 0
+//│ ║  l.14: 	    Bar then 0
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.16: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║  l.15: 	    Baz(x) then foo(x : Foo[x.T])
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `T` leaks out of its scope
-//│ ║  l.16: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║  l.15: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║        	                             ^^
+//│ ╙── into expression of type `T | ~([??T] & ??T0)`
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.13: 	fun foo[T](f: Foo[T]): Int = if f is
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.14: 	    Bar then 0
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.15: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `T` leaks out of its scope
+//│ ║  l.15: 	    Baz(x) then foo(x : Foo[x.T])
 //│ ║        	                             ^^
 //│ ╙── into expression of type `T | ~(Int & ??T)`
 //│ ╔══[ERROR] Type error in definition
-//│ ║  l.14: 	fun foo[T](f: Foo[T]): Int = if f is
+//│ ║  l.13: 	fun foo[T](f: Foo[T]): Int = if f is
 //│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.15: 	    Bar then 0
+//│ ║  l.14: 	    Bar then 0
 //│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.16: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║  l.15: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `T` leaks out of its scope
+//│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ╙──     	          ^
+//│ ╔══[ERROR] Type `T` does not contain member `0`
+//│ ╙──
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.13: 	fun foo[T](f: Foo[T]): Int = if f is
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.14: 	    Bar then 0
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.15: 	    Baz(x) then foo(x : Foo[x.T])
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `T` leaks out of its scope
 //│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
@@ -59,42 +73,113 @@ fun foo(f) = if f is
 //│ fun foo: (Bar | Baz[in anything out nothing]) -> Int
 //│ fun foo: forall 'a. Foo['a] -> Int
 
-abstract class Foo[type T]: Bar | Baz[T]
-class Bar extends Foo[Int]
-class Baz[T](val x: Foo[T]) extends Foo[[T]]
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.64: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `T` is not a 1-element tuple
-//│ ║  l.64: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
-//│ ║        	          ^
-//│ ╟── Note: constraint arises from tuple type:
-//│ ║  l.64: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
-//│ ║        	                                        ^^^
-//│ ╟── Note: type parameter T is defined at:
-//│ ║  l.62: 	abstract class Foo[type T]: Bar | Baz[T]
-//│ ╙──      	                        ^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.64: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `[T]` does not match type `T`
-//│ ║  l.64: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
-//│ ║        	                                        ^^^
-//│ ╟── Note: constraint arises from type parameter:
-//│ ║  l.64: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
-//│ ╙──      	          ^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ abstract class Foo[T]: Bar | Baz[T]
-//│ class Bar extends Foo {
-//│   constructor()
-//│ }
-//│ class Baz[T](x: Foo[T]) extends Foo
-
-fun foo[T](f: Foo[T]): Int = if f is
+// FIXME
+fun foo[T](f: Foo[?]): Int = if f is
     Bar then 0
     Baz(x) then foo(x : Foo[x.T])
-//│ fun foo: forall 'T. (f: Foo['T]) -> Int
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.77: 	fun foo[T](f: Foo[?]): Int = if f is
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.78: 	    Bar then 0
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.79: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `T` leaks out of its scope
+//│ ║  l.79: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║        	                             ^^
+//│ ╟── into type `~([??T] & ??T0)`
+//│ ║  l.77: 	fun foo[T](f: Foo[?]): Int = if f is
+//│ ╙──      	                  ^
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.77: 	fun foo[T](f: Foo[?]): Int = if f is
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.78: 	    Bar then 0
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.79: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `T` leaks out of its scope
+//│ ║  l.79: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║        	                             ^^
+//│ ╟── into type `~(Int & ??T)`
+//│ ║  l.77: 	fun foo[T](f: Foo[?]): Int = if f is
+//│ ╙──      	                  ^
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.77: 	fun foo[T](f: Foo[?]): Int = if f is
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.78: 	    Bar then 0
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.79: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `T` leaks out of its scope
+//│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ╙──     	          ^
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.77: 	fun foo[T](f: Foo[?]): Int = if f is
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.78: 	    Bar then 0
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.79: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `T` leaks out of its scope
+//│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ╙──     	          ^
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.77: 	fun foo[T](f: Foo[?]): Int = if f is
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.78: 	    Bar then 0
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.79: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `~[??T] & ~??T0` does not match type `~(Int & ??T1)`
+//│ ╟── Note: constraint arises from wildcard:
+//│ ║  l.77: 	fun foo[T](f: Foo[?]): Int = if f is
+//│ ║        	                  ^
+//│ ╟── from type selection:
+//│ ║  l.79: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║        	                             ^^
+//│ ╟── Note: type parameter T is defined at:
+//│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ╙──     	          ^
+//│ ╔══[ERROR] Type `Int & ??T` does not contain member `0`
+//│ ╙──
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.77: 	fun foo[T](f: Foo[?]): Int = if f is
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.78: 	    Bar then 0
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.79: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `T` leaks out of its scope
+//│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ╙──     	          ^
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.77: 	fun foo[T](f: Foo[?]): Int = if f is
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.78: 	    Bar then 0
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.79: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `T` leaks out of its scope
+//│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ╙──     	          ^
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.77: 	fun foo[T](f: Foo[?]): Int = if f is
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.78: 	    Bar then 0
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.79: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `~Int & ~??T` does not match type `~([??T0] & ??T1)`
+//│ ╟── Note: constraint arises from wildcard:
+//│ ║  l.77: 	fun foo[T](f: Foo[?]): Int = if f is
+//│ ║        	                  ^
+//│ ╟── from type selection:
+//│ ║  l.79: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║        	                             ^^
+//│ ╟── Note: type parameter T is defined at:
+//│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ╙──     	          ^
+//│ fun foo: (f: Foo[?]) -> Int
 
 fun bar(f) = if f is 
     Bar then 0
@@ -130,17 +215,17 @@ fun foo(x) = if x is
     C1(c) then c : x.T
     C2    then 0 : x.T
 //│ ╔══[ERROR] Type error in definition
-//│ ║  l.129: 	fun foo(x) = if x is
+//│ ║  l.214: 	fun foo(x) = if x is
 //│ ║         	    ^^^^^^^^^^^^^^^^
-//│ ║  l.130: 	    C1(c) then c : x.T
+//│ ║  l.215: 	    C1(c) then c : x.T
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.131: 	    C2    then 0 : x.T
+//│ ║  l.216: 	    C2    then 0 : x.T
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.130: 	    C1(c) then c : x.T
+//│ ║  l.215: 	    C1(c) then c : x.T
 //│ ║         	                    ^^
 //│ ╟── into type `'T | ~??A`
-//│ ║  l.128: 	fun foo: C['T] -> 'T
+//│ ║  l.213: 	fun foo: C['T] -> 'T
 //│ ╙──       	                  ^^
 //│ fun foo: forall 'A. (C1['A] | C2) -> (Int | ??A & 'A)
 //│ fun foo: forall 'T. C['T] -> 'T

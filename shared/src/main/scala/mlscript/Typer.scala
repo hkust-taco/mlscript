@@ -508,8 +508,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           else lit.baseClassesOld)(tyTp(ty.toLoc, "literal type"))
       case wc @ TypeName("?") => // TODO handle typing of C[?]
         implicit val prov: TypeProvenance = tyTp(ty.toLoc, "wildcard")
-        err(msg"wildcard type notation currently unsupported", prov.loco)
-        freshVar(prov, N, N)
+        // err(msg"wildcard type notation currently unsupported", prov.loco)
+        TypeBounds(BotType, TopType)(prov)
       case TypeName("this") =>
         ctx.env.get("this") match {
           case S(_: AbstractConstructor | _: LazyTypeInfo) => die

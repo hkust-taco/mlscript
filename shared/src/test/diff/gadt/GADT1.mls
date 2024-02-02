@@ -57,7 +57,7 @@ fun len(xs: Vec['l, 'a]) = if xs is
     Nil then 0
     Cons(h, t) then 1 + len(t : Vec[xs.L.P, xs.T])
 //│ fun len: forall 'l 'P 'a. (xs: Vec['l, 'a]) -> Int
-//│ fun len: forall 'a0 'l0. Vec['l0, 'a0] -> Int
+//│ fun len: forall 'l0 'a0. Vec['l0, 'a0] -> Int
 //│ where
 //│   'l <: {P :> S[?] & ??L | 'P <: 'P & (S[in anything out nothing] | ??L0)} | ~(S[in S[in anything out nothing] | ??L out S[?] & ??L0] & {P :> S[in anything out nothing] | ??L <: S[?] & ??L0})
 

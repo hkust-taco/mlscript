@@ -74,30 +74,62 @@ fun f(x: S[?]): x.T = if x is
     A then 1 : x.T
     B then true : x.T
     _ then error
-//│ ╔══[ERROR] wildcard type notation currently unsupported
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.73: 	fun f(x: S[?]): x.T = if x is 
+//│ ║        	                         ^^^^^
+//│ ║  l.74: 	    A then 1 : x.T
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.75: 	    B then true : x.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.76: 	    _ then error
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╟── type `Int` is not an instance of type `Bool`
+//│ ║  l.26: 	module A extends S[Int]
+//│ ║        	                   ^^^
+//│ ╟── but it flows into type selection with expected type `Bool`
+//│ ║  l.74: 	    A then 1 : x.T
+//│ ║        	                ^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.27: 	module B extends S[Bool]
+//│ ║        	                   ^^^^
+//│ ╟── from type selection:
+//│ ║  l.73: 	fun f(x: S[?]): x.T = if x is 
+//│ ╙──      	                 ^^
+//│ fun f: (x: S[?]) -> (Int | false | true)
+
+// FIXME
+f(A)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.101: 	f(A)
+//│ ║         	^^^^
+//│ ╟── type `Int` does not match type `nothing`
+//│ ║  l.26: 	module A extends S[Int]
+//│ ║        	                   ^^^
+//│ ╟── Note: constraint arises from wildcard:
 //│ ║  l.73: 	fun f(x: S[?]): x.T = if x is 
 //│ ╙──      	           ^
-//│ fun f: forall 'a. (x: S['a]) -> ('a & (Int | false | true))
-
-f(A)
-//│ Int
+//│ Int | error | false | true
 //│ res
 //│     = 1
 
 :e
 let y: ? = 1
-//│ ╔══[ERROR] wildcard type notation currently unsupported
-//│ ║  l.88: 	let y: ? = 1
-//│ ╙──      	       ^
-//│ let y: 1
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.116: 	let y: ? = 1
+//│ ║         	           ^
+//│ ╟── integer literal of type `1` does not match type `nothing`
+//│ ╟── Note: constraint arises from wildcard:
+//│ ║  l.116: 	let y: ? = 1
+//│ ╙──       	       ^
+//│ let y: anything
 //│ y
 //│   = 1
 
 :e
 let x = ?
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.97: 	let x = ?
-//│ ╙──      	        ^
+//│ ║  l.129: 	let x = ?
+//│ ╙──       	        ^
 //│ let x: error
 //│ Code generation encountered an error:
 //│   cannot generate code for term WildcardType()
@@ -105,7 +137,7 @@ let x = ?
 :e
 if x is ? then 1
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.106: 	if x is ? then 1
+//│ ║  l.138: 	if x is ? then 1
 //│ ╙──       	        ^
 //│ error
 //│ Code generation encountered an error:
