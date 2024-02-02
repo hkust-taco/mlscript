@@ -67,16 +67,16 @@ fun find(t, k) =
       sgt(k, k') then find(r, k)
       _ then Some(v)
     Empty then None
-//│ fun insert: forall 'A 'A0 'A1 'A2 'A3. (Empty | Node[in 'A2 out 'A1], Str, 'A3 & 'A0 & ('A1 | ??A)) -> Node[in 'A3 & 'A0 out 'A]
+//│ fun insert: forall 'A 'A0 'A1 'A2 'A3. (Empty | Node[in 'A0 out 'A1], Str, 'A & 'A2 & ('A1 | ??A)) -> Node[in 'A & 'A2 out 'A3]
 //│ fun find: forall 'A4. (Empty | Node[in 'A4 out nothing], Str) -> (None | Some[??A0 & 'A4])
 //│ where
-//│   'A2 <: 'A3 & ('A1 & ('A0 | ~??A1) | ??A & ('A0 | ~??A1)) | ~??A1
-//│   'A3 :> 'A | ??A1 & 'A2
-//│       <: 'A0 & ('A1 | ??A)
-//│   'A :> 'A3 | ??A1 & 'A2 | 'A0
-//│   'A0 :> 'A | ??A1 & 'A2
-//│       <: 'A3 & ('A1 | ??A)
-//│   'A1 <: 'A2
+//│   'A0 <: 'A & ('A1 & ('A2 | ~??A1) | ??A & ('A2 | ~??A1)) | ~??A1
+//│   'A :> 'A3 | ??A1 & 'A0
+//│      <: 'A2 & ('A1 | ??A)
+//│   'A3 :> 'A | ??A1 & 'A0 | 'A2
+//│   'A2 :> 'A3 | ??A1 & 'A0
+//│       <: 'A & ('A1 | ??A)
+//│   'A1 <: 'A0
 
 fun showType(ty) =
   if ty is
@@ -131,7 +131,7 @@ showTerm(App(Abs(Var("x"), _t("int"), Var("y")), Var("z")))
 //│ res
 //│     = '((&x: int => z) z)'
 
-:e // FIXME recursion depth excess
+// :e // FIXME recursion depth excess
 // Removing the return type annotation causes stack overflow.
 fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, Str] =
   if t is
@@ -150,28 +150,6 @@ fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, Str] =
         Err(message) then Err(message)
       Ok(PrimitiveType(name)) then Err("cannot apply primitive type `" ++ name ++ "`")
       Err(message) then Err(message)
-//│ ╔══[ERROR] Subtyping constraint of the form `?typeTerm <: (?a, ?b) -> ?c` exceeded recursion depth limit (250)
-//│ ║  l.142: 	    Abs(Var(name), ty, body) and typeTerm(body, insert(ctx, name, ty)) is
-//│ ║         	                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Subtyping constraint of the form `([?a, ?b, ?c]) -> ?d <: ?e -> ?f` exceeded recursion depth limit (250)
-//│ ║  l.137: 	  if t is
-//│ ║         	     ^^^^
-//│ ║  l.138: 	    Lit(_, ty) then Ok(ty)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.139: 	    Var(name) and find(ctx, name) is
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.140: 	      Some(ty) then Ok(ty)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.141: 	      None then Err("unbound variable `" ++ name ++ "`")
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.142: 	    Abs(Var(name), ty, body) and typeTerm(body, insert(ctx, name, ty)) is
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.143: 	      Ok(resTy) then Ok(FunctionType(ty, resTy))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.144: 	      Err(message) then Err(message)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ fun typeTerm: (t: Term, ctx: TreeMap[Type]) -> Result[Type, Str]
 
 fun showTypeTerm(t, ctx) =

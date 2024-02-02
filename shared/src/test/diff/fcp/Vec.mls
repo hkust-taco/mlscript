@@ -272,7 +272,7 @@ v2 = cons 1 (cons 2 nil)
 //│ ╟── Note: class Z is defined at:
 //│ ║  l.7: 	class Z
 //│ ╙──     	      ^
-//│ v2: error | ((Cons[1 | 2, in S['p] out S['p] | Z] with {head: 1, size: forall 'P. S['P], tail: Vec[2, in S['p] out S['p] | Z]}) -> 'a) -> 'a
+//│ v2: error
 
 
 def impossible x = case x of {}
@@ -300,7 +300,7 @@ def head2 (vec: Vec['a, S['p]]) = vec (fun v -> case v of {
 head1 v1
 head1 v2
 //│ res: 1
-//│ res: 1 | error
+//│ res: error
 
 :e
 head1 nil
@@ -360,10 +360,6 @@ sum v1_0
 
 // * Note: also worked woth top/bot extrusion
 sum v2
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?sum. ?sum <: (forall ?a. ?a) -> ?b` exceeded recursion depth limit (250)
-//│ ║  l.362: 	sum v2
-//│ ║         	^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ res: error
 
 

@@ -21,8 +21,6 @@ class MkF[T](t: T) extends F[Box[T]]
 
 // FIXME
 fun f[T](x: F[T]): T = if x is MkF(t) then Box(t) as x.A
-//│ ╔══[ERROR] Subtyping constraint of the form `?a <: ?b` exceeded recursion depth limit (250)
-//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ fun f: forall 'T. (x: F['T]) -> 'T
 
 // * *
@@ -41,8 +39,6 @@ fun h[A](x: H[A]): A = if x is
     HI then Some(1) as x.A
     HB then Box(false) as x.A
     HG(t) then Some(Box(t)) as x.A
-//│ ╔══[ERROR] Subtyping constraint of the form `?a <: ?b` exceeded recursion depth limit (250)
-//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ fun h: forall 'A. (x: H['A]) -> 'A
 
 h(HG(1))
@@ -83,7 +79,7 @@ f(MkF(Box(1)))
 :e
 f(MkU(1))
 //│ ╔══[ERROR] identifier not found: MkU
-//│ ║  l.84: 	f(MkU(1))
+//│ ║  l.80: 	f(MkU(1))
 //│ ╙──      	  ^^^
 //│ Int
 //│ Code generation encountered an error:
@@ -106,16 +102,16 @@ u(MkU(1, 2))
 :e
 u(MkU(1, true))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.107: 	u(MkU(1, true))
+//│ ║  l.103: 	u(MkU(1, true))
 //│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of `Int`
-//│ ║  l.107: 	u(MkU(1, true))
+//│ ║  l.103: 	u(MkU(1, true))
 //│ ║         	         ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.93: 	class MkU[S, T](s: S, t: T) extends U[S, T, Int]
+//│ ║  l.89: 	class MkU[S, T](s: S, t: T) extends U[S, T, Int]
 //│ ║        	                                            ^^^
 //│ ╟── Note: type parameter C is defined at:
-//│ ║  l.92: 	abstract class U[type A, type B, type C]: MkU
+//│ ║  l.88: 	abstract class U[type A, type B, type C]: MkU
 //│ ╙──      	                                      ^
 //│ Int | error | true
 //│ res

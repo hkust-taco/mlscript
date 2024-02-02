@@ -1,4 +1,5 @@
 :NewDefs
+// :NoProvs
 
 fun (++) concatOp(a, b) = concat(a)(b)
 //│ fun (++) concatOp: (Str, Str) -> Str
@@ -81,9 +82,15 @@ fun listConcat(xs, ys) =
   if xs is
     Nil then ys
     Cons(x, xs') then Cons(x, listConcat(xs', ys))
-//│ fun listConcat: forall 'A 'A0 'a. (Cons[in 'A & ('A0 | ~??A) out nothing] | Nil, List['A0] & 'a) -> (Cons['A0] | 'a)
+//│ fun listConcat: forall 'A 'A0 'A1 'a 'A2 'A3. (Cons[in 'A2 & ('A1 | ~??A) out nothing] | Nil, List[in 'A3 out 'A0] & 'a) -> (Cons[in 'A1 out 'A] | 'a)
 //│   where
-//│     'A0 :> ??A & 'A
+//│     'A1 :> 'A | ??A & 'A2
+//│         <: 'A0
+//│     'A0 :> 'A | 'A3 | ??A & 'A2
+//│         <: 'A1
+//│     'A :> 'A1 | 'A3 | ??A & 'A2
+//│     'A3 :> 'A
+//│         <: 'A1
 
 fun listContains(xs, x) =
   if xs is
@@ -228,18 +235,37 @@ showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
 //│ res
 //│     = '((&x. x) x) DOES NOT have free variable y'
 
+// // :d
+// fun fv(t) =
+//   if t is
+//     Var(name) then list1(error)
+//     App(lhs, rhs) then listConcat(error, fv(rhs))
+
+// fun fv(t) =
+//   if t is
+//     Var(name) then list1(error)
+//     App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
+
+:Fuel 100000
+// :d
+// :ex
 fun fv(t) =
   if t is
     Var(name) then list1(name)
     Abs(Var(name), body) then listWithout(fv(body), name)
     App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
-//│ fun fv: forall 'A 'A0 'A1. (Abs | App | Var) -> (Cons[in 'A out 'A0] | Cons[in 'A & 'A1 out 'A0] | Nil)
+//│ fun fv: forall 'A 'A0 'A1 'A2 'A3 'A4 'A5. (Abs | App | Var) -> (Cons[in 'A0 out 'A5] | Cons[in 'A0 & 'A2 out 'A5] | Nil)
 //│   where
-//│     'A :> 'A0 | ??A & 'A0 | ??A0 & 'A0
-//│        <: 'A1 | ~??A
-//│     'A0 :> 'A | 'A1
-//│     'A1 :> 'A0 | ??A & 'A0
-//│         <: 'A
+//│     'A0 :> 'A5 | ??A & 'A5 | ??A0 & 'A5
+//│         <: 'A2 & (~??A0 & ('A4 | ~??A) | 'A & 'A1 & ('A4 | ~??A))
+//│     'A5 :> 'A0 | 'A3
+//│     'A3 :> Str & ??A0 | 'A5 | 'A0 | ??A & 'A5 | ??A0 & 'A5
+//│         <: 'A0 & 'A2 & (~??A0 & ('A4 | ~??A) | 'A & 'A1 & ('A4 | ~??A))
+//│     'A2 <: 'A0 & 'A3 & (~??A0 & ('A4 | ~??A) | 'A & 'A1 & ('A4 | ~??A))
+//│     'A4 <: 'A0 & 'A2 & ('A & 'A1 | ~??A0)
+//│     'A <: 'A0 & 'A3 & 'A2 & (~??A0 & ('A4 | ~??A) | 'A1 & ('A4 | ~??A))
+//│     'A1 <: 'A0 & 'A3 & 'A2 & (~??A0 & ('A4 | ~??A) | 'A & ('A4 | ~??A))
+:ResetFuel
 
 fun showFv(t) =
   showTerm(t) ++ if fv(t) is
