@@ -154,7 +154,7 @@ final case class AppliedType(base: TypeName, targs: List[Type]) extends Type wit
 final case class Selection(base: Type, name: TypeName)   extends Type
 final case class Neg(base: Type)                         extends Type
 final case class Rem(base: Type, names: Ls[Var])         extends Type
-final case class Bounds(lb: Type, ub: Type)              extends Type
+final case class Bounds(lb: Type, ub: Type)              extends Type // TODO repurpose to use as wildcard type arg
 final case class WithExtension(base: Type, rcd: Record)  extends Type
 final case class Splice(fields: Ls[Either[Type, Field]]) extends Type
 final case class Constrained(base: TypeLike, tvBounds: Ls[TypeVar -> Bounds], where: Ls[Bounds]) extends Type

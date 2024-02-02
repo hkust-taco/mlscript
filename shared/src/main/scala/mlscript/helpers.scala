@@ -649,6 +649,8 @@ trait TermImpl extends StatementImpl { self: Term =>
     case ty @ App(v @ Var("\\"), PlainTup(lhs, rhs)) =>
       Inter(lhs.toType_!, Neg(rhs.toType_!).withLoc(Loc(v :: rhs :: Nil))).withLoc(ty.toCoveringLoc)
     case App(Var("~"), rhs) => Neg(rhs.toType_!)
+    case App(Var(".."), PlainTup(lhs, rhs)) =>
+      Bounds(lhs.toType_!, rhs.toType_!)
     case Lam(lhs, rhs) => Function(lhs.toType_!, rhs.toType_!)
     case App(lhs, PlainTup(fs @ _*)) =>
       lhs.toType_! match {
