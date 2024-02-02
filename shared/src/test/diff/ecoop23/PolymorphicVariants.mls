@@ -91,14 +91,14 @@ module Test1 extends EvalVar, EvalLambda
 Test1.eval(Nil, Var("a"))
 //│ 'a
 //│   where
-//│     'a :> Abs['a] | Var | App['a]
+//│     'a :> App['a] | Abs['a] | Var
 //│ res
 //│     = Var {}
 
 Test1.eval(Nil, Abs("b", Var("a")))
 //│ 'a
 //│   where
-//│     'a :> Abs['a] | Var | App['a]
+//│     'a :> App['a] | Abs['a] | Var
 //│ res
 //│     = Abs {}
 
@@ -149,7 +149,7 @@ mixin EvalExpr {
 
 module Test2 extends EvalVar, EvalExpr
 //│ module Test2 {
-//│   fun eval: forall 'a. (Cons[{0: anything, 1: 'A & (Object | ~??A | ~??A0 & ~??A1)} | ~??A2] | Nil, 'a & (Add['A0] | Mul['A1] | Numb | Var)) -> (Numb | Var | ??A & 'A | ??A3 & 'A0 | ??A4 & 'A1 | 'a)
+//│   fun eval: forall 'a. (Cons[{0: anything, 1: 'A & (Object | ~??A | ~??A0 & ~??A1)} | ~??A2] | Nil, 'a & (Add['A0] | Mul['A1] | Numb | Var)) -> (Numb | Var | ??A3 & 'A0 | ??A4 & 'A1 | ??A & 'A | 'a)
 //│ }
 //│ where
 //│   'A0 <: Add['A0] | Mul['A1] | Numb | Var | ~??A3
@@ -229,7 +229,7 @@ module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ where
 //│   'A :> ??A0 & 'A0 | ??A1 & 'A1 | 'a
 //│      <: Object | ~(??A2 & (??A3 | ??A4))
-//│   'a :> Abs[nothing] | App[nothing] | Numb | Var | ??A2 & 'A | ??A0 & 'A0 | ??A1 & 'A1
+//│   'a :> Abs[nothing] | App[nothing] | Numb | Var | ??A0 & 'A0 | ??A1 & 'A1 | ??A2 & 'A
 //│   'A0 <: Add['A0] | Mul['A1] | Numb | Var | ~??A0
 //│   'A1 <: Add['A0] | Mul['A1] | Numb | Var | ~??A1
 

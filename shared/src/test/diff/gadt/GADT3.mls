@@ -57,6 +57,18 @@ fun foo[T](f: Foo[T]): Int = if f is
 //│ ╟── type variable `T` leaks out of its scope
 //│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
 //│ ╙──     	          ^
+//│ ╔══[ERROR] Type `T` does not contain member `0`
+//│ ╙──
+//│ ╔══[ERROR] Type error in definition
+//│ ║  l.14: 	fun foo[T](f: Foo[T]): Int = if f is
+//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.15: 	    Bar then 0
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.16: 	    Baz(x) then foo(x : Foo[x.T])
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `T` leaks out of its scope
+//│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ╙──     	          ^
 //│ fun foo: forall 'T. (f: Foo['T]) -> Int
 
 fun foo: Foo['a] -> Int
@@ -260,7 +272,7 @@ fun getOr(x, d) = if x is
 fun getOr(x: Option['a], d) = if x is
     None then d
     Some(g) then g
-//│ fun getOr: forall 'a 'b. (x: Option['a], 'b) -> (??A & 'a | 'b)
+//│ fun getOr: forall 'b 'a. (x: Option['a], 'b) -> (??A & 'a | 'b)
 
 fun getOr[T](x: Option[T], d: T): T = if x is
     None then d

@@ -113,7 +113,7 @@ fun (:::) concatList(xs, ys) = if xs is
   Nil then ys
   Cons(x, xs) then x :: xs ::: ys
 //│ fun (::) cons: forall 'A. ('A, List['A]) -> Cons['A]
-//│ fun (:::) concatList: forall 'A0 'A1 'a. (Cons['A0] | Nil, List['A1] & 'a) -> (Cons['A1 | ??A & 'A0] | 'a)
+//│ fun (:::) concatList: forall 'a 'A0 'A1. (Cons['A0] | Nil, List['A1] & 'a) -> (Cons['A1 | ??A & 'A0] | 'a)
 
 module Lists { // TODO use name List when module overloading is supported:
   
@@ -262,66 +262,31 @@ fun eval(t, env) = if t is
     else err(String(pree) ++ " does not have field " ++ nme)
   Rcd(fs) then
     Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
-//│ ╔══[ERROR] Subtyping constraint of the form `(?a, ?b) -> (?c | ?d | ?e | ?f | ?g | ?h) <: ?eval` exceeded recursion depth limit (250)
-//│ ║  l.245: 	fun eval(t, env) = if t is
-//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.246: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.247: 	    then v
-//│ ║         	^^^^^^^^^^
-//│ ║  l.248: 	    else err("variable not found: " ++ nme)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.249: 	  Lit then t
-//│ ║         	^^^^^^^^^^^^
-//│ ║  l.250: 	  Lam then t
-//│ ║         	^^^^^^^^^^^^
-//│ ║  l.251: 	  App(f, args) then
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.252: 	    let fe = eval(f, env)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.253: 	    if fe is Lam(ps, bod) then
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.254: 	      val argse = args |> Lists.map(a => eval(a, env))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.255: 	      if ps.length === argse.length then () else err("wrong number of arguments")
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.256: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.257: 	      eval(bod, envp ::: env)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.258: 	    else err(String(fe) ++ " cannot be applied")
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.259: 	  Sel(pre, nme) then
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.260: 	    let pree = eval(pre, env)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.261: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.262: 	    else err(String(pree) ++ " does not have field " ++ nme)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.263: 	  Rcd(fs) then
-//│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.264: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ fun eval: forall 'A 'Sub 'a 'A0 'Sub0. (App | Lam | Lit['A] | Rcd['Sub0] | Sel | Var, Cons[{key: Eql[Str], value: 'A0} | ~??A] & {List#A <: {key: Eql[Str], value: 'A0} | ~??A} & List[{key: Eql[Str], value: 'A0} | ~??A] | Nil & {List#A <: {key: Eql[Str], value: 'A0} | ~??A} & List[{key: Eql[Str], value: 'A0} | ~??A]) -> 'a
-//│   where
-//│     'A0 :> ??A0 & 'a
-//│         <: Object & ~#Rcd | Rcd['Sub] | ~??A1
-//│     'a :> ??A1 & 'A0 | Rcd[nothing] | Lam | Lit[??A2 & (??A3 | 'A)] | ??Sub & ??A4 & 'Sub
-//│     'Sub :> Lam | Lit[??A2 & (??A3 | 'A)] | 'a
-//│          <: Object & ~#Rcd | Rcd['Sub] | ~(??Sub & ??A4)
-//│     'Sub0 <: App | Lam | Lit['A] | Rcd['Sub0] | Sel | Var | ~??Sub0
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed: (A102_1134''',Some(A105_1113''''))
+//│ 	at: scala.Predef$.require(Predef.scala:337)
+//│ 	at: mlscript.TyperDatatypes$TypeVariable.assignedTo_$eq(TyperDatatypes.scala:546)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$freshenAbove$1(ConstraintSolver.scala:1507)
+//│ 	at: scala.collection.mutable.HashMap.getOrElse(HashMap.scala:451)
+//│ 	at: mlscript.ConstraintSolver.freshenImpl$1(ConstraintSolver.scala:1503)
+//│ 	at: mlscript.ConstraintSolver.freshenAbove(ConstraintSolver.scala:1608)
+//│ 	at: mlscript.TyperDatatypes$SimpleType.freshenAbove(TyperDatatypes.scala:174)
+//│ 	at: mlscript.TyperDatatypes$FieldType.$anonfun$freshenAbove$3(TyperDatatypes.scala:507)
+//│ 	at: scala.Option.map(Option.scala:242)
+//│ 	at: mlscript.TyperDatatypes$FieldType.update(TyperDatatypes.scala:505)
 
 :e // FIXME recursion depth
 eval : (Term, List[{key: Str, value: Value}]) -> Value
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d ?e ?f ?g ?h. (?d, ?c) -> (?a | ?f | ?h | ?e | ?b | ?g) <: (Term, List[{key: Str, value: Value}]) -> Value` exceeded recursion depth limit (250)
-//│ ║  l.317: 	eval : (Term, List[{key: Str, value: Value}]) -> Value
-//│ ║         	^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ (Term, List[{key: Str, value: Value}]) -> Value
-//│ res
-//│     = [Function: eval]
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed: (A102_1562''',Some(A105_1541''''))
+//│ 	at: scala.Predef$.require(Predef.scala:337)
+//│ 	at: mlscript.TyperDatatypes$TypeVariable.assignedTo_$eq(TyperDatatypes.scala:546)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$freshenAbove$1(ConstraintSolver.scala:1507)
+//│ 	at: scala.collection.mutable.HashMap.getOrElse(HashMap.scala:451)
+//│ 	at: mlscript.ConstraintSolver.freshenImpl$1(ConstraintSolver.scala:1503)
+//│ 	at: mlscript.ConstraintSolver.freshenAbove(ConstraintSolver.scala:1608)
+//│ 	at: mlscript.TyperDatatypes$SimpleType.freshenAbove(TyperDatatypes.scala:174)
+//│ 	at: mlscript.TyperDatatypes$FieldType.$anonfun$freshenAbove$3(TyperDatatypes.scala:507)
+//│ 	at: scala.Option.map(Option.scala:242)
+//│ 	at: mlscript.TyperDatatypes$FieldType.update(TyperDatatypes.scala:505)
 
 let rcd = Rcd({key: "a", value: IntLit(0)} :: Nil)
 //│ let rcd: Rcd[IntLit]
@@ -329,24 +294,42 @@ let rcd = Rcd({key: "a", value: IntLit(0)} :: Nil)
 //│     = Rcd {}
 
 eval of rcd, Nil
-//│ 'a
-//│   where
-//│     'a :> ??A & ??A0 & (Lam | Lit[??A1 & (Int | ??A2)]) | Rcd[Lam | Lit[??A1 & (Int | ??A2)] | 'a] | Lam | Lit[??A1 & (Int | ??A2)] | ??A3 & ??Sub & (Lam | Lit[??A1 & (Int | ??A2)])
-//│ res
-//│     = Rcd {}
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed: (A102_2008''',Some(A105_1987''''))
+//│ 	at: scala.Predef$.require(Predef.scala:337)
+//│ 	at: mlscript.TyperDatatypes$TypeVariable.assignedTo_$eq(TyperDatatypes.scala:546)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$freshenAbove$1(ConstraintSolver.scala:1507)
+//│ 	at: scala.collection.mutable.HashMap.getOrElse(HashMap.scala:451)
+//│ 	at: mlscript.ConstraintSolver.freshenImpl$1(ConstraintSolver.scala:1503)
+//│ 	at: mlscript.ConstraintSolver.freshenAbove(ConstraintSolver.scala:1608)
+//│ 	at: mlscript.TyperDatatypes$SimpleType.freshenAbove(TyperDatatypes.scala:174)
+//│ 	at: mlscript.TyperDatatypes$FieldType.$anonfun$freshenAbove$3(TyperDatatypes.scala:507)
+//│ 	at: scala.Option.map(Option.scala:242)
+//│ 	at: mlscript.TyperDatatypes$FieldType.update(TyperDatatypes.scala:505)
 
 eval of Sel(rcd, "a"), Nil
-//│ 'a
-//│   where
-//│     'a :> ??A & ??A0 & (Lam | Lit[??A1 & ??A2]) | Lam | Lit[??A1 & ??A2] | ??A3 & ??Sub & (Lam | Lit[??A1 & ??A2]) | Rcd[Lam | Lit[??A1 & ??A2] | 'a]
-//│ res
-//│     = IntLit {}
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed: (A102_2436''',Some(A105_2415''''))
+//│ 	at: scala.Predef$.require(Predef.scala:337)
+//│ 	at: mlscript.TyperDatatypes$TypeVariable.assignedTo_$eq(TyperDatatypes.scala:546)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$freshenAbove$1(ConstraintSolver.scala:1507)
+//│ 	at: scala.collection.mutable.HashMap.getOrElse(HashMap.scala:451)
+//│ 	at: mlscript.ConstraintSolver.freshenImpl$1(ConstraintSolver.scala:1503)
+//│ 	at: mlscript.ConstraintSolver.freshenAbove(ConstraintSolver.scala:1608)
+//│ 	at: mlscript.TyperDatatypes$SimpleType.freshenAbove(TyperDatatypes.scala:174)
+//│ 	at: mlscript.TyperDatatypes$FieldType.$anonfun$freshenAbove$3(TyperDatatypes.scala:507)
+//│ 	at: scala.Option.map(Option.scala:242)
+//│ 	at: mlscript.TyperDatatypes$FieldType.update(TyperDatatypes.scala:505)
 
 eval of App(Lam("x" :: Nil, Sel(Var("x"), "a")), rcd :: Nil), Nil
-//│ 'a
-//│   where
-//│     'a :> ??A & ??A0 & (Lam | Lit[??A1 & ??A2]) | Lam | Lit[??A1 & ??A2] | ??A3 & ??Sub & (Lam | Lit[??A1 & ??A2]) | Rcd[Lam | Lit[??A1 & ??A2] | 'a]
-//│ res
-//│     = IntLit {}
+//│ /!!!\ Uncaught error: java.lang.IllegalArgumentException: requirement failed: (A102_2864''',Some(A105_2843''''))
+//│ 	at: scala.Predef$.require(Predef.scala:337)
+//│ 	at: mlscript.TyperDatatypes$TypeVariable.assignedTo_$eq(TyperDatatypes.scala:546)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$freshenAbove$1(ConstraintSolver.scala:1507)
+//│ 	at: scala.collection.mutable.HashMap.getOrElse(HashMap.scala:451)
+//│ 	at: mlscript.ConstraintSolver.freshenImpl$1(ConstraintSolver.scala:1503)
+//│ 	at: mlscript.ConstraintSolver.freshenAbove(ConstraintSolver.scala:1608)
+//│ 	at: mlscript.TyperDatatypes$SimpleType.freshenAbove(TyperDatatypes.scala:174)
+//│ 	at: mlscript.TyperDatatypes$FieldType.$anonfun$freshenAbove$3(TyperDatatypes.scala:507)
+//│ 	at: scala.Option.map(Option.scala:242)
+//│ 	at: mlscript.TyperDatatypes$FieldType.update(TyperDatatypes.scala:505)
 
 

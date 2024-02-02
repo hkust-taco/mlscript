@@ -104,10 +104,16 @@ fun listJoin(xs, sep) =
 //│ type List[A] = Cons[A] | Nil
 //│ module Nil
 //│ class Cons[A](head: A, tail: List[A])
-//│ fun listConcat: forall 'A 'A0 'a. (Cons[in 'A & ('A0 | ~??A) out nothing] | Nil, List['A0] & 'a) -> (Cons['A0] | 'a)
+//│ fun listConcat: forall 'A 'a 'A0 'A1 'A2 'A3. (Cons[in 'A2 & ('A0 | ~??A) out nothing] | Nil, List[in 'A3 out 'A1] & 'a) -> (Cons[in 'A0 out 'A] | 'a)
 //│ fun listJoin: (Cons[in anything out nothing] | Nil, Str) -> Str
 //│ where
-//│   'A0 :> ??A & 'A
+//│   'A0 :> 'A | ??A & 'A2
+//│       <: 'A1
+//│   'A1 :> 'A | 'A3 | ??A & 'A2
+//│       <: 'A0
+//│   'A :> 'A0 | 'A3 | ??A & 'A2
+//│   'A3 :> 'A
+//│       <: 'A0
 
 type TreeMap[out A] = Node[A] | Empty
 module Empty
@@ -136,15 +142,17 @@ fun traverse(t, f) =
 //│ class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
 //│ fun insert: forall 'A 'A0. (Empty | Node['A], Str, 'A0) -> Node[??A & 'A | 'A0]
 //│ fun find: forall 'A1 'A2. (Empty | Node['A1], Str) -> (None | Some[in 'A2 out 'A2 | ??A0 & 'A1])
-//│ fun traverse: forall 'A3 'A4 'A5 'A6 'A7 'A8. (Empty | Node['A3], (Str, ??A1 & 'A3) -> ('A5 & 'A4 & 'A7)) -> (Cons[in 'A4 & 'A7 out 'A5 | 'A6] | Nil)
+//│ fun traverse: forall 'A3 'A4 'A5 'A6 'A7 'A8 'A9 'A10. (Empty | Node['A5], (Str, ??A1 & 'A5) -> ('A10 & 'A8 & ('A3 & 'A9 | ~??A2))) -> (Cons[in 'A10 out 'A6] | Nil)
 //│ where
-//│   'A5 :> 'A6 | 'A7 | ??A2 & 'A8
-//│       <: 'A4 & 'A7
-//│   'A6 :> 'A7 | ??A2 & 'A8
-//│   'A7 :> 'A5 | 'A6 | ??A2 & 'A8
-//│       <: 'A5 & 'A4
-//│   'A4 <: 'A5 & 'A7
-//│   'A8 :> 'A5 & 'A7 | 'A6
+//│   'A10 <: 'A4 & ('A3 & 'A9 | ~??A2) & 'A8
+//│   'A4 :> 'A6 | ??A2 & 'A6
+//│       <: 'A10 & ('A3 & 'A9 | ~??A2)
+//│   'A6 :> 'A4 | 'A7 | 'A8 & 'A10 & ('A3 & 'A9 | ~??A2) | 'A8
+//│   'A7 <: 'A10 & ('A3 & 'A9 | ~??A2) & 'A9 & ('A3 | ~??A2) & 'A8
+//│   'A3 <: 'A10 & ('A9 | ~??A2) & 'A8
+//│   'A8 :> 'A4 | 'A7 | 'A6 | ??A2 & 'A6
+//│       <: 'A10 & ('A3 & 'A9 | ~??A2)
+//│   'A9 <: 'A10 & 'A7 & ('A3 | ~??A2)
 
 :e // FIXME recursion depth excess
 type JsonValue = JsonNull | JsonNumber | JsonString | JsonBoolean | JsonObject | JsonArray
@@ -168,10 +176,6 @@ class JsonObject(entries: TreeMap[JsonValue]) {
 class JsonArray(elements: List[JsonValue]) {
   fun toString() = concat3("[", listJoin(elements, ", "), "]")
 }
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c ?d. (?c, ?d) -> (?b | ?a) <: (?e, forall ?f ?g ?h. (?h, ?f) -> ?g) -> ?i` exceeded recursion depth limit (250)
-//│ ║  l.166: 	      else concat3("{ ", listJoin(traverse(entries, (k, v) => concat3(k, ": ", getStringOf(v))), ", "), " }")
-//│ ║         	                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ type JsonValue = JsonArray | JsonBoolean | JsonNull | JsonNumber | JsonObject | JsonString
 //│ module JsonNull {
 //│   fun toString: () -> "null"
@@ -191,6 +195,7 @@ class JsonArray(elements: List[JsonValue]) {
 //│ class JsonArray(elements: List[JsonValue]) {
 //│   fun toString: () -> Str
 //│ }
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 toString of JsonNull
 toString of JsonBoolean(true)

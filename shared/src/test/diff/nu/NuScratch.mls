@@ -1,3 +1,21 @@
 :NewDefs
 
 
+// ?A' :> `S <: `S
+// ?A :> ??S <: ??S and ?A' :> `S | ?A <: `S & ?A'
+// the bounds of ??A are now eqt to ?A :> Top <: Bot
+// which fails
+
+
+class Box[type A](val get: A)
+abstract class F[type A]: MkF
+class MkF[T](t: T) extends F[Box[T]]
+//│ class Box[A](get: A)
+//│ abstract class F[A]: MkF[anything]
+//│ class MkF[T](t: T) extends F
+
+// :d
+fun f[T](x: F[T]): T = if x is MkF(t) then Box(t) as x.A
+//│ fun f: forall 'T. (x: F['T]) -> 'T
+
+
