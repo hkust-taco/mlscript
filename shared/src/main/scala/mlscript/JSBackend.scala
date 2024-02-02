@@ -187,7 +187,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
   private def createASTCall(tp: Str, args: Ls[Term]): App =
     App(Var(tp), Tup(args.map(a => N -> Fld(FldFlags.empty, a))))
 
-  case class FreeVars(vs: Set[Str])
+  class FreeVars(val vs: Set[Str])
 
   // * Left: the branch is quoted and it has been desugared
   // * Right: the branch is not quoted and quoted subterms have been desugared
@@ -243,7 +243,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
                 nme -> lamScope.declareValue(nme, S(false), false, N).runtimeName
               case p => throw CodeGenError(s"parameter $p is not supported in quasiquote")
             }
-            newfreeVars.foldRight(desugarQuote(body)(lamScope, isQuoted, FreeVars(freeVars.vs ++ newfreeVars.map(_._1))))((p, res) =>
+            newfreeVars.foldRight(desugarQuote(body)(lamScope, isQuoted, new FreeVars(freeVars.vs ++ newfreeVars.map(_._1))))((p, res) =>
               Let(false, Var(p._2), createASTCall("freshName", StrLit(p._1) :: Nil), createASTCall("Lam", createASTCall("Var", Var(p._2) :: Nil) :: res :: Nil)))
           case _  => throw CodeGenError(s"term $params is not a valid parameter list")
         }
@@ -287,7 +287,8 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
         letScope.declareParameter(name)
         val freshedName = letScope.declareValue(name, S(false), false, N).runtimeName
         Let(false, Var(freshedName), createASTCall("freshName", StrLit(name) :: Nil),
-          createASTCall("Let", createASTCall("Var", Var(freshedName) :: Nil) :: desugarQuote(value) :: desugarQuote(body)(letScope, isQuoted, FreeVars(freeVars.vs ++ (name :: Nil))) :: Nil
+          createASTCall("Let", createASTCall("Var", Var(freshedName) :: Nil) :: desugarQuote(value)
+            :: desugarQuote(body)(letScope, isQuoted, new FreeVars(freeVars.vs ++ (name :: Nil))) :: Nil
         ))
       }
       else Let(rec, Var(name), desugarQuote(value), desugarQuote(body)(letScope, isQuoted, freeVars))
@@ -485,7 +486,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     case Eqn(Var(name), _) =>
       throw CodeGenError(s"assignment of $name is not supported outside a constructor")
     case Quoted(body) =>
-      translateTerm(desugarQuote(body)(scope.derive("desugar"), true, FreeVars(Set.empty)))(scope.derive("quote"))
+      translateTerm(desugarQuote(body)(scope.derive("desugar"), true, new FreeVars(Set.empty)))(scope.derive("quote"))
     case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: AdtMatchWith | _: Rft | _: Unquoted =>
       throw CodeGenError(s"cannot generate code for term $term")
   }
