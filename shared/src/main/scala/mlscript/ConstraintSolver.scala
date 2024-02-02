@@ -669,11 +669,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       val newVars = res.getVars -- originalVars
       if (newVars.nonEmpty) trace(s"RECONSTRAINING TVs") {
         newVars.foreach {
-          case AssignedVariable(bnd) =>
+          case tv @ AssignedVariable(bnd) =>
+            println(s"No need to reconstrain assigned $tv")
             // * This is unlikely to happen, but it should be fine anyway,
             // * as all bounds of vars being assigned are checked against the assigned type.
             ()
           case tv =>
+            println(s"Reconstraining $tv")
             if (tv.level > lowerLvl) tv.lowerBounds.foreach(lb =>
               // * Q: is it fine to constrain with the current ctx's level?
               tv.upperBounds.foreach(ub => rec(lb, ub, false)))
@@ -1323,7 +1325,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case w @ Without(b, ns) => Without(extrude(b, lowerLvl, pol, upperLvl), ns)(w.prov)
       case tv @ AssignedVariable(ty) =>
         cache.getOrElse(tv -> true, {
-          val nv = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
+          val nv = freshVar(tv.prov, S(tv), tv.nameHint)(lowerLvl)
           cache += tv -> true -> nv
           val tyPos = extrude(ty, lowerLvl, true, upperLvl)
           val tyNeg = extrude(ty, lowerLvl, false, upperLvl)
