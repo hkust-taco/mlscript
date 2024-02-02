@@ -215,3 +215,23 @@ run(v)
 //│ ║         	^^^^^^
 //│ ╙── expression of type `anything` does not match type `nothing`
 //│ Int | error
+
+
+let x = code"1"
+code"$x + 1"
+//│ let x: Code[1, nothing]
+//│ Code[Int, nothing]
+
+
+:pe
+code"$"
+//│ ╔══[LEXICAL ERROR] unexpected character '$'
+//│ ║  l.227: 	code"$"
+//│ ╙──       	     ^
+//│ ╔══[PARSE ERROR] Unexpected error in expression position
+//│ ║  l.227: 	code"$"
+//│ ╙──       	     ^
+//│ ╔══[PARSE ERROR] Unexpected end of quasiquote section; an expression was expected here
+//│ ║  l.227: 	code"$"
+//│ ╙──       	      ^
+//│ Code[(), nothing]

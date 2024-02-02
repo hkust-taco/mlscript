@@ -54,3 +54,17 @@ fun foo(dbg) =
   code"x => ${let c = code"(${x}, ${foo(dbg)})" in dbg(c)}"
 //│ fun foo: forall 'a 'b. (Code[anything -> 'a, anything] -> Code['a, 'b]) -> Code[anything -> 'a, 'b]
 
+fun power(x) = case
+  0 then `1.0
+  n then x `*. power(x)(n - 1)
+//│ fun power: forall 'a. Code[Num, 'a] -> (0 | Int & ~0) -> Code[Num, 'a]
+
+:e
+let p3 = y `=>
+  discard(run(x `=> power(x `+ y)(3)))
+  y
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.64: 	  discard(run(x `=> power(x `+ y)(3)))
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `?y & ~??x` does not match type `nothing`
+//│ let p3: Code[forall 'a. (Int & 'a) -> 'a, nothing]
