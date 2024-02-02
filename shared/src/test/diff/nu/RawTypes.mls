@@ -38,21 +38,19 @@ fun foo(f: Foo[?]) = f.a : f.A
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.37: 	fun foo(f: Foo[?]) = f.a : f.A
 //│ ║        	                     ^^^
-//│ ╟── type `anything` does not match type `nothing`
+//│ ╟── field selection of type `anything` does not match type `nothing`
+//│ ╟── Note: constraint arises from type selection:
 //│ ║  l.37: 	fun foo(f: Foo[?]) = f.a : f.A
-//│ ║        	               ^
-//│ ╟── but it flows into field selection with expected type `nothing`
-//│ ║  l.37: 	fun foo(f: Foo[?]) = f.a : f.A
-//│ ╙──      	                     ^^^
+//│ ╙──      	                            ^^
 //│ TEST CASE FAILURE: There was an unexpected type error
 //│ fun foo: (f: Foo[?]) -> anything
 
 foo(Foo(1))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.50: 	foo(Foo(1))
+//│ ║  l.48: 	foo(Foo(1))
 //│ ║        	^^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not match type `nothing`
-//│ ║  l.50: 	foo(Foo(1))
+//│ ║  l.48: 	foo(Foo(1))
 //│ ║        	        ^
 //│ ╟── Note: constraint arises from wildcard:
 //│ ║  l.37: 	fun foo(f: Foo[?]) = f.a : f.A
@@ -71,29 +69,29 @@ fun foo(f: Foo[Int]) = f.a
 // FIXME
 fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.72: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.70: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ║        	                          ^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.72: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.70: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ║        	                                                ^^
 //│ ╟── into type `Int | ~??A`
-//│ ║  l.72: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.70: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ╙──      	                 ^^^
 //│ fun foo: (f: Foo[anything]) -> Int
 
 :e
 fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.85: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║  l.83: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ║        	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `Int | ~??A`
-//│ ║  l.85: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
-//│ ║        	               ^
-//│ ╟── but it flows into type selection with expected type `Int | ~??A`
-//│ ║  l.85: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║  l.83: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ║        	                                                   ^^
+//│ ╟── but it flows into operator application with expected type `Int | ~??A`
+//│ ║  l.83: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║        	                             ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.85: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║  l.83: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ╙──      	                    ^^^
 //│ fun foo: (f: Foo[?]) -> Int
 
@@ -138,17 +136,7 @@ fun foo(x: Foo[?]) = if x is Bar then x.b : x.T
 //│ fun foo: (x: Foo[?]) -> Int
 
 foo(Bar(1))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.140: 	foo(Bar(1))
-//│ ║         	^^^^^^^^^^^
-//│ ╟── type `Int` does not match type `nothing`
-//│ ║  l.132: 	class Bar(val b: Int) extends Foo[Int]
-//│ ║         	                                  ^^^
-//│ ╟── Note: constraint arises from wildcard:
-//│ ║  l.137: 	fun foo(x: Foo[?]) = if x is Bar then x.b : x.T
-//│ ╙──       	               ^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ Int | error
+//│ Int
 //│ res
 //│     = 1
 

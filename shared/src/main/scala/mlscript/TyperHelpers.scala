@@ -1091,8 +1091,11 @@ abstract class TyperHelpers { Typer: Typer =>
         lazy val mkTparamRcd = RecordType(info.tparams.lazyZip(targs).map {
             case ((tn, tv, vi), ta) =>
               val fldNme = tparamField(defn.name, tn.name, vi.visible)
-              // TODO also use computed variance info when available!
-              Var(fldNme).withLocOf(tn) -> FieldType.mk(vi.getVarOr(VarianceInfo.in), ta, ta)(provTODO)
+              val fld = ta match {
+                case TypeBounds(BotType, TopType) => FieldType(S(BotType), TopType)(provTODO)
+                case _ => FieldType.mk(vi.getVarOr(VarianceInfo.in), ta, ta)(provTODO)
+              }
+              Var(fldNme).withLocOf(tn) -> fld
           })(provTODO)
         info.result match {
           case S(td: TypedNuAls) =>

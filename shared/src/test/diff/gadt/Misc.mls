@@ -97,29 +97,19 @@ fun f(x: S[?]): x.T = if x is
 //│ ╙──      	                 ^^
 //│ fun f: (x: S[?]) -> (Int | false | true)
 
-// FIXME
 f(A)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.101: 	f(A)
-//│ ║         	^^^^
-//│ ╟── type `Int` does not match type `nothing`
-//│ ║  l.26: 	module A extends S[Int]
-//│ ║        	                   ^^^
-//│ ╟── Note: constraint arises from wildcard:
-//│ ║  l.73: 	fun f(x: S[?]): x.T = if x is 
-//│ ╙──      	           ^
-//│ Int | error | false | true
+//│ Int | false | true
 //│ res
 //│     = 1
 
 :e
 let y: ? = 1
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.116: 	let y: ? = 1
+//│ ║  l.106: 	let y: ? = 1
 //│ ║         	           ^
 //│ ╟── integer literal of type `1` does not match type `nothing`
 //│ ╟── Note: constraint arises from wildcard:
-//│ ║  l.116: 	let y: ? = 1
+//│ ║  l.106: 	let y: ? = 1
 //│ ╙──       	       ^
 //│ let y: anything
 //│ y
@@ -128,7 +118,7 @@ let y: ? = 1
 :e
 let x = ?
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.129: 	let x = ?
+//│ ║  l.119: 	let x = ?
 //│ ╙──       	        ^
 //│ let x: error
 //│ Code generation encountered an error:
@@ -137,16 +127,16 @@ let x = ?
 :e
 if x is ? then 1
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.138: 	if x is ? then 1
+//│ ║  l.128: 	if x is ? then 1
 //│ ╙──       	        ^
 //│ error
 //│ Code generation encountered an error:
 //│   if expression was not desugared
 
-abstract class C[type S, type T]: R | I
+abstract class C[type S, type T]: R[?] | I[?]
 class R[A] extends C[A, A]
 class I[A](val f: A => Int) extends C[A, Int]
-//│ abstract class C[S, T]: I[nothing] | R[?]
+//│ abstract class C[S, T]: I[?] | R[?]
 //│ class R[A] extends C {
 //│   constructor()
 //│ }
@@ -176,3 +166,80 @@ Foo.a
 //│ 1
 //│ res
 //│     = 1
+
+abstract class Option[type out T]: None | Some[T]
+module None extends Option[nothing]
+class Some[A](get: A) extends Option[A]
+//│ abstract class Option[T]: None | Some[T]
+//│ module None extends Option
+//│ class Some[A](get: A) extends Option
+
+fun optToInt(w: Option[?]) = if w is Some then 1 else 0
+//│ fun optToInt: (w: Option[nothing]) -> (0 | 1)
+
+optToInt(Some(1))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.180: 	optToInt(Some(1))
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── integer literal of type `1` does not match type `nothing`
+//│ ║  l.180: 	optToInt(Some(1))
+//│ ║         	              ^
+//│ ╟── Note: constraint arises from wildcard:
+//│ ║  l.177: 	fun optToInt(w: Option[?]) = if w is Some then 1 else 0
+//│ ║         	                       ^
+//│ ╟── Note: type parameter T is defined at:
+//│ ║  l.170: 	abstract class Option[type out T]: None | Some[T]
+//│ ╙──       	                               ^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ 0 | 1 | error
+//│ res
+//│     = 1
+
+optToInt(None)
+//│ 0 | 1
+//│ res
+//│     = 0
+
+abstract class W[type T]: MkW[?]
+class MkW[A](val w: A) extends W[Ty[A]]
+//│ abstract class W[T]: MkW[?]
+//│ class MkW[A](w: A) extends W
+
+fun test(w: W[Ty[Int]]) = if w is MkW(x) then x
+//│ fun test: (w: W[Ty[Int]]) -> ??A
+
+test(MkW(1))
+//│ ??A
+//│ res
+//│     = 1
+
+fun test(w: W[?]) = if w is MkW(x) then x
+//│ fun test: (w: W[?]) -> ??A
+
+test(MkW(1))
+//│ ??A
+//│ res
+//│     = 1
+
+:e
+fun test(a: Some[Int]) = true as a.T
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.225: 	fun test(a: Some[Int]) = true as a.T
+//│ ║         	                         ^^^^
+//│ ╟── reference of type `true` is not an instance of type `Int`
+//│ ╟── Note: constraint arises from type selection:
+//│ ║  l.225: 	fun test(a: Some[Int]) = true as a.T
+//│ ╙──       	                                  ^^
+//│ fun test: (a: Some[Int]) -> Int
+
+// TODO
+:e
+fun test() = 
+    let a = Some(1)
+    true as a.T
+//│ ╔══[ERROR] Cannot select from let binding or function
+//│ ║  l.239: 	    true as a.T
+//│ ╙──       	            ^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Can't find member `error`
+
+// * maybe we should only allow type member access for function arguments

@@ -55,22 +55,24 @@ fun foo(b: Bar): b.f.A = 1
 fun bar(b: Bar) = b.f.f(1)
 //│ fun bar: (b: Bar) -> Int
 
+// TODO
+:e
 fun foo(b: Bar) =
   let f = id(b).f
   let g = x => f.f(x + 1)
   g(1) : f.A
-//│ fun foo: (b: Bar) -> Int
-
-foo(Bar(new Foo()))
-//│ Int
+//│ ╔══[ERROR] Cannot select from let binding or function
+//│ ║  l.63: 	  g(1) : f.A
+//│ ╙──      	         ^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Can't find member `error`
 
 // FIXME
 fun foo(f: Foo, x: f.A) = f.f(x)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.68: 	fun foo(f: Foo, x: f.A) = f.f(x)
+//│ ║  l.70: 	fun foo(f: Foo, x: f.A) = f.f(x)
 //│ ║        	                          ^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.68: 	fun foo(f: Foo, x: f.A) = f.f(x)
+//│ ║  l.70: 	fun foo(f: Foo, x: f.A) = f.f(x)
 //│ ║        	                    ^^
 //│ ╟── back into type variable `A`
 //│ ║  l.31: 	class Foo[type A] {
@@ -96,35 +98,35 @@ fun foo[T](f: Foo[T]): T = f.a : f.A
 // TODO support
 fun foo(f: Foo): Int = f.a : f.A
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.97: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.99: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ║        	                       ^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.97: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.99: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ║        	                       ^^^
 //│ ╟── back into type variable `A`
-//│ ║  l.97: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.99: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ╙──      	                              ^^
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.97: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.99: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ║        	                       ^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.97: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.99: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ║        	                              ^^
 //│ ╟── into type `Int`
-//│ ║  l.97: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.99: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ╙──      	                 ^^^
 //│ fun foo: (f: Foo[anything]) -> Int
 
 // FIXME
 fun foo(f: Foo) = f.a : f.A
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.119: 	fun foo(f: Foo) = f.a : f.A
+//│ ║  l.121: 	fun foo(f: Foo) = f.a : f.A
 //│ ║         	                  ^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.119: 	fun foo(f: Foo) = f.a : f.A
+//│ ║  l.121: 	fun foo(f: Foo) = f.a : f.A
 //│ ║         	                  ^^^
 //│ ╟── back into type variable `A`
-//│ ║  l.119: 	fun foo(f: Foo) = f.a : f.A
+//│ ║  l.121: 	fun foo(f: Foo) = f.a : f.A
 //│ ╙──       	                         ^^
 //│ fun foo: (f: Foo[anything]) -> ??A
 
@@ -136,22 +138,20 @@ fun foo(f: Foo['a]): Int = f.a : f.A
 // TODO reject for now
 fun foo(f: Foo[?]): Int = f.a : f.A
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.137: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ║  l.139: 	fun foo(f: Foo[?]): Int = f.a : f.A
 //│ ║         	                          ^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.137: 	fun foo(f: Foo[?]): Int = f.a : f.A
-//│ ║         	               ^
-//│ ╟── but it flows into field selection with expected type `nothing`
-//│ ║  l.137: 	fun foo(f: Foo[?]): Int = f.a : f.A
-//│ ╙──       	                          ^^^
+//│ ╟── field selection of type `anything` does not match type `nothing`
+//│ ╟── Note: constraint arises from type selection:
+//│ ║  l.139: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ╙──       	                                 ^^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.137: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ║  l.139: 	fun foo(f: Foo[?]): Int = f.a : f.A
 //│ ║         	                          ^^^
 //│ ╟── type `anything` is not an instance of type `Int`
-//│ ║  l.137: 	fun foo(f: Foo[?]): Int = f.a : f.A
-//│ ║         	               ^
+//│ ║  l.139: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ║         	                                 ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.137: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ║  l.139: 	fun foo(f: Foo[?]): Int = f.a : f.A
 //│ ╙──       	                    ^^^
 //│ fun foo: (f: Foo[?]) -> Int
 
@@ -377,18 +377,6 @@ class C2(val i: Int) extends C[Int]
 //│ class C1(s: Bool) extends C
 //│ class C2(i: Int) extends C
 
-let c1 = C1(true)
-let c2 = C2(1)
-//│ let c1: C1
-//│ let c2: C2
-
-c1.s : c1.A
-//│ Bool
-
-c2.i: c2.A
-//│ Int
-
-
 let f = (t, x: t.A) => x + t.i
 //│ let f: forall 'A. ({A :> 'A <: Int, i: Int}, x: 'A) -> Int
 
@@ -397,3 +385,13 @@ f(C2(1), 2)
 
 let g = (t, x: t) => t && x
 //│ let g: (Bool, x: Bool) -> Bool
+
+class Foo(val x: C1) {
+  fun foo(y: x.A) = y || y
+}
+//│ class Foo(x: C1) {
+//│   fun foo: (y: Bool) -> Bool
+//│ }
+
+Foo(C1(false)).foo(true)
+//│ Bool

@@ -18,6 +18,140 @@ fun v1(u: U['a], a: ()) = if u is MkU then a
 fun v2(a, u: U['a]) = if u is MkU then if a is () then () as u.A
 //│ fun v2: forall 'a. ((), u: U['a]) -> (() & 'a)
 
+:d
+fun v3[T](u: U[T]): T = if u is MkU then () as u.A
+//│ 0. Typing TypingUnit(List(NuFunDef(None,Var(v3),None,List(TypeName(T)),Left(Lam(Tup(List((Some(Var(u)),Fld(_,TyApp(Var(U),List(TypeName(T))))))),Asc(If(IfThen(App(Var(is),Tup(List((None,Fld(_,Var(u))), (None,Fld(_,Var(MkU)))))),Asc(UnitLit(true),Selection(TypeName(u),TypeName(A)))),None),TypeName(T)))))))
+//│ | 0. Created lazy type info for NuFunDef(None,Var(v3),None,List(TypeName(T)),Left(Lam(Tup(List((Some(Var(u)),Fld(_,TyApp(Var(U),List(TypeName(T))))))),Asc(If(IfThen(App(Var(is),Tup(List((None,Fld(_,Var(u))), (None,Fld(_,Var(MkU)))))),Asc(UnitLit(true),Selection(TypeName(u),TypeName(A)))),None),TypeName(T)))))
+//│ | Completing fun v3 = (u: U‹T›,) => if (is(u, MkU,)) then undefined : u.A : T
+//│ | | Type params (TypeName(T),T85',TypeParamInfo(None,false))
+//│ | | Params 
+//│ | | 1. Typing term Lam(Tup(List((Some(Var(u)),Fld(_,TyApp(Var(U),List(TypeName(T))))))),Asc(If(IfThen(App(Var(is),Tup(List((None,Fld(_,Var(u))), (None,Fld(_,Var(MkU)))))),Asc(UnitLit(true),Selection(TypeName(u),TypeName(A)))),None),TypeName(T)))
+//│ | | | 1. Typing pattern Tup(List((Some(Var(u)),Fld(_,TyApp(Var(U),List(TypeName(T)))))))
+//│ | | | | 1. Typing pattern Asc(Var(u),AppliedType(TypeName(U),List(TypeName(T))))
+//│ | | | | | Typing type AppliedType(TypeName(U),List(TypeName(T)))
+//│ | | | | | | vars=Map(T -> ‘T85') newDefsInfo=Map()
+//│ | | | | | | 1. type AppliedType(TypeName(U),List(TypeName(T)))
+//│ | | | | | | | 1. type TypeName(T)
+//│ | | | | | | | => ‘T85'
+//│ | | | | | | => U[‘T85']
+//│ | | | | | => U[‘T85'] ——— 
+//│ | | | | 1. : U[‘T85']
+//│ | | | 1. : (u: U[‘T85'],)
+//│ | | | 1. Typing term Asc(If(IfThen(App(Var(is),Tup(List((None,Fld(_,Var(u))), (None,Fld(_,Var(MkU)))))),Asc(UnitLit(true),Selection(TypeName(u),TypeName(A)))),None),TypeName(T))
+//│ | | | | 1. Typing term If(IfThen(App(Var(is),Tup(List((None,Fld(_,Var(u))), (None,Fld(_,Var(MkU)))))),Asc(UnitLit(true),Selection(TypeName(u),TypeName(A)))),None)
+//│ | | | | | [Desugarer.destructPattern] scrutinee = Var(u); pattern = Var(MkU)
+//│ | | | | | [Desugarer.destructPattern] Result: «u is Var(MkU)»
+//│ | | | | | Desugared term: case u of { MkU => undefined : u.A }
+//│ | | | | | 1. Typing term CaseOf(Var(u),Case(Var(MkU),Asc(UnitLit(true),Selection(TypeName(u),TypeName(A))),NoCases))
+//│ | | | | | | 1. Typing term Var(u)
+//│ | | | | | | 1. : U[‘T85']
+//│ | | | | | | CONSTRAIN U[‘T85'] <! Object
+//│ | | | | | |   where 
+//│ | | | | | | 1. C U[‘T85'] <! Object    (0)
+//│ | | | | | | | Assigning A :: A49' := ‘T85' where 
+//│ | | | | | | | Set A49_86' ~> A49'
+//│ | | | | | | | 1. C ((#U<Object> & MkU) & {A: mut ‘T85'..‘T85'}) <! #Object<>    (2)
+//│ | | | | | | | | Already a subtype by <:<
+//│ | | | | | | Match arm MkU: #MkU<Object,U> & ⊤ intl ⊤
+//│ | | | | | | var rfn: u :: U[‘T85'] & #MkU<Object,U> & ⊤
+//│ | | | | | | 2. Typing term Asc(UnitLit(true),Selection(TypeName(u),TypeName(A)))
+//│ | | | | | | | 2. Typing term UnitLit(true)
+//│ | | | | | | | 2. : #undefined<Object>
+//│ | | | | | | | Typing type Selection(TypeName(u),TypeName(A))
+//│ | | | | | | | | vars=Map(T -> ‘T85') newDefsInfo=Map()
+//│ | | | | | | | | 2. type Selection(TypeName(u),TypeName(A))
+//│ | | | | | | | | | 2. type TypeName(u)
+//│ | | | | | | | | | | ty var: Var(u) : (U[‘T85'] & #MkU<Object,U>)
+//│ | | | | | | | | | => (U[‘T85'] & #MkU<Object,U>)
+//│ | | | | | | | | | Type selection : (U[‘T85'] & #MkU<Object,U>) <=< {A: mut A88''..A89''}
+//│ | | | | | | | | | CONSTRAIN (U[‘T85'] & #MkU<Object,U>) <! {A: mut A88''..A89''}
+//│ | | | | | | | | |   where 
+//│ | | | | | | | | | 2. C (U[‘T85'] & #MkU<Object,U>) <! {A: mut A88''..A89''}    (0)
+//│ | | | | | | | | | | Assigning A :: A49' := ‘T85' where 
+//│ | | | | | | | | | | Set A49_90' ~> A49'
+//│ | | | | | | | | | | 2. ARGH  DNF(1, #MkU<Object,U>{A: mut ‘T85'..‘T85'})  <!  DNF(2, {A: mut A88''..A89''})
+//│ | | | | | | | | | | | DNF DISCHARGE CONSTRAINTS
+//│ | | | | | | | | | | | Consider #MkU<Object,U>{A: mut ‘T85'..‘T85'} <: DNF(2, {A: mut A88''..A89''})
+//│ | | | | | | | | | | | Possible: List({A: mut A88''..A89''})
+//│ | | | | | | | | | | | 2. A  #MkU<Object,U>{A: mut ‘T85'..‘T85'}  %  List()  <!  List({A: mut A88''..A89''})  %  ⊥
+//│ | | | | | | | | | | | | 2. A  #MkU<Object,U>{A: mut ‘T85'..‘T85'}  %  List()  <!  List()  %  {Var(A):mut A88''..A89''}
+//│ | | | | | | | | | | | | | 2. A  #MkU<Object,U>{A: mut ‘T85'..‘T85'}  %  List()  <!  List()  %  |{Var(A):mut A88''..A89''}
+//│ | | | | | | | | | | | | | | Looking up field A in Some(MkU) & TreeSet() & {...}
+//│ | | | | | | | | | | | | | | | Lookup MkU.A : Some(mut A49_53#..A49_53#) where 
+//│ 		A49_53# := #undefined<Object>
+//│ | | | | | | | | | | | | | | | Fresh[0] MkU.A : Some(mut A49_53#..A49_53#) where Some(
+//│ 		A49_53# := #undefined<Object>)
+//│ | | | | | | | | | | | | | | |   & Some(mut ‘T85'..‘T85')  (from refinement)
+//│ | | | | | | | | | | | | | | 2. C (A49_53# & ‘T85') <! A89''    (1)
+//│ | | | | | | | | | | | | | | | NEW A89'' LB (1)
+//│ | | | | | | | | | | | | | | 2. C A88'' <! (A49_53# | ‘T85')    (1)
+//│ | | | | | | | | | | | | | | | NEW A88'' UB (1)
+//│ | | | | | | | | => A88''..A89''
+//│ | | | | | | | => A88''..A89'' ——— 
+//│ | | | | | | | CONSTRAIN #undefined<Object> <! A88''..A89''
+//│ | | | | | | |   where 
+//│ 		A49_53# := #undefined<Object>
+//│ 		A88'' <: (A49_53# | ‘T85')
+//│ 		A89'' :> (A49_53# & ‘T85')
+//│ | | | | | | | 2. C #undefined<Object> <! A88''..A89''    (0)
+//│ | | | | | | | | 2. C #undefined<Object> <! A88''    (2)
+//│ | | | | | | | | | NEW A88'' LB (0)
+//│ | | | | | | | | | 2. C #undefined<Object> <! (A49_53# | ‘T85')    (4)
+//│ | | | | | | | | | | 2. ARGH  DNF(0, #undefined<Object>{})  <!  DNF(1, #undefined<Object>{} | {}∧‘T85')
+//│ | | | | | | | | | | | DNF DISCHARGE CONSTRAINTS
+//│ | | | | | | | | | | | Consider #undefined<Object>{} <: DNF(1, #undefined<Object>{} | {}∧‘T85')
+//│ | | | | | | | | | | | OK  #undefined<Object>{} <: #undefined<Object>{}
+//│ | | | | | | 2. : A88''..A89''
+//│ | | | | | | CONSTRAIN A88''..A89'' <! α87'
+//│ | | | | | |   where 
+//│ 		A49_53# := #undefined<Object>
+//│ 		A88'' :> #undefined<Object> <: (A49_53# | ‘T85')
+//│ 		A89'' :> (A49_53# & ‘T85')
+//│ | | | | | | 2. C A88''..A89'' <! α87'    (0)
+//│ | | | | | | | 2. C A89'' <! α87'    (2)
+//│ | | | | | | | | NEW A89'' UB (1)
+//│ | | | | | | | | 2. C (A49_53# & ‘T85') <! α87'    (4)
+//│ | | | | | | | | | NEW α87' LB (1)
+//│ | | | | | | finishing branch: [(#MkU<Object,U>,⊤)] + List() and [α87'] | ⊥
+//│ | | | | | | finishing case U[‘T85'] <: #MkU<Object,U>
+//│ | | | | | | CONSTRAIN U[‘T85'] <! #MkU<Object,U>
+//│ | | | | | |   where 
+//│ | | | | | | 1. C U[‘T85'] <! #MkU<Object,U>    (0)
+//│ | | | | | | | Assigning A :: A49' := ‘T85' where 
+//│ | | | | | | | Set A49_91' ~> A49'
+//│ | | | | | | | 1. C ((#U<Object> & MkU) & {A: mut ‘T85'..‘T85'}) <! #MkU<Object,U>    (2)
+//│ | | | | | | | | 1. ARGH  DNF(1, #MkU<Object,U>{A: mut ‘T85'..‘T85'})  <!  DNF(0, #MkU<Object,U>{})
+//│ | | | | | | | | | DNF DISCHARGE CONSTRAINTS
+//│ | | | | | | | | | Consider #MkU<Object,U>{A: mut ‘T85'..‘T85'} <: DNF(0, #MkU<Object,U>{})
+//│ | | | | | | | | | OK  #MkU<Object,U>{A: mut ‘T85'..‘T85'} <: #MkU<Object,U>{}
+//│ | | | | | 1. : α87'
+//│ | | | | 1. : α87'
+//│ | | | | Typing type TypeName(T)
+//│ | | | | | vars=Map(T -> ‘T85') newDefsInfo=Map()
+//│ | | | | | 1. type TypeName(T)
+//│ | | | | | => ‘T85'
+//│ | | | | => ‘T85' ——— 
+//│ | | | | CONSTRAIN α87' <! ‘T85'
+//│ | | | |   where 
+//│ 		A49_53# := #undefined<Object>
+//│ 		α87' :> (A49_53# & ‘T85')
+//│ | | | | 1. C α87' <! ‘T85'    (0)
+//│ | | | | | NEW α87' UB (1)
+//│ | | | | | 1. C (A49_53# & ‘T85') <! ‘T85'    (2)
+//│ | | | | | | Already a subtype by <:<
+//│ | | | 1. : ‘T85'
+//│ | | 1. : ((u: U[‘T85'],) -> ‘T85')
+//│ | | CONSTRAIN ((u: U[‘T85'],) -> ‘T85') <! v392'
+//│ | |   where 
+//│ | | 1. C ((u: U[‘T85'],) -> ‘T85') <! v392'    (0)
+//│ | | | NEW v392' LB (1)
+//│ | Completed TypedNuFun(0,NuFunDef(None,Var(v3),None,List(TypeName(T)),Left(Lam(Tup(List((Some(Var(u)),Fld(_,TyApp(Var(U),List(TypeName(T))))))),Asc(If(IfThen(App(Var(is),Tup(List((None,Fld(_,Var(u))), (None,Fld(_,Var(MkU)))))),Asc(UnitLit(true),Selection(TypeName(u),TypeName(A)))),None),TypeName(T))))),((u: U[‘T85'],) -> ‘T85')) where 
+//│ | Typing unit statements
+//│ | : None
+//│ ======== TYPED ========
+//│ fun v3: ‹∀ 0. ((u: U[‘T85'],) -> ‘T85')› where 
+//│ fun v3: forall 'T. (u: U['T]) -> 'T
+
 abstract class F[type A, type B]: MkF
 class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
 //│ abstract class F[A, B]: MkF[?, anything]
@@ -42,17 +176,17 @@ let x: F[Option[nothing], Option[nothing]] = MkF(None)
 :e
 MkF(x) : F[Option[Int], Option[Int]]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.43: 	MkF(x) : F[Option[Int], Option[Int]]
-//│ ║        	^^^^^^
+//│ ║  l.177: 	MkF(x) : F[Option[Int], Option[Int]]
+//│ ║         	^^^^^^
 //│ ╟── type `MkF[?, anything] & {B = Option[nothing], A = Option[nothing]}` is not an instance of type `Option`
-//│ ║  l.37: 	let x: F[Option[nothing], Option[nothing]] = MkF(None)
-//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.171: 	let x: F[Option[nothing], Option[nothing]] = MkF(None)
+//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Option[anything]`
-//│ ║  l.43: 	MkF(x) : F[Option[Int], Option[Int]]
-//│ ║        	    ^
+//│ ║  l.177: 	MkF(x) : F[Option[Int], Option[Int]]
+//│ ║         	    ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.43: 	MkF(x) : F[Option[Int], Option[Int]]
-//│ ╙──      	                        ^^^^^^^^^^^
+//│ ║  l.177: 	MkF(x) : F[Option[Int], Option[Int]]
+//│ ╙──       	                        ^^^^^^^^^^^
 //│ F[Option[Int], Option[Int]]
 //│ res
 //│     = MkF {}
@@ -79,27 +213,27 @@ g(MkF(Some(1)))
 g(MkF(1))
 g(t)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.79: 	g(MkF(1))
-//│ ║        	^^^^^^^^^
+//│ ║  l.213: 	g(MkF(1))
+//│ ║         	^^^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `Option`
-//│ ║  l.79: 	g(MkF(1))
-//│ ║        	      ^
+//│ ║  l.213: 	g(MkF(1))
+//│ ║         	      ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.22: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
-//│ ║        	                                ^^^^^^^^^
+//│ ║  l.156: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
+//│ ║         	                                ^^^^^^^^^
 //│ ╟── from type variable:
-//│ ║  l.60: 	fun g: forall 'T: F['T, 'T] -> 'T
-//│ ╙──      	                        ^^
+//│ ║  l.194: 	fun g: forall 'T: F['T, 'T] -> 'T
+//│ ╙──       	                        ^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.80: 	g(t)
-//│ ║        	^^^^
+//│ ║  l.214: 	g(t)
+//│ ║         	^^^^
 //│ ╟── expression of type `true` is not an instance of type `Option`
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.22: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
-//│ ║        	                                ^^^^^^^^^
+//│ ║  l.156: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
+//│ ║         	                                ^^^^^^^^^
 //│ ╟── from type variable:
-//│ ║  l.60: 	fun g: forall 'T: F['T, 'T] -> 'T
-//│ ╙──      	                        ^^
+//│ ║  l.194: 	fun g: forall 'T: F['T, 'T] -> 'T
+//│ ╙──       	                        ^^
 //│ error
 //│ res
 //│     = 1
@@ -123,23 +257,23 @@ fun g[T](x: F[Option[T], Option[T]]): Option[T] = if x is
     MkF(None) then None : x.B
     else error
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.122: 	fun g[T](x: F[Option[T], Option[T]]): Option[T] = if x is
+//│ ║  l.256: 	fun g[T](x: F[Option[T], Option[T]]): Option[T] = if x is
 //│ ║         	                                                     ^^^^
-//│ ║  l.123: 	    MkF(None) then None : x.B
+//│ ║  l.257: 	    MkF(None) then None : x.B
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.124: 	    else error
+//│ ║  l.258: 	    else error
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── type variable `Y` leaks out of its scope
-//│ ║  l.22: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
-//│ ║        	             ^
+//│ ║  l.156: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
+//│ ║         	             ^
 //│ ╟── into `case` expression of type `Object | ~??Y`
-//│ ║  l.123: 	    MkF(None) then None : x.B
+//│ ║  l.257: 	    MkF(None) then None : x.B
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.124: 	    else error
+//│ ║  l.258: 	    else error
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.22: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
-//│ ╙──      	                ^
+//│ ║  l.156: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
+//│ ╙──       	                ^
 //│ fun g: forall 'T. (x: F[Option['T], Option['T]]) -> Option['T]
 
 // FIXME
@@ -148,23 +282,23 @@ fun g[T](x: F[T, T]): T = if x is
     MkF(None) then None : x.B
     else error
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.147: 	fun g[T](x: F[T, T]): T = if x is
+//│ ║  l.281: 	fun g[T](x: F[T, T]): T = if x is
 //│ ║         	                             ^^^^
-//│ ║  l.148: 	    MkF(None) then None : x.B
+//│ ║  l.282: 	    MkF(None) then None : x.B
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.149: 	    else error
+//│ ║  l.283: 	    else error
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── type variable `Y` leaks out of its scope
-//│ ║  l.22: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
-//│ ║        	             ^
+//│ ║  l.156: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
+//│ ║         	             ^
 //│ ╟── into `case` expression of type `Object | ~??Y`
-//│ ║  l.148: 	    MkF(None) then None : x.B
+//│ ║  l.282: 	    MkF(None) then None : x.B
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.149: 	    else error
+//│ ║  l.283: 	    else error
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.22: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
-//│ ╙──      	                ^
+//│ ║  l.156: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
+//│ ╙──       	                ^
 //│ fun g: forall 'T. (x: F['T, 'T]) -> 'T
 //│ fun g: forall 'T0. F['T0, 'T0] -> 'T0
 
@@ -175,27 +309,27 @@ fun g[T](x: F[T, T]): T = if x is
         None then None as x.B
         else error
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.173: 	fun g[T](x: F[T, T]): T = if x is
+//│ ║  l.307: 	fun g[T](x: F[T, T]): T = if x is
 //│ ║         	                             ^^^^
-//│ ║  l.174: 	    MkF(m) then if m is
+//│ ║  l.308: 	    MkF(m) then if m is
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.175: 	        None then None as x.B
+//│ ║  l.309: 	        None then None as x.B
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.176: 	        else error
+//│ ║  l.310: 	        else error
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `Y` leaks out of its scope
-//│ ║  l.22: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
-//│ ║        	             ^
+//│ ║  l.156: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
+//│ ║         	             ^
 //│ ╟── into `case` expression of type `Object | ~??Y`
-//│ ║  l.174: 	    MkF(m) then if m is
+//│ ║  l.308: 	    MkF(m) then if m is
 //│ ║         	                   ^^^^
-//│ ║  l.175: 	        None then None as x.B
+//│ ║  l.309: 	        None then None as x.B
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.176: 	        else error
+//│ ║  l.310: 	        else error
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.22: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
-//│ ╙──      	                ^
+//│ ║  l.156: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
+//│ ╙──       	                ^
 //│ fun g: forall 'T. (x: F['T, 'T]) -> 'T
 //│ fun g: forall 'T0. F['T0, 'T0] -> 'T0
 
