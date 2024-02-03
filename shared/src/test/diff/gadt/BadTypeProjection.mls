@@ -1,0 +1,21 @@
+:NewDefs
+
+
+class Wrap[type A]
+class Test[type B]
+//│ class Wrap[A] {
+//│   constructor()
+//│ }
+//│ class Test[B] {
+//│   constructor()
+//│ }
+
+fun oops(w: Wrap[Test[Int] & Test[Str]]) = 1 : w.A.B
+//│ fun oops: (w: Wrap[in Test[out Int | Str] out Test[in Int | Str out nothing]]) -> nothing
+
+oops(new Wrap)
+//│ nothing
+//│ res
+//│     = 1
+
+
