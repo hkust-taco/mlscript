@@ -233,14 +233,11 @@ trait Normalization { self: Desugarer with Traceable =>
         if (scrutinee === otherScrutinee) {
           println(s"Case 1: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
           otherPattern reportInconsistentRefinedWith pattern
-          if (otherPattern =:= pattern) {
-            println(s"Case 2.1: $pattern =:= $otherPattern")
-            specialize(tail, false)
-          } else if (otherPattern <:< pattern) {
-            println(s"Case 2.2: $pattern <:< $otherPattern")
+          if (otherPattern =:= pattern || otherPattern <:< pattern) {
+            println(s"Case 1.1: $pattern =:= (or <:<) $otherPattern")
             specialize(tail, false)
           } else {
-            println(s"Case 2.3: $pattern are unrelated with $otherPattern")
+            println(s"Case 1.2: $pattern are unrelated with $otherPattern")
             split.copy(tail = specialize(tail, false))
           }
         } else {
