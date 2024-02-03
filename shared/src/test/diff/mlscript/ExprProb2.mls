@@ -184,17 +184,17 @@ def eval2_fixed_2 = fix eval2f
 eval2_fixed_2 e1
 //│ res: int
 //│    = 6
-//│ constrain calls  : 335
+//│ constrain calls  : 267
 //│ annoying  calls  : 140
-//│ subtyping calls  : 2726
+//│ subtyping calls  : 1865
 
 :stats
 eval2_fixed_2 e2
 //│ res: int
 //│    = -5
-//│ constrain calls  : 822
+//│ constrain calls  : 648
 //│ annoying  calls  : 345
-//│ subtyping calls  : 7615
+//│ subtyping calls  : 5049
 
 
 

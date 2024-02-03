@@ -765,7 +765,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   }
   
   def mkProxy(ty: SimpleType, prov: TypeProvenance): SimpleType = {
-    if (recordProvenances) ProvType(ty)(prov)
+    if (recordProvenances)
+      if (ty.prov is prov) ty
+        // * ^ Hacky: without this we get some prov accumulation explosions... would be better to fix at the root!
+      else ProvType(ty)(prov)
     else ty // TODO don't do this when debugging errors
     // TODO switch to return this in perf mode:
     // ty

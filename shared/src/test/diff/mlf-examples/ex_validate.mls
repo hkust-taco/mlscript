@@ -582,9 +582,9 @@ def main =
         let _ = print_sep "" x in
         null
 //│ main: null
-//│ constrain calls  : 2450
+//│ constrain calls  : 1743
 //│ annoying  calls  : 94
-//│ subtyping calls  : 13103
+//│ subtyping calls  : 5536
 
 
 

@@ -182,9 +182,9 @@ c = c6
 //│         <: C5['A0]
 //│   <:  c:
 //│ 'a -> C6['a]
-//│ constrain calls  : 70
+//│ constrain calls  : 64
 //│ annoying  calls  : 34
-//│ subtyping calls  : 476
+//│ subtyping calls  : 434
 
 
 // Reproduction of an issue found while trying out TypeRef ctor typing:

@@ -393,9 +393,9 @@ s: ChurchInt -> ChurchInt
 //│ ╙──       	^
 //│ res: ChurchInt -> ChurchInt
 //│    = [Function: s]
-//│ constrain calls  : 109
+//│ constrain calls  : 90
 //│ annoying  calls  : 0
-//│ subtyping calls  : 382
+//│ subtyping calls  : 255
 
 
 
@@ -1069,9 +1069,9 @@ z: ChurchInt
 s: ChurchInt -> ChurchInt
 //│ res: ChurchInt -> ChurchInt
 //│    = [Function: s]
-//│ constrain calls  : 91
+//│ constrain calls  : 80
 //│ annoying  calls  : 0
-//│ subtyping calls  : 315
+//│ subtyping calls  : 228
 
 // * Now works
 to_church_ty = to_ch

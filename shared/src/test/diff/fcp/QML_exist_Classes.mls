@@ -135,16 +135,16 @@ simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 //│    = [Function: simpleStepImpl]
 //│ constrain calls  : 9926
 //│ annoying  calls  : 78
-//│ subtyping calls  : 70332
+//│ subtyping calls  : 28078
 // * Note that the above incidentally can be checked using recursive types
 :RecursiveTypes
 :stats
 simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 //│ res: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]
 //│    = [Function: simpleStepImpl]
-//│ constrain calls  : 579
+//│ constrain calls  : 432
 //│ annoying  calls  : 104
-//│ subtyping calls  : 5591
+//│ subtyping calls  : 3111
 :NoRecursiveTypes
 
 // * Apparently, it's due to excessive extrusion due to the type annot not being generalized!
@@ -152,9 +152,9 @@ simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 simpleStepImpl : forall 'a 'r. ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 //│ res: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]
 //│    = [Function: simpleStepImpl]
-//│ constrain calls  : 711
+//│ constrain calls  : 576
 //│ annoying  calls  : 104
-//│ subtyping calls  : 1792
+//│ subtyping calls  : 1183
 
 
 

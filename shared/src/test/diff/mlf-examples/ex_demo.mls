@@ -1222,9 +1222,9 @@ this_should_be_98_ =
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ this_should_be_98_: string
 //│                   = '98'
-//│ constrain calls  : 2942
+//│ constrain calls  : 11252
 //│ annoying  calls  : 0
-//│ subtyping calls  : 13033
+//│ subtyping calls  : 38842
 
 // * Decomposing...
 
@@ -1232,9 +1232,9 @@ this_should_be_98_ =
 c_i5_ = c_add_ c_i3_ c_i2_
 //│ c_i5_: ('b -> 'c & 'c -> 'd & 'd -> 'e & ('a | 'e) -> 'a) -> 'b -> 'a
 //│      = [Function (anonymous)]
-//│ constrain calls  : 143
+//│ constrain calls  : 118
 //│ annoying  calls  : 0
-//│ subtyping calls  : 639
+//│ subtyping calls  : 493
 
 :stats
 :e
@@ -1246,37 +1246,37 @@ c_i10_ = c_mul_ c_i5_ c_i2_
 //│ ║  l.1241: 	c_i10_ = c_mul_ c_i5_ c_i2_
 //│ ║          	         ^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ c_i10_: error | ((forall 'a 'b 'c. ('c -> 'a & 'a -> 'b) -> 'c -> 'b | 'd) -> ('e -> 'f -> ('g & 'h & 'i & 'j & 'k & 'l & 'm) & 'n) & (('o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 's) -> 'o -> 'r | 'n) -> ('t -> 'u -> ('h & 'i & 'j & 'k & 'l & 'm) & 'v) & (('w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's) -> 'w -> 'g | 'v) -> ('x -> 'y -> ('i & 'j & 'k & 'l & 'm) & 'z) & (('a1 -> ('u & 'w) & 'w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's & 't) -> 'a1 -> 'h | 'z) -> ('b1 -> 'c1 -> ('j & 'k & 'l & 'm) & 'd1) & (('e1 -> ('y & 'a1) & 'a1 -> ('u & 'w) & 'w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's & 't & 'x) -> 'e1 -> 'i | 'd1) -> ('f1 -> 'g1 -> ('k & 'l & 'm) & 'h1) & (('i1 -> ('c1 & 'e1) & 'e1 -> ('y & 'a1) & 'a1 -> ('u & 'w) & 'w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's & 't & 'x & 'b1) -> 'i1 -> 'j | 'h1) -> ('j1 -> 'k1 -> ('l & 'm) & 'l1) & (('m1 -> ('g1 & 'i1) & 'i1 -> ('c1 & 'e1) & 'e1 -> ('y & 'a1) & 'a1 -> ('u & 'w) & 'w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's & 't & 'x & 'b1 & 'f1) -> 'm1 -> 'k | 'l1) -> ('n1 -> 'o1 -> 'm & 'p1) & (('q1 -> ('k1 & 'm1) & 'm1 -> ('g1 & 'i1) & 'i1 -> ('c1 & 'e1) & 'e1 -> ('y & 'a1) & 'a1 -> ('u & 'w) & 'w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's & 't & 'x & 'b1 & 'f1 & 'j1) -> 'q1 -> 'l | 'p1) -> ('r1 & 's1)) -> ('s -> 'p -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'd) -> (('t1 -> ('o1 & 'q1) & 'q1 -> ('k1 & 'm1) & 'm1 -> ('g1 & 'i1) & 'i1 -> ('c1 & 'e1) & 'e1 -> ('y & 'a1) & 'a1 -> ('u & 'w) & 'w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's & 't & 'x & 'b1 & 'f1 & 'j1 & 'n1) -> 't1 -> 'm | 'r1) | 's1
+//│ c_i10_: error | ((forall 'a 'b 'c. ('a -> 'b & 'b -> 'c) -> 'a -> 'c | 'd) -> ('e -> 'f -> ('g & 'h & 'i & 'j & 'k & 'l & 'm) & 'n) & (('o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 's) -> 'o -> 'r | 'n) -> ('t -> 'u -> ('h & 'i & 'j & 'k & 'l & 'm) & 'v) & (('w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's) -> 'w -> 'g | 'v) -> ('x -> 'y -> ('i & 'j & 'k & 'l & 'm) & 'z) & (('a1 -> ('u & 'w) & 'w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's & 't) -> 'a1 -> 'h | 'z) -> ('b1 -> 'c1 -> ('j & 'k & 'l & 'm) & 'd1) & (('e1 -> ('y & 'a1) & 'a1 -> ('u & 'w) & 'w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's & 't & 'x) -> 'e1 -> 'i | 'd1) -> ('f1 -> 'g1 -> ('k & 'l & 'm) & 'h1) & (('i1 -> ('c1 & 'e1) & 'e1 -> ('y & 'a1) & 'a1 -> ('u & 'w) & 'w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's & 't & 'x & 'b1) -> 'i1 -> 'j | 'h1) -> ('j1 -> 'k1 -> ('l & 'm) & 'l1) & (('m1 -> ('g1 & 'i1) & 'i1 -> ('c1 & 'e1) & 'e1 -> ('y & 'a1) & 'a1 -> ('u & 'w) & 'w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's & 't & 'x & 'b1 & 'f1) -> 'm1 -> 'k | 'l1) -> ('n1 -> 'o1 -> 'm & 'p1) & (('q1 -> ('k1 & 'm1) & 'm1 -> ('g1 & 'i1) & 'i1 -> ('c1 & 'e1) & 'e1 -> ('y & 'a1) & 'a1 -> ('u & 'w) & 'w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's & 't & 'x & 'b1 & 'f1 & 'j1) -> 'q1 -> 'l | 'p1) -> ('r1 & 's1)) -> ('s -> 'p -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'd) -> (('t1 -> ('o1 & 'q1) & 'q1 -> ('k1 & 'm1) & 'm1 -> ('g1 & 'i1) & 'i1 -> ('c1 & 'e1) & 'e1 -> ('y & 'a1) & 'a1 -> ('u & 'w) & 'w -> ('f & 'o) & 'o -> 'p & 'p -> 'q & 'q -> ('g & 'h & 'i & 'j & 'k & 'l & 'm & 'r) & 'e & 's & 't & 'x & 'b1 & 'f1 & 'j1 & 'n1) -> 't1 -> 'm | 'r1) | 's1
 //│   where
 //│     's1 <: (forall 'u1 'v1 'w1 'x1. ('u1 -> 'v1 -> 'w1) -> ('x1 -> 'v1 & 'u1) -> 'x1 -> 'w1) -> (forall 'y1 'z1 'a2. ('y1 -> 'z1 & 'z1 -> 'a2) -> 'y1 -> 'a2) -> 's1
 //│       = [Function (anonymous)]
-//│ constrain calls  : 1274
+//│ constrain calls  : 983
 //│ annoying  calls  : 0
-//│ subtyping calls  : 34858
+//│ subtyping calls  : 32252
 :stats
 // * This one works:
 c_i10_ = c_mul c_i5_ c_i2_
 //│ c_i10_: (('a | 'b) -> 'a & ('a0 | 'b) -> 'a0) -> 'b -> ('a | 'a0) | Fint
 //│       = [Function (anonymous)]
-//│ constrain calls  : 902
+//│ constrain calls  : 624
 //│ annoying  calls  : 0
-//│ subtyping calls  : 6626
+//│ subtyping calls  : 2474
 
 // * Ouchie (cf stats)
 :stats
 c_i9_ = c_pred_ c_i10_
 //│ c_i9_: ('a -> ('a & 'b) & 'c -> 'b & 'c -> 'c & 'd -> ('d & 'b) & 'e -> 'b & 'e -> 'e) -> ('a & 'b & 'c & 'd & 'e) -> 'b
 //│      = [Function (anonymous)]
-//│ constrain calls  : 3909
+//│ constrain calls  : 2552
 //│ annoying  calls  : 0
-//│ subtyping calls  : 31911
+//│ subtyping calls  : 11102
 
 :stats
 :e
 c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│ ╔══[ERROR] Inferred recursive type: 'b
 //│   where
-//│     'b <: (forall 'c 'd 'e 'f. ('c -> 'd -> 'e) -> ('f -> 'd & 'c) -> 'f -> 'e) -> ((forall 'a 'a0 'g 'a1 'a2. (('a1 | 'g) -> 'a1 & ('a2 | 'g) -> 'a2 & ('a0 | 'g) -> 'a0 & ('a | 'g) -> 'a) -> 'g -> ('a1 | 'a2 | 'a0 | 'a) | Fint) -> ? & (forall 'a3 'h 'a4. (('a3 | 'h) -> 'a3 & ('a4 | 'h) -> 'a4) -> 'h -> ('a3 | 'a4) | Fint) -> anything)
+//│     'b <: (forall 'c 'd 'e 'f. ('c -> 'd -> 'e) -> ('f -> 'd & 'c) -> 'f -> 'e) -> ((forall 'a 'a0 'g 'a1 'a2. (('a | 'g) -> 'a & ('a1 | 'g) -> 'a1 & ('a2 | 'g) -> 'a2 & ('a0 | 'g) -> 'a0) -> 'g -> ('a | 'a1 | 'a2 | 'a0) | Fint) -> ? & (forall 'a3 'h 'a4. (('a3 | 'h) -> 'a3 & ('a4 | 'h) -> 'a4) -> 'h -> ('a3 | 'a4) | Fint) -> anything)
 //│ ║  l.903: 	def c_succ_ n = fun f -> fun x -> n f (f x)
 //│ ╙──       	                                       ^^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
@@ -1285,18 +1285,18 @@ c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ c_99_: error | ('a -> 'a & 'b -> 'b & 'c -> 'c & 'd -> 'd) -> ('a & 'b & 'c & 'd) -> error
 //│      = [Function (anonymous)]
-//│ constrain calls  : 4612
+//│ constrain calls  : 3117
 //│ annoying  calls  : 0
-//│ subtyping calls  : 40645
+//│ subtyping calls  : 14864
 :stats
 // * Note: works with `c_mul` AND recursive types...
 :RecursiveTypes
 c_99_ = c_add_ (c_mul c_i9_ c_i10_) c_i9_
 //│ c_99_: ('b -> ('b & 'c & 'a & 'a0) & 'a -> ('c & 'a) & 'a0 -> ('c & 'a0) & 'd -> ('e & 'c & 'a1 & 'a2) & 'e -> ('e & 'c & 'a3 & 'a4) & 'a3 -> ('c & 'a3) & 'a4 -> ('c & 'a4) & 'a1 -> ('c & 'a1) & 'a2 -> ('c & 'a2) & 'f -> ('f & 'c & 'a5 & 'a6) & 'a5 -> ('c & 'a5) & 'a6 -> ('c & 'a6) & ('a7 | 'd) -> 'a7 & 'd -> ('g & 'c & 'a8 & 'a9) & 'g -> ('g & 'c & 'a10 & 'a11) & 'a10 -> ('c & 'a10) & 'a11 -> ('c & 'a11) & 'a8 -> ('c & 'a8) & 'a9 -> ('c & 'a9)) -> ('b & 'd & 'f & 'c) -> ('a7 | 'c) | Fint
 //│      = [Function (anonymous)]
-//│ constrain calls  : 3728
+//│ constrain calls  : 2217
 //│ annoying  calls  : 0
-//│ subtyping calls  : 61344
+//│ subtyping calls  : 23022
 :NoRecursiveTypes
 
 // * Ouchie++
@@ -1305,9 +1305,9 @@ c_99_ = c_add_ (c_mul c_i9_ c_i10_) c_i9_
 c_98_ = c_pred_ c_99_
 //│ c_98_: ('a -> ('a & 'b) & 'c -> 'a & 'c -> 'c & 'd -> ('a & 'd) & 'e -> 'b & 'f -> 'e & 'f -> 'f & 'g -> ('e & 'g) & 'h -> ('e & 'h) & 'i -> 'h & 'i -> 'i & 'j -> ('h & 'j) & 'k -> ('k & 'b) & 'l -> 'k & 'l -> 'l & 'm -> ('k & 'm) & 'n -> ('n & 'b) & 'o -> 'b & 'o -> 'o & 'p -> 'b & 'q -> 'p & 'q -> 'q & 'r -> ('p & 'r) & 's -> ('p & 's) & 't -> 's & 't -> 't & 'u -> ('s & 'u)) -> ('a & 'c & 'd & 'b & 'e & 'f & 'g & 'h & 'i & 'j & 'k & 'l & 'm & 'n & 'o & 'p & 'q & 'r & 's & 't & 'u) -> 'b
 //│      = [Function (anonymous)]
-//│ constrain calls  : 18323
+//│ constrain calls  : 11598
 //│ annoying  calls  : 0
-//│ subtyping calls  : 178084
+//│ subtyping calls  : 74107
 :ResetFuel
 
 
@@ -1380,24 +1380,24 @@ def c_succ_ n = fun f -> fun x -> n f (f x)
 //│   where
 //│     'b <: 'a -> 'a & 'c -> 'a))
 //│       = [Function: c_succ1]
-//│ c_succ_: 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. 'e -> 'd
+//│ c_succ_: 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. 'c -> 'e
 //│   where
-//│     'a <: 'b -> 'c -> 'd
-//│     'b <: 'e -> 'c))
+//│     'a <: 'b -> 'd -> 'e
+//│     'b <: 'c -> 'd))
 //│        = [Function: c_succ_1]
 
 def c_add_ n m = m c_succ_ n
-//│ c_add_: 'a -> (forall 'b. ((forall 'c. 'c -> (forall 'd. 'd -> (forall 'e 'f 'g. 'g -> 'f
+//│ c_add_: 'a -> (forall 'b. ((forall 'c. 'c -> (forall 'd. 'd -> (forall 'e 'f 'g. 'e -> 'g
 //│   where
-//│     'c <: 'd -> 'e -> 'f
-//│     'd <: 'g -> 'e))) -> 'a -> 'b) -> 'b)
+//│     'd <: 'e -> 'f
+//│     'c <: 'd -> 'f -> 'g))) -> 'a -> 'b) -> 'b)
 //│       = [Function: c_add_1]
 
 // let c_i1 = fun f x -> f x
 def c_i1 = fun f -> fun x -> f x
-//│ c_i1: 'a -> (forall 'b 'c. 'c -> 'b
+//│ c_i1: 'a -> (forall 'b 'c. 'b -> 'c
 //│   where
-//│     'a <: 'c -> 'b)
+//│     'a <: 'b -> 'c)
 //│     = [Function: c_i11]
 
 // let c_i2 = c_succ c_i1
@@ -1407,12 +1407,12 @@ def c_i2_ = c_succ_ c_i1
 //│   where
 //│     'b <: 'a -> 'a & 'c -> 'a)
 //│     = [Function: c_i22]
-//│ c_i2_: 'a -> (forall 'b 'c 'd. 'd -> 'c
+//│ c_i2_: 'a -> (forall 'b 'c 'd. 'b -> 'd
 //│   where
-//│     'a <: 'd -> 'b
+//│     'a <: 'b -> 'c
 //│     forall 'e. 'e -> (forall 'f 'g. 'f -> 'g
 //│       where
-//│         'e <: 'f -> 'g) <: 'a -> 'b -> 'c)
+//│         'e <: 'f -> 'g) <: 'a -> 'c -> 'd)
 //│      = [Function: c_i2_1]
 
 // let c_i3 = c_succ c_i2
@@ -1422,12 +1422,12 @@ def c_i3_ = c_succ_ c_i2
 //│   where
 //│     'b <: 'a -> 'a & 'c -> 'a)
 //│     = [Function: c_i31]
-//│ c_i3_: 'b -> (forall 'c 'd 'e. 'e -> 'd
+//│ c_i3_: 'b -> (forall 'c 'd 'e. 'c -> 'e
 //│   where
-//│     'b <: 'e -> 'c
+//│     'b <: 'c -> 'd
 //│     forall 'f. 'f -> (forall 'a 'g. 'g -> 'a
 //│       where
-//│         'f <: 'a -> 'a & 'g -> 'a) <: 'b -> 'c -> 'd)
+//│         'f <: 'a -> 'a & 'g -> 'a) <: 'b -> 'd -> 'e)
 //│      = [Function: c_i3_1]
 
 :e
@@ -1435,33 +1435,33 @@ def c_i3_ = c_succ_ c_i2
 c_i5_ = c_add_ c_i3_ c_i2
 //│ ╔══[ERROR] Inferred recursive type: 'b
 //│   where
-//│     'b :> forall 'c. 'c -> (forall 'd 'e 'f 'g. 'd -> 'g
+//│     'b :> forall 'c. 'c -> (forall 'd 'e 'f 'g. 'd -> 'f
 //│       where
-//│         'c <: 'd -> 'f & 'd -> 'e
-//│         'b <: 'c -> 'f -> 'g
+//│         'c <: 'd -> 'e & 'd -> 'g
+//│         'b <: 'c -> 'e -> 'f
 //│         forall 'h. 'h -> (forall 'i 'j 'k. 'k -> 'j
 //│           where
 //│             forall 'l. 'l -> (forall 'a 'm. 'm -> 'a
 //│               where
 //│                 'l <: 'a -> 'a & 'm -> 'a) <: 'h -> 'i -> 'j
-//│             'h <: 'k -> 'i) <: 'c -> 'e -> 'g)
+//│             'h <: 'k -> 'i) <: 'c -> 'g -> 'f)
 //│ ╙──
 //│ c_i5_: 'b
 //│   where
-//│     'b :> forall 'c. 'c -> (forall 'd 'e 'f 'g. 'g -> 'f
+//│     'b :> forall 'c. 'c -> (forall 'd 'e 'f 'g. 'd -> 'f
 //│       where
-//│         'c <: 'g -> 'e & 'g -> 'd
+//│         'c <: 'd -> 'e & 'd -> 'g
 //│         'b <: 'c -> 'e -> 'f
-//│         forall 'h. 'h -> (forall 'i 'j 'k. 'j -> 'i
+//│         forall 'h. 'h -> (forall 'i 'j 'k. 'i -> 'k
 //│           where
 //│             forall 'l. 'l -> (forall 'a 'm. 'm -> 'a
 //│               where
-//│                 'l <: 'a -> 'a & 'm -> 'a) <: 'h -> 'k -> 'i
-//│             'h <: 'j -> 'k) <: 'c -> 'd -> 'f)
+//│                 'l <: 'a -> 'a & 'm -> 'a) <: 'h -> 'j -> 'k
+//│             'h <: 'i -> 'j) <: 'c -> 'g -> 'f)
 //│      = [Function (anonymous)]
-//│ constrain calls  : 140
+//│ constrain calls  : 107
 //│ annoying  calls  : 0
-//│ subtyping calls  : 617
+//│ subtyping calls  : 378
 
 :stats
 :e
@@ -1469,14 +1469,14 @@ c_i10_ = c_mul_ c_i5_ c_i2_
 //│ ╔══[ERROR] Inferred recursive type: nothing
 //│ ║  l.731: 	type Fint  = forall 'a. ('a -> 'a) -> ('a -> 'a)
 //│ ╙──       	                    ^^
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c. ?a -> ?c -> ?b <: (forall ?d. ?d) -> ?e` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b ?c. ?c -> ?b -> ?a <: (forall ?d. ?d) -> ?e` exceeded recursion depth limit (250)
 //│ ║  l.1468: 	c_i10_ = c_mul_ c_i5_ c_i2_
 //│ ║          	         ^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ c_i10_: error
 //│       = [Function (anonymous)]
-//│ constrain calls  : 2761
+//│ constrain calls  : 3720
 //│ annoying  calls  : 0
-//│ subtyping calls  : 26965
+//│ subtyping calls  : 26592
 
 
