@@ -59,6 +59,7 @@ fun example3(t) =
 //│             let y*‡ = (ucs$args_t$Derived).0
 //│             y
 //│           _ -> 42
+//│   _ -> 42
 //│ | | | | | | | STEP 4
 //│ | | | | | | | collected match registry: 
 //│ | | | | | | | >>> t => [class `Base`, class `Derived`]
@@ -89,10 +90,11 @@ fun example3(t) =
 //│ | | | | | | | | | remaining cases should be covered by the wildcard
 //│ | | | | | | | | | checkCoverage <== TERM 42
 //│ | | | | | | | | checkCoverage ==> 0 diagnostics
-//│ | | | | | | | | remaining cases are not covered: []
+//│ | | | | | | | | remaining cases should be covered by the wildcard
+//│ | | | | | | | | checkCoverage <== TERM 42
 //│ | | | | | | | checkCoverage ==> 0 diagnostics
 //│ | | | | | | | Coverage checking result: 0 errors
-//│ fun example3: forall 'a. (Base & {#x: Num & 'a}) -> (Int | 'a)
+//│ fun example3: forall 'a. (Base & {#x: Num & 'a} | Object & ~#Base) -> (Int | 'a)
 
 fun example4(t, x) =
   if t is
@@ -103,7 +105,7 @@ fun example4(t, x) =
     // previous branch shadows the variable `x`, a correct implementation
     // should restore the original value of `x` in this branch.
     else 42
-//│ fun example4: forall 'a. (Base & {#x: Num & 'a}, Int) -> (Int | 'a)
+//│ fun example4: forall 'a. (Base & {#x: Num & 'a} | Object & ~#Base, Int) -> (Int | 'a)
 
 example4(Base(-1), 0) ~~> -1
 example4(Base(1), 2) ~~> 42

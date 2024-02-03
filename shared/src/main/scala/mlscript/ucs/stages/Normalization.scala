@@ -238,7 +238,7 @@ trait Normalization { self: Desugarer with Traceable =>
             specialize(tail, false)
           } else if (otherPattern <:< pattern) {
             println(s"Case 2.2: $pattern <:< $otherPattern")
-            Split.Nil
+            specialize(tail, false)
           } else {
             println(s"Case 2.3: $pattern are unrelated with $otherPattern")
             split.copy(tail = specialize(tail, false))

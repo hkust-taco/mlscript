@@ -364,11 +364,11 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
         case Var("Int") if !oldDefs =>
           JSInvoke(JSField(JSIdent("Number"), "isInteger"), scrut :: Nil)
         case Var("Num") if !oldDefs =>
-          JSBinary("===", scrut.typeof(), JSLit("number"))
+          JSBinary("===", scrut.typeof(), JSLit(JSLit.makeStringLiteral("number")))
         case Var("Bool") if !oldDefs =>
-          JSBinary("===", scrut.typeof(), JSLit("boolean"))
+          JSBinary("===", scrut.typeof(), JSLit(JSLit.makeStringLiteral("boolean")))
         case Var("Str") if !oldDefs =>
-          JSBinary("===", scrut.typeof(), JSLit("string"))
+          JSBinary("===", scrut.typeof(), JSLit(JSLit.makeStringLiteral("string")))
         case Var("bool") =>
           JSBinary("===", scrut.member("constructor"), JSLit("Boolean"))
         case Var(s @ ("true" | "false")) =>

@@ -93,7 +93,8 @@ fun test(x, p) = if x is
 //│         case x*‡ of
 //│           0 -> "bar"
 //│           _ -> "qax"
-//│ fun test: forall 'a. (Int & 'a, (Int & 'a) -> Bool) -> ("bar" | "foo" | "qax")
+//│   _ -> "qax"
+//│ fun test: forall 'a. (Int & 'a | Object & ~Int, (Int & 'a) -> Bool) -> ("bar" | "foo" | "qax")
 
 :ducs:postprocess.result
 fun test(x, p) = if x is
@@ -110,28 +111,13 @@ fun test(x, p) = if x is
 //│         case x*‡ of
 //│           "lol" -> "bar"
 //│           _ -> "qax"
-//│ fun test: forall 'a. (Str & 'a, (Str & 'a) -> Bool) -> ("bar" | "foo" | "qax")
+//│   _ -> "qax"
+//│ fun test: forall 'a. (Object & ~Str | Str & 'a, (Str & 'a) -> Bool) -> ("bar" | "foo" | "qax")
 
-// This should work, but it doesn't.
 test(0, _ => true)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.116: 	test(0, _ => true)
-//│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `0` is not an instance of type `Str`
-//│ ║  l.116: 	test(0, _ => true)
-//│ ║         	     ^
-//│ ╟── Note: constraint arises from class pattern:
-//│ ║  l.100: 	  Str and p(x) then "foo"
-//│ ║         	  ^^^
-//│ ╟── from reference:
-//│ ║  l.99: 	fun test(x, p) = if x is
-//│ ╙──      	                    ^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ "bar" | "foo" | "qax" | error
+//│ "bar" | "foo" | "qax"
 //│ res
-//│ TEST CASE FAILURE: There was an unexpected runtime error
-//│ Runtime error:
-//│   ReferenceError: string is not defined
+//│     = 'qax'
 
 :ducs:postprocess.result
 fun test(x, p) = if x is
@@ -150,7 +136,8 @@ fun test(x, p) = if x is
 //│           2.71828 -> "E"
 //│           3.14159 -> "PI"
 //│           _ -> "other"
-//│ fun test: forall 'a. ('a & (2.71828 | 3.14159 | Num & ~2.71828 & ~3.14159), (Num & 'a) -> Bool) -> ("E" | "PI" | "great" | "other")
+//│   _ -> "other"
+//│ fun test: forall 'a. (Object & ~Num | 'a & (2.71828 | 3.14159 | Num & ~2.71828 & ~3.14159), (Num & 'a) -> Bool) -> ("E" | "PI" | "great" | "other")
 
 :ducs:postprocess.result
 fun test(x, p) = if x is
