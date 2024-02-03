@@ -216,7 +216,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     case _ => op
   }
 
-  // * Desugar `Quoted` into AST constructor invokations.
+  // * Desugar `Quoted` into AST constructor invocations.
   // * e.g., `42 will be translated into Quoted(IntLit(42)),
   // * which will be further desugared into App(Var("IntLit"), IntLit(42)) and be traslated into `IntLit(42)` in JS
   private def desugarQuote(term: Term)(implicit scope: Scope, isQuoted: Bool, freeVars: FreeVars): Term = term match {
