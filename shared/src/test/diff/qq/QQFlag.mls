@@ -68,10 +68,8 @@ run(code"code"114"")
 //│ ║  l.66: 	run(code"code"114"")
 //│ ╙──      	         ^^^^^^^^^
 //│ error
-//│ res
-//│     = Quoted:
-//│       code"114"
-//│       undefined
+//│ Code generation encountered an error:
+//│   nested quotation is not allowed.
 
 
 declare module Math {

@@ -159,12 +159,12 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
   protected def translateApp(term: App)(implicit scope: Scope): JSExpr = term match {
     // Binary expressions
     case App(App(Var(op), Tup((N -> Fld(_, lhs)) :: Nil)), Tup((N -> Fld(_, rhs)) :: Nil))
-        if JSBinary.operators contains toJSOperator(op) =>
-      JSBinary(toJSOperator(op), translateTerm(lhs), translateTerm(rhs))
+        if oldDefs && (JSBinary.operators contains op) =>
+      JSBinary(op, translateTerm(lhs), translateTerm(rhs))
     // Binary expressions with new-definitions
-    case App(Var(op), Tup(N -> Fld(_, lhs) :: N -> Fld(_, rhs) :: Nil))
-        if JSBinary.operators.contains(toJSOperator(op)) && (!translateVarImpl(op, isCallee = true).isRight || op =/= toJSOperator(op)) =>
-      JSBinary(toJSOperator(op), translateTerm(lhs), translateTerm(rhs))
+    case App(Var(op), Tup(N -> Fld(_, lhs) :: N -> Fld(_, rhs) :: Nil)) // JS doesn't support operators like `+.` so we need to map them before testing
+        if JSBinary.operators.contains(mapFloatingOperator(op)) && (!translateVarImpl(op, isCallee = true).isRight || op =/= mapFloatingOperator(op)) =>
+      JSBinary(mapFloatingOperator(op), translateTerm(lhs), translateTerm(rhs))
     // If-expressions
     case App(App(App(Var("if"), Tup((_, Fld(_, tst)) :: Nil)), Tup((_, Fld(_, con)) :: Nil)), Tup((_, Fld(_, alt)) :: Nil)) =>
       JSTenary(translateTerm(tst), translateTerm(con), translateTerm(alt))
@@ -184,9 +184,11 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     case _ => throw CodeGenError(s"ill-formed application $term")
   }
 
+  // * Generate an `App` node for AST constructors
   private def createASTCall(tp: Str, args: Ls[Term]): App =
     App(Var(tp), Tup(args.map(a => N -> Fld(FldFlags.empty, a))))
 
+  // * Bound free variables appearing in quasiquotes
   class FreeVars(val vs: Set[Str])
 
   // * Left: the branch is quoted and it has been desugared
@@ -209,7 +211,9 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     case NoCases => if (isQuoted) L(createASTCall("NoCases", Nil)) else R(NoCases)
   }
 
-  private def toJSOperator(op: Str) = op match {
+  // * Operators `+`, `-`, and `*` will not be available for floating numbers until we have the correct overloading.
+  // * Currently, we use OCaml-style floating operators temporarily and translate them into normal JS operators.
+  private def mapFloatingOperator(op: Str) = op match {
     case "+." => "+"
     case "-." => "-"
     case "*." => "*"
@@ -217,18 +221,23 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
   }
 
   // * Desugar `Quoted` into AST constructor invocations.
-  // * e.g., `42 will be translated into Quoted(IntLit(42)),
-  // * which will be further desugared into App(Var("IntLit"), IntLit(42)) and be traslated into `IntLit(42)` in JS
+  // * example 1: `` `42 `` is desugared into `IntLit(42)`
+  // * example 2: `` x `=> id(x) `+ `1 `` is desugared into `let x1 = freshName("x") in Lam(Var(x1), App(Var("+"), id(Var(x1)), IntLit(1)))`
   private def desugarQuote(term: Term)(implicit scope: Scope, isQuoted: Bool, freeVars: FreeVars): Term = term match {
-    case Var("error") if isQuoted =>
-      createASTCall("Var", StrLit("error") :: Nil)
-    case Var(name) if isQuoted || freeVars.vs(name) => createASTCall("Var", Var(scope.resolveValue(name).fold[Str](
-      throw CodeGenError(s"unbound free variable $name is not supported yet.")
-    )(_.runtimeName)) :: Nil)
-    case lit: IntLit if isQuoted => createASTCall("IntLit", lit :: Nil)
-    case lit: DecLit if isQuoted => createASTCall("DecLit", lit :: Nil)
-    case lit: StrLit if isQuoted => createASTCall("StrLit", lit :: Nil)
-    case lit: UnitLit if isQuoted => createASTCall("UnitLit", lit :: Nil)
+    case Var(name) =>
+      val isFreeVar = freeVars.vs(name)
+      if (isQuoted || isFreeVar) {
+        val runtimeName = scope.resolveValue(name).fold[Str](
+          throw CodeGenError(s"unbound free variable $name is not supported yet.")
+        )(_.runtimeName)
+        if (isFreeVar) createASTCall("Var", Var(runtimeName) :: Nil) // quoted variables
+        else createASTCall("Var", StrLit(runtimeName) :: Nil) // built-in symbols (e.g., true, error)
+      }
+      else term
+    case lit: IntLit => if (isQuoted) createASTCall("IntLit", lit :: Nil) else lit
+    case lit: DecLit => if (isQuoted) createASTCall("DecLit", lit :: Nil) else lit
+    case lit: StrLit => if (isQuoted) createASTCall("StrLit", lit :: Nil) else lit
+    case lit: UnitLit => if (isQuoted) createASTCall("UnitLit", lit :: Nil) else lit
     case Lam(params, body) =>
       if (isQuoted) {
         val lamScope = scope.derive("Lam")
@@ -249,26 +258,23 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
         }
       }
       else Lam(params, desugarQuote(body))
-    case Unquoted(body) if isQuoted =>
-      val unquoteScope = scope.derive("unquote")
-      desugarQuote(body)(unquoteScope, false, freeVars)
+    case Unquoted(body) =>
+      if (isQuoted) {
+        val unquoteScope = scope.derive("unquote")
+        desugarQuote(body)(unquoteScope, false, freeVars)
+      }
+      else throw CodeGenError("unquoted term should be wrapped by quotes.")
     case Quoted(body) =>
       val quoteScope = scope.derive("quote")
       val res = desugarQuote(body)(quoteScope, true, freeVars)
-      if (isQuoted) createASTCall("Quoted", res :: Nil)
+      if (isQuoted) throw CodeGenError("nested quotation is not allowed.")
       else res
-    case App(App(Var(op), Tup((N -> Fld(f1, lhs)) :: Nil)), Tup((N -> Fld(f2, rhs)) :: Nil))
-        if JSBinary.operators contains toJSOperator(op) =>
-      if (isQuoted)
-        createASTCall("App", createASTCall("Var", StrLit(toJSOperator(op)) :: Nil) :: desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
-      else
-        App(App(Var(toJSOperator(op)), Tup((N -> Fld(f1, desugarQuote(lhs))) :: Nil)), Tup((N -> Fld(f2, desugarQuote(rhs))) :: Nil))
     case App(Var(op), Tup(N -> Fld(f1, lhs) :: N -> Fld(f2, rhs) :: Nil))
-        if JSBinary.operators.contains(toJSOperator(op)) && (!translateVarImpl(op, isCallee = true).isRight || op =/= toJSOperator(op)) =>
+        if JSBinary.operators.contains(mapFloatingOperator(op)) && (!translateVarImpl(op, isCallee = true).isRight || op =/= mapFloatingOperator(op)) =>
       if (isQuoted)
-        createASTCall("App", createASTCall("Var", StrLit(toJSOperator(op)) :: Nil) :: desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
+        createASTCall("App", createASTCall("Var", StrLit(mapFloatingOperator(op)) :: Nil) :: desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
       else
-        App(Var(toJSOperator(op)), Tup(N -> Fld(f1, desugarQuote(lhs)) :: N -> Fld(f2, desugarQuote(rhs)) :: Nil))
+        App(Var(op), Tup(N -> Fld(f1, desugarQuote(lhs)) :: N -> Fld(f2, desugarQuote(rhs)) :: Nil))
     case App(lhs, rhs) =>
       if (isQuoted) createASTCall("App", desugarQuote(lhs) :: desugarQuote(rhs) :: Nil)
       else App(desugarQuote(lhs), desugarQuote(rhs))
@@ -327,7 +333,17 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
         case R(b) => CaseOf(desugarQuote(trm), b)
       }
     case _ if term.desugaredTerm.isDefined => desugarQuote(term.desugaredTerm.getOrElse(die))
-    case _ => term // * For other terms, either they are not supported & there would be a type error, or we don't need desugar them
+    case Assign(lhs, rhs) if !isQuoted => Assign(desugarQuote(lhs), desugarQuote(rhs))
+    case NuNew(cls) if !isQuoted => NuNew(desugarQuote(cls))
+    case TyApp(lhs, targs) if !isQuoted => TyApp(desugarQuote(lhs), targs)
+    case Forall(p, body) if !isQuoted => Forall(p, desugarQuote(body))
+    case Inst(body) if !isQuoted => Inst(desugarQuote(body))
+    case _: Super if !isQuoted => term
+    case Eqn(lhs, rhs) if !isQuoted => Eqn(lhs, desugarQuote(rhs))
+    case While(cond, body) if !isQuoted => While(desugarQuote(cond), desugarQuote(body))
+    case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: AdtMatchWith | _: Rft | _: New
+        | _: Assign | _: NuNew | _: TyApp | _: Forall | _: Inst | _: Super | _: Eqn | _: While =>
+      throw CodeGenError("this quote syntax is not supported yet.")
   }
 
   /**
@@ -486,7 +502,8 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     case Eqn(Var(name), _) =>
       throw CodeGenError(s"assignment of $name is not supported outside a constructor")
     case Quoted(body) =>
-      translateTerm(desugarQuote(body)(scope.derive("desugar"), true, new FreeVars(Set.empty)))(scope.derive("quote"))
+      val quotedScope = scope.derive("quote")
+      translateTerm(desugarQuote(body)(quotedScope, true, new FreeVars(Set.empty)))(quotedScope)
     case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: AdtMatchWith | _: Rft | _: Unquoted =>
       throw CodeGenError(s"cannot generate code for term $term")
   }
