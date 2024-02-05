@@ -3,6 +3,14 @@
 class Foo[type T](val x: T)
 //│ class Foo[T](x: T)
 
+fun foo(f: Foo[?]) = f
+//│ fun foo: (f: Foo[?]) -> Foo[?]
+
+foo(Foo(0))
+//│ Foo[?]
+//│ res
+//│     = Foo {}
+
 fun foo(f: Foo[?]) = 0
 //│ fun foo: (f: Foo[?]) -> 0
 
@@ -23,7 +31,7 @@ foo(Foo(1))
 let y: Foo[Foo[Int]]
 let f: Foo[Foo[?]] = y
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.24: 	let f: Foo[Foo[?]] = y
+//│ ║  l.32: 	let f: Foo[Foo[?]] = y
 //│ ║        	                     ^
 //│ ╙── expression of type `Int` does not match type `nothing`
 //│ let f: Foo[Foo[?]]
@@ -47,11 +55,11 @@ foo(Foo(1))
 
 fun foo(f: Foo[?]) = f.x as f.T
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.48: 	fun foo(f: Foo[?]) = f.x as f.T
+//│ ║  l.56: 	fun foo(f: Foo[?]) = f.x as f.T
 //│ ║        	                     ^^^
 //│ ╟── field selection of type `anything` does not match type `nothing`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.48: 	fun foo(f: Foo[?]) = f.x as f.T
+//│ ║  l.56: 	fun foo(f: Foo[?]) = f.x as f.T
 //│ ╙──      	                             ^^
 //│ TEST CASE FAILURE: There was an unexpected type error
 //│ fun foo: (f: Foo[?]) -> anything
@@ -81,7 +89,7 @@ let f: Foo[?] = Foo(1)
 let y: Foo[Foo[Int]]
 let f: Foo[Foo[?]] = y
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.82: 	let f: Foo[Foo[?]] = y
+//│ ║  l.90: 	let f: Foo[Foo[?]] = y
 //│ ║        	                     ^
 //│ ╙── expression of type `Int` does not match type `nothing`
 //│ let f: Foo[Foo[anything]]
@@ -121,6 +129,7 @@ bar(MkBarFoo(Foo(1)))
 //│ res
 //│     = 3
 
+
 let x: Bar[?] = MkBarInt()
 //│ let x: Bar[?]
 //│ x
@@ -129,13 +138,13 @@ let x: Bar[?] = MkBarInt()
 :e
 x as Bar[Bool]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.130: 	x as Bar[Bool]
+//│ ║  l.139: 	x as Bar[Bool]
 //│ ║         	^
 //│ ╟── type `anything` is not an instance of type `Bool`
-//│ ║  l.124: 	let x: Bar[?] = MkBarInt()
+//│ ║  l.133: 	let x: Bar[?] = MkBarInt()
 //│ ║         	           ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.130: 	x as Bar[Bool]
+//│ ║  l.139: 	x as Bar[Bool]
 //│ ╙──       	         ^^^^
 //│ Bar[Bool]
 //│ res
@@ -154,7 +163,7 @@ MkBarFoo(Foo(1)) as Bar[?]
 :e
 MkBarFoo(Foo(1)) as Bar[Foo[?]]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.155: 	MkBarFoo(Foo(1)) as Bar[Foo[?]]
+//│ ║  l.164: 	MkBarFoo(Foo(1)) as Bar[Foo[?]]
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not match type `nothing`
 //│ Bar[Foo[?]]
@@ -164,7 +173,7 @@ MkBarFoo(Foo(1)) as Bar[Foo[?]]
 :e
 let x: Bar[Foo[?]] = MkBarFoo(1)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.165: 	let x: Bar[Foo[?]] = MkBarFoo(1)
+//│ ║  l.174: 	let x: Bar[Foo[?]] = MkBarFoo(1)
 //│ ║         	                     ^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not match type `nothing`
 //│ let x: Bar[Foo[?]]
@@ -179,7 +188,7 @@ let x: Bar[Foo[?]]
 :e
 x as Bar[Foo[Int]]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.180: 	x as Bar[Foo[Int]]
+//│ ║  l.189: 	x as Bar[Foo[Int]]
 //│ ║         	^
 //│ ╙── expression of type `anything` is not an instance of type `Int`
 //│ Bar[Foo[Int]]
@@ -187,13 +196,58 @@ x as Bar[Foo[Int]]
 //│     = <no result>
 //│       x is not implemented
 
+abstract class Baz[type A]: BI | BB
+class BI() extends Baz[Int]
+class BB() extends Baz[Bool]
+//│ abstract class Baz[A]: BB | BI
+//│ class BI() extends Baz
+//│ class BB() extends Baz
+
+fun baz[T](b: Baz[T]): T = if b is
+    BI then 1 as b.A
+    BB then true as b.A
+//│ fun baz: forall 'T. (b: Baz['T]) -> 'T
+
+fun baz(b: Baz['a]): b.A = if b is
+    BI then 1 as b.A
+    BB then true as b.A
+//│ fun baz: forall 'a. (b: Baz['a]) -> ('a & (Int | false | true))
+
+fun baz(b: Baz[?]): b.A = if b is
+    BI then 1 as b.A
+    BB then true as b.A
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.216: 	fun baz(b: Baz[?]): b.A = if b is
+//│ ║         	                             ^^^^
+//│ ║  l.217: 	    BI then 1 as b.A
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.218: 	    BB then true as b.A
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ╟── type `Int` is not an instance of type `Bool`
+//│ ║  l.200: 	class BI() extends Baz[Int]
+//│ ║         	                       ^^^
+//│ ╟── but it flows into type selection with expected type `Bool`
+//│ ║  l.217: 	    BI then 1 as b.A
+//│ ║         	                  ^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.201: 	class BB() extends Baz[Bool]
+//│ ║         	                       ^^^^
+//│ ╟── from type selection:
+//│ ║  l.216: 	fun baz(b: Baz[?]): b.A = if b is
+//│ ╙──       	                     ^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ fun baz: (b: Baz[?]) -> (Int | false | true)
+
+class Foo[T](val x: T)
+//│ class Foo[T](x: T)
+
 fun e: Foo[?]
 fun f: Foo[?] -> Foo[?]
-//│ fun e: Foo[nothing]
-//│ fun f: Foo[anything] -> Foo[nothing]
+//│ fun e: Foo[?]
+//│ fun f: Foo[?] -> Foo[?]
 
 f(e)
-//│ Foo[nothing]
+//│ Foo[?]
 //│ res
 //│     = <no result>
 //│       f is not implemented
@@ -201,25 +255,25 @@ f(e)
 fun e: Foo[Int]
 fun f: Foo[?] -> Foo[?]
 //│ fun e: Foo[Int]
-//│ fun f: Foo[anything] -> Foo[nothing]
+//│ fun f: Foo[?] -> Foo[?]
 
 f(e)
-//│ Foo[nothing]
+//│ Foo[?]
 //│ res
 //│     = <no result>
 //│       f is not implemented
 
 fun e: Foo[?]
 fun f: Foo[Int] -> Foo[?]
-//│ fun e: Foo[nothing]
-//│ fun f: Foo[Int] -> Foo[nothing]
+//│ fun e: Foo[?]
+//│ fun f: Foo[Int] -> Foo[?]
 
 :e
 e as Foo[Int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.218: 	e as Foo[Int]
+//│ ║  l.272: 	e as Foo[Int]
 //│ ║         	^
-//│ ╙── expression of type `Int` does not match type `nothing`
+//│ ╙── expression of type `anything` is not an instance of type `Int`
 //│ Foo[Int]
 //│ res
 //│     = <no result>
@@ -228,62 +282,110 @@ e as Foo[Int]
 :e
 f(e)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.229: 	f(e)
+//│ ║  l.283: 	f(e)
 //│ ║         	^^^^
-//│ ╙── expression of type `Int` does not match type `nothing`
-//│ Foo[nothing] | error
+//│ ╙── expression of type `anything` is not an instance of type `Int`
+//│ Foo[?] | error
 //│ res
 //│     = <no result>
 //│       f is not implemented
 
+// TODO
+fun f(x: ?) = x
+//│ fun f: (x: nothing) -> anything
+
+:e
+f(1)
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.294: 	fun f(x: ?) = x
+//│ ╙──       	         ^
+//│ error
+//│ res
+//│     = 1
+
+:e
+f(f)
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.294: 	fun f(x: ?) = x
+//│ ╙──       	         ^
+//│ error
+//│ res
+//│     = [Function: f5]
+
+:e
+fun f(x): ? = x
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.316: 	fun f(x): ? = x
+//│ ╙──       	          ^
+//│ fun f: anything -> anything
+
+:e
+fun f(x: Int): ? = x
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.323: 	fun f(x: Int): ? = x
+//│ ╙──       	               ^
+//│ fun f: (x: Int) -> anything
+
+// TODO
+fun f(x: ?): ? = x
+//│ fun f: (x: nothing) -> anything
+
+:e
+f(1)
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.330: 	fun f(x: ?): ? = x
+//│ ╙──       	         ^
+//│ error
+//│ res
+//│     = 1
+
 :e
 let x: ? = 1
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.240: 	let x: ? = 1
+//│ ║  l.343: 	let x: ? = 1
 //│ ╙──       	       ^
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.240: 	let x: ? = 1
+//│ ║  l.343: 	let x: ? = 1
 //│ ╙──       	       ^
 //│ let x: anything
 //│ x
 //│   = 1
 
 :e
+1 as ?
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.355: 	1 as ?
+//│ ╙──       	     ^
+//│ anything
+//│ res
+//│     = 1
+
+// TODO
 fun f: (? -> ?) -> ?
 //│ fun f: (anything -> nothing) -> anything
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
-:e
+// TODO
 fun f: ? -> ?
 //│ fun f: nothing -> anything
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
-:e
+// TODO
 fun f: ? -> Int
 //│ fun f: nothing -> Int
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
-:e
+// TODO
 fun f: Int -> ?
 //│ fun f: Int -> anything
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
-:e
-fun f(x: ?) = x
-//│ fun f: (x: nothing) -> anything
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
-
-:e
+// TODO
 let x: ? -> ?
 //│ let x: nothing -> anything
 //│ x
 //│   = <missing implementation>
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 :e
 let x = ?
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.284: 	let x = ?
+//│ ║  l.386: 	let x = ?
 //│ ╙──       	        ^
 //│ let x: error
 //│ Code generation encountered an error:
@@ -292,7 +394,7 @@ let x = ?
 :e
 if x is ? then 1
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.293: 	if x is ? then 1
+//│ ║  l.395: 	if x is ? then 1
 //│ ╙──       	        ^
 //│ error
 //│ Code generation encountered an error:
@@ -301,7 +403,7 @@ if x is ? then 1
 :e
 let x: ?[?]
 //│ ╔══[ERROR] Wrong number of type arguments – expected 0, found 1
-//│ ║  l.302: 	let x: ?[?]
+//│ ║  l.404: 	let x: ?[?]
 //│ ╙──       	       ^^^^
 //│ let x: ?
 //│ x
