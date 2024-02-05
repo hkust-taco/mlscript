@@ -102,37 +102,6 @@ f(A)
 //│ res
 //│     = 1
 
-:e
-let y: ? = 1
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.106: 	let y: ? = 1
-//│ ║         	           ^
-//│ ╟── integer literal of type `1` does not match type `nothing`
-//│ ╟── Note: constraint arises from wildcard:
-//│ ║  l.106: 	let y: ? = 1
-//│ ╙──       	       ^
-//│ let y: anything
-//│ y
-//│   = 1
-
-:e
-let x = ?
-//│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.119: 	let x = ?
-//│ ╙──       	        ^
-//│ let x: error
-//│ Code generation encountered an error:
-//│   cannot generate code for term WildcardType()
-
-:e
-if x is ? then 1
-//│ ╔══[ERROR] illegal pattern
-//│ ║  l.128: 	if x is ? then 1
-//│ ╙──       	        ^
-//│ error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
-
 abstract class C[type S, type T]: R[?] | I[?]
 class R[A] extends C[A, A]
 class I[A](val f: A => Int) extends C[A, Int]
@@ -178,20 +147,12 @@ fun optToInt(w: Option[?]) = if w is Some then 1 else 0
 //│ fun optToInt: (w: Option[nothing]) -> (0 | 1)
 
 optToInt(Some(1))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.180: 	optToInt(Some(1))
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `1` does not match type `nothing`
-//│ ║  l.180: 	optToInt(Some(1))
-//│ ║         	              ^
-//│ ╟── Note: constraint arises from wildcard:
-//│ ║  l.177: 	fun optToInt(w: Option[?]) = if w is Some then 1 else 0
-//│ ║         	                       ^
-//│ ╟── Note: type parameter T is defined at:
-//│ ║  l.170: 	abstract class Option[type out T]: None | Some[T]
-//│ ╙──       	                               ^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ 0 | 1 | error
+//│ 0 | 1
+//│ res
+//│     = 1
+
+optToInt(Some(1) as Option[Int])
+//│ 0 | 1
 //│ res
 //│     = 1
 
@@ -199,6 +160,34 @@ optToInt(None)
 //│ 0 | 1
 //│ res
 //│     = 0
+
+optToInt(None as Option[nothing])
+//│ 0 | 1
+//│ res
+//│     = 0
+
+let x = Some(Some(1))
+let y = Some(None)
+//│ let x: Some['A]
+//│ let y: Some['A0]
+//│ where
+//│   'A0 :> None
+//│   'A :> Some['A1]
+//│   'A1 :> 1
+//│ x
+//│   = Some {}
+//│ y
+//│   = Some {}
+
+x : Option[Option[Int]]
+//│ Option[Option[Int]]
+//│ res
+//│     = Some {}
+
+y : Option[Option[nothing]]
+//│ Option[Option[nothing]]
+//│ res
+//│     = Some {}
 
 abstract class W[type T]: MkW[?]
 class MkW[A](val w: A) extends W[Ty[A]]
@@ -224,11 +213,11 @@ test(MkW(1))
 :e
 fun test(a: Some[Int]) = true as a.T
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.225: 	fun test(a: Some[Int]) = true as a.T
+//│ ║  l.214: 	fun test(a: Some[Int]) = true as a.T
 //│ ║         	                         ^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.225: 	fun test(a: Some[Int]) = true as a.T
+//│ ║  l.214: 	fun test(a: Some[Int]) = true as a.T
 //│ ╙──       	                                  ^^
 //│ fun test: (a: Some[Int]) -> Int
 
@@ -238,7 +227,7 @@ fun test() =
     let a = Some(1)
     true as a.T
 //│ ╔══[ERROR] Cannot select from let binding or function
-//│ ║  l.239: 	    true as a.T
+//│ ║  l.228: 	    true as a.T
 //│ ╙──       	            ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Can't find member `error`
 

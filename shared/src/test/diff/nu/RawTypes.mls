@@ -46,16 +46,6 @@ fun foo(f: Foo[?]) = f.a : f.A
 //│ fun foo: (f: Foo[?]) -> anything
 
 foo(Foo(1))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.48: 	foo(Foo(1))
-//│ ║        	^^^^^^^^^^^
-//│ ╟── integer literal of type `1` does not match type `nothing`
-//│ ║  l.48: 	foo(Foo(1))
-//│ ║        	        ^
-//│ ╟── Note: constraint arises from wildcard:
-//│ ║  l.37: 	fun foo(f: Foo[?]) = f.a : f.A
-//│ ╙──      	               ^
-//│ TEST CASE FAILURE: There was an unexpected type error
 //│ anything
 //│ res
 //│     = 1
@@ -69,29 +59,29 @@ fun foo(f: Foo[Int]) = f.a
 // FIXME
 fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.70: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.60: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ║        	                          ^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.70: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.60: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ║        	                                                ^^
 //│ ╟── into type `Int | ~??A`
-//│ ║  l.70: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.60: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ╙──      	                 ^^^
 //│ fun foo: (f: Foo[anything]) -> Int
 
 :e
 fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.83: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║  l.73: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ║        	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `Int | ~??A`
-//│ ║  l.83: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║  l.73: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ║        	                                                   ^^
 //│ ╟── but it flows into operator application with expected type `Int | ~??A`
-//│ ║  l.83: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║  l.73: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ║        	                             ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.83: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║  l.73: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ╙──      	                    ^^^
 //│ fun foo: (f: Foo[?]) -> Int
 

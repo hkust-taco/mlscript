@@ -6,49 +6,91 @@ class Foo[type T](val x: T)
 fun foo(f: Foo[?]) = 0
 //│ fun foo: (f: Foo[?]) -> 0
 
+let f: Foo[?] = Foo(1)
+//│ let f: Foo[?]
+//│ f
+//│   = Foo {}
+
+foo(f)
 foo(Foo(1))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.9: 	foo(Foo(1))
-//│ ║       	^^^^^^^^^^^
-//│ ╟── integer literal of type `1` does not match type `nothing`
-//│ ║  l.9: 	foo(Foo(1))
-//│ ║       	        ^
-//│ ╟── Note: constraint arises from wildcard:
-//│ ║  l.6: 	fun foo(f: Foo[?]) = 0
-//│ ╙──     	               ^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ 0 | error
+//│ 0
 //│ res
 //│     = 0
+//│ res
+//│     = 0
+
+:e
+let y: Foo[Foo[Int]]
+let f: Foo[Foo[?]] = y
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.24: 	let f: Foo[Foo[?]] = y
+//│ ║        	                     ^
+//│ ╙── expression of type `Int` does not match type `nothing`
+//│ let f: Foo[Foo[?]]
+//│ let y: Foo[Foo[Int]]
+//│ y
+//│   = <missing implementation>
+//│ f
+//│   = <no result>
+//│     y is not implemented
 
 fun foo(f: Foo[?]) = f.x
 //│ fun foo: (f: Foo[?]) -> anything
 
+foo(Foo(Foo(1)))
 foo(Foo(1))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.27: 	foo(Foo(1))
-//│ ║        	^^^^^^^^^^^
-//│ ╟── integer literal of type `1` does not match type `nothing`
-//│ ║  l.27: 	foo(Foo(1))
-//│ ║        	        ^
-//│ ╟── Note: constraint arises from wildcard:
-//│ ║  l.24: 	fun foo(f: Foo[?]) = f.x
-//│ ╙──      	               ^
-//│ TEST CASE FAILURE: There was an unexpected type error
 //│ anything
+//│ res
+//│     = Foo {}
 //│ res
 //│     = 1
 
 fun foo(f: Foo[?]) = f.x as f.T
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.42: 	fun foo(f: Foo[?]) = f.x as f.T
+//│ ║  l.48: 	fun foo(f: Foo[?]) = f.x as f.T
 //│ ║        	                     ^^^
 //│ ╟── field selection of type `anything` does not match type `nothing`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.42: 	fun foo(f: Foo[?]) = f.x as f.T
+//│ ║  l.48: 	fun foo(f: Foo[?]) = f.x as f.T
 //│ ╙──      	                             ^^
 //│ TEST CASE FAILURE: There was an unexpected type error
 //│ fun foo: (f: Foo[?]) -> anything
+
+class Foo[out T](val x: T)
+//│ class Foo[T](x: T)
+
+let f: Foo[?] = Foo(1)
+//│ let f: Foo[anything]
+//│ f
+//│   = Foo {}
+
+let f: Foo[Foo[?]] = Foo(Foo(1))
+//│ let f: Foo[Foo[anything]]
+//│ f
+//│   = Foo {}
+
+class Foo[in T](val x: T)
+//│ class Foo[T](x: T)
+
+let f: Foo[?] = Foo(1)
+//│ let f: Foo[nothing]
+//│ f
+//│   = Foo {}
+
+:e
+let y: Foo[Foo[Int]]
+let f: Foo[Foo[?]] = y
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.82: 	let f: Foo[Foo[?]] = y
+//│ ║        	                     ^
+//│ ╙── expression of type `Int` does not match type `nothing`
+//│ let f: Foo[Foo[anything]]
+//│ let y: Foo[Foo[Int]]
+//│ y
+//│   = <missing implementation>
+//│ f
+//│   = <no result>
+//│     y is not implemented
 
 abstract class Bar[type A]: MkBarInt | MkBarBool | MkBarFoo[?]
 class MkBarInt() extends Bar[Int]
@@ -66,9 +108,201 @@ fun bar(b: Bar[?]) = if b is
 //│ fun bar: (b: Bar[?]) -> (1 | 2 | 3)
 
 bar(MkBarInt())
+bar(MkBarBool() as Bar[?])
+bar(MkBarFoo("hello"))
 bar(MkBarFoo(Foo(1)))
 //│ 1 | 2 | 3
 //│ res
 //│     = 1
 //│ res
+//│     = 2
+//│ res
 //│     = 3
+//│ res
+//│     = 3
+
+let x: Bar[?] = MkBarInt()
+//│ let x: Bar[?]
+//│ x
+//│   = MkBarInt {}
+
+:e
+x as Bar[Bool]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.130: 	x as Bar[Bool]
+//│ ║         	^
+//│ ╟── type `anything` is not an instance of type `Bool`
+//│ ║  l.124: 	let x: Bar[?] = MkBarInt()
+//│ ║         	           ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.130: 	x as Bar[Bool]
+//│ ╙──       	         ^^^^
+//│ Bar[Bool]
+//│ res
+//│     = MkBarInt {}
+
+MkBarFoo(Foo(1)) as Bar[Foo[Foo[Int]]]
+//│ Bar[Foo[Foo[Int]]]
+//│ res
+//│     = MkBarFoo {}
+
+MkBarFoo(Foo(1)) as Bar[?]
+//│ Bar[?]
+//│ res
+//│     = MkBarFoo {}
+
+:e
+MkBarFoo(Foo(1)) as Bar[Foo[?]]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.155: 	MkBarFoo(Foo(1)) as Bar[Foo[?]]
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `anything` does not match type `nothing`
+//│ Bar[Foo[?]]
+//│ res
+//│     = MkBarFoo {}
+
+:e
+let x: Bar[Foo[?]] = MkBarFoo(1)
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.165: 	let x: Bar[Foo[?]] = MkBarFoo(1)
+//│ ║         	                     ^^^^^^^^^^^
+//│ ╙── expression of type `anything` does not match type `nothing`
+//│ let x: Bar[Foo[?]]
+//│ x
+//│   = MkBarFoo {}
+
+let x: Bar[Foo[?]]
+//│ let x: Bar[Foo[?]]
+//│ x
+//│   = <missing implementation>
+
+:e
+x as Bar[Foo[Int]]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.180: 	x as Bar[Foo[Int]]
+//│ ║         	^
+//│ ╙── expression of type `anything` is not an instance of type `Int`
+//│ Bar[Foo[Int]]
+//│ res
+//│     = <no result>
+//│       x is not implemented
+
+fun e: Foo[?]
+fun f: Foo[?] -> Foo[?]
+//│ fun e: Foo[nothing]
+//│ fun f: Foo[anything] -> Foo[nothing]
+
+f(e)
+//│ Foo[nothing]
+//│ res
+//│     = <no result>
+//│       f is not implemented
+
+fun e: Foo[Int]
+fun f: Foo[?] -> Foo[?]
+//│ fun e: Foo[Int]
+//│ fun f: Foo[anything] -> Foo[nothing]
+
+f(e)
+//│ Foo[nothing]
+//│ res
+//│     = <no result>
+//│       f is not implemented
+
+fun e: Foo[?]
+fun f: Foo[Int] -> Foo[?]
+//│ fun e: Foo[nothing]
+//│ fun f: Foo[Int] -> Foo[nothing]
+
+:e
+e as Foo[Int]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.218: 	e as Foo[Int]
+//│ ║         	^
+//│ ╙── expression of type `Int` does not match type `nothing`
+//│ Foo[Int]
+//│ res
+//│     = <no result>
+//│       e is not implemented
+
+:e
+f(e)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.229: 	f(e)
+//│ ║         	^^^^
+//│ ╙── expression of type `Int` does not match type `nothing`
+//│ Foo[nothing] | error
+//│ res
+//│     = <no result>
+//│       f is not implemented
+
+:e
+let x: ? = 1
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.240: 	let x: ? = 1
+//│ ╙──       	       ^
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.240: 	let x: ? = 1
+//│ ╙──       	       ^
+//│ let x: anything
+//│ x
+//│   = 1
+
+:e
+fun f: (? -> ?) -> ?
+//│ fun f: (anything -> nothing) -> anything
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
+
+:e
+fun f: ? -> ?
+//│ fun f: nothing -> anything
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
+
+:e
+fun f: ? -> Int
+//│ fun f: nothing -> Int
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
+
+:e
+fun f: Int -> ?
+//│ fun f: Int -> anything
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
+
+:e
+fun f(x: ?) = x
+//│ fun f: (x: nothing) -> anything
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
+
+:e
+let x: ? -> ?
+//│ let x: nothing -> anything
+//│ x
+//│   = <missing implementation>
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
+
+:e
+let x = ?
+//│ ╔══[ERROR] Cannot use ? as expression
+//│ ║  l.284: 	let x = ?
+//│ ╙──       	        ^
+//│ let x: error
+//│ Code generation encountered an error:
+//│   cannot generate code for term WildcardType()
+
+:e
+if x is ? then 1
+//│ ╔══[ERROR] illegal pattern
+//│ ║  l.293: 	if x is ? then 1
+//│ ╙──       	        ^
+//│ error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+:e
+let x: ?[?]
+//│ ╔══[ERROR] Wrong number of type arguments – expected 0, found 1
+//│ ║  l.302: 	let x: ?[?]
+//│ ╙──       	       ^^^^
+//│ let x: ?
+//│ x
+//│   = <missing implementation>

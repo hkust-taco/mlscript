@@ -482,6 +482,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case (ls, (w @ Without(_, _)) :: rs) =>
           lastWords(s"unexpected Without in negative position not at the top level: ${w}")
         */
+
+        // TODO wildcards
+        case (WildcardArg(lb, ub) :: ls, _) => ???
+        case (_, WildcardArg(lb, ub) :: rs) => ???
         
         case ((l: BaseTypeOrTag) :: ls, rs) => annoying(ls, (done_ls & (l, pol = true))(ctx, etf = true) getOrElse
           (return println(s"OK  $done_ls & $l  =:=  ${BotType}")), rs, done_rs)
@@ -819,7 +823,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(lhs, rhs, true)
           case (lhs, tv @ AssignedVariable(rhs)) =>
             rec(lhs, rhs, true)
-            
+          
+          // standalone wildcards
+          case (_, w: WildcardArg) => 
+            err(msg"Wildcards can only be use in type arguments", w.prov.loco); ()
+          case (w: WildcardArg, _) => 
+            err(msg"Wildcards can only be use in type arguments", w.prov.loco); ()  
             
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
             println(s"NEW $lhs UB (${rhs.level})")
@@ -922,15 +931,32 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             
           case (tr1: TypeRef, tr2: TypeRef)
           if tr1.defn.name =/= "Array" && tr2.defn.name =/= "Eql" =>
+            @inline def recWildcard(vi: Opt[VarianceInfo], l: ST, r: ST, sameLevel: Bool): Unit = {
+              def helper(et: TP => ST, lhs: ST, rhs: ST) = (lhs, rhs) match {
+                case (_: WildcardArg, _: WildcardArg) => ()
+                case (wa: WildcardArg, rhs) => rec(et(wa.prov), rhs, sameLevel)
+                case (lhs, wa: WildcardArg) => rec(lhs, et(wa.prov), sameLevel)
+                case (lhs, rhs) => rec(lhs, rhs, sameLevel)
+              }
+              val lhs = l match { case AssignedVariable(t) => t; case t => t }
+              val rhs = r match { case AssignedVariable(t) => t; case t => t }
+              vi match {
+                case Some(v) => 
+                  if (!v.isContravariant) helper(ExtrType(v.isContravariant), lhs, rhs)
+                  if (!v.isCovariant) helper(ExtrType(v.isCovariant), rhs, lhs)
+                case None => helper(TypeBounds(BotType, TopType), lhs, rhs)
+              }              
+            }
             if (tr1.defn === tr2.defn) {
               assert(tr1.targs.sizeCompare(tr2.targs) === 0)
               ctx.tyDefs.get(tr1.defn.name) match {
                 case S(td) =>
                   val tvv = td.getVariancesOrDefault
                   td.tparamsargs.unzip._2.lazyZip(tr1.targs).lazyZip(tr2.targs).foreach { (tv, targ1, targ2) =>
-                    val v = tvv(tv)
-                    if (!v.isContravariant) rec(targ1, targ2, false)
-                    if (!v.isCovariant) rec(targ2, targ1, false)
+                    recWildcard(S(tvv(tv)), targ1, targ2, false)
+                    // val v = tvv(tv)
+                    // if (!v.isContravariant) recWildcard(targ1, targ2, false)
+                    // if (!v.isCovariant) recWildcard(targ2, targ1, false)
                   }
                 case N =>
                   /* 
@@ -949,21 +975,22 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                     case S(lti) =>
                       lti.tparams.map(_._2).lazyZip(tr1.targs).lazyZip(tr2.targs).foreach {
                         (tv, targ1, targ2) =>
-                          val v = lti.varianceOf(tv)
-                          if (!v.isContravariant) rec(targ1, targ2, false)
-                          if (!v.isCovariant) rec(targ2, targ1, false)
+                          recWildcard(S(lti.varianceOf(tv)), targ1, targ2, false)
+                          // val v = lti.varianceOf(tv)
+                          // if (!v.isContravariant) recWildcard(targ1, targ2, false)
+                          // if (!v.isCovariant) recWildcard(targ2, targ1, false)
                       }
                     case N =>
                       ??? // TODO
                   }
               }
             } else {
-              if (tr1.mayHaveTransitiveSelfType) rec(tr1.expand, tr2.expand, true)
+              if (tr1.mayHaveTransitiveSelfType) recWildcard(N, tr1.expand, tr2.expand, true)
               else (tr1.mkClsTag, tr2.mkClsTag) match {
                 case (S(tag1), S(tag2)) if !(tag1 <:< tag2) =>
                   reportError()
                 case _ =>
-                  rec(tr1.expand, tr2.expand, true)
+                  recWildcard(N, tr1.expand, tr2.expand, true)
               }
             }
           case (tr: TypeRef, _) => rec(tr.expand, rhs, true)
@@ -1413,6 +1440,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }, extrude(bod, lowerLvl, pol, upperLvl))
       case o @ Overload(alts) =>
         o.mapAlts(extrude(_, lowerLvl, !pol, upperLvl))(extrude(_, lowerLvl, pol, upperLvl))
+      case WildcardArg(_, _) => ???
     }
     // }(r => s"=> $r"))
   
@@ -1602,6 +1630,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         ConstrainedType(cs2, freshen(bod))
       case o @ Overload(alts) =>
         o.mapAlts(freshen)(freshen)
+      case t @ WildcardArg(_, _) => ???
     }}
     // (r => s"=> $r"))
     

@@ -332,6 +332,7 @@ abstract class TyperHelpers { Typer: Typer =>
     
     def map(f: SimpleType => SimpleType): SimpleType = this match {
       case TypeBounds(lb, ub) => TypeBounds.mkSimple(f(lb), f(ub))
+      case WildcardArg(lb, ub) => WildcardArg(f(lb), f(ub))(prov)
       case FunctionType(lhs, rhs) => FunctionType(f(lhs), f(rhs))(prov)
       case ov @ Overload(as) => ov.mapAltsPol(N)((_, x) => f(x))
       case RecordType(fields) => RecordType(fields.mapValues(_.update(f, f)))(prov)
@@ -355,6 +356,9 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypeBounds(lb, ub) if smart && pol.isDefined =>
         if (pol.getOrElse(die)) f(S(true), ub) else f(S(false), lb)
       case TypeBounds(lb, ub) => TypeBounds.mkSimple(f(S(false), lb), f(S(true), ub))
+      // case WildcardArg(lb, ub) if smart && pol.isDefined =>
+      //   if (pol.getOrElse(die)) f(S(true), ub) else f(S(false), lb)
+      case WildcardArg(lb, ub) => WildcardArg(f(S(false), lb), f(S(true), ub))(prov)
       case rt: RecordType => Typer.mapPol(rt, pol, smart)(f)
       case Without(base, names) if smart => f(pol, base).without(names)
       case bt: BaseType => Typer.mapPol(bt, pol, smart)(f)
@@ -497,6 +501,8 @@ abstract class TyperHelpers { Typer: Typer =>
         case (pt1 @ ClassTag(id1, ps1), pt2 @ ClassTag(id2, ps2)) => (id1 === id2) || pt1.parentsST(id2)
         case (TypeBounds(lb, ub), _) => ub <:< that
         case (_, TypeBounds(lb, ub)) => this <:< lb
+        case (WildcardArg(lb, ub), _) => false
+        case (_, WildcardArg(lb, ub)) => false
         case (FunctionType(l1, r1), FunctionType(l2, r2)) => assume { implicit cache =>
           l2 <:< l1 && r1 <:< r2 
         }
@@ -625,6 +631,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case p @ ProxyType(und) => und.withoutPos(names)
       case p: TypeTag => p
       case TypeBounds(lo, hi) => hi.withoutPos(names)
+      case WildcardArg(lo, hi) => hi.withoutPos(names)
       case _: TypeVariable | _: NegType | _: TypeRef => Without(this, names)(noProv)
       case PolymorphicType(plvl, bod) => PolymorphicType.mk(plvl, bod.withoutPos(names))
       case ot: Overload => ot
@@ -718,6 +725,7 @@ abstract class TyperHelpers { Typer: Typer =>
         case tr: TypeRef => tr.mapTargs(pol)(_ -> _)
         case Without(b, ns) => pol -> b :: Nil
         case TypeBounds(lb, ub) => S(false) -> lb :: S(true) -> ub :: Nil
+        case WildcardArg(lb, ub) => S(false) -> lb :: S(true) -> ub :: Nil
         case PolymorphicType(_, und) => pol -> und :: Nil
         case ConstrainedType(cs, bod) =>
           cs.flatMap(vbs => S(true) -> vbs._1 :: S(false) -> vbs._2 :: Nil) ::: pol -> bod :: Nil
@@ -804,6 +812,7 @@ abstract class TyperHelpers { Typer: Typer =>
         case tr: TypeRef => tr.mapTargs(pol)(_ -> _)
         case Without(b, ns) => pol -> b :: Nil
         case TypeBounds(lb, ub) => PolMap.neg -> lb :: PolMap.pos -> ub :: Nil
+        case WildcardArg(lb, ub) => PolMap.neg -> lb :: PolMap.pos -> ub :: Nil
         case PolymorphicType(_, und) => pol -> und :: Nil
         case ConstrainedType(cs, bod) =>
           cs.flatMap(vbs => PolMap.pos -> vbs._1 :: PolMap.posAtNeg -> vbs._2 :: Nil) ::: pol -> bod :: Nil
@@ -966,6 +975,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case OtherTypeLike(tu) =>
         val ents = tu.implementedMembers.flatMap(childrenMem)
         ents ::: tu.result.toList
+      case WildcardArg(lb, ub) => lb :: ub :: Nil
     }
     
     def getVarsImpl(includeBounds: Bool): SortedSet[TypeVariable] = {
@@ -1092,7 +1102,8 @@ abstract class TyperHelpers { Typer: Typer =>
             case ((tn, tv, vi), ta) =>
               val fldNme = tparamField(defn.name, tn.name, vi.visible)
               val fld = ta match {
-                case TypeBounds(BotType, TopType) => FieldType(S(BotType), TopType)(provTODO)
+                case AssignedVariable(WildcardArg(lb, ub)) => FieldType(S(BotType), TopType)(provTODO)
+                case WildcardArg(lb, ub) => FieldType(S(BotType), TopType)(provTODO)
                 case _ => FieldType.mk(vi.getVarOr(VarianceInfo.in), ta, ta)(provTODO)
               }
               Var(fldNme).withLocOf(tn) -> fld
@@ -1274,6 +1285,9 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypeBounds(lb, ub) =>
         if (pol =/= S(true)) apply(S(false))(lb)
         if (pol =/= S(false)) apply(S(true))(ub)
+      case WildcardArg(lb, ub) =>
+        if (pol =/= S(true)) apply(S(false))(lb)
+        if (pol =/= S(false)) apply(S(true))(ub)
       case PolymorphicType(plvl, und) => apply(pol)(und)
       case ConstrainedType(cs, bod) =>
         cs.foreach {
@@ -1354,6 +1368,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case tr: TypeRef => tr.mapTargs(pol)(apply(_)(_)); ()
       case Without(b, ns) => apply(pol)(b)
       case TypeBounds(lb, ub) => pol.traverseRange(lb, ub)(apply(_)(_))
+      case WildcardArg(lb, ub) => pol.traverseRange(lb, ub)(apply(_)(_))
       case PolymorphicType(plvl, und) => apply(pol.enter(plvl))(und)
       case ConstrainedType(cs, bod) =>
         cs.foreach {

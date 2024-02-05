@@ -40,19 +40,6 @@ fun foo: Foo[?] -> Int
 fun foo(f: Foo[?]): Int = if f is
     Bar then 1
     Baz(x) then 1 + foo(x)
-//│ ╔══[ERROR] Type error in operator application
-//│ ║  l.40: 	fun foo(f: Foo[?]): Int = if f is
-//│ ║        	                             ^^^^
-//│ ║  l.41: 	    Bar then 1
-//│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.42: 	    Baz(x) then 1 + foo(x)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type variable `T` leaks out of its scope
-//│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
-//│ ║       	          ^
-//│ ╟── back into type variable `T`
-//│ ║  l.39: 	fun foo: Foo[?] -> Int
-//│ ╙──      	             ^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.40: 	fun foo(f: Foo[?]): Int = if f is
 //│ ║        	                             ^^^^
@@ -60,32 +47,7 @@ fun foo(f: Foo[?]): Int = if f is
 //│ ║        	^^^^^^^^^^^^^^
 //│ ║  l.42: 	    Baz(x) then 1 + foo(x)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `anything` does not match type `~??T`
-//│ ╟── Note: constraint arises from wildcard:
-//│ ║  l.39: 	fun foo: Foo[?] -> Int
-//│ ║        	             ^
-//│ ╟── Note: type parameter T is defined at:
-//│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
-//│ ╙──     	          ^
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.40: 	fun foo(f: Foo[?]): Int = if f is
-//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.41: 	    Bar then 1
-//│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.42: 	    Baz(x) then 1 + foo(x)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.39: 	fun foo: Foo[?] -> Int
-//│ ║        	             ^
-//│ ╟── Note: constraint arises from wildcard:
-//│ ║  l.40: 	fun foo(f: Foo[?]): Int = if f is
-//│ ╙──      	               ^
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.39: 	fun foo: Foo[?] -> Int
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `nothing`
-//│ ║  l.39: 	fun foo: Foo[?] -> Int
-//│ ╙──      	             ^
+//│ ╙── expression of type `~??T` does not match type `nothing`
 //│ fun foo: (f: Foo[?]) -> Int
 //│ fun foo: Foo[?] -> Int
 
@@ -123,18 +85,18 @@ fun foo(x) = if x is
     C1(c) then c : x.T
     C2    then 0 : x.T
 //│ ╔══[ERROR] Type error in definition
-//│ ║  l.122: 	fun foo(x) = if x is
-//│ ║         	    ^^^^^^^^^^^^^^^^
-//│ ║  l.123: 	    C1(c) then c : x.T
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.124: 	    C2    then 0 : x.T
-//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.84: 	fun foo(x) = if x is
+//│ ║        	    ^^^^^^^^^^^^^^^^
+//│ ║  l.85: 	    C1(c) then c : x.T
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.86: 	    C2    then 0 : x.T
+//│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.123: 	    C1(c) then c : x.T
-//│ ║         	                    ^^
+//│ ║  l.85: 	    C1(c) then c : x.T
+//│ ║        	                    ^^
 //│ ╟── into type `'T | ~??A`
-//│ ║  l.121: 	fun foo: C['T] -> 'T
-//│ ╙──       	                  ^^
+//│ ║  l.83: 	fun foo: C['T] -> 'T
+//│ ╙──      	                  ^^
 //│ fun foo: forall 'A. (C1['A] | C2) -> (Int | ??A & 'A)
 //│ fun foo: forall 'T. C['T] -> 'T
 
