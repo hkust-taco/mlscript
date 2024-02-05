@@ -66,7 +66,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       fvars: MutSet[ST], // * Free variables
       inQuote: Bool, // * Is in quasiquote
       inPattern: Bool,
-      funDefs: MutMap[Str, DelayedTypeInfo],
       tyDefs: Map[Str, TypeDef],
       tyDefs2: MutMap[Str, DelayedTypeInfo],
       inRecursiveDef: Opt[Var], // TODO rm
@@ -84,18 +83,24 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       }
     }
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
-    def get(name: Str, quoted: Bool = false): Opt[TypeInfo] =
-      if (inQuote === quoted) env.get(name) orElse parent.dlof(_.get(name, quoted))(N)
-      else if (!quoted) (env.get(name), qget(name)) match {
-        case (S(VarSymbol(ty, _)), S(tag)) =>
-          S(VarSymbol(TypeRef(TypeName("Var"), ty :: tag :: Nil)(noProv), Var(name)))
-        case _ => parent.dlof(_.get(name, quoted))(N)
+    def get(name: Str): Opt[TypeInfo] = {
+      // * 1. If we try to get a quoted variable from a quoted context, or get a non-quoted variable from a non-quoted context,
+      // * we can directly search the `env`;
+      // * 2. If we try to get a quoted variable from a non-quoted context, we need to wrap it with its contextual Skolem;
+      // * 3. Otherwise, it is a top-level defined symbol, or the context has a quoted parent.
+      def rec(ctx: Ctx): Opt[TypeInfo] = {
+        if (inQuote === ctx.inQuote) ctx.env.get(name) orElse ctx.parent.flatMap(rec(_))
+        else if (!inQuote) (ctx.env.get(name), ctx.qget(name)) match {
+          case (S(VarSymbol(ty, _)), S(tag)) =>
+            S(VarSymbol(TypeRef(TypeName("Var"), ty :: tag :: Nil)(noProv), Var(name)))
+          case _ => ctx.parent.flatMap(rec(_))
+        }
+        else ctx.parent match {
+          case S(parent) => rec(parent)
+          case _ => ctx.env.get(name)
+        }
       }
-      else parent.dlof(_.get(name, quoted))(N)
-    def getDecl(name: Str): Opt[NuDecl] = funDefs.get(name).map(_.decl) orElse parent.dlof(_.getDecl(name))(N)
-    def getTopLevel(name: Str): Opt[TypeInfo] = (get(name), getDecl(name)) match {
-      case (ty, S(fd: NuFunDef)) if (fd.outer.isEmpty) => ty
-      case _ => N
+      rec(this)
     }
     def qget(name: Str): Opt[SkolemTag] = qenv.get(name) orElse parent.dlof(_.qget(name))(N)
     def getCtxTy: ST = fvars.foldLeft[ST](BotType)((res, ty) => res | ty)
@@ -113,6 +118,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     private def containsMth(key: (Str, Str) \/ (Opt[Str], Str)): Bool = mthEnv.contains(key) || parent.exists(_.containsMth(key))
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
     def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty)
+    // * Create a nested context for quasiquotes. If it is quoted, we need to clean `qenv` and `fvars`.
+    def qnest(quoted: Bool): Ctx =
+      if (quoted) copy(Some(this), MutMap.empty, MutMap.empty, inQuote = quoted, qenv = MutMap.empty, fvars = MutSet.empty)
+      else copy(Some(this), MutMap.empty, MutMap.empty, inQuote = quoted)
     def nextLevel[R](k: Ctx => R)(implicit raise: Raise, prov: TP): R = {
       val newCtx = copy(lvl = lvl + 1, extrCtx = MutMap.empty)
       val res = k(newCtx)
@@ -183,7 +192,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       fvars = MutSet.empty,
       inQuote = false,
       inPattern = false,
-      funDefs = MutMap.empty,
       tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)),
       tyDefs2 = MutMap.empty,
       inRecursiveDef = N,
@@ -890,10 +898,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             res
           }
       case v @ ValidVar(name) =>
-        val tyOpt = // * If it is quoted and not a builtin, it is either defined in quotations or at top levels
-          if (ctx.inQuote && !builtinBindings.contains(name)) ctx.get(name, ctx.inQuote) orElse ctx.getTopLevel(name)
-          else ctx.get(name, ctx.inQuote) orElse ctx.get(name, false) // * Otherwise, it either shadows a builtin or not in quotations
-        val ty = tyOpt.fold(err("identifier not found: " + name, term.toLoc): ST) {
+        val ty = ctx.get(name).fold(err((if (ctx.inQuote) "unbound quoted variable: " else "identifier not found: ") + name, term.toLoc): ST) {
           case AbstractConstructor(absMths, traitWithMths) =>
             val td = ctx.tyDefs(name)
             err((msg"Instantiation of an abstract type is forbidden" -> term.toLoc)
@@ -1077,7 +1082,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise)
       case Lam(pat, body) if ctx.inQuote =>
         println(s"TYPING QUOTED LAM")
-        ctx.nest.copy(qenv = MutMap.empty, fvars = MutSet.empty).poly { newCtx =>
+        ctx.qnest(true).poly { newCtx =>
           val param_ty = typePattern(pat)(newCtx, raise, vars)
           val body_ty = typeTerm(body)(newCtx, raise, vars,
             generalizeCurriedFunctions || doGenLambdas && constrainedTypes)
@@ -1298,7 +1303,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case Let(isrec, nme, rhs, bod) =>
         if (ctx.inQuote) {
           val rhs_ty = typeTerm(rhs)
-          ctx.nest.copy(qenv = MutMap.empty, fvars = MutSet.empty).poly {
+          ctx.qnest(true).poly {
             newCtx => {
               newCtx += nme.name -> VarSymbol(rhs_ty, nme)
               val res_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
@@ -1538,13 +1543,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case q @ Quoted(body) =>
         if (ctx.inQuote) err(msg"Nested quotation is not allowed.", q.toLoc)
         else {
-          val newCtx = ctx.nest.copy(inQuote = true, qenv = MutMap.empty, fvars = MutSet.empty)
+          val newCtx = ctx.qnest(true)
           val bodyType = typeTerm(body)(newCtx, raise, vars, genLambdas)
           TypeRef(TypeName("Code"), bodyType :: newCtx.getCtxTy :: Nil)(TypeProvenance(q.toLoc, "code fragment"))
         }
       case uq @ Unquoted(body) =>
         if (ctx.inQuote) {
-          val newCtx = ctx.nest.copy(inQuote = false)
+          val newCtx = ctx.qnest(false)
           val bodyType = typeTerm(body)(newCtx, raise, vars, genLambdas)
           val res = freshVar(TypeProvenance(uq.toLoc, "code fragment body type"), N)
           val ctxTy = freshVar(TypeProvenance(body.toLoc, "code fragment context type"), N)

@@ -4,7 +4,7 @@
 
 :e // TODO support unbound free vars
 let c = code"x"
-//│ ╔══[ERROR] identifier not found: x
+//│ ╔══[ERROR] unbound quoted variable: x
 //│ ║  l.6: 	let c = code"x"
 //│ ╙──     	             ^
 //│ let c: Code[error, nothing]
@@ -97,7 +97,7 @@ run(code_nested)
 :e
 let y = code"x"
 code"let id = x => ${y} in id(true)"
-//│ ╔══[ERROR] identifier not found: x
+//│ ╔══[ERROR] unbound quoted variable: x
 //│ ║  l.98: 	let y = code"x"
 //│ ╙──      	             ^
 //│ let y: Code[error, nothing]
@@ -148,16 +148,12 @@ class Foo(n: Int)
 //│ class Foo(n: Int)
 
 
-:e
 let res = code"Foo(1)"
-//│ ╔══[ERROR] identifier not found: Foo
-//│ ║  l.152: 	let res = code"Foo(1)"
-//│ ╙──       	               ^^^
-//│ let res: Code[error, nothing]
+//│ let res: Code[Foo, nothing]
 
 
 run(res)
-//│ error
+//│ Foo
 
 let codeA = code"let y = 2 in y"
 let codeB = code"y + y"
@@ -172,8 +168,8 @@ let both = code"${codeA}, ${codeB}"
 let a = code"let x = 0 in x"
 let b = code"x"
 let c = code"${a} + ${b}"
-//│ ╔══[ERROR] identifier not found: x
-//│ ║  l.173: 	let b = code"x"
+//│ ╔══[ERROR] unbound quoted variable: x
+//│ ║  l.169: 	let b = code"x"
 //│ ╙──       	             ^
 //│ let a: Code[0, nothing]
 //│ let b: Code[error, nothing]
@@ -211,7 +207,7 @@ let v: Var[Int, anything]
 :e
 run(v)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.212: 	run(v)
+//│ ║  l.208: 	run(v)
 //│ ║         	^^^^^^
 //│ ╙── expression of type `anything` does not match type `nothing`
 //│ Int | error
@@ -226,12 +222,12 @@ code"$x + 1"
 :pe
 code"$"
 //│ ╔══[LEXICAL ERROR] unexpected character '$'
-//│ ║  l.227: 	code"$"
+//│ ║  l.223: 	code"$"
 //│ ╙──       	     ^
 //│ ╔══[PARSE ERROR] Unexpected error in expression position
-//│ ║  l.227: 	code"$"
+//│ ║  l.223: 	code"$"
 //│ ╙──       	     ^
 //│ ╔══[PARSE ERROR] Unexpected end of quasiquote section; an expression was expected here
-//│ ║  l.227: 	code"$"
+//│ ║  l.223: 	code"$"
 //│ ╙──       	      ^
 //│ Code[(), nothing]

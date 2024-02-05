@@ -31,7 +31,7 @@ run(test(3, code"0"))
 :e
 fun cde_template(cde) = code"${cde} + x"
 fun test(n, cde) = if n > 0 then code"let x = ${Const(n)} in ${test(n - 1, cde_template(cde))}" else cde
-//│ ╔══[ERROR] identifier not found: x
+//│ ╔══[ERROR] unbound quoted variable: x
 //│ ║  l.32: 	fun cde_template(cde) = code"${cde} + x"
 //│ ╙──      	                                      ^
 //│ fun cde_template: forall 'a. Code[Int, 'a] -> Code[Int, 'a]

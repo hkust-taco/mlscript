@@ -32,7 +32,7 @@ fun bind2(rhs, k) = code"app(x => ${k(code"x")}, ${rhs})"
 fun foo() =
   let bar = 42 // not at top level
   code"bar"
-//│ ╔══[ERROR] identifier not found: bar
+//│ ╔══[ERROR] unbound quoted variable: bar
 //│ ║  l.34: 	  code"bar"
 //│ ╙──      	       ^^^
 //│ fun foo: () -> Code[error, nothing]

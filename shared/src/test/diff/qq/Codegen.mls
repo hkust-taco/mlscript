@@ -4,7 +4,7 @@
 :js
 :e
 code"x"
-//│ ╔══[ERROR] identifier not found: x
+//│ ╔══[ERROR] unbound quoted variable: x
 //│ ║  l.6: 	code"x"
 //│ ╙──     	     ^
 //│ Code[error, nothing]
