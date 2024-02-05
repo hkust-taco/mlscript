@@ -640,7 +640,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case ((v, r), R(acc)) => R(Let(false, v, r, acc))
       case ((v, r), L(acc)) if genQuote =>
         err((
-          msg"quote syntax is not supported yet." -> acc.toLoc :: Nil))
+          msg"This quote syntax is not supported yet." -> acc.toLoc :: Nil))
         R(Var("<error>"))
       case ((v, r), L(acc)) => L(IfLet(false, v, r, acc))
     }
@@ -680,7 +680,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
               case R(it @ If(IfThen(cond, body), els)) =>
                 R(Quoted(If(IfThen(Unquoted(cond), Unquoted(body)), els.map(els => Unquoted(els)))).withLoc(S(loc ++ it.toLoc)))
               case _ =>
-                err((msg"quote syntax is not supported yet." -> S(l0) :: Nil))
+                err((msg"This quote syntax is not supported yet." -> S(l0) :: Nil))
                 R(Var("<error>").withLoc(S(l0)))
             }
           case (br @ BRACKETS(bk @ Round, toks), loc) :: _ =>
@@ -688,13 +688,13 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) match {
               case (N, Fld(FldFlags(false, false, _), elt)) :: Nil => Quoted(Bra(false, elt)).withLoc(S(loc ++ elt.toLoc))
               case _ =>
-                err((msg"quote syntax is not supported yet." -> S(loc) :: Nil))
+                err((msg"This quote syntax is not supported yet." -> S(loc) :: Nil))
                 Var("<error>").withLoc(S(loc))
             }
             exprCont(res, prec, allowNewlines = false)
           case _ =>
             err((
-              msg"quote syntax is not supported yet." -> S(loc) :: Nil))
+              msg"This quote syntax is not supported yet." -> S(loc) :: Nil))
             R(Var("<error>").withLoc(S(loc)))
         }
       case (LITVAL(lit), l0) :: _ =>
@@ -749,7 +749,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 exprCont(Tup(res), 0, true) match {
                   case L(t) =>
                     err((
-                      msg"quote syntax is not supported yet." -> t.toLoc :: Nil))
+                      msg"This quote syntax is not supported yet." -> t.toLoc :: Nil))
                     Var("<error>")
                   case R(t) => t
                 }
