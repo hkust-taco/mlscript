@@ -234,3 +234,18 @@ let x = `42
 //│ ║  l.232: 	`(x: Int) => x `+ `2
 //│ ╙──       	 ^^^^^^^^
 //│ () -> Code[Int, nothing]
+
+:pe
+`
+//│ ╔══[PARSE ERROR] This quote syntax is not supported yet
+//│ ║  l.239: 	`
+//│ ╙──       	^
+//│ ()
+
+
+:pe
+`42 `
+//│ ╔══[PARSE ERROR] This quote syntax is not supported yet
+//│ ║  l.247: 	`42 `
+//│ ╙──       	^^^
+//│ Code[42, nothing]

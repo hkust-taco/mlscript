@@ -929,32 +929,28 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           }
           val res = App(Unquoted(acc), Tup(as).withLoc(S(loc)))
           exprCont(Quoted(res), prec, allowNewlines)
-        case _ :: (IDENT(opStr, true), l0) :: _ if opPrec(opStr)._1 > prec =>
-          val currentOp = Var(opStr).withLoc(S(l0))
-          consume
-          def insQuotes(term: Term): Term = term match {
-            // * Find the correct operator and insert quotes and unquotes.
-            case App(vop @ Var(op), Tup(lhs :: rhs :: Nil)) if op === opStr && currentOp.toLoc === vop.toLoc =>
-              Quoted(App(vop, Tup((lhs :: rhs :: Nil).map {
-                case v -> Fld(flags, t) => v -> Fld(flags, Unquoted(t))
-              })))
-            // * Otherwise, search in LHS, since RHS has been done with higher priorities.
-            case App(f, Tup((v -> Fld(flags, t)) :: tail)) =>
-              App(f, Tup((v -> Fld(flags, insQuotes(t))) :: tail))
-            case Quoted(body) => Quoted(insQuotes(body))
-            case Unquoted(body) => Unquoted(insQuotes(body))
-            case _ => term
-          }
-          exprCont(acc, prec, allowNewlines) match {
-            case R(term) =>
-              R(insQuotes(term))
-            case L(bd) => bd match {
-              case IfThen(expr, rhs) =>
-                L(IfThen(insQuotes(expr), rhs))
-              case _ => L(bd)
+        case _ :: (IDENT(opStr, true), l0) :: _ =>
+          if (opPrec(opStr)._1 > prec) {
+            consume
+            consume
+            val v = Var(opStr).withLoc(S(l0))
+            yeetSpaces match {
+              case (NEWLINE, l0) :: _ => consume
+              case _ =>
+            }
+            exprOrIf(opPrec(opStr)._2) match {
+              case L(rhs) => R(unsupportedQuote(S(l0)))
+              case R(rhs) => exprCont(opStr match {
+                case "with" => unsupportedQuote(S(l0))
+                case _ => Quoted(App(v, PlainTup(Unquoted(acc), Unquoted(rhs))))
+              }, prec, allowNewlines)
             }
           }
-        case _ => R(acc)
+          else R(acc)
+        case _ =>
+          consume
+          unsupportedQuote(acc.toLoc)
+          R(acc)
       }
       case (COMMA, l0) :: _ if prec === 0 =>
         consume
