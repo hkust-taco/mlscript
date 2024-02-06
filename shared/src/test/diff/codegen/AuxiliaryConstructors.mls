@@ -512,7 +512,7 @@ let hh = h(1)
 
 :e
 new hh(1)
-//│ ╔══[ERROR] Cannot select from let binding or function
+//│ ╔══[ERROR] Unexpected type `?a` after `new` keyword
 //│ ║  l.514: 	new hh(1)
 //│ ╙──       	    ^^
 //│ error

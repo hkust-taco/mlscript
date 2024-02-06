@@ -7,7 +7,7 @@ fun snd([x, y]) = y
 
 // dependent types //
 
-abstract class Rep[type T]: IntRep | BoolRep | PairRep
+abstract class Rep[type T]: IntRep | BoolRep | PairRep[?,?]
 class IntRep extends Rep[Int]
 class BoolRep extends Rep[Bool]
 class PairRep[A, B](val a: Rep[A], val b: Rep[B]) extends Rep[[A, B]]
@@ -63,7 +63,7 @@ equal(PairRep(new IntRep, new BoolRep), [1, false], [1, false])
 
 // perfect binary tree //
 
-abstract class Perfect[type T]: Leaf | Node
+abstract class Perfect[type T]: Leaf | Node[?]
 class Leaf(val a: Int) extends Perfect[Int]
 class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
 //│ abstract class Perfect[T]: Leaf | Node[?]

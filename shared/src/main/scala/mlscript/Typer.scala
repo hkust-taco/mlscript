@@ -441,9 +441,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             case Some(VarSymbol(ty, vr)) => 
               println(s"ty var: $vr : $ty") // select type from variable
               () => ty
-            case S(CompletedTypeInfo(ty@TypedNuFun(_,_,_))) =>
-              // allowing this will be unsound (at least via signature)
-              () => err(s"Cannot select from let binding or function", loc)(raise)
+            case Some(CompletedTypeInfo(ty@TypedNuFun(_,_,_))) =>
+              () => ty.typeSignature  // TODO not sure
+              // () => err(s"Cannot select from let binding or function", loc)(raise)
             case r => () => err(s"type identifier not found: " + name, loc)(raise) })
     val localVars = mutable.Map.empty[TypeVar, TypeVariable]
     def tyTp(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N) =

@@ -100,10 +100,19 @@ let c = new Cls
 
 // FIXME
 let y: c.A = c.x
-//│ ╔══[ERROR] Cannot select from let binding or function
+//│ ╔══[ERROR] Type `Cls[?A]` does not contain member `A`
 //│ ║  l.102: 	let y: c.A = c.x
-//│ ╙──       	       ^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Can't find member `error`
+//│ ╙──       	        ^^
+//│ ╔══[ERROR] Type mismatch in type selection:
+//│ ║  l.102: 	let y: c.A = c.x
+//│ ║         	        ^^
+//│ ╟── application of type `forall ?A. Cls[?A]` does not have field 'A'
+//│ ║  l.96: 	let c = new Cls
+//│ ╙──      	            ^^^
+//│ let y: error
+//│ y
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 
 
@@ -187,11 +196,11 @@ fun test(f: ((IntLit | BoolLit) -> Int)) =
 :e
 class OopsLit() extends Expr[Bool]
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.188: 	class OopsLit() extends Expr[Bool]
+//│ ║  l.197: 	class OopsLit() extends Expr[Bool]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `#OopsLit` does not match type `BoolLit | IntLit`
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.176: 	abstract class Expr[A]: (IntLit | BoolLit) {}
+//│ ║  l.185: 	abstract class Expr[A]: (IntLit | BoolLit) {}
 //│ ╙──       	                        ^^^^^^^^^^^^^^^^^^
 //│ class OopsLit() extends Expr
 

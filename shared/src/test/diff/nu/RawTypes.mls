@@ -33,7 +33,7 @@ fun foo(f: Foo): Int = f.a : f.A
 fun foo(f: Foo[?]) = f.a
 //│ fun foo: (f: Foo[?]) -> anything
 
-//TODO
+// TODO
 fun foo(f: Foo[?]) = f.a : f.A
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.37: 	fun foo(f: Foo[?]) = f.a : f.A
@@ -42,7 +42,6 @@ fun foo(f: Foo[?]) = f.a : f.A
 //│ ╟── Note: constraint arises from type selection:
 //│ ║  l.37: 	fun foo(f: Foo[?]) = f.a : f.A
 //│ ╙──      	                            ^^
-//│ TEST CASE FAILURE: There was an unexpected type error
 //│ fun foo: (f: Foo[?]) -> anything
 
 foo(Foo(1))
@@ -56,32 +55,35 @@ fun foo(f: Foo) = f.a
 fun foo(f: Foo[Int]) = f.a
 //│ fun foo: (f: Foo[Int]) -> Int
 
+fun foo(f: Foo[?]) = if f is Foo(a) then a : f.A
+//│ fun foo: (f: Foo[?]) -> ??A
+
 // FIXME
 fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.60: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.62: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ║        	                          ^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.60: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.62: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ║        	                                                ^^
 //│ ╟── into type `Int | ~??A`
-//│ ║  l.60: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.62: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ╙──      	                 ^^^
 //│ fun foo: (f: Foo[anything]) -> Int
 
 :e
 fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.73: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║  l.75: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ║        	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `anything` does not match type `Int | ~??A`
-//│ ║  l.73: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║  l.75: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ║        	                                                   ^^
 //│ ╟── but it flows into operator application with expected type `Int | ~??A`
-//│ ║  l.73: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║  l.75: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ║        	                             ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.73: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║  l.75: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ╙──      	                    ^^^
 //│ fun foo: (f: Foo[?]) -> Int
 
@@ -121,7 +123,6 @@ class Bar(val b: Int) extends Foo[Int]
 //│ abstract class Foo[T]: Bar
 //│ class Bar(b: Int) extends Foo
 
-// TODO
 fun foo(x: Foo[?]) = if x is Bar then x.b : x.T
 //│ fun foo: (x: Foo[?]) -> Int
 

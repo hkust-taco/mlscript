@@ -259,7 +259,7 @@ fun f(x) = {x}
 
 :e
 new f(1)
-//│ ╔══[ERROR] Cannot select from let binding or function
+//│ ╔══[ERROR] Unexpected type `forall ?a. ?a -> {x: ?a}` after `new` keyword
 //│ ║  l.261: 	new f(1)
 //│ ╙──       	    ^
 //│ error
