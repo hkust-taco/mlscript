@@ -601,6 +601,11 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     err(msg"Expected an expression; found a 'then'/'else' clause instead" -> loc :: Nil)
     errExpr
   }
+
+  private def unsupportedQuote(loc: Opt[Loc]) = {
+    err(msg"This quote syntax is not supported yet" -> loc :: Nil)
+    errExpr
+  }
   
   final def expr(prec: Int, allowSpace: Bool = true)(implicit fe: FoundErr, l: Line): Term = wrap(prec,allowSpace) { l =>
     exprOrIf(prec, allowSpace)(et = false, fe = fe, l = implicitly) match {
@@ -638,10 +643,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     bs.foldRight(body) {
       case ((v, r), R(acc)) if genQuote => R(Quoted(Let(false, v, Unquoted(r), Unquoted(acc))))
       case ((v, r), R(acc)) => R(Let(false, v, r, acc))
-      case ((v, r), L(acc)) if genQuote =>
-        err((
-          msg"This quote syntax is not supported yet." -> acc.toLoc :: Nil))
-        R(Var("<error>"))
+      case ((v, r), L(acc)) if genQuote => R(unsupportedQuote(acc.toLoc))
       case ((v, r), L(acc)) => L(IfLet(false, v, r, acc))
     }
   }
@@ -672,32 +674,23 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             consume
             letBindings(true) match {
               case R(bd) => R(bd.withLoc(S(loc ++ bd.toLoc)))
-              case _ =>
-                err((msg"This quote syntax is not supported yet." -> S(l0) :: Nil))
-                R(Var("<error>").withLoc(S(l0)))
+              case _ => R(unsupportedQuote(S(l0)))
             }
           case (KEYWORD("if"), l0) :: _ =>
             val term = exprOrIf(prec, allowSpace)
             term match {
               case R(it @ If(IfThen(cond, body), els)) =>
                 R(Quoted(If(IfThen(Unquoted(cond), Unquoted(body)), els.map(els => Unquoted(els)))).withLoc(S(loc ++ it.toLoc)))
-              case _ =>
-                err((msg"This quote syntax is not supported yet." -> S(l0) :: Nil))
-                R(Var("<error>").withLoc(S(l0)))
+              case _ => R(unsupportedQuote(S(l0)))
             }
           case (br @ BRACKETS(bk @ Round, toks), loc) :: _ =>
             consume
             val res = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()) match {
               case (N, Fld(FldFlags(false, false, _), elt)) :: Nil => Quoted(Bra(false, elt)).withLoc(S(loc ++ elt.toLoc))
-              case _ =>
-                err((msg"This quote syntax is not supported yet." -> S(loc) :: Nil))
-                Var("<error>").withLoc(S(loc))
+              case _ => unsupportedQuote(S(loc))
             }
             exprCont(res, prec, allowNewlines = false)
-          case _ =>
-            err((
-              msg"This quote syntax is not supported yet." -> S(loc) :: Nil))
-            R(Var("<error>").withLoc(S(loc)))
+          case _ => R(unsupportedQuote(S(loc)))
         }
       case (LITVAL(lit), l0) :: _ =>
         consume
@@ -749,10 +742,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 Lam(Tup(res), e)
               case (QUOTE, l0) :: (KEYWORD("=>"), l1) :: _ =>
                 exprCont(Tup(res), 0, true) match {
-                  case L(t) =>
-                    err((
-                      msg"This quote syntax is not supported yet." -> t.toLoc :: Nil))
-                    Var("<error>")
+                  case L(t) => unsupportedQuote(t.toLoc)
                   case R(t) => t
                 }
               case (IDENT("->", true), l1) :: _ =>

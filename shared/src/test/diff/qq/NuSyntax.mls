@@ -169,19 +169,15 @@ fun foo(x) =
 //│ Code[error, nothing]
 
 :pe
-:e
 `fun foo = 42
 `val bar = 0
-//│ ╔══[PARSE ERROR] This quote syntax is not supported yet.
-//│ ║  l.173: 	`fun foo = 42
+//│ ╔══[PARSE ERROR] This quote syntax is not supported yet
+//│ ║  l.172: 	`fun foo = 42
 //│ ╙──       	^
 //│ ╔══[PARSE ERROR] Expected end of input; found 'fun' keyword instead
-//│ ║  l.173: 	`fun foo = 42
+//│ ║  l.172: 	`fun foo = 42
 //│ ╙──       	 ^^^
-//│ ╔══[ERROR] identifier not found: <error>
-//│ ║  l.173: 	`fun foo = 42
-//│ ╙──       	^
-//│ error
+//│ ()
 
 
 let x = `42
@@ -194,39 +190,47 @@ let x = `42
   `> `1 then `0
   `== `1 then `1
   _ then `2
-//│ ╔══[PARSE ERROR] This quote syntax is not supported yet.
-//│ ║  l.194: 	  `> `1 then `0
+//│ ╔══[PARSE ERROR] This quote syntax is not supported yet
+//│ ║  l.190: 	  `> `1 then `0
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Unexpected operator here
-//│ ║  l.194: 	  `> `1 then `0
+//│ ║  l.190: 	  `> `1 then `0
 //│ ╙──       	   ^
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.193: 	`if x
+//│ ║  l.189: 	`if x
 //│ ║         	    ^
-//│ ║  l.194: 	  `> `1 then `0
-//│ ╙──       	^^^
+//│ ║  l.190: 	  `> `1 then `0
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.191: 	  `== `1 then `1
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.192: 	  _ then `2
+//│ ╙──       	^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found application instead
-//│ ║  l.193: 	`if x
+//│ ║  l.189: 	`if x
 //│ ║         	    ^
-//│ ║  l.194: 	  `> `1 then `0
-//│ ║         	^^^
+//│ ║  l.190: 	  `> `1 then `0
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.191: 	  `== `1 then `1
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.192: 	  _ then `2
+//│ ║         	^^^^^^^^^^^
 //│ ╟── Note: 'if' expression starts here:
-//│ ║  l.193: 	`if x
+//│ ║  l.189: 	`if x
 //│ ╙──       	 ^^
-//│ ╔══[ERROR] The case when this is false is not handled: ${App(Var(x),Tup(List((None,Fld(_,Var(<error>))))))}
-//│ ║  l.193: 	`if x
+//│ ╔══[ERROR] The case when this is false is not handled: ${App(Var(x),Tup(List((None,Fld(_,UnitLit(true))))))}
+//│ ║  l.189: 	`if x
 //│ ║         	    ^
-//│ ║  l.194: 	  `> `1 then `0
-//│ ╙──       	^^^
+//│ ║  l.190: 	  `> `1 then `0
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.191: 	  `== `1 then `1
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.192: 	  _ then `2
+//│ ╙──       	^^^^^^^^^^^
 //│ Code[error, nothing]
 
 :pe
-:e
 `(x: Int) => x `+ `2
-//│ ╔══[PARSE ERROR] This quote syntax is not supported yet.
-//│ ║  l.225: 	`(x: Int) => x `+ `2
+//│ ╔══[PARSE ERROR] This quote syntax is not supported yet
+//│ ║  l.232: 	`(x: Int) => x `+ `2
 //│ ╙──       	 ^^^^^^^^
-//│ ╔══[ERROR] identifier not found: <error>
-//│ ║  l.225: 	`(x: Int) => x `+ `2
-//│ ╙──       	 ^^^^^^^^
-//│ error -> Code[Int, nothing]
+//│ () -> Code[Int, nothing]
