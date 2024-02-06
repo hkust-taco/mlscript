@@ -672,7 +672,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             consume
             letBindings(true) match {
               case R(bd) => R(bd.withLoc(S(loc ++ bd.toLoc)))
-              case _ => die
+              case _ =>
+                err((msg"This quote syntax is not supported yet." -> S(l0) :: Nil))
+                R(Var("<error>").withLoc(S(l0)))
             }
           case (KEYWORD("if"), l0) :: _ =>
             val term = exprOrIf(prec, allowSpace)

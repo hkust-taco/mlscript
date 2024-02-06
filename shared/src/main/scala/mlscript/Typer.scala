@@ -118,7 +118,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     private def containsMth(key: (Str, Str) \/ (Opt[Str], Str)): Bool = mthEnv.contains(key) || parent.exists(_.containsMth(key))
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
     def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty)
-    // * Create a nested context for quasiquotes. If it is quoted, we need to clean `qenv` and `fvars`.
+    // * Create a nested context for quasiquotes/unquotes. If it is quoted, we need to clean `qenv` and `fvars`.
+    // * quoted: true -> a quote context, false -> an unquote context
     def qnest(quoted: Bool): Ctx =
       if (quoted) copy(Some(this), MutMap.empty, MutMap.empty, inQuote = quoted, qenv = MutMap.empty, fvars = MutSet.empty)
       else copy(Some(this), MutMap.empty, MutMap.empty, inQuote = quoted)
