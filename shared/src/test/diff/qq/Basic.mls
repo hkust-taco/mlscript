@@ -2,7 +2,7 @@
 :NoJS
 
 
-:e // TODO support unbound free vars
+:e
 let c = code"x"
 //│ ╔══[ERROR] unbound quoted variable: x
 //│ ║  l.6: 	let c = code"x"
@@ -222,8 +222,8 @@ code"$x + 1"
 :pe
 code"$"
 //│ ╔══[LEXICAL ERROR] unexpected character '$'
-//│ ║  l.223: 	code"$"
-//│ ╙──       	     ^
+//│ ║  l.223: 	$
+//│ ╙──       	^
 //│ ╔══[PARSE ERROR] Unexpected error in expression position
 //│ ║  l.223: 	code"$"
 //│ ╙──       	     ^
