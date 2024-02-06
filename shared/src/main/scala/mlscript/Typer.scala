@@ -118,11 +118,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     private def containsMth(key: (Str, Str) \/ (Opt[Str], Str)): Bool = mthEnv.contains(key) || parent.exists(_.containsMth(key))
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
     def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty)
-    // * Create a nested context for quasiquotes/unquotes. If it is quoted, we need to clean `qenv` and `fvars`.
-    // * quoted: true -> a quote context, false -> an unquote context
-    def qnest(quoted: Bool): Ctx =
-      if (quoted) copy(Some(this), MutMap.empty, MutMap.empty, inQuote = quoted, qenv = MutMap.empty, fvars = MutSet.empty)
-      else copy(Some(this), MutMap.empty, MutMap.empty, inQuote = quoted)
+    // * Enter a new quoted environment with empty `qenv` and `fvars`.
+    // * For a whole quasiquote (i.e., code"..."), it contains no binding or free variables at the beginning.
+    // * For a quoted binding (e.g., code"x => ..."):
+    // ** 1. It is still in the quotation so `inQuote = true`
+    // ** 2. `qenv` only contains skolems created by the current binding and `fvars` only contains free variables appearing in the body.
+    // ** So we also apply empty `qenv` and `fvars` at the beginning.
+    // ** e.g. `code"x => y => x + y"`. For `y => x + y`, fvars = {\ga_x, \ga_y}, qenv = {\ga_y}. 
+    // ** So for `code"x => ..."`, fvars = {\al}, qenv = {\ga_x}, where \ga_x \/ \ga_y <= \al \/ \ga_y
+    def enterQuote: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, inQuote = true, qenv = MutMap.empty, fvars = MutSet.empty)
+    def enterUnquote: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, inQuote = false)
     def nextLevel[R](k: Ctx => R)(implicit raise: Raise, prov: TP): R = {
       val newCtx = copy(lvl = lvl + 1, extrCtx = MutMap.empty)
       val res = k(newCtx)
@@ -1083,7 +1088,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise)
       case Lam(pat, body) if ctx.inQuote =>
         println(s"TYPING QUOTED LAM")
-        ctx.qnest(true).poly { newCtx =>
+        ctx.enterQuote.poly { newCtx =>
           val param_ty = typePattern(pat)(newCtx, raise, vars)
           val body_ty = typeTerm(body)(newCtx, raise, vars,
             generalizeCurriedFunctions || doGenLambdas && constrainedTypes)
@@ -1304,7 +1309,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case Let(isrec, nme, rhs, bod) =>
         if (ctx.inQuote) {
           val rhs_ty = typeTerm(rhs)
-          ctx.qnest(true).poly {
+          ctx.enterQuote.poly {
             newCtx => {
               newCtx += nme.name -> VarSymbol(rhs_ty, nme)
               val res_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
@@ -1544,13 +1549,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case q @ Quoted(body) =>
         if (ctx.inQuote) err(msg"Nested quotation is not allowed.", q.toLoc)
         else {
-          val newCtx = ctx.qnest(true)
+          val newCtx = ctx.enterQuote
           val bodyType = typeTerm(body)(newCtx, raise, vars, genLambdas)
           TypeRef(TypeName("Code"), bodyType :: newCtx.getCtxTy :: Nil)(TypeProvenance(q.toLoc, "code fragment"))
         }
       case uq @ Unquoted(body) =>
         if (ctx.inQuote) {
-          val newCtx = ctx.qnest(false)
+          val newCtx = ctx.enterUnquote
           val bodyType = typeTerm(body)(newCtx, raise, vars, genLambdas)
           val res = freshVar(TypeProvenance(uq.toLoc, "code fragment body type"), N)
           val ctxTy = freshVar(TypeProvenance(body.toLoc, "code fragment context type"), N)

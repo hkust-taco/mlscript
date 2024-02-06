@@ -31,9 +31,11 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     c === '0' || c === '1'
   def isDigit(c: Char): Bool =
     c >= '0' && c <= '9'
-  def matches(i: Int, syntax: Str): Bool =
-    i + syntax.length <= length && bytes.slice(i, i + syntax.length).mkString === syntax
-  def isQuasiquote(i: Int): Bool = matches(i, QQCode.prefix + '"') // code"
+  def matches(i: Int, syntax: Str, start: Int): Bool =
+    if (start >= syntax.length) true
+    else if (i + start < length && bytes(i + start) === syntax(start)) matches(i, syntax, start + 1)
+    else false
+  def isQuasiquote(i: Int): Bool = matches(i, QQCODE.prefix + '"', 0) // code"
   
   /* // TODO remove (unused)
   private val isNonStickyKeywordChar = Set(
@@ -164,7 +166,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   // * Check the end of a string (either single quotation or triple quotation)
   final def closeStr(i: Int, isTriple: Bool): Int =
     if (!isTriple && bytes.lift(i) === Some('"')) i + 1
-    else if (isTriple && matches(i, "\"\"\"")) i + 3
+    else if (isTriple && matches(i, "\"\"\"", 0)) i + 3
     else {
       raise(ErrorReport(msg"unclosed quotation mark" -> S(loc(i, i + 1)) :: Nil, newDefs = true, source = Lexing))
       i
@@ -175,16 +177,16 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   // * and handles inner quasiquotes (e.g., `code"x => ${code"y => y + 1"}"`) recursively.
   final def qstr(i: Int, cur: Ls[Char])(implicit triple: Bool): (Str, Int) =
     if (isQuasiquote(i)) {
-      val j = i + QQCode.prefix.length
-      val isTriple = matches(j, "\"\"\"")
+      val j = i + QQCODE.prefix.length
+      val isTriple = matches(j, "\"\"\"", 0)
       val close = if (isTriple) "\"\"\"" else "\""
-      val open = QQCode.prefix + close 
+      val open = QQCODE.prefix + close 
       val (s, k) = qstr(j + (if (isTriple) 3 else 1), Nil)(isTriple)
       qstr(closeStr(k, isTriple), (open + s + close).reverse.toList ++ cur)
     }
     else if (triple) {
       if (i < length) {
-        if (matches(i, "\"\"\"") && !matches(i + 1, "\"\"\"")) // Find the last """
+        if (matches(i, "\"\"\"", 0) && !matches(i + 1, "\"\"\"", 0)) // Find the last """
           (cur.reverseIterator.mkString, i)
         else qstr(i + 1, bytes(i) :: cur)
       }
@@ -224,7 +226,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
       if (i < length)
         bytes(i) match {
           case '"' =>
-            if (matches(i, "\"\"\"") && !matches(i + 1, "\"\"\"")) // Find the last """
+            if (matches(i, "\"\"\"", 0) && !matches(i + 1, "\"\"\"", 0)) // Find the last """
               (cur.reverseIterator.mkString, i)
             else str(i + 1, false, '"' :: cur)
           case ch => str(i + 1, false, ch :: cur)
@@ -250,7 +252,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     def pe(msg: Message): Unit =
       // raise(ParseError(false, msg -> S(loc(i, i + 1)) :: Nil))
       raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, newDefs = true, source = Lexing))
-    def isUnquoteOpening(i: Int): Bool = matches(i, BracketKind.Unquote.beg)
+    def isUnquoteOpening(i: Int): Bool = matches(i, BracketKind.Unquote.beg, 0)
     // @inline 
     // def go(j: Int, tok: Token) = lex(j, ind, (tok, loc(i, j)) :: acc)
     def next(j: Int, tok: Token) = (tok, loc(i, j)) :: acc
@@ -266,12 +268,12 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
       case '`' =>
         lex(i + 1, ind, next(i + 1, QUOTE))
       case 'c' if isQuasiquote(i) =>
-        val j = i + QQCode.prefix.length
-        val isTriple = matches(j, "\"\"\"")
+        val j = i + QQCODE.prefix.length
+        val isTriple = matches(j, "\"\"\"", 0)
         val j2 = j + (if (isTriple) 3 else 1)
         val (s, k) = qstr(j2, Nil)(isTriple)
         val k2 = closeStr(k, isTriple)
-        lex(k2, ind, (LITVAL(StrLit(s)), loc(j2, k)) :: (QQCode(isTriple), loc(i, j)) :: acc)
+        lex(k2, ind, (LITVAL(StrLit(s)), loc(j2, k)) :: (QQCODE(isTriple), loc(i, j)) :: acc)
       case '$' if isUnquoteOpening(i) =>
         lex(i + 2, ind, next(i + 2, OPEN_BRACKET(BracketKind.Unquote)))
       case '$' if i + 1 < length && isIdentFirstChar(bytes(i + 1)) =>
@@ -281,7 +283,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         val j = i + 1
         lex(j, ind, next(j, SEMI))
       case '"' =>
-        val isTriple = matches(i, "\"\"\"")
+        val isTriple = matches(i, "\"\"\"", 0)
         val j = i + (if (isTriple) 3 else 1)
         val (chars, k) = str(j, false)(isTriple)
         val k2 = closeStr(k, isTriple)
@@ -390,7 +392,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     import BracketKind._
     def go(toks: Ls[Token -> Loc], canStartAngles: Bool, stack: Ls[BracketKind -> Loc -> Ls[Stroken -> Loc]], acc: Ls[Stroken -> Loc]): Ls[Stroken -> Loc] =
       toks match {
-        case (c: QQCode, l0) :: (LITVAL(StrLit(s)), l1) :: rest => {
+        case (c: QQCODE, l0) :: (LITVAL(StrLit(s)), l1) :: rest => {
           // * Since we use a fresh NewLexer with a different Origin object to tokenize quoted code,
           // * we must recover the Origin object and location offset to get correct error information
           def recoverLocs(tokens: Ls[Stroken -> Loc])(implicit offset: Int): Ls[Stroken -> Loc] = tokens match {
@@ -539,7 +541,7 @@ object NewLexer {
     case (DEINDENT, _) => "←"
     case (ERROR, _) => "<error>"
     case (QUOTE, _) => "`"
-    case (QQCode(_), _) => QQCode.prefix
+    case (QQCODE(_), _) => QQCODE.prefix
     case (LITVAL(lv), _) => lv.idStr
     case (KEYWORD(name: String), _) => "#" + name
     case (IDENT(name: String, symbolic: Bool), _) => name
