@@ -80,7 +80,7 @@ fun mapPartition(f, xs) = if xs is
 //│ fun mapPartition: forall 'A 'A0 'A1. ((??A & 'A) -> (Left['A0] | Right['A1]), Cons['A] | Nil) -> Pair[Cons[??A0 & 'A0] | Nil | ??A1 & (Cons[??A0 & 'A0] | Nil), Cons[??A2 & 'A1] | Nil | ??B & (Cons[??A2 & 'A1] | Nil)]
 
 mapPartition(f, zeroToThree)
-//│ Pair[Cons[??A & ??A0 & (0 | 1 | 2 | 3)] | Nil | ??A1 & (Cons[??A & ??A0 & (0 | 1 | 2 | 3)] | Nil), Cons[??A2 & ??A & (0 | 1 | 2 | 3)] | Nil | ??B & (Cons[??A2 & ??A & (0 | 1 | 2 | 3)] | Nil)]
+//│ Pair[Cons[??A & ??A0 & (0 | 1 | 2 | 3)] | Nil | ??A1 & (Cons[??A & ??A0 & (0 | 1 | 2 | 3)] | Nil), Cons[??A & ??A2 & (0 | 1 | 2 | 3)] | Nil | ??B & (Cons[??A & ??A2 & (0 | 1 | 2 | 3)] | Nil)]
 //│ res
 //│     = Pair {}
 

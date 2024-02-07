@@ -200,6 +200,8 @@ fun eval(e: Expr['t]): e.T = if e is
     Fst(p) then fst(eval(p)) : e.T
 //│ fun eval: forall 't. (e: Expr['t]) -> ('t & (Int | false | true | [??A, ??B] | ??A0 | ??A1))
 //│ fun eval: forall 'T. Expr['T] -> 'T
+//│ where
+//│   't :> [??A, ??B] & ~[??A2, ??B0]
 
 fun eval: Expr['T] -> 'T
 fun eval(e: Expr['t]): e.T = if e is
@@ -211,6 +213,8 @@ fun eval(e: Expr['t]): e.T = if e is
     Fst(p) then fst(eval(p))
 //│ fun eval: forall 't. (e: Expr['t]) -> ('t & (Int | false | true | [??A, ??B] | ??A0 | ??A1))
 //│ fun eval: forall 'T. Expr['T] -> 'T
+//│ where
+//│   't :> [??A, ??B] & ~[??A2, ??B0]
 
 eval(Plus(Lit(1), Lit(1)))
 //│ Int
@@ -225,7 +229,7 @@ eval(If(Equals(Lit(3), Plus(Lit(1), Lit(1))), Fst(Pair(Lit(1), Lit(2))), Lit(3))
 :e
 eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.226: 	eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
+//│ ║  l.230: 	eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Bool` is not an instance of type `Int`
 //│ ║  l.181: 	class Equals(a: Expr[Int], b: Expr[Int]) extends Expr[Bool]

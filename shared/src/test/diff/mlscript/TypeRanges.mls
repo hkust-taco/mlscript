@@ -168,7 +168,7 @@ foo[0] <- 1
 //│ ╟── from assigned array element:
 //│ ║  l.158: 	foo[0] <- 1
 //│ ╙──       	^^^^^^
-//│ = []
+//│ = undefined
 
 foo[0]
 //│ res: number | undefined
@@ -270,10 +270,10 @@ res : int | undefined
 //│    = 0
 
 foo[0] <- 1
-//│ = []
+//│ = undefined
 
 foo[0] <- (1/2)
-//│ = []
+//│ = undefined
 
 
 

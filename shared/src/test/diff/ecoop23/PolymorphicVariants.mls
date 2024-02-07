@@ -75,7 +75,7 @@ mixin EvalLambda {
 //│   this: {
 //│     eval: ('a, ??A & 'A) -> 'd & (Cons[[Str, 'd]], ??A0 & 'A0) -> 'c & (Cons[[Str, Var] | 'A1], ??A1 & 'A2) -> 'e
 //│   }
-//│   fun eval: ('a & (Cons['A1] | Nil), Abs['A2] | App['A & (Abs['A0] | Object & ~#Abs | ~??A2)] | Object & 'b & ~#Abs & ~#App) -> (Abs['e] | App['d] | 'c)
+//│   fun eval: ('a & (Cons['A1] | Nil), Abs['A2] | App['A & (Abs['A0] | Object & ~#Abs | ~??A)] | Object & 'b & ~#Abs & ~#App) -> (Abs['e] | App['d] | 'c)
 //│ }
 
 module Test1 extends EvalVar, EvalLambda
@@ -149,7 +149,7 @@ mixin EvalExpr {
 
 module Test2 extends EvalVar, EvalExpr
 //│ module Test2 {
-//│   fun eval: forall 'a. (Cons[{0: anything, 1: 'A & (Object | ~??A | ~??A0 & ~??A1)} | ~??A2] | Nil, 'a & (Add['A0] | Mul['A1] | Numb | Var)) -> (Numb | Var | ??A3 & 'A0 | ??A4 & 'A1 | ??A & 'A | 'a)
+//│   fun eval: forall 'a. (Cons[{0: anything, 1: 'A & (Object | ~??A & ~??A0 | ~??A1)} | ~??A2] | Nil, 'a & (Add['A0] | Mul['A1] | Numb | Var)) -> (Numb | Var | ??A3 & 'A0 | ??A4 & 'A1 | ??A1 & 'A | 'a)
 //│ }
 //│ where
 //│   'A0 <: Add['A0] | Mul['A1] | Numb | Var | ~??A3

@@ -26,7 +26,7 @@ trait Test { type T = Int }
 //│ ╔══[ERROR] Type mismatch in type selection:
 //│ ║  l.22: 	1 : Test.T
 //│ ║        	        ^^
-//│ ╙── expression of type `#Test` does not have field 'T'
+//│ ╙── type `error` cannot be reassigned
 //│ error
 //│ res
 //│     = 1

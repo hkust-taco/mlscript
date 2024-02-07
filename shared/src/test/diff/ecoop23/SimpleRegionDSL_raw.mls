@@ -329,7 +329,7 @@ mixin Eliminate {
 //│   this: {
 //│     eliminate: (??Region & 'Region) -> 'a & (??Region0 & 'Region0) -> 'b & (??Region1 & 'Region1) -> 'c & (??Region2 & 'Region2) -> 'd & (??Region3 & 'Region3) -> 'e & (??Region4 & 'Region4) -> 'f
 //│   }
-//│   fun eliminate: (Intersect['Region2] | Object & 'a & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | Outside['Region0 & (Object & ~#Outside | Outside['Region] | ~??Region5)] | Scale['Region4] | Translate['Region3] | Union['Region1]) -> (Intersect['d] | Outside['b] | Scale['f] | Translate['e] | Union['c] | 'a)
+//│   fun eliminate: (Intersect['Region2] | Object & 'a & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | Outside['Region0 & (Object & ~#Outside | Outside['Region] | ~??Region0)] | Scale['Region4] | Translate['Region3] | Union['Region1]) -> (Intersect['d] | Outside['b] | Scale['f] | Translate['e] | Union['c] | 'a)
 //│ }
 
 module TestElim extends Eliminate
@@ -371,7 +371,7 @@ fun mk(n) = if n is
 TestElim.eliminate(mk(100))
 //│ 'a
 //│   where
-//│     'a :> Scale['a] | Outside['a] | Union['a] | Intersect['a] | Translate['a]
+//│     'a :> Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a]
 //│ res
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

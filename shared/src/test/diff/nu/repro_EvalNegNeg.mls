@@ -20,7 +20,7 @@ mixin EvalBase {
 }
 //│ mixin EvalBase() {
 //│   this: {eval: (??A & 'A) -> 'a & (??A0 & 'A0 | ??E & 'E) -> Int}
-//│   fun eval: (Add['E] | Lit | Neg['A0 & (Neg['A] | Object & ~#Neg | ~??A1)]) -> (Int | 'a)
+//│   fun eval: (Add['E] | Lit | Neg['A0 & (Neg['A] | Object & ~#Neg | ~??A0)]) -> (Int | 'a)
 //│ }
 
 // module TestLang extends EvalBase, EvalNeg
@@ -46,8 +46,8 @@ TestLang.eval(mk(0))
 //│ Int
 //│ res
 //│     = 0
-//│ constrain calls  : 250
+//│ constrain calls  : 237
 //│ annoying  calls  : 54
-//│ subtyping calls  : 2395
+//│ subtyping calls  : 2335
 
 

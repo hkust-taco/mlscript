@@ -160,11 +160,22 @@ fun g[T](x: F[T, T]): T = if x is
     MkF(f) then if (f : x.A) is 
         Some(t) then Some(t) : x.A
         None    then None : x.A
-//│ fun g: forall 'T. (x: F['T, 'T]) -> 'T
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.159: 	fun g[T](x: F[T, T]): T = if x is
+//│ ║         	                             ^^^^
+//│ ║  l.160: 	    MkF(f) then if (f : x.A) is 
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.161: 	        Some(t) then Some(t) : x.A
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.162: 	        None    then None : x.A
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `anything` does not match type `??Z | ~(??Z0 & ??A)`
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ fun g: forall 'T. (x: F['T, 'T]) -> (error | 'T)
 
 g(MkF(None))
 g(MkF(Some(1)))
-//│ Option['A] | Some['A]
+//│ Option['A] | Some['A] | error
 //│   where
 //│     'A :> 1
 //│ res

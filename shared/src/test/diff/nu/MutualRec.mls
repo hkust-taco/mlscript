@@ -163,7 +163,7 @@ module Test1_1 {
 module Test1_2 {
   fun b = Test1_1.a
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.164: 	  fun b = Test1_1.a
 //│ ╙──       	                 ^^
 //│ module Test1_1 {
@@ -210,7 +210,7 @@ class Test1_1() {
 class Test1_2() {
   fun b = Test1_1().a
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.211: 	  fun b = Test1_1().a
 //│ ╙──       	                   ^^
 //│ class Test1_1() {
@@ -227,7 +227,7 @@ class Test1_1 {
 class Test1_2 {
   fun b = (new Test1_1).a
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.228: 	  fun b = (new Test1_1).a
 //│ ╙──       	                       ^^
 //│ class Test1_1 {
@@ -268,7 +268,7 @@ module Test2_2 {
   fun c = Test2_1.a
   fun e = Test2_1.n
 }
-//│ ╔══[ERROR] Indirectly-recursive member should have type annotation
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.268: 	  fun c = Test2_1.a
 //│ ╙──       	                 ^^
 //│ module Test2_1 {
@@ -361,4 +361,46 @@ module Test3 {
 //│ module Test3 {
 //│   fun inc: (t: Test2) -> Test2
 //│ }
+
+
+
+mixin Foo {
+  fun f(x) = x(f)
+}
+//│ mixin Foo() {
+//│   fun f: 'a -> 'b
+//│ }
+//│ where
+//│   'a <: ('a -> 'b) -> 'b
+
+mixin Foo {
+  fun f(x) = g(f), x
+  fun g(y) = y(g)
+}
+//│ mixin Foo() {
+//│   fun f: ('a & 'b) -> ('c -> 'b | 'a)
+//│   fun g: 'c -> 'b
+//│ }
+//│ where
+//│   'b :> 'c -> 'b
+//│   'c <: ('c -> 'b) -> 'b
+
+mixin Foo {
+  fun f(x) = g(x), x
+  fun g(y) = f(y)
+}
+//│ mixin Foo() {
+//│   fun f: 'a -> 'a
+//│   fun g: 'a -> 'a
+//│ }
+
+module Foo {
+  fun f(x) = g(x), x
+  fun g(y) = f(y)
+}
+//│ module Foo {
+//│   fun f: forall 'a. 'a -> 'a
+//│   fun g: forall 'a. 'a -> 'a
+//│ }
+
 

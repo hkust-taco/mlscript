@@ -39,7 +39,7 @@ fun len(xs: Vec['l, 'a]) = if xs is
 //│ fun len: forall 'l 'P 'a. (xs: Vec['l, 'a]) -> Int
 //│ fun len: forall 'l0 'a0. Vec['l0, 'a0] -> Int
 //│ where
-//│   'l <: {P :> 'P | ??H <: ??H0 & 'P} | ~S[in ??H out ??H0]
+//│   'l <: {P :> 'P | ??H <: ??H0 & 'P} | ~S[in ??H0 out ??H]
 
 fun map: ('A -> 'B, Vec['L, 'A]) -> Vec['L, 'B]
 fun map[B](f, xs: Vec['L, 'A]) = if xs is
@@ -48,7 +48,7 @@ fun map[B](f, xs: Vec['L, 'A]) = if xs is
 //│ fun map: forall 'T 'B 'L 'H. ((??T & 'T) -> 'B, xs: Vec['L, 'T]) -> Vec[in S[in ??H out ??H0] | 'L out 'L & (S[in ??H out ??H0] | Z), 'B]
 //│ fun map: forall 'A 'B0 'L0. ('A -> 'B0, Vec['L0, 'A]) -> Vec['L0, 'B0]
 //│ where
-//│   'L <: S[in ??H & 'H out 'H | ??H0] & {P :> 'H | ??H0 <: ??H & 'H} | S[in anything out nothing] & ~{P :> ??H0 <: ??H} | ~S[in ??H0 out ??H]
+//│   'L <: S[in ??H & 'H out 'H | ??H0] & {P :> 'H | ??H0 <: ??H & 'H} | S[in anything out nothing] & ~{P :> ??H <: ??H0} | ~S[in ??H out ??H0]
 
 // FIXME
 fun zip: (Vec['L, 'A], Vec['L, 'B]) -> Vec['L, ['A, 'B]]

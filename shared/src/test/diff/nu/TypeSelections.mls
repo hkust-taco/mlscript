@@ -32,7 +32,12 @@ foo(M.mkC(42))
 //│ ╔══[ERROR] Type mismatch in type selection:
 //│ ║  l.31: 	42 : M.mkC
 //│ ║        	      ^^^^
-//│ ╙── expression of type `M` does not have field 'mkC'
+//│ ╟── member of type `(n: Int) -> C` is not mutable
+//│ ║  l.7: 	  fun mkC = C
+//│ ║       	      ^^^^^^^
+//│ ╟── but it flows into type selection with expected type `?mkC`
+//│ ║  l.31: 	42 : M.mkC
+//│ ╙──      	      ^^^^
 //│ (n: Int) -> C
 //│ res
 //│     = 42

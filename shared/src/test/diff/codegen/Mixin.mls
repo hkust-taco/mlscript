@@ -177,7 +177,7 @@ mixin EvalNegNeg {
 //│ mixin EvalNegNeg() {
 //│   super: {eval: (Neg[??A & 'A] | 'a) -> 'b}
 //│   this: {eval: (??A0 & 'A0) -> 'b}
-//│   fun eval: (Neg['A & (Neg['A0] | Object & ~#Neg | ~??A1)] | Object & 'a & ~#Neg) -> 'b
+//│   fun eval: (Neg['A & (Neg['A0] | Object & ~#Neg | ~??A)] | Object & 'a & ~#Neg) -> 'b
 //│ }
 //│ // Prelude
 //│ class TypingUnit4 {

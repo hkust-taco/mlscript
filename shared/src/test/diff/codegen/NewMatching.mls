@@ -96,7 +96,7 @@ fun get1(s) =
   if s is
     Some(V1(x)) then x
     Some(y) then y
-//│ fun get1: forall 'T. Some['T & (Object | ~??T)] -> (Int | ??T0 & 'T)
+//│ fun get1: forall 'T. Some['T & (Object | ~??T)] -> (Int | ??T & 'T)
 //│ // Prelude
 //│ class TypingUnit5 {}
 //│ const typing_unit5 = new TypingUnit5;

@@ -22,10 +22,6 @@ fun foo(f: Foo[Int]): f.A = f.a
 //│ ╔══[ERROR] Type `Foo[Int]` does not contain member `A`
 //│ ║  l.21: 	fun foo(f: Foo[Int]): f.A = f.a
 //│ ╙──      	                       ^^
-//│ ╔══[ERROR] Type mismatch in type selection:
-//│ ║  l.21: 	fun foo(f: Foo[Int]): f.A = f.a
-//│ ║        	                       ^^
-//│ ╙── expression of type `Foo[Int]` does not have field 'A'
 //│ fun foo: (f: Foo[Int]) -> error
 
 class Foo[type A] {
@@ -47,9 +43,9 @@ class Bar(val f: Foo[Int])
 :e
 fun foo(b: Bar): b.f.A = 1
 //│ ╔══[ERROR] Type mismatch in type selection:
-//│ ║  l.48: 	fun foo(b: Bar): b.f.A = 1
+//│ ║  l.44: 	fun foo(b: Bar): b.f.A = 1
 //│ ║        	                  ^^
-//│ ╙── expression of type `Bar` does not have field 'f'
+//│ ╙── type `Foo[Int]` cannot be reassigned
 //│ fun foo: (b: Bar) -> Int
 
 fun bar(b: Bar) = b.f.f(1)
@@ -64,13 +60,13 @@ fun foo(b: Bar) =
 // FIXME
 fun foo(f: Foo, x: f.A) = f.f(x)
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.65: 	fun foo(f: Foo, x: f.A) = f.f(x)
+//│ ║  l.61: 	fun foo(f: Foo, x: f.A) = f.f(x)
 //│ ║        	                          ^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.65: 	fun foo(f: Foo, x: f.A) = f.f(x)
+//│ ║  l.61: 	fun foo(f: Foo, x: f.A) = f.f(x)
 //│ ║        	                    ^^
 //│ ╟── back into type variable `A`
-//│ ║  l.31: 	class Foo[type A] {
+//│ ║  l.27: 	class Foo[type A] {
 //│ ╙──      	               ^
 //│ fun foo: (f: Foo[nothing], x: ??A) -> (Int | error)
 
@@ -93,35 +89,35 @@ fun foo[T](f: Foo[T]): T = f.a : f.A
 // TODO support
 fun foo(f: Foo): Int = f.a : f.A
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.94: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.90: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ║        	                       ^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.94: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.90: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ║        	                       ^^^
 //│ ╟── back into type variable `A`
-//│ ║  l.94: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.90: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ╙──      	                              ^^
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.94: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.90: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ║        	                       ^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.94: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.90: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ║        	                              ^^
 //│ ╟── into type `Int`
-//│ ║  l.94: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║  l.90: 	fun foo(f: Foo): Int = f.a : f.A
 //│ ╙──      	                 ^^^
 //│ fun foo: (f: Foo[anything]) -> Int
 
 // FIXME
 fun foo(f: Foo) = f.a : f.A
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.116: 	fun foo(f: Foo) = f.a : f.A
+//│ ║  l.112: 	fun foo(f: Foo) = f.a : f.A
 //│ ║         	                  ^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.116: 	fun foo(f: Foo) = f.a : f.A
+//│ ║  l.112: 	fun foo(f: Foo) = f.a : f.A
 //│ ║         	                  ^^^
 //│ ╟── back into type variable `A`
-//│ ║  l.116: 	fun foo(f: Foo) = f.a : f.A
+//│ ║  l.112: 	fun foo(f: Foo) = f.a : f.A
 //│ ╙──       	                         ^^
 //│ fun foo: (f: Foo[anything]) -> ??A
 
@@ -133,20 +129,20 @@ fun foo(f: Foo['a]): Int = f.a : f.A
 // TODO reject for now
 fun foo(f: Foo[?]): Int = f.a : f.A
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.134: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ║  l.130: 	fun foo(f: Foo[?]): Int = f.a : f.A
 //│ ║         	                          ^^^
 //│ ╟── field selection of type `anything` does not match type `nothing`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.134: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ║  l.130: 	fun foo(f: Foo[?]): Int = f.a : f.A
 //│ ╙──       	                                 ^^
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.134: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ║  l.130: 	fun foo(f: Foo[?]): Int = f.a : f.A
 //│ ║         	                          ^^^
 //│ ╟── type `anything` is not an instance of type `Int`
-//│ ║  l.134: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ║  l.130: 	fun foo(f: Foo[?]): Int = f.a : f.A
 //│ ║         	                                 ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.134: 	fun foo(f: Foo[?]): Int = f.a : f.A
+//│ ║  l.130: 	fun foo(f: Foo[?]): Int = f.a : f.A
 //│ ╙──       	                    ^^^
 //│ fun foo: (f: Foo[?]) -> Int
 
@@ -162,16 +158,16 @@ foo(Foo(1))
 :e
 foo(Foo(true))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.163: 	foo(Foo(true))
+//│ ║  l.159: 	foo(Foo(true))
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of `Int`
-//│ ║  l.163: 	foo(Foo(true))
+//│ ║  l.159: 	foo(Foo(true))
 //│ ║         	        ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.156: 	fun foo(f): Int = f.a : f.A
+//│ ║  l.152: 	fun foo(f): Int = f.a : f.A
 //│ ║         	            ^^^
 //│ ╟── from type selection:
-//│ ║  l.156: 	fun foo(f): Int = f.a : f.A
+//│ ║  l.152: 	fun foo(f): Int = f.a : f.A
 //│ ╙──       	                         ^^
 //│ Int | error
 
@@ -179,15 +175,15 @@ class Foo[type A]: Bar | Baz
 module Bar extends Foo[Int]
 module Baz extends Foo[Str]
 //│ ╔══[WARNING] Self-type annotations have no effects on non-abstract class definitions
-//│ ║  l.178: 	class Foo[type A]: Bar | Baz
+//│ ║  l.174: 	class Foo[type A]: Bar | Baz
 //│ ║         	                   ^^^^^^^^^
 //│ ╙── Did you mean to use `extends` and inherit from a parent class?
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.178: 	class Foo[type A]: Bar | Baz
+//│ ║  l.174: 	class Foo[type A]: Bar | Baz
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `#Foo & {A = A}` does not match type `Bar | Baz`
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.178: 	class Foo[type A]: Bar | Baz
+//│ ║  l.174: 	class Foo[type A]: Bar | Baz
 //│ ╙──       	                   ^^^^^^^^^
 //│ class Foo[A]: Bar | Baz {
 //│   constructor()
@@ -201,14 +197,14 @@ module Baz extends Foo[Str]
 :e
 "bad": Bar.A
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.202: 	"bad": Bar.A
+//│ ║  l.198: 	"bad": Bar.A
 //│ ║         	^^^^^
 //│ ╟── string literal of type `"bad"` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.179: 	module Bar extends Foo[Int]
+//│ ║  l.175: 	module Bar extends Foo[Int]
 //│ ║         	                       ^^^
 //│ ╟── from type selection:
-//│ ║  l.202: 	"bad": Bar.A
+//│ ║  l.198: 	"bad": Bar.A
 //│ ╙──       	          ^^
 //│ Int
 
@@ -247,17 +243,17 @@ fun test(f: Foo) = if f is
   Bar then 123 : f.A
   Baz then "hello" : f.A
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.246: 	fun test(f: Foo) = if f is
+//│ ║  l.242: 	fun test(f: Foo) = if f is
 //│ ║         	                      ^^^^
-//│ ║  l.247: 	  Bar then 123 : f.A
+//│ ║  l.243: 	  Bar then 123 : f.A
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.248: 	  Baz then "hello" : f.A
+//│ ║  l.244: 	  Baz then "hello" : f.A
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Foo[?]` does not match type `Bar | Baz`
-//│ ║  l.246: 	fun test(f: Foo) = if f is
+//│ ║  l.242: 	fun test(f: Foo) = if f is
 //│ ║         	            ^^^
 //│ ╟── but it flows into reference with expected type `Bar | Baz`
-//│ ║  l.246: 	fun test(f: Foo) = if f is
+//│ ║  l.242: 	fun test(f: Foo) = if f is
 //│ ╙──       	                      ^
 //│ fun test: (f: Foo[in anything out nothing]) -> (Int | Str)
 
@@ -278,10 +274,10 @@ fun test[T](f: Foo[T]): T = if f is
 class Foo[type A]
 class Bar[type A] extends Foo[A]
 //│ ╔══[ERROR] Inherited parameter named `A` is not virtual and cannot be overridden
-//│ ║  l.279: 	class Bar[type A] extends Foo[A]
+//│ ║  l.275: 	class Bar[type A] extends Foo[A]
 //│ ║         	               ^
 //│ ╟── Originally declared here:
-//│ ║  l.278: 	class Foo[type A]
+//│ ║  l.274: 	class Foo[type A]
 //│ ╙──       	               ^
 //│ class Foo[A] {
 //│   constructor()
@@ -298,10 +294,10 @@ class Foo[type A]
 :e
 class Bar[type A] extends Foo[A -> A]
 //│ ╔══[ERROR] Inherited parameter named `A` is not virtual and cannot be overridden
-//│ ║  l.299: 	class Bar[type A] extends Foo[A -> A]
+//│ ║  l.295: 	class Bar[type A] extends Foo[A -> A]
 //│ ║         	               ^
 //│ ╟── Originally declared here:
-//│ ║  l.293: 	class Foo[type A]
+//│ ║  l.289: 	class Foo[type A]
 //│ ╙──       	               ^
 //│ class Bar[A] extends Foo {
 //│   constructor()
@@ -310,10 +306,10 @@ class Bar[type A] extends Foo[A -> A]
 :e
 class Bar[type A] extends Foo[Int]
 //│ ╔══[ERROR] Inherited parameter named `A` is not virtual and cannot be overridden
-//│ ║  l.311: 	class Bar[type A] extends Foo[Int]
+//│ ║  l.307: 	class Bar[type A] extends Foo[Int]
 //│ ║         	               ^
 //│ ╟── Originally declared here:
-//│ ║  l.293: 	class Foo[type A]
+//│ ║  l.289: 	class Foo[type A]
 //│ ╙──       	               ^
 //│ class Bar[A] extends Foo {
 //│   constructor()
@@ -331,13 +327,9 @@ class Foo[A]
 // Would be nice:
 fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
 //│ ╔══[ERROR] Type `Foo['a]` does not contain member `A`
-//│ ║  l.332: 	fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
+//│ ║  l.328: 	fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
 //│ ╙──       	                              ^^
-//│ ╔══[ERROR] Type mismatch in type selection:
-//│ ║  l.332: 	fun foo(x: Foo['a], y) = y : x.A  // interpreted as `y : x.Foo#A`
-//│ ║         	                              ^^
-//│ ╙── expression of type `Foo['a]` does not have field 'A'
-//│ fun foo: forall 'a. (x: Foo['a], anything) -> error
+//│ fun foo: forall 'a. (x: Foo['a], error) -> error
 
 fun foo(x, y) = y : x.A
 //│ fun foo: forall 'A 'A0. ({A :> 'A <: 'A0}, 'A) -> 'A0
@@ -345,9 +337,9 @@ fun foo(x, y) = y : x.A
 // FIXME
 fun bar(f: Foo['a], y) = foo(f, y)
 //│ ╔══[ERROR] Type `Foo['a]` does not contain member `A`
-//│ ║  l.342: 	fun foo(x, y) = y : x.A
+//│ ║  l.334: 	fun foo(x, y) = y : x.A
 //│ ╙──       	                     ^^
-//│ fun bar: forall 'a. (f: Foo['a], anything) -> error
+//│ fun bar: forall 'a. (f: Foo['a], error) -> error
 
 class Bar(val A: Int)
 //│ class Bar(A: Int)
@@ -356,15 +348,15 @@ class C[type A]: C1 | C2
 class C1(val s: Bool) extends C[Bool]
 class C2(val i: Int) extends C[Int]
 //│ ╔══[WARNING] Self-type annotations have no effects on non-abstract class definitions
-//│ ║  l.355: 	class C[type A]: C1 | C2
+//│ ║  l.347: 	class C[type A]: C1 | C2
 //│ ║         	                 ^^^^^^^
 //│ ╙── Did you mean to use `extends` and inherit from a parent class?
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.355: 	class C[type A]: C1 | C2
+//│ ║  l.347: 	class C[type A]: C1 | C2
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── expression of type `#C & {A = A}` does not match type `C1 | C2`
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.355: 	class C[type A]: C1 | C2
+//│ ║  l.347: 	class C[type A]: C1 | C2
 //│ ╙──       	                 ^^^^^^^
 //│ class C[A]: C1 | C2 {
 //│   constructor()

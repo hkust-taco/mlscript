@@ -280,12 +280,16 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         consume
         yeetSpaces
         go(acc.copy(acc.mods + ("virtual" -> l0)))
+      case (KEYWORD("mut"), l0) :: c =>
+        consume
+        yeetSpaces
+        go(acc.copy(acc.mods + ("mut" -> l0)))
       case (KEYWORD("abstract"), l0) :: c =>
         consume
         yeetSpaces
         go(acc.copy(acc.mods + ("abstract" -> l0)))
       case _ if acc.mods.isEmpty => acc
-      case (KEYWORD("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module" | "fun" | "val"), l0) :: _ =>
+      case (KEYWORD("class" | "infce" | "trait" | "mixin" | "type" | "namespace" | "module" | "fun" | "val" | "let"), l0) :: _ =>
         acc
       case (tok, loc) :: _ =>
         // TODO support indented blocks of modified declarations...
@@ -424,7 +428,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             consume
             val (isDecl, mods2) = mods.handle("declare")
             val (isVirtual, mods3) = mods2.handle("virtual")
-            mods3.done
+            val (isMut, mods4) = mods3.handle("mut")
+            mods4.done
             val genField = kwStr =/= "let"
             val isLetRec = yeetSpaces match {
               case (KEYWORD("rec"), l1) :: _ if kwStr === "let" =>
@@ -517,7 +522,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                     case _ =>
                       R(NuFunDef(
                           isLetRec, v, opStr, tparams, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))
-                        )(isDecl, isVirtual, N, N, genField).withLoc(S(l0 ++ annotatedBody.toLoc)))
+                        )(isDecl, isVirtual, isMut, N, N, genField).withLoc(S(l0 ++ annotatedBody.toLoc)))
                   }
                 case c =>
                   asc match {
@@ -526,7 +531,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                       R(NuFunDef(isLetRec, v, opStr, tparams, R(PolyType(Nil, ps.foldRight(ty)((p, r) => Function(p.toType match {
                         case L(diag) => raise(diag); Top // TODO better
                         case R(tp) => tp
-                      }, r)))))(isDecl, isVirtual, N, N, genField).withLoc(S(l0 ++ ty.toLoc)))
+                      }, r)))))(isDecl, isVirtual, isMut, N, N, genField).withLoc(S(l0 ++ ty.toLoc)))
                       // TODO rm PolyType after FCP is merged
                     case N =>
                       // TODO dedup:
@@ -537,7 +542,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                       val bod = errExpr
                       R(NuFunDef(
                           isLetRec, v, opStr, Nil, L(ps.foldRight(bod: Term)((i, acc) => Lam(i, acc)))
-                        )(isDecl, isVirtual, N, N, genField).withLoc(S(l0 ++ bod.toLoc)))
+                        )(isDecl, isVirtual, isMut, N, N, genField).withLoc(S(l0 ++ bod.toLoc)))
                   }
               }
             }
@@ -549,6 +554,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             case R(v: Var) =>
               consume
               R(Eqn(v, expr(0)))
+            case R(App(v: Var, args)) =>
+              consume
+              R(Eqn(v, Lam(args, expr(0))))
             case _ => t
           }
           case _ => t
@@ -715,6 +723,18 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             errExpr
         }
         R(Forall(idents, rest))
+      case (KEYWORD("while"), l0) :: _ =>
+        consume
+        val cond = expr(0)
+        val (success, _) = skip(KEYWORD("do")) // TODO kw?
+        val body = expr(0)
+        exprCont(While(cond, body).withLoc(S(l0 ++ body.toLoc)), prec, allowNewlines = false)
+      case (KEYWORD("set"), l0) :: _ =>
+        consume
+        val lhs = expr(0)
+        val (success, _) = skip(KEYWORD("=")) // TODO kw?
+        val rhs = expr(0)(fe = foundErr || !success, l = implicitly)
+        exprCont(Assign(lhs, rhs).withLoc(S(l0 ++ rhs.toLoc)), prec, allowNewlines = false)
       case (KEYWORD("let"), l0) :: _ =>
         consume
         val bs = bindings(Nil)
@@ -936,7 +956,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         val tu = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.typingUnitMaybeIndented).withLoc(S(loc))
         exprCont(Rft(acc, tu), prec, allowNewlines)
         
-      case (COMMA | SEMI | NEWLINE | KEYWORD("then" | "else" | "in" | "=")
+      case (COMMA | SEMI | NEWLINE | KEYWORD("then" | "else" | "in" | "=" | "do")
         | IDENT(_, true) | BRACKETS(Curly, _), _) :: _ => R(acc)
       
       case (KEYWORD("of"), _) :: _ if prec <= 1 =>

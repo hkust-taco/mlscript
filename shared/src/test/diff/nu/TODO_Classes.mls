@@ -103,12 +103,6 @@ let y: c.A = c.x
 //│ ╔══[ERROR] Type `Cls[?A]` does not contain member `A`
 //│ ║  l.102: 	let y: c.A = c.x
 //│ ╙──       	        ^^
-//│ ╔══[ERROR] Type mismatch in type selection:
-//│ ║  l.102: 	let y: c.A = c.x
-//│ ║         	        ^^
-//│ ╟── application of type `forall ?A. Cls[?A]` does not have field 'A'
-//│ ║  l.96: 	let c = new Cls
-//│ ╙──      	            ^^^
 //│ let y: error
 //│ y
 //│ Runtime error:
@@ -196,11 +190,11 @@ fun test(f: ((IntLit | BoolLit) -> Int)) =
 :e
 class OopsLit() extends Expr[Bool]
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.197: 	class OopsLit() extends Expr[Bool]
+//│ ║  l.191: 	class OopsLit() extends Expr[Bool]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `#OopsLit` does not match type `BoolLit | IntLit`
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.185: 	abstract class Expr[A]: (IntLit | BoolLit) {}
+//│ ║  l.179: 	abstract class Expr[A]: (IntLit | BoolLit) {}
 //│ ╙──       	                        ^^^^^^^^^^^^^^^^^^
 //│ class OopsLit() extends Expr
 
