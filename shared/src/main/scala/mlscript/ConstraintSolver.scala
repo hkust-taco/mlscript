@@ -1529,11 +1529,33 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       
       case tv @ AssignedVariable(ty) =>
         freshened.getOrElse(tv, {
-          val nv = freshVar(tv.prov, S(tv), tv.nameHint)(if (tv.level > below) tv.level else lvl)
+          val nv = freshVar(tv.prov, S(tv), tv.nameHint)(if (tv.level > below) tv.level else {
+            assert(lvl <= below, "this condition should be false for the result to be correct")
+            lvl
+          })
           freshened += tv -> nv
           val ty2 = freshen(ty)
-          nv.assignedTo = S(ty2)
-          nv
+          val l = ty2.level
+          if (l <= nv.level) {
+            // * Normal case.
+            nv.assignedTo = S(ty2)
+            nv
+          } else {
+            // * Ouch... Freak case.
+            // * Because tv could be recursive and refer to itself,
+            // * in the general case we must do the freshening from scratch.
+            // * This is obviously horrible and could lead to pathological complexity;
+            // * but I believe it only occurs in freak cases related to `freshen` being (ab)used
+            // * to instantiate some skolems to type arguments whose levels happen to be bigger than ctx.lvl.
+            // * As of this commit, it seems this case is only triggered by shared/src/test/diff/nu/Eval.mls.
+            // * Eventually we'll want to fix this by making ctx.lvl agree
+            // * with whatever is substituted by freshening.
+            val nv = freshVar(tv.prov, S(tv), tv.nameHint)(l)
+            freshened += tv -> nv
+            val ty2 = freshen(ty)
+            nv.assignedTo = S(ty2)
+            nv
+          }
         })
       
       // * Note: I forgot why I though this was unsound...
