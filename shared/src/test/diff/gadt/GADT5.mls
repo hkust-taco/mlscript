@@ -153,7 +153,7 @@ fun g[T](x: F[T, T]): T = if x is
 //│ ╟── Note: type parameter Y is defined at:
 //│ ║  l.25: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
 //│ ╙──      	             ^
-//│ fun g: forall 'T. (x: F['T, 'T]) -> 'T
+//│ fun g: forall 'T. (x: F['T, 'T]) -> (error | 'T)
 
 // * we can manually refine it though
 fun g[T](x: F[T, T]): T = if x is
@@ -164,9 +164,9 @@ fun g[T](x: F[T, T]): T = if x is
 
 g(MkF(None))
 g(MkF(Some(1)))
-//│ Option['Z] | Some['Z]
+//│ Option['A] | Some['A]
 //│   where
-//│     'Z :> 1
+//│     'A :> 1
 //│ res
 //│     = None { class: [class None extends Option] }
 //│ res

@@ -36,4 +36,4 @@ fun get(x) = if x is Some(r) then r else error
 //│ fun get: forall 'T. (Object & ~#Some | Some['T]) -> (??T & 'T)
 
 fun get(x: Option['a]): x.T = if x is Some(r) then r else error
-//│ fun get: forall 'a. (x: Option['a]) -> 'a
+//│ fun get: forall 'a. (x: Option['a]) -> (??T & 'a)

@@ -238,29 +238,11 @@ fun baz(b: Baz[?]) = if b is
     BB then true as b.A
 //│ fun baz: (b: Baz[?]) -> (Int | false | true)
 
-// TODO   b.A is basically ? here, maybe fine?
+// * Note: this didn't work before we pushed ascriptions in,
+// * as we don't yet have proper path-dependent type forms like b.A, which is basically ? here.
 fun baz(b: Baz[?]): b.A = if b is
     BI then 1 as b.A
     BB then true as b.A
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.242: 	fun baz(b: Baz[?]): b.A = if b is
-//│ ║         	                             ^^^^
-//│ ║  l.243: 	    BI then 1 as b.A
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.244: 	    BB then true as b.A
-//│ ║         	^^^^^^^^^^^^^^^^
-//│ ╟── type `Int` is not an instance of type `Bool`
-//│ ║  l.220: 	class BI() extends Baz[Int]
-//│ ║         	                       ^^^
-//│ ╟── but it flows into type selection with expected type `Bool`
-//│ ║  l.243: 	    BI then 1 as b.A
-//│ ║         	                  ^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.221: 	class BB() extends Baz[Bool]
-//│ ║         	                       ^^^^
-//│ ╟── from type selection:
-//│ ║  l.242: 	fun baz(b: Baz[?]): b.A = if b is
-//│ ╙──       	                     ^^
 //│ fun baz: (b: Baz[?]) -> (Int | false | true)
 
 class Foo[T](val x: T)
@@ -296,7 +278,7 @@ fun f: Foo[Int] -> Foo[?]
 :e
 e as Foo[Int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.297: 	e as Foo[Int]
+//│ ║  l.279: 	e as Foo[Int]
 //│ ║         	^
 //│ ╙── expression of type `anything` is not an instance of type `Int`
 //│ Foo[Int]
@@ -307,7 +289,7 @@ e as Foo[Int]
 :e
 f(e)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.308: 	f(e)
+//│ ║  l.290: 	f(e)
 //│ ║         	^^^^
 //│ ╙── expression of type `anything` is not an instance of type `Int`
 //│ Foo[?] | error
@@ -322,7 +304,7 @@ fun f(x: ?) = x
 :e
 f(1)
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.319: 	fun f(x: ?) = x
+//│ ║  l.301: 	fun f(x: ?) = x
 //│ ╙──       	         ^
 //│ error
 //│ res
@@ -331,7 +313,7 @@ f(1)
 :e
 f(f)
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.319: 	fun f(x: ?) = x
+//│ ║  l.301: 	fun f(x: ?) = x
 //│ ╙──       	         ^
 //│ error
 //│ res
@@ -340,14 +322,14 @@ f(f)
 :e
 fun f(x): ? = x
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.341: 	fun f(x): ? = x
+//│ ║  l.323: 	fun f(x): ? = x
 //│ ╙──       	          ^
 //│ fun f: anything -> anything
 
 :e
 fun f(x: Int): ? = x
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.348: 	fun f(x: Int): ? = x
+//│ ║  l.330: 	fun f(x: Int): ? = x
 //│ ╙──       	               ^
 //│ fun f: (x: Int) -> anything
 
@@ -358,7 +340,7 @@ fun f(x: ?): ? = x
 :e
 f(1)
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.355: 	fun f(x: ?): ? = x
+//│ ║  l.337: 	fun f(x: ?): ? = x
 //│ ╙──       	         ^
 //│ error
 //│ res
@@ -367,10 +349,10 @@ f(1)
 :e
 let x: ? = 1
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.368: 	let x: ? = 1
+//│ ║  l.350: 	let x: ? = 1
 //│ ╙──       	       ^
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.368: 	let x: ? = 1
+//│ ║  l.350: 	let x: ? = 1
 //│ ╙──       	       ^
 //│ let x: anything
 //│ x
@@ -379,7 +361,7 @@ let x: ? = 1
 :e
 1 as ?
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.380: 	1 as ?
+//│ ║  l.362: 	1 as ?
 //│ ╙──       	     ^
 //│ anything
 //│ res
@@ -410,7 +392,7 @@ let x: ? -> ?
 :e
 let x = ?
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.411: 	let x = ?
+//│ ║  l.393: 	let x = ?
 //│ ╙──       	        ^
 //│ let x: error
 //│ Code generation encountered an error:
@@ -419,7 +401,7 @@ let x = ?
 :e
 if x is ? then 1
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.420: 	if x is ? then 1
+//│ ║  l.402: 	if x is ? then 1
 //│ ╙──       	        ^
 //│ error
 //│ Code generation encountered an error:
@@ -428,7 +410,7 @@ if x is ? then 1
 :e
 let x: ?[?]
 //│ ╔══[ERROR] Wrong number of type arguments – expected 0, found 1
-//│ ║  l.429: 	let x: ?[?]
+//│ ║  l.411: 	let x: ?[?]
 //│ ╙──       	       ^^^^
 //│ let x: ?
 //│ x

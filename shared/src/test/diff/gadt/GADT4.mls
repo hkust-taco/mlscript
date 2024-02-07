@@ -198,7 +198,18 @@ fun eval(e: Expr['t]): e.T = if e is
     If(p, a, b) then if eval(p) then eval(a) : e.T else eval(b) : e.T
     Pair(a, b) then [eval(a), eval(b)] : e.T
     Fst(p) then fst(eval(p)) : e.T
-//│ fun eval: forall 't. (e: Expr['t]) -> 't
+//│ fun eval: forall 't. (e: Expr['t]) -> ('t & (Int | false | true | [??A, ??B] | ??A0 | ??A1))
+//│ fun eval: forall 'T. Expr['T] -> 'T
+
+fun eval: Expr['T] -> 'T
+fun eval(e: Expr['t]): e.T = if e is
+    Lit(i) then i
+    Plus(a, b) then eval(a) + eval(b)
+    Equals(a, b) then (eval(a) == eval(b))
+    If(p, a, b) then if eval(p) then eval(a) else eval(b)
+    Pair(a, b) then [eval(a), eval(b)]
+    Fst(p) then fst(eval(p))
+//│ fun eval: forall 't. (e: Expr['t]) -> ('t & (Int | false | true | [??A, ??B] | ??A0 | ??A1))
 //│ fun eval: forall 'T. Expr['T] -> 'T
 
 eval(Plus(Lit(1), Lit(1)))
@@ -214,7 +225,7 @@ eval(If(Equals(Lit(3), Plus(Lit(1), Lit(1))), Fst(Pair(Lit(1), Lit(2))), Lit(3))
 :e
 eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.215: 	eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
+//│ ║  l.226: 	eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Bool` is not an instance of type `Int`
 //│ ║  l.181: 	class Equals(a: Expr[Int], b: Expr[Int]) extends Expr[Bool]

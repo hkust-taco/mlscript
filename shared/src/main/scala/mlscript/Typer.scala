@@ -803,8 +803,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     *   - we always generalize lambdas found in arguments, record/tuple fields, etc.
     */
   def typeTerm(term: Term)(implicit ctx: Ctx, raise: Raise, vars: Map[Str, SimpleType], genLambdas: GenLambdas): SimpleType
-        = trace[ST](s"$lvl. Typing ${if (ctx.inPattern) "pattern" else "term"} $term") {
-        // = trace[ST](s"$lvl. Typing ${if (ctx.inPattern) "pattern" else "term"} $term   ${extrCtx.map(_.size)}") {
+        = trace[ST](s"$lvl. Typing ${if (ctx.inPattern) "pattern" else "term"} ${term.showDbg}") {
+        // = trace[ST](s"$lvl. Typing ${if (ctx.inPattern) "pattern" else "term"} ${term.showDbg}   ${extrCtx.map(_.size)}") {
     implicit val prov: TypeProvenance = ttp(term)
     
     def con(lhs: SimpleType, rhs: SimpleType, res: SimpleType)(implicit ctx: Ctx): SimpleType = {
@@ -853,6 +853,19 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             ctx += nme -> VarSymbol(ty_ty, v)
             ty_ty
         }
+        
+      case Asc(c @ CaseOf(s, cs), ty) =>
+        // TODO hygiene:
+        //  * Pushing the ascribed type inside the branch could lead to wrongly capturing pattern-bound variables.
+        //  * In the future this won't happen, since we'll get properly uniqued names/symbols from pretyper.
+        typeTerm(CaseOf(s, cs.map(t => Asc(t, ty))).withLocOf(c))
+        
+      case Asc(i @ If(ifb, els), ty) =>
+        // TODO hygiene: like above
+        val i2 = If(ifb.map(t => Asc(t, ty)), els.map(t => Asc(t, ty))).withLocOf(i)
+        val res_ty = typeTerm(i2)
+        i.desugaredTerm = i2.desugaredTerm
+        res_ty
         
       case Asc(trm, ty) =>
         val trm_ty = typePolymorphicTerm(trm)

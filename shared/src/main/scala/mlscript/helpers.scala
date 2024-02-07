@@ -1056,6 +1056,12 @@ trait CaseBranchesImpl extends Located { self: CaseBranches =>
     case NoCases => ""
   }
   
+  def map(f: Term => Term): CaseBranches = this match {
+    case Case(pat, body, rest) => Case(pat, f(body), rest.map(f))
+    case Wildcard(b) => Wildcard(f(b))
+    case NoCases => this
+  }
+  
 }
 
 trait AdtMatchPatImpl extends Located { self: AdtMatchPat =>
@@ -1081,6 +1087,18 @@ trait IfBodyImpl extends Located { self: IfBody =>
     case IfOpApp(lhs, op, ib) => s"${lhs.showDbg} ${op.showDbg} ${ib.showDbg}"
     case IfOpsApp(lhs, ops) => s"${lhs.showDbg} ‹${ops.iterator.map{case(v, r) => s"· ${v.showDbg} ${r.showDbg}"}.mkString("; ")}›"
     case IfLet(isRec, v, r, b) => s"${if (isRec) "rec " else ""}let ${v.showDbg} = ${r.showDbg} in ${b.showDbg}"
+  }
+  
+  def map(f: Term => Term): IfBody = this match {
+    case IfThen(expr, rhs) => IfThen(expr, f(rhs))
+    case IfElse(expr) => IfElse(f(expr))
+    case IfLet(isRec, name, rhs, body) => IfLet(isRec, name, rhs, body.map(f))
+    case IfOpApp(lhs, op, rhs) => IfOpApp(lhs, op, rhs.map(f))
+    case IfOpsApp(lhs, opsRhss) => IfOpsApp(lhs, opsRhss.map(_.mapSecond(_.map(f))))
+    case IfBlock(lines) => IfBlock(lines.map {
+      case Left(ifb) => Left(ifb.map(f))
+      case r: Right[_, _] => r
+    })
   }
   
 }

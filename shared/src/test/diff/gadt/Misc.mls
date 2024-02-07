@@ -61,13 +61,13 @@ f(B)
 
 :e
 fun f(x: S): x.T = if x is A then 1 else 0
-//│ ╔══[ERROR] Type error in type ascription
+//│ ╔══[ERROR] Type error in `case` expression
 //│ ║  l.63: 	fun f(x: S): x.T = if x is A then 1 else 0
 //│ ║        	                      ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `T` leaks out of its scope
 //│ ║  l.63: 	fun f(x: S): x.T = if x is A then 1 else 0
-//│ ╙──      	                                  ^
-//│ fun f: (x: S[in anything out nothing]) -> ??T
+//│ ╙──      	                                         ^
+//│ fun f: (x: S[in anything out nothing]) -> (Int | ??T)
 
 fun f(x: S[?]) = if x is 
     A then 1 : x.T
@@ -79,29 +79,9 @@ f(A)
 //│ res
 //│     = 1
 
-// TODO
 fun f(x: S[?]): x.T = if x is 
     A then 1 : x.T
     B then true : x.T
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.83: 	fun f(x: S[?]): x.T = if x is 
-//│ ║        	                         ^^^^^
-//│ ║  l.84: 	    A then 1 : x.T
-//│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ║  l.85: 	    B then true : x.T
-//│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── type `Int` is not an instance of type `Bool`
-//│ ║  l.26: 	module A extends S[Int]
-//│ ║        	                   ^^^
-//│ ╟── but it flows into type selection with expected type `Bool`
-//│ ║  l.84: 	    A then 1 : x.T
-//│ ║        	                ^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.27: 	module B extends S[Bool]
-//│ ║        	                   ^^^^
-//│ ╟── from type selection:
-//│ ║  l.83: 	fun f(x: S[?]): x.T = if x is 
-//│ ╙──      	                 ^^
 //│ fun f: (x: S[?]) -> (Int | false | true)
 
 f(A)
@@ -220,11 +200,11 @@ test(MkW(1))
 :e
 fun test(a: Some[Int]) = true as a.T
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.221: 	fun test(a: Some[Int]) = true as a.T
+//│ ║  l.201: 	fun test(a: Some[Int]) = true as a.T
 //│ ║         	                         ^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.221: 	fun test(a: Some[Int]) = true as a.T
+//│ ║  l.201: 	fun test(a: Some[Int]) = true as a.T
 //│ ╙──       	                                  ^^
 //│ fun test: (a: Some[Int]) -> Int
 
@@ -258,11 +238,11 @@ let x: Ty[Int]
 :e
 true as x.T
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.259: 	true as x.T
+//│ ║  l.239: 	true as x.T
 //│ ║         	^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.259: 	true as x.T
+//│ ║  l.239: 	true as x.T
 //│ ╙──       	         ^^
 //│ Int
 //│ res
@@ -281,11 +261,11 @@ let x: Some[Int]
 :e
 true as x.T
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.282: 	true as x.T
+//│ ║  l.262: 	true as x.T
 //│ ║         	^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.282: 	true as x.T
+//│ ║  l.262: 	true as x.T
 //│ ╙──       	         ^^
 //│ Int
 //│ res

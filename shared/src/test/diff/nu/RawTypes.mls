@@ -60,31 +60,35 @@ fun foo(f: Foo[?]) = if f is Foo(a) then a : f.A
 
 // FIXME
 fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
-//│ ╔══[ERROR] Type error in type ascription
+//│ ╔══[ERROR] Type error in `case` expression
 //│ ║  l.62: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ║        	                          ^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.62: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
-//│ ║        	                                                ^^
+//│ ║  l.8: 	class Foo[type A](val a: A)
+//│ ║       	               ^
 //│ ╟── into type `Int | ~??A`
 //│ ║  l.62: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
-//│ ╙──      	                 ^^^
-//│ fun foo: (f: Foo[anything]) -> Int
+//│ ║        	                 ^^^
+//│ ╟── Note: constraint arises from type selection:
+//│ ║  l.62: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ╙──      	                                                ^^
+//│ fun foo: (f: Foo[anything]) -> (Int | error)
 
 :e
 fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.75: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.78: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ║        	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `anything` does not match type `Int | ~??A`
-//│ ║  l.75: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
-//│ ║        	                                                   ^^
-//│ ╟── but it flows into operator application with expected type `Int | ~??A`
-//│ ║  l.75: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
-//│ ║        	                             ^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `anything` does not match type `Int | ~??A`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.75: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
-//│ ╙──      	                    ^^^
+//│ ║  l.78: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║        	                    ^^^
+//│ ╟── from type selection:
+//│ ║  l.78: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║        	                                                   ^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.8: 	class Foo[type A](val a: A)
+//│ ╙──     	               ^
 //│ fun foo: (f: Foo[?]) -> Int
 
 fun foo(f: Foo['a]) = f.a : f.A

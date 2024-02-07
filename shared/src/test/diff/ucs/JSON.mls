@@ -154,7 +154,6 @@ fun traverse(t, f) =
 //│       <: 'A10 & ('A3 & 'A9 | ~??A2)
 //│   'A9 <: 'A10 & 'A7 & ('A3 | ~??A2)
 
-:e // FIXME recursion depth excess
 type JsonValue = JsonNull | JsonNumber | JsonString | JsonBoolean | JsonObject | JsonArray
 module JsonNull {
   fun toString() = "null"
@@ -195,7 +194,6 @@ class JsonArray(elements: List[JsonValue]) {
 //│ class JsonArray(elements: List[JsonValue]) {
 //│   fun toString: () -> Str
 //│ }
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 toString of JsonNull
 toString of JsonBoolean(true)
