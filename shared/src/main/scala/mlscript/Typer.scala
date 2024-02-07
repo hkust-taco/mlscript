@@ -441,9 +441,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             case Some(VarSymbol(ty, vr)) => () => if (lift) {
                 println(s"ty var: $vr : $ty") // select type from variable
                 ty
-              } else err(s"cannot lift variable $name to type", loc)(raise)
-            case Some(CompletedTypeInfo(ty@TypedNuFun(_,_,_))) => () => if (lift) ty.typeSignature
-              else err(s"cannot lift expression $name to type", loc)(raise)
+              } else err(
+                (msg"cannot lift variable $name to type" -> loc) ::
+                ty.prov.loco.toList.map(_ => (msg"as defined in" -> ty.prov.loco))
+              )(raise)
+            case Some(CompletedTypeInfo(ty@TypedNuFun(_,_,_))) => () => if (lift) 
+                ty.typeSignature
+              else err(
+                (msg"cannot lift expression $name to type" -> loc) ::
+                ty.toLoc.toList.map(_ => (msg"as defined in" -> ty.toLoc))
+              )(raise)
             case r => () => err(s"type identifier not found: " + name, loc)(raise) })
     val localVars = mutable.Map.empty[TypeVar, TypeVariable]
     def tyTp(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N) =

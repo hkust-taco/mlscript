@@ -52,7 +52,10 @@ let y: Foo
 let z: y[1, 2]
 //│ ╔══[ERROR] cannot lift expression y to type
 //│ ║  l.52: 	let z: y[1, 2]
-//│ ╙──      	       ^^^^^^^
+//│ ║        	       ^^^^^^^
+//│ ╟── as defined in
+//│ ║  l.46: 	let y: Foo
+//│ ╙──      	^^^^^^^^^^
 //│ let z: error
 //│ z
 //│   = <missing implementation>
@@ -60,7 +63,7 @@ let z: y[1, 2]
 :e
 2 : (1, 2)
 //│ ╔══[ERROR] cannot lift variable , to type
-//│ ║  l.61: 	2 : (1, 2)
+//│ ║  l.64: 	2 : (1, 2)
 //│ ╙──      	    ^^^^^^
 //│ error
 //│ res
