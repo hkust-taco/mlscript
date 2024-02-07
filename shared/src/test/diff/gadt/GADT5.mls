@@ -63,7 +63,7 @@ MkF(x) : F[Option[Int], Option[Int]]
 
 fun g: forall 'T: F['T, 'T] -> 'T
 fun g[T](x: F[T, T]): T = if x is
-    MkF(m) then m : x.B
+  MkF(m) then m : x.B
 //│ fun g: forall 'T. (x: F['T, 'T]) -> 'T
 //│ fun g: forall 'T0. F['T0, 'T0] -> 'T0
 
@@ -113,8 +113,8 @@ g(t)
 //│     = true
 
 fun g[T](x: MkF[T, Option[T]]): Option[T] = if x is
-    MkF(None) then None : x.B
-    else error
+  MkF(None) then None : x.B
+  else error
 //│ fun g: forall 'T. (x: MkF['T, Option['T]]) -> Option['T]
 
 g(MkF(None))
@@ -123,30 +123,30 @@ g(MkF(None))
 //│     = None { class: [class None extends Option] }
 
 fun g[T](x: F[Option[T], Option[T]]): Option[T] = if x is
-    MkF(None) then None : x.B
-    else error
+  MkF(None) then None : x.B
+  else error
 //│ fun g: forall 'T. (x: F[Option['T], Option['T]]) -> Option['T]
 
 // * no refinement in nested patterns
-// TODO
+:e // TODO
 fun g[T](x: F[T, T]): T = if x is
-    MkF(Some(t)) then Some(t) : x.A
-    MkF(None) then None : x.A
+  MkF(Some(t)) then Some(t) : x.A
+  MkF(None) then None : x.A
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.132: 	fun g[T](x: F[T, T]): T = if x is
 //│ ║         	                             ^^^^
-//│ ║  l.133: 	    MkF(Some(t)) then Some(t) : x.A
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.134: 	    MkF(None) then None : x.A
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.133: 	  MkF(Some(t)) then Some(t) : x.A
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.134: 	  MkF(None) then None : x.A
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `T` does not match type `Object | ~(T & ??Y)`
 //│ ║  l.132: 	fun g[T](x: F[T, T]): T = if x is
 //│ ║         	      ^
 //│ ╟── Note: constraint arises from `case` expression:
-//│ ║  l.133: 	    MkF(Some(t)) then Some(t) : x.A
-//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.134: 	    MkF(None) then None : x.A
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.133: 	  MkF(Some(t)) then Some(t) : x.A
+//│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.134: 	  MkF(None) then None : x.A
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from field selection:
 //│ ║  l.25: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
 //│ ║        	                ^
@@ -155,22 +155,23 @@ fun g[T](x: F[T, T]): T = if x is
 //│ ╙──      	             ^
 //│ fun g: forall 'T. (x: F['T, 'T]) -> (error | 'T)
 
-// * we can manually refine it though
+// * We used to be able to manually refine it
+// * but this now fails... not sure why
+:e
 fun g[T](x: F[T, T]): T = if x is
-    MkF(f) then if (f : x.A) is 
-        Some(t) then Some(t) : x.A
-        None    then None : x.A
+  MkF(f) then if (f : x.A) is 
+    Some(t) then Some(t) : x.A
+    None  then None : x.A
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.159: 	fun g[T](x: F[T, T]): T = if x is
+//│ ║  l.161: 	fun g[T](x: F[T, T]): T = if x is
 //│ ║         	                             ^^^^
-//│ ║  l.160: 	    MkF(f) then if (f : x.A) is 
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.161: 	        Some(t) then Some(t) : x.A
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.162: 	        None    then None : x.A
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.162: 	  MkF(f) then if (f : x.A) is 
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.163: 	    Some(t) then Some(t) : x.A
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.164: 	    None  then None : x.A
+//│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not match type `??Z | ~(??Z0 & ??A)`
-//│ TEST CASE FAILURE: There was an unexpected type error
 //│ fun g: forall 'T. (x: F['T, 'T]) -> (error | 'T)
 
 g(MkF(None))
@@ -183,12 +184,19 @@ g(MkF(Some(1)))
 //│ res
 //│     = Some {}
 
+fun g[T](x: F[T, T]): T = if x is MkF(f) then f : x.A
+//│ fun g: forall 'T. (x: F['T, 'T]) -> 'T
+
+fun g[T](x: F[T, T]): T = if x is MkF(f) then f : x.B
+//│ fun g: forall 'T. (x: F['T, 'T]) -> 'T
+
+
 abstract class Foo[type A, type B]: Bar
 class Bar(val a: Option[Int]) extends Foo[Option[Int], Option[Int]]
 //│ abstract class Foo[A, B]: Bar
 //│ class Bar(a: Option[Int]) extends Foo
 
 fun foo[T](x: Foo[T, T]): T = if x is
-    Bar(Some(a)) then Some(a) as x.A
-    Bar(None)    then None as x.A
+  Bar(Some(a)) then Some(a) as x.A
+  Bar(None)  then None as x.A
 //│ fun foo: forall 'T. (x: Foo['T, 'T]) -> 'T
