@@ -53,14 +53,15 @@ foo(Foo(1))
 //│ res
 //│     = 1
 
-// TODO
+:e // * To allow this, we'd need to either introduce more levels even outside pattern matching branches
+   // * or support proper path-dependent types internally.
 fun foo(f: Foo[?]) = f.x as f.T
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.57: 	fun foo(f: Foo[?]) = f.x as f.T
+//│ ║  l.58: 	fun foo(f: Foo[?]) = f.x as f.T
 //│ ║        	                     ^^^
 //│ ╟── field selection of type `anything` does not match type `nothing`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.57: 	fun foo(f: Foo[?]) = f.x as f.T
+//│ ║  l.58: 	fun foo(f: Foo[?]) = f.x as f.T
 //│ ╙──      	                             ^^
 //│ fun foo: (f: Foo[?]) -> anything
 
@@ -97,7 +98,7 @@ let f: Foo[?] = Foo(1)
 let y: Foo[Foo[Int]]
 let f: Foo[Foo[?]] = y
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.98: 	let f: Foo[Foo[?]] = y
+//│ ║  l.99: 	let f: Foo[Foo[?]] = y
 //│ ║        	                     ^
 //│ ╙── expression of type `Int` does not match type `nothing`
 //│ let f: Foo[Foo[anything]]
@@ -145,13 +146,13 @@ let x: Bar[?] = MkBarInt()
 :e
 x as Bar[Bool]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.146: 	x as Bar[Bool]
+//│ ║  l.147: 	x as Bar[Bool]
 //│ ║         	^
 //│ ╟── type `anything` is not an instance of type `Bool`
-//│ ║  l.140: 	let x: Bar[?] = MkBarInt()
+//│ ║  l.141: 	let x: Bar[?] = MkBarInt()
 //│ ║         	           ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.146: 	x as Bar[Bool]
+//│ ║  l.147: 	x as Bar[Bool]
 //│ ╙──       	         ^^^^
 //│ Bar[Bool]
 //│ res
@@ -170,7 +171,7 @@ MkBarFoo(Foo(1)) as Bar[?]
 :e
 MkBarFoo(Foo(1)) as Bar[Foo[?]]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.171: 	MkBarFoo(Foo(1)) as Bar[Foo[?]]
+//│ ║  l.172: 	MkBarFoo(Foo(1)) as Bar[Foo[?]]
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not match type `nothing`
 //│ Bar[Foo[?]]
@@ -180,7 +181,7 @@ MkBarFoo(Foo(1)) as Bar[Foo[?]]
 :e
 let x: Bar[Foo[?]] = MkBarFoo(1)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.181: 	let x: Bar[Foo[?]] = MkBarFoo(1)
+//│ ║  l.182: 	let x: Bar[Foo[?]] = MkBarFoo(1)
 //│ ║         	                     ^^^^^^^^^^^
 //│ ╙── expression of type `anything` does not match type `nothing`
 //│ let x: Bar[Foo[?]]
@@ -195,7 +196,7 @@ let x: Bar[Foo[?]]
 :e
 x as Bar[Foo[Int]]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.196: 	x as Bar[Foo[Int]]
+//│ ║  l.197: 	x as Bar[Foo[Int]]
 //│ ║         	^
 //│ ╙── expression of type `anything` is not an instance of type `Int`
 //│ Bar[Foo[Int]]
@@ -278,7 +279,7 @@ fun f: Foo[Int] -> Foo[?]
 :e
 e as Foo[Int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.279: 	e as Foo[Int]
+//│ ║  l.280: 	e as Foo[Int]
 //│ ║         	^
 //│ ╙── expression of type `anything` is not an instance of type `Int`
 //│ Foo[Int]
@@ -289,7 +290,7 @@ e as Foo[Int]
 :e
 f(e)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.290: 	f(e)
+//│ ║  l.291: 	f(e)
 //│ ║         	^^^^
 //│ ╙── expression of type `anything` is not an instance of type `Int`
 //│ Foo[?] | error
@@ -304,7 +305,7 @@ fun f(x: ?) = x
 :e
 f(1)
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.301: 	fun f(x: ?) = x
+//│ ║  l.302: 	fun f(x: ?) = x
 //│ ╙──       	         ^
 //│ error
 //│ res
@@ -313,7 +314,7 @@ f(1)
 :e
 f(f)
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.301: 	fun f(x: ?) = x
+//│ ║  l.302: 	fun f(x: ?) = x
 //│ ╙──       	         ^
 //│ error
 //│ res
@@ -322,14 +323,14 @@ f(f)
 :e
 fun f(x): ? = x
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.323: 	fun f(x): ? = x
+//│ ║  l.324: 	fun f(x): ? = x
 //│ ╙──       	          ^
 //│ fun f: anything -> anything
 
 :e
 fun f(x: Int): ? = x
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.330: 	fun f(x: Int): ? = x
+//│ ║  l.331: 	fun f(x: Int): ? = x
 //│ ╙──       	               ^
 //│ fun f: (x: Int) -> anything
 
@@ -340,7 +341,7 @@ fun f(x: ?): ? = x
 :e
 f(1)
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.337: 	fun f(x: ?): ? = x
+//│ ║  l.338: 	fun f(x: ?): ? = x
 //│ ╙──       	         ^
 //│ error
 //│ res
@@ -349,10 +350,10 @@ f(1)
 :e
 let x: ? = 1
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.350: 	let x: ? = 1
+//│ ║  l.351: 	let x: ? = 1
 //│ ╙──       	       ^
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.350: 	let x: ? = 1
+//│ ║  l.351: 	let x: ? = 1
 //│ ╙──       	       ^
 //│ let x: anything
 //│ x
@@ -361,7 +362,7 @@ let x: ? = 1
 :e
 1 as ?
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.362: 	1 as ?
+//│ ║  l.363: 	1 as ?
 //│ ╙──       	     ^
 //│ anything
 //│ res
@@ -392,7 +393,7 @@ let x: ? -> ?
 :e
 let x = ?
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.393: 	let x = ?
+//│ ║  l.394: 	let x = ?
 //│ ╙──       	        ^
 //│ let x: error
 //│ Code generation encountered an error:
@@ -401,7 +402,7 @@ let x = ?
 :e
 if x is ? then 1
 //│ ╔══[ERROR] illegal pattern
-//│ ║  l.402: 	if x is ? then 1
+//│ ║  l.403: 	if x is ? then 1
 //│ ╙──       	        ^
 //│ error
 //│ Code generation encountered an error:
@@ -410,7 +411,7 @@ if x is ? then 1
 :e
 let x: ?[?]
 //│ ╔══[ERROR] Wrong number of type arguments – expected 0, found 1
-//│ ║  l.411: 	let x: ?[?]
+//│ ║  l.412: 	let x: ?[?]
 //│ ╙──       	       ^^^^
 //│ let x: ?
 //│ x
@@ -419,7 +420,7 @@ let x: ?[?]
 :e
 class Bar extends ?
 //│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.420: 	class Bar extends ?
+//│ ║  l.421: 	class Bar extends ?
 //│ ╙──       	                  ^
 //│ class Bar {
 //│   constructor()
@@ -431,14 +432,14 @@ class Bar extends ?
 :e
 abstract class Bar: ?
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.432: 	abstract class Bar: ?
+//│ ║  l.433: 	abstract class Bar: ?
 //│ ╙──       	                    ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
 
 :e
 class ?
 //│ ╔══[ERROR] Type name '?' is reserved
-//│ ║  l.439: 	class ?
+//│ ║  l.440: 	class ?
 //│ ╙──       	^^^^^^^
 //│ class ? {
 //│   constructor()
