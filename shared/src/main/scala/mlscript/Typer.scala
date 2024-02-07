@@ -121,7 +121,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     // * Enter a new quoted environment with empty `qenv` and `fvars`.
     // * A whole quasiquote (i.e., code"...") contains no binding or free variables at the beginning.
     // * For a quoted binding (e.g., code"x => ..."):
-    // ** 1. The ctx of `...` is still in the quotation so `inQuote = true`
+    // ** 1. The context of the lambda body is still in the quotation so `inQuote = true`
     // ** 2. `qenv` only contains skolems created by the current binding and `fvars` only contains free variables appearing in the body.
     // ** So we also apply empty `qenv` and `fvars` at the beginning.
     // ** e.g. `code"x => y => x + y"`. For `y => x + y`, fvars = {\ga_x, \ga_y}, qenv = {\ga_y}. 
