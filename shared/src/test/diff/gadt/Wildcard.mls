@@ -415,3 +415,37 @@ let x: ?[?]
 //│ let x: ?
 //│ x
 //│   = <missing implementation>
+
+:e
+class Bar extends ?
+//│ ╔══[ERROR] Unsupported parent specification
+//│ ║  l.420: 	class Bar extends ?
+//│ ╙──       	                  ^
+//│ class Bar {
+//│   constructor()
+//│ }
+//│ Code generation encountered an error:
+//│   unsupported parents.
+
+// FIXME
+:e
+abstract class Bar: ?
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.432: 	abstract class Bar: ?
+//│ ╙──       	                    ^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+
+:e
+class ?
+//│ ╔══[ERROR] Type name '?' is reserved
+//│ ║  l.439: 	class ?
+//│ ╙──       	^^^^^^^
+//│ class ? {
+//│   constructor()
+//│ }
+//│ Syntax error:
+//│   Invalid or unexpected token
+
+// TODO should we allow this?
+fun (?) wc: Int -> Bool
+//│ fun (?) wc: Int -> Bool

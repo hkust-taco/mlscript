@@ -417,7 +417,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case Cls | Mod | Als | Trt => ()
       case _ => err(msg"${k.str} ${nme} cannot be used as a type", loc); ()
     }
-    def typeNamed(loc: Opt[Loc], name: Str): (() => ST) \/ (TypeDefKind, Int) =
+    def typeNamed(loc: Opt[Loc], name: Str, lift: Bool): (() => ST) \/ (TypeDefKind, Int) =
       newDefsInfo.get(name)
         .orElse(ctx.tyDefs.get(name).map(td => (td.kind, td.tparamsargs.size)))
         .orElse(ctx.get(name).flatMap {
@@ -438,12 +438,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             N
         })
         .toRight(ctx.get(name) match {
-            case Some(VarSymbol(ty, vr)) => 
-              println(s"ty var: $vr : $ty") // select type from variable
-              () => ty
-            case Some(CompletedTypeInfo(ty@TypedNuFun(_,_,_))) =>
-              () => ty.typeSignature  // TODO not sure
-              // () => err(s"Cannot select from let binding or function", loc)(raise)
+            case Some(VarSymbol(ty, vr)) => () => if (lift) {
+                println(s"ty var: $vr : $ty") // select type from variable
+                ty
+              } else err(s"cannot lift variable $name to type", loc)(raise)
+            case Some(CompletedTypeInfo(ty@TypedNuFun(_,_,_))) => () => if (lift) ty.typeSignature
+              else err(s"cannot lift expression $name to type", loc)(raise)
             case r => () => err(s"type identifier not found: " + name, loc)(raise) })
     val localVars = mutable.Map.empty[TypeVar, TypeVariable]
     def tyTp(loco: Opt[Loc], desc: Str, originName: Opt[Str] = N) =
@@ -521,7 +521,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         val tyLoc = ty.toLoc
         val tpr = tyTp(tyLoc, "type reference")
         vars.getOrElse(name, {
-          typeNamed(tyLoc, name) match {
+          typeNamed(tyLoc, name, true) match {
             case R((_, tpnum)) =>
               if (tpnum === 0) TypeRef(tn, Nil)(tpr)
               else ctx.tyDefs2.get(name) match {
@@ -539,7 +539,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               }
             case L(e) =>
               if (name.isEmpty || !name.head.isLower) e()
-              else (typeNamed(tyLoc, name.capitalize), ctx.tyDefs.get(name.capitalize)) match {
+              else (typeNamed(tyLoc, name.capitalize, false), ctx.tyDefs.get(name.capitalize)) match {
                 case (R((kind, _)), S(td)) => kind match {
                   case Cls => clsNameToNomTag(td)(tyTp(tyLoc, "class tag"), ctx)
                   case Trt => trtNameToNomTag(td)(tyTp(tyLoc, "trait tag"), ctx)
@@ -562,7 +562,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       }
       case AppliedType(base, targs) =>
         val prov = tyTp(ty.toLoc, "applied type reference")
-        typeNamed(ty.toLoc, base.name) match {
+        typeNamed(ty.toLoc, base.name, false) match {
           case R((_, tpnum)) =>
             val realTargs = if (targs.size === tpnum) targs.map{
               case Bounds(lb, ub) if newDefs => WildcardArg(rec(lb), rec(ub))(provTODO)

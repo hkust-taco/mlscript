@@ -13,8 +13,10 @@ fun f: (Str | [Str, Int])
 
 :e
 fun f: Str | (Str, Int)
-//│ fun f: forall 'a. Str | (anything, 'a) -> 'a
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
+//│ ╔══[ERROR] cannot lift variable , to type
+//│ ║  l.15: 	fun f: Str | (Str, Int)
+//│ ╙──      	             ^^^^^^^^^^
+//│ fun f: Str | error
 
 
 fun f: Str | ([Str, Int])
@@ -22,8 +24,10 @@ fun f: Str | ([Str, Int])
 
 :e
 fun f: Str | ((Str, Int))
-//│ fun f: forall 'a. Str | (anything, 'a) -> 'a
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
+//│ ╔══[ERROR] cannot lift variable , to type
+//│ ║  l.26: 	fun f: Str | ((Str, Int))
+//│ ╙──      	             ^^^^^^^^^^^^
+//│ fun f: Str | error
 
 
 
@@ -67,19 +71,19 @@ let r = if true then id else (x, y) => [y, x]
 r(error)
 r(error, error)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.67: 	r(error)
+//│ ║  l.71: 	r(error)
 //│ ║        	^^^^^^^^
 //│ ╟── argument of type `[nothing]` does not match type `[?a, ?b]`
-//│ ║  l.67: 	r(error)
+//│ ║  l.71: 	r(error)
 //│ ║        	 ^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.61: 	let r = if true then id else (x, y) => [y, x]
+//│ ║  l.65: 	let r = if true then id else (x, y) => [y, x]
 //│ ╙──      	                              ^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.68: 	r(error, error)
+//│ ║  l.72: 	r(error, error)
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── argument list of type `[nothing, nothing]` does not match type `[?a]`
-//│ ║  l.68: 	r(error, error)
+//│ ║  l.72: 	r(error, error)
 //│ ╙──      	 ^^^^^^^^^^^^^^
 //│ error | [nothing, nothing]
 //│ res
@@ -91,7 +95,7 @@ r(error, error)
 
 // * Note: the correct version:
 let r = if true then id else ([x, y]) => [y, x]
-//│ let r: forall 'a 'b 'c. (['a, 'b] & 'c) -> (['b, 'a] | 'c)
+//│ let r: forall 'a 'b 'c. (['b, 'c] & 'a) -> (['c, 'b] | 'a)
 //│ r
 //│   = [Function: id]
 

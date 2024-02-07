@@ -38,7 +38,7 @@ fun f(e) = if e is
 
 // * Invariant:
 
-abstract class Exp[A]: Pair | Lit
+abstract class Exp[A]: Pair[?, ?] | Lit
 class Lit(val n: Int) extends Exp[Int]
 class Pair[L, R](val lhs: Exp[L], val rhs: Exp[R]) extends Exp[[L, R]]
 //│ abstract class Exp[A]: Lit | Pair[?, ?]
@@ -61,15 +61,16 @@ fun f(e) = if e is
 
 // :e
 (e: Exp['X]) => f(e)
-//│ forall 'X 'L 'R. (e: Exp['X]) -> (Int | [Exp[in ??L & 'L | ??L0 out ??L1 & (??L2 | 'L)], Exp[in ??R & 'R | ??R0 out ??R1 & (??R2 | 'R)]])
+//│ forall 'X. (e: Exp['X]) -> (Int | [Exp[in ??L out ??L0], Exp[in ??R out ??R0]])
 //│ res
 //│     = [Function: res]
 
-:e
 fun f(e) = if e is
   Pair(l, r) then f(l) + f(r)
   Lit(n) then n
 //│ fun f: (Lit | Pair[in anything out nothing, in anything out nothing]) -> Int
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
-
+f(Pair(Pair(Lit(1), Lit(2)), Lit(3)))
+//│ Int
+//│ res
+//│     = 6

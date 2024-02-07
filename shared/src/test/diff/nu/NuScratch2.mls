@@ -157,3 +157,7 @@ fun test(f: Foo['a]): f.T = if f is
 test(error, 1)
 //│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
+fun test[T](f: Foo[T]): T = if f is
+    Bar then 123 : f.T
+    Baz then error
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError

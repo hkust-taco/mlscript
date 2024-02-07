@@ -68,14 +68,18 @@ let x: (1,)
 
 :e
 let x: (1, 2)
-//│ let x: forall 'a. (anything, 'a) -> 'a
+//│ ╔══[ERROR] cannot lift variable , to type
+//│ ║  l.70: 	let x: (1, 2)
+//│ ╙──      	       ^^^^^^
+//│ let x: error
 //│ x
 //│   = <missing implementation>
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 :e
 let x: (1, 2,)
-//│ let x: forall 'a. (anything, 'a) -> 'a
+//│ ╔══[ERROR] cannot lift variable , to type
+//│ ║  l.79: 	let x: (1, 2,)
+//│ ╙──      	       ^^^^^^^
+//│ let x: error
 //│ x
 //│   = <missing implementation>
-//│ TEST CASE FAILURE: There was an unexpected lack of type error

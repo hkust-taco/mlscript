@@ -1,0 +1,72 @@
+:NewDefs
+
+let y = 1
+//│ let y: 1
+//│ y
+//│   = 1
+
+1 : y
+//│ 1
+//│ res
+//│     = 1
+
+let x: y
+//│ let x: 1
+//│ x
+//│   = <missing implementation>
+
+:e
+let x: (1, 2)
+//│ ╔══[ERROR] cannot lift variable , to type
+//│ ║  l.19: 	let x: (1, 2)
+//│ ╙──      	       ^^^^^^
+//│ let x: error
+//│ x
+//│   = <missing implementation>
+
+:e
+let x: (1, 2,)
+//│ ╔══[ERROR] cannot lift variable , to type
+//│ ║  l.28: 	let x: (1, 2,)
+//│ ╙──      	       ^^^^^^^
+//│ let x: error
+//│ x
+//│   = <missing implementation>
+
+class Foo[A, B]
+//│ class Foo[A, B] {
+//│   constructor()
+//│ }
+
+let x: Foo[1, 2]
+//│ let x: Foo[1, 2]
+//│ x
+//│   = <missing implementation>
+
+let y: Foo
+//│ let y: Foo[?, ?]
+//│ y
+//│   = <missing implementation>
+
+:e
+let z: y[1, 2]
+//│ ╔══[ERROR] cannot lift expression y to type
+//│ ║  l.52: 	let z: y[1, 2]
+//│ ╙──      	       ^^^^^^^
+//│ let z: error
+//│ z
+//│   = <missing implementation>
+
+:e
+2 : (1, 2)
+//│ ╔══[ERROR] cannot lift variable , to type
+//│ ║  l.61: 	2 : (1, 2)
+//│ ╙──      	    ^^^^^^
+//│ error
+//│ res
+//│     = 2
+
+1 : Int
+//│ Int
+//│ res
+//│     = 1

@@ -1,6 +1,6 @@
 :NewDefs
 
-abstract class R[type A]: (RI | RB | RC)
+abstract class R[type A]: RI | RB | RC
 class RI(x: Int) extends R[Int]
 class RB(x: Bool) extends R[Bool]
 class RC(x: Str) extends R[Str]
