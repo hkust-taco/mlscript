@@ -14,7 +14,6 @@ sealed abstract class Token {
     case DEINDENT => "deindentation"
     case ERROR => "error"
     case QUOTE => "quote"
-    case QQCODE(_) => "code"
     case LITVAL(value) => "literal"
     case KEYWORD(name) =>
       if (name.headOption.exists(_.isLetter)) s"'$name' keyword" else s"'$name'"
@@ -40,12 +39,6 @@ case object INDENT extends Token
 case object DEINDENT extends Token
 case object ERROR extends Token with Stroken
 case object QUOTE extends Token with Stroken
-final case class QQCODE(triple: Bool) extends Token with Stroken {
-  val quotations: Str = if (triple) "\"\"\"" else "\""
-}
-object QQCODE {
-  val prefix: Str = "code"
-}
 final case class LITVAL(value: Lit) extends Token with Stroken
 final case class KEYWORD(name: String) extends Token with Stroken
 final case class IDENT(name: String, symbolic: Bool) extends Token with Stroken
@@ -65,6 +58,7 @@ sealed abstract class BracketKind {
     case Angle => "‹" -> "›"
     case Indent => "→" -> "←"
     case Quasiquote => "code\"" -> "\""
+    case QuasiquoteTriple => "code\"\"\"" -> "\"\"\""
     case Unquote => "${" -> "}"
   }
   def name: Str = this match {
@@ -74,6 +68,7 @@ sealed abstract class BracketKind {
     case Angle => "angle bracket"
     case Indent => "indentation"
     case Quasiquote => "quasiquote"
+    case QuasiquoteTriple => "quasiquote triple"
     case Unquote => "unquote"
   }
 }
@@ -85,6 +80,7 @@ object BracketKind {
   case object Angle extends BracketKind
   case object Indent extends BracketKind
   case object Quasiquote extends BracketKind
+  case object QuasiquoteTriple extends BracketKind
   case object Unquote extends BracketKind
   
   def unapply(c: Char): Opt[Either[BracketKind, BracketKind]] = c |>? {

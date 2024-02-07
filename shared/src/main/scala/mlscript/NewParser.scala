@@ -701,7 +701,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (IDENT(nme, false), l0) :: _ =>
         consume
         exprCont(Var(nme).withLoc(S(l0)), prec, allowNewlines = false)
-      case (br @ BRACKETS(Quasiquote, toks), loc) :: _ =>
+      case (br @ BRACKETS(Quasiquote | QuasiquoteTriple, toks), loc) :: _ =>
         consume
         val body = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.expr(0))
         exprCont(Quoted(body).withLoc(S(loc)), prec, allowNewlines = false)

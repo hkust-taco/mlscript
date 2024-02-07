@@ -58,7 +58,7 @@ code""""hello world""""
 
 :pe
 code""" "HKUST"
-//│ ╔══[LEXICAL ERROR] unclosed quotation mark
+//│ ╔══[PARSE ERROR] Unmatched opening quasiquote triple
 //│ ║  l.60: 	code""" "HKUST"
-//│ ╙──      	               ^
-//│ Code["HKUST", nothing]
+//│ ╙──      	^^^^^^^
+//│ "HKUST"

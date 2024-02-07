@@ -27,10 +27,10 @@ run(res)
 
 :pe
 code"// Can I comment?"
-//│ ╔══[PARSE ERROR] Unexpected end of quasiquote section; an expression was expected here
+//│ ╔══[PARSE ERROR] Unmatched opening quasiquote
 //│ ║  l.29: 	code"// Can I comment?"
-//│ ╙──      	                      ^
-//│ Code[(), nothing]
+//│ ╙──      	^^^^^
+//│ 
 
 let res = code"[x: 1,]"
 //│ let res: Code[[x: 1], nothing]

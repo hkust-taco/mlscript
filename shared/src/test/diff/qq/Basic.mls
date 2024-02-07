@@ -222,8 +222,8 @@ code"$x + 1"
 :pe
 code"$"
 //│ ╔══[LEXICAL ERROR] unexpected character '$'
-//│ ║  l.223: 	$
-//│ ╙──       	^
+//│ ║  l.223: 	code"$"
+//│ ╙──       	     ^
 //│ ╔══[PARSE ERROR] Unexpected error in expression position
 //│ ║  l.223: 	code"$"
 //│ ╙──       	     ^
