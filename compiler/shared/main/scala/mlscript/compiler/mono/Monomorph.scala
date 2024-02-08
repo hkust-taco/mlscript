@@ -489,12 +489,15 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
   def nuCreateObjValue(tpName: String, args: List[BoundedTerm]): MonoVal = 
     nuAllTypeImpls.get(tpName) match
       case Some(NuTypeDef(kind, nme, tparams, params, ctor, sig, parents, _, _, body)) => 
+        debug.writeLine(s"Creating Object Value for ${tpName} with arguments ${args}")
+        debug.indent()
         val ags = (params match
           case Some(p) => 
             if (extractObjParams(p).length != args.length) throw MonomorphError("ObjValue param mismatch")
             extractObjParams(p).map(_._2.name).zip(args).toList // FIXME: Different structure for Obj Params
           case None => Nil)
         val obj = ObjVal(tpName, ags.map((p, _) => p), MutMap(ags: _*)) // TODO: parent object fields
+        debug.writeLine(s"Parents term is ${parents}")
         val parentObjs = parents.map{
           case Var(name) => BoundedTerm(nuCreateObjValue(name, Nil))
           case App(Var(name), t: Tup) => 
@@ -502,7 +505,10 @@ class Monomorph(debug: Debug = DummyDebug) extends DataTypeInferer:
             BoundedTerm(nuCreateObjValue(name, extractFuncArgs(t).map(getRes)))
           case other => throw MonomorphError(s"Unexpected parent object format ${other}")
         }
+        debug.writeLine(s"Parent objects are ${parentObjs}")
         obj.fields.addAll(parentObjs.zipWithIndex.map((e, i) => s"sup$$$i" -> e))
+        debug.writeLine(s"Created Object Value ${obj}")
+        debug.outdent()
         obj
       case None => throw MonomorphError(s"TypeName ${tpName} not found in implementations ${nuAllTypeImpls}")
 

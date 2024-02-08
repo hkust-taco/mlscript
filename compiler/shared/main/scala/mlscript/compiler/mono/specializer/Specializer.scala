@@ -303,15 +303,17 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
             })
           case other => throw MonomorphError(s"IfBody ${body} not handled")
         res
-      case Asc(term, ty) => 
-        nuEvaluate(term)
-        termMap.addOne(term, getRes(term))
+      case Asc(t, ty) => 
+        nuEvaluate(t)
+        termMap.addOne(term, getRes(t))
       case Tup(fields) => // TODO: give evaledTerm?
         fields.map{
           case (name, Fld(flags, value)) => nuEvaluate(value)
         }
         termMap.addOne(term, BoundedTerm(monoer.createTupVal(fields.map{case (name, Fld(flags, value)) => getRes(value)})))
-      // case Bra(rcd, term) => ???
+      case Bra(rcd, t) => 
+        nuEvaluate(t)
+        termMap.addOne(term, getRes(t))
       // case _: Bind => ???
       // case _: Test => ???
       // case With(term, Rcd(fields)) => ???
@@ -467,6 +469,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
           case t: Term => nuDefunctionalize(t)
           case other => other
         })
+      case Bra(false, term) => Bra(false, nuDefunctionalize(term))
       case _ => throw MonomorphError(s"Cannot Defunctionalize ${term}")
     ret
   }

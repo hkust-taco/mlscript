@@ -1,0 +1,73 @@
+:NewDefs
+
+:nm
+:e //FIXME
+class Foo(f: Int -> Int){
+  fun foo = () -> f(1)
+}
+class F1() extends Foo(x => x+1){}
+class F2() extends Foo(x => x+2){}
+(new F1()).foo()
+(new F2()).foo()
+//│ Lifted:
+//│ TypingUnit {
+//│   class Foo$1([f: ->(Int, Int,),]) {fun foo = () => (this).f(1,)}
+//│   class F1$2_Lambda1$1$4([par$F1$2,]) {fun apply = (x,) => +(x, 1,)}
+//│   class F1$2([]): Foo$1({F1$2_Lambda1$1$4(this,)},) {}
+//│   class F2$3_Lambda1$2$5([par$F2$3,]) {fun apply = (x,) => +(x, 2,)}
+//│   class F2$3([]): Foo$1({F2$3_Lambda1$2$5(this,)},) {}
+//│   Code(List(('(' new F1$2([]) {} ')').foo()))
+//│   Code(List(('(' new F2$3([]) {} ')').foo()))
+//│ }
+//│ Mono:
+//│ TypingUnit {
+//│   class F1$2([]): Foo$1({F1$2_Lambda1$1$4(this,)},) {}
+//│   class F2$3_Lambda1$2$5([par$F2$3,]) {}
+//│   class F2$3([]): Foo$1({F2$3_Lambda1$2$5(this,)},) {}
+//│   class Foo$1([f: ->(Int, Int,),]) {}
+//│   class F1$2_Lambda1$1$4([par$F1$2,]) {}
+//│   fun apply$F2$3_Lambda1$2$5 = (this, x,) => +(x, 2,)
+//│   fun foo$Foo$1 = (this,) => let obj = this in if obj is ‹(Foo$1(f,)) then f; else error›
+//│   fun main$$6 = () => let obj = '(' new F2$3([]) {} ')' in if obj is ‹(F2$3) then foo$Foo$1(obj,); else error›
+//│   fun main$$5 = () => let obj = '(' new F1$2([]) {} ')' in if obj is ‹(F1$2) then foo$Foo$1(obj,); else error›
+//│   fun apply$F1$2_Lambda1$1$4 = (this, x,) => +(x, 1,)
+//│   Code(List(main$$5()))
+//│   Code(List(main$$6()))
+//│ }
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ╙──
+//│ ╔══[ERROR] identifier not found: this
+//│ ╙──
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ╟── expression of type `#F1$2_Lambda1$1$4` is not a function
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.5: 	class Foo(f: Int -> Int){
+//│ ╙──     	             ^^^^^^^^^^
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ╙──
+//│ ╔══[ERROR] identifier not found: this
+//│ ╙──
+//│ ╔══[ERROR] Type mismatch in type declaration:
+//│ ╟── expression of type `F2$3_Lambda1$2$5` is not a function
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.5: 	class Foo(f: Int -> Int){
+//│ ╙──     	             ^^^^^^^^^^
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ╙──
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ╙──
+//│ class F1$2() extends Foo$1
+//│ class F2$3_Lambda1$2$5(par$F2$3: error)
+//│ class F2$3() extends Foo$1
+//│ class Foo$1(f: Int -> Int)
+//│ class F1$2_Lambda1$1$4(par$F1$2: error)
+//│ fun apply$F2$3_Lambda1$2$5: (anything, Int) -> Int
+//│ fun foo$Foo$1: Object -> Int -> Int
+//│ fun main$$6: () -> Int -> Int
+//│ fun main$$5: () -> Int -> Int
+//│ fun apply$F1$2_Lambda1$1$4: (anything, Int) -> Int
+//│ Int -> Int
+//│ res
+//│     = F1$2_Lambda1$1$4 {}
+//│ res
+//│     = F2$3_Lambda1$2$5 {}
