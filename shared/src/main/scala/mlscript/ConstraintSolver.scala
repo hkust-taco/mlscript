@@ -33,7 +33,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         (implicit ctx: Ctx, raise: Raise)
         : Either[Diagnostic, NuMember]
         = {
-    val info = ctx.tyDefs2.getOrElse(clsNme, lastWords(s"Can't find member `$clsNme`"))
+    val info = ctx.tyDefs2.getOrElse(clsNme, throw new Exception(s"Crashes at looking up member `$clsNme`"))
     
     if (info.isComputing) {
       ??? // TODO support?

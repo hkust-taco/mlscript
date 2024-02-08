@@ -58,7 +58,7 @@ fun foo(f: Foo[Int]) = f.a
 fun foo(f: Foo[?]) = if f is Foo(a) then a : f.A
 //│ fun foo: (f: Foo[?]) -> ??A
 
-// FIXME
+:e
 fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ╔══[ERROR] Type error in `case` expression
 //│ ║  l.62: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A

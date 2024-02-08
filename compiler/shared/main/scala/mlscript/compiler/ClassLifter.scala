@@ -439,7 +439,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val (bod2, ctx) = liftTerm(bod)
       val (sts2, ctx2) = liftEntities(sts)
       (Where(bod2, sts2), ctx2)
-    case _: Eqn | _: Super | _: Rft | _: While | _: WildcardType => throw MonomorphError(s"Unimplemented liftTerm: ${target}") // TODO
+    case _: Eqn | _: Super | _: Rft | _: While => throw MonomorphError(s"Unimplemented liftTerm: ${target}") // TODO
     case patmat: AdtMatchWith => lastWords(s"Cannot liftTermNew ${patmat}")
   }
 

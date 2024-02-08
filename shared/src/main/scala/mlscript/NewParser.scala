@@ -648,7 +648,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         exprCont(Super().withLoc(S(l0)), prec, allowNewlines = false)
       case (IDENT("?", true), l0) :: _ => 
         consume
-        exprCont(WildcardType().withLoc(S(l0)), prec, allowNewlines = false)
+        exprCont(Var("?").withLoc(S(l0)), prec, allowNewlines = false)
       case (IDENT("~", _), l0) :: _ =>
         consume
         val rest = expr(prec, allowSpace = true)
@@ -1115,21 +1115,21 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     val visinfo = yeetSpaces match {
       case (KEYWORD("type"), l0) :: _ =>
         consume
-        (true, S(l0))
-      case _ => (false, N)
+        S(l0)
+      case _ => N
     }
     val vinfo = yeetSpaces match {
       case (KEYWORD("in"), l0) :: (KEYWORD("out"), l1) :: _ =>
         consume
-        (S(VarianceInfo.in), S(l0++l1))
+        S(VarianceInfo.in -> (l0++l1))
       case (KEYWORD("in"), l0) :: _ =>
         consume
-        (S(VarianceInfo.contra), S(l0))
+        S(VarianceInfo.contra -> l0)
       case (KEYWORD("out"), l0) :: _ =>
         consume
-        (S(VarianceInfo.co), S(l0))
+        S(VarianceInfo.co -> l0)
       case _ =>
-        (N, N)
+        N
     }
     yeetSpaces match {
       case (IDENT(nme, false), l0) :: _ =>
@@ -1138,17 +1138,19 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         yeetSpaces match {
           case (COMMA, l0) :: _ =>
             consume
-            TypeParamInfo(vinfo._1, visinfo._1) -> tyNme :: typeParams
+            TypeParamInfo(vinfo.map(_._1), visinfo.isDefined) -> tyNme :: typeParams
           case _ =>
-            TypeParamInfo(vinfo._1, visinfo._1) -> tyNme :: Nil
+            TypeParamInfo(vinfo.map(_._1), visinfo.isDefined) -> tyNme :: Nil
         }
       case _ =>
         (visinfo, vinfo) match {
-          case (_, (S(_), S(loc))) =>
+          case (S(l1), S(_ -> l2)) =>
+            err(msg"dangling type member and variance information" -> S(l1 ++ l2) :: Nil)
+          case (_, S(_ -> loc)) =>
             err(msg"dangling variance information" -> S(loc) :: Nil)
-          case ((true, S(loc)), _) =>
+          case (S(loc), _) =>
             err(msg"dangling visible type member" -> S(loc) :: Nil)
-          case _ =>
+          case (N, N) =>
         }
         Nil
     }

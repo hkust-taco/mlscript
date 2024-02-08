@@ -382,3 +382,12 @@ class Foo(val x: C1) {
 
 Foo(C1(false)).foo(true)
 //│ Bool
+
+:pe
+class Foo[type in]
+//│ ╔══[PARSE ERROR] dangling type member and variance information
+//│ ║  l.387: 	class Foo[type in]
+//│ ╙──       	          ^^^^^^^
+//│ class Foo {
+//│   constructor()
+//│ }

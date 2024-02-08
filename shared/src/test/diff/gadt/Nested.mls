@@ -12,8 +12,6 @@ class Some[A](val get: A) extends Option[A]
 class Box[type A](val get: A)
 //│ class Box[A](get: A)
 
-// * possibly the smallest loop case *
-
 abstract class F[type A]: MkF
 class MkF[T](t: T) extends F[Box[T]]
 //│ abstract class F[A]: MkF[anything]
@@ -21,8 +19,6 @@ class MkF[T](t: T) extends F[Box[T]]
 
 fun f[T](x: F[T]): T = if x is MkF(t) then Box(t) as x.A
 //│ fun f: forall 'T. (x: F['T]) -> 'T
-
-// * *
 
 abstract class H[type A]: HI | HB | HG
 module HI extends H[Option[Int]]
@@ -77,7 +73,7 @@ f(MkF(Box(1)))
 :e
 f(MkU(1))
 //│ ╔══[ERROR] identifier not found: MkU
-//│ ║  l.78: 	f(MkU(1))
+//│ ║  l.74: 	f(MkU(1))
 //│ ╙──      	  ^^^
 //│ Int
 //│ Code generation encountered an error:
@@ -100,16 +96,16 @@ u(MkU(1, 2))
 :e
 u(MkU(1, true))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.101: 	u(MkU(1, true))
-//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.97: 	u(MkU(1, true))
+//│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of `Int`
-//│ ║  l.101: 	u(MkU(1, true))
-//│ ║         	         ^^^^
+//│ ║  l.97: 	u(MkU(1, true))
+//│ ║        	         ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.87: 	class MkU[S, T](s: S, t: T) extends U[S, T, Int]
+//│ ║  l.83: 	class MkU[S, T](s: S, t: T) extends U[S, T, Int]
 //│ ║        	                                            ^^^
 //│ ╟── Note: type parameter C is defined at:
-//│ ║  l.86: 	abstract class U[type A, type B, type C]: MkU
+//│ ║  l.82: 	abstract class U[type A, type B, type C]: MkU
 //│ ╙──      	                                      ^
 //│ Int | error | true
 //│ res

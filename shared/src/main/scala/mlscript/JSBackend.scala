@@ -339,7 +339,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     case TyApp(base, _) => translateTerm(base)
     case Eqn(Var(name), _) =>
       throw CodeGenError(s"assignment of $name is not supported outside a constructor")
-    case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: AdtMatchWith | _: Rft | _: WildcardType =>
+    case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: AdtMatchWith | _: Rft =>
       throw CodeGenError(s"cannot generate code for term $term")
   }
 

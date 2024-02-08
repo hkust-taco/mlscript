@@ -1105,7 +1105,7 @@ abstract class TyperHelpers { Typer: Typer =>
               val fld = ta match {
                 case AssignedVariable(WildcardArg(lb, ub)) => FieldType(S(BotType), TopType)(provTODO)
                 case WildcardArg(lb, ub) => FieldType(S(BotType), TopType)(provTODO)
-                case _ => FieldType.mk(vi.getVarOr(VarianceInfo.in), ta, ta)(provTODO)
+                case _ => FieldType.mk(vi.varinfo.getOrElse(VarianceInfo.in), ta, ta)(provTODO)
               }
               Var(fldNme).withLocOf(tn) -> fld
           })(provTODO)

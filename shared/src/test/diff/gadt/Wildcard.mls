@@ -397,12 +397,21 @@ let x = ?
 //│ ╙──       	        ^
 //│ let x: error
 //│ Code generation encountered an error:
-//│   cannot generate code for term WildcardType()
+//│   unresolved symbol ?
+
+:e
+if ? is 1 then 1
+//│ ╔══[ERROR] Cannot use ? as expression
+//│ ║  l.403: 	if ? is 1 then 1
+//│ ╙──       	   ^
+//│ 1
+//│ Code generation encountered an error:
+//│   unresolved symbol ?
 
 :e
 if x is ? then 1
-//│ ╔══[ERROR] illegal pattern
-//│ ║  l.403: 	if x is ? then 1
+//│ ╔══[ERROR] Cannot match on wildcard ?
+//│ ║  l.412: 	if x is ? then 1
 //│ ╙──       	        ^
 //│ error
 //│ Code generation encountered an error:
@@ -411,7 +420,7 @@ if x is ? then 1
 :e
 let x: ?[?]
 //│ ╔══[ERROR] Wrong number of type arguments – expected 0, found 1
-//│ ║  l.412: 	let x: ?[?]
+//│ ║  l.421: 	let x: ?[?]
 //│ ╙──       	       ^^^^
 //│ let x: ?
 //│ x
@@ -419,27 +428,27 @@ let x: ?[?]
 
 :e
 class Bar extends ?
-//│ ╔══[ERROR] Unsupported parent specification
-//│ ║  l.421: 	class Bar extends ?
+//│ ╔══[ERROR] Could not find definition `?`
+//│ ║  l.430: 	class Bar extends ?
 //│ ╙──       	                  ^
 //│ class Bar {
 //│   constructor()
 //│ }
 //│ Code generation encountered an error:
-//│   unsupported parents.
+//│   unresolved parent ?.
 
 // FIXME
 :e
 abstract class Bar: ?
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.433: 	abstract class Bar: ?
+//│ ║  l.442: 	abstract class Bar: ?
 //│ ╙──       	                    ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
 
 :e
 class ?
 //│ ╔══[ERROR] Type name '?' is reserved
-//│ ║  l.440: 	class ?
+//│ ║  l.449: 	class ?
 //│ ╙──       	^^^^^^^
 //│ class ? {
 //│   constructor()
@@ -447,6 +456,41 @@ class ?
 //│ Syntax error:
 //│   Invalid or unexpected token
 
+:e
+type ? = Int
+//│ ╔══[ERROR] Type name '?' is reserved
+//│ ║  l.460: 	type ? = Int
+//│ ╙──       	^^^^^^
+//│ type ? = Int
+
+// TODO should we allow this
+type W = ?
+//│ type W = anything
+
+// TODO
+fun f(x): W = x
+//│ fun f: W -> W
+
+:e
+f(1)
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.467: 	type W = ?
+//│ ╙──       	         ^
+//│ error | W
+//│ res
+//│     = 1
+
 // TODO should we allow this?
-fun (?) wc: Int -> Bool
-//│ fun (?) wc: Int -> Bool
+fun (?) wc: (Int, Int) -> Bool
+fun (?) wc(x, y) = x == y
+//│ fun (?) wc: (Num, Num) -> Bool
+//│ fun (?) wc: (Int, Int) -> Bool
+
+// TODO
+1 ? 1
+//│ ╔══[ERROR] Cannot use ? as expression
+//│ ║  l.490: 	1 ? 1
+//│ ╙──       	  ^
+//│ error
+//│ res
+//│     = true

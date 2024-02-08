@@ -7,6 +7,7 @@ import scala.util.chaining._
 import scala.annotation.tailrec
 import mlscript.utils._, shorthands._
 import mlscript.Message._
+import java.lang.reflect.WildcardType
 
 class TypeDefs extends NuTypeDefs { Typer: Typer =>
   import TypeProvenance.{apply => tp}
@@ -169,7 +170,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
       case TypeBounds(lb, ub) => fieldsOf(ub, paramTags)
       case _: TypeTag | _: FunctionType | _: ArrayBase | _: TypeVariable
         | _: NegType | _: ExtrType | _: ComposedType | _: SpliceType
-        | _: ConstrainedType | _: PolymorphicType | _: Overload
+        | _: ConstrainedType | _: PolymorphicType | _: Overload | _: WildcardArg
         => Map.empty
     }
   }
@@ -239,6 +240,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
           case p: ProxyType => checkCycle(p.underlying)
           case Without(base, _) => checkCycle(base)
           case TypeBounds(lb, ub) => checkCycle(lb) && checkCycle(ub)
+          case WildcardArg(lb, ub) => checkCycle(lb) && checkCycle(ub)
           case tv: TypeVariable => travsersed(R(tv)) || {
             val t2 = travsersed + R(tv)
             tv.assignedTo match {
@@ -316,6 +318,9 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
                 false
               case _: TypeBounds =>
                 err(msg"cannot inherit from type bounds", prov.loco)
+                false
+              case _: WildcardArg =>
+                err(msg"cannot inherit from wildcards", prov.loco)
                 false
               case _: PolymorphicType =>
                 err(msg"cannot inherit from a polymorphic type", prov.loco)
@@ -717,6 +722,9 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
             updateVariance(lhs, curVariance)
             updateVariance(rhs, curVariance)
           case TypeBounds(lb, ub) =>
+            updateVariance(lb, VarianceInfo.contra)
+            updateVariance(ub, VarianceInfo.co)
+          case WildcardArg(lb, ub) =>
             updateVariance(lb, VarianceInfo.contra)
             updateVariance(ub, VarianceInfo.co)
           case ArrayType(inner) => fieldVarianceHelper(inner)

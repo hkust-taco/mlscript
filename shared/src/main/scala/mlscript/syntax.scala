@@ -90,7 +90,6 @@ final case class Forall(params: Ls[TypeVar], body: Term)             extends Ter
 final case class Inst(body: Term)                                    extends Term // Explicit instantiation of polymohic term
 final case class Super()                                             extends Term
 final case class Eqn(lhs: Var, rhs: Term)                            extends Term // equations such as x = y, notably used in constructors; TODO: make lhs a Term
-final case class WildcardType()                                      extends Term // TODO use Var("?") instead
 final case class Rft(base: Term, decls: TypingUnit)                  extends Term
 final case class While(cond: Term, body: Term)                       extends Term
 
@@ -244,9 +243,7 @@ final case class NuFunDef(
 final case class Constructor(params: Tup, body: Blk) extends DesugaredStatement with ConstructorImpl // constructor(...) { ... }
 
 
-final case class TypeParamInfo(varinfo: Option[VarianceInfo], visible: Boolean) {
-  def getVarOr(default: VarianceInfo): VarianceInfo = varinfo.getOrElse(default)
-}
+final case class TypeParamInfo(varinfo: Opt[VarianceInfo], visible: Bool)
 
 final case class VarianceInfo(isCovariant: Bool, isContravariant: Bool) {
   

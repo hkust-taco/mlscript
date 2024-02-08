@@ -192,6 +192,10 @@ class Desugarer extends TypeDefs { self: Typer =>
         Clause.MatchAny(scrutinee)(wildcard.toLoc.toList) :: Nil
       // If it's not top-level, wildcard means we don't care.
       case Var("_") => Nil
+      // We cannot use wildcard (type) for patterns
+      case wc @ Var("?") => throw new DesugaringException({
+          msg"Cannot match on wildcard ?"
+        }, wc.toLoc)
       // This case handles literals.
       // x is true | x is false | x is 0 | x is "text" | ...
       case literal: Var if literal.name === "true" || literal.name === "false" =>

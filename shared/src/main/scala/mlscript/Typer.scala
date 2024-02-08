@@ -848,7 +848,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         if (ctx.inPattern || funkyTuples) freshVar(tp(v.toLoc, "wildcard"), N)
         else err(msg"Widlcard in expression position.", v.toLoc)
 
-      case w @ WildcardType() => 
+      case w @ Var("?") => 
         err(msg"Cannot use ? as expression", w.toLoc)
         
       case Asc(v @ ValidPatVar(nme), ty) =>
@@ -1553,7 +1553,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                         nvLB.upperBounds ::= nvUB
                         val sk = SkolemTag(freshVar(tv.prov, S(tv), tv.nameHint)(lvl + 1))(provTODO)
                         val v = Var(tparamField(nme, tn.name, vi.visible)).withLocOf(tn)
-                        val vce = vi.getVarOr(VarianceInfo.in)
+                        val vce = vi.varinfo.getOrElse(VarianceInfo.in)
                         (v, FieldType.mk(vce, nvLB, nvUB)(provTODO)) ->
                         (v, FieldType.mk(vce, nvLB | sk, nvUB & sk)(provTODO))
                       }.unzip

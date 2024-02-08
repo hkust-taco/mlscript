@@ -949,7 +949,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     }
     
     lazy val explicitVariances: VarianceStore =
-      MutMap.from(tparams.iterator.map(tp => tp._2 -> tp._3.getVarOr(VarianceInfo.in)))
+      MutMap.from(tparams.iterator.map(tp => tp._2 -> tp._3.varinfo.getOrElse(VarianceInfo.in)))
     
     def varianceOf(tv: TV)(implicit ctx: Ctx): VarianceInfo =
       // TODO make use of inferred vce if result is completed
