@@ -356,9 +356,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypeBounds(lb, ub) if smart && pol.isDefined =>
         if (pol.getOrElse(die)) f(S(true), ub) else f(S(false), lb)
       case TypeBounds(lb, ub) => TypeBounds.mkSimple(f(S(false), lb), f(S(true), ub))
-      // case WildcardArg(lb, ub) if smart && pol.isDefined =>
-      //   if (pol.getOrElse(die)) f(S(true), ub) else f(S(false), lb)
-      case WildcardArg(lb, ub) => WildcardArg(f(S(false), lb), f(S(true), ub))(prov)
+      case WildcardArg(lb, ub) => WildcardArg(f(pol.map(!_), lb), f(pol, ub))(prov)
       case rt: RecordType => Typer.mapPol(rt, pol, smart)(f)
       case Without(base, names) if smart => f(pol, base).without(names)
       case bt: BaseType => Typer.mapPol(bt, pol, smart)(f)
@@ -632,7 +630,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case p @ ProxyType(und) => und.withoutPos(names)
       case p: TypeTag => p
       case TypeBounds(lo, hi) => hi.withoutPos(names)
-      case WildcardArg(lo, hi) => hi.withoutPos(names)
+      case w @ WildcardArg(lo, hi) => WildcardArg(lo, hi.withoutPos(names))(w.prov)
       case _: TypeVariable | _: NegType | _: TypeRef => Without(this, names)(noProv)
       case PolymorphicType(plvl, bod) => PolymorphicType.mk(plvl, bod.withoutPos(names))
       case ot: Overload => ot
@@ -726,7 +724,7 @@ abstract class TyperHelpers { Typer: Typer =>
         case tr: TypeRef => tr.mapTargs(pol)(_ -> _)
         case Without(b, ns) => pol -> b :: Nil
         case TypeBounds(lb, ub) => S(false) -> lb :: S(true) -> ub :: Nil
-        case WildcardArg(lb, ub) => S(false) -> lb :: S(true) -> ub :: Nil
+        case WildcardArg(lb, ub) => pol.map(!_) -> lb :: pol -> ub :: Nil
         case PolymorphicType(_, und) => pol -> und :: Nil
         case ConstrainedType(cs, bod) =>
           cs.flatMap(vbs => S(true) -> vbs._1 :: S(false) -> vbs._2 :: Nil) ::: pol -> bod :: Nil
@@ -813,7 +811,7 @@ abstract class TyperHelpers { Typer: Typer =>
         case tr: TypeRef => tr.mapTargs(pol)(_ -> _)
         case Without(b, ns) => pol -> b :: Nil
         case TypeBounds(lb, ub) => PolMap.neg -> lb :: PolMap.pos -> ub :: Nil
-        case WildcardArg(lb, ub) => PolMap.neg -> lb :: PolMap.pos -> ub :: Nil
+        case WildcardArg(lb, ub) => pol.contravar -> lb :: pol.covar -> ub :: Nil
         case PolymorphicType(_, und) => pol -> und :: Nil
         case ConstrainedType(cs, bod) =>
           cs.flatMap(vbs => PolMap.pos -> vbs._1 :: PolMap.posAtNeg -> vbs._2 :: Nil) ::: pol -> bod :: Nil
@@ -1286,9 +1284,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypeBounds(lb, ub) =>
         if (pol =/= S(true)) apply(S(false))(lb)
         if (pol =/= S(false)) apply(S(true))(ub)
-      case WildcardArg(lb, ub) =>
-        if (pol =/= S(true)) apply(S(false))(lb)
-        if (pol =/= S(false)) apply(S(true))(ub)
+      case WildcardArg(lb, ub) => apply(pol.map(!_))(lb); apply(pol)(ub)
       case PolymorphicType(plvl, und) => apply(pol)(und)
       case ConstrainedType(cs, bod) =>
         cs.foreach {
@@ -1369,7 +1365,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case tr: TypeRef => tr.mapTargs(pol)(apply(_)(_)); ()
       case Without(b, ns) => apply(pol)(b)
       case TypeBounds(lb, ub) => pol.traverseRange(lb, ub)(apply(_)(_))
-      case WildcardArg(lb, ub) => pol.traverseRange(lb, ub)(apply(_)(_))
+      case WildcardArg(lb, ub) => apply(pol.contravar)(lb); apply(pol)(ub)
       case PolymorphicType(plvl, und) => apply(pol.enter(plvl))(und)
       case ConstrainedType(cs, bod) =>
         cs.foreach {
