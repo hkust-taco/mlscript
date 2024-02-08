@@ -19,3 +19,25 @@ fun f[T](x: F[T]): T = if x is MkF(t) then Box(t) as x.A
 //│ fun f: forall 'T. (x: F['T]) -> 'T
 
 
+
+fun f: Box[?]
+//│ fun f: Box[?]
+
+// :ds
+f
+//│ Box[?]
+//│ res
+//│     = <no result>
+//│       f is not implemented
+
+
+fun foo(b: Box['X]) = b.get + 1
+//│ fun foo: forall 'X. (b: Box['X]) -> Int
+//│   where
+//│     'X <: Int
+
+fun foo(b: Box['X] & Box[Int]) = [b, b.get + 1]
+//│ fun foo: (b: Box[Int]) -> [Box[Int], Int]
+
+
+

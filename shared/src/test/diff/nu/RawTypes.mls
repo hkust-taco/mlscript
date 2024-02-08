@@ -30,17 +30,19 @@ fun foo(f: Foo): Int = f.a : f.A
 //│ ╙──      	                 ^^^
 //│ fun foo: (f: Foo[anything]) -> Int
 
+// :s
+// :ds
 fun foo(f: Foo[?]) = f.a
 //│ fun foo: (f: Foo[?]) -> anything
 
 // TODO
 fun foo(f: Foo[?]) = f.a : f.A
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.37: 	fun foo(f: Foo[?]) = f.a : f.A
+//│ ║  l.39: 	fun foo(f: Foo[?]) = f.a : f.A
 //│ ║        	                     ^^^
 //│ ╟── field selection of type `anything` does not match type `nothing`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.37: 	fun foo(f: Foo[?]) = f.a : f.A
+//│ ║  l.39: 	fun foo(f: Foo[?]) = f.a : f.A
 //│ ╙──      	                            ^^
 //│ fun foo: (f: Foo[?]) -> anything
 
@@ -61,30 +63,30 @@ fun foo(f: Foo[?]) = if f is Foo(a) then a : f.A
 :e
 fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.62: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.64: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ║        	                          ^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
 //│ ║  l.8: 	class Foo[type A](val a: A)
 //│ ║       	               ^
 //│ ╟── into type `Int | ~??A`
-//│ ║  l.62: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.64: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ║        	                 ^^^
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.62: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║  l.64: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
 //│ ╙──      	                                                ^^
 //│ fun foo: (f: Foo[anything]) -> (Int | error)
 
 :e
 fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.78: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║  l.80: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ║        	                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `anything` does not match type `Int | ~??A`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.78: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║  l.80: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ║        	                    ^^^
 //│ ╟── from type selection:
-//│ ║  l.78: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ║  l.80: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
 //│ ║        	                                                   ^^
 //│ ╟── Note: type parameter A is defined at:
 //│ ║  l.8: 	class Foo[type A](val a: A)
@@ -116,11 +118,13 @@ class Foo[A](val a: A -> A)
 //│ class Foo[A](a: A -> A)
 
 fun foo(f: Foo) = f.a
-//│ fun foo: (f: Foo[in anything out nothing]) -> ??A -> ??A0
+//│ fun foo: (f: Foo[?]) -> ??A -> ??A0
 
+fun foo(f: Foo) = ()
+//│ fun foo: (f: Foo[?]) -> ()
 
 fun foo(f) = f : Foo
-//│ fun foo: Foo[in anything out nothing] -> Foo[?]
+//│ fun foo: Foo[?] -> Foo[?]
 
 abstract class Foo[type T]: Bar
 class Bar(val b: Int) extends Foo[Int]

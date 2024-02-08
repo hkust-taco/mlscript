@@ -10,12 +10,12 @@ abstract class Cls[A] { fun x: A; fun g: A -> Int }
 
 fun test(a) = if a is
   Cls then a.x
-//│ fun test: forall 'A. Cls[in 'A out nothing] -> (??A & 'A)
+//│ fun test: forall 'A. Cls[out 'A] -> (??A & 'A)
 
 fun test(a) = if a is
   Cls then a.x
   else error
-//│ fun test: forall 'A. (Cls[in 'A out nothing] | Object & ~#Cls) -> (??A & 'A)
+//│ fun test: forall 'A. (Cls[out 'A] | Object & ~#Cls) -> (??A & 'A)
 
 fun test(a: Cls['a]) = if a is
   Cls then a.x
@@ -87,7 +87,7 @@ class Cls[A](val x: A) { fun g: A -> Int; fun g(x) = 42 }
 
 fun test(a) = if a is
   Cls then a.x
-//│ fun test: forall 'A. Cls[in 'A out nothing] -> (??A & 'A)
+//│ fun test: forall 'A. Cls[out 'A] -> (??A & 'A)
 
 fun test(a: Object) = if a is
   Cls then a.x

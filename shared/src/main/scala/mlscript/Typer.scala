@@ -1927,7 +1927,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           case (_, ty) => go(ty)
         })
         case TypeBounds(lb, ub) => Bounds(go(lb), go(ub))
-        case WildcardArg(lb, up) => TypeName("?")
+        case WildcardArg(lb, ub) => Bounds(go(lb), go(ub))
         case Without(base, names) => Rem(go(base), names.toList)
         case Overload(as) => as.map(go).reduce(Inter)
         case PolymorphicType(lvl, bod) =>

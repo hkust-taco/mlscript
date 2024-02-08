@@ -46,15 +46,15 @@ fun test(f: Foo) = f.f(f.x)
 //│ ╟── back into type variable `T`
 //│ ║  l.16: 	abstract class Foo[type T]: (Bar | Baz) {
 //│ ╙──      	                        ^
-//│ fun test: (f: Foo[in anything out nothing]) -> (Int | error)
+//│ fun test: (f: Foo[?]) -> (Int | error)
 
 fun test(f: Foo) = if f is
   Foo then f.f(f.x)
-//│ fun test: (f: Foo[in anything out nothing]) -> Int
+//│ fun test: (f: Foo[?]) -> Int
 
 fun test(f: Foo) = if f is
   Foo then f.x : f.T
-//│ fun test: (f: Foo[in anything out nothing]) -> (??T & ??T0)
+//│ fun test: (f: Foo[?]) -> (??T & ??T0)
 
 // FIXME
 fun test(f: Foo['a]) = if f is
@@ -96,17 +96,17 @@ fun test(x: 'a, g: Foo0[x], f: Foo0[x]) = if f is
 
 fun test(f: Foo) = if f is
   Foo then f.f(f.x : f.T)
-//│ fun test: (f: Foo[in anything out nothing]) -> Int
+//│ fun test: (f: Foo[?]) -> Int
 
 fun test(f: Foo) = if f is
     Bar then f.x
   else error
-//│ fun test: (f: Foo[in anything out nothing]) -> Int
+//│ fun test: (f: Foo[?]) -> Int
 
 fun test(f: Foo) = if f is
     Bar then f.x : f.T
   else error
-//│ fun test: (f: Foo[in anything out nothing]) -> Int
+//│ fun test: (f: Foo[?]) -> Int
 
 // FIXME
 fun test(f: Foo) = if f is
@@ -125,13 +125,13 @@ fun test(f: Foo) = if f is
 //│ ╟── but it flows into reference with expected type `Bar | Baz`
 //│ ║  l.112: 	fun test(f: Foo) = if f is
 //│ ╙──       	                      ^
-//│ fun test: (f: Foo[in anything out nothing]) -> Int
+//│ fun test: (f: Foo[?]) -> Int
 
 fun test(f: Foo) = if f is
     Bar then 123 : f.T
     Baz then "hello" : f.T
     _ then error
-//│ fun test: (f: Foo[in anything out nothing]) -> (Int | Str)
+//│ fun test: (f: Foo[?]) -> (Int | Str)
 
 // FIXME
 fun test(f: Foo['a]) = if f is
@@ -141,7 +141,7 @@ fun test(f: Foo['a]) = if f is
 //│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 fun test(f: Foo, x) = x : f.T
-//│ fun test: (f: Foo[in anything out nothing], ??T) -> ??T0
+//│ fun test: (f: Foo[?], ??T) -> ??T0
 
 // FIXME
 fun test[A](f: Foo[A]): A = if f is

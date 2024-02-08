@@ -7,7 +7,7 @@ class C<A>
 //│ }
 
 fun f(x) = if x is C then x
-//│ fun f: forall 'A 'A0. (C[in 'A out 'A0] & {C#A :> 'A0 <: 'A}) -> C[in 'A0 & 'A | ??A out ??A0 & 'A]
+//│ fun f: forall 'A 'A0. C[in 'A out 'A0] -> C[in 'A & 'A0 | ??A out ??A0 & 'A0]
 
 // * TODO parse class tags?
 // f(C : #C)

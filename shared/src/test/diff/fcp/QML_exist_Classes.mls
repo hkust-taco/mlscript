@@ -307,6 +307,8 @@ def simpleStep arr = arr (fun impl -> fun k -> k (simpleStepImpl impl))
 :e
 def simpleStep2 arr k = arr (fun impl -> k (simpleStepImpl impl))
 //│ ((ArraysRep[out 'A, out 'Rep] -> 'a) -> 'c) -> ((forall 'Rep0. ArraysImpl[in 'A & 'A0 out 'A0, 'Rep0] with {
+//│   ArraysImpl#A :> 'A & 'A0 <: 'A0,
+//│   ArraysRep#A :> 'A & 'A0 <: 'A0,
 //│   fold: forall 'b. (nothing -> 'b -> 'b) -> 'b -> (('Rep, anything,),) -> 'b,
 //│   init: 'A -> (nothing, "initialized",),
 //│   sub: (('Rep, anything,),) -> int -> nothing,

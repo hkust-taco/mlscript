@@ -32,29 +32,20 @@ fun foo: Foo['a] -> Int
 fun foo(f) = if f is
     Bar then 1
     Baz(x) then 1 + foo(x)
-//│ fun foo: (Bar | Baz[in anything out nothing]) -> Int
+//│ fun foo: (Bar | Baz[?]) -> Int
 //│ fun foo: forall 'a. Foo['a] -> Int
 
-// FIXME
 fun foo: Foo[?] -> Int
 fun foo(f: Foo[?]): Int = if f is
     Bar then 1
     Baz(x) then 1 + foo(x)
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.40: 	fun foo(f: Foo[?]): Int = if f is
-//│ ║        	                             ^^^^
-//│ ║  l.41: 	    Bar then 1
-//│ ║        	^^^^^^^^^^^^^^
-//│ ║  l.42: 	    Baz(x) then 1 + foo(x)
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `~??T` does not match type `nothing`
 //│ fun foo: (f: Foo[?]) -> Int
 //│ fun foo: Foo[?] -> Int
 
 fun bar(f) = if f is 
     Bar then 0
     Baz(_) then 1
-//│ fun bar: (Bar | Baz[in anything out nothing]) -> (0 | 1)
+//│ fun bar: (Bar | Baz[?]) -> (0 | 1)
 
 bar(Baz(new Bar))
 //│ 0 | 1
@@ -85,17 +76,17 @@ fun foo(x) = if x is
     C1(c) then c : x.T
     C2    then 0 : x.T
 //│ ╔══[ERROR] Type error in definition
-//│ ║  l.84: 	fun foo(x) = if x is
+//│ ║  l.75: 	fun foo(x) = if x is
 //│ ║        	    ^^^^^^^^^^^^^^^^
-//│ ║  l.85: 	    C1(c) then c : x.T
+//│ ║  l.76: 	    C1(c) then c : x.T
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.86: 	    C2    then 0 : x.T
+//│ ║  l.77: 	    C2    then 0 : x.T
 //│ ║        	^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.85: 	    C1(c) then c : x.T
+//│ ║  l.76: 	    C1(c) then c : x.T
 //│ ║        	                    ^^
 //│ ╟── into type `'T | ~??A`
-//│ ║  l.83: 	fun foo: C['T] -> 'T
+//│ ║  l.74: 	fun foo: C['T] -> 'T
 //│ ╙──      	                  ^^
 //│ fun foo: forall 'A. (C1['A] | C2) -> (Int | ??A & 'A)
 //│ fun foo: forall 'T. C['T] -> 'T

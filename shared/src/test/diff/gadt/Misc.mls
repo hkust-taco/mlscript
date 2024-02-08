@@ -67,7 +67,7 @@ fun f(x: S): x.T = if x is A then 1 else 0
 //│ ╟── type variable `T` leaks out of its scope
 //│ ║  l.63: 	fun f(x: S): x.T = if x is A then 1 else 0
 //│ ╙──      	                                         ^
-//│ fun f: (x: S[in anything out nothing]) -> (Int | ??T)
+//│ fun f: (x: S[?]) -> (Int | ??T)
 
 fun f(x: S[?]) = if x is 
     A then 1 : x.T
@@ -131,7 +131,7 @@ class Some[A](get: A) extends Option[A]
 //│ class Some[A](get: A) extends Option
 
 fun optToInt(w: Option[?]) = if w is Some then 1 else 0
-//│ fun optToInt: (w: Option[nothing]) -> (0 | 1)
+//│ fun optToInt: (w: Option[?]) -> (0 | 1)
 
 optToInt(Some(1))
 //│ 0 | 1

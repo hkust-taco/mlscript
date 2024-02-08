@@ -67,16 +67,16 @@ fun find(t, k) =
       sgt(k, k') then find(r, k)
       _ then Some(v)
     Empty then None
-//│ fun insert: forall 'A 'A0 'A1 'A2 'A3. (Empty | Node[in 'A0 out 'A1], Str, 'A & 'A2 & ('A1 | ??A)) -> Node[in 'A & 'A2 out 'A3]
-//│ fun find: forall 'A4. (Empty | Node[in 'A4 out nothing], Str) -> (None | Some[??A0 & 'A4])
+//│ fun insert: forall 'A 'A0 'A1 'A2 'A3. (Empty | Node[in 'A0 out 'A], Str, 'A3 & 'A1 & ('A0 | ??A)) -> Node[in 'A3 & 'A1 out 'A2]
+//│ fun find: forall 'A4. (Empty | Node[out 'A4], Str) -> (None | Some[??A0 & 'A4])
 //│ where
-//│   'A0 <: 'A & ('A1 & ('A2 | ~??A1) | ??A & ('A2 | ~??A1)) | ~??A1
-//│   'A :> 'A3 | ??A1 & 'A0
-//│      <: 'A2 & ('A1 | ??A)
-//│   'A3 :> 'A | ??A1 & 'A0 | 'A2
-//│   'A2 :> 'A3 | ??A1 & 'A0
-//│       <: 'A & ('A1 | ??A)
-//│   'A1 <: 'A0
+//│   'A0 <: 'A
+//│   'A <: 'A3 & ('A0 & ('A1 | ~??A1) | ??A & ('A1 | ~??A1)) | ~??A1
+//│   'A3 :> 'A2 | ??A1 & 'A
+//│       <: 'A1 & ('A0 | ??A)
+//│   'A2 :> 'A3 | ??A1 & 'A | 'A1
+//│   'A1 :> 'A2 | ??A1 & 'A
+//│       <: 'A3 & ('A0 | ??A)
 
 fun showType(ty) =
   if ty is

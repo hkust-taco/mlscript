@@ -176,6 +176,7 @@ fun fmt(f) = fmtGo("", f)
 // typed ast //
 
 abstract class Expr[type T]: Lit | Plus| Equals | If[?] | Pair[?,?] | Fst[?,?]
+// type Expr[type T] = Lit | Plus| Equals | If[?] | Pair[?,?] | Fst[?,?]
 class Lit(i: Int) extends Expr[Int]
 class Plus(a: Expr[Int], b: Expr[Int]) extends Expr[Int]
 class Equals(a: Expr[Int], b: Expr[Int]) extends Expr[Bool]
@@ -229,13 +230,13 @@ eval(If(Equals(Lit(3), Plus(Lit(1), Lit(1))), Fst(Pair(Lit(1), Lit(2))), Lit(3))
 :e
 eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.230: 	eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
+//│ ║  l.231: 	eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Bool` is not an instance of type `Int`
-//│ ║  l.181: 	class Equals(a: Expr[Int], b: Expr[Int]) extends Expr[Bool]
+//│ ║  l.182: 	class Equals(a: Expr[Int], b: Expr[Int]) extends Expr[Bool]
 //│ ║         	                                                      ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.180: 	class Plus(a: Expr[Int], b: Expr[Int]) extends Expr[Int]
+//│ ║  l.181: 	class Plus(a: Expr[Int], b: Expr[Int]) extends Expr[Int]
 //│ ╙──       	                   ^^^
 //│ nothing
 //│ res

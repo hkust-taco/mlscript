@@ -166,6 +166,16 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     def level: Level = lb.level max ub.level
     def levelBelow(ubnd: Level)(implicit cache: MutSet[TV]): Level =
       lb.levelBelow(ubnd) max ub.levelBelow(ubnd)
+    override def toString: Str = s"? :> $lb <: $ub"
+  }
+  object WildcardArg {
+    def mk(lb: ST, ub: ST, prov: TP = noProv)(implicit ctx: Ctx): ST =
+      if ((lb is ub)
+        || lb === ub
+        || !lb.mentionsTypeBounds && !ub.mentionsTypeBounds && lb <:< ub && ub <:< lb
+      ) lb else (lb, ub) match {
+        case _ => WildcardArg(lb, ub)(prov)
+      }
   }
   
   /** A general type form (TODO: rename to AnyType). */
@@ -469,12 +479,12 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     override def toString = s"$lb..$ub"
   }
   object TypeBounds {
-    final def mkSimple(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv): SimpleType = (lb, ub) match {
+    def mkSimple(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv): SimpleType = (lb, ub) match {
       case (TypeBounds(lb, _), ub) => mkSimple(lb, ub, prov)
       case (lb, TypeBounds(_, ub)) => mkSimple(lb, ub, prov)
       case _ => TypeBounds(lb, ub)(prov)
     }
-    final def mk(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv)(implicit ctx: Ctx): SimpleType =
+    def mk(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv)(implicit ctx: Ctx): SimpleType =
       if ((lb is ub)
         || lb === ub
         || !lb.mentionsTypeBounds && !ub.mentionsTypeBounds && lb <:< ub && ub <:< lb
@@ -486,7 +496,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       * (in particular, the `transform` function may replace TV bounds `TypeBound` bundles,
       * and creating these `TypeBound`s should NOT rely on the bounds still being there at the time
       * the bundle is constructed). */
-    final def mkSafe(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv)(implicit ctx: Ctx): SimpleType =
+    def mkSafe(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv)(implicit ctx: Ctx): SimpleType =
       if ((lb is ub)
         || lb === ub
       ) lb else (lb, ub) match {

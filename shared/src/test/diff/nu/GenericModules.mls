@@ -142,7 +142,7 @@ Test : Test<'a>
 
 
 fun test(x) = if x is Test then x.foo
-//│ fun test: forall 'A 'A0. (Test[in 'A out 'A0] & {Test#A :> 'A0 <: 'A}) -> ('A0 & 'A | ??A) -> (??A0 & 'A)
+//│ fun test: forall 'A 'A0. Test[in 'A out 'A0] -> ('A & 'A0 | ??A) -> (??A0 & 'A0)
 
 test(Test)
 //│ ('A | ??A) -> (??A0 & 'A)

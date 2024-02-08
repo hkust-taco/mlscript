@@ -233,7 +233,7 @@ fun test(f: Foo[Int]) = if f is Bar then 123 : f.A else error
 //│ fun test: (f: Foo[Int]) -> Int
 
 fun test(f: Foo) = if f is Bar then 123 : f.A else error
-//│ fun test: (f: Foo[in anything out nothing]) -> Int
+//│ fun test: (f: Foo[?]) -> Int
 
 fun test(f: Foo[?]) = if f is Bar then 123 : f.A else error
 //│ fun test: (f: Foo[?]) -> Int
@@ -255,7 +255,7 @@ fun test(f: Foo) = if f is
 //│ ╟── but it flows into reference with expected type `Bar | Baz`
 //│ ║  l.242: 	fun test(f: Foo) = if f is
 //│ ╙──       	                      ^
-//│ fun test: (f: Foo[in anything out nothing]) -> (Int | Str)
+//│ fun test: (f: Foo[?]) -> (Int | Str)
 
 [test(Bar), test(Baz)]
 //│ [Int | Str, Int | Str]

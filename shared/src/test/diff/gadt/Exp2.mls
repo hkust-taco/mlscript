@@ -51,13 +51,13 @@ fun f(p: Pair['a, 'b]) = p.lhs
 
 fun f(e) = if e is
   Pair(l, r) then [l, r]
-//│ fun f: forall 'R 'L 'L0 'R0. (Pair[in 'L out 'L0, in 'R0 out 'R] & {Pair#L :> 'L0 <: 'L, Pair#R :> 'R <: 'R0}) -> [Exp[in 'L0 & 'L | ??L out ??L0 & 'L], Exp[in 'R & 'R0 | ??R out ??R0 & 'R0]]
+//│ fun f: forall 'R 'L 'L0 'R0. Pair[in 'L out 'L0, in 'R0 out 'R] -> [Exp[in 'L & 'L0 | ??L out ??L0 & 'L0], Exp[in 'R0 & 'R | ??R out ??R0 & 'R]]
 // f: (Exp['a] & Pair) -> 0
 
 fun f(e) = if e is
   Pair(l, r) then [l, r]
   Lit(n) then n
-//│ fun f: forall 'L 'L0 'R 'R0. (Lit | Pair[in 'L out 'L0, in 'R out 'R0] & {Pair#L :> 'L0 <: 'L, Pair#R :> 'R0 <: 'R}) -> (Int | [Exp[in 'L0 & 'L | ??L out ??L0 & 'L], Exp[in 'R0 & 'R | ??R out ??R0 & 'R]])
+//│ fun f: forall 'L 'L0 'R 'R0. (Lit | Pair[in 'L out 'L0, in 'R out 'R0]) -> (Int | [Exp[in 'L & 'L0 | ??L out ??L0 & 'L0], Exp[in 'R & 'R0 | ??R out ??R0 & 'R0]])
 
 // :e
 (e: Exp['X]) => f(e)
@@ -68,7 +68,7 @@ fun f(e) = if e is
 fun f(e) = if e is
   Pair(l, r) then f(l) + f(r)
   Lit(n) then n
-//│ fun f: (Lit | Pair[in anything out nothing, in anything out nothing]) -> Int
+//│ fun f: (Lit | Pair[?, ?]) -> Int
 
 f(Pair(Pair(Lit(1), Lit(2)), Lit(3)))
 //│ Int

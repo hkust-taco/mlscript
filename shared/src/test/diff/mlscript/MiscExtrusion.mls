@@ -48,7 +48,7 @@ def print: Expr['a] -> unit
 
 def alsoPrintSize f =
   mapExpr(fun e -> let tmp = print e in f e)
-//│ alsoPrintSize: (Expr[in ??a out ??a0] -> Expr[in ??a0 out ??a]) -> Program -> Program
+//│ alsoPrintSize: (Expr[in ??a out ??a0] -> (Expr[in ??a0 out ??a] with {Expr#A :> ??a0 <: ??a})) -> Program -> Program
 
 :e
 alsoPrintSize id

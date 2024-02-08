@@ -762,7 +762,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           of(polymLvl, cons, LhsRefined(tr.mkClsTag, ssEmp, RecordType.empty, SortedMap(defn -> tr)))
         } else mk(polymLvl, cons, tr.expandOrCrash, pol)
       case TypeBounds(lb, ub) => mk(polymLvl, cons, if (pol) ub else lb, pol)
-      case w @ WildcardArg(lb, ub) => mk(polymLvl, cons, if (pol) ub else lb, pol)  // TODO really?
+      case w @ WildcardArg(lb, ub) => die // Not supposed to normalize WildcardArg
       case PolymorphicType(lvl, bod) => mk(lvl, cons, bod, pol)
       case ConstrainedType(cs, bod) => mk(polymLvl, cs ::: cons, bod, pol)
     }
@@ -807,7 +807,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
             CNF(Disjunct(RhsBases(Nil, N, SortedMap.single(defn -> tr)), ssEmp, LhsTop, ssEmp) :: Nil)
           } else mk(polymLvl, cons, tr.expandOrCrash, pol)
         case TypeBounds(lb, ub) => mk(polymLvl, cons, if (pol) ub else lb, pol)
-        case WildcardArg(lb, ub) => mk(polymLvl, cons, if (pol) ub else lb, pol)
+        case WildcardArg(lb, ub) => die // Not supposed to normalize WildcardArg
         case PolymorphicType(lvl, bod) => mk(lvl, cons, bod, pol)
         case ConstrainedType(cs, bod) => mk(lvl, cs ::: cons, bod, pol)
       }
