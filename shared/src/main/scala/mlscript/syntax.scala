@@ -47,6 +47,18 @@ final case class MethodDef[RHS <: Term \/ Type](
   val children: Ls[Located] = nme :: body :: Nil
 }
 
+sealed abstract class Annotation(name: Str)
+
+trait Annotated {
+  private var annotation: Opt[Annotation] = N
+  def hasAnnotation: Bool = annotation.isDefined
+  
+  def withAnnotation(annotation: Annotation): this.type = {
+    this.annotation = S(annotation)
+    this
+  }
+}
+
 sealed trait NameRef extends Located { val name: Str; def toVar: Var }
 
 sealed abstract class OuterKind(val str: Str)
@@ -124,7 +136,7 @@ trait IdentifiedTerm
 
 sealed abstract class SimpleTerm extends Term with IdentifiedTerm with SimpleTermImpl
 
-sealed trait Statement extends StatementImpl
+sealed trait Statement extends StatementImpl with Annotated
 final case class LetS(isRec: Bool, pat: Term, rhs: Term) extends Statement
 final case class DataDefn(body: Term)                    extends Statement
 final case class DatatypeDefn(head: Term, body: Term)    extends Statement
