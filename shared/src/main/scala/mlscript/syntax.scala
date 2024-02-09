@@ -50,13 +50,15 @@ final case class MethodDef[RHS <: Term \/ Type](
 sealed abstract class Annotation(name: Str)
 
 trait Annotated {
-  private var annotation: Opt[Annotation] = N
-  def hasAnnotation: Bool = annotation.isDefined
+  private var annots: List[Annotation] = Nil
+  def hasAnnotation: Bool = !annots.isEmpty
   
   def withAnnotation(annotation: Annotation): this.type = {
-    this.annotation = S(annotation)
+    annots = annotation :: annots
     this
   }
+
+  def annotations: List[Annotation] = annots
 }
 
 sealed trait NameRef extends Located { val name: Str; def toVar: Var }
