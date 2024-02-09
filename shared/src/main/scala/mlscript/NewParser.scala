@@ -8,6 +8,8 @@ import utils._, shorthands._
 import mlscript.Message._
 import BracketKind._
 
+import mlscript.Annotation
+
 object NewParser {
   
   type ExpectThen >: Bool
@@ -304,7 +306,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       S(res, _cur)
     }
   }
-  final def block(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] =
+  final def block(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] = {
+    val annotations = parseAnnotations
+
     cur match {
       case Nil => Nil
       case (NEWLINE, _) :: _ => consume; block
@@ -561,12 +565,41 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           }
           case _ => t
         }
+
+        val annotated = finalTerm match {
+          case Left(e) => L(e.withAnnotations(annotations))
+          case Right(e) => R(e.withAnnotations(annotations))
+        }
+        
         yeetSpaces match {
-          case (SEMI, _) :: _ => consume; finalTerm :: block
-          case (NEWLINE, _) :: _ => consume; finalTerm :: block
-          case _ => finalTerm :: Nil
+          case (SEMI, _) :: _ => consume; annotated :: block
+          case (NEWLINE, _) :: _ => consume; annotated :: block
+          case _ => annotated :: Nil
         }
     }
+  }
+
+  private def parseAnnotations: Ls[Annotation] = {
+    @tailrec
+    def rec(acc: Ls[Annotation]): Ls[Annotation] = cur match {
+      case (IDENT("@", true), l0) :: c => {
+        consume
+        val (name, loc) = c match {
+          case (IDENT(nme, false), l1) :: next => (nme, l1)
+          case c =>
+            val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
+            err((msg"Expected an identifier; found ${tkstr} instead" -> loc :: Nil))
+            ("<error>", l0)
+        }
+        consume
+
+        val annotation = Annotation(AnnotationName(name).withLoc(S(loc)))
+        rec(annotation :: acc)
+      }
+      case _ => acc.reverse
+    }
+    rec(Nil)
+  }
   
   private def yeetSpaces: Ls[TokLoc] =
     cur.dropWhile(tkloc =>
@@ -622,6 +655,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       newDefs = true))
   
   final def exprOrIf(prec: Int, allowSpace: Bool = true)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, allowSpace) { l =>
+    val annotations = parseAnnotations
+    
     cur match {
       case (SPACE, l0) :: _ if allowSpace => // Q: do we really need the `allowSpace` flag?
         consume

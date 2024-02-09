@@ -1,0 +1,20 @@
+:NewDefs
+
+:p
+@tailrec
+fun hello(x) = 2 + @hello 4
+//│ |@|tailrec|↵|#fun| |hello|(|x|)| |#=| |2| |+| |@|hello| |4|
+//│ AST: TypingUnit(List(NuFunDef(None,Var(hello),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(x))))),App(Var(+),Tup(List((None,Fld(_,IntLit(2))), (None,Fld(_,IntLit(4)))))))))))
+//│ Parsed: fun hello = (x,) => +(2, 4,);
+//│ fun hello: anything -> Int
+
+
+:p
+if @hello true then 2 else 3
+//│ |#if| |@|hello| |true| |#then| |2| |#else| |3|
+//│ AST: TypingUnit(List(If(IfThen(Var(true),IntLit(2)),Some(IntLit(3)))))
+//│ Parsed: if (true) then 2 else 3;
+//│ 2 | 3
+//│ res
+//│     = 2
+

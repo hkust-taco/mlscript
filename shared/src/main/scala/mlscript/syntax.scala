@@ -47,19 +47,29 @@ final case class MethodDef[RHS <: Term \/ Type](
   val children: Ls[Located] = nme :: body :: Nil
 }
 
-sealed abstract class Annotation(name: Str)
+// Annotations
+
+final case class AnnotationName(name: Str) extends Located {
+  def children: List[Located] = Nil
+}
+
+final case class Annotation(name: AnnotationName) extends Located {
+  def children: List[Located] = name :: Nil
+}
 
 trait Annotated {
-  private var annots: List[Annotation] = Nil
-  def hasAnnotation: Bool = !annots.isEmpty
+  private var _annotations: Ls[Annotation] = Nil
+  def hasAnnotation: Bool = !_annotations.isEmpty
   
-  def withAnnotation(annotation: Annotation): this.type = {
-    annots = annotation :: annots
+  def withAnnotations(annotations: Ls[Annotation]): this.type = {
+    _annotations = annotations
     this
   }
 
-  def annotations: List[Annotation] = annots
+  def annotations: Ls[Annotation] = _annotations
 }
+
+
 
 sealed trait NameRef extends Located { val name: Str; def toVar: Var }
 
@@ -110,7 +120,7 @@ final case class While(cond: Term, body: Term)                       extends Ter
 final case class AdtMatchWith(cond: Term, arms: Ls[AdtMatchPat])     extends Term
 final case class AdtMatchPat(pat: Term, rhs: Term)                   extends AdtMatchPatImpl
 
-sealed abstract class IfBody extends IfBodyImpl
+sealed abstract class IfBody extends IfBodyImpl with Annotated
 final case class IfThen(expr: Term, rhs: Term) extends IfBody
 final case class IfElse(expr: Term) extends IfBody
 final case class IfLet(isRec: Bool, name: Var, rhs: Term, body: IfBody) extends IfBody
