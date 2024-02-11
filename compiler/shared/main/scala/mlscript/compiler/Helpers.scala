@@ -29,6 +29,7 @@ object Helpers:
 
   def term2Expr(term: Term): Expr = {
       term match
+        case Ann(anns, receiver) => term2Expr(receiver) // TODO: Make sure this is actually what we want.
         case Var(name) => Expr.Ref(name)
         case Lam(lhs, rhs) => 
           val params = toFuncParams(lhs).toList

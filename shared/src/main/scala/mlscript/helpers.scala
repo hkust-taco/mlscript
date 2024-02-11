@@ -531,6 +531,7 @@ trait TermImpl extends StatementImpl { self: Term =>
   def describe: Str = sugaredTerm match {
     case S(t) => t.describe
     case N => this match {
+      case Ann(annotations, receiver) => receiver.describe
       case Bra(true, Tup(_ :: _ :: _) | Tup((S(_), _) :: _) | Blk(_)) => "record"
       case Bra(_, trm) => trm.describe
       case Blk((trm: Term) :: Nil) => trm.describe
@@ -580,6 +581,7 @@ trait TermImpl extends StatementImpl { self: Term =>
   def print(brackets: Bool): Str = {
       def bra(str: Str): Str = if (brackets) s"($str)" else str
       this match {
+    case Ann(anns, receiver) => bra(anns.foldLeft("")(_ + "@" + _.name.name + " ") + receiver.print(false))
     case Bra(true, trm) => s"'{' ${trm.showDbg} '}'"
     case Bra(false, trm) => s"'(' ${trm.showDbg} ')'"
     case Blk(stmts) => stmts.iterator.map(_.showDbg).mkString("{", "; ", "}")
@@ -985,6 +987,7 @@ trait StatementImpl extends Located { self: Statement =>
   }
   
   def children: List[Located] = this match {
+    case Ann(_, trm) => trm :: Nil
     case Bra(_, trm) => trm :: Nil
     case Var(name) => Nil
     case Asc(trm, ty) => trm :: Nil

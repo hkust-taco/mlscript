@@ -48,28 +48,12 @@ final case class MethodDef[RHS <: Term \/ Type](
 }
 
 // Annotations
-
-final case class AnnotationName(name: Str) extends Located {
-  def children: List[Located] = Nil
-}
-
-final case class Annotation(name: AnnotationName) extends Located {
+final case class Annotation(name: Var) extends Located {
   def children: List[Located] = name :: Nil
 }
 
-trait Annotated {
-  private var _annotations: Ls[Annotation] = Nil
-  def hasAnnotation: Bool = !_annotations.isEmpty
-  
-  def withAnnotations(annotations: Ls[Annotation]): this.type = {
-    _annotations = annotations
-    this
-  }
-
-  def annotations: Ls[Annotation] = _annotations
-}
-
-
+// final case class Ann(anns: Ls[Annotation], receiver: Statement) extends Statement
+// final case class AnnDesugared(anns: Ls[Annotation], receiver: DesugaredStatement) extends DesugaredStatement
 
 sealed trait NameRef extends Located { val name: Str; def toVar: Var }
 
@@ -116,11 +100,12 @@ final case class Super()                                             extends Ter
 final case class Eqn(lhs: Var, rhs: Term)                            extends Term // equations such as x = y, notably used in constructors; TODO: make lhs a Term
 final case class Rft(base: Term, decls: TypingUnit)                  extends Term
 final case class While(cond: Term, body: Term)                       extends Term
+final case class Ann(anns: Ls[Annotation], receiver: Term)           extends Term
 
 final case class AdtMatchWith(cond: Term, arms: Ls[AdtMatchPat])     extends Term
 final case class AdtMatchPat(pat: Term, rhs: Term)                   extends AdtMatchPatImpl
 
-sealed abstract class IfBody extends IfBodyImpl with Annotated
+sealed abstract class IfBody extends IfBodyImpl
 final case class IfThen(expr: Term, rhs: Term) extends IfBody
 final case class IfElse(expr: Term) extends IfBody
 final case class IfLet(isRec: Bool, name: Var, rhs: Term, body: IfBody) extends IfBody
@@ -148,7 +133,7 @@ trait IdentifiedTerm
 
 sealed abstract class SimpleTerm extends Term with IdentifiedTerm with SimpleTermImpl
 
-sealed trait Statement extends StatementImpl with Annotated
+sealed trait Statement extends StatementImpl
 final case class LetS(isRec: Bool, pat: Term, rhs: Term) extends Statement
 final case class DataDefn(body: Term)                    extends Statement
 final case class DatatypeDefn(head: Term, body: Term)    extends Statement

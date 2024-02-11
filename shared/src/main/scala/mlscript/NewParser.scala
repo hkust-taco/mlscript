@@ -307,7 +307,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }
   }
   final def block(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] = {
-    val annotations = parseAnnotations
+    val annotations = parseAnnotations(true)
 
     cur match {
       case Nil => Nil
@@ -551,7 +551,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
               }
             }
           case _ =>
-            exprOrIf(0, allowSpace = false)
+            exprOrIf(0, allowSpace = false, annotations = annotations)
         }
         val finalTerm = yeetSpaces match {
           case (KEYWORD("="), l0) :: _ => t match {
@@ -565,23 +565,24 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           }
           case _ => t
         }
-
-        val annotated = finalTerm match {
-          case Left(e) => L(e.withAnnotations(annotations))
-          case Right(e) => R(e.withAnnotations(annotations))
-        }
-        
+              
         yeetSpaces match {
-          case (SEMI, _) :: _ => consume; annotated :: block
-          case (NEWLINE, _) :: _ => consume; annotated :: block
-          case _ => annotated :: Nil
+          case (SEMI, _) :: _ => consume; finalTerm :: block
+          case (NEWLINE, _) :: _ => consume; finalTerm :: block
+          case _ => finalTerm :: Nil
         }
     }
   }
 
-  private def parseAnnotations: Ls[Annotation] = {
+  private def parseAnnotations(allowNewLines: Bool): Ls[Annotation] = {
     @tailrec
     def rec(acc: Ls[Annotation]): Ls[Annotation] = cur match {
+      case (SPACE, _) :: c => 
+        consume
+        rec(acc)
+      case (NEWLINE, _) :: c if allowNewLines =>
+        consume
+        rec(acc)
       case (IDENT("@", true), l0) :: c => {
         consume
         val (name, loc) = c match {
@@ -593,7 +594,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         }
         consume
 
-        val annotation = Annotation(AnnotationName(name).withLoc(S(loc)))
+        val annotation = Annotation(Var(name).withLoc(S(loc)))
         rec(annotation :: acc)
       }
       case _ => acc.reverse
@@ -654,10 +655,16 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     raise(WarningReport(msg"[${cur.headOption.map(_._1).mkString}] ${""+msg}" -> loco :: Nil,
       newDefs = true))
   
-  final def exprOrIf(prec: Int, allowSpace: Bool = true)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, allowSpace) { l =>
-    val annotations = parseAnnotations
+  final def exprOrIf(prec: Int, allowSpace: Bool = true, annotations: Ls[Annotation] = Nil)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, allowSpace) { l =>
+    val moreAnnotations: Ls[Annotation] = parseAnnotations(false)
+
+    if (!moreAnnotations.isEmpty) {
+      yeetSpaces
+    }
+
+    val allAnns = annotations ++ moreAnnotations
     
-    cur match {
+    val res = cur match {
       case (SPACE, l0) :: _ if allowSpace => // Q: do we really need the `allowSpace` flag?
         consume
         exprOrIf(prec, allowSpace)
@@ -886,7 +893,21 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         err(msg"Unexpected ${tk.describe} in expression position" -> S(l0) :: Nil)
         consume
         exprOrIf(prec)(et = et, fe = true, l = implicitly)
-  }}
+    }
+    
+    if (allAnns.isEmpty) res
+    else res match {
+      case Left(body) => body match {
+        case IfThen(expr, rhs) =>
+          Left(IfThen(Ann(allAnns, expr), rhs))
+        case _ =>
+          err(msg"Unexpected annotation" -> allAnns.head.toLoc :: Nil)
+          L(body) // discord annotations for now
+      }
+
+      case Right(term) => R(Ann(allAnns, term))
+    }
+  }
   
   private def errExpr =
     // Tup(Nil).withLoc(lastLoc) // TODO FIXME produce error term instead
