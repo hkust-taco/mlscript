@@ -1,0 +1,35 @@
+:NewDefs
+
+
+type Test[T] = LitInt | LitStr
+class LitInt(n: Int) { type T = Int }
+class LitStr(s: Str) { type T = Str }
+//│ type Test[T] = LitInt | LitStr
+//│ class LitInt(n: Int) {
+//│   type T = Int
+//│ }
+//│ class LitStr(s: Str) {
+//│   type T = Str
+//│ }
+
+// TODO support
+fun foo[T](x: Test[T]): x.T = if x is
+  LitInt(n) then n
+  LitStr(s) then s
+//│ ╔══[ERROR] Access to type alias member not yet supported
+//│ ║  l.16: 	fun foo[T](x: Test[T]): x.T = if x is
+//│ ╙──      	                         ^^
+//│ ╔══[ERROR] Type mismatch in type selection:
+//│ ║  l.16: 	fun foo[T](x: Test[T]): x.T = if x is
+//│ ║        	                         ^^
+//│ ╙── type `error` cannot be reassigned
+//│ ╔══[ERROR] Access to type alias member not yet supported
+//│ ║  l.16: 	fun foo[T](x: Test[T]): x.T = if x is
+//│ ╙──      	                         ^^
+//│ ╔══[ERROR] Type mismatch in type selection:
+//│ ║  l.16: 	fun foo[T](x: Test[T]): x.T = if x is
+//│ ║        	                         ^^
+//│ ╙── type `error` cannot be reassigned
+//│ fun foo: forall 'T. (x: Test['T]) -> error
+
+
