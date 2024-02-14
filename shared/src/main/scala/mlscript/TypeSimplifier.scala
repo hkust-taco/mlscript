@@ -75,6 +75,17 @@ trait TypeSimplifier { self: Typer =>
               tv.upperBounds.reverseIterator.map(process(_, S(false -> tv)))
                 .reduceOption(_ &- _).filterNot(_.isTop).toList
             else Nil
+          nv.tsc = tv.tsc.map {
+              case (tsc, i) =>
+                tsc.tvs.flatMap(x => renewed.get(x).flatMap(_.tsc)).headOption
+                  .fold(new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov), i) {
+                    tsc => (tsc._1, i)
+                  }
+          }
+          nv.tsc.foreach { case (tsc, i) =>
+            val (l, r) = tsc.tvs.splitAt(i-1)
+            l ++ (nv :: r.drop(1))
+          }
         }
         nv
         
@@ -520,6 +531,7 @@ trait TypeSimplifier { self: Typer =>
       override def apply(pol: PolMap)(st: ST): Unit = trace(s"analyze1[${(pol)}] $st") {
         st match {
           case tv: TV =>
+            println(s"analyzing 1: $tv, ${pol(tv)}")
             pol(tv) match {
               case S(pol) =>
                 occNums(pol -> tv) += 1
@@ -543,7 +555,9 @@ trait TypeSimplifier { self: Typer =>
                 analyzed1.setAndIfUnset(tv -> pol(tv).getOrElse(false)) { apply(pol)(ty) }
               case N =>
                 if (pol(tv) =/= S(false))
-                  analyzed1.setAndIfUnset(tv -> true) { tv.lowerBounds.foreach(apply(pol.at(tv.level, true))) }
+                  analyzed1.setAndIfUnset(tv -> true) {
+                    tv.lowerBounds.foreach(apply(pol.at(tv.level, true)))
+                  }
                 if (pol(tv) =/= S(true))
                   analyzed1.setAndIfUnset(tv -> false) { tv.upperBounds.foreach(apply(pol.at(tv.level, false))) }
             }
@@ -1011,6 +1025,17 @@ trait TypeSimplifier { self: Typer =>
                           res.lowerBounds = tv.lowerBounds.map(transform(_, pol.at(tv.level, true), Set.single(tv)))
                         if (occNums.contains(false -> tv))
                           res.upperBounds = tv.upperBounds.map(transform(_, pol.at(tv.level, false), Set.single(tv)))
+                        res.tsc = tv.tsc.map {
+                          case (tsc, i) =>
+                            tsc.tvs.flatMap(x => renewals.get(x).flatMap(_.tsc)).headOption
+                              .fold(new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov), i) {
+                                tsc => (tsc._1, i)
+                              }
+                        }
+                        res.tsc.foreach { case (tsc, i) =>
+                          val (l, r) = tsc.tvs.splitAt(i-1)
+                          l ++ (res :: r.drop(1))
+                        }
                     }
                     res
                   }()

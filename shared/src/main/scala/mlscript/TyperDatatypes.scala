@@ -535,8 +535,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       _assignedTo = value
     }
 
-    var lbtsc: Opt[(TupleSetConstraints, Int)] = N
-    var ubtsc: Opt[(TupleSetConstraints, Int)] = N
+    var tsc: Opt[(TupleSetConstraints, Int)] = N
     
     // * Bounds should always be disregarded when `equatedTo` is defined, as they are then irrelevant:
     def lowerBounds: List[SimpleType] = { require(assignedTo.isEmpty, this); _lowerBounds }
@@ -655,7 +654,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       def go(ub: ST): Unit = ub match {
         case ub: TV =>
           ub.upperBounds.foreach(go)
-          ub.lbtsc = S(this, index)
+          ub.lowerBounds ::= tvs(index)
         case _ =>
           constraints.filterInPlace { constrs =>
             val ty = constrs(index)
@@ -668,8 +667,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       if (constraints.sizeCompare(1) === 0) {
         constraints.head.zip(tvs).foreach {
           case (ty, tv) =>
-            tv.lbtsc = N
-            tv.ubtsc = N
+            tv.tsc = N
             constrain(tv, ty)(raise, prov, ctx)
             constrain(ty, tv)(raise, prov, ctx)
         }
@@ -685,8 +683,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       if (constraints.sizeCompare(1) === 0) {
         constraints.head.zip(tvs).foreach {
           case (ty, tv) =>
-            tv.lbtsc = N
-            tv.ubtsc = N
+            tv.tsc = N
             constrain(tv, ty)(raise, prov, ctx)
             constrain(ty, tv)(raise, prov, ctx)
         }
@@ -743,14 +740,13 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       (FunctionType(lhs, rhs)(prov), ltvs ++ rtvs, lconstrs ++ rconstrs)
     }
     def mk(ov: Overload)(implicit lvl: Level): FunctionType = {
-      def unwrap(t: ST): ST = t.map(unwrap)
+      def unwrap(t: ST): ST = t.unwrapProxies.map(unwrap)
       if (ov.alts.tail.isEmpty) ov.alts.head else {
         val f = ov.mapAlts(unwrap)(unwrap)
         val (t, tvs, constrs) = lcgFunction(f.alts.head, f.alts.tail)(ov.prov, lvl)
         val tsc = new TupleSetConstraints(MutSet.empty ++ constrs.transpose, tvs)(ov.prov)
         tvs.zipWithIndex.foreach { case (tv, i) =>
-          tv.lbtsc = S((tsc, i))
-          tv.ubtsc = S((tsc, i))
+          tv.tsc = S((tsc, i))
         }
         println(s"TSC mk: ${tsc.tvs} in ${tsc.constraints}")
         t

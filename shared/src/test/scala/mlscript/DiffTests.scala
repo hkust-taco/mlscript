@@ -507,7 +507,7 @@ class DiffTests
                 exp match {
                   // * Strip top-level implicitly-quantified type variables
                   case pt: PolyType => stripPoly(pt)
-                  case Constrained(pt: PolyType, bs, cs) => Constrained(stripPoly(pt), bs, cs)
+                  case Constrained(pt: PolyType, bs, cs, tscs) => Constrained(stripPoly(pt), bs, cs, tscs)
                   case ty => ty
                 }
               }

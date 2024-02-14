@@ -953,19 +953,19 @@ abstract class TyperHelpers { Typer: Typer =>
     def getVars: SortedSet[TypeVariable] = getVarsImpl(includeBounds = true)
     
     def showBounds: String =
-      getVars.iterator.filter(tv => tv.assignedTo.nonEmpty || (tv.upperBounds ++ tv.lowerBounds).nonEmpty || (tv.lbtsc.isDefined && tv.ubtsc.isEmpty)).map {
+      getVars.iterator.filter(tv => (tv.assignedTo.nonEmpty || (tv.upperBounds ++ tv.lowerBounds).nonEmpty) && tv.tsc.isEmpty).map {
       case tv @ AssignedVariable(ty) => "\n\t\t" + tv.toString + " := " + ty
       case tv => ("\n\t\t" + tv.toString
           + (if (tv.lowerBounds.isEmpty) "" else " :> " + tv.lowerBounds.mkString(" | "))
           + (if (tv.upperBounds.isEmpty) "" else " <: " + tv.upperBounds.mkString(" & "))
-          + tv.lbtsc.fold(""){ case (tsc, i) => " :> " + tsc.tvs(i) } )
+      )
       }.mkString + {
         val visited: MutSet[TV] = MutSet.empty
-        getVars.iterator.filter(tv => tv.ubtsc.isDefined).map {
+        getVars.iterator.filter(tv => tv.tsc.isDefined).map {
           case tv if visited.contains(tv) => ""
           case tv =>
-            visited ++= tv.lbtsc.fold(Nil: Ls[TV])(_._1.tvs)
-            tv.lbtsc.fold("") { case (tsc, _) => ("\n\t\t[ "
+            visited ++= tv.tsc.fold(Nil: Ls[TV])(_._1.tvs)
+            tv.tsc.fold("") { case (tsc, _) => ("\n\t\t[ "
               + tsc.tvs.mkString(", ")
               + " ] in { " + tsc.constraints.mkString(", ") + " }")
             }
@@ -1398,7 +1398,7 @@ abstract class TyperHelpers { Typer: Typer =>
     private val lvl = 0
     def apply(lvl: Level): Pol
     def quantifPolarity(lvl: Level): PolMap
-    final def apply(tv: TV): Pol = apply(tv.level)
+    final def apply(tv: TV): Pol = if (tv.tsc.isEmpty) apply(tv.level) else N
     def enter(polymLvl: Level): PolMap =
       new PolMap(base) {
         def apply(lvl: Level): Pol =
