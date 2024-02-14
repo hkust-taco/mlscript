@@ -1135,6 +1135,19 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (IDENT(nme, false), l0) :: _ =>
         consume
         val tyNme = TypeName(nme).withLoc(S(l0))
+
+        @inline def getTypeName(kw: String) = yeetSpaces match {
+          case (KEYWORD(k), l0) :: _ if k === kw => consume
+            yeetSpaces match {
+              case (IDENT(nme, false), l1) :: _ => 
+                consume; S(TypeName(nme).withLoc(S(l1)))
+              case _ => err(msg"dangling $kw keyword" -> S(l0) :: Nil); N
+            }
+          case _ => N
+        }
+        val lb = getTypeName("restricts")
+        val ub = getTypeName("extends")
+
         yeetSpaces match {
           case (COMMA, l0) :: _ =>
             consume

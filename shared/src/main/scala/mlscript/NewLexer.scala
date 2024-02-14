@@ -442,7 +442,8 @@ object NewLexer {
     "undefined",
     "abstract",
     "constructor",
-    "virtual"
+    "virtual",
+    "restricts"
   )
   
   def printToken(tl: TokLoc): Str = tl match {

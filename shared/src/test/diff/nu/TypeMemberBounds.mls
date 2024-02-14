@@ -1,0 +1,96 @@
+:NewDefs
+
+class Foo[A restricts Bool]
+//│ class Foo[A] {
+//│   constructor()
+//│ }
+
+class Foo[A extends Bool]
+//│ class Foo[A] {
+//│   constructor()
+//│ }
+
+class Foo[type A restricts Int extends Int]
+//│ class Foo[A] {
+//│   constructor()
+//│ }
+
+class Foo[in A restricts Int]
+//│ class Foo[A] {
+//│   constructor()
+//│ }
+
+
+class Foo[A restricts Bool, B extends Int]
+//│ class Foo[A, B] {
+//│   constructor()
+//│ }
+
+:pe
+class Foo[type restricts]
+//│ ╔══[PARSE ERROR] dangling visible type member
+//│ ║  l.30: 	class Foo[type restricts]
+//│ ╙──      	          ^^^^
+//│ ╔══[PARSE ERROR] Unexpected 'restricts' keyword here
+//│ ║  l.30: 	class Foo[type restricts]
+//│ ╙──      	               ^^^^^^^^^
+//│ class Foo {
+//│   constructor()
+//│ }
+
+:pe
+class Foo[type extends]
+//│ ╔══[PARSE ERROR] dangling visible type member
+//│ ║  l.42: 	class Foo[type extends]
+//│ ╙──      	          ^^^^
+//│ ╔══[PARSE ERROR] Unexpected 'extends' keyword here
+//│ ║  l.42: 	class Foo[type extends]
+//│ ╙──      	               ^^^^^^^
+//│ class Foo {
+//│   constructor()
+//│ }
+
+:pe
+class Foo[restricts Int]
+//│ ╔══[PARSE ERROR] Unexpected 'restricts' keyword here
+//│ ║  l.54: 	class Foo[restricts Int]
+//│ ╙──      	          ^^^^^^^^^
+//│ class Foo {
+//│   constructor()
+//│ }
+
+:pe
+class Foo[restricts extends]
+//│ ╔══[PARSE ERROR] Unexpected 'restricts' keyword here
+//│ ║  l.63: 	class Foo[restricts extends]
+//│ ╙──      	          ^^^^^^^^^
+//│ class Foo {
+//│   constructor()
+//│ }
+
+:pe
+class Foo[extends Int]
+//│ ╔══[PARSE ERROR] Unexpected 'extends' keyword here
+//│ ║  l.72: 	class Foo[extends Int]
+//│ ╙──      	          ^^^^^^^
+//│ class Foo {
+//│   constructor()
+//│ }
+
+:pe
+class Foo[A extends]
+//│ ╔══[PARSE ERROR] dangling extends keyword
+//│ ║  l.81: 	class Foo[A extends]
+//│ ╙──      	            ^^^^^^^
+//│ class Foo[A] {
+//│   constructor()
+//│ }
+
+:pe
+class Foo[B restricts]
+//│ ╔══[PARSE ERROR] dangling restricts keyword
+//│ ║  l.90: 	class Foo[B restricts]
+//│ ╙──      	            ^^^^^^^^^
+//│ class Foo[B] {
+//│   constructor()
+//│ }
