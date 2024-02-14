@@ -8,8 +8,6 @@ import utils._, shorthands._
 import mlscript.Message._
 import BracketKind._
 
-import mlscript.Annotation
-
 object NewParser {
   
   type ExpectThen >: Bool
