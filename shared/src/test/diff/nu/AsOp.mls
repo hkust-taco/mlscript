@@ -47,7 +47,6 @@ fun foo[T](f: Foo[T]): Int = if f is
 //│ res
 //│     = 'hello'
 
-// what ?
 0as Int
 //│ Int
 //│ res

@@ -29,12 +29,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     ErrorReport(
       msg"${info.decl.kind.str.capitalize} `${info.decl.name}` does not contain member `${fld.name}`" -> fld.toLoc :: Nil, newDefs)
   
-  def lookupMember(clsNme: Str, rfnt: Var => Opt[FieldType], fld: Var)
-        (implicit ctx: Ctx, raise: Raise)
+  def lookupMember(clsNme: Str, rfnt: Var => Opt[FieldType], fld: Var)(implicit ctx: Ctx, raise: Raise)
         : Either[Diagnostic, NuMember]
-        = {
-    val info = ctx.tyDefs2.getOrElse(clsNme, throw new Exception(s"Crashes at looking up member `$clsNme`"))
-    
+        = ctx.tyDefs2.get(clsNme).toRight(ErrorReport(msg"Cannot find class ${clsNme}" -> N :: Nil, newDefs)) flatMap { info =>
     if (info.isComputing) {
       ??? // TODO support?
       

@@ -7,7 +7,6 @@ import scala.util.chaining._
 import scala.annotation.tailrec
 import mlscript.utils._, shorthands._
 import mlscript.Message._
-import java.lang.reflect.WildcardType
 
 class TypeDefs extends NuTypeDefs { Typer: Typer =>
   import TypeProvenance.{apply => tp}

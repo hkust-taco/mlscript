@@ -461,7 +461,8 @@ type ? = Int
 //│ ╙──       	^^^^^^
 //│ type ? = Int
 
-// TODO should we allow this
+// FIXME
+:e
 type W = ?
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
 
@@ -472,7 +473,7 @@ fun f(x): W = x
 :e
 f(1)
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.465: 	type W = ?
+//│ ║  l.466: 	type W = ?
 //│ ╙──       	         ^
 //│ error | W
 //│ res
@@ -487,7 +488,7 @@ fun (?) wc(x, y) = x == y
 // TODO
 1 ? 1
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.488: 	1 ? 1
+//│ ║  l.489: 	1 ? 1
 //│ ╙──       	  ^
 //│ error
 //│ res
@@ -504,11 +505,11 @@ let f: Foo[?]
 :e
 f.a : Int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.505: 	f.a : Int
+//│ ║  l.506: 	f.a : Int
 //│ ║         	^^^
 //│ ╟── field selection of type `anything` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.505: 	f.a : Int
+//│ ║  l.506: 	f.a : Int
 //│ ╙──       	      ^^^
 //│ Int
 //│ res
@@ -519,7 +520,7 @@ f.a : Int
 :e
 42 : f.a
 //│ ╔══[ERROR] Type mismatch in type selection:
-//│ ║  l.520: 	42 : f.a
+//│ ║  l.521: 	42 : f.a
 //│ ║         	      ^^
 //│ ╙── type `anything` cannot be reassigned
 //│ anything
