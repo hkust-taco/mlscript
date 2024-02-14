@@ -987,7 +987,10 @@ trait StatementImpl extends Located { self: Statement =>
   }
   
   def children: List[Located] = this match {
-    case Ann(_, trm) => trm :: Nil
+    case Ann(ann, trm) => trm match {
+      case t: Ann => ann :: t.children
+      case t => ann :: t :: Nil
+    }
     case Bra(_, trm) => trm :: Nil
     case Var(name) => Nil
     case Asc(trm, ty) => trm :: Nil
