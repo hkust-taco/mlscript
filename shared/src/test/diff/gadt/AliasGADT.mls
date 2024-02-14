@@ -5,31 +5,54 @@ type Test[T] = LitInt | LitStr
 class LitInt(n: Int) { type T = Int }
 class LitStr(s: Str) { type T = Str }
 //│ type Test[T] = LitInt | LitStr
-//│ class LitInt(n: Int) {
-//│   type T = Int
-//│ }
-//│ class LitStr(s: Str) {
-//│   type T = Str
-//│ }
+//│ class LitInt(n: Int)
+//│ class LitStr(s: Str)
 
-// TODO support
 fun foo[T](x: Test[T]): x.T = if x is
   LitInt(n) then n
   LitStr(s) then s
-//│ ╔══[ERROR] Access to type alias member not yet supported
-//│ ║  l.16: 	fun foo[T](x: Test[T]): x.T = if x is
-//│ ╙──      	                         ^^
-//│ ╔══[ERROR] Type mismatch in type selection:
-//│ ║  l.16: 	fun foo[T](x: Test[T]): x.T = if x is
-//│ ║        	                         ^^
-//│ ╙── type `error` cannot be reassigned
-//│ ╔══[ERROR] Access to type alias member not yet supported
-//│ ║  l.16: 	fun foo[T](x: Test[T]): x.T = if x is
-//│ ╙──      	                         ^^
-//│ ╔══[ERROR] Type mismatch in type selection:
-//│ ║  l.16: 	fun foo[T](x: Test[T]): x.T = if x is
-//│ ║        	                         ^^
-//│ ╙── type `error` cannot be reassigned
-//│ fun foo: forall 'T. (x: Test['T]) -> error
+//│ fun foo: forall 'T. (x: Test['T]) -> (Int | Str)
 
+// FIXME
+fun foo[T](x: Test[T]): T = if x is
+  LitInt(n) then n : x.T
+  LitStr(s) then s : x.T
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.18: 	  LitInt(n) then n : x.T
+//│ ║        	                 ^
+//│ ╟── type `Int` does not match type `T`
+//│ ║  l.5: 	class LitInt(n: Int) { type T = Int }
+//│ ║       	                                ^^^
+//│ ╟── Note: constraint arises from method type parameter:
+//│ ║  l.17: 	fun foo[T](x: Test[T]): T = if x is
+//│ ╙──      	        ^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.19: 	  LitStr(s) then s : x.T
+//│ ║        	                 ^
+//│ ╟── type `Str` does not match type `T`
+//│ ║  l.6: 	class LitStr(s: Str) { type T = Str }
+//│ ║       	                                ^^^
+//│ ╟── Note: constraint arises from method type parameter:
+//│ ║  l.17: 	fun foo[T](x: Test[T]): T = if x is
+//│ ╙──      	        ^
+//│ fun foo: forall 'T. (x: Test['T]) -> 'T
 
+// * somehow we need to find a way to associate T in Foo and T in MkF
+type Foo[T] = MkF
+class MkF(n: Int) { type T = Int }
+//│ type Foo[T] = MkF
+//│ class MkF(n: Int)
+
+// FIXME
+fun foo[T](x: Foo[T]): T = if x is
+  MkF(n) then n : x.T
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.48: 	  MkF(n) then n : x.T
+//│ ║        	              ^
+//│ ╟── type `Int` does not match type `T`
+//│ ║  l.42: 	class MkF(n: Int) { type T = Int }
+//│ ║        	                             ^^^
+//│ ╟── Note: constraint arises from method type parameter:
+//│ ║  l.47: 	fun foo[T](x: Foo[T]): T = if x is
+//│ ╙──      	        ^
+//│ fun foo: forall 'T. (x: Foo['T]) -> 'T

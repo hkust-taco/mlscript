@@ -16,7 +16,7 @@ import mlscript.Message._
  */
 class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val newDefs: Bool)
     extends ucs.Desugarer with TypeSimplifier {
-
+  
   def funkyTuples: Bool = false
   def doFactorize: Bool = false
   def showAllErrors: Bool = false // TODO enable?

@@ -384,10 +384,43 @@ Foo(C1(false)).foo(true)
 //│ Bool
 
 :pe
+class Foo[in type]
+//│ ╔══[PARSE ERROR] dangling variance information
+//│ ║  l.387: 	class Foo[in type]
+//│ ╙──       	          ^^
+//│ ╔══[PARSE ERROR] Unexpected 'type' keyword here
+//│ ║  l.387: 	class Foo[in type]
+//│ ╙──       	             ^^^^
+//│ class Foo {
+//│   constructor()
+//│ }
+
+:pe
+class Foo[type]
+//│ ╔══[PARSE ERROR] dangling visible type member
+//│ ║  l.399: 	class Foo[type]
+//│ ╙──       	          ^^^^
+//│ class Foo {
+//│   constructor()
+//│ }
+
+:pe
 class Foo[type in]
 //│ ╔══[PARSE ERROR] dangling type member and variance information
-//│ ║  l.387: 	class Foo[type in]
+//│ ║  l.408: 	class Foo[type in]
 //│ ╙──       	          ^^^^^^^
 //│ class Foo {
 //│   constructor()
 //│ }
+
+// FIXME
+:pe
+fun foo[type](x)
+//│ ╔══[PARSE ERROR] Unexpected 'type' keyword in expression position
+//│ ║  l.418: 	fun foo[type](x)
+//│ ╙──       	        ^^^^
+//│ ╔══[PARSE ERROR] Unexpected end of square bracket section; an expression was expected here
+//│ ║  l.418: 	fun foo[type](x)
+//│ ╙──       	            ^
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+

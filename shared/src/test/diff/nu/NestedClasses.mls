@@ -15,7 +15,7 @@ let c = C0()
 
 :e
 c.NC0
-//│ ╔══[ERROR] Access to class member not yet supported
+//│ ╔══[ERROR] Access to class member NC0 not yet supported
 //│ ║  l.17: 	c.NC0
 //│ ╙──      	 ^^^^
 //│ error
@@ -37,7 +37,7 @@ module M0 {
 
 :e
 M0.NC0
-//│ ╔══[ERROR] Access to class member not yet supported
+//│ ╔══[ERROR] Access to class member NC0 not yet supported
 //│ ║  l.39: 	M0.NC0
 //│ ╙──      	  ^^^^
 //│ error
@@ -54,7 +54,7 @@ module M1 {
 
 :e
 M1.NM1
-//│ ╔══[ERROR] Access to module member not yet supported
+//│ ╔══[ERROR] Access to module member NM1 not yet supported
 //│ ║  l.56: 	M1.NM1
 //│ ╙──      	  ^^^^
 //│ error

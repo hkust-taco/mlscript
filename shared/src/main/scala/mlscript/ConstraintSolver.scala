@@ -33,6 +33,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         : Either[Diagnostic, NuMember]
         = ctx.tyDefs2.get(clsNme).toRight(ErrorReport(msg"Cannot find class ${clsNme}" -> N :: Nil, newDefs)) flatMap { info =>
     if (info.isComputing) {
+
       ??? // TODO support?
       
     } else info.complete() match {
@@ -101,7 +102,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                     Nil)
                 S(p.ty)
               case S(m) =>
-                S(err(msg"Access to ${m.kind.str} member not yet supported", fld.toLoc).toUpper(noProv))
+                S(err(msg"Access to ${m.kind.str} member ${fld.name} not yet supported", fld.toLoc).toUpper(noProv))
               case N => N
             }
           

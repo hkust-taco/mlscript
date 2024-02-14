@@ -1,0 +1,64 @@
+:NewDefs
+
+
+class Test { type T = Int }
+//│ class Test {
+//│   constructor()
+//│ }
+
+1 : Test.T
+//│ Int
+//│ res
+//│     = 1
+
+
+trait Test { type T = Int }
+//│ trait Test
+
+1 : Test.T
+//│ Int
+//│ res
+//│     = 1
+
+class Foo[T](x: T) { 
+  type T = T
+} 
+//│ class Foo[T](x: T)
+
+1 : Foo(1).T
+//│ 1
+//│ res
+//│     = 1
+
+:e
+class Foo[type T](x: Int) { 
+  type T = Int
+} 
+//│ ╔══[ERROR] Class type member 'T' already exists
+//│ ║  l.35: 	  type T = Int
+//│ ╙──      	  ^^^^^^
+//│ class Foo[T](x: Int)
+
+abstract class Foo { type T = Int }
+//│ abstract class Foo
+
+:e
+class Bar extends Foo { type T = Bool }
+//│ ╔══[ERROR] Inherited parameter named `T` is not virtual and cannot be overridden
+//│ ╙── Originally declared here:
+//│ class Bar extends Foo {
+//│   constructor()
+//│ }
+
+abstract class Foo[type T]
+//│ abstract class Foo[T]
+
+// TODO
+class Bar extends Foo { type T = Bool }
+//│ ╔══[ERROR] Inherited parameter named `T` is not virtual and cannot be overridden
+//│ ╟── Originally declared here:
+//│ ║  l.53: 	abstract class Foo[type T]
+//│ ╙──      	                        ^
+//│ class Bar extends Foo {
+//│   constructor()
+//│ }

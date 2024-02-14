@@ -1446,12 +1446,15 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       case _ =>
                     }
                     
-                    val ttu = typeTypingUnit(td.body, S(td))
+                    val ttu = typeTypingUnit(td.body, S(td)) 
                     
                     val allMembers = (
                       trtMembers.iterator.map(d => d.name -> d)
-                      ++ ttu.implementedMembers.map(d => d.name -> d)
-                      ++ typedSignatureMembers
+                      ++ ttu.implementedMembers.map {
+                        case als: TypedNuAls => als.name -> NuParam(TypeName(als.name), 
+                          FieldType(S(als.body), als.body)(als.body.prov), true)(als.level)
+                        case td => td.name -> td
+                    } ++ typedSignatureMembers
                     ).toMap
                     
                     // check trait overriding
@@ -1651,7 +1654,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     
                     println(s"baseClsImplemMembers ${baseClsImplemMembers}")
                     
-                    val newImplems = ttu.implementedMembers
+                    val newImplems = ttu.implementedMembers.map {
+                      case als: TypedNuAls => 
+                        if (tparamFields.map(_._1.name).contains(als.name))
+                          err(msg"Class type member '${als.name}' already exists", als.toLoc)
+                        NuParam(TypeName(als.name), FieldType(S(als.body), als.body)(als.body.prov), true)(als.level)
+                      case td => td
+                    }
                     
                     val clsSigns = typedSignatureMembers.map(_._2)
                     
