@@ -52,9 +52,6 @@ final case class Annotation(name: Var) extends Located {
   def children: List[Located] = name :: Nil
 }
 
-// final case class Ann(anns: Ls[Annotation], receiver: Statement) extends Statement
-// final case class AnnDesugared(anns: Ls[Annotation], receiver: DesugaredStatement) extends DesugaredStatement
-
 sealed trait NameRef extends Located { val name: Str; def toVar: Var }
 
 sealed abstract class OuterKind(val str: Str)
@@ -100,7 +97,7 @@ final case class Super()                                             extends Ter
 final case class Eqn(lhs: Var, rhs: Term)                            extends Term // equations such as x = y, notably used in constructors; TODO: make lhs a Term
 final case class Rft(base: Term, decls: TypingUnit)                  extends Term
 final case class While(cond: Term, body: Term)                       extends Term
-final case class Ann(anns: Ls[Annotation], receiver: Term)           extends Term
+final case class Ann(ann: Annotation, receiver: Term)           extends Term
 
 final case class AdtMatchWith(cond: Term, arms: Ls[AdtMatchPat])     extends Term
 final case class AdtMatchPat(pat: Term, rhs: Term)                   extends AdtMatchPatImpl
@@ -225,7 +222,7 @@ final case class NuFunDef(
   nme: Var,
   symbolicNme: Opt[Var],
   tparams: Ls[TypeName],
-  rhs: Term \/ Type,
+  rhs: Term \/ Type
 )(
   val declareLoc: Opt[Loc],
   val virtualLoc: Opt[Loc], // Some(Loc) means that the function is modified by keyword `virtual`

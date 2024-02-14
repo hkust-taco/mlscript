@@ -581,7 +581,7 @@ trait TermImpl extends StatementImpl { self: Term =>
   def print(brackets: Bool): Str = {
       def bra(str: Str): Str = if (brackets) s"($str)" else str
       this match {
-    case Ann(anns, receiver) => bra(anns.foldLeft("")(_ + "@" + _.name.name + " ") + receiver.print(false))
+    case Ann(ann, receiver) => bra("@" + ann.name.name + " ") + receiver.print(false)
     case Bra(true, trm) => s"'{' ${trm.showDbg} '}'"
     case Bra(false, trm) => s"'(' ${trm.showDbg} ')'"
     case Blk(stmts) => stmts.iterator.map(_.showDbg).mkString("{", "; ", "}")

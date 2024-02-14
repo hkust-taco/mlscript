@@ -897,15 +897,18 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     else res match {
       case Left(body) => body match {
         case IfThen(expr, rhs) =>
-          Left(IfThen(Ann(allAnns, expr), rhs))
+          Left(IfThen(wrapAnns(expr, allAnns), rhs))
         case _ =>
           err(msg"Unexpected annotation" -> allAnns.head.toLoc :: Nil)
           L(body) // discord annotations for now
       }
 
-      case Right(term) => R(Ann(allAnns, term))
+      case Right(term) => R(wrapAnns(term, allAnns))
     }
   }
+
+  private def wrapAnns(trm: Term, anns: List[Annotation]) =
+    anns.foldRight(trm)(Ann(_, _))
   
   private def errExpr =
     // Tup(Nil).withLoc(lastLoc) // TODO FIXME produce error term instead
