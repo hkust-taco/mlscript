@@ -1,6 +1,7 @@
 package mlscript.compiler
 
-import mlscript.utils.shorthands.*
+import mlscript.utils.shorthands._
+import mlscript.compiler.ir._
 import scala.util.control.NonFatal
 import scala.collection.mutable.StringBuilder
 import mlscript.{DiffTests, ModeType, TypingUnit}
@@ -8,11 +9,16 @@ import mlscript.compiler.debug.TreeDebug
 import mlscript.compiler.mono.Monomorph
 import mlscript.compiler.printer.ExprPrinter
 import mlscript.compiler.mono.MonomorphError
-import mlscript.compiler.optimizer.{GraphOptimizer, GraphInterpreter, Fresh, FreshInt}
-import mlscript.compiler.optimizer.GraphBuilder
+import mlscript.compiler.ir.{IRInterpreter, Fresh, FreshInt, IRBuilder}
+import mlscript.compiler.optimizer.GraphOptimizer
+import mlscript.Origin
 
 class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*
+
+  override def postProcessWithHaskellSyntax(mode: ModeType, basePath: List[Str], testName: Str, orig: Origin): List[Str] =
+    ???
+
   override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit): List[Str] = 
     val outputBuilder = StringBuilder()
 
@@ -23,7 +29,7 @@ class DiffTestCompiler extends DiffTests {
         val f2 = FreshInt()
         val f3 = FreshInt()
         val f4 = FreshInt()
-        val gb = GraphBuilder(f1, f2, f3, f4)
+        val gb = IRBuilder(f1, f2, f3, f4)
         val go = GraphOptimizer(f1, f2, f3, f4, mode.graphOptVerbose)
         val graph = gb.buildGraph(unit)
         outputBuilder ++= graph.toString()
@@ -35,7 +41,7 @@ class DiffTestCompiler extends DiffTests {
         var interp_result: Opt[Str] = None
         if (mode.graphInterp)
           outputBuilder ++= "\n\nInterpreted ------------------------------\n"
-          val ir = GraphInterpreter(mode.graphOptVerbose).interpret(graph4)
+          val ir = IRInterpreter(mode.graphOptVerbose).interpret(graph4)
           interp_result = Some(ir)
           outputBuilder ++= ir
           outputBuilder ++= "\n"
@@ -55,7 +61,7 @@ class DiffTestCompiler extends DiffTests {
 
           if (mode.graphInterp)
             outputBuilder ++= "\n\nInterpreted ------------------------------\n"
-            val ir = GraphInterpreter(mode.graphOptVerbose).interpret(g)
+            val ir = IRInterpreter(mode.graphOptVerbose).interpret(g)
             outputBuilder ++= ir
             if ir != interp_result.get then
               throw optimizer.GraphOptimizingError("Interpreted result changed after optimization")

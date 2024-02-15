@@ -1,9 +1,10 @@
 package mlscript.compiler.optimizer
 
-import mlscript.*
-import mlscript.compiler.*
-import mlscript.utils.*
-import shorthands.*
+import mlscript._
+import mlscript.compiler._
+import mlscript.compiler.ir._
+import mlscript.utils._
+import shorthands._
 
 import scala.annotation.tailrec
 import scala.collection.immutable.*

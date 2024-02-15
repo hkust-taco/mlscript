@@ -1,9 +1,10 @@
-package mlscript.compiler.optimizer
+package mlscript.compiler.ir
 
 import mlscript.utils.shorthands._
-import mlscript.compiler.optimizer._
+import mlscript.compiler.ir._
 
 import GONode._
+import mlscript.compiler.optimizer.GraphOptimizingError
 
 private final class DefRefInSet(defs: Set[GODef]):
   private def f(x: GONode): Unit = x match

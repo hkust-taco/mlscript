@@ -1,16 +1,18 @@
 package mlscript.compiler.optimizer
 
-import mlscript.*
-import mlscript.compiler.*
-import mlscript.utils.*
-import shorthands.*
+import mlscript._
+import mlscript.compiler._
+import mlscript.compiler.ir._
+import mlscript.utils._
+import shorthands._
 
 import scala.annotation.tailrec
-import scala.collection.immutable.*
+import scala.collection.immutable._
 import scala.collection.mutable.{HashMap => MutHMap}
 import scala.collection.mutable.{HashSet => MutHSet, Set => MutSet}
 import scala.collection.mutable.{MultiMap, Queue}
-import os.copy.over
+import mlscript.compiler.ir.{Fresh, FreshInt}
+import mlscript.compiler.ir.validate
 
 final case class GraphOptimizingError(message: String) extends Exception(message)
 

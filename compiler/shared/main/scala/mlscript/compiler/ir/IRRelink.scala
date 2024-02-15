@@ -1,9 +1,10 @@
-package mlscript.compiler.optimizer
+package mlscript.compiler.ir
 
 import mlscript.utils.shorthands._
-import mlscript.compiler.optimizer._
+import mlscript.compiler.ir._
 
 import GONode._
+import mlscript.compiler.optimizer.GraphOptimizingError
 
 private final class Relink(defs: Set[GODef], allow_inline_jp: Bool):
   private def f(x: GONode): Unit = x match
@@ -26,7 +27,7 @@ private final class Relink(defs: Set[GODef], allow_inline_jp: Bool):
   def run(node: GODef) = f(node.body)
 
 
-private def relink(entry: GONode, defs: Set[GODef], allow_inline_jp: Bool = false): Unit  =
+def relink(entry: GONode, defs: Set[GODef], allow_inline_jp: Bool = false): Unit  =
   val rl = Relink(defs, allow_inline_jp)
   rl.run(entry)
   defs.foreach(rl.run(_))

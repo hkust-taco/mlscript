@@ -43,6 +43,7 @@ abstract class ModeType {
   def graphOpt: Bool
   def graphInterp: Bool
   def graphOptVerbose: Bool
+  def parseAsHaskell: Bool
 }
 
 class DiffTests
@@ -54,7 +55,8 @@ class DiffTests
   
   /**  Hook for dependent projects, like the monomorphizer. */
   def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit): Ls[Str] = Nil
-  
+
+  def postProcessWithHaskellSyntax(mode: ModeType, basePath: Ls[Str], testName: Str, orig: Origin): Ls[Str] = Nil
   
   @SuppressWarnings(Array("org.wartremover.warts.RedundantIsInstanceOf"))
   private val inParallel = isInstanceOf[ParallelTestExecution]
@@ -173,6 +175,8 @@ class DiffTests
       graphOpt: Bool = false,
       graphInterp: Bool = false,
       graphOptVerbose: Bool = false,
+      parseAsHaskell: Bool = false,
+      
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
     }
@@ -283,6 +287,7 @@ class DiffTests
           case "GraphOpt" => mode.copy(graphOpt = true)
           case "GraphInterp" => mode.copy(graphInterp = true)
           case "GraphOptVerbose" => mode.copy(graphOptVerbose = true)
+          case "SyntaxHaskell" => mode.copy(parseAsHaskell = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -422,7 +427,11 @@ class DiffTests
         
         // try to parse block of text into mlscript ast
         val ans = try {
-          if (newParser) {
+          if (mode.parseAsHaskell) {
+            val origin = Origin(testName, globalStartLineNum, fph)
+            postProcessWithHaskellSyntax(mode, basePath, testName, origin).foreach(output)
+            Success(Pgrm(Nil), 0)
+          } else if (newParser) {
             
             val origin = Origin(testName, globalStartLineNum, fph)
             val lexer = new NewLexer(origin, raise, dbg = mode.dbgParsing)

@@ -1,22 +1,21 @@
-package mlscript.compiler.optimizer
+package mlscript.compiler.ir
 
-import mlscript.utils.*
-import mlscript.utils.shorthands.*
+import mlscript._
+import mlscript.utils._
+import mlscript.utils.shorthands._
+import mlscript.compiler.ir._
+import mlscript.compiler.optimizer._
 
 import collection.mutable.{Map as MutMap, Set as MutSet, HashMap, ListBuffer}
-import mlscript.*
-import mlscript.compiler.optimizer.*
-
 import annotation.unused
 import util.Sorting
 import scala.collection.immutable.SortedSet
 
-// -----------------------------------------------
+final case class IRError(message: String) extends Exception(message)
 
 case class GOProgram(
   val classes: Set[ClassInfo],
   val defs: Set[GODef],
-  // TODO add a cache of split defs
   val main: GONode,
 ):
   override def equals(o: Any): Bool = o match {

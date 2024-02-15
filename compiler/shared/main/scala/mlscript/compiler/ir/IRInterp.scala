@@ -1,16 +1,17 @@
-package mlscript.compiler.optimizer
+package mlscript.compiler.ir
 
-import mlscript.*
-import mlscript.compiler.*
-import mlscript.compiler.optimizer.*
-import mlscript.utils.*
-import shorthands.*
-import scala.collection.immutable.*
-import scala.annotation.*
+import mlscript._
+import mlscript.compiler._
+import mlscript.compiler.optimizer._
+import mlscript.compiler.ir._
+import mlscript.utils._
+import scala.collection.immutable._
+import scala.annotation._
+import shorthands._
 
-final case class GraphInterpreterError(message: String) extends Exception(message)
+final case class IRInterpreterError(message: String) extends Exception(message)
 
-class GraphInterpreter(verbose: Bool):
+class IRInterpreter(verbose: Bool):
   private def log(x: Any) = if verbose then println(x)
   private case class Program(
     classes: Set[ClassInfo],
@@ -223,20 +224,20 @@ class GraphInterpreter(verbose: Bool):
         case CtorApp(cls2, xs) if cls == cls2 =>
           xs.zip(cls2.fields).find{_._2 == field} match
             case Some((x, _)) => x
-            case None => throw GraphInterpreterError("unable to find selected field")
-        case x @ _ => throw GraphInterpreterError(s"unexpected node: select $field but got $x when eval $expr")
+            case None => throw IRInterpreterError("unable to find selected field")
+        case x @ _ => throw IRInterpreterError(s"unexpected node: select $field but got $x when eval $expr")
       }.toLeft(expr)
     case BasicOp(name, args) =>
       val xs = eval_args_may_not_progress(args)
       val x = name match
         case "+" | "-" | "*" | "/" | "==" | "!=" | "<=" | ">=" | "<" | ">" => 
           eval(using ctx, clsctx)(name, xs.head, xs.tail.head)
-        case _ => throw GraphInterpreterError("unexpected basic operation")
+        case _ => throw IRInterpreterError("unexpected basic operation")
       x.toLeft(expr)
 
   private def expect_def(r: DefRef) = r.defn match
     case Left(value) => value
-    case Right(value) => throw GraphInterpreterError("only has the name of definition")
+    case Right(value) => throw IRInterpreterError("only has the name of definition")
 
   private def eval_may_not_progress(using ctx: Ctx, clsctx: ClassCtx)(node: Node) = eval(node) match
     case Left(x) => x
@@ -256,11 +257,11 @@ class GraphInterpreter(verbose: Bool):
     case Case(scrut, cases) =>
       val CtorApp(cls, xs) = (Ref(scrut):Expr) |> eval_may_not_progress(using ctx, clsctx) match {
         case x: CtorApp => x
-        case x => throw GraphInterpreterError(s"not a class $x")
+        case x => throw IRInterpreterError(s"not a class $x")
       }
       val arm = cases.find{_._1 == cls} match {
         case Some((_, x)) => x
-        case _ => throw GraphInterpreterError(s"can not find the matched case, $cls expected")
+        case _ => throw IRInterpreterError(s"can not find the matched case, $cls expected")
       }
       eval(arm)
     case LetExpr(name, expr, body) =>
@@ -273,11 +274,11 @@ class GraphInterpreter(verbose: Bool):
       val ctx1 = ctx ++ defn.params.map{_.str}.zip(ys)
       val res = eval_may_not_progress(using ctx1, clsctx)(defn.body) match {
         case Result(xs) => xs
-        case _ => throw GraphInterpreterError("unexpected node")
+        case _ => throw IRInterpreterError("unexpected node")
       }
       val ctx2 = ctx ++ xs.map{_.str}.zip(res)
       eval(using ctx2, clsctx)(body)
-    case _ => throw GraphInterpreterError("unexpected node")
+    case _ => throw IRInterpreterError("unexpected node")
 
   private def interpret(prog: Program): Node =
     val Program(classes, defs, main) = prog

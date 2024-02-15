@@ -1,6 +1,6 @@
-package mlscript.compiler.optimizer
+package mlscript.compiler.ir
 
-import mlscript.compiler.optimizer._
+import mlscript.compiler.optimizer.FreeVarAnalysis
 import mlscript.utils.shorthands._
 import mlscript.utils._
 import mlscript._
@@ -8,7 +8,7 @@ import collection.mutable.ListBuffer
 
 final val ops = Set("+", "-", "*", "/", ">", "<", ">=", "<=", "!=", "==")
 
-final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshInt):
+final class IRBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshInt):
   import GONode._
   import GOExpr._
   
@@ -30,8 +30,8 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, ta
   private def ref(x: Name) = Ref(x)
   private def result(x: Ls[TrivialExpr]) = Result(x).attach_tag(tag)
   private def sresult(x: TrivialExpr) = Result(Ls(x)).attach_tag(tag)
-  private def unexpected_node(x: GONode) = throw GraphOptimizingError(s"unsupported node $x")
-  private def unexpected_term(x: Term) = throw GraphOptimizingError(s"unsupported term $x")
+  private def unexpected_node(x: GONode) = throw IRError(s"unsupported node $x")
+  private def unexpected_term(x: Term) = throw IRError(s"unsupported term $x")
 
   private def buildBinding(using ctx: Ctx)(name: Str, e: Term, body: Term)(k: GONode => GONode): GONode =
     buildResultFromTerm(e) {
@@ -62,7 +62,7 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, ta
   private def bindingPatternVariables(scrut: Str, tup: Tup, cls: ClassInfo, rhs: Term): Term =
     val params = tup.fields.map {
       case N -> Fld(FldFlags.empty, Var(name)) => name
-      case _ => throw GraphOptimizingError("unsupported field")
+      case _ => throw IRError("unsupported field")
     }
     val fields = cls.fields
     val tm = params.zip(fields).foldLeft(rhs) {
@@ -83,11 +83,11 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, ta
         else
           ctx.name_ctx.get(name) match {
             case Some(x) => x |> ref |> sresult |> k
-            case _ => throw GraphOptimizingError(s"unknown name $name in $ctx")
+            case _ => throw IRError(s"unknown name $name in $ctx")
           }
 
       case Lam(Tup(fields), body) =>
-        throw GraphOptimizingError("not supported: lambda")
+        throw IRError("not supported: lambda")
       case App(
         App(Var(name), Tup((_ -> Fld(_, e1)) :: Nil)), 
         Tup((_ -> Fld(_, e2)) :: Nil)) if ctx.op_ctx.contains(name) =>
@@ -124,7 +124,7 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, ta
         }
         case Result(Ref(f) :: Nil) => buildResultFromTerm(xs) {
           case Result(args) =>
-            throw GraphOptimizingError(s"not supported: apply")
+            throw IRError(s"not supported: apply")
           case node @ _ => node |> unexpected_node
         }
         case node @ _ => node |> unexpected_node
@@ -137,7 +137,7 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, ta
         buildResultFromTerm(cond) {
           case Result(Ref(cond) :: Nil) => 
             if (!ctx.class_ctx.contains("True") || !ctx.class_ctx.contains("False"))
-              throw GraphOptimizingError("True or False class not found, unable to use 'if then else'")
+              throw IRError("True or False class not found, unable to use 'if then else'")
             val jp = fresh make "j"
             val res = fresh.make
             val jpbody = res |> ref |> sresult |> k
@@ -200,7 +200,7 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, ta
                   case Result(xs) => Jump(GODefRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attach_tag(tag)
                   case node @ _ => node |> unexpected_node
                 }
-              case _ => throw GraphOptimizingError(s"not supported UCS")
+              case _ => throw IRError(s"not supported UCS")
             }
             Case(scrut, cases).attach_tag(tag)
           case node @ _ => node |> unexpected_node
@@ -239,7 +239,7 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, ta
     case NuFunDef(_, Var(name), None, Nil, L(Lam(Tup(fields), body))) =>
       val strs = fields map {
           case N -> Fld(FldFlags.empty, Var(x)) => x
-          case _ => throw GraphOptimizingError("unsupported field") 
+          case _ => throw IRError("unsupported field") 
         }
       val names = strs map (fresh.make(_))
       given Ctx = ctx.copy(name_ctx = ctx.name_ctx ++ (strs zip names))
@@ -251,7 +251,7 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, ta
         specialized = None,
         buildResultFromTerm(body) { x => x }
       )
-    case _ => throw GraphOptimizingError("unsupported NuFunDef")
+    case _ => throw IRError("unsupported NuFunDef")
   
   private def buildClassInfo(ntd: Statement): ClassInfo = ntd match
     case NuTypeDef(Cls, TypeName(name), Nil, S(Tup(args)), N, N, Nil, N, N, TypingUnit(Nil)) =>
@@ -260,7 +260,7 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, ta
         name, 
         args map {
           case N -> Fld(FldFlags.empty, Var(name)) => name
-          case _ => throw GraphOptimizingError("unsupported field")
+          case _ => throw IRError("unsupported field")
         }
       )
     case NuTypeDef(Cls, TypeName(name), Nil, N, N, N, Nil, N, N, TypingUnit(Nil)) =>
@@ -269,16 +269,16 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, ta
         name,
         Ls(),
       )
-    case x @ _ => throw GraphOptimizingError(f"unsupported NuTypeDef $x")
+    case x @ _ => throw IRError(f"unsupported NuTypeDef $x")
 
   private def checkDuplicateField(ctx: Set[Str], cls: ClassInfo): Set[Str] =
     val u = cls.fields.toSet intersect ctx
-    if (u.nonEmpty) throw GraphOptimizingError(f"duplicate class field $u")
+    if (u.nonEmpty) throw IRError(f"duplicate class field $u")
     cls.fields.toSet union ctx
 
   private def getDefinitionName(nfd: Statement): Str = nfd match
     case NuFunDef(_, Var(name), _, _, _) => name
-    case _ => throw GraphOptimizingError("unsupported NuFunDef")
+    case _ => throw IRError("unsupported NuFunDef")
 
   def buildGraph(unit: TypingUnit): GOProgram = unit match
     case TypingUnit(entities) =>
@@ -286,7 +286,7 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, ta
         case ntd: NuTypeDef => 0
         case nfd: NuFunDef => 1
         case tm: Term => 2
-        case _ => throw GraphOptimizingError("unsupported entity")
+        case _ => throw IRError("unsupported entity")
       }
 
       import scala.collection.mutable.{ HashSet => MutHSet }
@@ -319,10 +319,13 @@ final class GraphBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, ta
 
       val main = buildResultFromTerm (terms match {
         case x :: Nil => x
-        case _ => throw GraphOptimizingError("only one term is allowed in the top level scope")
+        case _ => throw IRError("only one term is allowed in the top level scope")
       }) { k => k }
 
       defs ++= jp_acc.toList
+
+      
+
       
       relink(main, defs, true)
       validate(main, defs)

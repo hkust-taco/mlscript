@@ -1,4 +1,4 @@
-package mlscript.compiler.optimizer
+package mlscript.compiler.ir
 
 import collection.mutable.{HashMap => MutHMap}
 import mlscript.utils.shorthands._

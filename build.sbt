@@ -45,6 +45,7 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
     libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.3.0",
     libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.3.3",
     libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.8.0",
+    libraryDependencies += "org.antlr" % "antlr4" % "4.13.1",
     // 
     watchSources += WatchSource(
       sourceDirectory.value.getParentFile().getParentFile()/"shared/src/test/diff", "*.fun", NothingFilter),
@@ -79,25 +80,13 @@ lazy val ts2mlsTest = project.in(file("ts2mls"))
   )
 
 lazy val compiler = crossProject(JSPlatform, JVMPlatform).in(file("compiler"))
-  .enablePlugins(SbtIdeaPlugin)
   .settings(
     name := "mlscript-compiler",
     scalaVersion := "3.1.3",
     sourceDirectory := baseDirectory.value.getParentFile()/"shared",
     watchSources += WatchSource(
       baseDirectory.value.getParentFile()/"shared"/"test"/"diff", "*.mls", NothingFilter),
-    ThisBuild / intellijPluginName := "haskell",
-    ThisBuild / intellijBuild      := "231.9011.34",
-    ThisBuild / intellijPlatform   := IntelliJPlatform.IdeaCommunity,
-    Global    / intellijAttachSources := true,
-    intellijPlugins += "com.intellij.properties".toPlugin,
-    intellijPlugins += "com.intellij.java".toPlugin,
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.12" % Test,
-    libraryDependencies += "io.spray" %% "spray-json" % "1.3.6",
-    libraryDependencies += "org.yaml" % "snakeyaml" % "1.30",
-    libraryDependencies += "com.github.blemale" %% "scaffeine" % "5.1.2",
-    libraryDependencies += "io.github.soc" % "directories" % "12",
-    libraryDependencies += "com.lihaoyi" %% "fastparse" % "2.3.3",
+    libraryDependencies += "org.antlr" % "antlr4" % "4.13.1"
   )
   .dependsOn(mlscript % "compile->compile;test->test")
 
