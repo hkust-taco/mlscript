@@ -65,9 +65,9 @@ l0 = Cons { head = 1; tail = Nil {} }
 :stats
 Cons.HeadOption l0
 //│ res: Some[1]
-//│ constrain calls  : 48
+//│ constrain calls  : 45
 //│ annoying  calls  : 22
-//│ subtyping calls  : 149
+//│ subtyping calls  : 137
 
 :stats
 l1 = Cons { head = 1; tail = Cons { head = 2; tail = Cons { head = 3; tail = Nil {} } } }
@@ -79,9 +79,9 @@ l1 = Cons { head = 1; tail = Cons { head = 2; tail = Cons { head = 3; tail = Nil
 :stats
 Cons.HeadOption l1
 //│ res: Some[1]
-//│ constrain calls  : 45
+//│ constrain calls  : 42
 //│ annoying  calls  : 21
-//│ subtyping calls  : 154
+//│ subtyping calls  : 140
 
 :stats
 l2 = Cons { head = 0; tail = l1 }
@@ -93,25 +93,25 @@ l2 = Cons { head = 0; tail = l1 }
 :stats
 Cons.HeadOption l2
 //│ res: Some[0]
-//│ constrain calls  : 51
+//│ constrain calls  : 48
 //│ annoying  calls  : 22
-//│ subtyping calls  : 155
+//│ subtyping calls  : 143
 
 :stats
 l3 = Cons { head = 0-1; tail = l2 }
 //│ l3: Cons[int] with {
 //│   tail: Cons[0] with {tail: Cons[1] with {tail: Cons[2] with {tail: Cons[3] with {tail: Nil[?]}}}}
 //│ }
-//│ constrain calls  : 34
+//│ constrain calls  : 33
 //│ annoying  calls  : 1
-//│ subtyping calls  : 253
+//│ subtyping calls  : 250
 
 :stats
 Cons.HeadOption l3
 //│ res: Some[int]
-//│ constrain calls  : 57
+//│ constrain calls  : 50
 //│ annoying  calls  : 22
-//│ subtyping calls  : 182
+//│ subtyping calls  : 148
 
 
 :stats
@@ -126,9 +126,9 @@ rec def lr1 = Cons { head = 0; tail = lr1 }
 :stats
 Cons.HeadOption lr1
 //│ res: Some[0]
-//│ constrain calls  : 48
+//│ constrain calls  : 45
 //│ annoying  calls  : 21
-//│ subtyping calls  : 162
+//│ subtyping calls  : 147
 
 :stats
 rec def lr2 = Cons { head = 0; tail = Cons { head = 1; tail = Cons { head = 3; tail = lr2 } } }
@@ -142,9 +142,9 @@ rec def lr2 = Cons { head = 0; tail = Cons { head = 1; tail = Cons { head = 3; t
 :stats
 Cons.HeadOption lr2
 //│ res: Some[0]
-//│ constrain calls  : 47
+//│ constrain calls  : 44
 //│ annoying  calls  : 21
-//│ subtyping calls  : 156
+//│ subtyping calls  : 142
 
 
 :e

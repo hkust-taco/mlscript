@@ -614,9 +614,9 @@ rec def to_ch_weird n =
 to_church = to_ch
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b 'c 'd 'e. (? & 'e) -> (('d & 'b) -> ('d | 'c)
+//│     'a :> forall 'b 'c 'd 'e. (? & 'b) -> (('e & 'c) -> ('e | 'd)
 //│       where
-//│         'a <: 'e -> 'b -> 'c)
+//│         'a <: 'b -> 'c -> 'd)
 //│ ╙──
 //│ int -> 'a -> ('b -> ('b | 'c)
 //│   where
