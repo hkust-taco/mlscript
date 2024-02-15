@@ -1,0 +1,22 @@
+:NewDefs
+
+:NoJS // * The JS backend currently doesn't know about Annotation
+
+
+module tailrec2 extends Annotation
+//│ module tailrec2 extends Annotation
+
+@tailrec2
+fun foo = 0
+//│ fun foo: 0
+
+
+class tailrec2() extends Annotation
+//│ class tailrec2() extends Annotation
+
+// :e // TODO should be rejected
+@tailrec2
+fun foo = 0
+//│ fun foo: 0
+
+
