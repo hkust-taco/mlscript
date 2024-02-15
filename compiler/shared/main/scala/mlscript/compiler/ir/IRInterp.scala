@@ -2,8 +2,8 @@ package mlscript.compiler.ir
 
 import mlscript._
 import mlscript.compiler._
+import mlscript.compiler.ir.{Node => INode, Expr => IExpr, Program => IProgram, Defn => IDefn, DefnRef => IDefnRef}
 import mlscript.compiler.optimizer._
-import mlscript.compiler.ir._
 import mlscript.utils._
 import scala.collection.immutable._
 import scala.annotation._
@@ -15,11 +15,11 @@ class IRInterpreter(verbose: Bool):
   private def log(x: Any) = if verbose then println(x)
   private case class Program(
     classes: Set[ClassInfo],
-    defs: Set[Def],
+    defs: Set[Defn],
     main: Node,
   )
 
-  private case class Def(
+  private case class Defn(
     val name: Str,
     val params: Ls[Name],
     val body: Node,
@@ -52,11 +52,11 @@ class IRInterpreter(verbose: Bool):
 
   private enum Node:
     case Result(res: Ls[Expr])
-    case Jump(defn: DefRef, args: Ls[Expr])
+    case Jump(defn: DefnRef, args: Ls[Expr])
     case Case(scrut: Name, cases: Ls[(ClassInfo, Node)])
     case LetExpr(name: Name, expr: Expr, body: Node)
     case LetJoin(joinName: Name, params: Ls[Name], rhs: Node, body: Node)
-    case LetCall(resultNames: Ls[Name], defn: DefRef, args: Ls[Expr], body: Node)
+    case LetCall(resultNames: Ls[Name], defn: DefnRef, args: Ls[Expr], body: Node)
 
     def show: Str =
       document.print
@@ -116,7 +116,7 @@ class IRInterpreter(verbose: Bool):
           raw("in") <:> body.document |> indent
         )
   
-  private class DefRef(var defn: Either[Def, Str]):
+  private class DefnRef(var defn: Either[Defn, Str]):
     def name = defn match
       case Left(defn) => defn.name
       case Right(name) => name
@@ -124,31 +124,31 @@ class IRInterpreter(verbose: Bool):
   import Node._
   import Expr._
 
-  private def convert(texpr: TrivialExpr): Expr = texpr match
-    case GOExpr.Ref(x) => Ref(x)
-    case GOExpr.Literal(x) => Literal(x)
+  private def convert(texpr: ir.TrivialExpr): Expr = texpr match
+    case IExpr.Ref(x) => Ref(x)
+    case IExpr.Literal(x) => Literal(x)
 
-  private def convert_args(xs: Ls[TrivialExpr]): Ls[Expr] = xs.map(convert)
+  private def convert_args(xs: Ls[ir.TrivialExpr]): Ls[Expr] = xs.map(convert)
 
-  private def convert(expr: GOExpr): Expr = expr match
-    case GOExpr.Ref(x) => Ref(x)
-    case GOExpr.Literal(x) => Literal(x)
-    case GOExpr.CtorApp(name, args) => CtorApp(name, args |> convert_args)
-    case GOExpr.Select(name, cls, field) => Select(name, cls, field)
-    case GOExpr.BasicOp(name, args) => BasicOp(name, args |> convert_args)
+  private def convert(expr: IExpr): Expr = expr match
+    case IExpr.Ref(x) => Ref(x)
+    case IExpr.Literal(x) => Literal(x)
+    case IExpr.CtorApp(name, args) => CtorApp(name, args |> convert_args)
+    case IExpr.Select(name, cls, field) => Select(name, cls, field)
+    case IExpr.BasicOp(name, args) => BasicOp(name, args |> convert_args)
 
-  private def convert(node: GONode): Node = node match
-    case GONode.Result(xs) => Result(xs |> convert_args)
-    case GONode.Jump(defnref, args) => Jump(DefRef(Right(defnref.getName)), args |> convert_args)
-    case GONode.Case(scrut, cases) => Case(scrut, cases.map{(cls, node) => (cls, node |> convert)})
-    case GONode.LetExpr(name, expr, body) => LetExpr(name, expr |> convert, body |> convert)
-    case GONode.LetCall(xs, defnref, args, body) =>
-      LetCall(xs, DefRef(Right(defnref.getName)), args |> convert_args, body |> convert)
+  private def convert(node: INode): Node = node match
+    case INode.Result(xs) => Result(xs |> convert_args)
+    case INode.Jump(defnref, args) => Jump(DefnRef(Right(defnref.getName)), args |> convert_args)
+    case INode.Case(scrut, cases) => Case(scrut, cases.map{(cls, node) => (cls, node |> convert)})
+    case INode.LetExpr(name, expr, body) => LetExpr(name, expr |> convert, body |> convert)
+    case INode.LetCall(xs, defnref, args, body) =>
+      LetCall(xs, DefnRef(Right(defnref.getName)), args |> convert_args, body |> convert)
 
-  private def convert(defn: GODef): Def =
-    Def(defn.name, defn.params, defn.body |> convert)
+  private def convert(defn: IDefn): Defn =
+    Defn(defn.name, defn.params, defn.body |> convert)
 
-  private def fix_cross_ref(defs: Set[Def], node: Node): Unit = node match
+  private def fix_cross_ref(defs: Set[Defn], node: Node): Unit = node match
     case Case(_, cases) => cases.foreach { case (cls, node) => fix_cross_ref(defs, node) }
     case LetExpr(name, expr, body) => fix_cross_ref(defs, body)
     case LetJoin(joinName, params, rhs, body) => fix_cross_ref(defs, body)
@@ -158,14 +158,14 @@ class IRInterpreter(verbose: Bool):
       fix_cross_ref(defs, body)
     case _ =>
 
-  private def convert(prog: GOProgram): Program =
+  private def convert(prog: IProgram): Program =
     val classes = prog.classes
     val old_defs = prog.defs
     val old_main = prog.main
 
-    val defs: Set[Def] = old_defs.map(convert)
+    val defs: Set[Defn] = old_defs.map(convert)
     defs.foreach {
-      case Def(_, _, body) => fix_cross_ref(defs, body)
+      case Defn(_, _, body) => fix_cross_ref(defs, body)
     }
 
     val main = convert(old_main)
@@ -235,7 +235,7 @@ class IRInterpreter(verbose: Bool):
         case _ => throw IRInterpreterError("unexpected basic operation")
       x.toLeft(expr)
 
-  private def expect_def(r: DefRef) = r.defn match
+  private def expect_def(r: DefnRef) = r.defn match
     case Left(value) => value
     case Right(value) => throw IRInterpreterError("only has the name of definition")
 
@@ -285,7 +285,7 @@ class IRInterpreter(verbose: Bool):
     val clsctx = classes.map(x => x.ident -> x).toMap
     eval_may_not_progress(using Map.empty, clsctx)(main)
     
-  def interpret(goprog: GOProgram): Str =
-    val prog = convert(goprog)
+  def interpret(irprog: ir.Program): Str =
+    val prog = convert(irprog)
     val node = interpret(prog) 
     node.show

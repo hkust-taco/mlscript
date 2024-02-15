@@ -12,7 +12,7 @@ fib(20)
 //│ 
 //│ 
 //│ GraphOpt:
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
 //│ Def(0, fib, [n$0], [{}],
 //│ S: None,
 //│ I: [],
@@ -42,7 +42,7 @@ fib(20)
 //│   in x$7 -- #33)
 //│ 
 //│ Promoted ------------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
 //│ Def(0, fib, [n$0], [{<EDirect@fib:#26-let x$2 = ...>,<EDirect@fib:#28-let x$0 = ...>,<EDirect@fib:#35-...>}],
 //│ S: None,
 //│ I: [],
@@ -87,7 +87,7 @@ foo()
 //│ 
 //│ 
 //│ GraphOpt:
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ S: None,
 //│ I: [],
@@ -146,7 +146,7 @@ foo()
 //│   in x$13 -- #46)
 //│ 
 //│ Promoted ------------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
 //│ Def(0, odd, [x$0], [{<EDirect@odd:#16-let x$4 = ...>,<EDirect@odd:#18-let x$1 = ...>}],
 //│ S: None,
 //│ I: [],
@@ -217,7 +217,7 @@ main()
 //│ 
 //│ 
 //│ GraphOpt:
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
 //│ Def(0, not, [x$0], [{}],
 //│ S: None,
 //│ I: [],
@@ -275,7 +275,7 @@ main()
 //│   in x$12 -- #40)
 //│ 
 //│ Promoted ------------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
 //│ Def(0, not, [x$0], [{<EDestruct@not:#8-if x$0 ...>,<EDirect@not:#8-if x$0 ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(False))]],
@@ -321,7 +321,7 @@ main()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
 //│ Def(2, foo, [x$4], [{<EDestruct@foo:#54-if x$4 ...>,<EDirect@foo:#53-jump foo$D$1 ...>,<EDirect@foo:#54-if x$4 ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(True))]],
@@ -363,7 +363,7 @@ main()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
 //│ Def(4, main, [], [],
 //│ S: None,
 //│ I: [],
@@ -430,7 +430,7 @@ main()
 //│ 
 //│ 
 //│ GraphOpt:
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
 //│ Def(0, aaa, [], [],
 //│ S: None,
 //│ I: [],
@@ -527,7 +527,7 @@ main()
 //│   in x$26 -- #85)
 //│ 
 //│ Promoted ------------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
 //│ Def(0, aaa, [], [],
 //│ S: None,
 //│ I: [],
@@ -599,7 +599,7 @@ main()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
 //│ Def(0, aaa, [], [],
 //│ S: None,
 //│ I: [],
@@ -667,7 +667,7 @@ main()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
 //│ Def(0, aaa, [], [],
 //│ S: None,
 //│ I: [],
@@ -751,7 +751,7 @@ foo()
 //│ 
 //│ 
 //│ GraphOpt:
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ S: None,
 //│ I: [],
@@ -812,7 +812,7 @@ foo()
 //│   in x$15 -- #53)
 //│ 
 //│ Promoted ------------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(0, odd, [x$0], [{<EDestruct@odd:#15-case x$0 of ...>,<EDirect@odd:#15-case x$0 of ...>,<ESelect(s)@odd:#14-let x$3 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(S))]],
@@ -861,7 +861,7 @@ foo()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(0, odd, [x$0], [{<EDestruct@odd:#62-case x$0 of ...>,<EDirect@odd:#62-case x$0 of ...>,<ESelect(s)@odd:#69-let x$18 = ...>}],
 //│ S: None,
 //│ I: [],
@@ -909,7 +909,7 @@ foo()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(0, odd, [x$0], [{<EDestruct@odd:#62-case x$0 of ...>,<EDirect@odd:#62-case x$0 of ...>,<ESelect(s)@odd:#69-let x$18 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(S))]],
@@ -956,7 +956,7 @@ foo()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(0, odd, [x$0], [{<EDestruct@odd:#96-case x$0 of ...>,<EDirect@odd:#96-case x$0 of ...>,<ESelect(s)@odd:#103-let x$26 = ...>}],
 //│ S: None,
 //│ I: [],
@@ -1002,7 +1002,7 @@ foo()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(4, foo, [], [],
 //│ S: None,
 //│ I: [],
@@ -1049,7 +1049,7 @@ foo()
 //│ 
 //│ 
 //│ GraphOpt:
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ S: None,
 //│ I: [],
@@ -1130,7 +1130,7 @@ foo()
 //│   in x$18 -- #68)
 //│ 
 //│ Promoted ------------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(0, odd, [x$0], [{<EDestruct@odd:#15-case x$0 of ...>,<EDirect@odd:#15-case x$0 of ...>,<ESelect(s)@odd:#14-let x$3 = ...>}],
 //│ S: None,
 //│ I: [[Some(IMix(ICtor(O),ICtor(S)))]],
@@ -1191,7 +1191,7 @@ foo()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(0, odd, [x$0], [{<EDestruct@odd:#15-case x$0 of ...>,<EDirect@odd:#15-case x$0 of ...>,<ESelect(s)@odd:#14-let x$3 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(O))],[Some(ICtor(S))]],
@@ -1274,7 +1274,7 @@ foo()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(0, odd, [x$0], [{<EDestruct@odd:#100-case x$0 of ...>,<EDirect@odd:#100-case x$0 of ...>,<ESelect(s)@odd:#113-let x$28 = ...>}],
 //│ S: None,
 //│ I: [],
@@ -1385,7 +1385,7 @@ foo()
 //│ 
 //│ 
 //│ GraphOpt:
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ S: None,
 //│ I: [],
@@ -1468,7 +1468,7 @@ foo()
 //│   in x$20 -- #76)
 //│ 
 //│ Promoted ------------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(0, odd, [x$0], [{<EDestruct@odd:#15-case x$0 of ...>,<EDirect@odd:#15-case x$0 of ...>,<ESelect(s)@odd:#14-let x$3 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(S))]],
@@ -1531,7 +1531,7 @@ foo()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(0, odd, [x$0], [{<EDestruct@odd:#87-case x$0 of ...>,<EDirect@odd:#87-case x$0 of ...>,<ESelect(s)@odd:#94-let x$23 = ...>}],
 //│ S: None,
 //│ I: [],
@@ -1593,7 +1593,7 @@ foo()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(0, odd, [x$0], [{<EDestruct@odd:#87-case x$0 of ...>,<EDirect@odd:#87-case x$0 of ...>,<ESelect(s)@odd:#94-let x$23 = ...>}],
 //│ S: None,
 //│ I: [[Some(IMix(ICtor(O),ICtor(S)))]],
@@ -1654,7 +1654,7 @@ foo()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(0, odd, [x$0], [{<EDestruct@odd:#87-case x$0 of ...>,<EDirect@odd:#87-case x$0 of ...>,<ESelect(s)@odd:#94-let x$23 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(O))],[Some(ICtor(S))]],
@@ -1737,7 +1737,7 @@ foo()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(0, odd, [x$0], [{<EDestruct@odd:#142-case x$0 of ...>,<EDirect@odd:#142-case x$0 of ...>,<ESelect(s)@odd:#155-let x$38 = ...>}],
 //│ S: None,
 //│ I: [],
@@ -1851,7 +1851,7 @@ main()
 //│ 
 //│ 
 //│ GraphOpt:
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ S: None,
 //│ I: [],
@@ -1956,7 +1956,7 @@ main()
 //│   in x$25 -- #89)
 //│ 
 //│ Promoted ------------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(0, odd, [x$0], [{<EDestruct@odd:#15-case x$0 of ...>,<EDirect@odd:#15-case x$0 of ...>,<ESelect(s)@odd:#14-let x$3 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(S))],[Some(ICtor(O))]],
@@ -2017,7 +2017,7 @@ main()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(0, odd, [x$0], [{<EDestruct@odd:#106-case x$0 of ...>,<EDirect@odd:#106-case x$0 of ...>,<ESelect(s)@odd:#119-let x$29 = ...>}],
 //│ S: None,
 //│ I: [],
@@ -2076,7 +2076,7 @@ main()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(6, bar, [], [],
 //│ S: None,
 //│ I: [],
@@ -2144,7 +2144,7 @@ main(False)
 //│ 
 //│ 
 //│ GraphOpt:
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
 //│ Def(0, aaa, [], [],
 //│ S: None,
 //│ I: [],
@@ -2241,7 +2241,7 @@ main(False)
 //│     in x$26 -- #86)
 //│ 
 //│ Promoted ------------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
 //│ Def(0, aaa, [], [],
 //│ S: None,
 //│ I: [],
@@ -2313,7 +2313,7 @@ main(False)
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
 //│ Def(0, aaa, [], [],
 //│ S: None,
 //│ I: [],
@@ -2392,7 +2392,7 @@ main(False)
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
 //│ Def(0, aaa, [], [],
 //│ S: None,
 //│ I: [],
@@ -2470,7 +2470,7 @@ main()
 //│ 
 //│ 
 //│ GraphOpt:
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(0, head_opt, [l$0], [{}],
 //│ S: None,
 //│ I: [],
@@ -2541,7 +2541,7 @@ main()
 //│   in x$15 -- #62)
 //│ 
 //│ Promoted ------------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(0, head_opt, [l$0], [{<EDestruct@head_opt:#17-case l$0 of ...>,<EDirect@head_opt:#17-case l$0 of ...>,<ESelect(h)@head_opt:#15-let x$3 = ...>}],
 //│ S: None,
 //│ I: [],
@@ -2598,7 +2598,7 @@ main()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(0, head_opt, [l$0], [{<EDestruct@head_opt:#71-case l$0 of ...>,<EDirect@head_opt:#71-case l$0 of ...>,<ESelect(h)@head_opt:#91-let x$21 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(Cons))]],
@@ -2646,7 +2646,7 @@ main()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(2, is_none, [o$0], [{<EDestruct@is_none:#29-case o$0 of ...>,<EDirect@is_none:#29-case o$0 of ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(Some))]],
@@ -2678,7 +2678,7 @@ main()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(5, main, [], [],
 //│ S: None,
 //│ I: [],
@@ -2731,7 +2731,7 @@ main()
 //│ 
 //│ 
 //│ GraphOpt:
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(0, mk_list, [n$0], [{}],
 //│ S: None,
 //│ I: [],
@@ -2823,7 +2823,7 @@ main()
 //│   in x$19 -- #79)
 //│ 
 //│ Promoted ------------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(0, mk_list, [n$0], [{<EDirect@mk_list:#22-let x$3 = ...>,<EDirect@mk_list:#24-let x$0 = ...>}],
 //│ S: None,
 //│ I: [],
@@ -2893,7 +2893,7 @@ main()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(0, mk_list, [n$0], [{<EDirect@mk_list:#96-let* (x$21,x$22) = mk_list$P$0 ...>}],
 //│ S: None,
 //│ I: [],
@@ -2977,7 +2977,7 @@ main()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(7, main, [], [],
 //│ S: None,
 //│ I: [],
@@ -3040,7 +3040,7 @@ main()
 //│ 
 //│ 
 //│ GraphOpt:
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(0, mk_list, [n$0], [{}],
 //│ S: None,
 //│ I: [],
@@ -3114,7 +3114,7 @@ main()
 //│   in x$17 -- #73)
 //│ 
 //│ Promoted ------------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(0, mk_list, [n$0], [{<EDirect@mk_list:#22-let x$3 = ...>,<EDirect@mk_list:#24-let x$0 = ...>}],
 //│ S: None,
 //│ I: [],
@@ -3166,7 +3166,7 @@ main()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(0, mk_list, [n$0], [{<EDirect@mk_list:#89-let* (x$18,x$19) = mk_list$P$0 ...>}],
 //│ S: None,
 //│ I: [],
@@ -3250,7 +3250,7 @@ main()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(0, mk_list, [n$0], [{<EDirect@mk_list:#89-let* (x$18,x$19) = mk_list$P$0 ...>}],
 //│ S: None,
 //│ I: [],
@@ -3367,7 +3367,7 @@ main()
 //│ 
 //│ 
 //│ GraphOpt:
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(0, is_some, [o$0], [{}],
 //│ S: None,
 //│ I: [],
@@ -3493,7 +3493,7 @@ main()
 //│   in x$39 -- #139)
 //│ 
 //│ Promoted ------------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(0, is_some, [o$0], [{<EDestruct@is_some:#11-case o$0 of ...>,<EDirect@is_some:#11-case o$0 of ...>}],
 //│ S: None,
 //│ I: [],
@@ -3595,7 +3595,7 @@ main()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(2, e0, [w$0], [{<EDirect@e0:#21-let x$4 = ...>}],
 //│ S: None,
 //│ I: [],
@@ -3712,7 +3712,7 @@ main()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(2, e0, [w$0], [{<EDirect@e0:#21-let x$4 = ...>}],
 //│ S: None,
 //│ I: [],
@@ -3828,7 +3828,7 @@ main()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(2, e0, [w$0], [{<EDirect@e0:#21-let x$4 = ...>}],
 //│ S: None,
 //│ I: [],
@@ -3993,7 +3993,7 @@ main()
 //│ 
 //│ 
 //│ GraphOpt:
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(0, is_some, [o$0], [{}],
 //│ S: None,
 //│ I: [],
@@ -4129,7 +4129,7 @@ main()
 //│   in x$40 -- #148)
 //│ 
 //│ Promoted ------------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(0, is_some, [o$0], [{<EDestruct@is_some:#11-case o$0 of ...>,<EDirect@is_some:#11-case o$0 of ...>}],
 //│ S: None,
 //│ I: [],
@@ -4229,7 +4229,7 @@ main()
 //│   in x$40 -- #148)
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(2, e0, [w$0], [{<EDirect@e0:#21-let x$4 = ...>}],
 //│ S: None,
 //│ I: [],
@@ -4345,7 +4345,7 @@ main()
 //│   in x$40 -- #148)
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(2, e0, [w$0], [{<EDirect@e0:#21-let x$4 = ...>}],
 //│ S: None,
 //│ I: [],
@@ -4460,7 +4460,7 @@ main()
 //│   in x$40 -- #148)
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
 //│ Def(2, e0, [w$0], [{<EDirect@e0:#21-let x$4 = ...>}],
 //│ S: None,
 //│ I: [],

@@ -23,7 +23,7 @@ bar()
 //│ 
 //│ 
 //│ GraphOpt:
-//│ GOProgram({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
+//│ Program({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
 //│ Def(0, complex_foo, [t$0], [{}],
 //│ S: None,
 //│ I: [],
@@ -84,7 +84,7 @@ bar()
 //│   in x$21 -- #92)
 //│ 
 //│ Promoted ------------------------------------
-//│ GOProgram({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
+//│ Program({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
 //│ Def(0, complex_foo, [t$0], [{<EDestruct@complex_foo:#63-case t$0 of ...>,<EDirect@complex_foo:#63-case t$0 of ...>,<ESelect(m)@complex_foo:#61-let x$15 = ...>,<ESelect(n)@complex_foo:#62-let x$14 = ...>,<ESelect(x)@complex_foo:#49-let x$11 = ...>,<ESelect(y)@complex_foo:#50-let x$10 = ...>,<ESelect(z)@complex_foo:#51-let x$9 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(B))]],
@@ -124,7 +124,7 @@ bar()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
+//│ Program({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
 //│ Def(3, bar, [], [],
 //│ S: None,
 //│ I: [],
@@ -198,7 +198,7 @@ bar()
 //│ 
 //│ 
 //│ GraphOpt:
-//│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
+//│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(0, complex_foo, [t$0], [{}],
 //│ S: None,
 //│ I: [],
@@ -308,7 +308,7 @@ bar()
 //│   in x$38 -- #165)
 //│ 
 //│ Promoted ------------------------------------
-//│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
+//│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(0, complex_foo, [t$0], [{<EDestruct@complex_foo:#138-case t$0 of ...>,<EDirect@complex_foo:#138-case t$0 of ...>,<ESelect(x)@complex_foo:#116-let x$27 = ...>,<ESelect(y)@complex_foo:#128-let x$29 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))]],
@@ -385,7 +385,7 @@ bar()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
+//│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(5, j$0, [x$2,x$0,x$1], [{<EDirect@j$0:#208-let* (x$44,x$45,x$46,x$47,x$48) = j$0$P$0 ...>},{<EDirect@j$0:#208-let* (x$44,x$45,x$46,x$47,x$48) = j$0$P$0 ...>},{<EDirect@j$0:#208-let* (x$44,x$45,x$46,x$47,x$48) = j$0$P$0 ...>}],
 //│ S: None,
 //│ I: [],
@@ -509,7 +509,7 @@ bar()
 //│ 
 //│ 
 //│ GraphOpt:
-//│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
+//│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(0, complex_foo, [t$0], [{}],
 //│ S: None,
 //│ I: [],
@@ -621,7 +621,7 @@ bar()
 //│   in x$40 -- #175)
 //│ 
 //│ Promoted ------------------------------------
-//│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
+//│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(0, complex_foo, [t$0], [{<EDestruct@complex_foo:#148-case t$0 of ...>,<EDirect@complex_foo:#148-case t$0 of ...>,<ESelect(w)@complex_foo:#125-let x$28 = ...>,<ESelect(y)@complex_foo:#138-let x$31 = ...>}],
 //│ S: None,
 //│ I: [[Some(ICtor(A))]],
@@ -700,7 +700,7 @@ bar()
 //│ 
 //│ 
 //│ Optimized ------------------------------
-//│ GOProgram({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
+//│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(6, bar, [], [],
 //│ S: None,
 //│ I: [],

@@ -10,7 +10,7 @@ import mlscript.compiler.mono.Monomorph
 import mlscript.compiler.printer.ExprPrinter
 import mlscript.compiler.mono.MonomorphError
 import mlscript.compiler.ir.{IRInterpreter, Fresh, FreshInt, IRBuilder}
-import mlscript.compiler.optimizer.GraphOptimizer
+import mlscript.compiler.optimizer.Optimizer
 import mlscript.Origin
 
 class DiffTestCompiler extends DiffTests {
@@ -30,7 +30,7 @@ class DiffTestCompiler extends DiffTests {
         val f3 = FreshInt()
         val f4 = FreshInt()
         val gb = IRBuilder(f1, f2, f3, f4)
-        val go = GraphOptimizer(f1, f2, f3, f4, mode.graphOptVerbose)
+        val go = Optimizer(f1, f2, f3, f4, mode.graphOptVerbose)
         val graph = gb.buildGraph(unit)
         outputBuilder ++= graph.toString()
         outputBuilder ++= "\n\nPromoted ------------------------------------\n"
