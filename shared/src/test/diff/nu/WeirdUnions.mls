@@ -58,7 +58,9 @@ f("abc", "abc")
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.46: 	fun f: (Str => Str) & ((Str, Int) => Int)
 //│ ╙──      	                      ^^^^^^^^^^^^^^^^^^^
-//│ error
+//│ error | 'a
+//│   where
+//│     ['b, 'a] in {}
 //│ res
 //│     = <no result>
 //│       f is not implemented
@@ -81,19 +83,19 @@ let r = if true then id else (x, y) => [y, x]
 r(error)
 r(error, error)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.81: 	r(error)
+//│ ║  l.83: 	r(error)
 //│ ║        	^^^^^^^^
 //│ ╟── argument of type `[nothing]` does not match type `[?a, ?b]`
-//│ ║  l.81: 	r(error)
+//│ ║  l.83: 	r(error)
 //│ ║        	 ^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.75: 	let r = if true then id else (x, y) => [y, x]
+//│ ║  l.77: 	let r = if true then id else (x, y) => [y, x]
 //│ ╙──      	                              ^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.82: 	r(error, error)
+//│ ║  l.84: 	r(error, error)
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── argument list of type `[nothing, nothing]` does not match type `[?a]`
-//│ ║  l.82: 	r(error, error)
+//│ ║  l.84: 	r(error, error)
 //│ ╙──      	 ^^^^^^^^^^^^^^
 //│ error | [nothing, nothing]
 //│ res

@@ -83,8 +83,8 @@ trait TypeSimplifier { self: Typer =>
                   }
           }
           nv.tsc.foreach { case (tsc, i) =>
-            val (l, r) = tsc.tvs.splitAt(i-1)
-            l ++ (nv :: r.drop(1))
+            val (l, r) = tsc.tvs.splitAt(i)
+            tsc.tvs = l ++ (nv :: r.drop(1))
           }
         }
         nv
@@ -531,7 +531,6 @@ trait TypeSimplifier { self: Typer =>
       override def apply(pol: PolMap)(st: ST): Unit = trace(s"analyze1[${(pol)}] $st") {
         st match {
           case tv: TV =>
-            println(s"analyzing 1: $tv, ${pol(tv)}")
             pol(tv) match {
               case S(pol) =>
                 occNums(pol -> tv) += 1
@@ -1033,8 +1032,8 @@ trait TypeSimplifier { self: Typer =>
                               }
                         }
                         res.tsc.foreach { case (tsc, i) =>
-                          val (l, r) = tsc.tvs.splitAt(i-1)
-                          l ++ (res :: r.drop(1))
+                          val (l, r) = tsc.tvs.splitAt(i)
+                          tsc.tvs = l ++ (res :: r.drop(1))
                         }
                     }
                     res

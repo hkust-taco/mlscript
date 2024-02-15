@@ -62,7 +62,9 @@ IISS : (0 | 1) -> number
 //│ res: (0 | 1) -> number
 
 IISS : 'a -> 'a
-//│ res: 'a -> 'a
+//│ res: ('a & 'b) -> ('a | 'c)
+//│   where
+//│     ['b, 'c] in {[string, string], [int, int]}
 
 IISS 0
 //│ res: int
@@ -75,7 +77,10 @@ IISS 0
 
 // * TODO: update type simplifier
 fun x -> (if true then IISS else BBNN) x
-//│ res: anything -> nothing
+//│ res: ('a & 'b) -> ('c | 'd)
+//│   where
+//│     ['b, 'd] in {[bool, bool], [number, number]}
+//│     ['a, 'c] in {[string, string], [int, int]}
 
 if true then IISS else BBNN
 //│ res: bool -> bool & number -> number | int -> int & string -> string
@@ -89,7 +94,7 @@ if true then IISS else BBNN
 :e
 (if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.90: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.95: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `0 | 1 | true` does not match type `?a`
 //│ ╟── Note: constraint arises from function type:

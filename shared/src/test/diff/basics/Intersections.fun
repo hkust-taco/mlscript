@@ -41,9 +41,9 @@ foo(1) as Nothing
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.39: 	not / foo(1)
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── reference of type `int` is not an instance of type `bool`
+//│ ╟── function of type `int` is not an instance of type `bool`
 //│ ║  l.26: 	let foo = (Int => Int) & (Bool => Bool)
-//│ ║        	                  ^^^
+//│ ║        	                          ^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `bool`
 //│ ║  l.39: 	not / foo(1)
 //│ ╙──      	      ^^^^^^
@@ -51,9 +51,9 @@ foo(1) as Nothing
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.40: 	foo(1) as Nothing
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── reference of type `int` does not match type `nothing`
+//│ ╟── function of type `int` does not match type `nothing`
 //│ ║  l.26: 	let foo = (Int => Int) & (Bool => Bool)
-//│ ║        	                  ^^^
+//│ ║        	                          ^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `nothing`
 //│ ║  l.40: 	foo(1) as Nothing
 //│ ║        	^^^^^^
