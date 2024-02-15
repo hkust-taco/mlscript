@@ -1060,7 +1060,7 @@ class Der2[A, B] extends Base[[A, B]] { fun f([x, y]) = [y, x] }
 //│ ╙──        	           ^
 //│ class Der2[A, B] extends Base {
 //│   constructor()
-//│   fun f: forall 'a 'b. (['b, 'a]) -> ['a, 'b]
+//│   fun f: forall 'a 'b. (['a, 'b]) -> ['b, 'a]
 //│ }
 
 trait Ta[T] {

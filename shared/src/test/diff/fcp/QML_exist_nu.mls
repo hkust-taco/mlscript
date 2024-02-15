@@ -312,7 +312,7 @@ fun mkMonoArray(n) =
 //│ fun mkMonoArray: forall 'A. (Eql[0] & Int) -> (forall 'A0. Base['A0] | StepAlt['A])
 
 let snb = mkMonoArray(3)
-//│ let snb: forall 'A 'A0. Base['A] | StepAlt['A0]
+//│ let snb: forall 'A 'A0. Base['A0] | StepAlt['A]
 //│ snb
 //│     = StepAlt {}
 

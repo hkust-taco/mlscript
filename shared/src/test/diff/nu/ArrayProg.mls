@@ -11,7 +11,7 @@ declare fun cast: anything -> nothing
 fun mapi: (Array['a], ('a, Int) -> 'b) -> Array['b]
 fun mapi(xs, f) = cast(xs).map(f)
 //│ fun mapi: (anything, anything) -> nothing
-//│ fun mapi: forall 'a 'b. (Array['a], ('a, Int) -> 'b) -> Array['b]
+//│ fun mapi: forall 'b 'a. (Array['a], ('a, Int) -> 'b) -> Array['b]
 
 mapi of ["a", "", "bb"], (x, i) => [i, length of x]
 //│ Array[[Int, Int]]
