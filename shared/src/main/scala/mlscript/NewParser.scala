@@ -524,7 +524,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                     case _ =>
                       R(NuFunDef(
                           isLetRec, v, opStr, tparams, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))
-                        )(isDecl, isVirtual, isMut, N, N, genField).withLoc(S(l0 ++ annotatedBody.toLoc)))
+                        )(isDecl, isVirtual, isMut, N, N, genField, annotations).withLoc(S(l0 ++ annotatedBody.toLoc)))
                   }
                 case c =>
                   asc match {
@@ -533,7 +533,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                       R(NuFunDef(isLetRec, v, opStr, tparams, R(PolyType(Nil, ps.foldRight(ty)((p, r) => Function(p.toType match {
                         case L(diag) => raise(diag); Top // TODO better
                         case R(tp) => tp
-                      }, r)))))(isDecl, isVirtual, isMut, N, N, genField).withLoc(S(l0 ++ ty.toLoc)))
+                      }, r)))))(isDecl, isVirtual, isMut, N, N, genField, annotations).withLoc(S(l0 ++ ty.toLoc)))
                       // TODO rm PolyType after FCP is merged
                     case N =>
                       // TODO dedup:
@@ -544,7 +544,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                       val bod = errExpr
                       R(NuFunDef(
                           isLetRec, v, opStr, Nil, L(ps.foldRight(bod: Term)((i, acc) => Lam(i, acc)))
-                        )(isDecl, isVirtual, isMut, N, N, genField).withLoc(S(l0 ++ bod.toLoc)))
+                        )(isDecl, isVirtual, isMut, N, N, genField, annotations).withLoc(S(l0 ++ bod.toLoc)))
                   }
               }
             }

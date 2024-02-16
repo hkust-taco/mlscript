@@ -230,6 +230,7 @@ final case class NuFunDef(
   val signature: Opt[NuFunDef],
   val outer: Opt[Outer],
   val genField: Bool, // true means it's a `val`; false means it's a `let`
+  val annotations: Ls[Annotation],
 ) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)
   def kind: DeclKind = Val
