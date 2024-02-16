@@ -579,9 +579,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             assert(fd.signature.isEmpty)
             funSigs.get(fd.nme.name) match {
               case S(sig) =>
-                fd.copy()(fd.declareLoc, fd.virtualLoc, fd.mutLoc, S(sig), outer, fd.genField)
+                fd.copy()(fd.declareLoc, fd.virtualLoc, fd.mutLoc, S(sig), outer, fd.genField, fd.annotations)
               case _ =>
-                fd.copy()(fd.declareLoc, fd.virtualLoc, fd.mutLoc, fd.signature, outer, fd.genField)
+                fd.copy()(fd.declareLoc, fd.virtualLoc, fd.mutLoc, fd.signature, outer, fd.genField, fd.annotations)
             }
           case td: NuTypeDef =>
             if (td.nme.name in reservedTypeNames)
@@ -1342,7 +1342,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         case _ => N // if one is fun, then it will be fun
                       }, a.fd.nme, N/*no sym name?*/, a.fd.tparams, a.fd.rhs)(
                         a.fd.declareLoc, a.fd.virtualLoc, a.fd.mutLoc,
-                        N, a.fd.outer orElse b.fd.outer, a.fd.genField)
+                        N, a.fd.outer orElse b.fd.outer, a.fd.genField, a.fd.annotations)
                       S(TypedNuFun(a.level, fd, a.bodyType & b.bodyType)(a.isImplemented || b.isImplemented))
                     case (a: NuParam, S(b: NuParam)) => 
                       if (!a.isPublic) S(b) else if (!b.isPublic) S(a)

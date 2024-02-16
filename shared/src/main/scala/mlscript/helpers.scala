@@ -459,7 +459,7 @@ trait NuDeclImpl extends Located { self: NuDecl =>
       }))
       NuFunDef(N, Var("unapply"), N, Nil, L(Lam(
         Tup(N -> Fld(FldFlags.empty, Var("x")) :: Nil),
-        ret)))(N, N, N, N, N, true)
+        ret)))(N, N, N, N, N, true, Nil)
     }
     case _ => N
   }
@@ -479,7 +479,7 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
     val declaredValueMembers = rawEntities.collect{ case fd: NuFunDef if fd.rhs.isRight => fd.nme.name }.toSet
     rawEntities.map {
       case Eqn(lhs, rhs) if declaredValueMembers(lhs.name) =>
-        NuFunDef(N, lhs, N, Nil, L(rhs))(N, N, N, N, N, true)
+        NuFunDef(N, lhs, N, Nil, L(rhs))(N, N, N, N, N, true, Nil)
       case e => e
     }
   }

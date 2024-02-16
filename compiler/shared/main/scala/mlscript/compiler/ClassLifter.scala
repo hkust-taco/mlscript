@@ -299,7 +299,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
   }
 
   private def newLambObj(lhs: Term, rhs: Term) = 
-    New(None, TypingUnit(List(NuFunDef(None, Var("apply"), None, Nil, Left(Lam(lhs, rhs)))(N, N, N, N, N, false)))) //TODO: Use Proper Arguments
+    New(None, TypingUnit(List(NuFunDef(None, Var("apply"), None, Nil, Left(Lam(lhs, rhs)))(N, N, N, N, N, false, Nil)))) //TODO: Use Proper Arguments
 
   private def liftTerm(target: Term)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (Term, LocalContext) = 
     log(s"liftTermNew $target in $ctx, $cache, $globFuncs, $outer")
@@ -321,7 +321,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val nTpNm = TypeName(genAnoName("Lambda"+prmCnt))
       val anoCls = NuTypeDef(
         Cls, nTpNm, Nil, S(Tup(Nil)), N, N, Nil, N, N, 
-        TypingUnit(List(NuFunDef(None, Var("apply"), N, Nil, Left(Lam(lhs, rhs)))(N, N, N, N, N, false))))(N, N) //TODO: Use Proper Arguments
+        TypingUnit(List(NuFunDef(None, Var("apply"), N, Nil, Left(Lam(lhs, rhs)))(N, N, N, N, N, false, Nil))))(N, N, Nil) //TODO: Use Proper Arguments
       val nSta = New(Some((nTpNm, Tup(Nil))), TypingUnit(Nil))
       val ret = liftEntities(List(anoCls, nSta))
       (Blk(ret._1), ret._2)
@@ -414,13 +414,13 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val cls = cache.get(t).get
       val supArgs = Tup(cls.body.params.fold(Nil)(t => t.fields).flatMap(tupleEntityToVar).map(toFldsEle))
       val anoCls = NuTypeDef(Cls, nTpNm, Nil, cls.body.params, None, None,
-                    List(App(Var(t.name), supArgs)), None, None, tu)(None, None)
+                    List(App(Var(t.name), supArgs)), None, None, tu)(None, None, Nil)
       val nSta = New(Some((nTpNm, prm)), TypingUnit(Nil))
       val ret = liftEntities(List(anoCls, nSta))
       (Blk(ret._1), ret._2)
     case New(None, tu) =>
       val nTpNm = TypeName(genAnoName())
-      val anoCls = NuTypeDef(Cls, nTpNm, Nil, None, None, None, Nil, None, None, tu)(None, None)
+      val anoCls = NuTypeDef(Cls, nTpNm, Nil, None, None, None, Nil, None, None, tu)(None, None, Nil)
       val nSta = New(Some((nTpNm, Tup(Nil))), TypingUnit(Nil))
       val ret = liftEntities(List(anoCls, nSta))
       (Blk(ret._1), ret._2)
@@ -582,18 +582,18 @@ class ClassLifter(logDebugMsg: Boolean = false) {
         val lctx = getFreeVars(lhs)(using emptyCtx, cache, globFuncs, None)
         val lret = liftTuple(lhs)(using ctx.addV(lctx.vSet))
         val ret = liftTerm(rhs)(using ctx.addV(lctx.vSet).addT(tpVs))
-        (func.copy(rhs = Left(Lam(lret._1, ret._1)))(func.declareLoc, func.virtualLoc, func.mutLoc, func.signature, func.outer, func.genField), ret._2 -+ lret._2) //TODO: Check correctness
+        (func.copy(rhs = Left(Lam(lret._1, ret._1)))(func.declareLoc, func.virtualLoc, func.mutLoc, func.signature, func.outer, func.genField, func.annotations), ret._2 -+ lret._2) //TODO: Check correctness
       case Left(value) => 
         // will be treated as Lam(Tup(Nil), rhs)
         val ret = liftTerm(value)(using ctx.addT(tpVs))
-        (func.copy(rhs = Left(Lam(Tup(Nil), ret._1)))(func.declareLoc, func.virtualLoc, func.mutLoc, func.signature, func.outer, func.genField), ret._2) //TODO: Check correctness
+        (func.copy(rhs = Left(Lam(Tup(Nil), ret._1)))(func.declareLoc, func.virtualLoc, func.mutLoc, func.signature, func.outer, func.genField, func.annotations), ret._2) //TODO: Check correctness
       case Right(PolyType(targs, body)) => 
         val nBody = liftType(body)(using ctx.addT(tpVs))
         val nTargs = targs.map {
           case L(tp) => liftTypeName(tp)(using ctx.addT(tpVs)).mapFirst(Left.apply)
           case R(tv) => R(tv) -> emptyCtx
         }.unzip
-        (func.copy(rhs = Right(PolyType(nTargs._1, nBody._1)))(func.declareLoc, func.virtualLoc, func.mutLoc, func.signature, func.outer, func.genField),
+        (func.copy(rhs = Right(PolyType(nTargs._1, nBody._1)))(func.declareLoc, func.virtualLoc, func.mutLoc, func.signature, func.outer, func.genField, func.annotations),
           nTargs._2.fold(nBody._2)(_ ++ _))
       case _ => throw MonomorphError(s"Unimplemented liftMemberFunc: ${func}") // TODO
     }
@@ -609,12 +609,12 @@ class ClassLifter(logDebugMsg: Boolean = false) {
         val lctx = getFreeVars(lhs)(using emptyCtx, cache, globFuncs, None)
         val lret = liftTuple(lhs)(using ctx.addV(lctx.vSet) ++ globFuncs.get(nm).get._2, cache, globFuncs)
         val ret = liftTerm(rhs)(using ctx.addV(lctx.vSet) ++ globFuncs.get(nm).get._2, cache, globFuncs)
-        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, Left(Lam(Tup(lret._1.fields ++ tmp), ret._1)))(N, N, N, N, N, true) //TODO: Use proper arguments
+        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, Left(Lam(Tup(lret._1.fields ++ tmp), ret._1)))(N, N, N, N, N, true, Nil) //TODO: Use proper arguments
       case Left(rhs) => 
         // will be treated as Lam(Tup(Nil), rhs)
         val tmp = globFuncs.get(nm).get._2.vSet.toList.map(toFldsEle)
         val ret = liftTerm(rhs)(using ctx ++ globFuncs.get(nm).get._2, cache, globFuncs)
-        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, Left(Lam(Tup(tmp), ret._1)))(N, N, N, N, N, true) //TODO: Use proper arguments
+        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, Left(Lam(Tup(tmp), ret._1)))(N, N, N, N, N, true, Nil) //TODO: Use proper arguments
         // val ret = liftTermNew(value)(using ctx.addV(nm) ++ globFuncs.get(nm).get._2, cache, globFuncs)
         // NuFunDef(rec, globFuncs.get(nm).get._1, nTpVs, Left(ret._1))
       case Right(PolyType(targs, body)) => 
@@ -624,7 +624,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
             liftTypeName(tn)(using ctx.addT(nTpVs), cache, globFuncs, None) match
               case (tn, ctx) => (L(tn), ctx)
           case R(tv) => R(tv) -> emptyCtx}).unzip
-        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, Right(PolyType(nTargs._1, nBody._1)))(N, N, N, N, N, true) //TODO: Use proper arguments
+        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, Right(PolyType(nTargs._1, nBody._1)))(N, N, N, N, N, true, Nil) //TODO: Use proper arguments
       case _ => throw MonomorphError(s"Unimplemented liftGlobalFunc: ${func}")
     })
   }
@@ -742,7 +742,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     clsList.foreach(x => liftTypeDef(x)(using nCache, globFuncs, nOuter))
     retSeq = retSeq.appended(NuTypeDef(
       kind, nName, nTps.map((None, _)), S(Tup(nParams)), None, None, nPars._1,
-      None, None, TypingUnit(nFuncs._1 ++ nTerms._1))(None, None))
+      None, None, TypingUnit(nFuncs._1 ++ nTerms._1))(None, None, Nil))
   }
 
   def liftTypingUnit(rawUnit: TypingUnit): TypingUnit = {
