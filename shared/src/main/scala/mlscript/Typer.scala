@@ -1794,7 +1794,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         }
       case tf @ TypedNuFun(level, fd, bodyTy) =>
         NuFunDef(fd.isLetRec, fd.nme, fd.symbolicNme, Nil, R(go(tf.typeSignature)))(
-          fd.declareLoc, fd.virtualLoc, fd.mutLoc, fd.signature, fd.outer, fd.genField, Nil)
+          fd.declareLoc, fd.virtualLoc, fd.mutLoc, fd.signature, fd.outer, fd.genField, fd.annotations)
       case p: NuParam =>
         ??? // TODO
       case TypedNuDummy(d) =>
