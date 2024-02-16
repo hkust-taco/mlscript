@@ -74,7 +74,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     def +=(b: Str -> TypeInfo): Unit = {
       env += b
       /**
-        * For quoted lambdas and let bindings, we should not have bindings with the same name in one quoted context
+        * For quoted lambdas and let bindings, `quoteSkolemEnv` should not have bindings with the same name in one quoted context
         * because we call `enterQuotedScope` function that resets the `quoteSkolemEnv`.
         * This check (i.e., `!quoteSkolemEnv.contains(b._1)`) is for quoted UCS desugared terms that contain bindings
         * and it is safe to share the same skolem tag since the temporary variables are always bound.
