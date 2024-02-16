@@ -62,8 +62,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       env: MutMap[Str, TypeInfo],
       mthEnv: MutMap[(Str, Str) \/ (Opt[Str], Str), MethodType],
       lvl: Int,
-      qenv: MutMap[Str, SkolemTag], // * SkolemTag for variables in quasiquotes
-      fvars: MutSet[ST], // * Free variables
+      quoteSkolemEnv: MutMap[Str, SkolemTag], // * SkolemTag for variables in quasiquotes
+      freeVarsInCurrentQuote: MutSet[ST], // * Free variables appearing in the current quote scope
       inQuote: Bool, // * Is in quasiquote
       inPattern: Bool,
       tyDefs: Map[Str, TypeDef],
@@ -73,24 +73,29 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   ) {
     def +=(b: Str -> TypeInfo): Unit = {
       env += b
-      // * For lambdas and let bindings, we should not have bindings with the same name in one context.
-      // * This check (`!qenv.contains(b._1)`) is for UCS desugared terms that contain bindings and it is safe to share the same skolem tag
-      // * since the temporary variables are always bound.
-      if (inQuote && !qenv.contains(b._1)) {
+      /**
+        * For quoted lambdas and let bindings, we should not have bindings with the same name in one quoted context
+        * because we call `enterQuotedScope` function that resets the `quoteSkolemEnv`.
+        * This check (i.e., `!quoteSkolemEnv.contains(b._1)`) is for quoted UCS desugared terms that contain bindings
+        * and it is safe to share the same skolem tag since the temporary variables are always bound.
+        */
+      if (inQuote && !quoteSkolemEnv.contains(b._1)) {
         val tag = SkolemTag(freshVar(NoProv, N, nameHint = S(b._1))(lvl))(NoProv)
         println(s"Create skolem tag $tag for ${b._2} in quasiquote.")
-        qenv += b._1 -> tag
+        quoteSkolemEnv += b._1 -> tag
       }
     }
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
     def get(name: Str): Opt[TypeInfo] = {
-      // * 1. If we try to get a quoted variable from a quoted context, or get a non-quoted variable from a non-quoted context,
-      // * we can directly search the `env`;
-      // * 2. If we try to get a quoted variable from a non-quoted context, we need to wrap it with its contextual Skolem;
-      // * 3. Otherwise, it is a top-level defined symbol, or the context has a quoted parent.
+      /**
+        * 1. If we try to get a quoted variable from a quoted context, or get a non-quoted variable from a non-quoted context,
+        * we can directly search the `env`;
+        * 2. If we try to get a quoted variable from a non-quoted context, we need to wrap it with its contextual Skolem;
+        * 3. Otherwise, it is a top-level defined symbol, or the context has a quoted parent.
+        */
       def rec(ctx: Ctx): Opt[TypeInfo] = {
         if (inQuote === ctx.inQuote) ctx.env.get(name) orElse ctx.parent.flatMap(rec(_))
-        else if (!inQuote) (ctx.env.get(name), ctx.qget(name)) match {
+        else if (!inQuote) (ctx.env.get(name), ctx.getQuoteSkolem(name)) match {
           case (S(VarSymbol(ty, _)), S(tag)) =>
             S(VarSymbol(TypeRef(TypeName("Var"), ty :: tag :: Nil)(noProv), Var(name)))
           case _ => ctx.parent.flatMap(rec(_))
@@ -102,11 +107,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       }
       rec(this)
     }
-    def qget(name: Str): Opt[SkolemTag] = qenv.get(name) orElse parent.dlof(_.qget(name))(N)
-    def getCtxTy: ST = fvars.foldLeft[ST](BotType)((res, ty) => res | ty)
+    def getQuoteSkolem(name: Str): Opt[SkolemTag] = quoteSkolemEnv.get(name) orElse parent.dlof(_.getQuoteSkolem(name))(N)
+    def getCtxTy: ST = freeVarsInCurrentQuote.foldLeft[ST](BotType)((res, ty) => res | ty)
     def traceFV(fv: ST): Unit = {
       println(s"Capture free variable type $fv")
-      fvars += fv
+      freeVarsInCurrentQuote += fv
     }
     def contains(name: Str): Bool = env.contains(name) || parent.exists(_.contains(name))
     def addMth(parent: Opt[Str], nme: Str, ty: MethodType): Unit = mthEnv += R(parent, nme) -> ty
@@ -118,15 +123,17 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     private def containsMth(key: (Str, Str) \/ (Opt[Str], Str)): Bool = mthEnv.contains(key) || parent.exists(_.containsMth(key))
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
     def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty)
-    // * Enter a new quoted environment with empty `qenv` and `fvars`.
-    // * A whole quasiquote (i.e., code"...") contains no binding or free variables at the beginning.
-    // * For a quoted binding (e.g., code"x => ..."):
-    // ** 1. The context of the lambda body is still in the quotation so `inQuote = true`
-    // ** 2. `qenv` only contains skolems created by the current binding and `fvars` only contains free variables appearing in the body.
-    // ** So we also apply empty `qenv` and `fvars` at the beginning.
-    // ** e.g. `code"x => y => x + y"`. For `y => x + y`, fvars = {\ga_x, \ga_y}, qenv = {\ga_y}. 
-    // ** So for `code"x => ..."`, fvars = {\al}, qenv = {\ga_x}, where \ga_x \/ \ga_y <= \al \/ \ga_y
-    def enterQuote: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, inQuote = true, qenv = MutMap.empty, fvars = MutSet.empty)
+    /**
+      * Enter a new quoted environment with empty `quoteSkolemEnv` and `freeVarsInCurrentQuote`.
+      * A whole quasiquote (i.e., code"...") contains no binding or free variables at the beginning.
+      * For a quoted binding (e.g., code"x => ..."):
+      *  1. The context of the lambda body is still in the quotation so `inQuote = true`
+      *  2. `quoteSkolemEnv` only contains skolems created by the current binding and `freeVarsInCurrentQuote` only contains free variables appearing in the body.
+      * So we also apply empty `quoteSkolemEnv` and `freeVarsInCurrentQuote` at the beginning.
+      * e.g. `code"x => y => x + y"`. For `y => x + y`, freeVarsInCurrentQuote = {\ga_x, \ga_y}, quoteSkolemEnv = {\ga_y}. 
+      * So for `code"x => ..."`, freeVarsInCurrentQuote = {\al}, quoteSkolemEnv = {\ga_x}, where \ga_x \/ \ga_y <= \al \/ \ga_y
+      */
+    def enterQuotedScope: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, inQuote = true, quoteSkolemEnv = MutMap.empty, freeVarsInCurrentQuote = MutSet.empty)
     def enterUnquote: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, inQuote = false)
     def nextLevel[R](k: Ctx => R)(implicit raise: Raise, prov: TP): R = {
       val newCtx = copy(lvl = lvl + 1, extrCtx = MutMap.empty)
@@ -194,8 +201,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       env = MutMap.from(builtinBindings.iterator.map(nt => nt._1 -> VarSymbol(nt._2, Var(nt._1)))),
       mthEnv = MutMap.empty,
       lvl = MinLevel,
-      qenv = MutMap.empty,
-      fvars = MutSet.empty,
+      quoteSkolemEnv = MutMap.empty,
+      freeVarsInCurrentQuote = MutSet.empty,
       inQuote = false,
       inPattern = false,
       tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)),
@@ -918,7 +925,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               )
             )
           case VarSymbol(ty, _) =>
-            if (ctx.inQuote) ctx.qget(name).foreach(sk => ctx.traceFV(sk))
+            if (ctx.inQuote) ctx.getQuoteSkolem(name).foreach(sk => ctx.traceFV(sk))
             ty
           case lti: LazyTypeInfo =>
             // TODO deal with classes without parameter lists (ie needing `new`)
@@ -1088,13 +1095,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise)
       case Lam(pat, body) if ctx.inQuote =>
         println(s"TYPING QUOTED LAM")
-        ctx.enterQuote.poly { newCtx =>
+        ctx.enterQuotedScope.poly { newCtx =>
           val param_ty = typePattern(pat)(newCtx, raise, vars)
           val body_ty = typeTerm(body)(newCtx, raise, vars,
             generalizeCurriedFunctions || doGenLambdas && constrainedTypes)
           val res = freshVar(noTyProv, N)(ctx.lvl)
           val ctxTy = freshVar(noTyProv, N)(ctx.lvl)
-          con(newCtx.getCtxTy, newCtx.qenv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res), res)(ctx)
+          con(newCtx.getCtxTy, newCtx.quoteSkolemEnv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res), res)(ctx)
           ctx.traceFV(ctxTy)
           FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
         }
@@ -1309,14 +1316,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case Let(isrec, nme, rhs, bod) =>
         if (ctx.inQuote) {
           val rhs_ty = typeTerm(rhs)
-          ctx.enterQuote.poly {
+          ctx.enterQuotedScope.poly {
             newCtx => {
               newCtx += nme.name -> VarSymbol(rhs_ty, nme)
               val res_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
 
               val res = freshVar(noTyProv, N)(ctx.lvl)
               val ctxTy = freshVar(noTyProv, N)(ctx.lvl)
-              con(newCtx.getCtxTy, newCtx.qenv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res), res)(ctx)
+              con(newCtx.getCtxTy, newCtx.quoteSkolemEnv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res), res)(ctx)
               ctx.traceFV(ctxTy)
               res_ty
             }
@@ -1549,7 +1556,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case q @ Quoted(body) =>
         if (ctx.inQuote) err(msg"Nested quotation is not allowed.", q.toLoc)
         else {
-          val newCtx = ctx.enterQuote
+          val newCtx = ctx.enterQuotedScope
           val bodyType = typeTerm(body)(newCtx, raise, vars, genLambdas)
           TypeRef(TypeName("Code"), bodyType :: newCtx.getCtxTy :: Nil)(TypeProvenance(q.toLoc, "code fragment"))
         }
