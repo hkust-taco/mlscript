@@ -1,5 +1,9 @@
 :NewDefs
 
+:NoJS
+
+tailrec
+//│ tailrec
 
 @tailrec fun foo(n) =
   if n > 0 then
@@ -8,17 +12,25 @@
   else ()
 //│ fun foo: Int -> ()
 
-foo(5)
-//│ ()
-//│ res
-//│     = undefined
-//│ // Output
-//│ hi 5
-//│ hi 4
-//│ hi 3
-//│ hi 2
-//│ hi 1
 
+module Foo extends Annotation { 
+}
+//│ module Foo extends Annotation
+
+@Foo 5
+//│ 5
+
+Foo
+//│ Foo
+
+:te
+//│ /!\ Unrecognized option :te
+@Bar 5
+//│ ╔══[ERROR] identifier not found: Bar
+//│ ║  l.28: 	@Bar 5
+//│ ╙──      	 ^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ 5
 
 // TODO
 fun foo(n) =
@@ -28,15 +40,10 @@ fun foo(n) =
     @tailrec foo(n - 1)
   else ()
 //│ fun foo: Int -> ()
-//│ Code generation encountered an error:
-//│   cannot generate code for term Ann(Annotation(Var(tailrec)),App(Var(foo),Tup(List((None,Fld(_,App(Var(-),Tup(List((None,Fld(_,Var(n))), (None,Fld(_,IntLit(1))))))))))))
 
 // TODO
 foo(5)
 //│ ()
-//│ res
-//│ Runtime error:
-//│   ReferenceError: foo1 is not defined
 
 
 
