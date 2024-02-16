@@ -1,5 +1,10 @@
 :NewDefs
 
+class Foo[]
+//│ class Foo {
+//│   constructor()
+//│ }
+
 class Foo[A restricts Bool]
 //│ class Foo[A] {
 //│   constructor()
@@ -29,10 +34,10 @@ class Foo[A restricts Bool, B extends Int]
 :pe
 class Foo[type restricts]
 //│ ╔══[PARSE ERROR] dangling visible type member
-//│ ║  l.30: 	class Foo[type restricts]
+//│ ║  l.35: 	class Foo[type restricts]
 //│ ╙──      	          ^^^^
 //│ ╔══[PARSE ERROR] Unexpected 'restricts' keyword here
-//│ ║  l.30: 	class Foo[type restricts]
+//│ ║  l.35: 	class Foo[type restricts]
 //│ ╙──      	               ^^^^^^^^^
 //│ class Foo {
 //│   constructor()
@@ -41,10 +46,10 @@ class Foo[type restricts]
 :pe
 class Foo[type extends]
 //│ ╔══[PARSE ERROR] dangling visible type member
-//│ ║  l.42: 	class Foo[type extends]
+//│ ║  l.47: 	class Foo[type extends]
 //│ ╙──      	          ^^^^
 //│ ╔══[PARSE ERROR] Unexpected 'extends' keyword here
-//│ ║  l.42: 	class Foo[type extends]
+//│ ║  l.47: 	class Foo[type extends]
 //│ ╙──      	               ^^^^^^^
 //│ class Foo {
 //│   constructor()
@@ -53,7 +58,7 @@ class Foo[type extends]
 :pe
 class Foo[restricts Int]
 //│ ╔══[PARSE ERROR] Unexpected 'restricts' keyword here
-//│ ║  l.54: 	class Foo[restricts Int]
+//│ ║  l.59: 	class Foo[restricts Int]
 //│ ╙──      	          ^^^^^^^^^
 //│ class Foo {
 //│   constructor()
@@ -62,7 +67,7 @@ class Foo[restricts Int]
 :pe
 class Foo[restricts extends]
 //│ ╔══[PARSE ERROR] Unexpected 'restricts' keyword here
-//│ ║  l.63: 	class Foo[restricts extends]
+//│ ║  l.68: 	class Foo[restricts extends]
 //│ ╙──      	          ^^^^^^^^^
 //│ class Foo {
 //│   constructor()
@@ -71,7 +76,7 @@ class Foo[restricts extends]
 :pe
 class Foo[extends Int]
 //│ ╔══[PARSE ERROR] Unexpected 'extends' keyword here
-//│ ║  l.72: 	class Foo[extends Int]
+//│ ║  l.77: 	class Foo[extends Int]
 //│ ╙──      	          ^^^^^^^
 //│ class Foo {
 //│   constructor()
@@ -80,7 +85,7 @@ class Foo[extends Int]
 :pe
 class Foo[A extends]
 //│ ╔══[PARSE ERROR] dangling extends keyword
-//│ ║  l.81: 	class Foo[A extends]
+//│ ║  l.86: 	class Foo[A extends]
 //│ ╙──      	            ^^^^^^^
 //│ class Foo[A] {
 //│   constructor()
@@ -89,8 +94,17 @@ class Foo[A extends]
 :pe
 class Foo[B restricts]
 //│ ╔══[PARSE ERROR] dangling restricts keyword
-//│ ║  l.90: 	class Foo[B restricts]
+//│ ║  l.95: 	class Foo[B restricts]
 //│ ╙──      	            ^^^^^^^^^
 //│ class Foo[B] {
+//│   constructor()
+//│ }
+
+:pe
+class Foo[extends]
+//│ ╔══[PARSE ERROR] Unexpected 'extends' keyword here
+//│ ║  l.104: 	class Foo[extends]
+//│ ╙──       	          ^^^^^^^
+//│ class Foo {
 //│   constructor()
 //│ }

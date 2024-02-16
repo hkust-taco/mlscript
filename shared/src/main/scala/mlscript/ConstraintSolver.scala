@@ -33,7 +33,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         : Either[Diagnostic, NuMember]
         = ctx.tyDefs2.get(clsNme).toRight(ErrorReport(msg"Cannot find class ${clsNme}" -> N :: Nil, newDefs)) flatMap { info =>
     if (info.isComputing) {
-
+      
       ??? // TODO support?
       
     } else info.complete() match {

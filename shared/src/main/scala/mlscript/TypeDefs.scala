@@ -36,7 +36,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
   case class TypeDef(
     kind: TypeDefKind,
     nme: TypeName,
-    tparamsargs: List[(TypeName, TypeVariable)],  // TODO add type member mark
+    tparamsargs: List[(TypeName, TypeVariable)],
     bodyTy: SimpleType,
     mthDecls: List[MethodDef[Right[Term, Type]]],
     mthDefs: List[MethodDef[Left[Term, Type]]],
@@ -349,7 +349,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
                 case _ =>
                   val fields = fieldsOf(td.bodyTy, paramTags = true)
                   val tparamTags = td.tparamsargs.map { case (tp, tv) =>
-                    // TODO fix type member name mangling
+                    // default to `C#A`
                     tparamField(td.nme, tp, false) -> FieldType(Some(tv), tv)(tv.prov) }
                   val ctor = k match {
                     case Cls =>

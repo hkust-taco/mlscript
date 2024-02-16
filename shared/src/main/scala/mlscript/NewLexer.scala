@@ -443,7 +443,7 @@ object NewLexer {
     "abstract",
     "constructor",
     "virtual",
-    "restricts"
+    "restricts",
   )
   
   def printToken(tl: TokLoc): Str = tl match {

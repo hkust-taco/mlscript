@@ -1446,7 +1446,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       case _ =>
                     }
                     
-                    val ttu = typeTypingUnit(td.body, S(td)) 
+                    val ttu = typeTypingUnit(td.body, S(td))
                     
                     val allMembers = (
                       trtMembers.iterator.map(d => d.name -> d)
