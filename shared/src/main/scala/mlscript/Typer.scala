@@ -1320,7 +1320,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             newCtx => {
               newCtx += nme.name -> VarSymbol(rhs_ty, nme)
               val res_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
-
               val res = freshVar(noTyProv, N)(ctx.lvl)
               val ctxTy = freshVar(noTyProv, N)(ctx.lvl)
               con(newCtx.getCtxTy, newCtx.quoteSkolemEnv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res), res)(ctx)
