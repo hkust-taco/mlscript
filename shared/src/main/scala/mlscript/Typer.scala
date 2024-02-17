@@ -110,6 +110,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       rec(this)
     }
     def getQuoteSkolem(name: Str): Opt[SkolemTag] = quoteSkolemEnv.get(name) orElse parent.dlof(_.getQuoteSkolem(name))(N)
+    def getAllQuoteSkolemsWith(ctxTy: TV): ST = quoteSkolemEnv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res)
     def getCtxTy: ST = freeVarsInCurrentQuote.foldLeft[ST](BotType)((res, ty) => res | ty)
     def trackFVs(fvsType: ST): Unit = {
       println(s"Capture free variable type $fvsType")
@@ -1106,8 +1107,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             generalizeCurriedFunctions || doGenLambdas && constrainedTypes)
           if (ctx.inQuote) {
             val ctxTy = freshVar(noTyProv, N)(ctx.lvl)
-            con(newCtx.getCtxTy, newCtx.quoteSkolemEnv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res), TopType)(ctx)
-            ctx.trackFVs(ctxTy)
+            ctx.trackFVs(con(newCtx.getCtxTy, newCtx.getAllQuoteSkolemsWith(ctxTy), ctxTy)(ctx))
           }
           FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
         }
@@ -1318,8 +1318,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               newCtx += nme.name -> VarSymbol(rhs_ty, nme)
               val res_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
               val ctxTy = freshVar(noTyProv, N)(ctx.lvl)
-              con(newCtx.getCtxTy, newCtx.quoteSkolemEnv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res), TopType)(ctx)
-              ctx.trackFVs(ctxTy)
+              ctx.trackFVs(con(newCtx.getCtxTy, newCtx.getAllQuoteSkolemsWith(ctxTy), ctxTy)(ctx))
               res_ty
             }
           }
