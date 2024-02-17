@@ -54,7 +54,8 @@ class DiffTests
   
   /**  Hook for dependent projects, like the monomorphizer. */
   def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit): Ls[Str] = Nil
-
+  
+  
   @SuppressWarnings(Array("org.wartremover.warts.RedundantIsInstanceOf"))
   private val inParallel = isInstanceOf[ParallelTestExecution]
   
@@ -172,7 +173,6 @@ class DiffTests
       useIR: Bool = false,
       interpIR: Bool = false,
       irVerbose: Bool = false,
-      parseAsHaskell: Bool = false,
       
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
@@ -284,7 +284,6 @@ class DiffTests
           case "UseIR" => mode.copy(useIR = true)
           case "InterpIR" => mode.copy(interpIR = true)
           case "IRVerbose" => mode.copy(irVerbose = true)
-          case "SyntaxHaskell" => mode.copy(parseAsHaskell = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -424,7 +423,7 @@ class DiffTests
         
         // try to parse block of text into mlscript ast
         val ans = try {
-            if (newParser) {
+          if (newParser) {
             
             val origin = Origin(testName, globalStartLineNum, fph)
             val lexer = new NewLexer(origin, raise, dbg = mode.dbgParsing)
