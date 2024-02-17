@@ -62,7 +62,7 @@ run(res)
 
 let app = code"f => x => f(x)"
 run(app)(id)(1)
-//│ let app: Code[forall 'a 'b. ('a -> 'b) -> 'a -> 'b, nothing]
+//│ let app: Code[forall 'a 'b. ('b -> 'a) -> 'b -> 'a, nothing]
 //│ 1
 
 :e

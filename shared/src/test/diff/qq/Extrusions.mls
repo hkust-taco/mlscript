@@ -7,7 +7,7 @@ fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(code"x")}"
 //│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, 'b]) -> Code['c, 'b]
 
 fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(x)}"
-//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Var['a, in ??x out ??x0] -> Code['c, 'b]) -> Code['c, 'b]
+//│ fun (%>) bind: forall 'a 'b 'c. (Code['c, 'a], Var['c, in ??x out ??x0] -> Code['b, 'a]) -> Code['b, 'a]
 
 // * Notice the extrusion
 fun foo(k) = code"x => ${k(code"x")}"
@@ -19,14 +19,14 @@ fun (%>) bind(rhs, k) = code"(x => ${k(code"x")})(${rhs})"
 // * Somehow this one does extrude properly:
 fun app = code"(f, x) => f(x)"
 fun (%>) bind(rhs, k) = code"${app}(x => ${k(code"x")}, ${rhs})"
-//│ fun app: Code[forall 'a 'b. ('b -> 'a, 'b) -> 'a, nothing]
+//│ fun app: Code[forall 'a 'b. ('a -> 'b, 'a) -> 'b, nothing]
 //│ fun (%>) bind: forall 'c 'd 'e. (Code['c, 'd], Code['c, ??x] -> Code['e, 'd]) -> Code['e, 'd]
 
 
 fun app(f, x) = f(x)
 fun bind2(rhs, k) = code"app(x => ${k(code"x")}, ${rhs})"
 //│ fun app: forall 'a 'b. ('a -> 'b, 'a) -> 'b
-//│ fun bind2: forall 'c 'd 'e. (Code['d, 'e], Code['d, ??x] -> Code['c, 'e]) -> Code['c, 'e]
+//│ fun bind2: forall 'c 'd 'e. (Code['c, 'd], Code['c, ??x] -> Code['e, 'd]) -> Code['e, 'd]
 
 :e
 fun foo() =

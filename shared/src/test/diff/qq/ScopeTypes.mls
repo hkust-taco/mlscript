@@ -91,7 +91,7 @@ code"x => ${ test(c => run(c), code"0") }"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.90: 	code"x => ${ test(c => run(c), code"0") }"
 //│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── argument list of type `[forall ?a ?b. ?b -> ?a, Code[0, nothing]]` does not match type `[?c]`
+//│ ╟── argument list of type `[forall ?a ?b. ?a -> ?b, Code[0, nothing]]` does not match type `[?c]`
 //│ ║  l.90: 	code"x => ${ test(c => run(c), code"0") }"
 //│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^
 //│ Code[anything -> Int -> Int, nothing]
@@ -113,7 +113,7 @@ fun test2(a) = code"x => ${ test(c => run(c), a) }"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.112: 	fun test2(a) = code"x => ${ test(c => run(c), a) }"
 //│ ║         	                            ^^^^^^^^^^^^^^^^^^^^
-//│ ╟── argument list of type `[forall ?a ?b. ?a -> ?b, ?c]` does not match type `[?d]`
+//│ ╟── argument list of type `[forall ?a ?b. ?b -> ?a, ?c]` does not match type `[?d]`
 //│ ║  l.112: 	fun test2(a) = code"x => ${ test(c => run(c), a) }"
 //│ ╙──       	                                ^^^^^^^^^^^^^^^^
 //│ fun test2: anything -> Code[anything -> Int -> Int, nothing]

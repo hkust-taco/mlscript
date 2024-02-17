@@ -109,9 +109,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     }
     def getQuoteSkolem(name: Str): Opt[SkolemTag] = quoteSkolemEnv.get(name) orElse parent.dlof(_.getQuoteSkolem(name))(N)
     def getCtxTy: ST = freeVarsInCurrentQuote.foldLeft[ST](BotType)((res, ty) => res | ty)
-    def traceFV(fv: ST): Unit = {
-      println(s"Capture free variable type $fv")
-      freeVarsInCurrentQuote += fv
+    def trackFVs(fvsType: ST): Unit = {
+      println(s"Capture free variable type $fvsType")
+      freeVarsInCurrentQuote += fvsType
     }
     def contains(name: Str): Bool = env.contains(name) || parent.exists(_.contains(name))
     def addMth(parent: Opt[Str], nme: Str, ty: MethodType): Unit = mthEnv += R(parent, nme) -> ty
@@ -925,7 +925,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               )
             )
           case VarSymbol(ty, _) =>
-            if (ctx.inQuote) ctx.getQuoteSkolem(name).foreach(sk => ctx.traceFV(sk))
+            if (ctx.inQuote) ctx.getQuoteSkolem(name).foreach(sk => ctx.trackFVs(sk))
             ty
           case lti: LazyTypeInfo =>
             // TODO deal with classes without parameter lists (ie needing `new`)
@@ -1093,25 +1093,19 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case pat if ctx.inPattern =>
         err(msg"Unsupported pattern shape${
           if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise)
-      case Lam(pat, body) if ctx.inQuote =>
-        println(s"TYPING QUOTED LAM")
-        ctx.enterQuotedScope.poly { newCtx =>
-          val param_ty = typePattern(pat)(newCtx, raise, vars)
-          val body_ty = typeTerm(body)(newCtx, raise, vars,
-            generalizeCurriedFunctions || doGenLambdas && constrainedTypes)
-          val res = freshVar(noTyProv, N)(ctx.lvl)
-          val ctxTy = freshVar(noTyProv, N)(ctx.lvl)
-          con(newCtx.getCtxTy, newCtx.quoteSkolemEnv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res), res)(ctx)
-          ctx.traceFV(ctxTy)
-          FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
-        }
-      case Lam(pat, body) if doGenLambdas =>
-        println(s"TYPING POLY LAM")
-        ctx.nest.poly { newCtx =>
+      case Lam(pat, body) if doGenLambdas || ctx.inQuote =>
+        if (ctx.inQuote) println(s"TYPING QUOTED LAM") else println(s"TYPING POLY LAM")
+        val newCtx = if (ctx.inQuote) ctx.enterQuotedScope else ctx.nest
+        newCtx.poly { newCtx =>
           val param_ty = typePattern(pat)(newCtx, raise, vars)
           val midCtx = newCtx
           val body_ty = typeTerm(body)(newCtx, raise, vars,
             generalizeCurriedFunctions || doGenLambdas && constrainedTypes)
+          if (ctx.inQuote) {
+            val ctxTy = freshVar(noTyProv, N)(ctx.lvl)
+            con(newCtx.getCtxTy, newCtx.quoteSkolemEnv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res), TopType)(ctx)
+            ctx.trackFVs(ctxTy)
+          }
           FunctionType(param_ty, body_ty)(tp(term.toLoc, "function"))
         }
       case Lam(pat, body) =>
@@ -1320,10 +1314,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             newCtx => {
               newCtx += nme.name -> VarSymbol(rhs_ty, nme)
               val res_ty = typeTerm(bod)(newCtx, raise, vars, genLambdas)
-              val res = freshVar(noTyProv, N)(ctx.lvl)
               val ctxTy = freshVar(noTyProv, N)(ctx.lvl)
-              con(newCtx.getCtxTy, newCtx.quoteSkolemEnv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res), res)(ctx)
-              ctx.traceFV(ctxTy)
+              con(newCtx.getCtxTy, newCtx.quoteSkolemEnv.foldLeft[ST](ctxTy)((res, ty) => ty._2 | res), TopType)(ctx)
+              ctx.trackFVs(ctxTy)
               res_ty
             }
           }
@@ -1567,7 +1560,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           val ctxTy = freshVar(TypeProvenance(body.toLoc, "code fragment context type"), N)
           val ty =
             con(bodyType, TypeRef(TypeName("Code"), res :: ctxTy :: Nil)(TypeProvenance(body.toLoc, "unquote body")), res)(newCtx)
-          ctx.traceFV(ctxTy)
+          ctx.trackFVs(ctxTy)
           ty.withProv(TypeProvenance(uq.toLoc, "unquote"))
         }
         else err("Unquotes should be enclosed with a quasiquote.", uq.toLoc)(raise)

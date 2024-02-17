@@ -12,7 +12,7 @@ foo(log)
 
 fun (>>) compose(f, g) = x => g(f(x))
 fun show: Code[anything, anything] -> Str
-//│ fun (>>) compose: forall 'a 'b 'c. ('a -> 'b, 'b -> 'c) -> 'a -> 'c
+//│ fun (>>) compose: forall 'a 'b 'c. ('c -> 'a, 'a -> 'b) -> 'c -> 'b
 //│ fun show: Code[anything, anything] -> Str
 
 foo(show >> log)
