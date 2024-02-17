@@ -55,7 +55,7 @@ class DiffTests
   /**  Hook for dependent projects, like the monomorphizer. */
   def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit): Ls[Str] = Nil
   
-  
+
   @SuppressWarnings(Array("org.wartremover.warts.RedundantIsInstanceOf"))
   private val inParallel = isInstanceOf[ParallelTestExecution]
   
