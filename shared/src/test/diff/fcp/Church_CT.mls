@@ -1108,30 +1108,77 @@ to_church_ty = to_ch_simplif
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_simplif]
 
+// * Redefinition in the context of distrib, just for the record (still infers but doesn't check)
+:e
+rec def to_ch_simplif n = s (to_ch_simplif n)
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> forall 'b 'c 'd 'e. 'b -> ('c -> 'e
+//│       where
+//│         'a <: 'b -> 'c -> 'd
+//│         'b <: 'd -> 'e)
+//│ ╙──
+//│ to_ch_simplif: anything -> 'a -> ('b -> 'c
+//│   where
+//│     'a <: 'd -> 'c
+//│     'e <: 'a -> 'b -> 'd)
+//│ where
+//│   'e :> forall 'f 'g 'h 'i. 'g -> ('h -> 'f
+//│     where
+//│       'e <: 'g -> 'h -> 'i
+//│       'g <: 'i -> 'f)
+//│              = [Function: to_ch_simplif1]
+
+:e // * Since the removal of "recursive definition hacks"
+to_church_ty = to_ch_simplif
+//│ ╔══[ERROR] Inferred recursive type: 'a
+//│   where
+//│     'a :> forall 'b 'c 'd 'e. 'b -> ('c -> 'e
+//│       where
+//│         'a <: 'b -> 'c -> 'd
+//│         'b <: 'd -> 'e)
+//│ ╙──
+//│ anything -> 'a -> ('b -> 'c
+//│   where
+//│     'd <: 'a -> 'b -> 'e
+//│     'a <: 'e -> 'c)
+//│ where
+//│   'd :> forall 'f 'g 'h 'i. 'f -> ('g -> 'i
+//│     where
+//│       'f <: 'h -> 'i
+//│       'd <: 'f -> 'g -> 'h)
+//│   <:  to_church_ty:
+//│ int -> ChurchInt
+//│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
+//│ ║  l.1133: 	to_church_ty = to_ch_simplif
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│             = [Function: to_ch_simplif1]
+
 // * Still doesn't work (Same with the full definition)
 :e
 to_church_ty = to_ch_A1
 //│ ╔══[ERROR] Inferred recursive type: 'to_ch_A1
 //│   where
-//│     'to_ch_A1 :> forall 'to_ch_A1. int -> (forall 'a 'b 'c 'd 'e. (? & 'a) -> (('b & 'c) -> ('c | 'd)
+//│     'to_ch_A1 :> forall 'to_ch_A1. int -> (forall 'a 'b 'c 'd 'e. (? & 'd) -> (('a & 'e) -> ('e | 'c)
 //│       where
-//│         ChurchInt <: 'a -> 'b -> 'e
-//│         'a <: 'e -> 'd))
+//│         'd <: 'b -> 'c
+//│         ChurchInt <: 'd -> 'a -> 'b))
 //│     where
 //│       'to_ch_A1 <: int -> ChurchInt
 //│ ╙──
 //│ 'to_ch_A1
 //│   where
-//│     'to_ch_A1 :> forall 'to_ch_A1. int -> (forall 'a 'b 'c 'd 'e. 'd -> (('c & 'b) -> ('b | 'e)
+//│     'to_ch_A1 :> forall 'to_ch_A1. int -> (forall 'a 'b 'c 'd 'e. 'b -> (('a & 'c) -> ('c | 'd)
 //│       where
-//│         'd <: 'a -> 'e
-//│         ChurchInt <: 'd -> 'c -> 'a))
+//│         'b <: 'e -> 'd
+//│         ChurchInt <: 'b -> 'a -> 'e))
 //│     where
 //│       'to_ch_A1 <: int -> ChurchInt
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│ ╔══[ERROR] Cyclic-looking constraint while typing def definition; a type annotation may be required
-//│ ║  l.1113: 	to_church_ty = to_ch_A1
+//│ ║  l.1160: 	to_church_ty = to_ch_A1
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│             = [Function: to_ch_A11]
