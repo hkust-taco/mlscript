@@ -95,9 +95,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         */
       def rec(ctx: Ctx): Opt[TypeInfo] = {
         if (inQuote === ctx.inQuote) ctx.env.get(name) orElse ctx.parent.flatMap(rec(_))
-        else if (!inQuote) (ctx.env.get(name), ctx.getQuoteSkolem(name)) match {
-          case (S(VarSymbol(ty, _)), S(tag)) =>
-            S(VarSymbol(TypeRef(TypeName("Var"), ty :: tag :: Nil)(noProv), Var(name)))
+        else if (!inQuote) ctx.env.get(name) match {
+          case S(VarSymbol(ty, _)) => ctx.getQuoteSkolem(name) match {
+            case S(tag) => S(VarSymbol(TypeRef(TypeName("Var"), ty :: tag :: Nil)(noProv), Var(name)))
+            case _ => ctx.parent.flatMap(rec(_))
+          }
           case _ => ctx.parent.flatMap(rec(_))
         }
         else ctx.parent match {
@@ -130,8 +132,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       *  1. The context of the lambda body is still in the quotation so `inQuote = true`
       *  2. `quoteSkolemEnv` only contains skolems created by the current binding and `freeVarsInCurrentQuote` only contains free variables appearing in the body.
       * So we also apply empty `quoteSkolemEnv` and `freeVarsInCurrentQuote` at the beginning.
-      * e.g. `code"x => y => x + y"`. For `y => x + y`, freeVarsInCurrentQuote = {\ga_x, \ga_y}, quoteSkolemEnv = {\ga_y}. 
-      * So for `code"x => ..."`, freeVarsInCurrentQuote = {\al}, quoteSkolemEnv = {\ga_x}, where \ga_x \/ \ga_y <= \al \/ \ga_y
+      * e.g. `code"x => y => x + y"`. For `y => x + y`, freeVarsInCurrentQuote = {'gx, 'gy}, quoteSkolemEnv = {'gy}.
+      * To get the contextual type, we solve constraint the 'gx \/ 'gy <= 'a \/ 'gy, where 'a is a fresh type variable for `y => x + y`'s contextual type.
+      * So for `code"x => ..."`, freeVarsInCurrentQuote = {'a}, quoteSkolemEnv = {'gx}, where 'gx <= 'a.
       */
     def enterQuotedScope: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, inQuote = true, quoteSkolemEnv = MutMap.empty, freeVarsInCurrentQuote = MutSet.empty)
     def enterUnquote: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, inQuote = false)
