@@ -15,15 +15,12 @@ import mlscript.Origin
 class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*
 
-  override def postProcessWithHaskellSyntax(mode: ModeType, basePath: List[Str], testName: Str, orig: Origin): List[Str] =
-    ???
-
   override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit): List[Str] = 
     val outputBuilder = StringBuilder()
 
-    if (mode.graphOpt || mode.graphOptVerbose)
+    if (mode.useIR || mode.irVerbose)
       try
-        outputBuilder ++= "\n\nGraphOpt:\n"
+        outputBuilder ++= "\n\nIR:\n"
         val f1 = Fresh()
         val f2 = FreshInt()
         val f3 = FreshInt()
@@ -34,9 +31,9 @@ class DiffTestCompiler extends DiffTests {
         outputBuilder ++= "\n\nPromoted ------------------------------------\n"
         outputBuilder ++= graph.toString()
         var interp_result: Opt[Str] = None
-        if (mode.graphInterp)
+        if (mode.interpIR)
           outputBuilder ++= "\n\nInterpreted ------------------------------\n"
-          val ir = IRInterpreter(mode.graphOptVerbose).interpret(graph)
+          val ir = IRInterpreter(mode.irVerbose).interpret(graph)
           interp_result = Some(ir)
           outputBuilder ++= ir
           outputBuilder ++= "\n"
