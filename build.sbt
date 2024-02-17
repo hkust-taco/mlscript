@@ -45,7 +45,6 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
     libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.3.0",
     libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.3.3",
     libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.8.0",
-    libraryDependencies += "org.antlr" % "antlr4" % "4.13.1",
     // 
     watchSources += WatchSource(
       sourceDirectory.value.getParentFile().getParentFile()/"shared/src/test/diff", "*.fun", NothingFilter),
@@ -86,7 +85,6 @@ lazy val compiler = crossProject(JSPlatform, JVMPlatform).in(file("compiler"))
     sourceDirectory := baseDirectory.value.getParentFile()/"shared",
     watchSources += WatchSource(
       baseDirectory.value.getParentFile()/"shared"/"test"/"diff", "*.mls", NothingFilter),
-    libraryDependencies += "org.antlr" % "antlr4" % "4.13.1"
   )
   .dependsOn(mlscript % "compile->compile;test->test")
 
