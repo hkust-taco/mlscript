@@ -9,6 +9,9 @@ class RC(x: Str) extends R[Str]
 //│ class RB(x: Bool) extends R
 //│ class RC(x: Str) extends R
 
+fun req[A](x: R[A], y: R[A]): Bool = if x is RI(a) and y is RI(b) then a == b else false
+//│ fun req: forall 'A. (x: R['A], y: R['A]) -> Bool
+
 fun f1[A](e: R[A]) = [ if e is RI(i) then i as e.A else error , if e is RB(i) then i as e.A else error , if e is RC(i) then i as e.A else error ]
 //│ fun f1: forall 'A. (e: R['A]) -> [Int & 'A | Str | false | true]
 
@@ -27,16 +30,16 @@ h1(RI(1), 1)
 :e
 h1(RC("hi"), true)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.28: 	h1(RC("hi"), true)
+//│ ║  l.31: 	h1(RC("hi"), true)
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of `Str`
-//│ ║  l.28: 	h1(RC("hi"), true)
+//│ ║  l.31: 	h1(RC("hi"), true)
 //│ ║        	             ^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.6: 	class RC(x: Str) extends R[Str]
 //│ ║       	                           ^^^
 //│ ╟── Note: method type parameter A is defined at:
-//│ ║  l.15: 	fun h1[A](x: R[A], y: A) = (if x is
+//│ ║  l.18: 	fun h1[A](x: R[A], y: A) = (if x is
 //│ ╙──      	       ^
 //│ R[in Int & 'A | Str | true | 'A0 | 'A1 & (Str | false | 'A0 | 'A) out Str & 'A1 | Str & 'A | true | 'A0 & (Int | false | 'A | 'A1)] | error
 //│ res
@@ -62,7 +65,7 @@ h2(RI(1), RI(2))
 :e
 h2(RB(true), RI(0))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.63: 	h2(RB(true), RI(0))
+//│ ║  l.66: 	h2(RB(true), RI(0))
 //│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Int` is not an instance of type `Bool`
 //│ ║  l.4: 	class RI(x: Int) extends R[Int]
@@ -71,13 +74,13 @@ h2(RB(true), RI(0))
 //│ ║  l.5: 	class RB(x: Bool) extends R[Bool]
 //│ ║       	                            ^^^^
 //│ ╟── Note: method type parameter A is defined at:
-//│ ║  l.46: 	fun h2[A](x: R[A], y: R[A]) = (if x is
+//│ ║  l.49: 	fun h2[A](x: R[A], y: R[A]) = (if x is
 //│ ╙──      	       ^
 //│ error
 //│ res
 //│     = RB {}
 
-abstract class Eq[type A, type B]: Refl
+abstract class Eq[type A, type B]: Refl[?]
 class Refl[A]() extends Eq[A, A]
 //│ abstract class Eq[A, B]: Refl[?]
 //│ class Refl[A]() extends Eq
@@ -89,3 +92,56 @@ e1(Refl(), 1)
 //│ 1
 //│ res
 //│     = 1
+
+class Z
+class S[type P]
+//│ class Z {
+//│   constructor()
+//│ }
+//│ class S[P] {
+//│   constructor()
+//│ }
+
+abstract class K[type T]: KZ | KS[?]
+class KZ() extends K[Z]
+class KS[A](ev: K[A]) extends K[S[A]]
+//│ abstract class K[T]: KS[?] | KZ
+//│ class KZ() extends K
+//│ class KS[A](ev: K[A]) extends K
+
+// FIXME
+fun fk: (K['L], K['L]) -> Int
+fun fk[L](l: K[L], r: K[L]) =
+  if l is KS(e1) and r is KS(e2) then 1 + fk(e1, e2) else 0
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.115: 	  if l is KS(e1) and r is KS(e2) then 1 + fk(e1, e2) else 0
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `??A & ~??A0` does not match type `nothing`
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.107: 	class KS[A](ev: K[A]) extends K[S[A]]
+//│ ╙──       	         ^
+//│ fun fk: forall 'L. (l: K['L], r: K['L]) -> Int
+//│ fun fk: forall 'L0. (K['L0], K['L0]) -> Int
+
+fk(KS(KS(KZ())), KS(KS(KZ())))
+//│ Int
+//│ res
+//│     = 2
+
+abstract class K[type T]: KZ | KS
+class KZ() extends K[Z]
+class KS[A](ev: K[A]) extends K[S[A]]
+//│ abstract class K[T]: KS[?] | KZ
+//│ class KZ() extends K
+//│ class KS[A](ev: K[A]) extends K
+
+fun fk: (K['L], K['L]) -> Int
+fun fk[L](l: K[L], r: K[L]) =
+  if l is KS(e1) and r is KS(e2) then 1 + fk(e1, e2) else 0
+//│ fun fk: forall 'L. (l: K['L], r: K['L]) -> Int
+//│ fun fk: forall 'L0. (K['L0], K['L0]) -> Int
+
+fk(KS(KS(KZ())), KS(KS(KZ())))
+//│ Int
+//│ res
+//│     = 2

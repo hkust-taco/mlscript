@@ -349,7 +349,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
                 case _ =>
                   val fields = fieldsOf(td.bodyTy, paramTags = true)
                   val tparamTags = td.tparamsargs.map { case (tp, tv) =>
-                    // default to `C#A`
+                    // `false` means using `C#A` (old type member names)
                     tparamField(td.nme, tp, false) -> FieldType(Some(tv), tv)(tv.prov) }
                   val ctor = k match {
                     case Cls =>

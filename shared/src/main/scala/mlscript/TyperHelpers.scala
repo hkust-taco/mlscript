@@ -1163,7 +1163,7 @@ abstract class TyperHelpers { Typer: Typer =>
       lazy val tparamTags =
         if (paramTags) RecordType.mk(td.tparamsargs.map { case (tp, tv) =>
             val tvv = td.getVariancesOrDefault
-            // default to `C#A`
+            // `false` means using `C#A` (old type member names)
             tparamField(defn, tp, false) -> FieldType(
               Some(if (tvv(tv).isCovariant) BotType else tv),
               if (tvv(tv).isContravariant) TopType else tv)(prov)

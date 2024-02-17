@@ -244,7 +244,7 @@ trait TypeSimplifier { self: Typer =>
                 
                 // * Reconstruct a TypeRef from its current structural components
                 val typeRef = TypeRef(td.nme, td.tparamsargs.zipWithIndex.map { case ((tp, tv), tpidx) =>
-                  val fieldTagNme = tparamField(clsTyNme, tp, false) // default to `C#A`
+                  val fieldTagNme = tparamField(clsTyNme, tp, false) // `false` means using `C#A` (old def type member names)
                   val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
                   fromTyRef.++(rcd2.fields.iterator.filter(_._1 === fieldTagNme).map(_._2))
                     .foldLeft((BotType: ST, TopType: ST)) {

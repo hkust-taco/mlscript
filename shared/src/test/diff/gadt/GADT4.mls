@@ -71,104 +71,6 @@ fmt(test)("hello")("world")
 //│ res
 //│     = 'int i = hello, bool b = world'
 
-// TODO
-fun fmtGo[F](acc, f: Format[F]): F = if f is
-    D(fmt)    then (i => fmtGo(acc ++ toString(i),fmt)) : f.F
-    B(fmt)    then (i => fmtGo(acc ++ toString(i),fmt)) : f.F
-    L(s, fmt) then fmtGo(acc ++ s, fmt) : f.F
-    E         then acc : f.F
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.75: 	fun fmtGo[F](acc, f: Format[F]): F = if f is
-//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.76: 	    D(fmt)    then (i => fmtGo(acc ++ toString(i),fmt)) : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.77: 	    B(fmt)    then (i => fmtGo(acc ++ toString(i),fmt)) : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.78: 	    L(s, fmt) then fmtGo(acc ++ s, fmt) : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.79: 	    E         then acc : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `anything` does not match type `F | ~??F`
-//│ ╟── Note: method type parameter F is defined at:
-//│ ║  l.75: 	fun fmtGo[F](acc, f: Format[F]): F = if f is
-//│ ╙──      	          ^
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.75: 	fun fmtGo[F](acc, f: Format[F]): F = if f is
-//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.76: 	    D(fmt)    then (i => fmtGo(acc ++ toString(i),fmt)) : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.77: 	    B(fmt)    then (i => fmtGo(acc ++ toString(i),fmt)) : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.78: 	    L(s, fmt) then fmtGo(acc ++ s, fmt) : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.79: 	    E         then acc : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `F & ~??F` does not match type `nothing`
-//│ ╟── Note: type parameter F is defined at:
-//│ ║  l.15: 	class L[F](s: Str, fmt: Format[F]) extends Format[F]
-//│ ╙──      	        ^
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.75: 	fun fmtGo[F](acc, f: Format[F]): F = if f is
-//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.76: 	    D(fmt)    then (i => fmtGo(acc ++ toString(i),fmt)) : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.77: 	    B(fmt)    then (i => fmtGo(acc ++ toString(i),fmt)) : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.78: 	    L(s, fmt) then fmtGo(acc ++ s, fmt) : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.79: 	    E         then acc : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `anything` does not match type `F | ~??F`
-//│ ╟── Note: method type parameter F is defined at:
-//│ ║  l.75: 	fun fmtGo[F](acc, f: Format[F]): F = if f is
-//│ ╙──      	          ^
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.75: 	fun fmtGo[F](acc, f: Format[F]): F = if f is
-//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.76: 	    D(fmt)    then (i => fmtGo(acc ++ toString(i),fmt)) : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.77: 	    B(fmt)    then (i => fmtGo(acc ++ toString(i),fmt)) : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.78: 	    L(s, fmt) then fmtGo(acc ++ s, fmt) : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.79: 	    E         then acc : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `F & ~??F` does not match type `nothing`
-//│ ╟── Note: type parameter F is defined at:
-//│ ║  l.14: 	class B[F](fmt: Format[F]) extends Format[Bool -> F]
-//│ ╙──      	        ^
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.75: 	fun fmtGo[F](acc, f: Format[F]): F = if f is
-//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.76: 	    D(fmt)    then (i => fmtGo(acc ++ toString(i),fmt)) : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.77: 	    B(fmt)    then (i => fmtGo(acc ++ toString(i),fmt)) : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.78: 	    L(s, fmt) then fmtGo(acc ++ s, fmt) : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.79: 	    E         then acc : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `anything` does not match type `F | ~??F`
-//│ ╟── Note: method type parameter F is defined at:
-//│ ║  l.75: 	fun fmtGo[F](acc, f: Format[F]): F = if f is
-//│ ╙──      	          ^
-//│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.75: 	fun fmtGo[F](acc, f: Format[F]): F = if f is
-//│ ║        	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.76: 	    D(fmt)    then (i => fmtGo(acc ++ toString(i),fmt)) : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.77: 	    B(fmt)    then (i => fmtGo(acc ++ toString(i),fmt)) : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.78: 	    L(s, fmt) then fmtGo(acc ++ s, fmt) : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.79: 	    E         then acc : f.F
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `F & ~??F` does not match type `nothing`
-//│ ╟── Note: type parameter F is defined at:
-//│ ║  l.13: 	class D[F](fmt: Format[F]) extends Format[Int -> F]
-//│ ╙──      	        ^
-//│ fun fmtGo: forall 'F. (Str, f: Format['F]) -> 'F
-
 fun fmt(f) = fmtGo("", f)
 //│ fun fmt: forall 'F. Format['F] -> 'F
 
@@ -230,14 +132,14 @@ eval(If(Equals(Lit(3), Plus(Lit(1), Lit(1))), Fst(Pair(Lit(1), Lit(2))), Lit(3))
 :e
 eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.231: 	eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
+//│ ║  l.133: 	eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Bool` is not an instance of type `Int`
-//│ ║  l.182: 	class Equals(a: Expr[Int], b: Expr[Int]) extends Expr[Bool]
-//│ ║         	                                                      ^^^^
+//│ ║  l.84: 	class Equals(a: Expr[Int], b: Expr[Int]) extends Expr[Bool]
+//│ ║        	                                                      ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.181: 	class Plus(a: Expr[Int], b: Expr[Int]) extends Expr[Int]
-//│ ╙──       	                   ^^^
+//│ ║  l.83: 	class Plus(a: Expr[Int], b: Expr[Int]) extends Expr[Int]
+//│ ╙──      	                   ^^^
 //│ nothing
 //│ res
 //│     = 3
