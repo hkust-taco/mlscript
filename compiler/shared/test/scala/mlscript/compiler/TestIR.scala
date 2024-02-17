@@ -3,15 +3,9 @@ package mlscript.compiler
 
 import mlscript.utils.shorthands._
 import mlscript.compiler.ir._
-import scala.util.control.NonFatal
 import scala.collection.mutable.StringBuilder
 import mlscript.{DiffTests, ModeType, TypingUnit}
-import mlscript.compiler.debug.TreeDebug
-import mlscript.compiler.mono.Monomorph
-import mlscript.compiler.printer.ExprPrinter
-import mlscript.compiler.mono.MonomorphError
 import mlscript.compiler.ir.{IRInterpreter, Fresh, FreshInt, IRBuilder}
-import mlscript.Origin
 
 class IRDiffTestCompiler extends DiffTests {
   import IRDiffTestCompiler.*
