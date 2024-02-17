@@ -5,7 +5,7 @@ import mlscript.utils.shorthands._
 import mlscript.compiler.ir._
 import scala.collection.mutable.StringBuilder
 import mlscript.{DiffTests, ModeType, TypingUnit}
-import mlscript.compiler.ir.{IRInterpreter, Fresh, FreshInt, IRBuilder}
+import mlscript.compiler.ir.{Interpreter, Fresh, FreshInt, Builder}
 
 class IRDiffTestCompiler extends DiffTests {
   import IRDiffTestCompiler.*
@@ -15,7 +15,7 @@ class IRDiffTestCompiler extends DiffTests {
     if (mode.useIR || mode.irVerbose)
       try
         outputBuilder ++= "\n\nIR:\n"
-        val gb = IRBuilder(Fresh(), FreshInt(),  FreshInt(), FreshInt())
+        val gb = Builder(Fresh(), FreshInt(),  FreshInt(), FreshInt())
         val graph = gb.buildGraph(unit)
         outputBuilder ++= graph.toString()
         outputBuilder ++= "\n\nPromoted:\n"
@@ -23,7 +23,7 @@ class IRDiffTestCompiler extends DiffTests {
         var interp_result: Opt[Str] = None
         if (mode.interpIR)
           outputBuilder ++= "\n\nInterpreted:\n"
-          val ir = IRInterpreter(mode.irVerbose).interpret(graph)
+          val ir = Interpreter(mode.irVerbose).interpret(graph)
           interp_result = Some(ir)
           outputBuilder ++= ir
           outputBuilder ++= "\n"

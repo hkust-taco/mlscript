@@ -11,7 +11,7 @@ import shorthands._
 
 final case class IRInterpreterError(message: String) extends Exception(message)
 
-class IRInterpreter(verbose: Bool):
+class Interpreter(verbose: Bool):
   private def log(x: Any) = if verbose then println(x)
   private case class Program(
     classes: Set[ClassInfo],
