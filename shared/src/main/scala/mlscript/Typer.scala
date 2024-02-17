@@ -1098,11 +1098,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         err(msg"Unsupported pattern shape${
           if (dbg) " ("+pat.getClass.toString+")" else ""}:", pat.toLoc)(raise)
       case Lam(pat, body) if doGenLambdas || ctx.inQuote =>
-        if (ctx.inQuote) println(s"TYPING QUOTED LAM") else println(s"TYPING POLY LAM")
+        println(s"TYPING POLY LAM")
         val newCtx = if (ctx.inQuote) ctx.enterQuotedScope else ctx.nest
         newCtx.poly { newCtx =>
           val param_ty = typePattern(pat)(newCtx, raise, vars)
-          val midCtx = newCtx
           val body_ty = typeTerm(body)(newCtx, raise, vars,
             generalizeCurriedFunctions || doGenLambdas && constrainedTypes)
           if (ctx.inQuote) {
