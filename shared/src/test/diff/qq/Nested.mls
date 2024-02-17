@@ -90,7 +90,7 @@ run(r)("happy")
 let inner4(x) = code"let x = inner2 in ${x}"
 let c2 = code"let x = inner1 in inner4(x)"
 //│ let inner4: anything -> Code[forall 'a. Code[Int, 'a] -> Code[anything -> Int, 'a], nothing]
-//│ let c2: Code[Code[forall 'b. Code[Int, 'b] -> Code[anything -> Int, 'b], nothing], nothing]
+//│ let c2: Code[Code[forall 'a. Code[Int, 'a] -> Code[anything -> Int, 'a], nothing], nothing]
 let r = run(c2)
 //│ let r: Code[forall 'a. Code[Int, 'a] -> Code[anything -> Int, 'a], nothing]
 let rr = run(r)
@@ -122,11 +122,11 @@ run(code"x => ${ x }")
 //│ forall 'b. 'b -> 'b
 
 f => code"x => ${ let tmp = f(x) in x }"
-//│ forall 'a 'b. (Var[in 'a out 'a | 'b, in ??x out ??x0] -> anything) -> Code[forall 'c. ('b & 'c) -> ('a | 'c), nothing]
+//│ forall 'a 'b 'c. (Var[in 'a out 'a | 'b, in ??x out ??x0] -> anything) -> Code[('b & 'c) -> ('a | 'c), nothing]
 
 let inner5(x) = code"${x}"
 let r = code"x => inner5(x)"
-//│ let inner5: forall 'a 'b. Code['a, 'b] -> Code['a, 'b]
+//│ let inner5: forall 'a 'b. Code['b, 'a] -> Code['b, 'a]
 //│ let r: Code[forall 'c 'd. Code['c, 'd] -> Code['c, 'd], nothing]
 run(r)(code"1")
 //│ Code[1, nothing]
