@@ -10,7 +10,6 @@ import mlscript.compiler.mono.Monomorph
 import mlscript.compiler.printer.ExprPrinter
 import mlscript.compiler.mono.MonomorphError
 import mlscript.compiler.ir.{IRInterpreter, Fresh, FreshInt, IRBuilder}
-import mlscript.compiler.optimizer.Optimizer
 import mlscript.Origin
 
 class DiffTestCompiler extends DiffTests {
@@ -30,55 +29,24 @@ class DiffTestCompiler extends DiffTests {
         val f3 = FreshInt()
         val f4 = FreshInt()
         val gb = IRBuilder(f1, f2, f3, f4)
-        val go = Optimizer(f1, f2, f3, f4, mode.graphOptVerbose)
         val graph = gb.buildGraph(unit)
         outputBuilder ++= graph.toString()
         outputBuilder ++= "\n\nPromoted ------------------------------------\n"
-        val graph2 = go.simplifyProgram(graph)
-        val graph3 = go.activeAnalyze(graph2)
-        val graph4 = go.recBoundaryAnalyze(graph3)
-        outputBuilder ++= graph4.toString()
+        outputBuilder ++= graph.toString()
         var interp_result: Opt[Str] = None
         if (mode.graphInterp)
           outputBuilder ++= "\n\nInterpreted ------------------------------\n"
-          val ir = IRInterpreter(mode.graphOptVerbose).interpret(graph4)
+          val ir = IRInterpreter(mode.graphOptVerbose).interpret(graph)
           interp_result = Some(ir)
           outputBuilder ++= ir
           outputBuilder ++= "\n"
-       
-        var changed = true
-        var g = graph4
-        val fuel_limit = 20
-        var fuel = fuel_limit
-        while (changed && fuel > 0)
-          val new_g = go.optimize(g)
-          changed = g != new_g
-          g = new_g
-          if (changed)
-            outputBuilder ++= "\n\nOptimized ------------------------------\n"
-            outputBuilder ++= new_g.toString()
-          fuel -= 1
-
-          if (mode.graphInterp)
-            outputBuilder ++= "\n\nInterpreted ------------------------------\n"
-            val ir = IRInterpreter(mode.graphOptVerbose).interpret(g)
-            outputBuilder ++= ir
-            if ir != interp_result.get then
-              throw optimizer.GraphOptimizingError("Interpreted result changed after optimization")
-            outputBuilder ++= "\n"
-
-        outputBuilder ++= "\n"
-        outputBuilder ++= s"\n\nFuel used: ${fuel_limit - fuel}"
-
-        if (fuel == 0)
-          throw optimizer.GraphOptimizingError("Fuel exhausted")
 
       catch
         case err: Exception =>
-          outputBuilder ++= s"\nGraphOpt failed: ${err.getMessage()}"
+          outputBuilder ++= s"\nIR Processing Failed: ${err.getMessage()}"
           outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
         case err: StackOverflowError =>
-          outputBuilder ++= s"\nGraphOpt failed: ${err.getMessage()}"
+          outputBuilder ++= s"\nIR Processing Failed: ${err.getMessage()}"
           outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
       
     outputBuilder.toString().linesIterator.toList

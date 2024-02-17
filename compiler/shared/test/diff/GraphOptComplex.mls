@@ -24,11 +24,8 @@ bar()
 //│ 
 //│ GraphOpt:
 //│ Program({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
-//│ Def(0, complex_foo, [t$0], [{}],
+//│ Def(0, complex_foo, [t$0],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ case t$0 of -- #63
 //│   A => let x$9 = t$0.z -- #51
@@ -42,20 +39,14 @@ bar()
 //│       in let x$16 = -(x$15,x$14) -- #60
 //│         in jump j$0(x$16) -- #59
 //│ )
-//│ Def(1, j$1, [x$2,x$0], [{},{}],
+//│ Def(1, j$1, [x$2,x$0],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ let x$3 = +(x$0,x$2) -- #13
 //│   in x$3 -- #12
 //│ )
-//│ Def(2, j$0, [x$0], [{}],
+//│ Def(2, j$0, [x$0],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ let x$1 = B(1,2) -- #34
 //│   in case x$1 of -- #33
@@ -67,11 +58,8 @@ bar()
 //│       in let x$8 = x$1.m -- #31
 //│         in jump j$1(4,x$0) -- #30
 //│ )
-//│ Def(3, bar, [], [],
+//│ Def(3, bar, [],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ let x$17 = A(6,7,8) -- #89
 //│   in let* (x$18) = complex_foo(x$17) -- #88
@@ -85,11 +73,8 @@ bar()
 //│ 
 //│ Promoted ------------------------------------
 //│ Program({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
-//│ Def(0, complex_foo, [t$0], [{<EDestruct@complex_foo:#63-case t$0 of ...>,<EDirect@complex_foo:#63-case t$0 of ...>,<ESelect(m)@complex_foo:#61-let x$15 = ...>,<ESelect(n)@complex_foo:#62-let x$14 = ...>,<ESelect(x)@complex_foo:#49-let x$11 = ...>,<ESelect(y)@complex_foo:#50-let x$10 = ...>,<ESelect(z)@complex_foo:#51-let x$9 = ...>}],
+//│ Def(0, complex_foo, [t$0],
 //│ S: None,
-//│ I: [[Some(ICtor(B))]],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ case t$0 of -- #63
 //│   A => let x$9 = t$0.z -- #51
@@ -97,23 +82,39 @@ bar()
 //│       in let x$11 = t$0.x -- #49
 //│         in let x$12 = *(x$10,x$9) -- #48
 //│           in let x$13 = +(x$11,x$12) -- #47
-//│             in let x$3 = +(x$13,4) -- #96
-//│               in x$3 -- #12
+//│             in jump j$0(x$13) -- #46
 //│   B => let x$14 = t$0.n -- #62
 //│     in let x$15 = t$0.m -- #61
 //│       in let x$16 = -(x$15,x$14) -- #60
-//│         in let x$3 = +(x$16,4) -- #97
-//│           in x$3 -- #12
+//│         in jump j$0(x$16) -- #59
 //│ )
-//│ Def(3, bar, [], [],
+//│ Def(1, j$1, [x$2,x$0],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
-//│ let x$19 = B(9,10) -- #87
-//│   in let* (x$20) = complex_foo(x$19) -- #86
-//│     in x$20 -- #85
+//│ let x$3 = +(x$0,x$2) -- #13
+//│   in x$3 -- #12
+//│ )
+//│ Def(2, j$0, [x$0],
+//│ S: None,
+//│ 1, 
+//│ let x$1 = B(1,2) -- #34
+//│   in case x$1 of -- #33
+//│     A => let x$4 = x$1.z -- #24
+//│       in let x$5 = x$1.y -- #23
+//│         in let x$6 = x$1.x -- #22
+//│           in jump j$1(3,x$0) -- #21
+//│     B => let x$7 = x$1.n -- #32
+//│       in let x$8 = x$1.m -- #31
+//│         in jump j$1(4,x$0) -- #30
+//│ )
+//│ Def(3, bar, [],
+//│ S: None,
+//│ 1, 
+//│ let x$17 = A(6,7,8) -- #89
+//│   in let* (x$18) = complex_foo(x$17) -- #88
+//│     in let x$19 = B(9,10) -- #87
+//│       in let* (x$20) = complex_foo(x$19) -- #86
+//│         in x$20 -- #85
 //│ )
 //│ },
 //│ let* (x$21) = bar() -- #93
@@ -121,43 +122,6 @@ bar()
 //│ 
 //│ Interpreted ------------------------------
 //│ 3
-//│ 
-//│ 
-//│ Optimized ------------------------------
-//│ Program({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
-//│ Def(3, bar, [], [],
-//│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x$20) = complex_foo$D$1$S$0(9,10) -- #103
-//│   in x$20 -- #85
-//│ )
-//│ Def(7, complex_foo$D$1$S$0, [t$0_m,t$0_n], [{<EDirect@complex_foo$D$1$S$0:#60-let x$16 = ...>},{<EDirect@complex_foo$D$1$S$0:#60-let x$16 = ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$16 = -(t$0_m,t$0_n) -- #60
-//│   in let x$3 = +(x$16,4) -- #97
-//│     in x$3 -- #12
-//│ )
-//│ },
-//│ let* (x$21) = bar() -- #93
-//│   in x$21 -- #92)
-//│ 
-//│ Interpreted ------------------------------
-//│ 3
-//│ 
-//│ 
-//│ Interpreted ------------------------------
-//│ 3
-//│ 
-//│ 
-//│ 
-//│ Fuel used: 2
 
 :GraphInterp
 :GraphOpt
@@ -199,11 +163,8 @@ bar()
 //│ 
 //│ GraphOpt:
 //│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
-//│ Def(0, complex_foo, [t$0], [{}],
+//│ Def(0, complex_foo, [t$0],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ let x$0 = +(1,2) -- #140
 //│   in let x$1 = *(1,2) -- #139
@@ -219,27 +180,18 @@ bar()
 //│         in let x$33 = C(0) -- #136
 //│           in jump j$0(x$33,x$0,x$1) -- #135
 //│ )
-//│ Def(1, j$2, [x$6], [{}],
+//│ Def(1, j$2, [x$6],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ x$6 -- #21
 //│ )
-//│ Def(2, j$3, [x$11], [{}],
+//│ Def(2, j$3, [x$11],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ jump j$2(x$11) -- #39
 //│ )
-//│ Def(3, j$1, [x$5,x$3,x$4], [{},{},{}],
+//│ Def(3, j$1, [x$5,x$3,x$4],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ case x$3 of -- #60
 //│   A => let x$7 = x$3.x -- #29
@@ -257,19 +209,13 @@ bar()
 //│       C => let x$15 = x$4.z -- #57
 //│         in jump j$3(8) -- #56
 //│ )
-//│ Def(4, j$4, [x$20,x$3,x$4], [{},{},{}],
+//│ Def(4, j$4, [x$20,x$3,x$4],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ jump j$1(x$20,x$3,x$4) -- #72
 //│ )
-//│ Def(5, j$0, [x$2,x$0,x$1], [{},{},{}],
+//│ Def(5, j$0, [x$2,x$0,x$1],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ let x$3 = A(5,x$2) -- #108
 //│   in let x$4 = B(6) -- #107
@@ -291,11 +237,8 @@ bar()
 //│       C => let x$26 = x$2.z -- #105
 //│         in jump j$1(3,x$3,x$4) -- #104
 //│ )
-//│ Def(6, bar, [], [],
+//│ Def(6, bar, [],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ let x$34 = B(10) -- #162
 //│   in let x$35 = A(9,x$34) -- #161
@@ -309,45 +252,59 @@ bar()
 //│ 
 //│ Promoted ------------------------------------
 //│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
-//│ Def(0, complex_foo, [t$0], [{<EDestruct@complex_foo:#138-case t$0 of ...>,<EDirect@complex_foo:#138-case t$0 of ...>,<ESelect(x)@complex_foo:#116-let x$27 = ...>,<ESelect(y)@complex_foo:#128-let x$29 = ...>}],
+//│ Def(0, complex_foo, [t$0],
 //│ S: None,
-//│ I: [[Some(ICtor(A))]],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ let x$0 = +(1,2) -- #140
 //│   in let x$1 = *(1,2) -- #139
 //│     in case t$0 of -- #138
 //│       A => let x$27 = t$0.x -- #116
-//│         in jump j$0(x$27,x$0,x$1) -- #114
+//│         in let x$28 = t$0.w -- #115
+//│           in jump j$0(x$27,x$0,x$1) -- #114
 //│       B => let x$29 = t$0.y -- #128
 //│         in let x$30 = +(x$29,x$1) -- #127
 //│           in let x$31 = B(x$30) -- #126
 //│             in jump j$0(x$31,x$0,x$1) -- #125
-//│       C => let x$33 = C(0) -- #136
-//│         in jump j$0(x$33,x$0,x$1) -- #135
+//│       C => let x$32 = t$0.z -- #137
+//│         in let x$33 = C(0) -- #136
+//│           in jump j$0(x$33,x$0,x$1) -- #135
 //│ )
-//│ Def(3, j$1, [x$5,x$3,x$4], [{},{<EDestruct@j$1:#60-case x$3 of ...>,<EDirect@j$1:#60-case x$3 of ...>,<ESelect(w)@j$1:#28-let x$8 = ...>},{<EDestruct@j$1:#58-case x$4 of ...>,<EDirect@j$1:#58-case x$4 of ...>,<ESelect(w)@j$1:#46-let x$13 = ...>}],
+//│ Def(1, j$2, [x$6],
 //│ S: None,
-//│ I: [[None,Some(ICtor(A)),Some(ICtor(B))]],
-//│ R: [None],
-//│ Rec: None,
+//│ 1, 
+//│ x$6 -- #21
+//│ )
+//│ Def(2, j$3, [x$11],
+//│ S: None,
+//│ 1, 
+//│ jump j$2(x$11) -- #39
+//│ )
+//│ Def(3, j$1, [x$5,x$3,x$4],
+//│ S: None,
 //│ 1, 
 //│ case x$3 of -- #60
-//│   A => let x$8 = x$3.w -- #28
-//│     in x$8 -- #180
-//│   B => 4 -- #181
-//│   C => case x$4 of -- #58
-//│     A => let x$13 = x$4.w -- #46
-//│       in x$13 -- #188
-//│     B => 7 -- #189
-//│     C => 8 -- #190
+//│   A => let x$7 = x$3.x -- #29
+//│     in let x$8 = x$3.w -- #28
+//│       in jump j$2(x$8) -- #27
+//│   B => let x$9 = x$3.y -- #34
+//│     in jump j$2(4) -- #33
+//│   C => let x$10 = x$3.z -- #59
+//│     in case x$4 of -- #58
+//│       A => let x$12 = x$4.x -- #47
+//│         in let x$13 = x$4.w -- #46
+//│           in jump j$3(x$13) -- #45
+//│       B => let x$14 = x$4.y -- #52
+//│         in jump j$3(7) -- #51
+//│       C => let x$15 = x$4.z -- #57
+//│         in jump j$3(8) -- #56
 //│ )
-//│ Def(5, j$0, [x$2,x$0,x$1], [{<EDestruct@j$0:#106-case x$2 of ...>,<EDirect@j$0:#106-case x$2 of ...>,<EDirect@j$0:#108-let x$3 = ...>,<ESelect(w)@j$0:#94-let x$17 = ...>,<ESelect(x)@j$0:#95-let x$16 = ...>},{<EDirect@j$0:#93-let x$18 = ...>},{<EDirect@j$0:#92-let x$19 = ...>}],
+//│ Def(4, j$4, [x$20,x$3,x$4],
 //│ S: None,
-//│ I: [[None,None,Some(ICtor(B))],[None,None,Some(ICtor(C))]],
-//│ R: [None],
-//│ Rec: None,
+//│ 1, 
+//│ jump j$1(x$20,x$3,x$4) -- #72
+//│ )
+//│ Def(5, j$0, [x$2,x$0,x$1],
+//│ S: None,
 //│ 1, 
 //│ let x$3 = A(5,x$2) -- #108
 //│   in let x$4 = B(6) -- #107
@@ -357,18 +314,20 @@ bar()
 //│           in let x$18 = +(x$17,x$0) -- #93
 //│             in let x$19 = +(x$18,x$1) -- #92
 //│               in case x$16 of -- #91
-//│                 A => let x$22 = x$16.w -- #79
-//│                   in jump j$1(x$22,x$3,x$4) -- #167
-//│                 B => jump j$1(x$19,x$3,x$4) -- #171
-//│                 C => jump j$1(0,x$3,x$4) -- #175
-//│       B => jump j$1(2,x$3,x$4) -- #99
-//│       C => jump j$1(3,x$3,x$4) -- #104
+//│                 A => let x$21 = x$16.x -- #80
+//│                   in let x$22 = x$16.w -- #79
+//│                     in jump j$4(x$22,x$3,x$4) -- #78
+//│                 B => let x$23 = x$16.y -- #85
+//│                   in jump j$4(x$19,x$3,x$4) -- #84
+//│                 C => let x$24 = x$16.z -- #90
+//│                   in jump j$4(0,x$3,x$4) -- #89
+//│       B => let x$25 = x$2.y -- #100
+//│         in jump j$1(2,x$3,x$4) -- #99
+//│       C => let x$26 = x$2.z -- #105
+//│         in jump j$1(3,x$3,x$4) -- #104
 //│ )
-//│ Def(6, bar, [], [],
+//│ Def(6, bar, [],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ let x$34 = B(10) -- #162
 //│   in let x$35 = A(9,x$34) -- #161
@@ -382,93 +341,6 @@ bar()
 //│ 
 //│ Interpreted ------------------------------
 //│ 5
-//│ 
-//│ 
-//│ Optimized ------------------------------
-//│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
-//│ Def(5, j$0, [x$2,x$0,x$1], [{<EDirect@j$0:#208-let* (x$44,x$45,x$46,x$47,x$48) = j$0$P$0 ...>},{<EDirect@j$0:#208-let* (x$44,x$45,x$46,x$47,x$48) = j$0$P$0 ...>},{<EDirect@j$0:#208-let* (x$44,x$45,x$46,x$47,x$48) = j$0$P$0 ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x$44,x$45,x$46,x$47,x$48) = j$0$P$0(x$2,x$0,x$1) -- #208
-//│   in case x$44 of -- #207
-//│     A => let x$72 = x$48.w -- #247
-//│       in let x$73 = x$44.x -- #246
-//│         in jump j$0$D$0$S$0(x$45,x$46,x$47,x$72,x$73) -- #204
-//│     B => let x$8 = x$48.w -- #244
-//│       in x$8 -- #180
-//│     C => let x$8 = x$48.w -- #245
-//│       in x$8 -- #180
-//│ )
-//│ Def(6, bar, [], [],
-//│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$34 = B(10) -- #162
-//│   in let x$35 = A(9,x$34) -- #161
-//│     in let x$36 = A(10,x$35) -- #160
-//│       in let* (x$54,x$55,x$56) = complex_foo$P$0(x$36) -- #212
-//│         in let* (x$37) = complex_foo$D$0(x$54,x$55,x$56) -- #211
-//│           in x$37 -- #158
-//│ )
-//│ Def(11, complex_foo$P$0, [t$0], [{<EDirect@complex_foo$P$0:#197-...>}],
-//│ S: None,
-//│ I: [[Some(ICtor(A))]],
-//│ R: [None,None,None],
-//│ Rec: None,
-//│ 3, 
-//│ let x$0 = +(1,2) -- #140
-//│   in let x$1 = *(1,2) -- #139
-//│     in t$0,x$0,x$1 -- #197
-//│ )
-//│ Def(12, complex_foo$D$0, [t$0,x$0,x$1], [{<ESelect(x)@complex_foo$D$0:#116-let x$27 = ...>},{<EDirect@complex_foo$D$0:#114-jump j$0 ...>},{<EDirect@complex_foo$D$0:#114-jump j$0 ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$27 = t$0.x -- #116
-//│   in jump j$0(x$27,x$0,x$1) -- #114
-//│ )
-//│ Def(15, j$0$P$0, [x$2,x$0,x$1], [{<EDirect@j$0$P$0:#108-let x$3 = ...>,<EDirect@j$0$P$0:#203-...>},{<EDirect@j$0$P$0:#203-...>},{<EDirect@j$0$P$0:#203-...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [None,None,None,Some(ICtor(B)),Some(ICtor(A))],
-//│ Rec: None,
-//│ 5, 
-//│ let x$3 = A(5,x$2) -- #108
-//│   in let x$4 = B(6) -- #107
-//│     in x$2,x$1,x$0,x$4,x$3 -- #203
-//│ )
-//│ Def(19, j$0$D$0$S$0, [x$1,x$0,x$4,x$3_w,x$2_x], [{},{},{},{<EDirect@j$0$D$0$S$0:#180-...>},{<EDestruct@j$0$D$0$S$0:#91-case x$2_x of ...>,<EDirect@j$0$D$0$S$0:#91-case x$2_x of ...>}],
-//│ S: None,
-//│ I: [[None,None,None,None,Some(ICtor(B))]],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ case x$2_x of -- #91
-//│   A => x$3_w -- #180
-//│   B => x$3_w -- #180
-//│   C => x$3_w -- #180
-//│ )
-//│ },
-//│ let* (x$38) = bar() -- #166
-//│   in x$38 -- #165)
-//│ 
-//│ Interpreted ------------------------------
-//│ 5
-//│ 
-//│ 
-//│ Interpreted ------------------------------
-//│ 5
-//│ 
-//│ 
-//│ 
-//│ Fuel used: 2
 
 :GraphInterp
 :GraphOpt
@@ -510,11 +382,8 @@ bar()
 //│ 
 //│ GraphOpt:
 //│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
-//│ Def(0, complex_foo, [t$0], [{}],
+//│ Def(0, complex_foo, [t$0],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ let x$0 = +(1,2) -- #150
 //│   in let x$1 = *(1,2) -- #149
@@ -532,27 +401,18 @@ bar()
 //│         in let x$35 = C(0) -- #146
 //│           in jump j$0(x$35,x$0,x$1) -- #145
 //│ )
-//│ Def(1, j$2, [x$6], [{}],
+//│ Def(1, j$2, [x$6],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ x$6 -- #21
 //│ )
-//│ Def(2, j$3, [x$11], [{}],
+//│ Def(2, j$3, [x$11],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ jump j$2(x$11) -- #39
 //│ )
-//│ Def(3, j$1, [x$5,x$3,x$4], [{},{},{}],
+//│ Def(3, j$1, [x$5,x$3,x$4],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ case x$3 of -- #60
 //│   A => let x$7 = x$3.x -- #29
@@ -570,19 +430,13 @@ bar()
 //│       C => let x$15 = x$4.z -- #57
 //│         in jump j$3(8) -- #56
 //│ )
-//│ Def(4, j$4, [x$20,x$3,x$4], [{},{},{}],
+//│ Def(4, j$4, [x$20,x$3,x$4],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ jump j$1(x$20,x$3,x$4) -- #72
 //│ )
-//│ Def(5, j$0, [x$2,x$0,x$1], [{},{},{}],
+//│ Def(5, j$0, [x$2,x$0,x$1],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ let x$3 = A(5,x$2) -- #108
 //│   in let x$4 = B(6) -- #107
@@ -604,11 +458,8 @@ bar()
 //│       C => let x$26 = x$2.z -- #105
 //│         in jump j$1(3,x$3,x$4) -- #104
 //│ )
-//│ Def(6, bar, [], [],
+//│ Def(6, bar, [],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ let x$36 = B(10) -- #172
 //│   in let x$37 = A(9,x$36) -- #171
@@ -622,47 +473,61 @@ bar()
 //│ 
 //│ Promoted ------------------------------------
 //│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
-//│ Def(0, complex_foo, [t$0], [{<EDestruct@complex_foo:#148-case t$0 of ...>,<EDirect@complex_foo:#148-case t$0 of ...>,<ESelect(w)@complex_foo:#125-let x$28 = ...>,<ESelect(y)@complex_foo:#138-let x$31 = ...>}],
+//│ Def(0, complex_foo, [t$0],
 //│ S: None,
-//│ I: [[Some(ICtor(A))]],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ let x$0 = +(1,2) -- #150
 //│   in let x$1 = *(1,2) -- #149
 //│     in case t$0 of -- #148
-//│       A => let x$28 = t$0.w -- #125
-//│         in let x$29 = C(0) -- #124
-//│           in let x$30 = A(x$28,x$29) -- #123
-//│             in jump j$0(x$30,x$0,x$1) -- #122
+//│       A => let x$27 = t$0.x -- #126
+//│         in let x$28 = t$0.w -- #125
+//│           in let x$29 = C(0) -- #124
+//│             in let x$30 = A(x$28,x$29) -- #123
+//│               in jump j$0(x$30,x$0,x$1) -- #122
 //│       B => let x$31 = t$0.y -- #138
 //│         in let x$32 = +(x$31,x$1) -- #137
 //│           in let x$33 = B(x$32) -- #136
 //│             in jump j$0(x$33,x$0,x$1) -- #135
-//│       C => let x$35 = C(0) -- #146
-//│         in jump j$0(x$35,x$0,x$1) -- #145
+//│       C => let x$34 = t$0.z -- #147
+//│         in let x$35 = C(0) -- #146
+//│           in jump j$0(x$35,x$0,x$1) -- #145
 //│ )
-//│ Def(3, j$1, [x$5,x$3,x$4], [{},{<EDestruct@j$1:#60-case x$3 of ...>,<EDirect@j$1:#60-case x$3 of ...>,<ESelect(w)@j$1:#28-let x$8 = ...>},{<EDestruct@j$1:#58-case x$4 of ...>,<EDirect@j$1:#58-case x$4 of ...>,<ESelect(w)@j$1:#46-let x$13 = ...>}],
+//│ Def(1, j$2, [x$6],
 //│ S: None,
-//│ I: [[None,Some(ICtor(A)),Some(ICtor(B))]],
-//│ R: [None],
-//│ Rec: None,
+//│ 1, 
+//│ x$6 -- #21
+//│ )
+//│ Def(2, j$3, [x$11],
+//│ S: None,
+//│ 1, 
+//│ jump j$2(x$11) -- #39
+//│ )
+//│ Def(3, j$1, [x$5,x$3,x$4],
+//│ S: None,
 //│ 1, 
 //│ case x$3 of -- #60
-//│   A => let x$8 = x$3.w -- #28
-//│     in x$8 -- #190
-//│   B => 4 -- #191
-//│   C => case x$4 of -- #58
-//│     A => let x$13 = x$4.w -- #46
-//│       in x$13 -- #198
-//│     B => 7 -- #199
-//│     C => 8 -- #200
+//│   A => let x$7 = x$3.x -- #29
+//│     in let x$8 = x$3.w -- #28
+//│       in jump j$2(x$8) -- #27
+//│   B => let x$9 = x$3.y -- #34
+//│     in jump j$2(4) -- #33
+//│   C => let x$10 = x$3.z -- #59
+//│     in case x$4 of -- #58
+//│       A => let x$12 = x$4.x -- #47
+//│         in let x$13 = x$4.w -- #46
+//│           in jump j$3(x$13) -- #45
+//│       B => let x$14 = x$4.y -- #52
+//│         in jump j$3(7) -- #51
+//│       C => let x$15 = x$4.z -- #57
+//│         in jump j$3(8) -- #56
 //│ )
-//│ Def(5, j$0, [x$2,x$0,x$1], [{<EDestruct@j$0:#106-case x$2 of ...>,<EDirect@j$0:#106-case x$2 of ...>,<EDirect@j$0:#108-let x$3 = ...>,<ESelect(w)@j$0:#94-let x$17 = ...>,<ESelect(x)@j$0:#95-let x$16 = ...>},{<EDirect@j$0:#93-let x$18 = ...>},{<EDirect@j$0:#92-let x$19 = ...>}],
+//│ Def(4, j$4, [x$20,x$3,x$4],
 //│ S: None,
-//│ I: [[None,None,Some(ICtor(A))],[None,None,Some(ICtor(B))],[None,None,Some(ICtor(C))]],
-//│ R: [None],
-//│ Rec: None,
+//│ 1, 
+//│ jump j$1(x$20,x$3,x$4) -- #72
+//│ )
+//│ Def(5, j$0, [x$2,x$0,x$1],
+//│ S: None,
 //│ 1, 
 //│ let x$3 = A(5,x$2) -- #108
 //│   in let x$4 = B(6) -- #107
@@ -672,18 +537,20 @@ bar()
 //│           in let x$18 = +(x$17,x$0) -- #93
 //│             in let x$19 = +(x$18,x$1) -- #92
 //│               in case x$16 of -- #91
-//│                 A => let x$22 = x$16.w -- #79
-//│                   in jump j$1(x$22,x$3,x$4) -- #177
-//│                 B => jump j$1(x$19,x$3,x$4) -- #181
-//│                 C => jump j$1(0,x$3,x$4) -- #185
-//│       B => jump j$1(2,x$3,x$4) -- #99
-//│       C => jump j$1(3,x$3,x$4) -- #104
+//│                 A => let x$21 = x$16.x -- #80
+//│                   in let x$22 = x$16.w -- #79
+//│                     in jump j$4(x$22,x$3,x$4) -- #78
+//│                 B => let x$23 = x$16.y -- #85
+//│                   in jump j$4(x$19,x$3,x$4) -- #84
+//│                 C => let x$24 = x$16.z -- #90
+//│                   in jump j$4(0,x$3,x$4) -- #89
+//│       B => let x$25 = x$2.y -- #100
+//│         in jump j$1(2,x$3,x$4) -- #99
+//│       C => let x$26 = x$2.z -- #105
+//│         in jump j$1(3,x$3,x$4) -- #104
 //│ )
-//│ Def(6, bar, [], [],
+//│ Def(6, bar, [],
 //│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
 //│ 1, 
 //│ let x$36 = B(10) -- #172
 //│   in let x$37 = A(9,x$36) -- #171
@@ -697,79 +564,3 @@ bar()
 //│ 
 //│ Interpreted ------------------------------
 //│ 5
-//│ 
-//│ 
-//│ Optimized ------------------------------
-//│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
-//│ Def(6, bar, [], [],
-//│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$36 = B(10) -- #172
-//│   in let x$37 = A(9,x$36) -- #171
-//│     in let x$38 = A(10,x$37) -- #170
-//│       in let* (x$53,x$54,x$55) = complex_foo$P$0(x$38) -- #222
-//│         in let* (x$39) = complex_foo$D$0(x$53,x$54,x$55) -- #221
-//│           in x$39 -- #168
-//│ )
-//│ Def(11, j$0$P$0, [x$2,x$0,x$1], [{<EDirect@j$0$P$0:#108-let x$3 = ...>,<EDirect@j$0$P$0:#207-...>},{<EDirect@j$0$P$0:#207-...>},{<EDirect@j$0$P$0:#207-...>}],
-//│ S: None,
-//│ I: [[None,None,Some(ICtor(A))]],
-//│ R: [None,None,None,Some(ICtor(B)),Some(ICtor(A))],
-//│ Rec: None,
-//│ 5, 
-//│ let x$3 = A(5,x$2) -- #108
-//│   in let x$4 = B(6) -- #107
-//│     in x$2,x$1,x$0,x$4,x$3 -- #207
-//│ )
-//│ Def(15, complex_foo$P$0, [t$0], [{<EDirect@complex_foo$P$0:#213-...>}],
-//│ S: None,
-//│ I: [[Some(ICtor(A))]],
-//│ R: [None,None,None],
-//│ Rec: None,
-//│ 3, 
-//│ let x$0 = +(1,2) -- #150
-//│   in let x$1 = *(1,2) -- #149
-//│     in t$0,x$0,x$1 -- #213
-//│ )
-//│ Def(16, complex_foo$D$0, [t$0,x$0,x$1], [{<ESelect(w)@complex_foo$D$0:#125-let x$28 = ...>},{<EDirect@complex_foo$D$0:#236-let* (x$74,x$75,x$76,x$77,x$78) = j$0$P$0 ...>},{<EDirect@complex_foo$D$0:#236-let* (x$74,x$75,x$76,x$77,x$78) = j$0$P$0 ...>}],
-//│ S: None,
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$28 = t$0.w -- #125
-//│   in let x$29 = C(0) -- #124
-//│     in let x$30 = A(x$28,x$29) -- #123
-//│       in let* (x$74,x$75,x$76,x$77,x$78) = j$0$P$0(x$30,x$0,x$1) -- #236
-//│         in let x$79 = x$78.w -- #256
-//│           in jump j$0$D$0$S$0(x$74,x$75,x$76,x$77,x$79) -- #235
-//│ )
-//│ Def(19, j$0$D$0$S$0, [x$2,x$1,x$0,x$4,x$3_w], [{<ESelect(x)@j$0$D$0$S$0:#95-let x$16 = ...>},{},{},{},{<EDirect@j$0$D$0$S$0:#190-...>}],
-//│ S: None,
-//│ I: [[None,None,None,None,Some(ICtor(B))]],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$16 = x$2.x -- #95
-//│   in case x$16 of -- #91
-//│     A => x$3_w -- #190
-//│     B => x$3_w -- #190
-//│     C => x$3_w -- #190
-//│ )
-//│ },
-//│ let* (x$40) = bar() -- #176
-//│   in x$40 -- #175)
-//│ 
-//│ Interpreted ------------------------------
-//│ 5
-//│ 
-//│ 
-//│ Interpreted ------------------------------
-//│ 5
-//│ 
-//│ 
-//│ 
-//│ Fuel used: 2
