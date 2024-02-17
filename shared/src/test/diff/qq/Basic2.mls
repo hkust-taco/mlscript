@@ -40,10 +40,10 @@ run(res)
 // :ge
 :e
 code"let x = {a: 100} in x . a" // "." ?
-//│ ╔══[ERROR] unbound quoted variable: .
+//│ ╔══[ERROR] identifier not found: .
 //│ ║  l.42: 	code"let x = {a: 100} in x . a" // "." ?
 //│ ╙──      	                           ^
-//│ ╔══[ERROR] unbound quoted variable: a
+//│ ╔══[ERROR] identifier not found: a
 //│ ║  l.42: 	code"let x = {a: 100} in x . a" // "." ?
 //│ ╙──      	                             ^
 //│ Code[error, nothing]

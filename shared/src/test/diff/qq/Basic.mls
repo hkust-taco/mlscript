@@ -4,7 +4,7 @@
 
 :e
 let c = code"x"
-//│ ╔══[ERROR] unbound quoted variable: x
+//│ ╔══[ERROR] identifier not found: x
 //│ ║  l.6: 	let c = code"x"
 //│ ╙──     	             ^
 //│ let c: Code[error, nothing]
@@ -97,7 +97,7 @@ run(code_nested)
 :e
 let y = code"x"
 code"let id = x => ${y} in id(true)"
-//│ ╔══[ERROR] unbound quoted variable: x
+//│ ╔══[ERROR] identifier not found: x
 //│ ║  l.98: 	let y = code"x"
 //│ ╙──      	             ^
 //│ let y: Code[error, nothing]
@@ -168,7 +168,7 @@ let both = code"${codeA}, ${codeB}"
 let a = code"let x = 0 in x"
 let b = code"x"
 let c = code"${a} + ${b}"
-//│ ╔══[ERROR] unbound quoted variable: x
+//│ ╔══[ERROR] identifier not found: x
 //│ ║  l.169: 	let b = code"x"
 //│ ╙──       	             ^
 //│ let a: Code[0, nothing]

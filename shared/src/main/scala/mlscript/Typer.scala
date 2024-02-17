@@ -914,7 +914,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             res
           }
       case v @ ValidVar(name) =>
-        val ty = ctx.get(name).fold(err((if (ctx.inQuote) "unbound quoted variable: " else "identifier not found: ") + name, term.toLoc): ST) {
+        val ty = ctx.get(name).fold(err("identifier not found: " + name, term.toLoc): ST) {
           case AbstractConstructor(absMths, traitWithMths) =>
             val td = ctx.tyDefs(name)
             err((msg"Instantiation of an abstract type is forbidden" -> term.toLoc)
