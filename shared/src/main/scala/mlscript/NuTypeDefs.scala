@@ -1419,7 +1419,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 implicit val gl: GenLambdas = false // TODO: what should this be?
                 val annType = typeTerm(ann.name)
                 constrain(annType, AnnType)
-              })
+              }
               
               td.kind match {
                 
