@@ -1371,21 +1371,20 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         val rcd_ty = typeMonomorphicTerm(rcd)
         (t_ty without rcd.fields.iterator.map(_._1).toSortedSet) & (rcd_ty, prov)
       case CaseOf(s, cs) =>
-        val midCtx = if (ctx.inQuote) ctx.enterQuotedScope else ctx
-        val s_ty = typeMonomorphicTerm(s)(midCtx, raise, vars)
-        if (newDefs) con(s_ty, ObjType.withProv(prov), TopType)(midCtx)
-        val (tys, cs_ty) = typeArms(s |>? {
-          case v: Var => v
-          case Asc(v: Var, _) => v
-        }, cs)(midCtx, raise, vars, genLambdas)
-        if (ctx.inQuote) {
-          val ctxTy = freshVar(noTyProv, N)(ctx.lvl)
-          ctx.trackFVs(con(midCtx.getCtxTy, midCtx.getAllQuoteSkolemsWith(ctxTy), ctxTy)(ctx))
+        val oldCtx = ctx
+        (if (ctx.inQuote) ctx.enterQuotedScope else ctx) |> { implicit ctx =>
+          val s_ty = typeMonomorphicTerm(s)
+          if (newDefs) con(s_ty, ObjType.withProv(prov), TopType)
+          val (tys, cs_ty) = typeArms(s |>? {
+            case v: Var => v
+            case Asc(v: Var, _) => v
+          }, cs)
+          solveQuoteContext(oldCtx, ctx)
+          val req = tys.foldRight(BotType: SimpleType) {
+            case ((a_ty, tv), req) => a_ty & tv | req & a_ty.neg()
+          }
+          con(s_ty, req, cs_ty)
         }
-        val req = tys.foldRight(BotType: SimpleType) {
-          case ((a_ty, tv), req) => a_ty & tv | req & a_ty.neg()
-        }
-        con(s_ty, req, cs_ty)(midCtx)
       case elf: If =>
         try typeTerm(desugarIf(elf)) catch {
           case e: ucs.DesugaringException => err(e.messages)
