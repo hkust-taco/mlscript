@@ -1415,7 +1415,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
               }
 
               // Check annotations
-              td.annotations.foreach(ann => {
+              td.annotations.foreach { ann =>
                 implicit val gl: GenLambdas = false // TODO: what should this be?
                 val annType = typeTerm(ann.name)
                 constrain(annType, AnnType)

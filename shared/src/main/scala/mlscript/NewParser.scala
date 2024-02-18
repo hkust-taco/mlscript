@@ -656,7 +656,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   final def exprOrIf(prec: Int, allowSpace: Bool = true, annotations: Ls[Annotation] = Nil)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, allowSpace) { l =>
     val moreAnnotations: Ls[Annotation] = parseAnnotations(false)
 
-    if (!moreAnnotations.isEmpty) {
+    if (moreAnnotations.nonEmpty) {
       yeetSpaces
     }
 
@@ -900,7 +900,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           Left(IfThen(wrapAnns(expr, allAnns), rhs))
         case _ =>
           err(msg"Unexpected annotation" -> allAnns.head.toLoc :: Nil)
-          L(body) // discord annotations for now
+          L(body) // discard annotations for now
       }
 
       case Right(term) => R(wrapAnns(term, allAnns))
