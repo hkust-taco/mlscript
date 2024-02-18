@@ -572,9 +572,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }
   }
 
-  private def parseAnnotations(allowNewLines: Bool): Ls[Annotation] = {
+  private def parseAnnotations(allowNewLines: Bool): Ls[Term] = {
     @tailrec
-    def rec(acc: Ls[Annotation]): Ls[Annotation] = cur match {
+    def rec(acc: Ls[Term]): Ls[Term] = cur match {
       case (SPACE, _) :: c => 
         consume
         rec(acc)
@@ -592,7 +592,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         }
         consume
 
-        val annotation = Annotation(Var(name).withLoc(S(loc)))
+        val annotation = Var(name).withLoc(S(loc))
         rec(annotation :: acc)
       }
       case _ => acc.reverse
@@ -653,8 +653,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     raise(WarningReport(msg"[${cur.headOption.map(_._1).mkString}] ${""+msg}" -> loco :: Nil,
       newDefs = true))
   
-  final def exprOrIf(prec: Int, allowSpace: Bool = true, annotations: Ls[Annotation] = Nil)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, allowSpace) { l =>
-    val moreAnnotations: Ls[Annotation] = parseAnnotations(false)
+  final def exprOrIf(prec: Int, allowSpace: Bool = true, annotations: Ls[Term] = Nil)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, allowSpace) { l =>
+    val moreAnnotations: Ls[Term] = parseAnnotations(false)
 
     if (moreAnnotations.nonEmpty) {
       yeetSpaces
@@ -907,7 +907,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }
   }
 
-  private def wrapAnns(trm: Term, anns: List[Annotation]) =
+  private def wrapAnns(trm: Term, anns: List[Term]) =
     anns.foldRight(trm)(Ann(_, _))
   
   private def errExpr =

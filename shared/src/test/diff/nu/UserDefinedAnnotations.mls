@@ -14,7 +14,7 @@ fun foo = 0
 class tailrec2() extends Annotation
 //│ class tailrec2() extends Annotation
 
-:e // In the future, this should be supported.
+:e // In the future, we should still support annotations that require a constructor.
 @tailrec2
 fun foo = 0
 //│ ╔══[ERROR] Type mismatch in definition:

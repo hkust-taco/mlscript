@@ -771,7 +771,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     ()
   }
 
-  
+
   /** Infer the type of a term.
     * genLambdas: whether to generalize lambdas that are found immediately in the term.
     * Note that the generalization of inner/nested lambdas is determined by other parameters; eg:
@@ -822,9 +822,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         if (ctx.inPattern || funkyTuples) freshVar(tp(v.toLoc, "wildcard"), N)
         else err(msg"Widlcard in expression position.", v.toLoc)
       
-      // TODO: Check all annotations are in scope
       case Ann(ann, receiver) => 
-        val annType = typeTerm(ann.name)
+        val annType = typeTerm(ann)
         con(annType, AnnType, UnitType)
         typeTerm(receiver)
         
@@ -1746,7 +1745,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case TypedNuAls(level, td, tparams, body) =>
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams, N, N, S(go(body)), Nil, N, N, TypingUnit(Nil))(
-            td.declareLoc, td.abstractLoc, Nil)
+            td.declareLoc, td.abstractLoc, td.annotations)
         }
       case TypedNuMxn(level, td, thisTy, superTy, tparams, params, members) =>
         ectx(tparams) |> { implicit ectx =>

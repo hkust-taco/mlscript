@@ -47,11 +47,6 @@ final case class MethodDef[RHS <: Term \/ Type](
   val children: Ls[Located] = nme :: body :: Nil
 }
 
-// Annotations
-final case class Annotation(name: Var) extends Located {
-  def children: List[Located] = name :: Nil
-}
-
 sealed trait NameRef extends Located { val name: Str; def toVar: Var }
 
 sealed abstract class OuterKind(val str: Str)
@@ -97,7 +92,7 @@ final case class Super()                                             extends Ter
 final case class Eqn(lhs: Var, rhs: Term)                            extends Term // equations such as x = y, notably used in constructors; TODO: make lhs a Term
 final case class Rft(base: Term, decls: TypingUnit)                  extends Term
 final case class While(cond: Term, body: Term)                       extends Term
-final case class Ann(ann: Annotation, receiver: Term)                extends Term
+final case class Ann(ann: Term, receiver: Term)                      extends Term
 
 final case class AdtMatchWith(cond: Term, arms: Ls[AdtMatchPat])     extends Term
 final case class AdtMatchPat(pat: Term, rhs: Term)                   extends AdtMatchPatImpl
@@ -212,7 +207,7 @@ final case class NuTypeDef(
   superAnnot: Opt[Type],
   thisAnnot: Opt[Type],
   body: TypingUnit
-)(val declareLoc: Opt[Loc], val abstractLoc: Opt[Loc], val annotations: Ls[Annotation])
+)(val declareLoc: Opt[Loc], val abstractLoc: Opt[Loc], val annotations: Ls[Term])
   extends NuDecl with Statement with Outer {
     def isPlainJSClass: Bool = params.isEmpty
   }
@@ -222,7 +217,7 @@ final case class NuFunDef(
   nme: Var,
   symbolicNme: Opt[Var],
   tparams: Ls[TypeName],
-  rhs: Term \/ Type
+  rhs: Term \/ Type,
 )(
   val declareLoc: Opt[Loc],
   val virtualLoc: Opt[Loc], // Some(Loc) means that the function is modified by keyword `virtual`
@@ -230,7 +225,7 @@ final case class NuFunDef(
   val signature: Opt[NuFunDef],
   val outer: Opt[Outer],
   val genField: Bool, // true means it's a `val`; false means it's a `let`
-  val annotations: Ls[Annotation],
+  val annotations: Ls[Term],
 ) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)
   def kind: DeclKind = Val

@@ -1127,12 +1127,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 if (fd.tparams.nonEmpty)
                   err(msg"Type parameters are not yet supported in this position",
                     fd.tparams.head.toLoc)
-              
-              implicit val gl: GenLambdas =
-                // * Don't generalize lambdas if we're already in generalization mode;
-                // * unless the thing is just a simple let binding with functions,
-                // * as in `let r = if true then id else x => x`
-                !isGeneralized && fd.isLetRec.isDefined && !fd.genField
 
               val res_ty = fd.rhs match {
                 case R(PolyType(tps, ty)) =>
@@ -1148,6 +1142,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 case R(_) => die
                 case L(body) =>
                   if (fd.isLetRec.isDefined) checkNoTyParams()
+                  implicit val gl: GenLambdas =
+                    // * Don't generalize lambdas if we're already in generalization mode;
+                    // * unless the thing is just a simple let binding with functions,
+                    // * as in `let r = if true then id else x => x`
+                    !isGeneralized && fd.isLetRec.isDefined && !fd.genField
                   val outer_ctx = ctx
                   val body_ty = if (isGeneralized) {
                     // * Note:
@@ -1184,7 +1183,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
 
               // Check annotations
               fd.annotations.foreach(ann => {
-                val annType = typeTerm(ann.name)
+                implicit val gl: GenLambdas = false;
+                val annType = typeTerm(ann)
                 constrain(annType, AnnType)
               })
 
@@ -1416,8 +1416,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
 
               // Check annotations
               td.annotations.foreach { ann =>
-                implicit val gl: GenLambdas = false // TODO: what should this be?
-                val annType = typeTerm(ann.name)
+                implicit val gl: GenLambdas = false
+                val annType = typeTerm(ann)
                 constrain(annType, AnnType)
               }
               

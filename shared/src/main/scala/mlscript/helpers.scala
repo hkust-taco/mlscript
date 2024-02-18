@@ -582,7 +582,7 @@ trait TermImpl extends StatementImpl { self: Term =>
   def print(brackets: Bool): Str = {
       def bra(str: Str): Str = if (brackets) s"($str)" else str
       this match {
-    case Ann(ann, receiver) => bra("@" + ann.name.name + " ") + receiver.print(false)
+    case Ann(ann, receiver) => bra("@" + ann.print(false) + " ") + receiver.print(false)
     case Bra(true, trm) => s"'{' ${trm.showDbg} '}'"
     case Bra(false, trm) => s"'(' ${trm.showDbg} ')'"
     case Blk(stmts) => stmts.iterator.map(_.showDbg).mkString("{", "; ", "}")
@@ -988,10 +988,7 @@ trait StatementImpl extends Located { self: Statement =>
   }
   
   def children: List[Located] = this match {
-    case Ann(ann, trm) => trm match {
-      case t: Ann => ann :: t.children
-      case t => ann :: t :: Nil
-    }
+    case Ann(ann, trm) => ann :: trm :: Nil
     case Bra(_, trm) => trm :: Nil
     case Var(name) => Nil
     case Asc(trm, ty) => trm :: Nil
