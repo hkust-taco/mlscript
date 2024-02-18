@@ -641,8 +641,8 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Eqn(lhs, rhs) => s"${lhs.showDbg} = ${rhs.showDbg}"
     case AdtMatchWith(cond, arms) =>
       s"match ${cond.showDbg} with ${arms.map (patmat => s"${patmat.pat.showDbg} -> ${patmat.rhs.showDbg}").mkString (" | ") }"
-    case Quoted(b) => s"code\"$b\""
-    case Unquoted(b) => s"$${$b}"
+    case Quoted(b) => s"code\"${b.showDbg}\""
+    case Unquoted(b) => s"$${${b.showDbg}}"
     case Rft(bse, tu) => s"${bse.showDbg} ${tu.showDbg}"
   }}
 
