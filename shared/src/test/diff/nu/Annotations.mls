@@ -23,13 +23,11 @@ module Foo extends Annotation {
 Foo
 //│ Foo
 
-:te
-//│ /!\ Unrecognized option :te
+:e
 @Bar 5
 //│ ╔══[ERROR] identifier not found: Bar
-//│ ║  l.28: 	@Bar 5
+//│ ║  l.27: 	@Bar 5
 //│ ╙──      	 ^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
 //│ 5
 
 // TODO
