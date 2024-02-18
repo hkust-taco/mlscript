@@ -14,7 +14,7 @@ fun foo = 0
 class tailrec2() extends Annotation
 //│ class tailrec2() extends Annotation
 
-:e // In the future, we should still support annotations that require a constructor.
+:e
 @tailrec2
 fun foo = 0
 //│ ╔══[ERROR] Type mismatch in definition:
@@ -59,3 +59,16 @@ module dummy
 //│ ║  l.56: 	@helloa
 //│ ╙──      	 ^^^^^^
 //│ module dummy
+
+// TODO: In the future, we should still support annotations that require a constructor.
+:e
+@tailrec2()
+fun foo = 0
+//│ ╔══[ERROR] Type mismatch in annotated undefined literal:
+//│ ║  l.65: 	@tailrec2()
+//│ ║        	 ^^^^^^^^^^
+//│ ╟── reference of type `() -> tailrec2` is not an instance of type `Annotation`
+//│ ║  l.65: 	@tailrec2()
+//│ ╙──      	 ^^^^^^^^
+//│ fun foo: 0
+//│ ()
