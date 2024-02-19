@@ -1,12 +1,1 @@
 :NewDefs
-
-class A() {
-    fun f = 6
-}
-A().f
-//│ class A() {
-//│   fun f: 6
-//│ }
-//│ 6
-//│ res
-//│     = 6

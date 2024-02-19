@@ -1,0 +1,26 @@
+:NewDefs
+
+:e // Support new new syntax
+:nm
+class Foo(x: Int) {
+}
+new Foo(5)
+//│ Lifted:
+//│ TypingUnit {
+//│   class Foo$1([x: Int,]) {}
+//│   Code(List(new Foo$1([5,]) {}))
+//│ }
+//│ Mono:
+//│ TypingUnit {
+//│   class Foo$1([x: Int,]) {}
+//│   fun main$$1 = () => new Foo$1([5,]) {}
+//│   Code(List(main$$1()))
+//│ }
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.7: 	new Foo(5)
+//│ ╙──     	        ^
+//│ class Foo$1(x: Int)
+//│ fun main$$1: () -> error
+//│ error
+//│ res
+//│     = Foo$1 {}

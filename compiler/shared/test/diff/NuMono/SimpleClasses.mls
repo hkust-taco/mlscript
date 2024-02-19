@@ -1,0 +1,61 @@
+:NewDefs
+
+:nm
+class Foo(x: Int){
+  fun bar(y) = x+y
+  fun boo(z) = bar(z)+x
+}
+(Foo(1)).boo(2)
+//│ Lifted:
+//│ TypingUnit {
+//│   class Foo$1([x: Int,]) {
+//│     fun bar = (y,) => +((this).x, y,)
+//│     fun boo = (z,) => +((this).bar(z,), (this).x,)
+//│   }
+//│   Code(List(('(' Foo$1(1,) ')').boo(2,)))
+//│ }
+//│ Mono:
+//│ TypingUnit {
+//│   class Foo$1([x: Int,]) {}
+//│   fun boo$Foo$1 = (this, z,) => +(let obj = this in if obj is ‹(Foo$1) then bar$Foo$1(obj, z,); else error›, let obj = this in if obj is ‹(Foo$1) then 1; else error›,)
+//│   fun bar$Foo$1 = (this, y,) => +(let obj = this in if obj is ‹(Foo$1) then 1; else error›, y,)
+//│   fun main$$1 = () => let obj = '(' Foo$1(1,) ')' in if obj is ‹(Foo$1) then boo$Foo$1(obj, 2,); else error›
+//│   Code(List(main$$1()))
+//│ }
+//│ class Foo$1(x: Int)
+//│ fun boo$Foo$1: (Object, Int) -> Int
+//│ fun bar$Foo$1: (Object, Int) -> Int
+//│ fun main$$1: () -> Int
+//│ Int
+//│ res
+//│     = 4
+
+:mono
+class OneInt(a: Int){
+  fun fac: () -> Int
+  fun fac = () ->
+    if(a > 0) then (OneInt(a - 1)).fac() else 1 
+}
+(OneInt(10)).fac()
+//│ Lifted:
+//│ TypingUnit {
+//│   class OneInt$1([a: Int,]) {
+//│     fun fac = () -> Int
+//│     fun fac = () => {if ('(' >((this).a, 0,) ')') then ('(' OneInt$1(-((this).a, 1,),) ')').fac() else 1}
+//│   }
+//│   Code(List(('(' OneInt$1(10,) ')').fac()))
+//│ }
+//│ Mono:
+//│ 
+//│ Defunc result: 
+//│ class OneInt$1(a) {
+//│ }
+//│ fun main$$1() =
+//│   OneInt$1(#10) match {}
+//│ main$$1()
+//│ class OneInt(a: Int) {
+//│   fun fac: () -> Int
+//│ }
+//│ Int
+//│ res
+//│     = 1

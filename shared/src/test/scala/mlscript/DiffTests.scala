@@ -457,8 +457,13 @@ class DiffTests
             
             if (parseOnly)
               Success(Pgrm(Nil), 0)
-            else if (mode.revConv || mode.numono || mode.lift)
-              Success(Pgrm(nuRes.getOrElse(???).entities), 0)
+            else if (mode.revConv || mode.numono || mode.lift) {
+              import Message._
+              Success(Pgrm(nuRes.getOrElse({
+                raise(ErrorReport(msg"Post-process failed to produce AST, defaulting to standard AST" -> None :: Nil, true, Diagnostic.Compilation))
+                res
+              }).entities), 0)
+            }
             else
               Success(Pgrm(res.entities), 0)
 
