@@ -635,12 +635,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         case (QUOTE, l1) :: (KEYWORD("in"), l2) :: _ =>
           consume
           consume
-          yeetSpaces match {
-            case (NEWLINE, _) :: _ =>
-              consume
-              exprOrIf(0)(et, fe, implicitly)
-            case _ => exprOrIf(0)(et, fe, implicitly)
-          }
+          exprOrIf(0)(et, fe, implicitly)
+        case (NEWLINE, _) :: _ =>
+          consume
+          val stmts = block
+          val es = stmts.map { case L(t) => unexpectedThenElse(t.toLoc); case R(e) => e }
+          R(Blk(es))
         case (tk, loc) :: _ =>
           err(msg"Expected '`in'; found ${tk.describe} instead" -> S(loc) :: Nil)
           R(errExpr)
