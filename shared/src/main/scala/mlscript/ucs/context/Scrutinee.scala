@@ -36,8 +36,8 @@ class Scrutinee(val context: Context, parent: Opt[Scrutinee]) {
     * If there is already a `Pattern.ClassLike` for the given symbol, return it.
     * Otherwise, create a new `Pattern.ClassLike` and return it.
     */
-  def getOrCreateClassPattern(classLikeSymbol: TypeSymbol): Pattern.ClassLike =
-    classLikePatterns.getOrElseUpdate(classLikeSymbol, Pattern.ClassLike(classLikeSymbol, this))
+  def getOrCreateClassPattern(classLikeSymbol: TypeSymbol, refined: Bool): Pattern.ClassLike =
+    classLikePatterns.getOrElseUpdate(classLikeSymbol, Pattern.ClassLike(classLikeSymbol, this)(refined))
 
   /**
     * Get the class pattern but DO NOT create a new one if there isn't. This

@@ -1,0 +1,49 @@
+:NewDefs
+
+module None
+class Some[out A](val value: A)
+//│ module None
+//│ class Some[A](value: A)
+
+// OK
+:ducs:desugar.result,postprocess.result
+x => if x is
+  refined(None) then x
+//│ Desugared UCS term:
+//│ if x*‡ is refined None then x
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   refined None*† -> x
+//│ forall 'a. (None & 'a) -> (None & 'a)
+//│ res
+//│     = [Function: res]
+
+// OK
+:ducs:desugar.result,postprocess.result
+x => if x is
+  refined(Some) then x
+//│ Desugared UCS term:
+//│ if x*‡ is refined Some then x
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   refined Some*◊ -> x
+//│ forall 'a. (Some[anything] & 'a) -> (Some[anything] & 'a)
+//│ res
+//│     = [Function: res]
+
+// NOT OK
+:ducs:desugar.result,postprocess.result
+x => if x is
+  refined(None) then x
+  refined(Some) then x
+//│ Desugared UCS term:
+//│ if
+//│   x*‡ is refined None then x
+//│   x*‡ is refined Some then x
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   refined None*† -> x
+//│   refined Some*◊ -> x
+//│ (None | Some[anything]) -> nothing
+//│ res
+//│     = [Function: res]

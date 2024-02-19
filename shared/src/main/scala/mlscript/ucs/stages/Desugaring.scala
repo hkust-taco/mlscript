@@ -136,10 +136,11 @@ trait Desugaring { self: PreTyper =>
       parentScrutineeVar: Var,
       parentScrutinee: Scrutinee,
       parentClassLikeSymbol: TypeSymbol,
-      parameters: Ls[s.Pattern]
+      parentRefined: Bool,
+      parameters: Ls[s.Pattern],
   )(implicit context: Context): Ls[Opt[(Var, Opt[s.Pattern], Ls[Var])]] = {
     // Make it `lazy` so that it will not be created if all fields are wildcards.
-    lazy val classPattern = parentScrutinee.getOrCreateClassPattern(parentClassLikeSymbol)
+    lazy val classPattern = parentScrutinee.getOrCreateClassPattern(parentClassLikeSymbol, parentRefined)
     def flattenPattern(
       parameterPattern: s.Pattern,
       index: Int,
@@ -197,10 +198,11 @@ trait Desugaring { self: PreTyper =>
       pattern: s.ClassPattern,
       scrutineeVar: Var,
       initialScope: Scope,
-      refined: Bool)(implicit context: Context): (Scope, c.Split => c.Branch) = {
+      refined: Bool
+  )(implicit context: Context): (Scope, c.Split => c.Branch) = {
     val scrutinee = scrutineeVar.getOrCreateScrutinee.withAliasVar(scrutineeVar)
     val patternClassSymbol = pattern.nme.resolveClassLikeSymbol(initialScope, context)
-    val classPattern = scrutinee.getOrCreateClassPattern(patternClassSymbol)
+    val classPattern = scrutinee.getOrCreateClassPattern(patternClassSymbol, refined)
     println(s"desugarClassPattern: ${scrutineeVar.name} is ${pattern.nme.name}")
     classPattern.addLocation(pattern.nme)
     val (scopeWithAll, bindAll) = pattern.parameters match {
@@ -213,7 +215,7 @@ trait Desugaring { self: PreTyper =>
           val vari = makeUnappliedVar(scrutineeVar, pattern.nme)
           vari.withSymbol(new LocalTermSymbol(vari))
         }
-        val nestedPatterns = flattenClassParameters(scrutineeVar, scrutinee, patternClassSymbol, parameters)
+        val nestedPatterns = flattenClassParameters(scrutineeVar, scrutinee, patternClassSymbol, refined, parameters)
         println(s"nestedPatterns = $nestedPatterns")
         // First, handle bindings of parameters of the current class pattern.
         val identity = (split: c.Split) => split
@@ -380,7 +382,7 @@ trait Desugaring { self: PreTyper =>
             c.Branch(scrutineeVar, c.Pattern.Literal(literal), desugarRight) :: desugarTail
           case s.ConcretePattern(nme @ (Var("true") | Var("false"))) =>
             val classSymbol = nme.resolveClassLikeSymbol
-            scrutinee.getOrCreateClassPattern(classSymbol).addLocation(nme)
+            scrutinee.getOrCreateClassPattern(classSymbol, false).addLocation(nme)
             c.Branch(
               scrutinee = scrutineeVar,
               pattern = c.Pattern.Class(nme, classSymbol, false),

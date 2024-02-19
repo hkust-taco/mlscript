@@ -34,10 +34,15 @@ sealed abstract class Pattern {
 
   /** Create a `SimpleTerm` which can be used as `pat` of `Case`. */
   def toCasePattern: SimpleTerm
+
+  def refined: Bool
 }
 
 object Pattern {
-  final case class ClassLike(val classLikeSymbol: TypeSymbol, scrutinee: Scrutinee) extends Pattern {
+  final case class ClassLike(
+      val classLikeSymbol: TypeSymbol,
+      scrutinee: Scrutinee
+  )(override val refined: Bool) extends Pattern {
     private var unappliedVarOpt: Opt[Var] = N
     private val parameters: MutSortedMap[Int, Scrutinee] = MutSortedMap.empty
 
@@ -65,7 +70,8 @@ object Pattern {
 
     override def arity: Opt[Int] = parameters.keysIterator.maxOption.map(_ + 1)
 
-    override def showDbg: Str = s"${classLikeSymbol.name}"
+    override def showDbg: Str =
+      (if (refined) "refined " else "") + s"${classLikeSymbol.name}"
 
     override def showInDiagnostics: Str = s"${(classLikeSymbol match {
       case dummySymbol: DummyClassSymbol => "class"
@@ -112,6 +118,8 @@ object Pattern {
       * find an instance of this class.
       */
     override def toCasePattern: SimpleTerm = ???
+
+    override def refined: Bool = ???
   }
 
   final case class Literal(val literal: Lit) extends Pattern {
@@ -128,5 +136,7 @@ object Pattern {
       }
 
     override def toCasePattern: SimpleTerm = literal.withLoc(firstOccurrence)
+
+    override def refined: Bool = false
   }
 }

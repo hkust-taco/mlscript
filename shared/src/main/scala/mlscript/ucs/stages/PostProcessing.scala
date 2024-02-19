@@ -7,6 +7,7 @@ import mlscript.pretyper.symbol._
 import mlscript.utils._, shorthands._
 import mlscript.Message, Message.MessageContext
 import scala.annotation.tailrec
+import mlscript.ucs.context.Pattern.ClassLike
 
 trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
   import PostProcessing._
@@ -63,7 +64,7 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
         val actualFalseBranch = cases.foldRight[CaseBranches](
           postProcessedDefault.fold[CaseBranches](NoCases)(Wildcard(_))
         ) { case ((pattern, loc, body), rest) =>
-          Case(pattern.toCasePattern, body, rest)(refined = false/*FIXME?*/)
+          Case(pattern.toCasePattern, body, rest)(refined = pattern.refined)
         }
         // Assemble the final `CaseOf`.
         top.copy(cases = fst.copy(body = processedTrueBranch, rest = actualFalseBranch)
