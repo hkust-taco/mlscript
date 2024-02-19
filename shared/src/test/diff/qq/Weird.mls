@@ -19,7 +19,7 @@ let p3 = y `=>
 
 
 :e
-`let y = `42 in
+`let y = `42 `in
   discard(run(x `=> power(x `+ y)(3)))
   y
 //│ ╔══[ERROR] Type mismatch in application:
@@ -30,18 +30,18 @@ let p3 = y `=>
 
 
 :e
-`let y = `42 in
-  discard(run(`let x = `0 in power(x `+ y)(3)))
+`let y = `42 `in
+  discard(run(`let x = `0 `in power(x `+ y)(3)))
   y
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.34: 	  discard(run(`let x = `0 in power(x `+ y)(3)))
-//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.34: 	  discard(run(`let x = `0 `in power(x `+ y)(3)))
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `?y & ~??x` does not match type `nothing`
 //│ Code[42, nothing]
 
 
 fun bind(rhs, k: forall 'g : Code['a, 'g] -> Code['b, 'c | 'g]) =
-  `let x = rhs in k(x)
+  `let x = rhs `in k(x)
 //│ fun bind: forall 'a 'c 'b. (Code['a, 'c], k: forall 'g. Code['a, 'g] -> Code['b, 'g | 'c]) -> Code['b, 'c]
 
 
@@ -74,13 +74,34 @@ run(g5)
 x `=> x `+ (x `=> x)`(`42)
 //│ Code[Int -> Int, nothing]
 
+:pe
+fun foo =
+  `let x = `1 `in
+  mut let v = x
+  `let x = `true `in x
+//│ ╔══[PARSE ERROR] Unexpected 'mut' keyword in expression position
+//│ ║  l.80: 	  mut let v = x
+//│ ╙──      	  ^^^
+//│ fun foo: Code[true, nothing]
+
+:pe
+:e
+`let x = `1 `in
+//│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
+//│ ║  l.89: 	`let x = `1 `in
+//│ ╙──      	               ^
+//│ ╔══[ERROR] Type mismatch in unquote:
+//│ ║  l.89: 	`let x = `1 `in
+//│ ║        	               ^
+//│ ╙── undefined literal of type `()` is not an instance of type `Code`
+//│ Code[error, nothing]
+
 // * Note that `` `let ... `` requires an expression after the `in` keyword
 // * so we need indentations here to use statements (e.g., `mut`).
 fun foo =
-  `let x = `1 in
+  `let x = `1 `in
     mut let v = x
-    `let x = `true
-    x
+    `let x = `true `in x
 //│ fun foo: Code[true, nothing]
 
 
@@ -91,8 +112,8 @@ class Ref[A](init: A) { mut val value: A = init }
 
 
 fun foo =
-  `let x = `1
+  `let x = `1 `in
   let v = Ref(x)
-  `let x = `true
+  `let x = `true `in
   (set v.value = x), x
 //│ fun foo: Code[true, nothing]

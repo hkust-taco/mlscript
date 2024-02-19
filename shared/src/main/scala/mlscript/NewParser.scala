@@ -630,16 +630,34 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
   
   private def letBindings(genQuote: Bool)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = {
     val bs = bindings(Nil)
-    val body = yeetSpaces match {
-      case (KEYWORD("in") | SEMI, _) :: _ =>
-        consume
-        exprOrIf(0)(et, fe, implicitly)
-      case (NEWLINE, _) :: _ =>
-        consume
-        exprOrIf(0)(et, fe, implicitly)
-      case _ =>
-        R(UnitLit(true).withLoc(curLoc.map(_.left)))
-    }
+    val body =
+      if (genQuote) yeetSpaces match {
+        case (QUOTE, l1) :: (KEYWORD("in"), l2) :: _ =>
+          consume
+          consume
+          yeetSpaces match {
+            case (NEWLINE, _) :: _ =>
+              consume
+              exprOrIf(0)(et, fe, implicitly)
+            case _ => exprOrIf(0)(et, fe, implicitly)
+          }
+        case (tk, loc) :: _ =>
+          err(msg"Expected '`in'; found ${tk.describe} instead" -> S(loc) :: Nil)
+          R(errExpr)
+        case Nil =>
+          err(msg"Expected '`in'; found end of input instead" -> lastLoc :: Nil)
+          R(errExpr)
+      }
+      else yeetSpaces match {
+        case (KEYWORD("in") | SEMI, _) :: _ =>
+          consume
+          exprOrIf(0)(et, fe, implicitly)
+        case (NEWLINE, _) :: _ =>
+          consume
+          exprOrIf(0)(et, fe, implicitly)
+        case _ =>
+          R(UnitLit(true).withLoc(curLoc.map(_.left)))
+      }
     bs.foldRight(body) {
       case ((v, r), R(acc)) if genQuote => R(Quoted(Let(false, v, Unquoted(r), Unquoted(acc))))
       case ((v, r), R(acc)) => R(Let(false, v, r, acc))
@@ -947,6 +965,8 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             }
           }
           else R(acc)
+        case _ :: (KEYWORD("in"), _) :: _ =>
+          R(acc)
         case _ =>
           consume
           unsupportedQuote(acc.toLoc)
