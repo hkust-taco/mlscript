@@ -22,7 +22,7 @@ class Lazy[out A](init: () => A) {
   fun toString() = join of "Lazy(", (if cached is defined(v) then String(v) else "..."), ")"
 }
 //│ class Lazy[A](init: () -> A) {
-//│   val cached: Option[A]
+//│   mut val cached: Option[A]
 //│   fun get: A
 //│   fun toString: () -> Str
 //│ }
