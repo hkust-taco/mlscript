@@ -242,8 +242,8 @@ module M {
   fun oops(x) = set m = x
 }
 //│ module M {
-//│   val m: None | 'm
-//│   fun oops: 'm -> ()
+//│   mut val m: None
+//│   fun oops: None -> ()
 //│ }
 
 
@@ -256,7 +256,7 @@ module M {
 //│ ║  l.253: 	  fun oops(x) = set this.m = x
 //│ ╙──       	                        ^^
 //│ module M {
-//│   val m: None
+//│   mut val m: None
 //│   fun oops: error -> ()
 //│ }
 
@@ -267,7 +267,7 @@ module M[A] {
   fun oops(x) = set this.m = x
 }
 //│ module M[A] {
-//│   val m: Option[A]
+//│   mut val m: Option[A]
 //│   fun oops: Option[A] -> ()
 //│ }
 
@@ -294,7 +294,7 @@ module M[A] {
   fun oops(x) = set this.m = x
 }
 //│ module M[A] {
-//│   val m: Option[A]
+//│   mut val m: Option[A]
 //│   fun oops: Option[A] -> ()
 //│ }
 
@@ -314,7 +314,7 @@ module M[A] {
   mut val m = None
 }
 //│ module M[A] {
-//│   val m: None
+//│   mut val m: None
 //│ }
 
 M.m
@@ -327,7 +327,20 @@ set M.m = None
 //│ res
 //│     = undefined
 
+:e
 set M.m = Some(1)
+//│ ╔══[ERROR] Type mismatch in assignment:
+//│ ║  l.331: 	set M.m = Some(1)
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Some[?A]` is not an instance of `None`
+//│ ║  l.331: 	set M.m = Some(1)
+//│ ║         	          ^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.314: 	  mut val m = None
+//│ ║         	              ^^^^
+//│ ╟── from assigned selection:
+//│ ║  l.331: 	set M.m = Some(1)
+//│ ╙──       	    ^^^
 //│ ()
 //│ res
 //│     = undefined
@@ -340,10 +353,10 @@ module M {
   fun oops(x) = m := x
 }
 //│ ╔══[ERROR] identifier not found: :=
-//│ ║  l.340: 	  fun oops(x) = m := x
+//│ ║  l.353: 	  fun oops(x) = m := x
 //│ ╙──       	                  ^^
 //│ module M {
-//│   val m: None
+//│   mut val m: None
 //│   fun oops: anything -> error
 //│ }
 //│ Code generation encountered an error:

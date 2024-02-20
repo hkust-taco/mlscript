@@ -139,7 +139,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
         }.mkString}"
       }, outerPrec > 0)
     case fd @ NuFunDef(isLetRec, nme, snme, targs, rhs) =>
-      s"${isLetRec match {
+      s"${if (fd.isMut) "mut " else ""}${isLetRec match {
         case S(false) => if (fd.genField) "val" else "let"
         case S(true) => if (fd.genField) die else "let rec"
         case N => "fun"

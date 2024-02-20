@@ -881,7 +881,7 @@ final case class JSClassNewDecl(
         if (!privateMems.contains(f)) buffer += s"  #${f};"
         buffer += s"  get ${f}() { return this.#${f}; }"
         if (mut) buffer +=
-          s"  set ${f}(value) { return this.#${f} = value; }"
+          s"  set ${f}($$value) { return this.#${f} = $$value; }"
       }
       buffer += s"  constructor($params) {"
       if (`extends`.isDefined) {
