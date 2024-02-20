@@ -188,7 +188,6 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
                     })
                   IfOpApp(scrut, Var("is"), IfBlock(branches))
                 case None => 
-                  //throw MonomorphError("Hey")
                   IfThen(App(Var(name), toTuple(params.map(k => Var(k)).toList)), field)
             case Some(LiteralVal(v)) =>
               IfThen(Var(name), v match
@@ -236,7 +235,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
         then
           debug.writeLine(s"Specializing ${term}")
           debug.indent()
-          val ifBlockLines = valSetToBranches(getRes(receiver).getValue.toList)(using fieldName, None)
+          val ifBlockLines = valSetToBranches(getRes(receiver).getValue.toList.sortWith((x, y) => (x.toString > y.toString)))(using fieldName, None)
           val ifBlk = IfBlock(ifBlockLines)
           val res = Let(false, Var("obj"), nuReceiver,
             If(IfOpApp(Var("obj"), Var("is"), ifBlk), None)
