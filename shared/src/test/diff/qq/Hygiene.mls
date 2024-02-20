@@ -10,7 +10,7 @@ run(code_test)
 //│ Int
 
 
-// Test 2: this is hygienic because the child Quoted is a descendant of the parent Quoted in the AST
+// Test 2
 fun test: forall 'c: (Int, cde: Code[Int, 'c]) => Code[Int, 'c]
 fun test(n, cde) = if n > 0 then code"let x = ${Const(n)} in ${test(n - 1, code"${cde} + x")}" else cde
 //│ fun test: forall 'a. (Int, Code[Int, 'a]) -> Code[Int, 'a]
