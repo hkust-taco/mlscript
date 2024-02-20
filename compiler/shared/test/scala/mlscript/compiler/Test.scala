@@ -6,7 +6,6 @@ import scala.collection.mutable.StringBuilder
 import mlscript.{DiffTests, ModeType, TypingUnit}
 import mlscript.compiler.debug.TreeDebug
 import mlscript.compiler.mono.Monomorph
-import mlscript.compiler.printer.ExprPrinter
 import mlscript.compiler.mono.MonomorphError
 
 class DiffTestCompiler extends DiffTests {
@@ -34,30 +33,20 @@ class DiffTestCompiler extends DiffTests {
         outputBuilder ++= "Lifting failed: " ++ err.toString()
         if mode.fullExceptionStack then 
           outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
-    if(mode.mono || mode.numono){
+    if(mode.numono){
       output("Mono:")
       //outputBuilder ++= "\nMono:\n"
       val treeDebug = new TreeDebug(if mode.dbgDefunc then output else (str) => ())
       try{
         val monomorph = new Monomorph(treeDebug)
-        if (mode.numono)
-          then
-            val defuncAST = monomorph.nuDefunctionalize(rstUnit)
-            //output(defuncAST.toString())
-            output(PrettyPrinter.showTypingUnit(defuncAST))
-            //outputBuilder ++= s"${mlscript.codegen.Helpers.inspect(defuncAST)}\n"
-            //outputBuilder ++= PrettyPrinter.showTypingUnit(defuncAST)++"\n"
-            //if mode.dbgDefunc then
-            //  outputBuilder ++= treeDebug.getLines.mkString("\n")
-            return (outputBuilder.toString().linesIterator.toList, Some(defuncAST))
-          else
-            val monomorphized = monomorph.defunctionalize(rstUnit)
-            outputBuilder ++= "\nDefunc result: \n"
-            outputBuilder ++= ExprPrinter.print(monomorphized)
-            outputBuilder ++= "\n"
-            if mode.dbgDefunc then
-              outputBuilder ++= treeDebug.getLines.mkString("\n")
-            return (outputBuilder.toString().linesIterator.toList, if mode.revConv then Some(monomorph.toTypingUnit(monomorphized)) else None)
+        val defuncAST = monomorph.nuDefunctionalize(rstUnit)
+        //output(defuncAST.toString())
+        output(PrettyPrinter.showTypingUnit(defuncAST))
+        //outputBuilder ++= s"${mlscript.codegen.Helpers.inspect(defuncAST)}\n"
+        //outputBuilder ++= PrettyPrinter.showTypingUnit(defuncAST)++"\n"
+        //if mode.dbgDefunc then
+        //  outputBuilder ++= treeDebug.getLines.mkString("\n")
+        return (outputBuilder.toString().linesIterator.toList, Some(defuncAST))
       }catch{
         case error: MonomorphError => outputBuilder ++= (error.getMessage()/* :: error.getStackTrace().map(_.toString()).toList).mkString("\n"*/)
         // case error: StackOverflowError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().take(40).map(_.toString()).toList).mkString("\n")
