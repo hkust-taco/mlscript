@@ -26,7 +26,7 @@ run(res)
 :pe
 code"// Can I comment?"
 //│ ╔══[PARSE ERROR] Unmatched opening quasiquote
-//│ ║  l.29: 	code"// Can I comment?"
+//│ ║  l.27: 	code"// Can I comment?"
 //│ ╙──      	^^^^^
 //│ 
 
@@ -39,10 +39,10 @@ run(res)
 :e
 code"let x = {a: 100} in x . a" // "." ?
 //│ ╔══[ERROR] identifier not found: .
-//│ ║  l.42: 	code"let x = {a: 100} in x . a" // "." ?
+//│ ║  l.40: 	code"let x = {a: 100} in x . a" // "." ?
 //│ ╙──      	                           ^
 //│ ╔══[ERROR] identifier not found: a
-//│ ║  l.42: 	code"let x = {a: 100} in x . a" // "." ?
+//│ ║  l.40: 	code"let x = {a: 100} in x . a" // "." ?
 //│ ╙──      	                             ^
 //│ Code[error, nothing]
 
@@ -66,7 +66,7 @@ run(app)(id)(1)
 :e
 code"f => x => f(${run(x)})"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.69: 	code"f => x => f(${run(x)})"
+//│ ║  l.67: 	code"f => x => f(${run(x)})"
 //│ ║        	                   ^^^^^^
 //│ ╙── expression of type `?x` does not match type `nothing`
 //│ Code[forall 'a 'b. ('a -> 'b) -> Code['a, anything] -> 'b, nothing]

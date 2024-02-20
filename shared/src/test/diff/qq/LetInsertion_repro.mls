@@ -10,7 +10,6 @@ fun (%>) bind: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -
 
 
 
-// * TV 'a is missing lower bounds here! (lack of transitive closure propagation)
 fun body(x, y) = case
   0 then x
   1 then y
@@ -20,20 +19,20 @@ fun body(x, y) = case
 :e
 body : forall 'g: (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.24: 	body : forall 'g: (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
+//│ ║  l.20: 	body : forall 'g: (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
 //│ ║        	^^^^
 //│ ╟── type variable `'c` leaks out of its scope
 //│ ║  l.6: 	fun (%>) bind: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
 //│ ║       	                                                     ^^
 //│ ╟── into type `'g`
-//│ ║  l.24: 	body : forall 'g: (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
+//│ ║  l.20: 	body : forall 'g: (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
 //│ ║        	                                                                     ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.20: 	  n then code"${x} + ${y}" %> z => body(x, z)(n - 1)
+//│ ║  l.16: 	  n then code"${x} + ${y}" %> z => body(x, z)(n - 1)
 //│ ║        	                              ^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.20: 	  n then code"${x} + ${y}" %> z => body(x, z)(n - 1)
+//│ ║  l.16: 	  n then code"${x} + ${y}" %> z => body(x, z)(n - 1)
 //│ ╙──      	                           ^^
 //│ forall 'g. (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
 
@@ -43,7 +42,7 @@ let c = code"(x, y) => ${body(code"x", code"y")(0)}"
 :e
 run(c)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.47: 	run(c)
+//│ ║  l.43: 	run(c)
 //│ ║        	^^^^^^
 //│ ╙── expression of type `??c & ~??y` does not match type `nothing`
 //│ error | (Int, Int) -> Int
@@ -64,20 +63,20 @@ code"(x, y) => ${body(code"x", code"y")(0)}"
 :e
 body : forall 'g: (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.68: 	body : forall 'g: (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
+//│ ║  l.64: 	body : forall 'g: (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
 //│ ║        	^^^^
 //│ ╟── type variable `'c` leaks out of its scope
 //│ ║  l.6: 	fun (%>) bind: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
 //│ ║       	                                                     ^^
 //│ ╟── into type `'g`
-//│ ║  l.68: 	body : forall 'g: (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
+//│ ║  l.64: 	body : forall 'g: (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
 //│ ║        	                                                                     ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.61: 	  n then code"${x} + ${y}" %> z => code"${body(x, z)(n - 1)}"
+//│ ║  l.57: 	  n then code"${x} + ${y}" %> z => code"${body(x, z)(n - 1)}"
 //│ ║        	                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.61: 	  n then code"${x} + ${y}" %> z => code"${body(x, z)(n - 1)}"
+//│ ║  l.57: 	  n then code"${x} + ${y}" %> z => code"${body(x, z)(n - 1)}"
 //│ ╙──      	                           ^^
 //│ forall 'g. (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
 
@@ -87,7 +86,7 @@ let c = code"(x, y) => ${body(code"x", code"y")(0)}"
 :e
 run(c)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.91: 	run(c)
+//│ ║  l.87: 	run(c)
 //│ ║        	^^^^^^
 //│ ╙── expression of type `??c & ~??y` does not match type `nothing`
 //│ error | (Int, Int) -> Int

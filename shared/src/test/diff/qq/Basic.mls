@@ -75,8 +75,11 @@ let unquoted = code"let x = 3 in ${Const(10)} * x"
 run(unquoted)
 //│ Int
 
-// No obvious test for DecLit 
-// No obvious test for UnitLit
+code"0.5 *. 2"
+//│ Code[Num, nothing]
+
+code"[(), null]"
+//│ Code[[(), null], nothing]
 
 let str_lit = code""" "hello" """
 //│ let str_lit: Code["hello", nothing]
@@ -98,15 +101,14 @@ run(code_nested)
 let y = code"x"
 code"let id = x => ${y} in id(true)"
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.98: 	let y = code"x"
-//│ ╙──      	             ^
+//│ ║  l.101: 	let y = code"x"
+//│ ╙──       	             ^
 //│ let y: Code[error, nothing]
 //│ Code[error, nothing]
 
 run(res)
 //│ 3
 
-// Hygiene
 let y = 1
 let free_y = code"y"
 //│ let y: 1
@@ -130,8 +132,6 @@ run(res)(100)
 let f = 0
 //│ let f: 0
 
-// Note the renaming of `f`, which means it won't be picked up by the QQ
-:js
 fun f(x) = x
 //│ fun f: forall 'a. 'a -> 'a
 

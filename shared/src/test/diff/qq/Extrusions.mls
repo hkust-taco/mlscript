@@ -17,7 +17,6 @@ fun foo(k) = code"x => ${k(code"x")}"
 fun (%>) bind(rhs, k) = code"(x => ${k(code"x")})(${rhs})"
 //│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, 'b]) -> Code['c, 'b]
 
-// * Somehow this one does extrude properly:
 fun app = code"(f, x) => f(x)"
 fun (%>) bind(rhs, k) = code"${app}(x => ${k(code"x")}, ${rhs})"
 //│ fun app: forall 'a 'b. Code[('a -> 'b, 'a) -> 'b, nothing]
