@@ -93,7 +93,7 @@ let code_nested = code"let a = 1 in let b = 2 in ${code"a + b"}"
 run(code_nested)
 //│ Int
 
-// TODO support unbound free vars
+// We don't support non-lexically-bound free variables
 :e
 let y = code"x"
 code"let id = x => ${y} in id(true)"
