@@ -9,7 +9,7 @@ final case class TypeVal(name: String) extends MonoVal
 final case class ObjVal(name: String, params: List[String], fields: MutMap[String, BoundedTerm]) extends MonoVal with ObjValImpl
 final case class FuncVal(name: String, params: Option[List[String]], ctx: List[(String, BoundedTerm)]) extends MonoVal
 final case class UnknownVal() extends MonoVal
-// Terribly unintuitive implementation, should attempt to refactor.
+// TODO: Terribly unintuitive implementation, should attempt to refactor.
 final case class VarVal(vx: Int, version: Int, val getter: VarVal => BoundedTerm) extends MonoVal with VarValImpl
 final case class LiteralVal(i: Lit | Boolean) extends MonoVal with LitValImpl
 final case class PrimVal() extends MonoVal
@@ -38,7 +38,7 @@ trait MonoValImpl { self: MonoVal =>
 }
 
 trait VarValImpl { 
-  //TODO
+  
 }
 
 trait LitValImpl { self: LiteralVal =>

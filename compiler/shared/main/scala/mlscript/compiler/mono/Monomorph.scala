@@ -101,7 +101,7 @@ class Monomorph(debug: Debug = DummyDebug):
       debug.writeLine(s"Queue: ${evalQueue}")
       val next = evalQueue.head
       evalQueue.remove(next)
-      updateFunction(next)
+      updateFunc(next)
     }
     debug.writeLine(s"${PrettyPrinter.showTypingUnit(TypingUnit(getResult(nuTerms)))}")
     debug.writeLine(s"========DEFUNC PHASE========")
@@ -117,17 +117,6 @@ class Monomorph(debug: Debug = DummyDebug):
     val ret = getResult(nuTerms)
     TypingUnit(ret)
 
-  private def updateFunction(funcName: String): Unit = {
-    val updateCount = evalCnt.get(funcName).getOrElse(0)
-    if(updateCount <= 10){
-      debug.writeLine(s"updating ${funcName} for ${updateCount}th time")
-      evalCnt.update(funcName, updateCount+1)
-      updateFunc(funcName)
-    }
-    else{
-      throw new MonomorphError("stack overflow!!!")
-    }
-  }
   def getFuncRetVal(name: String, args: Option[List[BoundedTerm]])(using evalCtx: Map[String, BoundedTerm], callingStack: List[String]): BoundedTerm = {
     funImpls.get(name) match
       case None => throw MonomorphError(s"Function ${name} does not exist")
@@ -150,7 +139,7 @@ class Monomorph(debug: Debug = DummyDebug):
                 if(!evalCnt.contains(name))
                   then 
                     debug.writeLine(s"first time eval function ${name}")
-                    updateFunction(name)
+                    updateFunc(name)
                   else 
                     debug.writeLine(s"new arg eval function ${name}")
                     evalQueue.add(name)
@@ -160,6 +149,12 @@ class Monomorph(debug: Debug = DummyDebug):
   }
 
   private def updateFunc(funcName: String): Unit = {
+    val updateCount = evalCnt.get(funcName).getOrElse(0)
+    if(updateCount > 10){
+      throw new MonomorphError("stack overflow!!!")
+    }
+    debug.writeLine(s"updating ${funcName} for ${updateCount}th time")
+    evalCnt.update(funcName, updateCount+1)
     debug.writeLine(s"Evaluating ${funcName}")
     val (func, mps, args, res) = funImpls.get(funcName).get
     debug.writeLine(s"args = ${args}")
@@ -199,7 +194,6 @@ class Monomorph(debug: Debug = DummyDebug):
 
   /*
     Find a variable in the global env 
-    TODO: Does TypeValue affect evaluation and dependence?
   */
   def findVar(name: String)(using evalCtx: Map[String, BoundedTerm], callingStack: List[String]): BoundedTerm =
     funImpls.get(name) match

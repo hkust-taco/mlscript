@@ -36,7 +36,7 @@ import mlscript.compiler.Helpers.extractFuncArgs
 class Specializer(monoer: Monomorph)(using debug: Debug){
 
   /*
-    Evaluate a Term given an evaluation Context and populate its EvaledTerm
+    Evaluate a Term given an evaluation Context and update its result in the term map
   */
   val builtInOps: Set[String] = Set("+", "-", ">", "<", "*", "==", "concat", "toString", "log") 
   def evaluate(term: Term)(using evalCtx: Map[String, BoundedTerm], callingStack: List[String], termMap: MutMap[Term, BoundedTerm]): Unit =
@@ -142,7 +142,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
       case Asc(t, ty) => 
         evaluate(t)
         termMap.addOne(term, getRes(t))
-      case Tup(fields) => // TODO: give evaledTerm?
+      case Tup(fields) => 
         fields.map{
           case (name, Fld(flags, value)) => evaluate(value)
         }
