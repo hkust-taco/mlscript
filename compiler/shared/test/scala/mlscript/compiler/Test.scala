@@ -33,13 +33,13 @@ class DiffTestCompiler extends DiffTests {
         outputBuilder ++= "Lifting failed: " ++ err.toString()
         if mode.fullExceptionStack then 
           outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
-    if(mode.numono){
+    if(mode.mono){
       output("Mono:")
       //outputBuilder ++= "\nMono:\n"
       val treeDebug = new TreeDebug(if mode.dbgDefunc then output else (str) => ())
       try{
         val monomorph = new Monomorph(treeDebug)
-        val defuncAST = monomorph.nuDefunctionalize(rstUnit)
+        val defuncAST = monomorph.defunctionalize(rstUnit)
         //output(defuncAST.toString())
         output(PrettyPrinter.showTypingUnit(defuncAST))
         //outputBuilder ++= s"${mlscript.codegen.Helpers.inspect(defuncAST)}\n"

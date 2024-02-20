@@ -1,6 +1,6 @@
 :NewDefs
 
-:nm
+:mono
 class Foo(x: Int){
   fun bar(y) = x+y
   fun boo(z) = bar(z)+x
@@ -30,7 +30,7 @@ class Foo(x: Int){
 //│ res
 //│     = 4
 
-:nm
+:mono
 class OneInt(a: Int){
   fun fac: () -> Int
   fun fac = () ->

@@ -1,7 +1,7 @@
 :NewDefs
 
 :e // Support new new syntax
-:nm
+:mono
 class Foo(x: Int) {
 }
 new Foo(5)

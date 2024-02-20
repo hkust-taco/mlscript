@@ -1,7 +1,7 @@
 :NewDefs
 
 :ge //FIXME: top-level defs
-:nm
+:mono
 let b = true
 class OneInt(a: Int){
   fun get = () -> a

@@ -1,7 +1,7 @@
 :NewDefs
 
-:ge // FIXME
-:nm
+:ge // FIXME: top-level defs
+:mono
 class A() {
     val x = 2
     val y() = 3

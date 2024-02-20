@@ -1,7 +1,7 @@
 :NewDefs 
 
 :e // FIXME: Preserve type annotations in lifting
-:nm
+:mono
 fun foo(x: Int) =
     (y) => x+y
 foo(1)(2)

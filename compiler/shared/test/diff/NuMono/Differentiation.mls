@@ -2,7 +2,7 @@
 
 :NewDefs
 
-:nm
+:mono
 class Exp() {
     virtual fun derive(): Exp
     virtual fun derive() = Exp()

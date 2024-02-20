@@ -42,8 +42,6 @@ abstract class ModeType {
   def showRepl: Bool
   def allowEscape: Bool
   def mono: Bool
-  def revConv: Bool
-  def numono: Bool
   def lift: Bool
   def nolift: Bool
 }
@@ -174,8 +172,6 @@ class DiffTests
       showRepl: Bool = false,
       allowEscape: Bool = false,
       mono: Bool = false,
-      revConv: Bool = false,
-      numono: Bool = false,
       lift: Bool = false,
       nolift: Bool = false,
       // noProvs: Bool = false,
@@ -280,8 +276,6 @@ class DiffTests
           case "r" | "showRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
           case "mono" => {mode.copy(mono = true)}
-          case "rc" => {mode.copy(revConv = true)}
-          case "nm" => {mode.copy(numono = true)}
           case "lift" => {mode.copy(lift = true)}
           case "nolift" => {mode.copy(nolift = true)}
           case "exit" =>
@@ -457,7 +451,7 @@ class DiffTests
             
             if (parseOnly)
               Success(Pgrm(Nil), 0)
-            else if (mode.revConv || mode.numono || mode.lift) {
+            else if (mode.mono || mode.lift) {
               import Message._
               Success(Pgrm(nuRes.getOrElse({
                 raise(ErrorReport(msg"Post-process failed to produce AST, defaulting to standard AST" -> None :: Nil, true, Diagnostic.Compilation))

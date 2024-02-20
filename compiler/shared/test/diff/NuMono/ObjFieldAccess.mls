@@ -1,7 +1,7 @@
 :NewDefs
 
-:ge // FIXME
-:nm
+:ge // FIXME: top-level defs
+:mono
 class A(i: Int) {
     fun get1() = i
     fun get2 = i
@@ -37,8 +37,8 @@ a.get2
 //│ Code generation encountered an error:
 //│   unguarded recursive use of by-value binding a$1
 
-:ge // FIXME
-:nm
+:ge // FIXME: top-level defs
+:mono
 class A(i: Str) {
     fun get1() = i
     fun get2 = i
@@ -74,8 +74,8 @@ a.get2
 //│ Code generation encountered an error:
 //│   unguarded recursive use of by-value binding a$1
 
-:ge //FIXME
-:nm
+:ge //FIXME: top-level defs
+:mono
 class X()
 class Y(foo: X) {
     fun get1() = foo
@@ -115,7 +115,7 @@ a.get2
 //│ Code generation encountered an error:
 //│   unguarded recursive use of by-value binding a$1
 
-:nm
+:mono
 class I() {}
 class J() {}
 class K(foo: I, bar: J) {

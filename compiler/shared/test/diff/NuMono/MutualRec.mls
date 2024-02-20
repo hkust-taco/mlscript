@@ -1,6 +1,6 @@
 :NewDefs
 
-:nm
+:mono
 :AllowRuntimeErrors
 val any = -20
 fun f(x) = 

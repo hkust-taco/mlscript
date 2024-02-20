@@ -1,7 +1,7 @@
 :NewDefs
 
 :e //FIXME: Support new new syntax
-:nm
+:mono
 class G(val num: Int) {
     val x = 
         log("once on construction")

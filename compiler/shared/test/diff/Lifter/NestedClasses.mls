@@ -1,6 +1,6 @@
 :NewDefs
 
-:e //FIXME
+:e //FIXME: top-level defs
 :lift
 class X() {
     class Y() {}

@@ -1,6 +1,6 @@
 :NewDefs
 
-:nm
+:mono
 class List {
     fun getRes: Str
     fun getRes = ""

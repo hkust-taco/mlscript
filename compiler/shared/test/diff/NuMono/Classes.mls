@@ -1,6 +1,6 @@
 :NewDefs
 
-:nm
+:mono
 class Bar(x: Int) {
   fun foo(x) = x
   fun FooMinus(y: Int) = x + y

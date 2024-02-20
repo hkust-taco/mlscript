@@ -1,7 +1,7 @@
 :NewDefs
 
 // old "new" syntax
-//:nm
+//:mono
 //class A() {
 //    val num() = 0
 //}
@@ -12,7 +12,7 @@
 //foo(10).num()
 
 
-:nm
+:mono
 class A() {
     val num() = 0
 }
@@ -53,7 +53,7 @@ foo(10).num()
 //│     = 0
 
 
-:nm
+:mono
 class A(val num1: Int, val num2: Int) {
     fun foo() = num1-num2
 }

@@ -1,7 +1,7 @@
 :NewDefs
 
 :e //FIXME: Class parameters not lifted
-:nm
+:mono
 class List(e: Int, tail: List | Nil) {
   fun map: (Int -> Int) -> List 
   fun map(f)= new List(f(e), tail.map(f))
@@ -69,7 +69,7 @@ fun add2(x) = x+2
 //│   if expression was not desugared
 
 :e //FIXME: Class parameters not lifted
-:nm
+:mono
 :AllowRuntimeErrors
 class List(e: Int, tail: List | Nil) {
   fun count(): Int
@@ -135,7 +135,7 @@ foo(generate(1))
 //│   RangeError: Maximum call stack size exceeded
 
 :e //FIXME: Class parameters not lifted
-:nm
+:mono
 class Cons(e: 'A, tail: Cons | Nil) {
   fun count(): Int
   fun count() = 1 + tail.count()
@@ -210,7 +210,7 @@ foo(Lambda2(2))
 //│     = 3
 
 :e //FIXME: Class parameters not lifted
-:nm
+:mono
 class Cons(e: Int, tail: Cons | Nil) {
   fun count(): Int
   fun count() = 1 + tail.count()

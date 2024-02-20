@@ -1,7 +1,7 @@
 :NewDefs
 
 
-:nm
+:mono
 class Arithmetic() {
     fun use(num1, num2) = 0
 }

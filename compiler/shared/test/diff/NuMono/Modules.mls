@@ -1,8 +1,8 @@
 :NewDefs
 
-:e // FIXME
+:e // FIXME: Change behaviour based on TypeDefKind
 :w
-:nm
+:mono
 class Foo() {fun f = 0}
 module x { val y = Foo() }
 x.y.f

@@ -1,6 +1,6 @@
 :NewDefs
 
-:nm
+:mono
 :e
 val c = 5
 class Sup(a: Int){
@@ -52,7 +52,7 @@ class Sub2(c: Int) extends Sub(c+c){
 //│   unguarded recursive use of by-value binding c$1
 
 // FIXME: Recursive reference in closure
-//:nm
+//:mono
 //:e 
 //class Foo(f: Int -> Int){
 //  fun foo = () -> f(1)

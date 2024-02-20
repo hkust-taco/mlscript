@@ -1,6 +1,6 @@
 :NewDefs
 
-:nm
+:mono
 :AllowRuntimeErrors
 fun f(x) = f(x)
 f(0)

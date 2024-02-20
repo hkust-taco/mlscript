@@ -27,19 +27,19 @@ class Monomorph(debug: Debug = DummyDebug):
    * Specialized implementations of function declarations.
    * function name -> (function, mutable parameters (?), parameters, output value)
    */
-  private val nuFunImpls = MutMap[String, (NuFunDef, MutMap[String, NuFunDef], Option[List[BoundedTerm]], VarVal)]()
+  private val funImpls = MutMap[String, (NuFunDef, MutMap[String, NuFunDef], Option[List[BoundedTerm]], VarVal)]()
 
-  private val nuFunDependence = MutMap[String, Set[String]]()
+  private val funDependence = MutMap[String, Set[String]]()
 
-  val nuEvalQueue = MutSet[String]()
-  val nuEvalCnt = MutMap[String, Int]()
+  val evalQueue = MutSet[String]()
+  val evalCnt = MutMap[String, Int]()
   
-  //private val nuTyImpls = MutMap[TypeName, SpecializationMap[NuTypeDef]]()
-  private val nuAllTypeImpls = MutMap[String, NuTypeDef]()
+  //private val tyImpls = MutMap[TypeName, SpecializationMap[NuTypeDef]]()
+  private val allTypeImpls = MutMap[String, NuTypeDef]()
 
-  private def nuAddType(typeDef: NuTypeDef) =
-    //nuTyImpls.addOne(typeDef.nme, SpecializationMap(typeDef))
-    nuAllTypeImpls.addOne(typeDef.name, typeDef)
+  private def addType(typeDef: NuTypeDef) =
+    //tyImpls.addOne(typeDef.nme, SpecializationMap(typeDef))
+    allTypeImpls.addOne(typeDef.name, typeDef)
   
   val specializer = new mono.specializer.Specializer(this)(using debug)
 
@@ -65,76 +65,76 @@ class Monomorph(debug: Debug = DummyDebug):
   val evaluationMap = new IdentityHashMap[Term, BoundedTerm]().asScala
   def getRes(term: Term): BoundedTerm = evaluationMap.getOrElse(term, throw MonomorphError(s"Bounds for ${term} not found."))
 
-  private def nuAddFunction(func: NuFunDef): Unit = {
+  private def addFunction(func: NuFunDef): Unit = {
     debug.writeLine(s"Adding Function ${func}")
-    nuFunImpls.addOne(func.name, (func, MutMap(), func.body match
+    funImpls.addOne(func.name, (func, MutMap(), func.body match
       case Lam(Tup(params), body) => Some(params.map(_ => BoundedTerm()))
       case _ => None
     , VarValMap.refresh()))
-    nuFunDependence.addOne(func.name, Set())
+    funDependence.addOne(func.name, Set())
   }
 
-  private def nuGetResult(mains: List[Statement]): List[Statement] = 
+  private def getResult(mains: List[Statement]): List[Statement] = 
     List[Statement]()
-    .concat(nuAllTypeImpls.values.map(_.copy(body = TypingUnit(Nil))(None, None)))
-    .concat(nuFunImpls.values.map(_._1))
+    .concat(allTypeImpls.values.map(_.copy(body = TypingUnit(Nil))(None, None)))
+    .concat(funImpls.values.map(_._1))
     .concat(mains)
   
-  def nuDefunctionalize(tu: TypingUnit): TypingUnit =
+  def defunctionalize(tu: TypingUnit): TypingUnit =
     val nuTerms = tu.entities.zipWithIndex.flatMap {
       case (term: Term, i) =>
         val mainFunc = NuFunDef(None, Var(s"main$$$$$i"), None, Nil, Left(Lam(Tup(Nil), term)))(None, None, None, None, false)
-        nuAddFunction(mainFunc)
-        nuEvalQueue.add(mainFunc.name)
+        addFunction(mainFunc)
+        evalQueue.add(mainFunc.name)
         Some(App(Var(s"main$$$$$i"), Tup(Nil)))
       case (tyDef: NuTypeDef, _) =>
-        nuAddType(tyDef)
+        addType(tyDef)
         None
       case (funDef: NuFunDef, _) =>
         funDef.rhs match
-          case Left(value) => nuAddFunction(funDef)
+          case Left(value) => addFunction(funDef)
           case Right(value) => ??? 
         None
       case _ => ???
     }
-    while (!nuEvalQueue.isEmpty) {
-      debug.writeLine(s"Queue: ${nuEvalQueue}")
-      val next = nuEvalQueue.head
-      nuEvalQueue.remove(next)
-      nuUpdateFunction(next)
+    while (!evalQueue.isEmpty) {
+      debug.writeLine(s"Queue: ${evalQueue}")
+      val next = evalQueue.head
+      evalQueue.remove(next)
+      updateFunction(next)
     }
-    debug.writeLine(s"${PrettyPrinter.showTypingUnit(TypingUnit(nuGetResult(nuTerms)))}")
+    debug.writeLine(s"${PrettyPrinter.showTypingUnit(TypingUnit(getResult(nuTerms)))}")
     debug.writeLine(s"========DEFUNC PHASE========")
-    nuFunImpls.mapValuesInPlace{
+    funImpls.mapValuesInPlace{
       case (_, (func@NuFunDef(isLetRec, nm, sn, tp, rhs), mp, la, lr)) =>
         rhs match 
           case Left(Lam(lhs, rhs)) =>
-            (NuFunDef(isLetRec, nm, sn, tp, Left(Lam(lhs,specializer.nuDefunctionalize(rhs)(using evaluationMap))))(None, None, None, None, false), mp, la, lr)
+            (NuFunDef(isLetRec, nm, sn, tp, Left(Lam(lhs,specializer.defunctionalize(rhs)(using evaluationMap))))(None, None, None, None, false), mp, la, lr)
           case Left(body) => 
-            (NuFunDef(isLetRec, nm, sn, tp, Left(specializer.nuDefunctionalize(body)(using evaluationMap)))(None, None, None, None, false), mp, la, lr)
+            (NuFunDef(isLetRec, nm, sn, tp, Left(specializer.defunctionalize(body)(using evaluationMap)))(None, None, None, None, false), mp, la, lr)
           case Right(tp) => ???
     }
-    val ret = nuGetResult(nuTerms)
+    val ret = getResult(nuTerms)
     TypingUnit(ret)
 
-  private def nuUpdateFunction(funcName: String): Unit = {
-    val updateCount = nuEvalCnt.get(funcName).getOrElse(0)
+  private def updateFunction(funcName: String): Unit = {
+    val updateCount = evalCnt.get(funcName).getOrElse(0)
     if(updateCount <= 10){
       debug.writeLine(s"updating ${funcName} for ${updateCount}th time")
-      nuEvalCnt.update(funcName, updateCount+1)
-      nuUpdateFunc(funcName)
+      evalCnt.update(funcName, updateCount+1)
+      updateFunc(funcName)
     }
     else{
       throw new MonomorphError("stack overflow!!!")
     }
   }
-  def nuGetFuncRetVal(name: String, args: Option[List[BoundedTerm]])(using evalCtx: Map[String, BoundedTerm], callingStack: List[String]): BoundedTerm = {
-    nuFunImpls.get(name) match
+  def getFuncRetVal(name: String, args: Option[List[BoundedTerm]])(using evalCtx: Map[String, BoundedTerm], callingStack: List[String]): BoundedTerm = {
+    funImpls.get(name) match
       case None => throw MonomorphError(s"Function ${name} does not exist")
       case Some((funDef, mp, oldArgs, vals)) => 
         funDef.rhs match
           case Left(body) => 
-            nuFunDependence.update(name, nuFunDependence.getOrElse(name, Set()) ++ callingStack.headOption)
+            funDependence.update(name, funDependence.getOrElse(name, Set()) ++ callingStack.headOption)
             val hasArgs = oldArgs.isDefined
             val params = extractLamParams(body)
             val mergedArgs = oldArgs.map(old => (old zip (args.get)).map(_ ++ _).zip(params.get).map(
@@ -144,24 +144,24 @@ class Monomorph(debug: Debug = DummyDebug):
             debug.writeLine(s"new args ${args}")
             debug.writeLine(s"merged args ${mergedArgs}")
             // FIXME: do paramless funcs need multiple evaluations? currently only eval paramless funcs once
-            if (!nuEvalCnt.contains(name) || (hasArgs && (oldArgs.get zip mergedArgs.get).exists(x => x._1.compare(x._2)))) {
-              nuFunImpls.update(name, (funDef, mp, mergedArgs, vals))
-              if(!nuEvalQueue.contains(name))
-                if(!nuEvalCnt.contains(name))
+            if (!evalCnt.contains(name) || (hasArgs && (oldArgs.get zip mergedArgs.get).exists(x => x._1.compare(x._2)))) {
+              funImpls.update(name, (funDef, mp, mergedArgs, vals))
+              if(!evalQueue.contains(name))
+                if(!evalCnt.contains(name))
                   then 
                     debug.writeLine(s"first time eval function ${name}")
-                    nuUpdateFunction(name)
+                    updateFunction(name)
                   else 
                     debug.writeLine(s"new arg eval function ${name}")
-                    nuEvalQueue.add(name)
+                    evalQueue.add(name)
             }
-            BoundedTerm(nuFunImpls.get(name).get._4)
+            BoundedTerm(funImpls.get(name).get._4)
           case Right(tp) => ???
   }
 
-  private def nuUpdateFunc(funcName: String): Unit = {
+  private def updateFunc(funcName: String): Unit = {
     debug.writeLine(s"Evaluating ${funcName}")
-    val (func, mps, args, res) = nuFunImpls.get(funcName).get
+    val (func, mps, args, res) = funImpls.get(funcName).get
     debug.writeLine(s"args = ${args}")
     func.rhs match
       case Left(value) =>
@@ -175,22 +175,22 @@ class Monomorph(debug: Debug = DummyDebug):
             then throw MonomorphError("Argument length mismatch in function update")
             else (p.map(_._2.name) zip args.get).toMap
           case None => Map()
-        specializer.nuEvaluate(body)(using ctx, List(func.name), evaluationMap)
+        specializer.evaluate(body)(using ctx, List(func.name), evaluationMap)
         evaluationMap.addOne(value, getRes(body))
-        val oldExp = VarValMap.get(nuFunImpls.get(funcName).get._4)
+        val oldExp = VarValMap.get(funImpls.get(funcName).get._4)
         if (oldExp.compare(getRes(value))) {
           debug.writeLine(s"Bounds of ${funcName} changed, adding dependent functions to evalQueue")
           debug.writeLine(s"Before: ${oldExp}")
           debug.writeLine(s"After : ${getRes(value)}")
-          nuFunDependence.get(funcName).get.foreach(x => if !nuEvalQueue.contains(x) then {
+          funDependence.get(funcName).get.foreach(x => if !evalQueue.contains(x) then {
             debug.writeLine(s"Added ${x}")
-            nuEvalQueue.add(x)
+            evalQueue.add(x)
           })
         } else {
           debug.writeLine(s"No change in bounds of ${funcName}")
         }
         //debug.writeLine(s"old body: ${showStructure(value)} => new body: ${showStructure(nuBody)}")
-        nuFunImpls.updateWith(funcName)(_.map(x => {
+        funImpls.updateWith(funcName)(_.map(x => {
           VarValMap.update(x._4, getRes(value))
           (x._1, x._2, x._3, x._4)
         }))
@@ -201,11 +201,11 @@ class Monomorph(debug: Debug = DummyDebug):
     Find a variable in the global env 
     TODO: Does TypeValue affect evaluation and dependence?
   */
-  def nuFindVar(name: String)(using evalCtx: Map[String, BoundedTerm], callingStack: List[String]): BoundedTerm =
-    nuFunImpls.get(name) match
+  def findVar(name: String)(using evalCtx: Map[String, BoundedTerm], callingStack: List[String]): BoundedTerm =
+    funImpls.get(name) match
       case Some(res) =>
         val (func, _, _, _) = res
-        nuFunDependence.update(name, nuFunDependence.get(name).get ++ callingStack.headOption)
+        funDependence.update(name, funDependence.get(name).get ++ callingStack.headOption)
         val params = func.rhs match
           //case Left(Lam(lhs, rhs)) => Some(extractParams(lhs).map(_._2.name).toList)
           case Left(body) => extractLamParams(body).map(_.map(_._2.name).toList)
@@ -213,15 +213,15 @@ class Monomorph(debug: Debug = DummyDebug):
         params match 
           case Some(p) => BoundedTerm(FuncVal(name, params, Nil))
           case None => 
-            val res = nuGetFuncRetVal(name, None)
+            val res = getFuncRetVal(name, None)
             res
       case None => 
-        nuAllTypeImpls.get(name) match
+        allTypeImpls.get(name) match
           case Some(res) => BoundedTerm(TypeVal(name))
           case None => throw MonomorphError(s"Variable ${name} not found during evaluation")
 
-  def nuCreateObjValue(tpName: String, args: List[BoundedTerm]): MonoVal = 
-    nuAllTypeImpls.get(tpName) match
+  def createObjValue(tpName: String, args: List[BoundedTerm]): MonoVal = 
+    allTypeImpls.get(tpName) match
       case Some(NuTypeDef(kind, nme, tparams, params, ctor, sig, parents, _, _, body)) => 
         debug.writeLine(s"Creating Object Value for ${tpName} with arguments ${args}")
         debug.indent()
@@ -233,10 +233,10 @@ class Monomorph(debug: Debug = DummyDebug):
         val obj = ObjVal(tpName, ags.map((p, _) => p), MutMap(ags: _*)) // TODO: parent object fields
         debug.writeLine(s"Parents term is ${parents}")
         val parentObjs = parents.map{
-          case Var(name) => BoundedTerm(nuCreateObjValue(name, Nil))
+          case Var(name) => BoundedTerm(createObjValue(name, Nil))
           case App(Var(name), t: Tup) => 
-            specializer.nuEvaluate(t)(using Map("this"->BoundedTerm(obj)) ++ ags, List(tpName), evaluationMap)
-            BoundedTerm(nuCreateObjValue(name, extractFuncArgs(t).map(getRes)))
+            specializer.evaluate(t)(using Map("this"->BoundedTerm(obj)) ++ ags, List(tpName), evaluationMap)
+            BoundedTerm(createObjValue(name, extractFuncArgs(t).map(getRes)))
           case other => throw MonomorphError(s"Unexpected parent object format ${other}")
         }
         debug.writeLine(s"Parent objects are ${parentObjs}")
@@ -244,15 +244,15 @@ class Monomorph(debug: Debug = DummyDebug):
         debug.writeLine(s"Created Object Value ${obj}")
         debug.outdent()
         obj
-      case None => throw MonomorphError(s"TypeName ${tpName} not found in implementations ${nuAllTypeImpls}")
+      case None => throw MonomorphError(s"TypeName ${tpName} not found in implementations ${allTypeImpls}")
 
   def createTupVal(fields: List[BoundedTerm]): TupVal = 
     TupVal(fields.zipWithIndex.map((term, i) => (Var(i.toString()) -> term)).toMap)
 
-  def nuGetFieldVal(obj: ObjVal, field: String): BoundedTerm =
+  def getFieldVal(obj: ObjVal, field: String): BoundedTerm =
     debug.writeLine(s"select ${field} from ${obj.name}")
-    nuAllTypeImpls.get(obj.name) match
-      case None => throw MonomorphError(s"ObjectValue ${obj} not found in implementations ${nuAllTypeImpls}")
+    allTypeImpls.get(obj.name) match
+      case None => throw MonomorphError(s"ObjectValue ${obj} not found in implementations ${allTypeImpls}")
       case Some(typeDef) => 
         typeDef.body.entities.flatMap{
           case func@NuFunDef(_, Var(nme), _, _, Left(_)) if nme.equals(field) => Some(func)
@@ -261,8 +261,8 @@ class Monomorph(debug: Debug = DummyDebug):
         case Some(NuFunDef(isLetRec, Var(nme), sn, tp, Left(body))) => 
           debug.writeLine(s"found some func")
           val nuFuncName = s"${nme}$$${obj.name}"
-          if (!nuFunImpls.contains(nuFuncName)) {
-            nuAddFunction(NuFunDef(isLetRec, Var(nuFuncName), sn, tp, Left(addThisParam(body)))(None, None, None, None, false))
+          if (!funImpls.contains(nuFuncName)) {
+            addFunction(NuFunDef(isLetRec, Var(nuFuncName), sn, tp, Left(addThisParam(body)))(None, None, None, None, false))
           } 
           BoundedTerm(FuncVal(nuFuncName, extractLamParams(body).map(_.map(_._2.name).toList), List("this" -> BoundedTerm(obj))))
         case _ => 
@@ -275,7 +275,7 @@ class Monomorph(debug: Debug = DummyDebug):
               if (x._1.matches("sup\\$[0-9]+")) {
                 x._2.asValue match{
                   case Some(o: ObjVal) => 
-                    Some(nuGetFieldVal(o, field))
+                    Some(getFieldVal(o, field))
                   case _ => None
                 }
               }

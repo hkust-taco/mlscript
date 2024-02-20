@@ -1,6 +1,6 @@
 :NewDefs
 
-:nm
+:mono
 class X() {
     val num = 5
     fun get() = num

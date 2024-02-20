@@ -39,7 +39,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
     Evaluate a Term given an evaluation Context and populate its EvaledTerm
   */
   val builtInOps: Set[String] = Set("+", "-", ">", "<", "*", "==", "concat", "toString", "log") 
-  def nuEvaluate(term: Term)(using evalCtx: Map[String, BoundedTerm], callingStack: List[String], termMap: MutMap[Term, BoundedTerm]): Unit =
+  def evaluate(term: Term)(using evalCtx: Map[String, BoundedTerm], callingStack: List[String], termMap: MutMap[Term, BoundedTerm]): Unit =
     def getRes(term: Term): BoundedTerm = termMap.getOrElse(term, throw MonomorphError(s"Bounds for ${term} not found."))
     debug.writeLine(s"╓Eval ${term}:")
     debug.indent()
@@ -54,32 +54,32 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
           then BoundedTerm(LiteralVal(true))
           else if name == "false"
           then BoundedTerm(LiteralVal(false))
-          else evalCtx.getOrElse(name, monoer.nuFindVar(name)))
+          else evalCtx.getOrElse(name, monoer.findVar(name)))
         term
       // case Lam(lhs, rhs) => throw MonomorphError("Should not encounter lambda during evaluation process")
       case App(lhs@Var(name), rhs) if builtInOps.contains(name) => 
-        nuEvaluate(rhs)
+        evaluate(rhs)
         termMap.addOne(term, extractFuncArgs(rhs).map(getRes).fold(BoundedTerm())(_ ++ _))
       case App(lhs, rhs) => 
-        nuEvaluate(lhs)
-        nuEvaluate(rhs)
+        evaluate(lhs)
+        evaluate(rhs)
         termMap.addOne(term, getRes(lhs).getValue.map{ 
           case FuncVal(name, prm, ctx) =>
               debug.writeLine(s"Apply Function ${name}") 
-              monoer.nuGetFuncRetVal(name, Some(ctx.unzip._2 ++ extractFuncArgs(rhs).map(getRes)))
-          case o: ObjVal => monoer.nuGetFieldVal(o, "apply").asValue match
+              monoer.getFuncRetVal(name, Some(ctx.unzip._2 ++ extractFuncArgs(rhs).map(getRes)))
+          case o: ObjVal => monoer.getFieldVal(o, "apply").asValue match
             case Some(FuncVal(name, prm, ctx)) => 
-              monoer.nuGetFuncRetVal(name, Some(ctx.unzip._2 ++ extractFuncArgs(rhs).map(getRes))) // Unzipping ctx gives implicit "this"
+              monoer.getFuncRetVal(name, Some(ctx.unzip._2 ++ extractFuncArgs(rhs).map(getRes))) // Unzipping ctx gives implicit "this"
             case other => throw MonomorphError(s"Encountered unknown value ${other} when evaluating object application")
           case TypeVal(name) => 
-            BoundedTerm(monoer.nuCreateObjValue(name, extractFuncArgs(rhs).map(getRes).toList))
+            BoundedTerm(monoer.createObjValue(name, extractFuncArgs(rhs).map(getRes).toList))
           case l@LiteralVal(i) => BoundedTerm(l)
         }.fold(BoundedTerm())(_ ++ _))
       case New(Some((constructor, args)), body) => 
-        nuEvaluate(args)
-        termMap.addOne(term, BoundedTerm(monoer.nuCreateObjValue(constructor.base.name, extractFuncArgs(args).map(getRes))))
+        evaluate(args)
+        termMap.addOne(term, BoundedTerm(monoer.createObjValue(constructor.base.name, extractFuncArgs(args).map(getRes))))
       case Sel(receiver, fieldName) => 
-        nuEvaluate(receiver)
+        evaluate(receiver)
         termMap.addOne(term, getRes(receiver).getValue.map{
           case obj: ObjVal => 
             obj.fields.get(fieldName.name) match
@@ -89,10 +89,10 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
               case None => 
                 debug.writeLine("other select")
                 debug.indent()
-                val res = monoer.nuGetFieldVal(obj, fieldName.name).getValue.map {
+                val res = monoer.getFieldVal(obj, fieldName.name).getValue.map {
                   case f@FuncVal(name, None, ctx) => 
                     debug.writeLine(s"got paramless func ${f}")
-                    monoer.nuGetFuncRetVal(name, Some(ctx.unzip._2))
+                    monoer.getFuncRetVal(name, Some(ctx.unzip._2))
                   case other => BoundedTerm(other)
                 }.fold(BoundedTerm())(_ ++ _)
                 debug.outdent()
@@ -108,13 +108,13 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
       case Let(rec, Var(name), rhs, body) =>
         if !rec
         then 
-          nuEvaluate(rhs)
-          nuEvaluate(body)(using evalCtx + (name -> getRes(rhs)))
+          evaluate(rhs)
+          evaluate(body)(using evalCtx + (name -> getRes(rhs)))
           termMap.addOne(term, getRes(body))
         else ??? //TODO: letrec
       case Blk(stmts) => 
         stmts.map{
-          case t: Term => nuEvaluate(t)
+          case t: Term => evaluate(t)
           case other => throw MonomorphError(s"Encountered unlifted non-term ${other} in block ")
         }
         termMap.addOne(term, {
@@ -126,9 +126,9 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
       case If(body, alternate) => 
         val res = body match
           case IfThen(condition, consequent) => 
-            nuEvaluate(consequent)
-            alternate.map(alt => nuEvaluate(alt))
-            nuEvaluate(condition)
+            evaluate(consequent)
+            alternate.map(alt => evaluate(alt))
+            evaluate(condition)
             termMap.addOne(term, getRes(condition).asValue match {
               // TODO: redundant branch elimination
               // case Some(x: LiteralVal) if x.asBoolean().isDefined =>
@@ -140,15 +140,15 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
           case other => throw MonomorphError(s"IfBody ${body} not handled")
         res
       case Asc(t, ty) => 
-        nuEvaluate(t)
+        evaluate(t)
         termMap.addOne(term, getRes(t))
       case Tup(fields) => // TODO: give evaledTerm?
         fields.map{
-          case (name, Fld(flags, value)) => nuEvaluate(value)
+          case (name, Fld(flags, value)) => evaluate(value)
         }
         termMap.addOne(term, BoundedTerm(monoer.createTupVal(fields.map{case (name, Fld(flags, value)) => getRes(value)})))
       case Bra(rcd, t) => 
-        nuEvaluate(t)
+        evaluate(t)
         termMap.addOne(term, getRes(t))
       // case _: Bind => ???
       // case _: Test => ???
@@ -161,7 +161,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
     debug.outdent()
     debug.writeLine(s"╙Result ${getRes(term).getValue.map(_.toString).toList}:")
 
-  def nuDefunctionalize(term: Term)(using termMap: MutMap[Term, BoundedTerm]): Term = {
+  def defunctionalize(term: Term)(using termMap: MutMap[Term, BoundedTerm]): Term = {
     def getRes(term: Term): BoundedTerm = termMap.getOrElse(term, throw MonomorphError(s"Bounds for ${term} not found."))
     // TODO: Change to use basic pattern match instead of UCS
     def valSetToBranches(vals: List[MonoVal], acc: List[Either[IfBody,Statement]] = List(Left(IfElse(Var("error")))))(using field: Var, args: Option[List[Term]]): List[Either[IfBody,Statement]] = 
@@ -170,7 +170,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
       case Nil => acc
       case head :: next => head match
         case o@ObjVal(name, params, fields) =>
-          val selValue = monoer.nuGetFieldVal(o, field.name)
+          val selValue = monoer.getFieldVal(o, field.name)
           debug.writeLine(s"selected value: ${selValue.asValue}")
           val branchCase = selValue.asValue match {
             case Some(f: FuncVal) =>
@@ -181,7 +181,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
                   val scrut = Sel(Var("obj"), field)
                   val branches = selValue.getValue.toList.map(_.asInstanceOf[ObjVal])
                     .flatMap(o => {
-                      val lambdaMemFunc = monoer.nuGetFieldVal(o, "apply").asValue.get.asInstanceOf[FuncVal]
+                      val lambdaMemFunc = monoer.getFieldVal(o, "apply").asValue.get.asInstanceOf[FuncVal]
                       val caseVarNm: Var = Var(s"obj$$${o.name}")
                       Right(NuFunDef(Some(false), Var("obj"), None, Nil, Left(Var(o.name)))(None, None, None, None, false)) :: 
                         List[Either[IfBody,Statement]](Left(IfThen(Var(o.name), App(Var(lambdaMemFunc.name), toTuple(caseVarNm :: a)))))
@@ -210,8 +210,8 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
       case App(sel@Sel(receiver, field), args) => 
         debug.writeLine(s"Specializing ${term}")
         debug.indent()
-        val nuReceiver = nuDefunctionalize(receiver)
-        val nuArgs = nuDefunctionalize(args)
+        val nuReceiver = defunctionalize(receiver)
+        val nuArgs = defunctionalize(args)
         val ifBlockLines = valSetToBranches(getRes(receiver).getValue.toList)(using field, Some(extractFuncArgs(nuArgs)))
         val ifBlk = IfBlock(ifBlockLines)
         val res = Let(false, Var("obj"), nuReceiver,
@@ -220,18 +220,18 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
         debug.outdent()
         res
       case App(op@Var(name), args) if builtInOps.contains(name) =>
-          App(op, nuDefunctionalize(args))
+          App(op, defunctionalize(args))
       case App(callee, args) => 
         if(getRes(callee).getValue.find(_.isInstanceOf[ObjVal]).isDefined)
-          nuDefunctionalize(App(Sel(callee, Var("apply")), args))
+          defunctionalize(App(Sel(callee, Var("apply")), args))
         else 
-          App(nuDefunctionalize(callee), nuDefunctionalize(args))
+          App(defunctionalize(callee), defunctionalize(args))
       case Tup(fields) => Tup(fields.map{
-        case (name, Fld(flags, value)) => (name, Fld(flags, nuDefunctionalize(value)))})
-      case If(IfThen(expr, rhs), els) => If(IfThen(nuDefunctionalize(expr), nuDefunctionalize(rhs)), els.map(nuDefunctionalize))
-      case New(Some((constructor, args)), body) => New(Some((constructor, nuDefunctionalize(args))), body)
+        case (name, Fld(flags, value)) => (name, Fld(flags, defunctionalize(value)))})
+      case If(IfThen(expr, rhs), els) => If(IfThen(defunctionalize(expr), defunctionalize(rhs)), els.map(defunctionalize))
+      case New(Some((constructor, args)), body) => New(Some((constructor, defunctionalize(args))), body)
       case Sel(receiver, fieldName) => 
-        val nuReceiver = nuDefunctionalize(receiver)
+        val nuReceiver = defunctionalize(receiver)
         if (getRes(receiver).getValue.forall(_.isInstanceOf[ObjVal]))
         then
           debug.writeLine(s"Specializing ${term}")
@@ -248,10 +248,10 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
           Sel(nuReceiver, fieldName)
       case Blk(stmts) => 
         Blk(stmts.map{
-          case t: Term => nuDefunctionalize(t)
+          case t: Term => defunctionalize(t)
           case other => other
         })
-      case Bra(false, term) => Bra(false, nuDefunctionalize(term))
+      case Bra(false, term) => Bra(false, defunctionalize(term))
       case _ => throw MonomorphError(s"Cannot Defunctionalize ${term}")
     ret
   }
