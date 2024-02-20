@@ -111,8 +111,8 @@ def test extr x =
 //│     'd <: 'b -> 'c
 //│     'a <: 0 -> 'b)) -> anything) -> 'd -> (anything -> 'e
 //│   where
-//│     0 <: 0 -> 'f
-//│     'd <: 'f -> 'e)
+//│     'd <: 'f -> 'e
+//│     0 <: 0 -> 'f)
 //│     = [Function: test1]
 
 :e
@@ -145,8 +145,8 @@ def test extr x =
 test 0 1
 //│ res: anything -> 'a
 //│   where
-//│     0 <: 0 -> 'b
 //│     1 <: 'b -> 'a
+//│     0 <: 0 -> 'b
 //│    = [Function (anonymous)]
 
 :e

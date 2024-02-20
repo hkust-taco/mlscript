@@ -132,7 +132,7 @@ fun test(a: Object) = if a is
 //│ ╟── type variable `A` leaks out of its scope
 //│ ║  l.113: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
 //│ ╙──       	          ^
-//│ fun test: (a: Object) -> (error | ??A)
+//│ fun test: (a: Object) -> anything
 
 :e // TODO
 fun test(a: Object) = if a is
