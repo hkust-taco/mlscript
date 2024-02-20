@@ -9,7 +9,11 @@ final case class TypeVal(name: String) extends MonoVal
 final case class ObjVal(name: String, params: List[String], fields: MutMap[String, BoundedTerm]) extends MonoVal with ObjValImpl
 final case class FuncVal(name: String, params: Option[List[String]], ctx: List[(String, BoundedTerm)]) extends MonoVal
 final case class UnknownVal() extends MonoVal
-// TODO: Terribly unintuitive implementation, should attempt to refactor.
+/* 
+ * VarVal represents the evaluation bounds of a function, which can change 
+ * as we progress through evaluation.
+ * TODO: Terribly unintuitive implementation, should attempt to refactor.
+ */
 final case class VarVal(vx: Int, version: Int, val getter: VarVal => BoundedTerm) extends MonoVal with VarValImpl
 final case class LiteralVal(i: Lit | Boolean) extends MonoVal with LitValImpl
 final case class PrimVal() extends MonoVal
@@ -85,7 +89,10 @@ trait BoundedTermImpl { self: BoundedTerm =>
       val ret2 = ret._2.flatten.toMap
       (ret1, ret2)
     }
-
+  
+  /* 
+   * Unfold VarVals into primitive values recursively.
+   */
   def unfoldVars(implicit instackExps: Set[Int] = Set()): BoundedTerm = { 
     val (vars, others) = self.values.toList.map{
       case vx: VarVal => (Some(vx), None)
@@ -120,6 +127,9 @@ trait BoundedTermImpl { self: BoundedTerm =>
     else this
   }
 
+  /* 
+   * Merge two BoundedTerms together recursively, including its component values & objects.
+   */
   def ++(other: BoundedTerm)(implicit instackExps: Set[Int] = Set()): BoundedTerm = {
     if (this == other) this
     else {
@@ -146,6 +156,9 @@ trait BoundedTermImpl { self: BoundedTerm =>
 
   def size: Int = values.size
 
+  /*
+   * Returns true if the bounds of other is larger than this.
+   */
   def compare(other: BoundedTerm)(implicit instackExps: Set[Int] = Set()): Boolean = {
     if (instackExps.contains(this.hashCode()) && instackExps.contains(other.hashCode()))
       false
