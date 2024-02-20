@@ -3,6 +3,7 @@
 
 
 
+// * This definition is not good as it leads to extrusion; we need `k` to be polymorphic (which requires annotation)
 fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(code"x")}"
 //│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, 'b]) -> Code['c, 'b]
 
