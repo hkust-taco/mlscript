@@ -424,8 +424,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def name: Str = fd.nme.name
     def symbolicName: Opt[Str] = fd.symbolicNme.map(_.name)
     def toLoc: Opt[Loc] = fd.toLoc
+    lazy val prov = TypeProvenance(toLoc, "member")
     def isPublic = true // TODO
-    lazy val typeSignature: ST = PolymorphicType.mk(level, bodyType)
+    lazy val typeSignature: ST =
+      if (fd.isMut) bodyType
+      else PolymorphicType.mk(level, bodyType)
     
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, freshened: MutMap[TV, ST])
@@ -576,9 +579,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             assert(fd.signature.isEmpty)
             funSigs.get(fd.nme.name) match {
               case S(sig) =>
-                fd.copy()(fd.declareLoc, fd.virtualLoc, S(sig), outer, fd.genField)
+                fd.copy()(fd.declareLoc, fd.virtualLoc, fd.mutLoc, S(sig), outer, fd.genField)
               case _ =>
-                fd.copy()(fd.declareLoc, fd.virtualLoc, fd.signature, outer, fd.genField)
+                fd.copy()(fd.declareLoc, fd.virtualLoc, fd.mutLoc, fd.signature, outer, fd.genField)
             }
           case td: NuTypeDef =>
             if (td.nme.name in reservedTypeNames)
@@ -598,7 +601,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             decl match {
               case NuFunDef(S(_), _, _, _, _) => ()
               case _ =>
-                err(msg"Refininition of '${decl.name}'", decl.toLoc)
+                err(msg"Redefinition of '${decl.name}'", decl.toLoc)
             }
             S(lti)
           case N =>
@@ -702,6 +705,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     private implicit val prov: TP =
       TypeProvenance(decl.toLoc, decl.describe)
+    
+    // * TODO should we use this? It could potentially improve error messages
+    implicit val newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty // TODO?
     
     println(s"${ctx.lvl}. Created lazy type info for $decl")
 
@@ -954,22 +960,20 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     lazy val typedParams: Opt[Ls[Var -> FieldType]] = ctx.nest.nextLevel { implicit ctx =>
       decl match {
         case td: NuTypeDef =>
-          td.params.map(_.fields.map {
+          td.params.map(_.fields.flatMap {
             case (S(nme), Fld(FldFlags(mut, spec, getter), value)) =>
               assert(!mut && !spec, "TODO") // TODO
-              value.toType match {
-                case R(tpe) =>
-                  implicit val newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty // TODO?
-                  val ty = typeType(tpe)
-                  nme -> FieldType(N, ty)(provTODO)
-                case _ => ???
-              }
+              val tpe = value.toTypeRaise
+              val ty = typeType(tpe)
+              nme -> FieldType(N, ty)(provTODO) :: Nil
             case (N, Fld(FldFlags(mut, spec, getter), nme: Var)) =>
               assert(!mut && !spec, "TODO") // TODO
               // nme -> FieldType(N, freshVar(ttp(nme), N, S(nme.name)))(provTODO)
               nme -> FieldType(N, err(msg"${td.kind.str.capitalize} parameters currently need type annotations",
-                nme.toLoc))(provTODO)
-            case _ => ???
+                nme.toLoc))(provTODO) :: Nil
+            case (_, fld) =>
+              err(msg"Unsupported field specification", fld.toLoc)
+              Nil
           })
         case fd: NuFunDef => N
       }
@@ -1053,16 +1057,43 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       (typedParams.getOrElse(Nil).toMap
         // -- privateFields
         -- inheritedFields /* parameters can be overridden by inherited fields/methods */
-      ) ++ typedSignatures.iterator.map(fd_ty => fd_ty._1.nme -> fd_ty._2.toUpper(noProv)) ++
+      ) ++ typedSignatures.iterator.map(fd_ty => fd_ty._1.nme -> (
+            if (fd_ty._1.isMut) FieldType(S(fd_ty._2), fd_ty._2)(
+              fd_ty._2.prov) // FIXME prov
+            else fd_ty._2.toUpper(noProv)
+          )) ++
         typedParents.flatMap(_._3).flatMap {
           case (k, p: NuParam) => Var(k) -> p.ty :: Nil
           case _ => Nil
         }
     }
-    lazy val mutRecTV: TV = freshVar(
-      TypeProvenance(decl.toLoc, decl.describe, S(decl.name), decl.isInstanceOf[NuTypeDef]),
-      N,
-      S(decl.name))(level + 1)
+    
+    private lazy val isGeneralized: Bool = decl match {
+      case fd: NuFunDef =>
+        println(s"Type ${fd.nme.name} polymorphically? ${fd.isGeneralized} && (${ctx.lvl} === 0 || ${
+          fd.signature.nonEmpty} || ${fd.outer.exists(_.kind isnt Mxn)}")
+        // * We only type polymorphically:
+        // * definitions that can be generalized (ie `fun`s or function-valued `let`s and `val`s); and
+        fd.isGeneralized && (
+              ctx.lvl === 0 // * top-level definitions
+          ||  fd.signature.nonEmpty // * definitions with a provided type signature
+          ||  fd.outer.exists(_.kind isnt Mxn) // * definitions NOT occurring in mixins
+        )
+        // * The reason to not type unannotated mixin methods polymorphically is that
+        // * doing so yields too much extrusion and cycle check failures,
+        // * in the context of inferred precisely-typed open recursion through mixin composition.
+      case _ => die
+    }
+    
+    lazy val mutRecTV: TV = decl match {
+      case fd: NuFunDef =>
+        freshVar(
+          TypeProvenance(decl.toLoc, decl.describe, S(decl.name), decl.isInstanceOf[NuTypeDef]),
+          N,
+          S(decl.name)
+        )(if (isGeneralized) level + 1 else level)
+      case _ => lastWords(s"Not supposed to use mutRecTV for ${decl.kind}")
+    }
     
     private lazy val thisTV: TV =
       freshVar(provTODO, N, S(decl.name.decapitalize))(lvl + 1)
@@ -1109,43 +1140,43 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   TypedNuFun(ctx.lvl, fd, PolymorphicType(ctx.lvl, body_ty))(isImplemented = false)
                 case R(_) => die
                 case L(body) =>
-                  fd.isLetRec match {
-                    case S(true) => // * Let rec bindings
-                      checkNoTyParams()
-                      implicit val gl: GenLambdas = true
-                      TypedNuFun(ctx.lvl, fd, typeTerm(
-                        Let(true, fd.nme, body, fd.nme)
-                      ))(isImplemented = true)
-                    case S(false) => // * Let bindings
-                      checkNoTyParams()
-                      implicit val gl: GenLambdas = true
-                      TypedNuFun(ctx.lvl, fd, typeTerm(body))(isImplemented = true)
-                    case N =>
-                      // * We don't type functions polymorphically from the point of view of a typing unit
-                      // * to avoid cyclic-looking constraints due to the polymorphic recursion limitation,
-                      // * as these functions are allowed to be mutually-recursive.
-                      // * In the future, we should type each mutual-recursion-component independently
-                      // * and polymorphically wrt to external uses of them.
-                      implicit val gl: GenLambdas = false
-                      val outer_ctx = ctx
-                      val body_ty = ctx.nextLevel { implicit ctx: Ctx =>
-                        // * Note: can't use `ctx.poly` instead of `ctx.nextLevel` because all the methods
-                        // * in the current typing unit are quantified together.
-                        assert(fd.tparams.sizeCompare(tparamsSkolems) === 0, (fd.tparams, tparamsSkolems))
-                        vars ++ tparamsSkolems |> { implicit vars =>
-                          // * Only type methods polymorphically if they're at the top level or if
-                          // * they're annotated with a type signature.
-                          // * Otherwise, we get too much extrusion and cycle check failures
-                          // * especially in the context of open recursion and mixins.
-                          if (ctx.lvl === 1 || fd.signature.nonEmpty || fd.outer.exists(_.kind isnt Mxn))
-                            typeTerm(body)
-                          else outer_ctx |> { implicit ctx: Ctx =>
-                            println(s"Not typing polymorphicall (cf. not top level or not annotated)")
-                            typeTerm(body) }
-                        }
-                      }.withProv(TypeProvenance(fd.toLoc, s"definition of method ${fd.nme.name}"))
-                      TypedNuFun(ctx.lvl, fd, body_ty)(isImplemented = true)
+                  if (fd.isLetRec.isDefined) checkNoTyParams()
+                  implicit val gl: GenLambdas =
+                    // * Don't generalize lambdas if we're already in generalization mode;
+                    // * unless the thing is just a simple let binding with functions,
+                    // * as in `let r = if true then id else x => x`
+                    !isGeneralized && fd.isLetRec.isDefined && !fd.genField
+                  val outer_ctx = ctx
+                  val body_ty = if (isGeneralized) {
+                    // * Note:
+                    // * Can't use `ctx.poly` instead of `ctx.nextLevel` here because all the methods
+                    // * in the current typing unit are quantified together.
+                    // * So instead of inserting an individual `forall` in the type of each method,
+                    // * we consider the `forall` to be implicit in the definition of TypedNuFun,
+                    // * and that forall is eschewed while typing mutually-recursive methods
+                    // * in the same typing unit, which will see the method's type through its mutRecTV.
+                    // * This avoids cyclic-looking constraints due to the polymorphic recursion limitation.
+                    // * Subnote: in the future, we should type each mutual-recursion-component independently
+                    // *  and polymorphically wrt to external uses of them.
+                    // *  Currently they are typed in order.
+                    ctx.nextLevel { implicit ctx: Ctx =>
+                      assert(fd.tparams.sizeCompare(tparamsSkolems) === 0, (fd.tparams, tparamsSkolems))
+                      vars ++ tparamsSkolems |> { implicit vars =>
+                        typeTerm(body)
+                      }
+                    }
+                  } else {
+                    if (fd.isMut) {
+                      constrain(typeTerm(body), mutRecTV)
+                      mutRecTV
+                    }
+                    else typeTerm(body)
                   }
+                  val tp = TypeProvenance(fd.toLoc, s"definition of ${fd.isLetRec match {
+                      case S(_) => if (fd.genField) "value" else "let binding"
+                      case N => "method"
+                    }} ${fd.nme.name}")
+                  TypedNuFun(ctx.lvl, fd, body_ty.withProv(tp))(isImplemented = true)
               }
               ctx.nextLevel { implicit ctx: Ctx => constrain(res_ty.bodyType, mutRecTV) }
               res_ty
@@ -1309,7 +1340,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       val fd = NuFunDef((a.fd.isLetRec, b.fd.isLetRec) match {
                         case (S(a), S(b)) => S(a || b)
                         case _ => N // if one is fun, then it will be fun
-                      }, a.fd.nme, N/*no sym name?*/, a.fd.tparams, a.fd.rhs)(a.fd.declareLoc, a.fd.virtualLoc, N, a.fd.outer orElse b.fd.outer, a.fd.genField)
+                      }, a.fd.nme, N/*no sym name?*/, a.fd.tparams, a.fd.rhs)(
+                        a.fd.declareLoc, a.fd.virtualLoc, a.fd.mutLoc,
+                        N, a.fd.outer orElse b.fd.outer, a.fd.genField)
                       S(TypedNuFun(a.level, fd, a.bodyType & b.bodyType)(a.isImplemented || b.isImplemented))
                     case (a: NuParam, S(b: NuParam)) => 
                       if (!a.isPublic) S(b) else if (!b.isPublic) S(a)
@@ -1686,7 +1719,6 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                               getterError(nme.toLoc)
                             value.toType match {
                               case R(tpe) =>
-                                implicit val newDefsInfo: Map[Str, (TypeDefKind, Int)] = Map.empty // TODO? (similar as one above in file)
                                 val ty = typeType(tpe)
                                 nme -> ty
                               case _ => ???
@@ -1731,6 +1763,24 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         S(res)
                       }
                       case N => N
+                    }
+                    
+                    // * After a class is type checked, we need to "solidify" the inferred types of its unannotated mutable fields,
+                    // * otherwise they would be treated as polymorphic, which would be wrong.
+                    allMembers.foreachEntry {
+                      case (nme, v: TypedNuFun) if v.fd.isMut =>
+                        // * A bit hacky but should work:
+                        v.bodyType.unwrapProvs match {
+                          case _ if v.fd.rhs.isRight || v.fd.signature.nonEmpty =>
+                            // * If the type was annotated, we don't need to do anything.
+                          case tv: TV if tv.assignedTo.isEmpty => // * Could this `tv` ever be assigned?
+                            val res_ty = tv.lowerBounds.reduceOption(_ | _)
+                              .getOrElse(err(msg"Could not infer a type for unused mutable field $nme", v.toLoc))
+                            println(s"Setting type of $nme based on inferred lower bounds: $tv := $res_ty")
+                            tv.assignedTo = S(res_ty)
+                          case ty => lastWords(ty.toString)
+                        }
+                      case (nme, m) =>
                     }
                     
                     TypedNuCls(outerCtx.lvl, td,

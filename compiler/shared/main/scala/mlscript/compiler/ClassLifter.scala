@@ -10,7 +10,7 @@ import scala.collection.mutable.ArrayBuffer as ArrayBuffer
 import mlscript.codegen.CodeGenError
 import mlscript.compiler.mono.MonomorphError
 
-class ClassLifter(logDebugMsg: Boolean = false) { 
+class ClassLifter(logDebugMsg: Boolean = false) {
   type ClassName = String
   type FieldName = String
   case class LocalContext(vSet: Set[Var], tSet: Set[TypeName]){
@@ -299,7 +299,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
   }
 
   private def newLambObj(lhs: Term, rhs: Term) = 
-    New(None, TypingUnit(List(NuFunDef(None, Var("apply"), None, Nil, Left(Lam(lhs, rhs)))(N, N, N, N, false))))
+    New(None, TypingUnit(List(NuFunDef(None, Var("apply"), None, Nil, Left(Lam(lhs, rhs)))(N, N, N, N, N, false))))
 
   private def liftTerm(target: Term)(using ctx: LocalContext, cache: ClassCache, globFuncs: Map[Var, (Var, LocalContext)], outer: Option[ClassInfoCache]): (Term, LocalContext) = 
     log(s"liftTermNew $target in $ctx, $cache, $globFuncs, $outer")
@@ -324,8 +324,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val nTpNm = TypeName(genAnoName("Lambda"+prmCnt))
       val anoCls = NuTypeDef(
         Cls, nTpNm, Nil, S(Tup(Nil)), N, N, Nil, N, N, 
-        TypingUnit(List(NuFunDef(None, Var("apply"), N, Nil, Left(Lam(lhs, rhs)))(N, N, N, N, false))))(N, N) 
-      //val nSta = New(Some((nTpNm, Tup(Nil))), TypingUnit(Nil))
+        TypingUnit(List(NuFunDef(None, Var("apply"), N, Nil, Left(Lam(lhs, rhs)))(N, N, N, N, N, false))))(N, N)
       val nSta = App(Var(nTpNm.name),Tup(Nil))
       val ret = liftEntities(List(anoCls, nSta))
       (Blk(ret._1), ret._2)
@@ -443,7 +442,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
       val (bod2, ctx) = liftTerm(bod)
       val (sts2, ctx2) = liftEntities(sts)
       (Where(bod2, sts2), ctx2)
-    case _: Eqn | _: Super | _: Rft => throw MonomorphError(s"Unimplemented liftTerm: ${target}") // TODO
+    case _: Eqn | _: Super | _: Rft | _: While => throw MonomorphError(s"Unimplemented liftTerm: ${target}") // TODO
     case patmat: AdtMatchWith => lastWords(s"Cannot liftTermNew ${patmat}")
   }
 
@@ -586,18 +585,17 @@ class ClassLifter(logDebugMsg: Boolean = false) {
         val lctx = getFreeVars(lhs)(using emptyCtx, cache, globFuncs, None)
         val lret = liftTuple(lhs)(using ctx.addV(lctx.vSet))
         val ret = liftTerm(rhs)(using ctx.addV(lctx.vSet).addT(tpVs))
-        (func.copy(rhs = Left(Lam(lret._1, ret._1)))(func.declareLoc, func.virtualLoc, func.signature, func.outer, func.genField), ret._2 -+ lret._2)
+        (func.copy(rhs = Left(Lam(lret._1, ret._1)))(func.declareLoc, func.virtualLoc, func.mutLoc, func.signature, func.outer, func.genField), ret._2 -+ lret._2)
       case Left(value) => 
         val ret = liftTerm(value)(using ctx.addT(tpVs))
-        (func.copy(rhs = Left(ret._1))(func.declareLoc, func.virtualLoc, func.signature, func.outer, func.genField), ret._2) 
-        //(func.copy(rhs = Left(Lam(Tup(Nil), ret._1)))(func.declareLoc, func.virtualLoc, func.signature, func.outer, func.genField), ret._2) 
+        (func.copy(rhs = Left(ret._1))(func.declareLoc, func.virtualLoc, func.mutLoc, func.signature, func.outer, func.genField), ret._2) 
       case Right(PolyType(targs, body)) => 
         val nBody = liftType(body)(using ctx.addT(tpVs))
         val nTargs = targs.map {
           case L(tp) => liftTypeName(tp)(using ctx.addT(tpVs)).mapFirst(Left.apply)
           case R(tv) => R(tv) -> emptyCtx
         }.unzip
-        (func.copy(rhs = Right(PolyType(nTargs._1, nBody._1)))(func.declareLoc, func.virtualLoc, func.signature, func.outer, func.genField),
+        (func.copy(rhs = Right(PolyType(nTargs._1, nBody._1)))(func.declareLoc, func.virtualLoc, func.mutLoc, func.signature, func.outer, func.genField),
           nTargs._2.fold(nBody._2)(_ ++ _))
       case _ => throw MonomorphError(s"Unimplemented liftMemberFunc: ${func}") // TODO
     }
@@ -613,11 +611,11 @@ class ClassLifter(logDebugMsg: Boolean = false) {
         val lctx = getFreeVars(lhs)(using emptyCtx, cache, globFuncs, None)
         val lret = liftTuple(lhs)(using ctx.addV(lctx.vSet) ++ globFuncs.get(nm).get._2, cache, globFuncs)
         val ret = liftTerm(rhs)(using ctx.addV(lctx.vSet) ++ globFuncs.get(nm).get._2, cache, globFuncs)
-        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, Left(Lam(Tup(lret._1.fields ++ tmp), ret._1)))(N, N, N, N, true)
+        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, Left(Lam(Tup(lret._1.fields ++ tmp), ret._1)))(N, N, N, N, N, true) 
       case Left(rhs) => 
         val tmp = globFuncs.get(nm).get._2.vSet.toList.map(toFldsEle)
         val ret = liftTerm(rhs)(using ctx ++ globFuncs.get(nm).get._2, cache, globFuncs)
-        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, Left(ret._1))(N, N, N, N, true)
+        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, Left(ret._1))(N, N, N, N, N, true) 
       case Right(PolyType(targs, body)) => 
         val nBody = liftType(body)(using ctx ++ globFuncs.get(nm).get._2, cache, globFuncs, None)
         val nTargs = targs.map({
@@ -625,7 +623,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
             liftTypeName(tn)(using ctx.addT(nTpVs), cache, globFuncs, None) match
               case (tn, ctx) => (L(tn), ctx)
           case R(tv) => R(tv) -> emptyCtx}).unzip
-        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, Right(PolyType(nTargs._1, nBody._1)))(N, N, N, N, true) 
+        NuFunDef(rec, globFuncs.get(nm).get._1, N, nTpVs, Right(PolyType(nTargs._1, nBody._1)))(N, N, N, N, N, true) 
       case _ => throw MonomorphError(s"Unimplemented liftGlobalFunc: ${func}")
     })
   }

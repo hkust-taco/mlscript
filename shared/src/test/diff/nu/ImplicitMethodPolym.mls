@@ -226,33 +226,137 @@ M.id1
 
 
 
+type Option[A] = Some[A] | None
+class Some[out A](val value: A)
 module None
+//│ type Option[A] = None | Some[A]
+//│ class Some[A](value: A)
 //│ module None
 
-// TODO parse
-// TODO reject; polymophism should be blocked by mutation from distributing/refreshing
-:pe
+
+// * TODO support semantics but reject at typing:
+// *  polymophism should be blocked by mutation from distributing/refreshing
+
+module M {
+  mut val m = None
+  fun oops(x) = set m = x
+}
+//│ module M {
+//│   mut val m: None
+//│   fun oops: None -> ()
+//│ }
+
+
+:e
+module M {
+  mut val m = None
+  fun oops(x) = set this.m = x
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
+//│ ║  l.253: 	  fun oops(x) = set this.m = x
+//│ ╙──       	                        ^^
+//│ module M {
+//│   mut val m: None
+//│   fun oops: error -> ()
+//│ }
+
+
+module M[A] {
+  mut val m: Option[A]
+  m = None
+  fun oops(x) = set this.m = x
+}
+//│ module M[A] {
+//│   mut val m: Option[A]
+//│   fun oops: Option[A] -> ()
+//│ }
+
+M.m
+//│ Option['A]
+//│ res
+//│     = None { class: [class None] }
+
+:re // * FIXME (codegen) member definition should inherit mutability of declaration
+M.oops(Some(123))
+//│ ()
+//│ res
+//│ Runtime error:
+//│   TypeError: Cannot set property m of #<M> which has only a getter
+
+M.m
+//│ Option['A]
+//│ res
+//│     = None { class: [class None] }
+
+module M[A] {
+  mut val m: Option[A]
+  mut val m = None
+  fun oops(x) = set this.m = x
+}
+//│ module M[A] {
+//│   mut val m: Option[A]
+//│   fun oops: Option[A] -> ()
+//│ }
+
+M.m
+M.oops(Some(123))
+M.m
+//│ Option['A]
+//│ res
+//│     = None { class: [class None] }
+//│ res
+//│     = undefined
+//│ res
+//│     = Some {}
+
+
+module M[A] {
+  mut val m = None
+}
+//│ module M[A] {
+//│   mut val m: None
+//│ }
+
+M.m
+//│ None
+//│ res
+//│     = None { class: [class None] }
+
+set M.m = None
+//│ ()
+//│ res
+//│     = undefined
+
+:e
+set M.m = Some(1)
+//│ ╔══[ERROR] Type mismatch in assignment:
+//│ ║  l.331: 	set M.m = Some(1)
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Some[?A]` is not an instance of `None`
+//│ ║  l.331: 	set M.m = Some(1)
+//│ ║         	          ^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.314: 	  mut val m = None
+//│ ║         	              ^^^^
+//│ ╟── from assigned selection:
+//│ ║  l.331: 	set M.m = Some(1)
+//│ ╙──       	    ^^^
+//│ ()
+//│ res
+//│     = undefined
+
+
+// * Another possible syntax, which we didn't go with (for now?)
 :e
 module M {
   mut val m = None
   fun oops(x) = m := x
 }
-//│ ╔══[PARSE ERROR] Unexpected 'mut' keyword in expression position
-//│ ║  l.237: 	  mut val m = None
-//│ ╙──       	  ^^^
-//│ ╔══[PARSE ERROR] Unexpected 'val' keyword in expression position
-//│ ║  l.237: 	  mut val m = None
-//│ ╙──       	      ^^^
 //│ ╔══[ERROR] identifier not found: :=
-//│ ║  l.238: 	  fun oops(x) = m := x
+//│ ║  l.353: 	  fun oops(x) = m := x
 //│ ╙──       	                  ^^
-//│ ╔══[ERROR] identifier not found: m
-//│ ║  l.238: 	  fun oops(x) = m := x
-//│ ╙──       	                ^
-//│ ╔══[ERROR] Unexpected equation in this position
-//│ ║  l.237: 	  mut val m = None
-//│ ╙──       	          ^^^^^^^^
 //│ module M {
+//│   mut val m: None
 //│   fun oops: anything -> error
 //│ }
 //│ Code generation encountered an error:

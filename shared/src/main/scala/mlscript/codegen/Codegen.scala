@@ -677,6 +677,13 @@ final case class JSForInStmt(pattern: JSPattern, iteratee: JSExpr, body: Ls[JSSt
     body.foldLeft(SourceCode.empty) { _ + _.toSourceCode }.block
 }
 
+final case class JSWhileStmt(cond: JSExpr, body: JSExpr) extends JSStmt {
+  def toSourceCode: SourceCode = SourceCode("while (") ++
+    cond.toSourceCode ++
+    SourceCode(") ") ++
+    body.toSourceCode.block
+}
+
 // A single return statement.
 final case class JSReturnStmt(value: Opt[JSExpr]) extends JSStmt {
   def toSourceCode = (value match {
@@ -769,6 +776,13 @@ final case class JSClassGetter(name: Str, body: JSExpr \/ Ls[JSStmt]) extends JS
     }).block
 }
 
+final case class JSClassSetter(name: Str) extends JSClassMemberDecl {
+  def toSourceCode: SourceCode =
+    SourceCode(s"set ${JSField.emitValidFieldName(name)}(value) ") ++ (
+      JSIdent(s"this.#$name") := JSIdent("value")
+    ).toSourceCode.block
+}
+
 final case class JSClassMethod(
     name: Str,
     params: Ls[JSPattern],
@@ -836,7 +850,7 @@ final case class JSClassDecl(
 final case class JSClassNewDecl(
     name: Str,
     fields: Ls[Str],
-    accessors: Ls[Str],
+    accessors: Ls[Bool -> Str], // mut -> name
     privateMems: Ls[Str],
     `extends`: Opt[JSExpr],
     superFields: Ls[JSExpr],
@@ -863,10 +877,12 @@ final case class JSClassNewDecl(
       privateMems.distinct.foreach(f => {
         buffer += s"  #${f};"
       })
-      accessors.distinct.foreach(f => {
+      accessors.distinct.foreach { case (mut, f) =>
         if (!privateMems.contains(f)) buffer += s"  #${f};"
         buffer += s"  get ${f}() { return this.#${f}; }"
-      })
+        if (mut) buffer +=
+          s"  set ${f}($$value) { return this.#${f} = $$value; }"
+      }
       buffer += s"  constructor($params) {"
       if (`extends`.isDefined) {
         val sf = superFields.iterator.zipWithIndex.foldLeft("")((res, p) =>
