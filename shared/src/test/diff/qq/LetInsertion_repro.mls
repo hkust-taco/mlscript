@@ -10,9 +10,6 @@ fun (%>) bind: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -
 
 
 
-// *** ??? ***
-
-
 // * TV 'a is missing lower bounds here! (lack of transitive closure propagation)
 fun body(x, y) = case
   0 then x
