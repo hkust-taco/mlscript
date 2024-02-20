@@ -115,15 +115,30 @@ fun foo =
 
 class Ref[A](init: A) { mut val value: A = init }
 //│ class Ref[A](init: A) {
-//│   val value: A
+//│   mut val value: A
 //│ }
+
+
+x `=>
+  let v = Ref(x)
+  let _ = y `=>
+    set v.value = y
+    `0
+  v.value
+//│ Code[forall 'a. 'a -> 'a, ??y & ~??x]
+
+let foo =
+  mut let r = `0
+  x `=> ((set r = x), `0), r
+//│ let foo: Code[0, nothing] | Var['a, in ??x out ??x0]
 
 
 fun foo =
   `let x = `1
   let v = Ref(x)
   `let x = `true
-  (set v.value = x), x
+  set v.value = x
+  x
 //│ fun foo: Code[true, nothing]
 
 let a = `42
@@ -136,7 +151,7 @@ let a = `42
 //│ ╔══[WARNING] Expression in statement position should have type `()`.
 //│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
 //│ ╟── Type mismatch in quasiquote:
-//│ ║  l.134: 	  `log`(x)
+//│ ║  l.149: 	  `log`(x)
 //│ ║         	  ^^^^^^^^
 //│ ╙── code fragment of type `Code[?a, ?b | ?c]` does not match type `()`
 //│ Code[42, nothing]
@@ -148,7 +163,7 @@ x
 //│ ╔══[WARNING] Expression in statement position should have type `()`.
 //│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
 //│ ╟── Type mismatch in quasiquote:
-//│ ║  l.146: 	`log`(x)
+//│ ║  l.161: 	`log`(x)
 //│ ║         	^^^^^^^^
 //│ ╙── code fragment of type `Code[?a, ?b | ?c]` does not match type `()`
 //│ Code[42, nothing]
