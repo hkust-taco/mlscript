@@ -202,40 +202,24 @@ x
 //│ Code[42, nothing]
 
 :e
-:w
 `let x = a `in
-  run of
+  let _ = run of
     `let _ = `log`(x)
     `1
   x
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.207: 	  run of
-//│ ║         	  ^^^^^^
-//│ ║  l.208: 	    `let _ = `log`(x)
+//│ ║  l.206: 	  let _ = run of
+//│ ║         	          ^^^^^^
+//│ ║  l.207: 	    `let _ = `log`(x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.209: 	    `1
+//│ ║  l.208: 	    `1
 //│ ║         	^^^^^^
 //│ ╟── code fragment context type of type `?x` does not match type `nothing`
-//│ ║  l.208: 	    `let _ = `log`(x)
+//│ ║  l.207: 	    `let _ = `log`(x)
 //│ ║         	                   ^
 //│ ╟── but it flows into code fragment context type with expected type `nothing`
-//│ ║  l.208: 	    `let _ = `log`(x)
+//│ ║  l.207: 	    `let _ = `log`(x)
 //│ ╙──       	             ^^^^^^^^
-//│ ╔══[WARNING] Expression in statement position should have type `()`.
-//│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
-//│ ╟── Type mismatch in application:
-//│ ║  l.207: 	  run of
-//│ ║         	  ^^^^^^
-//│ ║  l.208: 	    `let _ = `log`(x)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.209: 	    `1
-//│ ║         	^^^^^^
-//│ ╟── integer literal of type `1` does not match type `()`
-//│ ║  l.209: 	    `1
-//│ ║         	     ^
-//│ ╟── but it flows into code fragment body type with expected type `()`
-//│ ║  l.209: 	    `1
-//│ ╙──       	    ^^
 //│ Code[42, nothing]
 
 
