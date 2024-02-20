@@ -51,7 +51,7 @@ class BaseImpl[A]() extends ArraysImpl[A, A] {
     fun fold  (r, b, f) = f(r)(b)
 }
 //│ class BaseImpl[A]() extends ArraysImpl {
-//│   fun fold: forall 'a 'b 'c. ('a, 'b, 'a -> 'b -> 'c) -> 'c
+//│   fun fold: forall 'a 'b 'c. ('b, 'c, 'b -> 'c -> 'a) -> 'a
 //│   fun init: forall 'd. 'd -> 'd
 //│   fun sub: forall 'e. ('e, anything) -> 'e
 //│   fun update: forall 'f. (anything, anything, 'f) -> 'f
@@ -142,7 +142,7 @@ class Step'[A](from: Arrays[A]) extends Arrays[A] {
 //│ ║  l.124: 	    from.use of impl => k(StepImpl(impl))
 //│ ╙──       	    ^^^^^^^^
 //│ class Step'[A](from: Arrays[A]) extends Arrays {
-//│   fun use: forall 'R 'a. (StepImpl[A, in ??rep & 'R out 'R | ??rep0] -> 'a) -> 'a
+//│   fun use: forall 'a. (StepImpl[A, in ??rep] -> 'a) -> 'a
 //│ }
 //│ Syntax error:
 //│   Unexpected string
@@ -187,7 +187,7 @@ snb.use of impl =>
 // * Here we are trying to leak the internally-quantified representation, resulting in the `??rep` extrusion
 snb.use of impl => impl.init(true)
 // :d
-//│ true | ??rep
+//│ anything
 //│ res
 //│     = [
 //│         [ [ true, true ], [ true, true ] ],
@@ -245,7 +245,7 @@ class StepAlt'[A](from: Arrays[A]) extends Arrays[A] {
 //│ ║  l.211: 	  val use = from.use of impl =>
 //│ ╙──       	            ^^^^^^^^
 //│ class StepAlt'[A](from: Arrays[A]) extends Arrays {
-//│   val use: forall 'R 'a. error | (StepImpl[A, 'R] -> 'a) -> 'a
+//│   val use: forall 'a 'R. error | (StepImpl[A, 'R] -> 'a) -> 'a
 //│ }
 //│ where
 //│   'R :> ??rep
@@ -329,7 +329,7 @@ snb.use of impl =>
 //│ ]
 
 snb.use of impl => impl.init(true)
-//│ true | ??rep
+//│ anything
 //│ res
 //│     = [
 //│         [ [ true, true ], [ true, true ] ],

@@ -23,14 +23,14 @@ def bar: (forall 'y. ('y -> 'y, 'a)) -> 'a
 //│ bar: (forall 'y. ('y -> 'y, 'a,)) -> 'a
 
 r1 = bar foo
-//│ r1: (??y & 'x) -> ('x | ??y0)
+//│ r1: ??y -> anything
 
 
 def baz: (forall 'y. ('a, 'y -> 'y)) -> 'a
 //│ baz: (forall 'y. ('a, 'y -> 'y,)) -> 'a
 
 r2 = bar foo
-//│ r2: (??y & 'x) -> ('x | ??y0)
+//│ r2: ??y -> anything
 
 
 
@@ -52,7 +52,7 @@ r1 id
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.18: 	def foo: forall 'x. ('x -> 'x, 'x -> 'x)
 //│ ╙──      	                               ^^
-//│ res: error | 'a -> 'a | ??y
+//│ res: anything
 
 :e
 r2 id
@@ -72,6 +72,6 @@ r2 id
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.18: 	def foo: forall 'x. ('x -> 'x, 'x -> 'x)
 //│ ╙──      	                               ^^
-//│ res: error | 'a -> 'a | ??y
+//│ res: anything
 
 

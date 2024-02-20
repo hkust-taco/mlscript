@@ -9,7 +9,7 @@ fun (:+) post(xs, x: Int) = [xs, [x]]
 fun (++) conc(xs, ys) = [xs, ys]
 //│ fun (+:) pre: forall 'a. (x: Int, 'a) -> [[Int], 'a]
 //│ fun (:+) post: forall 'b. ('b, x: Int) -> ['b, [Int]]
-//│ fun (++) conc: forall 'c 'd. ('c, 'd) -> ['c, 'd]
+//│ fun (++) conc: forall 'c 'd. ('d, 'c) -> ['d, 'c]
 
 
 1 +: 2 +: 3 +: []

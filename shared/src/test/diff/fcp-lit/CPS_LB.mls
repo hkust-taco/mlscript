@@ -83,5 +83,5 @@ def g t1 t2 = (s x x t1 x (s x t2 x e) e)
 
 // (* This does not type. It requires first-class polymorphism. *)
 def h t = g t t
-//│ h: (() -> List["x"] -> ((forall 'b 'a. () -> List['a] -> (() -> List["x" | 'a] -> 'b) -> 'b) -> 'c -> (forall 'a0 'd. () -> List[string] -> () -> List['a0] -> (() -> List[string | 'a0] -> 'd) -> 'd) -> 'e & (forall 'f 'a. () -> List['a] -> (() -> List["x" | 'a] -> 'f) -> 'f) -> (forall 'a0 'g. () -> List[string] -> () -> List['a0] -> (() -> List[string | 'a0] -> 'g) -> 'g) -> 'c)) -> 'e
+//│ h: (() -> List["x"] -> ((forall 'a 'b. () -> List['a] -> (() -> List["x" | 'a] -> 'b) -> 'b) -> 'c -> (forall 'a0 'd. () -> List[string] -> () -> List['a0] -> (() -> List[string | 'a0] -> 'd) -> 'd) -> 'e & (forall 'a 'f. () -> List['a] -> (() -> List["x" | 'a] -> 'f) -> 'f) -> (forall 'a0 'g. () -> List[string] -> () -> List['a0] -> (() -> List[string | 'a0] -> 'g) -> 'g) -> 'c)) -> 'e
 
