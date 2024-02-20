@@ -23,8 +23,6 @@ run(res)
 //│ let res: Code[Int, nothing]
 //│ Int
 
-//any of a, b, c -> codegen error from unresolved symbol "any"
-
 :pe
 code"// Can I comment?"
 //│ ╔══[PARSE ERROR] Unmatched opening quasiquote
