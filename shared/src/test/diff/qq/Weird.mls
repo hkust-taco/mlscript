@@ -167,3 +167,85 @@ x
 //│ ║         	^^^^^^^^
 //│ ╙── code fragment of type `Code[?a, ?b | ?c]` does not match type `()`
 //│ Code[42, nothing]
+
+:w
+`let x = a `in
+  run of
+    `log`(x)
+    `1
+  x
+//│ ╔══[WARNING] Expression in statement position should have type `()`.
+//│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
+//│ ╟── Type mismatch in quasiquote:
+//│ ║  l.174: 	    `log`(x)
+//│ ║         	    ^^^^^^^^
+//│ ╙── code fragment of type `Code[?a, ?b | ?c]` does not match type `()`
+//│ ╔══[WARNING] Expression in statement position should have type `()`.
+//│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
+//│ ╟── Type mismatch in application:
+//│ ║  l.173: 	  run of
+//│ ║         	  ^^^^^^
+//│ ║  l.174: 	    `log`(x)
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.175: 	    `1
+//│ ║         	^^^^^^
+//│ ╟── integer literal of type `1` does not match type `()`
+//│ ║  l.175: 	    `1
+//│ ║         	     ^
+//│ ╟── but it flows into application with expected type `()`
+//│ ║  l.173: 	  run of
+//│ ║         	  ^^^^^^
+//│ ║  l.174: 	    `log`(x)
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.175: 	    `1
+//│ ╙──       	^^^^^^
+//│ Code[42, nothing]
+
+:e
+:w
+`let x = a `in
+  run of
+    `let _ = `log`(x)
+    `1
+  x
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.207: 	  run of
+//│ ║         	  ^^^^^^
+//│ ║  l.208: 	    `let _ = `log`(x)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.209: 	    `1
+//│ ║         	^^^^^^
+//│ ╟── code fragment context type of type `?x` does not match type `nothing`
+//│ ║  l.208: 	    `let _ = `log`(x)
+//│ ║         	                   ^
+//│ ╟── but it flows into code fragment context type with expected type `nothing`
+//│ ║  l.208: 	    `let _ = `log`(x)
+//│ ╙──       	             ^^^^^^^^
+//│ ╔══[WARNING] Expression in statement position should have type `()`.
+//│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
+//│ ╟── Type mismatch in application:
+//│ ║  l.207: 	  run of
+//│ ║         	  ^^^^^^
+//│ ║  l.208: 	    `let _ = `log`(x)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.209: 	    `1
+//│ ║         	^^^^^^
+//│ ╟── integer literal of type `1` does not match type `()`
+//│ ║  l.209: 	    `1
+//│ ║         	     ^
+//│ ╟── but it flows into code fragment body type with expected type `()`
+//│ ║  l.209: 	    `1
+//│ ╙──       	    ^^
+//│ Code[42, nothing]
+
+
+`let x = `1 `in
+  `let _ = `log`(x)
+  x
+//│ Code[1, nothing]
+
+fun foo =
+  `let x = `1
+  `let _ = `log`(x)
+  x
+//│ fun foo: Code[1, nothing]
