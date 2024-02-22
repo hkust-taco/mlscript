@@ -166,11 +166,11 @@ def simpleStep: Arrays['a] -> Arrays['a]
 
 // * Note: this one fails to type check when the file is typed with `:ConstrainedTypes`
 def simpleStep arr = arr (fun impl -> fun (k: ArraysRepConsumer['a, 'r]) -> k (simpleStepImpl impl))
-//│ ((forall 'A 'a 'A0 'Rep 'A1. ArraysRep[in 'A0 & 'A1 & 'A out 'A0 | 'A1, 'Rep] -> ArraysRepConsumer['A0, 'a] -> 'a) -> 'b) -> 'b
+//│ ((forall 'A 'A0 'A1 'Rep 'a. ArraysRep[in 'A & 'A0 & 'A1 out 'A | 'A0, 'Rep] -> ArraysRepConsumer['A, 'a] -> 'a) -> 'b) -> 'b
 //│   where
-//│     'A0 :> 'A1
-//│         <: 'A
-//│     'A <: 'A0
+//│     'A :> 'A0
+//│        <: 'A1
+//│     'A1 <: 'A
 //│   <:  simpleStep:
 //│ Arrays['a] -> Arrays['a]
 //│           = [Function: simpleStep]
@@ -270,11 +270,11 @@ sb (fun arr ->
 
 :e
 def simpleStep arr = arr (fun impl -> fun k -> k (simpleStepImpl impl))
-//│ ((forall 'Rep 'a 'A 'c 'A0 'd 'A1 'Rep0. ArraysRep[in 'A1 & 'A0 & 'A out 'A0 | 'A1, in 'Rep & 'Rep0 & 'a out 'Rep | 'Rep0] -> ((forall 'Rep1. ArraysImpl['A, 'Rep1] with {
+//│ ((forall 'A 'A0 'A1 'Rep 'Rep0 'a 'c 'd. ArraysRep[in 'A & 'A0 & 'A1 out 'A0 | 'A, in 'Rep & 'Rep0 & 'a out 'Rep | 'Rep0] -> ((forall 'Rep1. ArraysImpl['A1, 'Rep1] with {
 //│   fold: forall 'b. ('A0 -> 'b -> 'b) -> 'b -> (('Rep0, anything,),) -> 'b,
-//│   init: 'A1 -> ('Rep, "initialized",),
+//│   init: 'A -> ('Rep, "initialized",),
 //│   sub: (('Rep0, anything,),) -> int -> 'A0,
-//│   update: forall 'e. (('Rep0 & 'e, anything,),) -> int -> 'A1 -> ('Rep | 'e, "updated",)
+//│   update: forall 'e. (('Rep0 & 'e, anything,),) -> int -> 'A -> ('Rep | 'e, "updated",)
 //│ }) -> 'd) -> 'd) -> 'f) -> 'f
 //│ where
 //│   'Rep1 :> ('Rep | 'c, "initialized" | "updated",)
@@ -282,8 +282,8 @@ def simpleStep arr = arr (fun impl -> fun k -> k (simpleStepImpl impl))
 //│   'a <: 'Rep0 & 'c
 //│   'c :> 'Rep
 //│      <: 'Rep0 & 'a
-//│   'A :> 'A0
-//│      <: 'A1
+//│   'A1 :> 'A0
+//│       <: 'A
 //│   <:  simpleStep:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type error in def definition
@@ -405,7 +405,7 @@ def step: Arrays['a] -> Arrays['a]
 //│     = <missing implementation>
 
 def step arr = arr (fun impl -> fun (k: ArraysRepConsumer['a, 'r]) -> k (stepImpl impl))
-//│ ((forall 'Rep 'a 'A 'A0 'A1. ArraysRep[in 'A & 'A0 & 'A1 out 'A | 'A0, 'Rep] -> ArraysRepConsumer['A, 'a] -> 'a) -> 'b) -> 'b
+//│ ((forall 'A 'A0 'A1 'Rep 'a. ArraysRep[in 'A & 'A0 & 'A1 out 'A | 'A0, 'Rep] -> ArraysRepConsumer['A, 'a] -> 'a) -> 'b) -> 'b
 //│   where
 //│     'A :> 'A0
 //│        <: 'A1

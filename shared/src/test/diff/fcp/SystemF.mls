@@ -335,7 +335,7 @@ fp02_ty = fp02
 fp02
 //│ res: forall 'a. 'a
 //│   where
-//│     'a :> forall 'b 'c. 'c -> 'b -> 'b
+//│     'a :> forall 'b 'c. 'b -> 'c -> 'c
 //│    = [Function: Z]
 
 sp02 = snd p02

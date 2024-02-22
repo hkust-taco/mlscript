@@ -33,7 +33,7 @@ fun foo() =
   let bar = 42 // not at top level
   code"bar"
 //│ ╔══[ERROR] identifier not found: bar
-//│ ║  l.40: 	  code"bar"
+//│ ║  l.34: 	  code"bar"
 //│ ╙──      	       ^^^
 //│ fun foo: () -> Code[error, nothing]
 
@@ -64,7 +64,7 @@ let p3 = y `=>
   discard(run(x `=> power(x `+ y)(3)))
   y
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.70: 	  discard(run(x `=> power(x `+ y)(3)))
+//│ ║  l.64: 	  discard(run(x `=> power(x `+ y)(3)))
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `?y & ~??x` does not match type `nothing`
 //│ let p3: Code[forall 'a. (Int & 'a) -> 'a, nothing]

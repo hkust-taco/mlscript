@@ -28,7 +28,7 @@ module A {
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ module A {
 //│   fun f: nothing
-//│   fun g: forall 'a 'b. ('b -> 'a & 'b) -> 'a
+//│   fun g: forall 'a 'b. ('a -> 'b & 'a) -> 'b
 //│   fun h: error
 //│   fun i: forall 'c. 'c -> 'c
 //│ }

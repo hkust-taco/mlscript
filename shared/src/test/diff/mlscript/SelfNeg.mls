@@ -16,12 +16,12 @@ foo
 
 :ns
 r = foo (fun a -> fun f -> f a)
-//│ r: forall 'b 'c 'a 'd. 'c
+//│ r: forall 'b 'a 'c 'd. 'b
 //│   where
-//│     'c :> 'a -> 'a
-//│     'a <: 'b & 'd
-//│     'd <: ~'a
-//│     'b <: 'a
+//│     'b :> 'a -> 'a
+//│     'a <: 'd & 'c
+//│     'c <: ~'a
+//│     'd <: 'a
 //│  = <no result>
 //│    foo is not implemented
 

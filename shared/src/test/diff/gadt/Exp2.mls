@@ -47,7 +47,7 @@ class Pair[L, R](val lhs: Exp[L], val rhs: Exp[R]) extends Exp[[L, R]]
 
 
 fun f(p: Pair['a, 'b]) = p.lhs
-//│ fun f: forall 'b 'a. (p: Pair['a, 'b]) -> Exp['a]
+//│ fun f: forall 'a 'b. (p: Pair['a, 'b]) -> Exp['a]
 
 fun f(e) = if e is
   Pair(l, r) then [l, r]

@@ -61,7 +61,7 @@ rec def f w = case w of
       Some ->
         // Some tmp0.value // * produces different result!
         let m = tmp0.value in Some m
-//│ f: 'b -> Some[in 'a out 0 | 'a]
+//│ f: 'b -> Some[in 'a out 'a | 0]
 //│   where
 //│     'b <: Node & {left: 'b}
 

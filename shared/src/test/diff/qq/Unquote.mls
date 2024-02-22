@@ -187,7 +187,7 @@ code"f(0)"
 // :ge
 code"${code"${code"${z}"}"}"
 //│ ╔══[ERROR] identifier not found: z
-//│ ║  l.194: 	code"${code"${code"${z}"}"}"
+//│ ║  l.188: 	code"${code"${code"${z}"}"}"
 //│ ╙──       	                     ^
 //│ Code[nothing, nothing]
 
@@ -200,7 +200,7 @@ code"${code"${z}"}"
 :e
 code"let x = 1 in let z = 1 in ${code"x + y"}"
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.207: 	code"let x = 1 in let z = 1 in ${code"x + y"}"
+//│ ║  l.201: 	code"let x = 1 in let z = 1 in ${code"x + y"}"
 //│ ╙──       	                                          ^
 //│ Code[Int, nothing]
 
@@ -211,7 +211,7 @@ code"let z = 0 in ${code"z + 1"}"
 :e
 code"let x = 1 in ${code"x + y"}"
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.218: 	code"let x = 1 in ${code"x + y"}"
+//│ ║  l.212: 	code"let x = 1 in ${code"x + y"}"
 //│ ╙──       	                             ^
 //│ Code[Int, nothing]
 

@@ -187,7 +187,7 @@ def step (arr: Arrays['a]) = arr helper
 //│ Arrays['a] -> error
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
-//│ ╔══[ERROR] Subtyping constraint of the form `Arrays['a] <: (forall 'a0 'rep. ArraysImpl['a0, 'rep] -> (forall 'res 'b ?a. ArraysImplConsumer['b, 'res] -> ?a)) -> ?b` took too many steps and ran out of fuel (10000)
+//│ ╔══[ERROR] Subtyping constraint of the form `Arrays['a] <: (forall 'a0 'rep. ArraysImpl['a0, 'rep] -> (forall ?a 'b 'res. ArraysImplConsumer['b, 'res] -> ?a)) -> ?b` took too many steps and ran out of fuel (10000)
 //│ ║  l.186: 	def step (arr: Arrays['a]) = arr helper
 //│ ║         	                             ^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -296,7 +296,7 @@ def step (arr: Arrays['a]) = arr helper
 // * An alternative way, and in one go:
 
 def step arr = arr (fun impl -> (fun k -> k (stepImpl_ty impl)) : Arrays['a])
-//│ ((forall 'r 'a. ArraysImpl['a, 'r] -> Arrays['a]) -> 'b) -> 'b
+//│ ((forall 'a 'r. ArraysImpl['a, 'r] -> Arrays['a]) -> 'b) -> 'b
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step6]
@@ -583,13 +583,13 @@ def s arr (k: ArraysImplConsumer['a, 'rep]) = arr (fun impl -> k (stepImpl_ty im
 // * We can see it shouldn't be simplified to nothing:
 :ns
 s
-//│ res: forall 'rep 'a 'b 'c 'a0. 'b -> (forall 'a1 'rep0 'd. ArraysImplConsumer['a1, 'rep0] -> 'd)
+//│ res: forall 'b 'a 'a0 'rep 'c. 'b -> (forall 'a1 'rep0 'd. ArraysImplConsumer['a1, 'rep0] -> 'd)
 //│   where
 //│     'd :> 'c
 //│     'rep0 <: 'rep
 //│     'a1 :> 'a0
 //│         <: 'a
-//│     'b <: (forall 'e 'a2 'f 'r. 'e -> 'f) -> 'c
+//│     'b <: (forall 'r 'e 'a2 'f. 'e -> 'f) -> 'c
 //│     'f :> 'rep
 //│     'e <: ArraysImpl['a2, 'r]
 //│     'a2 :> 'a

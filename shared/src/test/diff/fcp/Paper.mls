@@ -102,7 +102,7 @@ auto auto!
 
 :e
 auto auto
-//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b. ?a -> ?b <: (forall ?c ?b. ?c -> ?b) -> ?d` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `forall ?a ?b. ?b -> ?a <: (forall ?a ?c. ?c -> ?a) -> ?d` exceeded recursion depth limit (250)
 //│ ║  l.104: 	auto auto
 //│ ║         	^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.

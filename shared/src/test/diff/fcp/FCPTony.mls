@@ -44,9 +44,9 @@ def app p q = p q
 def mul r s = r (app s) id
 //│ mul: 'a -> ('b -> 'c
 //│   where
-//│     'a <: (forall 'd 'e. 'e -> 'd
+//│     'a <: (forall 'd 'e. 'd -> 'e
 //│       where
-//│         'b <: 'e -> 'd) -> (forall 'f. 'f -> 'f) -> 'c)
+//│         'b <: 'd -> 'e) -> (forall 'f. 'f -> 'f) -> 'c)
 //│    = [Function: mul]
 
 :e
@@ -142,13 +142,13 @@ add
 
 :ns
 def f x y = add x y
-//│ f: forall 'a. 'a -> (forall 'b 'c 'd 'e 'f. 'b -> 'd
+//│ f: forall 'a. 'a -> (forall 'b 'c 'd 'e 'f. 'b -> 'c
 //│   where
-//│     'a <: (ChurchInt -> ChurchInt) -> 'e)
+//│     'a <: (ChurchInt -> ChurchInt) -> 'd)
 //│ where
-//│   'b <: 'f
-//│   'e <: 'f -> 'c
-//│   'c <: 'd
+//│   'b <: 'e
+//│   'd <: 'e -> 'f
+//│   'f <: 'c
 //│  = [Function: f]
 
 // :ds
