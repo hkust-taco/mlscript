@@ -462,10 +462,10 @@ fun subst(t, n, v) =
 //│     'a :> Abs & {lhs: Var & {name: string}, rhs: Var & {name: string} | 'rhs | 'e | 'c | 'a | 'd}
 //│        <: Abs & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'a & 'h | App & 'b & 'f | Var & 'c} & 'h | App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'a & 'h | App & 'b & 'f | Var & 'c} & 'b & 'f | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'a & 'h | App & 'b & 'f | Var & 'c} & 'c | 'd & (App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'a & 'h | App & 'b & 'f | Var & 'c} & 'f & ~#App | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'a & 'h | App & 'b & 'f | Var & 'c} & ~#Var)
 //│     'rhs :> Var & {name: string} | 'e | 'c | 'a | 'd
-//│     'e :> Var & {name: string} | 'c | 'a | 'd | App & {
+//│     'e :> Var & {name: string} | 'c | 'a | 'd | Abs & {lhs: Var & {name: string}, rhs: 'rhs} | App & {
 //│       lhs: Var & {name: string} | 'e | 'c | 'a | 'd,
 //│       rhs: Var & {name: string} | 'e | 'c | 'a | 'd
-//│     } | Abs & {lhs: Var & {name: string}, rhs: 'rhs}
+//│     }
 //│     'c :> Var & {name: string}
 //│        <: Abs & {name: anything} & 'a & 'h | App & {name: anything} & 'b & 'f | Var | 'd & (Abs & {name: anything} & 'h & ~#Abs | App & {name: anything} & 'f & ~#App)
 //│     'b <: {

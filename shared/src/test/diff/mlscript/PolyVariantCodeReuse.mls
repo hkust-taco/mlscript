@@ -142,7 +142,7 @@ rec def eval1 subst = eval_lambda eval1 subst
 //│     'b <: {head: {0: string, 1: 'result}, tail: 'tail}
 //│     'result :> 'd
 //│             <: Abs[?] & 'e & 'f | 'lhs & (Abs[?] & 'f & ~#Abs | App[?] & 'g | Var & 'h)
-//│     'd :> 'result | 'i | App['a]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | Abs['d]
+//│     'd :> 'result | 'i | Abs['d] | App['a]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs}
 //│     'i :> Var
 //│        <: Abs[?] & 'e & 'f | 'lhs & (Abs[?] & 'f & ~#Abs | App[?] & {name: string} & 'g | Var & 'h)
 //│     'lhs :> App['a]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | Var
@@ -492,8 +492,8 @@ rec def eval4 subst = eval_lexpr' eval4 subst
 //│     'n <: Abs[?] & {body: 'h} | App[?] & {lhs: 'h, rhs: 'h} | Var & 'r
 //│     'lhs :> Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | App['a | 'a0]\lhs\rhs & {lhs: 'lhs | 'lhs0, rhs: 'rhs | 'rhs0} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Numb | Var
 //│          <: 'h & 'a0
-//│     'a :> Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | App['a | 'a0]\lhs\rhs & {lhs: 'lhs | 'lhs0, rhs: 'rhs | 'rhs0} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Var | 'i
-//│     'a0 :> Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | App['a | 'a0]\lhs\rhs & {lhs: 'lhs | 'lhs0, rhs: 'rhs | 'rhs0} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Var | 'i
+//│     'a :> Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | App['a | 'a0]\lhs\rhs & {lhs: 'lhs | 'lhs0, rhs: 'rhs | 'rhs0} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | 'i
+//│     'a0 :> Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | App['a | 'a0]\lhs\rhs & {lhs: 'lhs | 'lhs0, rhs: 'rhs | 'rhs0} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | 'i
 //│     'lhs0 :> Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | App['a | 'a0]\lhs\rhs & {lhs: 'lhs | 'lhs0, rhs: 'rhs | 'rhs0} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Numb | Var
 //│           <: 'h & 'a
 //│     'rhs0 :> 'i
@@ -504,7 +504,7 @@ rec def eval4 subst = eval_lexpr' eval4 subst
 //│        eval_lexpr', eval_var, list_assoc and eq are not implemented
 //│ constrain calls  : 10599
 //│ annoying  calls  : 2300
-//│ subtyping calls  : 336355
+//│ subtyping calls  : 348738
 
 :ResetFuel
 

@@ -375,8 +375,8 @@ EM_to_DNE: EM -> DNE
 //│ ║  l.23: 	type DNE = forall 'a. Not[Not['a]] -> 'a
 //│ ║        	                              ^^
 //│ ╟── back into type variable `'a`
-//│ ║  l.23: 	type DNE = forall 'a. Not[Not['a]] -> 'a
-//│ ║        	                  ^^
+//│ ║  l.32: 	  case em of Left -> em.v, Right -> nna em.v
+//│ ║        	                     ^^^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this field selection:
 //│ ║  l.32: 	  case em of Left -> em.v, Right -> nna em.v
@@ -386,7 +386,10 @@ EM_to_DNE: EM -> DNE
 //│ ║         	^^^^^^^^^
 //│ ╟── • this field selection:
 //│ ║  l.32: 	  case em of Left -> em.v, Right -> nna em.v
-//│ ╙──      	                     ^^^^
+//│ ║        	                     ^^^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.19: 	type EM = forall 'a. Either['a, Not['a]]
+//│ ╙──      	                                    ^^
 //│ res: EM -> DNE
 
 :e
