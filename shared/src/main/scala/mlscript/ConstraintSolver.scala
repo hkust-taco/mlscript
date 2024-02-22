@@ -20,7 +20,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     // 200
     250
   
-  type ExtrCtx = MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
+  // type ExtrCtx = MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
+  type ExtrCtx = MutSortMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
   
   protected var currentConstrainingRun = 0
   
