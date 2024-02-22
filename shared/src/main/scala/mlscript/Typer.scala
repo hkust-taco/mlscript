@@ -241,7 +241,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     NuTypeDef(Als, TN("undefined"), Nil, N, N, S(Literal(UnitLit(true))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc), Nil),
     NuTypeDef(Als, TN("null"), Nil, N, N, S(Literal(UnitLit(false))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc), Nil),
     NuTypeDef(Cls, TN("Annotation"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc), Nil),
-    NuTypeDef(Mod, TN("tailrec"), Nil, N, N, N, Var("Annotation") :: Nil, N, N, TypingUnit(Nil))(N, N, Nil),
+    // Not yet implemented, so we do not define it yet
+    // NuTypeDef(Mod, TN("tailrec"), Nil, N, N, N, Var("Annotation") :: Nil, N, N, TypingUnit(Nil))(N, N, Nil),
   )
   val builtinTypes: Ls[TypeDef] =
     TypeDef(Cls, TN("?"), Nil, TopType, Nil, Nil, Set.empty, N, Nil) :: // * Dummy for pretty-printing unknown type locations

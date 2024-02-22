@@ -1,8 +1,5 @@
 :NewDefs
 
-:NoJS // * The JS backend currently doesn't know about Annotation
-
-
 module tailrec2 extends Annotation
 //│ module tailrec2 extends Annotation
 
@@ -18,10 +15,10 @@ class tailrec2() extends Annotation
 @tailrec2
 fun foo = 0
 //│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.19: 	fun foo = 0
+//│ ║  l.16: 	fun foo = 0
 //│ ║        	    ^^^^^^^
 //│ ╟── reference of type `() -> tailrec2` is not an instance of type `Annotation`
-//│ ║  l.18: 	@tailrec2
+//│ ║  l.15: 	@tailrec2
 //│ ╙──      	 ^^^^^^^^
 //│ fun foo: 0
 
@@ -29,7 +26,7 @@ fun foo = 0
 @hello
 fun foo = 0
 //│ ╔══[ERROR] identifier not found: hello
-//│ ║  l.29: 	@hello
+//│ ║  l.26: 	@hello
 //│ ╙──      	 ^^^^^
 //│ fun foo: 0
 
@@ -44,7 +41,7 @@ class Triple[A](a: A, b: A, c: A)
 @helloa
 class Triple[A](a: A, b: A, c: A)
 //│ ╔══[ERROR] identifier not found: helloa
-//│ ║  l.44: 	@helloa
+//│ ║  l.41: 	@helloa
 //│ ╙──      	 ^^^^^^
 //│ class Triple[A](a: A, b: A, c: A)
 
@@ -56,7 +53,7 @@ module dummy
 @helloa
 module dummy
 //│ ╔══[ERROR] identifier not found: helloa
-//│ ║  l.56: 	@helloa
+//│ ║  l.53: 	@helloa
 //│ ╙──      	 ^^^^^^
 //│ module dummy
 
@@ -65,10 +62,12 @@ module dummy
 @tailrec2()
 fun foo = 0
 //│ ╔══[ERROR] Type mismatch in annotated undefined literal:
-//│ ║  l.65: 	@tailrec2()
+//│ ║  l.62: 	@tailrec2()
 //│ ║        	 ^^^^^^^^^^
 //│ ╟── reference of type `() -> tailrec2` is not an instance of type `Annotation`
-//│ ║  l.65: 	@tailrec2()
+//│ ║  l.62: 	@tailrec2()
 //│ ╙──      	 ^^^^^^^^
 //│ fun foo: 0
 //│ ()
+//│ res
+//│     = undefined

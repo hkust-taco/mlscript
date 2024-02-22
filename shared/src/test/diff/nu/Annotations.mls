@@ -1,9 +1,13 @@
 :NewDefs
 
-:NoJS
+// This should not be needed once we implemented the @tailrec annotation internally.
+module tailrec extends Annotation
+//│ module tailrec extends Annotation
 
 tailrec
 //│ tailrec
+//│ res
+//│     = tailrec { class: [class tailrec extends Object] }
 
 @tailrec fun foo(n) =
   if n > 0 then
@@ -19,18 +23,23 @@ module Foo extends Annotation {
 
 @Foo 5
 //│ 5
+//│ res
+//│     = 5
 
 Foo
 //│ Foo
+//│ res
+//│     = Foo { class: [class Foo extends Object] }
 
 :e
 @Bar 5
 //│ ╔══[ERROR] identifier not found: Bar
-//│ ║  l.27: 	@Bar 5
+//│ ║  l.35: 	@Bar 5
 //│ ╙──      	 ^^^
 //│ 5
+//│ res
+//│     = 5
 
-// TODO
 fun foo(n) =
   if n > 0 then
     log(join of "hi ", String(n))
@@ -39,7 +48,7 @@ fun foo(n) =
   else ()
 //│ fun foo: Int -> ()
 
-// TODO
+:NoJS // recurses infinitely since `div` is float division. do not run it for now
 foo(5)
 //│ ()
 

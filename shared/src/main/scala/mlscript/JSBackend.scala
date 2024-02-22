@@ -75,9 +75,10 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     case TyApp(base, _) =>
       translatePattern(base)
     case Inst(bod) => translatePattern(bod)
+    case Ann(ann, receiver) => translatePattern(receiver)
     case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf
         | _: Subs | _: Assign | _: If | _: New  | NuNew(_) | _: Splc | _: Forall | _: Where
-        | _: Super | _: Eqn | _: AdtMatchWith | _: Rft | _: While | _: Ann =>
+        | _: Super | _: Eqn | _: AdtMatchWith | _: Rft | _: While =>
       throw CodeGenError(s"term $t is not a valid pattern")
   }
 
@@ -339,7 +340,8 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     case TyApp(base, _) => translateTerm(base)
     case Eqn(Var(name), _) =>
       throw CodeGenError(s"assignment of $name is not supported outside a constructor")
-    case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: AdtMatchWith | _: Rft | _: Ann =>
+    case Ann(ann, receiver) => translateTerm(receiver)
+    case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: AdtMatchWith | _: Rft =>
       throw CodeGenError(s"cannot generate code for term $term")
   }
 
