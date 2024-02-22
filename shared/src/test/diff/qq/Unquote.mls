@@ -127,7 +127,7 @@ let cde_w_mutli_unquote = code"${free_var2} + ${free_var1}"
 //│ let cde_w_mutli_unquote: Code[Int, nothing]
 
 fun f(x, y) = code"[${x}, ${y}]"
-//│ fun f: forall 'a 'b 'c. (Code['c, 'a], Code['b, 'a]) -> Code[['c, 'b], 'a]
+//│ fun f: forall 'a 'b 'c. (Code['a, 'b], Code['c, 'b]) -> Code[['a, 'c], 'b]
 
 
 :e
@@ -170,7 +170,7 @@ code"y => ${c}"
 
 
 fun f(x, y) = [code"[${x}, ${y}]", x, y]
-//│ fun f: forall 'a 'b 'c 'd 'e. (Code['d, 'c] & 'b, Code['a, 'c] & 'e) -> [Code[['d, 'a], 'c], 'b, 'e]
+//│ fun f: forall 'a 'b 'c 'd 'e. (Code['c, 'b] & 'a, Code['e, 'b] & 'd) -> [Code[['c, 'e], 'b], 'a, 'd]
 
 
 

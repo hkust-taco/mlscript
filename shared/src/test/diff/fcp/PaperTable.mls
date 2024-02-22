@@ -698,7 +698,7 @@ auto auto
 // Gn+1
 :e
 (fun x -> x x) (fun x -> x x)
-//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c ?d. ?d -> ?c) -> ?e` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c ?d. ?c -> ?d) -> ?e` exceeded recursion depth limit (250)
 //│ ║  l.700: 	(fun x -> x x) (fun x -> x x)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -1105,7 +1105,7 @@ auto auto
 // Gn+1
 :e
 (fun x -> x x) (fun x -> x x)
-//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c ?d. ?c -> ?d) -> ?e` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c ?d. ?d -> ?c) -> ?e` exceeded recursion depth limit (250)
 //│ ║  l.1107: 	(fun x -> x x) (fun x -> x x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -1438,9 +1438,9 @@ rec def id1 x = if true then x else id1 id1 x
 id1 id1
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b 'c. ('d & 'c) -> ('a | 'b)
+//│     'a :> forall 'b 'c. ('d & 'b) -> ('a | 'c)
 //│        <: 'd -> 'a
-//│     'd :> forall 'b 'c. ('d & 'c) -> ('a | 'b)
+//│     'd :> forall 'b 'c. ('d & 'b) -> ('a | 'c)
 //│        <: 'a & 'e & 'f
 //│     'f :> ('d & 'f) -> ('a | 'g)
 //│        <: 'd & 'g
@@ -1450,9 +1450,9 @@ id1 id1
 //│        <: 'd & 'h
 //│     'h :> ('d & 'e) -> ('a | 'h)
 //│        <: 'e -> 'h
-//│     'c :> 'c -> 'b
-//│        <: 'b
-//│     'b := 'c -> 'b
+//│     'b :> 'b -> 'c
+//│        <: 'c
+//│     'c := 'b -> 'c
 //│ ║  l.1415: 	rec def id1 x = if true then x else id1 id1 x
 //│ ╙──        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required

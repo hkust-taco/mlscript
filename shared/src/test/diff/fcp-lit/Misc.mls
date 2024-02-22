@@ -17,7 +17,7 @@
 // we may exhibit terms than are typable in F but not in the predicative fragment F(≤^F_p)
 // One such term (λz. z y z) (λz. z y z) is due to Pawel Urzyczyn, according to Leivant [Lei91].
 pawel y = (fun z -> z y z) (fun z -> z y z)
-//│ pawel: ('a -> 'a -> (forall 'b 'c. ('a -> 'c -> 'b & 'c) -> 'b) -> 'd & 'a) -> 'd
+//│ pawel: ('a -> 'a -> (forall 'b 'c. ('a -> 'b -> 'c & 'b) -> 'c) -> 'd & 'a) -> 'd
 //│      = [Function: pawel]
 
 def f = (fun z -> z z : (forall 'X. 'X -> 'X) -> (forall 'X. 'X -> 'X))

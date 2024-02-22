@@ -335,7 +335,7 @@ fp02_ty = fp02
 fp02
 //│ res: forall 'a. 'a
 //│   where
-//│     'a :> forall 'b 'c. 'b -> 'c -> 'c
+//│     'a :> forall 'b 'c. 'c -> 'b -> 'b
 //│    = [Function: Z]
 
 sp02 = snd p02
@@ -399,7 +399,7 @@ E q = q id
 // shallow (not (not true))        -- Shallow encoding.
 // λid.id(λb t f.b f t)(id(λb t f.b f t)(λx y.x))
 sh id = (id not) ((id not) tru)
-//│ sh: ((forall 'a 'b 'c. ('c -> 'a -> 'b) -> 'a -> 'c -> 'b) -> ('d -> 'e & (forall 'f. 'f -> anything -> 'f) -> 'd)) -> 'e
+//│ sh: ((forall 'a 'b 'c. ('a -> 'b -> 'c) -> 'b -> 'a -> 'c) -> ('d -> 'e & (forall 'f. 'f -> anything -> 'f) -> 'd)) -> 'e
 //│   = [Function: sh]
 
 // E[forall X.X->X->X](shallow (not( not true)))

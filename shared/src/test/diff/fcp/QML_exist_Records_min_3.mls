@@ -25,9 +25,9 @@ s
 //│     'd :> 'b
 //│     'a1 :> 'a0
 //│         <: 'a
-//│     'c <: (forall 'e 'a2 'f. 'e -> 'f) -> 'b
-//│     'f :> int
-//│     'e <: ArraysImpl['a2]
+//│     'c <: (forall 'e 'f 'a2. 'f -> 'e) -> 'b
+//│     'e :> int
+//│     'f <: ArraysImpl['a2]
 //│     'a2 :> 'a
 //│         <: 'a0
 //│     'a <: 'a0

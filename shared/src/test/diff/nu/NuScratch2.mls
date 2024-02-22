@@ -1,0 +1,8 @@
+:NewDefs
+
+
+
+fun (++) conc(xs, ys) = [xs, ys]
+//│ fun (++) conc: forall 'a 'b. ('a, 'b) -> ['a, 'b]
+
+

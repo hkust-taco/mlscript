@@ -206,7 +206,7 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
 //│ 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Abs[Var] | Numb | Var
+//│     'a :> Abs[Var] | Numb | Var | App['a] | Abs['a]
 //│ res
 //│     = Abs {}
 

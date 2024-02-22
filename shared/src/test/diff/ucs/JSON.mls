@@ -309,7 +309,7 @@ fun parse(scanner) =
 //│ fun parseElements: Scanner -> ParseResult[List[JsonValue]]
 //│ fun parseStringContent: anything -> ParseResult[Str]
 //│ fun parseNumber: anything -> ParseResult[JsonNumber]
-//│ fun parse: forall 'T. Scanner -> (ParseFailure | ParseSuccess[in JsonValue & 'T out JsonNull | 'T | JsonBoolean | JsonString | JsonObject | JsonArray] | ParseResult[JsonNumber])
+//│ fun parse: forall 'T. Scanner -> (ParseFailure | ParseSuccess[in JsonValue & 'T out JsonNull | 'T | JsonBoolean | JsonString | JsonArray | JsonObject] | ParseResult[JsonNumber])
 
 :ng
 toString of parse of scan of "    true"

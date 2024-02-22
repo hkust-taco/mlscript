@@ -317,15 +317,15 @@ def a2_ (x: A1) =
 //│   = [Function: a11]
 //│ a3: 'a -> (forall 'b. anything -> 'b
 //│   where
-//│     'a <: (forall 'c 'd 'e. ('e -> 'c & 'c -> 'd) -> 'e -> 'd) -> 'b)
+//│     'a <: (forall 'c 'd 'e. ('c -> 'd & 'd -> 'e) -> 'c -> 'e) -> 'b)
 //│   = [Function: a31]
 //│ a2: A1 -> (forall 'a. anything -> 'a
 //│   where
-//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a)
+//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('g -> 'h & 'h -> 'f) -> 'g -> 'f) -> 'a)
 //│   = [Function: a21]
 //│ a2_: A1 -> (forall 'a. anything -> 'a
 //│   where
-//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a)
+//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('g -> 'h & 'h -> 'f) -> 'g -> 'f) -> 'a)
 //│    = [Function: a2_1]
 
 def a0 = a2 a1
@@ -337,7 +337,7 @@ def a0 = a2 a1
 def a0_ = a2_ a1
 //│ a0_: anything -> 'a
 //│   where
-//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
+//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('g -> 'h & 'h -> 'f) -> 'g -> 'f) -> 'a
 //│    = [Function: a0_1]
 
 def a1' = fun f -> fun x -> f (f (either id x))
@@ -355,14 +355,14 @@ def a2' (x: A1') =
   ) a3
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b 'c 'a 'd. nothing -> ('d -> 'b | 'c)
+//│     'a :> forall 'b 'c 'd 'a. nothing -> ('b -> 'c | 'd)
 //│       where
-//│         'a | Sid <: (forall 'e 'b 'd. ('d -> 'e & 'e -> 'b) -> 'd -> 'b) -> 'c
+//│         'a | Sid <: (forall 'b 'e 'c. ('b -> 'e & 'e -> 'c) -> 'b -> 'c) -> 'd
 //│ ║  l.198: 	type A1' = forall 'a. (('a | Sid) -> 'a) -> 'a -> ('a | Sid)
 //│ ╙──       	                  ^^
 //│ a2': A1' -> (forall 'a. anything -> 'a
 //│   where
-//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a)
+//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('g -> 'h & 'h -> 'f) -> 'g -> 'f) -> 'a)
 //│    = [Function: a2$1]
 
 def a2'_ x =
@@ -373,9 +373,9 @@ def a2'_ x =
   ) a3
 //│ a2'_: ((forall 'a 'b. ('a -> 'b & 'a) -> 'b) -> (forall 'c. 'c -> 'c) -> anything & (forall 'd. 'd -> (forall 'e. anything -> 'e
 //│   where
-//│     'd <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'e)) -> (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> anything) -> (forall 'i. anything -> 'i
+//│     'd <: (forall 'f 'g 'h. ('g -> 'h & 'h -> 'f) -> 'g -> 'f) -> 'e)) -> (forall 'f 'g 'h. ('g -> 'h & 'h -> 'f) -> 'g -> 'f) -> anything) -> (forall 'i. anything -> 'i
 //│   where
-//│     forall 'j 'k 'l 'm. ('j -> 'k -> 'l) -> ('l -> 'm & 'j) -> 'k -> 'm <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'i)
+//│     forall 'j 'k 'l 'm. ('j -> 'k -> 'l) -> ('l -> 'm & 'j) -> 'k -> 'm <: (forall 'f 'g 'h. ('g -> 'h & 'h -> 'f) -> 'g -> 'f) -> 'i)
 //│     = [Function: a2$_1]
 
 :e // * [FCP-LIM] see previous version above
@@ -428,7 +428,7 @@ def a0'_ = a2'_ a1'
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ a0'_: error | anything -> 'a
 //│   where
-//│     forall 'b 'c 'd 'e. ('b -> 'c -> 'd) -> ('d -> 'e & 'b) -> 'c -> 'e <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
+//│     forall 'b 'c 'd 'e. ('c -> 'd -> 'e) -> ('e -> 'b & 'c) -> 'd -> 'b <: (forall 'f 'g 'h. ('f -> 'g & 'g -> 'h) -> 'f -> 'h) -> 'a
 //│     = [Function: a0$_2]
 
 :RecursiveTypes

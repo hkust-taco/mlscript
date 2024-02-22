@@ -70,7 +70,7 @@ let gn5 = run(gib_naive(5))
 //│       undefined
 
 fun bind(rhs, k) = `let x = rhs `in k(x)
-//│ fun bind: forall 'a 'b 'c. (Code['c, 'a], Var['c, in ??x out ??x0] -> Code['b, 'a]) -> Code['b, 'a]
+//│ fun bind: forall 'a 'b 'c. (Code['a, 'b], Var['a, in ??x out ??x0] -> Code['c, 'b]) -> Code['c, 'b]
 
 fun bind(rhs, k: forall 'g : Code['a, 'g] -> Code['b, 'c | 'g]) =
   `let x = rhs `in k(x)

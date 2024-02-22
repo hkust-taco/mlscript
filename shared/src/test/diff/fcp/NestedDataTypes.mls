@@ -240,30 +240,30 @@ rec def map f tree = case tree of {
   }
 //│ ╔══[ERROR] Inferred recursive type: 'map
 //│   where
-//│     'map :> forall 'subTree 'A 'subTree0 'a 'value 'value0. 'a -> ((Leaf[?] & {value: 'value} | (Node[?] with {subTree: 'subTree})) -> (Leaf['value0] | (Node['A] with {subTree: 'subTree0}))
+//│     'map :> forall 'A 'subTree 'value 'value0 'a 'subTree0. 'a -> ((Leaf[?] & {value: 'value0} | (Node[?] with {subTree: 'subTree0})) -> (Leaf['value] | (Node['A] with {subTree: 'subTree}))
 //│       where
 //│         'map <: (forall 'b 'c 'd 'e. (('b, 'd,),) -> ('c, 'e,)
 //│           where
-//│             'a <: 'b -> 'c & 'd -> 'e) -> 'subTree -> (PerfectTree[Two['A]] & 'subTree0)
-//│         'a <: 'value -> 'value0)
+//│             'a <: 'b -> 'c & 'd -> 'e) -> 'subTree0 -> (PerfectTree[Two['A]] & 'subTree)
+//│         'a <: 'value0 -> 'value)
 //│ ╙──
 //│ map: 'map
 //│   where
-//│     'map :> forall 'A 'subTree 'value 'a 'value0 'subTree0. 'a -> ((Leaf[?] & {value: 'value} | (Node[?] with {subTree: 'subTree0})) -> (Leaf['value0] | (Node['A] with {subTree: 'subTree}))
+//│     'map :> forall 'subTree 'A 'a 'subTree0 'value 'value0. 'a -> ((Leaf[?] & {value: 'value} | (Node[?] with {subTree: 'subTree})) -> (Leaf['value0] | (Node['A] with {subTree: 'subTree0}))
 //│       where
 //│         'a <: 'value -> 'value0
 //│         'map <: (forall 'b 'c 'd 'e. (('b, 'd,),) -> ('c, 'e,)
 //│           where
-//│             'a <: 'b -> 'c & 'd -> 'e) -> 'subTree0 -> (PerfectTree[Two['A]] & 'subTree))
+//│             'a <: 'b -> 'c & 'd -> 'e) -> 'subTree -> (PerfectTree[Two['A]] & 'subTree0))
 //│    = [Function: map1]
 
 :e
 map succ n4
 //│ ╔══[ERROR] Inferred recursive type: 'map
 //│   where
-//│     'map :> forall 'value 'subTree 'subTree0 'value0 'A. 'a -> ((Leaf[?] & {value: 'value} | (Node[?] with {subTree: 'subTree0})) -> (Leaf['value0] | (Node['A] with {subTree: 'subTree}))
+//│     'map :> forall 'subTree 'A 'value 'value0 'subTree0. 'a -> ((Leaf[?] & {value: 'value0} | (Node[?] with {subTree: 'subTree0})) -> (Leaf['value] | (Node['A] with {subTree: 'subTree}))
 //│       where
-//│         'a <: 'value -> 'value0
+//│         'a <: 'value0 -> 'value
 //│         'map <: (forall 'b 'c 'd 'e. (('b, 'd,),) -> ('c, 'e,)
 //│           where
 //│             'a <: 'b -> 'c & 'd -> 'e) -> 'subTree0 -> (PerfectTree[Two['A]] & 'subTree))

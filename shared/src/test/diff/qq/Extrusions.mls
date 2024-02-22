@@ -8,7 +8,7 @@ fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(code"x")}"
 //│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, 'b]) -> Code['c, 'b]
 
 fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(x)}"
-//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Var['a, in ??x out ??x0] -> Code['c, 'b]) -> Code['c, 'b]
+//│ fun (%>) bind: forall 'a 'b 'c. (Code['b, 'c], Var['b, in ??x out ??x0] -> Code['a, 'c]) -> Code['a, 'c]
 
 // * Notice the extrusion
 fun foo(k) = code"x => ${k(code"x")}"

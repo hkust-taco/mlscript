@@ -1,3 +1,40 @@
 :NewDefs
+:NoJS
 
+mut let foo_ty = error
+//│ mut let foo_ty: nothing
+
+// :d // to see the typing trace
+:ns // to disable simplification
+let rec body(x) =
+  log of x.m + 1
+  set foo_ty = body
+  x
+//│ let rec body: forall 'a 'm. 'a -> 'a
+//│   where
+//│     'a :> 'b
+//│        <: 'c & {m: 'm}
+//│     'm :> 'm0
+//│        <: Int
+//│     'c :> 'b
+//│     'b <: {m: 'm0}
+//│     'm0 <: Int
+
+foo_ty of {m: 1}
+//│ {m: 1}
+
+foo_ty of {m: 2}
+//│ {m: 1 | 2}
+
+body({m: 3})
+//│ {m: 1 | 2 | 3}
+
+body({m: 4})
+//│ {m: 1 | 2 | 4}
+
+
+// let test = fun extr ->
+//   let f = fun x ->
+//     let tmp = extr x in x
+//   in {l = f; r = extr}
 
