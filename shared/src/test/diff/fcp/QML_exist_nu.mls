@@ -51,7 +51,7 @@ class BaseImpl[A]() extends ArraysImpl[A, A] {
     fun fold  (r, b, f) = f(r)(b)
 }
 //│ class BaseImpl[A]() extends ArraysImpl {
-//│   fun fold: forall 'a 'b 'c. ('c, 'a, 'c -> 'a -> 'b) -> 'b
+//│   fun fold: forall 'a 'b 'c. ('a, 'b, 'a -> 'b -> 'c) -> 'c
 //│   fun init: forall 'd. 'd -> 'd
 //│   fun sub: forall 'e. ('e, anything) -> 'e
 //│   fun update: forall 'f. (anything, anything, 'f) -> 'f
@@ -124,22 +124,22 @@ class Step'[A](from: Arrays[A]) extends Arrays[A] {
     from.use of impl => k(StepImpl(impl))
 }
 //│ ╔══[ERROR] Type error in definition of method use
-//│ ║  l.123: 	  fun use(k) =
+//│ ║  l.129: 	  fun use(k) =
 //│ ║         	      ^^^^^^^^
-//│ ║  l.124: 	    from.use of impl => k(StepImpl(impl))
+//│ ║  l.130: 	    from.use of impl => k(StepImpl(impl))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'rep` leaks out of its scope
 //│ ║  l.36: 	type ArraysImplConsumer[A, R] = forall 'rep: ArraysImpl[A, 'rep] -> R
 //│ ║        	                                                           ^^^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
-//│ ║  l.124: 	    from.use of impl => k(StepImpl(impl))
+//│ ║  l.130: 	    from.use of impl => k(StepImpl(impl))
 //│ ║         	                                   ^^^^
 //│ ╟── • this signature of member `use`:
 //│ ║  l.40: 	  fun use: ArraysImplConsumer[A, 'res] -> 'res
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── • this field selection:
-//│ ║  l.124: 	    from.use of impl => k(StepImpl(impl))
+//│ ║  l.130: 	    from.use of impl => k(StepImpl(impl))
 //│ ╙──       	    ^^^^^^^^
 //│ class Step'[A](from: Arrays[A]) extends Arrays {
 //│   fun use: forall 'a. (StepImpl[A, in ??rep] -> 'a) -> 'a
@@ -225,24 +225,24 @@ class StepAlt'[A](from: Arrays[A]) extends Arrays[A] {
     // * which eventually leads to 'rep := impl and 'r := 'res.
 }
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.211: 	  val use = from.use of impl =>
+//│ ║  l.217: 	  val use = from.use of impl =>
 //│ ║         	            ^^^^^^^^^^^^^^^^^^^
-//│ ║  l.212: 	    k => k(StepImpl(impl))
+//│ ║  l.218: 	    k => k(StepImpl(impl))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'rep` leaks out of its scope
 //│ ║  l.36: 	type ArraysImplConsumer[A, R] = forall 'rep: ArraysImpl[A, 'rep] -> R
 //│ ║        	                                                           ^^^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.211: 	  val use = from.use of impl =>
+//│ ║  l.217: 	  val use = from.use of impl =>
 //│ ║         	                        ^^^^^^^
-//│ ║  l.212: 	    k => k(StepImpl(impl))
+//│ ║  l.218: 	    k => k(StepImpl(impl))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── • this signature of member `use`:
 //│ ║  l.40: 	  fun use: ArraysImplConsumer[A, 'res] -> 'res
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── • this field selection:
-//│ ║  l.211: 	  val use = from.use of impl =>
+//│ ║  l.217: 	  val use = from.use of impl =>
 //│ ╙──       	            ^^^^^^^^
 //│ class StepAlt'[A](from: Arrays[A]) extends Arrays {
 //│   val use: forall 'R 'a. error | (StepImpl[A, 'R] -> 'a) -> 'a

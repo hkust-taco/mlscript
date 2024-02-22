@@ -94,6 +94,7 @@ final case class Quoted(body: Term)                                  extends Ter
 final case class Unquoted(body: Term)                                extends Term 
 final case class Rft(base: Term, decls: TypingUnit)                  extends Term
 final case class While(cond: Term, body: Term)                       extends Term
+final case class Ann(ann: Term, receiver: Term)                      extends Term
 
 final case class AdtMatchWith(cond: Term, arms: Ls[AdtMatchPat])     extends Term
 final case class AdtMatchPat(pat: Term, rhs: Term)                   extends AdtMatchPatImpl
@@ -208,7 +209,7 @@ final case class NuTypeDef(
   superAnnot: Opt[Type],
   thisAnnot: Opt[Type],
   body: TypingUnit
-)(val declareLoc: Opt[Loc], val abstractLoc: Opt[Loc])
+)(val declareLoc: Opt[Loc], val abstractLoc: Opt[Loc], val annotations: Ls[Term])
   extends NuDecl with Statement with Outer {
     def isPlainJSClass: Bool = params.isEmpty
   }
@@ -226,6 +227,7 @@ final case class NuFunDef(
   val signature: Opt[NuFunDef],
   val outer: Opt[Outer],
   val genField: Bool, // true means it's a `val`; false means it's a `let`
+  val annotations: Ls[Term],
 ) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)
   def kind: DeclKind = Val

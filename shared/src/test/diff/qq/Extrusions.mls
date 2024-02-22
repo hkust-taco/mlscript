@@ -8,7 +8,7 @@ fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(code"x")}"
 //│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, 'b]) -> Code['c, 'b]
 
 fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(x)}"
-//│ fun (%>) bind: forall 'a 'b 'c. (Code['b, 'c], Var['b, in ??x out ??x0] -> Code['a, 'c]) -> Code['a, 'c]
+//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Var['a, in ??x out ??x0] -> Code['c, 'b]) -> Code['c, 'b]
 
 // * Notice the extrusion
 fun foo(k) = code"x => ${k(code"x")}"
@@ -33,7 +33,7 @@ fun foo() =
   let bar = 42 // not at top level
   code"bar"
 //│ ╔══[ERROR] identifier not found: bar
-//│ ║  l.34: 	  code"bar"
+//│ ║  l.40: 	  code"bar"
 //│ ╙──      	       ^^^
 //│ fun foo: () -> Code[error, nothing]
 
@@ -64,7 +64,7 @@ let p3 = y `=>
   discard(run(x `=> power(x `+ y)(3)))
   y
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.64: 	  discard(run(x `=> power(x `+ y)(3)))
+//│ ║  l.70: 	  discard(run(x `=> power(x `+ y)(3)))
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── expression of type `?y & ~??x` does not match type `nothing`
 //│ let p3: Code[forall 'a. (Int & 'a) -> 'a, nothing]

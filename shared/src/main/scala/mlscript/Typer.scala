@@ -275,6 +275,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     else ClassTag(Var("true"), sing(TN("bool")))(noTyProv)
   val FalseType: ST = if (newDefs) TR(TN("false"), Nil)(noTyProv)
     else ClassTag(Var("false"), sing(TN("bool")))(noTyProv)
+  val AnnType: ST = TR(TN("Annotation"), Nil)(noTyProv)
   
   val EqlTag: TraitTag = TraitTag(Var("Eql"), Set.empty)(noProv)
   
@@ -290,18 +291,21 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   // freshVar(noTyProv, N)(1)
   
   val nuBuiltinTypes: Ls[NuTypeDef] = Ls(
-    NuTypeDef(Cls, TN("Object"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
-    NuTypeDef(Trt, TN("Eql"), (S(VarianceInfo.contra), TN("A")) :: Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
-    NuTypeDef(Cls, TN("Num"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
-    NuTypeDef(Cls, TN("Int"), Nil, N, N, N, Var("Num") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
-    NuTypeDef(Cls, TN("Bool"), Nil, N, N, S(Union(TN("true"), TN("false"))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
-    NuTypeDef(Mod, TN("true"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, N),
-    NuTypeDef(Mod, TN("false"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, N),
-    NuTypeDef(Cls, TN("Str"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
-    NuTypeDef(Als, TN("undefined"), Nil, N, N, S(Literal(UnitLit(true))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
-    NuTypeDef(Als, TN("null"), Nil, N, N, S(Literal(UnitLit(false))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
-    NuTypeDef(Cls, TN("Code"), (S(VarianceInfo.co) -> TN("T")) :: (S(VarianceInfo.co) -> TN("C")) :: Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
-    NuTypeDef(Cls, TN("Var"), (S(VarianceInfo.in) -> TN("T")) :: (S(VarianceInfo.in) -> TN("C")) :: Nil, N, N, N, TyApp(Var("Code"), TN("T") :: TN("C") :: Nil) :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc))
+    NuTypeDef(Cls, TN("Object"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc), Nil),
+    NuTypeDef(Trt, TN("Eql"), (S(VarianceInfo.contra), TN("A")) :: Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc), Nil),
+    NuTypeDef(Cls, TN("Num"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc), Nil),
+    NuTypeDef(Cls, TN("Int"), Nil, N, N, N, Var("Num") :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc), Nil),
+    NuTypeDef(Cls, TN("Bool"), Nil, N, N, S(Union(TN("true"), TN("false"))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc), Nil),
+    NuTypeDef(Mod, TN("true"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, N, Nil),
+    NuTypeDef(Mod, TN("false"), Nil, N, N, N, Var("Bool") :: Nil, N, N, TypingUnit(Nil))(N, N, Nil),
+    NuTypeDef(Cls, TN("Str"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc), Nil),
+    NuTypeDef(Als, TN("undefined"), Nil, N, N, S(Literal(UnitLit(true))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc), Nil),
+    NuTypeDef(Als, TN("null"), Nil, N, N, S(Literal(UnitLit(false))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc), Nil),
+    NuTypeDef(Cls, TN("Annotation"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc), Nil),
+    NuTypeDef(Cls, TN("Code"), (S(VarianceInfo.co) -> TN("T")) :: (S(VarianceInfo.co) -> TN("C")) :: Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc), Nil),
+    NuTypeDef(Cls, TN("Var"), (S(VarianceInfo.in) -> TN("T")) :: (S(VarianceInfo.in) -> TN("C")) :: Nil, N, N, N, TyApp(Var("Code"), TN("T") :: TN("C") :: Nil) :: Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc), Nil)
+    // Not yet implemented, so we do not define it yet
+    // NuTypeDef(Mod, TN("tailrec"), Nil, N, N, N, Var("Annotation") :: Nil, N, N, TypingUnit(Nil))(N, N, Nil),
   )
   val builtinTypes: Ls[TypeDef] =
     TypeDef(Cls, TN("?"), Nil, TopType, Nil, Nil, Set.empty, N, Nil) :: // * Dummy for pretty-printing unknown type locations
@@ -905,6 +909,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case v @ Var("_") =>
         if (ctx.inPattern || funkyTuples) freshVar(tp(v.toLoc, "wildcard"), N)
         else err(msg"Widlcard in expression position.", v.toLoc)
+      
+      case Ann(ann, receiver) => 
+        val annType = typeTerm(ann)
+        con(annType, AnnType, UnitType)
+        typeTerm(receiver)
         
       case Asc(v @ ValidPatVar(nme), ty) =>
         val ty_ty = typeType(ty)(ctx.copy(inPattern = false), raise, vars)
@@ -1865,7 +1874,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case TypedNuAls(level, td, tparams, body) =>
         ectx(tparams) |> { implicit ectx =>
           NuTypeDef(td.kind, td.nme, td.tparams, N, N, S(go(body)), Nil, N, N, TypingUnit(Nil))(
-            td.declareLoc, td.abstractLoc)
+            td.declareLoc, td.abstractLoc, td.annotations)
         }
       case TypedNuMxn(level, td, thisTy, superTy, tparams, params, members) =>
         ectx(tparams) |> { implicit ectx =>
@@ -1877,7 +1886,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             Option.when(!(TopType <:< superTy))(go(superTy)),
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
             mkTypingUnit(thisTy, members)
-          )(td.declareLoc, td.abstractLoc)
+          )(td.declareLoc, td.abstractLoc, td.annotations)
         }
       case TypedNuCls(level, td, tparams, params, acParams, members, thisTy, sign, ihtags, ptps) =>
         ectx(tparams) |> { implicit ectx =>
@@ -1897,7 +1906,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                 case N => tun
               }
             }
-          )(td.declareLoc, td.abstractLoc)
+          )(td.declareLoc, td.abstractLoc, td.annotations)
         }
       case TypedNuTrt(level, td, tparams, members, thisTy, sign, ihtags, ptps) => 
         ectx(tparams) |> { implicit ectx =>
@@ -1909,11 +1918,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             N,//TODO
             Option.when(!(TopType <:< thisTy))(go(thisTy)),
             mkTypingUnit(thisTy, members)
-          )(td.declareLoc, td.abstractLoc)
+          )(td.declareLoc, td.abstractLoc, td.annotations)
         }
       case tf @ TypedNuFun(level, fd, bodyTy) =>
         NuFunDef(fd.isLetRec, fd.nme, fd.symbolicNme, Nil, R(go(tf.typeSignature)))(
-          fd.declareLoc, fd.virtualLoc, fd.mutLoc, fd.signature, fd.outer, fd.genField)
+          fd.declareLoc, fd.virtualLoc, fd.mutLoc, fd.signature, fd.outer, fd.genField, fd.annotations)
       case p: NuParam =>
         ??? // TODO
       case TypedNuDummy(d) =>
