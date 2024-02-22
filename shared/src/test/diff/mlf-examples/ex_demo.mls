@@ -1438,13 +1438,13 @@ c_i5_ = c_add_ c_i3_ c_i2
 //│     'b :> forall 'c. 'c -> (forall 'd 'e 'f 'g. 'f -> 'e
 //│       where
 //│         'c <: 'f -> 'd & 'f -> 'g
-//│         'b <: 'c -> 'd -> 'e
 //│         forall 'h. 'h -> (forall 'i 'j 'k. 'k -> 'j
 //│           where
+//│             'h <: 'k -> 'i
 //│             forall 'l. 'l -> (forall 'a 'm. 'm -> 'a
 //│               where
-//│                 'l <: 'a -> 'a & 'm -> 'a) <: 'h -> 'i -> 'j
-//│             'h <: 'k -> 'i) <: 'c -> 'g -> 'e)
+//│                 'l <: 'a -> 'a & 'm -> 'a) <: 'h -> 'i -> 'j) <: 'c -> 'g -> 'e
+//│         'b <: 'c -> 'd -> 'e)
 //│ ╙──
 //│ c_i5_: 'b
 //│   where
@@ -1454,10 +1454,10 @@ c_i5_ = c_add_ c_i3_ c_i2
 //│         'b <: 'c -> 'd -> 'e
 //│         forall 'h. 'h -> (forall 'i 'j 'k. 'k -> 'j
 //│           where
+//│             'h <: 'k -> 'i
 //│             forall 'l. 'l -> (forall 'a 'm. 'm -> 'a
 //│               where
-//│                 'l <: 'a -> 'a & 'm -> 'a) <: 'h -> 'i -> 'j
-//│             'h <: 'k -> 'i) <: 'c -> 'g -> 'e)
+//│                 'l <: 'a -> 'a & 'm -> 'a) <: 'h -> 'i -> 'j) <: 'c -> 'g -> 'e)
 //│      = [Function (anonymous)]
 //│ constrain calls  : 107
 //│ annoying  calls  : 0
