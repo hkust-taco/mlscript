@@ -57,8 +57,7 @@ module dummy
 //│ ╙──      	 ^^^^^^
 //│ module dummy
 
-// TODO: In the future, we should still support annotations that require a constructor.
-:e
+:e // TODO: In the future, we should still support annotations that require a constructor.
 @tailrec2()
 fun foo = 0
 //│ ╔══[ERROR] Type mismatch in annotated undefined literal:
