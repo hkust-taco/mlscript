@@ -96,6 +96,12 @@ class Scope(val name: Str, enclosing: Opt[Scope]) {
     Ls("int", "number", "bool", "string", "unit") foreach { name =>
       register(TypeAliasSymbol(name, Nil, TypeName(name)))
     }
+
+    // TODO: eventually this should be properly registered along
+    // with all other built-in classes. For now, this just helps the
+    // unit tests relating to annotations pass.
+    val annType = TraitSymbol("Annotation", "Annotation", Nil, Record(Nil), Nil)
+    register(annType)
   }
 
   private val allocateRuntimeNameIter = for {

@@ -130,7 +130,7 @@ code"x => ${ test(run) }"
 :ne
 fun assertNotZero(x) =
   code"if (${x} == 0) then error else ${x}"
-//│ fun assertNotZero: forall 'a 'b. Code[Num & 'a, 'b] -> Code['a, 'b]
+//│ fun assertNotZero: forall 'a 'b. Code[Num & 'b, 'a] -> Code['b, 'a]
 
 :ne
 fun safeDiv = run(code"x => y => let t = ${assertNotZero(code"y")} in x / t")
@@ -156,7 +156,7 @@ fun showAndRet(n: Code['a, anything]) =
 
 :ne
 fun bar(x: Code['a, 'b]) = x
-//│ fun bar: forall 'b 'a. (x: Code['a, 'b]) -> Code['a, 'b]
+//│ fun bar: forall 'a 'b. (x: Code['a, 'b]) -> Code['a, 'b]
 
 
 :ne

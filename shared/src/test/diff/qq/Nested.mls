@@ -126,7 +126,7 @@ f => code"x => ${ let tmp = f(x) in x }"
 
 let inner5(x) = code"${x}"
 let r = code"x => inner5(x)"
-//│ let inner5: forall 'a 'b. Code['b, 'a] -> Code['b, 'a]
+//│ let inner5: forall 'a 'b. Code['a, 'b] -> Code['a, 'b]
 //│ let r: Code[forall 'c 'd. Code['c, 'd] -> Code['c, 'd], nothing]
 run(r)(code"1")
 //│ Code[1, nothing]
