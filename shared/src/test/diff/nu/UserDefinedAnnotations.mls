@@ -61,10 +61,10 @@ module dummy
 @tailrec2()
 fun foo = 0
 //│ ╔══[ERROR] Type mismatch in annotated undefined literal:
-//│ ║  l.62: 	@tailrec2()
+//│ ║  l.61: 	@tailrec2()
 //│ ║        	 ^^^^^^^^^^
 //│ ╟── reference of type `() -> tailrec2` is not an instance of type `Annotation`
-//│ ║  l.62: 	@tailrec2()
+//│ ║  l.61: 	@tailrec2()
 //│ ╙──      	 ^^^^^^^^
 //│ fun foo: 0
 //│ ()
