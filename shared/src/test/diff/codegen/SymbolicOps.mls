@@ -2,7 +2,7 @@
 
 
 fun (>>) compose(f, g) = x => g(f(x))
-//│ fun (>>) compose: forall 'a 'b 'c. ('c -> 'a, 'a -> 'b) -> 'c -> 'b
+//│ fun (>>) compose: forall 'a 'b 'c. ('b -> 'c, 'c -> 'a) -> 'b -> 'a
 
 :js 
 let r = succ >> succ

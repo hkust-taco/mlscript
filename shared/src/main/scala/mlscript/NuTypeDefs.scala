@@ -1781,6 +1781,24 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       case N => N
                     }
                     
+                    // * After a class is type checked, we need to "solidify" the inferred types of its unannotated mutable fields,
+                    // * otherwise they would be treated as polymorphic, which would be wrong.
+                    allMembers.foreachEntry {
+                      case (nme, v: TypedNuFun) if v.fd.isMut =>
+                        // * A bit hacky but should work:
+                        v.bodyType.unwrapProvs match {
+                          case _ if v.fd.rhs.isRight || v.fd.signature.nonEmpty =>
+                            // * If the type was annotated, we don't need to do anything.
+                          case tv: TV if tv.assignedTo.isEmpty => // * Could this `tv` ever be assigned?
+                            val res_ty = tv.lowerBounds.reduceOption(_ | _)
+                              .getOrElse(err(msg"Could not infer a type for unused mutable field $nme", v.toLoc))
+                            println(s"Setting type of $nme based on inferred lower bounds: $tv := $res_ty")
+                            tv.assignedTo = S(res_ty)
+                          case ty => lastWords(ty.toString)
+                        }
+                      case (nme, m) =>
+                    }
+                    
                     TypedNuCls(outerCtx.lvl, td,
                       tparams,
                       typedParams,

@@ -422,21 +422,21 @@ rec def eval4 subst = eval_lexpr' eval4 subst
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ eval4: ('tail & 'tail0 & 'tail1 & 'tail2 & 'tail3 & 'tail4 & (Cons[?] & List[?] & 'b & 'c & 'd & 'e & 'f & 'g | Nil & List[?])) -> 'h -> 'i
 //│   where
-//│     'tail4 <: Cons[?] & 'e | Nil
-//│     'e <: {head: {0: string, 1: 'result}, tail: 'tail4}
-//│     'tail3 <: Cons[?] & 'd | Nil
-//│     'd <: {head: {0: string, 1: 'result}, tail: 'tail3}
-//│     'tail2 <: Cons[?] & 'g | Nil
-//│     'g <: {head: {0: string, 1: 'result0}, tail: 'tail2}
-//│     'tail1 <: Cons[?] & 'f | Nil
-//│     'f <: {head: {0: string, 1: 'result}, tail: 'tail1}
+//│     'tail4 <: Cons[?] & 'd | Nil
+//│     'd <: {head: {0: string, 1: 'result}, tail: 'tail4}
+//│     'tail3 <: Cons[?] & 'g | Nil
+//│     'g <: {head: {0: string, 1: 'result0}, tail: 'tail3}
+//│     'tail2 <: Cons[?] & 'f | Nil
+//│     'f <: {head: {0: string, 1: 'result}, tail: 'tail2}
+//│     'tail1 <: Cons[?] & 'e | Nil
+//│     'e <: {head: {0: string, 1: 'result}, tail: 'tail1}
 //│     'tail0 <: Cons[?] & 'c | Nil
 //│     'c <: {head: {0: string, 1: 'result0}, tail: 'tail0}
 //│     'tail <: Cons[?] & 'b | Nil
 //│     'b <: {head: {0: string, 1: 'result0}, tail: 'tail}
 //│     'result0 :> 'i
 //│              <: Abs[?] & 'j & 'k | 'lhs & (Abs[?] & 'k & ~#Abs | Add[?] & 'l | App[?] & 'm | Mul[?] & 'n | Var & 'o | 'p & (Numb | Numb & ~#Numb))
-//│     'i :> 'result0 | 'q | Abs[nothing] | App[nothing] | Abs['i] | App['a]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | 'result | 'r | Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i}
+//│     'i :> 'result0 | 'q | 'result | 'r | Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Abs[nothing] | App[nothing] | Abs['i] | App['a]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs}
 //│     'q :> Var
 //│        <: Abs[?] & 'j & 'k | 'lhs & (Abs[?] & 'k & ~#Abs | Add[?] & {name: string} & 'l | App[?] & {name: string} & 'm | Mul[?] & {name: string} & 'n | Var & 'o | 'p & (Numb & {name: string} | Numb & {name: string} & ~#Numb))
 //│     'j <: {body: 'h, name: string}

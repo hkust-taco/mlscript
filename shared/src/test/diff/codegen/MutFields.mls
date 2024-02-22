@@ -7,7 +7,7 @@ module Foo {
   mut val x: Int = 1
 }
 //│ module Foo {
-//│   val x: Int
+//│   mut val x: Int
 //│ }
 //│ // Prelude
 //│ function log(x) {
@@ -24,7 +24,7 @@ module Foo {
 //│       class Foo {
 //│         #x;
 //│         get x() { return this.#x; }
-//│         set x(value) { return this.#x = value; }
+//│         set x($value) { return this.#x = $value; }
 //│         constructor() {
 //│           log("Creating Foo");
 //│           this.#x = 1;
@@ -111,7 +111,7 @@ class Test {
 //│ class Test {
 //│   constructor()
 //│   fun incr: ()
-//│   val x: Int
+//│   mut val x: Int
 //│ }
 //│ // Prelude
 //│ class TypingUnit7 {
@@ -124,7 +124,7 @@ class Test {
 //│       class Test {
 //│         #x;
 //│         get x() { return this.#x; }
-//│         set x(value) { return this.#x = value; }
+//│         set x($value) { return this.#x = $value; }
 //│         constructor() {
 //│           this.#x = 1;
 //│           const x = this.#x;
@@ -182,7 +182,7 @@ class MySumCont extends Cont {
 //│ class MySumCont extends Cont {
 //│   constructor()
 //│   let init: Int -> Int
-//│   val pc: Int
+//│   mut val pc: Int
 //│ }
 
 fun f(b) = if b then 0 else new MySumCont

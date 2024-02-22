@@ -245,10 +245,10 @@ fun main(ctx) =
   ctx.printLine(concat("The sum is: ")(String of sum)) #>> _ =>
   ctx.pure(sum)
 //│ fun main: forall 'a 'b 'c 'd 'e. {
-//│   printLine: "Hi! Input two numbers: " -> {bind: (anything -> 'b) -> 'd} & Str -> {bind: (anything -> 'e) -> 'a},
-//│   pure: Int -> 'e,
-//│   readInt: {bind: (Int -> 'c) -> 'b & (Int -> 'a) -> 'c}
-//│ } -> 'd
+//│   printLine: "Hi! Input two numbers: " -> {bind: (anything -> 'c) -> 'a} & Str -> {bind: (anything -> 'b) -> 'e},
+//│   pure: Int -> 'b,
+//│   readInt: {bind: (Int -> 'd) -> 'c & (Int -> 'e) -> 'd}
+//│ } -> 'a
 
 val defaultCtx = {printLine, readInt, pure: Pure}
 //│ val defaultCtx: {
