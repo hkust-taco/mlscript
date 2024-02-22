@@ -18,7 +18,7 @@ class Pure[A](value: A) extends IO[A] {
 //│   fun run: A
 //│ }
 //│ class Bind[CC, AA](underlying: IO[CC], f: CC -> IO[AA]) extends IO {
-//│   fun bind: forall 'AA0. (AA -> IO['AA0]) -> Bind[in AA & 'A out AA, 'AA0]
+//│   fun bind: forall 'AA0. ('A -> IO['AA0]) -> Bind['A, 'AA0]
 //│   fun hey: IO['A]
 //│   fun run: AA
 //│ }

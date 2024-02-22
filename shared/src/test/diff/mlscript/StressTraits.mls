@@ -83,7 +83,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 65
 //│ annoying  calls  : 90
-//│ subtyping calls  : 4116
+//│ subtyping calls  : 4132
 
 :stats
 :e
@@ -160,7 +160,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 76
 //│ annoying  calls  : 90
-//│ subtyping calls  : 3900
+//│ subtyping calls  : 3884
 
 
 // ====== 4 ====== //

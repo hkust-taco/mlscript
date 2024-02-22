@@ -24,7 +24,7 @@ class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO[B] {
 //│   fun run: A
 //│ }
 //│ class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO {
-//│   fun bind: forall 'B1. (B -> IO['B1]) -> Bind[in B & 'A0 out B, 'B1]
+//│   fun bind: forall 'B1. ('A0 -> IO['B1]) -> Bind['A0, 'B1]
 //│   fun run: B
 //│ }
 //│ where

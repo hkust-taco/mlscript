@@ -34,7 +34,7 @@ rec def f w = case w of
       Some ->
         let m = (tmp0).value in
         Some (m,)
-//│ f: (Leaf | Node & 'b) -> (None | Some[in 'a out 'a | 0])
+//│ f: (Leaf | Node & 'b) -> (None | Some[in 'a out 0 | 'a])
 //│   where
 //│     'b <: {left: Leaf | Node & 'b, right: Leaf | Node & 'b}
 
@@ -49,7 +49,7 @@ rec def f w = case w of
       Some ->
         let m = (tmp0).value in
         Some (m,)
-//│ f: 'left -> Some[in 'a out 'a | 0]
+//│ f: 'left -> Some[in 'a out 0 | 'a]
 //│   where
 //│     'left <: Node & {left: 'left}
 
@@ -160,8 +160,8 @@ rec def f w = case w of
 //│ | | >> Processing f112_129' at [+]
 //│ | | go f112_129'   ()
 //│ | | | go (α113_130' -> (α121_133' | α126_137'))   (f112_129')
-//│ | | >> Occurrences HashSet(f112_129', (α113_130' -> (α121_133' | α126_137')))
-//│ | | >>>> occs[+f112_129'] := HashSet(f112_129', (α113_130' -> (α121_133' | α126_137')))  <~ None
+//│ | | >> Occurrences LinkedHashSet(f112_129', (α113_130' -> (α121_133' | α126_137')))
+//│ | | >>>> occs[+f112_129'] := LinkedHashSet(f112_129', (α113_130' -> (α121_133' | α126_137')))  <~ None
 //│ | | analyze2[+;Q(0)] (α113_130' -> (α121_133' | α126_137'))
 //│ | | | analyze2[+;Q(0);-] (α113_130',)
 //│ | | | | analyze2[+;Q(0);-] α113_130'
@@ -170,27 +170,27 @@ rec def f w = case w of
 //│ | | | | | | go (#Node<> & α114_131')   (α113_130')
 //│ | | | | | | | go #Node<>   (α113_130')
 //│ | | | | | | | go α114_131'   (α113_130', #Node<>)
-//│ | | | | | | | | go {left: left115_132'}   (α113_130', α114_131', #Node<>)
-//│ | | | | | >> Occurrences HashSet(α113_130', α114_131', {left: left115_132'}, #Node<>)
-//│ | | | | | >>>> occs[-α113_130'] := HashSet(α113_130', α114_131', {left: left115_132'}, #Node<>)  <~ None
-//│ | | | | | >>>> occs[-α114_131'] := HashSet(α113_130', α114_131', {left: left115_132'}, #Node<>)  <~ None
+//│ | | | | | | | | go {left: left115_132'}   (α113_130', #Node<>, α114_131')
+//│ | | | | | >> Occurrences LinkedHashSet(α113_130', #Node<>, α114_131', {left: left115_132'})
+//│ | | | | | >>>> occs[-α113_130'] := LinkedHashSet(α113_130', #Node<>, α114_131', {left: left115_132'})  <~ None
+//│ | | | | | >>>> occs[-α114_131'] := LinkedHashSet(α113_130', #Node<>, α114_131', {left: left115_132'})  <~ None
+//│ | | | | | analyze2[+;Q(0);-] #Node<>
 //│ | | | | | analyze2[+;Q(0);-] {left: left115_132'}
 //│ | | | | | | analyze2[+;Q(0);-] left115_132'
 //│ | | | | | | | >> Processing left115_132' at [-]
 //│ | | | | | | | go left115_132'   ()
 //│ | | | | | | | | go α113_130'   (left115_132')
-//│ | | | | | | | | | go (#Node<> & α114_131')   (α113_130', left115_132')
-//│ | | | | | | | | | | go #Node<>   (α113_130', left115_132')
-//│ | | | | | | | | | | go α114_131'   (α113_130', left115_132', #Node<>)
-//│ | | | | | | | | | | | go {left: left115_132'}   (α113_130', α114_131', left115_132', #Node<>)
-//│ | | | | | | | >> Occurrences HashSet(α113_130', α114_131', left115_132', {left: left115_132'}, #Node<>)
-//│ | | | | | | | >>>> occs[-α113_130'] := HashSet(α113_130', α114_131', left115_132', {left: left115_132'}, #Node<>)  <~ Some(HashSet(α113_130', α114_131', {left: left115_132'}, #Node<>))
-//│ | | | | | | | >>>> occs[-α114_131'] := HashSet(α113_130', α114_131', left115_132', {left: left115_132'}, #Node<>)  <~ Some(HashSet(α113_130', α114_131', {left: left115_132'}, #Node<>))
-//│ | | | | | | | >>>> occs[-left115_132'] := HashSet(α113_130', α114_131', left115_132', {left: left115_132'}, #Node<>)  <~ None
+//│ | | | | | | | | | go (#Node<> & α114_131')   (left115_132', α113_130')
+//│ | | | | | | | | | | go #Node<>   (left115_132', α113_130')
+//│ | | | | | | | | | | go α114_131'   (left115_132', α113_130', #Node<>)
+//│ | | | | | | | | | | | go {left: left115_132'}   (left115_132', α113_130', #Node<>, α114_131')
+//│ | | | | | | | >> Occurrences LinkedHashSet(left115_132', α113_130', #Node<>, α114_131', {left: left115_132'})
+//│ | | | | | | | >>>> occs[-left115_132'] := LinkedHashSet(left115_132', α113_130', #Node<>, α114_131', {left: left115_132'})  <~ None
+//│ | | | | | | | >>>> occs[-α113_130'] := LinkedHashSet(left115_132', α113_130', #Node<>, α114_131', {left: left115_132'})  <~ Some(LinkedHashSet(α113_130', #Node<>, α114_131', {left: left115_132'}))
+//│ | | | | | | | >>>> occs[-α114_131'] := LinkedHashSet(left115_132', α113_130', #Node<>, α114_131', {left: left115_132'})  <~ Some(LinkedHashSet(α113_130', #Node<>, α114_131', {left: left115_132'}))
+//│ | | | | | | | analyze2[+;Q(0);-] #Node<>
 //│ | | | | | | | analyze2[+;Q(0);-] {left: left115_132'}
 //│ | | | | | | | | analyze2[+;Q(0);-] left115_132'
-//│ | | | | | | | analyze2[+;Q(0);-] #Node<>
-//│ | | | | | analyze2[+;Q(0);-] #Node<>
 //│ | | | analyze2[+;Q(0)] (α121_133' | α126_137')
 //│ | | | | Components Set((Some(true),α121_133'), (Some(true),α126_137'))
 //│ | | | | >> Processing (α121_133' | α126_137') at [+]
@@ -199,51 +199,51 @@ rec def f w = case w of
 //│ | | | | | | go Some['a18_134']   (α121_133')
 //│ | | | | | go α126_137'   (α121_133', Some['a18_134'])
 //│ | | | | | | go Some['a18_138']   (α121_133', Some['a18_134'], α126_137')
-//│ | | | | >> Occurrences HashSet(α121_133', Some['a18_134'], α126_137', Some['a18_138'])
-//│ | | | | >>>> occs[+α121_133'] := HashSet(α121_133', Some['a18_134'], α126_137', Some['a18_138'])  <~ None
-//│ | | | | >>>> occs[+α126_137'] := HashSet(α121_133', Some['a18_134'], α126_137', Some['a18_138'])  <~ None
+//│ | | | | >> Occurrences LinkedHashSet(α121_133', Some['a18_134'], α126_137', Some['a18_138'])
+//│ | | | | >>>> occs[+α121_133'] := LinkedHashSet(α121_133', Some['a18_134'], α126_137', Some['a18_138'])  <~ None
+//│ | | | | >>>> occs[+α126_137'] := LinkedHashSet(α121_133', Some['a18_134'], α126_137', Some['a18_138'])  <~ None
 //│ | | | | analyze2[+;Q(0)] Some['a18_134']
 //│ | | | | | analyze2[+;Q(0);=] 'a18_134'
 //│ | | | | | | >> Processing 'a18_134' at [+]
 //│ | | | | | | go 'a18_134'   ()
 //│ | | | | | | | go #0<int,number>   ('a18_134')
-//│ | | | | | | >> Occurrences HashSet(#0<int,number>, 'a18_134')
-//│ | | | | | | >>>> occs[+'a18_134'] := HashSet(#0<int,number>, 'a18_134')  <~ None
+//│ | | | | | | >> Occurrences LinkedHashSet('a18_134', #0<int,number>)
+//│ | | | | | | >>>> occs[+'a18_134'] := LinkedHashSet('a18_134', #0<int,number>)  <~ None
 //│ | | | | | | analyze2[+;Q(0);=;@[+](0)] #0<int,number>
 //│ | | | | | | >> Processing 'a18_134' at [-]
 //│ | | | | | | go 'a18_134'   ()
 //│ | | | | | | | go value124_135'   ('a18_134')
-//│ | | | | | | >> Occurrences HashSet('a18_134', value124_135')
-//│ | | | | | | >>>> occs[-'a18_134'] := HashSet('a18_134', value124_135')  <~ None
-//│ | | | | | | >>>> occs[-value124_135'] := HashSet('a18_134', value124_135')  <~ None
+//│ | | | | | | >> Occurrences LinkedHashSet('a18_134', value124_135')
+//│ | | | | | | >>>> occs[-'a18_134'] := LinkedHashSet('a18_134', value124_135')  <~ None
+//│ | | | | | | >>>> occs[-value124_135'] := LinkedHashSet('a18_134', value124_135')  <~ None
 //│ | | | | analyze2[+;Q(0)] Some['a18_138']
 //│ | | | | | analyze2[+;Q(0);=] 'a18_138'
 //│ | | | | | | >> Processing 'a18_138' at [+]
 //│ | | | | | | go 'a18_138'   ()
 //│ | | | | | | | go ‹∀ 1. value124_136''›   ('a18_138')
-//│ | | | | | | >> Occurrences HashSet(‹∀ 1. value124_136''›, 'a18_138')
-//│ | | | | | | >>>> occs[+'a18_138'] := HashSet(‹∀ 1. value124_136''›, 'a18_138')  <~ None
+//│ | | | | | | >> Occurrences LinkedHashSet('a18_138', ‹∀ 1. value124_136''›)
+//│ | | | | | | >>>> occs[+'a18_138'] := LinkedHashSet('a18_138', ‹∀ 1. value124_136''›)  <~ None
 //│ | | | | | | analyze2[+;Q(0);=;@[+](0)] ‹∀ 1. value124_136''›
 //│ | | | | | | | analyze2[+;Q(0);=;@[+](0);Q(0)] value124_136''
 //│ | | | | | | | | >> Processing value124_136'' at [+]
 //│ | | | | | | | | go value124_136''   ()
 //│ | | | | | | | | | go value124_135'   (value124_136'')
-//│ | | | | | | | | | | go (#0<int,number> | ‹∀ 1. value124_136''›)   (value124_135', value124_136'')
-//│ | | | | | | | | | | | go #0<int,number>   (value124_135', value124_136'')
-//│ | | | | | | | | | | | go ‹∀ 1. value124_136''›   (#0<int,number>, value124_135', value124_136'')
-//│ | | | | | | | | >> Occurrences HashSet(‹∀ 1. value124_136''›, #0<int,number>, value124_135', value124_136'')
-//│ | | | | | | | | >>>> occs[+value124_135'] := HashSet(‹∀ 1. value124_136''›, #0<int,number>, value124_135', value124_136'')  <~ None
-//│ | | | | | | | | >>>> occs[+value124_136''] := HashSet(‹∀ 1. value124_136''›, #0<int,number>, value124_135', value124_136'')  <~ None
+//│ | | | | | | | | | | go (#0<int,number> | ‹∀ 1. value124_136''›)   (value124_136'', value124_135')
+//│ | | | | | | | | | | | go #0<int,number>   (value124_136'', value124_135')
+//│ | | | | | | | | | | | go ‹∀ 1. value124_136''›   (value124_136'', value124_135', #0<int,number>)
+//│ | | | | | | | | >> Occurrences LinkedHashSet(value124_136'', value124_135', #0<int,number>, ‹∀ 1. value124_136''›)
+//│ | | | | | | | | >>>> occs[+value124_136''] := LinkedHashSet(value124_136'', value124_135', #0<int,number>, ‹∀ 1. value124_136''›)  <~ None
+//│ | | | | | | | | >>>> occs[+value124_135'] := LinkedHashSet(value124_136'', value124_135', #0<int,number>, ‹∀ 1. value124_136''›)  <~ None
+//│ | | | | | | | | analyze2[+;Q(0);=;@[+](0);Q(0)] #0<int,number>
 //│ | | | | | | | | analyze2[+;Q(0);=;@[+](0);Q(0)] ‹∀ 1. value124_136''›
 //│ | | | | | | | | | analyze2[+;Q(0);=;@[+](0);Q(0);Q(0)] value124_136''
-//│ | | | | | | | | analyze2[+;Q(0);=;@[+](0);Q(0)] #0<int,number>
 //│ | | | | | | >> Processing 'a18_138' at [-]
 //│ | | | | | | go 'a18_138'   ()
 //│ | | | | | | | go value124_135'   ('a18_138')
-//│ | | | | | | >> Occurrences HashSet(value124_135', 'a18_138')
-//│ | | | | | | >>>> occs[-value124_135'] := HashSet(value124_135', 'a18_138')  <~ Some(HashSet('a18_134', value124_135'))
-//│ | | | | | | >>>> occs[-'a18_138'] := HashSet(value124_135', 'a18_138')  <~ None
-//│ [occs] +f112_129' {f112_129',(α113_130' -> (α121_133' | α126_137'))} ; -α113_130' {α113_130',α114_131',{left: left115_132'},#Node<>} ; -α114_131' {α113_130',α114_131',{left: left115_132'},#Node<>} ; -left115_132' {α113_130',α114_131',left115_132',{left: left115_132'},#Node<>} ; +α121_133' {α121_133',Some['a18_134'],α126_137',Some['a18_138']} ; +α126_137' {α121_133',Some['a18_134'],α126_137',Some['a18_138']} ; +'a18_134' {#0<int,number>,'a18_134'} ; -'a18_134' {'a18_134',value124_135'} ; -value124_135' {value124_135'} ; +'a18_138' {‹∀ 1. value124_136''›,'a18_138'} ; +value124_135' {‹∀ 1. value124_136''›,#0<int,number>,value124_135',value124_136''} ; +value124_136'' {‹∀ 1. value124_136''›,#0<int,number>,value124_135',value124_136''} ; -'a18_138' {value124_135','a18_138'}
+//│ | | | | | | >> Occurrences LinkedHashSet('a18_138', value124_135')
+//│ | | | | | | >>>> occs[-'a18_138'] := LinkedHashSet('a18_138', value124_135')  <~ None
+//│ | | | | | | >>>> occs[-value124_135'] := LinkedHashSet('a18_138', value124_135')  <~ Some(LinkedHashSet('a18_134', value124_135'))
+//│ [occs] +f112_129' {f112_129',(α113_130' -> (α121_133' | α126_137'))} ; -α113_130' {α113_130',#Node<>,α114_131',{left: left115_132'}} ; -α114_131' {α113_130',#Node<>,α114_131',{left: left115_132'}} ; -left115_132' {left115_132',α113_130',#Node<>,α114_131',{left: left115_132'}} ; +α121_133' {α121_133',Some['a18_134'],α126_137',Some['a18_138']} ; +α126_137' {α121_133',Some['a18_134'],α126_137',Some['a18_138']} ; +'a18_134' {'a18_134',#0<int,number>} ; -'a18_134' {'a18_134',value124_135'} ; -value124_135' {value124_135'} ; +'a18_138' {'a18_138',‹∀ 1. value124_136''›} ; +value124_136'' {value124_136'',value124_135',#0<int,number>,‹∀ 1. value124_136''›} ; +value124_135' {value124_136'',value124_135',#0<int,number>,‹∀ 1. value124_136''›} ; -'a18_138' {'a18_138',value124_135'}
 //│ [vars] TreeSet(f112_129', α113_130', α114_131', left115_132', α121_133', 'a18_134', value124_135', value124_136'', α126_137', 'a18_138')
 //│ [rec] HashSet(left115_132', value124_136'', α114_131', α113_130', value124_135')
 //│ 0[1] f112_129'
@@ -254,19 +254,19 @@ rec def f w = case w of
 //│ 1[!] f112_129'
 //│ 1[!] α121_133'
 //│ 1[!] α126_137'
-//│ 2[v] α113_130' None Some(HashSet(α113_130', α114_131', {left: left115_132'}, #Node<>))
-//│ 2[v] 'a18_134' Some(HashSet(#0<int,number>, 'a18_134')) Some(HashSet('a18_134', value124_135'))
-//│ 2[v] value124_135' Some(HashSet(‹∀ 1. value124_136''›, #0<int,number>, value124_135', value124_136'')) Some(HashSet(value124_135'))
-//│ 2[v] value124_136'' Some(HashSet(‹∀ 1. value124_136''›, #0<int,number>, value124_135', value124_136'')) None
-//│ 2[v] 'a18_138' Some(HashSet(‹∀ 1. value124_136''›, 'a18_138')) Some(HashSet(value124_135', 'a18_138'))
-//│ 3[v] α113_130' + -HashSet(α113_130', α114_131', {left: left115_132'}, #Node<>)
-//│ 3[v] 'a18_134' +HashSet(#0<int,number>, 'a18_134') -HashSet('a18_134', value124_135')
-//│ | [w] value124_135' -HashSet(value124_135')
+//│ 2[v] α113_130' None Some(LinkedHashSet(α113_130', #Node<>, α114_131', {left: left115_132'}))
+//│ 2[v] 'a18_134' Some(LinkedHashSet('a18_134', #0<int,number>)) Some(LinkedHashSet('a18_134', value124_135'))
+//│ 2[v] value124_135' Some(LinkedHashSet(value124_136'', value124_135', #0<int,number>, ‹∀ 1. value124_136''›)) Some(LinkedHashSet(value124_135'))
+//│ 2[v] value124_136'' Some(LinkedHashSet(value124_136'', value124_135', #0<int,number>, ‹∀ 1. value124_136''›)) None
+//│ 2[v] 'a18_138' Some(LinkedHashSet('a18_138', ‹∀ 1. value124_136''›)) Some(LinkedHashSet('a18_138', value124_135'))
+//│ 3[v] α113_130' + -LinkedHashSet(α113_130', #Node<>, α114_131', {left: left115_132'})
+//│ 3[v] 'a18_134' +LinkedHashSet('a18_134', #0<int,number>) -LinkedHashSet('a18_134', value124_135')
+//│ | [w] value124_135' -LinkedHashSet(value124_135')
 //│ | | 'a18_134' and value124_135' have non-equal other bounds and won't be merged
-//│ 3[v] value124_135' +HashSet(‹∀ 1. value124_136''›, #0<int,number>, value124_135', value124_136'') -HashSet(value124_135')
-//│ 3[v] value124_136'' +HashSet(‹∀ 1. value124_136''›, #0<int,number>, value124_135', value124_136'') -
-//│ 3[v] 'a18_138' +HashSet(‹∀ 1. value124_136''›, 'a18_138') -HashSet(value124_135', 'a18_138')
-//│ | [w] value124_135' -HashSet(value124_135')
+//│ 3[v] value124_135' +LinkedHashSet(value124_136'', value124_135', #0<int,number>, ‹∀ 1. value124_136''›) -LinkedHashSet(value124_135')
+//│ 3[v] value124_136'' +LinkedHashSet(value124_136'', value124_135', #0<int,number>, ‹∀ 1. value124_136''›) -
+//│ 3[v] 'a18_138' +LinkedHashSet('a18_138', ‹∀ 1. value124_136''›) -LinkedHashSet('a18_138', value124_135')
+//│ | [w] value124_135' -LinkedHashSet(value124_135')
 //│ | | 'a18_138' and value124_135' have non-equal other bounds and won't be merged
 //│ [sub] f112_129' -> None, α114_131' -> None, left115_132' -> None, α121_133' -> None, α126_137' -> None
 //│ [bounds] 
@@ -472,11 +472,11 @@ rec def f w = case w of
 //│ | | | | | go (Node & {left: α113_139'})   (α113_139')
 //│ | | | | | | go Node   (α113_139')
 //│ | | | | | | go {left: α113_139'}   (α113_139', Node)
-//│ | | | | >> Occurrences HashSet({left: α113_139'}, α113_139', Node)
-//│ | | | | >>>> occs[-α113_139'] := HashSet({left: α113_139'}, α113_139', Node)  <~ None
+//│ | | | | >> Occurrences LinkedHashSet(α113_139', Node, {left: α113_139'})
+//│ | | | | >>>> occs[-α113_139'] := LinkedHashSet(α113_139', Node, {left: α113_139'})  <~ None
+//│ | | | | analyze2[+;Q(0);-] Node
 //│ | | | | analyze2[+;Q(0);-] {left: α113_139'}
 //│ | | | | | analyze2[+;Q(0);-] α113_139'
-//│ | | | | analyze2[+;Q(0);-] Node
 //│ | | analyze2[+;Q(0)] Some[('a18_140' & 'a18_143')..('a18_140' | 'a18_143')]
 //│ | | | analyze2[+;Q(0);=] ('a18_140' & 'a18_143')..('a18_140' | 'a18_143')
 //│ | | | | analyze2[-] ('a18_140' & 'a18_143')
@@ -487,36 +487,36 @@ rec def f w = case w of
 //│ | | | | | | | go value124_141'   ('a18_140')
 //│ | | | | | | go 'a18_143'   ('a18_140', value124_141')
 //│ | | | | | | | go value124_141'   ('a18_140', value124_141', 'a18_143')
-//│ | | | | | >> Occurrences HashSet('a18_140', value124_141', 'a18_143')
-//│ | | | | | >>>> occs[-'a18_140'] := HashSet('a18_140', value124_141', 'a18_143')  <~ None
-//│ | | | | | >>>> occs[-value124_141'] := HashSet('a18_140', value124_141', 'a18_143')  <~ None
-//│ | | | | | >>>> occs[-'a18_143'] := HashSet('a18_140', value124_141', 'a18_143')  <~ None
+//│ | | | | | >> Occurrences LinkedHashSet('a18_140', value124_141', 'a18_143')
+//│ | | | | | >>>> occs[-'a18_140'] := LinkedHashSet('a18_140', value124_141', 'a18_143')  <~ None
+//│ | | | | | >>>> occs[-value124_141'] := LinkedHashSet('a18_140', value124_141', 'a18_143')  <~ None
+//│ | | | | | >>>> occs[-'a18_143'] := LinkedHashSet('a18_140', value124_141', 'a18_143')  <~ None
 //│ | | | | analyze2[+] ('a18_140' | 'a18_143')
 //│ | | | | | Components Set((Some(true),'a18_140'), (Some(true),'a18_143'))
 //│ | | | | | >> Processing ('a18_140' | 'a18_143') at [+]
 //│ | | | | | go ('a18_140' | 'a18_143')   ()
 //│ | | | | | | go 'a18_140'   ()
 //│ | | | | | | | go #0<int,number>   ('a18_140')
-//│ | | | | | | go 'a18_143'   (#0<int,number>, 'a18_140')
-//│ | | | | | | | go value124_141'   (#0<int,number>, 'a18_140', 'a18_143')
-//│ | | | | | | | | go #0<int,number>   (#0<int,number>, 'a18_140', value124_141', 'a18_143')
-//│ | | | | | >> Occurrences HashSet(#0<int,number>, 'a18_140', value124_141', 'a18_143')
-//│ | | | | | >>>> occs[+'a18_140'] := HashSet(#0<int,number>, 'a18_140', value124_141', 'a18_143')  <~ None
-//│ | | | | | >>>> occs[+value124_141'] := HashSet(#0<int,number>, 'a18_140', value124_141', 'a18_143')  <~ None
-//│ | | | | | >>>> occs[+'a18_143'] := HashSet(#0<int,number>, 'a18_140', value124_141', 'a18_143')  <~ None
+//│ | | | | | | go 'a18_143'   ('a18_140', #0<int,number>)
+//│ | | | | | | | go value124_141'   ('a18_140', #0<int,number>, 'a18_143')
+//│ | | | | | | | | go #0<int,number>   ('a18_140', #0<int,number>, 'a18_143', value124_141')
+//│ | | | | | >> Occurrences LinkedHashSet('a18_140', #0<int,number>, 'a18_143', value124_141')
+//│ | | | | | >>>> occs[+'a18_140'] := LinkedHashSet('a18_140', #0<int,number>, 'a18_143', value124_141')  <~ None
+//│ | | | | | >>>> occs[+'a18_143'] := LinkedHashSet('a18_140', #0<int,number>, 'a18_143', value124_141')  <~ None
+//│ | | | | | >>>> occs[+value124_141'] := LinkedHashSet('a18_140', #0<int,number>, 'a18_143', value124_141')  <~ None
 //│ | | | | | analyze2[+] #0<int,number>
-//│ [occs] -α113_139' {{left: α113_139'},α113_139',Node} ; -'a18_140' {'a18_140',value124_141','a18_143'} ; -value124_141' {'a18_140',value124_141','a18_143'} ; -'a18_143' {'a18_140',value124_141','a18_143'} ; +'a18_140' {#0<int,number>,'a18_140',value124_141','a18_143'} ; +value124_141' {#0<int,number>,'a18_140',value124_141','a18_143'} ; +'a18_143' {#0<int,number>,'a18_140',value124_141','a18_143'}
+//│ [occs] -α113_139' {α113_139',Node,{left: α113_139'}} ; -'a18_140' {'a18_140',value124_141','a18_143'} ; -value124_141' {'a18_140',value124_141','a18_143'} ; -'a18_143' {'a18_140',value124_141','a18_143'} ; +'a18_140' {'a18_140',#0<int,number>,'a18_143',value124_141'} ; +'a18_143' {'a18_140',#0<int,number>,'a18_143',value124_141'} ; +value124_141' {'a18_140',#0<int,number>,'a18_143',value124_141'}
 //│ [vars] TreeSet(α113_139', 'a18_140', value124_141', 'a18_143')
 //│ [rec] Set(α113_139')
-//│ 2[v] α113_139' None Some(HashSet({left: α113_139'}, α113_139', Node))
-//│ 2[v] 'a18_140' Some(HashSet(#0<int,number>, 'a18_140', value124_141', 'a18_143')) Some(HashSet('a18_140', value124_141', 'a18_143'))
-//│   [..] 'a18_140' := value124_141'..(value124_141' | #0<int,number>)
-//│ 2[v] value124_141' Some(HashSet(#0<int,number>, 'a18_140', value124_141', 'a18_143')) Some(HashSet('a18_140', value124_141', 'a18_143'))
+//│ 2[v] α113_139' None Some(LinkedHashSet(α113_139', Node, {left: α113_139'}))
+//│ 2[v] 'a18_140' Some(LinkedHashSet('a18_140', #0<int,number>, 'a18_143', value124_141')) Some(LinkedHashSet('a18_140', value124_141', 'a18_143'))
+//│   [..] 'a18_140' := ('a18_143' & value124_141')..('a18_143' | #0<int,number>)
+//│ 2[v] value124_141' Some(LinkedHashSet('a18_140', #0<int,number>, 'a18_143', value124_141')) Some(LinkedHashSet('a18_140', value124_141', 'a18_143'))
 //│   [..] value124_141' := 'a18_143'..('a18_143' | #0<int,number>)
-//│ 2[v] 'a18_143' Some(HashSet(#0<int,number>, 'a18_140', value124_141', 'a18_143')) Some(HashSet('a18_140', value124_141', 'a18_143'))
-//│ 3[v] α113_139' + -HashSet({left: α113_139'}, α113_139', Node)
-//│ 3[v] 'a18_143' +HashSet(#0<int,number>, 'a18_140', value124_141', 'a18_143') -HashSet('a18_140', value124_141', 'a18_143')
-//│ [sub] 'a18_140' -> Some(value124_141'..(value124_141' | #0<int,number>)), value124_141' -> Some('a18_143'..('a18_143' | #0<int,number>))
+//│ 2[v] 'a18_143' Some(LinkedHashSet('a18_140', #0<int,number>, 'a18_143', value124_141')) Some(LinkedHashSet('a18_140', value124_141', 'a18_143'))
+//│ 3[v] α113_139' + -LinkedHashSet(α113_139', Node, {left: α113_139'})
+//│ 3[v] 'a18_143' +LinkedHashSet('a18_140', #0<int,number>, 'a18_143', value124_141') -LinkedHashSet('a18_140', value124_141', 'a18_143')
+//│ [sub] 'a18_140' -> Some(('a18_143' & value124_141')..('a18_143' | #0<int,number>)), value124_141' -> Some('a18_143'..('a18_143' | #0<int,number>))
 //│ [bounds] 
 //│ 		α113_139' <: (Node & {left: α113_139'})
 //│ 		'a18_140' :> #0<int,number> <: value124_141'
@@ -543,16 +543,28 @@ rec def f w = case w of
 //│ | | | transform[=] ('a18_140' & 'a18_143')..('a18_140' | 'a18_143')   ()  +;Q(0);=  None
 //│ | | | | transform[-] ('a18_140' & 'a18_143')   ()  -  None
 //│ | | | | | transform[-] 'a18_140'   ()  -  None
-//│ | | | | | | -> value124_141'..(value124_141' | #0<int,number>)
-//│ | | | | | | transform[-] value124_141'..(value124_141' | #0<int,number>)   ('a18_140')  -  None
-//│ | | | | | | | transform[-] value124_141'   ('a18_140')  -  None
-//│ | | | | | | | | -> 'a18_143'..('a18_143' | #0<int,number>)
-//│ | | | | | | | | transform[-] 'a18_143'..('a18_143' | #0<int,number>)   ('a18_140', value124_141')  -  None
-//│ | | | | | | | | | transform[-] 'a18_143'   ('a18_140', value124_141')  -  None
-//│ | | | | | | | | | | Renewed 'a18_143' ~> 'a18_145'
-//│ | | | | | | | | | | Inlining [-] bounds of 'a18_143' (~> 'a18_145')
-//│ | | | | | | | | | | transform[-] value124_141'   ('a18_140', value124_141', 'a18_143')  -;@[-](0)  None
+//│ | | | | | | -> ('a18_143' & value124_141')..('a18_143' | #0<int,number>)
+//│ | | | | | | transform[-] ('a18_143' & value124_141')..('a18_143' | #0<int,number>)   ('a18_140')  -  None
+//│ | | | | | | | transform[-] ('a18_143' & value124_141')   ('a18_140')  -  None
+//│ | | | | | | | | transform[-] 'a18_143'   ('a18_140')  -  None
+//│ | | | | | | | | | Renewed 'a18_143' ~> 'a18_145'
+//│ | | | | | | | | | Inlining [-] bounds of 'a18_143' (~> 'a18_145')
+//│ | | | | | | | | | transform[-] value124_141'   ('a18_140', 'a18_143')  -;@[-](0)  None
+//│ | | | | | | | | | | -> 'a18_143'..('a18_143' | #0<int,number>)
+//│ | | | | | | | | | | transform[-] 'a18_143'..('a18_143' | #0<int,number>)   ('a18_140', 'a18_143', value124_141')  -;@[-](0)  None
+//│ | | | | | | | | | | | transform[-] 'a18_143'   ('a18_140', 'a18_143', value124_141')  -;@[-](0)  None
+//│ | | | | | | | | | | | ~> ⊤
 //│ | | | | | | | | | | ~> ⊤
+//│ | | | | | | | | | ~> ⊤
+//│ | | | | | | | | ~> 'a18_145'
+//│ | | | | | | | | transform[-] value124_141'   ('a18_140')  -  None
+//│ | | | | | | | | | -> 'a18_143'..('a18_143' | #0<int,number>)
+//│ | | | | | | | | | transform[-] 'a18_143'..('a18_143' | #0<int,number>)   ('a18_140', value124_141')  -  None
+//│ | | | | | | | | | | transform[-] 'a18_143'   ('a18_140', value124_141')  -  None
+//│ | | | | | | | | | | | Inlining [-] bounds of 'a18_143' (~> 'a18_145')
+//│ | | | | | | | | | | | transform[-] value124_141'   ('a18_140', value124_141', 'a18_143')  -;@[-](0)  None
+//│ | | | | | | | | | | | ~> ⊤
+//│ | | | | | | | | | | ~> 'a18_145'
 //│ | | | | | | | | | ~> 'a18_145'
 //│ | | | | | | | | ~> 'a18_145'
 //│ | | | | | | | ~> 'a18_145'
@@ -571,28 +583,28 @@ rec def f w = case w of
 //│ | | | | ~> 'a18_145'
 //│ | | | | transform[+] ('a18_140' | 'a18_143')   ()  +  None
 //│ | | | | | transform[+] 'a18_140'   ()  +  None
-//│ | | | | | | -> value124_141'..(value124_141' | #0<int,number>)
-//│ | | | | | | transform[+] value124_141'..(value124_141' | #0<int,number>)   ('a18_140')  +  None
-//│ | | | | | | | transform[+] (value124_141' | #0<int,number>)   ('a18_140')  +  None
-//│ | | | | | | | | transform[+] value124_141'   ('a18_140')  +  None
-//│ | | | | | | | | | -> 'a18_143'..('a18_143' | #0<int,number>)
-//│ | | | | | | | | | transform[+] 'a18_143'..('a18_143' | #0<int,number>)   ('a18_140', value124_141')  +  None
-//│ | | | | | | | | | | transform[+] ('a18_143' | #0<int,number>)   ('a18_140', value124_141')  +  None
-//│ | | | | | | | | | | | transform[+] 'a18_143'   ('a18_140', value124_141')  +  None
-//│ | | | | | | | | | | | | Inlining [+] bounds of 'a18_143' (~> 'a18_145')
-//│ | | | | | | | | | | | | transform[+] value124_141'   ('a18_140', value124_141', 'a18_143')  +;@[+](0)  None
+//│ | | | | | | -> ('a18_143' & value124_141')..('a18_143' | #0<int,number>)
+//│ | | | | | | transform[+] ('a18_143' & value124_141')..('a18_143' | #0<int,number>)   ('a18_140')  +  None
+//│ | | | | | | | transform[+] ('a18_143' | #0<int,number>)   ('a18_140')  +  None
+//│ | | | | | | | | transform[+] 'a18_143'   ('a18_140')  +  None
+//│ | | | | | | | | | Inlining [+] bounds of 'a18_143' (~> 'a18_145')
+//│ | | | | | | | | | transform[+] value124_141'   ('a18_140', 'a18_143')  +;@[+](0)  None
+//│ | | | | | | | | | | -> 'a18_143'..('a18_143' | #0<int,number>)
+//│ | | | | | | | | | | transform[+] 'a18_143'..('a18_143' | #0<int,number>)   ('a18_140', 'a18_143', value124_141')  +;@[+](0)  None
+//│ | | | | | | | | | | | transform[+] ('a18_143' | #0<int,number>)   ('a18_140', 'a18_143', value124_141')  +;@[+](0)  None
+//│ | | | | | | | | | | | | transform[+] 'a18_143'   ('a18_140', 'a18_143', value124_141')  +;@[+](0)  None
 //│ | | | | | | | | | | | | ~> ⊥
-//│ | | | | | | | | | | | ~> 'a18_145'
-//│ | | | | | | | | | | | transform[+] #0<int,number>   ('a18_140', value124_141')  +  None
+//│ | | | | | | | | | | | | transform[+] #0<int,number>   ('a18_140', 'a18_143', value124_141')  +;@[+](0)  None
+//│ | | | | | | | | | | | | ~> #0<int,number>
 //│ | | | | | | | | | | | ~> #0<int,number>
-//│ | | | | | | | | | | ~> ('a18_145' | #0<int,number>)
-//│ | | | | | | | | | ~> ('a18_145' | #0<int,number>)
-//│ | | | | | | | | ~> ('a18_145' | #0<int,number>)
+//│ | | | | | | | | | | ~> #0<int,number>
+//│ | | | | | | | | | ~> #0<int,number>
+//│ | | | | | | | | ~> (#0<int,number> | 'a18_145')
 //│ | | | | | | | | transform[+] #0<int,number>   ('a18_140')  +  None
 //│ | | | | | | | | ~> #0<int,number>
-//│ | | | | | | | ~> (('a18_145' | #0<int,number>) | #0<int,number>)
-//│ | | | | | | ~> (('a18_145' | #0<int,number>) | #0<int,number>)
-//│ | | | | | ~> (('a18_145' | #0<int,number>) | #0<int,number>)
+//│ | | | | | | | ~> ((#0<int,number> | 'a18_145') | #0<int,number>)
+//│ | | | | | | ~> ((#0<int,number> | 'a18_145') | #0<int,number>)
+//│ | | | | | ~> ((#0<int,number> | 'a18_145') | #0<int,number>)
 //│ | | | | | transform[+] 'a18_143'   ()  +  None
 //│ | | | | | | Inlining [+] bounds of 'a18_143' (~> 'a18_145')
 //│ | | | | | | transform[+] value124_141'   ('a18_143')  +;@[+](0)  None
@@ -607,22 +619,22 @@ rec def f w = case w of
 //│ | | | | | | | ~> #0<int,number>
 //│ | | | | | | ~> #0<int,number>
 //│ | | | | | ~> (#0<int,number> | 'a18_145')
-//│ | | | | ~> ((('a18_145' | #0<int,number>) | #0<int,number>) | (#0<int,number> | 'a18_145'))
-//│ | | | ~> 'a18_145'..((('a18_145' | #0<int,number>) | #0<int,number>) | (#0<int,number> | 'a18_145'))
-//│ | | ~> Some['a18_145'..((('a18_145' | #0<int,number>) | #0<int,number>) | (#0<int,number> | 'a18_145'))]
-//│ | ~> (α113_144' -> Some['a18_145'..((('a18_145' | #0<int,number>) | #0<int,number>) | (#0<int,number> | 'a18_145'))])
-//│ ~> ‹∀ 0. (α113_144' -> Some['a18_145'..((('a18_145' | #0<int,number>) | #0<int,number>) | (#0<int,number> | 'a18_145'))])›
-//│ ⬤ Resim: ‹∀ 0. (α113_144' -> Some['a18_145'..((('a18_145' | #0<int,number>) | #0<int,number>) | (#0<int,number> | 'a18_145'))])›
+//│ | | | | ~> (((#0<int,number> | 'a18_145') | #0<int,number>) | (#0<int,number> | 'a18_145'))
+//│ | | | ~> 'a18_145'..(((#0<int,number> | 'a18_145') | #0<int,number>) | (#0<int,number> | 'a18_145'))
+//│ | | ~> Some['a18_145'..(((#0<int,number> | 'a18_145') | #0<int,number>) | (#0<int,number> | 'a18_145'))]
+//│ | ~> (α113_144' -> Some['a18_145'..(((#0<int,number> | 'a18_145') | #0<int,number>) | (#0<int,number> | 'a18_145'))])
+//│ ~> ‹∀ 0. (α113_144' -> Some['a18_145'..(((#0<int,number> | 'a18_145') | #0<int,number>) | (#0<int,number> | 'a18_145'))])›
+//│ ⬤ Resim: ‹∀ 0. (α113_144' -> Some['a18_145'..(((#0<int,number> | 'a18_145') | #0<int,number>) | (#0<int,number> | 'a18_145'))])›
 //│  where: 
 //│ 		α113_144' <: (Node & {left: α113_144'})
 //│ allVarPols: -α113_144', ='a18_145'
 //│ Consider α113_144'
 //│ [subs] HashMap()
-//│ ⬤ Factored: ‹∀ 0. (α113_144' -> Some['a18_145'..((('a18_145' | #0<int,number>) | #0<int,number>) | (#0<int,number> | 'a18_145'))])›
+//│ ⬤ Factored: ‹∀ 0. (α113_144' -> Some['a18_145'..(((#0<int,number> | 'a18_145') | #0<int,number>) | (#0<int,number> | 'a18_145'))])›
 //│  where: 
 //│ 		α113_144' <: (Node & {left: α113_144'})
-//│ expand ‹∀ 0. (α113_144' -> Some['a18_145'..((('a18_145' | #0<int,number>) | #0<int,number>) | (#0<int,number> | 'a18_145'))])›
-//│ | expand (α113_144' -> Some['a18_145'..((('a18_145' | #0<int,number>) | #0<int,number>) | (#0<int,number> | 'a18_145'))])
+//│ expand ‹∀ 0. (α113_144' -> Some['a18_145'..(((#0<int,number> | 'a18_145') | #0<int,number>) | (#0<int,number> | 'a18_145'))])›
+//│ | expand (α113_144' -> Some['a18_145'..(((#0<int,number> | 'a18_145') | #0<int,number>) | (#0<int,number> | 'a18_145'))])
 //│ | | expand (α113_144',)
 //│ | | | expand α113_144'
 //│ | | | | expand ⊥
@@ -637,38 +649,38 @@ rec def f w = case w of
 //│ | | | | ~> Inter(TypeName(Node),Record(List((Var(left),Field(None,α144)))))
 //│ | | | ~> α144
 //│ | | ~> Tuple(List((None,Field(None,α144))))
-//│ | | expand Some['a18_145'..((('a18_145' | #0<int,number>) | #0<int,number>) | (#0<int,number> | 'a18_145'))]
-//│ | | | expand 'a18_145'..((('a18_145' | #0<int,number>) | #0<int,number>) | (#0<int,number> | 'a18_145'))
+//│ | | expand Some['a18_145'..(((#0<int,number> | 'a18_145') | #0<int,number>) | (#0<int,number> | 'a18_145'))]
+//│ | | | expand 'a18_145'..(((#0<int,number> | 'a18_145') | #0<int,number>) | (#0<int,number> | 'a18_145'))
 //│ | | | | expand 'a18_145'
 //│ | | | | | expand ⊥
 //│ | | | | | ~> Bot
 //│ | | | | | expand ⊤
 //│ | | | | | ~> Top
 //│ | | | | ~> α145
-//│ | | | | expand ((('a18_145' | #0<int,number>) | #0<int,number>) | (#0<int,number> | 'a18_145'))
-//│ | | | | | expand (('a18_145' | #0<int,number>) | #0<int,number>)
-//│ | | | | | | expand ('a18_145' | #0<int,number>)
-//│ | | | | | | | expand 'a18_145'
-//│ | | | | | | | ~> α145
+//│ | | | | expand (((#0<int,number> | 'a18_145') | #0<int,number>) | (#0<int,number> | 'a18_145'))
+//│ | | | | | expand ((#0<int,number> | 'a18_145') | #0<int,number>)
+//│ | | | | | | expand (#0<int,number> | 'a18_145')
 //│ | | | | | | | expand #0<int,number>
 //│ | | | | | | | ~> Literal(IntLit(0))
-//│ | | | | | | ~> Union(α145,Literal(IntLit(0)))
+//│ | | | | | | | expand 'a18_145'
+//│ | | | | | | | ~> α145
+//│ | | | | | | ~> Union(Literal(IntLit(0)),α145)
 //│ | | | | | | expand #0<int,number>
 //│ | | | | | | ~> Literal(IntLit(0))
-//│ | | | | | ~> Union(Union(α145,Literal(IntLit(0))),Literal(IntLit(0)))
+//│ | | | | | ~> Union(Union(Literal(IntLit(0)),α145),Literal(IntLit(0)))
 //│ | | | | | expand (#0<int,number> | 'a18_145')
 //│ | | | | | | expand #0<int,number>
 //│ | | | | | | ~> Literal(IntLit(0))
 //│ | | | | | | expand 'a18_145'
 //│ | | | | | | ~> α145
 //│ | | | | | ~> Union(Literal(IntLit(0)),α145)
-//│ | | | | ~> Union(Union(Union(α145,Literal(IntLit(0))),Literal(IntLit(0))),Union(Literal(IntLit(0)),α145))
-//│ | | | ~> Bounds(α145,Union(Union(Union(α145,Literal(IntLit(0))),Literal(IntLit(0))),Union(Literal(IntLit(0)),α145)))
-//│ | | ~> AppliedType(TypeName(Some),List(Bounds(α145,Union(Union(Union(α145,Literal(IntLit(0))),Literal(IntLit(0))),Union(Literal(IntLit(0)),α145)))))
-//│ | ~> Function(Tuple(List((None,Field(None,α144)))),AppliedType(TypeName(Some),List(Bounds(α145,Union(Union(Union(α145,Literal(IntLit(0))),Literal(IntLit(0))),Union(Literal(IntLit(0)),α145))))))
-//│ ~> PolyType(List(Right(α144), Right(α145)),Function(Tuple(List((None,Field(None,α144)))),AppliedType(TypeName(Some),List(Bounds(α145,Union(Union(Union(α145,Literal(IntLit(0))),Literal(IntLit(0))),Union(Literal(IntLit(0)),α145)))))))
-//│ ⬤ Expanded: Constrained(PolyType(List(Right(α144), Right(α145)),Function(Tuple(List((None,Field(None,α144)))),AppliedType(TypeName(Some),List(Bounds(α145,Union(Union(Union(α145,Literal(IntLit(0))),Literal(IntLit(0))),Union(Literal(IntLit(0)),α145))))))),List((α144,Bounds(Bot,Inter(TypeName(Node),Record(List((Var(left),Field(None,α144)))))))),List())
-//│ f: 'b -> Some[in 'a out 'a | 0]
+//│ | | | | ~> Union(Union(Union(Literal(IntLit(0)),α145),Literal(IntLit(0))),Union(Literal(IntLit(0)),α145))
+//│ | | | ~> Bounds(α145,Union(Union(Union(Literal(IntLit(0)),α145),Literal(IntLit(0))),Union(Literal(IntLit(0)),α145)))
+//│ | | ~> AppliedType(TypeName(Some),List(Bounds(α145,Union(Union(Union(Literal(IntLit(0)),α145),Literal(IntLit(0))),Union(Literal(IntLit(0)),α145)))))
+//│ | ~> Function(Tuple(List((None,Field(None,α144)))),AppliedType(TypeName(Some),List(Bounds(α145,Union(Union(Union(Literal(IntLit(0)),α145),Literal(IntLit(0))),Union(Literal(IntLit(0)),α145))))))
+//│ ~> PolyType(List(Right(α144), Right(α145)),Function(Tuple(List((None,Field(None,α144)))),AppliedType(TypeName(Some),List(Bounds(α145,Union(Union(Union(Literal(IntLit(0)),α145),Literal(IntLit(0))),Union(Literal(IntLit(0)),α145)))))))
+//│ ⬤ Expanded: Constrained(PolyType(List(Right(α144), Right(α145)),Function(Tuple(List((None,Field(None,α144)))),AppliedType(TypeName(Some),List(Bounds(α145,Union(Union(Union(Literal(IntLit(0)),α145),Literal(IntLit(0))),Union(Literal(IntLit(0)),α145))))))),List((α144,Bounds(Bot,Inter(TypeName(Node),Record(List((Var(left),Field(None,α144)))))))),List())
+//│ f: 'b -> Some[in 'a out 0 | 'a]
 //│   where
 //│     'b <: Node & {left: 'b}
 
@@ -687,5 +699,6 @@ def f w =
 //│ f: 'b -> Some[in 'a out 0 | 'a]
 //│   where
 //│     'b <: {left: Node & 'b}
+
 
 

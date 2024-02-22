@@ -566,7 +566,7 @@ trait TypeSimplifier { self: Typer =>
     
     // * Note: for negatively-quantified vars, the notion of co-occurrence is reversed (wrt unions/inters)...
     
-    val coOccurrences: MutMap[(Bool, TypeVariable), MutSet[SimpleType]] = LinkedHashMap.empty
+    val coOccurrences: MutMap[(Bool, TypeVariable), LinkedHashSet[SimpleType]] = LinkedHashMap.empty
     
     // * Remember which TVs we analyzed at which polarity
     val analyzed2 = MutSet.empty[Bool -> ST]
@@ -668,7 +668,8 @@ trait TypeSimplifier { self: Typer =>
     }
     
     def processImpl(st: SimpleType, pol: PolMap, occPol: Bool) = {
-      val newOccs = MutSet.empty[SimpleType]
+      // val newOccs = MutSet.empty[SimpleType]
+      val newOccs = LinkedHashSet.empty[SimpleType]
       
       println(s">> Processing $st at [${printPol(S(occPol))}]")
       
@@ -705,7 +706,8 @@ trait TypeSimplifier { self: Typer =>
               case Some(os) =>
                 // Q: filter out vars of different level?
                 os.filterInPlace(occs) // computes the intersection
-              case None => coOccurrences(pol -> tv) = occs.clone() // `clone` not needed?
+              // case None => coOccurrences(pol -> tv) = occs.clone() // `clone` not needed?
+              case None => coOccurrences(pol -> tv) = LinkedHashSet.from(occs) // `clone` not needed?
             }
           }
           pol(tv) match {
@@ -787,6 +789,7 @@ trait TypeSimplifier { self: Typer =>
       println(s"2[v] $v ${coOccurrences.get(true -> v)} ${coOccurrences.get(false -> v)}")
       
       coOccurrences.get(true -> v).iterator.flatMap(_.iterator).foreach {
+      // coOccurrences.get(true -> v).toArray.sorted.flatMap(_.iterator).foreach {
         
         case atom @ (_: BaseType | _: TypeRef)
           if !recVars(v) // can't reduce recursive sandwiches, obviously
