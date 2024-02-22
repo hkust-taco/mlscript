@@ -25,7 +25,7 @@ class UsefulnessAnalysis(verbose: Bool = false):
   
   private def addUse(x: Name) =
     val def_count = defs.get(x) match
-      case None => throw GraphOptimizingError(s"Use of undefined variable $x")
+      case None => throw IRError(s"Use of undefined variable $x")
       case Some(value) => value
     val key = (x, defs(x))
     uses.update(key, uses.getOrElse(key, 0) + 1)

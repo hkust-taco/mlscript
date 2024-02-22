@@ -8,7 +8,7 @@ import collection.mutable.ListBuffer
 
 final val ops = Set("+", "-", "*", "/", ">", "<", ">=", "<=", "!=", "==")
 
-final class IRBuilder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshInt):
+final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshInt):
   import Node._
   import Expr._
   

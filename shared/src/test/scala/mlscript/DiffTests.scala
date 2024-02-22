@@ -40,10 +40,9 @@ abstract class ModeType {
   def showRepl: Bool
   def allowEscape: Bool
   def mono: Bool
-  def graphOpt: Bool
-  def graphInterp: Bool
-  def graphOptVerbose: Bool
-  def parseAsHaskell: Bool
+  def useIR: Bool
+  def interpIR: Bool
+  def irVerbose: Bool
 }
 
 class DiffTests
@@ -55,9 +54,8 @@ class DiffTests
   
   /**  Hook for dependent projects, like the monomorphizer. */
   def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit): Ls[Str] = Nil
-
-  def postProcessWithHaskellSyntax(mode: ModeType, basePath: Ls[Str], testName: Str, orig: Origin): Ls[Str] = Nil
   
+
   @SuppressWarnings(Array("org.wartremover.warts.RedundantIsInstanceOf"))
   private val inParallel = isInstanceOf[ParallelTestExecution]
   
@@ -172,10 +170,9 @@ class DiffTests
       allowEscape: Bool = false,
       mono: Bool = false,
       // noProvs: Bool = false,
-      graphOpt: Bool = false,
-      graphInterp: Bool = false,
-      graphOptVerbose: Bool = false,
-      parseAsHaskell: Bool = false,
+      useIR: Bool = false,
+      interpIR: Bool = false,
+      irVerbose: Bool = false,
       
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
@@ -284,10 +281,9 @@ class DiffTests
               case l :: _ => out.println(l)
             }
             return ()
-          case "GraphOpt" => mode.copy(graphOpt = true)
-          case "GraphInterp" => mode.copy(graphInterp = true)
-          case "GraphOptVerbose" => mode.copy(graphOptVerbose = true)
-          case "SyntaxHaskell" => mode.copy(parseAsHaskell = true)
+          case "UseIR" => mode.copy(useIR = true)
+          case "InterpIR" => mode.copy(interpIR = true)
+          case "IRVerbose" => mode.copy(irVerbose = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -427,11 +423,7 @@ class DiffTests
         
         // try to parse block of text into mlscript ast
         val ans = try {
-          if (mode.parseAsHaskell) {
-            val origin = Origin(testName, globalStartLineNum, fph)
-            postProcessWithHaskellSyntax(mode, basePath, testName, origin).foreach(output)
-            Success(Pgrm(Nil), 0)
-          } else if (newParser) {
+          if (newParser) {
             
             val origin = Origin(testName, globalStartLineNum, fph)
             val lexer = new NewLexer(origin, raise, dbg = mode.dbgParsing)
