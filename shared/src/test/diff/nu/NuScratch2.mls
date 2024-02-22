@@ -1,8 +1,16 @@
 :NewDefs
 
 
-
+// :d
+// :ds
+fun (+:) pre(x: Int, xs) = [[x], xs]
+fun (:+) post(xs, x: Int) = [xs, [x]]
 fun (++) conc(xs, ys) = [xs, ys]
-//│ fun (++) conc: forall 'a 'b. ('a, 'b) -> ['a, 'b]
+//│ fun (+:) pre: forall 'a. (x: Int, 'a) -> [[Int], 'a]
+//│ fun (:+) post: forall 'b. ('b, x: Int) -> ['b, [Int]]
+//│ fun (++) conc: forall 'c 'd. ('c, 'd) -> ['c, 'd]
+
+
+
 
 

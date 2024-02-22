@@ -287,7 +287,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   
   private val preludeLoc = Loc(0, 0, Origin("<prelude>", 0, new FastParseHelpers("")))
   
-  freshVar(noTyProv, N)(1)
+  // freshVar(noTyProv, N)(1)
   
   val nuBuiltinTypes: Ls[NuTypeDef] = Ls(
     NuTypeDef(Cls, TN("Object"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
@@ -1931,13 +1931,14 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     }
     
     def go(st: SimpleType)(implicit ectx: ExpCtx): Type =
-            // trace(s"expand $st") {
+            trace(s"expand $st") {
           st.unwrapProvs match {
         case tv: TypeVariable if stopAtTyVars => tv.asTypeVar
         case tv: TypeVariable => ectx.tps.getOrElse(tv, {
           val nv = tv.asTypeVar
-          if (!seenVars(tv)) {
-            seenVars += tv
+          // if (!seenVars(tv)) {
+          //   seenVars += tv
+          if (seenVars.add(tv)) {
             tv.assignedTo match {
               case S(ty) =>
                 val b = go(ty)
@@ -2010,7 +2011,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             newBounds.iterator.flatMap(_._2.freeTypeVariables)
           val fvars = qvars.filter(tv => ftvs.contains(tv.asTypeVar))
           if (fvars.isEmpty) b else
-            PolyType(fvars.map(_.asTypeVar pipe (R(_))).toList, b)
+            PolyType(fvars
+              .toArray.sorted
+              .map(_.asTypeVar pipe (R(_))).toList, b)
         case ConstrainedType(cs, bod) =>
           val (ubs, others1) = cs.groupMap(_._1)(_._2).toList.partition(_._2.sizeIs > 1)
           val lbs = others1.mapValues(_.head).groupMap(_._2)(_._1).toList
@@ -2021,7 +2024,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         // case DeclType(lvl, info) =>
           
     }
-    // }(r => s"~> $r")
+    }(r => s"~> $r")
     
     val res = goLike(st)(new ExpCtx(Map.empty))
     if (bounds.isEmpty) res
