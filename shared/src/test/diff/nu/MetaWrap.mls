@@ -63,7 +63,7 @@ module Test0 extends Base, WithUid
 //│ module Test0 {
 //│   fun getUid: {uid: 'uid, underlying: 'underlying} -> 'uid
 //│   fun rewrap: ({uid: 'uid0, underlying: 'underlying0 & 'underlying1}, 'underlying1 -> 'underlying0) -> {uid: 'uid0 | Int, underlying: 'underlying0}
-//│   fun setUid: ({uid: 'uid0, underlying: 'underlying0 & 'underlying1}, uid: Int) -> {uid: Int | 'uid0, underlying: 'underlying0}
+//│   fun setUid: ({uid: 'uid0, underlying: 'underlying0 & 'underlying1}, uid: Int) -> {uid: 'uid0 | Int, underlying: 'underlying0}
 //│   fun unwrap: {uid: 'uid, underlying: 'underlying} -> 'underlying
 //│ }
 
@@ -74,15 +74,15 @@ module Test0 extends Base, WithUid, WithUid
 //│     uid: 'uid0,
 //│     underlying: {uid: 'uid1, underlying: 'underlying0 & 'underlying1} & 'underlying2
 //│   }, 'underlying1 -> 'underlying0) -> {
-//│     uid: Int | 'uid0,
-//│     underlying: 'underlying2 | {uid: Int | 'uid1, underlying: 'underlying0}
+//│     uid: 'uid0 | Int,
+//│     underlying: 'underlying2 | {uid: 'uid1 | Int, underlying: 'underlying0}
 //│   }
 //│   fun setUid: ({
 //│     uid: 'uid0,
 //│     underlying: {uid: 'uid1, underlying: 'underlying0 & 'underlying1} & 'underlying2
 //│   }, uid: Int) -> {
-//│     uid: Int | 'uid0,
-//│     underlying: 'underlying2 | {uid: Int | 'uid1, underlying: 'underlying0}
+//│     uid: 'uid0 | Int,
+//│     underlying: 'underlying2 | {uid: 'uid1 | Int, underlying: 'underlying0}
 //│   }
 //│   fun unwrap: {uid: anything, underlying: {uid: 'uid, underlying: 'underlying}} -> 'underlying
 //│ }
@@ -96,22 +96,22 @@ module Test1 extends Base, WithUid, WithType
 //│     uid: 'uid0,
 //│     underlying: {ty: 'ty0, underlying: 'underlying0 & 'underlying1} & 'underlying2
 //│   }, 'underlying1 -> 'underlying0) -> {
-//│     uid: Int | 'uid0,
-//│     underlying: 'underlying2 | {ty: Type | 'ty0, underlying: 'underlying0}
+//│     uid: 'uid0 | Int,
+//│     underlying: 'underlying2 | {ty: 'ty0 | Type, underlying: 'underlying0}
 //│   }
 //│   fun setType: ({
 //│     uid: 'uid0,
 //│     underlying: {ty: 'ty0, underlying: 'underlying0 & 'underlying1} & 'underlying2
 //│   }, ty: Type) -> {
-//│     uid: Int | 'uid0,
-//│     underlying: 'underlying2 | {ty: Type | 'ty0, underlying: 'underlying0}
+//│     uid: 'uid0 | Int,
+//│     underlying: 'underlying2 | {ty: 'ty0 | Type, underlying: 'underlying0}
 //│   }
 //│   fun setUid: ({
 //│     uid: 'uid0,
 //│     underlying: {ty: 'ty0, underlying: 'underlying0 & 'underlying1} & 'underlying2
 //│   }, uid: Int) -> {
-//│     uid: Int | 'uid0,
-//│     underlying: 'underlying2 | {ty: Type | 'ty0, underlying: 'underlying0}
+//│     uid: 'uid0 | Int,
+//│     underlying: 'underlying2 | {ty: 'ty0 | Type, underlying: 'underlying0}
 //│   }
 //│   fun unwrap: {uid: 'uid, underlying: {ty: 'ty, underlying: 'underlying}} -> 'underlying
 //│ }

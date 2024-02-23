@@ -45,7 +45,7 @@ Bar(true).x
 //│ ╟── Either make the parameter a `val` or access it through destructuring
 //│ ║  l.37: 	class Bar(x: Bool) extends Foo(123)
 //│ ╙──      	          ^
-//│ error | true | false
+//│ error | false | true
 //│ res
 //│     = undefined
 

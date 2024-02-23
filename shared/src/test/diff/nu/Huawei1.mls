@@ -21,10 +21,10 @@ class B
 fun bar(c) = if c is
   C(y) then y
   B    then 0
-//│ fun bar: forall 'a. (C['a] | B) -> ('a | 0)
+//│ fun bar: forall 'a. (B | C['a]) -> ('a | 0)
 
 bar(c)
-//│ 123 | 0
+//│ 0 | 123
 //│ res
 //│     = 123
 
@@ -56,7 +56,7 @@ bar(C(true))
 //│ ╟── Note: type parameter A is defined at:
 //│ ║  l.4: 	class C[out A](x: A) {
 //│ ╙──     	            ^
-//│ error | Int
+//│ Int | error
 //│ res
 //│     = 2
 

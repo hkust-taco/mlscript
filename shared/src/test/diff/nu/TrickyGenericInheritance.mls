@@ -79,7 +79,7 @@ c1.f
 //│ ╟── from type variable:
 //│ ║  l.69: 	(c1 : T1['X]).f(false)
 //│ ╙──      	         ^^
-//│ error | false | Int
+//│ Int | error | false
 //│ res
 //│     = false
 

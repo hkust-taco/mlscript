@@ -30,7 +30,7 @@ new Foo(1).x
 //│     = 1
 
 if f is Foo then 1 else 0
-//│ 1 | 0
+//│ 0 | 1
 //│ res
 //│     = 1
 
@@ -85,7 +85,7 @@ let f = new Foo
 //│ ╟── argument list of type `[]` does not match type `[x: Int]`
 //│ ║  l.81: 	let f = new Foo
 //│ ╙──      	               ^
-//│ let f: error | Foo
+//│ let f: Foo | error
 //│ f
 //│   = Foo {}
 
@@ -116,7 +116,7 @@ new Foo("2")
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.57: 	  constructor(x: Int){}
 //│ ╙──      	                 ^^^
-//│ error | Foo
+//│ Foo | error
 //│ res
 //│     = Foo {}
 
@@ -128,7 +128,7 @@ new Foo()
 //│ ╟── argument list of type `[]` does not match type `[x: Int]`
 //│ ║  l.124: 	new Foo()
 //│ ╙──       	       ^^
-//│ error | Foo
+//│ Foo | error
 //│ res
 //│     = Foo {}
 
@@ -150,7 +150,7 @@ new PoInt
 //│ ╟── argument list of type `[]` does not match type `[x: ?A, y: ?A]`
 //│ ║  l.146: 	new PoInt
 //│ ╙──       	         ^
-//│ error | PoInt[nothing]
+//│ PoInt[nothing] | error
 //│ res
 //│     = PoInt {}
 
@@ -165,7 +165,7 @@ new PoInt['_]
 //│ ╟── argument list of type `[]` does not match type `[x: ?A, y: ?A]`
 //│ ║  l.158: 	new PoInt['_]
 //│ ╙──       	             ^
-//│ error | PoInt[nothing]
+//│ PoInt[nothing] | error
 //│ Code generation encountered an error:
 //│   Unsupported `new` class term: TyApp(Var(PoInt),List('_))
 

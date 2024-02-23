@@ -8,7 +8,7 @@ class Cond[T](p: Expr[Bool], t: Expr[T], e: Expr[T]) extends Expr[T]
 class Pair[S, T](a: Expr[S], b: Expr[T]) extends Expr[[S, T]]
 class Fst[S, T](p: Expr[[S, T]]) extends Expr[S]
 class Snd[S, T](p: Expr[[S, T]]) extends Expr[T]
-//│ trait Expr[A]: LitInt | LitBool | Add | Cond[?] | Pair[?, ?] | Fst[?, ?] | Snd[?, ?]
+//│ trait Expr[A]: Add | Cond[?] | Fst[?, ?] | LitBool | LitInt | Pair[?, ?] | Snd[?, ?]
 //│ class LitInt(n: Int) extends Expr
 //│ class LitBool(b: Bool) extends Expr
 //│ class Add(x: Expr[Int], y: Expr[Int]) extends Expr
@@ -64,10 +64,10 @@ fun eval[A](e: Expr[A]): A =
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.59: 	        e is Add(x, y) then eval(x) + eval(y)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `#Expr & (LitInt & {Expr#A = A} | LitBool & {Expr#A = A} | Add & {Expr#A = A} | Cond[?] & {Expr#A = A} | Pair[?, ?] & {Expr#A = A} | Fst[?, ?] & {Expr#A = A} | Snd[?, ?] & {Expr#A = A})` does not match type `LitInt | LitBool | Add`
+//│ ╟── type `#Expr & (Add & {Expr#A = A} | Cond[?] & {Expr#A = A} | Fst[?, ?] & {Expr#A = A} | LitBool & {Expr#A = A} | LitInt & {Expr#A = A} | Pair[?, ?] & {Expr#A = A} | Snd[?, ?] & {Expr#A = A})` does not match type `Add | LitBool | LitInt`
 //│ ║  l.55: 	fun eval[A](e: Expr[A]): A =
 //│ ║        	               ^^^^^^^
-//│ ╟── but it flows into reference with expected type `LitInt | LitBool | Add`
+//│ ╟── but it flows into reference with expected type `Add | LitBool | LitInt`
 //│ ║  l.57: 	        e is LitInt(n) then n
 //│ ╙──      	        ^
 //│ ╔══[ERROR] Type mismatch in type ascription:

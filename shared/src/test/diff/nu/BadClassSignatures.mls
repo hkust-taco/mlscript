@@ -175,7 +175,7 @@ not(Foo().x)
 //│ ╟── field selection of type `Int & ??FigureItOut` is not an instance of type `Bool`
 //│ ║  l.171: 	not(Foo().x)
 //│ ╙──       	    ^^^^^^^
-//│ error | true | false
+//│ error | false | true
 //│ res
 //│     = true
 

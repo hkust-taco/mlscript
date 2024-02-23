@@ -29,7 +29,7 @@ f(1)
 //│     = 1
 
 f(true)
-//│ true | 1
+//│ 1 | true
 //│ res
 //│     = true
 
@@ -85,14 +85,14 @@ fun funny(x) =
 //│ fun funny: 'A -> (None | Some['A])
 
 funny(123)
-//│ Some[in 'A out 'A | 123] | None
+//│ None | Some[in 'A out 'A | 123]
 //│ res
 //│     = None { class: [class None] }
 
 if funny("hi") is
   Some(v) then v
   else 0
-//│ 123 | "hi" | 0
+//│ "hi" | 0 | 123
 //│ res
 //│     = 123
 
@@ -107,7 +107,7 @@ mut let m = None
 
 mut val m = None
 fun oops(x) = set m = x
-//│ mut val m: None | 'm
+//│ mut val m: 'm | None
 //│ fun oops: 'm -> ()
 //│ m
 //│   = None { class: [class None] }
@@ -163,7 +163,7 @@ fun repmin(t) =
   let go(t) = set min = t.value
   go(t)
   min
-//│ fun repmin: forall 'min. {value: 'min} -> (123 | 'min)
+//│ fun repmin: forall 'min. {value: 'min} -> ('min | 123)
 
 
 class Leaf[out A](val value: A)
@@ -175,14 +175,14 @@ fun repmin(t) =
     Leaf(n) then set min = n
   go(t)
   min
-//│ fun repmin: forall 'min. Leaf['min] -> (123 | 'min)
+//│ fun repmin: forall 'min. Leaf['min] -> ('min | 123)
 
 fun repmin =
   mut let min = 123
   let go(t) = if t is
     Leaf(n) then set min = n
   [min, go]
-//│ fun repmin: forall 'min. [123 | 'min, Leaf['min] -> ()]
+//│ fun repmin: forall 'min. ['min | 123, Leaf['min] -> ()]
 
 
 :e

@@ -91,7 +91,7 @@ mixin Test {
 //│ mixin Test() {
 //│   this: {size: anything -> Int}
 //│   class Add[A](lhs: A, rhs: A) {
-//│     fun cached: error | Int
+//│     fun cached: Int | error
 //│   }
 //│   class Lit(n: Int)
 //│   fun size: Add[??A & 'a] -> Int

@@ -22,7 +22,7 @@ xs.[0] + 1
 //│ ╟── possibly-undefined array access of type `()` is not an instance of type `Int`
 //│ ║  l.18: 	xs.[0] + 1
 //│ ╙──      	  ^^^^
-//│ error | Int
+//│ Int | error
 //│ res
 //│     = 1
 

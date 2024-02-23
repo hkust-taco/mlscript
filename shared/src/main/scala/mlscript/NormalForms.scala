@@ -29,6 +29,30 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   
   
   sealed abstract class LhsNf {
+  // sealed abstract class LhsNf extends Ordered[LhsNf] {
+    // def compare(that: LhsNf): Int = {???}
+    def comparePartial(that: LhsNf): Int = (this, that) match {
+      case (LhsRefined(b1, ts1, r1, trs1), LhsRefined(b2, ts2, r2, trs2)) =>
+        val cmp1 = (b1, b2) match {
+          case (S(c1), S(c2)) => c1.comparePartial(c2)
+          case (S(c1), N) => -1
+          case (N, S(c2)) => 1
+          case (N, N) => 0
+        }
+        if (cmp1 =/= 0) return cmp1
+        val cmp2 = ts1.size.compare(ts2.size)
+        if (cmp2 =/= 0) return cmp2
+        // val cmp3 = r1.comparePartial(r2)
+        val cmp3 = (r1, r2) match {
+          case (RecordType(Nil), RecordType(fs2)) => -1
+          case (RecordType(fs1), RecordType(Nil)) => 1
+          case (RecordType(fs1), RecordType(fs2)) => 0
+        }
+        if (cmp3 =/= 0) return cmp3
+        trs1.size.compare(trs2.size)
+      case (LhsTop, _) => -1
+      case (_, LhsTop) => 1
+    }
     def toTypes: Ls[SimpleType] = toType() :: Nil
     def toType(sort: Bool = false): SimpleType =
       if (sort) mkType(true) else underlying
@@ -247,6 +271,22 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def isTop: Bool = isInstanceOf[LhsTop.type]
   }
   case class LhsRefined(base: Opt[BaseType], ttags: SortedSet[AbstractTag], reft: RecordType, trefs: SortedMap[TypeName, TypeRef]) extends LhsNf {
+  // case class LhsRefined(base: Opt[BaseType], ttags: SortedSet[AbstractTag], reft: RecordType, trefs: SortedMap[TypeName, TypeRef]) extends LhsNf {
+    // def compare(that: LhsNf): Int = that match {
+    //   case LhsRefined(b, ts, r, trs) =>
+    //     implicitly[Ordering[Opt[BaseTypeOrTag]]]
+    //     // val cmp1 = base.compare(b)
+    //     val cmp1 = implicitly[Ordering[Opt[BaseTypeOrTag]]].compare(base, b)
+    //     if (cmp1 =/= 0) return cmp1
+    //     val cmp2 = ttags.size.compare(ts.size)
+    //     if (cmp2 =/= 0) return cmp2
+    //     val cmp3 = 
+    //       {???;0} // TODO
+    //       // reft.compare(r)
+    //     if (cmp3 =/= 0) return cmp3
+    //     trefs.size.compare(trs.size)
+    //   case LhsTop => 1
+    // }
     // assert(!trefs.exists(primitiveTypes contains _._1.name))
     lazy val allTags: Set[IdentifiedTerm] = ttags.iterator.foldLeft(base match {
         case S(cls: ClassTag) => cls.parentsST + cls.id
@@ -259,11 +299,15 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       (ttags.iterator ++ trefs.valuesIterator).map("∧"+_).mkString}"
   }
   case object LhsTop extends LhsNf {
+    // def compare(that: LhsNf): Int = -1
     override def toString: Str = "⊤"
   }
   
   
   sealed abstract class RhsNf {
+  // sealed abstract class RhsNf extends Ordered[RhsNf] {
+    // def compare(that: RhsNf): Int = {???}
+    def comparePartial(that: RhsNf): Int = {???}
     def toTypes: Ls[SimpleType] = toType() :: Nil
     def toType(sort: Bool = false): SimpleType =
       if (sort) mkType(true) else underlying
@@ -444,10 +488,24 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   }
   
   
-  case class Conjunct(lnf: LhsNf, vars: SortedSet[TypeVariable], rnf: RhsNf, nvars: SortedSet[TypeVariable]) extends Ordered[Conjunct] {
+  object ConjunctPartialOrdering extends Ordering[Conjunct] {
+    def compare(x: Conjunct, y: Conjunct): Int = x.comparePartial(y)
+  }
+  case class Conjunct(lnf: LhsNf, vars: SortedSet[TypeVariable], rnf: RhsNf, nvars: SortedSet[TypeVariable]) {
+  // case class Conjunct(lnf: LhsNf, vars: SortedSet[TypeVariable], rnf: RhsNf, nvars: SortedSet[TypeVariable]) extends Ordered[Conjunct] {
   // case class Conjunct(lnf: LhsNf, vars: SortedSet[TypeVariable], rnf: RhsNf, nvars: SortedSet[TypeVariable]) {
     // def compare(that: Conjunct): Int = this.mkString compare that.mkString // TODO less inefficient!!
-    
+    def comparePartial(that: Conjunct): Int = {
+      val cmp1 = lnf.comparePartial(that.lnf)
+      if (cmp1 =/= 0) return cmp1
+      val cmp3 = rnf.comparePartial(that.rnf)
+      if (cmp3 =/= 0) return cmp3
+      val cmp2 = vars.size.compare(that.vars.size)
+      if (cmp2 =/= 0) return cmp2
+      nvars.size.compare(that.nvars.size)
+      // implicitly[Ordering[SortedSet[TV]]]
+      // ???
+    }
     def toType(sort: Bool = false): SimpleType =
       toTypeWith(_.toType(sort), _.toType(sort), sort)
     def toTypeWith(f: LhsNf => SimpleType, g: RhsNf => SimpleType, sort: Bool = false): SimpleType =

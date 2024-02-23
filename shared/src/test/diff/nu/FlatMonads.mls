@@ -34,11 +34,11 @@ class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO[B] {
 module readInt extends IO[Int] { fun run: Int = 42 }
 class printLine(str: Str) extends IO[undefined] { fun run = log(str) }
 //│ module readInt extends IO {
-//│   fun bind: forall 'B. ('A -> IO['B]) -> Bind[Int & 'A, 'B]
+//│   fun bind: forall 'B. (Int -> IO['B]) -> Bind[Int & 'A, 'B]
 //│   fun run: Int
 //│ }
 //│ class printLine(str: Str) extends IO {
-//│   fun bind: forall 'B0. ('A0 -> IO['B0]) -> Bind[() & 'A0, 'B0]
+//│   fun bind: forall 'B0. (() -> IO['B0]) -> Bind[() & 'A0, 'B0]
 //│   fun run: ()
 //│ }
 //│ where
@@ -103,7 +103,7 @@ printLine("").bind of [] => error
 //│ ╟── type `()` is not a 0-element tuple
 //│ ║  l.35: 	class printLine(str: Str) extends IO[undefined] { fun run = log(str) }
 //│ ╙──      	                                     ^^^^^^^^^
-//│ error | Bind[out (), 'B]
+//│ Bind[out (), 'B] | error
 //│ res
 //│     = Bind {}
 
@@ -116,7 +116,7 @@ printLine("").bind of () => error
 //│ ╟── type `[?A]` does not match type `[]`
 //│ ║  l.15: 	class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO[B] {
 //│ ╙──      	                                       ^
-//│ error | Bind[(), 'B]
+//│ Bind[(), 'B] | error
 //│ res
 //│     = Bind {}
 
@@ -284,7 +284,7 @@ fun loop(ctx) =
 //│ fun loop: forall 'a 'b 'c 'd. {
 //│   printLine: "Input a positive number: " -> {bind: (anything -> 'a) -> 'b},
 //│   pure: 'c -> 'd,
-//│   readInt: {bind: ((Num & 'c) -> ('b | 'd)) -> 'a}
+//│   readInt: {bind: ((Num & 'c) -> ('d | 'b)) -> 'a}
 //│ } -> 'b
 
 let r = loop(defaultCtx)
@@ -312,7 +312,7 @@ not(r)
 //│ ╟── but it flows into reference with expected type `Bool`
 //│ ║  l.305: 	not(r)
 //│ ╙──       	    ^
-//│ error | true | false
+//│ error | false | true
 //│ res
 //│     = false
 
@@ -340,14 +340,14 @@ val main =
   val sum = n + m
   printLine(concat("The sum is: ")(String of sum)).bind of _ =>
   Pure(sum)
-//│ val main: Bind[in 'A out () | 'A, 'B]
+//│ val main: Bind[in 'A out 'A | (), 'B]
 //│   where
 //│     'B :> Int
 //│ main
 //│      = Bind {}
 
 main
-//│ Bind[in 'A out () | 'A, 'B]
+//│ Bind[in 'A out 'A | (), 'B]
 //│   where
 //│     'B :> Int
 //│ res
@@ -365,7 +365,7 @@ let r = printLine("").bind of 0 => Pure(1)
 //│ ╟── Note: constraint arises from integer literal:
 //│ ║  l.358: 	let r = printLine("").bind of 0 => Pure(1)
 //│ ╙──       	                              ^
-//│ let r: error | Bind[in 0 & 'A out () | 'A, 'B]
+//│ let r: Bind[in 0 & 'A out 'A | (), 'B] | error
 //│   where
 //│     'B :> 1
 //│ r
@@ -391,7 +391,7 @@ Pure(1)
 //│ ╟── from reference:
 //│ ║  l.376: 	log(x.a)
 //│ ╙──       	    ^
-//│ let r: error | Bind[in {a: anything} & 'A out () | 'A, 'B]
+//│ let r: Bind[in {a: anything} & 'A out 'A | (), 'B] | error
 //│   where
 //│     'B :> 1
 //│ r

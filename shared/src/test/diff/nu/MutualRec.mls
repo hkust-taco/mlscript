@@ -272,7 +272,7 @@ module Test2_2 {
 //│ ║  l.268: 	  fun c = Test2_1.a
 //│ ╙──       	                 ^^
 //│ module Test2_1 {
-//│   fun a: error | 123
+//│   fun a: 123 | error
 //│   fun d: error
 //│   fun n: 456
 //│   fun t2: Test2_2
@@ -289,7 +289,7 @@ Test2_1.t2.b
 //│     = 123
 
 Test2_1.a
-//│ error | 123
+//│ 123 | error
 //│ res
 //│     = 123
 
@@ -378,7 +378,7 @@ mixin Foo {
   fun g(y) = y(g)
 }
 //│ mixin Foo() {
-//│   fun f: ('a & 'b) -> ('c -> 'b | 'a)
+//│   fun f: ('a & 'b) -> ('a | 'c -> 'b)
 //│   fun g: 'c -> 'b
 //│ }
 //│ where

@@ -9,7 +9,7 @@ type A = A
 // TODO check cyclicity
 // :e
 type A = A | Int
-//│ type A = A | Int
+//│ type A = Int | A
 
 // TODO check regularity
 // :e

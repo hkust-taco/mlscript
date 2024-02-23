@@ -57,19 +57,19 @@ fun f = id
 fun h: (Int -> (Int | Bool)) & (Bool -> (Int | Bool))
 fun h = f
 //│ fun h: Int -> Int & Bool -> Bool
-//│ fun h: (Int | true | false) -> (Int | true | false)
+//│ fun h: (Int | false | true) -> (Int | false | true)
 
 // * Merge intersected functions with same domain
 fun g: (Int | Bool) -> (Int | Bool)
 fun g = h
-//│ fun g: (Int | true | false) -> (Int | true | false)
-//│ fun g: (Int | true | false) -> (Int | true | false)
+//│ fun g: (Int | false | true) -> (Int | false | true)
+//│ fun g: (Int | false | true) -> (Int | false | true)
 
 // * In one step
 fun g: (Int | Bool) -> (Int | Bool)
 fun g = f
 //│ fun g: Int -> Int & Bool -> Bool
-//│ fun g: (Int | true | false) -> (Int | true | false)
+//│ fun g: (Int | false | true) -> (Int | false | true)
 
 
 // * Can also widen into intersection
@@ -99,14 +99,14 @@ fun j = f
 fun g: (Int & Bool) -> (Int | Bool)
 fun g = f
 //│ fun g: Int -> Int & Bool -> Bool
-//│ fun g: nothing -> (Int | true | false)
+//│ fun g: nothing -> (Int | false | true)
 
 
 // * Note: we currently approximate uses of overloaded function types!
 // * With match-type-based constraint solving, we could return Int here
 
 f(0)
-//│ Int | true | false
+//│ Int | false | true
 //│ res
 //│     = 0
 
@@ -114,7 +114,7 @@ f(0)
 
 
 x => f(x)
-//│ (Int | true | false) -> (Int | true | false)
+//│ (Int | false | true) -> (Int | false | true)
 //│ res
 //│     = [Function: res]
 
@@ -122,7 +122,7 @@ x => f(x)
 
 
 f(if true then 0 else false)
-//│ Int | true | false
+//│ Int | false | true
 //│ res
 //│     = 0
 
@@ -137,7 +137,7 @@ f(refined if true then 0 else false) // this one can be precise again!
 //│ ╔══[ERROR] identifier not found: refined
 //│ ║  l.133: 	f(refined if true then 0 else false) // this one can be precise again!
 //│ ╙──       	  ^^^^^^^
-//│ Int | true | false
+//│ Int | false | true
 //│ Code generation encountered an error:
 //│   unresolved symbol refined
 
@@ -274,7 +274,7 @@ fun x: A & B
 fun test(x) = if x is
   A then 0
   _ then x
-//│ fun test: forall 'a. (A | Object & 'a & ~#A) -> (0 | 'a)
+//│ fun test: forall 'a. (A | Object & 'a & ~#A) -> ('a | 0)
 
 test(B())
 //│ 0 | B

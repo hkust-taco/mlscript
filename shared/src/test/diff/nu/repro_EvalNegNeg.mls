@@ -20,7 +20,7 @@ mixin EvalBase {
 }
 //│ mixin EvalBase() {
 //│   this: {eval: 'a -> 'b & 'c -> Int}
-//│   fun eval: (Neg['c & (Neg['a] | Object & ~#Neg)] | Lit | Add['c]) -> ('b | Int)
+//│   fun eval: (Add['c] | Lit | Neg['c & (Neg['a] | Object & ~#Neg)]) -> ('b | Int)
 //│ }
 
 // module TestLang extends EvalBase, EvalNeg
@@ -29,16 +29,16 @@ module TestLang extends EvalBase
 //│   fun eval: 'a -> Int
 //│ }
 //│ where
-//│   'a <: Neg['a & (Neg['a] | Object & ~#Neg)] | Lit | Add['a]
+//│   'a <: Add['a] | Lit | Neg['a & (Neg['a] | Object & ~#Neg)]
 
 
 fun mk(n) = if n is
   0 then Lit(0)
   1 then Neg(mk(n))
   _ then Add(mk(n), mk(n))
-//│ fun mk: forall 'a. Object -> (Lit | 'a)
+//│ fun mk: forall 'a. Object -> ('a | Lit)
 //│   where
-//│     'a :> Neg[Lit | 'a] | Add[Lit | 'a]
+//│     'a :> Neg['a | Lit] | Add['a | Lit]
 
 :stats
 TestLang.eval(mk(0))

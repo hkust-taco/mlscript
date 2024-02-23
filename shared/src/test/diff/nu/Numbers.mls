@@ -47,7 +47,7 @@ x + 1
 //│ ╟── but it flows into reference with expected type `Int`
 //│ ║  l.40: 	x + 1
 //│ ╙──      	^
-//│ error | Int
+//│ Int | error
 //│ res
 //│     = NaN
 
@@ -58,7 +58,7 @@ true : Bool
 //│     = true
 
 true : Bool | Str
-//│ Bool | Str
+//│ Str | false | true
 //│ res
 //│     = true
 

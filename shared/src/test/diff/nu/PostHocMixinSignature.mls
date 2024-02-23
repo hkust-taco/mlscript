@@ -37,7 +37,7 @@ module Test extends Foo
 //│   'a <: {a: Object, b: 'a}
 
 [Test.foo(ValA), Test.foo(ValB)]
-//│ [ValA | ValB, ValB | ValA]
+//│ [ValA | ValB, ValA | ValB]
 //│ res
 //│     = [ ValB { class: [class ValB] }, ValB { class: [class ValB] } ]
 

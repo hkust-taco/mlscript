@@ -47,12 +47,12 @@ C.baz1
 //│     = 0
 
 C.foo(1)
-//│ 1 | 0
+//│ 0 | 1
 //│ res
 //│     = 1
 
 C.foo(false)
-//│ false | 0
+//│ 0 | false
 //│ res
 //│     = false
 
@@ -91,7 +91,7 @@ C.foo(false)
 //│ ╟── Note: type parameter A is defined at:
 //│ ║  l.22: 	mixin Test[A] {
 //│ ╙──      	           ^
-//│ error | Int
+//│ Int | error
 //│ res
 //│     = false
 
@@ -125,15 +125,15 @@ mixin Test[A] {
 
 class C(val arg: Int) extends Test
 //│ class C(arg: Int) {
-//│   fun bar: [Int | 'A, Int | 'A]
+//│   fun bar: ['A | Int, 'A | Int]
 //│   fun baz: Int
-//│   fun foo: 'A -> (Int | 'A)
+//│   fun foo: 'A -> ('A | Int)
 //│ }
 
 let c = C(1)
 [c.foo(false), c.bar]
 //│ let c: C
-//│ [false | Int, [Int, Int]]
+//│ [Int | false, [Int, Int]]
 //│ c
 //│   = C {}
 //│ res
@@ -150,9 +150,9 @@ module D extends C(0) {
 //│ ║  l.144: 	  this.foo(false)
 //│ ╙──       	  ^^^^
 //│ module D extends C {
-//│   fun bar: forall 'A. [Int | 'A, Int | 'A]
+//│   fun bar: forall 'A. ['A | Int, 'A | Int]
 //│   fun baz: Int
-//│   fun foo: forall 'A. 'A -> (Int | 'A)
+//│   fun foo: forall 'A. 'A -> ('A | Int)
 //│ }
 
 :e // TODO support or produce better error (arg is not actually recursive)
@@ -171,9 +171,9 @@ class C extends Test { // it also fails with Test[Int]...
 //│ class C {
 //│   constructor()
 //│   fun arg: 123
-//│   fun bar: [error | 'A, error | 'A]
+//│   fun bar: ['A | error, 'A | error]
 //│   fun baz: error
-//│   fun foo: 'A -> (error | 'A)
+//│   fun foo: 'A -> ('A | error)
 //│ }
 
 class C extends Test {
@@ -183,9 +183,9 @@ class C extends Test {
 //│ class C {
 //│   constructor()
 //│   fun arg: Int
-//│   fun bar: [Int | 'A, Int | 'A]
+//│   fun bar: ['A | Int, 'A | Int]
 //│   fun baz: Int
-//│   fun foo: 'A -> (Int | 'A)
+//│   fun foo: 'A -> ('A | Int)
 //│ }
 
 

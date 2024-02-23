@@ -101,12 +101,12 @@ trait Anemo {
   fun ter: Bool
 }
 //│ trait Geo {
-//│   fun get: Int | true | false
+//│   fun get: Int | false | true
 //│   fun ter: Int
 //│   let v: 2 | 3
 //│ }
 //│ trait Anemo {
-//│   fun get: Bool | string
+//│   fun get: false | string | true
 //│   fun ter: Bool
 //│   let v: 1 | 2
 //│ }
@@ -475,7 +475,7 @@ fun f(x: Base) = if x is
 trait Base: Foo | Bar
 class Foo[A](val aa: [A, A]) extends Base
 class Bar[B](f: B => B) extends Base
-//│ trait Base: Foo[anything] | Bar[?]
+//│ trait Base: Bar[?] | Foo[anything]
 //│ class Foo[A](aa: [A, A]) extends Base
 //│ class Bar[B](f: B -> B) extends Base
 
@@ -495,7 +495,7 @@ let b: Base = f
 //│   = Foo {}
 
 if b is Foo(a) then a else 0
-//│ [??A, ??A] | 0
+//│ 0 | [??A, ??A]
 //│ res
 //│     = [ 1, 2 ]
 
@@ -507,7 +507,7 @@ if b is Bar(f) then f else 0
 //│ ╟── type variable `B` leaks out of its scope
 //│ ║  l.477: 	class Bar[B](f: B => B) extends Base
 //│ ╙──       	          ^
-//│ ??B -> anything | 0
+//│ 0 | ??B -> anything
 //│ res
 //│     = 0
 
@@ -712,7 +712,7 @@ class Eh2 extends Bs(true), Ele {
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
 //│ ║  l.695: 	    fun foo(x) = x && false
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Bool` does not match type `?a | Int`
+//│ ╟── operator application of type `Bool` does not match type `Int | ?a`
 //│ ║  l.695: 	    fun foo(x) = x && false
 //│ ║         	                 ^^^^^^^^^^
 //│ ╟── Note: constraint arises from operator application:
@@ -721,7 +721,7 @@ class Eh2 extends Bs(true), Ele {
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
 //│ ║  l.695: 	    fun foo(x) = x && false
 //│ ║         	        ^^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Bool` does not match type `?a | Int`
+//│ ╟── operator application of type `Bool` does not match type `Int | ?a`
 //│ ║  l.695: 	    fun foo(x) = x && false
 //│ ║         	                 ^^^^^^^^^^
 //│ ╟── Note: constraint arises from operator application:
@@ -1196,7 +1196,7 @@ class Go extends Fate {
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
 //│ ║  l.1180: 	    fun foo(x) = x && true
 //│ ║          	        ^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Bool` does not match type `?a | Int`
+//│ ╟── operator application of type `Bool` does not match type `Int | ?a`
 //│ ║  l.1180: 	    fun foo(x) = x && true
 //│ ║          	                 ^^^^^^^^^
 //│ ╟── Note: constraint arises from operator application:
@@ -1205,7 +1205,7 @@ class Go extends Fate {
 //│ ╔══[ERROR] Type mismatch in definition of method foo:
 //│ ║  l.1180: 	    fun foo(x) = x && true
 //│ ║          	        ^^^^^^^^^^^^^^^^^^
-//│ ╟── operator application of type `Bool` does not match type `?a | Int`
+//│ ╟── operator application of type `Bool` does not match type `Int | ?a`
 //│ ║  l.1180: 	    fun foo(x) = x && true
 //│ ║          	                 ^^^^^^^^^
 //│ ╟── Note: constraint arises from operator application:

@@ -23,7 +23,7 @@ x === 1
 //│ ╟── but it flows into reference with expected type `Num`
 //│ ║  l.16: 	1 === x
 //│ ╙──      	      ^
-//│ error | true | false
+//│ error | false | true
 //│ res
 //│     = <no result>
 //│       x is not implemented
@@ -39,7 +39,7 @@ x === x
 //│ ╟── but it flows into reference with expected type `Int`
 //│ ║  l.32: 	x === x
 //│ ╙──      	      ^
-//│ error | true | false
+//│ error | false | true
 //│ res
 //│     = <no result>
 //│       x is not implemented
@@ -85,7 +85,7 @@ test1(x)
 //│ ╟── but it flows into reference with expected type `Int`
 //│ ║  l.78: 	test1(x)
 //│ ╙──      	      ^
-//│ error | true | false
+//│ error | false | true
 //│ res
 //│     = <no result>
 //│       x is not implemented
@@ -176,7 +176,7 @@ test2(1, "oops")
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.53: 	  x === y
 //│ ╙──      	        ^
-//│ error | true | false
+//│ error | false | true
 //│ res
 //│     = false
 
@@ -191,7 +191,7 @@ test2("oops", 1)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.53: 	  x === y
 //│ ╙──      	        ^
-//│ error | true | false
+//│ error | false | true
 //│ res
 //│     = false
 
@@ -204,7 +204,7 @@ test2(1, {})
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.53: 	  x === y
 //│ ╙──      	        ^
-//│ error | true | false
+//│ error | false | true
 //│ res
 //│     = false
 
@@ -217,7 +217,7 @@ test2({}, 1)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.53: 	  x === y
 //│ ╙──      	  ^
-//│ error | true | false
+//│ error | false | true
 //│ res
 //│     = false
 
@@ -230,7 +230,7 @@ test2({}, {})
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.53: 	  x === y
 //│ ╙──      	  ^
-//│ error | true | false
+//│ error | false | true
 //│ res
 //│     = false
 

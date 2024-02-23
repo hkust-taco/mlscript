@@ -30,11 +30,11 @@ fun id(x) = x
 // * later we should try to separate mutually-recursive components and generalize them independently.
 fun test = [id(1), id(true)]
 fun id(x) = x
-//│ fun test: forall 'a 'b. [1 | true | 'a, true | 1 | 'b]
+//│ fun test: forall 'a 'b. [1 | true | 'a, 'b | 1 | true]
 //│ fun id: forall 'a 'b. ('b & 'a) -> (1 | true | 'a)
 
 [id(1), id(true)]
-//│ [true | 1, true | 1]
+//│ [1 | true, 1 | true]
 //│ res
 //│     = [ 1, true ]
 
@@ -49,7 +49,7 @@ not(id(true))
 //│ ╟── but it flows into application with expected type `Bool`
 //│ ║  l.42: 	not(id(true))
 //│ ╙──      	    ^^^^^^^^
-//│ error | true | false
+//│ error | false | true
 //│ res
 //│     = false
 

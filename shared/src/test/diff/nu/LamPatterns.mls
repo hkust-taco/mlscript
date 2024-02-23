@@ -54,7 +54,7 @@ f(Some(0))
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.21: 	let f = Some => 0
 //│ ╙──      	        ^^^^
-//│ error | 0
+//│ 0 | error
 //│ res
 //│     = 0
 

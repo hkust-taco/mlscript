@@ -83,7 +83,7 @@ x => x + 2
 //│ ║        	         ^
 //│ ║  l.58: 	  >> succ
 //│ ╙──      	^^^^^^^^^^
-//│ Int -> (error | Int)
+//│ Int -> (Int | error)
 //│ res
 //│     = [Function: res]
 

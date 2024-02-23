@@ -144,7 +144,7 @@ new C(1, 2)
 //│ ╟── tuple literal of type `[1, 2]` does not match type `[z: Int]`
 //│ ║  l.140: 	new C(1, 2)
 //│ ╙──       	     ^^^^^^
-//│ error | C
+//│ C | error
 //│ res
 //│     = C {}
 //│ // Output
@@ -165,7 +165,7 @@ new C(1, 2)
 //│ ╟── tuple literal of type `[1, 2]` does not match type `[z: Int]`
 //│ ║  l.161: 	new C(1, 2)
 //│ ╙──       	     ^^^^^^
-//│ error | C
+//│ C | error
 //│ res
 //│     = C {}
 //│ // Output

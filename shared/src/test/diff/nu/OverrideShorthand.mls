@@ -25,7 +25,7 @@ mixin Test {
 }
 //│ mixin Test() {
 //│   super: {f: 'a -> 'b}
-//│   fun f: (Pair | Object & 'a & ~#Pair) -> (Int | 'b)
+//│   fun f: (Object & 'a & ~#Pair | Pair) -> ('b | Int)
 //│ }
 
 

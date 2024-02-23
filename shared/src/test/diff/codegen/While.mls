@@ -66,11 +66,12 @@ mut let min = 123
 let go =
     if true then set min = 0 else ()
     1
-//│ mut let min: 123 | 0
+//│ mut let min: 0 | 123
 //│ let go: 1
 //│ min
 //│     = 123
 //│ go
 //│    = 1
+
 
 

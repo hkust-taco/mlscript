@@ -201,8 +201,9 @@ trait TypeSimplifier { self: Typer =>
         else go(csNegs.foldLeft(TopType: ST)(_ & _.toType().neg()), pol.map(!_)).neg()
       
       // println(s"O ${otherCs} ${otherCs.sorted}")
-      // val otherCs2 = otherCs.sorted.map { c =>
-      val otherCs2 = otherCs.map { c =>
+      // val otherCs2 = otherCs.sortBy(_.comparePartial(_)).map { c =>
+      val otherCs2 = otherCs.sorted(ConjunctPartialOrdering).map { c =>
+      // val otherCs2 = otherCs.map { c =>
         c.vars.foreach(processVar)
         c.nvars.foreach(processVar)
         

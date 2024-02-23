@@ -10,7 +10,7 @@ Mod === Mod
 //│ ╔══[ERROR] Module 'Mod' does not support equality comparison because it does not have a parameter list
 //│ ║  l.9: 	Mod === Mod
 //│ ╙──     	^^^^^^^^^^^
-//│ error | true | false
+//│ error | false | true
 //│ res
 //│     = true
 
@@ -35,7 +35,7 @@ Cls2(0) === Cls2(1)
 //│ ╟── Either make the parameter a `val` or access it through destructuring
 //│ ║  l.27: 	class Cls2(x: Int)
 //│ ╙──      	           ^
-//│ error | true | false
+//│ error | false | true
 //│ res
 //│     = false
 
@@ -88,7 +88,7 @@ p === { fst: 1, snd: 2 }
 //│ ╟── record literal of type `{fst: 1, snd: 2}` is not an instance of type `Eql`
 //│ ║  l.84: 	{ fst: 1, snd: 2 } === p
 //│ ╙──      	       ^^^^^^^^^
-//│ error | true | false
+//│ error | false | true
 //│ res
 //│     = false
 
@@ -111,7 +111,7 @@ x => { a: 0 } === x
 //│ ╟── record literal of type `{a: 0}` is not an instance of type `Eql`
 //│ ║  l.107: 	x => { a: 0 } === x
 //│ ╙──       	          ^
-//│ anything -> (error | true | false)
+//│ anything -> (error | false | true)
 //│ res
 //│ Syntax error:
 //│   Unexpected token '==='
@@ -124,7 +124,7 @@ x => x === { a: 0 }
 
 
 let q = Pair(1, "oops")
-//│ let q: Pair[1 | "oops"]
+//│ let q: Pair["oops" | 1]
 //│ q
 //│   = Pair {}
 
@@ -136,7 +136,7 @@ q === q
 //│ ╟── integer literal of type `1` is not an instance of type `Str`
 //│ ║  l.126: 	let q = Pair(1, "oops")
 //│ ╙──       	             ^
-//│ error | true | false
+//│ error | false | true
 //│ res
 //│     = true
 

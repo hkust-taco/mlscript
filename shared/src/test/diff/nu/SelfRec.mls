@@ -61,7 +61,7 @@ Foo2X(1).x
 //│ ╟── Either make the parameter a `val` or access it through destructuring
 //│ ║  l.39: 	class Foo2X(x: 0 | 1) extends Foo2(x) {
 //│ ╙──      	            ^
-//│ error | 0 | 1
+//│ 0 | 1 | error
 //│ res
 //│     = 1
 
@@ -207,7 +207,7 @@ class Foo7_2_A[A](head: A, tail: Foo7_A[Int] | N) {
     _ then tail.test1
 }
 //│ class Foo7_2_A[A](head: A, tail: Foo7_A[Int] | N) {
-//│   fun test1: Int | A
+//│   fun test1: A | Int
 //│ }
 
 :e

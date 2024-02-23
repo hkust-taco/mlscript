@@ -167,8 +167,31 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
   }
   type ST = SimpleType
   
-  sealed abstract class BaseTypeOrTag extends SimpleType
+  sealed abstract class BaseTypeOrTag extends SimpleType {
+  // sealed abstract class BaseTypeOrTag extends SimpleType with Ordered[BaseTypeOrTag] {
+  //   def compare(that: BaseTypeOrTag): Int = (this, that) match {
+  //     case (a: TypeTag, b: TypeTag) => a.compareTag(b)
+  //     case (a: TypeTag, _) => -1
+  //     case (_, b: TypeTag) => 1
+  //     case (a: BaseType, b: BaseType) => a.compareBase(b)
+  //     // case (a: BaseType, _) => -1
+  //     // case (_, b: BaseType) => 1
+  //   }
+  }
+  // FunctionType, ClassTag, 
   sealed abstract class BaseType extends BaseTypeOrTag {
+  // sealed abstract class BaseType extends BaseTypeOrTag with Ordered[BaseType] {
+    // def compare(that: BaseType): Int = ???
+    def comparePartial(that: BaseType): Int = (this, that) match {
+      case (a: TypeTag, b: TypeTag) => a.compare(b)
+      case (a: TypeTag, _) => -1
+      case (_, b: TypeTag) => 1
+      case (a: BaseType, b: BaseType) => ???
+        // a.compareBase(b)
+      // case (a: BaseType, _) => -1
+      // case (_, b: BaseType) => 1
+    }
+    // def compareBase(that: BaseType): Int = ???
     def toRecord: RecordType = RecordType.empty
     protected def freshenAboveImpl(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST]): BaseType
     override def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST]): BaseType =
@@ -391,8 +414,10 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
   }
   
   sealed trait TypeTag extends BaseTypeOrTag with Ordered[TypeTag] {
+  // sealed trait TypeTag extends BaseTypeOrTag {
     val id: IdentifiedTerm
     def compare(that: TypeTag): Int = (this, that) match {
+    // def compareTag(that: TypeTag): Int = (this, that) match {
       case (obj1: ObjectTag, obj2: ObjectTag) => obj1.id compare obj2.id
       case (SkolemTag(id1), SkolemTag(id2)) => id1 compare id2
       case (Extruded(_, id1), Extruded(_, id2)) => id1 compare id2

@@ -125,12 +125,12 @@ None.toArray
 
 
 type Option<A> = Some<A> | None
-//│ type Option[A] = Some[A] | None
+//│ type Option[A] = None | Some[A]
 
 
 
 let opt = if true then Some(123) else None
-//│ let opt: Some[123] | None
+//│ let opt: None | Some[123]
 //│ opt
 //│     = Some {}
 
@@ -158,12 +158,12 @@ opt.map(x => x > 0)
 
 
 if opt is Some then opt.value else 0
-//│ 123 | 0
+//│ 0 | 123
 //│ res
 //│     = 123
 
 if opt is Some(v) then v else 0
-//│ 123 | 0
+//│ 0 | 123
 //│ res
 //│     = 123
 
@@ -224,7 +224,7 @@ class Test<out A>(n: A) {
 //│ ║  l.214: 	class Test<out A>(n: A) {
 //│ ╙──       	               ^
 //│ class Test[A](n: A) {
-//│   fun foo: error | Int
+//│   fun foo: Int | error
 //│ }
 
 Test(1)
@@ -274,14 +274,14 @@ let t = Test(1)
 //│   = Test {}
 
 t.foo1(true)
-//│ true | 1
+//│ 1 | true
 //│ res
 //│     = true
 
 t : Test<'a>
 //│ Test['a]
 //│   where
-//│     'a :> true | 1
+//│     'a :> 1 | true
 //│ res
 //│     = Test {}
 
@@ -312,7 +312,7 @@ class TestBad<A>() {
 //│ ╙──       	              ^
 //│ class TestBad[A]() {
 //│   fun foo1: (x: A) -> A
-//│   fun foo2: (x: A) -> (error | Int)
+//│   fun foo2: (x: A) -> (Int | error)
 //│ }
 
 TestBad().foo1
@@ -372,7 +372,7 @@ foo(t)(1)
 
 
 TestBad().foo2
-//│ (x: anything) -> (error | Int)
+//│ (x: anything) -> (Int | error)
 //│ res
 //│     = [Function: foo2]
 
