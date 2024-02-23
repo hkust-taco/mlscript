@@ -2,6 +2,7 @@ package mlscript
 
 import scala.util.chaining._
 import scala.collection.mutable.{Map => MutMap, SortedMap => SortedMutMap, Set => MutSet, Buffer}
+import scala.collection.immutable.SortedMap
 
 import math.Ordered.orderingToOrdered
 
@@ -285,7 +286,7 @@ trait TypeImpl extends Located { self: Type =>
 
 
 final case class ShowCtx(
-    vs: Map[TypeVar, Str],
+    vs: SortedMap[TypeVar, Str],
     debug: Bool, // TODO make use of `debug` or rm
     indentLevel: Int,
     newDefs: Bool,
@@ -331,7 +332,7 @@ object ShowCtx {
     val namedMap = (namedVars ++ hintedVars).map { case (nh, tv) =>
       // tv -> assignName(nh.dropWhile(_ === '\''))
       tv -> assignName(nh.stripPrefix(_pre))
-    }.toMap
+    }.toSortedMap
     val used = usedNames.keySet
     
     // * Generate names for unnamed variables

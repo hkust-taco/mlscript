@@ -200,7 +200,9 @@ trait TypeSimplifier { self: Typer =>
       val csNegs2 = if (csNegs.isEmpty) BotType
         else go(csNegs.foldLeft(TopType: ST)(_ & _.toType().neg()), pol.map(!_)).neg()
       
-      val otherCs2 = otherCs.sorted.map { c =>
+      // println(s"O ${otherCs} ${otherCs.sorted}")
+      // val otherCs2 = otherCs.sorted.map { c =>
+      val otherCs2 = otherCs.map { c =>
         c.vars.foreach(processVar)
         c.nvars.foreach(processVar)
         
