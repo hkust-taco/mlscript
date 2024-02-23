@@ -563,22 +563,17 @@ f_manual ainf
 
 // Notice the simplified type is NOT the same as that of `f`...
 def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.TyperDatatypes$BaseType.comparePartial(TyperDatatypes.scala:189)
-//│ 	at: mlscript.NormalForms$LhsNf.comparePartial(NormalForms.scala:37)
-//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:500)
-//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
-//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
-//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
-//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ f_manual_ns: in forall 'b 'f 'c 'd 'c0. ('b & 'f & (int & ~{a: int} | (int & 'c)\a & 'c0\a & int)) -> ('d | 'b) out forall 'b 'f 'c 'd 'c0. ((int & 'c & 'c0 | ~{a: int})\a & int & 'b & 'f) -> ('d | 'b)
+//│   where
+//│     'c0 <: {a: 'd & 'c0}
+//│     'c <: {a: 'c & 'd}
+//│     'f <: {a: 'f}
+//│     'b :> 'b\a & {a: int}
 
 :e
 f_manual_ns ainf
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.579: 	f_manual_ns ainf
+//│ ║  l.574: 	f_manual_ns ainf
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── type `int` does not have field 'a'
 //│ ║  l.565: 	def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
@@ -628,13 +623,13 @@ r + 1
 :e
 r.a
 //│ ╔══[ERROR] Type mismatch in field selection:
-//│ ║  l.629: 	r.a
+//│ ║  l.624: 	r.a
 //│ ║         	^^^
 //│ ╟── integer literal of type `1` does not have field 'a'
-//│ ║  l.620: 	r = f 1
+//│ ║  l.615: 	r = f 1
 //│ ║         	      ^
 //│ ╟── but it flows into reference with expected type `{a: ?a}`
-//│ ║  l.629: 	r.a
+//│ ║  l.624: 	r.a
 //│ ╙──       	^
 //│ res: error | int
 

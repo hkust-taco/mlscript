@@ -74,17 +74,7 @@ fun x -> (if true then IISS else BBNN) x
 //│ res: int -> (bool | number | string)
 
 if true then IISS else BBNN
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.TyperDatatypes$BaseType.comparePartial(TyperDatatypes.scala:189)
-//│ 	at: mlscript.NormalForms$LhsNf.comparePartial(NormalForms.scala:37)
-//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:500)
-//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
-//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
-//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
-//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ res: int -> int & string -> string | bool -> bool & number -> number
 
 (if true then IISS else ZZII) : int -> int
 //│ res: int -> int
@@ -95,10 +85,10 @@ if true then IISS else BBNN
 :e
 (if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.96: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.86: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `true` does not match type `int | string`
-//│ ║  l.96: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.86: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╙──      	                                         ^^^^
 //│ res: (0 | 1 | true) -> number
 

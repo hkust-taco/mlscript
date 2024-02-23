@@ -307,7 +307,34 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   sealed abstract class RhsNf {
   // sealed abstract class RhsNf extends Ordered[RhsNf] {
     // def compare(that: RhsNf): Int = {???}
-    def comparePartial(that: RhsNf): Int = {???}
+    def comparePartial(that: RhsNf): Int = (this, that) match {
+      case (RhsField(n1, t1), RhsField(n2, t2)) => n1.compare(n2)
+      case (RhsBases(ps1, bf1, trs1), RhsBases(ps2, bf2, trs2)) =>
+        val cmp1 = ps1.size.compare(ps2.size)
+        if (cmp1 =/= 0) return cmp1
+        // val cmp2 = bf1.fold(0)(_.fold(1, -1)) compare bf2.fold(0)(_.fold(1, -1))
+        // if (cmp2 =/= 0) return cmp2
+        val cmp3 = trs1.size.compare(trs2.size)
+        if (cmp3 =/= 0) return cmp3
+        // val cmp4 = ps1.iterator.zip(ps2.iterator).map { case (p1, p2) => p1.compare(p2) }.find(_ =/= 0)
+        // if (cmp4.isDefined) return cmp4.get
+        // val cmp5 = trs1.iterator.zip(trs2.iterator).map { case ((n1, t1), (n2, t2)) =>
+        //   n1.compare(n2) match {
+        //     case 0 => t1.comparePartial(t2)
+        //     case c => c
+        //   }
+        // }.find(_ =/= 0)
+        // if (cmp5.isDefined) return cmp5.get
+        // bf1.fold(0)(_.fold(0, 1)) compare bf2.fold(0)(_.fold(0, 1))
+        0
+      // case (_: RhsBases, _: RhsField) => -1
+      // case (_: RhsField, _: RhsBases) => 1
+      case (_: RhsBases, _) => -1
+      case (_, _: RhsBases) => 1
+      case (_: RhsField, _) => -1
+      case (_, _: RhsField) => 1
+      case (RhsBot, RhsBot) => 0
+    }
     def toTypes: Ls[SimpleType] = toType() :: Nil
     def toType(sort: Bool = false): SimpleType =
       if (sort) mkType(true) else underlying

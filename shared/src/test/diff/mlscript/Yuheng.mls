@@ -283,31 +283,54 @@ rec def eval(e) = case e of
   { IntLit -> e.value
   | Pair -> (eval e.lhs, eval e.rhs)
   }
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
-//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
-//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
-//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
-//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
-//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
-//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
+//│ 'a -> 'value
+//│   where
+//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a})
+//│     'value :> ('value, 'value,)
+//│   <:  eval:
+//│ Expr[?] -> nothing
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.+1: 	rec def eval(e) = case e of
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  { IntLit -> e.value
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	  }
+//│ ║        	^^^
+//│ ╟── type `Expr[?]` does not match type `IntLit & ?a | Pair[?, ?] & ?b`
+//│ ║  l.279: 	def eval: Expr['a] -> 'a
+//│ ║         	          ^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.+1: 	rec def eval(e) = case e of
+//│ ╙──      	                       ^
 
 rec def eval(e) = case e of
   { IntLit -> e.value
   | Pair -> (eval e.lhs, eval e.rhs)
   | _ -> error
   }
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
-//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
-//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
-//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
-//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
-//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
-//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
+//│ 'a -> 'value
+//│   where
+//│     'a <: (IntLit with {value: 'value}) | (Pair[?, ?] with {lhs: 'a, rhs: 'a}) | ~IntLit & ~Pair[?, ?]
+//│     'value :> ('value, 'value,)
+//│   <:  eval:
+//│ Expr[?] -> nothing
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.+1: 	rec def eval(e) = case e of
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+2: 	  { IntLit -> e.value
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.+4: 	  | _ -> error
+//│ ║        	^^^^^^^^^^^^^^
+//│ ║  l.+5: 	  }
+//│ ║        	^^^
+//│ ╟── expression of type `Expr[?] & ~#IntLit & ~?a | Pair[?, ?]` does not have field 'rhs'
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.+3: 	  | Pair -> (eval e.lhs, eval e.rhs)
+//│ ║        	                              ^^^^^
+//│ ╟── from refined scrutinee:
+//│ ║  l.+1: 	rec def eval(e) = case e of
+//│ ╙──      	                       ^

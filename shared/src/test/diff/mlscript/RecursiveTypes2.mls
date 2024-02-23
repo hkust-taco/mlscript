@@ -37,17 +37,12 @@ def f: T3 & { x: T1 & 'a } as 'a
 
 :stats
 f.x
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
-//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
-//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
-//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
-//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
-//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
-//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
+//│ res: 'a & (T1 & T2 & {x: T3} | T1 & T3 & {x: T2})
+//│   where
+//│     'a :> T3 & {x: T1 & 'a}
+//│ constrain calls  : 4
+//│ annoying  calls  : 4
+//│ subtyping calls  : 102
 
 g = error : T1 & { x: T2 | 'a } as 'a
 //│ g: 'a

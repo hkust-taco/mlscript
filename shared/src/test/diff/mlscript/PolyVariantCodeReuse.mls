@@ -136,17 +136,26 @@ def eval_lambda eval_rec subst v = case v of {
 //│              eval_var, list_assoc and eq are not implemented
 
 rec def eval1 subst = eval_lambda eval1 subst
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
-//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
-//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
-//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
-//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
-//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
-//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:356)
+//│ eval1: ('tail & (Cons[?] & List[?] & 'b | Nil & List[?])) -> 'c -> 'd
+//│   where
+//│     'tail <: Cons[?] & 'b | Nil
+//│     'b <: {head: {0: string, 1: 'result}, tail: 'tail}
+//│     'result :> 'd
+//│             <: Abs[?] & 'e & 'f | 'lhs & (Abs[?] & 'f & ~#Abs | App[?] & 'g | Var & 'h)
+//│     'd :> 'i | 'result | App['a]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | Abs['d]
+//│     'i :> Var
+//│        <: Abs[?] & 'e & 'f | 'lhs & (Abs[?] & 'f & ~#Abs | App[?] & {name: string} & 'g | Var & 'h)
+//│     'lhs :> App['a]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | Var
+//│          <: 'a & 'c
+//│     'a :> App['a]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | 'd
+//│     'rhs :> 'd
+//│     'e <: {body: 'c, name: string}
+//│     'c <: Abs[?] & 'f | App[?] & 'g | Var & 'h
+//│     'h <: Var & 'i
+//│     'g <: {lhs: 'c, rhs: 'c}
+//│     'f <: {body: 'c, name: string}
+//│      = <no result>
+//│        eval_lambda, eval_var, list_assoc and eq are not implemented
 
 // ------------- OCaml's type -------------
 // val eval_lambda :
@@ -394,47 +403,118 @@ def eval_lexpr' eval_rec subst v = case v of {
   | Add -> eval_expr eval_rec subst v
   | Mul -> eval_expr eval_rec subst v
   }
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
-//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
-//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
-//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
-//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
-//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
-//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
-//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
-//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
+//│ eval_lexpr': ((Cons[('b, Var | 'body,) | 'A]\head\tail & {head: ('b, Var | 'body,), tail: Nil | 'tail} | 'tail) -> 'body0 -> ('result & 'body & (Abs[?]\body\name & {body: 'body0, name: 'b} | 'lhs & 'a & (Abs[?]\body\name & {body: 'body0, name: 'b} & ~#Abs | 'lhs & 'a & ~#Abs)))) -> (List['A] & (Cons[?] & 'c | Nil) & (Cons[?] & 'd | Nil) & (Cons[?] & 'e | Nil) & (Cons[?] & 'f | Nil) & (Cons[?] & 'g | Nil) & 'tail & (Cons[?] & 'h | Nil)) -> (Abs[?]\body\name & {body: 'body0, name: 'b} | Add[?] & {lhs: 'body0, rhs: 'body0} | App[?] & {lhs: 'body0, rhs: 'body0} | Mul[?] & {lhs: 'body0, rhs: 'body0} | Numb & 'result | Var & 'result) -> (Abs['body] | Add['body] | App['body | 'a]\lhs\rhs & {lhs: 'lhs, rhs: 'body} | Mul['body] | Numb | 'result)
+//│   where
+//│     'h <: {head: {0: string, 1: 'result}, tail: Cons[?] & 'h | Nil}
+//│     'g <: {head: {0: string, 1: 'result}, tail: Cons[?] & 'g | Nil}
+//│     'f <: {head: {0: string, 1: 'result}, tail: Cons[?] & 'f | Nil}
+//│     'e <: {head: {0: string, 1: 'result}, tail: Cons[?] & 'e | Nil}
+//│     'd <: {head: {0: string, 1: 'result}, tail: Cons[?] & 'd | Nil}
+//│     'c <: {head: {0: string, 1: 'result}, tail: Cons[?] & 'c | Nil}
+//│            = <no result>
+//│              eval_var, list_assoc and eq are not implemented
 
 :e
 rec def eval4 subst = eval_lexpr' eval4 subst
-//│ ╔══[ERROR] identifier not found: eval_lexpr'
-//│ ║  l.410: 	rec def eval4 subst = eval_lexpr' eval4 subst
-//│ ╙──       	                      ^^^^^^^^^^^
-//│ eval4: anything -> error
-//│ Code generation encountered an error:
-//│   unresolved symbol eval_lexpr'
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: ?eval4` took too many steps and ran out of fuel (10000)
+//│ ║  l.418: 	rec def eval4 subst = eval_lexpr' eval4 subst
+//│ ║         	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ eval4: ('tail & 'tail0 & 'tail1 & 'tail2 & 'tail3 & 'tail4 & (Cons[?] & List[?] & 'b & 'c & 'd & 'e & 'f & 'g | Nil & List[?])) -> 'h -> 'i
+//│   where
+//│     'tail4 <: Cons[?] & 'g | Nil
+//│     'g <: {head: {0: string, 1: 'result}, tail: 'tail4}
+//│     'tail3 <: Cons[?] & 'f | Nil
+//│     'f <: {head: {0: string, 1: 'result0}, tail: 'tail3}
+//│     'tail2 <: Cons[?] & 'e | Nil
+//│     'e <: {head: {0: string, 1: 'result0}, tail: 'tail2}
+//│     'tail1 <: Cons[?] & 'd | Nil
+//│     'd <: {head: {0: string, 1: 'result0}, tail: 'tail1}
+//│     'tail0 <: Cons[?] & 'c | Nil
+//│     'c <: {head: {0: string, 1: 'result}, tail: 'tail0}
+//│     'tail <: Cons[?] & 'b | Nil
+//│     'b <: {head: {0: string, 1: 'result}, tail: 'tail}
+//│     'result :> 'i
+//│             <: Abs[?] & 'j & 'k | 'lhs & (Abs[?] & 'k & ~#Abs | Add[?] & 'l | App[?] & 'm | Mul[?] & 'n | Numb & 'o | Var & 'p)
+//│     'i :> 'q | 'result | Abs[nothing] | App[nothing] | Abs['i] | App['a]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | 'r | 'result0 | Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i}
+//│     'q :> Var
+//│        <: Abs[?] & 'j & 'k | 'lhs & (Abs[?] & 'k & ~#Abs | Add[?] & {name: string} & 'l | App[?] & {name: string} & 'm | Mul[?] & {name: string} & 'n | Var & 'p | 'o & (Numb & {name: string} | Numb & {name: string} & ~#Numb))
+//│     'j <: {body: 'h, name: string}
+//│     'h <: Abs[?] & 'k | Add[?] & 'l | App[?] & 'm | Mul[?] & 'n | Numb & 'o | Var & 'p
+//│     'l <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result0 | Var & 'r
+//│     'result0 :> Var | 'i | Numb
+//│              <: Abs[?] & 'j & 'k | 'lhs & (Add[?] & 'l | App[?] & 'm | Mul[?] & 'n | Numb & 'o | Var & 'p)
+//│     'n <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result0 | Var & 'r
+//│     'r <: Var & (Abs[?] & 'j & 'k | 'lhs & (Add[?] & {name: string} & 'l | App[?] & {name: string} & 'm | Mul[?] & {name: string} & 'n | Var & 'p | 'o & (Numb & {name: string} | Numb & {name: string} & ~#Numb)))
+//│     'o <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result0 | Var & 'r
+//│     'p <: Var & 'q
+//│     'm <: Abs[?] & {body: 'h} | App[?] & {lhs: 'h, rhs: 'h} | Var & 'q
+//│     'lhs :> Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | App['a]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Numb | Var
+//│          <: 'h & 'a
+//│     'a :> Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | App['a]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Numb | Var | 'i
+//│     'rhs :> 'i
+//│     'k <: Abs[?] | App[?] | Var & 'q
+//│      = <no result>
+//│        eval_lexpr', eval_var, list_assoc and eq are not implemented
 
 :Fuel 20000
 
 :stats
 rec def eval4 subst = eval_lexpr' eval4 subst
-//│ ╔══[ERROR] identifier not found: eval_lexpr'
-//│ ║  l.421: 	rec def eval4 subst = eval_lexpr' eval4 subst
-//│ ╙──       	                      ^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ eval4: anything -> error
-//│ Code generation encountered an error:
-//│   unresolved symbol eval_lexpr'
-//│ constrain calls  : 14
-//│ annoying  calls  : 0
-//│ subtyping calls  : 23
+//│ eval4: ('tail & 'tail0 & 'tail1 & 'tail2 & 'tail3 & 'tail4 & (Cons[?] & List[?] & 'b & 'c & 'd & 'e & 'f & 'g | Nil & List[?])) -> 'h -> 'i
+//│   where
+//│     'tail4 <: Cons[?] & 'g | Nil
+//│     'g <: {head: {0: string, 1: 'result}, tail: 'tail4}
+//│     'tail3 <: Cons[?] & 'f | Nil
+//│     'f <: {head: {0: string, 1: 'result0}, tail: 'tail3}
+//│     'tail2 <: Cons[?] & 'e | Nil
+//│     'e <: {head: {0: string, 1: 'result0}, tail: 'tail2}
+//│     'tail1 <: Cons[?] & 'd | Nil
+//│     'd <: {head: {0: string, 1: 'result0}, tail: 'tail1}
+//│     'tail0 <: Cons[?] & 'c | Nil
+//│     'c <: {head: {0: string, 1: 'result}, tail: 'tail0}
+//│     'tail <: Cons[?] & 'b | Nil
+//│     'b <: {head: {0: string, 1: 'result}, tail: 'tail}
+//│     'result :> 'i
+//│             <: Abs[?] & 'j & 'k & 'l | 'lhs & (Abs[?] & 'k & 'l & ~#Abs | 'lhs0 & (Add[?] & 'm | App[?] & 'n | Mul[?] & 'o | Numb & 'p | Var & 'q))
+//│     'i :> 'r | 'result | Abs['i] | App['a]\lhs\rhs & {lhs: 'lhs0, rhs: 'rhs} | App['a0]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs0} | 's | 'result0 | Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i}
+//│     'r :> Var
+//│        <: Abs[?] & 'j & 'k & 'l | 'lhs & (Abs[?] & 'k & 'l & ~#Abs | 'lhs0 & (Add[?] & {name: string} & 'm | App[?] & {name: string} & 'n | Mul[?] & {name: string} & 'o | Var & 'q | 'p & (Numb & {name: string} | Numb & {name: string} & ~#Numb)))
+//│     'j <: {body: 'h, name: string}
+//│     'h <: Abs[?] & 'k | Add[?] & 'm | App[?] & 'n | Mul[?] & 'o | Numb & 'p | Var & 'q
+//│     'm <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result0 | Var & 's
+//│     'result0 :> Var | 'i | Numb
+//│              <: Abs[?] & 'j & 'k & 'l | 'lhs & 'lhs0 & (Add[?] & 'm | App[?] & 'n | Mul[?] & 'o | Numb & 'p | Var & 'q)
+//│     'o <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result0 | Var & 's
+//│     's <: Var & (Abs[?] & 'j & 'k & 'l | 'lhs & 'lhs0 & (Add[?] & {name: string} & 'm | App[?] & {name: string} & 'n | Mul[?] & {name: string} & 'o | Var & 'q | 'p & (Numb & {name: string} | Numb & {name: string} & ~#Numb)))
+//│     'p <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result0 | Var & 's
+//│     'q <: Var & 'r
+//│     'n <: Abs[?] & {body: 'h} | App[?] & {lhs: 'h, rhs: 'h} | Var & 'r
+//│     'lhs :> Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | App['a | 'a0]\lhs\rhs & {lhs: 'lhs0 | 'lhs, rhs: 'rhs | 'rhs0} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Numb | Var
+//│          <: 'h & 'a0
+//│     'a :> Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | App['a | 'a0]\lhs\rhs & {lhs: 'lhs0 | 'lhs, rhs: 'rhs | 'rhs0} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Numb | Var | 'i
+//│     'a0 :> Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | App['a | 'a0]\lhs\rhs & {lhs: 'lhs0 | 'lhs, rhs: 'rhs | 'rhs0} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Numb | Var | 'i
+//│     'lhs0 :> Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | App['a | 'a0]\lhs\rhs & {lhs: 'lhs0 | 'lhs, rhs: 'rhs | 'rhs0} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Numb | Var
+//│           <: 'h & 'a
+//│     'rhs0 :> 'i
+//│     'rhs :> 'i
+//│     'l <: {body: 'h, name: string}
+//│     'k <: Abs[?] & {body: 'h} | App[?] & {lhs: 'h, rhs: 'h} | Var & 'r
+//│      = <no result>
+//│        eval_lexpr', eval_var, list_assoc and eq are not implemented
+//│ constrain calls  : 10599
+//│ annoying  calls  : 2300
+//│ subtyping calls  : 343821
 
 :ResetFuel
 
 eval4 Nil (Abs { name = "s"; body = Add { lhs = Var { name = "s" }; rhs = Numb { num = 1 } } })
-//│ res: error
-//│ TEST CASE FAILURE: There was an unexpected runtime error
-//│ Runtime error:
-//│   ReferenceError: eval41 is not defined
+//│ res: 'b
+//│   where
+//│     'b :> Var | Abs['b] | (App['a] with {lhs: 'lhs, rhs: 'rhs}) | Numb | (Add['b] with {lhs: 'b, rhs: 'b}) | (Mul['b] with {lhs: 'b, rhs: 'b})
+//│     'a :> 'lhs | 'b
+//│     'lhs :> (Add['b] with {lhs: 'b, rhs: 'b}) | (App['a] with {lhs: 'lhs, rhs: 'rhs}) | (Mul['b] with {lhs: 'b, rhs: 'b}) | Numb | Var
+//│     'rhs :> 'b
+//│    = <no result>
+//│      eval4, eval_lexpr', eval_var, list_assoc and eq are not implemented
 
