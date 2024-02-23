@@ -310,11 +310,25 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def comparePartial(that: RhsNf): Int = (this, that) match {
       case (RhsField(n1, t1), RhsField(n2, t2)) => n1.compare(n2)
       case (RhsBases(ps1, bf1, trs1), RhsBases(ps2, bf2, trs2)) =>
-        val cmp1 = ps1.size.compare(ps2.size)
+        // val cmp1 = ps1.size.compare(ps2.size)
+        val cmp1 = ps1.minOption match {
+          case S(m1) => ps2.minOption match {
+            case S(m2) => m1.compare(m2)
+            case N => ps1.size.compare(ps2.size)
+          }
+          case N => ps1.size.compare(ps2.size)
+        }
         if (cmp1 =/= 0) return cmp1
         // val cmp2 = bf1.fold(0)(_.fold(1, -1)) compare bf2.fold(0)(_.fold(1, -1))
         // if (cmp2 =/= 0) return cmp2
-        val cmp3 = trs1.size.compare(trs2.size)
+        // val cmp3 = trs1.size.compare(trs2.size)
+        val cmp3 = (trs1.headOption, trs2.headOption) match {
+          case (Some((n1, _)), Some((n2, _))) => n1.compare(n2)
+          // case (Some(_), None) => -1
+          // case (None, Some(_)) => 1
+          // case (None, None) => 0
+          case _ => trs1.size.compare(trs2.size)
+        }
         if (cmp3 =/= 0) return cmp3
         // val cmp4 = ps1.iterator.zip(ps2.iterator).map { case (p1, p2) => p1.compare(p2) }.find(_ =/= 0)
         // if (cmp4.isDefined) return cmp4.get
