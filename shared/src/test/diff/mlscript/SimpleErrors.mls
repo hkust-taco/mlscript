@@ -37,21 +37,21 @@ trait MyTrait: { value: anything }
 //│ Defined trait MyTrait
 
 def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
-//│ test1: ({value: 'value} & #MyTrait | ~#MyTrait) -> (0 | 'value)
+//│ test1: ({value: 'value} & #MyTrait | ~#MyTrait) -> ('value | 0)
 
 :e
 test1 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.43: 	test1 1
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `1 & #MyTrait | 1 & ~?a` does not have field 'value'
+//│ ╟── expression of type `1 & ~?a | 1 & #MyTrait` does not have field 'value'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.39: 	def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
 //│ ║        	                                     ^^^^^^^
 //│ ╟── from refined scrutinee:
 //│ ║  l.39: 	def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
 //│ ╙──      	                   ^
-//│ res: 0 | error
+//│ res: error | 0
 
 
 def map: 'a -> 'a
@@ -109,6 +109,6 @@ add boom 1
 //│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.102: 	add boom 1
 //│ ╙──       	    ^^^^
-//│ res: error | int
+//│ res: int | error
 
 

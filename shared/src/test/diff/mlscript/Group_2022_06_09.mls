@@ -13,7 +13,7 @@ rec def eval e = case e of {
   }
 //│ eval: 'a -> int
 //│   where
-//│     'a <: (Add with {lhs: 'a, rhs: 'a}) | Lit
+//│     'a <: Lit | (Add with {lhs: 'a, rhs: 'a})
 //│     = [Function: eval]
 
 e = Add { lhs = Lit {n=1}; rhs = Lit {n=2} }
@@ -21,7 +21,7 @@ e = Add { lhs = Lit {n=1}; rhs = Lit {n=2} }
 //│  = Add { lhs: Lit { n: 1 }, rhs: Lit { n: 2 } }
 
 eval e
-//│ res: int
+//│ res: int | 1
 //│    = 3
 
 
@@ -41,10 +41,10 @@ eval e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.40: 	eval e2
 //│ ║        	^^^^^^^
-//│ ╟── application of type `Neg & {e: ?e}` does not match type `Add & ?a | Lit & ?b`
+//│ ╟── application of type `Neg & {e: ?e}` does not match type `Lit & ?a | Add & ?b`
 //│ ║  l.31: 	e2 = Neg { e }
 //│ ║        	     ^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `Add & ?c | Lit & ?d`
+//│ ╟── but it flows into reference with expected type `Lit & ?c | Add & ?d`
 //│ ║  l.40: 	eval e2
 //│ ║        	     ^^
 //│ ╟── Note: constraint arises from reference:
@@ -59,7 +59,7 @@ def eval eval e = case e of {
   | Lit -> e.n
   | Add -> eval eval e.lhs + eval eval e.rhs
   }
-//│ eval: ('a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'lhs}) | (Lit with {n: 'n})) -> (int | 'n)
+//│ eval: ('a -> 'lhs -> int & 'a) -> ((Lit with {n: 'n}) | (Add with {lhs: 'lhs, rhs: 'lhs})) -> ('n | int)
 //│     = [Function: eval1]
 
 eval eval! e
@@ -71,7 +71,7 @@ def evalN evalN e = case e of {
   | Neg -> 0 - evalN evalN e.e
   | _ -> eval evalN e
   }
-//│ evalN: ('a -> 'e -> int & 'a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'lhs}) | (Lit with {n: 'n}) | (Neg with {e: 'e})) -> (int | 'n)
+//│ evalN: ('a -> 'e -> int & 'a -> 'lhs -> int & 'a) -> ((Neg with {e: 'e}) | (Lit with {n: 'n}) | (Add with {lhs: 'lhs, rhs: 'lhs})) -> (int | 'n)
 //│      = [Function: evalN]
 
 evalN eval! e
@@ -83,9 +83,9 @@ evalN eval! e2
 //│    = -3
 
 ev = evalN evalN!
-//│ ev: ((Add with {lhs: 'a, rhs: 'a}) | (Lit with {n: 'n}) | (Neg with {e: 'a})) -> (int | 'n)
+//│ ev: ((Neg with {e: 'a}) | (Lit with {n: 'n}) | (Add with {lhs: 'a, rhs: 'a})) -> (int | 'n)
 //│   where
-//│     'a <: (Add with {lhs: 'a, rhs: 'a}) | Lit | (Neg with {e: 'a})
+//│     'a <: (Neg with {e: 'a}) | Lit | (Add with {lhs: 'a, rhs: 'a})
 //│   = [Function (anonymous)]
 
 (ev e, ev e2)
@@ -116,15 +116,15 @@ def evalN evalN k e = case e of {
 // *  by making the simplifier realize that in `Lit with {n: 'n}`, `'n` really co-occurs with `int`!
 
 def evalComposed evalComposed = evalN evalN! (fun e -> eval evalComposed e)
-//│ evalComposed: ('a -> 'rhs -> int & 'a) -> ((Add with {lhs: 'rhs, rhs: 'rhs}) | (Lit with {n: 'n}) | (Neg with {e: 'b})) -> (int | 'n)
+//│ evalComposed: ('a -> 'rhs -> int & 'a) -> ((Neg with {e: 'b}) | (Lit with {n: 'n}) | (Add with {lhs: 'rhs, rhs: 'rhs})) -> (int | 'n)
 //│   where
-//│     'b <: (Add with {lhs: 'rhs, rhs: 'rhs}) | Lit | (Neg with {e: 'b})
+//│     'b <: (Neg with {e: 'b}) | Lit | (Add with {lhs: 'rhs, rhs: 'rhs})
 //│             = [Function: evalComposed]
 
 def evalComposed evalComposed = evalN evalN! (eval evalComposed)
-//│ evalComposed: ('a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'lhs}) | (Lit with {n: 'n}) | (Neg with {e: 'b})) -> (int | 'n)
+//│ evalComposed: ('a -> 'lhs -> int & 'a) -> ((Neg with {e: 'b}) | (Lit with {n: 'n}) | (Add with {lhs: 'lhs, rhs: 'lhs})) -> (int | 'n)
 //│   where
-//│     'b <: (Add with {lhs: 'lhs, rhs: 'lhs}) | Lit | (Neg with {e: 'b})
+//│     'b <: (Neg with {e: 'b}) | Lit | (Add with {lhs: 'lhs, rhs: 'lhs})
 //│             = [Function: evalComposed1]
 
 
@@ -132,13 +132,13 @@ def evalComposed evalComposed = evalN evalN! (eval evalComposed)
 // *    of the need for an algorithm to tie recursive TV knots and inline the rest;
 // *    once we inline, `b` we should get the expected simplified recursive type.
 ev2 = evalComposed evalComposed!
-//│ ev2: (Add\lhs\rhs & {lhs: Neg\e & {e: 'a} | 'b & ~#Neg, rhs: Neg\e & {e: 'a} | 'b & ~#Neg} | Lit\n & {n: 'n} | Neg\e & {e: 'c}) -> (int | 'n)
+//│ ev2: (Neg\e & {e: 'a} | Lit\n & {n: 'n} | Add\lhs\rhs & {lhs: Neg\e & {e: 'b} | 'c & ~#Neg, rhs: Neg\e & {e: 'b} | 'c & ~#Neg}) -> (int | 'n)
 //│   where
-//│     'c <: Add\lhs\rhs & {lhs: Neg\e & {e: 'a} | 'b & ~#Neg, rhs: Neg\e & {e: 'a} | 'b & ~#Neg} | Lit | Neg\e & {e: 'c}
-//│     'a <: Add\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | Lit | Neg\e & {e: 'a}
-//│     'lhs <: Neg\e & {e: 'a} | 'b & ~#Neg
-//│     'b <: Add\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | Lit
-//│     'rhs <: Neg\e & {e: 'a} | 'b & ~#Neg
+//│     'a <: Neg\e & {e: 'a} | Lit | Add\lhs\rhs & {lhs: Neg\e & {e: 'b} | 'c & ~#Neg, rhs: Neg\e & {e: 'b} | 'c & ~#Neg}
+//│     'b <: Neg\e & {e: 'b} | Lit | Add\lhs\rhs & {lhs: 'lhs, rhs: 'rhs}
+//│     'lhs <: Neg\e & {e: 'b} | 'c & ~#Neg
+//│     'c <: Lit | Add\lhs\rhs & {lhs: 'lhs, rhs: 'rhs}
+//│     'rhs <: Neg\e & {e: 'b} | 'c & ~#Neg
 //│    = [Function (anonymous)]
 
 ev2 e3
@@ -153,13 +153,13 @@ def ev2_ty: (Add & { lhs: 'a; rhs: 'a } | Lit | Neg & { e: 'a } as 'a) -> int
 //│       = <missing implementation>
 
 ev2_ty = ev2
-//│ (Add\lhs\rhs & {lhs: Neg\e & {e: 'a} | 'b & ~#Neg, rhs: Neg\e & {e: 'a} | 'b & ~#Neg} | Lit\n & {n: 'n} | Neg\e & {e: 'c}) -> (int | 'n)
+//│ (Neg\e & {e: 'a} | Lit\n & {n: 'n} | Add\lhs\rhs & {lhs: Neg\e & {e: 'b} | 'c & ~#Neg, rhs: Neg\e & {e: 'b} | 'c & ~#Neg}) -> (int | 'n)
 //│   where
-//│     'c <: Add\lhs\rhs & {lhs: Neg\e & {e: 'a} | 'b & ~#Neg, rhs: Neg\e & {e: 'a} | 'b & ~#Neg} | Lit | Neg\e & {e: 'c}
-//│     'a <: Add\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | Lit | Neg\e & {e: 'a}
-//│     'lhs <: Neg\e & {e: 'a} | 'b & ~#Neg
-//│     'b <: Add\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | Lit
-//│     'rhs <: Neg\e & {e: 'a} | 'b & ~#Neg
+//│     'a <: Neg\e & {e: 'a} | Lit | Add\lhs\rhs & {lhs: Neg\e & {e: 'b} | 'c & ~#Neg, rhs: Neg\e & {e: 'b} | 'c & ~#Neg}
+//│     'b <: Neg\e & {e: 'b} | Lit | Add\lhs\rhs & {lhs: 'lhs, rhs: 'rhs}
+//│     'lhs <: Neg\e & {e: 'b} | 'c & ~#Neg
+//│     'c <: Lit | Add\lhs\rhs & {lhs: 'lhs, rhs: 'rhs}
+//│     'rhs <: Neg\e & {e: 'b} | 'c & ~#Neg
 //│   <:  ev2_ty:
 //│ 'a -> int
 //│   where

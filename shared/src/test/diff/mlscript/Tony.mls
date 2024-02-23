@@ -17,11 +17,11 @@ arg = if true then Some{value = 42} with {payload = 23} else None {}
 // > TODO don't distribute neg inters + handle better at constraint top level
 :stats
 flatMap3 (fun x -> add x.value x.payload) arg
-//│ res: None | int
+//│ res: int | None
 //│    = 65
 //│ constrain calls  : 82
 //│ annoying  calls  : 23
-//│ subtyping calls  : 350
+//│ subtyping calls  : 347
 
 
 arg = if true then Some{value = 42} else None {}
@@ -61,7 +61,7 @@ foo (None{})
 
 
 fun f -> flatMap3 f arg
-//│ res: (Some[42] -> 'a) -> (None | 'a)
+//│ res: (Some[42] -> 'a) -> ('a | None)
 //│    = [Function: res]
 
 
@@ -79,15 +79,15 @@ foo 1
 
 
 def simpler = fun f -> case None{} of { Some -> f 1 | _ -> None{} }
-//│ simpler: (1 -> 'a) -> (None | 'a)
+//│ simpler: (1 -> 'a) -> ('a | None)
 //│        = [Function: simpler]
 
 def simpler = fun f -> fun opt -> case opt of { Some -> f opt | None -> opt }
-//│ simpler: ('a -> 'b) -> (None & 'b | Some[?] & 'a) -> 'b
+//│ simpler: ('a -> 'b) -> (Some[?] & 'a | None & 'b) -> 'b
 //│        = [Function: simpler1]
 
 simpler (fun x -> x.value)
-//│ res: (None & 'a | Some[?] & {value: 'b}) -> ('b | 'a)
+//│ res: (Some[?] & {value: 'a} | None & 'b) -> ('a | 'b)
 //│    = [Function (anonymous)]
 
 :e
@@ -95,7 +95,7 @@ res 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.94: 	res 1
 //│ ║        	^^^^^
-//│ ╟── integer literal of type `1` does not match type `None & ?a | Some[?] & ?b`
+//│ ╟── integer literal of type `1` does not match type `Some[?] & ?a | None & ?b`
 //│ ║  l.94: 	res 1
 //│ ║        	    ^
 //│ ╟── Note: constraint arises from reference:

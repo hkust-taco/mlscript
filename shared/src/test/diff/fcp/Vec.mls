@@ -282,12 +282,12 @@ def head1 vec = vec (fun v -> case v of {
   | Nil -> impossible v.size
   | Cons -> v.head
   })
-//│ head1: ((forall 'head. (Cons[?, ?] & {head: 'head} | Nil & {size: nothing}) -> 'head) -> 'a) -> 'a
+//│ head1: ((forall 'head. (Nil & {size: nothing} | Cons[?, ?] & {head: 'head}) -> 'head) -> 'a) -> 'a
 
 def head1_ty : Vec['a, S['p]] -> 'a
 head1_ty = head1
 //│ head1_ty: Vec['a, S['p]] -> 'a
-//│ ((forall 'head. (Cons[?, ?] & {head: 'head} | Nil & {size: nothing}) -> 'head) -> 'a) -> 'a
+//│ ((forall 'head. (Nil & {size: nothing} | Cons[?, ?] & {head: 'head}) -> 'head) -> 'a) -> 'a
 //│   <:  head1_ty:
 //│ Vec['a, S['p]] -> 'a
 
@@ -328,7 +328,7 @@ rec def sum vec = vec (fun v -> case v of {
   })
 //│ sum: 'a -> 'b
 //│   where
-//│     'a <: (((Cons[?, ?]\size with {head: int, tail: 'a}) | Nil) -> int) -> (int & 'b)
+//│     'a <: ((Nil | (Cons[?, ?]\size with {head: int, tail: 'a})) -> int) -> (int & 'b)
 
 def sum_ty : Vec[int, 'n] -> int
 //│ sum_ty: Vec[int, 'n] -> int
@@ -338,7 +338,7 @@ def sum_ty : Vec[int, 'n] -> int
 sum_ty = sum
 //│ 'a -> 'b
 //│   where
-//│     'a <: (((Cons[?, ?]\size with {head: int, tail: 'a}) | Nil) -> int) -> (int & 'b)
+//│     'a <: ((Nil | (Cons[?, ?]\size with {head: int, tail: 'a})) -> int) -> (int & 'b)
 //│   <:  sum_ty:
 //│ Vec[int, 'n] -> int
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?sum. ?sum <: forall 'n. Vec[int, 'n] -> int` exceeded recursion depth limit (250)
@@ -376,7 +376,7 @@ def head1_ty v = case v of {
   | Nil -> impossible v.size
   | Cons -> v.head
   }
-//│ (Cons[?, ?] & {head: 'head} | Nil & {size: nothing}) -> 'head
+//│ (Nil & {size: nothing} | Cons[?, ?] & {head: 'head}) -> 'head
 //│   <:  head1_ty:
 //│ Vec['a, S['p]] -> 'a
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -388,7 +388,7 @@ def head1_ty v = case v of {
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ║  l.+4: 	  }
 //│ ║        	^^^
-//│ ╟── type `(forall 'p. (Cons['a, in S[in 'p0 & 'p out 'p | 'p0] out S[in 'p | 'p0 out 'p0 & 'p]] | (Nil with {size: S['p0]})) -> 'r) -> 'r` does not match type `Cons[?, ?] & ?a | Nil & ?b`
+//│ ╟── type `(forall 'p. ((Nil with {size: S['p0]}) | Cons['a, in S[in 'p0 & 'p out 'p | 'p0] out S[in 'p | 'p0 out 'p0 & 'p]]) -> 'r) -> 'r` does not match type `Nil & ?a | Cons[?, ?] & ?b`
 //│ ║  l.20: 	type Vec[A, N] = forall 'r. (forall 'p. (Nil & { size: N } | Cons[A, S['p]] & Cons[A, N]) -> 'r) -> 'r
 //│ ║        	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:

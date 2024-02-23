@@ -62,7 +62,7 @@ mixin WithType {
 module Test0 extends Base, WithUid
 //│ module Test0 {
 //│   fun getUid: {uid: 'uid, underlying: 'underlying} -> 'uid
-//│   fun rewrap: ({uid: 'uid0, underlying: 'underlying0 & 'underlying1}, 'underlying1 -> 'underlying0) -> {uid: Int | 'uid0, underlying: 'underlying0}
+//│   fun rewrap: ({uid: 'uid0, underlying: 'underlying0 & 'underlying1}, 'underlying1 -> 'underlying0) -> {uid: 'uid0 | Int, underlying: 'underlying0}
 //│   fun setUid: ({uid: 'uid0, underlying: 'underlying0 & 'underlying1}, uid: Int) -> {uid: Int | 'uid0, underlying: 'underlying0}
 //│   fun unwrap: {uid: 'uid, underlying: 'underlying} -> 'underlying
 //│ }

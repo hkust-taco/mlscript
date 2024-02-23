@@ -96,7 +96,7 @@ d2_ : HTree[S[Z], int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.95: 	d2_ : HTree[S[Z], int]
 //│ ║        	^^^
-//│ ╟── expression of type `S[in Z & 'p out Z | 'p]` is not an instance of type `Z`
+//│ ╟── expression of type `S[in Z & 'p out 'p | Z]` is not an instance of type `Z`
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.72: 	def d1_ty: HTree[Z, int]
 //│ ║        	                 ^
@@ -116,7 +116,7 @@ d2_ : HTree[S[Z], int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.112: 	d2_ : HTree[S[Z], int]
 //│ ║         	^^^
-//│ ╟── type `HTreeBase[S[Z], ?]` does not match type `DLeaf[int] | DNode[S[in Z & 'p out Z | 'p], int]`
+//│ ╟── type `HTreeBase[S[Z], ?]` does not match type `DLeaf[int] | DNode[S[in Z & 'p out 'p | Z], int]`
 //│ ║  l.111: 	d2_ k = k (d2:HTreeBase[S[Z], int])
 //│ ║         	              ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:

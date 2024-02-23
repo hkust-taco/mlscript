@@ -92,7 +92,7 @@ fun walk(t, mn) = if t is
 
 
 let tree = Node of (Node of (Node of Leaf(1), Leaf(5)), Leaf(3)), Node of Leaf(3), Leaf(2)
-//│ let tree: Node[1 | 2 | 3 | 5]
+//│ let tree: Node[3 | 1 | 5 | 2]
 //│ tree
 //│      = Node {}
 
@@ -125,7 +125,7 @@ fun walk(t, mn) = if t is
     Pair of n, Leaf(if n > 2 * mn then mn else n)
   Node(l, r) and walk(l, mn) is Pair(mn1, l1) and walk(r, mn) is Pair(mn2, r1) then
     Pair of min(mn1, mn2), Node(l1, r1)
-//│ fun walk: forall 'A 'a. (Leaf['A] | Node['A], Int & 'a) -> Pair['A, Leaf['A | 'a] | Node['A | 'a]]
+//│ fun walk: forall 'A 'a. (Leaf['A] | Node['A], Int & 'a) -> Pair['A, Leaf['a | 'A] | Node['a | 'A]]
 //│   where
 //│     'A <: Num
 
@@ -158,7 +158,7 @@ class repmin(t: Tree[Int]) {
 //│ class repmin(t: Tree[Int]) {
 //│   val mn: Int
 //│   val mn_res: [Int, Lazy[Leaf[Int] | Node[Int]]]
-//│   val tree: Leaf[Int] | Node[Int]
+//│   val tree: Node[Int] | Leaf[Int]
 //│ }
 
 let rm = repmin(tree)
@@ -188,7 +188,7 @@ fun repmin(t) =
     val mn_res = walkLazy of t, Lazy of () => mn_res.0
   }
   [Rec.mn_res.0, Rec.mn_res.1.get]
-//│ fun repmin: forall 'a. (Leaf[Int & 'a] | Node[Int & 'a]) -> ['a, Leaf['a] | Node['a]]
+//│ fun repmin: forall 'a. (Leaf[Int & 'a] | Node[Int & 'a]) -> ['a, Node['a] | Leaf['a]]
 
 String of repmin(tree)
 //│ Str
@@ -208,7 +208,7 @@ String of repmin(tree)
 fun repmin(t) =
   let rec mn_res = walkLazy of t, Lazy(() => mn_res.0)
   [mn_res.0, mn_res.1.get]
-//│ fun repmin: forall 'a. (Leaf[Int & 'a] | Node[Int & 'a]) -> ['a, Leaf['a] | Node['a]]
+//│ fun repmin: forall 'a. (Leaf[Int & 'a] | Node[Int & 'a]) -> ['a, Node['a] | Leaf['a]]
 //│ Code generation encountered an error:
 //│   unguarded recursive use of by-value binding mn_res
 

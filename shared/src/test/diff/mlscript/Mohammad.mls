@@ -1,10 +1,10 @@
 
 def test f = f (fun b -> if b then 1 else 2)
-//│ test: ((bool -> (1 | 2)) -> 'a) -> 'a
+//│ test: ((bool -> (2 | 1)) -> 'a) -> 'a
 //│     = [Function: test]
 
 test (fun k -> (k true, k false))
-//│ res: (1 | 2, 1 | 2,)
+//│ res: (2 | 1, 2 | 1,)
 //│    = [ 1, 2 ]
 
 
@@ -27,15 +27,15 @@ def useCls c = case c of { Class -> c.x | int -> "oops" }
 //│   })());
 //│ };
 //│ // End of generated code
-//│ useCls: ((Class with {x: 'x}) | int) -> ("oops" | 'x)
+//│ useCls: ((Class with {x: 'x}) | int) -> ('x | "oops")
 //│       = [Function: useCls]
 
 useCls c
-//│ res: "oops" | 1
+//│ res: 1 | "oops"
 //│    = 1
 
 useCls (c with { x = 2 })
-//│ res: "oops" | 2
+//│ res: 2 | "oops"
 //│    = 2
 
 :js
@@ -94,7 +94,7 @@ class D: T & {z: int}
 //│ // End of generated code
 
 def useTrt t = case t of { T -> t.y | Class -> t.x }
-//│ useTrt: ((Class with {x: 'y}) & ~#T | {y: 'y} & #T) -> 'y
+//│ useTrt: ({y: 'y} & #T | (Class with {x: 'y}) & ~#T) -> 'y
 //│       = [Function: useTrt]
 
 :e
@@ -102,14 +102,14 @@ useTrt c
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.101: 	useTrt c
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `Class & {x: ?x} & #T | Class & {x: ?x} & ~?a` does not have field 'y'
+//│ ╟── expression of type `Class & {x: ?x} & ~?a | Class & {x: ?x} & #T` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.96: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ║        	                                ^^^
 //│ ╟── from refined scrutinee:
 //│ ║  l.96: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ╙──      	                    ^
-//│ res: 1 | error
+//│ res: error | 1
 //│    = 1
 
 useTrt (c with { y = 1 })
@@ -121,14 +121,14 @@ useTrt c
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.120: 	useTrt c
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `Class & {x: ?x} & #T | Class & {x: ?x} & ~?a` does not have field 'y'
+//│ ╟── expression of type `Class & {x: ?x} & ~?a | Class & {x: ?x} & #T` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.96: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ║        	                                ^^^
 //│ ╟── from refined scrutinee:
 //│ ║  l.96: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ╙──      	                    ^
-//│ res: 1 | error
+//│ res: error | 1
 //│    = 1
 
 d = D{z = 1213}

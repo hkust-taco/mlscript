@@ -387,7 +387,7 @@ def stepImpl arrImpl = ArraysImpl {
 //│   update: forall 'd 'e. (('Rep0 & 'd, 'Rep0 & 'e,),) -> int -> 'A -> ('Rep | 'd, 'Rep | 'e,)
 //│ })
 //│ where
-//│   'Rep1 :> ('Rep | 'a | 'f, 'Rep | 'c | 'g,)
+//│   'Rep1 :> ('Rep | 'a | 'f, 'Rep | 'g | 'c,)
 //│         <: ('Rep0 & 'a, 'Rep0 & 'c,)
 //│   'c <: 'Rep0 & 'g
 //│   'g :> 'Rep

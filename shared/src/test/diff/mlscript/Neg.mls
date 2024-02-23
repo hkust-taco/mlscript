@@ -26,7 +26,7 @@ add res 1
 //│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.19: 	add res 1
 //│ ╙──      	    ^^^
-//│ res: error | int
+//│ res: int | error
 //│    = 2
 
 :e
@@ -68,7 +68,7 @@ add res 1
 //│ ╟── Note: constraint arises from type negation:
 //│ ║  l.63: 	1: ~(~3 & ~2)
 //│ ╙──      	   ^^^^^^^^^^
-//│ res: 2 | 3
+//│ res: 3 | 2
 //│    = 1
 
 

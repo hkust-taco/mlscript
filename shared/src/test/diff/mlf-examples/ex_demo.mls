@@ -782,7 +782,7 @@ def c_and_ a b = c_if a (fun z -> b) (fun z -> c_false)
 // let c_or  (a:Bool) (b:Bool) = c_if a (fun z -> c_true) (fun z -> b)
 def c_or (a: Fbool) (b: Fbool) = c_if a (fun z -> c_true) (fun z -> b)
 def c_or_ a b = c_if a (fun z -> c_true) (fun z -> b)
-//│ c_or: Fbool -> Fbool -> (((forall 'a. 'a -> 'a) -> 'b) -> anything -> 'b | Fbool)
+//│ c_or: Fbool -> Fbool -> (Fbool | ((forall 'a. 'a -> 'a) -> 'b) -> anything -> 'b)
 //│     = [Function: c_or]
 //│ c_or_: Fbool -> 'a -> (((forall 'b. 'b -> 'b) -> 'c) -> anything -> 'c | 'a)
 //│      = [Function: c_or_]
@@ -937,7 +937,7 @@ def c_mul_ m n = m (c_add_ n) c_i0
 // let c_pow n (m:Int) = m (c_mul n) c_i1
 
 def c_pow m (n: Fint) = m (c_mul n) c_i1
-//│ c_pow: ((Fint -> (forall 'a 'b. (('a | 'b) -> 'a) -> 'b -> ('a | 'b) | Fint)) -> (forall 'c 'd. ('c -> 'd) -> 'c -> 'd) -> 'e) -> Fint -> 'e
+//│ c_pow: ((Fint -> (forall 'a 'b. (('a | 'b) -> 'a) -> 'b -> ('b | 'a) | Fint)) -> (forall 'c 'd. ('c -> 'd) -> 'c -> 'd) -> 'e) -> Fint -> 'e
 //│      = [Function: c_pow]
 
 def c_pow_ m n = m (c_mul_ n) c_i1
@@ -1048,7 +1048,7 @@ rec def to_church_ n =
 rec def c_fact (n: Fint) =
   c_if (c_iszero n) (fun (u: Funit) -> c_i1)
     (fun (u: Funit) -> c_mul n (c_fact (c_pred n)))
-//│ c_fact: Fint -> ((('a | 'b) -> 'a & 'b -> 'c) -> 'b -> ('a | 'b | 'c) | Fint)
+//│ c_fact: Fint -> (Fint | (('a | 'b) -> 'a & 'b -> 'c) -> 'b -> ('a | 'b | 'c))
 //│       = [Function: c_fact]
 
 // def c_fact: Fint -> (forall 'a 'b. ('a & 'b) -> (forall 'c 'd 'e 'f 'g 'h. (('c & 'h) -> ('d | 'g | 'c))))
@@ -1059,7 +1059,7 @@ def c_fact_A: Fint -> Fint
 def c_fact_A n =
   c_if (c_iszero n) (fun u -> c_i1)
     (fun u -> c_mul n (c_fact_A (c_pred n)))
-//│ (Fint & (Fint -> (forall 'a 'b. (('a | 'b) -> 'a) -> 'b -> 'a | Fint)) -> (forall 'c. anything -> 'c -> 'c) -> 'd) -> (('e -> 'f) -> 'e -> 'f | 'd)
+//│ (Fint & (Fint -> (forall 'a 'b. (('a | 'b) -> 'a) -> 'b -> 'a | Fint)) -> (forall 'c. anything -> 'c -> 'c) -> 'd) -> ('d | ('e -> 'f) -> 'e -> 'f)
 //│   <:  c_fact_A:
 //│ Fint -> Fint
 //│         = <no result>
@@ -1256,7 +1256,7 @@ c_i10_ = c_mul_ c_i5_ c_i2_
 :stats
 // * This one works:
 c_i10_ = c_mul c_i5_ c_i2_
-//│ c_i10_: (('a | 'b) -> 'a & ('a0 | 'b) -> 'a0) -> 'b -> ('a | 'a0) | Fint
+//│ c_i10_: Fint | (('a | 'b) -> 'a & ('a0 | 'b) -> 'a0) -> 'b -> ('a | 'a0)
 //│       = [Function (anonymous)]
 //│ constrain calls  : 624
 //│ annoying  calls  : 0
@@ -1276,14 +1276,14 @@ c_i9_ = c_pred_ c_i10_
 c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│ ╔══[ERROR] Inferred recursive type: 'b
 //│   where
-//│     'b <: (forall 'c 'd 'e 'f. ('c -> 'd -> 'e) -> ('f -> 'd & 'c) -> 'f -> 'e) -> ((forall 'a 'g 'a0 'a1 'a2. (('a | 'g) -> 'a & ('a0 | 'g) -> 'a0 & ('a1 | 'g) -> 'a1 & ('a2 | 'g) -> 'a2) -> 'g -> ('a | 'a0 | 'a1 | 'a2) | Fint) -> ? & (forall 'a3 'h 'a4. (('a3 | 'h) -> 'a3 & ('a4 | 'h) -> 'a4) -> 'h -> ('a3 | 'a4) | Fint) -> anything)
+//│     'b <: (forall 'c 'd 'e 'f. ('c -> 'd -> 'e) -> ('f -> 'd & 'c) -> 'f -> 'e) -> ((forall 'a 'g 'a0 'a1 'a2. Fint | (('a | 'g) -> 'a & ('a0 | 'g) -> 'a0 & ('a1 | 'g) -> 'a1 & ('a2 | 'g) -> 'a2) -> 'g -> ('a | 'a0 | 'a1 | 'a2)) -> ? & (forall 'a3 'h 'a4. Fint | (('a3 | 'h) -> 'a3 & ('a4 | 'h) -> 'a4) -> 'h -> ('a3 | 'a4)) -> anything)
 //│ ║  l.903: 	def c_succ_ n = fun f -> fun x -> n f (f x)
 //│ ╙──       	                                       ^^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
 //│ ║  l.1276: 	c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 //│ ║          	                ^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ c_99_: error | ('a -> 'a & 'b -> 'b & 'c -> 'c & 'd -> 'd) -> ('a & 'b & 'c & 'd) -> error
+//│ c_99_: ('a -> 'a & 'b -> 'b & 'c -> 'c & 'd -> 'd) -> ('a & 'b & 'c & 'd) -> error | error
 //│      = [Function (anonymous)]
 //│ constrain calls  : 3117
 //│ annoying  calls  : 0
@@ -1292,11 +1292,11 @@ c_99_ = c_add_ (c_mul_ c_i9_ c_i10_) c_i9_
 // * Note: works with `c_mul` AND recursive types...
 :RecursiveTypes
 c_99_ = c_add_ (c_mul c_i9_ c_i10_) c_i9_
-//│ c_99_: ('b -> ('b & 'c & 'a & 'a0) & 'a -> ('c & 'a) & 'a0 -> ('c & 'a0) & 'd -> ('e & 'c & 'a1 & 'a2) & 'e -> ('e & 'c & 'a3 & 'a4) & 'a3 -> ('c & 'a3) & 'a4 -> ('c & 'a4) & 'a1 -> ('c & 'a1) & 'a2 -> ('c & 'a2) & 'f -> ('f & 'c & 'a5 & 'a6) & 'a5 -> ('c & 'a5) & 'a6 -> ('c & 'a6) & ('a7 | 'd) -> 'a7 & 'd -> ('g & 'c & 'a8 & 'a9) & 'g -> ('g & 'c & 'a10 & 'a11) & 'a10 -> ('c & 'a10) & 'a11 -> ('c & 'a11) & 'a8 -> ('c & 'a8) & 'a9 -> ('c & 'a9)) -> ('b & 'd & 'f & 'c) -> ('a7 | 'c) | Fint
+//│ c_99_: ('b -> ('b & 'c & 'a & 'a0) & 'a -> ('c & 'a) & 'a0 -> ('c & 'a0) & 'd -> ('e & 'c & 'a1 & 'a2) & 'e -> ('e & 'c & 'a3 & 'a4) & 'a3 -> ('c & 'a3) & 'a4 -> ('c & 'a4) & 'a1 -> ('c & 'a1) & 'a2 -> ('c & 'a2) & 'f -> ('f & 'c & 'a5 & 'a6) & 'a5 -> ('c & 'a5) & 'a6 -> ('c & 'a6) & ('a7 | 'd) -> 'a7 & 'd -> ('g & 'c & 'a8 & 'a9) & 'g -> ('g & 'c & 'a10 & 'a11) & 'a10 -> ('c & 'a10) & 'a11 -> ('c & 'a11) & 'a8 -> ('c & 'a8) & 'a9 -> ('c & 'a9)) -> ('b & 'd & 'f & 'c) -> ('c | 'a7) | Fint
 //│      = [Function (anonymous)]
 //│ constrain calls  : 2217
 //│ annoying  calls  : 0
-//│ subtyping calls  : 23022
+//│ subtyping calls  : 22997
 :NoRecursiveTypes
 
 // * Ouchie++

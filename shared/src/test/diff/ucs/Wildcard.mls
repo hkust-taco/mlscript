@@ -45,7 +45,7 @@ fun w2(x, p) =
     _ and p(x) then 2
     None then 3
     _ then 4
-//│ fun w2: forall 'a. (None | Object & 'a & ~#None & ~#Some | Some[anything], (None | 'a) -> Object) -> (1 | 2 | 3 | 4)
+//│ fun w2: forall 'a. (Some[anything] | None | Object & 'a & ~#None & ~#Some, (None | 'a) -> Object) -> (1 | 2 | 3 | 4)
 
 w2(Some(0), x => true)
 w2(None, x => true)
@@ -66,7 +66,7 @@ fun w3(x, p) = if x is
   Some(xv) then concat("r2: ")(toString(xv))
   None then "r3"
   _ then "r4"
-//│ fun w3: forall 'a. (None | Object & 'a & ~#None & ~#Some | Some[anything], (None | Some[nothing] | 'a) -> Object) -> Str
+//│ fun w3: forall 'a. (Some[anything] | None | Object & 'a & ~#None & ~#Some, (Some[nothing] | None | 'a) -> Object) -> Str
 
 // Expect "r1"
 w3(0, _ => true)
@@ -142,7 +142,7 @@ fun w4(x, p) = if x is
   Some(xv) then concat("r2: ")(toString(xv))
   None then "r3"
   _ then "r4"
-//│ fun w4: forall 'a. (None | Object & 'a & ~#None & ~#Some | Some[anything], (None | Some[nothing] | 'a) -> Object) -> Str
+//│ fun w4: forall 'a. (Some[anything] | None | Object & 'a & ~#None & ~#Some, (Some[nothing] | None | 'a) -> Object) -> Str
 
 
 // Expect "r1"
@@ -196,14 +196,14 @@ fun w5(y) =
         _ and y is
           Delta then "delta"
           _ then "unknown"
-//│ fun w5: Object -> ("alpha" | "beta" | "delta" | "gamma" | "unknown")
+//│ fun w5: Object -> ("alpha" | "beta" | "gamma" | "delta" | "unknown")
 
 w5(0)
 w5(Alpha())
 w5(Beta())
 w5(Gamma())
 w5(Delta())
-//│ "alpha" | "beta" | "delta" | "gamma" | "unknown"
+//│ "alpha" | "beta" | "gamma" | "delta" | "unknown"
 //│ res
 //│     = 'unknown'
 //│ res
@@ -221,12 +221,12 @@ fun w6(x, y) =
       Some(z) then z
       None then 0
     else x
-//│ fun w6: forall 'a. ('a, Object & ~#Some | Some['a]) -> (0 | 'a)
+//│ fun w6: forall 'a. ('a, Some['a] | Object & ~#Some) -> ('a | 0)
 
 w6("42", Some(42))
 w6("42", None)
 w6("42", "42")
-//│ "42" | 0
+//│ 0 | "42"
 //│ res
 //│     = 42
 //│ res
@@ -243,7 +243,7 @@ fun w7(x, f) =
       None then x
     Left(x) then x + 1
     Right(x) then x + 2
-//│ fun w7: forall 'a 'b. (Left[Int] | Object & 'a & ~#Left & ~#Right | Right[Int], 'a -> (None | Some['b])) -> (Int | 'a | 'b)
+//│ fun w7: forall 'a 'b. (Left[Int] | Right[Int] | Object & 'a & ~#Left & ~#Right, 'a -> (Some['b] | None)) -> (Int | 'b | 'a)
 
 // The results are wrong:
 w7(Left(99), _ => Some(0)) // => 0

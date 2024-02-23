@@ -242,7 +242,7 @@ E{} + 1
 //│ ╟── Note: class E is defined at:
 //│ ║  l.205: 	class E: 1
 //│ ╙──       	      ^
-//│ res: error | int
+//│ res: int | error
 //│    = '[object Object]1'
 
 :e

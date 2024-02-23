@@ -7,7 +7,7 @@
 abstract class Exp[out A]: Pair | Lit
 class Lit(val n: Int) extends Exp[Int]
 class Pair[out L, out R](val lhs: Exp[L], val rhs: Exp[R]) extends Exp[[L, R]]
-//│ abstract class Exp[A]: Lit | Pair[anything, anything]
+//│ abstract class Exp[A]: Pair[anything, anything] | Lit
 //│ class Lit(n: Int) extends Exp
 //│ class Pair[L, R](lhs: Exp[L], rhs: Exp[R]) extends Exp
 
@@ -23,17 +23,17 @@ fun f(e) = if e is
 fun f(e) = if e is
   Pair(l, r) then [l, r]
   Lit(n) then n
-//│ fun f: forall 'L 'R. (Lit | Pair['L, 'R]) -> (Int | [Exp['L], Exp['R]])
+//│ fun f: forall 'L 'R. (Pair['L, 'R] | Lit) -> ([Exp['L], Exp['R]] | Int)
 
 (e: Exp['X]) => f(e)
-//│ (e: Exp[anything]) -> (Int | [Exp[??L], Exp[??R]])
+//│ (e: Exp[anything]) -> ([Exp[??L], Exp[??R]] | Int)
 //│ res
 //│     = [Function: res]
 
 fun f(e) = if e is
   Pair(l, r) then f(l) + f(r)
   Lit(n) then n
-//│ fun f: (Lit | Pair[anything, anything]) -> Int
+//│ fun f: (Pair[anything, anything] | Lit) -> Int
 
 
 // * Invariant:
@@ -41,7 +41,7 @@ fun f(e) = if e is
 abstract class Exp[A]: Pair | Lit
 class Lit(val n: Int) extends Exp[Int]
 class Pair[L, R](val lhs: Exp[L], val rhs: Exp[R]) extends Exp[[L, R]]
-//│ abstract class Exp[A]: Lit | Pair[?, ?]
+//│ abstract class Exp[A]: Pair[?, ?] | Lit
 //│ class Lit(n: Int) extends Exp
 //│ class Pair[L, R](lhs: Exp[L], rhs: Exp[R]) extends Exp
 
@@ -57,7 +57,7 @@ fun f(e) = if e is
 fun f(e) = if e is
   Pair(l, r) then [l, r]
   Lit(n) then n
-//│ fun f: forall 'L 'R. (Lit | Pair['L, 'R]) -> (Int | [Exp['L], Exp['R]])
+//│ fun f: forall 'L 'R. (Pair['L, 'R] | Lit) -> ([Exp['L], Exp['R]] | Int)
 
 :e
 (e: Exp['X]) => f(e)
@@ -67,7 +67,7 @@ fun f(e) = if e is
 //│ ╟── type variable `L` leaks out of its scope
 //│ ║  l.43: 	class Pair[L, R](val lhs: Exp[L], val rhs: Exp[R]) extends Exp[[L, R]]
 //│ ╙──      	           ^
-//│ forall 'X 'L 'R. (e: Exp['X]) -> (Int | error | [Exp['L], Exp['R]])
+//│ forall 'X 'L 'R. (e: Exp['X]) -> (error | [Exp['L], Exp['R]] | Int)
 //│   where
 //│     'R :> ??R
 //│        <: ??R0
@@ -100,7 +100,7 @@ fun f(e) = if e is
 //│ ╟── type variable `R` leaks out of its scope
 //│ ║  l.43: 	class Pair[L, R](val lhs: Exp[L], val rhs: Exp[R]) extends Exp[[L, R]]
 //│ ╙──      	              ^
-//│ fun f: forall 'L 'R. (Lit | Pair['L, 'R]) -> Int
+//│ fun f: forall 'L 'R. (Pair['L, 'R] | Lit) -> Int
 //│   where
 //│     'R :> ??R
 //│        <: ??R0

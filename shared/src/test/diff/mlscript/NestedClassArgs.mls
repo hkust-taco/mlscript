@@ -143,14 +143,14 @@ rec def c5 a = C5{ a = C2 { a = c5 a } }
 //│ c5: anything -> (C5['A] with {a: 'a})
 //│   where
 //│     'a :> C2['A0] with {a: C5['A] with {a: 'a}}
-//│     'A0 :> (C5['A] with {a: 'a}) | C5['A]
+//│     'A0 :> C5['A] | (C5['A] with {a: 'a})
 //│         <: C5['A]
 
 c = c5
 //│ anything -> (C5['A] with {a: 'a})
 //│   where
 //│     'a :> C2['A0] with {a: C5['A] with {a: 'a}}
-//│     'A0 :> (C5['A] with {a: 'a}) | C5['A]
+//│     'A0 :> C5['A] | (C5['A] with {a: 'a})
 //│         <: C5['A]
 //│   <:  c:
 //│ 'a -> C5['a]
@@ -170,7 +170,7 @@ rec def c6 a = C6{ a = c5 (c6 a) }
 //│ c6: anything -> (C6['A] with {a: forall 'A0 'a 'A1. C5['A0] with {a: 'a}})
 //│   where
 //│     'a :> C2['A1] with {a: C5['A0] with {a: 'a}}
-//│     'A1 :> (C5['A0] with {a: 'a}) | C5['A0]
+//│     'A1 :> C5['A0] | (C5['A0] with {a: 'a})
 //│         <: C5['A0]
 
 :stats
@@ -178,13 +178,13 @@ c = c6
 //│ anything -> (C6['A] with {a: forall 'A0 'a 'A1. C5['A0] with {a: 'a}})
 //│   where
 //│     'a :> C2['A1] with {a: C5['A0] with {a: 'a}}
-//│     'A1 :> (C5['A0] with {a: 'a}) | C5['A0]
+//│     'A1 :> C5['A0] | (C5['A0] with {a: 'a})
 //│         <: C5['A0]
 //│   <:  c:
 //│ 'a -> C6['a]
 //│ constrain calls  : 64
 //│ annoying  calls  : 34
-//│ subtyping calls  : 434
+//│ subtyping calls  : 428
 
 
 // Reproduction of an issue found while trying out TypeRef ctor typing:

@@ -50,7 +50,7 @@ fun f(x, y) = if x is
     Fals and y is Fals then false
     Tru and y is Fals then true
     Fals and y is Tru then true
-//│ fun f: (Fals | Tru, Fals | Tru) -> Bool
+//│ fun f: (Tru | Fals, Fals | Tru) -> Bool
 
 // Replace the `x is Fals` with `_`
 fun f(x, y) = if x is
@@ -59,7 +59,7 @@ fun f(x, y) = if x is
     _ and y is
       Tru then true
       Fals then false
-//│ fun f: (Object, Fals | Tru) -> Bool
+//│ fun f: (Object, Tru | Fals) -> Bool
 
 f(Tru, Tru)
 f(Tru, Fals)
@@ -91,7 +91,7 @@ fun f(x, y) = if x is
   else if y is
     Tru then true
     Fals then false
-//│ fun f: (Object, Fals | Tru) -> Bool
+//│ fun f: (Object, Tru | Fals) -> Bool
 
 fun f(x, y) = if x is
     Tru and y is Tru then true
@@ -99,11 +99,11 @@ fun f(x, y) = if x is
   else if y is
     Tru and x is Fals then true
     Fals and x is Tru then false
-//│ fun f: (Fals | Tru, Fals | Tru) -> Bool
+//│ fun f: (Tru | Fals, Fals | Tru) -> Bool
 
 fun h(x, y, p) = if
   x and p(x) then 0
   y is
     Tru then 1
     Fals then 2
-//│ fun h: (Object, Fals | Tru, true -> Object) -> (0 | 1 | 2)
+//│ fun h: (Object, Tru | Fals, true -> Object) -> (0 | 1 | 2)

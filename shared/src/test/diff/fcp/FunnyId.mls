@@ -47,7 +47,7 @@ id 1
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
 //│     'a <: 'b -> ?
-//│     'b :> 1 | 'b -> 'b
+//│     'b :> 'b -> 'b | 1
 //│        <: ? & 'a
 //│ ║  l.30: 	rec def id x = let tmp = id id x in x
 //│ ╙──      	                         ^^^^^
@@ -63,9 +63,9 @@ id 1
 //│ ╟── from reference:
 //│ ║  l.30: 	rec def id x = let tmp = id id x in x
 //│ ╙──      	                                    ^
-//│ res: 1 | error | 'a -> 'a | 'b
+//│ res: error | 1 | 'a -> 'a | 'b
 //│   where
-//│     'a :> 1 | 'a -> 'a
+//│     'a :> 'a -> 'a | 1
 //│        <: 'a -> anything & 'b
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -148,9 +148,9 @@ rec def id x = if true then x else id id x
 id_ty = id
 //│ ╔══[ERROR] Inferred recursive type: 'b
 //│   where
-//│     'b :> 'a | 'c -> 'b
+//│     'b :> 'c -> 'b | 'a
 //│        <: 'c -> 'a & 'a
-//│     'c :> 'a | 'c -> 'b
+//│     'c :> 'c -> 'b | 'a
 //│        <: 'a
 //│     'a <: 'b
 //│ ║  l.126: 	rec def id x = if true then x else id id x
@@ -198,7 +198,7 @@ rec def id1 x = choose x (id1 id1 x)
 id1 id
 //│ res: ('a & 'b) -> 'a
 //│   where
-//│     'a :> forall 'c 'd. ('a & 'b & 'c) -> 'a
+//│     'a :> forall 'c 'd. ('a & 'b & 'c) -> ('a | 'd)
 //│        <: ((forall 'c 'd. 'c -> 'd) | 'b) -> 'a
 //│     'c :> 'c -> 'd
 //│        <: 'd
@@ -214,7 +214,7 @@ rec def id1 x = if true then x else id1 id1 x
 id1 id
 //│ res: ('a & 'b) -> 'a
 //│   where
-//│     'a :> forall 'c 'd. ('a & 'b & 'c) -> 'a
+//│     'a :> forall 'c 'd. ('a & 'b & 'c) -> ('a | 'd)
 //│        <: ((forall 'c 'd. 'c -> 'd) | 'b) -> 'a
 //│     'c :> 'c -> 'd
 //│        <: 'd

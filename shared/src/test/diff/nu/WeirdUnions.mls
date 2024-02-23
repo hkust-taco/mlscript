@@ -6,7 +6,7 @@ fun f: Str | [Str, Int]
 //│ fun f: Str | [Str, Int]
 
 fun f: [Str] | [Str, Int]
-//│ fun f: Array[Int | Str] & {0: Str}
+//│ fun f: Array[Str | Int] & {0: Str}
 
 fun f: (Str | [Str, Int])
 //│ fun f: Str | [Str, Int]
@@ -33,7 +33,7 @@ fun f: Str | ((Str, Int))
 
 // * This type merges the input tuples, resulting in the union seen above:
 fun f: (Str => Str) & ((Str, Int) => Str)
-//│ fun f: (...Array[Int | Str] & {0: Str}) -> Str
+//│ fun f: (...Array[Str | Int] & {0: Str}) -> Str
 
 f("abc", "abc")
 //│ Str
@@ -48,13 +48,13 @@ fun f: (Str => Str) & ((Str, Int) => Int)
 
 // * ...resulting in approximation at call sites (we don't handle overloading)
 f("abc", "abc")
-//│ Int | Str
+//│ Str | Int
 //│ res
 //│     = <no result>
 //│       f is not implemented
 
 f("abcabc")
-//│ Int | Str
+//│ Str | Int
 //│ res
 //│     = <no result>
 //│       f is not implemented
@@ -95,18 +95,18 @@ r(error, error)
 
 // * Note: the correct version:
 let r = if true then id else ([x, y]) => [y, x]
-//│ let r: forall 'a 'b 'c. (['a, 'b] & 'c) -> (['b, 'a] | 'c)
+//│ let r: forall 'a 'b 'c. (['a, 'b] & 'c) -> ('c | ['b, 'a])
 //│ r
 //│   = [Function: id]
 
 r of [0, 1]
-//│ [0 | 1, 0 | 1]
+//│ [0 | 1, 1 | 0]
 //│ res
 //│     = [ 0, 1 ]
 
 // Also currently parses the same:
 let r = if true then id else [x, y] => [y, x]
-//│ let r: forall 'a 'b 'c. (['a, 'b] & 'c) -> (['b, 'a] | 'c)
+//│ let r: forall 'a 'b 'c. (['a, 'b] & 'c) -> ('c | ['b, 'a])
 //│ r
 //│   = [Function: id]
 

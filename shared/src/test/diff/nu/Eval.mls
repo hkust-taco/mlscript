@@ -113,7 +113,7 @@ fun (:::) concatList(xs, ys) = if xs is
   Nil then ys
   Cons(x, xs) then x :: xs ::: ys
 //│ fun (::) cons: forall 'A. ('A, List['A]) -> Cons['A]
-//│ fun (:::) concatList: forall 'A0 'a. (Cons['A0] | Nil, List['A0] & 'a) -> (Cons['A0] | 'a)
+//│ fun (:::) concatList: forall 'A0 'a. (Nil | Cons['A0], List['A0] & 'a) -> ('a | Cons['A0])
 
 module Lists { // TODO use name List when module overloading is supported:
   
@@ -136,13 +136,13 @@ module Lists { // TODO use name List when module overloading is supported:
   
 }
 //│ module Lists {
-//│   fun assoc: forall 'a 'A. 'a -> (Cons[{key: Eql['a], value: 'A}] | Nil) -> (None | Some['A])
-//│   fun map: forall 'b 'A0. ('b -> 'A0) -> (Cons['b] | Nil) -> (Cons['A0] | Nil)
-//│   fun zip: forall 'c 'd. (Cons['c] | Nil, Cons['d] | Nil) -> (Cons[['c, 'd]] | Nil)
+//│   fun assoc: forall 'a 'A. 'a -> (Cons[{key: Eql['a], value: 'A}] | Nil) -> (Some['A] | None)
+//│   fun map: forall 'b 'A0. ('b -> 'A0) -> (Nil | Cons['b]) -> (Nil | Cons['A0])
+//│   fun zip: forall 'c 'd. (Nil | Cons['c], Nil | Cons['d]) -> (Nil | Cons[['c, 'd]])
 //│ }
 
 let xs = 1 :: 2 :: 3 :: Nil
-//│ let xs: Cons[1 | 2 | 3]
+//│ let xs: Cons[1 | 3 | 2]
 //│ xs
 //│    = Cons {}
 
@@ -158,7 +158,7 @@ let ls = {key: "a", value: 0} :: Nil
 //│    = Cons {}
 
 ls |> Lists.assoc("a")
-//│ None | Some[0]
+//│ Some[0] | None
 //│ res
 //│     = Some {}
 
@@ -189,7 +189,7 @@ class StrLit(v: Str) extends Lit[Str](v)
 //│ ╔══[ERROR] Type mismatch in type declaration:
 //│ ║  l.175: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Sub` does not match type `App | Lam | #Lit | Rcd[Term] | Sel | Var`
+//│ ╟── type `Sub` does not match type `Var | App | Lam | Sel | Rcd[Term] | #Lit`
 //│ ║  l.175: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
 //│ ║         	              ^^^
 //│ ╟── Note: constraint arises from union type:
@@ -201,7 +201,7 @@ class StrLit(v: Str) extends Lit[Str](v)
 //│ ╔══[ERROR] Type `Sub` does not contain member `Rcd#Sub`
 //│ ║  l.175: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
 //│ ╙──       	              ^^^
-//│ abstract class Term: App | Lam | Lit[anything] | Rcd[Term] | Sel | Var
+//│ abstract class Term: Var | App | Lam | Sel | Rcd[Term] | Lit[anything]
 //│ class Var(name: Str) extends Term
 //│ class App(lhs: Term, args: List[Term]) extends Term
 //│ class Lam(params: List[Str], body: Term) extends Term
@@ -221,7 +221,7 @@ class Sel(val prefix: Term, val fieldName: Str)
 abstract class Lit[out A](val value: A): IntLit | StrLit
 class IntLit(v: Int) extends Lit[Int](v)
 class StrLit(v: Str) extends Lit[Str](v)
-//│ type Term = App | Lam | Lit[anything] | Rcd[Term] | Sel | Var
+//│ type Term = Var | App | Lam | Sel | Rcd[Term] | Lit[anything]
 //│ class Var(name: Str)
 //│ class App(lhs: Term, args: List[Term])
 //│ class Lam(params: List[Str], body: Term)
@@ -260,12 +260,12 @@ fun eval(t, env) = if t is
     else err(String(pree) ++ " does not have field " ++ nme)
   Rcd(fs) then
     Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
-//│ fun eval: forall 'a 'b 'c. ('a, Cons[{key: Eql[Str], value: 'b}] & {List#A <: {key: Eql[Str], value: 'b}} & List[{key: Eql[Str], value: 'b}] | Nil & {List#A <: {key: Eql[Str], value: 'b}} & List[{key: Eql[Str], value: 'b}]) -> 'c
+//│ fun eval: forall 'a 'b 'c. ('a, Cons[{key: Eql[Str], value: 'b}] & {List#A <: {key: Eql[Str], value: 'b}} & List[{key: Eql[Str], value: 'b}] | Nil & {List#A <: {key: Eql[Str], value: 'b}} & List[{key: Eql[Str], value: 'b}]) -> ('c | Lit[??A] | Lam)
 //│   where
-//│     'b :> 'c
-//│        <: Object & ~#Rcd | Rcd['b]
-//│     'c :> 'b | Lam | Lit[??A] | Rcd[Lam | Lit[??A] | 'c]
-//│     'a <: App | Lam | Lit[anything] | Rcd['a] | Sel | Var
+//│     'b :> 'c | Lit[??A] | Lam
+//│        <: Rcd['b] | Object & ~#Rcd
+//│     'c :> 'b | Lit[??A] | Lam | Rcd['c | Lit[??A] | Lam]
+//│     'a <: Var | Lit[anything] | Lam | App | Sel | Rcd['a]
 
 eval : (Term, List[{key: Str, value: Value}]) -> Value
 //│ (Term, List[{key: Str, value: Value}]) -> Value
@@ -278,23 +278,23 @@ let rcd = Rcd({key: "a", value: IntLit(0)} :: Nil)
 //│     = Rcd {}
 
 eval of rcd, Nil
-//│ 'a
+//│ 'a | Lit[anything] | Lam
 //│   where
-//│     'a :> Lam | Lit[anything] | Rcd[Lam | Lit[anything] | 'a]
+//│     'a :> Lit[anything] | Lam | Rcd['a | Lit[anything] | Lam]
 //│ res
 //│     = Rcd {}
 
 eval of Sel(rcd, "a"), Nil
-//│ 'a
+//│ 'a | Lit[??A] | Lam
 //│   where
-//│     'a :> Lam | Lit[??A] | Rcd[Lam | Lit[??A] | 'a]
+//│     'a :> Lit[??A] | Lam | Rcd['a | Lit[??A] | Lam]
 //│ res
 //│     = IntLit {}
 
 eval of App(Lam("x" :: Nil, Sel(Var("x"), "a")), rcd :: Nil), Nil
-//│ 'a
+//│ 'a | Lit[??A] | Lam
 //│   where
-//│     'a :> Lam | Lit[??A] | Rcd[Lam | Lit[??A] | 'a]
+//│     'a :> Lit[??A] | Lam | Rcd['a | Lit[??A] | Lam]
 //│ res
 //│     = IntLit {}
 

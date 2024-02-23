@@ -35,7 +35,7 @@ abstract class Test[C] {
 //│   fun getVar: Code[Int, C]
 //│   fun test0: Code[Int, nothing]
 //│   fun test1: Code[Int, nothing]
-//│   fun unquote: forall 'c. (input: Code[anything, 'c | C]) -> Code[Int, 'c]
+//│   fun unquote: forall 'c. (input: Code[anything, C | 'c]) -> Code[Int, 'c]
 //│ }
 
 

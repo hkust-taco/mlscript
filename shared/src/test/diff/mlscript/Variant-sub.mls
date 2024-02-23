@@ -12,7 +12,7 @@ def None = None{}
 
 def flatMap = fun f -> fun opt ->
   case opt of { Some -> f opt.v | None -> opt }
-//│ flatMap: ('v -> 'a) -> (None & 'a | Some[?] & {v: 'v}) -> 'a
+//│ flatMap: ('v -> 'a) -> (Some[?] & {v: 'v} | None & 'a) -> 'a
 //│        = [Function: flatMap]
 
 f x = Some x
@@ -22,7 +22,7 @@ flatMap f None
 //│  = [Function: f]
 //│ res: Some[1]
 //│    = Some { v: 1 }
-//│ res: None | Some[nothing]
+//│ res: Some[nothing] | None
 //│    = None {}
 
 :e
@@ -30,20 +30,20 @@ flatMap f "oops"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.29: 	flatMap f "oops"
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"oops"` does not match type `None & ?a | Some[?] & ?b`
+//│ ╟── string literal of type `"oops"` does not match type `Some[?] & ?a | None & ?b`
 //│ ║  l.29: 	flatMap f "oops"
 //│ ║        	          ^^^^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.14: 	  case opt of { Some -> f opt.v | None -> opt }
 //│ ╙──      	       ^^^
-//│ res: Some[nothing] | error
+//│ res: error | Some[nothing]
 //│ Runtime error:
 //│   Error: non-exhaustive case expression
 
 class NoneBecause: None & { reason: string }
 flatMap f (NoneBecause { reason = "uh uh" })
 //│ Defined class NoneBecause
-//│ res: NoneBecause & {reason: "uh uh"} | Some[nothing]
+//│ res: Some[nothing] | NoneBecause & {reason: "uh uh"}
 //│    = NoneBecause { reason: 'uh uh' }
 
 type Expr = Lit | Neg | Var | Plus
@@ -74,17 +74,17 @@ rec def evalOpt x = case x of {
         Some (l + r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ evalOpt: 'a -> (NoneBecause | Some[int])
+//│ evalOpt: 'a -> (Some[int] | NoneBecause)
 //│   where
-//│     'a <: Lit & {v: int} | (Neg with {sub: 'a}) | (Plus with {lhs: 'a, rhs: 'a}) | Var
+//│     'a <: Lit & {v: int} | (Neg with {sub: 'a}) | Var | (Plus with {lhs: 'a, rhs: 'a})
 //│        = [Function: evalOpt]
 //│ constrain calls  : 537
 //│ annoying  calls  : 105
-//│ subtyping calls  : 3721
+//│ subtyping calls  : 3720
 
 :stats
 evalOpt (Plus{lhs = Lit{v=2}; rhs = Lit{v=3}})
-//│ res: NoneBecause | Some[int]
+//│ res: Some[int] | NoneBecause
 //│    = Some { v: 5 }
 //│ constrain calls  : 127
 //│ annoying  calls  : 37

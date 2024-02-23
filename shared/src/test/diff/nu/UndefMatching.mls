@@ -3,7 +3,7 @@
 
 
 fun foo(x: 'a | undefined) = if x is undefined then error else x
-//│ fun foo: forall 'a. (x: Object & 'a & ~() | ()) -> 'a
+//│ fun foo: forall 'a. (x: () | Object & 'a & ~()) -> 'a
 
 
 class Abstract[A] {
@@ -45,7 +45,7 @@ class Abstract[A] {
 //│ ╙──      	       ^
 //│ class Abstract[A] {
 //│   constructor()
-//│   fun bar: (x: () | A & ~()) -> (A & ~())
+//│   fun bar: (x: A & ~() | ()) -> (A & ~())
 //│ }
 
 

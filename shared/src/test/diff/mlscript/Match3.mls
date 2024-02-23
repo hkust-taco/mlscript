@@ -33,7 +33,7 @@ eval_expr (M {})
 //│ ╟── Note: class M is defined at:
 //│ ║  l.3: 	class M
 //│ ╙──     	      ^
-//│ res: M | error
+//│ res: error | M
 //│    = M {}
 
 def eval_expr v =

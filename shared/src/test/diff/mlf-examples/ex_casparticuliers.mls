@@ -174,7 +174,7 @@ rec def to_church_1 n =
 rec def to_church_1_t n =
   if n == 0 then zero
   else succ_ty (to_church_1_t (n - 1))
-//│ to_church_1_t: int -> (anything -> 'a -> 'a | ChurchInt)
+//│ to_church_1_t: int -> (ChurchInt | anything -> 'a -> 'a)
 //│              = [Function: to_church_1_t]
 
 rec def to_church_1_tt n =
@@ -307,7 +307,7 @@ def to_church_1_repro n =
 rec def to_church_1_st n =
   if n == 0 then zero
   else succ_ty (to_church_1_st (n - 1))
-//│ to_church_1_st: int -> (anything -> 'a -> 'a | ChurchInt)
+//│ to_church_1_st: int -> (ChurchInt | anything -> 'a -> 'a)
 //│               = [Function: to_church_1_st]
 
 rec def to_church_2 n =
@@ -369,7 +369,7 @@ to_church_ty = to_church_1
 //│             = [Function: to_church_1]
 
 to_church_ty = to_church_1_t
-//│ int -> (anything -> 'a -> 'a | ChurchInt)
+//│ int -> (ChurchInt | anything -> 'a -> 'a)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_church_1_t]
@@ -382,7 +382,7 @@ to_church_ty = to_church_1_tt
 //│               to_church_1_tt and zero_ty are not implemented
 
 to_church_ty = to_church_1_st
-//│ int -> (anything -> 'a -> 'a | ChurchInt)
+//│ int -> (ChurchInt | anything -> 'a -> 'a)
 //│   <:  to_church_ty:
 //│ int -> ChurchInt
 //│             = [Function: to_church_1_st]

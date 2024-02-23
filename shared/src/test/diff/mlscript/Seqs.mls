@@ -33,7 +33,7 @@ Nil{}
 //│ ╟── record literal of type `anything` does not have field 'size'
 //│ ║  l.29: 	Nil{}
 //│ ╙──      	   ^^
-//│ res: Nil & {size: nothing} | error
+//│ res: error | Nil & {size: nothing}
 //│    = Nil { size: undefined }
 
 def Nil = Nil { size = 0 }
@@ -100,7 +100,7 @@ c.size
 //│    = 1
 
 d = Cons 2 c
-//│ d: Cons[1 | 2] with {head: 2, tail: Cons[1] with {tail: Nil & {size: 0}}}
+//│ d: Cons[2 | 1] with {head: 2, tail: Cons[1] with {tail: Nil & {size: 0}}}
 //│  = Cons {
 //│      size: 2,
 //│      head: 2,

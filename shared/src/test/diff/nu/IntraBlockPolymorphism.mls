@@ -23,7 +23,7 @@ fun i(x) = x
 let b = i(true)
 //│ let a: 0 | true | 'a
 //│ fun i: forall 'b. ('a & 'b) -> (0 | 'b)
-//│ let b: 0 | true
+//│ let b: true | 0
 //│ a
 //│ Runtime error:
 //│   ReferenceError: i1 is not defined
@@ -35,7 +35,7 @@ let a = i(0)
 let b = i(true)
 fun i(x) = x
 //│ let a: 0 | true | 'a
-//│ let b: 0 | true | 'a
+//│ let b: true | 0 | 'a
 //│ fun i: forall 'b. ('a & 'b) -> (0 | true | 'b)
 //│ a
 //│ Runtime error:

@@ -69,7 +69,7 @@ fun add(e) =
       Vectr of map of xs, x => add of Pair of x, Numbr(n)
     Pair(Numbr(n), Vectr(xs)) then
       Vectr of map of xs, x => add of Pair of Numbr(n), x
-//│ fun add: Pair[Numbr | Vectr, Numbr | Vectr] -> (Numbr | Vectr)
+//│ fun add: Pair[Numbr | Vectr, Vectr | Numbr] -> (Numbr | Vectr)
 
 
 add(Pair(Numbr(0), Numbr(1)))
@@ -180,7 +180,7 @@ s([Numbr(0),Numbr(0)])
 //│ ╟── Note: constraint arises from tuple type:
 //│ ║  l.136: 	fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
 //│ ╙──       	        ^^^^^^^^^^^^^
-//│ Int | error
+//│ error | Int
 // g <: 0 -> 'a
 
 :e
@@ -244,6 +244,6 @@ add2(Pair(Vectr(0), Numbr(1)))
 //│ ╟── Note: type parameter A is defined at:
 //│ ║  l.52: 	class Pair[A, B](a: A, b: B)
 //│ ╙──      	           ^
-//│ Numbr | error | Array[Numbr | Vectr]
+//│ error | Numbr | Array[Numbr | Vectr]
 
 

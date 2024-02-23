@@ -145,7 +145,7 @@ eval (Pair {
   rhs = IntLit { value = 2 } })
 //│ res: 'a
 //│   where
-//│     'a :> 1 | 2 | ('a, 'a,)
+//│     'a :> 2 | 1 | ('a, 'a,)
 //│    = [ 1, 2 ]
 
 p = Pair {
@@ -165,7 +165,7 @@ p = Pair {
 ep = eval p
 //│ ep: 'a
 //│   where
-//│     'a :> 1 | 2 | 3 | ('a, 'a,)
+//│     'a :> 3 | 2 | 1 | ('a, 'a,)
 //│   = [ 1, [ 2, 3 ] ]
 
 
@@ -220,7 +220,7 @@ ep + 1
 //│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.+1: 	ep + 1
 //│ ╙──      	^^
-//│ res: error | int
+//│ res: int | error
 
 ep[0]
 //│ ╔══[ERROR] Type mismatch in array access:
@@ -232,9 +232,9 @@ ep[0]
 //│ ╟── but it flows into reference with expected type `Array[?b]`
 //│ ║  l.+1: 	ep[0]
 //│ ╙──      	^^
-//│ res: error | undefined | 'a
+//│ res: error | 'a | undefined
 //│   where
-//│     'a :> 1 | 2 | 3 | ('a, 'a,)
+//│     'a :> 3 | 2 | 1 | ('a, 'a,)
 
 
 eval (Pair {
@@ -261,7 +261,7 @@ eval (Pair {
 //│ ╙──      	                                   ^^^
 //│ res: 'a
 //│   where
-//│     'a :> 1 | (Pair[?, ?] with {lhs: IntLit & {value: 2}, rhs: IntLit & {value: 3}}) | ('a, 'a,)
+//│     'a :> (Pair[?, ?] with {lhs: IntLit & {value: 2}, rhs: IntLit & {value: 3}}) | 1 | ('a, 'a,)
 
 
 p = Pair2 {

@@ -28,7 +28,7 @@ if Pair(0, 1) is Pair(a, b) then true else false
 
 
 fun foo(x) = x is Pair(a, b)
-//│ fun foo: (Object & ~#Pair | Pair[anything]) -> Bool
+//│ fun foo: (Pair[anything] | Object & ~#Pair) -> Bool
 
 
 Pair(0, 1) is Pair(a, b) and a > b
@@ -43,10 +43,10 @@ if Pair(0, 1) is Pair(a, b) then a > b else false
 
 
 fun foo(x) = x is Pair(a, b) and a > b
-//│ fun foo: (Object & ~#Pair | Pair[Num]) -> Bool
+//│ fun foo: (Pair[Num] | Object & ~#Pair) -> Bool
 
 fun foo(x) = if x is Pair(a, b) then a > b else false
-//│ fun foo: (Object & ~#Pair | Pair[Num]) -> Bool
+//│ fun foo: (Pair[Num] | Object & ~#Pair) -> Bool
 
 
 // TODO proper error

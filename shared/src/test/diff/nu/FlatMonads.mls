@@ -103,7 +103,7 @@ printLine("").bind of [] => error
 //│ ╟── type `()` is not a 0-element tuple
 //│ ║  l.35: 	class printLine(str: Str) extends IO[undefined] { fun run = log(str) }
 //│ ╙──      	                                     ^^^^^^^^^
-//│ Bind[out (), 'B] | error
+//│ error | Bind[out (), 'B]
 //│ res
 //│     = Bind {}
 
@@ -116,7 +116,7 @@ printLine("").bind of () => error
 //│ ╟── type `[?A]` does not match type `[]`
 //│ ║  l.15: 	class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO[B] {
 //│ ╙──      	                                       ^
-//│ Bind[(), 'B] | error
+//│ error | Bind[(), 'B]
 //│ res
 //│     = Bind {}
 
@@ -284,7 +284,7 @@ fun loop(ctx) =
 //│ fun loop: forall 'a 'b 'c 'd. {
 //│   printLine: "Input a positive number: " -> {bind: (anything -> 'a) -> 'b},
 //│   pure: 'c -> 'd,
-//│   readInt: {bind: ((Num & 'c) -> ('d | 'b)) -> 'a}
+//│   readInt: {bind: ((Num & 'c) -> ('b | 'd)) -> 'a}
 //│ } -> 'b
 
 let r = loop(defaultCtx)
@@ -312,7 +312,7 @@ not(r)
 //│ ╟── but it flows into reference with expected type `Bool`
 //│ ║  l.305: 	not(r)
 //│ ╙──       	    ^
-//│ error | false | true
+//│ error | true | false
 //│ res
 //│     = false
 
@@ -365,7 +365,7 @@ let r = printLine("").bind of 0 => Pure(1)
 //│ ╟── Note: constraint arises from integer literal:
 //│ ║  l.358: 	let r = printLine("").bind of 0 => Pure(1)
 //│ ╙──       	                              ^
-//│ let r: Bind[in 0 & 'A out () | 'A, 'B] | error
+//│ let r: error | Bind[in 0 & 'A out () | 'A, 'B]
 //│   where
 //│     'B :> 1
 //│ r
@@ -391,7 +391,7 @@ Pure(1)
 //│ ╟── from reference:
 //│ ║  l.376: 	log(x.a)
 //│ ╙──       	    ^
-//│ let r: Bind[in {a: anything} & 'A out () | 'A, 'B] | error
+//│ let r: error | Bind[in {a: anything} & 'A out () | 'A, 'B]
 //│   where
 //│     'B :> 1
 //│ r

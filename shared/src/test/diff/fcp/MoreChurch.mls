@@ -143,10 +143,10 @@ pow_ty = pow
 //│       = [Function: pow1]
 
 def pow (n: ChurchInt) m = n (mul m) (succ_ty zero)
-//│ pow: ChurchInt -> ChurchInt -> (('a -> ('a & 'b)) -> ('b & 'a) -> 'b | ChurchInt)
+//│ pow: ChurchInt -> ChurchInt -> (ChurchInt | ('a -> ('a & 'b)) -> ('b & 'a) -> 'b)
 //│    = [Function: pow2]
 pow_ty = pow
-//│ ChurchInt -> ChurchInt -> (('a -> ('a & 'b)) -> ('b & 'a) -> 'b | ChurchInt)
+//│ ChurchInt -> ChurchInt -> (ChurchInt | ('a -> ('a & 'b)) -> ('b & 'a) -> 'b)
 //│   <:  pow_ty:
 //│ ChurchInt -> ChurchInt -> ChurchInt
 //│       = [Function: pow2]

@@ -13,16 +13,16 @@ def abs x =
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.12: 	  let r = x < 0 in absImpl r x
 //│ ║        	                   ^^^^^^^^^
-//│ ╟── operator application of type `bool` does not match type `false & ?a | true & ?b`
+//│ ╟── operator application of type `bool` does not match type `true & ?a | false & ?b`
 //│ ║  l.12: 	  let r = x < 0 in absImpl r x
 //│ ║        	          ^^^^^
-//│ ╟── but it flows into reference with expected type `false & ?a | true & ?b`
+//│ ╟── but it flows into reference with expected type `true & ?a | false & ?b`
 //│ ║  l.12: 	  let r = x < 0 in absImpl r x
 //│ ║        	                           ^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.3: 	  case lt of
 //│ ╙──     	       ^^
-//│ abs: int -> (error | int)
+//│ abs: int -> (int | error)
 //│    = [Function: abs]
 
 

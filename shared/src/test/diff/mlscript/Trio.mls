@@ -34,7 +34,7 @@ def arg: A | B | C
 
 :stats
 foo arg
-//│ res: bool | int | string
+//│ res: int | string | bool
 //│    = <no result>
 //│      arg is not implemented
 //│ constrain calls  : 37

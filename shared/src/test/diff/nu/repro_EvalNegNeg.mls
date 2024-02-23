@@ -20,7 +20,7 @@ mixin EvalBase {
 }
 //│ mixin EvalBase() {
 //│   this: {eval: 'a -> 'b & 'c -> Int}
-//│   fun eval: (Add['c] | Lit | Neg['c & (Neg['a] | Object & ~#Neg)]) -> (Int | 'b)
+//│   fun eval: (Neg['c & (Neg['a] | Object & ~#Neg)] | Lit | Add['c]) -> ('b | Int)
 //│ }
 
 // module TestLang extends EvalBase, EvalNeg
@@ -29,7 +29,7 @@ module TestLang extends EvalBase
 //│   fun eval: 'a -> Int
 //│ }
 //│ where
-//│   'a <: Add['a] | Lit | Neg['a & (Neg['a] | Object & ~#Neg)]
+//│   'a <: Neg['a & (Neg['a] | Object & ~#Neg)] | Lit | Add['a]
 
 
 fun mk(n) = if n is
@@ -47,6 +47,6 @@ TestLang.eval(mk(0))
 //│     = 0
 //│ constrain calls  : 179
 //│ annoying  calls  : 51
-//│ subtyping calls  : 1203
+//│ subtyping calls  : 1202
 
 

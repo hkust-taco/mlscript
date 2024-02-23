@@ -224,7 +224,7 @@ def apply_to_id f = f id
 test1 = apply_to_id step
 test2 = apply_to_id delta
 test2_ = apply_to_id delta_
-//│ step: ((0 | 1) -> int) -> int
+//│ step: ((1 | 0) -> int) -> int
 //│     = [Function: step]
 //│ apply_to_id: ((forall 'a. 'a -> 'a) -> 'b) -> 'b
 //│            = [Function: apply_to_id]
@@ -278,9 +278,9 @@ fun x -> fun y ->
 fun x -> fun y ->
   let isnil = x y in
     (isnil (cons 1 (cons 2 (cons 3 nil))), isnil nil, isnil (cons "ok" nil), isnil (cons true nil)) 
-//│ res: Id -> (List[1 | 2 | 3] -> 'a & List[nothing] -> 'b & List["ok"] -> 'c & List[true] -> 'd) -> ('a, 'b, 'c, 'd,)
+//│ res: Id -> (List[1 | 3 | 2] -> 'a & List[nothing] -> 'b & List["ok"] -> 'c & List[true] -> 'd) -> ('a, 'b, 'c, 'd,)
 //│    = [Function: res]
-//│ res: ('a -> (List[1 | 2 | 3] -> 'b & List[nothing] -> 'c & List["ok"] -> 'd & List[true] -> 'e)) -> 'a -> ('b, 'c, 'd, 'e,)
+//│ res: ('a -> (List[1 | 3 | 2] -> 'b & List[nothing] -> 'c & List["ok"] -> 'd & List[true] -> 'e)) -> 'a -> ('b, 'c, 'd, 'e,)
 //│    = [Function: res]
 
 // (*let t1 = f delta	
@@ -292,7 +292,7 @@ def partage x = choose id x
 def departage x = choose id (x : Id)
 //│ partage: 'a -> ('b -> 'b | 'a)
 //│        = [Function: partage]
-//│ departage: Id -> ('a -> 'a | Id)
+//│ departage: Id -> (Id | 'a -> 'a)
 //│          = [Function: departage]
 
 // let delta' = fun x -> (departage x) x
@@ -366,7 +366,7 @@ def ff_ = fun g ->
       let _ = ig (g t) in
       t succ
     ) (fun x -> succ (x 8))
-//│ ff_: (((Id & 8 -> int) -> (int | Id)) -> anything) -> int
+//│ ff_: (((Id & 8 -> int) -> (Id | int)) -> anything) -> int
 //│    = [Function: ff_]
 
 // let bigtest = ff aa
@@ -437,9 +437,9 @@ example_ mkpair
 rec def p = { x = cons 1 p.y; y = cons 2 p.x }
 def x = p.x
 def y = p.y
-//│ p: {x: List[1 | 2], y: List[1 | 2]}
+//│ p: {x: List[1 | 2], y: List[2 | 1]}
 //│ x: List[1 | 2]
-//│ y: List[1 | 2]
+//│ y: List[2 | 1]
 
 // let print_int x = print_string "#"; print_int x; print_string " "
 // let intprint x = print_int x

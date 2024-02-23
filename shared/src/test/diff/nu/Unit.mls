@@ -202,7 +202,7 @@ f of (1, 2)
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.181: 	fun f(x, y) = x + y
 //│ ╙──       	     ^^^^^^
-//│ Int | error
+//│ error | Int
 //│ res
 //│     = NaN
 
@@ -336,7 +336,7 @@ foo + 1
 //│ ║  l.326: 	foo + 1
 //│ ╙──       	^^^
 //│ fun foo: ()
-//│ Int | error
+//│ error | Int
 //│ res
 //│     = NaN
 

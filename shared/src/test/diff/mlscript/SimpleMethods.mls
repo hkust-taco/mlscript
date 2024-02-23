@@ -13,11 +13,11 @@ class C0
 //│ ║  l.4: 	  method Foo0[A](a: A) = a + 1
 //│ ╙──     	              ^
 //│ Defined class C0
-//│ Defined C0.Foo0: C0 -> anything -> (error | int)
+//│ Defined C0.Foo0: C0 -> anything -> (int | error)
 //│ Defined C0.Foo1: C0 -> 'A -> {a: 'A}
 
 (C0{}).Foo0
-//│ res: anything -> (error | int)
+//│ res: anything -> (int | error)
 //│    = [Function: Foo0]
 
 f1 = (C0{}).Foo1
@@ -68,7 +68,7 @@ class C5[A]
 //│ ║  l.59: 	class C5[A]
 //│ ╙──      	         ^
 //│ Defined class C5[-A]
-//│ Defined C5.F: C5['A] -> 'A -> (error | int)
+//│ Defined C5.F: C5['A] -> 'A -> (int | error)
 
 
 :w

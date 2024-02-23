@@ -116,7 +116,7 @@ class Goodstatt(size: 1 | 2) extends RefinedStadt {
 }
 //│ class Goodstatt(size: 1 | 2) extends RefinedStadt, Stadt {
 //│   fun bar: forall 'a. 'a -> 'a
-//│   fun foo: Bool -> (0 | 1 | 2)
+//│   fun foo: Bool -> (1 | 2 | 0)
 //│   let name: "good"
 //│ }
 
@@ -195,7 +195,7 @@ mixin Fooo {
 //│ }
 
 class Grassberg(name: "grass" | "GRASS") extends More, SizedStadt, Fooo
-//│ class Grassberg(name: "GRASS" | "grass") extends RefinedStadt, SizedStadt, Stadt {
+//│ class Grassberg(name: "grass" | "GRASS") extends RefinedStadt, SizedStadt, Stadt {
 //│   fun bar: forall 'a. 'a -> 'a
 //│   fun foo: anything -> 0
 //│   fun more: Num -> Bool
@@ -333,11 +333,11 @@ trait T2 {
     let bar : Int | Bool
 }
 //│ trait T1 {
-//│   fun bar: Str | false | true
+//│   fun bar: Str | true | false
 //│   let foo: 1 | 2 | 3
 //│ }
 //│ trait T2 {
-//│   let bar: Int | false | true
+//│   let bar: Int | true | false
 //│   let foo: 2 | 3 | 4
 //│ }
 
@@ -393,7 +393,7 @@ class C2(foo: Int, bar: Str) extends T4
 //│ ╔══[ERROR] Type mismatch in type reference:
 //│ ║  l.382: 	class C2(foo: Int, bar: Str) extends T4
 //│ ║         	                        ^^^
-//│ ╟── type `Str` does not match type `Int | false | true`
+//│ ╟── type `Str` does not match type `Int | true | false`
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.333: 	    let bar : Int | Bool
 //│ ║         	              ^^^^^^^^^^

@@ -7,7 +7,7 @@ class Foo(x)
 //│    = [Function: Foo1]
 
 if 1 is 1 then 1 else 0
-//│ res: 0 | 1
+//│ res: 1 | 0
 //│    = 1
 
 fun test(x) = if x is 1 then 0 else 1
@@ -37,7 +37,7 @@ class Bar(y, z)
 fun test(f) = if f is
   Foo(a) then a
   Bar(b, c) then b + c
-//│ test: (Bar & {y: int, z: int} | Foo & {x: 'x}) -> (int | 'x)
+//│ test: (Foo & {x: 'x} | Bar & {y: int, z: int}) -> ('x | int)
 //│     = [Function: test1]
 
 
@@ -52,7 +52,7 @@ fun f(x) =
     Pair(1, 1) then "ones"
     Pair(y, 1) then x
     _          then "nah"
-//│ f: (Pair & 'a | ~Pair) -> ("nah" | "ones" | "zeros" | 'a)
+//│ f: (Pair & 'a | ~Pair) -> ("zeros" | 'a | "nah" | "ones")
 //│  = [Function: f]
 
 class Z()
@@ -110,7 +110,7 @@ fun foo(x) = if x is
       Z() then "zeros"
     O() then if b is
       O() then "ones"
-//│ foo: (Pair & {fst: O | Z, snd: nothing}) -> ("ones" | "zeros")
+//│ foo: (Pair & {fst: Z | O, snd: nothing}) -> ("zeros" | "ones")
 //│    = [Function: foo2]
 
 fun foo(x) = if x is
@@ -120,7 +120,7 @@ fun foo(x) = if x is
       else "???"
     O() then if b is
       O() then "ones"
-//│ foo: (Pair & {fst: O | Z, snd: O}) -> ("???" | "ones" | "zeros")
+//│ foo: (Pair & {fst: Z | O, snd: O}) -> ("zeros" | "???" | "ones")
 //│    = [Function: foo3]
 
 fun foo(x) = if x is
@@ -131,7 +131,7 @@ fun foo(x) = if x is
     O() then if b is
       O() then "zeros"
       else "???"
-//│ foo: (Pair & {fst: O | Z}) -> ("???" | "zeros")
+//│ foo: (Pair & {fst: Z | O}) -> ("zeros" | "???")
 //│    = [Function: foo4]
 
 class S(pred)
@@ -148,7 +148,7 @@ fun foo(x) = if x is
     O() then if b is
       O() then "zeros"
       else "???"
-//│ foo: (Pair & {fst: O | Z, snd: S & {pred: 'pred} | ~S}) -> ("???" | "zeros" | 'pred)
+//│ foo: (Pair & {fst: Z | O, snd: S & {pred: 'pred} | ~S}) -> ('pred | "???" | "zeros")
 //│    = [Function: foo5]
 
 foo(Pair(Z(), Z()))

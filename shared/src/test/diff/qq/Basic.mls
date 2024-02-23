@@ -210,7 +210,7 @@ run(v)
 //│ ║  l.208: 	run(v)
 //│ ║         	^^^^^^
 //│ ╙── expression of type `anything` does not match type `nothing`
-//│ Int | error
+//│ error | Int
 
 
 let x = code"1"

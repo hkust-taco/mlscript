@@ -116,7 +116,7 @@ f htx
 
 
 g arg = case arg of { Hey -> arg.x | _ -> () }
-//│ g: ({x: 'x} & #Hey | ~#Hey) -> (() | 'x)
+//│ g: ({x: 'x} & #Hey | ~#Hey) -> ('x | ())
 //│  = [Function: g]
 
 g htx
@@ -147,24 +147,24 @@ g tx
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.130: 	g arg = case arg of { Hey -> arg.x | _ -> arg.y }
 //│ ╙──       	                                          ^^^^^
-//│ res: 1 | error
+//│ res: error | 1
 //│    = 1
 
 :ge
 if bool then (1,) else (2,)
-//│ res: (1 | 2,)
+//│ res: (2 | 1,)
 //│ Code generation encountered an error:
 //│   type alias bool is not a valid expression
 
 :ge
 if bool then (1,) else (2, 3)
-//│ res: Array[1 | 2 | 3] & {0: 1 | 2}
+//│ res: Array[2 | 3 | 1] & {0: 2 | 1}
 //│ Code generation encountered an error:
 //│   type alias bool is not a valid expression
 
 :ge
 if bool then (1,) with { a = 1; b = 2 } else (2, 3) with { b = 3; c = 4 }
-//│ res: Array[1 | 2 | 3] & {0: 1 | 2, b: 2 | 3}
+//│ res: Array[2 | 3 | 1] & {0: 2 | 1, b: 3 | 2}
 //│ Code generation encountered an error:
 //│   type alias bool is not a valid expression
 
@@ -244,7 +244,7 @@ a = (if true then (0, 1) else (2, 1, 2))[1]
 
 case a of
   undefined -> 0, _ -> a
-//│ res: 0 | 1 | 2
+//│ res: 0 | 2 | 1
 //│    = 1
 
 

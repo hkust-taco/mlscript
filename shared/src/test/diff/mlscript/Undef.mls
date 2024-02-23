@@ -8,13 +8,13 @@ undef = Undef{}
 
 
 def example: int | Undef
-//│ example: Undef | int
+//│ example: int | Undef
 //│        = <missing implementation>
 
 example = if true then undef else 42
 //│ 42 | Undef
 //│   <:  example:
-//│ Undef | int
+//│ int | Undef
 //│        = Undef {}
 
 def qmrk_qmrk lhs rhs = case lhs of { Undef -> rhs | _ -> lhs }

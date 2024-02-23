@@ -44,7 +44,7 @@ def a0' = a2' a1'
 //│ ╟── back into type variable `'a`
 //│ ║  l.4: 	type Sid = forall 'a. 'a -> 'a
 //│ ╙──     	                            ^^
-//│ a0': 0 | error
+//│ a0': error | 0
 //│    = <no result>
 //│      a1' is not implemented
 

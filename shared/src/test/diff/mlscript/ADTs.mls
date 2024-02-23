@@ -36,7 +36,7 @@ rec def eval e = case e of {
   }
 //│ eval: 'a -> int
 //│   where
-//│     'a <: Add[?] & {lhs: 'a, rhs: 'a} | Lit | Nega[?] & {arg: 'a}
+//│     'a <: Lit | Add[?] & {lhs: 'a, rhs: 'a} | Nega[?] & {arg: 'a}
 //│     = [Function: eval]
 
 ex = add (lit 2) (lit 2)
@@ -56,13 +56,13 @@ def e: Add['e] as 'e
 def e: Lit | Add['e] as 'e
 //│ e: 'e
 //│   where
-//│     'e :> Add['e] | Lit
+//│     'e :> Lit | Add['e]
 //│  = <missing implementation>
 
 def e: Lit | Add['e] | Nega['e] as 'e
 //│ e: 'e
 //│   where
-//│     'e :> Add['e] | Lit | Nega['e]
+//│     'e :> Lit | Add['e] | Nega['e]
 //│  = <missing implementation>
 
 e = ex
@@ -70,7 +70,7 @@ e = ex
 //│   <:  e:
 //│ 'e
 //│   where
-//│     'e :> Add['e] | Lit | Nega['e]
+//│     'e :> Lit | Add['e] | Nega['e]
 //│  = Add { lhs: Lit { val: 2 }, rhs: Lit { val: 2 } }
 
 eval e
@@ -102,10 +102,10 @@ eval exp
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+2: 	eval exp
 //│ ║        	^^^^^^^^
-//│ ╟── type `Array[Automata] -> Array[Binding]` does not match type `Add[?] & ?a | Lit & ?b | Nega[?] & ?c`
+//│ ╟── type `Array[Automata] -> Array[Binding]` does not match type `Lit & ?a | Add[?] & ?b | Nega[?] & ?c`
 //│ ║  l.+1: 	def exp: Array[Automata] -> Array[Binding]
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `Add[?] & ?d | Lit & ?e | Nega[?] & ?f`
+//│ ╟── but it flows into reference with expected type `Lit & ?d | Add[?] & ?e | Nega[?] & ?f`
 //│ ║  l.+2: 	eval exp
 //│ ║        	     ^^^
 //│ ╟── Note: constraint arises from reference:
@@ -127,7 +127,7 @@ eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int` does not match type `Add[?] & ?a | Lit & ?b | Nega[?] & ?c`
+//│ ╟── type `int` does not match type `Lit & ?a | Add[?] & ?b | Nega[?] & ?c`
 //│ ║  l.+1: 	eval (e : Lit | Add['e] | Nega[int] as 'e)
 //│ ║        	                               ^^^
 //│ ╟── Note: constraint arises from reference:

@@ -8,29 +8,29 @@
 (mut 1, mut 2): MutArray['a]
 //│ res: MutArray['a]
 //│   where
-//│     'a :> 1 | 2
+//│     'a :> 2 | 1
 //│    = [ 1, 2 ]
 
 ((fun t -> let tmp = t.0 <- 3 in t) ((mut 1, mut 2))): MutArray['a]
 //│ res: MutArray['a]
 //│   where
-//│     'a :> 1 | 2 | 3
+//│     'a :> 2 | 3 | 1
 //│    = [ 3, 2 ]
 
 ((fun t -> let tmp = t.0 + 1 in t) ((mut 1, mut 2))): MutArray['a]
 //│ res: MutArray[in 'a & 'b out 'b]
 //│   where
 //│     'a <: int & 'b
-//│     'b :> 1 | 2
+//│     'b :> 2 | 1
 //│        <: 'a
 //│    = [ 1, 2 ]
 
 if true then (mut 1,) else (mut 2,)
-//│ res: (mut in 'a out 1 | 2 | 'a,)
+//│ res: (mut in 'a out 1 | 'a | 2,)
 //│    = [ 1 ]
 
 if true then (mut 1, mut 2) else (mut 3, mut 4)
-//│ res: (mut in 'a out 1 | 3 | 'a, mut in 'b out 2 | 4 | 'b,)
+//│ res: (mut in 'a out 1 | 'a | 3, mut in 'b out 2 | 'b | 4,)
 //│    = [ 1, 2 ]
 
 def t1: (mut 1, mut 2)
@@ -41,7 +41,7 @@ def t2: (mut 3, mut 4)
 //│   = <missing implementation>
 
 r = if true then t1 else t2
-//│ r: (mut out 1 | 3, mut out 2 | 4,)
+//│ r: (mut out 3 | 1, mut out 4 | 2,)
 //│  = <no result>
 //│    t1 is not implemented
 
@@ -71,7 +71,7 @@ def t2: (mut 2 | 3 | 4)
 //│   = <missing implementation>
 
 r = if true then t1 else t2
-//│ r: (mut in 2 | 3 out 1 | 2 | 3 | 4,)
+//│ r: (mut in 2 | 3 out 2 | 3 | 4 | 1,)
 //│  = <no result>
 //│    t1 is not implemented
 

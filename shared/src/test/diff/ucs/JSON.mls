@@ -84,7 +84,7 @@ fun par(a) = concat3("(", a, ")")
 type Option[A] = Some[A] | None
 module None
 class Some[A](value: A)
-//│ type Option[A] = None | Some[A]
+//│ type Option[A] = Some[A] | None
 //│ module None
 //│ class Some[A](value: A)
 
@@ -104,8 +104,8 @@ fun listJoin(xs, sep) =
 //│ type List[A] = Cons[A] | Nil
 //│ module Nil
 //│ class Cons[A](head: A, tail: List[A])
-//│ fun listConcat: forall 'A 'A0 'a. (Cons['A] | Nil, List['A0] & 'a) -> (Cons['A0] | 'a)
-//│ fun listJoin: forall 'A1. (Cons['A1] | Nil, Str) -> Str
+//│ fun listConcat: forall 'A 'A0 'a. (Nil | Cons['A], List['A0] & 'a) -> ('a | Cons['A0])
+//│ fun listJoin: forall 'A1. (Nil | Cons['A1], Str) -> Str
 //│ where
 //│   'A <: 'A0
 
@@ -131,12 +131,12 @@ fun traverse(t, f) =
     Empty then Nil
     Node(key, value, left, right) then
       listConcat(traverse(left, f), Cons(f(key, value), traverse(right, f)))
-//│ type TreeMap[A] = Empty | Node[A]
+//│ type TreeMap[A] = Node[A] | Empty
 //│ module Empty
 //│ class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
-//│ fun insert: forall 'A. (Empty | Node['A], Str, 'A) -> Node['A]
-//│ fun find: forall 'A0. (Empty | Node['A0], Str) -> (None | Some['A0])
-//│ fun traverse: forall 'a 'A1. (Empty | Node['a], (Str, 'a) -> 'A1) -> (Cons['A1] | Nil)
+//│ fun insert: forall 'A. (Node['A] | Empty, Str, 'A) -> Node['A]
+//│ fun find: forall 'A0. (Node['A0] | Empty, Str) -> (None | Some['A0])
+//│ fun traverse: forall 'a 'A1. (Empty | Node['a], (Str, 'a) -> 'A1) -> (Nil | Cons['A1])
 
 type JsonValue = JsonNull | JsonNumber | JsonString | JsonBoolean | JsonObject | JsonArray
 module JsonNull {
@@ -159,7 +159,7 @@ class JsonObject(entries: TreeMap[JsonValue]) {
 class JsonArray(elements: List[JsonValue]) {
   fun toString() = concat3("[", listJoin(elements, ", "), "]")
 }
-//│ type JsonValue = JsonArray | JsonBoolean | JsonNull | JsonNumber | JsonObject | JsonString
+//│ type JsonValue = JsonNull | JsonNumber | JsonString | JsonBoolean | JsonObject | JsonArray
 //│ module JsonNull {
 //│   fun toString: () -> "null"
 //│ }
@@ -231,7 +231,7 @@ class ParseSuccess[T](value: T, scanner: Scanner) {
 class ParseFailure(message: Str, scanner: Scanner) {
   fun toString() = concat4("Failure at ", getStringOf(scanner.at), ": ", message)
 }
-//│ type ParseResult[T] = ParseFailure | ParseSuccess[T]
+//│ type ParseResult[T] = ParseSuccess[T] | ParseFailure
 //│ class ParseSuccess[T](value: T, scanner: Scanner) {
 //│   fun toString: () -> Str
 //│ }
@@ -245,7 +245,7 @@ fun expect(scanner, ch) =
       eq(ch)(ch') then ParseSuccess((), scanner.advance)
       else ParseFailure(concat4("expect '", ch, "' but found ", ch'), scanner)
     None then ParseFailure(concat3("expect '", ch, "' but found EOF"), scanner)
-//│ fun expect: forall 'T. (Scanner & {advance: Scanner}, Str) -> (ParseFailure | ParseSuccess['T])
+//│ fun expect: forall 'T. (Scanner & {advance: Scanner}, Str) -> (ParseSuccess['T] | ParseFailure)
 //│   where
 //│     'T :> ()
 
@@ -262,7 +262,7 @@ fun expectWord(scanner, word, result) =
         ParseFailure(concat3("there should not be other alphabets after\"", word, "\""), scanner)
       else
         ParseSuccess(result, scanner)
-//│ fun expectWord: forall 'T. (Scanner & {peek: Object & ~#Some | Some[anything], advance: Scanner}, Str, 'T) -> (ParseFailure | ParseSuccess['T])
+//│ fun expectWord: forall 'T. (Scanner & {peek: Some[anything] | Object & ~#Some, advance: Scanner}, Str, 'T) -> (ParseFailure | ParseSuccess['T])
 
 // If we put this function together with the next block, there will be type
 // mismatch errors.
@@ -272,7 +272,7 @@ fun parseMatched(scanner, closingSymbol, parse, fn) =
       ParseSuccess(_, scanner) then ParseSuccess(fn(outcome), scanner)
       ParseFailure(message, scanner) then ParseFailure(message, scanner)
     ParseFailure(message, scanner) then ParseFailure(message, scanner)
-//│ fun parseMatched: forall 'advance 'a 'T. ({advance: 'advance}, Str, 'advance -> (ParseFailure | ParseSuccess['a]), 'a -> 'T) -> (ParseFailure | ParseSuccess['T])
+//│ fun parseMatched: forall 'advance 'a 'T. ({advance: 'advance}, Str, 'advance -> (ParseSuccess['a] | ParseFailure), 'a -> 'T) -> (ParseSuccess['T] | ParseFailure)
 
 :ng
 fun parseEntries(scanner): ParseResult[TreeMap[JsonValue]] = error

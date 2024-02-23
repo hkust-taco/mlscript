@@ -23,7 +23,7 @@ module Block
 fun println(x: anything): Effectful[(), IO]
 fun readLine: Effectful[Str, IO | Block]
 //│ fun println: (x: anything) -> Effectful[(), IO]
-//│ fun readLine: Effectful[Str, Block | IO]
+//│ fun readLine: Effectful[Str, IO | Block]
 
 
 // * Define NonBlocking as an effectful computation that does not block (using type-level difference `\`)
@@ -55,7 +55,7 @@ onMousePressed(event => readLine.flatMap(println))
 //│ ╟── type `Block` does not match type `~Block`
 //│ ║  l.24: 	fun readLine: Effectful[Str, IO | Block]
 //│ ╙──      	                                  ^^^^^
-//│ Effectful[(), IO & ~Block] | error
+//│ error | Effectful[(), IO & ~Block]
 
 
 class Event
@@ -95,6 +95,6 @@ onMouseClick of ev =>
 //│ ╟── type `Register` does not match type `~Register`
 //│ ║  l.78: 	fun onMouseClick(f: Event -> Effectful[(), 'e \ Register]): Effectful[(), Register]
 //│ ╙──      	                                                                          ^^^^^^^^
-//│ Effectful[(), Register] | error
+//│ error | Effectful[(), Register]
 
 

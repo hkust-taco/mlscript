@@ -83,7 +83,7 @@ f([1, 2])
 //│ ╟── Note: constraint arises from tuple literal:
 //│ ║  l.65: 	let f = (x, y) => x + y
 //│ ╙──      	         ^^^^
-//│ Int | error
+//│ error | Int
 //│ res
 //│     = '1,2undefined'
 
@@ -112,7 +112,7 @@ f(1, 2)
 //│ ╟── argument list of type `[1, 2]` does not match type `[error]`
 //│ ║  l.108: 	f(1, 2)
 //│ ╙──       	 ^^^^^^
-//│ Int | error
+//│ error | Int
 //│ res
 //│ Runtime error:
 //│   ReferenceError: f5 is not defined
@@ -172,7 +172,7 @@ f(1, 2)
 //│ ╟── argument list of type `[1, 2]` does not match type `[[?a, ?b]]`
 //│ ║  l.168: 	f(1, 2)
 //│ ╙──       	 ^^^^^^
-//│ Int | error
+//│ error | Int
 //│ res
 //│ Runtime error:
 //│   TypeError: number 1 is not iterable (cannot read property Symbol(Symbol.iterator))
@@ -201,7 +201,7 @@ f(1, 2)
 //│ ╟── argument list of type `[1, 2]` does not match type `[[?a, ?b]]`
 //│ ║  l.197: 	f(1, 2)
 //│ ╙──       	 ^^^^^^
-//│ Int | error
+//│ error | Int
 //│ res
 //│ Runtime error:
 //│   TypeError: number 1 is not iterable (cannot read property Symbol(Symbol.iterator))
@@ -220,7 +220,7 @@ f([[1, 2]])
 //│ ╟── tuple literal of type `[1, 2]` does not match type `[[?a, ?b]]`
 //│ ║  l.216: 	f([[1, 2]])
 //│ ╙──       	   ^^^^^^
-//│ Int | error
+//│ error | Int
 //│ res
 //│ Runtime error:
 //│   TypeError: number 1 is not iterable (cannot read property Symbol(Symbol.iterator))

@@ -31,7 +31,7 @@ foo(1) // returns int & bool, equivalent to nothing
 succ / foo(1)
 foo(true)
 not / foo(true)
-//│ res: bool | int
+//│ res: int | bool
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.31: 	succ / foo(1)
 //│ ║        	^^^^^^^^^^^^^
@@ -42,7 +42,7 @@ not / foo(true)
 //│ ║  l.31: 	succ / foo(1)
 //│ ╙──      	       ^^^^^^
 //│ res: error | int
-//│ res: bool | int
+//│ res: int | bool
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.33: 	not / foo(true)
 //│ ║        	^^^^^^^^^^^^^^^
@@ -52,7 +52,7 @@ not / foo(true)
 //│ ╟── but it flows into application with expected type `bool`
 //│ ║  l.33: 	not / foo(true)
 //│ ╙──      	      ^^^^^^^^^
-//│ res: bool | error
+//│ res: error | bool
 
 :e
 not / foo(1)
@@ -66,7 +66,7 @@ foo(1) as Nothing
 //│ ╟── but it flows into application with expected type `bool`
 //│ ║  l.58: 	not / foo(1)
 //│ ╙──      	      ^^^^^^
-//│ res: bool | error
+//│ res: error | bool
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.59: 	foo(1) as Nothing
 //│ ║        	^^^^^^^^^^^^^^^^^

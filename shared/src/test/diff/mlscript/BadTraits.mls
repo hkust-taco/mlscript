@@ -48,7 +48,7 @@ T a
 //│ ╟── Note: class A is defined at:
 //│ ║  l.1: 	class A
 //│ ╙──     	      ^
-//│ res: A & #T | error
+//│ res: error | A & #T
 //│    = A {}
 
 :e
@@ -92,7 +92,7 @@ T (B {})
 //│ ╟── Note: class B is defined at:
 //│ ║  l.2: 	class B
 //│ ╙──     	      ^
-//│ res: B & #T | error
+//│ res: error | B & #T
 //│    = B {}
 
 :re

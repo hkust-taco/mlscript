@@ -20,7 +20,7 @@ Undefined2 { x = "I am here to make a type mismatch." }
 //│ ╟── Note: constraint arises from literal type:
 //│ ║  l.1: 	class Undefined2: { x: undefined }
 //│ ╙──     	                       ^^^^^^^^^
-//│ res: (Undefined2 with {x: "I am here to make a type mismatch."}) | error
+//│ res: error | (Undefined2 with {x: "I am here to make a type mismatch."})
 //│    = Undefined2 { x: 'I am here to make a type mismatch.' }
 
 :e
@@ -123,11 +123,11 @@ bar "undefined"
 //│    = 'undefined'
 
 case (undefined) of { undefined -> "undefined it is" | null -> "null it is"}
-//│ res: "null it is" | "undefined it is"
+//│ res: "undefined it is" | "null it is"
 //│    = 'undefined it is'
 
 case (null) of { undefined -> "undefined it is" | null -> "null it is" }
-//│ res: "null it is" | "undefined it is"
+//│ res: "undefined it is" | "null it is"
 //│    = 'null it is'
 
 

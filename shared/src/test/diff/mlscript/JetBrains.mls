@@ -12,26 +12,26 @@ rec def eval x = case x of {
   }
 //│ eval: 'a -> int
 //│   where
-//│     'a <: (Add with {lhs: 'a, rhs: 'a}) | Lit
+//│     'a <: Lit | (Add with {lhs: 'a, rhs: 'a})
 //│     = [Function: eval]
 
 def eval eval x = case x of {
   Lit -> x.val
   | Add -> eval eval x.lhs + eval eval x.rhs
   }
-//│ eval: ('a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'lhs}) | (Lit with {val: 'val})) -> (int | 'val)
+//│ eval: ('a -> 'lhs -> int & 'a) -> ((Lit with {val: 'val}) | (Add with {lhs: 'lhs, rhs: 'lhs})) -> ('val | int)
 //│     = [Function: eval1]
 
 eval eval!
-//│ res: ((Add with {lhs: 'a, rhs: 'a}) | (Lit with {val: 'val})) -> (int | 'val)
+//│ res: ((Lit with {val: 'val}) | (Add with {lhs: 'a, rhs: 'a})) -> ('val | int)
 //│   where
-//│     'a <: (Add with {lhs: 'a, rhs: 'a}) | Lit
+//│     'a <: Lit | (Add with {lhs: 'a, rhs: 'a})
 //│    = [Function (anonymous)]
 
 eval eval!
-//│ res: ((Add with {lhs: 'a, rhs: 'a}) | (Lit with {val: 'val})) -> (int | 'val)
+//│ res: ((Lit with {val: 'val}) | (Add with {lhs: 'a, rhs: 'a})) -> ('val | int)
 //│   where
-//│     'a <: (Add with {lhs: 'a, rhs: 'a}) | Lit
+//│     'a <: Lit | (Add with {lhs: 'a, rhs: 'a})
 //│    = [Function (anonymous)]
 
 class Neg: Expr & { underlying: Expr }
@@ -41,13 +41,13 @@ def evalN evalN x = case x of {
   Neg -> 0 - (evalN evalN x.underlying)
   | _ -> eval evalN x
   }
-//│ evalN: ('a -> 'underlying -> int & 'a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'lhs}) | (Lit with {val: 'val}) | (Neg with {underlying: 'underlying})) -> (int | 'val)
+//│ evalN: ('a -> 'underlying -> int & 'a -> 'lhs -> int & 'a) -> ((Neg with {underlying: 'underlying}) | (Lit with {val: 'val}) | (Add with {lhs: 'lhs, rhs: 'lhs})) -> (int | 'val)
 //│      = [Function: evalN]
 
 evalN evalN!
-//│ res: ((Add with {lhs: 'a, rhs: 'a}) | (Lit with {val: 'val}) | (Neg with {underlying: 'a})) -> (int | 'val)
+//│ res: ((Neg with {underlying: 'a}) | (Lit with {val: 'val}) | (Add with {lhs: 'a, rhs: 'a})) -> (int | 'val)
 //│   where
-//│     'a <: (Add with {lhs: 'a, rhs: 'a}) | Lit | (Neg with {underlying: 'a})
+//│     'a <: (Neg with {underlying: 'a}) | Lit | (Add with {lhs: 'a, rhs: 'a})
 //│    = [Function (anonymous)]
 
 e = Add{lhs = Lit{val = 1}; rhs = Neg{underlying = Lit{val = 2}}}
@@ -74,15 +74,15 @@ def evalN2 evalN2 x = case x of {
   Neg -> 0 - (evalN2 evalN2 x.underlying)
   | _ -> eval eval! x
   }
-//│ evalN2: ('a -> 'underlying -> int & 'a) -> ((Add with {lhs: 'b, rhs: 'b}) | (Lit with {val: 'val}) | (Neg with {underlying: 'underlying})) -> (int | 'val)
+//│ evalN2: ('a -> 'underlying -> int & 'a) -> ((Neg with {underlying: 'underlying}) | (Lit with {val: 'val}) | (Add with {lhs: 'b, rhs: 'b})) -> (int | 'val)
 //│   where
-//│     'b <: (Add with {lhs: 'b, rhs: 'b}) | Lit
+//│     'b <: Lit | (Add with {lhs: 'b, rhs: 'b})
 
 evalN2 evalN2! e
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	evalN2 evalN2! e
 //│ ║        	^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Neg & {underlying: ?underlying}` does not match type `Add & ?a | Lit & ?b`
+//│ ╟── application of type `Neg & {underlying: ?underlying}` does not match type `Lit & ?a | Add & ?b`
 //│ ║  l.53: 	e = Add{lhs = Lit{val = 1}; rhs = Neg{underlying = Lit{val = 2}}}
 //│ ║        	                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -113,13 +113,13 @@ def evalN3 evalN3 x = case x of {
 //│ ╟── but it flows into application with expected type `int`
 //│ ║  l.+2: 	  Neg -> 0 - (evalN2 x.underlying)
 //│ ╙──      	              ^^^^^^^^^^^^^^^^^^^
-//│ evalN3: ('a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'lhs}) | (Lit with {val: 'val}) | (Neg with {underlying: 'b -> nothing -> int & 'b})) -> (error | int | 'val)
+//│ evalN3: ('a -> 'lhs -> int & 'a) -> ((Neg with {underlying: 'b -> nothing -> int & 'b}) | (Lit with {val: 'val}) | (Add with {lhs: 'lhs, rhs: 'lhs})) -> (error | int | 'val)
 
 def evalN3 evalN3 x = case x of {
   Neg -> 0 - (evalN3 x.underlying)
   | _ -> eval evalN3 x
   }
-//│ evalN3: ('underlying -> int & 'a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'lhs}) | (Lit with {val: 'val}) | (Neg with {underlying: 'underlying})) -> (int | 'val)
+//│ evalN3: ('underlying -> int & 'a -> 'lhs -> int & 'a) -> ((Neg with {underlying: 'underlying}) | (Lit with {val: 'val}) | (Add with {lhs: 'lhs, rhs: 'lhs})) -> (int | 'val)
 
 evalN3 evalN3! e
 //│ ╔══[ERROR] Type mismatch in application:

@@ -88,7 +88,7 @@ x => succ (not x)
 //│ ╟── from field selection:
 //│ ║  l.+1: 	(x => not x.f) { f: 123 }
 //│ ╙──      	           ^^
-//│ res: bool | error
+//│ res: error | bool
 
 :e
 (f => x => not (f x.u)) false
@@ -220,12 +220,12 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ res: error | anything -> anything -> anything -> 'a
+//│ res: anything -> anything -> anything -> 'a | error
 //│   where
 //│     'a :> forall 'a. anything -> 'a
 
 res 1 2
-//│ res: error | anything -> 'a
+//│ res: anything -> 'a | error
 //│   where
 //│     'a :> forall 'a. anything -> 'a
 
@@ -395,7 +395,7 @@ let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
 //│     'a :> 'a -> 'a
 //│ res: ({u: 'u} & 'a) -> ('u | 'a) | 'b
 //│   where
-//│     'a :> forall 'u. ({u: 'u} & 'a) -> ('u | 'a)
+//│     'a :> forall 'u. ({u: 'u} & 'a) -> ('a | 'u)
 //│        <: 'b
 
 :ns

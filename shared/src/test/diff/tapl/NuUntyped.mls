@@ -36,7 +36,7 @@ class Some[out A](value: A) {
 module None {
   fun toString() = "None"
 }
-//│ type Option[A] = None | Some[A]
+//│ type Option[A] = Some[A] | None
 //│ class Some[A](value: A) {
 //│   fun toString: () -> Str
 //│ }
@@ -75,13 +75,13 @@ fun findFirst(list, p) =
     Cons(x, xs) and
       p(x) then Some(x)
       else findFirst(xs, p)
-//│ fun findFirst: forall 'A. (Cons['A] | Nil, 'A -> Object) -> (None | Some['A])
+//│ fun findFirst: forall 'A. (Nil | Cons['A], 'A -> Object) -> (Some['A] | None)
 
 fun listConcat(xs, ys) =
   if xs is
     Nil then ys
     Cons(x, xs') then Cons(x, listConcat(xs', ys))
-//│ fun listConcat: forall 'A 'A0 'a. (Cons['A] | Nil, List['A0] & 'a) -> (Cons['A0] | 'a)
+//│ fun listConcat: forall 'A 'A0 'a. (Nil | Cons['A], List['A0] & 'a) -> ('a | Cons['A0])
 //│   where
 //│     'A <: 'A0
 
@@ -91,7 +91,7 @@ fun listContains(xs, x) =
     Cons(x', xs') and
       eq(x)(x') then true
       _ then listContains(xs', x)
-//│ fun listContains: forall 'A. (Cons['A] | Nil, anything) -> Bool
+//│ fun listContains: forall 'A. (Nil | Cons['A], anything) -> Bool
 
 // Remove all occurrences of x from xs.
 fun listWithout(xs, x) =
@@ -100,7 +100,7 @@ fun listWithout(xs, x) =
     Cons(x', xs') and
       eq(x)(x') then listWithout(xs', x)
       _ then Cons(x', listWithout(xs', x))
-//│ fun listWithout: forall 'A 'A0. (Cons['A] | Nil, anything) -> (Cons['A0] | Nil)
+//│ fun listWithout: forall 'A 'A0. (Nil | Cons['A], anything) -> (Nil | Cons['A0])
 //│   where
 //│     'A <: 'A0
 
@@ -111,7 +111,7 @@ fun listJoin(xs, sep) =
     Nil then ""
     Cons(x, Nil) then toString(x)
     Cons(x, xs') then toString(x) ++ sep ++ listJoin(xs', sep)
-//│ fun listJoin: forall 'A. (Cons['A] | Nil, Str) -> Str
+//│ fun listJoin: forall 'A. (Nil | Cons['A], Str) -> Str
 
 fun listJoin(xs, sep) =
   if xs is
@@ -119,7 +119,7 @@ fun listJoin(xs, sep) =
     Cons(x, xs') and xs' is
       Nil then toString(x)
       _ then toString(x) ++ sep ++ listJoin(xs', sep)
-//│ fun listJoin: forall 'A. (Cons['A] | Nil, Str) -> Str
+//│ fun listJoin: forall 'A. (Nil | Cons['A], Str) -> Str
 
 listJoin(list3("x", "y", "z"), ", ")
 //│ Str
@@ -130,7 +130,7 @@ type Term = Var | Abs | App
 class Var(name: Str)
 class Abs(lhs: Var, rhs: Term)
 class App(lhs: Term, rhs: Term)
-//│ type Term = Abs | App | Var
+//│ type Term = Var | Abs | App
 //│ class Var(name: Str)
 //│ class Abs(lhs: Var, rhs: Term)
 //│ class App(lhs: Term, rhs: Term)
@@ -142,7 +142,7 @@ fun showTerm(t) =
     App(Abs(lhs0, lhs1), rhs) then
       "((" ++ "&" ++ showTerm(lhs0) ++ ". " ++ showTerm(lhs1) ++ ") " ++ showTerm(rhs) ++ ")"
     App(lhs, rhs) then par(showTerm(lhs) ++ " " ++ showTerm(rhs))
-//│ fun showTerm: (Abs | App | Var) -> Str
+//│ fun showTerm: (Var | Abs | App) -> Str
 
 showTerm(Var("x"))
 showTerm(Abs(Var("x"), Var("y")))
@@ -163,7 +163,7 @@ fun isValue(t) =
     Var then true
     Abs then true
     App then false
-//│ fun isValue: (Abs | App | Var) -> Bool
+//│ fun isValue: (Var | Abs | App) -> Bool
 
 isValue(Var("x"))
 isValue(Abs(Var("x"), Var("y")))
@@ -188,7 +188,7 @@ fun hasFree(t, n) =
 
 fun showHasFree(t, n) =
   showTerm(t) ++ (if hasFree(t, n) then " has " else " DOES NOT have ") ++ "free variable " ++ n
-//│ fun showHasFree: (Abs | App | Var, Str) -> Str
+//│ fun showHasFree: (Var | Abs | App, Str) -> Str
 
 showHasFree(Var("x"), "x")
 showHasFree(Var("x"), "y")
@@ -233,7 +233,7 @@ fun fv(t) =
     Var(name) then list1(name)
     Abs(Var(name), body) then listWithout(fv(body), name)
     App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
-//│ fun fv: forall 'A. (Abs | App | Var) -> (Cons['A] | Nil)
+//│ fun fv: forall 'A. (Var | Abs | App) -> (Nil | Cons['A])
 //│   where
 //│     'A :> Str
 
@@ -241,7 +241,7 @@ fun showFv(t) =
   showTerm(t) ++ if fv(t) is
     Nil then " DOES NOT have free variables"
     _ then " has free variables: " ++ listJoin(fv(t), ", ")
-//│ fun showFv: (Abs | App | Var) -> Str
+//│ fun showFv: (Var | Abs | App) -> Str
 
 showFv(Var("x"))
 showFv(Abs(Var("x"), Var("x")))
@@ -268,7 +268,7 @@ fun tryNextAlphabet(initialCode, currentCode, freeNames) =
     let name = fromCharCode(currentCode)
     listContains(freeNames, name) then tryNextAlphabet(initialCode, currentCode + 1, freeNames)
     _ then Some(name)
-//│ fun tryNextAlphabet: forall 'A. (Num, Int, Cons['A] | Nil) -> (None | Some[Str])
+//│ fun tryNextAlphabet: forall 'A. (Num, Int, Nil | Cons['A]) -> (None | Some[Str])
 
 tryNextAlphabet(97, 97, list1("a")).toString()
 tryNextAlphabet(97, 98, list1("a")).toString()
@@ -293,7 +293,7 @@ fun tryAppendDigits(name, index, freeNames) =
     listContains(freeNames, currentName) then
       tryAppendDigits(name, index + 1, freeNames)
     _ then currentName
-//│ fun tryAppendDigits: forall 'A. (Str, Int, Cons['A] | Nil) -> Str
+//│ fun tryAppendDigits: forall 'A. (Str, Int, Nil | Cons['A]) -> Str
 
 // Note: some weird behavior here... Just try the commented code.
 fun findFreshName(name, freeNames) =
@@ -303,12 +303,12 @@ fun findFreshName(name, freeNames) =
       tryNextAlphabet(charCode, charCode + 1, freeNames) is
         Some(newName) then newName
     _ then tryAppendDigits(name, 0, freeNames)
-//│ fun findFreshName: forall 'A 'A0 'A1. (Str, Cons[in 'A | 'A0 | 'A1 out 'A & 'A0 & 'A1] | Nil) -> Str
+//│ fun findFreshName: forall 'A 'A0 'A1. (Str, Nil | Cons[in 'A | 'A0 | 'A1 out 'A & 'A0 & 'A1]) -> Str
 
 // Find a fresh name to replace `name` that does not conflict with any bound
 // variables in the `body`.
 fun freshName(name, body) = findFreshName(name, fv(body))
-//│ fun freshName: (Str, Abs | App | Var) -> Str
+//│ fun freshName: (Str, Var | Abs | App) -> Str
 
 fun subst(t, n, v) =
   if t is
@@ -319,11 +319,11 @@ fun subst(t, n, v) =
       _ then Abs(Var(name), subst(body, n, v))
     App(lhs, rhs) then App(subst(lhs, n, v), subst(rhs, n, v))
     _ then t
-//│ fun subst: forall 'a. (Abs | App | Term & Object & 'a & ~#Abs & ~#App & ~#Var | Var, anything, Term & Object & 'a) -> ('a | Abs | App | Var)
+//│ fun subst: forall 'a. (Var | Abs | App | Term & Object & 'a & ~#Abs & ~#App & ~#Var, anything, Term & Object & 'a) -> ('a | Var | App | Abs)
 
 fun showSubst(t, n, v) =
   showTerm(t) ++ " [" ++ n ++ " / " ++ showTerm(v) ++ "]" ++ " => " ++ showTerm(subst(t, n, v))
-//│ fun showSubst: (Abs | App | Var, Str, Abs & Term | App & Term | Var & Term) -> Str
+//│ fun showSubst: (Var | Abs | App, Str, Var & Term | Abs & Term | App & Term) -> Str
 
 showSubst(Var("x"), "x", Var("y"))
 showSubst(Abs(Var("x"), Var("x")), "x", Var("z"))
@@ -355,7 +355,7 @@ class Stuck(term: Term, part: Term) {
 class Stepped(from: Term, to: Term) {
   fun toString() = showTerm(from) ++ " => " ++ showTerm(to)
 }
-//│ type Result = Normal | Stepped | Stuck
+//│ type Result = Normal | Stuck | Stepped
 //│ class Normal(term: Term) {
 //│   fun toString: () -> Str
 //│ }
@@ -379,7 +379,7 @@ fun stepByValue(t) =
         Normal and lhs is
           Abs(Var(name), body) then Stepped(t, subst(body, name, rhs))
           _ then Stuck(t, lhs)
-//│ fun stepByValue: (Abs | App | Var) -> (Normal | Stepped | Stuck)
+//│ fun stepByValue: (Var | Abs | App) -> (Stuck | Normal | Stepped)
 
 toString of stepByValue of Var("x")
 toString of stepByValue of Abs(Var("x"), Var("y"))
@@ -402,7 +402,7 @@ fun evalByValue(t) =
   if stepByValue(t) is result and result is
     Stepped(_, term) then evalByValue(term)
     else result
-//│ fun evalByValue: (Abs | App | Var) -> (Normal | Stuck)
+//│ fun evalByValue: (Var | Abs | App) -> (Stuck | Normal)
 
 // Let's program with Church encoding!
 let zero = Abs(Var("f"), Abs(Var("x"), Var("x")))

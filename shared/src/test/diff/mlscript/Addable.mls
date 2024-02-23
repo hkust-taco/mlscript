@@ -55,7 +55,7 @@ def addSame a = a.Add a
 //│        = [Function: addSame]
 
 addSame n
-//│ res: Numb
+//│ res: Numb | Numb & {val: 1}
 //│    = Numb { val: 2 }
 
 
@@ -181,5 +181,5 @@ class Str_bad_0: Addable[Str_bad_0] & { val: string }
 //│ ║  l.+2: 	  method Add that = Str_bad_0 { val = this.val + that.val }
 //│ ╙──      	                                                 ^^^^^^^^
 //│ Defined class Str_bad_0
-//│ Defined Str_bad_0.Add: Str_bad_0 -> {val: int} -> ((Str_bad_0 with {val: error | int}) | error)
+//│ Defined Str_bad_0.Add: Str_bad_0 -> {val: int} -> (error | (Str_bad_0 with {val: error | int}))
 

@@ -51,7 +51,7 @@ def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def add (n: ChurchInt) (m: ChurchInt) = n succ m
 def printInt (n: ChurchInt) = toString (n (fun x -> x + 1) 0)
 //│ succ: ChurchInt -> ('a -> ('a & 'b)) -> 'a -> 'b
-//│ add: ChurchInt -> ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
+//│ add: ChurchInt -> ChurchInt -> (ChurchInt | ('a -> ('a & 'b)) -> 'a -> 'b)
 //│ printInt: ChurchInt -> string
 
 def create_hashtbl () = nil
@@ -86,7 +86,7 @@ def nfind table key =
 //│ nfind: List[{0: anything, 1: 'val}] -> anything -> (anything -> 'a -> 'a | 'val)
 
 def nfind: List[{0: anything; 1: 'val}] -> anything -> (anything -> 'a -> 'a | 'val)
-//│ nfind: List[{0: anything, 1: 'val}] -> anything -> ('val | anything -> 'a -> 'a)
+//│ nfind: List[{0: anything, 1: 'val}] -> anything -> (anything -> 'a -> 'a | 'val)
 
 // * Alternative
 // def nfind table key =
@@ -104,7 +104,7 @@ def x = nfind table "one"
 // def x: ('b -> 'a) -> ('a & 'b) -> 'a
 
 add x
-//│ res: ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
+//│ res: ChurchInt -> (ChurchInt | ('a -> ('a & 'b)) -> 'a -> 'b)
 
 // * But this doesn't, because `nfind table "one"` is no longer generalized:
 
@@ -127,7 +127,7 @@ add (nfind table "one")
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.63: 	table = hashtbl_add table "one" (fun f -> fun x -> f x)
 //│ ╙──      	                                                     ^
-//│ res: error | ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
+//│ res: error | ChurchInt -> (ChurchInt | ('a -> ('a & 'b)) -> 'a -> 'b)
 //│ constrain calls  : 100
 //│ annoying  calls  : 7
 //│ subtyping calls  : 305
@@ -141,7 +141,7 @@ tmp "one"
 //│ res: ('b -> 'a) -> ('a & 'b) -> 'a
 
 add (tmp "one")
-//│ res: ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
+//│ res: ChurchInt -> (ChurchInt | ('a -> ('a & 'b)) -> 'a -> 'b)
 
 // * But it all works with argument-generalization:
 // ==========================================================================================
@@ -149,14 +149,14 @@ add (tmp "one")
 
 :stats
 add (nfind table "one")
-//│ res: ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
+//│ res: ChurchInt -> (ChurchInt | ('a -> ('a & 'b)) -> 'a -> 'b)
 //│ constrain calls  : 94
 //│ annoying  calls  : 7
 //│ subtyping calls  : 280
 
 :stats
 (fun x -> add x) (nfind table "one")
-//│ res: ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
+//│ res: ChurchInt -> (ChurchInt | ('a -> ('a & 'b)) -> 'a -> 'b)
 //│ constrain calls  : 106
 //│ annoying  calls  : 7
 //│ subtyping calls  : 314
@@ -193,10 +193,10 @@ def foo key = match_opt (
     fun () -> fun f -> id,
     fun v -> v
   ) (find table key)
-//│ foo: anything -> ('a -> 'b) -> 'a -> ('a | 'b)
+//│ foo: anything -> ('a -> 'b) -> 'a -> ('b | 'a)
 
 foo 1
-//│ res: ('a -> 'b) -> 'a -> ('a | 'b)
+//│ res: ('a -> 'b) -> 'a -> ('b | 'a)
 
 :e
 foo 1 2
@@ -212,7 +212,7 @@ foo 1 2
 //│ ╟── from reference:
 //│ ║  l.63: 	table = hashtbl_add table "one" (fun f -> fun x -> f x)
 //│ ╙──      	                                                   ^
-//│ res: error | 'a -> 'a
+//│ res: 'a -> 'a | error
 
 foo 1 error
 //│ res: 'a -> 'a
@@ -224,7 +224,7 @@ foo 1 error 2
     fun () -> fun f -> fun x -> x,
     fun v -> v
   ) (find table key)) "two"
-//│ res: ('a -> 'b) -> ('c & 'a) -> ('b | 'c)
+//│ res: ('a -> 'b) -> ('c & 'a) -> ('c | 'b)
 
 res id
 //│ res: 'a -> 'a

@@ -11,7 +11,7 @@ def z = x + y
 // common values
 //│ res: {a: "hello", b: "world"}
 //│ res: int
-//│ res: 1 | {b: 'b} -> 'b
+//│ res: {b: 'b} -> 'b | 1
 //│ x: 1
 //│ y: 2
 //│ z: int
@@ -19,7 +19,7 @@ def z = x + y
 //│ // start ts
 //│ export declare const res: {readonly a: "hello", readonly b: "world"}
 //│ export declare const res: int
-//│ export declare const res<b>: 1 | ((arg: {readonly b: b}) => b)
+//│ export declare const res<b>: ((arg: {readonly b: b}) => b) | 1
 //│ export declare const x: 1
 //│ export declare const y: 2
 //│ export declare const z: int
@@ -51,11 +51,11 @@ def f (a: int) (b: string) (c: bool) = if c then a else b
 rec def fact x = if x == 1 then 1 else x * fact (x - 1)
 def g x y = if x.b == 1 then x else x.a
 // miscellaneous functions
-//│ f: int -> string -> bool -> (int | string)
+//│ f: int -> string -> bool -> (string | int)
 //│ fact: int -> int
 //│ g: ({a: 'a, b: number} & 'a) -> anything -> 'a
 //│ // start ts
-//│ export declare const f: (arg: int) => (arg1: string) => (arg2: bool) => int | string
+//│ export declare const f: (arg: int) => (arg1: string) => (arg2: bool) => string | int
 //│ export declare const fact: (arg: int) => int
 //│ export declare const g<a>: (arg: {readonly a: a, readonly b: number} & a) => (arg1: unknown) => a
 //│ // end ts
@@ -66,7 +66,7 @@ rec def l (a: int) = l
 rec def m (a: int) (b: int) = m
 def f: ('c -> 'a as 'a) -> 'c -> int
 // recursion type functions
-//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot generate type for `where` clause List((α104,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))))),α104),Top))) List()
+//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot generate type for `where` clause List((α96,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))))),α96),Top))) List()
 
 :ts
 :e
@@ -152,6 +152,6 @@ def weird: ((int, int) -> 'a) as 'a
 def weird: ('a -> (int, int)) as 'a
 def weird: ((int, 'a) as 'a) -> int
 def weird: ((int, bool) | 'a) -> 'a
-//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot generate type for `where` clause List((α227,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))), (None,Field(None,TypeName(int))))),α227),Top))) List()
+//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot generate type for `where` clause List((α219,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))), (None,Field(None,TypeName(int))))),α219),Top))) List()
 
 

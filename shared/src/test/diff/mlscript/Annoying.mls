@@ -63,7 +63,7 @@ def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.59: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `int & {x: 'a} | {x: 'a} & ~?a` does not have field 'f'
+//│ ╟── expression of type `{x: 'a} & ~?a | int & {x: 'a}` does not have field 'f'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.59: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	                                ^^^
@@ -193,7 +193,7 @@ def negWeird: ~(~(~(A & { x: int })))
 //│ negWeird: in ~(A & {x: int}) out ~A
 
 def v = negWeird with { x = 1 }
-//│ v: {x: 1} & ~{x: int} | ~A\x & {x: 1}
+//│ v: ~A\x & {x: 1} | {x: 1} & ~{x: int}
 
 def w: {x: 1} & ~{x: int} | ~A\x & {x: 1}
 //│ w: {x: 1} & ~A\x
@@ -258,13 +258,13 @@ if true then id else idx
 //│ res: 'a -> 'a
 
 r =  if true then id with { x = "a"; y = "b" } else idx
-//│ r: 'a -> 'a & {x: "a" | 1}
+//│ r: 'a -> 'a & {x: 1 | "a"}
 
 r r.x
 //│ res: "a" | 1
 
 indirect r
-//│ res: "a" | 1
+//│ res: 1 | "a"
 
 def takeFunOrRecord: (int -> int | { x: int }) -> int
 //│ takeFunOrRecord: anything -> int

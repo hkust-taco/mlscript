@@ -137,7 +137,7 @@ let c = new C()
 //│ ╟── argument list of type `[]` does not match type `[x: Int]`
 //│ ║  l.133: 	let c = new C()
 //│ ╙──       	             ^^
-//│ let c: C | error
+//│ let c: error | C
 //│ c
 //│   = C {}
 //│ // Output

@@ -29,7 +29,7 @@ test2 f =
 //│      = [Function: test2]
 
 test2 (fun value -> { value })
-//│ res: ({value: 0 | true}, {value: 0 | true},)
+//│ res: ({value: true | 0}, {value: true | 0},)
 //│    = [ { value: 0 }, { value: true } ]
 
 

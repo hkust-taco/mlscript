@@ -107,10 +107,10 @@ Cons 1 res
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.106: 	Cons 1 res
 //│ ║         	^^^^^^^^^^
-//│ ╟── integer literal of type `2` does not match type `Cons[?A] | Nil`
+//│ ╟── integer literal of type `2` does not match type `Nil | Cons[?A]`
 //│ ║  l.97: 	Cons 2 Nil
 //│ ║        	     ^
-//│ ╟── but it flows into reference with expected type `Cons[?A0] | Nil`
+//│ ╟── but it flows into reference with expected type `Nil | Cons[?A0]`
 //│ ║  l.106: 	Cons 1 res
 //│ ║         	       ^^^
 //│ ╟── Note: constraint arises from union type:
@@ -119,7 +119,7 @@ Cons 1 res
 //│ ╟── from reference:
 //│ ║  l.88: 	def Cons head tail = originalCons { head; tail } with { head; tail }
 //│ ╙──      	                                          ^^^^
-//│ res: (Cons[1] with {tail: 2}) | error
+//│ res: error | (Cons[1] with {tail: 2})
 //│    = Cons { head: 1, tail: 2 }
 
 // Here there used to be a loss of precision in the older with-field approach.
@@ -157,9 +157,9 @@ rec def filter p ls = case ls of
   { Cons -> if p ls.head then Cons ls.head (filter p ls.tail) else filter p ls.tail
   | Nil -> Nil
   }
-//│ filter: ('head -> bool) -> 'a -> 'b
+//│ filter: ('head -> bool) -> 'a -> ('b | Nil)
 //│   where
-//│     'b :> (Cons['head] with {tail: 'b}) | Nil
+//│     'b :> (Cons['head] with {tail: 'b | Nil}) | Nil
 //│     'a <: (Cons[?] with {head: 'head, tail: 'a}) | Nil
 //│       = [Function: filter]
 

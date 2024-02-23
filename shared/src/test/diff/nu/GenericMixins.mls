@@ -47,12 +47,12 @@ C.baz1
 //│     = 0
 
 C.foo(1)
-//│ 0 | 1
+//│ 1 | 0
 //│ res
 //│     = 1
 
 C.foo(false)
-//│ 0 | false
+//│ false | 0
 //│ res
 //│     = false
 
@@ -91,7 +91,7 @@ C.foo(false)
 //│ ╟── Note: type parameter A is defined at:
 //│ ║  l.22: 	mixin Test[A] {
 //│ ╙──      	           ^
-//│ Int | error
+//│ error | Int
 //│ res
 //│     = false
 
@@ -133,7 +133,7 @@ class C(val arg: Int) extends Test
 let c = C(1)
 [c.foo(false), c.bar]
 //│ let c: C
-//│ [Int | false, [Int, Int]]
+//│ [false | Int, [Int, Int]]
 //│ c
 //│   = C {}
 //│ res

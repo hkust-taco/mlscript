@@ -289,7 +289,7 @@ EM_to_DNE em
 //│ res: (Not['v] -> 'a) -> ('v | 'a)
 
 DNE_to_EM dne
-//│ res: (Left with {v: 'v}) | Right & {v: 'v -> nothing}
+//│ res: Right & {v: 'v -> nothing} | (Left with {v: 'v})
 
 
 EM_to_DNE_A0 em
@@ -300,7 +300,7 @@ EM_to_DNE_A1 em
 
 
 DNE_to_EM_A0 dne
-//│ res: (Left with {v: 'v}) | Right & {v: 'v -> nothing}
+//│ res: Right & {v: 'v -> nothing} | (Left with {v: 'v})
 
 DNE_to_EM_A1 dne
 //│ res: EM_of['a]
@@ -353,7 +353,7 @@ EM_to_DNE em
 //│ res: (Not['v] -> 'a) -> ('v | 'a)
 
 DNE_to_EM dne
-//│ res: (Left with {v: 'v}) | Right & {v: 'v -> nothing}
+//│ res: Right & {v: 'v -> nothing} | (Left with {v: 'v})
 
 
 

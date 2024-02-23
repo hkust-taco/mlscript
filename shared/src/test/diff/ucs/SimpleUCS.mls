@@ -74,7 +74,7 @@ fun f(x) =
       v > 0 then "positive"
       _     then "zero"
     None() then "nothing"
-//│ f: (None | Some & {value: number}) -> ("negative" | "nothing" | "positive" | "zero")
+//│ f: (Some & {value: number} | None) -> ("negative" | "positive" | "zero" | "nothing")
 //│  = [Function: f3]
 
 fun f(x, y) =
@@ -201,7 +201,7 @@ fun f(x, allowNone) =
     Some(x) and isValid(x) then "good"
     None() and allowNone then "okay"
     else "bad"
-//│ f: (anything, anything,) -> ("bad" | "good" | "okay")
+//│ f: (anything, anything,) -> ("good" | "bad" | "okay")
 //│  = [Function: f12]
 
 fun f(x) =
@@ -210,7 +210,7 @@ fun f(x) =
     Some(x) then "roll"
     _ and x == 0 then 0
     _ then "rock"
-//│ f: (None | Some | number) -> ("bruh" | "rock" | "roll" | 0)
+//│ f: (None | Some | number) -> ("bruh" | "roll" | 0 | "rock")
 //│  = [Function: f13]
 
 fun f(x, a, b) =
@@ -218,7 +218,7 @@ fun f(x, a, b) =
     A(aa) and a then aa
     B(bb) and b then bb
     _           then 0
-//│ f: (A & {value: 'value} | B & {value: 'value} | ~A & ~B, anything, anything,) -> (0 | 'value)
+//│ f: (A & {value: 'value} | B & {value: 'value} | ~A & ~B, anything, anything,) -> ('value | 0)
 //│  = [Function: f14]
 
 fun f(x, y, b) =
@@ -228,7 +228,7 @@ fun f(x, y, b) =
       is None() then "bruh"
     Some(xv) and b then xv + b
     _ then "roll"
-//│ f: (Some & {value: int} | ~Some, anything, ~true,) -> ("bruh" | "roll" | int)
+//│ f: (Some & {value: int} | ~Some, anything, ~true,) -> ("bruh" | int | "roll")
 //│  = [Function: f15]
 
 fun g(x, y, b) =
@@ -238,12 +238,12 @@ fun g(x, y, b) =
       is None() then "bruh"
     Some(xv) and b then xv + b
     _ then "roll"
-//│ g: (Some & {value: int} | ~Some, Some & {value: 'value} | ~Some, ~true,) -> ("bruh" | "roll" | int | 'value)
+//│ g: (Some & {value: int} | ~Some, Some & {value: 'value} | ~Some, ~true,) -> ('value | "bruh" | int | "roll")
 //│  = [Function: g]
 
 fun foo(x, y, z) =
   if x - y > 0 then Some(x + y + z) else None()
-//│ foo: (int, int, int,) -> (None | Some & {value: int})
+//│ foo: (int, int, int,) -> (Some & {value: int} | None)
 //│    = [Function: foo]
 
 // Uncomment this block to make the following block work.
@@ -283,7 +283,7 @@ fun f(u, v, w) =
 //│  = [Function: f16]
 
 fun p(x) = if x >= 0 then Right(x) else Left(x)
-//│ p: (number & 'rightValue) -> (Left & {leftValue: 'rightValue} | Right & {rightValue: 'rightValue})
+//│ p: (number & 'rightValue) -> (Right & {rightValue: 'rightValue} | Left & {leftValue: 'rightValue})
 //│  = [Function: p]
 
 fun g(a, b) =
@@ -294,7 +294,7 @@ fun g(a, b) =
     Right(x) and b is
       Some(y) then x * y
       None    then x
-//│ g: (int, None | Some & {value: int},) -> int
+//│ g: (int, Some & {value: int} | None,) -> int
 //│  = [Function: g1]
 
 g(5, None())
@@ -338,9 +338,9 @@ fun p(e, context) =
       Some(BoolVal(v)) then Right(v)
     Lit(IntVal(v)) then Left(v)
     Lit(BoolVal(v)) then Right(v)
-//│ p: (Lit & {value: BoolVal & {value: 'value} | IntVal & {value: 'value0}} | Var & {name: 'name}, {
-//│   get: 'name -> (Some & {value: BoolVal & {value: 'value} | IntVal & {value: 'value0}})
-//│ },) -> (Left & {leftValue: 'value0} | Right & {rightValue: 'value})
+//│ p: (Var & {name: 'name} | Lit & {value: IntVal & {value: 'value} | BoolVal & {value: 'value0}}, {
+//│   get: 'name -> (Some & {value: IntVal & {value: 'value} | BoolVal & {value: 'value0}})
+//│ },) -> (Left & {leftValue: 'value} | Right & {rightValue: 'value0})
 //│  = [Function: p1]
 
 class Nil()
@@ -390,20 +390,20 @@ fun g(x, y) =
 
 
 fun test(x) = if x then 0 else "oops"
-//│ test: anything -> ("oops" | 0)
+//│ test: anything -> (0 | "oops")
 //│     = [Function: test]
 
 test(true)
 test(false)
 test(0)
 test(1)
-//│ res: "oops" | 0
+//│ res: 0 | "oops"
 //│    = 0
-//│ res: "oops" | 0
+//│ res: 0 | "oops"
 //│    = 'oops'
-//│ res: "oops" | 0
+//│ res: 0 | "oops"
 //│    = 'oops'
-//│ res: "oops" | 0
+//│ res: 0 | "oops"
 //│    = 'oops'
 
 

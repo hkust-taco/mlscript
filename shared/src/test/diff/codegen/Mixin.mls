@@ -71,7 +71,7 @@ mixin EvalBase {
 }
 //│ mixin EvalBase() {
 //│   this: {eval: 'a -> Int}
-//│   fun eval: (Add['a] | Lit) -> Int
+//│   fun eval: (Lit | Add['a]) -> Int
 //│ }
 //│ // Prelude
 //│ class TypingUnit1 {
@@ -210,7 +210,7 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ where
 //│   'A <: 'b & (Neg['b] | Object & ~#Neg)
 //│   'b <: Neg['A] | Object & 'a & ~#Neg
-//│   'a <: Add['b] | Lit | Neg['b]
+//│   'a <: Neg['b] | Lit | Add['b]
 //│ // Prelude
 //│ class TypingUnit5 {
 //│   #TestLang;

@@ -63,7 +63,7 @@ fun (++) conc(xs, ys) = [xs, ys]
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.7: 	fun (+:) pre(x: Int, xs) = [[x], xs]
 //│ ╙──     	                ^^^
-//│ [[Int], error | [[Int], "b"]]
+//│ [[Int], [[Int], "b"] | error]
 //│ res
 //│     = [ [ 1 ], [ [ [Array] ], 'b' ] ]
 

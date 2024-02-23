@@ -360,7 +360,7 @@ refun.Swap
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
 //│ ╙──     	          ^
-//│ res: error | int | string
+//│ res: error | string | int
 //│    = <no result>
 //│      refun is not implemented
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -375,7 +375,7 @@ refun.Swap
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
 //│ ╙──     	          ^
-//│ res: nothing -> (error | unit)
+//│ res: nothing -> (unit | error)
 //│    = <no result>
 //│      refun is not implemented
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -390,7 +390,7 @@ refun.Swap
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
 //│ ╙──     	          ^
-//│ res: error | nothing -> (int | string)
+//│ res: error | nothing -> (string | int)
 //│    = <no result>
 //│      refun is not implemented
 

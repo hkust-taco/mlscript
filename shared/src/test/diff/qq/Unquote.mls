@@ -46,7 +46,7 @@ code"a + a"
 //│ ╟── but it flows into reference with expected type `Int`
 //│ ║  l.39: 	code"a + a"
 //│ ╙──      	     ^
-//│ Code[Int | error, nothing]
+//│ Code[error | Int, nothing]
 
 
 :e
@@ -60,7 +60,7 @@ code"a + b"
 //│ ╟── but it flows into reference with expected type `Int`
 //│ ║  l.53: 	code"a + b"
 //│ ╙──      	     ^
-//│ Code[Int | error, nothing]
+//│ Code[error | Int, nothing]
 
 
 :e

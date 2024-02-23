@@ -76,7 +76,7 @@ trait S3 extends S1, T1
 
 class C1(val x: Int | Bool)
 trait T1 { val x: Int | Str }
-//│ class C1(x: Int | false | true)
+//│ class C1(x: Int | true | false)
 //│ trait T1 {
 //│   val x: Int | Str
 //│ }
@@ -108,7 +108,7 @@ class C2 extends C1("oops"), T1
 //│ ╔══[ERROR] Type mismatch in type declaration:
 //│ ║  l.107: 	class C2 extends C1("oops"), T1
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"oops"` does not match type `Int | false | true`
+//│ ╟── string literal of type `"oops"` does not match type `Int | true | false`
 //│ ║  l.107: 	class C2 extends C1("oops"), T1
 //│ ║         	                    ^^^^^^
 //│ ╟── Note: constraint arises from union type:

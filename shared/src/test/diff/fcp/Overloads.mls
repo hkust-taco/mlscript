@@ -24,7 +24,7 @@ IISS : int -> int & string -> string
 //│ res: int -> int & string -> string
 
 IISS : IISS | BBNN
-//│ res: BBNN | IISS
+//│ res: IISS | BBNN
 
 :e
 IISS : ZZII
@@ -68,10 +68,10 @@ IISS 0
 //│ res: int
 
 (if true then IISS else BBNN) 0
-//│ res: bool | number | string
+//│ res: number | string | bool
 
 fun x -> (if true then IISS else BBNN) x
-//│ res: int -> (bool | number | string)
+//│ res: int -> (number | string | bool)
 
 if true then IISS else BBNN
 //│ res: bool -> bool & number -> number | int -> int & string -> string
@@ -108,18 +108,18 @@ not test
 
 // :ds
 def test: ~(int -> int) & ~bool
-//│ test: in ~bool & ~(int -> int) out nothing
+//│ test: in ~(int -> int) & ~bool out nothing
 
 def test: ~(int -> int) & bool
 //│ test: in bool out nothing
 
 def test: ~(int -> int) & ~(bool -> bool)
-//│ test: in ~(nothing -> (bool | int)) out nothing
+//│ test: in ~(nothing -> (int | bool)) out nothing
 
 def test: ~(int -> int | bool -> bool)
-//│ test: in ~(nothing -> (bool | int)) out nothing
+//│ test: in ~(nothing -> (int | bool)) out nothing
 
 def test: ~(int -> int & string -> string) & ~(bool -> bool & number -> number)
-//│ test: in ~(nothing -> (number | string) & int -> number & nothing -> (bool | string) & nothing -> (bool | int)) out nothing
+//│ test: in ~(nothing -> (string | number) & int -> number & nothing -> (string | bool) & nothing -> (int | bool)) out nothing
 
 

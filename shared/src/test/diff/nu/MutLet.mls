@@ -29,7 +29,7 @@ f(1)
 //│     = 1
 
 f(true)
-//│ 1 | true
+//│ true | 1
 //│ res
 //│     = true
 
@@ -67,7 +67,7 @@ set oops = Some(123)
 //│     = undefined
 
 oops
-//│ None | Some[in 'A out 1 | 123 | 'A]
+//│ None | Some[in 'A out 123 | 'A | 1]
 //│ res
 //│     = Some {}
 
@@ -85,14 +85,14 @@ fun funny(x) =
 //│ fun funny: 'A -> (None | Some['A])
 
 funny(123)
-//│ None | Some[in 'A out 123 | 'A]
+//│ Some[in 'A out 'A | 123] | None
 //│ res
 //│     = None { class: [class None] }
 
 if funny("hi") is
   Some(v) then v
   else 0
-//│ "hi" | 0 | 123
+//│ 123 | "hi" | 0
 //│ res
 //│     = 123
 

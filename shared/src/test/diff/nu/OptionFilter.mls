@@ -28,11 +28,11 @@ class Some[out T](val value: T) extends Option[T] {
 module None extends Option[nothing] {
   fun filter(_) = None
 }
-//│ abstract class Option[T]: None | Some[T] {
+//│ abstract class Option[T]: Some[T] | None {
 //│   fun filter: (p: T -> Bool) -> Option[T]
 //│ }
 //│ class Some[T](value: T) extends Option {
-//│   fun filter: (T -> Object) -> (None | Some[T])
+//│   fun filter: (T -> Object) -> (Some[T] | None)
 //│ }
 //│ module None extends Option {
 //│   fun filter: anything -> None

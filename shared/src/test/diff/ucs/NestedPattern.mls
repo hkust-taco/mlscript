@@ -27,7 +27,7 @@ fun compute(v) =
     Left(None()) then 1
     Right(Some(x)) then x * 3
     Right(None()) then 0
-//│ compute: (Left & {leftValue: None | Some & {value: int}} | Right & {rightValue: None | Some & {value: int}}) -> int
+//│ compute: (Left & {leftValue: Some & {value: int} | None} | Right & {rightValue: Some & {value: int} | None}) -> int
 
 fun crazy(v) =
   if v is
@@ -66,7 +66,7 @@ fun f(p) =
     None()       then 0
 //│ ╔══[ERROR] type identifier not found: Tuple#2
 //│ ╙──
-//│ f: (None | Some) -> (0 | error)
+//│ f: (Some | None) -> (error | 0)
 
 class Union(a, b)
 //│ Defined class Union

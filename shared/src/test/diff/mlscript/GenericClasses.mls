@@ -39,7 +39,7 @@ res.value
 //│ ╟── but it flows into reference with expected type `{value: ?value}`
 //│ ║  l.32: 	res.value
 //│ ╙──      	^^^
-//│ res: error | int
+//│ res: int | error
 //│    = 42
 
 :e
@@ -50,7 +50,7 @@ res.value
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.46: 	42: Option[int, int]
 //│ ║        	^^
-//│ ╟── integer literal of type `42` does not match type `None | Some[int]`
+//│ ╟── integer literal of type `42` does not match type `Some[int] | None`
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.21: 	type Option[A] = Some[A] | None
 //│ ║        	                 ^^^^^^^^^^^^^^

@@ -19,7 +19,7 @@ fun eval(e) =
     Add(l, r) then eval(l) + eval(r)
 //│ fun eval: forall 'a. 'a -> Int
 //│   where
-//│     'a <: Add['a] | Lit
+//│     'a <: Lit | Add['a]
 
 
 mixin EvalBase {
@@ -30,7 +30,7 @@ mixin EvalBase {
 }
 //│ mixin EvalBase() {
 //│   this: {eval: 'a -> Int}
-//│   fun eval: (Add['a] | Lit) -> Int
+//│   fun eval: (Lit | Add['a]) -> Int
 //│ }
 
 
@@ -39,12 +39,12 @@ module TestLang extends EvalBase
 //│   fun eval: 'a -> Int
 //│ }
 //│ where
-//│   'a <: Add['a] | Lit
+//│   'a <: Lit | Add['a]
 
 TestLang.eval
 //│ 'a -> Int
 //│   where
-//│     'a <: Add['a] | Lit
+//│     'a <: Lit | Add['a]
 //│ res
 //│     = [Function: eval]
 
@@ -71,18 +71,18 @@ module TestLang extends EvalNothing, EvalAddLit
 //│ mixin EvalAddLit() {
 //│   super: {eval: 'a -> 'b}
 //│   this: {eval: 'c -> Int}
-//│   fun eval: (Add['c] | Lit | Object & 'a & ~#Add & ~#Lit) -> (Int | 'b)
+//│   fun eval: (Lit | Add['c] | Object & 'a & ~#Add & ~#Lit) -> (Int | 'b)
 //│ }
 //│ module TestLang {
 //│   fun eval: 'd -> Int
 //│ }
 //│ where
-//│   'd <: Add['d] | Lit
+//│   'd <: Lit | Add['d]
 
 TestLang.eval
 //│ 'a -> Int
 //│   where
-//│     'a <: Add['a] | Lit
+//│     'a <: Lit | Add['a]
 //│ res
 //│     = [Function: eval]
 
@@ -118,12 +118,12 @@ module TestLang extends EvalBase, EvalNeg
 //│   fun eval: 'a -> Int
 //│ }
 //│ where
-//│   'a <: Neg['a] | Object & (Add['a] | Lit) & ~#Neg
+//│   'a <: Neg['a] | Object & (Lit | Add['a]) & ~#Neg
 
 TestLang.eval
 //│ 'a -> Int
 //│   where
-//│     'a <: Neg['a] | Object & (Add['a] | Lit) & ~#Neg
+//│     'a <: Neg['a] | Object & (Lit | Add['a]) & ~#Neg
 //│ res
 //│     = [Function: eval]
 
@@ -195,7 +195,7 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│ where
 //│   'A <: 'b & (Neg['b] | Object & ~#Neg)
 //│   'b <: Neg['A] | Object & 'a & ~#Neg
-//│   'a <: Add['b] | Lit | Neg['b]
+//│   'a <: Neg['b] | Lit | Add['b]
 
 fun mk(n) = if n is
   0 then Lit(0)
@@ -210,7 +210,7 @@ TestLang.eval
 //│   where
 //│     'A <: 'b & (Neg['b] | Object & ~#Neg)
 //│     'b <: Neg['A] | Object & 'a & ~#Neg
-//│     'a <: Add['b] | Lit | Neg['b]
+//│     'a <: Neg['b] | Lit | Add['b]
 //│ res
 //│     = [Function: eval]
 

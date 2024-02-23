@@ -102,11 +102,11 @@ fun boolToStr(x) =
   if x is
     true then "yah"
     false then "nah"
-//│ fun boolToStr: nothing -> ("nah" | "yah")
+//│ fun boolToStr: nothing -> ("yah" | "nah")
 
 boolToStr of true
 boolToStr of false
-//│ "nah" | "yah"
+//│ "yah" | "nah"
 //│ res
 //│     = 'yah'
 //│ res

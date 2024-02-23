@@ -229,7 +229,7 @@ M.id1
 type Option[A] = Some[A] | None
 class Some[out A](val value: A)
 module None
-//│ type Option[A] = None | Some[A]
+//│ type Option[A] = Some[A] | None
 //│ class Some[A](value: A)
 //│ module None
 

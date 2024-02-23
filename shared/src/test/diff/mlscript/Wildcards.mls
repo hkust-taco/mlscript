@@ -166,7 +166,7 @@ q + 1
 //│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.159: 	q + 1
 //│ ╙──       	^
-//│ res: error | int
+//│ res: int | error
 //│    = 2
 
 :e
@@ -210,7 +210,7 @@ f e
 //│ ╟── Note: constraint arises from type wildcard:
 //│ ║  l.196: 	def f: Expr[?] -> Expr[?]
 //│ ╙──       	            ^
-//│ res: Expr[?] | error
+//│ res: error | Expr[?]
 
 
 

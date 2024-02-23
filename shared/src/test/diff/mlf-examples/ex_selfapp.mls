@@ -76,7 +76,7 @@ rec def foo = fun xs -> case xs of
 //│ foo: 'a -> (Nil | 'b)
 //│   where
 //│     'b :> Cons[int] with {tail: Nil | 'b}
-//│     'a <: (Cons[?] with {head: int, tail: 'a}) | Nil
+//│     'a <: Nil | (Cons[?] with {head: int, tail: 'a})
 //│    = [Function: foo2]
 // * An simplified version, easier to type check, just for the record
 rec def foo = fun xs -> case xs of
@@ -86,7 +86,7 @@ rec def foo = fun xs -> case xs of
 //│ foo: 'a -> (Nil | 'b)
 //│   where
 //│     'b :> Cons[int] with {tail: Nil | 'b}
-//│     'a <: (Cons[?] with {head: int, tail: 'a}) | Nil
+//│     'a <: Nil | (Cons[?] with {head: int, tail: 'a})
 //│    = [Function: foo3]
 :NoRecursiveTypes
 // * === === === *
@@ -135,7 +135,7 @@ def build_ = fun g -> g (fun x -> fun xs -> Cons (x, xs)) Nil
 build_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> List['a]
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> Cons[?] with {tail: forall 'a. Nil | 'a}
+//│     'a :> Cons[?] with {tail: forall 'a. 'a | Nil}
 //│ ║  l.130: 	def build_ = fun g -> g (fun x -> fun xs -> Cons (x, xs)) Nil
 //│ ╙──       	                                            ^^^^^^^^^^^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing type ascription; a type annotation may be required
@@ -149,22 +149,22 @@ build_ : forall 'a. (forall 'b. (('a -> 'b -> 'b) -> 'b -> 'b)) -> List['a]
 def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> Cons (x, xs)) Nil
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> Cons[?] with {tail: forall 'a. Nil | 'a}
+//│     'a :> Cons[?] with {tail: forall 'a. 'a | Nil}
 //│ ║  l.149: 	def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> Cons (x, xs)) Nil
 //│ ╙──       	                                                                                      ^^^^^^^^^^^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
 //│ ║  l.149: 	def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> Cons (x, xs)) Nil
 //│ ║         	                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ build: (forall 'b. ('head -> 'b -> 'b) -> 'b -> 'b) -> (Nil | error | 'a)
+//│ build: (forall 'b. ('head -> 'b -> 'b) -> 'b -> 'b) -> (Nil | 'a | error)
 //│   where
-//│     'a :> Cons['head] with {tail: forall 'a. Nil | 'a}
+//│     'a :> Cons['head] with {tail: forall 'a. 'a | Nil}
 //│      = [Function: build]
 :RecursiveTypes
 def build = fun (g: forall 'b. ('a -> 'b -> 'b) -> 'b -> 'b) -> g (fun x -> fun xs -> Cons (x, xs)) Nil
 //│ build: (forall 'b. ('head -> 'b -> 'b) -> 'b -> 'b) -> (Nil | 'a)
 //│   where
-//│     'a :> Cons['head] with {tail: forall 'a. Nil | 'a}
+//│     'a :> Cons['head] with {tail: forall 'a. 'a | Nil}
 //│      = [Function: build1]
 :NoRecursiveTypes
 
@@ -217,7 +217,7 @@ rec def foldr = fun k -> fun z -> fun xs ->
 //│ ╙──       	       ^^
 //│ foldr: ('head -> 'a -> 'a) -> 'a -> 'b -> 'a
 //│   where
-//│     'b <: (Cons[?] with {head: 'head, tail: 'b}) | Nil
+//│     'b <: Nil | (Cons[?] with {head: 'head, tail: 'b})
 //│      = [Function: foldr1]
 
 
@@ -339,8 +339,8 @@ k = k_
 def bfoo xs = build (foldr k z xs)
 //│ bfoo: 'a -> (Nil | 'b)
 //│   where
-//│     'b :> Cons[int] with {tail: forall 'b. Nil | 'b}
-//│     'a <: (Cons[?] with {head: int, tail: 'a}) | Nil
+//│     'b :> Cons[int] with {tail: forall 'b. 'b | Nil}
+//│     'a <: Nil | (Cons[?] with {head: int, tail: 'a})
 //│     = [Function: bfoo]
 
 :e
@@ -348,7 +348,7 @@ def bfoo_ xs = build_ (foldr k_ z_ xs)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.347: 	def bfoo_ xs = build_ (foldr k_ z_ xs)
 //│ ║         	               ^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?b -> (forall ?c. ?c -> ?c)` does not match type `Cons[?a] | Nil`
+//│ ╟── function of type `?b -> (forall ?c. ?c -> ?c)` does not match type `Nil | Cons[?a]`
 //│ ║  l.229: 	def z_ = fun c -> fun n -> n
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
@@ -359,14 +359,14 @@ def bfoo_ xs = build_ (foldr k_ z_ xs)
 //│ ╙──       	                                                     ^^
 //│ bfoo_: 'a -> error
 //│   where
-//│     'a <: (Cons[?] with {head: int, tail: 'a}) | Nil
+//│     'a <: Nil | (Cons[?] with {head: int, tail: 'a})
 //│      = [Function: bfoo_]
 // * Alt (requires :RecursiveTypes):
 def bfoo_ xs = build_ (foldr k z_ xs)
-//│ bfoo_: 'a -> (Nil | 'b)
+//│ bfoo_: 'a -> ('b | Nil)
 //│   where
-//│     'b :> Cons[int] with {tail: forall 'b. Nil | 'b}
-//│     'a <: (Cons[?] with {head: int, tail: 'a}) | Nil
+//│     'b :> Cons[int] with {tail: forall 'b. 'b | Nil}
+//│     'a <: Nil | (Cons[?] with {head: int, tail: 'a})
 //│      = [Function: bfoo_1]
 
 
@@ -400,16 +400,16 @@ foo lst0
 bfoo lst0
 //│ res: Nil | 'a
 //│   where
-//│     'a :> Cons[int] with {tail: forall 'a. Nil | 'a}
+//│     'a :> Cons[int] with {tail: forall 'a. 'a | Nil}
 //│    = Cons {
 //│        head: 1,
 //│        tail: Cons { head: 2, tail: Cons { head: 4, tail: [Cons] } }
 //│      }
 
 bfoo_ lst0
-//│ res: Nil | 'a
+//│ res: 'a | Nil
 //│   where
-//│     'a :> Cons[int] with {tail: forall 'a. Nil | 'a}
+//│     'a :> Cons[int] with {tail: forall 'a. 'a | Nil}
 //│    = Cons {
 //│        head: 1,
 //│        tail: Cons { head: 2, tail: Cons { head: 4, tail: [Cons] } }

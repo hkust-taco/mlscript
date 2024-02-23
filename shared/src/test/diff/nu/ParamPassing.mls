@@ -60,7 +60,7 @@ Foo(1).x
 //│ ╟── Either make the parameter a `val` or access it through destructuring
 //│ ║  l.52: 	class Foo(x: Int)
 //│ ╙──      	          ^
-//│ Int | error
+//│ error | Int
 //│ res
 //│     = undefined
 
@@ -114,7 +114,7 @@ Bar(11).x
 //│ ╟── Either make the parameter a `val` or access it through destructuring
 //│ ║  l.100: 	class Bar(x: Int) extends Foo(x)
 //│ ╙──       	          ^
-//│ Int | error
+//│ error | Int
 //│ res
 //│     = 11
 
@@ -186,7 +186,7 @@ B.x
 //│ ╟── Either make the parameter a `val` or access it through destructuring
 //│ ║  l.175: 	class A(x: Int)
 //│ ╙──       	        ^
-//│ Int | error
+//│ error | Int
 //│ res
 //│     = undefined
 

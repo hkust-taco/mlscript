@@ -67,7 +67,7 @@ trait T1 extends Foo[Int | Bool]
 //│   fun foo: 'A
 //│ }
 //│ where
-//│   'A := Int | false | true
+//│   'A := Int | true | false
 
 module Bar extends T1, Foo[Int | Str] {
   fun foo = 123
@@ -89,14 +89,14 @@ module Bar extends T1, Foo[Int | Str] {
 //│     = [Function: id]
 
 (Bar : T1).foo
-//│ Int | false | true
+//│ Int | true | false
 //│ res
 //│     = 123
 
 let f = (Bar : T1).bar
 f(true)
-//│ let f: ('A & (Int | false | true)) -> (Int | false | true | 'A)
-//│ Int | false | true
+//│ let f: ('A & (Int | true | false)) -> (Int | true | false | 'A)
+//│ Int | true | false
 //│ f
 //│   = [Function: id]
 //│ res

@@ -73,7 +73,7 @@ c34 = Complex 3 4
 //│    = Complex { real: 3, imaginary: 4 }
 
 if true then c12 else c34
-//│ res: Complex[1 | 2 | 3 | 4] & {imaginary: 2 | 4, real: 1 | 3}
+//│ res: Complex[3 | 4 | 1 | 2] & {imaginary: 4 | 2, real: 3 | 1}
 //│    = Complex { real: 1, imaginary: 2 }
 
 cmi.Add (Complex 1 2) (Complex 3 4)
@@ -103,7 +103,7 @@ cmi = ComplexMonoid { base = IntMonoid }
 //│ ╟── from reference:
 //│ ║  l.52: 	def ComplexMonoid base = ComplexMonoid { base }
 //│ ╙──      	                                         ^^^^
-//│ cmi: (ComplexMonoid['A] with {base: {base: IntMonoid}}) | error
+//│ cmi: error | (ComplexMonoid['A] with {base: {base: IntMonoid}})
 
 
 
@@ -171,7 +171,7 @@ class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║  l.3: 	  method Empty: A
 //│ ╙──     	         ^^^^^^^^
 //│ Defined class ComplexMonoid_bad_0[=A]
-//│ Defined ComplexMonoid_bad_0.Empty: ComplexMonoid_bad_0['A] -> 'A0 -> (Complex['A0 | {real: Monoid['A]}] with {imaginary: 'A0, real: {real: Monoid['A]}})
+//│ Defined ComplexMonoid_bad_0.Empty: ComplexMonoid_bad_0['A] -> 'A0 -> (Complex[{real: Monoid['A]} | 'A0] with {imaginary: 'A0, real: {real: Monoid['A]}})
 //│ Defined ComplexMonoid_bad_0.Add: ComplexMonoid_bad_0['A] -> anything -> anything -> nothing
 
 
@@ -245,7 +245,7 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║  l.3: 	  method Empty: A
 //│ ╙──     	         ^^^^^^^^
 //│ Defined class ComplexMonoid_bad_1[=A]
-//│ Defined ComplexMonoid_bad_1.Empty: ComplexMonoid_bad_1['A] -> 'A0 -> (Complex['A0 | {imaginary: nothing, real: 'A}] with {imaginary: 'A0, real: {imaginary: nothing, real: 'A}})
+//│ Defined ComplexMonoid_bad_1.Empty: ComplexMonoid_bad_1['A] -> 'A0 -> (Complex[{imaginary: nothing, real: 'A} | 'A0] with {imaginary: 'A0, real: {imaginary: nothing, real: 'A}})
 //│ Defined ComplexMonoid_bad_1.Add: ComplexMonoid_bad_1['A] -> anything -> anything -> nothing
 
 

@@ -86,7 +86,7 @@ type T = 'a -> 'a
 //│     = 0
 
 (id : T)(true)
-//│ 0 | true
+//│ true | 0
 //│ res
 //│     = true
 

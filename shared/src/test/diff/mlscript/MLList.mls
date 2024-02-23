@@ -34,14 +34,14 @@ ls = cons({key="I"; val=id}, cons({key="omega"; val=fun x -> x x}, nil))
 //│     }
 
 res = find(ls, "omega")
-//│ res: undefined | ('a -> 'b & 'b & 'a) -> 'b
+//│ res: ('a -> 'b & 'b & 'a) -> 'b | undefined
 //│    = [Function: val]
 
 case res of undefined -> "???", _ -> res id "!"
-//│ res: "!" | "???"
+//│ res: "???" | "!"
 //│    = '!'
 
 find(ls, "oops")
-//│ res: undefined | ('a -> 'b & 'c & 'a) -> ('c | 'b)
+//│ res: ('a -> 'b & 'c & 'a) -> ('c | 'b) | undefined
 //│    = undefined
 

@@ -25,7 +25,7 @@ val invalidConstruction = demo()
 //│ class demo() {
 //│   constructor(param1: Int)
 //│ }
-//│ val invalidConstruction: demo | error
+//│ val invalidConstruction: error | demo
 //│ invalidConstruction
 //│                     = demo {}
 
@@ -46,7 +46,7 @@ val invalidConstruction = new demo
 //│ ╟── argument list of type `[]` does not match type `[param1: Int]`
 //│ ║  l.42: 	val invalidConstruction = new demo
 //│ ╙──      	                                  ^
-//│ val invalidConstruction: demo | error
+//│ val invalidConstruction: error | demo
 //│ invalidConstruction
 //│                     = demo {}
 
@@ -65,7 +65,7 @@ val invalidConstruction = demo()
 //│ class demo {
 //│   constructor(param1: Int)
 //│ }
-//│ val invalidConstruction: demo | error
+//│ val invalidConstruction: error | demo
 //│ invalidConstruction
 //│ Runtime error:
 //│   TypeError: Class constructor demo cannot be invoked without 'new'
@@ -87,7 +87,7 @@ val invalidConstruction = new demo
 //│ ╟── argument list of type `[]` does not match type `[param1: Int]`
 //│ ║  l.83: 	val invalidConstruction = new demo
 //│ ╙──      	                                  ^
-//│ val invalidConstruction: demo | error
+//│ val invalidConstruction: error | demo
 //│ invalidConstruction
 //│                     = demo {}
 
@@ -107,7 +107,7 @@ val invalidConstruction = demo()
 //│ ╟── argument of type `[]` does not match type `[param1: Int]`
 //│ ║  l.100: 	val invalidConstruction = demo()
 //│ ╙──       	                              ^^
-//│ val invalidConstruction: demo | error
+//│ val invalidConstruction: error | demo
 //│ invalidConstruction
 //│ Runtime error:
 //│   TypeError: Class constructor demo cannot be invoked without 'new'
@@ -143,7 +143,7 @@ val invalidConstruction = demo(5)
 //│ ╟── argument of type `[5]` does not match type `[param1: Int, param2: Int]`
 //│ ║  l.136: 	val invalidConstruction = demo(5)
 //│ ╙──       	                              ^^^
-//│ val invalidConstruction: demo | error
+//│ val invalidConstruction: error | demo
 //│ invalidConstruction
 //│                     = demo {}
 //│ // Output
@@ -158,7 +158,7 @@ val invalidConstruction = new demo(5)
 //│ ╟── argument list of type `[5]` does not match type `[param1: Int, param2: Int]`
 //│ ║  l.154: 	val invalidConstruction = new demo(5)
 //│ ╙──       	                                  ^^^
-//│ val invalidConstruction: demo | error
+//│ val invalidConstruction: error | demo
 //│ invalidConstruction
 //│                     = demo {}
 //│ // Output

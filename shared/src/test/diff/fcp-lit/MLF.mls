@@ -114,7 +114,7 @@ let f = choose id in (f auto) (f succ)
 //│ ╟── Note: quantified type variable 'a is defined at:
 //│ ║  l.28: 	def auto (x: forall 'a. 'a -> 'a) = x x
 //│ ╙──      	                    ^^
-//│ res: error | int -> int
+//│ res: int -> int | error
 
 // * Reproduced with an unnanotated auto:
 
@@ -135,7 +135,7 @@ res (choose id succ)
 //│ ╟── but it flows into application with expected type `int`
 //│ ║  l.128: 	res (choose id succ)
 //│ ╙──       	     ^^^^^^^^^^^^^^
-//│ res: error | int | int -> int
+//│ res: int -> int | error | int
 
 // * Didier Le Botlan suggested this fix by email:
 

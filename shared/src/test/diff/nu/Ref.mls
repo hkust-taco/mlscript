@@ -10,8 +10,8 @@
 mut let r = 42
 set r = "abc"
 r
-//│ mut let r: "abc" | 42
-//│ "abc" | 42
+//│ mut let r: 42 | "abc"
+//│ 42 | "abc"
 //│ r
 //│   = 42
 //│ res
@@ -30,7 +30,7 @@ r + 1
 //│ ╟── but it flows into reference with expected type `Int`
 //│ ║  l.23: 	r + 1
 //│ ╙──      	^
-//│ Int | error
+//│ error | Int
 //│ res
 //│     = 'abc1'
 
@@ -70,7 +70,7 @@ r.value + 1
 //│ ╟── but it flows into field selection with expected type `Int`
 //│ ║  l.63: 	r.value + 1
 //│ ╙──      	^^^^^^^
-//│ Int | error
+//│ error | Int
 //│ res
 //│     = 'abc1'
 
@@ -116,7 +116,7 @@ r.value
 class Ref() { mut val value = 0; fun foo = set value = 42 }
 //│ class Ref() {
 //│   fun foo: ()
-//│   mut val value: 0 | 42
+//│   mut val value: 42 | 0
 //│ }
 
 set r.value = 0
@@ -134,7 +134,7 @@ set r.value = 666
 //│ ╔══[ERROR] Type mismatch in assignment:
 //│ ║  l.133: 	set r.value = 666
 //│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `666` does not match type `0 | 42`
+//│ ╟── integer literal of type `666` does not match type `42 | 0`
 //│ ║  l.133: 	set r.value = 666
 //│ ║         	              ^^^
 //│ ╟── Note: constraint arises from definition of value value:
@@ -200,7 +200,7 @@ class Ref[A](init: A) { mut val value = (); fun foo(x) = set value = x }
 class Ref[A](init: A) { mut val value = (); fun foo(x: A) = set value = x }
 //│ class Ref[A](init: A) {
 //│   fun foo: (x: A) -> ()
-//│   mut val value: () | A
+//│   mut val value: A | ()
 //│ }
 
 class Ref[A](init: A) { mut val value = init; fun foo(x) = set value = x }
@@ -219,10 +219,10 @@ class Ref() extends B { mut val value = 0; fun foo = set value = 42 }
 //│ class Ref() extends B {
 //│   fun foo: ()
 //│   fun get: 'A
-//│   mut val value: 0 | 42
+//│   mut val value: 42 | 0
 //│ }
 //│ where
-//│   'A :> 0 | 42
+//│   'A :> 42 | 0
 
 let r = Ref()
 //│ let r: Ref
@@ -237,7 +237,7 @@ r : B['a]
 //│     = Ref {}
 
 r.value
-//│ 0 | 42
+//│ 42 | 0
 //│ res
 //│     = 0
 
@@ -247,7 +247,7 @@ set r.value = 42
 //│     = undefined
 
 r.get
-//│ 0 | 42
+//│ 42 | 0
 //│ res
 //│     = 42
 

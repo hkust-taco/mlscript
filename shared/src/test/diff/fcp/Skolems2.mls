@@ -133,7 +133,7 @@ extrude(id)(id)(42)
 //│ ╟── • this reference:
 //│ ║  l.19: 	def extrude f = oops((f, 0))
 //│ ╙──      	                ^^^^
-//│ res: 42 | error
+//│ res: error | 42
 //│    = 42
 //│ // Output
 //│ Hi!
@@ -221,7 +221,7 @@ def oops (i: forall 'c. ('c -> 'c, 0)) =
     in let r = (f id) "hello"
     in let _ = log r
     in f) i
-//│ oops: (forall 'c. ('c -> 'c, 0,)) -> ("hello" -> anything & 'c0) -> (forall 'a. 'c0 | 'a -> 'a)
+//│ oops: (forall 'c. ('c -> 'c, 0,)) -> ("hello" -> anything & 'c0) -> (forall 'a. 'a -> 'a | 'c0)
 //│     = [Function: oops2]
 
 

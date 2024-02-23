@@ -5,7 +5,7 @@ trait T2
 //│ Defined trait T2
 
 r = if true then T1 1 else T2 2
-//│ r: 1 & #T1 | 2 & #T2
+//│ r: 2 & #T2 | 1 & #T1
 //│  = [Number: 1]
 
 case r of { T1 -> r | _ -> 0 }
@@ -14,11 +14,11 @@ case r of { T1 -> r | _ -> 0 }
 
 // TODO also factor ClassTag-s like `2`:
 case r of { T1 -> r | T2 -> r }
-//│ res: 1 & #T1 | 'a | #T2 & (2 & #T1 | 2 & ~#T1 | 2 & ~#T2 | 2 & ~'a)
+//│ res: 1 & #T1 | 'a | #T2 & (2 & ~#T2 | 2 & ~'a | 2 & #T1 | 2 & ~#T1)
 //│    = [Number: 1]
 
 r = if true then T1 ((1,2,3)) else T2 ((3,4,5,4))
-//│ r: (1, 2, 3,) & #T1 | (3, 4, 5, 4,) & #T2
+//│ r: (3, 4, 5, 4,) & #T2 | (1, 2, 3,) & #T1
 //│  = [ 1, 2, 3 ]
 
 case r of { T1 -> r | _ -> 0 }
@@ -26,7 +26,7 @@ case r of { T1 -> r | _ -> 0 }
 //│    = [ 1, 2, 3 ]
 
 case r of { T1 -> r | T2 -> r }
-//│ res: (1, 2, 3,) & #T1 | 'a | #T2 & ((3, 4, 5, 4,) & #T1 | (3, 4, 5, 4,) & ~#T1 | (3, 4, 5, 4,) & ~#T2 | (3, 4, 5, 4,) & ~'a)
+//│ res: (1, 2, 3,) & #T1 | 'a | #T2 & ((3, 4, 5, 4,) & ~#T2 | (3, 4, 5, 4,) & ~'a | (3, 4, 5, 4,) & #T1 | (3, 4, 5, 4,) & ~#T1)
 //│    = [ 1, 2, 3 ]
 
 
@@ -56,11 +56,11 @@ class C2[A]: { a: A }
 //│ Defined class C2[+A]
 
 r = if true then C1 {a=x} else C2 {a=(3,4,5,4)}
-//│ r: C1[1] | C2[(3, 4, 5, 4,)]
+//│ r: C2[(3, 4, 5, 4,)] | C1[1]
 //│  = C1 { a: 1 }
 
 case r of { C1 -> r.a | _ -> 0 }
-//│ res: 0 | 1
+//│ res: 1 | 0
 //│    = 1
 
 def x1: (int, bool)
@@ -72,7 +72,7 @@ def x2: (string, unit)
 
 
 if true then x1 else x2
-//│ res: (int | string, bool | unit,)
+//│ res: (string | int, unit | bool,)
 //│    = <no result>
 //│      x1 is not implemented
 
@@ -141,18 +141,18 @@ t = if false then res else hhh
 g = if true then (6,6,6) else res
 gwx = g with {x=123}
 gwx.x with {y = gwx}
-//│ res: Array["hello" | 1 | 2 | 3 | 4 | false | true] & {0: 1 | true, 1: 2 | 4, 2: 3 | false}
+//│ res: Array[true | 4 | false | 1 | 2 | 3 | "hello"] & {0: true | 1, 1: 4 | 2, 2: false | 3}
 //│    = [ 1, 2, 3, 'hello' ]
-//│ hhh: Array["bye" | 345 | 3 | 45 | false | true] & {0: 45 | false, 1: 345 | 3}
+//│ hhh: Array[false | 3 | 45 | 345 | "bye" | true] & {0: false | 45, 1: 3 | 345}
 //│    = [ false, 3 ]
-//│ t: Array["bye" | "hello" | 1 | 2 | 345 | 3 | 45 | 4 | false | true] & {0: 1 | 45 | false | true, 1: 2 | 345 | 3 | 4}
+//│ t: Array[false | 3 | 45 | 345 | "bye" | true | 4 | 1 | 2 | "hello"] & {0: false | 45 | true | 1, 1: 3 | 345 | 4 | 2}
 //│  = [ false, 3 ]
-//│ g: Array["hello" | 1 | 2 | 3 | 4 | 6 | false | true] & {0: 1 | 6 | true, 1: 2 | 4 | 6, 2: 3 | 6 | false}
+//│ g: Array[6 | true | 4 | false | 1 | 2 | 3 | "hello"] & {0: true | 1 | 6, 1: 4 | 2 | 6, 2: false | 3 | 6}
 //│  = [ 6, 6, 6 ]
-//│ gwx: Array["hello" | 1 | 2 | 3 | 4 | 6 | false | true] & {0: 1 | 6 | true, 1: 2 | 4 | 6, 2: 3 | 6 | false, x: 123}
+//│ gwx: Array[6 | true | 4 | false | 1 | 2 | 3 | "hello"] & {0: true | 1 | 6, 1: 4 | 2 | 6, 2: false | 3 | 6, x: 123}
 //│    = [ 6, 6, 6, x: 123 ]
 //│ res: 123 & {
-//│   y: Array["hello" | 1 | 2 | 3 | 4 | 6 | false | true] & {0: 1 | 6 | true, 1: 2 | 4 | 6, 2: 3 | 6 | false, x: 123}
+//│   y: Array[6 | true | 4 | false | 1 | 2 | 3 | "hello"] & {0: true | 1 | 6, 1: 4 | 2 | 6, 2: false | 3 | 6, x: 123}
 //│ }
 //│    = [Number: 123] { y: [ 6, 6, 6, x: 123 ] }
 
@@ -165,7 +165,7 @@ def g: (bool, string, int) -> int
 //│  = <missing implementation>
 
 p1 = if true then (1, 2, 2) else (true, false)
-//│ p1: Array[1 | 2 | false | true] & {0: 1 | true, 1: 2 | false}
+//│ p1: Array[Bool | 1 | 2] & {0: true | 1, 1: false | 2}
 //│   = [ 1, 2, 2 ]
 
 def q: Array[int]
@@ -302,7 +302,7 @@ t2: (1, 1, 2, bool)
 t2: Array[int | bool]
 //│ res: (1, 1, 2, bool,)
 //│    = [ 1, 1, 2, true ]
-//│ res: Array[bool | int]
+//│ res: Array[int | bool]
 //│    = [ 1, 1, 2, true ]
 
 class Wrapped[A]: {len: int; inner: Array[A]}
@@ -312,7 +312,7 @@ def tk: Array['a] -> Wrapped['a]
 tk ((1,2,3,true,false))
 //│ tk: Array['a] -> Wrapped['a]
 //│   = <missing implementation>
-//│ res: Wrapped[1 | 2 | 3 | false | true]
+//│ res: Wrapped[1 | 2 | 3 | true | false]
 //│    = <no result>
 //│      tk is not implemented
 
@@ -379,7 +379,7 @@ def append: Array['a] -> Array['b] -> Array['a | 'b]
 append ((1,2,false)) (((), 'hi'))
 //│ append: Array['a] -> Array['a] -> Array['a]
 //│       = <missing implementation>
-//│ res: Array["hi" | 1 | 2 | false | ()]
+//│ res: Array[1 | 2 | false | () | "hi"]
 //│    = <no result>
 //│      append is not implemented
 
@@ -393,7 +393,7 @@ append2 ((mut 1, mut 2, mut false)) ((mut (), mut 'hi'))
 //│     'a :> "hi" | ()
 //│     'aa :> 'b
 //│         <: 'c & 'b
-//│     'b :> 1 | 2 | false
+//│     'b :> false | 1 | 2
 //│        <: 'c
 //│     'c <: 'b
 //│    = <no result>
@@ -404,13 +404,13 @@ append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.403: 	append2 ((mut 1, mut 2, mut false)) ((mut (), 'hi'))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `"hi" | ?a` cannot be reassigned
+//│ ╙── expression of type `?a | "hi"` cannot be reassigned
 //│ res: error | MutArray['aa | 'bb]
 //│   where
-//│     'bb :> "hi" | ()
+//│     'bb :> () | "hi"
 //│     'aa :> 'a
 //│         <: 'b & 'a
-//│     'a :> 1 | 2 | false
+//│     'a :> false | 1 | 2
 //│        <: 'b
 //│     'b <: 'a
 //│    = <no result>
@@ -435,7 +435,7 @@ tba tb
 //│   <:  tb:
 //│ T2 & Array[int]
 //│   = [ 1, 2, 3 ]
-//│ tba: (T2 & Array[bool | int]) -> (T2 & int)
+//│ tba: (T2 & Array[int | bool]) -> (T2 & int)
 //│    = <missing implementation>
 //│ res: T2 & int
 //│    = <no result>
@@ -455,20 +455,20 @@ gt ta
 def tg: ((T1 & Array[int]) | (T2 & Array[bool])) -> (T1 | T2)
 //│ gett1: (#T1 & 'a | ~#T1) -> 'a -> 'a
 //│      = [Function: gett1]
-//│ res: #T1 & (123 | Array[int])
+//│ res: #T1 & (Array[int] | 123)
 //│    = [ 1, 2, 3 ]
-//│ gt: (T1 & Array[bool | int]) -> Array[int]
+//│ gt: (T1 & Array[int | bool]) -> Array[int]
 //│   = <missing implementation>
 //│ res: Array[int]
 //│    = <no result>
 //│      gt is not implemented
-//│ tg: (T2 & Array[bool] | T1 & Array[int]) -> (T1 | T2)
+//│ tg: (T1 & Array[int] | T2 & Array[bool]) -> (T1 | T2)
 //│   = <missing implementation>
 
 gett1 ta (T1 123)
 tg (T1 ((1,2,3,4)))
 tg (T2 ((true,false,false)))
-//│ res: #T1 & (123 | Array[int])
+//│ res: #T1 & (Array[int] | 123)
 //│    = [ 1, 2, 3 ]
 //│ res: T1 | T2
 //│    = <no result>
@@ -573,7 +573,7 @@ inn (T1 (T2 v3))
 
 v3: Array[Array[Array[int | bool]]]
 inn2 (T2 r1)
-//│ res: Array[Array[Array[bool | int]]]
+//│ res: Array[Array[Array[int | bool]]]
 //│    = <no result>
 //│      v3 is not implemented
 //│ res: Array[T1 & int | T1 & true]
@@ -734,11 +734,11 @@ ta3[1-2]
 //│    = 3
 //│ ta2: ((1, 2, 4,), (true, false,),)
 //│    = [ [ 1, 2, 4 ], [ true, false ] ]
-//│ res: false | int | null | true | undefined
+//│ res: null | int | 2 | 4 | true | false | undefined
 //│    = null
 //│ ta3: ((1, 2, 3,), "hello", false,)
 //│    = [ [ 1, 2, 3 ], 'hello', false ]
-//│ res: "hello" | false | undefined | (1, 2, 3,)
+//│ res: (1, 2, 3,) | "hello" | false | undefined
 //│    = undefined
 //│ res: 1 | 2 | 3 | undefined
 //│    = undefined
@@ -751,7 +751,7 @@ ta3[1-2]
 //│ ╟── possibly-undefined array access of type `undefined` does not match type `~undefined`
 //│ ║  l.747: 	((defined ta2[0])[1+4], ta[1])[0]
 //│ ╙──       	 ^^^^^^^^^^^^^^^^^^^^^
-//│ res: error | false | int | true | undefined
+//│ res: Bool | int | 2 | 4 | undefined | error
 //│    = undefined
 
 :e
@@ -829,7 +829,7 @@ mkarr (1,true,"hi")[0]
 //│    = 6
 //│ res: number | undefined
 //│    = 2
-//│ res: Array["hi" | 1 | true | undefined]
+//│ res: Array[1 | true | "hi" | undefined]
 //│    = [ 1, 1, 1, 1, 1 ]
 
 :e 
@@ -859,13 +859,13 @@ def s1 a = (defined a[1] + defined a[2], a[(1,2).1])
 def s2 a = (defined (defined a[1])[0]).1 + (defined a[2]).0
 def s3 a = defined a.0.t[0] + defined (defined a.x[1])[2]
 (defined ((1, "hello"),(2, true, false),(3,3,4))[0]).0
-//│ s1: Array[int & 'a] -> (int, undefined | 'a,)
+//│ s1: Array[int & 'a] -> (int, 'a | undefined,)
 //│   = [Function: s1]
 //│ s2: Array[Array[{1: int} & ~undefined] & {0: int}] -> int
 //│   = [Function: s2]
 //│ s3: {0: {t: Array[int]}, x: Array[Array[int]]} -> int
 //│   = [Function: s3]
-//│ res: 1 | 2 | 3
+//│ res: 3 | 2 | 1
 //│    = 1
 
 def ara: Array[(int, bool)]

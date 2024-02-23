@@ -43,7 +43,7 @@ fun process(e) =
     Pair(Vec(xs), Vec(ys))  then n
     Pair(Vec(n),  Numb(n)) then n
     Pair(Numb(n), Vec(n))  then n
-//│ fun process: Pair[Numb | Vec, Numb | Vec] -> (Int | Numb | Array[Numb | Vec])
+//│ fun process: Pair[Numb | Vec, Vec | Numb] -> (Numb | Array[Numb | Vec] | Int)
 
 
 // * FIXME should warn, be rejected, or compare both values for equality

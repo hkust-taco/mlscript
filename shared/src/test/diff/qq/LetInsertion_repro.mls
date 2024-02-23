@@ -14,7 +14,7 @@ fun body(x, y) = case
   0 then x
   1 then y
   n then code"${x} + ${y}" %> z => body(x, z)(n - 1)
-//│ fun body: forall 'a. (Code[Int, anything] & 'a, Code[Int, anything] & 'a) -> (0 | 1 | Int & ~0 & ~1) -> (Code[Int, anything] | 'a)
+//│ fun body: forall 'a. (Code[Int, anything] & 'a, Code[Int, anything] & 'a) -> (0 | 1 | Int & ~0 & ~1) -> ('a | Code[Int, anything])
 
 :e
 body : forall 'g: (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
@@ -55,7 +55,7 @@ fun body(x, y) = case
   0 then x
   1 then y
   n then code"${x} + ${y}" %> z => code"${body(x, z)(n - 1)}"
-//│ fun body: forall 'a. (Code[Int, anything] & 'a, Code[Int, anything] & 'a) -> (0 | 1 | Int & ~0 & ~1) -> (Code[Int, anything] | 'a)
+//│ fun body: forall 'a. (Code[Int, anything] & 'a, Code[Int, anything] & 'a) -> (0 | 1 | Int & ~0 & ~1) -> ('a | Code[Int, anything])
 
 code"(x, y) => ${body(code"x", code"y")(0)}"
 //│ Code[(Int, Int) -> Int, ??c & ~??y]

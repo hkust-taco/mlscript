@@ -44,7 +44,7 @@ not r
 //│ ╟── • this reference:
 //│ ║  l.10: 	  forall 'T. fun (x: 'T) -> esc x
 //│ ╙──      	                            ^^^
-//│ res: bool | error
+//│ res: error | bool
 //│    = false
 
 

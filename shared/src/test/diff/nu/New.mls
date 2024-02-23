@@ -13,11 +13,11 @@ let f = Foo(1)
 // let f = new Foo(1)
 
 if f is Foo then 1 else 0
-//│ res: 0 | 1
+//│ res: 1 | 0
 //│    = 1
 
 if f is Foo(a) then a else 0
-//│ res: 0 | 1
+//│ res: 1 | 0
 //│    = 1
 
 // case f of
