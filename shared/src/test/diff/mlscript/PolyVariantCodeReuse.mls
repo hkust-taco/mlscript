@@ -129,7 +129,7 @@ def eval_lambda eval_rec subst v = case v of {
     Abs { name = new_name;
           body = eval_rec (Cons (Tuple v.name (Var { name = new_name })) subst) v.body }
   }
-//│ eval_lambda: (((Cons[('a, Var | 'body,) | 'A] with {head: ('a, Var | 'body,), tail: Nil | 'tail}) | 'tail) -> 'lhs -> ('body & 'result & ((Abs[?] with {body: 'lhs, name: 'a}) | 'lhs0 & ~#Abs))) -> (List['A] & (Cons[?] & 'b | Nil) & 'tail) -> ((Abs[?] with {body: 'lhs, name: 'a}) | App[?] & {lhs: 'lhs, rhs: 'lhs} | Var & 'result) -> (Abs['body] | (App['lhs0 | 'body] with {lhs: 'lhs0, rhs: 'body}) | 'result)
+//│ eval_lambda: (((Cons[('a, Var | 'body,) | 'A] with {head: ('a, Var | 'body,), tail: Nil | 'tail}) | 'tail) -> 'lhs -> ('result & 'body & ((Abs[?] with {body: 'lhs, name: 'a}) | 'lhs0 & ~#Abs))) -> (List['A] & (Cons[?] & 'b | Nil) & 'tail) -> ((Abs[?] with {body: 'lhs, name: 'a}) | App[?] & {lhs: 'lhs, rhs: 'lhs} | Var & 'result) -> (Abs['body] | (App['lhs0 | 'body] with {lhs: 'lhs0, rhs: 'body}) | 'result)
 //│   where
 //│     'b <: {head: {0: string, 1: 'result}, tail: Cons[?] & 'b | Nil}
 //│            = <no result>
@@ -422,31 +422,31 @@ rec def eval4 subst = eval_lexpr' eval4 subst
 //│ ╙── Note: use flag `:ex` to see internal error info.
 //│ eval4: ('tail & 'tail0 & 'tail1 & 'tail2 & 'tail3 & 'tail4 & (Cons[?] & List[?] & 'b & 'c & 'd & 'e & 'f & 'g | Nil & List[?])) -> 'h -> 'i
 //│   where
-//│     'tail4 <: Cons[?] & 'd | Nil
-//│     'd <: {head: {0: string, 1: 'result}, tail: 'tail4}
-//│     'tail3 <: Cons[?] & 'g | Nil
-//│     'g <: {head: {0: string, 1: 'result0}, tail: 'tail3}
-//│     'tail2 <: Cons[?] & 'f | Nil
-//│     'f <: {head: {0: string, 1: 'result}, tail: 'tail2}
-//│     'tail1 <: Cons[?] & 'e | Nil
-//│     'e <: {head: {0: string, 1: 'result}, tail: 'tail1}
+//│     'tail4 <: Cons[?] & 'g | Nil
+//│     'g <: {head: {0: string, 1: 'result}, tail: 'tail4}
+//│     'tail3 <: Cons[?] & 'f | Nil
+//│     'f <: {head: {0: string, 1: 'result0}, tail: 'tail3}
+//│     'tail2 <: Cons[?] & 'e | Nil
+//│     'e <: {head: {0: string, 1: 'result0}, tail: 'tail2}
+//│     'tail1 <: Cons[?] & 'd | Nil
+//│     'd <: {head: {0: string, 1: 'result0}, tail: 'tail1}
 //│     'tail0 <: Cons[?] & 'c | Nil
-//│     'c <: {head: {0: string, 1: 'result0}, tail: 'tail0}
+//│     'c <: {head: {0: string, 1: 'result}, tail: 'tail0}
 //│     'tail <: Cons[?] & 'b | Nil
-//│     'b <: {head: {0: string, 1: 'result0}, tail: 'tail}
-//│     'result0 :> 'i
-//│              <: Abs[?] & 'j & 'k | 'lhs & (Abs[?] & 'k & ~#Abs | Add[?] & 'l | App[?] & 'm | Mul[?] & 'n | Var & 'o | 'p & (Numb | Numb & ~#Numb))
-//│     'i :> 'result0 | 'q | Abs[nothing] | App[nothing] | Abs['i] | App['a]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | 'result | 'r | Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i}
+//│     'b <: {head: {0: string, 1: 'result}, tail: 'tail}
+//│     'result :> 'i
+//│             <: Abs[?] & 'j & 'k | 'lhs & (Abs[?] & 'k & ~#Abs | Add[?] & 'l | App[?] & 'm | Mul[?] & 'n | Var & 'o | 'p & (Numb | Numb & ~#Numb))
+//│     'i :> 'result | 'q | Abs[nothing] | App[nothing] | Abs['i] | App['a]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | 'result0 | 'r | Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i}
 //│     'q :> Var
 //│        <: Abs[?] & 'j & 'k | 'lhs & (Abs[?] & 'k & ~#Abs | Add[?] & {name: string} & 'l | App[?] & {name: string} & 'm | Mul[?] & {name: string} & 'n | Var & 'o | 'p & (Numb & {name: string} | Numb & {name: string} & ~#Numb))
 //│     'j <: {body: 'h, name: string}
 //│     'h <: Abs[?] & 'k | Add[?] & 'l | App[?] & 'm | Mul[?] & 'n | Numb & 'p | Var & 'o
-//│     'l <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result | Var & 'r
-//│     'result :> Var | 'i | Numb
-//│             <: Abs[?] & 'j & 'k | 'lhs & (Add[?] & 'l | App[?] & 'm | Mul[?] & 'n | Var & 'o | 'p & (Numb | Numb & ~#Numb))
-//│     'n <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result | Var & 'r
+//│     'l <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result0 | Var & 'r
+//│     'result0 :> Var | 'i | Numb
+//│              <: Abs[?] & 'j & 'k | 'lhs & (Add[?] & 'l | App[?] & 'm | Mul[?] & 'n | Var & 'o | 'p & (Numb | Numb & ~#Numb))
+//│     'n <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result0 | Var & 'r
 //│     'r <: Var & (Abs[?] & 'j & 'k | 'lhs & (Add[?] & {name: string} & 'l | App[?] & {name: string} & 'm | Mul[?] & {name: string} & 'n | Var & 'o | 'p & (Numb & {name: string} | Numb & {name: string} & ~#Numb)))
-//│     'p <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result | Var & 'r
+//│     'p <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result0 | Var & 'r
 //│     'o <: Var & 'q
 //│     'm <: Abs[?] & {body: 'h} | App[?] & {lhs: 'h, rhs: 'h} | Var & 'q
 //│     'lhs :> Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | App['a]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Numb | Var
@@ -463,31 +463,31 @@ rec def eval4 subst = eval_lexpr' eval4 subst
 rec def eval4 subst = eval_lexpr' eval4 subst
 //│ eval4: ('tail & 'tail0 & 'tail1 & 'tail2 & 'tail3 & 'tail4 & (Cons[?] & List[?] & 'b & 'c & 'd & 'e & 'f & 'g | Nil & List[?])) -> 'h -> 'i
 //│   where
-//│     'tail4 <: Cons[?] & 'g | Nil
-//│     'g <: {head: {0: string, 1: 'result}, tail: 'tail4}
-//│     'tail3 <: Cons[?] & 'f | Nil
-//│     'f <: {head: {0: string, 1: 'result0}, tail: 'tail3}
-//│     'tail2 <: Cons[?] & 'e | Nil
-//│     'e <: {head: {0: string, 1: 'result0}, tail: 'tail2}
-//│     'tail1 <: Cons[?] & 'd | Nil
-//│     'd <: {head: {0: string, 1: 'result0}, tail: 'tail1}
+//│     'tail4 <: Cons[?] & 'd | Nil
+//│     'd <: {head: {0: string, 1: 'result}, tail: 'tail4}
+//│     'tail3 <: Cons[?] & 'g | Nil
+//│     'g <: {head: {0: string, 1: 'result0}, tail: 'tail3}
+//│     'tail2 <: Cons[?] & 'f | Nil
+//│     'f <: {head: {0: string, 1: 'result}, tail: 'tail2}
+//│     'tail1 <: Cons[?] & 'e | Nil
+//│     'e <: {head: {0: string, 1: 'result}, tail: 'tail1}
 //│     'tail0 <: Cons[?] & 'c | Nil
-//│     'c <: {head: {0: string, 1: 'result}, tail: 'tail0}
+//│     'c <: {head: {0: string, 1: 'result0}, tail: 'tail0}
 //│     'tail <: Cons[?] & 'b | Nil
-//│     'b <: {head: {0: string, 1: 'result}, tail: 'tail}
-//│     'result :> 'i
-//│             <: Abs[?] & 'j & 'k & 'l | 'lhs & (Abs[?] & 'k & 'l & ~#Abs | 'lhs0 & (Add[?] & 'm | App[?] & 'n | Mul[?] & 'o | Var & 'p | 'q & (Numb | Numb & ~#Numb)))
-//│     'i :> 'result | 'r | Abs['i] | App['a]\lhs\rhs & {lhs: 'lhs0, rhs: 'rhs} | App['a0]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs0} | 'result0 | 's | Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i}
+//│     'b <: {head: {0: string, 1: 'result0}, tail: 'tail}
+//│     'result0 :> 'i
+//│              <: Abs[?] & 'j & 'k & 'l | 'lhs & (Abs[?] & 'k & 'l & ~#Abs | 'lhs0 & (Add[?] & 'm | App[?] & 'n | Mul[?] & 'o | Var & 'p | 'q & (Numb | Numb & ~#Numb)))
+//│     'i :> 'result0 | 'r | Abs['i] | App['a]\lhs\rhs & {lhs: 'lhs0, rhs: 'rhs} | App['a0]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs0} | 'result | 's | Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i}
 //│     'r :> Var
 //│        <: Abs[?] & 'j & 'k & 'l | 'lhs & (Abs[?] & 'k & 'l & ~#Abs | 'lhs0 & (Add[?] & {name: string} & 'm | App[?] & {name: string} & 'n | Mul[?] & {name: string} & 'o | Var & 'p | 'q & (Numb & {name: string} | Numb & {name: string} & ~#Numb)))
 //│     'j <: {body: 'h, name: string}
 //│     'h <: Abs[?] & 'k | Add[?] & 'm | App[?] & 'n | Mul[?] & 'o | Numb & 'q | Var & 'p
-//│     'm <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result0 | Var & 's
-//│     'result0 :> Var | 'i | Numb
-//│              <: Abs[?] & 'j & 'k & 'l | 'lhs & 'lhs0 & (Add[?] & 'm | App[?] & 'n | Mul[?] & 'o | Var & 'p | 'q & (Numb | Numb & ~#Numb))
-//│     'o <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result0 | Var & 's
+//│     'm <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result | Var & 's
+//│     'result :> Var | 'i | Numb
+//│             <: Abs[?] & 'j & 'k & 'l | 'lhs & 'lhs0 & (Add[?] & 'm | App[?] & 'n | Mul[?] & 'o | Var & 'p | 'q & (Numb | Numb & ~#Numb))
+//│     'o <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result | Var & 's
 //│     's <: Var & (Abs[?] & 'j & 'k & 'l | 'lhs & 'lhs0 & (Add[?] & {name: string} & 'm | App[?] & {name: string} & 'n | Mul[?] & {name: string} & 'o | Var & 'p | 'q & (Numb & {name: string} | Numb & {name: string} & ~#Numb)))
-//│     'q <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result0 | Var & 's
+//│     'q <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result | Var & 's
 //│     'p <: Var & 'r
 //│     'n <: Abs[?] & {body: 'h} | App[?] & {lhs: 'h, rhs: 'h} | Var & 'r
 //│     'lhs :> Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | App['a | 'a0]\lhs\rhs & {lhs: 'lhs | 'lhs0, rhs: 'rhs | 'rhs0} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Numb | Var
