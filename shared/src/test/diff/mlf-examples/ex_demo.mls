@@ -1224,7 +1224,7 @@ this_should_be_98_ =
 //│                   = '98'
 //│ constrain calls  : 11252
 //│ annoying  calls  : 0
-//│ subtyping calls  : 38842
+//│ subtyping calls  : 38847
 
 // * Decomposing...
 
@@ -1477,6 +1477,6 @@ c_i10_ = c_mul_ c_i5_ c_i2_
 //│       = [Function (anonymous)]
 //│ constrain calls  : 3360
 //│ annoying  calls  : 0
-//│ subtyping calls  : 23437
+//│ subtyping calls  : 23503
 
 

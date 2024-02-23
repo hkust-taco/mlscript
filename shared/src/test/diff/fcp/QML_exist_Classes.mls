@@ -135,7 +135,7 @@ simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 //│    = [Function: simpleStepImpl]
 //│ constrain calls  : 9926
 //│ annoying  calls  : 78
-//│ subtyping calls  : 28078
+//│ subtyping calls  : 28186
 // * Note that the above incidentally can be checked using recursive types
 :RecursiveTypes
 :stats

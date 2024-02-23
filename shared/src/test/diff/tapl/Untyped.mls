@@ -172,7 +172,7 @@ fun listWithout(xs, x) =
       _ then Cons(x', listWithout(xs', x))
 //│ listWithout: (Cons & 'a | Nil, anything,) -> 'b
 //│   where
-//│     'b :> Nil | Cons & {head: 'head, tail: 'b}
+//│     'b :> Cons & {head: 'head, tail: 'b} | Nil
 //│     'a <: {head: 'head, tail: Cons & 'a | Nil}
 //│            = [Function: listWithout]
 
@@ -334,8 +334,8 @@ fun fv(t) =
 //│     'd :> forall 'e. 'f | 'e
 //│     'e :> Cons & {head: forall 'head. 'head, tail: 'f | 'e}
 //│     'f :> forall 'g. Cons & {head: 'name, tail: Nil} | 'g | 'd
-//│     'g :> Nil | Cons & {head: forall 'head0. 'head0, tail: 'g}
-//│     'c :> Nil | Cons & {head: forall 'head0. 'head0, tail: 'c}
+//│     'g :> Cons & {head: forall 'head0. 'head0, tail: 'g} | Nil
+//│     'c :> Cons & {head: forall 'head0. 'head0, tail: 'c} | Nil
 //│     'head0 :> forall 'head. 'name | 'head
 //│     'head :> forall 'head0. 'name | 'head0
 //│     'a <: {lhs: Var, rhs: Abs & 'a | App & 'b | Var & {name: 'name}}
@@ -461,10 +461,10 @@ fun subst(t, n, v) =
 //│     'i <: {lhs: anything, rhs: Abs & 'i | App & 'g | Var | ~Abs & ~App & ~Var}
 //│     'a :> Abs & {lhs: Var & {name: string}, rhs: Var & {name: string} | 'e | 'c | 'a | 'd | 'rhs}
 //│        <: Abs & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'a & 'h | App & 'b & 'f | Var & 'c} & 'h | App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'a & 'h | App & 'b & 'f | Var & 'c} & 'b & 'f | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'a & 'h | App & 'b & 'f | Var & 'c} & 'c | 'd & (App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'a & 'h | App & 'b & 'f | Var & 'c} & 'f & ~#App | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'a & 'h | App & 'b & 'f | Var & 'c} & ~#Var)
-//│     'e :> Var & {name: string} | 'c | 'a | 'd | Abs & {lhs: Var & {name: string}, rhs: 'rhs} | App & {
+//│     'e :> Abs & {lhs: Var & {name: string}, rhs: 'rhs} | App & {
 //│       lhs: Var & {name: string} | 'e | 'c | 'a | 'd,
 //│       rhs: Var & {name: string} | 'e | 'c | 'a | 'd
-//│     }
+//│     } | Var & {name: string} | 'c | 'a | 'd
 //│     'rhs :> Var & {name: string} | 'e | 'c | 'a | 'd
 //│     'c :> Var & {name: string}
 //│        <: Abs & {name: anything} & 'a & 'h | App & {name: anything} & 'b & 'f | Var | 'd & (Abs & {name: anything} & 'h & ~#Abs | App & {name: anything} & 'f & ~#App)
@@ -553,10 +553,10 @@ fun stepByValue(t) =
 //│     rhs: Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e | 'rhs0
 //│   }
 //│      <: Abs & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'd & 'g | App & 'h & 'f | Var & 'b} & 'g | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'd & 'g | App & 'h & 'f | Var & 'b} & 'e & ~#Var | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'd & 'g | App & 'h & 'f | Var & 'b} & 'b | 'h & (App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'd & 'g | App & 'h & 'f | Var & 'b} & 'e & ~#App | App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'd & 'g | App & 'h & 'f | Var & 'b} & 'f)
-//│   'c :> Var & {name: string} | 'rhs | 'b | 'd | 'e | Abs & {lhs: Var & {name: string}, rhs: 'rhs0} | App & {
+//│   'c :> Abs & {lhs: Var & {name: string}, rhs: 'rhs0} | App & {
 //│     lhs: Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e,
 //│     rhs: Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e
-//│   }
+//│   } | Var & {name: string} | 'rhs | 'b | 'd | 'e
 //│   'rhs0 :> Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e
 //│   'rhs <: Abs & 'd & 'g & 'i | App & 'a & 'h & 'f & 'j | Var & 'b
 //│   'f <: {

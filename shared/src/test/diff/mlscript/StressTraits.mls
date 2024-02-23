@@ -49,7 +49,7 @@ foo arg
 :e
 def arg: A[int] | B[int]
 foo arg
-//│ arg: A[int] | B[int]
+//│ arg: B[int] | A[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.51: 	foo arg
 //│ ║        	^^^^^^^
@@ -63,13 +63,13 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 36
 //│ annoying  calls  : 31
-//│ subtyping calls  : 699
+//│ subtyping calls  : 698
 
 :stats
 :e
 def arg: A[int] | B[int] | C[int]
 foo arg
-//│ arg: A[int] | B[int] | C[int]
+//│ arg: C[int] | B[int] | A[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.71: 	foo arg
 //│ ║        	^^^^^^^
@@ -83,13 +83,13 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 65
 //│ annoying  calls  : 90
-//│ subtyping calls  : 3264
+//│ subtyping calls  : 3208
 
 :stats
 :e
 def arg: A[int] | B[int] | D[int]
 foo arg
-//│ arg: A[int] | B[int] | D[int]
+//│ arg: D[int] | B[int] | A[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.91: 	foo arg
 //│ ║        	^^^^^^^
@@ -103,7 +103,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 82
 //│ annoying  calls  : 209
-//│ subtyping calls  : 18727
+//│ subtyping calls  : 16245
 
 
 // ====== 2 ====== //
@@ -117,7 +117,7 @@ def foo x = case x of {
 def arg: A[int] | B[int]
 foo arg
 //│ foo: ({fB: 'fA} & #B & ~#A | {fA: 'fA} & #A) -> 'fA
-//│ arg: A[int] | B[int]
+//│ arg: B[int] | A[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.118: 	foo arg
 //│ ║         	^^^^^^^
@@ -131,7 +131,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 44
 //│ annoying  calls  : 31
-//│ subtyping calls  : 495
+//│ subtyping calls  : 494
 
 
 // ====== 3 ====== //
@@ -146,7 +146,7 @@ def foo x = case x of {
 def arg: A[int] | B[int] | C[int]
 foo arg
 //│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | {fC: 'fA} & #C & ~#B)) -> 'fA
-//│ arg: A[int] | B[int] | C[int]
+//│ arg: C[int] | B[int] | A[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.147: 	foo arg
 //│ ║         	^^^^^^^
@@ -160,7 +160,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 76
 //│ annoying  calls  : 90
-//│ subtyping calls  : 3045
+//│ subtyping calls  : 2989
 
 
 // ====== 4 ====== //
@@ -176,7 +176,7 @@ def foo x = case x of {
 def arg: A[int] | B[int] | C[int] | D[int]
 foo arg
 //│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | {fD: 'fA} & #D & ~#C))) -> 'fA
-//│ arg: A[int] | B[int] | C[int] | D[int]
+//│ arg: D[int] | C[int] | B[int] | A[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.177: 	foo arg
 //│ ║         	^^^^^^^
@@ -190,7 +190,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 94
 //│ annoying  calls  : 131
-//│ subtyping calls  : 4048
+//│ subtyping calls  : 3984
 
 :stats
 :e
@@ -208,7 +208,7 @@ foo (arg with { x = 1} with { y = 2 })
 //│ res: error
 //│ constrain calls  : 69
 //│ annoying  calls  : 128
-//│ subtyping calls  : 3510
+//│ subtyping calls  : 3450
 
 :stats
 :e
@@ -226,7 +226,7 @@ foo (arg with { x = 1; y = 2; z = 3 })
 //│ res: error
 //│ constrain calls  : 69
 //│ annoying  calls  : 128
-//│ subtyping calls  : 3510
+//│ subtyping calls  : 3450
 
 
 // ====== 5 ====== //
@@ -243,7 +243,7 @@ def foo x = case x of {
 def arg: A[int] | B[int] | C[int] | D[int] | E[int]
 foo arg
 //│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | {fE: 'fA} & #E & ~#D)))) -> 'fA
-//│ arg: A[int] | B[int] | C[int] | D[int] | E[int]
+//│ arg: E[int] | D[int] | C[int] | B[int] | A[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.244: 	foo arg
 //│ ║         	^^^^^^^
@@ -257,7 +257,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 98
 //│ annoying  calls  : 131
-//│ subtyping calls  : 4336
+//│ subtyping calls  : 4272
 
 
 // ====== 6 ====== //
@@ -275,7 +275,7 @@ def foo x = case x of {
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
 foo arg
 //│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | ~#D & ({fE: 'fA} & #E | {fF: 'fA} & #F & ~#E))))) -> 'fA
-//│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
+//│ arg: F[int] | E[int] | D[int] | C[int] | B[int] | A[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.276: 	foo arg
 //│ ║         	^^^^^^^
@@ -289,7 +289,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 102
 //│ annoying  calls  : 131
-//│ subtyping calls  : 4682
+//│ subtyping calls  : 4618
 
 
 // ====== 7 ====== //
@@ -308,7 +308,7 @@ def foo x = case x of {
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
 foo arg
 //│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | ~#D & ({fE: 'fA} & #E | ~#E & ({fF: 'fA} & #F | {fG: 'fA} & #G & ~#F)))))) -> 'fA
-//│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
+//│ arg: G[int] | F[int] | E[int] | D[int] | C[int] | B[int] | A[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.309: 	foo arg
 //│ ║         	^^^^^^^
@@ -322,7 +322,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 106
 //│ annoying  calls  : 131
-//│ subtyping calls  : 5091
+//│ subtyping calls  : 5027
 
 def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ foo_manual: ({fA: 'a} & #A | ~#A & ({fB: 'a} & #B | ~#B & ({fC: 'a} & #C | ~#C & ({fD: 'a} & #D | ~#D & ({fE: 'a} & #E | ~#E & ({fF: 'a} & #F | {fG: 'a} & #G & ~#F)))))) -> 'a
@@ -374,7 +374,7 @@ def foo x = case x of {
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
 foo arg
 //│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | ~#D & ({fE: 'fA} & #E | ~#E & ({fF: 'fA} & #F | ~#F & ({fG: 'fA} & #G | {fH: 'fA} & #H & ~#G))))))) -> 'fA
-//│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
+//│ arg: H[int] | G[int] | F[int] | E[int] | D[int] | C[int] | B[int] | A[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.375: 	foo arg
 //│ ║         	^^^^^^^
@@ -388,6 +388,6 @@ foo arg
 //│ res: error
 //│ constrain calls  : 110
 //│ annoying  calls  : 131
-//│ subtyping calls  : 5568
+//│ subtyping calls  : 5504
 
 

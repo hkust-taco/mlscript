@@ -150,7 +150,7 @@ succ' {} {} {}
 //│   TypeError: n is not a function
 
 fun x -> succ' x x x x x x x x x
-//│ res: ('a -> 'a -> 'b & 'b -> 'a -> 'a -> 'a -> 'a -> 'a -> 'a -> 'c & 'a) -> 'c
+//│ res: ('a -> 'b -> 'b -> 'b -> 'b -> 'b -> 'b -> 'c & 'b -> 'b -> 'a & 'b) -> 'c
 //│    = [Function: res]
 
 

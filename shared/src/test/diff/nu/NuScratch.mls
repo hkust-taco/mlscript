@@ -1,6 +1,14 @@
 :NewDefs
 :NoJS
 
+
+// * TODO diffs to check
+// shared/src/test/diff/mlscript/FunnySubsumptions.mls
+// shared/src/test/diff/mlscript/Addable.mls
+// shared/src/test/diff/ecoop23/SimpleRegionDSL_annot.mls
+
+
+
 mut let foo_ty = error
 //│ mut let foo_ty: nothing
 

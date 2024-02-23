@@ -14,21 +14,21 @@ trait U
 
 def A0: (C | {x:T}) & (D | {y:S})
 def B0: C&{y:S} | D&{x:T} | {x: T; y: S}
-//│ A0: C & D | {x: T, y: S} | C & {y: S} | D & {x: T}
+//│ A0: C & D | {x: T, y: S} | D & {x: T} | C & {y: S}
 //│ B0: {x: T, y: S} | C & {y: S} | D & {x: T}
 
 :stats
 A0 = B0
 //│ {x: T, y: S} | C & {y: S} | D & {x: T}
 //│   <:  A0:
-//│ C & D | {x: T, y: S} | C & {y: S} | D & {x: T}
+//│ C & D | {x: T, y: S} | D & {x: T} | C & {y: S}
 //│ constrain calls  : 1
 //│ annoying  calls  : 0
 //│ subtyping calls  : 198
 
 :stats
 B0 = A0
-//│ C & D | {x: T, y: S} | C & {y: S} | D & {x: T}
+//│ C & D | {x: T, y: S} | D & {x: T} | C & {y: S}
 //│   <:  B0:
 //│ {x: T, y: S} | C & {y: S} | D & {x: T}
 //│ constrain calls  : 2
@@ -39,11 +39,11 @@ B0 = A0
 def A1: C & {x : T} | D & {y : U}
 def B1: (C | D) & (C | {y : U}) & (D | {x : T})
 //│ A1: C & {x: T} | D & {y: U}
-//│ B1: C & D | C & {x: T} | D & {y: U}
+//│ B1: C & D | D & {y: U} | C & {x: T}
 
 :stats
 A1 = B1
-//│ C & D | C & {x: T} | D & {y: U}
+//│ C & D | D & {y: U} | C & {x: T}
 //│   <:  A1:
 //│ C & {x: T} | D & {y: U}
 //│ constrain calls  : 2
@@ -54,7 +54,7 @@ A1 = B1
 B1 = A1
 //│ C & {x: T} | D & {y: U}
 //│   <:  B1:
-//│ C & D | C & {x: T} | D & {y: U}
+//│ C & D | D & {y: U} | C & {x: T}
 //│ constrain calls  : 1
 //│ annoying  calls  : 0
 //│ subtyping calls  : 170
