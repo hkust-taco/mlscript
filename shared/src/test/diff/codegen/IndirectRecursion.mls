@@ -50,7 +50,7 @@ z (fun self -> 1)
 //│ ╟── from intersection type:
 //│ ║  l.3: 	def z: (('a -> 'b) -> (('a -> 'b) & 'c)) -> 'c
 //│ ╙──     	                      ^^^^^^^^^^^^^^^^^
-//│ res: error | 1
+//│ res: 1 | error
 //│    = 1
 
 

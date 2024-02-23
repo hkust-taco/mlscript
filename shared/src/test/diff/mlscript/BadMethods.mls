@@ -198,7 +198,7 @@ bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.190: 	bp.(BadPair.Test) (fun x -> fun y -> if (y) then x else y)
 //│ ╙──       	                                         ^
-//│ res: error | 42
+//│ res: 42 | error
 
 BadPair = BadPair { x = 42; y = 0 }
 BadPair.Map
@@ -823,10 +823,10 @@ class Test9B: Test9A[int]
 //│ ╔══[ERROR] Type mismatch in method declaration:
 //│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `Test9A[int] -> int` does not match type `?x | int`
+//│ ╟── type `Test9A[int] -> int` does not match type `int | ?x`
 //│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	                   ^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into method declaration with expected type `?x | int`
+//│ ╟── but it flows into method declaration with expected type `int | ?x`
 //│ ║  l.815: 	    method Mth9A : Test9A[int] -> int
 //│ ║         	           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from field selection:

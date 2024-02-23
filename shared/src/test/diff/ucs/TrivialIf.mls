@@ -18,28 +18,28 @@ fun getOrElse(opt, default) =
   if opt is
     Some(value) then value
     None then default
-//│ getOrElse: (Some & {value: 'value} | None, 'value,) -> 'value
+//│ getOrElse: (None | Some & {value: 'value}, 'value,) -> 'value
 
 getOrElse(None(), 0)
 //│ res: 0
 
 getOrElse(Some(42), 0)
-//│ res: 42 | 0
+//│ res: 0 | 42
 
 fun map(v, f) =
   if v is
     Some(x) then Some(f(x))
     None then None()
-//│ map: (Some & {value: 'value} | None, 'value -> 'value0,) -> (Some & {value: 'value0} | None)
+//│ map: (None | Some & {value: 'value}, 'value -> 'value0,) -> (None | Some & {value: 'value0})
 
 fun inc(x) = x + 5
 //│ inc: int -> int
 
 map(Some(5), x => x + 5)
-//│ res: Some & {value: int} | None
+//│ res: None | Some & {value: int}
 
 map(None(), inc)
-//│ res: Some & {value: int} | None
+//│ res: None | Some & {value: int}
 
 :e
 fun f(a, b) = if a and b then 0

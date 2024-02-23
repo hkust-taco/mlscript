@@ -19,7 +19,7 @@ n = Numb { val = 1 }
 //│  = Numb { val: 1 }
 
 n.Add n
-//│ res: Numb
+//│ res: Numb | Numb & {val: 1}
 //│    = Numb { val: 2 }
 
 n.Add
@@ -33,7 +33,7 @@ def addTwo a0 a1 = a0.Add a1
 
 
 addTwo n n
-//│ res: Numb
+//│ res: Numb | Numb & {val: 1}
 //│    = Numb { val: 2 }
 
 s = Stri { val = "hey" }
@@ -41,11 +41,11 @@ s = Stri { val = "hey" }
 //│  = Stri { val: 'hey' }
 
 s.Add s
-//│ res: Stri
+//│ res: Stri | Stri & {val: "hey"}
 //│    = Stri { val: 'heyhey' }
 
 addTwo s s
-//│ res: Stri
+//│ res: Stri | Stri & {val: "hey"}
 //│    = Stri { val: 'heyhey' }
 
 
@@ -65,11 +65,11 @@ rec def addNTimes a n =
 //│          = [Function: addNTimes]
 
 addNTimes n 12
-//│ res: Numb
+//│ res: Numb | Numb & {val: 1}
 //│    = Numb { val: 12 }
 
 addNTimes s 5
-//│ res: Stri
+//│ res: Stri | Stri & {val: "hey"}
 //│    = Stri { val: 'heyheyheyheyhey' }
 
 
@@ -181,5 +181,5 @@ class Str_bad_0: Addable[Str_bad_0] & { val: string }
 //│ ║  l.+2: 	  method Add that = Str_bad_0 { val = this.val + that.val }
 //│ ╙──      	                                                 ^^^^^^^^
 //│ Defined class Str_bad_0
-//│ Defined Str_bad_0.Add: Str_bad_0 -> {val: int} -> (error | (Str_bad_0 with {val: error | int}))
+//│ Defined Str_bad_0.Add: Str_bad_0 -> {val: int} -> ((Str_bad_0 with {val: error | int}) | error)
 

@@ -10,11 +10,11 @@ c = 3
 //│  = 3
 
 if true then if true then a else b else a
-//│ res: 2 | 1
+//│ res: 1 | 2
 //│    = 1
 
 if true then if true then id a else id b else a
-//│ res: 2 | 1
+//│ res: 1 | 2
 //│    = 1
 
 class Foo[A]: { field: A }
@@ -55,7 +55,7 @@ test (Foo { field = 2 })
 //│    = 2
 
 def test x = case x of { Foo -> x.field | _ -> 1 }
-//│ test: (Foo[?] & {field: 'field} | ~Foo[?]) -> ('field | 1)
+//│ test: (Foo[?] & {field: 'field} | ~Foo[?]) -> (1 | 'field)
 //│     = [Function: test2]
 
 
@@ -76,6 +76,6 @@ f (if true then { u = 1; v = 2 } else { u = 1 })
 //│    = 1
 
 if true then { u = 1; v = 2 } else { u = 2 }
-//│ res: {u: 2 | 1}
+//│ res: {u: 1 | 2}
 //│    = { u: 1, v: 2 }
 

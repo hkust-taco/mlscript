@@ -5,7 +5,7 @@ fun f(x, y) =
     x == 0 then "x"
     y == 0 then "y"
     _      then "nah"
-//│ f: (number, number,) -> ("x" | "y" | "nah")
+//│ f: (number, number,) -> ("nah" | "x" | "y")
 //│  = [Function: f]
 
 class Option
@@ -30,7 +30,7 @@ fun f(x, allowNone) =
     is Some(x) and isValid(x) then "good"
     is None() and allowNone then "okay"
     is _ then "bad"
-//│ f: (anything, anything,) -> ("good" | "bad" | "okay")
+//│ f: (anything, anything,) -> ("bad" | "good" | "okay")
 //│  = [Function: f1]
 
 fun f(x, y, z) =
@@ -44,7 +44,7 @@ fun f(x, y, z) =
         _ then "bruh"
       3 then "y = 3"
       _ then "bruh"
-//│ f: (number, number, number,) -> ("x" | "y = 1" | "z = 0" | "z = 9" | "bruh" | "y = 3")
+//│ f: (number, number, number,) -> ("bruh" | "x" | "y = 1" | "y = 3" | "z = 0" | "z = 9")
 //│  = [Function: f2]
 
 :w

@@ -53,7 +53,7 @@ test2(0)
 //│ ╟── from reference:
 //│ ║  l.39: 	    x is A then A
 //│ ╙──      	    ^
-//│ error | 0 | A
+//│ 0 | A | error
 //│ res
 //│     = 0
 
@@ -62,6 +62,6 @@ test2(A)
 //│ ╔══[ERROR] Module 'A' does not support equality comparison because it does not have a parameter list
 //│ ║  l.61: 	test2(A)
 //│ ╙──      	^^^^^^^^
-//│ error | 0 | A
+//│ 0 | A | error
 //│ res
 //│     = A { class: [class A] }

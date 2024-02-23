@@ -11,7 +11,7 @@ class A: { f: anything }
 def eval eval x = case x of
   L -> 0,
   A -> eval eval x.f
-//│ eval: ('a -> 'f -> 'b & 'a) -> (L | (A with {f: 'f})) -> (0 | 'b)
+//│ eval: ('a -> 'f -> 'b & 'a) -> ((A with {f: 'f}) | L) -> (0 | 'b)
 //│     = [Function: eval]
 
 
@@ -21,7 +21,7 @@ e = eval eval
 //│ ║  l.19: 	e = eval eval
 //│ ║        	    ^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ e: error | (L | A & {f: L | A}) -> 0
+//│ e: error | (A & {f: A | L} | L) -> 0
 //│  = [Function (anonymous)]
 
 e (A{f = L{}})
@@ -38,7 +38,7 @@ e = eval eval!
 //│ ╙──      	                 ^^^
 //│ e: 'a -> 0
 //│   where
-//│     'a <: L | (A with {f: 'a})
+//│     'a <: (A with {f: 'a}) | L
 //│  = [Function (anonymous)]
 
 :e
@@ -74,7 +74,7 @@ e v
 //│ ║  l.67: 	e v
 //│ ║        	^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ res: error | 0
+//│ res: 0 | error
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
@@ -92,7 +92,7 @@ e v
 def eval eval x = case x of
   L -> 0,
   A -> { x = eval eval x.f }
-//│ eval: ('a -> 'f -> 'b & 'a) -> (L | (A with {f: 'f})) -> (0 | {x: 'b})
+//│ eval: ('a -> 'f -> 'b & 'a) -> ((A with {f: 'f}) | L) -> (0 | {x: 'b})
 //│     = [Function: eval1]
 
 
@@ -102,12 +102,12 @@ e = eval eval
 //│ ║  l.100: 	e = eval eval
 //│ ║         	    ^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ e: error | (L | A & {f: L | A}) -> (0 | {x: 0 | {x: nothing}})
+//│ e: error | (A & {f: A | L} | L) -> (0 | {x: 0 | {x: nothing}})
 //│  = [Function (anonymous)]
 
 :re
 e v
-//│ res: 0 | {x: 0 | {x: nothing}} | error
+//│ res: 0 | error | {x: 0 | {x: nothing}}
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
 
@@ -116,7 +116,7 @@ e = eval eval!
 //│ e: 'a -> 'b
 //│   where
 //│     'b :> 0 | {x: 'b}
-//│     'a <: L | A & {f: 'a}
+//│     'a <: A & {f: 'a} | L
 //│  = [Function (anonymous)]
 
 :re

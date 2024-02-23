@@ -95,7 +95,7 @@ fun (x, y) ->
   match (x, y) with
    | (1, 2) -> 3
    | _ -> 0
-//│ res: (int, int,) -> (3 | 0)
+//│ res: (int, int,) -> (0 | 3)
 
 
 foo x = match x with

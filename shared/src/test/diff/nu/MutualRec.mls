@@ -378,7 +378,7 @@ mixin Foo {
   fun g(y) = y(g)
 }
 //│ mixin Foo() {
-//│   fun f: ('a & 'b) -> ('a | 'c -> 'b)
+//│   fun f: ('a & 'b) -> ('c -> 'b | 'a)
 //│   fun g: 'c -> 'b
 //│ }
 //│ where

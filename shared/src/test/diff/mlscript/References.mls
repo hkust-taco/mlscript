@@ -260,7 +260,7 @@ res.Swap
 //│    = undefined
 
 refin: Ref['a..'b] & Ref['c..'d]
-//│ res: Ref[in 'd & (int | string) | 'b & (int | string) out 'b & 'd]
+//│ res: Ref[in 'b & (int | string) | 'd & (int | string) out 'b & 'd]
 //│    = <no result>
 //│      refin is not implemented
 
@@ -360,7 +360,7 @@ refun.Swap
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
 //│ ╙──     	          ^
-//│ res: error | string | int
+//│ res: error | int | string
 //│    = <no result>
 //│      refun is not implemented
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -375,7 +375,7 @@ refun.Swap
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
 //│ ╙──     	          ^
-//│ res: nothing -> (unit | error)
+//│ res: nothing -> (error | unit)
 //│    = <no result>
 //│      refun is not implemented
 //│ ╔══[ERROR] Type mismatch in field selection:
@@ -390,7 +390,7 @@ refun.Swap
 //│ ╟── Note: class type parameter A is defined at:
 //│ ║  l.3: 	class Ref[A]
 //│ ╙──     	          ^
-//│ res: error | nothing -> (string | int)
+//│ res: error | nothing -> (int | string)
 //│    = <no result>
 //│      refun is not implemented
 

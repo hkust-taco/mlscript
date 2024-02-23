@@ -22,13 +22,13 @@ d : #D
 //│    = D { a: [Function: id], b: 0 }
 
 def foo x = case x of D -> x.b, _ -> 0
-//│ foo: ((D\a with {b: 'b}) | ~D) -> ('b | 0)
+//│ foo: ((D\a with {b: 'b}) | ~D) -> (0 | 'b)
 //│    = [Function: foo]
 
 // Overloading through intersections: not supported
 // foo: ((D\a with {b: 'b}) -> 'b) & (~D -> 0)
 
 foo d
-//│ res: 1 | 0
+//│ res: 0 | 1
 //│    = 0
 

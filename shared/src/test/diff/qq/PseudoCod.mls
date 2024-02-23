@@ -42,7 +42,7 @@ fun body(x, y) = case
   0 then x
   1 then y
   n then quote([unquote(x), unquote(y)]) %> z => body(x, z)(n - 1)
-//│ fun body: forall 'b 'a. (Cod['b, anything] & 'a, Cod['b, anything] & 'a) -> (0 | 1 | Int & ~0 & ~1) -> ('a | Cod['b, anything])
+//│ fun body: forall 'b 'a. (Cod['b, anything] & 'a, Cod['b, anything] & 'a) -> (0 | 1 | Int & ~0 & ~1) -> (Cod['b, anything] | 'a)
 
 // code"(x, y) => ${body(code"x", code"y")(0)}"
 

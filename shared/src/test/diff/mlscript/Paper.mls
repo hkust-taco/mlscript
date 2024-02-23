@@ -10,7 +10,7 @@ type Option[A] = Some[A] | None
 def flatMap f opt = case opt of
   Some -> f opt.value,
   None -> None{}
-//│ flatMap: ('value -> 'a) -> (Some[?] & {value: 'value} | None) -> ('a | None)
+//│ flatMap: ('value -> 'a) -> (None | Some[?] & {value: 'value}) -> (None | 'a)
 //│        = [Function: flatMap]
 
 res = flatMap (fun x -> x) (Some{value = 42})
@@ -18,7 +18,7 @@ res = flatMap (fun x -> x) (Some{value = 42})
 //│    = 42
 
 case res of int -> res, None -> 0
-//│ res: 42 | 0
+//│ res: 0 | 42
 //│    = 42
 
 flatMap (fun x -> None{}) (Some{value = 42})
@@ -35,7 +35,7 @@ flatMap2 (fun x -> Some{value = x}) (Some{value = 12})
 //│    = Some { value: 12 }
 
 flatMap2 (fun x -> Some{value = x}) 42
-//│ res: Some[nothing] | 42
+//│ res: 42 | Some[nothing]
 //│    = 42
 
 flatMap2 (fun x -> x) 42
@@ -53,7 +53,7 @@ class SomeAnd[A, P]: Some[A] & { payload: P }
 
 let arg = if true then SomeAnd{value = 42; payload = 23} else None{}
   in mapSome (fun x -> x.value + x.payload) arg
-//│ res: int | None
+//│ res: None | int
 //│    = 65
 
 
@@ -114,9 +114,9 @@ type List[A] = Cons[A] | None
 rec def mapList f ls = case ls of
   Cons -> Cons{value = f ls.value; tail = mapList f ls.tail},
   None -> None{}
-//│ mapList: ('value -> 'value0) -> 'a -> ('b | None)
+//│ mapList: ('value -> 'value0) -> 'a -> (None | 'b)
 //│   where
-//│     'b :> Cons['value0] with {tail: 'b | None}
+//│     'b :> Cons['value0] with {tail: None | 'b}
 //│     'a <: (Cons[?] with {tail: 'a, value: 'value}) | None
 //│        = [Function: mapList]
 

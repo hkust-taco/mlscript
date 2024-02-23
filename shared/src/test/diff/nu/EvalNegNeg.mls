@@ -31,7 +31,7 @@ mixin EvalNeg {
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
 //│   this: {eval: 'c -> Int}
-//│   fun eval: (Neg['c] | Object & 'a & ~#Neg) -> ('b | Int)
+//│   fun eval: (Neg['c] | Object & 'a & ~#Neg) -> (Int | 'b)
 //│ }
 
 
@@ -41,7 +41,7 @@ mixin EvalNegNeg {
     else super.eval(e)
 }
 //│ mixin EvalNegNeg() {
-//│   super: {eval: ('a | Neg[nothing]) -> 'b}
+//│   super: {eval: (Neg[nothing] | 'a) -> 'b}
 //│   this: {eval: 'c -> 'b}
 //│   fun eval: (Neg[Neg['c] | Object & ~#Neg] | Object & 'a & ~#Neg) -> 'b
 //│ }
@@ -61,9 +61,9 @@ fun mk(n) = if n is
   0 then Lit(3)
   1 then Neg(mk(n - 1))
   _ then Add(mk(n - 1), mk(n - 1))
-//│ fun mk: forall 'a. (0 | 1 | Int & ~0 & ~1) -> ('a | Lit)
+//│ fun mk: forall 'a. (0 | 1 | Int & ~0 & ~1) -> (Lit | 'a)
 //│   where
-//│     'a :> Neg['a | Lit] | Add['a | Lit]
+//│     'a :> Neg[Lit | 'a] | Add[Lit | 'a]
 
 TestLang.eval(mk(0))
 //│ Int

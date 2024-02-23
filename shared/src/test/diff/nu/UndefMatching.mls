@@ -45,7 +45,7 @@ class Abstract[A] {
 //│ ╙──      	       ^
 //│ class Abstract[A] {
 //│   constructor()
-//│   fun bar: (x: A & ~() | ()) -> (A & ~())
+//│   fun bar: (x: () | A & ~()) -> (A & ~())
 //│ }
 
 

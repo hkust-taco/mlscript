@@ -185,7 +185,7 @@ r1 = res id id id id id
 //│   = [Function: id]
 
 r1 iter2 iter2 K
-//│ res: ('a & 'b & 'c) -> (anything -> ('d | anything -> 'b) | 'c | 'e)
+//│ res: ('a & 'b & 'c) -> (anything -> (anything -> 'b | 'd) | 'c | 'e)
 //│   where
 //│     'e :> forall 'f. anything -> 'f -> ('e | 'f)
 //│     'a :> anything -> 'd
@@ -193,7 +193,7 @@ r1 iter2 iter2 K
 //│    = [Function (anonymous)]
 
 r = r1 iter2 iter2
-//│ r: ('a -> 'b & 'b -> 'c & 'd -> 'e & 'e -> ('d & 'f)) -> ('g | ('a & 'd) -> ('c | 'f))
+//│ r: ('a -> 'b & 'b -> 'c & 'd -> 'e & 'e -> ('d & 'f)) -> (('a & 'd) -> ('c | 'f) | 'g)
 //│   where
 //│     'g :> forall 'h. 'h -> (anything -> 'g | 'h)
 //│  = [Function (anonymous)]
@@ -371,7 +371,7 @@ c2_ c2_
 c2_ c2_ K
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b 'c 'd 'e. ('b & 'e) -> ('d | ? -> 'e)
+//│     'a :> forall 'b 'c 'd 'e. ('b & 'e) -> (? -> 'e | 'd)
 //│       where
 //│         forall 'f. 'f -> (forall 'g 'h 'i. 'g -> 'i
 //│           where
@@ -399,7 +399,7 @@ c2_ c2_ K
 //│             'j <: 'l -> 'm) <: 'n -> 'g -> 'h
 //│         'n <: 'h -> 'i <: 'o -> 'b
 //│ where
-//│   'n :> forall 'p 'q 'r 's. ('p & 's) -> ('r | anything -> 's)
+//│   'n :> forall 'p 'q 'r 's. ('p & 's) -> (anything -> 's | 'r)
 //│     where
 //│       forall 't. 't -> (forall 'u 'v 'w. 'u -> 'w
 //│         where

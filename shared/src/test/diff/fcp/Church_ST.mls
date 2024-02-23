@@ -150,29 +150,29 @@ n1w = n1 wrap
 n1w 0
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> {x: 'a} | 0
+//│     'a :> 0 | {x: 'a}
 //│ ╙──
-//│ res: 0 | {x: 'a}
+//│ res: 'a
 //│   where
-//│     'a :> {x: 'a} | 0
+//│     'a :> 0 | {x: 'a}
 //│    = { x: 0 }
 
 :e
 n1 wrap 0
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> {x: 'a} | 0
+//│     'a :> 0 | {x: 'a}
 //│ ╙──
-//│ res: 0 | {x: 'a}
+//│ res: 'a
 //│   where
-//│     'a :> {x: 'a} | 0
+//│     'a :> 0 | {x: 'a}
 //│    = { x: 0 }
 
 :e
 res.x + 1
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> {x: 'a} | 0
+//│     'a :> 0 | {x: 'a}
 //│ ╙──
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.172: 	res.x + 1
@@ -192,25 +192,25 @@ res.x + 1
 //│ ╟── but it flows into field selection with expected type `int`
 //│ ║  l.172: 	res.x + 1
 //│ ╙──       	^^^^^
-//│ res: int | error
+//│ res: error | int
 //│    = 1
 
 :e
 n2 wrap 0
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> {x: 'a} | 0
+//│     'a :> 0 | {x: 'a}
 //│ ╙──
-//│ res: 0 | {x: 'a}
+//│ res: 'a
 //│   where
-//│     'a :> {x: 'a} | 0
+//│     'a :> 0 | {x: 'a}
 //│    = { x: { x: 0 } }
 
 :e
 res.x.x + 1
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> {x: 'a} | 0
+//│     'a :> 0 | {x: 'a}
 //│ ╙──
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.210: 	res.x.x + 1
@@ -239,7 +239,7 @@ res.x.x + 1
 //│ ╟── but it flows into field selection with expected type `int`
 //│ ║  l.210: 	res.x.x + 1
 //│ ╙──       	^^^^^^^
-//│ res: int | error
+//│ res: error | int
 //│    = 1
 
 
@@ -268,18 +268,18 @@ n1w = n1 wrap_ty
 n1w 0
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> {x: 'a} | 0
+//│     'a :> 0 | {x: 'a}
 //│ ╙──
-//│ res: 0 | {x: 'a}
+//│ res: 'a
 //│   where
-//│     'a :> {x: 'a} | 0
+//│     'a :> 0 | {x: 'a}
 //│    = { x: 0 }
 
 :e
 res.x + 1
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> {x: 'a} | 0
+//│     'a :> 0 | {x: 'a}
 //│ ╙──
 //│ ╔══[ERROR] Type mismatch in field selection:
 //│ ║  l.279: 	res.x + 1
@@ -299,7 +299,7 @@ res.x + 1
 //│ ╟── but it flows into field selection with expected type `int`
 //│ ║  l.279: 	res.x + 1
 //│ ╙──       	^^^^^
-//│ res: int | error
+//│ res: error | int
 //│    = 1
 
 

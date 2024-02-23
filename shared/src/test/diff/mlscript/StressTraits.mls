@@ -28,10 +28,17 @@ def foo x = case x of {
   | G -> x.fG
   | H -> x.fH
   }
-//│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | ~#D & ({fE: 'fA} & #E | ~#E & ({fF: 'fA} & #F | ~#F & ({fG: 'fA} & #G | {fH: 'fA} & #H & ~#G))))))) -> 'fA
-//│ constrain calls  : 26
-//│ annoying  calls  : 0
-//│ subtyping calls  : 623
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
 
 
 // ====== 1 & all ====== //
@@ -40,70 +47,53 @@ def foo x = case x of {
 def arg: A[int]
 foo arg
 //│ arg: A[int]
-//│ res: int
-//│ constrain calls  : 19
-//│ annoying  calls  : 9
-//│ subtyping calls  : 248
+//│ ╔══[ERROR] identifier not found: foo
+//│ ║  l.48: 	foo arg
+//│ ╙──      	^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ res: error
+//│ constrain calls  : 6
+//│ annoying  calls  : 0
+//│ subtyping calls  : 11
 
 :stats
 :e
 def arg: A[int] | B[int]
 foo arg
-//│ arg: A[int] | B[int]
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.51: 	foo arg
-//│ ║        	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.22: 	  | A -> x.fA
-//│ ║        	         ^^^^
-//│ ╟── from refined scrutinee:
-//│ ║  l.21: 	def foo x = case x of {
-//│ ╙──      	                 ^
-//│ res: error | int
-//│ constrain calls  : 36
-//│ annoying  calls  : 31
-//│ subtyping calls  : 699
+//│ arg: B[int] | A[int]
+//│ ╔══[ERROR] identifier not found: foo
+//│ ║  l.62: 	foo arg
+//│ ╙──      	^^^
+//│ res: error
+//│ constrain calls  : 6
+//│ annoying  calls  : 0
+//│ subtyping calls  : 33
 
 :stats
 :e
 def arg: A[int] | B[int] | C[int]
 foo arg
-//│ arg: A[int] | B[int] | C[int]
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.71: 	foo arg
-//│ ║        	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.22: 	  | A -> x.fA
-//│ ║        	         ^^^^
-//│ ╟── from refined scrutinee:
-//│ ║  l.21: 	def foo x = case x of {
-//│ ╙──      	                 ^
-//│ res: error | int
-//│ constrain calls  : 65
-//│ annoying  calls  : 90
-//│ subtyping calls  : 3909
+//│ arg: C[int] | B[int] | A[int]
+//│ ╔══[ERROR] identifier not found: foo
+//│ ║  l.75: 	foo arg
+//│ ╙──      	^^^
+//│ res: error
+//│ constrain calls  : 6
+//│ annoying  calls  : 0
+//│ subtyping calls  : 74
 
 :stats
 :e
 def arg: A[int] | B[int] | D[int]
 foo arg
-//│ arg: A[int] | B[int] | D[int]
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.91: 	foo arg
-//│ ║        	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.22: 	  | A -> x.fA
-//│ ║        	         ^^^^
-//│ ╟── from refined scrutinee:
-//│ ║  l.21: 	def foo x = case x of {
-//│ ╙──      	                 ^
+//│ arg: D[int] | B[int] | A[int]
+//│ ╔══[ERROR] identifier not found: foo
+//│ ║  l.88: 	foo arg
+//│ ╙──      	^^^
 //│ res: error
-//│ constrain calls  : 82
-//│ annoying  calls  : 209
-//│ subtyping calls  : 24636
+//│ constrain calls  : 6
+//│ annoying  calls  : 0
+//│ subtyping calls  : 74
 
 
 // ====== 2 ====== //
@@ -116,22 +106,17 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int]
 foo arg
-//│ foo: ({fA: 'fA} & #A | {fB: 'fA} & #B & ~#A) -> 'fA
-//│ arg: A[int] | B[int]
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.118: 	foo arg
-//│ ║         	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.114: 	  | A -> x.fA
-//│ ║         	         ^^^^
-//│ ╟── from refined scrutinee:
-//│ ║  l.113: 	def foo x = case x of {
-//│ ╙──       	                 ^
-//│ res: error | int
-//│ constrain calls  : 44
-//│ annoying  calls  : 31
-//│ subtyping calls  : 481
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
 
 
 // ====== 3 ====== //
@@ -145,22 +130,17 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int]
 foo arg
-//│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | {fC: 'fA} & #C & ~#B)) -> 'fA
-//│ arg: A[int] | B[int] | C[int]
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.147: 	foo arg
-//│ ║         	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.142: 	  | A -> x.fA
-//│ ║         	         ^^^^
-//│ ╟── from refined scrutinee:
-//│ ║  l.141: 	def foo x = case x of {
-//│ ╙──       	                 ^
-//│ res: error | int
-//│ constrain calls  : 76
-//│ annoying  calls  : 90
-//│ subtyping calls  : 3677
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
 
 
 // ====== 4 ====== //
@@ -175,58 +155,39 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int]
 foo arg
-//│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | {fD: 'fA} & #D & ~#C))) -> 'fA
-//│ arg: A[int] | B[int] | C[int] | D[int]
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.177: 	foo arg
-//│ ║         	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.171: 	  | A -> x.fA
-//│ ║         	         ^^^^
-//│ ╟── from refined scrutinee:
-//│ ║  l.170: 	def foo x = case x of {
-//│ ╙──       	                 ^
-//│ res: error
-//│ constrain calls  : 94
-//│ annoying  calls  : 131
-//│ subtyping calls  : 4647
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
 
 :stats
 :e
 foo (arg with { x = 1} with { y = 2 })
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.197: 	foo (arg with { x = 1} with { y = 2 })
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int, x: 1, y: 2} & ~#B | {fB: int, x: 1, y: 2} & ~?a | {fB: int, x: 1, y: 2} & #A)` does not have field 'fA'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.171: 	  | A -> x.fA
-//│ ║         	         ^^^^
-//│ ╟── from refined scrutinee:
-//│ ║  l.170: 	def foo x = case x of {
-//│ ╙──       	                 ^
+//│ ╔══[ERROR] identifier not found: foo
+//│ ║  l.172: 	foo (arg with { x = 1} with { y = 2 })
+//│ ╙──       	^^^
 //│ res: error
-//│ constrain calls  : 69
-//│ annoying  calls  : 128
-//│ subtyping calls  : 4136
+//│ constrain calls  : 6
+//│ annoying  calls  : 0
+//│ subtyping calls  : 11
 
 :stats
 :e
 foo (arg with { x = 1; y = 2; z = 3 })
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.215: 	foo (arg with { x = 1; y = 2; z = 3 })
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int, x: 1, y: 2, z: 3} & ~#B | {fB: int, x: 1, y: 2, z: 3} & ~?a | {fB: int, x: 1, y: 2, z: 3} & #A)` does not have field 'fA'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.171: 	  | A -> x.fA
-//│ ║         	         ^^^^
-//│ ╟── from refined scrutinee:
-//│ ║  l.170: 	def foo x = case x of {
-//│ ╙──       	                 ^
+//│ ╔══[ERROR] identifier not found: foo
+//│ ║  l.183: 	foo (arg with { x = 1; y = 2; z = 3 })
+//│ ╙──       	^^^
 //│ res: error
-//│ constrain calls  : 69
-//│ annoying  calls  : 128
-//│ subtyping calls  : 4136
+//│ constrain calls  : 6
+//│ annoying  calls  : 0
+//│ subtyping calls  : 11
 
 
 // ====== 5 ====== //
@@ -242,22 +203,17 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int]
 foo arg
-//│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | {fE: 'fA} & #E & ~#D)))) -> 'fA
-//│ arg: A[int] | B[int] | C[int] | D[int] | E[int]
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.244: 	foo arg
-//│ ║         	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.237: 	  | A -> x.fA
-//│ ║         	         ^^^^
-//│ ╟── from refined scrutinee:
-//│ ║  l.236: 	def foo x = case x of {
-//│ ╙──       	                 ^
-//│ res: error
-//│ constrain calls  : 98
-//│ annoying  calls  : 131
-//│ subtyping calls  : 4916
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
 
 
 // ====== 6 ====== //
@@ -274,22 +230,17 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
 foo arg
-//│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | ~#D & ({fE: 'fA} & #E | {fF: 'fA} & #F & ~#E))))) -> 'fA
-//│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.276: 	foo arg
-//│ ║         	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.268: 	  | A -> x.fA
-//│ ║         	         ^^^^
-//│ ╟── from refined scrutinee:
-//│ ║  l.267: 	def foo x = case x of {
-//│ ╙──       	                 ^
-//│ res: error
-//│ constrain calls  : 102
-//│ annoying  calls  : 131
-//│ subtyping calls  : 5238
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
 
 
 // ====== 7 ====== //
@@ -307,54 +258,59 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
 foo arg
-//│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | ~#D & ({fE: 'fA} & #E | ~#E & ({fF: 'fA} & #F | {fG: 'fA} & #G & ~#F)))))) -> 'fA
-//│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.309: 	foo arg
-//│ ║         	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.300: 	  | A -> x.fA
-//│ ║         	         ^^^^
-//│ ╟── from refined scrutinee:
-//│ ║  l.299: 	def foo x = case x of {
-//│ ╙──       	                 ^
-//│ res: error
-//│ constrain calls  : 106
-//│ annoying  calls  : 131
-//│ subtyping calls  : 5618
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
 
 def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
-//│ foo_manual: ({fA: 'a} & #A | ~#A & ({fB: 'a} & #B | ~#B & ({fC: 'a} & #C | ~#C & ({fD: 'a} & #D | ~#D & ({fE: 'a} & #E | ~#E & ({fF: 'a} & #F | {fG: 'a} & #G & ~#F)))))) -> 'a
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
 
 :stats
 :e
 foo_manual arg
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.332: 	foo_manual arg
-//│ ║         	^^^^^^^^^^^^^^
-//│ ╟── type `{fB: int} & #B` does not match type `{fA: 'a} & #A | ~#A & ({fB: 'a} & #B | ~#B & ({fC: 'a} & #C | ~#C & ({fD: 'a} & #D | ~#D & ({fE: 'a} & #E | ~#E & ({fF: 'a} & #F | {fG: 'a} & #G & ~#F)))))`
-//│ ║  l.308: 	def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
-//│ ║         	                  ^^^^^^
-//│ ╟── but it flows into reference with expected type `{fA: 'a0} & #A | ~#A & ({fB: 'a0} & #B | ~#B & ({fC: 'a0} & #C | ~#C & ({fD: 'a0} & #D | ~#D & ({fE: 'a0} & #E | ~#E & ({fF: 'a0} & #F | {fG: 'a0} & #G & ~#F)))))`
-//│ ║  l.332: 	foo_manual arg
-//│ ║         	           ^^^
-//│ ╟── Note: constraint arises from union type:
-//│ ║  l.327: 	def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
-//│ ╙──       	                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ res: error
-//│ constrain calls  : 24
-//│ annoying  calls  : 67
-//│ subtyping calls  : 3625
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
 
 :stats
 foo_manual = foo
-//│ ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | ~#D & ({fE: 'fA} & #E | ~#E & ({fF: 'fA} & #F | {fG: 'fA} & #G & ~#F)))))) -> 'fA
-//│   <:  foo_manual:
-//│ ({fA: 'a} & #A | ~#A & ({fB: 'a} & #B | ~#B & ({fC: 'a} & #C | ~#C & ({fD: 'a} & #D | ~#D & ({fE: 'a} & #E | ~#E & ({fF: 'a} & #F | {fG: 'a} & #G & ~#F)))))) -> 'a
-//│ constrain calls  : 91
-//│ annoying  calls  : 183
-//│ subtyping calls  : 3413
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
 
 
 // ====== 8 ====== //
@@ -373,21 +329,16 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
 foo arg
-//│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | ~#D & ({fE: 'fA} & #E | ~#E & ({fF: 'fA} & #F | ~#F & ({fG: 'fA} & #G | {fH: 'fA} & #H & ~#G))))))) -> 'fA
-//│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.375: 	foo arg
-//│ ║         	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.365: 	  | A -> x.fA
-//│ ║         	         ^^^^
-//│ ╟── from refined scrutinee:
-//│ ║  l.364: 	def foo x = case x of {
-//│ ╙──       	                 ^
-//│ res: error
-//│ constrain calls  : 110
-//│ annoying  calls  : 131
-//│ subtyping calls  : 6061
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
 
 

@@ -34,7 +34,7 @@ f (0 as Int)
 //│ ╟── from reference:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ╙──     	           ^
-//│ res: error | 0 | 1
+//│ res: 0 | 1 | error
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.21: 	f (0 as 1 | 3)
 //│ ║        	   ^^^^^^^^^^
@@ -59,7 +59,7 @@ f (0 as Int)
 //│ ╟── from reference:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ╙──     	           ^
-//│ res: error | 0 | 1
+//│ res: 0 | 1 | error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.22: 	f (0 as 0 | 3)
 //│ ║        	^^^^^^^^^^^^^^
@@ -75,7 +75,7 @@ f (0 as Int)
 //│ ╟── from reference:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ╙──     	           ^
-//│ res: error | 0 | 1
+//│ res: 0 | 1 | error
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.23: 	f (0 as 3 | 4)
 //│ ║        	   ^^^^^^^^^^
@@ -100,7 +100,7 @@ f (0 as Int)
 //│ ╟── from reference:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ╙──     	           ^
-//│ res: error | 0 | 1
+//│ res: 0 | 1 | error
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.24: 	f (0 as Int)
 //│ ║        	^^^^^^^^^^^^
@@ -116,7 +116,7 @@ f (0 as Int)
 //│ ╟── from reference:
 //│ ║  l.9: 	let f(x) = x as 0 | 1
 //│ ╙──     	           ^
-//│ res: error | 0 | 1
+//│ res: 0 | 1 | error
 
 let g(x: int) = succ x
 g 0
@@ -159,7 +159,7 @@ bar(2, 2)
 //│ ╟── integer literal of type `2` does not match type `0 | 1`
 //│ ║  l.155: 	bar(2, 2)
 //│ ╙──       	    ^
-//│ res: error | 2
+//│ res: 2 | error
 
 bar(0, 0)
 bar(1, 1)
@@ -189,7 +189,7 @@ f 2
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.173: 	let f x = bar(x, x)
 //│ ╙──       	              ^
-//│ res: error | 2
+//│ res: 2 | error
 
 x => bar(1, x)
 x => bar(x, 0)
@@ -214,7 +214,7 @@ x => bar(bar(x, x), 0)
 
 x => bar(bar(x, 1), 0)
 (x, y) => bar(bar(x, y), x)
-//│ res: ('a & (0 | 1)) -> (1 | 0 | 'a)
+//│ res: ('a & (0 | 1)) -> (0 | 1 | 'a)
 //│ res: ('a & (0 | 1), 'a & (0 | 1),) -> 'a
 
 (x, y) => bar(bar(x, y), 0)

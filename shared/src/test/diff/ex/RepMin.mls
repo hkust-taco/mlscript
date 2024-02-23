@@ -88,7 +88,7 @@ fun walk(t, mn) = if t is
     let mnl = walk(l, mn)
     let mnr = walk(r, mn)
     [min(mnl.0, mnr.0), Node(mnl.1, mnr.1)]
-//│ fun walk: forall 'a 'b. (Leaf[Num & 'a] | Node[Num & 'a], Int & 'b) -> ['a, Leaf['a | 'b] | Node['a | 'b]]
+//│ fun walk: forall 'a 'b. (Leaf[Num & 'a] | Node[Num & 'a], Int & 'b) -> ['a, Leaf['b | 'a] | Node['b | 'a]]
 
 
 let tree = Node of (Node of (Node of Leaf(1), Leaf(5)), Leaf(3)), Node of Leaf(3), Leaf(2)
@@ -125,7 +125,9 @@ fun walk(t, mn) = if t is
     Pair of n, Leaf(if n > 2 * mn then mn else n)
   Node(l, r) and walk(l, mn) is Pair(mn1, l1) and walk(r, mn) is Pair(mn2, r1) then
     Pair of min(mn1, mn2), Node(l1, r1)
-//│ fun walk: forall 'A 'a. (Leaf[Num & 'A] | Node[Num & 'A], Int & 'a) -> Pair['A, Leaf['A | 'a] | Node['A | 'a]]
+//│ fun walk: forall 'A 'a. (Leaf['A] | Node['A], Int & 'a) -> Pair['A, Leaf['a | 'A] | Node['a | 'A]]
+//│   where
+//│     'A <: Num
 
 String of walk(tree, 2)
 //│ Str
@@ -143,7 +145,7 @@ fun walkLazy(t, mn) = if t is
     let mnl = walkLazy(l, mn)
     let mnr = walkLazy(r, mn)
     [min(mnl.0, mnr.0), Lazy of () => Node of mnl.1.get, mnr.1.get]
-//│ fun walkLazy: forall 'a 'get. (Leaf[Num & 'a] | Node[Num & 'a], {get: Int & 'get}) -> ['a, Lazy[Leaf['a | 'get] | Node['a | 'get]]]
+//│ fun walkLazy: forall 'a 'get. (Leaf[Num & 'a] | Node[Num & 'a], {get: Int & 'get}) -> ['a, Lazy[Leaf['get | 'a] | Node['get | 'a]]]
 
 
 // * One way to tie the recursive knot
@@ -238,7 +240,7 @@ fun repmin(t) =
       () => Node of l'(), r'()
   let res = go(t)
   [min, res()]
-//│ fun repmin: forall 'min. (Leaf[Int & 'min] | Node[Int & 'min]) -> ['min | 2147483648, Leaf['min | 2147483648] | Node['min | 2147483648]]
+//│ fun repmin: forall 'min. (Leaf[Int & 'min] | Node[Int & 'min]) -> [2147483648 | 'min, Leaf[2147483648 | 'min] | Node[2147483648 | 'min]]
 
 String of repmin(tree)
 //│ Str

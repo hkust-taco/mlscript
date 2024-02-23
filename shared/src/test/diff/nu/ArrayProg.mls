@@ -56,9 +56,9 @@ class Pair[A, B](a: A, b: B)
 fun unbox(x) = if x is
   Numbr(n) then n
   Vectr(xs) then map of xs, unbox
-//│ fun unbox: forall 'a. (Numbr | Vectr) -> ('a | Int)
+//│ fun unbox: forall 'a. (Numbr | Vectr) -> (Int | 'a)
 //│   where
-//│     'a :> Array['a | Int]
+//│     'a :> Array[Int | 'a]
 
 fun add(e) =
   if e is
@@ -88,9 +88,9 @@ let v = Vectr of [Numbr(10), Numbr(20), Numbr(30)]
 //│   = Vectr {}
 
 unbox(v)
-//│ forall 'a. 'a | Int
+//│ forall 'a. Int | 'a
 //│   where
-//│     'a :> Array['a | Int]
+//│     'a :> Array[Int | 'a]
 //│ res
 //│     = [ 10, 20, 30 ]
 
@@ -101,9 +101,9 @@ let res = add of Pair of (Vectr of [Numbr(1), Numbr(2)]), (Vectr of [Numbr(3), v
 //│     = Vectr {}
 
 unbox(res)
-//│ forall 'a. 'a | Int
+//│ forall 'a. Int | 'a
 //│   where
-//│     'a :> Array['a | Int]
+//│     'a :> Array[Int | 'a]
 //│ res
 //│     = [ 4, [ 12, 22, 32 ] ]
 

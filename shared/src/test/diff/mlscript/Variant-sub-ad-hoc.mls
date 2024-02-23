@@ -22,7 +22,7 @@ res = flatMap f None
 //│  = [Function: f]
 //│ res: Some & {v: 1}
 //│    = Some { v: 1 }
-//│ res: Some & {v: nothing} | None
+//│ res: None | Some & {v: nothing}
 //│    = None {}
 
 class Lit
@@ -47,9 +47,9 @@ rec def evalOpt = fun x -> case x of {
         Some (l + r)
       ) (evalOpt x.rhs)) (evalOpt x.lhs)
   }
-//│ evalOpt: 'a -> (Some & {v: int} | None & {err: string})
+//│ evalOpt: 'a -> (None & {err: string} | Some & {v: int})
 //│   where
-//│     'a <: Lit & {v: int} | Neg & {sub: 'a} | Var & {nme: string} | Plus & {lhs: 'a, rhs: 'a}
+//│     'a <: Lit & {v: int} | Neg & {sub: 'a} | Plus & {lhs: 'a, rhs: 'a} | Var & {nme: string}
 //│        = [Function: evalOpt]
 //│ constrain calls  : 533
 //│ annoying  calls  : 156
@@ -57,7 +57,7 @@ rec def evalOpt = fun x -> case x of {
 
 :stats
 evalOpt (Plus{} with {lhs = Lit{} with {v=2}; rhs = Lit{} with {v=2}})
-//│ res: Some & {v: int} | None & {err: string}
+//│ res: None & {err: string} | Some & {v: int}
 //│    = Some { v: 4 }
 //│ constrain calls  : 88
 //│ annoying  calls  : 34

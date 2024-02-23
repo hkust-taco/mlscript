@@ -21,7 +21,7 @@ class B
 fun bar(c) = if c is
   C(y) then y
   B    then 0
-//│ fun bar: forall 'a. (B | C['a]) -> ('a | 0)
+//│ fun bar: forall 'a. (B | C['a]) -> (0 | 'a)
 
 bar(c)
 //│ 0 | 123

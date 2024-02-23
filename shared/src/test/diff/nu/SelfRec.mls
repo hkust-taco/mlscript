@@ -179,7 +179,7 @@ class Foo7[A](head: A, tail: Foo7[A] | N) {
 //│ ║  l.176: 	    _ then tail.test1
 //│ ╙──       	               ^^^^^^
 //│ class Foo7[A](head: A, tail: Foo7[A] | N) {
-//│   fun test1: A | error
+//│   fun test1: error | A
 //│ }
 
 class Foo7_A[A](head: A, tail: Foo7_A[A] | N) {
@@ -207,7 +207,7 @@ class Foo7_2_A[A](head: A, tail: Foo7_A[Int] | N) {
     _ then tail.test1
 }
 //│ class Foo7_2_A[A](head: A, tail: Foo7_A[Int] | N) {
-//│   fun test1: A | Int
+//│   fun test1: Int | A
 //│ }
 
 :e

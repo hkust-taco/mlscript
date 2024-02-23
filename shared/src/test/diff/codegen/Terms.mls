@@ -78,7 +78,7 @@ if true then 1 else 2
 //│ // Query 1
 //│ res = true ? 1 : 2;
 //│ // End of generated code
-//│ res: 2 | 1
+//│ res: 1 | 2
 //│    = 1
 
 // App(Var(callee), ...): Construct objects conforming some traits
@@ -267,7 +267,7 @@ case 0 of
 //│ // Query 1
 //│ res = 0 instanceof A ? 1 : 0;
 //│ // End of generated code
-//│ res: 1 | 0
+//│ res: 0 | 1
 //│    = 0
 
 // CaseOf: Two branches with the wildcard
@@ -281,7 +281,7 @@ case 0 of
 //│ let a;
 //│ res = (a = 0, a instanceof A ? 1 : a instanceof B ? 2 : 0);
 //│ // End of generated code
-//│ res: 1 | 2 | 0
+//│ res: 0 | 1 | 2
 //│    = 0
 
 // CaseOf: Two branches without the wildcard

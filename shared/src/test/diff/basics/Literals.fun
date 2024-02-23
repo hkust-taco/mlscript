@@ -69,25 +69,25 @@ false as 1
 //│ res: 1
 
 let f = b => if b then 0 else 1
-//│ f: bool -> (1 | 0)
+//│ f: bool -> (0 | 1)
 
 let pred = n => 0 < n
 //│ pred: number -> bool
 
 let g = x => if pred x then x else f false
-//│ g: (number & 'a) -> (1 | 0 | 'a)
+//│ g: (number & 'a) -> (0 | 1 | 'a)
 
 g 3
-//│ res: 3 | 1 | 0
+//│ res: 0 | 1 | 3
 
 g / succ 3
 //│ res: int
 
 x => if x then x else f false
-//│ res: (bool & 'a) -> (1 | 0 | 'a)
+//│ res: (bool & 'a) -> (0 | 1 | 'a)
 
 res false
-//│ res: false | 1 | 0
+//│ res: 0 | 1 | false
 
 let rec f = n =>
   if pred n then n else f (n + 1)
@@ -119,8 +119,8 @@ let take1 (x: 1) = 1
 //│ take1: (x: 1,) -> 1
 
 let takeWhat y = if y < 0 then take0 y else take1 y
-//│ takeWhat: nothing -> (1 | 0)
+//│ takeWhat: nothing -> (0 | 1)
 
 let takeWhat y = if y < 0 then take0 (x: y) else take1 (x: y)
-//│ takeWhat: nothing -> (1 | 0)
+//│ takeWhat: nothing -> (0 | 1)
 

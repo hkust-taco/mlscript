@@ -83,7 +83,7 @@ foo id
 //│ ╟── Note: quantified type variable 'a is defined at:
 //│ ║  l.66: 	def foo: (forall 'a 'b. ('a | 'b) -> ('a & 'b)) -> 1
 //│ ╙──      	                 ^^
-//│ res: error | 1
+//│ res: 1 | error
 
 
 def foo: MutArray[forall 'a 'b. ('a & 'b) -> ('a | 'b)]

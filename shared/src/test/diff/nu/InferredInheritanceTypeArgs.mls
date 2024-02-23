@@ -41,22 +41,22 @@ mixin Test2[S, T] {
 
 class A1[B](val s: Bool, val t: B) extends Test2[Bool, B]
 //│ class A1[B](s: Bool, t: B) {
-//│   fun fb: ('S & Bool) -> ['S | false | true, 'S | false | true]
-//│   fun x: ['S | false | true, B]
+//│   fun fb: ('S & Bool) -> [Bool | 'S, Bool | 'S]
+//│   fun x: [Bool | 'S, B]
 //│ }
 
 // * TODO: Investigate type of fb
 class A2[A](val s: A, val t: Int) extends Test2
 //│ class A2[A](s: A, t: Int) {
-//│   fun fb: 'S -> ['S | A, 'S | A]
-//│   fun x: ['S | A, Int]
+//│   fun fb: 'S -> [A | 'S, A | 'S]
+//│   fun x: [A | 'S, Int]
 //│ }
 
 // * TODO: Investigate type of fb
 class A3(val s: Int, val t: Bool) extends Test2
 //│ class A3(s: Int, t: Bool) {
-//│   fun fb: 'S -> ['S | Int, 'S | Int]
-//│   fun x: ['S | Int, Bool]
+//│   fun fb: 'S -> [Int | 'S, Int | 'S]
+//│   fun x: [Int | 'S, Bool]
 //│ }
 
 class P(val p: Int) { 

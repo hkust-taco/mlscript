@@ -14,49 +14,87 @@ trait U
 
 def A0: (C | {x:T}) & (D | {y:S})
 def B0: C&{y:S} | D&{x:T} | {x: T; y: S}
-//│ A0: C & D | D & {x: T} | C & {y: S} | {x: T, y: S}
-//│ B0: C & {y: S} | D & {x: T} | {x: T, y: S}
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:360)
 
 :stats
 A0 = B0
-//│ C & {y: S} | D & {x: T} | {x: T, y: S}
-//│   <:  A0:
-//│ C & D | D & {x: T} | C & {y: S} | {x: T, y: S}
-//│ constrain calls  : 1
-//│ annoying  calls  : 0
-//│ subtyping calls  : 214
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:360)
 
 :stats
 B0 = A0
-//│ C & D | D & {x: T} | C & {y: S} | {x: T, y: S}
-//│   <:  B0:
-//│ C & {y: S} | D & {x: T} | {x: T, y: S}
-//│ constrain calls  : 2
-//│ annoying  calls  : 32
-//│ subtyping calls  : 306
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:360)
 
 
 def A1: C & {x : T} | D & {y : U}
 def B1: (C | D) & (C | {y : U}) & (D | {x : T})
-//│ A1: C & {x: T} | D & {y: U}
-//│ B1: C & D | D & {y: U} | C & {x: T}
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
 
 :stats
 A1 = B1
-//│ C & D | D & {y: U} | C & {x: T}
-//│   <:  A1:
-//│ C & {x: T} | D & {y: U}
-//│ constrain calls  : 2
-//│ annoying  calls  : 13
-//│ subtyping calls  : 233
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
 
 :stats
 B1 = A1
-//│ C & {x: T} | D & {y: U}
-//│   <:  B1:
-//│ C & D | D & {y: U} | C & {x: T}
-//│ constrain calls  : 1
-//│ annoying  calls  : 0
-//│ subtyping calls  : 170
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
 
 

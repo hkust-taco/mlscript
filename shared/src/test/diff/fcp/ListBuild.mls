@@ -4,7 +4,7 @@
 class Ls[A]
   method HeadTail: (A, Ls[A]) | undefined
 //│ Defined class Ls[+A]
-//│ Declared Ls.HeadTail: Ls['A] -> (('A, Ls['A],) | undefined)
+//│ Declared Ls.HeadTail: Ls['A] -> (undefined | ('A, Ls['A],))
 
 // * Note that a more structural type such as this will raise cycle errors due to `:NoRecursiveTypes`
 // class Ls[A]: { head: A | undefined; tail: Ls[A] | undefined }
@@ -153,7 +153,7 @@ xs1 = build (fun c -> fun n -> c 1 n)
 //│    = Cons { head: 1, tail: Nil {} }
 
 xs3 = build (fun c -> fun n -> c 1 (c 2 (c 3 n)))
-//│ xs3: Ls[3 | 2 | 1]
+//│ xs3: Ls[1 | 2 | 3]
 //│    = Cons {
 //│        head: 1,
 //│        tail: Cons { head: 2, tail: Cons { head: 3, tail: Nil {} } }
@@ -214,7 +214,7 @@ build_ (fun c -> fun n -> c 1 n)
 //│    = Cons { head: 1, tail: Nil {} }
 
 build_ (fun c -> fun n -> c 1 (c 2 (c 3 n)))
-//│ res: Ls[1 | 3 | 2]
+//│ res: Ls[1 | 2 | 3]
 //│    = Cons {
 //│        head: 1,
 //│        tail: Cons { head: 2, tail: Cons { head: 3, tail: Nil {} } }

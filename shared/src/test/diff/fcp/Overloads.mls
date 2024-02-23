@@ -24,7 +24,7 @@ IISS : int -> int & string -> string
 //│ res: int -> int & string -> string
 
 IISS : IISS | BBNN
-//│ res: IISS | BBNN
+//│ res: BBNN | IISS
 
 :e
 IISS : ZZII
@@ -68,13 +68,23 @@ IISS 0
 //│ res: int
 
 (if true then IISS else BBNN) 0
-//│ res: number | string | bool
+//│ res: bool | number | string
 
 fun x -> (if true then IISS else BBNN) x
-//│ res: int -> (number | string | bool)
+//│ res: int -> (bool | number | string)
 
 if true then IISS else BBNN
-//│ res: bool -> bool & number -> number | int -> int & string -> string
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.TyperDatatypes$BaseType.comparePartial(TyperDatatypes.scala:189)
+//│ 	at: mlscript.NormalForms$LhsNf.comparePartial(NormalForms.scala:37)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:500)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
 
 (if true then IISS else ZZII) : int -> int
 //│ res: int -> int
@@ -85,10 +95,10 @@ if true then IISS else BBNN
 :e
 (if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.86: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.96: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `true` does not match type `int | string`
-//│ ║  l.86: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.96: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╙──      	                                         ^^^^
 //│ res: (0 | 1 | true) -> number
 
@@ -108,18 +118,18 @@ not test
 
 // :ds
 def test: ~(int -> int) & ~bool
-//│ test: in ~(int -> int) & ~bool out nothing
+//│ test: in ~bool & ~(int -> int) out nothing
 
 def test: ~(int -> int) & bool
 //│ test: in bool out nothing
 
 def test: ~(int -> int) & ~(bool -> bool)
-//│ test: in ~(nothing -> (int | bool)) out nothing
+//│ test: in ~(nothing -> (bool | int)) out nothing
 
 def test: ~(int -> int | bool -> bool)
-//│ test: in ~(nothing -> (int | bool)) out nothing
+//│ test: in ~(nothing -> (bool | int)) out nothing
 
 def test: ~(int -> int & string -> string) & ~(bool -> bool & number -> number)
-//│ test: in ~(nothing -> (string | number) & int -> number & nothing -> (string | bool) & nothing -> (int | bool)) out nothing
+//│ test: in ~(nothing -> (number | string) & int -> number & nothing -> (bool | string) & nothing -> (bool | int)) out nothing
 
 

@@ -357,7 +357,7 @@ def a2' (x: A1') =
 //│   where
 //│     'a :> forall 'a 'b 'c 'd. nothing -> ('b -> 'c | 'd)
 //│       where
-//│         'a | Sid <: (forall 'b 'e 'c. ('b -> 'e & 'e -> 'c) -> 'b -> 'c) -> 'd
+//│         Sid | 'a <: (forall 'b 'e 'c. ('b -> 'e & 'e -> 'c) -> 'b -> 'c) -> 'd
 //│ ║  l.198: 	type A1' = forall 'a. (('a | Sid) -> 'a) -> 'a -> ('a | Sid)
 //│ ╙──       	                  ^^
 //│ a2': A1' -> (forall 'a. anything -> 'a

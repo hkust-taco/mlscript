@@ -172,7 +172,7 @@ B(0, 0).x
 //│ ╟── Either make the parameter a `val` or access it through destructuring
 //│ ║  l.130: 	class B(x: Int, val y: Int)
 //│ ╙──       	        ^
-//│ error | Int
+//│ Int | error
 //│ res
 //│     = undefined
 
@@ -262,7 +262,7 @@ if D(42) is D(x) then x else 0
 //│ class D(x: Int) {
 //│   let x: 1
 //│ }
-//│ 1 | 0
+//│ 0 | 1
 //│ res
 //│     = 1
 
@@ -273,7 +273,7 @@ if E(42) is E(x) then x else 0
 //│ class E(x: Int) {
 //│   val x: 2
 //│ }
-//│ 2 | 0
+//│ 0 | 2
 //│ res
 //│     = 2
 

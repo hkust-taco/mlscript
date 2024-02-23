@@ -1,10 +1,10 @@
 
 def test f = f (fun b -> if b then 1 else 2)
-//│ test: ((bool -> (2 | 1)) -> 'a) -> 'a
+//│ test: ((bool -> (1 | 2)) -> 'a) -> 'a
 //│     = [Function: test]
 
 test (fun k -> (k true, k false))
-//│ res: (2 | 1, 2 | 1,)
+//│ res: (1 | 2, 1 | 2,)
 //│    = [ 1, 2 ]
 
 
@@ -27,15 +27,15 @@ def useCls c = case c of { Class -> c.x | int -> "oops" }
 //│   })());
 //│ };
 //│ // End of generated code
-//│ useCls: ((Class with {x: 'x}) | int) -> ('x | "oops")
+//│ useCls: ((Class with {x: 'x}) | int) -> ("oops" | 'x)
 //│       = [Function: useCls]
 
 useCls c
-//│ res: 1 | "oops"
+//│ res: "oops" | 1
 //│    = 1
 
 useCls (c with { x = 2 })
-//│ res: 2 | "oops"
+//│ res: "oops" | 2
 //│    = 2
 
 :js
@@ -94,7 +94,7 @@ class D: T & {z: int}
 //│ // End of generated code
 
 def useTrt t = case t of { T -> t.y | Class -> t.x }
-//│ useTrt: ({y: 'y} & #T | (Class with {x: 'y}) & ~#T) -> 'y
+//│ useTrt: ((Class with {x: 'y}) & ~#T | {y: 'y} & #T) -> 'y
 //│       = [Function: useTrt]
 
 :e
@@ -109,7 +109,7 @@ useTrt c
 //│ ╟── from refined scrutinee:
 //│ ║  l.96: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ╙──      	                    ^
-//│ res: error | 1
+//│ res: 1 | error
 //│    = 1
 
 useTrt (c with { y = 1 })
@@ -128,7 +128,7 @@ useTrt c
 //│ ╟── from refined scrutinee:
 //│ ║  l.96: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ╙──      	                    ^
-//│ res: error | 1
+//│ res: 1 | error
 //│    = 1
 
 d = D{z = 1213}

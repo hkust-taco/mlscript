@@ -21,7 +21,7 @@ c = Child(Parent { name = "Bob" })
 //│ ╟── application of type `Parent & {name: ?name}` does not have all required fields 'name', 'age'
 //│ ║  l.17: 	c = Child(Parent { name = "Bob" })
 //│ ╙──      	          ^^^^^^^^^^^^^^^^^^^^^^^
-//│ c: error | Child & {age: nothing, name: "Bob"}
+//│ c: Child & {age: nothing, name: "Bob"} | error
 //│  = Child { name: 'Bob', age: undefined }
 
 c = Child(Parent { name = "Bob" } with { age = 123 })
@@ -92,11 +92,11 @@ def f x = case x of {
   | Parent -> x.name
   | _ -> ""
   }
-//│ f: ((Parent with {name: 'name}) | ~Parent) -> ('name | "")
+//│ f: ((Parent with {name: 'name}) | ~Parent) -> ("" | 'name)
 //│  = [Function: f2]
 
 f c
-//│ res: "Bob" | ""
+//│ res: "" | "Bob"
 //│    = 'Bob'
 
 f (c: Parent)

@@ -125,9 +125,9 @@ mixin Test[A] {
 
 class C(val arg: Int) extends Test
 //│ class C(arg: Int) {
-//│   fun bar: ['A | Int, 'A | Int]
+//│   fun bar: [Int | 'A, Int | 'A]
 //│   fun baz: Int
-//│   fun foo: 'A -> ('A | Int)
+//│   fun foo: 'A -> (Int | 'A)
 //│ }
 
 let c = C(1)
@@ -150,9 +150,9 @@ module D extends C(0) {
 //│ ║  l.144: 	  this.foo(false)
 //│ ╙──       	  ^^^^
 //│ module D extends C {
-//│   fun bar: forall 'A. ['A | Int, 'A | Int]
+//│   fun bar: forall 'A. [Int | 'A, Int | 'A]
 //│   fun baz: Int
-//│   fun foo: forall 'A. 'A -> ('A | Int)
+//│   fun foo: forall 'A. 'A -> (Int | 'A)
 //│ }
 
 :e // TODO support or produce better error (arg is not actually recursive)
@@ -171,9 +171,9 @@ class C extends Test { // it also fails with Test[Int]...
 //│ class C {
 //│   constructor()
 //│   fun arg: 123
-//│   fun bar: ['A | error, 'A | error]
+//│   fun bar: [error | 'A, error | 'A]
 //│   fun baz: error
-//│   fun foo: 'A -> ('A | error)
+//│   fun foo: 'A -> (error | 'A)
 //│ }
 
 class C extends Test {
@@ -183,9 +183,9 @@ class C extends Test {
 //│ class C {
 //│   constructor()
 //│   fun arg: Int
-//│   fun bar: ['A | Int, 'A | Int]
+//│   fun bar: [Int | 'A, Int | 'A]
 //│   fun baz: Int
-//│   fun foo: 'A -> ('A | Int)
+//│   fun foo: 'A -> (Int | 'A)
 //│ }
 
 

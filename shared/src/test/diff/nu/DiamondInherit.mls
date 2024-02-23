@@ -84,7 +84,7 @@ module Bar extends T1, Foo[Int | Str] {
 //│     = 123
 
 (Bar : Foo['X]).bar
-//│ ('X & (Int | Str)) -> ('X | Int | Str)
+//│ ('X & (Int | Str)) -> (Int | Str | 'X)
 //│ res
 //│     = [Function: id]
 
@@ -95,7 +95,7 @@ module Bar extends T1, Foo[Int | Str] {
 
 let f = (Bar : T1).bar
 f(true)
-//│ let f: ('A & (Int | false | true)) -> ('A | Int | false | true)
+//│ let f: ('A & (Int | false | true)) -> (Int | false | true | 'A)
 //│ Int | false | true
 //│ f
 //│   = [Function: id]

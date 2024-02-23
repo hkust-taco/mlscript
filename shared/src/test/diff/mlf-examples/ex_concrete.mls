@@ -33,7 +33,7 @@ cinq = Cons ("zozo", quatre)
 //│      = Cons { head: 10, tail: Nil {} }
 //│ quatre: Cons["ok"] with {tail: Nil}
 //│       = Cons { head: 'ok', tail: Nil {} }
-//│ cinq: Cons["zozo" | "ok"] with {head: "zozo", tail: Cons["ok"] with {tail: Nil}}
+//│ cinq: Cons["ok" | "zozo"] with {head: "zozo", tail: Cons["ok"] with {tail: Nil}}
 //│     = Cons { head: 'zozo', tail: Cons { head: 'ok', tail: Nil {} } }
 
 // let id x = x 
@@ -54,7 +54,7 @@ rec def map f l = case l of
 //│ map: ('head -> 'head0) -> 'a -> (Nil | 'b)
 //│   where
 //│     'b :> Cons['head0] with {tail: Nil | 'b}
-//│     'a <: Nil | (Cons[?] with {head: 'head, tail: 'a})
+//│     'a <: (Cons[?] with {head: 'head, tail: 'a}) | Nil
 //│    = [Function: map]
 :NoRecursiveTypes
 

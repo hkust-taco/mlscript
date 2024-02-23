@@ -291,7 +291,7 @@ b3 = B {x = 6; y = false}
 //│ ╟── record field of type `6` is not mutable
 //│ ║  l.287: 	b3 = B {x = 6; y = false}
 //│ ╙──       	        ^^^^^
-//│ b3: error | (B with {mut x: 'x, y: false})
+//│ b3: (B with {mut x: 'x, y: false}) | error
 //│   where
 //│     'x :> 6
 //│        <: int
@@ -358,7 +358,7 @@ h {mut x = 4} 2
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.337: 	def h : B -> int -> int
 //│ ╙──       	        ^
-//│ res: int | error
+//│ res: error | int
 //│    = 2
 
 def mt1: (mut int, mut bool)
@@ -437,7 +437,7 @@ amf mt4
 //│ ║  l.435: 	amf mt4
 //│ ║         	^^^^^^^
 //│ ╙── expression of type `bool` cannot be reassigned
-//│ res: error | bool
+//│ res: bool | error
 //│    = <no result>
 //│      amf is not implemented
 
@@ -614,7 +614,7 @@ g (1, true) 2
 //│ ╟── argument of type `1` is not mutable
 //│ ║  l.610: 	g (1, true) 2
 //│ ╙──       	   ^
-//│ res: unit | error
+//│ res: error | unit
 //│    = <no result>
 //│      g is not implemented
 
@@ -626,7 +626,7 @@ g (mut 1, true) 2
 //│ ╟── argument of type `1` is not mutable
 //│ ║  l.622: 	g (mut 1, true) 2
 //│ ╙──       	       ^
-//│ res: unit | error
+//│ res: error | unit
 //│    = <no result>
 //│      g is not implemented
 
@@ -808,7 +808,7 @@ def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
 //│    = [Function: foo1]
 
 foo { mut a = 1 } 2 add
-//│ res: (unit, int, 1 | 0 | 2, unit, int -> int,)
+//│ res: (unit, int, 0 | 1 | 2, unit, int -> int,)
 //│    = [ undefined, 1, 0, undefined, [Function (anonymous)] ]
 
 :e
@@ -825,7 +825,7 @@ foo { mut a = 1 } 2 3
 //│ ╟── from reference:
 //│ ║  l.806: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
 //│ ╙──       	                                                   ^
-//│ res: error | (unit, int, 1 | 0 | 2, unit, nothing,)
+//│ res: error | (unit, int, 0 | 1 | 2, unit, nothing,)
 //│ Runtime error:
 //│   TypeError: z is not a function
 
@@ -844,7 +844,7 @@ foo { a = 1 } 2
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.806: 	def foo x y z = (x.a <- 0, x.a + 1, x.a, x.a <- y, z x.a)
 //│ ╙──       	                           ^^^
-//│ res: (("oops" | 0 | 2) -> 'a) -> (unit, int, "oops" | 0 | 2, unit, 'a,) | error
+//│ res: error | (("oops" | 0 | 2) -> 'a) -> (unit, int, "oops" | 0 | 2, unit, 'a,)
 //│    = [Function (anonymous)]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.834: 	foo { a = 1 } 2
@@ -852,7 +852,7 @@ foo { a = 1 } 2
 //│ ╟── record field of type `1` is not mutable
 //│ ║  l.834: 	foo { a = 1 } 2
 //│ ╙──       	      ^^^^^
-//│ res: (1 -> 'a) -> (unit, int, 1, unit, 'a,) | error
+//│ res: error | (1 -> 'a) -> (unit, int, 1, unit, 'a,)
 //│    = [Function (anonymous)]
 
 

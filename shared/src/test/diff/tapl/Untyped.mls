@@ -146,10 +146,10 @@ fun listConcat(xs, ys) =
   if xs is
     Nil() then ys
     Cons(x, xs') then Cons(x, listConcat(xs', ys))
-//│ listConcat: (Nil | Cons & 'a, 'b,) -> 'b
+//│ listConcat: (Cons & 'a | Nil, 'b,) -> 'b
 //│   where
 //│     'b :> Cons & {head: 'head, tail: 'b}
-//│     'a <: {head: 'head, tail: Nil | Cons & 'a}
+//│     'a <: {head: 'head, tail: Cons & 'a | Nil}
 //│           = [Function: listConcat]
 
 fun listContains(xs, x) =
@@ -158,9 +158,9 @@ fun listContains(xs, x) =
     Cons(x', xs') and
       eq(x)(x') then true
       _ then listContains(xs', x)
-//│ listContains: (Nil | Cons & 'a, anything,) -> Bool
+//│ listContains: (Cons & 'a | Nil, anything,) -> Bool
 //│   where
-//│     'a <: {head: anything, tail: Nil | Cons & 'a}
+//│     'a <: {head: anything, tail: Cons & 'a | Nil}
 //│             = [Function: listContains]
 
 // Remove all occurrences of x from xs.
@@ -170,10 +170,10 @@ fun listWithout(xs, x) =
     Cons(x', xs') and
       eq(x)(x') then listWithout(xs', x)
       _ then Cons(x', listWithout(xs', x))
-//│ listWithout: (Nil | Cons & 'a, anything,) -> 'b
+//│ listWithout: (Cons & 'a | Nil, anything,) -> 'b
 //│   where
 //│     'b :> Nil | Cons & {head: 'head, tail: 'b}
-//│     'a <: {head: 'head, tail: Nil | Cons & 'a}
+//│     'a <: {head: 'head, tail: Cons & 'a | Nil}
 //│            = [Function: listWithout]
 
 fun listJoin(xs, sep) =
@@ -181,9 +181,9 @@ fun listJoin(xs, sep) =
     Nil() then ""
     Cons(x, Nil()) then toString(x)
     Cons(x, xs') then concat3(toString(x), sep, listJoin(xs', sep))
-//│ listJoin: (Nil | Cons & 'a, string,) -> string
+//│ listJoin: (Cons & 'a | Nil, string,) -> string
 //│   where
-//│     'a <: {head: anything, tail: Nil | Cons & 'a}
+//│     'a <: {head: anything, tail: Cons & 'a | Nil}
 //│         = [Function: listJoin]
 
 listJoin(list3("x", "y", "z"), ", ")
@@ -214,12 +214,12 @@ fun showTerm(t) =
     App(Abs(lhs0, lhs1), rhs) then
       concat8("((", "&", showTerm(lhs0), ". ", showTerm(lhs1), ") ", showTerm(rhs), ")")
     App(lhs, rhs) then par(concat3(showTerm(lhs), " ", showTerm(rhs)))
-//│ showTerm: (Var | Abs & 'a | App & 'b) -> string
+//│ showTerm: (Abs & 'a | App & 'b | Var) -> string
 //│   where
-//│     'a <: {lhs: Var | Abs & 'a | App & 'b, rhs: Var | Abs & 'a | App & 'b}
+//│     'a <: {lhs: Abs & 'a | App & 'b | Var, rhs: Abs & 'a | App & 'b | Var}
 //│     'b <: {
-//│       lhs: Var | App & 'b | 'a & (Abs & 'a | Abs & ~#Abs),
-//│       rhs: Var | Abs & 'a | App & 'b
+//│       lhs: App & 'b | Var | 'a & (Abs & ~#Abs | Abs & 'a),
+//│       rhs: Abs & 'a | App & 'b | Var
 //│     }
 //│         = [Function: showTerm]
 
@@ -241,7 +241,7 @@ fun isValue(t) =
     Var then true
     Abs then true
     App then false
-//│ isValue: (Var | Abs | App) -> Bool
+//│ isValue: (Abs | App | Var) -> Bool
 //│        = [Function: isValue]
 
 isValue(Var("x"))
@@ -262,28 +262,28 @@ fun hasFree(t, n) =
     Abs(Var(name), body) then hasFree(body, n)
     App(lhs, rhs) then hasFree(lhs, n) || hasFree(rhs, n)
     _ then false
-//│ hasFree: (Var | Abs & 'a | App & 'b | ~Var & ~Abs & ~App, anything,) -> bool
+//│ hasFree: (Abs & 'a | App & 'b | Var | ~Abs & ~App & ~Var, anything,) -> bool
 //│   where
-//│     'a <: {lhs: anything, rhs: Var | Abs & 'a | App & 'b | ~Var & ~Abs & ~App}
+//│     'a <: {lhs: anything, rhs: Abs & 'a | App & 'b | Var | ~Abs & ~App & ~Var}
 //│     'b <: {
-//│       lhs: Var | Abs & 'a | App & 'b | ~Var & ~Abs & ~App,
-//│       rhs: Var | Abs & 'a | App & 'b | ~Var & ~Abs & ~App
+//│       lhs: Abs & 'a | App & 'b | Var | ~Abs & ~App & ~Var,
+//│       rhs: Abs & 'a | App & 'b | Var | ~Abs & ~App & ~Var
 //│     }
 //│        = [Function: hasFree]
 
 fun showHasFree(t, n) =
   concat4(showTerm(t), (if hasFree(t, n) then " has " else " DOES NOT have "), "free variable ", n)
-//│ showHasFree: (Var | Abs & 'a & 'b | App & 'c & 'd, string,) -> string
+//│ showHasFree: (Abs & 'a & 'b | App & 'c & 'd | Var, string,) -> string
 //│   where
-//│     'b <: {lhs: anything, rhs: Var | Abs & 'b | App & 'd | ~Var & ~Abs & ~App}
+//│     'b <: {lhs: anything, rhs: Abs & 'b | App & 'd | Var | ~Abs & ~App & ~Var}
 //│     'd <: {
-//│       lhs: Var | Abs & 'b | App & 'd | ~Var & ~Abs & ~App,
-//│       rhs: Var | Abs & 'b | App & 'd | ~Var & ~Abs & ~App
+//│       lhs: Abs & 'b | App & 'd | Var | ~Abs & ~App & ~Var,
+//│       rhs: Abs & 'b | App & 'd | Var | ~Abs & ~App & ~Var
 //│     }
-//│     'a <: {lhs: Var | Abs & 'a | App & 'c, rhs: Var | Abs & 'a | App & 'c}
+//│     'a <: {lhs: Abs & 'a | App & 'c | Var, rhs: Abs & 'a | App & 'c | Var}
 //│     'c <: {
-//│       lhs: Var | App & 'c | 'a & (Abs & 'a | Abs & ~#Abs),
-//│       rhs: Var | Abs & 'a | App & 'c
+//│       lhs: App & 'c | Var | 'a & (Abs & ~#Abs | Abs & 'a),
+//│       rhs: Abs & 'a | App & 'c | Var
 //│     }
 //│            = [Function: showHasFree]
 
@@ -329,7 +329,7 @@ fun fv(t) =
     Var(name) then list1(name)
     Abs(Var(name), body) then listWithout(fv(body), name)
     App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
-//│ fv: (Var & {name: 'name} | Abs & 'a | App & 'b) -> (Cons & {head: 'name, tail: Nil} | 'c | 'd)
+//│ fv: (Abs & 'a | App & 'b | Var & {name: 'name}) -> (Cons & {head: 'name, tail: Nil} | 'c | 'd)
 //│   where
 //│     'd :> forall 'e. 'f | 'e
 //│     'e :> Cons & {head: forall 'head. 'head, tail: 'f | 'e}
@@ -338,10 +338,10 @@ fun fv(t) =
 //│     'c :> Nil | Cons & {head: forall 'head0. 'head0, tail: 'c}
 //│     'head0 :> forall 'head. 'name | 'head
 //│     'head :> forall 'head0. 'name | 'head0
-//│     'a <: {lhs: Var, rhs: Var & {name: 'name} | Abs & 'a | App & 'b}
+//│     'a <: {lhs: Var, rhs: Abs & 'a | App & 'b | Var & {name: 'name}}
 //│     'b <: {
-//│       lhs: Var & {name: 'name} | Abs & 'a | App & 'b,
-//│       rhs: Var & {name: 'name} | Abs & 'a | App & 'b
+//│       lhs: Abs & 'a | App & 'b | Var & {name: 'name},
+//│       rhs: Abs & 'a | App & 'b | Var & {name: 'name}
 //│     }
 //│   = [Function: fv]
 
@@ -350,16 +350,16 @@ fun showFv(t) =
     Nil then " DOES NOT have free variables"
     _ then concat2(" has free variables: ", listJoin(fv(t), ", "))
   )
-//│ showFv: (Var | Abs & 'a & 'b & 'c | App & 'd & 'e & 'f) -> string
+//│ showFv: (Abs & 'a & 'b & 'c | App & 'd & 'e & 'f | Var) -> string
 //│   where
-//│     'c <: {lhs: Var, rhs: Var | Abs & 'c | App & 'f}
-//│     'f <: {lhs: Var | Abs & 'c | App & 'f, rhs: Var | Abs & 'c | App & 'f}
-//│     'b <: {lhs: Var, rhs: Var | Abs & 'b | App & 'e}
-//│     'e <: {lhs: Var | Abs & 'b | App & 'e, rhs: Var | Abs & 'b | App & 'e}
-//│     'a <: {lhs: Var | Abs & 'a | App & 'd, rhs: Var | Abs & 'a | App & 'd}
+//│     'c <: {lhs: Var, rhs: Abs & 'c | App & 'f | Var}
+//│     'f <: {lhs: Abs & 'c | App & 'f | Var, rhs: Abs & 'c | App & 'f | Var}
+//│     'b <: {lhs: Var, rhs: Abs & 'b | App & 'e | Var}
+//│     'e <: {lhs: Abs & 'b | App & 'e | Var, rhs: Abs & 'b | App & 'e | Var}
+//│     'a <: {lhs: Abs & 'a | App & 'd | Var, rhs: Abs & 'a | App & 'd | Var}
 //│     'd <: {
-//│       lhs: Var | App & 'd | 'a & (Abs & 'a | Abs & ~#Abs),
-//│       rhs: Var | Abs & 'a | App & 'd
+//│       lhs: App & 'd | Var | 'a & (Abs & ~#Abs | Abs & 'a),
+//│       rhs: Abs & 'a | App & 'd | Var
 //│     }
 //│       = [Function: showFv]
 
@@ -387,9 +387,9 @@ fun tryNextAlphabet(initialCode, currentCode, freeNames) =
     let name = fromCharCode(currentCode)
     listContains(freeNames, name) then tryNextAlphabet(initialCode, currentCode + 1, freeNames)
     _ then Some(name)
-//│ tryNextAlphabet: (number, int, Nil | Cons & 'a,) -> (None | Some & {value: string})
+//│ tryNextAlphabet: (number, int, Cons & 'a | Nil,) -> (Some & {value: string} | None)
 //│   where
-//│     'a <: {head: anything, tail: Nil | Cons & 'a}
+//│     'a <: {head: anything, tail: Cons & 'a | Nil}
 //│                = [Function: tryNextAlphabet]
 
 tryNextAlphabet(97, 97, list1("a"))
@@ -397,15 +397,15 @@ tryNextAlphabet(97, 98, list1("a"))
 tryNextAlphabet(97, 98, list2("a", "b"))
 tryNextAlphabet(121, 122, list1("y"))
 tryNextAlphabet(121, 122, list2("y", "z"))
-//│ res: None | Some & {value: string}
+//│ res: Some & {value: string} | None
 //│    = None {}
-//│ res: None | Some & {value: string}
+//│ res: Some & {value: string} | None
 //│    = Some { value: 'b' }
-//│ res: None | Some & {value: string}
+//│ res: Some & {value: string} | None
 //│    = Some { value: 'c' }
-//│ res: None | Some & {value: string}
+//│ res: Some & {value: string} | None
 //│    = Some { value: 'z' }
-//│ res: None | Some & {value: string}
+//│ res: Some & {value: string} | None
 //│    = Some { value: 'a' }
 
 fun tryAppendDigits(name, index, freeNames) =
@@ -414,9 +414,9 @@ fun tryAppendDigits(name, index, freeNames) =
     listContains(freeNames, currentName) then
       tryAppendDigits(name, index + 1, freeNames)
     _ then currentName
-//│ tryAppendDigits: (string, int, Nil | Cons & 'a,) -> string
+//│ tryAppendDigits: (string, int, Cons & 'a | Nil,) -> string
 //│   where
-//│     'a <: {head: anything, tail: Nil | Cons & 'a}
+//│     'a <: {head: anything, tail: Cons & 'a | Nil}
 //│                = [Function: tryAppendDigits]
 
 // Note: some weird behavior here... Just try the commented code.
@@ -427,20 +427,20 @@ fun findFreshName(name, freeNames) =
       tryNextAlphabet(charCode, charCode + 1, freeNames) is
         Some(newName) then newName
     _ then tryAppendDigits(name, 0, freeNames)
-//│ findFreshName: (string, Nil | Cons & 'a & 'b & 'c,) -> string
+//│ findFreshName: (string, Cons & 'a & 'b & 'c | Nil,) -> string
 //│   where
-//│     'c <: {head: anything, tail: Nil | Cons & 'c}
-//│     'b <: {head: anything, tail: Nil | Cons & 'b}
-//│     'a <: {head: anything, tail: Nil | Cons & 'a}
+//│     'c <: {head: anything, tail: Cons & 'c | Nil}
+//│     'b <: {head: anything, tail: Cons & 'b | Nil}
+//│     'a <: {head: anything, tail: Cons & 'a | Nil}
 //│              = [Function: findFreshName]
 
 // Find a fresh name to replace `name` that does not conflict with any bound
 // variables in the `body`.
 fun freshName(name, body) = findFreshName(name, fv(body))
-//│ freshName: (string, Var | Abs & 'a | App & 'b,) -> string
+//│ freshName: (string, Abs & 'a | App & 'b | Var,) -> string
 //│   where
-//│     'a <: {lhs: Var, rhs: Var | Abs & 'a | App & 'b}
-//│     'b <: {lhs: Var | Abs & 'a | App & 'b, rhs: Var | Abs & 'a | App & 'b}
+//│     'a <: {lhs: Var, rhs: Abs & 'a | App & 'b | Var}
+//│     'b <: {lhs: Abs & 'a | App & 'b | Var, rhs: Abs & 'a | App & 'b | Var}
 //│          = [Function: freshName]
 
 fun subst(t, n, v) =
@@ -452,65 +452,31 @@ fun subst(t, n, v) =
       _ then Abs(Var(name), subst(body, n, v))
     App(lhs, rhs) then App(subst(lhs, n, v), subst(rhs, n, v))
     _ then t
-//│ subst: (Var & 'a | Abs & 'b | App & 'c | 'd & ~#Abs & ~#App & ~#Var, anything, 'e & (Var & 'a | 'c & 'f & (App & 'g | App & ~#App) | 'b & 'h & (Abs & 'i | Abs & ~#Abs) | 'd & (Var & ~#Var | Abs & 'h & ~#Abs | App & 'f & ~#App)),) -> (Var & {name: string} | 'e | 'a | 'b | 'd)
-//│   where
-//│     'g <: {
-//│       lhs: Var | Abs & 'i | App & 'g | ~Var & ~Abs & ~App,
-//│       rhs: Var | Abs & 'i | App & 'g | ~Var & ~Abs & ~App
-//│     }
-//│     'i <: {lhs: anything, rhs: Var | Abs & 'i | App & 'g | ~Var & ~Abs & ~App}
-//│     'a :> Var & {name: string}
-//│        <: Var | 'f & (App & {name: anything} & 'c | App & {name: anything} & 'd & ~#App) | 'h & (Abs & {name: anything} & 'b | Abs & {name: anything} & 'd & ~#Abs)
-//│     'c <: {
-//│       lhs: Var & 'a | Abs & 'b | App & 'c | 'd & ~#Abs & ~#App & ~#Var,
-//│       rhs: Var & 'a | Abs & 'b | App & 'c | 'd & ~#Abs & ~#App & ~#Var
-//│     }
-//│     'b :> Abs & {lhs: Var & {name: string}, rhs: Var & {name: string} | 'e | 'a | 'b | 'd | 'rhs}
-//│        <: Var & {lhs: Var & {name: string} | ~Var, rhs: Var & 'a | Abs & 'b & 'h | App & 'c & 'f} & 'a | Abs & {lhs: Var & {name: string} | ~Var, rhs: Var & 'a | Abs & 'b & 'h | App & 'c & 'f} & 'h | App & {lhs: Var & {name: string} | ~Var, rhs: Var & 'a | Abs & 'b & 'h | App & 'c & 'f} & 'c & 'f | 'd & (Var & {lhs: Var & {name: string} | ~Var, rhs: Var & 'a | Abs & 'b & 'h | App & 'c & 'f} & ~#Var | App & {lhs: Var & {name: string} | ~Var, rhs: Var & 'a | Abs & 'b & 'h | App & 'c & 'f} & 'f & ~#App)
-//│     'e :> Var & {name: string} | 'a | 'b | 'd | Abs & {lhs: Var & {name: string}, rhs: 'rhs} | App & {
-//│       lhs: Var & {name: string} | 'e | 'a | 'b | 'd,
-//│       rhs: Var & {name: string} | 'e | 'a | 'b | 'd
-//│     }
-//│     'rhs :> Var & {name: string} | 'e | 'a | 'b | 'd
-//│     'd <: Var & 'a | Var & ~#Var | 'f & (App & 'c | App & ~#App) | 'h & (Abs & 'b | Abs & ~#Abs)
-//│     'f <: {lhs: Var | Abs & 'h | App & 'f, rhs: Var | Abs & 'h | App & 'f}
-//│     'h <: {lhs: Var, rhs: Var | Abs & 'h | App & 'f}
-//│      = [Function: subst]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:356)
 
 fun showSubst(t, n, v) =
   concat8(showTerm(t), " [", n, " / ", showTerm(v), "]", " => ", showTerm(subst(t, n, v)))
-//│ showSubst: (Var & 'a | Abs & 'b & 'c | App & 'd & 'e, string, Abs & 'c & 'f & 'g & 'h & 'i | Var & 'a | App & 'j & 'e & 'k & 'l & 'm,) -> string
-//│   where
-//│     'i <: {lhs: anything, rhs: Var | Abs & 'i | App & 'm | ~Var & ~Abs & ~App}
-//│     'm <: {
-//│       lhs: Var | Abs & 'i | App & 'm | ~Var & ~Abs & ~App,
-//│       rhs: Var | Abs & 'i | App & 'm | ~Var & ~Abs & ~App
-//│     }
-//│     'h <: {lhs: Var | Abs & 'h | App & 'l, rhs: Var | Abs & 'h | App & 'l}
-//│     'l <: {
-//│       lhs: Var | App & 'l | 'h & (Abs & 'h | Abs & ~#Abs),
-//│       rhs: Var | Abs & 'h | App & 'l
-//│     }
-//│     'b <: {lhs: Var | Abs & 'b | App & 'd, rhs: Var | Abs & 'b | App & 'd}
-//│     'd <: {
-//│       lhs: Var | App & 'd | 'b & (Abs & 'b | Abs & ~#Abs),
-//│       rhs: Var | Abs & 'b | App & 'd
-//│     }
-//│     'a <: Var | 'j & 'k & (App & {name: anything} & 'e | App & {name: anything} & 'n & ~#App) | 'f & 'g & (Abs & {name: anything} & 'c | Abs & {name: anything} & 'n & ~#Abs)
-//│     'e <: {
-//│       lhs: Var & 'a | Abs & 'c | App & 'e | 'n & ~#Abs & ~#App & ~#Var,
-//│       rhs: Var & 'a | Abs & 'c | App & 'e | 'n & ~#Abs & ~#App & ~#Var
-//│     }
-//│     'c <: Abs & {lhs: Var & {name: string} | ~Var, rhs: Var & 'a | Abs & 'c & 'f | App & 'j & 'e} & 'f & 'g | Var & {lhs: Var & {name: string} | ~Var, rhs: Var & 'a | Abs & 'c & 'f | App & 'j & 'e} & 'a | App & {lhs: Var & {name: string} | ~Var, rhs: Var & 'a | Abs & 'c & 'f | App & 'j & 'e} & 'j & 'e & 'k | 'n & (Var & {lhs: Var & {name: string} | ~Var, rhs: Var & 'a | Abs & 'c & 'f | App & 'j & 'e} & ~#Var | App & {lhs: Var & {name: string} | ~Var, rhs: Var & 'a | Abs & 'c & 'f | App & 'j & 'e} & 'j & 'k & ~#App)
-//│     'n <: Var & 'a | Var & ~#Var | 'j & 'k & (App & 'e | App & ~#App) | 'f & 'g & (Abs & 'c | Abs & ~#Abs)
-//│     'k <: {
-//│       lhs: Var | App & 'k | 'g & (Abs & 'g | Abs & ~#Abs),
-//│       rhs: Var | Abs & 'g | App & 'k
-//│     }
-//│     'g <: {lhs: Var | Abs & 'g | App & 'k, rhs: Var | Abs & 'g | App & 'k}
-//│     'j <: {lhs: Var | Abs & 'f | App & 'j, rhs: Var | Abs & 'f | App & 'j}
-//│     'f <: {lhs: Var, rhs: Var | Abs & 'f | App & 'j}
-//│          = [Function: showSubst]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:360)
 
 showSubst(Var("x"), "x", Var("y"))
 showSubst(Abs(Var("x"), Var("x")), "x", Var("z"))
@@ -518,15 +484,12 @@ showSubst(App(Var("x"), Var("y")), "x", Abs(Var("x"), Var("x")))
 showSubst(App(Abs(Var("x"), Var("x")), Var("x")), "x", Abs(Var("y"), Var("y")))
 showSubst(Abs(Var("x"), App(Var("x"), Var("y"))), "y", Var("x"))
 //│ res: string
-//│    = 'x [x / y] => y'
 //│ res: string
-//│    = '&x. x [x / z] => &x. x'
 //│ res: string
-//│    = '(x y) [x / &x. x] => ((&x. x) y)'
 //│ res: string
-//│    = '((&x. x) x) [x / &y. y] => ((&x. x) &y. y)'
 //│ res: string
-//│    = '&x. (x y) [y / x] => &z. (z x)'
+//│ Code generation encountered an error:
+//│   unresolved symbol showSubst
 
 fun stepByValue(t) =
   if t is
@@ -539,91 +502,45 @@ fun stepByValue(t) =
         None and lhs is
           Abs(Var(name), body) then Some(subst(body, name, rhs))
           _ then None()
-//│ stepByValue: (Var | Abs | App & 'a) -> (None | Some & {
-//│   value: App & {
-//│     lhs: App & {lhs: 'lhs, rhs: Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e} | Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e,
-//│     rhs: 'rhs
-//│   } | App & {lhs: 'lhs, rhs: Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e} | Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e
-//│ })
-//│ where
-//│   'a <: {lhs: 'lhs, rhs: 'rhs}
-//│   'lhs <: Var | Abs & {rhs: Var & 'b | Abs & 'd | App & 'f | 'e & ~#Abs & ~#App & ~#Var} | Abs & ~#Abs | App & 'a
-//│   'b :> Var & {name: string}
-//│      <: Var | 'g & (App & {name: anything} & 'f | App & {name: anything} & 'e & ~#App) | 'h & (Abs & {name: anything} & 'd | Abs & {name: anything} & 'e & ~#Abs)
-//│   'f <: {
-//│     lhs: Var & 'b | Abs & 'd | App & 'f | 'e & ~#Abs & ~#App & ~#Var,
-//│     rhs: Var & 'b | Abs & 'd | App & 'f | 'e & ~#Abs & ~#App & ~#Var
-//│   }
-//│   'd :> Abs & {
-//│     lhs: Var & {name: string},
-//│     rhs: Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e | 'rhs0
-//│   }
-//│      <: Var & {lhs: Var & {name: string} | ~Var, rhs: Var & 'b | Abs & 'd & 'h | App & 'g & 'f} & 'b | Abs & {lhs: Var & {name: string} | ~Var, rhs: Var & 'b | Abs & 'd & 'h | App & 'g & 'f} & 'h | App & {lhs: Var & {name: string} | ~Var, rhs: Var & 'b | Abs & 'd & 'h | App & 'g & 'f} & 'g & 'f | 'e & (Var & {lhs: Var & {name: string} | ~Var, rhs: Var & 'b | Abs & 'd & 'h | App & 'g & 'f} & ~#Var | App & {lhs: Var & {name: string} | ~Var, rhs: Var & 'b | Abs & 'd & 'h | App & 'g & 'f} & 'g & ~#App)
-//│   'c :> Var & {name: string} | 'rhs | 'b | 'd | 'e | Abs & {lhs: Var & {name: string}, rhs: 'rhs0} | App & {
-//│     lhs: Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e,
-//│     rhs: Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e
-//│   }
-//│   'rhs0 :> Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e
-//│   'e <: Var & 'b | Var & ~#Var | 'g & (App & 'f | App & ~#App) | 'h & (Abs & 'd | Abs & ~#Abs)
-//│   'rhs <: Var & 'b | Abs & 'd & 'h & 'i | App & 'a & 'g & 'f & 'j
-//│   'i <: {lhs: anything, rhs: Var | Abs & 'i | App & 'j | ~Var & ~Abs & ~App}
-//│   'j <: {
-//│     lhs: Var | Abs & 'i | App & 'j | ~Var & ~Abs & ~App,
-//│     rhs: Var | Abs & 'i | App & 'j | ~Var & ~Abs & ~App
-//│   }
-//│   'g <: {lhs: Var | Abs & 'h | App & 'g, rhs: Var | Abs & 'h | App & 'g}
-//│   'h <: {lhs: Var, rhs: Var | Abs & 'h | App & 'g}
-//│            = [Function: stepByValue]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:355)
 
 fun showStepByValue(t) =
   concat3(showTerm(t), " => ", if stepByValue(t) is
     Some(t) then showTerm(t)
     None then "stuck"
   )
-//│ showStepByValue: (Var | Abs & 'a | App & 'b & 'c) -> string
-//│   where
-//│     'c <: {
-//│       lhs: Var | App & 'c & 'd | 'e & (Abs & {rhs: Var & 'f | Abs & 'g | App & 'h | 'i & ~#Abs & ~#App & ~#Var} | Abs & ~#Abs),
-//│       rhs: Abs & 'g & 'j & 'e & 'k | Var & 'f | App & 'c & 'l & 'h & 'd & 'm
-//│     }
-//│     'k <: {lhs: anything, rhs: Var | Abs & 'k | App & 'm | ~Var & ~Abs & ~App}
-//│     'm <: {
-//│       lhs: Var | Abs & 'k | App & 'm | ~Var & ~Abs & ~App,
-//│       rhs: Var | Abs & 'k | App & 'm | ~Var & ~Abs & ~App
-//│     }
-//│     'f <: Var | 'l & 'd & (App & {name: anything} & 'h | App & {name: anything} & 'i & ~#App) | 'j & 'e & (Abs & {name: anything} & 'g | Abs & {name: anything} & 'i & ~#Abs)
-//│     'h <: {
-//│       lhs: Var & 'f | Abs & 'g | App & 'h | 'i & ~#Abs & ~#App & ~#Var,
-//│       rhs: Var & 'f | Abs & 'g | App & 'h | 'i & ~#Abs & ~#App & ~#Var
-//│     }
-//│     'g <: Abs & {lhs: Var & {name: string} | ~Var, rhs: Var & 'f | Abs & 'g & 'j | App & 'l & 'h} & 'j & 'e | Var & {lhs: Var & {name: string} | ~Var, rhs: Var & 'f | Abs & 'g & 'j | App & 'l & 'h} & 'f | App & {lhs: Var & {name: string} | ~Var, rhs: Var & 'f | Abs & 'g & 'j | App & 'l & 'h} & 'l & 'h & 'd | 'i & (Var & {lhs: Var & {name: string} | ~Var, rhs: Var & 'f | Abs & 'g & 'j | App & 'l & 'h} & ~#Var | App & {lhs: Var & {name: string} | ~Var, rhs: Var & 'f | Abs & 'g & 'j | App & 'l & 'h} & 'l & 'd & ~#App)
-//│     'i <: Var & 'f | Var & ~#Var | 'l & 'd & (App & 'h | App & ~#App) | 'j & 'e & (Abs & 'g | Abs & ~#Abs)
-//│     'l <: {lhs: Var | Abs & 'j | App & 'l, rhs: Var | Abs & 'j | App & 'l}
-//│     'j <: {lhs: Var, rhs: Var | Abs & 'j | App & 'l}
-//│     'd <: {
-//│       lhs: Var | App & 'd | 'e & (Abs & 'e | Abs & ~#Abs),
-//│       rhs: Var | Abs & 'e | App & 'd
-//│     }
-//│     'e <: {lhs: Var | Abs & 'e | App & 'd, rhs: Var | Abs & 'e | App & 'd}
-//│     'a <: {lhs: Var | Abs & 'a | App & 'b, rhs: Var | Abs & 'a | App & 'b}
-//│     'b <: {
-//│       lhs: Var | App & 'b | 'a & (Abs & 'a | Abs & ~#Abs),
-//│       rhs: Var | Abs & 'a | App & 'b
-//│     }
-//│                = [Function: showStepByValue]
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NormalForms$RhsNf.comparePartial(NormalForms.scala:310)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:502)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
+//│ 	at: java.base/java.util.TimSort.countRunAndMakeAscending(TimSort.java:360)
 
 showStepByValue(Var("x"))
 showStepByValue(Abs(Var("x"), Var("y")))
 showStepByValue(App(Var("x"), Var("y")))
 showStepByValue(App(Abs(Var("x"), Var("x")), Var("y")))
 //│ res: string
-//│    = 'x => stuck'
 //│ res: string
-//│    = '&x. y => stuck'
 //│ res: string
-//│    = '(x y) => stuck'
 //│ res: string
-//│    = '((&x. x) y) => y'
+//│ Code generation encountered an error:
+//│   unresolved symbol showStepByValue
 
 fun equalTerm(a, b) =
   if a is
@@ -631,14 +548,14 @@ fun equalTerm(a, b) =
     Abs(la, ra) and b is Abs(lb, rb) then equalTerm(la, lb) && equalTerm(ra, rb)
     App(la, ra) and b is App(lb, rb) then equalTerm(la, lb) && equalTerm(ra, rb)
     _ then false
-//│ equalTerm: (Var | Abs & 'a | App & 'a | ~Var & ~Abs & ~App, App & 'b | Abs & 'b | Var | ~App & ~Abs & ~Var,) -> bool
+//│ equalTerm: (Abs & 'a | App & 'a | Var | ~Abs & ~App & ~Var, Abs & 'b | App & 'b | Var | ~Abs & ~App & ~Var,) -> bool
 //│   where
 //│     'b <: {
-//│       lhs: Var | Abs & 'b | App & 'b | ~Var & ~Abs & ~App,
-//│       rhs: Var | Abs & 'b | App & 'b | ~Var & ~Abs & ~App
+//│       lhs: Abs & 'b | App & 'b | Var | ~Abs & ~App & ~Var,
+//│       rhs: Abs & 'b | App & 'b | Var | ~Abs & ~App & ~Var
 //│     }
 //│     'a <: {
-//│       lhs: Var | Abs & 'a | App & 'a | ~Var & ~Abs & ~App,
-//│       rhs: Var | Abs & 'a | App & 'a | ~Var & ~Abs & ~App
+//│       lhs: Abs & 'a | App & 'a | Var | ~Abs & ~App & ~Var,
+//│       rhs: Abs & 'a | App & 'a | Var | ~Abs & ~App & ~Var
 //│     }
 //│          = [Function: equalTerm]

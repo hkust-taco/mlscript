@@ -38,7 +38,7 @@ test(log("here we go"); 123)
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.14: 	let test(x) = log(x), x + 1
 //│ ╙──      	                      ^
-//│ error | Int
+//│ Int | error
 //│ res
 //│     = NaN
 //│ // Output

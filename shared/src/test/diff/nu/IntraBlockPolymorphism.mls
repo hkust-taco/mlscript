@@ -21,8 +21,8 @@ let b = i(true)
 let a = i(0)
 fun i(x) = x
 let b = i(true)
-//│ let a: 'a | 0 | true
-//│ fun i: forall 'b. ('a & 'b) -> ('b | 0)
+//│ let a: 0 | true | 'a
+//│ fun i: forall 'b. ('a & 'b) -> (0 | 'b)
 //│ let b: 0 | true
 //│ a
 //│ Runtime error:
@@ -34,9 +34,9 @@ let b = i(true)
 let a = i(0)
 let b = i(true)
 fun i(x) = x
-//│ let a: 'a | 0 | true
-//│ let b: 'a | 0 | true
-//│ fun i: forall 'b. ('a & 'b) -> ('b | 0 | true)
+//│ let a: 0 | true | 'a
+//│ let b: 0 | true | 'a
+//│ fun i: forall 'b. ('a & 'b) -> (0 | true | 'b)
 //│ a
 //│ Runtime error:
 //│   ReferenceError: i2 is not defined

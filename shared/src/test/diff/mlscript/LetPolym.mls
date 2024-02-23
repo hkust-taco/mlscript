@@ -8,7 +8,7 @@ def test f =
 def test f =
   let local x = f x
   in (local (fun z -> z), local (fun z -> true))
-//│ test: ((forall 'a. 'a -> ('a | true)) -> 'b) -> ('b, 'b,)
+//│ test: ((forall 'a. 'a -> (true | 'a)) -> 'b) -> ('b, 'b,)
 //│     = [Function: test1]
 
 def test f =
@@ -150,7 +150,7 @@ f_g.1 42
 def test f =
   let local g x = g (f x)
   in (local add 1, local concat "ok")
-//│ test: ((1 | "ok") -> nothing) -> (int -> int, string -> string,)
+//│ test: (("ok" | 1) -> nothing) -> (int -> int, string -> string,)
 //│     = [Function: test12]
 
 :e

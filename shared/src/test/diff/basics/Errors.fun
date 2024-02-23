@@ -98,7 +98,7 @@ log / false + 1
 //│ ╟── reference of type `false` is not an instance of type `int`
 //│ ║  l.+4: 	false + 1
 //│ ╙──      	^^^^^
-//│ res: int | error
+//│ res: error | int
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.+5: 	1 + false
 //│ ║        	^^^^^^^^^
@@ -307,7 +307,7 @@ succ {a: 1}
 //│ ╟── but it flows into field selection with expected type `int`
 //│ ║  l.+6: 	{a: true}.a + 1
 //│ ╙──      	         ^^
-//│ res: int | error
+//│ res: error | int
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+7: 	succ {a: 1}
 //│ ║        	^^^^^^^^^^^
@@ -414,7 +414,7 @@ f arg
 //│ ╟── from field selection:
 //│ ║  l.327: 	  log / succ x.prop
 //│ ╙──       	              ^^^^^
-//│ res: error | bool
+//│ res: bool | error
 
 
 let g = y =>

@@ -4,7 +4,7 @@ trait MyTrait[A]: { value: A }
 
 
 def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
-//│ test1: ({value: 'value} & #MyTrait | ~#MyTrait) -> ('value | 0)
+//│ test1: ({value: 'value} & #MyTrait | ~#MyTrait) -> (0 | 'value)
 //│      = [Function: test1]
 
 :e
@@ -19,11 +19,11 @@ test1 1
 //│ ╟── from refined scrutinee:
 //│ ║  l.6: 	def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
 //│ ╙──     	                   ^
-//│ res: error | 0
+//│ res: 0 | error
 //│    = 0
 
 test1 { value = 1 }
-//│ res: 1 | 0
+//│ res: 0 | 1
 //│    = 0
 
 mt = MyTrait { value = 1 }
@@ -31,19 +31,19 @@ mt = MyTrait { value = 1 }
 //│   = { value: 1 }
 
 test1 mt
-//│ res: 1 | 0
+//│ res: 0 | 1
 //│    = 1
 
 class C1: MyTrait[int]
 //│ Defined class C1
 
 test1 (C1 { value = 1 })
-//│ res: 1 | 0
+//│ res: 0 | 1
 //│    = 1
 
 
 def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
-//│ test2: ({value: 'value} & #MyTrait | {default: 'value} & ~#MyTrait) -> 'value
+//│ test2: ({default: 'value} & ~#MyTrait | {value: 'value} & #MyTrait) -> 'value
 //│      = [Function: test2]
 
 :e
@@ -67,11 +67,11 @@ test2 { value = 1 }
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.45: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                                                    ^^^^^^^^^
-//│ res: error | 1
+//│ res: 1 | error
 //│    = undefined
 
 test2 { value = 1; default = "hi" }
-//│ res: 1 | "hi"
+//│ res: "hi" | 1
 //│    = 'hi'
 
 test2 mt
@@ -99,7 +99,7 @@ test2 (C2 { default = "oops" })
 //│ ╟── from refined scrutinee:
 //│ ║  l.45: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                   ^
-//│ res: error | "oops"
+//│ res: "oops" | error
 //│    = 'oops'
 
 // Note: `value` is unused here; would deserve a warning
@@ -119,11 +119,11 @@ test2 c2
 //│ ╟── from refined scrutinee:
 //│ ║  l.45: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ╙──      	                   ^
-//│ res: error | "oops"
+//│ res: "oops" | error
 //│    = 'oops'
 
 test2 (c2 with { value = 1 })
-//│ res: 1 | "oops"
+//│ res: "oops" | 1
 //│    = 'oops'
 
 

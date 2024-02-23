@@ -383,7 +383,7 @@ hg1 ((5,5,5))
 def ta1: Array[int] | (int, bool)
 def test: (string, 1) & { 0: "hello" }
 def test2: (string, 1) & { 0: "hello"; 2: int }
-//│ ta1: Array[int | bool]
+//│ ta1: Array[bool | int]
 //│    = <missing implementation>
 //│ test: ("hello", 1,)
 //│     = <missing implementation>
@@ -413,7 +413,7 @@ def tb1: (int, true)
 fta1 tb1
 r1 = if true then (1,2,3) else (1, 2)
 fta1 r1
-//│ fta1: Array[int | bool] -> int
+//│ fta1: Array[bool | int] -> int
 //│     = <missing implementation>
 //│ tb1: (int, true,)
 //│    = <missing implementation>
@@ -431,7 +431,7 @@ def p1: T | Array[bool] | (int, string) | (true, 3)
 def p2: T | (string, bool) | Array[int] | (2, 4)
 def pf t = (t[1], t.0)
 pf((1,2,3))
-//│ p1: T | Array[int | string | bool]
-//│ p2: T | Array[string | bool | int]
-//│ pf: (Array['a & ~undefined] & {0: 'b}) -> ('a | undefined, 'b,)
+//│ p1: Array[bool | int | string] | T
+//│ p2: Array[bool | int | string] | T
+//│ pf: (Array['a & ~undefined] & {0: 'b}) -> (undefined | 'a, 'b,)
 //│ res: (1 | 2 | 3 | undefined, 1,)

@@ -51,7 +51,7 @@ bar foo
 //│ ╟── • this reference:
 //│ ║  l.34: 	bar foo
 //│ ╙──      	^^^
-//│ res: error | 1
+//│ res: 1 | error
 //│    = <no result>
 //│      foo is not implemented
 

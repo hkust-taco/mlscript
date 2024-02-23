@@ -4,7 +4,7 @@
 abstract class Exp[A]: Pair | Lit
 class Lit(n: Int) extends Exp[Int]
 class Pair[L, R](val lhs: L, val rhs: R) extends Exp[[L, R]]
-//│ abstract class Exp[A]: Pair[anything, anything] | Lit
+//│ abstract class Exp[A]: Lit | Pair[anything, anything]
 //│ class Lit(n: Int) extends Exp
 //│ class Pair[L, R](lhs: L, rhs: R) extends Exp
 
@@ -22,10 +22,10 @@ fun f(e) = if e is
 fun f(e) = if e is
   Pair(l, r) then [l, r]
   Lit(n) then n
-//│ fun f: forall 'a 'b. (Pair['a, 'b] | Lit) -> (['a, 'b] | Int)
+//│ fun f: forall 'a 'b. (Lit | Pair['a, 'b]) -> (Int | ['a, 'b])
 
 (e: Exp['X]) => f(e)
-//│ forall 'X. (e: Exp['X]) -> ([??L, ??R] | Int)
+//│ forall 'X. (e: Exp['X]) -> (Int | [??L, ??R])
 //│ res
 //│     = [Function: res]
 

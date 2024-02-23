@@ -46,7 +46,7 @@ dv = D{}
 //│ ╟── record literal of type `anything` is not a record (expected a record with fields: y, x)
 //│ ║  l.42: 	dv = D{}
 //│ ╙──      	      ^^
-//│ dv: error | D & {x: nothing, y: nothing}
+//│ dv: D & {x: nothing, y: nothing} | error
 //│   = D { x: undefined, y: undefined }
 
 dv = D { x = 0; y = "hello" }
@@ -103,7 +103,7 @@ E{}
 //│ ╟── record literal of type `anything` does not have field 'x'
 //│ ║  l.99: 	E{}
 //│ ╙──      	 ^^
-//│ res: error | E & {x: nothing}
+//│ res: E & {x: nothing} | error
 //│    = E {}
 
 ev = E { x = 1 }
@@ -160,7 +160,7 @@ c1 = C1 { }
 //│ ╟── record literal of type `anything` is not a record (expected a record with fields: y, x)
 //│ ║  l.156: 	c1 = C1 { }
 //│ ╙──       	        ^^^
-//│ c1: error | C1 & {x: nothing, y: nothing}
+//│ c1: C1 & {x: nothing, y: nothing} | error
 //│   = C1 { y: undefined, x: undefined }
 
 c1 = C1 { x = 1; y = "hi" }

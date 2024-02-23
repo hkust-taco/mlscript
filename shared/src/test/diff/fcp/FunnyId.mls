@@ -47,7 +47,7 @@ id 1
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
 //│     'a <: 'b -> ?
-//│     'b :> 'b -> 'b | 1
+//│     'b :> 1 | 'b -> 'b
 //│        <: ? & 'a
 //│ ║  l.30: 	rec def id x = let tmp = id id x in x
 //│ ╙──      	                         ^^^^^
@@ -63,9 +63,9 @@ id 1
 //│ ╟── from reference:
 //│ ║  l.30: 	rec def id x = let tmp = id id x in x
 //│ ╙──      	                                    ^
-//│ res: error | 1 | 'a -> 'a | 'b
+//│ res: 1 | error | 'a -> 'a | 'b
 //│   where
-//│     'a :> 'a -> 'a | 1
+//│     'a :> 1 | 'a -> 'a
 //│        <: 'a -> anything & 'b
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

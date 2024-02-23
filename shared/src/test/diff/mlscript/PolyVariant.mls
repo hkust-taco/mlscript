@@ -106,7 +106,7 @@ rec def map f l = case l of {
   }
 //│ map: ('head -> ('head0 & 'A)) -> 'a -> 'b
 //│   where
-//│     'a <: Nil & List['A] & 'b | (Cons[?] with {head: 'head, tail: 'a})
+//│     'a <: (Cons[?] with {head: 'head, tail: 'a}) | Nil & List['A] & 'b
 //│     'b :> Cons['A] with {head: 'head0, tail: 'b}
 //│    = [Function: map]
 
@@ -152,7 +152,7 @@ f ({ _1 = A{}; _2 = C{} })
 //│ ╟── Note: class C is defined at:
 //│ ║  l.22: 	class C
 //│ ╙──      	      ^
-//│ res: error | 1 | 2 | 3 | 4
+//│ res: 1 | 2 | 3 | 4 | error
 //│    = 1
 
 // x actually has equivalent type {_1: anything; _2: anything}

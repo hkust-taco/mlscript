@@ -269,7 +269,7 @@ addOne2 (mkStr "hello")
 //│    = Stri { value: 'hello1', addOne: [Function: addOne] }
 
 union = if true then mkIntegerPrecise 42 else mkStr "hello"
-//│ union: Stri | Integer & {value: 42}
+//│ union: Integer & {value: 42} | Stri
 //│      = Integer { value: 42, addOne: [Function: addOne] }
 
 union2 = addOne2 union

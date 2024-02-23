@@ -198,7 +198,7 @@ trait TypeSimplifier { self: Typer =>
       // *  where `T` is `A & B & C`.
       // * It is fine to call `go` because we made sure A, B, C, etc. do not themsleves have any negative components.
       val csNegs2 = if (csNegs.isEmpty) BotType
-        else go(csNegs.foldLeft(TopType: ST)(_ & _.toType().neg()), pol.map(!_)).neg()
+        else go(csNegs.foldLeft(TopType: ST)(_ & _.toType().neg()), pol.map(!_)).neg() // TODO sort?! csNegs and toType
       
       // println(s"O ${otherCs} ${otherCs.sorted}")
       // val otherCs2 = otherCs.sortBy(_.comparePartial(_)).map { c =>

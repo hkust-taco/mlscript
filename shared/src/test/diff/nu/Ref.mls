@@ -200,7 +200,7 @@ class Ref[A](init: A) { mut val value = (); fun foo(x) = set value = x }
 class Ref[A](init: A) { mut val value = (); fun foo(x: A) = set value = x }
 //│ class Ref[A](init: A) {
 //│   fun foo: (x: A) -> ()
-//│   mut val value: A | ()
+//│   mut val value: () | A
 //│ }
 
 class Ref[A](init: A) { mut val value = init; fun foo(x) = set value = x }

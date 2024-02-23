@@ -461,7 +461,7 @@ choose id auto
 
 // ,("choose auto id", ok "(forall a. a -> a) -> (forall a. a -> a)")
 choose auto id
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'a1 -> 'a1)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a1 -> 'a1 | 'a0)
 //│    = [Function: auto]
 
 // ,("choose xauto xauto", ok "forall a. (forall b. b -> b) -> a -> a")
@@ -476,7 +476,7 @@ choose id xauto
 
 // ,("choose xauto id", Wrong)
 choose xauto id
-//│ res: (forall 'b. 'b -> 'b & 'a) -> ('a | 'a0 -> 'a0)
+//│ res: (forall 'b. 'b -> 'b & 'a) -> ('a0 -> 'a0 | 'a)
 //│    = [Function: xauto]
 
 // -- these fail too in ghc: (choose ids []) is accepted while (choose [] ids) is rejected
@@ -932,7 +932,7 @@ xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 def runST2: forall 'a. (forall 's. (ST['s, 'a], ST['s, 'a])) -> 'a
 runST2 ((newRef 1, newRef 2))
 //│ runST2: (forall 's. (ST['s, 'a], ST['s, 'a],)) -> 'a
-//│ res: Ref[in ??s, 2 | 1]
+//│ res: Ref[in ??s, 1 | 2]
 
 def runST3: forall 'a. (forall 's. ST[('s, 's), 'a]) -> 'a
 def newRef3: forall 'a 's. 'a -> ST[('s, 's), Ref['s, 'a]]
@@ -1003,7 +1003,7 @@ map xauto (map xauto ids)
 //│ ╟── back into type variable `'b`
 //│ ║  l.173: 	def xauto : forall 'a. (forall 'b. 'b -> 'b) -> 'a -> 'a
 //│ ╙──       	                                         ^^
-//│ res: error | List['a -> 'a]
+//│ res: List['a -> 'a] | error
 
 
 // * This doesn't work (without distrib.) because we don't currently generalize non-functions:

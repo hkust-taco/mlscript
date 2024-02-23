@@ -60,7 +60,7 @@ add boom 1
 //│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.53: 	add boom 1
 //│ ╙──      	    ^^^^
-//│ res: int | error
+//│ res: error | int
 //│    = 2
 
 
@@ -240,7 +240,7 @@ f 1
 
 :re
 res 2
-//│ res: 2 | 1
+//│ res: 1 | 2
 //│ Runtime error:
 //│   TypeError: b is not a function
 

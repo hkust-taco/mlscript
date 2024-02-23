@@ -50,8 +50,8 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         }
         if (cmp3 =/= 0) return cmp3
         trs1.size.compare(trs2.size)
-      case (LhsTop, _) => -1
-      case (_, LhsTop) => 1
+      case (LhsTop, _) => 1
+      case (_, LhsTop) => -1
     }
     def toTypes: Ls[SimpleType] = toType() :: Nil
     def toType(sort: Bool = false): SimpleType =
@@ -495,14 +495,17 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   // case class Conjunct(lnf: LhsNf, vars: SortedSet[TypeVariable], rnf: RhsNf, nvars: SortedSet[TypeVariable]) extends Ordered[Conjunct] {
   // case class Conjunct(lnf: LhsNf, vars: SortedSet[TypeVariable], rnf: RhsNf, nvars: SortedSet[TypeVariable]) {
     // def compare(that: Conjunct): Int = this.mkString compare that.mkString // TODO less inefficient!!
-    def comparePartial(that: Conjunct): Int = {
+    def comparePartial(that: Conjunct): Int = trace(s"comparePartial($this, $that)")(comparePartialImpl(that))(r => s"= $r")
+    def comparePartialImpl(that: Conjunct): Int = {
       val cmp1 = lnf.comparePartial(that.lnf)
       if (cmp1 =/= 0) return cmp1
       val cmp3 = rnf.comparePartial(that.rnf)
       if (cmp3 =/= 0) return cmp3
-      val cmp2 = vars.size.compare(that.vars.size)
+      // val cmp2 = vars.size.compare(that.vars.size)
+      val cmp2 = -vars.sizeCompare(that.vars)
       if (cmp2 =/= 0) return cmp2
-      nvars.size.compare(that.nvars.size)
+      // nvars.size.compare(that.nvars.size)
+      -nvars.sizeCompare(that.nvars)
       // implicitly[Ordering[SortedSet[TV]]]
       // ???
     }

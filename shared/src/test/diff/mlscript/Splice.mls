@@ -77,13 +77,13 @@ gt2 = (...arr1)
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.76: 	(1, ...(true, false), "hi") : Array[int | bool]
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── string literal of type `"hi"` does not match type `int | bool`
+//│ ╟── string literal of type `"hi"` does not match type `bool | int`
 //│ ║  l.76: 	(1, ...(true, false), "hi") : Array[int | bool]
 //│ ║        	                      ^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.76: 	(1, ...(true, false), "hi") : Array[int | bool]
 //│ ╙──      	                                    ^^^^^^^^^^
-//│ res: Array[int | bool]
+//│ res: Array[bool | int]
 
 a1 = (1,2,3,4,5)
 a2 = (1,2, ...a1, 4,5)

@@ -21,7 +21,7 @@ code""" "hello world" """
 code"""if 0 == 0 then 1
 else 0
 """
-//│ Code[1 | 0, nothing]
+//│ Code[0 | 1, nothing]
 
 :pe
 :w

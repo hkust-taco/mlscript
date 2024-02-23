@@ -73,9 +73,17 @@ trait T
 
 :re
 error: (1,2) & t | Array[3]
-//│ res: (1, 2,) & #T | Array[3]
-//│ Runtime error:
-//│   Error: an error was thrown
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.TyperDatatypes$BaseType.comparePartial(TyperDatatypes.scala:189)
+//│ 	at: mlscript.NormalForms$LhsNf.comparePartial(NormalForms.scala:37)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:500)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
 
 
 def arr: Array[1]
@@ -94,30 +102,34 @@ arr: Array[2] | (1, 2)
 
 :e
 arr: Array[2] & t | (1, 1)
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.96: 	arr: Array[2] & t | (1, 1)
-//│ ║        	^^^
-//│ ╟── type `Array[1]` does not match type `Array[2] & #T | (1, 1,)`
-//│ ║  l.81: 	def arr: Array[1]
-//│ ║        	         ^^^^^^^^
-//│ ╟── but it flows into reference with expected type `Array[2] & #T | (1, 1,)`
-//│ ║  l.96: 	arr: Array[2] & t | (1, 1)
-//│ ║        	^^^
-//│ ╟── Note: constraint arises from union type:
-//│ ║  l.96: 	arr: Array[2] & t | (1, 1)
-//│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^
-//│ res: Array[2] & #T | (1, 1,)
-//│    = <no result>
-//│      arr is not implemented
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.TyperDatatypes$BaseType.comparePartial(TyperDatatypes.scala:189)
+//│ 	at: mlscript.NormalForms$LhsNf.comparePartial(NormalForms.scala:37)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:500)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
 
 def arrt: Array[1] & t
 //│ arrt: Array[1] & #T
 //│     = <missing implementation>
 
 arrt: Array[2] & t | (1, 1)
-//│ res: Array[2] & #T | (1, 1,)
-//│    = <no result>
-//│      arrt is not implemented
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.TyperDatatypes$BaseType.comparePartial(TyperDatatypes.scala:189)
+//│ 	at: mlscript.NormalForms$LhsNf.comparePartial(NormalForms.scala:37)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:500)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
 
 
 def f_1: 'a -> (Array['a] & t)
@@ -125,32 +137,44 @@ def f_1: 'a -> (Array['a] & t)
 //│    = <missing implementation>
 
 def f_2: 'a -> (Array['a] & t | (1,))
-//│ f_2: 'a -> (Array['a] & #T | (1,))
-//│    = <missing implementation>
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.TyperDatatypes$BaseType.comparePartial(TyperDatatypes.scala:189)
+//│ 	at: mlscript.NormalForms$LhsNf.comparePartial(NormalForms.scala:37)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:500)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
 
 :e
 f_1 = f_2
-//│ 'a -> (Array['a] & #T | (1,))
-//│   <:  f_1:
-//│ 'a -> (Array['a] & #T)
-//│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.132: 	f_1 = f_2
-//│ ║         	^^^^^^^^^
-//│ ╟── type `1` does not match type `'a`
-//│ ║  l.127: 	def f_2: 'a -> (Array['a] & t | (1,))
-//│ ║         	                                 ^
-//│ ╟── Note: constraint arises from type variable:
-//│ ║  l.123: 	def f_1: 'a -> (Array['a] & t)
-//│ ╙──       	                      ^^
-//│    = <no result>
-//│      f_2 is not implemented
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.TyperDatatypes$BaseType.comparePartial(TyperDatatypes.scala:189)
+//│ 	at: mlscript.NormalForms$LhsNf.comparePartial(NormalForms.scala:37)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:500)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
 
 f_2 = f_1
-//│ 'a -> (Array['a] & #T)
-//│   <:  f_2:
-//│ 'a -> (Array['a] & #T | (1,))
-//│    = <no result>
-//│      f_1 and f_2 are not implemented
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.TyperDatatypes$BaseType.comparePartial(TyperDatatypes.scala:189)
+//│ 	at: mlscript.NormalForms$LhsNf.comparePartial(NormalForms.scala:37)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartialImpl(NormalForms.scala:500)
+//│ 	at: mlscript.NormalForms$Conjunct.$anonfun$comparePartial$2(NormalForms.scala:498)
+//│ 	at: scala.runtime.java8.JFunction0$mcI$sp.apply(JFunction0$mcI$sp.scala:17)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NormalForms$Conjunct.comparePartial(NormalForms.scala:498)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:492)
+//│ 	at: mlscript.NormalForms$ConjunctPartialOrdering$.compare(NormalForms.scala:491)
 
 
 
@@ -164,13 +188,13 @@ test = ("hi", 1)
 //│   <:  test:
 //│ ("hello", 1,)
 //│ ╔══[ERROR] Type mismatch in def definition:
-//│ ║  l.162: 	test = ("hi", 1)
+//│ ║  l.186: 	test = ("hi", 1)
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"hi"` does not match type `"hello"`
-//│ ║  l.162: 	test = ("hi", 1)
+//│ ║  l.186: 	test = ("hi", 1)
 //│ ║         	        ^^^^
 //│ ╟── Note: constraint arises from literal type:
-//│ ║  l.157: 	def test: (string, 1) & { 0: "hello" }
+//│ ║  l.181: 	def test: (string, 1) & { 0: "hello" }
 //│ ╙──       	                             ^^^^^^^
 //│     = [ 'hi', 1 ]
 
@@ -195,7 +219,7 @@ test: ('a, 1)
 :e
 class A: (1,2)
 //│ ╔══[ERROR] cannot inherit from a tuple type
-//│ ║  l.196: 	class A: (1,2)
+//│ ║  l.220: 	class A: (1,2)
 //│ ╙──       	      ^^^^^^^^
 
 

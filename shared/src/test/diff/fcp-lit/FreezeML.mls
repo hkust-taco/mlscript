@@ -537,7 +537,7 @@ res id
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.503: 	choose id (fun (x: ('a -> 'a)) -> auto_ x)
 //│ ╙──       	                          ^^
-//│ res: 'b -> 'b | error
+//│ res: error | 'b -> 'b
 //│    = [Function: id1]
 
 
@@ -552,7 +552,7 @@ a (fun x -> { u = x })
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.172: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──       	                              ^^
-//│ res: 'b -> ({u: 'b} | 'b) | error
+//│ res: error | 'b -> ({u: 'b} | 'b)
 //│    = [Function (anonymous)]
 
 

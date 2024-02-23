@@ -286,7 +286,7 @@ code"if 3 is
   2 then 514
   _ then 0
 "
-//│ Code[114 | 514 | 0, nothing]
+//│ Code[0 | 114 | 514, nothing]
 //│ // Prelude
 //│ class TypingUnit23 {}
 //│ const typing_unit23 = new TypingUnit23;

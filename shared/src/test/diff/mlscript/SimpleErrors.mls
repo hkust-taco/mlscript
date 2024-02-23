@@ -37,7 +37,7 @@ trait MyTrait: { value: anything }
 //│ Defined trait MyTrait
 
 def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
-//│ test1: ({value: 'value} & #MyTrait | ~#MyTrait) -> ('value | 0)
+//│ test1: ({value: 'value} & #MyTrait | ~#MyTrait) -> (0 | 'value)
 
 :e
 test1 1
@@ -51,7 +51,7 @@ test1 1
 //│ ╟── from refined scrutinee:
 //│ ║  l.39: 	def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
 //│ ╙──      	                   ^
-//│ res: error | 0
+//│ res: 0 | error
 
 
 def map: 'a -> 'a
@@ -109,6 +109,6 @@ add boom 1
 //│ ╟── but it flows into reference with expected type `int`
 //│ ║  l.102: 	add boom 1
 //│ ╙──       	    ^^^^
-//│ res: int | error
+//│ res: error | int
 
 

@@ -121,12 +121,12 @@ fun sumOpt(x, y) =
     is None() and y is
       Some(yv) then yv
       None() then 0
-//│ sumOpt: (Some & {value: int} | None, Some & {value: int} | None,) -> int
+//│ sumOpt: (None | Some & {value: int}, None | Some & {value: int},) -> int
 //│       = [Function: sumOpt]
 
 fun f(x, y, z) =
   if x is A() and y
     == z then 1
     is B() then 0
-//│ f: (A, nothing, number,) -> (1 | 0)
+//│ f: (A, nothing, number,) -> (0 | 1)
 //│  = [Function: f5]

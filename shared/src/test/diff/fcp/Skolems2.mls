@@ -133,7 +133,7 @@ extrude(id)(id)(42)
 //│ ╟── • this reference:
 //│ ║  l.19: 	def extrude f = oops((f, 0))
 //│ ╙──      	                ^^^^
-//│ res: error | 42
+//│ res: 42 | error
 //│    = 42
 //│ // Output
 //│ Hi!

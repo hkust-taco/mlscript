@@ -33,7 +33,7 @@ class Pure[A](value: A) extends IO[A] {
 
 module readInt extends IO[Int] { fun run: Int = 42 }
 //│ module readInt extends IO {
-//│   fun bind: forall 'AA. (Int -> IO['AA]) -> Bind[Int & 'A, 'AA]
+//│   fun bind: forall 'AA. ('A -> IO['AA]) -> Bind[Int & 'A, 'AA]
 //│   fun hey: IO['A]
 //│   fun run: Int
 //│ }

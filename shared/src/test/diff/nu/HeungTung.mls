@@ -274,7 +274,7 @@ fun x: A & B
 fun test(x) = if x is
   A then 0
   _ then x
-//│ fun test: forall 'a. (A | Object & 'a & ~#A) -> ('a | 0)
+//│ fun test: forall 'a. (A | Object & 'a & ~#A) -> (0 | 'a)
 
 test(B())
 //│ 0 | B

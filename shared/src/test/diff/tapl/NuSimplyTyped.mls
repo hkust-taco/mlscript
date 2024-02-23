@@ -10,14 +10,14 @@ fun par(a) = "(" ++ a ++ ")"
 type Option[out A] = Some[A] | None
 class Some[out A](value: A)
 module None
-//│ type Option[A] = Some[A] | None
+//│ type Option[A] = None | Some[A]
 //│ class Some[A](value: A)
 //│ module None
 
 type Result[A, B] = Ok[A] | Err[B]
 class Ok[A](value: A)
 class Err[A](message: A)
-//│ type Result[A, B] = Ok[A] | Err[B]
+//│ type Result[A, B] = Err[B] | Ok[A]
 //│ class Ok[A](value: A)
 //│ class Err[A](message: A)
 
@@ -40,7 +40,7 @@ class Var(name: Str)
 class Abs(lhs: Var, lty: Type, rhs: Term)
 class App(lhs: Term, rhs: Term)
 // class App(lhs: Term, rhs: Term): Term
-//│ type Term = Lit | Var | Abs | App
+//│ type Term = Abs | App | Lit | Var
 //│ class Lit(tag: Str, ty: Type)
 //│ class Var(name: Str)
 //│ class Abs(lhs: Var, lty: Type, rhs: Term)
@@ -49,7 +49,7 @@ class App(lhs: Term, rhs: Term)
 type TreeMap[A] = Node[A] | Empty
 class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
 module Empty
-//│ type TreeMap[A] = Node[A] | Empty
+//│ type TreeMap[A] = Empty | Node[A]
 //│ class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
 //│ module Empty
 
@@ -67,8 +67,8 @@ fun find(t, k) =
       sgt(k, k') then find(r, k)
       _ then Some(v)
     Empty then None
-//│ fun insert: forall 'A. (Node['A] | Empty, Str, 'A) -> Node['A]
-//│ fun find: forall 'A0. (Node['A0] | Empty, Str) -> (None | Some['A0])
+//│ fun insert: forall 'A. (Empty | Node['A], Str, 'A) -> Node['A]
+//│ fun find: forall 'A0. (Empty | Node['A0], Str) -> (None | Some['A0])
 
 fun showType(ty) =
   if ty is
@@ -107,7 +107,7 @@ fun showTerm(t) =
     App(Abs(lhs0, ty, lhs1), rhs) then
       "((" ++ showTerm(Abs(lhs0, ty, rhs)) ++ ") " ++ showTerm(rhs) ++ ")"
     App(lhs, rhs) then par(showTerm(lhs) ++ " " ++ showTerm(rhs))
-//│ fun showTerm: (Lit | Var | Abs | App) -> Str
+//│ fun showTerm: (Abs | App | Lit | Var) -> Str
 
 showTerm(Var("x"))
 showTerm(Abs(Var("x"), _t("int"), Var("y")))

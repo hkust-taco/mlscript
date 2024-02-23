@@ -39,7 +39,7 @@ id
 //│ ╟── operator application of type `number` is not an instance of type `int`
 //│ ║  l.32: 	1 * (2 + 3) / 4 - 5
 //│ ╙──      	^^^^^^^^^^^^^^^
-//│ res: int | error
+//│ res: error | int
 //│    = -3.75
 
 :js
@@ -75,7 +75,7 @@ case x of { int -> 1 | string -> 0 }
 //│   throw new Error("non-exhaustive case expression");
 //│ })());
 //│ // End of generated code
-//│ res: 1 | 0
+//│ res: 0 | 1
 //│    = 1
 
 // When generating comma expressions in comma-separated lists, don't forget to
@@ -93,7 +93,7 @@ case x of { int -> 1 | string -> 0 }
 //│   })())
 //│ ];
 //│ // End of generated code
-//│ res: (1 | 0, 1 | 0,)
+//│ res: (0 | 1, 0 | 1,)
 //│    = [ 1, 1 ]
 
 // Don't add extra parentheses when generating invocations.

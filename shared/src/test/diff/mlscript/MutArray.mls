@@ -2,7 +2,7 @@
 
 
 def access0 arr = arr[0]
-//│ access0: Array['a & ~undefined] -> ('a | undefined)
+//│ access0: Array['a & ~undefined] -> (undefined | 'a)
 //│        = [Function: access0]
 
 def set0 arr x = arr[0] <- x

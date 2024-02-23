@@ -46,3 +46,20 @@ let a = if true then id else "{x: 1}"
 //│ let a: forall 'a. "{x: 1}" | 'a -> 'a
 
 
+
+class C[A]()
+class D[A]()
+//│ class C[A]()
+//│ class D[A]()
+
+let b = if true then C() else D()
+//│ let b: forall 'A 'A0. C['A] | D['A0]
+
+let b = if true then D() else C()
+//│ let b: forall 'A 'A0. C['A] | D['A0]
+
+// :ds
+let f(x) = if true then x else C()
+//│ let f: forall 'a. 'a -> (forall 'A. C['A] | 'a)
+
+

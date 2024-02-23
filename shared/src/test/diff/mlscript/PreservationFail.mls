@@ -22,7 +22,7 @@ c1 = C1{}
 //│   = C1 {}
 
 r = foo c1
-//│ r: C3 | C1 & ~#C2
+//│ r: C1 & ~#C2 | C3
 //│  = C1 {}
 
 // * Here we have the C1{} value typed at ~C2
@@ -62,7 +62,7 @@ c1 = C1_Impl{}
 //│   = C1_Impl {}
 
 r = foo c1
-//│ r: C3 | C1_Impl
+//│ r: C1_Impl | C3
 //│  = C1_Impl {}
 
 r : ~C2

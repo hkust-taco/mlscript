@@ -133,7 +133,7 @@ def succ_ n = fun f -> fun x -> f (n f x)
 // let add (n:Int) (m:Int) = n succ m
 def add (n: ChurchInt) (m: ChurchInt) = n succ m
 def add_ n m = n succ_ m
-//│ add: ChurchInt -> ChurchInt -> (ChurchInt | ('a -> ('a & 'b)) -> 'a -> 'b)
+//│ add: ChurchInt -> ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
 //│ add_: ((forall 'a 'b 'c 'd. ('a -> 'b -> 'c) -> ('c -> 'd & 'a) -> 'b -> 'd) -> 'e -> 'f) -> 'e -> 'f
 
 // let printInt (n:Int) = print (n (fun x -> x+1) 0)
@@ -150,7 +150,7 @@ table = hashtbl_add table "one" (fun f -> fun x -> f x)
 table = hashtbl_add table "two" (fun f -> fun x -> f (f x))
 //│ table: List[nothing]
 //│ table: List[("one", forall 'a 'b. ('a -> 'b) -> 'a -> 'b,)]
-//│ table: List[("two" | "one", forall 'a 'b 'c. ('a -> 'b & 'b -> 'c & 'a -> 'c) -> 'a -> 'c,)]
+//│ table: List[("one" | "two", forall 'a 'b 'c. ('a -> 'b & 'b -> 'c & 'a -> 'c) -> 'a -> 'c,)]
 
 // let zog =
 //   printInt (add (nfind table "one") (nfind table "two"))
@@ -165,7 +165,7 @@ zog = printInt (add (nfind table "one") (nfind table "two"))
 
 :stats
 a = add (nfind table "one")
-//│ a: ChurchInt -> (ChurchInt | ('a -> ('a & 'b)) -> 'a -> 'b)
+//│ a: ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
 //│ constrain calls  : 1556
 //│ annoying  calls  : 28
 //│ subtyping calls  : 7972
@@ -188,12 +188,12 @@ b (fun x -> x (not x))
 //│ res: nothing -> nothing
 
 b (fun x -> 0)
-//│ res: 'a -> ('a | 0)
+//│ res: 'a -> (0 | 'a)
 
 // * Note: this one required `:DistributeForalls`
 :stats
 a b
-//│ res: ChurchInt | ('a -> ('a & 'b)) -> 'a -> 'b
+//│ res: ('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt
 //│ constrain calls  : 759
 //│ annoying  calls  : 0
 //│ subtyping calls  : 4467

@@ -47,7 +47,7 @@ k (fun x -> (x, x)) + 1
 //│ ╟── • this reference:
 //│ ║  l.35: 	k (fun x -> (x, x)) + 1
 //│ ╙──      	^
-//│ res: int | error
+//│ res: error | int
 
 
 def k: (forall 'a. 'a -> 'a) -> int

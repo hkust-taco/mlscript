@@ -50,12 +50,12 @@ fooid = foo id
 fooSome = foo Some
 //│ foo: ((123 | true) -> 'a) -> ('a, 'a,)
 //│ fooid: (123 | true, 123 | true,)
-//│ fooSome: (Option[true | 123], Option[true | 123],)
+//│ fooSome: (Option[123 | true], Option[123 | true],)
 
 def bar f = (f (fun x -> x), f (fun x -> Some x))
 test = bar foo
 //│ bar: ((forall 'a. 'a -> 'a) -> 'b & (forall 'c. 'c -> Option['c]) -> 'd) -> ('b, 'd,)
-//│ test: ((123 | true, 123 | true,), (Option[true | 123], Option[true | 123],),)
+//│ test: ((123 | true, 123 | true,), (Option[123 | true], Option[123 | true],),)
 
 
 // * With function type annotation (same lesser generality)
@@ -65,12 +65,12 @@ fooid = foo id
 fooSome = foo Some
 //│ foo: ((123 | true) -> 'a) -> ('a, 'a,)
 //│ fooid: (123 | true, 123 | true,)
-//│ fooSome: (Option[true | 123], Option[true | 123],)
+//│ fooSome: (Option[123 | true], Option[123 | true],)
 
 def bar f = (f (fun x -> x), f (fun x -> Some x))
 test = bar foo
 //│ bar: ((forall 'a. 'a -> 'a) -> 'b & (forall 'c. 'c -> Option['c]) -> 'd) -> ('b, 'd,)
-//│ test: ((123 | true, 123 | true,), (Option[true | 123], Option[true | 123],),)
+//│ test: ((123 | true, 123 | true,), (Option[123 | true], Option[123 | true],),)
 
 
 // * Here's an idea: we could use application types to retain this function's precise typing
@@ -127,7 +127,7 @@ found = find(ls, 1)
 match found with
   | None -> ("???", false)
   | Some(r) -> (r id "!!!", r id true)
-//│ res: ("???" | "!!!", Bool,)
+//│ res: ("!!!" | "???", Bool,)
 
 
 use fnd = match fnd with
@@ -136,7 +136,7 @@ use fnd = match fnd with
 //│ use: Option[(forall 'a. 'a -> 'a) -> ("!!!" -> 'b & true -> 'c)] -> ("???" | 'b, false | 'c,)
 
 use found
-//│ res: ("???" | "!!!", Bool,)
+//│ res: ("!!!" | "???", Bool,)
 
 
 

@@ -12,15 +12,15 @@ def test = fun x -> case x of
   { Person -> x.age
   | Animal -> 0
   }
-//│ test: ((Person\name with {age: 'age}) | Animal) -> ('age | 0)
+//│ test: (Animal | (Person\name with {age: 'age})) -> (0 | 'age)
 //│     = [Function: test]
 
 test: Person & {age: 'a} | Animal -> 'a | 0
-//│ res: Person & {age: 0} | Animal -> 0 | 0
+//│ res: 0 | Person & {age: 0} | Animal -> 0
 //│    = [Function: test]
 
 test: (Person & {age: int} | Animal) -> int
-//│ res: (Person | Animal) -> int
+//│ res: (Animal | Person) -> int
 //│    = [Function: test]
 
 a = Animal{}
@@ -44,7 +44,7 @@ test a
 //│    = 0
 
 test p
-//│ res: 42 | 0
+//│ res: 0 | 42
 //│    = 42
 
 1: int

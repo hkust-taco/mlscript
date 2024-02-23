@@ -57,7 +57,7 @@ let r = Right "ok"
 let e = if _ then l else r
 //│ l: Left[1, ?]
 //│ r: Right[?, "ok"]
-//│ e: Right[?, "ok"] | Left[1, ?]
+//│ e: Left[1, ?] | Right[?, "ok"]
 
 :e // TODO
 e as Either Int String

@@ -34,7 +34,7 @@ def arg: A | B | C
 
 :stats
 foo arg
-//│ res: int | string | bool
+//│ res: bool | int | string
 //│    = <no result>
 //│      arg is not implemented
 //│ constrain calls  : 37
@@ -55,7 +55,7 @@ def foo x = case x of {
   | B -> x.fB
   | C -> { l = x.fC; r = x.payload }
   }
-//│ foo: (A & {payload: int} | (B with {fB: 'fB}) | (C with {fC: 'fC, payload: 'payload})) -> (int | 'fB | {l: 'fC, r: 'payload})
+//│ foo: (A & {payload: int} | (B with {fB: 'fB}) | (C with {fC: 'fC, payload: 'payload})) -> (int | {l: 'fC, r: 'payload} | 'fB)
 //│    = [Function: foo1]
 
 :e

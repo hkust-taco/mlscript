@@ -51,7 +51,7 @@ def succ (n: ChurchInt) = fun f -> fun x -> f (n f x)
 def add (n: ChurchInt) (m: ChurchInt) = n succ m
 def printInt (n: ChurchInt) = toString (n (fun x -> x + 1) 0)
 //│ succ: ChurchInt -> ('a -> ('a & 'b)) -> 'a -> 'b
-//│ add: ChurchInt -> ChurchInt -> (ChurchInt | ('a -> ('a & 'b)) -> 'a -> 'b)
+//│ add: ChurchInt -> ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
 //│ printInt: ChurchInt -> string
 
 def create_hashtbl () = nil
@@ -104,7 +104,7 @@ def x = nfind table "one"
 // def x: ('b -> 'a) -> ('a & 'b) -> 'a
 
 add x
-//│ res: ChurchInt -> (ChurchInt | ('a -> ('a & 'b)) -> 'a -> 'b)
+//│ res: ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
 
 // * But this doesn't, because `nfind table "one"` is no longer generalized:
 
@@ -127,7 +127,7 @@ add (nfind table "one")
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.63: 	table = hashtbl_add table "one" (fun f -> fun x -> f x)
 //│ ╙──      	                                                     ^
-//│ res: error | ChurchInt -> (ChurchInt | ('a -> ('a & 'b)) -> 'a -> 'b)
+//│ res: error | ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
 //│ constrain calls  : 100
 //│ annoying  calls  : 7
 //│ subtyping calls  : 305
@@ -141,7 +141,7 @@ tmp "one"
 //│ res: ('b -> 'a) -> ('a & 'b) -> 'a
 
 add (tmp "one")
-//│ res: ChurchInt -> (ChurchInt | ('a -> ('a & 'b)) -> 'a -> 'b)
+//│ res: ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
 
 // * But it all works with argument-generalization:
 // ==========================================================================================
@@ -149,14 +149,14 @@ add (tmp "one")
 
 :stats
 add (nfind table "one")
-//│ res: ChurchInt -> (ChurchInt | ('a -> ('a & 'b)) -> 'a -> 'b)
+//│ res: ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
 //│ constrain calls  : 94
 //│ annoying  calls  : 7
 //│ subtyping calls  : 280
 
 :stats
 (fun x -> add x) (nfind table "one")
-//│ res: ChurchInt -> (ChurchInt | ('a -> ('a & 'b)) -> 'a -> 'b)
+//│ res: ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
 //│ constrain calls  : 106
 //│ annoying  calls  : 7
 //│ subtyping calls  : 314
@@ -212,7 +212,7 @@ foo 1 2
 //│ ╟── from reference:
 //│ ║  l.63: 	table = hashtbl_add table "one" (fun f -> fun x -> f x)
 //│ ╙──      	                                                   ^
-//│ res: 'a -> 'a | error
+//│ res: error | 'a -> 'a
 
 foo 1 error
 //│ res: 'a -> 'a

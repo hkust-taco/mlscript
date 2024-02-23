@@ -129,7 +129,7 @@ fun foo(s) =
   if s is
     Some(t) then let b = s2.value in b + t.x
     _ then 0  
-//│ fun foo: (Some[{x: Int}] | Object & ~#Some) -> Int
+//│ fun foo: (Object & ~#Some | Some[{x: Int}]) -> Int
 //│ // Prelude
 //│ class TypingUnit8 {}
 //│ const typing_unit8 = new TypingUnit8;
@@ -150,7 +150,7 @@ fun bar(s) =
   if s is
     Some(_) then let b = s2.value in b + 1
     _ then 0
-//│ fun bar: (Some[anything] | Object & ~#Some) -> Int
+//│ fun bar: (Object & ~#Some | Some[anything]) -> Int
 
 bar(Some(V1(12)))
 //│ Int
@@ -195,7 +195,7 @@ fun t(x) =
   if x is
     FooBar then 1
     _ then 0
-//│ fun t: Object -> (1 | 0)
+//│ fun t: Object -> (0 | 1)
 //│ // Prelude
 //│ class TypingUnit13 {}
 //│ const typing_unit13 = new TypingUnit13;
@@ -208,7 +208,7 @@ fun t(x) =
 //│ // End of generated code
 
 t(new FooBar())
-//│ 1 | 0
+//│ 0 | 1
 //│ res
 //│     = 1
 
@@ -232,7 +232,7 @@ fun m(x) =
     MM then 1
     _ then 0
 //│ module MM
-//│ fun m: Object -> (1 | 0)
+//│ fun m: Object -> (0 | 1)
 //│ // Prelude
 //│ class TypingUnit16 {
 //│   #MM;
@@ -317,7 +317,7 @@ g(0)
 
 // * Approximated type
 g(true)
-//│ true | 0
+//│ 0 | true
 //│ res
 //│     = true
 

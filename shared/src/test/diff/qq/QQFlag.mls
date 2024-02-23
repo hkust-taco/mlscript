@@ -100,7 +100,7 @@ run(code"x => ${power'(code"x", 10)}")
 //│       undefined
 
 run(code"x => if (x == 42) then 42 else 0")
-//│ Num -> (42 | 0)
+//│ Num -> (0 | 42)
 //│ res
 //│     = Quoted:
 //│       (x_6) =>

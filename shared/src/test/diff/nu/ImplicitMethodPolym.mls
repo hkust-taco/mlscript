@@ -53,8 +53,8 @@ module M extends Mx {
   val r = this.id1(0)
 }
 //│ module M {
-//│   fun id1: forall 'a. ('b & 'a) -> ('a | 0)
-//│   val r: 'b | 0
+//│   fun id1: forall 'a. ('b & 'a) -> (0 | 'a)
+//│   val r: 0 | 'b
 //│ }
 
 mixin Mx {
@@ -98,8 +98,8 @@ module M extends Mx {
   let _ = this.id1(0)
 }
 //│ module M {
-//│   let _: ['a | 0, 'a | 0]
-//│   fun id1: 'a -> ['a | 0, 'a | 0]
+//│   let _: [0 | 'a, 0 | 'a]
+//│   fun id1: 'a -> [0 | 'a, 0 | 'a]
 //│   fun id2: forall 'a0. 'a0 -> ['a0, 'a0]
 //│ }
 

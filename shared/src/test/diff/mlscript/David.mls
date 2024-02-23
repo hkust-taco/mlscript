@@ -17,11 +17,11 @@ r1 = selectBoolOrInt true
 r2 = selectBoolOrInt 1
 addOneI = fun x -> add x 1
 addOneB = bb
-//│ selectBoolOrInt: anything -> (true | 1)
+//│ selectBoolOrInt: anything -> (1 | true)
 //│                = [Function: selectBoolOrInt]
-//│ r1: true | 1
+//│ r1: 1 | true
 //│   = 1
-//│ r2: true | 1
+//│ r2: 1 | true
 //│   = 1
 //│ addOneI: int -> int
 //│        = [Function: addOneI]
@@ -33,7 +33,7 @@ addOne = fun x ->
     then addOneI x 
     else addOneB x
 r3 = isInt r2
-//│ addOne: nothing -> (true | int)
+//│ addOne: nothing -> (int | true)
 //│       = [Function: addOne]
 //│ r3: true
 //│   = true
@@ -55,7 +55,7 @@ r4 = addOne (selectBoolOrInt 1)
 //│ ╟── from reference:
 //│ ║  l.34: 	    else addOneB x
 //│ ╙──      	                 ^
-//│ r4: error | true | int
+//│ r4: error | int | true
 //│   = 2
 
 :e
@@ -72,7 +72,7 @@ r4 = let tmp = selectBoolOrInt 1 in case tmp of { int -> addOne tmp }
 //│ ╟── Note: constraint arises from class pattern:
 //│ ║  l.62: 	r4 = let tmp = selectBoolOrInt 1 in case tmp of { int -> addOne tmp }
 //│ ╙──      	                                                  ^^^
-//│ r4: true | int | error
+//│ r4: error | int | true
 //│   = 2
 
 // TODO improve:
@@ -92,14 +92,14 @@ r4 = let tmp = selectBoolOrInt 1 in case tmp of { int -> addOne tmp | _ -> 0 }
 //│ ╟── from refined scrutinee:
 //│ ║  l.84: 	r4 = let tmp = selectBoolOrInt 1 in case tmp of { int -> addOne tmp | _ -> 0 }
 //│ ╙──      	                                         ^^^
-//│ r4: true | int
+//│ r4: int | true
 //│   = 2
 
 def addOne x = case x of {
   | int -> addOneI x 
   | bool -> addOneB x
   }
-//│ addOne: (int | bool) -> (int | true)
+//│ addOne: (bool | int) -> (int | true)
 //│       = [Function: addOne1]
 
 def r4 = addOne (selectBoolOrInt 1)
@@ -135,7 +135,7 @@ isInt "Two"
 //│    = false
 
 def addOne = fun x -> if isInt x then addOneI x else addOneS x
-//│ addOne: nothing -> (string | int)
+//│ addOne: nothing -> (int | string)
 //│       = [Function: addOne2]
 
 :e
@@ -152,7 +152,7 @@ addOne "hello"
 //│ ╟── from reference:
 //│ ║  l.137: 	def addOne = fun x -> if isInt x then addOneI x else addOneS x
 //│ ╙──       	                                              ^
-//│ res: error | string | int
+//│ res: error | int | string
 //│    = 'helloOne'
 
 
@@ -183,7 +183,7 @@ concat "Three" (addOne "Two")
 //│ ╟── but it flows into application with expected type `int`
 //│ ║  l.175: 	(addOne 1) + 1
 //│ ╙──       	 ^^^^^^^^
-//│ res: int | error
+//│ res: error | int
 //│    = 3
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.176: 	concat "Three" (addOne "Two")

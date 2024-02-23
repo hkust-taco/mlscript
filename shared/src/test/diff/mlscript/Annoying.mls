@@ -63,7 +63,7 @@ def test x = case x of { int -> x.f | _ -> x.x }
 //│ ╔══[ERROR] Type mismatch in def definition:
 //│ ║  l.59: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `{x: 'a} & ~?a | int & {x: 'a}` does not have field 'f'
+//│ ╟── expression of type `int & {x: 'a} | {x: 'a} & ~?a` does not have field 'f'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.59: 	def test x = case x of { int -> x.f | _ -> x.x }
 //│ ║        	                                ^^^
@@ -258,13 +258,13 @@ if true then id else idx
 //│ res: 'a -> 'a
 
 r =  if true then id with { x = "a"; y = "b" } else idx
-//│ r: 'a -> 'a & {x: 1 | "a"}
+//│ r: 'a -> 'a & {x: "a" | 1}
 
 r r.x
 //│ res: "a" | 1
 
 indirect r
-//│ res: 1 | "a"
+//│ res: "a" | 1
 
 def takeFunOrRecord: (int -> int | { x: int }) -> int
 //│ takeFunOrRecord: anything -> int
