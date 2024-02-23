@@ -602,7 +602,8 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     lazy val levelBelowPolym = levelBelow(polymLevel)
     def isBot: Bool = cs.isEmpty
     def toType(sort: Bool = false): SimpleType = ConstrainedType.mk(cons, if (cs.isEmpty) BotType else {
-      val css = if (sort) cs.sorted else cs
+      // val css = if (sort) cs.sorted else cs
+      val css = cs
       PolymorphicType.mk(polymLevel, css.map(_.toType(sort)).foldLeft(BotType: ST)(_ | _))
     })
     lazy val level: Level =
@@ -679,6 +680,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       val (newLvl, thisCs, thatCs, thisCons, thatCons) = levelWith(that)
       // println(s"-- $polymLevel ${that.polymLevel} $newLvl")
       thatCs.foldLeft(DNF(newLvl, thisCons ::: thatCons, thisCs))(_ | _)
+      // ^ Note: conjuncting the constrained-type constraints here is probably the wrong thing to do...
     }
     def & (that: Conjunct, pol: Bool)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF =
       DNF(polymLevel, cons, cs.flatMap(_ & (that, pol))) // TODO may need further simplif afterward

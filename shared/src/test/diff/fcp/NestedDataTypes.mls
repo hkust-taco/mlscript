@@ -251,10 +251,10 @@ rec def map f tree = case tree of {
 //│   where
 //│     'map :> forall 'a 'subTree 'A 'subTree0 'value 'value0. 'a -> ((Leaf[?] & {value: 'value} | (Node[?] with {subTree: 'subTree})) -> (Leaf['value0] | (Node['A] with {subTree: 'subTree0}))
 //│       where
-//│         'a <: 'value -> 'value0
 //│         'map <: (forall 'b 'c 'd 'e. (('b, 'd,),) -> ('c, 'e,)
 //│           where
-//│             'a <: 'b -> 'c & 'd -> 'e) -> 'subTree -> (PerfectTree[Two['A]] & 'subTree0))
+//│             'a <: 'b -> 'c & 'd -> 'e) -> 'subTree -> (PerfectTree[Two['A]] & 'subTree0)
+//│         'a <: 'value -> 'value0)
 //│    = [Function: map1]
 
 :e
@@ -263,10 +263,10 @@ map succ n4
 //│   where
 //│     'map :> forall 'subTree 'A 'subTree0 'value 'value0. 'a -> ((Leaf[?] & {value: 'value} | (Node[?] with {subTree: 'subTree})) -> (Leaf['value0] | (Node['A] with {subTree: 'subTree0}))
 //│       where
-//│         'a <: 'value -> 'value0
 //│         'map <: (forall 'b 'c 'd 'e. (('b, 'd,),) -> ('c, 'e,)
 //│           where
-//│             'a <: 'b -> 'c & 'd -> 'e) -> 'subTree -> (PerfectTree[Two['A]] & 'subTree0))
+//│             'a <: 'b -> 'c & 'd -> 'e) -> 'subTree -> (PerfectTree[Two['A]] & 'subTree0)
+//│         'a <: 'value -> 'value0)
 //│ ╙──
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
 //│ ║  l.261: 	map succ n4
