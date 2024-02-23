@@ -20,7 +20,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     // 200
     250
   
-  // type ExtrCtx = MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
   type ExtrCtx = MutSortMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
   
   protected var currentConstrainingRun = 0
@@ -1312,7 +1311,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def extrude(ty: SimpleType, lowerLvl: Int, pol: Boolean, upperLvl: Level)
         (implicit ctx: Ctx, cache: LinkedHashMap[TypeVarOrRigidVar->Bool, TypeVarOrRigidVar], cache2: MutSortMap[TraitTag, TraitTag], reason: Ls[Ls[ST]])
         : SimpleType =
-  (trace(s"EXTR[${printPol(S(pol))}] $ty || $lowerLvl .. $upperLvl  ${ty.level} ${ty.level <= lowerLvl}"){
+  // (trace(s"EXTR[${printPol(S(pol))}] $ty || $lowerLvl .. $upperLvl  ${ty.level} ${ty.level <= lowerLvl}"){
     if (ty.level <= lowerLvl) ty else ty match {
       case t @ TypeBounds(lb, ub) => if (pol) extrude(ub, lowerLvl, true, upperLvl) else extrude(lb, lowerLvl, false, upperLvl)
       case t @ FunctionType(l, r) => FunctionType(extrude(l, lowerLvl, !pol, upperLvl), extrude(r, lowerLvl, pol, upperLvl))(t.prov)
@@ -1417,7 +1416,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case o @ Overload(alts) =>
         o.mapAlts(extrude(_, lowerLvl, !pol, upperLvl))(extrude(_, lowerLvl, pol, upperLvl))
     }
-    }(r => s"=> $r"))
+    // }(r => s"=> $r"))
   
   
   def err(msg: Message, loco: Opt[Loc])(implicit raise: Raise): SimpleType = {
