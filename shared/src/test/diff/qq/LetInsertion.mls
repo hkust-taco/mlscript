@@ -2,6 +2,7 @@
 :NoJS
 
 
+
 fun (%>) bind: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
 fun bind[g](rhs, k: forall 'c: Code['a, 'c] -> Code['b, 'c | g]) = code"let x = ${rhs} in ${k(code"x")}"
 //│ fun bind: forall 'a 'd 'b 'g. (Code['a, 'd], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'd | 'g & ~??x]

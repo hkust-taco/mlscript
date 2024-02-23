@@ -53,7 +53,6 @@ rec def f w = case w of
 //│   where
 //│     'left <: Node & {left: 'left}
 
-// :ds
 rec def f w = case w of
   Node ->
     let tmp0 = f w.left in
@@ -66,12 +65,6 @@ rec def f w = case w of
 //│   where
 //│     'b <: Node & {left: 'b}
 
-
-f
-//│ res: 'b -> Some[in 'a out 0 | 'a]
-//│   where
-//│     'b <: Node & {left: 'b}
-
 def f w =
   let tmp0 = f w.left in
   case tmp0 of
@@ -81,6 +74,4 @@ def f w =
 //│ f: 'b -> Some[in 'a out 0 | 'a]
 //│   where
 //│     'b <: {left: Node & 'b}
-
-
 

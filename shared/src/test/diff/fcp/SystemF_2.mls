@@ -334,7 +334,6 @@ c2 c2 K
 //│     'X :> anything -> 'X
 //│    = [Function (anonymous)]
 
-// :ds
 c2_ = succ_ (succ_ n0)
 //│ c2_: 'a -> (forall 'b 'c 'd. 'b -> 'd
 //│   where
@@ -461,12 +460,6 @@ c2__ c2__ K
 //│             'k <: 'm -> 'n) <: (forall 'o. 'o -> anything -> 'o) -> 'h -> 'i
 //│         forall 'o. 'o -> anything -> 'o <: 'i -> 'j <: 'p -> 'b
 //│    = [Function (anonymous)]
-
-
-
-
-
-
 
 
 
