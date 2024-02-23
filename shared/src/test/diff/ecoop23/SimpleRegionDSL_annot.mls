@@ -85,7 +85,148 @@ mixin SizeExt {
 //│   fun size: (Empty | Object & 'a & ~#Empty & ~#Scale & ~#Univ | Scale['c] | Univ) -> (Int | 'b)
 //│ }
 
+:ds
 type RegionLang = BaseLang[RegionLang] | ExtLang[RegionLang]
+//│ ⬤ Initial: TypedTypingUnit(
+//│ 	TypedNuAls(0,NuTypeDef(Als,TypeName(RegionLang),List(),None,None,Some(Union(AppliedType(TypeName(BaseLang),List(TypeName(RegionLang))),AppliedType(TypeName(ExtLang),List(TypeName(RegionLang))))),List(),None,None,TypingUnit(List())),List(),(BaseLang[RegionLang] | ExtLang[RegionLang]))
+//│ 	None)
+//│  where: 
+//│ allVarPols: 
+//│ ⬤ Cleaned up: TypedTypingUnit(
+//│ 	TypedNuAls(0,NuTypeDef(Als,TypeName(RegionLang),List(),None,None,Some(Union(AppliedType(TypeName(BaseLang),List(TypeName(RegionLang))),AppliedType(TypeName(ExtLang),List(TypeName(RegionLang))))),List(),None,None,TypingUnit(List())),List(),(BaseLang[RegionLang] | ExtLang[RegionLang]))
+//│ 	None)
+//│  where: 
+//│ allVarPols: 
+//│ consed: Map()
+//│ ⬤ Unskid: TypedTypingUnit(
+//│ 	TypedNuAls(0,NuTypeDef(Als,TypeName(RegionLang),List(),None,None,Some(Union(AppliedType(TypeName(BaseLang),List(TypeName(RegionLang))),AppliedType(TypeName(ExtLang),List(TypeName(RegionLang))))),List(),None,None,TypingUnit(List())),List(),(BaseLang[RegionLang] | ExtLang[RegionLang]))
+//│ 	None)
+//│  where: 
+//│ analyze1[+] (BaseLang[RegionLang] | ExtLang[RegionLang])
+//│ | analyze1[+] BaseLang[RegionLang]
+//│ | | analyze1[+;=] RegionLang
+//│ | analyze1[+] ExtLang[RegionLang]
+//│ | | analyze1[+;=] RegionLang
+//│ [inv] 
+//│ [nums] 
+//│ analyze2[+] (BaseLang[RegionLang] | ExtLang[RegionLang])
+//│ | Components Set((None,BaseLang[RegionLang]), (None,ExtLang[RegionLang]))
+//│ | >> Processing (BaseLang[RegionLang] | ExtLang[RegionLang]) at [+]
+//│ | go (BaseLang[RegionLang] | ExtLang[RegionLang])   ()
+//│ | | go BaseLang[RegionLang]   ()
+//│ | | go ExtLang[RegionLang]   (BaseLang[RegionLang])
+//│ | >> Occurrences LinkedHashSet(BaseLang[RegionLang], ExtLang[RegionLang])
+//│ | analyze2[+] BaseLang[RegionLang]
+//│ | | analyze2[+;=] RegionLang
+//│ | analyze2[+] ExtLang[RegionLang]
+//│ | | analyze2[+;=] RegionLang
+//│ [occs] 
+//│ [vars] TreeSet()
+//│ [rec] Set()
+//│ [sub] 
+//│ [bounds] 
+//│ [rec] Set()
+//│ transform[+] (BaseLang[RegionLang] | ExtLang[RegionLang])   ()  +  None
+//│ | transform[+] BaseLang[RegionLang]   ()  +  None
+//│ | | transform[=] RegionLang   ()  +;=  None
+//│ | | ~> RegionLang
+//│ | ~> BaseLang[RegionLang]
+//│ | transform[+] ExtLang[RegionLang]   ()  +  None
+//│ | | transform[=] RegionLang   ()  +;=  None
+//│ | | ~> RegionLang
+//│ | ~> ExtLang[RegionLang]
+//│ ~> (BaseLang[RegionLang] | ExtLang[RegionLang])
+//│ ⬤ Type after simplification: TypedTypingUnit(
+//│ 	TypedNuAls(0,NuTypeDef(Als,TypeName(RegionLang),List(),None,None,Some(Union(AppliedType(TypeName(BaseLang),List(TypeName(RegionLang))),AppliedType(TypeName(ExtLang),List(TypeName(RegionLang))))),List(),None,None,TypingUnit(List())),List(),(BaseLang[RegionLang] | ExtLang[RegionLang]))
+//│ 	None)
+//│  where: 
+//│ allVarPols: 
+//│ normLike[+] TypedTypingUnit(
+//│ 	TypedNuAls(0,NuTypeDef(Als,TypeName(RegionLang),List(),None,None,Some(Union(AppliedType(TypeName(BaseLang),List(TypeName(RegionLang))),AppliedType(TypeName(ExtLang),List(TypeName(RegionLang))))),List(),None,None,TypingUnit(List())),List(),(BaseLang[RegionLang] | ExtLang[RegionLang]))
+//│ 	None)
+//│ | norm[+] (BaseLang[RegionLang] | ExtLang[RegionLang])
+//│ | | DNF: DNF(0, {}∧BaseLang[RegionLang] | {}∧ExtLang[RegionLang])
+//│ | | comparePartial({}∧ExtLang[RegionLang], {}∧BaseLang[RegionLang])
+//│ | | = -1
+//│ | | norm[=] RegionLang
+//│ | | | DNF: DNF(0, {}∧RegionLang)
+//│ | | | C RegionLang List(RegionLang)
+//│ | | | DNF: DNF(0, {}∧RegionLang)
+//│ | | | C RegionLang List(RegionLang)
+//│ | | ~> RegionLang
+//│ | | norm[=] RegionLang
+//│ | | | DNF: DNF(0, {}∧RegionLang)
+//│ | | | C RegionLang List(RegionLang)
+//│ | | | DNF: DNF(0, {}∧RegionLang)
+//│ | | | C RegionLang List(RegionLang)
+//│ | | ~> RegionLang
+//│ | | C (ExtLang[RegionLang] | BaseLang[RegionLang]) List(ExtLang[RegionLang], BaseLang[RegionLang])
+//│ | | CS List(ExtLang[RegionLang], BaseLang[RegionLang])
+//│ | | factorize? ExtLang[RegionLang] | BaseLang[RegionLang]
+//│ | | | Factors 
+//│ | | | Hash codes 
+//│ | | | Classes 
+//│ | | yes: (ExtLang[RegionLang] | BaseLang[RegionLang])
+//│ | ~> (ExtLang[RegionLang] | BaseLang[RegionLang])
+//│ ⬤ Normalized: TypedTypingUnit(
+//│ 	TypedNuAls(0,NuTypeDef(Als,TypeName(RegionLang),List(),None,None,Some(Union(AppliedType(TypeName(BaseLang),List(TypeName(RegionLang))),AppliedType(TypeName(ExtLang),List(TypeName(RegionLang))))),List(),None,None,TypingUnit(List())),List(),(ExtLang[RegionLang] | BaseLang[RegionLang]))
+//│ 	None)
+//│  where: 
+//│ allVarPols: 
+//│ ⬤ Cleaned up: TypedTypingUnit(
+//│ 	TypedNuAls(0,NuTypeDef(Als,TypeName(RegionLang),List(),None,None,Some(Union(AppliedType(TypeName(BaseLang),List(TypeName(RegionLang))),AppliedType(TypeName(ExtLang),List(TypeName(RegionLang))))),List(),None,None,TypingUnit(List())),List(),(ExtLang[RegionLang] | BaseLang[RegionLang]))
+//│ 	None)
+//│  where: 
+//│ allVarPols: 
+//│ consed: Map()
+//│ ⬤ Unskid: TypedTypingUnit(
+//│ 	TypedNuAls(0,NuTypeDef(Als,TypeName(RegionLang),List(),None,None,Some(Union(AppliedType(TypeName(BaseLang),List(TypeName(RegionLang))),AppliedType(TypeName(ExtLang),List(TypeName(RegionLang))))),List(),None,None,TypingUnit(List())),List(),(ExtLang[RegionLang] | BaseLang[RegionLang]))
+//│ 	None)
+//│  where: 
+//│ analyze1[+] (ExtLang[RegionLang] | BaseLang[RegionLang])
+//│ | analyze1[+] ExtLang[RegionLang]
+//│ | | analyze1[+;=] RegionLang
+//│ | analyze1[+] BaseLang[RegionLang]
+//│ | | analyze1[+;=] RegionLang
+//│ [inv] 
+//│ [nums] 
+//│ analyze2[+] (ExtLang[RegionLang] | BaseLang[RegionLang])
+//│ | Components Set((None,ExtLang[RegionLang]), (None,BaseLang[RegionLang]))
+//│ | >> Processing (ExtLang[RegionLang] | BaseLang[RegionLang]) at [+]
+//│ | go (ExtLang[RegionLang] | BaseLang[RegionLang])   ()
+//│ | | go ExtLang[RegionLang]   ()
+//│ | | go BaseLang[RegionLang]   (ExtLang[RegionLang])
+//│ | >> Occurrences LinkedHashSet(ExtLang[RegionLang], BaseLang[RegionLang])
+//│ | analyze2[+] ExtLang[RegionLang]
+//│ | | analyze2[+;=] RegionLang
+//│ | analyze2[+] BaseLang[RegionLang]
+//│ | | analyze2[+;=] RegionLang
+//│ [occs] 
+//│ [vars] TreeSet()
+//│ [rec] Set()
+//│ [sub] 
+//│ [bounds] 
+//│ [rec] Set()
+//│ transform[+] (ExtLang[RegionLang] | BaseLang[RegionLang])   ()  +  None
+//│ | transform[+] ExtLang[RegionLang]   ()  +  None
+//│ | | transform[=] RegionLang   ()  +;=  None
+//│ | | ~> RegionLang
+//│ | ~> ExtLang[RegionLang]
+//│ | transform[+] BaseLang[RegionLang]   ()  +  None
+//│ | | transform[=] RegionLang   ()  +;=  None
+//│ | | ~> RegionLang
+//│ | ~> BaseLang[RegionLang]
+//│ ~> (ExtLang[RegionLang] | BaseLang[RegionLang])
+//│ ⬤ Resim: TypedTypingUnit(
+//│ 	TypedNuAls(0,NuTypeDef(Als,TypeName(RegionLang),List(),None,None,Some(Union(AppliedType(TypeName(BaseLang),List(TypeName(RegionLang))),AppliedType(TypeName(ExtLang),List(TypeName(RegionLang))))),List(),None,None,TypingUnit(List())),List(),(ExtLang[RegionLang] | BaseLang[RegionLang]))
+//│ 	None)
+//│  where: 
+//│ allVarPols: 
+//│ [subs] HashMap()
+//│ ⬤ Factored: TypedTypingUnit(
+//│ 	TypedNuAls(0,NuTypeDef(Als,TypeName(RegionLang),List(),None,None,Some(Union(AppliedType(TypeName(BaseLang),List(TypeName(RegionLang))),AppliedType(TypeName(ExtLang),List(TypeName(RegionLang))))),List(),None,None,TypingUnit(List())),List(),(ExtLang[RegionLang] | BaseLang[RegionLang]))
+//│ 	None)
+//│  where: 
 //│ type RegionLang = ExtLang[RegionLang] | BaseLang[RegionLang]
 
 module TestSize extends SizeBase, SizeExt {
@@ -180,16 +321,16 @@ mixin Text {
 :e
 module SizeText extends Text
 //│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
-//│ ║  l.173: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
+//│ ║  l.314: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
 //│ ╙──       	                                                                         ^^^^^
 //│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
-//│ ║  l.172: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
+//│ ║  l.313: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                                     ^^^^^
 //│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
-//│ ║  l.171: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
+//│ ║  l.312: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                          ^^^^^
 //│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
-//│ ║  l.170: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
+//│ ║  l.311: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
 //│ ╙──       	                                                                       ^^^^^
 //│ module SizeText {
 //│   fun text: (Circle | Intersect[anything] | Outside[anything] | Translate[anything] | Union[anything]) -> Str
@@ -289,16 +430,16 @@ IsUnivIsEmpty.isEmpty(circles)
 class Foo()
 IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.290: 	IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
+//│ ║  l.431: 	IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Foo` does not match type `ExtLang[RegionLang] | BaseLang[RegionLang]`
-//│ ║  l.290: 	IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
+//│ ║  l.431: 	IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
 //│ ║         	                                                    ^^^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.88: 	type RegionLang = BaseLang[RegionLang] | ExtLang[RegionLang]
+//│ ║  l.89: 	type RegionLang = BaseLang[RegionLang] | ExtLang[RegionLang]
 //│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
-//│ ║  l.88: 	type RegionLang = BaseLang[RegionLang] | ExtLang[RegionLang]
+//│ ║  l.89: 	type RegionLang = BaseLang[RegionLang] | ExtLang[RegionLang]
 //│ ╙──      	                           ^^^^^^^^^^
 //│ class Foo()
 //│ error | false | true
@@ -417,16 +558,16 @@ Lang.size(mk(100))
 :re
 Lang.contains(mk(100), Vector(0, 0))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.418: 	Lang.contains(mk(100), Vector(0, 0))
+//│ ║  l.559: 	Lang.contains(mk(100), Vector(0, 0))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Scale[?Region]` does not match type `Circle | Intersect[BaseRegionLang] | Outside[BaseRegionLang] | Translate[BaseRegionLang] | Union[BaseRegionLang]`
-//│ ║  l.348: 	  _ then Scale(Vector(0, 0), mk(n))
+//│ ║  l.489: 	  _ then Scale(Vector(0, 0), mk(n))
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.23: 	type BaseLang[T] = Circle | Intersect[T] | Union[T] | Outside[T] | Translate[T]
 //│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
-//│ ║  l.134: 	type BaseRegionLang = BaseLang[BaseRegionLang]
+//│ ║  l.275: 	type BaseRegionLang = BaseLang[BaseRegionLang]
 //│ ╙──       	                               ^^^^^^^^^^^^^^
 //│ error | false | true
 //│ res
@@ -437,16 +578,16 @@ Lang.contains(mk(100), Vector(0, 0))
 :re
 Lang.text(mk(100))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.438: 	Lang.text(mk(100))
+//│ ║  l.579: 	Lang.text(mk(100))
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Scale[?Region]` does not match type `Circle | Intersect[BaseRegionLang] | Outside[BaseRegionLang] | Translate[BaseRegionLang] | Union[BaseRegionLang]`
-//│ ║  l.348: 	  _ then Scale(Vector(0, 0), mk(n))
+//│ ║  l.489: 	  _ then Scale(Vector(0, 0), mk(n))
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.23: 	type BaseLang[T] = Circle | Intersect[T] | Union[T] | Outside[T] | Translate[T]
 //│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
-//│ ║  l.134: 	type BaseRegionLang = BaseLang[BaseRegionLang]
+//│ ║  l.275: 	type BaseRegionLang = BaseLang[BaseRegionLang]
 //│ ╙──       	                               ^^^^^^^^^^^^^^
 //│ Str | error
 //│ res
@@ -473,3 +614,4 @@ Lang.size(Lang.eliminate(mk(100)))
 //│ res
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
+

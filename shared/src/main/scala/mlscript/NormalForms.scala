@@ -40,6 +40,16 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           case (N, N) => 0
         }
         if (cmp1 =/= 0) return cmp1
+        (trs1.headOption, trs2.headOption) match {
+          // case (Some((n1, _)), Some((n2, _))) => n1.compare(n2) match {
+          //   case 0 =>
+          //   case res => return res
+          // }
+          // case (Some(_), None) => -1
+          // case (None, Some(_)) => 1
+          // case (None, None) => 0
+          case _ => //trs1.size.compare(trs2.size)
+        }
         val cmp2 = ts1.size.compare(ts2.size)
         if (cmp2 =/= 0) return cmp2
         // val cmp3 = r1.comparePartial(r2)

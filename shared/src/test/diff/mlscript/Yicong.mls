@@ -462,7 +462,7 @@ def tg: ((T1 & Array[int]) | (T2 & Array[bool])) -> (T1 | T2)
 //│ res: Array[int]
 //│    = <no result>
 //│      gt is not implemented
-//│ tg: (T2 & Array[bool] | T1 & Array[int]) -> (T2 | T1)
+//│ tg: (T1 & Array[int] | T2 & Array[bool]) -> (T1 | T2)
 //│   = <missing implementation>
 
 gett1 ta (T1 123)
@@ -470,10 +470,10 @@ tg (T1 ((1,2,3,4)))
 tg (T2 ((true,false,false)))
 //│ res: #T1 & (123 | Array[int])
 //│    = [ 1, 2, 3 ]
-//│ res: T2 | T1
+//│ res: T1 | T2
 //│    = <no result>
 //│      tg is not implemented
-//│ res: T2 | T1
+//│ res: T1 | T2
 //│    = <no result>
 //│      tg is not implemented
 
