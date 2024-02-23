@@ -1,7 +1,7 @@
 package mlscript
 
 import scala.collection.mutable
-import scala.collection.mutable.{Map => MutMap, Set => MutSet, SortedMap => MutSortMap, LinkedHashMap, Buffer}
+import scala.collection.mutable.{Map => MutMap, Set => MutSet, SortedMap => MutSortMap, LinkedHashMap, LinkedHashSet, Buffer}
 import scala.collection.immutable.{SortedSet, SortedMap}
 import Set.{empty => semp}
 import scala.util.chaining._
@@ -63,7 +63,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       mthEnv: MutMap[(Str, Str) \/ (Opt[Str], Str), MethodType],
       lvl: Int,
       quoteSkolemEnv: MutMap[Str, SkolemTag], // * SkolemTag for variables in quasiquotes
-      freeVarsInCurrentQuote: MutSet[ST], // * Free variables appearing in the current quote scope
+      freeVarsInCurrentQuote: LinkedHashSet[ST], // * Free variables appearing in the current quote scope
       inQuote: Bool, // * Is in quasiquote
       inPattern: Bool,
       tyDefs: Map[Str, TypeDef],
@@ -135,7 +135,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       * So for `code"x => ..."`, freeVarsInCurrentQuote = {'a}, quoteSkolemEnv = {'gx}, where 'gx <= 'a.
       * After calling `enterQuotedScope`, **solve the constraints** using `solveQuoteContext` to make sure free variables are handled correctly.
       */
-    def enterQuotedScope: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, lvl = lvl + 1, inQuote = true, quoteSkolemEnv = MutMap.empty, freeVarsInCurrentQuote = MutSet.empty)
+    def enterQuotedScope: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, lvl = lvl + 1, inQuote = true, quoteSkolemEnv = MutMap.empty, freeVarsInCurrentQuote = LinkedHashSet.empty)
     def enterUnquote: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, inQuote = false)
     def nextLevel[R](k: Ctx => R)(implicit raise: Raise, prov: TP): R = {
       val newCtx = copy(lvl = lvl + 1, extrCtx = MutSortMap.empty)
@@ -207,7 +207,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       mthEnv = MutMap.empty,
       lvl = MinLevel,
       quoteSkolemEnv = MutMap.empty,
-      freeVarsInCurrentQuote = MutSet.empty,
+      freeVarsInCurrentQuote = LinkedHashSet.empty,
       inQuote = false,
       inPattern = false,
       tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)),
@@ -291,16 +291,16 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   
   private val preludeLoc = Loc(0, 0, Origin("<prelude>", 0, new FastParseHelpers("")))
   
-  freshVar(noTyProv, N)(1)
-  freshVar(noTyProv, N)(1)
-  freshVar(noTyProv, N)(1)
-  freshVar(noTyProv, N)(1)
-  freshVar(noTyProv, N)(1)
-  freshVar(noTyProv, N)(1)
-  freshVar(noTyProv, N)(1)
-  freshVar(noTyProv, N)(1)
-  freshVar(noTyProv, N)(1)
-  freshVar(noTyProv, N)(1)
+  // freshVar(noTyProv, N)(1)
+  // freshVar(noTyProv, N)(1)
+  // freshVar(noTyProv, N)(1)
+  // freshVar(noTyProv, N)(1)
+  // freshVar(noTyProv, N)(1)
+  // freshVar(noTyProv, N)(1)
+  // freshVar(noTyProv, N)(1)
+  // freshVar(noTyProv, N)(1)
+  // freshVar(noTyProv, N)(1)
+  // freshVar(noTyProv, N)(1)
   
   val nuBuiltinTypes: Ls[NuTypeDef] = Ls(
     NuTypeDef(Cls, TN("Object"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc), Nil),
