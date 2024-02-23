@@ -301,6 +301,11 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   // freshVar(noTyProv, N)(1)
   // freshVar(noTyProv, N)(1)
   // freshVar(noTyProv, N)(1)
+  // freshVar(noTyProv, N)(1)
+  // freshVar(noTyProv, N)(1)
+  // freshVar(noTyProv, N)(1)
+  // freshVar(noTyProv, N)(1)
+  // freshVar(noTyProv, N)(1)
   
   val nuBuiltinTypes: Ls[NuTypeDef] = Ls(
     NuTypeDef(Cls, TN("Object"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc), Nil),
