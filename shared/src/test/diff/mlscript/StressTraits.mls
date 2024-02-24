@@ -49,7 +49,7 @@ foo arg
 :e
 def arg: A[int] | B[int]
 foo arg
-//│ arg: B[int] | A[int]
+//│ arg: A[int] | B[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.51: 	foo arg
 //│ ║        	^^^^^^^
@@ -69,7 +69,7 @@ foo arg
 :e
 def arg: A[int] | B[int] | C[int]
 foo arg
-//│ arg: C[int] | B[int] | A[int]
+//│ arg: A[int] | B[int] | C[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.71: 	foo arg
 //│ ║        	^^^^^^^
@@ -89,7 +89,7 @@ foo arg
 :e
 def arg: A[int] | B[int] | D[int]
 foo arg
-//│ arg: D[int] | B[int] | A[int]
+//│ arg: A[int] | B[int] | D[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.91: 	foo arg
 //│ ║        	^^^^^^^
@@ -117,7 +117,7 @@ def foo x = case x of {
 def arg: A[int] | B[int]
 foo arg
 //│ foo: ({fB: 'fA} & #B & ~#A | {fA: 'fA} & #A) -> 'fA
-//│ arg: B[int] | A[int]
+//│ arg: A[int] | B[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.118: 	foo arg
 //│ ║         	^^^^^^^
@@ -146,7 +146,7 @@ def foo x = case x of {
 def arg: A[int] | B[int] | C[int]
 foo arg
 //│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | {fC: 'fA} & #C & ~#B)) -> 'fA
-//│ arg: C[int] | B[int] | A[int]
+//│ arg: A[int] | B[int] | C[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.147: 	foo arg
 //│ ║         	^^^^^^^
@@ -176,7 +176,7 @@ def foo x = case x of {
 def arg: A[int] | B[int] | C[int] | D[int]
 foo arg
 //│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | {fD: 'fA} & #D & ~#C))) -> 'fA
-//│ arg: D[int] | C[int] | B[int] | A[int]
+//│ arg: A[int] | B[int] | C[int] | D[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.177: 	foo arg
 //│ ║         	^^^^^^^
@@ -243,7 +243,7 @@ def foo x = case x of {
 def arg: A[int] | B[int] | C[int] | D[int] | E[int]
 foo arg
 //│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | {fE: 'fA} & #E & ~#D)))) -> 'fA
-//│ arg: E[int] | D[int] | C[int] | B[int] | A[int]
+//│ arg: A[int] | B[int] | C[int] | D[int] | E[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.244: 	foo arg
 //│ ║         	^^^^^^^
@@ -275,7 +275,7 @@ def foo x = case x of {
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
 foo arg
 //│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | ~#D & ({fE: 'fA} & #E | {fF: 'fA} & #F & ~#E))))) -> 'fA
-//│ arg: F[int] | E[int] | D[int] | C[int] | B[int] | A[int]
+//│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.276: 	foo arg
 //│ ║         	^^^^^^^
@@ -308,7 +308,7 @@ def foo x = case x of {
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
 foo arg
 //│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | ~#D & ({fE: 'fA} & #E | ~#E & ({fF: 'fA} & #F | {fG: 'fA} & #G & ~#F)))))) -> 'fA
-//│ arg: G[int] | F[int] | E[int] | D[int] | C[int] | B[int] | A[int]
+//│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.309: 	foo arg
 //│ ║         	^^^^^^^
@@ -374,7 +374,7 @@ def foo x = case x of {
 def arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
 foo arg
 //│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | ~#D & ({fE: 'fA} & #E | ~#E & ({fF: 'fA} & #F | ~#F & ({fG: 'fA} & #G | {fH: 'fA} & #H & ~#G))))))) -> 'fA
-//│ arg: H[int] | G[int] | F[int] | E[int] | D[int] | C[int] | B[int] | A[int]
+//│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.375: 	foo arg
 //│ ║         	^^^^^^^

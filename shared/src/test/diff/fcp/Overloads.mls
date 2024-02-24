@@ -74,7 +74,7 @@ fun x -> (if true then IISS else BBNN) x
 //│ res: int -> (bool | number | string)
 
 if true then IISS else BBNN
-//│ res: int -> int & string -> string | bool -> bool & number -> number
+//│ res: bool -> bool & number -> number | int -> int & string -> string
 
 (if true then IISS else ZZII) : int -> int
 //│ res: int -> int

@@ -452,7 +452,7 @@ fun subst(t, n, v) =
       _ then Abs(Var(name), subst(body, n, v))
     App(lhs, rhs) then App(subst(lhs, n, v), subst(rhs, n, v))
     _ then t
-//│ subst: (Abs & 'a | App & 'b | Var & 'c | 'd & ~#Abs & ~#App & ~#Var, anything, 'e & (Var & 'c | 'b & 'f & (App & ~#App | App & 'g) | 'a & 'h & (Abs & ~#Abs | Abs & 'i) | 'd & (Abs & 'h & ~#Abs | App & 'f & ~#App | Var & ~#Var)),) -> (Var & {name: string} | 'e | 'c | 'a | 'd)
+//│ subst: (Abs & 'a | App & 'b | Var & 'c | 'd & ~#Abs & ~#App & ~#Var, anything, 'e & (Var & 'd & ~#Var | Var & 'c | 'f & (App & 'd & ~#App | 'b & (App & 'g | App & ~#App)) | 'h & (Abs & 'd & ~#Abs | 'a & (Abs & 'i | Abs & ~#Abs))),) -> (Var & {name: string} | 'e | 'c | 'a | 'd)
 //│   where
 //│     'g <: {
 //│       lhs: Abs & 'i | App & 'g | Var | ~Abs & ~App & ~Var,
@@ -472,7 +472,7 @@ fun subst(t, n, v) =
 //│       lhs: Abs & 'a | App & 'b | Var & 'c | 'd & ~#Abs & ~#App & ~#Var,
 //│       rhs: Abs & 'a | App & 'b | Var & 'c | 'd & ~#Abs & ~#App & ~#Var
 //│     }
-//│     'd <: Var & ~#Var | Var & 'c | 'f & (App & ~#App | App & 'b) | 'h & (Abs & ~#Abs | Abs & 'a)
+//│     'd <: Var & ~#Var | Var & 'c | 'f & (App & 'b | App & ~#App) | 'h & (Abs & 'a | Abs & ~#Abs)
 //│     'h <: {lhs: Var, rhs: Abs & 'h | App & 'f | Var}
 //│     'f <: {lhs: Abs & 'h | App & 'f | Var, rhs: Abs & 'h | App & 'f | Var}
 //│      = [Function: subst]
@@ -497,7 +497,7 @@ fun showSubst(t, n, v) =
 //│       rhs: Abs & 'b | App & 'd | Var & 'e | 'n & ~#Abs & ~#App & ~#Var
 //│     }
 //│     'e <: Var | 'j & 'k & (App & {name: anything} & 'd | App & {name: anything} & 'n & ~#App) | 'f & 'g & (Abs & {name: anything} & 'n & ~#Abs | Abs & {name: anything} & 'b)
-//│     'n <: Var & 'e | Var & ~#Var | 'j & 'k & (App & ~#App | App & 'd) | 'f & 'g & (Abs & ~#Abs | Abs & 'b)
+//│     'n <: Var & 'e | Var & ~#Var | 'j & 'k & (App & 'd | App & ~#App) | 'f & 'g & (Abs & 'b | Abs & ~#Abs)
 //│     'k <: {
 //│       lhs: App & 'k | Var | 'g & (Abs & ~#Abs | Abs & 'g),
 //│       rhs: Abs & 'g | App & 'k | Var
@@ -565,7 +565,7 @@ fun stepByValue(t) =
 //│   }
 //│   'b :> Var & {name: string}
 //│      <: Var | 'h & (App & {name: anything} & 'e & ~#App | App & {name: anything} & 'f) | 'g & (Abs & {name: anything} & 'e & ~#Abs | Abs & {name: anything} & 'd)
-//│   'e <: Var & ~#Var | Var & 'b | 'h & (App & ~#App | App & 'f) | 'g & (Abs & ~#Abs | Abs & 'd)
+//│   'e <: Var & ~#Var | Var & 'b | 'h & (App & 'f | App & ~#App) | 'g & (Abs & 'd | Abs & ~#Abs)
 //│   'i <: {lhs: anything, rhs: Abs & 'i | App & 'j | Var | ~Abs & ~App & ~Var}
 //│   'j <: {
 //│     lhs: Abs & 'i | App & 'j | Var | ~Abs & ~App & ~Var,
@@ -597,7 +597,7 @@ fun showStepByValue(t) =
 //│       rhs: Abs & 'f | App & 'g | Var & 'h | 'i & ~#Abs & ~#App & ~#Var
 //│     }
 //│     'h <: Var | 'l & 'd & (App & {name: anything} & 'g | App & {name: anything} & 'i & ~#App) | 'j & 'e & (Abs & {name: anything} & 'i & ~#Abs | Abs & {name: anything} & 'f)
-//│     'i <: Var & 'h | Var & ~#Var | 'l & 'd & (App & ~#App | App & 'g) | 'j & 'e & (Abs & ~#Abs | Abs & 'f)
+//│     'i <: Var & 'h | Var & ~#Var | 'l & 'd & (App & 'g | App & ~#App) | 'j & 'e & (Abs & 'f | Abs & ~#Abs)
 //│     'j <: {lhs: Var, rhs: Abs & 'j | App & 'l | Var}
 //│     'l <: {lhs: Abs & 'j | App & 'l | Var, rhs: Abs & 'j | App & 'l | Var}
 //│     'd <: {

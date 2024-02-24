@@ -14,11 +14,11 @@ case r of { T1 -> r | _ -> 0 }
 
 // TODO also factor ClassTag-s like `2`:
 case r of { T1 -> r | T2 -> r }
-//│ res: 1 & #T1 | 'a | #T2 & (2 & ~#T1 | 2 & ~'a | 2 & ~#T2 | 2 & #T1)
+//│ res: 1 & #T1 | 'a | #T2 & (2 & ~#T1 | 2 & ~#T2 | 2 & ~'a | 2 & #T1)
 //│    = [Number: 1]
 
 r = if true then T1 ((1,2,3)) else T2 ((3,4,5,4))
-//│ r: (1, 2, 3,) & #T1 | (3, 4, 5, 4,) & #T2
+//│ r: (3, 4, 5, 4,) & #T2 | (1, 2, 3,) & #T1
 //│  = [ 1, 2, 3 ]
 
 case r of { T1 -> r | _ -> 0 }
@@ -88,7 +88,7 @@ fun (x, y) -> f ((x,y))
 //│      f is not implemented
 
 def f: ((1,2)&t1 | (3,4)&t2) -> anything
-//│ f: ((3, 4,) & #T2 | (1, 2,) & #T1) -> anything
+//│ f: ((1, 2,) & #T1 | (3, 4,) & #T2) -> anything
 //│  = <missing implementation>
 
 :e
@@ -108,7 +108,7 @@ fun (x, y) -> f ((x,y))
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.107: 	fun (x, y) -> f ((x,y))
 //│ ║         	              ^^^^^^^^^
-//│ ╟── tuple literal of type `(?a, ?b,)` does not match type `(3, 4,) & #T2 | (1, 2,) & #T1`
+//│ ╟── tuple literal of type `(?a, ?b,)` does not match type `(1, 2,) & #T1 | (3, 4,) & #T2`
 //│ ║  l.107: 	fun (x, y) -> f ((x,y))
 //│ ║         	                 ^^^^^
 //│ ╟── Note: constraint arises from union type:
@@ -462,7 +462,7 @@ def tg: ((T1 & Array[int]) | (T2 & Array[bool])) -> (T1 | T2)
 //│ res: Array[int]
 //│    = <no result>
 //│      gt is not implemented
-//│ tg: (T2 & Array[bool] | T1 & Array[int]) -> (T2 | T1)
+//│ tg: (T1 & Array[int] | T2 & Array[bool]) -> (T1 | T2)
 //│   = <missing implementation>
 
 gett1 ta (T1 123)
@@ -470,10 +470,10 @@ tg (T1 ((1,2,3,4)))
 tg (T2 ((true,false,false)))
 //│ res: #T1 & (123 | Array[int])
 //│    = [ 1, 2, 3 ]
-//│ res: T2 | T1
+//│ res: T1 | T2
 //│    = <no result>
 //│      tg is not implemented
-//│ res: T2 | T1
+//│ res: T1 | T2
 //│    = <no result>
 //│      tg is not implemented
 

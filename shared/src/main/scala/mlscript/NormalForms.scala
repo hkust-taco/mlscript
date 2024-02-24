@@ -33,33 +33,45 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     // def compare(that: LhsNf): Int = {???}
     def comparePartial(that: LhsNf): Int = (this, that) match {
       case (LhsRefined(b1, ts1, r1, trs1), LhsRefined(b2, ts2, r2, trs2)) =>
+        println(trs1, trs2)
         val cmp1 = (b1, b2) match {
           case (S(c1), S(c2)) => c1.comparePartial(c2)
           case (S(c1), N) => -1
           case (N, S(c2)) => 1
           case (N, N) => 0
         }
+        println(cmp1)
         if (cmp1 =/= 0) return cmp1
-        (trs1.headOption, trs2.headOption) match {
-          // case (Some((n1, _)), Some((n2, _))) => n1.compare(n2) match {
-          //   case 0 =>
-          //   case res => return res
-          // }
+        val cmp4 = (trs1.headOption, trs2.headOption) match {
+          case (Some((n1, _)), Some((n2, _))) =>
+            n1.compare(n2) 
+            // match {
+            //   case 0 =>
+            //   case res => return res
+            // }
           // case (Some(_), None) => -1
           // case (None, Some(_)) => 1
           // case (None, None) => 0
-          case _ => //trs1.size.compare(trs2.size)
+          // case _ => //trs1.size.compare(trs2.size)
+          case _ => trs1.size.compare(trs2.size)
         }
+        if (cmp4 =/= 0) return cmp4
         val cmp2 = ts1.size.compare(ts2.size)
+        println(cmp2)
         if (cmp2 =/= 0) return cmp2
         // val cmp3 = r1.comparePartial(r2)
         val cmp3 = (r1, r2) match {
-          case (RecordType(Nil), RecordType(fs2)) => -1
-          case (RecordType(fs1), RecordType(Nil)) => 1
+          // case (RecordType(Nil), RecordType(Nil)) => 0
+          // case (RecordType(Nil), RecordType(fs2)) => -1
+          // case (RecordType(fs1), RecordType(Nil)) => 1
+          // case (RecordType(fs1), RecordType(fs2)) => 0
+          case (RecordType(Nil), RecordType(_ :: _)) => -1
+          case (RecordType(_ :: _), RecordType(Nil)) => 1
           case (RecordType(fs1), RecordType(fs2)) => 0
         }
-        if (cmp3 =/= 0) return cmp3
-        trs1.size.compare(trs2.size)
+        // if (cmp3 =/= 0) return cmp3
+        cmp3
+        // trs1.size.compare(trs2.size)
       case (LhsTop, _) => 1
       case (_, LhsTop) => -1
     }

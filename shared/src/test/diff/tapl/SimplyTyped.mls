@@ -345,7 +345,7 @@ fun typeTerm(t, ctx) =
 //│     rhs: Abs & 'a | App & 'b | Lit & {ty: 'ty & (FunctionType & 'c & 'd & 'e | PrimitiveType & {name: string})} | Var & {name: string}
 //│   }
 //│   'e <: {
-//│     lhs: PrimitiveType & {name: string} | 'j & (FunctionType & ~#FunctionType | FunctionType & 'i),
+//│     lhs: PrimitiveType & {name: string} | 'j & (FunctionType & 'i | FunctionType & ~#FunctionType),
 //│     rhs: 'rhs
 //│   }
 //│   'rhs :> forall 'value. 'value
@@ -383,7 +383,7 @@ fun showTypeTerm(t, ctx) =
 //│       value: FunctionType & 'h & 'k & 'l & 'm | PrimitiveType & {name: string}
 //│     }
 //│     'm <: {
-//│       lhs: PrimitiveType & {name: string} | 'n & (FunctionType & ~#FunctionType | FunctionType & 'o),
+//│       lhs: PrimitiveType & {name: string} | 'n & (FunctionType & 'o | FunctionType & ~#FunctionType),
 //│       rhs: FunctionType & 'h & 'k & 'l & 'm | PrimitiveType & {name: string}
 //│     }
 //│     'o <: {
@@ -410,7 +410,7 @@ fun showTypeTerm(t, ctx) =
 //│       value: FunctionType & 'h & 'q & 'r & 's | PrimitiveType & {name: string}
 //│     }
 //│     's <: {
-//│       lhs: PrimitiveType & {name: string} | 't & (FunctionType & ~#FunctionType | FunctionType & 'u),
+//│       lhs: PrimitiveType & {name: string} | 't & (FunctionType & 'u | FunctionType & ~#FunctionType),
 //│       rhs: FunctionType & 'h & 'q & 'r & 's | PrimitiveType & {name: string}
 //│     }
 //│     'u <: {
@@ -455,7 +455,7 @@ fun showTypeTerm(t, ctx) =
 //│       rhs: Abs & 'a | App & 'c | Lit & {ty: FunctionType & 'e & 'f & 'g & 'h | PrimitiveType & {name: string}} | Var & {name: string}
 //│     }
 //│     'g <: {
-//│       lhs: PrimitiveType & {name: string} | 'x & (FunctionType & ~#FunctionType | FunctionType & 'w),
+//│       lhs: PrimitiveType & {name: string} | 'x & (FunctionType & 'w | FunctionType & ~#FunctionType),
 //│       rhs: FunctionType & 'e & 'f & 'g & 'h | PrimitiveType & {name: string}
 //│     }
 //│     'h <: {
