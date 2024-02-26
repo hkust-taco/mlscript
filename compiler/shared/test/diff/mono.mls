@@ -13,7 +13,7 @@ fun f(x: Int) = if x then 42 else 1337
 //│ Defunc result: 
 //│ fun f$1(x) =
 //│   if x then #42 else #1337
-//│ fun f: (x: Int) -> (42 | 1337)
+//│ fun f: (x: Int) -> (1337 | 42)
 
 :mono
 fun foo() = 42
@@ -47,9 +47,9 @@ let b = foo(23, false)
 //│   if b then x else #1337
 //│ fun a$1() =
 //│   foo$3(#42, true)
-//│ fun foo: forall 'a. ('a, Object) -> ('a | 1337)
-//│ let a: 42 | 1337
-//│ let b: 23 | 1337
+//│ fun foo: forall 'a. ('a, Object) -> (1337 | 'a)
+//│ let a: 1337 | 42
+//│ let b: 1337 | 23
 //│ a
 //│   = 42
 //│ b
@@ -263,7 +263,7 @@ count(new List(new List(new Nil(undefined, false), true), true))
 //│ fun count: forall 'a. 'a -> Int
 //│ Int
 //│ where
-//│   'a <: {hasTail: Object, l: () | Object & 'a & ~()}
+//│   'a <: {hasTail: Object, l: Object & 'a & ~() | ()}
 //│ res
 //│     = 2
 
@@ -766,7 +766,7 @@ class C(e1: Exp, e2: Exp) extends Exp {
 //│   fun isEmpty: () -> true
 //│ }
 //│ class Ch(i: Int) extends Exp {
-//│   fun derive: Num -> (Ep | E)
+//│   fun derive: Num -> (E | Ep)
 //│   fun isEmpty: () -> false
 //│ }
 //│ class A(e1: Exp, e2: Exp) extends Exp {
@@ -980,7 +980,7 @@ class OneBool(b: Bool){
 //│ class OneBool(b: Bool) {
 //│   fun get: () -> Bool
 //│ }
-//│ Bool | Int
+//│ Int | false | true
 //│ res
 //│     = true
 
