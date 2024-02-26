@@ -24,7 +24,7 @@ foo(Baz(Baz(new Bar)))
 fun foo: Foo['a] -> Int
 fun foo(f: Foo['a]) = if f is
     Bar then 1
-    Baz(x) then 1 + foo(x as Foo[x.T])
+    Baz(x) then 1 + foo(x)
 //│ fun foo: forall 'a. (f: Foo['a]) -> Int
 //│ fun foo: forall 'a0. Foo['a0] -> Int
 
@@ -52,6 +52,37 @@ bar(Baz(new Bar))
 //│ res
 //│     = 1
 
+// FIXME
+fun baz : (Foo['T], Foo['T]) -> Bool
+fun baz[T](x: Foo[T], y: Foo[T]): Bool =
+    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
+    else if x is Bar and y is Bar then true
+    else false
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.58: 	    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
+//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.59: 	    else if x is Bar and y is Bar then true
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.60: 	    else false
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── expression of type `[anything] & ??T & ??T0 & ~??T1` does not match type `nothing`
+//│ ╟── Note: type parameter T is defined at:
+//│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ╙──     	          ^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.58: 	    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
+//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.59: 	    else if x is Bar and y is Bar then true
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.60: 	    else false
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── expression of type `[anything] & ??T & ~??T0` does not match type `nothing`
+//│ ╟── Note: type parameter T is defined at:
+//│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ╙──     	          ^
+//│ fun baz: forall 'T. (x: Foo['T], y: Foo['T]) -> Bool
+//│ fun baz: forall 'T0. (Foo['T0], Foo['T0]) -> Bool
+
 abstract class C[type T]: D1 | D2
 class D1 extends C[Int]
 class D2[A, B](val a: C[A], val b: C[B]) extends C[[A, B]]
@@ -76,18 +107,18 @@ fun foo(x) = if x is
     C1(c) then c : x.T
     C2    then 0 : x.T
 //│ ╔══[ERROR] Type error in definition
-//│ ║  l.75: 	fun foo(x) = if x is
-//│ ║        	    ^^^^^^^^^^^^^^^^
-//│ ║  l.76: 	    C1(c) then c : x.T
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.77: 	    C2    then 0 : x.T
-//│ ║        	^^^^^^^^^^^^^^^^
+//│ ║  l.106: 	fun foo(x) = if x is
+//│ ║         	    ^^^^^^^^^^^^^^^^
+//│ ║  l.107: 	    C1(c) then c : x.T
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.108: 	    C2    then 0 : x.T
+//│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.76: 	    C1(c) then c : x.T
-//│ ║        	                    ^^
+//│ ║  l.107: 	    C1(c) then c : x.T
+//│ ║         	                    ^^
 //│ ╟── into type `'T | ~??A`
-//│ ║  l.74: 	fun foo: C['T] -> 'T
-//│ ╙──      	                  ^^
+//│ ║  l.105: 	fun foo: C['T] -> 'T
+//│ ╙──       	                  ^^
 //│ fun foo: forall 'A. (C1['A] | C2) -> (Int | ??A & 'A)
 //│ fun foo: forall 'T. C['T] -> 'T
 
@@ -104,7 +135,9 @@ foo(new C2)
 fun foo(x: C['a]): x.T = if x is
     C1(c) then c : x.T
     C2    then 0 : x.T
-//│ fun foo: forall 'a. (x: C['a]) -> ('a & (Int | ??A & ??A0))
+//│ fun foo: forall 'a. (x: C['a]) -> (??A & ??A0 & 'a)
+//│   where
+//│     'a :> ??A & ??A0 & ~??A1
 
 abstract class Option[type out T]: None | Some[T]
 module None extends Option[nothing]
@@ -138,3 +171,36 @@ None as Option[Int]
 //│ Option[Int]
 //│ res
 //│     = None { class: [class None extends Option] }
+
+fun test(x, y) = 
+    if x is Some(a) and y is Some(b) then eq(a)(b) 
+    else if x is None and y is None then true 
+    else false
+//│ fun test: (Object & ~#Some | Some[anything], Object & ~#Some | Some[anything]) -> Bool
+
+test(Some(1), Some(1))
+//│ Bool
+//│ res
+//│     = true
+
+test(Some(1), None)
+//│ Bool
+//│ res
+//│     = false
+
+
+fun test[T](x: Option[T], y: Option[T]): Bool = 
+    if x is Some(a) and y is Some(b) then eq(a)(b) 
+    else if x is None and y is None then true 
+    else false
+//│ fun test: (x: Option[anything], y: Option[anything]) -> Bool
+
+test(Some(None), Some(None))
+//│ Bool
+//│ res
+//│     = true
+
+test(Some(None), Some(1))
+//│ Bool
+//│ res
+//│     = false

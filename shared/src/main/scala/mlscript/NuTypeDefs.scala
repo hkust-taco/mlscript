@@ -1655,6 +1655,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     println(s"baseClsImplemMembers ${baseClsImplemMembers}")
                     
                     val newImplems = ttu.implementedMembers.map {
+                      // * transform type alias member to type member
                       case als: TypedNuAls => 
                         if (tparamFields.map(_._1.name).contains(als.name))
                           err(msg"Class type member '${als.name}' already exists", als.toLoc)

@@ -501,7 +501,7 @@ if b is Foo(a) then a else 0
 
 // :e // * Note: an error is raised in this case and not above because B is invariant so it can't be widened
 if b is Bar(f) then f else 0
-//│ 0 | (??B & 'B | ??B0) -> (??B1 & (??B2 | 'B))
+//│ 0 | ??B -> (??B0 & ??B1)
 //│ res
 //│     = 0
 

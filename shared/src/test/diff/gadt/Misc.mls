@@ -67,7 +67,7 @@ fun f(x: S): x.T = if x is A then 1 else 0
 //│ ╟── type variable `T` leaks out of its scope
 //│ ║  l.63: 	fun f(x: S): x.T = if x is A then 1 else 0
 //│ ╙──      	                                         ^
-//│ fun f: (x: S[?]) -> (Int | ??T)
+//│ fun f: (x: S[?]) -> ??T
 
 fun f(x: S[?]) = if x is 
     A then 1 : x.T
@@ -89,10 +89,10 @@ f(A)
 //│ res
 //│     = 1
 
-abstract class C[type S, type T]: R[?] | I[?]
+abstract class C[type S, type T]: R[S | T] | I[S]   // TODO just a trick
 class R[A] extends C[A, A]
 class I[A](val f: A => Int) extends C[A, Int]
-//│ abstract class C[S, T]: I[?] | R[?]
+//│ abstract class C[S, T]: I[S] | R[S | T]
 //│ class R[A] extends C {
 //│   constructor()
 //│ }
@@ -101,7 +101,7 @@ class I[A](val f: A => Int) extends C[A, Int]
 fun foo[A, B](x: A, ev: C[A, B]): B = if ev is 
     R then (x : ev.S) : ev.T
     I(f) then ev.f(x : ev.S) : ev.T
-//│ fun foo: forall 'A 'B. (x: 'A, ev: C['A, 'B]) -> 'B
+//│ fun foo: forall 'B 'A. (x: 'A, ev: C['A, 'B]) -> 'B
 
 foo(true, new R)
 //│ true

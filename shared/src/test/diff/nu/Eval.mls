@@ -260,14 +260,14 @@ fun eval(t, env) = if t is
     else err(String(pree) ++ " does not have field " ++ nme)
   Rcd(fs) then
     Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
-//│ fun eval: forall 'A 'Sub 'a 'A0 'Sub0. (App | Lam | Lit['A] | Rcd['Sub0] | Sel | Var, Cons[{key: Eql[Str], value: 'A0} | ~??A] & {List#A <: {key: Eql[Str], value: 'A0} | ~??A} & List[{key: Eql[Str], value: 'A0} | ~??A] | Nil & {List#A <: {key: Eql[Str], value: 'A0} | ~??A} & List[{key: Eql[Str], value: 'A0} | ~??A]) -> 'a
+//│ fun eval: forall 'Sub 'A 'a 'Sub0. (App | Lam | Lit[anything] | Rcd['Sub] | Sel | Var, Cons[{key: Eql[Str], value: 'A} | ~??A] & {List#A <: {key: Eql[Str], value: 'A} | ~??A} & List[{key: Eql[Str], value: 'A} | ~??A] | Nil & {List#A <: {key: Eql[Str], value: 'A} | ~??A} & List[{key: Eql[Str], value: 'A} | ~??A]) -> 'a
 //│   where
-//│     'A0 :> ??A0 & 'a
-//│         <: Object & ~#Rcd | Rcd['Sub] | ~??A1
-//│     'a :> ??A1 & 'A0 | Lam | Lit[??A2 & (??A3 | 'A)] | ??Sub & ??A4 & 'Sub | Rcd[nothing]
-//│     'Sub :> Lam | Lit[??A2 & (??A3 | 'A)] | 'a
-//│          <: Object & ~#Rcd | Rcd['Sub] | ~(??Sub & ??A4)
-//│     'Sub0 <: App | Lam | Lit['A] | Rcd['Sub0] | Sel | Var | ~??Sub0
+//│     'A :> ??A0 & 'a
+//│        <: Object & ~#Rcd | Rcd['Sub0] | ~??A1
+//│     'a :> ??A1 & 'A | Lam | Lit[??A2 & ??A3] | ??Sub & ??A4 & 'Sub0 | Rcd[nothing]
+//│     'Sub0 :> Lam | Lit[??A2 & ??A3] | 'a
+//│           <: Object & ~#Rcd | Rcd['Sub0] | ~(??Sub & ??A4)
+//│     'Sub <: App | Lam | Lit[anything] | Rcd['Sub] | Sel | Var | ~??Sub0
 
 eval : (Term, List[{key: Str, value: Value}]) -> Value
 //│ (Term, List[{key: Str, value: Value}]) -> Value
@@ -282,7 +282,7 @@ let rcd = Rcd({key: "a", value: IntLit(0)} :: Nil)
 eval of rcd, Nil
 //│ 'a
 //│   where
-//│     'a :> ??A & ??A0 & (Lam | Lit[??A1 & (Int | ??A2)]) | ??A3 & ??Sub & (Lam | Lit[??A1 & (Int | ??A2)]) | Rcd[Lam | Lit[??A1 & (Int | ??A2)] | 'a] | Lam | Lit[??A1 & (Int | ??A2)]
+//│     'a :> ??A & ??A0 & (Lam | Lit[??A1 & ??A2]) | ??A3 & ??Sub & (Lam | Lit[??A1 & ??A2]) | Rcd[Lam | Lit[??A1 & ??A2] | 'a] | Lam | Lit[??A1 & ??A2]
 //│ res
 //│     = Rcd {}
 
@@ -296,7 +296,7 @@ eval of Sel(rcd, "a"), Nil
 eval of App(Lam("x" :: Nil, Sel(Var("x"), "a")), rcd :: Nil), Nil
 //│ 'a
 //│   where
-//│     'a :> ??A & ??A0 & (Lam | Lit[??A1 & ??A2]) | Lam | Lit[??A1 & ??A2] | ??A3 & ??Sub & (Lam | Lit[??A1 & ??A2]) | Rcd[Lam | Lit[??A1 & ??A2] | 'a]
+//│     'a :> ??A & ??A0 & (Lam | Lit[??A1 & ??A2]) | ??A3 & ??Sub & (Lam | Lit[??A1 & ??A2]) | Rcd[Lam | Lit[??A1 & ??A2] | 'a] | Lam | Lit[??A1 & ??A2]
 //│ res
 //│     = IntLit {}
 

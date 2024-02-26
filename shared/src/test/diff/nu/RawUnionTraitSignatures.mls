@@ -90,6 +90,13 @@ trait Base2: Foo['FigureItOut]
 
 // :e
 (b: Base2) => b : Foo['X]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.92: 	(b: Base2) => b : Foo['X]
+//│ ║        	              ^
+//│ ╟── type `??FigureItOut` does not match type `??FigureItOut0`
+//│ ║  l.92: 	(b: Base2) => b : Foo['X]
+//│ ╙──      	                      ^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ forall 'X. (b: Base2) -> Foo['X]
 //│   where
 //│     'X :> ??FigureItOut
@@ -101,7 +108,7 @@ trait Base2: Foo['FigureItOut]
 :e
 class Impl extends Base2
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.102: 	class Impl extends Base2
+//│ ║  l.109: 	class Impl extends Base2
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `#Impl` is not an instance of type `Foo`
 //│ ╟── Note: constraint arises from applied type reference:
@@ -117,19 +124,19 @@ class Impl extends Base2
 :e
 (x: Impl) => x : Base2
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.118: 	(x: Impl) => x : Base2
+//│ ║  l.125: 	(x: Impl) => x : Base2
 //│ ║         	             ^
 //│ ╟── type `Impl` is not an instance of type `Foo`
-//│ ║  l.118: 	(x: Impl) => x : Base2
+//│ ║  l.125: 	(x: Impl) => x : Base2
 //│ ║         	    ^^^^
 //│ ╟── but it flows into reference with expected type `#Foo`
-//│ ║  l.118: 	(x: Impl) => x : Base2
+//│ ║  l.125: 	(x: Impl) => x : Base2
 //│ ║         	             ^
 //│ ╟── Note: constraint arises from applied type reference:
 //│ ║  l.78: 	trait Base2: Foo['FigureItOut]
 //│ ║        	             ^^^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
-//│ ║  l.118: 	(x: Impl) => x : Base2
+//│ ║  l.125: 	(x: Impl) => x : Base2
 //│ ╙──       	                 ^^^^^
 //│ (x: Impl) -> Base2
 //│ res
@@ -138,13 +145,13 @@ class Impl extends Base2
 :e
 class Impl() extends Base2, Foo
 //│ ╔══[ERROR] Type error in type declaration
-//│ ║  l.139: 	class Impl() extends Base2, Foo
+//│ ║  l.146: 	class Impl() extends Base2, Foo
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'FigureItOut` leaks out of its scope
 //│ ║  l.78: 	trait Base2: Foo['FigureItOut]
 //│ ╙──      	                 ^^^^^^^^^^^^
 //│ ╔══[ERROR] Member `x` is declared (or its declaration is inherited) but is not implemented in `Impl`
-//│ ║  l.139: 	class Impl() extends Base2, Foo
+//│ ║  l.146: 	class Impl() extends Base2, Foo
 //│ ║         	      ^^^^
 //│ ╟── Declared here:
 //│ ║  l.5: 	trait Foo[A] { fun x: A }
@@ -158,11 +165,11 @@ class Impl() extends Base2, Foo {
   fun x = 1
 }
 //│ ╔══[ERROR] Type error in type declaration
-//│ ║  l.157: 	class Impl() extends Base2, Foo {
+//│ ║  l.164: 	class Impl() extends Base2, Foo {
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.158: 	  fun x = 1
+//│ ║  l.165: 	  fun x = 1
 //│ ║         	^^^^^^^^^^^
-//│ ║  l.159: 	}
+//│ ║  l.166: 	}
 //│ ║         	^
 //│ ╟── type variable `'FigureItOut` leaks out of its scope
 //│ ║  l.78: 	trait Base2: Foo['FigureItOut]
@@ -179,10 +186,10 @@ Impl().x
 :e
 Impl() : Base2
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.180: 	Impl() : Base2
+//│ ║  l.187: 	Impl() : Base2
 //│ ║         	^^^^^^
 //│ ╟── type variable `'FigureItOut` leaks out of its scope
-//│ ║  l.158: 	  fun x = 1
+//│ ║  l.165: 	  fun x = 1
 //│ ╙──       	          ^
 //│ Base2
 //│ res
@@ -191,10 +198,10 @@ Impl() : Base2
 :e
 (Impl() : Base2).x
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.192: 	(Impl() : Base2).x
+//│ ║  l.199: 	(Impl() : Base2).x
 //│ ║         	 ^^^^^^
 //│ ╟── type variable `'FigureItOut` leaks out of its scope
-//│ ║  l.158: 	  fun x = 1
+//│ ║  l.165: 	  fun x = 1
 //│ ╙──       	          ^
 //│ ??FigureItOut
 //│ res
@@ -205,27 +212,27 @@ class Impl2() extends Base2, Foo[Int] {
   fun x = 1
 }
 //│ ╔══[ERROR] Type error in type declaration
-//│ ║  l.204: 	class Impl2() extends Base2, Foo[Int] {
+//│ ║  l.211: 	class Impl2() extends Base2, Foo[Int] {
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.205: 	  fun x = 1
+//│ ║  l.212: 	  fun x = 1
 //│ ║         	^^^^^^^^^^^
-//│ ║  l.206: 	}
+//│ ║  l.213: 	}
 //│ ║         	^
 //│ ╟── type variable `'FigureItOut` leaks out of its scope
-//│ ║  l.204: 	class Impl2() extends Base2, Foo[Int] {
+//│ ║  l.211: 	class Impl2() extends Base2, Foo[Int] {
 //│ ╙──       	                                 ^^^
 //│ ╔══[ERROR] Type error in type declaration
-//│ ║  l.204: 	class Impl2() extends Base2, Foo[Int] {
+//│ ║  l.211: 	class Impl2() extends Base2, Foo[Int] {
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.205: 	  fun x = 1
+//│ ║  l.212: 	  fun x = 1
 //│ ║         	^^^^^^^^^^^
-//│ ║  l.206: 	}
+//│ ║  l.213: 	}
 //│ ║         	^
 //│ ╟── type variable `'FigureItOut` leaks out of its scope
 //│ ║  l.78: 	trait Base2: Foo['FigureItOut]
 //│ ║        	                 ^^^^^^^^^^^^
 //│ ╟── into type `Int`
-//│ ║  l.204: 	class Impl2() extends Base2, Foo[Int] {
+//│ ║  l.211: 	class Impl2() extends Base2, Foo[Int] {
 //│ ╙──       	                                 ^^^
 //│ class Impl2() extends Base2, Foo {
 //│   fun x: 1
@@ -234,10 +241,10 @@ class Impl2() extends Base2, Foo[Int] {
 :e
 (Impl2() : Base2).x
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.235: 	(Impl2() : Base2).x
+//│ ║  l.242: 	(Impl2() : Base2).x
 //│ ║         	 ^^^^^^^
 //│ ╟── type variable `'FigureItOut` leaks out of its scope
-//│ ║  l.204: 	class Impl2() extends Base2, Foo[Int] {
+//│ ║  l.211: 	class Impl2() extends Base2, Foo[Int] {
 //│ ╙──       	                                 ^^^
 //│ ??FigureItOut
 //│ res

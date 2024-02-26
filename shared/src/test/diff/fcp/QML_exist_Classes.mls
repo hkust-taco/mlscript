@@ -254,7 +254,7 @@ sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.234: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ╙──       	                                             ^^^^^^^^^^^^^^
-//│ res: error | int -> anything -> (??Rep | ??Rep0)
+//│ res: error | int -> anything -> ??Rep
 //│    = [Function (anonymous)]
 
 sb (fun arr ->
@@ -270,20 +270,20 @@ sb (fun arr ->
 
 :e
 def simpleStep arr = arr (fun impl -> fun k -> k (simpleStepImpl impl))
-//│ ((forall 'Rep 'a 'A 'c 'A0 'd 'Rep0 'A1. ArraysRep[in 'A1 & 'A & 'A0 out 'A | 'A1, in 'Rep0 & 'Rep & 'c out 'Rep0 | 'Rep] -> ((forall 'Rep1. ArraysImpl['A0, 'Rep1] with {
-//│   fold: forall 'b. ('A -> 'b -> 'b) -> 'b -> (('Rep, anything,),) -> 'b,
-//│   init: 'A1 -> ('Rep0, "initialized",),
-//│   sub: (('Rep, anything,),) -> int -> 'A,
-//│   update: forall 'e. (('Rep & 'e, anything,),) -> int -> 'A1 -> ('Rep0 | 'e, "updated",)
-//│ }) -> 'a) -> 'a) -> 'f) -> 'f
+//│ ((forall 'Rep 'A 'Rep0 'a 'c 'A0 'A1 'd. ArraysRep[in 'A & 'A1 & 'A0 out 'A1 | 'A, in 'Rep & 'Rep0 & 'a out 'Rep | 'Rep0] -> ((forall 'Rep1. ArraysImpl['A0, 'Rep1] with {
+//│   fold: forall 'b. ('A1 -> 'b -> 'b) -> 'b -> (('Rep0, anything,),) -> 'b,
+//│   init: 'A -> ('Rep, "initialized",),
+//│   sub: (('Rep0, anything,),) -> int -> 'A1,
+//│   update: forall 'e. (('Rep0 & 'e, anything,),) -> int -> 'A -> ('Rep | 'e, "updated",)
+//│ }) -> 'c) -> 'c) -> 'f) -> 'f
 //│ where
-//│   'Rep1 :> ('Rep0 | 'd, "initialized" | "updated",)
-//│         <: ('Rep & 'c, anything,)
-//│   'c <: 'Rep & 'd
-//│   'd :> 'Rep0
-//│      <: 'Rep & 'c
-//│   'A0 :> 'A
-//│       <: 'A1
+//│   'Rep1 :> ('Rep | 'd, "initialized" | "updated",)
+//│         <: ('Rep0 & 'a, anything,)
+//│   'a <: 'Rep0 & 'd
+//│   'd :> 'Rep
+//│      <: 'Rep0 & 'a
+//│   'A0 :> 'A1
+//│       <: 'A
 //│   <:  simpleStep:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type error in def definition
@@ -383,10 +383,10 @@ def stepImpl arrImpl = ArraysImpl {
     fold = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.Fold f (arrImpl.Fold f b r0) r1
   }
 //│ stepImpl: ArraysRep[in 'A & 'A0 & 'A1 out 'A0 | 'A, in 'Rep & 'Rep0 & 'a & 'c out 'Rep | 'Rep0] -> (ArraysImpl['A1, 'Rep1] with {
-//│   fold: forall 'b 'b0. ('A0 -> 'b0 -> 'b0 & 'A0 -> 'b -> ('b0 & 'b)) -> ('b0 & 'b) -> (('Rep0, 'Rep0,),) -> 'b0,
+//│   fold: forall 'b 'b0. ('A0 -> 'b -> 'b & 'A0 -> 'b0 -> ('b & 'b0)) -> ('b & 'b0) -> (('Rep0, 'Rep0,),) -> 'b,
 //│   init: 'A -> ('Rep, 'Rep,),
 //│   sub: (('Rep0, 'Rep0,),) -> int -> 'A0,
-//│   update: forall 'd 'e. (('Rep0 & 'd, 'Rep0 & 'e,),) -> int -> 'A -> ('Rep | 'd, 'Rep | 'e,)
+//│   update: forall 'd 'e. (('Rep0 & 'e, 'Rep0 & 'd,),) -> int -> 'A -> ('Rep | 'e, 'Rep | 'd,)
 //│ })
 //│ where
 //│   'Rep1 :> ('Rep | 'a | 'f, 'Rep | 'c | 'g,)
@@ -407,11 +407,11 @@ def step: Arrays['a] -> Arrays['a]
 //│     = <missing implementation>
 
 def step arr = arr (fun impl -> fun (k: ArraysRepConsumer['a, 'r]) -> k (stepImpl impl))
-//│ ((forall 'Rep 'a 'A 'A0 'A1. ArraysRep[in 'A & 'A0 & 'A1 out 'A | 'A0, 'Rep] -> ArraysRepConsumer['A, 'a] -> 'a) -> 'b) -> 'b
+//│ ((forall 'A 'A0 'Rep 'a 'A1. ArraysRep[in 'A1 & 'A & 'A0 out 'A1 | 'A, 'Rep] -> ArraysRepConsumer['A1, 'a] -> 'a) -> 'b) -> 'b
 //│   where
-//│     'A :> 'A0
-//│        <: 'A1
-//│     'A1 <: 'A
+//│     'A1 :> 'A
+//│         <: 'A0
+//│     'A0 <: 'A1
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step]
@@ -462,7 +462,7 @@ snb = mkMonoArray 5
 //│    = [Function (anonymous)]
 
 snb (fun arr -> arr.Init true)
-//│ res: ??Rep | ??Rep0
+//│ res: ??Rep
 //│    = [
 //│        [ [ [Array], [Array] ], [ [Array], [Array] ] ],
 //│        [ [ [Array], [Array] ], [ [Array], [Array] ] ]
@@ -479,7 +479,7 @@ snb = mkMonoArray 5
 //│    = [Function (anonymous)]
 
 snb (fun arr -> arr.Init true)
-//│ res: ??Rep | ??Rep0
+//│ res: ??Rep
 //│    = [ [ [ [Array], 'initialized' ], 'initialized' ], 'initialized' ]
 
 

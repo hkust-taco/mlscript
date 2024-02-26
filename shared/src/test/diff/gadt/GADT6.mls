@@ -80,9 +80,9 @@ h2(RB(true), RI(0))
 //│ res
 //│     = RB {}
 
-abstract class Eq[type A, type B]: Refl[?]
+abstract class Eq[type A, type B]: Refl[A | B]  // TODO use correct sig
 class Refl[A]() extends Eq[A, A]
-//│ abstract class Eq[A, B]: Refl[?]
+//│ abstract class Eq[A, B]: Refl[A | B]
 //│ class Refl[A]() extends Eq
 
 fun e1[A, B](e: Eq[A, B], x: A): B = if e is Refl() then (x as e.A) as e.B
@@ -109,24 +109,150 @@ class KS[A](ev: K[A]) extends K[S[A]]
 //│ class KZ() extends K
 //│ class KS[A](ev: K[A]) extends K
 
-// FIXME
+// FIXME accept
 fun fk: (K['L], K['L]) -> Int
 fun fk[L](l: K[L], r: K[L]) =
-  if l is KS(e1) and r is KS(e2) then 1 + fk(e1, e2) else 0
+  if l is KS(ep) and r is KS(eq) then 1 + fk(ep, eq) else 0
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.115: 	  if l is KS(ep) and r is KS(eq) then 1 + fk(ep, eq) else 0
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `??A & ??A0 & ~??A1` does not match type `nothing`
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.107: 	class KS[A](ev: K[A]) extends K[S[A]]
+//│ ╙──       	         ^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.115: 	  if l is KS(e1) and r is KS(e2) then 1 + fk(e1, e2) else 0
+//│ ║  l.115: 	  if l is KS(ep) and r is KS(eq) then 1 + fk(ep, eq) else 0
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `??A & ~??A0` does not match type `nothing`
 //│ ╟── Note: type parameter A is defined at:
 //│ ║  l.107: 	class KS[A](ev: K[A]) extends K[S[A]]
 //│ ╙──       	         ^
-//│ fun fk: forall 'L. (l: K['L], r: K['L]) -> Int
+//│ fun fk: forall 'L. (l: K['L], r: K['L]) -> (Int | error)
 //│ fun fk: forall 'L0. (K['L0], K['L0]) -> Int
 
 fk(KS(KS(KZ())), KS(KS(KZ())))
 //│ Int
 //│ res
 //│     = 2
+
+fun fz[L](l: K[L], r: K[L]) =
+  if l is KS(ea) and r is KS(eb) then
+    let zt: K[ea.T] = ea
+    1
+  else 0
+//│ fun fz: forall 'L. (l: K['L], r: K['L]) -> (0 | 1)
+
+// FIXME
+fun fz[L](l: K[L], r: K[L]) =
+  if l is KS(ea) and r is KS(eb) then
+    let zt: K[ea.T] = (ea : eb) : ea
+    1
+  else 0
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.147: 	  if l is KS(ea) and r is KS(eb) then
+//│ ║         	                     ^^^^^^^^^^^^^^^^
+//│ ║  l.148: 	    let zt: K[ea.T] = (ea : eb) : ea
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.149: 	    1
+//│ ║         	^^^^^
+//│ ║  l.150: 	  else 0
+//│ ║         	^^^^^^^^
+//│ ╙── expression of type `Z & ??A & ~??A0` does not match type `nothing`
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.147: 	  if l is KS(ea) and r is KS(eb) then
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.148: 	    let zt: K[ea.T] = (ea : eb) : ea
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.149: 	    1
+//│ ║         	^^^^^^
+//│ ║  l.150: 	  else 0
+//│ ║         	^^^^^^^^
+//│ ╟── expression of type `S[?] & ??A & ??A0 & ~??A1` does not match type `nothing`
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.107: 	class KS[A](ev: K[A]) extends K[S[A]]
+//│ ╙──       	         ^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.147: 	  if l is KS(ea) and r is KS(eb) then
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.148: 	    let zt: K[ea.T] = (ea : eb) : ea
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.149: 	    1
+//│ ║         	^^^^^^
+//│ ║  l.150: 	  else 0
+//│ ║         	^^^^^^^^
+//│ ╟── expression of type `??A & ~#Z & ~??A0` does not match type `nothing`
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.107: 	class KS[A](ev: K[A]) extends K[S[A]]
+//│ ╙──       	         ^
+//│ fun fz: forall 'L. (l: K['L], r: K['L]) -> (0 | error)
+
+// FIXME
+fun fz[L](l: K[L], r: K[L]) =
+  if l is KS(ea) and r is KS(eb) then
+    let zt: K[ea.T] = eb
+    1
+  else 0
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.191: 	  if l is KS(ea) and r is KS(eb) then
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.192: 	    let zt: K[ea.T] = eb
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.193: 	    1
+//│ ║         	^^^^^^
+//│ ║  l.194: 	  else 0
+//│ ║         	^^^^^^^^
+//│ ╟── expression of type `S[?] & ??A & ??A0 & ~??A1` does not match type `nothing`
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.107: 	class KS[A](ev: K[A]) extends K[S[A]]
+//│ ╙──       	         ^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.191: 	  if l is KS(ea) and r is KS(eb) then
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.192: 	    let zt: K[ea.T] = eb
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.193: 	    1
+//│ ║         	^^^^^^
+//│ ║  l.194: 	  else 0
+//│ ║         	^^^^^^^^
+//│ ╟── expression of type `S[?] & ??A & ~??A0` does not match type `nothing`
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.107: 	class KS[A](ev: K[A]) extends K[S[A]]
+//│ ╙──       	         ^
+//│ fun fz: forall 'L. (l: K['L], r: K['L]) -> (0 | error)
+
+// FIXME
+fun fz[L](l: K[L], r: K[L]) =
+  if l is KS(ea) and r is KS(eb) then
+    let zt: K[eb.T] = ea // * <- we should have ea.T = eb.T
+    1
+  else 0
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.225: 	  if l is KS(ea) and r is KS(eb) then
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.226: 	    let zt: K[eb.T] = ea // * <- we should have ea.T = eb.T
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.227: 	    1
+//│ ║         	^^^^^^
+//│ ║  l.228: 	  else 0
+//│ ║         	^^^^^^^^
+//│ ╟── expression of type `S[?] & ??A & ??A0 & ~??A1` does not match type `nothing`
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.107: 	class KS[A](ev: K[A]) extends K[S[A]]
+//│ ╙──       	         ^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.225: 	  if l is KS(ea) and r is KS(eb) then
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.226: 	    let zt: K[eb.T] = ea // * <- we should have ea.T = eb.T
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.227: 	    1
+//│ ║         	^^^^^^
+//│ ║  l.228: 	  else 0
+//│ ║         	^^^^^^^^
+//│ ╟── expression of type `??A & ~#Z & ~??A0` does not match type `nothing`
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.107: 	class KS[A](ev: K[A]) extends K[S[A]]
+//│ ╙──       	         ^
+//│ fun fz: forall 'L. (l: K['L], r: K['L]) -> (0 | error)
 
 abstract class K[type T]: KZ | KS
 class KZ() extends K[Z]
@@ -135,13 +261,45 @@ class KS[A](ev: K[A]) extends K[S[A]]
 //│ class KZ() extends K
 //│ class KS[A](ev: K[A]) extends K
 
+:e
 fun fk: (K['L], K['L]) -> Int
 fun fk[L](l: K[L], r: K[L]) =
   if l is KS(e1) and r is KS(e2) then 1 + fk(e1, e2) else 0
-//│ fun fk: forall 'L. (l: K['L], r: K['L]) -> Int
+//│ ╔══[ERROR] Type error in operator application
+//│ ║  l.267: 	  if l is KS(e1) and r is KS(e2) then 1 + fk(e1, e2) else 0
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.259: 	class KS[A](ev: K[A]) extends K[S[A]]
+//│ ╙──       	         ^
+//│ ╔══[ERROR] Type error in `case` expression
+//│ ║  l.267: 	  if l is KS(e1) and r is KS(e2) then 1 + fk(e1, e2) else 0
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.259: 	class KS[A](ev: K[A]) extends K[S[A]]
+//│ ╙──       	         ^
+//│ fun fk: forall 'L. (l: K['L], r: K['L]) -> (Int | error)
 //│ fun fk: forall 'L0. (K['L0], K['L0]) -> Int
 
 fk(KS(KS(KZ())), KS(KS(KZ())))
 //│ Int
 //│ res
 //│     = 2
+
+abstract class K[type T]: KS[?]
+class KS[A](ev: K[A]) extends K[S[A]]
+//│ abstract class K[T]: KS[?]
+//│ class KS[A](ev: K[A]) extends K
+
+// why ?
+fun fk[L](l: K[L], r: K[L]) =
+  if l is KS(e1) and r is KS(e2) then fk((e1 : K[e1.T]), (e2 : K[e2.T])) else 0
+fun fk: (K['L], K['L]) -> Int
+//│ fun fk: forall 'L. (l: K['L], r: K['L]) -> Int
+//│ fun fk: forall 'L0. (K['L0], K['L0]) -> Int
+
+// why ?
+fun fz[L](l: K[L], r: K[L]) =
+  if l is KS(ea) and r is KS(eb) then 
+    let xw: K[eb.T] = ea : K[ea.T]; 1
+  else 0
+//│ fun fz: forall 'L. (l: K['L], r: K['L]) -> (0 | 1)

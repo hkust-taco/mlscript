@@ -143,7 +143,7 @@ mixin EvalExpr {
 }
 //│ mixin EvalExpr() {
 //│   super: {eval: ('a, Var) -> 'b}
-//│   this: {eval: ('a, ??A & 'A | ??A0 & 'A0) -> (Object | ~??A1 & ~??A2)}
+//│   this: {eval: ('a, ??A & 'A | ??A0 & 'A0) -> (Object | ~??A1)}
 //│   fun eval: ('a, 'b & (Add['A] | Mul['A0] | Numb | Var)) -> (Numb | 'b)
 //│ }
 
@@ -191,7 +191,7 @@ Test2.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
 //│   Error: non-exhaustive case expression
 
 Test2.eval(Cons(["a", Abs("d", Var("d"))], Nil), Add(Numb(1), Var("a")))
-//│ Abs[Var] & ??A | Add[Numb | Var] | Numb | Var
+//│ Abs[Var] & ??A | Add[Numb | Var] | Numb & ??A0 | Var
 //│ res
 //│     = Add {}
 
@@ -201,23 +201,23 @@ module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│ }
 //│ where
 //│   'A :> 'b
-//│      <: Object | ~(??A0 & (??A1 | ??A2))
+//│      <: Object | ~(??A0 & ??A1)
 //│   'b :> App[nothing] | Abs[nothing] | Numb | Var | ??A0 & 'A | 'a
-//│   'a <: Add[Abs['A0] | App['A1] | 'a & (Object & ~#Abs & ~#App | ~#Abs & ~#App & ~??A3) | ~??A3] | Mul[Abs['A0] | App['A1] | 'a & (Object & ~#Abs & ~#App | ~#Abs & ~#App & ~??A4) | ~??A4] | Numb | Var
-//│   'A0 <: Abs['A0] | App['A1] | 'a & (Object & ~#Abs & ~#App | ~#Abs & ~#App & ~??A5) | ~??A5
-//│   'A1 <: Abs['A0 & (Abs['A0] | App['A1] | Object & 'a & ~#Abs & ~#App | ~??A6)] | Abs['A0] & ~#Abs | App['A1] | Object & 'a & ~#Abs & ~#App | ~??A7
+//│   'a <: Add[Abs['A0] | App['A1] | 'a & (Object & ~#Abs & ~#App | ~#Abs & ~#App & ~??A2) | ~??A2] | Mul[Abs['A0] | App['A1] | 'a & (Object & ~#Abs & ~#App | ~#Abs & ~#App & ~??A3) | ~??A3] | Numb | Var
+//│   'A0 <: Abs['A0] | App['A1] | 'a & (Object & ~#Abs & ~#App | ~#Abs & ~#App & ~??A4) | ~??A4
+//│   'A1 <: Abs['A0 & (Abs['A0] | App['A1] | Object & 'a & ~#Abs & ~#App | ~??A5)] | Abs['A0] & ~#Abs | App['A1] | Object & 'a & ~#Abs & ~#App | ~??A6
 
 Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
 //│ 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Abs[Var] & ??A | Numb | Var
+//│     'a :> App['a] | Abs['a] | Abs[Var] & ??A | Numb | Var & ??A0
 //│ res
 //│     = Abs {}
 
 Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), App(Abs("a", Var("a")), Add(Numb(1), Var("c"))))
 //│ 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Abs[Var] & ??A | Add[Numb | Var] & ??A0 | Numb | Numb & ??A1 | Var
+//│     'a :> App['a] | Abs['a] | Abs[Var] & ??A | Add[Numb | Var] & ??A0 | Numb & ??A1 | Var & ??A2
 //│ res
 //│     = Add {}
 
@@ -228,7 +228,7 @@ module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ }
 //│ where
 //│   'A :> ??A0 & 'A0 | ??A1 & 'A1 | 'a
-//│      <: Object | ~(??A2 & (??A3 | ??A4))
+//│      <: Object | ~(??A2 & ??A3)
 //│   'a :> Abs[nothing] | App[nothing] | Numb | Var | ??A0 & 'A0 | ??A1 & 'A1 | ??A2 & 'A
 //│   'A0 <: Add['A0] | Mul['A1] | Numb | Var | ~??A0
 //│   'A1 <: Add['A0] | Mul['A1] | Numb | Var | ~??A1
@@ -249,9 +249,9 @@ Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
 //│ ╟── from reference:
 //│ ║  l.137: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
-//│ Abs[Var] | error | 'a
+//│ Abs[Var] | Numb | error | 'a
 //│   where
-//│     'a :> Abs[Var | 'a] | Abs[Var] & ??A | App['a] | Numb | Var
+//│     'a :> Abs[Var | 'a] | App['a] | Var | ??A & (Abs[Var] | Numb)
 //│ res
 //│ Runtime error:
 //│   Error: non-exhaustive case expression

@@ -38,10 +38,10 @@ module Impl extends Cls[Int] {
 fun test(a: Object) = if a is
   Cls then [a.g(a.x), a.x] // a.x : a.A ; a.g : a.A -> a.A
   else [0, 1]
-//│ fun test: (a: Object) -> [Int, 1 | ??A & ??A0]
+//│ fun test: (a: Object) -> [Int, ??A & ??A0]
 
 test(Impl)
-//│ [Int, 1 | ??A & ??A0]
+//│ [Int, ??A & ??A0]
 //│ res
 //│     = [ 43, 42 ]
 
@@ -97,7 +97,7 @@ fun test(a: Object) = if a is
 fun test(a: Object) = if a is
   Cls then [a.g(a.x), a.x] // a.x : a.A ; a.g : a.A -> a.A
   else [0, 1]
-//│ fun test: (a: Object) -> [Int, 1 | ??A & ??A0]
+//│ fun test: (a: Object) -> [Int, ??A & ??A0]
 
 fun test(a: Cls['a]) = if a is
   Cls then [a.g(a.x), a.x] // a.x : a.A ; a.g : a.A -> a.A

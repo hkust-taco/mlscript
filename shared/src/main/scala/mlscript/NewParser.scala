@@ -1147,7 +1147,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         }
         val lb = getTypeName("restricts")
         val ub = getTypeName("extends")
-
+        // TODO update `TypeParamInfo` to use lb and ub
         yeetSpaces match {
           case (COMMA, l0) :: _ =>
             consume

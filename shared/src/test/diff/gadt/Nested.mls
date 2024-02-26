@@ -42,9 +42,9 @@ h(HG(1))
 //│ res
 //│     = Some {}
 
-abstract class F[type A, type B]: MkF
+abstract class F[type A, type B]: MkF[A]
 class MkF[X](x: X) extends F[X, Some[Box[Int]]]
-//│ abstract class F[A, B]: MkF[anything]
+//│ abstract class F[A, B]: MkF[A]
 //│ class MkF[X](x: X) extends F
 
 fun f[T](x: F[T, T]): Int = if x is
@@ -55,6 +55,31 @@ f(MkF(Some(Box(1))))
 //│ Int
 //│ res
 //│     = 1
+
+MkF(1)
+//│ MkF['X]
+//│   where
+//│     'X :> 1
+//│ res
+//│     = MkF {}
+
+:e
+MkF(1) : F['a, 'a]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.67: 	MkF(1) : F['a, 'a]
+//│ ║        	^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `Some`
+//│ ║  l.67: 	MkF(1) : F['a, 'a]
+//│ ║        	    ^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.46: 	class MkF[X](x: X) extends F[X, Some[Box[Int]]]
+//│ ║        	                                ^^^^^^^^^^^^^^
+//│ ╟── Note: type parameter B is defined at:
+//│ ║  l.45: 	abstract class F[type A, type B]: MkF[A]
+//│ ╙──      	                              ^
+//│ F[in Some[Box[Int]] out Some[Box[Int]] | 1, in Some[Box[Int]] out Some[Box[Int]] | 1]
+//│ res
+//│     = MkF {}
 
 abstract class F[type A, type B]: MkF
 class MkF[type X](x: X) extends F[Some[X], Some[Box[Int]]]
@@ -71,42 +96,164 @@ f(MkF(Box(1)))
 //│     = 1
 
 :e
-f(MkU(1))
-//│ ╔══[ERROR] identifier not found: MkU
-//│ ║  l.74: 	f(MkU(1))
-//│ ╙──      	  ^^^
-//│ Int
-//│ Code generation encountered an error:
-//│   unresolved symbol MkU
+f(MkF(1))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.99: 	f(MkF(1))
+//│ ║        	^^^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `Box`
+//│ ║  l.99: 	f(MkF(1))
+//│ ║        	      ^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.85: 	class MkF[type X](x: X) extends F[Some[X], Some[Box[Int]]]
+//│ ╙──      	                                                ^^^^^^^^
+//│ Int | error
+//│ res
+//│     = undefined
 
-abstract class U[type A, type B, type C]: MkU
+abstract class U[type A, type B, type C]: MkU[?, ?]
 class MkU[S, T](s: S, t: T) extends U[S, T, Int]
-//│ abstract class U[A, B, C]: MkU[anything, anything]
+//│ abstract class U[A, B, C]: MkU[?, ?]
 //│ class MkU[S, T](s: S, t: T) extends U
 
 fun u[A](x: U[A, A, A]): A = if x is
     MkU(s, t) then (((s as x.A) as x.C) + ((t as x.B) as x.C)) as x.C
-//│ fun u: forall 'A. (x: U['A, 'A, 'A]) -> 'A
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.118: 	fun u[A](x: U[A, A, A]): A = if x is
+//│ ║         	                                ^^^^
+//│ ║  l.119: 	    MkU(s, t) then (((s as x.A) as x.C) + ((t as x.B) as x.C)) as x.C
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `??S & ~A & ~??S0` does not match type `nothing`
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ fun u: forall 'A. (x: U['A, 'A, 'A]) -> (error | 'A)
 
 u(MkU(1, 2))
-//│ Int
+//│ Int | error
 //│ res
 //│     = 3
 
 :e
 u(MkU(1, true))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.97: 	u(MkU(1, true))
-//│ ║        	^^^^^^^^^^^^^^^
+//│ ║  l.135: 	u(MkU(1, true))
+//│ ║         	^^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of `Int`
-//│ ║  l.97: 	u(MkU(1, true))
-//│ ║        	         ^^^^
+//│ ║  l.135: 	u(MkU(1, true))
+//│ ║         	         ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.83: 	class MkU[S, T](s: S, t: T) extends U[S, T, Int]
-//│ ║        	                                            ^^^
+//│ ║  l.114: 	class MkU[S, T](s: S, t: T) extends U[S, T, Int]
+//│ ║         	                                            ^^^
 //│ ╟── Note: type parameter C is defined at:
-//│ ║  l.82: 	abstract class U[type A, type B, type C]: MkU
-//│ ╙──      	                                      ^
+//│ ║  l.113: 	abstract class U[type A, type B, type C]: MkU[?, ?]
+//│ ╙──       	                                      ^
 //│ Int | error | true
 //│ res
 //│     = 2
+
+:e
+fun u2[A, B](x: U[A, B, A]): A = if x is
+    MkU(s, t) then (((s as x.A) as x.C) + ((t as x.B) as x.C)) as x.C
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.153: 	fun u2[A, B](x: U[A, B, A]): A = if x is
+//│ ║         	                                    ^^^^
+//│ ║  l.154: 	    MkU(s, t) then (((s as x.A) as x.C) + ((t as x.B) as x.C)) as x.C
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `??S & ~A & ~??S0` does not match type `nothing`
+//│ fun u2: forall 'A 'B. (x: U['A, 'B, 'A]) -> (error | 'A)
+
+fun eu[A, B](x: U[A,B,A], y: U[A,B,A]): Bool =
+    if x is MkU(s1, t1) and y is MkU(s2, t2) then 
+        ((s1 as x.A) as x.C) == ((s2 as y.A) as y.C)
+    else false
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.164: 	    if x is MkU(s1, t1) and y is MkU(s2, t2) then 
+//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.165: 	        ((s1 as x.A) as x.C) == ((s2 as y.A) as y.C)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.166: 	    else false
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╙── expression of type `??S & ~A & ~??S0` does not match type `nothing`
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.164: 	    if x is MkU(s1, t1) and y is MkU(s2, t2) then 
+//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.165: 	        ((s1 as x.A) as x.C) == ((s2 as y.A) as y.C)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.166: 	    else false
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╙── expression of type `??S & ~A & ~??S0` does not match type `nothing`
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ fun eu: forall 'A 'B. (x: U['A, 'B, 'A], y: U['A, 'B, 'A]) -> Bool
+
+eu(MkU(1, 2), MkU(1, 3))
+//│ Bool
+//│ res
+//│     = true
+
+eu(MkU(1, true), MkU(2, false))
+//│ Bool
+//│ res
+//│     = false
+
+eu(MkU(1, 2), MkU(1, "ha"))
+//│ Bool
+//│ res
+//│     = true
+
+fun su[A, B](x: U[A,B,A], y: U[B,A,B]): Int =
+    if x is MkU(s1, t1) and y is MkU(s2, t2) then 
+        ((s1 as x.A) as x.C) + ((t1 as y.B) as x.C) + ((s2 as y.A) as y.C) + ((t2 as x.B) as y.C)
+    else 0
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.203: 	    if x is MkU(s1, t1) and y is MkU(s2, t2) then 
+//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.204: 	        ((s1 as x.A) as x.C) + ((t1 as y.B) as x.C) + ((s2 as y.A) as y.C) + ((t2 as x.B) as y.C)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.205: 	    else 0
+//│ ║         	^^^^^^^^^^
+//│ ╙── expression of type `??S & ~B & ~??S0` does not match type `nothing`
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.203: 	    if x is MkU(s1, t1) and y is MkU(s2, t2) then 
+//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.204: 	        ((s1 as x.A) as x.C) + ((t1 as y.B) as x.C) + ((s2 as y.A) as y.C) + ((t2 as x.B) as y.C)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.205: 	    else 0
+//│ ║         	^^^^^^^^^^
+//│ ╟── expression of type `??T & ??T0 & ~A & ~B & ~??T1` does not match type `nothing`
+//│ ╟── Note: type parameter T is defined at:
+//│ ║  l.114: 	class MkU[S, T](s: S, t: T) extends U[S, T, Int]
+//│ ╙──       	             ^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.203: 	    if x is MkU(s1, t1) and y is MkU(s2, t2) then 
+//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.204: 	        ((s1 as x.A) as x.C) + ((t1 as y.B) as x.C) + ((s2 as y.A) as y.C) + ((t2 as x.B) as y.C)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.205: 	    else 0
+//│ ║         	^^^^^^^^^^
+//│ ╙── expression of type `??S & ~A & ~??S0` does not match type `nothing`
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ fun su: forall 'A 'B. (x: U['A, 'B, 'A], y: U['B, 'A, 'B]) -> Int
+
+su(MkU(1,2), MkU(3,4))
+//│ Int
+//│ res
+//│     = 10
+
+:e
+su(MkU(1,true), MkU(3,4))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.244: 	su(MkU(1,true), MkU(3,4))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `true` is not an instance of `Int`
+//│ ║  l.244: 	su(MkU(1,true), MkU(3,4))
+//│ ║         	         ^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.114: 	class MkU[S, T](s: S, t: T) extends U[S, T, Int]
+//│ ║         	                                            ^^^
+//│ ╟── Note: type parameter C is defined at:
+//│ ║  l.113: 	abstract class U[type A, type B, type C]: MkU[?, ?]
+//│ ╙──       	                                      ^
+//│ Int | error
+//│ res
+//│     = 9
