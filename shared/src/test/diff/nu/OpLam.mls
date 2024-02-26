@@ -23,7 +23,7 @@ fun (|>;) foo(a, b) = [a, b]
 
 
 fun (>>) compose(f, g) = x => g(f(x))
-//│ fun (>>) compose: forall 'a 'b 'c. ('c -> 'a, 'a -> 'b) -> 'c -> 'b
+//│ fun (>>) compose: forall 'a 'b 'c. ('a -> 'b, 'b -> 'c) -> 'a -> 'c
 
 succ >> x => x + 2
 //│ Int -> Int

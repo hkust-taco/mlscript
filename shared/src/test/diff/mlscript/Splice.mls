@@ -92,4 +92,4 @@ a2 = (1,2, ...a1, 4,5)
 
 // TODO
 a2 : Array[int]
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.

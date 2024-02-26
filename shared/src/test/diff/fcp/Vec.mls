@@ -108,7 +108,7 @@ cons_ty = cons : Cons_ty
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.104: 	cons_ty = cons : Cons_ty
 //│ ║         	          ^^^^
-//│ ╟── expression of type `S[in 'n & 'p out 'p | 'n]` does not match type `'n`
+//│ ╟── expression of type `S[in 'n & 'p out 'p | 'n] with {S#P :> 'n & 'p <: 'p | 'n}` does not match type `'n`
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.70: 	type Cons_ty = forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
 //│ ║        	                                        ^^
@@ -127,7 +127,7 @@ cons_ty3 = cons : Cons_ty
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.126: 	cons_ty3 = cons : Cons_ty
 //│ ║         	           ^^^^
-//│ ╟── expression of type `S[in 'n & 'p out 'p | 'n]` does not match type `'n`
+//│ ╟── expression of type `S[in 'n & 'p out 'p | 'n] with {S#P :> 'n & 'p <: 'p | 'n}` does not match type `'n`
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.70: 	type Cons_ty = forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
 //│ ║        	                                        ^^
@@ -143,7 +143,7 @@ cons : Cons_ty
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.142: 	cons : Cons_ty
 //│ ║         	^^^^
-//│ ╟── expression of type `S[in 'n & 'p out 'p | 'n]` does not match type `'n`
+//│ ╟── expression of type `S[in 'n & 'p out 'p | 'n] with {S#P :> 'n & 'p <: 'p | 'n}` does not match type `'n`
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.70: 	type Cons_ty = forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
 //│ ║        	                                        ^^
@@ -162,7 +162,7 @@ cons : Cons_ty
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.161: 	cons : Cons_ty
 //│ ║         	^^^^
-//│ ╟── expression of type `S[in 'n & 'p out 'p | 'n]` does not match type `'n`
+//│ ╟── expression of type `S[in 'n & 'p out 'p | 'n] with {S#P :> 'n & 'p <: 'p | 'n}` does not match type `'n`
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.70: 	type Cons_ty = forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
 //│ ║        	                                        ^^

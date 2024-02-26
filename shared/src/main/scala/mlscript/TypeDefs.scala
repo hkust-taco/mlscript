@@ -110,9 +110,11 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
     }
   }
   
-  
-  def tparamField(clsNme: TypeName, tparamNme: TypeName): Var =
-    Var(clsNme.name + "#" + tparamNme.name)
+  def tparamField(clsNme: TypeName, tparamNme: TypeName, visible: Bool): Var =
+    Var(tparamField(clsNme.name, tparamNme.name, visible))
+
+  def tparamField(clsNme: String, tparamNme: String, visible: Bool): String =
+    if (!visible) clsNme + "#" + tparamNme else tparamNme
   
   def clsNameToNomTag(td: NuTypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
     require((td.kind is Cls) || (td.kind is Mod), td.kind)
@@ -167,7 +169,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
       case TypeBounds(lb, ub) => fieldsOf(ub, paramTags)
       case _: TypeTag | _: FunctionType | _: ArrayBase | _: TypeVariable
         | _: NegType | _: ExtrType | _: ComposedType | _: SpliceType
-        | _: ConstrainedType | _: PolymorphicType | _: Overload
+        | _: ConstrainedType | _: PolymorphicType | _: Overload | _: WildcardArg
         => Map.empty
     }
   }
@@ -237,6 +239,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
           case p: ProxyType => checkCycle(p.underlying)
           case Without(base, _) => checkCycle(base)
           case TypeBounds(lb, ub) => checkCycle(lb) && checkCycle(ub)
+          case WildcardArg(lb, ub) => checkCycle(lb) && checkCycle(ub)
           case tv: TypeVariable => travsersed(R(tv)) || {
             val t2 = travsersed + R(tv)
             tv.assignedTo match {
@@ -315,6 +318,9 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
               case _: TypeBounds =>
                 err(msg"cannot inherit from type bounds", prov.loco)
                 false
+              case _: WildcardArg =>
+                err(msg"cannot inherit from wildcards", prov.loco)
+                false
               case _: PolymorphicType =>
                 err(msg"cannot inherit from a polymorphic type", prov.loco)
                 false
@@ -343,7 +349,8 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
                 case _ =>
                   val fields = fieldsOf(td.bodyTy, paramTags = true)
                   val tparamTags = td.tparamsargs.map { case (tp, tv) =>
-                    tparamField(td.nme, tp) -> FieldType(Some(tv), tv)(tv.prov) }
+                    // `false` means using `C#A` (old type member names)
+                    tparamField(td.nme, tp, false) -> FieldType(Some(tv), tv)(tv.prov) }
                   val ctor = k match {
                     case Cls =>
                       val nomTag = clsNameToNomTag(td)(originProv(td.nme.toLoc, "class", td.nme.name), ctx)
@@ -714,6 +721,9 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
             updateVariance(lhs, curVariance)
             updateVariance(rhs, curVariance)
           case TypeBounds(lb, ub) =>
+            updateVariance(lb, VarianceInfo.contra)
+            updateVariance(ub, VarianceInfo.co)
+          case WildcardArg(lb, ub) =>
             updateVariance(lb, VarianceInfo.contra)
             updateVariance(ub, VarianceInfo.co)
           case ArrayType(inner) => fieldVarianceHelper(inner)

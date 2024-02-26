@@ -408,7 +408,7 @@ object NewLexer {
     "val",
     "var",
     // "is",
-    // "as",
+    "as",
     "of",
     // "and",
     // "or",
@@ -442,7 +442,8 @@ object NewLexer {
     "undefined",
     "abstract",
     "constructor",
-    "virtual"
+    "virtual",
+    "restricts",
   )
   
   def printToken(tl: TokLoc): Str = tl match {

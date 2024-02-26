@@ -123,7 +123,7 @@ trait TypeSimplifier { self: Typer =>
                         else  v -> default :: Nil
                     }
                   case S(trt: TypedNuTrt) => // TODO factor w/ above & generalize
-                    trt.tparams.iterator.find(_._1.name === postfix).flatMap(_._3).getOrElse(VarianceInfo.in) match {
+                    trt.tparams.iterator.find(_._1.name === postfix).flatMap(_._3.varinfo).getOrElse(VarianceInfo.in) match {
                       case VarianceInfo(true, true) => Nil
                       case VarianceInfo(co, contra) =>
                         if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil
@@ -219,7 +219,7 @@ trait TypeSimplifier { self: Typer =>
             
             val trs2 = trs.map {
               case (d, tr @ TypeRef(defn, targs)) =>
-                d -> TypeRef(defn, tr.mapTargs(pol)((pol, ta) => go(ta, pol)))(tr.prov)
+                d -> TypeRef(defn, tr.mapTargs2(pol)((pol, ta) => go(ta, pol)))(tr.prov)
             }
             
             val traitPrefixes =
@@ -244,7 +244,7 @@ trait TypeSimplifier { self: Typer =>
                 
                 // * Reconstruct a TypeRef from its current structural components
                 val typeRef = TypeRef(td.nme, td.tparamsargs.zipWithIndex.map { case ((tp, tv), tpidx) =>
-                  val fieldTagNme = tparamField(clsTyNme, tp)
+                  val fieldTagNme = tparamField(clsTyNme, tp, false) // `false` means using `C#A` (old def type member names)
                   val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
                   fromTyRef.++(rcd2.fields.iterator.filter(_._1 === fieldTagNme).map(_._2))
                     .foldLeft((BotType: ST, TopType: ST)) {
@@ -253,34 +253,9 @@ trait TypeSimplifier { self: Typer =>
                     }.pipe {
                       case (lb, ub) =>
                         vs(tv) match {
-                          case VarianceInfo(true, true) => TypeBounds.mk(BotType, TopType)
-                          case VarianceInfo(false, false) =>
-                            // * FIXME: this usage of type bounds is wrong!
-                            // * We're here using it as though it meant a bounded wildcard,
-                            // * for the purpose of type pretty-printing...
-                            // * But this is inconsistent with other uses of these types as *absolute* type ranges!
-                            TypeBounds.mk(lb, ub)
-                            // * However, the fix is to make all TR arguments actual bounded wildcards
-                            // * which is not easy as it requires extensive refactoring
-                            // * 
-                            // * Note that the version below doesn't work because the refinement redundancy tests
-                            // * below require non-polar types to compare against, so TypeBounds is inadequate.
-                            /* 
-                            pol match {
-                              case N => ???
-                                TypeBounds.mk(lb, ub)
-                              case S(true) => 
-                                TypeBounds.mk(lb, ub)
-                              case S(false) => 
-                                TypeBounds.mk(ub, lb)
-                            }
-                            */
-                            // * FIXME In fact, the use of such subtyping checks should render
-                            // * all uses of TypeBounds produced by the simplifier inadequate!
-                            // * We should find a proper solution to this at some point...
-                            // * (Probably by only using proper wildcards in the type simplifier.)
-                          case VarianceInfo(co, contra) =>
-                            if (co) ub else lb
+                          case VarianceInfo(true, true) => WildcardArg.mk(BotType, TopType)
+                          case VarianceInfo(false, false) => WildcardArg.mk(lb, ub)
+                          case VarianceInfo(co, contra) => if (co) ub else lb
                         }
                     }
                 })(noProv)
@@ -354,7 +329,7 @@ trait TypeSimplifier { self: Typer =>
                 
                 // * Reconstruct a TypeRef from its current structural components
                 val typeRef = TypeRef(cls.td.nme, cls.tparams.zipWithIndex.map { case ((tp, tv, vi), tpidx) =>
-                  val fieldTagNme = tparamField(clsTyNme, tp)
+                  val fieldTagNme = tparamField(clsTyNme, tp, vi.visible)
                   val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
                   fromTyRef.++(rcd2.fields.iterator.filter(_._1 === fieldTagNme).map(_._2))
                     .foldLeft((BotType: ST, TopType: ST)) {
@@ -363,10 +338,9 @@ trait TypeSimplifier { self: Typer =>
                     }.pipe {
                       case (lb, ub) =>
                         cls.varianceOf(tv) match {
-                          case VarianceInfo(true, true) => TypeBounds.mk(BotType, TopType)
-                          case VarianceInfo(false, false) => TypeBounds.mk(lb, ub)
-                          case VarianceInfo(co, contra) =>
-                            if (co) ub else lb
+                          case VarianceInfo(true, true) => WildcardArg.mk(BotType, TopType)
+                          case VarianceInfo(false, false) => WildcardArg.mk(lb, ub)
+                          case VarianceInfo(co, contra) => if (co) ub else lb
                         }
                     }
                 })(noProv)
@@ -1050,7 +1024,7 @@ trait TypeSimplifier { self: Typer =>
         RecordType(fs.mapValues(_.update(transform(_, pol.contravar, semp), transform(_, pol, semp))))(noProv))(noProv)
       case ProxyType(underlying) => transform(underlying, pol, parents, canDistribForall)
       case tr @ TypeRef(defn, targs) =>
-        TypeRef(defn, tr.mapTargs(pol)((pol, ty) => transform(ty, pol, semp)))(tr.prov)
+        TypeRef(defn, tr.mapTargs2(pol)((pol, ty) => transform(ty, pol, semp)))(tr.prov)
       case wo @ Without(base, names) =>
         if (names.isEmpty) transform(base, pol, semp, canDistribForall)
         else if (pol.base === S(true)) transform(base, pol, semp, canDistribForall).withoutPos(names)
@@ -1067,6 +1041,11 @@ trait TypeSimplifier { self: Typer =>
         ))(p =>
           if (p) transform(ub, pol, parents) else transform(lb, pol, parents)
         )
+      case WildcardArg(lb, ub) =>
+        WildcardArg(
+          transform(lb, pol.contravar, parents, canDistribForall),
+          transform(ub, pol.covar, parents, canDistribForall)
+          )(noProv)
       case PolymorphicType(plvl, bod) =>
         val res = transform(bod, pol.enter(plvl), parents, canDistribForall = S(plvl))
         canDistribForall match {
@@ -1216,6 +1195,8 @@ trait TypeSimplifier { self: Typer =>
                         case (SkolemTag(id1), SkolemTag(id2)) => id1 === id2 || nope
                         case (ExtrType(pol1), ExtrType(pol2)) => pol1 === pol2 || nope
                         case (TypeBounds(lb1, ub1), TypeBounds(lb2, ub2)) =>
+                          unify(lb1, lb2) && unify(ub1, ub2)
+                        case (WildcardArg(lb1, ub1), WildcardArg(lb2, ub2)) =>
                           unify(lb1, lb2) && unify(ub1, ub2)
                         case (ComposedType(pol1, lhs1, rhs1), ComposedType(pol2, lhs2, rhs2)) =>
                           (pol1 === pol2 || nope) && unify(lhs1, lhs2) && unify(rhs1, rhs2)

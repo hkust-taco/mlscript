@@ -1,0 +1,530 @@
+:NewDefs
+
+class Foo[type T](val x: T)
+//│ class Foo[T](x: T)
+
+fun foo(f: Foo[?]) = f
+//│ fun foo: (f: Foo[?]) -> Foo[?]
+
+foo(Foo(0))
+//│ Foo[?]
+//│ res
+//│     = Foo {}
+
+fun foo(f: Foo[?]) = 0
+//│ fun foo: (f: Foo[?]) -> 0
+
+let f: Foo[?] = Foo(1)
+//│ let f: Foo[?]
+//│ f
+//│   = Foo {}
+
+foo(f)
+foo(Foo(1))
+//│ 0
+//│ res
+//│     = 0
+//│ res
+//│     = 0
+
+let y: Foo[Foo[Int]]
+//│ let y: Foo[Foo[Int]]
+//│ y
+//│   = <missing implementation>
+
+// * Foo is invariant so this doesn't work
+:e
+let f: Foo[Foo[?]] = y
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.37: 	let f: Foo[Foo[?]] = y
+//│ ║        	                     ^
+//│ ╙── expression of type `Int` does not match type `nothing`
+//│ let f: Foo[Foo[?]]
+//│ f
+//│   = <no result>
+//│     y is not implemented
+
+
+fun foo(f: Foo[?]) = f.x
+//│ fun foo: (f: Foo[?]) -> anything
+
+foo(Foo(Foo(1)))
+foo(Foo(1))
+//│ anything
+//│ res
+//│     = Foo {}
+//│ res
+//│     = 1
+
+:e // * To allow this, we'd need to either introduce more levels even outside pattern matching branches
+   // * or support proper path-dependent types internally.
+fun foo(f: Foo[?]) = f.x as f.T
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.61: 	fun foo(f: Foo[?]) = f.x as f.T
+//│ ║        	                     ^^^
+//│ ╟── field selection of type `anything` does not match type `nothing`
+//│ ╟── Note: constraint arises from type selection:
+//│ ║  l.61: 	fun foo(f: Foo[?]) = f.x as f.T
+//│ ╙──      	                             ^^
+//│ fun foo: (f: Foo[?]) -> anything
+
+fun foo(f: Foo[?]) = if f is Foo(x) then x as f.T
+//│ fun foo: (f: Foo[?]) -> ??T
+
+foo(Foo(1))
+//│ ??T
+//│ res
+//│     = 1
+
+class Foo[out T](val x: T)
+//│ class Foo[T](x: T)
+
+let f: Foo[?] = Foo(1)
+//│ let f: Foo[?]
+//│ f
+//│   = Foo {}
+
+let f: Foo[Foo[?]] = Foo(Foo(1))
+//│ let f: Foo[Foo[?]]
+//│ f
+//│   = Foo {}
+
+class Foo[in T](val x: T)
+//│ class Foo[T](x: T)
+
+let f: Foo[?] = Foo(1)
+//│ let f: Foo[?]
+//│ f
+//│   = Foo {}
+
+let y: Foo[Foo[Int]]
+//│ let y: Foo[Foo[Int]]
+//│ y
+//│   = <missing implementation>
+
+// * Correct error: Foo[Int] <: Foo[?] so Foo[Foo[?]] <: Foo[Foo[Int]] and not the other way around
+:e
+let f: Foo[Foo[?]] = y
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.107: 	let f: Foo[Foo[?]] = y
+//│ ║         	                     ^
+//│ ╙── expression of type `anything` is not an instance of type `Int`
+//│ let f: Foo[Foo[?]]
+//│ f
+//│   = <no result>
+//│     y is not implemented
+
+(x: Foo[Foo[?]]) => x as Foo[Foo[Int]]
+//│ (x: Foo[Foo[?]]) -> Foo[Foo[Int]]
+//│ res
+//│     = [Function: res]
+
+abstract class Bar[type A]: MkBarInt | MkBarBool | MkBarFoo[?]
+class MkBarInt() extends Bar[Int]
+class MkBarBool() extends Bar[Bool]
+class MkBarFoo[A](ev: A) extends Bar[Foo[A]]
+//│ abstract class Bar[A]: MkBarBool | MkBarFoo[?] | MkBarInt
+//│ class MkBarInt() extends Bar
+//│ class MkBarBool() extends Bar
+//│ class MkBarFoo[A](ev: A) extends Bar
+
+fun bar(b: Bar[?]) = if b is
+    MkBarInt then 1
+    MkBarBool then 2
+    MkBarFoo then 3
+//│ fun bar: (b: Bar[?]) -> (1 | 2 | 3)
+
+bar(MkBarInt())
+bar(MkBarBool() as Bar[?])
+bar(MkBarFoo("hello"))
+bar(MkBarFoo(Foo(1)))
+//│ 1 | 2 | 3
+//│ res
+//│     = 1
+//│ res
+//│     = 2
+//│ res
+//│     = 3
+//│ res
+//│     = 3
+
+let x: Bar[?] = MkBarInt()
+//│ let x: Bar[?]
+//│ x
+//│   = MkBarInt {}
+
+:e
+x as Bar[Bool]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.157: 	x as Bar[Bool]
+//│ ║         	^
+//│ ╟── type `Bool` does not match type `nothing`
+//│ ║  l.157: 	x as Bar[Bool]
+//│ ╙──       	         ^^^^
+//│ Bar[Bool]
+//│ res
+//│     = MkBarInt {}
+
+MkBarFoo(Foo(1)) as Bar[Foo[Foo[Int]]]
+//│ Bar[Foo[Foo[Int]]]
+//│ res
+//│     = MkBarFoo {}
+
+MkBarFoo(Foo(1)) as Bar[?]
+//│ Bar[?]
+//│ res
+//│     = MkBarFoo {}
+
+MkBarFoo(Foo(1)) as Bar[Foo[?]]
+//│ Bar[Foo[?]]
+//│ res
+//│     = MkBarFoo {}
+
+let x: Bar[Foo[?]] = MkBarFoo(1)
+//│ let x: Bar[Foo[?]]
+//│ x
+//│   = MkBarFoo {}
+
+let x: Bar[Foo[?]]
+//│ let x: Bar[Foo[?]]
+//│ x
+//│   = <missing implementation>
+
+:e
+x as Bar[Foo[Int]]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.194: 	x as Bar[Foo[Int]]
+//│ ║         	^
+//│ ╙── expression of type `Int` does not match type `nothing`
+//│ Bar[Foo[Int]]
+//│ res
+//│     = <no result>
+//│       x is not implemented
+
+abstract class C[type A]: MkC
+class MkC() extends C[Int]
+//│ abstract class C[A]: MkC
+//│ class MkC() extends C
+
+fun fc(c: C[?]) = if c is MkC then 1 as c.A
+//│ fun fc: (c: C[?]) -> Int
+
+fc(MkC())
+//│ Int
+//│ res
+//│     = 1
+
+abstract class Baz[type A]: BI | BB
+class BI() extends Baz[Int]
+class BB() extends Baz[Bool]
+//│ abstract class Baz[A]: BB | BI
+//│ class BI() extends Baz
+//│ class BB() extends Baz
+
+fun baz[T](b: Baz[T]): T = if b is
+    BI then 1 as b.A
+    BB then true as b.A
+//│ fun baz: forall 'T. (b: Baz['T]) -> 'T
+
+fun baz(b: Baz['a]): b.A = if b is
+    BI then 1 as b.A
+    BB then true as b.A
+//│ fun baz: forall 'a. (b: Baz['a]) -> ('a & (Int | false | true))
+
+fun baz(b: Baz[?]) = if b is
+    BI then 1 as b.A
+    BB then true as b.A
+//│ fun baz: (b: Baz[?]) -> (Int | false | true)
+
+// * Note: this didn't work before we pushed ascriptions in,
+// * as we don't yet have proper path-dependent type forms like b.A, which is basically ? here.
+fun baz(b: Baz[?]): b.A = if b is
+    BI then 1 as b.A
+    BB then true as b.A
+//│ fun baz: (b: Baz[?]) -> (Int | false | true)
+
+class Foo[T](val x: T)
+//│ class Foo[T](x: T)
+
+fun e: Foo[?]
+fun f: Foo[?] -> Foo[?]
+//│ fun e: Foo[?]
+//│ fun f: Foo[?] -> Foo[?]
+
+f(e)
+//│ Foo[?]
+//│ res
+//│     = <no result>
+//│       f is not implemented
+
+fun e: Foo[Int]
+fun f: Foo[?] -> Foo[?]
+//│ fun e: Foo[Int]
+//│ fun f: Foo[?] -> Foo[?]
+
+f(e)
+//│ Foo[?]
+//│ res
+//│     = <no result>
+//│       f is not implemented
+
+fun e: Foo[?]
+fun f: Foo[Int] -> Foo[?]
+//│ fun e: Foo[?]
+//│ fun f: Foo[Int] -> Foo[?]
+
+:e
+e as Foo[Int]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.277: 	e as Foo[Int]
+//│ ║         	^
+//│ ╙── expression of type `anything` is not an instance of type `Int`
+//│ Foo[Int]
+//│ res
+//│     = <no result>
+//│       e is not implemented
+
+:e
+f(e)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.288: 	f(e)
+//│ ║         	^^^^
+//│ ╙── expression of type `anything` is not an instance of type `Int`
+//│ Foo[?] | error
+//│ res
+//│     = <no result>
+//│       f is not implemented
+
+// TODO
+fun f(x: ?) = x
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+
+:e
+f(1)
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.299: 	fun f(x: ?) = x
+//│ ╙──       	         ^
+//│ error
+//│ res
+//│     = <no result>
+//│       f is not implemented
+
+:e
+f(f)
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.299: 	fun f(x: ?) = x
+//│ ╙──       	         ^
+//│ error
+//│ res
+//│     = <no result>
+//│       f is not implemented
+
+// FIXME crash
+:e
+fun f(x): ? = x
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.324: 	fun f(x): ? = x
+//│ ╙──       	          ^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+
+// FIXME crash
+:e
+fun f(x: Int): ? = x
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.332: 	fun f(x: Int): ? = x
+//│ ╙──       	               ^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+
+// TODO
+fun f(x: ?): ? = x
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+
+:e
+f(1)
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.339: 	fun f(x: ?): ? = x
+//│ ╙──       	         ^
+//│ error
+//│ res
+//│     = <no result>
+//│       f is not implemented
+
+// FIXME crash
+:e
+let x: ? = 1
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.354: 	let x: ? = 1
+//│ ╙──       	       ^
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.354: 	let x: ? = 1
+//│ ╙──       	       ^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+
+// FIXME crash
+:e
+1 as ?
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.365: 	1 as ?
+//│ ╙──       	     ^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+
+// TODO
+fun f: (? -> ?) -> ?
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+
+// TODO
+fun f: ? -> ?
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+
+// TODO
+fun f: ? -> Int
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+
+// TODO
+fun f: Int -> ?
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+
+// TODO
+let x: ? -> ?
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+
+:e
+let x = ?
+//│ ╔══[ERROR] Cannot use ? as expression
+//│ ║  l.392: 	let x = ?
+//│ ╙──       	        ^
+//│ let x: error
+//│ Code generation encountered an error:
+//│   unresolved symbol ?
+
+:e
+if ? is 1 then 1
+//│ ╔══[ERROR] Cannot use ? as expression
+//│ ║  l.401: 	if ? is 1 then 1
+//│ ╙──       	   ^
+//│ 1
+//│ Code generation encountered an error:
+//│   unresolved symbol ?
+
+:e
+if x is ? then 1
+//│ ╔══[ERROR] Cannot match on wildcard ?
+//│ ║  l.410: 	if x is ? then 1
+//│ ╙──       	        ^
+//│ error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+:e
+let x: ?[?]
+//│ ╔══[ERROR] Wrong number of type arguments – expected 0, found 1
+//│ ║  l.419: 	let x: ?[?]
+//│ ╙──       	       ^^^^
+//│ let x: ?
+//│ x
+//│   = <missing implementation>
+
+:e
+class Bar extends ?
+//│ ╔══[ERROR] Could not find definition `?`
+//│ ║  l.428: 	class Bar extends ?
+//│ ╙──       	                  ^
+//│ class Bar {
+//│   constructor()
+//│ }
+//│ Code generation encountered an error:
+//│   unresolved parent ?.
+
+// FIXME
+:e
+abstract class Bar: ?
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.440: 	abstract class Bar: ?
+//│ ╙──       	                    ^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+
+:e
+class ?
+//│ ╔══[ERROR] Type name '?' is reserved
+//│ ║  l.447: 	class ?
+//│ ╙──       	^^^^^^^
+//│ class ? {
+//│   constructor()
+//│ }
+//│ Syntax error:
+//│   Invalid or unexpected token
+
+:e
+type ? = Int
+//│ ╔══[ERROR] Type name '?' is reserved
+//│ ║  l.458: 	type ? = Int
+//│ ╙──       	^^^^^^
+//│ type ? = Int
+
+// FIXME
+:e
+type W = ?
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+
+// TODO
+fun f(x): W = x
+//│ fun f: W -> W
+
+:e
+f(1)
+//│ ╔══[ERROR] Wildcards can only be use in type arguments
+//│ ║  l.466: 	type W = ?
+//│ ╙──       	         ^
+//│ error | W
+//│ res
+//│     = 1
+
+// TODO should we allow this?
+fun (?) wc: (Int, Int) -> Bool
+fun (?) wc(x, y) = x == y
+//│ fun (?) wc: (Num, Num) -> Bool
+//│ fun (?) wc: (Int, Int) -> Bool
+
+// TODO
+1 ? 1
+//│ ╔══[ERROR] Cannot use ? as expression
+//│ ║  l.489: 	1 ? 1
+//│ ╙──       	  ^
+//│ error
+//│ res
+//│     = true
+
+
+class Foo[T](val a: T)
+let f: Foo[?]
+//│ class Foo[T](a: T)
+//│ let f: Foo[?]
+//│ f
+//│   = <missing implementation>
+
+:e
+f.a : Int
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.506: 	f.a : Int
+//│ ║         	^^^
+//│ ╟── field selection of type `anything` is not an instance of type `Int`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.506: 	f.a : Int
+//│ ╙──       	      ^^^
+//│ Int
+//│ res
+//│     = <no result>
+//│       f is not implemented
+
+// * FIXME strange error!
+:e
+42 : f.a
+//│ ╔══[ERROR] Type mismatch in type selection:
+//│ ║  l.521: 	42 : f.a
+//│ ║         	      ^^
+//│ ╙── type `anything` cannot be reassigned
+//│ anything
+//│ res
+//│     = 42
+
+

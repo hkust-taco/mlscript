@@ -25,7 +25,7 @@ fun f(a, b) = if a is Some(av)
 //│ |#fun| |f|(|a|,| |b|)| |#=| |#if| |a| |is| |Some|(|av|)|→|and| |b| |is| |Some|(|bv|)|↵|#then| |av| |+| |bv|←|
 //│ AST: TypingUnit(List(NuFunDef(None,Var(f),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(a))), (None,Fld(_,Var(b))))),If(IfOpApp(Var(a),Var(is),IfOpsApp(App(Var(Some),Tup(List((None,Fld(_,Var(av)))))),List((Var(and),IfThen(App(Var(is),Tup(List((None,Fld(_,Var(b))), (None,Fld(_,App(Var(Some),Tup(List((None,Fld(_,Var(bv))))))))))),App(Var(+),Tup(List((None,Fld(_,Var(av))), (None,Fld(_,Var(bv))))))))))),None))))))
 //│ Parsed: fun f = (a, b,) => if a is Some(av,) ‹· and (is(b, Some(bv,),)) then +(av, bv,)›;
-//│ fun f: (Some[Int], Some[Int]) -> Int
+//│ fun f: (Some[Int | ~??T], Some[Int | ~??T0]) -> Int
 
 // TODO
 :p

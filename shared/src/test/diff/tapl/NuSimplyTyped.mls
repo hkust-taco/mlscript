@@ -67,8 +67,16 @@ fun find(t, k) =
       sgt(k, k') then find(r, k)
       _ then Some(v)
     Empty then None
-//│ fun insert: forall 'A. (Empty | Node['A], Str, 'A) -> Node['A]
-//│ fun find: forall 'A0. (Empty | Node['A0], Str) -> (None | Some['A0])
+//│ fun insert: forall 'A 'A0 'A1 'A2 'A3. (Empty | Node[in 'A0 out 'A], Str, 'A3 & 'A1 & ('A0 | ??A)) -> Node[in 'A3 & 'A1 out 'A2]
+//│ fun find: forall 'A4. (Empty | Node[out 'A4], Str) -> (None | Some[??A0 & 'A4])
+//│ where
+//│   'A0 <: 'A
+//│   'A <: 'A3 & ('A0 & ('A1 | ~??A1) | ??A & ('A1 | ~??A1)) | ~??A1
+//│   'A3 :> 'A2 | ??A1 & 'A
+//│       <: 'A1 & ('A0 | ??A)
+//│   'A2 :> 'A3 | ??A1 & 'A | 'A1
+//│   'A1 :> 'A2 | ??A1 & 'A
+//│       <: 'A3 & ('A0 | ??A)
 
 fun showType(ty) =
   if ty is
@@ -123,6 +131,7 @@ showTerm(App(Abs(Var("x"), _t("int"), Var("y")), Var("z")))
 //│ res
 //│     = '((&x: int => z) z)'
 
+// :e // FIXME recursion depth excess
 // Removing the return type annotation causes stack overflow.
 fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, Str] =
   if t is
@@ -165,3 +174,4 @@ showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("Str")))
 //│     = 'Type error: expect the argument to be of type `int` but found `float`'
 //│ res
 //│     = 'Type error: cannot apply primitive type `Str`'
+

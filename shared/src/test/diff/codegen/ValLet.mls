@@ -166,7 +166,7 @@ class B(x: Int, val y: Int)
 
 :e
 B(0, 0).x
-//│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
+//│ ╔══[ERROR] Parameter 'x' cannot be accessed as a field
 //│ ║  l.168: 	B(0, 0).x
 //│ ║         	       ^^
 //│ ╟── Either make the parameter a `val` or access it through destructuring

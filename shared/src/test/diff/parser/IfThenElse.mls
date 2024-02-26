@@ -440,8 +440,8 @@ let Some(x) = v
 //│ Parsed: {let Some = (x,) => v}
 
 v as Some(x)
-//│ |v| |as| |Some|(|x|)|
-//│ Parsed: {as(v,)(Some(x,),)}
+//│ |v| |#as| |Some|(|x|)|
+//│ Parsed: {v : Some[x]}
 
 
 

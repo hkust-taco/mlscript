@@ -382,7 +382,7 @@ foo(if true then 1 else 2, 3)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.381: 	foo(if true then 1 else 2, 3)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── argument of type `[1 | ?a]` does not match type `[?b, ?c]`
+//│ ╟── argument of type `[?a | ?b]` does not match type `[?c, ?d]`
 //│ ║  l.381: 	foo(if true then 1 else 2, 3)
 //│ ║         	   ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:

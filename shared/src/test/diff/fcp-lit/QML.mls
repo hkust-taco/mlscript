@@ -510,7 +510,7 @@ def step = fun xx -> xx (fun ((((xinit, xsub), xupdate), xfold),) ->
 
 let mkArray n = if n == 0 then base else step base in
   mkArray 1 (fun ((((xinit, xsub), xupdate), xfold),) -> xinit 2)
-//│ res: ??r | ??r0
+//│ res: ??r
 //│    = [ 2, 2 ]
 
 def mkArray : int -> ExSig

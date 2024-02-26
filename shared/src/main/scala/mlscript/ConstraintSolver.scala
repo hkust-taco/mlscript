@@ -29,12 +29,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     ErrorReport(
       msg"${info.decl.kind.str.capitalize} `${info.decl.name}` does not contain member `${fld.name}`" -> fld.toLoc :: Nil, newDefs)
   
-  def lookupMember(clsNme: Str, rfnt: Var => Opt[FieldType], fld: Var)
-        (implicit ctx: Ctx, raise: Raise)
+  def lookupMember(clsNme: Str, rfnt: Var => Opt[FieldType], fld: Var)(implicit ctx: Ctx, raise: Raise)
         : Either[Diagnostic, NuMember]
-        = {
-    val info = ctx.tyDefs2.getOrElse(clsNme, ???/*TODO*/)
-    
+        = ctx.tyDefs2.get(clsNme).toRight(ErrorReport(msg"Cannot find class ${clsNme}" -> N :: Nil, newDefs)) flatMap { info =>
     if (info.isComputing) {
       
       ??? // TODO support?
@@ -77,7 +74,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         
         case S(fty) =>
           if (info.privateParams.contains(fld) && !allowPrivateAccess)
-            err(msg"Parameter '${fld.name}' cannot tbe accessed as a field" -> fld.toLoc :: Nil)
+            err(msg"Parameter '${fld.name}' cannot be accessed as a field" -> fld.toLoc :: Nil)
           S(fty)
         
         case N if info.isComputing =>
@@ -100,12 +97,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 )
               case S(p: NuParam) =>
                 if (!allowPrivateAccess && !p.isPublic)
-                  err(msg"Parameter '${p.nme.name}' cannot tbe accessed as a field" -> fld.toLoc ::
+                  err(msg"Parameter '${p.nme.name}' cannot be accessed as a field" -> fld.toLoc ::
                     msg"Either make the parameter a `val` or access it through destructuring" -> p.nme.toLoc ::
                     Nil)
                 S(p.ty)
               case S(m) =>
-                S(err(msg"Access to ${m.kind.str} member not yet supported", fld.toLoc).toUpper(noProv))
+                S(err(msg"Access to ${m.kind.str} member ${fld.name} not yet supported", fld.toLoc).toUpper(noProv))
               case N => N
             }
           
@@ -127,17 +124,20 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         implicit val shadows: Shadows = Shadows.empty
         
         info.tparams.foreach { case (tn, _tv, vi) =>
-          val targ = rfnt(Var(info.decl.name + "#" + tn.name)) match {
+          val targ = rfnt(tparamField(TypeName(info.decl.name), tn, vi.visible)) match {
             // * TODO to avoid infinite recursion due to ever-expanding type args,
             // *  we should set the shadows of the targ to be the same as that of the parameter it replaces... 
-            case S(fty) if vi === S(VarianceInfo.co) => fty.ub
-            case S(fty) if vi === S(VarianceInfo.contra) => fty.lb.getOrElse(BotType)
+            case S(fty) if vi.varinfo === S(VarianceInfo.co) => 
+              println(s"Lookup: Found $fty")
+              fty.ub
+            case S(fty) if vi.varinfo === S(VarianceInfo.contra) => 
+              println(s"Lookup: Found $fty")
+              fty.lb.getOrElse(BotType)
             case S(fty) =>
-              TypeBounds.mk(
-                fty.lb.getOrElse(BotType),
-                fty.ub,
-              )
+              println(s"Lookup: Found $fty")
+              TypeBounds.mk(fty.lb.getOrElse(BotType), fty.ub)
             case N =>
+              println(s"Lookup: field not found, creating new bounds")
               TypeBounds(
                 // _tv.lowerBounds.foldLeft(BotType: ST)(_ | _),
                 // _tv.upperBounds.foldLeft(TopType: ST)(_ & _),
@@ -484,6 +484,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case (ls, (w @ Without(_, _)) :: rs) =>
           lastWords(s"unexpected Without in negative position not at the top level: ${w}")
         */
+
+        // TODO wildcards
+        case (WildcardArg(lb, ub) :: ls, _) => ???
+        case (_, WildcardArg(lb, ub) :: rs) => ???
         
         case ((l: BaseTypeOrTag) :: ls, rs) => annoying(ls, (done_ls & (l, pol = true))(ctx, etf = true) getOrElse
           (return println(s"OK  $done_ls & $l  =:=  ${BotType}")), rs, done_rs)
@@ -665,7 +669,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           : SimpleType =
     {
       val originalVars = ty.getVars
+      
+      // * FIXME ctx.extrCache and ctx.extrCache2 should be indexed by the level of the extrusion!
+      // val res = extrude(ty, lowerLvl, pol, upperLvl)(ctx, ctx.extrCache, ctx.extrCache2, reason)
       val res = extrude(ty, lowerLvl, pol, upperLvl)(ctx, MutMap.empty, MutSortMap.empty, reason)
+      
       val newVars = res.getVars -- originalVars
       if (newVars.nonEmpty) trace(s"RECONSTRAINING TVs") {
         newVars.foreach {
@@ -821,7 +829,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(lhs, rhs, true)
           case (lhs, tv @ AssignedVariable(rhs)) =>
             rec(lhs, rhs, true)
-            
+          
+          // FIXME wrong place for this; should be reported in typeType
+          // standalone wildcards
+          case (_, w: WildcardArg) => 
+            err(msg"Wildcards can only be use in type arguments", w.prov.loco); ()
+          case (w: WildcardArg, _) => 
+            err(msg"Wildcards can only be use in type arguments", w.prov.loco); ()  
             
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
             println(s"NEW $lhs UB (${rhs.level})")
@@ -949,11 +963,22 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   */
                   ctx.tyDefs2.get(tr1.defn.name) match {
                     case S(lti) =>
-                      lti.tparams.map(_._2).lazyZip(tr1.targs).lazyZip(tr2.targs).foreach {
-                        (tv, targ1, targ2) =>
-                          val v = lti.varianceOf(tv)
-                          if (!v.isContravariant) rec(targ1, targ2, false)
-                          if (!v.isCovariant) rec(targ2, targ1, false)
+                      lti.tparams.map(_._2).lazyZip(tr1.targs).lazyZip(tr2.targs).foreach { case (tv, ta1, ta2) =>
+                        val v = lti.varianceOf(tv)
+                        (ta1, ta2) match {
+                          case (WildcardArg(l0, r0), WildcardArg(l1, r1)) =>
+                            if (!v.isContravariant) rec(l1, l0, false)
+                            if (!v.isCovariant) rec(r0, r1, false)
+                          case (WildcardArg(l0, r0), rhs) =>
+                            if (!v.isContravariant) rec(rhs, l0, false)
+                            if (!v.isCovariant) rec(r0, rhs, false)
+                          case (lhs, WildcardArg(l1, r1)) =>
+                            if (!v.isContravariant) rec(l1, lhs, false)
+                            if (!v.isCovariant) rec(lhs, r1, false)
+                          case (targ1, targ2) =>
+                            if (!v.isContravariant) rec(targ1, targ2, false)
+                            if (!v.isCovariant) rec(targ2, targ1, false)
+                        }
                       }
                     case N =>
                       ??? // TODO
@@ -1415,6 +1440,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }, extrude(bod, lowerLvl, pol, upperLvl))
       case o @ Overload(alts) =>
         o.mapAlts(extrude(_, lowerLvl, !pol, upperLvl))(extrude(_, lowerLvl, pol, upperLvl))
+      case WildcardArg(_, _) => ???
     }
     // }(r => s"=> $r"))
   
@@ -1503,11 +1529,33 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       
       case tv @ AssignedVariable(ty) =>
         freshened.getOrElse(tv, {
-          val nv = freshVar(tv.prov, S(tv), tv.nameHint)(if (tv.level > below) tv.level else lvl)
+          val nv = freshVar(tv.prov, S(tv), tv.nameHint)(if (tv.level > below) tv.level else {
+            assert(lvl <= below, "this condition should be false for the result to be correct")
+            lvl
+          })
           freshened += tv -> nv
           val ty2 = freshen(ty)
-          nv.assignedTo = S(ty2)
-          nv
+          val l = ty2.level
+          if (l <= nv.level) {
+            // * Normal case.
+            nv.assignedTo = S(ty2)
+            nv
+          } else {
+            // * Ouch... Freak case.
+            // * Because tv could be recursive and refer to itself,
+            // * in the general case we must do the freshening from scratch.
+            // * This is obviously horrible and could lead to pathological complexity;
+            // * but I believe it only occurs in freak cases related to `freshen` being (ab)used
+            // * to instantiate some skolems to type arguments whose levels happen to be bigger than ctx.lvl.
+            // * As of this commit, it seems this case is only triggered by shared/src/test/diff/nu/Eval.mls.
+            // * Eventually we'll want to fix this by making ctx.lvl agree
+            // * with whatever is substituted by freshening.
+            val nv = freshVar(tv.prov, S(tv), tv.nameHint)(l)
+            freshened += tv -> nv
+            val ty2 = freshen(ty)
+            nv.assignedTo = S(ty2)
+            nv
+          }
         })
       
       // * Note: I forgot why I though this was unsound...
@@ -1604,6 +1652,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         ConstrainedType(cs2, freshen(bod))
       case o @ Overload(alts) =>
         o.mapAlts(freshen)(freshen)
+      case t @ WildcardArg(_, _) => ???
     }}
     // (r => s"=> $r"))
     

@@ -54,7 +54,7 @@ class Foo(x: Int)
 
 :e
 Foo(1).x
-//│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
+//│ ╔══[ERROR] Parameter 'x' cannot be accessed as a field
 //│ ║  l.56: 	Foo(1).x
 //│ ║        	      ^^
 //│ ╟── Either make the parameter a `val` or access it through destructuring
@@ -108,7 +108,7 @@ class Bar(x: Int) extends Foo(x)
 
 :e
 Bar(11).x
-//│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
+//│ ╔══[ERROR] Parameter 'x' cannot be accessed as a field
 //│ ║  l.110: 	Bar(11).x
 //│ ║         	       ^^
 //│ ╟── Either make the parameter a `val` or access it through destructuring
@@ -180,7 +180,7 @@ module B extends A(42)
 
 :e
 B.x
-//│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
+//│ ╔══[ERROR] Parameter 'x' cannot be accessed as a field
 //│ ║  l.182: 	B.x
 //│ ║         	 ^^
 //│ ╟── Either make the parameter a `val` or access it through destructuring

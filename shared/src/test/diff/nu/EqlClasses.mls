@@ -29,7 +29,7 @@ class Cls2(x: Int)
 
 :e // TODO better error – or actually only support data classes
 Cls2(0) === Cls2(1)
-//│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
+//│ ╔══[ERROR] Parameter 'x' cannot be accessed as a field
 //│ ║  l.27: 	class Cls2(x: Int)
 //│ ║        	           ^
 //│ ╟── Either make the parameter a `val` or access it through destructuring

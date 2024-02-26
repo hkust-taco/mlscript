@@ -13,7 +13,7 @@ fun f: (Str | [Str, Int])
 
 :e
 fun f: Str | (Str, Int)
-//│ ╔══[ERROR] type identifier not found: ,
+//│ ╔══[ERROR] cannot lift variable , to type
 //│ ║  l.15: 	fun f: Str | (Str, Int)
 //│ ╙──      	             ^^^^^^^^^^
 //│ fun f: Str | error
@@ -24,7 +24,7 @@ fun f: Str | ([Str, Int])
 
 :e
 fun f: Str | ((Str, Int))
-//│ ╔══[ERROR] type identifier not found: ,
+//│ ╔══[ERROR] cannot lift variable , to type
 //│ ║  l.26: 	fun f: Str | ((Str, Int))
 //│ ╙──      	             ^^^^^^^^^^^^
 //│ fun f: Str | error
@@ -95,7 +95,7 @@ r(error, error)
 
 // * Note: the correct version:
 let r = if true then id else ([x, y]) => [y, x]
-//│ let r: forall 'a 'b 'c. (['a, 'b] & 'c) -> (['b, 'a] | 'c)
+//│ let r: forall 'a 'b 'c. (['b, 'c] & 'a) -> (['c, 'b] | 'a)
 //│ r
 //│   = [Function: id]
 
@@ -106,7 +106,7 @@ r of [0, 1]
 
 // Also currently parses the same:
 let r = if true then id else [x, y] => [y, x]
-//│ let r: forall 'a 'b 'c. (['b, 'c] & 'a) -> (['c, 'b] | 'a)
+//│ let r: forall 'a 'b 'c. (['a, 'b] & 'c) -> (['b, 'a] | 'c)
 //│ r
 //│   = [Function: id]
 

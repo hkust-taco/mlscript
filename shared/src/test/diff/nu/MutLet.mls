@@ -57,7 +57,7 @@ funny(1)
 if oops is
   None then 0
   Some(v) then v
-//│ 0 | 1
+//│ 0 | 1 & ??A
 //│ res
 //│     = 1
 
@@ -92,7 +92,7 @@ funny(123)
 if funny("hi") is
   Some(v) then v
   else 0
-//│ "hi" | 0 | 123
+//│ 0 | ??A & ("hi" | 123)
 //│ res
 //│     = 123
 
@@ -175,14 +175,14 @@ fun repmin(t) =
     Leaf(n) then set min = n
   go(t)
   min
-//│ fun repmin: forall 'min. Leaf['min] -> (123 | 'min)
+//│ fun repmin: forall 'A. Leaf['A] -> (123 | ??A & 'A)
 
 fun repmin =
   mut let min = 123
   let go(t) = if t is
     Leaf(n) then set min = n
   [min, go]
-//│ fun repmin: forall 'min. [123 | 'min, Leaf['min] -> ()]
+//│ fun repmin: forall 'A. [123 | ??A & 'A, Leaf['A] -> ()]
 
 
 :e

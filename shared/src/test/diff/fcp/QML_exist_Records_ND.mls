@@ -482,7 +482,7 @@ snb = mkMonoArray 3
 
 // * Here we are trying to leak the internally-quantified representation, resulting in extruded types being returned
 snb (fun arr -> arr.init true)
-//│ res: ??rep | ??rep0
+//│ res: ??rep
 //│    = [ [ [ true, 'hi' ], 'hi' ], 'hi' ]
 
 
@@ -583,19 +583,19 @@ def s arr (k: ArraysImplConsumer['a, 'rep]) = arr (fun impl -> k (stepImpl_ty im
 // * We can see it shouldn't be simplified to nothing:
 :ns
 s
-//│ res: forall 'b 'a 'a0 'rep 'c. 'c -> (forall 'd 'a1 'rep0. ArraysImplConsumer['a1, 'rep0] -> 'd)
+//│ res: forall 'a 'b 'c 'rep 'a0. 'b -> (forall 'd 'a1 'rep0. ArraysImplConsumer['a1, 'rep0] -> 'd)
 //│   where
-//│     'd :> 'b
+//│     'd :> 'c
 //│     'rep0 <: 'rep
-//│     'a1 :> 'a0
-//│         <: 'a
-//│     'c <: (forall 'e 'a2 'f 'r. 'e -> 'f) -> 'b
+//│     'a1 :> 'a
+//│         <: 'a0
+//│     'b <: (forall 'e 'a2 'f 'r. 'e -> 'f) -> 'c
 //│     'f :> 'rep
 //│     'e <: ArraysImpl['a2, 'r]
-//│     'a2 :> 'a
-//│         <: 'a0
-//│     'a <: 'a0
+//│     'a2 :> 'a0
+//│         <: 'a
 //│     'a0 <: 'a
+//│     'a <: 'a0
 //│    = [Function: s]
 
 // * BTW: this doesn't work (same reason as before: k needs an annotation)
@@ -650,7 +650,7 @@ snb = mkMonoArray 3
 
 // * Here we are trying to leak the internally-quantified representation, resulting in extruded types being returned
 snb (fun arr -> arr.init true)
-//│ res: ??rep | ??rep0
+//│ res: ??rep
 //│    = [ [ [ true, 'hi' ], 'hi' ], 'hi' ]
 
 

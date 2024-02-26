@@ -241,7 +241,14 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       case (LhsTop, _) => false
       case (LhsRefined(b1, ts1, rt1, trs1), LhsRefined(b2, ts2, rt2, trs2)) =>
         b2.forall(b2 => b1.exists(_ <:< b2)) &&
-          ts2.forall(ts1) && rt1 <:< rt2 &&
+          ts2.forall {
+            case sk: SkolemTag => ts1(sk)
+            case tt: TraitTag => ts1(tt)
+            case Extruded(pol, sk) => !pol || ts1.exists { // find ? <: bot
+              case Extruded(true, _) => true
+              case _ => false
+            }
+          } && rt1 <:< rt2 &&
           trs2.valuesIterator.forall(tr2 => trs1.valuesIterator.exists(_ <:< tr2))
     }
     def isTop: Bool = isInstanceOf[LhsTop.type]
@@ -762,6 +769,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           of(polymLvl, cons, LhsRefined(tr.mkClsTag, ssEmp, RecordType.empty, SortedMap(defn -> tr)))
         } else mk(polymLvl, cons, tr.expandOrCrash, pol)
       case TypeBounds(lb, ub) => mk(polymLvl, cons, if (pol) ub else lb, pol)
+      case w @ WildcardArg(lb, ub) => die // Not supposed to normalize WildcardArg
       case PolymorphicType(lvl, bod) => mk(lvl, cons, bod, pol)
       case ConstrainedType(cs, bod) => mk(polymLvl, cs ::: cons, bod, pol)
     }
@@ -806,6 +814,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
             CNF(Disjunct(RhsBases(Nil, N, SortedMap.single(defn -> tr)), ssEmp, LhsTop, ssEmp) :: Nil)
           } else mk(polymLvl, cons, tr.expandOrCrash, pol)
         case TypeBounds(lb, ub) => mk(polymLvl, cons, if (pol) ub else lb, pol)
+        case WildcardArg(lb, ub) => die // Not supposed to normalize WildcardArg
         case PolymorphicType(lvl, bod) => mk(lvl, cons, bod, pol)
         case ConstrainedType(cs, bod) => mk(lvl, cs ::: cons, bod, pol)
       }

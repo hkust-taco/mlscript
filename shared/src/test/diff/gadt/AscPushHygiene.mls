@@ -1,0 +1,17 @@
+:NewDefs
+
+
+// * Example lack of hygiene from pushing ascriptions in
+
+class Foo[type A](a: A, n: Int)
+//│ class Foo[A](a: A, n: Int)
+
+:e // FIXME
+fun test(x: Foo[Int]): x.A = if x is
+  Foo(a, x) then a
+//│ ╔══[ERROR] Type `Int` does not contain member `A`
+//│ ║  l.10: 	fun test(x: Foo[Int]): x.A = if x is
+//│ ╙──      	                        ^^
+//│ fun test: (x: Foo[Int]) -> error
+
+

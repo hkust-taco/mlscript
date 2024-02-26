@@ -17,9 +17,9 @@ let circles = go(2)
 
 fun contains(a) =
   if a is Union then contains(a.a)
-//│ fun contains: forall 'a. 'a -> nothing
+//│ fun contains: forall 'Region. Union['Region] -> nothing
 //│   where
-//│     'a <: Union['a]
+//│     'Region <: Union['Region] | ~??Region
 
 contains(circles)
 //│ nothing
@@ -30,16 +30,16 @@ mixin Contains {
     if a is Union then this.contains(a.a)
 }
 //│ mixin Contains() {
-//│   this: {contains: 'a -> 'b}
-//│   fun contains: Union['a] -> 'b
+//│   this: {contains: (??Region & 'Region) -> 'a}
+//│   fun contains: Union['Region] -> 'a
 //│ }
 
 module TestContains extends Contains
 //│ module TestContains {
-//│   fun contains: 'a -> nothing
+//│   fun contains: Union['Region] -> nothing
 //│ }
 //│ where
-//│   'a <: Union['a]
+//│   'Region <: Union['Region] | ~??Region
 
 TestContains.contains(circles)
 //│ nothing
