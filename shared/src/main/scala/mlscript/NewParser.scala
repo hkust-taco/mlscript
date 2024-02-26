@@ -1151,9 +1151,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         yeetSpaces match {
           case (COMMA, l0) :: _ =>
             consume
-            TypeParamInfo(vinfo.map(_._1), visinfo.isDefined) -> tyNme :: typeParams
+            TypeParamInfo(vinfo.map(_._1), visinfo.isDefined, lb, ub) -> tyNme :: typeParams
           case _ =>
-            TypeParamInfo(vinfo.map(_._1), visinfo.isDefined) -> tyNme :: Nil
+            TypeParamInfo(vinfo.map(_._1), visinfo.isDefined, lb, ub) -> tyNme :: Nil
         }
       case _ =>
         (visinfo, vinfo) match {

@@ -89,14 +89,14 @@ trait Base2: Foo['FigureItOut]
 //│     = [Function: res]
 
 // :e
+// FIXME
 (b: Base2) => b : Foo['X]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.92: 	(b: Base2) => b : Foo['X]
+//│ ║  l.93: 	(b: Base2) => b : Foo['X]
 //│ ║        	              ^
 //│ ╟── type `??FigureItOut` does not match type `??FigureItOut0`
-//│ ║  l.92: 	(b: Base2) => b : Foo['X]
+//│ ║  l.93: 	(b: Base2) => b : Foo['X]
 //│ ╙──      	                      ^^
-//│ TEST CASE FAILURE: There was an unexpected type error
 //│ forall 'X. (b: Base2) -> Foo['X]
 //│   where
 //│     'X :> ??FigureItOut

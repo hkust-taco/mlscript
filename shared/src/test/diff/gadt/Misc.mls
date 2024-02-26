@@ -275,3 +275,43 @@ true as x.T
 //│ 1
 //│ res
 //│     = 1
+
+// * `A` and `S` are not associated
+abstract class U[type A, type B]: MkU[?]
+class MkU[S](x: S) extends U[S, Int]
+//│ abstract class U[A, B]: MkU[?]
+//│ class MkU[S](x: S) extends U
+
+fun uu[A](x: MkU[A]): A = if x is
+    MkU(s) then s : x.A
+//│ fun uu: forall 'A. (x: MkU['A]) -> 'A
+
+uu(MkU(true))
+//│ true
+//│ res
+//│     = true
+
+fun u(x: U[?, ?]): x.A = if x is
+    MkU(s) then s : x.A
+//│ fun u: (x: U[?, ?]) -> ??S
+
+u(MkU(1))
+//│ ??S
+//│ res
+//│     = 1
+
+// FIXME
+fun u[T](x: U[T, 'b]): T = if x is
+    MkU(s) then s : x.A
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.304: 	fun u[T](x: U[T, 'b]): T = if x is
+//│ ║         	                              ^^^^
+//│ ║  l.305: 	    MkU(s) then s : x.A
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `??S & ~T & ~??S0` does not match type `nothing`
+//│ fun u: forall 'T 'b. (x: U['T, 'b]) -> (error | 'T)
+
+u(MkU(1))
+//│ 1 | error
+//│ res
+//│     = 1

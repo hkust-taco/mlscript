@@ -10,7 +10,7 @@ class Foo[A restricts Bool]
 //│   constructor()
 //│ }
 
-class Foo[A extends Bool]
+class Foo[A extends Int]
 //│ class Foo[A] {
 //│   constructor()
 //│ }

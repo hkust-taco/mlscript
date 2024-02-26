@@ -174,9 +174,16 @@ fun g[T](x: F[T, T]): T = if x is
 //│ ╙── expression of type `anything` does not match type `??Z | ~(??Z0 & ??A)`
 //│ fun g: forall 'T. (x: F['T, 'T]) -> (error | 'T)
 
+// * why this works
+fun g[T](x: F[T, T]): T = if x is
+  MkF(f) then if ((f : x.A) : Option['a]) is 
+      Some(t) then Some(t) : x.A
+      None then None : x.A
+//│ fun g: forall 'T. (x: F['T, 'T]) -> 'T
+
 g(MkF(None))
 g(MkF(Some(1)))
-//│ Option['A] | Some['A] | error
+//│ Option['A] | Some['A]
 //│   where
 //│     'A :> 1
 //│ res
@@ -200,3 +207,4 @@ fun foo[T](x: Foo[T, T]): T = if x is
   Bar(Some(a)) then Some(a) as x.A
   Bar(None)  then None as x.A
 //│ fun foo: forall 'T. (x: Foo['T, 'T]) -> 'T
+

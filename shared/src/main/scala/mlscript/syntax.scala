@@ -242,8 +242,8 @@ final case class NuFunDef(
 
 final case class Constructor(params: Tup, body: Blk) extends DesugaredStatement with ConstructorImpl // constructor(...) { ... }
 
-
-final case class TypeParamInfo(varinfo: Opt[VarianceInfo], visible: Bool)
+// TODO lb and ub not handled in typing
+final case class TypeParamInfo(varinfo: Opt[VarianceInfo], visible: Bool, lb: Opt[TypeName], ub: Opt[TypeName])
 
 final case class VarianceInfo(isCovariant: Bool, isContravariant: Bool) {
   
