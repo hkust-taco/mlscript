@@ -183,7 +183,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
                     .flatMap(o => {
                       val lambdaMemFunc = monoer.getFieldVal(o, "apply").asValue.get.asInstanceOf[FuncVal]
                       val caseVarNm: Var = Var(s"obj$$${o.name}")
-                      Right(NuFunDef(Some(false), Var("obj"), None, Nil, Left(Var(o.name)))(None, None, None, None, None, false)) :: 
+                      Right(NuFunDef(Some(false), Var("obj"), None, Nil, Left(Var(o.name)))(None, None, None, None, None, false, Nil)) :: 
                         List[Either[IfBody,Statement]](Left(IfThen(Var(o.name), App(Var(lambdaMemFunc.name), toTuple(caseVarNm :: a)))))
                     })
                   IfOpApp(scrut, Var("is"), IfBlock(branches))
