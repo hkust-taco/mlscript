@@ -157,22 +157,11 @@ fun g[T](x: F[T, T]): T = if x is
 
 // * We used to be able to manually refine it
 // * but this now fails... not sure why
-:e
 fun g[T](x: F[T, T]): T = if x is
   MkF(f) then if (f : x.A) is 
     Some(t) then Some(t) : x.A
     None  then None : x.A
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.161: 	fun g[T](x: F[T, T]): T = if x is
-//│ ║         	                             ^^^^
-//│ ║  l.162: 	  MkF(f) then if (f : x.A) is 
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.163: 	    Some(t) then Some(t) : x.A
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.164: 	    None  then None : x.A
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `anything` does not match type `??Z | ~(??Z0 & ??A)`
-//│ fun g: forall 'T. (x: F['T, 'T]) -> (error | 'T)
+//│ fun g: forall 'T. (x: F['T, 'T]) -> 'T
 
 // * why this works
 fun g[T](x: F[T, T]): T = if x is

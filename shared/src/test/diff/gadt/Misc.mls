@@ -276,15 +276,14 @@ true as x.T
 //│ res
 //│     = 1
 
-// * `A` and `S` are not associated
 abstract class U[type A, type B]: MkU[?]
 class MkU[S](x: S) extends U[S, Int]
 //│ abstract class U[A, B]: MkU[?]
 //│ class MkU[S](x: S) extends U
 
-fun uu[A](x: MkU[A]): A = if x is
+fun uu[T](x: MkU[T]): T = if x is
     MkU(s) then s : x.A
-//│ fun uu: forall 'A. (x: MkU['A]) -> 'A
+//│ fun uu: forall 'T. (x: MkU['T]) -> 'T
 
 uu(MkU(true))
 //│ true
@@ -300,18 +299,75 @@ u(MkU(1))
 //│ res
 //│     = 1
 
-// FIXME
+:e
+fun w[T](x: U[T, T]): Bool = if x is
+    MkU(s) then (s : x.A) : x.B
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.304: 	    MkU(s) then (s : x.A) : x.B
+//│ ║         	                ^^^^^^^^^
+//│ ╟── type `T & ?B` is not an instance of type `Bool`
+//│ ║  l.304: 	    MkU(s) then (s : x.A) : x.B
+//│ ║         	                             ^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.303: 	fun w[T](x: U[T, T]): Bool = if x is
+//│ ╙──       	                      ^^^^
+//│ fun w: forall 'T. (x: U['T, 'T]) -> Bool
+
+fun w[T](x: U[T, T]): Int = if x is
+    MkU(s) then (s : x.A) : x.B
+//│ fun w: forall 'T. (x: U['T, 'T]) -> Int
+
 fun u[T](x: U[T, 'b]): T = if x is
-    MkU(s) then s : x.A
-//│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.304: 	fun u[T](x: U[T, 'b]): T = if x is
-//│ ║         	                              ^^^^
-//│ ║  l.305: 	    MkU(s) then s : x.A
-//│ ║         	^^^^^^^^^^^^^^^^^
-//│ ╙── expression of type `??S & ~T & ~??S0` does not match type `nothing`
-//│ fun u: forall 'T 'b. (x: U['T, 'b]) -> (error | 'T)
+    MkU(s) then s :x.A
+//│ fun u: forall 'T 'b. (x: U['T, 'b]) -> 'T
 
 u(MkU(1))
-//│ 1 | error
+//│ 1
 //│ res
 //│     = 1
+
+abstract class U[type A, type B]: MkU[A]
+class MkU[S](x: S) extends U[S, Int]
+//│ abstract class U[A, B]: MkU[A]
+//│ class MkU[S](x: S) extends U
+
+fun u[T](x: U[T, 'b]): T = if x is
+    MkU(s) then s : x.A
+//│ fun u: forall 'T 'b. (x: U['T, 'b]) -> 'T
+
+fun w[T](x: U[T, T]): Int = if x is
+    MkU(s) then (s : x.A) : x.B
+//│ fun w: forall 'T. (x: U['T, 'T]) -> Int
+
+w(MkU(1))
+//│ Int
+//│ res
+//│     = 1
+
+:e
+w(MkU(true))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.348: 	w(MkU(true))
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── reference of type `true` is not an instance of `Int`
+//│ ║  l.348: 	w(MkU(true))
+//│ ║         	      ^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.330: 	class MkU[S](x: S) extends U[S, Int]
+//│ ║         	                                ^^^
+//│ ╟── Note: type parameter B is defined at:
+//│ ║  l.329: 	abstract class U[type A, type B]: MkU[A]
+//│ ╙──       	                              ^
+//│ Int | error
+//│ res
+//│     = true
+
+abstract class U[type A, type B]: MkU
+class MkU[S](x: S) extends U[S, Int]
+//│ abstract class U[A, B]: MkU[anything]
+//│ class MkU[S](x: S) extends U
+
+// TODO no variable leaks now ?
+fun u[T](x: U[T, 'b]): T = if x is
+    MkU(s) then s : x.A
+//│ fun u: forall 'T 'b. (x: U['T, 'b]) -> 'T

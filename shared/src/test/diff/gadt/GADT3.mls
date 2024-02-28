@@ -83,7 +83,7 @@ fun baz[T](x: Foo[T], y: Foo[T]): Bool =
 //│ fun baz: forall 'T. (x: Foo['T], y: Foo['T]) -> Bool
 //│ fun baz: forall 'T0. (Foo['T0], Foo['T0]) -> Bool
 
-abstract class C[type T]: D1 | D2
+abstract class C[type T]: D1 | D2[?, ?]
 class D1 extends C[Int]
 class D2[A, B](val a: C[A], val b: C[B]) extends C[[A, B]]
 //│ abstract class C[T]: D1 | D2[?, ?]
@@ -92,10 +92,10 @@ class D2[A, B](val a: C[A], val b: C[B]) extends C[[A, B]]
 //│ }
 //│ class D2[A, B](a: C[A], b: C[B]) extends C
 
-abstract class C[type T]: C1 | C2
+abstract class C[type T]: C1[T] | C2
 class C1[type A](c: A) extends C[A]
 class C2 extends C[Int]
-//│ abstract class C[T]: C1[anything] | C2
+//│ abstract class C[T]: C1[T] | C2
 //│ class C1[A](c: A) extends C
 //│ class C2 extends C {
 //│   constructor()
@@ -106,17 +106,17 @@ fun foo: C['T] -> 'T
 fun foo(x) = if x is
     C1(c) then c : x.T
     C2    then 0 : x.T
-//│ ╔══[ERROR] Type error in definition
+//│ ╔══[ERROR] Type mismatch in definition:
 //│ ║  l.106: 	fun foo(x) = if x is
 //│ ║         	    ^^^^^^^^^^^^^^^^
 //│ ║  l.107: 	    C1(c) then c : x.T
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.108: 	    C2    then 0 : x.T
 //│ ║         	^^^^^^^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.107: 	    C1(c) then c : x.T
-//│ ║         	                    ^^
-//│ ╟── into type `'T | ~??A`
+//│ ╟── type `Int` does not match type `'T`
+//│ ║  l.97: 	class C2 extends C[Int]
+//│ ║        	                   ^^^
+//│ ╟── Note: constraint arises from type variable:
 //│ ║  l.105: 	fun foo: C['T] -> 'T
 //│ ╙──       	                  ^^
 //│ fun foo: forall 'A. (C1['A] | C2) -> (Int | ??A & 'A)
@@ -135,9 +135,7 @@ foo(new C2)
 fun foo(x: C['a]): x.T = if x is
     C1(c) then c : x.T
     C2    then 0 : x.T
-//│ fun foo: forall 'a. (x: C['a]) -> (??A & ??A0 & 'a)
-//│   where
-//│     'a :> ??A & ??A0 & ~??A1
+//│ fun foo: forall 'a. (x: C['a]) -> (??A & 'a)
 
 abstract class Option[type out T]: None | Some[T]
 module None extends Option[nothing]

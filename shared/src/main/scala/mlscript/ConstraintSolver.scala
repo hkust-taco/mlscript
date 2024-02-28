@@ -332,6 +332,21 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       trace(s"DNF DISCHARGE CONSTRAINTS") {
         lhsCons.foreach(c => rec(c._1, c._2, false))
       }()
+
+      // * finish when a type appears at both sides
+      val both = lhsCs.exists(s => s.lnf match {
+        case LhsTop => false
+        case LhsRefined(lbs, ltt, lr, ltr) =>
+          rhs.cs.exists(c => c.lnf match {
+            case LhsTop => false
+            case LhsRefined(rbs, rtt, rr, rtr) => 
+              !ltt.intersect(rtt).collect{ case sk: SkolemTag => sk }.isEmpty
+          })
+        })
+
+      if (both /* && false */) {
+        println("DNF finished with same type at both sides")
+      } else
       
       // * Same remark as in the `rec` method [note:1]
       // assert(lvl >= rhs.level)

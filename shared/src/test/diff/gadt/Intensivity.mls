@@ -13,8 +13,6 @@ class Bar[S](val a: S) extends Foo[S]
 fun foo(x: Foo['a]) = if x is
   Bar then x.a : x.T
 //│ fun foo: forall 'a. (x: Foo['a]) -> (??S & ??S0 & 'a)
-//│   where
-//│     'a :> ??S & ??S0 & ~??S1
 
 
 abstract class Foo[type T]: Bar
@@ -33,13 +31,13 @@ fun foo(x: Foo['a]) = if x is
 :e
 (error : Foo[Int]) : Bar['a] | Int
 //│ ╔══[ERROR] Type error in type ascription
-//│ ║  l.34: 	(error : Foo[Int]) : Bar['a] | Int
+//│ ║  l.32: 	(error : Foo[Int]) : Bar['a] | Int
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `S` leaks out of its scope
-//│ ║  l.34: 	(error : Foo[Int]) : Bar['a] | Int
+//│ ║  l.32: 	(error : Foo[Int]) : Bar['a] | Int
 //│ ║        	                         ^^
 //│ ╟── back into type variable `S`
-//│ ║  l.21: 	class Bar[type S](val a: S) extends Foo[S]
+//│ ║  l.19: 	class Bar[type S](val a: S) extends Foo[S]
 //│ ╙──      	               ^
 //│ Bar['a] | Int
 //│   where

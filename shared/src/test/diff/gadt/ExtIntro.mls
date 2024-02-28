@@ -1,0 +1,155 @@
+:NewDefs
+
+class Z 
+class S[type P]
+//│ class Z {
+//│   constructor()
+//│ }
+//│ class S[P] {
+//│   constructor()
+//│ }
+
+abstract class K[type T]: KS[?]
+class KS[A](ev: K[A]) extends K[S[A]]
+//│ abstract class K[T]: KS[?]
+//│ class KS[A](ev: K[A]) extends K
+
+fun fk: (K['L], K['L]) -> Int
+fun fk[L](l: K[L], r: K[L]) =
+  if l is KS(e1) and r is KS(e2) then fk((e1 : K[e1.T]), (e2 : K[e2.T])) else 0
+//│ fun fk: forall 'L. (l: K['L], r: K['L]) -> Int
+//│ fun fk: forall 'L0. (K['L0], K['L0]) -> Int
+
+fun fz[L](l: K[L], r: K[L]) =
+  if l is KS(ea) and r is KS(eb) then 
+    let xw: K[eb.T] = ea : K[ea.T]; 0
+  else 0
+//│ fun fz: forall 'L. (l: K['L], r: K['L]) -> 0
+
+:re
+fk((error : K[S[S[nothing]]]), (error : K[S[S[nothing]]]))
+//│ Int
+//│ res
+//│ Runtime error:
+//│   Error: an error was thrown
+
+:e
+fk((error : K[S[S[nothing]]]), (error : K[S[nothing]]))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.37: 	fk((error : K[S[S[nothing]]]), (error : K[S[nothing]]))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `S[nothing]` does not match type `nothing`
+//│ ║  l.37: 	fk((error : K[S[S[nothing]]]), (error : K[S[nothing]]))
+//│ ║        	                ^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.37: 	fk((error : K[S[S[nothing]]]), (error : K[S[nothing]]))
+//│ ╙──      	                                            ^^^^^^^
+//│ Int | error
+//│ res
+//│ Runtime error:
+//│   Error: an error was thrown
+
+// * with alt
+
+abstract class K[type T]: KZ | KS[?]
+class KZ() extends K[Z]
+class KS[type A](ev: K[A]) extends K[S[A]]
+//│ abstract class K[T]: KS[?] | KZ
+//│ class KZ() extends K
+//│ class KS[A](ev: K[A]) extends K
+
+// FIXME accept
+fun fk: (K['L], K['L]) -> Int
+fun fk[L](l: K[L], r: K[L]): Int =
+  if l is KS(ep) and r is KS(eq) then 1 + fk(ep, eq) else 0
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.64: 	  if l is KS(ep) and r is KS(eq) then 1 + fk(ep, eq) else 0
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `??A & ??A0 & ~??A1` does not match type `nothing`
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.56: 	class KS[type A](ev: K[A]) extends K[S[A]]
+//│ ╙──      	              ^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.64: 	  if l is KS(ep) and r is KS(eq) then 1 + fk(ep, eq) else 0
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `??A & ~??A0` does not match type `nothing`
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.56: 	class KS[type A](ev: K[A]) extends K[S[A]]
+//│ ╙──      	              ^
+//│ fun fk: forall 'L. (l: K['L], r: K['L]) -> Int
+//│ fun fk: forall 'L0. (K['L0], K['L0]) -> Int
+
+fk(KS(KS(KZ())), KS(KS(KZ())))
+//│ Int
+//│ res
+//│     = 2
+
+:e
+fk(KS(KS(KZ())), KS(KZ()))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.88: 	fk(KS(KS(KZ())), KS(KZ()))
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Z` is not an instance of `S[?A]`
+//│ ║  l.55: 	class KZ() extends K[Z]
+//│ ║        	                     ^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.56: 	class KS[type A](ev: K[A]) extends K[S[A]]
+//│ ║        	                                     ^^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.56: 	class KS[type A](ev: K[A]) extends K[S[A]]
+//│ ╙──      	              ^
+//│ Int | error
+//│ res
+//│     = 1
+
+fun fi[L](x: K[L]): K[L] = if x is 
+    KZ() then KZ() : K[x.T]
+    KS(ea) then KS(ea) : K[x.T]
+//│ fun fi: forall 'L. (x: K['L]) -> K['L]
+
+fun fz[L](l: K[L], r: K[L]) =
+  if l is KS(ea) and r is KS(eb) then
+    let zt: K[ea.T] = ea ; 0
+  else 0
+//│ fun fz: forall 'L. (l: K['L], r: K['L]) -> 0
+
+fun fz[L](l: KS[L], r: KS[L]) =
+  if l is KS(ea) and r is KS(eb) then
+    let zt: K[eb.T] = ea : K[ea.T] ; 0
+  else 0
+//│ fun fz: forall 'L. (l: KS['L], r: KS['L]) -> 0
+
+// FIXME
+fun fz[L](l: K[L], r: K[L]) =
+  if l is KS(ea) and r is KS(eb) then
+    let zt = ea : K[eb.T] ; 0
+  else 0
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.124: 	  if l is KS(ea) and r is KS(eb) then
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.125: 	    let zt = ea : K[eb.T] ; 0
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.126: 	  else 0
+//│ ║         	^^^^^^^^
+//│ ╟── expression of type `S[?] & ??A & ??A0 & ~??A1` does not match type `nothing`
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.56: 	class KS[type A](ev: K[A]) extends K[S[A]]
+//│ ╙──      	              ^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.124: 	  if l is KS(ea) and r is KS(eb) then
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.125: 	    let zt = ea : K[eb.T] ; 0
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.126: 	  else 0
+//│ ║         	^^^^^^^^
+//│ ╟── expression of type `??A & ~#Z & ~??A0` does not match type `nothing`
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.56: 	class KS[type A](ev: K[A]) extends K[S[A]]
+//│ ╙──      	              ^
+//│ fun fz: forall 'L. (l: K['L], r: K['L]) -> (0 | error)
+
+fun fz[L](l: K[L], r: K[L]): K[L] =
+  if l is KS(ea) and r is KS(eb) 
+    then (KS(eb) : K[r.T]) : K[l.T]
+    else error
+//│ fun fz: forall 'L. (l: K['L], r: K['L]) -> K['L]
