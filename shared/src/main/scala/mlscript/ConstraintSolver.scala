@@ -847,10 +847,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           
           // FIXME wrong place for this; should be reported in typeType
           // standalone wildcards
-          case (_, w: WildcardArg) => 
+          case (lhs, w@WildcardArg(lb, ub)) => 
             err(msg"Wildcards can only be use in type arguments", w.prov.loco); ()
-          case (w: WildcardArg, _) => 
-            err(msg"Wildcards can only be use in type arguments", w.prov.loco); ()  
+          case (w@WildcardArg(lb, ub), rhs) => 
+            err(msg"Wildcards can only be use in type arguments", w.prov.loco); ()
             
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
             println(s"NEW $lhs UB (${rhs.level})")
@@ -1430,9 +1430,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case _: ClassTag | _: TraitTag | _: Extruded => ty
       case tr @ TypeRef(d, ts) =>
         TypeRef(d, tr.mapTargs(S(pol)) {
+          case (N, WildcardArg(lb, ub)) =>
+            WildcardArg(extrude(lb, lowerLvl, false, upperLvl), extrude(ub, lowerLvl, true, upperLvl))(tr.prov)
           case (N, targ) =>
             // * Note: the semantics of TypeBounds is inappropriuate for this use (known problem; FIXME later)
-            TypeBounds.mk(extrude(targ, lowerLvl, false, upperLvl), extrude(targ, lowerLvl, true, upperLvl)) // Q: ? subtypes?
+            // TypeBounds.mk(extrude(targ, lowerLvl, false, upperLvl), extrude(targ, lowerLvl, true, upperLvl)) // Q: ? subtypes?
+            WildcardArg(extrude(targ, lowerLvl, false, upperLvl), extrude(targ, lowerLvl, true, upperLvl))(tr.prov)
             // * A sanity-checking version, making sure the type range is correct (LB subtype of UB):
             /* 
             val a = extrude(targ, lowerLvl, false, upperLvl)
@@ -1455,7 +1458,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }, extrude(bod, lowerLvl, pol, upperLvl))
       case o @ Overload(alts) =>
         o.mapAlts(extrude(_, lowerLvl, !pol, upperLvl))(extrude(_, lowerLvl, pol, upperLvl))
-      case WildcardArg(_, _) => ???
+      case w @ WildcardArg(lb, ub) => 
+        if (pol) extrude(ub, lowerLvl, true, upperLvl) else extrude(lb, lowerLvl, false, upperLvl)
     }
     // }(r => s"=> $r"))
   
@@ -1667,7 +1671,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         ConstrainedType(cs2, freshen(bod))
       case o @ Overload(alts) =>
         o.mapAlts(freshen)(freshen)
-      case t @ WildcardArg(_, _) => ???
+      case t @ WildcardArg(lb, ub) => WildcardArg(freshen(lb), freshen(ub))(t.prov)
     }}
     // (r => s"=> $r"))
     
