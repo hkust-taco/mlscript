@@ -18,6 +18,7 @@ import mlscript.compiler.*
 import mlscript.compiler.mono.specializer.{MonoVal, TypeVal, ObjVal, FuncVal, LiteralVal, PrimVal, VarVal, TupVal, UnknownVal, BoundedTerm}
 import java.util.IdentityHashMap
 import scala.collection.JavaConverters._
+import mlscript.Mod
 
 class Monomorph(debug: Debug = DummyDebug):
   import Helpers._
@@ -208,8 +209,10 @@ class Monomorph(debug: Debug = DummyDebug):
             res
       case None => 
         allTypeImpls.get(name) match
-          case Some(res) => BoundedTerm(TypeVal(name))
+          case Some(res) if res.kind == Cls => BoundedTerm(TypeVal(name))
+          case Some(res) if res.kind == Mod => BoundedTerm(createObjValue(name, Nil))
           case None => throw MonomorphError(s"Variable ${name} not found during evaluation")
+          case _ => throw MonomorphError(s"Variable ${name} unhandled")
 
   def createObjValue(tpName: String, args: List[BoundedTerm]): MonoVal = 
     allTypeImpls.get(tpName) match
