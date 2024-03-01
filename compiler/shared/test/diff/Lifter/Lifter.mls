@@ -164,7 +164,7 @@ class A<T, U>(x: Int) extends {a1: Int}, B<T>, D(x){
 //│   class B$1[T]([]) {}
 //│   class C$2([]) {}
 //│   class D$3([y: Int,]) {}
-//│   class A$4[T,U]([x: Int,]): '{' {a1: Int} '}', B$1()‹T›, D$3((this).x,) {fun getA = () => new C$2([]) {}}
+//│   class A$4[T,U]([x: Int,]): '{' {a1: Int} '}', B$1‹T›, D$3((this).x,) {fun getA = () => new C$2([]) {}}
 //│ }
 //│ 
 
@@ -252,7 +252,7 @@ new B{
 //│ TypingUnit {
 //│   class A$1([]) {fun getA = 0; fun funcA = 10}
 //│   class B$2([]) {fun getA = 1; fun funcB = 11}
-//│   fun f$1 = (x,) => if (is(x, A$1(),)) then 0 else 1
+//│   fun f$1 = (x,) => if (is(x, A$1,)) then 0 else 1
 //│   Code(List(new A$1([]) {}))
 //│   Code(List(new B$2([]) {}))
 //│   Code(List(f$1(new A$1([]) {},)))

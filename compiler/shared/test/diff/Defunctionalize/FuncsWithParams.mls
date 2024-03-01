@@ -17,8 +17,8 @@ getArith(2).use(4,6)
 //│ Lifted:
 //│ TypingUnit {
 //│   class Arithmetic$1([]) {fun use = (num1, num2,) => 0}
-//│   class Add$2([]): Arithmetic$1() {fun use = (num1, num2,) => +(num1, num2,)}
-//│   class Sub$3([]): Arithmetic$1() {fun use = (num1, num2,) => -(num1, num2,)}
+//│   class Add$2([]): Arithmetic$1 {fun use = (num1, num2,) => +(num1, num2,)}
+//│   class Sub$3([]): Arithmetic$1 {fun use = (num1, num2,) => -(num1, num2,)}
 //│   fun getArith$1 = (choice,) => if (==(choice, 1,)) then Add$2() else Sub$3()
 //│   Code(List((getArith$1(1,)).use(4, 6,)))
 //│   Code(List((getArith$1(2,)).use(4, 6,)))
@@ -26,8 +26,8 @@ getArith(2).use(4,6)
 //│ Mono:
 //│ TypingUnit {
 //│   class Arithmetic$1([]) {}
-//│   class Sub$3([]): Arithmetic$1() {}
-//│   class Add$2([]): Arithmetic$1() {}
+//│   class Sub$3([]): Arithmetic$1 {}
+//│   class Add$2([]): Arithmetic$1 {}
 //│   fun getArith$1 = (choice,) => if (==(choice, 1,)) then Add$2() else Sub$3()
 //│   fun use$Add$2 = (this, num1, num2,) => +(num1, num2,)
 //│   fun use$Sub$3 = (this, num1, num2,) => -(num1, num2,)

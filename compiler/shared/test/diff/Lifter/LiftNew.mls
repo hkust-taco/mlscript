@@ -1,0 +1,23 @@
+:NewDefs
+
+:e //FIXME: new new syntax
+:lift
+class A(num: Int) {
+}
+new A(5)
+//│ TypingUnit {
+//│   class A([num: Int,]) {}
+//│   Code(List((new A)(5,)))
+//│ }
+//│ Lifted:
+//│ TypingUnit {
+//│   class A$1([num: Int,]) {}
+//│   Code(List(new A$1([5,]) {}))
+//│ }
+//│ ╔══[ERROR] Currently unsupported `new` syntax
+//│ ║  l.7: 	new A(5)
+//│ ╙──     	      ^
+//│ class A$1(num: Int)
+//│ error
+//│ res
+//│     = A$1 {}

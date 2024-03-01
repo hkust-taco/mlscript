@@ -309,8 +309,10 @@ class ClassLifter(logDebugMsg: Boolean = false) {
         (globFuncs.get(v).get)
       }
       else if(cache.contains(TypeName(v.name))){
-        val ret = liftConstr(TypeName(v.name), Tup(Nil))
-        App(Var(ret._1.name), ret._2) -> ret._3
+        //val ret = liftConstr(TypeName(v.name), Tup(Nil))
+        //App(Var(ret._1.name), ret._2) -> ret._3
+        val cls@ClassInfoCache(_, nm, capParams, _, _, _, out, _, _) = cache.get(TypeName(v.name)).get
+        (Var(nm.name), emptyCtx)
       }
       else if(ctx.contains(v) || v.name.equals("this") || primiTypes.contains(v.name))   (v, emptyCtx)
       else {
@@ -734,7 +736,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     val nParams = 
       outer.map(x => List(toFldsEle(Var(genParName(x.liftedNm.name))))).getOrElse(Nil)
       ++ params.fold(Nil)(t => t.fields.map{
-        case (Some(nm), Fld(flags, Var(name))) => (Some(nm), Fld(flags, cache.get(TypeName(name)).map(_.liftedNm.toVar).getOrElse(Var(name))))
+        case (Some(nm), Fld(flags, term)) => (Some(nm), Fld(flags, liftTerm(term)(using emptyCtx, nCache, globFuncs, nOuter)._1))
         case other => other
       })
       ++ freeVs.vSet.map(toFldsEle) 
