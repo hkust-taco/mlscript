@@ -579,9 +579,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             assert(fd.signature.isEmpty)
             funSigs.get(fd.nme.name) match {
               case S(sig) =>
-                fd.copy()(fd.declareLoc, fd.virtualLoc, fd.mutLoc, S(sig), outer, fd.genField)
+                fd.copy()(fd.declareLoc, fd.virtualLoc, fd.mutLoc, S(sig), outer, fd.genField, fd.annotations)
               case _ =>
-                fd.copy()(fd.declareLoc, fd.virtualLoc, fd.mutLoc, fd.signature, outer, fd.genField)
+                fd.copy()(fd.declareLoc, fd.virtualLoc, fd.mutLoc, fd.signature, outer, fd.genField, fd.annotations)
             }
           case td: NuTypeDef =>
             if (td.nme.name in reservedTypeNames)
@@ -1127,6 +1127,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 if (fd.tparams.nonEmpty)
                   err(msg"Type parameters are not yet supported in this position",
                     fd.tparams.head.toLoc)
+
               val res_ty = fd.rhs match {
                 case R(PolyType(tps, ty)) =>
                   checkNoTyParams()
@@ -1179,6 +1180,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   TypedNuFun(ctx.lvl, fd, body_ty.withProv(tp))(isImplemented = true)
               }
               ctx.nextLevel { implicit ctx: Ctx => constrain(res_ty.bodyType, mutRecTV) }
+
+              // Check annotations
+              fd.annotations.foreach(ann => {
+                implicit val gl: GenLambdas = false;
+                val annType = typeTerm(ann)
+                constrain(annType, AnnType)
+              })
+
               res_ty
               
               
@@ -1342,7 +1351,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         case _ => N // if one is fun, then it will be fun
                       }, a.fd.nme, N/*no sym name?*/, a.fd.tparams, a.fd.rhs)(
                         a.fd.declareLoc, a.fd.virtualLoc, a.fd.mutLoc,
-                        N, a.fd.outer orElse b.fd.outer, a.fd.genField)
+                        N, a.fd.outer orElse b.fd.outer, a.fd.genField, a.fd.annotations)
                       S(TypedNuFun(a.level, fd, a.bodyType & b.bodyType)(a.isImplemented || b.isImplemented))
                     case (a: NuParam, S(b: NuParam)) => 
                       if (!a.isPublic) S(b) else if (!b.isPublic) S(a)
@@ -1403,6 +1412,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   case lb :: Nil => lb
                   case _ => die
                 }
+              }
+
+              // Check annotations
+              td.annotations.foreach { ann =>
+                implicit val gl: GenLambdas = false
+                val annType = typeTerm(ann)
+                constrain(annType, AnnType)
               }
               
               td.kind match {

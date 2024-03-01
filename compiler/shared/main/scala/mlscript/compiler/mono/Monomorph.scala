@@ -75,14 +75,14 @@ class Monomorph(debug: Debug = DummyDebug):
 
   private def getResult(mains: List[Statement]): List[Statement] = 
     List[Statement]()
-    .concat(allTypeImpls.values.map(_.copy(body = TypingUnit(Nil))(None, None)))
+    .concat(allTypeImpls.values.map(_.copy(body = TypingUnit(Nil))(None, None, Nil)))
     .concat(funImpls.values.map(_._1))
     .concat(mains)
   
   def defunctionalize(tu: TypingUnit): TypingUnit =
     val nuTerms = tu.entities.zipWithIndex.flatMap {
       case (term: Term, i) =>
-        val mainFunc = NuFunDef(None, Var(s"main$$$$$i"), None, Nil, Left(Lam(Tup(Nil), term)))(None, None, None, None, None, false)
+        val mainFunc = NuFunDef(None, Var(s"main$$$$$i"), None, Nil, Left(Lam(Tup(Nil), term)))(None, None, None, None, None, false, Nil)
         addFunction(mainFunc)
         evalQueue.add(mainFunc.name)
         Some(App(Var(s"main$$$$$i"), Tup(Nil)))
@@ -108,9 +108,9 @@ class Monomorph(debug: Debug = DummyDebug):
       case (_, (func@NuFunDef(isLetRec, nm, sn, tp, rhs), mp, la, lr)) =>
         rhs match 
           case Left(Lam(lhs, rhs)) =>
-            (NuFunDef(isLetRec, nm, sn, tp, Left(Lam(lhs,specializer.defunctionalize(rhs)(using evaluationMap))))(None, None, None, None, None, false), mp, la, lr)
+            (NuFunDef(isLetRec, nm, sn, tp, Left(Lam(lhs,specializer.defunctionalize(rhs)(using evaluationMap))))(None, None, None, None, None, false, Nil), mp, la, lr)
           case Left(body) => 
-            (NuFunDef(isLetRec, nm, sn, tp, Left(specializer.defunctionalize(body)(using evaluationMap)))(None, None, None, None, None, false), mp, la, lr)
+            (NuFunDef(isLetRec, nm, sn, tp, Left(specializer.defunctionalize(body)(using evaluationMap)))(None, None, None, None, None, false, Nil), mp, la, lr)
           case Right(tp) => ???
     }
     val ret = getResult(nuTerms)
@@ -256,7 +256,7 @@ class Monomorph(debug: Debug = DummyDebug):
           debug.writeLine(s"found some func")
           val nuFuncName = s"${nme}$$${obj.name}"
           if (!funImpls.contains(nuFuncName)) {
-            addFunction(NuFunDef(isLetRec, Var(nuFuncName), sn, tp, Left(addThisParam(body)))(None, None, None, None, None, false))
+            addFunction(NuFunDef(isLetRec, Var(nuFuncName), sn, tp, Left(addThisParam(body)))(None, None, None, None, None, false, Nil))
           } 
           BoundedTerm(FuncVal(nuFuncName, extractLamParams(body).map(_.map(_._2.name).toList), List("this" -> BoundedTerm(obj))))
         case _ => 

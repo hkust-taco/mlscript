@@ -22,7 +22,7 @@ val const: Cod[Int, nothing]
 fun quote: Array[Plain['a, 'c]] -> Cod['a, 'c]
 fun unquote: Cod['a, 'c] -> Plain['a, 'c]
 fun lam: (forall 'c: Cod['a, 'c] -> Cod['b, 'c | 'g]) -> Cod['a -> 'b, 'g]
-//│ fun quote: forall 'c 'a. Array[Plain['a, 'c]] -> Cod['a, 'c]
+//│ fun quote: forall 'a 'c. Array[Plain['a, 'c]] -> Cod['a, 'c]
 //│ val const: Cod[Int, nothing]
 //│ fun lam: forall 'a0 'b 'g. (forall 'c0. Cod['a0, 'c0] -> Cod['b, 'c0 | 'g]) -> Cod['a0 -> 'b, 'g]
 //│ fun unquote: forall 'a1 'c1. Cod['a1, 'c1] -> Plain['a1, 'c1]
@@ -42,7 +42,7 @@ fun body(x, y) = case
   0 then x
   1 then y
   n then quote([unquote(x), unquote(y)]) %> z => body(x, z)(n - 1)
-//│ fun body: forall 'a 'b. (Cod['b, anything] & 'a, Cod['b, anything] & 'a) -> (0 | 1 | Int & ~0 & ~1) -> (Cod['b, anything] | 'a)
+//│ fun body: forall 'b 'a. (Cod['b, anything] & 'a, Cod['b, anything] & 'a) -> (0 | 1 | Int & ~0 & ~1) -> (Cod['b, anything] | 'a)
 
 // code"(x, y) => ${body(code"x", code"y")(0)}"
 
