@@ -34,11 +34,9 @@ class Monomorph(debug: Debug = DummyDebug):
   val evalQueue = MutSet[String]()
   val evalCnt = MutMap[String, Int]()
   
-  //private val tyImpls = MutMap[TypeName, SpecializationMap[NuTypeDef]]()
   private val allTypeImpls = MutMap[String, NuTypeDef]()
 
   private def addType(typeDef: NuTypeDef) =
-    //tyImpls.addOne(typeDef.nme, SpecializationMap(typeDef))
     allTypeImpls.addOne(typeDef.name, typeDef)
   
   val specializer = new mono.specializer.Specializer(this)(using debug)
@@ -201,7 +199,6 @@ class Monomorph(debug: Debug = DummyDebug):
         val (func, _, _, _) = res
         funDependence.update(name, funDependence.get(name).get ++ callingStack.headOption)
         val params = func.rhs match
-          //case Left(Lam(lhs, rhs)) => Some(extractParams(lhs).map(_._2.name).toList)
           case Left(body) => extractLamParams(body).map(_.map(_._2.name).toList)
           case Right(tp) => ???
         params match 

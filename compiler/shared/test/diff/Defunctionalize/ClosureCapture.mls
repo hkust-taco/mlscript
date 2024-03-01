@@ -1,6 +1,6 @@
 :NewDefs
 
-:e //FIXME: Class parameters not lifted
+:e //FIXME: Class parameters not annotated
 :mono
 fun foo(x) = 
   (f => f(x))(z => z+1)

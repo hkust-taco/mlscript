@@ -33,7 +33,7 @@ class Pow(lhs: Variable, rhs: Numeric) extends Exp {
 Sum(Variable("x"), Numeric(3)).derive().getVal
 Mul(Variable("x"), Numeric(3)).derive().getVal
 Pow(Variable("x"), Numeric(3)).derive().getVal
-Mul(Pow(Variable("x"), Numeric(2)), Pow(Variable("y"), Numeric(2))).derive().getVal // FIXME: Stack overflow, cause unsure
+Mul(Pow(Variable("x"), Numeric(2)), Pow(Variable("y"), Numeric(2))).derive().getVal
 //│ Lifted:
 //│ TypingUnit {
 //│   class Exp$1([]) {

@@ -37,7 +37,7 @@ count(new List(new List(new Nil(undefined, false), true), true))
 //│   class Nil$2([val l: |(|(List$1, Nil$2,), undefined,), val hasTail: Bool,]) {}
 //│   let l$2 = (lst).l
 //│   fun count$1 = (lst,) => {if ((lst).hasTail) then {if (is(l$2, undefined,)) then 1 else +(count$1(l$2,), 1,)} else 0}
-//│   Code(List(count$1(new List$1([new List$1([new Nil$2([undefined, false,]) {}, true,]) {}, true,]) {},)))
+//│   Code(List(count$1((new List$1)((new List$1)((new Nil$2)(undefined, false,), true,), true,),)))
 //│ }
 //│ Mono:
 //│ Variable lst not found during evaluation

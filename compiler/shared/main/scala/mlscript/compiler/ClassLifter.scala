@@ -346,7 +346,12 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     case NuNew(cls) =>
       liftTerm(App(NuNew(cls), Tup(Nil)))
     case App(NuNew(cls), args) =>
-      liftTerm(Rft(App(NuNew(cls), args), TypingUnit(Nil)))
+      (cls, args) match {
+        case (v: Var, args: Tup) =>
+          val ret = liftConstr(TypeName(v.name), args)
+          (App(NuNew(Var(ret._1.name)), ret._2), ret._3)
+        case _ => ???
+      }
     case Rft(NuNew(cls), tu) =>
       liftTerm(Rft(App(NuNew(cls), Tup(Nil)), TypingUnit(Nil)))
     case Rft(App(NuNew(cls), args), tu) =>
