@@ -1101,9 +1101,9 @@ abstract class TyperHelpers { Typer: Typer =>
             case ((tn, tv, vi), ta) =>
               val fldNme = tparamField(defn.name, tn.name, vi.visible)
               val fld = ta match {
-                case AssignedVariable(WildcardArg(lb, ub)) => FieldType(S(lb), ub)(provTODO) // TODO refactor: seems like a hack
-                case WildcardArg(lb, ub) => FieldType(S(lb), ub)(provTODO)
-                case _ => FieldType.mk(vi.varinfo.getOrElse(VarianceInfo.in), ta, ta)(provTODO)
+                case a@AssignedVariable(WildcardArg(lb, ub)) => FieldType(S(lb), ub)(a.prov) // TODO refactor: seems like a hack
+                case w@WildcardArg(lb, ub) => FieldType(S(lb), ub)(w.prov)
+                case f => FieldType.mk(vi.varinfo.getOrElse(VarianceInfo.in), ta, ta)(f.prov)
               }
               Var(fldNme).withLocOf(tn) -> fld
           })(provTODO)
@@ -1220,7 +1220,7 @@ abstract class TyperHelpers { Typer: Typer =>
         (tparamsargs lazyZip targs).map { case ((_, tv), ta) =>
           tvv(tv) match {
             case VarianceInfo(true, true) =>
-              f(N, TypeBounds(BotType, TopType)(noProv))
+              f(N, WildcardArg(BotType, TopType)(noProv))
             case VarianceInfo(co, contra) =>
               // f(if (co) pol else if (contra) pol.map(!_) else N, ta)
               ta match {

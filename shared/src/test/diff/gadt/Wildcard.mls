@@ -160,7 +160,10 @@ x as Bar[Bool]
 //│ ║         	^
 //│ ╟── type `Bool` does not match type `nothing`
 //│ ║  l.157: 	x as Bar[Bool]
-//│ ╙──       	         ^^^^
+//│ ║         	         ^^^^
+//│ ╟── Note: constraint arises from wildcard:
+//│ ║  l.151: 	let x: Bar[?] = MkBarInt()
+//│ ╙──       	           ^
 //│ Bar[Bool]
 //│ res
 //│     = MkBarInt {}
@@ -193,7 +196,7 @@ let x: Bar[Foo[?]]
 :e
 x as Bar[Foo[Int]]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.194: 	x as Bar[Foo[Int]]
+//│ ║  l.197: 	x as Bar[Foo[Int]]
 //│ ║         	^
 //│ ╙── expression of type `Int` does not match type `nothing`
 //│ Bar[Foo[Int]]
@@ -276,7 +279,7 @@ fun f: Foo[Int] -> Foo[?]
 :e
 e as Foo[Int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.277: 	e as Foo[Int]
+//│ ║  l.280: 	e as Foo[Int]
 //│ ║         	^
 //│ ╙── expression of type `anything` is not an instance of type `Int`
 //│ Foo[Int]
@@ -287,7 +290,7 @@ e as Foo[Int]
 :e
 f(e)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.288: 	f(e)
+//│ ║  l.291: 	f(e)
 //│ ║         	^^^^
 //│ ╙── expression of type `anything` is not an instance of type `Int`
 //│ Foo[?] | error
@@ -302,7 +305,7 @@ fun f(x: ?) = x
 :e
 f(1)
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.299: 	fun f(x: ?) = x
+//│ ║  l.302: 	fun f(x: ?) = x
 //│ ╙──       	         ^
 //│ error
 //│ res
@@ -312,7 +315,7 @@ f(1)
 :e
 f(f)
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.299: 	fun f(x: ?) = x
+//│ ║  l.302: 	fun f(x: ?) = x
 //│ ╙──       	         ^
 //│ error
 //│ res
@@ -323,7 +326,7 @@ f(f)
 :e
 fun f(x): ? = x
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.324: 	fun f(x): ? = x
+//│ ║  l.327: 	fun f(x): ? = x
 //│ ╙──       	          ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
 
@@ -331,7 +334,7 @@ fun f(x): ? = x
 :e
 fun f(x: Int): ? = x
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.332: 	fun f(x: Int): ? = x
+//│ ║  l.335: 	fun f(x: Int): ? = x
 //│ ╙──       	               ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
 
@@ -342,7 +345,7 @@ fun f(x: ?): ? = x
 :e
 f(1)
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.339: 	fun f(x: ?): ? = x
+//│ ║  l.342: 	fun f(x: ?): ? = x
 //│ ╙──       	         ^
 //│ error
 //│ res
@@ -353,10 +356,10 @@ f(1)
 :e
 let x: ? = 1
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.354: 	let x: ? = 1
+//│ ║  l.357: 	let x: ? = 1
 //│ ╙──       	       ^
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.354: 	let x: ? = 1
+//│ ║  l.357: 	let x: ? = 1
 //│ ╙──       	       ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
 
@@ -364,7 +367,7 @@ let x: ? = 1
 :e
 1 as ?
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.365: 	1 as ?
+//│ ║  l.368: 	1 as ?
 //│ ╙──       	     ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
 
@@ -391,7 +394,7 @@ let x: ? -> ?
 :e
 let x = ?
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.392: 	let x = ?
+//│ ║  l.395: 	let x = ?
 //│ ╙──       	        ^
 //│ let x: error
 //│ Code generation encountered an error:
@@ -400,7 +403,7 @@ let x = ?
 :e
 if ? is 1 then 1
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.401: 	if ? is 1 then 1
+//│ ║  l.404: 	if ? is 1 then 1
 //│ ╙──       	   ^
 //│ 1
 //│ Code generation encountered an error:
@@ -409,7 +412,7 @@ if ? is 1 then 1
 :e
 if x is ? then 1
 //│ ╔══[ERROR] Cannot match on wildcard ?
-//│ ║  l.410: 	if x is ? then 1
+//│ ║  l.413: 	if x is ? then 1
 //│ ╙──       	        ^
 //│ error
 //│ Code generation encountered an error:
@@ -418,7 +421,7 @@ if x is ? then 1
 :e
 let x: ?[?]
 //│ ╔══[ERROR] Wrong number of type arguments – expected 0, found 1
-//│ ║  l.419: 	let x: ?[?]
+//│ ║  l.422: 	let x: ?[?]
 //│ ╙──       	       ^^^^
 //│ let x: ?
 //│ x
@@ -427,7 +430,7 @@ let x: ?[?]
 :e
 class Bar extends ?
 //│ ╔══[ERROR] Could not find definition `?`
-//│ ║  l.428: 	class Bar extends ?
+//│ ║  l.431: 	class Bar extends ?
 //│ ╙──       	                  ^
 //│ class Bar {
 //│   constructor()
@@ -439,14 +442,14 @@ class Bar extends ?
 :e
 abstract class Bar: ?
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.440: 	abstract class Bar: ?
+//│ ║  l.443: 	abstract class Bar: ?
 //│ ╙──       	                    ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
 
 :e
 class ?
 //│ ╔══[ERROR] Type name '?' is reserved
-//│ ║  l.447: 	class ?
+//│ ║  l.450: 	class ?
 //│ ╙──       	^^^^^^^
 //│ class ? {
 //│   constructor()
@@ -457,7 +460,7 @@ class ?
 :e
 type ? = Int
 //│ ╔══[ERROR] Type name '?' is reserved
-//│ ║  l.458: 	type ? = Int
+//│ ║  l.461: 	type ? = Int
 //│ ╙──       	^^^^^^
 //│ type ? = Int
 
@@ -473,7 +476,7 @@ fun f(x): W = x
 :e
 f(1)
 //│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.466: 	type W = ?
+//│ ║  l.469: 	type W = ?
 //│ ╙──       	         ^
 //│ error | W
 //│ res
@@ -488,7 +491,7 @@ fun (?) wc(x, y) = x == y
 // TODO
 1 ? 1
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.489: 	1 ? 1
+//│ ║  l.492: 	1 ? 1
 //│ ╙──       	  ^
 //│ error
 //│ res
@@ -505,11 +508,11 @@ let f: Foo[?]
 :e
 f.a : Int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.506: 	f.a : Int
+//│ ║  l.509: 	f.a : Int
 //│ ║         	^^^
 //│ ╟── field selection of type `anything` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.506: 	f.a : Int
+//│ ║  l.509: 	f.a : Int
 //│ ╙──       	      ^^^
 //│ Int
 //│ res
@@ -520,11 +523,10 @@ f.a : Int
 :e
 42 : f.a
 //│ ╔══[ERROR] Type mismatch in type selection:
-//│ ║  l.521: 	42 : f.a
+//│ ║  l.524: 	42 : f.a
 //│ ║         	      ^^
 //│ ╙── type `anything` cannot be reassigned
 //│ anything
 //│ res
 //│     = 42
-
 

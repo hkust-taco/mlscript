@@ -15,49 +15,52 @@ fun req[A](x: R[A], y: R[A]): Bool = if x is RI(a) and y is RI(b) then a == b el
 fun f1[A](e: R[A]) = [ if e is RI(i) then i as e.A else error , if e is RB(i) then i as e.A else error , if e is RC(i) then i as e.A else error ]
 //│ fun f1: forall 'A. (e: R['A]) -> [Int & 'A | Str | false | true]
 
+:ns
 fun h1[A](x: R[A], y: A) = (if x is
     RI(_) then RI as (x.A => R[x.A])
     RB(_) then RB as (x.A => R[x.A])
     else error
   ) (y as x.A)
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
-//│ 	at: mlscript.utils.package$.die(package.scala:208)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:772)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:760)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$108(TypeSimplifier.scala:449)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.TypeSimplifier.go$1(TypeSimplifier.scala:453)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$11(TypeSimplifier.scala:222)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mapTargs2$3(TyperHelpers.scala:1255)
-//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ fun h1: forall 'A 'a 'A0 'A1 'A2. (x: R[A], y: A) -> 'a
+//│   where
+//│     'a :> R[in 'A1 out 'A0] | R[in 'A out 'A2]
+//│     'A2 :> 'A3 & A
+//│     'A <: 'A3 | A
+//│     'A3 := Int
+//│     'A0 :> 'A4 & A
+//│     'A1 <: 'A4 | A
+//│     'A4 := Bool
 
+:ns
 h1(RI(1), 1)
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
-//│ 	at: mlscript.utils.package$.die(package.scala:208)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:772)
-//│ 	at: mlscript.NormalForms$DNF$.mk(NormalForms.scala:760)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$108(TypeSimplifier.scala:449)
-//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
-//│ 	at: mlscript.TypeSimplifier.go$1(TypeSimplifier.scala:453)
-//│ 	at: mlscript.TypeSimplifier.$anonfun$normalizeTypes_$bang$11(TypeSimplifier.scala:222)
-//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$mapTargs2$3(TyperHelpers.scala:1255)
-//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 'a
+//│   where
+//│     'a :> forall 'b 'A 'A0 'A1 'A2. 'b
+//│     'b :> R[in 'A2 out 'A1] | R[in 'A out 'A0]
+//│     'A0 :> 'A3 & 'A4
+//│     'A <: 'A3 | 'A4
+//│     'A3 := Int
+//│     'A1 :> 'A5 & 'A4
+//│     'A2 <: 'A5 | 'A4
+//│     'A4 :> 1 | Int
+//│         <: Int
+//│     'A5 := Bool
+//│ res
+//│     = RI {}
 
 :e
 h1(RC("hi"), true)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.49: 	h1(RC("hi"), true)
+//│ ║  l.52: 	h1(RC("hi"), true)
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of `Str`
-//│ ║  l.49: 	h1(RC("hi"), true)
+//│ ║  l.52: 	h1(RC("hi"), true)
 //│ ║        	             ^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.6: 	class RC(x: Str) extends R[Str]
 //│ ║       	                           ^^^
 //│ ╟── Note: method type parameter A is defined at:
-//│ ║  l.18: 	fun h1[A](x: R[A], y: A) = (if x is
+//│ ║  l.19: 	fun h1[A](x: R[A], y: A) = (if x is
 //│ ╙──      	       ^
 //│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
 //│ 	at: mlscript.utils.package$.lastWords(package.scala:209)
@@ -108,7 +111,7 @@ h2(RI(1), RI(2))
 :e
 h2(RB(true), RI(0))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.109: 	h2(RB(true), RI(0))
+//│ ║  l.112: 	h2(RB(true), RI(0))
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Int` is not an instance of type `Bool`
 //│ ║  l.4: 	class RI(x: Int) extends R[Int]
@@ -117,7 +120,7 @@ h2(RB(true), RI(0))
 //│ ║  l.5: 	class RB(x: Bool) extends R[Bool]
 //│ ║       	                            ^^^^
 //│ ╟── Note: method type parameter A is defined at:
-//│ ║  l.74: 	fun h2[A](x: R[A], y: R[A]) = (if x is
+//│ ║  l.77: 	fun h2[A](x: R[A], y: R[A]) = (if x is
 //│ ╙──      	       ^
 //│ error
 //│ Code generation encountered an error:
@@ -129,7 +132,7 @@ class Refl[A]() extends Eq[A, A]
 //│ class Refl[A]() extends Eq
 
 fun e1[A, B](e: Eq[A, B], x: A): B = if e is Refl() then (x as e.A) as e.B
-//│ fun e1: forall 'A 'B. (e: Eq['A, 'B], x: 'A) -> 'B
+//│ fun e1: forall 'B 'A. (e: Eq['A, 'B], x: 'A) -> 'B
 
 e1(Refl(), 1)
 //│ 1
@@ -139,7 +142,7 @@ e1(Refl(), 1)
 :e
 Refl() : Eq[Int, Bool]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.140: 	Refl() : Eq[Int, Bool]
+//│ ║  l.143: 	Refl() : Eq[Int, Bool]
 //│ ║         	^^^^^^
 //│ ╙── expression of type `Int` does not match type `Bool`
 //│ Eq[Int, Bool]
@@ -155,4 +158,3 @@ e2(Refl(), Refl(), true)
 //│ true
 //│ res
 //│     = true
-

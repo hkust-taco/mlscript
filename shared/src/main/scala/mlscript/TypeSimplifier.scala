@@ -1041,11 +1041,11 @@ trait TypeSimplifier { self: Typer =>
         ))(p =>
           if (p) transform(ub, pol, parents) else transform(lb, pol, parents)
         )
-      case WildcardArg(lb, ub) =>
+      case w@WildcardArg(lb, ub) =>
         WildcardArg(
           transform(lb, pol.contravar, parents, canDistribForall),
           transform(ub, pol.covar, parents, canDistribForall)
-          )(noProv)
+          )(w.prov)
       case PolymorphicType(plvl, bod) =>
         val res = transform(bod, pol.enter(plvl), parents, canDistribForall = S(plvl))
         canDistribForall match {

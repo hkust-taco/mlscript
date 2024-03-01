@@ -515,7 +515,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           else lit.baseClassesOld)(tyTp(ty.toLoc, "literal type"))
       case wc @ TypeName("?") => // TODO handle typing of C[?]
         implicit val prov: TypeProvenance = tyTp(ty.toLoc, "wildcard")
-        WildcardArg(BotType, TopType)(prov)
+        WildcardArg(ExtrType(true)(prov), ExtrType(false)(prov))(prov)
       case TypeName("this") =>
         ctx.env.get("this") match {
           case S(_: AbstractConstructor | _: LazyTypeInfo) => die
@@ -572,7 +572,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         typeNamed(ty.toLoc, base.name, false) match {
           case R((_, tpnum)) =>
             val realTargs = if (targs.size === tpnum) targs.map{
-              case Bounds(lb, ub) if newDefs => WildcardArg(rec(lb), rec(ub))(provTODO)
+              case b@Bounds(lb, ub) if newDefs => WildcardArg(rec(lb), rec(ub))(tyTp(b.toLoc, "wildcard"))
               case ty => rec(ty)
             } else {
               err(msg"Wrong number of type arguments – expected ${tpnum.toString}, found ${

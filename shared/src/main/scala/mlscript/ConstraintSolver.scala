@@ -1445,6 +1445,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             constrain(a, b)
             TypeBounds.mk(a, b)
             */
+          case (S(pol), WildcardArg(lb, ub)) =>
+            WildcardArg(extrude(lb, lowerLvl, !pol, upperLvl), extrude(ub, lowerLvl, pol, upperLvl))(tr.prov)
           case (S(pol), targ) => extrude(targ, lowerLvl, pol, upperLvl)
         })(tr.prov)
       case PolymorphicType(polymLevel, body) =>
@@ -1458,8 +1460,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }, extrude(bod, lowerLvl, pol, upperLvl))
       case o @ Overload(alts) =>
         o.mapAlts(extrude(_, lowerLvl, !pol, upperLvl))(extrude(_, lowerLvl, pol, upperLvl))
-      case w @ WildcardArg(lb, ub) => 
-        if (pol) extrude(ub, lowerLvl, true, upperLvl) else extrude(lb, lowerLvl, false, upperLvl)
+      case w @ WildcardArg(lb, ub) => ???
+        // if (pol) extrude(ub, lowerLvl, true, upperLvl) else extrude(lb, lowerLvl, false, upperLvl)
     }
     // }(r => s"=> $r"))
   
