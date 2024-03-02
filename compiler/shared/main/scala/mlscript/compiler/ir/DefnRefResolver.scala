@@ -5,7 +5,7 @@ import mlscript.compiler.ir._
 
 import Node._
 
-private final class Relink(defs: Set[Defn], allow_inline_jp: Bool):
+private final class DefnRefResolver(defs: Set[Defn], allow_inline_jp: Bool):
   private def f(x: Node): Unit = x match
     case Result(res) =>
     case Case(scrut, cases) => cases map { (_, body) => f(body) }
@@ -26,7 +26,7 @@ private final class Relink(defs: Set[Defn], allow_inline_jp: Bool):
   def run(node: Defn) = f(node.body)
 
 
-def relink(entry: Node, defs: Set[Defn], allow_inline_jp: Bool = false): Unit  =
-  val rl = Relink(defs, allow_inline_jp)
+def resolveDefnRef(entry: Node, defs: Set[Defn], allow_inline_jp: Bool = false): Unit  =
+  val rl = DefnRefResolver(defs, allow_inline_jp)
   rl.run(entry)
   defs.foreach(rl.run(_))

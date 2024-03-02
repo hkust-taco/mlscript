@@ -14,17 +14,10 @@ import scala.collection.immutable.SortedSet
 final case class IRError(message: String) extends Exception(message)
 
 case class Program(
-  val classes: Set[ClassInfo],
-  val defs: Set[Defn],
-  val main: Node,
+  classes: Set[ClassInfo],
+  defs: Set[Defn],
+  main: Node,
 ):
-  override def equals(o: Any): Bool = o match {
-    case o: Program if this.isInstanceOf[Program] =>
-      o.classes == classes &&
-      o.defs == defs &&
-      o.main == main
-    case _ => false
-  }
   override def toString: String =
     val t1 = classes.toArray
     val t2 = defs.toArray
@@ -37,24 +30,15 @@ implicit object ClassInfoOrdering extends Ordering[ClassInfo] {
 }
 
 case class ClassInfo(
-  val id: Int,
-  val ident: Str,
-  val fields: Ls[Str],
+  id: Int,
+  ident: Str,
+  fields: Ls[Str],
 ):
-  override def equals(o: Any): Bool = o match {
-    case o: ClassInfo if this.isInstanceOf[ClassInfo] => o.id == id
-    case _ => false
-  }
   override def hashCode: Int = id
   override def toString: String =
     s"ClassInfo($id, $ident, [${fields mkString ","}])"
 
-case class Name(val str: Str):
-  override def equals(o: Any): Bool = o match {
-    case Name(s2) => str == s2
-    case _ => false
-  }
-
+case class Name(str: Str):
   def copy: Name = Name(str)
   def trySubst(map: Map[Str, Name]) = map.getOrElse(str, this)
   
@@ -62,23 +46,14 @@ case class Name(val str: Str):
     str
 
 class DefnRef(var defn: Either[Defn, Str]):
-  def getName: String = defn match {
-    case Left(godef) => godef.getName
-    case Right(name) => name
-  }
+  def getName: String = defn.fold(_.getName, x => x)
   def expectDefn: Defn = defn match {
     case Left(godef) => godef
     case Right(name) => throw Exception(s"Expected a def, but got $name")
   }
-  
-  def getDefn: Opt[Defn] = defn match {
-    case Left(godef) => Some(godef)
-    case Right(name) => None
-  }
-
+  def getDefn: Opt[Defn] = defn.left.toOption
   override def equals(o: Any): Bool = o match {
-    case o: DefnRef if this.isInstanceOf[DefnRef] =>
-      o.getName == this.getName
+    case o: DefnRef => o.getName == this.getName
     case _ => false
   }
 
@@ -92,23 +67,14 @@ case class Defn(
   val name: Str,
   val params: Ls[Name],
   val resultNum: Int,
-  var specialized: Opt[Ls[Opt[Intro]]],
   val body: Node
 ):
-
-  override def equals(o: Any): Bool = o match {
-    case o: Defn if this.isInstanceOf[Defn] =>
-      o.id == id &&
-      o.body == body
-    case _ => false
-  }
   override def hashCode: Int = id
   def getName: String = name
 
   override def toString: String =
     val ps = params.map(_.toString).mkString("[", ",", "]")
-    val spec = specialized.map(_.toSeq.sorted.mkString("[", ",", "]")).toString()
-    s"Def($id, $name, $ps,\nS: $spec,\n$resultNum, \n$body\n)"
+    s"Def($id, $name, $ps,\n$resultNum, \n$body\n)"
 
 sealed trait TrivialExpr:
   import Expr._
@@ -116,11 +82,11 @@ sealed trait TrivialExpr:
   def show: String
   def toDocument: Document
 
-  def map_name_of_texpr(f: Name => Name): TrivialExpr = this match
+  def mapNameOfTrivialExpr(f: Name => Name): TrivialExpr = this match
     case x: Ref => Ref(f(x.name))
     case x: Literal => x
 
-  def to_expr: Expr = this match { case x: Expr => x }
+  def toExpr: Expr = this match { case x: Expr => x }
 
 private def show_args(args: Ls[TrivialExpr]) = args map (_.show) mkString ","
 
@@ -149,19 +115,19 @@ enum Expr:
     case BasicOp(name: Str, args) =>
       raw(name) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
 
-  def map_name(f: Name => Name): Expr = this match
+  def mapName(f: Name => Name): Expr = this match
     case Ref(name) => Ref(f(name))
     case Literal(lit) => Literal(lit)
-    case CtorApp(cls, args) => CtorApp(cls, args.map(_.map_name_of_texpr(f)))
+    case CtorApp(cls, args) => CtorApp(cls, args.map(_.mapNameOfTrivialExpr(f)))
     case Select(x, cls, field) => Select(f(x), cls, field)
-    case BasicOp(name, args) => BasicOp(name, args.map(_.map_name_of_texpr(f)))
+    case BasicOp(name, args) => BasicOp(name, args.map(_.mapNameOfTrivialExpr(f)))
 
-  def loc_marker: LocMarker = this match
+  def locMarker: LocMarker = this match
     case Ref(name) => LocMarker.MRef(name.str)
     case Literal(lit) => LocMarker.MLit(lit)
-    case CtorApp(name, args) => LocMarker.MCtorApp(name, args.map(_.to_expr.loc_marker))
+    case CtorApp(name, args) => LocMarker.MCtorApp(name, args.map(_.toExpr.locMarker))
     case Select(name, cls, field) => LocMarker.MSelect(name.str, cls, field)
-    case BasicOp(name, args) => LocMarker.MBasicOp(name, args.map(_.to_expr.loc_marker))
+    case BasicOp(name, args) => LocMarker.MBasicOp(name, args.map(_.toExpr.locMarker))
   
 
 enum Node:
@@ -175,12 +141,12 @@ enum Node:
 
   var tag = DefnTag(-1)
 
-  def attach_tag(x: FreshInt): Node =
+  def attachTag(x: FreshInt): Node =
     this.tag = DefnTag(x.make)
     this
-  def attach_tag_as[V](x: FreshInt): V =
-    attach_tag(x).asInstanceOf[V]
-  def copy_tag(x: Node) =
+  def attachTagAs[V](x: FreshInt): V =
+    attachTag(x).asInstanceOf[V]
+  def copyTag(x: Node) =
     this.tag = x.tag
     this
 
@@ -190,22 +156,22 @@ enum Node:
     toDocument.print
 
   def map_name(f: Name => Name): Node = this match
-    case Result(res) => Result(res.map(_.map_name_of_texpr(f)))
-    case Jump(defn, args) => Jump(defn, args.map(_.map_name_of_texpr(f)))
+    case Result(res) => Result(res.map(_.mapNameOfTrivialExpr(f)))
+    case Jump(defn, args) => Jump(defn, args.map(_.mapNameOfTrivialExpr(f)))
     case Case(scrut, cases) => Case(f(scrut), cases.map { (cls, arm) => (cls, arm.map_name(f)) })
-    case LetExpr(name, expr, body) => LetExpr(f(name), expr.map_name(f), body.map_name(f))
-    case LetCall(names, defn, args, body) => LetCall(names.map(f), defn, args.map(_.map_name_of_texpr(f)), body.map_name(f))  
+    case LetExpr(name, expr, body) => LetExpr(f(name), expr.mapName(f), body.map_name(f))
+    case LetCall(names, defn, args, body) => LetCall(names.map(f), defn, args.map(_.mapNameOfTrivialExpr(f)), body.map_name(f))  
   
   def copy(ctx: Map[Str, Name]): Node = this match
-    case Result(res) => Result(res.map(_.map_name_of_texpr(_.trySubst(ctx))))
-    case Jump(defn, args) => Jump(defn, args.map(_.map_name_of_texpr(_.trySubst(ctx))))
+    case Result(res) => Result(res.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))))
+    case Jump(defn, args) => Jump(defn, args.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))))
     case Case(scrut, cases) => Case(ctx(scrut.str), cases.map { (cls, arm) => (cls, arm.copy(ctx)) })
     case LetExpr(name, expr, body) => 
       val name_copy = name.copy
-      LetExpr(name_copy, expr.map_name(_.trySubst(ctx)), body.copy(ctx + (name_copy.str -> name_copy)))
+      LetExpr(name_copy, expr.mapName(_.trySubst(ctx)), body.copy(ctx + (name_copy.str -> name_copy)))
     case LetCall(names, defn, args, body) => 
       val names_copy = names.map(_.copy)
-      LetCall(names_copy, defn, args.map(_.map_name_of_texpr(_.trySubst(ctx))), body.copy(ctx ++ names_copy.map(x => x.str -> x)))
+      LetCall(names_copy, defn, args.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))), body.copy(ctx ++ names_copy.map(x => x.str -> x)))
 
   private def toDocument: Document = this match
     case Result(res) => raw(res |> show_args) <:> raw(s"-- $tag")
@@ -253,50 +219,18 @@ enum Node:
 
   def loc_marker: LocMarker =
     val marker = this match
-      case Result(res) => LocMarker.MResult(res.map(_.to_expr.loc_marker))
-      case Jump(defn, args) => LocMarker.MJump(defn.getName, args.map(_.to_expr.loc_marker))
+      case Result(res) => LocMarker.MResult(res.map(_.toExpr.locMarker))
+      case Jump(defn, args) => LocMarker.MJump(defn.getName, args.map(_.toExpr.locMarker))
       case Case(scrut, cases) => LocMarker.MCase(scrut.str, cases.map(_._1))
-      case LetExpr(name, expr, _) => LocMarker.MLetExpr(name.str, expr.loc_marker)
-      case LetCall(names, defn, args, _) => LocMarker.MLetCall(names.map(_.str), defn.getName, args.map(_.to_expr.loc_marker))
+      case LetExpr(name, expr, _) => LocMarker.MLetExpr(name.str, expr.locMarker)
+      case LetCall(names, defn, args, _) => LocMarker.MLetCall(names.map(_.str), defn.getName, args.map(_.toExpr.locMarker))
     marker.tag = this.tag
     marker
 
-
-enum Intro:
-  case ICtor(c: Str)
-  case ILam(n: Int)
-  case IMulti(n: Int)
-  case IMix(i: Set[Intro])
-
-  override def toString: String = this match
-    case ICtor(c) => s"ICtor($c)"
-    case ILam(n) => s"ILam($n)"
-    case IMulti(n) => s"IMulti($n)"
-    case IMix(i) => s"IMix(${i.toSeq.sorted.mkString(",")})"
-
-  def toShortString: String = this match
-    case ICtor(c) => s"C($c)"
-    case ILam(n) => s"L$n"
-    case IMulti(n) => s"M$n"
-    case IMix(i) => s"X(${i.toSeq.map(_.toShortString).sorted.mkString})"
-
-  override def equals(o: Any): Boolean = o match
-    case o: Intro if this.isInstanceOf[Intro] =>
-      (o, this) match
-        case (ICtor(c1), ICtor(c2)) => c1 == c2
-        case (ILam(n1), ILam(n2)) => n1 == n2
-        case (IMulti(n1), IMulti(n2)) => n1 == n2
-        case (IMix(i1), IMix(i2)) => 
-          i1 == i2
-        case _ => false
-    case _ => false
-
-implicit object IntroOrdering extends Ordering[Intro]:
-  override def compare(a: Intro, b: Intro) = a.toString.compare(b.toString)
 case class DefnTag(inner: Int):
   def is_valid = inner >= 0
   override def equals(x: Any): Bool = x match
-    case o: DefnTag if this.isInstanceOf[DefnTag] =>
+    case o: DefnTag =>
       (this, o) match
         case (DefnTag(a), DefnTag(b)) => this.is_valid && o.is_valid && a == b
     case _ => false
@@ -354,8 +288,3 @@ enum LocMarker:
   override def toString(): String = show
 
   def matches(x: Node): Bool = this.tag == x.tag
-
-  override def equals(x: Any): Boolean = x match
-    case x: LocMarker if this.isInstanceOf[LocMarker] =>
-      this.tag == x.tag
-    case _ => false

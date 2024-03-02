@@ -25,7 +25,6 @@ bar()
 //│ IR:
 //│ Program({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
 //│ Def(0, complex_foo, [t$0],
-//│ S: None,
 //│ 1, 
 //│ case t$0 of -- #63
 //│   A => let x$9 = t$0.z -- #51
@@ -40,13 +39,11 @@ bar()
 //│         in jump j$0(x$16) -- #59
 //│ )
 //│ Def(1, j$1, [x$2,x$0],
-//│ S: None,
 //│ 1, 
 //│ let x$3 = +(x$0,x$2) -- #13
 //│   in x$3 -- #12
 //│ )
 //│ Def(2, j$0, [x$0],
-//│ S: None,
 //│ 1, 
 //│ let x$1 = B(1,2) -- #34
 //│   in case x$1 of -- #33
@@ -59,7 +56,6 @@ bar()
 //│         in jump j$1(4,x$0) -- #30
 //│ )
 //│ Def(3, bar, [],
-//│ S: None,
 //│ 1, 
 //│ let x$17 = A(6,7,8) -- #89
 //│   in let* (x$18) = complex_foo(x$17) -- #88
@@ -74,7 +70,6 @@ bar()
 //│ Promoted:
 //│ Program({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
 //│ Def(0, complex_foo, [t$0],
-//│ S: None,
 //│ 1, 
 //│ case t$0 of -- #63
 //│   A => let x$9 = t$0.z -- #51
@@ -89,13 +84,11 @@ bar()
 //│         in jump j$0(x$16) -- #59
 //│ )
 //│ Def(1, j$1, [x$2,x$0],
-//│ S: None,
 //│ 1, 
 //│ let x$3 = +(x$0,x$2) -- #13
 //│   in x$3 -- #12
 //│ )
 //│ Def(2, j$0, [x$0],
-//│ S: None,
 //│ 1, 
 //│ let x$1 = B(1,2) -- #34
 //│   in case x$1 of -- #33
@@ -108,7 +101,6 @@ bar()
 //│         in jump j$1(4,x$0) -- #30
 //│ )
 //│ Def(3, bar, [],
-//│ S: None,
 //│ 1, 
 //│ let x$17 = A(6,7,8) -- #89
 //│   in let* (x$18) = complex_foo(x$17) -- #88
@@ -164,7 +156,6 @@ bar()
 //│ IR:
 //│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(0, complex_foo, [t$0],
-//│ S: None,
 //│ 1, 
 //│ let x$0 = +(1,2) -- #140
 //│   in let x$1 = *(1,2) -- #139
@@ -181,17 +172,14 @@ bar()
 //│           in jump j$0(x$33,x$0,x$1) -- #135
 //│ )
 //│ Def(1, j$2, [x$6],
-//│ S: None,
 //│ 1, 
 //│ x$6 -- #21
 //│ )
 //│ Def(2, j$3, [x$11],
-//│ S: None,
 //│ 1, 
 //│ jump j$2(x$11) -- #39
 //│ )
 //│ Def(3, j$1, [x$5,x$3,x$4],
-//│ S: None,
 //│ 1, 
 //│ case x$3 of -- #60
 //│   A => let x$7 = x$3.x -- #29
@@ -210,12 +198,10 @@ bar()
 //│         in jump j$3(8) -- #56
 //│ )
 //│ Def(4, j$4, [x$20,x$3,x$4],
-//│ S: None,
 //│ 1, 
 //│ jump j$1(x$20,x$3,x$4) -- #72
 //│ )
 //│ Def(5, j$0, [x$2,x$0,x$1],
-//│ S: None,
 //│ 1, 
 //│ let x$3 = A(5,x$2) -- #108
 //│   in let x$4 = B(6) -- #107
@@ -238,7 +224,6 @@ bar()
 //│         in jump j$1(3,x$3,x$4) -- #104
 //│ )
 //│ Def(6, bar, [],
-//│ S: None,
 //│ 1, 
 //│ let x$34 = B(10) -- #162
 //│   in let x$35 = A(9,x$34) -- #161
@@ -253,7 +238,6 @@ bar()
 //│ Promoted:
 //│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(0, complex_foo, [t$0],
-//│ S: None,
 //│ 1, 
 //│ let x$0 = +(1,2) -- #140
 //│   in let x$1 = *(1,2) -- #139
@@ -270,17 +254,14 @@ bar()
 //│           in jump j$0(x$33,x$0,x$1) -- #135
 //│ )
 //│ Def(1, j$2, [x$6],
-//│ S: None,
 //│ 1, 
 //│ x$6 -- #21
 //│ )
 //│ Def(2, j$3, [x$11],
-//│ S: None,
 //│ 1, 
 //│ jump j$2(x$11) -- #39
 //│ )
 //│ Def(3, j$1, [x$5,x$3,x$4],
-//│ S: None,
 //│ 1, 
 //│ case x$3 of -- #60
 //│   A => let x$7 = x$3.x -- #29
@@ -299,12 +280,10 @@ bar()
 //│         in jump j$3(8) -- #56
 //│ )
 //│ Def(4, j$4, [x$20,x$3,x$4],
-//│ S: None,
 //│ 1, 
 //│ jump j$1(x$20,x$3,x$4) -- #72
 //│ )
 //│ Def(5, j$0, [x$2,x$0,x$1],
-//│ S: None,
 //│ 1, 
 //│ let x$3 = A(5,x$2) -- #108
 //│   in let x$4 = B(6) -- #107
@@ -327,7 +306,6 @@ bar()
 //│         in jump j$1(3,x$3,x$4) -- #104
 //│ )
 //│ Def(6, bar, [],
-//│ S: None,
 //│ 1, 
 //│ let x$34 = B(10) -- #162
 //│   in let x$35 = A(9,x$34) -- #161
@@ -383,7 +361,6 @@ bar()
 //│ IR:
 //│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(0, complex_foo, [t$0],
-//│ S: None,
 //│ 1, 
 //│ let x$0 = +(1,2) -- #150
 //│   in let x$1 = *(1,2) -- #149
@@ -402,17 +379,14 @@ bar()
 //│           in jump j$0(x$35,x$0,x$1) -- #145
 //│ )
 //│ Def(1, j$2, [x$6],
-//│ S: None,
 //│ 1, 
 //│ x$6 -- #21
 //│ )
 //│ Def(2, j$3, [x$11],
-//│ S: None,
 //│ 1, 
 //│ jump j$2(x$11) -- #39
 //│ )
 //│ Def(3, j$1, [x$5,x$3,x$4],
-//│ S: None,
 //│ 1, 
 //│ case x$3 of -- #60
 //│   A => let x$7 = x$3.x -- #29
@@ -431,12 +405,10 @@ bar()
 //│         in jump j$3(8) -- #56
 //│ )
 //│ Def(4, j$4, [x$20,x$3,x$4],
-//│ S: None,
 //│ 1, 
 //│ jump j$1(x$20,x$3,x$4) -- #72
 //│ )
 //│ Def(5, j$0, [x$2,x$0,x$1],
-//│ S: None,
 //│ 1, 
 //│ let x$3 = A(5,x$2) -- #108
 //│   in let x$4 = B(6) -- #107
@@ -459,7 +431,6 @@ bar()
 //│         in jump j$1(3,x$3,x$4) -- #104
 //│ )
 //│ Def(6, bar, [],
-//│ S: None,
 //│ 1, 
 //│ let x$36 = B(10) -- #172
 //│   in let x$37 = A(9,x$36) -- #171
@@ -474,7 +445,6 @@ bar()
 //│ Promoted:
 //│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
 //│ Def(0, complex_foo, [t$0],
-//│ S: None,
 //│ 1, 
 //│ let x$0 = +(1,2) -- #150
 //│   in let x$1 = *(1,2) -- #149
@@ -493,17 +463,14 @@ bar()
 //│           in jump j$0(x$35,x$0,x$1) -- #145
 //│ )
 //│ Def(1, j$2, [x$6],
-//│ S: None,
 //│ 1, 
 //│ x$6 -- #21
 //│ )
 //│ Def(2, j$3, [x$11],
-//│ S: None,
 //│ 1, 
 //│ jump j$2(x$11) -- #39
 //│ )
 //│ Def(3, j$1, [x$5,x$3,x$4],
-//│ S: None,
 //│ 1, 
 //│ case x$3 of -- #60
 //│   A => let x$7 = x$3.x -- #29
@@ -522,12 +489,10 @@ bar()
 //│         in jump j$3(8) -- #56
 //│ )
 //│ Def(4, j$4, [x$20,x$3,x$4],
-//│ S: None,
 //│ 1, 
 //│ jump j$1(x$20,x$3,x$4) -- #72
 //│ )
 //│ Def(5, j$0, [x$2,x$0,x$1],
-//│ S: None,
 //│ 1, 
 //│ let x$3 = A(5,x$2) -- #108
 //│   in let x$4 = B(6) -- #107
@@ -550,7 +515,6 @@ bar()
 //│         in jump j$1(3,x$3,x$4) -- #104
 //│ )
 //│ Def(6, bar, [],
-//│ S: None,
 //│ 1, 
 //│ let x$36 = B(10) -- #172
 //│   in let x$37 = A(9,x$36) -- #171

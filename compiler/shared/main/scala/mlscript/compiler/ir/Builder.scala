@@ -28,8 +28,8 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
   )
 
   private def ref(x: Name) = Ref(x)
-  private def result(x: Ls[TrivialExpr]) = Result(x).attach_tag(tag)
-  private def sresult(x: TrivialExpr) = Result(Ls(x)).attach_tag(tag)
+  private def result(x: Ls[TrivialExpr]) = Result(x).attachTag(tag)
+  private def sresult(x: TrivialExpr) = Result(Ls(x)).attachTag(tag)
   private def unexpected_node(x: Node) = throw IRError(s"unsupported node $x")
   private def unexpected_term(x: Term) = throw IRError(s"unsupported term $x")
 
@@ -43,7 +43,7 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
         given Ctx = ctx.copy(name_ctx = ctx.name_ctx + (name -> v))
         LetExpr(v,
           lit,
-          buildResultFromTerm(body)(k)).attach_tag(tag)
+          buildResultFromTerm(body)(k)).attachTag(tag)
       case node @ _ => node |> unexpected_node
     }
   
@@ -79,7 +79,7 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
           val v = fresh.make
           LetExpr(v,
             CtorApp(ctx.class_ctx(name), Nil),
-            v |> ref |> sresult |> k).attach_tag(tag)
+            v |> ref |> sresult |> k).attachTag(tag)
         else
           ctx.name_ctx.get(name) match {
             case Some(x) => x |> ref |> sresult |> k
@@ -98,7 +98,7 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
                 val v = fresh.make
                 LetExpr(v,
                   BasicOp(name, List(v1, v2)),
-                  v |> ref |> sresult |> k).attach_tag(tag)
+                  v |> ref |> sresult |> k).attachTag(tag)
               case node @ _ => node |> unexpected_node
             }
           case node @ _ => node |> unexpected_node
@@ -110,7 +110,7 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
             val v = fresh.make
             LetExpr(v,
               CtorApp(ctx.class_ctx(name), args),
-              v |> ref |> sresult |> k).attach_tag(tag)
+              v |> ref |> sresult |> k).attachTag(tag)
           case node @ _ => node |> unexpected_node
         }
 
@@ -119,7 +119,7 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
         case Result(Ref(f) :: Nil) if ctx.fn_ctx.contains(f.str) => buildResultFromTerm(xs) {
           case Result(args) =>
             val v = fresh.make
-            LetCall(List(v), DefnRef(Right(f.str)), args, v |> ref |> sresult |> k).attach_tag(tag)
+            LetCall(List(v), DefnRef(Right(f.str)), args, v |> ref |> sresult |> k).attachTag(tag)
           case node @ _ => node |> unexpected_node
         }
         case Result(Ref(f) :: Nil) => buildResultFromTerm(xs) {
@@ -147,19 +147,18 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
               jp.str,
               params = res :: fvs.map(x => Name(x)),
               resultNum = 1,
-              specialized = None,
               jpbody
             )
             ctx.jp_acc.addOne(jpdef)
             val tru2 = buildResultFromTerm(tru) {
-              case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attach_tag(tag)
+              case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
               case node @ _ => node |> unexpected_node
             }
             val fls2 = buildResultFromTerm(fls) {
-              case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attach_tag(tag)
+              case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
               case node @ _ => node |> unexpected_node
             }
-            Case(cond, Ls((ctx.class_ctx("True"), tru2), (ctx.class_ctx("False"), fls2))).attach_tag(tag)
+            Case(cond, Ls((ctx.class_ctx("True"), tru2), (ctx.class_ctx("False"), fls2))).attachTag(tag)
           case node @ _ => node |> unexpected_node
         }
         
@@ -180,7 +179,6 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
               jp.str,
               params = res :: fvs.map(x => Name(x)),
               resultNum = 1,
-              specialized = None,
               jpbody,
             )
             ctx.jp_acc.addOne(jpdef)
@@ -191,18 +189,18 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
                   given Ctx = ctx.copy(name_ctx = ctx.name_ctx + (scrut.str -> scrut))
                   buildResultFromTerm(
                     bindingPatternVariables(scrut.str, params, ctx.class_ctx(ctor), rhs)) {
-                      case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attach_tag(tag)
+                      case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
                       case node @ _ => node |> unexpected_node
                     }
                 }
               case L(IfThen(Var(ctor), rhs)) =>
                 ctx.class_ctx(ctor) -> buildResultFromTerm(rhs) {
-                  case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attach_tag(tag)
+                  case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
                   case node @ _ => node |> unexpected_node
                 }
               case _ => throw IRError(s"not supported UCS")
             }
-            Case(scrut, cases).attach_tag(tag)
+            Case(scrut, cases).attachTag(tag)
           case node @ _ => node |> unexpected_node
         }
 
@@ -225,7 +223,7 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
             val cls = ctx.field_ctx(fld)._2
             LetExpr(v,
               Select(res, cls, fld),
-              v |> ref |> sresult |> k).attach_tag(tag)
+              v |> ref |> sresult |> k).attachTag(tag)
           case node @ _ => node |> unexpected_node
         }
 
@@ -248,7 +246,6 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
         name,
         params = names,
         resultNum = 1,
-        specialized = None,
         buildResultFromTerm(body) { x => x }
       )
     case _ => throw IRError("unsupported NuFunDef")
@@ -327,7 +324,7 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
       
 
       
-      relink(main, defs, true)
+      resolveDefnRef(main, defs, true)
       validate(main, defs)
       
       Program(clsinfo, defs, main)

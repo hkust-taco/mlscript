@@ -13,6 +13,17 @@ final case class IRInterpreterError(message: String) extends Exception(message)
 
 class Interpreter(verbose: Bool):
   private def log(x: Any) = if verbose then println(x)
+
+  // We have a similar definition of IR here to represent the result of the interpreter.
+  // This is because IR itself is in A-normal form.
+  // It represent terms, e.g. "Pair(True, False)", like:
+  //   let x = CtorApp(True, []) in
+  //   let y = CtorApp(False, []) in
+  //   let z = CtorApp(Pair, [x, y]) in
+  //   z
+  // But I don't want the result of an interpreter to be like this.
+  // So we release the limitation of the ANF IR here and allow expressions in argument position.
+
   private case class Program(
     classes: Set[ClassInfo],
     defs: Set[Defn],

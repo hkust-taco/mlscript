@@ -64,13 +64,13 @@ class FreeVarAnalysis(extended_scope: Bool = true, verbose: Bool = false):
   private def f(using defined: Set[Str])(expr: Expr, fv: Set[Str]): Set[Str] = expr match
     case Ref(name) => if (defined.contains(name.str)) fv else fv + name.str
     case Literal(lit) => fv
-    case CtorApp(name, args) => args.foldLeft(fv)((acc, arg) => f(using defined)(arg.to_expr, acc))
+    case CtorApp(name, args) => args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
     case Select(name, cls, field) => if (defined.contains(name.str)) fv else fv + name.str
-    case BasicOp(name, args) => args.foldLeft(fv)((acc, arg) => f(using defined)(arg.to_expr, acc))
+    case BasicOp(name, args) => args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
   private def f(using defined: Set[Str])(node: Node, fv: Set[Str]): Set[Str] = node match
-    case Result(res) => res.foldLeft(fv)((acc, arg) => f(using defined)(arg.to_expr, acc))
+    case Result(res) => res.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
     case Jump(defnref, args) =>
-      var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined)(arg.to_expr, acc))
+      var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
       if (extended_scope && !visited.contains(defnref.getName))
         val defn = defnref.expectDefn
         visited.add(defn.name)
@@ -87,7 +87,7 @@ class FreeVarAnalysis(extended_scope: Bool = true, verbose: Bool = false):
       val defined2 = defined + name.str
       f(using defined2)(body, fv2)
     case LetCall(resultNames, defnref, args, body) =>
-      var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined)(arg.to_expr, acc))
+      var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
       val defined2 = resultNames.foldLeft(defined)((acc, name) => acc + name.str)
       if (extended_scope && !visited.contains(defnref.getName))
         val defn = defnref.expectDefn
