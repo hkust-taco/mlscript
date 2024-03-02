@@ -11,35 +11,34 @@ import mlscript.compiler.mono.MonomorphError
 
 class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*
-  override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit): List[Str] = 
+    override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (List[Str], Option[TypingUnit]) = 
     val outputBuilder = StringBuilder()
 
-    outputBuilder ++= "\nLifted:\n"
+    output("\nLifted:")
     var rstUnit = unit;
     try
       rstUnit = ClassLifter(mode.fullExceptionStack).liftTypingUnit(unit)
-      outputBuilder ++= PrettyPrinter.showTypingUnit(rstUnit)
+      output(PrettyPrinter.showTypingUnit(rstUnit))
     catch
       case NonFatal(err) =>
-        outputBuilder ++= "Lifting failed: " ++ err.toString()
+        output("Lifting failed: " ++ err.toString())
         if mode.fullExceptionStack then 
-          outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
+          output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))
     if(mode.mono){
-      outputBuilder ++= "\nMono:\n"
+      output("Mono:")
       val treeDebug = new TreeDebug()
       try{
         val monomorph = new Monomorph(treeDebug)
         val monomorphized = monomorph.defunctionalize(rstUnit)
-        outputBuilder ++= "\nDefunc result: \n"
-        outputBuilder ++= ExprPrinter.print(monomorphized)
-        outputBuilder ++= "\n"
+        output("\nDefunc result: ")
+        output(ExprPrinter.print(monomorphized))
       }catch{
         case error: MonomorphError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().map(_.toString()).toList).mkString("\n")
         // case error: StackOverflowError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().take(40).map(_.toString()).toList).mkString("\n")
       }
       // outputBuilder ++= treeDebug.getLines.mkString("\n")
     }
-    outputBuilder.toString().linesIterator.toList
+    (outputBuilder.toString().linesIterator.toList, Some(rstUnit))
   
   override protected lazy val files = allFiles.filter { file =>
       val fileName = file.baseName
