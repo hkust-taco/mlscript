@@ -155,12 +155,12 @@ enum Node:
   def show: String =
     toDocument.print
 
-  def map_name(f: Name => Name): Node = this match
+  def mapName(f: Name => Name): Node = this match
     case Result(res) => Result(res.map(_.mapNameOfTrivialExpr(f)))
     case Jump(defn, args) => Jump(defn, args.map(_.mapNameOfTrivialExpr(f)))
-    case Case(scrut, cases) => Case(f(scrut), cases.map { (cls, arm) => (cls, arm.map_name(f)) })
-    case LetExpr(name, expr, body) => LetExpr(f(name), expr.mapName(f), body.map_name(f))
-    case LetCall(names, defn, args, body) => LetCall(names.map(f), defn, args.map(_.mapNameOfTrivialExpr(f)), body.map_name(f))  
+    case Case(scrut, cases) => Case(f(scrut), cases.map { (cls, arm) => (cls, arm.mapName(f)) })
+    case LetExpr(name, expr, body) => LetExpr(f(name), expr.mapName(f), body.mapName(f))
+    case LetCall(names, defn, args, body) => LetCall(names.map(f), defn, args.map(_.mapNameOfTrivialExpr(f)), body.mapName(f))  
   
   def copy(ctx: Map[Str, Name]): Node = this match
     case Result(res) => Result(res.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))))
@@ -217,7 +217,7 @@ enum Node:
         raw("in") <:> body.toDocument |> indent
       )
 
-  def loc_marker: LocMarker =
+  def locMarker: LocMarker =
     val marker = this match
       case Result(res) => LocMarker.MResult(res.map(_.toExpr.locMarker))
       case Jump(defn, args) => LocMarker.MJump(defn.getName, args.map(_.toExpr.locMarker))
