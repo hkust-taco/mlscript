@@ -520,7 +520,7 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 
 // * The skolem used to (unsafely) leak into this type – see also `Skolems.mls`:
 res
-//│ res: (('a | ??a) -> (??a0 & 'a) & 'a0) -> (error | 'a0 | 'b -> 'b)
+//│ res: (anything -> ??a & 'a) -> (error | 'a | 'b -> 'b)
 //│    = [Function: id1]
 
 :e // skolem extrusion

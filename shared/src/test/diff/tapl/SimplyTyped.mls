@@ -88,11 +88,11 @@ class App(lhs, rhs): Term
 //│ Lit: ('tag, 'ty,) -> (Lit & {tag: 'tag, ty: 'ty})
 //│    = [Function: Lit1]
 //│ Var: 'name -> (Var & {name: 'name})
-//│    = [Function: Var1]
+//│    = [Function: Var2]
 //│ Abs: ('lhs, 'lty, 'rhs,) -> (Abs & {lhs: 'lhs, lty: 'lty, rhs: 'rhs})
 //│    = [Function: Abs1]
 //│ App: ('lhs, 'rhs,) -> (App & {lhs: 'lhs, rhs: 'rhs})
-//│    = [Function: App1]
+//│    = [Function: App2]
 
 class Assumption(name, ty)
 //│ Defined class Assumption

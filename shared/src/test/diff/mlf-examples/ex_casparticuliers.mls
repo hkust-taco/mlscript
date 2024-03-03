@@ -275,7 +275,7 @@ rec def wat n =
 //│ ╟── • this application:
 //│ ║  l.204: 	  succ wat n
 //│ ╙──       	  ^^^^^^^^^^
-//│ wat: ((??a | 'a) -> (??a0 & 'a & 'b)) -> (??a0 & 'a) -> (??a | 'b)
+//│ wat: (anything -> (??a & 'a)) -> (??a & 'a) -> anything
 //│    = [Function: wat1]
 
 // * Works with this option!

@@ -22,7 +22,7 @@ class Lazy[out A](init: () => A) {
   fun toString() = join of "Lazy(", (if cached is defined(v) then String(v) else "..."), ")"
 }
 //│ class Lazy[A](init: () -> A) {
-//│   val cached: Option[A]
+//│   mut val cached: Option[A]
 //│   fun get: A
 //│   fun toString: () -> Str
 //│ }
@@ -145,7 +145,7 @@ fun walkLazy(t, mn) = if t is
     let mnl = walkLazy(l, mn)
     let mnr = walkLazy(r, mn)
     [min(mnl.0, mnr.0), Lazy of () => Node of mnl.1.get, mnr.1.get]
-//│ fun walkLazy: forall 'a 'get. (Leaf[Num & 'a] | Node[Num & 'a], {get: Int & 'get}) -> ['a, Lazy[Leaf['get | 'a] | Node['get | 'a]]]
+//│ fun walkLazy: forall 'get 'a. (Leaf[Num & 'a] | Node[Num & 'a], {get: Int & 'get}) -> ['a, Lazy[Leaf['get | 'a] | Node['get | 'a]]]
 
 
 // * One way to tie the recursive knot

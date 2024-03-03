@@ -106,7 +106,7 @@ r of [0, 1]
 
 // Also currently parses the same:
 let r = if true then id else [x, y] => [y, x]
-//│ let r: forall 'a 'b 'c. (['b, 'c] & 'a) -> (['c, 'b] | 'a)
+//│ let r: forall 'a 'b 'c. (['a, 'b] & 'c) -> (['b, 'a] | 'c)
 //│ r
 //│   = [Function: id]
 
