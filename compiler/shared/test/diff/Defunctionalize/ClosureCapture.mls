@@ -1,6 +1,6 @@
 :NewDefs
 
-:e //FIXME: Class parameters not lifted
+:e //FIXME: Class parameters not annotated
 :mono
 fun foo(x) = 
   (f => f(x))(z => z+1)
@@ -35,7 +35,7 @@ foo(2)
 //│ res
 //│     = 3
 
-:e //FIXME: Class parameters not lifted
+:e //FIXME: Class parameters not annotated
 :mono
 :AllowRuntimeErrors
 fun f(x) =

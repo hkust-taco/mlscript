@@ -309,8 +309,10 @@ class ClassLifter(logDebugMsg: Boolean = false) {
         (globFuncs.get(v).get)
       }
       else if(cache.contains(TypeName(v.name))){
-        val ret = liftConstr(TypeName(v.name), Tup(Nil))
-        App(Var(ret._1.name), ret._2) -> ret._3
+        //val ret = liftConstr(TypeName(v.name), Tup(Nil))
+        //App(Var(ret._1.name), ret._2) -> ret._3
+        val cls@ClassInfoCache(_, nm, capParams, _, _, _, out, _, _) = cache.get(TypeName(v.name)).get
+        (Var(nm.name), emptyCtx)
       }
       else if(ctx.contains(v) || v.name.equals("this") || primiTypes.contains(v.name))   (v, emptyCtx)
       else {
@@ -344,7 +346,12 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     case NuNew(cls) =>
       liftTerm(App(NuNew(cls), Tup(Nil)))
     case App(NuNew(cls), args) =>
-      liftTerm(Rft(App(NuNew(cls), args), TypingUnit(Nil)))
+      (cls, args) match {
+        case (v: Var, args: Tup) =>
+          val ret = liftConstr(TypeName(v.name), args)
+          (App(NuNew(Var(ret._1.name)), ret._2), ret._3)
+        case _ => ???
+      }
     case Rft(NuNew(cls), tu) =>
       liftTerm(Rft(App(NuNew(cls), Tup(Nil)), TypingUnit(Nil)))
     case Rft(App(NuNew(cls), args), tu) =>
@@ -734,7 +741,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     val nParams = 
       outer.map(x => List(toFldsEle(Var(genParName(x.liftedNm.name))))).getOrElse(Nil)
       ++ params.fold(Nil)(t => t.fields.map{
-        case (Some(nm), Fld(flags, Var(name))) => (Some(nm), Fld(flags, cache.get(TypeName(name)).map(_.liftedNm.toVar).getOrElse(Var(name))))
+        case (Some(nm), Fld(flags, term)) => (Some(nm), Fld(flags, liftTerm(term)(using emptyCtx, nCache, globFuncs, nOuter)._1))
         case other => other
       })
       ++ freeVs.vSet.map(toFldsEle) 
@@ -743,8 +750,10 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     val nTerms = termList.map(liftTerm(_)(using emptyCtx, nCache, globFuncs, nOuter)).unzip
     clsList.foreach(x => liftTypeDef(x)(using nCache, globFuncs, nOuter))
     retSeq = retSeq.appended(NuTypeDef(
-      kind, nName, nTps.map((None, _)), S(Tup(nParams)), None, None, nPars._1,
-      None, None, TypingUnit(nFuncs._1 ++ nTerms._1))(None, None, Nil))
+      kind, nName, nTps.map((None, _)), kind match 
+        case Mod => None
+        case _ => S(Tup(nParams))
+      , None, None, nPars._1, None, None, TypingUnit(nFuncs._1 ++ nTerms._1))(None, None, Nil))
   }
 
   def liftTypingUnit(rawUnit: TypingUnit): TypingUnit = {

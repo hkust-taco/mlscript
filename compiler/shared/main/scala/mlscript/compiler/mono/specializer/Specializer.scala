@@ -13,7 +13,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
   */
   val builtInOps: Set[String] = Set("+", "-", ">", "<", "*", "==", "concat", "toString", "log") 
   def evaluate(term: Term)(using evalCtx: Map[String, BoundedTerm], callingStack: List[String], termMap: MutMap[Term, BoundedTerm]): Unit =
-    def getRes(term: Term): BoundedTerm = termMap.getOrElse(term, throw MonomorphError(s"Bounds for ${term} not found."))
+    def getRes(term: Term): BoundedTerm = termMap.getOrElse(term, throw MonomorphError(s"Bounds for ${term} not found during eval."))
     debug.writeLine(s"╓Eval ${term}:")
     debug.indent()
     term match
@@ -33,6 +33,13 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
       case App(lhs@Var(name), rhs) if builtInOps.contains(name) => 
         evaluate(rhs)
         termMap.addOne(term, extractFuncArgs(rhs).map(getRes).fold(BoundedTerm())(_ ++ _))
+      case App(lhs@NuNew(cls), args) =>
+        (cls, args) match {
+          case (v: Var, args: Tup) =>
+            evaluate(args)
+            termMap.addOne(term, BoundedTerm(monoer.createObjValue(v.name, extractFuncArgs(args).map(getRes))))
+          case _ => ???
+        }
       case App(lhs, rhs) => 
         evaluate(lhs)
         evaluate(rhs)
@@ -135,7 +142,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
     debug.writeLine(s"╙Result ${getRes(term).getValue.map(_.toString).toList}:")
 
   def defunctionalize(term: Term)(using termMap: MutMap[Term, BoundedTerm]): Term = {
-    def getRes(term: Term): BoundedTerm = termMap.getOrElse(term, throw MonomorphError(s"Bounds for ${term} not found."))
+    def getRes(term: Term): BoundedTerm = termMap.getOrElse(term, throw MonomorphError(s"Bounds for ${term} not found during defunc."))
     // TODO: Change to use basic pattern match instead of UCS
     def valSetToBranches(vals: List[MonoVal], acc: List[Either[IfBody,Statement]] = List(Left(IfElse(Var("error")))))(using field: Var, args: Option[List[Term]]): List[Either[IfBody,Statement]] = 
       debug.writeLine(s"Expanding ${vals}")
@@ -193,6 +200,12 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
         res
       case App(op@Var(name), args) if builtInOps.contains(name) =>
           App(op, defunctionalize(args))
+      case App(lhs@NuNew(cls), args) =>
+        (cls, args) match {
+          case (v: Var, args: Tup) =>
+            App(lhs, defunctionalize(args))
+          case _ => ???
+        }
       case App(callee, args) => 
         if(getRes(callee).getValue.find(_.isInstanceOf[ObjVal]).isDefined)
           defunctionalize(App(Sel(callee, Var("apply")), args))

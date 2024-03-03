@@ -7,6 +7,7 @@ import scala.collection.mutable.{Map as MutMap, Set as MutSet}
 import scala.collection.mutable.ListBuffer
 import java.util.IdentityHashMap
 import scala.collection.JavaConverters._
+import mlscript.Mod
 
 class Monomorph(debug: Debug = DummyDebug):
   import Helpers._
@@ -23,11 +24,9 @@ class Monomorph(debug: Debug = DummyDebug):
   val evalQueue = MutSet[String]()
   val evalCnt = MutMap[String, Int]()
   
-  //private val tyImpls = MutMap[TypeName, SpecializationMap[NuTypeDef]]()
   private val allTypeImpls = MutMap[String, NuTypeDef]()
 
   private def addType(typeDef: NuTypeDef) =
-    //tyImpls.addOne(typeDef.nme, SpecializationMap(typeDef))
     allTypeImpls.addOne(typeDef.name, typeDef)
   
   val specializer = new Specializer(this)(using debug)
@@ -190,7 +189,6 @@ class Monomorph(debug: Debug = DummyDebug):
         val (func, _, _, _) = res
         funDependence.update(name, funDependence.get(name).get ++ callingStack.headOption)
         val params = func.rhs match
-          //case Left(Lam(lhs, rhs)) => Some(extractParams(lhs).map(_._2.name).toList)
           case Left(body) => extractLamParams(body).map(_.map(_._2.name).toList)
           case Right(tp) => ???
         params match 
@@ -200,8 +198,10 @@ class Monomorph(debug: Debug = DummyDebug):
             res
       case None => 
         allTypeImpls.get(name) match
-          case Some(res) => BoundedTerm(TypeVal(name))
+          case Some(res) if res.kind == Cls => BoundedTerm(TypeVal(name))
+          case Some(res) if res.kind == Mod => BoundedTerm(createObjValue(name, Nil))
           case None => throw MonomorphError(s"Variable ${name} not found during evaluation")
+          case _ => throw MonomorphError(s"Variable ${name} unhandled")
 
   def createObjValue(tpName: String, args: List[BoundedTerm]): MonoVal = 
     allTypeImpls.get(tpName) match

@@ -11,7 +11,7 @@ Sub2().add(5,6)
 //│ Lifted:
 //│ TypingUnit {
 //│   class Sup$1([]) {fun add = (num1, num2,) => +(num1, num2,)}
-//│   class Sub1$2([]): Sup$1() {}
+//│   class Sub1$2([]): Sup$1 {}
 //│   class Sub2$3([]): Sub1$2() {}
 //│   Code(List((Sub1$2()).add(3, 4,)))
 //│   Code(List((Sub2$3()).add(5, 6,)))
@@ -20,7 +20,7 @@ Sub2().add(5,6)
 //│ TypingUnit {
 //│   class Sub2$3([]): Sub1$2() {}
 //│   class Sup$1([]) {}
-//│   class Sub1$2([]): Sup$1() {}
+//│   class Sub1$2([]): Sup$1 {}
 //│   fun add$Sup$1 = (this, num1, num2,) => +(num1, num2,)
 //│   fun main$$4 = () => let obj = Sub2$3() in if obj is ‹(Sub2$3) then add$Sup$1(obj, 5, 6,); else error›
 //│   fun main$$3 = () => let obj = Sub1$2() in if obj is ‹(Sub1$2) then add$Sup$1(obj, 3, 4,); else error›

@@ -3,7 +3,7 @@
 :NewDefs
 
 :mono
-class Exp() {
+abstract class Exp() {
     virtual fun derive(): Exp
     virtual fun derive() = Exp()
     virtual fun getVal: Str
@@ -33,7 +33,7 @@ class Pow(lhs: Variable, rhs: Numeric) extends Exp {
 Sum(Variable("x"), Numeric(3)).derive().getVal
 Mul(Variable("x"), Numeric(3)).derive().getVal
 Pow(Variable("x"), Numeric(3)).derive().getVal
-Mul(Pow(Variable("x"), Numeric(2)), Pow(Variable("y"), Numeric(2))).derive().getVal // FIXME: Stack overflow, cause unsure
+Mul(Pow(Variable("x"), Numeric(2)), Pow(Variable("y"), Numeric(2))).derive().getVal
 //│ Lifted:
 //│ TypingUnit {
 //│   class Exp$1([]) {
@@ -42,21 +42,21 @@ Mul(Pow(Variable("x"), Numeric(2)), Pow(Variable("y"), Numeric(2))).derive().get
 //│     fun getVal = Str
 //│     fun getVal = ""
 //│   }
-//│   class Numeric$2([i: Int,]): Exp$1() {
+//│   class Numeric$2([i: Int,]): Exp$1 {
 //│     fun derive = () => Numeric$2(0,)
 //│     fun getNum = (this).i
 //│     fun getVal = toString((this).i,)
 //│   }
-//│   class Variable$3([nm: Str,]): Exp$1() {fun derive = () => Numeric$2(1,); fun getVal = (this).nm}
-//│   class Sum$4([lhs: Exp$1, rhs: Exp$1,]): Exp$1() {
+//│   class Variable$3([nm: Str,]): Exp$1 {fun derive = () => Numeric$2(1,); fun getVal = (this).nm}
+//│   class Sum$4([lhs: Exp$1, rhs: Exp$1,]): Exp$1 {
 //│     fun derive = () => Sum$4(((this).lhs).derive(), ((this).rhs).derive(),)
 //│     fun getVal = concat("(",)(concat(concat(concat(((this).lhs).getVal,)(" + ",),)(((this).rhs).getVal,),)(")",),)
 //│   }
-//│   class Mul$5([lhs: Exp$1, rhs: Exp$1,]): Exp$1() {
+//│   class Mul$5([lhs: Exp$1, rhs: Exp$1,]): Exp$1 {
 //│     fun derive = () => Sum$4(Mul$5(((this).lhs).derive(), (this).rhs,), Mul$5((this).lhs, ((this).rhs).derive(),),)
 //│     fun getVal = concat("(",)(concat(concat(concat(((this).lhs).getVal,)(" * ",),)(((this).rhs).getVal,),)(")",),)
 //│   }
-//│   class Pow$6([lhs: Variable$3, rhs: Numeric$2,]): Exp$1() {
+//│   class Pow$6([lhs: Variable$3, rhs: Numeric$2,]): Exp$1 {
 //│     fun derive = () => Mul$5((this).rhs, Pow$6((this).lhs, Numeric$2(-(((this).rhs).getNum, 1,),),),)
 //│     fun getVal = concat("(",)(concat(concat(concat(((this).lhs).getVal,)(" ^ ",),)(((this).rhs).getVal,),)(")",),)
 //│   }
@@ -67,11 +67,11 @@ Mul(Pow(Variable("x"), Numeric(2)), Pow(Variable("y"), Numeric(2))).derive().get
 //│ }
 //│ Mono:
 //│ TypingUnit {
-//│   class Numeric$2([i: Int,]): Exp$1() {}
-//│   class Pow$6([lhs: Variable$3, rhs: Numeric$2,]): Exp$1() {}
-//│   class Sum$4([lhs: Exp$1, rhs: Exp$1,]): Exp$1() {}
-//│   class Mul$5([lhs: Exp$1, rhs: Exp$1,]): Exp$1() {}
-//│   class Variable$3([nm: Str,]): Exp$1() {}
+//│   class Numeric$2([i: Int,]): Exp$1 {}
+//│   class Pow$6([lhs: Variable$3, rhs: Numeric$2,]): Exp$1 {}
+//│   class Sum$4([lhs: Exp$1, rhs: Exp$1,]): Exp$1 {}
+//│   class Mul$5([lhs: Exp$1, rhs: Exp$1,]): Exp$1 {}
+//│   class Variable$3([nm: Str,]): Exp$1 {}
 //│   class Exp$1([]) {}
 //│   fun getVal$Sum$4 = (this,) => concat("(",)(concat(concat(concat(let obj = let obj = this in if obj is ‹(Sum$4(lhs, rhs,)) then lhs; else error› in if obj is ‹(Mul$5) then getVal$Mul$5(obj,); (Numeric$2) then getVal$Numeric$2(obj,); else error›,)(" + ",),)(let obj = let obj = this in if obj is ‹(Sum$4(lhs, rhs,)) then rhs; else error› in if obj is ‹(Mul$5) then getVal$Mul$5(obj,); (Numeric$2) then getVal$Numeric$2(obj,); else error›,),)(")",),)
 //│   fun derive$Pow$6 = (this,) => Mul$5(let obj = this in if obj is ‹(Pow$6(lhs, rhs,)) then rhs; else error›, Pow$6(let obj = this in if obj is ‹(Pow$6(lhs, rhs,)) then lhs; else error›, Numeric$2(-(let obj = let obj = this in if obj is ‹(Pow$6(lhs, rhs,)) then rhs; else error› in if obj is ‹(Numeric$2) then getNum$Numeric$2(obj,); else error›, 1,),),),)

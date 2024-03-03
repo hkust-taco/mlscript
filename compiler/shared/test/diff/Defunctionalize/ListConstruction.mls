@@ -25,11 +25,11 @@ mkList(5).map((x) => x*2).getRes
 //│     fun getRes = ""
 //│     fun map = (f,) => error
 //│   }
-//│   class Cons$2([x: Int, xs: List$1,]): List$1() {
+//│   class Cons$2([x: Int, xs: List$1,]): List$1 {
 //│     fun getRes = concat(concat(toString((this).x,),)(" :: ",),)(((this).xs).getRes,)
 //│     fun map = (f,) => Cons$2(f((this).x,), ((this).xs).map(f,),)
 //│   }
-//│   class Nil$3([]): List$1() {fun getRes = "Nil"; fun map = (f,) => Nil$3()}
+//│   class Nil$3([]): List$1 {fun getRes = "Nil"; fun map = (f,) => Nil$3()}
 //│   class Lambda1$2$4([]) {fun apply = ('(' x ')',) => *(x, 2,)}
 //│   fun mkList$1 = (len: Int,) => {if (==(len, 0,)) then Nil$3() else Cons$2(len, mkList$1(-(len, 1,),),)}
 //│   Code(List(((mkList$1(5,)).map({Lambda1$2$4()},)).getRes))
@@ -38,8 +38,8 @@ mkList(5).map((x) => x*2).getRes
 //│ TypingUnit {
 //│   class Lambda1$2$4([]) {}
 //│   class List$1([]) {}
-//│   class Cons$2([x: Int, xs: List$1,]): List$1() {}
-//│   class Nil$3([]): List$1() {}
+//│   class Cons$2([x: Int, xs: List$1,]): List$1 {}
+//│   class Nil$3([]): List$1 {}
 //│   fun mkList$1 = (len: Int,) => {if (==(len, 0,)) then Nil$3() else Cons$2(len, mkList$1(-(len, 1,),),)}
 //│   fun map$Nil$3 = (this, f,) => Nil$3()
 //│   fun getRes$Nil$3 = (this,) => "Nil"

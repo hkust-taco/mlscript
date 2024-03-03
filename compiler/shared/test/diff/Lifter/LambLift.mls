@@ -12,7 +12,7 @@ foo()
 //│ Lifted:
 //│ TypingUnit {
 //│   class Foo$1([x,]) {fun bar = +((this).x, foo$1(),)}
-//│   let local$2 = (x,) => {('(' new Foo$1([x,]) {} ')').bar}
+//│   let local$2 = (x,) => {('(' (new Foo$1)(x,) ')').bar}
 //│   fun foo$1 = () => {local$2(1,)}
 //│   Code(List(foo$1()))
 //│ }
@@ -67,7 +67,7 @@ app(new A(1))
 //│   class Lambda1$3$2([a,]) {fun apply = (z,) => ((this).a).bar(z,)}
 //│   fun foo$2 = (f,) => {f(1,)}
 //│   fun app$1 = (a,) => {foo$2({Lambda1$3$2(a,)},)}
-//│   Code(List(app$1(new A$1([1,]) {},)))
+//│   Code(List(app$1((new A$1)(1,),)))
 //│ }
 //│ fun foo: forall 'a. (1 -> 'a) -> 'a
 //│ class A(y: Int) {
