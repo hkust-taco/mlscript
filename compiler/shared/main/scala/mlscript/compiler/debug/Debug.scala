@@ -1,4 +1,4 @@
-package mlscript.compiler.debug
+package mlscript.compiler
 
 abstract class Debug:
   def trace[T](name: String, pre: Any*)

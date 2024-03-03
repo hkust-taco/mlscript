@@ -1,21 +1,10 @@
-package mlscript.compiler.mono
+package mlscript
+package compiler
+package mono
 
-import mlscript.compiler.debug.{Debug, DummyDebug}
-import mlscript.{TypingUnit, NuTypeDef, NuFunDef}
-import mlscript.{AppliedType, TypeName}
-import mlscript.{App, Asc, Assign, Bind, Blk, Bra, CaseOf, Lam, Let, Lit,
-                 New, Rcd, Sel, Subs, Term, Test, Tup, With, Var, Fld, FldFlags, If}
-import mlscript.{IfThen, IfElse, IfLet, IfOpApp, IfOpsApp, IfBlock, Statement}
-import mlscript.{IntLit, DecLit, StrLit, UnitLit}
 import scala.collection.immutable.{HashMap, ListMap}
 import scala.collection.mutable.{Map as MutMap, Set as MutSet}
 import scala.collection.mutable.ListBuffer
-import mlscript.Cls
-import mlscript.CaseBranches
-import mlscript.TypeDefKind
-import mlscript.AppliedType.apply
-import mlscript.compiler.*
-import mlscript.compiler.mono.specializer.{MonoVal, TypeVal, ObjVal, FuncVal, LiteralVal, PrimVal, VarVal, TupVal, UnknownVal, BoundedTerm}
 import java.util.IdentityHashMap
 import scala.collection.JavaConverters._
 
@@ -41,7 +30,7 @@ class Monomorph(debug: Debug = DummyDebug):
     //tyImpls.addOne(typeDef.nme, SpecializationMap(typeDef))
     allTypeImpls.addOne(typeDef.name, typeDef)
   
-  val specializer = new mono.specializer.Specializer(this)(using debug)
+  val specializer = new Specializer(this)(using debug)
 
 
   object VarValMap {

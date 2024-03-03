@@ -4,7 +4,7 @@ import mlscript.utils.shorthands.*
 import scala.util.control.NonFatal
 import scala.collection.mutable.StringBuilder
 import mlscript.{DiffTests, ModeType, TypingUnit}
-import mlscript.compiler.debug.TreeDebug
+import mlscript.compiler.TreeDebug
 import mlscript.compiler.mono.Monomorph
 import mlscript.compiler.mono.MonomorphError
 

@@ -1,4 +1,4 @@
-package mlscript.compiler.mono.specializer
+package mlscript.compiler.mono
 import mlscript.{Var, Lit}
 import scala.collection.mutable.{Map => MutMap}
 import scala.collection.immutable.ListMap

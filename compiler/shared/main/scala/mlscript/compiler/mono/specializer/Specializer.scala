@@ -1,38 +1,11 @@
-package mlscript.compiler.mono.specializer
+package mlscript
+package compiler
+package mono
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Map as MutMap
-import mlscript.compiler.debug.Debug
-import mlscript.compiler.mono.MonomorphError
-import mlscript.compiler.mono.Monomorph
-import mlscript.TypeName
-import mlscript.{App, Asc, Assign, Bind, Blk, Bra, CaseOf, Lam, Let, Lit,
-                 New, Rcd, Sel, Subs, Term, Test, Tup, With, Var, Fld, FldFlags, If, PolyType, 
-                 IfBody, IfThen, IfElse, IfLet, IfOpApp, IfOpsApp, IfBlock, LetS, Statement}
-import mlscript.UnitLit
-import mlscript.compiler.mono.MonomorphError
-import mlscript.NuTypeDef
-import mlscript.NuFunDef
 import scala.collection.mutable.ArrayBuffer
-import mlscript.CaseBranches
-import mlscript.Case
-import mlscript.SimpleTerm
-import mlscript.NoCases
-import mlscript.Wildcard
-import mlscript.DecLit
-import mlscript.IntLit
-import mlscript.StrLit
-import mlscript.AppliedType
-import mlscript.TypeName
-import mlscript.TypeDefKind
-import mlscript.compiler.mono.Monomorph
-import mlscript.NuDecl
-import mlscript.TypingUnit
-import mlscript.compiler.Helpers.extractLamParams
-import mlscript.compiler.Helpers.toTuple
-import mlscript.compiler.mono.specializer.{MonoVal, TypeVal, ObjVal, FuncVal, LiteralVal, PrimVal, VarVal, TupVal, UnknownVal, BoundedTerm}
-import mlscript.compiler.Helpers.extractFuncArgs
-
+import mlscript.compiler.Helpers.*
 class Specializer(monoer: Monomorph)(using debug: Debug){
 
   /*

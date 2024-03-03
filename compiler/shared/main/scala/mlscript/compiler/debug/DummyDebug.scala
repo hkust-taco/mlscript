@@ -1,4 +1,4 @@
-package mlscript.compiler.debug
+package mlscript.compiler
 
 object DummyDebug extends Debug:
   def trace[T](name: String, pre: Any*)
