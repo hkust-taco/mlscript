@@ -41,20 +41,14 @@ foo(1) as Nothing
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.39: 	not / foo(1)
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── function of type `int` is not an instance of type `bool`
-//│ ║  l.26: 	let foo = (Int => Int) & (Bool => Bool)
-//│ ║        	                          ^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `bool`
+//│ ╟── application of type `int` is not an instance of type `bool`
 //│ ║  l.39: 	not / foo(1)
 //│ ╙──      	      ^^^^^^
 //│ res: bool | error
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.40: 	foo(1) as Nothing
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `int` does not match type `nothing`
-//│ ║  l.26: 	let foo = (Int => Int) & (Bool => Bool)
-//│ ║        	                          ^^^^^^^^^^^^
-//│ ╟── but it flows into application with expected type `nothing`
+//│ ╟── application of type `int` does not match type `nothing`
 //│ ║  l.40: 	foo(1) as Nothing
 //│ ║        	^^^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -65,26 +59,26 @@ foo(1) as Nothing
 :e
 foo as Nothing
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.66: 	foo as Nothing
+//│ ║  l.60: 	foo as Nothing
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── type intersection of type `int -> int & bool -> bool` does not match type `nothing`
 //│ ║  l.26: 	let foo = (Int => Int) & (Bool => Bool)
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.66: 	foo as Nothing
+//│ ║  l.60: 	foo as Nothing
 //│ ║        	^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.66: 	foo as Nothing
+//│ ║  l.60: 	foo as Nothing
 //│ ╙──      	       ^^^^^^^
 //│ res: nothing
 
 :e
 let oops = (&)
 //│ ╔══[ERROR] Illegal use of reserved operator: &
-//│ ║  l.82: 	let oops = (&)
+//│ ║  l.76: 	let oops = (&)
 //│ ╙──      	           ^^^
 //│ ╔══[ERROR] identifier not found: &
-//│ ║  l.82: 	let oops = (&)
+//│ ║  l.76: 	let oops = (&)
 //│ ╙──      	           ^^^
 //│ oops: error
 

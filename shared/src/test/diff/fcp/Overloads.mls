@@ -31,25 +31,37 @@ IISS : ZZII
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.30: 	IISS : ZZII
 //│ ║        	^^^^
-//│ ╟── type `int` does not match type `0`
+//│ ╟── type `int -> int & string -> string` is not a function
 //│ ║  l.12: 	def IISS: int -> int & string -> string
-//│ ║        	                 ^^^
-//│ ╟── Note: constraint arises from literal type:
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `0 -> 0`
+//│ ║  l.30: 	IISS : ZZII
+//│ ║        	^^^^
+//│ ╟── Note: constraint arises from function type:
 //│ ║  l.7: 	type ZZII = 0 -> 0 & int -> int
-//│ ╙──     	                 ^
+//│ ║       	            ^^^^^^
+//│ ╟── from type reference:
+//│ ║  l.30: 	IISS : ZZII
+//│ ╙──      	       ^^^^
 //│ res: ZZII
 
 :e
 IISS : BBNN
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.43: 	IISS : BBNN
+//│ ║  l.49: 	IISS : BBNN
 //│ ║        	^^^^
-//│ ╟── type `bool` does not match type `?a`
-//│ ║  l.6: 	type BBNN = bool -> bool & number -> number
-//│ ║       	            ^^^^
-//│ ╟── Note: constraint arises from function type:
+//│ ╟── type `int -> int & string -> string` is not a function
 //│ ║  l.12: 	def IISS: int -> int & string -> string
-//│ ╙──      	                       ^^^^^^^^^^^^^^^^
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `bool -> bool`
+//│ ║  l.49: 	IISS : BBNN
+//│ ║        	^^^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.6: 	type BBNN = bool -> bool & number -> number
+//│ ║       	            ^^^^^^^^^^^^
+//│ ╟── from type reference:
+//│ ║  l.49: 	IISS : BBNN
+//│ ╙──      	       ^^^^
 //│ res: BBNN
 
 
@@ -62,9 +74,7 @@ IISS : (0 | 1) -> number
 //│ res: (0 | 1) -> number
 
 IISS : 'a -> 'a
-//│ res: ('a & 'b) -> ('a | 'c)
-//│   where
-//│     ['b, 'c] in {[string, string], [int, int]}
+//│ res: 'a -> 'a
 
 IISS 0
 //│ res: int
@@ -76,11 +86,18 @@ IISS 0
 //│ res: number
 
 // * TODO: update type simplifier
+:e
 fun x -> (if true then IISS else BBNN) x
-//│ res: ('a & 'b) -> ('c | 'd)
-//│   where
-//│     ['b, 'd] in {[bool, bool], [number, number]}
-//│     ['a, 'c] in {[string, string], [int, int]}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.90: 	fun x -> (if true then IISS else BBNN) x
+//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `int -> int & string -> string` is not a function
+//│ ║  l.12: 	def IISS: int -> int & string -> string
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `?a -> ?b`
+//│ ║  l.90: 	fun x -> (if true then IISS else BBNN) x
+//│ ╙──      	                       ^^^^
+//│ res: anything -> error
 
 if true then IISS else BBNN
 //│ res: bool -> bool & number -> number | int -> int & string -> string
@@ -94,12 +111,17 @@ if true then IISS else BBNN
 :e
 (if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.95: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `0 | 1 | true` does not match type `?a`
-//│ ╟── Note: constraint arises from function type:
+//│ ║  l.112: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `int -> int & string -> string` is not a function
 //│ ║  l.12: 	def IISS: int -> int & string -> string
-//│ ╙──      	                       ^^^^^^^^^^^^^^^^
+//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `(0 | 1 | true) -> number`
+//│ ║  l.112: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║         	              ^^^^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.112: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ╙──       	                                ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: (0 | 1 | true) -> number
 
 

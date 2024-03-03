@@ -592,9 +592,12 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             tp(mergeOptions(lo.toLoc, hi.toLoc)(_ ++ _), "constraint specifiation"), ctx)
         }
         tscs.foreach { case (typevars, constrs) =>
-          val tvs = typevars.map(recVars)
+          val tvs = typevars.map(x => (x._1, rec(x._2)))
           val tsc = new TupleSetConstraints(MutSet.empty ++ constrs.map(_.map(rec)), tvs)(res.prov)
-          tvs.zipWithIndex.foreach { case (tv, i) => tv.tsc = S((tsc, i)) }
+          tvs.zipWithIndex.foreach {
+            case ((_, tv: TV), i) => tv.tsc += tsc -> i
+            case _ => ()
+          }
         }
         res
       case PolyType(vars, ty) =>
@@ -1679,7 +1682,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     val expandType = ()
     
     var bounds: Ls[TypeVar -> Bounds] = Nil
-    var tscs: Ls[Ls[TypeVar] -> Ls[Ls[Type]]] = Nil
+    var tscs: Ls[Ls[(Opt[Bool], Type)] -> Ls[Ls[Type]]] = Nil
     
     val seenVars = mutable.Set.empty[TV]
     
@@ -1789,10 +1792,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                 if (l =/= Bot || u =/= Top)
                   bounds ::= nv -> Bounds(l, u)
             }
-            tv.tsc.foreach {
+            tv.tsc.foreachEntry {
               case (tsc, i) =>
-                if (tsc.tvs.forall(v => !seenVars(v) || v === tv)) {
-                  val tvs = tsc.tvs.map(_.asTypeVar)
+                if (tsc.tvs.forall { case (_, v: TV) => !seenVars(v) || v === tv; case _ => true }) {
+                  val tvs = tsc.tvs.map(x => (x._1, go(x._2)))
                   val constrs = tsc.constraints.toList.map(_.map(go))
                   tscs ::= tvs -> constrs
                 }

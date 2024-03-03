@@ -72,10 +72,15 @@ fun g = f
 //│ ╔══[ERROR] Type mismatch in definition:
 //│ ║  l.71: 	fun g = f
 //│ ║        	    ^^^^^
-//│ ╟── expression of type `Int | false | true` does not match type `?a`
-//│ ╟── Note: constraint arises from function type:
+//│ ╟── type `Int -> Int & Bool -> Bool` is not a function
 //│ ║  l.50: 	fun f: (Int -> Int) & (Bool -> Bool)
-//│ ╙──      	                      ^^^^^^^^^^^^^^
+//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `(Int | false | true) -> (Bool | Int)`
+//│ ║  l.71: 	fun g = f
+//│ ║        	        ^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.70: 	fun g: (Int | Bool) -> (Int | Bool)
+//│ ╙──      	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ fun g: Int -> Int & Bool -> Bool
 //│ fun g: (Bool | Int) -> (Int | false | true)
 
@@ -96,11 +101,17 @@ fun j = i
 fun j: (Int & Bool) -> (Int & Bool)
 fun j = f
 //│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.97: 	fun j = f
-//│ ║        	    ^^^^^
-//│ ╟── type `?a` does not match type `nothing`
+//│ ║  l.102: 	fun j = f
+//│ ║         	    ^^^^^
+//│ ╟── type `Int -> Int & Bool -> Bool` is not a function
 //│ ║  l.50: 	fun f: (Int -> Int) & (Bool -> Bool)
-//│ ╙──      	                      ^^^^^^^^^^^^^^
+//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `nothing -> nothing`
+//│ ║  l.102: 	fun j = f
+//│ ║         	        ^
+//│ ╟── Note: constraint arises from function type:
+//│ ║  l.101: 	fun j: (Int & Bool) -> (Int & Bool)
+//│ ╙──       	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ fun j: Int -> Int & Bool -> Bool
 //│ fun j: nothing -> nothing
 
@@ -123,10 +134,18 @@ f(0)
 // f(0) : case 0 of { Int => Int; Bool => Bool } == Int
 
 
+:e
 x => f(x)
-//│ forall 'a 'b. 'a -> 'b
-//│   where
-//│     ['a, 'b] in {[Bool, Bool], [Int, Int]}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.138: 	x => f(x)
+//│ ║         	     ^^^^
+//│ ╟── type `Int -> Int & Bool -> Bool` is not a function
+//│ ║  l.50: 	fun f: (Int -> Int) & (Bool -> Bool)
+//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `?a -> ?b`
+//│ ║  l.138: 	x => f(x)
+//│ ╙──       	     ^
+//│ anything -> error
 //│ res
 //│     = [Function: res]
 
@@ -135,15 +154,15 @@ x => f(x)
 :e
 f(if true then 0 else false)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.136: 	f(if true then 0 else false)
+//│ ║  l.155: 	f(if true then 0 else false)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `0 | false` does not match type `?a`
-//│ ╟── Note: constraint arises from function type:
+//│ ╟── type `Int -> Int & Bool -> Bool` is not a function
 //│ ║  l.50: 	fun f: (Int -> Int) & (Bool -> Bool)
-//│ ╙──      	                      ^^^^^^^^^^^^^^
-//│ error | 'a
-//│   where
-//│     ['b, 'a] in {}
+//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `(0 | false) -> ?a`
+//│ ║  l.155: 	f(if true then 0 else false)
+//│ ╙──       	^
+//│ error
 //│ res
 //│     = 0
 
@@ -153,23 +172,21 @@ f(if true then 0 else false)
 :w
 f(refined if true then 0 else false) // this one can be precise again!
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.154: 	f(refined if true then 0 else false) // this one can be precise again!
+//│ ║  l.173: 	f(refined if true then 0 else false) // this one can be precise again!
 //│ ╙──       	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: refined
-//│ ║  l.154: 	f(refined if true then 0 else false) // this one can be precise again!
+//│ ║  l.173: 	f(refined if true then 0 else false) // this one can be precise again!
 //│ ╙──       	  ^^^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.154: 	f(refined if true then 0 else false) // this one can be precise again!
+//│ ║  l.173: 	f(refined if true then 0 else false) // this one can be precise again!
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `error` does not match type `?a`
-//│ ║  l.154: 	f(refined if true then 0 else false) // this one can be precise again!
-//│ ║         	  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from function type:
+//│ ╟── type `Int -> Int & Bool -> Bool` is not a function
 //│ ║  l.50: 	fun f: (Int -> Int) & (Bool -> Bool)
-//│ ╙──      	                      ^^^^^^^^^^^^^^
-//│ error | 'a
-//│   where
-//│     ['b, 'a] in {}
+//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `?a -> ?b`
+//│ ║  l.173: 	f(refined if true then 0 else false) // this one can be precise again!
+//│ ╙──       	^
+//│ error
 //│ Code generation encountered an error:
 //│   unresolved symbol refined
 
@@ -225,7 +242,7 @@ type T = List[Int]
 :e // TODO application types
 type Res = M(T)
 //│ ╔══[ERROR] Wrong number of type arguments – expected 0, found 1
-//│ ║  l.226: 	type Res = M(T)
+//│ ║  l.243: 	type Res = M(T)
 //│ ╙──       	           ^^^^
 //│ type Res = M
 
@@ -248,7 +265,7 @@ fun f: Int -> Int
 fun f: Bool -> Bool
 fun f = id
 //│ ╔══[ERROR] A type signature for 'f' was already given
-//│ ║  l.248: 	fun f: Bool -> Bool
+//│ ║  l.265: 	fun f: Bool -> Bool
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ fun f: forall 'a. 'a -> 'a
 //│ fun f: Int -> Int
@@ -256,13 +273,13 @@ fun f = id
 :e // TODO support
 f: (Int -> Int) & (Bool -> Bool)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.257: 	f: (Int -> Int) & (Bool -> Bool)
+//│ ║  l.274: 	f: (Int -> Int) & (Bool -> Bool)
 //│ ║         	^
 //│ ╟── type `Bool` is not an instance of `Int`
-//│ ║  l.257: 	f: (Int -> Int) & (Bool -> Bool)
+//│ ║  l.274: 	f: (Int -> Int) & (Bool -> Bool)
 //│ ║         	                   ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.247: 	fun f: Int -> Int
+//│ ║  l.264: 	fun f: Int -> Int
 //│ ╙──       	       ^^^
 //│ Int -> Int & Bool -> Bool
 //│ res
@@ -329,14 +346,14 @@ fun test(x) = refined if x is
   A then 0
   B then 1
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.328: 	fun test(x) = refined if x is
+//│ ║  l.345: 	fun test(x) = refined if x is
 //│ ║         	              ^^^^^^^^^^^^^^^
-//│ ║  l.329: 	  A then 0
+//│ ║  l.346: 	  A then 0
 //│ ║         	^^^^^^^^^^
-//│ ║  l.330: 	  B then 1
+//│ ║  l.347: 	  B then 1
 //│ ╙──       	^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: refined
-//│ ║  l.328: 	fun test(x) = refined if x is
+//│ ║  l.345: 	fun test(x) = refined if x is
 //│ ╙──       	              ^^^^^^^
 //│ fun test: (A | B) -> error
 //│ Code generation encountered an error:
@@ -356,41 +373,88 @@ q(0)
 //│       q is not implemented
 
 q(1)
-//│ 'a
-//│   where
-//│     ['b, 'a] in {[0 | 1, true], [1 | 2, false]}
+//│ nothing
 //│ res
 //│     = <no result>
 //│       q is not implemented
 
+// FIXME
+:e
 x => q(x): true
-//│ (0 | 1) -> true
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.383: 	x => q(x): true
+//│ ║         	     ^^^^
+//│ ╟── type `(0 | 1) -> true & (1 | 2) -> false` is not a function
+//│ ║  l.366: 	fun q: (0|1) -> true & (1|2) -> false
+//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `?a -> ?b`
+//│ ║  l.383: 	x => q(x): true
+//│ ╙──       	     ^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.383: 	x => q(x): true
+//│ ║         	     ^^^^
+//│ ╟── application of type `?a` does not match type `true`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.383: 	x => q(x): true
+//│ ╙──       	           ^^^^
+//│ anything -> true
 //│ res
 //│     = <no result>
 //│       q is not implemented
 
+
+:e
 x => q(x)
-//│ forall 'a 'b. 'a -> 'b
-//│   where
-//│     ['a, 'b] in {[0 | 1, true], [1 | 2, false]}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.407: 	x => q(x)
+//│ ║         	     ^^^^
+//│ ╟── type `(0 | 1) -> true & (1 | 2) -> false` is not a function
+//│ ║  l.366: 	fun q: (0|1) -> true & (1|2) -> false
+//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `?a -> ?b`
+//│ ║  l.407: 	x => q(x)
+//│ ╙──       	     ^
+//│ anything -> error
 //│ res
 //│     = <no result>
 //│       q is not implemented
 
+:e
 fun w = x => q(x)
-//│ fun w: forall 'a 'b. 'a -> 'b
-//│   where
-//│     ['a, 'b] in {[0 | 1, true], [1 | 2, false]}
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.423: 	fun w = x => q(x)
+//│ ║         	             ^^^^
+//│ ╟── type `(0 | 1) -> true & (1 | 2) -> false` is not a function
+//│ ║  l.366: 	fun q: (0|1) -> true & (1|2) -> false
+//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `?a -> ?b`
+//│ ║  l.423: 	fun w = x => q(x)
+//│ ╙──       	             ^
+//│ fun w: anything -> error
 
 w(0)
-//│ forall 'a. 'a
-//│   where
-//│     ['b, 'a] in {[0 | 1, true]}
+//│ error
 //│ res
 //│     = <no result>
 //│       w and q are not implemented
 
+:e
 x => (f: forall a: ((0, Int) -> 'a & (1, Str) -> ['a])) => f(0, x) + 1
-//│ Int -> (f: (0, Int) -> Int & (1, Str) -> [Int]) -> Int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.442: 	x => (f: forall a: ((0, Int) -> 'a & (1, Str) -> ['a])) => f(0, x) + 1
+//│ ║         	                                                           ^^^^^^^
+//│ ╟── type `(0, Int) -> 'a & (1, Str) -> ['a]` is not a function
+//│ ║  l.442: 	x => (f: forall a: ((0, Int) -> 'a & (1, Str) -> ['a])) => f(0, x) + 1
+//│ ║         	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `(0, ?a) -> ?b`
+//│ ║  l.442: 	x => (f: forall a: ((0, Int) -> 'a & (1, Str) -> ['a])) => f(0, x) + 1
+//│ ╙──       	                                                           ^
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.442: 	x => (f: forall a: ((0, Int) -> 'a & (1, Str) -> ['a])) => f(0, x) + 1
+//│ ║         	                                                           ^^^^^^^^^^^
+//│ ╟── application of type `?a` does not match type `Int`
+//│ ║  l.442: 	x => (f: forall a: ((0, Int) -> 'a & (1, Str) -> ['a])) => f(0, x) + 1
+//│ ╙──       	                                                           ^^^^^^^
+//│ anything -> (f: (0, Int) -> anything & (1, Str) -> [anything]) -> (Int | error)
 //│ res
 //│     = [Function: res]

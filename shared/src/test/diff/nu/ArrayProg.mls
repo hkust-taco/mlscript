@@ -137,8 +137,18 @@ fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
 //│ fun s: (Numbr | Vectr, Numbr | Vectr) -> Int
 
 
+:e
 s(Vectr([]),Vectr([]))
-//│ Int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.141: 	s(Vectr([]),Vectr([]))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `(Numbr | Vectr, Numbr | Vectr) -> Int` is not a function
+//│ ║  l.136: 	fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
+//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `(?a, ?b) -> ?c`
+//│ ║  l.141: 	s(Vectr([]),Vectr([]))
+//│ ╙──       	^
+//│ error
 //│ res
 //│     = <no result>
 //│       s is not implemented
@@ -174,13 +184,13 @@ s([Numbr(0),Numbr(0)])
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	s([Numbr(0),Numbr(0)])
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── argument of type `[[?a, ?b]]` does not match type `[Numbr | Vectr, Numbr | Vectr]`
-//│ ║  l.+1: 	s([Numbr(0),Numbr(0)])
-//│ ║        	 ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from tuple type:
+//│ ╟── type `(Numbr | Vectr, Numbr | Vectr) -> Int` is not a function
 //│ ║  l.136: 	fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
-//│ ╙──       	        ^^^^^^^^^^^^^
-//│ Int | error
+//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `([?a, ?b]) -> ?c`
+//│ ║  l.+1: 	s([Numbr(0),Numbr(0)])
+//│ ╙──      	^
+//│ error
 // g <: 0 -> 'a
 
 :e

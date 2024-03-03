@@ -961,11 +961,11 @@ abstract class TyperHelpers { Typer: Typer =>
       )
       }.mkString + {
         val visited: MutSet[TV] = MutSet.empty
-        getVars.iterator.filter(tv => tv.tsc.isDefined).map {
+        getVars.iterator.filter(tv => tv.tsc.nonEmpty).map {
           case tv if visited.contains(tv) => ""
           case tv =>
-            visited ++= tv.tsc.fold(Nil: Ls[TV])(_._1.tvs)
-            tv.tsc.fold("") { case (tsc, _) => ("\n\t\t[ "
+            visited ++= tv.tsc.map(_._1.tvs.collect { case (_, v: TV) => v }).flatten
+            tv.tsc.map { case (tsc, _) => ("\n\t\t[ "
               + tsc.tvs.mkString(", ")
               + " ] in { " + tsc.constraints.mkString(", ") + " }")
             }

@@ -619,10 +619,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               recLb(ar.inner, b.inner)
               rec(b.inner.ub, ar.inner.ub, false)
             case (LhsRefined(S(b: ArrayBase), ts, r, _), _) => reportError()
+            case (LhsRefined(S(ov: Overload), ts, r, trs), RhsBases(_, S(L(f: FunctionType)), _)) =>
+              val tsc = TupleSetConstraints.mk(ov, f)
+              if (tsc.constraints.isEmpty) reportError()
+              // val t = TupleSetConstraints.mk(ov)
+              // annoying(Nil, LhsRefined(S(t), ts, r, trs), Nil, done_rs)
             case (LhsRefined(S(ov: Overload), ts, r, trs), _) =>
-              val t = TupleSetConstraints.mk(ov)
-              annoying(Nil, LhsRefined(S(t), ts, r, trs), Nil, done_rs)
-              // annoying(Nil, LhsRefined(S(ov.approximatePos), ts, r, trs), Nil, done_rs) // TODO remove approx. with ambiguous constraints
+              annoying(Nil, LhsRefined(S(ov.approximatePos), ts, r, trs), Nil, done_rs) // TODO remove approx. with ambiguous constraints
             case (LhsRefined(S(Without(b, ns)), ts, r, _), RhsBases(pts, N | S(L(_)), _)) =>
               rec(b, done_rs.toType(), true)
             case (_, RhsBases(pts, S(L(Without(base, ns))), _)) =>
@@ -820,9 +823,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             lhs.upperBounds ::= newBound // update the bound
-            lhs.tsc.foreach {
+            lhs.tsc.foreachEntry {
               case (tsc, i) =>
-                tsc.filterUB(i, rhs)
+                tsc.updateOn(i, rhs)
                 if (tsc.constraints.isEmpty) reportError()
             }
             lhs.lowerBounds.foreach(rec(_, rhs, true)) // propagate from the bound
@@ -832,9 +835,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             rhs.lowerBounds ::= newBound // update the bound
-            rhs.tsc.foreach {
+            rhs.tsc.foreachEntry {
               case (tsc, i) =>
-                tsc.filterLB(i, lhs)
+                tsc.updateOn(i, lhs)
                 if (tsc.constraints.isEmpty) reportError()
             }
             rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
@@ -1562,8 +1565,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           freshened += tv -> v
           v.lowerBounds = tv.lowerBounds.mapConserve(freshen)
           v.upperBounds = tv.upperBounds.mapConserve(freshen)
-          v.tsc = tv.tsc
-          v.tsc.foreach { case (tsc, i) => tsc.tvs = tsc.tvs.mapConserve(x => freshen(x).asInstanceOf[TV]) }
+          v.tsc = tv.tsc // fixme
+          v.tsc.foreachEntry { case (tsc, i) => tsc.tvs = tsc.tvs.mapConserve(x => (x._1, freshen(x._2))) }
           v
       }
       

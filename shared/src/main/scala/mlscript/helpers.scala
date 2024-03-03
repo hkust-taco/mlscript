@@ -139,7 +139,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
         }.mkString
       }${tscs.map{
           case (tvs, constrs) =>
-            s"\n${ctx.indStr}${tvs.map(_.showIn(ctx, 0)).mkString("[", ", ", "]")}" +
+            s"\n${ctx.indStr}${tvs.map(_._2.showIn(ctx, 0)).mkString("[", ", ", "]")}" +
             s" in ${constrs.map(_.map(_.showIn(ctx, 0)).mkString("[", ", ", "]")).mkString("{", ", ", "}")}"
         }.mkString}"
       }, outerPrec > 0)
@@ -210,7 +210,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case WithExtension(b, r) => b :: r :: Nil
     case PolyType(targs, body) => targs.map(_.fold(identity, identity)) :+ body
     case Splice(fs) => fs.flatMap{ case L(l) => l :: Nil case R(r) => r.in.toList ++ (r.out :: Nil) }
-    case Constrained(b, bs, ws, tscs) => b :: bs.flatMap(c => c._1 :: c._2 :: Nil) ::: ws.flatMap(c => c.lb :: c.ub :: Nil) ::: tscs.flatMap(tsc => tsc._1 ::: tsc._2.flatten)
+    case Constrained(b, bs, ws, tscs) => b :: bs.flatMap(c => c._1 :: c._2 :: Nil) ::: ws.flatMap(c => c.lb :: c.ub :: Nil) ::: tscs.flatMap(tsc => tsc._1.map(_._2) ::: tsc._2.flatten)
     case Signature(xs, res) => xs ::: res.toList
     case NuFunDef(isLetRec, nme, snme, targs, rhs) => targs ::: rhs.toOption.toList
     case NuTypeDef(kind, nme, tparams, params, ctor, sig, parents, sup, ths, body) =>

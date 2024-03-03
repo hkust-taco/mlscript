@@ -47,20 +47,18 @@ fun f: (Str => Str) & ((Str, Int) => Int)
 //│ fun f: Str -> Str & (Str, Int) -> Int
 
 // * ...resulting in approximation at call sites (we don't handle overloading)
-:e // TODO
+:e
 f("abc", "abc")
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.51: 	f("abc", "abc")
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── argument list of type `["abc", "abc"]` does not match type `?a`
-//│ ║  l.51: 	f("abc", "abc")
-//│ ║        	 ^^^^^^^^^^^^^^
-//│ ╟── Note: constraint arises from function type:
+//│ ╟── type `Str -> Str & (Str, Int) -> Int` is not a function
 //│ ║  l.46: 	fun f: (Str => Str) & ((Str, Int) => Int)
-//│ ╙──      	                      ^^^^^^^^^^^^^^^^^^^
-//│ error | 'a
-//│   where
-//│     ['b, 'a] in {}
+//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `("abc", "abc") -> ?a`
+//│ ║  l.51: 	f("abc", "abc")
+//│ ╙──      	^
+//│ error
 //│ res
 //│     = <no result>
 //│       f is not implemented
@@ -83,19 +81,19 @@ let r = if true then id else (x, y) => [y, x]
 r(error)
 r(error, error)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.83: 	r(error)
+//│ ║  l.81: 	r(error)
 //│ ║        	^^^^^^^^
 //│ ╟── argument of type `[nothing]` does not match type `[?a, ?b]`
-//│ ║  l.83: 	r(error)
+//│ ║  l.81: 	r(error)
 //│ ║        	 ^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.77: 	let r = if true then id else (x, y) => [y, x]
+//│ ║  l.75: 	let r = if true then id else (x, y) => [y, x]
 //│ ╙──      	                              ^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.84: 	r(error, error)
+//│ ║  l.82: 	r(error, error)
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── argument list of type `[nothing, nothing]` does not match type `[?a]`
-//│ ║  l.84: 	r(error, error)
+//│ ║  l.82: 	r(error, error)
 //│ ╙──      	 ^^^^^^^^^^^^^^
 //│ error | [nothing, nothing]
 //│ res
@@ -118,7 +116,7 @@ r of [0, 1]
 
 // Also currently parses the same:
 let r = if true then id else [x, y] => [y, x]
-//│ let r: forall 'a 'b 'c. (['a, 'b] & 'c) -> (['b, 'a] | 'c)
+//│ let r: forall 'a 'b 'c. (['c, 'a] & 'b) -> (['a, 'c] | 'b)
 //│ r
 //│   = [Function: id]
 
