@@ -585,7 +585,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 fd.copy()(fd.declareLoc, fd.virtualLoc, fd.mutLoc, fd.signature, outer, fd.genField)
             }
           case td: NuTypeDef =>
-            if (td.nme.name in reservedTypeNames)
+            if (td.nme.name.in(reservedTypeNames) || td.nme.name === "?")
               err(msg"Type name '${td.nme.name}' is reserved", td.toLoc)
             td
         }
@@ -1112,7 +1112,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           err(msg"${raw.kind.str} $rawName expects ${
             raw.tparams.size.toString} type parameter(s); got ${pta.size.toString}", Loc(v :: pta))
       }
-      refreshHelper2(raw: PolyNuDecl, v: Var, parTargs.map(_.map(typeType(_))))
+      refreshHelper2(raw: PolyNuDecl, v: Var, parTargs.map(_.map(typeType(_))), true)
     }
     
     def complete()(implicit raise: Raise): TypedNuDecl = result.getOrElse {
@@ -1853,8 +1853,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
   }
   
-  // TODO: use pol: Bool
-  def refreshHelper2(raw: PolyNuDecl, v: Var, parTargs: Opt[Ls[SimpleTypeOrWildcard]])
+  def refreshHelper2(raw: PolyNuDecl, v: Var, parTargs: Opt[Ls[SimpleTypeOrWildcard]], pol: Bool)
         (implicit ctx: Ctx): (MutMap[TV, ST], Map[Str, NuParam]) = {
     val freshened: MutMap[TV, ST] = MutMap.empty
     val rawName = v.name
@@ -1878,7 +1877,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           assert(tv.lowerBounds.isEmpty, tv.lowerBounds)
           assert(tv.upperBounds.isEmpty, tv.upperBounds)
           // TODO use pol
-          tv.assignedTo = S(TypeBounds(wc.lb, wc.ub)(wc.prov))
+          tv.assignedTo = S(
+            if (pol) TypeBounds(wc.lb, wc.ub)(wc.prov) else TypeBounds(wc.ub, wc.lb)(wc.prov)
+          )
           
           println(s"Assigned ${tv.assignedTo}")
           tv

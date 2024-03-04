@@ -308,71 +308,48 @@ fun f: Foo[?] -> Foo[?]
 
 :e
 fun f(x: ?) = x
-//│ ╔══[ERROR] type identifier not found: ?
+//│ ╔══[ERROR] Invalid use of ? here
 //│ ║  l.310: 	fun f(x: ?) = x
 //│ ╙──       	         ^
 //│ fun f: (x: error) -> error
 
 :e
-f(1)
-//│ error
-//│ res
-//│     = 1
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
-
-:e
-f(f)
-//│ error
-//│ res
-//│     = [Function: f5]
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
-
-:e
 fun f(x): ? = x
-//│ ╔══[ERROR] type identifier not found: ?
-//│ ║  l.331: 	fun f(x): ? = x
+//│ ╔══[ERROR] Invalid use of ? here
+//│ ║  l.317: 	fun f(x): ? = x
 //│ ╙──       	          ^
 //│ fun f: error -> error
 
 :e
 fun f(x: Int): ? = x
-//│ ╔══[ERROR] type identifier not found: ?
-//│ ║  l.338: 	fun f(x: Int): ? = x
+//│ ╔══[ERROR] Invalid use of ? here
+//│ ║  l.324: 	fun f(x: Int): ? = x
 //│ ╙──       	               ^
 //│ fun f: (x: Int) -> error
 
 :e
 fun f(x: ?): ? = x
-//│ ╔══[ERROR] type identifier not found: ?
-//│ ║  l.345: 	fun f(x: ?): ? = x
+//│ ╔══[ERROR] Invalid use of ? here
+//│ ║  l.331: 	fun f(x: ?): ? = x
 //│ ╙──       	         ^
-//│ ╔══[ERROR] type identifier not found: ?
-//│ ║  l.345: 	fun f(x: ?): ? = x
+//│ ╔══[ERROR] Invalid use of ? here
+//│ ║  l.331: 	fun f(x: ?): ? = x
 //│ ╙──       	             ^
 //│ fun f: (x: error) -> error
 
 :e
-f(1)
-//│ error
-//│ res
-//│     = 1
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
-
-// FIXME crash
-:e
 let x: ? = 1
-//│ ╔══[ERROR] type identifier not found: ?
-//│ ║  l.363: 	let x: ? = 1
+//│ ╔══[ERROR] Invalid use of ? here
+//│ ║  l.341: 	let x: ? = 1
 //│ ╙──       	       ^
 //│ let x: error
 //│ x
 //│   = 1
 
-// FIXME crash
 :e
 1 as ?
-//│ ╔══[ERROR] type identifier not found: ?
-//│ ║  l.373: 	1 as ?
+//│ ╔══[ERROR] Invalid use of ? here
+//│ ║  l.350: 	1 as ?
 //│ ╙──       	     ^
 //│ error
 //│ res
@@ -380,48 +357,48 @@ let x: ? = 1
 
 :e
 fun f: (? -> ?) -> ?
-//│ ╔══[ERROR] type identifier not found: ?
-//│ ║  l.382: 	fun f: (? -> ?) -> ?
+//│ ╔══[ERROR] Invalid use of ? here
+//│ ║  l.359: 	fun f: (? -> ?) -> ?
 //│ ╙──       	        ^
-//│ ╔══[ERROR] type identifier not found: ?
-//│ ║  l.382: 	fun f: (? -> ?) -> ?
+//│ ╔══[ERROR] Invalid use of ? here
+//│ ║  l.359: 	fun f: (? -> ?) -> ?
 //│ ╙──       	             ^
-//│ ╔══[ERROR] type identifier not found: ?
-//│ ║  l.382: 	fun f: (? -> ?) -> ?
+//│ ╔══[ERROR] Invalid use of ? here
+//│ ║  l.359: 	fun f: (? -> ?) -> ?
 //│ ╙──       	                   ^
 //│ fun f: (error -> error) -> error
 
 :e
 fun f: ? -> ?
-//│ ╔══[ERROR] type identifier not found: ?
-//│ ║  l.395: 	fun f: ? -> ?
+//│ ╔══[ERROR] Invalid use of ? here
+//│ ║  l.372: 	fun f: ? -> ?
 //│ ╙──       	       ^
-//│ ╔══[ERROR] type identifier not found: ?
-//│ ║  l.395: 	fun f: ? -> ?
+//│ ╔══[ERROR] Invalid use of ? here
+//│ ║  l.372: 	fun f: ? -> ?
 //│ ╙──       	            ^
 //│ fun f: error -> error
 
 :e
 fun f: ? -> Int
-//│ ╔══[ERROR] type identifier not found: ?
-//│ ║  l.405: 	fun f: ? -> Int
+//│ ╔══[ERROR] Invalid use of ? here
+//│ ║  l.382: 	fun f: ? -> Int
 //│ ╙──       	       ^
 //│ fun f: error -> Int
 
 :e
 fun f: Int -> ?
-//│ ╔══[ERROR] type identifier not found: ?
-//│ ║  l.412: 	fun f: Int -> ?
+//│ ╔══[ERROR] Invalid use of ? here
+//│ ║  l.389: 	fun f: Int -> ?
 //│ ╙──       	              ^
 //│ fun f: Int -> error
 
 :e
 let x: ? -> ?
-//│ ╔══[ERROR] type identifier not found: ?
-//│ ║  l.419: 	let x: ? -> ?
+//│ ╔══[ERROR] Invalid use of ? here
+//│ ║  l.396: 	let x: ? -> ?
 //│ ╙──       	       ^
-//│ ╔══[ERROR] type identifier not found: ?
-//│ ║  l.419: 	let x: ? -> ?
+//│ ╔══[ERROR] Invalid use of ? here
+//│ ║  l.396: 	let x: ? -> ?
 //│ ╙──       	            ^
 //│ let x: error -> error
 //│ x
@@ -430,7 +407,7 @@ let x: ? -> ?
 :e
 let x = ?
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.431: 	let x = ?
+//│ ║  l.408: 	let x = ?
 //│ ╙──       	        ^
 //│ let x: error
 //│ Code generation encountered an error:
@@ -439,7 +416,7 @@ let x = ?
 :e
 if ? is 1 then 1
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.440: 	if ? is 1 then 1
+//│ ║  l.417: 	if ? is 1 then 1
 //│ ╙──       	   ^
 //│ 1
 //│ Code generation encountered an error:
@@ -448,7 +425,7 @@ if ? is 1 then 1
 :e
 if x is ? then 1
 //│ ╔══[ERROR] Cannot match on wildcard ?
-//│ ║  l.449: 	if x is ? then 1
+//│ ║  l.426: 	if x is ? then 1
 //│ ╙──       	        ^
 //│ error
 //│ Code generation encountered an error:
@@ -457,7 +434,7 @@ if x is ? then 1
 :e
 let x: ?[?]
 //│ ╔══[ERROR] type identifier not found: ?
-//│ ║  l.458: 	let x: ?[?]
+//│ ║  l.435: 	let x: ?[?]
 //│ ╙──       	       ^^^^
 //│ let x: error
 //│ x
@@ -466,7 +443,7 @@ let x: ?[?]
 :e
 class Bar extends ?
 //│ ╔══[ERROR] Could not find definition `?`
-//│ ║  l.467: 	class Bar extends ?
+//│ ║  l.444: 	class Bar extends ?
 //│ ╙──       	                  ^
 //│ class Bar {
 //│   constructor()
@@ -476,56 +453,50 @@ class Bar extends ?
 
 :e
 abstract class Bar: ?
-//│ ╔══[ERROR] type identifier not found: ?
-//│ ║  l.478: 	abstract class Bar: ?
+//│ ╔══[ERROR] Invalid use of ? here
+//│ ║  l.455: 	abstract class Bar: ?
 //│ ╙──       	                    ^
 //│ abstract class Bar: error
 
 :e
 class ?
+//│ ╔══[ERROR] Type name '?' is reserved
+//│ ║  l.462: 	class ?
+//│ ╙──       	^^^^^^^
 //│ class ? {
 //│   constructor()
 //│ }
 //│ Syntax error:
 //│   Invalid or unexpected token
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 :e
 type ? = Int
+//│ ╔══[ERROR] Type name '?' is reserved
+//│ ║  l.473: 	type ? = Int
+//│ ╙──       	^^^^^^
 //│ type ? = Int
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 :e
 type W = ?
-//│ type W = ?
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
+//│ ╔══[ERROR] Invalid use of ? here
+//│ ║  l.480: 	type W = ?
+//│ ╙──       	         ^
+//│ type W = error
 
-// TODO
-fun f(x): W = x
-//│ fun f: W -> W
-
-:e
-f(1)
-//│ W
-//│ res
-//│     = 1
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
-
-// TODO should we allow this?
+// TODO reject
 fun (?) wc: (Int, Int) -> Bool
 fun (?) wc(x, y) = x == y
 //│ fun (?) wc: (Num, Num) -> Bool
 //│ fun (?) wc: (Int, Int) -> Bool
 
-// TODO
+:e
 1 ? 1
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.521: 	1 ? 1
+//│ ║  l.493: 	1 ? 1
 //│ ╙──       	  ^
 //│ error
 //│ res
 //│     = true
-
 
 class Foo[T](val a: T)
 let f: Foo[?]
@@ -537,11 +508,11 @@ let f: Foo[?]
 :e
 f.a : Int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.538: 	f.a : Int
+//│ ║  l.509: 	f.a : Int
 //│ ║         	^^^
 //│ ╟── field selection of type `anything` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.538: 	f.a : Int
+//│ ║  l.509: 	f.a : Int
 //│ ╙──       	      ^^^
 //│ Int
 //│ res
@@ -552,7 +523,7 @@ f.a : Int
 :e
 42 : f.a
 //│ ╔══[ERROR] Type mismatch in type selection:
-//│ ║  l.553: 	42 : f.a
+//│ ║  l.524: 	42 : f.a
 //│ ║         	      ^^
 //│ ╙── type `anything` cannot be reassigned
 //│ anything

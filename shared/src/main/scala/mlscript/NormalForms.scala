@@ -799,7 +799,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         // * TODO later: when proper TypeRef-based simplif. is implemented, can remove this special case
         if (preserveTypeRefs && !primitiveTypes.contains(defn.name) || !tr.canExpand) {
           of(polymLvl, cons, LhsRefined(tr.mkClsTag, ssEmp, RecordType.empty, SortedMap(defn -> tr)))
-        } else mk(polymLvl, cons, tr.expandOrCrash, pol)
+        } else mk(polymLvl, cons, tr.expandOrCrash(pol), pol)
       case TypeBounds(lb, ub) => mk(polymLvl, cons, if (pol) ub else lb, pol)
       case PolymorphicType(lvl, bod) => mk(lvl, cons, bod, pol)
       case ConstrainedType(cs, bod) => mk(polymLvl, cs ::: cons, bod, pol)
@@ -843,7 +843,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         case tr @ TypeRef(defn, targs) =>
           if (preserveTypeRefs && !primitiveTypes.contains(defn.name) || !tr.canExpand) {
             CNF(Disjunct(RhsBases(Nil, N, SortedMap.single(defn -> tr)), ssEmp, LhsTop, ssEmp) :: Nil)
-          } else mk(polymLvl, cons, tr.expandOrCrash, pol)
+          } else mk(polymLvl, cons, tr.expandOrCrash(pol), pol)
         case TypeBounds(lb, ub) => mk(polymLvl, cons, if (pol) ub else lb, pol)
         case PolymorphicType(lvl, bod) => mk(lvl, cons, bod, pol)
         case ConstrainedType(cs, bod) => mk(lvl, cs ::: cons, bod, pol)

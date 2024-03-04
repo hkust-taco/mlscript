@@ -527,11 +527,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case (LhsRefined(_, ts, _, trs), RhsBases(pts, _, _)) if ts.exists(pts.contains) => ()
             
             case (LhsRefined(bo, ts, r, trs), _) if trs.nonEmpty =>
-              annoying(trs.valuesIterator.map { tr => tr.expand }.toList,
+              annoying(trs.valuesIterator.map { tr => tr.expand(true) }.toList,
                 LhsRefined(bo, ts, r, SortedMap.empty), Nil, done_rs)
             
             case (_, RhsBases(pts, bf, trs)) if trs.nonEmpty =>
-              annoying(Nil, done_ls, trs.valuesIterator.map(_.expand).toList, RhsBases(pts, bf, SortedMap.empty))
+              annoying(Nil, done_ls, trs.valuesIterator.map(_.expand(true)).toList, RhsBases(pts, bf, SortedMap.empty))
             
             case (_, RhsBases(pts, S(L(ov: Overload)), trs)) =>
               ov.alts.foreach(alt => annoying(Nil, done_ls, Nil, RhsBases(pts, S(L(alt)), trs)))
@@ -992,22 +992,22 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   }
               }
             } else {
-              if (tr1.mayHaveTransitiveSelfType) rec(tr1.expand, tr2.expand, true)
+              if (tr1.mayHaveTransitiveSelfType) rec(tr1.expand(true), tr2.expand(true), true)
               else (tr1.mkClsTag, tr2.mkClsTag) match {
                 case (S(tag1), S(tag2)) if !(tag1 <:< tag2) =>
                   reportError()
                 case _ =>
-                  rec(tr1.expand, tr2.expand, true)
+                  rec(tr1.expand(true), tr2.expand(true), true)
               }
             }
-          case (tr: TypeRef, _) => rec(tr.expand, rhs, true)
+          case (tr: TypeRef, _) => rec(tr.expand(true), rhs, true)
           case (err @ ClassTag(ErrTypeId, _), tr: TypeRef) =>
             // rec(tr.copy(targs = tr.targs.map(_ => err))(noProv), tr, true)
             // * ^ Nicely propagates more errors to the result,
             // * but can incur vast amounts of unnecessary constraining in the context of recursive types!
             ()
           case (_, tr: TypeRef) =>
-            rec(lhs, tr.expand, true)
+            rec(lhs, tr.expand(true), true)
           
           case (ClassTag(ErrTypeId, _), _) => ()
           case (_, ClassTag(ErrTypeId, _)) => ()

@@ -160,7 +160,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
   {
     ty match {
       case tr @ TypeRef(td, targs) =>
-        fieldsOf(tr.expandWith(paramTags, selfTy = false), paramTags)
+        fieldsOf(tr.expandWith(paramTags, selfTy = false, pol = true), paramTags)
       case ComposedType(false, l, r) =>
         mergeMap(fieldsOf(l, paramTags), fieldsOf(r, paramTags))(_ && _)
       case RecordType(fs) => fs.toMap
@@ -233,7 +233,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
           case TypeRef(tn, _) if travsersed(L(tn)) =>
             err(msg"illegal cycle involving type ${tn}", prov.loco)
             false
-          case tr @ TypeRef(tn, targs) => checkCycle(tr.expand)(travsersed + L(tn))
+          case tr @ TypeRef(tn, targs) => checkCycle(tr.expand(true))(travsersed + L(tn))
           case ComposedType(_, l, r) => checkCycle(l) && checkCycle(r)
           case NegType(u) => checkCycle(u)
           case p: ProxyType => checkCycle(p.underlying)
@@ -277,8 +277,8 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
                         false
                       } tap (_ => parentsClasses += tr)
                     } else
-                      checkParents(tr.expand)
-                  case Trt => checkParents(tr.expand)
+                      checkParents(tr.expand(true))
+                  case Trt => checkParents(tr.expand(true))
                   case Mod =>
                     err(msg"cannot inherit from a module", prov.loco)
                     false
@@ -387,7 +387,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
         }
         def checkRegular(ty: SimpleType)(implicit reached: Map[Str, Ls[SimpleType]]): Bool = ty match {
           case tr @ TypeRef(defn, targs) => reached.get(defn.name) match {
-            case None => checkRegular(tr.expandWith(false, selfTy = false))(reached + (defn.name -> targs.map { 
+            case None => checkRegular(tr.expandWith(false, selfTy = false, pol = true))(reached + (defn.name -> targs.map { 
               case w: WildcardArg => TypeBounds(w.lb, w.ub)(w.prov)
               case st: ST => st 
             }))
@@ -620,7 +620,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
             }
             nme.name -> mthTy
           }
-          MethodSet(td2.nme, filterTR(tr.expand).map(rec(_)(thisCtx)),
+          MethodSet(td2.nme, filterTR(tr.expand(true)).map(rec(_)(thisCtx)),
             td2.mthDecls.iterator.map(go).toMap, td2.mthDefs.iterator.map(go).toMap)
         }
         val mds = rec(TypeRef(td.nme, rigidtargs)(tp(td.toLoc, "type definition")), true)(ctx)

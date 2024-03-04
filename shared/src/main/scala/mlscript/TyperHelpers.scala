@@ -554,9 +554,9 @@ abstract class TyperHelpers { Typer: Typer =>
         case (_, NegType(und)) => (this & und) <:< BotType
         case (NegType(und), _) => TopType <:< (that | und)
         case (tr: TypeRef, _)
-          if (primitiveTypes contains tr.defn.name) && tr.canExpand => tr.expandOrCrash <:< that
+          if (primitiveTypes contains tr.defn.name) && tr.canExpand => tr.expandOrCrash(true) <:< that
         case (_, tr: TypeRef)
-          if (primitiveTypes contains tr.defn.name) && tr.canExpand => this <:< tr.expandOrCrash
+          if (primitiveTypes contains tr.defn.name) && tr.canExpand => this <:< tr.expandOrCrash(true)
         case (tr1: TypeRef, _) => ctx.tyDefs.get(tr1.defn.name) match {
             case S(td1) =>
           that match {
@@ -638,7 +638,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case ct: ConstrainedType => ct
     }
     def unwrapAll(implicit ctx: Ctx): SimpleType = unwrapProxies match {
-      case tr: TypeRef if tr.canExpand => tr.expandOrCrash.unwrapAll
+      case tr: TypeRef if tr.canExpand => tr.expandOrCrash(true).unwrapAll
       case u => u
     }
     def negNormPos(f: SimpleType => SimpleType, p: TypeProvenance)
@@ -647,7 +647,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case ComposedType(true, l, r) => l.negNormPos(f, p) & r.negNormPos(f, p)
       case ComposedType(false, l, r) => l.negNormPos(f, p) | r.negNormPos(f, p)
       case NegType(n) => f(n).withProv(p)
-      case tr: TypeRef if !preserveTypeRefs && tr.canExpand => tr.expandOrCrash.negNormPos(f, p)
+      case tr: TypeRef if !preserveTypeRefs && tr.canExpand => tr.expandOrCrash(true).negNormPos(f, p)
       case _: RecordType | _: FunctionType => BotType // Only valid in positive positions!
         // Because Top<:{x:S}|{y:T}, any record type negation neg{x:S}<:{y:T} for any y=/=x,
         // meaning negated records are basically bottoms.
@@ -1052,7 +1052,7 @@ abstract class TyperHelpers { Typer: Typer =>
           println(s"  where: ${res.showBounds}")
           if (cannotBeDistribbed.isEmpty) S(res)
           else S(PolymorphicType(polymLevel, res))
-        case tr: TypeRef if !traversed.contains(tr.defn) => go(tr.expand, traversed + tr.defn, polymLevel)
+        case tr: TypeRef if !traversed.contains(tr.defn) => go(tr.expand(true), traversed + tr.defn, polymLevel)
         case proxy: ProxyType => go(proxy.underlying, traversed, polymLevel)
         case tv @ AssignedVariable(ty) if !traversed.contains(tv) =>
           go(ty, traversed + tv, polymLevel)
@@ -1077,8 +1077,8 @@ abstract class TyperHelpers { Typer: Typer =>
         // * Object types do not need to be completed in order to be expanded
         info.kind.isInstanceOf[ObjDefKind]
         || info.isComputed)
-    // TODO add pol: Bool
-    def expand(implicit ctx: Ctx, raise: Raise): SimpleType = {
+    // TODO provide correct pol at each call
+    def expand(pol: Bool)(implicit ctx: Ctx, raise: Raise): SimpleType = {
       ctx.tyDefs2.get(defn.name) match {
         case S(info) =>
           if (!info.kind.isInstanceOf[ObjDefKind]) {
@@ -1088,13 +1088,13 @@ abstract class TyperHelpers { Typer: Typer =>
           }
         case N =>
       }
-      expandWith(paramTags = true, selfTy = true)
+      expandWith(paramTags = true, selfTy = true, pol = pol)
     }
-    def expandOrCrash(implicit ctx: Ctx): SimpleType = {
+    def expandOrCrash(pol: Bool)(implicit ctx: Ctx): SimpleType = {
       require(canExpand)
-      expandWith(paramTags = true, selfTy = true)
+      expandWith(paramTags = true, selfTy = true, pol = pol)
     }
-    def expandWith(paramTags: Bool, selfTy: Bool)(implicit ctx: Ctx): SimpleType =
+    def expandWith(paramTags: Bool, selfTy: Bool, pol: Bool)(implicit ctx: Ctx): SimpleType =
       ctx.tyDefs2.get(defn.name).map { info =>
         lazy val mkTparamRcd = RecordType(info.tparams.lazyZip(targs).map {
             case ((tn, tv, vi), ta) =>
@@ -1117,7 +1117,7 @@ abstract class TyperHelpers { Typer: Typer =>
           case S(td: TypedNuTrt) =>
             assert(td.tparams.size === targs.size)
             // println(s"EXP ${td.sign}")
-            val (freshenMap, _) = refreshHelper2(td, Var(td.name).withLoc(prov.loco), S(targs)) // infer ty args if not provided
+            val (freshenMap, _) = refreshHelper2(td, Var(td.name).withLoc(prov.loco), S(targs), pol) // infer ty args if not provided
             val freshSelf = if (!selfTy) TopType else {
               implicit val freshened: MutMap[TV, ST] = freshenMap
               implicit val shadows: Shadows = Shadows.empty
@@ -1129,7 +1129,7 @@ abstract class TyperHelpers { Typer: Typer =>
               mkTparamRcd
           case S(td: TypedNuCls) =>
             assert(td.tparams.size === targs.size)
-            val (freshenMap, _) = refreshHelper2(td, Var(td.name).withLoc(prov.loco), S(targs)) // infer ty args if not provided
+            val (freshenMap, _) = refreshHelper2(td, Var(td.name).withLoc(prov.loco), S(targs), pol) // infer ty args if not provided
             val freshSelf = if (!selfTy) TopType else {
               implicit val freshened: MutMap[TV, ST] = freshenMap
               implicit val shadows: Shadows = Shadows.empty
@@ -1478,7 +1478,7 @@ abstract class TyperHelpers { Typer: Typer =>
       def go(ty: ST, traversed: Set[AnyRef]): Opt[PolymorphicType] = //trace(s"go $ty") {
           if (!distributeForalls) N else ty match {
         case poly @ PolymorphicType(plvl, bod) => S(poly)
-        case tr: TypeRef if !traversed.contains(tr.defn) => go(tr.expand, traversed + tr.defn)
+        case tr: TypeRef if !traversed.contains(tr.defn) => go(tr.expand(true), traversed + tr.defn)
         case proxy: ProxyType => go(proxy.underlying, traversed)
         case tv @ AssignedVariable(ty) if !traversed.contains(tv) =>
           go(ty, traversed + tv)
@@ -1500,7 +1500,7 @@ abstract class TyperHelpers { Typer: Typer =>
   object AliasOf {
     def unapply(ty: ST)(implicit ctx: Ctx): S[ST] = {
       def go(ty: ST, traversedVars: Set[TV]): S[ST] = ty match {
-        case tr: TypeRef if tr.canExpand => go(tr.expandOrCrash, traversedVars)
+        case tr: TypeRef if tr.canExpand => go(tr.expandOrCrash(true), traversedVars)
         case proxy: ProxyType => go(proxy.underlying, traversedVars)
         case tv @ AssignedVariable(ty) if !traversedVars.contains(tv) =>
           go(ty, traversedVars + tv)
