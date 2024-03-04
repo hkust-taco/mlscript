@@ -14,7 +14,7 @@ class Box[type A](val get: A)
 
 abstract class F[type A]: MkF[?]
 class MkF[T](t: T) extends F[Box[T]]
-//│ abstract class F[A]: MkF[?]
+//│ abstract class F[A]: MkF[anything]
 //│ class MkF[T](t: T) extends F
 
 fun f[T](x: F[T]): T = if x is MkF(t) then Box(t) as x.A
@@ -24,7 +24,7 @@ abstract class H[type A]: HI | HB | HG[?]
 module HI extends H[Option[Int]]
 module HB extends H[Box[Bool]]
 class HG[T](t: T) extends H[Option[Box[T]]]
-//│ abstract class H[A]: HB | HG[?] | HI
+//│ abstract class H[A]: HB | HG[anything] | HI
 //│ module HI extends H
 //│ module HB extends H
 //│ class HG[T](t: T) extends H
@@ -83,7 +83,7 @@ MkF(1) : F['a, 'a]
 
 abstract class F[type A, type B]: MkF[?]
 class MkF[type X](x: X) extends F[Some[X], Some[Box[Int]]]
-//│ abstract class F[A, B]: MkF[?]
+//│ abstract class F[A, B]: MkF[anything]
 //│ class MkF[X](x: X) extends F
 
 fun f[R](x: F['t, R]): R = if x is

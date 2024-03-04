@@ -224,34 +224,12 @@ class StepAlt'[A](from: Arrays[A]) extends Arrays[A] {
     // *    1. ArraysImpl[A, 'rep] -> 'res  <:  (StepImpl[A, impl] -> 'r) -> 'r
     // * which eventually leads to 'rep := impl and 'r := 'res.
 }
-//│ ╔══[ERROR] Type error in application
-//│ ║  l.211: 	  val use = from.use of impl =>
-//│ ║         	            ^^^^^^^^^^^^^^^^^^^
-//│ ║  l.212: 	    k => k(StepImpl(impl))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type variable `'rep` leaks out of its scope
-//│ ║  l.36: 	type ArraysImplConsumer[A, R] = forall 'rep: ArraysImpl[A, 'rep] -> R
-//│ ║        	                                                           ^^^^
-//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this function:
-//│ ║  l.211: 	  val use = from.use of impl =>
-//│ ║         	                        ^^^^^^^
-//│ ║  l.212: 	    k => k(StepImpl(impl))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── • this signature of member `use`:
-//│ ║  l.40: 	  fun use: ArraysImplConsumer[A, 'res] -> 'res
-//│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── • this field selection:
-//│ ║  l.211: 	  val use = from.use of impl =>
-//│ ╙──       	            ^^^^^^^^
 //│ class StepAlt'[A](from: Arrays[A]) extends Arrays {
-//│   val use: forall 'R 'a. error | (StepImpl[A, 'R] -> 'a) -> 'a
+//│   val use: forall 'A 'R 'a. (StepImpl['A, 'R] -> 'a) -> 'a
 //│ }
-//│ where
-//│   'R :> ??rep
-//│      <: ??rep0
 //│ Syntax error:
 //│   Unexpected string
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 
 // * An alternative implementation of Step which only allocates one StepImpl per instance!

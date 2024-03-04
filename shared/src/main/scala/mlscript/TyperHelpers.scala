@@ -1109,7 +1109,9 @@ abstract class TyperHelpers { Typer: Typer =>
           case S(td: TypedNuAls) =>
             assert(td.tparams.size === targs.size)
             subst(td.body, td.tparams.lazyZip(targs).map {
-              case (tp, w: WildcardArg) => ??? // TODO error
+              case (tp, w: WildcardArg) => 
+                // TODO raise type error here
+                SkolemTag(tp._2)(noProv) -> errType
               case (tp, st: ST) => SkolemTag(tp._2)(noProv) -> st
             }.toMap)
           case S(td: TypedNuTrt) =>
@@ -1174,7 +1176,10 @@ abstract class TyperHelpers { Typer: Typer =>
         case Cls => clsNameToNomTag(td)(prov, ctx) & td.bodyTy & tparamTags
         case Trt => trtNameToNomTag(td)(prov, ctx) & td.bodyTy & tparamTags
         case Mxn => lastWords("mixins cannot be used as types")
-      }, td.targs.lazyZip(targs.map(_.asInstanceOf[ST])).toMap[ST, ST])  // * old defs to make things compiler //.withProv(prov)
+      }, td.targs.lazyZip(targs.map{
+        case w: WildcardArg => TypeBounds(w.lb, w.ub)(w.prov) // * old defs
+        case st: ST => st
+      }).toMap[ST, ST])  // * old defs to make things compiler //.withProv(prov)
     } //tap { res => println(s"Expand $this => $res") }
     private var tag: Opt[Opt[ClassTag]] = N
     def expansionFallback(implicit ctx: Ctx): Opt[ST] = mkClsTag

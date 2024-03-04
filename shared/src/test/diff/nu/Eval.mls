@@ -113,7 +113,7 @@ fun (:::) concatList(xs, ys) = if xs is
   Nil then ys
   Cons(x, xs) then x :: xs ::: ys
 //│ fun (::) cons: forall 'A. ('A, List['A]) -> Cons['A]
-//│ fun (:::) concatList: forall 'a 'A0 'A1. (Cons['A0] | Nil, List['A1] & 'a) -> (Cons['A1 | ??A & 'A0] | 'a)
+//│ fun (:::) concatList: forall 'a 'A0. (Cons['A0] | Nil, List[anything] & 'a) -> (Cons[??A & 'A0] | 'a)
 
 module Lists { // TODO use name List when module overloading is supported:
   
@@ -135,10 +135,36 @@ module Lists { // TODO use name List when module overloading is supported:
     Nil then None
   
 }
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.124: 	  fun zip(xs, ys) = if xs is
+//│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.125: 	    Nil then Nil
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.126: 	    Cons(x, xs) then if ys is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.127: 	      Nil then Nil
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ║  l.128: 	      Cons(y, ys) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.129: 	        [x, y] :: zip(xs, ys)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── tuple literal of type `[?a, ?b]` does not match type `nothing`
+//│ ║  l.129: 	        [x, y] :: zip(xs, ys)
+//│ ║         	        ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from applied type reference:
+//│ ║  l.90: 	class Cons[out A](val head: A, val tail: List[A]) extends List[A] {
+//│ ║        	                                         ^^^^^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.89: 	abstract class List[out A]: (Cons[A] | Nil) { virtual val length: Int }
+//│ ╙──      	                        ^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ module Lists {
-//│   fun assoc: forall 'a 'A. 'a -> (Cons[{key: Eql['a], value: 'A} | ~??A] | Nil) -> (None | Some['A])
-//│   fun map: forall 'A0 'A1. ((??A0 & 'A0) -> 'A1) -> (Cons['A0] | Nil) -> (Cons['A1] | Nil)
-//│   fun zip: forall 'A2 'A3. (Cons['A2] | Nil, Cons['A3] | Nil) -> (Cons[[??A1 & 'A2, ??A2 & 'A3]] | Nil)
+//│   fun assoc: forall 'A. anything -> (Cons[{key: Eql[?], value: 'A} | ~??A] | Nil) -> (None | Some['A])
+//│   fun map: forall 'A0. ((??A0 & 'A0) -> nothing) -> (Cons['A0] | Nil) -> (Cons[nothing] | Nil)
+//│   fun zip: forall 'A1 'A2. (Cons['A1] | Nil, Cons['A2] | Nil) -> (Cons[[??A1 & 'A1, ??A2 & 'A2]] | Nil)
 //│ }
 
 let xs = 1 :: 2 :: 3 :: Nil
@@ -178,28 +204,28 @@ abstract class Lit[out A](val value: A): IntLit | StrLit extends Term
 class IntLit(v: Int) extends Lit[Int](v)
 class StrLit(v: Str) extends Lit[Str](v)
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.175: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
+//│ ║  l.201: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Sub` is not an instance of type `Term`
-//│ ║  l.175: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
+//│ ║  l.201: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
 //│ ║         	              ^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.171: 	abstract class Term: Var | App | Lam | Sel | Rcd[Term] | Lit
+//│ ║  l.197: 	abstract class Term: Var | App | Lam | Sel | Rcd[Term] | Lit
 //│ ╙──       	                                                 ^^^^
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.175: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
+//│ ║  l.201: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Sub` does not match type `App | Lam | #Lit | Rcd[Term] | Sel | Var`
-//│ ║  l.175: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
+//│ ║  l.201: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
 //│ ║         	              ^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.171: 	abstract class Term: Var | App | Lam | Sel | Rcd[Term] | Lit
+//│ ║  l.197: 	abstract class Term: Var | App | Lam | Sel | Rcd[Term] | Lit
 //│ ║         	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
-//│ ║  l.171: 	abstract class Term: Var | App | Lam | Sel | Rcd[Term] | Lit
+//│ ║  l.197: 	abstract class Term: Var | App | Lam | Sel | Rcd[Term] | Lit
 //│ ╙──       	                                                 ^^^^
 //│ ╔══[ERROR] Type `Sub` does not contain member `Rcd#Sub`
-//│ ║  l.175: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
+//│ ║  l.201: 	class Rcd[out Sub](val fields: List[{key: Str, value: Sub}]) extends Term
 //│ ╙──       	              ^^^
 //│ abstract class Term: App | Lam | Lit[anything] | Rcd[Term] | Sel | Var
 //│ class Var(name: Str) extends Term
@@ -260,16 +286,2238 @@ fun eval(t, env) = if t is
     else err(String(pree) ++ " does not have field " ++ nme)
   Rcd(fs) then
     Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
-//│ fun eval: forall 'Sub 'A 'a 'Sub0. (App | Lam | Lit[anything] | Rcd['Sub] | Sel | Var, Cons[{key: Eql[Str], value: 'A} | ~??A] & {List#A <: {key: Eql[Str], value: 'A} | ~??A} & List[{key: Eql[Str], value: 'A} | ~??A] | Nil & {List#A <: {key: Eql[Str], value: 'A} | ~??A} & List[{key: Eql[Str], value: 'A} | ~??A]) -> 'a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{key: ?a, value: ?b}` does not match type `nothing`
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	                                                                         ^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.122: 	    Cons(x, xs) then f(x) :: map(f)(xs)
+//│ ╙──       	                     ^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{key: ?a, value: ?b}` does not match type `nothing`
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.122: 	    Cons(x, xs) then f(x) :: map(f)(xs)
+//│ ╙──       	                     ^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `Lit[??A & ?A]` does not match type `~(??A0 & ??A1)`
+//│ ║  l.273: 	  Lit then t
+//│ ║         	           ^
+//│ ╟── but it flows into application with expected type `~(??A0 & ??A1)`
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	                                         ^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ╙──      	                        ^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── class pattern of type `Lam` does not match type `~(??A & ??A0)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	  ^^^
+//│ ╟── but it flows into reference with expected type `~(??A & ??A0)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	           ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `Lit[??A & ?A]` does not match type `~(??A0 & ??A1 & ??Sub & ??A2)`
+//│ ║  l.273: 	  Lit then t
+//│ ║         	           ^
+//│ ╟── but it flows into application with expected type `~(??A0 & ??A1 & ??Sub & ??A2)`
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	                                         ^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ╙──      	                        ^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── class pattern of type `Lam` does not match type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	  ^^^
+//│ ╟── but it flows into reference with expected type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	           ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `Lit[??A & ?A]` does not match type `~(??A0 & ??A1 & ??Sub & ??A2)`
+//│ ║  l.273: 	  Lit then t
+//│ ║         	           ^
+//│ ╟── but it flows into application with expected type `~(??A0 & ??A1 & ??Sub & ??A2)`
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	                                                           ^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── class pattern of type `Lam` does not match type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	  ^^^
+//│ ╟── but it flows into reference with expected type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	           ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Rcd[?Sub] & {Rcd#Sub :> ?Sub0 <: ?Sub}` does not match type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into operator application with expected type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	                      ^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Rcd[?Sub] & {Rcd#Sub :> ?Sub0 <: ?Sub}` does not match type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into operator application with expected type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	                      ^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `Lit[??A & ?A]` does not match type `~(??A0 & ??A1 & ??Sub & ??A2)`
+//│ ║  l.273: 	  Lit then t
+//│ ║         	           ^
+//│ ╟── but it flows into application with expected type `~(??A0 & ??A1 & ??Sub & ??A2)`
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	                                                           ^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── class pattern of type `Lam` does not match type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	  ^^^
+//│ ╟── but it flows into reference with expected type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	           ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Rcd[?Sub] & {Rcd#Sub :> ?Sub0 <: ?Sub}` does not match type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into operator application with expected type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	                      ^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Rcd[?Sub] & {Rcd#Sub :> ?Sub0 <: ?Sub}` does not match type `~(??A & ??A0)`
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into operator application with expected type `~(??A & ??A0)`
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	                      ^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `Lit[??A & ?A]` does not match type `~(??A0 & ??A1)`
+//│ ║  l.273: 	  Lit then t
+//│ ║         	           ^
+//│ ╟── but it flows into application with expected type `~(??A0 & ??A1)`
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	                                         ^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ╙──      	                        ^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── class pattern of type `Lam` does not match type `~(??A & ??A0)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	  ^^^
+//│ ╟── but it flows into reference with expected type `~(??A & ??A0)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	           ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Rcd[?Sub] & {Rcd#Sub :> ?Sub0 <: ?Sub}` does not match type `~(??A & ??A0)`
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into operator application with expected type `~(??A & ??A0)`
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	                      ^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `Lit[??A & ?A]` does not match type `nothing`
+//│ ║  l.273: 	  Lit then t
+//│ ║         	           ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── class pattern of type `Lam` does not match type `nothing`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	  ^^^
+//│ ╟── but it flows into reference with expected type `nothing`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	           ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `Lit[??A & ?A]` does not match type `~(??A0 & ??A1 & ??Sub & ??A2)`
+//│ ║  l.273: 	  Lit then t
+//│ ║         	           ^
+//│ ╟── but it flows into application with expected type `~(??A0 & ??A1 & ??Sub & ??A2)`
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	                                         ^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ╙──      	                        ^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── class pattern of type `Lam` does not match type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	  ^^^
+//│ ╟── but it flows into reference with expected type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	           ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `Lit[??A & ?A]` does not match type `~(??A0 & ??A1 & ??Sub & ??A2)`
+//│ ║  l.273: 	  Lit then t
+//│ ║         	           ^
+//│ ╟── but it flows into application with expected type `~(??A0 & ??A1 & ??Sub & ??A2)`
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	                                                           ^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── class pattern of type `Lam` does not match type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	  ^^^
+//│ ╟── but it flows into reference with expected type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	           ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Rcd[?Sub] & {Rcd#Sub :> ?Sub0 <: ?Sub}` does not match type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into operator application with expected type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	                      ^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Rcd[?Sub] & {Rcd#Sub :> ?Sub0 <: ?Sub}` does not match type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into operator application with expected type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	                      ^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `Lit[??A & ?A]` does not match type `~(??A0 & ??A1 & ??Sub & ??A2)`
+//│ ║  l.273: 	  Lit then t
+//│ ║         	           ^
+//│ ╟── but it flows into application with expected type `~(??A0 & ??A1 & ??Sub & ??A2)`
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	                                         ^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ╙──      	                        ^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── class pattern of type `Lam` does not match type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	  ^^^
+//│ ╟── but it flows into reference with expected type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	           ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Rcd[?Sub] & {Rcd#Sub :> ?Sub0 <: ?Sub}` does not match type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into operator application with expected type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	                      ^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `Lit[??A & ?A]` does not match type `~(??Sub & ??A0)`
+//│ ║  l.273: 	  Lit then t
+//│ ║         	           ^
+//│ ╟── but it flows into application with expected type `~(??Sub & ??A0)`
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	                                                           ^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── class pattern of type `Lam` does not match type `~(??Sub & ??A)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	  ^^^
+//│ ╟── but it flows into reference with expected type `~(??Sub & ??A)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	           ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `Lit[??A & ?A]` does not match type `~(??Sub & ??A0)`
+//│ ║  l.273: 	  Lit then t
+//│ ║         	           ^
+//│ ╟── but it flows into application with expected type `~(??Sub & ??A0)`
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	                                                           ^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── class pattern of type `Lam` does not match type `~(??Sub & ??A)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	  ^^^
+//│ ╟── but it flows into reference with expected type `~(??Sub & ??A)`
+//│ ║  l.274: 	  Lam then t
+//│ ║         	           ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Rcd[?Sub] & {Rcd#Sub :> ?Sub0 <: ?Sub}` does not match type `~(??Sub & ??A)`
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into operator application with expected type `~(??Sub & ??A)`
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	                      ^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Rcd[?Sub] & {Rcd#Sub :> ?Sub0 <: ?Sub}` does not match type `~(??Sub & ??A)`
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into operator application with expected type `~(??Sub & ??A)`
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	                      ^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── application of type `Rcd[?Sub] & {Rcd#Sub :> ?Sub0 <: ?Sub}` does not match type `nothing`
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into operator application with expected type `nothing`
+//│ ║  l.269: 	fun eval(t, env) = if t is
+//│ ║         	                      ^^^^
+//│ ║  l.270: 	  Var(nme) then if env |> Lists.assoc(nme) is Some(v)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.271: 	    then v
+//│ ║         	^^^^^^^^^^
+//│ ║  l.272: 	    else err("variable not found: " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.273: 	  Lit then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.274: 	  Lam then t
+//│ ║         	^^^^^^^^^^^^
+//│ ║  l.275: 	  App(f, args) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.276: 	    let fe = eval(f, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.277: 	    if fe is Lam(ps, bod) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.279: 	      if ps.length === argse.length then () else err("wrong number of arguments")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.281: 	      eval(bod, envp ::: env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.282: 	    else err(String(fe) ++ " cannot be applied")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.283: 	  Sel(pre, nme) then
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.284: 	    let pree = eval(pre, env)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.285: 	    if pree is Rcd(xs) and xs |> Lists.assoc(nme) is Some(v) then v
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.286: 	    else err(String(pree) ++ " does not have field " ++ nme)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.287: 	  Rcd(fs) then
+//│ ║         	^^^^^^^^^^^^^^
+//│ ║  l.288: 	    Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from application:
+//│ ║  l.278: 	      val argse = args |> Lists.map(a => eval(a, env))
+//│ ╙──       	                                         ^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ fun eval: forall 'A 'A0 'Sub 'a 'A1. (App | Lam | Lit[anything] | Rcd['Sub] | Sel | Var, Cons['A0 & ({key: Eql[?], value: 'A} | ~??A)] & {List#A} & List[in 'A0] | Nil & {List#A} & List[in 'A0]) -> 'a
 //│   where
-//│     'A :> ??A0 & 'a
-//│        <: Object & ~#Rcd | Rcd['Sub0] | ~??A1
-//│     'a :> ??A1 & 'A | Lam | Lit[??A2 & ??A3] | ??Sub & ??A4 & 'Sub0 | Rcd[nothing]
-//│     'Sub0 :> Lam | Lit[??A2 & ??A3] | 'a
-//│           <: Object & ~#Rcd | Rcd['Sub0] | ~(??Sub & ??A4)
+//│     'A0 :> {key: Str & ??A0, value: ??A1 & 'A1} & ??A2
+//│         <: ~??A | {key: Eql[?], value: 'A}
+//│     'A1 :> 'a
+//│     'a :> ??A3 & 'A | Rcd[Lam | Lit[??A4 & ??A5] | 'a] | Lam | Lit[??A4 & ??A5] | ??Sub & ??A6 & (Lam | Lit[??A4 & ??A5])
+//│     'A :> ??A1 & 'A1
+//│        <: ~??A3
 //│     'Sub <: App | Lam | Lit[anything] | Rcd['Sub] | Sel | Var | ~??Sub0
 
 eval : (Term, List[{key: Str, value: Value}]) -> Value
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.2507: 	eval : (Term, List[{key: Str, value: Value}]) -> Value
+//│ ║          	^^^^
+//│ ╟── type `Lam` does not match type `~(??A & ??A0 & ??Sub & ??A1)`
+//│ ║  l.260: 	type Value = Lam | Lit | Rcd[Value]
+//│ ║         	             ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── from field selection:
+//│ ║  l.133: 	      if kv.key === e then Some(kv.value)
+//│ ╙──       	                                ^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ (Term, List[{key: Str, value: Value}]) -> Value
 //│ res
 //│     = [Function: eval]
@@ -280,23 +2528,62 @@ let rcd = Rcd({key: "a", value: IntLit(0)} :: Nil)
 //│     = Rcd {}
 
 eval of rcd, Nil
-//│ 'a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.2530: 	eval of rcd, Nil
+//│ ║          	^^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{key: ?a, value: ?b}` does not match type `~??A`
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	                                                                         ^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.89: 	abstract class List[out A]: (Cons[A] | Nil) { virtual val length: Int }
+//│ ╙──      	                        ^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ error | 'a
 //│   where
-//│     'a :> ??A & ??A0 & (Lam | Lit[??A1 & ??A2]) | ??A3 & ??Sub & (Lam | Lit[??A1 & ??A2]) | Rcd[Lam | Lit[??A1 & ??A2] | 'a] | Lam | Lit[??A1 & ??A2]
+//│     'a :> ??A & ??A0 & (Lam | Lit[??A1 & ??A2]) | Lam | Lit[??A1 & ??A2] | ??Sub & ??A3 & (Lam | Lit[??A1 & ??A2]) | Rcd[Lam | Lit[??A1 & ??A2] | 'a]
 //│ res
 //│     = Rcd {}
 
 eval of Sel(rcd, "a"), Nil
-//│ 'a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.2550: 	eval of Sel(rcd, "a"), Nil
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{key: ?a, value: ?b}` does not match type `~??A`
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	                                                                         ^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.89: 	abstract class List[out A]: (Cons[A] | Nil) { virtual val length: Int }
+//│ ╙──      	                        ^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ error | 'a
 //│   where
-//│     'a :> ??A & ??A0 & (Lam | Lit[??A1 & ??A2]) | Lam | Lit[??A1 & ??A2] | ??A3 & ??Sub & (Lam | Lit[??A1 & ??A2]) | Rcd[Lam | Lit[??A1 & ??A2] | 'a]
+//│     'a :> ??A & ??A0 & (Lam | Lit[??A1 & ??A2]) | Rcd[Lam | Lit[??A1 & ??A2] | 'a] | Lam | Lit[??A1 & ??A2] | ??Sub & ??A3 & (Lam | Lit[??A1 & ??A2])
 //│ res
 //│     = IntLit {}
 
 eval of App(Lam("x" :: Nil, Sel(Var("x"), "a")), rcd :: Nil), Nil
-//│ 'a
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.2570: 	eval of App(Lam("x" :: Nil, Sel(Var("x"), "a")), rcd :: Nil), Nil
+//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── record literal of type `{key: ?a, value: ?b}` does not match type `~??A`
+//│ ║  l.280: 	      let envp = Lists.zip(ps, argse) |> Lists.map of ([key, value]) => {key, value}
+//│ ║         	                                                                         ^^^^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.95: 	module Nil extends List[nothing] {
+//│ ║        	                        ^^^^^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.89: 	abstract class List[out A]: (Cons[A] | Nil) { virtual val length: Int }
+//│ ╙──      	                        ^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ error | 'a
 //│   where
-//│     'a :> ??A & ??A0 & (Lam | Lit[??A1 & ??A2]) | ??A3 & ??Sub & (Lam | Lit[??A1 & ??A2]) | Rcd[Lam | Lit[??A1 & ??A2] | 'a] | Lam | Lit[??A1 & ??A2]
+//│     'a :> ??A & ??A0 & (Lam | Lit[??A1 & ??A2]) | Lam | Lit[??A1 & ??A2] | ??Sub & ??A3 & (Lam | Lit[??A1 & ??A2]) | Rcd[Lam | Lit[??A1 & ??A2] | 'a]
 //│ res
 //│     = IntLit {}
 

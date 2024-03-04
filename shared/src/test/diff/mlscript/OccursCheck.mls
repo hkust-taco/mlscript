@@ -14,7 +14,7 @@ rec def f x = f x
 rec def f x = f
 //│ ╔══[ERROR] Inferred recursive type: 'f
 //│   where
-//│     'f :> ? -> 'f
+//│     'f :> #? -> 'f
 //│ ╙──
 //│ f: 'f
 //│   where

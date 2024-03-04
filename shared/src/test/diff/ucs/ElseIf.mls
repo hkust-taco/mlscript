@@ -10,7 +10,7 @@ fun f(x, y) = if x ===
     0 then true
     1 then false
   else false
-//│ fun f: (Eql[0 | 1], Eql[0 | 1]) -> Bool
+//│ fun f: (Eql[out 0 | 1], Eql[out 0 | 1]) -> Bool
 
 fun f(x, y) = if x ===
     0 then true
@@ -18,7 +18,7 @@ fun f(x, y) = if x ===
   else if y ===
     0 then true
     _ then false
-//│ fun f: (Eql[0 | 1], Eql[0]) -> Bool
+//│ fun f: (Eql[out 0 | 1], Eql[0]) -> Bool
 
 module Tru
 module Fals

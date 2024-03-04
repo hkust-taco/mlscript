@@ -316,8 +316,8 @@ class C[A, in B, out C]() { fun f: [A, B] -> [A, C] = f }
 fun test(k) =
   let f(x) = let c = C() in [k(c), c]
   f
-//│ fun test: forall 'C 'B 'A 'A0 'a. (C[in 'A0 out 'A0 | 'A, 'B, 'C] -> 'a) -> (forall 'A1. anything -> ['a, C['A1, 'B, 'C]])
+//│ fun test: forall 'A 'A0 'a. (C[in 'A out 'A | 'A0, anything, nothing] -> 'a) -> (forall 'A1. anything -> ['a, C['A1, anything, nothing]])
 //│   where
-//│     'A1 :> 'A0
-//│         <: 'A
+//│     'A1 :> 'A
+//│         <: 'A0
 

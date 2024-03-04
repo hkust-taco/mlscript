@@ -1215,9 +1215,9 @@ trait TypeSimplifier { self: Typer =>
                         case (_, ProxyType(underlying2)) => unify(ty1, underlying2)
                         case (TypeRef(defn1, targs1), TypeRef(defn2, targs2)) =>
                           (defn1 === defn2 || nope) && targs1.lazyZip(targs2).forall {
-                            case (WildcardArg(l1, u1), WildcardArg(l2, u2)) => ???
-                            case (WildcardArg(l1, u1), ta2: ST) => ???
-                            case (ta1: ST, WildcardArg(l2, u2)) => ???
+                            case (WildcardArg(l1, u1), WildcardArg(l2, u2)) => unify(l1, l2) && unify(u1, u2)
+                            case (WildcardArg(l1, u1), ta2: ST) => nope // TODO correctly unify wildcard
+                            case (ta1: ST, WildcardArg(l2, u2)) => nope // TODO correctly unify wildcard
                             case (ta1: ST, ta2: ST) => unify(ta1, ta2)
                           }
                         case _ => nope

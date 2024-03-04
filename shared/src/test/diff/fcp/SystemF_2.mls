@@ -38,7 +38,7 @@ id iter2 iter2
 iter2 iter2 K
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> ? -> ? -> 'a
+//│     'a :> #? -> #? -> 'a
 //│ ╙──
 //│ res: 'a -> anything -> 'b
 //│   where
@@ -97,7 +97,7 @@ c2 = succ (succ n0)
 c2 c2 K
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> ? -> 'a
+//│     'a :> #? -> 'a
 //│ ╙──
 //│ res: ('a & 'X) -> ('X | anything -> 'a)
 //│   where
@@ -127,10 +127,10 @@ c2_ c2_!
 c2_ c2_ K
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> ? -> ('a | 'b | 'c | 'd)
-//│     'c :> ? -> ('b | 'c | 'd)
-//│     'd :> ? -> ('b | 'c)
-//│     'b :> ? -> ('a | 'b)
+//│     'a :> #? -> ('a | 'b | 'c | 'd)
+//│     'c :> #? -> ('b | 'c | 'd)
+//│     'd :> #? -> ('b | 'c)
+//│     'b :> #? -> ('a | 'b)
 //│ ╙──
 //│ res: ('a & 'b) -> anything -> ('c | 'd)
 //│   where
@@ -152,7 +152,7 @@ c2__ c2__
 c2__ c2__ K
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> ? -> ? -> 'a
+//│     'a :> #? -> #? -> 'a
 //│ ╙──
 //│ res: 'a -> anything -> 'b
 //│   where
@@ -324,7 +324,7 @@ c2 = succ (succ n0)
 c2 c2 K
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> ? -> 'a
+//│     'a :> #? -> 'a
 //│ ╙──
 //│ res: ('a & 'X) -> ('X | anything -> 'a)
 //│   where
@@ -367,7 +367,7 @@ c2_ c2_
 c2_ c2_ K
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b 'c 'd 'e. ('b & 'e) -> (? -> 'e | 'd)
+//│     'a :> forall 'b 'c 'd 'e. ('b & 'e) -> (#? -> 'e | 'd)
 //│       where
 //│         'a <: 'c -> 'd
 //│         forall 'f. 'f -> (forall 'g 'h 'i. 'i -> 'h

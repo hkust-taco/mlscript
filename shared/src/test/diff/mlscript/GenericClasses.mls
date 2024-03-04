@@ -205,7 +205,7 @@ mrg.Foo2 42
 
 
 def mrg: Foo2[int] | Foo2[string]
-//│ mrg: Foo2[out int | string]
+//│ mrg: Foo2[in int | string out nothing]
 //│    = <missing implementation>
 
 
@@ -271,7 +271,7 @@ mrg = Foo2_Co{}
 //│    = Foo2_Co {}
 
 def mrg: Foo2_Co[int] | Foo2_Co[string]
-//│ mrg: in Foo2_Co[nothing] out Foo2_Co[int | string]
+//│ mrg: Foo2_Co[nothing]
 //│    = <missing implementation>
 
 

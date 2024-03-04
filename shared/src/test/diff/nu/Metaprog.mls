@@ -31,9 +31,25 @@ abstract class Test[C] {
   fun test0 = this.unquote of IntLit(1)
   fun test1 = this.unquote of Add(this.getVar, IntLit(1))
 }
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.31: 	  fun test0 = this.unquote of IntLit(1)
+//│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `C` does not match type `nothing`
+//│ ║  l.29: 	  fun unquote: (input: Code['a, C | 'c]) -> Code[Int, 'c]
+//│ ║        	                                ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.9: 	class IntLit(value: Int) extends Code[Int, nothing]
+//│ ║       	                                           ^^^^^^^
+//│ ╟── Note: type parameter C is defined at:
+//│ ║  l.27: 	abstract class Test[C] {
+//│ ║        	                    ^
+//│ ╟──       type parameter Ctx is defined at:
+//│ ║  l.4: 	class Code[out A, out Ctx]
+//│ ╙──     	                      ^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ abstract class Test[C] {
 //│   fun getVar: Code[Int, C]
-//│   fun test0: Code[Int, nothing]
+//│   fun test0: Code[Int, nothing] | error
 //│   fun test1: Code[Int, nothing]
 //│   fun unquote: forall 'c. (input: Code[anything, 'c | C]) -> Code[Int, 'c]
 //│ }
@@ -55,7 +71,7 @@ mkVar of t0 =>
 mkVar of t0 =>
   mkVar of t1 =>
     t1.unquote of t0.unquote of Add(t0.getVar, t1.getVar)
-//│ Code[Int, ??C & ~??C0 & ~??C1]
+//│ Code[Int, nothing]
 
 mkVar of t0 =>
   mkVar of t1 =>

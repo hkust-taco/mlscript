@@ -1853,6 +1853,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
   }
   
+  // TODO: use pol: Bool
   def refreshHelper2(raw: PolyNuDecl, v: Var, parTargs: Opt[Ls[SimpleTypeOrWildcard]])
         (implicit ctx: Ctx): (MutMap[TV, ST], Map[Str, NuParam]) = {
     val freshened: MutMap[TV, ST] = MutMap.empty
@@ -1876,11 +1877,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           assert(tv.assignedTo.isEmpty)
           assert(tv.lowerBounds.isEmpty, tv.lowerBounds)
           assert(tv.upperBounds.isEmpty, tv.upperBounds)
+          // TODO use pol
           tv.assignedTo = S(TypeBounds(wc.lb, wc.ub)(wc.prov))
           
           println(s"Assigned ${tv.assignedTo}")
-          // tv  
-          ???
+          tv
         case st: ST =>
           println(s"Assigning ${tn.name} :: ${_tv} := $st where ${st.showBounds}")
           val tv =

@@ -144,7 +144,7 @@ fun foo(f: Foo[?]): Int = f.a : f.A
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.130: 	fun foo(f: Foo[?]): Int = f.a : f.A
 //│ ╙──       	                    ^^^
-//│ fun foo: (f: Foo[?]) -> Int
+//│ fun foo: (f: Foo[anything]) -> Int
 
 fun foo(f) = f.a : f.A
 //│ fun foo: forall 'A 'A0. {A :> 'A <: 'A0, a: 'A} -> 'A0

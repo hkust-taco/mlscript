@@ -23,13 +23,12 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       assert(tr1.defn === tr2.defn)
       assert(tr1.targs.size === tr2.targs.size)
       TypeRef(tr1.defn, (tr1.targs lazyZip tr2.targs).map {
-        case (WildcardArg(l1, u1), WildcardArg(l2, u2)) => ???
-        case (WildcardArg(l1, u1), ta2: ST) => ???
-        case (ta1: ST, WildcardArg(l2, u2)) => ???
-        case (ta1: ST, ta2: ST) => 
-          if (pol) WildcardArg.mk(ta1 & ta2, ta1 | ta2) else WildcardArg.mk(ta1 | ta2, ta1 & ta2)
+        case (l: WildcardArg, r: WildcardArg) => 
+          if (pol) WildcardArg.mk(l.lb | r.lb, l.ub & r.ub) else WildcardArg.mk(l.lb & r.lb, l.ub | r.ub)
+        case (l: WildcardArg, r: ST) => if (pol) WildcardArg.mk(l.lb | r, l.ub & r) else WildcardArg.mk(l.lb & r, l.ub | r)
+        case (l: ST, r: WildcardArg) => if (pol) WildcardArg.mk(l | r.lb, l & r.ub) else WildcardArg.mk(l & r.lb, l | r.ub)
+        case (l: ST, r: ST) => if (pol) WildcardArg.mk(l | r, l & r) else WildcardArg.mk(l & r, l | r)
       })(noProv)
-      
     }
   
   

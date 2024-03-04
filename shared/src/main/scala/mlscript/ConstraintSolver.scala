@@ -950,8 +950,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   td.tparamsargs.unzip._2.lazyZip(tr1.targs).lazyZip(tr2.targs).foreach { (tv, targ1, targ2) =>
                     val v = tvv(tv)
                     // * old defs, just to make things compile
-                    val t1 = targ1.asInstanceOf[ST]
-                    val t2 = targ2.asInstanceOf[ST]
+                    val t1 = targ1 match { case w: WildcardArg => TypeBounds(w.lb, w.ub)(w.prov) ; case st: ST => st }
+                    val t2 = targ2 match { case w: WildcardArg => TypeBounds(w.lb, w.ub)(w.prov) ; case st: ST => st }
                     if (!v.isContravariant) rec(t1, t2, false)
                     if (!v.isCovariant) rec(t2, t1, false)
                   }

@@ -16,34 +16,28 @@ class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO[B] {
   fun run = f(underlying.run).run
 }
 //│ abstract class IO[A] {
-//│   fun bind: forall 'B. (A -> IO['B]) -> Bind[A, 'B]
+//│   fun bind: forall 'A 'B. ('A -> IO['B]) -> Bind['A, 'B]
 //│   fun run: A
 //│ }
 //│ class Pure[A](value: A) extends IO {
-//│   fun bind: forall 'B0. (A -> IO['B0]) -> Bind[in A & 'A out A, 'B0]
+//│   fun bind: forall 'A0 'B0. ('A0 -> IO['B0]) -> Bind['A0, 'B0]
 //│   fun run: A
 //│ }
 //│ class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO {
-//│   fun bind: forall 'B1. (B -> IO['B1]) -> Bind[in B & 'A0 out B, 'B1]
+//│   fun bind: forall 'A1 'B1. ('A1 -> IO['B1]) -> Bind['A1, 'B1]
 //│   fun run: B
 //│ }
-//│ where
-//│   'A0 := B
-//│   'A := A
 
 module readInt extends IO[Int] { fun run: Int = 42 }
 class printLine(str: Str) extends IO[undefined] { fun run = log(str) }
 //│ module readInt extends IO {
-//│   fun bind: forall 'B. ('A -> IO['B]) -> Bind[Int & 'A, 'B]
+//│   fun bind: forall 'B 'A. ('A -> IO['B]) -> Bind['A, 'B]
 //│   fun run: Int
 //│ }
 //│ class printLine(str: Str) extends IO {
-//│   fun bind: forall 'B0. ('A0 -> IO['B0]) -> Bind[() & 'A0, 'B0]
+//│   fun bind: forall 'A0 'B0. ('A0 -> IO['B0]) -> Bind['A0, 'B0]
 //│   fun run: ()
 //│ }
-//│ where
-//│   'A0 := ()
-//│   'A := Int
 
 
 // * Nested indent:
@@ -55,7 +49,7 @@ val main =
         val sum = n + m
         printLine(concat("The sum is: ")(String of sum)).bind of _ =>
           Pure(sum)
-//│ val main: Bind[(), 'B]
+//│ val main: Bind['A, 'B]
 //│   where
 //│     'B :> Int
 //│ main
@@ -79,7 +73,7 @@ val main =
   val sum = n + m
   printLine(concat("The sum is: ")(String of sum)).bind of _ =>
   Pure(sum)
-//│ val main: Bind[(), 'B]
+//│ val main: Bind['A, 'B]
 //│   where
 //│     'B :> Int
 //│ main
@@ -97,31 +91,30 @@ main.run
 // * TODO improve this error – missing provenance for '0-element tuple'
 :e
 printLine("").bind of [] => error
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.99: 	printLine("").bind of [] => error
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `()` is not a 0-element tuple
-//│ ║  l.35: 	class printLine(str: Str) extends IO[undefined] { fun run = log(str) }
-//│ ╙──      	                                     ^^^^^^^^^
-//│ Bind[out (), 'B] | error
+//│ Bind['A, 'B]
+//│   where
+//│     'A <: []
 //│ res
 //│     = Bind {}
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 // * TODO improve this error (parameter list repr.)
 :e
 printLine("").bind of () => error
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.112: 	printLine("").bind of () => error
+//│ ║  l.103: 	printLine("").bind of () => error
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `[?A]` does not match type `[]`
 //│ ║  l.15: 	class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO[B] {
 //│ ╙──      	                                       ^
-//│ Bind[(), 'B] | error
+//│ Bind['A, 'B] | error
 //│ res
 //│     = Bind {}
 
 printLine("").bind of (()) => error
-//│ Bind[(), 'B]
+//│ Bind['A, 'B]
+//│   where
+//│     'A <: ()
 //│ res
 //│     = Bind {}
 
@@ -172,7 +165,7 @@ let r = loop.run
 
 fun (>>) compose[A, B, C](f: A -> B, g: B -> C): A -> C = x => g(f(x))
 fun (#>) map[A, B](x: IO[A], f: A -> B): IO[B] = x.bind(f >> Pure)
-//│ fun (>>) compose: forall 'C 'A 'B. (f: 'A -> 'B, g: 'B -> 'C) -> 'A -> 'C
+//│ fun (>>) compose: forall 'B 'C 'A. (f: 'A -> 'B, g: 'B -> 'C) -> 'A -> 'C
 //│ fun (#>) map: forall 'A0 'B0. (x: IO['A0], f: 'A0 -> 'B0) -> IO['B0]
 
 val main =
@@ -205,7 +198,7 @@ val main =
   val sum = n + m
   printLine(concat("The sum is: ")(String of sum)) #> _ =>
   sum
-//│ val main: Bind[(), 'B]
+//│ val main: Bind['A, 'B]
 //│   where
 //│     'B :> Int
 //│ main
@@ -223,12 +216,10 @@ fun loop =
   printLine("Input a positive number: ") #>> _ =>
   readInt #>> n =>
   if n < 0 then loop else Pure(n)
-//│ fun loop: forall 'B. Bind[(), 'B]
-//│   where
-//│     'B :> Int
+//│ fun loop: forall 'A 'B. Bind['A, 'B]
 
 let r = loop.run
-//│ let r: Int
+//│ let r: nothing
 //│ r
 //│   = 42
 //│ // Output
@@ -245,10 +236,10 @@ fun main(ctx) =
   ctx.printLine(concat("The sum is: ")(String of sum)) #>> _ =>
   ctx.pure(sum)
 //│ fun main: forall 'a 'b 'c 'd 'e. {
-//│   printLine: "Hi! Input two numbers: " -> {bind: (anything -> 'e) -> 'd} & Str -> {bind: (anything -> 'a) -> 'b},
-//│   pure: Int -> 'a,
-//│   readInt: {bind: (Int -> 'c) -> 'e & (Int -> 'b) -> 'c}
-//│ } -> 'd
+//│   printLine: "Hi! Input two numbers: " -> {bind: (anything -> 'c) -> 'b} & Str -> {bind: (anything -> 'e) -> 'd},
+//│   pure: Int -> 'e,
+//│   readInt: {bind: (Int -> 'a) -> 'c & (Int -> 'd) -> 'a}
+//│ } -> 'b
 
 val defaultCtx = {printLine, readInt, pure: Pure}
 //│ val defaultCtx: {
@@ -288,14 +279,12 @@ fun loop(ctx) =
 //│ } -> 'b
 
 let r = loop(defaultCtx)
-//│ let r: Bind[(), 'B]
-//│   where
-//│     'B :> Int
+//│ let r: Bind['A, 'B]
 //│ r
 //│   = Bind {}
 
 let r = loop(defaultCtx).run
-//│ let r: Int
+//│ let r: nothing
 //│ r
 //│   = 42
 //│ // Output
@@ -303,18 +292,10 @@ let r = loop(defaultCtx).run
 
 :e
 not(r)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.305: 	not(r)
-//│ ║         	^^^^^^
-//│ ╟── type `Int` is not an instance of type `Bool`
-//│ ║  l.34: 	module readInt extends IO[Int] { fun run: Int = 42 }
-//│ ║        	                          ^^^
-//│ ╟── but it flows into reference with expected type `Bool`
-//│ ║  l.305: 	not(r)
-//│ ╙──       	    ^
-//│ error | false | true
+//│ Bool
 //│ res
 //│     = false
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 
 // * Note: using inferred parent type arguments
@@ -322,16 +303,13 @@ not(r)
 module readInt extends IO { fun run = 42 }
 class printLine(str: Str) extends IO { fun run = log(str) }
 //│ module readInt extends IO {
-//│   fun bind: forall 'B. ('A -> IO['B]) -> Bind['A, 'B]
+//│   fun bind: forall 'A 'B. ('A -> IO['B]) -> Bind['A, 'B]
 //│   fun run: 42
 //│ }
 //│ class printLine(str: Str) extends IO {
-//│   fun bind: forall 'B0. ('A0 -> IO['B0]) -> Bind['A0, 'B0]
+//│   fun bind: forall 'B0 'A0. ('A0 -> IO['B0]) -> Bind['A0, 'B0]
 //│   fun run: ()
 //│ }
-//│ where
-//│   'A0 :> ()
-//│   'A :> 42
 
 val main =
   printLine("Hi! Input two numbers: ").bind of _ =>
@@ -340,14 +318,14 @@ val main =
   val sum = n + m
   printLine(concat("The sum is: ")(String of sum)).bind of _ =>
   Pure(sum)
-//│ val main: Bind[in 'A out () | 'A, 'B]
+//│ val main: Bind['A, 'B]
 //│   where
 //│     'B :> Int
 //│ main
 //│      = Bind {}
 
 main
-//│ Bind[in 'A out () | 'A, 'B]
+//│ Bind['A, 'B]
 //│   where
 //│     'B :> Int
 //│ res
@@ -356,50 +334,29 @@ main
 
 :e
 let r = printLine("").bind of 0 => Pure(1)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.358: 	let r = printLine("").bind of 0 => Pure(1)
-//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `()` does not match type `0`
-//│ ║  l.323: 	class printLine(str: Str) extends IO { fun run = log(str) }
-//│ ║         	                                                 ^^^^^^^^
-//│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.358: 	let r = printLine("").bind of 0 => Pure(1)
-//│ ╙──       	                              ^
-//│ let r: Bind[in 0 & 'A out () | 'A, 'B] | error
+//│ let r: Bind['A, 'B]
 //│   where
 //│     'B :> 1
+//│     'A <: 0
 //│ r
 //│   = Bind {}
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 :e
 let r = printLine("").bind of x =>
 log(x.a)
 Pure(1)
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.375: 	let r = printLine("").bind of x =>
-//│ ║         	        ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.376: 	log(x.a)
-//│ ║         	^^^^^^^^^
-//│ ║  l.377: 	Pure(1)
-//│ ║         	^^^^^^^
-//│ ╟── application of type `()` does not have field 'a'
-//│ ║  l.323: 	class printLine(str: Str) extends IO { fun run = log(str) }
-//│ ║         	                                                 ^^^^^^^^
-//│ ╟── Note: constraint arises from field selection:
-//│ ║  l.376: 	log(x.a)
-//│ ║         	    ^^^
-//│ ╟── from reference:
-//│ ║  l.376: 	log(x.a)
-//│ ╙──       	    ^
-//│ let r: Bind[in {a: anything} & 'A out () | 'A, 'B] | error
+//│ let r: Bind['A, 'B]
 //│   where
 //│     'B :> 1
+//│     'A <: {a: anything}
 //│ r
 //│   = Bind {}
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 :re
 r.run
-//│ 1 | error
+//│ 1
 //│ res
 //│ Runtime error:
 //│   TypeError: Cannot read properties of undefined (reading 'a')

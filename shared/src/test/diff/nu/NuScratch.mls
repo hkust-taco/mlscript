@@ -21,11 +21,11 @@ fun f[T](x: F[T]): T = if x is MkF(t) then Box(t) as x.A
 
 
 fun f: Box[?]
-//│ fun f: Box[?]
+//│ fun f: Box[anything]
 
 // :ds
 f
-//│ Box[?]
+//│ Box[anything]
 //│ res
 //│     = <no result>
 //│       f is not implemented
@@ -37,7 +37,7 @@ fun foo(b: Box['X]) = b.get + 1
 //│     'X <: Int
 
 fun foo(b: Box['X] & Box[Int]) = [b, b.get + 1]
-//│ fun foo: (b: Box[Int]) -> [Box[Int], Int]
+//│ fun foo: forall 'X. (b: Box[Int | 'X]) -> [Box[Int & 'X], Int]
 
 
 

@@ -88,7 +88,7 @@ fun walk(t, mn) = if t is
     let mnl = walk(l, mn)
     let mnr = walk(r, mn)
     [min(mnl.0, mnr.0), Node(mnl.1, mnr.1)]
-//│ fun walk: forall 'A 'A0 'a. (Leaf['A & (Num | ~??A)] | Node['A0 & (Num | ~??A | ~??A0)], Int & 'a) -> [??A & ('A | ??A0 & 'A0), Leaf['a | ??A & ('A | ??A0 & 'A0)] | Node['a | ??A & ('A | ??A0 & 'A0)]]
+//│ fun walk: forall 'A. (Leaf['A & (Num | ~??A)] | Node[anything], nothing) -> [??A & (error | 'A), Leaf[??A & (error | 'A)] | Node[nothing]]
 
 
 let tree = Node of (Node of (Node of Leaf(1), Leaf(5)), Leaf(3)), Node of Leaf(3), Leaf(2)
@@ -125,7 +125,10 @@ fun walk(t, mn) = if t is
     Pair of n, Leaf(if n > 2 * mn then mn else n)
   Node(l, r) and walk(l, mn) is Pair(mn1, l1) and walk(r, mn) is Pair(mn2, r1) then
     Pair of min(mn1, mn2), Node(l1, r1)
-//│ fun walk: forall 'A 'A0 'a. (Leaf['A & (Num | ~??A)] | Node['A0 & (Num | ~??A | ~??A0)], Int & 'a) -> Pair[??A1 & ??A & (??A0 & 'A0 | 'A) | ??A2 & ??A & (??A0 & 'A0 | 'A) | ??A & ('A | ??A0 & 'A0), Leaf['a | ??A & ('A | ??A0 & 'A0)] | Node['a | ??A & ('A | ??A0 & 'A0)]]
+//│ fun walk: forall 'A 'a 'A0. (Leaf['A & (Num | ~??A)] | Node[anything], nothing) -> Pair[??A & 'a & (error | 'A), nothing]
+//│   where
+//│     'a :> ??A0 & 'A0 | ??A1 & 'A0
+//│     'A0 :> 'a | ??A & (error | 'A)
 
 String of walk(tree, 2)
 //│ Str
@@ -143,7 +146,7 @@ fun walkLazy(t, mn) = if t is
     let mnl = walkLazy(l, mn)
     let mnr = walkLazy(r, mn)
     [min(mnl.0, mnr.0), Lazy of () => Node of mnl.1.get, mnr.1.get]
-//│ fun walkLazy: forall 'A 'A0 'get. (Leaf['A & (Num | ~??A)] | Node['A0 & (Num | ~??A | ~??A0)], {get: Int & 'get}) -> [??A & ('A | ??A0 & 'A0), Lazy[Leaf['get | ??A & ('A | ??A0 & 'A0)] | Node['get | ??A & ('A | ??A0 & 'A0)]]]
+//│ fun walkLazy: forall 'A. (Leaf['A & (Num | ~??A)] | Node[anything], {get: nothing}) -> [??A & (error | 'A), Lazy[nothing]]
 
 
 // * One way to tie the recursive knot
@@ -154,9 +157,9 @@ class repmin(t: Tree[Int]) {
   val tree = mn_res.1.get
 }
 //│ class repmin(t: Tree[Int]) {
-//│   val mn: Int & ??A
-//│   val mn_res: [Int & ??A, Lazy[Leaf[Int & ??A] | Node[Int & ??A]]]
-//│   val tree: Leaf[Int & ??A] | Node[Int & ??A]
+//│   val mn: ??A & (Int | error)
+//│   val mn_res: [??A & (Int | error), Lazy[nothing]]
+//│   val tree: Leaf[??A & (Int | error)] | Node[nothing] | ??A0 & (Leaf[??A & (Int | error)] | Node[nothing])
 //│ }
 
 let rm = repmin(tree)
@@ -171,7 +174,7 @@ let rm = repmin(tree)
 //│ Traversing leaf 2
 
 [rm.mn, String of rm.tree]
-//│ [Int & ??A, Str]
+//│ [??A & (Int | error), Str]
 //│ res
 //│     = [
 //│         1,
@@ -186,7 +189,7 @@ fun repmin(t) =
     val mn_res = walkLazy of t, Lazy of () => mn_res.0
   }
   [Rec.mn_res.0, Rec.mn_res.1.get]
-//│ fun repmin: forall 'A 'A0. (Leaf['A & (Int | ~??A)] | Node['A0 & (Int | ~??A | ~??A0)]) -> [??A & ('A | ??A0 & 'A0), Leaf[??A & ('A | ??A0 & 'A0)] | Node[??A & ('A | ??A0 & 'A0)]]
+//│ fun repmin: forall 'A. (Leaf['A & (Int | ~??A)] | Node[anything]) -> [??A & (error | 'A), Leaf[??A & (error | 'A)] | Node[nothing] | ??A0 & (Leaf[??A & (error | 'A)] | Node[nothing])]
 
 String of repmin(tree)
 //│ Str
@@ -206,7 +209,7 @@ String of repmin(tree)
 fun repmin(t) =
   let rec mn_res = walkLazy of t, Lazy(() => mn_res.0)
   [mn_res.0, mn_res.1.get]
-//│ fun repmin: forall 'A 'A0. (Leaf['A & (Int | ~??A)] | Node['A0 & (Int | ~??A | ~??A0)]) -> [??A & ('A | ??A0 & 'A0), Leaf[??A & ('A | ??A0 & 'A0)] | Node[??A & ('A | ??A0 & 'A0)]]
+//│ fun repmin: forall 'A. (Leaf['A & (Int | ~??A)] | Node[anything]) -> [??A & (error | 'A), Leaf[??A & (error | 'A)] | Node[nothing] | ??A0 & (Leaf[??A & (error | 'A)] | Node[nothing])]
 //│ Code generation encountered an error:
 //│   unguarded recursive use of by-value binding mn_res
 
@@ -238,7 +241,7 @@ fun repmin(t) =
       () => Node of l'(), r'()
   let res = go(t)
   [min, res()]
-//│ fun repmin: forall 'A 'A0. (Leaf['A & (Int | ~??A)] | Node[(Num | ~(??A & ??A0)) & (Int | ~(??A & ??A0)) & 'A0]) -> [2147483648 | ??A & ('A | ??A0 & 'A0), Leaf[2147483648 | ??A & ('A | ??A0 & 'A0)] | Node[2147483648 | ??A & ('A | ??A0 & 'A0)]]
+//│ fun repmin: forall 'A. (Leaf[(Num | ~??A) & (Int | ~??A) & 'A] | Node[anything]) -> [2147483648 | ??A & (error | 'A), Leaf[2147483648 | ??A & (error | 'A)] | Node[nothing]]
 
 String of repmin(tree)
 //│ Str
@@ -264,7 +267,7 @@ p => if p is Pair of a, b then a + b
 :e // TODO handle this pattern better in the parser?
 (p, q) => if p is Pair of a, b and q is Pair of a', b' then Pair of a + a', b + b'
 //│ ╔══[ERROR] Illegal pattern `and`
-//│ ║  l.265: 	(p, q) => if p is Pair of a, b and q is Pair of a', b' then Pair of a + a', b + b'
+//│ ║  l.268: 	(p, q) => if p is Pair of a, b and q is Pair of a', b' then Pair of a + a', b + b'
 //│ ╙──       	                               ^^^
 //│ (anything, anything) -> error
 //│ Code generation encountered an error:

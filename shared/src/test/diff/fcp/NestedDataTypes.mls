@@ -67,7 +67,7 @@ rec def map f tree = case tree of {
   }
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a <: {subTree: Leaf[?] & {value: ((?, (?, ?,),), ((?, ?,), ?,),)} | Node[?] & 'a}
+//│     'a <: {subTree: Leaf[?] & {value: ((#?, (#?, #?,),), ((#?, #?,), #?,),)} | Node[?] & 'a}
 //│ ║  l.64: 	rec def map f tree = case tree of {
 //│ ╙──      	                          ^^^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required

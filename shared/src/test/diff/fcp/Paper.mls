@@ -92,7 +92,7 @@ auto auto!
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
 //│     'a :> 'a -> 'b
-//│        <: 'a -> (? & 'b)
+//│        <: 'a -> (#? & 'b)
 //│ ╙──
 //│ res: nothing
 

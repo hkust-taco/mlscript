@@ -466,7 +466,7 @@ def myNil l = eq l nil
 rec def append x l =
   if eq l nil then cons x nil
   else cons (head l) (append x (tail l))
-//│ append: 'a -> List['a] -> List['a]
+//│ append: ('a & 'b) -> List['b] -> List['a & 'b]
 //│       = [Function: append]
 
 // let rec map l f =

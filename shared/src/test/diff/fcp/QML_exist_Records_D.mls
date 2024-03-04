@@ -139,7 +139,7 @@ def step arr = arr helper
 
 // * Also works, but not necessary
 def step (arr: Arrays['a]) = arr helper
-//│ Arrays['a] -> ArraysImplConsumer['a, 'b] -> 'b
+//│ Arrays['a] -> ArraysImplConsumer[?, 'b] -> 'b
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step1]
@@ -162,7 +162,7 @@ def step arr = arr (fun impl -> fun (k: ArraysImplConsumer['a, 'r]) -> k (stepIm
 
 // * With one more annotation (not needed)
 def step (arr: Arrays['a0]) = arr (fun impl -> fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl impl))
-//│ Arrays['a0] -> ArraysImplConsumer['a0, 'a] -> 'a
+//│ Arrays['a0] -> ArraysImplConsumer[?, 'a] -> 'a
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step4]
@@ -186,11 +186,11 @@ ssb (fun arr ->
 
 rec def mkMonoArray n =
   if n == 0 then base else step (mkMonoArray (n - 1))
-//│ mkMonoArray: int -> Arrays['a]
+//│ mkMonoArray: int -> Arrays[in 'a | 'a0 out 'a & 'a0]
 //│            = [Function: mkMonoArray]
 
 snb = mkMonoArray 3
-//│ snb: Arrays['a]
+//│ snb: Arrays[in 'a | 'a0 out 'a & 'a0]
 //│    = [Function (anonymous)]
 
 // * Here we are trying to leak the internally-quantified representation, resulting in `anything` being returned
@@ -257,11 +257,11 @@ ssb (fun arr ->
 
 rec def mkMonoArray n =
   if n == 0 then base else step2 (mkMonoArray (n - 1))
-//│ mkMonoArray: int -> Arrays['a]
+//│ mkMonoArray: int -> Arrays[in 'a | 'a0 out 'a & 'a0]
 //│            = [Function: mkMonoArray1]
 
 snb = mkMonoArray 3
-//│ snb: Arrays['a]
+//│ snb: Arrays[in 'a | 'a0 out 'a & 'a0]
 //│    = [Function (anonymous)]
 
 // * Here we are trying to leak the internally-quantified representation, resulting in `anything` being returned
@@ -356,33 +356,30 @@ def step (arr: Arrays['a]) = arr (fun impl -> fun k -> k (stepImpl impl))
 
 // * Works. Note: removing `forall 'a.` here leads to badness
 def step arr = arr (forall 'a. fun impl -> forall 'r. fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl impl))
-//│ ((forall 'a 'r 'r0. ArraysImpl['a, 'r] -> ArraysImplConsumer['a, 'r0] -> 'r0) -> 'b) -> 'b
+//│ ((forall 'a 'r. ArraysImpl[?, ?] -> ArraysImplConsumer['a, 'r] -> 'r) -> 'b) -> 'b
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step7]
 
 // * ...unless we use `stepImpl_ty` instead of `stepImpl`
 def step arr = arr (fun impl -> forall 'r. fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl_ty impl))
-//│ ((forall 'a 'a0 'r 'r0 'a1. ArraysImpl[in 'a & 'a0 out 'a | 'a0, 'r] -> ArraysImplConsumer['a1, 'r0] -> 'r0) -> 'b) -> 'b
-//│   where
-//│     'a1 :> 'a
-//│         <: 'a0
+//│ ((forall 'a 'r. ArraysImpl[?, ?] -> ArraysImplConsumer['a, 'r] -> 'r) -> 'b) -> 'b
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step8]
 
 
 def step arr = arr (fun impl -> (fun k -> k (stepImpl impl)) : Arrays['a])
-//│ ((forall 'a 'a0 'r. ArraysImpl[in 'a & 'a0 out 'a, 'r] -> Arrays['a0]) -> 'b) -> 'b
+//│ ((forall 'a 'a0. ArraysImpl[?, ?] -> Arrays['a]) -> 'b) -> 'b
 //│   where
-//│     'a :> 'a0
-//│     'a0 := 'a
+//│     'a := 'a0
+//│     'a0 :> 'a
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step9]
 
 def step arr = arr (fun impl -> (fun k -> k (stepImpl_ty impl)) : Arrays['a])
-//│ ((forall 'a 'r. ArraysImpl['a, 'r] -> Arrays['a]) -> 'b) -> 'b
+//│ ((forall 'a. ArraysImpl[?, ?] -> Arrays['a]) -> 'b) -> 'b
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step10]

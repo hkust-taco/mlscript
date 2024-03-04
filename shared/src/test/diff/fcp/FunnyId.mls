@@ -30,9 +30,9 @@ id_ty = id
 rec def id x = let tmp = id id x in x
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a <: 'b -> ?
+//│     'a <: 'b -> #?
 //│     'b :> 'b -> 'b
-//│        <: ? & 'a
+//│        <: #? & 'a
 //│ ║  l.30: 	rec def id x = let tmp = id id x in x
 //│ ╙──      	                         ^^^^^
 //│ id: 'a -> 'a
@@ -46,9 +46,9 @@ rec def id x = let tmp = id id x in x
 id 1
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a <: 'b -> ?
+//│     'a <: 'b -> #?
 //│     'b :> 1 | 'b -> 'b
-//│        <: ? & 'a
+//│        <: #? & 'a
 //│ ║  l.30: 	rec def id x = let tmp = id id x in x
 //│ ╙──      	                         ^^^^^
 //│ ╔══[ERROR] Type mismatch in application:
@@ -74,9 +74,9 @@ id 1
 id_ty = id
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a <: 'b -> ?
+//│     'a <: 'b -> #?
 //│     'b :> 'b -> 'b
-//│        <: ? & 'a
+//│        <: #? & 'a
 //│ ║  l.30: 	rec def id x = let tmp = id id x in x
 //│ ╙──      	                         ^^^^^
 //│ 'a -> 'a

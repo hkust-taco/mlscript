@@ -631,7 +631,7 @@ rec def to_ch_s n =
   else s (to_ch_s (n - 1))
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b. (? & 'b) -> (forall 'b 'c 'd 'e 'f. ('c & 'f) -> ('c | 'e)
+//│     'a :> forall 'b. (#? & 'b) -> (forall 'b 'c 'd 'e 'f. ('c & 'f) -> ('c | 'e)
 //│       where
 //│         'b <: 'd -> 'e
 //│         'a <: 'b -> 'f -> 'd)
@@ -650,7 +650,7 @@ rec def to_ch n =
   else s (to_ch (n - 1))
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b. (? & 'b) -> (forall 'c 'd 'e 'b 'f. ('f & 'e) -> ('f | 'c)
+//│     'a :> forall 'b. (#? & 'b) -> (forall 'c 'd 'e 'b 'f. ('f & 'e) -> ('f | 'c)
 //│       where
 //│         'a <: 'b -> 'e -> 'd
 //│         'b <: 'd -> 'c)
@@ -667,7 +667,7 @@ rec def to_ch n =
 to_church_ty = to_ch
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b. (? & 'b) -> (forall 'b 'c 'd 'e 'f. ('d & 'c) -> ('d | 'f)
+//│     'a :> forall 'b. (#? & 'b) -> (forall 'b 'c 'd 'e 'f. ('d & 'c) -> ('d | 'f)
 //│       where
 //│         'a <: 'b -> 'c -> 'e
 //│         'b <: 'e -> 'f)
@@ -803,7 +803,7 @@ rec def to_ch_A1 n =
   else s (to_ch_A1 (n - 1) : ChurchInt)
 //│ ╔══[ERROR] Inferred recursive type: 'to_ch_A1
 //│   where
-//│     'to_ch_A1 :> forall 'to_ch_A1. int -> (forall 'a. (? & 'a) -> (forall 'b 'a 'c 'd 'e. ('e & 'c) -> ('c | 'b)
+//│     'to_ch_A1 :> forall 'to_ch_A1. int -> (forall 'a. (#? & 'a) -> (forall 'b 'a 'c 'd 'e. ('e & 'c) -> ('c | 'b)
 //│       where
 //│         'a <: 'd -> 'b
 //│         ChurchInt <: 'a -> 'e -> 'd))
@@ -825,7 +825,7 @@ rec def to_ch_A1 n =
 to_church_ty = to_ch_A1
 //│ ╔══[ERROR] Inferred recursive type: 'to_ch_A1
 //│   where
-//│     'to_ch_A1 :> forall 'to_ch_A1. int -> (forall 'a. (? & 'a) -> (forall 'a 'b 'c 'd 'e. ('b & 'd) -> ('d | 'e)
+//│     'to_ch_A1 :> forall 'to_ch_A1. int -> (forall 'a. (#? & 'a) -> (forall 'a 'b 'c 'd 'e. ('b & 'd) -> ('d | 'e)
 //│       where
 //│         'a <: 'c -> 'e
 //│         ChurchInt <: 'a -> 'b -> 'c))
@@ -1060,7 +1060,7 @@ rec def to_chD n =
 to_church_ty = to_ch
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b 'c 'd 'e 'f. (? & 'd) -> (('f & 'b) -> ('f | 'c)
+//│     'a :> forall 'b 'c 'd 'e 'f. (#? & 'd) -> (('f & 'b) -> ('f | 'c)
 //│       where
 //│         'a <: 'd -> 'b -> 'e
 //│         'd <: 'e -> 'c)
@@ -1160,7 +1160,7 @@ to_church_ty = to_ch_simplif
 to_church_ty = to_ch_A1
 //│ ╔══[ERROR] Inferred recursive type: 'to_ch_A1
 //│   where
-//│     'to_ch_A1 :> forall 'to_ch_A1. int -> (forall 'a 'b 'c 'd 'e. (? & 'e) -> (('d & 'c) -> ('c | 'b)
+//│     'to_ch_A1 :> forall 'to_ch_A1. int -> (forall 'a 'b 'c 'd 'e. (#? & 'e) -> (('d & 'c) -> ('c | 'b)
 //│       where
 //│         ChurchInt <: 'e -> 'd -> 'a
 //│         'e <: 'a -> 'b))

@@ -49,7 +49,7 @@ fun filtermap(f, xs) = if xs is
     Tru then filtermap(f, ys)
     Fals then Cons(y, filtermap(f, ys))
     Pair(Tru, z) then Cons(z, filtermap(f, ys))
-//│ fun filtermap: forall 'A 'B. ((??A & 'A) -> (Fals | Pair[Tru | ~??A0, 'B] | Tru), Cons['A] | Nil) -> (Cons[??A & 'A | ??B & 'B] | Nil)
+//│ fun filtermap: forall 'A 'B. ((??A & 'A) -> (Fals | Pair[Tru | ~??A0, 'B] | Tru), Cons['A] | Nil) -> (Cons[??B & 'B & ??A & 'A] | Nil)
 
 fun mkString(xs) =
   if xs is
