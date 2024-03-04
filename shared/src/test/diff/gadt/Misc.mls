@@ -67,27 +67,73 @@ fun f(x: S): x.T = if x is A then 1 else 0
 //│ ╟── type variable `T` leaks out of its scope
 //│ ║  l.63: 	fun f(x: S): x.T = if x is A then 1 else 0
 //│ ╙──      	                                         ^
-//│ fun f: (x: S[?]) -> ??T
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
 
 fun f(x: S[?]) = if x is 
     A then 1 : x.T
     B then true : x.T
-//│ fun f: (x: S[?]) -> (Int | false | true)
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
 
 f(A)
-//│ Int | false | true
-//│ res
-//│     = 1
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
 
 fun f(x: S[?]): x.T = if x is 
     A then 1 : x.T
     B then true : x.T
-//│ fun f: (x: S[?]) -> (Int | false | true)
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
 
 f(A)
-//│ Int | false | true
-//│ res
-//│     = 1
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
 
 abstract class C[type S, type T]: R[S | T] | I[S]   // TODO just a trick
 class R[A] extends C[A, A]
@@ -101,7 +147,7 @@ class I[A](val f: A => Int) extends C[A, Int]
 fun foo[A, B](x: A, ev: C[A, B]): B = if ev is 
     R then (x : ev.S) : ev.T
     I(f) then ev.f(x : ev.S) : ev.T
-//│ fun foo: forall 'B 'A. (x: 'A, ev: C['A, 'B]) -> 'B
+//│ fun foo: forall 'A 'B. (x: 'A, ev: C['A, 'B]) -> 'B
 
 foo(true, new R)
 //│ true
@@ -131,27 +177,212 @@ class Some[A](get: A) extends Option[A]
 //│ class Some[A](get: A) extends Option
 
 fun optToInt(w: Option[?]) = if w is Some then 1 else 0
-//│ fun optToInt: (w: Option[?]) -> (0 | 1)
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
 
-optToInt(Some(1))
-//│ 0 | 1
-//│ res
-//│     = 1
+
+:d
+:s
+optToInt(Some(11))
+//│ 0. Typing TypingUnit(List(App(Var(optToInt),Tup(List((None,Fld(_,App(Var(Some),Tup(List((None,Fld(_,IntLit(11)))))))))))))
+//│ | Typing unit statements
+//│ | | 0. Typing term optToInt(Some(11,),)
+//│ | | | 0. Typing term optToInt
+//│ | | | | Completing fun optToInt = (w: Option‹?›,) => if (is(w, Some,)) then 1 else 0
+//│ | | | | | Type params 
+//│ | | | | | Params 
+//│ | | | | | 1. Typing term (w: Option‹?›,) => if (is(w, Some,)) then 1 else 0
+//│ | | | | | | 1. Typing pattern [w: Option‹?›,]
+//│ | | | | | | | 1. Typing pattern w : Option[?]
+//│ | | | | | | | | Typing type AppliedType(TypeName(Option),List(TypeName(?)))
+//│ | | | | | | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | | | | | | 1. type AppliedType(TypeName(Option),List(TypeName(?)))
+//│ | | | | | | | | | => Option[? :> ⊥ <: ⊤]
+//│ | | | | | | | | => Option[? :> ⊥ <: ⊤] ——— 
+//│ | | | | | | | 1. : Option[? :> ⊥ <: ⊤]
+//│ | | | | | | 1. : (w: Option[? :> ⊥ <: ⊤],)
+//│ | | | | | | 1. Typing term if (is(w, Some,)) then 1 else 0
+//│ | | | | | | | [Desugarer.destructPattern] scrutinee = Var(w); pattern = Var(Some)
+//│ | | | | | | | [Desugarer.destructPattern] Result: «w is Var(Some)»
+//│ | | | | | | | Desugared term: case w of { Some => 1; _ => 0 }
+//│ | | | | | | | 1. Typing term case w of { Some => 1; _ => 0 }
+//│ | | | | | | | | 1. Typing term w
+//│ | | | | | | | | 1. : Option[? :> ⊥ <: ⊤]
+//│ | | | | | | | | CONSTRAIN Option[? :> ⊥ <: ⊤] <! Object
+//│ | | | | | | | |   where 
+//│ | | | | | | | | 1. C Option[? :> ⊥ <: ⊤] <! Object    (0)
+//│ | | | | | | | | | Assigning T :: T321' := ? :> ⊥ <: ⊤
+//│ | | | | | | | | | Set T321_342 ~> T321'
+//│ | | | | | | | | | Assigned Some(⊥..⊤)
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.$anonfun$expandWith$1(TyperHelpers.scala:1129)
+//│ 	at: scala.Option.map(Option.scala:242)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.expandWith(TyperHelpers.scala:1097)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.expandWith$(TyperHelpers.scala:1096)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.expandWith(TyperDatatypes.scala:429)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.expand(TyperHelpers.scala:1090)
+//│ 	at: mlscript.TyperHelpers$TypeRefImpl.expand$(TyperHelpers.scala:1080)
+//│ 	at: mlscript.TyperDatatypes$TypeRef.expand(TyperDatatypes.scala:429)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$111(ConstraintSolver.scala:995)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$111$adapted(ConstraintSolver.scala:807)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ 	at: mlscript.ConstraintSolver.$anonfun$constrainImpl$106(ConstraintSolver.scala:807)
+//│ 	at: scala.runtime.java8.JFunction0$mcV$sp.apply(JFunction0$mcV$sp.scala:18)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.ConstraintSolver.recImpl$1(ConstraintSolver.scala:740)
+//│ 	at: mlscript.ConstraintSolver.rec$1(ConstraintSolver.scala:720)
+//│ 	at: mlscript.ConstraintSolver.constrainImpl(ConstraintSolver.scala:1315)
+//│ 	at: mlscript.ConstraintSolver.constrain(ConstraintSolver.scala:211)
+//│ 	at: mlscript.Typer.con$1(Typer.scala:819)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1321)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1510)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1332)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1510)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1087)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1510)
+//│ 	at: mlscript.NuTypeDefs$DelayedTypeInfoImpl.$anonfun$complete$10(NuTypeDefs.scala:1170)
+//│ 	at: mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ 	at: mlscript.NuTypeDefs$DelayedTypeInfoImpl.$anonfun$complete$8(NuTypeDefs.scala:1169)
+//│ 	at: mlscript.Typer$Ctx.nextLevel(Typer.scala:88)
+//│ 	at: mlscript.NuTypeDefs$DelayedTypeInfoImpl.$anonfun$complete$3(NuTypeDefs.scala:1167)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NuTypeDefs$DelayedTypeInfoImpl.$anonfun$complete$1(NuTypeDefs.scala:1826)
+//│ 	at: scala.Option.getOrElse(Option.scala:201)
+//│ 	at: mlscript.NuTypeDefs$DelayedTypeInfoImpl.complete(NuTypeDefs.scala:1119)
+//│ 	at: mlscript.NuTypeDefs$DelayedTypeInfoImpl.complete$(NuTypeDefs.scala:1118)
+//│ 	at: mlscript.TyperDatatypes$DelayedTypeInfo.complete(TyperDatatypes.scala:55)
+//│ 	at: mlscript.NuTypeDefs$DelayedTypeInfoImpl.typeSignature(NuTypeDefs.scala:1834)
+//│ 	at: mlscript.NuTypeDefs$DelayedTypeInfoImpl.typeSignature$(NuTypeDefs.scala:1828)
+//│ 	at: mlscript.TyperDatatypes$DelayedTypeInfo.typeSignature(TyperDatatypes.scala:55)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$11(Typer.scala:927)
+//│ 	at: scala.Option.fold(Option.scala:263)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:893)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1510)
+//│ 	at: mlscript.Typer.typeMonomorphicTerm(Typer.scala:788)
+//│ 	at: mlscript.Typer.$anonfun$typeTerm$2(Typer.scala:1182)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.Typer.typeTerm(Typer.scala:1510)
+//│ 	at: mlscript.NuTypeDefs.go$1(NuTypeDefs.scala:656)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$typeTypingUnit$19(NuTypeDefs.scala:686)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$typeTypingUnit$2(NuTypeDefs.scala:686)
+//│ 	at: mlscript.TyperHelpers.trace(TyperHelpers.scala:32)
+//│ 	at: mlscript.NuTypeDefs.typeTypingUnit(NuTypeDefs.scala:532)
+//│ 	at: mlscript.DiffTests.rec$1(DiffTests.scala:521)
+//│ 	at: mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1037)
+//│ 	at: org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+//│ 	at: org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+//│ 	at: org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+//│ 	at: org.scalatest.Transformer.apply(Transformer.scala:22)
+//│ 	at: org.scalatest.Transformer.apply(Transformer.scala:20)
+//│ 	at: org.scalatest.funsuite.AnyFunSuiteLike$$anon$1.apply(AnyFunSuiteLike.scala:226)
+//│ 	at: org.scalatest.TestSuite.withFixture(TestSuite.scala:196)
+//│ 	at: org.scalatest.TestSuite.withFixture$(TestSuite.scala:195)
+//│ 	at: mlscript.DiffTests.org$scalatest$concurrent$TimeLimitedTests$$super$withFixture(DiffTests.scala:45)
+//│ 	at: org.scalatest.concurrent.TimeLimitedTests.$anonfun$withFixture$3(TimeLimitedTests.scala:154)
+//│ 	at: org.scalatest.enablers.Timed$$anon$1.timeoutAfter(Timed.scala:127)
+//│ 	at: org.scalatest.concurrent.TimeLimits$.failAfterImpl(TimeLimits.scala:282)
+//│ 	at: org.scalatest.concurrent.TimeLimitedTests.withFixture(TimeLimitedTests.scala:153)
+//│ 	at: org.scalatest.concurrent.TimeLimitedTests.withFixture$(TimeLimitedTests.scala:150)
+//│ 	at: mlscript.DiffTests.withFixture(DiffTests.scala:45)
+//│ 	at: org.scalatest.funsuite.AnyFunSuiteLike.invokeWithFixture$1(AnyFunSuiteLike.scala:224)
+//│ 	at: org.scalatest.funsuite.AnyFunSuiteLike.$anonfun$runTest$1(AnyFunSuiteLike.scala:236)
+//│ 	at: org.scalatest.SuperEngine.runTestImpl(Engine.scala:306)
+//│ 	at: org.scalatest.funsuite.AnyFunSuiteLike.runTest(AnyFunSuiteLike.scala:236)
+//│ 	at: org.scalatest.funsuite.AnyFunSuiteLike.runTest$(AnyFunSuiteLike.scala:218)
+//│ 	at: mlscript.DiffTests.org$scalatest$OneInstancePerTest$$super$runTest(DiffTests.scala:45)
+//│ 	at: org.scalatest.OneInstancePerTest.runTest(OneInstancePerTest.scala:131)
+//│ 	at: org.scalatest.OneInstancePerTest.runTest$(OneInstancePerTest.scala:123)
+//│ 	at: mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$runTest(DiffTests.scala:45)
+//│ 	at: org.scalatest.ParallelTestExecution.runTest(ParallelTestExecution.scala:164)
+//│ 	at: org.scalatest.ParallelTestExecution.runTest$(ParallelTestExecution.scala:148)
+//│ 	at: mlscript.DiffTests.runTest(DiffTests.scala:45)
+//│ 	at: org.scalatest.OneInstancePerTest.runTests(OneInstancePerTest.scala:181)
+//│ 	at: org.scalatest.OneInstancePerTest.runTests$(OneInstancePerTest.scala:172)
+//│ 	at: mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$runTests(DiffTests.scala:45)
+//│ 	at: org.scalatest.ParallelTestExecution.runTests(ParallelTestExecution.scala:97)
+//│ 	at: org.scalatest.ParallelTestExecution.runTests$(ParallelTestExecution.scala:79)
+//│ 	at: mlscript.DiffTests.runTests(DiffTests.scala:45)
+//│ 	at: org.scalatest.Suite.run(Suite.scala:1114)
+//│ 	at: org.scalatest.Suite.run$(Suite.scala:1096)
+//│ 	at: org.scalatest.funsuite.AnyFunSuite.org$scalatest$funsuite$AnyFunSuiteLike$$super$run(AnyFunSuite.scala:1563)
+//│ 	at: org.scalatest.funsuite.AnyFunSuiteLike.$anonfun$run$1(AnyFunSuiteLike.scala:273)
+//│ 	at: org.scalatest.SuperEngine.runImpl(Engine.scala:535)
+//│ 	at: org.scalatest.funsuite.AnyFunSuiteLike.run(AnyFunSuiteLike.scala:273)
+//│ 	at: org.scalatest.funsuite.AnyFunSuiteLike.run$(AnyFunSuiteLike.scala:272)
+//│ 	at: mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$run(DiffTests.scala:45)
+//│ 	at: org.scalatest.ParallelTestExecution.run(ParallelTestExecution.scala:261)
+//│ 	at: org.scalatest.ParallelTestExecution.run$(ParallelTestExecution.scala:258)
+//│ 	at: mlscript.DiffTests.run(DiffTests.scala:45)
+//│ 	at: org.scalatest.tools.DistributedTestRunnerSuite.run(DistributedTestRunnerSuite.scala:22)
+//│ 	at: org.scalatest.tools.SuiteRunner.run(SuiteRunner.scala:47)
+//│ 	at: java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
+//│ 	at: java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+//│ 	at: java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+//│ 	at: java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+//│ 	at: java.base/java.lang.Thread.run(Thread.java:833)
 
 optToInt(Some(1) as Option[Int])
-//│ 0 | 1
-//│ res
-//│     = 1
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
 
 optToInt(None)
-//│ 0 | 1
-//│ res
-//│     = 0
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
 
 optToInt(None as Option[nothing])
-//│ 0 | 1
-//│ res
-//│     = 0
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
 
 let x = Some(Some(1))
 let y = Some(None)
@@ -178,33 +409,69 @@ y : Option[Option[nothing]]
 
 abstract class W[type T]: MkW[?]
 class MkW[A](val w: A) extends W[Ty[A]]
-//│ abstract class W[T]: MkW[?]
+//│ abstract class W[T]: MkW[anything]
 //│ class MkW[A](w: A) extends W
 
 fun test(w: W[Ty[Int]]) = if w is MkW(x) then x
-//│ fun test: (w: W[Ty[Int]]) -> ??A
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
 
 test(MkW(1))
-//│ ??A
-//│ res
-//│     = 1
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
 
 fun test(w: W[?]) = if w is MkW(x) then x
-//│ fun test: (w: W[?]) -> ??A
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
 
 test(MkW(1))
-//│ ??A
-//│ res
-//│     = 1
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
 
 :e
 fun test(a: Some[Int]) = true as a.T
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.201: 	fun test(a: Some[Int]) = true as a.T
+//│ ║  l.468: 	fun test(a: Some[Int]) = true as a.T
 //│ ║         	                         ^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.201: 	fun test(a: Some[Int]) = true as a.T
+//│ ║  l.468: 	fun test(a: Some[Int]) = true as a.T
 //│ ╙──       	                                  ^^
 //│ fun test: (a: Some[Int]) -> Int
 
@@ -238,11 +505,11 @@ let x: Ty[Int]
 :e
 true as x.T
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.239: 	true as x.T
+//│ ║  l.506: 	true as x.T
 //│ ║         	^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.239: 	true as x.T
+//│ ║  l.506: 	true as x.T
 //│ ╙──       	         ^^
 //│ Int
 //│ res
@@ -261,11 +528,11 @@ let x: Some[Int]
 :e
 true as x.T
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.262: 	true as x.T
+//│ ║  l.529: 	true as x.T
 //│ ║         	^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.262: 	true as x.T
+//│ ║  l.529: 	true as x.T
 //│ ╙──       	         ^^
 //│ Int
 //│ res
@@ -278,7 +545,7 @@ true as x.T
 
 abstract class U[type A, type B]: MkU[?]
 class MkU[S](x: S) extends U[S, Int]
-//│ abstract class U[A, B]: MkU[?]
+//│ abstract class U[A, B]: MkU[anything]
 //│ class MkU[S](x: S) extends U
 
 fun uu[T](x: MkU[T]): T = if x is
@@ -292,39 +559,86 @@ uu(MkU(true))
 
 fun u(x: U[?, ?]): x.A = if x is
     MkU(s) then s : x.A
-//│ fun u: (x: U[?, ?]) -> ??S
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
 
 u(MkU(1))
-//│ ??S
-//│ res
-//│     = 1
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
 
 :e
 fun w[T](x: U[T, T]): Bool = if x is
     MkU(s) then (s : x.A) : x.B
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.304: 	    MkU(s) then (s : x.A) : x.B
-//│ ║         	                ^^^^^^^^^
-//│ ╟── type `T & ?B` is not an instance of type `Bool`
-//│ ║  l.304: 	    MkU(s) then (s : x.A) : x.B
-//│ ║         	                             ^^
-//│ ╟── Note: constraint arises from type reference:
-//│ ║  l.303: 	fun w[T](x: U[T, T]): Bool = if x is
-//│ ╙──       	                      ^^^^
-//│ fun w: forall 'T. (x: U['T, 'T]) -> Bool
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
 
 fun w[T](x: U[T, T]): Int = if x is
     MkU(s) then (s : x.A) : x.B
-//│ fun w: forall 'T. (x: U['T, 'T]) -> Int
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
 
 fun u[T](x: U[T, 'b]): T = if x is
     MkU(s) then s :x.A
-//│ fun u: forall 'T 'b. (x: U['T, 'b]) -> 'T
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
 
 u(MkU(1))
-//│ 1
-//│ res
-//│     = 1
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ 	at: scala.Predef$.$qmark$qmark$qmark(Predef.scala:344)
+//│ 	at: mlscript.NuTypeDefs.$anonfun$refreshHelper2$3(NuTypeDefs.scala:1883)
+//│ 	at: scala.collection.LazyZip2$$anon$1$$anon$2.next(LazyZipOps.scala:42)
+//│ 	at: scala.collection.immutable.List.prependedAll(List.scala:153)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:684)
+//│ 	at: scala.collection.immutable.List$.from(List.scala:681)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:115)
+//│ 	at: scala.collection.BuildFromLowPriority2$$anon$11.fromSpecific(BuildFrom.scala:112)
+//│ 	at: scala.collection.LazyZip2.map(LazyZipOps.scala:37)
+//│ 	at: mlscript.NuTypeDefs.refreshHelper2(NuTypeDefs.scala:1863)
 
 abstract class U[type A, type B]: MkU[A]
 class MkU[S](x: S) extends U[S, Int]
@@ -347,16 +661,16 @@ w(MkU(1))
 :e
 w(MkU(true))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.348: 	w(MkU(true))
+//│ ║  l.662: 	w(MkU(true))
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of `Int`
-//│ ║  l.348: 	w(MkU(true))
+//│ ║  l.662: 	w(MkU(true))
 //│ ║         	      ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.330: 	class MkU[S](x: S) extends U[S, Int]
+//│ ║  l.644: 	class MkU[S](x: S) extends U[S, Int]
 //│ ║         	                                ^^^
 //│ ╟── Note: type parameter B is defined at:
-//│ ║  l.329: 	abstract class U[type A, type B]: MkU[A]
+//│ ║  l.643: 	abstract class U[type A, type B]: MkU[A]
 //│ ╙──       	                              ^
 //│ Int | error
 //│ res
@@ -371,3 +685,4 @@ class MkU[S](x: S) extends U[S, Int]
 fun u[T](x: U[T, 'b]): T = if x is
     MkU(s) then s : x.A
 //│ fun u: forall 'T 'b. (x: U['T, 'b]) -> 'T
+

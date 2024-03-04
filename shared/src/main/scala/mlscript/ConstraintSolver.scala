@@ -499,10 +499,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case (ls, (w @ Without(_, _)) :: rs) =>
           lastWords(s"unexpected Without in negative position not at the top level: ${w}")
         */
-
-        // TODO wildcards
-        case (WildcardArg(lb, ub) :: ls, _) => ???
-        case (_, WildcardArg(lb, ub) :: rs) => ???
         
         case ((l: BaseTypeOrTag) :: ls, rs) => annoying(ls, (done_ls & (l, pol = true))(ctx, etf = true) getOrElse
           (return println(s"OK  $done_ls & $l  =:=  ${BotType}")), rs, done_rs)
@@ -844,13 +840,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rec(lhs, rhs, true)
           case (lhs, tv @ AssignedVariable(rhs)) =>
             rec(lhs, rhs, true)
-          
-          // FIXME wrong place for this; should be reported in typeType
-          // standalone wildcards
-          case (lhs, w@WildcardArg(lb, ub)) => 
-            err(msg"Wildcards can only be use in type arguments", w.prov.loco); ()
-          case (w@WildcardArg(lb, ub), rhs) => 
-            err(msg"Wildcards can only be use in type arguments", w.prov.loco); ()
             
           case (lhs: TypeVariable, rhs) if rhs.level <= lhs.level =>
             println(s"NEW $lhs UB (${rhs.level})")
@@ -960,8 +949,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   val tvv = td.getVariancesOrDefault
                   td.tparamsargs.unzip._2.lazyZip(tr1.targs).lazyZip(tr2.targs).foreach { (tv, targ1, targ2) =>
                     val v = tvv(tv)
-                    if (!v.isContravariant) rec(targ1, targ2, false)
-                    if (!v.isCovariant) rec(targ2, targ1, false)
+                    // * old defs, just to make things compile
+                    val t1 = targ1.asInstanceOf[ST]
+                    val t2 = targ2.asInstanceOf[ST]
+                    if (!v.isContravariant) rec(t1, t2, false)
+                    if (!v.isCovariant) rec(t2, t1, false)
                   }
                 case N =>
                   /* 
@@ -984,13 +976,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                           case (WildcardArg(l0, r0), WildcardArg(l1, r1)) =>
                             if (!v.isContravariant) rec(l1, l0, false)
                             if (!v.isCovariant) rec(r0, r1, false)
-                          case (WildcardArg(l0, r0), rhs) =>
+                          case (WildcardArg(l0, r0), rhs: ST) =>
                             if (!v.isContravariant) rec(rhs, l0, false)
                             if (!v.isCovariant) rec(r0, rhs, false)
-                          case (lhs, WildcardArg(l1, r1)) =>
+                          case (lhs: ST, WildcardArg(l1, r1)) =>
                             if (!v.isContravariant) rec(l1, lhs, false)
                             if (!v.isCovariant) rec(lhs, r1, false)
-                          case (targ1, targ2) =>
+                          case (targ1: ST, targ2: ST) =>
                             if (!v.isContravariant) rec(targ1, targ2, false)
                             if (!v.isCovariant) rec(targ2, targ1, false)
                         }
@@ -1432,7 +1424,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         TypeRef(d, tr.mapTargs(S(pol)) {
           case (N, WildcardArg(lb, ub)) =>
             WildcardArg(extrude(lb, lowerLvl, false, upperLvl), extrude(ub, lowerLvl, true, upperLvl))(tr.prov)
-          case (N, targ) =>
+          case (N, targ: ST) =>
             // * Note: the semantics of TypeBounds is inappropriuate for this use (known problem; FIXME later)
             // TypeBounds.mk(extrude(targ, lowerLvl, false, upperLvl), extrude(targ, lowerLvl, true, upperLvl)) // Q: ? subtypes?
             WildcardArg(extrude(targ, lowerLvl, false, upperLvl), extrude(targ, lowerLvl, true, upperLvl))(tr.prov)
@@ -1447,7 +1439,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             */
           case (S(pol), WildcardArg(lb, ub)) =>
             WildcardArg(extrude(lb, lowerLvl, !pol, upperLvl), extrude(ub, lowerLvl, pol, upperLvl))(tr.prov)
-          case (S(pol), targ) => extrude(targ, lowerLvl, pol, upperLvl)
+          case (S(pol), targ: ST) => extrude(targ, lowerLvl, pol, upperLvl)
         })(tr.prov)
       case PolymorphicType(polymLevel, body) =>
         PolymorphicType(polymLevel, extrude(body, lowerLvl, pol, upperLvl =
@@ -1460,8 +1452,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }, extrude(bod, lowerLvl, pol, upperLvl))
       case o @ Overload(alts) =>
         o.mapAlts(extrude(_, lowerLvl, !pol, upperLvl))(extrude(_, lowerLvl, pol, upperLvl))
-      case w @ WildcardArg(lb, ub) => ???
-        // if (pol) extrude(ub, lowerLvl, true, upperLvl) else extrude(lb, lowerLvl, false, upperLvl)
     }
     // }(r => s"=> $r"))
   
@@ -1663,7 +1653,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         freshen(id)
       case _: ClassTag | _: TraitTag | _: SkolemTag | _: Extruded => ty
       case w @ Without(b, ns) => Without(freshen(b), ns)(w.prov)
-      case tr @ TypeRef(d, ts) => TypeRef(d, ts.map(freshen(_)))(tr.prov)
+      case tr @ TypeRef(d, ts) => TypeRef(d, ts.map {
+        case w@WildcardArg(lb, ub) => WildcardArg(freshen(lb), freshen(ub))(w.prov)
+        case t: ST => freshen(t)
+      })(tr.prov)
       case pt @ PolymorphicType(polyLvl, bod) if pt.level <= above => pt // is this really useful?
       case pt @ PolymorphicType(polyLvl, bod) =>
         if (lvl > polyLvl) freshen(pt.raiseLevelToImpl(lvl, leaveAlone))
@@ -1673,7 +1666,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         ConstrainedType(cs2, freshen(bod))
       case o @ Overload(alts) =>
         o.mapAlts(freshen)(freshen)
-      case t @ WildcardArg(lb, ub) => WildcardArg(freshen(lb), freshen(ub))(t.prov)
     }}
     // (r => s"=> $r"))
     

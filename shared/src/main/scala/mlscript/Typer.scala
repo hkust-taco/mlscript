@@ -245,7 +245,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     NuTypeDef(Als, TN("null"), Nil, N, N, S(Literal(UnitLit(false))), Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
   )
   val builtinTypes: Ls[TypeDef] =
-    TypeDef(Cls, TN("?"), Nil, TopType, Nil, Nil, Set.empty, N, Nil) :: // * Dummy for pretty-printing unknown type locations
+    // TypeDef(Cls, TN("?"), Nil, TopType, Nil, Nil, Set.empty, N, Nil) :: // * Dummy for pretty-printing unknown type locations
     TypeDef(Cls, TN("int"), Nil, TopType, Nil, Nil, sing(TN("number")), N, Nil) ::
     TypeDef(Cls, TN("number"), Nil, TopType, Nil, Nil, semp, N, Nil) ::
     TypeDef(Cls, TN("bool"), Nil, TopType, Nil, Nil, semp, N, Nil) ::
@@ -513,9 +513,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       case Literal(lit) =>
         ClassTag(lit, if (newDefs) lit.baseClassesNu
           else lit.baseClassesOld)(tyTp(ty.toLoc, "literal type"))
-      case wc @ TypeName("?") => // TODO handle typing of C[?]
-        implicit val prov: TypeProvenance = tyTp(ty.toLoc, "wildcard")
-        WildcardArg(ExtrType(true)(prov), ExtrType(false)(prov))(prov)
       case TypeName("this") =>
         ctx.env.get("this") match {
           case S(_: AbstractConstructor | _: LazyTypeInfo) => die
@@ -573,6 +570,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           case R((_, tpnum)) =>
             val realTargs = if (targs.size === tpnum) targs.map{
               case b@Bounds(lb, ub) if newDefs => WildcardArg(rec(lb), rec(ub))(tyTp(b.toLoc, "wildcard"))
+              case w@TypeName("?") if newDefs => 
+                val prov: TypeProvenance = tyTp(w.toLoc, "wildcard")
+                WildcardArg(ExtrType(true)(prov), ExtrType(false)(prov))(prov)
               case ty => rec(ty)
             } else {
               err(msg"Wrong number of type arguments – expected ${tpnum.toString}, found ${
@@ -759,7 +759,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   }
   
   // TODO also prevent rebinding of "not"
-  val reservedVarNames: Set[Str] = Set("|", "&", "~", "neg", "and", "or", "is")
+  val reservedVarNames: Set[Str] = Set("|", "&", "~", "neg", "and", "or", "is", "?")
   
   object ValidVar {
     def unapply(v: Var)(implicit raise: Raise): S[Str] = S {
@@ -1924,10 +1924,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         case TypeRef(td, Nil) => td
         case tr @ TypeRef(td, targs) => AppliedType(td, tr.mapTargs(S(true)) {
           case ta @ ((S(true), TopType) | (S(false), BotType)) => Bounds(Bot, Top)
-          case (_, ty) => go(ty)
+          case (_, WildcardArg(lb, ub)) => Bounds(go(lb), go(ub))
+          case (_, ty: ST) => go(ty)
         })
         case TypeBounds(lb, ub) => Bounds(go(lb), go(ub))
-        case WildcardArg(lb, ub) => Bounds(go(lb), go(ub))
         case Without(base, names) => Rem(go(base), names.toList)
         case Overload(as) => as.map(go).reduce(Inter)
         case PolymorphicType(lvl, bod) =>

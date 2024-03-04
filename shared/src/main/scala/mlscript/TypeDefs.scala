@@ -169,7 +169,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
       case TypeBounds(lb, ub) => fieldsOf(ub, paramTags)
       case _: TypeTag | _: FunctionType | _: ArrayBase | _: TypeVariable
         | _: NegType | _: ExtrType | _: ComposedType | _: SpliceType
-        | _: ConstrainedType | _: PolymorphicType | _: Overload | _: WildcardArg
+        | _: ConstrainedType | _: PolymorphicType | _: Overload
         => Map.empty
     }
   }
@@ -239,7 +239,6 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
           case p: ProxyType => checkCycle(p.underlying)
           case Without(base, _) => checkCycle(base)
           case TypeBounds(lb, ub) => checkCycle(lb) && checkCycle(ub)
-          case WildcardArg(lb, ub) => checkCycle(lb) && checkCycle(ub)
           case tv: TypeVariable => travsersed(R(tv)) || {
             val t2 = travsersed + R(tv)
             tv.assignedTo match {
@@ -318,9 +317,6 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
               case _: TypeBounds =>
                 err(msg"cannot inherit from type bounds", prov.loco)
                 false
-              case _: WildcardArg =>
-                err(msg"cannot inherit from wildcards", prov.loco)
-                false
               case _: PolymorphicType =>
                 err(msg"cannot inherit from a polymorphic type", prov.loco)
                 false
@@ -391,13 +387,13 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
         }
         def checkRegular(ty: SimpleType)(implicit reached: Map[Str, Ls[SimpleType]]): Bool = ty match {
           case tr @ TypeRef(defn, targs) => reached.get(defn.name) match {
-            case None => checkRegular(tr.expandWith(false, selfTy = false))(reached + (defn.name -> targs))
+            case None => checkRegular(tr.expandWith(false, selfTy = false))(reached + (defn.name -> targs.map(_.asInstanceOf[ST])))
             case Some(tys) =>
               // Note: this check *has* to be relatively syntactic because
               //    the termination of constraint solving relies on recursive type occurrences
               //    obtained from unrolling a recursive type to be *equal* to the original type
               //    and to have the same has hashCode (see: the use of a cache MutSet)
-              if (defn === td.nme && tys =/= targs) {
+              if (defn === td.nme && tys =/= targs.map(_.asInstanceOf[ST])) {
                 err(msg"Type definition is not regular: it occurs within itself as ${
                   expandType(tr).show(Typer.newDefs)
                 }, but is defined as ${
@@ -532,7 +528,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
                 MethodSet(tr.defn, Nil, Map.empty, Map.empty)
               case S(td2) =>
           implicit val thisCtx: Ctx = ctx.nest
-          val targsMap = td2.tparams.iterator.map(_.name).zip(tr.targs).toMap
+          val targsMap = td2.tparams.iterator.map(_.name).zip(tr.targs.map(_.asInstanceOf[ST])).toMap
           val declared = MutMap.empty[Str, Opt[Loc]]
           val defined = MutMap.empty[Str, Opt[Loc]]
           
@@ -591,7 +587,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
                   //    If the method is already in the environment,
                   //    it means it belongs to a previously-defined class/trait (not the one being typed),
                   //    in which case we need to perform a substitution on the corresponding method body...
-                  val targsMap3 = td2.targs.lazyZip(tr.targs).toMap[ST, ST] +
+                  val targsMap3 = td2.targs.lazyZip(tr.targs.map(_.asInstanceOf[ST])).toMap[ST, ST] +
                     (td2.thisTv -> td.thisTv) +
                     (td.thisTv -> td.thisTv)
                   // Subsitute parent this TVs to current this TV.
@@ -659,7 +655,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
       *   false polarity if contravariant position visit
       *   both if invariant position visit
       */
-    def updateVariance(ty: SimpleType, curVariance: VarianceInfo)(implicit tyDef: TypeDef, visited: MutSet[Bool -> TypeVariable]): Unit = {
+    def updateVariance(ty: SimpleTypeOrWildcard, curVariance: VarianceInfo)(implicit tyDef: TypeDef, visited: MutSet[Bool -> TypeVariable]): Unit = {
       def fieldVarianceHelper(fieldTy: FieldType): Unit = {
           fieldTy.lb.foreach(lb => updateVariance(lb, curVariance.flip))
           updateVariance(fieldTy.ub, curVariance)

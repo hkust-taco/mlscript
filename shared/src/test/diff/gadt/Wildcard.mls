@@ -4,18 +4,18 @@ class Foo[type T](val x: T)
 //│ class Foo[T](x: T)
 
 fun foo(f: Foo[?]) = f
-//│ fun foo: (f: Foo[?]) -> Foo[?]
+//│ fun foo: (f: Foo[anything]) -> Foo[anything]
 
 foo(Foo(0))
-//│ Foo[?]
+//│ Foo[anything]
 //│ res
 //│     = Foo {}
 
 fun foo(f: Foo[?]) = 0
-//│ fun foo: (f: Foo[?]) -> 0
+//│ fun foo: (f: Foo[anything]) -> 0
 
 let f: Foo[?] = Foo(1)
-//│ let f: Foo[?]
+//│ let f: Foo[anything]
 //│ f
 //│   = Foo {}
 
@@ -39,14 +39,14 @@ let f: Foo[Foo[?]] = y
 //│ ║  l.37: 	let f: Foo[Foo[?]] = y
 //│ ║        	                     ^
 //│ ╙── expression of type `Int` does not match type `nothing`
-//│ let f: Foo[Foo[?]]
+//│ let f: Foo[Foo[anything]]
 //│ f
 //│   = <no result>
 //│     y is not implemented
 
 
 fun foo(f: Foo[?]) = f.x
-//│ fun foo: (f: Foo[?]) -> anything
+//│ fun foo: (f: Foo[anything]) -> anything
 
 foo(Foo(Foo(1)))
 foo(Foo(1))
@@ -66,10 +66,10 @@ fun foo(f: Foo[?]) = f.x as f.T
 //│ ╟── Note: constraint arises from type selection:
 //│ ║  l.61: 	fun foo(f: Foo[?]) = f.x as f.T
 //│ ╙──      	                             ^^
-//│ fun foo: (f: Foo[?]) -> anything
+//│ fun foo: (f: Foo[anything]) -> anything
 
 fun foo(f: Foo[?]) = if f is Foo(x) then x as f.T
-//│ fun foo: (f: Foo[?]) -> ??T
+//│ fun foo: (f: Foo[anything]) -> ??T
 
 foo(Foo(1))
 //│ ??T
@@ -80,12 +80,12 @@ class Foo[out T](val x: T)
 //│ class Foo[T](x: T)
 
 let f: Foo[?] = Foo(1)
-//│ let f: Foo[?]
+//│ let f: Foo[anything]
 //│ f
 //│   = Foo {}
 
 let f: Foo[Foo[?]] = Foo(Foo(1))
-//│ let f: Foo[Foo[?]]
+//│ let f: Foo[Foo[anything]]
 //│ f
 //│   = Foo {}
 
@@ -93,7 +93,7 @@ class Foo[in T](val x: T)
 //│ class Foo[T](x: T)
 
 let f: Foo[?] = Foo(1)
-//│ let f: Foo[?]
+//│ let f: Foo[nothing]
 //│ f
 //│   = Foo {}
 
@@ -109,13 +109,13 @@ let f: Foo[Foo[?]] = y
 //│ ║  l.107: 	let f: Foo[Foo[?]] = y
 //│ ║         	                     ^
 //│ ╙── expression of type `anything` is not an instance of type `Int`
-//│ let f: Foo[Foo[?]]
+//│ let f: Foo[Foo[nothing]]
 //│ f
 //│   = <no result>
 //│     y is not implemented
 
 (x: Foo[Foo[?]]) => x as Foo[Foo[Int]]
-//│ (x: Foo[Foo[?]]) -> Foo[Foo[Int]]
+//│ (x: Foo[Foo[nothing]]) -> Foo[Foo[Int]]
 //│ res
 //│     = [Function: res]
 
@@ -123,7 +123,7 @@ abstract class Bar[type A]: MkBarInt | MkBarBool | MkBarFoo[?]
 class MkBarInt() extends Bar[Int]
 class MkBarBool() extends Bar[Bool]
 class MkBarFoo[A](ev: A) extends Bar[Foo[A]]
-//│ abstract class Bar[A]: MkBarBool | MkBarFoo[?] | MkBarInt
+//│ abstract class Bar[A]: MkBarBool | MkBarFoo[anything] | MkBarInt
 //│ class MkBarInt() extends Bar
 //│ class MkBarBool() extends Bar
 //│ class MkBarFoo[A](ev: A) extends Bar
@@ -179,17 +179,17 @@ MkBarFoo(Foo(1)) as Bar[?]
 //│     = MkBarFoo {}
 
 MkBarFoo(Foo(1)) as Bar[Foo[?]]
-//│ Bar[Foo[?]]
+//│ Bar[Foo[nothing]]
 //│ res
 //│     = MkBarFoo {}
 
 let x: Bar[Foo[?]] = MkBarFoo(1)
-//│ let x: Bar[Foo[?]]
+//│ let x: Bar[Foo[nothing]]
 //│ x
 //│   = MkBarFoo {}
 
 let x: Bar[Foo[?]]
-//│ let x: Bar[Foo[?]]
+//│ let x: Bar[Foo[nothing]]
 //│ x
 //│   = <missing implementation>
 
@@ -251,11 +251,11 @@ class Foo[T](val x: T)
 
 fun e: Foo[?]
 fun f: Foo[?] -> Foo[?]
-//│ fun e: Foo[?]
-//│ fun f: Foo[?] -> Foo[?]
+//│ fun e: Foo[anything]
+//│ fun f: Foo[anything] -> Foo[anything]
 
 f(e)
-//│ Foo[?]
+//│ Foo[anything]
 //│ res
 //│     = <no result>
 //│       f is not implemented
@@ -263,18 +263,18 @@ f(e)
 fun e: Foo[Int]
 fun f: Foo[?] -> Foo[?]
 //│ fun e: Foo[Int]
-//│ fun f: Foo[?] -> Foo[?]
+//│ fun f: Foo[anything] -> Foo[anything]
 
 f(e)
-//│ Foo[?]
+//│ Foo[anything]
 //│ res
 //│     = <no result>
 //│       f is not implemented
 
 fun e: Foo[?]
 fun f: Foo[Int] -> Foo[?]
-//│ fun e: Foo[?]
-//│ fun f: Foo[Int] -> Foo[?]
+//│ fun e: Foo[anything]
+//│ fun f: Foo[Int] -> Foo[anything]
 
 :e
 e as Foo[Int]
@@ -293,108 +293,144 @@ f(e)
 //│ ║  l.291: 	f(e)
 //│ ║         	^^^^
 //│ ╙── expression of type `anything` is not an instance of type `Int`
-//│ Foo[?] | error
+//│ Foo[anything] | error
 //│ res
 //│     = <no result>
 //│       f is not implemented
 
-// TODO
+class Foo[T](val x: T => T)
+//│ class Foo[T](x: T -> T)
+
+fun e: Foo[?]
+fun f: Foo[?] -> Foo[?]
+//│ fun e: Foo[?]
+//│ fun f: Foo[?] -> Foo[?]
+
+:e
 fun f(x: ?) = x
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ ╔══[ERROR] type identifier not found: ?
+//│ ║  l.310: 	fun f(x: ?) = x
+//│ ╙──       	         ^
+//│ fun f: (x: error) -> error
 
 :e
 f(1)
-//│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.302: 	fun f(x: ?) = x
-//│ ╙──       	         ^
 //│ error
 //│ res
-//│     = <no result>
-//│       f is not implemented
+//│     = 1
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 :e
 f(f)
-//│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.302: 	fun f(x: ?) = x
-//│ ╙──       	         ^
 //│ error
 //│ res
-//│     = <no result>
-//│       f is not implemented
+//│     = [Function: f5]
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
-// FIXME crash
 :e
 fun f(x): ? = x
-//│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.327: 	fun f(x): ? = x
+//│ ╔══[ERROR] type identifier not found: ?
+//│ ║  l.331: 	fun f(x): ? = x
 //│ ╙──       	          ^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ fun f: error -> error
 
-// FIXME crash
 :e
 fun f(x: Int): ? = x
-//│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.335: 	fun f(x: Int): ? = x
+//│ ╔══[ERROR] type identifier not found: ?
+//│ ║  l.338: 	fun f(x: Int): ? = x
 //│ ╙──       	               ^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ fun f: (x: Int) -> error
 
-// TODO
+:e
 fun f(x: ?): ? = x
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ ╔══[ERROR] type identifier not found: ?
+//│ ║  l.345: 	fun f(x: ?): ? = x
+//│ ╙──       	         ^
+//│ ╔══[ERROR] type identifier not found: ?
+//│ ║  l.345: 	fun f(x: ?): ? = x
+//│ ╙──       	             ^
+//│ fun f: (x: error) -> error
 
 :e
 f(1)
-//│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.342: 	fun f(x: ?): ? = x
-//│ ╙──       	         ^
 //│ error
 //│ res
-//│     = <no result>
-//│       f is not implemented
+//│     = 1
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 // FIXME crash
 :e
 let x: ? = 1
-//│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.357: 	let x: ? = 1
+//│ ╔══[ERROR] type identifier not found: ?
+//│ ║  l.363: 	let x: ? = 1
 //│ ╙──       	       ^
-//│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.357: 	let x: ? = 1
-//│ ╙──       	       ^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ let x: error
+//│ x
+//│   = 1
 
 // FIXME crash
 :e
 1 as ?
-//│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.368: 	1 as ?
+//│ ╔══[ERROR] type identifier not found: ?
+//│ ║  l.373: 	1 as ?
 //│ ╙──       	     ^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ error
+//│ res
+//│     = 1
 
-// TODO
+:e
 fun f: (? -> ?) -> ?
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ ╔══[ERROR] type identifier not found: ?
+//│ ║  l.382: 	fun f: (? -> ?) -> ?
+//│ ╙──       	        ^
+//│ ╔══[ERROR] type identifier not found: ?
+//│ ║  l.382: 	fun f: (? -> ?) -> ?
+//│ ╙──       	             ^
+//│ ╔══[ERROR] type identifier not found: ?
+//│ ║  l.382: 	fun f: (? -> ?) -> ?
+//│ ╙──       	                   ^
+//│ fun f: (error -> error) -> error
 
-// TODO
+:e
 fun f: ? -> ?
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ ╔══[ERROR] type identifier not found: ?
+//│ ║  l.395: 	fun f: ? -> ?
+//│ ╙──       	       ^
+//│ ╔══[ERROR] type identifier not found: ?
+//│ ║  l.395: 	fun f: ? -> ?
+//│ ╙──       	            ^
+//│ fun f: error -> error
 
-// TODO
+:e
 fun f: ? -> Int
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ ╔══[ERROR] type identifier not found: ?
+//│ ║  l.405: 	fun f: ? -> Int
+//│ ╙──       	       ^
+//│ fun f: error -> Int
 
-// TODO
+:e
 fun f: Int -> ?
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ ╔══[ERROR] type identifier not found: ?
+//│ ║  l.412: 	fun f: Int -> ?
+//│ ╙──       	              ^
+//│ fun f: Int -> error
 
-// TODO
+:e
 let x: ? -> ?
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ ╔══[ERROR] type identifier not found: ?
+//│ ║  l.419: 	let x: ? -> ?
+//│ ╙──       	       ^
+//│ ╔══[ERROR] type identifier not found: ?
+//│ ║  l.419: 	let x: ? -> ?
+//│ ╙──       	            ^
+//│ let x: error -> error
+//│ x
+//│   = <missing implementation>
 
 :e
 let x = ?
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.395: 	let x = ?
+//│ ║  l.431: 	let x = ?
 //│ ╙──       	        ^
 //│ let x: error
 //│ Code generation encountered an error:
@@ -403,7 +439,7 @@ let x = ?
 :e
 if ? is 1 then 1
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.404: 	if ? is 1 then 1
+//│ ║  l.440: 	if ? is 1 then 1
 //│ ╙──       	   ^
 //│ 1
 //│ Code generation encountered an error:
@@ -412,7 +448,7 @@ if ? is 1 then 1
 :e
 if x is ? then 1
 //│ ╔══[ERROR] Cannot match on wildcard ?
-//│ ║  l.413: 	if x is ? then 1
+//│ ║  l.449: 	if x is ? then 1
 //│ ╙──       	        ^
 //│ error
 //│ Code generation encountered an error:
@@ -420,17 +456,17 @@ if x is ? then 1
 
 :e
 let x: ?[?]
-//│ ╔══[ERROR] Wrong number of type arguments – expected 0, found 1
-//│ ║  l.422: 	let x: ?[?]
+//│ ╔══[ERROR] type identifier not found: ?
+//│ ║  l.458: 	let x: ?[?]
 //│ ╙──       	       ^^^^
-//│ let x: ?
+//│ let x: error
 //│ x
 //│   = <missing implementation>
 
 :e
 class Bar extends ?
 //│ ╔══[ERROR] Could not find definition `?`
-//│ ║  l.431: 	class Bar extends ?
+//│ ║  l.467: 	class Bar extends ?
 //│ ╙──       	                  ^
 //│ class Bar {
 //│   constructor()
@@ -438,36 +474,31 @@ class Bar extends ?
 //│ Code generation encountered an error:
 //│   unresolved parent ?.
 
-// FIXME
 :e
 abstract class Bar: ?
-//│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.443: 	abstract class Bar: ?
+//│ ╔══[ERROR] type identifier not found: ?
+//│ ║  l.478: 	abstract class Bar: ?
 //│ ╙──       	                    ^
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ abstract class Bar: error
 
 :e
 class ?
-//│ ╔══[ERROR] Type name '?' is reserved
-//│ ║  l.450: 	class ?
-//│ ╙──       	^^^^^^^
 //│ class ? {
 //│   constructor()
 //│ }
 //│ Syntax error:
 //│   Invalid or unexpected token
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 :e
 type ? = Int
-//│ ╔══[ERROR] Type name '?' is reserved
-//│ ║  l.461: 	type ? = Int
-//│ ╙──       	^^^^^^
 //│ type ? = Int
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
-// FIXME
 :e
 type W = ?
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
+//│ type W = ?
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 // TODO
 fun f(x): W = x
@@ -475,12 +506,10 @@ fun f(x): W = x
 
 :e
 f(1)
-//│ ╔══[ERROR] Wildcards can only be use in type arguments
-//│ ║  l.469: 	type W = ?
-//│ ╙──       	         ^
-//│ error | W
+//│ W
 //│ res
 //│     = 1
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 // TODO should we allow this?
 fun (?) wc: (Int, Int) -> Bool
@@ -491,7 +520,7 @@ fun (?) wc(x, y) = x == y
 // TODO
 1 ? 1
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.492: 	1 ? 1
+//│ ║  l.521: 	1 ? 1
 //│ ╙──       	  ^
 //│ error
 //│ res
@@ -501,18 +530,18 @@ fun (?) wc(x, y) = x == y
 class Foo[T](val a: T)
 let f: Foo[?]
 //│ class Foo[T](a: T)
-//│ let f: Foo[?]
+//│ let f: Foo[anything]
 //│ f
 //│   = <missing implementation>
 
 :e
 f.a : Int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.509: 	f.a : Int
+//│ ║  l.538: 	f.a : Int
 //│ ║         	^^^
 //│ ╟── field selection of type `anything` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.509: 	f.a : Int
+//│ ║  l.538: 	f.a : Int
 //│ ╙──       	      ^^^
 //│ Int
 //│ res
@@ -523,10 +552,11 @@ f.a : Int
 :e
 42 : f.a
 //│ ╔══[ERROR] Type mismatch in type selection:
-//│ ║  l.524: 	42 : f.a
+//│ ║  l.553: 	42 : f.a
 //│ ║         	      ^^
 //│ ╙── type `anything` cannot be reassigned
 //│ anything
 //│ res
 //│     = 42
+
 

@@ -44,7 +44,7 @@ fun map[L, A, B](f, xs: Vec[L, A]): Vec[L, 'B] = if xs is
     Nil then new Nil : Vec[xs.L, B]
     Cons(h, t) then Cons(f(h), map(f, t)) : Vec[xs.L, B]
 //│ fun map: forall 'A 'B 'L. ((??T & 'A) -> 'B, xs: Vec['L, 'A]) -> Vec['L, 'B]
-//│ fun map: forall 'A0 'B0 'L0. ('A0 -> 'B0, Vec['L0, 'A0]) -> Vec['L0, 'B0]
+//│ fun map: forall 'L0 'A0 'B0. ('A0 -> 'B0, Vec['L0, 'A0]) -> Vec['L0, 'B0]
 
 // TODO
 fun zipSum: (Vec['L, Int], Vec['L, Int]) -> Vec['L, Int]
@@ -336,3 +336,4 @@ vecEq(Cons(1, Cons(2, new Nil)), Cons(2, new Nil))
 //│ error | false | true
 //│ res
 //│     = false
+

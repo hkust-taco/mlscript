@@ -332,7 +332,6 @@ abstract class TyperHelpers { Typer: Typer =>
     
     def map(f: SimpleType => SimpleType): SimpleType = this match {
       case TypeBounds(lb, ub) => TypeBounds.mkSimple(f(lb), f(ub))
-      case WildcardArg(lb, ub) => WildcardArg(f(lb), f(ub))(prov)
       case FunctionType(lhs, rhs) => FunctionType(f(lhs), f(rhs))(prov)
       case ov @ Overload(as) => ov.mapAltsPol(N)((_, x) => f(x))
       case RecordType(fields) => RecordType(fields.mapValues(_.update(f, f)))(prov)
@@ -345,7 +344,10 @@ abstract class TyperHelpers { Typer: Typer =>
       case ProvType(underlying) => ProvType(f(underlying))(prov)
       case WithType(bse, rcd) => WithType(f(bse), RecordType(rcd.fields.mapValues(_.update(f, f)))(rcd.prov))(prov)
       case ProxyType(underlying) => f(underlying) // TODO different?
-      case TypeRef(defn, targs) => TypeRef(defn, targs.map(f(_)))(prov)
+      case TypeRef(defn, targs) => TypeRef(defn, targs.map { 
+          case w@WildcardArg(lb, ub) => WildcardArg(f(lb), f(ub))(w.prov)
+          case st: ST => f(st)
+        })(prov)
       case PolymorphicType(plvl, und) => PolymorphicType(plvl, f(und))
       case ConstrainedType(cs, bod) =>
         ConstrainedType(cs.map(lu => f(lu._1) -> f(lu._2)), f(bod))
@@ -356,7 +358,6 @@ abstract class TyperHelpers { Typer: Typer =>
       case TypeBounds(lb, ub) if smart && pol.isDefined =>
         if (pol.getOrElse(die)) f(S(true), ub) else f(S(false), lb)
       case TypeBounds(lb, ub) => TypeBounds.mkSimple(f(S(false), lb), f(S(true), ub))
-      case WildcardArg(lb, ub) => WildcardArg(f(pol.map(!_), lb), f(pol, ub))(prov)
       case rt: RecordType => Typer.mapPol(rt, pol, smart)(f)
       case Without(base, names) if smart => f(pol, base).without(names)
       case bt: BaseType => Typer.mapPol(bt, pol, smart)(f)
@@ -369,7 +370,10 @@ abstract class TyperHelpers { Typer: Typer =>
       case ProvType(underlying) => ProvType(f(pol, underlying))(prov)
       case WithType(bse, rcd) => WithType(f(pol, bse), RecordType(rcd.fields.mapValues(_.update(f(pol.map(!_), _), f(pol, _))))(rcd.prov))(prov)
       case ProxyType(underlying) => f(pol, underlying) // TODO different?
-      case tr @ TypeRef(defn, targs) => TypeRef(defn, tr.mapTargs2(pol)(f))(prov)
+      case tr @ TypeRef(defn, targs) => TypeRef(defn, tr.mapTargs2(pol)((pol, st) => st match {
+        case st: ST => f(pol, st)
+        case wc@WildcardArg(lb, ub) => WildcardArg(f(pol.map(!_), lb), f(pol, ub))(wc.prov)
+      }))(prov)
       case PolymorphicType(plvl, und) =>
         if (smart) PolymorphicType.mk(plvl, f(pol, und)) else PolymorphicType(plvl, f(pol, und))
       case ConstrainedType(cs, bod) =>
@@ -500,8 +504,6 @@ abstract class TyperHelpers { Typer: Typer =>
         case (pt1 @ ClassTag(id1, ps1), pt2 @ ClassTag(id2, ps2)) => (id1 === id2) || pt1.parentsST(id2)
         case (TypeBounds(lb, ub), _) => ub <:< that
         case (_, TypeBounds(lb, ub)) => this <:< lb
-        case (WildcardArg(lb, ub), _) => false
-        case (_, WildcardArg(lb, ub)) => false
         case (FunctionType(l1, r1), FunctionType(l2, r2)) => assume { implicit cache =>
           l2 <:< l1 && r1 <:< r2 
         }
@@ -562,7 +564,7 @@ abstract class TyperHelpers { Typer: Typer =>
               val tvv = td1.getVariancesOrDefault
               td1.tparamsargs.unzip._2.lazyZip(tr1.targs).lazyZip(tr2.targs).forall { (tv, targ1, targ2) =>
                 val v = tvv(tv)
-                (v.isContravariant || targ1 <:< targ2) && (v.isCovariant || targ2 <:< targ1)
+                (v.isContravariant || targ1 <:<? targ2) && (v.isCovariant || targ2 <:<? targ1)
               }
             case _ =>
               (td1.kind is Cls) && clsNameToNomTag(td1)(noProv, ctx) <:< that
@@ -630,7 +632,6 @@ abstract class TyperHelpers { Typer: Typer =>
       case p @ ProxyType(und) => und.withoutPos(names)
       case p: TypeTag => p
       case TypeBounds(lo, hi) => hi.withoutPos(names)
-      case w @ WildcardArg(lo, hi) => w
       case _: TypeVariable | _: NegType | _: TypeRef => Without(this, names)(noProv)
       case PolymorphicType(plvl, bod) => PolymorphicType.mk(plvl, bod.withoutPos(names))
       case ot: Overload => ot
@@ -721,10 +722,9 @@ abstract class TyperHelpers { Typer: Typer =>
         // case _: TypeTag => Nil
         case _: ObjectTag | _: Extruded => Nil
         case SkolemTag(id) => pol -> id :: Nil
-        case tr: TypeRef => tr.mapTargs(pol)(_ -> _)
+        case tr: TypeRef => tr.mapTargs(pol){ case (p, st: ST) => p -> st :: Nil ; case (pol, WildcardArg(l, r)) => pol.map(!_) -> l :: pol -> r :: Nil }.flatten
         case Without(b, ns) => pol -> b :: Nil
         case TypeBounds(lb, ub) => S(false) -> lb :: S(true) -> ub :: Nil
-        case WildcardArg(lb, ub) => pol.map(!_) -> lb :: pol -> ub :: Nil
         case PolymorphicType(_, und) => pol -> und :: Nil
         case ConstrainedType(cs, bod) =>
           cs.flatMap(vbs => S(true) -> vbs._1 :: S(false) -> vbs._2 :: Nil) ::: pol -> bod :: Nil
@@ -808,10 +808,9 @@ abstract class TyperHelpers { Typer: Typer =>
         // case _: TypeTag => Nil
         case _: ObjectTag | _: Extruded => Nil
         case SkolemTag(id) => pol -> id :: Nil
-        case tr: TypeRef => tr.mapTargs(pol)(_ -> _)
+        case tr: TypeRef => tr.mapTargs(pol){ case (p, st: ST) => p -> st :: Nil ; case (p, WildcardArg(l, r)) => pol.contravar -> l :: pol.covar -> r :: Nil }.flatten
         case Without(b, ns) => pol -> b :: Nil
         case TypeBounds(lb, ub) => PolMap.neg -> lb :: PolMap.pos -> ub :: Nil
-        case WildcardArg(lb, ub) => pol.contravar -> lb :: pol.covar -> ub :: Nil
         case PolymorphicType(_, und) => pol -> und :: Nil
         case ConstrainedType(cs, bod) =>
           cs.flatMap(vbs => PolMap.pos -> vbs._1 :: PolMap.posAtNeg -> vbs._2 :: Nil) ::: pol -> bod :: Nil
@@ -965,7 +964,7 @@ abstract class TyperHelpers { Typer: Typer =>
       // case _: TypeTag => Nil
       case _: ObjectTag | _: Extruded => Nil
       case SkolemTag(id) => id :: Nil
-      case TypeRef(d, ts) => ts
+      case TypeRef(d, ts) => ts flatMap { case st: ST => st :: Nil ; case WildcardArg(lb, ub) => lb :: ub :: Nil }
       case Without(b, ns) => b :: Nil
       case TypeBounds(lb, ub) => lb :: ub :: Nil
       case PolymorphicType(_, und) => und :: Nil
@@ -974,7 +973,6 @@ abstract class TyperHelpers { Typer: Typer =>
       case OtherTypeLike(tu) =>
         val ents = tu.implementedMembers.flatMap(childrenMem)
         ents ::: tu.result.toList
-      case WildcardArg(lb, ub) => lb :: ub :: Nil
     }
     
     def getVarsImpl(includeBounds: Bool): SortedSet[TypeVariable] = {
@@ -1079,6 +1077,7 @@ abstract class TyperHelpers { Typer: Typer =>
         // * Object types do not need to be completed in order to be expanded
         info.kind.isInstanceOf[ObjDefKind]
         || info.isComputed)
+    // TODO add pol: Bool
     def expand(implicit ctx: Ctx, raise: Raise): SimpleType = {
       ctx.tyDefs2.get(defn.name) match {
         case S(info) =>
@@ -1101,9 +1100,8 @@ abstract class TyperHelpers { Typer: Typer =>
             case ((tn, tv, vi), ta) =>
               val fldNme = tparamField(defn.name, tn.name, vi.visible)
               val fld = ta match {
-                case a@AssignedVariable(WildcardArg(lb, ub)) => FieldType(S(lb), ub)(a.prov) // TODO refactor: seems like a hack
                 case w@WildcardArg(lb, ub) => FieldType(S(lb), ub)(w.prov)
-                case f => FieldType.mk(vi.varinfo.getOrElse(VarianceInfo.in), ta, ta)(f.prov)
+                case ta: ST => FieldType.mk(vi.varinfo.getOrElse(VarianceInfo.in), ta, ta)(ta.prov)
               }
               Var(fldNme).withLocOf(tn) -> fld
           })(provTODO)
@@ -1111,7 +1109,8 @@ abstract class TyperHelpers { Typer: Typer =>
           case S(td: TypedNuAls) =>
             assert(td.tparams.size === targs.size)
             subst(td.body, td.tparams.lazyZip(targs).map {
-              case (tp, ta) => SkolemTag(tp._2)(noProv) -> ta
+              case (tp, w: WildcardArg) => ??? // TODO error
+              case (tp, st: ST) => SkolemTag(tp._2)(noProv) -> st
             }.toMap)
           case S(td: TypedNuTrt) =>
             assert(td.tparams.size === targs.size)
@@ -1175,7 +1174,7 @@ abstract class TyperHelpers { Typer: Typer =>
         case Cls => clsNameToNomTag(td)(prov, ctx) & td.bodyTy & tparamTags
         case Trt => trtNameToNomTag(td)(prov, ctx) & td.bodyTy & tparamTags
         case Mxn => lastWords("mixins cannot be used as types")
-      }, td.targs.lazyZip(targs).toMap) //.withProv(prov)
+      }, td.targs.lazyZip(targs.map(_.asInstanceOf[ST])).toMap[ST, ST])  // * old defs to make things compiler //.withProv(prov)
     } //tap { res => println(s"Expand $this => $res") }
     private var tag: Opt[Opt[ClassTag]] = N
     def expansionFallback(implicit ctx: Ctx): Opt[ST] = mkClsTag
@@ -1206,7 +1205,7 @@ abstract class TyperHelpers { Typer: Typer =>
       tag = S(res)
       res
     }
-    def mapTargs[R](pol: Opt[Bool])(f: (Opt[Bool], ST) => R)(implicit ctx: Ctx): Ls[R] = {
+    def mapTargs[R](pol: Opt[Bool])(f: (Opt[Bool], SimpleTypeOrWildcard) => R)(implicit ctx: Ctx): Ls[R] = {
       // TODO factor w/ below
       val (tvarVariances, tparamsargs) = ctx.tyDefs.get(defn.name) match {
         case S(td) =>
@@ -1232,7 +1231,7 @@ abstract class TyperHelpers { Typer: Typer =>
           }
       }}
     }
-    def mapTargs2(pol: Opt[Bool])(f: (Opt[Bool], ST) => ST)(implicit ctx: Ctx): Ls[ST] = {
+    def mapTargs2(pol: Opt[Bool])(f: (Opt[Bool], SimpleTypeOrWildcard) => SimpleTypeOrWildcard)(implicit ctx: Ctx): Ls[SimpleTypeOrWildcard] = {
       // TODO factor w/ below
       val (tvarVariances, tparamsargs) = ctx.tyDefs.get(defn.name) match {
         case S(td) =>
@@ -1245,12 +1244,17 @@ abstract class TyperHelpers { Typer: Typer =>
       assert(tparamsargs.sizeCompare(targs) === 0)
       (tparamsargs lazyZip targs).map { case ((_, tv), ta) =>
         tvv(tv) match {
-          case VarianceInfo(true, true) =>
-            WildcardArg(f(pol.map(!_), BotType), f(pol, TopType))(noProv)
+          case VarianceInfo(true, true) => (f(pol.map(!_), BotType), f(pol, TopType)) match {
+            case (lb: ST, ub: ST) => WildcardArg(lb, ub)(noProv)
+            case _ => ???
+          }
           case VarianceInfo(co, contra) =>
             ta match {
               case wa @ WildcardArg(l, b) => // TODO improve (needs refactoring...)
-                WildcardArg(f(pol.map(!_), l), f(pol, b))(wa.prov)
+                (f(pol.map(!_), l), f(pol, b)) match {
+                  case (lb: ST, ub: ST) => WildcardArg(lb, ub)(wa.prov)
+                  case _ => ???
+              }
               case _ =>
                 f(if (co) pol else if (contra) pol.map(!_) else N, ta)
             }
@@ -1258,7 +1262,7 @@ abstract class TyperHelpers { Typer: Typer =>
       }
     }
     // TODO dedup w/ above
-    def mapTargs[R](pol: PolMap)(f: (PolMap, ST) => R)(implicit ctx: Ctx): Ls[R] = {
+    def mapTargs[R](pol: PolMap)(f: (PolMap, SimpleTypeOrWildcard) => R)(implicit ctx: Ctx): Ls[R] = {
       val (tvarVariances, tparamsargs) = ctx.tyDefs.get(defn.name) match {
         case S(td) =>
           (td.tvarVariances, td.tparamsargs)
@@ -1290,7 +1294,7 @@ abstract class TyperHelpers { Typer: Typer =>
       }}
     }
     // TODO dedup w/ above
-    def mapTargs2(pol: PolMap)(f: (PolMap, ST) => ST)(implicit ctx: Ctx): Ls[ST] = {
+    def mapTargs2(pol: PolMap)(f: (PolMap, SimpleTypeOrWildcard) => SimpleTypeOrWildcard)(implicit ctx: Ctx): Ls[SimpleTypeOrWildcard] = {
       val (tvarVariances, tparamsargs) = ctx.tyDefs.get(defn.name) match {
         case S(td) =>
           (td.tvarVariances, td.tparamsargs)
@@ -1308,12 +1312,17 @@ abstract class TyperHelpers { Typer: Typer =>
       assert(tparamsargs.sizeCompare(targs) === 0)
       (tparamsargs lazyZip targs).map { case ((_, tv), ta) =>
         tvv(tv) match {
-          case VarianceInfo(true, true) =>
-            WildcardArg(f(pol.contravar, BotType), f(pol, TopType))(noProv)
+          case VarianceInfo(true, true) => (f(pol.contravar, BotType), f(pol, TopType)) match {
+            case (lb: ST, ub: ST) => WildcardArg(lb, ub)(noProv)
+            case _ => ???
+          }
           case VarianceInfo(co, contra) =>
             ta match {
               case wa @ WildcardArg(l, b) => // TODO improve (needs refactoring...)
-                WildcardArg(f(pol.contravar, l), f(pol.covar, b))(wa.prov)
+                (f(pol.contravar, l), f(pol.covar, b)) match {
+                  case (lb: ST, ub: ST) => WildcardArg(lb, ub)(wa.prov)
+                  case _ => ???
+                }
               case _ =>
                 f(if (co) pol else if (contra) pol.contravar else pol.invar, ta)
             }
@@ -1330,7 +1339,7 @@ abstract class TyperHelpers { Typer: Typer =>
   
   
   class Traverser(implicit ctx: Ctx) {
-    def apply(pol: Opt[Bool])(st: ST): Unit = st match {
+    def apply(pol: Opt[Bool])(st: SimpleTypeOrWildcard): Unit = st match {
       case tv @ AssignedVariable(ty) => apply(pol)(ty)
       case tv: TypeVariable =>
         if (pol =/= S(false)) tv.lowerBounds.foreach(apply(S(true)))
@@ -1430,10 +1439,12 @@ abstract class TyperHelpers { Typer: Typer =>
       // case _: TypeTag => ()
       case _: ObjectTag | _: Extruded => ()
       case SkolemTag(id) => apply(pol)(id)
-      case tr: TypeRef => tr.mapTargs(pol)(apply(_)(_)); ()
+      case tr: TypeRef => tr.mapTargs(pol){(pol, t) => t match {
+        case WildcardArg(lb, ub) => apply(pol.contravar)(lb); apply(pol)(ub)
+        case st: ST => apply(pol)(st)
+       }}; ()
       case Without(b, ns) => apply(pol)(b)
       case TypeBounds(lb, ub) => pol.traverseRange(lb, ub)(apply(_)(_))
-      case WildcardArg(lb, ub) => apply(pol.contravar)(lb); apply(pol)(ub)
       case PolymorphicType(plvl, und) => apply(pol.enter(plvl))(und)
       case ConstrainedType(cs, bod) =>
         cs.foreach {

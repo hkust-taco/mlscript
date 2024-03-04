@@ -1853,7 +1853,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
   }
   
-  def refreshHelper2(raw: PolyNuDecl, v: Var, parTargs: Opt[Ls[ST]])
+  def refreshHelper2(raw: PolyNuDecl, v: Var, parTargs: Opt[Ls[SimpleTypeOrWildcard]])
         (implicit ctx: Ctx): (MutMap[TV, ST], Map[Str, NuParam]) = {
     val freshened: MutMap[TV, ST] = MutMap.empty
     val rawName = v.name
@@ -1865,8 +1865,24 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         case tv: TV => 
           println(s"Passing ${tn.name} :: ${_tv} <=< ${tv}")
           tv
-        case _ =>
-          println(s"Assigning ${tn.name} :: ${_tv} := $targ where ${targ.showBounds}")
+        case wc: WildcardArg =>
+          println(s"Assigning ${tn.name} :: ${_tv} := $wc")
+          val tv =
+            freshVar(_tv.prov, S(_tv), _tv.nameHint,
+              lbs = _tv.lowerBounds,
+              ubs = _tv.upperBounds,
+              )(targ.level)
+          println(s"Set ${tv} ~> ${_tv}")
+          assert(tv.assignedTo.isEmpty)
+          assert(tv.lowerBounds.isEmpty, tv.lowerBounds)
+          assert(tv.upperBounds.isEmpty, tv.upperBounds)
+          tv.assignedTo = S(TypeBounds(wc.lb, wc.ub)(wc.prov))
+          
+          println(s"Assigned ${tv.assignedTo}")
+          // tv  
+          ???
+        case st: ST =>
+          println(s"Assigning ${tn.name} :: ${_tv} := $st where ${st.showBounds}")
           val tv =
             freshVar(_tv.prov, S(_tv), _tv.nameHint,
               lbs = _tv.lowerBounds,
@@ -1879,7 +1895,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           // * When we support bounded types, bounds check will be needed at the type definition site
           assert(tv.lowerBounds.isEmpty, tv.lowerBounds)
           assert(tv.upperBounds.isEmpty, tv.upperBounds)
-          tv.assignedTo = S(targ)
+          tv.assignedTo = S(st)
           
           println(s"Assigned ${tv.assignedTo}")
           tv

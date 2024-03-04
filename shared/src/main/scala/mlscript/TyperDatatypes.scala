@@ -156,20 +156,46 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     def unapply(ot: OtherTypeLike): S[TypedTypingUnit] = S(ot.self)
   }
   
-  type SimpleTypeOrWildcard = SimpleType // TODO make this a separate abstract class
+  sealed trait SimpleTypeOrWildcard {
+    def prov: TypeProvenance
+    def level: Level
+    def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level
+    def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST]): SimpleTypeOrWildcard
+
+    def <:<?(that: SimpleTypeOrWildcard)
+      (implicit ctx: Ctx, crt: CompareRecTypes = true, cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool = 
+        (this, that) match { case (l: ST, r: ST) => l <:< r ; case _ => false }
+
+    // def &?(that: SimpleTypeOrWildcard): SimpleTypeOrWildcard = (this, that) match {
+    //   case (l: WildcardArg, r: WildcardArg) => WildcardArg(l.lb | r.lb, l.ub & r.ub)(l.prov)
+    //   case (l: WildcardArg, r: ST) => WildcardArg(l.lb | r, l.ub & r)(l.prov)
+    //   case (l: ST, r: WildcardArg) => WildcardArg(r.lb | l, r.ub & l)(r.prov)
+    //   case (l: ST, r: ST) => l & r
+    // }
+
+    // def |?(that: SimpleTypeOrWildcard): SimpleTypeOrWildcard = (this, that) match {
+    //   case (l: WildcardArg, r: WildcardArg) => WildcardArg(l.lb & r.lb, l.ub | r.ub)(l.prov)
+    //   case (l: WildcardArg, r: ST) => WildcardArg(l.lb & r, l.ub | r)(l.prov)
+    //   case (l: ST, r: WildcardArg) => WildcardArg(r.lb & l, r.ub | l)(r.prov)
+    //   case (l: ST, r: ST) => l | r
+    // }
+  }
   
   // * As in `Foo[Nat..Int]` or `Foo[?]` which is syntax sugar for `Foo[nothing..anything]`
   // TODO generate when finding Bounds in class type argument positions
   // TODO treat specially in `def expand` to turn into proper TypeBounds: turn Foo[?] into #Foo & { A: Bot..Top }
   // TODO separate this from the SimpleType hierarchy; make it a subtype of SimpleTypeOrWildcard
-  case class WildcardArg(lb: ST, ub: ST)(val prov: TP) extends SimpleType {
+  case class WildcardArg(lb: ST, ub: ST)(val prov: TP) extends SimpleTypeOrWildcard {
     def level: Level = lb.level max ub.level
     def levelBelow(ubnd: Level)(implicit cache: MutSet[TV]): Level =
       lb.levelBelow(ubnd) max ub.levelBelow(ubnd)
     override def toString: Str = s"? :> $lb <: $ub"
+
+    def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST]): WildcardArg =
+      WildcardArg(lb.freshenAbove(lim,rigidify), ub.freshenAbove(lim,rigidify))(prov)
   }
   object WildcardArg {
-    def mk(lb: ST, ub: ST, prov: TP = noProv)(implicit ctx: Ctx): ST =
+    def mk(lb: ST, ub: ST, prov: TP = noProv)(implicit ctx: Ctx): SimpleTypeOrWildcard =
       if ((lb is ub)
         || lb === ub
         || !lb.mentionsTypeBounds && !ub.mentionsTypeBounds && lb <:< ub && ub <:< lb
@@ -179,7 +205,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
   }
   
   /** A general type form (TODO: rename to AnyType). */
-  sealed abstract class SimpleType extends TypeLike with SimpleTypeImpl {
+  sealed abstract class SimpleType extends TypeLike with SimpleTypeImpl with SimpleTypeOrWildcard {
     val prov: TypeProvenance
     def level: Level
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level

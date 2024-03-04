@@ -22,9 +22,14 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     mergeSortedMap(trs1, trs2) { (tr1, tr2) =>
       assert(tr1.defn === tr2.defn)
       assert(tr1.targs.size === tr2.targs.size)
-      TypeRef(tr1.defn, (tr1.targs lazyZip tr2.targs).map((ta1, ta2) => 
-          if (pol) TypeBounds.mk(ta1 & ta2, ta1 | ta2) else TypeBounds.mk(ta1 | ta2, ta1 & ta2)
-        ))(noProv)
+      TypeRef(tr1.defn, (tr1.targs lazyZip tr2.targs).map {
+        case (WildcardArg(l1, u1), WildcardArg(l2, u2)) => ???
+        case (WildcardArg(l1, u1), ta2: ST) => ???
+        case (ta1: ST, WildcardArg(l2, u2)) => ???
+        case (ta1: ST, ta2: ST) => 
+          if (pol) WildcardArg.mk(ta1 & ta2, ta1 | ta2) else WildcardArg.mk(ta1 | ta2, ta1 & ta2)
+      })(noProv)
+      
     }
   
   
@@ -196,11 +201,25 @@ class NormalForms extends TyperDatatypes { self: Typer =>
             val thatTarg = thatTargs.head
             thatTargs = thatTargs.tail
             vce match {
-              case S(true) => otherTarg & thatTarg
-              case S(false) => otherTarg | thatTarg
-              case N =>
-                if (pol) TypeBounds.mk(otherTarg | thatTarg, otherTarg & thatTarg)
-                else TypeBounds.mk(otherTarg & thatTarg, otherTarg | thatTarg)
+              case S(true) => (otherTarg, thatTarg) match {
+                case (l: WildcardArg, r: WildcardArg) => WildcardArg.mk(l.lb | r.lb, l.ub & r.ub)
+                case (l: WildcardArg, r: ST) => l.ub & r
+                case (l: ST, r: WildcardArg) => l & r.ub
+                case (l: ST, r: ST) => l & r
+              }
+              case S(false) => (otherTarg, thatTarg) match {
+                case (l: WildcardArg, r: WildcardArg) => WildcardArg.mk(l.lb & r.lb, l.ub | r.ub)
+                case (l: WildcardArg, r: ST) => l.lb | r
+                case (l: ST, r: WildcardArg) => l | r.lb
+                case (l: ST, r: ST) => l & r
+              }
+              case N => (otherTarg, thatTarg) match {
+                case (l: WildcardArg, r: WildcardArg) => 
+                  if (pol) WildcardArg.mk(l.lb | r.lb, l.ub & r.ub) else WildcardArg.mk(l.lb & r.lb, l.ub | r.ub)
+                case (l: WildcardArg, r: ST) => if (pol) WildcardArg.mk(l.lb | r, l.ub & r) else WildcardArg.mk(l.lb & r, l.ub | r)
+                case (l: ST, r: WildcardArg) => if (pol) WildcardArg.mk(l | r.lb, l & r.ub) else WildcardArg.mk(l & r.lb, l | r.ub)
+                case (l: ST, r: ST) => if (pol) WildcardArg.mk(l | r, l & r) else WildcardArg.mk(l & r, l | r)
+              } 
             }
           }
           TypeRef(that.defn, newTargs)(that.prov)
@@ -301,11 +320,25 @@ class NormalForms extends TyperDatatypes { self: Typer =>
             val thatTarg = thatTargs.head
             thatTargs = thatTargs.tail
             vce match {
-              case S(true) => otherTarg | thatTarg
-              case S(false) => otherTarg & thatTarg
-              case N =>
-                if (pol) TypeBounds.mk(otherTarg & thatTarg, otherTarg | thatTarg)
-                else TypeBounds.mk(otherTarg | thatTarg, otherTarg & thatTarg)
+              case S(true) => (otherTarg, thatTarg) match {
+                case (l: WildcardArg, r: WildcardArg) => WildcardArg.mk(l.lb & r.lb, l.ub | r.ub)
+                case (l: WildcardArg, r: ST) => l.lb | r
+                case (l: ST, r: WildcardArg) => l | r.lb
+                case (l: ST, r: ST) => l & r
+              }
+              case S(false) => (otherTarg, thatTarg) match {
+                case (l: WildcardArg, r: WildcardArg) => WildcardArg.mk(l.lb | r.lb, l.ub & r.ub)
+                case (l: WildcardArg, r: ST) => l.ub & r
+                case (l: ST, r: WildcardArg) => l & r.ub
+                case (l: ST, r: ST) => l & r
+              }
+              case N => (otherTarg, thatTarg) match {
+                case (l: WildcardArg, r: WildcardArg) => 
+                  if (pol)  WildcardArg.mk(l.lb & r.lb, l.ub | r.ub) else WildcardArg.mk(l.lb | r.lb, l.ub & r.ub) 
+                case (l: WildcardArg, r: ST) => if (pol)  WildcardArg.mk(l.lb & r, l.ub | r) else WildcardArg.mk(l.lb | r, l.ub & r)
+                case (l: ST, r: WildcardArg) => if (pol)  WildcardArg.mk(l & r.lb, l | r.ub) else WildcardArg.mk(l | r.lb, l & r.ub) 
+                case (l: ST, r: ST) => if (pol) WildcardArg.mk(l & r, l | r) else WildcardArg.mk(l | r, l & r)
+              }
             }
           }
           TypeRef(that.defn, newTargs)(that.prov)
@@ -769,7 +802,6 @@ class NormalForms extends TyperDatatypes { self: Typer =>
           of(polymLvl, cons, LhsRefined(tr.mkClsTag, ssEmp, RecordType.empty, SortedMap(defn -> tr)))
         } else mk(polymLvl, cons, tr.expandOrCrash, pol)
       case TypeBounds(lb, ub) => mk(polymLvl, cons, if (pol) ub else lb, pol)
-      case w @ WildcardArg(lb, ub) => die // Not supposed to normalize WildcardArg
       case PolymorphicType(lvl, bod) => mk(lvl, cons, bod, pol)
       case ConstrainedType(cs, bod) => mk(polymLvl, cs ::: cons, bod, pol)
     }
@@ -814,7 +846,6 @@ class NormalForms extends TyperDatatypes { self: Typer =>
             CNF(Disjunct(RhsBases(Nil, N, SortedMap.single(defn -> tr)), ssEmp, LhsTop, ssEmp) :: Nil)
           } else mk(polymLvl, cons, tr.expandOrCrash, pol)
         case TypeBounds(lb, ub) => mk(polymLvl, cons, if (pol) ub else lb, pol)
-        case WildcardArg(lb, ub) => die // Not supposed to normalize WildcardArg
         case PolymorphicType(lvl, bod) => mk(lvl, cons, bod, pol)
         case ConstrainedType(cs, bod) => mk(lvl, cs ::: cons, bod, pol)
       }

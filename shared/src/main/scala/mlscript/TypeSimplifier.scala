@@ -4,6 +4,7 @@ import scala.collection.mutable.{Map => MutMap, Set => MutSet, LinkedHashMap, Li
 import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.util.chaining._
 import mlscript.utils._, shorthands._
+import java.lang.reflect.WildcardType
 
 
 trait TypeSimplifier { self: Typer =>
@@ -219,7 +220,10 @@ trait TypeSimplifier { self: Typer =>
             
             val trs2 = trs.map {
               case (d, tr @ TypeRef(defn, targs)) =>
-                d -> TypeRef(defn, tr.mapTargs2(pol)((pol, ta) => go(ta, pol)))(tr.prov)
+                d -> TypeRef(defn, tr.mapTargs2(pol)((pol, ta) => ta match {
+                  case w@WildcardArg(lb, ub) => ??? // TODO
+                  case st: ST => go(st, pol)
+                }))(tr.prov)
             }
             
             val traitPrefixes =
@@ -245,7 +249,10 @@ trait TypeSimplifier { self: Typer =>
                 // * Reconstruct a TypeRef from its current structural components
                 val typeRef = TypeRef(td.nme, td.tparamsargs.zipWithIndex.map { case ((tp, tv), tpidx) =>
                   val fieldTagNme = tparamField(clsTyNme, tp, false) // `false` means using `C#A` (old def type member names)
-                  val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
+                  val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { 
+                    case wc@WildcardArg(lb, ub) => FieldType(S(lb), ub)(wc.prov) 
+                    case ta: ST => FieldType(S(ta), ta)(noProv) 
+                  })
                   fromTyRef.++(rcd2.fields.iterator.filter(_._1 === fieldTagNme).map(_._2))
                     .foldLeft((BotType: ST, TopType: ST)) {
                       case ((acc_lb, acc_ub), FieldType(lb, ub)) =>
@@ -330,7 +337,10 @@ trait TypeSimplifier { self: Typer =>
                 // * Reconstruct a TypeRef from its current structural components
                 val typeRef = TypeRef(cls.td.nme, cls.tparams.zipWithIndex.map { case ((tp, tv, vi), tpidx) =>
                   val fieldTagNme = tparamField(clsTyNme, tp, vi.visible)
-                  val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
+                  val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { 
+                    case wc@WildcardArg(lb, ub) => FieldType(S(lb), ub)(wc.prov) 
+                    case ta: ST => FieldType(S(ta), ta)(noProv) 
+                  })
                   fromTyRef.++(rcd2.fields.iterator.filter(_._1 === fieldTagNme).map(_._2))
                     .foldLeft((BotType: ST, TopType: ST)) {
                       case ((acc_lb, acc_ub), FieldType(lb, ub)) =>
@@ -1024,7 +1034,10 @@ trait TypeSimplifier { self: Typer =>
         RecordType(fs.mapValues(_.update(transform(_, pol.contravar, semp), transform(_, pol, semp))))(noProv))(noProv)
       case ProxyType(underlying) => transform(underlying, pol, parents, canDistribForall)
       case tr @ TypeRef(defn, targs) =>
-        TypeRef(defn, tr.mapTargs2(pol)((pol, ty) => transform(ty, pol, semp)))(tr.prov)
+        TypeRef(defn, tr.mapTargs2(pol)((pol, ty) => ty match {
+          case w@WildcardArg(lb, ub) => WildcardArg(transform(lb, pol.contravar, semp), transform(ub, pol.covar, semp))(w.prov)
+          case ty: ST => transform(ty, pol, semp)
+        }))(tr.prov)
       case wo @ Without(base, names) =>
         if (names.isEmpty) transform(base, pol, semp, canDistribForall)
         else if (pol.base === S(true)) transform(base, pol, semp, canDistribForall).withoutPos(names)
@@ -1041,11 +1054,6 @@ trait TypeSimplifier { self: Typer =>
         ))(p =>
           if (p) transform(ub, pol, parents) else transform(lb, pol, parents)
         )
-      case w@WildcardArg(lb, ub) =>
-        WildcardArg(
-          transform(lb, pol.contravar, parents, canDistribForall),
-          transform(ub, pol.covar, parents, canDistribForall)
-          )(w.prov)
       case PolymorphicType(plvl, bod) =>
         val res = transform(bod, pol.enter(plvl), parents, canDistribForall = S(plvl))
         canDistribForall match {
@@ -1196,8 +1204,6 @@ trait TypeSimplifier { self: Typer =>
                         case (ExtrType(pol1), ExtrType(pol2)) => pol1 === pol2 || nope
                         case (TypeBounds(lb1, ub1), TypeBounds(lb2, ub2)) =>
                           unify(lb1, lb2) && unify(ub1, ub2)
-                        case (WildcardArg(lb1, ub1), WildcardArg(lb2, ub2)) =>
-                          unify(lb1, lb2) && unify(ub1, ub2)
                         case (ComposedType(pol1, lhs1, rhs1), ComposedType(pol2, lhs2, rhs2)) =>
                           (pol1 === pol2 || nope) && unify(lhs1, lhs2) && unify(rhs1, rhs2)
                         case (RecordType(fields1), RecordType(fields2)) =>
@@ -1208,7 +1214,12 @@ trait TypeSimplifier { self: Typer =>
                         case (ProxyType(underlying1), _) => unify(underlying1, ty2)
                         case (_, ProxyType(underlying2)) => unify(ty1, underlying2)
                         case (TypeRef(defn1, targs1), TypeRef(defn2, targs2)) =>
-                          (defn1 === defn2 || nope) && targs1.lazyZip(targs2).forall(unify)
+                          (defn1 === defn2 || nope) && targs1.lazyZip(targs2).forall {
+                            case (WildcardArg(l1, u1), WildcardArg(l2, u2)) => ???
+                            case (WildcardArg(l1, u1), ta2: ST) => ???
+                            case (ta1: ST, WildcardArg(l2, u2)) => ???
+                            case (ta1: ST, ta2: ST) => unify(ta1, ta2)
+                          }
                         case _ => nope
                       }
                     }
