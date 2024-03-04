@@ -76,13 +76,15 @@ fun findFirst(list, p) =
     Cons(x, xs) and
       p(x) then Some(x)
       else findFirst(xs, p)
-//│ fun findFirst: forall 'A. (Cons[out 'A] | Nil, (??A & (error | 'A)) -> Object) -> (None | Some[??A & (error | 'A)])
+//│ fun findFirst: forall 'A. (Cons[out 'A] | Nil, (??A & 'A) -> Object) -> (None | Some[??A & 'A])
 
 fun listConcat(xs, ys) =
   if xs is
     Nil then ys
     Cons(x, xs') then Cons(x, listConcat(xs', ys))
-//│ fun listConcat: forall 'A 'a 'A0. (Cons[out 'A] | Nil, List[?] & 'a) -> (Cons[in 'A0 out 'A0 | ??A & (error | 'A)] | 'a)
+//│ fun listConcat: forall 'A 'A0 'a. (Cons[out 'A & ('A0 | ~??A)] | Nil, List['A0] & 'a) -> (Cons['A0] | 'a)
+//│   where
+//│     'A0 :> ??A & 'A
 
 fun listContains(xs, x) =
   if xs is
@@ -99,7 +101,9 @@ fun listWithout(xs, x) =
     Cons(x', xs') and
       eq(x)(x') then listWithout(xs', x)
       _ then Cons(x', listWithout(xs', x))
-//│ fun listWithout: forall 'A 'A0. (Cons[out 'A] | Nil, anything) -> (Cons[in 'A0 out 'A0 | ??A & (error | 'A)] | Nil)
+//│ fun listWithout: forall 'A 'A0. (Cons[out 'A & ('A0 | ~??A)] | Nil, anything) -> (Cons['A0] | Nil)
+//│   where
+//│     'A0 :> ??A & 'A
 
 
 // * FIXME?
@@ -244,10 +248,27 @@ fun fv(t) =
     Var(name) then list1(name)
     Abs(Var(name), body) then listWithout(fv(body), name)
     App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
-//│ fun fv: forall 'A 'A0 'A1. (Abs | App | Var) -> (forall 'A2 'A3 'A4. Cons[in 'A out Str | 'A] | Cons[in 'A | 'A2 out Str & 'A2 | Str & ??A & 'A0 | 'A & ('A2 | ??A & 'A0)] | Cons[in 'A3 out 'A3 | ??A0 & 'A1] | Nil | Cons[in 'A4 out 'A4 | ??A0 & 'A1])
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> (?b | ?c | ?d) <: ?fv` exceeded recursion depth limit (250)
+//│ ║  l.246: 	fun fv(t) =
+//│ ║         	    ^^^^^^^
+//│ ║  l.247: 	  if t is
+//│ ║         	^^^^^^^^^
+//│ ║  l.248: 	    Var(name) then list1(name)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.249: 	    Abs(Var(name), body) then listWithout(fv(body), name)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.250: 	    App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ fun fv: forall 'A 'A0 'A1 'A2. (Abs | App | Var) -> (Cons[in 'A out 'A0] | Cons['A1] | Nil)
 //│   where
-//│     'A0 :> Str | error | 'A | ??A0 & 'A1
-//│     'A1 :> Str | error | 'A | ??A & 'A0
+//│     'A :> 'A0 | 'A1
+//│        <: 'A2
+//│     'A0 :> 'A | 'A1 | 'A2
+//│     'A2 :> 'A0 | 'A | 'A1
+//│         <: 'A
+//│     'A1 <: 'A
 :ResetFuel
 
 fun showFv(t) =

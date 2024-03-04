@@ -67,8 +67,16 @@ fun find(t, k) =
       sgt(k, k') then find(r, k)
       _ then Some(v)
     Empty then None
-//│ fun insert: forall 'A 'A0 'a 'A1 'A2 'A3 'A4. (Empty | Node[in 'A2 out 'A3], Str, 'a & (error & 'A2 & 'A3 | ??A)) -> Node[in 'A0 | 'A2 & 'A3 & (error & 'A | error & 'A4 | error & 'A1) | ??A & ('A | 'A4 | 'A1) out 'a | 'A0 & ('A & 'A4 & 'A1 | ??A0 & (error | 'A3))]
-//│ fun find: forall 'A5. (Empty | Node[out 'A5], Str) -> (None | Some[??A1 & (error | 'A5)])
+//│ fun insert: forall 'A 'A0 'A1 'A2 'A3. (Empty | Node[in 'A out 'A3], Str, 'A2 & 'A0 & ('A | ??A)) -> Node[in 'A2 out 'A1]
+//│ fun find: forall 'A4. (Empty | Node[out 'A4], Str) -> (None | Some[??A0 & 'A4])
+//│ where
+//│   'A <: 'A3
+//│   'A3 <: 'A2 & ('A & ('A0 | ~??A1) | ??A & ('A0 | ~??A1)) | ~??A1
+//│   'A2 :> 'A1 | ??A1 & 'A3
+//│       <: 'A0 & ('A | ??A)
+//│   'A1 :> 'A2 | ??A1 & 'A3 | 'A0
+//│   'A0 :> 'A1 | ??A1 & 'A3
+//│       <: 'A2 & ('A | ??A)
 
 fun showType(ty) =
   if ty is
@@ -142,6 +150,30 @@ fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, Str] =
         Err(message) then Err(message)
       Ok(PrimitiveType(name)) then Err("cannot apply primitive type `" ++ name ++ "`")
       Err(message) then Err(message)
+//│ ╔══[ERROR] Subtyping constraint of the form `?typeTerm <: (?a, ?b) -> ?c` exceeded recursion depth limit (250)
+//│ ║  l.142: 	    Abs(Var(name), ty, body) and typeTerm(body, insert(ctx, name, ty)) is
+//│ ║         	                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Subtyping constraint of the form `([?a, ?b, ?c]) -> ?d <: ?e -> ?f` exceeded recursion depth limit (250)
+//│ ║  l.137: 	  if t is
+//│ ║         	     ^^^^
+//│ ║  l.138: 	    Lit(_, ty) then Ok(ty)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.139: 	    Var(name) and find(ctx, name) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.140: 	      Some(ty) then Ok(ty)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.141: 	      None then Err("unbound variable `" ++ name ++ "`")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.142: 	    Abs(Var(name), ty, body) and typeTerm(body, insert(ctx, name, ty)) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.143: 	      Ok(resTy) then Ok(FunctionType(ty, resTy))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.144: 	      Err(message) then Err(message)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ fun typeTerm: (t: Term, ctx: TreeMap[Type]) -> Result[Type, Str]
 
 fun showTypeTerm(t, ctx) =

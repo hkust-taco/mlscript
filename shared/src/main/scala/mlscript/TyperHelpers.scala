@@ -1077,7 +1077,7 @@ abstract class TyperHelpers { Typer: Typer =>
         // * Object types do not need to be completed in order to be expanded
         info.kind.isInstanceOf[ObjDefKind]
         || info.isComputed)
-    // TODO provide correct pol at each call
+    // TODO provide correct pol at each expand call (we're assuming `pol = true` now)
     def expand(pol: Bool)(implicit ctx: Ctx, raise: Raise): SimpleType = {
       ctx.tyDefs2.get(defn.name) match {
         case S(info) =>
@@ -1110,8 +1110,9 @@ abstract class TyperHelpers { Typer: Typer =>
             assert(td.tparams.size === targs.size)
             subst(td.body, td.tparams.lazyZip(targs).map {
               case (tp, w: WildcardArg) => 
-                // TODO raise type error here
-                SkolemTag(tp._2)(noProv) -> errType
+                // * FIXME we should NOT use TypeBounds here (somehow causes infinite subtyping loop)
+                // *       but raising an error will break a lot of  code related to alias (maybe changling `subst`)
+                SkolemTag(tp._2)(noProv) -> TypeBounds(w.lb, w.ub)(w.prov)
               case (tp, st: ST) => SkolemTag(tp._2)(noProv) -> st
             }.toMap)
           case S(td: TypedNuTrt) =>

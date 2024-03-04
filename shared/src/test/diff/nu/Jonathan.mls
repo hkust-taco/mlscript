@@ -44,7 +44,7 @@ fun onMousePressed(listener) =
 
 // * OK: `println` does not block
 onMousePressed(event => println("Clicked!"))
-//│ Effectful[(), nothing]
+//│ Effectful[(), IO & ~Block]
 
 // * NOT OK: `readLine` blocks
 :e
@@ -55,7 +55,7 @@ onMousePressed(event => readLine.flatMap(println))
 //│ ╟── type `Block` does not match type `~Block`
 //│ ║  l.24: 	fun readLine: Effectful[Str, IO | Block]
 //│ ╙──      	                                  ^^^^^
-//│ Effectful[(), nothing] | error
+//│ Effectful[(), IO & ~Block] | error
 
 
 class Event
