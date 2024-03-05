@@ -70,7 +70,6 @@ trait ObjValImpl { self: ObjVal =>
 trait BoundedTermImpl { self: BoundedTerm =>
   override def toString: String = self.values.map(_.toString).mkString(";")
   def getObjNames(): Set[String] = self.values.flatMap{
-    // case FunctionValue(name, body, prm, ctx) => Some(name)
     case ObjVal(name, _, _) => Some(name)
     case _ => None
   }
@@ -144,12 +143,7 @@ trait BoundedTermImpl { self: BoundedTerm =>
 
       var ret2 = restVals1 ++ restVals2
       // TODO: eliminate redundant values
-      // if(ret2.count(x => (x.isInstanceOf[LiteralVal] || x.isInstanceOf[PrimVal])) > 1){
-      //   ret2 = ret2.filterNot(_.isInstanceOf[LiteralVal])// + PrimVal()
-      // }
       val retVals = BoundedTerm(ret ++ ret2)
-      // retVals.updateCnt = this.updateCnt
-      // if(this.compare(retVals)) retVals.updateCnt += 1
       retVals
     }
   }

@@ -1,6 +1,6 @@
 :NewDefs
 
-//FIXME: Observable change in behavior after lifting
+//TODO: Observable change in behavior after lifting
 :mono
 class X() {
     val a = 

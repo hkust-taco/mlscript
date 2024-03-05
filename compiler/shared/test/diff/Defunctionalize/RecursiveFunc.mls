@@ -21,7 +21,7 @@ fac(5)
 //│ res
 //│     = 120
 
-:e //FIXME: Strange syntax
+:e //TODO: Strange syntax
 :mono
 class List(val l: List | Nil | undefined, val hasTail: Bool)  {}
 class Nil(val l: List | Nil | undefined, val hasTail: Bool)  {}
