@@ -308,38 +308,38 @@ fun f: Foo[?] -> Foo[?]
 
 :e
 fun f(x: ?) = x
-//│ ╔══[ERROR] Invalid use of ? here
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
 //│ ║  l.310: 	fun f(x: ?) = x
 //│ ╙──       	         ^
 //│ fun f: (x: error) -> error
 
 :e
 fun f(x): ? = x
-//│ ╔══[ERROR] Invalid use of ? here
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
 //│ ║  l.317: 	fun f(x): ? = x
 //│ ╙──       	          ^
 //│ fun f: error -> error
 
 :e
 fun f(x: Int): ? = x
-//│ ╔══[ERROR] Invalid use of ? here
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
 //│ ║  l.324: 	fun f(x: Int): ? = x
 //│ ╙──       	               ^
 //│ fun f: (x: Int) -> error
 
 :e
 fun f(x: ?): ? = x
-//│ ╔══[ERROR] Invalid use of ? here
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
 //│ ║  l.331: 	fun f(x: ?): ? = x
 //│ ╙──       	         ^
-//│ ╔══[ERROR] Invalid use of ? here
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
 //│ ║  l.331: 	fun f(x: ?): ? = x
 //│ ╙──       	             ^
 //│ fun f: (x: error) -> error
 
 :e
 let x: ? = 1
-//│ ╔══[ERROR] Invalid use of ? here
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
 //│ ║  l.341: 	let x: ? = 1
 //│ ╙──       	       ^
 //│ let x: error
@@ -348,7 +348,7 @@ let x: ? = 1
 
 :e
 1 as ?
-//│ ╔══[ERROR] Invalid use of ? here
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
 //│ ║  l.350: 	1 as ?
 //│ ╙──       	     ^
 //│ error
@@ -357,47 +357,47 @@ let x: ? = 1
 
 :e
 fun f: (? -> ?) -> ?
-//│ ╔══[ERROR] Invalid use of ? here
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
 //│ ║  l.359: 	fun f: (? -> ?) -> ?
 //│ ╙──       	        ^
-//│ ╔══[ERROR] Invalid use of ? here
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
 //│ ║  l.359: 	fun f: (? -> ?) -> ?
 //│ ╙──       	             ^
-//│ ╔══[ERROR] Invalid use of ? here
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
 //│ ║  l.359: 	fun f: (? -> ?) -> ?
 //│ ╙──       	                   ^
 //│ fun f: (error -> error) -> error
 
 :e
 fun f: ? -> ?
-//│ ╔══[ERROR] Invalid use of ? here
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
 //│ ║  l.372: 	fun f: ? -> ?
 //│ ╙──       	       ^
-//│ ╔══[ERROR] Invalid use of ? here
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
 //│ ║  l.372: 	fun f: ? -> ?
 //│ ╙──       	            ^
 //│ fun f: error -> error
 
 :e
 fun f: ? -> Int
-//│ ╔══[ERROR] Invalid use of ? here
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
 //│ ║  l.382: 	fun f: ? -> Int
 //│ ╙──       	       ^
 //│ fun f: error -> Int
 
 :e
 fun f: Int -> ?
-//│ ╔══[ERROR] Invalid use of ? here
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
 //│ ║  l.389: 	fun f: Int -> ?
 //│ ╙──       	              ^
 //│ fun f: Int -> error
 
 :e
 let x: ? -> ?
-//│ ╔══[ERROR] Invalid use of ? here
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
 //│ ║  l.396: 	let x: ? -> ?
 //│ ╙──       	       ^
-//│ ╔══[ERROR] Invalid use of ? here
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
 //│ ║  l.396: 	let x: ? -> ?
 //│ ╙──       	            ^
 //│ let x: error -> error
@@ -453,7 +453,7 @@ class Bar extends ?
 
 :e
 abstract class Bar: ?
-//│ ╔══[ERROR] Invalid use of ? here
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
 //│ ║  l.455: 	abstract class Bar: ?
 //│ ╙──       	                    ^
 //│ abstract class Bar: error
@@ -478,7 +478,7 @@ type ? = Int
 
 :e
 type W = ?
-//│ ╔══[ERROR] Invalid use of ? here
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
 //│ ║  l.480: 	type W = ?
 //│ ╙──       	         ^
 //│ type W = error

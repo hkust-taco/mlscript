@@ -531,7 +531,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 LhsRefined(bo, ts, r, SortedMap.empty), Nil, done_rs)
             
             case (_, RhsBases(pts, bf, trs)) if trs.nonEmpty =>
-              annoying(Nil, done_ls, trs.valuesIterator.map(_.expand(true)).toList, RhsBases(pts, bf, SortedMap.empty))
+              annoying(Nil, done_ls, trs.valuesIterator.map(_.expand(false)).toList, RhsBases(pts, bf, SortedMap.empty))
             
             case (_, RhsBases(pts, S(L(ov: Overload)), trs)) =>
               ov.alts.foreach(alt => annoying(Nil, done_ls, Nil, RhsBases(pts, S(L(alt)), trs)))
@@ -992,12 +992,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   }
               }
             } else {
-              if (tr1.mayHaveTransitiveSelfType) rec(tr1.expand(true), tr2.expand(true), true)
+              if (tr1.mayHaveTransitiveSelfType) rec(tr1.expand(true), tr2.expand(false), true)
               else (tr1.mkClsTag, tr2.mkClsTag) match {
                 case (S(tag1), S(tag2)) if !(tag1 <:< tag2) =>
                   reportError()
                 case _ =>
-                  rec(tr1.expand(true), tr2.expand(true), true)
+                  rec(tr1.expand(true), tr2.expand(false), true)
               }
             }
           case (tr: TypeRef, _) => rec(tr.expand(true), rhs, true)
@@ -1007,7 +1007,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             // * but can incur vast amounts of unnecessary constraining in the context of recursive types!
             ()
           case (_, tr: TypeRef) =>
-            rec(lhs, tr.expand(true), true)
+            rec(lhs, tr.expand(false), true)
           
           case (ClassTag(ErrTypeId, _), _) => ()
           case (_, ClassTag(ErrTypeId, _)) => ()

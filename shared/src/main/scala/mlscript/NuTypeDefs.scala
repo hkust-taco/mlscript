@@ -585,7 +585,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 fd.copy()(fd.declareLoc, fd.virtualLoc, fd.mutLoc, fd.signature, outer, fd.genField)
             }
           case td: NuTypeDef =>
-            if (td.nme.name.in(reservedTypeNames) || td.nme.name === "?")
+            if (td.nme.name.in(reservedTypeNames))
               err(msg"Type name '${td.nme.name}' is reserved", td.toLoc)
             td
         }

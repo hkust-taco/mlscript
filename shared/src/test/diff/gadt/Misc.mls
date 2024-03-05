@@ -134,20 +134,7 @@ fun optToInt(w: Option[?]) = if w is Some then 1 else 0
 //│ fun optToInt: (w: Option[anything]) -> (0 | 1)
 
 optToInt(Some(11))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.136: 	optToInt(Some(11))
-//│ ║         	^^^^^^^^^^^^^^^^^^
-//│ ╟── integer literal of type `11` does not match type `nothing`
-//│ ║  l.136: 	optToInt(Some(11))
-//│ ║         	              ^^
-//│ ╟── Note: constraint arises from wildcard:
-//│ ║  l.133: 	fun optToInt(w: Option[?]) = if w is Some then 1 else 0
-//│ ║         	                       ^
-//│ ╟── Note: type parameter T is defined at:
-//│ ║  l.126: 	abstract class Option[type out T]: None | Some[T]
-//│ ╙──       	                               ^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ 0 | 1 | error
+//│ 0 | 1
 //│ res
 //│     = 1
 
@@ -213,11 +200,11 @@ test(MkW(1))
 :e
 fun test(a: Some[Int]) = true as a.T
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.214: 	fun test(a: Some[Int]) = true as a.T
+//│ ║  l.201: 	fun test(a: Some[Int]) = true as a.T
 //│ ║         	                         ^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.214: 	fun test(a: Some[Int]) = true as a.T
+//│ ║  l.201: 	fun test(a: Some[Int]) = true as a.T
 //│ ╙──       	                                  ^^
 //│ fun test: (a: Some[Int]) -> Int
 
@@ -251,11 +238,11 @@ let x: Ty[Int]
 :e
 true as x.T
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.252: 	true as x.T
+//│ ║  l.239: 	true as x.T
 //│ ║         	^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.252: 	true as x.T
+//│ ║  l.239: 	true as x.T
 //│ ╙──       	         ^^
 //│ Int
 //│ res
@@ -274,11 +261,11 @@ let x: Some[Int]
 :e
 true as x.T
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.275: 	true as x.T
+//│ ║  l.262: 	true as x.T
 //│ ║         	^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.275: 	true as x.T
+//│ ║  l.262: 	true as x.T
 //│ ╙──       	         ^^
 //│ Int
 //│ res
@@ -316,13 +303,13 @@ u(MkU(1))
 fun w[T](x: U[T, T]): Bool = if x is
     MkU(s) then (s : x.A) : x.B
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.317: 	    MkU(s) then (s : x.A) : x.B
+//│ ║  l.304: 	    MkU(s) then (s : x.A) : x.B
 //│ ║         	                ^^^^^^^^^
 //│ ╟── type `T & ?B` is not an instance of type `Bool`
-//│ ║  l.317: 	    MkU(s) then (s : x.A) : x.B
+//│ ║  l.304: 	    MkU(s) then (s : x.A) : x.B
 //│ ║         	                             ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.316: 	fun w[T](x: U[T, T]): Bool = if x is
+//│ ║  l.303: 	fun w[T](x: U[T, T]): Bool = if x is
 //│ ╙──       	                      ^^^^
 //│ fun w: forall 'T. (x: U['T, 'T]) -> Bool
 
@@ -331,7 +318,7 @@ fun w[T](x: U[T, T]): Int = if x is
 //│ fun w: forall 'T. (x: U['T, 'T]) -> Int
 
 fun u[T](x: U[T, 'b]): T = if x is
-    MkU(s) then s :x.A
+    MkU(s) then s : x.A
 //│ fun u: forall 'T 'b. (x: U['T, 'b]) -> 'T
 
 u(MkU(1))
@@ -360,16 +347,16 @@ w(MkU(1))
 :e
 w(MkU(true))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.361: 	w(MkU(true))
+//│ ║  l.348: 	w(MkU(true))
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of `Int`
-//│ ║  l.361: 	w(MkU(true))
+//│ ║  l.348: 	w(MkU(true))
 //│ ║         	      ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.343: 	class MkU[S](x: S) extends U[S, Int]
+//│ ║  l.330: 	class MkU[S](x: S) extends U[S, Int]
 //│ ║         	                                ^^^
 //│ ╟── Note: type parameter B is defined at:
-//│ ║  l.342: 	abstract class U[type A, type B]: MkU[A]
+//│ ║  l.329: 	abstract class U[type A, type B]: MkU[A]
 //│ ╙──       	                              ^
 //│ Int | error
 //│ res

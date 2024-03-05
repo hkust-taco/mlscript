@@ -556,7 +556,7 @@ abstract class TyperHelpers { Typer: Typer =>
         case (tr: TypeRef, _)
           if (primitiveTypes contains tr.defn.name) && tr.canExpand => tr.expandOrCrash(true) <:< that
         case (_, tr: TypeRef)
-          if (primitiveTypes contains tr.defn.name) && tr.canExpand => this <:< tr.expandOrCrash(true)
+          if (primitiveTypes contains tr.defn.name) && tr.canExpand => this <:< tr.expandOrCrash(false)
         case (tr1: TypeRef, _) => ctx.tyDefs.get(tr1.defn.name) match {
             case S(td1) =>
           that match {
@@ -638,7 +638,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case ct: ConstrainedType => ct
     }
     def unwrapAll(implicit ctx: Ctx): SimpleType = unwrapProxies match {
-      case tr: TypeRef if tr.canExpand => tr.expandOrCrash(true).unwrapAll
+      case tr: TypeRef if tr.canExpand => tr.expandOrCrash(false).unwrapAll
       case u => u
     }
     def negNormPos(f: SimpleType => SimpleType, p: TypeProvenance)
@@ -647,7 +647,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case ComposedType(true, l, r) => l.negNormPos(f, p) & r.negNormPos(f, p)
       case ComposedType(false, l, r) => l.negNormPos(f, p) | r.negNormPos(f, p)
       case NegType(n) => f(n).withProv(p)
-      case tr: TypeRef if !preserveTypeRefs && tr.canExpand => tr.expandOrCrash(true).negNormPos(f, p)
+      case tr: TypeRef if !preserveTypeRefs && tr.canExpand => tr.expandOrCrash(false).negNormPos(f, p)
       case _: RecordType | _: FunctionType => BotType // Only valid in positive positions!
         // Because Top<:{x:S}|{y:T}, any record type negation neg{x:S}<:{y:T} for any y=/=x,
         // meaning negated records are basically bottoms.
@@ -1052,7 +1052,7 @@ abstract class TyperHelpers { Typer: Typer =>
           println(s"  where: ${res.showBounds}")
           if (cannotBeDistribbed.isEmpty) S(res)
           else S(PolymorphicType(polymLevel, res))
-        case tr: TypeRef if !traversed.contains(tr.defn) => go(tr.expand(true), traversed + tr.defn, polymLevel)
+        case tr: TypeRef if !traversed.contains(tr.defn) => go(tr.expand(false), traversed + tr.defn, polymLevel)
         case proxy: ProxyType => go(proxy.underlying, traversed, polymLevel)
         case tv @ AssignedVariable(ty) if !traversed.contains(tv) =>
           go(ty, traversed + tv, polymLevel)
@@ -1077,7 +1077,7 @@ abstract class TyperHelpers { Typer: Typer =>
         // * Object types do not need to be completed in order to be expanded
         info.kind.isInstanceOf[ObjDefKind]
         || info.isComputed)
-    // TODO provide correct pol at each expand call (we're assuming `pol = true` now)
+
     def expand(pol: Bool)(implicit ctx: Ctx, raise: Raise): SimpleType = {
       ctx.tyDefs2.get(defn.name) match {
         case S(info) =>
@@ -1479,7 +1479,7 @@ abstract class TyperHelpers { Typer: Typer =>
       def go(ty: ST, traversed: Set[AnyRef]): Opt[PolymorphicType] = //trace(s"go $ty") {
           if (!distributeForalls) N else ty match {
         case poly @ PolymorphicType(plvl, bod) => S(poly)
-        case tr: TypeRef if !traversed.contains(tr.defn) => go(tr.expand(true), traversed + tr.defn)
+        case tr: TypeRef if !traversed.contains(tr.defn) => go(tr.expand(false), traversed + tr.defn)
         case proxy: ProxyType => go(proxy.underlying, traversed)
         case tv @ AssignedVariable(ty) if !traversed.contains(tv) =>
           go(ty, traversed + tv)
@@ -1501,7 +1501,7 @@ abstract class TyperHelpers { Typer: Typer =>
   object AliasOf {
     def unapply(ty: ST)(implicit ctx: Ctx): S[ST] = {
       def go(ty: ST, traversedVars: Set[TV]): S[ST] = ty match {
-        case tr: TypeRef if tr.canExpand => go(tr.expandOrCrash(true), traversedVars)
+        case tr: TypeRef if tr.canExpand => go(tr.expandOrCrash(false), traversedVars)
         case proxy: ProxyType => go(proxy.underlying, traversedVars)
         case tv @ AssignedVariable(ty) if !traversedVars.contains(tv) =>
           go(ty, traversedVars + tv)

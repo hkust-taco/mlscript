@@ -92,6 +92,7 @@ trait TypeSimplifier { self: Typer =>
       case ProvType(ty) => process(ty, parent, canDistribForall = canDistribForall)
       
       case tr @ TypeRef(defn, targs) if builtinTypes.contains(defn) && tr.canExpand =>
+        assert(tr.targs.isEmpty)
         process(tr.expandOrCrash(true), parent)
       
       case RecordType(fields) => RecordType.mk(fields.flatMap { case (v @ Var(fnme), fty) =>
@@ -268,7 +269,7 @@ trait TypeSimplifier { self: Typer =>
                 })(noProv)
                 println(s"typeRef ${typeRef}")
                 
-                val clsFields = fieldsOf(typeRef.expandWith(paramTags = true, selfTy = false, pol.getOrElse(true)), paramTags = true)
+                val clsFields = fieldsOf(typeRef.expandWith(paramTags = true, selfTy = false, pol.getOrElse(die /* TODO */)), paramTags = true)
                 println(s"clsFields ${clsFields.mkString(", ")}")
                 
                 val cleanPrefixes = ps.map(_.name.capitalize) + clsNme ++ traitPrefixes
@@ -356,7 +357,7 @@ trait TypeSimplifier { self: Typer =>
                 })(noProv)
                 println(s"typeRef ${typeRef}")
                 
-                val clsFields = fieldsOf(typeRef.expandWith(paramTags = true, selfTy = false, pol = pol.getOrElse(true)), paramTags = true)
+                val clsFields = fieldsOf(typeRef.expandWith(paramTags = true, selfTy = false, pol = pol.getOrElse(die /* TODO */)), paramTags = true)
                 println(s"clsFields ${clsFields.mkString(", ")}")
                 
                 val cleanPrefixes = ps.map(_.name.capitalize) + clsNme ++ traitPrefixes

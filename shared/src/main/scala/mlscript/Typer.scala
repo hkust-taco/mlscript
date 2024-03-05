@@ -282,7 +282,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   val primitiveTypes: Set[Str] =
     builtinTypes.iterator.map(_.nme.name).flatMap(n => n.decapitalize :: n.capitalize :: Nil).toSet +
       "Object" + "Num" + "Str"
-  val reservedTypeNames: Set[Str] = primitiveTypes + "Eql"
+  val reservedTypeNames: Set[Str] = primitiveTypes + "Eql" + "?"
   def singleTup(ty: ST): ST =
     if (funkyTuples) ty else TupleType((N, ty.toUpper(ty.prov) ) :: Nil)(noProv)
   def pair(ty1: ST, ty2: ST): ST =
@@ -521,7 +521,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         }
       case tn @ TypeTag(name) => rec(TypeName(name.decapitalize)) // TODO rm this hack
       // case tn @ TypeTag(name) => rec(TypeName(name))
-      case wc @ TypeName("?") => err(msg"Invalid use of ? here", wc.toLoc)
+      case wc @ TypeName("?") => err(msg"Invalid use of wildcard type `?` here", wc.toLoc)
       case tn @ TypeName(name) =>
         val tyLoc = ty.toLoc
         val tpr = tyTp(tyLoc, "type reference")
