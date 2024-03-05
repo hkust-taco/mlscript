@@ -290,11 +290,12 @@ head2(Cons(1, new Nil))
 fun verr: (Vec['L, Int], Vec['L, Int]) -> Bool
 fun verr[L](xs: Vec[L, Int], ys: Vec[L, Int]): Bool =
     if xs is Cons(x, tx) and ys is Cons(y, ty) 
-        then verr(tx, Cons(0, ty))
+        then verr(tx, Cons(0, ty))  // <- unequal size here
         else false
 //│ fun verr: forall 'L. (xs: Vec['L, Int], ys: Vec['L, Int]) -> Bool
 //│ fun verr: forall 'L0. (Vec['L0, Int], Vec['L0, Int]) -> Bool
 
+// TODO somehow checks
 fun vecEq: (Vec['L, Int], Vec['L, Int]) -> Bool
 fun vecEq[L](xs: Vec[L, Int], ys: Vec[L, Int]): Bool =
     if xs is Nil and ys is Nil then true
@@ -314,7 +315,7 @@ vecEq(Cons(2, Cons(1, new Nil)), Cons(1, Cons(2, new Nil)))
 :e
 vecEq(Cons(1, Cons(2, new Nil)), Cons(2, new Nil))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.315: 	vecEq(Cons(1, Cons(2, new Nil)), Cons(2, new Nil))
+//│ ║  l.316: 	vecEq(Cons(1, Cons(2, new Nil)), Cons(2, new Nil))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Z` is not an instance of `S[?H]`
 //│ ║  l.17: 	class Nil[T] extends Vec[Z, T]

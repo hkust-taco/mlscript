@@ -1427,7 +1427,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case (N, targ: ST) =>
             // * Note: the semantics of TypeBounds is inappropriuate for this use (known problem; FIXME later)
             // * use TypeBounds for type alias
-            if (ctx.tyDefs2.get(d.name).map(_.decl.kind === Als).getOrElse(false))
+            if (ctx.tyDefs2.get(d.name).map(_.decl.kind === Als).getOrElse(true))
               TypeBounds.mk(extrude(targ, lowerLvl, false, upperLvl), extrude(targ, lowerLvl, true, upperLvl)) // Q: ? subtypes?
             else 
               WildcardArg(extrude(targ, lowerLvl, false, upperLvl), extrude(targ, lowerLvl, true, upperLvl))(tr.prov)

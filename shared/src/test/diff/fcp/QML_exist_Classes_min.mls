@@ -22,10 +22,15 @@ type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 def simpleStepImpl arrImpl = ArraysImpl {
     update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.Update r0 i a, "updated")
   }
-//│ simpleStepImpl: ArraysRep['A, ?] -> (ArraysImpl['A, 'Rep] with {update: forall 'a. (('a, anything,),) -> int -> 'A -> ('a, "updated",)})
-//│   where
-//│     'Rep :> ('b, "updated",)
-//│          <: ('b, anything,)
+//│ simpleStepImpl: ArraysRep['A, in 'Rep & 'a out 'Rep | 'Rep0] -> (ArraysImpl['A, 'Rep1] with {
+//│   update: forall 'b. (('Rep0 & 'b, anything,),) -> int -> 'A -> ('Rep | 'b, "updated",)
+//│ })
+//│ where
+//│   'Rep1 :> ('c, "updated",)
+//│         <: ('a, anything,)
+//│   'a <: 'Rep0 & 'c
+//│   'c :> 'Rep
+//│      <: 'a
 //│               = [Function: simpleStepImpl]
 
 
@@ -48,17 +53,17 @@ mkArrays impl k = k impl
 :e
 def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.49: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
+//│ ║  l.54: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
 //│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'Rep` leaks out of its scope
 //│ ║  l.18: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
 //│ ║        	                                            ^^^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this function:
-//│ ║  l.49: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
+//│ ║  l.54: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
 //│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── • this reference:
-//│ ║  l.49: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
+//│ ║  l.54: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
 //│ ║        	              ^^^
 //│ ╟── Note: constraint arises from reference:
 //│ ║  l.23: 	    update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.Update r0 i a, "updated")

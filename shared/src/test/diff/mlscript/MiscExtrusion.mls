@@ -25,16 +25,16 @@ def alsoPrintSizeSimple f =
   let rec nested expr =
     asExpr (f (asExpr expr))
   in nested
-//│ alsoPrintSizeSimple: (Expr['a] -> Expr[?]) -> Expr['a] -> Expr['a0]
+//│ alsoPrintSizeSimple: (Expr['a] -> Expr['a0]) -> Expr['a] -> Expr['a0]
 
 // * Note: the type of definitions like this one is much cleaner with :ConstrainedTypes
 def alsoPrintSizeSimple f =
   let rec nested expr =
     f (asExpr expr) nested
   in nested
-//│ alsoPrintSizeSimple: (Expr[in 'a out 'a | 'a0] -> (Expr[?] -> 'b) -> 'b) -> Expr['a1] -> 'b
+//│ alsoPrintSizeSimple: (Expr[in 'a out 'a | 'a0] -> (Expr[in 'a0 & 'a1 out 'a2] -> 'b) -> 'b) -> Expr['a2] -> 'b
 //│   where
-//│     'a1 :> 'a
+//│     'a2 :> 'a | 'a1
 //│         <: 'a0
 
 
@@ -64,10 +64,7 @@ alsoPrintSize id
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this application:
 //│ ║  l.50: 	  mapExpr(fun e -> let tmp = print e in f e)
-//│ ║        	                                        ^^^
-//│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.44: 	def mapExpr: (forall 'a. Expr['a] -> Expr['a]) -> Program -> Program
-//│ ╙──      	                         ^^^^^^^^
+//│ ╙──      	                                        ^^^
 //│ res: error | Program -> Program
 
 def alsoPrintSize (f: forall 'a. Expr['a] -> Expr['a]) =
@@ -95,17 +92,17 @@ def alsoPrintSizeCo f =
 :e
 alsoPrintSizeCo id
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.96: 	alsoPrintSizeCo id
+//│ ║  l.93: 	alsoPrintSizeCo id
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'a` leaks out of its scope
-//│ ║  l.86: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
+//│ ║  l.83: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
 //│ ║        	                                  ^^
 //│ ╟── back into type variable `'a`
-//│ ║  l.86: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
+//│ ║  l.83: 	def mapExprCo: (forall 'a. ExprCo['a] -> ExprCo['a]) -> Program -> Program
 //│ ║        	                                                ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this application:
-//│ ║  l.92: 	  mapExprCo(fun e -> let tmp = printCo e in f e)
+//│ ║  l.89: 	  mapExprCo(fun e -> let tmp = printCo e in f e)
 //│ ╙──      	                                            ^^^
 //│ res: error | Program -> Program
 

@@ -161,7 +161,6 @@ fun g[T](x: F[T, T]): T = if x is
     None  then None : x.A
 //│ fun g: forall 'T. (x: F['T, 'T]) -> 'T
 
-// * why this works
 fun g[T](x: F[T, T]): T = if x is
   MkF(f) then if ((f : x.A) : Option['a]) is 
       Some(t) then Some(t) : x.A

@@ -15,52 +15,31 @@ fun req[A](x: R[A], y: R[A]): Bool = if x is RI(a) and y is RI(b) then a == b el
 fun f1[A](e: R[A]) = [ if e is RI(i) then i as e.A else error , if e is RB(i) then i as e.A else error , if e is RC(i) then i as e.A else error ]
 //│ fun f1: forall 'A. (e: R['A]) -> [Int & 'A | Str | false | true]
 
-:ns
 fun h1[A](x: R[A], y: A) = (if x is
     RI(_) then RI as (x.A => R[x.A])
     RB(_) then RB as (x.A => R[x.A])
     else error
   ) (y as x.A)
-//│ fun h1: forall 'A 'a 'A0 'A1 'A2. (x: R[A], y: A) -> 'a
-//│   where
-//│     'a :> R[in 'A1 out 'A0] | R[in 'A out 'A2]
-//│     'A2 :> 'A3 & A
-//│     'A <: 'A3 | A
-//│     'A3 := Int
-//│     'A0 :> 'A4 & A
-//│     'A1 <: 'A4 | A
-//│     'A4 := Bool
+//│ fun h1: forall 'A. (x: R['A], y: 'A) -> R[in Int & 'A0 | 'A | 'A1 & Bool out 'A & (Int & 'A1 | 'A0 & (Bool | 'A1))]
 
-:ns
 h1(RI(1), 1)
-//│ 'a
-//│   where
-//│     'a :> forall 'b 'A 'A0 'A1 'A2. 'b
-//│     'b :> R[in 'A2 out 'A1] | R[in 'A out 'A0]
-//│     'A0 :> 'A3 & 'A4
-//│     'A <: 'A3 | 'A4
-//│     'A3 := Int
-//│     'A1 :> 'A5 & 'A4
-//│     'A2 <: 'A5 | 'A4
-//│     'A4 :> 1 | Int
-//│         <: Int
-//│     'A5 := Bool
+//│ R[in Int & 'A | Int & 'A0 | 'A1 & Bool out Int & 'A1 | 'A0 & 'A & (Bool | 'A1)]
 //│ res
 //│     = RI {}
 
 :e
 h1(RC("hi"), true)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.52: 	h1(RC("hi"), true)
+//│ ║  l.31: 	h1(RC("hi"), true)
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of `Str`
-//│ ║  l.52: 	h1(RC("hi"), true)
+//│ ║  l.31: 	h1(RC("hi"), true)
 //│ ║        	             ^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.6: 	class RC(x: Str) extends R[Str]
 //│ ║       	                           ^^^
 //│ ╟── Note: method type parameter A is defined at:
-//│ ║  l.19: 	fun h1[A](x: R[A], y: A) = (if x is
+//│ ║  l.18: 	fun h1[A](x: R[A], y: A) = (if x is
 //│ ╙──      	       ^
 //│ R[in Int & 'A | Str & 'A0 | 'A1 & Bool out Int & 'A0 & 'A1 | 'A & (Str & 'A1 | true | 'A0 & (false | 'A1))] | error
 //│ res
@@ -86,7 +65,7 @@ h2(RI(1), RI(2))
 :e
 h2(RB(true), RI(0))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.87: 	h2(RB(true), RI(0))
+//│ ║  l.66: 	h2(RB(true), RI(0))
 //│ ║        	^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Int` is not an instance of type `Bool`
 //│ ║  l.4: 	class RI(x: Int) extends R[Int]
@@ -95,7 +74,7 @@ h2(RB(true), RI(0))
 //│ ║  l.5: 	class RB(x: Bool) extends R[Bool]
 //│ ║       	                            ^^^^
 //│ ╟── Note: method type parameter A is defined at:
-//│ ║  l.70: 	fun h2[A](x: R[A], y: R[A]) = (if x is
+//│ ║  l.49: 	fun h2[A](x: R[A], y: R[A]) = (if x is
 //│ ╙──      	       ^
 //│ error
 //│ res
@@ -117,8 +96,8 @@ e1(Refl(), 1)
 :e
 Refl() : Eq[Int, Bool]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.118: 	Refl() : Eq[Int, Bool]
-//│ ║         	^^^^^^
+//│ ║  l.97: 	Refl() : Eq[Int, Bool]
+//│ ║        	^^^^^^
 //│ ╙── expression of type `Int` does not match type `Bool`
 //│ Eq[Int, Bool]
 //│ res

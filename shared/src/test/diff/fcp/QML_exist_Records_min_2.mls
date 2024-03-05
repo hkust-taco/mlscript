@@ -41,6 +41,9 @@ def helper impl (k: ArraysImplConsumer['a2, 'res]) = k (stepImpl_ty impl)
 
 // * Used to SOF in simplif:
 helper
-//│ res: ArraysImpl[?, ?] -> (forall 'a2 'a. ArraysImplConsumer['a2, 'a] -> 'a)
+//│ res: ArraysImpl[in 'a & 'a0 out 'a | 'a0, 'r] -> (forall 'a2 'b. ArraysImplConsumer['a2, 'b] -> 'b)
+//│   where
+//│     'a2 :> 'a
+//│         <: 'a0
 
 

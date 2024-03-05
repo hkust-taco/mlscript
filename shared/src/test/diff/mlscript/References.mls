@@ -177,7 +177,7 @@ move ri rn
 
 
 def swap a b = let tmp = a.Get in (a.Set b.Get, b.Set tmp)
-//│ swap: Ref['A] -> Ref[in 'A0 & 'A1 out 'A & 'A0 | 'A1] -> (unit, unit,)
+//│ swap: Ref[in 'A & 'A0 out 'A | 'A0] -> Ref[in 'A1 & ('A | 'A2) out 'A0 & 'A1 | 'A2] -> (unit, unit,)
 //│     = [Function: swap]
 
 swap r
