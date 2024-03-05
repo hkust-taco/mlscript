@@ -1426,8 +1426,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             WildcardArg(extrude(lb, lowerLvl, false, upperLvl), extrude(ub, lowerLvl, true, upperLvl))(tr.prov)
           case (N, targ: ST) =>
             // * Note: the semantics of TypeBounds is inappropriuate for this use (known problem; FIXME later)
-            // TypeBounds.mk(extrude(targ, lowerLvl, false, upperLvl), extrude(targ, lowerLvl, true, upperLvl)) // Q: ? subtypes?
-            WildcardArg(extrude(targ, lowerLvl, false, upperLvl), extrude(targ, lowerLvl, true, upperLvl))(tr.prov)
+            // * use TypeBounds for type alias
+            if (ctx.tyDefs2.get(d.name).map(_.decl.kind === Als).getOrElse(false))
+              TypeBounds.mk(extrude(targ, lowerLvl, false, upperLvl), extrude(targ, lowerLvl, true, upperLvl)) // Q: ? subtypes?
+            else 
+              WildcardArg(extrude(targ, lowerLvl, false, upperLvl), extrude(targ, lowerLvl, true, upperLvl))(tr.prov)
             // * A sanity-checking version, making sure the type range is correct (LB subtype of UB):
             /* 
             val a = extrude(targ, lowerLvl, false, upperLvl)

@@ -150,30 +150,6 @@ fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, Str] =
         Err(message) then Err(message)
       Ok(PrimitiveType(name)) then Err("cannot apply primitive type `" ++ name ++ "`")
       Err(message) then Err(message)
-//│ ╔══[ERROR] Subtyping constraint of the form `?typeTerm <: (?a, ?b) -> ?c` exceeded recursion depth limit (250)
-//│ ║  l.142: 	    Abs(Var(name), ty, body) and typeTerm(body, insert(ctx, name, ty)) is
-//│ ║         	                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ ╔══[ERROR] Subtyping constraint of the form `([?a, ?b, ?c]) -> ?d <: ?e -> ?f` exceeded recursion depth limit (250)
-//│ ║  l.137: 	  if t is
-//│ ║         	     ^^^^
-//│ ║  l.138: 	    Lit(_, ty) then Ok(ty)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.139: 	    Var(name) and find(ctx, name) is
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.140: 	      Some(ty) then Ok(ty)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.141: 	      None then Err("unbound variable `" ++ name ++ "`")
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.142: 	    Abs(Var(name), ty, body) and typeTerm(body, insert(ctx, name, ty)) is
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.143: 	      Ok(resTy) then Ok(FunctionType(ty, resTy))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.144: 	      Err(message) then Err(message)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ TEST CASE FAILURE: There was an unexpected type error
 //│ fun typeTerm: (t: Term, ctx: TreeMap[Type]) -> Result[Type, Str]
 
 fun showTypeTerm(t, ctx) =

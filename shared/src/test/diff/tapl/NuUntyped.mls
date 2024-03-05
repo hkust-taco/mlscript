@@ -82,9 +82,15 @@ fun listConcat(xs, ys) =
   if xs is
     Nil then ys
     Cons(x, xs') then Cons(x, listConcat(xs', ys))
-//│ fun listConcat: forall 'A 'A0 'a. (Cons[out 'A & ('A0 | ~??A)] | Nil, List['A0] & 'a) -> (Cons['A0] | 'a)
+//│ fun listConcat: forall 'A 'A0 'A1 'A2 'a 'A3. (Cons[out 'A1 & ('A | ~??A)] | Nil, List[in 'A0 out 'A2] & 'a) -> (Cons[in 'A out 'A3] | 'a)
 //│   where
-//│     'A0 :> ??A & 'A
+//│     'A :> 'A3 | ??A & 'A1
+//│        <: 'A2
+//│     'A2 :> 'A3 | 'A0 | ??A & 'A1
+//│         <: 'A
+//│     'A3 :> 'A | 'A0 | ??A & 'A1
+//│     'A0 :> 'A3
+//│         <: 'A
 
 fun listContains(xs, x) =
   if xs is
@@ -248,27 +254,17 @@ fun fv(t) =
     Var(name) then list1(name)
     Abs(Var(name), body) then listWithout(fv(body), name)
     App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
-//│ ╔══[ERROR] Subtyping constraint of the form `?a -> (?b | ?c | ?d) <: ?fv` exceeded recursion depth limit (250)
-//│ ║  l.246: 	fun fv(t) =
-//│ ║         	    ^^^^^^^
-//│ ║  l.247: 	  if t is
-//│ ║         	^^^^^^^^^
-//│ ║  l.248: 	    Var(name) then list1(name)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.249: 	    Abs(Var(name), body) then listWithout(fv(body), name)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.250: 	    App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ fun fv: forall 'A 'A0 'A1 'A2. (Abs | App | Var) -> (Cons[in 'A out 'A0] | Cons['A1] | Nil)
+//│ fun fv: forall 'A 'A0 'A1 'A2 'A3 'A4 'A5. (Abs | App | Var) -> (Cons[in 'A5 out 'A2] | Cons[in 'A4 out 'A2] | Nil)
 //│   where
-//│     'A :> 'A0 | 'A1
-//│        <: 'A2
-//│     'A0 :> 'A | 'A1 | 'A2
-//│     'A2 :> 'A0 | 'A | 'A1
-//│         <: 'A
-//│     'A1 <: 'A
+//│     'A5 :> 'A2 | ??A & 'A2 | ??A0 & 'A2
+//│         <: 'A4 & ('A & 'A0 & ('A3 | ~??A) | ~??A0 & ('A3 | ~??A))
+//│     'A2 :> 'A5 | 'A1
+//│     'A1 :> Str & ??A & ??A0 | 'A2 | 'A5 | ??A & 'A2 | ??A0 & 'A2
+//│         <: 'A5 & 'A4 & ('A & 'A0 & ('A3 | ~??A) | ~??A0 & ('A3 | ~??A))
+//│     'A4 <: 'A5 & 'A1 & ('A & 'A0 & ('A3 | ~??A) | ~??A0 & ('A3 | ~??A))
+//│     'A <: 'A5 & 'A1 & 'A4 & ('A0 & ('A3 | ~??A) | ~??A0 & ('A3 | ~??A))
+//│     'A0 <: 'A5 & 'A1 & 'A4 & ('A & ('A3 | ~??A) | ~??A0 & ('A3 | ~??A))
+//│     'A3 <: 'A5 & 'A4 & ('A & 'A0 | ~??A0)
 :ResetFuel
 
 fun showFv(t) =

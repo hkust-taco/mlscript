@@ -39,7 +39,7 @@ fun f(x) = x : NonBlocking
 fun onMousePressed(listener) =
   let l(e) = listener(e) : NonBlocking
   l(0).flatMap of a => l(1).flatMap of b => pure of ()
-//│ fun onMousePressed: ((0 | 1) -> NonBlocking[?, ?]) -> Effectful[(), nothing]
+//│ fun onMousePressed: forall 'a. ((0 | 1) -> NonBlocking[anything, 'a]) -> Effectful[(), 'a & ~Block]
 
 
 // * OK: `println` does not block

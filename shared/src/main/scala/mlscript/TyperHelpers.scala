@@ -1110,9 +1110,8 @@ abstract class TyperHelpers { Typer: Typer =>
             assert(td.tparams.size === targs.size)
             subst(td.body, td.tparams.lazyZip(targs).map {
               case (tp, w: WildcardArg) => 
-                // * FIXME we should NOT use TypeBounds here (somehow causes infinite subtyping loop)
-                // *       but raising an error will break a lot of  code related to alias (maybe changling `subst`)
-                SkolemTag(tp._2)(noProv) -> TypeBounds(w.lb, w.ub)(w.prov)
+                // SkolemTag(tp._2)(noProv) -> TypeBounds(w.lb, w.ub)(w.prov)
+                ??? // TODO raise proper error
               case (tp, st: ST) => SkolemTag(tp._2)(noProv) -> st
             }.toMap)
           case S(td: TypedNuTrt) =>
