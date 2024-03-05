@@ -367,7 +367,6 @@ class MkU[S](x: S) extends U[S, Int]
 //│ abstract class U[A, B]: MkU[anything]
 //│ class MkU[S](x: S) extends U
 
-// TODO no variable leaks now ?
 fun u[T](x: U[T, 'b]): T = if x is
     MkU(s) then s : x.A
 //│ fun u: forall 'T 'b. (x: U['T, 'b]) -> 'T

@@ -197,8 +197,8 @@ eval1_ty_ugly = eval1_ty
 //│     'b := Add['b] | Lit | 'a & ~Add[?] & ~Lit
 //│              = [Function: eval1]
 //│ constrain calls  : 150
-//│ annoying  calls  : 469
-//│ subtyping calls  : 2683
+//│ annoying  calls  : 1810
+//│ subtyping calls  : 2699
 
 :stats
 eval1_ty = eval1_ty_ugly
@@ -210,9 +210,9 @@ eval1_ty = eval1_ty_ugly
 //│   where
 //│     'b := Add['b] | Lit | 'a & ~#Add & ~#Lit
 //│         = [Function: eval1]
-//│ constrain calls  : 632
-//│ annoying  calls  : 610
-//│ subtyping calls  : 59713
+//│ constrain calls  : 752
+//│ annoying  calls  : 674
+//│ subtyping calls  : 71116
 
 
 // Workaround:

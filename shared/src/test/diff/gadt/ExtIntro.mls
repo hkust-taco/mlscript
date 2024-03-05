@@ -41,6 +41,7 @@ fun fr[L](l: K[L], r: K[L]) =
 //│ fun fr: forall 'L. (l: K['L], r: K['L]) -> Int
 //│ fun fr: forall 'L0. (K['L0], K['L0]) -> Int
 
+// FIXME
 :e
 fun fr: (K['L], K['L]) -> Int
 fun fr[L](l: K[L], r: K[L]) =
@@ -71,13 +72,13 @@ fk((error : K[S[S[nothing]]]), (error : K[S[S[nothing]]]))
 :e
 fk((error : K[S[S[nothing]]]), (error : K[S[nothing]]))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.72: 	fk((error : K[S[S[nothing]]]), (error : K[S[nothing]]))
+//│ ║  l.73: 	fk((error : K[S[S[nothing]]]), (error : K[S[nothing]]))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `S[nothing]` does not match type `nothing`
-//│ ║  l.72: 	fk((error : K[S[S[nothing]]]), (error : K[S[nothing]]))
+//│ ║  l.73: 	fk((error : K[S[S[nothing]]]), (error : K[S[nothing]]))
 //│ ║        	                ^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.72: 	fk((error : K[S[S[nothing]]]), (error : K[S[nothing]]))
+//│ ║  l.73: 	fk((error : K[S[S[nothing]]]), (error : K[S[nothing]]))
 //│ ╙──      	                                            ^^^^^^^
 //│ Int | error
 //│ res
@@ -110,16 +111,16 @@ fk(KS(KS(KZ())), KS(KS(KZ())))
 :e
 fk(KS(KS(KZ())), KS(KZ()))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.111: 	fk(KS(KS(KZ())), KS(KZ()))
+//│ ║  l.112: 	fk(KS(KS(KZ())), KS(KZ()))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Z` is not an instance of `S[?A]`
-//│ ║  l.90: 	class KZ() extends K[Z]
+//│ ║  l.91: 	class KZ() extends K[Z]
 //│ ║        	                     ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.91: 	class KS[type A](ev: K[A]) extends K[S[A]]
+//│ ║  l.92: 	class KS[type A](ev: K[A]) extends K[S[A]]
 //│ ║        	                                     ^^^^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.91: 	class KS[type A](ev: K[A]) extends K[S[A]]
+//│ ║  l.92: 	class KS[type A](ev: K[A]) extends K[S[A]]
 //│ ╙──      	              ^
 //│ Int | error
 //│ res
@@ -171,13 +172,13 @@ conv(KS(KZ()), Refl())
 :e
 conv(KZ(), Refl())
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.172: 	conv(KZ(), Refl())
+//│ ║  l.173: 	conv(KZ(), Refl())
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Z` is not an instance of `S[?A]`
-//│ ║  l.90: 	class KZ() extends K[Z]
+//│ ║  l.91: 	class KZ() extends K[Z]
 //│ ║        	                     ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.162: 	fun conv[L, A](x: K[L], ev: Eq[L, S[A]]): K[S[A]] =
+//│ ║  l.163: 	fun conv[L, A](x: K[L], ev: Eq[L, S[A]]): K[S[A]] =
 //│ ╙──       	                                  ^^^^
 //│ K[S['A]] | error
 //│ res
@@ -199,13 +200,13 @@ extr(KS(KZ()), Refl())
 :e
 extr(KZ(), Refl())
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.200: 	extr(KZ(), Refl())
+//│ ║  l.201: 	extr(KZ(), Refl())
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Z` is not an instance of `S[?H]`
-//│ ║  l.90: 	class KZ() extends K[Z]
+//│ ║  l.91: 	class KZ() extends K[Z]
 //│ ║        	                     ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.191: 	fun extr[L, H](x: K[L], ev: Eq[L, S[H]]): K[H] = get(x : K[ev.B])
+//│ ║  l.192: 	fun extr[L, H](x: K[L], ev: Eq[L, S[H]]): K[H] = get(x : K[ev.B])
 //│ ╙──       	                                  ^^^^
 //│ K['H] | error
 //│ res
@@ -248,28 +249,28 @@ KZ().n(new Z)
 KS(KZ()).n(new Z)
 KZ().n(new S : S[Z])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.248: 	KS(KZ()).n(new Z)
+//│ ║  l.249: 	KS(KZ()).n(new Z)
 //│ ║         	^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Z` is not an instance of `S[?A]`
-//│ ║  l.248: 	KS(KZ()).n(new Z)
+//│ ║  l.249: 	KS(KZ()).n(new Z)
 //│ ║         	               ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.222: 	class KS[type A](ev: K[A]) extends K[S[A]]
+//│ ║  l.223: 	class KS[type A](ev: K[A]) extends K[S[A]]
 //│ ║         	                                     ^^^^
 //│ ╟── Note: type parameter T is defined at:
-//│ ║  l.215: 	abstract class K[type T]: (KZ | KS[?]) {
+//│ ║  l.216: 	abstract class K[type T]: (KZ | KS[?]) {
 //│ ╙──       	                      ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.249: 	KZ().n(new S : S[Z])
+//│ ║  l.250: 	KZ().n(new S : S[Z])
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `S[Z]` is not an instance of `Z`
-//│ ║  l.249: 	KZ().n(new S : S[Z])
+//│ ║  l.250: 	KZ().n(new S : S[Z])
 //│ ║         	               ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.221: 	class KZ() extends K[Z]
+//│ ║  l.222: 	class KZ() extends K[Z]
 //│ ║         	                     ^
 //│ ╟── Note: type parameter T is defined at:
-//│ ║  l.215: 	abstract class K[type T]: (KZ | KS[?]) {
+//│ ║  l.216: 	abstract class K[type T]: (KZ | KS[?]) {
 //│ ╙──       	                      ^
 //│ Z | error
 //│ res
@@ -285,13 +286,13 @@ KS(KZ()).m(Refl())
 :e
 KZ().m(Refl())
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.286: 	KZ().m(Refl())
+//│ ║  l.287: 	KZ().m(Refl())
 //│ ║         	^^^^^^^^^^^^^^
 //│ ╟── type `Z` is not an instance of `S['A]`
-//│ ║  l.221: 	class KZ() extends K[Z]
+//│ ║  l.222: 	class KZ() extends K[Z]
 //│ ║         	                     ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.216: 	  fun m: Eq[T, S['A]] -> Int
+//│ ║  l.217: 	  fun m: Eq[T, S['A]] -> Int
 //│ ╙──       	               ^^^^^
 //│ Int | error
 //│ res

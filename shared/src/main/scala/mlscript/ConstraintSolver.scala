@@ -334,17 +334,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       }()
 
       // * finish when a type appears at both sides
-      val both = lhsCs.exists(s => s.lnf match {
+      lazy val both = lhsCs.exists(s => s.lnf match {
         case LhsTop => false
         case LhsRefined(lbs, ltt, lr, ltr) =>
           rhs.cs.exists(c => c.lnf match {
             case LhsTop => false
             case LhsRefined(rbs, rtt, rr, rtr) => 
-              !ltt.intersect(rtt).collect{ case sk: SkolemTag => sk }.isEmpty
+              ltt.exists(rtt.contains)
           })
         })
 
-      if (both /* && false */) {
+      if (newDefs && both /* && false */) {
         println("DNF finished with same type at both sides")
       } else
       

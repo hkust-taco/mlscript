@@ -155,8 +155,6 @@ fun g[T](x: F[T, T]): T = if x is
 //│ ╙──      	             ^
 //│ fun g: forall 'T. (x: F['T, 'T]) -> (error | 'T)
 
-// * We used to be able to manually refine it
-// * but this now fails... not sure why
 fun g[T](x: F[T, T]): T = if x is
   MkF(f) then if (f : x.A) is 
     Some(t) then Some(t) : x.A
