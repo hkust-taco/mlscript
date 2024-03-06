@@ -25,7 +25,7 @@ fun list_assoc(s, l) =
       if s === h.0 then Success(h.1)
       else list_assoc(s, t)
     Nil then NotFound()
-//│ fun list_assoc: forall 'A. (Eql[?], Cons[{0: anything, 1: 'A} | ~??A] | Nil) -> (NotFound | Success['A])
+//│ fun list_assoc: forall 'a 'A. (Eql[in 'a], Cons[{0: 'a, 1: 'A} | ~??A] | Nil) -> (NotFound | Success['A])
 
 // fun list_assoc(s: Str, l: Cons[{ _1: Str, _2: 'b }] | Nil): NotFound | Success['b]
 
@@ -73,9 +73,9 @@ mixin EvalLambda {
 //│ mixin EvalLambda() {
 //│   super: {eval: ('a, 'b) -> 'c}
 //│   this: {
-//│     eval: ('a, ??A & 'A) -> 'd & (Cons[[Str, 'd]], ??A0 & 'A0) -> 'c & (Cons[[Str, Var]], ??A1 & 'A1) -> 'A2
+//│     eval: ('a, ??A & 'A) -> 'd & (Cons[[Str, 'd]], ??A0 & 'A0) -> 'c & (Cons[[Str, Var] | 'A1], ??A1 & 'A2) -> 'A3
 //│   }
-//│   fun eval: ('a & (Cons[anything] | Nil), Abs['A1] | App['A & (Abs['A0] | Object & ~#Abs | ~??A)] | Object & 'b & ~#Abs & ~#App) -> (Abs['A2] | App['d] | 'c)
+//│   fun eval: ('a & (Cons['A1] | Nil), Abs['A2] | App['A & (Abs['A0] | Object & ~#Abs | ~??A)] | Object & 'b & ~#Abs & ~#App) -> (Abs['A3] | App['d] | 'c)
 //│ }
 
 module Test1 extends EvalVar, EvalLambda
@@ -98,14 +98,14 @@ Test1.eval(Nil, Var("a"))
 Test1.eval(Nil, Abs("b", Var("a")))
 //│ Abs['a] | App['a] | 'a
 //│   where
-//│     'a :> Abs['a] | Var | App['a]
+//│     'a :> App['a] | Abs['a] | Var
 //│ res
 //│     = Abs {}
 
 Test1.eval(Cons(["c", Var("d")], Nil), App(Abs("b", Var("b")), Var("c")))
 //│ Abs['a] | App['a] | 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Var
+//│     'a :> Abs['a] | Var | App['a]
 //│ res
 //│     = Var {}
 
@@ -129,7 +129,7 @@ fun map_expr(f, v) =
     Numb then v
     Add(l, r) then Add(f(l), f(r))
     Mul(l, r) then Mul(f(l), f(r))
-//│ fun map_expr: forall 'A 'A0 'A1 'A2. ((??A & 'A1) -> 'A2 & (??A0 & 'A) -> 'A0, Add['A1] | Mul['A] | Numb | Var) -> (Add['A2] | Mul['A0] | Numb | Var)
+//│ fun map_expr: forall 'A 'A0 'A1 'A2. ((??A & 'A) -> 'A0 & (??A0 & 'A1) -> 'A2, Add['A] | Mul['A1] | Numb | Var) -> (Add['A0] | Mul['A2] | Numb | Var)
 
 mixin EvalExpr {
   fun eval(sub, v) =

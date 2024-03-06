@@ -372,13 +372,13 @@ fun mk(n) = if n is
   _ then Scale(Vector(0, 0), mk(n))
 //│ fun mk: forall 'a. Object -> 'a
 //│   where
-//│     'a :> Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a]
+//│     'a :> Outside['a] | Scale['a] | Union['a] | Intersect['a] | Translate['a]
 
 :re
 TestElim.eliminate(mk(100))
 //│ Intersect['a] | Outside['a] | Scale['a] | Translate['a] | Union['a] | 'a
 //│   where
-//│     'a :> Union['a] | Intersect['a] | Translate['a] | Scale['a] | Outside['a]
+//│     'a :> Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a]
 //│ res
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -412,7 +412,7 @@ module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminat
 //│   'Region5 <: Intersect['Region3] | Outside['Region4] | Scale['Region5] | Translate['Region6] | Union['Region7] | 'a & (Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~??Region21) | ~??Region21
 //│   'Region6 <: Intersect['Region3] | Outside['Region4] | Scale['Region5] | Translate['Region6] | Union['Region7] | 'a & (Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~??Region22) | ~??Region22
 //│   'Region7 <: Intersect['Region3] | Outside['Region4] | Scale['Region5] | Translate['Region6] | Union['Region7] | 'a & (Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~??Region23) | ~??Region23
-//│   'a :> Union['a] | Intersect['a] | Translate['a] | Scale['a] | Outside['a]
+//│   'a :> Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a]
 //│   'Region <: Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2] | ~??Region24
 //│   'Region0 <: Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2] | ~??Region25
 //│   'Region1 <: Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2] | ~??Region26

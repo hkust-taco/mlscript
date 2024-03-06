@@ -113,7 +113,7 @@ fun (:::) concatList(xs, ys) = if xs is
   Nil then ys
   Cons(x, xs) then x :: xs ::: ys
 //│ fun (::) cons: forall 'A. ('A, List['A]) -> Cons['A]
-//│ fun (:::) concatList: forall 'a 'A0. (Cons['A0] | Nil, List[anything] & 'a) -> (Cons[??A & 'A0] | 'a)
+//│ fun (:::) concatList: forall 'A0 'A1 'a. (Cons['A0] | Nil, List['A1] & 'a) -> (Cons['A1 | ??A & 'A0] | 'a)
 
 module Lists { // TODO use name List when module overloading is supported:
   
@@ -137,8 +137,8 @@ module Lists { // TODO use name List when module overloading is supported:
 }
 //│ module Lists {
 //│   fun assoc: forall 'A. anything -> (Cons[{key: Eql[?], value: 'A} | ~??A] | Nil) -> (None | Some['A])
-//│   fun map: forall 'A0 'A1. ((??A0 & 'A0) -> 'A1) -> (Cons['A0] | Nil) -> (Cons['A1] | Nil)
-//│   fun zip: forall 'A2 'A3. (Cons['A2] | Nil, Cons['A3] | Nil) -> (Cons[[??A1 & 'A2, ??A2 & 'A3]] | Nil)
+//│   fun map: forall 'A0 'a. ((??A0 & 'A0) -> 'a) -> (Cons['A0] | Nil) -> (Cons['a] | Nil)
+//│   fun zip: forall 'A1 'A2. (Cons['A2] | Nil, Cons['A1] | Nil) -> (Cons[[??A1 & 'A2, ??A2 & 'A1]] | Nil)
 //│ }
 
 let xs = 1 :: 2 :: 3 :: Nil
@@ -260,7 +260,7 @@ fun eval(t, env) = if t is
     else err(String(pree) ++ " does not have field " ++ nme)
   Rcd(fs) then
     Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
-//│ fun eval: forall 'Sub 'A 'a 'Sub0. (App | Lam | Lit[anything] | Rcd['Sub] | Sel | Var, Cons[{key: Eql[?], value: 'A} | ~??A] & {List#A} & List[?] | Nil & {List#A} & List[?]) -> 'a
+//│ fun eval: forall 'Sub 'A 'a 'Sub0. (App | Lam | Lit[anything] | Rcd['Sub] | Sel | Var, Cons[{key: Eql[?], value: 'A} | ~??A] & {List#A <: {key: Eql[?], value: 'A} | ~??A} & List[out {key: Eql[?], value: 'A} | ~??A] | Nil & {List#A <: {key: Eql[?], value: 'A} | ~??A} & List[out {key: Eql[?], value: 'A} | ~??A]) -> 'a
 //│   where
 //│     'A :> ??A0 & 'a
 //│        <: Object & ~#Rcd | Rcd['Sub0] | ~??A1
@@ -282,7 +282,7 @@ let rcd = Rcd({key: "a", value: IntLit(0)} :: Nil)
 eval of rcd, Nil
 //│ 'a
 //│   where
-//│     'a :> ??A & ??A0 & (Lam | Lit[??A1 & ??A2]) | Rcd[Lam | Lit[??A1 & ??A2] | 'a] | Lam | Lit[??A1 & ??A2] | ??Sub & ??A3 & (Lam | Lit[??A1 & ??A2])
+//│     'a :> ??A & ??A0 & (Lam | Lit[??A1 & ??A2]) | Lam | Lit[??A1 & ??A2] | ??Sub & ??A3 & (Lam | Lit[??A1 & ??A2]) | Rcd[Lam | Lit[??A1 & ??A2] | 'a]
 //│ res
 //│     = Rcd {}
 

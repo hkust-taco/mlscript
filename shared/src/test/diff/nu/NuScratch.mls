@@ -40,4 +40,17 @@ fun foo(b: Box['X] & Box[Int]) = [b, b.get + 1]
 //│ fun foo: forall 'X. (b: Box[Int | 'X]) -> [Box[Int & 'X], Int]
 
 
+type List[out A] = Cons[A]
+module Nil
+class Cons[A](head: A, tail: List[A])
+//│ type List[A] = Cons[A]
+//│ module Nil
+//│ class Cons[A](head: A, tail: List[A])
+
+fun listConcat(xs) =
+  if xs is
+    Cons(x, xs2) then Cons(x, listConcat(xs2))
+//│ fun listConcat: forall 'A 'A0. Cons['A & ('A0 | ~??A)] -> Cons['A0]
+//│   where
+//│     'A0 :> ??A & 'A
 

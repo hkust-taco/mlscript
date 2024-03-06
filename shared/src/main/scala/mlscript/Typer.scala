@@ -46,6 +46,37 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
   
   type GenLambdas >: Bool
   def doGenLambdas(implicit gl: GenLambdas): Bool = gl === true
+
+  class ExtrCache(
+    val cache: MutMap[Level, MutMap[TypeVarOrRigidVar->Bool, TypeVarOrRigidVar]],
+  ) {
+      private var cycle: Int = 0
+      // TODO maybe find a better way
+      def clearAbove()(implicit lvl: Level): Unit = 
+        if (cycle > 1024) {
+          cache.keys.foreach(k => if (k > lvl) cache.remove(k))
+          cycle = 0
+        }
+
+      def getOrElse(k: TypeVarOrRigidVar->Bool, df: => TypeVarOrRigidVar)(implicit lvl: Level): TypeVarOrRigidVar =
+        cache.get(lvl).flatMap(_.get(k)).getOrElse(df)
+
+      def set(k: TypeVarOrRigidVar->Bool, v: TypeVarOrRigidVar)(implicit lvl: Level): Unit = {
+        cycle += 1
+        cache.get(lvl) match {
+          case None => cache += lvl -> MutMap(k -> v)
+          case Some(cc) => cc += k -> v
+        }
+        clearAbove()  // TODO
+      }
+
+     def contains(k: TypeVarOrRigidVar->Bool)(implicit lvl: Level): Bool =
+      cache.get(lvl).map(_.contains(k)).getOrElse(false)
+  }
+
+  object ExtrCache {
+    def empty: ExtrCache = new ExtrCache(MutMap.empty)
+  }
   
   /**  `env`: maps the names of all global and local bindings to their types
     *  Keys of `mthEnv`:
@@ -67,8 +98,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       tyDefs2: MutMap[Str, DelayedTypeInfo],
       inRecursiveDef: Opt[Var], // TODO rm
       extrCtx: ExtrCtx,
-      extrCache: MutMap[TypeVarOrRigidVar->Bool, TypeVarOrRigidVar], 
-      extrCache2: MutSortMap[TraitTag, TraitTag]
+      extrCache: ExtrCache,
   ) {
     def +=(b: Str -> TypeInfo): Unit = env += b
     def ++=(bs: IterableOnce[Str -> TypeInfo]): Unit = bs.iterator.foreach(+=)
@@ -84,7 +114,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     def containsMth(parent: Opt[Str], nme: Str): Bool = containsMth(R(parent, nme))
     def nest: Ctx = copy(Some(this), MutMap.empty, MutMap.empty)
     def nextLevel[R](k: Ctx => R)(implicit raise: Raise, prov: TP): R = {
-      val newCtx = copy(lvl = lvl + 1, extrCtx = MutMap.empty, extrCache = MutMap.empty, extrCache2 = MutSortMap.empty)
+      val newCtx = copy(lvl = lvl + 1, extrCtx = MutMap.empty)
       val res = k(newCtx)
       val ec = newCtx.extrCtx
       assert(constrainedTypes || newCtx.extrCtx.isEmpty)
@@ -154,8 +184,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       tyDefs2 = MutMap.empty,
       inRecursiveDef = N,
       MutMap.empty,
-      MutMap.empty, 
-      MutSortMap.empty
+      ExtrCache.empty
     )
     def init: Ctx = if (!newDefs) initBase else {
       val res = initBase.copy(

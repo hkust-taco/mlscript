@@ -67,16 +67,16 @@ fun find(t, k) =
       sgt(k, k') then find(r, k)
       _ then Some(v)
     Empty then None
-//│ fun insert: forall 'A 'A0 'A1 'A2 'A3. (Empty | Node[in 'A out 'A3], Str, 'A2 & 'A0 & ('A | ??A)) -> Node[in 'A2 out 'A1]
+//│ fun insert: forall 'A 'A0 'A1 'A2 'A3. (Empty | Node[in 'A3 out 'A], Str, 'A0 & 'A2 & ('A3 | ??A)) -> Node[in 'A0 out 'A1]
 //│ fun find: forall 'A4. (Empty | Node[out 'A4], Str) -> (None | Some[??A0 & 'A4])
 //│ where
-//│   'A <: 'A3
-//│   'A3 <: 'A2 & ('A0 | ~??A1) | ~??A1
-//│   'A2 :> 'A1 | ??A1 & 'A3
-//│       <: 'A0 & ('A | ??A)
-//│   'A1 :> 'A2 | ??A1 & 'A3 | 'A0
-//│   'A0 :> 'A1 | ??A1 & 'A3
-//│       <: 'A2 & ('A | ??A)
+//│   'A3 <: 'A
+//│   'A <: 'A0 & ('A2 | ~??A1) | ~??A1
+//│   'A0 :> 'A1 | ??A1 & 'A
+//│       <: 'A2 & ('A3 | ??A)
+//│   'A1 :> 'A0 | ??A1 & 'A | 'A2
+//│   'A2 :> 'A1 | ??A1 & 'A
+//│       <: 'A0 & ('A3 | ??A)
 
 fun showType(ty) =
   if ty is

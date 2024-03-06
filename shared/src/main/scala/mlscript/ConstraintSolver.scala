@@ -682,8 +682,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       val originalVars = ty.getVars
       
       // * FIXME ctx.extrCache and ctx.extrCache2 should be indexed by the level of the extrusion!
-      // val res = extrude(ty, lowerLvl, pol, upperLvl)(ctx, ctx.extrCache, ctx.extrCache2, reason)
-      val res = extrude(ty, lowerLvl, pol, upperLvl)(ctx, MutMap.empty, MutSortMap.empty, reason)
+      // TODO somehow handle extrCache2
+      val res = extrude(ty, lowerLvl, pol, upperLvl)(ctx, MutSortMap.empty, reason)
       
       val newVars = res.getVars -- originalVars
       if (newVars.nonEmpty) trace(s"RECONSTRAINING TVs") {
@@ -1341,7 +1341,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     * `upperLvl` tracks the lowest such current quantification level. */
   private final
   def extrude(ty: SimpleType, lowerLvl: Int, pol: Boolean, upperLvl: Level)
-        (implicit ctx: Ctx, cache: MutMap[TypeVarOrRigidVar->Bool, TypeVarOrRigidVar], cache2: MutSortMap[TraitTag, TraitTag], reason: Ls[Ls[ST]])
+        (implicit ctx: Ctx, cache2: MutSortMap[TraitTag, TraitTag], reason: Ls[Ls[ST]])
         : SimpleType =
   // (trace(s"EXTR[${printPol(S(pol))}] $ty || $lowerLvl .. $upperLvl  ${ty.level} ${ty.level <= lowerLvl}"){
     if (ty.level <= lowerLvl) ty else ty match {
@@ -1356,9 +1356,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         ArrayType(ar.update(extrude(_, lowerLvl, !pol, upperLvl), extrude(_, lowerLvl, pol, upperLvl)))(t.prov)
       case w @ Without(b, ns) => Without(extrude(b, lowerLvl, pol, upperLvl), ns)(w.prov)
       case tv @ AssignedVariable(ty) =>
-        cache.getOrElse(tv -> true, {
+        ctx.extrCache.getOrElse(tv -> true, {
           val nv = freshVar(tv.prov, S(tv), tv.nameHint)(lowerLvl)
-          cache += tv -> true -> nv
+          ctx.extrCache.set(tv -> true, nv)
           val tyPos = extrude(ty, lowerLvl, true, upperLvl)
           val tyNeg = extrude(ty, lowerLvl, false, upperLvl)
           if (tyPos === tyNeg)
@@ -1372,24 +1372,24 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           nv
         })
       case tv: TypeVariable if tv.level > upperLvl =>
-        assert(!cache.contains(tv -> false), (tv, cache))
+        assert(!ctx.extrCache.contains(tv -> false), (tv, ctx.extrCache.cache.get(lvl)))
         // * If the TV's level is strictly greater than `upperLvl`,
         // *  it means the TV is quantified by a type being copied,
         // *  so all we need to do is copy this TV along (it is not extruded).
         // * We pick `tv -> true` (and not `tv -> false`) arbitrarily.
         if (tv.lowerBounds.isEmpty && tv.upperBounds.isEmpty) tv
-        else cache.getOrElse(tv -> true, {
+        else ctx.extrCache.getOrElse(tv -> true, {
           val nv = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
-          cache += tv -> true -> nv
+          ctx.extrCache.set(tv -> true, nv)
           nv.lowerBounds = tv.lowerBounds.map(extrude(_, lowerLvl, true, upperLvl))
           nv.upperBounds = tv.upperBounds.map(extrude(_, lowerLvl, false, upperLvl))
           nv
         })
       case t @ SpliceType(fs) => 
         t.updateElems(extrude(_, lowerLvl, pol, upperLvl), extrude(_, lowerLvl, !pol, upperLvl), extrude(_, lowerLvl, pol, upperLvl), t.prov)
-      case tv: TypeVariable => cache.getOrElse(tv -> pol, {
+      case tv: TypeVariable => ctx.extrCache.getOrElse(tv -> pol, {
         val nv = freshVar(tv.prov, S(tv), tv.nameHint)(lowerLvl)
-        cache += tv -> pol -> nv
+        ctx.extrCache.set(tv -> pol, nv)
         if (pol) {
           tv.upperBounds ::= nv
           nv.lowerBounds = tv.lowerBounds.map(extrude(_, lowerLvl, pol, upperLvl))

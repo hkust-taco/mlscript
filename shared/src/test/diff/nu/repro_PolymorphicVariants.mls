@@ -29,8 +29,8 @@ mixin EvalLambda {
         error
 }
 //│ mixin EvalLambda() {
-//│   this: {eval: (Cons[[string, nothing]], nothing) -> ()}
-//│   fun eval: (Cons[anything] | Nil, Abs[anything]) -> nothing
+//│   this: {eval: (Cons[[string, nothing] | 'A], nothing) -> ()}
+//│   fun eval: (Cons['A] | Nil, Abs[anything]) -> nothing
 //│ }
 
 // * Note: this used to crash because of a current type simplification bug: analyze2 does not traverse TVs witht he correct PolMap

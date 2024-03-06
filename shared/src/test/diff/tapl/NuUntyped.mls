@@ -82,15 +82,9 @@ fun listConcat(xs, ys) =
   if xs is
     Nil then ys
     Cons(x, xs') then Cons(x, listConcat(xs', ys))
-//│ fun listConcat: forall 'A 'A0 'A1 'A2 'a 'A3. (Cons[out 'A1 & ('A | ~??A)] | Nil, List[in 'A0 out 'A2] & 'a) -> (Cons[in 'A out 'A3] | 'a)
+//│ fun listConcat: forall 'A 'A0 'a. (Cons[out 'A & ('A0 | ~??A)] | Nil, List['A0] & 'a) -> (Cons['A0] | 'a)
 //│   where
-//│     'A :> 'A3 | ??A & 'A1
-//│        <: 'A2
-//│     'A2 :> 'A3 | 'A0 | ??A & 'A1
-//│         <: 'A
-//│     'A3 :> 'A | 'A0 | ??A & 'A1
-//│     'A0 :> 'A3
-//│         <: 'A
+//│     'A0 :> ??A & 'A
 
 fun listContains(xs, x) =
   if xs is
@@ -254,17 +248,15 @@ fun fv(t) =
     Var(name) then list1(name)
     Abs(Var(name), body) then listWithout(fv(body), name)
     App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
-//│ fun fv: forall 'A 'A0 'A1 'A2 'A3 'A4 'A5. (Abs | App | Var) -> (Cons[in 'A5 out 'A2] | Cons[in 'A4 out 'A2] | Nil)
+//│ fun fv: forall 'A 'A0 'A1 'A2. (Abs | App | Var) -> (Cons[in 'A2 out 'A] | Cons[in 'A2 | 'A1 out 'A] | Cons[in 'A0 out 'A] | Nil)
 //│   where
-//│     'A5 :> 'A2 | ??A & 'A2 | ??A0 & 'A2
-//│         <: 'A4 & ('A & 'A0 & ('A3 | ~??A) | ~??A0 & ('A3 | ~??A))
-//│     'A2 :> 'A5 | 'A1
-//│     'A1 :> Str & ??A & ??A0 | 'A2 | 'A5 | ??A & 'A2 | ??A0 & 'A2
-//│         <: 'A5 & 'A4 & ('A & 'A0 & ('A3 | ~??A) | ~??A0 & ('A3 | ~??A))
-//│     'A4 <: 'A5 & 'A1 & ('A & 'A0 & ('A3 | ~??A) | ~??A0 & ('A3 | ~??A))
-//│     'A <: 'A5 & 'A1 & 'A4 & ('A0 & ('A3 | ~??A) | ~??A0 & ('A3 | ~??A))
-//│     'A0 <: 'A5 & 'A1 & 'A4 & ('A & ('A3 | ~??A) | ~??A0 & ('A3 | ~??A))
-//│     'A3 <: 'A5 & 'A4 & ('A & 'A0 | ~??A0)
+//│     'A2 :> 'A | ??A & 'A | ??A0 & 'A
+//│         <: 'A0 & ('A1 | ~??A)
+//│     'A :> 'A2 | 'A0 | 'A1
+//│     'A0 :> 'A | ??A & 'A | ??A0 & 'A
+//│         <: 'A2 & ('A1 | ~??A)
+//│     'A1 :> 'A | ??A & 'A
+//│         <: 'A2 & 'A0
 :ResetFuel
 
 fun showFv(t) =

@@ -88,7 +88,7 @@ fun walk(t, mn) = if t is
     let mnl = walk(l, mn)
     let mnr = walk(r, mn)
     [min(mnl.0, mnr.0), Node(mnl.1, mnr.1)]
-//│ fun walk: forall 'A 'A0 'a. (Leaf['A & (Num | ~??A)] | Node['A0 & (Num | ~??A | ~??A0)], Int & 'a) -> [??A & ('A | ??A0 & 'A0), Leaf['a | ??A & ('A | ??A0 & 'A0)] | Node['a | ??A & ('A | ??A0 & 'A0)]]
+//│ fun walk: forall 'A 'a 'A0. (Leaf['A0 & (Num | ~??A)] | Node['A & (Num | ~??A | ~??A0)], Int & 'a) -> [??A & ('A0 | ??A0 & 'A), Leaf['a | ??A & ('A0 | ??A0 & 'A)] | Node['a | ??A & ('A0 | ??A0 & 'A)]]
 
 
 let tree = Node of (Node of (Node of Leaf(1), Leaf(5)), Leaf(3)), Node of Leaf(3), Leaf(2)
@@ -125,10 +125,10 @@ fun walk(t, mn) = if t is
     Pair of n, Leaf(if n > 2 * mn then mn else n)
   Node(l, r) and walk(l, mn) is Pair(mn1, l1) and walk(r, mn) is Pair(mn2, r1) then
     Pair of min(mn1, mn2), Node(l1, r1)
-//│ fun walk: forall 'a 'A 'A0 'A1 'b. (Leaf['A1 & (Num | ~??A)] | Node['A & (Num | ~??A | ~??A0)], Int & 'a) -> Pair[??A & 'b & ('A1 | ??A0 & 'A), nothing]
+//│ fun walk: forall 'A 'A0 'A1 'a 'b. (Leaf['A1 & (Num | ~??A)] | Node['A & (Num | ~??A | ~??A0)], Int & 'b) -> Pair[??A & 'a & ('A1 | ??A0 & 'A), nothing]
 //│   where
-//│     'b :> ??A1 & 'A0 | ??A2 & 'A0
-//│     'A0 :> 'b | ??A & ('A1 | ??A0 & 'A)
+//│     'a :> ??A1 & 'A0 | ??A2 & 'A0
+//│     'A0 :> 'a | ??A & ('A1 | ??A0 & 'A)
 
 String of walk(tree, 2)
 //│ Str
