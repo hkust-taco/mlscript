@@ -4,7 +4,6 @@ import scala.collection.mutable.{Map => MutMap, Set => MutSet, LinkedHashMap, Li
 import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.util.chaining._
 import mlscript.utils._, shorthands._
-import java.lang.reflect.WildcardType
 
 
 trait TypeSimplifier { self: Typer =>
@@ -222,7 +221,7 @@ trait TypeSimplifier { self: Typer =>
             val trs2 = trs.map {
               case (d, tr @ TypeRef(defn, targs)) =>
                 d -> TypeRef(defn, tr.mapTargs2(pol)((pol, ta) => ta match {
-                  case w@WildcardArg(lb, ub) => ??? // TODO
+                  case w@WildcardArg(lb, ub) => WildcardArg(go(lb, pol.map(!_)), go(ub, pol))(w.prov)
                   case st: ST => go(st, pol)
                 }))(tr.prov)
             }

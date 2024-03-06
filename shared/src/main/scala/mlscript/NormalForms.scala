@@ -210,7 +210,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
                 case (l: WildcardArg, r: WildcardArg) => WildcardArg.mk(l.lb & r.lb, l.ub | r.ub)
                 case (l: WildcardArg, r: ST) => l.lb | r
                 case (l: ST, r: WildcardArg) => l | r.lb
-                case (l: ST, r: ST) => l & r
+                case (l: ST, r: ST) => l | r
               }
               case N => (otherTarg, thatTarg) match {
                 case (l: WildcardArg, r: WildcardArg) => 
@@ -323,7 +323,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
                 case (l: WildcardArg, r: WildcardArg) => WildcardArg.mk(l.lb & r.lb, l.ub | r.ub)
                 case (l: WildcardArg, r: ST) => l.lb | r
                 case (l: ST, r: WildcardArg) => l | r.lb
-                case (l: ST, r: ST) => l & r
+                case (l: ST, r: ST) => l | r
               }
               case S(false) => (otherTarg, thatTarg) match {
                 case (l: WildcardArg, r: WildcardArg) => WildcardArg.mk(l.lb | r.lb, l.ub & r.ub)

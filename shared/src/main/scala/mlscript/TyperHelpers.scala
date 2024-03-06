@@ -722,7 +722,10 @@ abstract class TyperHelpers { Typer: Typer =>
         // case _: TypeTag => Nil
         case _: ObjectTag | _: Extruded => Nil
         case SkolemTag(id) => pol -> id :: Nil
-        case tr: TypeRef => tr.mapTargs(pol){ case (p, st: ST) => p -> st :: Nil ; case (pol, WildcardArg(l, r)) => pol.map(!_) -> l :: pol -> r :: Nil }.flatten
+        case tr: TypeRef => tr.mapTargs(pol) { 
+          case (p, st: ST) => p -> st :: Nil
+          case (pol, WildcardArg(l, r)) => pol.map(!_) -> l :: pol -> r :: Nil
+        }.flatten
         case Without(b, ns) => pol -> b :: Nil
         case TypeBounds(lb, ub) => S(false) -> lb :: S(true) -> ub :: Nil
         case PolymorphicType(_, und) => pol -> und :: Nil
@@ -808,7 +811,10 @@ abstract class TyperHelpers { Typer: Typer =>
         // case _: TypeTag => Nil
         case _: ObjectTag | _: Extruded => Nil
         case SkolemTag(id) => pol -> id :: Nil
-        case tr: TypeRef => tr.mapTargs(pol){ case (p, st: ST) => p -> st :: Nil ; case (p, WildcardArg(l, r)) => pol.contravar -> l :: pol.covar -> r :: Nil }.flatten
+        case tr: TypeRef => tr.mapTargs(pol) {
+          case (p, st: ST) => p -> st :: Nil
+          case (p, WildcardArg(l, r)) => pol.contravar -> l :: pol.covar -> r :: Nil
+        }.flatten
         case Without(b, ns) => pol -> b :: Nil
         case TypeBounds(lb, ub) => PolMap.neg -> lb :: PolMap.pos -> ub :: Nil
         case PolymorphicType(_, und) => pol -> und :: Nil
