@@ -8,7 +8,7 @@ import collection.mutable.ListBuffer
 
 final val ops = Set("+", "-", "*", "/", ">", "<", ">=", "<=", "!=", "==")
 
-final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshInt):
+final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
   import Node._
   import Expr._
   
@@ -19,12 +19,12 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
   private type OpCtx = Set[Str]
   
   private final case class Ctx(
-    val name_ctx: NameCtx = Map.empty,
-    val class_ctx: ClassCtx = Map.empty,
-    val field_ctx: FieldCtx = Map.empty,
-    val fn_ctx: FnCtx = Set.empty,
-    val op_ctx: OpCtx = Set.empty,
-    var jp_acc: ListBuffer[Defn],
+    val nameCtx: NameCtx = Map.empty,
+    val classCtx: ClassCtx = Map.empty,
+    val fieldCtx: FieldCtx = Map.empty,
+    val fnCtx: FnCtx = Set.empty,
+    val opCtx: OpCtx = Set.empty,
+    var jpAcc: ListBuffer[Defn],
   )
 
   private def ref(x: Name) = Ref(x)
@@ -36,11 +36,11 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
   private def buildBinding(using ctx: Ctx)(name: Str, e: Term, body: Term)(k: Node => Node): Node =
     buildResultFromTerm(e) {
       case Result((r: Ref) :: Nil) =>
-        given Ctx = ctx.copy(name_ctx = ctx.name_ctx + (name -> r.name))
+        given Ctx = ctx.copy(nameCtx = ctx.nameCtx + (name -> r.name))
         buildResultFromTerm(body)(k)
       case Result((lit: Literal) :: Nil) =>
         val v = fresh.make
-        given Ctx = ctx.copy(name_ctx = ctx.name_ctx + (name -> v))
+        given Ctx = ctx.copy(nameCtx = ctx.nameCtx + (name -> v))
         LetExpr(v,
           lit,
           buildResultFromTerm(body)(k)).attachTag(tag)
@@ -78,10 +78,10 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
         if (name.isCapitalized)
           val v = fresh.make
           LetExpr(v,
-            CtorApp(ctx.class_ctx(name), Nil),
+            CtorApp(ctx.classCtx(name), Nil),
             v |> ref |> sresult |> k).attachTag(tag)
         else
-          ctx.name_ctx.get(name) match {
+          ctx.nameCtx.get(name) match {
             case Some(x) => x |> ref |> sresult |> k
             case _ => throw IRError(s"unknown name $name in $ctx")
           }
@@ -90,7 +90,7 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
         throw IRError("not supported: lambda")
       case App(
         App(Var(name), Tup((_ -> Fld(_, e1)) :: Nil)), 
-        Tup((_ -> Fld(_, e2)) :: Nil)) if ctx.op_ctx.contains(name) =>
+        Tup((_ -> Fld(_, e2)) :: Nil)) if ctx.opCtx.contains(name) =>
         buildResultFromTerm(e1) {
           case Result(v1 :: Nil) =>
             buildResultFromTerm(e2) {
@@ -109,14 +109,14 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
           case Result(args) => 
             val v = fresh.make
             LetExpr(v,
-              CtorApp(ctx.class_ctx(name), args),
+              CtorApp(ctx.classCtx(name), args),
               v |> ref |> sresult |> k).attachTag(tag)
           case node @ _ => node |> unexpectedNode
         }
 
       case App(f, xs @ Tup(_)) =>
         buildResultFromTerm(f) {
-        case Result(Ref(f) :: Nil) if ctx.fn_ctx.contains(f.str) => buildResultFromTerm(xs) {
+        case Result(Ref(f) :: Nil) if ctx.fnCtx.contains(f.str) => buildResultFromTerm(xs) {
           case Result(args) =>
             val v = fresh.make
             LetCall(List(v), DefnRef(Right(f.str)), args, v |> ref |> sresult |> k).attachTag(tag)
@@ -136,20 +136,20 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
       case If(IfThen(cond, tru), Some(fls)) => 
         buildResultFromTerm(cond) {
           case Result(Ref(cond) :: Nil) => 
-            if (!ctx.class_ctx.contains("True") || !ctx.class_ctx.contains("False"))
+            if (!ctx.classCtx.contains("True") || !ctx.classCtx.contains("False"))
               throw IRError("True or False class not found, unable to use 'if then else'")
             val jp = fresh make "j"
             val res = fresh.make
             val jpbody = res |> ref |> sresult |> k
             val fvs = FreeVarAnalysis(extended_scope = false).run_with(jpbody, Set(res.str)).toList
             val jpdef = Defn(
-              fn_uid.make,
+              fnUid.make,
               jp.str,
               params = res :: fvs.map(x => Name(x)),
               resultNum = 1,
               jpbody
             )
-            ctx.jp_acc.addOne(jpdef)
+            ctx.jpAcc.addOne(jpdef)
             val tru2 = buildResultFromTerm(tru) {
               case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
               case node @ _ => node |> unexpectedNode
@@ -158,7 +158,7 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
               case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
               case node @ _ => node |> unexpectedNode
             }
-            Case(cond, Ls((ctx.class_ctx("True"), tru2), (ctx.class_ctx("False"), fls2))).attachTag(tag)
+            Case(cond, Ls((ctx.classCtx("True"), tru2), (ctx.classCtx("False"), fls2))).attachTag(tag)
           case node @ _ => node |> unexpectedNode
         }
         
@@ -175,26 +175,26 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
             val jpbody = res |> ref |> sresult |> k
             val fvs = FreeVarAnalysis(extended_scope = false).run_with(jpbody, Set(res.str)).toList
             val jpdef = Defn(
-              fn_uid.make,
+              fnUid.make,
               jp.str,
               params = res :: fvs.map(x => Name(x)),
               resultNum = 1,
               jpbody,
             )
-            ctx.jp_acc.addOne(jpdef)
+            ctx.jpAcc.addOne(jpdef)
             val cases: Ls[(ClassInfo, Node)] = lines map {
               case L(IfThen(App(Var(ctor), params: Tup), rhs)) =>
-                ctx.class_ctx(ctor) -> {
+                ctx.classCtx(ctor) -> {
                   // need this because we have built terms (selections in case arms) containing names that are not in the original term
-                  given Ctx = ctx.copy(name_ctx = ctx.name_ctx + (scrut.str -> scrut))
+                  given Ctx = ctx.copy(nameCtx = ctx.nameCtx + (scrut.str -> scrut))
                   buildResultFromTerm(
-                    bindingPatternVariables(scrut.str, params, ctx.class_ctx(ctor), rhs)) {
+                    bindingPatternVariables(scrut.str, params, ctx.classCtx(ctor), rhs)) {
                       case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
                       case node @ _ => node |> unexpectedNode
                     }
                 }
               case L(IfThen(Var(ctor), rhs)) =>
-                ctx.class_ctx(ctor) -> buildResultFromTerm(rhs) {
+                ctx.classCtx(ctor) -> buildResultFromTerm(rhs) {
                   case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
                   case node @ _ => node |> unexpectedNode
                 }
@@ -220,7 +220,7 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
         buildResultFromTerm(tm) {
           case Result(Ref(res) :: Nil) =>
             val v = fresh.make
-            val cls = ctx.field_ctx(fld)._2
+            val cls = ctx.fieldCtx(fld)._2
             LetExpr(v,
               Select(res, cls, fld),
               v |> ref |> sresult |> k).attachTag(tag)
@@ -240,9 +240,9 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
           case _ => throw IRError("unsupported field") 
         }
       val names = strs map (fresh.make(_))
-      given Ctx = ctx.copy(name_ctx = ctx.name_ctx ++ (strs zip names))
+      given Ctx = ctx.copy(nameCtx = ctx.nameCtx ++ (strs zip names))
       Defn(
-        fn_uid.make,
+        fnUid.make,
         name,
         params = names,
         resultNum = 1,
@@ -253,7 +253,7 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
   private def buildClassInfo(ntd: Statement): ClassInfo = ntd match
     case NuTypeDef(Cls, TypeName(name), Nil, S(Tup(args)), N, N, Nil, N, N, TypingUnit(Nil)) =>
       ClassInfo(
-        class_uid.make,
+        classUid.make,
         name, 
         args map {
           case N -> Fld(FldFlags.empty, Var(name)) => name
@@ -262,7 +262,7 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
       )
     case NuTypeDef(Cls, TypeName(name), Nil, N, N, N, Nil, N, N, TypingUnit(Nil)) =>
       ClassInfo(
-        class_uid.make,
+        classUid.make,
         name,
         Ls(),
       )
@@ -300,12 +300,12 @@ final class Builder(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: Fr
 
       val jp_acc = ListBuffer.empty[Defn]
       given Ctx = Ctx(
-        name_ctx = name_ctx,
-        class_ctx = class_ctx,
-        field_ctx = field_ctx,
-        fn_ctx = fn_ctx,
-        op_ctx = ops,
-        jp_acc = jp_acc,
+        nameCtx = name_ctx,
+        classCtx = class_ctx,
+        fieldCtx = field_ctx,
+        fnCtx = fn_ctx,
+        opCtx = ops,
+        jpAcc = jp_acc,
       )
 
       var defs: Set[Defn] = grouped.getOrElse(1, Nil).map(buildDefFromNuFunDef).toSet
