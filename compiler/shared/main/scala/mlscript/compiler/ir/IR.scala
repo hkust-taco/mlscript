@@ -10,7 +10,6 @@ import collection.mutable.{Map as MutMap, Set as MutSet, HashMap, ListBuffer}
 import annotation.unused
 import util.Sorting
 import scala.collection.immutable.SortedSet
-import mlscript.VarianceInfo.in
 
 final case class IRError(message: String) extends Exception(message)
 
