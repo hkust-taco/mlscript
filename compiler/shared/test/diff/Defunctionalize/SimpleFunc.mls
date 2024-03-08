@@ -41,7 +41,7 @@ f(2)+3
 //│ res
 //│     = 6
 
-:e // FIXME: Evaluate unused terms
+:e // TODO: Evaluate unused terms
 :mono 
 fun foo(x, #b) = if b then x else 1337
 let a = foo(42, true)
