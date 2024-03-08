@@ -10,6 +10,7 @@ import collection.mutable.{Map as MutMap, Set as MutSet, HashMap, ListBuffer}
 import annotation.unused
 import util.Sorting
 import scala.collection.immutable.SortedSet
+import mlscript.VarianceInfo.in
 
 final case class IRError(message: String) extends Exception(message)
 
@@ -184,14 +185,14 @@ enum Node:
       <:> raw(s"-- $tag") 
     case Case(x, Ls((tcls, tru), (fcls, fls))) if tcls.ident == "True" && fcls.ident == "False" =>
       val first = raw("if") <:> raw(x.toString) <:> raw(s"-- $tag") 
-      val tru2 = indent(raw("true") <:> raw ("=>") <:> tru.toDocument)
-      val fls2 = indent(raw("false") <:> raw ("=>") <:> fls.toDocument)
+      val tru2 = indent(stack(raw("true") <:> raw ("=>"), tru.toDocument |> indent))
+      val fls2 = indent(stack(raw("false") <:> raw ("=>"), fls.toDocument |> indent))
       Document.Stacked(Ls(first, tru2, fls2))
     case Case(x, cases) =>
       val first = raw("case") <:> raw(x.toString) <:> raw("of") <:> raw(s"-- $tag") 
       val other = cases map {
         case (ClassInfo(_, name, _), node) =>
-          indent(raw(name) <:> raw("=>") <:> node.toDocument)
+          indent(stack(raw(name) <:> raw("=>"), node.toDocument |> indent))
       }
       Document.Stacked(first :: other)
     case LetExpr(x, expr, body) => 
@@ -200,8 +201,9 @@ enum Node:
           <:> raw(x.toString)
           <:> raw("=")
           <:> expr.toDocument
-          <:> raw(s"-- $tag") ,
-        raw("in") <:> body.toDocument |> indent)
+          <:> raw("in")
+          <:> raw(s"-- $tag"),
+        body.toDocument)
     case LetCall(xs, defn, args, body) => 
       stack(
         raw("let*")
@@ -213,9 +215,9 @@ enum Node:
           <#> raw("(")
           <#> raw(args.map{ x => x.toString }.mkString(","))
           <#> raw(")")
-          <:> raw(s"-- $tag") ,
-        raw("in") <:> body.toDocument |> indent
-      )
+          <:> raw("in") 
+          <:> raw(s"-- $tag"),
+        body.toDocument)
 
   def locMarker: LocMarker =
     val marker = this match

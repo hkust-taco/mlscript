@@ -321,9 +321,6 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
 
       defs ++= jp_acc.toList
 
-      
-
-      
       resolveDefnRef(main, defs, true)
       validate(main, defs)
       

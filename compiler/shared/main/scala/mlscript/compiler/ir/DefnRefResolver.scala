@@ -5,6 +5,7 @@ import mlscript.compiler.ir._
 
 import Node._
 
+// Resolves the definition references by turning them from Right(name) to Left(Defn).
 private final class DefnRefResolver(defs: Set[Defn], allowInlineJp: Bool):
   private def f(x: Node): Unit = x match
     case Result(res) =>
