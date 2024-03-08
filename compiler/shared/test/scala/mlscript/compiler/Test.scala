@@ -30,12 +30,11 @@ class DiffTestCompiler extends DiffTests {
         output(lifter.getLog)
     catch
       case NonFatal(err) =>
-        outputBuilder ++= "Lifting failed: " ++ err.toString()
+        output("Lifting failed: " ++ err.toString())
         if mode.fullExceptionStack then 
-          outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
+          output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))
     if(mode.mono){
       output("Mono:")
-      //outputBuilder ++= "\nMono:\n"
       val treeDebug = new TreeDebug(if mode.dbgDefunc then output else (str) => ())
       try{
         val monomorph = new Monomorph(treeDebug)

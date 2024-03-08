@@ -42,6 +42,9 @@ abstract class ModeType {
   def showRepl: Bool
   def allowEscape: Bool
   def mono: Bool
+  def useIR: Bool
+  def interpIR: Bool
+  def irVerbose: Bool
   def lift: Bool
   def nolift: Bool
 }
@@ -175,6 +178,9 @@ class DiffTests
       lift: Bool = false,
       nolift: Bool = false,
       // noProvs: Bool = false,
+      useIR: Bool = false,
+      interpIR: Bool = false,
+      irVerbose: Bool = false,
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
     }
@@ -197,6 +203,7 @@ class DiffTests
     var constrainedTypes = false
     var irregularTypes = false
     var prettyPrintQQ = false
+    var useIR = false
     
     // * This option makes some test cases pass which assume generalization should happen in arbitrary arguments
     // * but it's way too aggressive to be ON by default, as it leads to more extrusion, cycle errors, etc.
@@ -288,6 +295,10 @@ class DiffTests
               case l :: _ => out.println(l)
             }
             return ()
+          case "UseIR" => useIR = true; mode
+          case "useIR" => mode.copy(useIR = true)
+          case "interpIR" => mode.copy(interpIR = true)
+          case "irVerbose" => mode.copy(irVerbose = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -448,8 +459,9 @@ class DiffTests
             if (mode.showParse)
               output(s"AST: $res")
             
-            val (postLines, nuRes) = postProcess(mode, basePath, testName, res, output)
-            postLines.foreach(output)            
+            val newMode = if (useIR) { mode.copy(useIR = true) } else mode
+            val (postLines, nuRes) = postProcess(newMode, basePath, testName, res, output)
+            postLines.foreach(output)  
             
             if (parseOnly)
               Success(Pgrm(Nil), 0)
