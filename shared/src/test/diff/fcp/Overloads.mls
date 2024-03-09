@@ -86,18 +86,8 @@ IISS 0
 //│ res: number
 
 // * TODO: update type simplifier
-:e
 fun x -> (if true then IISS else BBNN) x
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.90: 	fun x -> (if true then IISS else BBNN) x
-//│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `int -> int & string -> string` is not a function
-//│ ║  l.12: 	def IISS: int -> int & string -> string
-//│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `?a -> ?b`
-//│ ║  l.90: 	fun x -> (if true then IISS else BBNN) x
-//│ ╙──      	                       ^^^^
-//│ res: anything -> error
+//│ res: anything -> nothing
 
 if true then IISS else BBNN
 //│ res: bool -> bool & number -> number | int -> int & string -> string
@@ -111,16 +101,16 @@ if true then IISS else BBNN
 :e
 (if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.112: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.102: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `int -> int & string -> string` is not a function
 //│ ║  l.12: 	def IISS: int -> int & string -> string
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(0 | 1 | true) -> number`
-//│ ║  l.112: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.102: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║         	              ^^^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.112: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.102: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╙──       	                                ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: (0 | 1 | true) -> number
 

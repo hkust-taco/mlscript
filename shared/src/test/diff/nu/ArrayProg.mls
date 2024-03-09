@@ -137,18 +137,8 @@ fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
 //│ fun s: (Numbr | Vectr, Numbr | Vectr) -> Int
 
 
-:e
 s(Vectr([]),Vectr([]))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.141: 	s(Vectr([]),Vectr([]))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `(Numbr | Vectr, Numbr | Vectr) -> Int` is not a function
-//│ ║  l.136: 	fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
-//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(?a, ?b) -> ?c`
-//│ ║  l.141: 	s(Vectr([]),Vectr([]))
-//│ ╙──       	^
-//│ error
+//│ Int
 //│ res
 //│     = <no result>
 //│       s is not implemented
@@ -179,18 +169,8 @@ A.g(0)
 :AllowTypeErrors
 
 
-:e
 s([Numbr(0),Numbr(0)])
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.+1: 	s([Numbr(0),Numbr(0)])
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `(Numbr | Vectr, Numbr | Vectr) -> Int` is not a function
-//│ ║  l.136: 	fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
-//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `([?a, ?b]) -> ?c`
-//│ ║  l.+1: 	s([Numbr(0),Numbr(0)])
-//│ ╙──      	^
-//│ error
+//│ Int
 // g <: 0 -> 'a
 
 :e

@@ -91,104 +91,6 @@ type RegionLang = BaseLang[RegionLang] | ExtLang[RegionLang]
 module TestSize extends SizeBase, SizeExt {
   fun size: RegionLang -> Int
 }
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.91: 	module TestSize extends SizeBase, SizeExt {
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.92: 	  fun size: RegionLang -> Int
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.93: 	}
-//│ ║        	^
-//│ ╟── expression of type `RegionLang -> Int & ?a -> (?b | ?c)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.79: 	      Scale(_, b) then this.size(b) + 1
-//│ ║        	                       ^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.79: 	      Scale(_, b) then this.size(b) + 1
-//│ ╙──      	                       ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.91: 	module TestSize extends SizeBase, SizeExt {
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.92: 	  fun size: RegionLang -> Int
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.93: 	}
-//│ ║        	^
-//│ ╟── expression of type `RegionLang -> Int & ?a -> (?b | ?c)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.33: 	      Translate(_, a) then this.size(a) + 1
-//│ ║        	                           ^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.33: 	      Translate(_, a) then this.size(a) + 1
-//│ ╙──      	                           ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.91: 	module TestSize extends SizeBase, SizeExt {
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.92: 	  fun size: RegionLang -> Int
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.93: 	}
-//│ ║        	^
-//│ ╟── expression of type `RegionLang -> Int & ?a -> (?b | ?c)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.32: 	      Intersect(a, b) then this.size(a) + this.size(b) + 1
-//│ ║        	                                          ^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.32: 	      Intersect(a, b) then this.size(a) + this.size(b) + 1
-//│ ╙──      	                                          ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.91: 	module TestSize extends SizeBase, SizeExt {
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.92: 	  fun size: RegionLang -> Int
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.93: 	}
-//│ ║        	^
-//│ ╟── expression of type `RegionLang -> Int & ?a -> (?b | ?c)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.32: 	      Intersect(a, b) then this.size(a) + this.size(b) + 1
-//│ ║        	                           ^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.32: 	      Intersect(a, b) then this.size(a) + this.size(b) + 1
-//│ ╙──      	                           ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.91: 	module TestSize extends SizeBase, SizeExt {
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.92: 	  fun size: RegionLang -> Int
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.93: 	}
-//│ ║        	^
-//│ ╟── expression of type `RegionLang -> Int & ?a -> (?b | ?c)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.31: 	      Union(a, b) then this.size(a) + this.size(b) + 1
-//│ ║        	                                      ^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.31: 	      Union(a, b) then this.size(a) + this.size(b) + 1
-//│ ╙──      	                                      ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.91: 	module TestSize extends SizeBase, SizeExt {
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.92: 	  fun size: RegionLang -> Int
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.93: 	}
-//│ ║        	^
-//│ ╟── expression of type `RegionLang -> Int & ?a -> (?b | ?c)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.31: 	      Union(a, b) then this.size(a) + this.size(b) + 1
-//│ ║        	                       ^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.31: 	      Union(a, b) then this.size(a) + this.size(b) + 1
-//│ ╙──      	                       ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.91: 	module TestSize extends SizeBase, SizeExt {
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.92: 	  fun size: RegionLang -> Int
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.93: 	}
-//│ ║        	^
-//│ ╟── expression of type `RegionLang -> Int & ?a -> (?b | ?c)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.30: 	      Outside(a) then this.size(a) + 1
-//│ ║        	                      ^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.30: 	      Outside(a) then this.size(a) + 1
-//│ ╙──      	                      ^^^^^^^^^
 //│ module TestSize {
 //│   fun size: RegionLang -> Int
 //│ }
@@ -235,90 +137,6 @@ type BaseRegionLang = BaseLang[BaseRegionLang]
 module TestContains extends Contains {
   fun contains: (BaseRegionLang, Vector) -> Bool
 }
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.235: 	module TestContains extends Contains {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.236: 	  fun contains: (BaseRegionLang, Vector) -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.237: 	}
-//│ ║         	^
-//│ ╟── expression of type `(BaseRegionLang, Vector) -> Bool & (?a, ?b) -> (?c | ?d | ?e | ?f | ?g)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.225: 	      Translate(v, a) then this.contains(a, Vector(p.x - v.x, p.y - v.y))
-//│ ║         	                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.225: 	      Translate(v, a) then this.contains(a, Vector(p.x - v.x, p.y - v.y))
-//│ ╙──       	                           ^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.235: 	module TestContains extends Contains {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.236: 	  fun contains: (BaseRegionLang, Vector) -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.237: 	}
-//│ ║         	^
-//│ ╟── expression of type `(BaseRegionLang, Vector) -> Bool & (?a, ?b) -> (?c | ?d | ?e | ?f | ?g)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.224: 	      Intersect(lhs, rhs) then this.contains(lhs, p) && this.contains(rhs, p)
-//│ ║         	                                                        ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.224: 	      Intersect(lhs, rhs) then this.contains(lhs, p) && this.contains(rhs, p)
-//│ ╙──       	                                                        ^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.235: 	module TestContains extends Contains {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.236: 	  fun contains: (BaseRegionLang, Vector) -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.237: 	}
-//│ ║         	^
-//│ ╟── expression of type `(BaseRegionLang, Vector) -> Bool & (?a, ?b) -> (?c | ?d | ?e | ?f | ?g)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.224: 	      Intersect(lhs, rhs) then this.contains(lhs, p) && this.contains(rhs, p)
-//│ ║         	                               ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.224: 	      Intersect(lhs, rhs) then this.contains(lhs, p) && this.contains(rhs, p)
-//│ ╙──       	                               ^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.235: 	module TestContains extends Contains {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.236: 	  fun contains: (BaseRegionLang, Vector) -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.237: 	}
-//│ ║         	^
-//│ ╟── expression of type `(BaseRegionLang, Vector) -> Bool & (?a, ?b) -> (?c | ?d | ?e | ?f | ?g)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.223: 	      Union(lhs, rhs) then this.contains(lhs, p) || this.contains(rhs, p)
-//│ ║         	                                                    ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.223: 	      Union(lhs, rhs) then this.contains(lhs, p) || this.contains(rhs, p)
-//│ ╙──       	                                                    ^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.235: 	module TestContains extends Contains {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.236: 	  fun contains: (BaseRegionLang, Vector) -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.237: 	}
-//│ ║         	^
-//│ ╟── expression of type `(BaseRegionLang, Vector) -> Bool & (?a, ?b) -> (?c | ?d | ?e | ?f | ?g)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.223: 	      Union(lhs, rhs) then this.contains(lhs, p) || this.contains(rhs, p)
-//│ ║         	                           ^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.223: 	      Union(lhs, rhs) then this.contains(lhs, p) || this.contains(rhs, p)
-//│ ╙──       	                           ^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.235: 	module TestContains extends Contains {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.236: 	  fun contains: (BaseRegionLang, Vector) -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.237: 	}
-//│ ║         	^
-//│ ╟── expression of type `(BaseRegionLang, Vector) -> Bool & (?a, ?b) -> (?c | ?d | ?e | ?f | ?g)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.222: 	      Outside(a) then not (this.contains(a, p))
-//│ ║         	                           ^^^^^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.222: 	      Outside(a) then not (this.contains(a, p))
-//│ ╙──       	                           ^^^^^^^^^^^^^
 //│ module TestContains {
 //│   fun contains: (BaseRegionLang, Vector) -> Bool
 //│ }
@@ -362,16 +180,16 @@ mixin Text {
 :e
 module SizeText extends Text
 //│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
-//│ ║  l.355: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
+//│ ║  l.173: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
 //│ ╙──       	                                                                         ^^^^^
 //│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
-//│ ║  l.354: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
+//│ ║  l.172: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                                     ^^^^^
 //│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
-//│ ║  l.353: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
+//│ ║  l.171: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                          ^^^^^
 //│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
-//│ ║  l.352: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
+//│ ║  l.170: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
 //│ ╙──       	                                                                       ^^^^^
 //│ module SizeText {
 //│   fun text: (Circle | Intersect[anything] | Outside[anything] | Translate[anything] | Union[anything]) -> Str
@@ -382,166 +200,6 @@ module SizeText extends SizeBase, Text {
   fun size: BaseRegionLang -> Int
   fun text: BaseRegionLang -> Str
 }
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.381: 	module SizeText extends SizeBase, Text {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.382: 	  fun size: BaseRegionLang -> Int
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.383: 	  fun text: BaseRegionLang -> Str
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.384: 	}
-//│ ║         	^
-//│ ╟── expression of type `BaseRegionLang -> Int & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.355: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
-//│ ║         	                                                                     ^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.355: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
-//│ ╙──       	                                                                     ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.381: 	module SizeText extends SizeBase, Text {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.382: 	  fun size: BaseRegionLang -> Int
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.383: 	  fun text: BaseRegionLang -> Str
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.384: 	}
-//│ ║         	^
-//│ ╟── expression of type `BaseRegionLang -> Int & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.354: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
-//│ ║         	                                                                                 ^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.354: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
-//│ ╙──       	                                                                                 ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.381: 	module SizeText extends SizeBase, Text {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.382: 	  fun size: BaseRegionLang -> Int
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.383: 	  fun text: BaseRegionLang -> Str
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.384: 	}
-//│ ║         	^
-//│ ╟── expression of type `BaseRegionLang -> Int & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.353: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
-//│ ║         	                                                                      ^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.353: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
-//│ ╙──       	                                                                      ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.381: 	module SizeText extends SizeBase, Text {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.382: 	  fun size: BaseRegionLang -> Int
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.383: 	  fun text: BaseRegionLang -> Str
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.384: 	}
-//│ ║         	^
-//│ ╟── expression of type `BaseRegionLang -> Int & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.352: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
-//│ ║         	                                                                   ^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.352: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
-//│ ╙──       	                                                                   ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.381: 	module SizeText extends SizeBase, Text {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.382: 	  fun size: BaseRegionLang -> Int
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.383: 	  fun text: BaseRegionLang -> Str
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.384: 	}
-//│ ║         	^
-//│ ╟── expression of type `BaseRegionLang -> Int & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.33: 	      Translate(_, a) then this.size(a) + 1
-//│ ║        	                           ^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.33: 	      Translate(_, a) then this.size(a) + 1
-//│ ╙──      	                           ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.381: 	module SizeText extends SizeBase, Text {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.382: 	  fun size: BaseRegionLang -> Int
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.383: 	  fun text: BaseRegionLang -> Str
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.384: 	}
-//│ ║         	^
-//│ ╟── expression of type `BaseRegionLang -> Int & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.32: 	      Intersect(a, b) then this.size(a) + this.size(b) + 1
-//│ ║        	                                          ^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.32: 	      Intersect(a, b) then this.size(a) + this.size(b) + 1
-//│ ╙──      	                                          ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.381: 	module SizeText extends SizeBase, Text {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.382: 	  fun size: BaseRegionLang -> Int
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.383: 	  fun text: BaseRegionLang -> Str
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.384: 	}
-//│ ║         	^
-//│ ╟── expression of type `BaseRegionLang -> Int & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.32: 	      Intersect(a, b) then this.size(a) + this.size(b) + 1
-//│ ║        	                           ^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.32: 	      Intersect(a, b) then this.size(a) + this.size(b) + 1
-//│ ╙──      	                           ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.381: 	module SizeText extends SizeBase, Text {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.382: 	  fun size: BaseRegionLang -> Int
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.383: 	  fun text: BaseRegionLang -> Str
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.384: 	}
-//│ ║         	^
-//│ ╟── expression of type `BaseRegionLang -> Int & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.31: 	      Union(a, b) then this.size(a) + this.size(b) + 1
-//│ ║        	                                      ^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.31: 	      Union(a, b) then this.size(a) + this.size(b) + 1
-//│ ╙──      	                                      ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.381: 	module SizeText extends SizeBase, Text {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.382: 	  fun size: BaseRegionLang -> Int
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.383: 	  fun text: BaseRegionLang -> Str
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.384: 	}
-//│ ║         	^
-//│ ╟── expression of type `BaseRegionLang -> Int & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.31: 	      Union(a, b) then this.size(a) + this.size(b) + 1
-//│ ║        	                       ^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.31: 	      Union(a, b) then this.size(a) + this.size(b) + 1
-//│ ╙──      	                       ^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.381: 	module SizeText extends SizeBase, Text {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.382: 	  fun size: BaseRegionLang -> Int
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.383: 	  fun text: BaseRegionLang -> Str
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.384: 	}
-//│ ║         	^
-//│ ╟── expression of type `BaseRegionLang -> Int & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.30: 	      Outside(a) then this.size(a) + 1
-//│ ║        	                      ^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.30: 	      Outside(a) then this.size(a) + 1
-//│ ╙──      	                      ^^^^^^^^^
 //│ module SizeText {
 //│   fun size: BaseRegionLang -> Int
 //│   fun text: BaseRegionLang -> Str
@@ -603,230 +261,6 @@ module IsUnivIsEmpty extends IsUniv, IsEmpty {
   fun isEmpty: RegionLang -> Bool
   fun isUniv: RegionLang -> Bool
 }
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.602: 	module IsUnivIsEmpty extends IsUniv, IsEmpty {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.603: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.604: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.605: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.594: 	      Scale(_, a) then this.isEmpty(a)
-//│ ║         	                       ^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.594: 	      Scale(_, a) then this.isEmpty(a)
-//│ ╙──       	                       ^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.602: 	module IsUnivIsEmpty extends IsUniv, IsEmpty {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.603: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.604: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.605: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.593: 	      Translate(_, a) then this.isEmpty(a)
-//│ ║         	                           ^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.593: 	      Translate(_, a) then this.isEmpty(a)
-//│ ╙──       	                           ^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.602: 	module IsUnivIsEmpty extends IsUniv, IsEmpty {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.603: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.604: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.605: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.592: 	      Intersect(a, b) then this.isEmpty(a) && this.isEmpty(b)
-//│ ║         	                                              ^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.592: 	      Intersect(a, b) then this.isEmpty(a) && this.isEmpty(b)
-//│ ╙──       	                                              ^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.602: 	module IsUnivIsEmpty extends IsUniv, IsEmpty {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.603: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.604: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.605: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.592: 	      Intersect(a, b) then this.isEmpty(a) && this.isEmpty(b)
-//│ ║         	                           ^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.592: 	      Intersect(a, b) then this.isEmpty(a) && this.isEmpty(b)
-//│ ╙──       	                           ^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.602: 	module IsUnivIsEmpty extends IsUniv, IsEmpty {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.603: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.604: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.605: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.591: 	      Union(a, b) then this.isEmpty(a) || this.isEmpty(b)
-//│ ║         	                                          ^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.591: 	      Union(a, b) then this.isEmpty(a) || this.isEmpty(b)
-//│ ╙──       	                                          ^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.602: 	module IsUnivIsEmpty extends IsUniv, IsEmpty {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.603: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.604: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.605: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.591: 	      Union(a, b) then this.isEmpty(a) || this.isEmpty(b)
-//│ ║         	                       ^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.591: 	      Union(a, b) then this.isEmpty(a) || this.isEmpty(b)
-//│ ╙──       	                       ^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.602: 	module IsUnivIsEmpty extends IsUniv, IsEmpty {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.603: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.604: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.605: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.590: 	      Outside(a) then this.isUniv(a)
-//│ ║         	                      ^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.590: 	      Outside(a) then this.isUniv(a)
-//│ ╙──       	                      ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.602: 	module IsUnivIsEmpty extends IsUniv, IsEmpty {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.603: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.604: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.605: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.578: 	      Scale(_, a) then this.isUniv(a)
-//│ ║         	                       ^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.578: 	      Scale(_, a) then this.isUniv(a)
-//│ ╙──       	                       ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.602: 	module IsUnivIsEmpty extends IsUniv, IsEmpty {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.603: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.604: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.605: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.577: 	      Translate(_, a) then this.isUniv(a)
-//│ ║         	                           ^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.577: 	      Translate(_, a) then this.isUniv(a)
-//│ ╙──       	                           ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.602: 	module IsUnivIsEmpty extends IsUniv, IsEmpty {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.603: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.604: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.605: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.576: 	      Intersect(a, b) then this.isUniv(a) && this.isUniv(b)
-//│ ║         	                                             ^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.576: 	      Intersect(a, b) then this.isUniv(a) && this.isUniv(b)
-//│ ╙──       	                                             ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.602: 	module IsUnivIsEmpty extends IsUniv, IsEmpty {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.603: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.604: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.605: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.576: 	      Intersect(a, b) then this.isUniv(a) && this.isUniv(b)
-//│ ║         	                           ^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.576: 	      Intersect(a, b) then this.isUniv(a) && this.isUniv(b)
-//│ ╙──       	                           ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.602: 	module IsUnivIsEmpty extends IsUniv, IsEmpty {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.603: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.604: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.605: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.575: 	      Union(a, b) then this.isUniv(a) || this.isUniv(b)
-//│ ║         	                                         ^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.575: 	      Union(a, b) then this.isUniv(a) || this.isUniv(b)
-//│ ╙──       	                                         ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.602: 	module IsUnivIsEmpty extends IsUniv, IsEmpty {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.603: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.604: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.605: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.575: 	      Union(a, b) then this.isUniv(a) || this.isUniv(b)
-//│ ║         	                       ^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.575: 	      Union(a, b) then this.isUniv(a) || this.isUniv(b)
-//│ ╙──       	                       ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.602: 	module IsUnivIsEmpty extends IsUniv, IsEmpty {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.603: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.604: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.605: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.574: 	      Outside(a) then this.isEmpty(a)
-//│ ║         	                      ^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.574: 	      Outside(a) then this.isEmpty(a)
-//│ ╙──       	                      ^^^^^^^^^^^^
 //│ module IsUnivIsEmpty {
 //│   fun isEmpty: RegionLang -> Bool
 //│   fun isUniv: RegionLang -> Bool
@@ -836,230 +270,6 @@ module IsUnivIsEmpty extends IsEmpty, IsUniv {
   fun isEmpty: RegionLang -> Bool
   fun isUniv: RegionLang -> Bool
 }
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.835: 	module IsUnivIsEmpty extends IsEmpty, IsUniv {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.836: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.837: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.838: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.578: 	      Scale(_, a) then this.isUniv(a)
-//│ ║         	                       ^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.578: 	      Scale(_, a) then this.isUniv(a)
-//│ ╙──       	                       ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.835: 	module IsUnivIsEmpty extends IsEmpty, IsUniv {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.836: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.837: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.838: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.577: 	      Translate(_, a) then this.isUniv(a)
-//│ ║         	                           ^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.577: 	      Translate(_, a) then this.isUniv(a)
-//│ ╙──       	                           ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.835: 	module IsUnivIsEmpty extends IsEmpty, IsUniv {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.836: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.837: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.838: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.576: 	      Intersect(a, b) then this.isUniv(a) && this.isUniv(b)
-//│ ║         	                                             ^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.576: 	      Intersect(a, b) then this.isUniv(a) && this.isUniv(b)
-//│ ╙──       	                                             ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.835: 	module IsUnivIsEmpty extends IsEmpty, IsUniv {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.836: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.837: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.838: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.576: 	      Intersect(a, b) then this.isUniv(a) && this.isUniv(b)
-//│ ║         	                           ^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.576: 	      Intersect(a, b) then this.isUniv(a) && this.isUniv(b)
-//│ ╙──       	                           ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.835: 	module IsUnivIsEmpty extends IsEmpty, IsUniv {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.836: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.837: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.838: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.575: 	      Union(a, b) then this.isUniv(a) || this.isUniv(b)
-//│ ║         	                                         ^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.575: 	      Union(a, b) then this.isUniv(a) || this.isUniv(b)
-//│ ╙──       	                                         ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.835: 	module IsUnivIsEmpty extends IsEmpty, IsUniv {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.836: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.837: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.838: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.575: 	      Union(a, b) then this.isUniv(a) || this.isUniv(b)
-//│ ║         	                       ^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.575: 	      Union(a, b) then this.isUniv(a) || this.isUniv(b)
-//│ ╙──       	                       ^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.835: 	module IsUnivIsEmpty extends IsEmpty, IsUniv {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.836: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.837: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.838: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.574: 	      Outside(a) then this.isEmpty(a)
-//│ ║         	                      ^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.574: 	      Outside(a) then this.isEmpty(a)
-//│ ╙──       	                      ^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.835: 	module IsUnivIsEmpty extends IsEmpty, IsUniv {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.836: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.837: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.838: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.594: 	      Scale(_, a) then this.isEmpty(a)
-//│ ║         	                       ^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.594: 	      Scale(_, a) then this.isEmpty(a)
-//│ ╙──       	                       ^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.835: 	module IsUnivIsEmpty extends IsEmpty, IsUniv {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.836: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.837: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.838: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.593: 	      Translate(_, a) then this.isEmpty(a)
-//│ ║         	                           ^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.593: 	      Translate(_, a) then this.isEmpty(a)
-//│ ╙──       	                           ^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.835: 	module IsUnivIsEmpty extends IsEmpty, IsUniv {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.836: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.837: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.838: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.592: 	      Intersect(a, b) then this.isEmpty(a) && this.isEmpty(b)
-//│ ║         	                                              ^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.592: 	      Intersect(a, b) then this.isEmpty(a) && this.isEmpty(b)
-//│ ╙──       	                                              ^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.835: 	module IsUnivIsEmpty extends IsEmpty, IsUniv {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.836: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.837: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.838: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.592: 	      Intersect(a, b) then this.isEmpty(a) && this.isEmpty(b)
-//│ ║         	                           ^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.592: 	      Intersect(a, b) then this.isEmpty(a) && this.isEmpty(b)
-//│ ╙──       	                           ^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.835: 	module IsUnivIsEmpty extends IsEmpty, IsUniv {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.836: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.837: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.838: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.591: 	      Union(a, b) then this.isEmpty(a) || this.isEmpty(b)
-//│ ║         	                                          ^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.591: 	      Union(a, b) then this.isEmpty(a) || this.isEmpty(b)
-//│ ╙──       	                                          ^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.835: 	module IsUnivIsEmpty extends IsEmpty, IsUniv {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.836: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.837: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.838: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.591: 	      Union(a, b) then this.isEmpty(a) || this.isEmpty(b)
-//│ ║         	                       ^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.591: 	      Union(a, b) then this.isEmpty(a) || this.isEmpty(b)
-//│ ╙──       	                       ^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.835: 	module IsUnivIsEmpty extends IsEmpty, IsUniv {
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.836: 	  fun isEmpty: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.837: 	  fun isUniv: RegionLang -> Bool
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.838: 	}
-//│ ║         	^
-//│ ╟── expression of type `RegionLang -> Bool & ?a -> (?b | ?c | ?d | ?e | ?f)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.590: 	      Outside(a) then this.isUniv(a)
-//│ ║         	                      ^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.590: 	      Outside(a) then this.isUniv(a)
-//│ ╙──       	                      ^^^^^^^^^^^
 //│ module IsUnivIsEmpty {
 //│   fun isEmpty: RegionLang -> Bool
 //│   fun isUniv: RegionLang -> Bool
@@ -1079,11 +289,11 @@ IsUnivIsEmpty.isEmpty(circles)
 class Foo()
 IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1080: 	IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.290: 	IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Foo` does not match type `BaseLang[RegionLang] | ExtLang[RegionLang]`
-//│ ║  l.1080: 	IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
-//│ ║          	                                                    ^^^^^
+//│ ║  l.290: 	IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
+//│ ║         	                                                    ^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.88: 	type RegionLang = BaseLang[RegionLang] | ExtLang[RegionLang]
 //│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1116,118 +326,6 @@ mixin Eliminate {
 module TestElim extends Eliminate {
   fun eliminate: RegionLang -> RegionLang
 }
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.1116: 	module TestElim extends Eliminate {
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1117: 	  fun eliminate: RegionLang -> RegionLang
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1118: 	}
-//│ ║          	^
-//│ ╟── expression of type `RegionLang -> RegionLang & ?a -> (?b | ?c | ?d | ?e | ?f | ?g)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.1106: 	      Scale(v, a) then Scale(v, this.eliminate(a))
-//│ ║          	                                ^^^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.1106: 	      Scale(v, a) then Scale(v, this.eliminate(a))
-//│ ╙──        	                                ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.1116: 	module TestElim extends Eliminate {
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1117: 	  fun eliminate: RegionLang -> RegionLang
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1118: 	}
-//│ ║          	^
-//│ ╟── expression of type `RegionLang -> RegionLang & ?a -> (?b | ?c | ?d | ?e | ?f | ?g)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.1105: 	      Translate(v, a) then Translate(v, this.eliminate(a))
-//│ ║          	                                        ^^^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.1105: 	      Translate(v, a) then Translate(v, this.eliminate(a))
-//│ ╙──        	                                        ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.1116: 	module TestElim extends Eliminate {
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1117: 	  fun eliminate: RegionLang -> RegionLang
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1118: 	}
-//│ ║          	^
-//│ ╟── expression of type `RegionLang -> RegionLang & ?a -> (?b | ?c | ?d | ?e | ?f | ?g)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.1104: 	      Intersect(a, b) then Intersect(this.eliminate(a), this.eliminate(b))
-//│ ║          	                                                        ^^^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.1104: 	      Intersect(a, b) then Intersect(this.eliminate(a), this.eliminate(b))
-//│ ╙──        	                                                        ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.1116: 	module TestElim extends Eliminate {
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1117: 	  fun eliminate: RegionLang -> RegionLang
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1118: 	}
-//│ ║          	^
-//│ ╟── expression of type `RegionLang -> RegionLang & ?a -> (?b | ?c | ?d | ?e | ?f | ?g)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.1104: 	      Intersect(a, b) then Intersect(this.eliminate(a), this.eliminate(b))
-//│ ║          	                                     ^^^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.1104: 	      Intersect(a, b) then Intersect(this.eliminate(a), this.eliminate(b))
-//│ ╙──        	                                     ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.1116: 	module TestElim extends Eliminate {
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1117: 	  fun eliminate: RegionLang -> RegionLang
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1118: 	}
-//│ ║          	^
-//│ ╟── expression of type `RegionLang -> RegionLang & ?a -> (?b | ?c | ?d | ?e | ?f | ?g)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.1103: 	      Union(a, b) then Union(this.eliminate(a), this.eliminate(b))
-//│ ║          	                                                ^^^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.1103: 	      Union(a, b) then Union(this.eliminate(a), this.eliminate(b))
-//│ ╙──        	                                                ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.1116: 	module TestElim extends Eliminate {
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1117: 	  fun eliminate: RegionLang -> RegionLang
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1118: 	}
-//│ ║          	^
-//│ ╟── expression of type `RegionLang -> RegionLang & ?a -> (?b | ?c | ?d | ?e | ?f | ?g)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.1103: 	      Union(a, b) then Union(this.eliminate(a), this.eliminate(b))
-//│ ║          	                             ^^^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.1103: 	      Union(a, b) then Union(this.eliminate(a), this.eliminate(b))
-//│ ╙──        	                             ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.1116: 	module TestElim extends Eliminate {
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1117: 	  fun eliminate: RegionLang -> RegionLang
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1118: 	}
-//│ ║          	^
-//│ ╟── expression of type `RegionLang -> RegionLang & ?a -> (?b | ?c | ?d | ?e | ?f | ?g)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.1102: 	      Outside(a) then Outside(this.eliminate(a))
-//│ ║          	                              ^^^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.1102: 	      Outside(a) then Outside(this.eliminate(a))
-//│ ╙──        	                              ^^^^^^^^^^^^^^
-//│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.1116: 	module TestElim extends Eliminate {
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1117: 	  fun eliminate: RegionLang -> RegionLang
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.1118: 	}
-//│ ║          	^
-//│ ╟── expression of type `RegionLang -> RegionLang & ?a -> (?b | ?c | ?d | ?e | ?f | ?g)` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.1101: 	      Outside(Outside(a)) then this.eliminate(a)
-//│ ║          	                               ^^^^^^^^^^^^^^^^^
-//│ ╟── from field selection:
-//│ ║  l.1101: 	      Outside(Outside(a)) then this.eliminate(a)
-//│ ╙──        	                               ^^^^^^^^^^^^^^
 //│ module TestElim {
 //│   fun eliminate: RegionLang -> RegionLang
 //│ }
@@ -1311,16 +409,16 @@ Lang.size(mk(100))
 :re
 Lang.contains(mk(100), Vector(0, 0))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1312: 	Lang.contains(mk(100), Vector(0, 0))
-//│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.410: 	Lang.contains(mk(100), Vector(0, 0))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Scale[?Region]` does not match type `Circle | Intersect[BaseRegionLang] | Outside[BaseRegionLang] | Translate[BaseRegionLang] | Union[BaseRegionLang]`
-//│ ║  l.1250: 	  _ then Scale(Vector(0, 0), mk(n))
-//│ ║          	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.348: 	  _ then Scale(Vector(0, 0), mk(n))
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.23: 	type BaseLang[T] = Circle | Intersect[T] | Union[T] | Outside[T] | Translate[T]
 //│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
-//│ ║  l.232: 	type BaseRegionLang = BaseLang[BaseRegionLang]
+//│ ║  l.134: 	type BaseRegionLang = BaseLang[BaseRegionLang]
 //│ ╙──       	                               ^^^^^^^^^^^^^^
 //│ error | false | true
 //│ Code generation encountered an error:
@@ -1330,16 +428,16 @@ Lang.contains(mk(100), Vector(0, 0))
 :re
 Lang.text(mk(100))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1331: 	Lang.text(mk(100))
-//│ ║          	^^^^^^^^^^^^^^^^^^
+//│ ║  l.429: 	Lang.text(mk(100))
+//│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Scale[?Region]` does not match type `Circle | Intersect[BaseRegionLang] | Outside[BaseRegionLang] | Translate[BaseRegionLang] | Union[BaseRegionLang]`
-//│ ║  l.1250: 	  _ then Scale(Vector(0, 0), mk(n))
-//│ ║          	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.348: 	  _ then Scale(Vector(0, 0), mk(n))
+//│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.23: 	type BaseLang[T] = Circle | Intersect[T] | Union[T] | Outside[T] | Translate[T]
 //│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
-//│ ║  l.232: 	type BaseRegionLang = BaseLang[BaseRegionLang]
+//│ ║  l.134: 	type BaseRegionLang = BaseLang[BaseRegionLang]
 //│ ╙──       	                               ^^^^^^^^^^^^^^
 //│ Str | error
 //│ Code generation encountered an error:

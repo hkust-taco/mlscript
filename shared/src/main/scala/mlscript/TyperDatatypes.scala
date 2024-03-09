@@ -717,41 +717,41 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     }
     def lcg(pol: Opt[Bool], first: ST, rest: Ls[Opt[ST]])
       (implicit prov: TypeProvenance, ctx: Ctx)
-        : (ST, Ls[(Opt[Bool], ST)], Ls[Ls[Opt[ST]]]) = first match {
+        : (ST, Ls[(Opt[Bool], ST)], Ls[Ls[Opt[ST]]]) = first.unwrapProxies match {
       case a: FunctionType =>
-        val (lhss, rhss) = rest.map {
+        val (lhss, rhss) = rest.map(_.map(_.unwrapProxies) match {
           case S(FunctionType(lhs, rhs)) => S(lhs) -> S(rhs)
           case _ => (N, N)
-        }.unzip
+        }).unzip
         val (lhs, ltvs, lconstrs) = lcg(pol.map(!_), a.lhs, lhss)
         val (rhs, rtvs, rconstrs) = lcg(pol, a.rhs, rhss)
         (FunctionType(lhs, rhs)(prov), ltvs ++ rtvs, lconstrs ++ rconstrs)
       case a: ArrayType =>
-        val inners = rest.map {
+        val inners = rest.map(_.map(_.unwrapProxies) match {
           case S(b: ArrayType) => S(b.inner)
           case _ => N
-        }
+        })
         val (t, tvs, constrs) = lcgField(pol, a.inner, inners)
         (ArrayType(t)(prov), tvs, constrs)
       case a: TupleType =>
-        val fields = rest.map {
+        val fields = rest.map(_.map(_.unwrapProxies) match {
           case S(TupleType(fs)) if a.fields.sizeCompare(fs.size) === 0 =>
             fs.map(x => S(x._2))
           case _ => a.fields.map(_ => N)
-        }
+        })
         val (fts, tvss, constrss) = a.fields.map(_._2).zip(fields.transpose).map { case (a, bs) => lcgField(pol, a, bs) }.unzip3
         (TupleType(fts.map(N -> _))(prov), tvss.flatten, constrss.flatten)
-      case a: TR if rest.flatten.forall { case b: TR => a.defn === b.defn && a.targs.sizeCompare(b.targs.size) === 0; case _ => false } =>
-        val targs = rest.map {
+      case a: TR if rest.flatten.map(_.unwrapProxies).forall { case b: TR => a.defn === b.defn && a.targs.sizeCompare(b.targs.size) === 0; case _ => false } =>
+        val targs = rest.map(_.map(_.unwrapProxies) match {
           case S(b: TR) => b.targs.map(S(_))
           case _ => a.targs.map(_ => N)
-        }
+        })
         val (ts, tvss, constrss) = a.targs.zip(targs.transpose).map { case (a, bs) => lcg(pol, a, bs) }.unzip3
         (TypeRef(a.defn, ts)(prov), tvss.flatten, constrss.flatten)
-      case a: TV if rest.flatten.forall { case b: TV => a.compare(b) === 0; case _ => false } => (a, Nil, Nil)
-      case a if rest.flatten.forall(_ === a) => (a, Nil, Nil)
+      case a: TV if rest.flatten.map(_.unwrapProxies).forall { case b: TV => a.compare(b) === 0; case _ => false } => (a, Nil, Nil)
+      case a if rest.flatten.forall(_.unwrapProxies === a) => (a, Nil, Nil)
       case _ =>
-        (first, List((pol, first)), List(rest))
+        (first, List((pol, first)), List(rest.map(_.map(_.unwrapProxies))))
         // val tv = freshVar(prov, N)
         // (tv, List(tv), List(first :: rest))
     }
@@ -765,10 +765,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       (FunctionType(lhs, rhs)(prov), ltvs ++ rtvs, lconstrs ++ rconstrs)
     }
     def mk(ov: Overload, f: FT)(implicit raise: Raise, ctx: Ctx): TupleSetConstraints = {
-      def unwrap(t: ST): ST = t.unwrapProxies.map(unwrap)
-      //      if (ov.alts.tail.isEmpty) ov.alts.head else {
-      val ovf = ov.mapAlts(unwrap)(unwrap)
-      val (t, tvs, constrs) = lcgFunction(S(false), f, ovf.alts)(ov.prov, ctx)
+      val (t, tvs, constrs) = lcgFunction(S(false), f, ov.alts)(ov.prov, ctx)
       val tsc = new TupleSetConstraints(MutSet.empty ++ constrs.transpose.filter(_.forall(_.isDefined)).map(_.flatten), tvs)(ov.prov)
       println(s"TSC mk: ${tsc.tvs} in ${tsc.constraints}")
       tvs.zipWithIndex.foreach {
