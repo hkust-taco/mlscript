@@ -16,4 +16,4 @@ object Uid:
         }.get
   object TypeVar extends Handler[TypeVar]
   object Ident extends Handler[Ident]
-  object Expr extends Handler[Expr]
+  object Term extends Handler[Term]
