@@ -750,8 +750,8 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
         (TypeRef(a.defn, ts)(prov), tvss.flatten, constrss.flatten)
       case a: TV if rest.flatten.map(_.unwrapProxies).forall { case b: TV => a.compare(b) === 0; case _ => false } => (a, Nil, Nil)
       case a if rest.flatten.forall(_.unwrapProxies === a) => (a, Nil, Nil)
-      case _ =>
-        (first, List((pol, first)), List(rest.map(_.map(_.unwrapProxies))))
+      case a =>
+        (a, List((pol, a)), List(rest.map(_.map(_.unwrapProxies))))
         // val tv = freshVar(prov, N)
         // (tv, List(tv), List(first :: rest))
     }

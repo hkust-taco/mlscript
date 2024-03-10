@@ -26,6 +26,7 @@ trait TypeSimplifier { self: Typer =>
     println(s"allVarPols: ${printPols(allVarPols)}")
     
     val renewed = MutMap.empty[TypeVariable, TypeVariable]
+    val renewedtsc = MutMap.empty[TupleSetConstraints, TupleSetConstraints]
     
     def renew(tv: TypeVariable): TypeVariable =
       renewed.getOrElseUpdate(tv,
@@ -75,19 +76,15 @@ trait TypeSimplifier { self: Typer =>
               tv.upperBounds.reverseIterator.map(process(_, S(false -> tv)))
                 .reduceOption(_ &- _).filterNot(_.isTop).toList
             else Nil
-          // fixme
-          // nv.tsc = tv.tsc.map {
-          //     case (tsc, i) =>
-          //       tsc.tvs.collect { case (_, x: TV) => renewed.get(x).flatMap(_.tsc) }
-          //         .flatten.headOption
-          //         .fold(new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov), i) {
-          //           tsc => (tsc._1, i)
-          //         }
-          // }
-          // nv.tsc.foreach { case (tsc, i) =>
-          //   val (l, r) = tsc.tvs.splitAt(i)
-          //   tsc.tvs = l ++ ((r.head._1, nv) :: r.drop(1))
-          // }
+          nv.tsc = tv.tsc.map { case (tsc, i) =>
+              (renewedtsc.getOrElseUpdate(tsc,
+                new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov)),
+               i)
+          }
+          nv.tsc.foreachEntry { case (tsc, i) =>
+            val (l, r) = tsc.tvs.splitAt(i)
+            tsc.tvs = l ++ ((r.head._1, nv) :: r.drop(1))
+          }
         }
         nv
         
@@ -932,6 +929,7 @@ trait TypeSimplifier { self: Typer =>
     println(s"[rec] ${recVars}")
     
     val renewals = MutMap.empty[TypeVariable, TypeVariable]
+    val renewaltsc = MutMap.empty[TupleSetConstraints, TupleSetConstraints]
     
     val semp = Set.empty[TV]
     
@@ -1026,18 +1024,15 @@ trait TypeSimplifier { self: Typer =>
                           res.lowerBounds = tv.lowerBounds.map(transform(_, pol.at(tv.level, true), Set.single(tv)))
                         if (occNums.contains(false -> tv))
                           res.upperBounds = tv.upperBounds.map(transform(_, pol.at(tv.level, false), Set.single(tv)))
-                        // TODO
-                        // res.tsc = tv.tsc.map {
-                        //   case (tsc, i) =>
-                        //     tsc.tvs.collect { case (_, x: TV) => renewals.get(x).flatMap(_.tsc)}.flatten.headOption
-                        //       .fold(new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov), i) {
-                        //         tsc => (tsc._1, i)
-                        //       }
-                        // }
-                        // res.tsc.foreach { case (tsc, i) =>
-                        //   val (l, r) = tsc.tvs.splitAt(i)
-                        //   tsc.tvs = l ++ ((r.head._1, res) :: r.drop(1))
-                        // }
+                        res.tsc = tv.tsc.map { case (tsc, i) =>
+                          (renewaltsc.getOrElseUpdate(tsc,
+                            new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov)),
+                            i)
+                        }
+                        res.tsc.foreachEntry { case (tsc, i) =>
+                          val (l, r) = tsc.tvs.splitAt(i)
+                          tsc.tvs = l ++ ((r.head._1, res) :: r.drop(1))
+                        }
                     }
                     res
                   }()
