@@ -1941,7 +1941,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     }
     
     def go(st: SimpleType)(implicit ectx: ExpCtx): Type =
-            trace(s"expand $st") {
+            // trace(s"expand $st") {
           st.unwrapProvs match {
         case tv: TypeVariable if stopAtTyVars => tv.asTypeVar
         case tv: TypeVariable => ectx.tps.getOrElse(tv, {
@@ -2050,7 +2050,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         // case DeclType(lvl, info) =>
           
     }
-    }(r => s"~> $r")
+    // }(r => s"~> $r")
     
     val res = goLike(st)(new ExpCtx(Map.empty))
     if (bounds.isEmpty) res

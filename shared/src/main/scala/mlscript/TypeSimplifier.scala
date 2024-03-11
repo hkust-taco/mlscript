@@ -571,7 +571,7 @@ trait TypeSimplifier { self: Typer =>
     
     // * Note: for negatively-quantified vars, the notion of co-occurrence is reversed (wrt unions/inters)...
     
-    val coOccurrences: MutMap[(Bool, TypeVariable), LinkedHashSet[SimpleType]] = LinkedHashMap.empty
+    val coOccurrences: MutMap[(Bool, TypeVariable), LinkedHashSet[SimpleType]] = MutMap.empty
     
     // * Remember which TVs we analyzed at which polarity
     val analyzed2 = MutSet.empty[Bool -> ST]
