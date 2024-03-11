@@ -41,7 +41,7 @@ f(2)+3
 //│ res
 //│     = 6
 
-:e // TODO: Evaluate unused terms
+// TODO: Evaluate unused terms
 :mono 
 fun foo(x, #b) = if b then x else 1337
 let a = foo(42, true)
@@ -53,17 +53,6 @@ let b = foo(23, false)
 //│   let b$2 = foo$3(23, false,)
 //│ }
 //│ Mono:
-//│ Bounds for Var(foo$3) not found during defunc.
-//│ mlscript.compiler.mono.Specializer.getRes$2$$anonfun$1(Specializer.scala:145)
-//│ scala.collection.MapOps.getOrElse(Map.scala:162)
-//│ scala.collection.MapOps.getOrElse$(Map.scala:160)
-//│ scala.collection.AbstractMap.getOrElse(Map.scala:405)
-//│ mlscript.compiler.mono.Specializer.getRes$2(Specializer.scala:145)
-//│ mlscript.compiler.mono.Specializer.defunctionalize(Specializer.scala:210)
-//│ mlscript.compiler.mono.Monomorph.defunctionalize$$anonfun$1(Monomorph.scala:102)
-//│ scala.collection.mutable.HashMap.mapValuesInPlaceImpl(HashMap.scala:547)
-//│ scala.collection.mutable.MapOps.mapValuesInPlace(Map.scala:203)
-//│ scala.collection.mutable.MapOps.mapValuesInPlace$(Map.scala:201)
 //│ ╔══[ERROR] Post-process failed to produce AST.
 //│ ╙──
 //│ 
