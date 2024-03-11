@@ -1,4 +1,4 @@
-package mlscript.compiler.debug
+package mlscript.compiler
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.immutable.StringOps
@@ -7,19 +7,21 @@ class RainbowDebug(color: Boolean = true) extends Debug:
   import RainbowDebug._
 
   private inline def currentColor =
-    if color then colors(indent % colors.size) else identity[String]
+    if color then colors(privIndent % colors.size) else identity[String]
   private inline def beginMark = currentColor("┌")
   private inline def endMark = currentColor("└")
-  private var indent = 0
+  private var privIndent = 0
+  def indent(): Unit = ()
+  def outdent(): Unit = ()
 
   def trace[T](name: String, pre: Any*)
               (thunk: => T)
               (post: T => Any): T = {
     printPrologue(name, pre.map(toLines(_)(using color)))
-    indent += 1
+    privIndent += 1
     val res =
       try thunk
-      finally indent -= 1
+      finally privIndent -= 1
     if (post eq Debug.noPostTrace) {
       log(s"$endMark $name")
     } else {
@@ -38,13 +40,13 @@ class RainbowDebug(color: Boolean = true) extends Debug:
         log(s"$beginMark ${name} ${if color then black(head) else head}")
       case list =>
         log(s"$beginMark ${name}")
-        indent += 1
+        privIndent += 1
         list.foreach { line => log(line) }
-        indent -= 1
+        privIndent -= 1
     }
-    indent += 1
+    privIndent += 1
     things.tail.foreach { _.foreach { log(_) } }
-    indent -= 1
+    privIndent -= 1
 
   private def printEpilogue(name: String, lines: List[String]): Unit =
     val leadingLength = name.length + 3
@@ -61,7 +63,7 @@ class RainbowDebug(color: Boolean = true) extends Debug:
   inline def log(msg: => String): Unit =
     import scala.collection.mutable.StringBuilder
     val indentBuilder = StringBuilder()
-    for i <- 0 until indent do
+    for i <- 0 until privIndent do
       indentBuilder ++= (if color then colors(i % colors.size) else identity[String])("│ ")
     writeLine("[mono] " + indentBuilder.toString + msg)
 
