@@ -665,7 +665,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           : SimpleType =
     {
       val originalVars = ty.getVars
-      val res = extrude(ty, lowerLvl, pol, upperLvl)(ctx, LinkedHashMap.empty, MutSortMap.empty, reason)
+      val res = extrude(ty, lowerLvl, pol, upperLvl)(ctx, MutMap.empty, MutSortMap.empty, reason)
       val newVars = res.getVars -- originalVars
       if (newVars.nonEmpty) trace(s"RECONSTRAINING TVs") {
         newVars.foreach {
@@ -1309,7 +1309,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     * `upperLvl` tracks the lowest such current quantification level. */
   private final
   def extrude(ty: SimpleType, lowerLvl: Int, pol: Boolean, upperLvl: Level)
-        (implicit ctx: Ctx, cache: LinkedHashMap[TypeVarOrRigidVar->Bool, TypeVarOrRigidVar], cache2: MutSortMap[TraitTag, TraitTag], reason: Ls[Ls[ST]])
+        (implicit ctx: Ctx, cache: MutMap[TypeVarOrRigidVar->Bool, TypeVarOrRigidVar], cache2: MutSortMap[TraitTag, TraitTag], reason: Ls[Ls[ST]])
         : SimpleType =
   // (trace(s"EXTR[${printPol(S(pol))}] $ty || $lowerLvl .. $upperLvl  ${ty.level} ${ty.level <= lowerLvl}"){
     if (ty.level <= lowerLvl) ty else ty match {
