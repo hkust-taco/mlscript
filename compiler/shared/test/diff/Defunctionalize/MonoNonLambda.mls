@@ -1,6 +1,6 @@
 :NewDefs
 
-:ge // TODO: top-level defs
+:ge // TODO: Wrap resulting statements in module
 :mono
 class A() {
     val x = 2

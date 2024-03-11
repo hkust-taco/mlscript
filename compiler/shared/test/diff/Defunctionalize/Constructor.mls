@@ -1,6 +1,6 @@
 :NewDefs
 
-//TODO: Observable change in behavior after lifting
+// FIXME: Preserve local state in classes
 :mono
 class X() {
     val a = 

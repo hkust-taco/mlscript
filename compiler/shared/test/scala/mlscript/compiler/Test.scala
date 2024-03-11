@@ -38,7 +38,8 @@ class DiffTestCompiler extends DiffTests {
         output(PrettyPrinter.showTypingUnit(defuncAST))
         return (outputBuilder.toString().linesIterator.toList, Some(defuncAST))
       }catch{
-        case error: MonomorphError => outputBuilder ++= (error.getMessage()/* :: error.getStackTrace().map(_.toString()).toList).mkString("\n"*/)
+        case error: MonomorphError => output(error.getMessage() ++ "\n" ++ (error.getStackTrace().take(10).map(_.toString()).toList).mkString("\n"))
+        return (Nil, None)
         // case error: StackOverflowError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().take(40).map(_.toString()).toList).mkString("\n")
       }
     }

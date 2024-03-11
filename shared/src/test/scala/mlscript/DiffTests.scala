@@ -468,8 +468,8 @@ class DiffTests
             else if (mode.mono || mode.lift) {
               import Message._
               Success(Pgrm(nuRes.getOrElse({
-                raise(ErrorReport(msg"Post-process failed to produce AST, defaulting to standard AST" -> None :: Nil, true, Diagnostic.Compilation))
-                res
+                raise(ErrorReport(msg"Post-process failed to produce AST." -> None :: Nil, true, Diagnostic.Compilation))
+                TypingUnit(Nil)
               }).entities), 0)
             }
             else

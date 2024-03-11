@@ -4,7 +4,7 @@ import scala.collection.mutable.{Map => MutMap}
 import scala.collection.immutable.ListMap
 
 
-abstract class MonoVal extends MonoValImpl
+sealed abstract class MonoVal extends MonoValImpl
 final case class TypeVal(name: String) extends MonoVal
 final case class ObjVal(name: String, params: List[String], fields: MutMap[String, BoundedTerm]) extends MonoVal with ObjValImpl
 final case class FuncVal(name: String, params: Option[List[String]], ctx: List[(String, BoundedTerm)]) extends MonoVal
@@ -38,7 +38,7 @@ trait MonoValImpl { self: MonoVal =>
     case UnknownVal() =>  s"UnknownVal"
     case PrimVal() => s"PrimVal()"
     case VarVal(vx, version, _) => s"VarVal(${vx})"
-      }
+  }
 }
 
 trait VarValImpl { 

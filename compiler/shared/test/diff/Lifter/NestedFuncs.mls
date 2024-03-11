@@ -1,6 +1,6 @@
 :NewDefs
 
-:e // TODO: Incorrect lifting
+:e // FIXME: Incorrect lifting
 :lift
 fun test(a) =
   let f(x) = a + x

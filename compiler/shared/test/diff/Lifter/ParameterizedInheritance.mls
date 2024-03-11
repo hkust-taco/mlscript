@@ -51,7 +51,7 @@ class Sub2(c: Int) extends Sub(c+c){
 //│ Code generation encountered an error:
 //│   unguarded recursive use of by-value binding c$1
 
-// TODO: Recursive reference in closure
+// TODO: Handle recursive references in closure
 //:mono
 //:e 
 //class Foo(f: Int -> Int){

@@ -1,24 +1,8 @@
 package mlscript
 package compiler
 
-import mlscript.compiler.mono.{Monomorph, MonomorphError}
+import mlscript.compiler.mono.*
 import scala.collection.mutable.ArrayBuffer
-import mlscript.CaseBranches
-import mlscript.Case
-import mlscript.SimpleTerm
-import mlscript.NoCases
-import mlscript.Wildcard
-import mlscript.DecLit
-import mlscript.IntLit
-import mlscript.StrLit
-import mlscript.AppliedType
-import mlscript.TypeName
-import mlscript.TypeDefKind
-import mlscript.compiler.mono.Monomorph
-import mlscript.compiler.NuParameter
-import mlscript.NuDecl
-import mlscript.TypingUnit
-import mlscript.Located
 
 type NuParameter = (FldFlags, Var, Option[Term])
 

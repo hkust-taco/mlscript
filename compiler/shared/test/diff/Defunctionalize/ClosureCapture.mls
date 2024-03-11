@@ -1,6 +1,7 @@
 :NewDefs
+:AllowRuntimeErrors
 
-:e //TODO: Class parameters not annotated
+// FIXME: Class parameters not annotated
 :mono
 fun foo(x) = 
   (f => f(x))(z => z+1)
@@ -23,7 +24,7 @@ foo(2)
 //│   Code(List(main$$3()))
 //│ }
 //│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.6: 	  (f => f(x))(z => z+1)
+//│ ║  l.7: 	  (f => f(x))(z => z+1)
 //│ ╙──     	          ^
 //│ class Lambda1$2$1(x: error)
 //│ class Lambda1$3$2()
@@ -35,9 +36,8 @@ foo(2)
 //│ res
 //│     = 3
 
-:e //TODO: Class parameters not annotated
+// FIXME: Class parameters not annotated
 :mono
-:AllowRuntimeErrors
 fun f(x) =
   (y => f(x+y))(x+1)
 f(1)

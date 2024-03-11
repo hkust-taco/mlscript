@@ -1,6 +1,6 @@
 :NewDefs
 
-:e //TODO: Nested class references not updated
+:e // FIXME: Nested class references not updated
 :lift
 class X() {
     class Y() {}

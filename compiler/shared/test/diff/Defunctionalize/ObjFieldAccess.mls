@@ -1,6 +1,6 @@
 :NewDefs
 
-:ge // TODO: top-level defs
+:ge // TODO: Wrap resulting statements in module
 :mono
 class A(i: Int) {
     fun get1() = i
@@ -37,7 +37,7 @@ a.get2
 //│ Code generation encountered an error:
 //│   unguarded recursive use of by-value binding a$1
 
-:ge // TODO: top-level defs
+:ge // TODO: Wrap resulting statements in module
 :mono
 class A(i: Str) {
     fun get1() = i
@@ -74,7 +74,7 @@ a.get2
 //│ Code generation encountered an error:
 //│   unguarded recursive use of by-value binding a$1
 
-:ge //TODO: top-level defs
+:ge //TODO: Wrap resulting statements in module
 :mono
 class X()
 class Y(foo: X) {
