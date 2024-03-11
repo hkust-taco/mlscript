@@ -1691,6 +1691,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     var tscs: Ls[Ls[(Opt[Bool], Type)] -> Ls[Ls[Type]]] = Nil
     
     val seenVars = mutable.Set.empty[TV]
+    val seenTscs = mutable.Set.empty[TupleSetConstraints]
     
     def field(ft: FieldType)(implicit ectx: ExpCtx): Field = ft match {
       case FieldType(S(l: TV), u: TV) if l === u =>
@@ -1801,6 +1802,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             tv.tsc.foreachEntry {
               case (tsc, i) =>
                 if (tsc.tvs.forall { case (_, v: TV) => !seenVars(v) || v === tv; case _ => true }) {
+                if (seenTscs.add(tsc)) {
                   val tvs = tsc.tvs.map(x => (x._1, go(x._2)))
                   val constrs = tsc.constraints.toList.map(_.map(go))
                   tscs ::= tvs -> constrs
