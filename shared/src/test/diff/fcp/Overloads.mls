@@ -96,8 +96,8 @@ fun x -> (if true then IISS else BBNN) x
 //│ ╙──
 //│ res: 'a -> 'b
 //│   where
-//│     ['a, 'b] in {[bool, bool], [number, number]}
 //│     ['a, 'b] in {[string, string], [int, int]}
+//│     ['a, 'b] in {[bool, bool], [number, number]}
 
 if true then IISS else BBNN
 //│ res: bool -> bool & number -> number | int -> int & string -> string
@@ -111,16 +111,16 @@ if true then IISS else BBNN
 :e
 (if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.252: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.112: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `int -> int & string -> string` is not a function
 //│ ║  l.12: 	def IISS: int -> int & string -> string
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(0 | 1 | true) -> number`
-//│ ║  l.252: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.112: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║         	              ^^^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.252: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.112: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╙──       	                                ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: (0 | 1 | true) -> number
 

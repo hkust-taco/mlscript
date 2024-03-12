@@ -1,7 +1,7 @@
 package mlscript
 
 import scala.collection.mutable
-import scala.collection.mutable.{Map => MutMap, Set => MutSet, Buffer}
+import scala.collection.mutable.{Map => MutMap, Set => MutSet, Buffer, LinkedHashMap}
 import scala.collection.immutable.{SortedSet, SortedMap}
 import scala.util.chaining._
 import scala.annotation.tailrec
@@ -535,7 +535,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       _assignedTo = value
     }
 
-    var tsc: MutMap[TupleSetConstraints, Int] = MutMap.empty
+    var tsc: LinkedHashMap[TupleSetConstraints, Int] = LinkedHashMap.empty
     
     // * Bounds should always be disregarded when `equatedTo` is defined, as they are then irrelevant:
     def lowerBounds: List[SimpleType] = { require(assignedTo.isEmpty, this); _lowerBounds }

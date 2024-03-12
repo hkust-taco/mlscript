@@ -960,16 +960,13 @@ abstract class TyperHelpers { Typer: Typer =>
           + (if (tv.upperBounds.isEmpty) "" else " <: " + tv.upperBounds.mkString(" & "))
       )
       }.mkString + {
-        val visited: MutSet[TV] = MutSet.empty
-        getVars.iterator.filter(tv => tv.tsc.nonEmpty).map {
-          case tv if visited.contains(tv) => ""
-          case tv =>
-            // FIXME nonsense: just keep a set of visited TSCs
-            visited ++= tv.tsc.map(_._1.tvs.collect { case (_, v: TV) => v }).flatten
-            tv.tsc.map { case (tsc, _) => ("\n\t\t[ "
+        val visited: MutSet[TupleSetConstraints] = MutSet.empty
+        getVars.iterator.flatMap(_.tsc).map { case (tsc, i) =>
+          if (visited.add(tsc))
+            ("\n\t\t[ "
               + tsc.tvs.mkString(", ")
               + " ] in { " + tsc.constraints.mkString(", ") + " }")
-            }
+          else ""
         }.mkString
       }
   }
