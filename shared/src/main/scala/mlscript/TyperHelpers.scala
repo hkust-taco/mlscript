@@ -206,25 +206,20 @@ abstract class TyperHelpers { Typer: Typer =>
     res
   }
   def factorize(ctx: Ctx)(ty: ST): ST = {
-    println(s"C $ty ${ty.components(true)}")
     cleanupUnion(ty.components(true))(ctx) match {
       case Nil => BotType
       case ty :: Nil => ty
-      case cs =>
-        println(s"CS $cs")
-        factorizeImpl(cs.map(_.components(false)))
+      case cs => factorizeImpl(cs.map(_.components(false)))
     }
   }
   def factorizeImpl(cs: Ls[Ls[ST]]): ST = trace(s"factorize? ${cs.map(_.mkString(" & ")).mkString(" | ")}") {
     def rebuild(cs: Ls[Ls[ST]]): ST =
       cs.iterator.map(_.foldLeft(TopType: ST)(_ & _)).foldLeft(BotType: ST)(_ | _)
     if (cs.sizeCompare(1) <= 0) return rebuild(cs)
-    // val factors = MutMap.empty[Factorizable, Int]
     val factors = LinkedHashMap.empty[Factorizable, Int]
     cs.foreach { c =>
       c.foreach {
         case tv: TV =>
-          println(s"Add $tv")
           factors(tv) = factors.getOrElse(tv, 0) + 1
         case tt: AbstractTag =>
           factors(tt) = factors.getOrElse(tt, 0) + 1
@@ -236,9 +231,7 @@ abstract class TyperHelpers { Typer: Typer =>
       }
     }
     println(s"Factors ${factors.mkString(", ")}")
-    println(s"Hash codes ${factors.map(_._1.hashCode).mkString(", ")}")
-    println(s"Classes ${factors.map(_._1.getClass()).mkString(", ")}")
-    factors.iterator.maxByOption(_._2).map{x=>println("?"+x);x} match {
+    factors.maxByOption(_._2) match {
       // case S((fact, n)) =>
       case S((fact, n)) if n > 1 =>
         val (factored, rest) =

@@ -1,6 +1,6 @@
 package mlscript
 
-import scala.collection.mutable.{Map => MutMap, SortedMap => MutSortMap, Set => MutSet, Stack => MutStack, Buffer, LinkedHashMap}
+import scala.collection.mutable.{Map => MutMap, SortedMap => MutSortMap, Set => MutSet, Stack => MutStack, Buffer}
 import scala.collection.immutable.{SortedSet, SortedMap}
 import scala.util.chaining._
 import scala.annotation.tailrec

@@ -442,7 +442,7 @@ rec def eval4 subst = eval_lexpr' eval4 subst
 //│     'h <: Abs[?] & 'k | Add[?] & 'l | App[?] & 'm | Mul[?] & 'n | Numb & 'o | Var & 'p
 //│     'k <: Abs[?] | App[?] | Var & 'q
 //│     'q :> Var
-//│        <: Abs[?] & 'j & 'k | 'lhs & (Abs[?] & 'k & ~#Abs | Add[?] & {name: string} & 'l | App[?] & {name: string} & 'm | Mul[?] & {name: string} & 'n | Var & 'p | 'o & (Numb & {name: string} | Numb & {name: string} & ~#Numb))
+//│        <: Abs[?] & 'j & 'k | 'lhs & (Abs[?] & 'k & ~#Abs | Add[?] & {name: string} & 'l | App[?] & {name: string} & 'm | Mul[?] & {name: string} & 'n | Numb & {name: string} & 'o | Var & 'p)
 //│     'l <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result0 | Var & 'p & 'lhs
 //│     'result0 :> Numb | Var | 'i
 //│              <: Abs[?] & 'j & 'k | 'lhs & (Add[?] & 'l | App[?] & 'm | Mul[?] & 'n | Numb & 'o | Var & 'p)
@@ -484,7 +484,7 @@ rec def eval4 subst = eval_lexpr' eval4 subst
 //│     'h <: Abs[?] & 'k | Add[?] & 'm | App[?] & 'n | Mul[?] & 'o | Numb & 'p | Var & 'q
 //│     'k <: Abs[?] & {body: 'h} | App[?] & {lhs: 'h, rhs: 'h} | Var & 'r
 //│     'r :> Var
-//│        <: Abs[?] & 'j & 'k & 'l | 'lhs & (Abs[?] & 'k & 'l & ~#Abs | 'lhs0 & (Add[?] & {name: string} & 'm | App[?] & {name: string} & 'n | Mul[?] & {name: string} & 'o | Var & 'q | 'p & (Numb & {name: string} | Numb & {name: string} & ~#Numb)))
+//│        <: Abs[?] & 'j & 'k & 'l | 'lhs & (Abs[?] & 'k & 'l & ~#Abs | 'lhs0 & (Add[?] & {name: string} & 'm | App[?] & {name: string} & 'n | Mul[?] & {name: string} & 'o | Numb & {name: string} & 'p | Var & 'q))
 //│     'm <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result0 | Var & 'q & 'lhs & 'lhs0
 //│     'result0 :> Numb | Var | 'i
 //│              <: Abs[?] & 'j & 'k & 'l | 'lhs & 'lhs0 & (Add[?] & 'm | App[?] & 'n | Mul[?] & 'o | Numb & 'p | Var & 'q)
@@ -499,7 +499,7 @@ rec def eval4 subst = eval_lexpr' eval4 subst
 //│        eval_lexpr', eval_var, list_assoc and eq are not implemented
 //│ constrain calls  : 10599
 //│ annoying  calls  : 2300
-//│ subtyping calls  : 321855
+//│ subtyping calls  : 319664
 
 :ResetFuel
 

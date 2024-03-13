@@ -29,49 +29,30 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   
   
   sealed abstract class LhsNf {
-  // sealed abstract class LhsNf extends Ordered[LhsNf] {
-    // def compare(that: LhsNf): Int = {???}
-    def comparePartial(that: LhsNf): Int = (this, that) match {
+    final def compareEquiv(that: LhsNf): Int = (this, that) match {
       case (LhsRefined(b1, ts1, r1, trs1), LhsRefined(b2, ts2, r2, trs2)) =>
-        println(trs1, trs2)
-        val cmp1 = (b1, b2) match {
-          case (S(c1), S(c2)) => c1.comparePartial(c2)
+        var cmp = (b1, b2) match {
+          case (S(c1), S(c2)) => c1.compareEquiv(c2)
           case (S(c1), N) => -1
           case (N, S(c2)) => 1
           case (N, N) => 0
         }
-        println(cmp1)
-        if (cmp1 =/= 0) return cmp1
-        val cmp4 = (trs1.headOption, trs2.headOption) match {
-          case (Some((n1, _)), Some((n2, _))) =>
-            n1.compare(n2) 
-            // match {
-            //   case 0 =>
-            //   case res => return res
-            // }
-          // case (Some(_), None) => -1
-          // case (None, Some(_)) => 1
-          // case (None, None) => 0
-          // case _ => //trs1.size.compare(trs2.size)
-          case _ => trs1.size.compare(trs2.size)
+        if (cmp =/= 0) return cmp
+        // * Just compare the heads for simplicity...
+        cmp = (trs1.headOption, trs2.headOption) match {
+          case (S((n1, _)), S((n2, _))) =>
+            n1.compare(n2) // * in principle we could go on to compare the tails if this is 0
+          case (S(_), N) => 1
+          case (N, S(_)) => -1
+          case (N, N) => 0
         }
-        if (cmp4 =/= 0) return cmp4
-        val cmp2 = ts1.size.compare(ts2.size)
-        println(cmp2)
-        if (cmp2 =/= 0) return cmp2
-        // val cmp3 = r1.comparePartial(r2)
-        val cmp3 = (r1, r2) match {
-          // case (RecordType(Nil), RecordType(Nil)) => 0
-          // case (RecordType(Nil), RecordType(fs2)) => -1
-          // case (RecordType(fs1), RecordType(Nil)) => 1
-          // case (RecordType(fs1), RecordType(fs2)) => 0
-          case (RecordType(Nil), RecordType(_ :: _)) => -1
-          case (RecordType(_ :: _), RecordType(Nil)) => 1
-          case (RecordType(fs1), RecordType(fs2)) => 0
-        }
-        // if (cmp3 =/= 0) return cmp3
-        cmp3
-        // trs1.size.compare(trs2.size)
+        if (cmp =/= 0) return cmp
+        cmp = -trs1.sizeCompare(trs2)
+        if (cmp =/= 0) return cmp
+        cmp = ts1.sizeCompare(ts2.size)
+        if (cmp =/= 0) return cmp
+        cmp = r1.fields.sizeCompare(r2.fields)
+        cmp
       case (LhsTop, _) => 1
       case (_, LhsTop) => -1
     }
@@ -293,22 +274,6 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     def isTop: Bool = isInstanceOf[LhsTop.type]
   }
   case class LhsRefined(base: Opt[BaseType], ttags: SortedSet[AbstractTag], reft: RecordType, trefs: SortedMap[TypeName, TypeRef]) extends LhsNf {
-  // case class LhsRefined(base: Opt[BaseType], ttags: SortedSet[AbstractTag], reft: RecordType, trefs: SortedMap[TypeName, TypeRef]) extends LhsNf {
-    // def compare(that: LhsNf): Int = that match {
-    //   case LhsRefined(b, ts, r, trs) =>
-    //     implicitly[Ordering[Opt[BaseTypeOrTag]]]
-    //     // val cmp1 = base.compare(b)
-    //     val cmp1 = implicitly[Ordering[Opt[BaseTypeOrTag]]].compare(base, b)
-    //     if (cmp1 =/= 0) return cmp1
-    //     val cmp2 = ttags.size.compare(ts.size)
-    //     if (cmp2 =/= 0) return cmp2
-    //     val cmp3 = 
-    //       {???;0} // TODO
-    //       // reft.compare(r)
-    //     if (cmp3 =/= 0) return cmp3
-    //     trefs.size.compare(trs.size)
-    //   case LhsTop => 1
-    // }
     // assert(!trefs.exists(primitiveTypes contains _._1.name))
     lazy val allTags: Set[IdentifiedTerm] = ttags.iterator.foldLeft(base match {
         case S(cls: ClassTag) => cls.parentsST + cls.id
@@ -321,50 +286,31 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       (ttags.iterator ++ trefs.valuesIterator).map("∧"+_).mkString}"
   }
   case object LhsTop extends LhsNf {
-    // def compare(that: LhsNf): Int = -1
     override def toString: Str = "⊤"
   }
   
   
   sealed abstract class RhsNf {
-  // sealed abstract class RhsNf extends Ordered[RhsNf] {
-    // def compare(that: RhsNf): Int = {???}
-    def comparePartial(that: RhsNf): Int = (this, that) match {
+    final def compareEquiv(that: RhsNf): Int = (this, that) match {
       case (RhsField(n1, t1), RhsField(n2, t2)) => n1.compare(n2)
       case (RhsBases(ps1, bf1, trs1), RhsBases(ps2, bf2, trs2)) =>
-        // val cmp1 = ps1.size.compare(ps2.size)
-        val cmp1 = ps1.minOption match {
+        var cmp = ps1.minOption match {
           case S(m1) => ps2.minOption match {
             case S(m2) => m1.compare(m2)
             case N => ps1.size.compare(ps2.size)
           }
           case N => ps1.size.compare(ps2.size)
         }
-        if (cmp1 =/= 0) return cmp1
-        // val cmp2 = bf1.fold(0)(_.fold(1, -1)) compare bf2.fold(0)(_.fold(1, -1))
-        // if (cmp2 =/= 0) return cmp2
-        // val cmp3 = trs1.size.compare(trs2.size)
-        val cmp3 = (trs1.headOption, trs2.headOption) match {
-          case (Some((n1, _)), Some((n2, _))) => n1.compare(n2)
-          // case (Some(_), None) => -1
-          // case (None, Some(_)) => 1
-          // case (None, None) => 0
-          case _ => trs1.size.compare(trs2.size)
+        if (cmp =/= 0) return cmp
+        cmp = (trs1.headOption, trs2.headOption) match {
+          case (S((n1, _)), S((n2, _))) => n1.compare(n2)
+          case (S(_), N) => 1
+          case (N, S(_)) => -1
+          case (N, N) => 0
         }
-        if (cmp3 =/= 0) return cmp3
-        // val cmp4 = ps1.iterator.zip(ps2.iterator).map { case (p1, p2) => p1.compare(p2) }.find(_ =/= 0)
-        // if (cmp4.isDefined) return cmp4.get
-        // val cmp5 = trs1.iterator.zip(trs2.iterator).map { case ((n1, t1), (n2, t2)) =>
-        //   n1.compare(n2) match {
-        //     case 0 => t1.comparePartial(t2)
-        //     case c => c
-        //   }
-        // }.find(_ =/= 0)
-        // if (cmp5.isDefined) return cmp5.get
-        // bf1.fold(0)(_.fold(0, 1)) compare bf2.fold(0)(_.fold(0, 1))
-        0
-      // case (_: RhsBases, _: RhsField) => -1
-      // case (_: RhsField, _: RhsBases) => 1
+        if (cmp =/= 0) return cmp
+        cmp = -trs1.sizeCompare(trs2)
+        cmp
       case (_: RhsBases, _) => -1
       case (_, _: RhsBases) => 1
       case (_: RhsField, _) => -1
@@ -551,26 +497,19 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   }
   
   
-  object ConjunctPartialOrdering extends Ordering[Conjunct] {
-    def compare(x: Conjunct, y: Conjunct): Int = x.comparePartial(y)
-  }
-  case class Conjunct(lnf: LhsNf, vars: SortedSet[TypeVariable], rnf: RhsNf, nvars: SortedSet[TypeVariable]) {
-  // case class Conjunct(lnf: LhsNf, vars: SortedSet[TypeVariable], rnf: RhsNf, nvars: SortedSet[TypeVariable]) extends Ordered[Conjunct] {
-  // case class Conjunct(lnf: LhsNf, vars: SortedSet[TypeVariable], rnf: RhsNf, nvars: SortedSet[TypeVariable]) {
-    // def compare(that: Conjunct): Int = this.mkString compare that.mkString // TODO less inefficient!!
-    def comparePartial(that: Conjunct): Int = trace(s"comparePartial($this, $that)")(comparePartialImpl(that))(r => s"= $r")
-    def comparePartialImpl(that: Conjunct): Int = {
-      val cmp1 = lnf.comparePartial(that.lnf)
-      if (cmp1 =/= 0) return cmp1
-      val cmp3 = rnf.comparePartial(that.rnf)
-      if (cmp3 =/= 0) return cmp3
-      // val cmp2 = vars.size.compare(that.vars.size)
-      val cmp2 = -vars.sizeCompare(that.vars)
-      if (cmp2 =/= 0) return cmp2
-      // nvars.size.compare(that.nvars.size)
-      -nvars.sizeCompare(that.nvars)
-      // implicitly[Ordering[SortedSet[TV]]]
-      // ???
+  final case class Conjunct(lnf: LhsNf, vars: SortedSet[TypeVariable], rnf: RhsNf, nvars: SortedSet[TypeVariable]) {
+    final def compareEquiv(that: Conjunct): Int =
+      // trace(s"compareEquiv($this, $that)")(compareEquivImpl(that))(r => s"= $r")
+      compareEquivImpl(that)
+    final def compareEquivImpl(that: Conjunct): Int = {
+      var cmp = lnf.compareEquiv(that.lnf)
+      if (cmp =/= 0) return cmp
+      cmp = rnf.compareEquiv(that.rnf)
+      if (cmp =/= 0) return cmp
+      cmp = -vars.sizeCompare(that.vars)
+      if (cmp =/= 0) return cmp
+      cmp = -nvars.sizeCompare(that.nvars)
+      cmp
     }
     def toType(sort: Bool = false): SimpleType =
       toTypeWith(_.toType(sort), _.toType(sort), sort)
@@ -702,6 +641,15 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         case RhsBot => RhsBot
       }, nvars)
     }
+    /** Scala's standard library is weird. I would have normally made Conjunct extend Ordered[Conjunct],
+      * but the contract of Ordered says that `equals` and `hashCode` should be "consistent" with `compare`,
+      * which I understand as two things comparing to 0 HAVING to be equal and to have the same hash code...
+      * But achieving this is very expensive for general type forms.
+      * All we want to do here is to define an ordering between implicit equivalence classes
+      * whose members are not necessarily equal. Which is fine since we only use this to do stable sorts. */
+    implicit object Ordering extends Ordering[Conjunct] {
+      def compare(x: Conjunct, y: Conjunct): Int = x.compareEquiv(y)
+    }
   }
   
   
@@ -728,8 +676,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
     lazy val levelBelowPolym = levelBelow(polymLevel)
     def isBot: Bool = cs.isEmpty
     def toType(sort: Bool = false): SimpleType = ConstrainedType.mk(cons, if (cs.isEmpty) BotType else {
-      // val css = if (sort) cs.sorted else cs
-      val css = cs
+      val css = if (sort) cs.sorted else cs
       PolymorphicType.mk(polymLevel, css.map(_.toType(sort)).foldLeft(BotType: ST)(_ | _))
     })
     lazy val level: Level =

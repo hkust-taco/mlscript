@@ -161,9 +161,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         implicit val ctx: Ctx = newCtx
         implicit val freshened: MutMap[TV, ST] = MutMap.empty
         
-        println(">>>>>>>> "+newCtx.extrCtx)
-        // ???
-        
         val cty = ConstrainedType.mk(newCtx.extrCtx.iterator.flatMap { case (tv, bs) =>
           bs.iterator
             // .filter(_._2.level > lvl) // does not seem to change anything!
@@ -1946,8 +1943,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         case tv: TypeVariable if stopAtTyVars => tv.asTypeVar
         case tv: TypeVariable => ectx.tps.getOrElse(tv, {
           val nv = tv.asTypeVar
-          // if (!seenVars(tv)) {
-          //   seenVars += tv
           if (seenVars.add(tv)) {
             tv.assignedTo match {
               case S(ty) =>
@@ -2025,22 +2020,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               .toArray.sorted
               .map(_.asTypeVar pipe (R(_))).toList, b)
         case ConstrainedType(cs, bod) =>
-          /* 
-          println(s"!!!! $cs")
-          val (ubs, others1) = cs.groupMap(_._1)(_._2).toList.partition(_._2.sizeIs > 1)
-          val lbs = others1.mapValues(_.head).groupMap(_._2)(_._1).toList
-          val bounds = (ubs.mapValues(_.reduce(_ &- _)) ++ lbs.mapValues(_.reduce(_ | _)).map(_.swap))
-          val processed = bounds.map { case (lo, hi) => Bounds(go(lo), go(hi)) }
-          // val sorted = processed.sortBy(_.)
-          println(s"???? $sorted")
-          Constrained(go(bod), Nil, sorted)
-          */
           val groups1, groups2 = LinkedHashMap.empty[ST, Buffer[ST]]
           cs.foreach { case (lo, hi) => groups1.getOrElseUpdate(lo, Buffer.empty) += hi }
           val (ubs, others1) = groups1.toList.partition(_._2.sizeIs > 1)
-          // val lbs = others1.mapValues(_.head).groupMap(_._2)(_._1).toList
-          // val groups2 = LinkedHashMap.empty[ST, Buffer[ST]]
-          // others1.foreach { case (k, v :: vs) => groups2.getOrElseUpdate(v, Buffer.empty) += k }
           others1.foreach { case (k, vs) => groups2.getOrElseUpdate(vs.head, Buffer.empty) += k }
           val lbs = groups2.toList
           val bounds = (ubs.mapValues(_.reduce(_ &- _)) ++ lbs.mapValues(_.reduce(_ | _)).map(_.swap))

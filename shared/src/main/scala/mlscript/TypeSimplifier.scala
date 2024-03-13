@@ -67,11 +67,15 @@ trait TypeSimplifier { self: Typer =>
           }
         case N =>
           nv.lowerBounds = if (allVarPols(tv).forall(_ === true))
-              (if (reverseBoundsOrder) tv.lowerBounds.reverseIterator else tv.lowerBounds.iterator).map(process(_, S(true -> tv)))
+              (if (reverseBoundsOrder) tv.lowerBounds.reverseIterator
+                else tv.lowerBounds.iterator
+              ).map(process(_, S(true -> tv)))
                 .reduceOption(_ | _).filterNot(_.isBot).toList
             else Nil
           nv.upperBounds = if (allVarPols(tv).forall(_ === false))
-              (if (reverseBoundsOrder) tv.upperBounds.reverseIterator else tv.upperBounds.iterator).map(process(_, S(false -> tv)))
+              (if (reverseBoundsOrder) tv.upperBounds.reverseIterator
+                else tv.upperBounds.iterator
+              ).map(process(_, S(false -> tv)))
                 .reduceOption(_ &- _).filterNot(_.isTop).toList
             else Nil
         }
@@ -198,12 +202,9 @@ trait TypeSimplifier { self: Typer =>
       // *  where `T` is `A & B & C`.
       // * It is fine to call `go` because we made sure A, B, C, etc. do not themsleves have any negative components.
       val csNegs2 = if (csNegs.isEmpty) BotType
-        else go(csNegs.foldLeft(TopType: ST)(_ & _.toType().neg()), pol.map(!_)).neg() // TODO sort?! csNegs and toType
+        else go(csNegs.foldLeft(TopType: ST)(_ & _.toType(sort = true).neg()), pol.map(!_)).neg() // TODO sort?! csNegs and toType
       
-      // println(s"O ${otherCs} ${otherCs.sorted}")
-      // val otherCs2 = otherCs.sortBy(_.comparePartial(_)).map { c =>
-      val otherCs2 = otherCs.sorted(ConjunctPartialOrdering).map { c =>
-      // val otherCs2 = otherCs.map { c =>
+      val otherCs2 = otherCs.sorted.map { c =>
         c.vars.foreach(processVar)
         c.nvars.foreach(processVar)
         
@@ -673,7 +674,6 @@ trait TypeSimplifier { self: Typer =>
     }
     
     def processImpl(st: SimpleType, pol: PolMap, occPol: Bool) = {
-      // val newOccs = MutSet.empty[SimpleType]
       val newOccs = LinkedHashSet.empty[SimpleType]
       
       println(s">> Processing $st at [${printPol(S(occPol))}]")
@@ -711,8 +711,7 @@ trait TypeSimplifier { self: Typer =>
               case Some(os) =>
                 // Q: filter out vars of different level?
                 os.filterInPlace(occs) // computes the intersection
-              // case None => coOccurrences(pol -> tv) = occs.clone() // `clone` not needed?
-              case None => coOccurrences(pol -> tv) = LinkedHashSet.from(occs) // `clone` not needed?
+              case None => coOccurrences(pol -> tv) = LinkedHashSet.from(occs) // copy not needed?
             }
           }
           pol(tv) match {
@@ -794,7 +793,6 @@ trait TypeSimplifier { self: Typer =>
       println(s"2[v] $v ${coOccurrences.get(true -> v)} ${coOccurrences.get(false -> v)}")
       
       coOccurrences.get(true -> v).iterator.flatMap(_.iterator).foreach {
-      // coOccurrences.get(true -> v).toArray.sorted.flatMap(_.iterator).foreach {
         
         case atom @ (_: BaseType | _: TypeRef)
           if !recVars(v) // can't reduce recursive sandwiches, obviously
@@ -1273,7 +1271,7 @@ trait TypeSimplifier { self: Typer =>
       debugOutput(s" where: ${cur.showBounds}")
       
       cur = removeIrrelevantBounds(cur, pol,
-        reverseBoundsOrder = true, // bounds are accumulated by type inference in reverse order of appearance; so nicer to reverse them
+        reverseBoundsOrder = true, // bounds are accumulated by type inference in reverse order of appearance; so nicer to reverse them here
         inPlace = false)
       debugOutput(s"⬤ Cleaned up: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")

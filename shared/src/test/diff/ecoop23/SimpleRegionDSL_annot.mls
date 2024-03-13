@@ -88,10 +88,6 @@ mixin SizeExt {
 type RegionLang = BaseLang[RegionLang] | ExtLang[RegionLang]
 //│ type RegionLang = BaseLang[RegionLang] | ExtLang[RegionLang]
 
-// * Note that the type components are reordered to be the same as the definition above:
-type RegionLang = ExtLang[RegionLang] | BaseLang[RegionLang]
-//│ type RegionLang = BaseLang[RegionLang] | ExtLang[RegionLang]
-
 module TestSize extends SizeBase, SizeExt {
   fun size: RegionLang -> Int
 }
@@ -184,16 +180,16 @@ mixin Text {
 :e
 module SizeText extends Text
 //│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
-//│ ║  l.177: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
+//│ ║  l.173: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
 //│ ╙──       	                                                                         ^^^^^
 //│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
-//│ ║  l.176: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
+//│ ║  l.172: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                                     ^^^^^
 //│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
-//│ ║  l.175: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
+//│ ║  l.171: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                          ^^^^^
 //│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
-//│ ║  l.174: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
+//│ ║  l.170: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
 //│ ╙──       	                                                                       ^^^^^
 //│ module SizeText {
 //│   fun text: (Circle | Intersect[anything] | Outside[anything] | Translate[anything] | Union[anything]) -> Str
@@ -293,17 +289,17 @@ IsUnivIsEmpty.isEmpty(circles)
 class Foo()
 IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.294: 	IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
+//│ ║  l.290: 	IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Foo` does not match type `BaseLang[RegionLang] | ExtLang[RegionLang]`
-//│ ║  l.294: 	IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
+//│ ║  l.290: 	IsUnivIsEmpty.isEmpty(Scale(Vector(1, 2), Intersect(Foo(), circles)))
 //│ ║         	                                                    ^^^^^
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.92: 	type RegionLang = ExtLang[RegionLang] | BaseLang[RegionLang]
+//│ ║  l.88: 	type RegionLang = BaseLang[RegionLang] | ExtLang[RegionLang]
 //│ ║        	                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
-//│ ║  l.92: 	type RegionLang = ExtLang[RegionLang] | BaseLang[RegionLang]
-//│ ╙──      	                                                 ^^^^^^^^^^
+//│ ║  l.88: 	type RegionLang = BaseLang[RegionLang] | ExtLang[RegionLang]
+//│ ╙──      	                           ^^^^^^^^^^
 //│ class Foo()
 //│ error | false | true
 //│ res
@@ -421,16 +417,16 @@ Lang.size(mk(100))
 :re
 Lang.contains(mk(100), Vector(0, 0))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.422: 	Lang.contains(mk(100), Vector(0, 0))
+//│ ║  l.418: 	Lang.contains(mk(100), Vector(0, 0))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Scale[?Region]` does not match type `Circle | Intersect[BaseRegionLang] | Outside[BaseRegionLang] | Translate[BaseRegionLang] | Union[BaseRegionLang]`
-//│ ║  l.352: 	  _ then Scale(Vector(0, 0), mk(n))
+//│ ║  l.348: 	  _ then Scale(Vector(0, 0), mk(n))
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.23: 	type BaseLang[T] = Circle | Intersect[T] | Union[T] | Outside[T] | Translate[T]
 //│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
-//│ ║  l.138: 	type BaseRegionLang = BaseLang[BaseRegionLang]
+//│ ║  l.134: 	type BaseRegionLang = BaseLang[BaseRegionLang]
 //│ ╙──       	                               ^^^^^^^^^^^^^^
 //│ error | false | true
 //│ res
@@ -441,16 +437,16 @@ Lang.contains(mk(100), Vector(0, 0))
 :re
 Lang.text(mk(100))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.442: 	Lang.text(mk(100))
+//│ ║  l.438: 	Lang.text(mk(100))
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Scale[?Region]` does not match type `Circle | Intersect[BaseRegionLang] | Outside[BaseRegionLang] | Translate[BaseRegionLang] | Union[BaseRegionLang]`
-//│ ║  l.352: 	  _ then Scale(Vector(0, 0), mk(n))
+//│ ║  l.348: 	  _ then Scale(Vector(0, 0), mk(n))
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.23: 	type BaseLang[T] = Circle | Intersect[T] | Union[T] | Outside[T] | Translate[T]
 //│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── from type reference:
-//│ ║  l.138: 	type BaseRegionLang = BaseLang[BaseRegionLang]
+//│ ║  l.134: 	type BaseRegionLang = BaseLang[BaseRegionLang]
 //│ ╙──       	                               ^^^^^^^^^^^^^^
 //│ Str | error
 //│ res
@@ -477,4 +473,3 @@ Lang.size(Lang.eliminate(mk(100)))
 //│ res
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
-

@@ -1,27 +1,9 @@
 :NewDefs
 
-
-// :d
-// :ds
-fun (+:) pre(x: Int, xs) = [[x], xs]
-fun (:+) post(xs, x: Int) = [xs, [x]]
-fun (++) conc(xs, ys) = [xs, ys]
-//│ fun (+:) pre: forall 'a. (x: Int, 'a) -> [[Int], 'a]
-//│ fun (:+) post: forall 'b. ('b, x: Int) -> ['b, [Int]]
-//│ fun (++) conc: forall 'c 'd. ('c, 'd) -> ['c, 'd]
+// https://twitter.com/LParreaux/status/1762843603804770408
 
 
-
-
-type a = 0 | "0" | 2 | "2" | 10
-//│ type a = "0" | "2" | 0 | 10 | 2
-
-type a = "0" | 0 | 2 | "2" | 10
-//│ type a = "0" | "2" | 0 | 10 | 2
-
-
-
-type f = forall 'a: ('a      ) -> 'a where 'a : Int
+type f =  forall 'a: ('a      ) -> 'a where 'a : Int
 //│ type f = forall 'a. (Int & 'a) -> 'a
 
 type f = (forall 'a: ('a      ) -> 'a where 'a : Int)
@@ -53,4 +35,5 @@ x => (id : f)(x) : Int
 //│ Int -> Int
 //│ res
 //│     = [Function: res]
+
 
