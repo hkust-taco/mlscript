@@ -6,6 +6,7 @@ import mlscript.compiler.ir._
 import scala.collection.mutable.StringBuilder
 import mlscript.{DiffTests, ModeType, TypingUnit}
 import mlscript.compiler.ir.{Interpreter, Fresh, FreshInt, Builder}
+import mlscript.compiler.optimizer.TailRecOpt
 
 class IRDiffTestCompiler extends DiffTests {
   import IRDiffTestCompiler.*
@@ -16,7 +17,15 @@ class IRDiffTestCompiler extends DiffTests {
       try
         output("\n\nIR:")
         val gb = Builder(Fresh(), FreshInt(),  FreshInt(), FreshInt())
-        val graph = gb.buildGraph(unit)
+        val graph_ = gb.buildGraph(unit)
+        output(graph_.toString())
+
+        val graph = if (!mode.noTailrecOpt) {
+          val tailRecOpt = new TailRecOpt
+          tailRecOpt(graph_)
+        } else {
+          graph_
+        }
         output(graph.toString())
         output("\nPromoted:")
         output(graph.toString())

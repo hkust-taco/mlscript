@@ -43,6 +43,7 @@ abstract class ModeType {
   def allowEscape: Bool
   def mono: Bool
   def useIR: Bool
+  def noTailrecOpt: Bool
   def interpIR: Bool
   def irVerbose: Bool
   def lift: Bool
@@ -178,6 +179,7 @@ class DiffTests
       lift: Bool = false,
       nolift: Bool = false,
       // noProvs: Bool = false,
+      noTailrecOpt: Bool = false,
       useIR: Bool = false,
       interpIR: Bool = false,
       irVerbose: Bool = false,
@@ -286,6 +288,7 @@ class DiffTests
           case "escape" => mode.copy(allowEscape = true)
           case "mono" => {mode.copy(mono = true)}
           case "lift" => {mode.copy(lift = true)}
+          case "noTailrec" => mode.copy(noTailrecOpt = true)
           case "nolift" => {mode.copy(nolift = true)}
           case "exit" =>
             out.println(exitMarker)
