@@ -27,6 +27,8 @@ abstract class ModeType {
   def dbgParsing: Bool
   def dbgSimplif: Bool
   def dbgUCS: Bool
+  def dbgLifting: Bool
+  def dbgDefunc: Bool
   def fullExceptionStack: Bool
   def stats: Bool
   def stdout: Bool
@@ -43,6 +45,8 @@ abstract class ModeType {
   def useIR: Bool
   def interpIR: Bool
   def irVerbose: Bool
+  def lift: Bool
+  def nolift: Bool
 }
 
 class DiffTests
@@ -155,6 +159,8 @@ class DiffTests
       dbgParsing: Bool = false,
       dbgSimplif: Bool = false,
       dbgUCS: Bool = false,
+      dbgLifting: Bool = false,
+      dbgDefunc: Bool = false,
       fullExceptionStack: Bool = false,
       stats: Bool = false,
       stdout: Bool = false,
@@ -169,6 +175,8 @@ class DiffTests
       showRepl: Bool = false,
       allowEscape: Bool = false,
       mono: Bool = false,
+      lift: Bool = false,
+      nolift: Bool = false,
       // noProvs: Bool = false,
       useIR: Bool = false,
       interpIR: Bool = false,
@@ -221,6 +229,8 @@ class DiffTests
           case "d" => mode.copy(dbg = true)
           case "dp" => mode.copy(dbgParsing = true)
           case "ds" => mode.copy(dbgSimplif = true)
+          case "dl" => mode.copy(dbgLifting = true)
+          case "dd" => mode.copy(dbgDefunc = true)
           case "ducs" => mode.copy(dbg = true, dbgUCS = true)
           case "s" => mode.copy(fullExceptionStack = true)
           case "v" | "verbose" => mode.copy(verbose = true)
@@ -275,6 +285,8 @@ class DiffTests
           case "r" | "showRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
           case "mono" => {mode.copy(mono = true)}
+          case "lift" => {mode.copy(lift = true)}
+          case "nolift" => {mode.copy(nolift = true)}
           case "exit" =>
             out.println(exitMarker)
             ls.dropWhile(_ =:= exitMarker).tails.foreach {
@@ -453,6 +465,13 @@ class DiffTests
             
             if (parseOnly)
               Success(Pgrm(Nil), 0)
+            else if (mode.mono || mode.lift) {
+              import Message._
+              Success(Pgrm(nuRes.getOrElse({
+                raise(ErrorReport(msg"Post-process failed to produce AST." -> None :: Nil, true, Diagnostic.Compilation))
+                TypingUnit(Nil)
+              }).entities), 0)
+            }
             else
               Success(Pgrm(res.entities), 0)
             

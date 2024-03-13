@@ -1,4 +1,4 @@
-package mlscript.compiler.debug
+package mlscript.compiler
 
 import scala.collection.mutable.ArrayBuffer
 import RainbowDebug.black

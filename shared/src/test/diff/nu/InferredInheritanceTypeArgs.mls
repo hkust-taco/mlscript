@@ -17,10 +17,10 @@ class A(val a: Int) extends Test
 
 :e
 class A(a: Int) extends Test
-//│ ╔══[ERROR] Parameter 'a' cannot tbe accessed as a field
+//│ ╔══[ERROR] Parameter 'a' cannot be accessed as a field
 //│ ║  l.6: 	  fun bar = [this.a, this.a]
 //│ ╙──     	                         ^^
-//│ ╔══[ERROR] Parameter 'a' cannot tbe accessed as a field
+//│ ╔══[ERROR] Parameter 'a' cannot be accessed as a field
 //│ ║  l.6: 	  fun bar = [this.a, this.a]
 //│ ╙──     	                 ^^
 //│ class A(a: Int) {

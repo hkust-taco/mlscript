@@ -1,7 +1,7 @@
 package mlscript.compiler
 
 import mlscript.{TypingUnit, NuFunDef, NuTypeDef, Term, Tup}
-import mlscript.compiler.debug.DebugOutput
+import mlscript.compiler.DebugOutput
 
 // For pretty printing terms in debug output.
 object PrettyPrinter:

@@ -1,7 +1,6 @@
 package mlscript.compiler.optimizer
 
 import mlscript._
-import mlscript.compiler.{Expr => ASTExpr}
 import mlscript.compiler.ir._
 import mlscript.utils._
 import shorthands._
