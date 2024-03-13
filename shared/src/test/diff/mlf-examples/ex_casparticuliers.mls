@@ -150,7 +150,7 @@ succ' {} {} {}
 //│   TypeError: n is not a function
 
 fun x -> succ' x x x x x x x x x
-//│ res: ('a -> 'a -> 'b & 'b -> 'a -> 'a -> 'a -> 'a -> 'a -> 'a -> 'c & 'a) -> 'c
+//│ res: ('a -> 'b -> 'b -> 'b -> 'b -> 'b -> 'b -> 'c & 'b -> 'b -> 'a & 'b) -> 'c
 //│    = [Function: res]
 
 
@@ -550,8 +550,8 @@ succ_ty = succ
 succ_ty = succ'
 //│ 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. 'c -> 'e
 //│   where
-//│     'b <: 'd -> 'e
-//│     'a <: 'b -> 'c -> 'd))
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e))
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type error in def definition
@@ -575,8 +575,8 @@ succ_ty = succ'
 succ_ty = succ'
 //│ 'a -> 'b -> ('c -> 'd
 //│   where
-//│     'b <: 'e -> 'd
-//│     'a <: 'b -> 'c -> 'e)
+//│     'a <: 'b -> 'c -> 'e
+//│     'b <: 'e -> 'd)
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
 //│        = [Function: succ$1]

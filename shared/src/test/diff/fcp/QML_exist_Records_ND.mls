@@ -97,7 +97,7 @@ def stepImpl (arrImpl: ArraysImpl['a, 'r]) = {
     fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
   }
 //│ stepImpl: ArraysImpl['a, 'r] -> {
-//│   fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'c. ('b & 'c) -> (('r, anything,),) -> ('b0 | 'c)),
+//│   fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'c. ('b & 'c) -> (('r, anything,),) -> ('c | 'b0)),
 //│   init: 'a -> ('r, "hi",),
 //│   sub: (('r, anything,),) -> int -> 'a,
 //│   update: (('r, anything,),) -> int -> 'a -> ('r, "hey",)
@@ -106,7 +106,7 @@ def stepImpl (arrImpl: ArraysImpl['a, 'r]) = {
 
 stepImpl_ty = stepImpl
 //│ ArraysImpl['a, 'r] -> {
-//│   fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'c. ('b & 'c) -> (('r, anything,),) -> ('b0 | 'c)),
+//│   fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'c. ('b & 'c) -> (('r, anything,),) -> ('c | 'b0)),
 //│   init: 'a -> ('r, "hi",),
 //│   sub: (('r, anything,),) -> int -> 'a,
 //│   update: (('r, anything,),) -> int -> 'a -> ('r, "hey",)
@@ -219,7 +219,7 @@ def step (arr: Arrays['a]) = arr helper
 // * Doesn't work (`'rep` leaks out of its scope in `step`)
 def helper impl k = k (stepImpl impl)
 //│ helper: ArraysImpl[in 'a out 'a | 'a0, in 'r out 'r | 'r0] -> (forall 'a1 'r1 'c. ({
-//│   fold: forall 'b 'b0. (('a | 'a1) -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> (('r0 & 'r1, anything,),) -> ('b0 | 'd)),
+//│   fold: forall 'b 'b0. (('a | 'a1) -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> (('r0 & 'r1, anything,),) -> ('d | 'b0)),
 //│   init: ('a0 & 'a1) -> ('r | 'r1, "hi",),
 //│   sub: (('r0 & 'r1, anything,),) -> int -> ('a | 'a1),
 //│   update: (('r0 & 'r1, anything,),) -> int -> ('a0 & 'a1) -> ('r | 'r1, "hey",)
@@ -229,7 +229,7 @@ def helper impl k = k (stepImpl impl)
 // * Idem
 def helper (impl: ArraysImpl['a, 'rep]) k = k (stepImpl impl)
 //│ helper: ArraysImpl['a, 'rep] -> (forall 'c. ({
-//│   fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> (('rep, anything,),) -> ('b0 | 'd)),
+//│   fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> (('rep, anything,),) -> ('d | 'b0)),
 //│   init: 'a -> ('rep, "hi",),
 //│   sub: (('rep, anything,),) -> int -> 'a,
 //│   update: (('rep, anything,),) -> int -> 'a -> ('rep, "hey",)
@@ -239,10 +239,10 @@ def helper (impl: ArraysImpl['a, 'rep]) k = k (stepImpl impl)
 :e
 def step (arr: Arrays['a]) = arr helper
 //│ Arrays['a] -> (forall 'c. error | ({
-//│   fold: forall 'b 'b0. (('a0 | 'a) -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> (('rep & 'rep0, anything,),) -> ('b0 | 'd)),
-//│   init: 'a -> ('rep, "hi",),
-//│   sub: (('rep & 'rep0, anything,),) -> int -> ('a0 | 'a),
-//│   update: (('rep & 'rep0, anything,),) -> int -> 'a -> ('rep, "hey",)
+//│   fold: forall 'b 'b0. ('a0 -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> (('rep & 'rep0, anything,),) -> ('d | 'b0)),
+//│   init: ('a & 'a0) -> ('rep, "hi",),
+//│   sub: (('rep & 'rep0, anything,),) -> int -> 'a0,
+//│   update: (('rep & 'rep0, anything,),) -> int -> ('a & 'a0) -> ('rep, "hey",)
 //│ } -> 'c) -> 'c)
 //│ where
 //│   'rep :> anything
@@ -386,7 +386,7 @@ def helper = forall 'a 'rep. fun (impl: ArraysImpl['a, 'rep]) -> fun (k: ArraysI
 //│       = [Function: helper11]
 
 def step arr = arr helper
-//│ ((forall 'rep 'a. ArraysImpl['a, 'rep] -> (forall 'b. ArraysImplConsumer['a, 'b] -> 'b)) -> 'c) -> 'c
+//│ ((forall 'a 'rep. ArraysImpl['a, 'rep] -> (forall 'b. ArraysImplConsumer['a, 'b] -> 'b)) -> 'c) -> 'c
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step12]
@@ -583,15 +583,15 @@ def s arr (k: ArraysImplConsumer['a, 'rep]) = arr (fun impl -> k (stepImpl_ty im
 // * We can see it shouldn't be simplified to nothing:
 :ns
 s
-//│ res: forall 'a 'b 'c 'a0 'rep. 'b -> (forall 'a1 'rep0 'd. ArraysImplConsumer['a1, 'rep0] -> 'd)
+//│ res: forall 'b 'a 'a0 'rep 'c. 'b -> (forall 'a1 'rep0 'd. ArraysImplConsumer['a1, 'rep0] -> 'd)
 //│   where
 //│     'd :> 'c
 //│     'rep0 <: 'rep
 //│     'a1 :> 'a0
 //│         <: 'a
-//│     'b <: (forall 'a2 'e 'r 'f. 'f -> 'e) -> 'c
-//│     'e :> 'rep
-//│     'f <: ArraysImpl['a2, 'r]
+//│     'b <: (forall 'r 'e 'a2 'f. 'e -> 'f) -> 'c
+//│     'f :> 'rep
+//│     'e <: ArraysImpl['a2, 'r]
 //│     'a2 :> 'a
 //│         <: 'a0
 //│     'a <: 'a0

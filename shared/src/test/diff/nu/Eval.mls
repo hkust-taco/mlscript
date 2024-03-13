@@ -264,7 +264,7 @@ fun eval(t, env) = if t is
 //│   where
 //│     'b :> 'c
 //│        <: Object & ~#Rcd | Rcd['b]
-//│     'c :> 'b | Lam | Lit[??A] | Rcd[Lam | Lit[??A] | 'c]
+//│     'c :> Lam | Lit[??A] | Rcd[Lam | Lit[??A] | 'c] | 'b
 //│     'a <: App | Lam | Lit[anything] | Rcd['a] | Sel | Var
 
 eval : (Term, List[{key: Str, value: Value}]) -> Value

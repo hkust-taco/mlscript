@@ -63,7 +63,7 @@ fun mk(n) = if n is
   _ then Add(mk(n - 1), mk(n - 1))
 //│ fun mk: forall 'a. (0 | 1 | Int & ~0 & ~1) -> (Lit | 'a)
 //│   where
-//│     'a :> Neg[Lit | 'a] | Add[Lit | 'a]
+//│     'a :> Add[Lit | 'a] | Neg[Lit | 'a]
 
 TestLang.eval(mk(0))
 //│ Int

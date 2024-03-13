@@ -1,7 +1,7 @@
 package mlscript
 
 import scala.collection.mutable
-import scala.collection.mutable.{Map => MutMap, Set => MutSet}
+import scala.collection.mutable.{Map => MutMap, Set => MutSet, SortedMap => MutSortMap, LinkedHashMap, LinkedHashSet, Buffer}
 import scala.collection.immutable.{SortedSet, SortedMap}
 import Set.{empty => semp}
 import scala.util.chaining._
@@ -63,7 +63,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       mthEnv: MutMap[(Str, Str) \/ (Opt[Str], Str), MethodType],
       lvl: Int,
       quoteSkolemEnv: MutMap[Str, SkolemTag], // * SkolemTag for variables in quasiquotes
-      freeVarsInCurrentQuote: MutSet[ST], // * Free variables appearing in the current quote scope
+      freeVarsInCurrentQuote: LinkedHashSet[ST], // * Free variables appearing in the current quote scope
       inQuote: Bool, // * Is in quasiquote
       inPattern: Bool,
       tyDefs: Map[Str, TypeDef],
@@ -135,10 +135,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       * So for `code"x => ..."`, freeVarsInCurrentQuote = {'a}, quoteSkolemEnv = {'gx}, where 'gx <= 'a.
       * After calling `enterQuotedScope`, **solve the constraints** using `solveQuoteContext` to make sure free variables are handled correctly.
       */
-    def enterQuotedScope: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, lvl = lvl + 1, inQuote = true, quoteSkolemEnv = MutMap.empty, freeVarsInCurrentQuote = MutSet.empty)
+    def enterQuotedScope: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, lvl = lvl + 1, inQuote = true, quoteSkolemEnv = MutMap.empty, freeVarsInCurrentQuote = LinkedHashSet.empty)
     def enterUnquote: Ctx = copy(Some(this), MutMap.empty, MutMap.empty, inQuote = false)
     def nextLevel[R](k: Ctx => R)(implicit raise: Raise, prov: TP): R = {
-      val newCtx = copy(lvl = lvl + 1, extrCtx = MutMap.empty)
+      val newCtx = copy(lvl = lvl + 1, extrCtx = MutSortMap.empty)
       val res = k(newCtx)
       val ec = newCtx.extrCtx
       assert(constrainedTypes || newCtx.extrCtx.isEmpty)
@@ -204,13 +204,13 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       mthEnv = MutMap.empty,
       lvl = MinLevel,
       quoteSkolemEnv = MutMap.empty,
-      freeVarsInCurrentQuote = MutSet.empty,
+      freeVarsInCurrentQuote = LinkedHashSet.empty,
       inQuote = false,
       inPattern = false,
       tyDefs = Map.from(builtinTypes.map(t => t.nme.name -> t)),
       tyDefs2 = MutMap.empty,
       inRecursiveDef = N,
-      MutMap.empty,
+      MutSortMap.empty,
     )
     def init: Ctx = if (!newDefs) initBase else {
       val res = initBase.copy(
@@ -1943,8 +1943,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         case tv: TypeVariable if stopAtTyVars => tv.asTypeVar
         case tv: TypeVariable => ectx.tps.getOrElse(tv, {
           val nv = tv.asTypeVar
-          if (!seenVars(tv)) {
-            seenVars += tv
+          if (seenVars.add(tv)) {
             tv.assignedTo match {
               case S(ty) =>
                 val b = go(ty)
@@ -2017,13 +2016,18 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             newBounds.iterator.flatMap(_._2.freeTypeVariables)
           val fvars = qvars.filter(tv => ftvs.contains(tv.asTypeVar))
           if (fvars.isEmpty) b else
-            PolyType(fvars.map(_.asTypeVar pipe (R(_))).toList, b)
+            PolyType(fvars
+              .toArray.sorted
+              .map(_.asTypeVar pipe (R(_))).toList, b)
         case ConstrainedType(cs, bod) =>
-          val (ubs, others1) = cs.groupMap(_._1)(_._2).toList.partition(_._2.sizeIs > 1)
-          val lbs = others1.mapValues(_.head).groupMap(_._2)(_._1).toList
+          val groups1, groups2 = LinkedHashMap.empty[ST, Buffer[ST]]
+          cs.foreach { case (lo, hi) => groups1.getOrElseUpdate(lo, Buffer.empty) += hi }
+          val (ubs, others1) = groups1.toList.partition(_._2.sizeIs > 1)
+          others1.foreach { case (k, vs) => groups2.getOrElseUpdate(vs.head, Buffer.empty) += k }
+          val lbs = groups2.toList
           val bounds = (ubs.mapValues(_.reduce(_ &- _)) ++ lbs.mapValues(_.reduce(_ | _)).map(_.swap))
-          val procesased = bounds.map { case (lo, hi) => Bounds(go(lo), go(hi)) }
-          Constrained(go(bod), Nil, procesased)
+          val processed = bounds.map { case (lo, hi) => Bounds(go(lo), go(hi)) }
+          Constrained(go(bod), Nil, processed)
         
         // case DeclType(lvl, info) =>
           

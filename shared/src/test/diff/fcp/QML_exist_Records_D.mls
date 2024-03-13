@@ -363,20 +363,20 @@ def step arr = arr (forall 'a. fun impl -> forall 'r. fun (k: ArraysImplConsumer
 
 // * ...unless we use `stepImpl_ty` instead of `stepImpl`
 def step arr = arr (fun impl -> forall 'r. fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl_ty impl))
-//│ ((forall 'r 'a 'a0 'a1 'r0. ArraysImpl[in 'a0 & 'a out 'a0 | 'a, 'r0] -> ArraysImplConsumer['a1, 'r] -> 'r) -> 'b) -> 'b
+//│ ((forall 'a 'a0 'r 'a1 'r0. ArraysImpl[in 'a & 'a0 out 'a | 'a0, 'r] -> ArraysImplConsumer['a1, 'r0] -> 'r0) -> 'b) -> 'b
 //│   where
-//│     'a1 :> 'a0
-//│         <: 'a
+//│     'a1 :> 'a
+//│         <: 'a0
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step8]
 
 
 def step arr = arr (fun impl -> (fun k -> k (stepImpl impl)) : Arrays['a])
-//│ ((forall 'r 'a 'a0. ArraysImpl[in 'a out 'a | 'a0, 'r] -> Arrays['a]) -> 'b) -> 'b
+//│ ((forall 'a 'a0 'r. ArraysImpl[in 'a & 'a0 out 'a, 'r] -> Arrays['a0]) -> 'b) -> 'b
 //│   where
-//│     'a := 'a0
-//│     'a0 :> 'a
+//│     'a :> 'a0
+//│     'a0 := 'a
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step9]

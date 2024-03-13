@@ -38,7 +38,7 @@ fun mk(n) = if n is
   _ then Add(mk(n), mk(n))
 //│ fun mk: forall 'a. Object -> (Lit | 'a)
 //│   where
-//│     'a :> Neg[Lit | 'a] | Add[Lit | 'a]
+//│     'a :> Add[Lit | 'a] | Neg[Lit | 'a]
 
 :stats
 TestLang.eval(mk(0))

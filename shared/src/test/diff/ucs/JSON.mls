@@ -136,7 +136,7 @@ fun traverse(t, f) =
 //│ class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
 //│ fun insert: forall 'A. (Empty | Node['A], Str, 'A) -> Node['A]
 //│ fun find: forall 'A0. (Empty | Node['A0], Str) -> (None | Some['A0])
-//│ fun traverse: forall 'A1 'a. (Empty | Node['a], (Str, 'a) -> 'A1) -> (Cons['A1] | Nil)
+//│ fun traverse: forall 'a 'A1. (Empty | Node['a], (Str, 'a) -> 'A1) -> (Cons['A1] | Nil)
 
 type JsonValue = JsonNull | JsonNumber | JsonString | JsonBoolean | JsonObject | JsonArray
 module JsonNull {
@@ -272,7 +272,7 @@ fun parseMatched(scanner, closingSymbol, parse, fn) =
       ParseSuccess(_, scanner) then ParseSuccess(fn(outcome), scanner)
       ParseFailure(message, scanner) then ParseFailure(message, scanner)
     ParseFailure(message, scanner) then ParseFailure(message, scanner)
-//│ fun parseMatched: forall 'T 'advance 'a. ({advance: 'advance}, Str, 'advance -> (ParseFailure | ParseSuccess['a]), 'a -> 'T) -> (ParseFailure | ParseSuccess['T])
+//│ fun parseMatched: forall 'advance 'a 'T. ({advance: 'advance}, Str, 'advance -> (ParseFailure | ParseSuccess['a]), 'a -> 'T) -> (ParseFailure | ParseSuccess['T])
 
 :ng
 fun parseEntries(scanner): ParseResult[TreeMap[JsonValue]] = error

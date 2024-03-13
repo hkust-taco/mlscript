@@ -8,11 +8,11 @@ fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(code"x")}"
 //│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, 'b]) -> Code['c, 'b]
 
 fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(x)}"
-//│ fun (%>) bind: forall 'a 'b 'c. (Code['c, 'a], Var['c, in ??x out ??x0] -> Code['b, 'a]) -> Code['b, 'a]
+//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Var['a, in ??x out ??x0] -> Code['c, 'b]) -> Code['c, 'b]
 
 // * Notice the extrusion
 fun foo(k) = code"x => ${k(code"x")}"
-//│ fun foo: forall 'a 'b 'c. (Code['b, ??x] -> Code['c, 'a]) -> Code['b -> 'c, 'a]
+//│ fun foo: forall 'a 'b 'c. (Code['a, ??x] -> Code['b, 'c]) -> Code['a -> 'b, 'c]
 
 fun (%>) bind(rhs, k) = code"(x => ${k(code"x")})(${rhs})"
 //│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, 'b]) -> Code['c, 'b]
@@ -47,7 +47,7 @@ fun bind(rhs, k: forall 'C: Code['A, 'C] -> Code['B, 'C | 'G]) = code"let x = ${
 //│ fun bind: forall 'A 'a 'B. (Code['A, 'a], k: forall 'C. Code['A, 'C] -> Code['B, 'C | 'a]) -> Code['B, 'a]
 
 bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
-//│ forall 'g 'a. (Code['a, 'g], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
+//│ forall 'a 'g. (Code['a, 'g], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
 
 
 fun foo(dbg) =

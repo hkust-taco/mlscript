@@ -44,7 +44,7 @@ test1 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.43: 	test1 1
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `1 & #MyTrait | 1 & ~?a` does not have field 'value'
+//│ ╟── expression of type `1 & ~?a | 1 & #MyTrait` does not have field 'value'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.39: 	def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
 //│ ║        	                                     ^^^^^^^

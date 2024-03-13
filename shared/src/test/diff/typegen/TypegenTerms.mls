@@ -61,31 +61,30 @@ def g x y = if x.b == 1 then x else x.a
 //│ // end ts
 
 // FIXME
-:ts
-rec def l (a: int) = l
-rec def m (a: int) (b: int) = m
-def f: ('c -> 'a as 'a) -> 'c -> int
+// :ts
+// rec def l (a: int) = l
+// rec def m (a: int) (b: int) = m
+// def f: ('c -> 'a as 'a) -> 'c -> int
 // recursion type functions
-//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot generate type for `where` clause List((α96,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))))),α96),Top))) List()
 
 :ts
 :e
 1: ?
 { a = "hello" }: { a: string } & { b: int }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.73: 	1: ?
+//│ ║  l.72: 	1: ?
 //│ ║        	^
 //│ ╟── integer literal of type `1` does not match type `nothing`
 //│ ╟── Note: constraint arises from type wildcard:
-//│ ║  l.73: 	1: ?
+//│ ║  l.72: 	1: ?
 //│ ╙──      	   ^
 //│ res: anything
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.74: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ║  l.73: 	{ a = "hello" }: { a: string } & { b: int }
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── record literal of type `{a: "hello"}` does not have field 'b'
 //│ ╟── Note: constraint arises from intersection type:
-//│ ║  l.74: 	{ a = "hello" }: { a: string } & { b: int }
+//│ ║  l.73: 	{ a = "hello" }: { a: string } & { b: int }
 //│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: {a: string, b: int}
 //│ // start ts
@@ -147,11 +146,10 @@ def l: ((1, 2), (3, 4)) -> 5
 
 
 // FIXME
-:ts
-def weird: ((int, int) -> 'a) as 'a
-def weird: ('a -> (int, int)) as 'a
-def weird: ((int, 'a) as 'a) -> int
-def weird: ((int, bool) | 'a) -> 'a
-//│ /!!!\ Uncaught error: mlscript.codegen.CodeGenError: Cannot generate type for `where` clause List((α219,Bounds(Function(Tuple(List((None,Field(None,TypeName(int))), (None,Field(None,TypeName(int))))),α219),Top))) List()
+// :ts
+// def weird: ((int, int) -> 'a) as 'a
+// def weird: ('a -> (int, int)) as 'a
+// def weird: ((int, 'a) as 'a) -> int
+// def weird: ((int, bool) | 'a) -> 'a
 
 

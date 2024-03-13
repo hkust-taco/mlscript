@@ -70,7 +70,7 @@ def cons: 'a -> List['a] -> List['a]
 def cons head tail = Cons { head; tail }
 //│ cons: 'a -> List['a] -> List['a]
 //│     = <missing implementation>
-//│ 'b -> (forall 'a 'tail. (List['a] & 'tail) -> (Cons['a | 'b] with {head: 'b, tail: 'tail}))
+//│ 'b -> (forall 'a 'tail. (List['a] & 'tail) -> (Cons['b | 'a] with {head: 'b, tail: 'tail}))
 //│   <:  cons:
 //│ 'a -> List['a] -> List['a]
 //│     = [Function: cons]
@@ -290,7 +290,7 @@ fun x -> fun y -> y
 
 // A2
 choose id
-//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+//│ res: 'a -> (forall 'a0. 'a0 -> 'a0 | 'a)
 //│    = [Function (anonymous)]
 
 // A3
@@ -315,12 +315,12 @@ id auto_
 
 // A7
 choose id auto
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> (forall 'b. 'a0 | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> (forall 'b. 'b -> 'b | 'a0)
 //│    = [Function: id1]
 
 // A8
 choose id auto_
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('b -> 'b | 'a0)
 //│    = [Function: id1]
 
 // A9
@@ -487,7 +487,7 @@ cons (head ids) ids
 
 // F8
 choose (head ids)
-//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+//│ res: 'a -> (forall 'a0. 'a0 -> 'a0 | 'a)
 //│    = [Function (anonymous)]
 
 // F9
@@ -497,7 +497,7 @@ let f = revapp id in f poly
 
 // F10
 choose id (fun x -> auto_ x)
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('b -> 'b | 'a0)
 //│    = [Function: id1]
 
 
@@ -565,7 +565,7 @@ fst (fst (fst (n3 (fun x -> (x, 0)) 1)))
 
 // G7
 rec def to_ch n = if n == 0 then z else s (to_ch (n - 1))
-//│ to_ch: int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'c. ('b & 'c) -> ('c | 'a)))
+//│ to_ch: int -> (forall 'a. ('b -> 'a & 'b -> 'b) -> (forall 'c. ('b & 'c) -> ('a | 'c)))
 //│      = [Function: to_ch]
 
 :e
@@ -628,41 +628,41 @@ id1 id1
 //│        <: 'd -> 'a
 //│     'd :> forall 'b 'c. ('d & 'b) -> ('a | 'c)
 //│        <: 'a & 'e
-//│     'e :> forall 'b 'c. ('b & 'e) -> ('c | 'f)
+//│     'e :> forall 'b 'c. ('b & 'e) -> ('f | 'c)
 //│        <: 'f & 'g
-//│     'g :> forall 'b 'c. ('b & 'g) -> ('c | 'h)
+//│     'g :> forall 'b 'c. ('b & 'g) -> ('h | 'c)
 //│        <: 'h & 'i
-//│     'i :> forall 'b 'c. ('b & 'i) -> ('c | 'j)
+//│     'i :> forall 'b 'c. ('b & 'i) -> ('j | 'c)
 //│        <: 'j & 'k
-//│     'k :> forall 'b 'c. ('b & 'k) -> ('c | 'l)
+//│     'k :> forall 'b 'c. ('b & 'k) -> ('l | 'c)
 //│        <: 'l & 'm
-//│     'm :> forall 'b 'c. ('b & 'm) -> ('c | 'n)
+//│     'm :> forall 'b 'c. ('b & 'm) -> ('n | 'c)
 //│        <: 'n & 'o
-//│     'o :> forall 'b 'c. ('b & 'o) -> ('c | 'p)
+//│     'o :> forall 'b 'c. ('b & 'o) -> ('p | 'c)
 //│        <: 'p & 'q
-//│     'q :> forall 'b 'c. ('b & 'q) -> ('c | 'r)
+//│     'q :> forall 'b 'c. ('b & 'q) -> ('r | 'c)
 //│        <: 'r & 's
-//│     's :> forall 'b 'c. ('b & 's) -> ('c | 't)
+//│     's :> forall 'b 'c. ('b & 's) -> ('t | 'c)
 //│        <: 't & 'u
-//│     'u :> forall 'b 'c. ('b & 'u) -> ('c | 'v)
+//│     'u :> forall 'b 'c. ('b & 'u) -> ('v | 'c)
 //│        <: 'v
-//│     'v :> forall 'b 'c. ('b & 'u) -> ('c | 'v)
+//│     'v :> forall 'b 'c. ('b & 'u) -> ('v | 'c)
 //│        <: 'u -> 'v
-//│     't :> forall 'b 'c. ('b & 's) -> ('c | 't)
+//│     't :> forall 'b 'c. ('b & 's) -> ('t | 'c)
 //│        <: 's -> 't
-//│     'r :> forall 'b 'c. ('b & 'q) -> ('c | 'r)
+//│     'r :> forall 'b 'c. ('b & 'q) -> ('r | 'c)
 //│        <: 'q -> 'r
-//│     'p :> forall 'b 'c. ('b & 'o) -> ('c | 'p)
+//│     'p :> forall 'b 'c. ('b & 'o) -> ('p | 'c)
 //│        <: 'o -> 'p
-//│     'n :> forall 'b 'c. ('b & 'm) -> ('c | 'n)
+//│     'n :> forall 'b 'c. ('b & 'm) -> ('n | 'c)
 //│        <: 'm -> 'n
-//│     'l :> forall 'b 'c. ('b & 'k) -> ('c | 'l)
+//│     'l :> forall 'b 'c. ('b & 'k) -> ('l | 'c)
 //│        <: 'k -> 'l
-//│     'j :> forall 'b 'c. ('b & 'i) -> ('c | 'j)
+//│     'j :> forall 'b 'c. ('b & 'i) -> ('j | 'c)
 //│        <: 'i -> 'j
-//│     'h :> forall 'b 'c. ('b & 'g) -> ('c | 'h)
+//│     'h :> forall 'b 'c. ('b & 'g) -> ('h | 'c)
 //│        <: 'g -> 'h
-//│     'f :> forall 'b 'c. ('b & 'e) -> ('c | 'f)
+//│     'f :> forall 'b 'c. ('b & 'e) -> ('f | 'c)
 //│        <: 'e -> 'f
 //│     'b :> 'b -> 'c
 //│        <: 'c
@@ -737,7 +737,7 @@ fun x -> fun y -> y
 
 // A2
 choose id
-//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+//│ res: 'a -> (forall 'a0. 'a0 -> 'a0 | 'a)
 //│    = [Function (anonymous)]
 
 // A3
@@ -762,12 +762,12 @@ id auto_
 
 // A7
 choose id auto
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('b -> 'b | 'a0)
 //│    = [Function: id1]
 
 // A8
 choose id auto_
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('b -> 'b | 'a0)
 //│    = [Function: id1]
 
 // A9
@@ -934,7 +934,7 @@ cons (head ids) ids
 
 // F8
 choose (head ids)
-//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+//│ res: 'a -> (forall 'a0. 'a0 -> 'a0 | 'a)
 //│    = [Function (anonymous)]
 
 // F9
@@ -944,7 +944,7 @@ let f = revapp id in f poly
 
 // F10
 choose id (fun x -> auto_ x)
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('b -> 'b | 'a0)
 //│    = [Function: id1]
 
 
@@ -1035,41 +1035,41 @@ id1 id1
 //│        <: 'd -> 'a
 //│     'd :> forall 'b 'c. ('d & 'b) -> ('a | 'c)
 //│        <: 'a & 'e
-//│     'e :> forall 'b 'c. ('b & 'e) -> ('c | 'f)
+//│     'e :> forall 'b 'c. ('b & 'e) -> ('f | 'c)
 //│        <: 'f & 'g
-//│     'g :> forall 'b 'c. ('b & 'g) -> ('c | 'h)
+//│     'g :> forall 'b 'c. ('b & 'g) -> ('h | 'c)
 //│        <: 'h & 'i
-//│     'i :> forall 'b 'c. ('b & 'i) -> ('c | 'j)
+//│     'i :> forall 'b 'c. ('b & 'i) -> ('j | 'c)
 //│        <: 'j & 'k
-//│     'k :> forall 'b 'c. ('b & 'k) -> ('c | 'l)
+//│     'k :> forall 'b 'c. ('b & 'k) -> ('l | 'c)
 //│        <: 'l & 'm
-//│     'm :> forall 'b 'c. ('b & 'm) -> ('c | 'n)
+//│     'm :> forall 'b 'c. ('b & 'm) -> ('n | 'c)
 //│        <: 'n & 'o
-//│     'o :> forall 'b 'c. ('b & 'o) -> ('c | 'p)
+//│     'o :> forall 'b 'c. ('b & 'o) -> ('p | 'c)
 //│        <: 'p & 'q
-//│     'q :> forall 'b 'c. ('b & 'q) -> ('c | 'r)
+//│     'q :> forall 'b 'c. ('b & 'q) -> ('r | 'c)
 //│        <: 'r & 's
-//│     's :> forall 'b 'c. ('b & 's) -> ('c | 't)
+//│     's :> forall 'b 'c. ('b & 's) -> ('t | 'c)
 //│        <: 't & 'u
-//│     'u :> forall 'b 'c. ('b & 'u) -> ('c | 'v)
+//│     'u :> forall 'b 'c. ('b & 'u) -> ('v | 'c)
 //│        <: 'v
-//│     'v :> forall 'b 'c. ('b & 'u) -> ('c | 'v)
+//│     'v :> forall 'b 'c. ('b & 'u) -> ('v | 'c)
 //│        <: 'u -> 'v
-//│     't :> forall 'b 'c. ('b & 's) -> ('c | 't)
+//│     't :> forall 'b 'c. ('b & 's) -> ('t | 'c)
 //│        <: 's -> 't
-//│     'r :> forall 'b 'c. ('b & 'q) -> ('c | 'r)
+//│     'r :> forall 'b 'c. ('b & 'q) -> ('r | 'c)
 //│        <: 'q -> 'r
-//│     'p :> forall 'b 'c. ('b & 'o) -> ('c | 'p)
+//│     'p :> forall 'b 'c. ('b & 'o) -> ('p | 'c)
 //│        <: 'o -> 'p
-//│     'n :> forall 'b 'c. ('b & 'm) -> ('c | 'n)
+//│     'n :> forall 'b 'c. ('b & 'm) -> ('n | 'c)
 //│        <: 'm -> 'n
-//│     'l :> forall 'b 'c. ('b & 'k) -> ('c | 'l)
+//│     'l :> forall 'b 'c. ('b & 'k) -> ('l | 'c)
 //│        <: 'k -> 'l
-//│     'j :> forall 'b 'c. ('b & 'i) -> ('c | 'j)
+//│     'j :> forall 'b 'c. ('b & 'i) -> ('j | 'c)
 //│        <: 'i -> 'j
-//│     'h :> forall 'b 'c. ('b & 'g) -> ('c | 'h)
+//│     'h :> forall 'b 'c. ('b & 'g) -> ('h | 'c)
 //│        <: 'g -> 'h
-//│     'f :> forall 'b 'c. ('b & 'e) -> ('c | 'f)
+//│     'f :> forall 'b 'c. ('b & 'e) -> ('f | 'c)
 //│        <: 'e -> 'f
 //│     'b :> 'b -> 'c
 //│        <: 'c
@@ -1105,7 +1105,7 @@ auto auto
 // Gn+1
 :e
 (fun x -> x x) (fun x -> x x)
-//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c ?d. ?c -> ?d) -> ?e` exceeded recursion depth limit (250)
+//│ ╔══[ERROR] Subtyping constraint of the form `?a -> ?b <: (forall ?c ?d. ?d -> ?c) -> ?e` exceeded recursion depth limit (250)
 //│ ║  l.1107: 	(fun x -> x x) (fun x -> x x)
 //│ ║          	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -1144,7 +1144,7 @@ fun x -> fun y -> y
 
 // A2
 choose id
-//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+//│ res: 'a -> (forall 'a0. 'a0 -> 'a0 | 'a)
 //│    = [Function (anonymous)]
 
 // A3
@@ -1169,12 +1169,12 @@ id auto_
 
 // A7
 choose id auto
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('b -> 'b | 'a0)
 //│    = [Function: id1]
 
 // A8
 choose id auto_
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('b -> 'b | 'a0)
 //│    = [Function: id1]
 
 // A9
@@ -1341,7 +1341,7 @@ cons (head ids) ids
 
 // F8
 choose (head ids)
-//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+//│ res: 'a -> (forall 'a0. 'a0 -> 'a0 | 'a)
 //│    = [Function (anonymous)]
 
 // F9
@@ -1351,7 +1351,7 @@ let f = revapp id in f poly
 
 // F10
 choose id (fun x -> auto_ x)
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('b -> 'b | 'a0)
 //│    = [Function: id1]
 
 
@@ -1438,21 +1438,21 @@ rec def id1 x = if true then x else id1 id1 x
 id1 id1
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b 'c. ('d & 'c) -> ('a | 'b)
+//│     'a :> forall 'b 'c. ('d & 'b) -> ('a | 'c)
 //│        <: 'd -> 'a
-//│     'd :> forall 'b 'c. ('d & 'c) -> ('a | 'b)
+//│     'd :> forall 'b 'c. ('d & 'b) -> ('a | 'c)
 //│        <: 'a & 'e & 'f
-//│     'f :> ('d & 'f) -> ('a | 'g)
+//│     'f :> ('d & 'f) -> ('g | 'a)
 //│        <: 'd & 'g
-//│     'g :> ('d & 'f) -> ('a | 'g)
+//│     'g :> ('d & 'f) -> ('g | 'a)
 //│        <: 'f -> 'g
-//│     'e :> ('d & 'e) -> ('a | 'h)
+//│     'e :> ('d & 'e) -> ('h | 'a)
 //│        <: 'd & 'h
-//│     'h :> ('d & 'e) -> ('a | 'h)
+//│     'h :> ('d & 'e) -> ('h | 'a)
 //│        <: 'e -> 'h
-//│     'c :> 'c -> 'b
-//│        <: 'b
-//│     'b := 'c -> 'b
+//│     'b :> 'b -> 'c
+//│        <: 'c
+//│     'c := 'b -> 'c
 //│ ║  l.1415: 	rec def id1 x = if true then x else id1 id1 x
 //│ ╙──        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
@@ -1523,7 +1523,7 @@ fun x -> fun y -> y
 
 // A2
 choose id
-//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+//│ res: 'a -> (forall 'a0. 'a0 -> 'a0 | 'a)
 //│    = [Function (anonymous)]
 
 // A3
@@ -1548,12 +1548,12 @@ id auto_
 
 // A7
 choose id auto
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('b -> 'b | 'a0)
 //│    = [Function: id1]
 
 // A8
 choose id auto_
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('b -> 'b | 'a0)
 //│    = [Function: id1]
 
 // A9
@@ -1720,7 +1720,7 @@ cons (head ids) ids
 
 // F8
 choose (head ids)
-//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+//│ res: 'a -> (forall 'a0. 'a0 -> 'a0 | 'a)
 //│    = [Function (anonymous)]
 
 // F9
@@ -1730,7 +1730,7 @@ let f = revapp id in f poly
 
 // F10
 choose id (fun x -> auto_ x)
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('b -> 'b | 'a0)
 //│    = [Function: id1]
 
 
