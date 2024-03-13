@@ -1802,7 +1802,10 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
             tv.tsc.foreachEntry {
               case (tsc, i) =>
                 if (seenTscs.add(tsc)) {
-                  val tvs = tsc.tvs.map(x => (x._1, go(x._2)))
+                  val tvs = tsc.tvs.map {
+                    case (pol, tv: TV) => (pol, tv.asTypeVar)
+                    case (pol, t) => (pol, go(t))
+                  }
                   val constrs = tsc.constraints.toList.map(_.map(go))
                   tscs ::= tvs -> constrs
                 }

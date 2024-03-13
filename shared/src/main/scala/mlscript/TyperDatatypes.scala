@@ -535,7 +535,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       _assignedTo = value
     }
 
-    var tsc: LinkedHashMap[TupleSetConstraints, Int] = LinkedHashMap.empty
+    val tsc: LinkedHashMap[TupleSetConstraints, Int] = LinkedHashMap.empty
     
     // * Bounds should always be disregarded when `equatedTo` is defined, as they are then irrelevant:
     def lowerBounds: List[SimpleType] = { require(assignedTo.isEmpty, this); _lowerBounds }

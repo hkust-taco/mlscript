@@ -367,49 +367,57 @@ module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminat
   fun size: RegionLang -> Int
   fun text: BaseRegionLang -> Str
 }
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ module Lang {
+//│   fun contains: (BaseRegionLang, Vector) -> Bool
+//│   fun eliminate: RegionLang -> RegionLang
+//│   fun isEmpty: RegionLang -> Bool
+//│   fun isUniv: RegionLang -> Bool
+//│   fun size: RegionLang -> Int
+//│   fun text: BaseRegionLang -> Str
+//│ }
 
 Lang.size(circles)
 //│ Int
-//│ Code generation encountered an error:
-//│   unresolved symbol Lang
+//│ res
+//│     = 13
 
 Lang.contains(circles, Vector(0, 0))
 //│ Bool
-//│ Code generation encountered an error:
-//│   unresolved symbol Lang
+//│ res
+//│     = false
 
 Lang.text(circles)
 //│ Str
-//│ Code generation encountered an error:
-//│   unresolved symbol Lang
+//│ res
+//│     = 'the union of two regions of size '
 
 Lang.isUniv(circles)
 //│ Bool
-//│ Code generation encountered an error:
-//│   unresolved symbol Lang
+//│ res
+//│     = false
 
 Lang.isEmpty(circles)
 //│ Bool
-//│ Code generation encountered an error:
-//│   unresolved symbol Lang
+//│ res
+//│     = false
 
 Lang.size(Lang.eliminate(circles))
 //│ Int
-//│ Code generation encountered an error:
-//│   unresolved symbol Lang
+//│ res
+//│     = 13
 
 :re
 Lang.size(mk(100))
 //│ Int
-//│ Code generation encountered an error:
-//│   unresolved symbol Lang
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 :e
 :re
 Lang.contains(mk(100), Vector(0, 0))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.410: 	Lang.contains(mk(100), Vector(0, 0))
+//│ ║  l.418: 	Lang.contains(mk(100), Vector(0, 0))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Scale[?Region]` does not match type `Circle | Intersect[BaseRegionLang] | Outside[BaseRegionLang] | Translate[BaseRegionLang] | Union[BaseRegionLang]`
 //│ ║  l.348: 	  _ then Scale(Vector(0, 0), mk(n))
@@ -421,14 +429,15 @@ Lang.contains(mk(100), Vector(0, 0))
 //│ ║  l.134: 	type BaseRegionLang = BaseLang[BaseRegionLang]
 //│ ╙──       	                               ^^^^^^^^^^^^^^
 //│ error | false | true
-//│ Code generation encountered an error:
-//│   unresolved symbol Lang
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 :e
 :re
 Lang.text(mk(100))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.429: 	Lang.text(mk(100))
+//│ ║  l.438: 	Lang.text(mk(100))
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Scale[?Region]` does not match type `Circle | Intersect[BaseRegionLang] | Outside[BaseRegionLang] | Translate[BaseRegionLang] | Union[BaseRegionLang]`
 //│ ║  l.348: 	  _ then Scale(Vector(0, 0), mk(n))
@@ -440,23 +449,27 @@ Lang.text(mk(100))
 //│ ║  l.134: 	type BaseRegionLang = BaseLang[BaseRegionLang]
 //│ ╙──       	                               ^^^^^^^^^^^^^^
 //│ Str | error
-//│ Code generation encountered an error:
-//│   unresolved symbol Lang
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 :re
 Lang.isUniv(mk(100))
 //│ Bool
-//│ Code generation encountered an error:
-//│   unresolved symbol Lang
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 :re
 Lang.isEmpty(mk(100))
 //│ Bool
-//│ Code generation encountered an error:
-//│   unresolved symbol Lang
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 :re
 Lang.size(Lang.eliminate(mk(100)))
 //│ Int
-//│ Code generation encountered an error:
-//│   unresolved symbol Lang
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded

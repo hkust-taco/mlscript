@@ -76,15 +76,15 @@ trait TypeSimplifier { self: Typer =>
               tv.upperBounds.reverseIterator.map(process(_, S(false -> tv)))
                 .reduceOption(_ &- _).filterNot(_.isTop).toList
             else Nil
-          nv.tsc = tv.tsc.map { case (tsc, i) =>
-              (renewedtsc.getOrElseUpdate(tsc,
-                new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov)),
-               i)
-          }
-          nv.tsc.foreachEntry { case (tsc, i) =>
-            val (l, r) = tsc.tvs.splitAt(i)
-            tsc.tvs = l ++ ((r.head._1, nv) :: r.drop(1))
-          }
+          nv.tsc ++= tv.tsc.map { case (tsc, i) => renewedtsc.get(tsc) match {
+            case S(tsc) => (tsc, i)
+            case N if inPlace => (tsc, i)
+            case N =>
+              val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov)
+              renewedtsc += tsc -> t
+              t.tvs = t.tvs.map(x => (x._1, process(x._2, N)))
+              (t, i)
+          }}
         }
         nv
         
@@ -1024,15 +1024,14 @@ trait TypeSimplifier { self: Typer =>
                           res.lowerBounds = tv.lowerBounds.map(transform(_, pol.at(tv.level, true), Set.single(tv)))
                         if (occNums.contains(false -> tv))
                           res.upperBounds = tv.upperBounds.map(transform(_, pol.at(tv.level, false), Set.single(tv)))
-                        res.tsc = tv.tsc.map { case (tsc, i) =>
-                          (renewaltsc.getOrElseUpdate(tsc,
-                            new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov)),
-                            i)
-                        }
-                        res.tsc.foreachEntry { case (tsc, i) =>
-                          val (l, r) = tsc.tvs.splitAt(i)
-                          tsc.tvs = l ++ ((r.head._1, res) :: r.drop(1))
-                        }
+                        res.tsc ++= tv.tsc.map { case (tsc, i) => renewaltsc.get(tsc) match {
+                          case S(tsc) => (tsc, i)
+                          case N =>
+                            val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov)
+                            renewaltsc += tsc -> t
+                            t.tvs = t.tvs.map(x => (x._1, transform(x._2, PolMap.neu, Set.empty)))
+                            (t, i)
+                        }}
                     }
                     res
                   }()

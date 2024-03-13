@@ -1487,6 +1487,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         (implicit ctx: Ctx, freshened: MutMap[TV, ST])
         : SimpleType =
   {
+    val freshenedTsc: MutMap[TupleSetConstraints, TupleSetConstraints] = MutMap.empty
     def freshenImpl(ty: SimpleType, below: Level): SimpleType =
     // (trace(s"${lvl}. FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
     {
@@ -1565,8 +1566,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           freshened += tv -> v
           v.lowerBounds = tv.lowerBounds.mapConserve(freshen)
           v.upperBounds = tv.upperBounds.mapConserve(freshen)
-          v.tsc = tv.tsc // fixme
-          v.tsc.foreachEntry { case (tsc, i) => tsc.tvs = tsc.tvs.mapConserve(x => (x._1, freshen(x._2))) }
+          v.tsc ++= tv.tsc.map { case (tsc, i) => freshenedTsc.get(tsc) match {
+            case S(tsc) => (tsc, i)
+            case N =>
+              val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov)
+              freshenedTsc += tsc -> t
+              t.tvs = t.tvs.map(x => (x._1, freshen(x._2)))
+              (t, i)
+          }}
           v
       }
       
