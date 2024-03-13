@@ -54,6 +54,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
           case TypeVal(name) => 
             BoundedTerm(monoer.createObjValue(name, extractFuncArgs(rhs).map(getRes).toList))
           case l@LiteralVal(i) => BoundedTerm(l)
+          case _ => utils.die
         }.fold(BoundedTerm())(_ ++ _))
       case New(Some((constructor, args)), body) => 
         evaluate(args)
@@ -102,6 +103,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
           then BoundedTerm(LiteralVal(UnitLit(false)))
           else stmts.reverse.head match 
             case t: Term => getRes(t)
+            case _ => utils.die
         })
       case If(body, alternate) => 
         val res = body match
@@ -138,6 +140,7 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
       // case Assign(lhs, rhs) => ???
       // case New(None, body) => ???
       // case Rcd(fields) => ???
+      case _ => utils.die
     debug.outdent()
     debug.writeLine(s"╙Result ${getRes(term).getValue.map(_.toString).toList}:")
 
@@ -178,10 +181,12 @@ class Specializer(monoer: Monomorph)(using debug: Debug){
               then 
                 IfThen(App(Var(name), toTuple(params.map(k => Var(k)).toList)), field)
               else throw MonomorphError(s"Selection of field ${field} from object ${o} results in no values")
+            case _ => utils.die
           }
           valSetToBranches(next, Left(branchCase) :: acc)
         // case t@TupVal(fields) =>
         //   val selValue = fields.getOrElse(field, throw MonomorphError(s"Invalid field selection ${field} from Tuple"))
+        case _ => utils.die
 
 
     val ret = term match

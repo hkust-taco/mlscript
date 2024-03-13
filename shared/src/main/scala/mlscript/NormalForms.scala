@@ -497,7 +497,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   }
   
   
-  final case class Conjunct(lnf: LhsNf, vars: SortedSet[TypeVariable], rnf: RhsNf, nvars: SortedSet[TypeVariable]) {
+  case class Conjunct(lnf: LhsNf, vars: SortedSet[TypeVariable], rnf: RhsNf, nvars: SortedSet[TypeVariable]) {
     final def compareEquiv(that: Conjunct): Int =
       // trace(s"compareEquiv($this, $that)")(compareEquivImpl(that))(r => s"= $r")
       compareEquivImpl(that)

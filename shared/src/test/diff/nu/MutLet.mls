@@ -197,12 +197,11 @@ mut val lol[A] = (x: A) => x
 
 
 
+:NoJS
+
+
 mut let foo_ty = error
 //│ mut let foo_ty: nothing
-//│ foo_ty
-//│ TEST CASE FAILURE: There was an unexpected runtime error
-//│ Runtime error:
-//│   Error: an error was thrown
 
 :ns
 let rec body(x) =
@@ -218,46 +217,24 @@ let rec body(x) =
 //│     'c :> 'b
 //│     'b <: {m: 'm0}
 //│     'm0 <: Int
-//│ body
-//│      = [Function: body]
 
 foo_ty of {m: 1}
 //│ {m: 1}
-//│ res
-//│ TEST CASE FAILURE: There was an unexpected runtime error
-//│ Runtime error:
-//│   ReferenceError: foo_ty is not defined
 
 foo_ty of {m: 2}
 //│ {m: 1 | 2}
-//│ res
-//│ TEST CASE FAILURE: There was an unexpected runtime error
-//│ Runtime error:
-//│   ReferenceError: foo_ty is not defined
 
 body({m: 3})
 //│ {m: 1 | 2 | 3}
-//│ res
-//│     = { m: 3 }
-//│ // Output
-//│ 4
 
 body({m: 4})
 //│ {m: 1 | 2 | 4}
-//│ res
-//│     = { m: 4 }
-//│ // Output
-//│ 5
 
 body
 //│ forall 'a. ({m: Int} & 'a) -> ({m: 1 | 2} | 'a)
-//│ res
-//│     = [Function: body]
 
 foo_ty
 //│ ({m: Int} & 'a) -> ({m: 1 | 2 | 3 | 4} | 'a)
-//│ res
-//│     = [Function: body]
 
 
 
