@@ -260,6 +260,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
       "anything" -> TopType, "nothing" -> BotType)
   
   private val preludeLoc = Loc(0, 0, Origin("<prelude>", 0, new FastParseHelpers("")))
+  // private val DummyTV: TV = freshVar()
   
   val nuBuiltinTypes: Ls[NuTypeDef] = Ls(
     NuTypeDef(Cls, TN("Object"), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, S(preludeLoc)),
@@ -1312,6 +1313,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         if (newDefs && !isrec) {
           // if (isrec) ???
           val rhs_ty = typeTerm(rhs)
+          // val rhs_ty = typeMonomorphicTerm(rhs)
           val newCtx = ctx.nest
           newCtx += nme.name -> VarSymbol(rhs_ty, nme)
           typeTerm(bod)(newCtx, raise, vars, genLambdas)

@@ -812,7 +812,32 @@ class Desugarer extends TypeDefs { self: Typer =>
                   case _ => visited.put(field, alias)
                 }
               }
-
+              /* 
+              val als = extraAlias.toList
+              assert(fields.size === als.size)
+              
+              (fields, als).zip/* .distinctBy(_._1) */.flatMap {
+                case (_ -> Var("_"), _) =>
+                case (_ -> Var(alias), _) =>
+                  
+              }
+              */
+              
+              // /* 
+              Let(false, Var("$unapp"), App(Sel(className, Var(unapplyMtd.name)), PlainTup(scrutinee.reference)),
+              // Let(false, Var("$tmp"), Sel(Var("$unapp"), Var("0")),
+              fields.zipWithIndex.foldRight(
+                extraAlias.toList.foldRight(consequent)((lt, rs) => Let(false, Var(lt._2), Var(lt._1), rs))
+              )((field, rs) => {
+                val (_ -> Var(alias), index) = field
+                if (alias === "_") rs
+                else
+                Let(false, Var(alias), Sel(Var("$unapp"), Var(index.toString)), rs)
+              })
+              )
+              // */
+              
+              /* 
               App(Lam(Tup(
                 N -> Fld(FldFlags.empty, Tup(
                   fields.distinctBy(_._1).map {
@@ -826,6 +851,11 @@ class Desugarer extends TypeDefs { self: Typer =>
                   Tup(N -> Fld(FldFlags.empty, scrutinee.reference) :: Nil))
                   ) :: Nil)
               )
+              */
+              
+              // )
+              // )
+              
             case _ => mkLetFromFields(scrutinee, fields.filter(_._2.name =/= "_").toList, consequent)
           }
           Case(className, body, rec2(next))
