@@ -773,7 +773,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     trace(s"$lvl. C $lhs <! $rhs    (${shadows.size})") {
     // trace(s"$lvl. C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
       
-      def constrainMaxTv(startTV: TV, startLeft: Bool): (TV, ST) = {
+      // def constrainMaxTv(startTV: TV, startLeft: Bool): (TV, ST) = {
+      def constrainMaxTv(startTV: TV, startLeft: Bool): Unit = {
         // System.out.println("======================")
         
         var maxTv = startTV
@@ -799,8 +800,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           case Nil => rs match {
             case ComposedType(true, l, r) :: rs => allComponents(ls, l :: r :: rs, done_ls, done_rs)
             case NegType(st) :: rs => allComponents(st :: ls, rs, done_ls, done_rs)
-            case ProvType(st) :: ls => allComponents(ls, st :: rs, done_ls, done_rs)
-            case (tv: TV) :: ls if tv is startTV => allComponents(ls, rs, done_ls, done_rs)
+            case ProvType(st) :: rs => allComponents(ls, st :: rs, done_ls, done_rs)
+            case (tv: TV) :: rs if tv is startTV => allComponents(ls, rs, done_ls, done_rs)
             case (tv: TV) :: rs if tv.level > maxTv.level =>
               val oldTv = maxTv
               val wasLeft = isLeft
@@ -820,9 +821,54 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         
         // System.out.println(s"Components: $ls  <<  $rs")
         
+        
+        
+        /* 
         if (maxTv is startTV) (maxTv, if (startLeft) rhs else lhs)
         else if (isLeft) (maxTv, (ls.iterator.map(_.neg()) ++ rs).reduce(_ | _))
         else (maxTv, (ls.iterator ++ rs.iterator.map(_.neg())).reduce(_ & _))
+        */
+        
+        if (isLeft) {
+          val rhs = (ls.iterator.map(_.neg()) ++ rs).reduce(_ | _) // TODO optimize
+          if (rhs.level > maxTv.level) {
+            println(s"wrong level: ${rhs.level}")
+            if (constrainedTypes && rhs.level <= lvl) {
+              println(s"STASHING $maxTv bound in extr ctx")
+              val buf = ctx.extrCtx.getOrElseUpdate(maxTv, Buffer.empty)
+              buf += false -> rhs
+              cache -= lhs -> rhs
+              ()
+            } else {
+              val rhs2 = extrudeAndCheck(rhs, lhs.level, false, MaxLevel,
+                cctx._1 :: prevCctxs.unzip._1 ::: prevCctxs.unzip._2)
+              println(s"EXTR RHS  ~>  $rhs2  to ${lhs.level}")
+              println(s" where ${rhs2.showBounds}")
+              // println(s"   and ${rhs.showBounds}")
+              rec(lhs, rhs2, true)
+            }
+          } else rec(maxTv, rhs, true)
+        } else {
+          val lhs = (ls.iterator ++ rs.iterator.map(_.neg())).reduce(_ & _) // TODO optimize
+          if (lhs.level > maxTv.level) {
+            println(s"wrong level: ${lhs.level}")
+            if (constrainedTypes && lhs.level <= lvl) {
+              println(s"STASHING $maxTv bound in extr ctx")
+              val buf = ctx.extrCtx.getOrElseUpdate(maxTv, Buffer.empty)
+              buf += true -> lhs
+              cache -= lhs -> rhs
+              ()
+            } else {
+              val lhs2 = extrudeAndCheck(lhs, rhs.level, true, MaxLevel,
+                cctx._2 :: prevCctxs.unzip._2 ::: prevCctxs.unzip._1)
+              println(s"EXTR LHS  ~>  $lhs2  to ${rhs.level}")
+              println(s" where ${lhs2.showBounds}")
+              // println(s"   and ${lhs.showBounds}")
+              rec(lhs2, rhs, true)
+            }
+          } else rec(lhs, maxTv, true)
+        }
+        
       }
       
       // shadows.previous.foreach { sh =>
@@ -1061,8 +1107,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             findBetterTV(rhs :: Nil, Nil, Nil)
               .foreach { case (l, r) => rec(l, r, true) }
              */
-            
+            /* 
             val (tv, rhs) = constrainMaxTv(lhs, true)
+            if (rhs.level <= tv.level) return rec(tv, rhs, true)
             
             println(s"wrong level: ${rhs.level}")
             if (constrainedTypes && rhs.level <= lvl) {
@@ -1079,9 +1126,15 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               // println(s"   and ${rhs.showBounds}")
               rec(lhs, rhs2, true)
             }
+            */
+            constrainMaxTv(lhs, true)
             
           case (lhs, rhs: TypeVariable) =>
-            val tv = rhs
+            // val tv = rhs
+            /* 
+            val (tv, lhs) = constrainMaxTv(rhs, false)
+            if (lhs.level <= tv.level) return rec(lhs, tv, true)
+            
             println(s"wrong level: ${lhs.level}")
             if (constrainedTypes && lhs.level <= lvl) {
               println(s"STASHING $tv bound in extr ctx")
@@ -1097,7 +1150,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               // println(s"   and ${lhs.showBounds}")
               rec(lhs2, rhs, true)
             }
-            
+            */
+            constrainMaxTv(rhs, false)
             
           case (TupleType(fs0), TupleType(fs1)) if fs0.size === fs1.size => // TODO generalize (coerce compatible tuples)
             fs0.lazyZip(fs1).foreach { case ((ln, l), (rn, r)) =>
