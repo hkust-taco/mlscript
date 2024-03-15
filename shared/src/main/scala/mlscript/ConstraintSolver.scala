@@ -359,9 +359,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         def local(): Unit = { // * Used to return early in simple cases
           
           vars.maxByOption(_.level) match {
-            case S(v) =>
+            case S(v) if v.level >= (rhs.level max _lhs.level) =>
               rec(v, rhs.toType() | Conjunct(lnf, vars - v, rnf, nvars).toType().neg(), true)
-            case N =>
+            // case N =>
+            case _ =>
               implicit val etf: ExpandTupleFields = true
               val fullRhs = nvars.iterator.map(DNF.mkDeep(MaxLevel, Nil, _, true))
                 .foldLeft(rhs | DNF.mkDeep(MaxLevel, Nil, rnf.toType(), false))(_ | _)

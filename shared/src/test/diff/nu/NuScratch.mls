@@ -54,3 +54,28 @@ fun listConcat(xs) =
 //│   where
 //│     'A0 :> ??A & 'A
 
+
+
+
+
+module T {
+  fun unapply(x) = [x]
+}
+//│ module T {
+//│   fun unapply: forall 'a. 'a -> ['a]
+//│ }
+
+:e
+fun foo(a) = if a is T(x) then x else 0
+//│ ╔══[ERROR] module T expects 0 parameter but found 1 parameter
+//│ ║  l.69: 	fun foo(a) = if a is T(x) then x else 0
+//│ ╙──      	                     ^^^^
+//│ fun foo: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+
+
+
+
+
