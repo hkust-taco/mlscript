@@ -512,7 +512,36 @@ fun fr[L](l: K[L], r: K[L]) =
 //│ | | | | | | | | | | | | | | | | | | | | | | 2. C (⊤(‘A71''') & ~(⊥(‘A58''))) <! (~(⊤(‘A58'')) | ⊥(‘A71'''))    (10)
 //│ | | | | | | | | | | | | | | | | | | | | | | | 2. ARGH  DNF(0, {}∧⊤(‘A71''')∧~(⊥(‘A58'')))  <!  DNF(0, ~(⊤(‘A58'')) | {}∧⊥(‘A71'''))
 //│ | | | | | | | | | | | | | | | | | | | | | | | | DNF DISCHARGE CONSTRAINTS
-//│ | | | | | | | | | | | | | | | | | | | | | | | | DNF finished with same type at both sides
+//│ | | | | | | | | | | | | | | | | | | | | | | | | Consider {}∧⊤(‘A71''') <: DNF(0, ~(⊤(‘A58'')) | {}∧⊥(‘A58''))
+//│ | | | | | | | | | | | | | | | | | | | | | | | | Possible: List(~(⊤(‘A58'')), {}∧⊥(‘A58''))
+//│ | | | | | | | | | | | | | | | | | | | | | | | | 2. A  {}∧⊤(‘A71''')  %  List()  <!  List(~(⊤(‘A58'')), ⊥(‘A58''))  %  ⊥
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | 2. A  {}∧⊤(‘A71''')  %  List(⊤(‘A58''))  <!  List(⊥(‘A58''))  %  ⊥
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | 2. A  {}∧⊤(‘A58'')∧⊤(‘A71''')  %  List()  <!  List(⊥(‘A58''))  %  ⊥
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | 2. A  {}∧⊤(‘A58'')∧⊤(‘A71''')  %  List()  <!  List()  %  ⊥(‘A58'')
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | Tag checking TreeSet(⊤(‘A58''), ⊤(‘A71''')) List(⊥(‘A58''))
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | CONSTRAINT FAILURE: (⊤(‘A71''') & ~(⊥(‘A58''))) <: (~(⊤(‘A58'')) | ⊥(‘A71'''))
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | allVarPols: 
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | normLike[-] (~(⊤(‘A58'')) | ⊥(‘A71'''))
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | | norm[-] (~(⊤(‘A58'')) | ⊥(‘A71'''))
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | DNF: DNF(0, ~(⊤(‘A58'')) | {}∧⊥(‘A71'''))
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | norm[+] ⊤(‘A58'')
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | DNF: DNF(0, {}∧⊤(‘A58''))
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | ~> ⊤(‘A58'')
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | | ~> (⊥(‘A71''') | ~(⊤(‘A58'')))
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | allVarPols: 
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | normLike[+] (⊤(‘A71''') & ~(⊥(‘A58'')))
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | | norm[+] (⊤(‘A71''') & ~(⊥(‘A58'')))
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | DNF: DNF(0, {}∧⊤(‘A71''')∧~(⊥(‘A58'')))
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | | ~> (⊤(‘A71''') & ~(⊥(‘A58'')))
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | CONSTRAIN #error<> <! (α72'' | #0<Int,Num,Object>)
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | |   where 
+//│ 		α72'' :> Int
+//│ | | | | | | | | | | | | | | | | | | | | | | | | | | | | 2. C #error<> <! (α72'' | #0<Int,Num,Object>)    (0)
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.21: 	  if l is KS(e1) and r is KS(e2) then fr(e1, e2) else 0
+//│ ║        	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `??A & ~??A0` does not match type `??A1 | ~??A2`
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ | | | | | | | | 2. : (α72'' | #0<Int,Num,Object>)
 //│ | | | | | | | 2. : (α72'' | #0<Int,Num,Object>)
 //│ | | | | | | 2. : (α72'' | #0<Int,Num,Object>)
@@ -525,36 +554,36 @@ fun fr[L](l: K[L], r: K[L]) =
 //│ | | | | | | | | EXTR[+] α72'' || 1 .. 1024  2 false
 //│ | | | | | | | | | EXTR[+] Int || 1 .. 1024  0 true
 //│ | | | | | | | | | => Int
-//│ | | | | | | | | => α72_88'
+//│ | | | | | | | | => α72_92'
 //│ | | | | | | | | EXTR[+] #0<Int,Num,Object> || 1 .. 1024  0 true
 //│ | | | | | | | | => #0<Int,Num,Object>
-//│ | | | | | | | => (α72_88' | #0<Int,Num,Object>)
+//│ | | | | | | | => (α72_92' | #0<Int,Num,Object>)
 //│ | | | | | | | RECONSTRAINING TVs
-//│ | | | | | | | | Reconstraining α72_88'
-//│ | | | | | | | EXTR LHS  ~>  (α72_88' | #0<Int,Num,Object>)  to 1
+//│ | | | | | | | | Reconstraining α72_92'
+//│ | | | | | | | EXTR LHS  ~>  (α72_92' | #0<Int,Num,Object>)  to 1
 //│ | | | | | | |  where 
-//│ 		α72_88' :> Int
-//│ | | | | | | | 2. C (α72_88' | #0<Int,Num,Object>) <! α59'    (0)
+//│ 		α72_92' :> Int
+//│ | | | | | | | 2. C (α72_92' | #0<Int,Num,Object>) <! α59'    (0)
 //│ | | | | | | | | NEW α59' LB (1)
 //│ | | | | | | 1. Typing term 0
 //│ | | | | | | 1. : #0<Int,Num,Object>
-//│ | | | | | | finishing branch: [(#KS<Object,K>,{KS#A: mut A39_56'..A39_57'})] + List((α89',⊤)) and [α59'] | #0<Int,Num,Object>
-//│ | | | | | | finishing case K[‘L54'] <: ((#KS<Object,K> & {KS#A: mut A39_56'..A39_57'}) | (α89' & ~(#KS<Object,K>)))
-//│ | | | | | | CONSTRAIN K[‘L54'] <! ((#KS<Object,K> & {KS#A: mut A39_56'..A39_57'}) | (α89' & ~(#KS<Object,K>)))
+//│ | | | | | | finishing branch: [(#KS<Object,K>,{KS#A: mut A39_56'..A39_57'})] + List((α93',⊤)) and [α59'] | #0<Int,Num,Object>
+//│ | | | | | | finishing case K[‘L54'] <: ((#KS<Object,K> & {KS#A: mut A39_56'..A39_57'}) | (α93' & ~(#KS<Object,K>)))
+//│ | | | | | | CONSTRAIN K[‘L54'] <! ((#KS<Object,K> & {KS#A: mut A39_56'..A39_57'}) | (α93' & ~(#KS<Object,K>)))
 //│ | | | | | |   where 
 //│ 		A39_56' :> (⊤(‘A71''') & ~(⊥(‘A58''))) <: A39_57'
 //│ 		A39_57' :> (⊤(‘A71''') & ~(⊥(‘A58''))) <: (~(⊤(‘A58'')) | ⊥(‘A71'''))
-//│ | | | | | | 1. C K[‘L54'] <! ((#KS<Object,K> & {KS#A: mut A39_56'..A39_57'}) | (α89' & ~(#KS<Object,K>)))    (0)
+//│ | | | | | | 1. C K[‘L54'] <! ((#KS<Object,K> & {KS#A: mut A39_56'..A39_57'}) | (α93' & ~(#KS<Object,K>)))    (0)
 //│ | | | | | | | Assigning T :: T36' := ‘L54' where 
-//│ | | | | | | | Set T36_90' ~> T36'
+//│ | | | | | | | Set T36_94' ~> T36'
 //│ | | | | | | | Assigned Some(‘L54')
-//│ | | | | | | | 1. C ((#K<Object> & KS[? :> ⊥ <: ⊤]) & {T: mut ‘L54'..‘L54'}) <! ((#KS<Object,K> & {KS#A: mut A39_56'..A39_57'}) | (α89' & ~(#KS<Object,K>)))    (2)
+//│ | | | | | | | 1. C ((#K<Object> & KS[? :> ⊥ <: ⊤]) & {T: mut ‘L54'..‘L54'}) <! ((#KS<Object,K> & {KS#A: mut A39_56'..A39_57'}) | (α93' & ~(#KS<Object,K>)))    (2)
 //│ | | | | | | | | Assigning A :: A39' := ? :> ⊥ <: ⊤
-//│ | | | | | | | | Set A39_91 ~> A39'
+//│ | | | | | | | | Set A39_95 ~> A39'
 //│ | | | | | | | | Assigned Some(⊥..⊤)
-//│ | | | | | | | | 1. ARGH  DNF(1, #KS<Object,K>{KS#A: mut ..⊤, T: mut ‘L54'..‘L54'})  <!  DNF(1, #KS<Object,K>{KS#A: mut A39_56'..A39_57'} | α89'∧~(#KS<Object,K>))
+//│ | | | | | | | | 1. ARGH  DNF(1, #KS<Object,K>{KS#A: mut ..⊤, T: mut ‘L54'..‘L54'})  <!  DNF(1, #KS<Object,K>{KS#A: mut A39_56'..A39_57'} | α93'∧~(#KS<Object,K>))
 //│ | | | | | | | | | DNF DISCHARGE CONSTRAINTS
-//│ | | | | | | | | | Consider #KS<Object,K>{KS#A: mut ..⊤, T: mut ‘L54'..‘L54'} <: DNF(1, #KS<Object,K>{KS#A: mut A39_56'..A39_57'} | α89'∧~(#KS<Object,K>))
+//│ | | | | | | | | | Consider #KS<Object,K>{KS#A: mut ..⊤, T: mut ‘L54'..‘L54'} <: DNF(1, #KS<Object,K>{KS#A: mut A39_56'..A39_57'} | α93'∧~(#KS<Object,K>))
 //│ | | | | | | | | | Possible: List(#KS<Object,K>{KS#A: mut A39_56'..A39_57'})
 //│ | | | | | | | | | 1. A  #KS<Object,K>{KS#A: mut ..⊤, T: mut ‘L54'..‘L54'}  %  List()  <!  List((#KS<Object,K> & {KS#A: mut A39_56'..A39_57'}))  %  ⊥
 //│ | | | | | | | | | | Case.1
@@ -600,8 +629,8 @@ fun fr[L](l: K[L], r: K[L]) =
 //│ | | | | | | | | | | | | | | | | | | | | | | ~> ⊤
 //│ | | | | | | | | | | | | | | | | | | | | | CONSTRAIN #error<> <! (α59' | #0<Int,Num,Object>)
 //│ | | | | | | | | | | | | | | | | | | | | |   where 
-//│ 		α59' :> (α72_88' | #0<Int,Num,Object>)
-//│ 		α72_88' :> Int
+//│ 		α59' :> (α72_92' | #0<Int,Num,Object>)
+//│ 		α72_92' :> Int
 //│ | | | | | | | | | | | | | | | | | | | | | 1. C #error<> <! (α59' | #0<Int,Num,Object>)    (0)
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.21: 	  if l is KS(e1) and r is KS(e2) then fr(e1, e2) else 0
@@ -639,18 +668,18 @@ fun fr[L](l: K[L], r: K[L]) =
 //│ | | 1. : ((l: K[‘L54'], r: K[‘L54'],) -> (α59' | #0<Int,Num,Object>))
 //│ | | CONSTRAIN ((l: K[‘L54'], r: K[‘L54'],) -> (α59' | #0<Int,Num,Object>)) <! fr96'
 //│ | |   where 
-//│ 		α59' :> (α72_88' | #0<Int,Num,Object>)
-//│ 		α72_88' :> Int
+//│ 		α59' :> (α72_92' | #0<Int,Num,Object>)
+//│ 		α72_92' :> Int
 //│ | | 1. C ((l: K[‘L54'], r: K[‘L54'],) -> (α59' | #0<Int,Num,Object>)) <! fr96'    (0)
 //│ | | | NEW fr96' LB (1)
 //│ | Completed TypedNuFun(0,NuFunDef(None,Var(fr),None,List(TypeName(L)),Left(Lam(Tup(List((Some(Var(l)),Fld(_,TyApp(Var(K),List(TypeName(L))))), (Some(Var(r)),Fld(_,TyApp(Var(K),List(TypeName(L))))))),Blk(List(If(IfThen(App(Var(and),Tup(List((None,Fld(_,App(Var(is),Tup(List((None,Fld(_,Var(l))), (None,Fld(_,App(Var(KS),Tup(List((None,Fld(_,Var(e1))))))))))))), (None,Fld(_,App(Var(is),Tup(List((None,Fld(_,Var(r))), (None,Fld(_,App(Var(KS),Tup(List((None,Fld(_,Var(e2)))))))))))))))),App(Var(fr),Tup(List((None,Fld(_,Var(e1))), (None,Fld(_,Var(e2))))))),Some(IntLit(0)))))))),((l: K[‘L54'], r: K[‘L54'],) -> (α59' | #0<Int,Num,Object>))) where 
-//│ 		α59' :> (α72_88' | #0<Int,Num,Object>)
-//│ 		α72_88' :> Int
+//│ 		α59' :> (α72_92' | #0<Int,Num,Object>)
+//│ 		α72_92' :> Int
 //│ | CHECKING SUBSUMPTION...
 //│ | CONSTRAIN ‹∀ 0. ((l: K[‘L54'], r: K[‘L54'],) -> (α59' | #0<Int,Num,Object>))› <! ‹∀ 0. ‹∀ 0. ((K['L52'], K['L52'],) -> Int)››
 //│ |   where 
-//│ 		α59' :> (α72_88' | #0<Int,Num,Object>)
-//│ 		α72_88' :> Int
+//│ 		α59' :> (α72_92' | #0<Int,Num,Object>)
+//│ 		α72_92' :> Int
 //│ | 0. C ‹∀ 0. ((l: K[‘L54'], r: K[‘L54'],) -> (α59' | #0<Int,Num,Object>))› <! ‹∀ 0. ‹∀ 0. ((K['L52'], K['L52'],) -> Int)››    (0)
 //│ | | BUMP TO LEVEL 1  -->  ‹∀ 0. ((K['L52'], K['L52'],) -> Int)›
 //│ | | where 
@@ -661,8 +690,8 @@ fun fr[L](l: K[L], r: K[L]) =
 //│ | | | 2. C ‹∀ 0. ((l: K[‘L54'], r: K[‘L54'],) -> (α59' | #0<Int,Num,Object>))› <! ((K[‘L97''], K[‘L97''],) -> Int)    (4)
 //│ | | | | INST [0]   ‹∀ 0. ((l: K[‘L54'], r: K[‘L54'],) -> (α59' | #0<Int,Num,Object>))›
 //│ | | | |   where  
-//│ 		α59' :> (α72_88' | #0<Int,Num,Object>)
-//│ 		α72_88' :> Int
+//│ 		α59' :> (α72_92' | #0<Int,Num,Object>)
+//│ 		α72_92' :> Int
 //│ | | | | TO [2] ~>  ((l: K[L54_98''], r: K[L54_98''],) -> (α59_99'' | #0<Int,Num,Object>))
 //│ | | | |   where  
 //│ 		α59_99'' :> (α72_100'' | #0<Int,Num,Object>)
@@ -701,8 +730,8 @@ fun fr[L](l: K[L], r: K[L]) =
 //│ | : None
 //│ ======== TYPED ========
 //│ fun fr: ‹∀ 0. ((l: K[‘L54'], r: K[‘L54'],) -> (α59' | #0<Int,Num,Object>))› where 
-//│ |		α59' :> (α72_88' | #0<Int,Num,Object>)
-//│ |		α72_88' :> Int
+//│ |		α59' :> (α72_92' | #0<Int,Num,Object>)
+//│ |		α72_92' :> Int
 //│ fun fr: ‹∀ 0. ‹∀ 0. ((K['L52'], K['L52'],) -> Int)›› where 
 //│ fun fr: forall 'L. (l: K['L], r: K['L]) -> Int
 //│ fun fr: forall 'L0. (K['L0], K['L0]) -> Int
@@ -712,14 +741,14 @@ fun fr: (K['L], K['L]) -> Int
 fun fr[L](l: K[L], r: K[L]) =
   if l is KS(e1) and r is KS(e2) then fr(l, e2) else 0
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.713: 	  if l is KS(e1) and r is KS(e2) then fr(l, e2) else 0
+//│ ║  l.742: 	  if l is KS(e1) and r is KS(e2) then fr(l, e2) else 0
 //│ ║         	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `anything` does not match type `S[in A & ?A out ?A0 | A] | L | ~??A`
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.711: 	fun fr: (K['L], K['L]) -> Int
+//│ ║  l.740: 	fun fr: (K['L], K['L]) -> Int
 //│ ║         	           ^^
 //│ ╟── from type variable:
-//│ ║  l.711: 	fun fr: (K['L], K['L]) -> Int
+//│ ║  l.740: 	fun fr: (K['L], K['L]) -> Int
 //│ ║         	                  ^^
 //│ ╟── Note: type parameter A is defined at:
 //│ ║  l.14: 	class KS[A](ev: K[A]) extends K[S[A]]
@@ -760,13 +789,13 @@ fk((error : K[S[S[nothing]]]), (error : K[S[S[nothing]]]))
 :e
 fk((error : K[S[S[nothing]]]), (error : K[S[nothing]]))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.761: 	fk((error : K[S[S[nothing]]]), (error : K[S[nothing]]))
+//│ ║  l.790: 	fk((error : K[S[S[nothing]]]), (error : K[S[nothing]]))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `S[nothing]` does not match type `nothing`
-//│ ║  l.761: 	fk((error : K[S[S[nothing]]]), (error : K[S[nothing]]))
+//│ ║  l.790: 	fk((error : K[S[S[nothing]]]), (error : K[S[nothing]]))
 //│ ║         	                ^^^^^^^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.761: 	fk((error : K[S[S[nothing]]]), (error : K[S[nothing]]))
+//│ ║  l.790: 	fk((error : K[S[S[nothing]]]), (error : K[S[nothing]]))
 //│ ╙──       	                                            ^^^^^^^
 //│ Int | error
 //│ res
@@ -789,17 +818,24 @@ fun fk: (K['L], K['L]) -> Int
 fun fk[L](l: K[L], r: K[L]): Int =
   if l is KS(ep) and r is KS(eq) then 1 + fk(ep, eq) else 0
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.790: 	  if l is KS(ep) and r is KS(eq) then 1 + fk(ep, eq) else 0
+//│ ║  l.819: 	  if l is KS(ep) and r is KS(eq) then 1 + fk(ep, eq) else 0
+//│ ║         	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `??A & ~??A0` does not match type `??A1 | ~??A2`
+//│ ║  l.817: 	fun fk: (K['L], K['L]) -> Int
+//│ ╙──       	           ^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.819: 	  if l is KS(ep) and r is KS(eq) then 1 + fk(ep, eq) else 0
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `anything` does not match type `??A | ~??A0`
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.788: 	fun fk: (K['L], K['L]) -> Int
+//│ ║  l.817: 	fun fk: (K['L], K['L]) -> Int
 //│ ║         	                  ^^
 //│ ╟── from type variable:
-//│ ║  l.788: 	fun fk: (K['L], K['L]) -> Int
+//│ ║  l.817: 	fun fk: (K['L], K['L]) -> Int
 //│ ║         	           ^^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.780: 	class KS[type A](ev: K[A]) extends K[S[A]]
+//│ ║  l.809: 	class KS[type A](ev: K[A]) extends K[S[A]]
 //│ ╙──       	              ^
 //│ TEST CASE FAILURE: There was an unexpected type error
 //│ fun fk: forall 'L. (l: K['L], r: K['L]) -> Int
@@ -813,16 +849,16 @@ fk(KS(KS(KZ())), KS(KS(KZ())))
 :e
 fk(KS(KS(KZ())), KS(KZ()))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.814: 	fk(KS(KS(KZ())), KS(KZ()))
+//│ ║  l.850: 	fk(KS(KS(KZ())), KS(KZ()))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Z` is not an instance of `S[?A]`
-//│ ║  l.779: 	class KZ() extends K[Z]
+//│ ║  l.808: 	class KZ() extends K[Z]
 //│ ║         	                     ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.780: 	class KS[type A](ev: K[A]) extends K[S[A]]
+//│ ║  l.809: 	class KS[type A](ev: K[A]) extends K[S[A]]
 //│ ║         	                                     ^^^^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.780: 	class KS[type A](ev: K[A]) extends K[S[A]]
+//│ ║  l.809: 	class KS[type A](ev: K[A]) extends K[S[A]]
 //│ ╙──       	              ^
 //│ Int | error
 //│ res
@@ -850,18 +886,29 @@ fun fz[L](l: K[L], r: K[L]) =
     let zt = ea : K[eb.T] ; 0
   else error
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.849: 	  if l is KS(ea) and r is KS(eb) then
-//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.850: 	    let zt = ea : K[eb.T] ; 0
+//│ ║  l.885: 	  if l is KS(ea) and r is KS(eb) then
+//│ ║         	                     ^^^^^^^^^^^^^^^^
+//│ ║  l.886: 	    let zt = ea : K[eb.T] ; 0
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.851: 	  else error
+//│ ║  l.887: 	  else error
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── type `S[?] & ??A & ~??A0` does not match type `Z | ??A1 | ~??A2`
+//│ ║  l.886: 	    let zt = ea : K[eb.T] ; 0
+//│ ╙──       	                      ^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.885: 	  if l is KS(ea) and r is KS(eb) then
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.886: 	    let zt = ea : K[eb.T] ; 0
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.887: 	  else error
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── expression of type `anything` does not match type `S[?] | ??A | ~??A0`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.850: 	    let zt = ea : K[eb.T] ; 0
+//│ ║  l.886: 	    let zt = ea : K[eb.T] ; 0
 //│ ║         	                      ^^
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.780: 	class KS[type A](ev: K[A]) extends K[S[A]]
+//│ ║  l.809: 	class KS[type A](ev: K[A]) extends K[S[A]]
 //│ ╙──       	              ^
 //│ TEST CASE FAILURE: There was an unexpected type error
 //│ fun fz: forall 'L. (l: K['L], r: K['L]) -> (0 | error)
@@ -889,13 +936,13 @@ conv(KS(KZ()), Refl())
 :e
 conv(KZ(), Refl())
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.890: 	conv(KZ(), Refl())
+//│ ║  l.937: 	conv(KZ(), Refl())
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Z` is not an instance of `S[?A]`
-//│ ║  l.779: 	class KZ() extends K[Z]
+//│ ║  l.808: 	class KZ() extends K[Z]
 //│ ║         	                     ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.880: 	fun conv[L, A](x: K[L], ev: Eq[L, S[A]]): K[S[A]] =
+//│ ║  l.927: 	fun conv[L, A](x: K[L], ev: Eq[L, S[A]]): K[S[A]] =
 //│ ╙──       	                                  ^^^^
 //│ K[S['A]] | error
 //│ res
@@ -917,13 +964,13 @@ extr(KS(KZ()), Refl())
 :e
 extr(KZ(), Refl())
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.918: 	extr(KZ(), Refl())
+//│ ║  l.965: 	extr(KZ(), Refl())
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Z` is not an instance of `S[?H]`
-//│ ║  l.779: 	class KZ() extends K[Z]
+//│ ║  l.808: 	class KZ() extends K[Z]
 //│ ║         	                     ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.909: 	fun extr[L, H](x: K[L], ev: Eq[L, S[H]]): K[H] = get(x : K[ev.B])
+//│ ║  l.956: 	fun extr[L, H](x: K[L], ev: Eq[L, S[H]]): K[H] = get(x : K[ev.B])
 //│ ╙──       	                                  ^^^^
 //│ K['H] | error
 //│ res
@@ -966,28 +1013,28 @@ KZ().n(new Z)
 KS(KZ()).n(new Z)
 KZ().n(new S : S[Z])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.966: 	KS(KZ()).n(new Z)
-//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.1013: 	KS(KZ()).n(new Z)
+//│ ║          	^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Z` is not an instance of `S[?A]`
-//│ ║  l.966: 	KS(KZ()).n(new Z)
-//│ ║         	               ^
+//│ ║  l.1013: 	KS(KZ()).n(new Z)
+//│ ║          	               ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.940: 	class KS[type A](ev: K[A]) extends K[S[A]]
+//│ ║  l.987: 	class KS[type A](ev: K[A]) extends K[S[A]]
 //│ ║         	                                     ^^^^
 //│ ╟── Note: type parameter T is defined at:
-//│ ║  l.933: 	abstract class K[type T]: (KZ | KS[?]) {
+//│ ║  l.980: 	abstract class K[type T]: (KZ | KS[?]) {
 //│ ╙──       	                      ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.967: 	KZ().n(new S : S[Z])
-//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.1014: 	KZ().n(new S : S[Z])
+//│ ║          	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `S[Z]` is not an instance of `Z`
-//│ ║  l.967: 	KZ().n(new S : S[Z])
-//│ ║         	               ^^^^
+//│ ║  l.1014: 	KZ().n(new S : S[Z])
+//│ ║          	               ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.939: 	class KZ() extends K[Z]
+//│ ║  l.986: 	class KZ() extends K[Z]
 //│ ║         	                     ^
 //│ ╟── Note: type parameter T is defined at:
-//│ ║  l.933: 	abstract class K[type T]: (KZ | KS[?]) {
+//│ ║  l.980: 	abstract class K[type T]: (KZ | KS[?]) {
 //│ ╙──       	                      ^
 //│ Z | error
 //│ res
@@ -1003,13 +1050,13 @@ KS(KZ()).m(Refl())
 :e
 KZ().m(Refl())
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.1004: 	KZ().m(Refl())
+//│ ║  l.1051: 	KZ().m(Refl())
 //│ ║          	^^^^^^^^^^^^^^
 //│ ╟── type `Z` is not an instance of `S['A]`
-//│ ║  l.939: 	class KZ() extends K[Z]
+//│ ║  l.986: 	class KZ() extends K[Z]
 //│ ║         	                     ^
 //│ ╟── Note: constraint arises from applied type reference:
-//│ ║  l.934: 	  fun m: Eq[T, S['A]] -> Int
+//│ ║  l.981: 	  fun m: Eq[T, S['A]] -> Int
 //│ ╙──       	               ^^^^^
 //│ Int | error
 //│ res
@@ -1021,10 +1068,10 @@ class C[type A]()
 fun test(k) =
   let f(x) = let c = C() in [k(c), c]
   f
-//│ fun test: forall 'A 'A0 'a. (C[in 'A out 'A | 'A0] -> 'a) -> (forall 'A1. anything -> ['a, C['A1]])
+//│ fun test: forall 'A 'a 'A0. (C[in 'A0 out 'A0 | 'A] -> 'a) -> (forall 'A1. anything -> ['a, C['A1]])
 //│   where
-//│     'A1 :> 'A
-//│         <: 'A0
+//│     'A1 :> 'A0
+//│         <: 'A
 
 class C[A, in B, out C]() { fun f: [A, B] -> [A, C] = f }
 //│ class C[A, B, C]() {

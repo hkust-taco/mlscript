@@ -59,6 +59,17 @@ fun baz[T](x: Foo[T], y: Foo[T]): Bool =
     else false
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.57: 	    if x is Baz(a) and y is Baz(b) then baz(a, b)
+//│ ║        	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.58: 	    else if x is Bar and y is Bar then true
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.59: 	    else false
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── type `??T & ~??T0` does not match type `??T1 | ~??T2`
+//│ ║  l.55: 	fun baz : (Foo['T], Foo['T]) -> Bool
+//│ ╙──      	               ^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.57: 	    if x is Baz(a) and y is Baz(b) then baz(a, b)
 //│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.58: 	    else if x is Bar and y is Bar then true
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -85,15 +96,25 @@ fun baz[T](x: Foo[T], y: Foo[T]): Bool =
     else if x is Bar and y is Bar then true
     else false
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.84: 	    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
-//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.85: 	    else if x is Bar and y is Bar then true
+//│ ║  l.95: 	    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
+//│ ║        	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.96: 	    else if x is Bar and y is Bar then true
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.86: 	    else false
+//│ ║  l.97: 	    else false
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── type `??T & ~[nothing] & ~??T0` does not match type `??T1 | ~(Int & ??T2)`
+//│ ║  l.95: 	    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
+//│ ╙──      	                                                          ^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.95: 	    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
+//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.96: 	    else if x is Bar and y is Bar then true
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.97: 	    else false
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── expression of type `anything` does not match type `??T | ~([anything] & ??T0)`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.84: 	    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
+//│ ║  l.95: 	    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
 //│ ║        	                                                          ^^
 //│ ╟── Note: type parameter T is defined at:
 //│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
@@ -125,17 +146,17 @@ fun foo(x) = if x is
     C1(c) then c : x.T
     C2    then 0 : x.T
 //│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.124: 	fun foo(x) = if x is
+//│ ║  l.145: 	fun foo(x) = if x is
 //│ ║         	    ^^^^^^^^^^^^^^^^
-//│ ║  l.125: 	    C1(c) then c : x.T
+//│ ║  l.146: 	    C1(c) then c : x.T
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.126: 	    C2    then 0 : x.T
+//│ ║  l.147: 	    C2    then 0 : x.T
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── type `Int` does not match type `'T`
-//│ ║  l.115: 	class C2 extends C[Int]
+//│ ║  l.136: 	class C2 extends C[Int]
 //│ ║         	                   ^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.123: 	fun foo: C['T] -> 'T
+//│ ║  l.144: 	fun foo: C['T] -> 'T
 //│ ╙──       	                  ^^
 //│ fun foo: forall 'A. (C1['A] | C2) -> (Int | ??A & 'A)
 //│ fun foo: forall 'T. C['T] -> 'T

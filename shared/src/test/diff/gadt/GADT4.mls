@@ -112,11 +112,31 @@ fun eval(e: Expr['t]): e.T = if e is
     If(p, a, b) then if eval(p) then eval(a) else eval(b)
     Pair(a, b) then [eval(a), eval(b)]
     Fst(p) then fst(eval(p))
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.108: 	fun eval(e: Expr['t]): e.T = if e is
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.109: 	    Lit(i) then i
+//│ ║         	^^^^^^^^^^^^^^^^^
+//│ ║  l.110: 	    Plus(a, b) then eval(a) + eval(b)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.111: 	    Equals(a, b) then (eval(a) == eval(b))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.112: 	    If(p, a, b) then if eval(p) then eval(a) else eval(b)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.113: 	    Pair(a, b) then [eval(a), eval(b)]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.114: 	    Fst(p) then fst(eval(p))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `??A & ~??A0` does not match type `nothing`
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.86: 	class Pair[A, B](a: Expr[A], b: Expr[B]) extends Expr[[A, B]]
+//│ ╙──      	           ^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ fun eval: forall 't 'A 'a. (e: Expr['t]) -> ([??A, ??B] & ~[??A0, ??B0] | 'a | 't & (Int | false | true | ??A1 & 'A))
 //│ fun eval: forall 'T. Expr['T] -> 'T
 //│ where
 //│   't :> [??A, ??B] & ~[??A0, ??B0]
-//│      <: 'A & (~'A & (~{0: ??A} | ~{1: ??B} | ~[??A, ??B]) | ~??A2 & (~[??A, ??B] | ~{0: ??A} | ~{1: ??B}) | 'a)
+//│      <: 'A & (~??A2 & (~[??A, ??B] | ~{0: ??A} | ~{1: ??B}) | ~'A & (~{0: ??A} | ~{1: ??B} | ~[??A, ??B]) | 'a)
 
 eval(Plus(Lit(1), Lit(1)))
 //│ Int
@@ -131,7 +151,7 @@ eval(If(Equals(Lit(3), Plus(Lit(1), Lit(1))), Fst(Pair(Lit(1), Lit(2))), Lit(3))
 :e
 eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.132: 	eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
+//│ ║  l.152: 	eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
 //│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `Bool` is not an instance of type `Int`
 //│ ║  l.84: 	class Equals(a: Expr[Int], b: Expr[Int]) extends Expr[Bool]
@@ -156,15 +176,12 @@ fun errval[T](e: Expr[T]): T = if e is
     Pair(a, b) then [errval(b), errval(a)] : e.T
     else error
 //│ ╔══[ERROR] Type mismatch in `case` expression:
-//│ ║  l.155: 	fun errval[T](e: Expr[T]): T = if e is
+//│ ║  l.175: 	fun errval[T](e: Expr[T]): T = if e is
 //│ ║         	                                  ^^^^
-//│ ║  l.156: 	    Pair(a, b) then [errval(b), errval(a)] : e.T
+//│ ║  l.176: 	    Pair(a, b) then [errval(b), errval(a)] : e.T
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.157: 	    else error
+//│ ║  l.177: 	    else error
 //│ ║         	^^^^^^^^^^^^^^
-//│ ╟── expression of type `??A & ~??B` does not match type `nothing`
-//│ ╟── Note: type parameter B is defined at:
-//│ ║  l.86: 	class Pair[A, B](a: Expr[A], b: Expr[B]) extends Expr[[A, B]]
-//│ ╙──      	              ^
+//│ ╙── expression of type `??A & ??B & ~??A0` does not match type `nothing`
 //│ fun errval: forall 'T. (e: Expr['T]) -> 'T
 //│ fun errval: forall 'T0. Expr['T0] -> 'T0

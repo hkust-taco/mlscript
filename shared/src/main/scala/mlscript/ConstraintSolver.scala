@@ -342,7 +342,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         case LhsRefined(lbs, ltt, lr, ltr) =>
           rhs.cs.exists(c => c.lnf match {
             case LhsTop => false
-            case LhsRefined(rbs, rtt, rr, rtr) => 
+            case LhsRefined(rbs, rtt, rr, rtr) =>
+              // println(ltt,rtt)
+              // println(ltt.headOption,rtt.headOption,ltt.headOption.map(x=>rtt.headOption.map(y=>x==y)),ltt.headOption.map(x=>rtt.headOption.map(y=>y==x)))
+              // println(ltt.headOption,rtt.headOption,ltt.headOption.map(x=>rtt.headOption.map(y=>x compare y)),ltt.headOption.map(x=>rtt.headOption.map(y=>y compare x)))
+              // println(ltt&rtt)
               ltt.exists(rtt.contains)
           })
         })
