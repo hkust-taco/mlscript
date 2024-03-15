@@ -177,14 +177,14 @@ fun repmin(t) =
     Leaf(n) then set min = n
   go(t)
   min
-//│ fun repmin: forall 'A. Leaf['A] -> (123 | ??A & 'A)
+//│ fun repmin: forall 'min. Leaf['min | ~??A] -> (123 | 'min)
 
 fun repmin =
   mut let min = 123
   let go(t) = if t is
     Leaf(n) then set min = n
   [min, go]
-//│ fun repmin: forall 'A. [123 | ??A & 'A, Leaf['A] -> ()]
+//│ fun repmin: forall 'min. [123 | 'min, Leaf['min | ~??A] -> ()]
 
 
 :e

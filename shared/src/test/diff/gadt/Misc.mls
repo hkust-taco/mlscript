@@ -101,7 +101,7 @@ class I[A](val f: A => Int) extends C[A, Int]
 fun foo[A, B](x: A, ev: C[A, B]): B = if ev is 
     R then (x : ev.S) : ev.T
     I(f) then ev.f(x : ev.S) : ev.T
-//│ fun foo: forall 'A 'B. (x: 'A, ev: C['A, 'B]) -> 'B
+//│ fun foo: forall 'B 'A. (x: 'A, ev: C['A, 'B]) -> 'B
 
 foo(true, new R)
 //│ true
@@ -319,7 +319,7 @@ fun w[T](x: U[T, T]): Int = if x is
 
 fun u[T](x: U[T, 'b]): T = if x is
     MkU(s) then s : x.A
-//│ fun u: forall 'T 'b. (x: U['T, 'b]) -> 'T
+//│ fun u: forall 'b 'T. (x: U['T, 'b]) -> 'T
 
 u(MkU(1))
 //│ 1

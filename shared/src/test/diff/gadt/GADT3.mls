@@ -57,33 +57,23 @@ fun baz[T](x: Foo[T], y: Foo[T]): Bool =
     if x is Baz(a) and y is Baz(b) then baz(a, b)
     else if x is Bar and y is Bar then true
     else false
-//│ ╔══[ERROR] Type error in operator application
+//│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.57: 	    if x is Baz(a) and y is Baz(b) then baz(a, b)
 //│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.58: 	    else if x is Bar and y is Bar then true
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.59: 	    else false
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── type variable `T` leaks out of its scope
-//│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
-//│ ║       	          ^
+//│ ╟── expression of type `anything` does not match type `??T | ~??T0`
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.55: 	fun baz : (Foo['T], Foo['T]) -> Bool
-//│ ╙──      	               ^^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.57: 	    if x is Baz(a) and y is Baz(b) then baz(a, b)
-//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.58: 	    else if x is Bar and y is Bar then true
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.59: 	    else false
-//│ ║        	^^^^^^^^^^^^^^
-//│ ╟── type variable `T` leaks out of its scope
-//│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
-//│ ║       	          ^
-//│ ╟── Note: constraint arises from type variable:
+//│ ║        	                        ^^
+//│ ╟── from type variable:
 //│ ║  l.55: 	fun baz : (Foo['T], Foo['T]) -> Bool
-//│ ╙──      	               ^^
+//│ ║        	               ^^
+//│ ╟── Note: type parameter T is defined at:
+//│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ╙──     	          ^
 //│ TEST CASE FAILURE: There was an unexpected type error
 //│ fun baz: forall 'T. (x: Foo['T], y: Foo['T]) -> Bool
 //│ fun baz: forall 'T0. (Foo['T0], Foo['T0]) -> Bool
@@ -94,24 +84,18 @@ fun baz[T](x: Foo[T], y: Foo[T]): Bool =
     if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
     else if x is Bar and y is Bar then true
     else false
-//│ ╔══[ERROR] Type error in operator application
-//│ ║  l.78: 	    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.84: 	    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
 //│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.79: 	    else if x is Bar and y is Bar then true
+//│ ║  l.85: 	    else if x is Bar and y is Bar then true
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.80: 	    else false
+//│ ║  l.86: 	    else false
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── type variable `T` leaks out of its scope
-//│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
-//│ ╙──     	          ^
-//│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.78: 	    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
-//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.79: 	    else if x is Bar and y is Bar then true
-//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.80: 	    else false
-//│ ║        	^^^^^^^^^^^^^^
-//│ ╟── type variable `T` leaks out of its scope
+//│ ╟── expression of type `anything` does not match type `??T | ~([anything] & ??T0)`
+//│ ╟── Note: constraint arises from type selection:
+//│ ║  l.84: 	    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
+//│ ║        	                                                          ^^
+//│ ╟── Note: type parameter T is defined at:
 //│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
 //│ ╙──     	          ^
 //│ fun baz: forall 'T. (x: Foo['T], y: Foo['T]) -> Bool
@@ -141,17 +125,17 @@ fun foo(x) = if x is
     C1(c) then c : x.T
     C2    then 0 : x.T
 //│ ╔══[ERROR] Type mismatch in definition:
-//│ ║  l.115: 	fun foo(x) = if x is
+//│ ║  l.124: 	fun foo(x) = if x is
 //│ ║         	    ^^^^^^^^^^^^^^^^
-//│ ║  l.116: 	    C1(c) then c : x.T
+//│ ║  l.125: 	    C1(c) then c : x.T
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.117: 	    C2    then 0 : x.T
+//│ ║  l.126: 	    C2    then 0 : x.T
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ╟── type `Int` does not match type `'T`
-//│ ║  l.106: 	class C2 extends C[Int]
+//│ ║  l.115: 	class C2 extends C[Int]
 //│ ║         	                   ^^^
 //│ ╟── Note: constraint arises from type variable:
-//│ ║  l.114: 	fun foo: C['T] -> 'T
+//│ ║  l.123: 	fun foo: C['T] -> 'T
 //│ ╙──       	                  ^^
 //│ fun foo: forall 'A. (C1['A] | C2) -> (Int | ??A & 'A)
 //│ fun foo: forall 'T. C['T] -> 'T
@@ -169,7 +153,7 @@ foo(new C2)
 fun foo(x: C['a]): x.T = if x is
     C1(c) then c : x.T
     C2    then 0 : x.T
-//│ fun foo: forall 'a. (x: C['a]) -> (??A & 'a)
+//│ fun foo: forall 'a. (x: C['a]) -> (Int & 'a)
 
 abstract class Option[type out T]: None | Some[T]
 module None extends Option[nothing]
@@ -197,7 +181,7 @@ fun get(x) = if x is Some(r) then r else error
 //│ fun get: forall 'A. (Object & ~#Some | Some['A]) -> (??A & 'A)
 
 fun get(x: Option['a]): x.T = if x is Some(r) then r else error
-//│ fun get: forall 'a. (x: Option['a]) -> (??A & 'a)
+//│ fun get: (x: Option[anything]) -> nothing
 
 None as Option[Int]
 //│ Option[Int]
@@ -208,7 +192,7 @@ fun test(x, y) =
     if x is Some(a) and y is Some(b) then eq(a)(b) 
     else if x is None and y is None then true 
     else false
-//│ fun test: (Object & ~#Some | Some[anything], Object & ~#Some | Some[anything]) -> Bool
+//│ fun test: (Object & ~#Some | Some[anything], None | Object & ~#None & ~#Some | Some[anything]) -> Bool
 
 test(Some(1), Some(1))
 //│ Bool

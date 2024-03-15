@@ -53,7 +53,7 @@ fun h1'(a) =
               let z = y.rightValue
               z
     None then 0
-//│ fun h1': forall 'B. (None | Some[Right['B] | Right[anything] & ~??T | ~??T]) -> (0 | ??B & 'B)
+//│ fun h1': forall 'B. (None | Some[Right['B] | ~??T]) -> (0 | ??B & 'B)
 
 // FIXME This seems fine but the desugared term does not merge the cases.
 // See the example below.
@@ -109,7 +109,7 @@ fun h3(x, y, f, p) =
 h3("anything", "not me", _ => "should be me", _ => true)
 h3(None, "should be me", _ => "not me", _ => false)
 h3("anything", "anything", _ => "not me", _ => false)
-//│ fun h3: forall 'a 'b. (None | Object & 'a & ~#None, 'b, (None | 'a) -> anything, (None | 'a) -> Object) -> ("anyway" | 'b)
+//│ fun h3: forall 'a 'b. (None | Object & 'a & ~#None, 'b, (None | 'a) -> anything, None -> Object & 'a -> Object) -> ("anyway" | 'b)
 //│ "anything" | "anyway"
 //│ res
 //│     = 'not me'
@@ -128,7 +128,7 @@ h4("should be me", "not me", _ => true) // WRONG!
 h4(None, "not me", _ => true) // WRONG!
 h4(None, "should be me", _ => false)
 h4("anything", "not me", _ => false)
-//│ fun h4: forall 'a 'b. (None | Object & 'a & ~#None, 'b, (None | 'a) -> Object) -> ("default" | 'b)
+//│ fun h4: forall 'a 'b. (None | Object & 'a & ~#None, 'b, None -> Object & 'a -> Object) -> ("default" | 'b)
 //│ "default" | "not me"
 //│ res
 //│     = 'not me'

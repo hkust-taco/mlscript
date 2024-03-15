@@ -51,7 +51,7 @@ fun f(p: Pair['a, 'b]) = p.lhs
 
 fun f(e) = if e is
   Pair(l, r) then [l, r]
-//│ fun f: forall 'R 'R0 'L 'L0. Pair[in 'L out 'L0, in 'R out 'R0] -> [Exp[in 'L & 'L0 | ??L out ??L0 & 'L0], Exp[in 'R & 'R0 | ??R out ??R0 & 'R0]]
+//│ fun f: forall 'L 'L0 'R 'R0. Pair[in 'L out 'L0, in 'R out 'R0] -> [Exp[in 'L & 'L0 | ??L out ??L0 & 'L0], Exp[in 'R & 'R0 | ??R out ??R0 & 'R0]]
 // f: (Exp['a] & Pair) -> 0
 
 fun f(e) = if e is

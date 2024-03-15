@@ -112,11 +112,11 @@ fun eval(e: Expr['t]): e.T = if e is
     If(p, a, b) then if eval(p) then eval(a) else eval(b)
     Pair(a, b) then [eval(a), eval(b)]
     Fst(p) then fst(eval(p))
-//│ fun eval: forall 't 'A. (e: Expr['t]) -> ('t & (Int | false | true | [??A, ??B] | ??A0 & 'A))
+//│ fun eval: forall 't 'A 'a. (e: Expr['t]) -> ([??A, ??B] & ~[??A0, ??B0] | 'a | 't & (Int | false | true | ??A1 & 'A))
 //│ fun eval: forall 'T. Expr['T] -> 'T
 //│ where
-//│   't :> [??A, ??B] & ~[??A1, ??B0]
-//│      <: 'A
+//│   't :> [??A, ??B] & ~[??A0, ??B0]
+//│      <: 'A & (~'A & (~{0: ??A} | ~{1: ??B} | ~[??A, ??B]) | ~??A2 & (~[??A, ??B] | ~{0: ??A} | ~{1: ??B}) | 'a)
 
 eval(Plus(Lit(1), Lit(1)))
 //│ Int

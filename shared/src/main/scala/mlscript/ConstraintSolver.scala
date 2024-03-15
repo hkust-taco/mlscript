@@ -359,7 +359,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         def local(): Unit = { // * Used to return early in simple cases
           
           vars.maxByOption(_.level) match {
-            case S(v) if v.level >= (rhs.level max _lhs.level) =>
+            // case S(v) if v.level >= (rhs.level max _lhs.level) =>
+            //   rec(v, rhs.toType() | Conjunct(lnf, vars - v, rnf, nvars).toType().neg(), true)
+            case S(v) =>
+              // TODO
               rec(v, rhs.toType() | Conjunct(lnf, vars - v, rnf, nvars).toType().neg(), true)
             // case N =>
             case _ =>

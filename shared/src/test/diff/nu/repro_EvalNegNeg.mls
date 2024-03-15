@@ -46,8 +46,8 @@ TestLang.eval(mk(0))
 //│ Int
 //│ res
 //│     = 0
-//│ constrain calls  : 233
-//│ annoying  calls  : 60
-//│ subtyping calls  : 2320
+//│ constrain calls  : 246
+//│ annoying  calls  : 55
+//│ subtyping calls  : 2390
 
 

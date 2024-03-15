@@ -125,7 +125,7 @@ fun walk(t, mn) = if t is
     Pair of n, Leaf(if n > 2 * mn then mn else n)
   Node(l, r) and walk(l, mn) is Pair(mn1, l1) and walk(r, mn) is Pair(mn2, r1) then
     Pair of min(mn1, mn2), Node(l1, r1)
-//│ fun walk: forall 'A 'A0. (Leaf['A & (Num | ~??A)] | Node['A0 & (Num | ~??A | ~??A0)], Int) -> Pair[??A & (??A & ??A1 & (??A0 & 'A0 | 'A) | ??A2 & ??A & (??A0 & 'A0 | 'A)) & ('A | ??A0 & 'A0), nothing]
+//│ fun walk: forall 'A 'A0. (Leaf['A & (Num | ~??A)] | Node['A0 & (Num | ~??A | ~??A0)], Int) -> Pair[??A & (??A1 & ??A & (??A0 & 'A0 | 'A) | ??A2 & ??A & (??A0 & 'A0 | 'A)) & ('A | ??A0 & 'A0), nothing]
 
 String of walk(tree, 2)
 //│ Str
@@ -238,7 +238,7 @@ fun repmin(t) =
       () => Node of l'(), r'()
   let res = go(t)
   [min, res()]
-//│ fun repmin: forall 'A 'A0. (Leaf['A & (Int | ~??A)] | Node[(Num | ~(??A & ??A0)) & (Int | ~(??A & ??A0)) & 'A0]) -> [2147483648 | ??A & ('A | ??A0 & 'A0), Leaf[2147483648 | ??A & ('A | ??A0 & 'A0)] | Node[2147483648 | ??A & ('A | ??A0 & 'A0)]]
+//│ fun repmin: forall 'A 'min 'A0. (Leaf['A & (Int & 'min | ~??A)] | Node['A0 & (Int & 'min | ~??A | ~??A0)]) -> [2147483648 | 'min, Leaf[2147483648 | 'min | ??A & ('A | ??A0 & 'A0)] | Node[2147483648 | 'min | ??A & ('A | ??A0 & 'A0)]]
 
 String of repmin(tree)
 //│ Str

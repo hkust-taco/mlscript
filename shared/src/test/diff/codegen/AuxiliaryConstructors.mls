@@ -318,7 +318,7 @@ fun f(c) =
 //│ globalThis.f = function f(c) {
 //│   return ((() => {
 //│     let a;
-//│     return a = c, a instanceof F.class ? (([x]) => x)(F.unapply(c)) : a instanceof G ? 2 : 0;
+//│     return a = c, a instanceof F.class ? (($unapp) => ((x) => x)($unapp[0]))(F.unapply(c)) : a instanceof G ? 2 : 0;
 //│   })());
 //│ };
 //│ // End of generated code

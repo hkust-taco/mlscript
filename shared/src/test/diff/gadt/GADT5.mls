@@ -139,14 +139,12 @@ fun g[T](x: F[T, T]): T = if x is
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.134: 	  MkF(None) then None : x.A
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `T` does not match type `Object | ~(T & ??Y)`
+//│ ╟── type `T` does not match type `None | Some[?A] & {Some#A :> ?A0 <: ?A} | ~(T & ??Y)`
 //│ ║  l.132: 	fun g[T](x: F[T, T]): T = if x is
 //│ ║         	      ^
-//│ ╟── Note: constraint arises from `case` expression:
+//│ ╟── Note: constraint arises from application:
 //│ ║  l.133: 	  MkF(Some(t)) then Some(t) : x.A
-//│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.134: 	  MkF(None) then None : x.A
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^
+//│ ║         	      ^^^^^^^
 //│ ╟── from field selection:
 //│ ║  l.25: 	class MkF[Z, Y](y: Y) extends F[Option[Z], Y]
 //│ ║        	                ^

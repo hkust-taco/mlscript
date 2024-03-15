@@ -204,7 +204,74 @@ r.n
 //│ res
 //│     = 0
 
+:d
 r.go.n
+//│ 0. Typing TypingUnit(List(Sel(Sel(Var(r),Var(go)),Var(n))))
+//│ | Typing unit statements
+//│ | | 0. Typing term ((r).go).n
+//│ | | | 0. Typing term (r).go
+//│ | | | | 0. Typing term r
+//│ | | | | 0. : α164
+//│ | | | | CONSTRAIN α164 <! {go: go169}
+//│ | | | |   where 
+//│ 		α164 :> Rec <: {n: n166} & r165
+//│ 		r165 :> Rec
+//│ 		n166 :> Int
+//│ | | | | 0. C α164 <! {go: go169}    (0)
+//│ | | | | | 0. C α164 <! {go: go169}    (0)
+//│ | | | | | | NEW α164 UB (0)
+//│ | | | | | | 0. C Rec <! {go: go169}    (2)
+//│ | | | | | | | 0. C Rec <! {go: go169}    (2)
+//│ | | | | | | | | 0. ARGH  DNF(0, #Rec<Object>{})  <!  DNF(0, {go: go169})
+//│ | | | | | | | | | DNF DISCHARGE CONSTRAINTS
+//│ | | | | | | | | | Consider #Rec<Object>{} <: DNF(0, {go: go169})
+//│ | | | | | | | | | Possible: List({go: go169})
+//│ | | | | | | | | | 0. A  #Rec<Object>{}  %  List()  <!  List({go: go169})  %  ⊥
+//│ | | | | | | | | | | 0. A  #Rec<Object>{}  %  List()  <!  List()  %  {go:go169}
+//│ | | | | | | | | | | | 0. A  #Rec<Object>{}  %  List()  <!  List()  %  |{go:go169}
+//│ | | | | | | | | | | | | Looking up field go in Some(Rec) & TreeSet() & {...}
+//│ | | | | | | | | | | | | | Lookup Rec.go : Some(‹∀ 1. α161''›) where 
+//│ 		α161'' :> Rec <: go162''
+//│ 		go162'' :> Rec
+//│ | | | | | | | | | | | | | Fresh[0] Rec.go : Some(‹∀ 1. α161''›) where Some(
+//│ 		α161'' :> Rec <: go162''
+//│ 		go162'' :> Rec)
+//│ | | | | | | | | | | | | |   & None  (from refinement)
+//│ | | | | | | | | | | | | 0. C ‹∀ 1. α161''› <! go169    (2)
+//│ | | | | | | | | | | | | | NEW go169 LB (0)
+//│ | | | 0. : go169
+//│ | | | CONSTRAIN go169 <! {n: n170}
+//│ | | |   where 
+//│ 		α161'' :> Rec <: go162''
+//│ 		go162'' :> Rec
+//│ 		go169 :> ‹∀ 1. α161''›
+//│ | | | 0. C go169 <! {n: n170}    (0)
+//│ | | | | NEW go169 UB (0)
+//│ | | | | 0. C ‹∀ 1. α161''› <! {n: n170}    (2)
+//│ | | | | | 0. ARGH  DNF(1, α161'')  <!  DNF(0, {n: n170})
+//│ | | | | | | DNF DISCHARGE CONSTRAINTS
+//│ | | | | | | 0. C α161_171 <! {n: n170}    (4)
+//│ | | | | | | | NEW α161_171 UB (0)
+//│ | | | | | | | 0. C Rec <! {n: n170}    (7)
+//│ | | | | | | | | 0. C Rec <! {n: n170}    (7)
+//│ | | | | | | | | | 0. ARGH  DNF(0, #Rec<Object>{})  <!  DNF(0, {n: n170})
+//│ | | | | | | | | | | DNF DISCHARGE CONSTRAINTS
+//│ | | | | | | | | | | Consider #Rec<Object>{} <: DNF(0, {n: n170})
+//│ | | | | | | | | | | Possible: List({n: n170})
+//│ | | | | | | | | | | 0. A  #Rec<Object>{}  %  List()  <!  List({n: n170})  %  ⊥
+//│ | | | | | | | | | | | 0. A  #Rec<Object>{}  %  List()  <!  List()  %  {n:n170}
+//│ | | | | | | | | | | | | 0. A  #Rec<Object>{}  %  List()  <!  List()  %  |{n:n170}
+//│ | | | | | | | | | | | | | Looking up field n in Some(Rec) & TreeSet() & {...}
+//│ | | | | | | | | | | | | | | Lookup Rec.n : Some(Int) where 
+//│ | | | | | | | | | | | | | | Fresh[0] Rec.n : Some(Int) where Some()
+//│ | | | | | | | | | | | | | |   & None  (from refinement)
+//│ | | | | | | | | | | | | | 0. C Int <! n170    (4)
+//│ | | | | | | | | | | | | | | NEW n170 LB (0)
+//│ | | 0. : n170
+//│ | : Some(n170)
+//│ ======== TYPED ========
+//│ res: Some(n170) where 
+//│ 		n170 :> Int
 //│ Int
 //│ res
 //│     = 1
@@ -220,13 +287,13 @@ class Annots(base: 0 | 1) {
 //│ ╔══[WARNING] Expression in statement position should have type `()`.
 //│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
 //│ ╟── Type mismatch in type ascription:
-//│ ║  l.217: 	  a: Int
+//│ ║  l.284: 	  a: Int
 //│ ║         	  ^
 //│ ╟── type `Int` does not match type `()`
-//│ ║  l.217: 	  a: Int
+//│ ║  l.284: 	  a: Int
 //│ ║         	     ^^^
 //│ ╟── but it flows into expression in statement position with expected type `()`
-//│ ║  l.217: 	  a: Int
+//│ ║  l.284: 	  a: Int
 //│ ╙──       	  ^
 //│ class Annots(base: 0 | 1) {
 //│   fun a: 0 | 1

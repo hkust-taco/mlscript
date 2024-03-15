@@ -342,19 +342,19 @@ module TestElim extends Eliminate
 //│   'Region1 <: Intersect['Region] | Outside['Region0] | Scale['Region1] | Translate['Region2] | Union['Region3] | 'a & (Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~??Region2) | ~??Region2
 //│   'Region2 <: Intersect['Region] | Outside['Region0] | Scale['Region1] | Translate['Region2] | Union['Region3] | 'a & (Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~??Region3) | ~??Region3
 //│   'Region3 <: Intersect['Region] | Outside['Region0] | Scale['Region1] | Translate['Region2] | Union['Region3] | 'a & (Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~??Region4) | ~??Region4
-//│   'a :> Union['a] | Intersect['a] | Translate['a] | Scale['a] | Outside['a]
+//│   'a :> Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a]
 
 TestElim.eliminate(Outside(Outside(Univ())))
 //│ Univ & ??Region | 'a
 //│   where
-//│     'a :> Univ & ??Region | Union[Univ & ??Region | 'a] | Intersect[Univ & ??Region | 'a] | Translate[Univ & ??Region | 'a] | Scale[Univ & ??Region | 'a] | Outside[Univ & ??Region | 'a]
+//│     'a :> Univ & ??Region | Outside[Univ & ??Region | 'a] | Union[Univ & ??Region | 'a] | Intersect[Univ & ??Region | 'a] | Translate[Univ & ??Region | 'a] | Scale[Univ & ??Region | 'a]
 //│ res
 //│     = Univ {}
 
 TestElim.eliminate(circles)
 //│ 'a
 //│   where
-//│     'a :> Circle | Union[Circle | 'a] | Intersect['a] | Translate[Circle | 'a] | Scale[Circle | 'a] | Outside[Circle | 'a]
+//│     'a :> Circle | Outside[Circle | 'a] | Union[Circle | 'a] | Intersect['a] | Translate[Circle | 'a] | Scale[Circle | 'a]
 //│ res
 //│     = Union {}
 
@@ -366,13 +366,13 @@ fun mk(n) = if n is
   _ then Scale(Vector(0, 0), mk(n))
 //│ fun mk: forall 'a. Object -> 'a
 //│   where
-//│     'a :> Outside['a] | Translate['a] | Scale['a] | Union['a] | Intersect['a]
+//│     'a :> Outside['a] | Scale['a] | Union['a] | Intersect['a] | Translate['a]
 
 :re
 TestElim.eliminate(mk(100))
 //│ 'a
 //│   where
-//│     'a :> Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a]
+//│     'a :> Translate['a] | Scale['a] | Outside['a] | Union['a] | Intersect['a]
 //│ res
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded
@@ -406,7 +406,7 @@ module Lang extends SizeBase, SizeExt, Contains, Text, IsUniv, IsEmpty, Eliminat
 //│   'Region5 <: Intersect['Region3] | Outside['Region4] | Scale['Region5] | Translate['Region6] | Union['Region7] | 'a & (Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~??Region21) | ~??Region21
 //│   'Region6 <: Intersect['Region3] | Outside['Region4] | Scale['Region5] | Translate['Region6] | Union['Region7] | 'a & (Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~??Region22) | ~??Region22
 //│   'Region7 <: Intersect['Region3] | Outside['Region4] | Scale['Region5] | Translate['Region6] | Union['Region7] | 'a & (Object & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union & ~??Region23) | ~??Region23
-//│   'a :> Translate['a] | Scale['a] | Outside['a] | Union['a] | Intersect['a]
+//│   'a :> Outside['a] | Union['a] | Intersect['a] | Translate['a] | Scale['a]
 //│   'Region <: Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2] | ~??Region24
 //│   'Region0 <: Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2] | ~??Region25
 //│   'Region1 <: Circle | Intersect['Region] | Outside['Region0] | Translate['Region1] | Union['Region2] | ~??Region26

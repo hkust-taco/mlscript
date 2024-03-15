@@ -826,7 +826,7 @@ class Desugarer extends TypeDefs { self: Typer =>
               // /* 
               Let(false, Var("$unapp"), App(Sel(className, Var(unapplyMtd.name)), PlainTup(scrutinee.reference)),
               // Let(false, Var("$tmp"), Sel(Var("$unapp"), Var("0")),
-              fields.zipWithIndex.foldRight(
+              fields.distinctBy(_._1).zipWithIndex.foldRight(
                 extraAlias.toList.foldRight(consequent)((lt, rs) => Let(false, Var(lt._2), Var(lt._1), rs))
               )((field, rs) => {
                 val (_ -> Var(alias), index) = field

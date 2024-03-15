@@ -290,49 +290,13 @@ fun typeTerm(t, ctx) =
 //│ ║  l.256: 	      Err(message) then Err(message)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ ╔══[ERROR] Cyclic-looking constraint while typing binding of lambda expression; a type annotation may be required
-//│ ║  l.240: 	fun typeTerm(t, ctx) =
-//│ ║         	            ^^^^^^^^^^
-//│ ║  l.241: 	  if t is
-//│ ║         	^^^^^^^^^
-//│ ║  l.242: 	    Lit(_, ty) then Ok(ty)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.243: 	    Var(name) and find(ctx, name) is
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.244: 	      Some(ty) then Ok(ty)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.245: 	      None then Err(concat3("unbound variable `", name, "`"))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.246: 	    Abs(Var(name), ty, body) and typeTerm(body, insert(ctx, name, ty)) is
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.247: 	      Ok(resTy) then Ok(FunctionType(ty, resTy))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.248: 	      Err(message) then Err(message)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.249: 	    App(lhs, rhs) and typeTerm(lhs, ctx) is
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.250: 	      Ok(FunctionType(pTy, resTy)) and typeTerm(rhs, ctx) is
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.251: 	        Ok(aTy) and
-//│ ║         	^^^^^^^^^^^^^^^^^^^
-//│ ║  l.252: 	          typeEqual(pTy, aTy) then Ok(resTy)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.253: 	          _ then Err(concat5("expect the argument to be of type `", showType(pTy), "` but found `", showType(aTy), "`"))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.254: 	        Err(message) then Err(message)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.255: 	      Ok(PrimitiveType(name)) then Err(concat3("cannot apply primitive type `", name, "`"))
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.256: 	      Err(message) then Err(message)
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
 //│ typeTerm: (Abs & 'a | App & 'b | Lit & {ty: 'ty & (FunctionType & 'c & 'd & 'e | PrimitiveType & {name: string})} | Var & {name: string}, Empty | Node & 'f & 'g,) -> (Err & {
-//│   message: forall 'message 'message0 'message1. string | 'message | 'message0 | 'message1
+//│   message: forall 'message 'message0 'message1. string | 'message1 | 'message | 'message0
 //│ } | Ok & {value: forall 'h. 'lty | 'rhs | 'ty | 'h})
 //│ where
-//│   'message :> forall 'message0 'message1. string | 'message0 | 'message1
-//│   'message0 :> forall 'message 'message1. 'message | 'message1
-//│   'message1 :> forall 'message 'message0. 'message | 'message0
+//│   'message1 :> forall 'message 'message0. string | 'message | 'message0
+//│   'message :> forall 'message0 'message1. 'message1 | 'message0
+//│   'message0 :> forall 'message 'message1. 'message1 | 'message
 //│   'g <: {key: string, left: Empty | Node & 'f & 'g, right: Empty | Node & 'f & 'g}
 //│   'f <: {
 //│     key: string,
@@ -406,7 +370,7 @@ fun showTypeTerm(t, ctx) =
 //│     }
 //│     'a <: {
 //│       lhs: Var & {name: string},
-//│       lty: FunctionType & 'e & 'f & 'g & 'l & 'm & 'h | PrimitiveType & {name: string},
+//│       lty: FunctionType & 'e & 'f & 'l & 'm & 'g & 'h | PrimitiveType & {name: string},
 //│       rhs: Abs & 'a | App & 'c | Lit & {ty: FunctionType & 'e & 'f & 'g & 'h | PrimitiveType & {name: string}} | Var & {name: string}
 //│     }
 //│     'c <: {
@@ -414,20 +378,20 @@ fun showTypeTerm(t, ctx) =
 //│       rhs: Abs & 'a | App & 'c | Lit & {ty: FunctionType & 'e & 'f & 'g & 'h | PrimitiveType & {name: string}} | Var & {name: string}
 //│     }
 //│     'g <: {
-//│       lhs: PrimitiveType & {name: string} | 'm & (FunctionType & 'l | FunctionType & ~#FunctionType),
+//│       lhs: PrimitiveType & {name: string} | 'l & (FunctionType & ~#FunctionType | FunctionType & 'm),
 //│       rhs: FunctionType & 'e & 'f & 'g & 'h | PrimitiveType & {name: string}
 //│     }
 //│     'h <: {
 //│       lhs: FunctionType & 'h | PrimitiveType & {name: string},
 //│       rhs: FunctionType & 'h | PrimitiveType & {name: string}
 //│     }
-//│     'l <: {
-//│       lhs: FunctionType & 'l | PrimitiveType | ~FunctionType & ~PrimitiveType,
-//│       rhs: FunctionType & 'l | PrimitiveType | ~FunctionType & ~PrimitiveType
-//│     }
 //│     'm <: {
-//│       lhs: FunctionType & 'm | PrimitiveType & {name: string},
-//│       rhs: FunctionType & 'm | PrimitiveType & {name: string}
+//│       lhs: FunctionType & 'm | PrimitiveType | ~FunctionType & ~PrimitiveType,
+//│       rhs: FunctionType & 'm | PrimitiveType | ~FunctionType & ~PrimitiveType
+//│     }
+//│     'l <: {
+//│       lhs: FunctionType & 'l | PrimitiveType & {name: string},
+//│       rhs: FunctionType & 'l | PrimitiveType & {name: string}
 //│     }
 //│     'f <: {
 //│       lhs: FunctionType & 'f | PrimitiveType | ~FunctionType & ~PrimitiveType,
