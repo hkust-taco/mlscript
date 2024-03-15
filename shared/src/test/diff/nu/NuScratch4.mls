@@ -1,0 +1,204 @@
+:NewDefs
+:NoJS
+
+
+class Ref[T](x: T -> T)
+//│ class Ref[T](x: T -> T)
+
+
+// fun refined[A](r: Ref[A])
+// fun refined[A, B](r: A): A & Ref[B]
+fun refined: forall 'A, 'B: (r: 'A) -> ('A & Ref['B])
+//│ fun refined: forall 'A 'B. (r: 'A) -> (Ref['B] & 'A)
+
+fun test(x: 'x) =
+  let foo() = refined(x)
+  foo
+//│ fun test: forall 'x. (x: 'x) -> (forall 'B. () -> (Ref['B] & 'x))
+
+// fun refined: forall 'A, 'B, 'C: (r: 'A, s: 'B) -> ('A & 'B & Ref['C])
+fun refined: forall 'A, 'B, 'C: (r: 'A, s: 'B) -> ('A & 'B)
+//│ fun refined: forall 'A 'B. (r: 'A, s: 'B) -> ('A & 'B)
+
+// fun test(x: 'x) =
+//   let foo(y: Ref['r] & 'y) = y
+//   foo(x)
+
+:d
+fun test(x: 'x) =
+  let foo(y) = refined(x, y) : Ref['r]
+  foo
+//│ 0. Typing TypingUnit(List(NuFunDef(None,Var(test),None,List(),Left(Lam(Tup(List((Some(Var(x)),Fld(_,Var('x))))),Blk(List(NuFunDef(Some(false),Var(foo),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(y))))),Asc(App(Var(refined),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y)))))),AppliedType(TypeName(Ref),List('r)))))), Var(foo))))))))
+//│ | 0. Created lazy type info for NuFunDef(None,Var(test),None,List(),Left(Lam(Tup(List((Some(Var(x)),Fld(_,Var('x))))),Blk(List(NuFunDef(Some(false),Var(foo),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(y))))),Asc(App(Var(refined),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y)))))),AppliedType(TypeName(Ref),List('r)))))), Var(foo))))))
+//│ | Completing fun test = (x: 'x,) => {let foo = (y,) => refined(x, y,) : Ref['r]; foo}
+//│ | | Type params 
+//│ | | Params 
+//│ | | Type test polymorphically? true && (0 === 0 || false || false
+//│ | | 1. Typing term (x: 'x,) => {let foo = (y,) => refined(x, y,) : Ref['r]; foo}
+//│ | | | 1. Typing pattern [x: 'x,]
+//│ | | | | 1. Typing pattern x : 'x
+//│ | | | | | Typing type 'x
+//│ | | | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | | | 1. type 'x
+//│ | | | | | | => 'x73'
+//│ | | | | | => 'x73' ——— 'x73'
+//│ | | | | 1. : 'x73'
+//│ | | | 1. : (x: 'x73',)
+//│ | | | 1. Typing term {let foo = (y,) => refined(x, y,) : Ref['r]; foo}
+//│ | | | | 1. Typing TypingUnit(List(NuFunDef(Some(false),Var(foo),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(y))))),Asc(App(Var(refined),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y)))))),AppliedType(TypeName(Ref),List('r)))))), Var(foo)))
+//│ | | | | | 1. Created lazy type info for NuFunDef(Some(false),Var(foo),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(y))))),Asc(App(Var(refined),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y)))))),AppliedType(TypeName(Ref),List('r))))))
+//│ | | | | | Completing let foo = (y,) => refined(x, y,) : Ref['r]
+//│ | | | | | | Type params 
+//│ | | | | | | Params 
+//│ | | | | | | Type foo polymorphically? true && (1 === 0 || false || true
+//│ | | | | | | 2. Typing term (y,) => refined(x, y,) : Ref['r]
+//│ | | | | | | | 2. Typing pattern [y,]
+//│ | | | | | | | | 2. Typing pattern y
+//│ | | | | | | | | 2. : y74''
+//│ | | | | | | | 2. : (y74'',)
+//│ | | | | | | | 2. Typing term refined(x, y,) : Ref['r]
+//│ | | | | | | | | 2. Typing term refined(x, y,)
+//│ | | | | | | | | | 2. Typing term refined
+//│ | | | | | | | | | 2. : ‹∀ 0. ‹∀ 1. ((r: 'A61'', s: 'B62'',) -> ('A61'' & 'B62''))››
+//│ | | | | | | | | | 2. Typing term x
+//│ | | | | | | | | | 2. : 'x73'
+//│ | | | | | | | | | 2. Typing term y
+//│ | | | | | | | | | 2. : y74''
+//│ | | | | | | | | | CONSTRAIN ‹∀ 0. ‹∀ 1. ((r: 'A61'', s: 'B62'',) -> ('A61'' & 'B62''))›› <! (('x73', y74'',) -> α75'')
+//│ | | | | | | | | |   where 
+//│ | | | | | | | | | 2. C ‹∀ 0. ‹∀ 1. ((r: 'A61'', s: 'B62'',) -> ('A61'' & 'B62''))›› <! (('x73', y74'',) -> α75'')    (0)
+//│ | | | | | | | | | | 2. C ‹∀ 1. ((r: 'A61'', s: 'B62'',) -> ('A61'' & 'B62''))› <! (('x73', y74'',) -> α75'')    (2)
+//│ | | | | | | | | | | | could be distribbed: Set('A61'', 'B62'')
+//│ | | | | | | | | | | | cannot be distribbed: Set('A61'', 'B62'')
+//│ | | | | | | | | | | | INST [1]   ‹∀ 1. ((r: 'A61'', s: 'B62'',) -> ('A61'' & 'B62''))›
+//│ | | | | | | | | | | |   where  
+//│ | | | | | | | | | | | TO [2] ~>  ((r: 'A61_76'', s: 'B62_77'',) -> ('A61_76'' & 'B62_77''))
+//│ | | | | | | | | | | |   where  
+//│ | | | | | | | | | | | 2. C ((r: 'A61_76'', s: 'B62_77'',) -> ('A61_76'' & 'B62_77'')) <! (('x73', y74'',) -> α75'')    (4)
+//│ | | | | | | | | | | | | 2. C ('x73', y74'',) <! (r: 'A61_76'', s: 'B62_77'',)    (3)
+//│ | | | | | | | | | | | | | 2. C 'x73' <! 'A61_76''    (4)
+//│ | | | | | | | | | | | | | | 2. C 'x73' <! 'A61_76''    (4)
+//│ | | | | | | | | | | | | | | | NEW 'A61_76'' LB (1)
+//│ | | | | | | | | | | | | | 2. C y74'' <! 'B62_77''    (4)
+//│ | | | | | | | | | | | | | | 2. C y74'' <! 'B62_77''    (4)
+//│ | | | | | | | | | | | | | | | NEW y74'' UB (2)
+//│ | | | | | | | | | | | | 2. C ('A61_76'' & 'B62_77'') <! α75''    (3)
+//│ | | | | | | | | | | | | | NEW α75'' LB (2)
+//│ | | | | | | | | 2. : α75''
+//│ | | | | | | | | Typing type AppliedType(TypeName(Ref),List('r))
+//│ | | | | | | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | | | | | | 2. type AppliedType(TypeName(Ref),List('r))
+//│ | | | | | | | | | | 2. type 'r
+//│ | | | | | | | | | | => 'r78''
+//│ | | | | | | | | | => Ref['r78'']
+//│ | | | | | | | | => Ref['r78''] ——— 'r78''
+//│ | | | | | | | | CONSTRAIN α75'' <! Ref['r78'']
+//│ | | | | | | | |   where 
+//│ 		α75'' :> ('A61_76'' & 'B62_77'')
+//│ 		'A61_76'' :> 'x73'
+//│ | | | | | | | | 2. C α75'' <! Ref['r78'']    (0)
+//│ | | | | | | | | | NEW α75'' UB (2)
+//│ | | | | | | | | | 2. C ('A61_76'' & 'B62_77'') <! Ref['r78'']    (2)
+//│ | | | | | | | | | | Passing T :: T29' <=< 'r78''
+//│ | | | | | | | | | | 2. C ('A61_76'' & 'B62_77'') <! (#Ref<Object> & {Ref#T: mut 'r78''..'r78''})    (4)
+//│ | | | | | | | | | | | 2. C ('A61_76'' & 'B62_77'') <! #Ref<Object>    (6)
+//│ | | | | | | | | | | | | 2. ARGH  DNF(2, 'A61_76''∧'B62_77'')  <!  DNF(0, #Ref<Object>{})
+//│ | | | | | | | | | | | | | DNF DISCHARGE CONSTRAINTS
+//│ | | | | | | | | | | | | | 2. C 'A61_76'' <! (#Ref<Object> | ~('B62_77''))    (8)
+//│ | | | | | | | | | | | | | | NEW 'A61_76'' UB (2)
+//│ | | | | | | | | | | | | | | 2. C 'x73' <! (#Ref<Object> | ~('B62_77''))    (10)
+//│ | | | | | | | | | | | | | | | wrong level: 2
+//│ | | | | | | | | | | | | | | | EXTR[-] (#Ref<Object> | ~('B62_77'')) || 1 .. 1024  2 false
+//│ | | | | | | | | | | | | | | | | EXTR[-] #Ref<Object> || 1 .. 1024  0 true
+//│ | | | | | | | | | | | | | | | | => #Ref<Object>
+//│ | | | | | | | | | | | | | | | | EXTR[-] ~('B62_77'') || 1 .. 1024  2 false
+//│ | | | | | | | | | | | | | | | | | EXTR[+] 'B62_77'' || 1 .. 1024  2 false
+//│ | | | | | | | | | | | | | | | | | => 'B62_79'
+//│ | | | | | | | | | | | | | | | | => ~('B62_79')
+//│ | | | | | | | | | | | | | | | => (#Ref<Object> | ~('B62_79'))
+//│ | | | | | | | | | | | | | | | RECONSTRAINING TVs
+//│ | | | | | | | | | | | | | | | | Reconstraining 'B62_79'
+//│ | | | | | | | | | | | | | | | EXTR RHS  ~>  (#Ref<Object> | ~('B62_79'))  to 1
+//│ | | | | | | | | | | | | | | |  where 
+//│ | | | | | | | | | | | | | | | 2. C 'x73' <! (#Ref<Object> | ~('B62_79'))    (12)
+//│ | | | | | | | | | | | | | | | | NEW 'x73' UB (1)
+//│ | | | | | | | | | | | 2. C ('A61_76'' & 'B62_77'') <! {Ref#T: mut 'r78''..'r78''}    (6)
+//│ | | | | | | | | | | | | 2. ARGH  DNF(2, 'A61_76''∧'B62_77'')  <!  DNF(2, {Ref#T: mut 'r78''..'r78''})
+//│ | | | | | | | | | | | | | DNF DISCHARGE CONSTRAINTS
+//│ | | | | | | | | | | | | | 2. C 'A61_76'' <! ({Ref#T: mut 'r78''..'r78''} | ~('B62_77''))    (8)
+//│ | | | | | | | | | | | | | | NEW 'A61_76'' UB (2)
+//│ | | | | | | | | | | | | | | 2. C 'x73' <! ({Ref#T: mut 'r78''..'r78''} | ~('B62_77''))    (10)
+//│ | | | | | | | | | | | | | | | wrong level: 2
+//│ | | | | | | | | | | | | | | | EXTR[-] ({Ref#T: mut 'r78''..'r78''} | ~('B62_77'')) || 1 .. 1024  2 false
+//│ | | | | | | | | | | | | | | | | EXTR[-] {Ref#T: mut 'r78''..'r78''} || 1 .. 1024  2 false
+//│ | | | | | | | | | | | | | | | | | EXTR[+] 'r78'' || 1 .. 1024  2 false
+//│ | | | | | | | | | | | | | | | | | => 'r78_80'
+//│ | | | | | | | | | | | | | | | | | EXTR[-] 'r78'' || 1 .. 1024  2 false
+//│ | | | | | | | | | | | | | | | | | | EXTR[-] 'r78_80' || 1 .. 1024  1 true
+//│ | | | | | | | | | | | | | | | | | | => 'r78_80'
+//│ | | | | | | | | | | | | | | | | | => 'r78_81'
+//│ | | | | | | | | | | | | | | | | => {Ref#T: mut 'r78_80'..'r78_81'}
+//│ | | | | | | | | | | | | | | | | EXTR[-] ~('B62_77'') || 1 .. 1024  2 false
+//│ | | | | | | | | | | | | | | | | | EXTR[+] 'B62_77'' || 1 .. 1024  2 false
+//│ | | | | | | | | | | | | | | | | | => 'B62_79'
+//│ | | | | | | | | | | | | | | | | => ~('B62_79')
+//│ | | | | | | | | | | | | | | | => ({Ref#T: mut 'r78_80'..'r78_81'} | ~('B62_79'))
+//│ | | | | | | | | | | | | | | | RECONSTRAINING TVs
+//│ | | | | | | | | | | | | | | | | Reconstraining 'r78_80'
+//│ | | | | | | | | | | | | | | | | Reconstraining 'r78_81'
+//│ | | | | | | | | | | | | | | | EXTR RHS  ~>  ({Ref#T: mut 'r78_80'..'r78_81'} | ~('B62_79'))  to 1
+//│ | | | | | | | | | | | | | | |  where 
+//│ 		'r78_81' <: 'r78_80'
+//│ | | | | | | | | | | | | | | | 2. C 'x73' <! ({Ref#T: mut 'r78_80'..'r78_81'} | ~('B62_79'))    (12)
+//│ | | | | | | | | | | | | | | | | NEW 'x73' UB (1)
+//│ | | | | | | | 2. : Ref['r78'']
+//│ | | | | | | 2. : (y74'' -> Ref['r78''])
+//│ | | | | | | CONSTRAIN (y74'' -> Ref['r78'']) <! foo82''
+//│ | | | | | |   where 
+//│ 		y74'' <: 'B62_77''
+//│ 		'B62_77'' <: 'B62_79'
+//│ 		'r78'' :> 'r78_81' <: 'r78_80'
+//│ 		'r78_81' <: 'r78_80'
+//│ | | | | | | 2. C (y74'' -> Ref['r78'']) <! foo82''    (0)
+//│ | | | | | | | NEW foo82'' LB (2)
+//│ | | | | | Completed TypedNuFun(1,NuFunDef(Some(false),Var(foo),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(y))))),Asc(App(Var(refined),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y)))))),AppliedType(TypeName(Ref),List('r)))))),(y74'' -> Ref['r78''])) where 
+//│ 		y74'' <: 'B62_77''
+//│ 		'B62_77'' <: 'B62_79'
+//│ 		'r78'' :> 'r78_81' <: 'r78_80'
+//│ 		'r78_81' <: 'r78_80'
+//│ | | | | | Typing unit statements
+//│ | | | | | | 1. Typing term foo
+//│ | | | | | | 1. : ‹∀ 1. (y74'' -> Ref['r78''])›
+//│ | | | | | : Some(‹∀ 1. (y74'' -> Ref['r78''])›)
+//│ | | | 1. : ‹∀ 1. (y74'' -> Ref['r78''])›
+//│ | | 1. : ((x: 'x73',) -> ‹∀ 1. (y74'' -> Ref['r78''])›)
+//│ | | CONSTRAIN ((x: 'x73',) -> ‹∀ 1. (y74'' -> Ref['r78''])›) <! test83'
+//│ | |   where 
+//│ 		'x73' <: ({Ref#T: mut 'r78_80'..'r78_81'} | ~('B62_79')) & (#Ref<Object> | ~('B62_79'))
+//│ 		y74'' <: 'B62_77''
+//│ 		'B62_77'' <: 'B62_79'
+//│ 		'r78'' :> 'r78_81' <: 'r78_80'
+//│ 		'r78_81' <: 'r78_80'
+//│ | | 1. C ((x: 'x73',) -> ‹∀ 1. (y74'' -> Ref['r78''])›) <! test83'    (0)
+//│ | | | NEW test83' LB (1)
+//│ | Completed TypedNuFun(0,NuFunDef(None,Var(test),None,List(),Left(Lam(Tup(List((Some(Var(x)),Fld(_,Var('x))))),Blk(List(NuFunDef(Some(false),Var(foo),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(y))))),Asc(App(Var(refined),Tup(List((None,Fld(_,Var(x))), (None,Fld(_,Var(y)))))),AppliedType(TypeName(Ref),List('r)))))), Var(foo)))))),((x: 'x73',) -> ‹∀ 1. (y74'' -> Ref['r78''])›)) where 
+//│ 		'x73' <: ({Ref#T: mut 'r78_80'..'r78_81'} | ~('B62_79')) & (#Ref<Object> | ~('B62_79'))
+//│ 		y74'' <: 'B62_77''
+//│ 		'B62_77'' <: 'B62_79'
+//│ 		'r78'' :> 'r78_81' <: 'r78_80'
+//│ 		'r78_81' <: 'r78_80'
+//│ | Typing unit statements
+//│ | : None
+//│ ======== TYPED ========
+//│ fun test: ‹∀ 0. ((x: 'x73',) -> ‹∀ 1. (y74'' -> Ref['r78''])›)› where 
+//│ |		'x73' <: ({Ref#T: mut 'r78_80'..'r78_81'} | ~('B62_79')) & (#Ref<Object> | ~('B62_79'))
+//│ |		y74'' <: 'B62_77''
+//│ |		'B62_77'' <: 'B62_79'
+//│ |		'r78'' :> 'r78_81' <: 'r78_80'
+//│ |		'r78_81' <: 'r78_80'
+//│ fun test: forall 'r 'r0 'B. (x: Ref[in 'r out 'r & 'r0] | Ref[?] & ~'B | ~'B) -> (forall 'r1. 'B -> Ref['r1])
+//│   where
+//│     'r1 :> 'r0
+//│         <: 'r
+
+
