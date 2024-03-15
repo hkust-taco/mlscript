@@ -359,9 +359,9 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     override def toString = if (pol) "⊥" else "⊤"
   }
   
-  /** Represents a type variable skolem that was extruded outsdie its polym level.
+  /** Represents a type variable skolem that was extruded outside its polym level.
     * The goal is to retain precise information to produce good errors,
-    * but still have this be functionally equivalent to `ExtrType(pol)`. */
+    * but still have this be functionally equivalent to `ExtrType(!pol)`. */
   case class Extruded(pol: Bool, underlying: SkolemTag)(val prov: TypeProvenance, val reason: Ls[Ls[ST]]) extends AbstractTag with TypeVarOrRigidVar {
     val level: Level = MinLevel
     val id = underlying.id

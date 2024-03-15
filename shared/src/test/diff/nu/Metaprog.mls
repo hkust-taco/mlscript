@@ -55,7 +55,7 @@ mkVar of t0 =>
 mkVar of t0 =>
   mkVar of t1 =>
     t1.unquote of t0.unquote of Add(t0.getVar, t1.getVar)
-//│ Code[Int, ??C & ~??C0 & ~??C1]
+//│ Code[Int, ??C & ~??C0]
 
 mkVar of t0 =>
   mkVar of t1 =>
