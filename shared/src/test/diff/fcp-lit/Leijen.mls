@@ -843,7 +843,7 @@ takeAuto (fun f -> f f)
 
 // ,("[id]: [ids]", ok "[[forall a. a -> a]]")
 cons (single id) (single ids)
-//│ res: List[List[forall 'a 'a0. 'a0 -> 'a0 & 'a -> 'a]]
+//│ res: List[List[forall 'a 'a0. 'a -> 'a & 'a0 -> 'a0]]
 //│    = Cons {
 //│        head: Cons { head: [Function: id1], tail: Nil {} },
 //│        tail: Cons {
@@ -900,7 +900,7 @@ fun x -> (auto x, x 1)
 
 // ,("\\x -> (auto x, (x :: forall a. a -> a) 1)", ok "forall a. (forall a. a -> a) -> (a -> a, Int)")
 fun x -> (auto x, (x : forall 'a. 'a -> 'a) 1)
-//│ res: (forall 'a 'a0. 'a0 -> 'a0 & 'a -> 'a) -> (forall 'a1. 'a1 -> 'a1, 1,)
+//│ res: (forall 'a 'a0. 'a -> 'a & 'a0 -> 'a0) -> (forall 'a1. 'a1 -> 'a1, 1,)
 //│    = [Function: res]
 
 // ,("\\x -> (auto x, (x :: Int -> Int) 1)", Wrong)

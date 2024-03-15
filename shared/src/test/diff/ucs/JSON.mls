@@ -136,15 +136,15 @@ fun traverse(t, f) =
 //│ class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
 //│ fun insert: forall 'a. (Empty | Node[anything], Str, 'a) -> Node['a]
 //│ fun find: forall 'A 'A0. (Empty | Node['A], Str) -> (None | Some['A0 | ??A & 'A])
-//│ fun traverse: forall 'A1 'A2 'A3 'A4 'A5 'A6. (Empty | Node['A6], (Str, ??A0 & 'A6) -> ('A4 & 'A5 & 'A2)) -> (Cons[in 'A2 out 'A4 & 'A1] | Nil)
+//│ fun traverse: forall 'A1 'A2 'A3 'A4 'A5 'A6. (Empty | Node['A4], (Str, ??A0 & 'A4) -> ('A1 & 'A5 & 'A3)) -> (Cons[in 'A3 out 'A1 & 'A2] | Nil)
 //│ where
-//│   'A4 :> 'A1 | 'A2 | ??A1 & 'A3
-//│       <: 'A5 & 'A2
-//│   'A1 :> 'A2 | ??A1 & 'A3
-//│   'A2 :> 'A4 | 'A1 | ??A1 & 'A3
-//│       <: 'A4 & 'A5
-//│   'A5 <: 'A4 & 'A2
-//│   'A3 :> 'A4 & 'A2 | 'A1
+//│   'A1 :> 'A2 | 'A3 | ??A1 & 'A6
+//│       <: 'A5 & 'A3
+//│   'A2 :> 'A3 | ??A1 & 'A6
+//│   'A3 :> 'A1 | 'A2 | ??A1 & 'A6
+//│       <: 'A1 & 'A5
+//│   'A5 <: 'A1 & 'A3
+//│   'A6 :> 'A1 & 'A3 | 'A2
 
 type JsonValue = JsonNull | JsonNumber | JsonString | JsonBoolean | JsonObject | JsonArray
 module JsonNull {
@@ -268,7 +268,7 @@ fun expectWord(scanner, word, result) =
         ParseFailure(concat3("there should not be other alphabets after\"", word, "\""), scanner)
       else
         ParseSuccess(result, scanner)
-//│ fun expectWord: forall 'a 'T 'T0 'T1 'T2. (Scanner & {peek: Object & ~#Some | Some[anything], advance: Scanner}, Str, 'a & 'T & 'T0) -> (ParseFailure | ParseSuccess['T & 'T0 & ('T1 & 'T2 | 'a)])
+//│ fun expectWord: forall 'a 'T 'T0 'T1 'T2. (Scanner & {peek: Object & ~#Some | Some[anything], advance: Scanner}, Str, 'a & 'T & 'T1) -> (ParseFailure | ParseSuccess['T & 'T1 & ('T2 & 'T0 | 'a)])
 
 // If we put this function together with the next block, there will be type
 // mismatch errors.
@@ -315,7 +315,7 @@ fun parse(scanner) =
 //│ fun parseElements: Scanner -> ParseResult[List[JsonValue]]
 //│ fun parseStringContent: anything -> ParseResult[Str]
 //│ fun parseNumber: anything -> ParseResult[JsonNumber]
-//│ fun parse: forall 'T 'T0 'T1 'T2 'T3 'T4. Scanner -> (forall 'T5 'T6 'T7 'T8 'T9 'T10 'T11 'T12 'T13. ParseFailure | ParseSuccess[JsonObject & 'T9 & 'T6 & 'T13 & 'T3 & 'T7 & 'T0 & 'T12 & 'T2 & 'T10 & 'T4 & 'T5 & 'T1 & 'T11 & 'T | 'T8 & (JsonArray & 'T6 & 'T13 & 'T3 & 'T7 & 'T0 & 'T12 & 'T2 & 'T10 & 'T4 & 'T5 & 'T1 & 'T11 & 'T | 'T9 & (JsonString & 'T13 & 'T3 & 'T7 & 'T0 & 'T12 & 'T2 & 'T10 & 'T4 & 'T5 & 'T1 & 'T11 & 'T | 'T6 & (JsonBoolean & 'T5 & 'T1 & 'T11 & 'T | 'T13 & 'T12 & 'T2 & 'T10 & 'T4 & 'T3 & 'T7 & 'T0 & (JsonNull | 'T5 & 'T1 & 'T11 & 'T))))] | ParseResult[JsonNumber])
+//│ fun parse: forall 'T 'T0 'T1 'T2 'T3 'T4. Scanner -> (forall 'T5 'T6 'T7 'T8 'T9 'T10 'T11 'T12 'T13. ParseFailure | ParseSuccess[JsonObject & 'T6 & 'T9 & 'T10 & 'T & 'T7 & 'T4 & 'T13 & 'T1 & 'T8 & 'T2 & 'T12 & 'T3 & 'T5 & 'T0 | 'T11 & (JsonArray & 'T9 & 'T10 & 'T & 'T7 & 'T4 & 'T13 & 'T1 & 'T8 & 'T2 & 'T12 & 'T3 & 'T5 & 'T0 | 'T6 & (JsonString & 'T10 & 'T & 'T7 & 'T4 & 'T13 & 'T1 & 'T8 & 'T2 & 'T12 & 'T3 & 'T5 & 'T0 | 'T9 & (JsonBoolean & 'T12 & 'T3 & 'T5 & 'T0 | 'T10 & 'T & 'T7 & 'T4 & 'T13 & 'T1 & 'T8 & 'T2 & (JsonNull | 'T12 & 'T3 & 'T5 & 'T0))))] | ParseResult[JsonNumber])
 
 :ng
 toString of parse of scan of "    true"

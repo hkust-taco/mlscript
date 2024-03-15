@@ -403,7 +403,7 @@ def eval_lexpr' eval_rec subst v = case v of {
   | Add -> eval_expr eval_rec subst v
   | Mul -> eval_expr eval_rec subst v
   }
-//│ eval_lexpr': ((Cons[('b, Var | 'body,) | 'A]\head\tail & {head: ('b, Var | 'body,), tail: Nil | 'tail} | 'tail) -> 'body0 -> ('body & 'result & (Abs[?]\body\name & {body: 'body0, name: 'b} | 'lhs & 'a & (Abs[?]\body\name & {body: 'body0, name: 'b} & ~#Abs | 'lhs & 'a & ~#Abs)))) -> (List['A] & (Cons[?] & 'c | Nil) & (Cons[?] & 'd | Nil) & (Cons[?] & 'e | Nil) & (Cons[?] & 'f | Nil) & (Cons[?] & 'g | Nil) & 'tail & (Cons[?] & 'h | Nil)) -> (Abs[?]\body\name & {body: 'body0, name: 'b} | Add[?] & {lhs: 'body0, rhs: 'body0} | App[?] & {lhs: 'body0, rhs: 'body0} | Mul[?] & {lhs: 'body0, rhs: 'body0} | Numb & 'result | Var & 'result) -> (Abs['body] | Add['body] | App['a | 'body]\lhs\rhs & {lhs: 'lhs, rhs: 'body} | Mul['body] | Numb | 'result)
+//│ eval_lexpr': ((Cons[('b, Var | 'body,) | 'A]\head\tail & {head: ('b, Var | 'body,), tail: Nil | 'tail} | 'tail) -> 'body0 -> ('body & 'result & (Abs[?]\body\name & {body: 'body0, name: 'b} | 'a & 'lhs & (Abs[?]\body\name & {body: 'body0, name: 'b} & ~#Abs | 'lhs & 'a & ~#Abs)))) -> (List['A] & (Cons[?] & 'c | Nil) & (Cons[?] & 'd | Nil) & (Cons[?] & 'e | Nil) & (Cons[?] & 'f | Nil) & (Cons[?] & 'g | Nil) & 'tail & (Cons[?] & 'h | Nil)) -> (Abs[?]\body\name & {body: 'body0, name: 'b} | Add[?] & {lhs: 'body0, rhs: 'body0} | App[?] & {lhs: 'body0, rhs: 'body0} | Mul[?] & {lhs: 'body0, rhs: 'body0} | Numb & 'result | Var & 'result) -> (Abs['body] | Add['body] | App['a | 'body]\lhs\rhs & {lhs: 'lhs, rhs: 'body} | Mul['body] | Numb | 'result)
 //│   where
 //│     'h <: {head: {0: string, 1: 'result}, tail: Cons[?] & 'h | Nil}
 //│     'g <: {head: {0: string, 1: 'result}, tail: Cons[?] & 'g | Nil}
@@ -463,14 +463,14 @@ rec def eval4 subst = eval_lexpr' eval4 subst
 rec def eval4 subst = eval_lexpr' eval4 subst
 //│ eval4: ('tail & 'tail0 & 'tail1 & 'tail2 & 'tail3 & 'tail4 & (Cons[?] & List[?] & 'b & 'c & 'd & 'e & 'f & 'g | Nil & List[?])) -> 'h -> 'i
 //│   where
-//│     'tail4 <: Cons[?] & 'e | Nil
-//│     'e <: {head: {0: string, 1: 'result}, tail: 'tail4}
-//│     'tail3 <: Cons[?] & 'd | Nil
-//│     'd <: {head: {0: string, 1: 'result}, tail: 'tail3}
-//│     'tail2 <: Cons[?] & 'g | Nil
-//│     'g <: {head: {0: string, 1: 'result0}, tail: 'tail2}
-//│     'tail1 <: Cons[?] & 'f | Nil
-//│     'f <: {head: {0: string, 1: 'result}, tail: 'tail1}
+//│     'tail4 <: Cons[?] & 'd | Nil
+//│     'd <: {head: {0: string, 1: 'result}, tail: 'tail4}
+//│     'tail3 <: Cons[?] & 'g | Nil
+//│     'g <: {head: {0: string, 1: 'result0}, tail: 'tail3}
+//│     'tail2 <: Cons[?] & 'f | Nil
+//│     'f <: {head: {0: string, 1: 'result}, tail: 'tail2}
+//│     'tail1 <: Cons[?] & 'e | Nil
+//│     'e <: {head: {0: string, 1: 'result}, tail: 'tail1}
 //│     'tail0 <: Cons[?] & 'c | Nil
 //│     'c <: {head: {0: string, 1: 'result0}, tail: 'tail0}
 //│     'tail <: Cons[?] & 'b | Nil

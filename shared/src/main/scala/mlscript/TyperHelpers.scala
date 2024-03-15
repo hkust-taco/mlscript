@@ -454,6 +454,11 @@ abstract class TyperHelpers { Typer: Typer =>
       case _ => NegType(this)(prov)
     }
     
+    // def components(pol: Bool): Ls[ST] = unwrapProvs match {
+    //   case ComposedType(`pol`, l, r) => l.components(pol) ++ r.components(pol)
+    //   case _ => this :: Nil
+    // }
+    
     /** This is used to know when two types can be assumed to be mutual subtypes
       * based on a simple equality check. This may not hold when the types involve `TypeBound`s.
       * Indeed, say `type Foo[A] = A -> A`;

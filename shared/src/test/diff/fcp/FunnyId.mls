@@ -198,11 +198,11 @@ rec def id1 x = choose x (id1 id1 x)
 id1 id
 //│ res: ('a & 'b) -> 'a
 //│   where
-//│     'a :> forall 'c 'd. ('a & 'b & 'd) -> 'a
-//│        <: ((forall 'c 'd. 'd -> 'c) | 'b) -> 'a
-//│     'd :> 'd -> 'c
-//│        <: 'c
-//│     'c := 'd -> 'c
+//│     'a :> forall 'c 'd. ('a & 'b & 'c) -> 'a
+//│        <: ((forall 'c 'd. 'c -> 'd) | 'b) -> 'a
+//│     'c :> 'c -> 'd
+//│        <: 'd
+//│     'd := 'c -> 'd
 
 rec def id1 x = if true then x else id1 id1 x
 //│ id1: 'a -> 'b
@@ -214,10 +214,10 @@ rec def id1 x = if true then x else id1 id1 x
 id1 id
 //│ res: ('a & 'b) -> 'a
 //│   where
-//│     'a :> forall 'c 'd. ('a & 'b & 'c) -> 'a
-//│        <: ((forall 'c 'd. 'c -> 'd) | 'b) -> 'a
-//│     'c :> 'c -> 'd
-//│        <: 'd
-//│     'd := 'c -> 'd
+//│     'a :> forall 'c 'd. ('a & 'b & 'd) -> 'a
+//│        <: ((forall 'c 'd. 'd -> 'c) | 'b) -> 'a
+//│     'd :> 'd -> 'c
+//│        <: 'c
+//│     'c := 'd -> 'c
 
 

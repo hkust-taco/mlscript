@@ -11,10 +11,10 @@ fun test(pt1, pt2) = pt1.color === pt1.color and
   if p1 is undefined then true
   else if p2 is undefined then true
   else test(p1, p2)
-//│ fun test: forall 'a 'b 'c. ('c, 'b) -> Bool
+//│ fun test: forall 'a 'b 'c. ('a, 'c) -> Bool
 //│   where
-//│     'b <: {parent: Object & 'b & ~() | ()}
-//│     'c <: {color: Eql['a] & 'a, parent: Object & 'c & ~() | ()}
+//│     'c <: {parent: Object & 'c & ~() | ()}
+//│     'a <: {color: Eql['b] & 'b, parent: Object & 'a & ~() | ()}
 
 
 // * This works out fine:

@@ -67,16 +67,16 @@ fun find(t, k) =
       sgt(k, k') then find(r, k)
       _ then Some(v)
     Empty then None
-//│ fun insert: forall 'A 'A0 'A1 'A2 'A3. (Empty | Node[in 'A0 out 'A1], Str, 'A & 'A2 & ('A0 | ??A)) -> Node[in 'A2 out 'A3]
+//│ fun insert: forall 'A 'A0 'A1 'A2 'A3. (Empty | Node[in 'A1 out 'A2], Str, 'A0 & 'A3 & ('A1 | ??A)) -> Node[in 'A3 out 'A]
 //│ fun find: forall 'A4. (Empty | Node[out 'A4], Str) -> (None | Some[??A0 & 'A4])
 //│ where
-//│   'A0 <: 'A1
-//│   'A1 <: 'A2 & ('A | ~??A1) | ~??A1
-//│   'A2 :> 'A3 | ??A1 & 'A1
-//│       <: 'A & ('A0 | ??A)
-//│   'A3 :> 'A2 | ??A1 & 'A1 | 'A
-//│   'A :> 'A3 | ??A1 & 'A1
-//│      <: 'A2 & ('A0 | ??A)
+//│   'A1 <: 'A2
+//│   'A2 <: 'A3 & ('A0 | ~??A1) | ~??A1
+//│   'A3 :> 'A | ??A1 & 'A2
+//│       <: 'A0 & ('A1 | ??A)
+//│   'A :> 'A3 | ??A1 & 'A2 | 'A0
+//│   'A0 :> 'A | ??A1 & 'A2
+//│       <: 'A3 & ('A1 | ??A)
 
 fun showType(ty) =
   if ty is
@@ -150,6 +150,147 @@ fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, Str] =
         Err(message) then Err(message)
       Ok(PrimitiveType(name)) then Err("cannot apply primitive type `" ++ name ++ "`")
       Err(message) then Err(message)
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.137: 	  if t is
+//│ ║         	     ^^^^
+//│ ║  l.138: 	    Lit(_, ty) then Ok(ty)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.139: 	    Var(name) and find(ctx, name) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.140: 	      Some(ty) then Ok(ty)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.141: 	      None then Err("unbound variable `" ++ name ++ "`")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.142: 	    Abs(Var(name), ty, body) and typeTerm(body, insert(ctx, name, ty)) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.143: 	      Ok(resTy) then Ok(FunctionType(ty, resTy))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.144: 	      Err(message) then Err(message)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `FunctionType & ~??A` does not match type `~(FunctionType & ??A0)`
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.136: 	fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, Str] =
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.137: 	  if t is
+//│ ║         	^^^^^^^^^
+//│ ║  l.138: 	    Lit(_, ty) then Ok(ty)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.139: 	    Var(name) and find(ctx, name) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.140: 	      Some(ty) then Ok(ty)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.141: 	      None then Err("unbound variable `" ++ name ++ "`")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.142: 	    Abs(Var(name), ty, body) and typeTerm(body, insert(ctx, name, ty)) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.143: 	      Ok(resTy) then Ok(FunctionType(ty, resTy))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.144: 	      Err(message) then Err(message)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.145: 	    App(lhs, rhs) and typeTerm(lhs, ctx) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.146: 	      Ok(FunctionType(pTy, resTy)) and typeTerm(rhs, ctx) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.147: 	        Ok(aTy) and
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.148: 	          typeEqual(pTy, aTy) then Ok(resTy)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.149: 	          else Err("expect the argument to be of type `" ++ showType(pTy) ++ "` but found `" ++ showType(aTy) ++ "`")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.150: 	        Err(message) then Err(message)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.151: 	      Ok(PrimitiveType(name)) then Err("cannot apply primitive type `" ++ name ++ "`")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.152: 	      Err(message) then Err(message)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `FunctionType` does not match type `~FunctionType`
+//│ ║  l.24: 	type Type = FunctionType | PrimitiveType
+//│ ║        	            ^^^^^^^^^^^^
+//│ ╟── but it flows into type reference with expected type `~FunctionType`
+//│ ║  l.136: 	fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, Str] =
+//│ ╙──       	                                   ^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.136: 	fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, Str] =
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.137: 	  if t is
+//│ ║         	^^^^^^^^^
+//│ ║  l.138: 	    Lit(_, ty) then Ok(ty)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.139: 	    Var(name) and find(ctx, name) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.140: 	      Some(ty) then Ok(ty)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.141: 	      None then Err("unbound variable `" ++ name ++ "`")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.142: 	    Abs(Var(name), ty, body) and typeTerm(body, insert(ctx, name, ty)) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.143: 	      Ok(resTy) then Ok(FunctionType(ty, resTy))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.144: 	      Err(message) then Err(message)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.145: 	    App(lhs, rhs) and typeTerm(lhs, ctx) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.146: 	      Ok(FunctionType(pTy, resTy)) and typeTerm(rhs, ctx) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.147: 	        Ok(aTy) and
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.148: 	          typeEqual(pTy, aTy) then Ok(resTy)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.149: 	          else Err("expect the argument to be of type `" ++ showType(pTy) ++ "` but found `" ++ showType(aTy) ++ "`")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.150: 	        Err(message) then Err(message)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.151: 	      Ok(PrimitiveType(name)) then Err("cannot apply primitive type `" ++ name ++ "`")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.152: 	      Err(message) then Err(message)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `FunctionType & ~??A` does not match type `~(FunctionType & ??A0)`
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.50: 	class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
+//│ ╙──      	           ^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.136: 	fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, Str] =
+//│ ║         	    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.137: 	  if t is
+//│ ║         	^^^^^^^^^
+//│ ║  l.138: 	    Lit(_, ty) then Ok(ty)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.139: 	    Var(name) and find(ctx, name) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.140: 	      Some(ty) then Ok(ty)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.141: 	      None then Err("unbound variable `" ++ name ++ "`")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.142: 	    Abs(Var(name), ty, body) and typeTerm(body, insert(ctx, name, ty)) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.143: 	      Ok(resTy) then Ok(FunctionType(ty, resTy))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.144: 	      Err(message) then Err(message)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.145: 	    App(lhs, rhs) and typeTerm(lhs, ctx) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.146: 	      Ok(FunctionType(pTy, resTy)) and typeTerm(rhs, ctx) is
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.147: 	        Ok(aTy) and
+//│ ║         	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.148: 	          typeEqual(pTy, aTy) then Ok(resTy)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.149: 	          else Err("expect the argument to be of type `" ++ showType(pTy) ++ "` but found `" ++ showType(aTy) ++ "`")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.150: 	        Err(message) then Err(message)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.151: 	      Ok(PrimitiveType(name)) then Err("cannot apply primitive type `" ++ name ++ "`")
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.152: 	      Err(message) then Err(message)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── expression of type `FunctionType & ??A & ~??A0` does not match type `~FunctionType`
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.50: 	class Node[A](key: Str, value: A, left: TreeMap[A], right: TreeMap[A])
+//│ ╙──      	           ^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ fun typeTerm: (t: Term, ctx: TreeMap[Type]) -> Result[Type, Str]
 
 fun showTypeTerm(t, ctx) =

@@ -188,6 +188,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   }()
   
   
+  private val DummyTV: TV = freshVar(noProv, N, S("<DUMMY>"), Nil, Nil, false)(-1)
+  
+  
   // * Each type has a shadow which identifies all variables created from copying
   // * variables that existed at the start of constraining.
   // * The intent is to make the total number of shadows in a given constraint
@@ -769,6 +772,58 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     trace(s"$lvl. C $lhs <! $rhs    (${shadows.size})") {
     // trace(s"$lvl. C $lhs <! $rhs  ${lhs.getClass.getSimpleName}  ${rhs.getClass.getSimpleName}") {
       
+      def constrainMaxTv(startTV: TV, startLeft: Bool): (TV, ST) = {
+        // System.out.println("======================")
+        
+        var maxTv = startTV
+        var isLeft = startLeft
+        @tailrec
+        def allComponents(ls: Ls[ST], rs: Ls[ST], done_ls: Ls[ST], done_rs: Ls[ST]): (Ls[ST], Ls[ST]) =
+            ls match {
+            // {System.out.println(ls,rs,done_ls,done_rs); ls} match {
+            // {Thread.sleep(100); System.out.println(ls,rs,done_ls,done_rs); ls} match {
+          case ComposedType(false, l, r) :: ls => allComponents(l :: r :: ls, rs, done_ls, done_rs)
+          case NegType(st) :: ls => allComponents(ls, st :: rs, done_ls, done_rs)
+          case ProvType(st) :: ls => allComponents(st :: ls, rs, done_ls, done_rs)
+          case (tv: TV) :: ls if tv is startTV => allComponents(ls, rs, done_ls, done_rs)
+          case (tv: TV) :: ls if tv.level > maxTv.level =>
+            val oldTv = maxTv
+            val wasLeft = isLeft
+            maxTv = tv
+            isLeft = true
+            // if (oldTv is DummyTV) allComponents(ls, rs, done_ls, done_rs)
+            if (wasLeft) allComponents(ls, rs, oldTv :: done_ls, done_rs)
+            else allComponents(ls, rs, done_ls, oldTv :: done_rs)
+          case st :: ls => allComponents(ls, rs, st :: done_ls, done_rs)
+          case Nil => rs match {
+            case ComposedType(true, l, r) :: rs => allComponents(ls, l :: r :: rs, done_ls, done_rs)
+            case NegType(st) :: rs => allComponents(st :: ls, rs, done_ls, done_rs)
+            case ProvType(st) :: ls => allComponents(ls, st :: rs, done_ls, done_rs)
+            case (tv: TV) :: ls if tv is startTV => allComponents(ls, rs, done_ls, done_rs)
+            case (tv: TV) :: rs if tv.level > maxTv.level =>
+              val oldTv = maxTv
+              val wasLeft = isLeft
+              maxTv = tv
+              isLeft = false
+              // if (oldTv is DummyTV) allComponents(ls, rs, done_ls, done_rs)
+              if (wasLeft) allComponents(ls, rs, oldTv :: done_ls, done_rs)
+              else allComponents(ls, rs, done_ls, oldTv :: done_rs)
+            case r :: rs => allComponents(Nil, rs, done_ls, r :: done_rs)
+            case Nil => (done_ls, done_rs)
+          }
+        }
+        val (ls, rs) = allComponents(lhs :: Nil, rhs :: Nil, Nil, Nil)
+        // if (maxTv isnt DummyTV)
+        // if (isLeft) rec(maxTv, (ls.iterator.map(_.neg()) ++ rs).reduce(_ | _), true)
+        // else rec((ls.iterator ++ rs.iterator.map(_.neg())).reduce(_ & _), maxTv, true)
+        
+        // System.out.println(s"Components: $ls  <<  $rs")
+        
+        if (maxTv is startTV) (maxTv, if (startLeft) rhs else lhs)
+        else if (isLeft) (maxTv, (ls.iterator.map(_.neg()) ++ rs).reduce(_ | _))
+        else (maxTv, (ls.iterator ++ rs.iterator.map(_.neg())).reduce(_ & _))
+      }
+      
       // shadows.previous.foreach { sh =>
       //   println(s">> $sh   ${sh.hashCode}")
       // }
@@ -789,7 +844,90 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       
       // println(s"  where ${FunctionType(lhs, rhs)(primProv).showBounds}")
       else {
+        /* 
+        @tailrec
+        def findTV(cur: TV, lr: Bool, todo: Ls[ST], l: Ls[ST], r: Ls[ST]): (Ls[ST], Ls[ST]) = todo match {
+          case (tv: TypeVariable) :: todo if tv.level > cur.level =>
+            if (lr) findTV(tv, true, cur :: l, r)
+            else findTV(tv, true, l, cur :: r)
+          case ComposedType(true, l, r) :: todo =>
+            findTV(l :: r :: todo, done)
+          case ProxyType(st) :: todo =>
+            findTV(st :: todo, l, r)
+          case NegType(st) :: todo =>
+            findTV(todo, st :: l, r)
+          case st :: todo =>
+            findTV(todo, l, st :: r)
+          case Nil => N
+        }
+        val (tv, lr, ls, rs) = findTV(DummyTV, rhs :: Nil, Nil, Nil)
+        if (tv isnt DummyTV)
+          if (lr) return ()
+          else return ()
+        */
+        /* 
+        val maxLevel = 
+        val ucs = lhs.components(true)
+        ucs.iterator.collect { case tv: TV => tv }.maxByOption(_.level) match {
+          case S(tv) if tv.level >= lhs.level max rhs.level =>
+            println(s"NEW $tv UB (${rhs.level})")
+            val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
+              if (c.prov is noProv) ty else mkProxy(ty, c.prov))
+            tv.upperBounds ::= newBound // update the bound
+            tv.lowerBounds.foreach(rec(_, rhs, true)) // propagate from the bound
+          case _ =>
+        }
+        val ics = lhs.components(false)
+        */
+        // lhs.components(true)
+        // val cs = (lhs & NegType(rhs)(noProv)).components(true)
+        
         val lhs_rhs = lhs -> rhs
+        /* 
+        lhs_rhs match {
+          // case (_: TV, _) | (_, _: TV) =>
+          case (lhs: TV, rhs) if lhs.level >= rhs.level =>
+          case (_, rhs: TV) if lhs.level <= rhs.level =>
+          case _ =>
+            var maxTv = DummyTV
+            var isLeft = true
+            @tailrec
+            def allComponents(ls: Ls[ST], rs: Ls[ST], done_ls: Ls[ST], done_rs: Ls[ST]): (Ls[ST], Ls[ST]) = ls match {
+              case ComposedType(true, l, r) :: ls => allComponents(l :: r :: ls, rs, done_ls, done_rs)
+              case NegType(st) :: ls => allComponents(ls, st :: rs, done_ls, done_rs)
+              case ProvType(st) :: ls => allComponents(st :: ls, rs, done_ls, done_rs)
+              case (tv: TV) :: ls if tv.level > maxTv.level =>
+                val oldTv = maxTv
+                val wasLeft = isLeft
+                maxTv = tv
+                isLeft = true
+                if (oldTv is DummyTV) allComponents(ls, rs, done_ls, done_rs)
+                else if (wasLeft) allComponents(ls, rs, oldTv :: done_ls, done_rs)
+                else allComponents(ls, rs, done_ls, oldTv :: done_rs)
+              case st :: ls => allComponents(ls, rs, st :: done_ls, done_rs)
+              case Nil => rs match {
+                case ComposedType(false, l, r) :: ls => allComponents(ls, l :: r :: rs, done_ls, done_rs)
+                case NegType(st) :: rs => allComponents(st :: ls, rs, done_ls, done_rs)
+                case ProvType(st) :: ls => allComponents(ls, st :: rs, done_ls, done_rs)
+                case (tv: TV) :: rs if tv.level > maxTv.level =>
+                  val oldTv = maxTv
+                  val wasLeft = isLeft
+                  maxTv = tv
+                  isLeft = false
+                  if (oldTv is DummyTV) allComponents(ls, rs, done_ls, done_rs)
+                  else if (wasLeft) allComponents(ls, rs, oldTv :: done_ls, done_rs)
+                  else allComponents(ls, rs, done_ls, oldTv :: done_rs)
+                case r :: rs => allComponents(Nil, rs, done_ls, r :: done_rs)
+                case Nil => (done_ls, done_rs)
+              }
+            }
+            val (ls, rs) = allComponents(lhs :: Nil, rhs :: Nil, Nil, Nil)
+            if (maxTv isnt DummyTV)
+              if (isLeft) return rec(maxTv, (ls.iterator.map(_.neg()) ++ rs).reduce(_ | _), true)
+              else return rec((ls.iterator ++ rs.iterator.map(_.neg())).reduce(_ & _), maxTv, true)
+        }
+        */
+        
         (lhs_rhs match {
           case (_: ProvType, _) | (_, _: ProvType) => shadows
           // * Note: contrary to Simple-sub, we do have to remember subtyping tests performed
@@ -885,8 +1023,46 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound
             
             
-          case (lhs: TypeVariable, rhs) =>
-            val tv = lhs
+          case (lhs: TypeVariable, _rhs) =>
+            // val tv = lhs
+            /* 
+            /* 
+            def findBetterTV(todo: Ls[ST], done: Ls[ST]): Opt[(TV, Ls[ST])] = todo match {
+              case (tv: TypeVariable) :: todo if tv.level > lhs.level =>
+                S(tv, todo ::: done)
+              case ComposedType(true, l, r) :: todo =>
+                findBetterTV(l :: r :: todo, done)
+              case ProxyType(st) :: todo =>
+                findBetterTV(st :: todo, done)
+              case st :: todo =>
+                findBetterTV(todo, st :: done)
+              case Nil => N
+            }
+            findBetterTV(rhs :: Nil, Nil) match {
+              case S((tv, ts)) =>
+                rec(ts.foldLeft(lhs: ST)(_ & _), tv, true)
+              case N =>
+            }
+            */
+            def findBetterTV(todo: Ls[ST], l: Ls[ST], r: Ls[ST]): Opt[(ST, ST)] = todo match {
+              case (tv: TypeVariable) :: todo if tv.level > lhs.level =>
+                S(tv, todo ::: done)
+              case ComposedType(true, l, r) :: todo =>
+                findBetterTV(l :: r :: todo, done)
+              case ProxyType(st) :: todo =>
+                findBetterTV(st :: todo, l, r)
+              case NegType(st) :: todo =>
+                findBetterTV(todo, st :: l, r)
+              case st :: todo =>
+                findBetterTV(todo, l, st :: r)
+              case Nil => N
+            }
+            findBetterTV(rhs :: Nil, Nil, Nil)
+              .foreach { case (l, r) => rec(l, r, true) }
+             */
+            
+            val (tv, rhs) = constrainMaxTv(lhs, true)
+            
             println(s"wrong level: ${rhs.level}")
             if (constrainedTypes && rhs.level <= lvl) {
               println(s"STASHING $tv bound in extr ctx")

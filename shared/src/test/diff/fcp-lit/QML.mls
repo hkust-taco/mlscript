@@ -202,7 +202,7 @@ def sstep = fun xx -> xx (fun (xinit, xsub) ->
     then xsub r1 (div i 2)
     else xsub r2 (div i 2) in
   fun f -> f (init, sub))
-//│ ((forall 'a 'b 'c 'd 'e. ('c -> 'd, 'e -> int -> 'a,) -> (('c -> ('d, 'd,), (('e, 'e,),) -> int -> 'a,) -> 'b) -> 'b) -> 'f) -> 'f
+//│ ((forall 'a 'b 'c 'd 'e. ('d -> 'e, 'a -> int -> 'b,) -> (('d -> ('e, 'e,), (('a, 'a,),) -> int -> 'b,) -> 'c) -> 'c) -> 'f) -> 'f
 //│   <:  sstep:
 //│ ExSmall -> ExSmall
 //│ ╔══[ERROR] Type error in def definition
@@ -440,7 +440,7 @@ def step = fun xx -> xx (fun ((((xinit, xsub), xupdate), xfold),) ->
     else (fst r, xupdate (snd r) (div i 2) a) in
   let fold f b r = xfold f (xfold f b (fst r)) (snd r) in
     fun f -> f ((((init, sub), update), fold),) )
-//│ ((forall 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm 'n 'o 'p. (((('f -> 'b, 'l -> int -> 'n,), 'g -> int -> 'c -> 'o & 'i -> int -> 'c -> 'd,), 'h -> ('k -> 'p -> 'a & 'e -> 'm -> 'k),),) -> ((((('f -> ('b, 'b,), (('l, 'l,),) -> int -> 'n,), forall 'q 'r. (('g & 'q, 'i & 'r,),) -> int -> 'c -> ('o | 'q, 'r | 'd,),), 'h -> 'e -> (('m, 'p,),) -> 'a,),) -> 'j) -> 'j) -> 's) -> 's
+//│ ((forall 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm 'n 'o 'p. (((('b -> 'j, 'l -> int -> 'g,), 'd -> int -> 'o -> 'i & 'e -> int -> 'o -> 'h,), 'm -> ('p -> 'a -> 'f & 'k -> 'n -> 'p),),) -> ((((('b -> ('j, 'j,), (('l, 'l,),) -> int -> 'g,), forall 'q 'r. (('d & 'q, 'e & 'r,),) -> int -> 'o -> ('i | 'q, 'r | 'h,),), 'm -> 'k -> (('n, 'a,),) -> 'f,),) -> 'c) -> 'c) -> 's) -> 's
 //│   <:  step:
 //│ ExSig -> ExSig
 //│ ╔══[ERROR] Type error in def definition

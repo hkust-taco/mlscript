@@ -163,7 +163,7 @@ module Lists { // TODO use name List when module overloading is supported:
 //│ module Lists {
 //│   fun assoc: forall 'a 'A. 'a -> (Cons[{key: Eql['a], value: 'A} | ~??A] | Nil) -> (None | Some['A])
 //│   fun map: forall 'A0 'A1. ((??A0 & 'A0) -> 'A1) -> (Cons['A0] | Nil) -> (Cons['A1] | Nil)
-//│   fun zip: forall 'A2 'A3. (Cons['A2] | Nil, Cons['A3] | Nil) -> (Cons[[??A1 & 'A2, ??A2 & 'A3]] | Nil)
+//│   fun zip: forall 'A2 'A3. (Cons['A3] | Nil, Cons['A2] | Nil) -> (Cons[[??A1 & 'A3, ??A2 & 'A2]] | Nil)
 //│ }
 
 let xs = 1 :: 2 :: 3 :: Nil
@@ -285,7 +285,7 @@ fun eval(t, env) = if t is
     else err(String(pree) ++ " does not have field " ++ nme)
   Rcd(fs) then
     Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
-//│ fun eval: forall 'a 'Sub 'Sub0 'A. (App | Lam | Lit[anything] | Rcd['Sub0] | Sel | Var, Cons[{key: Eql[Str], value: 'A} | ~??A] & {List#A <: {key: Eql[Str], value: 'A} | ~??A} & List[{key: Eql[Str], value: 'A} | ~??A] | Nil & {List#A <: {key: Eql[Str], value: 'A} | ~??A} & List[{key: Eql[Str], value: 'A} | ~??A]) -> 'a
+//│ fun eval: forall 'A 'a 'Sub 'Sub0. (App | Lam | Lit[anything] | Rcd['Sub0] | Sel | Var, Cons[{key: Eql[Str], value: 'A} | ~??A] & {List#A <: {key: Eql[Str], value: 'A} | ~??A} & List[{key: Eql[Str], value: 'A} | ~??A] | Nil & {List#A <: {key: Eql[Str], value: 'A} | ~??A} & List[{key: Eql[Str], value: 'A} | ~??A]) -> 'a
 //│   where
 //│     'A :> ??A0 & 'a
 //│        <: Object & ~#Rcd | Rcd['Sub] | ~??A1
@@ -314,7 +314,7 @@ eval of rcd, Nil
 eval of Sel(rcd, "a"), Nil
 //│ 'a
 //│   where
-//│     'a :> ??A & ??A0 & (Lam | Lit[??A1 & ??A2]) | Lam | Lit[??A1 & ??A2] | ??A3 & ??Sub & (Lam | Lit[??A1 & ??A2]) | Rcd[Lam | Lit[??A1 & ??A2] | 'a]
+//│     'a :> ??A & ??A0 & (Lam | Lit[??A1 & ??A2]) | Rcd[Lam | Lit[??A1 & ??A2] | 'a] | Lam | Lit[??A1 & ??A2] | ??A3 & ??Sub & (Lam | Lit[??A1 & ??A2])
 //│ res
 //│     = IntLit {}
 

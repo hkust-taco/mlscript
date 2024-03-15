@@ -354,7 +354,7 @@ TestElim.eliminate(Outside(Outside(Univ())))
 TestElim.eliminate(circles)
 //│ 'a
 //│   where
-//│     'a :> Circle | Intersect['a] | Translate[Circle | 'a] | Scale[Circle | 'a] | Outside[Circle | 'a] | Union[Circle | 'a]
+//│     'a :> Circle | Union[Circle | 'a] | Intersect['a] | Translate[Circle | 'a] | Scale[Circle | 'a] | Outside[Circle | 'a]
 //│ res
 //│     = Union {}
 

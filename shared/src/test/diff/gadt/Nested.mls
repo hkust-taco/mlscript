@@ -192,6 +192,26 @@ fun eu[A, B](x: U[A,B,A], y: U[A,B,A]): Bool =
     if x is MkU(s1, t1) and y is MkU(s2, t2) then 
         ((s1 as x.A) as x.C) == ((s2 as y.A) as y.C)
     else false
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.192: 	    if x is MkU(s1, t1) and y is MkU(s2, t2) then 
+//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.193: 	        ((s1 as x.A) as x.C) == ((s2 as y.A) as y.C)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.194: 	    else false
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── type `A` does not match type `~(A & ??S)`
+//│ ║  l.191: 	fun eu[A, B](x: U[A,B,A], y: U[A,B,A]): Bool =
+//│ ║         	       ^
+//│ ╟── Note: constraint arises from type selection:
+//│ ║  l.193: 	        ((s1 as x.A) as x.C) == ((s2 as y.A) as y.C)
+//│ ║         	                 ^^
+//│ ╟── from field selection:
+//│ ║  l.133: 	class MkU[S, T](s: S, t: T) extends U[S, T, Int]
+//│ ║         	                ^
+//│ ╟── Note: type parameter S is defined at:
+//│ ║  l.133: 	class MkU[S, T](s: S, t: T) extends U[S, T, Int]
+//│ ╙──       	          ^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ fun eu: forall 'A 'B. (x: U['A, 'B, 'A], y: U['A, 'B, 'A]) -> Bool
 
 eu(MkU(1, 2), MkU(1, 3))
@@ -213,12 +233,52 @@ fun su[A, B](x: U[A,B,A], y: U[B,A,B]): Int =
     if x is MkU(s1, t1) and y is MkU(s2, t2) then 
         (t1 as y.A) as y.C
     else 0
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.213: 	    if x is MkU(s1, t1) and y is MkU(s2, t2) then 
+//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.214: 	        (t1 as y.A) as y.C
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.215: 	    else 0
+//│ ║         	^^^^^^^^^^
+//│ ╟── type `B` does not match type `~(B & ??T)`
+//│ ║  l.212: 	fun su[A, B](x: U[A,B,A], y: U[B,A,B]): Int =
+//│ ║         	          ^
+//│ ╟── Note: constraint arises from type selection:
+//│ ║  l.214: 	        (t1 as y.A) as y.C
+//│ ║         	                ^^
+//│ ╟── from field selection:
+//│ ║  l.133: 	class MkU[S, T](s: S, t: T) extends U[S, T, Int]
+//│ ║         	                      ^
+//│ ╟── Note: type parameter T is defined at:
+//│ ║  l.133: 	class MkU[S, T](s: S, t: T) extends U[S, T, Int]
+//│ ╙──       	             ^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ fun su: forall 'A 'B. (x: U['A, 'B, 'A], y: U['B, 'A, 'B]) -> Int
 
 fun su[A, B](x: U[A,B,A], y: U[B,A,B]): Int =
     if x is MkU(s1, t1) and y is MkU(s2, t2) then 
         ((s1 as x.A) as x.C) + ((t1 as y.A) as y.C) + ((s2 as y.A) as y.C) + ((t2 as x.A) as x.C)
     else 0
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.219: 	    if x is MkU(s1, t1) and y is MkU(s2, t2) then 
+//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.220: 	        ((s1 as x.A) as x.C) + ((t1 as y.A) as y.C) + ((s2 as y.A) as y.C) + ((t2 as x.A) as x.C)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.221: 	    else 0
+//│ ║         	^^^^^^^^^^
+//│ ╟── type `A` does not match type `~(A & ??S)`
+//│ ║  l.218: 	fun su[A, B](x: U[A,B,A], y: U[B,A,B]): Int =
+//│ ║         	       ^
+//│ ╟── Note: constraint arises from type selection:
+//│ ║  l.220: 	        ((s1 as x.A) as x.C) + ((t1 as y.A) as y.C) + ((s2 as y.A) as y.C) + ((t2 as x.A) as x.C)
+//│ ║         	                 ^^
+//│ ╟── from field selection:
+//│ ║  l.133: 	class MkU[S, T](s: S, t: T) extends U[S, T, Int]
+//│ ║         	                ^
+//│ ╟── Note: type parameter S is defined at:
+//│ ║  l.133: 	class MkU[S, T](s: S, t: T) extends U[S, T, Int]
+//│ ╙──       	          ^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ fun su: forall 'A 'B. (x: U['A, 'B, 'A], y: U['B, 'A, 'B]) -> Int
 
 su(MkU(1,2), MkU(3,4))

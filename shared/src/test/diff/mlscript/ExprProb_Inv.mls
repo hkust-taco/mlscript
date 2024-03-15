@@ -52,13 +52,13 @@ rec def eval1_stub e = case e of {
   | Add -> eval1_stub e.lhs
   | _ -> 0
   }
-//│ eval1_stub: forall 'a 'b 'lhs 'eval1_stub 'c 'd 'e. 'eval1_stub
+//│ eval1_stub: forall 'lhs 'eval1_stub 'a 'b 'c 'd 'e. 'eval1_stub
 //│   where
-//│     'eval1_stub := 'b -> (1 | 'a | 0)
-//│     'a :> 1 | 'a | 0
-//│     'b <: #Lit & 'd | (#Add & 'c | 'e & ~#Add) & ~#Lit
-//│     'c <: {lhs: 'lhs}
-//│     'lhs <: 'b
+//│     'eval1_stub := 'd -> (1 | 'e | 0)
+//│     'e :> 1 | 'e | 0
+//│     'd <: #Lit & 'b | (#Add & 'a | 'c & ~#Add) & ~#Lit
+//│     'a <: {lhs: 'lhs}
+//│     'lhs <: 'd
 //│           = [Function: eval1_stub2]
 
 eval1_stub
@@ -84,18 +84,18 @@ rec def eval1 k e = case e of {
 
 :ns
 eval1
-//│ res: forall 'val 'eval1 'rhs 'a 'b 'c 'd 'e 'lhs 'f 'g. 'eval1
+//│ res: forall 'a 'rhs 'b 'c 'lhs 'd 'e 'f 'eval1 'val 'g. 'eval1
 //│   where
-//│     'eval1 := 'd -> 'c -> ('val | 'e | 'g)
-//│     'e := int
-//│     'c <: #Lit & 'a | (#Add & 'f | 'b & ~#Add) & ~#Lit
+//│     'eval1 := 'e -> 'c -> ('val | 'd | 'b)
+//│     'd := int
+//│     'c <: #Lit & 'a | (#Add & 'f | 'g & ~#Add) & ~#Lit
 //│     'f <: {rhs: 'rhs} & {lhs: 'lhs}
 //│     'lhs <: 'c
 //│     'rhs <: 'c
 //│     'a <: {val: 'val}
 //│     'val <: int
-//│     'd <: 'b -> 'g
-//│     'g <: int
+//│     'e <: 'g -> 'b
+//│     'b <: int
 //│    = [Function: eval1]
 
 :re
@@ -653,7 +653,7 @@ prettier2 done eval2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b ?c. ?c | ?b)` is not an instance of type `number`
+//│ ╟── function of type `?a -> (forall ?b ?c. ?b | ?c)` is not an instance of type `number`
 //│ ║  l.72: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.73: 	  | Lit -> e.val
@@ -721,7 +721,7 @@ prettier2 done eval2 e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	prettier2 done eval2 e2
 //│ ║        	^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b ?c. ?c | ?b)` is not an instance of type `number`
+//│ ╟── function of type `?a -> (forall ?b ?c. ?b | ?c)` is not an instance of type `number`
 //│ ║  l.72: 	rec def eval1 k e = case e of {
 //│ ║        	                ^^^^^^^^^^^^^^^
 //│ ║  l.73: 	  | Lit -> e.val

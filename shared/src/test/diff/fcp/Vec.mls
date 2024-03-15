@@ -115,6 +115,12 @@ cons_ty = cons : Cons_ty
 //│ ╟── Note: class type parameter N is defined at:
 //│ ║  l.18: 	class Cons[A, N]: { size: S[N]; head: A; tail: Vec[A, N] }
 //│ ╙──      	              ^
+//│ ╔══[ERROR] Type error in def definition
+//│ ║  l.104: 	cons_ty = cons : Cons_ty
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── type variable `'p` leaks out of its scope
+//│ ║  l.42: 	def cons_ty : forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
+//│ ╙──      	                                       ^^
 
 cons_ty3 = cons : Cons_ty
 //│ ╔══[ERROR] Type mismatch in type ascription:
@@ -397,7 +403,7 @@ sum v1_ty
 //│ ╟── type `Cons[int, Z]` is not a function
 //│ ║  l.180: 	v1_ty = v1_ : Cons[int, Z]
 //│ ║         	              ^^^^^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(forall ?a ?b. ?b -> ?a) -> ?c`
+//│ ╟── but it flows into reference with expected type `(forall ?a ?b. ?a -> ?b) -> ?c`
 //│ ║  l.+1: 	sum v1_ty
 //│ ║        	    ^^^^^
 //│ ╟── Note: constraint arises from application:
