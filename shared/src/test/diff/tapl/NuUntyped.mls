@@ -248,15 +248,15 @@ fun fv(t) =
     Var(name) then list1(name)
     Abs(Var(name), body) then listWithout(fv(body), name)
     App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
-//│ fun fv: forall 'A 'A0 'A1 'A2. (Abs | App | Var) -> (Cons[in 'A2 out 'A] | Cons[in 'A2 | 'A1 out 'A] | Cons[in 'A0 out 'A] | Nil)
+//│ fun fv: forall 'A 'A0 'A1 'A2. (Abs | App | Var) -> (Cons[in 'A0 out 'A1] | Cons[in 'A0 | 'A out 'A1] | Cons[in 'A2 out 'A1] | Nil)
 //│   where
-//│     'A2 :> 'A | ??A & 'A | ??A0 & 'A
-//│         <: 'A0 & ('A1 | ~??A)
-//│     'A :> 'A2 | 'A0 | 'A1
-//│     'A0 :> 'A | ??A & 'A | ??A0 & 'A
-//│         <: 'A2 & ('A1 | ~??A)
-//│     'A1 :> 'A | ??A & 'A
-//│         <: 'A2 & 'A0
+//│     'A0 :> 'A1 | ??A & 'A1 | ??A0 & 'A1
+//│         <: 'A2 & ('A | ~??A)
+//│     'A1 :> 'A0 | 'A2 | 'A
+//│     'A2 :> 'A1 | ??A & 'A1 | ??A0 & 'A1
+//│         <: 'A0 & ('A | ~??A)
+//│     'A :> 'A1 | ??A & 'A1
+//│        <: 'A0 & 'A2
 :ResetFuel
 
 fun showFv(t) =

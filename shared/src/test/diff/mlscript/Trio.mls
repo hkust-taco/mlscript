@@ -24,7 +24,7 @@ foo b
 //│ res: "test"
 //│    = 'test'
 //│ constrain calls  : 22
-//│ annoying  calls  : 10
+//│ annoying  calls  : 11
 //│ subtyping calls  : 156
 
 
@@ -38,7 +38,7 @@ foo arg
 //│    = <no result>
 //│      arg is not implemented
 //│ constrain calls  : 37
-//│ annoying  calls  : 30
+//│ annoying  calls  : 33
 //│ subtyping calls  : 342
 
 :stats
@@ -47,7 +47,7 @@ foo (arg with { fC = true })
 //│    = <no result>
 //│      arg is not implemented
 //│ constrain calls  : 30
-//│ annoying  calls  : 28
+//│ annoying  calls  : 31
 //│ subtyping calls  : 274
 
 def foo x = case x of {
@@ -80,7 +80,7 @@ foo arg
 //│    = <no result>
 //│      arg is not implemented
 //│ constrain calls  : 48
-//│ annoying  calls  : 40
+//│ annoying  calls  : 43
 //│ subtyping calls  : 427
 
 :stats
@@ -89,6 +89,6 @@ foo (arg with { payload = 1 })
 //│    = <no result>
 //│      arg is not implemented
 //│ constrain calls  : 42
-//│ annoying  calls  : 38
+//│ annoying  calls  : 41
 //│ subtyping calls  : 330
 

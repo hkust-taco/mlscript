@@ -38,11 +38,11 @@ class MyPoint[out Col](val x: Int, val y: Int, val color: Col, val parent: Some[
 
 module CompareMyPoint extends ComparePoint, CompareColored, CompareNested
 //│ module CompareMyPoint {
-//│   fun compare: ({color: Eql['a], parent: 'parent, x: Eql[in 'b], y: Eql[in 'c]}, {color: 'a, parent: Object & 'parent0, x: 'b, y: 'c}) -> Bool
+//│   fun compare: ({color: Eql['a], parent: 'parent, x: Eql['b], y: Eql['c]}, {color: 'a, parent: Object & 'parent0, x: 'b, y: 'c}) -> Bool
 //│ }
 //│ where
 //│   'parent0 <: Object & ~#Some | Some[{color: 'a, parent: Object & 'parent0, x: 'b, y: 'c} | ~??A]
-//│   'parent <: Object & ~#Some | Some[{color: Eql['a], parent: 'parent, x: Eql[in 'b], y: Eql[in 'c]} | ~??A0]
+//│   'parent <: Object & ~#Some | Some[{color: Eql['a], parent: 'parent, x: Eql['b], y: Eql['c]} | ~??A0]
 
 let Red = 0
 let p0 = MyPoint(0, 0, Red, None)

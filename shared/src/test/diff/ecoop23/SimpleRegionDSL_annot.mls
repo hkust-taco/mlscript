@@ -330,9 +330,9 @@ mixin Eliminate {
 }
 //│ mixin Eliminate() {
 //│   this: {
-//│     eliminate: (??Region & 'Region) -> 'a & (??Region0 & 'Region0) -> 'Region1 & (??Region1 & 'Region2) -> 'Region3 & (??Region2 & 'Region4) -> 'Region5 & (??Region3 & 'Region6) -> 'Region7 & (??Region4 & 'Region8) -> 'Region9
+//│     eliminate: (??Region & 'Region) -> 'a & (??Region0 & 'Region0) -> 'b & (??Region1 & 'Region1) -> 'c & (??Region2 & 'Region2) -> 'd & (??Region3 & 'Region3) -> 'e & (??Region4 & 'Region4) -> 'f
 //│   }
-//│   fun eliminate: (Intersect['Region4] | Object & 'a & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | Outside['Region0 & (Object & ~#Outside | Outside['Region] | ~??Region0)] | Scale['Region8] | Translate['Region6] | Union['Region2]) -> (Intersect['Region5] | Outside['Region1] | Scale['Region9] | Translate['Region7] | Union['Region3] | 'a)
+//│   fun eliminate: (Intersect['Region2] | Object & 'a & ~#Intersect & ~#Outside & ~#Scale & ~#Translate & ~#Union | Outside['Region0 & (Object & ~#Outside | Outside['Region] | ~??Region0)] | Scale['Region4] | Translate['Region3] | Union['Region1]) -> (Intersect['d] | Outside['b] | Scale['f] | Translate['e] | Union['c] | 'a)
 //│ }
 
 module TestElim extends Eliminate {
@@ -360,7 +360,7 @@ fun mk(n) = if n is
   _ then Scale(Vector(0, 0), mk(n))
 //│ fun mk: forall 'a. Object -> 'a
 //│   where
-//│     'a :> Outside['a] | Translate['a] | Scale['a] | Union['a] | Intersect['a]
+//│     'a :> Outside['a] | Intersect['a] | Translate['a] | Scale['a] | Union['a]
 
 :re
 TestElim.eliminate(mk(100))

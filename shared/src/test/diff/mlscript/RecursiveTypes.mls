@@ -704,12 +704,12 @@ f "a"
 //│ res: int
 
 rec def f x = case x of {int -> f "ok" | string -> f (impossible x) | _ -> x}
-//│ f: (int | string & (int | string | ~int) | 'a & ~int & ~string) -> 'a
+//│ f: (int | string & (int | string | ~int) | 'a & ~int & ~string) -> ("ok" & ~int & ~string & int | 'a)
 
 f 1
 f "a"
 f false
-//│ res: nothing
-//│ res: nothing
-//│ res: false
+//│ res: "ok" & ~int & ~string & int
+//│ res: ~int & ~string & int & ("a" | "ok")
+//│ res: "ok" & ~int & ~string & int | false
 

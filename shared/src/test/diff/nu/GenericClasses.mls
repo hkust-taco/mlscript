@@ -171,7 +171,7 @@ if opt is Some(v) then v else 0
 fun map(x, f) = if x is
   None then None
   Some(v) then Some(f(v))
-//│ fun map: forall 'A 'A0. (None | Some['A], (??A & 'A) -> 'A0) -> (None | Some['A0])
+//│ fun map: forall 'A 'a. (None | Some['A], (??A & 'A) -> 'a) -> (None | Some['a])
 
 let mo = map(opt, succ)
 //│ let mo: None | Some[Int]

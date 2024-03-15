@@ -332,7 +332,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       trace(s"DNF DISCHARGE CONSTRAINTS") {
         lhsCons.foreach(c => rec(c._1, c._2, false))
       }()
-
+      
       // * finish when a type appears at both sides
       lazy val both = lhsCs.exists(s => s.lnf match {
         case LhsTop => false
@@ -343,7 +343,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               ltt.exists(rtt.contains)
           })
         })
-
+      
       if (newDefs && both /* && false */) {
         println("DNF finished with same type at both sides")
       } else
@@ -355,7 +355,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         
         def local(): Unit = { // * Used to return early in simple cases
           
-          vars.headOption match {
+          vars.maxByOption(_.level) match {
             case S(v) =>
               rec(v, rhs.toType() | Conjunct(lnf, vars - v, rnf, nvars).toType().neg(), true)
             case N =>
@@ -409,12 +409,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 println(s"Factorized: " + fact)
                 
                 // Finally, we enter the "annoying constraint" resolution routine:
-                annoying(Nil, lnf, fact, RhsBot)
+                annoying(Nil, Nil, lnf, fact, Nil, RhsBot)
                 
               } else {
                 // Alternatively, without factorization (does not actually make a difference most of the time):
                 
-                annoying(Nil, lnf, possible.map(_.toType()), RhsBot)
+                annoying(Nil, Nil, lnf, possible.map(_.toType()), Nil, RhsBot)
                 
               }
               
@@ -431,62 +431,66 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         which are those that involve either unions and intersections at the wrong polarities or negations.
         This works by constructing all pairs of "conjunct <: disjunct" implied by the conceptual
         "DNF <: CNF" form of the constraint. */
-    def annoying(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
+    def annoying(ls: Ls[ST], vars_ls: Ls[TV], done_ls: LhsNf, rs: Ls[ST], vars_rs: Ls[TV], done_rs: RhsNf)
           (implicit cctx: ConCtx, prevCctxs: Ls[ConCtx], shadows: Shadows, ctx: Ctx, dbgHelp: Str = "Case")
           : Unit =
     {
       annoyingCalls += 1
       consumeFuel()
-      annoyingImpl(ls, done_ls, rs, done_rs)
+      annoyingImpl(ls, vars_ls, done_ls, rs, done_rs, vars_rs)
     }
     
     // TODO improve by moving things to the right side *before* branching out in the search!
-    def annoyingImpl(ls: Ls[SimpleType], done_ls: LhsNf, rs: Ls[SimpleType], done_rs: RhsNf)
+    def annoyingImpl(ls: Ls[ST], vars_ls: Ls[TV], done_ls: LhsNf, rs: Ls[ST], done_rs: RhsNf, vars_rs: Ls[TV])
           (implicit cctx: ConCtx, prevCctxs: Ls[ConCtx], ctx: Ctx, shadows: Shadows, dbgHelp: Str = "Case")
           : Unit =
     trace(s"${lvl}. A  $done_ls  %  $ls  <!  $rs  %  $done_rs") {
-      def mkRhs(ls: Ls[SimpleType]): SimpleType = {
-        def tys = (ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes
-        tys.reduceOption(_ | _).getOrElse(BotType)
-      }
-      def mkLhs(rs: Ls[SimpleType]): SimpleType = {
-        def tys = ls.iterator ++ done_ls.toTypes ++ (rs.iterator ++ done_rs.toTypes).map(_.neg())
-        tys.reduceOption(_ & _).getOrElse(TopType)
-      }
+      // def mkRhs(ls: Ls[SimpleType]): SimpleType = {
+      //   def tys = (ls.iterator ++ done_ls.toTypes).map(_.neg()) ++ rs.iterator ++ done_rs.toTypes
+      //   tys.reduceOption(_ | _).getOrElse(BotType)
+      // }
+      // def mkLhs(rs: Ls[SimpleType]): SimpleType = {
+      //   def tys = ls.iterator ++ done_ls.toTypes ++ (rs.iterator ++ done_rs.toTypes).map(_.neg())
+      //   tys.reduceOption(_ & _).getOrElse(TopType)
+      // }
       implicit val etf: ExpandTupleFields = false
       (ls, rs) match {
+        
         // If we find a type variable, we can weasel out of the annoying constraint by delaying its resolution,
         // saving it as negations in the variable's bounds!
-        case ((tv: TypeVariable) :: ls, _) => rec(tv, mkRhs(ls), done_ls.isTop && ls.forall(_.isTop))
-        case (_, (tv: TypeVariable) :: rs) => rec(mkLhs(rs), tv, done_rs.isBot && rs.forall(_.isBot))
-        case (TypeBounds(lb, ub) :: ls, _) => annoying(ub :: ls, done_ls, rs, done_rs)
-        case (_, TypeBounds(lb, ub) :: rs) => annoying(ls, done_ls, lb :: rs, done_rs)
+        // case ((tv: TypeVariable) :: ls, _) => rec(tv, mkRhs(ls), done_ls.isTop && ls.forall(_.isTop))
+        // case (_, (tv: TypeVariable) :: rs) => rec(mkLhs(rs), tv, done_rs.isBot && rs.forall(_.isBot))
+        case ((tv: TypeVariable) :: ls, _) => annoying(ls, tv :: vars_ls, done_ls, rs, vars_rs, done_rs)
+        case (_, (tv: TypeVariable) :: rs) => annoying(ls, vars_ls, done_ls, rs, tv :: vars_rs, done_rs)
+        
+        case (TypeBounds(lb, ub) :: ls, _) => annoying(ub :: ls, vars_ls, done_ls, rs, vars_rs, done_rs)
+        case (_, TypeBounds(lb, ub) :: rs) => annoying(ls, vars_ls, done_ls, lb :: rs, vars_rs, done_rs)
         case (ComposedType(true, ll, lr) :: ls, _) =>
-          mkCase("1"){ implicit dbgHelp => annoying(ll :: ls, done_ls, rs, done_rs) }
-          mkCase("2"){ implicit dbgHelp => annoying(lr :: ls, done_ls, rs, done_rs) }
+          mkCase("1"){ implicit dbgHelp => annoying(ll :: ls, vars_ls, done_ls, rs, vars_rs, done_rs) }
+          mkCase("2"){ implicit dbgHelp => annoying(lr :: ls, vars_ls, done_ls, rs, vars_rs, done_rs) }
         case (_, ComposedType(false, rl, rr) :: rs) =>
-          mkCase("1"){ implicit dbgHelp => annoying(ls, done_ls, rl :: rs, done_rs) }
-          mkCase("2"){ implicit dbgHelp => annoying(ls, done_ls, rr :: rs, done_rs) }
+          mkCase("1"){ implicit dbgHelp => annoying(ls, vars_ls, done_ls, rl :: rs, vars_rs, done_rs) }
+          mkCase("2"){ implicit dbgHelp => annoying(ls, vars_ls, done_ls, rr :: rs, vars_rs, done_rs) }
         case (_, ComposedType(true, rl, rr) :: rs) =>
-          annoying(ls, done_ls, rl :: rr :: rs, done_rs)
+          annoying(ls, vars_ls, done_ls, rl :: rr :: rs, vars_rs, done_rs)
         case (ComposedType(false, ll, lr) :: ls, _) =>
-          annoying(ll :: lr :: ls, done_ls, rs, done_rs)
-        case (p @ ProxyType(und) :: ls, _) => annoying(und :: ls, done_ls, rs, done_rs)
-        case (_, p @ ProxyType(und) :: rs) => annoying(ls, done_ls, und :: rs, done_rs)
+          annoying(ll :: lr :: ls, vars_ls, done_ls, rs, vars_rs, done_rs)
+        case (p @ ProxyType(und) :: ls, _) => annoying(und :: ls, vars_ls, done_ls, rs, vars_rs, done_rs)
+        case (_, p @ ProxyType(und) :: rs) => annoying(ls, vars_ls, done_ls, und :: rs, vars_rs, done_rs)
         // ^ TODO retain the proxy provs wrapping each ConstructedType... for better errors later on?
-        case (n @ NegType(ty) :: ls, _) => annoying(ls, done_ls, ty :: rs, done_rs)
-        case (_, n @ NegType(ty) :: rs) => annoying(ty :: ls, done_ls, rs, done_rs)
+        case (n @ NegType(ty) :: ls, _) => annoying(ls, vars_ls, done_ls, ty :: rs, vars_rs, done_rs)
+        case (_, n @ NegType(ty) :: rs) => annoying(ty :: ls, vars_ls, done_ls, rs, vars_rs, done_rs)
         case (ExtrType(true) :: ls, rs) => () // Bot in the LHS intersection makes the constraint trivial
         case (ls, ExtrType(false) :: rs) => () // Top in the RHS union makes the constraint trivial
-        case (ExtrType(false) :: ls, rs) => annoying(ls, done_ls, rs, done_rs)
-        case (ls, ExtrType(true) :: rs) => annoying(ls, done_ls, rs, done_rs)
+        case (ExtrType(false) :: ls, rs) => annoying(ls, vars_ls, done_ls, rs, vars_rs, done_rs)
+        case (ls, ExtrType(true) :: rs) => annoying(ls, vars_ls, done_ls, rs, vars_rs, done_rs)
           
         // case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(tr.expand :: ls, done_ls, rs, done_rs)
-        case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(ls, (done_ls & (tr, pol = true)) getOrElse
-          (return println(s"OK  $done_ls & $tr  =:=  ${BotType}")), rs, done_rs)
+        case ((tr @ TypeRef(_, _)) :: ls, rs) => annoying(ls, vars_ls, (done_ls & (tr, pol = true)) getOrElse
+          (return println(s"OK  $done_ls & $tr  =:=  ${BotType}")), rs, vars_rs, done_rs)
         
         // case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, tr.expand :: rs, done_rs)
-        case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, done_ls, rs, done_rs | (tr, pol = false) getOrElse
+        case (ls, (tr @ TypeRef(_, _)) :: rs) => annoying(ls, vars_ls, done_ls, rs, vars_rs, done_rs | (tr, pol = false) getOrElse
           (return println(s"OK  $done_rs & $tr  =:=  ${TopType}")))
         
         /*
@@ -500,22 +504,45 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           lastWords(s"unexpected Without in negative position not at the top level: ${w}")
         */
         
-        case ((l: BaseTypeOrTag) :: ls, rs) => annoying(ls, (done_ls & (l, pol = true))(ctx, etf = true) getOrElse
-          (return println(s"OK  $done_ls & $l  =:=  ${BotType}")), rs, done_rs)
-        case (ls, (r: BaseTypeOrTag) :: rs) => annoying(ls, done_ls, rs, done_rs | r getOrElse
+        case ((l: BaseTypeOrTag) :: ls, rs) => annoying(ls, vars_ls, (done_ls & (l, pol = true))(ctx, etf = true) getOrElse
+          (return println(s"OK  $done_ls & $l  =:=  ${BotType}")), rs, vars_rs, done_rs)
+        case (ls, (r: BaseTypeOrTag) :: rs) => annoying(ls, vars_ls, done_ls, rs, vars_rs, done_rs | r getOrElse
           (return println(s"OK  $done_rs | $r  =:=  ${TopType}")))
           
-        case ((l: RecordType) :: ls, rs) => annoying(ls, done_ls & l, rs, done_rs)
+        case ((l: RecordType) :: ls, rs) => annoying(ls, vars_ls, done_ls & l, rs, vars_rs, done_rs)
         case (ls, (r @ RecordType(Nil)) :: rs) => ()
-        case (ls, (r @ RecordType(f :: Nil)) :: rs) => annoying(ls, done_ls, rs, done_rs | f getOrElse
+        case (ls, (r @ RecordType(f :: Nil)) :: rs) => annoying(ls, vars_ls, done_ls, rs, vars_rs, done_rs | f getOrElse
           (return println(s"OK  $done_rs | $f  =:=  ${TopType}")))
-        case (ls, (r @ RecordType(fs)) :: rs) => annoying(ls, done_ls, r.toInter :: rs, done_rs)
+        case (ls, (r @ RecordType(fs)) :: rs) => annoying(ls, vars_ls, done_ls, r.toInter :: rs, vars_rs, done_rs)
           
         // TODO statically prevent these cases by refining `annoyingImpl`'s parameter types
         case (_, (_: PolymorphicType) :: _) | ((_: PolymorphicType) :: _, _) => die
         case (_, (_: ConstrainedType) :: _) | ((_: ConstrainedType) :: _, _) => die
           
         case (Nil, Nil) =>
+          
+          def mkRhs(ls: Ls[ST], tv: TV): ST = {
+            def tys = (vars_ls.iterator.filterNot(_ is tv) ++ done_ls.toTypes).map(_.neg()) ++
+              vars_rs.iterator ++ done_rs.toTypes
+            tys.reduceOption(_ | _).getOrElse(BotType)
+          }
+          def mkLhs(rs: Ls[ST], tv: TV): ST = {
+            def tys = vars_ls.iterator ++ done_ls.toTypes ++
+              (vars_rs.iterator.filterNot(_ is tv) ++ done_rs.toTypes).map(_.neg())
+            tys.reduceOption(_ & _).getOrElse(TopType)
+          }
+          
+          (vars_ls.maxByOption(_.level), vars_rs.maxByOption(_.level)) match {
+            case (S(tv1), S(tv2)) =>
+              if (tv1.level <= tv2.level)
+                return rec(tv1, mkRhs(ls, tv1), done_ls.isTop && ls.forall(_.isTop))
+              else
+                return rec(mkLhs(rs, tv2), tv2, done_rs.isBot && rs.forall(_.isBot))
+            case (S(tv), N) => return rec(tv, mkRhs(ls, tv), done_ls.isTop && ls.forall(_.isTop))
+            case (N, S(tv)) => return rec(mkLhs(rs, tv), tv, done_rs.isBot && rs.forall(_.isBot))
+            case (N, N) =>
+          }
+          
           // TODO improve:
           //    Most of the `rec` calls below will yield ugly errors because we don't maintain
           //    the original constraining context!
@@ -527,14 +554,16 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             case (LhsRefined(_, ts, _, trs), RhsBases(pts, _, _)) if ts.exists(pts.contains) => ()
             
             case (LhsRefined(bo, ts, r, trs), _) if trs.nonEmpty =>
-              annoying(trs.valuesIterator.map { tr => tr.expand(true) }.toList,
-                LhsRefined(bo, ts, r, SortedMap.empty), Nil, done_rs)
+              annoying(trs.valuesIterator.map { tr => tr.expand(true) }.toList, Nil,
+                LhsRefined(bo, ts, r, SortedMap.empty), Nil, Nil, done_rs)
             
             case (_, RhsBases(pts, bf, trs)) if trs.nonEmpty =>
-              annoying(Nil, done_ls, trs.valuesIterator.map(_.expand(false)).toList, RhsBases(pts, bf, SortedMap.empty))
+              annoying(Nil, Nil, done_ls,
+                trs.valuesIterator.map(_.expand(false)).toList,
+                Nil, RhsBases(pts, bf, SortedMap.empty))
             
             case (_, RhsBases(pts, S(L(ov: Overload)), trs)) =>
-              ov.alts.foreach(alt => annoying(Nil, done_ls, Nil, RhsBases(pts, S(L(alt)), trs)))
+              ov.alts.foreach(alt => annoying(Nil, Nil, done_ls, Nil, Nil, RhsBases(pts, S(L(alt)), trs)))
             
             // From this point on, trs should be empty!
             case (LhsRefined(_, _, _, trs), _) if trs.nonEmpty => die
@@ -547,7 +576,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 , RhsBases(_, S(L(f1@FunctionType(l1, r1))), _)) =>
               rec(f0, f1, true)
             case (LhsRefined(S(f: FunctionType), ts, r, trs), RhsBases(pts, _, _)) =>
-              annoying(Nil, LhsRefined(N, ts, r, trs), Nil, done_rs)
+              annoying(Nil, Nil, LhsRefined(N, ts, r, trs), Nil, Nil, done_rs)
             
             // * Note: We could avoid the need for this rule by adding `Eql` to *all* class tag parent sets,
             // *  but I chose not to for performance reasons (better keep parent sets small).
@@ -596,10 +625,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               if (pts.exists(p => (p.id === pt.id) || l.allTags.contains(p.id)))
                 println(s"OK  $pt  <:  ${pts.mkString(" | ")}")
               // else f.fold(reportError())(f => annoying(Nil, done_ls, Nil, f))
-              else annoying(Nil, LhsRefined(N, ts, r, trs), Nil, RhsBases(Nil, bf, trs2))
+              else annoying(Nil, Nil, LhsRefined(N, ts, r, trs), Nil, Nil, RhsBases(Nil, bf, trs2))
             case (lr @ LhsRefined(bo, ts, r, _), rf @ RhsField(n, t2)) =>
               // Reuse the case implemented below:  (this shortcut adds a few more annoying calls in stats)
-              annoying(Nil, lr, Nil, RhsBases(Nil, S(R(rf)), SortedMap.empty))
+              annoying(Nil, Nil, lr, Nil, Nil, RhsBases(Nil, S(R(rf)), SortedMap.empty))
             case (LhsRefined(N, ts, r, _), RhsBases(ots, S(R(RhsField(fldNme, fldTy))), trs)) if newDefs =>
               val fty = lookupField(() => done_ls.toType(sort = true), N, r.fields.toMap.get, ts, fldNme)
               rec(fty.ub, fldTy.ub, false)
@@ -639,14 +668,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               rec(b.inner.ub, ar.inner.ub, false)
             case (LhsRefined(S(b: ArrayBase), ts, r, _), _) => reportError()
             case (LhsRefined(S(ov: Overload), ts, r, trs), _) =>
-              annoying(Nil, LhsRefined(S(ov.approximatePos), ts, r, trs), Nil, done_rs) // TODO remove approx. with ambiguous constraints
+              annoying(Nil, Nil, LhsRefined(S(ov.approximatePos), ts, r, trs), Nil, Nil, done_rs) // TODO remove approx. with ambiguous constraints
             case (LhsRefined(S(Without(b, ns)), ts, r, _), RhsBases(pts, N | S(L(_)), _)) =>
               rec(b, done_rs.toType(), true)
             case (_, RhsBases(pts, S(L(Without(base, ns))), _)) =>
               // rec((pts.map(_.neg()).foldLeft(done_ls.toType())(_ & _)).without(ns), base)
               // ^ This less efficient version creates a slightly different error message
               //    (see test in Annoying.mls)
-              annoying(pts.map(_.neg()), done_ls, base :: Nil, RhsBot)
+              annoying(pts.map(_.neg()), Nil, done_ls, base :: Nil, Nil, RhsBot)
           }
           
       }
@@ -1343,7 +1372,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
   def extrude(ty: SimpleType, lowerLvl: Int, pol: Boolean, upperLvl: Level)
         (implicit ctx: Ctx, cache2: MutSortMap[TraitTag, TraitTag], reason: Ls[Ls[ST]])
         : SimpleType =
-  // (trace(s"EXTR[${printPol(S(pol))}] $ty || $lowerLvl .. $upperLvl  ${ty.level} ${ty.level <= lowerLvl}"){
+  (trace(s"EXTR[${printPol(S(pol))}] $ty || $lowerLvl .. $upperLvl  ${ty.level} ${ty.level <= lowerLvl}"){
     if (ty.level <= lowerLvl) ty else ty match {
       case t @ TypeBounds(lb, ub) => if (pol) extrude(ub, lowerLvl, true, upperLvl) else extrude(lb, lowerLvl, false, upperLvl)
       case t @ FunctionType(l, r) => FunctionType(extrude(l, lowerLvl, !pol, upperLvl), extrude(r, lowerLvl, pol, upperLvl))(t.prov)
@@ -1421,29 +1450,40 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         } else die // shouldn't happen
       case _: ClassTag | _: TraitTag | _: Extruded => ty
       case tr @ TypeRef(d, ts) =>
-        TypeRef(d, tr.mapTargs(S(pol)) {
-          case (N, WildcardArg(lb, ub)) =>
-            WildcardArg(extrude(lb, lowerLvl, false, upperLvl), extrude(ub, lowerLvl, true, upperLvl))(tr.prov)
-          case (N, targ: ST) =>
-            // * Note: the semantics of TypeBounds is inappropriuate for this use (known problem; FIXME later)
-            // * use TypeBounds for type alias
-            if (ctx.tyDefs2.get(d.name).map(_.decl.kind === Als).getOrElse(true))
-              TypeBounds.mk(extrude(targ, lowerLvl, false, upperLvl), extrude(targ, lowerLvl, true, upperLvl)) // Q: ? subtypes?
-            else 
-              WildcardArg(extrude(targ, lowerLvl, false, upperLvl), extrude(targ, lowerLvl, true, upperLvl))(tr.prov)
-            // * A sanity-checking version, making sure the type range is correct (LB subtype of UB):
-            /* 
-            val a = extrude(targ, lowerLvl, false, upperLvl)
-            val b = extrude(targ, lowerLvl, true, upperLvl)
-            implicit val r: Raise = throw _
-            implicit val p: TP = noProv
-            constrain(a, b)
-            TypeBounds.mk(a, b)
-            */
-          case (S(pol), WildcardArg(lb, ub)) =>
-            WildcardArg(extrude(lb, lowerLvl, !pol, upperLvl), extrude(ub, lowerLvl, pol, upperLvl))(tr.prov)
-          case (S(pol), targ: ST) => extrude(targ, lowerLvl, pol, upperLvl)
-        })(tr.prov)
+        val (tparamsargs, tvv, acceptsWildcards) = ctx.tyDefs2.get(d.name) match {
+          case S(lti) =>
+            (lti.tparams.map(tp => (tp._1, tp._2)), (tv: TV) => lti.varianceOf(tv), lti.kind isnt Als)
+          case N =>
+            ctx.tyDefs.get(d.name) match {
+              case S(td) =>
+                val vces = td.tvarVariances.getOrElse(VarianceStore.empty.withDefaultValue(VarianceInfo.in))
+                (td.tparamsargs, (tv: TV) => vces(tv), false)
+              case N =>
+                // (tv: TV) => N
+                ???
+            }
+        }
+        assert(tparamsargs.sizeCompare(ts) === 0)
+        val newTargs = (tparamsargs lazyZip ts).map { case ((_, tv), ta) =>
+          tvv(tv) match {
+            case VarianceInfo(true, true) if acceptsWildcards =>
+              WildcardArg(BotType, TopType)(noProv)
+            case VarianceInfo(co, contra) =>
+              ta match {
+                case WildcardArg(lb, ub) =>
+                  if (co) extrude(ub, lowerLvl, pol, upperLvl)
+                  else if (contra) extrude(lb, lowerLvl, !pol, upperLvl)
+                  else WildcardArg.mk(extrude(lb, lowerLvl, !pol, upperLvl), extrude(ub, lowerLvl, pol, upperLvl), tr.prov)
+                case st: ST => 
+                  if (co) extrude(st, lowerLvl, pol, upperLvl)
+                  else if (contra) extrude(st, lowerLvl, !pol, upperLvl)
+                  else if (acceptsWildcards)
+                    WildcardArg.mk(extrude(st, lowerLvl, !pol, upperLvl), extrude(st, lowerLvl, pol, upperLvl), tr.prov)
+                  else TypeBounds.mk(extrude(st, lowerLvl, false, upperLvl), extrude(st, lowerLvl, true, upperLvl))
+              }
+          }
+        }
+        TypeRef(d, newTargs)(tr.prov)
       case PolymorphicType(polymLevel, body) =>
         PolymorphicType(polymLevel, extrude(body, lowerLvl, pol, upperLvl =
             // upperLvl min polymLevel // * for some crazy reason, this stopped type checking
@@ -1456,7 +1496,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case o @ Overload(alts) =>
         o.mapAlts(extrude(_, lowerLvl, !pol, upperLvl))(extrude(_, lowerLvl, pol, upperLvl))
     }
-    // }(r => s"=> $r"))
+    }(r => s"=> $r"))
   
   
   def err(msg: Message, loco: Opt[Loc])(implicit raise: Raise): SimpleType = {

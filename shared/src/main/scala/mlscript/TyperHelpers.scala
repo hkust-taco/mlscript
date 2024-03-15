@@ -1115,9 +1115,10 @@ abstract class TyperHelpers { Typer: Typer =>
           case S(td: TypedNuAls) =>
             assert(td.tparams.size === targs.size)
             subst(td.body, td.tparams.lazyZip(targs).map {
-              case (tp, w: WildcardArg) => 
+              case (tp, w: WildcardArg) =>
                 // SkolemTag(tp._2)(noProv) -> TypeBounds(w.lb, w.ub)(w.prov)
-                ??? // TODO raise proper error
+                // ??? // TODO raise proper error
+                lastWords("Type aliases cannot use wildcard type arguments: " + this)
               case (tp, st: ST) => SkolemTag(tp._2)(noProv) -> st
             }.toMap)
           case S(td: TypedNuTrt) =>

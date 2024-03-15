@@ -50,7 +50,7 @@ class Cons[A](head: A, tail: List[A])
 fun listConcat(xs) =
   if xs is
     Cons(x, xs2) then Cons(x, listConcat(xs2))
-//│ fun listConcat: forall 'A 'A0. Cons['A & ('A0 | ~??A)] -> Cons['A0]
+//│ fun listConcat: forall 'A 'A0. Cons['A] -> Cons['A0]
 //│   where
 //│     'A0 :> ??A & 'A
 

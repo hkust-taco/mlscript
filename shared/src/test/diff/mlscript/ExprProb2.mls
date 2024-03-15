@@ -185,7 +185,7 @@ eval2_fixed_2 e1
 //│ res: int
 //│    = 6
 //│ constrain calls  : 267
-//│ annoying  calls  : 140
+//│ annoying  calls  : 158
 //│ subtyping calls  : 1865
 
 :stats
@@ -193,7 +193,7 @@ eval2_fixed_2 e2
 //│ res: int
 //│    = -5
 //│ constrain calls  : 648
-//│ annoying  calls  : 345
+//│ annoying  calls  : 389
 //│ subtyping calls  : 5049
 
 

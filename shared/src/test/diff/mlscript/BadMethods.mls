@@ -567,7 +567,7 @@ t : Dup[int, bool]
 //│ ╙──       	             ^^^^
 //│ res: Dup[?, bool]
 //│ constrain calls  : 28
-//│ annoying  calls  : 24
+//│ annoying  calls  : 25
 //│ subtyping calls  : 65
 
 :stats

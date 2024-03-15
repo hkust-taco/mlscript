@@ -28,7 +28,7 @@ fun insert(t, v) = if t is
     v > v' then Node(v', l, insert(r, v))
     _ then t
   Empty then Node(v, Empty, Empty)
-//│ fun insert: forall 'A 'A0 'a. (Empty | Node['A0 & (Num | ~??A)], Num & 'a & 'A) -> (Node[??A & 'A0] | Node[(??A & 'A0 | 'A) & 'a | 'A0 & ??A & 'a])
+//│ fun insert: forall 'A 'a 'A0. (Empty | Node['A & (Num | ~??A)], Num & 'a & 'A0) -> (Node[??A & 'A] | Node['a & (??A & 'A | 'A0)])
 
 find(Empty, 0)
 find(Node(0, Empty, Empty), 0)

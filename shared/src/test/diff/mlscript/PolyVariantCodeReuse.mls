@@ -503,7 +503,7 @@ rec def eval4 subst = eval_lexpr' eval4 subst
 //│      = <no result>
 //│        eval_lexpr', eval_var, list_assoc and eq are not implemented
 //│ constrain calls  : 10599
-//│ annoying  calls  : 2300
+//│ annoying  calls  : 2624
 //│ subtyping calls  : 348698
 
 :ResetFuel
