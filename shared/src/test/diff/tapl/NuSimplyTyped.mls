@@ -149,11 +149,6 @@ fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, Str] =
         Err(message) then Err(message)
       Ok(PrimitiveType(name)) then Err("cannot apply primitive type `" ++ name ++ "`")
       Err(message) then Err(message)
-//│ ╔══[ERROR] Subtyping constraint of the form `?typeTerm <: (?a, ?b) -> ?c` took too many steps and ran out of fuel (10000)
-//│ ║  l.141: 	    Abs(Var(name), ty, body) and typeTerm(body, insert(ctx, name, ty)) is
-//│ ║         	                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╙── Note: use flag `:ex` to see internal error info.
-//│ TEST CASE FAILURE: There was an unexpected type error
 //│ fun typeTerm: (t: Term, ctx: TreeMap[Type]) -> Result[Type, Str]
 
 fun showTypeTerm(t, ctx) =

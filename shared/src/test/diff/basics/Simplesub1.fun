@@ -220,14 +220,14 @@ x => {l: x x, r: x }
 //│ ║  l.+1: 	(f => (x => f (v => (x x) v)) (x => f (v => (x x) v))) (f => x => f)
 //│ ║        	      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
-//│ res: error | anything -> anything -> anything -> 'a
+//│ res: error | 'a
 //│   where
-//│     'a :> forall 'a. anything -> 'a
+//│     'a :> anything -> 'a
 
 res 1 2
-//│ res: error | anything -> 'a
+//│ res: error | 'a
 //│   where
-//│     'a :> forall 'a. anything -> 'a
+//│     'a :> anything -> 'a
 
 
 let rec trutru = g => trutru (g true)
@@ -400,7 +400,7 @@ let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
 
 :ns
 let rec x = (let y = (x x); (z => z))
-//│ x: forall 'x 'a 'b. 'x
+//│ x: forall 'a 'b 'x. 'x
 //│   where
 //│     'x := 'b -> 'b
 //│     'b :> 'b -> 'b

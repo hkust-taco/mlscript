@@ -52,25 +52,10 @@ mkArrays impl k = k impl
 // * Inconsistent bounds on 'Rep after type avoidance during extrusion (<- not sure comment is still current)
 :e
 def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
-//│ ╔══[ERROR] Type error in application
-//│ ║  l.54: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
-//│ ║        	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type variable `'Rep` leaks out of its scope
-//│ ║  l.18: 	type Arrays[A] = (forall 'Rep. ArraysRep[A, 'Rep] -> 'r) -> 'r
-//│ ║        	                                            ^^^^
-//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this function:
-//│ ║  l.54: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
-//│ ║        	                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── • this reference:
-//│ ║  l.54: 	def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
-//│ ║        	              ^^^
-//│ ╟── Note: constraint arises from reference:
-//│ ║  l.23: 	    update = fun ((r0, r1)) -> fun i -> fun a -> (arrImpl.Update r0 i a, "updated")
-//│ ╙──      	                                                                 ^^
-//│ stepped: error
+//│ stepped: ((ArraysImpl[int, in (??Rep & 'a, anything,) & 'Rep out (??Rep0 | 'a, "updated",) | 'Rep] with {update: ((??Rep & 'b, anything,),) -> int -> int -> (??Rep0 | 'b, "updated",)}) -> 'c) -> 'c
 //│        = <no result>
 //│          arr is not implemented
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 
 def stepped = arr (fun arrImpl -> fun (k: forall 'Rep. ArraysRep[int, 'Rep] -> 'r) -> k (simpleStepImpl arrImpl))

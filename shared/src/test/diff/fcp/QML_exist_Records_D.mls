@@ -148,7 +148,7 @@ def step (arr: Arrays['a]) = arr helper
 
 // * With `stepImpl`
 def step arr = arr (fun impl -> fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl impl))
-//│ ((forall 'a 'r 'b. ArraysImpl['a, 'r] -> ArraysImplConsumer['a, 'b] -> 'b) -> 'c) -> 'c
+//│ ((forall 'r 'b 'a. ArraysImpl['a, 'r] -> ArraysImplConsumer['a, 'b] -> 'b) -> 'c) -> 'c
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step2]
@@ -328,7 +328,7 @@ def step arr = arr (fun impl -> fun k -> k (stepImpl_ty impl))
 :e
 def step (arr: Arrays['a]) = arr (fun impl -> fun k -> k (stepImpl impl))
 //│ Arrays['a] -> ({
-//│   fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> ((??rep & 'r, anything,),) -> 'b,
+//│   fold: ('a -> 'b -> 'b) -> 'b -> ((??rep & 'r, anything,),) -> 'b,
 //│   init: 'a -> ('r | ??rep0, "hi",),
 //│   sub: ((??rep & 'r, anything,),) -> int -> 'a,
 //│   update: ((??rep & 'r, anything,),) -> int -> 'a -> ('r | ??rep0, "hey",)
@@ -359,21 +359,47 @@ def step arr = arr (forall 'a. fun impl -> forall 'r. fun (k: ArraysImplConsumer
 //│ ((forall 'a 'r 'r0. ArraysImpl['a, 'r] -> ArraysImplConsumer['a, 'r0] -> 'r0) -> 'b) -> 'b
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.358: 	def step arr = arr (forall 'a. fun impl -> forall 'r. fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl impl))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `'r` does not match type `'r0`
+//│ ║  l.20: 	type Arrays[A] = forall 'r. ArraysImplConsumer[A, 'r] -> 'r
+//│ ║        	                                                  ^^
+//│ ╟── Note: constraint arises from rigid type variable:
+//│ ║  l.358: 	def step arr = arr (forall 'a. fun impl -> forall 'r. fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl impl))
+//│ ║         	                                                  ^^
+//│ ╟── Note: quantified type variable 'r is defined at:
+//│ ║  l.20: 	type Arrays[A] = forall 'r. ArraysImplConsumer[A, 'r] -> 'r
+//│ ╙──      	                        ^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│     = [Function: step7]
 
 // * ...unless we use `stepImpl_ty` instead of `stepImpl`
 def step arr = arr (fun impl -> forall 'r. fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl_ty impl))
-//│ ((forall 'r 'a 'a0 'r0 'a1. ArraysImpl[in 'a & 'a0 out 'a | 'a0, 'r0] -> ArraysImplConsumer['a1, 'r] -> 'r) -> 'b) -> 'b
+//│ ((forall 'a 'r 'r0 'a0 'a1. ArraysImpl[in 'a1 & 'a out 'a1 | 'a, 'r] -> ArraysImplConsumer['a0, 'r0] -> 'r0) -> 'b) -> 'b
 //│   where
-//│     'a1 :> 'a
-//│         <: 'a0
+//│     'a0 :> 'a1
+//│         <: 'a
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.378: 	def step arr = arr (fun impl -> forall 'r. fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl_ty impl))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `'r` does not match type `'r0`
+//│ ║  l.20: 	type Arrays[A] = forall 'r. ArraysImplConsumer[A, 'r] -> 'r
+//│ ║        	                                                  ^^
+//│ ╟── Note: constraint arises from rigid type variable:
+//│ ║  l.378: 	def step arr = arr (fun impl -> forall 'r. fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl_ty impl))
+//│ ║         	                                       ^^
+//│ ╟── Note: quantified type variable 'r is defined at:
+//│ ║  l.20: 	type Arrays[A] = forall 'r. ArraysImplConsumer[A, 'r] -> 'r
+//│ ╙──      	                        ^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│     = [Function: step8]
 
 
 def step arr = arr (fun impl -> (fun k -> k (stepImpl impl)) : Arrays['a])
-//│ ((forall 'a 'a0 'r. ArraysImpl[in 'a out 'a | 'a0, 'r] -> Arrays['a]) -> 'b) -> 'b
+//│ ((forall 'a 'a0 'r. ArraysImpl[in 'a out 'a0 | 'a, 'r] -> Arrays['a]) -> 'b) -> 'b
 //│   where
 //│     'a := 'a0
 //│     'a0 :> 'a
@@ -418,7 +444,7 @@ def arrayRepToArray_A impl k = k impl
 
 
 def step arr = arr (fun impl -> arrayRepToArray_A (stepImpl_ty impl))
-//│ ((forall 'a 'r. ArraysImpl['a, 'r] -> Arrays['a]) -> 'b) -> 'b
+//│ ((forall 'r 'a. ArraysImpl['a, 'r] -> Arrays['a]) -> 'b) -> 'b
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step13]

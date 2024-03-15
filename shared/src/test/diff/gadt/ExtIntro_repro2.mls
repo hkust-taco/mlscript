@@ -1,0 +1,34 @@
+:NewDefs
+:DontDistributeForalls
+
+:NoJS
+
+
+class Z 
+class S[type P]
+//│ class Z {
+//│   constructor()
+//│ }
+//│ class S[P] {
+//│   constructor()
+//│ }
+
+// abstract class K[type T]: KS[?]
+abstract class K[type T]: KS
+class KS[type A](ev: K[A]) extends K[S[A]]
+//│ abstract class K[T]: KS[?]
+//│ class KS[A](ev: K[A]) extends K
+
+
+// * TODO investigate: 'L0 :> ??A <: ??A0 bad bounds?
+// :d
+// :e
+fun fr[L](l: K[L]) = if l is KS(e1) then () => (e1 as K['X])
+//│ fun fr: forall 'L 'X. (l: K['L]) -> () -> K[in ??A & 'X out 'X | ??A0 & ??A1]
+
+// Doesn't happen here:
+fun fr[L](l: K[L]) = if l is KS(e1) then (e1 as K['X])
+//│ fun fr: forall 'L 'X. (l: K['L]) -> K[in ??A & 'X out 'X | ??A0 & ??A1]
+
+
+

@@ -462,11 +462,11 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //│                   where
 //│                     'd <: (forall 'l. 'l
 //│                       where
-//│                         'd <: 'j -> 'l) -> 'k) <: (forall 'd 'm 'n. 'd -> ('m -> 'n
+//│                         'd <: 'j -> 'l) -> 'k) <: (forall 'm 'd 'n. 'd -> ('n -> 'm
 //│                   where
 //│                     'd <: (forall 'o. 'o
 //│                       where
-//│                         'd <: 'm -> 'o) -> 'n)) -> 'i <: (forall 'p. 'p -> anything -> 'p) -> 'h) -> 'c <: (forall 'q. 'q
+//│                         'd <: 'n -> 'o) -> 'm)) -> 'i <: (forall 'p. 'p -> anything -> 'p) -> 'h) -> 'c <: (forall 'q. 'q
 //│       where
 //│         forall 'c. 'c
 //│           where
@@ -482,11 +482,11 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 //│                       where
 //│                         'd <: (forall 'l. 'l
 //│                           where
-//│                             'd <: 'j -> 'l) -> 'k) <: (forall 'd 'm 'n. 'd -> ('m -> 'n
+//│                             'd <: 'j -> 'l) -> 'k) <: (forall 'm 'd 'n. 'd -> ('n -> 'm
 //│                       where
 //│                         'd <: (forall 'o. 'o
 //│                           where
-//│                             'd <: 'm -> 'o) -> 'n)) -> 'i <: (forall 'p. 'p -> anything -> 'p) -> 'h) -> 'c <: 'a -> 'q) -> 'b
+//│                             'd <: 'n -> 'o) -> 'm)) -> 'i <: (forall 'p. 'p -> anything -> 'p) -> 'h) -> 'c <: 'a -> 'q) -> 'b
 //│    = [Function (anonymous)]
 :NoConstrainedTypes
 
@@ -502,7 +502,7 @@ def t (z: nothing) = let x = fun (y: forall 't. 'a -> 't) -> y z in x x
 (fun h -> (fun x -> h (x x)) (fun x -> h (x x))) (fun f -> fun n -> n (fun v -> fun x -> fun y -> y) k (fun f -> fun x -> f x)(fun g -> fun x -> n (f (n (fun p -> fun s -> s (p (fun x -> fun y -> y)) (fun f -> fun x -> f (p (fun x -> fun y -> y) f x))) (fun s -> s (fun f -> fun x -> x) (fun f -> fun x -> x)) k) g) x)) (fun f -> fun x -> f (f x))
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a <: (nothing -> ('b | 'c) | 'd) -> 'e & (forall 'f 'g 'h 'i 'j. ((forall 'k. #? -> 'k -> 'k) -> 'i & (forall 'l. #? -> 'l -> 'l) -> 'g -> 'h -> 'j) -> ('i -> (forall 'm. ('j -> 'm & 'g) -> 'h -> 'm) -> 'f) -> 'f) -> (forall 'n. ((forall 'o. #? -> 'o -> 'o) -> (forall 'p. #? -> 'p -> 'p) -> 'n) -> 'n) -> (forall 'q. 'q -> #? -> 'q) -> 'a & (forall 'r. #? -> #? -> 'r -> 'r) -> (forall 'q. 'q -> #? -> 'q) -> (forall 's 't. ('s -> 't) -> 's -> 't) -> (((forall 'u. #? -> #? -> 'u -> 'u | #?) -> ((nothing -> #? -> #?) -> 'e & 'b) & (forall 'v. #? -> #? -> 'v -> 'v | #?) -> ((nothing -> #? -> #?) -> 'e & 'b) & (forall 'w. #? -> #? -> 'w -> 'w) -> (nothing -> #? -> #?) -> 'e & (forall 'x. #? -> #? -> 'x -> 'x | #?) -> ((nothing -> #? -> #?) -> 'e & 'b) & (forall 'y. #? -> #? -> 'y -> 'y | #?) -> ((nothing -> #? -> #?) -> 'e & 'b) & 'd & 'z) -> nothing -> 'c) -> 'z -> ((forall 'a1. #? -> #? -> 'a1 -> 'a1) -> (nothing -> #? -> #?) -> 'e & 'd)
+//│     'a <: (nothing -> ('b | 'c) | 'd) -> 'e & (forall 'f 'g 'h 'i 'j. ((forall 'k. #? -> 'k -> 'k) -> 'f & (forall 'l. #? -> 'l -> 'l) -> 'i -> 'j -> 'g) -> ('f -> (forall 'm. ('g -> 'm & 'i) -> 'j -> 'm) -> 'h) -> 'h) -> (forall 'n. ((forall 'o. #? -> 'o -> 'o) -> (forall 'p. #? -> 'p -> 'p) -> 'n) -> 'n) -> (forall 'q. 'q -> #? -> 'q) -> 'a & (forall 'r. #? -> #? -> 'r -> 'r) -> (forall 'q. 'q -> #? -> 'q) -> (forall 's 't. ('s -> 't) -> 's -> 't) -> (((forall 'u. #? -> #? -> 'u -> 'u | #?) -> ((nothing -> #? -> #?) -> 'e & 'b) & (forall 'v. #? -> #? -> 'v -> 'v | #?) -> ((nothing -> #? -> #?) -> 'e & 'b) & (forall 'w. #? -> #? -> 'w -> 'w) -> (nothing -> #? -> #?) -> 'e & (forall 'x. #? -> #? -> 'x -> 'x | #?) -> ((nothing -> #? -> #?) -> 'e & 'b) & (forall 'y. #? -> #? -> 'y -> 'y | #?) -> ((nothing -> #? -> #?) -> 'e & 'b) & 'd & 'z) -> nothing -> 'c) -> 'z -> ((forall 'a1. #? -> #? -> 'a1 -> 'a1) -> (nothing -> #? -> #?) -> 'e & 'd)
 //│     'c :> forall 'b1 'c1. (#? & 'b1) -> (#? -> 'c1 -> 'c1 | 'b1 | #?)
 //│        <: (nothing -> #? -> #?) -> 'e
 //│     'e <: (forall 'd1. #? -> #? -> 'd1 -> 'd1 | #?) -> 'c

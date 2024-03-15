@@ -1638,6 +1638,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           }
           nv
         })
+        /* // !!!!!!!!!!!!!!!!!!!!!!!!!!! not valid in the presence of skolems and reconstraining?!
       case tv: TypeVariable if tv.level > upperLvl =>
         assert(!ctx.extrCache.contains(tv -> false), (tv, ctx.extrCache.cache.get(lvl)))
         // * If the TV's level is strictly greater than `upperLvl`,
@@ -1652,6 +1653,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           nv.upperBounds = tv.upperBounds.map(extrude(_, lowerLvl, false, upperLvl))
           nv
         })
+        */
       case t @ SpliceType(fs) => 
         t.updateElems(extrude(_, lowerLvl, pol, upperLvl), extrude(_, lowerLvl, !pol, upperLvl), extrude(_, lowerLvl, pol, upperLvl), t.prov)
       case tv: TypeVariable => ctx.extrCache.getOrElse(tv -> pol, {

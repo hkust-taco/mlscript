@@ -224,9 +224,9 @@ class StepAlt'[A](from: Arrays[A]) extends Arrays[A] {
     // *    1. ArraysImpl[A, 'rep] -> 'res  <:  (StepImpl[A, impl] -> 'r) -> 'r
     // * which eventually leads to 'rep := impl and 'r := 'res.
 }
-//│ ╔══[ERROR] Type error in application
+//│ ╔══[ERROR] Type error in definition of value use
 //│ ║  l.211: 	  val use = from.use of impl =>
-//│ ║         	            ^^^^^^^^^^^^^^^^^^^
+//│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.212: 	    k => k(StepImpl(impl))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'rep` leaks out of its scope
@@ -244,12 +244,24 @@ class StepAlt'[A](from: Arrays[A]) extends Arrays[A] {
 //│ ╟── • this field selection:
 //│ ║  l.211: 	  val use = from.use of impl =>
 //│ ╙──       	            ^^^^^^^^
+//│ ╔══[ERROR] Type error in definition of value use
+//│ ║  l.211: 	  val use = from.use of impl =>
+//│ ║         	      ^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.212: 	    k => k(StepImpl(impl))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `'res` leaks out of its scope
+//│ ║  l.40: 	  fun use: ArraysImplConsumer[A, 'res] -> 'res
+//│ ║        	                                 ^^^^
+//│ ╟── back into type variable `'res`
+//│ ║  l.40: 	  fun use: ArraysImplConsumer[A, 'res] -> 'res
+//│ ║        	                                          ^^^^
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this application:
+//│ ║  l.212: 	    k => k(StepImpl(impl))
+//│ ╙──       	         ^^^^^^^^^^^^^^^^^
 //│ class StepAlt'[A](from: Arrays[A]) extends Arrays {
-//│   val use: forall 'R 'a. error | (StepImpl[A, 'R] -> 'a) -> 'a
+//│   val use: (StepImpl[A, in ??rep & 'R out 'R | ??rep0] -> (??res & 'a)) -> (??res0 | 'a)
 //│ }
-//│ where
-//│   'R :> ??rep
-//│      <: ??rep0
 //│ Syntax error:
 //│   Unexpected string
 

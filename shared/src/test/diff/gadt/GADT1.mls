@@ -165,8 +165,8 @@ fun toList: (((Vec['l, 'a]) -> 'xs) where ['a, 'xs] | [] : 'xs)
 fun toList(xs) = if xs is
     Nil then []
     Cons(h, t) then [h, toList(t)]
-//│ fun toList: forall 'T. (Cons[?, out 'T] | Nil[?]) -> Array[forall 'xs. 'xs | ??T & 'T]
-//│ fun toList: forall 'l 'a 'xs0. Vec['l, 'a] -> 'xs0
+//│ fun toList: forall 'T 'xs. (Cons[?, out 'T] | Nil[?]) -> 'xs
+//│ fun toList: forall 'xs0 'l 'a. Vec['l, 'a] -> 'xs0
 //│ where
 //│   'xs0 :> Array['a | 'xs0]
 //│   'xs :> Array['xs | ??T & 'T]

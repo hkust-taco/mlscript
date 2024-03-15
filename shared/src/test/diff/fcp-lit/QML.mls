@@ -440,7 +440,7 @@ def step = fun xx -> xx (fun ((((xinit, xsub), xupdate), xfold),) ->
     else (fst r, xupdate (snd r) (div i 2) a) in
   let fold f b r = xfold f (xfold f b (fst r)) (snd r) in
     fun f -> f ((((init, sub), update), fold),) )
-//│ ((forall 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm 'n 'o 'p. (((('b -> 'j, 'l -> int -> 'g,), 'd -> int -> 'o -> 'i & 'e -> int -> 'o -> 'h,), 'm -> ('p -> 'a -> 'f & 'k -> 'n -> 'p),),) -> ((((('b -> ('j, 'j,), (('l, 'l,),) -> int -> 'g,), forall 'q 'r. (('d & 'q, 'e & 'r,),) -> int -> 'o -> ('i | 'q, 'r | 'h,),), 'm -> 'k -> (('n, 'a,),) -> 'f,),) -> 'c) -> 'c) -> 's) -> 's
+//│ ((forall 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm 'n 'o 'p. (((('h -> 'k, 'd -> int -> 'f,), 'n -> int -> 'a -> 'p & 'j -> int -> 'a -> 'o,), 'g -> ('e -> 'c -> 'l & 'i -> 'b -> 'e),),) -> ((((('h -> ('k, 'k,), (('d, 'd,),) -> int -> 'f,), forall 'q 'r. (('n & 'q, 'j & 'r,),) -> int -> 'a -> ('p | 'q, 'r | 'o,),), 'g -> 'i -> (('b, 'c,),) -> 'l,),) -> 'm) -> 'm) -> 's) -> 's
 //│   <:  step:
 //│ ExSig -> ExSig
 //│ ╔══[ERROR] Type error in def definition
