@@ -215,18 +215,18 @@ trait Normalization { self: Desugarer with Traceable =>
         if (scrutinee === otherScrutinee) {
           println(s"Case 1: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
           if (otherPattern =:= pattern) {
-            println(s"Case 2.1: $pattern =:= $otherPattern")
+            println(s"Case 1.1: $pattern =:= $otherPattern")
             otherPattern reportInconsistentRefinedWith pattern
             specialize(continuation, true) :++ specialize(tail, true)
           } else if (otherPattern <:< pattern) {
-            println(s"Case 2.2: $pattern <:< $otherPattern")
+            println(s"Case 1.2: $pattern <:< $otherPattern")
             pattern.markAsRefined; split
           } else {
-            println(s"Case 2.3: $pattern are unrelated with $otherPattern")
+            println(s"Case 1.3: $pattern are unrelated with $otherPattern")
             specialize(tail, true)
           }
         } else {
-          println(s"Case 2: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
+          println(s"Case 2: ${scrutineeVar.name} =/= ${otherScrutineeVar.name}")
           head.copy(continuation = specialize(continuation, true)) :: specialize(tail, true)
         }
       case (false, split @ Split.Cons(head @ Branch(Scrutinee.WithVar(otherScrutineeVar, otherScrutinee), otherPattern, continuation), tail)) =>
@@ -241,7 +241,7 @@ trait Normalization { self: Desugarer with Traceable =>
             split.copy(tail = specialize(tail, false))
           }
         } else {
-          println(s"Case 2: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
+          println(s"Case 2: ${scrutineeVar.name} =/= ${otherScrutineeVar.name}")
           head.copy(continuation = specialize(continuation, false)) :: specialize(tail, false)
         }
       case (_, split @ Split.Cons(Branch(_, pattern, _), _)) =>

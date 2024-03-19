@@ -77,8 +77,8 @@ package object display {
 
   def showSplit(prefix: Str, s: c.Split)(implicit context: Context): Str = {
     def split(s: c.Split, isFirst: Bool, isTopLevel: Bool): Lines = s match {
-      case c.Split.Cons(head, tail) => (branch(head) match {
-        case (n, line) :: tail => (n, (if (isTopLevel) "" else "") + s"$line") :: tail
+      case c.Split.Cons(head, tail) => (branch(head, isTopLevel) match {
+        case (n, line) :: tail => (n, (if (isTopLevel) "" else "and ") + s"$line") :: tail
         case Nil => Nil
       }) ::: split(tail, false, isTopLevel)
       case c.Split.Let(_, nme, rhs, tail) =>
@@ -87,9 +87,9 @@ package object display {
         (if (isFirst) (0, s"then ${term.showDbg}") else (0, s"else ${term.showDbg}")) :: Nil
       case c.Split.Nil => Nil
     }
-    def branch(b: c.Branch): Lines = {
+    def branch(b: c.Branch, isTopLevel: Bool): Lines = {
       val c.Branch(scrutinee, pattern, continuation) = b
-      s"${showVar(scrutinee)} is $pattern" #: split(continuation, true, false)
+      s"${showVar(scrutinee)} is $pattern" #: split(continuation, true, isTopLevel)
     }
     val lines = split(s, true, true)
     (if (prefix.isEmpty) lines else prefix #: lines).toIndentedString
