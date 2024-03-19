@@ -170,7 +170,7 @@ trait B { class X { fun g = 1 } }
 
 :e
 class C extends A, B
-//│ ╔══[ERROR] Class member `X` cannot override class member of the same name declared in parent
+//│ ╔══[ERROR] Class member 'X' cannot override class member of the same name declared in parent
 //│ ║  l.172: 	class C extends A, B
 //│ ║         	^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Originally declared here:
@@ -197,7 +197,7 @@ class C extends A, B
 class C extends A {
   class X { fun g = 1 }
 }
-//│ ╔══[ERROR] Class member `X` cannot override class member of the same name declared in parent
+//│ ╔══[ERROR] Class member 'X' cannot override class member of the same name declared in parent
 //│ ║  l.197: 	class C extends A {
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ║  l.198: 	  class X { fun g = 1 }

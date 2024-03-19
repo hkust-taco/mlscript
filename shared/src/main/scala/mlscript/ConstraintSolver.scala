@@ -93,6 +93,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           def handle(virtualMembers: Map[Str, NuMember]): Opt[FieldType] =
             virtualMembers.get(fld.name) match {
               case S(d: TypedNuFun) =>
+                if (d.fd.isLetOrLetRec)
+                  err(msg"Let binding '${d.name}' cannot tbe accessed as a field" -> fld.toLoc ::
+                    msg"Use a `val` declaration to make it a field" -> d.fd.toLoc ::
+                    Nil)
                 val ty = d.typeSignature
                 S(
                   if (d.fd.isMut) FieldType(S(ty), ty)(d.prov)

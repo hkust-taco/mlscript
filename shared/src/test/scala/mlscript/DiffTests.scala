@@ -214,7 +214,8 @@ class DiffTests
     val backend = new JSTestBackend {
       def oldDefs = !newDefs
     }
-    val host = ReplHost()
+    var hostCreated = false
+    lazy val host = { hostCreated = true; ReplHost() }
     val codeGenTestHelpers = new CodeGenTestHelpers(file, output)
     
     def rec(lines: List[String], mode: Mode): Unit = lines match {
@@ -1068,7 +1069,7 @@ class DiffTests
 
     try rec(allLines, defaultMode) finally {
       out.close()
-      host.terminate()
+      if (hostCreated) host.terminate()
     }
     val testFailed = failures.nonEmpty || unmergedChanges.nonEmpty
     val result = strw.toString
