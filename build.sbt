@@ -2,7 +2,7 @@ import Wart._
 
 enablePlugins(ScalaJSPlugin)
 
-ThisBuild / scalaVersion     := "2.13.12"
+ThisBuild / scalaVersion     := "2.13.13"
 ThisBuild / version          := "0.1.0-SNAPSHOT"
 ThisBuild / organization     := "io.lptk"
 ThisBuild / organizationName := "LPTK"
@@ -16,11 +16,24 @@ ThisBuild / scalacOptions ++= Seq(
 )
 
 lazy val root = project.in(file("."))
-  .aggregate(mlscriptJS, mlscriptJVM, ts2mlsTest, compilerJVM)
+  .aggregate(mlscriptJS, mlscriptJVM, ts2mlsTest, compilerJVM, hkmc2JS, hkmc2JVM)
   .settings(
     publish := {},
     publishLocal := {},
   )
+
+lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
+  .settings(
+    name := "hkmc2",
+    scalaVersion := "3.3.3",
+    sourceDirectory := baseDirectory.value.getParentFile()/"shared",
+    watchSources += WatchSource(
+      baseDirectory.value.getParentFile()/"shared"/"test"/"diff", "*.mls", NothingFilter),
+  )
+  .dependsOn(mlscript % "compile->compile;test->test")
+
+lazy val hkmc2JVM = hkmc2.jvm
+lazy val hkmc2JS = hkmc2.js
 
 lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
   .settings(
@@ -79,7 +92,7 @@ lazy val ts2mlsTest = project.in(file("ts2mls"))
 lazy val compiler = crossProject(JSPlatform, JVMPlatform).in(file("compiler"))
   .settings(
     name := "mlscript-compiler",
-    scalaVersion := "3.1.3",
+    scalaVersion := "3.3.3",
     sourceDirectory := baseDirectory.value.getParentFile()/"shared",
     watchSources += WatchSource(
       baseDirectory.value.getParentFile()/"shared"/"test"/"diff", "*.mls", NothingFilter),
