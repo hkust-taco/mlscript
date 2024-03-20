@@ -4,8 +4,8 @@ import mlscript.utils._, shorthands._
 
 
 /** Type of general Tokens */
-sealed abstract class Token {
-  def describe: Str = this match {
+sealed abstract class Token:
+  def describe: Str = this match
     case SPACE => "space"
     case COMMA => "comma"
     case SEMI => "semicolon"
@@ -16,16 +16,14 @@ sealed abstract class Token {
     case QUOTE => "quote"
     case LITVAL(value) => "literal"
     case KEYWORD(name) =>
-      if (name.headOption.exists(_.isLetter)) s"'$name' keyword" else s"'$name'"
-    case IDENT(name, symbolic) => if (symbolic) "operator" else "identifier"
+      if name.headOption.exists(_.isLetter) then s"'$name' keyword" else s"'$name'"
+    case IDENT(name, symbolic) => if symbolic then "operator" else "identifier"
     case SELECT(name) => "selector"
     case OPEN_BRACKET(k) => s"opening ${k.name}"
     case CLOSE_BRACKET(k) => s"closing ${k.name}"
     case BRACKETS(BracketKind.Indent, contents) => s"indented block"
     case BRACKETS(k, contents) => s"${k.name} section"
     case COMMENT(text) => "comment"
-  }
-}
 
 /** Type of 'Structured Tokens' aka 'Strokens',
   * which use a `BRACKETS` construct instead of `OPEN_BRACKET`/`CLOSE_BRACKET` and `INDENT`/`DEINDENT` */
@@ -49,9 +47,9 @@ final case class BRACKETS(k: BracketKind, contents: Ls[Stroken -> Loc])(val inne
 final case class COMMENT(text: String) extends Token with Stroken
 
 
-sealed abstract class BracketKind {
+sealed abstract class BracketKind:
   import BracketKind._
-  lazy val (beg, end) = this match {
+  lazy val (beg, end) = this match
     case Round => "(" -> ")"
     case Curly => "{" -> "}"
     case Square => "[" -> "]"
@@ -60,8 +58,7 @@ sealed abstract class BracketKind {
     case Quasiquote => "code\"" -> "\""
     case QuasiquoteTriple => "code\"\"\"" -> "\"\"\""
     case Unquote => "${" -> "}"
-  }
-  def name: Str = this match {
+  def name: Str = this match
     case Round => "parenthesis"
     case Curly => "curly brace"
     case Square => "square bracket"
@@ -70,10 +67,8 @@ sealed abstract class BracketKind {
     case Quasiquote => "quasiquote"
     case QuasiquoteTriple => "quasiquote triple"
     case Unquote => "unquote"
-  }
-}
 
-object BracketKind {
+object BracketKind:
   case object Round extends BracketKind
   case object Curly extends BracketKind
   case object Square extends BracketKind
@@ -83,7 +78,7 @@ object BracketKind {
   case object QuasiquoteTriple extends BracketKind
   case object Unquote extends BracketKind
   
-  def unapply(c: Char): Opt[Either[BracketKind, BracketKind]] = c |>? {
+  def unapply(c: Char): Opt[Either[BracketKind, BracketKind]] = c `|>?` :
     case '(' => Left(Round)
     case ')' => Right(Round)
     case '{' => Left(Curly)
@@ -92,6 +87,4 @@ object BracketKind {
     case ']' => Right(Square)
     case '‹' => Left(Angle)
     case '›' => Right(Angle)
-  }
-}
 

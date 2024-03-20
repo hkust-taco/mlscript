@@ -29,6 +29,8 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
     sourceDirectory := baseDirectory.value.getParentFile()/"shared",
     watchSources += WatchSource(
       baseDirectory.value.getParentFile()/"shared"/"test"/"diff", "*.mls", NothingFilter),
+    // scalacOptions ++= Seq("-indent", "-rewrite"),
+    scalacOptions ++= Seq("-new-syntax", "-rewrite"),
   )
   .dependsOn(mlscript % "compile->compile;test->test")
 

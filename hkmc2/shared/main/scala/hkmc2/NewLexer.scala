@@ -9,7 +9,7 @@ import Diagnostic.{Lexing, Parsing}
 
 import NewLexer._
 
-class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
+class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool):
   
   val bytes: Array[Char] = origin.fph.blockStr.toArray
   private val length = bytes.length
@@ -33,7 +33,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   def isDigit(c: Char): Bool =
     c >= '0' && c <= '9'
   def matches(i: Int, syntax: Str, start: Int): Bool =
-    if (start < syntax.length && i + start < length && bytes(i + start) === syntax(start)) matches(i, syntax, start + 1)
+    if start < syntax.length && i + start < length && bytes(i + start) === syntax(start) then matches(i, syntax, start + 1)
     else start >= syntax.length
   
   /* // TODO remove (unused)
@@ -68,114 +68,99 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
   
   @tailrec final
   def takeWhile(i: Int, cur: Ls[Char] = Nil)(pred: Char => Bool): (Str, Int) =
-    if (i < length && pred(bytes(i))) takeWhile(i + 1, bytes(i) :: cur)(pred)
+    if i < length && pred(bytes(i)) then takeWhile(i + 1, bytes(i) :: cur)(pred)
     else (cur.reverseIterator.mkString, i)
 
-  final def num(i: Int): (Lit, Int) = {
+  final def num(i: Int): (Lit, Int) =
     def test(i: Int, p: Char => Bool): Bool = i < length && p(bytes(i))
     def zero: IntLit = IntLit(BigInt(0))
     /** Take a sequence of digits interleaved with underscores. */
-    def takeDigits(i: Int, pred: Char => Bool): (Opt[Str], Int) = {
+    def takeDigits(i: Int, pred: Char => Bool): (Opt[Str], Int) =
       @tailrec def rec(i: Int, acc: Ls[Char], firstSep: Bool, lastSep: Bool): (Str, Bool, Bool, Int) =
-        if (i < length) {
+        if i < length then
           val c = bytes(i)
-          if (pred(c)) rec(i + 1, c :: acc, firstSep, false)
-          else if (c === '_') rec(i + 1, acc, acc.isEmpty, true)
+          if pred(c) then rec(i + 1, c :: acc, firstSep, false)
+          else if c === '_' then rec(i + 1, acc, acc.isEmpty, true)
           else (acc.reverseIterator.mkString, firstSep, lastSep, i)
-        }
         else (acc.reverseIterator.mkString, firstSep, lastSep, i)
       val (str, firstSep, lastSep, j) = rec(i, Nil, false, false)
-      if (firstSep)
+      if firstSep then
         raise(WarningReport(
           msg"Leading separator is not allowed" -> S(loc(i - 1, i)) :: Nil,
           newDefs = true, source = Lexing))
-      if (lastSep)
+      if lastSep then
         raise(WarningReport(
           msg"Trailing separator is not allowed" -> S(loc(j - 1, j)) :: Nil,
           newDefs = true, source = Lexing))
-      (if (str.isEmpty) N else S(str), j)
-    }
+      (if str.isEmpty then N else S(str), j)
     /** Take an integer and coverts to `BigInt`. Also checks if it is empty. */
-    def integer(i: Int, radix: Int, desc: Str, pred: Char => Bool): (IntLit, Int) = {
-      takeDigits(i, pred) match {
+    def integer(i: Int, radix: Int, desc: Str, pred: Char => Bool): (IntLit, Int) =
+      takeDigits(i, pred) match
         case (N, j) =>
           raise(ErrorReport(msg"Expect at least one $desc digit" -> S(loc(i, i + 2)) :: Nil,
             newDefs = true, source = Lexing))
           (zero, j)
         case (S(str), j) => (IntLit(BigInt(str, radix)), j)
-      }
-    }
     def isDecimalStart(ch: Char) = ch === '.' || ch === 'e' || ch === 'E'
     /** Take a fraction part with an optional exponent part. Call at periods. */
-    def decimal(i: Int, integral: Str): (DecLit, Int) = {
-      val (fraction, j) = if (test(i, _ === '.')) {
-        takeDigits(i + 1, isDigit) match {
+    def decimal(i: Int, integral: Str): (DecLit, Int) =
+      val (fraction, j) = if test(i, _ === '.') then
+        takeDigits(i + 1, isDigit) match
           case (N, j) =>
             raise(ErrorReport(msg"Expect at least one digit after the decimal point" -> S(loc(i + 1, i + 2)) :: Nil,
               newDefs = true, source = Lexing))
             ("", j)
           case (S(digits), j) => ("." + digits, j)
-        }
-      } else ("", i)
-      val (exponent, k) = if (test(j, ch => ch === 'e' || ch === 'E')) {
-        val (sign, k) = if (test(j + 1, ch => ch === '+' || ch === '-')) {
+      else ("", i)
+      val (exponent, k) = if test(j, ch => ch === 'e' || ch === 'E') then
+        val (sign, k) = if test(j + 1, ch => ch === '+' || ch === '-') then
           (bytes(j + 1), j + 2)
-        } else {
+        else
           ('+', j + 1)
-        }
-        takeDigits(k, isDigit) match {
+        takeDigits(k, isDigit) match
           case (N, l) =>
             raise(ErrorReport(msg"Expect at least one digit after the exponent sign" -> S(loc(l - 1, l)) :: Nil,
               newDefs = true, source = Lexing))
             ("", l)
           case (S(digits), l) => ("E" + sign + digits, l)
-        }
-      } else {
+      else
         ("", j)
-      }
       (DecLit(BigDecimal(integral + fraction + exponent)), k)
-    }
-    if (i < length) {
-      bytes(i) match {
-        case '0' if i + 1 < length => bytes(i + 1) match {
+    if i < length then
+      bytes(i) match
+        case '0' if i + 1 < length => bytes(i + 1) match
           case 'x' => integer(i + 2, 16, "hexadecimal", isHexDigit)
           case 'o' => integer(i + 2, 8, "octal", isOctDigit)
           case 'b' => integer(i + 2, 2, "binary", isBinDigit)
           case '.' | 'E' | 'e' => decimal(i + 1, "0")
           case _ => integer(i, 10, "decimal", isDigit)
-        }
         case '0' => (zero, i + 1)
-        case _ => takeDigits(i, isDigit) match {
+        case _ => takeDigits(i, isDigit) match
           case (N, j) =>
             raise(ErrorReport(msg"Expect a numeric literal" -> S(loc(i, i + 1)) :: Nil,
               newDefs = true, source = Lexing))
             (zero, i)
           case (S(integral), j) =>
-            if (j < length && isDecimalStart(bytes(j))) decimal(j, integral)
+            if j < length && isDecimalStart(bytes(j)) then decimal(j, integral)
             else (IntLit(BigInt(integral)), j)
-        }
-      }
-    } else {
+    else
       raise(ErrorReport(msg"Expect a numeric literal instead of end of input" -> S(loc(i, i + 1)) :: Nil,
         newDefs = true, source = Lexing))
       (zero, i)
-    }
-  }
 
   // * Check the end of a string (either single quotation or triple quotation)
   final def closeStr(i: Int, isTriple: Bool): Int =
-    if (!isTriple && bytes.lift(i) === Some('"')) i + 1
-    else if (isTriple && matches(i, "\"\"\"", 0)) i + 3
-    else {
+    if !isTriple && bytes.lift(i) === Some('"') then i + 1
+    else if isTriple && matches(i, "\"\"\"", 0) then i + 3
+    else
       raise(ErrorReport(msg"unclosed quotation mark" -> S(loc(i, i + 1)) :: Nil, newDefs = true, source = Lexing))
       i
-    }
 
   @tailrec final
   def str(i: Int, escapeMode: Bool, cur: Ls[Char] = Nil)(implicit triple: Bool): (Str, Int) =
-    if (escapeMode)
-      if (i < length)
-        bytes(i) match {
+    if escapeMode then
+      if i < length then
+        bytes(i) match
           case '\\' => str(i + 1, false, '\\' :: cur)
           case '"' => str(i + 1, false, '"' :: cur)
           case 'n' => str(i + 1, false, '\n' :: cur)
@@ -187,50 +172,48 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
             raise(WarningReport(msg"Found invalid escape character" -> S(loc(i, i + 1)) :: Nil,
               newDefs = true, source = Lexing))
             str(i + 1, false, ch :: cur)
-        }
-      else {
+      else
         raise(ErrorReport(msg"Expect an escape character" -> S(loc(i, i + 1)) :: Nil,
           newDefs = true, source = Lexing))
         (cur.reverseIterator.mkString, i)
-      }
-    else if (triple) {
-      if (i < length)
-        bytes(i) match {
+    else if triple then
+      if i < length then
+        bytes(i) match
           case '"' =>
-            if (matches(i, "\"\"\"", 0) && !matches(i + 1, "\"\"\"", 0)) // Find the last """
+            if matches(i, "\"\"\"", 0) && !matches(i + 1, "\"\"\"", 0) then // Find the last """
               (cur.reverseIterator.mkString, i)
             else str(i + 1, false, '"' :: cur)
           case ch => str(i + 1, false, ch :: cur)
-        }
       else (cur.reverseIterator.mkString, i)
-    }
-    else {
-      if (i < length)
-        bytes(i) match {
+    else
+      if i < length then
+        bytes(i) match
           case '\\' => str(i + 1, true, cur)
           case '"' | '\n' => (cur.reverseIterator.mkString, i)
           case ch => str(i + 1, false, ch :: cur)
-        }
       else
         (cur.reverseIterator.mkString, i)
-    }
   
   def loc(start: Int, end: Int): Loc = Loc(start, end, origin)
   
   @tailrec final
-  def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc])(implicit qqList: Ls[BracketKind]): Ls[TokLoc] = if (i >= length) acc.reverse else {
+  def lex(i: Int, ind: Ls[Int], acc: Ls[TokLoc])(implicit qqList: Ls[BracketKind]): Ls[TokLoc] = if i >= length then acc.reverse else
+    
     val c = bytes(i)
+    
     def pe(msg: Message): Unit =
       // raise(ParseError(false, msg -> S(loc(i, i + 1)) :: Nil))
       raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, newDefs = true, source = Lexing))
+    
     def isQuasiquoteOpening(i: Int): Bool = matches(i, BracketKind.Quasiquote.beg, 0)
     def isQuasiquoteTripleOpening(i: Int): Bool =  matches(i, BracketKind.QuasiquoteTriple.beg, 0)
     def isUnquoteOpening(i: Int): Bool = matches(i, BracketKind.Unquote.beg, 0)
     def isQuasiquoteTripleClosing(i: Int): Bool = matches(i, BracketKind.QuasiquoteTriple.end, 0)
-    // @inline 
-    // def go(j: Int, tok: Token) = lex(j, ind, (tok, loc(i, j)) :: acc)
-    def next(j: Int, tok: Token) = (tok, loc(i, j)) :: acc
-    c match {
+    
+    inline def go(j: Int, tok: Token) = lex(j, ind, (tok, loc(i, j)) :: acc)
+    inline def next(j: Int, tok: Token) = (tok, loc(i, j)) :: acc
+    
+    c match
       case ' ' =>
         val (_, j) = takeWhile(i)(_ === ' ')
         // go(j, SPACE)
@@ -243,7 +226,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         lex(i + 1, ind, next(i + 1, QUOTE))
       case 'c' if isQuasiquoteOpening(i) || isQuasiquoteTripleOpening(i) =>
         val isTripleQuoteQQ = isQuasiquoteTripleOpening(i)
-        val bracket_kind = if (isTripleQuoteQQ)
+        val bracket_kind = if isTripleQuoteQQ then
           BracketKind.QuasiquoteTriple
         else
           BracketKind.Quasiquote
@@ -253,28 +236,26 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         lex(i + 2, ind, next(i + 2, OPEN_BRACKET(BracketKind.Unquote)))
       case '$' if i + 1 < length && isIdentFirstChar(bytes(i + 1)) =>
         val (n, j) = takeWhile(i + 1)(isIdentChar)
-        lex(j, ind, next(j, BRACKETS(BracketKind.Unquote, (if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)), loc(i + 1, j)) :: Nil)(loc(i, j))))
+        lex(j, ind, next(j, BRACKETS(BracketKind.Unquote, (if keywords.contains(n) then KEYWORD(n) else IDENT(n, isAlphaOp(n)), loc(i + 1, j)) :: Nil)(loc(i, j))))
       case ';' =>
         val j = i + 1
         lex(j, ind, next(j, SEMI))
       case '"' =>
-        val (isTripleQQ, cons) = qqList match {
+        val (isTripleQQ, cons) = qqList match
           case h :: t => (h === BracketKind.QuasiquoteTriple, t)
           case Nil => (false, Nil)
-        }
-        if (isTripleQQ && isQuasiquoteTripleClosing(i)) {
+        if isTripleQQ && isQuasiquoteTripleClosing(i) then
           val length = BracketKind.QuasiquoteTriple.end.length
           lex(i + length, ind, next(i + length, CLOSE_BRACKET(BracketKind.QuasiquoteTriple)))(cons)
-        } else if (!isTripleQQ && qqList.nonEmpty) {
+        else if !isTripleQQ && qqList.nonEmpty then
           lex(i + 1, ind, next(i + 1, CLOSE_BRACKET(BracketKind.Quasiquote)))(cons)
-        } else {
+        else
           val isTriple = matches(i, "\"\"\"", 0)
-          val j = i + (if (isTriple) 3 else 1)
+          val j = i + (if isTriple then 3 else 1)
           val (chars, k) = str(j, false)(isTriple)
           val k2 = closeStr(k, isTriple)
           // go(k2, LITVAL(StrLit(chars)))
           lex(k2, ind, next(k2, LITVAL(StrLit(chars))))
-        }        
       case '/' if bytes.lift(i + 1).contains('/') =>
         val j = i + 2
         val (txt, k) =
@@ -301,51 +282,46 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         val (space, k) =
           takeWhile(j)(c => c === ' ' || c === '\n')
         val nextInd = space.reverseIterator.takeWhile(_ =/= '\n').size
-        if (ind.headOption.forall(_ < nextInd) && nextInd > 0)
+        if ind.headOption.forall(_ < nextInd) && nextInd > 0 then
           lex(k, nextInd :: ind, (INDENT, loc(j, k)) :: acc)
-        else {
+        else
           val newIndBase = ind.dropWhile(_ > nextInd)
           val droppedNum = ind.size - newIndBase.size
           val hasNewIndent = newIndBase.headOption.forall(_ < nextInd) && nextInd > 0
-          val newInd = if (hasNewIndent) nextInd :: newIndBase else newIndBase
-          if (dbg) {
+          val newInd = if hasNewIndent then nextInd :: newIndBase else newIndBase
+          if dbg then
             println("dbg: " + bytes.drop(i).take(10).map(escapeChar).mkString+"...")
             println((ind, nextInd, newIndBase, droppedNum, hasNewIndent, newInd))
-          }
           lex(k, newInd,
-            if (droppedNum > 0) {
-              if (hasNewIndent) (INDENT, loc(j, k))
+            if droppedNum > 0 then {
+              if hasNewIndent then (INDENT, loc(j, k))
               else (NEWLINE, loc(i, k))
             } :: List.fill(droppedNum)((DEINDENT, loc(j-1, k))) ::: acc
             else (NEWLINE, loc(i, k)) :: acc
           )
-        }
       case _ if isIdentFirstChar(c) =>
         val (n, j) = takeWhile(i)(isIdentChar)
         // go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)))
-        lex(j, ind, next(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n))))
+        lex(j, ind, next(j, if keywords.contains(n) then KEYWORD(n) else IDENT(n, isAlphaOp(n))))
       case _ if isOpChar(c) =>
         val (n, j) = takeWhile(i)(isOpChar)
-        if (n === "." && j < length) {
+        if n === "." && j < length then
           val nc = bytes(j)
-          if (isIdentFirstChar(nc)) {
+          if isIdentFirstChar(nc) then
             val (name, k) = takeWhile(j)(isIdentChar)
             // go(k, SELECT(name))
             lex(k, ind, next(k, SELECT(name)))
-          }
-          else if (
+          else if
             // The first character is '0' and the next character is not a digit
             (nc === '0' && !(j + 1 < length && isDigit(bytes(j + 1)))) ||
             ('0' < nc && nc <= '9') // The first character is a digit other than '0'
-          ) {
+          then
             val (name, k) = takeWhile(j)(isDigit)
             // go(k, SELECT(name))
             lex(k, ind, next(k, SELECT(name)))
-          }
-          else lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))
-        }
+          else lex(j, ind, next(j, if isSymKeyword.contains(n) then KEYWORD(n) else IDENT(n, true)))
         // else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
-        else lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))
+        else lex(j, ind, next(j, if isSymKeyword.contains(n) then KEYWORD(n) else IDENT(n, true)))
       case _ if isDigit(c) =>
         val (lit, j) = num(i)
         // go(j, LITVAL(IntLit(BigInt(str))))
@@ -354,10 +330,8 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         pe(msg"unexpected character '${escapeChar(c)}'")
         // go(i + 1, ERROR)
         lex(i + 1, ind, next(i + 1, ERROR))
-    }
-  }
  
-  def escapeChar(ch: Char): String = ch match {
+  def escapeChar(ch: Char): String = ch match
     case '\b' => "\\b"
     case '\t' => "\\t"
     case '\n' => "\\n"
@@ -366,18 +340,18 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     case '"'  => "\\\""
     case '\'' => "\\\'"
     case '\\' => "\\\\"
-    case _    => if (ch.isControl) "\\0" + Integer.toOctalString(ch.toInt) 
-                else              String.valueOf(ch)
-  }
+    case _    => if ch.isControl
+      then "\\0" + Integer.toOctalString(ch.toInt) 
+      else String.valueOf(ch)
   
   
   lazy val tokens: Ls[Token -> Loc] = lex(0, Nil, Nil)(Nil)
   
   /** Converts the lexed tokens into structured tokens. */
-  lazy val bracketedTokens: Ls[Stroken -> Loc] = {
+  lazy val bracketedTokens: Ls[Stroken -> Loc] =
     import BracketKind._
     def go(toks: Ls[Token -> Loc], canStartAngles: Bool, stack: Ls[BracketKind -> Loc -> Ls[Stroken -> Loc]], acc: Ls[Stroken -> Loc]): Ls[Stroken -> Loc] =
-      toks match {
+      toks match
         case (QUOTE, l0) :: (IDENT("<", true), l1) :: rest =>
           go(rest, false, stack, (IDENT("<", true), l1) :: (QUOTE, l0) :: acc)
         case (QUOTE, l0) :: (IDENT(">", true), l1) :: rest =>
@@ -385,7 +359,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
         case (OPEN_BRACKET(k), l0) :: rest =>
           go(rest, false, k -> l0 -> acc :: stack, Nil)
         case (CLOSE_BRACKET(k1), l1) :: rest =>
-          stack match {
+          stack match
             case ((Indent, loc), oldAcc) :: _ if k1 =/= Indent =>
               go(CLOSE_BRACKET(Indent) -> l1.left :: toks, false, stack, acc)
             case ((Indent, loc), oldAcc) :: stack
@@ -393,7 +367,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
               // * Ignore empty indented blocks:
               go(rest, false, stack, oldAcc)
             case ((k0, l0), oldAcc) :: stack =>
-              if (k0 =/= k1 && !(k0 === Unquote && k1 === Curly))
+              if k0 =/= k1 && !(k0 === Unquote && k1 === Curly) then
                 raise(ErrorReport(msg"Mistmatched closing ${k1.name}" -> S(l1) ::
                   msg"does not correspond to opening ${k0.name}" -> S(l0) :: Nil, newDefs = true,
                   source = Parsing))
@@ -402,7 +376,6 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
               raise(ErrorReport(msg"Unexpected closing ${k1.name}" -> S(l1) :: Nil,
                 newDefs = true, source = Parsing))
               go(rest, false, stack, acc)
-          }
         case (INDENT, loc) :: rest =>
           go(OPEN_BRACKET(Indent) -> loc :: rest, false, stack, acc)
         case (DEINDENT, loc) :: rest =>
@@ -432,27 +405,23 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
             case _ => true
           }, stack, tk -> loc :: acc)
         case Nil =>
-          stack match {
+          stack match
             case ((Indent, loc), oldAcc) :: _ =>
               go(CLOSE_BRACKET(Indent) -> loc/*FIXME not proper loc...*/ :: Nil, false, stack, acc)
             case ((k, l0), oldAcc) :: stack =>
               raise(ErrorReport(msg"Unmatched opening ${k.name}" -> S(l0) :: (
-                if (k === Angle)
+                if k === Angle then
                   msg"Note that `<` without spaces around it is considered as an angle bracket and not as an operator" -> N :: Nil
                 else Nil
               ), newDefs = true, source = Parsing))
               (oldAcc ::: acc).reverse
             case Nil => acc.reverse
-          }
-      }
     
     go(tokens, false, Nil, Nil)
     
-  }
   
-}
 
-object NewLexer {
+object NewLexer:
   
   type TokLoc = (Token, Loc)
   
@@ -502,7 +471,7 @@ object NewLexer {
     "virtual"
   )
   
-  def printToken(tl: TokLoc): Str = tl match {
+  def printToken(tl: TokLoc): Str = tl match
     case (SPACE, _) => " "
     case (COMMA, _) => ","
     case (SEMI, _) => ";"
@@ -522,10 +491,8 @@ object NewLexer {
     case (BRACKETS(k, contents), _) =>
       k.beg + printTokens(contents) + k.end
     case (COMMENT(text: String), _) => "/*" + text + "*/"
-  }
   def printTokens(ts: Ls[TokLoc]): Str =
     ts.iterator.map(printToken).mkString("|", "|", "|")
   
   
 
-}
