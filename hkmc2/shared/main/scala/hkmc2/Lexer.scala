@@ -7,9 +7,9 @@ import utils._, shorthands._
 import Message.MessageContext
 import Diagnostic.{Lexing, Parsing}
 
-import NewLexer._
+import Lexer._
 
-class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool):
+class Lexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool):
   
   val bytes: Array[Char] = origin.fph.blockStr.toArray
   private val length = bytes.length
@@ -421,7 +421,7 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool):
     
   
 
-object NewLexer:
+object Lexer:
   
   type TokLoc = (Token, Loc)
   
