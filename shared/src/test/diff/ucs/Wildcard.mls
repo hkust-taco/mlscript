@@ -42,13 +42,98 @@ w1(Right(Some(0)), "a", "b")
 //│ res
 //│     = 'Right of Some of 0'
 
+//  Should be
+//  case x of
+//    Some -> 1
+//    None ->
+//      case p(x) of
+//        true -> 2
+//        _ -> 4
+//    _ ->
+//      case p(x) of
+//        true -> 3
+//        _ -> 5
+:ducs:normalize.result,postprocess.result
+fun w2(x, p) =
+  if x is
+    Some then 1
+    _ and p(x) and
+      x is None then 2
+      _ then 3
+    None then 4
+    _ then 5
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   Some*◊ -> 1
+//│   _ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† ->
+//│         case x*‡ of
+//│           None*† -> 2
+//│           _ -> 3
+//│       _ ->
+//│         case x*‡ of
+//│           None*† -> 4
+//│           _ -> 5
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   Some*◊ -> 1
+//│   None*† ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true -> 2
+//│       _ -> 4
+//│   _ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true -> 3
+//│       _ -> 5
+//│ fun w2: forall 'a. (None | Object & 'a & ~#None & ~#Some | Some[anything], (None | 'a) -> Bool) -> (1 | 2 | 3 | 4 | 5)
+
+//  Should be
+//  case x of
+//    Some -> 1
+//    None ->
+//      case p(x) of
+//        true -> 2
+//        _ -> 3
+//    _ ->
+//      case p(x) of
+//        true -> 2
+//        _ -> 4
+:ducs:normalize.result,postprocess.result
 fun w2(x, p) =
   if x is
     Some then 1
     _ and p(x) then 2
     None then 3
     _ then 4
-//│ fun w2: forall 'a. (Object & 'a & ~#Some | Some[anything], 'a -> Bool) -> (1 | 2 | 3 | 4)
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   Some*◊ -> 1
+//│   _ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† -> 2
+//│       _ ->
+//│         case x*‡ of
+//│           None*† -> 3
+//│           _ -> 4
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   Some*◊ -> 1
+//│   None*† ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true -> 2
+//│       _ -> 3
+//│   _ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true -> 2
+//│       _ -> 4
+//│ fun w2: forall 'a. (None | Object & 'a & ~#None & ~#Some | Some[anything], (None | 'a) -> Bool) -> (1 | 2 | 3 | 4)
 
 w2(Some(0), x => true)
 w2(None, x => true)
@@ -108,10 +193,10 @@ w3(0, _ => false)
 fun w3_1(x, f) =
   if f(x) is _ then 0 else 1
 //│ ╔══[WARNING] this case is unreachable
-//│ ║  l.109: 	  if f(x) is _ then 0 else 1
+//│ ║  l.194: 	  if f(x) is _ then 0 else 1
 //│ ║         	                           ^
 //│ ╟── because it is subsumed by the branch
-//│ ║  l.109: 	  if f(x) is _ then 0 else 1
+//│ ║  l.194: 	  if f(x) is _ then 0 else 1
 //│ ╙──       	                    ^
 //│ fun w3_1: forall 'a. ('a, 'a -> anything) -> 0
 
@@ -127,10 +212,10 @@ w3_1(0, _ => false)
 fun w3_1_1(x, f) =
   if f(x) is a then a else 0
 //│ ╔══[WARNING] this case is unreachable
-//│ ║  l.128: 	  if f(x) is a then a else 0
+//│ ║  l.213: 	  if f(x) is a then a else 0
 //│ ║         	                           ^
 //│ ╟── because it is subsumed by the branch
-//│ ║  l.128: 	  if f(x) is a then a else 0
+//│ ║  l.213: 	  if f(x) is a then a else 0
 //│ ╙──       	                    ^
 //│ fun w3_1_1: forall 'a 'b. ('a, 'a -> 'b) -> 'b
 

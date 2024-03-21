@@ -120,7 +120,9 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
       case lhs @ Let(_, _, _, body) => lhs.copy(body = mergeTerms(body, rhs))
       case lhs @ CaseOf(scrutinee: Var, cases) =>
         lhs.copy(cases = recCaseBranches(cases, rhs))
-      case _ => reportUnreachableCase(rhs, lhs)
+      case _ =>
+        println("unreachable: " + rhs.describe)
+        reportUnreachableCase(rhs, lhs)
     }
     def recCaseBranches(lhs: CaseBranches, rhs: Term): CaseBranches = lhs match {
       case NoCases => Wildcard(rhs).withLocOf(rhs)
@@ -153,6 +155,7 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
   ): (Term, Opt[Term]) = {
     def rec(term: Term): (Term, Opt[Term]) =
       term match {
+        // Disentangle pattern matching
         case top @ CaseOf(Scrutinee.WithVar(otherScrutineeVar, otherScrutinee), cases) =>
           if (scrutinee === otherScrutinee) {
             println(s"found a `CaseOf` that matches on `${scrutineeVar.name}`")
@@ -163,6 +166,20 @@ trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
             val (n, y) = disentangleUnmatchedCaseBranches(cases)
             (top.copy(cases = n), (if (y === NoCases) N else S(top.copy(cases = y))))
           }
+        // Disentangle tests with two case branches
+        case top @ CaseOf(testVar: Var, Case(Var("true"), whenTrue, Wildcard(whenFalse))) if context.isTestVar(testVar) =>
+          println(s"TEST `${testVar.name}`")
+          val (n1, y1) = disentangleTerm(whenTrue)
+          val (n2, y2) = disentangleTerm(whenFalse)
+          (
+            CaseOf(testVar, Case(Var("true"), n1, Wildcard(n2))(false)),
+            (y1, y2) match {
+              case (N, N) => N
+              case (S(t1), N) => S(CaseOf(testVar, Case(Var("true"), t1, Wildcard(n2))(false)))
+              case (N, S(t2)) => S(CaseOf(testVar, Case(Var("true"), n1, Wildcard(t2))(false)))
+              case (S(t1), S(t2)) => S(CaseOf(testVar, Case(Var("true"), t1, Wildcard(t2))(false)))
+            }
+          )
         // For let bindings, we just go deeper.
         case let @ Let(_, _, _, body) =>
           val (n, y) = rec(body)
