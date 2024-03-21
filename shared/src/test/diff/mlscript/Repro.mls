@@ -1,1 +1,67 @@
 :NewDefs
+
+class A()
+class B() extends A()
+//│ class A()
+//│ class B() extends A
+
+fun p(x) = true
+//│ fun p: anything -> true
+
+fun f(x) = if
+  x is B and
+    x is A then 1
+    p(x) then 2
+  x is A then 31
+  x is B then 3
+  else 4
+//│ fun f: (B | Object & ~#B) -> (2 | 31 | 3 | 4)
+
+
+
+// FIXME should warn about unreachable code (3 disappears)
+:ducs:postprocess.result
+fun f(x) = if
+  x is A and
+    x is B then 1
+    p(x) then 2
+  x is B then 3
+  else 4
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   refined A*◊ ->
+//│     case x*‡ of
+//│       B*◊ -> 1
+//│       _ ->
+//│         let ucs$test$0*† = p(x,) : Bool
+//│         case ucs$test$0*† of
+//│           true*† -> 2
+//│           _ -> 4
+//│   _ -> 4
+//│ fun f: Object -> (1 | 2 | 4)
+
+
+class X()
+class Y()
+//│ class X()
+//│ class Y()
+
+// FIXME should warn about unreachable code (1 disappears)
+:ducs:postprocess.result
+fun f(x) = if
+  x is X and
+    x is Y then 1
+    p(x) then 2
+  x is Y then 3
+  else 4
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   X*◊ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† -> 2
+//│       _ -> 4
+//│   Y*◊ -> 3
+//│   _ -> 4
+//│ fun f: Object -> (2 | 3 | 4)
+
