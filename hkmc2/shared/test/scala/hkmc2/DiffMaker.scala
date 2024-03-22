@@ -36,6 +36,33 @@ abstract class DiffMaker:
   
   val exitMarker = "=" * 100
   
+  
+  private val commands: mutable.Map[Str, Command[?]] = mutable.Map.empty
+  
+  def resetCommands: Unit =
+    commands.valuesIterator.foreach(cmd =>
+      if !cmd.isGlobal then cmd.currentValue = N)
+  
+  class Command[A](val name: Str, val process: Str => A, var isGlobal: Bool = false):
+    require(name.nonEmpty)
+    require(name.forall(_.isLetterOrDigit))
+    if commands.contains(name) then
+      throw new IllegalArgumentException(s"Option '$name' already exists")
+    commands += name -> this
+    private[DiffMaker] var currentValue: Opt[A] = N
+    def get: Opt[A] = currentValue
+    def isSet: Bool = currentValue.isDefined
+  
+  class NullaryCommand(name: Str) extends Command[Unit](name,
+    line => assert(line.isEmpty))
+  
+  
+  val global = NullaryCommand("global")
+  
+  val debug = NullaryCommand("d")
+  val showParse = NullaryCommand("p")
+  
+  
   def apply(file: os.Path): Unit =
     val fileName = file.toString
     
@@ -70,6 +97,8 @@ abstract class DiffMaker:
       case "" :: Nil =>
       case line :: ls if line.startsWith(":") =>
         out.println(line)
+        
+        /* 
         // def updateMode(m: Mode): Mode = 
         val newMode = line.tail.takeWhile(!_.isWhitespace) match {
           case "global" => mode.copy(global = true)
@@ -107,6 +136,20 @@ abstract class DiffMaker:
         }
         if mode.global then defaultMode = newMode.copy(global = false)
         rec(ls, newMode)
+        */
+        
+        val cmd = line.tail.takeWhile(!_.isWhitespace)
+        val rest = line.drop(cmd.length + 1)
+        
+        commands.get(cmd) match
+          case S(cmd) =>
+            cmd.currentValue = S(cmd.process(rest))
+            if global.isSet then cmd.isGlobal = true
+          case N =>
+            failures += allLines.size - lines.size
+            output("/!\\ Unrecognized command: " + cmd)
+        
+        rec(ls, mode)
       case line :: ls if line.startsWith("// FIXME") /* || line.startsWith("// TODO") */ =>
         out.println(line)
         rec(ls, mode.copy(fixme = true))
@@ -145,7 +188,7 @@ abstract class DiffMaker:
         val lexer = new Lexer(origin, raise, dbg = mode.dbgParsing)
         val tokens = lexer.bracketedTokens
         
-        if mode.showParse || mode.dbgParsing then
+        if showParse.isSet || mode.showParse || mode.dbgParsing then
           output(Lexer.printTokens(tokens))
         
         //
