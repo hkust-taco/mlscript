@@ -39,7 +39,7 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
     libraryDependencies += "io.methvin" %% "directory-watcher-better-files" % directoryWatcherVersion,
     libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.4.0",
     
-    // Test/run/fork := true,
+    Test/run/fork := true, // so that CTRL+C actually terminates the watcher
   )
   .dependsOn(core)
 

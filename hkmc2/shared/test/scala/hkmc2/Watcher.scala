@@ -7,7 +7,8 @@ import better.files.*
 import io.methvin.better.files.*
 import io.methvin.watcher.DirectoryWatcher
 
-object MainWatcher extends Watcher(File("hkmc2/shared/")):
+// Note: when SBT's `fork` is set to `false`, the path should be `File("hkmc2/shared/")` instead...
+object MainWatcher extends Watcher(File("../shared/")):
   def main(args: Array[String]): Unit = run
 
 class Watcher(dir: File):
