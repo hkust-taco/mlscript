@@ -37,9 +37,10 @@ final case class DecLit(value: BigDecimal)        extends Lit
 final case class StrLit(value: Str)               extends Lit
 final case class UnitLit(undefinedOrNull: Bool)   extends Lit
 
-final case class TypeVar(val identifier: Int \/ Str, nameHint: Opt[Str]) extends NullaryType with TypeVarImpl {
-  require(nameHint.isEmpty || identifier.isLeft)
-  // ^ The better data structure to represent this would be an EitherOrBoth
+/** If the identifier is an integer, we can still have a string name used as a name hint. */
+final case class TypeVar(val identifier_name: EitherOrBoth[Int, Str]) extends NullaryType with TypeVarImpl {
+  val identifier: Int \/ Str = identifier_name.reduce(left)(right)((x, y) => x)
+  def nameHint: Opt[Str] = identifier_name.second
   override def toString: Str = identifier.fold("α" + _, identity)
 }
 trait TypeVarImpl extends Ordered[TypeVar] { self: TypeVar =>

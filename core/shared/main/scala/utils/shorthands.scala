@@ -41,6 +41,9 @@ object shorthands {
   type \/[+A, +B] = Either[A, B]
   val \/ : Either.type = Either
   
+  def left[A]: A => Left[A, Nothing] = Left(_)
+  def right[B]: B => Right[Nothing, B] = Right(_)
+  
   type L[+A] = Left[A, Nothing]
   val L: Left.type = Left
   
