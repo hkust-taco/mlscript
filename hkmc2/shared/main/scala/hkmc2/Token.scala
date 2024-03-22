@@ -1,4 +1,4 @@
-package mlscript
+package hkmc2
 
 import mlscript.utils._, shorthands._
 

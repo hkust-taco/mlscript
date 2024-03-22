@@ -2,10 +2,13 @@ import Wart._
 
 enablePlugins(ScalaJSPlugin)
 
+val scala3Version = "3.3.3"
+val directoryWatcherVersion = "0.18.0"
+
 ThisBuild / scalaVersion     := "2.13.13"
 ThisBuild / version          := "0.1.0-SNAPSHOT"
-ThisBuild / organization     := "io.lptk"
-ThisBuild / organizationName := "LPTK"
+ThisBuild / organization     := "hkust-taco.github.io"
+ThisBuild / organizationName := "HKUST-TACO"
 ThisBuild / scalacOptions ++= Seq(
   "-deprecation",
   "-feature",
@@ -16,7 +19,7 @@ ThisBuild / scalacOptions ++= Seq(
 )
 
 lazy val root = project.in(file("."))
-  .aggregate(mlscriptJS, mlscriptJVM, ts2mlsTest, compilerJVM, hkmc2JS, hkmc2JVM)
+  .aggregate(mlscriptJS, mlscriptJVM, ts2mlsTest, compilerJVM, hkmc2JS, hkmc2JVM, coreJS, coreJVM)
   .settings(
     publish := {},
     publishLocal := {},
@@ -24,18 +27,32 @@ lazy val root = project.in(file("."))
 
 lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
   .settings(
-    name := "hkmc2",
-    scalaVersion := "3.3.3",
+    scalaVersion := scala3Version,
     sourceDirectory := baseDirectory.value.getParentFile()/"shared",
     watchSources += WatchSource(
       baseDirectory.value.getParentFile()/"shared"/"test"/"diff", "*.mls", NothingFilter),
+    
     // scalacOptions ++= Seq("-indent", "-rewrite"),
     scalacOptions ++= Seq("-new-syntax", "-rewrite"),
+    
+    libraryDependencies += "io.methvin" % "directory-watcher" % directoryWatcherVersion,
+    libraryDependencies += "io.methvin" %% "directory-watcher-better-files" % directoryWatcherVersion,
+    libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.4.0",
+    
+    // Test/run/fork := true,
   )
-  .dependsOn(mlscript % "compile->compile;test->test")
+  .dependsOn(core)
 
 lazy val hkmc2JVM = hkmc2.jvm
 lazy val hkmc2JS = hkmc2.js
+
+lazy val core = crossProject(JSPlatform, JVMPlatform).in(file("core"))
+  .settings(
+    sourceDirectory := baseDirectory.value.getParentFile()/"shared",
+  )
+
+lazy val coreJVM = core.jvm
+lazy val coreJS = core.js
 
 lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
   .settings(
@@ -55,7 +72,7 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
       TripleQuestionMark,
     ),
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.12" % Test,
-    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.3.0",
+    libraryDependencies += "com.lihaoyi" %%% "sourcecode" % "0.3.1",
     libraryDependencies += "com.lihaoyi" %%% "fastparse" % "2.3.3",
     libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.8.0",
     // 
@@ -69,6 +86,7 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
     scalaJSUseMainModuleInitializer := true,
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "2.1.0",
   )
+  .dependsOn(core)
 
 lazy val mlscriptJVM = mlscript.jvm
 lazy val mlscriptJS = mlscript.js
@@ -94,7 +112,7 @@ lazy val ts2mlsTest = project.in(file("ts2mls"))
 lazy val compiler = crossProject(JSPlatform, JVMPlatform).in(file("compiler"))
   .settings(
     name := "mlscript-compiler",
-    scalaVersion := "3.3.3",
+    scalaVersion := scala3Version,
     sourceDirectory := baseDirectory.value.getParentFile()/"shared",
     watchSources += WatchSource(
       baseDirectory.value.getParentFile()/"shared"/"test"/"diff", "*.mls", NothingFilter),
