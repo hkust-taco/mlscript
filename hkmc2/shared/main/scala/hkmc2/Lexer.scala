@@ -7,9 +7,11 @@ import utils._, shorthands._
 import Message.MessageContext
 import Diagnostic.{Lexing, Parsing}
 
+type Raise = Diagnostic => Unit
+
 import Lexer._
 
-class Lexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool):
+class Lexer(origin: Origin, raise: Raise, dbg: Bool):
   
   val bytes: Array[Char] = origin.fph.blockStr.toArray
   private val length = bytes.length

@@ -16,9 +16,9 @@ class Watcher(dir: File):
   println((fansi.Color.Blue("Watching directory ") ++ fansi.Color.DarkGray(dir.toString)).toString)
   
   // TODO DiffMaker
-  // val dm = new DiffMaker:
-  //   def doFail(msg: String): Unit =
-  //     System.err.println(fansi.Color.Red("FAILURE: ").toString + msg)
+  val dm = new DiffMaker:
+    def doFail(msg: String): Unit =
+      System.err.println(fansi.Color.Red("FAILURE: ").toString + msg)
   
   val watcher: DirectoryWatcher = DirectoryWatcher.builder()
     .logger(org.slf4j.helpers.NOPLogger.NOP_LOGGER)
@@ -57,7 +57,9 @@ class Watcher(dir: File):
       watcher.close()
     else if file.toString.endsWith(".mls") then
       // update(file) // TODO
-      ()
+      // ()
+      Thread.sleep(100)
+      dm(os.Path(file.pathAsString))
   
   def show(file: File) =
     fansi.Color.Yellow:

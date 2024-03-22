@@ -24,12 +24,16 @@ trait Located {
 sealed abstract class SimpleTerm {
   val idStr: Str = this match {
     // case Var(name) => name
-    case lit: Lit => lit.showDbg
+    // case lit: Lit => lit.showDbg
+    case IntLit(value) => value.toString
+    case DecLit(value) => value.toString
+    case StrLit(value) => '"'.toString + value + '"'
+    case UnitLit(value) => if value then "undefined" else "null"
   }
 }
 
 sealed abstract class Lit extends SimpleTerm {
-  def showDbg: Str = ???
+  def showDbg: Str = idStr
 }
 
 final case class IntLit(value: BigInt)            extends Lit
