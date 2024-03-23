@@ -349,7 +349,7 @@ class Polydef {
     p.rawEntities.map {
       case ty: NuTypeDef => {
         val calls = mutable.Set.empty[Var]
-        val p = process(Blk(ty.body.rawEntities), true)(using ctx, calls)
+        val p = process(Blk(ty.body.rawEntities), true)(using ctx, calls, Map.empty)
         val id = nextIdent(true, ty.nameVar)
         val v = vars(id).s
         constrain(p, ConsVar(v.uid, v.name)()(using noExprId).toStrat())
@@ -357,7 +357,7 @@ class Polydef {
       }
       case t: Term => {
         val calls = mutable.Set.empty[Var]
-        val topLevelProd = process(t, true)(using ctx, calls)
+        val topLevelProd = process(t, true)(using ctx, calls, Map.empty)
         constrain(topLevelProd, NoCons()(using noExprId).toStrat())
         callsInfo._1.addAll(calls)
       }
@@ -370,55 +370,16 @@ class Polydef {
   val dtorExprToType = mutable.Map.empty[TermId, Destruct]
   val exprToProdType = mutable.Map.empty[TermId, ProdStrat]
 
-  def process(e: Term, isTail: Boolean)(using ctx: Ctx, calls: mutable.Set[Var]): ProdStrat = 
+  def process(e: Term, isTail: Boolean)(using ctx: Ctx, calls: mutable.Set[Var], varCtx: Map[String, Ident]): ProdStrat = 
     if isTail then tailPosExprIds += e.uid else ()
     val res: ProdStratEnum = e match
       case IntLit(_) => prodInt(using noExprId)
       case DecLit(_) => prodFloat(using noExprId) // floating point numbers as integers type
-      //case StrLit(_) => ???
-      // str lits are handled by fromHaskell; do not handle str lits in mls now
-      // case Const(StrLit(strLit)) => prodString(strLit)(using noExprId) // Strings constants are lists of chars
-    //   case Const(l) => NoProd()(using e.uid)
-    //   case Var(Ident(_, Var(primitive), _)) if Deforest.lumberhackKeywords(primitive) => {
-    //     if Deforest.lumberhackIntComparisonFun(primitive) || Deforest.lumberhackIntComparisonOps(primitive) then
-    //       prodIntEq(using e.uid, this)
-    //     else if Deforest.lumberhackIntValueFun(primitive) || Deforest.lumberhackIntValueBinOps(primitive) then
-    //       prodIntBinOp(using e.uid, this)
-    //     else if Deforest.lumberhackBoolBinOps(primitive) then
-    //       prodBoolBinOp(using e.uid, this)
-    //     else if Deforest.lumberhackBoolUnaryOps(primitive) then
-    //       prodBoolUnaryOp(using e.uid, this)
-    //     else if Deforest.lumberhackFloatBinOps(primitive) then
-    //       prodFloatBinOp(using e.uid, this)
-    //     else if Deforest.lumberhackFloatUnaryOps(primitive) then
-    //       prodFloatUnaryOp(using e.uid, this)
-    //     else if primitive == "error" then
-    //       freshVar("_lh_rigid_error_var")(using e.uid)._1
-    //     else if (Set("primitive", "primId") ++ Deforest.lumberhackPolyOps)(primitive) then
-    //       NoProd()(using e.uid) // `primitive`, `primId`
-    //     else if primitive == "string_of_int" then
-    //       ProdFun(consInt(using noExprId).toStrat(), prodString(using this, noExprId).toStrat())(using e.uid)
-    //     else if primitive == "string_of_float" then
-    //       ProdFun(consFloat(using noExprId).toStrat(), prodString(using this, noExprId).toStrat())(using e.uid)
-    //     else if primitive == "char_of_int" then
-    //       ProdFun(consInt(using noExprId).toStrat(), prodChar(using noExprId).toStrat())(using e.uid)
-    //     else if primitive == "int_of_char" then
-    //       ProdFun(consChar(using noExprId).toStrat(), prodInt(using noExprId).toStrat())(using e.uid)
-    //     else if primitive == "float_of_int" then
-    //       ProdFun(consInt(using noExprId).toStrat(), prodFloat(using noExprId).toStrat())(using e.uid)
-    //     else if primitive == "int_of_float" then
-    //       ProdFun(consFloat(using noExprId).toStrat(), prodInt(using noExprId).toStrat())(using e.uid)
-    //     else if primitive == "ceiling" then
-    //       ProdFun(consFloat(using noExprId).toStrat(), prodFloat(using noExprId).toStrat())(using e.uid)
-    //     else if primitive == "z_of_int" || primitive == "z_to_int" then
-    //       prodBoolUnaryOp(using e.uid, this)
-    //     else
-    //       lastWords("lazy, force and lumberhack_obj_magic should not be handled here")
-    //   }
-    //   case r @ Var(id) => if id.isDef then {
-    //     calls.add(r)
-    //     ctx(id).s.copy()(Some(r))(using e.uid)
-    //   } else ctx(id).s.copy()(None)(using e.uid)
+      case StrLit(_) => ???
+      case r @ Var(id) => if varCtx(id).isDef then {
+        calls.add(r)
+        ctx(varCtx(id)).s.copy()(Some(r))(using e.uid)
+      } else ctx(varCtx(id)).s.copy()(None)(using e.uid)
     //   case Call(f, a) =>
     //     val fp = process(f, false)
     //     val ap = process(a, false)
