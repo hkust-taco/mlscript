@@ -5,13 +5,20 @@ import mlscript.compiler.ir.Defn
 import mlscript.compiler.ir.Node
 import mlscript.compiler.ir.Node._
 import scala.annotation.tailrec
+import mlscript.compiler.ir.FreshInt
+import mlscript.compiler.ir.Name
+import mlscript.compiler.ir.ClassInfo
+import mlscript.compiler.ir.DefnRef
+import mlscript.compiler.ir.Expr
+import mlscript.IntLit
 
-class TailRecOpt {
+// fnUid should be the same FreshInt that was used to build the graph being passed into this class
+class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
   private type DefnGraph = Set[DefnNode]
 
   private def findTailCalls(node: Node)(implicit nodeMap: Map[Defn, DefnNode]): List[DefnNode] = node match
     case Result(res)                      => Nil
-    case Jump(defn, args)                 => nodeMap(defn.expectDefn) :: Nil
+    case Jump(defn, args)                 => nodeMap(defn.expectDefn) :: Nil // assume that all definition references are resolved
     case Case(scrut, cases)               => cases.flatMap((_, body) => findTailCalls(body))
     case LetExpr(name, expr, body)        => findTailCalls(body)
     case LetCall(names, defn, args, body) => findTailCalls(body)
@@ -48,7 +55,7 @@ class TailRecOpt {
       for (u <- findTailCalls(src.defn.body)) do {
         if (u.visited)
           if (!u.processed)
-            src.lowest = u.num.min(src.lowest)          
+            src.lowest = u.num.min(src.lowest)
         else
           dfs(u)
           src.lowest = u.lowest.min(src.lowest)
@@ -74,7 +81,7 @@ class TailRecOpt {
 
         scc = scc + vertex
 
-        sccs = scc :: sccs 
+        sccs = scc :: sccs
       }
     }
 
@@ -86,7 +93,93 @@ class TailRecOpt {
     sccs
   }
 
-  def partition(defns: Set[Defn]) = {
+  private case class DefnInfo(defn: Defn, stackFrameIdx: Int)
+
+  // Returns a set containing the original set of functions pointing to an optimized function
+  // and the optimized function.
+  // TODO: Currently untested
+  def optimize(defns: Set[Defn], classes: Set[ClassInfo]): Set[Defn] = {
+
+    def asLit(x: Int) = Expr.Literal(IntLit(x))
+
+    // To build the case block, we need to compare integers and check if the result is "True"
+    val trueClass = classes.find(c => c.ident == "True").get
+    val falseClass = classes.find(c => c.ident == "False").get
+
+    // currently, single tail recursive functions are already optimised
+    if (defns.size <= 1)
+      return defns
+
+    // concretely order the functions as soon as possible, since the order of the functions matter
+    val defnsList = defns.toList
+
+    // TODO: make sure that name clashes aren't a problem
+    val trName = Name("tailrecBranch");
+    val stackFrame = trName :: defnsList.flatMap(_.params) // take union of stack frames
+
+    val stackFrameIdxes = defnsList.foldRight(1 :: Nil)((defn, ls) => defn.params.size + ls.head :: ls)
+
+    val defnInfoMap: Map[Defn, DefnInfo] = (defnsList zip stackFrameIdxes.drop(1))
+      .foldLeft(Map.empty)((map, item) => map + (item._1 -> DefnInfo(item._1, item._2)))
+
+    // TODO: This works fine for now, but ideally should find a way to guarantee the new
+    // name is unique
+    val newName = defns.foldLeft("")(_ + "_" + _.name) + "opt"
+
+    val newDefnRef = DefnRef(Right(newName))
+
+    // Build the node.
+    def transformNode(node: Node)(implicit info: DefnInfo): Node = node match
+      case Jump(defn, args) =>
+        // transform the stack frame
+        val start = stackFrame.take(info.stackFrameIdx).drop(1).map(n => Expr.Ref(n)) // we drop tailrecBranch and replace it with the defn id
+        val end = stackFrame.drop(info.stackFrameIdx + args.size).map(n => Expr.Ref(n))
+        val concated = asLit(info.defn.id) :: start ::: args ::: end
+        Jump(newDefnRef, concated)
+
+      case Result(_)                        => node
+      case Case(scrut, cases)               => Case(scrut, cases.map(n => (n._1, transformNode(n._2))))
+      case LetExpr(name, expr, body)        => LetExpr(name, expr, transformNode(body))
+      case LetCall(names, defn, args, body) => LetCall(names, defn, args, transformNode(body))
+
+    // Tail calls to another function in the component will be replaced with a tail call
+    // to the merged function
+    def transformDefn(defn: Defn): Defn = Defn(
+      defn.id,
+      defn.name,
+      defn.params,
+      defn.resultNum,
+      Jump(newDefnRef, asLit(defn.id) :: stackFrame.map(n => Expr.Ref(n)).drop(1)).attachTag(tag)
+    )
+
+    // given expressions value, e1, e2, transform it into
+    // let scrut = tailrecBranch == value
+    // in case scrut of True  -> e1
+    //                  False -> e2
+    //
+    def makeCaseBranch(value: Int, e1: Node, e2: Node): Node =
+      val name = Name("scrut")
+      val cases = Case(name, List((trueClass, e1), (falseClass, e2))).attachTag(tag)
+      LetExpr(
+        name,
+        Expr.BasicOp("==", List(asLit(value), Expr.Ref(trName))),
+        cases
+      ).attachTag(tag)
+
+    val first = defnsList.head;
+    val newNode = defnsList.tail.foldLeft(transformNode(first.body)(defnInfoMap(first)))(
+      (elz, defn) => makeCaseBranch(defn.id, transformNode(defn.body)(defnInfoMap(defn)), elz)
+    ).attachTag(tag)
+
+    // TODO: What is resultNum? It's only ever set to 1 elsewhere
+    val newDefn = Defn(fnUid.make, newName, stackFrame, 1, newNode)
+
+    newDefnRef.defn = Left(newDefn)
+
+    defns.map(d => transformDefn(d)) + newDefn
+  }
+
+  def partition(defns: Set[Defn]): List[Set[Defn]] = {
     val nodeMap = defns.foldLeft[Map[Defn, DefnNode]](Map())((m, d) => m + (d -> DefnNode(d)))
     partitionNodes(nodeMap.values.toSet)(nodeMap).map(g => g.map(d => d.defn))
   }

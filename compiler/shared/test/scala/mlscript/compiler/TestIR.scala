@@ -16,12 +16,15 @@ class IRDiffTestCompiler extends DiffTests {
     if (mode.useIR || mode.irVerbose)
       try
         output("\n\nIR:")
-        val gb = Builder(Fresh(), FreshInt(),  FreshInt(), FreshInt())
+        val fnUid = FreshInt()
+        val tag = FreshInt()
+
+        val gb = Builder(Fresh(), fnUid,  FreshInt(), tag)
         val graph_ = gb.buildGraph(unit)
         output(graph_.toString())
 
         val graph = if (!mode.noTailrecOpt) {
-          val tailRecOpt = new TailRecOpt
+          val tailRecOpt = new TailRecOpt(fnUid, tag)
           tailRecOpt(graph_)
         } else {
           graph_
