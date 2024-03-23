@@ -169,8 +169,18 @@ A.g(0)
 :AllowTypeErrors
 
 
+:e
 s([Numbr(0),Numbr(0)])
-//│ Int
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.+1: 	s([Numbr(0),Numbr(0)])
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `(Numbr | Vectr, Numbr | Vectr) -> Int` is not a function
+//│ ║  l.136: 	fun s: ([Numbr,Numbr] -> Int) & ([Vectr,Vectr] -> Int)
+//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `([?a, ?b]) -> ?c`
+//│ ║  l.+1: 	s([Numbr(0),Numbr(0)])
+//│ ╙──      	^
+//│ error
 // g <: 0 -> 'a
 
 :e
