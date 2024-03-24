@@ -147,13 +147,11 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
 
     // Tail calls to another function in the component will be replaced with a tail call
     // to the merged function
-    def transformDefn(defn: Defn): Defn = Defn(
-      defn.id,
-      defn.name,
-      defn.params,
-      defn.resultNum,
-      Jump(newDefnRef, asLit(defn.id) :: stackFrame.map(n => Expr.Ref(n)).drop(1)).attachTag(tag)
-    )
+    def transformDefn(defn: Defn): Defn = {
+      val args = asLit(defn.id) :: stackFrame.drop(1).map { Expr.Ref(_) }
+      val jmp = Jump(newDefnRef, args).attachTag(tag)
+      Defn(defn.id, defn.name, defn.params, defn.resultNum, jmp)
+    }
 
     // given expressions value, e1, e2, transform it into
     // let scrut = tailrecBranch == value
