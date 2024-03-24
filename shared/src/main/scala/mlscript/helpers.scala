@@ -1,5 +1,4 @@
 package mlscript
-
 import scala.util.chaining._
 import scala.collection.mutable.{Map => MutMap, SortedMap => SortedMutMap, Set => MutSet, Buffer}
 
@@ -139,7 +138,12 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
         }.mkString
       }${tscs.map{
           case (tvs, constrs) =>
-            s"\n${ctx.indStr}${tvs.map(_._2.showIn(ctx, 0)).mkString("[", ", ", "]")}" +
+            val s = tvs.map {
+              case (S(true), t) => "+" ++ t.showIn(ctx, 0)
+              case (S(false), t) => "-" ++ t.showIn(ctx, 0)
+              case (N, t) => "=" ++ t.showIn(ctx, 0)
+            }.mkString("[", ", ", "]")
+            s"\n${ctx.indStr}" + s +
             s" in ${constrs.map(_.map(_.showIn(ctx, 0)).mkString("[", ", ", "]")).mkString("{", ", ", "}")}"
         }.mkString}"
       }, outerPrec > 0)

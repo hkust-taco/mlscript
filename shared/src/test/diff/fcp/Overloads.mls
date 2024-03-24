@@ -76,7 +76,7 @@ IISS : (0 | 1) -> number
 IISS : 'a -> 'a
 //│ res: 'a -> 'a
 //│   where
-//│     ['a, 'a] in {[string, string], [int, int]}
+//│     [+'a, -'a] in {[string, string], [int, int]}
 
 IISS 0
 //│ res: int
@@ -95,8 +95,8 @@ fun x -> (if true then IISS else BBNN) x
 //│ ╙──
 //│ res: 'a -> 'b
 //│   where
-//│     ['a, 'b] in {[bool, bool], [number, number]}
-//│     ['a, 'b] in {[string, string], [int, int]}
+//│     [+'a, -'b] in {[bool, bool], [number, number]}
+//│     [+'a, -'b] in {[string, string], [int, int]}
 
 if true then IISS else BBNN
 //│ res: bool -> bool & number -> number | int -> int & string -> string

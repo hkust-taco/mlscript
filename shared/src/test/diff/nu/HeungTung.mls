@@ -137,7 +137,7 @@ f(0)
 x => f(x)
 //│ forall 'a 'b. 'a -> 'b
 //│   where
-//│     ['a, 'b] in {[Bool, Bool], [Int, Int]}
+//│     [+'a, -'b] in {[Bool, Bool], [Int, Int]}
 //│ res
 //│     = [Function: res]
 
@@ -157,7 +157,7 @@ f(if true then 0 else false)
 //│ 'a
 //│   where
 //│     'a :> error
-//│     [0 | false, 'a, 0 | false] in {}
+//│     [+0 | false, -'a, +0 | false] in {}
 //│ res
 //│     = 0
 
@@ -174,7 +174,7 @@ f(refined if true then 0 else false) // this one can be precise again!
 //│ ╙──       	  ^^^^^^^
 //│ 'a
 //│   where
-//│     ['b, 'a] in {[Bool, Bool], [Int, Int]}
+//│     [+'b, -'a] in {[Bool, Bool], [Int, Int]}
 //│ Code generation encountered an error:
 //│   unresolved symbol refined
 
@@ -363,7 +363,7 @@ q(0)
 q(1)
 //│ 'a
 //│   where
-//│     [1, 'a, 1] in {[1 | 2, false, 1 | 2], [0 | 1, true, 0 | 1]}
+//│     [+1, -'a, +1] in {[1 | 2, false, 1 | 2], [0 | 1, true, 0 | 1]}
 //│ res
 //│     = <no result>
 //│       q is not implemented
@@ -377,7 +377,7 @@ x => q(x): true
 x => q(x)
 //│ forall 'a 'b. 'a -> 'b
 //│   where
-//│     ['a, 'b] in {[0 | 1, true], [1 | 2, false]}
+//│     [+'a, -'b] in {[0 | 1, true], [1 | 2, false]}
 //│ res
 //│     = <no result>
 //│       q is not implemented
@@ -385,12 +385,12 @@ x => q(x)
 fun w = x => q(x)
 //│ fun w: forall 'a 'b. 'a -> 'b
 //│   where
-//│     ['a, 'b] in {[0 | 1, true], [1 | 2, false]}
+//│     [+'a, -'b] in {[0 | 1, true], [1 | 2, false]}
 
 w(0)
 //│ forall 'a. 'a
 //│   where
-//│     ['b, 'a] in {[0 | 1, true, 0 | 1]}
+//│     [+'b, -'a] in {[0 | 1, true, 0 | 1]}
 //│ res
 //│     = <no result>
 //│       w and q are not implemented
@@ -409,8 +409,8 @@ x => r(r(x))
 //│ ╙──
 //│ forall 'a 'b. 'a -> 'b
 //│   where
-//│     ['c, 'b] in {[Bool, Bool], [Int, Int]}
-//│     ['a, 'c] in {[Bool, Bool], [Int, Int]}
+//│     [+'c, -'b] in {[Bool, Bool], [Int, Int]}
+//│     [+'a, -'c] in {[Bool, Bool], [Int, Int]}
 //│ res
 //│     = <no result>
 //│       r is not implemented

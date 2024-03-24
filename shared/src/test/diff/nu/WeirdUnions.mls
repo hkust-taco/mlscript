@@ -61,7 +61,7 @@ f("abc", "abc")
 //│ 'a
 //│   where
 //│     'a :> error
-//│     ["abc", "abc", 'a, "abc"] in {}
+//│     [+"abc", +"abc", -'a, +"abc"] in {}
 //│ res
 //│     = <no result>
 //│       f is not implemented

@@ -965,7 +965,7 @@ abstract class TyperHelpers { Typer: Typer =>
         getVars.iterator.flatMap(_.tsc).map { case (tsc, i) =>
           if (visited.add(tsc))
             ("\n\t\t[ "
-              + tsc.tvs.mkString(", ")
+              + tsc.tvs.map(t => s"${printPol(t._1)}${t._2}").mkString(", ")
               + " ] in { " + tsc.constraints.mkString(", ") + " }")
           else ""
         }.mkString
