@@ -132,8 +132,8 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
     def transformNode(node: Node)(implicit info: DefnInfo): Node = node match
       case Jump(defn, args) =>
         // transform the stack frame
-        val start = stackFrame.take(info.stackFrameIdx).drop(1).map(n => Expr.Ref(n)) // we drop tailrecBranch and replace it with the defn id
-        val end = stackFrame.drop(info.stackFrameIdx + args.size).map(n => Expr.Ref(n))
+        val start = stackFrame.take(info.stackFrameIdx).drop(1).map { Expr.Ref(_) } // we drop tailrecBranch and replace it with the defn id
+        val end = stackFrame.drop(info.stackFrameIdx + args.size).map { Expr.Ref(_) }
         val concated = asLit(info.defn.id) :: start ::: args ::: end
         Jump(newDefnRef, concated)
 
@@ -167,16 +167,18 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
       ).attachTag(tag)
 
     val first = defnsList.head;
-    val newNode = defnsList.tail.foldLeft(transformNode(first.body)(defnInfoMap(first)))(
-      (elz, defn) => makeCaseBranch(defn.id, transformNode(defn.body)(defnInfoMap(defn)), elz)
-    ).attachTag(tag)
+    val newNode = defnsList.tail
+      .foldLeft(transformNode(first.body)(defnInfoMap(first)))((elz, defn) =>
+        makeCaseBranch(defn.id, transformNode(defn.body)(defnInfoMap(defn)), elz)
+      )
+      .attachTag(tag)
 
     // TODO: What is resultNum? It's only ever set to 1 elsewhere
     val newDefn = Defn(fnUid.make, newName, stackFrame, 1, newNode)
 
     newDefnRef.defn = Left(newDefn)
 
-    defns.map(d => transformDefn(d)) + newDefn
+    defns.map { d => transformDefn(d) } + newDefn
   }
 
   def partition(defns: Set[Defn]): List[Set[Defn]] = {
