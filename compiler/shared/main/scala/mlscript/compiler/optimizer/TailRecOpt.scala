@@ -11,6 +11,7 @@ import mlscript.compiler.ir.ClassInfo
 import mlscript.compiler.ir.DefnRef
 import mlscript.compiler.ir.Expr
 import mlscript.IntLit
+import mlscript.compiler.ir.resolveDefnRef
 
 // fnUid should be the same FreshInt that was used to build the graph being passed into this class
 class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
@@ -40,7 +41,9 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
   }
 
   // TODO: this is untested. test this.
-  private def partitionNodes(defns: DefnGraph)(implicit nodeMap: Map[Defn, DefnNode]): List[DefnGraph] = {
+  private def partitionNodes(implicit nodeMap: Map[Defn, DefnNode]): List[DefnGraph] = {
+    val defns = nodeMap.values.toSet
+
     var ctr = 0
     var stack: List[DefnNode] = Nil
     var sccs: List[DefnGraph] = Nil
@@ -95,8 +98,8 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
 
   private case class DefnInfo(defn: Defn, stackFrameIdx: Int)
 
-  // Returns a set containing the original set of functions pointing to an optimized function
-  // and the optimized function.
+  // Returns a set containing the optimized function and the
+  // original functions pointing to an optimized function.
   // TODO: Currently untested
   def optimize(defns: Set[Defn], classes: Set[ClassInfo]): Set[Defn] = {
 
@@ -156,7 +159,6 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
     // let scrut = tailrecBranch == value
     // in case scrut of True  -> e1
     //                  False -> e2
-    //
     def makeCaseBranch(value: Int, e1: Node, e2: Node): Node =
       val name = Name("scrut")
       val cases = Case(name, List((trueClass, e1), (falseClass, e2))).attachTag(tag)
@@ -167,9 +169,12 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
       ).attachTag(tag)
 
     val first = defnsList.head;
+    val firstNode = transformNode(first.body)(defnInfoMap(first))
+
     val newNode = defnsList.tail
-      .foldLeft(transformNode(first.body)(defnInfoMap(first)))((elz, defn) =>
-        makeCaseBranch(defn.id, transformNode(defn.body)(defnInfoMap(defn)), elz)
+      .foldLeft(firstNode)((elz, defn) =>
+        val thisNode = transformNode(defn.body)(defnInfoMap(defn))
+        makeCaseBranch(defn.id, thisNode, elz)
       )
       .attachTag(tag)
 
@@ -182,16 +187,20 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
   }
 
   def partition(defns: Set[Defn]): List[Set[Defn]] = {
-    val nodeMap = defns.foldLeft[Map[Defn, DefnNode]](Map())((m, d) => m + (d -> DefnNode(d)))
-    partitionNodes(nodeMap.values.toSet)(nodeMap).map(g => g.map(d => d.defn))
+    val nodeMap: Map[Defn, DefnNode] = defns.foldLeft(Map.empty)((m, d) => m + (d -> DefnNode(d)))
+    partitionNodes(nodeMap).map(g => g.map(d => d.defn))
   }
 
   def apply(p: Program) = run(p)
 
   def run(p: Program): Program = {
-    val defnMap = p.defs.foldLeft[Map[Int, Defn]](Map())((m, d) => m + (d.id -> d))
+    val partitions = partition(p.defs)
+    val newDefs: Set[Defn] = partitions.flatMap { optimize(_, p.classes) }.toSet
 
-    // TODO
-    p
+    // update the definition refs
+    newDefs.foreach { defn => resolveDefnRef(defn.body, newDefs, true) }
+    resolveDefnRef(p.main, newDefs, true)
+
+    Program(p.classes, newDefs, p.main)
   }
 }
