@@ -15,9 +15,15 @@ type Cnstr = ProdStrat -> ConsStrat
 type ProdStrat = Strat[ProdStratEnum]
 type ConsStrat = Strat[ConsStratEnum]
 
+def toSuperscript(i: String) = i.map {
+  case '0' => '⁰'; case '1' => '¹'; case '2' => '²'
+  case '3' => '³'; case '4' => '⁴'; case '5' => '⁵'
+  case '6' => '⁶'; case '7' => '⁷'; case '8' => '⁸'
+  case '9' => '⁹'; case c => c
+}
 
 case class Ident(isDef: Bool, tree: Var, uid: Uid[Ident]) {
-  //def pp(using config: PrettyPrintConfig): Str = s"${tree.name}${if config.showIuid then s"${toSuperscript(uid.toString)}" else ""}"
+  def pp(using config: PrettyPrintConfig): Str = s"${tree.name}${if config.showIuid then s"${toSuperscript(uid.toString)}" else ""}"
   //def copyToNewDeforest(using newd: Deforest): Ident = newd.nextIdent(isDef, tree)
 }
 
@@ -349,7 +355,7 @@ class Polydef {
     p.rawEntities.map {
       case ty: NuTypeDef => {
         val calls = mutable.Set.empty[Var]
-        val p = process(Blk(ty.body.rawEntities), true)(using ctx, calls, Map.empty)
+        val p = process(Blk(ty.body.rawEntities))(using ctx, calls, Map.empty)
         val id = nextIdent(true, ty.nameVar)
         val v = vars(id).s
         constrain(p, ConsVar(v.uid, v.name)()(using noExprId).toStrat())
@@ -357,7 +363,7 @@ class Polydef {
       }
       case t: Term => {
         val calls = mutable.Set.empty[Var]
-        val topLevelProd = process(t, true)(using ctx, calls, Map.empty)
+        val topLevelProd = process(t)(using ctx, calls, Map.empty)
         constrain(topLevelProd, NoCons()(using noExprId).toStrat())
         callsInfo._1.addAll(calls)
       }
@@ -370,8 +376,7 @@ class Polydef {
   val dtorExprToType = mutable.Map.empty[TermId, Destruct]
   val exprToProdType = mutable.Map.empty[TermId, ProdStrat]
 
-  def process(e: Term, isTail: Boolean)(using ctx: Ctx, calls: mutable.Set[Var], varCtx: Map[String, Ident]): ProdStrat = 
-    if isTail then tailPosExprIds += e.uid else ()
+  def process(e: Term)(using ctx: Ctx, calls: mutable.Set[Var], varCtx: Map[String, Ident]): ProdStrat = 
     val res: ProdStratEnum = e match
       case IntLit(_) => prodInt(using noExprId)
       case DecLit(_) => prodFloat(using noExprId) // floating point numbers as integers type
@@ -380,45 +385,18 @@ class Polydef {
         calls.add(r)
         ctx(varCtx(id)).s.copy()(Some(r))(using e.uid)
       } else ctx(varCtx(id)).s.copy()(None)(using e.uid)
-    //   case Call(f, a) =>
-    //     val fp = process(f, false)
-    //     val ap = process(a, false)
-    //     val sv = freshVar(s"${e.uid}_callres")(using e.uid)
-    //     constrain(fp, ConsFun(ap, sv._2.toStrat())(using noExprId).toStrat())
-    //     sv._1
-    //   case ce@Ctor(name, args) =>
-    //     val ctorType = MkCtor(name, args.map(a => process(a, false)))(using e.uid)
-    //     this.ctorExprToType += ce.uid -> ctorType.asInstanceOf[MkCtor]
-    //     ctorType
-    //   case me@Match(scrut, arms) =>
-    //     val sp = process(scrut, false)
-    //     val (detrs, bodies) = arms.map { (v, as, e) =>
-    //       if v.name.isCapitalized then { // normal pattern
-    //         val as_tys = as.map(a => a -> freshVar(a)(using noExprId))
-    //         val ep = process(e, true && isTail)(using ctx ++ as_tys.map(v => v._1 -> v._2._1.toStrat()))
-    //         (Destructor(v, as_tys.map(a_ty => a_ty._2._2.toStrat())), ep)
-    //       } else if v.name == "_" then { // id pattern or wildcard pattern ("_", id :: Nil (or Nil), armBodyExpr)
-    //         val newIdCtx = as.headOption.map { newId =>
-    //           val idVar = freshVar(newId)(using noExprId)
-    //           (newId -> idVar._1.toStrat(), idVar._2.toStrat())
-    //         }
-    //         val ep = process(e, true && isTail)(using ctx ++ newIdCtx.map(_._1))
-    //         (Destructor(v, newIdCtx.map(_._2).toList), ep)
-    //       } else if v.name.toIntOption.isDefined then { // int literal pattern: ("3", Nil, armBodyExpr)
-    //         val ep = process(e, true && isTail)
-    //         (Destructor(Var("Int"), Nil), ep)
-    //       } else if v.name.matches("'.'") then {
-    //         val ep = process(e, true && isTail)
-    //         (Destructor(Var("Char"), Nil), ep)
-    //       } else { lastWords(s"unreachable: unknown kind of match arm: ${v.name}") }
-    //     }.unzip
-    //     val dtorType = Destruct(detrs)(using e.uid).toStrat()
-    //     constrain(sp, dtorType)
-    //     val res = freshVar(s"${e.uid}_matchres")(using e.uid)
-    //     bodies.foreach(constrain(_, res._2.toStrat()))
-    //     // register from expr to type
-    //     this.dtorExprToType += me.uid -> dtorType.s
-    //     res._1
+      case App(func, arg) => 
+        val funcRes = process(func)
+        val argRes = process(arg)
+        val sv = freshVar(s"${e.uid}_callres")(using e.uid)
+        constrain(funcRes, ConsFun(argRes, sv._2.toStrat())(using noExprId).toStrat())
+        sv._1
+      // case Lam(Tup(args), body) =>
+      //   args.map{
+      //     case (None, Fld(_, _, v: Var)) if => 
+      //   }
+      //   ProdFun(sv._2.toStrat(),
+      //     process(body)(using ctx + ()))
     //   case Function(param, body) =>
     //     val sv = freshVar(param)(using noExprId)
     //     ProdFun(sv._2.toStrat(),
