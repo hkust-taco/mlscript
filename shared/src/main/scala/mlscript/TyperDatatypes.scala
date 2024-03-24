@@ -675,6 +675,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
           }
           case ((S(false), ub), c) => c.map { ty =>
             val dnf = DNF.mk(MaxLevel, Nil, ty & ub.neg(), true)
+            println(s"tag0: $ub, $ty, $dnf")
             if (dnf.isBot || dnf.cs.forall(c => !(c.vars.isEmpty && c.nvars.isEmpty)))
               S(ty)
             else N
@@ -750,15 +751,26 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       case (a: ArrayType, b) => N
       case (a: TupleType, b: TupleType) if a.fields.sizeCompare(b.fields) === 0 =>
         val fs = a.fields.map(_._2).zip(b.fields.map(_._2)).map(u => lcgField(pol, u._1, u._2))
-        if (fs.contains(N))
-          N
-        else {
+        if (!fs.contains(N)) {
           val (l, m) = fs.flatten.reduce[(Ls[(Opt[Bool], ST)], Map[(Opt[Bool], ST), Ls[ST]])] {
             case ((xl, xm), (yl, ym)) => (xl ++ yl, xm ++ ym)
           }
           S(l, m + ((pol, a) -> List(b)))
-        }
+        } else N
       case (a: TupleType, b) => N
+      case (a: RecordType, b: RecordType) if pol.isDefined =>
+        val default = FieldType(N, if (pol === S(true)) TopType else BotType)(prov)
+        if (b.fields.map(_._1).forall(a.fields.map(_._1).contains)) {
+          val u = a.fields.map {
+            case (v, f) => lcgField(pol, f, b.fields.find(_._1 === v).fold(default)(_._2))
+          }
+          if (!u.contains(N)) {
+            val (l, m) = u.flatten.reduce[(Ls[(Opt[Bool], ST)], Map[(Opt[Bool], ST), Ls[ST]])] {
+              case ((xl, xm), (yl, ym)) => (xl ++ yl, xm ++ ym)
+            }
+            S(l, m + ((pol, a) -> List(b)))
+          } else N
+        } else N
       case (a, b) if a === b => S(Nil, Map((pol, a) -> List(b)))
       case (a, b) => S(List((pol, a)), Map((pol, a) -> List(b)))
     }

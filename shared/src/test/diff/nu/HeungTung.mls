@@ -414,3 +414,20 @@ x => r(r(x))
 //│ res
 //│     = <no result>
 //│       r is not implemented
+
+fun u: {x:0, y:Int} -> Int & {x:1, z: Str} -> Str
+//│ fun u: {x: 0, y: Int} -> Int & {x: 1, z: Str} -> Str
+
+(a, b, c) => u({x: a, y: b, z: c})
+//│ forall 'a 'b 'c 'd. ('a, 'b, 'c) -> 'd
+//│   where
+//│     [+'a, +'b, +'c, -'d] in {[0, Int, anything, Int], [1, anything, Str, Str]}
+//│ res
+//│     = <no result>
+//│       u is not implemented
+
+(a, b) => u({x: a, y: "abc", z: b})
+//│ (1, Str) -> Str
+//│ res
+//│     = <no result>
+//│       u is not implemented
