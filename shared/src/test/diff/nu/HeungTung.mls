@@ -360,10 +360,22 @@ q(0)
 //│     = <no result>
 //│       q is not implemented
 
+q(0) : true
+//│ true
+//│ res
+//│     = <no result>
+//│       q is not implemented
+
 q(1)
 //│ 'a
 //│   where
 //│     [+1, -'a, +1] in {[1 | 2, false, 1 | 2], [0 | 1, true, 0 | 1]}
+//│ res
+//│     = <no result>
+//│       q is not implemented
+
+q(1) : Bool
+//│ Bool
 //│ res
 //│     = <no result>
 //│       q is not implemented

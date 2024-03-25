@@ -87,16 +87,59 @@ IISS 0
 (if true then IISS else BBNN) 0
 //│ res: number
 
-// * TODO: update type simplifier
-// fixme
+// * TODO: should we still allow this? And maybe reduce it
+// * Conceptually we'd expect it to reduce to `int -> number`
+// * But it's tricky to do the actual reduction since technically
+// * 'a = Bot anf 'b = Top could satisfy all tuple alternatives
 :e
-fun x -> (if true then IISS else BBNN) x
+def f = fun x -> (if true then IISS else BBNN) x
 //│ ╔══[ERROR] ambiguous
 //│ ╙──
-//│ res: 'a -> 'b
+//│ f: 'a -> 'b
 //│   where
 //│     [+'a, -'b] in {[bool, bool], [number, number]}
 //│     [+'a, -'b] in {[string, string], [int, int]}
+
+// * Q: why 3 elements in the tuple?
+f(0)
+//│ res: 'a
+//│   where
+//│     [+'b, -'a] in {[number, number, number]}
+//│     [+'b, -'a] in {[int, int, int]}
+
+// FIXME
+f(0) + 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.111: 	f(0) + 1
+//│ ║         	^^^^^^
+//│ ╟── application of type `?a` does not match type `int`
+//│ ║  l.95: 	def f = fun x -> (if true then IISS else BBNN) x
+//│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into application with expected type `int`
+//│ ║  l.111: 	f(0) + 1
+//│ ╙──       	^^^^
+//│ res: error | int
+
+// FIXME
+f : int -> number
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.124: 	f : int -> number
+//│ ║         	^
+//│ ╟── type `int` does not match type `?a`
+//│ ║  l.124: 	f : int -> number
+//│ ╙──       	    ^^^
+//│ res: int -> number
+
+:e
+f : number -> int
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.134: 	f : number -> int
+//│ ║         	^
+//│ ╟── type `number` does not match type `?a`
+//│ ║  l.134: 	f : number -> int
+//│ ╙──       	    ^^^^^^
+//│ res: number -> int
+
 
 if true then IISS else BBNN
 //│ res: bool -> bool & number -> number | int -> int & string -> string
@@ -110,16 +153,16 @@ if true then IISS else BBNN
 :e
 (if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.111: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.154: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `int -> int & string -> string` is not a function
 //│ ║  l.12: 	def IISS: int -> int & string -> string
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(0 | 1 | true) -> number`
-//│ ║  l.111: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.154: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║         	              ^^^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.111: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.154: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╙──       	                                ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: (0 | 1 | true) -> number
 
