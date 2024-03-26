@@ -1,0 +1,19 @@
+:global
+:p
+
+
+foo
+//│ |foo|
+//│ AST: List(Ident(foo))
+
+foo
+bar
+//│ |foo|↵|bar|
+//│ AST: List(Ident(foo), Ident(bar))
+
+:fixme
+123
+//│ |123|
+//│ /!!!\ Uncaught error: scala.NotImplementedError: LITVAL(IntLit(123))
+
+

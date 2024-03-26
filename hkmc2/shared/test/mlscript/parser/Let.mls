@@ -1,0 +1,55 @@
+:global
+:p
+
+
+:pe
+let
+//│ |let|
+//│ Error: Expected expression after let binding keyword 'let'; found end of input instead
+
+:pe
+let x
+//│ |let| |x|
+//│ Error: Expected '=' keyword after let binding head; found end of input instead
+
+:pe
+let x =
+//│ |let| |x| |=|
+//│ Error: Expected expression after let binding equals sign; found end of input instead
+
+let x = y
+//│ |let| |x| |=| |y|
+//│ AST: List(Let(Ident(x),Ident(y),None))
+
+:pe
+let x = y in
+//│ |let| |x| |=| |y| |in|
+//│ Error: Expected expression after let binding `in` clause; found end of input instead
+
+let x = y in z
+//│ |let| |x| |=| |y| |in| |z|
+//│ AST: List(Let(Ident(x),Ident(y),Some(Ident(z))))
+
+:pe
+let x = y class
+//│ |let| |x| |=| |y| |class|
+//│ Error: Expected 'in' keyword or end of input after let binding right-hand side; found 'class' keyword instead
+
+
+
+let x = y
+foo
+//│ |let| |x| |=| |y|↵|foo|
+//│ AST: List(Let(Ident(x),Ident(y),None), Ident(foo))
+
+
+:fixme
+if
+//│ |if|
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+
+
+
+
+

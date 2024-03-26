@@ -1,13 +1,12 @@
 package hkmc2
+package syntax
 
 import scala.annotation.tailrec
 import mlscript._
 import utils._, shorthands._
 
 import Message.MessageContext
-import Diagnostic.{Lexing, Parsing}
-
-type Raise = Diagnostic => Unit
+import Diagnostic.Source.{Lexing, Parsing}
 
 import Lexer._
 
@@ -238,7 +237,11 @@ class Lexer(origin: Origin, raise: Raise, dbg: Bool):
         lex(i + 2, ind, next(i + 2, OPEN_BRACKET(BracketKind.Unquote)))
       case '$' if i + 1 < length && isIdentFirstChar(bytes(i + 1)) =>
         val (n, j) = takeWhile(i + 1)(isIdentChar)
-        lex(j, ind, next(j, BRACKETS(BracketKind.Unquote, (if keywords.contains(n) then KEYWORD(n) else IDENT(n, isAlphaOp(n)), loc(i + 1, j)) :: Nil)(loc(i, j))))
+        lex(j, ind, next(j, BRACKETS(BracketKind.Unquote, (
+            // if keywords.contains(n) then KEYWRD(n) else IDENT(n, isAlphaOp(n)),
+            IDENT(n, isAlphaOp(n)),
+            loc(i + 1, j)
+          ) :: Nil)(loc(i, j))))
       case ';' =>
         val j = i + 1
         lex(j, ind, next(j, SEMI))
@@ -303,8 +306,11 @@ class Lexer(origin: Origin, raise: Raise, dbg: Bool):
           )
       case _ if isIdentFirstChar(c) =>
         val (n, j) = takeWhile(i)(isIdentChar)
-        // go(j, if (keywords.contains(n)) KEYWORD(n) else IDENT(n, isAlphaOp(n)))
-        lex(j, ind, next(j, if keywords.contains(n) then KEYWORD(n) else IDENT(n, isAlphaOp(n))))
+        // go(j, if (keywords.contains(n)) KEYWRD(n) else IDENT(n, isAlphaOp(n)))
+        lex(j, ind, next(j,
+            // if keywords.contains(n) then KEYWRD(n) else IDENT(n, isAlphaOp(n))
+            IDENT(n, isAlphaOp(n))
+          ))
       case _ if isOpChar(c) =>
         val (n, j) = takeWhile(i)(isOpChar)
         if n === "." && j < length then
@@ -321,9 +327,15 @@ class Lexer(origin: Origin, raise: Raise, dbg: Bool):
             val (name, k) = takeWhile(j)(isDigit)
             // go(k, SELECT(name))
             lex(k, ind, next(k, SELECT(name)))
-          else lex(j, ind, next(j, if isSymKeyword.contains(n) then KEYWORD(n) else IDENT(n, true)))
-        // else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
-        else lex(j, ind, next(j, if isSymKeyword.contains(n) then KEYWORD(n) else IDENT(n, true)))
+          else lex(j, ind, next(j,
+              // if isSymKeyword.contains(n) then KEYWRD(n) else IDENT(n, true)
+              IDENT(n, true)
+            ))
+        // else go(j, if (isSymKeyword.contains(n)) KEYWRD(n) else IDENT(n, true))
+        else lex(j, ind, next(j,
+            // if isSymKeyword.contains(n) then KEYWRD(n) else IDENT(n, true)
+            IDENT(n, true)
+          ))
       case _ if isDigit(c) =>
         val (lit, j) = num(i)
         // go(j, LITVAL(IntLit(BigInt(str))))
@@ -483,7 +495,7 @@ object Lexer:
     case (ERROR, _) => "<error>"
     case (QUOTE, _) => "`"
     case (LITVAL(lv), _) => lv.idStr
-    case (KEYWORD(name: String), _) => "#" + name
+    // case (KEYWRD(name: String), _) => "#" + name
     case (IDENT(name: String, symbolic: Bool), _) => name
     case (SELECT(name: String), _) => "." + name
     case (OPEN_BRACKET(k), _) => k.beg

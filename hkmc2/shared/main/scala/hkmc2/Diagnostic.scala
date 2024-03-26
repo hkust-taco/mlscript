@@ -12,32 +12,32 @@ sealed abstract class Diagnostic(val theMsg: String) extends Exception(theMsg) {
 }
 object Diagnostic {
   
-  sealed abstract class Kind
-  case object Error   extends Kind
-  case object Warning extends Kind
+  enum Kind:
+    case Error
+    case Warning
   
-  sealed abstract class Source
-  case object Lexing      extends Source
-  case object Parsing     extends Source
-  case object Typing      extends Source
-  case object Compilation extends Source
-  case object Runtime     extends Source
+  enum Source:
+    case Lexing
+    case Parsing
+    case Typing
+    case Compilation
+    case Runtime
   
 }
 
 final case class ErrorReport(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]], source: Source) extends Diagnostic(mainMsg) {
-  val kind: Kind = Error
+  val kind: Kind = Kind.Error
 }
 object ErrorReport {
-  def apply(msgs: Ls[Message -> Opt[Loc]], newDefs: Bool, source: Source = Typing): ErrorReport =
+  def apply(msgs: Ls[Message -> Opt[Loc]], newDefs: Bool, source: Source = Source.Typing): ErrorReport =
     ErrorReport(msgs.head._1.show(newDefs), msgs, source)
 }
 
 final case class WarningReport(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]], source: Source) extends Diagnostic(mainMsg) {
-  val kind: Kind = Warning
+  val kind: Kind = Kind.Warning
 }
 object WarningReport {
-  def apply(msgs: Ls[Message -> Opt[Loc]], newDefs: Bool, source: Source = Typing): WarningReport =
+  def apply(msgs: Ls[Message -> Opt[Loc]], newDefs: Bool, source: Source = Source.Typing): WarningReport =
     WarningReport(msgs.head._1.show(newDefs), msgs, source)
 }
 

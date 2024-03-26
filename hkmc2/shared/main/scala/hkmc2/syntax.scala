@@ -5,6 +5,9 @@ import mlscript.utils._, shorthands._
 import math.Ordered.orderingToOrdered
 
 
+type Raise = Diagnostic => Unit
+
+
 trait TypeLike {
   def showIn(prec: Int)(using ShowCtx): Str = ???
   lazy val typeVarsList: List[TypeVar] = this match {

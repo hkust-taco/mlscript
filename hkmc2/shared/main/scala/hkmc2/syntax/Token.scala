@@ -1,4 +1,5 @@
 package hkmc2
+package syntax
 
 import mlscript.utils._, shorthands._
 
@@ -15,9 +16,11 @@ sealed abstract class Token:
     case ERROR => "error"
     case QUOTE => "quote"
     case LITVAL(value) => "literal"
-    case KEYWORD(name) =>
-      if name.headOption.exists(_.isLetter) then s"'$name' keyword" else s"'$name'"
-    case IDENT(name, symbolic) => if symbolic then "operator" else "identifier"
+    // case KEYWRD(name) =>
+    //   if name.headOption.exists(_.isLetter) then s"'$name' keyword" else s"'$name'"
+    case IDENT(name, symbolic) =>
+      if Keyword.all.contains(name) then s"'$name' keyword"
+      else if symbolic then "operator" else "identifier"
     case SELECT(name) => "selector"
     case OPEN_BRACKET(k) => s"opening ${k.name}"
     case CLOSE_BRACKET(k) => s"closing ${k.name}"
@@ -38,7 +41,7 @@ case object DEINDENT extends Token
 case object ERROR extends Token with Stroken
 case object QUOTE extends Token with Stroken
 final case class LITVAL(value: Lit) extends Token with Stroken
-final case class KEYWORD(name: String) extends Token with Stroken
+// final case class KEYWRD(name: String) extends Token with Stroken
 final case class IDENT(name: String, symbolic: Bool) extends Token with Stroken
 final case class SELECT(name: String) extends Token with Stroken
 final case class OPEN_BRACKET(k: BracketKind) extends Token

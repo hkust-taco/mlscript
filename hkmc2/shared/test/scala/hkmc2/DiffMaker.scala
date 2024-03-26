@@ -1,26 +1,16 @@
 package hkmc2
 
-// import ammonite.ops.*
-// import os.Path
 import scala.collection.mutable
 import mlscript.utils.*, shorthands.*
 
-case class Mode(
-  global: Bool,
-  expectTypeErrors: Bool, expectWarnings: Bool, expectParseErrors: Bool,
-  fixme: Bool, showParse: Bool, verbose: Bool, noSimplification: Bool,
-  explainErrors: Bool, dbg: Bool, dbg_err: Bool, fullExceptionStack: Bool,
-  dbgParsing: Bool = false,
-)
-object Mode:
-  val init = Mode(
-    false, false, false, false, false, false, false, false, false, false, false, false)
-end Mode
 
 class Outputter(val out: java.io.PrintWriter):
   val outputMarker = "//│ "
   // val oldOutputMarker = "/// "
-  def apply(str: String) = out.println(outputMarker + str)
+  def apply(str: String) =
+    // out.println(outputMarker + str)
+    str.splitSane('\n').foreach(l => out.println(outputMarker + l))
+
 
 abstract class DiffMaker:
   
@@ -41,7 +31,7 @@ abstract class DiffMaker:
   
   def resetCommands: Unit =
     commands.valuesIterator.foreach(cmd =>
-      if !cmd.isGlobal then cmd.currentValue = N)
+      if !cmd.isGlobal then cmd.unset)
   
   class Command[A](val name: Str, val process: Str => A, var isGlobal: Bool = false):
     require(name.nonEmpty)
@@ -52,6 +42,9 @@ abstract class DiffMaker:
     private[DiffMaker] var currentValue: Opt[A] = N
     def get: Opt[A] = currentValue
     def isSet: Bool = currentValue.isDefined
+    def isUnset: Bool = !isSet
+    def unset: Unit = currentValue = N
+    override def toString: Str = s"${if isGlobal then "global " else ""}$name: $currentValue"
   
   class NullaryCommand(name: Str) extends Command[Unit](name,
     line => assert(line.isEmpty))
@@ -59,12 +52,21 @@ abstract class DiffMaker:
   
   val global = NullaryCommand("global")
   
+  val fixme = NullaryCommand("fixme")
+  val fullExceptionStack = NullaryCommand("ex")
+  
   val debug = NullaryCommand("d")
+  val dbgParsing = NullaryCommand("dp")
+  
+  val expectParseError = NullaryCommand("pe") // TODO handle lack of errors
+  val expectTypeErrors = NullaryCommand("e") // TODO handle lack of errors
+  val expectWarnings = NullaryCommand("w")
+  
   val showParse = NullaryCommand("p")
   
   
   def apply(file: os.Path): Unit =
-    val fileName = file.toString
+    val fileName = file.last
     
     val fileContents = os.read(file)
     val allLines = fileContents.splitSane('\n').toList
@@ -86,81 +88,35 @@ abstract class DiffMaker:
     var _allowTypeErrors = false
     var _showRelativeLineNums = false
     
-    var defaultMode = Mode.init
-    
-    def showMode(m: Mode): Str =
-      m.productElementNames.zip:
-        Iterator.tabulate(m.productArity)(m.productElement)
-      .map(_.toString + "=" + _) mkString ", "
-    
-    def rec(lines: List[String], mode: Mode): Unit = lines match {
-      case "" :: Nil =>
+    def rec(lines: List[String]): Unit = lines match {
+      case "" :: Nil => // To prevent adding an extra newline at the end
+      case (line @ "") :: ls =>
+        out.println(line)
+        resetCommands
+        rec(ls)
       case line :: ls if line.startsWith(":") =>
         out.println(line)
-        
-        /* 
-        // def updateMode(m: Mode): Mode = 
-        val newMode = line.tail.takeWhile(!_.isWhitespace) match {
-          case "global" => mode.copy(global = true)
-          case "e" => mode.copy(expectTypeErrors = true)
-          case "w" => mode.copy(expectWarnings = true)
-          case "pe" => mode.copy(expectParseErrors = true)
-          case "p" => mode.copy(showParse = true)
-          // case "q" => ls.foreach(out.println); return
-          case "q" =>
-            val msg = "====== TEST ABORTED – THE REST OF THIS FILE IS NOT PROCESSED ======"
-            output(msg)
-            // out.print(ls.mkString("\n")); return
-            out.print(ls.dropWhile(_.endsWith(msg)).mkString("\n")); return
-          case "d" => mode.copy(dbg = true)
-          case "de" => mode.copy(dbg_err = true)
-          case "s" => mode.copy(fullExceptionStack = true)
-          case "v" | "verbose" => mode.copy(verbose = true)
-          case "ex" | "explain" => mode.copy(expectTypeErrors = true, explainErrors = true)
-          case "ns" | "no-simpl" => mode.copy(noSimplification = true)
-          // case "InferPreciseTypes" => typer.mergeFunctionTypes = false; mode
-          case "OnlyParse" => _onlyParse = true; mode
-          case "AllowTypeErrors" => _allowTypeErrors = true; mode
-          case "ShowRelativeLineNums" => _showRelativeLineNums = true; mode
-          // case "import" =>
-          //   val arg = line.tail.dropWhile(!_.isWhitespace).dropWhile(_.isWhitespace)
-          //   val file = pwd/"src"/"test"/"supertype"/"diff"/(arg + ".sup")
-          //   if mode.dbg then output(s"Importing '${file}'...")
-          //   val ans = ModuleTyper(file, typer, ctx, mode, failures, output)
-          //   if mode.dbg then if ans.nonEmpty then out.println(ans)
-          //   mode
-          case _ =>
-            failures += allLines.size - lines.size
-            output("/!\\ Unrecognized option " + line)
-            mode
-        }
-        if mode.global then defaultMode = newMode.copy(global = false)
-        rec(ls, newMode)
-        */
         
         val cmd = line.tail.takeWhile(!_.isWhitespace)
         val rest = line.drop(cmd.length + 1)
         
         commands.get(cmd) match
           case S(cmd) =>
-            cmd.currentValue = S(cmd.process(rest))
             if global.isSet then cmd.isGlobal = true
+            cmd.currentValue = S(cmd.process(rest))
           case N =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized command: " + cmd)
         
-        rec(ls, mode)
-      case line :: ls if line.startsWith("// FIXME") /* || line.startsWith("// TODO") */ =>
-        out.println(line)
-        rec(ls, mode.copy(fixme = true))
+        rec(ls)
+      // case line :: ls if line.startsWith("// FIXME") /* || line.startsWith("// TODO") */ =>
+      //   out.println(line)
+      //   rec(ls, mode.copy(fixme = true))
       case line :: ls if line.startsWith(output.outputMarker) //|| line.startsWith(oldOutputMarker)
-        => rec(ls, defaultMode)
+        => rec(ls)
       case line :: ls if line.startsWith("//") =>
         out.println(line)
-        rec(ls, mode)
-      case line :: ls if line.isEmpty =>
-        out.println(line)
-        rec(ls, defaultMode)
+        rec(ls)
       case l :: ls =>
         // val block = (l :: ls.takeWhile(l => l.nonEmpty && !(
         //   l.startsWith(output.outputMarker)
@@ -168,7 +124,7 @@ abstract class DiffMaker:
         // ))).toIndexedSeq
         // block.foreach(out.println)
         // // output(showMode(mode))
-        
+      
         val blockLineNum = (allLines.size - lines.size) + 1
         
         val block = (l :: ls.takeWhile(l => l.nonEmpty && !(
@@ -181,53 +137,69 @@ abstract class DiffMaker:
         val processedBlockStr = processedBlock.mkString
         val fph = new FastParseHelpers(block)
         val globalStartLineNum = allLines.size - lines.size + 1
+          
+        try
+          
+          val origin = Origin(fileName, globalStartLineNum, fph)
+          // type Raise = Diagnostic => Unit
+          val raise: Raise = throw _ // TODO
+          val lexer = new syntax.Lexer(origin, raise, dbg = dbgParsing.isSet)
+          val tokens = lexer.bracketedTokens
+          
+          if showParse.isSet || showParse.isSet || dbgParsing.isSet then
+            output(syntax.Lexer.printTokens(tokens))
+          
+          val p = new syntax.Parser(origin, tokens, raise, dbg = dbgParsing.isSet) {
+            def doPrintDbg(msg: => Str): Unit = if dbg then output(msg)
+          }
+          // val res = p.parseAll(p.parse(syntax.ParseRule.block))
+          val res = p.parseAll(p.block)
+          
+          // if (parseOnly)
+          //   output(s"Parsed: ${res.showDbg}")
+          
+          if showParse.isSet then
+            output(s"AST: $res")
+          
+          /*
+          // val globalLineNum = (allLines.size - lines.size) + lineNum
+          val lineOffset = allLines.size - lines.size
+          val mt = new ModuleTyper(typer, ctx, output, lineOffset, failures):
+            override val globalStartLineNum = _globalStartLineNum
+            override def onlyParse = _onlyParse
+            override def allowTypeErrors = _allowTypeErrors
+            override def showRelativeLineNums = _showRelativeLineNums
+            override def doSimplify = !mode.noSimplification
+          val ans = mt.ans(parser, fph, origin, mode)
+          // val ans = mt.ans(preparser, parser, fph, origin, mode)
+          if (ans.nonEmpty) out.println(ans)
+          */
         
-        val origin = Origin(fileName, globalStartLineNum, fph)
-        // type Raise = Diagnostic => Unit
-        val raise: Raise = throw _ // TODO
-        val lexer = new Lexer(origin, raise, dbg = mode.dbgParsing)
-        val tokens = lexer.bracketedTokens
+          catch {
+            case oh_noes: ThreadDeath => throw oh_noes
+            case err: ErrorReport if err.source is Diagnostic.Source.Parsing => // TODO properly handle
+              // println((allLines.size - lines.size,fixme,expectParseError,fixme.isUnset && expectParseError.isUnset))
+              if fixme.isUnset && expectParseError.isUnset then
+                failures += blockLineNum
+                doFail(s"unexpected parse error at $fileName:" + blockLineNum)
+              output("Error: " + err.mainMsg)
+            case err: Throwable =>
+              if fixme.isUnset then
+                failures += allLines.size - lines.size
+                doFail(s"unhandled exception at $fileName:" + blockLineNum)
+              // err.printStackTrace(out)
+              output("/!!!\\ Uncaught error: " + err +
+                err.getStackTrace().take(
+                  if fullExceptionStack.isSet then Int.MaxValue
+                  else if fixme.isSet || err.isInstanceOf[StackOverflowError] then 0
+                  else 10
+                ).map("\n" + "\tat: " + _).mkString)
+          }
         
-        if showParse.isSet || mode.showParse || mode.dbgParsing then
-          output(Lexer.printTokens(tokens))
-        
-        //
-        // output(showMode(mode))
-        // 
-        /* 
-        val fph = FastParseHelpers(block)
-        val _globalStartLineNum = allLines.size - lines.size + 1
-        // val parser = new Parser(Origin(fileName, _globalStartLineNum, fph))
-        // val parser = Parser(fph.blockStr.toArray)
-        val origin = Origin(fileName, _globalStartLineNum, fph)
-        val parser = Parser(origin)
-        // val ppDiags = mutable.Buffer.empty[Diagnostic[Not]]
-        // val preparser = PreParser(origin, ppDiags.+=)
-        /* 
-        val toks = preparser.tokens()
-        println("LX: " + preparser.printTokens(toks))
-        println("PP: " + preparser.parse(toks))
-        */
-        // ppDiags
-        // val globalLineNum = (allLines.size - lines.size) + lineNum
-        val lineOffset = allLines.size - lines.size
-        val mt = new ModuleTyper(typer, ctx, output, lineOffset, failures):
-          override val globalStartLineNum = _globalStartLineNum
-          override def onlyParse = _onlyParse
-          override def allowTypeErrors = _allowTypeErrors
-          override def showRelativeLineNums = _showRelativeLineNums
-          override def doSimplify = !mode.noSimplification
-        val ans = mt.ans(parser, fph, origin, mode)
-        // val ans = mt.ans(preparser, parser, fph, origin, mode)
-        if (ans.nonEmpty) out.println(ans)
-        */
-        
-        rec(lines.drop(block.size), mode)
-        if mode.dbg then
-          println("=== DONE ===")
+        rec(lines.drop(block.size))
       case Nil =>
     }
-    try rec(allLines, defaultMode) finally {
+    try rec(allLines) finally {
       out.close()
     }
     val result = strw.toString
