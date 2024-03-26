@@ -44,9 +44,14 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
     // libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.8.0",
     libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.9.3",
     
+    libraryDependencies += "org.scalactic" %%% "scalactic" % "3.2.18",
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.18" % "test",
+    
     watchSources += WatchSource(
       // sourceDirectory.value.getParentFile().getParentFile()/"shared/src/test/mlscript", "*.mls", NothingFilter),
       baseDirectory.value.getParentFile()/"shared"/"test"/"mlscript", "*.mls", NothingFilter),
+    watchSources += WatchSource(
+      baseDirectory.value.getParentFile()/"shared"/"test"/"mlscript", "*.cmd", NothingFilter),
     
     Test/run/fork := true, // so that CTRL+C actually terminates the watcher
   )

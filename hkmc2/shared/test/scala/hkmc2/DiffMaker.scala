@@ -33,7 +33,7 @@ abstract class DiffMaker:
     commands.valuesIterator.foreach(cmd =>
       if !cmd.isGlobal then cmd.unset)
   
-  class Command[A](val name: Str, val process: Str => A, var isGlobal: Bool = false):
+  class Command[A](val name: Str, var isGlobal: Bool = false)(val process: Str => A):
     require(name.nonEmpty)
     require(name.forall(_.isLetterOrDigit))
     if commands.contains(name) then
@@ -46,7 +46,7 @@ abstract class DiffMaker:
     def unset: Unit = currentValue = N
     override def toString: Str = s"${if isGlobal then "global " else ""}$name: $currentValue"
   
-  class NullaryCommand(name: Str) extends Command[Unit](name,
+  class NullaryCommand(name: Str) extends Command[Unit](name)(
     line => assert(line.isEmpty))
   
   
@@ -63,6 +63,11 @@ abstract class DiffMaker:
   val expectWarnings = NullaryCommand("w")
   
   val showParse = NullaryCommand("p")
+  
+  
+  val tests = Command("tests"){ case "" =>
+    new DiffTests(new DiffTests.State).execute()
+  }
   
   
   def apply(file: os.Path): Unit =

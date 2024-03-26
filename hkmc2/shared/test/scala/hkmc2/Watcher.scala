@@ -21,24 +21,25 @@ class Watcher(dir: File):
     .fileHasher(null) // so that simple save events trigger processing eve if there's no file change
     .listener(new io.methvin.watcher.DirectoryChangeListener {
       def onEvent(event: io.methvin.watcher.DirectoryChangeEvent): Unit = try
-          println(event)
-          import java.nio.file.StandardWatchEventKinds
-          import java.nio.file.WatchEvent
-          import java.nio.file.Path
-          val et = event.eventType
-          val file = File(event.path)
-          val count = event.count
-          et match
-            case io.methvin.watcher.DirectoryChangeEvent.EventType.OVERFLOW => ???
-            case _ =>
-              et.getWatchEventKind.asInstanceOf[WatchEvent.Kind[Path]] match
-                case StandardWatchEventKinds.ENTRY_CREATE => onCreate(file, count)
-                case StandardWatchEventKinds.ENTRY_MODIFY => onModify(file, count)
-                case StandardWatchEventKinds.ENTRY_DELETE => onDelete(file, count)
-        catch ex =>
-          println(ex)
-          watcher.close()
-          throw ex
+        // println(event)
+        import java.nio.file.StandardWatchEventKinds
+        import java.nio.file.WatchEvent
+        import java.nio.file.Path
+        val et = event.eventType
+        val file = File(event.path)
+        val count = event.count
+        et match
+          case io.methvin.watcher.DirectoryChangeEvent.EventType.OVERFLOW => ???
+          case _ =>
+            et.getWatchEventKind.asInstanceOf[WatchEvent.Kind[Path]] match
+              case StandardWatchEventKinds.ENTRY_CREATE => onCreate(file, count)
+              case StandardWatchEventKinds.ENTRY_MODIFY => onModify(file, count)
+              case StandardWatchEventKinds.ENTRY_DELETE => onDelete(file, count)
+      catch ex =>
+        System.err.println("Unexpected error in watcher: " + ex)
+        ex.printStackTrace()
+        watcher.close()
+        throw ex
     })
     .build();
     
@@ -47,13 +48,14 @@ class Watcher(dir: File):
     finally watcher.close()
   
   def go(file: File) =
-    println(s"go $file")
-    val dm = new DiffMaker:
-      def doFail(msg: String): Unit =
-        System.err.println(fansi.Color.Red("FAILURE: ").toString + msg)
+    // println(s"go $file")
+    val isMls = file.toString.endsWith(".mls")
     if file.toString.endsWith(".scala") then
       watcher.close()
-    else if file.toString.endsWith(".mls") then
+    else if isMls || file.toString.endsWith(".cmd") then
+      val dm = new DiffMaker:
+        def doFail(msg: String): Unit =
+          System.err.println(fansi.Color.Red("FAILURE: ").toString + msg)
       // update(file) // TODO
       // ()
       Thread.sleep(100)
