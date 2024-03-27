@@ -1,0 +1,59 @@
+:global
+:p
+
+
+:pe
+mut
+//│ |mut|
+//│ ╔══[PARSE ERROR] Expected expression after modifier keyword 'mut'; found end of input instead
+//│ ║  l.6: 	mut
+//│ ╙──     	   ^
+//│ AST: List(Empty)
+
+mut x
+//│ |mut| |x|
+//│ AST: List(Modified(keyword 'mut',Ident(x)))
+
+mut
+  x
+  y
+//│ |mut|→|x|↵|y|←|
+//│ AST: List(Modified(keyword 'mut',Ident(x)), Modified(keyword 'mut',Ident(y)))
+
+mut let x = 1
+//│ |mut| |let| |x| |=| |1|
+//│ AST: List(Modified(keyword 'mut',Let(Ident(x),IntLit(1),None)))
+
+mut
+  let x = 1
+//│ |mut|→|let| |x| |=| |1|←|
+//│ AST: List(Modified(keyword 'mut',Let(Ident(x),IntLit(1),None)))
+
+mut
+  let x = 1
+  let y = 1
+//│ |mut|→|let| |x| |=| |1|↵|let| |y| |=| |1|←|
+//│ AST: List(Modified(keyword 'mut',Let(Ident(x),IntLit(1),None)), Modified(keyword 'mut',Let(Ident(y),IntLit(1),None)))
+
+:fixme
+mut
+  let
+    x = 1
+    y = 1
+//│ |mut|→|let|→|x| |=| |1|↵|y| |=| |1|←|←|
+//│ ╔══[PARSE ERROR] Expected expression after let binding keyword 'let'; found indented block instead
+//│ ║  l.41: 	    x = 1
+//│ ╙──      	^^^^
+//│ AST: List(Modified(keyword 'mut',Empty))
+
+:fixme
+mut let
+    x = 1
+    y = 1
+//│ |mut| |let|→|x| |=| |1|↵|y| |=| |1|←|
+//│ ╔══[PARSE ERROR] Expected expression after let binding keyword 'let'; found indented block instead
+//│ ║  l.51: 	    x = 1
+//│ ╙──      	^^^^
+//│ AST: List(Modified(keyword 'mut',Empty))
+
+

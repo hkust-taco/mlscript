@@ -27,5 +27,6 @@ enum Tree:
   case Let(lhs: Tree, rhs: Tree, body: Opt[Tree])
   case Val(body: Tree)
   case TypeDecl(head: Tree, extension: Opt[Tree], body: Opt[Tree])
+  case Modified(modifier: Keyword, body: Tree)
 
 

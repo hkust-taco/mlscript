@@ -74,28 +74,12 @@ let
 
 :pe
 let
-  x
-  y
-//│ |let|→|x|↵|y|←|
-//│ ╔══[PARSE ERROR] Expected '=' keyword after let binding head; found newline instead
-//│ ║  l.78: 	  y
-//│ ╙──      	   ^
-//│ ╔══[PARSE ERROR] Expected '=' keyword after let binding head; found end of input instead
-//│ ║  l.78: 	  y
-//│ ╙──      	   ^
-//│ AST: List(Empty, Empty)
-
-let
-  x = 1
-  y = 2
-//│ |let|→|x| |=| |1|↵|y| |=| |2|←|
-//│ AST: List(Let(Ident(x),IntLit(1),None), Let(Ident(y),IntLit(2),None))
-
-let
-  x = 1 in x
-  y = 2 in y
-//│ |let|→|x| |=| |1| |in| |x|↵|y| |=| |2| |in| |y|←|
-//│ AST: List(Let(Ident(x),IntLit(1),Some(Ident(x))), Let(Ident(y),IntLit(2),Some(Ident(y))))
+  with
+//│ |let|→|with|←|
+//│ ╔══[PARSE ERROR] Expected expression after let binding keyword 'let'; found 'with' keyword instead
+//│ ║  l.77: 	  with
+//│ ╙──      	  ^^^^
+//│ AST: List(Empty)
 
 
 :fixme
@@ -103,16 +87,19 @@ let x = 1 in
   x
 //│ |let| |x| |=| |1| |in|→|x|←|
 //│ ╔══[PARSE ERROR] Expected expression after let binding `in` clause; found indented block instead
-//│ ║  l.103: 	  x
-//│ ╙──       	^^
+//│ ║  l.87: 	  x
+//│ ╙──      	^^
 //│ AST: List(Empty)
 
 
 
-:fixme
+:pe
 if
 //│ |if|
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[PARSE ERROR] Expected 'val' keyword, 'let' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, or expression after start of statement; found 'if' keyword instead
+//│ ║  l.97: 	if
+//│ ╙──      	^^
+//│ AST: List(Empty)
 
 
 

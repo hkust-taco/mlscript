@@ -56,10 +56,13 @@ class Foo with
 //│ AST: List(TypeDecl(Ident(Foo),None,Some(Block(List(Val(Ident(x)))))))
 
 
-:fixme
+:pe
 with
 //│ |with|
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[PARSE ERROR] Expected 'val' keyword, 'let' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, or expression after start of statement; found 'with' keyword instead
+//│ ║  l.60: 	with
+//│ ╙──      	^^^^
+//│ AST: List(Empty)
 
 
 class

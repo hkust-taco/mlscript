@@ -49,6 +49,12 @@ object ParseRule:
   import Alt.*
   import Tree.*
   
+  val standaloneExpr =
+    Expr(ParseRule("standalone expression")(End(())))((l, _: Unit) => l)
+  
+  def modified(kw: Keyword) =
+    Kw(kw)(ParseRule(s"modifier keyword '${kw.name}'")(standaloneExpr)).map(Tree.Modified(kw, _))
+  
   val typeDeclTemplate: Alt[Opt[Tree]] =
     Kw(`with`):
       ParseRule("type declaration body")(
@@ -78,7 +84,7 @@ object ParseRule:
       // ) { case (head, ext, bod) => TypeDecl(head, ext, bod) }
       ) { case (head, (ext, bod)) => TypeDecl(head, ext, bod) }
   
-  val prefixRules: ParseRule[Tree] = ParseRule("prefix expression")(
+  val prefixRules: ParseRule[Tree] = ParseRule("start of statement")(
     Kw(`val`):
       ParseRule("field binding keyword 'val'")(
         Expr(ParseRule("'val' head")(End(())))((body, _: Unit) => body),
@@ -116,13 +122,14 @@ object ParseRule:
     Kw(`class`)(typeDeclBody),
     Kw(`trait`)(typeDeclBody),
     Kw(`module`)(typeDeclBody),
-    Expr(ParseRule("standalone expression")(End(())))((l, _: Unit) => l),
-  )
-
-  // lazy val decl: ParseRule = ParseRule("class declaration",
-  //   `class` -> S(ParseRule("class head",
-  //     Expression -> S(decl)
-  //   ))
-  // )
+    modified(`abstract`),
+    modified(`mut`),
+    modified(`virtual`),
+    modified(`override`),
+    modified(`declare`),
+    modified(`public`),
+    modified(`private`),
+    standaloneExpr,
+  ) 
 
 

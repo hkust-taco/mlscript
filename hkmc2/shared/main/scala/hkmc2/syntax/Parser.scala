@@ -98,24 +98,38 @@ abstract class Parser(
     case Nil => Nil
     case (NEWLINE, _) :: _ => consume; blockOf(rule)
     case (SPACE, _) :: _ => consume; blockOf(rule)
-    case (id: IDENT, l0) :: _ =>
+    case (tok @ (id: IDENT), loc) :: _ =>
       Keyword.all.get(id.name) match
-        case S(kw) =>
-          consume
-          rule.kwAlts.get(kw.name) match
-            case S(subRule) =>
-              yeetSpaces match
-                case (tok @ BRACKETS(Indent, toks), loc) :: _ if subRule.blkAlt.isEmpty =>
-                  consume
-                  rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.blockOf(subRule))
-                case _ =>
-                  parse(subRule).getOrElse(errExpr) :: blockContOf(rule)
-            case N =>
-              // err((msg"Expected a keyword; found ${id.name} instead" -> S(l0) :: Nil))
-              // errExpr
-              ???
+      case S(kw) =>
+        consume
+        rule.kwAlts.get(kw.name) match
+        case S(subRule) =>
+          yeetSpaces match
+          case (tok @ BRACKETS(Indent, toks), loc) :: _ if subRule.blkAlt.isEmpty =>
+            consume
+            rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.blockOf(subRule))
+          case _ =>
+            parse(subRule).getOrElse(errExpr) :: blockContOf(rule)
         case N =>
-          tryParseExp(id, l0, rule).getOrElse(errExpr) :: blockContOf(rule)
+          
+          // TODO dedup this common-looking logic:
+          
+          rule.exprAlt match
+          case S(exprAlt) =>
+            ParseRule.prefixRules.kwAlts.get(id.name) match
+            case S(subRule) =>
+              val e = parse(subRule).getOrElse(errExpr)
+              parse(exprAlt.rest).map(res => exprAlt.k(e, res)).getOrElse(errExpr) :: blockContOf(rule)
+            case N =>
+              // TODO dedup?
+              err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
+              errExpr :: blockContOf(rule)
+          case N =>
+            err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
+            errExpr :: blockContOf(rule)
+            
+      case N =>
+        tryParseExp(tok, loc, rule).getOrElse(errExpr) :: blockContOf(rule)
     case (tok, loc) :: _ =>
       tryParseExp(tok, loc, rule).getOrElse(errExpr) :: blockContOf(rule)
   
@@ -133,27 +147,33 @@ abstract class Parser(
       case N =>
         err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
         N
+  
+  /** A result of None means there was an error and nothign could be parsed. */
   def parse[A](rule: ParseRule[A]): Opt[A] = yeetSpaces match
     case (tok @ (id: IDENT), loc) :: _ =>
       Keyword.all.get(id.name) match
-        case S(kw) =>
-          consume
-          rule.kwAlts.get(id.name) match
+      case S(kw) =>
+        consume
+        rule.kwAlts.get(id.name) match
+        case S(subRule) =>
+          parse(subRule)
+        case N =>
+          rule.exprAlt match
+          case S(exprAlt) =>
+            ParseRule.prefixRules.kwAlts.get(id.name) match
             case S(subRule) =>
-              parse(subRule)
+              // parse(subRule)
+              val e = parse(subRule).getOrElse(errExpr)
+              parse(exprAlt.rest).map(res => exprAlt.k(e, res))
             case N =>
-              // TODO(kw.name)
+              // TODO dedup?
               err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
               N
-        case N =>
-          // rule.exprAlt match
-          //   case S(exprAlt) =>
-          //     val e = expr
-          //     parse(exprAlt.rest).map(res => exprAlt.k(e, res))
-          //   case N =>
-          //     err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
-          //     N
-          tryParseExp(tok, loc, rule)
+          case N =>
+            err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
+            N
+      case N =>
+        tryParseExp(tok, loc, rule)
     case (tok @ (NEWLINE | SEMI), l0) :: _ =>
       // TODO(cur)
       rule.emptyAlt match

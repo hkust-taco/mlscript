@@ -1,0 +1,65 @@
+:global
+:p
+
+
+:pe
+let let
+//│ |let| |let|
+//│ ╔══[PARSE ERROR] Expected expression after let binding keyword 'let'; found end of input instead
+//│ ║  l.6: 	let let
+//│ ╙──     	       ^
+//│ ╔══[PARSE ERROR] Expected '=' keyword after let binding head; found end of input instead
+//│ ║  l.6: 	let let
+//│ ╙──     	       ^
+//│ AST: List(Empty)
+
+:pe
+let x = 1 let y = 2
+//│ |let| |x| |=| |1| |let| |y| |=| |2|
+//│ ╔══[PARSE ERROR] Expected 'in' keyword or end of input after let binding right-hand side; found 'let' keyword instead
+//│ ║  l.17: 	let x = 1 let y = 2
+//│ ╙──      	          ^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
+//│ ║  l.17: 	let x = 1 let y = 2
+//│ ╙──      	              ^
+//│ AST: List(Empty)
+
+let x = 1 in let y = 2
+//│ |let| |x| |=| |1| |in| |let| |y| |=| |2|
+//│ AST: List(Let(Ident(x),IntLit(1),Some(Let(Ident(y),IntLit(2),None))))
+
+let x = 1 in let y = 2 in let z = 3
+//│ |let| |x| |=| |1| |in| |let| |y| |=| |2| |in| |let| |z| |=| |3|
+//│ AST: List(Let(Ident(x),IntLit(1),Some(Let(Ident(y),IntLit(2),Some(Let(Ident(z),IntLit(3),None))))))
+
+let x = 1
+let y = 2
+//│ |let| |x| |=| |1|↵|let| |y| |=| |2|
+//│ AST: List(Let(Ident(x),IntLit(1),None), Let(Ident(y),IntLit(2),None))
+
+:pe
+let
+  x
+  y
+//│ |let|→|x|↵|y|←|
+//│ ╔══[PARSE ERROR] Expected '=' keyword after let binding head; found newline instead
+//│ ║  l.43: 	  y
+//│ ╙──      	   ^
+//│ ╔══[PARSE ERROR] Expected '=' keyword after let binding head; found end of input instead
+//│ ║  l.43: 	  y
+//│ ╙──      	   ^
+//│ AST: List(Empty, Empty)
+
+let
+  x = 1
+  y = 2
+//│ |let|→|x| |=| |1|↵|y| |=| |2|←|
+//│ AST: List(Let(Ident(x),IntLit(1),None), Let(Ident(y),IntLit(2),None))
+
+let
+  x = 1 in x
+  y = 2 in y
+//│ |let|→|x| |=| |1| |in| |x|↵|y| |=| |2| |in| |y|←|
+//│ AST: List(Let(Ident(x),IntLit(1),Some(Ident(x))), Let(Ident(y),IntLit(2),Some(Ident(y))))
+
+
