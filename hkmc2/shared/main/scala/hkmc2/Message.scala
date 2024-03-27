@@ -5,7 +5,7 @@ import mlscript.utils._, shorthands._
 
 final case class Message(bits: Ls[Message.Bit]) {
   def show(newDefs: Bool): Str = {
-    val ctx = ShowCtx.mk(typeBits, newDefs)
+    val ctx = ShowCtx.mk(typeBits)
     showIn(ctx)
   }
   def typeBits: Ls[TypeLike] = bits.collect{ case Message.Code(t) => t }
@@ -25,8 +25,8 @@ final case class Message(bits: Ls[Message.Bit]) {
 }
 object Message {
   
-  def mkCtx(msgs: IterableOnce[Message], newDefs: Bool,pre: Str = "'"): ShowCtx =
-    ShowCtx.mk(msgs.iterator.flatMap(_.typeBits), newDefs, pre)
+  def mkCtx(msgs: IterableOnce[Message],pre: Str = "'"): ShowCtx =
+    ShowCtx.mk(msgs.iterator.flatMap(_.typeBits), pre)
   
   def join(msgs: Seq[Message]): Message = Message(msgs.iterator.flatMap(_.bits).toList)
   

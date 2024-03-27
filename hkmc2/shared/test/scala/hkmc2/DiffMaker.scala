@@ -15,6 +15,8 @@ class Outputter(val out: java.io.PrintWriter):
 abstract class DiffMaker:
   
   def doFail(msg: String): Unit
+  def unhandled(fileName: Str, blockLineNum: Int, exc: Throwable): Unit =
+    doFail(s"unhandled exception at $fileName:" + blockLineNum)
   
   val outputMarker = "//│ "
   // val oldOutputMarker = "/// "
@@ -61,6 +63,7 @@ abstract class DiffMaker:
   val expectParseError = NullaryCommand("pe") // TODO handle lack of errors
   val expectTypeErrors = NullaryCommand("e") // TODO handle lack of errors
   val expectWarnings = NullaryCommand("w")
+  val showRelativeLineNums = NullaryCommand("showRelativeLineNums")
   
   val showParse = NullaryCommand("p")
   
@@ -79,6 +82,7 @@ abstract class DiffMaker:
     val out = new java.io.PrintWriter(strw)
     // def output(str: String) = out.println(outputMarker + str)
     val output = Outputter(out)
+    val report = ReportFormatter(output.apply)
     
     // val typer = new Typer {
     //   dbg = false
@@ -147,7 +151,7 @@ abstract class DiffMaker:
           
           val origin = Origin(fileName, globalStartLineNum, fph)
           // type Raise = Diagnostic => Unit
-          val raise: Raise = throw _ // TODO
+          val raise: Raise = d => report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
           val lexer = new syntax.Lexer(origin, raise, dbg = dbgParsing.isSet)
           val tokens = lexer.bracketedTokens
           
@@ -182,16 +186,10 @@ abstract class DiffMaker:
         
           catch {
             case oh_noes: ThreadDeath => throw oh_noes
-            case err: ErrorReport if err.source is Diagnostic.Source.Parsing => // TODO properly handle
-              // println((allLines.size - lines.size,fixme,expectParseError,fixme.isUnset && expectParseError.isUnset))
-              if fixme.isUnset && expectParseError.isUnset then
-                failures += blockLineNum
-                doFail(s"unexpected parse error at $fileName:" + blockLineNum)
-              output("Error: " + err.mainMsg)
             case err: Throwable =>
               if fixme.isUnset then
                 failures += allLines.size - lines.size
-                doFail(s"unhandled exception at $fileName:" + blockLineNum)
+                unhandled(fileName, blockLineNum, err)
               // err.printStackTrace(out)
               output("/!!!\\ Uncaught error: " + err +
                 err.getStackTrace().take(

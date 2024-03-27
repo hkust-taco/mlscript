@@ -101,7 +101,8 @@ class DiffTests(state: DiffTests.State)
       
       val dm = new DiffMaker:
         def doFail(msg: String): Unit =
-          System.err.println(fansi.Color.Red("FAILURE: ").toString + msg)
+          // System.err.println(fansi.Color.Red("FAILURE: ").toString + msg)
+          fail(msg)
       
       // dm(os.Path(file.pathAsString))
       dm(file)

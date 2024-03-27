@@ -56,6 +56,9 @@ class Watcher(dir: File):
       val dm = new DiffMaker:
         def doFail(msg: String): Unit =
           System.err.println(fansi.Color.Red("FAILURE: ").toString + msg)
+        override def unhandled(fileName: Str, blockLineNum: Int, exc: Throwable): Unit =
+          exc.printStackTrace()
+          super.unhandled(fileName, blockLineNum, exc)
       // update(file) // TODO
       // ()
       Thread.sleep(100)

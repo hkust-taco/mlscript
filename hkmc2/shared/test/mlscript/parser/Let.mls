@@ -5,17 +5,26 @@
 :pe
 let
 //│ |let|
-//│ Error: Expected expression after let binding keyword 'let'; found end of input instead
+//│ ╔══[PARSE ERROR] Expected expression after let binding keyword 'let'; found end of input instead
+//│ ║  l.6: 	let
+//│ ╙──     	   ^
+//│ AST: List(Empty)
 
 :pe
 let x
 //│ |let| |x|
-//│ Error: Expected '=' keyword after let binding head; found end of input instead
+//│ ╔══[PARSE ERROR] Expected '=' keyword after let binding head; found end of input instead
+//│ ║  l.14: 	let x
+//│ ╙──      	     ^
+//│ AST: List(Empty)
 
 :pe
 let x =
 //│ |let| |x| |=|
-//│ Error: Expected expression after let binding equals sign; found end of input instead
+//│ ╔══[PARSE ERROR] Expected expression after let binding equals sign; found end of input instead
+//│ ║  l.22: 	let x =
+//│ ╙──      	       ^
+//│ AST: List(Empty)
 
 let x = y
 //│ |let| |x| |=| |y|
@@ -24,7 +33,10 @@ let x = y
 :pe
 let x = y in
 //│ |let| |x| |=| |y| |in|
-//│ Error: Expected expression after let binding `in` clause; found end of input instead
+//│ ╔══[PARSE ERROR] Expected expression after let binding `in` clause; found end of input instead
+//│ ║  l.34: 	let x = y in
+//│ ╙──      	            ^
+//│ AST: List(Empty)
 
 let x = y in z
 //│ |let| |x| |=| |y| |in| |z|
@@ -33,7 +45,10 @@ let x = y in z
 :pe
 let x = y class
 //│ |let| |x| |=| |y| |class|
-//│ Error: Expected 'in' keyword or end of input after let binding right-hand side; found 'class' keyword instead
+//│ ╔══[PARSE ERROR] Expected 'in' keyword or end of input after let binding right-hand side; found 'class' keyword instead
+//│ ║  l.46: 	let x = y class
+//│ ╙──      	          ^^^^^
+//│ AST: List(Empty)
 
 
 

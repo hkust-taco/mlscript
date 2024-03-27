@@ -12,7 +12,6 @@ import mlscript.utils._, shorthands._
 final case class ShowCtx(
     vs: SortedMap[TypeVar, Str],
     indentLevel: Int,
-    newDefs: Bool,
     angletards: Bool = false,
   )
 {
@@ -32,7 +31,7 @@ object ShowCtx {
     * completely new names. If same name exists increment counter suffix
     * in the name.
     */
-  def mk(tys: IterableOnce[TypeLike], newDefs: Bool, _pre: Str = "'"): ShowCtx = {
+  def mk(tys: IterableOnce[TypeLike], _pre: Str = "'"): ShowCtx = {
     val (otherVars, namedVars) = tys.iterator.toList.flatMap(_.typeVarsList).distinct.partitionMap { tv =>
       tv.identifier match { case L(_) => L(tv.nameHint -> tv); case R(nh) => R(nh -> tv) }
     }
@@ -67,7 +66,7 @@ object ShowCtx {
       S(('a' + idx % numLetters).toChar.toString + (if postfix === 0 then "" else postfix.toString), idx + 1)
     }.filterNot(used).map(assignName)
     
-    ShowCtx(namedMap ++ unnamedVars.zip(names), indentLevel = 0, newDefs)
+    ShowCtx(namedMap ++ unnamedVars.zip(names), indentLevel = 0)
   }
 }
 

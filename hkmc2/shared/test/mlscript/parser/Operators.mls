@@ -5,6 +5,9 @@
 :fixme
 2 + 2
 //│ |2| |+| |2|
-//│ Error: Expected end of input; found operator instead
+//│ ╔══[PARSE ERROR] Expected end of input; found operator instead
+//│ ║  l.6: 	2 + 2
+//│ ╙──     	  ^
+//│ AST: List(IntLit(2))
 
 
