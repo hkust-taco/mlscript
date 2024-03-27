@@ -3,27 +3,23 @@ package hkmc2
 import scala.language.implicitConversions
 import mlscript.utils._, shorthands._
 
-final case class Message(bits: Ls[Message.Bit]) {
-  def show(newDefs: Bool): Str = {
+final case class Message(bits: Ls[Message.Bit]):
+  def show(newDefs: Bool): Str =
     val ctx = ShowCtx.mk(typeBits)
     showIn(ctx)
-  }
   def typeBits: Ls[TypeLike] = bits.collect{ case Message.Code(t) => t }
-  def showIn(implicit ctx: ShowCtx): Str = {
+  def showIn(implicit ctx: ShowCtx): Str =
     bits.map {
       case Message.Code(ty) => ty.showIn(0)
       case Message.Text(txt) => txt
     }.mkString
-  }
-  def showDbg: Str = {
+  def showDbg: Str =
     bits.iterator.map {
       case Message.Code(trm) => s"$trm"
       case Message.Text(txt) => txt
     }.mkString
-  }
   def +(that: Message): Message = Message(bits ++ that.bits)
-}
-object Message {
+object Message:
   
   def mkCtx(msgs: IterableOnce[Message],pre: Str = "'"): ShowCtx =
     ShowCtx.mk(msgs.iterator.flatMap(_.typeBits), pre)
@@ -36,14 +32,11 @@ object Message {
   implicit def fromType(ty: TypeLike): Message = Message(Code(ty)::Nil)
   implicit def fromStr(str: Str): Message = Message(Text(str)::Nil)
   
-  implicit class MessageContext(private val ctx: StringContext) {
-    def msg(inserted: Message*): Message = {
+  implicit class MessageContext(private val ctx: StringContext):
+    def msg(inserted: Message*): Message =
       assert(inserted.length === ctx.parts.length - 1)
       val parts = ctx.parts.map(str => Text(StringContext(str).s()))
       val h = parts.head
       val t = parts.tail
       Message((h +: inserted.lazyZip(t).flatMap(_.bits :+ _)).toList)
-    }
-  }
   
-}

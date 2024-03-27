@@ -9,9 +9,9 @@ import mlscript.utils._, shorthands._
 
 
 
-object DiffTests {
+object DiffTests:
   
-  class State {
+  class State:
     
     val TimeLimit =
       if sys.env.get("CI").isDefined then Span(60, Seconds)
@@ -39,23 +39,22 @@ object DiffTests {
           N // * Disregard modified files that are staged
         else if filePath.ext =/= "mls" then N
         else S(filePath)
-      }.toSet catch {
+      }.toSet catch
         case err: Throwable => System.err.println("/!\\ git command failed with: " + err)
         Set.empty
-      }
     
-  }
+  end State
   
   lazy val State = new State
-  
-}
+
+end DiffTests
 
 
 class DiffTests(state: DiffTests.State)
   extends funsuite.AnyFunSuite
   with ParallelTestExecution
   with TimeLimitedTests
-{
+:
   import state.*
   
   def this() = this(DiffTests.State)
@@ -78,8 +77,8 @@ class DiffTests(state: DiffTests.State)
   
   val timeLimit = TimeLimit
   
-  override val defaultTestSignaler: Signaler = new Signaler {
-    @annotation.nowarn("msg=method stop in class Thread is deprecated") def apply(testThread: Thread): Unit = {
+  override val defaultTestSignaler: Signaler = new Signaler:
+    @annotation.nowarn("msg=method stop in class Thread is deprecated") def apply(testThread: Thread): Unit =
       println(s"!! Test at $testThread has run out out time !! stopping..." +
         "\n\tNote: you can increase this limit by changing DiffTests.TimeLimit")
       // * Thread.stop() is considered bad practice because normally it's better to implement proper logic
@@ -89,23 +88,18 @@ class DiffTests(state: DiffTests.State)
       // * It would feel extremely wrong to intersperse the pure type checker algorithms
       // * with ugly `Thread.isInterrupted` checks everywhere...
       testThread.stop()
-    }
-  }
   
-  files.foreach { file =>
+  files.foreach: file =>
     val basePath = file.segments.drop(dir.segmentCount).toList.init
     val testName = basePath.map(_ + "/").mkString + file.baseName
-    test(testName) {
+    test(testName):
       
       val dm = new DiffMaker(file)
       
       if dm.failures.nonEmpty then
         fail(s"Unexpected test outcome(s) at: " +
           dm.failures.distinct.map("\n\t"+file.segments.toList.last+":"+_).mkString(", "))
-      
-    }
-  }
   
-  
-}
+end DiffTests
+
 

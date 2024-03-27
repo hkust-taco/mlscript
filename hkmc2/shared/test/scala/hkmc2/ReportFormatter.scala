@@ -9,9 +9,9 @@ class ReportFormatter(output: Str => Unit):
   def apply(blockLineNum: Int, diags: Ls[Diagnostic], showRelativeLineNums: Bool): Unit =
     diags.foreach { diag =>
       val sctx = Message.mkCtx(diag.allMsgs.iterator.map(_._1), "?")
-      val headStr = diag match {
+      val headStr = diag match
         case ErrorReport(msg, loco, src) =>
-          src match {
+          src match
             case Diagnostic.Source.Lexing =>
               // totalParseErrors += 1
               s"╔══[LEXICAL ERROR] "
@@ -21,11 +21,9 @@ class ReportFormatter(output: Str => Unit):
             case _ => // TODO customize too
               // totalTypeErrors += 1
               s"╔══[ERROR] "
-          }
         case WarningReport(msg, loco, src) =>
           // totalWarnings += 1
           s"╔══[WARNING] "
-      }
       val lastMsgNum = diag.allMsgs.size - 1
       var globalLineNum = blockLineNum
       diag.allMsgs.zipWithIndex.foreach { case ((msg, loco), msgNum) =>
@@ -42,7 +40,7 @@ class ReportFormatter(output: Str => Unit):
             loc.origin.fph.getLineColAt(loc.spanEnd)
           var l = startLineNum
           var c = startLineCol
-          while l <= endLineNum do {
+          while l <= endLineNum do
             val globalLineNum = loc.origin.startLineNum + l - 1
             val relativeLineNum = globalLineNum - blockLineNum + 1
             val shownLineNum =
@@ -62,7 +60,6 @@ class ReportFormatter(output: Str => Unit):
             output(tickBuilder.toString)
             c = 1
             l += 1
-          }
         }
       }
       if diag.allMsgs.isEmpty then output("╙──")

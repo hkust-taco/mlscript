@@ -98,7 +98,7 @@ class DiffMaker(file: os.Path):
   var _showRelativeLineNums = false
   
   @annotation.tailrec
-  final def rec(lines: List[String]): Unit = lines match {
+  final def rec(lines: List[String]): Unit = lines match
     case "" :: Nil => // To prevent adding an extra newline at the end
     case (line @ "") :: ls =>
       out.println(line)
@@ -149,9 +149,8 @@ class DiffMaker(file: os.Path):
         if showParse.isSet || showParse.isSet || dbgParsing.isSet then
           output(syntax.Lexer.printTokens(tokens))
         
-        val p = new syntax.Parser(origin, tokens, raise, dbg = dbgParsing.isSet) {
+        val p = new syntax.Parser(origin, tokens, raise, dbg = dbgParsing.isSet):
           def doPrintDbg(msg: => Str): Unit = if dbg then output(msg)
-        }
         val res = p.parseAll(p.block)
         
         // if (parseOnly)
@@ -160,7 +159,7 @@ class DiffMaker(file: os.Path):
         if showParse.isSet then
           output(s"AST: $res")
         
-        catch {
+        catch
           case oh_noes: ThreadDeath => throw oh_noes
           case err: Throwable =>
             if fixme.isUnset then
@@ -173,19 +172,15 @@ class DiffMaker(file: os.Path):
                 else if fixme.isSet || err.isInstanceOf[StackOverflowError] then 0
                 else 10
               ).map("\n" + "\tat: " + _).mkString)
-        }
       
       rec(lines.drop(block.size))
     case Nil =>
-  }
-  try rec(allLines) finally {
+  try rec(allLines) finally
     out.close()
-  }
   val result = strw.toString
-  if result =/= fileContents then {
+  if result =/= fileContents then
     println(s"Updating $file...")
     os.write.over(file, result)
-  }
   
 end DiffMaker
 

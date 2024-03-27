@@ -24,10 +24,9 @@ abstract class Parser(
   protected var indent = 0
   private var _cur: Ls[TokLoc] = tokens
   
-  def resetCur(newCur: Ls[TokLoc]): Unit = {
+  def resetCur(newCur: Ls[TokLoc]): Unit =
     _cur = newCur
     // _modifiersCache = ModifierSet.empty
-  }
   
   private lazy val lastLoc =
     tokens.lastOption.map(_._2.right)//.orElse(fallbackLoc)
@@ -35,19 +34,17 @@ abstract class Parser(
   private def summarizeCur =
     Lexer.printTokens(_cur.take(5)) + (if _cur.sizeIs > 5 then "..." else "")
   
-  private def cur(implicit l: Line, n: Name) = {
+  private def cur(implicit l: Line, n: Name) =
     if dbg then printDbg(s"? ${n.value}\t\tinspects ${summarizeCur}    [at l.${l.value}]")
     while !_cur.isEmpty && (_cur.head._1 match {
       case COMMENT(_) => true
       case _ => false
     }) do consume
     _cur
-  }
   
-  final def consume(implicit l: Line, n: Name): Unit = {
+  final def consume(implicit l: Line, n: Name): Unit =
     if dbg then printDbg(s"! ${n.value}\t\tconsumes ${Lexer.printTokens(_cur.take(1))}    [at l.${l.value}]")
     resetCur(_cur.tailOption.getOrElse(Nil)) // FIXME throw error if empty?
-  }
   
   private def yeetSpaces: Ls[TokLoc] =
     cur.dropWhile(tkloc =>
@@ -66,16 +63,14 @@ abstract class Parser(
   final def err(msgs: Ls[Message -> Opt[Loc]]): Unit =
     raise(ErrorReport(msgs, newDefs = true, source = Diagnostic.Source.Parsing))
   
-  final def parseAll[R](parser: => R): R = {
+  final def parseAll[R](parser: => R): R =
     val res = parser
-    cur match {
+    cur match
       case c @ (tk, tkl) :: _ =>
         val (relevantToken, rl) = c.dropWhile(_._1 === SPACE).headOption.getOrElse(tk, tkl)
         err(msg"Expected end of input; found ${relevantToken.describe} instead" -> S(rl) :: Nil)
       case Nil => ()
-    }
     res
-  }
   
   def block: Ls[Tree] = cur match
     case Nil => Nil
@@ -98,11 +93,10 @@ abstract class Parser(
       expr :: blockCont
   
   def blockCont: Ls[Tree] =
-    yeetSpaces match {
+    yeetSpaces match
       case (SEMI, _) :: _ => consume; block
       case (NEWLINE, _) :: _ => consume; block
       case _ => Nil
-    }
   
   def parse[A](rule: ParseRule[A]): Opt[A] = yeetSpaces match
     case (tok @ (id: IDENT), loc) :: _ =>
