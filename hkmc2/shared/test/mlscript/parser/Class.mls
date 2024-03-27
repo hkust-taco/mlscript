@@ -1,0 +1,60 @@
+:global
+:p
+
+
+class
+//│ |class|
+//│ ╔══[PARSE ERROR] Expected expression after type declaration start; found end of input instead
+//│ ║  l.5: 	class
+//│ ╙──     	     ^
+//│ AST: List(Empty)
+
+class Foo
+//│ |class| |Foo|
+//│ AST: List(TypeDecl(Ident(Foo),None,None))
+
+class Foo extends
+//│ |class| |Foo| |extends|
+//│ ╔══[PARSE ERROR] Expected expression after extension clause; found end of input instead
+//│ ║  l.16: 	class Foo extends
+//│ ╙──      	                 ^
+//│ AST: List(Empty)
+
+class Foo extends Bar
+//│ |class| |Foo| |extends| |Bar|
+//│ AST: List(TypeDecl(Ident(Foo),Some(Ident(Bar)),None))
+
+class Foo extends Bar with
+//│ |class| |Foo| |extends| |Bar| |with|
+//│ ╔══[PARSE ERROR] Expected indented block after type declaration body; found end of input instead
+//│ ║  l.27: 	class Foo extends Bar with
+//│ ╙──      	                          ^
+//│ AST: List(Empty)
+
+class Foo extends Bar with val x
+//│ |class| |Foo| |extends| |Bar| |with| |val| |x|
+//│ ╔══[PARSE ERROR] Expected indented block after type declaration body; found 'val' keyword instead
+//│ ║  l.34: 	class Foo extends Bar with val x
+//│ ╙──      	                           ^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
+//│ ║  l.34: 	class Foo extends Bar with val x
+//│ ╙──      	                               ^
+//│ AST: List(Empty)
+
+class Foo extends Bar with
+  val x
+//│ |class| |Foo| |extends| |Bar| |with|→|val| |x|←|
+//│ AST: List(TypeDecl(Ident(Foo),Some(Ident(Bar)),Some(Block(List(Val(Ident(x)))))))
+
+class Foo with
+  val x
+//│ |class| |Foo| |with|→|val| |x|←|
+//│ AST: List(TypeDecl(Ident(Foo),None,Some(Block(List(Val(Ident(x)))))))
+
+
+:fixme
+with
+//│ |with|
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+

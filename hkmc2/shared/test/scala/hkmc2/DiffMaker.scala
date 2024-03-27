@@ -57,7 +57,7 @@ class DiffMaker(file: os.Path):
   val global = NullaryCommand("global")
   
   val fixme = NullaryCommand("fixme")
-  val fullExceptionStack = NullaryCommand("ex")
+  val fullExceptionStack = NullaryCommand("s")
   
   val debug = NullaryCommand("d")
   val dbgParsing = NullaryCommand("dp")
@@ -166,6 +166,7 @@ class DiffMaker(file: os.Path):
               failures += allLines.size - lines.size + 1
               unhandled(fileName, blockLineNum, err)
             // err.printStackTrace(out)
+            // println(err.getCause())
             output("/!!!\\ Uncaught error: " + err +
               err.getStackTrace().take(
                 if fullExceptionStack.isSet then Int.MaxValue

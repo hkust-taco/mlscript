@@ -41,6 +41,7 @@ object Keyword:
   val `mixin` = Keyword("mixin", N, N)
   val `interface` = Keyword("interface", N, N)
   val `extends` = Keyword("extends", N, N)
+  val `with` = Keyword("with", N, N)
   val `override` = Keyword("override", N, N)
   val `super` = Keyword("super", N, N)
   val `new` = Keyword("new", N, N)

@@ -16,6 +16,7 @@ abstract class Parser(
   val dbg: Bool,
   // fallbackLoc: Opt[Loc], description: Str = "input",
 ):
+  outer =>
   
   protected def doPrintDbg(msg: => Str): Unit
   protected def printDbg(msg: => Any): Unit =
@@ -23,6 +24,13 @@ abstract class Parser(
   
   protected var indent = 0
   private var _cur: Ls[TokLoc] = tokens
+  
+  final def rec(tokens: Ls[Stroken -> Loc], fallbackLoc: Opt[Loc], description: Str): Parser =
+    new Parser(origin, tokens, raiseFun, dbg
+        // , fallbackLoc, description
+    ) {
+      def doPrintDbg(msg: => Str): Unit = outer.printDbg("> " + msg)
+    }
   
   def resetCur(newCur: Ls[TokLoc]): Unit =
     _cur = newCur
@@ -72,6 +80,18 @@ abstract class Parser(
       case Nil => ()
     res
   
+  final def concludeWith[R](f: this.type => R): R = {
+    val res = f(this)
+    cur.dropWhile(tk => (tk._1 === SPACE || tk._1 === NEWLINE) && { consume; true }) match {
+      case c @ (tk, tkl) :: _ =>
+        val (relevantToken, rl) = c.dropWhile(_._1 === SPACE).headOption.getOrElse(tk, tkl)
+        err(msg"Unexpected ${relevantToken.describe} here" -> S(rl) :: Nil)
+      case Nil => ()
+    }
+    printDbg(s"Concluded with $res")
+    res
+  }
+  
   def block: Ls[Tree] = cur match
     case Nil => Nil
     case (NEWLINE, _) :: _ => consume; block
@@ -98,6 +118,14 @@ abstract class Parser(
       case (NEWLINE, _) :: _ => consume; block
       case _ => Nil
   
+  private def tryParseExp[A](tok: Token, loc: Loc, rule: ParseRule[A]): Opt[A] =
+    rule.exprAlt match
+      case S(exprAlt) =>
+        val e = expr
+        parse(exprAlt.rest).map(res => exprAlt.k(e, res))
+      case N =>
+        err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
+        N
   def parse[A](rule: ParseRule[A]): Opt[A] = yeetSpaces match
     case (tok @ (id: IDENT), loc) :: _ =>
       Keyword.all.get(id.name) match
@@ -111,13 +139,14 @@ abstract class Parser(
               err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
               N
         case N =>
-          rule.exprAlt match
-            case S(exprAlt) =>
-              val e = expr
-              parse(exprAlt.rest).map(res => exprAlt.k(e, res))
-            case N =>
-              err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${id.name} instead" -> S(loc) :: Nil))
-              N
+          // rule.exprAlt match
+          //   case S(exprAlt) =>
+          //     val e = expr
+          //     parse(exprAlt.rest).map(res => exprAlt.k(e, res))
+          //   case N =>
+          //     err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
+          //     N
+          tryParseExp(tok, loc, rule)
     case (tok @ (NEWLINE | SEMI), l0) :: _ =>
       // TODO(cur)
       rule.emptyAlt match
@@ -125,7 +154,24 @@ abstract class Parser(
         case N =>
           err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> lastLoc :: Nil))
           N
-    case (tok, loc) :: _ => ??? 
+    case (tok @ BRACKETS(Indent, toks), loc) :: _ =>
+      // rule.blkAlt match
+      //   case S(res) => S(res)
+      //   case N =>
+      //     err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> lastLoc :: Nil))
+      //     N
+      consume
+      rule.blkAlt match
+        case S(exprAlt) =>
+          val e = rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.block)
+            |> Tree.Block.apply
+          parse(exprAlt.rest).map(res => exprAlt.k(e, res))
+        case N =>
+          err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
+          N
+    case (tok, loc) :: _ =>
+      tryParseExp(tok, loc, rule)
+      // TODO(tok)
     case Nil =>
       rule.emptyAlt match
         case S(res) =>
@@ -143,6 +189,9 @@ abstract class Parser(
       consume
       lit.asTree
       // TODO cont
+    case (BRACKETS(Indent, _), loc) :: _ =>
+      err((msg"Expected an expression; found indented block instead" -> lastLoc :: Nil))
+      errExpr
     case (tok, loc) :: _ =>
       TODO(tok)
     case Nil =>

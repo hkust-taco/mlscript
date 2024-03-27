@@ -5,7 +5,7 @@
 :pe
 let
 //│ |let|
-//│ ╔══[PARSE ERROR] Expected expression after let binding keyword 'let'; found end of input instead
+//│ ╔══[PARSE ERROR] Expected expression or indented block after let binding keyword 'let'; found end of input instead
 //│ ║  l.6: 	let
 //│ ╙──     	   ^
 //│ AST: List(Empty)
