@@ -17,7 +17,10 @@ class DiffMaker(file: os.Path):
   def doFail(fileName: Str, blockLineNum: Int, msg: String): Unit =
     System.err.println(fansi.Color.Red("FAILURE: ").toString + msg)
   def unhandled(fileName: Str, blockLineNum: Int, exc: Throwable): Unit =
-    doFail(fileName, blockLineNum, s"unhandled exception at $fileName:" + blockLineNum)
+    unexpected("exception", fileName, blockLineNum)
+  
+  final def unexpected(what: Str, fileName: Str, blockLineNum: Int): Unit =
+    doFail(fileName, blockLineNum, s"unexpected $what at $fileName:" + blockLineNum)
   
   
   val outputMarker = "//│ "
@@ -142,7 +145,27 @@ class DiffMaker(file: os.Path):
       try
         
         val origin = Origin(fileName, globalStartLineNum, fph)
-        val raise: Raise = d => report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
+        val raise: Raise = d =>
+          d.kind match
+          case Diagnostic.Kind.Error =>
+            d.source match
+            case Diagnostic.Source.Lexing =>
+              TODO(d.source)
+            case Diagnostic.Source.Parsing =>
+              if expectParseError.isUnset && fixme.isUnset then
+                failures += allLines.size - lines.size + 1
+                // doFail(fileName, blockLineNum, "unexpected parse error at ")
+                unexpected("parse error", fileName, blockLineNum)
+                // report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
+            case Diagnostic.Source.Typing =>
+              TODO(d.source)
+            case Diagnostic.Source.Compilation =>
+              TODO(d.source)
+            case Diagnostic.Source.Runtime =>
+              TODO(d.source)
+          case Diagnostic.Kind.Warning =>
+            TODO(d.kind)
+          report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
         val lexer = new syntax.Lexer(origin, raise, dbg = dbgParsing.isSet)
         val tokens = lexer.bracketedTokens
         
