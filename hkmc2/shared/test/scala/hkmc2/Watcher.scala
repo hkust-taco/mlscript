@@ -5,7 +5,10 @@ import mlscript.utils.*, shorthands.*
 
 import better.files.*
 import io.methvin.better.files.*
-import io.methvin.watcher.DirectoryWatcher
+import io.methvin.watcher.{DirectoryWatcher, PathUtils}
+import io.methvin.watcher.hashing.{FileHash, FileHasher}
+import java.time.LocalDateTime
+import java.time.temporal._
 
 // Note: when SBT's `fork` is set to `false`, the path should be `File("hkmc2/shared/")` instead...
 object MainWatcher extends Watcher(File("../shared/")):
@@ -15,18 +18,41 @@ class Watcher(dir: File):
   
   println((fansi.Color.Blue("Watching directory ") ++ fansi.Color.DarkGray(dir.toString)).toString)
   
+  val fileHashes = mutable.Map.empty[File, FileHash]
+  val completionTime = mutable.Map.empty[File, LocalDateTime]
+  val fileHasher = FileHasher.DEFAULT_FILE_HASHER
+  
   val watcher: DirectoryWatcher = DirectoryWatcher.builder()
     .logger(org.slf4j.helpers.NOPLogger.NOP_LOGGER)
     .path(dir.toJava.toPath)
-    .fileHasher(null) // so that simple save events trigger processing eve if there's no file change
+    .fileHashing(false) // so that simple save events trigger processing eve if there's no file change
     .listener(new io.methvin.watcher.DirectoryChangeListener {
       def onEvent(event: io.methvin.watcher.DirectoryChangeEvent): Unit = try
         // println(event)
+        val hash = PathUtils.hash(fileHasher, event.path)
+        val file = File(event.path)
+        val old = fileHashes.get(event.path)
+        fileHashes(event.path) = hash
+        old match
+          case S(existingHash) =>
+            if existingHash === hash then
+              // if file.extension =/= S(".cmd") then return
+              // else
+              val newTime = LocalDateTime.now()
+              completionTime.get(event.path) match
+                case S(time) =>
+                  val diff = time.until(newTime, ChronoUnit.SECONDS)
+                  if diff <= 1 then
+                    // println(s"Debounced $time -> $newTime = $diff s")
+                    return
+                case N =>
+                  System.err.println("It seems the previous completion time was not recorded")
+                  return
+          case N =>
         import java.nio.file.StandardWatchEventKinds
         import java.nio.file.WatchEvent
         import java.nio.file.Path
         val et = event.eventType
-        val file = File(event.path)
         val count = event.count
         et match
           case io.methvin.watcher.DirectoryChangeEvent.EventType.OVERFLOW => ???
@@ -35,6 +61,7 @@ class Watcher(dir: File):
               case StandardWatchEventKinds.ENTRY_CREATE => onCreate(file, count)
               case StandardWatchEventKinds.ENTRY_MODIFY => onModify(file, count)
               case StandardWatchEventKinds.ENTRY_DELETE => onDelete(file, count)
+        completionTime(event.path) = LocalDateTime.now()
       catch ex =>
         System.err.println("Unexpected error in watcher: " + ex)
         ex.printStackTrace()

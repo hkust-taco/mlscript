@@ -17,12 +17,13 @@ sealed trait Lit:
 
 
 enum Tree:
-  case IntLit(value: BigInt)            extends Tree with Lit
-  case DecLit(value: BigDecimal)        extends Tree with Lit
-  case StrLit(value: Str)               extends Tree with Lit
-  case UnitLit(undefinedOrNull: Bool)   extends Tree with Lit
+  case IntLit(value: BigInt)          extends Tree with Lit
+  case DecLit(value: BigDecimal)      extends Tree with Lit
+  case StrLit(value: Str)             extends Tree with Lit
+  case UnitLit(undefinedOrNull: Bool) extends Tree with Lit
   case Let(lhs: Tree, rhs: Tree, body: Opt[Tree])
   case Ident(name: Str)
+  case Block(stmts: Ls[Tree])
   case Empty
 
 
