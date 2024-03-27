@@ -97,15 +97,11 @@ class DiffTests(state: DiffTests.State)
     val testName = basePath.map(_ + "/").mkString + file.baseName
     test(testName) {
       
-      // println(s"Running test: $testName")
+      val dm = new DiffMaker(file)
       
-      val dm = new DiffMaker:
-        def doFail(msg: String): Unit =
-          // System.err.println(fansi.Color.Red("FAILURE: ").toString + msg)
-          fail(msg)
-      
-      // dm(os.Path(file.pathAsString))
-      dm(file)
+      if dm.failures.nonEmpty then
+        fail(s"Unexpected test outcome(s) at: " +
+          dm.failures.distinct.map("\n\t"+file.segments.toList.last+":"+_).mkString(", "))
       
     }
   }

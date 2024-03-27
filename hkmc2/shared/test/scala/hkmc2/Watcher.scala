@@ -53,17 +53,12 @@ class Watcher(dir: File):
     if file.toString.endsWith(".scala") then
       watcher.close()
     else if isMls || file.toString.endsWith(".cmd") then
-      val dm = new DiffMaker:
-        def doFail(msg: String): Unit =
-          System.err.println(fansi.Color.Red("FAILURE: ").toString + msg)
+      Thread.sleep(100)
+      val dm = new DiffMaker(os.Path(file.pathAsString)):
         override def unhandled(fileName: Str, blockLineNum: Int, exc: Throwable): Unit =
           exc.printStackTrace()
           super.unhandled(fileName, blockLineNum, exc)
-      // update(file) // TODO
-      // ()
-      Thread.sleep(100)
-      dm(os.Path(file.pathAsString))
-  
+      
   def show(file: File) =
     fansi.Color.Yellow:
       file.toString.stripPrefix(dir.toString)
