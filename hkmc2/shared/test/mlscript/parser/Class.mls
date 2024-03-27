@@ -62,3 +62,15 @@ with
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 
+class
+  Foo
+//│ |class|→|Foo|←|
+//│ AST: List(TypeDecl(Ident(Foo),None,None))
+
+class
+  Foo
+  Bar
+//│ |class|→|Foo|↵|Bar|←|
+//│ AST: List(TypeDecl(Ident(Foo),None,None), TypeDecl(Ident(Bar),None,None))
+
+

@@ -5,7 +5,7 @@
 :pe
 let
 //│ |let|
-//│ ╔══[PARSE ERROR] Expected expression or indented block after let binding keyword 'let'; found end of input instead
+//│ ╔══[PARSE ERROR] Expected expression after let binding keyword 'let'; found end of input instead
 //│ ║  l.6: 	let
 //│ ╙──     	   ^
 //│ AST: List(Empty)
@@ -56,6 +56,57 @@ let x = y
 foo
 //│ |let| |x| |=| |y|↵|foo|
 //│ AST: List(Let(Ident(x),Ident(y),None), Ident(foo))
+
+
+:pe
+let
+  x
+//│ |let|→|x|←|
+//│ ╔══[PARSE ERROR] Expected '=' keyword after let binding head; found end of input instead
+//│ ║  l.63: 	  x
+//│ ╙──      	   ^
+//│ AST: List(Empty)
+
+let
+  x = 1
+//│ |let|→|x| |=| |1|←|
+//│ AST: List(Let(Ident(x),IntLit(1),None))
+
+:pe
+let
+  x
+  y
+//│ |let|→|x|↵|y|←|
+//│ ╔══[PARSE ERROR] Expected '=' keyword after let binding head; found newline instead
+//│ ║  l.78: 	  y
+//│ ╙──      	   ^
+//│ ╔══[PARSE ERROR] Expected '=' keyword after let binding head; found end of input instead
+//│ ║  l.78: 	  y
+//│ ╙──      	   ^
+//│ AST: List(Empty, Empty)
+
+let
+  x = 1
+  y = 2
+//│ |let|→|x| |=| |1|↵|y| |=| |2|←|
+//│ AST: List(Let(Ident(x),IntLit(1),None), Let(Ident(y),IntLit(2),None))
+
+let
+  x = 1 in x
+  y = 2 in y
+//│ |let|→|x| |=| |1| |in| |x|↵|y| |=| |2| |in| |y|←|
+//│ AST: List(Let(Ident(x),IntLit(1),Some(Ident(x))), Let(Ident(y),IntLit(2),Some(Ident(y))))
+
+
+:fixme
+let x = 1 in
+  x
+//│ |let| |x| |=| |1| |in|→|x|←|
+//│ ╔══[PARSE ERROR] Expected expression after let binding `in` clause; found indented block instead
+//│ ║  l.103: 	  x
+//│ ╙──       	^^
+//│ AST: List(Empty)
+
 
 
 :fixme

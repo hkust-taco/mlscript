@@ -7,6 +7,7 @@ import mlscript.utils.*, shorthands.*
 
 class Keyword(val name: String, val leftPrec: Opt[Int], val rightPrec: Opt[Int]):
   Keyword.all += name -> this
+  override def toString: Str = s"keyword '$name'"
 
 object Keyword:
   

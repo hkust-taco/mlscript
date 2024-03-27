@@ -24,6 +24,8 @@ class ParseRule[+A](val name: Str)(alts: Alt[A]*):
   def map[B](f: A => B): ParseRule[B] =
     ParseRule(name)(alts.map(_.map(f))*)
   
+  override def toString: Str = s"$name ::= " + alts.mkString(" | ")
+  
   lazy val emptyAlt = alts.collectFirst { case Alt.End(a) => a }
   lazy val kwAlts = alts.collect { case k @ Alt.Kw(kw) => kw.name -> k.rest }.toMap
   lazy val exprAlt = alts.collectFirst { case alt: Alt.Expr[rst, A] => alt }
@@ -108,16 +110,13 @@ object ParseRule:
         //     Kw(`class`):
         //       typeDeclBody
         // ) { case (lhs, body) => Let(lhs, lhs, body) }
-        Blk(
-          ParseRule("'let' block"):
-            End(())
-        ) { case (res, ()) => res }
       )
     ,
     Kw(`type`)(typeDeclBody),
     Kw(`class`)(typeDeclBody),
     Kw(`trait`)(typeDeclBody),
     Kw(`module`)(typeDeclBody),
+    Expr(ParseRule("standalone expression")(End(())))((l, _: Unit) => l),
   )
 
   // lazy val decl: ParseRule = ParseRule("class declaration",

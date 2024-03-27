@@ -92,30 +92,37 @@ abstract class Parser(
     res
   }
   
-  def block: Ls[Tree] = cur match
+  def block: Ls[Tree] = blockOf(ParseRule.prefixRules)
+  
+  def blockOf(rule: ParseRule[Tree]): Ls[Tree] = cur match
     case Nil => Nil
-    case (NEWLINE, _) :: _ => consume; block
-    case (SPACE, _) :: _ => consume; block
+    case (NEWLINE, _) :: _ => consume; blockOf(rule)
+    case (SPACE, _) :: _ => consume; blockOf(rule)
     case (id: IDENT, l0) :: _ =>
       Keyword.all.get(id.name) match
         case S(kw) =>
           consume
-          ParseRule.prefixRules.kwAlts.get(kw.name) match
+          rule.kwAlts.get(kw.name) match
             case S(subRule) =>
-              parse(subRule).getOrElse(errExpr) :: blockCont
+              yeetSpaces match
+                case (tok @ BRACKETS(Indent, toks), loc) :: _ if subRule.blkAlt.isEmpty =>
+                  consume
+                  rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.blockOf(subRule))
+                case _ =>
+                  parse(subRule).getOrElse(errExpr) :: blockContOf(rule)
             case N =>
               // err((msg"Expected a keyword; found ${id.name} instead" -> S(l0) :: Nil))
               // errExpr
               ???
         case N =>
-          expr :: blockCont
-    case _ =>
-      expr :: blockCont
+          tryParseExp(id, l0, rule).getOrElse(errExpr) :: blockContOf(rule)
+    case (tok, loc) :: _ =>
+      tryParseExp(tok, loc, rule).getOrElse(errExpr) :: blockContOf(rule)
   
-  def blockCont: Ls[Tree] =
+  def blockContOf(rule: ParseRule[Tree]): Ls[Tree] =
     yeetSpaces match
-      case (SEMI, _) :: _ => consume; block
-      case (NEWLINE, _) :: _ => consume; block
+      case (SEMI, _) :: _ => consume; blockOf(rule)
+      case (NEWLINE, _) :: _ => consume; blockOf(rule)
       case _ => Nil
   
   private def tryParseExp[A](tok: Token, loc: Loc, rule: ParseRule[A]): Opt[A] =
