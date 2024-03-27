@@ -5,6 +5,6 @@
 :fixme
 2 + 2
 //│ |2| |+| |2|
-//│ /!!!\ Uncaught error: scala.NotImplementedError: LITVAL(IntLit(2))
+//│ Error: Expected end of input; found operator instead
 
 

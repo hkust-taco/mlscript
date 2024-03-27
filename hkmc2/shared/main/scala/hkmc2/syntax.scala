@@ -24,26 +24,6 @@ trait Located {
   def toLoc: Opt[Loc] = ???
 }
 
-sealed abstract class SimpleTerm {
-  val idStr: Str = this match {
-    // case Var(name) => name
-    // case lit: Lit => lit.showDbg
-    case IntLit(value) => value.toString
-    case DecLit(value) => value.toString
-    case StrLit(value) => '"'.toString + value + '"'
-    case UnitLit(value) => if value then "undefined" else "null"
-  }
-}
-
-sealed abstract class Lit extends SimpleTerm {
-  def showDbg: Str = idStr
-}
-
-final case class IntLit(value: BigInt)            extends Lit
-final case class DecLit(value: BigDecimal)        extends Lit
-final case class StrLit(value: Str)               extends Lit
-final case class UnitLit(undefinedOrNull: Bool)   extends Lit
-
 /** If the identifier is an integer, we can still have a string name used as a name hint. */
 final case class TypeVar(val identifier_name: EitherOrBoth[Int, Str]) extends NullaryType with TypeVarImpl {
   val identifier: Int \/ Str = identifier_name.reduce(left)(right)((x, y) => x)

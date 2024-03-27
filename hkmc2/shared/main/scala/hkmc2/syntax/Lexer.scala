@@ -9,6 +9,7 @@ import Message.MessageContext
 import Diagnostic.Source.{Lexing, Parsing}
 
 import Lexer._
+import Tree.{IntLit, DecLit, StrLit}
 
 class Lexer(origin: Origin, raise: Raise, dbg: Bool):
   

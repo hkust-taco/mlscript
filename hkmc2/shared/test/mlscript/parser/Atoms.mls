@@ -11,9 +11,8 @@ bar
 //│ |foo|↵|bar|
 //│ AST: List(Ident(foo), Ident(bar))
 
-:fixme
 123
 //│ |123|
-//│ /!!!\ Uncaught error: scala.NotImplementedError: LITVAL(IntLit(123))
+//│ AST: List(IntLit(123))
 
 

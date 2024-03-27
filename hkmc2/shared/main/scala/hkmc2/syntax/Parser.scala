@@ -145,6 +145,10 @@ abstract class Parser(
       consume
       Tree.Ident(nme)
       // TODO cont
+    case (LITVAL(lit), loc) :: _ =>
+      consume
+      lit.asTree
+      // TODO cont
     case (tok, loc) :: _ =>
       TODO(tok)
     case Nil =>
