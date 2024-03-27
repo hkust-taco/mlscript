@@ -15,6 +15,7 @@ object MainWatcher extends Watcher(File("../shared/")):
   def main(args: Array[String]): Unit = run
 
 class Watcher(dir: File):
+  val dirPath = os.Path(dir.pathAsString)
   
   println((fansi.Color.Blue("Watching directory ") ++ fansi.Color.DarkGray(dir.toString)).toString)
   
@@ -81,10 +82,13 @@ class Watcher(dir: File):
       watcher.close()
     else if isMls || file.toString.endsWith(".cmd") then
       Thread.sleep(100)
-      val dm = new DiffMaker(os.Path(file.pathAsString)):
-        override def unhandled(fileName: Str, blockLineNum: Int, exc: Throwable): Unit =
+      val path = os.Path(file.pathAsString)
+      val basePath = path.segments.drop(dirPath.segmentCount).toList.init
+      val relativeName = basePath.map(_ + "/").mkString + path.baseName
+      val dm = new DiffMaker(path, relativeName):
+        override def unhandled(blockLineNum: Int, exc: Throwable): Unit =
           exc.printStackTrace()
-          super.unhandled(fileName, blockLineNum, exc)
+          super.unhandled(blockLineNum, exc)
       
   def show(file: File) =
     fansi.Color.Yellow:

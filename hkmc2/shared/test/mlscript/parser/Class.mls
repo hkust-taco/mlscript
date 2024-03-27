@@ -76,4 +76,58 @@ class
 //│ |class|→|Foo|↵|Bar|←|
 //│ AST: List(TypeDecl(Ident(Foo),None,None), TypeDecl(Ident(Bar),None,None))
 
+class
+  Foo extends Bar
+  Bar with
+    x
+//│ |class|→|Foo| |extends| |Bar|↵|Bar| |with|→|x|←|←|
+//│ AST: List(TypeDecl(Ident(Foo),Some(Ident(Bar)),None), TypeDecl(Ident(Bar),None,Some(Block(List(Ident(x))))))
+
+
+:pe
+class
+Foo
+//│ |class|↵|Foo|
+//│ ╔══[PARSE ERROR] Expected expression after type declaration start; found newline instead
+//│ ║  l.89: 	Foo
+//│ ╙──      	   ^
+//│ AST: List(Empty, Ident(Foo))
+
+:fixme
+class
+  Foo
+extends Bar
+//│ |class|→|Foo|←|↵|extends| |Bar|
+//│ ╔══[PARSE ERROR] Expected end of input; found newline instead
+//│ ║  l.98: 	  Foo
+//│ ║        	     ^
+//│ ║  l.99: 	extends Bar
+//│ ╙──      	
+//│ AST: List(TypeDecl(Ident(Foo),None,None))
+
+class
+  Foo
+  extends Bar
+//│ |class|→|Foo|↵|extends| |Bar|←|
+//│ AST: List(TypeDecl(Ident(Foo),Some(Ident(Bar)),None))
+
+class
+  Foo
+  extends Bar
+  Bar
+  extends Baz
+//│ |class|→|Foo|↵|extends| |Bar|↵|Bar|↵|extends| |Baz|←|
+//│ AST: List(TypeDecl(Ident(Foo),Some(Ident(Bar)),None), TypeDecl(Ident(Bar),Some(Ident(Baz)),None))
+
+class Foo
+extends Bar
+//│ |class| |Foo|↵|extends| |Bar|
+//│ AST: List(TypeDecl(Ident(Foo),Some(Ident(Bar)),None))
+
+class Foo
+extends
+  Bar
+//│ |class| |Foo|↵|extends|→|Bar|←|
+//│ AST: List(TypeDecl(Ident(Foo),Some(Ident(Bar)),None))
+
 

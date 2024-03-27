@@ -12,15 +12,15 @@ class Outputter(val out: java.io.PrintWriter):
     str.splitSane('\n').foreach(l => out.println(outputMarker + l))
 
 
-class DiffMaker(file: os.Path):
+class DiffMaker(file: os.Path, relativeName: Str):
   
-  def doFail(fileName: Str, blockLineNum: Int, msg: String): Unit =
+  def doFail(blockLineNum: Int, msg: String): Unit =
     System.err.println(fansi.Color.Red("FAILURE: ").toString + msg)
-  def unhandled(fileName: Str, blockLineNum: Int, exc: Throwable): Unit =
-    unexpected("exception", fileName, blockLineNum)
+  def unhandled(blockLineNum: Int, exc: Throwable): Unit =
+    unexpected("exception", blockLineNum)
   
-  final def unexpected(what: Str, fileName: Str, blockLineNum: Int): Unit =
-    doFail(fileName, blockLineNum, s"unexpected $what at $fileName:" + blockLineNum)
+  final def unexpected(what: Str, blockLineNum: Int): Unit =
+    doFail(blockLineNum, s"unexpected $what at $relativeName.${file.ext}:" + blockLineNum)
   
   
   val outputMarker = "//│ "
@@ -155,7 +155,7 @@ class DiffMaker(file: os.Path):
               if expectParseError.isUnset && fixme.isUnset then
                 failures += allLines.size - lines.size + 1
                 // doFail(fileName, blockLineNum, "unexpected parse error at ")
-                unexpected("parse error", fileName, blockLineNum)
+                unexpected("parse error", blockLineNum)
                 // report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
             case Diagnostic.Source.Typing =>
               TODO(d.source)
@@ -187,7 +187,7 @@ class DiffMaker(file: os.Path):
           case err: Throwable =>
             if fixme.isUnset then
               failures += allLines.size - lines.size + 1
-              unhandled(fileName, blockLineNum, err)
+              unhandled(blockLineNum, err)
             // err.printStackTrace(out)
             // println(err.getCause())
             output("/!!!\\ Uncaught error: " + err +

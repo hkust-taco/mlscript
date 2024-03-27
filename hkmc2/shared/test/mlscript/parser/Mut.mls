@@ -29,6 +29,16 @@ mut
 //│ |mut|→|let| |x| |=| |1|←|
 //│ AST: List(Modified(keyword 'mut',Let(Ident(x),IntLit(1),None)))
 
+:fixme
+mut
+  let
+    x = 1
+//│ |mut|→|let|→|x| |=| |1|←|←|
+//│ ╔══[PARSE ERROR] Expected expression after let binding keyword 'let'; found indented block instead
+//│ ║  l.35: 	    x = 1
+//│ ╙──      	^^^^
+//│ AST: List(Modified(keyword 'mut',Empty))
+
 mut
   let x = 1
   let y = 1
@@ -42,18 +52,18 @@ mut
     y = 1
 //│ |mut|→|let|→|x| |=| |1|↵|y| |=| |1|←|←|
 //│ ╔══[PARSE ERROR] Expected expression after let binding keyword 'let'; found indented block instead
-//│ ║  l.41: 	    x = 1
+//│ ║  l.51: 	    x = 1
 //│ ╙──      	^^^^
 //│ AST: List(Modified(keyword 'mut',Empty))
 
 :fixme
 mut let
-    x = 1
-    y = 1
+  x = 1
+  y = 1
 //│ |mut| |let|→|x| |=| |1|↵|y| |=| |1|←|
 //│ ╔══[PARSE ERROR] Expected expression after let binding keyword 'let'; found indented block instead
-//│ ║  l.51: 	    x = 1
-//│ ╙──      	^^^^
+//│ ║  l.61: 	  x = 1
+//│ ╙──      	^^
 //│ AST: List(Modified(keyword 'mut',Empty))
 
 

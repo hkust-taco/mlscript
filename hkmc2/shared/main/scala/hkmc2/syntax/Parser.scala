@@ -156,7 +156,12 @@ abstract class Parser(
         consume
         rule.kwAlts.get(id.name) match
         case S(subRule) =>
-          parse(subRule)
+          yeetSpaces match
+          case (tok @ BRACKETS(Indent, toks), loc) :: _ if subRule.blkAlt.isEmpty =>
+            consume
+            rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.parse(subRule))
+          case _ =>
+            parse(subRule)
         case N =>
           rule.exprAlt match
           case S(exprAlt) =>
@@ -174,6 +179,9 @@ abstract class Parser(
             N
       case N =>
         tryParseExp(tok, loc, rule)
+    case (tok @ NEWLINE, l0) :: (id: IDENT, l1) :: _ if rule.kwAlts.contains(id.name) =>
+      consume
+      parse(rule)
     case (tok @ (NEWLINE | SEMI), l0) :: _ =>
       // TODO(cur)
       rule.emptyAlt match

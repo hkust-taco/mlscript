@@ -91,14 +91,14 @@ class DiffTests(state: DiffTests.State)
   
   files.foreach: file =>
     val basePath = file.segments.drop(dir.segmentCount).toList.init
-    val testName = basePath.map(_ + "/").mkString + file.baseName
-    test(testName):
+    val relativeName = basePath.map(_ + "/").mkString + file.baseName
+    test(relativeName):
       
-      val dm = new DiffMaker(file)
+      val dm = new DiffMaker(file, relativeName)
       
       if dm.failures.nonEmpty then
         fail(s"Unexpected test outcome(s) at: " +
-          dm.failures.distinct.map("\n\t"+file.segments.toList.last+":"+_).mkString(", "))
+          dm.failures.distinct.map("\n\t"+relativeName+"."+file.ext+":"+_).mkString(", "))
   
 end DiffTests
 
