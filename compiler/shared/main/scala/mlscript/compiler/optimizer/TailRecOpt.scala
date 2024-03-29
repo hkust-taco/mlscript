@@ -58,7 +58,6 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
     var processed: Boolean = false
   }
 
-  // TODO: this is untested. test this.
   private def partitionNodes(implicit nodeMap: Map[Int, DefnNode]): List[DefnGraph] = {
     val defns = nodeMap.values.toSet
 
@@ -118,7 +117,6 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
 
   // Returns a set containing the optimized function and the
   // original functions pointing to an optimized function.
-  // TODO: Currently untested
   def optimize(defns: Set[Defn], classes: Set[ClassInfo]): Set[Defn] = {
 
     def asLit(x: Int) = Expr.Literal(IntLit(x))
