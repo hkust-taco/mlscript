@@ -95,7 +95,7 @@ object ParseRule:
         ) { case (res, ()) => res }
       ).map(Val.apply),
     Kw(`let`):
-      ParseRule("let binding keyword 'let'")(
+      ParseRule("'let' binding keyword")(
         Expr(
           ParseRule("let binding head"):
             Kw(`=`):

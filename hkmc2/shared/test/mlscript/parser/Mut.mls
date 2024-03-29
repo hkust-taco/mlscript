@@ -29,40 +29,61 @@ mut
 //│ |mut|→|let| |x| |=| |1|←|
 //│ AST: List(Modified(keyword 'mut',Let(Ident(x),IntLit(1),None)))
 
-:fixme
+mut
+  let x = 1
+  in x
+//│ |mut|→|let| |x| |=| |1|↵|in| |x|←|
+//│ AST: List(Modified(keyword 'mut',Let(Ident(x),IntLit(1),Some(Ident(x)))))
+
+mut
+  let x = 1
+  let y = 2
+//│ |mut|→|let| |x| |=| |1|↵|let| |y| |=| |2|←|
+//│ AST: List(Modified(keyword 'mut',Let(Ident(x),IntLit(1),None)), Modified(keyword 'mut',Let(Ident(y),IntLit(2),None)))
+
 mut
   let
     x = 1
 //│ |mut|→|let|→|x| |=| |1|←|←|
-//│ ╔══[PARSE ERROR] Expected expression after let binding keyword 'let'; found indented block instead
-//│ ║  l.35: 	    x = 1
-//│ ╙──      	^^^^
-//│ AST: List(Modified(keyword 'mut',Empty))
+//│ AST: List(Modified(keyword 'mut',Let(Ident(x),IntLit(1),None)))
 
-mut
-  let x = 1
-  let y = 1
-//│ |mut|→|let| |x| |=| |1|↵|let| |y| |=| |1|←|
-//│ AST: List(Modified(keyword 'mut',Let(Ident(x),IntLit(1),None)), Modified(keyword 'mut',Let(Ident(y),IntLit(1),None)))
-
-:fixme
 mut
   let
     x = 1
+  let
     y = 1
-//│ |mut|→|let|→|x| |=| |1|↵|y| |=| |1|←|←|
-//│ ╔══[PARSE ERROR] Expected expression after let binding keyword 'let'; found indented block instead
-//│ ║  l.51: 	    x = 1
-//│ ╙──      	^^^^
-//│ AST: List(Modified(keyword 'mut',Empty))
+//│ |mut|→|let|→|x| |=| |1|←|↵|let|→|y| |=| |1|←|←|
+//│ AST: List(Modified(keyword 'mut',Let(Ident(x),IntLit(1),None)), Modified(keyword 'mut',Let(Ident(y),IntLit(1),None)))
 
+mut
+  let
+    x = 1
+    y = 2
+//│ |mut|→|let|→|x| |=| |1|↵|y| |=| |2|←|←|
+//│ AST: List(Modified(keyword 'mut',Let(Ident(x),IntLit(1),None)), Modified(keyword 'mut',Let(Ident(y),IntLit(2),None)))
+
+mut
+  let
+    x = 1 in x
+//│ |mut|→|let|→|x| |=| |1| |in| |x|←|←|
+//│ AST: List(Modified(keyword 'mut',Let(Ident(x),IntLit(1),Some(Ident(x)))))
+
+mut
+  let
+    x = 1 in x
+  let
+    y = 2 in y
+//│ |mut|→|let|→|x| |=| |1| |in| |x|←|↵|let|→|y| |=| |2| |in| |y|←|←|
+//│ AST: List(Modified(keyword 'mut',Let(Ident(x),IntLit(1),Some(Ident(x)))), Modified(keyword 'mut',Let(Ident(y),IntLit(2),Some(Ident(y)))))
+
+// TODO currently we only look at the next token to see if it's an indented block...
 :fixme
 mut let
   x = 1
-  y = 1
-//│ |mut| |let|→|x| |=| |1|↵|y| |=| |1|←|
-//│ ╔══[PARSE ERROR] Expected expression after let binding keyword 'let'; found indented block instead
-//│ ║  l.61: 	  x = 1
+  y = 2
+//│ |mut| |let|→|x| |=| |1|↵|y| |=| |2|←|
+//│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found indented block instead
+//│ ║  l.82: 	  x = 1
 //│ ╙──      	^^
 //│ AST: List(Modified(keyword 'mut',Empty))
 

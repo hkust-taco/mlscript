@@ -1,0 +1,21 @@
+:global
+:p
+
+
+x
+//│ |x|
+//│ AST: List(Ident(x))
+
+:pe
+x
+  y
+//│ |x|→|y|←|
+//│ ╔══[PARSE ERROR] Expected end of input after standalone expression; found indented block instead
+//│ ║  l.11: 	  y
+//│ ╙──      	^^
+//│ AST: List(Empty)
+
+
+
+
+

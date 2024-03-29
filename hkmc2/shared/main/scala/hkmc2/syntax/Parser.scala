@@ -25,12 +25,24 @@ abstract class Parser(
   protected var indent = 0
   private var _cur: Ls[TokLoc] = tokens
   
+  private def wrap[R](args: => Any)(mkRes: => R)(implicit l: Line, n: Name): R =
+    printDbg(s"@ ${n.value}${args match {
+      case it: Iterable[_] => it.mkString("(", ",", ")")
+      case _: Product => args
+      case _ => s"($args)"
+    }}    [at l.${l.value}]")
+    val res = try
+      indent += 1
+      mkRes
+    finally indent -= 1
+    printDbg(s"= $res")
+    res
+  
   final def rec(tokens: Ls[Stroken -> Loc], fallbackLoc: Opt[Loc], description: Str): Parser =
     new Parser(origin, tokens, raiseFun, dbg
         // , fallbackLoc, description
-    ) {
+    ):
       def doPrintDbg(msg: => Str): Unit = outer.printDbg("> " + msg)
-    }
   
   def resetCur(newCur: Ls[TokLoc]): Unit =
     _cur = newCur
@@ -43,7 +55,7 @@ abstract class Parser(
     Lexer.printTokens(_cur.take(5)) + (if _cur.sizeIs > 5 then "..." else "")
   
   private def cur(implicit l: Line, n: Name) =
-    if dbg then printDbg(s"? ${n.value}\t\tinspects ${summarizeCur}    [at l.${l.value}]")
+    if dbg then printDbg(s"? ${n.value}\t\tinspects ${summarizeCur}    [at syntax/Parser.scala:${l.value}]")
     while !_cur.isEmpty && (_cur.head._1 match {
       case COMMENT(_) => true
       case _ => false
@@ -51,7 +63,7 @@ abstract class Parser(
     _cur
   
   final def consume(implicit l: Line, n: Name): Unit =
-    if dbg then printDbg(s"! ${n.value}\t\tconsumes ${Lexer.printTokens(_cur.take(1))}    [at l.${l.value}]")
+    if dbg then printDbg(s"! ${n.value}\t\tconsumes ${Lexer.printTokens(_cur.take(1))}    [at syntax/Parser.scala:${l.value}]")
     resetCur(_cur.tailOption.getOrElse(Nil)) // FIXME throw error if empty?
   
   private def yeetSpaces: Ls[TokLoc] =
@@ -68,7 +80,8 @@ abstract class Parser(
   private def errExpr =
     Tree.Empty // TODO FIXME produce error term instead
   
-  final def err(msgs: Ls[Message -> Opt[Loc]]): Unit =
+  final def err(msgs: Ls[Message -> Opt[Loc]])(implicit l: Line, n: Name): Unit =
+    printDbg(s"Error    [at syntax/Parser.scala:${l.value}]")
     raise(ErrorReport(msgs, newDefs = true, source = Diagnostic.Source.Parsing))
   
   final def parseAll[R](parser: => R): R =
@@ -80,21 +93,20 @@ abstract class Parser(
       case Nil => ()
     res
   
-  final def concludeWith[R](f: this.type => R): R = {
+  final def concludeWith[R](f: this.type => R): R =
     val res = f(this)
-    cur.dropWhile(tk => (tk._1 === SPACE || tk._1 === NEWLINE) && { consume; true }) match {
+    cur.dropWhile(tk => (tk._1 === SPACE || tk._1 === NEWLINE) && { consume; true }) match
       case c @ (tk, tkl) :: _ =>
         val (relevantToken, rl) = c.dropWhile(_._1 === SPACE).headOption.getOrElse(tk, tkl)
         err(msg"Unexpected ${relevantToken.describe} here" -> S(rl) :: Nil)
       case Nil => ()
-    }
     printDbg(s"Concluded with $res")
     res
-  }
   
   def block: Ls[Tree] = blockOf(ParseRule.prefixRules)
   
-  def blockOf(rule: ParseRule[Tree]): Ls[Tree] = cur match
+  def blockOf(rule: ParseRule[Tree]): Ls[Tree] = wrap(rule.name):
+    cur match
     case Nil => Nil
     case (NEWLINE, _) :: _ => consume; blockOf(rule)
     case (SPACE, _) :: _ => consume; blockOf(rule)
@@ -116,14 +128,25 @@ abstract class Parser(
           
           rule.exprAlt match
           case S(exprAlt) =>
-            ParseRule.prefixRules.kwAlts.get(id.name) match
-            case S(subRule) =>
-              val e = parse(subRule).getOrElse(errExpr)
-              parse(exprAlt.rest).map(res => exprAlt.k(e, res)).getOrElse(errExpr) :: blockContOf(rule)
-            case N =>
-              // TODO dedup?
-              err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
-              errExpr :: blockContOf(rule)
+            yeetSpaces match
+            case (tok @ BRACKETS(Indent, toks), loc) :: _ /* if subRule.blkAlt.isEmpty */ =>
+              consume
+              ParseRule.prefixRules.kwAlts.get(kw.name) match
+              case S(subRule) if subRule.blkAlt.isEmpty =>
+                rec(toks, S(tok.innerLoc), tok.describe).concludeWith { p =>
+                  p.blockOf(subRule.map(e => parse(exprAlt.rest).map(res => exprAlt.k(e, res)).getOrElse(errExpr)))
+                } ++ blockContOf(rule)
+              case _ =>
+                TODO(cur)
+            case _ =>
+              ParseRule.prefixRules.kwAlts.get(kw.name) match
+              case S(subRule) =>
+                val e = parse(subRule).getOrElse(errExpr)
+                parse(exprAlt.rest).map(res => exprAlt.k(e, res)).getOrElse(errExpr) :: blockContOf(rule)
+              case N =>
+                // TODO dedup?
+                err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
+                errExpr :: blockContOf(rule)
           case N =>
             err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
             errExpr :: blockContOf(rule)
@@ -202,6 +225,11 @@ abstract class Parser(
             |> Tree.Block.apply
           parse(exprAlt.rest).map(res => exprAlt.k(e, res))
         case N =>
+          
+          // TODO... [todo:0]
+          // toks match
+          //   case 
+          
           err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
           N
     case (tok, loc) :: _ =>
