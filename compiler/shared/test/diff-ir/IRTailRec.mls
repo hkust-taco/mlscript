@@ -2,8 +2,9 @@
 :ParseOnly
 :UseIR
 
+// remark: this really should be changed so we don't need to add `class True` every time we want to use conditionals
 // :interpIR
-class True // remark: this really should be changed so we don't need to add `class True` every time we want to use conditionals
+class True
 class False
 fun f(n) = g(n)
 fun g(m) = f(m)
