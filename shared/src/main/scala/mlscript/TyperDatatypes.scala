@@ -649,15 +649,13 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     val prov = noProv
   }
 
-  class TupleSetConstraints(val constraints: MutSet[Ls[ST]], var tvs: Ls[(Opt[Bool], ST)])(val prov: TypeProvenance) {
+  class TupleSetConstraints(var constraints: Ls[Ls[ST]], var tvs: Ls[(Opt[Bool], ST)])(val prov: TypeProvenance) {
     def updateImpl(index: Int, bound: ST)(implicit raise: Raise, ctx: Ctx) : Unit = {
-      val u = constraints.toList.map(_(index)).map(TupleSetConstraints.lcg(tvs(index)._1, bound, _)(prov, ctx))
-      val ncs0 = constraints.toList.zip(u).map {
+      val u = constraints.map(_(index)).map(TupleSetConstraints.lcg(tvs(index)._1, bound, _)(prov, ctx))
+      val ncs0 = constraints.zip(u).map {
         case (u, v) => if (v.isEmpty) Nil else u
       }.filter(_.nonEmpty)
-      constraints.clear()
-      constraints ++= ncs0
-      if (!constraints.isEmpty) {
+      if (!ncs0.isEmpty) {
         val (tvs0, m) = u.flatten
           .reduce[(Ls[(Opt[Bool], ST)], Map[(Opt[Bool], ST), Ls[ST]])] {
             case ((xl, xm), (yl, ym)) =>
@@ -692,8 +690,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
         val ncs = ncs0.zip(cs0.transpose).map {
           case (u, v) => if (v.exists(_.isEmpty)) Nil else u ++ v.flatten
         }.filter(_.nonEmpty)
-        constraints.clear()
-        constraints ++= ncs
+        constraints = ncs
         tvs ++= tvs0
         tvs.zipWithIndex.foreach {
           case ((pol, tv: TV), i) => tv.tsc.update(this, i)
@@ -792,7 +789,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
           val l = (xl.filter(ym.contains(_)) ++ yl.filter(xm.contains(_))).distinct
           (l, l.map(t => (t, xm(t) ++ ym(t))).toMap)
       }
-      val tsc = new TupleSetConstraints(MutSet.empty ++ tvs.map(m(_)).transpose, tvs)(ov.prov)
+      val tsc = new TupleSetConstraints(tvs.map(m(_)).transpose, tvs)(ov.prov)
       println(s"TSC mk: ${tsc.tvs} in ${tsc.constraints}")
       tvs.zipWithIndex.foreach {
         case ((pol, tv: TV), i) => tv.tsc.update(tsc, i)

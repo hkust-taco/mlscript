@@ -599,7 +599,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         }
         tscs.foreach { case (typevars, constrs) =>
           val tvs = typevars.map(x => (x._1, rec(x._2)))
-          val tsc = new TupleSetConstraints(MutSet.empty ++ constrs.map(_.map(rec)), tvs)(res.prov)
+          val tsc = new TupleSetConstraints(constrs.map(_.map(rec)), tvs)(res.prov)
           tvs.zipWithIndex.foreach {
             case ((_, tv: TV), i) => tv.tsc += tsc -> i
             case _ => ()
@@ -1806,7 +1806,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                     case (pol, tv: TV) => (pol, tv.asTypeVar)
                     case (pol, t) => (pol, go(t))
                   }
-                  val constrs = tsc.constraints.toList.map(_.map(go))
+                  val constrs = tsc.constraints.map(_.map(go))
                   tscs ::= tvs -> constrs
                 }
             }

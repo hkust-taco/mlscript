@@ -76,7 +76,7 @@ IISS : (0 | 1) -> number
 IISS : 'a -> 'a
 //│ res: 'a -> 'a
 //│   where
-//│     [+'a, -'a] in {[string, string], [int, int]}
+//│     [+'a, -'a] in {[int, int], [string, string]}
 
 IISS 0
 //│ res: int
@@ -98,14 +98,14 @@ def f = fun x -> (if true then IISS else BBNN) x
 //│ f: 'a -> 'b
 //│   where
 //│     [+'a, -'b] in {[bool, bool], [number, number]}
-//│     [+'a, -'b] in {[string, string], [int, int]}
+//│     [+'a, -'b] in {[int, int], [string, string]}
 
 // * Q: why 3 elements in the tuple?
 f(0)
 //│ res: 'a
 //│   where
-//│     [+'b, -'a] in {[number, number, number]}
-//│     [+'b, -'a] in {[int, int, int]}
+//│     [+'b, -'a] in {[bool, bool], [number, number]}
+//│     [+'b, -'a] in {[int, int], [string, string]}
 
 // FIXME
 f(0) + 1
@@ -135,9 +135,12 @@ f : number -> int
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.134: 	f : number -> int
 //│ ║         	^
-//│ ╟── type `number` does not match type `?a`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.134: 	f : number -> int
-//│ ╙──       	    ^^^^^^
+//│ ║         	    ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	def IISS: int -> int & string -> string
+//│ ╙──      	          ^^^
 //│ res: number -> int
 
 
@@ -153,16 +156,16 @@ if true then IISS else BBNN
 :e
 (if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.154: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.157: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `int -> int & string -> string` is not a function
 //│ ║  l.12: 	def IISS: int -> int & string -> string
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(0 | 1 | true) -> number`
-//│ ║  l.154: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.157: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║         	              ^^^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.154: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.157: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╙──       	                                ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: (0 | 1 | true) -> number
 
