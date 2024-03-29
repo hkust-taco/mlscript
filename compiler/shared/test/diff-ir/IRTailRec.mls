@@ -1,0 +1,87 @@
+:NewParser
+:ParseOnly
+:UseIR
+
+// :interpIR
+class True // remark: this really should be changed so we don't need to add `class True` every time we want to use conditionals
+class False
+fun f(n) = g(n)
+fun g(m) = f(m)
+fun h() = h()
+2
+//│ |#class| |True|↵|#class| |False|↵|#fun| |f|(|n|)| |#=| |g|(|n|)|↵|#fun| |g|(|m|)| |#=| |f|(|m|)|↵|#fun| |h|(||)| |#=| |h|(||)|↵|2|
+//│ Parsed: {class True {}; class False {}; fun f = (n,) => g(n,); fun g = (m,) => f(m,); fun h = () => h(); 2}
+//│ 
+//│ 
+//│ IR:
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Def(0, f, [n$0],
+//│ 1, 
+//│ let* (x$0) = g(n$0) in -- #5
+//│ x$0 -- #4
+//│ )
+//│ Def(1, g, [m$0],
+//│ 1, 
+//│ let* (x$1) = f(m$0) in -- #11
+//│ x$1 -- #10
+//│ )
+//│ Def(2, h, [],
+//│ 1, 
+//│ let* (x$2) = h() in -- #15
+//│ x$2 -- #14
+//│ )
+//│ },
+//│ 2 -- #16)
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(h), Set(g, f))
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Def(0, f, [n$0],
+//│ 1, 
+//│ jump _g_fopt(0,m$0,n$0) -- #21
+//│ )
+//│ Def(1, g, [m$0],
+//│ 1, 
+//│ jump _g_fopt(1,m$0,n$0) -- #20
+//│ )
+//│ Def(2, h, [],
+//│ 1, 
+//│ jump h() -- #x
+//│ )
+//│ Def(3, _g_fopt, [tailrecBranch,m$0,n$0],
+//│ 1, 
+//│ let scrut = ==(0,tailrecBranch) in -- #19
+//│ if scrut -- #17
+//│   true =>
+//│     jump _g_fopt(0,n$0,n$0) -- #x
+//│   false =>
+//│     jump _g_fopt(1,m$0,m$0) -- #x
+//│ )
+//│ },
+//│ 2 -- #16)
+//│ 
+//│ Promoted:
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Def(0, f, [n$0],
+//│ 1, 
+//│ jump _g_fopt(0,m$0,n$0) -- #21
+//│ )
+//│ Def(1, g, [m$0],
+//│ 1, 
+//│ jump _g_fopt(1,m$0,n$0) -- #20
+//│ )
+//│ Def(2, h, [],
+//│ 1, 
+//│ jump h() -- #x
+//│ )
+//│ Def(3, _g_fopt, [tailrecBranch,m$0,n$0],
+//│ 1, 
+//│ let scrut = ==(0,tailrecBranch) in -- #19
+//│ if scrut -- #17
+//│   true =>
+//│     jump _g_fopt(0,n$0,n$0) -- #x
+//│   false =>
+//│     jump _g_fopt(1,m$0,m$0) -- #x
+//│ )
+//│ },
+//│ 2 -- #16)

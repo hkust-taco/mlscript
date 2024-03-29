@@ -1,9 +1,0 @@
-:NewParser
-:ParseOnly
-:UseIR
-
-:interpIR
-if 2 is
-    2 then 0
-    3 then 0
-    else 0

@@ -17,9 +17,27 @@ import mlscript.compiler.ir.resolveDefnRef
 class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
   private type DefnGraph = Set[DefnNode]
 
-  private def findTailCalls(node: Node)(implicit nodeMap: Map[Defn, DefnNode]): List[DefnNode] = node match
+  // Rewrites nodes of the form
+  // let x = g(params) in x
+  // as Jump(g, params)
+  private def rewriteTailCalls(node: Node): Node = node match
+    case Case(scrut, cases) => Case(scrut, cases.map((ci, node) => (ci, rewriteTailCalls(node))))
+    case LetExpr(name, expr, body) => LetExpr(name, expr, rewriteTailCalls(body))
+    case LetCall(names, defn, args, body) => body match
+      case Result(res) => 
+        val results = res.collect { case Expr.Ref(name) => name }
+        if (names == results) then
+          Jump(defn, args)
+        else
+          LetCall(names, defn, args, rewriteTailCalls(body))
+        
+      case _ => LetCall(names, defn, args, rewriteTailCalls(body))
+    case _ => node
+  
+
+  private def findTailCalls(node: Node)(implicit nodeMap: Map[Int, DefnNode]): List[DefnNode] = node match
     case Result(res)                      => Nil
-    case Jump(defn, args)                 => nodeMap(defn.expectDefn) :: Nil // assume that all definition references are resolved
+    case Jump(defn, args)                 => nodeMap(defn.expectDefn.id) :: Nil // assume that all definition references are resolved
     case Case(scrut, cases)               => cases.flatMap((_, body) => findTailCalls(body))
     case LetExpr(name, expr, body)        => findTailCalls(body)
     case LetCall(names, defn, args, body) => findTailCalls(body)
@@ -41,7 +59,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
   }
 
   // TODO: this is untested. test this.
-  private def partitionNodes(implicit nodeMap: Map[Defn, DefnNode]): List[DefnGraph] = {
+  private def partitionNodes(implicit nodeMap: Map[Int, DefnNode]): List[DefnGraph] = {
     val defns = nodeMap.values.toSet
 
     var ctr = 0
@@ -56,7 +74,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
       stack = src :: stack
 
       for (u <- findTailCalls(src.defn.body)) do {
-        if (u.visited)
+        if (u.visited) then
           if (!u.processed)
             src.lowest = u.num.min(src.lowest)
         else
@@ -118,6 +136,8 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
 
     // TODO: make sure that name clashes aren't a problem
     val trName = Name("tailrecBranch");
+
+    // TODO: Handle clashing variable names in different functions.
     val stackFrame = trName :: defnsList.flatMap(_.params) // take union of stack frames
 
     val stackFrameIdxes = defnsList.foldRight(1 :: Nil)((defn, ls) => defn.params.size + ls.head :: ls)
@@ -148,6 +168,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
     // Tail calls to another function in the component will be replaced with a tail call
     // to the merged function
     def transformDefn(defn: Defn): Defn = {
+      // TODO: Figure out how to substitute variables with dummy variables.
       val args = asLit(defn.id) :: stackFrame.drop(1).map { Expr.Ref(_) }
       val jmp = Jump(newDefnRef, args).attachTag(tag)
       Defn(defn.id, defn.name, defn.params, defn.resultNum, jmp)
@@ -185,20 +206,25 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
   }
 
   def partition(defns: Set[Defn]): List[Set[Defn]] = {
-    val nodeMap: Map[Defn, DefnNode] = defns.foldLeft(Map.empty)((m, d) => m + (d -> DefnNode(d)))
+    val nodeMap: Map[Int, DefnNode] = defns.foldLeft(Map.empty)((m, d) => m + (d.id -> DefnNode(d)))
     partitionNodes(nodeMap).map(g => g.map(d => d.defn))
   }
 
   def apply(p: Program) = run(p)
 
-  def run(p: Program): Program = {
-    val partitions = partition(p.defs)
+  def run_debug(p: Program): (Program, List[Set[String]]) = {
+    val rewritten = p.defs.map(d => Defn(d.id, d.name, d.params, d.resultNum, rewriteTailCalls(d.body)))
+    val partitions = partition(rewritten)
     val newDefs: Set[Defn] = partitions.flatMap { optimize(_, p.classes) }.toSet
 
     // update the definition refs
     newDefs.foreach { defn => resolveDefnRef(defn.body, newDefs, true) }
     resolveDefnRef(p.main, newDefs, true)
 
-    Program(p.classes, newDefs, p.main)
+    (Program(p.classes, newDefs, p.main), partitions.map(t => t.map(f => f.name)))
+  }
+
+  def run(p: Program): Program = {
+    run_debug(p)._1
   }
 }

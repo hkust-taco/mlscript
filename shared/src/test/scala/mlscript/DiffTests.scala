@@ -43,7 +43,7 @@ abstract class ModeType {
   def allowEscape: Bool
   def mono: Bool
   def useIR: Bool
-  def noTailrecOpt: Bool
+  def noTailRecOpt: Bool
   def interpIR: Bool
   def irVerbose: Bool
   def lift: Bool
@@ -179,7 +179,7 @@ class DiffTests
       lift: Bool = false,
       nolift: Bool = false,
       // noProvs: Bool = false,
-      noTailrecOpt: Bool = false,
+      noTailRecOpt: Bool = false,
       useIR: Bool = false,
       interpIR: Bool = false,
       irVerbose: Bool = false,
@@ -206,6 +206,7 @@ class DiffTests
     var irregularTypes = false
     var prettyPrintQQ = false
     var useIR = false
+    var noTailRec = false
     
     // * This option makes some test cases pass which assume generalization should happen in arbitrary arguments
     // * but it's way too aggressive to be ON by default, as it leads to more extrusion, cycle errors, etc.
@@ -250,6 +251,7 @@ class DiffTests
           case "NewParser" => newParser = true; mode
           case "NewDefs" => newParser = true; newDefs = true; mode
           case "NoJS" => noJavaScript = true; mode
+          case "NoTailRec" => noTailRec = true; mode
           case "NoProvs" => noProvs = true; mode
           case "GeneralizeCurriedFunctions" => generalizeCurriedFunctions = true; mode
           case "DontGeneralizeCurriedFunctions" => generalizeCurriedFunctions = false; mode
@@ -288,7 +290,7 @@ class DiffTests
           case "escape" => mode.copy(allowEscape = true)
           case "mono" => {mode.copy(mono = true)}
           case "lift" => {mode.copy(lift = true)}
-          case "noTailrec" => mode.copy(noTailrecOpt = true)
+          case "noTailRec" => mode.copy(noTailRecOpt = true)
           case "nolift" => {mode.copy(nolift = true)}
           case "exit" =>
             out.println(exitMarker)
@@ -463,7 +465,9 @@ class DiffTests
               output(s"AST: $res")
             
             val newMode = if (useIR) { mode.copy(useIR = true) } else mode
-            val (postLines, nuRes) = postProcess(newMode, basePath, testName, res, output)
+            val newNewMode = if (noTailRec) { newMode.copy(noTailRecOpt = true) } else newMode
+
+            val (postLines, nuRes) = postProcess(newNewMode, basePath, testName, res, output)
             postLines.foreach(output)  
             
             if (parseOnly)

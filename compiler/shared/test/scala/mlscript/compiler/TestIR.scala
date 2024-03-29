@@ -23,9 +23,12 @@ class IRDiffTestCompiler extends DiffTests {
         val graph_ = gb.buildGraph(unit)
         output(graph_.toString())
 
-        val graph = if (!mode.noTailrecOpt) {
+        val graph = if (!mode.noTailRecOpt) {
           val tailRecOpt = new TailRecOpt(fnUid, tag)
-          tailRecOpt(graph_)
+          val (g, comps) = tailRecOpt.run_debug(graph_)
+          output("\nStrongly Connected Tail Calls:")
+          output(comps.toString)
+          g
         } else {
           graph_
         }

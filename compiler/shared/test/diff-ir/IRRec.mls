@@ -1,6 +1,7 @@
 :NewParser
 :ParseOnly
 :UseIR
+:NoTailRec
 
 :interpIR
 class True
