@@ -2,15 +2,20 @@
 :p
 
 
-:fixme
-2 + 2
-//│ |2| |+| |2|
-//│ ╔══[PARSE ERROR] Expected end of input after standalone expression; found operator instead
-//│ ║  l.6: 	2 + 2
-//│ ╙──     	  ^
-//│ ╔══[PARSE ERROR] Expected end of input; found operator instead
-//│ ║  l.6: 	2 + 2
-//│ ╙──     	  ^
-//│ AST: List(Empty)
+1 + 2
+//│ |1| |+| |2|
+//│ AST: List(App(Ident(+),Tup(List(IntLit(1), IntLit(2)))))
+
+1 + 2 * 3
+//│ |1| |+| |2| |*| |3|
+//│ AST: List(App(Ident(+),Tup(List(IntLit(1), App(Ident(*),Tup(List(IntLit(2), IntLit(3))))))))
+
+1 + 2 * 3 - 4
+//│ |1| |+| |2| |*| |3| |-| |4|
+//│ AST: List(App(Ident(-),Tup(List(App(Ident(+),Tup(List(IntLit(1), App(Ident(*),Tup(List(IntLit(2), IntLit(3))))))), IntLit(4)))))
+
+1 => 2
+//│ |1| |=>| |2|
+//│ AST: List(App(Ident(=>),Tup(List(IntLit(1), IntLit(2)))))
 
 

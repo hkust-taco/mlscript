@@ -1,0 +1,27 @@
+:global
+:p
+
+
+:fixme
+a and b
+//│ |a| |and| |b|
+//│ ╔══[PARSE ERROR] Expected end of input after standalone expression; found 'and' keyword instead
+//│ ║  l.6: 	a and b
+//│ ╙──     	  ^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
+//│ ║  l.6: 	a and b
+//│ ╙──     	      ^
+//│ AST: List(Empty)
+
+:fixme
+a and b or x and d
+//│ |a| |and| |b| |or| |x| |and| |d|
+//│ ╔══[PARSE ERROR] Expected end of input after standalone expression; found 'and' keyword instead
+//│ ║  l.17: 	a and b or x and d
+//│ ╙──      	  ^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
+//│ ║  l.17: 	a and b or x and d
+//│ ╙──      	      ^
+//│ AST: List(Empty)
+
+
