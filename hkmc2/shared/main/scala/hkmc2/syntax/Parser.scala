@@ -241,6 +241,7 @@ abstract class Parser(
   
   def blockContOf(rule: ParseRule[Tree]): Ls[Tree] =
     yeetSpaces match
+      case (COMMA, _) :: _ => consume; blockOf(rule)
       case (SEMI, _) :: _ => consume; blockOf(rule)
       case (NEWLINE, _) :: _ => consume; blockOf(rule)
       case _ => Nil
@@ -333,6 +334,14 @@ abstract class Parser(
     case (LITVAL(lit), loc) :: _ =>
       consume
       exprCont(lit.asTree, prec, allowNewlines = true)
+    case (BRACKETS(Round, toks), loc) :: _ if toks.forall(_ is SPACE) =>
+      consume
+      val res = Tree.UnitLit(false).withLoc(S(loc))
+      exprCont(res, prec, allowNewlines = true)
+    case (BRACKETS(Round, toks), loc) :: _ =>
+      consume
+      val res = rec(toks, S(loc), "parenthesized expression").concludeWith(_.expr(0))
+      exprCont(res, prec, allowNewlines = true)
     case (BRACKETS(Indent, _), loc) :: _ =>
       err((msg"Expected an expression; found indented block instead" -> lastLoc :: Nil))
       errExpr
@@ -360,16 +369,12 @@ abstract class Parser(
             case t: Tup => t
             case _ => PlainTup(acc)
           }, Unquoted(expr(1)))), prec, allowNewlines)
-          /* 
         case _ :: (br @ BRACKETS(Round, toks), loc) :: _ =>
           consume
           consume
-          val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented()).map {
-            case nme -> Fld(flgs, t) => nme -> Fld(flgs, Unquoted(t))
-          }
+          val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.block)
           val res = App(Unquoted(acc), Tup(as).withLoc(S(loc)))
           exprCont(Quoted(res), prec, allowNewlines)
-          */
         case _ :: (OP(opStr), l0) :: _ =>
           if opPrec(opStr)._1 > prec then {
             consume
@@ -399,7 +404,7 @@ abstract class Parser(
           case (NEWLINE, _) :: _ => consume
           case _ =>
         }
-        val rhs = expr(prec) // TODO support exprOrIf for comma operators
+        val rhs = expr(prec)
         App(Ident(",").withLoc(S(l0)), PlainTup(acc, rhs))
         /* 
       case (KEYWORD(opStr @ "=>"), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>
@@ -552,20 +557,18 @@ abstract class Parser(
         val idx = rec(toks, S(br.innerLoc), "subscript").concludeWith(_.expr(0))
         val res = Subs(acc, idx.withLoc(S(loc)))
         exprCont(res, prec, allowNewlines)*/
-      
+      */
       case (br @ BRACKETS(Round, toks), loc) :: _ if prec <= AppPrec =>
         consume
-        val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
+        val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.block)
         val res = App(acc, Tup(as).withLoc(S(loc)))
         exprCont(res, prec, allowNewlines)
-        
       case (KEYWORD("of"), _) :: _ =>
         consume
-        val as = argsMaybeIndented()
-        // val as = argsOrIf(Nil) // TODO
+        val as = block
         val res = App(acc, Tup(as))
         exprCont(res, prec, allowNewlines)
-        
+      /*
       case c @ (h :: _) if (h._1 match {
         case KEYWORD(":" | "of" | "where" | "extends") | SEMI | BRACKETS(Round | Square, _)
           | BRACKETS(Indent, (

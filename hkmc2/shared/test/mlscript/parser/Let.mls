@@ -123,7 +123,7 @@ in x
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found newline instead
 //│ ║  l.121: 	in x
 //│ ╙──       	    ^
-//│ ╔══[PARSE ERROR] Expected end of input after standalone expression; found '=' keyword instead
+//│ ╔══[PARSE ERROR] Expected end of input after expression; found '=' keyword instead
 //│ ║  l.120: 	x = 1
 //│ ╙──       	  ^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead

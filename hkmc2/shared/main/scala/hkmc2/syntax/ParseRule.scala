@@ -50,7 +50,7 @@ object ParseRule:
   import Tree.*
   
   val standaloneExpr =
-    Expr(ParseRule("standalone expression")(End(())))((l, _: Unit) => l)
+    Expr(ParseRule("expression")(End(())))((l, _: Unit) => l)
   
   def modified(kw: Keyword) =
     Kw(kw)(ParseRule(s"modifier keyword '${kw.name}'")(standaloneExpr)).map(Tree.Modified(kw, _))
@@ -86,7 +86,7 @@ object ParseRule:
   
   val prefixRules: ParseRule[Tree] = ParseRule("start of statement")(
     Kw(`val`):
-      ParseRule("field binding keyword 'val'")(
+      ParseRule("'val' binding keyword")(
         Expr(ParseRule("'val' head")(End(())))((body, _: Unit) => body),
         // Expr(ParseRule("'val' head")(End(())))((body, _) => body),
         Blk(
@@ -130,6 +130,16 @@ object ParseRule:
     modified(`public`),
     modified(`private`),
     standaloneExpr,
-  ) 
+  )
+  
+  val infixRules: ParseRule[Tree] = ParseRule("continuation of statement")(
+    Expr(
+      ParseRule("'and' operator left-hand side"):
+        Kw(`and`):
+          ParseRule("'and' operator")(
+            Expr(ParseRule("'and' operator right-hand side")(End(())))((rhs, _: Unit) => rhs)
+          )
+    ) { case (lhs, rhs) => App(lhs, rhs) },
+  )
 
 

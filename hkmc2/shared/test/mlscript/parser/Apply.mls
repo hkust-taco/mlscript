@@ -2,37 +2,24 @@
 :p
 
 
-:fixme
 f()
 //│ |f|(||)|
-//│ ╔══[PARSE ERROR] Expected end of input after standalone expression; found parenthesis section instead
-//│ ║  l.6: 	f()
-//│ ╙──     	 ^^
-//│ ╔══[PARSE ERROR] Expected end of input; found parenthesis section instead
-//│ ║  l.6: 	f()
-//│ ╙──     	 ^^
-//│ AST: List(Empty)
+//│ AST: List(App(Ident(f),Tup(List())))
 
-:fixme
 f(1)
 //│ |f|(|1|)|
-//│ ╔══[PARSE ERROR] Expected end of input after standalone expression; found parenthesis section instead
-//│ ║  l.17: 	f(1)
-//│ ╙──      	 ^^^
-//│ ╔══[PARSE ERROR] Expected end of input; found parenthesis section instead
-//│ ║  l.17: 	f(1)
-//│ ╙──      	 ^^^
-//│ AST: List(Empty)
+//│ AST: List(App(Ident(f),Tup(List(IntLit(1)))))
 
-:fixme
 f(1, 2, 3)
 //│ |f|(|1|,| |2|,| |3|)|
-//│ ╔══[PARSE ERROR] Expected end of input after standalone expression; found parenthesis section instead
-//│ ║  l.28: 	f(1, 2, 3)
-//│ ╙──      	 ^^^^^^^^^
-//│ ╔══[PARSE ERROR] Expected end of input; found parenthesis section instead
-//│ ║  l.28: 	f(1, 2, 3)
-//│ ╙──      	 ^^^^^^^^^
-//│ AST: List(Empty)
+//│ AST: List(App(Ident(f),Tup(List(App(Ident(,),Tup(List(IntLit(1), App(Ident(,),Tup(List(IntLit(2), IntLit(3)))))))))))
+
+f()()
+//│ |f|(||)|(||)|
+//│ AST: List(App(App(Ident(f),Tup(List())),Tup(List())))
+
+f(1)(2)
+//│ |f|(|1|)|(|2|)|
+//│ AST: List(App(App(Ident(f),Tup(List(IntLit(1)))),Tup(List(IntLit(2)))))
 
 
