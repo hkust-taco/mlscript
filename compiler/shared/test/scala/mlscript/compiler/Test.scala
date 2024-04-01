@@ -7,6 +7,8 @@ import mlscript.{DiffTests, ModeType, TypingUnit}
 import mlscript.compiler.TreeDebug
 import mlscript.compiler.mono.Monomorph
 import mlscript.compiler.mono.MonomorphError
+import mlscript.Polyfill
+import mlscript.compiler.polydef.Polydef
 
 class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*
@@ -33,6 +35,10 @@ class DiffTestCompiler extends DiffTests {
         outputBuilder ++= "Lifting failed: " ++ err.toString()
         if mode.fullExceptionStack then 
           outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
+    if(mode.polydef) {
+      val pd = Polydef()
+      output(pd(rstUnit).toString())
+    }
     if(mode.mono){
       output("Mono:")
       //outputBuilder ++= "\nMono:\n"

@@ -42,6 +42,7 @@ abstract class ModeType {
   def showRepl: Bool
   def allowEscape: Bool
   def mono: Bool
+  def polydef: Bool
   def lift: Bool
   def nolift: Bool
 }
@@ -172,6 +173,7 @@ class DiffTests
       showRepl: Bool = false,
       allowEscape: Bool = false,
       mono: Bool = false,
+      polydef: Bool = false,
       lift: Bool = false,
       nolift: Bool = false,
       // noProvs: Bool = false,
@@ -278,6 +280,7 @@ class DiffTests
           case "r" | "showRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
           case "mono" => {mode.copy(mono = true)}
+          case "pd" => {mode.copy(polydef = true)}
           case "lift" => {mode.copy(lift = true)}
           case "nolift" => {mode.copy(nolift = true)}
           case "exit" =>

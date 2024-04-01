@@ -74,13 +74,6 @@ enum PathElem[+T <: PathElemType] {
   def rev: PathElem[T] = this match
     case n: Normal => n
     case s: Star => s.copy(elms = s.elms.reverse)
-//   def pp(using config: PrettyPrintConfig): Str = this match
-//     case n@Normal(r@Var(Ident(_, Var(nme), uid))) =>
-//       (if config.showPolarity then n.pol.pp else "")
-//       + nme
-//       + (if config.showIuid then s":$uid" else "")
-//       + (if config.showRefEuid then s"^${r.uid}" else "")
-//     case Star(elms) => s"{${elms.map(_.pp).mkString(" · ")}}*"
   def canCancel[V <: PathElemType](other: PathElem[V]): Boolean = (this, other) match
     case (n: Normal, o: Normal) => (n == o) && (n.pol.canCancel(o.pol))
     case _ => ???
@@ -91,9 +84,6 @@ case class Path(p: Ls[PathElem[PathElemType]]) {
   lazy val last = this.p.last.asInstanceOf[PathElem.Normal]
   // merge two consecutive identical stars during concatenation if we have stars
   def ::: (other: Path) = Path(other.p ::: p)
-//   def pp(using config: PrettyPrintConfig): Str = if !config.pathAsIdent
-//     then s"[${p.map(_.pp).mkString(" · ")}]"
-//     else p.map(_.pp(using InitPpConfig.showRefEuidOn)).mkString("_")
 
   lazy val annihilated: Path =
     def anni(i: Ls[PathElem[PathElemType]], o: Ls[PathElem[PathElemType]]): Path = (i, o) match
@@ -114,21 +104,6 @@ case class Path(p: Ls[PathElem[PathElemType]]) {
     }
     Path(prod) -> Path(cons.reverse)
   }
-
-//   def reachable(callsInfo: (mutable.Set[Var], mutable.Map[Ident, Set[Var]])): Boolean = {
-//     p match {
-//       case Nil => true
-//       case PathElem.Normal(ref) :: t => {
-//         val headCheck: Boolean = callsInfo._1.contains(ref)
-//         val nextCalls: Option[Set[Var]] = callsInfo._2.get(ref.id)
-//         (headCheck, nextCalls) match {
-//           case (true, Some(next)) => Path(t).reachable((next.to(mutable.Set), callsInfo._2))
-//           case _ => false
-//         }
-//       }
-//       case _ => ???
-//     }
-//   }
 }
 object Path {
   lazy val empty = Path(Nil)
@@ -136,31 +111,13 @@ object Path {
 case class Strat[+T <: (ProdStratEnum | ConsStratEnum)](val s: T)(val path: Path) {
   def updatePath(newPath: Path): Strat[T] = this.copy()(path = newPath)
   def addPath(newPath: Path): Strat[T] = this.updatePath(newPath ::: this.path)
-  //def pp(using config: PrettyPrintConfig): Str = if config.showPath then s"(${path.pp}: ${s.pp})" else s.pp
   lazy val negPath = this.copy()(path = path.neg)
-//   lazy val asInPath: Option[Path] = this.s match {
-//     case pv: ProdStratEnum.ProdVar => pv.asInPath
-//     case cv: ConsStratEnum.ConsVar => cv.asInPath
-//     case _ => None
-//   }
-//   lazy val asOutPath: Option[Path] = this.s match {
-//     case pv: ProdStratEnum.ProdVar => pv.asOutPath
-//     case cv: ConsStratEnum.ConsVar => cv.asOutPath
-//     case _ => None
-//   }
 }
 trait ToStrat[+T <: (ProdStratEnum | ConsStratEnum)] { self: T =>
   def toStrat(p: Path = Path(Nil)): Strat[T] = Strat(this)(p)
   //def pp(using config: PrettyPrintConfig): Str
 }
-trait TypevarWithBoundary(val boundary: Option[Var]) { this: (ProdStratEnum.ProdVar | ConsStratEnum.ConsVar) =>
-//   lazy val asInPath: Option[Path] = this.boundary.map(_.toPath(PathElemPol.In))
-//   lazy val asOutPath: Option[Path] = this.boundary.map(_.toPath(PathElemPol.Out))
-//   def printBoundary(config: PrettyPrintConfig) = boundary.map {
-//     case r@Var(Ident(_, Var(nme), uid)) =>
-//       (if config.showIuid then s"_${uid}" else "") +
-//       (if config.showRefEuid then s"^${r.uid}" else "")
-//   }.getOrElse("")
+trait TypevarWithBoundary(val boundary: Option[Var]) { this: (ProdStratEnum.ProdVar | ConsStratEnum.ConsVar) => ()
 }
 trait MkCtorTrait { this: ProdStratEnum.MkCtor =>
   override def equals(x: Any): Boolean = x match {
@@ -187,39 +144,8 @@ enum ProdStratEnum(using val euid: TermId) extends ToStrat[ProdStratEnum] {
     extends ProdStratEnum
     with ToStrat[ProdVar]
     with TypevarWithBoundary(boundary)
+  case ProdTup(fields: Ls[ProdStrat])(using TermId) extends ProdStratEnum with ToStrat[ProdTup]
   case DeadCodeProd()(using TermId) extends ProdStratEnum with ToStrat[DeadCodeProd]
-
-//   def pp(using config: PrettyPrintConfig): Str = this match
-//     case NoProd() => "NoProd"
-//     case MkCtor(ctor, args) if args.length > 0 => s"${ctor.name}(${args.map(_.pp).mkString(", ")})"
-//     case MkCtor(ctor, _) => ctor.name
-//     case Sum(ls) => s"Sum[${ls.map(_.pp).mkString(", ")}]"
-//     case ProdFun(l, r) => s"${l.pp} => ${r.pp}"
-//     case pv@ProdVar(uid, n) =>
-//       (if config.showVuid then s"$uid" else "") +
-//       s"'$n" +
-//       (if config.showVboundary then pv.printBoundary else "")
-//     case DeadCodeProd() => "DeadCodeProd"
-
-  // def representsDeadCode(using pd: Polydef, cache: Set[TypeVarId] = Set()): Boolean = {
-  //   if !(pd.exprs.isDefinedAt(this.euid)) then
-  //     false
-  //   else
-  //     this match {
-  //       case p: (MkCtor | NoProd | Sum | ProdFun) => !pd.isNotDead.contains(p)
-  //       case v: ProdVar =>
-  //         if cache(v.uid) then
-  //           true
-  //         else
-  //           pd.upperBounds(v.uid).forall { case (_, s) => s.s match {
-  //             case ConsStratEnum.DeadCodeCons() => true
-  //             case ConsStratEnum.ConsVar(uid, name) => ProdVar(uid, name)().representsDeadCode(using d, cache + v.uid)
-  //             case _ => false
-  //           }}
-  //       case DeadCodeProd() => lastWords("deadcodeprod cannot associate with an expr")
-  //     }
-  // }
-
 }
 enum ConsStratEnum(using val euid: TermId) extends ToStrat[ConsStratEnum] {
   case NoCons()(using TermId) extends ConsStratEnum with ToStrat[NoCons]
@@ -231,22 +157,11 @@ enum ConsStratEnum(using val euid: TermId) extends ToStrat[ConsStratEnum] {
     extends ConsStratEnum
     with ToStrat[ConsVar]
     with TypevarWithBoundary(boundary)
+  case ConsTup(fields: Ls[ConsStrat])(using TermId) extends ConsStratEnum with ToStrat[ConsTup]
   case DeadCodeCons()(using TermId) extends ConsStratEnum with ToStrat[DeadCodeCons]
-
-//   def pp(using config: PrettyPrintConfig): Str = this match
-//     case NoCons() => "NoCons"
-//     case DeadCodeCons() => "DeadCodeCons"
-//     case Destruct(x) => s"Destruct(${x.map(_.pp).mkString(", ")})"
-//     case ConsFun(l, r) => s"${l.pp} => ${r.pp}"
-//     case cv@ConsVar(uid, n) =>
-//       (if config.showVuid then s"$uid" else "") +
-//       s"'$n" +
-//       (if config.showVboundary then cv.printBoundary else "")
 }
 import ProdStratEnum.*, ConsStratEnum.*
 case class Destructor(ctor: Var, argCons: Ls[Strat[ConsVar]]) {
-//   def pp(using config: PrettyPrintConfig): Str =
-//     if argCons.length > 0 then s"${ctor.name}(${argCons.map(_.pp).mkString(", ")})" else ctor.name
 }
 object ProdStratEnum {
   def prodBool(using TermId) = Sum(
@@ -256,11 +171,6 @@ object ProdStratEnum {
   def prodFloat(using TermId) = MkCtor(Var("Float"), Nil)
   def prodChar(using TermId) = MkCtor(Var("Char"), Nil)
   def prodString(using pd: Polydef, euid: TermId): ProdStratEnum = {
-    // val v = pd.freshVar("_lh_string")
-    // val nil = MkCtor(Var("LH_N"), Nil)
-    // val cons = MkCtor(Var("LH_C"), prodChar.toStrat() :: v._1.toStrat() :: Nil)
-    // pd.constrain(nil.toStrat(), v._2.toStrat())
-    // pd.constrain(cons.toStrat(), v._2.toStrat())
     NoProd()(using euid)
   }
   def prodString(s: Str)(using TermId): MkCtor = s.headOption match {
@@ -315,7 +225,7 @@ object Ctx {
 
 class Polydef {
   
-  extension (t: Term) {
+  extension (t: Statement) {
     def uid = termMap.getOrElse(t, {
       val id = euid.nextUid
       termMap.addOne((t, euid.nextUid))
@@ -325,7 +235,7 @@ class Polydef {
 
   var log: Str => Unit = (s) => ()
   var constraints: Ls[Cnstr] = Nil
-  val termMap = mutable.Map.empty[Term, TermId]
+  val termMap = mutable.Map.empty[Statement, TermId]
   val varsName = mutable.Map.empty[TypeVarId, Str]
   val vuid = Uid.TypeVar.State()
   val iuid = Uid.Ident.State()
@@ -340,8 +250,8 @@ class Polydef {
     varsName += vid -> n
     log(s"fresh var '$n")
     (pv, cv)
-  //def freshVar(n: Ident)(using TermId): ((ProdStratEnum & ToStrat[ProdVar] & TypevarWithBoundary), (ConsStratEnum & ToStrat[ConsVar] & TypevarWithBoundary)) =
-  //  freshVar(n.pp(using InitPpConfig.showIuidOn))
+  def freshVar(n: Ident)(using TermId): ((ProdStratEnum & ToStrat[ProdVar] & TypevarWithBoundary), (ConsStratEnum & ToStrat[ConsVar] & TypevarWithBoundary)) =
+   freshVar(n.pp(using InitPpConfig.showIuidOn))
 
   def apply(p: TypingUnit): Ls[Ident -> ProdStrat] = 
     if constraints.nonEmpty then return Nil
@@ -376,7 +286,7 @@ class Polydef {
   val dtorExprToType = mutable.Map.empty[TermId, Destruct]
   val exprToProdType = mutable.Map.empty[TermId, ProdStrat]
 
-  def process(e: Term)(using ctx: Ctx, calls: mutable.Set[Var], varCtx: Map[String, Ident]): ProdStrat = 
+  def process(e: Statement)(using ctx: Ctx, calls: mutable.Set[Var], varCtx: Map[String, Ident]): ProdStrat = 
     val res: ProdStratEnum = e match
       case IntLit(_) => prodInt(using noExprId)
       case DecLit(_) => prodFloat(using noExprId) // floating point numbers as integers type
@@ -391,39 +301,24 @@ class Polydef {
         val sv = freshVar(s"${e.uid}_callres")(using e.uid)
         constrain(funcRes, ConsFun(argRes, sv._2.toStrat())(using noExprId).toStrat())
         sv._1
-      // case Lam(Tup(args), body) =>
-      //   args.map{
-      //     case (None, Fld(_, _, v: Var)) if => 
-      //   }
-      //   ProdFun(sv._2.toStrat(),
-      //     process(body)(using ctx + ()))
-    //   case Function(param, body) =>
-    //     val sv = freshVar(param)(using noExprId)
-    //     ProdFun(sv._2.toStrat(),
-    //       process(body, false)(using ctx + (param -> sv._1.toStrat()))
-    //     )(using e.uid)
-    //   case IfThenElse(scrut, thenn, elze) =>
-    //     constrain(process(scrut, false), consBool(using noExprId).toStrat())
-    //     val res = freshVar(s"${e.uid}_ifres")(using e.uid)
-    //     constrain(process(thenn, true && isTail), res._2.toStrat())
-    //     constrain(process(elze, true && isTail), res._2.toStrat())
-    //     res._1
-    //   case LetIn(id, rhs, body) =>
-    //     val v = freshVar(id)(using noExprId)
-    //     constrain(process(rhs, false)(using ctx + (id -> v._1.toStrat())), v._2.toStrat())
-    //     process(body, true && isTail)(using ctx + (id -> v._1.toStrat())).s
-    //   case LetGroup(defs, body) =>
-    //     assert(defs.nonEmpty)
-    //     val vs = defs.keys.map(k => k -> freshVar(k)(using noExprId)).toMap
-    //     given newCtx: Ctx = ctx ++ vs.mapValues(_._1.toStrat()).toMap
-    //     defs.foreach { case (id, rhs) =>
-    //       val t = process(rhs, false)(using newCtx)
-    //       constrain(t, vs(id)._2.toStrat())
-    //     }
-    //     process(body, true && isTail)(using newCtx).s
-    //   case Sequence(fst, snd) =>
-    //     process(fst, false)
-    //     process(snd, true && isTail).s
+      case Lam(t @ Tup(args), body) =>
+        val mapping = args.map{
+          case (None, Fld(_, v: Var)) =>
+            val argId = nextIdent(false, v)
+            (argId, freshVar(s"${e.uid}_${v.name}")(using noExprId))
+          case _ => ??? // Unsupported
+        }
+        ProdFun(ConsTup(mapping.map(_._2._2.toStrat()))(using t.uid).toStrat(),
+          process(body)(using ctx ++ mapping.map((i, s) => (i, s._1.toStrat()))))(using e.uid)
+      case If(IfThen(scrut, thenn), S(elze)) =>
+        constrain(process(scrut), consBool(using noExprId).toStrat())
+        val res = freshVar(s"${e.uid}_ifres")(using e.uid)
+        constrain(process(thenn), res._2.toStrat())
+        constrain(process(elze), res._2.toStrat())
+        res._1
+      case If(_) => ??? // Desugar first (resolved by pretyper OR moving post-process point)
+      //case Blk(stmts) => 
+      // val results = stmts.map(process)
 
     res.toStrat()
     //registerExprToType(e, res.toStrat())
