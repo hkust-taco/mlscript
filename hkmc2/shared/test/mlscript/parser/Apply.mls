@@ -22,4 +22,40 @@ f(1)(2)
 //│ |f|(|1|)|(|2|)|
 //│ AST: List(App(App(Ident(f),Tup(List(IntLit(1)))),Tup(List(IntLit(2)))))
 
+f(
+  1
+)
+//│ |f|(|→|1|←|↵|)|
+//│ AST: List(App(Ident(f),Tup(List(IntLit(1)))))
+
+f(
+  1,
+)
+//│ |f|(|→|1|,|←|↵|)|
+//│ AST: List(App(Ident(f),Tup(List(IntLit(1)))))
+
+f(
+  1,
+  2,
+  3
+)
+//│ |f|(|→|1|,|↵|2|,|↵|3|←|↵|)|
+//│ AST: List(App(Ident(f),Tup(List(IntLit(1), IntLit(2), IntLit(3)))))
+
+f(
+  1,
+  2,
+  3,
+)
+//│ |f|(|→|1|,|↵|2|,|↵|3|,|←|↵|)|
+//│ AST: List(App(Ident(f),Tup(List(IntLit(1), IntLit(2), IntLit(3)))))
+
+f(
+  1
+  2
+  3
+)
+//│ |f|(|→|1|↵|2|↵|3|←|↵|)|
+//│ AST: List(App(Ident(f),Tup(List(IntLit(1), IntLit(2), IntLit(3)))))
+
 

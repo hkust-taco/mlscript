@@ -184,6 +184,17 @@ abstract class Parser(
     printDbg(s"Concluded with $res")
     res
   
+  
+  final def maybeIndented[R](f: Parser => R): R =
+    cur match
+      case (br @ BRACKETS(Indent, toks), _) :: _ =>
+        consume
+        rec(toks, S(br.innerLoc), br.describe).concludeWith(f)
+      case _ => f(this)
+  
+  final def blockMaybeIndented: Ls[Tree] =
+    maybeIndented(_.block)
+  
   def block: Ls[Tree] = blockOf(ParseRule.prefixRules)
   
   def blockOf(rule: ParseRule[Tree]): Ls[Tree] = wrap(rule.name):
@@ -380,7 +391,7 @@ abstract class Parser(
         case _ :: (br @ BRACKETS(Round, toks), loc) :: _ =>
           consume
           consume
-          val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.block)
+          val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
           val res = App(Unquoted(acc), Tup(as).withLoc(S(loc)))
           exprCont(Quoted(res), prec, allowNewlines)
         case _ :: (OP(opStr), l0) :: _ =>
@@ -568,12 +579,12 @@ abstract class Parser(
       */
       case (br @ BRACKETS(Round, toks), loc) :: _ if prec <= AppPrec =>
         consume
-        val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.block)
+        val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
         val res = App(acc, Tup(as).withLoc(S(loc)))
         exprCont(res, prec, allowNewlines)
       case (KEYWORD("of"), _) :: _ =>
         consume
-        val as = block
+        val as = blockMaybeIndented
         val res = App(acc, Tup(as))
         exprCont(res, prec, allowNewlines)
       /*
