@@ -2,23 +2,25 @@
 :p
 
 
-// Support?
-:fixme
+a
+//│ |a|
+//│ AST: List(Ident(a))
+
 a,
 //│ |a|,|
-//│ ╔══[PARSE ERROR] Expected an expression; found end of input instead
-//│ ║  l.7: 	a,
-//│ ╙──     	  ^
-//│ AST: List(App(Ident(,),Tup(List(Ident(a), Empty))))
+//│ AST: List(Ident(a))
 
+a, b
+//│ |a|,| |b|
+//│ AST: List(Ident(a), Ident(b))
 
 a, b, c
 //│ |a|,| |b|,| |c|
-//│ AST: List(App(Ident(,),Tup(List(Ident(a), App(Ident(,),Tup(List(Ident(b), Ident(c))))))))
+//│ AST: List(Ident(a), Ident(b), Ident(c))
 
 
 class A, res
 //│ |class| |A|,| |res|
-//│ AST: List(TypeDecl(App(Ident(,),Tup(List(Ident(A), Ident(res)))),None,None))
+//│ AST: List(TypeDecl(Ident(A),None,None), Ident(res))
 
 

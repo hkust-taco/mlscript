@@ -7,6 +7,10 @@ import mlscript.utils.*, shorthands.*
 
 class Keyword(val name: String, val leftPrec: Opt[Int], val rightPrec: Opt[Int]):
   Keyword.all += name -> this
+  def assumeLeftPrec: Int = leftPrec.getOrElse(lastWords(s"$this does not have left precedence"))
+  def assumeRightPrec: Int = rightPrec.getOrElse(lastWords(s"$this does not have right precedence"))
+  def leftPrecOrMin: Int = leftPrec.getOrElse(Int.MinValue)
+  def rightPrecOrMin: Int = rightPrec.getOrElse(Int.MaxValue)
   override def toString: Str = s"keyword '$name'"
 
 object Keyword:
@@ -15,6 +19,13 @@ object Keyword:
   
   // val Let = Keyword("let", 0, 0)
   // val Let = Keyword("let", 0, 0)
+  
+  private var _curPrec = 1
+  private def curPrec: S[Int] = S(_curPrec)
+  private def nextPrec: S[Int] =
+    val res = _curPrec
+    _curPrec += 1
+    S(res)
   
   val `if` = Keyword("if", N, N)
   val `then` = Keyword("then", N, N)
@@ -28,9 +39,9 @@ object Keyword:
   val `of` = Keyword("of", N, N)
   val `and` = Keyword("and", N, N)
   val `or` = Keyword("or", N, N)
-  val `let` = Keyword("let", N, N)
+  val `let` = Keyword("let", nextPrec, nextPrec)
   val `rec` = Keyword("rec", N, N)
-  val `in` = Keyword("in", N, N)
+  val `in` = Keyword("in", nextPrec, curPrec)
   val `out` = Keyword("out", N, N)
   val `mut` = Keyword("mut", N, N)
   val `set` = Keyword("set", N, N)
@@ -41,8 +52,8 @@ object Keyword:
   val `trait` = Keyword("trait", N, N)
   val `mixin` = Keyword("mixin", N, N)
   val `interface` = Keyword("interface", N, N)
-  val `extends` = Keyword("extends", N, N)
-  val `with` = Keyword("with", N, N)
+  val `extends` = Keyword("extends", nextPrec, nextPrec)
+  val `with` = Keyword("with", curPrec, curPrec)
   val `override` = Keyword("override", N, N)
   val `super` = Keyword("super", N, N)
   val `new` = Keyword("new", N, N)
@@ -61,9 +72,11 @@ object Keyword:
   val `false` = Keyword("false", N, N)
   val `public` = Keyword("public", N, N)
   val `private` = Keyword("private", N, N)
-  val `=` = Keyword("=", N, N)
+  val `=` = Keyword("=", nextPrec, curPrec)
   
   val modifiers = Set(
     `abstract`, mut, virtual, `override`, declare, public, `private`)
-
+  
+  val maxPrec = curPrec
+  
 

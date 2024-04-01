@@ -12,7 +12,7 @@ f(1)
 
 f(1, 2, 3)
 //│ |f|(|1|,| |2|,| |3|)|
-//│ AST: List(App(Ident(f),Tup(List(App(Ident(,),Tup(List(IntLit(1), App(Ident(,),Tup(List(IntLit(2), IntLit(3)))))))))))
+//│ AST: List(App(Ident(f),Tup(List(IntLit(1), IntLit(2), IntLit(3)))))
 
 f()()
 //│ |f|(||)|(||)|
