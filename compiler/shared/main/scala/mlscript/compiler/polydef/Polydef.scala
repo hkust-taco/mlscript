@@ -210,22 +210,9 @@ object ConsStratEnum {
   def consChar(using TermId) = Destruct(Destructor(Var("Char"), Nil) :: Nil)
 }
 
-case class Ctx(bindings: Map[Ident, Strat[ProdVar]]) {
-  def apply(id: Ident): Strat[ProdVar] =
-    bindings.getOrElse(id, lastWords(s"binding not found: " + id))
-  def + (b: Ident -> Strat[ProdVar]): Ctx =
-    copy(bindings = bindings + b)
-  def ++ (bs: Iterable[Ident -> Strat[ProdVar]]): Ctx =
-    copy(bindings = bindings ++ bs)
-}
-object Ctx {
-  def empty = Ctx(Map.empty)
-}
-
-
 class Polydef {
   
-  extension (t: Statement) {
+  extension (t: Term) {
     def uid = termMap.getOrElse(t, {
       val id = euid.nextUid
       termMap.addOne((t, euid.nextUid))
@@ -235,13 +222,11 @@ class Polydef {
 
   var log: Str => Unit = (s) => ()
   var constraints: Ls[Cnstr] = Nil
-  val termMap = mutable.Map.empty[Statement, TermId]
+  val termMap = mutable.Map.empty[Term, TermId]
   val varsName = mutable.Map.empty[TypeVarId, Str]
   val vuid = Uid.TypeVar.State()
-  val iuid = Uid.Ident.State()
   val euid = Uid.Term.State()
   val noExprId = euid.nextUid
-  def nextIdent(isDef: Bool, name: Var): Ident = Ident(isDef, name, iuid.nextUid(name.name))
 
   def freshVar(n: String)(using TermId): ((ProdStratEnum & ToStrat[ProdVar] & TypevarWithBoundary), (ConsStratEnum & ToStrat[ConsVar] & TypevarWithBoundary)) =
     val vid = vuid.nextUid
@@ -250,69 +235,62 @@ class Polydef {
     varsName += vid -> n
     log(s"fresh var '$n")
     (pv, cv)
-  def freshVar(n: Ident)(using TermId): ((ProdStratEnum & ToStrat[ProdVar] & TypevarWithBoundary), (ConsStratEnum & ToStrat[ConsVar] & TypevarWithBoundary)) =
-   freshVar(n.pp(using InitPpConfig.showIuidOn))
+  def freshVar(n: Var)(using TermId): ((ProdStratEnum & ToStrat[ProdVar] & TypevarWithBoundary), (ConsStratEnum & ToStrat[ConsVar] & TypevarWithBoundary)) =
+   freshVar(n.name)
 
-  def apply(p: TypingUnit): Ls[Ident -> ProdStrat] = 
-    if constraints.nonEmpty then return Nil
-    // TODO: Collect Defs?
-    val vars: Map[Ident, Strat[ProdVar]] = Map() //p.rawEntities.collect { 
-      // case L(ProgDef(id, body)) =>
-      //   id -> freshVar(id.pp(using InitPpConfig))(using noExprId)._1.toStrat()
-    //}.toMap
-
-    val ctx = Ctx.empty ++ vars
+  def apply(p: TypingUnit): Ls[Var -> ProdStrat] = 
+    // if constraints.nonEmpty then return Nil
+    val vars: Map[Var, Strat[ProdVar]] = p.rawEntities.collect { 
+      case fun: NuFunDef =>
+        fun.nme -> freshVar(fun.name)(using noExprId)._1.toStrat()
+    }.toMap
+    val ctx = vars
     p.rawEntities.map {
-      case ty: NuTypeDef => {
+      case f: NuFunDef => {
         val calls = mutable.Set.empty[Var]
-        val p = process(Blk(ty.body.rawEntities))(using ctx, calls, Map.empty)
-        val id = nextIdent(true, ty.nameVar)
-        val v = vars(id).s
+        val p = process(f.rhs match 
+          case Left(value) => value
+          case Right(value) => ???)(using ctx)
+        val v = vars(f.nme).s
         constrain(p, ConsVar(v.uid, v.name)()(using noExprId).toStrat())
-        callsInfo._2.addOne(id -> calls.toSet)
       }
       case t: Term => {
         val calls = mutable.Set.empty[Var]
-        val topLevelProd = process(t)(using ctx, calls, Map.empty)
+        val topLevelProd = process(t)(using ctx)
         constrain(topLevelProd, NoCons()(using noExprId).toStrat())
-        callsInfo._1.addAll(calls)
       }
     }
     vars.toList
 
-  val tailPosExprIds = mutable.Set.empty[TermId]
-  val callsInfo = (mutable.Set.empty[Var], mutable.Map.empty[Ident, Set[Var]])
   val ctorExprToType = mutable.Map.empty[TermId, MkCtor]
   val dtorExprToType = mutable.Map.empty[TermId, Destruct]
   val exprToProdType = mutable.Map.empty[TermId, ProdStrat]
 
-  def process(e: Statement)(using ctx: Ctx, calls: mutable.Set[Var], varCtx: Map[String, Ident]): ProdStrat = 
-    val res: ProdStratEnum = e match
+  def process(t: Term)(using ctx: Map[Var, Strat[ProdVar]]): ProdStrat = 
+    val res: ProdStratEnum = t match
       case IntLit(_) => prodInt(using noExprId)
       case DecLit(_) => prodFloat(using noExprId) // floating point numbers as integers type
       case StrLit(_) => ???
-      case r @ Var(id) => if varCtx(id).isDef then {
-        calls.add(r)
-        ctx(varCtx(id)).s.copy()(Some(r))(using e.uid)
-      } else ctx(varCtx(id)).s.copy()(None)(using e.uid)
+      case r @ Var(id) =>// if varCtx(id).isDef then {
+        ctx(r).s.copy()(Some(r))(using t.uid)
+      //} else ctx(r).s.copy()(None)(using t.uid)
       case App(func, arg) => 
         val funcRes = process(func)
         val argRes = process(arg)
-        val sv = freshVar(s"${e.uid}_callres")(using e.uid)
+        val sv = freshVar(s"${t.uid}_callres")(using t.uid)
         constrain(funcRes, ConsFun(argRes, sv._2.toStrat())(using noExprId).toStrat())
         sv._1
       case Lam(t @ Tup(args), body) =>
         val mapping = args.map{
           case (None, Fld(_, v: Var)) =>
-            val argId = nextIdent(false, v)
-            (argId, freshVar(s"${e.uid}_${v.name}")(using noExprId))
+            (v, freshVar(s"${t.uid}_${v.name}")(using noExprId))
           case _ => ??? // Unsupported
         }
         ProdFun(ConsTup(mapping.map(_._2._2.toStrat()))(using t.uid).toStrat(),
-          process(body)(using ctx ++ mapping.map((i, s) => (i, s._1.toStrat()))))(using e.uid)
+          process(body)(using ctx ++ mapping.map((i, s) => (i, s._1.toStrat()))))(using t.uid)
       case If(IfThen(scrut, thenn), S(elze)) =>
         constrain(process(scrut), consBool(using noExprId).toStrat())
-        val res = freshVar(s"${e.uid}_ifres")(using e.uid)
+        val res = freshVar(s"${t.uid}_ifres")(using t.uid)
         constrain(process(thenn), res._2.toStrat())
         constrain(process(elze), res._2.toStrat())
         res._1
@@ -320,12 +298,24 @@ class Polydef {
       //case Blk(stmts) => 
       // val results = stmts.map(process)
 
-    res.toStrat()
-    //registerExprToType(e, res.toStrat())
+    registerTermToType(t, res.toStrat())
 
   def constrain(prod: ProdStrat, cons: ConsStrat): Unit = {
-    (prod.s, cons.s) match
-      // case (NoProd(), _) | (_, NoCons()) => ()
-      case (p, c) => constraints ::= (prod, cons)
+    //if (cache.contains(prod -> cons)) return ()
+    
+    // (prod.s, cons.s) match
+    //     case (ProdVar(v, pn), ConsVar(w, cn))
+    //       if v === w => ()
+  }
+
+  private def registerTermToType(t: Term, s: ProdStrat) = {
+    exprToProdType.get(t.uid) match {
+      case None => {
+        exprToProdType += t.uid -> s
+        s
+      }
+      case Some(value) =>
+        lastWords(s"${t} registered two prod strategies:\n already has ${value}, but got ${s}")
+    }
   }
 }

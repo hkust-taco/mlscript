@@ -18,14 +18,15 @@ class DiffTestCompiler extends DiffTests {
     //output(unit.toString())
     if (mode.lift) output(PrettyPrinter.showTypingUnit(unit))
 
-    output("Lifted:")
     //outputBuilder ++= "\nLifted:\n"
     var rstUnit = unit;
     try
       val lifter = ClassLifter(mode.fullExceptionStack)
-      if (!mode.nolift) rstUnit = lifter.liftTypingUnit(unit)
+      if (!mode.nolift)
+        output("Lifted:")
+        rstUnit = lifter.liftTypingUnit(unit)
+        output(PrettyPrinter.showTypingUnit(rstUnit))
       if (mode.showParse) output(rstUnit.toString())
-      output(PrettyPrinter.showTypingUnit(rstUnit))
       //outputBuilder ++= s"${mlscript.codegen.Helpers.inspect(rstUnit)}\n"
       //outputBuilder ++= PrettyPrinter.showTypingUnit(rstUnit)
       if (mode.dbgLifting) 
@@ -36,8 +37,12 @@ class DiffTestCompiler extends DiffTests {
         if mode.fullExceptionStack then 
           outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
     if(mode.polydef) {
+      output("\nPolydef:")
       val pd = Polydef()
-      output(pd(rstUnit).toString())
+      pd(rstUnit)
+      output(pd.termMap.toString())
+      output(pd.exprToProdType.toString())
+      output("Polydef end\n")
     }
     if(mode.mono){
       output("Mono:")

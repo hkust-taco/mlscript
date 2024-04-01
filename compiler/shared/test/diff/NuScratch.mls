@@ -1,16 +1,19 @@
 :NewDefs
 
+:pd
+:nolift
 :p
-(y,x: Int) => y+1
-//│ |(|y|,|x|#:| |Int|)| |#=>| |y|+|1|
-//│ AST: TypingUnit(List(Lam(Tup(List((None,Fld(_,Var(y))), (Some(Var(x)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(y))), (None,Fld(_,IntLit(1)))))))))
-//│ Lifted:
-//│ TypingUnit(List(NuTypeDef(Cls,TypeName(Lambda2$1$1),List(),Some(Tup(List())),None,None,List(),None,None,TypingUnit(List(NuFunDef(None,Var(apply),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(y))), (Some(Var(x)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(y))), (None,Fld(_,IntLit(1)))))))))))), Blk(List(App(Var(Lambda2$1$1),Tup(List()))))))
-//│ TypingUnit {
-//│   class Lambda2$1$1([]) {fun apply = (y, x: Int,) => +(y, 1,)}
-//│   Code(List({Lambda2$1$1()}))
-//│ }
-//│ Parsed: (y, x: Int,) => +(y, 1,);
-//│ (Int, x: Int) -> Int
-//│ res
-//│     = [Function: res]
+let id(y) = y
+//│ |#let| |id|(|y|)| |#=| |y|
+//│ AST: TypingUnit(List(NuFunDef(Some(false),Var(id),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(y))))),Var(y))))))
+//│ TypingUnit(List(NuFunDef(Some(false),Var(id),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(y))))),Var(y))))))
+//│ 
+//│ Polydef:
+//│ HashMap(Tup(List((None,Fld(_,Var(y))))) -> 2, Var(y) -> 4, Lam(Tup(List((None,Fld(_,Var(y))))),Var(y)) -> 6)
+//│ HashMap(4 -> Strat(ProdVar(1,1_y)), 6 -> Strat(ProdFun(Strat(ConsTup(List(Strat(ConsVar(1,1_y))))),Strat(ProdVar(1,1_y)))))
+//│ Polydef end
+//│ 
+//│ Parsed: let id = (y,) => y;
+//│ let id: forall 'a. 'a -> 'a
+//│ id
+//│    = [Function: id]
