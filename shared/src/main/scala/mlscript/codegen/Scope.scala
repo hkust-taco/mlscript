@@ -86,6 +86,7 @@ class Scope(val name: Str, enclosing: Opt[Scope]) {
       "Wildcard",
       "NoCases",
       "discard",
+      "window",
     ) foreach { name =>
       register(BuiltinSymbol(name, name))
     }
