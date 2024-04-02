@@ -86,7 +86,7 @@ def nfind table key =
 //│ nfind: List[{0: anything, 1: 'val}] -> anything -> (anything -> 'a -> 'a | 'val)
 
 def nfind: List[{0: anything; 1: 'val}] -> anything -> (anything -> 'a -> 'a | 'val)
-//│ nfind: List[{0: anything, 1: 'val}] -> anything -> ('val | anything -> 'a -> 'a)
+//│ nfind: List[{0: anything, 1: 'val}] -> anything -> (anything -> 'a -> 'a | 'val)
 
 // * Alternative
 // def nfind table key =
@@ -128,9 +128,9 @@ add (nfind table "one")
 //│ ║  l.63: 	table = hashtbl_add table "one" (fun f -> fun x -> f x)
 //│ ╙──      	                                                     ^
 //│ res: error | ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
-//│ constrain calls  : 113
+//│ constrain calls  : 100
 //│ annoying  calls  : 7
-//│ subtyping calls  : 365
+//│ subtyping calls  : 305
 
 // * On the other hand, in this variation, distributivity saves the day:
 
@@ -150,24 +150,24 @@ add (tmp "one")
 :stats
 add (nfind table "one")
 //│ res: ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
-//│ constrain calls  : 105
+//│ constrain calls  : 94
 //│ annoying  calls  : 7
-//│ subtyping calls  : 331
+//│ subtyping calls  : 280
 
 :stats
 (fun x -> add x) (nfind table "one")
 //│ res: ChurchInt -> (('a -> ('a & 'b)) -> 'a -> 'b | ChurchInt)
-//│ constrain calls  : 119
+//│ constrain calls  : 106
 //│ annoying  calls  : 7
-//│ subtyping calls  : 372
+//│ subtyping calls  : 314
 
 
 :stats
 zog = printInt (add (nfind table "one") (nfind table "two"))
 //│ zog: string
-//│ constrain calls  : 318
+//│ constrain calls  : 283
 //│ annoying  calls  : 14
-//│ subtyping calls  : 971
+//│ subtyping calls  : 786
 
 :DontGeneralizeArguments
 // ==========================================================================================
@@ -224,7 +224,7 @@ foo 1 error 2
     fun () -> fun f -> fun x -> x,
     fun v -> v
   ) (find table key)) "two"
-//│ res: ('a -> 'b) -> ('c & 'a) -> ('b | 'c)
+//│ res: ('a -> 'b) -> ('c & 'a) -> ('c | 'b)
 
 res id
 //│ res: 'a -> 'a

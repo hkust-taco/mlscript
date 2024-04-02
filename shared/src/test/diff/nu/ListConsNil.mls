@@ -93,10 +93,10 @@ module Nil extends List[nothing] {
 // TODO should better simplify these types (reduce the List refinement)
 
 :ng
-let test0: Cons[Int] & List[Num]
-let test1: Nil & List[Int]
-//│ let test0: Cons[Int] & List[Num]
-//│ let test1: Nil & List[Int]
+val test0: Cons[Int] & List[Num]
+val test1: Nil & List[Int]
+//│ val test0: Cons[Int] & List[Num]
+//│ val test1: Nil & List[Int]
 
 
 

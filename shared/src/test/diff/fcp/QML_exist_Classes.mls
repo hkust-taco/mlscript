@@ -135,16 +135,16 @@ simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 //│    = [Function: simpleStepImpl]
 //│ constrain calls  : 9926
 //│ annoying  calls  : 78
-//│ subtyping calls  : 70332
+//│ subtyping calls  : 28186
 // * Note that the above incidentally can be checked using recursive types
 :RecursiveTypes
 :stats
 simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 //│ res: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]
 //│    = [Function: simpleStepImpl]
-//│ constrain calls  : 579
+//│ constrain calls  : 432
 //│ annoying  calls  : 104
-//│ subtyping calls  : 5591
+//│ subtyping calls  : 3111
 :NoRecursiveTypes
 
 // * Apparently, it's due to excessive extrusion due to the type annot not being generalized!
@@ -152,9 +152,9 @@ simpleStepImpl : ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 simpleStepImpl : forall 'a 'r. ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 //│ res: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string,)]
 //│    = [Function: simpleStepImpl]
-//│ constrain calls  : 711
+//│ constrain calls  : 576
 //│ annoying  calls  : 104
-//│ subtyping calls  : 1792
+//│ subtyping calls  : 1183
 
 
 
@@ -166,11 +166,11 @@ def simpleStep: Arrays['a] -> Arrays['a]
 
 // * Note: this one fails to type check when the file is typed with `:ConstrainedTypes`
 def simpleStep arr = arr (fun impl -> fun (k: ArraysRepConsumer['a, 'r]) -> k (simpleStepImpl impl))
-//│ ((forall 'a 'A 'A0 'A1 'Rep. ArraysRep[in 'A & 'A1 & 'A0 out 'A | 'A1, 'Rep] -> ArraysRepConsumer['A, 'a] -> 'a) -> 'b) -> 'b
+//│ ((forall 'A 'A0 'A1 'Rep 'a. ArraysRep[in 'A & 'A0 & 'A1 out 'A | 'A0, 'Rep] -> ArraysRepConsumer['A, 'a] -> 'a) -> 'b) -> 'b
 //│   where
-//│     'A :> 'A1
-//│        <: 'A0
-//│     'A0 <: 'A
+//│     'A :> 'A0
+//│        <: 'A1
+//│     'A1 <: 'A
 //│   <:  simpleStep:
 //│ Arrays['a] -> Arrays['a]
 //│           = [Function: simpleStep]
@@ -227,7 +227,7 @@ sb (fun arr -> arr.Sub 0 (arr.Init true))
 //│   TypeError: number 0 is not iterable (cannot read property Symbol(Symbol.iterator))
 
 sb (fun arr -> arr.Update (arr.Init true) 1 false)
-//│ res: ??Rep
+//│ res: anything
 //│    = [ false, 'updated' ]
 
 :e // * Rightly prevent skolem confusion
@@ -254,7 +254,7 @@ sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.234: 	sb (fun arr1 -> sb (fun arr2 -> arr2.Update (arr1.Init true)))
 //│ ╙──       	                                             ^^^^^^^^^^^^^^
-//│ res: error | int -> anything -> (??Rep | ??Rep0)
+//│ res: error | int -> anything -> anything
 //│    = [Function (anonymous)]
 
 sb (fun arr ->
@@ -270,20 +270,20 @@ sb (fun arr ->
 
 :e
 def simpleStep arr = arr (fun impl -> fun k -> k (simpleStepImpl impl))
-//│ ((forall 'Rep 'a 'A 'c 'A0 'd 'Rep0 'A1. ArraysRep[in 'A1 & 'A & 'A0 out 'A | 'A1, in 'Rep0 & 'Rep & 'c out 'Rep0 | 'Rep] -> ((forall 'Rep1. ArraysImpl['A0, 'Rep1] with {
-//│   fold: forall 'b. ('A -> 'b -> 'b) -> 'b -> (('Rep, anything,),) -> 'b,
-//│   init: 'A1 -> ('Rep0, "initialized",),
-//│   sub: (('Rep, anything,),) -> int -> 'A,
-//│   update: forall 'e. (('Rep & 'e, anything,),) -> int -> 'A1 -> ('Rep0 | 'e, "updated",)
-//│ }) -> 'a) -> 'a) -> 'f) -> 'f
+//│ ((forall 'A 'A0 'A1 'Rep 'Rep0 'a 'c 'd. ArraysRep[in 'A & 'A0 & 'A1 out 'A0 | 'A, in 'Rep & 'Rep0 & 'a out 'Rep | 'Rep0] -> ((forall 'Rep1. ArraysImpl['A1, 'Rep1] with {
+//│   fold: forall 'b. ('A0 -> 'b -> 'b) -> 'b -> (('Rep0, anything,),) -> 'b,
+//│   init: 'A -> ('Rep, "initialized",),
+//│   sub: (('Rep0, anything,),) -> int -> 'A0,
+//│   update: forall 'e. (('Rep0 & 'e, anything,),) -> int -> 'A -> ('Rep | 'e, "updated",)
+//│ }) -> 'd) -> 'd) -> 'f) -> 'f
 //│ where
-//│   'Rep1 :> ('Rep0 | 'd, "initialized" | "updated",)
-//│         <: ('Rep & 'c, anything,)
-//│   'c <: 'Rep & 'd
-//│   'd :> 'Rep0
-//│      <: 'Rep & 'c
-//│   'A0 :> 'A
-//│       <: 'A1
+//│   'Rep1 :> ('Rep | 'c, "initialized" | "updated",)
+//│         <: ('Rep0 & 'a, anything,)
+//│   'a <: 'Rep0 & 'c
+//│   'c :> 'Rep
+//│      <: 'Rep0 & 'a
+//│   'A1 :> 'A0
+//│       <: 'A
 //│   <:  simpleStep:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type error in def definition
@@ -381,13 +381,13 @@ def stepImpl arrImpl = ArraysImpl {
     fold = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.Fold f (arrImpl.Fold f b r0) r1
   }
 //│ stepImpl: ArraysRep[in 'A & 'A0 & 'A1 out 'A0 | 'A, in 'Rep & 'Rep0 & 'a & 'c out 'Rep | 'Rep0] -> (ArraysImpl['A1, 'Rep1] with {
-//│   fold: forall 'b 'b0. ('A0 -> 'b0 -> 'b0 & 'A0 -> 'b -> ('b0 & 'b)) -> ('b0 & 'b) -> (('Rep0, 'Rep0,),) -> 'b0,
+//│   fold: forall 'b 'b0. ('A0 -> 'b -> 'b & 'A0 -> 'b0 -> ('b & 'b0)) -> ('b & 'b0) -> (('Rep0, 'Rep0,),) -> 'b,
 //│   init: 'A -> ('Rep, 'Rep,),
 //│   sub: (('Rep0, 'Rep0,),) -> int -> 'A0,
 //│   update: forall 'd 'e. (('Rep0 & 'd, 'Rep0 & 'e,),) -> int -> 'A -> ('Rep | 'd, 'Rep | 'e,)
 //│ })
 //│ where
-//│   'Rep1 :> ('Rep | 'a | 'f, 'Rep | 'c | 'g,)
+//│   'Rep1 :> ('Rep | 'a | 'f, 'Rep | 'g | 'c,)
 //│         <: ('Rep0 & 'a, 'Rep0 & 'c,)
 //│   'c <: 'Rep0 & 'g
 //│   'g :> 'Rep
@@ -405,7 +405,7 @@ def step: Arrays['a] -> Arrays['a]
 //│     = <missing implementation>
 
 def step arr = arr (fun impl -> fun (k: ArraysRepConsumer['a, 'r]) -> k (stepImpl impl))
-//│ ((forall 'Rep 'a 'A 'A0 'A1. ArraysRep[in 'A & 'A0 & 'A1 out 'A | 'A0, 'Rep] -> ArraysRepConsumer['A, 'a] -> 'a) -> 'b) -> 'b
+//│ ((forall 'A 'A0 'A1 'Rep 'a. ArraysRep[in 'A & 'A0 & 'A1 out 'A | 'A0, 'Rep] -> ArraysRepConsumer['A, 'a] -> 'a) -> 'b) -> 'b
 //│   where
 //│     'A :> 'A0
 //│        <: 'A1
@@ -460,7 +460,7 @@ snb = mkMonoArray 5
 //│    = [Function (anonymous)]
 
 snb (fun arr -> arr.Init true)
-//│ res: ??Rep | ??Rep0
+//│ res: anything
 //│    = [
 //│        [ [ [Array], [Array] ], [ [Array], [Array] ] ],
 //│        [ [ [Array], [Array] ], [ [Array], [Array] ] ]
@@ -477,7 +477,7 @@ snb = mkMonoArray 5
 //│    = [Function (anonymous)]
 
 snb (fun arr -> arr.Init true)
-//│ res: ??Rep | ??Rep0
+//│ res: anything
 //│    = [ [ [ [Array], 'initialized' ], 'initialized' ], 'initialized' ]
 
 

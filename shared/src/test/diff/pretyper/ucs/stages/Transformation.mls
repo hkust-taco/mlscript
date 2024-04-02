@@ -42,7 +42,7 @@ fun zipWith(f, xs, ys) =
 //│     Cons(x, xs) and ys is Cons(y, ys) and zipWith(f, xs, ys,) is Some(tail) then Some(Cons(f(x, y,), tail,),)
 //│     Nil and ys is Nil then Some(Nil,)
 //│   else None
-//│ fun zipWith: forall 'T 'T0 'T1 'T2. (('T0, 'T1) -> 'T2, Cons['T0] | Object & ~#Cons, Cons['T1] | Object & ~#Cons) -> (None | Some[in List['T2] & 'T out Nil | 'T | Cons['T2]])
+//│ fun zipWith: forall 'T 'T0 'T1 'T2. (('T, 'T0) -> 'T1, Cons['T] | Object & ~#Cons, Cons['T0] | Object & ~#Cons) -> (None | Some[in List['T1] & 'T2 out Nil | 'T2 | Cons['T1]])
 
 :ducs:transform.result
 fun getOrElse[T](x: Option[T], default: T): T =

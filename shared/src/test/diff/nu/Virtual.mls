@@ -26,7 +26,7 @@ Bar().f(40)
 class Baz() extends Bar() {
   fun f(x: Int) = x + 3
 }
-//│ ╔══[ERROR] Value member `f` is not virtual and cannot be overridden
+//│ ╔══[ERROR] Value member 'f' is not virtual and cannot be overridden
 //│ ║  l.27: 	  fun f(x: Int) = x + 3
 //│ ║        	      ^^^^^^^^^^^^^^^^^
 //│ ╟── Originally declared here:
@@ -41,7 +41,7 @@ class Baz() extends Bar() {
 class Baz() extends Foo {
   val g = 1
 }
-//│ ╔══[ERROR] Value member `g` is not virtual and cannot be overridden
+//│ ╔══[ERROR] Value member 'g' is not virtual and cannot be overridden
 //│ ║  l.42: 	  val g = 1
 //│ ║        	      ^^^^^
 //│ ╟── Originally declared here:

@@ -15,7 +15,7 @@ fun f(x) = if
   x is A then 31
   x is B then 3
   else 4
-//│ fun f: (B | Object & ~#B) -> (2 | 31 | 3 | 4)
+//│ fun f: (B | Object & ~#B) -> (2 | 3 | 31 | 4)
 
 
 

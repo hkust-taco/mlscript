@@ -31,7 +31,7 @@ def foo x = case x of {
 //│ foo: ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | ~#D & ({fE: 'fA} & #E | ~#E & ({fF: 'fA} & #F | ~#F & ({fG: 'fA} & #G | {fH: 'fA} & #H & ~#G))))))) -> 'fA
 //│ constrain calls  : 26
 //│ annoying  calls  : 0
-//│ subtyping calls  : 623
+//│ subtyping calls  : 756
 
 
 // ====== 1 & all ====== //
@@ -41,9 +41,9 @@ def arg: A[int]
 foo arg
 //│ arg: A[int]
 //│ res: int
-//│ constrain calls  : 20
+//│ constrain calls  : 19
 //│ annoying  calls  : 9
-//│ subtyping calls  : 257
+//│ subtyping calls  : 248
 
 :stats
 :e
@@ -53,7 +53,7 @@ foo arg
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.51: 	foo arg
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~#B | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.22: 	  | A -> x.fA
 //│ ║        	         ^^^^
@@ -61,9 +61,9 @@ foo arg
 //│ ║  l.21: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: error | int
-//│ constrain calls  : 39
+//│ constrain calls  : 36
 //│ annoying  calls  : 31
-//│ subtyping calls  : 741
+//│ subtyping calls  : 698
 
 :stats
 :e
@@ -73,7 +73,7 @@ foo arg
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.71: 	foo arg
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~#B | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.22: 	  | A -> x.fA
 //│ ║        	         ^^^^
@@ -81,9 +81,9 @@ foo arg
 //│ ║  l.21: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: error | int
-//│ constrain calls  : 71
+//│ constrain calls  : 65
 //│ annoying  calls  : 90
-//│ subtyping calls  : 4236
+//│ subtyping calls  : 3208
 
 :stats
 :e
@@ -93,7 +93,7 @@ foo arg
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.91: 	foo arg
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~#B | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.22: 	  | A -> x.fA
 //│ ║        	         ^^^^
@@ -101,9 +101,9 @@ foo arg
 //│ ║  l.21: 	def foo x = case x of {
 //│ ╙──      	                 ^
 //│ res: error
-//│ constrain calls  : 90
+//│ constrain calls  : 82
 //│ annoying  calls  : 209
-//│ subtyping calls  : 25579
+//│ subtyping calls  : 16245
 
 
 // ====== 2 ====== //
@@ -116,12 +116,12 @@ def foo x = case x of {
   }
 def arg: A[int] | B[int]
 foo arg
-//│ foo: ({fA: 'fA} & #A | {fB: 'fA} & #B & ~#A) -> 'fA
+//│ foo: ({fB: 'fA} & #B & ~#A | {fA: 'fA} & #A) -> 'fA
 //│ arg: A[int] | B[int]
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.118: 	foo arg
 //│ ║         	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~#B | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.114: 	  | A -> x.fA
 //│ ║         	         ^^^^
@@ -129,9 +129,9 @@ foo arg
 //│ ║  l.113: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error | int
-//│ constrain calls  : 47
+//│ constrain calls  : 44
 //│ annoying  calls  : 31
-//│ subtyping calls  : 523
+//│ subtyping calls  : 494
 
 
 // ====== 3 ====== //
@@ -150,7 +150,7 @@ foo arg
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.147: 	foo arg
 //│ ║         	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~#B | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.142: 	  | A -> x.fA
 //│ ║         	         ^^^^
@@ -158,9 +158,9 @@ foo arg
 //│ ║  l.141: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error | int
-//│ constrain calls  : 82
+//│ constrain calls  : 76
 //│ annoying  calls  : 90
-//│ subtyping calls  : 4004
+//│ subtyping calls  : 2989
 
 
 // ====== 4 ====== //
@@ -180,7 +180,7 @@ foo arg
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.177: 	foo arg
 //│ ║         	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~#B | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.171: 	  | A -> x.fA
 //│ ║         	         ^^^^
@@ -188,9 +188,9 @@ foo arg
 //│ ║  l.170: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 102
+//│ constrain calls  : 94
 //│ annoying  calls  : 131
-//│ subtyping calls  : 5312
+//│ subtyping calls  : 3984
 
 :stats
 :e
@@ -198,7 +198,7 @@ foo (arg with { x = 1} with { y = 2 })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.197: 	foo (arg with { x = 1} with { y = 2 })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int, x: 1, y: 2} & #A | {fB: int, x: 1, y: 2} & ~#B | {fB: int, x: 1, y: 2} & ~?a)` does not have field 'fA'
+//│ ╟── expression of type `#B & ({fB: int, x: 1, y: 2} & ~#B | {fB: int, x: 1, y: 2} & ~?a | {fB: int, x: 1, y: 2} & #A)` does not have field 'fA'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.171: 	  | A -> x.fA
 //│ ║         	         ^^^^
@@ -206,9 +206,9 @@ foo (arg with { x = 1} with { y = 2 })
 //│ ║  l.170: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 77
+//│ constrain calls  : 69
 //│ annoying  calls  : 128
-//│ subtyping calls  : 4801
+//│ subtyping calls  : 3450
 
 :stats
 :e
@@ -216,7 +216,7 @@ foo (arg with { x = 1; y = 2; z = 3 })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.215: 	foo (arg with { x = 1; y = 2; z = 3 })
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int, x: 1, y: 2, z: 3} & #A | {fB: int, x: 1, y: 2, z: 3} & ~#B | {fB: int, x: 1, y: 2, z: 3} & ~?a)` does not have field 'fA'
+//│ ╟── expression of type `#B & ({fB: int, x: 1, y: 2, z: 3} & ~#B | {fB: int, x: 1, y: 2, z: 3} & ~?a | {fB: int, x: 1, y: 2, z: 3} & #A)` does not have field 'fA'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.171: 	  | A -> x.fA
 //│ ║         	         ^^^^
@@ -224,9 +224,9 @@ foo (arg with { x = 1; y = 2; z = 3 })
 //│ ║  l.170: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 77
+//│ constrain calls  : 69
 //│ annoying  calls  : 128
-//│ subtyping calls  : 4801
+//│ subtyping calls  : 3450
 
 
 // ====== 5 ====== //
@@ -247,7 +247,7 @@ foo arg
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.244: 	foo arg
 //│ ║         	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~#B | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.237: 	  | A -> x.fA
 //│ ║         	         ^^^^
@@ -255,9 +255,9 @@ foo arg
 //│ ║  l.236: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 106
+//│ constrain calls  : 98
 //│ annoying  calls  : 131
-//│ subtyping calls  : 5565
+//│ subtyping calls  : 4272
 
 
 // ====== 6 ====== //
@@ -279,7 +279,7 @@ foo arg
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.276: 	foo arg
 //│ ║         	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~#B | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.268: 	  | A -> x.fA
 //│ ║         	         ^^^^
@@ -287,9 +287,9 @@ foo arg
 //│ ║  l.267: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 110
+//│ constrain calls  : 102
 //│ annoying  calls  : 131
-//│ subtyping calls  : 5903
+//│ subtyping calls  : 4618
 
 
 // ====== 7 ====== //
@@ -312,7 +312,7 @@ foo arg
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.309: 	foo arg
 //│ ║         	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~#B | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.300: 	  | A -> x.fA
 //│ ║         	         ^^^^
@@ -320,9 +320,9 @@ foo arg
 //│ ║  l.299: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 114
+//│ constrain calls  : 106
 //│ annoying  calls  : 131
-//│ subtyping calls  : 6283
+//│ subtyping calls  : 5027
 
 def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ foo_manual: ({fA: 'a} & #A | ~#A & ({fB: 'a} & #B | ~#B & ({fC: 'a} & #C | ~#C & ({fD: 'a} & #D | ~#D & ({fE: 'a} & #E | ~#E & ({fF: 'a} & #F | {fG: 'a} & #G & ~#F)))))) -> 'a
@@ -345,16 +345,16 @@ foo_manual arg
 //│ res: error
 //│ constrain calls  : 24
 //│ annoying  calls  : 67
-//│ subtyping calls  : 3627
+//│ subtyping calls  : 4417
 
 :stats
 foo_manual = foo
 //│ ({fA: 'fA} & #A | ~#A & ({fB: 'fA} & #B | ~#B & ({fC: 'fA} & #C | ~#C & ({fD: 'fA} & #D | ~#D & ({fE: 'fA} & #E | ~#E & ({fF: 'fA} & #F | {fG: 'fA} & #G & ~#F)))))) -> 'fA
 //│   <:  foo_manual:
 //│ ({fA: 'a} & #A | ~#A & ({fB: 'a} & #B | ~#B & ({fC: 'a} & #C | ~#C & ({fD: 'a} & #D | ~#D & ({fE: 'a} & #E | ~#E & ({fF: 'a} & #F | {fG: 'a} & #G & ~#F)))))) -> 'a
-//│ constrain calls  : 98
+//│ constrain calls  : 91
 //│ annoying  calls  : 183
-//│ subtyping calls  : 3588
+//│ subtyping calls  : 3611
 
 
 // ====== 8 ====== //
@@ -378,7 +378,7 @@ foo arg
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.375: 	foo arg
 //│ ║         	^^^^^^^
-//│ ╟── expression of type `#B & ({fB: int} & #A | {fB: int} & ~#B | {fB: int} & ~?a)` does not have field 'fA'
+//│ ╟── expression of type `#B & ({fB: int} & ~#B | {fB: int} & ~?a | {fB: int} & #A)` does not have field 'fA'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.365: 	  | A -> x.fA
 //│ ║         	         ^^^^
@@ -386,8 +386,8 @@ foo arg
 //│ ║  l.364: 	def foo x = case x of {
 //│ ╙──       	                 ^
 //│ res: error
-//│ constrain calls  : 118
+//│ constrain calls  : 110
 //│ annoying  calls  : 131
-//│ subtyping calls  : 6710
+//│ subtyping calls  : 5504
 
 

@@ -776,7 +776,7 @@ rec def merge cmp l1 l2 =
       if cmp h1 h2 <= 0
       then Cons(h1, merge cmp t1 l2)
       else Cons(h2, merge cmp l1 t2)
-//│ ('A -> 'A0 -> number) -> List['A & 'a] -> List['A0 & 'a] -> List['A | 'A0 | 'a]
+//│ ('A -> 'A0 -> number) -> List['A & 'a] -> List['A0 & 'a] -> List['a | 'A0 | 'A]
 //│   <:  merge:
 //│ ('a -> 'a -> int) -> List['a] -> List['a] -> List['a]
 
@@ -850,7 +850,7 @@ def stable_sort cmp l =
   in
   let len = length l in
   if len < 2 then l else fst (sort len l)
-//│ ('A -> 'A -> number) -> (List['A & 'A0] & 'a & List['A & 'A1]) -> (List['A1 | 'A0] | 'a)
+//│ ('A -> 'A -> number) -> (List['A & 'A0] & 'a & List['A & 'A1]) -> (List['A0 | 'A1] | 'a)
 //│   <:  stable_sort:
 //│ ('a -> 'a -> int) -> List['a] -> List['a]
 
@@ -971,7 +971,7 @@ def sort_uniq cmp l =
   in
   let len = length l in
   if len < 2 then l else fst (sort len l)
-//│ ('A -> 'A -> number) -> (List['A & 'A0] & 'a & List['A & 'A1]) -> (List['A1 | 'A0] | 'a)
+//│ ('A -> 'A -> number) -> (List['A & 'A0] & 'a & List['A & 'A1]) -> (List['A0 | 'A1] | 'a)
 //│   <:  sort_uniq:
 //│ ('a -> 'a -> int) -> List['a] -> List['a]
 

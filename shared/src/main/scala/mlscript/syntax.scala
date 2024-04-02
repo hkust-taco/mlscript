@@ -90,8 +90,11 @@ final case class Forall(params: Ls[TypeVar], body: Term)             extends Ter
 final case class Inst(body: Term)                                    extends Term // Explicit instantiation of polymohic term
 final case class Super()                                             extends Term
 final case class Eqn(lhs: Var, rhs: Term)                            extends Term // equations such as x = y, notably used in constructors; TODO: make lhs a Term
+final case class Quoted(body: Term)                                  extends Term 
+final case class Unquoted(body: Term)                                extends Term 
 final case class Rft(base: Term, decls: TypingUnit)                  extends Term
 final case class While(cond: Term, body: Term)                       extends Term
+final case class Ann(ann: Term, receiver: Term)                      extends Term
 
 final case class AdtMatchWith(cond: Term, arms: Ls[AdtMatchPat])     extends Term
 final case class AdtMatchPat(pat: Term, rhs: Term)                   extends AdtMatchPatImpl
@@ -207,13 +210,13 @@ final case class NuTypeDef(
   superAnnot: Opt[Type],
   thisAnnot: Opt[Type],
   body: TypingUnit
-)(val declareLoc: Opt[Loc], val abstractLoc: Opt[Loc])
+)(val declareLoc: Opt[Loc], val abstractLoc: Opt[Loc], val annotations: Ls[Term])
   extends NuDecl with Statement with Outer {
     def isPlainJSClass: Bool = params.isEmpty
   }
 
 final case class NuFunDef(
-  isLetRec: Opt[Bool], // None means it's a `fun`, which is always recursive; Some means it's a `let` or `val`
+  isLetRec: Opt[Bool], // None means it's a `fun`, which is always recursive; Some means it's a `let`/`let rec` or `val`
   nme: Var,
   symbolicNme: Opt[Var],
   tparams: Ls[TypeName],
@@ -225,11 +228,14 @@ final case class NuFunDef(
   val signature: Opt[NuFunDef],
   val outer: Opt[Outer],
   val genField: Bool, // true means it's a `val`; false means it's a `let`
+  val annotations: Ls[Term],
 ) extends NuDecl with DesugaredStatement {
   val body: Located = rhs.fold(identity, identity)
   def kind: DeclKind = Val
   val abstractLoc: Opt[Loc] = None
-
+  
+  def isLetOrLetRec: Bool = isLetRec.isDefined && !genField
+  
   // If the member has no implementation, it is virtual automatically
   def isVirtual: Bool = virtualLoc.nonEmpty || rhs.isRight
   

@@ -59,7 +59,7 @@ fun map[A, B, C, D](eob: EitherOrBoth[A, B], f: A -> C, g: B -> D): EitherOrBoth
     Left(left) then Left(f(left))
     Right(right) then Right(g(right))
     Both(left, right) then Both(f(left), g(right))
-//│ fun map: forall 'D 'A 'B 'C. (eob: EitherOrBoth['A, 'B], f: 'A -> 'C, g: 'B -> 'D) -> EitherOrBoth['C, 'D]
+//│ fun map: forall 'A 'B 'C 'D. (eob: EitherOrBoth['A, 'B], f: 'A -> 'C, g: 'B -> 'D) -> EitherOrBoth['C, 'D]
 
 fun fold[A, B, C](eob: EitherOrBoth[A, B], f: A -> C, g: B -> C, h: [A, B] -> C): C =
   if eob is

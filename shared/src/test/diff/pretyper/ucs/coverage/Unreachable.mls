@@ -28,7 +28,7 @@ fun reachable_1(x) =
     _ and f(x) then "cos"
     Some(xv) then "sin"
     None then "tan"
-//│ fun reachable_1: (None | Some[Eql[1]] | Some[anything] & ~#Some) -> ("cos" | "sin" | "tan")
+//│ fun reachable_1: (None | Some[anything] & ~#Some | Some[Eql[1]]) -> ("cos" | "sin" | "tan")
 
 reachable_1(Some(1))
 reachable_1(Some(2))

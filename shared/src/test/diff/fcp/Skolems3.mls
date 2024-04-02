@@ -37,7 +37,7 @@ def baz x =
 //│ ╟── back into type variable `'a`
 //│ ║  l.30: 	  (x: 's -> 's): forall 'a. 'a -> 'a
 //│ ╙──      	                                  ^^
-//│ baz: (('s | ??a) -> (??a0 & 's)) -> (forall 'a. 'a -> 'a)
+//│ baz: (anything -> ??a) -> (forall 'a. 'a -> 'a)
 //│    = [Function: baz]
 
 // * Thankfully, it turns out this kind of situations just doesn't seem to arise very often.
@@ -67,7 +67,7 @@ def lift x = (mut x)
 
 def bar y =
   (fun x -> y (lift x)) : forall 'a. 'a -> 'a
-//│ bar: (MutArray[in 'a out 'a | ??a] -> ??a0) -> (forall 'a0. 'a0 -> 'a0)
+//│ bar: (MutArray[anything] -> ??a) -> (forall 'a. 'a -> 'a)
 //│    = [Function: bar2]
 
 def bar y =
@@ -87,12 +87,12 @@ def bar y =
 
 def bar y =
   (fun x -> y (lift x)) : forall 'a. MutArray['a] -> 'a
-//│ bar: (MutArray[in 'a out 'a | MutArray[in ??a out ??a0]] -> ??a) -> (forall 'a0. MutArray['a0] -> 'a0)
+//│ bar: (MutArray[in 'a out MutArray[in ??a out ??a0] | 'a] -> ??a) -> (forall 'a0. MutArray['a0] -> 'a0)
 //│    = [Function: bar6]
 
 def bar y =
   (fun x -> y (lift x)) : forall 'a. MutArray['a] -> MutArray['a]
-//│ bar: (MutArray[in 'a out 'a | MutArray[in ??a out ??a0]] -> MutArray[in ??a0 out ??a]) -> (forall 'a0. MutArray['a0] -> MutArray['a0])
+//│ bar: (MutArray[in 'a out MutArray[in ??a out ??a0] | 'a] -> MutArray[in ??a0 out ??a]) -> (forall 'a0. MutArray['a0] -> MutArray['a0])
 //│    = [Function: bar7]
 
 // * Again, we can still make it fail using contrived annotations.
@@ -204,7 +204,7 @@ id3 = id
 
 def bar y =
   (fun x -> y (id3 x, 0)) : forall 'a. ('a -> 'a) -> ('a -> 'a)
-//│ bar: (((??a & 's) -> ('s | ??a0), 0,) -> ??a0 -> ??a) -> (forall 'a. ('a -> 'a) -> 'a -> 'a)
+//│ bar: ((??a -> anything, 0,) -> ??a0 -> ??a) -> (forall 'a. ('a -> 'a) -> 'a -> 'a)
 //│    = [Function: bar12]
 
 
@@ -223,7 +223,7 @@ def baz x =
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.213: 	  (x: ('s -> 's) -> 0): forall 'a. ('a -> 'a) -> 0
 //│ ╙──       	             ^^
-//│ baz: (((??a & 's) -> ('s | ??a0)) -> 0) -> (forall 'a. ('a -> 'a) -> 0)
+//│ baz: ((??a -> anything) -> 0) -> (forall 'a. ('a -> 'a) -> 0)
 //│    = [Function: baz4]
 
 
@@ -271,7 +271,7 @@ def boo x =
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.260: 	  let tmp = (x: ('s -> 's) -> 't): forall 'a. ('a -> 'a) -> 0
 //│ ╙──       	                       ^^
-//│ boo: (((??a & 's) -> ('s | ??a0)) -> 0) -> 0
+//│ boo: ((??a -> anything) -> 0) -> 0
 //│    = [Function: boo3]
 
 

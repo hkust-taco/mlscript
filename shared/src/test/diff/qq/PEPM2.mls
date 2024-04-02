@@ -1,0 +1,110 @@
+:NewDefs
+:QQ
+
+
+fun power(x) = case
+  0 then `1.0
+  n then x `*. power(x)(n - 1)
+//│ fun power: forall 'a. Code[Num, 'a] -> (0 | Int & ~0) -> Code[Num, 'a]
+
+run(x `=> id(x) `* x)
+//│ Int -> Int
+//│ res
+//│     = Quoted:
+//│       (x_0) =>
+//│         (x_0 * x_0)
+//│       undefined
+
+run(`(x => x + x))
+//│ Int -> Int
+//│ res
+//│     = Quoted:
+//│       ((x_1) =>
+//│         (x_1 + x_1))
+//│       undefined
+
+
+fun assertNotZero(x) =
+  `if (x `== `0.0) then `error else x
+fun checkedDiv = x `=> y `=> x `/ assertNotZero(y)
+run(checkedDiv)
+//│ fun assertNotZero: forall 'a 'b. Code[Num & 'a, 'b] -> Code['a, 'b]
+//│ fun checkedDiv: Code[Num -> Num -> Num, nothing]
+//│ Num -> Num -> Num
+//│ res
+//│     = Quoted:
+//│       (x_2) =>
+//│         (y_0) =>
+//│           (x_2 / let ucs$test$0_0 =
+//│             (y_0 == 0)
+//│             in match ucs$test$0_0:
+//│               case true => error
+//│               _ => y_0))
+//│       undefined
+
+fun show: Code[anything, anything] -> Str = _ => "debug"
+fun inc(dbg) =
+  x `=> let c = x `+ `1 in dbg(c), c
+inc(c => log(show(c)))
+//│ fun show: Code[anything, anything] -> Str
+//│ fun inc: (Code[Int, anything] -> anything) -> Code[Int -> Int, nothing]
+//│ Code[Int -> Int, nothing]
+//│ res
+//│     = '(x_3) =>\n  (x_3 + 1)'
+//│ // Output
+//│ debug
+
+fun body(x, y) = case
+  0 then x
+  1 then y
+  n then body(y, x `+ y)(n - 1)
+fun gib_naive(n) =
+  (x, y) `=> body(x, y)(n)
+let gn5 = run(gib_naive(5))
+//│ fun body: forall 'a. (Code[Int, 'a], Code[Int, 'a]) -> (0 | 1 | Int & ~0 & ~1) -> Code[Int, 'a]
+//│ fun gib_naive: (0 | 1 | Int & ~0 & ~1) -> Code[(Int, Int) -> Int, nothing]
+//│ let gn5: (Int, Int) -> Int
+//│ gn5
+//│     = Quoted:
+//│       (x_4) =>
+//│         (y_1) =>
+//│           ((y_1 + (x_4 + y_1)) + ((x_4 + y_1) + (y_1 + (x_4 + y_1))))
+//│       undefined
+
+fun bind(rhs, k) = `let x = rhs `in k(x)
+//│ fun bind: forall 'a 'b 'c. (Code['a, 'b], Var['a, in ??x out ??x0] -> Code['c, 'b]) -> Code['c, 'b]
+
+fun bind(rhs, k: forall 'g : Code['a, 'g] -> Code['b, 'c | 'g]) =
+  `let x = rhs `in k(x)
+//│ fun bind: forall 'a 'c 'b. (Code['a, 'c], k: forall 'g. Code['a, 'g] -> Code['b, 'c | 'g]) -> Code['b, 'c]
+
+bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
+//│ forall 'a 'g. (Code['a, 'g], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
+//│ res
+//│     = [Function: bind1]
+
+fun body: forall 'g : (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
+fun body(x, y) = case
+  0 then x
+  1 then y
+  n then bind of x `+ y, z => body(y, z)(n - 1)
+fun gib(n) = ((x, y) `=> body(x, y)(n))
+let g5 = run(gib(5))
+//│ fun body: forall 'a. (Code[Int, 'a], Code[Int, 'a]) -> (0 | 1 | Int & ~0 & ~1) -> Code[Int, 'a]
+//│ fun gib: Int -> Code[(Int, Int) -> Int, nothing]
+//│ let g5: (Int, Int) -> Int
+//│ fun body: forall 'g. (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
+//│ g5
+//│    = Quoted:
+//│      (x_5) =>
+//│        (y_2) =>
+//│          let x_6 =
+//│            (x_5 + y_2)
+//│            in let x_7 =
+//│              (y_2 + x_6)
+//│              in let x_8 =
+//│                (x_6 + x_7)
+//│                in let x_9 =
+//│                  (x_7 + x_8)
+//│                  in x_9
+//│      undefined

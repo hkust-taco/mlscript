@@ -29,6 +29,33 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   
   
   sealed abstract class LhsNf {
+    final def compareEquiv(that: LhsNf): Int = (this, that) match {
+      case (LhsRefined(b1, ts1, r1, trs1), LhsRefined(b2, ts2, r2, trs2)) =>
+        var cmp = (b1, b2) match {
+          case (S(c1), S(c2)) => c1.compareEquiv(c2)
+          case (S(c1), N) => -1
+          case (N, S(c2)) => 1
+          case (N, N) => 0
+        }
+        if (cmp =/= 0) return cmp
+        // * Just compare the heads for simplicity...
+        cmp = (trs1.headOption, trs2.headOption) match {
+          case (S((n1, _)), S((n2, _))) =>
+            n1.compare(n2) // * in principle we could go on to compare the tails if this is 0
+          case (S(_), N) => 1
+          case (N, S(_)) => -1
+          case (N, N) => 0
+        }
+        if (cmp =/= 0) return cmp
+        cmp = -trs1.sizeCompare(trs2)
+        if (cmp =/= 0) return cmp
+        cmp = ts1.sizeCompare(ts2.size)
+        if (cmp =/= 0) return cmp
+        cmp = r1.fields.sizeCompare(r2.fields)
+        cmp
+      case (LhsTop, _) => 1
+      case (_, LhsTop) => -1
+    }
     def toTypes: Ls[SimpleType] = toType() :: Nil
     def toType(sort: Bool = false): SimpleType =
       if (sort) mkType(true) else underlying
@@ -264,6 +291,32 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   
   
   sealed abstract class RhsNf {
+    final def compareEquiv(that: RhsNf): Int = (this, that) match {
+      case (RhsField(n1, t1), RhsField(n2, t2)) => n1.compare(n2)
+      case (RhsBases(ps1, bf1, trs1), RhsBases(ps2, bf2, trs2)) =>
+        var cmp = ps1.minOption match {
+          case S(m1) => ps2.minOption match {
+            case S(m2) => m1.compare(m2)
+            case N => ps1.size.compare(ps2.size)
+          }
+          case N => ps1.size.compare(ps2.size)
+        }
+        if (cmp =/= 0) return cmp
+        cmp = (trs1.headOption, trs2.headOption) match {
+          case (S((n1, _)), S((n2, _))) => n1.compare(n2)
+          case (S(_), N) => 1
+          case (N, S(_)) => -1
+          case (N, N) => 0
+        }
+        if (cmp =/= 0) return cmp
+        cmp = -trs1.sizeCompare(trs2)
+        cmp
+      case (_: RhsBases, _) => -1
+      case (_, _: RhsBases) => 1
+      case (_: RhsField, _) => -1
+      case (_, _: RhsField) => 1
+      case (RhsBot, RhsBot) => 0
+    }
     def toTypes: Ls[SimpleType] = toType() :: Nil
     def toType(sort: Bool = false): SimpleType =
       if (sort) mkType(true) else underlying
@@ -444,8 +497,20 @@ class NormalForms extends TyperDatatypes { self: Typer =>
   }
   
   
-  case class Conjunct(lnf: LhsNf, vars: SortedSet[TypeVariable], rnf: RhsNf, nvars: SortedSet[TypeVariable]) extends Ordered[Conjunct] {
-    def compare(that: Conjunct): Int = this.mkString compare that.mkString // TODO less inefficient!!
+  case class Conjunct(lnf: LhsNf, vars: SortedSet[TypeVariable], rnf: RhsNf, nvars: SortedSet[TypeVariable]) {
+    final def compareEquiv(that: Conjunct): Int =
+      // trace(s"compareEquiv($this, $that)")(compareEquivImpl(that))(r => s"= $r")
+      compareEquivImpl(that)
+    final def compareEquivImpl(that: Conjunct): Int = {
+      var cmp = lnf.compareEquiv(that.lnf)
+      if (cmp =/= 0) return cmp
+      cmp = rnf.compareEquiv(that.rnf)
+      if (cmp =/= 0) return cmp
+      cmp = -vars.sizeCompare(that.vars)
+      if (cmp =/= 0) return cmp
+      cmp = -nvars.sizeCompare(that.nvars)
+      cmp
+    }
     def toType(sort: Bool = false): SimpleType =
       toTypeWith(_.toType(sort), _.toType(sort), sort)
     def toTypeWith(f: LhsNf => SimpleType, g: RhsNf => SimpleType, sort: Bool = false): SimpleType =
@@ -576,6 +641,15 @@ class NormalForms extends TyperDatatypes { self: Typer =>
         case RhsBot => RhsBot
       }, nvars)
     }
+    /** Scala's standard library is weird. I would have normally made Conjunct extend Ordered[Conjunct],
+      * but the contract of Ordered says that `equals` and `hashCode` should be "consistent" with `compare`,
+      * which I understand as two things comparing to 0 HAVING to be equal and to have the same hash code...
+      * But achieving this is very expensive for general type forms.
+      * All we want to do here is to define an ordering between implicit equivalence classes
+      * whose members are not necessarily equal. Which is fine since we only use this to do stable sorts. */
+    implicit object Ordering extends Ordering[Conjunct] {
+      def compare(x: Conjunct, y: Conjunct): Int = x.compareEquiv(y)
+    }
   }
   
   
@@ -679,6 +753,7 @@ class NormalForms extends TyperDatatypes { self: Typer =>
       val (newLvl, thisCs, thatCs, thisCons, thatCons) = levelWith(that)
       // println(s"-- $polymLevel ${that.polymLevel} $newLvl")
       thatCs.foldLeft(DNF(newLvl, thisCons ::: thatCons, thisCs))(_ | _)
+      // ^ Note: conjuncting the constrained-type constraints here is probably the wrong thing to do...
     }
     def & (that: Conjunct, pol: Bool)(implicit ctx: Ctx, etf: ExpandTupleFields): DNF =
       DNF(polymLevel, cons, cs.flatMap(_ & (that, pol))) // TODO may need further simplif afterward

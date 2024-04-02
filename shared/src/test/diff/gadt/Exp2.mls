@@ -67,7 +67,7 @@ fun f(e) = if e is
 //│ ╟── type variable `L` leaks out of its scope
 //│ ║  l.43: 	class Pair[L, R](val lhs: Exp[L], val rhs: Exp[R]) extends Exp[[L, R]]
 //│ ╙──      	           ^
-//│ forall 'L 'R 'X. (e: Exp['X]) -> (Int | error | [Exp['L], Exp['R]])
+//│ forall 'X 'L 'R. (e: Exp['X]) -> (Int | error | [Exp['L], Exp['R]])
 //│   where
 //│     'R :> ??R
 //│        <: ??R0

@@ -228,7 +228,7 @@ let ids = single id in
 
 // FreezeML A2
 choose id
-//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+//│ res: 'a -> (forall 'a0. 'a0 -> 'a0 | 'a)
 //│    = [Function (anonymous)]
 
 fun (f: forall 'a. 'a -> 'a) -> poly f

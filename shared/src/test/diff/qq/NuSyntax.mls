@@ -1,0 +1,268 @@
+:NewDefs
+:NoJS
+
+`42
+//│ Code[42, nothing]
+
+x `=> x
+//│ Code[forall 'a. 'a -> 'a, nothing]
+
+x `=>
+  x
+//│ Code[forall 'a. 'a -> 'a, nothing]
+
+run(x `=> x)(42)
+//│ 42
+
+`1 `+ `1
+//│ Code[Int, nothing]
+
+`(1 + 1)
+//│ Code[Int, nothing]
+
+
+`1 `< `2
+//│ Code[Bool, nothing]
+
+`1 `<= `2
+//│ Code[Bool, nothing]
+
+:p
+`1 `* `2 `+ `3
+//│ |`|1| |`|*| |`|2| |`|+| |`|3|
+//│ AST: TypingUnit(List(Quoted(App(Var(+),Tup(List((None,Fld(_,Unquoted(Quoted(App(Var(*),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(1))))), (None,Fld(_,Unquoted(Quoted(IntLit(2)))))))))))), (None,Fld(_,Unquoted(Quoted(IntLit(3)))))))))))
+//│ Parsed: code"+(${code"*(${code"1"}, ${code"2"},)"}, ${code"3"},)";
+//│ Code[Int, nothing]
+
+:p
+`1 `* `2 `+ `3 `- `4
+//│ |`|1| |`|*| |`|2| |`|+| |`|3| |`|-| |`|4|
+//│ AST: TypingUnit(List(Quoted(App(Var(-),Tup(List((None,Fld(_,Unquoted(Quoted(App(Var(+),Tup(List((None,Fld(_,Unquoted(Quoted(App(Var(*),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(1))))), (None,Fld(_,Unquoted(Quoted(IntLit(2)))))))))))), (None,Fld(_,Unquoted(Quoted(IntLit(3)))))))))))), (None,Fld(_,Unquoted(Quoted(IntLit(4)))))))))))
+//│ Parsed: code"-(${code"+(${code"*(${code"1"}, ${code"2"},)"}, ${code"3"},)"}, ${code"4"},)";
+//│ Code[Int, nothing]
+
+:p
+`1 `+ `2 `* `3
+//│ |`|1| |`|+| |`|2| |`|*| |`|3|
+//│ AST: TypingUnit(List(Quoted(App(Var(+),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(1))))), (None,Fld(_,Unquoted(Quoted(App(Var(*),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(2))))), (None,Fld(_,Unquoted(Quoted(IntLit(3))))))))))))))))))
+//│ Parsed: code"+(${code"1"}, ${code"*(${code"2"}, ${code"3"},)"},)";
+//│ Code[Int, nothing]
+
+:p
+`1 `+ `2 `* `3 `+ `4
+//│ |`|1| |`|+| |`|2| |`|*| |`|3| |`|+| |`|4|
+//│ AST: TypingUnit(List(Quoted(App(Var(+),Tup(List((None,Fld(_,Unquoted(Quoted(App(Var(+),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(1))))), (None,Fld(_,Unquoted(Quoted(App(Var(*),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(2))))), (None,Fld(_,Unquoted(Quoted(IntLit(3))))))))))))))))))), (None,Fld(_,Unquoted(Quoted(IntLit(4)))))))))))
+//│ Parsed: code"+(${code"+(${code"1"}, ${code"*(${code"2"}, ${code"3"},)"},)"}, ${code"4"},)";
+//│ Code[Int, nothing]
+
+:e
+:p
+1 + `2 `+ `3
+//│ |1| |+| |`|2| |`|+| |`|3|
+//│ AST: TypingUnit(List(Quoted(App(Var(+),Tup(List((None,Fld(_,Unquoted(App(Var(+),Tup(List((None,Fld(_,IntLit(1))), (None,Fld(_,Quoted(IntLit(2)))))))))), (None,Fld(_,Unquoted(Quoted(IntLit(3)))))))))))
+//│ Parsed: code"+(${+(1, code"2",)}, ${code"3"},)";
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.60: 	1 + `2 `+ `3
+//│ ║        	^^^^^^
+//│ ╟── code fragment of type `Code[2, nothing]` is not an instance of type `Int`
+//│ ║  l.60: 	1 + `2 `+ `3
+//│ ╙──      	    ^^
+//│ ╔══[ERROR] Type mismatch in unquote:
+//│ ║  l.60: 	1 + `2 `+ `3
+//│ ║        	^^^^^^
+//│ ╙── operator application of type `Int` is not an instance of type `Code`
+//│ Code[Int, error]
+
+:e
+:p
+`1 `+ `2 + 3
+//│ |`|1| |`|+| |`|2| |+| |3|
+//│ AST: TypingUnit(List(App(Var(+),Tup(List((None,Fld(_,Quoted(App(Var(+),Tup(List((None,Fld(_,Unquoted(Quoted(IntLit(1))))), (None,Fld(_,Unquoted(Quoted(IntLit(2))))))))))), (None,Fld(_,IntLit(3))))))))
+//│ Parsed: +(code"+(${code"1"}, ${code"2"},)", 3,);
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.78: 	`1 `+ `2 + 3
+//│ ║        	^^^^^^^^^^^^
+//│ ╟── code fragment of type `Code[?a, ?b | ?c]` is not an instance of type `Int`
+//│ ║  l.78: 	`1 `+ `2 + 3
+//│ ╙──      	^^^^^^^^
+//│ Int | error
+
+x `=> x `+ `1
+//│ Code[Int -> Int, nothing]
+
+y `=> `0 `- y
+//│ Code[Int -> Int, nothing]
+
+:e
+z `=> z + 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.97: 	z `=> z + 1
+//│ ║        	      ^^^^^
+//│ ╟── reference of type `Var[?a, ?z]` is not an instance of type `Int`
+//│ ║  l.97: 	z `=> z + 1
+//│ ╙──      	      ^
+//│ ╔══[ERROR] Type mismatch in unquote:
+//│ ║  l.97: 	z `=> z + 1
+//│ ║        	      ^^^^^
+//│ ╙── operator application of type `Int` is not an instance of type `Code`
+//│ Code[anything -> error, nothing]
+
+
+(x, y) `=> x `+ y
+//│ Code[(Int, Int) -> Int, nothing]
+
+run((x, y) `=> x `+ y)(1, 2)
+//│ Int
+
+
+`let x = `42 `in x `+ `1
+//│ Code[Int, nothing]
+
+
+fun f(x: Code[Int, nothing]) =
+  `let t = x `in t
+//│ fun f: (x: Code[Int, nothing]) -> Code[Int, nothing]
+
+:e
+`let x = `0 `in `let y = 1 `in x `+ y
+//│ ╔══[ERROR] Type mismatch in unquote:
+//│ ║  l.127: 	`let x = `0 `in `let y = 1 `in x `+ y
+//│ ║         	                         ^
+//│ ╙── integer literal of type `1` is not an instance of type `Code`
+//│ Code[Int, nothing]
+
+
+f `=> a `=> f`(a)
+//│ Code[forall 'a 'b. ('a -> 'b) -> 'a -> 'b, nothing]
+
+`let app = (f, a) `=> f`(a) `in `let id = x `=> x `in app`(id, `42)
+//│ Code[42, nothing]
+
+
+`if `(1 == 1) then `1 else `2
+//│ Code[1 | 2, nothing]
+
+fun foo(x) =
+  `if x `== `1 then `1 else `2
+//│ fun foo: forall 'a. Code[Num, 'a] -> Code[1 | 2, 'a]
+
+fun foo(x) =
+  `if `(1 == 1) then x else `2
+//│ fun foo: forall 'a 'b. Code['a, 'b] -> Code[2 | 'a, 'b]
+
+
+`if `1 `< `2 `and `1 `> `2 then `0 else `1
+//│ Code[0 | 1, nothing]
+
+:e
+`(`42)
+//│ ╔══[ERROR] Nested quotation is not allowed.
+//│ ║  l.158: 	`(`42)
+//│ ╙──       	  ^^^
+//│ Code[error, nothing]
+
+:e
+`(x `=> x)
+//│ ╔══[ERROR] Nested quotation is not allowed.
+//│ ║  l.165: 	`(x `=> x)
+//│ ╙──       	  ^^^^^^^
+//│ Code[error, nothing]
+
+:pe
+`fun foo = 42
+`val bar = 0
+//│ ╔══[PARSE ERROR] This quote syntax is not supported yet
+//│ ║  l.172: 	`fun foo = 42
+//│ ╙──       	^
+//│ ╔══[PARSE ERROR] Expected end of input; found 'fun' keyword instead
+//│ ║  l.172: 	`fun foo = 42
+//│ ╙──       	 ^^^
+//│ ()
+
+
+let x = `42
+//│ let x: Code[42, nothing]
+
+:pe
+:w
+:e
+`if x
+  `> `1 then `0
+  `== `1 then `1
+  _ then `2
+//│ ╔══[PARSE ERROR] This quote syntax is not supported yet
+//│ ║  l.190: 	  `> `1 then `0
+//│ ╙──       	  ^
+//│ ╔══[PARSE ERROR] Unexpected operator here
+//│ ║  l.190: 	  `> `1 then `0
+//│ ╙──       	   ^
+//│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
+//│ ║  l.189: 	`if x
+//│ ║         	    ^
+//│ ║  l.190: 	  `> `1 then `0
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.191: 	  `== `1 then `1
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.192: 	  _ then `2
+//│ ╙──       	^^^^^^^^^^^
+//│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found application instead
+//│ ║  l.189: 	`if x
+//│ ║         	    ^
+//│ ║  l.190: 	  `> `1 then `0
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.191: 	  `== `1 then `1
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.192: 	  _ then `2
+//│ ║         	^^^^^^^^^^^
+//│ ╟── Note: 'if' expression starts here:
+//│ ║  l.189: 	`if x
+//│ ╙──       	 ^^
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.190: 	  `> `1 then `0
+//│ ╙──       	  ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.189: 	`if x
+//│ ║         	    ^
+//│ ║  l.190: 	  `> `1 then `0
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ║  l.191: 	  `== `1 then `1
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ║  l.192: 	  _ then `2
+//│ ║         	^^^^^^^^^^^
+//│ ╟── code fragment of type `Code[42, nothing]` is not a function
+//│ ║  l.183: 	let x = `42
+//│ ║         	        ^^^
+//│ ╟── but it flows into reference with expected type `() -> ?a`
+//│ ║  l.189: 	`if x
+//│ ╙──       	    ^
+//│ ╔══[ERROR] Type mismatch in unquote:
+//│ ║  l.190: 	  `> `1 then `0
+//│ ║         	  ^
+//│ ╙── undefined literal of type `()` is not an instance of type `Code`
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.190: 	  `> `1 then `0
+//│ ║         	  ^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ Code[error, nothing]
+
+:pe
+`(x: Int) => x `+ `2
+//│ ╔══[PARSE ERROR] This quote syntax is not supported yet
+//│ ║  l.249: 	`(x: Int) => x `+ `2
+//│ ╙──       	 ^^^^^^^^
+//│ () -> Code[Int, nothing]
+
+:pe
+`
+//│ ╔══[PARSE ERROR] This quote syntax is not supported yet
+//│ ║  l.256: 	`
+//│ ╙──       	^
+//│ ()
+
+
+:pe
+`42 `
+//│ ╔══[PARSE ERROR] This quote syntax is not supported yet
+//│ ║  l.264: 	`42 `
+//│ ╙──       	^^^
+//│ Code[42, nothing]

@@ -78,11 +78,11 @@ fun showList(xs) = "[" ++ join(", ")(xs) ++ "]"
 //│ class Cons[A](head: A, tail: List[A])
 //│ module Nil
 //│ fun (::) cons: forall 'A. ('A, List['A]) -> Cons['A]
-//│ fun reverse: forall 'A0 'A1. (Cons['A1] | Nil) -> (Cons['A0] | Nil)
+//│ fun reverse: forall 'A0 'A1. (Cons['A0] | Nil) -> (Cons['A1] | Nil)
 //│ fun join: Str -> (forall 'A2. (Cons['A2] | Nil) -> Str)
 //│ fun showList: forall 'A3. (Cons['A3] | Nil) -> Str
 //│ where
-//│   'A1 <: 'A0
+//│   'A0 <: 'A1
 
 //  _
 // | |    _____  _____ _ __

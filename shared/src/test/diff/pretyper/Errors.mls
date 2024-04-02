@@ -295,7 +295,7 @@ module M {
 //│ ╙──       	                  ^^
 //│ module None
 //│ module M {
-//│   val m: None
+//│   mut val m: None
 //│   fun oops: anything -> error
 //│ }
 

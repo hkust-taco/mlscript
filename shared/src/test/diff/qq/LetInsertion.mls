@@ -1,0 +1,123 @@
+:NewDefs
+:NoJS
+
+
+
+fun (%>) bind: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
+fun bind[g](rhs, k: forall 'c: Code['a, 'c] -> Code['b, 'c | g]) = code"let x = ${rhs} in ${k(code"x")}"
+//│ fun bind: forall 'a 'd 'b 'g. (Code['a, 'd], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'd | 'g & ~??x]
+//│ fun (%>) bind: forall 'a0 'g0 'b0. (Code['a0, 'g0], k: forall 'c0. Code['a0, 'c0] -> Code['b0, 'c0 | 'g0]) -> Code['b0, 'g0]
+
+
+let f(k) = bind of code"123", k
+//│ let f: forall 'b 'g. (forall 'c. Code[123, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
+
+f(id)
+//│ Code[123, nothing]
+
+bind of code"123", x => x
+//│ Code[123, nothing]
+
+bind of code"123", x =>
+bind of code"${x} + 1", y =>
+code"${y} + ${y}"
+//│ Code[Int, nothing]
+
+code"123" %> x =>
+code"${x} + 1" %> y =>
+code"${y} + ${y}"
+//│ Code[Int, nothing]
+
+
+fun test(x, y) = code"${x} + ${y}"
+//│ fun test: forall 'a. (Code[Int, 'a], Code[Int, 'a]) -> Code[Int, 'a]
+
+fun test2(x, y, f) = code"${x} + ${y}" %> f
+//│ fun test2: forall 'g 'b. (Code[Int, 'g], Code[Int, 'g], forall 'c. Code[Int, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
+
+code"(x, y) => ${test2(code"x + 1", code"y * 2", tmp => code"[${tmp}, ${tmp}]") }"
+//│ Code[(Int, Int) -> [Int, Int], nothing]
+
+
+
+// * Naive version
+
+:w
+fun gib_naive(n) =
+  let rec body(x, y) = case
+    0 then x
+    1 then y
+    n then code"${body(x, code"${x} + ${y}")(n - 1)}"
+  code"(x, y) => ${body(code"x", code"y")(n)}"
+//│ ╔══[WARNING] the outer binding `n`
+//│ ║  l.46: 	fun gib_naive(n) =
+//│ ║        	              ^
+//│ ╟── is shadowed by name pattern `n`
+//│ ║  l.50: 	    n then code"${body(x, code"${x} + ${y}")(n - 1)}"
+//│ ╙──      	    ^
+//│ fun gib_naive: (0 | 1 | Int & ~0 & ~1) -> Code[(Int, Int) -> Int, nothing]
+
+let gn5 = gib_naive(5)
+run(gn5)
+//│ let gn5: Code[(Int, Int) -> Int, nothing]
+//│ (Int, Int) -> Int
+
+
+// * Expected: needs polymorphic recursion
+:w
+fun gib(n) =
+  let rec body(x, y) = case
+    0 then x
+    1 then y
+    n then code"${x} + ${y}" %> z => body(x, z)(n - 1)
+  code"(x, y) => ${body(code"x", code"y")(n)}"
+//│ ╔══[WARNING] the outer binding `n`
+//│ ║  l.68: 	fun gib(n) =
+//│ ║        	        ^
+//│ ╟── is shadowed by name pattern `n`
+//│ ║  l.72: 	    n then code"${x} + ${y}" %> z => body(x, z)(n - 1)
+//│ ╙──      	    ^
+//│ fun gib: (0 | 1 | Int & ~0 & ~1) -> Code[(Int, Int) -> Int, ??c & ~??y]
+
+
+
+// * Better version
+
+fun body: forall 'g: (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
+fun body(x, y) = case
+  0 then x
+  1 then y
+  n then code"${x} + ${y}" %> z => body(x, z)(n - 1)
+//│ fun body: forall 'g. (Code[Int, 'g], Code[Int, 'g]) -> (0 | 1 | Int & ~0 & ~1) -> Code[Int, 'g]
+//│ fun body: forall 'g0. (Code[Int, 'g0], Code[Int, 'g0]) -> Int -> Code[Int, 'g0]
+
+fun gib(n) =
+  code"(x, y) => ${body(code"x", code"y")(n)}"
+//│ fun gib: Int -> Code[(Int, Int) -> Int, nothing]
+
+let gn5 = gib(5)
+run(gn5)
+//│ let gn5: Code[(Int, Int) -> Int, nothing]
+//│ (Int, Int) -> Int
+
+
+// * Alternative version:
+fun body: forall 'g: (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
+fun body(x, y) = case
+  0 then x
+  1 then y
+  n then code"let tmp = ${x} + ${y} in ${body(x, code"tmp")(n - 1)}"
+//│ fun body: forall 'a. (Code[Int, 'a], Code[Int, 'a]) -> (0 | 1 | Int & ~0 & ~1) -> Code[Int, 'a]
+//│ fun body: forall 'g. (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
+
+fun gib(n) =
+  code"(x, y) => ${body(code"x", code"y")(n)}"
+//│ fun gib: Int -> Code[(Int, Int) -> Int, nothing]
+
+let gn5 = gib(5)
+run(gn5)
+//│ let gn5: Code[(Int, Int) -> Int, nothing]
+//│ (Int, Int) -> Int
+
+
+

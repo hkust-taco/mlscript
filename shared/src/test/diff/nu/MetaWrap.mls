@@ -75,14 +75,14 @@ module Test0 extends Base, WithUid, WithUid
 //│     underlying: {uid: 'uid1, underlying: 'underlying0 & 'underlying1} & 'underlying2
 //│   }, 'underlying1 -> 'underlying0) -> {
 //│     uid: Int | 'uid0,
-//│     underlying: 'underlying2 | {uid: Int | 'uid1, underlying: 'underlying0}
+//│     underlying: {uid: Int | 'uid1, underlying: 'underlying0} | 'underlying2
 //│   }
 //│   fun setUid: ({
 //│     uid: 'uid0,
 //│     underlying: {uid: 'uid1, underlying: 'underlying0 & 'underlying1} & 'underlying2
 //│   }, uid: Int) -> {
 //│     uid: Int | 'uid0,
-//│     underlying: 'underlying2 | {uid: Int | 'uid1, underlying: 'underlying0}
+//│     underlying: {uid: Int | 'uid1, underlying: 'underlying0} | 'underlying2
 //│   }
 //│   fun unwrap: {uid: anything, underlying: {uid: 'uid, underlying: 'underlying}} -> 'underlying
 //│ }
@@ -97,21 +97,21 @@ module Test1 extends Base, WithUid, WithType
 //│     underlying: {ty: 'ty0, underlying: 'underlying0 & 'underlying1} & 'underlying2
 //│   }, 'underlying1 -> 'underlying0) -> {
 //│     uid: Int | 'uid0,
-//│     underlying: 'underlying2 | {ty: Type | 'ty0, underlying: 'underlying0}
+//│     underlying: {ty: Type | 'ty0, underlying: 'underlying0} | 'underlying2
 //│   }
 //│   fun setType: ({
 //│     uid: 'uid0,
 //│     underlying: {ty: 'ty0, underlying: 'underlying0 & 'underlying1} & 'underlying2
 //│   }, ty: Type) -> {
 //│     uid: Int | 'uid0,
-//│     underlying: 'underlying2 | {ty: Type | 'ty0, underlying: 'underlying0}
+//│     underlying: {ty: Type | 'ty0, underlying: 'underlying0} | 'underlying2
 //│   }
 //│   fun setUid: ({
 //│     uid: 'uid0,
 //│     underlying: {ty: 'ty0, underlying: 'underlying0 & 'underlying1} & 'underlying2
 //│   }, uid: Int) -> {
 //│     uid: Int | 'uid0,
-//│     underlying: 'underlying2 | {ty: Type | 'ty0, underlying: 'underlying0}
+//│     underlying: {ty: Type | 'ty0, underlying: 'underlying0} | 'underlying2
 //│   }
 //│   fun unwrap: {uid: 'uid, underlying: {ty: 'ty, underlying: 'underlying}} -> 'underlying
 //│ }

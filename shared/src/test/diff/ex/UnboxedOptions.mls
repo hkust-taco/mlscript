@@ -22,7 +22,7 @@ fun some(x) = if x is
   refined(None) then Some(x)
   refined(Some) then Some(x)
   else x
-//│ fun some: forall 'a 'b 'c. (None & 'b | Object & 'c & ~#None & ~#Some | Some[anything] & 'a) -> (Some[None & 'b | Some[anything] & 'a] | 'c)
+//│ fun some: forall 'a 'b 'c. (None & 'a | Object & 'b & ~#None & ~#Some | Some[anything] & 'c) -> (Some[None & 'a | Some[anything] & 'c] | 'b)
 
 let some_ = some : forall 'a: (Object & 'a) -> Opt['a]
 //│ let some_: forall 'a. (Object & 'a) -> Opt['a]
@@ -270,7 +270,7 @@ fold(ss, o => fold(o, id, -1), 0)
 // * Demonstration that we can't lift a parametric value into an unboxed option without casts.
 
 fun mk(x: Object) = some(x)
-//│ fun mk: forall 'a. (x: Object) -> (Object & ~#None & ~#Some | Some[None | Some[anything]] | 'a)
+//│ fun mk: (x: Object) -> (Object & ~#None & ~#Some | Some[None | Some[anything]])
 
 :e
 fun mk[A](x: A) = some(x)
@@ -295,8 +295,8 @@ fun mk[A](x: A) = some(x)
 //│ ╟── Note: method type parameter A is defined at:
 //│ ║  l.276: 	fun mk[A](x: A) = some(x)
 //│ ╙──       	       ^
-//│ fun mk: forall 'A 'a 'b. (x: 'A) -> (Some[Some[anything] & 'a | 'A & (None | None & ~'a & ~'b | Some[anything])] | error | 'A & ~#None & ~#Some | 'b)
+//│ fun mk: forall 'A. (x: 'A) -> (Some['A & (None | Some[anything])] | error | 'A & ~#None & ~#Some)
 
 fun mk[A](x: A & Object) = some(x)
-//│ fun mk: forall 'A 'a 'b. (x: Object & 'A) -> (Object & 'A & ~#None & ~#Some | Some[Some[anything] & 'a | 'A & (None | None & ~'a & ~'b | Some[anything])] | 'b)
+//│ fun mk: forall 'A. (x: Object & 'A) -> (Object & 'A & ~#None & ~#Some | Some['A & (None | Some[anything])])
 

@@ -1,8 +1,8 @@
 :NewDefs
 
 
-let x: Eql[Int]
-//│ let x: Eql[Int]
+val x: Eql[Int]
+//│ val x: Eql[Int]
 //│ x
 //│   = <missing implementation>
 
@@ -18,7 +18,7 @@ x === 1
 //│ ║  l.16: 	1 === x
 //│ ║        	^^^^^^^
 //│ ╟── type `#Eql` is not an instance of type `Num`
-//│ ║  l.4: 	let x: Eql[Int]
+//│ ║  l.4: 	val x: Eql[Int]
 //│ ║       	       ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Num`
 //│ ║  l.16: 	1 === x
@@ -34,7 +34,7 @@ x === x
 //│ ║  l.32: 	x === x
 //│ ║        	^^^^^^^
 //│ ╟── type `#Eql` is not an instance of type `Int`
-//│ ║  l.4: 	let x: Eql[Int]
+//│ ║  l.4: 	val x: Eql[Int]
 //│ ║       	       ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Int`
 //│ ║  l.32: 	x === x
@@ -80,7 +80,7 @@ test1(x)
 //│ ║  l.78: 	test1(x)
 //│ ║        	^^^^^^^^
 //│ ╟── type `#Eql` is not an instance of type `Int`
-//│ ║  l.4: 	let x: Eql[Int]
+//│ ║  l.4: 	val x: Eql[Int]
 //│ ║       	       ^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Int`
 //│ ║  l.78: 	test1(x)
@@ -107,8 +107,8 @@ test1(n)
 //│     = true
 
 
-let n: Num
-//│ let n: Num
+val n: Num
+//│ val n: Num
 //│ n
 //│   = <missing implementation>
 

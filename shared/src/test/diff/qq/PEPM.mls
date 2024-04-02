@@ -1,0 +1,169 @@
+:NewDefs
+
+:ne
+:js
+let a = code"1 + 1"
+let b = code"40 + ${a}"
+//│ let a: Code[Int, nothing]
+//│ let b: Code[Int, nothing]
+//│ // Prelude
+//│ let res;
+//│ class TypingUnit {}
+//│ const typing_unit = new TypingUnit;
+//│ // Query 1
+//│ globalThis.a = App(Var("+"), IntLit(1), IntLit(1));
+//│ // Query 2
+//│ globalThis.b = App(Var("+"), IntLit(40), a);
+//│ // End of generated code
+
+:ne
+run(b)
+//│ Int
+
+:ne
+let one = Const(42)
+let one' = code"42"
+let one'' = let tmp = 42 in Const(tmp)
+//│ let one: Code[Int, nothing]
+//│ let one': Code[42, nothing]
+//│ let one'': Code[Int, nothing]
+
+declare module Math {
+  declare fun floor(x: Num): Int
+}
+//│ declare module Math {
+//│   fun floor: (x: Num) -> Int
+//│ }
+
+fun even(n) = n % 2 == 0
+//│ fun even: Int -> Bool
+
+// x^n
+fun power(x, n) =
+  if (n == 0) then 1
+  else if (even(n)) then let t = power(x, Math.floor(n / 2)) in t * t
+  else x * power(x, n - 1)
+//│ fun power: (Int, Int) -> Int
+
+power(3, 3)
+power(2, 10)
+//│ Int
+//│ res
+//│     = 27
+//│ res
+//│     = 1024
+
+
+// x^n
+:js
+fun power'(x, n) =
+  if (n == 0) then Const(1)
+  else if (even(n)) then code"let t = ${power'(x, Math.floor(n / 2))} in t * t"
+  else code"${x} * ${power'(x, n - 1)}"
+//│ fun power': forall 'a. (Code[Int, 'a], Int) -> Code[Int, 'a]
+//│ // Prelude
+//│ class TypingUnit7 {}
+//│ const typing_unit7 = new TypingUnit7;
+//│ // Query 1
+//│ globalThis.power$ = function power$(x, n) {
+//│   return ((() => {
+//│     return ((ucs$test$0) => ucs$test$0 === true ? Const(1) : ((ucs$test$0) => ucs$test$0 === true ? ((t1) => Let(Var(t1), power$(x, Math.floor(n / 2)), App(Var("*"), Var(t1), Var(t1))))(freshName("t")) : App(Var("*"), x, power$(x, n - 1)))(even(n)))((n == 0));
+//│   })());
+//│ };
+//│ // End of generated code
+
+:ne
+:js
+let power10 = run(code"x => ${power'(code"x", 10)}")
+//│ let power10: Int -> Int
+//│ // Prelude
+//│ class TypingUnit8 {}
+//│ const typing_unit8 = new TypingUnit8;
+//│ // Query 1
+//│ globalThis.power10 = run(((x1) => Lam(Var(x1), power$(Var(x1), 10)))(freshName("x")));
+//│ // End of generated code
+
+
+:ne
+:js
+code"x => x"
+//│ Code[forall 'a. 'a -> 'a, nothing]
+//│ // Prelude
+//│ class TypingUnit9 {}
+//│ const typing_unit9 = new TypingUnit9;
+//│ // Query 1
+//│ res = ((x1) => Lam(Var(x1), Var(x1)))(freshName("x"));
+//│ // End of generated code
+
+
+:ne
+:js
+code"let x = 42 in x"
+//│ Code[42, nothing]
+//│ // Prelude
+//│ class TypingUnit10 {}
+//│ const typing_unit10 = new TypingUnit10;
+//│ // Query 1
+//│ res = ((x1) => Let(Var(x1), IntLit(42), Var(x1)))(freshName("x"));
+//│ // End of generated code
+
+
+:ne
+fun test(f) =
+  code"x => x + ${f(code"x + 1")}"
+//│ fun test: forall 'a. (Code[Int, ??x] -> Code[Int, 'a]) -> Code[Int -> Int, 'a]
+
+:ne
+:e
+code"x => ${ test(run) }"
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.118: 	code"x => ${ test(run) }"
+//│ ║         	             ^^^^^^^^^
+//│ ╟── type variable `?x` leaks out of its scope
+//│ ╟── into type `nothing`
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this reference:
+//│ ║  l.113: 	  code"x => x + ${f(code"x + 1")}"
+//│ ╙──       	                  ^
+//│ Code[anything -> nothing, nothing]
+
+:ne
+fun assertNotZero(x) =
+  code"if (${x} == 0) then error else ${x}"
+//│ fun assertNotZero: forall 'a 'b. Code[Num & 'a, 'b] -> Code['a, 'b]
+
+:ne
+fun safeDiv = run(code"x => y => let t = ${assertNotZero(code"y")} in x / t")
+//│ fun safeDiv: Num -> Num -> Num
+
+:ne
+assertNotZero(Const(42))
+//│ Code[Int, nothing]
+
+:ne
+safeDiv(10)(2)
+//│ Num
+
+:ne
+fun fac(n, dbg) =
+  if (n > 0) then code"let x = ${Const(n)} in ${dbg(code"x")} * ${fac(n - 1, dbg)}" else Const(1)
+//│ fun fac: forall 'a. (Int, Code[Int, ??x] -> Code[Int, 'a]) -> Code[Int, 'a]
+
+fun showAndRet(n: Code['a, anything]) =
+  log(n)
+  n
+//│ fun showAndRet: forall 'a. (n: Code['a, anything]) -> Code['a, anything]
+
+:ne
+fun bar(x: Code['a, 'b]) = x
+//│ fun bar: forall 'a 'b. (x: Code['a, 'b]) -> Code['a, 'b]
+
+
+:ne
+fac(10, showAndRet)
+//│ Code[Int, anything]
+
+
+fun inc(x, dbg) =
+  dbg(x); inc(code"${x} + 1", dbg)
+//│ fun inc: forall 'a. (Code[Int, 'a], Code[Int, 'a] -> ()) -> nothing

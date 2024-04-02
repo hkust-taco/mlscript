@@ -202,7 +202,7 @@ def sstep = fun xx -> xx (fun (xinit, xsub) ->
     then xsub r1 (div i 2)
     else xsub r2 (div i 2) in
   fun f -> f (init, sub))
-//│ ((forall 'a 'b 'c 'd 'e. ('e -> 'a, 'b -> int -> 'c,) -> (('e -> ('a, 'a,), (('b, 'b,),) -> int -> 'c,) -> 'd) -> 'd) -> 'f) -> 'f
+//│ ((forall 'a 'b 'c 'd 'e. ('a -> 'b, 'c -> int -> 'd,) -> (('a -> ('b, 'b,), (('c, 'c,),) -> int -> 'd,) -> 'e) -> 'e) -> 'f) -> 'f
 //│   <:  sstep:
 //│ ExSmall -> ExSmall
 //│ ╔══[ERROR] Type error in def definition
@@ -440,7 +440,7 @@ def step = fun xx -> xx (fun ((((xinit, xsub), xupdate), xfold),) ->
     else (fst r, xupdate (snd r) (div i 2) a) in
   let fold f b r = xfold f (xfold f b (fst r)) (snd r) in
     fun f -> f ((((init, sub), update), fold),) )
-//│ ((forall 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm 'n 'o 'p. (((('l -> 'm, 'b -> int -> 'f,), 'i -> int -> 'e -> 'p & 'n -> int -> 'e -> 'j,), 'h -> ('d -> 'o -> 'k & 'c -> 'g -> 'd),),) -> ((((('l -> ('m, 'm,), (('b, 'b,),) -> int -> 'f,), forall 'q 'r. (('i & 'q, 'n & 'r,),) -> int -> 'e -> ('p | 'q, 'r | 'j,),), 'h -> 'c -> (('g, 'o,),) -> 'k,),) -> 'a) -> 'a) -> 's) -> 's
+//│ ((forall 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm 'n 'o 'p. (((('a -> 'b, 'c -> int -> 'd,), 'e -> int -> 'f -> 'g & 'h -> int -> 'f -> 'i,), 'j -> ('k -> 'l -> 'm & 'n -> 'o -> 'k),),) -> ((((('a -> ('b, 'b,), (('c, 'c,),) -> int -> 'd,), forall 'q 'r. (('e & 'q, 'h & 'r,),) -> int -> 'f -> ('q | 'g, 'i | 'r,),), 'j -> 'n -> (('o, 'l,),) -> 'm,),) -> 'p) -> 'p) -> 's) -> 's
 //│   <:  step:
 //│ ExSig -> ExSig
 //│ ╔══[ERROR] Type error in def definition
@@ -510,7 +510,7 @@ def step = fun xx -> xx (fun ((((xinit, xsub), xupdate), xfold),) ->
 
 let mkArray n = if n == 0 then base else step base in
   mkArray 1 (fun ((((xinit, xsub), xupdate), xfold),) -> xinit 2)
-//│ res: ??r | ??r0
+//│ res: anything
 //│    = [ 2, 2 ]
 
 def mkArray : int -> ExSig
@@ -557,7 +557,7 @@ def choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
 
 choose (head ids)
-//│ res: 'a -> (forall 'b. 'a | 'b -> 'b)
+//│ res: 'a -> (forall 'b. 'b -> 'b | 'a)
 //│    = <no result>
 //│      choose is not implemented
 

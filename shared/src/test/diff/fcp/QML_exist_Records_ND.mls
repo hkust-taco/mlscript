@@ -64,7 +64,7 @@ def base: Arrays['a]
 // * so we do not need first-class parametric polymorphism to type check the definition.
 def base f = f baseImpl
 //│ ({
-//│   fold: forall 'a 'b 'c. ('c -> 'a -> 'b) -> 'a -> 'c -> 'b,
+//│   fold: forall 'a 'b 'c. ('a -> 'b -> 'c) -> 'b -> 'a -> 'c,
 //│   init: forall 'd. 'd -> 'd,
 //│   sub: forall 'e. 'e -> anything -> 'e,
 //│   update: anything -> anything -> (forall 'f. 'f -> 'f)
@@ -97,7 +97,7 @@ def stepImpl (arrImpl: ArraysImpl['a, 'r]) = {
     fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
   }
 //│ stepImpl: ArraysImpl['a, 'r] -> {
-//│   fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'c. ('b & 'c) -> (('r, anything,),) -> ('b0 | 'c)),
+//│   fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'c. ('b & 'c) -> (('r, anything,),) -> ('c | 'b0)),
 //│   init: 'a -> ('r, "hi",),
 //│   sub: (('r, anything,),) -> int -> 'a,
 //│   update: (('r, anything,),) -> int -> 'a -> ('r, "hey",)
@@ -106,7 +106,7 @@ def stepImpl (arrImpl: ArraysImpl['a, 'r]) = {
 
 stepImpl_ty = stepImpl
 //│ ArraysImpl['a, 'r] -> {
-//│   fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'c. ('b & 'c) -> (('r, anything,),) -> ('b0 | 'c)),
+//│   fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'c. ('b & 'c) -> (('r, anything,),) -> ('c | 'b0)),
 //│   init: 'a -> ('r, "hi",),
 //│   sub: (('r, anything,),) -> int -> 'a,
 //│   update: (('r, anything,),) -> int -> 'a -> ('r, "hey",)
@@ -187,7 +187,7 @@ def step (arr: Arrays['a]) = arr helper
 //│ Arrays['a] -> error
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
-//│ ╔══[ERROR] Subtyping constraint of the form `Arrays['a] <: (forall 'a0 'rep. ArraysImpl['a0, 'rep] -> (forall ?a 'res 'b. ArraysImplConsumer['b, 'res] -> ?a)) -> ?b` took too many steps and ran out of fuel (10000)
+//│ ╔══[ERROR] Subtyping constraint of the form `Arrays['a] <: (forall 'a0 'rep. ArraysImpl['a0, 'rep] -> (forall ?a 'b 'res. ArraysImplConsumer['b, 'res] -> ?a)) -> ?b` took too many steps and ran out of fuel (10000)
 //│ ║  l.186: 	def step (arr: Arrays['a]) = arr helper
 //│ ║         	                             ^^^^^^^^^^
 //│ ╙── Note: use flag `:ex` to see internal error info.
@@ -219,7 +219,7 @@ def step (arr: Arrays['a]) = arr helper
 // * Doesn't work (`'rep` leaks out of its scope in `step`)
 def helper impl k = k (stepImpl impl)
 //│ helper: ArraysImpl[in 'a out 'a | 'a0, in 'r out 'r | 'r0] -> (forall 'a1 'r1 'c. ({
-//│   fold: forall 'b 'b0. (('a | 'a1) -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> (('r0 & 'r1, anything,),) -> ('b0 | 'd)),
+//│   fold: forall 'b 'b0. (('a | 'a1) -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> (('r0 & 'r1, anything,),) -> ('d | 'b0)),
 //│   init: ('a0 & 'a1) -> ('r | 'r1, "hi",),
 //│   sub: (('r0 & 'r1, anything,),) -> int -> ('a | 'a1),
 //│   update: (('r0 & 'r1, anything,),) -> int -> ('a0 & 'a1) -> ('r | 'r1, "hey",)
@@ -229,7 +229,7 @@ def helper impl k = k (stepImpl impl)
 // * Idem
 def helper (impl: ArraysImpl['a, 'rep]) k = k (stepImpl impl)
 //│ helper: ArraysImpl['a, 'rep] -> (forall 'c. ({
-//│   fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> (('rep, anything,),) -> ('b0 | 'd)),
+//│   fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> (('rep, anything,),) -> ('d | 'b0)),
 //│   init: 'a -> ('rep, "hi",),
 //│   sub: (('rep, anything,),) -> int -> 'a,
 //│   update: (('rep, anything,),) -> int -> 'a -> ('rep, "hey",)
@@ -239,15 +239,15 @@ def helper (impl: ArraysImpl['a, 'rep]) k = k (stepImpl impl)
 :e
 def step (arr: Arrays['a]) = arr helper
 //│ Arrays['a] -> (forall 'c. error | ({
-//│   fold: forall 'b 'b0. (('a0 | 'a) -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> (('rep & 'rep0, anything,),) -> ('b0 | 'd)),
-//│   init: 'a -> ('rep, "hi",),
-//│   sub: (('rep & 'rep0, anything,),) -> int -> ('a0 | 'a),
-//│   update: (('rep & 'rep0, anything,),) -> int -> 'a -> ('rep, "hey",)
+//│   fold: forall 'b 'b0. ('a0 -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> (('rep & 'rep0, anything,),) -> ('d | 'b0)),
+//│   init: ('a & 'a0) -> ('rep, "hi",),
+//│   sub: (('rep & 'rep0, anything,),) -> int -> 'a0,
+//│   update: (('rep & 'rep0, anything,),) -> int -> ('a & 'a0) -> ('rep, "hey",)
 //│ } -> 'c) -> 'c)
 //│ where
-//│   'rep :> ??rep
+//│   'rep :> anything
 //│        <: 'rep0
-//│   'rep0 <: ??rep0 & 'rep
+//│   'rep0 <: ??rep & 'rep
 //│   'a <: 'a0
 //│   'a0 := 'a
 //│   <:  step:
@@ -482,7 +482,7 @@ snb = mkMonoArray 3
 
 // * Here we are trying to leak the internally-quantified representation, resulting in extruded types being returned
 snb (fun arr -> arr.init true)
-//│ res: ??rep | ??rep0
+//│ res: anything
 //│    = [ [ [ true, 'hi' ], 'hi' ], 'hi' ]
 
 
@@ -532,7 +532,7 @@ def step2 (arr: Arrays['a]) (k: ArraysImplConsumer['a2, 'rep]) = arr (fun impl -
 
 :e
 def step2 = forall 'a. fun (arr: Arrays['a]) -> fun k -> arr (fun impl -> k (stepImpl_ty impl))
-//│ Arrays['a] -> (forall 'r 'b. (ArraysImpl['a, in (??rep & 'r, string,) out ('r | ??rep0, string,)] -> 'b) -> 'b)
+//│ Arrays['a] -> (forall 'b. (ArraysImpl['a, in (??rep, string,) out (anything, string,)] -> 'b) -> 'b)
 //│   <:  step2:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type error in def definition
@@ -583,13 +583,13 @@ def s arr (k: ArraysImplConsumer['a, 'rep]) = arr (fun impl -> k (stepImpl_ty im
 // * We can see it shouldn't be simplified to nothing:
 :ns
 s
-//│ res: forall 'b 'a 'a0 'rep 'c. 'c -> (forall 'd 'a1 'rep0. ArraysImplConsumer['a1, 'rep0] -> 'd)
+//│ res: forall 'b 'a 'a0 'rep 'c. 'b -> (forall 'a1 'rep0 'd. ArraysImplConsumer['a1, 'rep0] -> 'd)
 //│   where
-//│     'd :> 'b
+//│     'd :> 'c
 //│     'rep0 <: 'rep
 //│     'a1 :> 'a0
 //│         <: 'a
-//│     'c <: (forall 'e 'a2 'f 'r. 'e -> 'f) -> 'b
+//│     'b <: (forall 'r 'e 'a2 'f. 'e -> 'f) -> 'c
 //│     'f :> 'rep
 //│     'e <: ArraysImpl['a2, 'r]
 //│     'a2 :> 'a
@@ -650,7 +650,7 @@ snb = mkMonoArray 3
 
 // * Here we are trying to leak the internally-quantified representation, resulting in extruded types being returned
 snb (fun arr -> arr.init true)
-//│ res: ??rep | ??rep0
+//│ res: anything
 //│    = [ [ [ true, 'hi' ], 'hi' ], 'hi' ]
 
 

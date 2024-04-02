@@ -296,17 +296,15 @@ g(0 - 5, Some(9))
 //│     = 4
 
 class Var(name: Str)
-class ValBase
+abstract class ValBase: (IntVal | BoolVal)
 class IntVal(value: Int) extends ValBase
 class BoolVal(value: Bool) extends ValBase
-class Lit[T](value: T)
+class Lit(value: ValBase)
 //│ class Var(name: Str)
-//│ class ValBase {
-//│   constructor()
-//│ }
+//│ abstract class ValBase: BoolVal | IntVal
 //│ class IntVal(value: Int) extends ValBase
 //│ class BoolVal(value: Bool) extends ValBase
-//│ class Lit[T](value: T)
+//│ class Lit(value: ValBase)
 
 fun p(e, context) =
   if e is
@@ -315,7 +313,7 @@ fun p(e, context) =
       Some(BoolVal(v)) then Right(v)
     Lit(IntVal(v)) then Left(v)
     Lit(BoolVal(v)) then Right(v)
-//│ fun p: forall 'A 'B. (Lit[BoolVal | IntVal] | Var, {get: Str -> Some[BoolVal | IntVal]}) -> (Left[in 'A out Int | 'A] | Right[in 'B out Bool | 'B])
+//│ fun p: forall 'A 'B. (Lit | Var, {get: Str -> Some[BoolVal | IntVal]}) -> (Left[in 'A out Int | 'A] | Right[in 'B out Bool | 'B])
 
 class Nil()
 //│ class Nil()
@@ -327,7 +325,7 @@ fun f(x) =
     0 ::
       Nil() then "oh"
 //│ ╔══[ERROR] Syntactic split of patterns are not supported
-//│ ║  l.327: 	    0 ::
+//│ ║  l.325: 	    0 ::
 //│ ╙──       	      ^^
 //│ ╔══[ERROR] unexpected empty split found
 //│ ╙──
@@ -372,22 +370,22 @@ test(false)
 test(0)
 test(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.372: 	test(0)
+//│ ║  l.370: 	test(0)
 //│ ║         	^^^^^^^
 //│ ╟── integer literal of type `0` is not an instance of type `Bool`
-//│ ║  l.372: 	test(0)
+//│ ║  l.370: 	test(0)
 //│ ║         	     ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.360: 	fun test(x) = if x then 0 else "oops"
+//│ ║  l.358: 	fun test(x) = if x then 0 else "oops"
 //│ ╙──       	                 ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.373: 	test(1)
+//│ ║  l.371: 	test(1)
 //│ ║         	^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `Bool`
-//│ ║  l.373: 	test(1)
+//│ ║  l.371: 	test(1)
 //│ ║         	     ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.360: 	fun test(x) = if x then 0 else "oops"
+//│ ║  l.358: 	fun test(x) = if x then 0 else "oops"
 //│ ╙──       	                 ^
 //│ "oops" | 0 | error
 //│ res

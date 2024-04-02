@@ -22,7 +22,7 @@ class Lazy[out A](init: () => A) {
   fun toString() = join of "Lazy(", (if cached is defined(v) then String(v) else "..."), ")"
 }
 //│ class Lazy[A](init: () -> A) {
-//│   val cached: Option[A]
+//│   mut val cached: Option[A]
 //│   fun get: A
 //│   fun toString: () -> Str
 //│ }
@@ -125,7 +125,7 @@ fun walk(t, mn) = if t is
     Pair of n, Leaf(if n > 2 * mn then mn else n)
   Node(l, r) and walk(l, mn) is Pair(mn1, l1) and walk(r, mn) is Pair(mn2, r1) then
     Pair of min(mn1, mn2), Node(l1, r1)
-//│ fun walk: forall 'A 'a. (Leaf['A] | Node['A], Int & 'a) -> Pair['A, Leaf['A | 'a] | Node['A | 'a]]
+//│ fun walk: forall 'A 'a. (Leaf['A] | Node['A], Int & 'a) -> Pair['A, Leaf['a | 'A] | Node['a | 'A]]
 //│   where
 //│     'A <: Num
 

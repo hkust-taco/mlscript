@@ -64,7 +64,32 @@ class Scope(val name: Str, enclosing: Opt[Scope]) {
       "eq",
       "unit",
       "log",
+      "run",
+      "Const",
+      "freshName",
+      "Lam",
+      "Var",
+      "App",
+      "IntLit",
+      "StrLit",
+      "DecLit",
+      "UnitLit",
+      "Rcd",
+      "Bra",
+      "Sel",
+      "Blk",
+      "Tup",
+      "Fld",
+      "Let",
+      "Subs",
+      "With",
+      "Quoted",
+      "CaseOf",
+      "Case",
+      "Wildcard",
+      "NoCases",
       "discard",
+      "window",
     ) foreach { name =>
       register(BuiltinSymbol(name, name))
     }
@@ -75,6 +100,12 @@ class Scope(val name: Str, enclosing: Opt[Scope]) {
     Ls("int", "number", "bool", "string", "unit") foreach { name =>
       register(TypeAliasSymbol(name, Nil, TypeName(name)))
     }
+
+    // TODO: eventually this should be properly registered along
+    // with all other built-in classes. For now, this just helps the
+    // unit tests relating to annotations pass.
+    val annType = TraitSymbol("Annotation", "Annotation", Nil, Record(Nil), Nil)
+    register(annType)
   }
 
   private val allocateRuntimeNameIter = for {

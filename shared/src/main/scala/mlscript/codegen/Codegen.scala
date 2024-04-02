@@ -589,7 +589,7 @@ class JSMember(`object`: JSExpr, property: JSExpr) extends JSExpr {
   override def precedence: Int = 20
   override def toSourceCode: SourceCode =
     `object`.toSourceCode.parenthesized(
-      `object`.precedence < precedence || `object`.isInstanceOf[JSRecord]
+      `object`.precedence < precedence || `object`.isInstanceOf[JSRecord] || `object`.isInstanceOf[JSNew]
     ) ++ SourceCode("[") ++ property.toSourceCode ++ SourceCode("]")
 
   override def isSimple: Bool = `object`.isSimple
@@ -602,7 +602,7 @@ object JSMember {
 class JSField(`object`: JSExpr, val property: JSIdent) extends JSMember(`object`, property) {
   override def toSourceCode: SourceCode =
     `object`.toSourceCode.parenthesized(
-      `object`.precedence < precedence || `object`.isInstanceOf[JSRecord]
+      `object`.precedence < precedence || `object`.isInstanceOf[JSRecord] || `object`.isInstanceOf[JSNew]
     ) ++ SourceCode(
       if (JSField.isValidFieldName(property.name)) {
         s".${property.name}"
@@ -881,7 +881,7 @@ final case class JSClassNewDecl(
         if (!privateMems.contains(f)) buffer += s"  #${f};"
         buffer += s"  get ${f}() { return this.#${f}; }"
         if (mut) buffer +=
-          s"  set ${f}(value) { return this.#${f} = value; }"
+          s"  set ${f}($$value) { return this.#${f} = $$value; }"
       }
       buffer += s"  constructor($params) {"
       if (`extends`.isDefined) {

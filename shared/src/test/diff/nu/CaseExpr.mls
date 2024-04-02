@@ -35,10 +35,10 @@ fun foo = case
 
 
 
-abstract class Option[out A]
+abstract class Option[out A]: Some[A] | None
 class Some[out A](val value: A) extends Option[A]
 module None extends Option[nothing]
-//│ abstract class Option[A]
+//│ abstract class Option[A]: None | Some[A]
 //│ class Some[A](value: A) extends Option
 //│ module None extends Option
 

@@ -143,7 +143,7 @@ fun foo(x) = if x is
 //│ ╟── it can be class `Z`
 //│ ║  l.136: 	  Pair(Z(), Z()) then "zeros"
 //│ ╙──       	            ^
-//│ fun foo: forall 'B 'A. Pair['A, O & 'B] -> ("ones" | "zeros" | Pair['A, 'B] | 'A)
+//│ fun foo: forall 'A 'B. Pair['A, O & 'B] -> ("ones" | "zeros" | Pair['A, 'B] | 'A)
 //│   where
 //│     'A <: Object
 

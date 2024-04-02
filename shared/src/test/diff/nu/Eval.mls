@@ -79,10 +79,10 @@ test
 //│   1
 
 
-abstract class Option[out A]
+abstract class Option[out A]: Some[A] | None
 class Some[out A](val value: A) extends Option[A]
 module None extends Option[nothing]
-//│ abstract class Option[A]
+//│ abstract class Option[A]: None | Some[A]
 //│ class Some[A](value: A) extends Option
 //│ module None extends Option
 
@@ -264,7 +264,7 @@ fun eval(t, env) = if t is
 //│   where
 //│     'b :> 'c
 //│        <: Object & ~#Rcd | Rcd['b]
-//│     'c :> Rcd[Lam | Lit[??A] | 'b | 'c] | Lam | Lit[??A] | 'b
+//│     'c :> Lam | Lit[??A] | Rcd[Lam | Lit[??A] | 'b | 'c] | 'b
 //│     'a <: App | Lam | Lit[anything] | Rcd['a] | Sel | Var
 
 eval : (Term, List[{key: Str, value: Value}]) -> Value
@@ -280,7 +280,7 @@ let rcd = Rcd({key: "a", value: IntLit(0)} :: Nil)
 eval of rcd, Nil
 //│ 'a
 //│   where
-//│     'a :> Lam | Lit[Int | ??A] | Rcd[Lam | Lit[Int | ??A] | 'a]
+//│     'a :> Lam | Lit[anything] | Rcd[Lam | Lit[anything] | 'a]
 //│ res
 //│     = Rcd {}
 

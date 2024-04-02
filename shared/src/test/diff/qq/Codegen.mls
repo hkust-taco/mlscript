@@ -1,0 +1,360 @@
+:NewDefs
+
+
+:js
+:e
+code"x"
+//│ ╔══[ERROR] identifier not found: x
+//│ ║  l.6: 	code"x"
+//│ ╙──     	     ^
+//│ Code[error, nothing]
+//│ Code generation encountered an error:
+//│   unbound free variable x is not supported yet.
+
+
+:js
+:ne
+code"x => x"
+//│ Code[forall 'a. 'a -> 'a, nothing]
+//│ // Prelude
+//│ let res;
+//│ class TypingUnit1 {}
+//│ const typing_unit1 = new TypingUnit1;
+//│ // Query 1
+//│ res = ((x1) => Lam(Var(x1), Var(x1)))(freshName("x"));
+//│ // End of generated code
+
+
+:js
+:ne
+code"x => ${code"x"}"
+//│ Code[forall 'a. 'a -> 'a, nothing]
+//│ // Prelude
+//│ class TypingUnit2 {}
+//│ const typing_unit2 = new TypingUnit2;
+//│ // Query 1
+//│ res = ((x1) => Lam(Var(x1), Var(x1)))(freshName("x"));
+//│ // End of generated code
+
+
+:js
+:ne
+code"x => ${id(code"x")}"
+//│ Code[forall 'a. 'a -> 'a, nothing]
+//│ // Prelude
+//│ function id(x) {
+//│   return x;
+//│ }
+//│ class TypingUnit3 {}
+//│ const typing_unit3 = new TypingUnit3;
+//│ // Query 1
+//│ res = ((x1) => Lam(Var(x1), id(Var(x1))))(freshName("x"));
+//│ // End of generated code
+
+
+:js
+:ne
+code"1 + 2"
+//│ Code[Int, nothing]
+//│ // Prelude
+//│ class TypingUnit4 {}
+//│ const typing_unit4 = new TypingUnit4;
+//│ // Query 1
+//│ res = App(Var("+"), IntLit(1), IntLit(2));
+//│ // End of generated code
+
+
+:js
+:ne
+code"f => f(114)"
+//│ Code[forall 'a. (114 -> 'a) -> 'a, nothing]
+//│ // Prelude
+//│ class TypingUnit5 {}
+//│ const typing_unit5 = new TypingUnit5;
+//│ // Query 1
+//│ res = ((f1) => Lam(Var(f1), App(Var(f1), Tup(Fld(IntLit(114), false, false, false)))))(freshName("f"));
+//│ // End of generated code
+
+
+:js
+:ne
+code""" "come on! roach!" """
+//│ Code["come on! roach!", nothing]
+//│ // Prelude
+//│ class TypingUnit6 {}
+//│ const typing_unit6 = new TypingUnit6;
+//│ // Query 1
+//│ res = StrLit("come on! roach!");
+//│ // End of generated code
+
+
+:js
+:ne
+code"{x: 114, y: 514}"
+//│ Code[{x: 114, y: 514}, nothing]
+//│ // Prelude
+//│ class TypingUnit7 {}
+//│ const typing_unit7 = new TypingUnit7;
+//│ // Query 1
+//│ res = Bra(Rcd(Var("x"), IntLit(114), Var("y"), IntLit(514)));
+//│ // End of generated code
+
+
+:js
+:ne
+code"{x: 114}.x"
+//│ Code[114, nothing]
+//│ // Prelude
+//│ class TypingUnit8 {}
+//│ const typing_unit8 = new TypingUnit8;
+//│ // Query 1
+//│ res = Sel(Bra(Rcd(Var("x"), IntLit(114))), Var("x"));
+//│ // End of generated code
+
+
+:js
+:ne
+code"let x = 42 in x"
+//│ Code[42, nothing]
+//│ // Prelude
+//│ class TypingUnit9 {}
+//│ const typing_unit9 = new TypingUnit9;
+//│ // Query 1
+//│ res = ((x1) => Let(Var(x1), IntLit(42), Var(x1)))(freshName("x"));
+//│ // End of generated code
+
+
+:js
+:ne
+code"(x => x + 1)(41)"
+//│ Code[Int, nothing]
+//│ // Prelude
+//│ class TypingUnit10 {}
+//│ const typing_unit10 = new TypingUnit10;
+//│ // Query 1
+//│ res = App(Bra(((x1) => Lam(Var(x1), App(Var("+"), Var(x1), IntLit(1))))(freshName("x"))), Tup(Fld(IntLit(41), false, false, false)));
+//│ // End of generated code
+
+
+:js
+:ne
+code"let x = ${Const(42)} in ${code"x"}"
+//│ Code[Int, nothing]
+//│ // Prelude
+//│ class TypingUnit11 {}
+//│ const typing_unit11 = new TypingUnit11;
+//│ // Query 1
+//│ res = ((x1) => Let(Var(x1), Const(42), Var(x1)))(freshName("x"));
+//│ // End of generated code
+
+
+:js
+:ne
+code"let x = 1 in (x + 1, x + 2)"
+//│ Code[Int, nothing]
+//│ // Prelude
+//│ class TypingUnit12 {}
+//│ const typing_unit12 = new TypingUnit12;
+//│ // Query 1
+//│ res = ((x1) => Let(Var(x1), IntLit(1), App(Var(","), App(Var("+"), Var(x1), IntLit(1)), App(Var("+"), Var(x1), IntLit(2)))))(freshName("x"));
+//│ // End of generated code
+
+
+:js
+:ne
+code"[1, 2, 3]"
+//│ Code[[1, 2, 3], nothing]
+//│ // Prelude
+//│ class TypingUnit13 {}
+//│ const typing_unit13 = new TypingUnit13;
+//│ // Query 1
+//│ res = Tup(Fld(IntLit(1), false, false, false), Fld(IntLit(2), false, false, false), Fld(IntLit(3), false, false, false));
+//│ // End of generated code
+
+:js
+:ne
+code"[1, 2, 3].1"
+//│ Code[2, nothing]
+//│ // Prelude
+//│ class TypingUnit14 {}
+//│ const typing_unit14 = new TypingUnit14;
+//│ // Query 1
+//│ res = Sel(Tup(Fld(IntLit(1), false, false, false), Fld(IntLit(2), false, false, false), Fld(IntLit(3), false, false, false)), Var("1"));
+//│ // End of generated code
+
+
+:js
+:ne
+code"true"
+//│ Code[true, nothing]
+//│ // Prelude
+//│ class TypingUnit15 {}
+//│ const typing_unit15 = new TypingUnit15;
+//│ // Query 1
+//│ res = Var("true");
+//│ // End of generated code
+
+
+:js
+:ne
+code"42: Int"
+//│ Code[Int, nothing]
+//│ // Prelude
+//│ class TypingUnit16 {}
+//│ const typing_unit16 = new TypingUnit16;
+//│ // Query 1
+//│ res = IntLit(42);
+//│ // End of generated code
+
+
+:js
+:ne
+code"(x: Int) => x + 1"
+//│ Code[(x: Int) -> Int, nothing]
+//│ // Prelude
+//│ class TypingUnit17 {}
+//│ const typing_unit17 = new TypingUnit17;
+//│ // Query 1
+//│ res = ((x1) => Lam(Var(x1), App(Var("+"), Var(x1), IntLit(1))))(freshName("x"));
+//│ // End of generated code
+
+
+:js
+:ne
+code"{x: 42} with {y: true}"
+//│ Code[{x: 42, y: true}, nothing]
+//│ // Prelude
+//│ class TypingUnit18 {}
+//│ const typing_unit18 = new TypingUnit18;
+//│ // Query 1
+//│ res = With(Bra(Rcd(Var("x"), IntLit(42))), Rcd(Var("y"), Var("true")));
+//│ // End of generated code
+
+
+:js
+:ne
+code"${Const(42)}"
+//│ Code[Int, nothing]
+//│ // Prelude
+//│ class TypingUnit19 {}
+//│ const typing_unit19 = new TypingUnit19;
+//│ // Query 1
+//│ res = Const(42);
+//│ // End of generated code
+
+
+:js
+:ne
+:e
+code"code"42""
+//│ ╔══[ERROR] Nested quotation is not allowed.
+//│ ║  l.249: 	code"code"42""
+//│ ╙──       	     ^^^^^^^^
+//│ Code[error, nothing]
+//│ Code generation encountered an error:
+//│   nested quotation is not allowed.
+
+
+:js
+:ne
+code"Const(42)"
+//│ Code[Code[Int, nothing], nothing]
+//│ // Prelude
+//│ class TypingUnit21 {}
+//│ const typing_unit21 = new TypingUnit21;
+//│ // Query 1
+//│ res = App(Var("Const"), Tup(Fld(IntLit(42), false, false, false)));
+//│ // End of generated code
+
+
+:js
+:ne
+code"if (1 == 2) then false else true"
+//│ Code[Bool, nothing]
+//│ // Prelude
+//│ class TypingUnit22 {}
+//│ const typing_unit22 = new TypingUnit22;
+//│ // Query 1
+//│ res = ((ucs$test$01) => Let(Var(ucs$test$01), Bra(App(Var("=="), IntLit(1), IntLit(2))), CaseOf(Var(ucs$test$01), Case(Var("true"), Var("false"), Wildcard(Var("true"))))))(freshName("ucs$test$0"));
+//│ // End of generated code
+
+
+:js
+:ne
+code"if 3 is
+  1 then 114
+  2 then 514
+  _ then 0
+"
+//│ Code[0 | 114 | 514, nothing]
+//│ // Prelude
+//│ class TypingUnit23 {}
+//│ const typing_unit23 = new TypingUnit23;
+//│ // Query 1
+//│ res = ((ucs$scrut$01) => Let(Var(ucs$scrut$01), IntLit(3), CaseOf(Var(ucs$scrut$01), Case(IntLit(1), IntLit(114), Case(IntLit(2), IntLit(514), Wildcard(IntLit(0)))))))(freshName("ucs$scrut$0"));
+//│ // End of generated code
+
+
+:js
+:ne
+let zero = Const(0)
+let one = Const(1)
+code"p => if p.x ===
+    ${zero} then true
+    ${one} then false
+  else false
+"
+//│ let zero: Code[Int, nothing]
+//│ let one: Code[Int, nothing]
+//│ Code[{x: Eql[Int]} -> Bool, nothing]
+//│ // Prelude
+//│ class TypingUnit24 {}
+//│ const typing_unit24 = new TypingUnit24;
+//│ // Query 1
+//│ globalThis.zero = Const(0);
+//│ // Query 2
+//│ globalThis.one = Const(1);
+//│ // Query 3
+//│ res = ((p1) => Lam(Var(p1), ((ucs$cache$01) => Let(Var(ucs$cache$01), Sel(Var(p1), Var("x")), ((ucs$test$01) => Let(Var(ucs$test$01), App(Var("==="), Var(ucs$cache$01), zero), CaseOf(Var(ucs$test$01), Case(Var("true"), Var("true"), Wildcard(((ucs$test$11) => Let(Var(ucs$test$11), App(Var("==="), Var(ucs$cache$01), one), CaseOf(Var(ucs$test$11), Case(Var("true"), Var("false"), Wildcard(Var("false"))))))(freshName("ucs$test$1")))))))(freshName("ucs$test$0"))))(freshName("ucs$cache$0"))))(freshName("p"));
+//│ // End of generated code
+
+
+:js
+:ne
+fun test(cde, f) =
+  code"x => x + ${f(cde)}"
+//│ fun test: forall 'a 'b. ('a, 'a -> Code[Int, 'b]) -> Code[Int -> Int, 'b]
+//│ // Prelude
+//│ class TypingUnit25 {}
+//│ const typing_unit25 = new TypingUnit25;
+//│ // Query 1
+//│ globalThis.test = function test(cde, f) {
+//│   return ((() => {
+//│     return ((x1) => Lam(Var(x1), App(Var("+"), Var(x1), f(cde))))(freshName("x"));
+//│   })());
+//│ };
+//│ // End of generated code
+
+
+:js
+:ne
+code"""let x = ${log("foo"), Const(0)} in x + 1"""
+//│ Code[Int, nothing]
+//│ // Prelude
+//│ function log(x) {
+//│   return console.info(x);
+//│ }
+//│ class TypingUnit26 {}
+//│ const typing_unit26 = new TypingUnit26;
+//│ // Query 1
+//│ res = ((x1) => Let(Var(x1), (log("foo") , Const(0)), App(Var("+"), Var(x1), IntLit(1))))(freshName("x"));
+//│ // End of generated code
+
+:ne
+fun foo(dbg) =
+  code"x => ${let c = code"x" in dbg(c)}"
+//│ fun foo: forall 'a 'b 'c. (Code['a, ??x] -> Code['b, 'c]) -> Code['a -> 'b, 'c]
+
+:ne
+code"x => let c = 42 in ${code"x"}"
+//│ Code[forall 'a. 'a -> 'a, nothing]

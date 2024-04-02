@@ -425,7 +425,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def symbolicName: Opt[Str] = fd.symbolicNme.map(_.name)
     def toLoc: Opt[Loc] = fd.toLoc
     lazy val prov = TypeProvenance(toLoc, "member")
-    def isPublic = true // TODO
+    def isPublic: Bool = !fd.isLetOrLetRec
     lazy val typeSignature: ST =
       if (fd.isMut) bodyType
       else PolymorphicType.mk(level, bodyType)
@@ -553,6 +553,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     val funSigs = MutMap.empty[Str, NuFunDef]
     val implems = decls.filter {
       case fd @ NuFunDef(_, nme, snme, tparams, R(rhs)) =>
+        if (fd.isLetOrLetRec)
+          err(s"`let` bindings must have a right-hand side", fd.toLoc)
         funSigs.updateWith(nme.name) {
           case S(s) =>
             err(s"A type signature for '${nme.name}' was already given", fd.toLoc)
@@ -579,9 +581,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
             assert(fd.signature.isEmpty)
             funSigs.get(fd.nme.name) match {
               case S(sig) =>
-                fd.copy()(fd.declareLoc, fd.virtualLoc, fd.mutLoc, S(sig), outer, fd.genField)
+                fd.copy()(fd.declareLoc, fd.virtualLoc, fd.mutLoc, S(sig), outer, fd.genField, fd.annotations)
               case _ =>
-                fd.copy()(fd.declareLoc, fd.virtualLoc, fd.mutLoc, fd.signature, outer, fd.genField)
+                fd.copy()(fd.declareLoc, fd.virtualLoc, fd.mutLoc, fd.signature, outer, fd.genField, fd.annotations)
             }
           case td: NuTypeDef =>
             if (td.nme.name in reservedTypeNames)
@@ -985,7 +987,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     lazy val (typedSignatures, funImplems) : (Ls[(NuFunDef, ST)], Ls[NuFunDef]) = decl match {
       case td: NuTypeDef => ctx.nest.nextLevel { implicit ctx =>
         val (signatures, rest) = td.body.entities.partitionMap {
-          case fd @ NuFunDef(N | S(false), nme, snme, tparams, R(rhs)) => // currently `val`s are encoded with `S(false)`
+          case fd @ NuFunDef(_, nme, snme, tparams, R(rhs)) if !fd.isLetOrLetRec =>
             L((fd, rhs))
           // TODO also pick up signature off implems with typed params/results
           case s => R(s)
@@ -1045,7 +1047,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     lazy val allFields: Set[Var] = decl match {
       case td: NuTypeDef =>
         (td.params.getOrElse(Tup(Nil)).fields.iterator.flatMap(_._1) ++ td.body.entities.iterator.collect {
-          case fd: NuFunDef => fd.nme
+          case fd: NuFunDef if !fd.isLetOrLetRec => fd.nme
         }).toSet ++ inheritedFields ++ tparams.map {
           case (nme @ TypeName(name), tv, _) =>
             Var(td.nme.name+"#"+name).withLocOf(nme)
@@ -1127,6 +1129,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 if (fd.tparams.nonEmpty)
                   err(msg"Type parameters are not yet supported in this position",
                     fd.tparams.head.toLoc)
+
               val res_ty = fd.rhs match {
                 case R(PolyType(tps, ty)) =>
                   checkNoTyParams()
@@ -1179,6 +1182,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   TypedNuFun(ctx.lvl, fd, body_ty.withProv(tp))(isImplemented = true)
               }
               ctx.nextLevel { implicit ctx: Ctx => constrain(res_ty.bodyType, mutRecTV) }
+
+              // Check annotations
+              fd.annotations.foreach(ann => {
+                implicit val gl: GenLambdas = false;
+                val annType = typeTerm(ann)
+                constrain(annType, AnnType)
+              })
+
               res_ty
               
               
@@ -1271,13 +1282,18 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 }
                 if (!td.isDecl && td.kind =/= Trt && !td.isAbstract) {
                   toImplement.foreach { m =>
+                    def mkErr(postfix: Ls[Message -> Opt[Loc]]) = err(
+                      msg"Member `${m.name}` is declared (or its declaration is inherited) but is not implemented in `${
+                          td.nme.name}`" -> td.nme.toLoc ::
+                        msg"Declared here:" -> m.toLoc ::
+                        postfix)
                     implemsMap.get(m.name) match {
-                      case S(_) =>
-                      case N =>
-                        err(msg"Member `${m.name}` is declared (or its declaration is inherited) but is not implemented in `${
-                            td.nme.name}`" -> td.nme.toLoc ::
-                          msg"Declared here:" -> m.toLoc ::
+                      case S(impl) =>
+                        if (impl.isPrivate) mkErr(
+                          msg"Note: ${impl.kind.str} member `${m.name}` is private and cannot be used as a valid implementation" -> impl.toLoc ::
                           Nil)
+                      case N =>
+                        mkErr(Nil)
                     }
                   }
                 }
@@ -1300,27 +1316,35 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   println(s"Checking overriding for ${m} against ${sigMap.get(m.name)}...")
                   (m, sigMap.get(m.name)) match {
                     case (_, N) =>
-                    case (m: TypedNuTermDef, S(fun: TypedNuTermDef)) => fun match {
+                    case (m: TypedNuTermDef, S(sig: TypedNuTermDef)) => sig match {
                       // * If the implementation and the declaration are in the same class,
                       // * it does not require to be virtual.
-                      case _ if fun.isPrivate => () // * Private members are not actually inherited
-                      case td: TypedNuFun if (!td.fd.isVirtual && !clsSigns.contains(fun)) =>
-                        err(msg"${m.kind.str.capitalize} member `${m.name
-                            }` is not virtual and cannot be overridden" -> m.toLoc ::
-                          msg"Originally declared here:" -> fun.toLoc ::
+                      case _ if sig.isPrivate => () // * Private members are not actually inherited
+                      case td: TypedNuFun if (!td.fd.isVirtual && !clsSigns.contains(sig)) =>
+                        err(msg"${m.kind.str.capitalize} member '${m.name
+                            }' is not virtual and cannot be overridden" -> m.toLoc ::
+                          msg"Originally declared here:" -> sig.toLoc ::
                           Nil)
                       case p: NuParam if (!p.isVirtual && !clsSigns.contains(p)) =>
-                        err(msg"Inherited parameter named `${m.name
-                            }` is not virtual and cannot be overridden" -> m.toLoc ::
-                          msg"Originally declared here:" -> fun.toLoc ::
+                        err(msg"Inherited parameter named '${m.name
+                            }' is not virtual and cannot be overridden" -> m.toLoc ::
+                          msg"Originally declared here:" -> sig.toLoc ::
                           Nil)
                       case _ =>
+                        m match {
+                          case fun: TypedNuFun if (fun.fd.isLetOrLetRec) =>
+                            err(msg"Cannot implement ${m.kind.str} member '${m.name
+                                }' with a let binding" -> m.toLoc ::
+                              msg"Originally declared here:" -> sig.toLoc ::
+                              Nil)
+                          case _ =>
+                        }
                         val mSign = m.typeSignature
                         implicit val prov: TP = mSign.prov
-                        constrain(mSign, fun.typeSignature)
+                        constrain(mSign, sig.typeSignature)
                     }
                     case (_, S(that)) =>
-                      err(msg"${m.kind.str.capitalize} member `${m.name}` cannot override ${
+                      err(msg"${m.kind.str.capitalize} member '${m.name}' cannot override ${
                           that.kind.str} member of the same name declared in parent" -> td.toLoc ::
                         msg"Originally declared here:" -> that.toLoc ::
                         Nil)
@@ -1342,7 +1366,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         case _ => N // if one is fun, then it will be fun
                       }, a.fd.nme, N/*no sym name?*/, a.fd.tparams, a.fd.rhs)(
                         a.fd.declareLoc, a.fd.virtualLoc, a.fd.mutLoc,
-                        N, a.fd.outer orElse b.fd.outer, a.fd.genField)
+                        N, a.fd.outer orElse b.fd.outer, a.fd.genField, a.fd.annotations)
                       S(TypedNuFun(a.level, fd, a.bodyType & b.bodyType)(a.isImplemented || b.isImplemented))
                     case (a: NuParam, S(b: NuParam)) => 
                       if (!a.isPublic) S(b) else if (!b.isPublic) S(a)
@@ -1403,6 +1427,13 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                   case lb :: Nil => lb
                   case _ => die
                 }
+              }
+
+              // Check annotations
+              td.annotations.foreach { ann =>
+                implicit val gl: GenLambdas = false
+                val annType = typeTerm(ann)
+                constrain(annType, AnnType)
               }
               
               td.kind match {
@@ -1698,9 +1729,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       overrideCheck(clsSigns, ifaceMembers, clsSigns)
                     }()
                     
-                    implemCheck(impltdMems,
-                      (clsSigns.iterator ++ ifaceMembers.iterator)
-                      .distinctBy(_.name).filterNot(_.isImplemented).toList)
+                    trace(s"Checking signature implementations...") {
+                      implemCheck(impltdMems,
+                        (clsSigns.iterator ++ ifaceMembers.iterator)
+                        .distinctBy(_.name).filterNot(_.isImplemented).toList)
+                    }()
                     
                     val allMembers =
                       (ifaceMembers ++ impltdMems).map(d => d.name -> d).toMap ++ typedSignatureMembers
@@ -1763,6 +1796,24 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         S(res)
                       }
                       case N => N
+                    }
+                    
+                    // * After a class is type checked, we need to "solidify" the inferred types of its unannotated mutable fields,
+                    // * otherwise they would be treated as polymorphic, which would be wrong.
+                    allMembers.foreachEntry {
+                      case (nme, v: TypedNuFun) if v.fd.isMut =>
+                        // * A bit hacky but should work:
+                        v.bodyType.unwrapProvs match {
+                          case _ if v.fd.rhs.isRight || v.fd.signature.nonEmpty =>
+                            // * If the type was annotated, we don't need to do anything.
+                          case tv: TV if tv.assignedTo.isEmpty => // * Could this `tv` ever be assigned?
+                            val res_ty = tv.lowerBounds.reduceOption(_ | _)
+                              .getOrElse(err(msg"Could not infer a type for unused mutable field $nme", v.toLoc))
+                            println(s"Setting type of $nme based on inferred lower bounds: $tv := $res_ty")
+                            tv.assignedTo = S(res_ty)
+                          case ty => lastWords(ty.toString)
+                        }
+                      case (nme, m) =>
                     }
                     
                     TypedNuCls(outerCtx.lvl, td,

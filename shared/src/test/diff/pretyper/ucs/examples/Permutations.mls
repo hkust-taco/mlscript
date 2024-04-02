@@ -62,11 +62,11 @@ fun insertAllPositions(z) =
         let nu = ((prev :+ z) ::: xs)
         aux(prev :+ head, nu :: acc, tail)
   xs => aux(Nil, Nil, xs)
-//│ fun insertAllPositions: forall 'a. 'a -> (forall 'A 'A0. (Cons['A0 & 'A] | Nil) -> (Cons[List['A | 'a]] | Nil))
+//│ fun insertAllPositions: forall 'a. 'a -> (forall 'A 'A0. (Cons['A & 'A0] | Nil) -> (Cons[List['a | 'A0]] | Nil))
 //│   where
-//│     'A0 <: 'A
-//│     'A :> 'a
-//│        <: 'A0
+//│     'A <: 'A0
+//│     'A0 :> 'a
+//│         <: 'A
 
 insertAllPositions(0)(1 :: 2 :: 3 :: Nil) |> showListList
 //│ Str

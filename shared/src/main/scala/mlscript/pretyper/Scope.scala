@@ -92,9 +92,9 @@ object Scope {
   }
 
   val global: Scope = {
-    def mod(name: Str) = NuTypeDef(Mod, TypeName(name), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N)
+    def mod(name: Str) = NuTypeDef(Mod, TypeName(name), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N, Nil)
     // def cls(name: Str) = NuTypeDef(Trt, TypeName(name), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N)
-    def als(name: Str) = NuTypeDef(Als, TypeName(name), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N)
+    def als(name: Str) = NuTypeDef(Als, TypeName(name), Nil, N, N, N, Nil, N, N, TypingUnit(Nil))(N, N, Nil)
     val builtinTypes = Ls(
       new ModuleSymbol(mod("true")),
       new ModuleSymbol(mod("false")),

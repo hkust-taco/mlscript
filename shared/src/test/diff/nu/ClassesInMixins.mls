@@ -90,12 +90,12 @@ mixin Test {
 //│ ║  l.79: 	  class Add<A>(lhs: A, rhs: A) {
 //│ ╙──      	            ^
 //│ mixin Test() {
-//│   this: {size: (??A | 'a) -> Int}
+//│   this: {size: anything -> Int}
 //│   class Add[A](lhs: A, rhs: A) {
 //│     fun cached: Int | error
 //│   }
 //│   class Lit(n: Int)
-//│   fun size: Add[??A0 & 'a] -> Int
+//│   fun size: Add[??A & 'a] -> Int
 //│ }
 
 

@@ -14,11 +14,11 @@ case r of { T1 -> r | _ -> 0 }
 
 // TODO also factor ClassTag-s like `2`:
 case r of { T1 -> r | T2 -> r }
-//│ res: 1 & #T1 | 'a | #T2 & (2 & #T1 | 2 & ~#T1 | 2 & ~#T2 | 2 & ~'a)
+//│ res: 1 & #T1 | 'a | #T2 & (2 & ~#T1 | 2 & ~#T2 | 2 & ~'a | 2 & #T1)
 //│    = [Number: 1]
 
 r = if true then T1 ((1,2,3)) else T2 ((3,4,5,4))
-//│ r: (1, 2, 3,) & #T1 | (3, 4, 5, 4,) & #T2
+//│ r: (3, 4, 5, 4,) & #T2 | (1, 2, 3,) & #T1
 //│  = [ 1, 2, 3 ]
 
 case r of { T1 -> r | _ -> 0 }
@@ -26,7 +26,7 @@ case r of { T1 -> r | _ -> 0 }
 //│    = [ 1, 2, 3 ]
 
 case r of { T1 -> r | T2 -> r }
-//│ res: (1, 2, 3,) & #T1 | 'a | #T2 & ((3, 4, 5, 4,) & #T1 | (3, 4, 5, 4,) & ~#T1 | (3, 4, 5, 4,) & ~#T2 | (3, 4, 5, 4,) & ~'a)
+//│ res: (1, 2, 3,) & #T1 | 'a | #T2 & ((3, 4, 5, 4,) & ~#T1 | (3, 4, 5, 4,) & ~#T2 | (3, 4, 5, 4,) & ~'a | (3, 4, 5, 4,) & #T1)
 //│    = [ 1, 2, 3 ]
 
 
@@ -143,9 +143,9 @@ gwx = g with {x=123}
 gwx.x with {y = gwx}
 //│ res: Array["hello" | 1 | 2 | 3 | 4 | false | true] & {0: 1 | true, 1: 2 | 4, 2: 3 | false}
 //│    = [ 1, 2, 3, 'hello' ]
-//│ hhh: Array["bye" | 345 | 3 | 45 | false | true] & {0: 45 | false, 1: 345 | 3}
+//│ hhh: Array["bye" | 3 | 345 | 45 | false | true] & {0: 45 | false, 1: 3 | 345}
 //│    = [ false, 3 ]
-//│ t: Array["bye" | "hello" | 1 | 2 | 345 | 3 | 45 | 4 | false | true] & {0: 1 | 45 | false | true, 1: 2 | 345 | 3 | 4}
+//│ t: Array["bye" | "hello" | 1 | 2 | 3 | 345 | 4 | 45 | false | true] & {0: 1 | 45 | false | true, 1: 2 | 3 | 345 | 4}
 //│  = [ false, 3 ]
 //│ g: Array["hello" | 1 | 2 | 3 | 4 | 6 | false | true] & {0: 1 | 6 | true, 1: 2 | 4 | 6, 2: 3 | 6 | false}
 //│  = [ 6, 6, 6 ]
@@ -462,7 +462,7 @@ def tg: ((T1 & Array[int]) | (T2 & Array[bool])) -> (T1 | T2)
 //│ res: Array[int]
 //│    = <no result>
 //│      gt is not implemented
-//│ tg: (T2 & Array[bool] | T1 & Array[int]) -> (T1 | T2)
+//│ tg: (T1 & Array[int] | T2 & Array[bool]) -> (T1 | T2)
 //│   = <missing implementation>
 
 gett1 ta (T1 123)

@@ -20,7 +20,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     // 200
     250
   
-  type ExtrCtx = MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
+  type ExtrCtx = MutSortMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
   
   protected var currentConstrainingRun = 0
   
@@ -77,7 +77,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         
         case S(fty) =>
           if (info.privateParams.contains(fld) && !allowPrivateAccess)
-            err(msg"Parameter '${fld.name}' cannot tbe accessed as a field" -> fld.toLoc :: Nil)
+            err(msg"Parameter '${fld.name}' cannot be accessed as a field" -> fld.toLoc :: Nil)
           S(fty)
         
         case N if info.isComputing =>
@@ -93,6 +93,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           def handle(virtualMembers: Map[Str, NuMember]): Opt[FieldType] =
             virtualMembers.get(fld.name) match {
               case S(d: TypedNuFun) =>
+                if (d.fd.isLetOrLetRec)
+                  err(msg"Let binding '${d.name}' cannot tbe accessed as a field" -> fld.toLoc ::
+                    msg"Use a `val` declaration to make it a field" -> d.fd.toLoc ::
+                    Nil)
                 val ty = d.typeSignature
                 S(
                   if (d.fd.isMut) FieldType(S(ty), ty)(d.prov)
@@ -100,7 +104,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 )
               case S(p: NuParam) =>
                 if (!allowPrivateAccess && !p.isPublic)
-                  err(msg"Parameter '${p.nme.name}' cannot tbe accessed as a field" -> fld.toLoc ::
+                  err(msg"Parameter '${p.nme.name}' cannot be accessed as a field" -> fld.toLoc ::
                     msg"Either make the parameter a `val` or access it through destructuring" -> p.nme.toLoc ::
                     Nil)
                 S(p.ty)
@@ -669,11 +673,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       val newVars = res.getVars -- originalVars
       if (newVars.nonEmpty) trace(s"RECONSTRAINING TVs") {
         newVars.foreach {
-          case AssignedVariable(bnd) =>
+          case tv @ AssignedVariable(bnd) =>
+            println(s"No need to reconstrain assigned $tv")
             // * This is unlikely to happen, but it should be fine anyway,
             // * as all bounds of vars being assigned are checked against the assigned type.
             ()
           case tv =>
+            println(s"Reconstraining $tv")
             if (tv.level > lowerLvl) tv.lowerBounds.foreach(lb =>
               // * Q: is it fine to constrain with the current ctx's level?
               tv.upperBounds.foreach(ub => rec(lb, ub, false)))
@@ -1323,7 +1329,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case w @ Without(b, ns) => Without(extrude(b, lowerLvl, pol, upperLvl), ns)(w.prov)
       case tv @ AssignedVariable(ty) =>
         cache.getOrElse(tv -> true, {
-          val nv = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
+          val nv = freshVar(tv.prov, S(tv), tv.nameHint)(lowerLvl)
           cache += tv -> true -> nv
           val tyPos = extrude(ty, lowerLvl, true, upperLvl)
           val tyNeg = extrude(ty, lowerLvl, false, upperLvl)

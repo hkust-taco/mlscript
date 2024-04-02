@@ -143,7 +143,7 @@ object Main {
           
           val exp = typer.expandType(sim)(ctx)
           
-          val expStr = exp.showIn(ShowCtx.mk(exp :: Nil, newDefs = true), 0).stripSuffix("\n")
+          val expStr = exp.showIn(0)(ShowCtx.mk(exp :: Nil, newDefs = true)).stripSuffix("\n")
             .replaceAll("  ", "&nbsp;&nbsp;")
             .replaceAll("\n", "<br/>")
 
@@ -159,7 +159,7 @@ object Main {
                             |""".stripMargin
 
           val backend = new JSWebBackend()
-          val (lines, resNames) = backend(pgrm)
+          val (lines, resNames) = backend(pgrm, newDefs = true)
           val code = lines.mkString("\n")
 
           // TODO: add a toggle button to show js code

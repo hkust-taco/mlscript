@@ -20,11 +20,11 @@ class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO[B] {
 //│   fun run: A
 //│ }
 //│ class Pure[A](value: A) extends IO {
-//│   fun bind: forall 'B0. (A -> IO['B0]) -> Bind[in A & 'A out A, 'B0]
+//│   fun bind: forall 'B0. ('A -> IO['B0]) -> Bind['A, 'B0]
 //│   fun run: A
 //│ }
 //│ class Bind[A, B](underlying: IO[A], f: A -> IO[B]) extends IO {
-//│   fun bind: forall 'B1. (B -> IO['B1]) -> Bind[in B & 'A0 out B, 'B1]
+//│   fun bind: forall 'B1. ('A0 -> IO['B1]) -> Bind['A0, 'B1]
 //│   fun run: B
 //│ }
 //│ where
@@ -173,7 +173,7 @@ let r = loop.run
 
 fun (>>) compose[A, B, C](f: A -> B, g: B -> C): A -> C = x => g(f(x))
 fun (#>) map[A, B](x: IO[A], f: A -> B): IO[B] = x.bind(f >> Pure)
-//│ fun (>>) compose: forall 'C 'A 'B. (f: 'A -> 'B, g: 'B -> 'C) -> 'A -> 'C
+//│ fun (>>) compose: forall 'A 'B 'C. (f: 'A -> 'B, g: 'B -> 'C) -> 'A -> 'C
 //│ fun (#>) map: forall 'A0 'B0. (x: IO['A0], f: 'A0 -> 'B0) -> IO['B0]
 
 val main =
@@ -246,10 +246,10 @@ fun main(ctx) =
   ctx.printLine(concat("The sum is: ")(String of sum)) #>> _ =>
   ctx.pure(sum)
 //│ fun main: forall 'a 'b 'c 'd 'e. {
-//│   printLine: "Hi! Input two numbers: " -> {bind: (anything -> 'e) -> 'd} & Str -> {bind: (anything -> 'a) -> 'b},
-//│   pure: Int -> 'a,
-//│   readInt: {bind: (Int -> 'c) -> 'e & (Int -> 'b) -> 'c}
-//│ } -> 'd
+//│   printLine: "Hi! Input two numbers: " -> {bind: (anything -> 'a) -> 'b} & Str -> {bind: (anything -> 'c) -> 'd},
+//│   pure: Int -> 'c,
+//│   readInt: {bind: (Int -> 'e) -> 'a & (Int -> 'd) -> 'e}
+//│ } -> 'b
 
 val defaultCtx = {printLine, readInt, pure: Pure}
 //│ val defaultCtx: {
@@ -285,7 +285,7 @@ fun loop(ctx) =
 //│ fun loop: forall 'a 'b 'c 'd. {
 //│   printLine: "Input a positive number: " -> {bind: (anything -> 'a) -> 'b},
 //│   pure: 'c -> 'd,
-//│   readInt: {bind: ((Num & 'c) -> ('d | 'b)) -> 'a}
+//│   readInt: {bind: ((Num & 'c) -> ('b | 'd)) -> 'a}
 //│ } -> 'b
 
 let r = loop(defaultCtx)

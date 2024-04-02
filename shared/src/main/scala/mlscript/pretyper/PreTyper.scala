@@ -175,6 +175,9 @@ class PreTyper extends Traceable with Diagnosable with Desugarer {
         case While(cond, body) =>
           traverseTerm(cond)
           traverseTerm(body)
+        case Ann(ann, receiver) => traverseTerm(receiver)
+        case Quoted(body) => traverseTerm(body)
+        case Unquoted(body) => traverseTerm(body)
       }
     }(_ => s"traverseTerm ==> ${term.showDbg}")
 

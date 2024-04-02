@@ -197,7 +197,7 @@ fun lowerBound(t, v) = if t is
     v > v' then Some(lowerBound(r, v) ?? v')
     _ then Some(v')
   Empty then None
-//│ fun lowerBound: forall 'a. (Empty | Node[Num & 'a], Num) -> (None | Some['a])
+//│ fun lowerBound: forall 'T. (Empty | Node[Num & 'T], Num) -> (None | Some['T])
 
 lowerBound(Empty, 0) ?? "not found"
 lowerBound(Node(0, Empty, Empty), 0) ?? "not found"
@@ -240,8 +240,8 @@ lowerBound(example2, 99) ?? "not found"
 lowerBound(example2, 7) ?? "not found"
 lowerBound(example2, 32) ?? "not found"
 lowerBound(example2, 41) ?? "not found"
-//│ let example2: Empty | Node[10 | 1 | 23 | 42 | 59 | 5 | 81]
-//│ "not found" | 10 | 1 | 23 | 42 | 59 | 5 | 81
+//│ let example2: Empty | Node[1 | 10 | 23 | 42 | 5 | 59 | 81]
+//│ "not found" | 1 | 10 | 23 | 42 | 5 | 59 | 81
 //│ example2
 //│          = Node {}
 //│ res
@@ -263,7 +263,7 @@ fun upperBound(t, v) = if t is
     v > v' then upperBound(r, v)
     _ then Some(v')
   Empty then None
-//│ fun upperBound: forall 'a. (Empty | Node[Num & 'a], Num) -> (None | Some['a])
+//│ fun upperBound: forall 'T. (Empty | Node[Num & 'T], Num) -> (None | Some['T])
 
 upperBound(example2, 0) ?? "not found"
 upperBound(example2, 25) ?? "not found"
@@ -271,7 +271,7 @@ upperBound(example2, 99) ?? "not found"
 upperBound(example2, 7) ?? "not found"
 upperBound(example2, 32) ?? "not found"
 upperBound(example2, 41) ?? "not found"
-//│ "not found" | 10 | 1 | 23 | 42 | 59 | 5 | 81
+//│ "not found" | 1 | 10 | 23 | 42 | 5 | 59 | 81
 //│ res
 //│     = 1
 //│ res
@@ -355,9 +355,9 @@ fun extractMin(t) =
       extractMin(l) is Pair(m, l') then
         Pair(m, Node(v, l', r))
     Empty then Pair(None, Empty)
-//│ fun extractMin: forall 'A 'A0 'A1 'B 'T. (Empty | Node['A0 & 'T & 'A1]) -> Pair[in 'A out 'A | None, in Tree['A1] & 'B out Empty | 'B | Node['A1] | Tree['A0]]
+//│ fun extractMin: forall 'A 'T 'A0 'A1 'B. (Empty | Node['A & 'T & 'A0]) -> Pair[in 'A1 out 'A1 | None, in Tree['A0] & 'B out Empty | 'B | Node['A0] | Tree['A]]
 //│   where
-//│     'A :> None | Some['T]
+//│     'A1 :> None | Some['T]
 
 extractMin(example1).first ?? "not found"
 extractMin(example1).second |> show

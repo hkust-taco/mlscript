@@ -35,7 +35,7 @@ abstract class Test[C] {
 //│   fun getVar: Code[Int, C]
 //│   fun test0: Code[Int, nothing]
 //│   fun test1: Code[Int, nothing]
-//│   fun unquote: forall 'c. (input: Code[anything, 'c | C]) -> Code[Int, 'c]
+//│   fun unquote: forall 'c. (input: Code[anything, C | 'c]) -> Code[Int, 'c]
 //│ }
 
 
@@ -50,12 +50,12 @@ mkVar of t0 =>
 
 mkVar of t0 =>
   Add(t0.getVar, IntLit(1))
-//│ Add[??C]
+//│ Add[anything]
 
 mkVar of t0 =>
   mkVar of t1 =>
     t1.unquote of t0.unquote of Add(t0.getVar, t1.getVar)
-//│ Code[Int, nothing]
+//│ Code[Int, ??C & ~??C0]
 
 mkVar of t0 =>
   mkVar of t1 =>

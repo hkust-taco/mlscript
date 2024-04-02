@@ -128,7 +128,7 @@ g tx
 
 // TODO: pattern match for traits in JavaScript
 g arg = case arg of { Hey -> arg.x | _ -> arg.y }
-//│ g: ({x: 'x} & #Hey | {y: 'x} & ~#Hey) -> 'x
+//│ g: ({y: 'x} & ~#Hey | {x: 'x} & #Hey) -> 'x
 //│  = [Function: g1]
 
 g htx

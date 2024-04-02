@@ -8,7 +8,7 @@ while i < 10 do
   log(i)
   set i = i + 1
 i
-//│ let i: Int
+//│ mut let i: Int
 //│ Int
 //│ // Prelude
 //│ function log(x) {
@@ -66,7 +66,7 @@ mut let min = 123
 let go =
     if true then set min = 0 else ()
     1
-//│ let min: 0 | 123
+//│ mut let min: 0 | 123
 //│ let go: 1
 //│ min
 //│     = 123
