@@ -89,11 +89,11 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
       case BasicOp(name, args) => args.foreach(f(env, _, loc))
 
     private def f(env: ElimEnv, x: Node): Unit = x match
-      case Result(res) => res.foreach(f(env, _, x.loc_marker))
+      case Result(res) => res.foreach(f(env, _, x.locMarker))
       case Jump(defnref, args) =>
-        args.foreach(f(env, _, x.loc_marker))
+        args.foreach(f(env, _, x.locMarker))
         val defn = defnref.expectDefn
-        val loc = x.loc_marker
+        val loc = x.locMarker
         args.zip(defn.newActiveParams).foreach {
           case (Ref(x), ys) => ys.foreach { y => addBackwardElim(env, x, y, loc) }
           case _ =>
@@ -103,15 +103,15 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
           defn.params.foreach(addDef(env, _))
           f(env.copy(defn = defn.name), defn.body)
       case Case(scrut, cases) => 
-        f(env, scrut, x.loc_marker)
-        addElim(env, scrut, EDestruct, x.loc_marker)
+        f(env, scrut, x.locMarker)
+        addElim(env, scrut, EDestruct, x.locMarker)
         cases.foreach((cls, arm) => f(env, arm))
       case LetExpr(name, expr, body) =>
-        f(env, expr, x.loc_marker)
+        f(env, expr, x.locMarker)
         addDef(env, name)
         f(env, body)
       case LetCall(names, defnref, args, body) =>
-        val loc = x.loc_marker
+        val loc = x.locMarker
         args.foreach(f(env, _, loc))
         val defn = defnref.expectDefn
         args.zip(defn.newActiveParams).foreach {
@@ -377,7 +377,7 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
           resultNum = defn.resultNum,
           params = defn.params,
           id = fn_uid.make,
-          body = Jump(DefnRef(Right(defn_name)),defn.params.map(Ref(_))).attach_tag(tag),
+          body = Jump(DefnRef(Right(defn_name)),defn.params.map(Ref(_))).attachTag(tag),
           specialized = Some(spec),
         )
         specialized_map.update(defn_name, new_defn.name)
@@ -408,11 +408,11 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
     )
 
     private def duplicate_and_keep_tags(node: Node): Node = node match
-      case Result(res) => Result(res).copy_tag(node)
-      case Jump(defn, args) => Jump(defn, args).copy_tag(node)
-      case Case(scrut, cases) => Case(scrut, cases map { (cls, arm) => (cls, duplicate_and_keep_tags(arm)) }).copy_tag(node)
-      case LetExpr(name, expr, body) => LetExpr(name, expr, duplicate_and_keep_tags(body)).copy_tag(node)
-      case LetCall(names, defn, args, body) => LetCall(names, defn, args, duplicate_and_keep_tags(body)).copy_tag(node)
+      case Result(res) => Result(res).copyTag(node)
+      case Jump(defn, args) => Jump(defn, args).copyTag(node)
+      case Case(scrut, cases) => Case(scrut, cases map { (cls, arm) => (cls, duplicate_and_keep_tags(arm)) }).copyTag(node)
+      case LetExpr(name, expr, body) => LetExpr(name, expr, duplicate_and_keep_tags(body)).copyTag(node)
+      case LetCall(names, defn, args, body) => LetCall(names, defn, args, duplicate_and_keep_tags(body)).copyTag(node)
 
     private def split_at_jump_or_letcall(env: SplitEnv, node: Node, marker: LocMarker): Opt[DefnLocMarker] = node match
       case Result(res) => None
@@ -427,7 +427,7 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
         val all_fv_list = all_fv.toList
         val fv_retvals = all_fv_list.map { x => Ref(Name(x)) }
 
-        val pre_body = env.accu(Result(fv_retvals).attach_tag(tag))
+        val pre_body = env.accu(Result(fv_retvals).attachTag(tag))
         val pre_name = fresh.make(defn.name + "$A")
         val pre_defn = Defn(
           fn_uid.make,
@@ -444,12 +444,12 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
         val override_defn =
           env.defn.copy(body = 
             LetCall(new_names, DefnRef(Right(pre_name.str)), env.defn.params.map(Ref(_)),
-              Jump(defnref, args.map { case Ref(Name(x)) => Ref(names_map(x)); case x => x }).attach_tag(tag)).attach_tag(tag))
+              Jump(defnref, args.map { case Ref(Name(x)) => Ref(names_map(x)); case x => x }).attachTag(tag)).attachTag(tag))
         overwrite_defs.put(defn.name, override_defn).map(x => throw GraphOptimizingError("Unexpected overwrite"))
 
         Some(dloc)
       case Case(scrut, cases) => None
-      case LetExpr(name, expr, body) => split_at_jump_or_letcall(env.copy(accu = n => env.accu(LetExpr(name, expr, n).copy_tag(node))), body, marker)
+      case LetExpr(name, expr, body) => split_at_jump_or_letcall(env.copy(accu = n => env.accu(LetExpr(name, expr, n).copyTag(node))), body, marker)
       case LetCall(xs, defnref, args, body) if marker matches node =>
         val defn = env.defn
         val dloc = DefnLocMarker(defn.name, marker)
@@ -462,7 +462,7 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
         val all_fv_list = all_fv.toList
         val fv_retvals = all_fv_list.map { x => Ref(Name(x)) }
 
-        val pre_body = env.accu(Result(fv_retvals).attach_tag(tag))
+        val pre_body = env.accu(Result(fv_retvals).attachTag(tag))
         val pre_name = fresh.make(defn.name + "$X")
         val pre_defn = Defn(
           fn_uid.make,
@@ -495,19 +495,19 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
           env.defn.copy(body = 
             LetCall(new_names, DefnRef(Right(pre_name.str)), env.defn.params.map(Ref(_)),
               LetCall(new_names_2, defnref, args.map { case Ref(Name(x)) => Ref(names_map(x)); case x => x },
-                Jump(DefnRef(Right(post_name.str)), post_params.map{x => Ref(names_map_2(x.str))}).attach_tag(tag)).attach_tag(tag)).attach_tag(tag))
+                Jump(DefnRef(Right(post_name.str)), post_params.map{x => Ref(names_map_2(x.str))}).attachTag(tag)).attachTag(tag)).attachTag(tag))
         overwrite_defs.put(defn.name, override_defn).map(x => throw GraphOptimizingError("Unexpected overwrite"))
         
         Some(dloc)
       case LetCall(xs, defnref, args, body) =>
-        split_at_jump_or_letcall(env.copy(accu = n => env.accu(LetCall(xs, defnref, args, n).copy_tag(node))), body, marker)
+        split_at_jump_or_letcall(env.copy(accu = n => env.accu(LetCall(xs, defnref, args, n).copyTag(node))), body, marker)
     
     private def split_at_first_case(env: SplitEnv, node: Node): Opt[DefnLocMarker] = node match
       case Result(res) => None
       case Jump(defn, args) => None
       case Case(scrut, cases) =>
         val defn = env.defn
-        val loc = node.loc_marker
+        val loc = node.locMarker
         val dloc = DefnLocMarker(defn.name, loc)
         
         if split_memo.contains(dloc) then return None
@@ -520,7 +520,7 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
         val all_fv_list = all_fv.toList
         val fv_retvals = all_fv_list.map { x => Ref(Name(x)) }
 
-        val pre_body = env.accu(Result(fv_retvals).attach_tag(tag))
+        val pre_body = env.accu(Result(fv_retvals).attachTag(tag))
         val pre_name = fresh.make(defn.name + "$P")
         val pre_defn = Defn(
           fn_uid.make,
@@ -558,15 +558,15 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
           body =
             LetCall(new_names, DefnRef(Right(pre_name.str)), env.defn.params.map(Ref(_)),
               Case(scrut_new_name.get, new_cases.map{
-                case (cls, (post_f, post_params)) => (cls, Jump(DefnRef(Right(post_f)), post_params.map{x => Ref(names_map(x))}).attach_tag(tag))
-              }).attach_tag(tag)).attach_tag(tag))
+                case (cls, (post_f, post_params)) => (cls, Jump(DefnRef(Right(post_f)), post_params.map{x => Ref(names_map(x))}).attachTag(tag))
+              }).attachTag(tag)).attachTag(tag))
         overwrite_defs.put(defn.name, overwrite_defn).map(x => throw GraphOptimizingError("Unexpected overwrite"))
 
         Some(dloc)
       case LetExpr(name, expr, body) =>
-        split_at_first_case(env.copy(accu = n => env.accu(LetExpr(name, expr, n).copy_tag(node))), body)
+        split_at_first_case(env.copy(accu = n => env.accu(LetExpr(name, expr, n).copyTag(node))), body)
       case LetCall(xs, defnref, args, body) =>
-        split_at_first_case(env.copy(accu = n => env.accu(LetCall(xs, defnref, args, n).copy_tag(node))), body)
+        split_at_first_case(env.copy(accu = n => env.accu(LetCall(xs, defnref, args, n).copyTag(node))), body)
     
   private case class IndirectConsumer(val defn: Str, val where: DefnLocMarker, val kind: IndirectSplitKind)
   private case class WrapAndSpecialize(val defn: Str, val spec: Ls[Opt[Intro]])
@@ -642,11 +642,11 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
     private def f(env: SplitTargetEnv, node: Node): Unit = node match
       case Result(res) =>
       case Jump(defnref, args) =>
-        val dloc = DefnLocMarker(env.defn.name, node.loc_marker)
+        val dloc = DefnLocMarker(env.defn.name, node.locMarker)
         val defn = defnref.expectDefn
         checkTargets(env, defn, dloc, args)
       case Case(x, cases) =>
-        val dloc = DefnLocMarker(env.defn.name, node.loc_marker)
+        val dloc = DefnLocMarker(env.defn.name, node.locMarker)
         env.intros.get(x.str) match
           case Some(IMix(_))  => name_defn_map.get(x.str) match
             case Some(loc) =>
@@ -664,9 +664,9 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
         f(env.copy(intros = intros), e2)
       case LetCall(xs, defnref, args, e) =>
         val defn = defnref.expectDefn
-        val dloc = DefnLocMarker(env.defn.name, node.loc_marker)
+        val dloc = DefnLocMarker(env.defn.name, node.locMarker)
         checkTargets(env, defn, dloc, args)
-        val intros2 = updateIntroInfoAndMaintainMixingIntrosNew(name_defn_map, defn, node.loc_marker, env.intros, xs)
+        val intros2 = updateIntroInfoAndMaintainMixingIntrosNew(name_defn_map, defn, node.locMarker, env.intros, xs)
         f(env.copy(intros = intros2), e)
 
       def run(x: Program) =
@@ -741,7 +741,7 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
 
       LetCall(new_names, DefnRef(Right(pre_f)), as,
         LetCall(xs, DefnRef(Right(post_f)), post_params.map{x => Ref(names_map(x))},
-          body).attach_tag(tag)).attach_tag(tag)
+          body).attachTag(tag)).attachTag(tag)
 
     private def subst_letcall_mixing_cases(env: SubstEnv, sdloc: DefnLocMarker, xs: Ls[Name], as: Ls[TrivialExpr], body: Node): Node =
       val scrut = sdloc.marker match
@@ -774,11 +774,11 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
           
           (cls, 
             LetCall(new_names_2, DefnRef(Right(post_f)), post_params.map{x => Ref(names_map(x))},
-              Jump(DefnRef(Right(new_jp.name)), fv_list.map{x => Ref(names_map_2.getOrElse(x, Name(x)))}).attach_tag(tag)).attach_tag(tag))
+              Jump(DefnRef(Right(new_jp.name)), fv_list.map{x => Ref(names_map_2.getOrElse(x, Name(x)))}).attachTag(tag)).attachTag(tag))
       }
 
       val node = LetCall(new_names, DefnRef(Right(pre_f)), as,
-        Case(scrut_new_name.get, new_cases.toList).attach_tag(tag)).attach_tag(tag)
+        Case(scrut_new_name.get, new_cases.toList).attachTag(tag)).attachTag(tag)
       node
 
     private def subst_letcall_indirect(env: SubstEnv, ic: IndirectConsumer, xs: Ls[Name], as: Ls[TrivialExpr], body: Node): Node =
@@ -798,7 +798,7 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
           val names_map = pre_retvals.zip(new_names).toMap
           LetCall(new_names, DefnRef(Right(pre_f)), as,
             LetCall(xs, DefnRef(Right(name)), rebuild_args_from_marker(args, names_map),
-              body).attach_tag(tag)).attach_tag(tag)
+              body).attachTag(tag)).attachTag(tag)
         case CallBeforeCase =>
           val (names, defn2, args) = ic.where.marker match
             case LocMarker.MLetCall(names, defn, args) => (names, defn, args)
@@ -811,7 +811,7 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
           val PostFunction(post_f, post_params) = single_post_map(ic.where)
           val node = LetCall(new_names, DefnRef(Right(pre_f)), as,
             LetCall(new_names_2, DefnRef(Right(defn2)), rebuild_args_from_marker(args, names_map),
-              LetCall(xs, DefnRef(Right(post_f)), post_params.map{x => Ref(names_map_2(x))}, body).attach_tag(tag)).attach_tag(tag)).attach_tag(tag)
+              LetCall(xs, DefnRef(Right(post_f)), post_params.map{x => Ref(names_map_2(x))}, body).attachTag(tag)).attachTag(tag)).attachTag(tag)
           node
 
     private def subst_jump_known_case(sdloc: DefnLocMarker, as: Ls[TrivialExpr], known_case: Str): Node =
@@ -827,7 +827,7 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
       val PostFunction(post_f, post_params) = cases(cls)
 
       LetCall(new_names, DefnRef(Right(pre_f)), as,
-        Jump(DefnRef(Right(post_f)), post_params.map{x => Ref(names_map(x))}).attach_tag(tag)).attach_tag(tag)
+        Jump(DefnRef(Right(post_f)), post_params.map{x => Ref(names_map(x))}).attachTag(tag)).attachTag(tag)
 
     private def subst_jump_mixing_cases(sdloc: DefnLocMarker, as: Ls[TrivialExpr]): Node =
       val scrut = sdloc.marker match
@@ -840,11 +840,11 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
       val new_cases = cases.map {
         case (cls, PostFunction(post_f, post_params)) => (
           cls, 
-          Jump(DefnRef(Right(post_f)), post_params.map{x => Ref(names_map(x))}).attach_tag(tag)
+          Jump(DefnRef(Right(post_f)), post_params.map{x => Ref(names_map(x))}).attachTag(tag)
         )
       }
       LetCall(new_names, DefnRef(Right(pre_f)), as,
-        Case(scrut_new_name.get, new_cases.toList).attach_tag(tag)).attach_tag(tag)
+        Case(scrut_new_name.get, new_cases.toList).attachTag(tag)).attachTag(tag)
 
     private def subst_jump_indirect(ic: IndirectConsumer, as: Ls[TrivialExpr]) =
       val defn_name = ic.defn
@@ -862,7 +862,7 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
           val new_names = make_new_names_for_free_variables(pre_retvals)
           val names_map = pre_retvals.zip(new_names).toMap
           LetCall(new_names, DefnRef(Right(pre_f)), as,
-            Jump(DefnRef(Right(name)), rebuild_args_from_marker(args, names_map)).attach_tag(tag)).attach_tag(tag)
+            Jump(DefnRef(Right(name)), rebuild_args_from_marker(args, names_map)).attachTag(tag)).attachTag(tag)
         case CallBeforeCase =>
           val (names, defn2, args) = ic.where.marker match
             case LocMarker.MLetCall(names, defn, args) => (names, defn, args)
@@ -875,68 +875,68 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
           val PostFunction(post_f, post_params) = single_post_map(ic.where)
           LetCall(new_names, DefnRef(Right(pre_f)), as,
             LetCall(new_names_2, DefnRef(Right(defn2)), rebuild_args_from_marker(args, names_map),
-              Jump(DefnRef(Right(post_f)), post_params.map{x => Ref(names_map_2(x))}).attach_tag(tag)).attach_tag(tag)).attach_tag(tag)
+              Jump(DefnRef(Right(post_f)), post_params.map{x => Ref(names_map_2(x))}).attachTag(tag)).attachTag(tag)).attachTag(tag)
     
     private def f(env: SubstEnv, node: Node): Node = node match
       case Result(res) => node
       case Case(scrut, cases) =>
         Case(scrut, cases map {
             (cls, arm) => (cls, f(env.copy(intros = env.intros + (scrut.str -> ICtor(cls.ident))), arm))
-        }).copy_tag(node)
+        }).copyTag(node)
       case LetExpr(x, e1, e2) =>
         val intros2 = IntroductionAnalysis.getIntro(e1, env.intros).map { y => env.intros + (x.str -> y) }.getOrElse(env.intros)
-        LetExpr(x, e1, f(env.copy(intros = intros2), e2)).copy_tag(node)
+        LetExpr(x, e1, f(env.copy(intros = intros2), e2)).copyTag(node)
       case Jump(defnref, args) =>
-        val dloc = DefnLocMarker(env.defn.name, node.loc_marker)
+        val dloc = DefnLocMarker(env.defn.name, node.locMarker)
         val defn = defnref.expectDefn
-        if targets.indirect_consumer.contains(node.loc_marker) then
+        if targets.indirect_consumer.contains(node.locMarker) then
           changed = true
-          val spec = targets.indirect_consumer(node.loc_marker)
+          val spec = targets.indirect_consumer(node.locMarker)
           subst_jump_indirect(spec, args)
-        else if targets.mixing_consumer.contains(node.loc_marker) && first_case.contains(targets.mixing_consumer(node.loc_marker)) then
+        else if targets.mixing_consumer.contains(node.locMarker) && first_case.contains(targets.mixing_consumer(node.locMarker)) then
           changed = true
-          val target = targets.mixing_consumer(node.loc_marker)
-          if targets.known_case.contains(node.loc_marker) then
-            subst_jump_known_case(first_case(target), args, targets.known_case(node.loc_marker))
+          val target = targets.mixing_consumer(node.locMarker)
+          if targets.known_case.contains(node.locMarker) then
+            subst_jump_known_case(first_case(target), args, targets.known_case(node.locMarker))
           else
             subst_jump_mixing_cases(first_case(target), args)
-        else /* if targets.specialize.contains(node.loc_marker) then
+        else /* if targets.specialize.contains(node.locMarker) then
           changed = true
-          val spec = targets.specialize(node.loc_marker)
+          val spec = targets.specialize(node.locMarker)
           val new_defn = specialized_map(spec.defn)
-          val new_node = Jump(DefnRef(Right(new_defn)), args).attach_tag(tag)
+          val new_node = Jump(DefnRef(Right(new_defn)), args).attachTag(tag)
           new_node
         else */
           node
       case LetCall(names, defnref, args, body) =>
-        val dloc = DefnLocMarker(env.defn.name, node.loc_marker)
+        val dloc = DefnLocMarker(env.defn.name, node.locMarker)
         val defn = defnref.expectDefn
-        val intros2 = updateIntroInfoAndMaintainMixingIntrosNew(name_defn_map, defn, node.loc_marker, env.intros, names)
-        if targets.indirect_consumer.contains(node.loc_marker) then
+        val intros2 = updateIntroInfoAndMaintainMixingIntrosNew(name_defn_map, defn, node.locMarker, env.intros, names)
+        if targets.indirect_consumer.contains(node.locMarker) then
           changed = true
-          val spec = targets.indirect_consumer(node.loc_marker)
+          val spec = targets.indirect_consumer(node.locMarker)
           subst_letcall_indirect(env, spec, names, args, body)
-        else if targets.mixing_consumer.contains(node.loc_marker) && first_case.contains(targets.mixing_consumer(node.loc_marker)) then
+        else if targets.mixing_consumer.contains(node.locMarker) && first_case.contains(targets.mixing_consumer(node.locMarker)) then
           changed = true
-          val target = targets.mixing_consumer(node.loc_marker)
-          val new_node = if targets.known_case.contains(node.loc_marker) then
-            subst_letcall_known_case(env, first_case(target), names, args, body, targets.known_case(node.loc_marker))
+          val target = targets.mixing_consumer(node.locMarker)
+          val new_node = if targets.known_case.contains(node.locMarker) then
+            subst_letcall_known_case(env, first_case(target), names, args, body, targets.known_case(node.locMarker))
           else
             subst_letcall_mixing_cases(env, first_case(target), names, args, body)
           new_node
-        else if names.tail.isEmpty && intros2.get(names.head.str).exists(_.isInstanceOf[IMix]) && targets.mixing_producer.contains(node.loc_marker) && first_case.contains(targets.mixing_producer(node.loc_marker)) then
+        else if names.tail.isEmpty && intros2.get(names.head.str).exists(_.isInstanceOf[IMix]) && targets.mixing_producer.contains(node.locMarker) && first_case.contains(targets.mixing_producer(node.locMarker)) then
           changed = true
-          val target = targets.mixing_producer(node.loc_marker)
+          val target = targets.mixing_producer(node.locMarker)
           val new_node = subst_letcall_mixing_cases(env, first_case(target), names, args, body)
           new_node
-        else if targets.specialize.contains(node.loc_marker) then
+        else if targets.specialize.contains(node.locMarker) then
           changed = true
-          val spec = targets.specialize(node.loc_marker)
+          val spec = targets.specialize(node.locMarker)
           val new_defn = specialized_map(spec.defn)
-          val new_node = LetCall(names, DefnRef(Right(new_defn)), args, body).attach_tag(tag)
+          val new_node = LetCall(names, DefnRef(Right(new_defn)), args, body).attachTag(tag)
           new_node
         else
-          LetCall(names, defnref, args, f(env.copy(intros = intros2), body)).copy_tag(node)
+          LetCall(names, defnref, args, f(env.copy(intros = intros2), body)).copyTag(node)
       def run(x: Program) =
         this.defs = Set.empty
         var defs = x.defs.map{ defn =>
@@ -946,7 +946,7 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
         }
         val main = x.main
         defs = defs ++ this.defs
-        relink(main, defs)
+        resolveDefnRef(main, defs)
         validate(main, defs)
         Program(x.classes, defs, main)
 
@@ -958,7 +958,7 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
       val fs = NewFunctionSplitting(split_cache)
       val sr = fs.run(x.defs, targets)
       var y = x.copy(defs = sr.overwrite(x.defs) ++ sr.all_defs)
-      relink(y.main, y.defs)
+      resolveDefnRef(y.main, y.defs)
       validate(y.main, y.defs)
       activeAnalyze(y)
       recBoundaryAnalyze(y)
@@ -967,7 +967,7 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
       while (changed)
         val scsr = NewSplittingCallSiteReplacement(clsctx, sr)
         y = scsr.run(y)
-        relink(y.main, y.defs)
+        resolveDefnRef(y.main, y.defs)
         validate(y.main, y.defs)
         activeAnalyze(y)
         recBoundaryAnalyze(y)
@@ -1076,13 +1076,13 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
       case Result(res) => node
       case Jump(defn, args) => node
       case Case(scrut, cases) =>
-        Case(scrut, cases.map { (cls, arm) => (cls, f(arm)) }).copy_tag(node)
+        Case(scrut, cases.map { (cls, arm) => (cls, f(arm)) }).copyTag(node)
       case LetExpr(x, Select(y,  cls, field), e2) if target_params.contains(y.str) =>
-        LetExpr(x, Ref(fieldParamName(y.str, field)), f(e2)).copy_tag(node)
+        LetExpr(x, Ref(fieldParamName(y.str, field)), f(e2)).copyTag(node)
       case LetExpr(x, e1, e2) =>
-        LetExpr(x, e1, f(e2)).copy_tag(node)
+        LetExpr(x, e1, f(e2)).copyTag(node)
       case LetCall(names, defn, args, body) =>
-        LetCall(names, defn, args, f(body)).copy_tag(node)
+        LetCall(names, defn, args, f(body)).copyTag(node)
     
 
   private class ScalarReplacementDefinitionBuilder(name_map: Map[Str, Str], defn_param_map: Map[Str, Map[Str, Ls[Str]]]) extends Iterator:
@@ -1137,7 +1137,7 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
       
       val new_node = f(new_name, new_args)
       letlist.foldRight(new_node) { case ((x, y, field), node) => 
-        LetExpr(x, Select(y, fldctx(field)._2, field), node).attach_tag_as[LetExpr](tag)
+        LetExpr(x, Select(y, fldctx(field)._2, field), node).attachTagAs[LetExpr](tag)
       }
 
     private def f(node: Node): Node = node match
@@ -1145,25 +1145,25 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
       case Jump(defnref, as) =>
         val defn = defnref.expectDefn
         if (defn_param_map.contains(defn.name))
-          susbtCallsite(defn, as, (x, y) => Jump(DefnRef(Right(x)), y).copy_tag(node))
+          susbtCallsite(defn, as, (x, y) => Jump(DefnRef(Right(x)), y).copyTag(node))
         else
           node
       case Case(scrut, cases) =>
-        Case(scrut, cases.map { (cls, arm) => (cls, f(arm)) }).copy_tag(node)
+        Case(scrut, cases.map { (cls, arm) => (cls, f(arm)) }).copyTag(node)
       case LetExpr(name, expr, body) =>
-        LetExpr(name, expr, f(body)).copy_tag(node)
+        LetExpr(name, expr, f(body)).copyTag(node)
       case LetCall(xs, defnref, as, e) =>
         val defn = defnref.expectDefn
         if (defn_param_map.contains(defn.name))
-          susbtCallsite(defn, as, (x, y) => LetCall(xs, DefnRef(Right(x)), y, f(e)).copy_tag(node))
+          susbtCallsite(defn, as, (x, y) => LetCall(xs, DefnRef(Right(x)), y, f(e)).copyTag(node))
         else
-          LetCall(xs, defnref, as, f(e)).copy_tag(node)
+          LetCall(xs, defnref, as, f(e)).copyTag(node)
   
     def run(x: Program) =
       val clsctx = make_class_ctx(x.classes)
       fldctx = x.classes.flatMap { case ClassInfo(_, name, fields) => fields.map { fld => (fld, (name, clsctx(name))) } }.toMap
       val y = Program(x.classes, x.defs.map(x => x.copy(body = f(x. body))), f(x.main))
-      relink(y.main, y.defs)
+      resolveDefnRef(y.main, y.defs)
       validate(y.main, y.defs)
       y
 
@@ -1193,13 +1193,13 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
   private class TrivialBindingSimplification:
     def run(x: Program) =
       val new_defs = x.defs.map(x => { x.copy(body = f(Map.empty, x.body))})
-      relink(x.main, new_defs)
+      resolveDefnRef(x.main, new_defs)
       Program(x.classes, new_defs, x.main)
 
     private def f(rctx: Map[Str, TrivialExpr], node: Node): Node = node match
-      case Result(res) => Result(res.map(x => f(rctx, x))).copy_tag(node)
-      case Jump(defn, args) => Jump(defn, args.map(x => f(rctx, x))).copy_tag(node)
-      case Case(scrut, cases) => Case(f(rctx, scrut), cases.map { (cls, arm) => (cls, f(rctx, arm)) }).copy_tag(node)
+      case Result(res) => Result(res.map(x => f(rctx, x))).copyTag(node)
+      case Jump(defn, args) => Jump(defn, args.map(x => f(rctx, x))).copyTag(node)
+      case Case(scrut, cases) => Case(f(rctx, scrut), cases.map { (cls, arm) => (cls, f(rctx, arm)) }).copyTag(node)
       case LetExpr(x, Ref(Name(z)), e2) if rctx.contains(z) =>
         val rctx2 = rctx + (x.str -> rctx(z))
         f(rctx2, e2)
@@ -1210,9 +1210,9 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
         val rctx2 = rctx + (x.str -> y)
         f(rctx2, e2)
       case LetExpr(x, e1, e2) =>
-        LetExpr(x, f(rctx, e1), f(rctx, e2)).copy_tag(node)
+        LetExpr(x, f(rctx, e1), f(rctx, e2)).copyTag(node)
       case LetCall(names, defn, args, body) =>
-        LetCall(names, defn, args.map(x => f(rctx, x)), f(rctx, body)).copy_tag(node)
+        LetCall(names, defn, args.map(x => f(rctx, x)), f(rctx, body)).copyTag(node)
 
     private def f(rctx: Map[Str, TrivialExpr], x: Expr): Expr = x match
       case Ref(name) => f(rctx, x)
@@ -1238,31 +1238,31 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
 
     def run(x: Program) =
       val new_defs = x.defs.map(x => { cctx = Map.empty; x.copy(body = f(x.body)) })
-      relink(x.main, new_defs)
+      resolveDefnRef(x.main, new_defs)
       validate(x.main, new_defs)
       Program(x.classes, new_defs, x.main)
 
     private def f(x: Node): Node = x match
       case Result(res) => x
       case Jump(defn, args) => x
-      case Case(scrut, cases) => Case(scrut, cases map { (cls, arm) => (cls, f(arm)) }).copy_tag(x)
+      case Case(scrut, cases) => Case(scrut, cases map { (cls, arm) => (cls, f(arm)) }).copyTag(x)
       case LetExpr(name, sel @ Select(y, cls, field), e2) if cctx.contains(y.str) =>
         cctx.get(y.str) match
           case Some(m) =>
             m.get(field) match 
               case Some(v) =>
-                LetExpr(name, v.to_expr, f(e2)) .copy_tag(x)
+                LetExpr(name, v.toExpr, f(e2)) .copyTag(x)
               case None => 
-                LetExpr(name, sel, f(e2)).copy_tag(x)
-          case None => LetExpr(name, sel, f(e2)).copy_tag(x)
+                LetExpr(name, sel, f(e2)).copyTag(x)
+          case None => LetExpr(name, sel, f(e2)).copyTag(x)
       case LetExpr(name, y @ CtorApp(cls, args), e2) =>
         val m = cls.fields.zip(args).toMap
         cctx = cctx + (name.str -> m)
-        LetExpr(name, y, f(e2)).copy_tag(x)
+        LetExpr(name, y, f(e2)).copyTag(x)
       case LetExpr(name, e1, e2) =>
-        LetExpr(name, e1, f(e2)).copy_tag(x)
+        LetExpr(name, e1, f(e2)).copyTag(x)
       case LetCall(names, defn, args, body) =>
-        LetCall(names, defn, args, f(body)).copy_tag(x)
+        LetCall(names, defn, args, f(body)).copyTag(x)
 
   private class DestructSimplification:
     var cctx: Map[Str, Str] = Map.empty
@@ -1276,20 +1276,20 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
             val arm = cases.find(_._1.ident == cls).get._2
             f(arm)
           case None =>
-            Case(scrut, cases map { (cls, arm) => (cls, f(arm)) }).copy_tag(x)
+            Case(scrut, cases map { (cls, arm) => (cls, f(arm)) }).copyTag(x)
       case Case(scrut, cases) =>
-        Case(scrut, cases map { (cls, arm) => (cls, f(arm)) }).copy_tag(x)
+        Case(scrut, cases map { (cls, arm) => (cls, f(arm)) }).copyTag(x)
       case LetExpr(name, y @ CtorApp(cls, args), e2) =>
         cctx = cctx + (name.str -> cls.ident)
-        LetExpr(name, y, f(e2)).copy_tag(x)
+        LetExpr(name, y, f(e2)).copyTag(x)
       case LetExpr(name, e1, e2) =>
-        LetExpr(name, e1, f(e2)).copy_tag(x)
+        LetExpr(name, e1, f(e2)).copyTag(x)
       case LetCall(names, defn, args, body) =>
-        LetCall(names, defn, args, f(body)).copy_tag(x)
+        LetCall(names, defn, args, f(body)).copyTag(x)
 
     def run(x: Program) =
       val new_defs = x.defs.map(x => { cctx = Map.empty; x.copy(body = f(x.body)) })
-      relink(x.main, new_defs)
+      resolveDefnRef(x.main, new_defs)
       validate(x.main, new_defs)
       Program(x.classes, new_defs, x.main)
 
@@ -1311,13 +1311,13 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
     private def f(x: Node): Node = x match
       case Result(res) => x
       case Jump(defn, args) => x
-      case Case(scrut, cases) => Case(scrut, cases map { (cls, arm) => (cls, f(arm)) }).copy_tag(x)
+      case Case(scrut, cases) => Case(scrut, cases map { (cls, arm) => (cls, f(arm)) }).copyTag(x)
       case LetExpr(name, expr, body) =>
         addDef(name)
         val ui = uses.get((name, defs(name)))
         ui match
           case Some(n) =>
-            LetExpr(name, expr, f(body)).copy_tag(x)
+            LetExpr(name, expr, f(body)).copyTag(x)
           case None =>
             f(body)
       case LetCall(names, defn, args, body) =>
@@ -1326,7 +1326,7 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
         if uis.forall(_.isEmpty) then
           f(body)
         else
-          LetCall(names, defn, args, f(body)).copy_tag(x)
+          LetCall(names, defn, args, f(body)).copyTag(x)
 
     def run(x: Program) =
       val fns = DefRevPostOrdering.ordered(x.main, x.defs)
@@ -1336,14 +1336,14 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
         x.params.foreach(addDef)
         x.copy(body = f(x.body))
       }.toSet
-      relink(x.main, new_fns)
+      resolveDefnRef(x.main, new_fns)
       validate(x.main, new_fns)
       Program(x.classes, new_fns, x.main)
 
   private class RemoveTrivialCallAndJump:
     private def subst_let_expr(le: LetExpr, map: Map[Name, TrivialExpr]): (Ls[(Name, TrivialExpr)], LetExpr) =  
       var let_list = Ls[(Name, TrivialExpr)]()
-      val new_expr = le.expr.map_name {
+      val new_expr = le.expr.mapName {
         x => map.get(x) match
           case None => x
           case Some(Ref(y)) => y
@@ -1353,18 +1353,18 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
             y
         
       }
-      val kernel = LetExpr(le.name, new_expr, le.body).attach_tag_as[LetExpr](tag)
+      val kernel = LetExpr(le.name, new_expr, le.body).attachTagAs[LetExpr](tag)
       (let_list, kernel)
 
     private def subst_let_expr_to_node(le: LetExpr, map: Map[Name, TrivialExpr]): Node =
       val (rev_let_list, kernel) = subst_let_expr(le, map)
       rev_let_list.foldLeft(kernel) {
-        case (accu, (name, value)) => LetExpr(name, value.to_expr, accu).attach_tag_as[LetExpr](tag)
+        case (accu, (name, value)) => LetExpr(name, value.toExpr, accu).attachTagAs[LetExpr](tag)
       }
     
     private def let_list_to_node(let_list: Ls[(Name, TrivialExpr)], node: Node): Node =
       let_list.foldRight(node) {
-        case ((name, value), accu) => LetExpr(name, value.to_expr, accu).attach_tag_as[LetExpr](tag)
+        case ((name, value), accu) => LetExpr(name, value.toExpr, accu).attachTagAs[LetExpr](tag)
       }
 
     private def param_to_arg(param: TrivialExpr, map: Map[Name, TrivialExpr]): TrivialExpr = param match
@@ -1382,9 +1382,9 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
         val parammap = defn.params.zip(as).toMap
         (defn.specialized.isEmpty, defn.body) match
           case (true, Result(ys)) =>
-            Result(params_to_args(ys, parammap)).attach_tag(tag)
+            Result(params_to_args(ys, parammap)).attachTag(tag)
           case (true, Jump(defnref, as2)) =>
-            val node = let_list_to_node(defn.params.zip(as), Jump(defnref, as2).attach_tag(tag))
+            val node = let_list_to_node(defn.params.zip(as), Jump(defnref, as2).attachTag(tag))
             node
           case (true, le @ LetExpr(y, e1, Result(Ref(z) :: Nil))) if y == z =>
             subst_let_expr_to_node(le, parammap)
@@ -1392,11 +1392,11 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
               xs2.zip(xs3).forall{ case (x, Ref(y)) => x == y; case _ => false } =>
             val node = let_list_to_node(
               defn.params.zip(as),
-              LetCall(xs2, defnref2, as2, Result(xs3).attach_tag(tag)).attach_tag(tag))
+              LetCall(xs2, defnref2, as2, Result(xs3).attachTag(tag)).attachTag(tag))
             node
           case _ => x
-      case Case(scrut, cases) => Case(scrut, cases.map { (cls, arm) => (cls, f(arm)) }).copy_tag(x)
-      case LetExpr(name, expr, body) => LetExpr(name, expr, f(body)).copy_tag(x)
+      case Case(scrut, cases) => Case(scrut, cases.map { (cls, arm) => (cls, f(arm)) }).copyTag(x)
+      case LetExpr(name, expr, body) => LetExpr(name, expr, f(body)).copyTag(x)
       case LetCall(xs, defnref, as, e) =>
         val defn = defnref.expectDefn
         val parammap = defn.params.zip(as).toMap
@@ -1405,27 +1405,27 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
             val init = e |> f
             xs.zip(ys).foldRight(init) {
               case ((name, retval), node) =>
-                LetExpr(name, param_to_arg(retval, parammap).to_expr, node).attach_tag(tag)
+                LetExpr(name, param_to_arg(retval, parammap).toExpr, node).attachTag(tag)
             }         
           case (true, Jump(defnref, as2)) =>
-            val node = let_list_to_node(defn.params.zip(as), LetCall(xs, defnref, as2, f(e)).attach_tag(tag))
+            val node = let_list_to_node(defn.params.zip(as), LetCall(xs, defnref, as2, f(e)).attachTag(tag))
             node
           case (true, le @ LetExpr(y, e1, Result(Ref(z) :: Nil))) if y == z =>
             val (let_list, kernel) = subst_let_expr(le, parammap)
             let_list.foldLeft(
               LetExpr(kernel.name, kernel.expr,
-                LetExpr(xs.head, Ref(kernel.name), e |> f).attach_tag(tag)).attach_tag(tag)) {
-              case (accu, (name, value)) => LetExpr(name, value.to_expr, accu).attach_tag(tag)
+                LetExpr(xs.head, Ref(kernel.name), e |> f).attachTag(tag)).attachTag(tag)) {
+              case (accu, (name, value)) => LetExpr(name, value.toExpr, accu).attachTag(tag)
             }
           case (true, LetCall(xs2, defnref2, as2, Result(xs3))) if
               xs2.zip(xs3).forall{ case (x, Ref(y)) => x == y; case _ => false } =>
-            val node = let_list_to_node(defn.params.zip(as), LetCall(xs, defnref2, as2, f(e)).attach_tag(tag))
+            val node = let_list_to_node(defn.params.zip(as), LetCall(xs, defnref2, as2, f(e)).attachTag(tag))
             node
-          case _ => LetCall(xs, defnref, as, e |> f).copy_tag(x)
+          case _ => LetCall(xs, defnref, as, e |> f).copyTag(x)
 
     def run(x: Program) =
       val new_defs = x.defs.map{ x => { x.copy(body = f(x.body)) }}
-      relink(x.main, new_defs)
+      resolveDefnRef(x.main, new_defs)
       validate(x.main, new_defs)
       Program(x.classes, new_defs, x.main)
 

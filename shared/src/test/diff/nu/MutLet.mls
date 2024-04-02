@@ -1,7 +1,7 @@
 :NewDefs
 
 mut let i = 0
-//│ let i: 0
+//│ mut let i: 0
 //│ i
 //│   = 0
 
@@ -19,7 +19,7 @@ i
 mut let f(x) =
   set f = _ => x
   x
-//│ let f: 'a -> 'a
+//│ mut let f: 'a -> 'a
 //│ f
 //│   = [Function: f]
 
@@ -40,7 +40,7 @@ module None
 //│ module None
 
 mut let oops = None
-//│ let oops: None
+//│ mut let oops: None
 //│ oops
 //│      = None { class: [class None] }
 
@@ -74,7 +74,7 @@ oops
 
 
 mut let oops = None
-//│ let oops: None
+//│ mut let oops: None
 //│ oops
 //│      = None { class: [class None] }
 
@@ -101,13 +101,13 @@ module None
 //│ module None
 
 mut let m = None
-//│ let m: None
+//│ mut let m: None
 //│ m
 //│   = None { class: [class None] }
 
 mut val m = None
 fun oops(x) = set m = x
-//│ val m: None | 'm
+//│ mut val m: None | 'm
 //│ fun oops: 'm -> ()
 //│ m
 //│   = None { class: [class None] }
@@ -143,7 +143,7 @@ x
 
 
 mut let min = 123
-//│ let min: 123
+//│ mut let min: 123
 //│ min
 //│     = 123
 
@@ -190,7 +190,7 @@ mut val lol[A] = (x: A) => x
 //│ ╔══[ERROR] Type parameters are not yet supported in this position
 //│ ║  l.189: 	mut val lol[A] = (x: A) => x
 //│ ╙──       	            ^
-//│ val lol: (x: 'A) -> 'A
+//│ mut val lol: (x: 'A) -> 'A
 //│ lol
 //│     = [Function: lol]
 

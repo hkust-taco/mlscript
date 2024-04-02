@@ -5,7 +5,8 @@ import mlscript.compiler.ir._
 
 import Node._
 
-private final class Relink(defs: Set[Defn], allow_inline_jp: Bool):
+// Resolves the definition references by turning them from Right(name) to Left(Defn).
+private final class DefnRefResolver(defs: Set[Defn], allowInlineJp: Bool):
   private def f(x: Node): Unit = x match
     case Result(res) =>
     case Case(scrut, cases) => cases map { (_, body) => f(body) }
@@ -20,13 +21,13 @@ private final class Relink(defs: Set[Defn], allow_inline_jp: Bool):
       defs.find{_.getName == defnref.getName} match
         case Some(defn) => defnref.defn = Left(defn)
         case None =>
-          if (!allow_inline_jp)
+          if (!allowInlineJp)
             throw IRError(f"unknown function ${defnref.getName} in ${defs.map{_.getName}.mkString(",")}")
   def run(node: Node) = f(node)
   def run(node: Defn) = f(node.body)
 
 
-def relink(entry: Node, defs: Set[Defn], allow_inline_jp: Bool = false): Unit  =
-  val rl = Relink(defs, allow_inline_jp)
+def resolveDefnRef(entry: Node, defs: Set[Defn], allowInlineJp: Bool = false): Unit  =
+  val rl = DefnRefResolver(defs, allowInlineJp)
   rl.run(entry)
   defs.foreach(rl.run(_))

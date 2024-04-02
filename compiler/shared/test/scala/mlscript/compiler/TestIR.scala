@@ -10,33 +10,32 @@ import mlscript.compiler.ir.{Interpreter, Fresh, FreshInt, Builder}
 class IRDiffTestCompiler extends DiffTests {
   import IRDiffTestCompiler.*
 
-  override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit): List[Str] = 
+  override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (List[Str], Option[TypingUnit]) = 
     val outputBuilder = StringBuilder()
     if (mode.useIR || mode.irVerbose)
       try
-        outputBuilder ++= "\n\nIR:\n"
+        output("\n\nIR:")
         val gb = Builder(Fresh(), FreshInt(),  FreshInt(), FreshInt())
         val graph = gb.buildGraph(unit)
-        outputBuilder ++= graph.toString()
-        outputBuilder ++= "\n\nPromoted:\n"
-        outputBuilder ++= graph.toString()
+        output(graph.toString())
+        output("\nPromoted:")
+        output(graph.toString())
         var interp_result: Opt[Str] = None
         if (mode.interpIR)
-          outputBuilder ++= "\n\nInterpreted:\n"
+          output("\nInterpreted:")
           val ir = Interpreter(mode.irVerbose).interpret(graph)
           interp_result = Some(ir)
-          outputBuilder ++= ir
-          outputBuilder ++= "\n"
+          output(ir)
 
       catch
         case err: Exception =>
-          outputBuilder ++= s"\nIR Processing Failed: ${err.getMessage()}"
-          outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
+          output(s"\nIR Processing Failed: ${err.getMessage()}")
+          output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))
         case err: StackOverflowError =>
-          outputBuilder ++= s"\nIR Processing Failed: ${err.getMessage()}"
-          outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
+          output(s"\nIR Processing Failed: ${err.getMessage()}")
+          output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))
       
-    outputBuilder.toString().linesIterator.toList
+    (outputBuilder.toString().linesIterator.toList, None)
   
   override protected lazy val files = allFiles.filter { file =>
       val fileName = file.baseName

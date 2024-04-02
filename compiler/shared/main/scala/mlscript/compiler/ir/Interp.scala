@@ -13,6 +13,17 @@ final case class IRInterpreterError(message: String) extends Exception(message)
 
 class Interpreter(verbose: Bool):
   private def log(x: Any) = if verbose then println(x)
+
+  // We have a similar definition of IR here to represent the result of the interpreter.
+  // This is because IR itself is in A-normal form.
+  // It represent terms, e.g. "Pair(True, False)", like:
+  //   let x = CtorApp(True, []) in
+  //   let y = CtorApp(False, []) in
+  //   let z = CtorApp(Pair, [x, y]) in
+  //   z
+  // But I don't want the result of an interpreter to be like this.
+  // So we release the limitation of the ANF IR here and allow expressions in argument position.
+
   private case class Program(
     classes: Set[ClassInfo],
     defs: Set[Defn],
@@ -35,7 +46,7 @@ class Interpreter(verbose: Bool):
     def show: Str =
       document.print
   
-    private def show_args(args: Ls[Expr]) = args map { x => x.show } mkString ","
+    private def showArgs(args: Ls[Expr]) = args map { x => x.show } mkString ","
 
     def document: Document = this match
       case Ref(Name(s)) => s |> raw
@@ -44,11 +55,11 @@ class Interpreter(verbose: Bool):
       case Literal(StrLit(lit)) => s"$lit" |> raw
       case Literal(UnitLit(lit)) => s"$lit" |> raw
       case CtorApp(ClassInfo(_, name, _), args) =>
-        raw(name) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
+        raw(name) <#> raw("(") <#> raw(args |> showArgs) <#> raw(")")
       case Select(Name(s), _, fld) =>
         raw(s) <#> raw(".") <#> raw(fld)
       case BasicOp(name: Str, args) =>
-        raw(name) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
+        raw(name) <#> raw("(") <#> raw(args |> showArgs) <#> raw(")")
 
   private enum Node:
     case Result(res: Ls[Expr])
@@ -61,15 +72,15 @@ class Interpreter(verbose: Bool):
     def show: Str =
       document.print
 
-    private def show_args(args: Ls[Expr]) = args map { x => x.show } mkString ","
+    private def showArgs(args: Ls[Expr]) = args map { x => x.show } mkString ","
 
     def document: Document = this match
-      case Result(res) => raw(res |> show_args)
+      case Result(res) => raw(res |> showArgs)
       case Jump(jp, args) =>
         raw("jump")
         <:> raw(jp.name)
         <#> raw("(")
-        <#> raw(args |> show_args)
+        <#> raw(args |> showArgs)
         <#> raw(")") 
       case Case(Name(x), Ls((tcls, tru), (fcls, fls))) if tcls.ident == "True" && fcls.ident == "False" =>
         val first = raw("if") <:> raw(x)
@@ -128,34 +139,34 @@ class Interpreter(verbose: Bool):
     case IExpr.Ref(x) => Ref(x)
     case IExpr.Literal(x) => Literal(x)
 
-  private def convert_args(xs: Ls[ir.TrivialExpr]): Ls[Expr] = xs.map(convert)
+  private def convertArgs(xs: Ls[ir.TrivialExpr]): Ls[Expr] = xs.map(convert)
 
   private def convert(expr: IExpr): Expr = expr match
     case IExpr.Ref(x) => Ref(x)
     case IExpr.Literal(x) => Literal(x)
-    case IExpr.CtorApp(name, args) => CtorApp(name, args |> convert_args)
+    case IExpr.CtorApp(name, args) => CtorApp(name, args |> convertArgs)
     case IExpr.Select(name, cls, field) => Select(name, cls, field)
-    case IExpr.BasicOp(name, args) => BasicOp(name, args |> convert_args)
+    case IExpr.BasicOp(name, args) => BasicOp(name, args |> convertArgs)
 
   private def convert(node: INode): Node = node match
-    case INode.Result(xs) => Result(xs |> convert_args)
-    case INode.Jump(defnref, args) => Jump(DefnRef(Right(defnref.getName)), args |> convert_args)
+    case INode.Result(xs) => Result(xs |> convertArgs)
+    case INode.Jump(defnref, args) => Jump(DefnRef(Right(defnref.getName)), args |> convertArgs)
     case INode.Case(scrut, cases) => Case(scrut, cases.map{(cls, node) => (cls, node |> convert)})
     case INode.LetExpr(name, expr, body) => LetExpr(name, expr |> convert, body |> convert)
     case INode.LetCall(xs, defnref, args, body) =>
-      LetCall(xs, DefnRef(Right(defnref.getName)), args |> convert_args, body |> convert)
+      LetCall(xs, DefnRef(Right(defnref.getName)), args |> convertArgs, body |> convert)
 
   private def convert(defn: IDefn): Defn =
     Defn(defn.name, defn.params, defn.body |> convert)
 
-  private def fix_cross_ref(defs: Set[Defn], node: Node): Unit = node match
-    case Case(_, cases) => cases.foreach { case (cls, node) => fix_cross_ref(defs, node) }
-    case LetExpr(name, expr, body) => fix_cross_ref(defs, body)
-    case LetJoin(joinName, params, rhs, body) => fix_cross_ref(defs, body)
+  private def resolveDefnRef(defs: Set[Defn], node: Node): Unit = node match
+    case Case(_, cases) => cases.foreach { case (cls, node) => resolveDefnRef(defs, node) }
+    case LetExpr(name, expr, body) => resolveDefnRef(defs, body)
+    case LetJoin(joinName, params, rhs, body) => resolveDefnRef(defs, body)
     case Jump(defnref, args) => defnref.defn = Left(defs.find(_.name == defnref.name).get)
     case LetCall(xs, defnref, args, body) =>
       defnref.defn = Left(defs.find(_.name == defnref.name).get)
-      fix_cross_ref(defs, body)
+      resolveDefnRef(defs, body)
     case _ =>
 
   private def convert(prog: IProgram): Program =
@@ -165,11 +176,11 @@ class Interpreter(verbose: Bool):
 
     val defs: Set[Defn] = old_defs.map(convert)
     defs.foreach {
-      case Defn(_, _, body) => fix_cross_ref(defs, body)
+      case Defn(_, _, body) => resolveDefnRef(defs, body)
     }
 
     val main = convert(old_main)
-    fix_cross_ref(defs, main)
+    resolveDefnRef(defs, main)
 
     Program(classes, defs, main)
 
@@ -192,7 +203,12 @@ class Interpreter(verbose: Bool):
     case ("<", Literal(IntLit(x)), Literal(IntLit(y))) => Some(if x < y then getTrue else getFalse)
     case _ => None
 
-  private def eval_args(using ctx: Ctx, clsctx: ClassCtx)(exprs: Ls[Expr]): Either[Ls[Expr], Ls[Expr]] = 
+  private def unifyEvalResult[A](x: Either[A, A]) =
+    x match
+      case Left(expr) => expr
+      case Right(expr) => expr 
+
+  private def evalArgs(using ctx: Ctx, clsctx: ClassCtx)(exprs: Ls[Expr]): Either[Ls[Expr], Ls[Expr]] = 
     var changed = false
     val xs = exprs.map {
       arg => eval(arg) match
@@ -201,22 +217,18 @@ class Interpreter(verbose: Bool):
     }
     if (changed) Left(xs) else Right(exprs)
 
-  private def eval_args_may_not_progress(using ctx: Ctx, clsctx: ClassCtx)(exprs: Ls[Expr]) = 
+  private def evalArgsMayNotProgress(using ctx: Ctx, clsctx: ClassCtx)(exprs: Ls[Expr]) = 
     exprs.map {
-      arg => eval(arg) match
-        case Left(expr) => expr
-        case Right(expr) => expr
+      arg => eval(arg) |> unifyEvalResult
     }
 
-  private def eval_may_not_progress(using ctx: Ctx, clsctx: ClassCtx)(expr: Expr) = eval(expr) match
-    case Left(x) => x
-    case Right(x) => x
+  private def evalMayNotProgress(using ctx: Ctx, clsctx: ClassCtx)(expr: Expr) = eval(expr) |> unifyEvalResult
     
   private def eval(using ctx: Ctx, clsctx: ClassCtx)(expr: Expr): Either[Expr, Expr] = expr match
     case Ref(Name(x)) => ctx.get(x).toLeft(expr)
     case Literal(x) => Right(expr)
     case CtorApp(name, args) =>
-      eval_args(args) match
+      evalArgs(args) match
         case Left(xs) => Left(CtorApp(name, xs)) 
         case _ => Right(expr)
     case Select(name, cls, field) => 
@@ -228,34 +240,32 @@ class Interpreter(verbose: Bool):
         case x @ _ => throw IRInterpreterError(s"unexpected node: select $field but got $x when eval $expr")
       }.toLeft(expr)
     case BasicOp(name, args) =>
-      val xs = eval_args_may_not_progress(args)
+      val xs = evalArgsMayNotProgress(args)
       val x = name match
         case "+" | "-" | "*" | "/" | "==" | "!=" | "<=" | ">=" | "<" | ">" => 
           eval(using ctx, clsctx)(name, xs.head, xs.tail.head)
         case _ => throw IRInterpreterError("unexpected basic operation")
       x.toLeft(expr)
 
-  private def expect_def(r: DefnRef) = r.defn match
+  private def expectDefn(r: DefnRef) = r.defn match
     case Left(value) => value
     case Right(value) => throw IRInterpreterError("only has the name of definition")
 
-  private def eval_may_not_progress(using ctx: Ctx, clsctx: ClassCtx)(node: Node) = eval(node) match
-    case Left(x) => x
-    case Right(x) => x
+  private def evalMayNotProgress(using ctx: Ctx, clsctx: ClassCtx)(node: Node) = eval(node) |> unifyEvalResult
 
   @tailrec
   private def eval(using ctx: Ctx, clsctx: ClassCtx)(node: Node): Either[Node, Node] = node match
     case Result(xs) =>
-      xs |> eval_args match
+      xs |> evalArgs match
         case Left(xs) => Left(Result(xs))
         case _ => Right(node)
     case Jump(defnref, args) =>
-      val xs = args |> eval_args_may_not_progress
-      val defn = defnref |> expect_def
+      val xs = args |> evalArgsMayNotProgress
+      val defn = defnref |> expectDefn
       val ctx1 = ctx ++ defn.params.map{_.str}.zip(xs)
       eval(using ctx1, clsctx)(defn.body)
     case Case(scrut, cases) =>
-      val CtorApp(cls, xs) = (Ref(scrut):Expr) |> eval_may_not_progress(using ctx, clsctx) match {
+      val CtorApp(cls, xs) = (Ref(scrut):Expr) |> evalMayNotProgress(using ctx, clsctx) match {
         case x: CtorApp => x
         case x => throw IRInterpreterError(s"not a class $x")
       }
@@ -265,14 +275,14 @@ class Interpreter(verbose: Bool):
       }
       eval(arm)
     case LetExpr(name, expr, body) =>
-      val x = eval_may_not_progress(expr)
+      val x = evalMayNotProgress(expr)
       val ctx1 = ctx + (name.str -> x)
       eval(using ctx1, clsctx)(body)
     case LetCall(xs, defnref, args, body) =>
-      val defn = defnref |> expect_def
-      val ys = args |> eval_args_may_not_progress
+      val defn = defnref |> expectDefn
+      val ys = args |> evalArgsMayNotProgress
       val ctx1 = ctx ++ defn.params.map{_.str}.zip(ys)
-      val res = eval_may_not_progress(using ctx1, clsctx)(defn.body) match {
+      val res = evalMayNotProgress(using ctx1, clsctx)(defn.body) match {
         case Result(xs) => xs
         case _ => throw IRInterpreterError("unexpected node")
       }
@@ -283,7 +293,7 @@ class Interpreter(verbose: Bool):
   private def interpret(prog: Program): Node =
     val Program(classes, defs, main) = prog
     val clsctx = classes.map(x => x.ident -> x).toMap
-    eval_may_not_progress(using Map.empty, clsctx)(main)
+    evalMayNotProgress(using Map.empty, clsctx)(main)
     
   def interpret(irprog: ir.Program): Str =
     val prog = convert(irprog)

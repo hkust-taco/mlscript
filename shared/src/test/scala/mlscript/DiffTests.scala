@@ -53,9 +53,9 @@ class DiffTests
   
   
   /**  Hook for dependent projects, like the monomorphizer. */
-  def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit): Ls[Str] = Nil
+  def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (Ls[Str], Option[TypingUnit]) = (Nil, None)
   
-
+  
   @SuppressWarnings(Array("org.wartremover.warts.RedundantIsInstanceOf"))
   private val inParallel = isInstanceOf[ParallelTestExecution]
   
@@ -173,7 +173,6 @@ class DiffTests
       useIR: Bool = false,
       interpIR: Bool = false,
       irVerbose: Bool = false,
-      
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
     }
@@ -195,6 +194,8 @@ class DiffTests
     var noRecursiveTypes = false
     var constrainedTypes = false
     var irregularTypes = false
+    var prettyPrintQQ = false
+    var useIR = false
     
     // * This option makes some test cases pass which assume generalization should happen in arbitrary arguments
     // * but it's way too aggressive to be ON by default, as it leads to more extrusion, cycle errors, etc.
@@ -263,6 +264,7 @@ class DiffTests
             // println("'"+line.drop(str.length + 2)+"'")
             typer.startingFuel = line.drop(str.length + 2).toInt; mode
           case "ResetFuel" => typer.startingFuel = typer.defaultStartingFuel; mode
+          case "QQ" => prettyPrintQQ = true; mode
           case "ne" => mode.copy(noExecution = true)
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
@@ -281,9 +283,10 @@ class DiffTests
               case l :: _ => out.println(l)
             }
             return ()
-          case "UseIR" => mode.copy(useIR = true)
-          case "InterpIR" => mode.copy(interpIR = true)
-          case "IRVerbose" => mode.copy(irVerbose = true)
+          case "UseIR" => useIR = true; mode
+          case "useIR" => mode.copy(useIR = true)
+          case "interpIR" => mode.copy(interpIR = true)
+          case "irVerbose" => mode.copy(irVerbose = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -444,7 +447,9 @@ class DiffTests
             if (mode.showParse)
               output(s"AST: $res")
             
-            postProcess(mode, basePath, testName, res).foreach(output)
+            val newMode = if (useIR) { mode.copy(useIR = true) } else mode
+            val (postLines, nuRes) = postProcess(newMode, basePath, testName, res, output)
+            postLines.foreach(output)  
             
             if (parseOnly)
               Success(Pgrm(Nil), 0)
@@ -587,9 +592,7 @@ class DiffTests
               val exp = typer.expandType(sim)(ctx)
               
               val expStr =
-                exp.showIn(ShowCtx.mk(exp :: Nil, newDefs)
-                    // .copy(newDefs = true) // TODO later
-                  , 0)
+                exp.showIn(0)(ShowCtx.mk(exp :: Nil, newDefs))// .copy(newDefs = true) // TODO later
               
               output(expStr.stripSuffix("\n"))
               
@@ -867,7 +870,7 @@ class DiffTests
             val executionResults: Result \/ Ls[(ReplHost.Reply, Str)] = if (!allowTypeErrors &&
                 file.ext =:= "mls" && !mode.noGeneration && !noJavaScript) {
               import codeGenTestHelpers._
-              backend(p, mode.allowEscape, newDefs && newParser) match {
+              backend(p, mode.allowEscape, newDefs && newParser, prettyPrintQQ) match {
                 case testCode @ TestCode(prelude, queries) => {
                   // Display the generated code.
                   if (mode.showGeneratedJS) showGeneratedCode(testCode)

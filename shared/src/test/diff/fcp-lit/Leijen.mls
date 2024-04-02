@@ -364,7 +364,7 @@ runST (returnST 1)
 // ,("runST (newRef 1)", Wrong)
 :ng
 runST (newRef 1)
-//│ res: Ref[in ??s & 's out 's | ??s0, 1]
+//│ res: Ref[in ??s, 1]
 
 // ,("apply runST (returnST 1)", ok "Int")
 :ng
@@ -932,21 +932,21 @@ xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 def runST2: forall 'a. (forall 's. (ST['s, 'a], ST['s, 'a])) -> 'a
 runST2 ((newRef 1, newRef 2))
 //│ runST2: (forall 's. (ST['s, 'a], ST['s, 'a],)) -> 'a
-//│ res: Ref[in ??s & 's out 's | ??s0, 1 | 2]
+//│ res: Ref[in ??s, 1 | 2]
 
 def runST3: forall 'a. (forall 's. ST[('s, 's), 'a]) -> 'a
 def newRef3: forall 'a 's. 'a -> ST[('s, 's), Ref['s, 'a]]
 runST3 (newRef3 1)
 //│ runST3: (forall 's. ST[('s, 's,), 'a]) -> 'a
 //│ newRef3: 'a -> ST[('s, 's,), Ref['s, 'a]]
-//│ res: Ref[in ??s & 's out 's | ??s0, 1]
+//│ res: Ref[in ??s, 1]
 
 def runST4: forall 'a 'b. (forall 's. ST['s, ('a, 'b)]) -> ('a, 'b)
 def newRef4: forall 'a 's. 'a -> ST['s, (Ref['s, 'a], Ref['s, 'a])]
 runST4 (newRef4 1)
 //│ runST4: (forall 's. ST['s, ('a, 'b,)]) -> ('a, 'b,)
 //│ newRef4: 'a -> ST['s, (Ref['s, 'a], Ref['s, 'a],)]
-//│ res: (Ref[in ??s & 's out 's | 's0 | ??s0, 1], Ref[in ??s & 's0 out 's | 's0 | ??s0, 1],)
+//│ res: (Ref[in ??s, 1], Ref[in ??s, 1],)
 
 
 // * Distributivity demonstration:

@@ -9,9 +9,9 @@ final case class Message(bits: Ls[Message.Bit]) {
     showIn(ctx)
   }
   def typeBits: Ls[TypeLike] = bits.collect{ case Message.Code(t) => t }
-  def showIn(ctx: ShowCtx): Str = {
+  def showIn(implicit ctx: ShowCtx): Str = {
     bits.map {
-      case Message.Code(ty) => ty.showIn(ctx, 0)
+      case Message.Code(ty) => ty.showIn(0)
       case Message.Text(txt) => txt
     }.mkString
   }
