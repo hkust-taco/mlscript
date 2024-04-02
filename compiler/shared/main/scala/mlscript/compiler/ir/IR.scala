@@ -153,8 +153,8 @@ enum Expr:
     case Literal(UnitLit(lit)) => s"$lit" |> raw
     case CtorApp(ClassInfo(_, name, _), args) =>
       raw(name) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
-    case Select(s, _, fld) =>
-      raw(s.toString) <#> raw(".") <#> raw(fld)
+    case Select(s, cls, fld) =>
+      raw(cls.ident)<#> raw(".") <#> raw(fld) <#> raw("(") <#> raw(s.toString) <#> raw(")")
     case BasicOp(name: Str, args) =>
       raw(name) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
 

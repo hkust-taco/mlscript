@@ -67,7 +67,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
     val fields = cls.fields
     val tm = params.zip(fields).foldLeft(rhs) {
       case (tm, (param, field)) => 
-        Let(false, Var(param), Sel(Var(scrut), Var(field)), tm)
+        Let(false, Var(param), App(Sel(Var(cls.ident), Var(field)), Tup(Ls(N -> Fld(FldFlags.empty, Var(scrut))))), tm)
     }
     tm
 
@@ -113,7 +113,18 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
               v |> ref |> sresult |> k).attachTag(tag)
           case node @ _ => node |> unexpectedNode
         }
-
+      case App(
+        member @ Sel(Var(clsName), Var(fld)), 
+        xs @ Tup((_ -> Fld(_, Var(s))) :: _)) if clsName.isCapitalized =>
+        buildResultFromTerm(xs) {
+          case Result(Ref(name) :: args) =>
+            val v = fresh.make
+            val cls = ctx.classCtx(clsName)
+            LetExpr(v,
+              if args.isEmpty then Select(name, cls, fld) else throw IRError("not supported: method call"),
+              v |> ref |> sresult |> k).attachTag(tag)
+          case node @ _ => print("x"); node |> unexpectedNode
+        }
       case App(f, xs @ Tup(_)) =>
         buildResultFromTerm(f) {
         case Result(Ref(f) :: Nil) if ctx.fnCtx.contains(f.str) => buildResultFromTerm(xs) {
@@ -218,17 +229,6 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
       case Blk(NuFunDef(S(false), Var(name), None, _, L(tm)) :: xs) =>
         buildBinding(name, tm, Blk(xs))(k)
 
-      case Sel(tm @ Var(name), Var(fld)) =>
-        buildResultFromTerm(tm) {
-          case Result(Ref(res) :: Nil) =>
-            val v = fresh.make
-            val cls = ctx.fieldCtx(fld)._2
-            LetExpr(v,
-              Select(res, cls, fld),
-              v |> ref |> sresult |> k).attachTag(tag)
-          case node @ _ => node |> unexpectedNode
-        }
-
       case tup: Tup => buildResultFromTup(tup)(k)
 
       case term => term |> unexpectedTerm
@@ -271,11 +271,6 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
       )
     case x @ _ => throw IRError(f"unsupported NuTypeDef $x")
 
-  private def checkDuplicateField(ctx: Set[Str], cls: ClassInfo): Set[Str] =
-    val u = cls.fields.toSet intersect ctx
-    if (u.nonEmpty) throw IRError(f"duplicate class field $u")
-    cls.fields.toSet union ctx
-
   private def getDefinitionName(nfd: Statement): Str = nfd match
     case NuFunDef(_, Var(name), _, _, _) => name
     case _ => throw IRError("unsupported NuFunDef")
@@ -292,7 +287,6 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
       import scala.collection.mutable.{ HashSet => MutHSet }
 
       val cls = grouped.getOrElse(0, Nil).map(buildClassInfo)
-      cls.foldLeft(Set.empty)(checkDuplicateField(_, _))
 
       val clsinfo = cls.toSet
       val defn_names = grouped.getOrElse(1, Nil).map(getDefinitionName)
