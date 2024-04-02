@@ -73,7 +73,7 @@ class Lexer(origin: Origin, raise: Raise, dbg: Bool):
     if i < length && pred(bytes(i)) then takeWhile(i + 1, bytes(i) :: cur)(pred)
     else (cur.reverseIterator.mkString, i)
 
-  final def num(i: Int): (Lit, Int) =
+  final def num(i: Int): (Literal, Int) =
     def test(i: Int, p: Char => Bool): Bool = i < length && p(bytes(i))
     def zero: IntLit = IntLit(BigInt(0))
     /** Take a sequence of digits interleaved with underscores. */

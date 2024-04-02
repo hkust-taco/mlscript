@@ -40,7 +40,7 @@ case object INDENT extends Token
 case object DEINDENT extends Token
 case object ERROR extends Token with Stroken
 case object QUOTE extends Token with Stroken
-final case class LITVAL(value: Lit) extends Token with Stroken
+final case class LITVAL(value: Literal) extends Token with Stroken
 // final case class KEYWRD(name: String) extends Token with Stroken
 final case class IDENT(name: String, symbolic: Bool) extends Token with Stroken
 final case class SELECT(name: String) extends Token with Stroken
