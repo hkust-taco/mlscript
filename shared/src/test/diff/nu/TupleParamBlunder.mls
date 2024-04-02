@@ -1,0 +1,35 @@
+:NewDefs
+
+
+// * TODO fix the parsing of this tuple-taking function signature!
+fun f: [Int, Int] -> Int
+fun f(a, b) = a + b  // should not be a valid implementation
+//│ fun f: (Int, Int) -> Int
+//│ fun f: (Int, Int) -> Int
+
+fun f: (Int, Int) -> Int
+fun f(a, b) = a + b
+//│ fun f: (Int, Int) -> Int
+//│ fun f: (Int, Int) -> Int
+
+:e
+fun f: [Int, Int] => Int
+fun f(a, b) = a + b
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.17: 	fun f(a, b) = a + b
+//│ ║        	    ^^^^^^^^^^^^^^^
+//│ ╟── type `[[Int, Int]]` does not match type `[?a, ?b]`
+//│ ║  l.16: 	fun f: [Int, Int] => Int
+//│ ║        	       ^^^^^^^^^^
+//│ ╟── Note: constraint arises from tuple literal:
+//│ ║  l.17: 	fun f(a, b) = a + b
+//│ ╙──      	     ^^^^^^
+//│ fun f: (Int, Int) -> Int
+//│ fun f: ([Int, Int]) -> Int
+
+fun f: (Int, Int) => Int
+fun f(a, b) = a + b
+//│ fun f: (Int, Int) -> Int
+//│ fun f: (Int, Int) -> Int
+
+
