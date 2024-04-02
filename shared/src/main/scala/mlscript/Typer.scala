@@ -1576,7 +1576,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                     err(msg"can only match on classes and traits", pat.toLoc)(raise)
                   
                   val prov = tp(pat.toLoc, "class pattern")
-
+                  
                   def tprmToRcd(tparams: TyParams): (SimpleType, SimpleType) = {
                     val (flds, fldsIntl) = tparams.map {
                       case (tn, tv, vi) =>
@@ -1604,7 +1604,8 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                       val (ty, tyIntl) = tprmToRcd(cls.tparams)
                       println(s"Match arm $nme: $tag & $ty intl $tyIntl")
                       (tag, ty, tyIntl)
-                    case CompletedTypeInfo(_) => bail()
+                    case CompletedTypeInfo(_) =>
+                      die
                   }
                   
                 case _ =>
