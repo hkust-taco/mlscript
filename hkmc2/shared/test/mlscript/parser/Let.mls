@@ -50,10 +50,10 @@ let x = y in z
 :pe
 let x = y class
 //│ |let| |x| |=| |y| |class|
-//│ ╔══[PARSE ERROR] Expected 'in' keyword or end of input after let binding right-hand side; found 'class' keyword instead
+//│ ╔══[PARSE ERROR] Expected end of input; found 'class' keyword instead
 //│ ║  l.51: 	let x = y class
 //│ ╙──      	          ^^^^^
-//│ AST: List(Empty)
+//│ AST: List(Let(Ident(x),Ident(y),None))
 
 
 
@@ -123,20 +123,17 @@ in x
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found newline instead
 //│ ║  l.121: 	in x
 //│ ╙──       	    ^
-//│ ╔══[PARSE ERROR] Expected end of input after expression; found '=' keyword instead
+//│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
 //│ ║  l.120: 	x = 1
 //│ ╙──       	  ^
-//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.120: 	x = 1
-//│ ╙──       	    ^
-//│ AST: List(Empty, Empty)
+//│ AST: List(Empty, Ident(x))
 
 :pe
 let
   with
 //│ |let|→|with|←|
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found 'with' keyword instead
-//│ ║  l.136: 	  with
+//│ ║  l.133: 	  with
 //│ ╙──       	  ^^^^
 //│ AST: List(Empty)
 
@@ -153,7 +150,7 @@ let x = 1 in
 if
 //│ |if|
 //│ ╔══[PARSE ERROR] Expected 'val' keyword, 'let' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, or expression after start of statement; found 'if' keyword instead
-//│ ║  l.153: 	if
+//│ ║  l.150: 	if
 //│ ╙──       	^^
 //│ AST: List(Empty)
 

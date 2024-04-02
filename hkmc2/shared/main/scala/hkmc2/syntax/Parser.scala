@@ -1,6 +1,7 @@
 package hkmc2
 package syntax
 
+import scala.util.boundary
 import sourcecode.{Name, Line}
 import mlscript.utils.*, shorthands.*
 import hkmc2.Message._
@@ -111,7 +112,7 @@ abstract class Parser(
       case it: Iterable[_] => it.mkString("(", ",", ")")
       case _: Product => args
       case _ => s"($args)"
-    }}    [at l.${l.value}]")
+    }}    [at syntax/Parser.scala:${l.value}]")
     val res = try
       indent += 1
       mkRes
@@ -213,7 +214,7 @@ abstract class Parser(
             consume
             rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.blockOf(subRule))
           case _ =>
-            parse(CommaPrecNext, subRule).getOrElse(errExpr) :: blockContOf(rule)
+            parseRule(CommaPrecNext, subRule).getOrElse(errExpr) :: blockContOf(rule)
         case N =>
           
           // TODO dedup this common-looking logic:
@@ -226,15 +227,15 @@ abstract class Parser(
               ParseRule.prefixRules.kwAlts.get(kw.name) match
               case S(subRule) if subRule.blkAlt.isEmpty =>
                 rec(toks, S(tok.innerLoc), tok.describe).concludeWith { p =>
-                  p.blockOf(subRule.map(e => parse(CommaPrecNext, exprAlt.rest).map(res => exprAlt.k(e, res)).getOrElse(errExpr)))
+                  p.blockOf(subRule.map(e => parseRule(CommaPrecNext, exprAlt.rest).map(res => exprAlt.k(e, res)).getOrElse(errExpr)))
                 } ++ blockContOf(rule)
               case _ =>
                 TODO(cur)
             case _ =>
               ParseRule.prefixRules.kwAlts.get(kw.name) match
               case S(subRule) =>
-                val e = parse(CommaPrecNext, subRule).getOrElse(errExpr)
-                parse(CommaPrecNext, exprAlt.rest).map(res => exprAlt.k(e, res)).getOrElse(errExpr) :: blockContOf(rule)
+                val e = parseRule(CommaPrecNext, subRule).getOrElse(errExpr)
+                parseRule(CommaPrecNext, exprAlt.rest).map(res => exprAlt.k(e, res)).getOrElse(errExpr) :: blockContOf(rule)
               case N =>
                 // TODO dedup?
                 err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
@@ -259,13 +260,24 @@ abstract class Parser(
     rule.exprAlt match
       case S(exprAlt) =>
         val e = expr(prec)
-        parse(prec, exprAlt.rest).map(res => exprAlt.k(e, res))
+        parseRule(prec, exprAlt.rest).map(res => exprAlt.k(e, res))
       case N =>
-        err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
-        N
+        rule.emptyAlt match
+        case S(res) =>
+          S(res)
+        case N =>
+          err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
+          N
   
   /** A result of None means there was an error (already reported) and nothing could be parsed. */
-  def parse[A](prec: Int, rule: ParseRule[A]): Opt[A] = yeetSpaces match
+  def parseRule[A](prec: Int, rule: ParseRule[A]): Opt[A] = wrap(prec, rule):
+    def tryEmpty(tok: Token, loc: Loc) = rule.emptyAlt match
+      case S(res) => S(res)
+      case N =>
+        consume
+        err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
+        N
+    yeetSpaces match
     // case (tok @ (id: IDENT), loc) :: _ if Keyword.all.get(id.name).exists(_.leftPrecOrMin < prec) =>
     //   printDbg(s"Precedence of $id < $prec")
     //   // TODO dedup with "nil" case below?
@@ -278,35 +290,33 @@ abstract class Parser(
     case (tok @ (id: IDENT), loc) :: _ =>
       Keyword.all.get(id.name) match
       case S(kw) =>
-        consume
         rule.kwAlts.get(id.name) match
         case S(subRule) =>
+          consume
           yeetSpaces match
           case (tok @ BRACKETS(Indent, toks), loc) :: _ if subRule.blkAlt.isEmpty =>
             consume
-            rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.parse(kw.assumeRightPrec, subRule))
+            rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.parseRule(kw.assumeRightPrec, subRule))
           case _ =>
-            parse(kw.assumeRightPrec, subRule)
+            parseRule(kw.assumeRightPrec, subRule)
         case N =>
           rule.exprAlt match
           case S(exprAlt) =>
+            consume
             ParseRule.prefixRules.kwAlts.get(id.name) match
             case S(subRule) =>
               // parse(subRule)
-              val e = parse(kw.assumeRightPrec, subRule).getOrElse(errExpr)
-              parse(prec, exprAlt.rest).map(res => exprAlt.k(e, res))
+              val e = parseRule(kw.assumeRightPrec, subRule).getOrElse(errExpr)
+              parseRule(prec, exprAlt.rest).map(res => exprAlt.k(e, res))
             case N =>
-              // TODO dedup?
-              err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
-              N
+              tryEmpty(tok, loc)
           case N =>
-            err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${tok.describe} instead" -> S(loc) :: Nil))
-            N
+            tryEmpty(tok, loc)
       case N =>
         tryParseExp(prec, tok, loc, rule)
     case (tok @ NEWLINE, l0) :: (id: IDENT, l1) :: _ if rule.kwAlts.contains(id.name) =>
       consume
-      parse(prec, rule)
+      parseRule(prec, rule)
     case (tok @ (NEWLINE | SEMI | COMMA), l0) :: _ =>
       // TODO(cur)
       rule.emptyAlt match
@@ -325,7 +335,7 @@ abstract class Parser(
         case S(exprAlt) =>
           val e = rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.block)
             |> Tree.Block.apply
-          parse(prec, exprAlt.rest).map(res => exprAlt.k(e, res))
+          parseRule(prec, exprAlt.rest).map(res => exprAlt.k(e, res))
         case N =>
           
           // TODO... [todo:0]
@@ -345,7 +355,8 @@ abstract class Parser(
           err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found end of input instead" -> lastLoc :: Nil))
           N
   
-  def expr(prec: Int): Tree = wrap(prec):
+  def expr(prec: Int)(using Line): Tree = wrap(prec)(exprImpl(prec))
+  def exprImpl(prec: Int): Tree =
     cur match
     case (IDENT(nme, sym), loc) :: _ =>
       consume
@@ -605,6 +616,26 @@ abstract class Parser(
         exprCont(res, prec, allowNewlines)
         */
         
+      case (KEYWORD(kwStr), l0) :: _ if opPrec(kwStr)._1 > prec =>
+        ParseRule.infixRules.kwAlts.get(kwStr) match
+          case S(rule) =>
+            consume
+            rule.exprAlt match
+              case S(exprAlt) =>
+                yeetSpaces match
+                  case (NEWLINE, l0) :: _ =>
+                    consume
+                    ???
+                  case _ =>
+                val rhs = expr(opPrec(kwStr)._2)
+                parseRule(opPrec(kwStr)._2, exprAlt.rest).map: rest =>
+                  exprCont(exprAlt.k(rhs, rest)(acc), prec, allowNewlines) // FIXME prec??
+                .getOrElse(errExpr)
+              case N =>
+                // TODO other alts...?
+                err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${kwStr} instead" -> S(l0) :: Nil))
+                acc
+          case _ => acc
       case _ => acc
     }
   

@@ -60,12 +60,13 @@ class Lexer(origin: Origin, raise: Raise, dbg: Bool):
     // ">",
   )
   
-  private val isAlphaOp = Set(
-    "with",
-    "and",
-    "or",
-    "is",
-    "as",
+  // TODO rm
+  private val isAlphaOp = Set[Str](
+    // "with",
+    // "and",
+    // "or",
+    // "is",
+    // "as",
   )
   
   @tailrec final

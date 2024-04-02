@@ -2,26 +2,24 @@
 :p
 
 
-:fixme
 a and b
 //│ |a| |and| |b|
-//│ ╔══[PARSE ERROR] Expected end of input after expression; found 'and' keyword instead
-//│ ║  l.6: 	a and b
-//│ ╙──     	  ^^^
-//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.6: 	a and b
-//│ ╙──     	      ^
-//│ AST: List(Empty)
+//│ AST: List(InfixApp(Ident(a),keyword 'and',Ident(b)))
 
-:fixme
+a and b and c
+//│ |a| |and| |b| |and| |c|
+//│ AST: List(InfixApp(InfixApp(Ident(a),keyword 'and',Ident(b)),keyword 'and',Ident(c)))
+
 a and b or x and d
 //│ |a| |and| |b| |or| |x| |and| |d|
-//│ ╔══[PARSE ERROR] Expected end of input after expression; found 'and' keyword instead
-//│ ║  l.17: 	a and b or x and d
-//│ ╙──      	  ^^^
-//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.17: 	a and b or x and d
-//│ ╙──      	      ^
-//│ AST: List(Empty)
+//│ AST: List(InfixApp(InfixApp(Ident(a),keyword 'and',Ident(b)),keyword 'or',InfixApp(Ident(x),keyword 'and',Ident(d))))
+
+(a and b) or (x and d)
+//│ |(|a| |and| |b|)| |or| |(|x| |and| |d|)|
+//│ AST: List(InfixApp(InfixApp(Ident(a),keyword 'and',Ident(b)),keyword 'or',InfixApp(Ident(x),keyword 'and',Ident(d))))
+
+a and (b or x) and d
+//│ |a| |and| |(|b| |or| |x|)| |and| |d|
+//│ AST: List(InfixApp(InfixApp(Ident(a),keyword 'and',InfixApp(Ident(b),keyword 'or',Ident(x))),keyword 'and',Ident(d)))
 
 

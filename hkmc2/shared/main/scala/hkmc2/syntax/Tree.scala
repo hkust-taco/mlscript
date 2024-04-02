@@ -34,6 +34,7 @@ enum Tree extends Located:
   case Lam(lhs: Tree, rhs: Tree)
   case Tup(fields: Ls[Tree])
   case App(lhs: Tree, rhs: Tree)
+  case InfixApp(lhs: Tree, kw: Keyword.Infix, rhs: Tree)
   
   def children: Ls[Tree] = this match
     case Empty | Ident(_) | IntLit(_) | DecLit(_) | StrLit(_) | UnitLit(_) => Nil
@@ -47,6 +48,7 @@ enum Tree extends Located:
     case Lam(lhs, rhs) => Ls(lhs, rhs)
     case Tup(fields) => fields
     case App(lhs, rhs) => Ls(lhs, rhs)
+    case InfixApp(lhs, _, rhs) => Ls(lhs, rhs)
   
   def describe: Str = ??? // TODO
 

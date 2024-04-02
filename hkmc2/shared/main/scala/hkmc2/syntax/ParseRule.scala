@@ -132,14 +132,18 @@ object ParseRule:
     standaloneExpr,
   )
   
-  val infixRules: ParseRule[Tree] = ParseRule("continuation of statement")(
-    Expr(
-      ParseRule("'and' operator left-hand side"):
-        Kw(`and`):
-          ParseRule("'and' operator")(
-            Expr(ParseRule("'and' operator right-hand side")(End(())))((rhs, _: Unit) => rhs)
-          )
-    ) { case (lhs, rhs) => App(lhs, rhs) },
+  val infixRules: ParseRule[Tree => Tree] = ParseRule("continuation of statement")(
+    // TODO dedup:
+    Kw(`and`):
+      ParseRule("'and' operator")(
+        Expr(ParseRule("'and' operator right-hand side")(End(())))(
+          (rhs, _: Unit) => lhs => InfixApp(lhs, `and`, rhs))
+      ),
+    Kw(`or`):
+      ParseRule("'or' operator")(
+        Expr(ParseRule("'or' operator right-hand side")(End(())))(
+          (rhs, _: Unit) => lhs => InfixApp(lhs, `or`, rhs))
+      ),
   )
 
 
