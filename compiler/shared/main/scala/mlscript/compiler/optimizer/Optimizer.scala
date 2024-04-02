@@ -1011,36 +1011,36 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
     override def iterate(x: LetExpr): Unit = x match
       case LetExpr(x, e1, e2) =>
         intros = IntroductionAnalysis.getIntro(e1, intros).map { y => intros + (x.str -> y) }.getOrElse(intros)
-        e2.accept_iterator(this)
+        e2.acceptIterator(this)
     
     override def iterate(x: LetCall): Unit = x match
       case LetCall(xs, defnref, as, e) =>
         val defn = defnref.expectDefn
         checkTargets(defn, intros, as)
         intros = updateIntroInfo(defn, intros, xs)
-        e.accept_iterator(this)
+        e.acceptIterator(this)
 
     override def iterate(x: Case) = x match
       case Case(x, cases) =>
         cases foreach {
           (cls, arm) => 
             intros = intros + (x.str -> ICtor(cls.ident))
-            arm.accept_iterator(this)
+            arm.acceptIterator(this)
         }
     
     override def iterate(defn: Defn): Unit =
       intros = defn.specialized.map(bindIntroInfoUsingInput(Map.empty, _, defn.params)).getOrElse(Map.empty)
-      defn.body.accept_iterator(this)
+      defn.body.acceptIterator(this)
 
     override def iterate(x: Program): Unit =
-      x.defs.foreach { x => x.accept_iterator(this) }
+      x.defs.foreach { x => x.acceptIterator(this) }
     
     private def sort_targets(fldctx: Map[Str, (Str, ClassInfo)], targets: Set[Str]) =
       val cls = fldctx(targets.head)._2
       cls.fields.filter(targets.contains(_))
 
     def run(x: Program) =
-      x.accept_iterator(this)
+      x.acceptIterator(this)
       val clsctx = make_class_ctx(x.classes)
       val fldctx = x.classes.flatMap { case ClassInfo(_, name, fields) => fields.map { fld => (fld, (name, clsctx(name))) } }.toMap
       name_map = ctx.map { (k, _) => k -> fresh.make(k + "$S").str }.toMap
@@ -1179,7 +1179,7 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
       val name_map = srta.name_map
       val srdb = ScalarReplacementDefinitionBuilder(name_map, worklist)
       
-      x.accept_iterator(srdb)
+      x.acceptIterator(srdb)
 
       val new_defs = x.defs ++ srdb.sr_defs
 
@@ -1457,7 +1457,7 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
   }
 
   def activeAnalyze(prog: Program): Program =
-    prog.accept_iterator(IntroductionAnalysis)
+    prog.acceptIterator(IntroductionAnalysis)
     NewEliminationAnalysis().run(prog)
     prog
 

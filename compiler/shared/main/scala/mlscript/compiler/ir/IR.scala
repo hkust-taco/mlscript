@@ -24,7 +24,7 @@ case class Program(
     Sorting.quickSort(t1)
     Sorting.quickSort(t2)
     s"Program({${t1.mkString(",")}}, {\n${t2.mkString("\n")}\n},\n$main)"
-  def accept_iterator(v: Iterator) = v.iterate(this)
+  def acceptIterator(v: Iterator) = v.iterate(this)
 
 implicit object ClassInfoOrdering extends Ordering[ClassInfo] {
   def compare(a: ClassInfo, b: ClassInfo) = a.id.compare(b.id)
@@ -38,7 +38,7 @@ case class ClassInfo(
   override def hashCode: Int = id
   override def toString: String =
     s"ClassInfo($id, $ident, [${fields mkString ","}])"
-  def accept_iterator(v: Iterator) = v.iterate(this)
+  def acceptIterator(v: Iterator) = v.iterate(this)
 
 case class Name(val str: Str):
   private var intro: Opt[Intro] = None
@@ -63,9 +63,9 @@ case class Name(val str: Str):
     str
 
   /* they will be deprecated soon. don't use */
-  def accept_def_iterator(v: NameIterator) = v.iterate_name_def(this)
-  def accept_use_iterator(v: NameIterator) = v.iterate_name_use(this)
-  def accept_param_iterator(v: NameIterator) = v.iterate_param(this)
+  def accept_def_iterator(v: NameIterator) = v.iterateNameDef(this)
+  def accept_use_iterator(v: NameIterator) = v.iterateNameUse(this)
+  def accept_param_iterator(v: NameIterator) = v.iterateParam(this)
 
 class DefnRef(var defn: Either[Defn, Str]):
   def getName: String = defn.fold(_.getName, x => x)
@@ -80,7 +80,7 @@ class DefnRef(var defn: Either[Defn, Str]):
   }
 
   /* they will be deprecated soon. don't use */
-  def accept_iterator(v: Iterator) = v.iterate(this)
+  def acceptIterator(v: Iterator) = v.iterate(this)
 
 implicit object DefOrdering extends Ordering[Defn] {
   def compare(a: Defn, b: Defn) = a.id.compare(b.id)
@@ -105,7 +105,7 @@ case class Defn(
   def getName: String = name
 
   /* they will be deprecated soon. don't use */
-  def accept_iterator(v: Iterator) = v.iterate(this)
+  def acceptIterator(v: Iterator) = v.iterate(this)
 
   override def toString: String =
     val ps = params.map(_.toString).mkString("[", ",", "]")
@@ -121,7 +121,7 @@ sealed trait TrivialExpr:
   def toDocument: Document
 
   /* they will be deprecated soon. don't use */
-  def accept_iterator(v: TrivialExprIterator): Unit = this match
+  def acceptIterator(v: TrivialExprIterator): Unit = this match
     case x: Ref => v.iterate(x)
     case x: Literal => v.iterate(x)
 
@@ -154,7 +154,7 @@ enum Expr:
     case CtorApp(ClassInfo(_, name, _), args) =>
       raw(name) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
     case Select(s, cls, fld) =>
-      raw(cls.ident)<#> raw(".") <#> raw(fld) <#> raw("(") <#> raw(s.toString) <#> raw(")")
+      raw(cls.ident) <#> raw(".") <#> raw(fld) <#> raw("(") <#> raw(s.toString) <#> raw(")")
     case BasicOp(name: Str, args) =>
       raw(name) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
 
@@ -166,7 +166,7 @@ enum Expr:
     case BasicOp(name, args) => BasicOp(name, args.map(_.mapNameOfTrivialExpr(f)))
 
   /* they will be deprecated soon. don't use */
-  def accept_iterator(v: Iterator): Unit = this match
+  def acceptIterator(v: Iterator): Unit = this match
     case x: Ref => v.iterate(x)
     case x: Literal => v.iterate(x)
     case x: CtorApp => v.iterate(x)
@@ -270,7 +270,7 @@ enum Node:
         body.toDocument)
 
   /* they will be deprecated soon. don't use */
-  def accept_iterator(v: Iterator): Unit  = this match
+  def acceptIterator(v: Iterator): Unit  = this match
     case x: Result => v.iterate(x)
     case x: Jump => v.iterate(x)
     case x: Case => v.iterate(x)
@@ -290,9 +290,9 @@ enum Node:
 
 /* they will be deprecated soon. don't use */
 trait NameIterator:
-  def iterate_name_def(x: Name): Unit = ()
-  def iterate_name_use(x: Name): Unit = ()
-  def iterate_param(x: Name): Unit    = ()
+  def iterateNameDef(x: Name): Unit = ()
+  def iterateNameUse(x: Name): Unit = ()
+  def iterateParam(x: Name): Unit    = ()
 
 /* they will be deprecated soon. don't use */
 trait TrivialExprIterator extends NameIterator:
@@ -304,34 +304,34 @@ trait Iterator extends TrivialExprIterator:
   import Expr._
   import Node._
   def iterate(x: CtorApp): Unit        = x match
-    case CtorApp(cls, xs)              => cls.accept_iterator(this); xs.foreach(_.accept_iterator(this))
+    case CtorApp(cls, xs)              => cls.acceptIterator(this); xs.foreach(_.acceptIterator(this))
   def iterate(x: Select): Unit         = x match
-    case Select(x, cls, field)         => x.accept_use_iterator(this); cls.accept_iterator(this)
+    case Select(x, cls, field)         => x.accept_use_iterator(this); cls.acceptIterator(this)
   def iterate(x: BasicOp): Unit        = x match
-    case BasicOp(op, xs)               => xs.foreach(_.accept_iterator(this))
+    case BasicOp(op, xs)               => xs.foreach(_.acceptIterator(this))
   def iterate(x: Result): Unit         = x match
-    case Result(xs)                    => xs.foreach(_.accept_iterator(this))
+    case Result(xs)                    => xs.foreach(_.acceptIterator(this))
   def iterate(x: Jump): Unit           = x match
-    case Jump(jp, xs)                  => jp.accept_iterator(this); xs.foreach(_.accept_iterator(this))
+    case Jump(jp, xs)                  => jp.acceptIterator(this); xs.foreach(_.acceptIterator(this))
   def iterate(x: Case): Unit           = x match
-    case Case(x, cases)                => x.accept_use_iterator(this); cases foreach { (cls, arm) => arm.accept_iterator(this) }
+    case Case(x, cases)                => x.accept_use_iterator(this); cases foreach { (cls, arm) => arm.acceptIterator(this) }
   def iterate(x: LetExpr): Unit        = x match
-    case LetExpr(x, e1, e2)            => x.accept_def_iterator(this); e1.accept_iterator(this); e2.accept_iterator(this)
+    case LetExpr(x, e1, e2)            => x.accept_def_iterator(this); e1.acceptIterator(this); e2.acceptIterator(this)
   def iterate(x: LetCall): Unit        = x match
-    case LetCall(xs, f, as, e2)        => xs.foreach(_.accept_def_iterator(this)); f.accept_iterator(this); as.foreach(_.accept_iterator(this)); e2.accept_iterator(this)
+    case LetCall(xs, f, as, e2)        => xs.foreach(_.accept_def_iterator(this)); f.acceptIterator(this); as.foreach(_.acceptIterator(this)); e2.acceptIterator(this)
   def iterate(x: DefnRef): Unit       = ()
   def iterate(x: ClassInfo): Unit      = ()
   def iterate(x: Defn): Unit =
     x.params.foreach(_.accept_param_iterator(this))
-    x.body.accept_iterator(this)
+    x.body.acceptIterator(this)
   def iterate(x: Program): Unit =
-    x.classes.foreach(_.accept_iterator(this))
-    x.defs.foreach(_.accept_iterator(this))
-    x.main.accept_iterator(this)
+    x.classes.foreach(_.acceptIterator(this))
+    x.defs.foreach(_.acceptIterator(this))
+    x.main.acceptIterator(this)
 
 trait DefTraversalOrdering:
   def ordered(entry: Node, defs: Set[Defn]): Ls[Defn]
-  def ordered_names(entry: Node, defs: Set[Defn]): Ls[Str]
+  def orderedNames(entry: Node, defs: Set[Defn]): Ls[Str]
 
 object DefDfs:
   import Node._
@@ -350,7 +350,7 @@ object DefDfs:
     if (!postfix)
       out += x
     val succ = Successors()
-    x.accept_iterator(succ)
+    x.acceptIterator(succ)
     succ.succ.foreach { y =>
       if (!visited(y.name))
         dfs(y)
@@ -360,31 +360,31 @@ object DefDfs:
   
   private def dfs(using visited: HashMap[Str, Bool], out: ListBuffer[Defn], postfix: Bool)(x: Node): Unit =
     val succ = Successors()
-    x.accept_iterator(succ)
+    x.acceptIterator(succ)
     succ.succ.foreach { y =>
       if (!visited(y.name))
         dfs(y)
     }
 
-  private def dfs_names(using visited: HashMap[Str, Bool], defs: Set[Defn], out: ListBuffer[Str], postfix: Bool)(x: Defn): Unit =
+  private def dfsNames(using visited: HashMap[Str, Bool], defs: Set[Defn], out: ListBuffer[Str], postfix: Bool)(x: Defn): Unit =
     visited.update(x.name, true)
     if (!postfix)
       out += x.name
     val succ = SuccessorNames()
-    x.accept_iterator(succ)
+    x.acceptIterator(succ)
     succ.succ.foreach { y =>
       if (!visited(y))
-        dfs_names(defs.find(_.name == y).get)
+        dfsNames(defs.find(_.name == y).get)
     }
     if (postfix)
       out += x.name
   
-  private def dfs_names(using visited: HashMap[Str, Bool], defs: Set[Defn], out: ListBuffer[Str], postfix: Bool)(x: Node): Unit =
+  private def dfsNames(using visited: HashMap[Str, Bool], defs: Set[Defn], out: ListBuffer[Str], postfix: Bool)(x: Node): Unit =
     val succ = SuccessorNames()
-    x.accept_iterator(succ)
+    x.acceptIterator(succ)
     succ.succ.foreach { y =>
       if (!visited(y))
-        dfs_names(defs.find(_.name == y).get)
+        dfsNames(defs.find(_.name == y).get)
     }
 
   def dfs(entry: Node, defs: Set[Defn], postfix: Bool): Ls[Defn] =
@@ -394,24 +394,24 @@ object DefDfs:
     dfs(using visited, out, postfix)(entry)
     out.toList
 
-  def dfs_names(entry: Node, defs: Set[Defn], postfix: Bool): Ls[Str] =
+  def dfsNames(entry: Node, defs: Set[Defn], postfix: Bool): Ls[Str] =
     val visited = HashMap[Str, Bool]()
     visited ++= defs.map(_.name -> false)
     val out = ListBuffer[Str]()
-    dfs_names(using visited, defs, out, postfix)(entry)
+    dfsNames(using visited, defs, out, postfix)(entry)
     out.toList
     
 object DefRevPostOrdering extends DefTraversalOrdering:
   def ordered(entry: Node, defs: Set[Defn]): Ls[Defn] =
     DefDfs.dfs(entry, defs, true).reverse
-  def ordered_names(entry: Node, defs: Set[Defn]): Ls[Str] =
-    DefDfs.dfs_names(entry, defs, true).reverse
+  def orderedNames(entry: Node, defs: Set[Defn]): Ls[Str] =
+    DefDfs.dfsNames(entry, defs, true).reverse
 
 object DefRevPreOrdering extends DefTraversalOrdering:
   def ordered(entry: Node, defs: Set[Defn]): Ls[Defn] =
     DefDfs.dfs(entry, defs, false).reverse
-  def ordered_names(entry: Node, defs: Set[Defn]): Ls[Str] =
-    DefDfs.dfs_names(entry, defs, false).reverse
+  def orderedNames(entry: Node, defs: Set[Defn]): Ls[Str] =
+    DefDfs.dfsNames(entry, defs, false).reverse
 
 
 case class ElimInfo(elim: Elim, loc: DefnLocMarker):
