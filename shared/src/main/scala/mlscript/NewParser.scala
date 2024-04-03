@@ -794,6 +794,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             Bra(false, elt)
           case (Round, _) =>
             yeetSpaces match {
+              case (KEYWORD(opStr @ "=>"), l1) :: (NEWLINE, l2) :: _ /* if opPrec(opStr)._1 > prec */ =>
+                consume
+                val rhs = Blk(typingUnit.entities)
+                Lam(Tup(res), rhs)
               case (KEYWORD("=>"), l1) :: _ =>
                 consume
                 val e = expr(NewParser.opPrec("=>")._2)

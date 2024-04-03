@@ -1,0 +1,16 @@
+:NewDefs
+
+
+// Extracted frrom JSON.mls
+
+parseNegative(state).flatMap of (negative, state) =>
+parseIntegral(state).flatMap of (integral, state) =>
+parseFraction(state).flatMap of (fraction, state) =>
+parseExponent(state).flatMap of (exponent, state) =>
+let value = (integral +. fraction) *. exponent
+Success of (if negative then (0 -. value) else value), state
+//│ |parseNegative|(|state|)|.flatMap| |#of| |(|negative|,| |state|)| |#=>|↵|parseIntegral|(|state|)|.flatMap| |#of| |(|integral|,| |state|)| |#=>|↵|parseFraction|(|state|)|.flatMap| |#of| |(|fraction|,| |state|)| |#=>|↵|parseExponent|(|state|)|.flatMap| |#of| |(|exponent|,| |state|)| |#=>|↵|#let| |value| |#=| |(|integral| |+.| |fraction|)| |*.| |exponent|↵|Success| |#of| |(|#if| |negative| |#then| |(|0| |-.| |value|)| |#else| |value|)|,| |state|
+//│ Parsed: {(parseNegative(state,)).flatMap((negative, state,) => {(parseIntegral(state,)).flatMap((integral, state,) => {(parseFraction(state,)).flatMap((fraction, state,) => {(parseExponent(state,)).flatMap((exponent, state,) => {let value = *.('(' +.(integral, fraction,) ')', exponent,); Success('(' if (negative) then '(' -.(0, value,) ')' else value ')', state,)},)},)},)},)}
+//│ 
+
+

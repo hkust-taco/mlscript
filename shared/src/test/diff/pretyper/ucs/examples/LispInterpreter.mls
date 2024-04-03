@@ -181,10 +181,9 @@ fun skipBlank(s: NStr, i: Int): Int =
 
 fun scanWhile(s: NStr, i: Int, p: Str -> Bool): Option[[Str, Int]] =
   let rec aux(acc, i) =
-    if i < s.length and s.charAt(i) is ch and p of ch then
-      aux(acc ++ ch, i + 1)
-    else
-      [acc, i]
+    if i < s.length and s.charAt(i) is ch and p of ch
+      then aux(acc ++ ch, i + 1)
+      else [acc, i]
   if aux("", i) is
     ["", _] then None
     [acc, i] then Some([acc, i])
@@ -238,10 +237,9 @@ fun isDigit(n) = 48 <= n and n <= 57
 fun isDigits(s: Str): Bool =
   let s' = String(s)
   let rec aux(i) =
-    if i < s'.length and isDigit of s'.charCodeAt(i) then
-      aux(i + 1)
-    else
-      i === s'.length
+    if i < s'.length and isDigit of s'.charCodeAt(i)
+      then aux(i + 1)
+      else i === s'.length
   aux(0)
 isDigits("123")
 isDigits("123jump")
@@ -275,6 +273,7 @@ fun parseExpr(tokens: List[Str]): [ParseResult[Data], List[Str]] =
       isDigits(token) then [(Success of Literal of IntLit of parseInt(token, 10)), tail]
       else [(Success of Symbol of token), tail]
     Nil then [Failure("Unexpected end of input, expect either `)` or more tokens."), Nil]
+  
 fun parseList(tokens: List[Str]): [ParseResult[DataList], List[Str]] =
   let rec collect(acc, ts) = if ts is
     Cons(")", tail) then [(Success of DataList of reverse of acc), tail]
@@ -442,12 +441,12 @@ fun builtinNull(args: List[Data]): Data = if args is
 //│ builtinNil
 //│            = DataList {}
 
-let globalEnv = emptyEnv ++: (
+let globalEnv = emptyEnv ++:
   ["eq", Literal(Lambda(builtinEq))] :: ["+", Literal(Lambda(builtinAdd))] ::
-    ["-", Literal(Lambda(builtinSub))] :: ["*", Literal(Lambda(builtinMul))] ::
-      ["nil", builtinNil] :: ["cons", Literal(Lambda(builtinCons))] ::
-        ["car", Literal(Lambda(builtinCar))] :: ["cdr", Literal(Lambda(builtinCdr))] ::
-          ["null", Literal(Lambda(builtinNull))] :: Nil)
+  ["-", Literal(Lambda(builtinSub))] :: ["*", Literal(Lambda(builtinMul))] ::
+  ["nil", builtinNil] :: ["cons", Literal(Lambda(builtinCons))] ::
+  ["car", Literal(Lambda(builtinCar))] :: ["cdr", Literal(Lambda(builtinCdr))] ::
+  ["null", Literal(Lambda(builtinNull))] :: Nil
 //│ let globalEnv: (name': Str) -> (DataList | Literal)
 //│ globalEnv
 //│           = [Function (anonymous)]
