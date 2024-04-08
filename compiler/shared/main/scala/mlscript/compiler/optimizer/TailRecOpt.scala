@@ -41,6 +41,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
     case Case(scrut, cases)               => cases.flatMap((_, body) => findTailCalls(body))
     case LetExpr(name, expr, body)        => findTailCalls(body)
     case LetCall(names, defn, args, body) => findTailCalls(body)
+    case AssignField(_, _, _, body)       => findTailCalls(body)
 
   // Partions a tail recursive call graph into strongly connected components
   // Refernece: https://en.wikipedia.org/wiki/Strongly_connected_component
@@ -158,10 +159,11 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
         val concated = asLit(info.defn.id) :: start ::: args ::: end
         Jump(newDefnRef, concated)
 
-      case Result(_)                        => node
-      case Case(scrut, cases)               => Case(scrut, cases.map(n => (n._1, transformNode(n._2))))
-      case LetExpr(name, expr, body)        => LetExpr(name, expr, transformNode(body))
-      case LetCall(names, defn, args, body) => LetCall(names, defn, args, transformNode(body))
+      case Result(_)                                 => node
+      case Case(scrut, cases)                        => Case(scrut, cases.map(n => (n._1, transformNode(n._2))))
+      case LetExpr(name, expr, body)                 => LetExpr(name, expr, transformNode(body))
+      case LetCall(names, defn, args, body)          => LetCall(names, defn, args, transformNode(body))
+      case AssignField(assignee, field, value, body) => AssignField(assignee, field, value, transformNode(body))
 
     // Tail calls to another function in the component will be replaced with a tail call
     // to the merged function

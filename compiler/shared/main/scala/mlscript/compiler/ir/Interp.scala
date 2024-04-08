@@ -155,6 +155,7 @@ class Interpreter(verbose: Bool):
     case INode.LetExpr(name, expr, body) => LetExpr(name, expr |> convert, body |> convert)
     case INode.LetCall(xs, defnref, args, body) =>
       LetCall(xs, DefnRef(Right(defnref.getName)), args |> convertArgs, body |> convert)
+    case INode.AssignField(_, _, _, _) => ??? // TODO: Interpret field assignments
 
   private def convert(defn: IDefn): Defn =
     Defn(defn.name, defn.params, defn.body |> convert)

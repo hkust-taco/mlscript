@@ -23,6 +23,7 @@ private final class DefnRefResolver(defs: Set[Defn], allowInlineJp: Bool):
         case None =>
           if (!allowInlineJp)
             throw IRError(f"unknown function ${defnref.getName} in ${defs.map{_.getName}.mkString(",")}")
+    case AssignField(assignee, fieldName, value, body) => f(body)
   def run(node: Node) = f(node)
   def run(node: Defn) = f(node.body)
 

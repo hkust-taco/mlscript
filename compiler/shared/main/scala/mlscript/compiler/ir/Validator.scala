@@ -17,6 +17,7 @@ private final class DefnRefInSet(defs: Set[Defn]):
         case _ =>
       }
       f(body)
+    case AssignField(assignee, fieldName, value, body) => f(body)
   def run(node: Node) = f(node)
   def run(defn: Defn) = f(defn.body)
 

@@ -138,6 +138,7 @@ enum Node:
   // Intermediate forms:
   case LetExpr(name: Name, expr: Expr, body: Node)
   case LetCall(names: Ls[Name], defn: DefnRef, args: Ls[TrivialExpr], body: Node)
+  case AssignField(assignee: Name, fieldName: Str, value: TrivialExpr, body: Node)
 
   var tag = DefnTag(-1)
 
@@ -160,7 +161,9 @@ enum Node:
     case Jump(defn, args) => Jump(defn, args.map(_.mapNameOfTrivialExpr(f)))
     case Case(scrut, cases) => Case(f(scrut), cases.map { (cls, arm) => (cls, arm.mapName(f)) })
     case LetExpr(name, expr, body) => LetExpr(f(name), expr.mapName(f), body.mapName(f))
-    case LetCall(names, defn, args, body) => LetCall(names.map(f), defn, args.map(_.mapNameOfTrivialExpr(f)), body.mapName(f))  
+    case LetCall(names, defn, args, body) => LetCall(names.map(f), defn, args.map(_.mapNameOfTrivialExpr(f)), body.mapName(f))
+    case AssignField(assignee, fieldName, value, body) =>
+      AssignField(f(assignee), fieldName, value.mapNameOfTrivialExpr(f), body.mapName(f))
   
   def copy(ctx: Map[Str, Name]): Node = this match
     case Result(res) => Result(res.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))))
@@ -172,6 +175,8 @@ enum Node:
     case LetCall(names, defn, args, body) => 
       val names_copy = names.map(_.copy)
       LetCall(names_copy, defn, args.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))), body.copy(ctx ++ names_copy.map(x => x.str -> x)))
+    case AssignField(assignee, fieldName, value, body) =>
+      AssignField(assignee.trySubst(ctx), fieldName, value.mapNameOfTrivialExpr(_.trySubst(ctx)), body.copy(ctx))
 
   private def toDocument: Document = this match
     case Result(res) => raw(res |> show_args) <:> raw(s"-- $tag")
@@ -217,7 +222,15 @@ enum Node:
           <:> raw("in") 
           <:> raw(s"-- $tag"),
         body.toDocument)
-
+    case AssignField(assignee, fieldName, value, body) => 
+      stack(
+        raw("assign")
+          <:> raw(assignee.toString + "." + fieldName)
+          <:> raw(":=")
+          <:> value.toDocument
+          <:> raw("in")
+          <:> raw(s"-- $tag"),
+        body.toDocument)
   def locMarker: LocMarker =
     val marker = this match
       case Result(res) => LocMarker.MResult(res.map(_.toExpr.locMarker))
@@ -225,6 +238,7 @@ enum Node:
       case Case(scrut, cases) => LocMarker.MCase(scrut.str, cases.map(_._1))
       case LetExpr(name, expr, _) => LocMarker.MLetExpr(name.str, expr.locMarker)
       case LetCall(names, defn, args, _) => LocMarker.MLetCall(names.map(_.str), defn.getName, args.map(_.toExpr.locMarker))
+      case AssignField(assignee, field, value, _) => LocMarker.MAssignField(assignee.toString, field, value.toExpr.locMarker)
     marker.tag = this.tag
     marker
 
@@ -252,6 +266,7 @@ enum LocMarker:
   case MCase(scrut: Str, cases: Ls[ClassInfo])
   case MLetExpr(name: Str, expr: LocMarker)
   case MLetCall(names: Ls[Str], defn: Str, args: Ls[LocMarker])
+  case MAssignField(assignee: Str, field: Str, value: LocMarker)
   var tag = DefnTag(-1)
 
   def toDocument: Document = this match

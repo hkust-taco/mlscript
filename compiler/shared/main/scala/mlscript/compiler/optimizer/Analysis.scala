@@ -46,6 +46,7 @@ class UsefulnessAnalysis(verbose: Bool = false):
     case Case(scrut, cases) => addUse(scrut); cases.foreach { case (cls, body) => f(body) }
     case LetExpr(name, expr, body) => f(expr); addDef(name); f(body)
     case LetCall(names, defn, args, body) => args.foreach(f); names.foreach(addDef); f(body)
+    case AssignField(assignee, fieldName, value, body) => f(value); f(body)
   
   def run(x: Defn) =
     x.params.foreach(addDef)
@@ -94,5 +95,9 @@ class FreeVarAnalysis(extended_scope: Bool = true, verbose: Bool = false):
         val defined2 = defn.params.foldLeft(defined)((acc, param) => acc + param.str)
         fv2 = f(using defined2)(defn, fv2)
       f(using defined2)(body, fv2)
+    case AssignField(assignee, fieldName, value, body) =>
+      val fv2 = if (defined.contains(assignee.str)) fv else fv + assignee.str
+      val fv3 = f(using defined)(value.toExpr, fv2)
+      f(using defined)(body, fv3)
   def run(node: Node) = f(using Set.empty)(node, Set.empty)
   def run_with(node: Node, defined: Set[Str]) = f(using defined)(node, Set.empty)
