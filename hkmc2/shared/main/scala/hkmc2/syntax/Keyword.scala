@@ -14,21 +14,25 @@ class Keyword(val name: String, val leftPrec: Opt[Int], val rightPrec: Opt[Int])
   override def toString: Str = s"keyword '$name'"
 
 object Keyword:
+  def unapply(kw: Keyword): Opt[Str] = S(kw.name)
   
   val all: mutable.Map[Str, Keyword] = mutable.Map.empty
   
   // val Let = Keyword("let", 0, 0)
   // val Let = Keyword("let", 0, 0)
   
-  private var _curPrec = 1
+  private var _curPrec = 2
   private def curPrec: S[Int] = S(_curPrec)
   private def nextPrec: S[Int] =
     val res = _curPrec
     _curPrec += 1
     S(res)
   
+  val eqPrec = nextPrec
+  val `=` = Keyword("=", eqPrec, eqPrec)
+  
   val `if` = Keyword("if", N, N)
-  val `then` = Keyword("then", N, N)
+  val `then` = Keyword("then", nextPrec, N)
   val `else` = Keyword("else", N, N)
   val `case` = Keyword("case", N, N)
   val `fun` = Keyword("fun", N, N)
@@ -37,13 +41,13 @@ object Keyword:
   val `is` = Keyword("is", N, N)
   val `as` = Keyword("as", N, N)
   val `of` = Keyword("of", N, N)
-  val `and` = Keyword("and", N, N)
-  val `or` = Keyword("or", N, N)
-  val `let` = Keyword("let", nextPrec, nextPrec)
+  val `or` = Keyword("or", nextPrec, curPrec)
+  val `and` = Keyword("and", nextPrec, curPrec)
+  val `let` = Keyword("let", nextPrec, curPrec)
   val `rec` = Keyword("rec", N, N)
-  val `in` = Keyword("in", nextPrec, curPrec)
+  val `in` = Keyword("in", curPrec, curPrec)
   val `out` = Keyword("out", N, N)
-  val `mut` = Keyword("mut", N, N)
+  val `mut` = Keyword("mut", N, nextPrec)
   val `set` = Keyword("set", N, N)
   val `do` = Keyword("do", N, N)
   val `while` = Keyword("while", N, N)
@@ -72,12 +76,16 @@ object Keyword:
   val `false` = Keyword("false", N, N)
   val `public` = Keyword("public", N, N)
   val `private` = Keyword("private", N, N)
-  val `=` = Keyword("=", nextPrec, curPrec)
+  
+  // * The lambda operator is special:
+  // *  it should associate very strongly on the left and very loosely on the right
+  // *  so that we can write things like `f() |> x => x is 0` ie `(f()) |> (x => (x is 0))`
+  val `=>` = Keyword("=>", nextPrec, eqPrec)
   
   val modifiers = Set(
     `abstract`, mut, virtual, `override`, declare, public, `private`)
   
-  type Infix = `and`.type | `or`.type
+  type Infix = `and`.type | `or`.type | `then`.type
   
   val maxPrec = curPrec
   

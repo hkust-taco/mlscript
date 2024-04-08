@@ -16,6 +16,6 @@
 
 1 => 2
 //│ |1| |=>| |2|
-//│ AST: List(App(Ident(=>),Tup(List(IntLit(1), IntLit(2)))))
+//│ AST: List(Lam(Tup(List(IntLit(1))),IntLit(2)))
 
 

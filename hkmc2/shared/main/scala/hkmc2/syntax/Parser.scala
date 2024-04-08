@@ -51,31 +51,20 @@ object Parser:
   
   final def opCharPrec(opChar: Char): Int = prec(opChar)
   final def opPrec(opStr: Str): (Int, Int) = opStr match {
-    case "is" => (4, 4)
-    case "and" => (3, 3)
-    case "or" => (2, 2)
-    case "=>" =>
-      // * The lambda operator is special:
-      // *  it should associate very strongly on the left and very loosely on the right
-      // *  so that we can write things like `f() |> x => x is 0` ie `(f()) |> (x => (x is 0))`
-      val eqPrec = prec('.') // * We pick the tightest precedence
-      (eqPrec, 1)
-      // * Note: we used to do this instead which broke the example above on both sides:
-      // val eqPrec = prec('=')
-      // (eqPrec, eqPrec - 1)
     case "+." | "-." | "*." =>
       (prec(opStr.head), prec(opStr.head))
     case _ if opStr.exists(_.isLetter) =>
-      (5, 5)
+      (Keyword.maxPrec.get, Keyword.maxPrec.get)
     case _ =>
       val r = opStr.last
       (prec(opStr.head), prec(r) - (if r === '@' || r === '/' || r === ',' || r === ':' then 1 else 0))
   }
   
   object KEYWORD:
-    def unapply(t: Token): Opt[Str] = t match
+    def unapply(t: Token): Opt[Keyword] = t match
+      case IDENT(nme, sym) => Keyword.all.get(nme)
       // case IDENT(nme, sym) => Keyword.all.get(nme).map(_.name)
-      case IDENT(nme, sym) if Keyword.all.contains(nme) => S(nme)
+      // case IDENT(nme, sym) if Keyword.all.contains(nme) => S(nme)
       case _ => N
   
   object OP:
@@ -357,7 +346,7 @@ abstract class Parser(
   
   def expr(prec: Int)(using Line): Tree = wrap(prec)(exprImpl(prec))
   def exprImpl(prec: Int): Tree =
-    cur match
+    yeetSpaces match
     case (IDENT(nme, sym), loc) :: _ =>
       consume
       exprCont(Tree.Ident(nme), prec, allowNewlines = true)
@@ -392,13 +381,13 @@ abstract class Parser(
   final def exprCont(acc: Tree, prec: Int, allowNewlines: Bool): Tree = wrap(prec, s"`$acc`", allowNewlines):
     cur match {
       case (QUOTE, l) :: _ => cur match {
-        case _ :: (KEYWORD(opStr @ "=>"), l0) :: _ if opPrec(opStr)._1 > prec =>
+        case _ :: (KEYWORD(kw @ Keyword.`=>`), l0) :: _ if kw.leftPrecOrMin > prec =>
           consume
           consume
           exprCont(Quoted(Lam(acc match {
             case t: Tup => t
             case _ => PlainTup(acc)
-          }, Unquoted(expr(1)))), prec, allowNewlines)
+          }, Unquoted(expr(kw.rightPrecOrMin)))), prec, allowNewlines)
         case _ :: (br @ BRACKETS(Round, toks), loc) :: _ =>
           consume
           consume
@@ -421,7 +410,7 @@ abstract class Parser(
               }, prec, allowNewlines)
           }
           else acc
-        case _ :: (KEYWORD("in"), _) :: _ =>
+        case _ :: (KEYWORD(Keyword("in")), _) :: _ =>
           acc
         case _ =>
           consume
@@ -442,9 +431,9 @@ abstract class Parser(
         val rhs = Blk(typingUnit.entities)
         R(Lam(PlainTup(acc), rhs))
         */
-      case (KEYWORD(opStr @ "=>"), l0) :: _ if opPrec(opStr)._1 > prec =>
+      case (KEYWORD(kw @ Keyword.`=>`), l0) :: _ if kw.leftPrecOrMin > prec =>
         consume
-        val rhs = expr(1)
+        val rhs = expr(kw.rightPrecOrMin)
         val res = Lam(PlainTup(acc), rhs)
         exprCont(res, prec, allowNewlines)
         /* 
@@ -593,7 +582,7 @@ abstract class Parser(
         val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
         val res = App(acc, Tup(as).withLoc(S(loc)))
         exprCont(res, prec, allowNewlines)
-      case (KEYWORD("of"), _) :: _ =>
+      case (KEYWORD(Keyword.`of`), _) :: _ =>
         consume
         val as = blockMaybeIndented
         val res = App(acc, Tup(as))
@@ -616,8 +605,8 @@ abstract class Parser(
         exprCont(res, prec, allowNewlines)
         */
         
-      case (KEYWORD(kwStr), l0) :: _ if opPrec(kwStr)._1 > prec =>
-        ParseRule.infixRules.kwAlts.get(kwStr) match
+      case (KEYWORD(kw), l0) :: _ if kw.leftPrecOrMin > prec =>
+        ParseRule.infixRules.kwAlts.get(kw.name) match
           case S(rule) =>
             consume
             rule.exprAlt match
@@ -627,13 +616,13 @@ abstract class Parser(
                     consume
                     ???
                   case _ =>
-                val rhs = expr(opPrec(kwStr)._2)
-                parseRule(opPrec(kwStr)._2, exprAlt.rest).map: rest =>
+                val rhs = expr(kw.rightPrecOrMin)
+                parseRule(kw.rightPrecOrMin, exprAlt.rest).map: rest =>
                   exprCont(exprAlt.k(rhs, rest)(acc), prec, allowNewlines) // FIXME prec??
                 .getOrElse(errExpr)
               case N =>
                 // TODO other alts...?
-                err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${kwStr} instead" -> S(l0) :: Nil))
+                err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found ${kw.name} instead" -> S(l0) :: Nil))
                 acc
           case _ => acc
       case _ => acc

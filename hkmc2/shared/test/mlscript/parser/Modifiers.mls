@@ -1,0 +1,13 @@
+:global
+:p
+
+
+mut let x = 1
+//│ |mut| |let| |x| |=| |1|
+//│ AST: List(Modified(keyword 'mut',Let(Ident(x),IntLit(1),None)))
+
+mut mut let x = 1
+//│ |mut| |mut| |let| |x| |=| |1|
+//│ AST: List(Modified(keyword 'mut',Modified(keyword 'mut',Let(Ident(x),IntLit(1),None))))
+
+

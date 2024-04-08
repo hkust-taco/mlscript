@@ -1,0 +1,25 @@
+:global
+:p
+
+
+1 then 2
+//│ |1| |then| |2|
+//│ AST: List(InfixApp(IntLit(1),keyword 'then',IntLit(2)))
+
+1 then 2 then 3
+//│ |1| |then| |2| |then| |3|
+//│ AST: List(InfixApp(InfixApp(IntLit(1),keyword 'then',IntLit(2)),keyword 'then',IntLit(3)))
+
+1 and 2 then 3
+//│ |1| |and| |2| |then| |3|
+//│ AST: List(InfixApp(InfixApp(IntLit(1),keyword 'and',IntLit(2)),keyword 'then',IntLit(3)))
+
+1 and 2 and 3 then 4
+//│ |1| |and| |2| |and| |3| |then| |4|
+//│ AST: List(InfixApp(InfixApp(InfixApp(IntLit(1),keyword 'and',IntLit(2)),keyword 'and',IntLit(3)),keyword 'then',IntLit(4)))
+
+1 then 2 and 3
+//│ |1| |then| |2| |and| |3|
+//│ AST: List(InfixApp(InfixApp(IntLit(1),keyword 'then',IntLit(2)),keyword 'and',IntLit(3)))
+
+
