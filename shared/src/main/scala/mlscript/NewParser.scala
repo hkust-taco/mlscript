@@ -463,6 +463,23 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 }
               case _ => N
             }
+            /* To support syntax like:
+               let
+                 lit0 = 0
+                 val lit1 = 1
+                 fun odd(x) = if x is 0 then false else even(x - 1)
+                 fun even(x) = if x is 0 then true else odd(x - 1)
+               odd(42)
+            */
+            yeetSpaces match {
+              case (br @ BRACKETS(Indent, toks), l1) :: _ =>
+                consume
+                val nested = rec(toks, S(br.innerLoc), br.describe)
+                val bindings = nested.concludeWith(_.groupBindings)
+                return R(LetGroup(bindings).withLoc(S(l1))) :: block
+              case _ =>
+            }
+            
             val (v, success) = yeetSpaces match {
               case (IDENT(idStr, false), l1) :: _ =>
                 consume
@@ -1444,6 +1461,22 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }
     
   }
+  }
+
+  final def groupBindings(implicit et: ExpectThen, fe: FoundErr): Ls[NuFunDef] = {
+    val res = block
+    res.flatMap {
+      case L(x) =>
+        err(msg"Unexpected 'then'/'else' clause" -> x.getLoc :: Nil)
+        N
+      case R(fndef @ NuFunDef(_, _, _, _, _)) => S(fndef)
+      case R(eqn @ Eqn(x @ Var(_), rhs)) =>
+        S(NuFunDef(S(false), x, N, Nil, L(rhs))
+           (N, N, N, N, N, true, Nil).withLoc(eqn.getLoc))
+      case R(x @ _) =>
+        err(msg"Unexpected group binding clause" -> x.getLoc :: Nil)
+        N
+    }
   }
   
   final def bindings(acc: Ls[Var -> Term])(implicit fe: FoundErr): Ls[Var -> Term] = 
