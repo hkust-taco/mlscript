@@ -6,6 +6,7 @@
 #include <tuple>
 #include <typeinfo>
 #include <utility>
+#include <stdexcept>
 
 constexpr std::size_t _mlsAlignment = 8;
 
@@ -183,7 +184,11 @@ int main() {
   _mlsValue::print(res);
 }
 
-struct _mls_True final : public _mlsObject {
+struct _mls_Boolean: public _mlsObject {
+  virtual const char *name() const override { return "Boolean"; }
+};
+
+struct _mls_True final : public _mls_Boolean {
   virtual const char *name() const override { return "True"; }
   template <std::size_t align> static _mlsValue create() {
     static _mls_True mlsTrue alignas(align);
@@ -191,8 +196,8 @@ struct _mls_True final : public _mlsObject {
   }
 };
 
-struct _mls_False final : public _mlsObject {
-  virtual const char *name() const override { return "True"; }
+struct _mls_False final : public _mls_Boolean {
+  virtual const char *name() const override { return "False"; }
   template <std::size_t align> static _mlsValue create() {
     static _mls_False mlsFalse alignas(align);
     return &mlsFalse;

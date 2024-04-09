@@ -84,11 +84,6 @@ fib(20)
 //│ _mlsValue _mls_fib(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_Boolean: public _mlsObject{
-//│ 
-//│   virtual const char *name() const override { return "Boolean"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
-//│ };
 //│ _mlsValue _mls_fib(_mlsValue _mls_n_0){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_0 = (_mls_n_0<_mlsValue::fromIntLit(2));
@@ -101,7 +96,7 @@ fib(20)
 //│     auto _mls_x_5 = _mls_fib(_mls_x_4);
 //│     auto _mls_x_6 = (_mls_x_3+_mls_x_5);
 //│     _mls_retval = _mls_j_0(_mls_x_6);
-//│   } 
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
@@ -259,27 +254,20 @@ foo()
 //│ _mlsValue _mls_even(_mlsValue);
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_Boolean: public _mlsObject{
-//│ 
-//│   virtual const char *name() const override { return "Boolean"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
-//│ };
 //│ _mlsValue _mls_j_1(_mlsValue _mls_x_8){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_8;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
+//│ _mlsValue _mls_foo(){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_1 = (_mls_x_0==_mlsValue::fromIntLit(0));
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_1)){
-//│     auto _mls_x_3 = _mlsValue::create<_mls_False>();
-//│     _mls_retval = _mls_j_0(_mls_x_3);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_1)){
-//│     auto _mls_x_4 = (_mls_x_0-_mlsValue::fromIntLit(1));
-//│     auto _mls_x_5 = _mls_even(_mls_x_4);
-//│     _mls_retval = _mls_j_0(_mls_x_5);
-//│   } 
+//│   auto _mls_x_12 = _mls_odd(_mlsValue::fromIntLit(10));
+//│   _mls_retval = _mls_x_12;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_2){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_2;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_even(_mlsValue _mls_x_6){
@@ -292,18 +280,20 @@ foo()
 //│     auto _mls_x_10 = (_mls_x_6-_mlsValue::fromIntLit(1));
 //│     auto _mls_x_11 = _mls_odd(_mls_x_10);
 //│     _mls_retval = _mls_j_1(_mls_x_11);
-//│   } 
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_foo(){
+//│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_12 = _mls_odd(_mlsValue::fromIntLit(10));
-//│   _mls_retval = _mls_x_12;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_0(_mlsValue _mls_x_2){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_2;
+//│   auto _mls_x_1 = (_mls_x_0==_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_1)){
+//│     auto _mls_x_3 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_3);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_1)){
+//│     auto _mls_x_4 = (_mls_x_0-_mlsValue::fromIntLit(1));
+//│     auto _mls_x_5 = _mls_even(_mls_x_4);
+//│     _mls_retval = _mls_j_0(_mls_x_5);
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -451,32 +441,27 @@ main()
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"
+//│ struct _mls_AorB;
 //│ struct _mls_Boolean;
 //│ struct _mls_B;
+//│ struct _mls_A;
 //│ struct _mls_True;
 //│ struct _mls_False;
-//│ struct _mls_AorB;
-//│ struct _mls_A;
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_main();
 //│ _mlsValue _mls_not(_mlsValue);
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mls_foo(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_Boolean: public _mlsObject{
+//│ struct _mls_AorB: public _mlsObject{
 //│ 
-//│   virtual const char *name() const override { return "Boolean"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
+//│   virtual const char *name() const override { return "AorB"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_AorB;  return _mlsVal; }
 //│ };
 //│ struct _mls_B: public _mls_AorB{
 //│   _mlsValue _mls_b;
 //│   virtual const char *name() const override { return "B"; }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_b) { auto _mlsVal = new (std::align_val_t(align)) _mls_B; _mlsVal->_mls_b = _mls_b; return _mlsVal; }
-//│ };
-//│ struct _mls_AorB: public _mlsObject{
-//│ 
-//│   virtual const char *name() const override { return "AorB"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_AorB;  return _mlsVal; }
 //│ };
 //│ struct _mls_A: public _mls_AorB{
 //│ 
@@ -493,19 +478,7 @@ main()
 //│     auto _mls_x_8 = _mls_foo(_mls_x_7);
 //│     auto _mls_x_9 = _mlsValue::create<_mls_B>(_mls_x_8);
 //│     _mls_retval = _mls_j_1(_mls_x_9);
-//│   } 
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_main(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_10 = _mlsValue::create<_mls_False>();
-//│   auto _mls_x_11 = _mls_foo(_mls_x_10);
-//│   _mls_retval = _mls_x_11;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_1;
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_j_1(_mlsValue _mls_x_5){
@@ -521,7 +494,19 @@ main()
 //│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_0)){
 //│     auto _mls_x_3 = _mlsValue::create<_mls_True>();
 //│     _mls_retval = _mls_j_0(_mls_x_3);
-//│   } 
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_10 = _mlsValue::create<_mls_False>();
+//│   auto _mls_x_11 = _mls_foo(_mls_x_10);
+//│   _mls_retval = _mls_x_11;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_1;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -758,12 +743,12 @@ main()
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"
+//│ struct _mls_AorB;
 //│ struct _mls_Boolean;
 //│ struct _mls_B;
+//│ struct _mls_A;
 //│ struct _mls_True;
 //│ struct _mls_False;
-//│ struct _mls_AorB;
-//│ struct _mls_A;
 //│ _mlsValue _mls_aaa();
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_j_2(_mlsValue);
@@ -773,20 +758,15 @@ main()
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mls_foo(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_Boolean: public _mlsObject{
+//│ struct _mls_AorB: public _mlsObject{
 //│ 
-//│   virtual const char *name() const override { return "Boolean"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
+//│   virtual const char *name() const override { return "AorB"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_AorB;  return _mlsVal; }
 //│ };
 //│ struct _mls_B: public _mls_AorB{
 //│   _mlsValue _mls_b;
 //│   virtual const char *name() const override { return "B"; }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_b) { auto _mlsVal = new (std::align_val_t(align)) _mls_B; _mlsVal->_mls_b = _mls_b; return _mlsVal; }
-//│ };
-//│ struct _mls_AorB: public _mlsObject{
-//│ 
-//│   virtual const char *name() const override { return "AorB"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_AorB;  return _mlsVal; }
 //│ };
 //│ struct _mls_A: public _mls_AorB{
 //│ 
@@ -798,20 +778,27 @@ main()
 //│   _mls_retval = _mls_x_15;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_not(_mlsValue _mls_x_10){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_10)){
-//│     auto _mls_x_12 = _mlsValue::create<_mls_False>();
-//│     _mls_retval = _mls_j_0(_mls_x_12);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_10)){
-//│     auto _mls_x_13 = _mlsValue::create<_mls_True>();
-//│     _mls_retval = _mls_j_0(_mls_x_13);
-//│   } 
-//│   return _mls_retval;
-//│ }
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_11){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_11;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_22){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_22;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_foo(_mlsValue _mls_x_14){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_14)){
+//│     auto _mls_x_16 = _mlsValue::create<_mls_A>();
+//│     _mls_retval = _mls_j_1(_mls_x_16);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_14)){
+//│     auto _mls_x_17 = _mls_not(_mls_x_14);
+//│     auto _mls_x_18 = _mls_foo(_mls_x_17);
+//│     auto _mls_x_19 = _mlsValue::create<_mls_B>(_mls_x_18);
+//│     _mls_retval = _mls_j_1(_mls_x_19);
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_aaa(){
@@ -826,25 +813,23 @@ main()
 //│   _mls_retval = _mls_x_6;
 //│   return _mls_retval;
 //│ }
+//│ _mlsValue _mls_not(_mlsValue _mls_x_10){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_10)){
+//│     auto _mls_x_12 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_12);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_10)){
+//│     auto _mls_x_13 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_0(_mls_x_13);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_bbb(){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_7 = _mls_aaa();
 //│   auto _mls_x_8 = (_mls_x_7*_mlsValue::fromIntLit(100));
 //│   auto _mls_x_9 = (_mls_x_8+_mlsValue::fromIntLit(4));
 //│   _mls_retval = _mls_x_9;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_foo(_mlsValue _mls_x_14){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_14)){
-//│     auto _mls_x_16 = _mlsValue::create<_mls_A>();
-//│     _mls_retval = _mls_j_1(_mls_x_16);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_14)){
-//│     auto _mls_x_17 = _mls_not(_mls_x_14);
-//│     auto _mls_x_18 = _mls_foo(_mls_x_17);
-//│     auto _mls_x_19 = _mlsValue::create<_mls_B>(_mls_x_18);
-//│     _mls_retval = _mls_j_1(_mls_x_19);
-//│   } 
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_main(){
@@ -858,12 +843,7 @@ main()
 //│     auto _mls_x_24 = _mlsValue::as<_mls_B>(_mls_x_21)->_mls_b;
 //│     auto _mls_x_25 = _mls_bbb();
 //│     _mls_retval = _mls_j_2(_mls_x_25);
-//│   } 
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_22){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_22;
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -1206,12 +1186,12 @@ foo()
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"
+//│ struct _mls_Nat;
 //│ struct _mls_Boolean;
 //│ struct _mls_O;
+//│ struct _mls_S;
 //│ struct _mls_True;
 //│ struct _mls_False;
-//│ struct _mls_Nat;
-//│ struct _mls_S;
 //│ _mlsValue _mls_odd(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_foo();
@@ -1220,41 +1200,36 @@ foo()
 //│ _mlsValue _mls_mk(_mlsValue);
 //│ _mlsValue _mls_even(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_Boolean: public _mlsObject{
+//│ struct _mls_Nat: public _mlsObject{
 //│ 
-//│   virtual const char *name() const override { return "Boolean"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
+//│   virtual const char *name() const override { return "Nat"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nat;  return _mlsVal; }
 //│ };
 //│ struct _mls_O: public _mls_Nat{
 //│ 
 //│   virtual const char *name() const override { return "O"; }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_O;  return _mlsVal; }
 //│ };
-//│ struct _mls_Nat: public _mlsObject{
-//│ 
-//│   virtual const char *name() const override { return "Nat"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nat;  return _mlsVal; }
-//│ };
 //│ struct _mls_S: public _mls_Nat{
 //│   _mlsValue _mls_s;
 //│   virtual const char *name() const override { return "S"; }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_s) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->_mls_s = _mls_s; return _mlsVal; }
 //│ };
+//│ _mlsValue _mls_even(_mlsValue _mls_x_5){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_5)){
+//│     auto _mls_x_7 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_1(_mls_x_7);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_5)){
+//│     auto _mls_x_8 = _mlsValue::as<_mls_S>(_mls_x_5)->_mls_s;
+//│     auto _mls_x_9 = _mls_odd(_mls_x_8);
+//│     _mls_retval = _mls_j_1(_mls_x_9);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_6;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_foo(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_16 = _mls_mk(_mlsValue::fromIntLit(10));
-//│   auto _mls_x_17 = _mls_odd(_mls_x_16);
-//│   _mls_retval = _mls_x_17;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_1;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
@@ -1266,7 +1241,24 @@ foo()
 //│     auto _mls_x_3 = _mlsValue::as<_mls_S>(_mls_x_0)->_mls_s;
 //│     auto _mls_x_4 = _mls_even(_mls_x_3);
 //│     _mls_retval = _mls_j_0(_mls_x_4);
-//│   } 
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_foo(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_16 = _mls_mk(_mlsValue::fromIntLit(10));
+//│   auto _mls_x_17 = _mls_odd(_mls_x_16);
+//│   _mls_retval = _mls_x_17;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_11;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_1;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_mk(_mlsValue _mls_n_0){
@@ -1280,24 +1272,7 @@ foo()
 //│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_10)){
 //│     auto _mls_x_15 = _mlsValue::create<_mls_O>();
 //│     _mls_retval = _mls_j_2(_mls_x_15);
-//│   } 
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_even(_mlsValue _mls_x_5){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_5)){
-//│     auto _mls_x_7 = _mlsValue::create<_mls_True>();
-//│     _mls_retval = _mls_j_1(_mls_x_7);
-//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_5)){
-//│     auto _mls_x_8 = _mlsValue::as<_mls_S>(_mls_x_5)->_mls_s;
-//│     auto _mls_x_9 = _mls_odd(_mls_x_8);
-//│     _mls_retval = _mls_j_1(_mls_x_9);
-//│   } 
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_11;
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -1497,103 +1472,65 @@ foo()
 //│ False()
 //│ 
 //│ Cpp:
-//│ #include "mlsprelude.h"
-//│ struct _mls_Boolean;
-//│ struct _mls_True;
-//│ struct _mls_False;
-//│ struct _mls_S;
-//│ struct _mls_O;
-//│ _mlsValue _mls_odd(_mlsValue);
-//│ _mlsValue _mls_j_0(_mlsValue);
-//│ _mlsValue _mls_foo();
-//│ _mlsValue _mls_j_2(_mlsValue);
-//│ _mlsValue _mls_j_1(_mlsValue);
-//│ _mlsValue _mls_mk(_mlsValue);
-//│ _mlsValue _mls_even(_mlsValue);
-//│ _mlsValue _mlsMain();
-//│ struct _mls_Boolean: public _mlsObject{
 //│ 
-//│   virtual const char *name() const override { return "Boolean"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
-//│ };
-//│ struct _mls_S: public _mls_Nat{
-//│   _mlsValue _mls_s;
-//│   virtual const char *name() const override { return "S"; }
-//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_s) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->_mls_s = _mls_s; return _mlsVal; }
-//│ };
-//│ struct _mls_O: public _mls_Nat{
+//│ IR Processing Failed: Cycle detected in class hierarchy: O, S
 //│ 
-//│   virtual const char *name() const override { return "O"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_O;  return _mlsVal; }
-//│ };
-//│ _mlsValue _mls_foo(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_16 = _mls_mk(_mlsValue::fromIntLit(10));
-//│   auto _mls_x_17 = _mlsValue::create<_mls_S>(_mls_x_16);
-//│   auto _mls_x_18 = _mlsValue::create<_mls_S>(_mls_x_17);
-//│   auto _mls_x_19 = _mls_odd(_mls_x_18);
-//│   _mls_retval = _mls_x_19;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_6;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_1;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_0)){
-//│     auto _mls_x_2 = _mlsValue::create<_mls_False>();
-//│     _mls_retval = _mls_j_0(_mls_x_2);
-//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_0)){
-//│     auto _mls_x_3 = _mlsValue::as<_mls_S>(_mls_x_0)->_mls_s;
-//│     auto _mls_x_4 = _mls_even(_mls_x_3);
-//│     _mls_retval = _mls_j_0(_mls_x_4);
-//│   } 
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_mk(_mlsValue _mls_n_0){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_10 = (_mls_n_0>_mlsValue::fromIntLit(0));
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_10)){
-//│     auto _mls_x_12 = (_mls_n_0-_mlsValue::fromIntLit(1));
-//│     auto _mls_x_13 = _mls_mk(_mls_x_12);
-//│     auto _mls_x_14 = _mlsValue::create<_mls_S>(_mls_x_13);
-//│     _mls_retval = _mls_j_2(_mls_x_14);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_10)){
-//│     auto _mls_x_15 = _mlsValue::create<_mls_O>();
-//│     _mls_retval = _mls_j_2(_mls_x_15);
-//│   } 
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_even(_mlsValue _mls_x_5){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_5)){
-//│     auto _mls_x_7 = _mlsValue::create<_mls_True>();
-//│     _mls_retval = _mls_j_1(_mls_x_7);
-//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_5)){
-//│     auto _mls_x_8 = _mlsValue::as<_mls_S>(_mls_x_5)->_mls_s;
-//│     auto _mls_x_9 = _mls_odd(_mls_x_8);
-//│     _mls_retval = _mls_j_1(_mls_x_9);
-//│   } 
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_11;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mlsMain(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_20 = _mls_foo();
-//│   _mls_retval = _mls_x_20;
-//│   return _mls_retval;
-//│ }
+//│ mlscript.compiler.codegen.cpp.CppCodeGen.sortClasses(CppCodeGen.scala:164)
+//│ mlscript.compiler.codegen.cpp.CppCodeGen.codegen(CppCodeGen.scala:169)
+//│ mlscript.compiler.IRDiffTestCompiler.postProcess(TestIR.scala:32)
+//│ mlscript.DiffTests.rec$1(DiffTests.scala:454)
+//│ mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1053)
+//│ org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+//│ org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+//│ org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+//│ org.scalatest.Transformer.apply(Transformer.scala:22)
+//│ org.scalatest.Transformer.apply(Transformer.scala:20)
+//│ org.scalatest.funsuite.AnyFunSuiteLike$$anon$1.apply(AnyFunSuiteLike.scala:226)
+//│ org.scalatest.TestSuite.withFixture(TestSuite.scala:196)
+//│ org.scalatest.TestSuite.withFixture$(TestSuite.scala:195)
+//│ mlscript.DiffTests.org$scalatest$concurrent$TimeLimitedTests$$super$withFixture(DiffTests.scala:49)
+//│ org.scalatest.concurrent.TimeLimitedTests.$anonfun$withFixture$3(TimeLimitedTests.scala:154)
+//│ org.scalatest.enablers.Timed$$anon$1.timeoutAfter(Timed.scala:127)
+//│ org.scalatest.concurrent.TimeLimits$.failAfterImpl(TimeLimits.scala:282)
+//│ org.scalatest.concurrent.TimeLimitedTests.withFixture(TimeLimitedTests.scala:153)
+//│ org.scalatest.concurrent.TimeLimitedTests.withFixture$(TimeLimitedTests.scala:150)
+//│ mlscript.DiffTests.withFixture(DiffTests.scala:49)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.invokeWithFixture$1(AnyFunSuiteLike.scala:224)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.$anonfun$runTest$1(AnyFunSuiteLike.scala:236)
+//│ org.scalatest.SuperEngine.runTestImpl(Engine.scala:306)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.runTest(AnyFunSuiteLike.scala:236)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.runTest$(AnyFunSuiteLike.scala:218)
+//│ mlscript.DiffTests.org$scalatest$OneInstancePerTest$$super$runTest(DiffTests.scala:49)
+//│ org.scalatest.OneInstancePerTest.runTest(OneInstancePerTest.scala:131)
+//│ org.scalatest.OneInstancePerTest.runTest$(OneInstancePerTest.scala:123)
+//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$runTest(DiffTests.scala:49)
+//│ org.scalatest.ParallelTestExecution.runTest(ParallelTestExecution.scala:164)
+//│ org.scalatest.ParallelTestExecution.runTest$(ParallelTestExecution.scala:148)
+//│ mlscript.DiffTests.runTest(DiffTests.scala:49)
+//│ org.scalatest.OneInstancePerTest.runTests(OneInstancePerTest.scala:181)
+//│ org.scalatest.OneInstancePerTest.runTests$(OneInstancePerTest.scala:172)
+//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$runTests(DiffTests.scala:49)
+//│ org.scalatest.ParallelTestExecution.runTests(ParallelTestExecution.scala:97)
+//│ org.scalatest.ParallelTestExecution.runTests$(ParallelTestExecution.scala:79)
+//│ mlscript.DiffTests.runTests(DiffTests.scala:49)
+//│ org.scalatest.Suite.run(Suite.scala:1114)
+//│ org.scalatest.Suite.run$(Suite.scala:1096)
+//│ org.scalatest.funsuite.AnyFunSuite.org$scalatest$funsuite$AnyFunSuiteLike$$super$run(AnyFunSuite.scala:1563)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.$anonfun$run$1(AnyFunSuiteLike.scala:273)
+//│ org.scalatest.SuperEngine.runImpl(Engine.scala:535)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.run(AnyFunSuiteLike.scala:273)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.run$(AnyFunSuiteLike.scala:272)
+//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$run(DiffTests.scala:49)
+//│ org.scalatest.ParallelTestExecution.run(ParallelTestExecution.scala:261)
+//│ org.scalatest.ParallelTestExecution.run$(ParallelTestExecution.scala:258)
+//│ mlscript.DiffTests.run(DiffTests.scala:49)
+//│ org.scalatest.tools.DistributedTestRunnerSuite.run(DistributedTestRunnerSuite.scala:22)
+//│ org.scalatest.tools.SuiteRunner.run(SuiteRunner.scala:47)
+//│ java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+//│ java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+//│ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+//│ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+//│ java.base/java.lang.Thread.run(Thread.java:829)
 
 :interpIR
 :genCpp
@@ -1832,123 +1769,65 @@ main()
 //│ True()
 //│ 
 //│ Cpp:
-//│ #include "mlsprelude.h"
-//│ struct _mls_Boolean;
-//│ struct _mls_True;
-//│ struct _mls_False;
-//│ struct _mls_S;
-//│ struct _mls_O;
-//│ _mlsValue _mls_odd(_mlsValue);
-//│ _mlsValue _mls_bar();
-//│ _mlsValue _mls_j_0(_mlsValue);
-//│ _mlsValue _mls_foo();
-//│ _mlsValue _mls_j_2(_mlsValue);
-//│ _mlsValue _mls_even(_mlsValue);
-//│ _mlsValue _mls_j_3(_mlsValue);
-//│ _mlsValue _mls_main();
-//│ _mlsValue _mls_j_1(_mlsValue);
-//│ _mlsValue _mlsMain();
-//│ struct _mls_Boolean: public _mlsObject{
 //│ 
-//│   virtual const char *name() const override { return "Boolean"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
-//│ };
-//│ struct _mls_S: public _mls_Nat{
-//│   _mlsValue _mls_s;
-//│   virtual const char *name() const override { return "S"; }
-//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_s) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->_mls_s = _mls_s; return _mlsVal; }
-//│ };
-//│ struct _mls_O: public _mls_Nat{
+//│ IR Processing Failed: Cycle detected in class hierarchy: O, S
 //│ 
-//│   virtual const char *name() const override { return "O"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_O;  return _mlsVal; }
-//│ };
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_6;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_main(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_23 = _mls_foo();
-//│   auto _mls_x_24 = _mls_bar();
-//│   _mls_retval = _mls_x_24;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_foo(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_10 = (_mlsValue::fromIntLit(10)>_mlsValue::fromIntLit(0));
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_10)){
-//│     auto _mls_x_13 = _mlsValue::create<_mls_O>();
-//│     auto _mls_x_14 = _mlsValue::create<_mls_S>(_mls_x_13);
-//│     _mls_retval = _mls_j_2(_mls_x_14);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_10)){
-//│     auto _mls_x_15 = _mlsValue::create<_mls_O>();
-//│     _mls_retval = _mls_j_2(_mls_x_15);
-//│   } 
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_even(_mlsValue _mls_x_5){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_5)){
-//│     auto _mls_x_7 = _mlsValue::create<_mls_True>();
-//│     _mls_retval = _mls_j_1(_mls_x_7);
-//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_5)){
-//│     auto _mls_x_8 = _mlsValue::as<_mls_S>(_mls_x_5)->_mls_s;
-//│     auto _mls_x_9 = _mls_odd(_mls_x_8);
-//│     _mls_retval = _mls_j_1(_mls_x_9);
-//│   } 
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_0)){
-//│     auto _mls_x_2 = _mlsValue::create<_mls_False>();
-//│     _mls_retval = _mls_j_0(_mls_x_2);
-//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_0)){
-//│     auto _mls_x_3 = _mlsValue::as<_mls_S>(_mls_x_0)->_mls_s;
-//│     auto _mls_x_4 = _mls_even(_mls_x_3);
-//│     _mls_retval = _mls_j_0(_mls_x_4);
-//│   } 
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_bar(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_16 = (_mlsValue::fromIntLit(10)>_mlsValue::fromIntLit(0));
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_16)){
-//│     auto _mls_x_18 = _mlsValue::create<_mls_O>();
-//│     auto _mls_x_19 = _mlsValue::create<_mls_S>(_mls_x_18);
-//│     auto _mls_x_20 = _mls_odd(_mls_x_19);
-//│     _mls_retval = _mls_j_3(_mls_x_20);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_16)){
-//│     auto _mls_x_21 = _mlsValue::create<_mls_O>();
-//│     auto _mls_x_22 = _mls_odd(_mls_x_21);
-//│     _mls_retval = _mls_j_3(_mls_x_22);
-//│   } 
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_3(_mlsValue _mls_x_17){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_17;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_1;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_12 = _mls_odd(_mls_x_11);
-//│   _mls_retval = _mls_x_12;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mlsMain(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_25 = _mls_main();
-//│   _mls_retval = _mls_x_25;
-//│   return _mls_retval;
-//│ }
+//│ mlscript.compiler.codegen.cpp.CppCodeGen.sortClasses(CppCodeGen.scala:164)
+//│ mlscript.compiler.codegen.cpp.CppCodeGen.codegen(CppCodeGen.scala:169)
+//│ mlscript.compiler.IRDiffTestCompiler.postProcess(TestIR.scala:32)
+//│ mlscript.DiffTests.rec$1(DiffTests.scala:454)
+//│ mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1053)
+//│ org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+//│ org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+//│ org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+//│ org.scalatest.Transformer.apply(Transformer.scala:22)
+//│ org.scalatest.Transformer.apply(Transformer.scala:20)
+//│ org.scalatest.funsuite.AnyFunSuiteLike$$anon$1.apply(AnyFunSuiteLike.scala:226)
+//│ org.scalatest.TestSuite.withFixture(TestSuite.scala:196)
+//│ org.scalatest.TestSuite.withFixture$(TestSuite.scala:195)
+//│ mlscript.DiffTests.org$scalatest$concurrent$TimeLimitedTests$$super$withFixture(DiffTests.scala:49)
+//│ org.scalatest.concurrent.TimeLimitedTests.$anonfun$withFixture$3(TimeLimitedTests.scala:154)
+//│ org.scalatest.enablers.Timed$$anon$1.timeoutAfter(Timed.scala:127)
+//│ org.scalatest.concurrent.TimeLimits$.failAfterImpl(TimeLimits.scala:282)
+//│ org.scalatest.concurrent.TimeLimitedTests.withFixture(TimeLimitedTests.scala:153)
+//│ org.scalatest.concurrent.TimeLimitedTests.withFixture$(TimeLimitedTests.scala:150)
+//│ mlscript.DiffTests.withFixture(DiffTests.scala:49)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.invokeWithFixture$1(AnyFunSuiteLike.scala:224)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.$anonfun$runTest$1(AnyFunSuiteLike.scala:236)
+//│ org.scalatest.SuperEngine.runTestImpl(Engine.scala:306)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.runTest(AnyFunSuiteLike.scala:236)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.runTest$(AnyFunSuiteLike.scala:218)
+//│ mlscript.DiffTests.org$scalatest$OneInstancePerTest$$super$runTest(DiffTests.scala:49)
+//│ org.scalatest.OneInstancePerTest.runTest(OneInstancePerTest.scala:131)
+//│ org.scalatest.OneInstancePerTest.runTest$(OneInstancePerTest.scala:123)
+//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$runTest(DiffTests.scala:49)
+//│ org.scalatest.ParallelTestExecution.runTest(ParallelTestExecution.scala:164)
+//│ org.scalatest.ParallelTestExecution.runTest$(ParallelTestExecution.scala:148)
+//│ mlscript.DiffTests.runTest(DiffTests.scala:49)
+//│ org.scalatest.OneInstancePerTest.runTests(OneInstancePerTest.scala:181)
+//│ org.scalatest.OneInstancePerTest.runTests$(OneInstancePerTest.scala:172)
+//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$runTests(DiffTests.scala:49)
+//│ org.scalatest.ParallelTestExecution.runTests(ParallelTestExecution.scala:97)
+//│ org.scalatest.ParallelTestExecution.runTests$(ParallelTestExecution.scala:79)
+//│ mlscript.DiffTests.runTests(DiffTests.scala:49)
+//│ org.scalatest.Suite.run(Suite.scala:1114)
+//│ org.scalatest.Suite.run$(Suite.scala:1096)
+//│ org.scalatest.funsuite.AnyFunSuite.org$scalatest$funsuite$AnyFunSuiteLike$$super$run(AnyFunSuite.scala:1563)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.$anonfun$run$1(AnyFunSuiteLike.scala:273)
+//│ org.scalatest.SuperEngine.runImpl(Engine.scala:535)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.run(AnyFunSuiteLike.scala:273)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.run$(AnyFunSuiteLike.scala:272)
+//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$run(DiffTests.scala:49)
+//│ org.scalatest.ParallelTestExecution.run(ParallelTestExecution.scala:261)
+//│ org.scalatest.ParallelTestExecution.run$(ParallelTestExecution.scala:258)
+//│ mlscript.DiffTests.run(DiffTests.scala:49)
+//│ org.scalatest.tools.DistributedTestRunnerSuite.run(DistributedTestRunnerSuite.scala:22)
+//│ org.scalatest.tools.SuiteRunner.run(SuiteRunner.scala:47)
+//│ java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+//│ java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+//│ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+//│ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+//│ java.base/java.lang.Thread.run(Thread.java:829)
 
 :interpIR
 :genCpp
@@ -2176,12 +2055,12 @@ main(False)
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"
+//│ struct _mls_AorB;
 //│ struct _mls_Boolean;
 //│ struct _mls_B;
+//│ struct _mls_A;
 //│ struct _mls_True;
 //│ struct _mls_False;
-//│ struct _mls_AorB;
-//│ struct _mls_A;
 //│ _mlsValue _mls_aaa();
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_main(_mlsValue);
@@ -2191,26 +2070,34 @@ main(False)
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mls_foo(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_Boolean: public _mlsObject{
+//│ struct _mls_AorB: public _mlsObject{
 //│ 
-//│   virtual const char *name() const override { return "Boolean"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
+//│   virtual const char *name() const override { return "AorB"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_AorB;  return _mlsVal; }
 //│ };
 //│ struct _mls_B: public _mls_AorB{
 //│   _mlsValue _mls_b;
 //│   virtual const char *name() const override { return "B"; }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_b) { auto _mlsVal = new (std::align_val_t(align)) _mls_B; _mlsVal->_mls_b = _mls_b; return _mlsVal; }
 //│ };
-//│ struct _mls_AorB: public _mlsObject{
-//│ 
-//│   virtual const char *name() const override { return "AorB"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_AorB;  return _mlsVal; }
-//│ };
 //│ struct _mls_A: public _mls_AorB{
 //│ 
 //│   virtual const char *name() const override { return "A"; }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A;  return _mlsVal; }
 //│ };
+//│ _mlsValue _mls_main(_mlsValue _mls_flag_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_20 = _mls_foo(_mls_flag_0);
+//│   if (_mlsValue::isValueOf<_mls_A>(_mls_x_20)){
+//│     auto _mls_x_22 = _mls_aaa();
+//│     _mls_retval = _mls_j_2(_mls_x_22);
+//│   } else if (_mlsValue::isValueOf<_mls_B>(_mls_x_20)){
+//│     auto _mls_x_23 = _mlsValue::as<_mls_B>(_mls_x_20)->_mls_b;
+//│     auto _mls_x_24 = _mls_bbb();
+//│     _mls_retval = _mls_j_2(_mls_x_24);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_j_2(_mlsValue _mls_x_21){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_21;
@@ -2221,20 +2108,22 @@ main(False)
 //│   _mls_retval = _mls_x_15;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_not(_mlsValue _mls_x_10){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_10)){
-//│     auto _mls_x_12 = _mlsValue::create<_mls_False>();
-//│     _mls_retval = _mls_j_0(_mls_x_12);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_10)){
-//│     auto _mls_x_13 = _mlsValue::create<_mls_True>();
-//│     _mls_retval = _mls_j_0(_mls_x_13);
-//│   } 
-//│   return _mls_retval;
-//│ }
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_11){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_11;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_foo(_mlsValue _mls_x_14){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_14)){
+//│     auto _mls_x_16 = _mlsValue::create<_mls_A>();
+//│     _mls_retval = _mls_j_1(_mls_x_16);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_14)){
+//│     auto _mls_x_17 = _mls_not(_mls_x_14);
+//│     auto _mls_x_18 = _mls_foo(_mls_x_17);
+//│     auto _mls_x_19 = _mlsValue::create<_mls_B>(_mls_x_18);
+//│     _mls_retval = _mls_j_1(_mls_x_19);
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_aaa(){
@@ -2249,38 +2138,23 @@ main(False)
 //│   _mls_retval = _mls_x_6;
 //│   return _mls_retval;
 //│ }
+//│ _mlsValue _mls_not(_mlsValue _mls_x_10){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_10)){
+//│     auto _mls_x_12 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_12);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_10)){
+//│     auto _mls_x_13 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_0(_mls_x_13);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_bbb(){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_7 = _mls_aaa();
 //│   auto _mls_x_8 = (_mls_x_7*_mlsValue::fromIntLit(100));
 //│   auto _mls_x_9 = (_mls_x_8+_mlsValue::fromIntLit(4));
 //│   _mls_retval = _mls_x_9;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_main(_mlsValue _mls_flag_0){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_20 = _mls_foo(_mls_flag_0);
-//│   if (_mlsValue::isValueOf<_mls_A>(_mls_x_20)){
-//│     auto _mls_x_22 = _mls_aaa();
-//│     _mls_retval = _mls_j_2(_mls_x_22);
-//│   } else if (_mlsValue::isValueOf<_mls_B>(_mls_x_20)){
-//│     auto _mls_x_23 = _mlsValue::as<_mls_B>(_mls_x_20)->_mls_b;
-//│     auto _mls_x_24 = _mls_bbb();
-//│     _mls_retval = _mls_j_2(_mls_x_24);
-//│   } 
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_foo(_mlsValue _mls_x_14){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_14)){
-//│     auto _mls_x_16 = _mlsValue::create<_mls_A>();
-//│     _mls_retval = _mls_j_1(_mls_x_16);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_14)){
-//│     auto _mls_x_17 = _mls_not(_mls_x_14);
-//│     auto _mls_x_18 = _mls_foo(_mls_x_17);
-//│     auto _mls_x_19 = _mlsValue::create<_mls_B>(_mls_x_18);
-//│     _mls_retval = _mls_j_1(_mls_x_19);
-//│   } 
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -2464,14 +2338,14 @@ main()
 //│ Cpp:
 //│ #include "mlsprelude.h"
 //│ struct _mls_Boolean;
-//│ struct _mls_Nil;
-//│ struct _mls_True;
 //│ struct _mls_Option;
-//│ struct _mls_False;
 //│ struct _mls_Some;
-//│ struct _mls_List;
 //│ struct _mls_None;
+//│ struct _mls_List;
+//│ struct _mls_Nil;
 //│ struct _mls_Cons;
+//│ struct _mls_True;
+//│ struct _mls_False;
 //│ _mlsValue _mls_is_empty(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_main();
@@ -2479,16 +2353,6 @@ main()
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mls_head_opt(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_Boolean: public _mlsObject{
-//│ 
-//│   virtual const char *name() const override { return "Boolean"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
-//│ };
-//│ struct _mls_Nil: public _mls_List{
-//│ 
-//│   virtual const char *name() const override { return "Nil"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
-//│ };
 //│ struct _mls_Option: public _mlsObject{
 //│ 
 //│   virtual const char *name() const override { return "Option"; }
@@ -2499,15 +2363,20 @@ main()
 //│   virtual const char *name() const override { return "Some"; }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->_mls_x = _mls_x; return _mlsVal; }
 //│ };
+//│ struct _mls_None: public _mls_Option{
+//│ 
+//│   virtual const char *name() const override { return "None"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│ };
 //│ struct _mls_List: public _mlsObject{
 //│ 
 //│   virtual const char *name() const override { return "List"; }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List;  return _mlsVal; }
 //│ };
-//│ struct _mls_None: public _mls_Option{
+//│ struct _mls_Nil: public _mls_List{
 //│ 
-//│   virtual const char *name() const override { return "None"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│   virtual const char *name() const override { return "Nil"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
 //│ };
 //│ struct _mls_Cons: public _mls_List{
 //│   _mlsValue _mls_h;
@@ -2520,18 +2389,16 @@ main()
 //│   _mls_retval = _mls_x_0;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_main(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_11 = _mlsValue::create<_mls_Nil>();
-//│   auto _mls_x_12 = _mlsValue::create<_mls_Cons>(_mlsValue::fromIntLit(2), _mls_x_11);
-//│   auto _mls_x_13 = _mlsValue::create<_mls_Cons>(_mlsValue::fromIntLit(1), _mls_x_12);
-//│   auto _mls_x_14 = _mls_is_empty(_mls_x_13);
-//│   _mls_retval = _mls_x_14;
-//│   return _mls_retval;
-//│ }
 //│ _mlsValue _mls_j_1(_mlsValue _mls_x_5){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_5;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_is_empty(_mlsValue _mls_l_1){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_9 = _mls_head_opt(_mls_l_1);
+//│   auto _mls_x_10 = _mls_is_none(_mls_x_9);
+//│   _mls_retval = _mls_x_10;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_head_opt(_mlsValue _mls_l_0){
@@ -2544,14 +2411,7 @@ main()
 //│     auto _mls_x_3 = _mlsValue::as<_mls_Cons>(_mls_l_0)->_mls_h;
 //│     auto _mls_x_4 = _mlsValue::create<_mls_Some>(_mls_x_3);
 //│     _mls_retval = _mls_j_0(_mls_x_4);
-//│   } 
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_is_empty(_mlsValue _mls_l_1){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_9 = _mls_head_opt(_mls_l_1);
-//│   auto _mls_x_10 = _mls_is_none(_mls_x_9);
-//│   _mls_retval = _mls_x_10;
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_is_none(_mlsValue _mls_o_0){
@@ -2563,7 +2423,16 @@ main()
 //│     auto _mls_x_7 = _mlsValue::as<_mls_Some>(_mls_o_0)->_mls_x;
 //│     auto _mls_x_8 = _mlsValue::create<_mls_False>();
 //│     _mls_retval = _mls_j_1(_mls_x_8);
-//│   } 
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_11 = _mlsValue::create<_mls_Nil>();
+//│   auto _mls_x_12 = _mlsValue::create<_mls_Cons>(_mlsValue::fromIntLit(2), _mls_x_11);
+//│   auto _mls_x_13 = _mlsValue::create<_mls_Cons>(_mlsValue::fromIntLit(1), _mls_x_12);
+//│   auto _mls_x_14 = _mls_is_empty(_mls_x_13);
+//│   _mls_retval = _mls_x_14;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -2789,14 +2658,14 @@ main()
 //│ Cpp:
 //│ #include "mlsprelude.h"
 //│ struct _mls_Boolean;
-//│ struct _mls_Nil;
-//│ struct _mls_True;
 //│ struct _mls_Option;
-//│ struct _mls_False;
 //│ struct _mls_Some;
-//│ struct _mls_List;
 //│ struct _mls_None;
+//│ struct _mls_List;
+//│ struct _mls_Nil;
 //│ struct _mls_Cons;
+//│ struct _mls_True;
+//│ struct _mls_False;
 //│ _mlsValue _mls_is_empty(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_j_2(_mlsValue);
@@ -2806,16 +2675,6 @@ main()
 //│ _mlsValue _mls_mk_list(_mlsValue);
 //│ _mlsValue _mls_head_opt(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_Boolean: public _mlsObject{
-//│ 
-//│   virtual const char *name() const override { return "Boolean"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
-//│ };
-//│ struct _mls_Nil: public _mls_List{
-//│ 
-//│   virtual const char *name() const override { return "Nil"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
-//│ };
 //│ struct _mls_Option: public _mlsObject{
 //│ 
 //│   virtual const char *name() const override { return "Option"; }
@@ -2826,15 +2685,20 @@ main()
 //│   virtual const char *name() const override { return "Some"; }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->_mls_x = _mls_x; return _mlsVal; }
 //│ };
+//│ struct _mls_None: public _mls_Option{
+//│ 
+//│   virtual const char *name() const override { return "None"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│ };
 //│ struct _mls_List: public _mlsObject{
 //│ 
 //│   virtual const char *name() const override { return "List"; }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List;  return _mlsVal; }
 //│ };
-//│ struct _mls_None: public _mls_Option{
+//│ struct _mls_Nil: public _mls_List{
 //│ 
-//│   virtual const char *name() const override { return "None"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│   virtual const char *name() const override { return "Nil"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
 //│ };
 //│ struct _mls_Cons: public _mls_List{
 //│   _mlsValue _mls_h;
@@ -2842,34 +2706,23 @@ main()
 //│   virtual const char *name() const override { return "Cons"; }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->_mls_h = _mls_h;_mlsVal->_mls_t = _mls_t; return _mlsVal; }
 //│ };
-//│ _mlsValue _mls_is_none(_mlsValue _mls_o_0){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_None>(_mls_o_0)){
-//│     auto _mls_x_12 = _mlsValue::create<_mls_True>();
-//│     _mls_retval = _mls_j_2(_mls_x_12);
-//│   } else if (_mlsValue::isValueOf<_mls_Some>(_mls_o_0)){
-//│     auto _mls_x_13 = _mlsValue::as<_mls_Some>(_mls_o_0)->_mls_x;
-//│     auto _mls_x_14 = _mlsValue::create<_mls_False>();
-//│     _mls_retval = _mls_j_2(_mls_x_14);
-//│   } 
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_head_opt(_mlsValue _mls_l_0){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_Nil>(_mls_l_0)){
-//│     auto _mls_x_7 = _mlsValue::create<_mls_None>();
-//│     _mls_retval = _mls_j_1(_mls_x_7);
-//│   } else if (_mlsValue::isValueOf<_mls_Cons>(_mls_l_0)){
-//│     auto _mls_x_8 = _mlsValue::as<_mls_Cons>(_mls_l_0)->_mls_t;
-//│     auto _mls_x_9 = _mlsValue::as<_mls_Cons>(_mls_l_0)->_mls_h;
-//│     auto _mls_x_10 = _mlsValue::create<_mls_Some>(_mls_x_9);
-//│     _mls_retval = _mls_j_1(_mls_x_10);
-//│   } 
-//│   return _mls_retval;
-//│ }
 //│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_mk_list(_mlsValue _mls_n_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_0 = (_mls_n_0==_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_0)){
+//│     auto _mls_x_2 = _mlsValue::create<_mls_Nil>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_0)){
+//│     auto _mls_x_3 = (_mls_n_0-_mlsValue::fromIntLit(1));
+//│     auto _mls_x_4 = _mls_mk_list(_mls_x_3);
+//│     auto _mls_x_5 = _mlsValue::create<_mls_Cons>(_mls_n_0, _mls_x_4);
+//│     _mls_retval = _mls_j_0(_mls_x_5);
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_main(){
@@ -2886,28 +2739,39 @@ main()
 //│   _mls_retval = _mls_x_16;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
+//│ _mlsValue _mls_is_none(_mlsValue _mls_o_0){
 //│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_1;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_mk_list(_mlsValue _mls_n_0){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_0 = (_mls_n_0==_mlsValue::fromIntLit(0));
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_0)){
-//│     auto _mls_x_2 = _mlsValue::create<_mls_Nil>();
-//│     _mls_retval = _mls_j_0(_mls_x_2);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_0)){
-//│     auto _mls_x_3 = (_mls_n_0-_mlsValue::fromIntLit(1));
-//│     auto _mls_x_4 = _mls_mk_list(_mls_x_3);
-//│     auto _mls_x_5 = _mlsValue::create<_mls_Cons>(_mls_n_0, _mls_x_4);
-//│     _mls_retval = _mls_j_0(_mls_x_5);
-//│   } 
+//│   if (_mlsValue::isValueOf<_mls_None>(_mls_o_0)){
+//│     auto _mls_x_12 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_2(_mls_x_12);
+//│   } else if (_mlsValue::isValueOf<_mls_Some>(_mls_o_0)){
+//│     auto _mls_x_13 = _mlsValue::as<_mls_Some>(_mls_o_0)->_mls_x;
+//│     auto _mls_x_14 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_2(_mls_x_14);
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_11;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_head_opt(_mlsValue _mls_l_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_Nil>(_mls_l_0)){
+//│     auto _mls_x_7 = _mlsValue::create<_mls_None>();
+//│     _mls_retval = _mls_j_1(_mls_x_7);
+//│   } else if (_mlsValue::isValueOf<_mls_Cons>(_mls_l_0)){
+//│     auto _mls_x_8 = _mlsValue::as<_mls_Cons>(_mls_l_0)->_mls_t;
+//│     auto _mls_x_9 = _mlsValue::as<_mls_Cons>(_mls_l_0)->_mls_h;
+//│     auto _mls_x_10 = _mlsValue::create<_mls_Some>(_mls_x_9);
+//│     _mls_retval = _mls_j_1(_mls_x_10);
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -3098,14 +2962,14 @@ main()
 //│ Cpp:
 //│ #include "mlsprelude.h"
 //│ struct _mls_Boolean;
-//│ struct _mls_Nil;
-//│ struct _mls_True;
 //│ struct _mls_Option;
-//│ struct _mls_False;
 //│ struct _mls_Some;
-//│ struct _mls_List;
 //│ struct _mls_None;
+//│ struct _mls_List;
+//│ struct _mls_Nil;
 //│ struct _mls_Cons;
+//│ struct _mls_True;
+//│ struct _mls_False;
 //│ _mlsValue _mls_last_opt(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_j_2(_mlsValue);
@@ -3113,16 +2977,6 @@ main()
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mls_mk_list(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_Boolean: public _mlsObject{
-//│ 
-//│   virtual const char *name() const override { return "Boolean"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
-//│ };
-//│ struct _mls_Nil: public _mls_List{
-//│ 
-//│   virtual const char *name() const override { return "Nil"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
-//│ };
 //│ struct _mls_Option: public _mlsObject{
 //│ 
 //│   virtual const char *name() const override { return "Option"; }
@@ -3133,15 +2987,20 @@ main()
 //│   virtual const char *name() const override { return "Some"; }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->_mls_x = _mls_x; return _mlsVal; }
 //│ };
+//│ struct _mls_None: public _mls_Option{
+//│ 
+//│   virtual const char *name() const override { return "None"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│ };
 //│ struct _mls_List: public _mlsObject{
 //│ 
 //│   virtual const char *name() const override { return "List"; }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List;  return _mlsVal; }
 //│ };
-//│ struct _mls_None: public _mls_Option{
+//│ struct _mls_Nil: public _mls_List{
 //│ 
-//│   virtual const char *name() const override { return "None"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│   virtual const char *name() const override { return "Nil"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
 //│ };
 //│ struct _mls_Cons: public _mls_List{
 //│   _mlsValue _mls_h;
@@ -3165,8 +3024,8 @@ main()
 //│       auto _mls_x_13 = _mlsValue::as<_mls_Cons>(_mls_x_8)->_mls_h;
 //│       auto _mls_x_14 = _mls_last_opt(_mls_x_8);
 //│       _mls_retval = _mls_j_2(_mls_x_14);
-//│     } 
-//│   } 
+//│     } else throw std::runtime_error("Non-exhaustive match");
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
@@ -3185,7 +3044,7 @@ main()
 //│     auto _mls_x_4 = _mls_mk_list(_mls_x_3);
 //│     auto _mls_x_5 = _mlsValue::create<_mls_Cons>(_mls_n_0, _mls_x_4);
 //│     _mls_retval = _mls_j_0(_mls_x_5);
-//│   } 
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
@@ -3503,14 +3362,14 @@ main()
 //│ Cpp:
 //│ #include "mlsprelude.h"
 //│ struct _mls_Boolean;
-//│ struct _mls_Nil;
-//│ struct _mls_True;
 //│ struct _mls_Option;
-//│ struct _mls_False;
 //│ struct _mls_Some;
-//│ struct _mls_List;
 //│ struct _mls_None;
+//│ struct _mls_List;
+//│ struct _mls_Nil;
 //│ struct _mls_Cons;
+//│ struct _mls_True;
+//│ struct _mls_False;
 //│ _mlsValue _mls_e0(_mlsValue);
 //│ _mlsValue _mls_e2(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
@@ -3522,16 +3381,6 @@ main()
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mls_f(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_Boolean: public _mlsObject{
-//│ 
-//│   virtual const char *name() const override { return "Boolean"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
-//│ };
-//│ struct _mls_Nil: public _mls_List{
-//│ 
-//│   virtual const char *name() const override { return "Nil"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
-//│ };
 //│ struct _mls_Option: public _mlsObject{
 //│ 
 //│   virtual const char *name() const override { return "Option"; }
@@ -3542,15 +3391,20 @@ main()
 //│   virtual const char *name() const override { return "Some"; }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->_mls_x = _mls_x; return _mlsVal; }
 //│ };
+//│ struct _mls_None: public _mls_Option{
+//│ 
+//│   virtual const char *name() const override { return "None"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│ };
 //│ struct _mls_List: public _mlsObject{
 //│ 
 //│   virtual const char *name() const override { return "List"; }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List;  return _mlsVal; }
 //│ };
-//│ struct _mls_None: public _mls_Option{
+//│ struct _mls_Nil: public _mls_List{
 //│ 
-//│   virtual const char *name() const override { return "None"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│   virtual const char *name() const override { return "Nil"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
 //│ };
 //│ struct _mls_Cons: public _mls_List{
 //│   _mlsValue _mls_h;
@@ -3563,10 +3417,41 @@ main()
 //│   _mls_retval = _mls_x_0;
 //│   return _mls_retval;
 //│ }
+//│ _mlsValue _mls_e3(_mlsValue _mls_c_1){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_11 = _mlsValue::fromIntLit(4);
+//│   auto _mls_x_12 = _mlsValue::fromIntLit(5);
+//│   auto _mls_x_13 = _mlsValue::fromIntLit(6);
+//│   auto _mls_x_14 = _mlsValue::fromIntLit(7);
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_c_1)){
+//│     auto _mls_x_16 = (_mls_x_11+_mls_x_12);
+//│     auto _mls_x_17 = (_mls_x_16+_mls_x_13);
+//│     auto _mls_x_18 = (_mls_x_17+_mls_x_14);
+//│     _mls_retval = _mls_j_1(_mls_x_18);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_c_1)){
+//│     auto _mls_x_19 = (_mls_x_11+_mls_x_12);
+//│     auto _mls_x_20 = (_mls_x_19-_mls_x_13);
+//│     auto _mls_x_21 = (_mls_x_20+_mls_x_14);
+//│     _mls_retval = _mls_j_1(_mls_x_21);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_j_2(_mlsValue _mls_x_29){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_30 = _mls_e0(_mls_x_29);
 //│   _mls_retval = _mls_x_30;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_is_some(_mlsValue _mls_o_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_Some>(_mls_o_0)){
+//│     auto _mls_x_1 = _mlsValue::as<_mls_Some>(_mls_o_0)->_mls_x;
+//│     auto _mls_x_2 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_None>(_mls_o_0)){
+//│     auto _mls_x_3 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_3);
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_main(){
@@ -3577,20 +3462,6 @@ main()
 //│   auto _mls_x_37 = _mls_f(_mls_x_36);
 //│   auto _mls_x_38 = (_mls_x_35+_mls_x_37);
 //│   _mls_retval = _mls_x_38;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_f(_mlsValue _mls_x_26){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_27 = _mls_is_some(_mls_x_26);
-//│   auto _mls_x_28 = _mls_e3(_mls_x_27);
-//│   if (_mlsValue::isValueOf<_mls_Some>(_mls_x_26)){
-//│     auto _mls_x_31 = _mlsValue::as<_mls_Some>(_mls_x_26)->_mls_x;
-//│     auto _mls_x_32 = _mls_e1(_mls_x_31, _mls_x_28);
-//│     _mls_retval = _mls_j_2(_mls_x_32);
-//│   } else if (_mlsValue::isValueOf<_mls_None>(_mls_x_26)){
-//│     auto _mls_x_33 = _mls_e2(_mls_x_28);
-//│     _mls_retval = _mls_j_2(_mls_x_33);
-//│   } 
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_e0(_mlsValue _mls_w_0){
@@ -3610,16 +3481,18 @@ main()
 //│   _mls_retval = _mls_x_10;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_is_some(_mlsValue _mls_o_0){
+//│ _mlsValue _mls_f(_mlsValue _mls_x_26){
 //│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_Some>(_mls_o_0)){
-//│     auto _mls_x_1 = _mlsValue::as<_mls_Some>(_mls_o_0)->_mls_x;
-//│     auto _mls_x_2 = _mlsValue::create<_mls_True>();
-//│     _mls_retval = _mls_j_0(_mls_x_2);
-//│   } else if (_mlsValue::isValueOf<_mls_None>(_mls_o_0)){
-//│     auto _mls_x_3 = _mlsValue::create<_mls_False>();
-//│     _mls_retval = _mls_j_0(_mls_x_3);
-//│   } 
+//│   auto _mls_x_27 = _mls_is_some(_mls_x_26);
+//│   auto _mls_x_28 = _mls_e3(_mls_x_27);
+//│   if (_mlsValue::isValueOf<_mls_Some>(_mls_x_26)){
+//│     auto _mls_x_31 = _mlsValue::as<_mls_Some>(_mls_x_26)->_mls_x;
+//│     auto _mls_x_32 = _mls_e1(_mls_x_31, _mls_x_28);
+//│     _mls_retval = _mls_j_2(_mls_x_32);
+//│   } else if (_mlsValue::isValueOf<_mls_None>(_mls_x_26)){
+//│     auto _mls_x_33 = _mls_e2(_mls_x_28);
+//│     _mls_retval = _mls_j_2(_mls_x_33);
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_e2(_mlsValue _mls_x_22){
@@ -3628,25 +3501,6 @@ main()
 //│   auto _mls_x_24 = (_mls_x_23+_mlsValue::fromIntLit(13));
 //│   auto _mls_x_25 = (_mls_x_24+_mlsValue::fromIntLit(14));
 //│   _mls_retval = _mls_x_25;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_e3(_mlsValue _mls_c_1){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_11 = _mlsValue::fromIntLit(4);
-//│   auto _mls_x_12 = _mlsValue::fromIntLit(5);
-//│   auto _mls_x_13 = _mlsValue::fromIntLit(6);
-//│   auto _mls_x_14 = _mlsValue::fromIntLit(7);
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_c_1)){
-//│     auto _mls_x_16 = (_mls_x_11+_mls_x_12);
-//│     auto _mls_x_17 = (_mls_x_16+_mls_x_13);
-//│     auto _mls_x_18 = (_mls_x_17+_mls_x_14);
-//│     _mls_retval = _mls_j_1(_mls_x_18);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_c_1)){
-//│     auto _mls_x_19 = (_mls_x_11+_mls_x_12);
-//│     auto _mls_x_20 = (_mls_x_19-_mls_x_13);
-//│     auto _mls_x_21 = (_mls_x_20+_mls_x_14);
-//│     _mls_retval = _mls_j_1(_mls_x_21);
-//│   } 
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_j_1(_mlsValue _mls_x_15){
@@ -3974,14 +3828,14 @@ main()
 //│ Cpp:
 //│ #include "mlsprelude.h"
 //│ struct _mls_Boolean;
-//│ struct _mls_Nil;
-//│ struct _mls_True;
 //│ struct _mls_Option;
-//│ struct _mls_False;
 //│ struct _mls_Some;
-//│ struct _mls_List;
 //│ struct _mls_None;
+//│ struct _mls_List;
+//│ struct _mls_Nil;
 //│ struct _mls_Cons;
+//│ struct _mls_True;
+//│ struct _mls_False;
 //│ _mlsValue _mls_e0(_mlsValue);
 //│ _mlsValue _mls_e2(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
@@ -3994,16 +3848,6 @@ main()
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mls_f(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_Boolean: public _mlsObject{
-//│ 
-//│   virtual const char *name() const override { return "Boolean"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
-//│ };
-//│ struct _mls_Nil: public _mls_List{
-//│ 
-//│   virtual const char *name() const override { return "Nil"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
-//│ };
 //│ struct _mls_Option: public _mlsObject{
 //│ 
 //│   virtual const char *name() const override { return "Option"; }
@@ -4014,15 +3858,20 @@ main()
 //│   virtual const char *name() const override { return "Some"; }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->_mls_x = _mls_x; return _mlsVal; }
 //│ };
+//│ struct _mls_None: public _mls_Option{
+//│ 
+//│   virtual const char *name() const override { return "None"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│ };
 //│ struct _mls_List: public _mlsObject{
 //│ 
 //│   virtual const char *name() const override { return "List"; }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List;  return _mlsVal; }
 //│ };
-//│ struct _mls_None: public _mls_Option{
+//│ struct _mls_Nil: public _mls_List{
 //│ 
-//│   virtual const char *name() const override { return "None"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│   virtual const char *name() const override { return "Nil"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
 //│ };
 //│ struct _mls_Cons: public _mls_List{
 //│   _mlsValue _mls_h;
@@ -4033,81 +3882,6 @@ main()
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_0;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_f(_mlsValue _mls_x_27){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_28 = _mls_is_some(_mls_x_27);
-//│   auto _mls_x_29 = _mls_e3(_mls_x_28);
-//│   if (_mlsValue::isValueOf<_mls_Some>(_mls_x_27)){
-//│     auto _mls_x_32 = _mlsValue::as<_mls_Some>(_mls_x_27)->_mls_x;
-//│     auto _mls_x_33 = _mls_e1(_mls_x_32, _mls_x_29);
-//│     _mls_retval = _mls_j_3(_mls_x_33);
-//│   } else if (_mlsValue::isValueOf<_mls_None>(_mls_x_27)){
-//│     auto _mls_x_34 = _mls_e2(_mls_x_29);
-//│     _mls_retval = _mls_j_3(_mls_x_34);
-//│   } 
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_e2(_mlsValue _mls_x_23){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_24 = (_mls_x_23+_mlsValue::fromIntLit(12));
-//│   auto _mls_x_25 = (_mls_x_24+_mlsValue::fromIntLit(13));
-//│   auto _mls_x_26 = (_mls_x_25+_mlsValue::fromIntLit(14));
-//│   _mls_retval = _mls_x_26;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_16){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_16;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_e0(_mlsValue _mls_w_0){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_4 = (_mls_w_0+_mlsValue::fromIntLit(8));
-//│   auto _mls_x_5 = (_mls_x_4+_mlsValue::fromIntLit(9));
-//│   auto _mls_x_6 = (_mls_x_5+_mlsValue::fromIntLit(10));
-//│   _mls_retval = _mls_x_6;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_main(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_35 = _mlsValue::create<_mls_Some>(_mlsValue::fromIntLit(2));
-//│   auto _mls_x_36 = _mls_f(_mls_x_35);
-//│   auto _mls_x_37 = _mlsValue::create<_mls_None>();
-//│   auto _mls_x_38 = _mls_f(_mls_x_37);
-//│   auto _mls_x_39 = (_mls_x_36+_mls_x_38);
-//│   _mls_retval = _mls_x_39;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_is_some(_mlsValue _mls_o_0){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_Some>(_mls_o_0)){
-//│     auto _mls_x_1 = _mlsValue::as<_mls_Some>(_mls_o_0)->_mls_x;
-//│     auto _mls_x_2 = _mlsValue::create<_mls_True>();
-//│     _mls_retval = _mls_j_0(_mls_x_2);
-//│   } else if (_mlsValue::isValueOf<_mls_None>(_mls_o_0)){
-//│     auto _mls_x_3 = _mlsValue::create<_mls_False>();
-//│     _mls_retval = _mls_j_0(_mls_x_3);
-//│   } 
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_e1(_mlsValue _mls_a_0, _mlsValue _mls_z_0){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_7 = (_mls_a_0>_mlsValue::fromIntLit(0));
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_7)){
-//│     auto _mls_x_9 = (_mls_a_0-_mlsValue::fromIntLit(1));
-//│     auto _mls_x_10 = _mlsValue::create<_mls_Some>(_mls_x_9);
-//│     auto _mls_x_11 = _mls_f(_mls_x_10);
-//│     _mls_retval = _mls_j_1(_mls_x_11);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_7)){
-//│     _mls_retval = _mls_j_1(_mls_z_0);
-//│   } 
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_8){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_8;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_e3(_mlsValue _mls_c_0){
@@ -4126,13 +3900,88 @@ main()
 //│     auto _mls_x_21 = (_mls_x_20-_mls_x_14);
 //│     auto _mls_x_22 = (_mls_x_21+_mls_x_15);
 //│     _mls_retval = _mls_j_2(_mls_x_22);
-//│   } 
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_8){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_8;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_e2(_mlsValue _mls_x_23){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_24 = (_mls_x_23+_mlsValue::fromIntLit(12));
+//│   auto _mls_x_25 = (_mls_x_24+_mlsValue::fromIntLit(13));
+//│   auto _mls_x_26 = (_mls_x_25+_mlsValue::fromIntLit(14));
+//│   _mls_retval = _mls_x_26;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_is_some(_mlsValue _mls_o_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_Some>(_mls_o_0)){
+//│     auto _mls_x_1 = _mlsValue::as<_mls_Some>(_mls_o_0)->_mls_x;
+//│     auto _mls_x_2 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_None>(_mls_o_0)){
+//│     auto _mls_x_3 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_3);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_16){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_16;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_j_3(_mlsValue _mls_x_30){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_31 = _mls_e0(_mls_x_30);
 //│   _mls_retval = _mls_x_31;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_e0(_mlsValue _mls_w_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_4 = (_mls_w_0+_mlsValue::fromIntLit(8));
+//│   auto _mls_x_5 = (_mls_x_4+_mlsValue::fromIntLit(9));
+//│   auto _mls_x_6 = (_mls_x_5+_mlsValue::fromIntLit(10));
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_e1(_mlsValue _mls_a_0, _mlsValue _mls_z_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_7 = (_mls_a_0>_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_7)){
+//│     auto _mls_x_9 = (_mls_a_0-_mlsValue::fromIntLit(1));
+//│     auto _mls_x_10 = _mlsValue::create<_mls_Some>(_mls_x_9);
+//│     auto _mls_x_11 = _mls_f(_mls_x_10);
+//│     _mls_retval = _mls_j_1(_mls_x_11);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_7)){
+//│     _mls_retval = _mls_j_1(_mls_z_0);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_35 = _mlsValue::create<_mls_Some>(_mlsValue::fromIntLit(2));
+//│   auto _mls_x_36 = _mls_f(_mls_x_35);
+//│   auto _mls_x_37 = _mlsValue::create<_mls_None>();
+//│   auto _mls_x_38 = _mls_f(_mls_x_37);
+//│   auto _mls_x_39 = (_mls_x_36+_mls_x_38);
+//│   _mls_retval = _mls_x_39;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_f(_mlsValue _mls_x_27){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_28 = _mls_is_some(_mls_x_27);
+//│   auto _mls_x_29 = _mls_e3(_mls_x_28);
+//│   if (_mlsValue::isValueOf<_mls_Some>(_mls_x_27)){
+//│     auto _mls_x_32 = _mlsValue::as<_mls_Some>(_mls_x_27)->_mls_x;
+//│     auto _mls_x_33 = _mls_e1(_mls_x_32, _mls_x_29);
+//│     _mls_retval = _mls_j_3(_mls_x_33);
+//│   } else if (_mlsValue::isValueOf<_mls_None>(_mls_x_27)){
+//│     auto _mls_x_34 = _mls_e2(_mls_x_29);
+//│     _mls_retval = _mls_j_3(_mls_x_34);
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){

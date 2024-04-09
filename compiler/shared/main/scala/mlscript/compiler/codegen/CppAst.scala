@@ -80,6 +80,7 @@ enum Stmt:
   case Continue
   case Block(decl: Ls[Decl], stmts: Ls[Stmt])
   case Switch(expr: Expr, cases: Ls[(Expr, Stmt)])
+  case Raw(stmt: Str)
 
   def toDocument: Document =
     def aux(x: Stmt): Document = x match
@@ -107,6 +108,7 @@ enum Stmt:
         raw("switch (") <#> expr.toDocument <#> raw(")") <#> raw("{") <#> stack_list(cases.map {
           case (cond, stmt) => raw("case ") <#> cond.toDocument <#> raw(":") <#> stmt.toDocument
         }) <#> raw("}")
+      case Raw(stmt) => stmt |> raw
     aux(this)
 
 object Expr:

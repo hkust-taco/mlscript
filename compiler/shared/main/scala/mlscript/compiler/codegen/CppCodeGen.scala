@@ -26,13 +26,14 @@ class CppCodeGen:
   private def mlsDebugPrint(x: Expr) = Expr.Call(Expr.Var("_mlsValue::print"), Ls(x))
   private def mlsTupleValue(init: Expr) = Expr.Constructor("_mlsValue::tuple", init)
   private def mlsAs(name: Str, cls: Str) = Expr.Var(s"_mlsValue::as<$cls>($name)")
-  private val mlsInternalClass = Set("True", "False")
+  private val mlsInternalClass = Set("True", "False", "Boolean")
   private val mlsObject = "_mlsObject"
   private def mlsObjectNameMethod(name: Str) = s"virtual const char *name() const override { return \"${name}\"; }"
   private def mlsCommonCreateMethod(cls: Str, fields: Ls[Str]) =
     val parameters = fields.map{x => s"_mlsValue $x"}.mkString(", ")
     val fieldsAssignment = fields.map{x => s"_mlsVal->$x = $x;"}.mkString
     s"template <std::size_t align> static _mlsValue create($parameters) { auto _mlsVal = new (std::align_val_t(align)) $cls; $fieldsAssignment return _mlsVal; }"
+  private def mlsThrowNonExhaustiveMatch = Stmt.Raw("throw std::runtime_error(\"Non-exhaustive match\");");
 
   private def codegenClassInfo(cls: ClassInfo): (Opt[Def], Decl) =
     val fields = cls.fields.map{x => (x |> mapName, mlsValType)}
@@ -67,7 +68,7 @@ class CppCodeGen:
   
   private def codegenCaseWithIfs(scrut: Name, cases: Ls[(ClassInfo, Node)], storeInto: Str)(using decls: Ls[Decl], stmts: Ls[Stmt]): (Ls[Decl], Ls[Stmt]) =
     val scrutName = mapName(scrut)
-    val init: Opt[Stmt] = None
+    val init: Opt[Stmt] = S(mlsThrowNonExhaustiveMatch)
     val stmt = cases.foldRight(init) {
       case ((cls, arm), nextarm) =>
         val (decls2, stmts2) = codegen(arm, storeInto)(using Ls.empty, Ls.empty[Stmt])
@@ -141,8 +142,32 @@ class CppCodeGen:
     val decl = Decl.FuncDecl(mlsValType, mlsMainName, Ls())
     (theDef, decl)
 
+  private def sortClasses(prog: Program): Ls[ClassInfo] =
+    var depgraph = prog.classes.map(x => (x.ident, x.parents)).toMap
+    var degree = depgraph.mapValues(_.size).toMap
+    def removeNode(node: Str) =
+      degree -= node
+      depgraph -= node
+      depgraph = depgraph.mapValues(_.filter(_ != node)).toMap
+      degree = depgraph.mapValues(_.size).toMap
+    var sorted = Ls.empty[ClassInfo]
+    var work = degree.filter(_._2 == 0).keys.toSet
+    while work.nonEmpty do
+      val node = work.head
+      work -= node
+      sorted = sorted :+ prog.classes.find(_.ident == node).get
+      removeNode(node)
+      val next = degree.filter(_._2 == 0).keys
+      work = work ++ next
+    if depgraph.nonEmpty then
+      val cycle = depgraph.keys.mkString(", ")
+      throw new Exception(s"Cycle detected in class hierarchy: $cycle")
+    println(sorted.map(_.ident))
+    sorted
+  
   def codegen(prog: Program): CompilationUnit =
-    val (defs, decls) = prog.classes.toList.map(codegenClassInfo).unzip
+    val sortedClasses = sortClasses(prog)
+    val (defs, decls) = sortedClasses.map(codegenClassInfo).unzip
     val (defs2, decls2) = prog.defs.map(codegenDefn).unzip
     val (defMain, declMain) = codegenTopNode(prog.main)
     CompilationUnit(Ls(mlsPrelude), decls ++ decls2 :+ declMain, defs.flatten ++ defs2 :+ defMain)
