@@ -36,7 +36,7 @@ class CppCodeGen:
 
   private def codegenClassInfo(cls: ClassInfo): (Opt[Def], Decl) =
     val fields = cls.fields.map{x => (x |> mapName, mlsValType)}
-    val parents =  mlsObject :: cls.parents.toList.map{x => x |> mapName}
+    val parents = if cls.parents.nonEmpty then cls.parents.toList.map{x => x |> mapName} else mlsObject :: Nil
     val decl = Decl.StructDecl(cls.ident |> mapName)
     if mlsInternalClass.contains(cls.ident) then return (None, decl)
     val theDef = Def.StructDef(

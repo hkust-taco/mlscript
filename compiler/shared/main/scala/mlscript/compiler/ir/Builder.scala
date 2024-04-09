@@ -254,8 +254,8 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
     case _ => throw IRError("unsupported NuFunDef")
   
   private def buildClassInfo(ntd: Statement): ClassInfo = ntd match
-    case NuTypeDef(Cls, TypeName(name), Nil, S(Tup(args)), N, N, Nil, N, N, TypingUnit(Nil)) =>
-      ClassInfo(
+    case NuTypeDef(Cls, TypeName(name), Nil, S(Tup(args)), N, N, parents, N, N, TypingUnit(Nil)) =>
+      val cls = ClassInfo(
         classUid.make,
         name, 
         args map {
@@ -263,12 +263,24 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
           case _ => throw IRError("unsupported field")
         }
       )
-    case NuTypeDef(Cls, TypeName(name), Nil, N, N, N, Nil, N, N, TypingUnit(Nil)) =>
-      ClassInfo(
+      cls.parents = parents.map { 
+        case Var(name) if name.isCapitalized =>
+          name
+        case _ => throw IRError("unsupported parent")
+      }.toSet
+      cls
+    case NuTypeDef(Cls, TypeName(name), Nil, N, N, N, parents, N, N, TypingUnit(Nil)) =>
+      val cls = ClassInfo(
         classUid.make,
         name,
         Ls(),
       )
+      cls.parents = parents.map { 
+        case Var(name) if name.isCapitalized =>
+          name
+        case _ => throw IRError("unsupported parent")
+      }.toSet
+      cls
     case x @ _ => throw IRError(f"unsupported NuTypeDef $x")
 
   private def getDefinitionName(nfd: Statement): Str = nfd match
