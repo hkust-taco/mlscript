@@ -59,13 +59,20 @@ map(succ) of None
 //│     = None { class: [class None extends Option] }
 
 
-:e // TODO support
+// :pe // TODO support
+// :e
+// :w
+
+// TODO :: here `as` is used as @
 fun map(f) = case
   Some(x)   then Some(f(x))
   None as n then n
-//│ ╔══[ERROR] Illegal pattern `as`
-//│ ║  l.65: 	  None as n then n
-//│ ╙──      	       ^^
+//│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
+//│ ║  l.69: 	  None as n then n
+//│ ╙──      	          ^^^^^^^^
+//│ ╔══[ERROR] Illegal interleaved statement Asc(Var(None),Literal(UnitLit(true)))
+//│ ║  l.69: 	  None as n then n
+//│ ╙──      	  ^^^^
 //│ fun map: anything -> anything -> error
 //│ Code generation encountered an error:
 //│   if expression was not desugared
@@ -74,10 +81,10 @@ fun map(f) = case
 :pe
 case 1
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'case'; found integer literal instead
-//│ ║  l.75: 	case 1
+//│ ║  l.82: 	case 1
 //│ ║        	     ^
 //│ ╟── Note: 'case' expression starts here:
-//│ ║  l.75: 	case 1
+//│ ║  l.82: 	case 1
 //│ ╙──      	^^^^
 //│ anything -> 1
 //│ res
@@ -86,13 +93,13 @@ case 1
 :pe
 case (1 then true)
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword here
-//│ ║  l.87: 	case (1 then true)
+//│ ║  l.94: 	case (1 then true)
 //│ ╙──      	        ^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'case'; found integer literal instead
-//│ ║  l.87: 	case (1 then true)
+//│ ║  l.94: 	case (1 then true)
 //│ ║        	     ^^^^^^^^^^^^^
 //│ ╟── Note: 'case' expression starts here:
-//│ ║  l.87: 	case (1 then true)
+//│ ║  l.94: 	case (1 then true)
 //│ ╙──      	^^^^
 //│ anything -> 1
 //│ res
@@ -106,16 +113,16 @@ case else 0
 :pe
 case then 1 else 0
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in expression position
-//│ ║  l.107: 	case then 1 else 0
+//│ ║  l.114: 	case then 1 else 0
 //│ ╙──       	     ^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'case'; found integer literal instead
-//│ ║  l.107: 	case then 1 else 0
+//│ ║  l.114: 	case then 1 else 0
 //│ ║         	          ^
 //│ ╟── Note: 'case' expression starts here:
-//│ ║  l.107: 	case then 1 else 0
+//│ ║  l.114: 	case then 1 else 0
 //│ ╙──       	^^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found 'else' keyword instead
-//│ ║  l.107: 	case then 1 else 0
+//│ ║  l.114: 	case then 1 else 0
 //│ ╙──       	            ^^^^
 //│ anything -> 1
 //│ res
@@ -129,16 +136,16 @@ case then 1 else 0
 :e
 case x, y then x + y
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
-//│ ║  l.130: 	case x, y then x + y
+//│ ║  l.137: 	case x, y then x + y
 //│ ╙──       	        ^^^^^^^^^^^^
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'case'; found operator application instead
-//│ ║  l.130: 	case x, y then x + y
+//│ ║  l.137: 	case x, y then x + y
 //│ ║         	     ^^^^^^^^^^^^^^^
 //│ ╟── Note: 'case' expression starts here:
-//│ ║  l.130: 	case x, y then x + y
+//│ ║  l.137: 	case x, y then x + y
 //│ ╙──       	^^^^
 //│ ╔══[ERROR] identifier not found: x
-//│ ║  l.130: 	case x, y then x + y
+//│ ║  l.137: 	case x, y then x + y
 //│ ╙──       	     ^
 //│ anything -> ()
 //│ Code generation encountered an error:
@@ -147,7 +154,7 @@ case x, y then x + y
 :e
 case (x, y) then x + y
 //│ ╔══[ERROR] Illegal pattern `,`
-//│ ║  l.148: 	case (x, y) then x + y
+//│ ║  l.155: 	case (x, y) then x + y
 //│ ╙──       	      ^^^^
 //│ anything -> error
 //│ Code generation encountered an error:

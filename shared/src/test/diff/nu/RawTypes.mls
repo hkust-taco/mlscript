@@ -1,0 +1,150 @@
+:NewDefs
+
+// * currently
+// Foo => Foo[?] ? is rigid can be uncovered in pattern matching
+// * future
+// Foo => Foo['a] can place bounds on 'a
+
+class Foo[type A](val a: A)
+//│ class Foo[A](a: A)
+
+:e
+fun foo(f: Foo): Int = f.a : f.A
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.12: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║        	                       ^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.12: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║        	                       ^^^
+//│ ╟── back into type variable `A`
+//│ ║  l.12: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ╙──      	                              ^^
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.12: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║        	                       ^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.12: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ║        	                              ^^
+//│ ╟── into type `Int`
+//│ ║  l.12: 	fun foo(f: Foo): Int = f.a : f.A
+//│ ╙──      	                 ^^^
+//│ fun foo: (f: Foo[anything]) -> Int
+
+// :s
+// :ds
+// TODO
+fun foo(f: Foo[?]) = f.a
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
+//│ ║  l.36: 	fun foo(f: Foo[?]) = f.a
+//│ ╙──      	               ^
+//│ fun foo: (f: Foo[error]) -> error
+
+// TODO
+fun foo(f: Foo[?]) = f.a : f.A
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
+//│ ║  l.43: 	fun foo(f: Foo[?]) = f.a : f.A
+//│ ╙──      	               ^
+//│ fun foo: (f: Foo[error]) -> error
+
+foo(Foo(1))
+//│ error
+//│ res
+//│     = 1
+
+fun foo(f: Foo) = f.a
+//│ fun foo: (f: Foo[anything]) -> ??A
+
+fun foo(f: Foo[Int]) = f.a
+//│ fun foo: (f: Foo[Int]) -> Int
+
+// TODO
+fun foo(f: Foo[?]) = if f is Foo(a) then a : f.A
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
+//│ ║  l.61: 	fun foo(f: Foo[?]) = if f is Foo(a) then a : f.A
+//│ ╙──      	               ^
+//│ fun foo: (f: Foo[error]) -> error
+
+:e
+fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ╔══[ERROR] Type error in `case` expression
+//│ ║  l.68: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║        	                          ^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.8: 	class Foo[type A](val a: A)
+//│ ║       	               ^
+//│ ╟── into type `nothing`
+//│ ║  l.68: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║        	                                                ^^
+//│ ╟── Note: constraint arises from field selection:
+//│ ║  l.8: 	class Foo[type A](val a: A)
+//│ ╙──     	                      ^
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.68: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║        	                          ^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.68: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ║        	                                                ^^
+//│ ╟── into type `Int`
+//│ ║  l.68: 	fun foo(f: Foo): Int = if f is Foo(a) then a : f.A
+//│ ╙──      	                 ^^^
+//│ fun foo: (f: Foo[anything]) -> Int
+
+:e
+fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
+//│ ║  l.93: 	fun foo(f: Foo[?]): Int = if f is Foo(a) then a : f.A else 0
+//│ ╙──      	               ^
+//│ fun foo: (f: Foo[error]) -> Int
+
+fun foo(f: Foo['a]) = f.a : f.A
+//│ fun foo: forall 'a. (f: Foo['a]) -> 'a
+
+fun foo(a, f: Foo[a]): Int = f.a : f.A
+//│ fun foo: forall 'a. ('a, f: Foo['a]) -> Int
+//│   where
+//│     'a <: Int
+
+fun bar(f): Int = f.a : f.A
+//│ fun bar: forall 'A. {A :> 'A <: Int, a: 'A} -> Int
+
+foo(2, Foo(1))
+//│ Int
+//│ res
+//│     = 1
+
+bar(Foo(1))
+//│ Int
+//│ res
+//│     = 1
+
+class Foo[A](val a: A -> A)
+//│ class Foo[A](a: A -> A)
+
+fun foo(f: Foo) = f.a
+//│ fun foo: (f: Foo[?]) -> ??A -> ??A0
+
+fun foo(f: Foo) = ()
+//│ fun foo: (f: Foo[?]) -> ()
+
+fun foo(f) = f : Foo
+//│ fun foo: Foo[?] -> Foo[?]
+
+abstract class Foo[type T]: Bar
+class Bar(val b: Int) extends Foo[Int]
+//│ abstract class Foo[T]: Bar
+//│ class Bar(b: Int) extends Foo
+
+// TODO
+fun foo(x: Foo[?]) = if x is Bar then x.b : x.T
+//│ ╔══[ERROR] Invalid use of wildcard type `?` here
+//│ ║  l.138: 	fun foo(x: Foo[?]) = if x is Bar then x.b : x.T
+//│ ╙──       	               ^
+//│ fun foo: (x: Foo[error]) -> Int
+
+foo(Bar(1))
+//│ Int
+//│ res
+//│     = 1
+
+fun foo(x: Foo['a]) = if x is Bar then x.b : x.T
+//│ fun foo: forall 'a. (x: Foo['a]) -> Int

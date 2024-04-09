@@ -123,6 +123,7 @@ showTerm(App(Abs(Var("x"), _t("int"), Var("y")), Var("z")))
 //│ res
 //│     = '((&x: int => z) z)'
 
+// :e // FIXME recursion depth excess
 // Removing the return type annotation causes stack overflow.
 fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, Str] =
   if t is
@@ -165,3 +166,4 @@ showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("Str")))
 //│     = 'Type error: expect the argument to be of type `int` but found `float`'
 //│ res
 //│     = 'Type error: cannot apply primitive type `Str`'
+

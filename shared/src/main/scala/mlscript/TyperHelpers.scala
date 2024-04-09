@@ -1095,9 +1095,9 @@ abstract class TyperHelpers { Typer: Typer =>
       ctx.tyDefs2.get(defn.name).map { info =>
         lazy val mkTparamRcd = RecordType(info.tparams.lazyZip(targs).map {
             case ((tn, tv, vi), ta) =>
-              val fldNme = defn.name + "#" + tn.name
+              val fldNme = tparamField(defn.name, tn.name, vi.visible)
               // TODO also use computed variance info when available!
-              Var(fldNme).withLocOf(tn) -> FieldType.mk(vi.getOrElse(VarianceInfo.in), ta, ta)(provTODO)
+              Var(fldNme).withLocOf(tn) -> FieldType.mk(vi.varinfo.getOrElse(VarianceInfo.in), ta, ta)(provTODO)
           })(provTODO)
         info.result match {
           case S(td: TypedNuAls) =>
@@ -1155,7 +1155,7 @@ abstract class TyperHelpers { Typer: Typer =>
       lazy val tparamTags =
         if (paramTags) RecordType.mk(td.tparamsargs.map { case (tp, tv) =>
             val tvv = td.getVariancesOrDefault
-            tparamField(defn, tp) -> FieldType(
+            tparamField(defn, tp, false) -> FieldType(
               Some(if (tvv(tv).isCovariant) BotType else tv),
               if (tvv(tv).isContravariant) TopType else tv)(prov)
           })(noProv)

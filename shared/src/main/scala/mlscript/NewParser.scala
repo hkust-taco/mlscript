@@ -770,6 +770,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (KEYWORD("super"), l0) :: _ =>
         consume
         exprCont(Super().withLoc(S(l0)), prec, allowNewlines = false)
+      case (IDENT("?", true), l0) :: _ => 
+        consume
+        exprCont(Var("?").withLoc(S(l0)), prec, allowNewlines = false)
       case (IDENT("~", _), l0) :: _ =>
         consume
         val rest = expr(prec, allowSpace = true)
@@ -1080,7 +1083,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                 else App(App(v, PlainTup(acc)), PlainTup(rhs))
             }, prec, allowNewlines)
         }
-      case (KEYWORD(":"), l0) :: _ if prec <= NewParser.prec(':') =>
+      case (KEYWORD("as" | ":"), l0) :: _ if prec <= NewParser.prec(':') =>
         consume
         R(Asc(acc, typ(0)))
       case (KEYWORD("where"), l0) :: _ if prec <= 1 =>
@@ -1278,35 +1281,59 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }
   
   // TODO support line-broken param lists; share logic with args/argsOrIf
-  def typeParams(implicit fe: FoundErr, et: ExpectThen): Ls[(Opt[VarianceInfo], TypeName)] = {
+  def typeParams(implicit fe: FoundErr, et: ExpectThen): Ls[(TypeParamInfo, TypeName)] = {
+    val visinfo = yeetSpaces match {
+      case (KEYWORD("type"), l0) :: _ =>
+        consume
+        S(l0)
+      case _ => N
+    }
     val vinfo = yeetSpaces match {
       case (KEYWORD("in"), l0) :: (KEYWORD("out"), l1) :: _ =>
         consume
-        S(VarianceInfo.in, l0 ++ l1)
+        S(VarianceInfo.in -> (l0++l1))
       case (KEYWORD("in"), l0) :: _ =>
         consume
-        S(VarianceInfo.contra, l0)
+        S(VarianceInfo.contra -> l0)
       case (KEYWORD("out"), l0) :: _ =>
         consume
-        S(VarianceInfo.co, l0)
-      case _ => N
+        S(VarianceInfo.co -> l0)
+      case _ =>
+        N
     }
     yeetSpaces match {
       case (IDENT(nme, false), l0) :: _ =>
         consume
         val tyNme = TypeName(nme).withLoc(S(l0))
+
+        @inline def getTypeName(kw: String) = yeetSpaces match {
+          case (KEYWORD(k), l0) :: _ if k === kw => consume
+            yeetSpaces match {
+              case (IDENT(nme, false), l1) :: _ => 
+                consume; S(TypeName(nme).withLoc(S(l1)))
+              case _ => err(msg"dangling $kw keyword" -> S(l0) :: Nil); N
+            }
+          case _ => N
+        }
+        val lb = getTypeName("restricts")
+        val ub = getTypeName("extends")
+        // TODO update `TypeParamInfo` to use lb and ub
         yeetSpaces match {
           case (COMMA, l0) :: _ =>
             consume
-            vinfo.map(_._1) -> tyNme :: typeParams
+            TypeParamInfo(vinfo.map(_._1), visinfo.isDefined, lb, ub) -> tyNme :: typeParams
           case _ =>
-            vinfo.map(_._1) -> tyNme :: Nil
+            TypeParamInfo(vinfo.map(_._1), visinfo.isDefined, lb, ub) -> tyNme :: Nil
         }
       case _ =>
-        vinfo match {
-          case S((_, loc)) =>
+        (visinfo, vinfo) match {
+          case (S(l1), S(_ -> l2)) =>
+            err(msg"dangling type member and variance information" -> S(l1 ++ l2) :: Nil)
+          case (_, S(_ -> loc)) =>
             err(msg"dangling variance information" -> S(loc) :: Nil)
-          case N =>
+          case (S(loc), _) =>
+            err(msg"dangling visible type member" -> S(loc) :: Nil)
+          case (N, N) =>
         }
         Nil
     }
@@ -1373,7 +1400,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case (NEWLINE, _) :: _ => // TODO: | ...
         assert(seqAcc.isEmpty)
         acc.reverse
-      case (IDENT(nme, true), _) :: _ if nme =/= "-" => // TODO: | ...
+      case (IDENT(nme, true), _) :: _ if nme =/= "-" && nme =/= "?" => // TODO: | ...
         assert(seqAcc.isEmpty)
         acc.reverse
       case _ =>

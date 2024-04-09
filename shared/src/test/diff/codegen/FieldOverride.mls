@@ -128,7 +128,7 @@ let c3 = C3(1)
 let c4 = c3.C4(2)
 c3.a
 c4.a
-//│ ╔══[ERROR] Access to class member not yet supported
+//│ ╔══[ERROR] Access to class member C4 not yet supported
 //│ ║  l.128: 	let c4 = c3.C4(2)
 //│ ╙──       	           ^^^
 //│ let c3: C3

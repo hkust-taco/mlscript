@@ -747,7 +747,7 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     val nTerms = termList.map(liftTerm(_)(using emptyCtx, nCache, globFuncs, nOuter)).unzip
     clsList.foreach(x => liftTypeDef(x)(using nCache, globFuncs, nOuter))
     retSeq = retSeq.appended(NuTypeDef(
-      kind, nName, nTps.map((None, _)), kind match 
+      kind, nName, nTps.map((TypeParamInfo(None, false, N, N), _)), kind match 
         case Mod => None
         case _ => S(Tup(nParams))
       , None, None, nPars._1, None, None, TypingUnit(nFuncs._1 ++ nTerms._1))(None, None, Nil))

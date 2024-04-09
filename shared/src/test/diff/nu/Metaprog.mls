@@ -28,7 +28,7 @@ abstract class Test[C] {
   // * Represents what happens in "... ${input} ..." when a binding of C is in scope
   fun unquote: (input: Code['a, C | 'c]) -> Code[Int, 'c]
   fun getVar: Code[Int, C]
-  fun test0 = this.unquote of IntLit(1)
+  fun test0 = this.unquote of (IntLit(1) : Code['ia, 'ic]) // ? why ascription works here
   fun test1 = this.unquote of Add(this.getVar, IntLit(1))
 }
 //│ abstract class Test[C] {

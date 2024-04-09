@@ -46,13 +46,10 @@ fun f(e) = if e is
   Pair(l: a, r) then
     let f(x: a) = x
     f(l)
-//│ ╔══[ERROR] type identifier not found: a
-//│ ║  l.47: 	    let f(x: a) = x
-//│ ╙──      	             ^
 //│ ╔══[ERROR] identifier not found: l
 //│ ║  l.48: 	    f(l)
 //│ ╙──      	      ^
-//│ fun f: Pair[anything, anything] -> error
+//│ fun f: forall 'a. Pair['a, anything] -> (error | 'a)
 //│ Code generation encountered an error:
 //│   unresolved symbol l
 // fun f: forall 'lhs 'rhs. Pair['lhs, 'rhs] -> ('lhs, 'rhs,)

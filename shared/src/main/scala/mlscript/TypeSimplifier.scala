@@ -127,7 +127,7 @@ trait TypeSimplifier { self: Typer =>
                         else  v -> default :: Nil
                     }
                   case S(trt: TypedNuTrt) => // TODO factor w/ above & generalize
-                    trt.tparams.iterator.find(_._1.name === postfix).flatMap(_._3).getOrElse(VarianceInfo.in) match {
+                    trt.tparams.iterator.find(_._1.name === postfix).flatMap(_._3.varinfo).getOrElse(VarianceInfo.in) match {
                       case VarianceInfo(true, true) => Nil
                       case VarianceInfo(co, contra) =>
                         if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil
@@ -248,7 +248,7 @@ trait TypeSimplifier { self: Typer =>
                 
                 // * Reconstruct a TypeRef from its current structural components
                 val typeRef = TypeRef(td.nme, td.tparamsargs.zipWithIndex.map { case ((tp, tv), tpidx) =>
-                  val fieldTagNme = tparamField(clsTyNme, tp)
+                  val fieldTagNme = tparamField(clsTyNme, tp, false)
                   val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
                   fromTyRef.++(rcd2.fields.iterator.filter(_._1 === fieldTagNme).map(_._2))
                     .foldLeft((BotType: ST, TopType: ST)) {
@@ -358,7 +358,7 @@ trait TypeSimplifier { self: Typer =>
                 
                 // * Reconstruct a TypeRef from its current structural components
                 val typeRef = TypeRef(cls.td.nme, cls.tparams.zipWithIndex.map { case ((tp, tv, vi), tpidx) =>
-                  val fieldTagNme = tparamField(clsTyNme, tp)
+                  val fieldTagNme = tparamField(clsTyNme, tp, vi.visible)
                   val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
                   fromTyRef.++(rcd2.fields.iterator.filter(_._1 === fieldTagNme).map(_._2))
                     .foldLeft((BotType: ST, TopType: ST)) {

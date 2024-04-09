@@ -39,22 +39,7 @@ fun sum(v) =
 //│ globalThis.sum = function sum(v) {
 //│   return ((() => {
 //│     let a;
-//│     return (a = v, a instanceof V0.class ? 0 : a instanceof V1.class ? (([a]) => a)(V1.unapply(v)) : a instanceof V2.class ? (([
-//│       a,
-//│       b
-//│     ]) => a + b)(V2.unapply(v)) : a instanceof Pos.class ? (([x]) => x > 0 === true ? x : -1)(Pos.unapply(v)) : a instanceof V22.class ? (([
-//│       tmp0,
-//│       tmp1
-//│     ]) => tmp0 instanceof V2.class ? (([
-//│       x1,
-//│       y1
-//│     ]) => tmp1 instanceof V2.class ? (([
-//│       x2,
-//│       y2
-//│     ]) => x1 + y1 + x2 + y2)(V2.unapply(tmp1)) : -1)(V2.unapply(tmp0)) : -1)(V22.unapply(v)) : a instanceof Half.class ? (([
-//│       tmp2,
-//│       x
-//│     ]) => x)(Half.unapply(v)) : a instanceof None.class ? (([tmp3]) => 0)(None.unapply(v)) : -1);
+//│     return a = v, a instanceof V0.class ? 0 : a instanceof V1.class ? (($unapp) => ((a) => a)($unapp[0]))(V1.unapply(v)) : a instanceof V2.class ? (($unapp) => ((a) => ((b) => a + b)($unapp[1]))($unapp[0]))(V2.unapply(v)) : a instanceof Pos.class ? (($unapp) => ((x) => x > 0 === true ? x : -1)($unapp[0]))(Pos.unapply(v)) : a instanceof V22.class ? (($unapp) => ((tmp0) => ((tmp1) => tmp0 instanceof V2.class ? (($unapp) => ((x1) => ((y1) => tmp1 instanceof V2.class ? (($unapp) => ((x2) => ((y2) => x1 + y1 + x2 + y2)($unapp[1]))($unapp[0]))(V2.unapply(tmp1)) : -1)($unapp[1]))($unapp[0]))(V2.unapply(tmp0)) : -1)($unapp[1]))($unapp[0]))(V22.unapply(v)) : a instanceof Half.class ? (($unapp) => ((x) => x)($unapp[1]))(Half.unapply(v)) : a instanceof None.class ? (($unapp) => 0)(None.unapply(v)) : -1;
 //│   })());
 //│ };
 //│ // End of generated code
@@ -104,7 +89,7 @@ fun get1(s) =
 //│ globalThis.get1 = function get1(s) {
 //│   return ((() => {
 //│     let a;
-//│     return (a = s, a instanceof Some.class ? (([tmp4]) => ((y) => tmp4 instanceof V1.class ? (([x]) => x)(V1.unapply(tmp4)) : y)(tmp4))(Some.unapply(s)) : (() => {
+//│     return (a = s, a instanceof Some.class ? (($unapp) => ((tmp2) => ((y) => tmp2 instanceof V1.class ? (($unapp) => ((x) => x)($unapp[0]))(V1.unapply(tmp2)) : y)(tmp2))($unapp[0]))(Some.unapply(s)) : (() => {
 //│       throw new Error("non-exhaustive case expression");
 //│     })());
 //│   })());
@@ -136,7 +121,7 @@ fun foo(s) =
 //│ // Query 1
 //│ globalThis.foo = function foo(s) {
 //│   return ((() => {
-//│     return s instanceof Some.class ? (([t]) => ((b) => b + t.x)(s2.value))(Some.unapply(s)) : 0;
+//│     return s instanceof Some.class ? (($unapp) => ((t) => ((b) => b + t.x)(s2.value))($unapp[0]))(Some.unapply(s)) : 0;
 //│   })());
 //│ };
 //│ // End of generated code
@@ -219,7 +204,7 @@ fun ft(x) =
     FooBar(x) then x
     _ then 0
 //│ ╔══[ERROR] class FooBar expects 0 parameter but found 1 parameter
-//│ ║  l.219: 	    FooBar(x) then x
+//│ ║  l.204: 	    FooBar(x) then x
 //│ ╙──       	    ^^^^^^^^^
 //│ fun ft: anything -> error
 //│ Code generation encountered an error:
@@ -265,7 +250,7 @@ fun c(x) =
     VVC(x, y, z) then x + y + z
     _ then 0
 //│ ╔══[ERROR] class VVC expects 2 parameters but found 3 parameters
-//│ ║  l.265: 	    VVC(x, y, z) then x + y + z
+//│ ║  l.250: 	    VVC(x, y, z) then x + y + z
 //│ ╙──       	    ^^^^^^^^^^^^
 //│ class VVC(v: Int, vc: Int)
 //│ fun c: anything -> error

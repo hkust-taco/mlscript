@@ -110,9 +110,11 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
     }
   }
   
-  
-  def tparamField(clsNme: TypeName, tparamNme: TypeName): Var =
-    Var(clsNme.name + "#" + tparamNme.name)
+  def tparamField(clsNme: TypeName, tparamNme: TypeName, visible: Bool): Var =
+    Var(tparamField(clsNme.name, tparamNme.name, visible))
+
+  def tparamField(clsNme: String, tparamNme: String, visible: Bool): String =
+    if (!visible) clsNme + "#" + tparamNme else tparamNme
   
   def clsNameToNomTag(td: NuTypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
     require((td.kind is Cls) || (td.kind is Mod), td.kind)
@@ -343,7 +345,8 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
                 case _ =>
                   val fields = fieldsOf(td.bodyTy, paramTags = true)
                   val tparamTags = td.tparamsargs.map { case (tp, tv) =>
-                    tparamField(td.nme, tp) -> FieldType(Some(tv), tv)(tv.prov) }
+                    // `false` means using `C#A` (old type member names)
+                    tparamField(td.nme, tp, false) -> FieldType(Some(tv), tv)(tv.prov) }
                   val ctor = k match {
                     case Cls =>
                       val nomTag = clsNameToNomTag(td)(originProv(td.nme.toLoc, "class", td.nme.name), ctx)

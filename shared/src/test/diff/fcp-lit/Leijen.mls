@@ -425,7 +425,7 @@ app (map head) (single ids)
 (error : List['a -> 'a] -> int) (error : List[(forall 'd. 'd -> 'c) -> 'c])
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a <: ? -> 'a
+//│     'a <: #? -> 'a
 //│ ╙──
 //│ res: int
 
