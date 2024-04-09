@@ -6,6 +6,7 @@ import mlscript.compiler.ir._
 import scala.collection.mutable.StringBuilder
 import mlscript.{DiffTests, ModeType, TypingUnit}
 import mlscript.compiler.ir.{Interpreter, Fresh, FreshInt, Builder}
+import mlscript.compiler.codegen.cpp.CppCodeGen
 
 class IRDiffTestCompiler extends DiffTests {
   import IRDiffTestCompiler.*
@@ -26,6 +27,10 @@ class IRDiffTestCompiler extends DiffTests {
           val ir = Interpreter(mode.irVerbose).interpret(graph)
           interp_result = Some(ir)
           output(ir)
+        if (mode.genCpp)
+          output("\nCpp:")
+          val cpp = CppCodeGen().codegen(graph)
+          output(cpp.toDocument.print)
 
       catch
         case err: Exception =>

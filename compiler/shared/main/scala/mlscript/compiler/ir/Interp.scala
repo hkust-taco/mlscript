@@ -3,6 +3,7 @@ package mlscript.compiler.ir
 import mlscript._
 import mlscript.compiler._
 import mlscript.compiler.ir.{Node => INode, Expr => IExpr, Program => IProgram, Defn => IDefn, DefnRef => IDefnRef}
+import mlscript.compiler.utils._
 import mlscript.compiler.optimizer._
 import mlscript.utils._
 import scala.collection.immutable._

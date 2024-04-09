@@ -3,8 +3,9 @@ package mlscript.compiler.ir
 import mlscript._
 import mlscript.utils._
 import mlscript.utils.shorthands._
-import mlscript.compiler.ir._
+import mlscript.compiler.utils._
 import mlscript.compiler.optimizer._
+import mlscript.compiler.ir._
 
 import collection.mutable.{Map as MutMap, Set as MutSet, HashMap, ListBuffer}
 import annotation.unused
@@ -35,6 +36,7 @@ case class ClassInfo(
   ident: Str,
   fields: Ls[Str],
 ):
+  var parents: Set[Str] = Set.empty
   override def hashCode: Int = id
   override def toString: String =
     s"ClassInfo($id, $ident, [${fields mkString ","}])"
@@ -87,12 +89,12 @@ implicit object DefOrdering extends Ordering[Defn] {
 }
 
 case class Defn(
-  val id: Int,
-  val name: Str,
-  val params: Ls[Name],
-  val resultNum: Int,
-  var specialized: Opt[Ls[Opt[Intro]]],
-  val body: Node
+  id: Int,
+  name: Str,
+  params: Ls[Name],
+  resultNum: Int,
+  specialized: Opt[Ls[Opt[Intro]]],
+  body: Node
 ):
   // used by optimizer
   var activeInputs: Set[Ls[Opt[Intro]]] = Set()

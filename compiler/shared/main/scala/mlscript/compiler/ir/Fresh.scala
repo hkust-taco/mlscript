@@ -3,9 +3,8 @@ package mlscript.compiler.ir
 import collection.mutable.{HashMap => MutHMap}
 import mlscript.utils.shorthands._
 
-final class Fresh:
+final class Fresh(div : Char = '$'):
   private val counter = MutHMap[Str, Int]()
-  private val div = '$' 
   private def gensym(s: Str) = {
     val n = s.lastIndexOf(div)
     val (ts, suffix) = s.splitAt(if n == -1 then s.length() else n)

@@ -75,6 +75,7 @@ fib(20)
 //│ 6765
 
 :interpIR
+:genCpp
 class True
 class False
 fun odd(x) = if x == 0 then False else even(x-1)
@@ -203,6 +204,65 @@ foo()
 //│ 
 //│ Interpreted:
 //│ False()
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_True;
+//│ struct _mls_False;
+//│ _mlsValue _mls_odd(_mlsValue);
+//│ _mlsValue _mls_j_0(_mlsValue);
+//│ _mlsValue _mls_foo();
+//│ _mlsValue _mls_even(_mlsValue);
+//│ _mlsValue _mls_j_1(_mlsValue);
+//│ _mlsValue _mlsMain();
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_8){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_8;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_1 = (_mls_x_0==_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_1)){
+//│     auto _mls_x_3 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_3);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_1)){
+//│     auto _mls_x_4 = (_mls_x_0-_mlsValue::fromIntLit(1));
+//│     auto _mls_x_5 = _mls_even(_mls_x_4);
+//│     _mls_retval = _mls_j_0(_mls_x_5);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_even(_mlsValue _mls_x_6){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_7 = (_mls_x_6==_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_7)){
+//│     auto _mls_x_9 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_1(_mls_x_9);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_7)){
+//│     auto _mls_x_10 = (_mls_x_6-_mlsValue::fromIntLit(1));
+//│     auto _mls_x_11 = _mls_odd(_mls_x_10);
+//│     _mls_retval = _mls_j_1(_mls_x_11);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_foo(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_12 = _mls_odd(_mlsValue::fromIntLit(10));
+//│   _mls_retval = _mls_x_12;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_2){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_2;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_13 = _mls_foo();
+//│   _mls_retval = _mls_x_13;
+//│   return _mls_retval;
+//│ }
 
 :interpIR
 class True
@@ -2077,6 +2137,7 @@ main()
 //│ Some(1)
 
 :interpIR
+:genCpp
 class True
 class False
 class Cons(h, t)
@@ -2359,8 +2420,152 @@ main()
 //│ 
 //│ Interpreted:
 //│ 115
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_True;
+//│ struct _mls_None;
+//│ struct _mls_False;
+//│ struct _mls_Cons;
+//│ struct _mls_Nil;
+//│ struct _mls_Some;
+//│ _mlsValue _mls_e0(_mlsValue);
+//│ _mlsValue _mls_e2(_mlsValue);
+//│ _mlsValue _mls_j_0(_mlsValue);
+//│ _mlsValue _mls_e1(_mlsValue, _mlsValue);
+//│ _mlsValue _mls_j_2(_mlsValue);
+//│ _mlsValue _mls_main();
+//│ _mlsValue _mls_e3(_mlsValue);
+//│ _mlsValue _mls_is_some(_mlsValue);
+//│ _mlsValue _mls_j_1(_mlsValue);
+//│ _mlsValue _mls_f(_mlsValue);
+//│ _mlsValue _mlsMain();
+//│ struct _mls_None: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "None"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│ };
+//│ struct _mls_Cons: public _mlsObject{
+//│   _mlsValue _mls_h;
+//│   _mlsValue _mls_t;
+//│   virtual const char *name() const override { return "Cons"; }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->_mls_h = _mls_h;_mlsVal->_mls_t = _mls_t; return _mlsVal; }
+//│ };
+//│ struct _mls_Nil: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "Nil"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
+//│ };
+//│ struct _mls_Some: public _mlsObject{
+//│   _mlsValue _mls_x;
+//│   virtual const char *name() const override { return "Some"; }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->_mls_x = _mls_x; return _mlsVal; }
+//│ };
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_0;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_29){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_30 = _mls_e0(_mls_x_29);
+//│   _mls_retval = _mls_x_30;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_34 = _mlsValue::create<_mls_Some>(_mlsValue::fromIntLit(2));
+//│   auto _mls_x_35 = _mls_f(_mls_x_34);
+//│   auto _mls_x_36 = _mlsValue::create<_mls_None>();
+//│   auto _mls_x_37 = _mls_f(_mls_x_36);
+//│   auto _mls_x_38 = (_mls_x_35+_mls_x_37);
+//│   _mls_retval = _mls_x_38;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_f(_mlsValue _mls_x_26){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_27 = _mls_is_some(_mls_x_26);
+//│   auto _mls_x_28 = _mls_e3(_mls_x_27);
+//│   if (_mlsValue::isValueOf<_mls_Some>(_mls_x_26)){
+//│     auto _mls_x_31 = _mlsValue::as<_mls_Some>(_mls_x_26)->_mls_x;
+//│     auto _mls_x_32 = _mls_e1(_mls_x_31, _mls_x_28);
+//│     _mls_retval = _mls_j_2(_mls_x_32);
+//│   } else if (_mlsValue::isValueOf<_mls_None>(_mls_x_26)){
+//│     auto _mls_x_33 = _mls_e2(_mls_x_28);
+//│     _mls_retval = _mls_j_2(_mls_x_33);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_e0(_mlsValue _mls_w_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_4 = (_mls_w_0+_mlsValue::fromIntLit(8));
+//│   auto _mls_x_5 = (_mls_x_4+_mlsValue::fromIntLit(9));
+//│   auto _mls_x_6 = (_mls_x_5+_mlsValue::fromIntLit(10));
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_e1(_mlsValue _mls_a_0, _mlsValue _mls_c_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_7 = (_mls_a_0+_mlsValue::fromIntLit(1));
+//│   auto _mls_x_8 = (_mls_x_7+_mlsValue::fromIntLit(2));
+//│   auto _mls_x_9 = (_mls_x_8+_mlsValue::fromIntLit(3));
+//│   auto _mls_x_10 = (_mls_x_9+_mlsValue::fromIntLit(4));
+//│   _mls_retval = _mls_x_10;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_is_some(_mlsValue _mls_o_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_Some>(_mls_o_0)){
+//│     auto _mls_x_1 = _mlsValue::as<_mls_Some>(_mls_o_0)->_mls_x;
+//│     auto _mls_x_2 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_None>(_mls_o_0)){
+//│     auto _mls_x_3 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_3);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_e2(_mlsValue _mls_x_22){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_23 = (_mls_x_22+_mlsValue::fromIntLit(12));
+//│   auto _mls_x_24 = (_mls_x_23+_mlsValue::fromIntLit(13));
+//│   auto _mls_x_25 = (_mls_x_24+_mlsValue::fromIntLit(14));
+//│   _mls_retval = _mls_x_25;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_e3(_mlsValue _mls_c_1){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_11 = _mlsValue::fromIntLit(4);
+//│   auto _mls_x_12 = _mlsValue::fromIntLit(5);
+//│   auto _mls_x_13 = _mlsValue::fromIntLit(6);
+//│   auto _mls_x_14 = _mlsValue::fromIntLit(7);
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_c_1)){
+//│     auto _mls_x_16 = (_mls_x_11+_mls_x_12);
+//│     auto _mls_x_17 = (_mls_x_16+_mls_x_13);
+//│     auto _mls_x_18 = (_mls_x_17+_mls_x_14);
+//│     _mls_retval = _mls_j_1(_mls_x_18);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_c_1)){
+//│     auto _mls_x_19 = (_mls_x_11+_mls_x_12);
+//│     auto _mls_x_20 = (_mls_x_19-_mls_x_13);
+//│     auto _mls_x_21 = (_mls_x_20+_mls_x_14);
+//│     _mls_retval = _mls_j_1(_mls_x_21);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_15){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_15;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_39 = _mls_main();
+//│   _mls_retval = _mls_x_39;
+//│   return _mls_retval;
+//│ }
 
 :interpIR
+:genCpp
 class True
 class False
 class Cons(h, t)
@@ -2665,3 +2870,156 @@ main()
 //│ 
 //│ Interpreted:
 //│ 179
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_True;
+//│ struct _mls_None;
+//│ struct _mls_False;
+//│ struct _mls_Cons;
+//│ struct _mls_Nil;
+//│ struct _mls_Some;
+//│ _mlsValue _mls_e0(_mlsValue);
+//│ _mlsValue _mls_e2(_mlsValue);
+//│ _mlsValue _mls_j_0(_mlsValue);
+//│ _mlsValue _mls_e1(_mlsValue, _mlsValue);
+//│ _mlsValue _mls_j_2(_mlsValue);
+//│ _mlsValue _mls_j_3(_mlsValue);
+//│ _mlsValue _mls_main();
+//│ _mlsValue _mls_e3(_mlsValue);
+//│ _mlsValue _mls_is_some(_mlsValue);
+//│ _mlsValue _mls_j_1(_mlsValue);
+//│ _mlsValue _mls_f(_mlsValue);
+//│ _mlsValue _mlsMain();
+//│ struct _mls_None: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "None"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│ };
+//│ struct _mls_Cons: public _mlsObject{
+//│   _mlsValue _mls_h;
+//│   _mlsValue _mls_t;
+//│   virtual const char *name() const override { return "Cons"; }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->_mls_h = _mls_h;_mlsVal->_mls_t = _mls_t; return _mlsVal; }
+//│ };
+//│ struct _mls_Nil: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "Nil"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
+//│ };
+//│ struct _mls_Some: public _mlsObject{
+//│   _mlsValue _mls_x;
+//│   virtual const char *name() const override { return "Some"; }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->_mls_x = _mls_x; return _mlsVal; }
+//│ };
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_0;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_f(_mlsValue _mls_x_27){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_28 = _mls_is_some(_mls_x_27);
+//│   auto _mls_x_29 = _mls_e3(_mls_x_28);
+//│   if (_mlsValue::isValueOf<_mls_Some>(_mls_x_27)){
+//│     auto _mls_x_32 = _mlsValue::as<_mls_Some>(_mls_x_27)->_mls_x;
+//│     auto _mls_x_33 = _mls_e1(_mls_x_32, _mls_x_29);
+//│     _mls_retval = _mls_j_3(_mls_x_33);
+//│   } else if (_mlsValue::isValueOf<_mls_None>(_mls_x_27)){
+//│     auto _mls_x_34 = _mls_e2(_mls_x_29);
+//│     _mls_retval = _mls_j_3(_mls_x_34);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_e2(_mlsValue _mls_x_23){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_24 = (_mls_x_23+_mlsValue::fromIntLit(12));
+//│   auto _mls_x_25 = (_mls_x_24+_mlsValue::fromIntLit(13));
+//│   auto _mls_x_26 = (_mls_x_25+_mlsValue::fromIntLit(14));
+//│   _mls_retval = _mls_x_26;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_16){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_16;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_e0(_mlsValue _mls_w_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_4 = (_mls_w_0+_mlsValue::fromIntLit(8));
+//│   auto _mls_x_5 = (_mls_x_4+_mlsValue::fromIntLit(9));
+//│   auto _mls_x_6 = (_mls_x_5+_mlsValue::fromIntLit(10));
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_35 = _mlsValue::create<_mls_Some>(_mlsValue::fromIntLit(2));
+//│   auto _mls_x_36 = _mls_f(_mls_x_35);
+//│   auto _mls_x_37 = _mlsValue::create<_mls_None>();
+//│   auto _mls_x_38 = _mls_f(_mls_x_37);
+//│   auto _mls_x_39 = (_mls_x_36+_mls_x_38);
+//│   _mls_retval = _mls_x_39;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_is_some(_mlsValue _mls_o_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_Some>(_mls_o_0)){
+//│     auto _mls_x_1 = _mlsValue::as<_mls_Some>(_mls_o_0)->_mls_x;
+//│     auto _mls_x_2 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_None>(_mls_o_0)){
+//│     auto _mls_x_3 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_3);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_e1(_mlsValue _mls_a_0, _mlsValue _mls_z_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_7 = (_mls_a_0>_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_7)){
+//│     auto _mls_x_9 = (_mls_a_0-_mlsValue::fromIntLit(1));
+//│     auto _mls_x_10 = _mlsValue::create<_mls_Some>(_mls_x_9);
+//│     auto _mls_x_11 = _mls_f(_mls_x_10);
+//│     _mls_retval = _mls_j_1(_mls_x_11);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_7)){
+//│     _mls_retval = _mls_j_1(_mls_z_0);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_8){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_8;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_e3(_mlsValue _mls_c_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_12 = _mlsValue::fromIntLit(4);
+//│   auto _mls_x_13 = _mlsValue::fromIntLit(5);
+//│   auto _mls_x_14 = _mlsValue::fromIntLit(6);
+//│   auto _mls_x_15 = _mlsValue::fromIntLit(7);
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_c_0)){
+//│     auto _mls_x_17 = (_mls_x_12+_mls_x_13);
+//│     auto _mls_x_18 = (_mls_x_17+_mls_x_14);
+//│     auto _mls_x_19 = (_mls_x_18+_mls_x_15);
+//│     _mls_retval = _mls_j_2(_mls_x_19);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_c_0)){
+//│     auto _mls_x_20 = (_mls_x_12+_mls_x_13);
+//│     auto _mls_x_21 = (_mls_x_20-_mls_x_14);
+//│     auto _mls_x_22 = (_mls_x_21+_mls_x_15);
+//│     _mls_retval = _mls_j_2(_mls_x_22);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_3(_mlsValue _mls_x_30){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_31 = _mls_e0(_mls_x_30);
+//│   _mls_retval = _mls_x_31;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_40 = _mls_main();
+//│   _mls_retval = _mls_x_40;
+//│   return _mls_retval;
+//│ }

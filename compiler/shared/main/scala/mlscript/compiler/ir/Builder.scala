@@ -123,7 +123,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
             LetExpr(v,
               if args.isEmpty then Select(name, cls, fld) else throw IRError("not supported: method call"),
               v |> ref |> sresult |> k).attachTag(tag)
-          case node @ _ => print("x"); node |> unexpectedNode
+          case node @ _ => node |> unexpectedNode
         }
       case App(f, xs @ Tup(_)) =>
         buildResultFromTerm(f) {

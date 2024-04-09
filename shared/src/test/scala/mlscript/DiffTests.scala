@@ -43,6 +43,7 @@ abstract class ModeType {
   def useIR: Bool
   def interpIR: Bool
   def irVerbose: Bool
+  def genCpp: Bool
 }
 
 class DiffTests
@@ -173,6 +174,7 @@ class DiffTests
       useIR: Bool = false,
       interpIR: Bool = false,
       irVerbose: Bool = false,
+      genCpp: Bool = false,
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
     }
@@ -287,6 +289,7 @@ class DiffTests
           case "useIR" => mode.copy(useIR = true)
           case "interpIR" => mode.copy(interpIR = true)
           case "irVerbose" => mode.copy(irVerbose = true)
+          case "genCpp" => mode.copy(genCpp = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
