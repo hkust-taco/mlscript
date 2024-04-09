@@ -70,7 +70,7 @@ abstract class Foo { type T = Int }
 
 :e
 class Bar extends Foo { type T = Bool }
-//│ ╔══[ERROR] Inherited parameter named `T` is not virtual and cannot be overridden
+//│ ╔══[ERROR] Inherited parameter named 'T' is not virtual and cannot be overridden
 //│ ╙── Originally declared here:
 //│ class Bar extends Foo {
 //│   constructor()
@@ -81,7 +81,7 @@ abstract class Foo[type T]
 
 // TODO
 class Bar extends Foo { type T = Bool }
-//│ ╔══[ERROR] Inherited parameter named `T` is not virtual and cannot be overridden
+//│ ╔══[ERROR] Inherited parameter named 'T' is not virtual and cannot be overridden
 //│ ╟── Originally declared here:
 //│ ║  l.79: 	abstract class Foo[type T]
 //│ ╙──      	                        ^

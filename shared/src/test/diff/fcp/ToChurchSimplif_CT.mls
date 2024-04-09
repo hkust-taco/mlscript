@@ -177,9 +177,9 @@ rec def to_ch n =
   else s (to_ch n)
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b. 'b -> (forall 'c 'd. 'd -> 'c
+//│     'a :> forall 'b. 'b -> (forall 'c 'd. 'c -> 'd
 //│       where
-//│         'a <: 'b -> 'd -> 'c) | ChurchInt
+//│         'a <: 'b -> 'c -> 'd) | ChurchInt
 //│ ╙──
 //│ to_ch: anything -> 'a
 //│   where
@@ -199,9 +199,9 @@ to_church = to_ch
 //│ ╙──
 //│ anything -> 'a
 //│   where
-//│     'a :> forall 'b. 'b -> (forall 'c 'd. 'd -> 'c
+//│     'a :> forall 'b. 'b -> (forall 'c 'd. 'c -> 'd
 //│       where
-//│         'a <: 'b -> 'd -> 'c) | ChurchInt
+//│         'a <: 'b -> 'c -> 'd) | ChurchInt
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_ch. ?to_ch <: int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)` exceeded recursion depth limit (250)
@@ -254,15 +254,15 @@ to_church = to_ch
 def to_ch n =
   if true then z
   else s (to_church n)
-//│ to_ch: int -> (forall 'a. 'a -> (forall 'b 'a 'c 'd. ('c & 'b) -> ('b | 'd)
+//│ to_ch: int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd. ('b & 'd) -> ('c | 'd)
 //│   where
-//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'c -> 'd))
+//│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c))
 //│      = <no result>
 //│        to_church, to_ch and zero are not implemented
 
 :e // * Since "sound extrusion"
 to_church = to_ch
-//│ int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd. ('b & 'd) -> ('d | 'c)
+//│ int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd. ('b & 'd) -> ('c | 'd)
 //│   where
 //│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c))
 //│   <:  to_church:
@@ -559,7 +559,7 @@ rec def to_ch n =
 //│       where
 //│         'a <: 'b -> 'c -> 'd)
 //│ ╙──
-//│ to_ch: int -> 'a -> ('b -> ('b | 'c)
+//│ to_ch: int -> 'a -> ('b -> ('c | 'b)
 //│   where
 //│     'd <: 'a -> 'b -> 'c)
 //│ where
@@ -576,13 +576,13 @@ to_church = to_ch
 //│       where
 //│         'a <: 'b -> 'c -> 'd)
 //│ ╙──
-//│ int -> 'a -> ('b -> ('b | 'c)
+//│ int -> 'a -> ('b -> ('c | 'b)
 //│   where
 //│     'd <: 'a -> 'b -> 'c)
 //│ where
-//│   'd :> forall 'e 'f 'g 'h. 'f -> (('e & 'g) -> ('e | 'h)
+//│   'd :> forall 'e 'f 'g 'h. 'e -> (('h & 'f) -> ('h | 'g)
 //│     where
-//│       'd <: 'f -> 'g -> 'h)
+//│       'd <: 'e -> 'f -> 'g)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_ch. ?to_ch <: int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)` exceeded recursion depth limit (250)
@@ -618,13 +618,13 @@ to_church = to_ch
 //│       where
 //│         'a <: 'b -> 'c -> 'd)
 //│ ╙──
-//│ int -> 'a -> ('b -> ('b | 'c)
+//│ int -> 'a -> ('b -> ('c | 'b)
 //│   where
 //│     'd <: 'a -> 'b -> 'c)
 //│ where
-//│   'd :> forall 'e 'f 'g 'h. 'f -> (('e & 'g) -> ('e | 'h)
+//│   'd :> forall 'e 'f 'g 'h. 'e -> (('h & 'f) -> ('h | 'g)
 //│     where
-//│       'd <: 'f -> 'g -> 'h)
+//│       'd <: 'e -> 'f -> 'g)
 //│   <:  to_church:
 //│ int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)
 //│ ╔══[ERROR] Subtyping constraint of the form `forall ?to_ch. ?to_ch <: int -> (forall 'M. ('M -> 'M) -> 'M -> 'M)` exceeded recursion depth limit (250)

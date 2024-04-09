@@ -67,7 +67,7 @@ fun f(x: S): x.T = if x is A then 1 else 0
 //│ ╟── type variable `T` leaks out of its scope
 //│ ║  l.63: 	fun f(x: S): x.T = if x is A then 1 else 0
 //│ ╙──      	                                         ^
-//│ fun f: (x: S[?]) -> ??T
+//│ fun f: (x: S[?]) -> anything
 
 fun f(x: S[?]) = if x is 
     A then 1 : x.T
@@ -101,7 +101,7 @@ class I[A](val f: A => Int) extends C[A, Int]
 fun foo[A, B](x: A, ev: C[A, B]): B = if ev is 
     R then (x : ev.S) : ev.T
     I(f) then ev.f(x : ev.S) : ev.T
-//│ fun foo: forall 'B 'A. (x: 'A, ev: C['A, 'B]) -> 'B
+//│ fun foo: forall 'A 'B. (x: 'A, ev: C['A, 'B]) -> 'B
 
 foo(true, new R)
 //│ true
@@ -226,6 +226,10 @@ true as x.T
 //│     = true
 
 let x: Ty[Int]
+//│ ╔══[ERROR] `let` bindings must have a right-hand side
+//│ ║  l.228: 	let x: Ty[Int]
+//│ ╙──       	^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ let x: Ty[Int]
 //│ x
 //│   = <missing implementation>
@@ -238,17 +242,21 @@ let x: Ty[Int]
 :e
 true as x.T
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.239: 	true as x.T
+//│ ║  l.243: 	true as x.T
 //│ ║         	^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.239: 	true as x.T
+//│ ║  l.243: 	true as x.T
 //│ ╙──       	         ^^
 //│ Int
 //│ res
 //│     = true
 
 let x: Some[Int]
+//│ ╔══[ERROR] `let` bindings must have a right-hand side
+//│ ║  l.255: 	let x: Some[Int]
+//│ ╙──       	^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ let x: Some[Int]
 //│ x
 //│   = <missing implementation>
@@ -261,11 +269,11 @@ let x: Some[Int]
 :e
 true as x.T
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.262: 	true as x.T
+//│ ║  l.270: 	true as x.T
 //│ ║         	^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.262: 	true as x.T
+//│ ║  l.270: 	true as x.T
 //│ ╙──       	         ^^
 //│ Int
 //│ res
@@ -303,13 +311,13 @@ u(MkU(1))
 fun w[T](x: U[T, T]): Bool = if x is
     MkU(s) then (s : x.A) : x.B
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.304: 	    MkU(s) then (s : x.A) : x.B
+//│ ║  l.312: 	    MkU(s) then (s : x.A) : x.B
 //│ ║         	                ^^^^^^^^^
 //│ ╟── type `T & ?B` is not an instance of type `Bool`
-//│ ║  l.304: 	    MkU(s) then (s : x.A) : x.B
+//│ ║  l.312: 	    MkU(s) then (s : x.A) : x.B
 //│ ║         	                             ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.303: 	fun w[T](x: U[T, T]): Bool = if x is
+//│ ║  l.311: 	fun w[T](x: U[T, T]): Bool = if x is
 //│ ╙──       	                      ^^^^
 //│ fun w: forall 'T. (x: U['T, 'T]) -> Bool
 
@@ -319,7 +327,7 @@ fun w[T](x: U[T, T]): Int = if x is
 
 fun u[T](x: U[T, 'b]): T = if x is
     MkU(s) then s : x.A
-//│ fun u: forall 'b 'T. (x: U['T, 'b]) -> 'T
+//│ fun u: forall 'T 'b. (x: U['T, 'b]) -> 'T
 
 u(MkU(1))
 //│ 1
@@ -347,16 +355,16 @@ w(MkU(1))
 :e
 w(MkU(true))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.348: 	w(MkU(true))
+//│ ║  l.356: 	w(MkU(true))
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of `Int`
-//│ ║  l.348: 	w(MkU(true))
+//│ ║  l.356: 	w(MkU(true))
 //│ ║         	      ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.330: 	class MkU[S](x: S) extends U[S, Int]
+//│ ║  l.338: 	class MkU[S](x: S) extends U[S, Int]
 //│ ║         	                                ^^^
 //│ ╟── Note: type parameter B is defined at:
-//│ ║  l.329: 	abstract class U[type A, type B]: MkU[A]
+//│ ║  l.337: 	abstract class U[type A, type B]: MkU[A]
 //│ ╙──       	                              ^
 //│ Int | error
 //│ res

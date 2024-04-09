@@ -52,7 +52,7 @@ mkArrays impl k = k impl
 // * Inconsistent bounds on 'Rep after type avoidance during extrusion (<- not sure comment is still current)
 :e
 def stepped = arr (fun arrImpl -> fun k -> k (simpleStepImpl arrImpl))
-//│ stepped: ((ArraysImpl[int, in (??Rep & 'a, anything,) & 'Rep out (??Rep0 | 'a, "updated",) | 'Rep] with {update: ((??Rep & 'b, anything,),) -> int -> int -> (??Rep0 | 'b, "updated",)}) -> 'c) -> 'c
+//│ stepped: ((ArraysImpl[int, in (??Rep, anything,) & 'Rep out (anything, "updated",) | 'Rep] with {update: ((??Rep, anything,),) -> int -> int -> (anything, "updated",)}) -> 'a) -> 'a
 //│        = <no result>
 //│          arr is not implemented
 //│ TEST CASE FAILURE: There was an unexpected lack of type error

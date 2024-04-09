@@ -46,7 +46,7 @@ def cons_ty : forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
 cons_ty = cons : forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
 //│ 'a -> Vec['a, 'n] -> Vec['a, S['n]]
 //│   where
-//│     'n := S[in 'n | 'p out 'n & 'p]
+//│     'n := S[in 'p | 'n out 'n & 'p]
 //│   <:  cons_ty:
 //│ 'a -> Vec['a, 'n] -> Vec['a, S['n]]
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -65,7 +65,7 @@ cons_ty = cons : forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
 cons_ty2 = cons : forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
 //│ cons_ty2: 'a -> Vec['a, 'n] -> Vec['a, S['n]]
 //│   where
-//│     'n := S[in 'n | 'p out 'n & 'p]
+//│     'n := S[in 'p | 'n out 'n & 'p]
 
 type Cons_ty = forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
 //│ Defined type alias Cons_ty
@@ -108,7 +108,7 @@ cons_ty = cons : Cons_ty
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.104: 	cons_ty = cons : Cons_ty
 //│ ║         	          ^^^^
-//│ ╟── expression of type `S[in 'p | 'n out 'n & 'p]` does not match type `'n`
+//│ ╟── expression of type `S[in 'n | 'p out 'n & 'p]` does not match type `'n`
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.70: 	type Cons_ty = forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
 //│ ║        	                                        ^^
@@ -120,7 +120,7 @@ cons_ty3 = cons : Cons_ty
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.119: 	cons_ty3 = cons : Cons_ty
 //│ ║         	           ^^^^
-//│ ╟── expression of type `S[in 'p | 'n out 'n & 'p]` does not match type `'n`
+//│ ╟── expression of type `S[in 'n | 'p out 'n & 'p]` does not match type `'n`
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.70: 	type Cons_ty = forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
 //│ ║        	                                        ^^
@@ -136,7 +136,7 @@ cons : Cons_ty
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.135: 	cons : Cons_ty
 //│ ║         	^^^^
-//│ ╟── expression of type `S[in 'p | 'n out 'n & 'p]` does not match type `'n`
+//│ ╟── expression of type `S[in 'n | 'p out 'n & 'p]` does not match type `'n`
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.70: 	type Cons_ty = forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
 //│ ║        	                                        ^^
@@ -155,7 +155,7 @@ cons : Cons_ty
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.154: 	cons : Cons_ty
 //│ ║         	^^^^
-//│ ╟── expression of type `S[in 'p | 'n out 'n & 'p]` does not match type `'n`
+//│ ╟── expression of type `S[in 'n | 'p out 'n & 'p]` does not match type `'n`
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.70: 	type Cons_ty = forall 'a. 'a -> Vec['a, 'n] -> Vec['a, S['n]]
 //│ ║        	                                        ^^
@@ -382,7 +382,7 @@ def head1_ty v = case v of {
 //│ ║        	^^^^^^^^^^^^^^^^^^
 //│ ║  l.+4: 	  }
 //│ ║        	^^^
-//│ ╟── type `(forall 'p. (Cons['a, S[in 'p | 'p0 out 'p0 & 'p]] | (Nil with {size: S['p0]})) -> 'r) -> 'r` does not match type `Cons[?, ?] & ?a | Nil & ?b`
+//│ ╟── type `(forall 'p. (Cons['a, S[in 'p0 | 'p out 'p0 & 'p]] | (Nil with {size: S['p0]})) -> 'r) -> 'r` does not match type `Cons[?, ?] & ?a | Nil & ?b`
 //│ ║  l.20: 	type Vec[A, N] = forall 'r. (forall 'p. (Nil & { size: N } | Cons[A, S['p]] & Cons[A, N]) -> 'r) -> 'r
 //│ ║        	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:

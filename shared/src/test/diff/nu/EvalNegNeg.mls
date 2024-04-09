@@ -52,8 +52,8 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│   fun eval: (Neg['A] | Object & 'a & ~#Neg) -> Int
 //│ }
 //│ where
-//│   'A <: Neg['A & (Neg['A] | Object & 'a & ~#Neg | ~??A)] | Neg['A] & ~#Neg | Object & 'a & ~#Neg | ~??A0 & (Neg[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??A) | ~??A] | Object & ~#Neg) | ~??A1
-//│   'a <: Add[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??E) | ~??E] | Lit | Neg[Neg['A] | 'a & (Object & ~#Neg | ~#Neg & ~??A0) | ~??A0]
+//│   'A <: Neg['A] & ~#Neg | Neg['A & (Neg['A] | Object & 'a & ~#Neg | ~??A)] | Object & 'a & ~#Neg | ~??A0
+//│   'a <: Add[Neg['A] | Object & 'a & ~#Neg | ~??E] | Lit | Neg[Neg['A] | Object & 'a & ~#Neg | ~??A1]
 
 
 fun mk(n) = if n is
@@ -62,7 +62,7 @@ fun mk(n) = if n is
   _ then Add(mk(n - 1), mk(n - 1))
 //│ fun mk: forall 'a. (0 | 1 | Int & ~0 & ~1) -> (Lit | 'a)
 //│   where
-//│     'a :> Neg[Lit | 'a] | Add[Lit | 'a]
+//│     'a :> Add[Lit | 'a] | Neg[Lit | 'a]
 
 TestLang.eval(mk(0))
 //│ Int

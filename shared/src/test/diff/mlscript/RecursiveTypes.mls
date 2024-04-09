@@ -12,10 +12,10 @@ let rec l = fun a -> fun a -> fun a -> l in let rec r = fun a -> fun a -> r in i
 //│   return (a) => (a) => l;
 //│ });
 //│ // End of generated code
-//│ res: 'l | 'r
+//│ res: 'r | 'l
 //│   where
-//│     'r :> anything -> anything -> 'r
 //│     'l :> anything -> anything -> anything -> 'l
+//│     'r :> anything -> anything -> 'r
 //│    = [Function: l]
 
 
@@ -62,17 +62,17 @@ rec def r a a = r
 
 
 if true then l else r
-//│ res: 'l | 'r
+//│ res: 'r | 'l
 //│   where
-//│     'r :> anything -> anything -> 'r
 //│     'l :> anything -> anything -> anything -> 'l
+//│     'r :> anything -> anything -> 'r
 //│    = [Function: l1]
 
 if true then l else r
-//│ res: 'l | 'r
+//│ res: 'r | 'l
 //│   where
-//│     'r :> anything -> anything -> 'r
 //│     'l :> anything -> anything -> anything -> 'l
+//│     'r :> anything -> anything -> 'r
 //│    = [Function: l1]
 
 
@@ -89,17 +89,17 @@ rec def r (a: bool) (a: bool) (a: bool) = r
 //│  = [Function: r3]
 
 if true then l else r
-//│ res: 'l | 'r
+//│ res: 'r | 'l
 //│   where
-//│     'r :> bool -> bool -> bool -> 'r
 //│     'l :> int -> int -> 'l
+//│     'r :> bool -> bool -> bool -> 'r
 //│    = [Function: l2]
 
 if true then l else r
-//│ res: 'l | 'r
+//│ res: 'r | 'l
 //│   where
-//│     'r :> bool -> bool -> bool -> 'r
 //│     'l :> int -> int -> 'l
+//│     'r :> bool -> bool -> bool -> 'r
 //│    = [Function: l2]
 
 if true then (fun x -> add x 1) else (fun y -> not y)
@@ -124,17 +124,17 @@ rec def r (a: int) (a: bool) (a: bool) = r
 //│  = [Function: r4]
 
 if true then l else r
-//│ res: 'l | 'r
+//│ res: 'r | 'l
 //│   where
-//│     'r :> int -> bool -> bool -> 'r
 //│     'l :> int -> bool -> 'l
+//│     'r :> int -> bool -> bool -> 'r
 //│    = [Function: l3]
 
 if true then l else r
-//│ res: 'l | 'r
+//│ res: 'r | 'l
 //│   where
-//│     'r :> int -> bool -> bool -> 'r
 //│     'l :> int -> bool -> 'l
+//│     'r :> int -> bool -> bool -> 'r
 //│    = [Function: l3]
 
 
@@ -179,10 +179,10 @@ rec def r (a: int) (b: int) (c: int) = r
 //│  = [Function: r6]
 
 if true then l else r
-//│ res: 'l | 'r
+//│ res: 'r | 'l
 //│   where
-//│     'r :> int -> int -> int -> 'r
 //│     'l :> int -> int -> 'l
+//│     'r :> int -> int -> int -> 'r
 //│    = [Function: l5]
 
 
@@ -405,19 +405,19 @@ f 1
 
 :ns
 rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
-//│ f: forall 'a 'f 'b 'c 'd 'e 'g. 'f
+//│ f: forall 'f 'b 'c 'd 'a 'e 'g. 'f
 //│   where
-//│     'f := 'b -> 'd
-//│     'b :> 'b\a & {a: 'e}
-//│        <: ({a: 'a} | ~{a: 'e} | ~{})\a & ({a: 'a} | ~{a: 'e})\a & (number | ~{a: 'e} | ~{})\a & (number | ~{a: 'e})\a & (int | ~{a: 'e} | ~{})\a & (int | ~{a: 'e})\a & 'g & int & number
-//│     'a <: 'g
-//│     'g :> 'b\a & {a: 'e}
+//│     'f := 'b -> 'g
+//│     'b :> 'b\a & {a: 'c}
+//│        <: ({a: 'a} | ~{a: 'c} | ~{})\a & ({a: 'a} | ~{a: 'c})\a & (number | ~{a: 'c} | ~{})\a & (number | ~{a: 'c})\a & (int | ~{a: 'c} | ~{})\a & (int | ~{a: 'c})\a & 'e & int & number
+//│     'a <: 'e
+//│     'e :> 'b\a & {a: 'c}
+//│        <: 'g
+//│     'g :> 'b\a & {a: 'c}
 //│        <: 'd
-//│     'd :> 'b\a & {a: 'e}
-//│        <: 'c
-//│     'c :> 'b\a & {a: 'e}
+//│     'd :> 'b\a & {a: 'c}
 //│        <: {a: 'a}
-//│     'e :> int
+//│     'c :> int
 
 f
 //│ res: 'a -> 'b
@@ -498,10 +498,11 @@ f infina
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.407: 	rec def f x = if x > 0 then (f (x with { a = x - 1 })).a else x
 //│ ╙──       	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ res: error | int | 'infina | 'a\a & {a: int}
+//│ res: error | int | 'a\a & {a: int} | 'infina | 'infina0
 //│   where
-//│     'a :> 'infina | 'a\a & {a: int}
 //│     'infina :> 0 & {a: 'infina}
+//│     'a :> forall 'infina0. 'a\a & {a: int} | 'infina0
+//│     'infina0 :> 0 & {a: 'infina0}
 
 
 def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
@@ -513,16 +514,16 @@ def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as
 :e
 f_manual 1
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.514: 	f_manual 1
+//│ ║  l.515: 	f_manual 1
 //│ ║         	^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not have field 'a'
-//│ ║  l.514: 	f_manual 1
+//│ ║  l.515: 	f_manual 1
 //│ ║         	         ^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.507: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.508: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ║         	                ^^^^^^^^^^^^^^^^^
 //│ ╟── from intersection type:
-//│ ║  l.507: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.508: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ╙──       	              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: error | 'e
 //│   where
@@ -531,16 +532,16 @@ f_manual 1
 :e
 f_manual { a = 1 }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.532: 	f_manual { a = 1 }
+//│ ║  l.533: 	f_manual { a = 1 }
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── integer literal of type `1` does not have field 'a'
-//│ ║  l.532: 	f_manual { a = 1 }
+//│ ║  l.533: 	f_manual { a = 1 }
 //│ ║         	               ^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.507: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.508: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ║         	                ^^^^^^^^^^^^^^^^^
 //│ ╟── from intersection type:
-//│ ║  l.507: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
+//│ ║  l.508: 	def f_manual: (({a: 'b & 'a & 'c} as 'a) & 'd) -> ('c | ('d | 'e\a & {a: int} as 'e))
 //│ ╙──       	                    ^^^^^^^^^^^^
 //│ res: 1 | error | 'e
 //│   where
@@ -555,15 +556,14 @@ f_manual error
 //    It looks like a simplification error (I copy-pasted the simplified type for f_manual)
 //    since `f_manual_ns ainf` gets the same error as `f ainf`.
 f_manual ainf
-//│ res: 'e | 'ainf
+//│ res: 'ainf | 'e
 //│   where
+//│     'e :> 'e\a & {a: int} | 'ainf
 //│     'ainf :> {a: 'ainf}
-//│     'e :> forall 'ainf0. 'e\a & {a: int} | 'ainf0
-//│     'ainf0 :> {a: 'ainf0}
 
 // Notice the simplified type is NOT the same as that of `f`...
 def f_manual_ns: 'a | ('b & (({a: 'd & 'c} as 'c) | ~{a: 'e | int} | ~{})\a & (({a: 'd & 'c} as 'c) | ~{a: 'e | int})\a & (({a: 'f} as 'c) as 'f) & (int | ~{a: 'e | int} | ~{})\a & (int | ~{a: 'e | int})\a & int & int) -> ('g | 'd | ('b | 'h\a & {a: 'e | int} as 'h))
-//│ f_manual_ns: in forall 'c 'd 'c0 'f 'b. ('b & 'f & (int & ~{a: int} | (int & 'c)\a & 'c0\a & int)) -> ('b | 'd) out forall 'c 'd 'c0 'f 'b. ((int & 'c & 'c0 | ~{a: int})\a & int & 'b & 'f) -> ('b | 'd)
+//│ f_manual_ns: in forall 'b 'f 'c 'd 'c0. ('b & 'f & (int & ~{a: int} | (int & 'c)\a & 'c0\a & int)) -> ('d | 'b) out forall 'b 'f 'c 'd 'c0. ((int & 'c & 'c0 | ~{a: int})\a & int & 'b & 'f) -> ('d | 'b)
 //│   where
 //│     'c0 <: {a: 'd & 'c0}
 //│     'c <: {a: 'c & 'd}

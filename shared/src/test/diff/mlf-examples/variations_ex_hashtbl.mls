@@ -86,7 +86,7 @@ def nfind table key =
 //│ nfind: List[{0: anything, 1: 'val}] -> anything -> (anything -> 'a -> 'a | 'val)
 
 def nfind: List[{0: anything; 1: 'val}] -> anything -> (anything -> 'a -> 'a | 'val)
-//│ nfind: List[{0: anything, 1: 'val}] -> anything -> ('val | anything -> 'a -> 'a)
+//│ nfind: List[{0: anything, 1: 'val}] -> anything -> (anything -> 'a -> 'a | 'val)
 
 // * Alternative
 // def nfind table key =
@@ -224,7 +224,7 @@ foo 1 error 2
     fun () -> fun f -> fun x -> x,
     fun v -> v
   ) (find table key)) "two"
-//│ res: ('a -> 'b) -> ('c & 'a) -> ('b | 'c)
+//│ res: ('a -> 'b) -> ('c & 'a) -> ('c | 'b)
 
 res id
 //│ res: 'a -> 'a

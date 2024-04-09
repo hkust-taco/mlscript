@@ -37,13 +37,13 @@ def s n f x = (n f x)
 
 :ns
 s
-//│ res: forall 'a 'b 'c 'd 'e. 'e -> (forall 'f. 'f -> (forall 'g 'h. 'g -> 'h))
+//│ res: forall 'a 'b 'c 'd 'e. 'a -> (forall 'f. 'f -> (forall 'g 'h. 'g -> 'h))
 //│   where
-//│     'h :> 'b
+//│     'h :> 'e
 //│     'g <: 'd
-//│     'f <: 'a
-//│     'e <: 'a -> 'c
-//│     'c <: 'd -> 'b
+//│     'f <: 'b
+//│     'a <: 'b -> 'c
+//│     'c <: 'd -> 'e
 //│    = [Function: s]
 
 :e // * Works with CT

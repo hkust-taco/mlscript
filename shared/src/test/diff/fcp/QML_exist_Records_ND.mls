@@ -97,7 +97,7 @@ def stepImpl (arrImpl: ArraysImpl['a, 'r]) = {
     fold   = fun f -> fun b -> fun ((r0, r1)) -> arrImpl.fold f b r0
   }
 //│ stepImpl: ArraysImpl['a, 'r] -> {
-//│   fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'c. ('b & 'c) -> (('r, anything,),) -> ('b0 | 'c)),
+//│   fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'c. ('b & 'c) -> (('r, anything,),) -> ('c | 'b0)),
 //│   init: 'a -> ('r, "hi",),
 //│   sub: (('r, anything,),) -> int -> 'a,
 //│   update: (('r, anything,),) -> int -> 'a -> ('r, "hey",)
@@ -106,7 +106,7 @@ def stepImpl (arrImpl: ArraysImpl['a, 'r]) = {
 
 stepImpl_ty = stepImpl
 //│ ArraysImpl['a, 'r] -> {
-//│   fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'c. ('b & 'c) -> (('r, anything,),) -> ('b0 | 'c)),
+//│   fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'c. ('b & 'c) -> (('r, anything,),) -> ('c | 'b0)),
 //│   init: 'a -> ('r, "hi",),
 //│   sub: (('r, anything,),) -> int -> 'a,
 //│   update: (('r, anything,),) -> int -> 'a -> ('r, "hey",)
@@ -292,8 +292,8 @@ def step (arr: Arrays['a]) = arr helper
 
 // * Doesn't work (`'rep` leaks out of its scope in `step`)
 def helper impl k = k (stepImpl impl)
-//│ helper: ArraysImpl[in 'a out 'a | 'a0, in 'r out 'r | 'r0] -> (forall 'r1 'c 'a1. ({
-//│   fold: forall 'b 'b0. (('a | 'a1) -> 'b0 -> ('b0 & 'b)) -> (forall 'd. ('b0 & 'd) -> (('r0 & 'r1, anything,),) -> ('b | 'd)),
+//│ helper: ArraysImpl[in 'a out 'a | 'a0, in 'r out 'r | 'r0] -> (forall 'a1 'r1 'c. ({
+//│   fold: forall 'b 'b0. (('a | 'a1) -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> (('r0 & 'r1, anything,),) -> ('d | 'b0)),
 //│   init: ('a0 & 'a1) -> ('r | 'r1, "hi",),
 //│   sub: (('r0 & 'r1, anything,),) -> int -> ('a | 'a1),
 //│   update: (('r0 & 'r1, anything,),) -> int -> ('a0 & 'a1) -> ('r | 'r1, "hey",)
@@ -303,7 +303,7 @@ def helper impl k = k (stepImpl impl)
 // * Idem
 def helper (impl: ArraysImpl['a, 'rep]) k = k (stepImpl impl)
 //│ helper: ArraysImpl['a, 'rep] -> (forall 'c. ({
-//│   fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> (('rep, anything,),) -> ('b0 | 'd)),
+//│   fold: forall 'b 'b0. ('a -> 'b -> ('b & 'b0)) -> (forall 'd. ('b & 'd) -> (('rep, anything,),) -> ('d | 'b0)),
 //│   init: 'a -> ('rep, "hi",),
 //│   sub: (('rep, anything,),) -> int -> 'a,
 //│   update: (('rep, anything,),) -> int -> 'a -> ('rep, "hey",)
@@ -313,10 +313,10 @@ def helper (impl: ArraysImpl['a, 'rep]) k = k (stepImpl impl)
 :e
 def step (arr: Arrays['a]) = arr helper
 //│ Arrays['a] -> ({
-//│   fold: ('a -> 'b -> 'b) -> 'b -> ((??rep & 'rep, anything,),) -> 'b,
-//│   init: 'a -> ('rep | ??rep0, "hi",),
-//│   sub: ((??rep & 'rep, anything,),) -> int -> 'a,
-//│   update: ((??rep & 'rep, anything,),) -> int -> 'a -> ('rep | ??rep0, "hey",)
+//│   fold: ('a -> 'b -> 'b) -> 'b -> ((??rep, anything,),) -> 'b,
+//│   init: 'a -> (anything, "hi",),
+//│   sub: ((??rep, anything,),) -> int -> 'a,
+//│   update: ((??rep, anything,),) -> int -> 'a -> (anything, "hey",)
 //│ } -> 'c) -> 'c
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
@@ -577,12 +577,12 @@ rec def mkMonoArray n =
 //│            = [Function: mkMonoArray]
 
 snb = mkMonoArray 3
-//│ snb: Arrays[in 'a | 'a0 out 'a0 & 'a]
+//│ snb: Arrays[in 'a | 'a0 out 'a & 'a0]
 //│    = [Function (anonymous)]
 
 // * Here we are trying to leak the internally-quantified representation, resulting in extruded types being returned
 snb (fun arr -> arr.init true)
-//│ res: ??rep
+//│ res: anything
 //│    = [ [ [ true, 'hi' ], 'hi' ], 'hi' ]
 
 
@@ -632,7 +632,7 @@ def step2 (arr: Arrays['a]) (k: ArraysImplConsumer['a2, 'rep]) = arr (fun impl -
 
 :e
 def step2 = forall 'a. fun (arr: Arrays['a]) -> fun k -> arr (fun impl -> k (stepImpl_ty impl))
-//│ Arrays['a] -> (forall 'r 'b. (ArraysImpl['a, in (??rep & 'r, string,) out ('r | ??rep0, string,)] -> 'b) -> 'b)
+//│ Arrays['a] -> (forall 'b. (ArraysImpl['a, in (??rep, string,) out (anything, string,)] -> 'b) -> 'b)
 //│   <:  step2:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type error in def definition
@@ -686,19 +686,19 @@ def s arr (k: ArraysImplConsumer['a, 'rep]) = arr (fun impl -> k (stepImpl_ty im
 // * We can see it shouldn't be simplified to nothing:
 :ns
 s
-//│ res: forall 'r 'a 'rep 'r0 'a0 'b 'c 'd 'a1 'a2 'e. 'e -> (forall 'rep0 'f 'a3. ArraysImplConsumer['a3, 'rep0] -> 'f)
+//│ res: forall 'b 'c 'a 'a0 'a1 'a2 'r 'r0 'd 'rep 'e. 'b -> (forall 'a3 'rep0 'f. ArraysImplConsumer['a3, 'rep0] -> 'f)
 //│   where
-//│     'f :> 'b
+//│     'f :> 'e
 //│     'rep0 <: 'rep
-//│     'a3 :> 'a
+//│     'a3 :> 'a0
 //│         <: 'a2
-//│     'e <: ('c -> 'd) -> 'b
+//│     'b <: ('c -> 'd) -> 'e
 //│     'd :> 'rep
-//│     'c <: ArraysImpl[in 'a0 out 'a1, in 'r0 out 'r]
-//│     'r :> 'r0
-//│     'a1 :> 'a0 | 'a2
-//│     'a2 :> 'a
-//│     'a0 <: 'a
+//│     'c <: ArraysImpl[in 'a out 'a1, in 'r out 'r0]
+//│     'r0 :> 'r
+//│     'a1 :> 'a | 'a2
+//│     'a2 :> 'a0
+//│     'a <: 'a0
 //│    = [Function: s]
 
 // * BTW: this doesn't work (same reason as before: k needs an annotation)
@@ -751,12 +751,12 @@ rec def mkMonoArray n =
 //│            = [Function: mkMonoArray1]
 
 snb = mkMonoArray 3
-//│ snb: Arrays[in 'a | 'a0 out 'a0 & 'a]
+//│ snb: Arrays[in 'a | 'a0 out 'a & 'a0]
 //│    = [Function (anonymous)]
 
 // * Here we are trying to leak the internally-quantified representation, resulting in extruded types being returned
 snb (fun arr -> arr.init true)
-//│ res: ??rep
+//│ res: anything
 //│    = [ [ [ true, 'hi' ], 'hi' ], 'hi' ]
 
 

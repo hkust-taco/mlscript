@@ -1,0 +1,148 @@
+:NewDefs
+:NoJS
+
+// * A bunch of semi-random polymorphism and extrusion tests.
+// * Some of them yield very ugly types. (They might improve once we use proper wildcard args.)
+// * I've been trying to reproduce/trigger the incompleteness of constraint solving
+// * for constraints like `MyClass[S] & ?b <: MyClass[T]` where ?b is a lower-level type variable.
+
+
+
+fun test(x: (forall 'a: 'a -> 'a) & 'b) =
+  let foo(y) =
+    x(y)
+  foo
+//│ fun test: forall 'a 'b 'c. (x: forall 'a0. 'a0 -> 'a0 & ~('a -> 'a) | 'a0 -> 'a0 & 'b -> 'c) -> 'b -> 'c
+
+
+type Id = forall 'a: 'a -> 'a
+//│ type Id = forall 'a. 'a -> 'a
+
+fun test(x: Id & 'b) =
+  let foo(y) = x(y)
+  foo
+//│ fun test: forall 'b 'c 'a. (x: Id & 'b -> 'c | Id & ~('a -> 'a)) -> 'b -> 'c
+
+fun test(x: Int | 'b) =
+  let foo(y) = (if true then x else y) : (Int | 'c)
+  foo
+//│ fun test: forall 'b. (x: Int | 'b) -> (forall 'c. (Int | 'c) -> (Int | 'b & ~Int | 'c))
+
+
+
+class Ref[T](x: T -> T)
+//│ class Ref[T](x: T -> T)
+
+class MyClass[A](x: A -> A)
+//│ class MyClass[A](x: A -> A)
+
+// Note: precedence of & is lower than that of ->
+fun mk: forall 'b: (Ref['b]) -> MyClass[Int] & 'b
+// fun mk(x) = error
+//│ fun mk: forall 'b. Ref['b] -> MyClass[Int] & 'b
+
+(x, y) => mk(x, y)
+//│ (anything, anything) -> nothing
+
+fun mk: forall 'a, 'b: (Ref['a], Ref['b]) -> (MyClass['a] & 'b)
+//│ fun mk: forall 'a 'b. (Ref['a], Ref['b]) -> (MyClass['a] & 'b)
+
+fun test(x, y) = mk(x, y)
+//│ fun test: forall 'a 'b. (Ref['a], Ref['b]) -> (MyClass['a] & 'b)
+
+:ns
+test
+//│ forall 'c 'd 'e 'a 'b. ('c, 'd) -> 'e
+//│   where
+//│     'e :> MyClass['a] & 'b
+//│     'd <: Ref['b]
+//│     'c <: Ref['a]
+
+
+
+fun test(x, y) =
+  let tmp = mk(x, y)
+  tmp
+//│ fun test: forall 'a 'b. (Ref['a], Ref['b]) -> (MyClass['a] & 'b)
+
+fun test(x, y) =
+  let tmp = mk(x, y)
+  let foo(z) = mk(z, tmp)
+  foo
+//│ fun test: forall 'a 'b 'b0. (Ref['a], Ref['b]) -> (forall 'a0. Ref['a0] -> (MyClass['a0] & 'b0))
+//│   where
+//│     'b <: Ref[?] | Ref[?] & ~{MyClass#A = 'a} | Ref['b0] | ~MyClass['a]
+
+fun test(x, y) =
+  let tmp = mk(x, y)
+  let foo(z) = mk(z, tmp) : MyClass['x]
+  foo
+//│ fun test: forall 'a 'b 'b0 'x 'x0 'a0 'a1. (Ref['a], Ref['b]) -> (forall 'a2 'x1. Ref['a2] -> MyClass['x1])
+//│   where
+//│     'x1 :> 'x0
+//│         <: 'x
+//│     'a2 :> 'a0
+//│         <: 'a1
+//│     'b <: Ref[?] | Ref[?] & ~{MyClass#A = 'a} | Ref[in 'b0 out 'b0 & (MyClass[in 'x out 'x & 'x0] | ~{MyClass#A :> 'a0 <: 'a0 | 'a1} | ~#MyClass)] | ~MyClass['a]
+
+fun test(x, y) =
+  let tmp = mk(x, y)
+  let foo(z) = mk(z, tmp) : MyClass['x]
+  [tmp, foo]
+//│ fun test: forall 'a 'b 'b0 'x 'x0 'a0 'a1. (Ref['a], Ref['b]) -> [MyClass['a] & 'b, forall 'a2 'x1. Ref['a2] -> MyClass['x1]]
+//│   where
+//│     'x1 :> 'x0
+//│         <: 'x
+//│     'a2 :> 'a0
+//│         <: 'a1
+//│     'b <: Ref[?] | Ref[?] & ~{MyClass#A = 'a} | Ref[in 'b0 out 'b0 & (MyClass[in 'x out 'x & 'x0] | ~{MyClass#A :> 'a0 <: 'a0 | 'a1} | ~#MyClass)] | ~MyClass['a]
+
+
+
+fun ref: 'a -> Ref['a]
+//│ fun ref: forall 'a. 'a -> Ref['a]
+
+fun test(x, y) =
+  let tmp = ref(mk(x, y))
+  let foo(z) = mk(z, tmp)
+  foo
+//│ fun test: forall 'a 'b. (Ref['a], Ref['b]) -> (forall 'a0. Ref['a0] -> (MyClass[in 'a0 | 'a out 'a & 'a0] & 'b))
+
+fun test(x, y) =
+  let tmp = ref(mk(x, y))
+  let foo(z) = mk(z, tmp) : MyClass['x]
+  foo
+//│ fun test: forall 'a 'b 'x 'x0 'a0 'a1. (Ref['a], Ref['b]) -> (forall 'a2 'x1. Ref['a2] -> MyClass['x1])
+//│   where
+//│     'x1 :> 'x0
+//│         <: 'x
+//│     'a2 :> 'a0
+//│         <: 'a1
+//│     'b <: MyClass[in 'x out 'x & 'x0] | ~MyClass[in 'a0 | 'a out 'a & ('a0 | 'a1)]
+
+
+
+fun refined: forall 'A, 'B: (r: 'A) -> ('A & Ref['B])
+//│ fun refined: forall 'A 'B. (r: 'A) -> (Ref['B] & 'A)
+
+fun test(x: 'x) =
+  let foo() = refined(x)
+  foo
+//│ fun test: forall 'x. (x: 'x) -> (forall 'B. () -> (Ref['B] & 'x))
+
+// fun refined: forall 'A, 'B, 'C: (r: 'A, s: 'B) -> ('A & 'B & Ref['C])
+fun refined: forall 'A, 'B, 'C: (r: 'A, s: 'B) -> ('A & 'B)
+//│ fun refined: forall 'A 'B. (r: 'A, s: 'B) -> ('A & 'B)
+
+fun test(x: 'x) =
+  let foo(y: Ref['r] & 'y) = y
+  foo(x)
+//│ fun test: forall 'r 'y. (x: Ref['r] & 'y) -> (Ref['r] & 'y)
+
+fun test(x: 'x) =
+  let foo(y) = refined(x, y) : Ref['r]
+  foo
+//│ fun test: forall 'x. (x: 'x) -> (forall 'r. (Ref['r] | ~'x) -> Ref['r])
+
+
+

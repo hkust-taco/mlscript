@@ -148,9 +148,9 @@ rec def id x = if true then x else id id x
 id_ty = id
 //│ ╔══[ERROR] Inferred recursive type: 'b
 //│   where
-//│     'b :> 'a | 'c -> 'b
+//│     'b :> 'c -> 'b | 'a
 //│        <: 'c -> 'a & 'a
-//│     'c :> 'a | 'c -> 'b
+//│     'c :> 'c -> 'b | 'a
 //│        <: 'a
 //│     'a <: 'b
 //│ ║  l.126: 	rec def id x = if true then x else id id x
@@ -198,7 +198,7 @@ rec def id1 x = choose x (id1 id1 x)
 id1 id
 //│ res: ('a & 'b) -> 'a
 //│   where
-//│     'a :> forall 'c 'd. ('a & 'b & 'c) -> 'a
+//│     'a :> forall 'c 'd. ('a & 'b & 'c) -> ('a | 'd)
 //│        <: ((forall 'c 'd. 'c -> 'd) | 'b) -> 'a
 //│     'c :> 'c -> 'd
 //│        <: 'd
@@ -214,10 +214,10 @@ rec def id1 x = if true then x else id1 id1 x
 id1 id
 //│ res: ('a & 'b) -> 'a
 //│   where
-//│     'a :> forall 'c 'd. ('a & 'b & 'd) -> 'a
-//│        <: ((forall 'c 'd. 'd -> 'c) | 'b) -> 'a
-//│     'd :> 'd -> 'c
-//│        <: 'c
-//│     'c := 'd -> 'c
+//│     'a :> forall 'c 'd. ('a & 'b & 'c) -> ('a | 'd)
+//│        <: ((forall 'c 'd. 'c -> 'd) | 'b) -> 'a
+//│     'c :> 'c -> 'd
+//│        <: 'd
+//│     'd := 'c -> 'd
 
 

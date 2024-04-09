@@ -27,16 +27,14 @@ foo(Foo(1))
 //│ res
 //│     = 0
 
-let y: Foo[Foo[Int]]
-//│ let y: Foo[Foo[Int]]
-//│ y
-//│   = <missing implementation>
+fun y: Foo[Foo[Int]]
+//│ fun y: Foo[Foo[Int]]
 
 // * Foo is invariant so this doesn't work
 :e
 let f: Foo[Foo[?]] = y
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.37: 	let f: Foo[Foo[?]] = y
+//│ ║  l.35: 	let f: Foo[Foo[?]] = y
 //│ ║        	                     ^
 //│ ╙── expression of type `Int` does not match type `nothing`
 //│ let f: Foo[Foo[anything]]
@@ -60,11 +58,11 @@ foo(Foo(1))
    // * or support proper path-dependent types internally.
 fun foo(f: Foo[?]) = f.x as f.T
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.61: 	fun foo(f: Foo[?]) = f.x as f.T
+//│ ║  l.59: 	fun foo(f: Foo[?]) = f.x as f.T
 //│ ║        	                     ^^^
 //│ ╟── field selection of type `anything` does not match type `nothing`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.61: 	fun foo(f: Foo[?]) = f.x as f.T
+//│ ║  l.59: 	fun foo(f: Foo[?]) = f.x as f.T
 //│ ╙──      	                             ^^
 //│ fun foo: (f: Foo[anything]) -> anything
 
@@ -98,6 +96,10 @@ let f: Foo[?] = Foo(1)
 //│   = Foo {}
 
 let y: Foo[Foo[Int]]
+//│ ╔══[ERROR] `let` bindings must have a right-hand side
+//│ ║  l.98: 	let y: Foo[Foo[Int]]
+//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ let y: Foo[Foo[Int]]
 //│ y
 //│   = <missing implementation>
@@ -106,7 +108,7 @@ let y: Foo[Foo[Int]]
 :e
 let f: Foo[Foo[?]] = y
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.107: 	let f: Foo[Foo[?]] = y
+//│ ║  l.109: 	let f: Foo[Foo[?]] = y
 //│ ║         	                     ^
 //│ ╙── expression of type `anything` is not an instance of type `Int`
 //│ let f: Foo[Foo[nothing]]
@@ -156,13 +158,13 @@ let x: Bar[?] = MkBarInt()
 :e
 x as Bar[Bool]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.157: 	x as Bar[Bool]
+//│ ║  l.159: 	x as Bar[Bool]
 //│ ║         	^
 //│ ╟── type `Bool` does not match type `nothing`
-//│ ║  l.157: 	x as Bar[Bool]
+//│ ║  l.159: 	x as Bar[Bool]
 //│ ║         	         ^^^^
 //│ ╟── Note: constraint arises from wildcard:
-//│ ║  l.151: 	let x: Bar[?] = MkBarInt()
+//│ ║  l.153: 	let x: Bar[?] = MkBarInt()
 //│ ╙──       	           ^
 //│ Bar[Bool]
 //│ res
@@ -189,6 +191,10 @@ let x: Bar[Foo[?]] = MkBarFoo(1)
 //│   = MkBarFoo {}
 
 let x: Bar[Foo[?]]
+//│ ╔══[ERROR] `let` bindings must have a right-hand side
+//│ ║  l.193: 	let x: Bar[Foo[?]]
+//│ ╙──       	^^^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ let x: Bar[Foo[nothing]]
 //│ x
 //│   = <missing implementation>
@@ -196,7 +202,7 @@ let x: Bar[Foo[?]]
 :e
 x as Bar[Foo[Int]]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.197: 	x as Bar[Foo[Int]]
+//│ ║  l.203: 	x as Bar[Foo[Int]]
 //│ ║         	^
 //│ ╙── expression of type `Int` does not match type `nothing`
 //│ Bar[Foo[Int]]
@@ -279,7 +285,7 @@ fun f: Foo[Int] -> Foo[?]
 :e
 e as Foo[Int]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.280: 	e as Foo[Int]
+//│ ║  l.286: 	e as Foo[Int]
 //│ ║         	^
 //│ ╙── expression of type `anything` is not an instance of type `Int`
 //│ Foo[Int]
@@ -290,7 +296,7 @@ e as Foo[Int]
 :e
 f(e)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.291: 	f(e)
+//│ ║  l.297: 	f(e)
 //│ ║         	^^^^
 //│ ╙── expression of type `anything` is not an instance of type `Int`
 //│ Foo[anything] | error
@@ -309,38 +315,38 @@ fun f: Foo[?] -> Foo[?]
 :e
 fun f(x: ?) = x
 //│ ╔══[ERROR] Invalid use of wildcard type `?` here
-//│ ║  l.310: 	fun f(x: ?) = x
+//│ ║  l.316: 	fun f(x: ?) = x
 //│ ╙──       	         ^
 //│ fun f: (x: error) -> error
 
 :e
 fun f(x): ? = x
 //│ ╔══[ERROR] Invalid use of wildcard type `?` here
-//│ ║  l.317: 	fun f(x): ? = x
+//│ ║  l.323: 	fun f(x): ? = x
 //│ ╙──       	          ^
 //│ fun f: error -> error
 
 :e
 fun f(x: Int): ? = x
 //│ ╔══[ERROR] Invalid use of wildcard type `?` here
-//│ ║  l.324: 	fun f(x: Int): ? = x
+//│ ║  l.330: 	fun f(x: Int): ? = x
 //│ ╙──       	               ^
 //│ fun f: (x: Int) -> error
 
 :e
 fun f(x: ?): ? = x
 //│ ╔══[ERROR] Invalid use of wildcard type `?` here
-//│ ║  l.331: 	fun f(x: ?): ? = x
+//│ ║  l.337: 	fun f(x: ?): ? = x
 //│ ╙──       	         ^
 //│ ╔══[ERROR] Invalid use of wildcard type `?` here
-//│ ║  l.331: 	fun f(x: ?): ? = x
+//│ ║  l.337: 	fun f(x: ?): ? = x
 //│ ╙──       	             ^
 //│ fun f: (x: error) -> error
 
 :e
 let x: ? = 1
 //│ ╔══[ERROR] Invalid use of wildcard type `?` here
-//│ ║  l.341: 	let x: ? = 1
+//│ ║  l.347: 	let x: ? = 1
 //│ ╙──       	       ^
 //│ let x: error
 //│ x
@@ -349,7 +355,7 @@ let x: ? = 1
 :e
 1 as ?
 //│ ╔══[ERROR] Invalid use of wildcard type `?` here
-//│ ║  l.350: 	1 as ?
+//│ ║  l.356: 	1 as ?
 //│ ╙──       	     ^
 //│ error
 //│ res
@@ -358,47 +364,50 @@ let x: ? = 1
 :e
 fun f: (? -> ?) -> ?
 //│ ╔══[ERROR] Invalid use of wildcard type `?` here
-//│ ║  l.359: 	fun f: (? -> ?) -> ?
+//│ ║  l.365: 	fun f: (? -> ?) -> ?
 //│ ╙──       	        ^
 //│ ╔══[ERROR] Invalid use of wildcard type `?` here
-//│ ║  l.359: 	fun f: (? -> ?) -> ?
+//│ ║  l.365: 	fun f: (? -> ?) -> ?
 //│ ╙──       	             ^
 //│ ╔══[ERROR] Invalid use of wildcard type `?` here
-//│ ║  l.359: 	fun f: (? -> ?) -> ?
+//│ ║  l.365: 	fun f: (? -> ?) -> ?
 //│ ╙──       	                   ^
 //│ fun f: (error -> error) -> error
 
 :e
 fun f: ? -> ?
 //│ ╔══[ERROR] Invalid use of wildcard type `?` here
-//│ ║  l.372: 	fun f: ? -> ?
+//│ ║  l.378: 	fun f: ? -> ?
 //│ ╙──       	       ^
 //│ ╔══[ERROR] Invalid use of wildcard type `?` here
-//│ ║  l.372: 	fun f: ? -> ?
+//│ ║  l.378: 	fun f: ? -> ?
 //│ ╙──       	            ^
 //│ fun f: error -> error
 
 :e
 fun f: ? -> Int
 //│ ╔══[ERROR] Invalid use of wildcard type `?` here
-//│ ║  l.382: 	fun f: ? -> Int
+//│ ║  l.388: 	fun f: ? -> Int
 //│ ╙──       	       ^
 //│ fun f: error -> Int
 
 :e
 fun f: Int -> ?
 //│ ╔══[ERROR] Invalid use of wildcard type `?` here
-//│ ║  l.389: 	fun f: Int -> ?
+//│ ║  l.395: 	fun f: Int -> ?
 //│ ╙──       	              ^
 //│ fun f: Int -> error
 
 :e
 let x: ? -> ?
+//│ ╔══[ERROR] `let` bindings must have a right-hand side
+//│ ║  l.402: 	let x: ? -> ?
+//│ ╙──       	^^^^^^^^^^^^^
 //│ ╔══[ERROR] Invalid use of wildcard type `?` here
-//│ ║  l.396: 	let x: ? -> ?
+//│ ║  l.402: 	let x: ? -> ?
 //│ ╙──       	       ^
 //│ ╔══[ERROR] Invalid use of wildcard type `?` here
-//│ ║  l.396: 	let x: ? -> ?
+//│ ║  l.402: 	let x: ? -> ?
 //│ ╙──       	            ^
 //│ let x: error -> error
 //│ x
@@ -407,7 +416,7 @@ let x: ? -> ?
 :e
 let x = ?
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.408: 	let x = ?
+//│ ║  l.417: 	let x = ?
 //│ ╙──       	        ^
 //│ let x: error
 //│ Code generation encountered an error:
@@ -416,7 +425,7 @@ let x = ?
 :e
 if ? is 1 then 1
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.417: 	if ? is 1 then 1
+//│ ║  l.426: 	if ? is 1 then 1
 //│ ╙──       	   ^
 //│ 1
 //│ Code generation encountered an error:
@@ -425,7 +434,7 @@ if ? is 1 then 1
 :e
 if x is ? then 1
 //│ ╔══[ERROR] Cannot match on wildcard ?
-//│ ║  l.426: 	if x is ? then 1
+//│ ║  l.435: 	if x is ? then 1
 //│ ╙──       	        ^
 //│ error
 //│ Code generation encountered an error:
@@ -433,8 +442,11 @@ if x is ? then 1
 
 :e
 let x: ?[?]
+//│ ╔══[ERROR] `let` bindings must have a right-hand side
+//│ ║  l.444: 	let x: ?[?]
+//│ ╙──       	^^^^^^^^^^^
 //│ ╔══[ERROR] type identifier not found: ?
-//│ ║  l.435: 	let x: ?[?]
+//│ ║  l.444: 	let x: ?[?]
 //│ ╙──       	       ^^^^
 //│ let x: error
 //│ x
@@ -443,7 +455,7 @@ let x: ?[?]
 :e
 class Bar extends ?
 //│ ╔══[ERROR] Could not find definition `?`
-//│ ║  l.444: 	class Bar extends ?
+//│ ║  l.456: 	class Bar extends ?
 //│ ╙──       	                  ^
 //│ class Bar {
 //│   constructor()
@@ -454,14 +466,14 @@ class Bar extends ?
 :e
 abstract class Bar: ?
 //│ ╔══[ERROR] Invalid use of wildcard type `?` here
-//│ ║  l.455: 	abstract class Bar: ?
+//│ ║  l.467: 	abstract class Bar: ?
 //│ ╙──       	                    ^
 //│ abstract class Bar: error
 
 :e
 class ?
 //│ ╔══[ERROR] Type name '?' is reserved
-//│ ║  l.462: 	class ?
+//│ ║  l.474: 	class ?
 //│ ╙──       	^^^^^^^
 //│ class ? {
 //│   constructor()
@@ -472,14 +484,14 @@ class ?
 :e
 type ? = Int
 //│ ╔══[ERROR] Type name '?' is reserved
-//│ ║  l.473: 	type ? = Int
+//│ ║  l.485: 	type ? = Int
 //│ ╙──       	^^^^^^
 //│ type ? = Int
 
 :e
 type W = ?
 //│ ╔══[ERROR] Invalid use of wildcard type `?` here
-//│ ║  l.480: 	type W = ?
+//│ ║  l.492: 	type W = ?
 //│ ╙──       	         ^
 //│ type W = error
 
@@ -492,7 +504,7 @@ fun (?) wc(x, y) = x == y
 :e
 1 ? 1
 //│ ╔══[ERROR] Cannot use ? as expression
-//│ ║  l.493: 	1 ? 1
+//│ ║  l.505: 	1 ? 1
 //│ ╙──       	  ^
 //│ error
 //│ res
@@ -500,6 +512,10 @@ fun (?) wc(x, y) = x == y
 
 class Foo[T](val a: T)
 let f: Foo[?]
+//│ ╔══[ERROR] `let` bindings must have a right-hand side
+//│ ║  l.514: 	let f: Foo[?]
+//│ ╙──       	^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ class Foo[T](a: T)
 //│ let f: Foo[anything]
 //│ f
@@ -508,11 +524,11 @@ let f: Foo[?]
 :e
 f.a : Int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.509: 	f.a : Int
+//│ ║  l.525: 	f.a : Int
 //│ ║         	^^^
 //│ ╟── field selection of type `anything` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.509: 	f.a : Int
+//│ ║  l.525: 	f.a : Int
 //│ ╙──       	      ^^^
 //│ Int
 //│ res
@@ -523,7 +539,7 @@ f.a : Int
 :e
 42 : f.a
 //│ ╔══[ERROR] Type mismatch in type selection:
-//│ ║  l.524: 	42 : f.a
+//│ ║  l.540: 	42 : f.a
 //│ ║         	      ^^
 //│ ╙── type `anything` cannot be reassigned
 //│ anything

@@ -64,7 +64,7 @@ fun baz[T](x: Foo[T], y: Foo[T]): Bool =
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.59: 	    else false
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── type `??T & ~??T0` does not match type `??T1 | ~??T2`
+//│ ╟── type `??T & ~??T0` does not match type `~??T1`
 //│ ║  l.55: 	fun baz : (Foo['T], Foo['T]) -> Bool
 //│ ╙──      	               ^^
 //│ TEST CASE FAILURE: There was an unexpected type error
@@ -75,7 +75,7 @@ fun baz[T](x: Foo[T], y: Foo[T]): Bool =
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.59: 	    else false
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── expression of type `anything` does not match type `??T | ~??T0`
+//│ ╟── expression of type `anything` does not match type `~??T`
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.55: 	fun baz : (Foo['T], Foo['T]) -> Bool
 //│ ║        	                        ^^
@@ -102,7 +102,7 @@ fun baz[T](x: Foo[T], y: Foo[T]): Bool =
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.97: 	    else false
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── type `??T & ~[nothing] & ~??T0` does not match type `??T1 | ~(Int & ??T2)`
+//│ ╟── type `??T & ~[nothing]` does not match type `~(Int & ??T0)`
 //│ ║  l.95: 	    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
 //│ ╙──      	                                                          ^^
 //│ ╔══[ERROR] Type mismatch in `case` expression:
@@ -112,7 +112,7 @@ fun baz[T](x: Foo[T], y: Foo[T]): Bool =
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ║  l.97: 	    else false
 //│ ║        	^^^^^^^^^^^^^^
-//│ ╟── expression of type `anything` does not match type `??T | ~([anything] & ??T0)`
+//│ ╟── expression of type `anything` does not match type `~([anything] & ??T)`
 //│ ╟── Note: constraint arises from type selection:
 //│ ║  l.95: 	    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
 //│ ║        	                                                          ^^

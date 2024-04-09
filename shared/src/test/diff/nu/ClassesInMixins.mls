@@ -72,22 +72,24 @@ mixin Test3 { fun f(x) = if x is Foo then 1 }
 
 
 
+:e
 mixin Test {
   class Lit(n: Int)
   class Add<A>(lhs: A, rhs: A) {
-    // Should be a lazy val only forceable when A has the right shape (use constrained types?):
+    // Should be a lazy val only forceable when A has the right shape (constrained types?):
     fun cached = size(this)
   }
   fun size(x) = if x is
     Add(l, r) then this.size(l) + this.size(r)
 }
 //│ mixin Test() {
-//│   this: {size: (??A & ??A0) -> Int}
+//│   this: {size: ??A -> Int}
 //│   class Add[A](lhs: A, rhs: A) {
 //│     fun cached: Int
 //│   }
 //│   class Lit(n: Int)
 //│   fun size: Add['A] -> Int
 //│ }
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 

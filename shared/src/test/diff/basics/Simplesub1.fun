@@ -395,12 +395,12 @@ let rec x = (let y = (x x); (z => z)); (x (y => y.u)) // [test:T1]
 //│     'a :> 'a -> 'a
 //│ res: ({u: 'u} & 'a) -> ('u | 'a) | 'b
 //│   where
-//│     'a :> forall 'u. ({u: 'u} & 'a) -> ('u | 'a)
+//│     'a :> forall 'u. ({u: 'u} & 'a) -> ('a | 'u)
 //│        <: 'b
 
 :ns
 let rec x = (let y = (x x); (z => z))
-//│ x: forall 'a 'b 'x. 'x
+//│ x: forall 'x 'a 'b. 'x
 //│   where
 //│     'x := 'b -> 'b
 //│     'b :> 'b -> 'b

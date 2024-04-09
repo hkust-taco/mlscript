@@ -36,7 +36,7 @@ mixin SizeBase {
 //│   this: {
 //│     size: (??Region & 'Region | ??Region0 & 'Region0 | ??Region1 & 'Region1 | ??Region2 & 'Region2) -> Int
 //│   }
-//│   fun size: (Circle | Intersect['Region] | Outside['Region1] | Translate['Region0] | Union['Region2]) -> Int
+//│   fun size: (Circle | Intersect['Region1] | Outside['Region] | Translate['Region2] | Union['Region0]) -> Int
 //│ }
 
 // ******************* Linguistic Reuse and Meta-Language Optimizations *******************
@@ -360,7 +360,7 @@ fun mk(n) = if n is
   _ then Scale(Vector(0, 0), mk(n))
 //│ fun mk: forall 'a. Object -> 'a
 //│   where
-//│     'a :> Outside['a] | Translate['a] | Scale['a] | Union['a] | Intersect['a]
+//│     'a :> Intersect['a] | Outside['a] | Scale['a] | Translate['a] | Union['a]
 
 :re
 TestElim.eliminate(mk(100))

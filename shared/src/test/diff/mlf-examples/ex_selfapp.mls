@@ -267,7 +267,7 @@ def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z_ c n)
 // * Notice the extrusion, yielding an imprecise type
 :e
 rec def k = fun x -> fun (xs: Ba) -> fun c -> fun n -> c (x + 1) (xs k z c n)
-//│ int -> Ba -> (int -> (??b | 'a) -> (??b0 & 'a & 'b)) -> (??b0 & 'a) -> (??b | 'b)
+//│ int -> Ba -> (int -> anything -> ??b) -> ??b -> anything
 //│   <:  k:
 //│ int -> Ba -> Ba
 //│ ╔══[ERROR] Type error in binding of lambda expression

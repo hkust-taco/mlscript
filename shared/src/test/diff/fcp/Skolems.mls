@@ -27,7 +27,7 @@ fun (x: ('a -> 'a)) -> auto_ x
 //│ ╟── back into type variable `'a`
 //│ ║  l.5: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──     	                              ^^
-//│ res: (('a | ??a) -> (??a0 & 'a)) -> (error | 'b -> 'b)
+//│ res: (anything -> ??a) -> (error | 'b -> 'b)
 //│    = [Function: res]
 
 foo(x: ('a -> 'b)) = auto_ x
@@ -175,7 +175,7 @@ fun (x: ('a -> 'a)) -> swapWith x
 //│ ╟── back into type variable `'y`
 //│ ║  l.155: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ╙──       	                                             ^^
-//│ res: (('a | (??x, ??y,)) -> ((??y0, ??x0,) & 'a)) -> (error | ('a0, 'b,) -> ('b, 'a0,))
+//│ res: (((??x, ??y,) | 'a) -> ((??y0, ??x0,) & 'a)) -> (error | ('a0, 'b,) -> ('b, 'a0,))
 //│    = [Function: res]
 
 foo = fun (x: ('a -> 'b)) -> swapWith x
@@ -252,7 +252,7 @@ fun (x: ((('a, 'b),) -> ('b, 'a))) -> swapWith x
 //│ ╟── back into type variable `'y`
 //│ ║  l.155: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ╙──       	                                             ^^
-//│ res: ((('a | ??x, 'b | ??y,),) -> (??y0 & 'b, ??x0 & 'a,)) -> (error | ('a0, 'b0,) -> ('b0, 'a0,))
+//│ res: (((anything, anything,),) -> (??y, ??x,)) -> (error | ('a, 'b,) -> ('b, 'a,))
 //│    = [Function: res]
 
 fun (x: ((('a, 'b),) -> ('c, 'd))) -> swapWith x

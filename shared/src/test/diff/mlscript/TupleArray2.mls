@@ -73,7 +73,7 @@ trait T
 
 :re
 error: (1,2) & t | Array[3]
-//│ res: (1, 2,) & #T | Array[3]
+//│ res: Array[3] | (1, 2,) & #T
 //│ Runtime error:
 //│   Error: an error was thrown
 
@@ -97,16 +97,16 @@ arr: Array[2] & t | (1, 1)
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.96: 	arr: Array[2] & t | (1, 1)
 //│ ║        	^^^
-//│ ╟── type `Array[1]` does not match type `(1, 1,) | Array[2] & #T`
+//│ ╟── type `Array[1]` does not match type `Array[2] & #T | (1, 1,)`
 //│ ║  l.81: 	def arr: Array[1]
 //│ ║        	         ^^^^^^^^
-//│ ╟── but it flows into reference with expected type `(1, 1,) | Array[2] & #T`
+//│ ╟── but it flows into reference with expected type `Array[2] & #T | (1, 1,)`
 //│ ║  l.96: 	arr: Array[2] & t | (1, 1)
 //│ ║        	^^^
 //│ ╟── Note: constraint arises from union type:
 //│ ║  l.96: 	arr: Array[2] & t | (1, 1)
 //│ ╙──      	     ^^^^^^^^^^^^^^^^^^^^^
-//│ res: (1, 1,) | Array[2] & #T
+//│ res: Array[2] & #T | (1, 1,)
 //│    = <no result>
 //│      arr is not implemented
 
@@ -115,7 +115,7 @@ def arrt: Array[1] & t
 //│     = <missing implementation>
 
 arrt: Array[2] & t | (1, 1)
-//│ res: (1, 1,) | Array[2] & #T
+//│ res: Array[2] & #T | (1, 1,)
 //│    = <no result>
 //│      arrt is not implemented
 
@@ -125,12 +125,12 @@ def f_1: 'a -> (Array['a] & t)
 //│    = <missing implementation>
 
 def f_2: 'a -> (Array['a] & t | (1,))
-//│ f_2: 'a -> ((1,) | Array['a] & #T)
+//│ f_2: 'a -> (Array['a] & #T | (1,))
 //│    = <missing implementation>
 
 :e
 f_1 = f_2
-//│ 'a -> ((1,) | Array['a] & #T)
+//│ 'a -> (Array['a] & #T | (1,))
 //│   <:  f_1:
 //│ 'a -> (Array['a] & #T)
 //│ ╔══[ERROR] Type mismatch in def definition:
@@ -148,7 +148,7 @@ f_1 = f_2
 f_2 = f_1
 //│ 'a -> (Array['a] & #T)
 //│   <:  f_2:
-//│ 'a -> ((1,) | Array['a] & #T)
+//│ 'a -> (Array['a] & #T | (1,))
 //│    = <no result>
 //│      f_1 and f_2 are not implemented
 

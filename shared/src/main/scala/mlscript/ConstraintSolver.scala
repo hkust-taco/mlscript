@@ -20,7 +20,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     // 200
     250
   
-  type ExtrCtx = MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
+  type ExtrCtx = MutSortMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
   
   protected var currentConstrainingRun = 0
   
@@ -90,6 +90,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           def handle(virtualMembers: Map[Str, NuMember]): Opt[FieldType] =
             virtualMembers.get(fld.name) match {
               case S(d: TypedNuFun) =>
+                if (d.fd.isLetOrLetRec)
+                  err(msg"Let binding '${d.name}' cannot tbe accessed as a field" -> fld.toLoc ::
+                    msg"Use a `val` declaration to make it a field" -> d.fd.toLoc ::
+                    Nil)
                 val ty = d.typeSignature
                 S(
                   if (d.fd.isMut) FieldType(S(ty), ty)(d.prov)

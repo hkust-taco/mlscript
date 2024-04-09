@@ -2,7 +2,7 @@
 :NoJS
 
 trait Into[T] {
-    fun Into: T
+  fun Into: T
 }
 //│ trait Into[T] {
 //│   fun Into: T
@@ -16,17 +16,17 @@ trait Nat extends Into[Int]
 //│   'T := Int
 
 trait Product[A, B] extends Into[A] {
-    let pair: [A, B]
+  val pair: [A, B]
 }
 //│ trait Product[A, B] extends Into {
 //│   fun Into: 'T
-//│   let pair: [A, B]
+//│   val pair: [A, B]
 //│ }
 //│ where
 //│   'T := A
 
 class TwoInts(val pair: [Int, Int]) extends Product[Int, Int] {
-    fun Into = pair.0 + pair.1
+  fun Into = pair.0 + pair.1
 }
 //│ class TwoInts(pair: [Int, Int]) extends Into, Product {
 //│   fun Into: Int
@@ -47,8 +47,8 @@ i2.pair
 i2.Into
 //│ Int
 
-let p1: Product[Int, Int]
-//│ let p1: Product[Int, Int]
+val p1: Product[Int, Int]
+//│ val p1: Product[Int, Int]
 
 :e
 p1: Product[Bool, Int]

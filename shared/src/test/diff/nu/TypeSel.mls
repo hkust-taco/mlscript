@@ -275,7 +275,7 @@ fun test[T](f: Foo[T]): T = if f is
 :e
 class Foo[type A]
 class Bar[type A] extends Foo[A]
-//│ ╔══[ERROR] Inherited parameter named `A` is not virtual and cannot be overridden
+//│ ╔══[ERROR] Inherited parameter named 'A' is not virtual and cannot be overridden
 //│ ║  l.277: 	class Bar[type A] extends Foo[A]
 //│ ║         	               ^
 //│ ╟── Originally declared here:
@@ -295,7 +295,7 @@ class Foo[type A]
 
 :e
 class Bar[type A] extends Foo[A -> A]
-//│ ╔══[ERROR] Inherited parameter named `A` is not virtual and cannot be overridden
+//│ ╔══[ERROR] Inherited parameter named 'A' is not virtual and cannot be overridden
 //│ ║  l.297: 	class Bar[type A] extends Foo[A -> A]
 //│ ║         	               ^
 //│ ╟── Originally declared here:
@@ -307,7 +307,7 @@ class Bar[type A] extends Foo[A -> A]
 
 :e
 class Bar[type A] extends Foo[Int]
-//│ ╔══[ERROR] Inherited parameter named `A` is not virtual and cannot be overridden
+//│ ╔══[ERROR] Inherited parameter named 'A' is not virtual and cannot be overridden
 //│ ║  l.309: 	class Bar[type A] extends Foo[Int]
 //│ ║         	               ^
 //│ ╟── Originally declared here:

@@ -21,11 +21,11 @@ class KS[type A](val ev: K[A]) extends K[S[A]]
 // :d
 // :e
 fun fr[L](l: K[L]) = if l is KS(e1) then () => (e1 as K['X])
-//│ fun fr: forall 'L 'X. (l: K['L]) -> () -> K[in ??A & 'X out 'X | ??A0 & ??A1]
+//│ fun fr: forall 'L. (l: K['L]) -> () -> K[in ??A]
 
 // Doesn't happen here:
 fun fr[L](l: K[L]) = if l is KS(e1) then (e1 as K['X])
-//│ fun fr: forall 'L 'X. (l: K['L]) -> K[in ??A & 'X out 'X | ??A0 & ??A1]
+//│ fun fr: forall 'L. (l: K['L]) -> K[in ??A]
 
 // fun fr[L](l: K[L]) = if l is KS(e1) then () => [(e1 as K['X]), e1 as K['X]]
 
@@ -81,7 +81,7 @@ fun fr[L](l: K[L], r: K[L]) =
 //│ ╔══[ERROR] Type mismatch in `case` expression:
 //│ ║  l.80: 	  if l is KS(e1) and r is KS(e2) then sig(e1, e2)
 //│ ║        	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── type `??A & ??A0 & ~??A1` does not match type `??A2 | ~??A3`
+//│ ╟── type `??A & ??A0 & ~??A1` does not match type `~??A2`
 //│ ║  l.75: 	fun sig: (K['L], K['L]) -> Int
 //│ ║        	            ^^
 //│ ╟── Note: type parameter A is defined at:
@@ -94,7 +94,7 @@ fun fr[L](l: K[L], r: K[L]) =
 //│ ╟── type variable `A` leaks out of its scope
 //│ ║  l.16: 	class KS[type A](val ev: K[A]) extends K[S[A]]
 //│ ║        	              ^
-//│ ╟── into type `??A | ~??A0`
+//│ ╟── into type `~??A`
 //│ ║  l.75: 	fun sig: (K['L], K['L]) -> Int
 //│ ║        	                   ^^
 //│ ╟── Note: constraint arises from type variable:

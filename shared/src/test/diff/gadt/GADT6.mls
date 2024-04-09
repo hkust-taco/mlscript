@@ -23,7 +23,7 @@ fun h1[A](x: R[A], y: A) = (if x is
 //│ fun h1: forall 'A. (x: R['A], y: 'A) -> R[in Int & 'A0 | 'A | 'A1 & Bool out 'A & (Int & 'A1 | 'A0 & (Bool | 'A1))]
 
 h1(RI(1), 1)
-//│ R[in Int & 'A | Int & 'A0 | 'A1 & Bool out Int & 'A1 | 'A0 & 'A & (Bool | 'A1)]
+//│ R[in Int & 'A | Int & 'A0 | 'A1 & Bool out Int & 'A1 | 'A & 'A0 & (Bool | 'A1)]
 //│ res
 //│     = RI {}
 
@@ -41,7 +41,7 @@ h1(RC("hi"), true)
 //│ ╟── Note: method type parameter A is defined at:
 //│ ║  l.18: 	fun h1[A](x: R[A], y: A) = (if x is
 //│ ╙──      	       ^
-//│ R[in Int & 'A | Str & 'A0 | 'A1 & Bool out Int & 'A0 & 'A1 | 'A & (Str & 'A1 | true | 'A0 & (false | 'A1))] | error
+//│ R[in Int & 'A | Str & 'A0 | 'A1 & Bool out Int & 'A0 & 'A1 | 'A & (false & 'A0 | true | 'A1 & (Str | 'A0))] | error
 //│ res
 //│ Runtime error:
 //│   Error: an error was thrown
@@ -58,7 +58,7 @@ fun h2[A](x: R[A], y: R[A]) = (if x is
 //│ fun h2: forall 'A. (x: R['A], y: R['A]) -> R[in Int & 'A0 | 'A | 'A1 & Bool out 'A & (Int & 'A1 | 'A0 & (Bool | 'A1))]
 
 h2(RI(1), RI(2))
-//│ R[in Int & 'A | Int & 'A0 | 'A1 & Bool out Int & 'A1 | 'A0 & 'A & (Bool | 'A1)]
+//│ R[in Int & 'A | Int & 'A0 | 'A1 & Bool out Int & 'A1 | 'A & 'A0 & (Bool | 'A1)]
 //│ res
 //│     = RI {}
 

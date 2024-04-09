@@ -108,11 +108,11 @@ def test extr x =
   in f 0
 //│ test: (('a -> (anything -> ('b | 'c)
 //│   where
-//│     0 | 'a <: 0 -> ('d & 'e)
-//│     'f <: 'd -> 'b)) -> anything) -> 'f -> (anything -> ('b | 'c)
+//│     'd <: 'e -> 'b
+//│     0 | 'a <: 0 -> ('e & 'f))) -> anything) -> 'd -> (anything -> ('b | 'c)
 //│   where
-//│     0 | 'a <: 0 -> ('d & 'e)
-//│     'f <: 'e -> 'c)
+//│     'd <: 'f -> 'c
+//│     0 | 'a <: 0 -> ('e & 'f))
 //│     = [Function: test1]
 
 :e

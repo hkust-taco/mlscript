@@ -11,14 +11,21 @@ let y = 1
 //│     = 1
 
 let x: y
+//│ ╔══[ERROR] `let` bindings must have a right-hand side
+//│ ║  l.13: 	let x: y
+//│ ╙──      	^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ let x: 1
 //│ x
 //│   = <missing implementation>
 
 :e
 let x: (1, 2)
+//│ ╔══[ERROR] `let` bindings must have a right-hand side
+//│ ║  l.23: 	let x: (1, 2)
+//│ ╙──      	^^^^^^^^^^^^^
 //│ ╔══[ERROR] cannot lift variable , to type
-//│ ║  l.19: 	let x: (1, 2)
+//│ ║  l.23: 	let x: (1, 2)
 //│ ╙──      	       ^^^^^^
 //│ let x: error
 //│ x
@@ -26,8 +33,11 @@ let x: (1, 2)
 
 :e
 let x: (1, 2,)
+//│ ╔══[ERROR] `let` bindings must have a right-hand side
+//│ ║  l.35: 	let x: (1, 2,)
+//│ ╙──      	^^^^^^^^^^^^^^
 //│ ╔══[ERROR] cannot lift variable , to type
-//│ ║  l.28: 	let x: (1, 2,)
+//│ ║  l.35: 	let x: (1, 2,)
 //│ ╙──      	       ^^^^^^^
 //│ let x: error
 //│ x
@@ -39,22 +49,33 @@ class Foo[A, B]
 //│ }
 
 let x: Foo[1, 2]
+//│ ╔══[ERROR] `let` bindings must have a right-hand side
+//│ ║  l.51: 	let x: Foo[1, 2]
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ let x: Foo[1, 2]
 //│ x
 //│   = <missing implementation>
 
 let y: Foo
+//│ ╔══[ERROR] `let` bindings must have a right-hand side
+//│ ║  l.60: 	let y: Foo
+//│ ╙──      	^^^^^^^^^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│ let y: Foo[?, ?]
 //│ y
 //│   = <missing implementation>
 
 :e
 let z: y[1, 2]
+//│ ╔══[ERROR] `let` bindings must have a right-hand side
+//│ ║  l.70: 	let z: y[1, 2]
+//│ ╙──      	^^^^^^^^^^^^^^
 //│ ╔══[ERROR] cannot lift expression y to type
-//│ ║  l.52: 	let z: y[1, 2]
+//│ ║  l.70: 	let z: y[1, 2]
 //│ ║        	       ^^^^^^^
 //│ ╟── as defined in
-//│ ║  l.46: 	let y: Foo
+//│ ║  l.60: 	let y: Foo
 //│ ╙──      	^^^^^^^^^^
 //│ let z: error
 //│ z
@@ -63,7 +84,7 @@ let z: y[1, 2]
 :e
 2 : (1, 2)
 //│ ╔══[ERROR] cannot lift variable , to type
-//│ ║  l.64: 	2 : (1, 2)
+//│ ║  l.85: 	2 : (1, 2)
 //│ ╙──      	    ^^^^^^
 //│ error
 //│ res

@@ -27,6 +27,8 @@ abstract class ModeType {
   def dbgParsing: Bool
   def dbgSimplif: Bool
   def dbgUCS: Bool
+  def dbgLifting: Bool
+  def dbgDefunc: Bool
   def fullExceptionStack: Bool
   def stats: Bool
   def stdout: Bool
@@ -40,6 +42,11 @@ abstract class ModeType {
   def showRepl: Bool
   def allowEscape: Bool
   def mono: Bool
+  def useIR: Bool
+  def interpIR: Bool
+  def irVerbose: Bool
+  def lift: Bool
+  def nolift: Bool
 }
 
 class DiffTests
@@ -50,7 +57,7 @@ class DiffTests
   
   
   /**  Hook for dependent projects, like the monomorphizer. */
-  def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit): Ls[Str] = Nil
+  def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (Ls[Str], Option[TypingUnit]) = (Nil, None)
   
   
   @SuppressWarnings(Array("org.wartremover.warts.RedundantIsInstanceOf"))
@@ -152,6 +159,8 @@ class DiffTests
       dbgParsing: Bool = false,
       dbgSimplif: Bool = false,
       dbgUCS: Bool = false,
+      dbgLifting: Bool = false,
+      dbgDefunc: Bool = false,
       fullExceptionStack: Bool = false,
       stats: Bool = false,
       stdout: Bool = false,
@@ -166,7 +175,12 @@ class DiffTests
       showRepl: Bool = false,
       allowEscape: Bool = false,
       mono: Bool = false,
+      lift: Bool = false,
+      nolift: Bool = false,
       // noProvs: Bool = false,
+      useIR: Bool = false,
+      interpIR: Bool = false,
+      irVerbose: Bool = false,
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
     }
@@ -188,6 +202,8 @@ class DiffTests
     var noRecursiveTypes = false
     var constrainedTypes = false
     var irregularTypes = false
+    var prettyPrintQQ = false
+    var useIR = false
     
     // * This option makes some test cases pass which assume generalization should happen in arbitrary arguments
     // * but it's way too aggressive to be ON by default, as it leads to more extrusion, cycle errors, etc.
@@ -198,7 +214,8 @@ class DiffTests
     val backend = new JSTestBackend {
       def oldDefs = !newDefs
     }
-    val host = ReplHost()
+    var hostCreated = false
+    lazy val host = { hostCreated = true; ReplHost() }
     val codeGenTestHelpers = new CodeGenTestHelpers(file, output)
     
     def rec(lines: List[String], mode: Mode): Unit = lines match {
@@ -213,6 +230,8 @@ class DiffTests
           case "d" => mode.copy(dbg = true)
           case "dp" => mode.copy(dbgParsing = true)
           case "ds" => mode.copy(dbgSimplif = true)
+          case "dl" => mode.copy(dbgLifting = true)
+          case "dd" => mode.copy(dbgDefunc = true)
           case "ducs" => mode.copy(dbg = true, dbgUCS = true)
           case "s" => mode.copy(fullExceptionStack = true)
           case "v" | "verbose" => mode.copy(verbose = true)
@@ -256,6 +275,7 @@ class DiffTests
             // println("'"+line.drop(str.length + 2)+"'")
             typer.startingFuel = line.drop(str.length + 2).toInt; mode
           case "ResetFuel" => typer.startingFuel = typer.defaultStartingFuel; mode
+          case "QQ" => prettyPrintQQ = true; mode
           case "ne" => mode.copy(noExecution = true)
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
@@ -266,6 +286,8 @@ class DiffTests
           case "r" | "showRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
           case "mono" => {mode.copy(mono = true)}
+          case "lift" => {mode.copy(lift = true)}
+          case "nolift" => {mode.copy(nolift = true)}
           case "exit" =>
             out.println(exitMarker)
             ls.dropWhile(_ =:= exitMarker).tails.foreach {
@@ -274,6 +296,10 @@ class DiffTests
               case l :: _ => out.println(l)
             }
             return ()
+          case "UseIR" => useIR = true; mode
+          case "useIR" => mode.copy(useIR = true)
+          case "interpIR" => mode.copy(interpIR = true)
+          case "irVerbose" => mode.copy(irVerbose = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)
@@ -434,10 +460,19 @@ class DiffTests
             if (mode.showParse)
               output(s"AST: $res")
             
-            postProcess(mode, basePath, testName, res).foreach(output)
+            val newMode = if (useIR) { mode.copy(useIR = true) } else mode
+            val (postLines, nuRes) = postProcess(newMode, basePath, testName, res, output)
+            postLines.foreach(output)  
             
             if (parseOnly)
               Success(Pgrm(Nil), 0)
+            else if (mode.mono || mode.lift) {
+              import Message._
+              Success(Pgrm(nuRes.getOrElse({
+                raise(ErrorReport(msg"Post-process failed to produce AST." -> None :: Nil, true, Diagnostic.Compilation))
+                TypingUnit(Nil)
+              }).entities), 0)
+            }
             else
               Success(Pgrm(res.entities), 0)
             
@@ -577,9 +612,7 @@ class DiffTests
               val exp = typer.expandType(sim)(ctx)
               
               val expStr =
-                exp.showIn(ShowCtx.mk(exp :: Nil, newDefs)
-                    // .copy(newDefs = true) // TODO later
-                  , 0)
+                exp.showIn(0)(ShowCtx.mk(exp :: Nil, newDefs))// .copy(newDefs = true) // TODO later
               
               output(expStr.stripSuffix("\n"))
               
@@ -857,7 +890,7 @@ class DiffTests
             val executionResults: Result \/ Ls[(ReplHost.Reply, Str)] = if (!allowTypeErrors &&
                 file.ext =:= "mls" && !mode.noGeneration && !noJavaScript) {
               import codeGenTestHelpers._
-              backend(p, mode.allowEscape, newDefs && newParser) match {
+              backend(p, mode.allowEscape, newDefs && newParser, prettyPrintQQ) match {
                 case testCode @ TestCode(prelude, queries) => {
                   // Display the generated code.
                   if (mode.showGeneratedJS) showGeneratedCode(testCode)
@@ -1036,7 +1069,7 @@ class DiffTests
 
     try rec(allLines, defaultMode) finally {
       out.close()
-      host.terminate()
+      if (hostCreated) host.terminate()
     }
     val testFailed = failures.nonEmpty || unmergedChanges.nonEmpty
     val result = strw.toString

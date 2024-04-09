@@ -184,7 +184,7 @@ trait Foo[A] { fun a: A; fun foo(x: A): A }
 //│   fun foo: (x: A) -> A
 //│ }
 
-class Bar[out B](a: B) extends Foo { fun foo(x) = x }
+class Bar[out B](val a: B) extends Foo { fun foo(x) = x }
 //│ class Bar[B](a: B) extends Foo {
 //│   fun foo: forall 'a. 'a -> 'a
 //│ }

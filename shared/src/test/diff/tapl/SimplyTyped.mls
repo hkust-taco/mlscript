@@ -88,11 +88,11 @@ class App(lhs, rhs): Term
 //│ Lit: ('tag, 'ty,) -> (Lit & {tag: 'tag, ty: 'ty})
 //│    = [Function: Lit1]
 //│ Var: 'name -> (Var & {name: 'name})
-//│    = [Function: Var1]
+//│    = [Function: Var2]
 //│ Abs: ('lhs, 'lty, 'rhs,) -> (Abs & {lhs: 'lhs, lty: 'lty, rhs: 'rhs})
 //│    = [Function: Abs1]
 //│ App: ('lhs, 'rhs,) -> (App & {lhs: 'lhs, rhs: 'rhs})
-//│    = [Function: App1]
+//│    = [Function: App2]
 
 class Assumption(name, ty)
 //│ Defined class Assumption
@@ -133,13 +133,8 @@ fun find(t, k) =
 //│   where
 //│     'b :> Node & {
 //│       key: 'key0,
-//│       left: Node & {key: 'key, left: Empty | 'left, right: Empty | 'right, value: 'value} | 'b,
-//│       right: 'right,
-//│       value: 'value
-//│     } | Node & {
-//│       key: 'key0,
-//│       left: 'left,
-//│       right: Node & {key: 'key, left: Empty | 'left, right: Empty | 'right, value: 'value} | 'b,
+//│       left: Node & {key: 'key, left: Empty | 'left, right: Empty | 'right, value: 'value} | 'left | 'b,
+//│       right: Node & {key: 'key, left: Empty | 'left, right: Empty | 'right, value: 'value} | 'b | 'right,
 //│       value: 'value
 //│     }
 //│     'a <: {key: string & 'key0, left: 'left, right: 'right}
@@ -211,10 +206,10 @@ fun showTerm(t) =
 //│       rhs: Abs & 'a | App & 'b | Lit | Var
 //│     }
 //│     'b <: {
-//│       lhs: App & 'b | Lit | Var | 'a & (Abs & {
+//│       lhs: App & 'b | Lit | Var | 'a & (Abs & ~#Abs | Abs & {
 //│         lhs: Abs & 'a | App & 'b | Lit | Var,
 //│         lty: FunctionType & 'c | PrimitiveType & {name: string}
-//│       } | Abs & ~#Abs),
+//│       }),
 //│       rhs: Abs & 'a | App & 'b | Lit | Var
 //│     }
 //│     'c <: {
@@ -256,7 +251,7 @@ fun typeTerm(t, ctx) =
       Err(message) then Err(message)
 //│ typeTerm: (Abs & 'a | App & 'b | Lit & {ty: 'ty & (FunctionType & 'c & 'd & 'e | PrimitiveType & {name: string})} | Var & {name: string}, Empty | Node & 'f & 'g,) -> (Err & {
 //│   message: forall 'message 'message0 'message1. string | 'message | 'message0 | 'message1
-//│ } | Ok & {value: forall 'h. 'lty | 'rhs | 'ty | 'h})
+//│ } | Ok & {value: forall 'h. 'ty | 'lty | 'h | 'rhs})
 //│ where
 //│   'message :> forall 'message0 'message1. string | 'message0 | 'message1
 //│   'message0 :> forall 'message 'message1. 'message | 'message1
@@ -283,7 +278,7 @@ fun typeTerm(t, ctx) =
 //│   }
 //│   'rhs :> forall 'value. 'value
 //│        <: FunctionType & 'c & 'd & 'e | PrimitiveType & {name: string}
-//│   'value :> forall 'h. 'lty | 'rhs | 'ty | 'h
+//│   'value :> forall 'h. 'ty | 'lty | 'h | 'rhs
 //│   'h :> FunctionType & {lhs: 'lty, rhs: forall 'value. 'value}
 //│   'i <: {
 //│     lhs: FunctionType & 'i | PrimitiveType | ~FunctionType & ~PrimitiveType,
@@ -322,10 +317,10 @@ fun showTypeTerm(t, ctx) =
 //│       rhs: Abs & 'b | App & 'd | Lit | Var
 //│     }
 //│     'd <: {
-//│       lhs: App & 'd | Lit | Var | 'b & (Abs & {
+//│       lhs: App & 'd | Lit | Var | 'b & (Abs & ~#Abs | Abs & {
 //│         lhs: Abs & 'b | App & 'd | Lit | Var,
 //│         lty: FunctionType & 'k | PrimitiveType & {name: string}
-//│       } | Abs & ~#Abs),
+//│       }),
 //│       rhs: Abs & 'b | App & 'd | Lit | Var
 //│     }
 //│     'k <: {
@@ -342,7 +337,7 @@ fun showTypeTerm(t, ctx) =
 //│       rhs: Abs & 'a | App & 'c | Lit & {ty: FunctionType & 'e & 'f & 'g & 'h | PrimitiveType & {name: string}} | Var & {name: string}
 //│     }
 //│     'g <: {
-//│       lhs: PrimitiveType & {name: string} | 'l & (FunctionType & ~#FunctionType | FunctionType & 'm),
+//│       lhs: PrimitiveType & {name: string} | 'l & (FunctionType & 'm | FunctionType & ~#FunctionType),
 //│       rhs: FunctionType & 'e & 'f & 'g & 'h | PrimitiveType & {name: string}
 //│     }
 //│     'h <: {
