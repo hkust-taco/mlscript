@@ -3,16 +3,18 @@
 :UseIR
 
 :interpIR
-class True
-class False
+:genCpp
+class Boolean
+class True extends Boolean
+class False extends Boolean
 fun fib(n) = if n < 2 then n else fib(n-1) + fib(n-2)
 fib(20)
-//│ |#class| |True|↵|#class| |False|↵|#fun| |fib|(|n|)| |#=| |#if| |n| |<| |2| |#then| |n| |#else| |fib|(|n|-|1|)| |+| |fib|(|n|-|2|)|↵|fib|(|20|)|
-//│ Parsed: {class True {}; class False {}; fun fib = (n,) => if (<(n,)(2,)) then n else +(fib(-(n,)(1,),),)(fib(-(n,)(2,),),); fib(20,)}
+//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#fun| |fib|(|n|)| |#=| |#if| |n| |<| |2| |#then| |n| |#else| |fib|(|n|-|1|)| |+| |fib|(|n|-|2|)|↵|fib|(|20|)|
+//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; fun fib = (n,) => if (<(n,)(2,)) then n else +(fib(-(n,)(1,),),)(fib(-(n,)(2,),),); fib(20,)}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, [])}, {
 //│ Def(0, fib, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -42,7 +44,7 @@ fib(20)
 //│ x$7 -- #33)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, [])}, {
 //│ Def(0, fib, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -73,21 +75,62 @@ fib(20)
 //│ 
 //│ Interpreted:
 //│ 6765
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_Boolean;
+//│ struct _mls_True;
+//│ struct _mls_False;
+//│ _mlsValue _mls_fib(_mlsValue);
+//│ _mlsValue _mls_j_0(_mlsValue);
+//│ _mlsValue _mlsMain();
+//│ struct _mls_Boolean: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "Boolean"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
+//│ };
+//│ _mlsValue _mls_fib(_mlsValue _mls_n_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_0 = (_mls_n_0<_mlsValue::fromIntLit(2));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_0)){
+//│     _mls_retval = _mls_j_0(_mls_n_0);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_0)){
+//│     auto _mls_x_2 = (_mls_n_0-_mlsValue::fromIntLit(1));
+//│     auto _mls_x_3 = _mls_fib(_mls_x_2);
+//│     auto _mls_x_4 = (_mls_n_0-_mlsValue::fromIntLit(2));
+//│     auto _mls_x_5 = _mls_fib(_mls_x_4);
+//│     auto _mls_x_6 = (_mls_x_3+_mls_x_5);
+//│     _mls_retval = _mls_j_0(_mls_x_6);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_7 = _mls_fib(_mlsValue::fromIntLit(20));
+//│   _mls_retval = _mls_x_7;
+//│   return _mls_retval;
+//│ }
 
 :interpIR
 :genCpp
-class True
-class False
+class Boolean
+class True extends Boolean
+class False extends Boolean
 fun odd(x) = if x == 0 then False else even(x-1)
 fun even(x) = if x == 0 then True else odd(x-1)
 fun foo() = odd(10)
 foo()
-//│ |#class| |True|↵|#class| |False|↵|#fun| |odd|(|x|)| |#=| |#if| |x| |==| |0| |#then| |False| |#else| |even|(|x|-|1|)|↵|#fun| |even|(|x|)| |#=| |#if| |x| |==| |0| |#then| |True| |#else| |odd|(|x|-|1|)|↵|#fun| |foo|(||)| |#=| |odd|(|10|)|↵|foo|(||)|
-//│ Parsed: {class True {}; class False {}; fun odd = (x,) => if (==(x,)(0,)) then False else even(-(x,)(1,),); fun even = (x,) => if (==(x,)(0,)) then True else odd(-(x,)(1,),); fun foo = () => odd(10,); foo()}
+//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#fun| |odd|(|x|)| |#=| |#if| |x| |==| |0| |#then| |False| |#else| |even|(|x|-|1|)|↵|#fun| |even|(|x|)| |#=| |#if| |x| |==| |0| |#then| |True| |#else| |odd|(|x|-|1|)|↵|#fun| |foo|(||)| |#=| |odd|(|10|)|↵|foo|(||)|
+//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; fun odd = (x,) => if (==(x,)(0,)) then False else even(-(x,)(1,),); fun even = (x,) => if (==(x,)(0,)) then True else odd(-(x,)(1,),); fun foo = () => odd(10,); foo()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, [])}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -145,7 +188,7 @@ foo()
 //│ x$13 -- #46)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, [])}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -207,6 +250,7 @@ foo()
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"
+//│ struct _mls_Boolean;
 //│ struct _mls_True;
 //│ struct _mls_False;
 //│ _mlsValue _mls_odd(_mlsValue);
@@ -215,6 +259,11 @@ foo()
 //│ _mlsValue _mls_even(_mlsValue);
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mlsMain();
+//│ struct _mls_Boolean: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "Boolean"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
+//│ };
 //│ _mlsValue _mls_j_1(_mlsValue _mls_x_8){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_8;
@@ -265,10 +314,13 @@ foo()
 //│ }
 
 :interpIR
-class True
-class False
-class A
-class B(b)
+:genCpp
+class Boolean
+class True extends Boolean
+class False extends Boolean
+class AorB
+class A extends AorB
+class B(b) extends AorB
 fun not(x) =
   if x then False else True
 fun foo(x) =
@@ -276,12 +328,12 @@ fun foo(x) =
        else B(foo(not(x)))
 fun main() = foo(False)
 main()
-//│ |#class| |True|↵|#class| |False|↵|#class| |A|↵|#class| |B|(|b|)|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A|→|#else| |B|(|foo|(|not|(|x|)|)|)|←|←|↵|#fun| |main|(||)| |#=| |foo|(|False|)|↵|main|(||)|
-//│ Parsed: {class True {}; class False {}; class A {}; class B(b,) {}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = () => foo(False,); main()}
+//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |AorB|↵|#class| |A| |#extends| |AorB|↵|#class| |B|(|b|)| |#extends| |AorB|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A|→|#else| |B|(|foo|(|not|(|x|)|)|)|←|←|↵|#fun| |main|(||)| |#=| |foo|(|False|)|↵|main|(||)|
+//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class AorB {}; class A: AorB {}; class B(b,): AorB {}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = () => foo(False,); main()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, AorB, []),ClassInfo(4, A, []),ClassInfo(5, B, [b])}, {
 //│ Def(0, not, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -338,7 +390,7 @@ main()
 //│ x$12 -- #40)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, AorB, []),ClassInfo(4, A, []),ClassInfo(5, B, [b])}, {
 //│ Def(0, not, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -396,12 +448,97 @@ main()
 //│ 
 //│ Interpreted:
 //│ B(A())
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_Boolean;
+//│ struct _mls_B;
+//│ struct _mls_True;
+//│ struct _mls_False;
+//│ struct _mls_AorB;
+//│ struct _mls_A;
+//│ _mlsValue _mls_j_0(_mlsValue);
+//│ _mlsValue _mls_main();
+//│ _mlsValue _mls_not(_mlsValue);
+//│ _mlsValue _mls_j_1(_mlsValue);
+//│ _mlsValue _mls_foo(_mlsValue);
+//│ _mlsValue _mlsMain();
+//│ struct _mls_Boolean: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "Boolean"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
+//│ };
+//│ struct _mls_B: public _mls_AorB{
+//│   _mlsValue _mls_b;
+//│   virtual const char *name() const override { return "B"; }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_b) { auto _mlsVal = new (std::align_val_t(align)) _mls_B; _mlsVal->_mls_b = _mls_b; return _mlsVal; }
+//│ };
+//│ struct _mls_AorB: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "AorB"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_AorB;  return _mlsVal; }
+//│ };
+//│ struct _mls_A: public _mls_AorB{
+//│ 
+//│   virtual const char *name() const override { return "A"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A;  return _mlsVal; }
+//│ };
+//│ _mlsValue _mls_foo(_mlsValue _mls_x_4){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_4)){
+//│     auto _mls_x_6 = _mlsValue::create<_mls_A>();
+//│     _mls_retval = _mls_j_1(_mls_x_6);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_4)){
+//│     auto _mls_x_7 = _mls_not(_mls_x_4);
+//│     auto _mls_x_8 = _mls_foo(_mls_x_7);
+//│     auto _mls_x_9 = _mlsValue::create<_mls_B>(_mls_x_8);
+//│     _mls_retval = _mls_j_1(_mls_x_9);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_10 = _mlsValue::create<_mls_False>();
+//│   auto _mls_x_11 = _mls_foo(_mls_x_10);
+//│   _mls_retval = _mls_x_11;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_5){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_5;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_not(_mlsValue _mls_x_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_0)){
+//│     auto _mls_x_2 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_0)){
+//│     auto _mls_x_3 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_0(_mls_x_3);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_12 = _mls_main();
+//│   _mls_retval = _mls_x_12;
+//│   return _mls_retval;
+//│ }
 
 :interpIR
-class True
-class False
-class A()
-class B(b)
+:genCpp
+class Boolean
+class True extends Boolean
+class False extends Boolean
+class AorB
+class A() extends AorB
+class B(b) extends AorB
 fun aaa() =
   let m = 1
   let n = 2
@@ -422,12 +559,12 @@ fun main() =
     A then aaa()
     B(b1) then bbb()
 main()
-//│ |#class| |True|↵|#class| |False|↵|#class| |A|(||)|↵|#class| |B|(|b|)|↵|#fun| |aaa|(||)| |#=|→|#let| |m| |#=| |1|↵|#let| |n| |#=| |2|↵|#let| |p| |#=| |3|↵|#let| |q| |#=| |4|↵|m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |bbb|(||)| |#=|→|#let| |x| |#=| |aaa|(||)|↵|x| |*| |100| |+| |4|←|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A|→|#else| |B|(|foo|(|not|(|x|)|)|)|←|←|↵|#fun| |main|(||)| |#=|→|#let| |x| |#=| |foo|(|False|)|↵|#if| |x| |is|→|A| |#then| |aaa|(||)|↵|B|(|b1|)| |#then| |bbb|(||)|←|←|↵|main|(||)|
-//│ Parsed: {class True {}; class False {}; class A() {}; class B(b,) {}; fun aaa = () => {let m = 1; let n = 2; let p = 3; let q = 4; +(-(+(m,)(n,),)(p,),)(q,)}; fun bbb = () => {let x = aaa(); +(*(x,)(100,),)(4,)}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = () => {let x = foo(False,); if x is ‹(A) then aaa(); (B(b1,)) then bbb()›}; main()}
+//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |AorB|↵|#class| |A|(||)| |#extends| |AorB|↵|#class| |B|(|b|)| |#extends| |AorB|↵|#fun| |aaa|(||)| |#=|→|#let| |m| |#=| |1|↵|#let| |n| |#=| |2|↵|#let| |p| |#=| |3|↵|#let| |q| |#=| |4|↵|m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |bbb|(||)| |#=|→|#let| |x| |#=| |aaa|(||)|↵|x| |*| |100| |+| |4|←|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A|→|#else| |B|(|foo|(|not|(|x|)|)|)|←|←|↵|#fun| |main|(||)| |#=|→|#let| |x| |#=| |foo|(|False|)|↵|#if| |x| |is|→|A| |#then| |aaa|(||)|↵|B|(|b1|)| |#then| |bbb|(||)|←|←|↵|main|(||)|
+//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class AorB {}; class A(): AorB {}; class B(b,): AorB {}; fun aaa = () => {let m = 1; let n = 2; let p = 3; let q = 4; +(-(+(m,)(n,),)(p,),)(q,)}; fun bbb = () => {let x = aaa(); +(*(x,)(100,),)(4,)}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = () => {let x = foo(False,); if x is ‹(A) then aaa(); (B(b1,)) then bbb()›}; main()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, AorB, []),ClassInfo(4, A, []),ClassInfo(5, B, [b])}, {
 //│ Def(0, aaa, [], [],
 //│ I: [],
 //│ R: [None],
@@ -522,7 +659,7 @@ main()
 //│ x$26 -- #87)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, AorB, []),ClassInfo(4, A, []),ClassInfo(5, B, [b])}, {
 //│ Def(0, aaa, [], [],
 //│ I: [],
 //│ R: [None],
@@ -618,13 +755,132 @@ main()
 //│ 
 //│ Interpreted:
 //│ 404
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_Boolean;
+//│ struct _mls_B;
+//│ struct _mls_True;
+//│ struct _mls_False;
+//│ struct _mls_AorB;
+//│ struct _mls_A;
+//│ _mlsValue _mls_aaa();
+//│ _mlsValue _mls_j_0(_mlsValue);
+//│ _mlsValue _mls_j_2(_mlsValue);
+//│ _mlsValue _mls_bbb();
+//│ _mlsValue _mls_main();
+//│ _mlsValue _mls_not(_mlsValue);
+//│ _mlsValue _mls_j_1(_mlsValue);
+//│ _mlsValue _mls_foo(_mlsValue);
+//│ _mlsValue _mlsMain();
+//│ struct _mls_Boolean: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "Boolean"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
+//│ };
+//│ struct _mls_B: public _mls_AorB{
+//│   _mlsValue _mls_b;
+//│   virtual const char *name() const override { return "B"; }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_b) { auto _mlsVal = new (std::align_val_t(align)) _mls_B; _mlsVal->_mls_b = _mls_b; return _mlsVal; }
+//│ };
+//│ struct _mls_AorB: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "AorB"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_AorB;  return _mlsVal; }
+//│ };
+//│ struct _mls_A: public _mls_AorB{
+//│ 
+//│   virtual const char *name() const override { return "A"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A;  return _mlsVal; }
+//│ };
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_15){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_15;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_not(_mlsValue _mls_x_10){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_10)){
+//│     auto _mls_x_12 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_12);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_10)){
+//│     auto _mls_x_13 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_0(_mls_x_13);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_11){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_11;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_aaa(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_0 = _mlsValue::fromIntLit(1);
+//│   auto _mls_x_1 = _mlsValue::fromIntLit(2);
+//│   auto _mls_x_2 = _mlsValue::fromIntLit(3);
+//│   auto _mls_x_3 = _mlsValue::fromIntLit(4);
+//│   auto _mls_x_4 = (_mls_x_0+_mls_x_1);
+//│   auto _mls_x_5 = (_mls_x_4-_mls_x_2);
+//│   auto _mls_x_6 = (_mls_x_5+_mls_x_3);
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_bbb(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_7 = _mls_aaa();
+//│   auto _mls_x_8 = (_mls_x_7*_mlsValue::fromIntLit(100));
+//│   auto _mls_x_9 = (_mls_x_8+_mlsValue::fromIntLit(4));
+//│   _mls_retval = _mls_x_9;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_foo(_mlsValue _mls_x_14){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_14)){
+//│     auto _mls_x_16 = _mlsValue::create<_mls_A>();
+//│     _mls_retval = _mls_j_1(_mls_x_16);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_14)){
+//│     auto _mls_x_17 = _mls_not(_mls_x_14);
+//│     auto _mls_x_18 = _mls_foo(_mls_x_17);
+//│     auto _mls_x_19 = _mlsValue::create<_mls_B>(_mls_x_18);
+//│     _mls_retval = _mls_j_1(_mls_x_19);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_20 = _mlsValue::create<_mls_False>();
+//│   auto _mls_x_21 = _mls_foo(_mls_x_20);
+//│   if (_mlsValue::isValueOf<_mls_A>(_mls_x_21)){
+//│     auto _mls_x_23 = _mls_aaa();
+//│     _mls_retval = _mls_j_2(_mls_x_23);
+//│   } else if (_mlsValue::isValueOf<_mls_B>(_mls_x_21)){
+//│     auto _mls_x_24 = _mlsValue::as<_mls_B>(_mls_x_21)->_mls_b;
+//│     auto _mls_x_25 = _mls_bbb();
+//│     _mls_retval = _mls_j_2(_mls_x_25);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_22){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_22;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_26 = _mls_main();
+//│   _mls_retval = _mls_x_26;
+//│   return _mls_retval;
+//│ }
 
 
 :interpIR
-class True
-class False
-class S(s)
-class O
+class Boolean
+class True extends Boolean
+class False extends Boolean
+class Nat
+class S(s) extends Nat
+class O extends Nat
 fun odd(x) =
   if x is
     O then False
@@ -635,12 +891,12 @@ fun even(x) =
     S(s) then odd(s)
 fun foo() = odd(S(S(S(O))))
 foo()
-//│ |#class| |True|↵|#class| |False|↵|#class| |S|(|s|)|↵|#class| |O|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|S|(|O|)|)|)|)|↵|foo|(||)|
-//│ Parsed: {class True {}; class False {}; class S(s,) {}; class O {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(S(S(S(O,),),),); foo()}
+//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |Nat|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|S|(|O|)|)|)|)|↵|foo|(||)|
+//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class Nat {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(S(S(S(O,),),),); foo()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, Nat, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -700,7 +956,7 @@ foo()
 //│ x$15 -- #57)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, Nat, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -763,10 +1019,13 @@ foo()
 //│ True()
 
 :interpIR
-class True
-class False
-class S(s)
-class O
+:genCpp
+class Boolean
+class True extends Boolean
+class False extends Boolean
+class Nat
+class S(s) extends Nat
+class O extends Nat
 fun odd(x) =
   if x is
     O then False
@@ -778,12 +1037,12 @@ fun even(x) =
 fun mk(n) = if n > 0 then S(mk(n - 1)) else O
 fun foo() = odd(mk(10))
 foo() 
-//│ |#class| |True|↵|#class| |False|↵|#class| |S|(|s|)|↵|#class| |O|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|mk|(|10|)|)|↵|foo|(||)| |
-//│ Parsed: {class True {}; class False {}; class S(s,) {}; class O {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n,)(0,)) then S(mk(-(n,)(1,),),) else O; fun foo = () => odd(mk(10,),); foo()}
+//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |Nat|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|mk|(|10|)|)|↵|foo|(||)| |
+//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class Nat {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n,)(0,)) then S(mk(-(n,)(1,),),) else O; fun foo = () => odd(mk(10,),); foo()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, Nat, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -863,7 +1122,7 @@ foo()
 //│ x$18 -- #72)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, Nat, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -944,12 +1203,117 @@ foo()
 //│ 
 //│ Interpreted:
 //│ False()
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_Boolean;
+//│ struct _mls_O;
+//│ struct _mls_True;
+//│ struct _mls_False;
+//│ struct _mls_Nat;
+//│ struct _mls_S;
+//│ _mlsValue _mls_odd(_mlsValue);
+//│ _mlsValue _mls_j_0(_mlsValue);
+//│ _mlsValue _mls_foo();
+//│ _mlsValue _mls_j_2(_mlsValue);
+//│ _mlsValue _mls_j_1(_mlsValue);
+//│ _mlsValue _mls_mk(_mlsValue);
+//│ _mlsValue _mls_even(_mlsValue);
+//│ _mlsValue _mlsMain();
+//│ struct _mls_Boolean: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "Boolean"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
+//│ };
+//│ struct _mls_O: public _mls_Nat{
+//│ 
+//│   virtual const char *name() const override { return "O"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_O;  return _mlsVal; }
+//│ };
+//│ struct _mls_Nat: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "Nat"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nat;  return _mlsVal; }
+//│ };
+//│ struct _mls_S: public _mls_Nat{
+//│   _mlsValue _mls_s;
+//│   virtual const char *name() const override { return "S"; }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_s) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->_mls_s = _mls_s; return _mlsVal; }
+//│ };
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_foo(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_16 = _mls_mk(_mlsValue::fromIntLit(10));
+//│   auto _mls_x_17 = _mls_odd(_mls_x_16);
+//│   _mls_retval = _mls_x_17;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_0)){
+//│     auto _mls_x_2 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_0)){
+//│     auto _mls_x_3 = _mlsValue::as<_mls_S>(_mls_x_0)->_mls_s;
+//│     auto _mls_x_4 = _mls_even(_mls_x_3);
+//│     _mls_retval = _mls_j_0(_mls_x_4);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_mk(_mlsValue _mls_n_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_10 = (_mls_n_0>_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_10)){
+//│     auto _mls_x_12 = (_mls_n_0-_mlsValue::fromIntLit(1));
+//│     auto _mls_x_13 = _mls_mk(_mls_x_12);
+//│     auto _mls_x_14 = _mlsValue::create<_mls_S>(_mls_x_13);
+//│     _mls_retval = _mls_j_2(_mls_x_14);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_10)){
+//│     auto _mls_x_15 = _mlsValue::create<_mls_O>();
+//│     _mls_retval = _mls_j_2(_mls_x_15);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_even(_mlsValue _mls_x_5){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_5)){
+//│     auto _mls_x_7 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_1(_mls_x_7);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_5)){
+//│     auto _mls_x_8 = _mlsValue::as<_mls_S>(_mls_x_5)->_mls_s;
+//│     auto _mls_x_9 = _mls_odd(_mls_x_8);
+//│     _mls_retval = _mls_j_1(_mls_x_9);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_11;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_18 = _mls_foo();
+//│   _mls_retval = _mls_x_18;
+//│   return _mls_retval;
+//│ }
 
 :interpIR
-class True
-class False
-class S(s)
-class O
+:genCpp
+class Boolean
+class True extends Boolean
+class False extends Boolean
+class S(s) extends Nat
+class O extends Nat
 fun odd(x) =
   if x is
     O then False
@@ -961,12 +1325,12 @@ fun even(x) =
 fun mk(n) = if n > 0 then S(mk(n - 1)) else O
 fun foo() = odd(S(S(mk(10))))
 foo()
-//│ |#class| |True|↵|#class| |False|↵|#class| |S|(|s|)|↵|#class| |O|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|mk|(|10|)|)|)|)|↵|foo|(||)|
-//│ Parsed: {class True {}; class False {}; class S(s,) {}; class O {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n,)(0,)) then S(mk(-(n,)(1,),),) else O; fun foo = () => odd(S(S(mk(10,),),),); foo()}
+//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|mk|(|10|)|)|)|)|↵|foo|(||)|
+//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n,)(0,)) then S(mk(-(n,)(1,),),) else O; fun foo = () => odd(S(S(mk(10,),),),); foo()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, S, [s]),ClassInfo(4, O, [])}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -1048,7 +1412,7 @@ foo()
 //│ x$20 -- #80)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, S, [s]),ClassInfo(4, O, [])}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -1131,12 +1495,113 @@ foo()
 //│ 
 //│ Interpreted:
 //│ False()
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_Boolean;
+//│ struct _mls_True;
+//│ struct _mls_False;
+//│ struct _mls_S;
+//│ struct _mls_O;
+//│ _mlsValue _mls_odd(_mlsValue);
+//│ _mlsValue _mls_j_0(_mlsValue);
+//│ _mlsValue _mls_foo();
+//│ _mlsValue _mls_j_2(_mlsValue);
+//│ _mlsValue _mls_j_1(_mlsValue);
+//│ _mlsValue _mls_mk(_mlsValue);
+//│ _mlsValue _mls_even(_mlsValue);
+//│ _mlsValue _mlsMain();
+//│ struct _mls_Boolean: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "Boolean"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
+//│ };
+//│ struct _mls_S: public _mls_Nat{
+//│   _mlsValue _mls_s;
+//│   virtual const char *name() const override { return "S"; }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_s) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->_mls_s = _mls_s; return _mlsVal; }
+//│ };
+//│ struct _mls_O: public _mls_Nat{
+//│ 
+//│   virtual const char *name() const override { return "O"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_O;  return _mlsVal; }
+//│ };
+//│ _mlsValue _mls_foo(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_16 = _mls_mk(_mlsValue::fromIntLit(10));
+//│   auto _mls_x_17 = _mlsValue::create<_mls_S>(_mls_x_16);
+//│   auto _mls_x_18 = _mlsValue::create<_mls_S>(_mls_x_17);
+//│   auto _mls_x_19 = _mls_odd(_mls_x_18);
+//│   _mls_retval = _mls_x_19;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_0)){
+//│     auto _mls_x_2 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_0)){
+//│     auto _mls_x_3 = _mlsValue::as<_mls_S>(_mls_x_0)->_mls_s;
+//│     auto _mls_x_4 = _mls_even(_mls_x_3);
+//│     _mls_retval = _mls_j_0(_mls_x_4);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_mk(_mlsValue _mls_n_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_10 = (_mls_n_0>_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_10)){
+//│     auto _mls_x_12 = (_mls_n_0-_mlsValue::fromIntLit(1));
+//│     auto _mls_x_13 = _mls_mk(_mls_x_12);
+//│     auto _mls_x_14 = _mlsValue::create<_mls_S>(_mls_x_13);
+//│     _mls_retval = _mls_j_2(_mls_x_14);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_10)){
+//│     auto _mls_x_15 = _mlsValue::create<_mls_O>();
+//│     _mls_retval = _mls_j_2(_mls_x_15);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_even(_mlsValue _mls_x_5){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_5)){
+//│     auto _mls_x_7 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_1(_mls_x_7);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_5)){
+//│     auto _mls_x_8 = _mlsValue::as<_mls_S>(_mls_x_5)->_mls_s;
+//│     auto _mls_x_9 = _mls_odd(_mls_x_8);
+//│     _mls_retval = _mls_j_1(_mls_x_9);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_11;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_20 = _mls_foo();
+//│   _mls_retval = _mls_x_20;
+//│   return _mls_retval;
+//│ }
 
 :interpIR
-class True
-class False
-class S(s)
-class O
+:genCpp
+class Boolean
+class True extends Boolean
+class False extends Boolean
+class S(s) extends Nat
+class O extends Nat
 fun odd(x) =
   if x is
     O then False
@@ -1151,12 +1616,12 @@ fun main() =
   foo()
   bar()
 main()
-//│ |#class| |True|↵|#class| |False|↵|#class| |S|(|s|)|↵|#class| |O|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|#if| |10| |>| |0| |#then| |S|(|O|)| |#else| |O|)|↵|#fun| |bar|(||)| |#=| |#if| |10| |>| |0| |#then| |odd|(|S|(|O|)|)| |#else| |odd|(|O|)|↵|#fun| |main|(||)| |#=|→|foo|(||)|↵|bar|(||)|←|↵|main|(||)|
-//│ Parsed: {class True {}; class False {}; class S(s,) {}; class O {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(if (>(10,)(0,)) then S(O,) else O,); fun bar = () => if (>(10,)(0,)) then odd(S(O,),) else odd(O,); fun main = () => {foo(); bar()}; main()}
+//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|#if| |10| |>| |0| |#then| |S|(|O|)| |#else| |O|)|↵|#fun| |bar|(||)| |#=| |#if| |10| |>| |0| |#then| |odd|(|S|(|O|)|)| |#else| |odd|(|O|)|↵|#fun| |main|(||)| |#=|→|foo|(||)|↵|bar|(||)|←|↵|main|(||)|
+//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(if (>(10,)(0,)) then S(O,) else O,); fun bar = () => if (>(10,)(0,)) then odd(S(O,),) else odd(O,); fun main = () => {foo(); bar()}; main()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, S, [s]),ClassInfo(4, O, [])}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -1260,7 +1725,7 @@ main()
 //│ x$25 -- #93)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, S, [s]),ClassInfo(4, O, [])}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -1365,12 +1830,134 @@ main()
 //│ 
 //│ Interpreted:
 //│ True()
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_Boolean;
+//│ struct _mls_True;
+//│ struct _mls_False;
+//│ struct _mls_S;
+//│ struct _mls_O;
+//│ _mlsValue _mls_odd(_mlsValue);
+//│ _mlsValue _mls_bar();
+//│ _mlsValue _mls_j_0(_mlsValue);
+//│ _mlsValue _mls_foo();
+//│ _mlsValue _mls_j_2(_mlsValue);
+//│ _mlsValue _mls_even(_mlsValue);
+//│ _mlsValue _mls_j_3(_mlsValue);
+//│ _mlsValue _mls_main();
+//│ _mlsValue _mls_j_1(_mlsValue);
+//│ _mlsValue _mlsMain();
+//│ struct _mls_Boolean: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "Boolean"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
+//│ };
+//│ struct _mls_S: public _mls_Nat{
+//│   _mlsValue _mls_s;
+//│   virtual const char *name() const override { return "S"; }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_s) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->_mls_s = _mls_s; return _mlsVal; }
+//│ };
+//│ struct _mls_O: public _mls_Nat{
+//│ 
+//│   virtual const char *name() const override { return "O"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_O;  return _mlsVal; }
+//│ };
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_23 = _mls_foo();
+//│   auto _mls_x_24 = _mls_bar();
+//│   _mls_retval = _mls_x_24;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_foo(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_10 = (_mlsValue::fromIntLit(10)>_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_10)){
+//│     auto _mls_x_13 = _mlsValue::create<_mls_O>();
+//│     auto _mls_x_14 = _mlsValue::create<_mls_S>(_mls_x_13);
+//│     _mls_retval = _mls_j_2(_mls_x_14);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_10)){
+//│     auto _mls_x_15 = _mlsValue::create<_mls_O>();
+//│     _mls_retval = _mls_j_2(_mls_x_15);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_even(_mlsValue _mls_x_5){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_5)){
+//│     auto _mls_x_7 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_1(_mls_x_7);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_5)){
+//│     auto _mls_x_8 = _mlsValue::as<_mls_S>(_mls_x_5)->_mls_s;
+//│     auto _mls_x_9 = _mls_odd(_mls_x_8);
+//│     _mls_retval = _mls_j_1(_mls_x_9);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_0)){
+//│     auto _mls_x_2 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_0)){
+//│     auto _mls_x_3 = _mlsValue::as<_mls_S>(_mls_x_0)->_mls_s;
+//│     auto _mls_x_4 = _mls_even(_mls_x_3);
+//│     _mls_retval = _mls_j_0(_mls_x_4);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_bar(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_16 = (_mlsValue::fromIntLit(10)>_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_16)){
+//│     auto _mls_x_18 = _mlsValue::create<_mls_O>();
+//│     auto _mls_x_19 = _mlsValue::create<_mls_S>(_mls_x_18);
+//│     auto _mls_x_20 = _mls_odd(_mls_x_19);
+//│     _mls_retval = _mls_j_3(_mls_x_20);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_16)){
+//│     auto _mls_x_21 = _mlsValue::create<_mls_O>();
+//│     auto _mls_x_22 = _mls_odd(_mls_x_21);
+//│     _mls_retval = _mls_j_3(_mls_x_22);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_3(_mlsValue _mls_x_17){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_17;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_12 = _mls_odd(_mls_x_11);
+//│   _mls_retval = _mls_x_12;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_25 = _mls_main();
+//│   _mls_retval = _mls_x_25;
+//│   return _mls_retval;
+//│ }
 
 :interpIR
-class True
-class False
-class A()
-class B(b)
+:genCpp
+class Boolean
+class True extends Boolean
+class False extends Boolean
+class AorB
+class A extends AorB
+class B(b) extends AorB
 fun aaa() =
   let m = 1
   let n = 2
@@ -1390,12 +1977,12 @@ fun main(flag) =
     A then aaa()
     B(b1) then bbb()
 main(False)
-//│ |#class| |True|↵|#class| |False|↵|#class| |A|(||)|↵|#class| |B|(|b|)|↵|#fun| |aaa|(||)| |#=|→|#let| |m| |#=| |1|↵|#let| |n| |#=| |2|↵|#let| |p| |#=| |3|↵|#let| |q| |#=| |4|↵|m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |bbb|(||)| |#=|→|#let| |x| |#=| |aaa|(||)|↵|x| |*| |100| |+| |4|←|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A| |#else| |B|(|foo|(|not|(|x|)|)|)|←|↵|#fun| |main|(|flag|)| |#=|→|#let| |x| |#=| |foo|(|flag|)|↵|#if| |x| |is|→|A| |#then| |aaa|(||)|↵|B|(|b1|)| |#then| |bbb|(||)|←|←|↵|main|(|False|)|
-//│ Parsed: {class True {}; class False {}; class A() {}; class B(b,) {}; fun aaa = () => {let m = 1; let n = 2; let p = 3; let q = 4; +(-(+(m,)(n,),)(p,),)(q,)}; fun bbb = () => {let x = aaa(); +(*(x,)(100,),)(4,)}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = (flag,) => {let x = foo(flag,); if x is ‹(A) then aaa(); (B(b1,)) then bbb()›}; main(False,)}
+//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |AorB|↵|#class| |A| |#extends| |AorB|↵|#class| |B|(|b|)| |#extends| |AorB|↵|#fun| |aaa|(||)| |#=|→|#let| |m| |#=| |1|↵|#let| |n| |#=| |2|↵|#let| |p| |#=| |3|↵|#let| |q| |#=| |4|↵|m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |bbb|(||)| |#=|→|#let| |x| |#=| |aaa|(||)|↵|x| |*| |100| |+| |4|←|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A| |#else| |B|(|foo|(|not|(|x|)|)|)|←|↵|#fun| |main|(|flag|)| |#=|→|#let| |x| |#=| |foo|(|flag|)|↵|#if| |x| |is|→|A| |#then| |aaa|(||)|↵|B|(|b1|)| |#then| |bbb|(||)|←|←|↵|main|(|False|)|
+//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class AorB {}; class A: AorB {}; class B(b,): AorB {}; fun aaa = () => {let m = 1; let n = 2; let p = 3; let q = 4; +(-(+(m,)(n,),)(p,),)(q,)}; fun bbb = () => {let x = aaa(); +(*(x,)(100,),)(4,)}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = (flag,) => {let x = foo(flag,); if x is ‹(A) then aaa(); (B(b1,)) then bbb()›}; main(False,)}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, AorB, []),ClassInfo(4, A, []),ClassInfo(5, B, [b])}, {
 //│ Def(0, aaa, [], [],
 //│ I: [],
 //│ R: [None],
@@ -1490,7 +2077,7 @@ main(False)
 //│ x$26 -- #88)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, AorB, []),ClassInfo(4, A, []),ClassInfo(5, B, [b])}, {
 //│ Def(0, aaa, [], [],
 //│ I: [],
 //│ R: [None],
@@ -1586,15 +2173,136 @@ main(False)
 //│ 
 //│ Interpreted:
 //│ 404
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_Boolean;
+//│ struct _mls_B;
+//│ struct _mls_True;
+//│ struct _mls_False;
+//│ struct _mls_AorB;
+//│ struct _mls_A;
+//│ _mlsValue _mls_aaa();
+//│ _mlsValue _mls_j_0(_mlsValue);
+//│ _mlsValue _mls_main(_mlsValue);
+//│ _mlsValue _mls_j_2(_mlsValue);
+//│ _mlsValue _mls_bbb();
+//│ _mlsValue _mls_not(_mlsValue);
+//│ _mlsValue _mls_j_1(_mlsValue);
+//│ _mlsValue _mls_foo(_mlsValue);
+//│ _mlsValue _mlsMain();
+//│ struct _mls_Boolean: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "Boolean"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
+//│ };
+//│ struct _mls_B: public _mls_AorB{
+//│   _mlsValue _mls_b;
+//│   virtual const char *name() const override { return "B"; }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_b) { auto _mlsVal = new (std::align_val_t(align)) _mls_B; _mlsVal->_mls_b = _mls_b; return _mlsVal; }
+//│ };
+//│ struct _mls_AorB: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "AorB"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_AorB;  return _mlsVal; }
+//│ };
+//│ struct _mls_A: public _mls_AorB{
+//│ 
+//│   virtual const char *name() const override { return "A"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A;  return _mlsVal; }
+//│ };
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_21){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_21;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_15){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_15;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_not(_mlsValue _mls_x_10){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_10)){
+//│     auto _mls_x_12 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_12);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_10)){
+//│     auto _mls_x_13 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_0(_mls_x_13);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_11){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_11;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_aaa(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_0 = _mlsValue::fromIntLit(1);
+//│   auto _mls_x_1 = _mlsValue::fromIntLit(2);
+//│   auto _mls_x_2 = _mlsValue::fromIntLit(3);
+//│   auto _mls_x_3 = _mlsValue::fromIntLit(4);
+//│   auto _mls_x_4 = (_mls_x_0+_mls_x_1);
+//│   auto _mls_x_5 = (_mls_x_4-_mls_x_2);
+//│   auto _mls_x_6 = (_mls_x_5+_mls_x_3);
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_bbb(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_7 = _mls_aaa();
+//│   auto _mls_x_8 = (_mls_x_7*_mlsValue::fromIntLit(100));
+//│   auto _mls_x_9 = (_mls_x_8+_mlsValue::fromIntLit(4));
+//│   _mls_retval = _mls_x_9;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(_mlsValue _mls_flag_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_20 = _mls_foo(_mls_flag_0);
+//│   if (_mlsValue::isValueOf<_mls_A>(_mls_x_20)){
+//│     auto _mls_x_22 = _mls_aaa();
+//│     _mls_retval = _mls_j_2(_mls_x_22);
+//│   } else if (_mlsValue::isValueOf<_mls_B>(_mls_x_20)){
+//│     auto _mls_x_23 = _mlsValue::as<_mls_B>(_mls_x_20)->_mls_b;
+//│     auto _mls_x_24 = _mls_bbb();
+//│     _mls_retval = _mls_j_2(_mls_x_24);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_foo(_mlsValue _mls_x_14){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_14)){
+//│     auto _mls_x_16 = _mlsValue::create<_mls_A>();
+//│     _mls_retval = _mls_j_1(_mls_x_16);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_14)){
+//│     auto _mls_x_17 = _mls_not(_mls_x_14);
+//│     auto _mls_x_18 = _mls_foo(_mls_x_17);
+//│     auto _mls_x_19 = _mlsValue::create<_mls_B>(_mls_x_18);
+//│     _mls_retval = _mls_j_1(_mls_x_19);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_25 = _mlsValue::create<_mls_False>();
+//│   auto _mls_x_26 = _mls_main(_mls_x_25);
+//│   _mls_retval = _mls_x_26;
+//│   return _mls_retval;
+//│ }
 
 
 :interpIR
-class True
-class False
-class Cons(h, t)
-class Nil
-class Some(x)
-class None
+:genCpp
+class Boolean
+class True extends Boolean
+class False extends Boolean
+class List
+class Cons(h, t) extends List
+class Nil extends List
+class Option
+class Some(x) extends Option
+class None extends Option
 fun head_opt(l) =
   if l is
     Nil then None
@@ -1608,12 +2316,12 @@ fun is_empty(l) =
 fun main() =
   is_empty(Cons(1, Cons(2, Nil)))
 main()
-//│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|Cons|(|1|,| |Cons|(|2|,| |Nil|)|)|)|←|↵|main|(||)|
-//│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(Cons(1, Cons(2, Nil,),),)}; main()}
+//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|Cons|(|1|,| |Cons|(|2|,| |Nil|)|)|)|←|↵|main|(||)|
+//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(Cons(1, Cons(2, Nil,),),)}; main()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
 //│ Def(0, head_opt, [l$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -1682,7 +2390,7 @@ main()
 //│ x$15 -- #68)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
 //│ Def(0, head_opt, [l$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -1752,14 +2460,130 @@ main()
 //│ 
 //│ Interpreted:
 //│ False()
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_Boolean;
+//│ struct _mls_Nil;
+//│ struct _mls_True;
+//│ struct _mls_Option;
+//│ struct _mls_False;
+//│ struct _mls_Some;
+//│ struct _mls_List;
+//│ struct _mls_None;
+//│ struct _mls_Cons;
+//│ _mlsValue _mls_is_empty(_mlsValue);
+//│ _mlsValue _mls_j_0(_mlsValue);
+//│ _mlsValue _mls_main();
+//│ _mlsValue _mls_is_none(_mlsValue);
+//│ _mlsValue _mls_j_1(_mlsValue);
+//│ _mlsValue _mls_head_opt(_mlsValue);
+//│ _mlsValue _mlsMain();
+//│ struct _mls_Boolean: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "Boolean"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
+//│ };
+//│ struct _mls_Nil: public _mls_List{
+//│ 
+//│   virtual const char *name() const override { return "Nil"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
+//│ };
+//│ struct _mls_Option: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "Option"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option;  return _mlsVal; }
+//│ };
+//│ struct _mls_Some: public _mls_Option{
+//│   _mlsValue _mls_x;
+//│   virtual const char *name() const override { return "Some"; }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->_mls_x = _mls_x; return _mlsVal; }
+//│ };
+//│ struct _mls_List: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "List"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List;  return _mlsVal; }
+//│ };
+//│ struct _mls_None: public _mls_Option{
+//│ 
+//│   virtual const char *name() const override { return "None"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│ };
+//│ struct _mls_Cons: public _mls_List{
+//│   _mlsValue _mls_h;
+//│   _mlsValue _mls_t;
+//│   virtual const char *name() const override { return "Cons"; }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->_mls_h = _mls_h;_mlsVal->_mls_t = _mls_t; return _mlsVal; }
+//│ };
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_0;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_11 = _mlsValue::create<_mls_Nil>();
+//│   auto _mls_x_12 = _mlsValue::create<_mls_Cons>(_mlsValue::fromIntLit(2), _mls_x_11);
+//│   auto _mls_x_13 = _mlsValue::create<_mls_Cons>(_mlsValue::fromIntLit(1), _mls_x_12);
+//│   auto _mls_x_14 = _mls_is_empty(_mls_x_13);
+//│   _mls_retval = _mls_x_14;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_5){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_5;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_head_opt(_mlsValue _mls_l_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_Nil>(_mls_l_0)){
+//│     auto _mls_x_1 = _mlsValue::create<_mls_None>();
+//│     _mls_retval = _mls_j_0(_mls_x_1);
+//│   } else if (_mlsValue::isValueOf<_mls_Cons>(_mls_l_0)){
+//│     auto _mls_x_2 = _mlsValue::as<_mls_Cons>(_mls_l_0)->_mls_t;
+//│     auto _mls_x_3 = _mlsValue::as<_mls_Cons>(_mls_l_0)->_mls_h;
+//│     auto _mls_x_4 = _mlsValue::create<_mls_Some>(_mls_x_3);
+//│     _mls_retval = _mls_j_0(_mls_x_4);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_is_empty(_mlsValue _mls_l_1){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_9 = _mls_head_opt(_mls_l_1);
+//│   auto _mls_x_10 = _mls_is_none(_mls_x_9);
+//│   _mls_retval = _mls_x_10;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_is_none(_mlsValue _mls_o_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_None>(_mls_o_0)){
+//│     auto _mls_x_6 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_1(_mls_x_6);
+//│   } else if (_mlsValue::isValueOf<_mls_Some>(_mls_o_0)){
+//│     auto _mls_x_7 = _mlsValue::as<_mls_Some>(_mls_o_0)->_mls_x;
+//│     auto _mls_x_8 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_1(_mls_x_8);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_15 = _mls_main();
+//│   _mls_retval = _mls_x_15;
+//│   return _mls_retval;
+//│ }
 
 :interpIR
-class True
-class False
-class Cons(h, t)
-class Nil
-class Some(x)
-class None
+:genCpp
+class Boolean
+class True extends Boolean
+class False extends Boolean
+class List
+class Cons(h, t) extends List
+class Nil extends List
+class Option
+class Some(x) extends Option
+class None extends Option
 fun mk_list(n) =
   if n == 0 then Nil else Cons(n, mk_list(n - 1))
 fun head_opt(l) =
@@ -1775,12 +2599,12 @@ fun is_empty(l) =
 fun main() =
   is_empty(mk_list(10))
 main()
-//│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|mk_list|(|10|)|)|←|↵|main|(||)|
-//│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun mk_list = (n,) => {if (==(n,)(0,)) then Nil else Cons(n, mk_list(-(n,)(1,),),)}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(mk_list(10,),)}; main()}
+//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|mk_list|(|10|)|)|←|↵|main|(||)|
+//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun mk_list = (n,) => {if (==(n,)(0,)) then Nil else Cons(n, mk_list(-(n,)(1,),),)}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(mk_list(10,),)}; main()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
 //│ Def(0, mk_list, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -1870,7 +2694,7 @@ main()
 //│ x$19 -- #85)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
 //│ Def(0, mk_list, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -1961,14 +2785,149 @@ main()
 //│ 
 //│ Interpreted:
 //│ False()
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_Boolean;
+//│ struct _mls_Nil;
+//│ struct _mls_True;
+//│ struct _mls_Option;
+//│ struct _mls_False;
+//│ struct _mls_Some;
+//│ struct _mls_List;
+//│ struct _mls_None;
+//│ struct _mls_Cons;
+//│ _mlsValue _mls_is_empty(_mlsValue);
+//│ _mlsValue _mls_j_0(_mlsValue);
+//│ _mlsValue _mls_j_2(_mlsValue);
+//│ _mlsValue _mls_main();
+//│ _mlsValue _mls_is_none(_mlsValue);
+//│ _mlsValue _mls_j_1(_mlsValue);
+//│ _mlsValue _mls_mk_list(_mlsValue);
+//│ _mlsValue _mls_head_opt(_mlsValue);
+//│ _mlsValue _mlsMain();
+//│ struct _mls_Boolean: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "Boolean"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
+//│ };
+//│ struct _mls_Nil: public _mls_List{
+//│ 
+//│   virtual const char *name() const override { return "Nil"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
+//│ };
+//│ struct _mls_Option: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "Option"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option;  return _mlsVal; }
+//│ };
+//│ struct _mls_Some: public _mls_Option{
+//│   _mlsValue _mls_x;
+//│   virtual const char *name() const override { return "Some"; }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->_mls_x = _mls_x; return _mlsVal; }
+//│ };
+//│ struct _mls_List: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "List"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List;  return _mlsVal; }
+//│ };
+//│ struct _mls_None: public _mls_Option{
+//│ 
+//│   virtual const char *name() const override { return "None"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│ };
+//│ struct _mls_Cons: public _mls_List{
+//│   _mlsValue _mls_h;
+//│   _mlsValue _mls_t;
+//│   virtual const char *name() const override { return "Cons"; }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->_mls_h = _mls_h;_mlsVal->_mls_t = _mls_t; return _mlsVal; }
+//│ };
+//│ _mlsValue _mls_is_none(_mlsValue _mls_o_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_None>(_mls_o_0)){
+//│     auto _mls_x_12 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_2(_mls_x_12);
+//│   } else if (_mlsValue::isValueOf<_mls_Some>(_mls_o_0)){
+//│     auto _mls_x_13 = _mlsValue::as<_mls_Some>(_mls_o_0)->_mls_x;
+//│     auto _mls_x_14 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_2(_mls_x_14);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_head_opt(_mlsValue _mls_l_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_Nil>(_mls_l_0)){
+//│     auto _mls_x_7 = _mlsValue::create<_mls_None>();
+//│     _mls_retval = _mls_j_1(_mls_x_7);
+//│   } else if (_mlsValue::isValueOf<_mls_Cons>(_mls_l_0)){
+//│     auto _mls_x_8 = _mlsValue::as<_mls_Cons>(_mls_l_0)->_mls_t;
+//│     auto _mls_x_9 = _mlsValue::as<_mls_Cons>(_mls_l_0)->_mls_h;
+//│     auto _mls_x_10 = _mlsValue::create<_mls_Some>(_mls_x_9);
+//│     _mls_retval = _mls_j_1(_mls_x_10);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_17 = _mls_mk_list(_mlsValue::fromIntLit(10));
+//│   auto _mls_x_18 = _mls_is_empty(_mls_x_17);
+//│   _mls_retval = _mls_x_18;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_is_empty(_mlsValue _mls_l_1){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_15 = _mls_head_opt(_mls_l_1);
+//│   auto _mls_x_16 = _mls_is_none(_mls_x_15);
+//│   _mls_retval = _mls_x_16;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_mk_list(_mlsValue _mls_n_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_0 = (_mls_n_0==_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_0)){
+//│     auto _mls_x_2 = _mlsValue::create<_mls_Nil>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_0)){
+//│     auto _mls_x_3 = (_mls_n_0-_mlsValue::fromIntLit(1));
+//│     auto _mls_x_4 = _mls_mk_list(_mls_x_3);
+//│     auto _mls_x_5 = _mlsValue::create<_mls_Cons>(_mls_n_0, _mls_x_4);
+//│     _mls_retval = _mls_j_0(_mls_x_5);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_11;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_19 = _mls_main();
+//│   _mls_retval = _mls_x_19;
+//│   return _mls_retval;
+//│ }
 
 :interpIR
-class True
-class False
-class Cons(h, t)
-class Nil
-class Some(x)
-class None
+:genCpp
+class Boolean
+class True extends Boolean
+class False extends Boolean
+class List
+class Cons(h, t) extends List
+class Nil extends List
+class Option
+class Some(x) extends Option
+class None extends Option
 fun mk_list(n) =
   if n == 0 then Nil else Cons(n, mk_list(n - 1))
 fun last_opt(l) =
@@ -1981,12 +2940,12 @@ fun last_opt(l) =
 fun main() =
   last_opt(mk_list(10))
 main()
-//│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |last_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then|→|#if| |t| |is|→|Nil| |#then| |Some|(|h|)|↵|Cons|(|h2|,| |t2|)| |#then| |last_opt|(|t|)|←|←|←|←|↵|#fun| |main|(||)| |#=|→|last_opt|(|mk_list|(|10|)|)|←|↵|main|(||)|
-//│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun mk_list = (n,) => {if (==(n,)(0,)) then Nil else Cons(n, mk_list(-(n,)(1,),),)}; fun last_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then {if t is ‹(Nil) then Some(h,); (Cons(h2, t2,)) then last_opt(t,)›}›}; fun main = () => {last_opt(mk_list(10,),)}; main()}
+//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |last_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then|→|#if| |t| |is|→|Nil| |#then| |Some|(|h|)|↵|Cons|(|h2|,| |t2|)| |#then| |last_opt|(|t|)|←|←|←|←|↵|#fun| |main|(||)| |#=|→|last_opt|(|mk_list|(|10|)|)|←|↵|main|(||)|
+//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun mk_list = (n,) => {if (==(n,)(0,)) then Nil else Cons(n, mk_list(-(n,)(1,),),)}; fun last_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then {if t is ‹(Nil) then Some(h,); (Cons(h2, t2,)) then last_opt(t,)›}›}; fun main = () => {last_opt(mk_list(10,),)}; main()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
 //│ Def(0, mk_list, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -2060,7 +3019,7 @@ main()
 //│ x$17 -- #81)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
 //│ Def(0, mk_list, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -2135,15 +3094,135 @@ main()
 //│ 
 //│ Interpreted:
 //│ Some(1)
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_Boolean;
+//│ struct _mls_Nil;
+//│ struct _mls_True;
+//│ struct _mls_Option;
+//│ struct _mls_False;
+//│ struct _mls_Some;
+//│ struct _mls_List;
+//│ struct _mls_None;
+//│ struct _mls_Cons;
+//│ _mlsValue _mls_last_opt(_mlsValue);
+//│ _mlsValue _mls_j_0(_mlsValue);
+//│ _mlsValue _mls_j_2(_mlsValue);
+//│ _mlsValue _mls_main();
+//│ _mlsValue _mls_j_1(_mlsValue);
+//│ _mlsValue _mls_mk_list(_mlsValue);
+//│ _mlsValue _mlsMain();
+//│ struct _mls_Boolean: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "Boolean"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
+//│ };
+//│ struct _mls_Nil: public _mls_List{
+//│ 
+//│   virtual const char *name() const override { return "Nil"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
+//│ };
+//│ struct _mls_Option: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "Option"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option;  return _mlsVal; }
+//│ };
+//│ struct _mls_Some: public _mls_Option{
+//│   _mlsValue _mls_x;
+//│   virtual const char *name() const override { return "Some"; }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->_mls_x = _mls_x; return _mlsVal; }
+//│ };
+//│ struct _mls_List: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "List"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List;  return _mlsVal; }
+//│ };
+//│ struct _mls_None: public _mls_Option{
+//│ 
+//│   virtual const char *name() const override { return "None"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│ };
+//│ struct _mls_Cons: public _mls_List{
+//│   _mlsValue _mls_h;
+//│   _mlsValue _mls_t;
+//│   virtual const char *name() const override { return "Cons"; }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->_mls_h = _mls_h;_mlsVal->_mls_t = _mls_t; return _mlsVal; }
+//│ };
+//│ _mlsValue _mls_last_opt(_mlsValue _mls_l_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_Nil>(_mls_l_0)){
+//│     auto _mls_x_7 = _mlsValue::create<_mls_None>();
+//│     _mls_retval = _mls_j_1(_mls_x_7);
+//│   } else if (_mlsValue::isValueOf<_mls_Cons>(_mls_l_0)){
+//│     auto _mls_x_8 = _mlsValue::as<_mls_Cons>(_mls_l_0)->_mls_t;
+//│     auto _mls_x_9 = _mlsValue::as<_mls_Cons>(_mls_l_0)->_mls_h;
+//│     if (_mlsValue::isValueOf<_mls_Nil>(_mls_x_8)){
+//│       auto _mls_x_11 = _mlsValue::create<_mls_Some>(_mls_x_9);
+//│       _mls_retval = _mls_j_2(_mls_x_11);
+//│     } else if (_mlsValue::isValueOf<_mls_Cons>(_mls_x_8)){
+//│       auto _mls_x_12 = _mlsValue::as<_mls_Cons>(_mls_x_8)->_mls_t;
+//│       auto _mls_x_13 = _mlsValue::as<_mls_Cons>(_mls_x_8)->_mls_h;
+//│       auto _mls_x_14 = _mls_last_opt(_mls_x_8);
+//│       _mls_retval = _mls_j_2(_mls_x_14);
+//│     } 
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_mk_list(_mlsValue _mls_n_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_0 = (_mls_n_0==_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_0)){
+//│     auto _mls_x_2 = _mlsValue::create<_mls_Nil>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_0)){
+//│     auto _mls_x_3 = (_mls_n_0-_mlsValue::fromIntLit(1));
+//│     auto _mls_x_4 = _mls_mk_list(_mls_x_3);
+//│     auto _mls_x_5 = _mlsValue::create<_mls_Cons>(_mls_n_0, _mls_x_4);
+//│     _mls_retval = _mls_j_0(_mls_x_5);
+//│   } 
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_15 = _mls_mk_list(_mlsValue::fromIntLit(10));
+//│   auto _mls_x_16 = _mls_last_opt(_mls_x_15);
+//│   _mls_retval = _mls_x_16;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_10){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_j_1(_mls_x_10);
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_17 = _mls_main();
+//│   _mls_retval = _mls_x_17;
+//│   return _mls_retval;
+//│ }
 
 :interpIR
 :genCpp
-class True
-class False
-class Cons(h, t)
-class Nil
-class Some(x)
-class None
+class Boolean
+class True extends Boolean
+class False extends Boolean
+class List
+class Cons(h, t) extends List
+class Nil extends List
+class Option
+class Some(x) extends Option
+class None extends Option
 fun is_some(o) =
   if o is
     Some(x) then True
@@ -2170,12 +3249,12 @@ fun f(x) =
 fun main() =
   f(Some(2)) + f(None)
 main()
-//│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |is_some|(|o|)| |#=|→|#if| |o| |is|→|Some|(|x|)| |#then| |True|↵|None| |#then| |False|←|←|↵|#fun| |e0|(|w|)| |#=|→|w| |+| |8| |+| |9| |+| |10|←|↵|#fun| |e1|(|a|,| |c|)| |#=|→|a| |+| |1| |+| |2| |+| |3| |+| |4|←|↵|#fun| |e3|(|c|)| |#=|→|#let| |m| |#=| |4|↵|#let| |n| |#=| |5|↵|#let| |p| |#=| |6|↵|#let| |q| |#=| |7|↵|#if| |c| |#then| |m| |+| |n| |+| |p| |+| |q| |#else| |m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |e2|(|x|)| |#=|→|x| |+| |12| |+| |13| |+| |14|←|↵|#fun| |f|(|x|)| |#=|→|#let| |c1| |#=| |is_some|(|x|)|↵|#let| |z| |#=| |e3|(|c1|)|↵|#let| |w| |#=| |#if| |x| |is|→|Some|(|a|)| |#then| |e1|(|a|,| |z|)|↵|None| |#then| |e2|(|z|)|←|↵|e0|(|w|)|←|↵|#fun| |main|(||)| |#=|→|f|(|Some|(|2|)|)| |+| |f|(|None|)|←|↵|main|(||)|
-//│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun is_some = (o,) => {if o is ‹(Some(x,)) then True; (None) then False›}; fun e0 = (w,) => {+(+(+(w,)(8,),)(9,),)(10,)}; fun e1 = (a, c,) => {+(+(+(+(a,)(1,),)(2,),)(3,),)(4,)}; fun e3 = (c,) => {let m = 4; let n = 5; let p = 6; let q = 7; if (c) then +(+(+(m,)(n,),)(p,),)(q,) else +(-(+(m,)(n,),)(p,),)(q,)}; fun e2 = (x,) => {+(+(+(x,)(12,),)(13,),)(14,)}; fun f = (x,) => {let c1 = is_some(x,); let z = e3(c1,); let w = if x is ‹(Some(a,)) then e1(a, z,); (None) then e2(z,)›; e0(w,)}; fun main = () => {+(f(Some(2,),),)(f(None,),)}; main()}
+//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |is_some|(|o|)| |#=|→|#if| |o| |is|→|Some|(|x|)| |#then| |True|↵|None| |#then| |False|←|←|↵|#fun| |e0|(|w|)| |#=|→|w| |+| |8| |+| |9| |+| |10|←|↵|#fun| |e1|(|a|,| |c|)| |#=|→|a| |+| |1| |+| |2| |+| |3| |+| |4|←|↵|#fun| |e3|(|c|)| |#=|→|#let| |m| |#=| |4|↵|#let| |n| |#=| |5|↵|#let| |p| |#=| |6|↵|#let| |q| |#=| |7|↵|#if| |c| |#then| |m| |+| |n| |+| |p| |+| |q| |#else| |m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |e2|(|x|)| |#=|→|x| |+| |12| |+| |13| |+| |14|←|↵|#fun| |f|(|x|)| |#=|→|#let| |c1| |#=| |is_some|(|x|)|↵|#let| |z| |#=| |e3|(|c1|)|↵|#let| |w| |#=| |#if| |x| |is|→|Some|(|a|)| |#then| |e1|(|a|,| |z|)|↵|None| |#then| |e2|(|z|)|←|↵|e0|(|w|)|←|↵|#fun| |main|(||)| |#=|→|f|(|Some|(|2|)|)| |+| |f|(|None|)|←|↵|main|(||)|
+//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun is_some = (o,) => {if o is ‹(Some(x,)) then True; (None) then False›}; fun e0 = (w,) => {+(+(+(w,)(8,),)(9,),)(10,)}; fun e1 = (a, c,) => {+(+(+(+(a,)(1,),)(2,),)(3,),)(4,)}; fun e3 = (c,) => {let m = 4; let n = 5; let p = 6; let q = 7; if (c) then +(+(+(m,)(n,),)(p,),)(q,) else +(-(+(m,)(n,),)(p,),)(q,)}; fun e2 = (x,) => {+(+(+(x,)(12,),)(13,),)(14,)}; fun f = (x,) => {let c1 = is_some(x,); let z = e3(c1,); let w = if x is ‹(Some(a,)) then e1(a, z,); (None) then e2(z,)›; e0(w,)}; fun main = () => {+(f(Some(2,),),)(f(None,),)}; main()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
 //│ Def(0, is_some, [o$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -2297,7 +3376,7 @@ main()
 //│ x$39 -- #143)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
 //│ Def(0, is_some, [o$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -2423,12 +3502,15 @@ main()
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"
-//│ struct _mls_True;
-//│ struct _mls_None;
-//│ struct _mls_False;
-//│ struct _mls_Cons;
+//│ struct _mls_Boolean;
 //│ struct _mls_Nil;
+//│ struct _mls_True;
+//│ struct _mls_Option;
+//│ struct _mls_False;
 //│ struct _mls_Some;
+//│ struct _mls_List;
+//│ struct _mls_None;
+//│ struct _mls_Cons;
 //│ _mlsValue _mls_e0(_mlsValue);
 //│ _mlsValue _mls_e2(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
@@ -2440,26 +3522,41 @@ main()
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mls_f(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_None: public _mlsObject{
+//│ struct _mls_Boolean: public _mlsObject{
 //│ 
-//│   virtual const char *name() const override { return "None"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│   virtual const char *name() const override { return "Boolean"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
 //│ };
-//│ struct _mls_Cons: public _mlsObject{
-//│   _mlsValue _mls_h;
-//│   _mlsValue _mls_t;
-//│   virtual const char *name() const override { return "Cons"; }
-//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->_mls_h = _mls_h;_mlsVal->_mls_t = _mls_t; return _mlsVal; }
-//│ };
-//│ struct _mls_Nil: public _mlsObject{
+//│ struct _mls_Nil: public _mls_List{
 //│ 
 //│   virtual const char *name() const override { return "Nil"; }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
 //│ };
-//│ struct _mls_Some: public _mlsObject{
+//│ struct _mls_Option: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "Option"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option;  return _mlsVal; }
+//│ };
+//│ struct _mls_Some: public _mls_Option{
 //│   _mlsValue _mls_x;
 //│   virtual const char *name() const override { return "Some"; }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->_mls_x = _mls_x; return _mlsVal; }
+//│ };
+//│ struct _mls_List: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "List"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List;  return _mlsVal; }
+//│ };
+//│ struct _mls_None: public _mls_Option{
+//│ 
+//│   virtual const char *name() const override { return "None"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│ };
+//│ struct _mls_Cons: public _mls_List{
+//│   _mlsValue _mls_h;
+//│   _mlsValue _mls_t;
+//│   virtual const char *name() const override { return "Cons"; }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->_mls_h = _mls_h;_mlsVal->_mls_t = _mls_t; return _mlsVal; }
 //│ };
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
@@ -2566,12 +3663,15 @@ main()
 
 :interpIR
 :genCpp
-class True
-class False
-class Cons(h, t)
-class Nil
-class Some(x)
-class None
+class Boolean
+class True extends Boolean
+class False extends Boolean
+class List
+class Cons(h, t) extends List
+class Nil extends List
+class Option
+class Some(x) extends Option
+class None extends Option
 fun is_some(o) =
   if o is
     Some(x) then True
@@ -2598,12 +3698,12 @@ fun f(x) =
 fun main() =
   f(Some(2)) + f(None)
 main()
-//│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |is_some|(|o|)| |#=|→|#if| |o| |is|→|Some|(|x|)| |#then| |True|↵|None| |#then| |False|←|←|↵|#fun| |e0|(|w|)| |#=|→|w| |+| |8| |+| |9| |+| |10|←|↵|#fun| |e1|(|a|,| |z|)| |#=|→|#if| |a| |>| |0| |#then| |f|(|Some|(|a| |-| |1|)|)| |#else| |z|←|↵|#fun| |e3|(|c|)| |#=|→|#let| |m| |#=| |4|↵|#let| |n| |#=| |5|↵|#let| |p| |#=| |6|↵|#let| |q| |#=| |7|↵|#if| |c| |#then| |m| |+| |n| |+| |p| |+| |q| |#else| |m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |e2|(|x|)| |#=|→|x| |+| |12| |+| |13| |+| |14|←|↵|#fun| |f|(|x|)| |#=|→|#let| |c1| |#=| |is_some|(|x|)|↵|#let| |z| |#=| |e3|(|c1|)|↵|#let| |w| |#=| |#if| |x| |is|→|Some|(|a|)| |#then| |e1|(|a|,| |z|)|↵|None| |#then| |e2|(|z|)|←|↵|e0|(|w|)|←|↵|#fun| |main|(||)| |#=|→|f|(|Some|(|2|)|)| |+| |f|(|None|)|←|↵|main|(||)|
-//│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun is_some = (o,) => {if o is ‹(Some(x,)) then True; (None) then False›}; fun e0 = (w,) => {+(+(+(w,)(8,),)(9,),)(10,)}; fun e1 = (a, z,) => {if (>(a,)(0,)) then f(Some(-(a,)(1,),),) else z}; fun e3 = (c,) => {let m = 4; let n = 5; let p = 6; let q = 7; if (c) then +(+(+(m,)(n,),)(p,),)(q,) else +(-(+(m,)(n,),)(p,),)(q,)}; fun e2 = (x,) => {+(+(+(x,)(12,),)(13,),)(14,)}; fun f = (x,) => {let c1 = is_some(x,); let z = e3(c1,); let w = if x is ‹(Some(a,)) then e1(a, z,); (None) then e2(z,)›; e0(w,)}; fun main = () => {+(f(Some(2,),),)(f(None,),)}; main()}
+//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |is_some|(|o|)| |#=|→|#if| |o| |is|→|Some|(|x|)| |#then| |True|↵|None| |#then| |False|←|←|↵|#fun| |e0|(|w|)| |#=|→|w| |+| |8| |+| |9| |+| |10|←|↵|#fun| |e1|(|a|,| |z|)| |#=|→|#if| |a| |>| |0| |#then| |f|(|Some|(|a| |-| |1|)|)| |#else| |z|←|↵|#fun| |e3|(|c|)| |#=|→|#let| |m| |#=| |4|↵|#let| |n| |#=| |5|↵|#let| |p| |#=| |6|↵|#let| |q| |#=| |7|↵|#if| |c| |#then| |m| |+| |n| |+| |p| |+| |q| |#else| |m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |e2|(|x|)| |#=|→|x| |+| |12| |+| |13| |+| |14|←|↵|#fun| |f|(|x|)| |#=|→|#let| |c1| |#=| |is_some|(|x|)|↵|#let| |z| |#=| |e3|(|c1|)|↵|#let| |w| |#=| |#if| |x| |is|→|Some|(|a|)| |#then| |e1|(|a|,| |z|)|↵|None| |#then| |e2|(|z|)|←|↵|e0|(|w|)|←|↵|#fun| |main|(||)| |#=|→|f|(|Some|(|2|)|)| |+| |f|(|None|)|←|↵|main|(||)|
+//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun is_some = (o,) => {if o is ‹(Some(x,)) then True; (None) then False›}; fun e0 = (w,) => {+(+(+(w,)(8,),)(9,),)(10,)}; fun e1 = (a, z,) => {if (>(a,)(0,)) then f(Some(-(a,)(1,),),) else z}; fun e3 = (c,) => {let m = 4; let n = 5; let p = 6; let q = 7; if (c) then +(+(+(m,)(n,),)(p,),)(q,) else +(-(+(m,)(n,),)(p,),)(q,)}; fun e2 = (x,) => {+(+(+(x,)(12,),)(13,),)(14,)}; fun f = (x,) => {let c1 = is_some(x,); let z = e3(c1,); let w = if x is ‹(Some(a,)) then e1(a, z,); (None) then e2(z,)›; e0(w,)}; fun main = () => {+(f(Some(2,),),)(f(None,),)}; main()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
 //│ Def(0, is_some, [o$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -2736,7 +3836,7 @@ main()
 //│ x$40 -- #152)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
 //│ Def(0, is_some, [o$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -2873,12 +3973,15 @@ main()
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"
-//│ struct _mls_True;
-//│ struct _mls_None;
-//│ struct _mls_False;
-//│ struct _mls_Cons;
+//│ struct _mls_Boolean;
 //│ struct _mls_Nil;
+//│ struct _mls_True;
+//│ struct _mls_Option;
+//│ struct _mls_False;
 //│ struct _mls_Some;
+//│ struct _mls_List;
+//│ struct _mls_None;
+//│ struct _mls_Cons;
 //│ _mlsValue _mls_e0(_mlsValue);
 //│ _mlsValue _mls_e2(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
@@ -2891,26 +3994,41 @@ main()
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mls_f(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_None: public _mlsObject{
+//│ struct _mls_Boolean: public _mlsObject{
 //│ 
-//│   virtual const char *name() const override { return "None"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│   virtual const char *name() const override { return "Boolean"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Boolean;  return _mlsVal; }
 //│ };
-//│ struct _mls_Cons: public _mlsObject{
-//│   _mlsValue _mls_h;
-//│   _mlsValue _mls_t;
-//│   virtual const char *name() const override { return "Cons"; }
-//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->_mls_h = _mls_h;_mlsVal->_mls_t = _mls_t; return _mlsVal; }
-//│ };
-//│ struct _mls_Nil: public _mlsObject{
+//│ struct _mls_Nil: public _mls_List{
 //│ 
 //│   virtual const char *name() const override { return "Nil"; }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
 //│ };
-//│ struct _mls_Some: public _mlsObject{
+//│ struct _mls_Option: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "Option"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option;  return _mlsVal; }
+//│ };
+//│ struct _mls_Some: public _mls_Option{
 //│   _mlsValue _mls_x;
 //│   virtual const char *name() const override { return "Some"; }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->_mls_x = _mls_x; return _mlsVal; }
+//│ };
+//│ struct _mls_List: public _mlsObject{
+//│ 
+//│   virtual const char *name() const override { return "List"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List;  return _mlsVal; }
+//│ };
+//│ struct _mls_None: public _mls_Option{
+//│ 
+//│   virtual const char *name() const override { return "None"; }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│ };
+//│ struct _mls_Cons: public _mls_List{
+//│   _mlsValue _mls_h;
+//│   _mlsValue _mls_t;
+//│   virtual const char *name() const override { return "Cons"; }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->_mls_h = _mls_h;_mlsVal->_mls_t = _mls_t; return _mlsVal; }
 //│ };
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
