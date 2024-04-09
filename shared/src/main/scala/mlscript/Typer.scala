@@ -640,10 +640,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         typeNamed(ty.toLoc, base.name, false) match {
           case R((_, tpnum)) =>
             val realTargs = if (targs.size === tpnum) targs.map{
-              // case b@Bounds(lb, ub) if newDefs => WildcardArg(rec(lb), rec(ub))(tyTp(b.toLoc, "wildcard"))
-              // case w@TypeName("?") if newDefs => 
-              //   val prov: TypeProvenance = tyTp(w.toLoc, "wildcard")
-              //   WildcardArg(ExtrType(true)(prov), ExtrType(false)(prov))(prov)
               case ty => rec(ty)
             } else {
               err(msg"Wrong number of type arguments – expected ${tpnum.toString}, found ${

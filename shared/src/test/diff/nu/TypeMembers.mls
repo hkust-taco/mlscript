@@ -80,10 +80,10 @@ abstract class Foo { type T = Int }
 :e
 class Bar extends Foo { type T = Bool }
 //│ ╔══[ERROR] Type alias member 'T' cannot override type alias member of the same name declared in parent
-//│ ║  l.82: 	class Bar extends Foo { type T = Bool }
+//│ ║  l.81: 	class Bar extends Foo { type T = Bool }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Originally declared here:
-//│ ║  l.76: 	abstract class Foo { type T = Int }
+//│ ║  l.75: 	abstract class Foo { type T = Int }
 //│ ╙──      	                     ^^^^^^
 //│ class Bar extends Foo {
 //│   constructor()
@@ -96,10 +96,10 @@ abstract class Foo[type T]
 :e
 class Bar extends Foo { type T = Bool }
 //│ ╔══[ERROR] Type alias member 'T' cannot override type alias member of the same name declared in parent
-//│ ║  l.98: 	class Bar extends Foo { type T = Bool }
+//│ ║  l.97: 	class Bar extends Foo { type T = Bool }
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Originally declared here:
-//│ ║  l.94: 	abstract class Foo[type T]
+//│ ║  l.93: 	abstract class Foo[type T]
 //│ ╙──      	                        ^
 //│ class Bar extends Foo {
 //│   constructor()
