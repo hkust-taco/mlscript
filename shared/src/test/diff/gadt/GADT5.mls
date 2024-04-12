@@ -15,8 +15,8 @@ module MkU extends U[()]
 fun v1(u: U['a], a: ()) = if u is MkU then a
 //│ fun v1: forall 'a. (u: U['a], a: ()) -> ()
 
-fun v2(a, u: U['a]) = if u is MkU then if a is () then () as u.A
-//│ fun v2: forall 'a. ((), u: U['a]) -> (() & 'a)
+fun v2(a, u: U['a]) = if u is MkU then if a is () then ()
+//│ fun v2: forall 'a. ((), u: U['a]) -> ()
 
 fun v3[T](u: U[T]): T = if u is MkU then () as u.A
 //│ fun v3: forall 'T. (u: U['T]) -> 'T

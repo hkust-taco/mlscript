@@ -103,10 +103,10 @@ fun head[T](t: Perfect[T]): Int = if t is
 //│ fun head: forall 'T0. Perfect['T0] -> Int
 
 fun flip: Perfect['A] -> Perfect['A]
-fun flip[A](t: Perfect[A]): Perfect[A] = if t is
-    Leaf(a) then Leaf(a) : Perfect[t.T]
-    Node(l, r) then Node(flip(r), flip(l)) : Perfect[t.T]
-//│ fun flip: forall 'A. (t: Perfect['A]) -> Perfect['A]
+fun flip[A](t: Perfect[A]): Perfect[t.T] = if t is
+    Leaf(a) then Leaf(a) 
+    Node(l, r) then Node(flip(r), flip(l))
+//│ fun flip: forall 'A 'T. (t: Perfect['A]) -> Perfect[in Int & 'T0 | [nothing, nothing] & 'T | 'A out 'A & ([??A, ??A] & 'T0 | 'T & (Int | 'T0))]
 //│ fun flip: forall 'A0. Perfect['A0] -> Perfect['A0]
 
 let test1 = Node(Node(Leaf(1), Leaf(2)), Node(Leaf(3), Leaf(4)))

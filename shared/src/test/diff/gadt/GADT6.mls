@@ -112,3 +112,40 @@ e2(Refl(), Refl(), true)
 //│ true
 //│ res
 //│     = true
+
+
+abstract class R[type A]: RI | RB
+class RI(x: Int) extends R[Int]
+class RB(x: Bool) extends R[Bool]
+//│ abstract class R[A]: RB | RI
+//│ class RI(x: Int) extends R
+//│ class RB(x: Bool) extends R
+
+
+
+fun u2[A](x: R[A], y: R[A]) = (if x is
+    RI(_) then RI as (x.A => R[x.A])
+    RB(_) then RB as (x.A => R[x.A])
+  ) (if y is
+    RI(a) then (a as y.A) as x.A
+    RB(a) then (a as y.A) as x.A
+  )
+//│ fun u2: forall 'A. (x: R['A], y: R['A]) -> R[in Int & 'A0 | 'A | 'A1 & Bool out 'A & (Int & 'A1 | 'A0 & (Bool | 'A1))]
+
+:e
+u2(RB(false), RI(1))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.136: 	u2(RB(false), RI(1))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Int` is not an instance of type `Bool`
+//│ ║  l.118: 	class RI(x: Int) extends R[Int]
+//│ ║         	                           ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.119: 	class RB(x: Bool) extends R[Bool]
+//│ ║         	                            ^^^^
+//│ ╟── Note: method type parameter A is defined at:
+//│ ║  l.126: 	fun u2[A](x: R[A], y: R[A]) = (if x is
+//│ ╙──       	       ^
+//│ error
+//│ res
+//│     = RB {}
