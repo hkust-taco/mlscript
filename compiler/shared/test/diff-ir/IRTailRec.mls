@@ -2,8 +2,81 @@
 :ParseOnly
 :UseIR
 
+:noTailRec
+:interpIR
+class True
+class False
+fun f(n) = g(n)
+fun g(m) = f(m)
+fun h() = h()
+2
+//│ |#class| |True|↵|#class| |False|↵|#fun| |f|(|n|)| |#=| |g|(|n|)|↵|#fun| |g|(|m|)| |#=| |f|(|m|)|↵|#fun| |h|(||)| |#=| |h|(||)|↵|2|
+//│ Parsed: {class True {}; class False {}; fun f = (n,) => g(n,); fun g = (m,) => f(m,); fun h = () => h(); 2}
+//│ 
+//│ 
+//│ IR:
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Def(0, f, [n$0],
+//│ 1, 
+//│ let* (x$0) = g(n$0) in -- #5
+//│ x$0 -- #4
+//│ )
+//│ Def(1, g, [m$0],
+//│ 1, 
+//│ let* (x$1) = f(m$0) in -- #11
+//│ x$1 -- #10
+//│ )
+//│ Def(2, h, [],
+//│ 1, 
+//│ let* (x$2) = h() in -- #15
+//│ x$2 -- #14
+//│ )
+//│ },
+//│ 2 -- #16)
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Def(0, f, [n$0],
+//│ 1, 
+//│ let* (x$0) = g(n$0) in -- #5
+//│ x$0 -- #4
+//│ )
+//│ Def(1, g, [m$0],
+//│ 1, 
+//│ let* (x$1) = f(m$0) in -- #11
+//│ x$1 -- #10
+//│ )
+//│ Def(2, h, [],
+//│ 1, 
+//│ let* (x$2) = h() in -- #15
+//│ x$2 -- #14
+//│ )
+//│ },
+//│ 2 -- #16)
+//│ 
+//│ Promoted:
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Def(0, f, [n$0],
+//│ 1, 
+//│ let* (x$0) = g(n$0) in -- #5
+//│ x$0 -- #4
+//│ )
+//│ Def(1, g, [m$0],
+//│ 1, 
+//│ let* (x$1) = f(m$0) in -- #11
+//│ x$1 -- #10
+//│ )
+//│ Def(2, h, [],
+//│ 1, 
+//│ let* (x$2) = h() in -- #15
+//│ x$2 -- #14
+//│ )
+//│ },
+//│ 2 -- #16)
+//│ 
+//│ Interpreted:
+//│ 2
+
 // remark: this really should be changed so we don't need to add `class True` every time we want to use conditionals
-// :interpIR
+:interpIR
 class True
 class False
 fun f(n) = g(n)
@@ -39,24 +112,31 @@ fun h() = h()
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
 //│ Def(0, f, [n$0],
 //│ 1, 
-//│ jump _g_fopt(0,m$0,n$0) -- #21
+//│ let* (r0) = _g_f_opt(0,n$0,0) in -- #26
+//│ r0 -- #25
 //│ )
 //│ Def(1, g, [m$0],
 //│ 1, 
-//│ jump _g_fopt(1,m$0,n$0) -- #20
+//│ let* (r0) = _g_f_opt(1,0,m$0) in -- #24
+//│ r0 -- #23
 //│ )
 //│ Def(2, h, [],
 //│ 1, 
-//│ jump h() -- #x
+//│ let* (x$2) = h() in -- #15
+//│ x$2 -- #14
 //│ )
-//│ Def(3, _g_fopt, [tailrecBranch,m$0,n$0],
+//│ Def(3, _g_f_opt_jp, [tailrecBranch,g_m$0,f_n$0],
 //│ 1, 
-//│ let scrut = ==(0,tailrecBranch) in -- #19
-//│ if scrut -- #17
+//│ let scrut = ==(0,tailrecBranch) in -- #21
+//│ if scrut -- #19
 //│   true =>
-//│     jump _g_fopt(0,n$0,n$0) -- #x
+//│     jump _g_f_opt_jp(0,f_n$0,f_n$0) -- #18
 //│   false =>
-//│     jump _g_fopt(1,m$0,m$0) -- #x
+//│     jump _g_f_opt_jp(1,g_m$0,g_m$0) -- #17
+//│ )
+//│ Def(4, _g_f_opt, [tailrecBranch,g_m$0,f_n$0],
+//│ 1, 
+//│ jump _g_f_opt_jp(tailrecBranch,g_m$0,f_n$0) -- #22
 //│ )
 //│ },
 //│ 2 -- #16)
@@ -65,24 +145,34 @@ fun h() = h()
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
 //│ Def(0, f, [n$0],
 //│ 1, 
-//│ jump _g_fopt(0,m$0,n$0) -- #21
+//│ let* (r0) = _g_f_opt(0,n$0,0) in -- #26
+//│ r0 -- #25
 //│ )
 //│ Def(1, g, [m$0],
 //│ 1, 
-//│ jump _g_fopt(1,m$0,n$0) -- #20
+//│ let* (r0) = _g_f_opt(1,0,m$0) in -- #24
+//│ r0 -- #23
 //│ )
 //│ Def(2, h, [],
 //│ 1, 
-//│ jump h() -- #x
+//│ let* (x$2) = h() in -- #15
+//│ x$2 -- #14
 //│ )
-//│ Def(3, _g_fopt, [tailrecBranch,m$0,n$0],
+//│ Def(3, _g_f_opt_jp, [tailrecBranch,g_m$0,f_n$0],
 //│ 1, 
-//│ let scrut = ==(0,tailrecBranch) in -- #19
-//│ if scrut -- #17
+//│ let scrut = ==(0,tailrecBranch) in -- #21
+//│ if scrut -- #19
 //│   true =>
-//│     jump _g_fopt(0,n$0,n$0) -- #x
+//│     jump _g_f_opt_jp(0,f_n$0,f_n$0) -- #18
 //│   false =>
-//│     jump _g_fopt(1,m$0,m$0) -- #x
+//│     jump _g_f_opt_jp(1,g_m$0,g_m$0) -- #17
+//│ )
+//│ Def(4, _g_f_opt, [tailrecBranch,g_m$0,f_n$0],
+//│ 1, 
+//│ jump _g_f_opt_jp(tailrecBranch,g_m$0,f_n$0) -- #22
 //│ )
 //│ },
 //│ 2 -- #16)
+//│ 
+//│ Interpreted:
+//│ 2
