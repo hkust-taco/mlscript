@@ -29,6 +29,7 @@ abstract class ModeType {
   def dbgUCS: Bool
   def dbgLifting: Bool
   def dbgDefunc: Bool
+  def dbgPolydef: Bool
   def fullExceptionStack: Bool
   def stats: Bool
   def stdout: Bool
@@ -159,6 +160,7 @@ class DiffTests
       dbgUCS: Bool = false,
       dbgLifting: Bool = false,
       dbgDefunc: Bool = false,
+      dbgPolydef: Bool = false,
       fullExceptionStack: Bool = false,
       stats: Bool = false,
       stdout: Bool = false,
@@ -226,6 +228,7 @@ class DiffTests
           case "ds" => mode.copy(dbgSimplif = true)
           case "dl" => mode.copy(dbgLifting = true)
           case "dd" => mode.copy(dbgDefunc = true)
+          case "dpd" => mode.copy(dbgPolydef = true)
           case "ducs" => mode.copy(dbg = true, dbgUCS = true)
           case "s" => mode.copy(fullExceptionStack = true)
           case "v" | "verbose" => mode.copy(verbose = true)

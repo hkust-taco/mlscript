@@ -1,19 +1,66 @@
 :NewDefs
 
 :pd
+:dpd
 :nolift
 :p
-let id(y) = y
-//│ |#let| |id|(|y|)| |#=| |y|
-//│ AST: TypingUnit(List(NuFunDef(Some(false),Var(id),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(y))))),Var(y))))))
-//│ TypingUnit(List(NuFunDef(Some(false),Var(id),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(y))))),Var(y))))))
+val a = 5
+let foo(y) = bar(y)
+let bar(x) = baz(x)
+let baz(z) = z
+foo(a)
+//│ |#val| |a| |#=| |5|↵|#let| |foo|(|y|)| |#=| |bar|(|y|)|↵|#let| |bar|(|x|)| |#=| |baz|(|x|)|↵|#let| |baz|(|z|)| |#=| |z|↵|foo|(|a|)|
+//│ AST: TypingUnit(List(NuFunDef(Some(false),Var(a),None,List(),Left(IntLit(5))), NuFunDef(Some(false),Var(foo),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(y))))),App(Var(bar),Tup(List((None,Fld(_,Var(y))))))))), NuFunDef(Some(false),Var(bar),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(x))))),App(Var(baz),Tup(List((None,Fld(_,Var(x))))))))), NuFunDef(Some(false),Var(baz),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(z))))),Var(z)))), App(Var(foo),Tup(List((None,Fld(_,Var(a))))))))
+//│ TypingUnit(List(NuFunDef(Some(false),Var(a),None,List(),Left(IntLit(5))), NuFunDef(Some(false),Var(foo),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(y))))),App(Var(bar),Tup(List((None,Fld(_,Var(y))))))))), NuFunDef(Some(false),Var(bar),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(x))))),App(Var(baz),Tup(List((None,Fld(_,Var(x))))))))), NuFunDef(Some(false),Var(baz),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(z))))),Var(z)))), App(Var(foo),Tup(List((None,Fld(_,Var(a))))))))
 //│ 
 //│ Polydef:
-//│ HashMap(Tup(List((None,Fld(_,Var(y))))) -> 2, Var(y) -> 4, Lam(Tup(List((None,Fld(_,Var(y))))),Var(y)) -> 6)
-//│ HashMap(4 -> Strat(ProdVar(1,1_y)), 6 -> Strat(ProdFun(Strat(ConsTup(List(Strat(ConsVar(1,1_y))))),Strat(ProdVar(1,1_y)))))
+//│ constraining Strat(ProdPrim(Int)) -> Strat(ConsVar(0,a))
+//│ constraining Strat(ProdVar(2,bar)) -> Strat(ConsFun(Strat(ProdTup(List(Strat(ProdVar(4,3_y))))),Strat(ConsVar(5,9_callres))))
+//│ constraining Strat(ProdFun(Strat(ConsTup(List(Strat(ConsVar(4,3_y))))),Strat(ProdVar(5,9_callres)))) -> Strat(ConsVar(1,foo))
+//│ constraining Strat(ProdVar(3,baz)) -> Strat(ConsFun(Strat(ProdTup(List(Strat(ProdVar(6,13_x))))),Strat(ConsVar(7,19_callres))))
+//│ constraining Strat(ProdFun(Strat(ConsTup(List(Strat(ConsVar(6,13_x))))),Strat(ProdVar(7,19_callres)))) -> Strat(ConsVar(2,bar))
+//│ constraining Strat(ProdFun(Strat(ConsTup(List(Strat(ConsVar(6,13_x))))),Strat(ProdVar(7,19_callres)))) -> Strat(ConsFun(Strat(ProdTup(List(Strat(ProdVar(4,3_y))))),Strat(ConsVar(5,9_callres))))
+//│ constraining Strat(ProdTup(List(Strat(ProdVar(4,3_y))))) -> Strat(ConsTup(List(Strat(ConsVar(6,13_x)))))
+//│ constraining Strat(ProdVar(4,3_y)) -> Strat(ConsVar(6,13_x))
+//│ constraining Strat(ProdVar(7,19_callres)) -> Strat(ConsVar(5,9_callres))
+//│ constraining Strat(ProdFun(Strat(ConsTup(List(Strat(ConsVar(8,23_z))))),Strat(ProdVar(8,23_z)))) -> Strat(ConsVar(3,baz))
+//│ constraining Strat(ProdFun(Strat(ConsTup(List(Strat(ConsVar(8,23_z))))),Strat(ProdVar(8,23_z)))) -> Strat(ConsFun(Strat(ProdTup(List(Strat(ProdVar(6,13_x))))),Strat(ConsVar(7,19_callres))))
+//│ constraining Strat(ProdTup(List(Strat(ProdVar(6,13_x))))) -> Strat(ConsTup(List(Strat(ConsVar(8,23_z)))))
+//│ constraining Strat(ProdVar(6,13_x)) -> Strat(ConsVar(8,23_z))
+//│ constraining Strat(ProdVar(8,23_z)) -> Strat(ConsVar(7,19_callres))
+//│ constraining Strat(ProdVar(1,foo)) -> Strat(ConsFun(Strat(ProdTup(List(Strat(ProdVar(0,a))))),Strat(ConsVar(9,35_callres))))
+//│ constraining Strat(ProdFun(Strat(ConsTup(List(Strat(ConsVar(4,3_y))))),Strat(ProdVar(5,9_callres)))) -> Strat(ConsFun(Strat(ProdTup(List(Strat(ProdVar(0,a))))),Strat(ConsVar(9,35_callres))))
+//│ constraining Strat(ProdTup(List(Strat(ProdVar(0,a))))) -> Strat(ConsTup(List(Strat(ConsVar(4,3_y)))))
+//│ constraining Strat(ProdVar(0,a)) -> Strat(ConsVar(4,3_y))
+//│ constraining Strat(ProdPrim(Int)) -> Strat(ConsVar(4,3_y))
+//│ constraining Strat(ProdPrim(Int)) -> Strat(ConsVar(6,13_x))
+//│ constraining Strat(ProdPrim(Int)) -> Strat(ConsVar(8,23_z))
+//│ constraining Strat(ProdPrim(Int)) -> Strat(ConsVar(7,19_callres))
+//│ constraining Strat(ProdPrim(Int)) -> Strat(ConsVar(5,9_callres))
+//│ constraining Strat(ProdVar(5,9_callres)) -> Strat(ConsVar(9,35_callres))
+//│ constraining Strat(ProdPrim(Int)) -> Strat(ConsVar(9,35_callres))
+//│ constraining Strat(ProdVar(9,35_callres)) -> Strat(NoCons())
+//│ constraining Strat(ProdPrim(Int)) -> Strat(NoCons())
+//│ HashMap(Var(y) -> 8, Tup(List((None,Fld(_,Var(a))))) -> 34, Var(z) -> 26, App(Var(foo),Tup(List((None,Fld(_,Var(a)))))) -> 36, Var(foo) -> 30, Tup(List((None,Fld(_,Var(x))))) -> 14, Lam(Tup(List((None,Fld(_,Var(x))))),App(Var(baz),Tup(List((None,Fld(_,Var(x))))))) -> 22, Var(bar) -> 6, Lam(Tup(List((None,Fld(_,Var(y))))),App(Var(bar),Tup(List((None,Fld(_,Var(y))))))) -> 12, App(Var(bar),Tup(List((None,Fld(_,Var(y)))))) -> 10, Tup(List((None,Fld(_,Var(y))))) -> 4, IntLit(5) -> 2, Tup(List((None,Fld(_,Var(z))))) -> 24, Var(a) -> 32, Lam(Tup(List((None,Fld(_,Var(z))))),Var(z)) -> 28, App(Var(baz),Tup(List((None,Fld(_,Var(x)))))) -> 20, Var(baz) -> 16, Var(x) -> 18)
+//│ HashMap(32 -> Strat(ProdVar(0,a)), 2 -> Strat(ProdPrim(Int)), 34 -> Strat(ProdTup(List(Strat(ProdVar(0,a))))), 4 -> Strat(ProdTup(List(Strat(ProdVar(4,3_y))))), 36 -> Strat(ProdVar(9,35_callres)), 6 -> Strat(ProdVar(2,bar)), 8 -> Strat(ProdVar(4,3_y)), 10 -> Strat(ProdVar(5,9_callres)), 12 -> Strat(ProdFun(Strat(ConsTup(List(Strat(ConsVar(4,3_y))))),Strat(ProdVar(5,9_callres)))), 14 -> Strat(ProdTup(List(Strat(ProdVar(6,13_x))))), 16 -> Strat(ProdVar(3,baz)), 18 -> Strat(ProdVar(6,13_x)), 20 -> Strat(ProdVar(7,19_callres)), 22 -> Strat(ProdFun(Strat(ConsTup(List(Strat(ConsVar(6,13_x))))),Strat(ProdVar(7,19_callres)))), 26 -> Strat(ProdVar(8,23_z)), 28 -> Strat(ProdFun(Strat(ConsTup(List(Strat(ConsVar(8,23_z))))),Strat(ProdVar(8,23_z)))), 30 -> Strat(ProdVar(1,foo)))
+//│ HashMap(0 -> a, 1 -> foo, 2 -> bar, 3 -> baz, 4 -> 3_y, 5 -> 9_callres, 6 -> 13_x, 7 -> 19_callres, 8 -> 23_z, 9 -> 35_callres)
+//│ Map(0 -> List((Path(List(Normal(Var(a)))),Strat(ConsVar(4,3_y)))), 1 -> List((Path(List(Normal(Var(foo)))),Strat(ConsFun(Strat(ProdTup(List(Strat(ProdVar(0,a))))),Strat(ConsVar(9,35_callres)))))), 2 -> List((Path(List(Normal(Var(bar)))),Strat(ConsFun(Strat(ProdTup(List(Strat(ProdVar(4,3_y))))),Strat(ConsVar(5,9_callres)))))), 3 -> List((Path(List(Normal(Var(baz)))),Strat(ConsFun(Strat(ProdTup(List(Strat(ProdVar(6,13_x))))),Strat(ConsVar(7,19_callres)))))), 4 -> List((Path(List(Normal(Var(y)))),Strat(ConsVar(6,13_x)))), 5 -> List((Path(List()),Strat(ConsVar(9,35_callres)))), 6 -> List((Path(List(Normal(Var(x)))),Strat(ConsVar(8,23_z)))), 7 -> List((Path(List()),Strat(ConsVar(5,9_callres)))), 8 -> List((Path(List(Normal(Var(z)))),Strat(ConsVar(7,19_callres)))), 9 -> List((Path(List()),Strat(NoCons()))))
+//│ Map(0 -> List((Path(List()),Strat(ProdPrim(Int)))), 1 -> List((Path(List()),Strat(ProdFun(Strat(ConsTup(List(Strat(ConsVar(4,3_y))))),Strat(ProdVar(5,9_callres)))))), 2 -> List((Path(List()),Strat(ProdFun(Strat(ConsTup(List(Strat(ConsVar(6,13_x))))),Strat(ProdVar(7,19_callres)))))), 3 -> List((Path(List()),Strat(ProdFun(Strat(ConsTup(List(Strat(ConsVar(8,23_z))))),Strat(ProdVar(8,23_z)))))), 4 -> List((Path(List(Normal(Var(a)))),Strat(ProdPrim(Int)))), 5 -> List((Path(List(Normal(Var(bar)))),Strat(ProdPrim(Int)))), 6 -> List((Path(List(Normal(Var(y)))),Strat(ProdPrim(Int)))), 7 -> List((Path(List(Normal(Var(baz)), Normal(Var(z)))),Strat(ProdPrim(Int)))), 8 -> List((Path(List(Normal(Var(x)))),Strat(ProdPrim(Int)))), 9 -> List((Path(List(Normal(Var(foo)))),Strat(ProdPrim(Int)))))
 //│ Polydef end
 //│ 
-//│ Parsed: let id = (y,) => y;
-//│ let id: forall 'a. 'a -> 'a
-//│ id
-//│    = [Function: id]
+//│ Parsed: let a = 5; let foo = (y,) => bar(y,); let bar = (x,) => baz(x,); let baz = (z,) => z; foo(a,);
+//│ val a: 5
+//│ let foo: forall 'a. 'a -> 'a
+//│ let bar: forall 'a. 'a -> 'a
+//│ let baz: forall 'a. 'a -> 'a
+//│ 5
+//│ a
+//│   = 5
+//│ foo
+//│     = [Function: foo]
+//│ bar
+//│     = [Function: bar]
+//│ baz
+//│     = [Function: baz]
+//│ res
+//│     = 5

@@ -38,10 +38,14 @@ class DiffTestCompiler extends DiffTests {
           outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
     if(mode.polydef) {
       output("\nPolydef:")
-      val pd = Polydef()
+      val treeDebug = new TreeDebug(if mode.dbgPolydef then output else (str) => ())
+      val pd = Polydef(treeDebug)
       pd(rstUnit)
       output(pd.termMap.toString())
       output(pd.exprToProdType.toString())
+      output(pd.varsName.toString())
+      output(pd.upperBounds.toString())
+      output(pd.lowerBounds.toString())
       output("Polydef end\n")
     }
     if(mode.mono){

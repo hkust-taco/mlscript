@@ -112,12 +112,27 @@ case class Strat[+T <: (ProdStratEnum | ConsStratEnum)](val s: T)(val path: Path
   def updatePath(newPath: Path): Strat[T] = this.copy()(path = newPath)
   def addPath(newPath: Path): Strat[T] = this.updatePath(newPath ::: this.path)
   lazy val negPath = this.copy()(path = path.neg)
+  lazy val asInPath: Option[Path] = this.s match {
+    case pv: ProdStratEnum.ProdVar => pv.asInPath
+    case cv: ConsStratEnum.ConsVar => cv.asInPath
+    case _ => None
+  }
+  lazy val asOutPath: Option[Path] = this.s match {
+    case pv: ProdStratEnum.ProdVar => pv.asOutPath
+    case cv: ConsStratEnum.ConsVar => cv.asOutPath
+    case _ => None
+  }
 }
 trait ToStrat[+T <: (ProdStratEnum | ConsStratEnum)] { self: T =>
   def toStrat(p: Path = Path(Nil)): Strat[T] = Strat(this)(p)
   //def pp(using config: PrettyPrintConfig): Str
 }
-trait TypevarWithBoundary(val boundary: Option[Var]) { this: (ProdStratEnum.ProdVar | ConsStratEnum.ConsVar) => ()
+extension (v: Var) {
+  def toPath(pol: PathElemPol = PathElemPol.In): Path = Path(PathElem.Normal(v)(pol) :: Nil)
+}
+trait TypevarWithBoundary(val boundary: Option[Var]) { this: (ProdStratEnum.ProdVar | ConsStratEnum.ConsVar) => 
+  lazy val asInPath: Option[Path] = this.boundary.map(_.toPath(PathElemPol.In))
+  lazy val asOutPath: Option[Path] = this.boundary.map(_.toPath(PathElemPol.Out))
 }
 trait MkCtorTrait { this: ProdStratEnum.MkCtor =>
   override def equals(x: Any): Boolean = x match {
@@ -138,6 +153,7 @@ enum ProdStratEnum(using val euid: TermId) extends ToStrat[ProdStratEnum] {
   case MkCtor(ctor: Var, args: Ls[ProdStrat])(using TermId) extends ProdStratEnum
     with ToStrat[MkCtor]
     with MkCtorTrait
+  case ProdPrim(name: String)(using TermId) extends ProdStratEnum with ToStrat[ProdPrim]
   case Sum(ctors: Ls[Strat[MkCtor]])(using TermId) extends ProdStratEnum with ToStrat[Sum]
   case ProdFun(lhs: ConsStrat, rhs: ProdStrat)(using TermId) extends ProdStratEnum with ToStrat[ProdFun]
   case ProdVar(uid: TypeVarId, name: String)(boundary: Option[Var] = None)(using TermId)
@@ -145,20 +161,19 @@ enum ProdStratEnum(using val euid: TermId) extends ToStrat[ProdStratEnum] {
     with ToStrat[ProdVar]
     with TypevarWithBoundary(boundary)
   case ProdTup(fields: Ls[ProdStrat])(using TermId) extends ProdStratEnum with ToStrat[ProdTup]
-  case DeadCodeProd()(using TermId) extends ProdStratEnum with ToStrat[DeadCodeProd]
 }
 enum ConsStratEnum(using val euid: TermId) extends ToStrat[ConsStratEnum] {
   case NoCons()(using TermId) extends ConsStratEnum with ToStrat[NoCons]
   case Destruct(destrs: Ls[Destructor])(using TermId) extends ConsStratEnum
     with ToStrat[Destruct]
     with DestructTrait
+  case ConsPrim(name: String)(using TermId) extends ConsStratEnum with ToStrat[ConsPrim]
   case ConsFun(lhs: ProdStrat, rhs: ConsStrat)(using TermId) extends ConsStratEnum with ToStrat[ConsFun]
   case ConsVar(uid: TypeVarId, name: String)(boundary: Option[Var] = None)(using TermId)
     extends ConsStratEnum
     with ToStrat[ConsVar]
     with TypevarWithBoundary(boundary)
   case ConsTup(fields: Ls[ConsStrat])(using TermId) extends ConsStratEnum with ToStrat[ConsTup]
-  case DeadCodeCons()(using TermId) extends ConsStratEnum with ToStrat[DeadCodeCons]
 }
 import ProdStratEnum.*, ConsStratEnum.*
 case class Destructor(ctor: Var, argCons: Ls[Strat[ConsVar]]) {
@@ -210,7 +225,7 @@ object ConsStratEnum {
   def consChar(using TermId) = Destruct(Destructor(Var("Char"), Nil) :: Nil)
 }
 
-class Polydef {
+class Polydef(debug: Debug) {
   
   extension (t: Term) {
     def uid = termMap.getOrElse(t, {
@@ -268,8 +283,8 @@ class Polydef {
 
   def process(t: Term)(using ctx: Map[Var, Strat[ProdVar]]): ProdStrat = 
     val res: ProdStratEnum = t match
-      case IntLit(_) => prodInt(using noExprId)
-      case DecLit(_) => prodFloat(using noExprId) // floating point numbers as integers type
+      case IntLit(_) => ProdPrim("Int")(using t.uid)
+      case DecLit(_) => ??? // floating point numbers as integers type
       case StrLit(_) => ???
       case r @ Var(id) =>// if varCtx(id).isDef then {
         ctx(r).s.copy()(Some(r))(using t.uid)
@@ -295,17 +310,56 @@ class Polydef {
         constrain(process(elze), res._2.toStrat())
         res._1
       case If(_) => ??? // Desugar first (resolved by pretyper OR moving post-process point)
+      case Tup(fields) =>
+        val mapping = fields.map{
+          case (None, Fld(_, fieldTerm: Term)) =>
+            process(fieldTerm)
+          case _ => ??? // Unsupported
+        }
+        ProdTup(mapping)(using t.uid)
       //case Blk(stmts) => 
       // val results = stmts.map(process)
 
     registerTermToType(t, res.toStrat())
+  
+  val constraintCache = mutable.Set.empty[(ProdStrat, ConsStrat)]
+  val upperBounds = mutable.Map.empty[TypeVarId, Ls[(Path, ConsStrat)]].withDefaultValue(Nil)
+  val lowerBounds = mutable.Map.empty[TypeVarId, Ls[(Path, ProdStrat)]].withDefaultValue(Nil)
 
   def constrain(prod: ProdStrat, cons: ConsStrat): Unit = {
-    //if (cache.contains(prod -> cons)) return ()
+    debug.writeLine(s"constraining ${prod} -> ${cons}")
+    if (constraintCache.contains(prod -> cons)) return ()
     
-    // (prod.s, cons.s) match
-    //     case (ProdVar(v, pn), ConsVar(w, cn))
-    //       if v === w => ()
+    (prod.s, cons.s) match
+        case (ProdPrim(n), NoCons()) =>
+          ()
+        case (ProdVar(v, pn), ConsVar(w, cn))
+          if v === w => ()
+        case (pv@ProdVar(v, _), _) =>
+          cons.s match {
+            // Check for important cases here
+            case _ => ()
+          }
+          upperBounds += v -> ((pv.asOutPath.getOrElse(Path.empty) ::: prod.path.rev, cons) :: upperBounds(v))
+          lowerBounds(v).foreach((lb_path, lb_strat) => constrain(
+            lb_strat.addPath(lb_path), cons.addPath(prod.path.rev).addPath(pv.asOutPath.getOrElse(Path.empty))
+          ))
+        case (_, cv@ConsVar(v, _)) =>
+          prod.s match {
+            // Check for important cases here
+            case _ => ()
+          }
+          lowerBounds += v -> ((cv.asInPath.getOrElse(Path.empty) ::: cons.path.rev, prod) :: lowerBounds(v))
+          upperBounds(v).foreach((ub_path, ub_strat) => constrain(
+            prod.addPath(cons.path.rev).addPath(cv.asInPath.getOrElse(Path.empty)), ub_strat.addPath(ub_path)
+          ))
+        case (ProdFun(lhs1, rhs1), ConsFun(lhs2, rhs2)) =>
+          constrain(lhs2.addPath(cons.path.neg), lhs1.addPath(prod.path.neg))
+          constrain(rhs1.addPath(prod.path), rhs2.addPath(cons.path))
+        case (ProdTup(fields1), ConsTup(fields2)) =>
+          (fields1 zip fields2).map((p, c) =>
+            constrain(p, c)
+          )
   }
 
   private def registerTermToType(t: Term, s: ProdStrat) = {
