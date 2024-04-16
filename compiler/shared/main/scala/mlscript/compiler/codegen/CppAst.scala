@@ -176,7 +176,7 @@ enum Def:
     def aux(x: Def): Document = x match
       case StructDef(name, fields, inherit, defs) =>
         stack(
-          raw(s"struct $name") <#> (if inherit.nonEmpty then raw(": public") <:> raw(inherit.get.mkString(", ")) else raw("") ) <#> raw("{"),
+          raw(s"struct $name") <#> (if inherit.nonEmpty then raw(": public") <:> raw(inherit.get.mkString(", ")) else raw("") ) <:> raw("{"),
             stack_list(fields.map {
                 case (name, typ) => typ.toDocument() <#> raw(" ") <#> raw(name) <#> raw(";")
             }) |> indent,
@@ -184,7 +184,7 @@ enum Def:
           raw("};")
         )
       case EnumDef(name, fields) =>
-        raw(s"enum $name") <#> raw("{") <#> stack_list(fields.map {
+        raw(s"enum $name") <:> raw("{") <#> stack_list(fields.map {
           case (name, value) => value.fold(raw(s"$name"))(x => raw(s"$name = $x"))
         }) <#> raw("};")
       case FuncDef(specret, name, args, body) =>

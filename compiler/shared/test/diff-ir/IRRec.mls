@@ -110,6 +110,7 @@ fib(20)
 //│   _mls_retval = _mls_x_7;
 //│   return _mls_retval;
 //│ }
+//│ int main() { auto res = _mlsMain(); res.print(); }
 
 :interpIR
 :genCpp
@@ -302,6 +303,7 @@ foo()
 //│   _mls_retval = _mls_x_13;
 //│   return _mls_retval;
 //│ }
+//│ int main() { auto res = _mlsMain(); res.print(); }
 
 :interpIR
 :genCpp
@@ -453,20 +455,26 @@ main()
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mls_foo(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_AorB: public _mlsObject{
+//│ struct _mls_AorB: public _mlsObject {
 //│ 
 //│   virtual const char *name() const override { return "AorB"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_AorB;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_AorB; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_B: public _mls_AorB{
+//│ struct _mls_B: public _mls_AorB {
 //│   _mlsValue _mls_b;
 //│   virtual const char *name() const override { return "B"; }
-//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_b) { auto _mlsVal = new (std::align_val_t(align)) _mls_B; _mlsVal->_mls_b = _mls_b; return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); std::printf("("); this->_mls_b.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_b);  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_b) { auto _mlsVal = new (std::align_val_t(align)) _mls_B; _mlsVal->refCount = 1; _mlsVal->_mls_b = _mls_b;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_A: public _mls_AorB{
+//│ struct _mls_A: public _mls_AorB {
 //│ 
 //│   virtual const char *name() const override { return "A"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
 //│ _mlsValue _mls_foo(_mlsValue _mls_x_4){
 //│   _mlsValue _mls_retval;
@@ -515,6 +523,7 @@ main()
 //│   _mls_retval = _mls_x_12;
 //│   return _mls_retval;
 //│ }
+//│ int main() { auto res = _mlsMain(); res.print(); }
 
 :interpIR
 :genCpp
@@ -758,20 +767,26 @@ main()
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mls_foo(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_AorB: public _mlsObject{
+//│ struct _mls_AorB: public _mlsObject {
 //│ 
 //│   virtual const char *name() const override { return "AorB"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_AorB;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_AorB; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_B: public _mls_AorB{
+//│ struct _mls_B: public _mls_AorB {
 //│   _mlsValue _mls_b;
 //│   virtual const char *name() const override { return "B"; }
-//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_b) { auto _mlsVal = new (std::align_val_t(align)) _mls_B; _mlsVal->_mls_b = _mls_b; return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); std::printf("("); this->_mls_b.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_b);  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_b) { auto _mlsVal = new (std::align_val_t(align)) _mls_B; _mlsVal->refCount = 1; _mlsVal->_mls_b = _mls_b;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_A: public _mls_AorB{
+//│ struct _mls_A: public _mls_AorB {
 //│ 
 //│   virtual const char *name() const override { return "A"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
 //│ _mlsValue _mls_j_1(_mlsValue _mls_x_15){
 //│   _mlsValue _mls_retval;
@@ -852,6 +867,7 @@ main()
 //│   _mls_retval = _mls_x_26;
 //│   return _mls_retval;
 //│ }
+//│ int main() { auto res = _mlsMain(); res.print(); }
 
 
 :interpIR
@@ -1200,20 +1216,26 @@ foo()
 //│ _mlsValue _mls_mk(_mlsValue);
 //│ _mlsValue _mls_even(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_Nat: public _mlsObject{
+//│ struct _mls_Nat: public _mlsObject {
 //│ 
 //│   virtual const char *name() const override { return "Nat"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nat;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nat; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_O: public _mls_Nat{
+//│ struct _mls_O: public _mls_Nat {
 //│ 
 //│   virtual const char *name() const override { return "O"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_O;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_O; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_S: public _mls_Nat{
+//│ struct _mls_S: public _mls_Nat {
 //│   _mlsValue _mls_s;
 //│   virtual const char *name() const override { return "S"; }
-//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_s) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->_mls_s = _mls_s; return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); std::printf("("); this->_mls_s.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_s);  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_s) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->refCount = 1; _mlsVal->_mls_s = _mls_s;  return _mlsValue(_mlsVal); }
 //│ };
 //│ _mlsValue _mls_even(_mlsValue _mls_x_5){
 //│   _mlsValue _mls_retval;
@@ -1281,6 +1303,7 @@ foo()
 //│   _mls_retval = _mls_x_18;
 //│   return _mls_retval;
 //│ }
+//│ int main() { auto res = _mlsMain(); res.print(); }
 
 :interpIR
 :genCpp
@@ -1475,8 +1498,8 @@ foo()
 //│ 
 //│ IR Processing Failed: Cycle detected in class hierarchy: O, S
 //│ 
-//│ mlscript.compiler.codegen.cpp.CppCodeGen.sortClasses(CppCodeGen.scala:164)
-//│ mlscript.compiler.codegen.cpp.CppCodeGen.codegen(CppCodeGen.scala:169)
+//│ mlscript.compiler.codegen.cpp.CppCodeGen.sortClasses(CppCodeGen.scala:173)
+//│ mlscript.compiler.codegen.cpp.CppCodeGen.codegen(CppCodeGen.scala:177)
 //│ mlscript.compiler.IRDiffTestCompiler.postProcess(TestIR.scala:32)
 //│ mlscript.DiffTests.rec$1(DiffTests.scala:454)
 //│ mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1053)
@@ -1772,8 +1795,8 @@ main()
 //│ 
 //│ IR Processing Failed: Cycle detected in class hierarchy: O, S
 //│ 
-//│ mlscript.compiler.codegen.cpp.CppCodeGen.sortClasses(CppCodeGen.scala:164)
-//│ mlscript.compiler.codegen.cpp.CppCodeGen.codegen(CppCodeGen.scala:169)
+//│ mlscript.compiler.codegen.cpp.CppCodeGen.sortClasses(CppCodeGen.scala:173)
+//│ mlscript.compiler.codegen.cpp.CppCodeGen.codegen(CppCodeGen.scala:177)
 //│ mlscript.compiler.IRDiffTestCompiler.postProcess(TestIR.scala:32)
 //│ mlscript.DiffTests.rec$1(DiffTests.scala:454)
 //│ mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1053)
@@ -2070,20 +2093,26 @@ main(False)
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mls_foo(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_AorB: public _mlsObject{
+//│ struct _mls_AorB: public _mlsObject {
 //│ 
 //│   virtual const char *name() const override { return "AorB"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_AorB;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_AorB; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_B: public _mls_AorB{
+//│ struct _mls_B: public _mls_AorB {
 //│   _mlsValue _mls_b;
 //│   virtual const char *name() const override { return "B"; }
-//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_b) { auto _mlsVal = new (std::align_val_t(align)) _mls_B; _mlsVal->_mls_b = _mls_b; return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); std::printf("("); this->_mls_b.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_b);  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_b) { auto _mlsVal = new (std::align_val_t(align)) _mls_B; _mlsVal->refCount = 1; _mlsVal->_mls_b = _mls_b;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_A: public _mls_AorB{
+//│ struct _mls_A: public _mls_AorB {
 //│ 
 //│   virtual const char *name() const override { return "A"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
 //│ _mlsValue _mls_main(_mlsValue _mls_flag_0){
 //│   _mlsValue _mls_retval;
@@ -2164,6 +2193,7 @@ main(False)
 //│   _mls_retval = _mls_x_26;
 //│   return _mls_retval;
 //│ }
+//│ int main() { auto res = _mlsMain(); res.print(); }
 
 
 :interpIR
@@ -2353,36 +2383,48 @@ main()
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mls_head_opt(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_Option: public _mlsObject{
+//│ struct _mls_Option: public _mlsObject {
 //│ 
 //│   virtual const char *name() const override { return "Option"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_Some: public _mls_Option{
+//│ struct _mls_Some: public _mls_Option {
 //│   _mlsValue _mls_x;
 //│   virtual const char *name() const override { return "Some"; }
-//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->_mls_x = _mls_x; return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); std::printf("("); this->_mls_x.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_x);  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->refCount = 1; _mlsVal->_mls_x = _mls_x;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_None: public _mls_Option{
+//│ struct _mls_None: public _mls_Option {
 //│ 
 //│   virtual const char *name() const override { return "None"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_List: public _mlsObject{
+//│ struct _mls_List: public _mlsObject {
 //│ 
 //│   virtual const char *name() const override { return "List"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_Nil: public _mls_List{
+//│ struct _mls_Nil: public _mls_List {
 //│ 
 //│   virtual const char *name() const override { return "Nil"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_Cons: public _mls_List{
+//│ struct _mls_Cons: public _mls_List {
 //│   _mlsValue _mls_h;
 //│   _mlsValue _mls_t;
 //│   virtual const char *name() const override { return "Cons"; }
-//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->_mls_h = _mls_h;_mlsVal->_mls_t = _mls_t; return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
@@ -2441,6 +2483,7 @@ main()
 //│   _mls_retval = _mls_x_15;
 //│   return _mls_retval;
 //│ }
+//│ int main() { auto res = _mlsMain(); res.print(); }
 
 :interpIR
 :genCpp
@@ -2675,36 +2718,48 @@ main()
 //│ _mlsValue _mls_mk_list(_mlsValue);
 //│ _mlsValue _mls_head_opt(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_Option: public _mlsObject{
+//│ struct _mls_Option: public _mlsObject {
 //│ 
 //│   virtual const char *name() const override { return "Option"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_Some: public _mls_Option{
+//│ struct _mls_Some: public _mls_Option {
 //│   _mlsValue _mls_x;
 //│   virtual const char *name() const override { return "Some"; }
-//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->_mls_x = _mls_x; return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); std::printf("("); this->_mls_x.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_x);  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->refCount = 1; _mlsVal->_mls_x = _mls_x;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_None: public _mls_Option{
+//│ struct _mls_None: public _mls_Option {
 //│ 
 //│   virtual const char *name() const override { return "None"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_List: public _mlsObject{
+//│ struct _mls_List: public _mlsObject {
 //│ 
 //│   virtual const char *name() const override { return "List"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_Nil: public _mls_List{
+//│ struct _mls_Nil: public _mls_List {
 //│ 
 //│   virtual const char *name() const override { return "Nil"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_Cons: public _mls_List{
+//│ struct _mls_Cons: public _mls_List {
 //│   _mlsValue _mls_h;
 //│   _mlsValue _mls_t;
 //│   virtual const char *name() const override { return "Cons"; }
-//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->_mls_h = _mls_h;_mlsVal->_mls_t = _mls_t; return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
 //│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
 //│   _mlsValue _mls_retval;
@@ -2780,6 +2835,7 @@ main()
 //│   _mls_retval = _mls_x_19;
 //│   return _mls_retval;
 //│ }
+//│ int main() { auto res = _mlsMain(); res.print(); }
 
 :interpIR
 :genCpp
@@ -2977,36 +3033,48 @@ main()
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mls_mk_list(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_Option: public _mlsObject{
+//│ struct _mls_Option: public _mlsObject {
 //│ 
 //│   virtual const char *name() const override { return "Option"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_Some: public _mls_Option{
+//│ struct _mls_Some: public _mls_Option {
 //│   _mlsValue _mls_x;
 //│   virtual const char *name() const override { return "Some"; }
-//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->_mls_x = _mls_x; return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); std::printf("("); this->_mls_x.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_x);  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->refCount = 1; _mlsVal->_mls_x = _mls_x;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_None: public _mls_Option{
+//│ struct _mls_None: public _mls_Option {
 //│ 
 //│   virtual const char *name() const override { return "None"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_List: public _mlsObject{
+//│ struct _mls_List: public _mlsObject {
 //│ 
 //│   virtual const char *name() const override { return "List"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_Nil: public _mls_List{
+//│ struct _mls_Nil: public _mls_List {
 //│ 
 //│   virtual const char *name() const override { return "Nil"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_Cons: public _mls_List{
+//│ struct _mls_Cons: public _mls_List {
 //│   _mlsValue _mls_h;
 //│   _mlsValue _mls_t;
 //│   virtual const char *name() const override { return "Cons"; }
-//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->_mls_h = _mls_h;_mlsVal->_mls_t = _mls_t; return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
 //│ _mlsValue _mls_last_opt(_mlsValue _mls_l_0){
 //│   _mlsValue _mls_retval;
@@ -3070,6 +3138,7 @@ main()
 //│   _mls_retval = _mls_x_17;
 //│   return _mls_retval;
 //│ }
+//│ int main() { auto res = _mlsMain(); res.print(); }
 
 :interpIR
 :genCpp
@@ -3381,36 +3450,48 @@ main()
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mls_f(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_Option: public _mlsObject{
+//│ struct _mls_Option: public _mlsObject {
 //│ 
 //│   virtual const char *name() const override { return "Option"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_Some: public _mls_Option{
+//│ struct _mls_Some: public _mls_Option {
 //│   _mlsValue _mls_x;
 //│   virtual const char *name() const override { return "Some"; }
-//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->_mls_x = _mls_x; return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); std::printf("("); this->_mls_x.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_x);  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->refCount = 1; _mlsVal->_mls_x = _mls_x;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_None: public _mls_Option{
+//│ struct _mls_None: public _mls_Option {
 //│ 
 //│   virtual const char *name() const override { return "None"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_List: public _mlsObject{
+//│ struct _mls_List: public _mlsObject {
 //│ 
 //│   virtual const char *name() const override { return "List"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_Nil: public _mls_List{
+//│ struct _mls_Nil: public _mls_List {
 //│ 
 //│   virtual const char *name() const override { return "Nil"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_Cons: public _mls_List{
+//│ struct _mls_Cons: public _mls_List {
 //│   _mlsValue _mls_h;
 //│   _mlsValue _mls_t;
 //│   virtual const char *name() const override { return "Cons"; }
-//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->_mls_h = _mls_h;_mlsVal->_mls_t = _mls_t; return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
@@ -3514,6 +3595,7 @@ main()
 //│   _mls_retval = _mls_x_39;
 //│   return _mls_retval;
 //│ }
+//│ int main() { auto res = _mlsMain(); res.print(); }
 
 :interpIR
 :genCpp
@@ -3848,36 +3930,48 @@ main()
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mls_f(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mls_Option: public _mlsObject{
+//│ struct _mls_Option: public _mlsObject {
 //│ 
 //│   virtual const char *name() const override { return "Option"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_Some: public _mls_Option{
+//│ struct _mls_Some: public _mls_Option {
 //│   _mlsValue _mls_x;
 //│   virtual const char *name() const override { return "Some"; }
-//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->_mls_x = _mls_x; return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); std::printf("("); this->_mls_x.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_x);  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->refCount = 1; _mlsVal->_mls_x = _mls_x;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_None: public _mls_Option{
+//│ struct _mls_None: public _mls_Option {
 //│ 
 //│   virtual const char *name() const override { return "None"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_List: public _mlsObject{
+//│ struct _mls_List: public _mlsObject {
 //│ 
 //│   virtual const char *name() const override { return "List"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_Nil: public _mls_List{
+//│ struct _mls_Nil: public _mls_List {
 //│ 
 //│   virtual const char *name() const override { return "Nil"; }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil;  return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil; _mlsVal->refCount = 1;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_Cons: public _mls_List{
+//│ struct _mls_Cons: public _mls_List {
 //│   _mlsValue _mls_h;
 //│   _mlsValue _mls_t;
 //│   virtual const char *name() const override { return "Cons"; }
-//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->_mls_h = _mls_h;_mlsVal->_mls_t = _mls_t; return _mlsVal; }
+//│   virtual void print() const override { std::printf("%s", name()); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
@@ -3990,3 +4084,4 @@ main()
 //│   _mls_retval = _mls_x_40;
 //│   return _mls_retval;
 //│ }
+//│ int main() { auto res = _mlsMain(); res.print(); }

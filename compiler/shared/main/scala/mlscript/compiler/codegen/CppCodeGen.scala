@@ -17,22 +17,29 @@ class CppCodeGen:
   private val mlsMainName = "_mlsMain"
   private val mlsPrelude = "#include \"mlsprelude.h\""
   private val mlsPreludeImpl = "#include \"mlsprelude.cpp\""
+  private val mlsInternalClass = Set("True", "False", "Boolean")
+  private val mlsObject = "_mlsObject"
+  private val mlsEntryPoint = s"int main() { auto res = _mlsMain(); res.print(); }";
   private def mlsIntLit(x: BigInt) = Expr.Call(Expr.Var("_mlsValue::fromIntLit"), Ls(Expr.IntLit(x)))
   private def mlsStrLit(x: Str) = Expr.Call(Expr.Var("_mlsValue::fromStrLit"), Ls(Expr.StrLit(x)))
-  private def mlsNewValue(cls: Str, args: Ls[Expr]) =
-    Expr.Call(Expr.Var(s"_mlsValue::create<$cls>"), args)
-  private def mlsIsValueOf(cls: Str, scrut: Expr) =
-    Expr.Call(Expr.Var(s"_mlsValue::isValueOf<$cls>"), Ls(scrut))
+  private def mlsNewValue(cls: Str, args: Ls[Expr]) = Expr.Call(Expr.Var(s"_mlsValue::create<$cls>"), args)
+  private def mlsIsValueOf(cls: Str, scrut: Expr) = Expr.Call(Expr.Var(s"_mlsValue::isValueOf<$cls>"), Ls(scrut))
   private def mlsDebugPrint(x: Expr) = Expr.Call(Expr.Var("_mlsValue::print"), Ls(x))
   private def mlsTupleValue(init: Expr) = Expr.Constructor("_mlsValue::tuple", init)
   private def mlsAs(name: Str, cls: Str) = Expr.Var(s"_mlsValue::as<$cls>($name)")
-  private val mlsInternalClass = Set("True", "False", "Boolean")
-  private val mlsObject = "_mlsObject"
   private def mlsObjectNameMethod(name: Str) = s"virtual const char *name() const override { return \"${name}\"; }"
   private def mlsCommonCreateMethod(cls: Str, fields: Ls[Str]) =
     val parameters = fields.map{x => s"_mlsValue $x"}.mkString(", ")
-    val fieldsAssignment = fields.map{x => s"_mlsVal->$x = $x;"}.mkString
-    s"template <std::size_t align> static _mlsValue create($parameters) { auto _mlsVal = new (std::align_val_t(align)) $cls; $fieldsAssignment return _mlsVal; }"
+    val fieldsAssignment = fields.map{x => s"_mlsVal->$x = $x; "}.mkString
+    s"template <std::size_t align> static _mlsValue create($parameters) { auto _mlsVal = new (std::align_val_t(align)) $cls; _mlsVal->refCount = 1; $fieldsAssignment return _mlsValue(_mlsVal); }"
+  private def mlsCommonPrintMethod(cls: Str, fields: Ls[Str]) =
+    if fields.isEmpty then s"virtual void print() const override { std::printf(\"%s\", name()); }"
+    else
+      val fieldsPrint = fields.map{x => s"this->$x.print(); "}.mkString("std::printf(\", \"); ")
+      s"virtual void print() const override { std::printf(\"%s\", name()); std::printf(\"(\"); $fieldsPrint std::printf(\")\"); }"
+  private def mlsCommonDestructorMethod(cls: Str, fields: Ls[Str]) = 
+    val fieldsDeletion = fields.map{x => s"_mlsValue::destroy(this->$x); "}.mkString
+    s"virtual void destroy() override { $fieldsDeletion operator delete (this); }"
   private def mlsThrowNonExhaustiveMatch = Stmt.Raw("throw std::runtime_error(\"Non-exhaustive match\");");
 
   private def codegenClassInfo(cls: ClassInfo): (Opt[Def], Decl) =
@@ -44,6 +51,8 @@ class CppCodeGen:
       cls.ident |> mapName, fields,
       if parents.nonEmpty then Some(parents) else None,
       Ls(Def.RawDef(mlsObjectNameMethod(cls.ident)),
+         Def.RawDef(mlsCommonPrintMethod(cls.ident, cls.fields.map(mapName))),
+         Def.RawDef(mlsCommonDestructorMethod(cls.ident |> mapName, cls.fields.map(mapName))),
          Def.RawDef(mlsCommonCreateMethod(cls.ident |> mapName, cls.fields.map(mapName)))))
     (S(theDef), decl)
 
@@ -162,7 +171,6 @@ class CppCodeGen:
     if depgraph.nonEmpty then
       val cycle = depgraph.keys.mkString(", ")
       throw new Exception(s"Cycle detected in class hierarchy: $cycle")
-    println(sorted.map(_.ident))
     sorted
   
   def codegen(prog: Program): CompilationUnit =
@@ -170,4 +178,4 @@ class CppCodeGen:
     val (defs, decls) = sortedClasses.map(codegenClassInfo).unzip
     val (defs2, decls2) = prog.defs.map(codegenDefn).unzip
     val (defMain, declMain) = codegenTopNode(prog.main)
-    CompilationUnit(Ls(mlsPrelude), decls ++ decls2 :+ declMain, defs.flatten ++ defs2 :+ defMain)
+    CompilationUnit(Ls(mlsPrelude), decls ++ decls2 :+ declMain, defs.flatten ++ defs2 :+ defMain :+ Def.RawDef(mlsEntryPoint))
