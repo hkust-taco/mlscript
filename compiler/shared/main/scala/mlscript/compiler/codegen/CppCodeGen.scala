@@ -27,16 +27,17 @@ class CppCodeGen:
   private def mlsDebugPrint(x: Expr) = Expr.Call(Expr.Var("_mlsValue::print"), Ls(x))
   private def mlsTupleValue(init: Expr) = Expr.Constructor("_mlsValue::tuple", init)
   private def mlsAs(name: Str, cls: Str) = Expr.Var(s"_mlsValue::as<$cls>($name)")
-  private def mlsObjectNameMethod(name: Str) = s"virtual const char *name() const override { return \"${name}\"; }"
-  private def mlsCommonCreateMethod(cls: Str, fields: Ls[Str]) =
+  private def mlsObjectNameMethod(name: Str) = s"constexpr static inline const char *typeName = \"${name}\";"
+  private def mlsTypeTag(id: Int) = s"constexpr static inline uint32_t typeTag = $id;"
+  private def mlsCommonCreateMethod(cls: Str, fields: Ls[Str], id: Int) =
     val parameters = fields.map{x => s"_mlsValue $x"}.mkString(", ")
     val fieldsAssignment = fields.map{x => s"_mlsVal->$x = $x; "}.mkString
-    s"template <std::size_t align> static _mlsValue create($parameters) { auto _mlsVal = new (std::align_val_t(align)) $cls; _mlsVal->refCount = 1; $fieldsAssignment return _mlsValue(_mlsVal); }"
+    s"template <std::size_t align> static _mlsValue create($parameters) { auto _mlsVal = new (std::align_val_t(align)) $cls; _mlsVal->refCount = 1; _mlsVal->tag = $id; $fieldsAssignment return _mlsValue(_mlsVal); }"
   private def mlsCommonPrintMethod(cls: Str, fields: Ls[Str]) =
-    if fields.isEmpty then s"virtual void print() const override { std::printf(\"%s\", name()); }"
+    if fields.isEmpty then s"virtual void print() const override { std::printf(\"%s\", typeName); }"
     else
       val fieldsPrint = fields.map{x => s"this->$x.print(); "}.mkString("std::printf(\", \"); ")
-      s"virtual void print() const override { std::printf(\"%s\", name()); std::printf(\"(\"); $fieldsPrint std::printf(\")\"); }"
+      s"virtual void print() const override { std::printf(\"%s\", typeName); std::printf(\"(\"); $fieldsPrint std::printf(\")\"); }"
   private def mlsCommonDestructorMethod(cls: Str, fields: Ls[Str]) = 
     val fieldsDeletion = fields.map{x => s"_mlsValue::destroy(this->$x); "}.mkString
     s"virtual void destroy() override { $fieldsDeletion operator delete (this); }"
@@ -51,9 +52,10 @@ class CppCodeGen:
       cls.ident |> mapName, fields,
       if parents.nonEmpty then Some(parents) else None,
       Ls(Def.RawDef(mlsObjectNameMethod(cls.ident)),
+         Def.RawDef(mlsTypeTag(cls.id)),
          Def.RawDef(mlsCommonPrintMethod(cls.ident, cls.fields.map(mapName))),
          Def.RawDef(mlsCommonDestructorMethod(cls.ident |> mapName, cls.fields.map(mapName))),
-         Def.RawDef(mlsCommonCreateMethod(cls.ident |> mapName, cls.fields.map(mapName)))))
+         Def.RawDef(mlsCommonCreateMethod(cls.ident |> mapName, cls.fields.map(mapName), cls.id))))
     (S(theDef), decl)
 
   private def toExpr(texpr: TrivialExpr, reifyUnit: Bool = false): Opt[Expr] = texpr match

@@ -1,6 +1,6 @@
-CC := /usr/bin/clang++
-CFLAGS := -O3 -Wall -Wextra -ggdb3 -std=c++17 -fsanitize=address,undefined
-LDFLAGS :=
+CXX := clang++
+CFLAGS := $(CFLAGS) -O3 -Wall -Wextra -ggdb3 -std=c++17 # -fsanitize=address
+LDFLAGS := $(LDFLAGS) -Wl,-stack_size -Wl,0x20000000
 SRC := mls.cpp
 INCLUDES = mlsprelude.h
 TARGET := mls
@@ -19,4 +19,4 @@ clean:
 	rm -r $(TARGET) $(TARGET).dSYM
 
 $(TARGET): pre $(SRC) $(INCLUDES)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(SRC) -o $(TARGET)
+	$(CXX) $(CFLAGS) $(LDFLAGS) $(SRC) -o $(TARGET)

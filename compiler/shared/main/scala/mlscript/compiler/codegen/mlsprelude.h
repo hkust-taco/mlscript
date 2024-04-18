@@ -12,8 +12,9 @@
 constexpr std::size_t _mlsAlignment = 8;
 
 struct _mlsObject {
-  uint32_t refCount = 1;
-  constexpr static uint32_t stickyRefCount =
+  uint32_t refCount;
+  uint32_t tag;
+  constexpr static inline uint32_t stickyRefCount =
       std::numeric_limits<decltype(refCount)>::max();
 
   void incRef() { ++refCount; }
@@ -23,7 +24,6 @@ struct _mlsObject {
     return false;
   }
 
-  virtual const char *name() const = 0;
   virtual void print() const = 0;
   virtual void destroy() = 0;
 };
@@ -139,7 +139,7 @@ public:
   static void destroy(_mlsValue &v) { v.~_mlsValue(); }
 
   template <typename T> static bool isValueOf(const _mlsValue &v) {
-    return dynamic_cast<T *>(v.asObject()) != nullptr;
+    return v.asObject()->tag == T::typeTag;
   }
 
   template <typename T> static T *as(const _mlsValue &v) {
@@ -216,24 +216,29 @@ public:
 _mlsValue _mlsMain();
 
 struct _mls_Boolean : public _mlsObject {
-  virtual const char *name() const override { return "Boolean"; }
 };
 
 struct _mls_True final : public _mls_Boolean {
-  virtual const char *name() const override { return "True"; }
-  virtual void print() const override { std::printf("True"); }
+  constexpr static inline const char *typeName = "True";
+  constexpr static inline uint32_t typeTag = 1;
+  virtual void print() const override { std::printf(typeName); }
   template <std::size_t align> static _mlsValue create() {
     static _mls_True mlsTrue alignas(align);
+    mlsTrue.refCount = stickyRefCount;
+    mlsTrue.tag = typeTag;
     return _mlsValue(&mlsTrue);
   }
   virtual void destroy() override {}
 };
 
 struct _mls_False final : public _mls_Boolean {
-  virtual const char *name() const override { return "False"; }
-  virtual void print() const override { std::printf("True"); }
+  constexpr static inline const char *typeName = "False";
+  constexpr static inline uint32_t typeTag = 2;
+  virtual void print() const override { std::printf(typeName); }
   template <std::size_t align> static _mlsValue create() {
     static _mls_False mlsFalse alignas(align);
+    mlsFalse.refCount = stickyRefCount;
+    mlsFalse.tag = typeTag;
     return _mlsValue(&mlsFalse);
   }
   virtual void destroy() override {}
