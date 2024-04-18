@@ -1319,6 +1319,7 @@ foo()
 class Boolean
 class True extends Boolean
 class False extends Boolean
+class Nat
 class S(s) extends Nat
 class O extends Nat
 fun odd(x) =
@@ -1332,12 +1333,12 @@ fun even(x) =
 fun mk(n) = if n > 0 then S(mk(n - 1)) else O
 fun foo() = odd(S(S(mk(10))))
 foo()
-//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|mk|(|10|)|)|)|)|↵|foo|(||)|
-//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n,)(0,)) then S(mk(-(n,)(1,),),) else O; fun foo = () => odd(S(S(mk(10,),),),); foo()}
+//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |Nat|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|mk|(|10|)|)|)|)|↵|foo|(||)|
+//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class Nat {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n,)(0,)) then S(mk(-(n,)(1,),),) else O; fun foo = () => odd(S(S(mk(10,),),),); foo()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, S, [s]),ClassInfo(4, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, Nat, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -1419,7 +1420,7 @@ foo()
 //│ x$20 -- #80)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, S, [s]),ClassInfo(4, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, Nat, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -1504,71 +1505,121 @@ foo()
 //│ False()
 //│ 
 //│ Cpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_Nat;
+//│ struct _mls_Boolean;
+//│ struct _mls_O;
+//│ struct _mls_S;
+//│ struct _mls_True;
+//│ struct _mls_False;
+//│ _mlsValue _mls_odd(_mlsValue);
+//│ _mlsValue _mls_j_0(_mlsValue);
+//│ _mlsValue _mls_foo();
+//│ _mlsValue _mls_j_2(_mlsValue);
+//│ _mlsValue _mls_j_1(_mlsValue);
+//│ _mlsValue _mls_mk(_mlsValue);
+//│ _mlsValue _mls_even(_mlsValue);
+//│ _mlsValue _mlsMain();
+//│ struct _mls_Nat: public _mlsObject {
 //│ 
-//│ IR Processing Failed: Cycle detected in class hierarchy: O, S
+//│   constexpr static inline const char *typeName = "Nat";
+//│   constexpr static inline uint32_t typeTag = 3;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nat; _mlsVal->refCount = 1; _mlsVal->tag = 3;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_O: public _mls_Nat {
 //│ 
-//│ mlscript.compiler.codegen.cpp.CppCodeGen.sortClasses(CppCodeGen.scala:175)
-//│ mlscript.compiler.codegen.cpp.CppCodeGen.codegen(CppCodeGen.scala:179)
-//│ mlscript.compiler.IRDiffTestCompiler.postProcess(TestIR.scala:32)
-//│ mlscript.DiffTests.rec$1(DiffTests.scala:454)
-//│ mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1053)
-//│ org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
-//│ org.scalatest.Transformer.apply(Transformer.scala:22)
-//│ org.scalatest.Transformer.apply(Transformer.scala:20)
-//│ org.scalatest.funsuite.AnyFunSuiteLike$$anon$1.apply(AnyFunSuiteLike.scala:226)
-//│ org.scalatest.TestSuite.withFixture(TestSuite.scala:196)
-//│ org.scalatest.TestSuite.withFixture$(TestSuite.scala:195)
-//│ mlscript.DiffTests.org$scalatest$concurrent$TimeLimitedTests$$super$withFixture(DiffTests.scala:49)
-//│ org.scalatest.concurrent.TimeLimitedTests.$anonfun$withFixture$3(TimeLimitedTests.scala:154)
-//│ org.scalatest.enablers.Timed$$anon$1.timeoutAfter(Timed.scala:127)
-//│ org.scalatest.concurrent.TimeLimits$.failAfterImpl(TimeLimits.scala:282)
-//│ org.scalatest.concurrent.TimeLimitedTests.withFixture(TimeLimitedTests.scala:153)
-//│ org.scalatest.concurrent.TimeLimitedTests.withFixture$(TimeLimitedTests.scala:150)
-//│ mlscript.DiffTests.withFixture(DiffTests.scala:49)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.invokeWithFixture$1(AnyFunSuiteLike.scala:224)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.$anonfun$runTest$1(AnyFunSuiteLike.scala:236)
-//│ org.scalatest.SuperEngine.runTestImpl(Engine.scala:306)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.runTest(AnyFunSuiteLike.scala:236)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.runTest$(AnyFunSuiteLike.scala:218)
-//│ mlscript.DiffTests.org$scalatest$OneInstancePerTest$$super$runTest(DiffTests.scala:49)
-//│ org.scalatest.OneInstancePerTest.runTest(OneInstancePerTest.scala:131)
-//│ org.scalatest.OneInstancePerTest.runTest$(OneInstancePerTest.scala:123)
-//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$runTest(DiffTests.scala:49)
-//│ org.scalatest.ParallelTestExecution.runTest(ParallelTestExecution.scala:164)
-//│ org.scalatest.ParallelTestExecution.runTest$(ParallelTestExecution.scala:148)
-//│ mlscript.DiffTests.runTest(DiffTests.scala:49)
-//│ org.scalatest.OneInstancePerTest.runTests(OneInstancePerTest.scala:181)
-//│ org.scalatest.OneInstancePerTest.runTests$(OneInstancePerTest.scala:172)
-//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$runTests(DiffTests.scala:49)
-//│ org.scalatest.ParallelTestExecution.runTests(ParallelTestExecution.scala:97)
-//│ org.scalatest.ParallelTestExecution.runTests$(ParallelTestExecution.scala:79)
-//│ mlscript.DiffTests.runTests(DiffTests.scala:49)
-//│ org.scalatest.Suite.run(Suite.scala:1114)
-//│ org.scalatest.Suite.run$(Suite.scala:1096)
-//│ org.scalatest.funsuite.AnyFunSuite.org$scalatest$funsuite$AnyFunSuiteLike$$super$run(AnyFunSuite.scala:1563)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.$anonfun$run$1(AnyFunSuiteLike.scala:273)
-//│ org.scalatest.SuperEngine.runImpl(Engine.scala:535)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.run(AnyFunSuiteLike.scala:273)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.run$(AnyFunSuiteLike.scala:272)
-//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$run(DiffTests.scala:49)
-//│ org.scalatest.ParallelTestExecution.run(ParallelTestExecution.scala:261)
-//│ org.scalatest.ParallelTestExecution.run$(ParallelTestExecution.scala:258)
-//│ mlscript.DiffTests.run(DiffTests.scala:49)
-//│ org.scalatest.tools.DistributedTestRunnerSuite.run(DistributedTestRunnerSuite.scala:22)
-//│ org.scalatest.tools.SuiteRunner.run(SuiteRunner.scala:47)
-//│ java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
-//│ java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-//│ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-//│ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-//│ java.base/java.lang.Thread.run(Thread.java:829)
+//│   constexpr static inline const char *typeName = "O";
+//│   constexpr static inline uint32_t typeTag = 5;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_O; _mlsVal->refCount = 1; _mlsVal->tag = 5;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_S: public _mls_Nat {
+//│   _mlsValue _mls_s;
+//│   constexpr static inline const char *typeName = "S";
+//│   constexpr static inline uint32_t typeTag = 4;
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_s.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_s);  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_s) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->refCount = 1; _mlsVal->tag = 4; _mlsVal->_mls_s = _mls_s;  return _mlsValue(_mlsVal); }
+//│ };
+//│ _mlsValue _mls_even(_mlsValue _mls_x_5){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_5)){
+//│     auto _mls_x_7 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_1(_mls_x_7);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_5)){
+//│     auto _mls_x_8 = _mlsValue::as<_mls_S>(_mls_x_5)->_mls_s;
+//│     auto _mls_x_9 = _mls_odd(_mls_x_8);
+//│     _mls_retval = _mls_j_1(_mls_x_9);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_foo(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_16 = _mls_mk(_mlsValue::fromIntLit(10));
+//│   auto _mls_x_17 = _mlsValue::create<_mls_S>(_mls_x_16);
+//│   auto _mls_x_18 = _mlsValue::create<_mls_S>(_mls_x_17);
+//│   auto _mls_x_19 = _mls_odd(_mls_x_18);
+//│   _mls_retval = _mls_x_19;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_0)){
+//│     auto _mls_x_2 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_0)){
+//│     auto _mls_x_3 = _mlsValue::as<_mls_S>(_mls_x_0)->_mls_s;
+//│     auto _mls_x_4 = _mls_even(_mls_x_3);
+//│     _mls_retval = _mls_j_0(_mls_x_4);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_11;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_mk(_mlsValue _mls_n_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_10 = (_mls_n_0>_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_10)){
+//│     auto _mls_x_12 = (_mls_n_0-_mlsValue::fromIntLit(1));
+//│     auto _mls_x_13 = _mls_mk(_mls_x_12);
+//│     auto _mls_x_14 = _mlsValue::create<_mls_S>(_mls_x_13);
+//│     _mls_retval = _mls_j_2(_mls_x_14);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_10)){
+//│     auto _mls_x_15 = _mlsValue::create<_mls_O>();
+//│     _mls_retval = _mls_j_2(_mls_x_15);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_20 = _mls_foo();
+//│   _mls_retval = _mls_x_20;
+//│   return _mls_retval;
+//│ }
+//│ int main() { auto res = _mlsMain(); res.print(); }
 
 :interpIR
 :genCpp
 class Boolean
 class True extends Boolean
 class False extends Boolean
+class Nat
 class S(s) extends Nat
 class O extends Nat
 fun odd(x) =
@@ -1585,12 +1636,12 @@ fun main() =
   foo()
   bar()
 main()
-//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|#if| |10| |>| |0| |#then| |S|(|O|)| |#else| |O|)|↵|#fun| |bar|(||)| |#=| |#if| |10| |>| |0| |#then| |odd|(|S|(|O|)|)| |#else| |odd|(|O|)|↵|#fun| |main|(||)| |#=|→|foo|(||)|↵|bar|(||)|←|↵|main|(||)|
-//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(if (>(10,)(0,)) then S(O,) else O,); fun bar = () => if (>(10,)(0,)) then odd(S(O,),) else odd(O,); fun main = () => {foo(); bar()}; main()}
+//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |Nat|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|#if| |10| |>| |0| |#then| |S|(|O|)| |#else| |O|)|↵|#fun| |bar|(||)| |#=| |#if| |10| |>| |0| |#then| |odd|(|S|(|O|)|)| |#else| |odd|(|O|)|↵|#fun| |main|(||)| |#=|→|foo|(||)|↵|bar|(||)|←|↵|main|(||)|
+//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class Nat {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(if (>(10,)(0,)) then S(O,) else O,); fun bar = () => if (>(10,)(0,)) then odd(S(O,),) else odd(O,); fun main = () => {foo(); bar()}; main()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, S, [s]),ClassInfo(4, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, Nat, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -1694,7 +1745,7 @@ main()
 //│ x$25 -- #93)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, S, [s]),ClassInfo(4, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, Nat, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -1801,65 +1852,134 @@ main()
 //│ True()
 //│ 
 //│ Cpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_Nat;
+//│ struct _mls_Boolean;
+//│ struct _mls_O;
+//│ struct _mls_S;
+//│ struct _mls_True;
+//│ struct _mls_False;
+//│ _mlsValue _mls_odd(_mlsValue);
+//│ _mlsValue _mls_bar();
+//│ _mlsValue _mls_j_0(_mlsValue);
+//│ _mlsValue _mls_foo();
+//│ _mlsValue _mls_j_2(_mlsValue);
+//│ _mlsValue _mls_even(_mlsValue);
+//│ _mlsValue _mls_j_3(_mlsValue);
+//│ _mlsValue _mls_main();
+//│ _mlsValue _mls_j_1(_mlsValue);
+//│ _mlsValue _mlsMain();
+//│ struct _mls_Nat: public _mlsObject {
 //│ 
-//│ IR Processing Failed: Cycle detected in class hierarchy: O, S
+//│   constexpr static inline const char *typeName = "Nat";
+//│   constexpr static inline uint32_t typeTag = 3;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nat; _mlsVal->refCount = 1; _mlsVal->tag = 3;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_O: public _mls_Nat {
 //│ 
-//│ mlscript.compiler.codegen.cpp.CppCodeGen.sortClasses(CppCodeGen.scala:175)
-//│ mlscript.compiler.codegen.cpp.CppCodeGen.codegen(CppCodeGen.scala:179)
-//│ mlscript.compiler.IRDiffTestCompiler.postProcess(TestIR.scala:32)
-//│ mlscript.DiffTests.rec$1(DiffTests.scala:454)
-//│ mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1053)
-//│ org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
-//│ org.scalatest.Transformer.apply(Transformer.scala:22)
-//│ org.scalatest.Transformer.apply(Transformer.scala:20)
-//│ org.scalatest.funsuite.AnyFunSuiteLike$$anon$1.apply(AnyFunSuiteLike.scala:226)
-//│ org.scalatest.TestSuite.withFixture(TestSuite.scala:196)
-//│ org.scalatest.TestSuite.withFixture$(TestSuite.scala:195)
-//│ mlscript.DiffTests.org$scalatest$concurrent$TimeLimitedTests$$super$withFixture(DiffTests.scala:49)
-//│ org.scalatest.concurrent.TimeLimitedTests.$anonfun$withFixture$3(TimeLimitedTests.scala:154)
-//│ org.scalatest.enablers.Timed$$anon$1.timeoutAfter(Timed.scala:127)
-//│ org.scalatest.concurrent.TimeLimits$.failAfterImpl(TimeLimits.scala:282)
-//│ org.scalatest.concurrent.TimeLimitedTests.withFixture(TimeLimitedTests.scala:153)
-//│ org.scalatest.concurrent.TimeLimitedTests.withFixture$(TimeLimitedTests.scala:150)
-//│ mlscript.DiffTests.withFixture(DiffTests.scala:49)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.invokeWithFixture$1(AnyFunSuiteLike.scala:224)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.$anonfun$runTest$1(AnyFunSuiteLike.scala:236)
-//│ org.scalatest.SuperEngine.runTestImpl(Engine.scala:306)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.runTest(AnyFunSuiteLike.scala:236)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.runTest$(AnyFunSuiteLike.scala:218)
-//│ mlscript.DiffTests.org$scalatest$OneInstancePerTest$$super$runTest(DiffTests.scala:49)
-//│ org.scalatest.OneInstancePerTest.runTest(OneInstancePerTest.scala:131)
-//│ org.scalatest.OneInstancePerTest.runTest$(OneInstancePerTest.scala:123)
-//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$runTest(DiffTests.scala:49)
-//│ org.scalatest.ParallelTestExecution.runTest(ParallelTestExecution.scala:164)
-//│ org.scalatest.ParallelTestExecution.runTest$(ParallelTestExecution.scala:148)
-//│ mlscript.DiffTests.runTest(DiffTests.scala:49)
-//│ org.scalatest.OneInstancePerTest.runTests(OneInstancePerTest.scala:181)
-//│ org.scalatest.OneInstancePerTest.runTests$(OneInstancePerTest.scala:172)
-//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$runTests(DiffTests.scala:49)
-//│ org.scalatest.ParallelTestExecution.runTests(ParallelTestExecution.scala:97)
-//│ org.scalatest.ParallelTestExecution.runTests$(ParallelTestExecution.scala:79)
-//│ mlscript.DiffTests.runTests(DiffTests.scala:49)
-//│ org.scalatest.Suite.run(Suite.scala:1114)
-//│ org.scalatest.Suite.run$(Suite.scala:1096)
-//│ org.scalatest.funsuite.AnyFunSuite.org$scalatest$funsuite$AnyFunSuiteLike$$super$run(AnyFunSuite.scala:1563)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.$anonfun$run$1(AnyFunSuiteLike.scala:273)
-//│ org.scalatest.SuperEngine.runImpl(Engine.scala:535)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.run(AnyFunSuiteLike.scala:273)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.run$(AnyFunSuiteLike.scala:272)
-//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$run(DiffTests.scala:49)
-//│ org.scalatest.ParallelTestExecution.run(ParallelTestExecution.scala:261)
-//│ org.scalatest.ParallelTestExecution.run$(ParallelTestExecution.scala:258)
-//│ mlscript.DiffTests.run(DiffTests.scala:49)
-//│ org.scalatest.tools.DistributedTestRunnerSuite.run(DistributedTestRunnerSuite.scala:22)
-//│ org.scalatest.tools.SuiteRunner.run(SuiteRunner.scala:47)
-//│ java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
-//│ java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-//│ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-//│ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-//│ java.base/java.lang.Thread.run(Thread.java:829)
+//│   constexpr static inline const char *typeName = "O";
+//│   constexpr static inline uint32_t typeTag = 5;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_O; _mlsVal->refCount = 1; _mlsVal->tag = 5;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_S: public _mls_Nat {
+//│   _mlsValue _mls_s;
+//│   constexpr static inline const char *typeName = "S";
+//│   constexpr static inline uint32_t typeTag = 4;
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_s.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_s);  operator delete (this); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_s) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->refCount = 1; _mlsVal->tag = 4; _mlsVal->_mls_s = _mls_s;  return _mlsValue(_mlsVal); }
+//│ };
+//│ _mlsValue _mls_bar(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_16 = (_mlsValue::fromIntLit(10)>_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_16)){
+//│     auto _mls_x_18 = _mlsValue::create<_mls_O>();
+//│     auto _mls_x_19 = _mlsValue::create<_mls_S>(_mls_x_18);
+//│     auto _mls_x_20 = _mls_odd(_mls_x_19);
+//│     _mls_retval = _mls_j_3(_mls_x_20);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_16)){
+//│     auto _mls_x_21 = _mlsValue::create<_mls_O>();
+//│     auto _mls_x_22 = _mls_odd(_mls_x_21);
+//│     _mls_retval = _mls_j_3(_mls_x_22);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_even(_mlsValue _mls_x_5){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_5)){
+//│     auto _mls_x_7 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_1(_mls_x_7);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_5)){
+//│     auto _mls_x_8 = _mlsValue::as<_mls_S>(_mls_x_5)->_mls_s;
+//│     auto _mls_x_9 = _mls_odd(_mls_x_8);
+//│     _mls_retval = _mls_j_1(_mls_x_9);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_foo(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_10 = (_mlsValue::fromIntLit(10)>_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_10)){
+//│     auto _mls_x_13 = _mlsValue::create<_mls_O>();
+//│     auto _mls_x_14 = _mlsValue::create<_mls_S>(_mls_x_13);
+//│     _mls_retval = _mls_j_2(_mls_x_14);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_10)){
+//│     auto _mls_x_15 = _mlsValue::create<_mls_O>();
+//│     _mls_retval = _mls_j_2(_mls_x_15);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_0)){
+//│     auto _mls_x_2 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_0)){
+//│     auto _mls_x_3 = _mlsValue::as<_mls_S>(_mls_x_0)->_mls_s;
+//│     auto _mls_x_4 = _mls_even(_mls_x_3);
+//│     _mls_retval = _mls_j_0(_mls_x_4);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_23 = _mls_foo();
+//│   auto _mls_x_24 = _mls_bar();
+//│   _mls_retval = _mls_x_24;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_3(_mlsValue _mls_x_17){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_17;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_12 = _mls_odd(_mls_x_11);
+//│   _mls_retval = _mls_x_12;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_25 = _mls_main();
+//│   _mls_retval = _mls_x_25;
+//│   return _mls_retval;
+//│ }
+//│ int main() { auto res = _mlsMain(); res.print(); }
 
 :interpIR
 :genCpp

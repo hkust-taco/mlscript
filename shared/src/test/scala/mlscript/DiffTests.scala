@@ -42,6 +42,8 @@ abstract class ModeType {
   def mono: Bool
   def useIR: Bool
   def interpIR: Bool
+  def irOpt: Bool
+  def irOptFuel: Int
   def irVerbose: Bool
   def genCpp: Bool
 }
@@ -174,6 +176,8 @@ class DiffTests
       useIR: Bool = false,
       interpIR: Bool = false,
       irVerbose: Bool = false,
+      irOpt: Bool = false,
+      irOptFuel: Int = 10,
       genCpp: Bool = false,
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
@@ -288,6 +292,8 @@ class DiffTests
           case "UseIR" => useIR = true; mode
           case "useIR" => mode.copy(useIR = true)
           case "interpIR" => mode.copy(interpIR = true)
+          case "optIR" => mode.copy(irOpt = true)
+          case fuel if fuel.startsWith("optFuel") => mode.copy(irOptFuel = fuel.stripPrefix("optFuel").toInt)
           case "irVerbose" => mode.copy(irVerbose = true)
           case "genCpp" => mode.copy(genCpp = true)
           case _ =>

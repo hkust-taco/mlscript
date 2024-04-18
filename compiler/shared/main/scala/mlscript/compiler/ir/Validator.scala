@@ -9,7 +9,7 @@ private final class DefnRefInSet(defs: Set[Defn]):
   private def f(x: Node): Unit = x match
     case Result(res) => 
     case Jump(defn, args) =>
-    case Case(scrut, cases) => cases map { (_, body) => f(body) }
+    case Case(scrut, cases, default) => cases foreach { (_, body) => f(body) }; default foreach f
     case LetExpr(name, expr, body) => f(body)
     case LetCall(res, defnref, args, body) =>
       defnref.getDefn match {

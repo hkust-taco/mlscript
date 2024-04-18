@@ -170,7 +170,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
               case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
               case node @ _ => node |> unexpectedNode
             }
-            Case(cond, Ls((ctx.classCtx("True"), tru2), (ctx.classCtx("False"), fls2))).attachTag(tag)
+            Case(cond, Ls((ctx.classCtx("True"), tru2), (ctx.classCtx("False"), fls2)), None).attachTag(tag)
           case node @ _ => node |> unexpectedNode
         }
         
@@ -195,9 +195,10 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
               jpbody,
             )
             ctx.jpAcc.addOne(jpdef)
-            val cases: Ls[(ClassInfo, Node)] = lines map {
+            var defaultCase: Opt[Node] = None
+            val cases: Ls[(ClassInfo, Node)] = lines flatMap {
               case L(IfThen(App(Var(ctor), params: Tup), rhs)) =>
-                ctx.classCtx(ctor) -> {
+                S(ctx.classCtx(ctor) -> {
                   // need this because we have built terms (selections in case arms) containing names that are not in the original term
                   given Ctx = ctx.copy(nameCtx = ctx.nameCtx + (scrut.str -> scrut))
                   buildResultFromTerm(
@@ -205,15 +206,21 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
                       case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
                       case node @ _ => node |> unexpectedNode
                     }
-                }
-              case L(IfThen(Var(ctor), rhs)) =>
-                ctx.classCtx(ctor) -> buildResultFromTerm(rhs) {
+                })
+              case L(IfThen(Var("_"), rhs)) =>
+                defaultCase = Some(buildResultFromTerm(rhs) {
                   case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
                   case node @ _ => node |> unexpectedNode
-                }
+                })
+                N
+              case L(IfThen(Var(ctor), rhs)) =>
+                S(ctx.classCtx(ctor) -> buildResultFromTerm(rhs) {
+                  case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
+                  case node @ _ => node |> unexpectedNode
+                })
               case _ => throw IRError(s"not supported UCS")
             }
-            Case(scrut, cases).attachTag(tag)
+            Case(scrut, cases, defaultCase).attachTag(tag)
           case node @ _ => node |> unexpectedNode
         }
 

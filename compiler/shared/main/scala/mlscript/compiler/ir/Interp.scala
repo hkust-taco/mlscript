@@ -65,7 +65,7 @@ class Interpreter(verbose: Bool):
   private enum Node:
     case Result(res: Ls[Expr])
     case Jump(defn: DefnRef, args: Ls[Expr])
-    case Case(scrut: Name, cases: Ls[(ClassInfo, Node)])
+    case Case(scrut: Name, cases: Ls[(ClassInfo, Node)], default: Opt[Node])
     case LetExpr(name: Name, expr: Expr, body: Node)
     case LetJoin(joinName: Name, params: Ls[Name], rhs: Node, body: Node)
     case LetCall(resultNames: Ls[Name], defn: DefnRef, args: Ls[Expr], body: Node)
@@ -83,18 +83,22 @@ class Interpreter(verbose: Bool):
         <#> raw("(")
         <#> raw(args |> showArgs)
         <#> raw(")") 
-      case Case(Name(x), Ls((tcls, tru), (fcls, fls))) if tcls.ident == "True" && fcls.ident == "False" =>
+      case Case(Name(x), Ls((tcls, tru), (fcls, fls)), N) if tcls.ident == "True" && fcls.ident == "False" =>
         val first = raw("if") <:> raw(x)
         val tru2 = indent(raw("true") <:> raw ("=>") <:> tru.document)
         val fls2 = indent(raw("false") <:> raw ("=>") <:> fls.document)
         Document.Stacked(Ls(first, tru2, fls2))
-      case Case(Name(x), cases) =>
+      case Case(Name(x), cases, default) =>
         val first = raw("case") <:> raw(x) <:> raw("of")
         val other = cases map {
           case (ClassInfo(_, name, _), node) =>
-            indent(raw(name) <:> raw("=>") <:> node.document)
+            raw(name) <:> raw("=>") <:> node.document
         }
-        Document.Stacked(first :: other)
+        default match
+          case N => stack(first, (Document.Stacked(other) |> indent))
+          case S(dc) =>
+            val default = raw("_") <:> raw("=>") <:> dc.document
+            stack(first, (Document.Stacked(other :+ default) |> indent))
       case LetExpr(Name(x), expr, body) => 
         stack(
           raw("let")
@@ -152,7 +156,7 @@ class Interpreter(verbose: Bool):
   private def convert(node: INode): Node = node match
     case INode.Result(xs) => Result(xs |> convertArgs)
     case INode.Jump(defnref, args) => Jump(DefnRef(Right(defnref.getName)), args |> convertArgs)
-    case INode.Case(scrut, cases) => Case(scrut, cases.map{(cls, node) => (cls, node |> convert)})
+    case INode.Case(scrut, cases, default) => Case(scrut, cases.map{(cls, node) => (cls, node |> convert)}, default map convert)
     case INode.LetExpr(name, expr, body) => LetExpr(name, expr |> convert, body |> convert)
     case INode.LetCall(xs, defnref, args, body) =>
       LetCall(xs, DefnRef(Right(defnref.getName)), args |> convertArgs, body |> convert)
@@ -161,7 +165,7 @@ class Interpreter(verbose: Bool):
     Defn(defn.name, defn.params, defn.body |> convert)
 
   private def resolveDefnRef(defs: Set[Defn], node: Node): Unit = node match
-    case Case(_, cases) => cases.foreach { case (cls, node) => resolveDefnRef(defs, node) }
+    case Case(_, cases, default) => cases.foreach { case (cls, node) => resolveDefnRef(defs, node) }; default.foreach(resolveDefnRef(defs, _))
     case LetExpr(name, expr, body) => resolveDefnRef(defs, body)
     case LetJoin(joinName, params, rhs, body) => resolveDefnRef(defs, body)
     case Jump(defnref, args) => defnref.defn = Left(defs.find(_.name == defnref.name).get)
@@ -265,14 +269,17 @@ class Interpreter(verbose: Bool):
       val defn = defnref |> expectDefn
       val ctx1 = ctx ++ defn.params.map{_.str}.zip(xs)
       eval(using ctx1, clsctx)(defn.body)
-    case Case(scrut, cases) =>
+    case Case(scrut, cases, default) =>
       val CtorApp(cls, xs) = (Ref(scrut):Expr) |> evalMayNotProgress(using ctx, clsctx) match {
         case x: CtorApp => x
         case x => throw IRInterpreterError(s"not a class $x")
       }
       val arm = cases.find{_._1 == cls} match {
         case Some((_, x)) => x
-        case _ => throw IRInterpreterError(s"can not find the matched case, $cls expected")
+        case _ => 
+          default match
+            case S(x) => x
+            case N =>throw IRInterpreterError(s"can not find the matched case, $cls expected")
       }
       eval(arm)
     case LetExpr(name, expr, body) =>

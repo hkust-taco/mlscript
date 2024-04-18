@@ -7,6 +7,8 @@ import scala.collection.mutable.StringBuilder
 import mlscript.{DiffTests, ModeType, TypingUnit}
 import mlscript.compiler.ir.{Interpreter, Fresh, FreshInt, Builder}
 import mlscript.compiler.codegen.cpp.CppCodeGen
+import mlscript.compiler.optimizer.Optimizer
+import mlscript.compiler.optimizer.OptimizingError
 
 class IRDiffTestCompiler extends DiffTests {
   import IRDiffTestCompiler.*
@@ -16,7 +18,8 @@ class IRDiffTestCompiler extends DiffTests {
     if (mode.useIR || mode.irVerbose)
       try
         output("\n\nIR:")
-        val gb = Builder(Fresh(), FreshInt(),  FreshInt(), FreshInt())
+        val (fresh, freshFnId, freshClassId, freshTag) = (Fresh(), FreshInt(), FreshInt(), FreshInt())
+        val gb = Builder(fresh, freshFnId, freshClassId, freshTag)
         val graph = gb.buildGraph(unit)
         output(graph.toString())
         output("\nPromoted:")
@@ -32,7 +35,37 @@ class IRDiffTestCompiler extends DiffTests {
           val cpp = CppCodeGen().codegen(graph)
           output(cpp.toDocument.print)
 
+        if (mode.irOpt)
+          val go = Optimizer(fresh, freshFnId, freshClassId, freshTag, mode.irVerbose)
+          var changed = true
+          var g = graph
+          var fuel = mode.irOptFuel
+          while (changed && fuel > 0)
+            val new_g = go.optimize(g)
+            changed = g != new_g
+            g = new_g
+            if (changed)
+              output("\nOptimized:")
+              output(new_g.toString())
+            fuel -= 1
+
+          if (mode.interpIR)
+            output("\nInterpreted:")
+            val ir = Interpreter(mode.irVerbose).interpret(g)
+            output(ir)
+            if ir != interp_result.get then
+              throw optimizer.OptimizingError("Interpreted result changed after optimization")
+            output("")
+
+          output(s"\nFuel used: ${mode.irOptFuel - fuel}")
+
+          if (fuel == 0)
+            throw optimizer.OptimizingError("Fuel exhausted")
+
       catch
+        case err: OptimizingError =>
+          output(s"\nOpt Failed: ${err.getMessage()}")
+          output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))
         case err: Exception =>
           output(s"\nIR Processing Failed: ${err.getMessage()}")
           output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))
