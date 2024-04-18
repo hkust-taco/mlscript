@@ -40,7 +40,7 @@ class CppCodeGen:
       s"virtual void print() const override { std::printf(\"%s\", typeName); std::printf(\"(\"); $fieldsPrint std::printf(\")\"); }"
   private def mlsCommonDestructorMethod(cls: Str, fields: Ls[Str]) = 
     val fieldsDeletion = fields.map{x => s"_mlsValue::destroy(this->$x); "}.mkString
-    s"virtual void destroy() override { $fieldsDeletion operator delete (this); }"
+    s"virtual void destroy() override { $fieldsDeletion operator delete (this, std::align_val_t(_mlsAlignment)); }"
   private def mlsThrowNonExhaustiveMatch = Stmt.Raw("throw std::runtime_error(\"Non-exhaustive match\");");
 
   private def codegenClassInfo(cls: ClassInfo): (Opt[Def], Decl) =
