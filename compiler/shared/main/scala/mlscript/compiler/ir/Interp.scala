@@ -39,7 +39,7 @@ class Interpreter(verbose: Bool):
   private enum Expr:
     case Ref(name: Name)
     case Literal(lit: Lit)
-    case CtorApp(name: ClassInfo, args: Ls[Expr])
+    case CtorApp(name: ClassInfo, var args: Ls[Expr])
     case Select(name: Name, cls: ClassInfo, field: Str)
     case BasicOp(name: Str, args: Ls[Expr])
   
@@ -68,6 +68,7 @@ class Interpreter(verbose: Bool):
     case LetExpr(name: Name, expr: Expr, body: Node)
     case LetJoin(joinName: Name, params: Ls[Name], rhs: Node, body: Node)
     case LetCall(resultNames: Ls[Name], defn: DefnRef, args: Ls[Expr], body: Node)
+    case AssignField(assignee: Name, fieldName: Str, value: Expr, body: Node)
 
     def show: Str =
       document.print
@@ -126,6 +127,16 @@ class Interpreter(verbose: Bool):
             <#> raw(")"),
           raw("in") <:> body.document |> indent
         )
+      case AssignField(Name(assignee), fieldName, value, body) =>
+        stack(
+          raw("assign") 
+            <:> raw(assignee)
+            <#> raw(".")
+            <#> raw(fieldName)
+            <:> raw("=")
+            <:> value.document,
+          raw("in") <:> body.document |> indent
+        )
   
   private class DefnRef(var defn: Either[Defn, Str]):
     def name = defn match
@@ -155,7 +166,7 @@ class Interpreter(verbose: Bool):
     case INode.LetExpr(name, expr, body) => LetExpr(name, expr |> convert, body |> convert)
     case INode.LetCall(xs, defnref, args, body) =>
       LetCall(xs, DefnRef(Right(defnref.getName)), args |> convertArgs, body |> convert)
-    case INode.AssignField(_, _, _, _) => ??? // TODO: Interpret field assignments
+    case INode.AssignField(assignee, fieldName, value, body) => AssignField(assignee, fieldName, value |> convert, body |> convert)
 
   private def convert(defn: IDefn): Defn =
     Defn(defn.name, defn.params, defn.body |> convert)
@@ -289,6 +300,18 @@ class Interpreter(verbose: Bool):
       }
       val ctx2 = ctx ++ xs.map{_.str}.zip(res)
       eval(using ctx2, clsctx)(body)
+    case AssignField(Name(assignee), fieldName, expr, body) =>
+      val value = evalMayNotProgress(expr)
+      val x = ctx.get(assignee) match
+        case Some(x: CtorApp) =>
+          val CtorApp(cls, args) = x
+          val idx = cls.fields.indexOf(fieldName)
+          val newArgs = args.take(idx - 1) ::: value :: args.drop(idx + 1)
+          x.args = newArgs
+        case Some(_) => IRInterpreterError("tried to assign a field of a non-ctor")
+        case None => IRInterpreterError("could not find value " + assignee)
+      
+      eval(body)
     case _ => throw IRInterpreterError("unexpected node")
 
   private def interpret(prog: Program): Node =
