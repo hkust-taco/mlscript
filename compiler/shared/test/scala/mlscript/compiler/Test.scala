@@ -43,9 +43,9 @@ class DiffTestCompiler extends DiffTests {
       pd(rstUnit)
       output(pd.termMap.toString())
       output(pd.exprToProdType.toString())
-      output(pd.varsName.toString())
-      output(pd.upperBounds.toString())
-      output(pd.lowerBounds.toString())
+      output(s"TypeVars: ${pd.varsName.mkString("\n")}")
+      output(s"Upper bounds: ${pd.upperBounds.mkString("\n")}")
+      output(s"Lower bounds: ${pd.lowerBounds.mkString("\n")}")
       output("Polydef end\n")
     }
     if(mode.mono){
