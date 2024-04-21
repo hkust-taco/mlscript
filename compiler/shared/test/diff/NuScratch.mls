@@ -1,6 +1,6 @@
 :NewDefs
 
-:pd
+//:pd
 :p
 :nolift
 val a = {
@@ -10,21 +10,6 @@ if a.number then 5 else 6
 //│ |#val| |a| |#=| |{|→|number|#:| |true|←|↵|}|↵|#if| |a|.number| |#then| |5| |#else| |6|
 //│ AST: TypingUnit(List(NuFunDef(Some(false),Var(a),None,List(),Left(Bra(true,Rcd(List((Var(number),Fld(_,Var(true)))))))), If(IfThen(Sel(Var(a),Var(number)),IntLit(5)),Some(IntLit(6)))))
 //│ TypingUnit(List(NuFunDef(Some(false),Var(a),None,List(),Left(Bra(true,Rcd(List((Var(number),Fld(_,Var(true)))))))), If(IfThen(Sel(Var(a),Var(number)),IntLit(5)),Some(IntLit(6)))))
-//│ 
-//│ Polydef:
-//│ Map(Var(a) -> 10, Var(true) -> 2, IntLit(5) -> 14, Rcd(List((Var(number),Fld(_,Var(true))))) -> 4, IntLit(6) -> 16, Bra(true,Rcd(List((Var(number),Fld(_,Var(true)))))) -> 6, If(IfThen(Sel(Var(a),Var(number)),IntLit(5)),Some(IntLit(6))) -> 12, Sel(Var(a),Var(number)) -> 8)
-//│ HashMap(16 -> ProdPrim(Int), 2 -> ProdPrim(Bool), 4 -> ProdObj(None,List((Var(number),ProdPrim(Bool)))), 6 -> ProdObj(None,List((Var(number),ProdPrim(Bool)))), 8 -> ProdVar(1,7_selres), 10 -> ProdVar(0,a), 12 -> ProdVar(2,11_ifres), 14 -> ProdPrim(Int))
-//│ TypeVars: 0 -> a
-//│ 1 -> 7_selres
-//│ 2 -> 11_ifres
-//│ Upper bounds: 0 -> List(ConsObj(None,List((Var(number),ConsVar(1,7_selres)))))
-//│ 1 -> List(ConsPrim(Bool))
-//│ 2 -> List(NoCons())
-//│ Lower bounds: 0 -> List(ProdObj(None,List((Var(number),ProdPrim(Bool)))))
-//│ 1 -> List(ProdPrim(Bool))
-//│ 2 -> List(ProdPrim(Int), ProdPrim(Int))
-//│ Polydef end
-//│ 
 //│ Parsed: let a = '{' {number: true} '}'; if ((a).number) then 5 else 6;
 //│ val a: {number: true}
 //│ 5 | 6
@@ -34,7 +19,7 @@ if a.number then 5 else 6
 //│     = 5
 
 
-:pd
+//:pd
 //:dpd
 :nolift
 :p
@@ -46,21 +31,6 @@ b.inner
 //│ |#class| |X|(||)| |{|→|#val| |inner| |#=| |6|←|↵|}|↵|#val| |b| |#=| |X|(||)|↵|b|.inner|
 //│ AST: TypingUnit(List(NuTypeDef(Cls,TypeName(X),List(),Some(Tup(List())),None,None,List(),None,None,TypingUnit(List(NuFunDef(Some(false),Var(inner),None,List(),Left(IntLit(6)))))), NuFunDef(Some(false),Var(b),None,List(),Left(App(Var(X),Tup(List())))), Sel(Var(b),Var(inner))))
 //│ TypingUnit(List(NuTypeDef(Cls,TypeName(X),List(),Some(Tup(List())),None,None,List(),None,None,TypingUnit(List(NuFunDef(Some(false),Var(inner),None,List(),Left(IntLit(6)))))), NuFunDef(Some(false),Var(b),None,List(),Left(App(Var(X),Tup(List())))), Sel(Var(b),Var(inner))))
-//│ 
-//│ Polydef:
-//│ Map(IntLit(6) -> 2, Sel(Var(b),Var(inner)) -> 10, App(Var(X),Tup(List())) -> 8, Tup(List()) -> 6, Var(b) -> 12, Var(X) -> 4)
-//│ HashMap(2 -> ProdPrim(Int), 4 -> ProdObj(Some(Var(X)),List((Var(inner),ProdVar(1,inner)))), 6 -> ProdTup(List()), 8 -> ProdObj(Some(Var(X)),List((Var(inner),ProdVar(1,inner)))), 10 -> ProdVar(2,9_selres), 12 -> ProdVar(0,b))
-//│ TypeVars: 0 -> b
-//│ 1 -> inner
-//│ 2 -> 9_selres
-//│ Upper bounds: 0 -> List(ConsObj(None,List((Var(inner),ConsVar(2,9_selres)))))
-//│ 1 -> List(ConsVar(2,9_selres))
-//│ 2 -> List(NoCons())
-//│ Lower bounds: 0 -> List(ProdObj(Some(Var(X)),List((Var(inner),ProdVar(1,inner)))))
-//│ 1 -> List(ProdPrim(Int))
-//│ 2 -> List(ProdPrim(Int))
-//│ Polydef end
-//│ 
 //│ Parsed: class X() {let inner = 6}; let b = X(); (b).inner;
 //│ class X() {
 //│   val inner: 6

@@ -102,7 +102,7 @@ class Polydef(debug: Debug) {
     }.toMap
     val constructors: Map[Var, ProdObj] = p.rawEntities.collect { 
       case ty: NuTypeDef =>
-        val bodyStrats = apply(ty.body) // TODO: Add additional ctx for class arguments
+        val bodyStrats = apply(ty.body) // TODO: Add additional ctx for class arguments, i.e. class X(num: Int)
         given TermId = noExprId
         ty.nameVar -> ProdObj(Some(ty.nameVar), bodyStrats)
     }.toMap
@@ -125,7 +125,9 @@ class Polydef(debug: Debug) {
     }
     vars.toList
 
-  val exprToProdType = mutable.Map.empty[TermId, ProdStrat]
+  val termToProdType = mutable.Map.empty[TermId, ProdStrat]
+  val selTermToType = mutable.Map.empty[TermId, ConsObj]
+  //val ObjCreatorToType = mutable.Map.empty[TermId, ProdObj]
 
   def process(t: Term)(using ctx: Map[Var, ProdVar], constructors: Map[Var, ProdObj]): ProdStrat = 
     val res: ProdStrat = t match
@@ -145,7 +147,7 @@ class Polydef(debug: Debug) {
           case ProdObj(ctor, fields) => 
             // TODO: Handle object args i.e. class X(num: Int)
             funcRes
-          case fun: ProdFun =>
+          case _ =>
             val sv = freshVar(s"${t.uid}_callres")(using t.uid)
             constrain(funcRes, ConsFun(argRes, sv._2)(using noExprId))
             sv._1
@@ -173,7 +175,9 @@ class Polydef(debug: Debug) {
         ProdTup(mapping)(using t.uid)
       case Sel(receiver, fieldName) =>
         val selRes = freshVar(s"${t.uid}_selres")(using t.uid)
-        constrain(process(receiver), ConsObj(None, List(fieldName -> selRes._2))(using noExprId))
+        val selector = ConsObj(None, List(fieldName -> selRes._2))(using t.uid)
+        constrain(process(receiver), selector)
+        selTermToType += (t.uid -> selector.asInstanceOf[ConsObj])
         selRes._1
       case Bra(true, t) =>
         process(t)
@@ -181,14 +185,16 @@ class Polydef(debug: Debug) {
         ProdObj(None, fields.map{
           case (v, Fld(_, t)) => (v -> process(t))
         })(using t.uid)
-      //case Blk(stmts) => 
-      // val results = stmts.map(process)
+      case Blk(stmts) => 
+        ???
 
     registerTermToType(t, res)
   
   val constraintCache = mutable.Set.empty[(ProdStrat, ConsStrat)]
   val upperBounds = mutable.Map.empty[TypeVarId, Ls[ConsStrat]].withDefaultValue(Nil)
   val lowerBounds = mutable.Map.empty[TypeVarId, Ls[ProdStrat]].withDefaultValue(Nil)
+  val selectionSource = mutable.Map.empty[ConsObj, Set[ProdStrat]].withDefaultValue(Set())
+  val objDestination = mutable.Map.empty[ProdObj, Set[ConsStrat]].withDefaultValue(Set())
 
   def constrain(prod: ProdStrat, cons: ConsStrat): Unit = {
     debug.writeLine(s"constraining ${prod} -> ${cons}")
@@ -202,14 +208,16 @@ class Polydef(debug: Debug) {
           if v === w => ()
         case (pv@ProdVar(v, _), _) =>
           cons match {
-            // Check for important cases here
+            case c: ConsObj if lowerBounds(v).isEmpty =>
+              selectionSource += c -> (selectionSource(c) + pv)
             case _ => ()
           }
           upperBounds += v -> (cons :: upperBounds(v))
           lowerBounds(v).foreach(lb_strat => constrain(lb_strat, cons))
         case (_, cv@ConsVar(v, _)) =>
           prod match {
-            // Check for important cases here
+            case p: ProdObj if upperBounds(v).isEmpty =>
+              objDestination += p -> (objDestination(p) + cv)
             case _ => ()
           }
           lowerBounds += v -> (prod :: lowerBounds(v))
@@ -221,21 +229,78 @@ class Polydef(debug: Debug) {
           (fields1 zip fields2).map((p, c) =>
             constrain(p, c)
           )
-        case (ProdObj(nme1, fields1), ConsObj(nme2, fields2)) =>
+        case (pv@ProdObj(nme1, fields1), cv@ConsObj(nme2, fields2)) =>
           nme2 match 
             case Some(name) if name != nme1 => ???
             case _ => ()
           fields2.map((key, res2) => {
             fields1.find(_._1 == key) match 
               case None => ???
-              case Some((_, res1)) => constrain(res1, res2)
+              case Some((_, res1)) => 
+                selectionSource += cv -> (selectionSource(cv) + pv)
+                objDestination += pv -> (objDestination(pv) + cv)
+                constrain(res1, res2)
           })
   }
+  lazy val selToObjTypes: Map[TermId, Set[ProdObj]] = selTermToType.map((termId, cons) =>
+    (termId, selectionSource(cons).map{
+        case p:ProdObj => p
+        //case other => ???
+      }
+    )
+  ).toMap
+
+  def rewriteTerm(t: Term): Term = 
+    def objSetToMatchBranches(reciever: Var, fieldName: Var, objSet: List[ProdObj], acc: List[Either[IfBody,Statement]] = Nil /*List(Left(IfElse(Var("error"))))*/): List[Either[IfBody,Statement]] =
+      objSet match 
+        case Nil => acc
+        case ProdObj(Some(v), _) :: rest => 
+          objSetToMatchBranches(reciever, fieldName, rest, Left(IfThen(v, Sel(reciever, fieldName))) :: acc)
+    t match
+      case IntLit(_) => t
+      case Var(_) => t
+      case App(func, arg) => 
+        App(rewriteTerm(func), rewriteTerm(arg))
+      case Lam(t @ Tup(args), body) =>
+        Lam(rewriteTerm(t), rewriteTerm(body))
+      case If(IfThen(scrut, thenn), S(elze)) =>
+        If(IfThen(rewriteTerm(scrut), rewriteTerm(thenn)), S(rewriteTerm(elze)))
+      case If(_) => ??? // Desugar first (resolved by pretyper OR moving post-process point)
+      case Tup(fields) =>
+        Tup(fields.map{
+          case (None, Fld(flags, fieldTerm: Term)) =>
+            (None, Fld(flags, rewriteTerm(fieldTerm)))
+          case _ => ??? // Unsupported
+        })
+      case Sel(receiver, fieldName) =>
+        val letName = Var(s"selRes${t.uid}")
+        Let(false, letName, receiver,
+          Blk(List(If(IfOpApp(letName, Var("is"), IfBlock(objSetToMatchBranches(letName, fieldName, selToObjTypes(t.uid).toList))), None)))
+        )
+      case Bra(true, t) =>
+        Bra(true, rewriteTerm(t))
+      case Rcd(fields) =>
+        Rcd(fields.map{
+          case (v, Fld(flags, t)) => (v, Fld(flags, rewriteTerm(t)))
+        })
+    
+  def rewriteProgram(t: TypingUnit): TypingUnit = 
+    TypingUnit(t.rawEntities.map{
+      case ty: NuTypeDef => 
+        ty.copy(body = rewriteProgram(ty.body))(None, None, Nil)
+      case f: NuFunDef => 
+        f.copy(rhs = f.rhs match
+          case Left(t) => Left(rewriteTerm(t))
+          case Right(_) => ???
+        )(f.declareLoc, f.virtualLoc, f.mutLoc, f.signature, f.outer, f.genField, f.annotations)
+      case t: Term => 
+        rewriteTerm(t)
+    })
 
   private def registerTermToType(t: Term, s: ProdStrat) = {
-    exprToProdType.get(t.uid) match {
+    termToProdType.get(t.uid) match {
       case None => {
-        exprToProdType += t.uid -> s
+        termToProdType += t.uid -> s
         s
       }
       case Some(value) =>

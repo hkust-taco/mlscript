@@ -459,7 +459,7 @@ class DiffTests
             
             if (parseOnly)
               Success(Pgrm(Nil), 0)
-            else if (mode.mono || mode.lift) {
+            else if (mode.mono || mode.lift || mode.polydef) {
               import Message._
               Success(Pgrm(nuRes.getOrElse({
                 raise(ErrorReport(msg"Post-process failed to produce AST, defaulting to standard AST" -> None :: Nil, true, Diagnostic.Compilation))
