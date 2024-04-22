@@ -5,10 +5,12 @@ import mlscript.utils.*, shorthands.*
 import syntax.*
 
 
-abstract class Symbol extends Located
+abstract class Symbol extends Located:
+  def children: List[Located] = Nil
 
-abstract class VarSymbol(val name: Str) extends Symbol
+class VarSymbol(val name: Str, uid: Int) extends Symbol:
+  override def toString: Str = s"$name@$uid"
 
-abstract class ClassSymbol(val name: Str) extends Symbol
+class ClassSymbol(val name: Str) extends Symbol
 
 

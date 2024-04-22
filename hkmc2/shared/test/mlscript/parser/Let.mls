@@ -1,158 +1,160 @@
 :global
-:p
+:parseOnly
 
 
 :pe
 let
-//│ |let|
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of input instead
 //│ ║  l.6: 	let
 //│ ╙──     	   ^
-//│ AST: List(Empty)
+//│ Parsed:
+//│ 	Empty
 
 :pe
 let x
-//│ |let| |x|
 //│ ╔══[PARSE ERROR] Expected '=' keyword after let binding head; found end of input instead
 //│ ║  l.14: 	let x
 //│ ╙──      	     ^
-//│ AST: List(Empty)
+//│ Parsed:
+//│ 	Empty
 
 :pe
 let x =
-//│ |let| |x| |=|
 //│ ╔══[PARSE ERROR] Expected expression after let binding equals sign; found end of input instead
 //│ ║  l.22: 	let x =
 //│ ╙──      	       ^
-//│ AST: List(Empty)
+//│ Parsed:
+//│ 	Empty
 
 let x = y
-//│ |let| |x| |=| |y|
-//│ AST: List(Let(Ident(x),Ident(y),None))
+//│ Parsed:
+//│ 	Let(Ident(x),Ident(y),None)
 
 let x =
   y
-//│ |let| |x| |=|→|y|←|
-//│ AST: List(Let(Ident(x),Ident(y),None))
+//│ Parsed:
+//│ 	Let(Ident(x),Ident(y),None)
 
 :pe
 let x = y in
-//│ |let| |x| |=| |y| |in|
 //│ ╔══[PARSE ERROR] Expected expression after let binding `in` clause; found end of input instead
 //│ ║  l.39: 	let x = y in
 //│ ╙──      	            ^
-//│ AST: List(Empty)
+//│ Parsed:
+//│ 	Empty
 
 let x = y in z
-//│ |let| |x| |=| |y| |in| |z|
-//│ AST: List(Let(Ident(x),Ident(y),Some(Ident(z))))
+//│ Parsed:
+//│ 	Let(Ident(x),Ident(y),Some(Ident(z)))
 
 :pe
 let x = y class
-//│ |let| |x| |=| |y| |class|
 //│ ╔══[PARSE ERROR] Expected end of input; found 'class' keyword instead
 //│ ║  l.51: 	let x = y class
 //│ ╙──      	          ^^^^^
-//│ AST: List(Let(Ident(x),Ident(y),None))
+//│ Parsed:
+//│ 	Let(Ident(x),Ident(y),None)
 
 
 
 let x = y
 foo
-//│ |let| |x| |=| |y|↵|foo|
-//│ AST: List(Let(Ident(x),Ident(y),None), Ident(foo))
+//│ Parsed:
+//│ 	Let(Ident(x),Ident(y),None)
+//│ 	Ident(foo)
 
 
 :pe
 let
   x
-//│ |let|→|x|←|
 //│ ╔══[PARSE ERROR] Expected '=' keyword after let binding head; found end of input instead
-//│ ║  l.68: 	  x
+//│ ║  l.69: 	  x
 //│ ╙──      	   ^
-//│ AST: List(Empty)
+//│ Parsed:
+//│ 	Empty
 
 let
   x = 1
-//│ |let|→|x| |=| |1|←|
-//│ AST: List(Let(Ident(x),IntLit(1),None))
+//│ Parsed:
+//│ 	Let(Ident(x),IntLit(1),None)
 
 let
   x = 1 in x
-//│ |let|→|x| |=| |1| |in| |x|←|
-//│ AST: List(Let(Ident(x),IntLit(1),Some(Ident(x))))
+//│ Parsed:
+//│ 	Let(Ident(x),IntLit(1),Some(Ident(x)))
 
 let
   x = 1
   in x
-//│ |let|→|x| |=| |1|↵|in| |x|←|
-//│ AST: List(Let(Ident(x),IntLit(1),Some(Ident(x))))
+//│ Parsed:
+//│ 	Let(Ident(x),IntLit(1),Some(Ident(x)))
 
 let x = 1
 in x
-//│ |let| |x| |=| |1|↵|in| |x|
-//│ AST: List(Let(Ident(x),IntLit(1),Some(Ident(x))))
+//│ Parsed:
+//│ 	Let(Ident(x),IntLit(1),Some(Ident(x)))
 
 // [todo:0]
 :fixme
 let x = 1
   in x
-//│ |let| |x| |=| |1|→|in| |x|←|
 //│ ╔══[PARSE ERROR] Expected 'in' keyword or end of input after let binding right-hand side; found indented block instead
-//│ ║  l.99: 	  in x
-//│ ╙──      	^^
-//│ AST: List(Empty)
+//│ ║  l.100: 	  in x
+//│ ╙──       	^^
+//│ Parsed:
+//│ 	Empty
 
 :pe
 let
   x = 1
 in x
-//│ |let|→|x| |=| |1|←|↵|in| |x|
 //│ ╔══[PARSE ERROR] Expected end of input; found newline instead
-//│ ║  l.108: 	  x = 1
+//│ ║  l.109: 	  x = 1
 //│ ║         	       ^
-//│ ║  l.109: 	in x
+//│ ║  l.110: 	in x
 //│ ╙──       	
-//│ AST: List(Let(Ident(x),IntLit(1),None))
+//│ Parsed:
+//│ 	Let(Ident(x),IntLit(1),None)
 
 :pe
 let
 x = 1
 in x
-//│ |let|↵|x| |=| |1|↵|in| |x|
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found newline instead
-//│ ║  l.121: 	in x
+//│ ║  l.122: 	in x
 //│ ╙──       	    ^
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.120: 	x = 1
+//│ ║  l.121: 	x = 1
 //│ ╙──       	  ^
-//│ AST: List(Empty, Ident(x))
+//│ Parsed:
+//│ 	Empty
+//│ 	Ident(x)
 
 :pe
 let
   with
-//│ |let|→|with|←|
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found 'with' keyword instead
-//│ ║  l.133: 	  with
+//│ ║  l.135: 	  with
 //│ ╙──       	  ^^^^
-//│ AST: List(Empty)
+//│ Parsed:
+//│ 	Empty
 
 
 :fixme
 let x = 1 in
   x
-//│ |let| |x| |=| |1| |in|→|x|←|
-//│ AST: List(Let(Ident(x),IntLit(1),Some(Ident(x))))
+//│ Parsed:
+//│ 	Let(Ident(x),IntLit(1),Some(Ident(x)))
 
 
 
 :pe
 if
-//│ |if|
 //│ ╔══[PARSE ERROR] Expected 'val' keyword, 'let' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, or expression after start of statement; found 'if' keyword instead
-//│ ║  l.150: 	if
+//│ ║  l.152: 	if
 //│ ╙──       	^^
-//│ AST: List(Empty)
+//│ Parsed:
+//│ 	Empty
 
 
 

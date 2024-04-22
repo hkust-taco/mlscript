@@ -1,18 +1,19 @@
 :global
-:p
+:parseOnly
 
 
 foo
-//│ |foo|
-//│ AST: List(Ident(foo))
+//│ Parsed:
+//│ 	Ident(foo)
 
 foo
 bar
-//│ |foo|↵|bar|
-//│ AST: List(Ident(foo), Ident(bar))
+//│ Parsed:
+//│ 	Ident(foo)
+//│ 	Ident(bar)
 
 123
-//│ |123|
-//│ AST: List(IntLit(123))
+//│ Parsed:
+//│ 	IntLit(123)
 
 

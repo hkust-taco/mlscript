@@ -2,6 +2,7 @@ package hkmc2
 
 import scala.collection.mutable
 import mlscript.utils.*, shorthands.*
+import hkmc2.semantics.Elaborator
 
 
 class Outputter(val out: java.io.PrintWriter):
@@ -71,6 +72,7 @@ class DiffMaker(file: os.Path, relativeName: Str):
   val showRelativeLineNums = NullaryCommand("showRelativeLineNums")
   
   val showParse = NullaryCommand("p")
+  val parseOnly = NullaryCommand("parseOnly")
   
   
   val tests = Command("tests"){ case "" =>
@@ -158,7 +160,9 @@ class DiffMaker(file: os.Path, relativeName: Str):
                 unexpected("parse error", blockLineNum)
                 // report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
             case Diagnostic.Source.Typing =>
-              TODO(d.source)
+              if expectTypeErrors.isUnset && fixme.isUnset then
+                failures += allLines.size - lines.size + 1
+                unexpected("type error", blockLineNum)
             case Diagnostic.Source.Compilation =>
               TODO(d.source)
             case Diagnostic.Source.Runtime =>
@@ -176,11 +180,17 @@ class DiffMaker(file: os.Path, relativeName: Str):
           def doPrintDbg(msg: => Str): Unit = if dbg then output(msg)
         val res = p.parseAll(p.block)
         
-        // if (parseOnly)
-        //   output(s"Parsed: ${res.showDbg}")
+        if parseOnly.isSet || showParse.isSet then
+          output(s"Parsed:${res.map("\n\t"+_.showDbg).mkString}")
         
-        if showParse.isSet then
-          output(s"AST: $res")
+        // if showParse.isSet then
+        //   output(s"AST: $res")
+        
+        if parseOnly.isUnset then
+          val elab = Elaborator(raise)
+          given Elaborator.Ctx = Elaborator.Ctx.empty
+          val e = elab.block(res)
+          output(s"Elab: ${e.showDbg}")
         
         catch
           case oh_noes: ThreadDeath => throw oh_noes

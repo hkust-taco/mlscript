@@ -153,7 +153,7 @@ abstract class Parser(
   
   final def err(msgs: Ls[Message -> Opt[Loc]])(implicit l: Line, n: Name): Unit =
     printDbg(s"Error    [at syntax/Parser.scala:${l.value}]")
-    raise(ErrorReport(msgs, newDefs = true, source = Diagnostic.Source.Parsing))
+    raise(ErrorReport(msgs, source = Diagnostic.Source.Parsing))
   
   final def parseAll[R](parser: => R): R =
     val res = parser

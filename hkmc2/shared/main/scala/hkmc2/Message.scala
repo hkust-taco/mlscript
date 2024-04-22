@@ -4,7 +4,7 @@ import scala.language.implicitConversions
 import mlscript.utils._, shorthands._
 
 final case class Message(bits: Ls[Message.Bit]):
-  def show(newDefs: Bool): Str =
+  def show: Str =
     val ctx = ShowCtx.mk(typeBits)
     showIn(ctx)
   def typeBits: Ls[TypeLike] = bits.collect{ case Message.Code(t) => t }

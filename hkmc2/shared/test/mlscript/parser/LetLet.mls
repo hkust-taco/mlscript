@@ -1,62 +1,66 @@
 :global
-:p
+:parseOnly
 
 
 :pe
 let let
-//│ |let| |let|
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of input instead
 //│ ║  l.6: 	let let
 //│ ╙──     	       ^
 //│ ╔══[PARSE ERROR] Expected '=' keyword after let binding head; found end of input instead
 //│ ║  l.6: 	let let
 //│ ╙──     	       ^
-//│ AST: List(Empty)
+//│ Parsed:
+//│ 	Empty
 
 :pe
 let x = 1 let y = 2
-//│ |let| |x| |=| |1| |let| |y| |=| |2|
 //│ ╔══[PARSE ERROR] Expected end of input; found 'let' keyword instead
 //│ ║  l.17: 	let x = 1 let y = 2
 //│ ╙──      	          ^^^
-//│ AST: List(Let(Ident(x),IntLit(1),None))
+//│ Parsed:
+//│ 	Let(Ident(x),IntLit(1),None)
 
 let x = 1 in let y = 2
-//│ |let| |x| |=| |1| |in| |let| |y| |=| |2|
-//│ AST: List(Let(Ident(x),IntLit(1),Some(Let(Ident(y),IntLit(2),None))))
+//│ Parsed:
+//│ 	Let(Ident(x),IntLit(1),Some(Let(Ident(y),IntLit(2),None)))
 
 let x = 1 in let y = 2 in let z = 3
-//│ |let| |x| |=| |1| |in| |let| |y| |=| |2| |in| |let| |z| |=| |3|
-//│ AST: List(Let(Ident(x),IntLit(1),Some(Let(Ident(y),IntLit(2),Some(Let(Ident(z),IntLit(3),None))))))
+//│ Parsed:
+//│ 	Let(Ident(x),IntLit(1),Some(Let(Ident(y),IntLit(2),Some(Let(Ident(z),IntLit(3),None)))))
 
 let x = 1
 let y = 2
-//│ |let| |x| |=| |1|↵|let| |y| |=| |2|
-//│ AST: List(Let(Ident(x),IntLit(1),None), Let(Ident(y),IntLit(2),None))
+//│ Parsed:
+//│ 	Let(Ident(x),IntLit(1),None)
+//│ 	Let(Ident(y),IntLit(2),None)
 
 :pe
 let
   x
   y
-//│ |let|→|x|↵|y|←|
 //│ ╔══[PARSE ERROR] Expected '=' keyword after let binding head; found newline instead
-//│ ║  l.40: 	  y
+//│ ║  l.41: 	  y
 //│ ╙──      	   ^
 //│ ╔══[PARSE ERROR] Expected '=' keyword after let binding head; found end of input instead
-//│ ║  l.40: 	  y
+//│ ║  l.41: 	  y
 //│ ╙──      	   ^
-//│ AST: List(Empty, Empty)
+//│ Parsed:
+//│ 	Empty
+//│ 	Empty
 
 let
   x = 1
   y = 2
-//│ |let|→|x| |=| |1|↵|y| |=| |2|←|
-//│ AST: List(Let(Ident(x),IntLit(1),None), Let(Ident(y),IntLit(2),None))
+//│ Parsed:
+//│ 	Let(Ident(x),IntLit(1),None)
+//│ 	Let(Ident(y),IntLit(2),None)
 
 let
   x = 1 in x
   y = 2 in y
-//│ |let|→|x| |=| |1| |in| |x|↵|y| |=| |2| |in| |y|←|
-//│ AST: List(Let(Ident(x),IntLit(1),Some(Ident(x))), Let(Ident(y),IntLit(2),Some(Ident(y))))
+//│ Parsed:
+//│ 	Let(Ident(x),IntLit(1),Some(Ident(x)))
+//│ 	Let(Ident(y),IntLit(2),Some(Ident(y)))
 
 

@@ -1,29 +1,29 @@
 :global
-:p
+:parseOnly
 
 
 a and b
-//│ |a| |and| |b|
-//│ AST: List(InfixApp(Ident(a),keyword 'and',Ident(b)))
+//│ Parsed:
+//│ 	InfixApp(Ident(a),keyword 'and',Ident(b))
 
 a and b and c
-//│ |a| |and| |b| |and| |c|
-//│ AST: List(InfixApp(InfixApp(Ident(a),keyword 'and',Ident(b)),keyword 'and',Ident(c)))
+//│ Parsed:
+//│ 	InfixApp(InfixApp(Ident(a),keyword 'and',Ident(b)),keyword 'and',Ident(c))
 
 a and b or x and d
-//│ |a| |and| |b| |or| |x| |and| |d|
-//│ AST: List(InfixApp(InfixApp(InfixApp(Ident(a),keyword 'and',Ident(b)),keyword 'or',Ident(x)),keyword 'and',Ident(d)))
+//│ Parsed:
+//│ 	InfixApp(InfixApp(InfixApp(Ident(a),keyword 'and',Ident(b)),keyword 'or',Ident(x)),keyword 'and',Ident(d))
 
 a or b and x or d
-//│ |a| |or| |b| |and| |x| |or| |d|
-//│ AST: List(InfixApp(InfixApp(InfixApp(Ident(a),keyword 'or',Ident(b)),keyword 'and',Ident(x)),keyword 'or',Ident(d)))
+//│ Parsed:
+//│ 	InfixApp(InfixApp(InfixApp(Ident(a),keyword 'or',Ident(b)),keyword 'and',Ident(x)),keyword 'or',Ident(d))
 
 (a and b) or (x and d)
-//│ |(|a| |and| |b|)| |or| |(|x| |and| |d|)|
-//│ AST: List(InfixApp(InfixApp(Ident(a),keyword 'and',Ident(b)),keyword 'or',InfixApp(Ident(x),keyword 'and',Ident(d))))
+//│ Parsed:
+//│ 	InfixApp(InfixApp(Ident(a),keyword 'and',Ident(b)),keyword 'or',InfixApp(Ident(x),keyword 'and',Ident(d)))
 
 a and (b or x) and d
-//│ |a| |and| |(|b| |or| |x|)| |and| |d|
-//│ AST: List(InfixApp(InfixApp(Ident(a),keyword 'and',InfixApp(Ident(b),keyword 'or',Ident(x))),keyword 'and',Ident(d)))
+//│ Parsed:
+//│ 	InfixApp(InfixApp(Ident(a),keyword 'and',InfixApp(Ident(b),keyword 'or',Ident(x))),keyword 'and',Ident(d))
 
 

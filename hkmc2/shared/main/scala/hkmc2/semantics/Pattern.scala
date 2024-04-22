@@ -10,7 +10,7 @@ enum Pattern extends Located:
   case Alias(nme: VarSymbol, pattern: Pattern)
   case LitPat(literal: Literal)
   case Concrete(nme: VarSymbol)
-  case Name(nme: VarSymbol)
+  case Var(nme: VarSymbol)
   /**
     * Represents wildcard patterns or missing patterns which match everything.
     * Should be transformed from `Var("_")` or unrecognized terms.
@@ -20,6 +20,8 @@ enum Pattern extends Located:
   case Tuple(fields: List[Pattern])
   case Record(entries: List[(VarSymbol -> Pattern)])
   
+  def boundSymbols: Ls[Str -> Symbol] = ???
+  
   def children: Ls[Located] = this match
     case Alias(nme, pattern) =>
       nme :: pattern :: Nil
@@ -27,7 +29,7 @@ enum Pattern extends Located:
       literal :: Nil
     case Concrete(nme) =>
       nme :: Nil
-    case Name(nme) =>
+    case Var(nme) =>
       nme :: Nil
     case Empty(source) =>
       source :: Nil
@@ -40,11 +42,11 @@ enum Pattern extends Located:
       // entries.iterator.flatMap { case (nme, als) => nme :: als :: Nil }.toList
       ???
   
-  override def toString: Str = this match
-    case Alias(nme, pattern) => s"${nme.name} @ $pattern"
+  def showDbg: Str = this match
+    case Alias(nme, pattern) => s"($nme as $pattern)"
     case LitPat(literal) => literal.idStr
     case Concrete(nme) => s"`${nme.name}`"
-    case Name(nme) => nme.name
+    case Var(nme) => nme.toString
     case Empty(_) => "•"
     case Class(sym, ps, rfd) => (if rfd then "refined " else "") + (ps match {
       case N => sym.name

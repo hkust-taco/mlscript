@@ -90,18 +90,18 @@ class Lexer(origin: Origin, raise: Raise, dbg: Bool):
       if firstSep then
         raise(WarningReport(
           msg"Leading separator is not allowed" -> S(loc(i - 1, i)) :: Nil,
-          newDefs = true, source = Lexing))
+          source = Lexing))
       if lastSep then
         raise(WarningReport(
           msg"Trailing separator is not allowed" -> S(loc(j - 1, j)) :: Nil,
-          newDefs = true, source = Lexing))
+          source = Lexing))
       (if str.isEmpty then N else S(str), j)
     /** Take an integer and coverts to `BigInt`. Also checks if it is empty. */
     def integer(i: Int, radix: Int, desc: Str, pred: Char => Bool): (IntLit, Int) =
       takeDigits(i, pred) match
         case (N, j) =>
           raise(ErrorReport(msg"Expect at least one $desc digit" -> S(loc(i, i + 2)) :: Nil,
-            newDefs = true, source = Lexing))
+            source = Lexing))
           (zero, j)
         case (S(str), j) => (IntLit(BigInt(str, radix)), j)
     def isDecimalStart(ch: Char) = ch === '.' || ch === 'e' || ch === 'E'
@@ -111,7 +111,7 @@ class Lexer(origin: Origin, raise: Raise, dbg: Bool):
         takeDigits(i + 1, isDigit) match
           case (N, j) =>
             raise(ErrorReport(msg"Expect at least one digit after the decimal point" -> S(loc(i + 1, i + 2)) :: Nil,
-              newDefs = true, source = Lexing))
+              source = Lexing))
             ("", j)
           case (S(digits), j) => ("." + digits, j)
       else ("", i)
@@ -123,7 +123,7 @@ class Lexer(origin: Origin, raise: Raise, dbg: Bool):
         takeDigits(k, isDigit) match
           case (N, l) =>
             raise(ErrorReport(msg"Expect at least one digit after the exponent sign" -> S(loc(l - 1, l)) :: Nil,
-              newDefs = true, source = Lexing))
+              source = Lexing))
             ("", l)
           case (S(digits), l) => ("E" + sign + digits, l)
       else
@@ -141,14 +141,14 @@ class Lexer(origin: Origin, raise: Raise, dbg: Bool):
         case _ => takeDigits(i, isDigit) match
           case (N, j) =>
             raise(ErrorReport(msg"Expect a numeric literal" -> S(loc(i, i + 1)) :: Nil,
-              newDefs = true, source = Lexing))
+              source = Lexing))
             (zero, i)
           case (S(integral), j) =>
             if j < length && isDecimalStart(bytes(j)) then decimal(j, integral)
             else (IntLit(BigInt(integral)), j)
     else
       raise(ErrorReport(msg"Expect a numeric literal instead of end of input" -> S(loc(i, i + 1)) :: Nil,
-        newDefs = true, source = Lexing))
+        source = Lexing))
       (zero, i)
 
   // * Check the end of a string (either single quotation or triple quotation)
@@ -156,7 +156,7 @@ class Lexer(origin: Origin, raise: Raise, dbg: Bool):
     if !isTriple && bytes.lift(i) === Some('"') then i + 1
     else if isTriple && matches(i, "\"\"\"", 0) then i + 3
     else
-      raise(ErrorReport(msg"unclosed quotation mark" -> S(loc(i, i + 1)) :: Nil, newDefs = true, source = Lexing))
+      raise(ErrorReport(msg"unclosed quotation mark" -> S(loc(i, i + 1)) :: Nil, source = Lexing))
       i
 
   @tailrec final
@@ -173,11 +173,11 @@ class Lexer(origin: Origin, raise: Raise, dbg: Bool):
           case 'f' => str(i + 1, false, '\f' :: cur)
           case ch =>
             raise(WarningReport(msg"Found invalid escape character" -> S(loc(i, i + 1)) :: Nil,
-              newDefs = true, source = Lexing))
+              source = Lexing))
             str(i + 1, false, ch :: cur)
       else
         raise(ErrorReport(msg"Expect an escape character" -> S(loc(i, i + 1)) :: Nil,
-          newDefs = true, source = Lexing))
+          source = Lexing))
         (cur.reverseIterator.mkString, i)
     else if triple then
       if i < length then
@@ -206,7 +206,7 @@ class Lexer(origin: Origin, raise: Raise, dbg: Bool):
     
     def pe(msg: Message): Unit =
       // raise(ParseError(false, msg -> S(loc(i, i + 1)) :: Nil))
-      raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, newDefs = true, source = Lexing))
+      raise(ErrorReport(msg -> S(loc(i, i + 1)) :: Nil, source = Lexing))
     
     def isQuasiquoteOpening(i: Int): Bool = matches(i, BracketKind.Quasiquote.beg, 0)
     def isQuasiquoteTripleOpening(i: Int): Bool =  matches(i, BracketKind.QuasiquoteTriple.beg, 0)
@@ -385,12 +385,12 @@ class Lexer(origin: Origin, raise: Raise, dbg: Bool):
             case ((k0, l0), oldAcc) :: stack =>
               if k0 =/= k1 && !(k0 === Unquote && k1 === Curly) then
                 raise(ErrorReport(msg"Mistmatched closing ${k1.name}" -> S(l1) ::
-                  msg"does not correspond to opening ${k0.name}" -> S(l0) :: Nil, newDefs = true,
+                  msg"does not correspond to opening ${k0.name}" -> S(l0) :: Nil,
                   source = Parsing))
               go(rest, true, stack, BRACKETS(k0, acc.reverse)(l0.right ++ l1.left) -> (l0 ++ l1) :: oldAcc)
             case Nil =>
               raise(ErrorReport(msg"Unexpected closing ${k1.name}" -> S(l1) :: Nil,
-                newDefs = true, source = Parsing))
+                source = Parsing))
               go(rest, false, stack, acc)
         case (INDENT, loc) :: rest =>
           go(OPEN_BRACKET(Indent) -> loc :: rest, false, stack, acc)
@@ -413,7 +413,7 @@ class Lexer(origin: Origin, raise: Raise, dbg: Bool):
           raise(WarningReport(
             msg"This looks like an angle bracket, but it does not close any angle bracket section" -> S(loc) ::
             msg"Add spaces around it if you intended to use `<` as an operator" -> N :: Nil,
-            newDefs = true, source = Parsing))
+            source = Parsing))
           go(rest, false, stack, tk -> loc :: acc)
         case (tk: Stroken, loc) :: rest =>
           go(rest, tk match {
@@ -429,7 +429,7 @@ class Lexer(origin: Origin, raise: Raise, dbg: Bool):
                 if k === Angle then
                   msg"Note that `<` without spaces around it is considered as an angle bracket and not as an operator" -> N :: Nil
                 else Nil
-              ), newDefs = true, source = Parsing))
+              ), source = Parsing))
               (oldAcc ::: acc).reverse
             case Nil => acc.reverse
     

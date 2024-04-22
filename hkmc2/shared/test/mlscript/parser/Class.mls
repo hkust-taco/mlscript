@@ -1,133 +1,137 @@
 :global
-:p
+:parseOnly
 
 
 :pe
 class
-//│ |class|
 //│ ╔══[PARSE ERROR] Expected expression after type declaration start; found end of input instead
 //│ ║  l.6: 	class
 //│ ╙──     	     ^
-//│ AST: List(Empty)
+//│ Parsed:
+//│ 	Empty
 
 class Foo
-//│ |class| |Foo|
-//│ AST: List(TypeDecl(Ident(Foo),None,None))
+//│ Parsed:
+//│ 	TypeDecl(Ident(Foo),None,None)
 
 :pe
 class Foo extends
-//│ |class| |Foo| |extends|
 //│ ╔══[PARSE ERROR] Expected expression after extension clause; found end of input instead
 //│ ║  l.18: 	class Foo extends
 //│ ╙──      	                 ^
-//│ AST: List(Empty)
+//│ Parsed:
+//│ 	Empty
 
 class Foo extends Bar
-//│ |class| |Foo| |extends| |Bar|
-//│ AST: List(TypeDecl(Ident(Foo),Some(Ident(Bar)),None))
+//│ Parsed:
+//│ 	TypeDecl(Ident(Foo),Some(Ident(Bar)),None)
 
 :pe
 class Foo extends Bar with
-//│ |class| |Foo| |extends| |Bar| |with|
 //│ ╔══[PARSE ERROR] Expected indented block after type declaration body; found end of input instead
 //│ ║  l.30: 	class Foo extends Bar with
 //│ ╙──      	                          ^
-//│ AST: List(Empty)
+//│ Parsed:
+//│ 	Empty
 
 :fixme
 class Foo extends Bar with val x
-//│ |class| |Foo| |extends| |Bar| |with| |val| |x|
 //│ ╔══[PARSE ERROR] Expected indented block after type declaration body; found 'val' keyword instead
 //│ ║  l.38: 	class Foo extends Bar with val x
 //│ ╙──      	                           ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
 //│ ║  l.38: 	class Foo extends Bar with val x
 //│ ╙──      	                               ^
-//│ AST: List(Empty)
+//│ Parsed:
+//│ 	Empty
 
 class Foo extends Bar with
   val x
-//│ |class| |Foo| |extends| |Bar| |with|→|val| |x|←|
-//│ AST: List(TypeDecl(Ident(Foo),Some(Ident(Bar)),Some(Block(List(Val(Ident(x)))))))
+//│ Parsed:
+//│ 	TypeDecl(Ident(Foo),Some(Ident(Bar)),Some(Block(List(Val(Ident(x))))))
 
 class Foo with
   val x
-//│ |class| |Foo| |with|→|val| |x|←|
-//│ AST: List(TypeDecl(Ident(Foo),None,Some(Block(List(Val(Ident(x)))))))
+//│ Parsed:
+//│ 	TypeDecl(Ident(Foo),None,Some(Block(List(Val(Ident(x))))))
 
 
 :pe
 with
-//│ |with|
 //│ ╔══[PARSE ERROR] Expected 'val' keyword, 'let' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, or expression after start of statement; found 'with' keyword instead
 //│ ║  l.60: 	with
 //│ ╙──      	^^^^
-//│ AST: List(Empty)
+//│ Parsed:
+//│ 	Empty
 
 
 class
   Foo
-//│ |class|→|Foo|←|
-//│ AST: List(TypeDecl(Ident(Foo),None,None))
+//│ Parsed:
+//│ 	TypeDecl(Ident(Foo),None,None)
 
 class
   Foo
   Bar
-//│ |class|→|Foo|↵|Bar|←|
-//│ AST: List(TypeDecl(Ident(Foo),None,None), TypeDecl(Ident(Bar),None,None))
+//│ Parsed:
+//│ 	TypeDecl(Ident(Foo),None,None)
+//│ 	TypeDecl(Ident(Bar),None,None)
 
 class
   Foo extends Bar
   Bar with
     x
-//│ |class|→|Foo| |extends| |Bar|↵|Bar| |with|→|x|←|←|
-//│ AST: List(TypeDecl(Ident(Foo),Some(Ident(Bar)),None), TypeDecl(Ident(Bar),None,Some(Block(List(Ident(x))))))
+//│ Parsed:
+//│ 	TypeDecl(Ident(Foo),Some(Ident(Bar)),None)
+//│ 	TypeDecl(Ident(Bar),None,Some(Block(List(Ident(x)))))
 
 
 :pe
 class
 Foo
-//│ |class|↵|Foo|
 //│ ╔══[PARSE ERROR] Expected expression after type declaration start; found newline instead
-//│ ║  l.89: 	Foo
+//│ ║  l.91: 	Foo
 //│ ╙──      	   ^
-//│ AST: List(Empty, Ident(Foo))
+//│ Parsed:
+//│ 	Empty
+//│ 	Ident(Foo)
 
 :fixme
 class
   Foo
 extends Bar
-//│ |class|→|Foo|←|↵|extends| |Bar|
 //│ ╔══[PARSE ERROR] Expected end of input; found newline instead
-//│ ║  l.98: 	  Foo
-//│ ║        	     ^
-//│ ║  l.99: 	extends Bar
-//│ ╙──      	
-//│ AST: List(TypeDecl(Ident(Foo),None,None))
+//│ ║  l.101: 	  Foo
+//│ ║         	     ^
+//│ ║  l.102: 	extends Bar
+//│ ╙──       	
+//│ Parsed:
+//│ 	TypeDecl(Ident(Foo),None,None)
 
 class
   Foo
   extends Bar
-//│ |class|→|Foo|↵|extends| |Bar|←|
-//│ AST: List(TypeDecl(Ident(Foo),Some(Ident(Bar)),None))
+//│ Parsed:
+//│ 	TypeDecl(Ident(Foo),Some(Ident(Bar)),None)
 
 class
   Foo
   extends Bar
   Bar
   extends Baz
-//│ |class|→|Foo|↵|extends| |Bar|↵|Bar|↵|extends| |Baz|←|
-//│ AST: List(TypeDecl(Ident(Foo),Some(Ident(Bar)),None), TypeDecl(Ident(Bar),Some(Ident(Baz)),None))
+//│ Parsed:
+//│ 	TypeDecl(Ident(Foo),Some(Ident(Bar)),None)
+//│ 	TypeDecl(Ident(Bar),Some(Ident(Baz)),None)
 
 class Foo
 extends Bar
-//│ |class| |Foo|↵|extends| |Bar|
-//│ AST: List(TypeDecl(Ident(Foo),Some(Ident(Bar)),None))
+//│ Parsed:
+//│ 	TypeDecl(Ident(Foo),Some(Ident(Bar)),None)
 
 class Foo
 extends
   Bar
-//│ |class| |Foo|↵|extends|→|Bar|←|
-//│ AST: List(TypeDecl(Ident(Foo),Some(Ident(Bar)),None))
+//│ Parsed:
+//│ 	TypeDecl(Ident(Foo),Some(Ident(Bar)),None)
 
 

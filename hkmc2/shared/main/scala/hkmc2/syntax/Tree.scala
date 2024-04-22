@@ -51,6 +51,8 @@ enum Tree extends Located:
     case InfixApp(lhs, _, rhs) => Ls(lhs, rhs)
   
   def describe: Str = ??? // TODO
+  
+  def showDbg: Str = toString // TODO
 
 object PlainTup:
   def apply(fields: Tree*): Tree = Tup(fields.toList)

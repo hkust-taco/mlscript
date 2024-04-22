@@ -26,14 +26,14 @@ object Diagnostic:
 final case class ErrorReport(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]], source: Source) extends Diagnostic(mainMsg):
   val kind: Kind = Kind.Error
 object ErrorReport:
-  def apply(msgs: Ls[Message -> Opt[Loc]], newDefs: Bool, source: Source = Source.Typing): ErrorReport =
-    ErrorReport(msgs.head._1.show(newDefs), msgs, source)
+  def apply(msgs: Ls[Message -> Opt[Loc]], source: Source = Source.Typing): ErrorReport =
+    ErrorReport(msgs.head._1.show, msgs, source)
 
 final case class WarningReport(mainMsg: Str, allMsgs: Ls[Message -> Opt[Loc]], source: Source) extends Diagnostic(mainMsg):
   val kind: Kind = Kind.Warning
 object WarningReport:
-  def apply(msgs: Ls[Message -> Opt[Loc]], newDefs: Bool, source: Source = Source.Typing): WarningReport =
-    WarningReport(msgs.head._1.show(newDefs), msgs, source)
+  def apply(msgs: Ls[Message -> Opt[Loc]], source: Source = Source.Typing): WarningReport =
+    WarningReport(msgs.head._1.show, msgs, source)
 
 
 final case class Loc(spanStart: Int, spanEnd: Int, origin: Origin):

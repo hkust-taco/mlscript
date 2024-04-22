@@ -1,26 +1,30 @@
 :global
-:p
+:parseOnly
 
 
 a
-//│ |a|
-//│ AST: List(Ident(a))
+//│ Parsed:
+//│ 	Ident(a)
 
 a,
-//│ |a|,|
-//│ AST: List(Ident(a))
+//│ Parsed:
+//│ 	Ident(a)
 
 a, b
-//│ |a|,| |b|
-//│ AST: List(Ident(a), Ident(b))
+//│ Parsed:
+//│ 	Ident(a)
+//│ 	Ident(b)
 
 a, b, c
-//│ |a|,| |b|,| |c|
-//│ AST: List(Ident(a), Ident(b), Ident(c))
+//│ Parsed:
+//│ 	Ident(a)
+//│ 	Ident(b)
+//│ 	Ident(c)
 
 
 class A, res
-//│ |class| |A|,| |res|
-//│ AST: List(TypeDecl(Ident(A),None,None), Ident(res))
+//│ Parsed:
+//│ 	TypeDecl(Ident(A),None,None)
+//│ 	Ident(res)
 
 
