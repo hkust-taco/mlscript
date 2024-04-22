@@ -1,0 +1,44 @@
+:NewDefs
+
+:pd
+:nolift
+class X() {
+    val num = 6
+}
+class Y() {
+    val num = true
+}
+fun foo(pred) = if pred then X() else Y()
+fun id(x) = x
+val a = foo(true)
+val b = id(a)
+b.num
+//│ 
+//│ Polydef:
+//│ {class X() {let num = 6}
+//│  class Y() {let num = true}
+//│  fun foo = (pred,) => if (pred) then X() else Y()
+//│  fun id = (x,) => x
+//│  let a = foo(true,)
+//│  let b = id(a,)
+//│  let selRes48 = b in {if selRes48 is ‹(Y) then (selRes48).num
+//│  (X) then (selRes48).num›}}
+//│ End polydef
+//│ 
+//│ class X() {
+//│   val num: 6
+//│ }
+//│ class Y() {
+//│   val num: true
+//│ }
+//│ fun foo: Object -> (X | Y)
+//│ fun id: forall 'a. 'a -> 'a
+//│ val a: X | Y
+//│ val b: X | Y
+//│ 6 | true
+//│ a
+//│   = X {}
+//│ b
+//│   = X {}
+//│ res
+//│     = 6

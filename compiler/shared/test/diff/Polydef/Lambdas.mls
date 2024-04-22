@@ -1,14 +1,14 @@
 :NewDefs
 
 :nolift
-fun getLambda(foo) =
+fun GetLambda(foo) =
     if foo == 1 then 
         (x) => x+5
     else 
         (x) => x+foo+10
-getLambda(1)(10)
-getLambda(2)(10)
-//│ fun getLambda: Int -> Int -> Int
+GetLambda(1)(10)
+GetLambda(2)(10)
+//│ fun GetLambda: Int -> Int -> Int
 //│ Int
 //│ res
 //│     = 15
@@ -18,23 +18,64 @@ getLambda(2)(10)
 :nolift
 class LAM1() {}
 class LAM2(val foo: Int) {}
-fun APPLY(lambda_object, argTuple) =
-    if lambda_object
-        is LAM1 then argTuple.0+5
-        is LAM2 then argTuple.0+lambda_object.foo+10
-fun getLambda_def(foo) =
+fun APPLY(lambdaObject, argTuple) =
+    if lambdaObject is
+        LAM1 then argTuple.0 + 5
+        LAM2 then argTuple.0 + lambdaObject.foo + 10
+fun GetLambda_defunc(foo) =
     if foo == 1 then
         LAM1()
     else
         LAM2(foo)
-APPLY(getLambda_def(1), [10])
-APPLY(getLambda_def(2), [10])
+APPLY(GetLambda_defunc(1), [10]) // Gives 15
+APPLY(GetLambda_defunc(2), [10]) // Gives 22
 //│ class LAM1()
 //│ class LAM2(foo: Int)
 //│ fun APPLY: (LAM1 | LAM2, {0: Int}) -> Int
-//│ fun getLambda_def: Int -> (LAM1 | LAM2)
+//│ fun GetLambda_defunc: Int -> (LAM1 | LAM2)
 //│ Int
 //│ res
 //│     = 15
 //│ res
 //│     = 22
+
+:nolift
+fun UseLambda(foo) =
+    foo(10)
+val freeVar = 5
+UseLambda((num) => num+1)
+UseLambda((num) => num+freeVar+5)
+//│ fun UseLambda: forall 'a. (10 -> 'a) -> 'a
+//│ val freeVar: 5
+//│ Int
+//│ freeVar
+//│         = 5
+//│ res
+//│     = 11
+//│ res
+//│     = 20
+
+:nolift
+class LAM3() {}
+class LAM4(val x: error) {}
+fun APPLY2(lambdaObject, argTuple) = 
+    if lambdaObject is
+        LAM3 then argTuple.0 + 1
+        LAM4 then argTuple.0 + lambdaObject.x + 5
+val freeVar = 5
+fun UseLambda_defunc(foo) =
+    APPLY2(foo, [10])
+UseLambda_defunc(LAM3())
+UseLambda_defunc(LAM4(freeVar))
+//│ class LAM3()
+//│ class LAM4(x: error)
+//│ fun APPLY2: (LAM3 | LAM4, {0: Int}) -> Int
+//│ val freeVar: 5
+//│ fun UseLambda_defunc: (LAM3 | LAM4) -> Int
+//│ Int
+//│ freeVar
+//│         = 5
+//│ res
+//│     = 11
+//│ res
+//│     = 20
