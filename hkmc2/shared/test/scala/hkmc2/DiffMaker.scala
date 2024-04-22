@@ -13,7 +13,7 @@ class Outputter(val out: java.io.PrintWriter):
     str.splitSane('\n').foreach(l => out.println(outputMarker + l))
 
 
-class DiffMaker(file: os.Path, relativeName: Str):
+class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
   
   def doFail(blockLineNum: Int, msg: String): Unit =
     System.err.println(fansi.Color.Red("FAILURE: ").toString + msg)
@@ -102,7 +102,29 @@ class DiffMaker(file: os.Path, relativeName: Str):
   var _allowTypeErrors = false
   var _showRelativeLineNums = false
   
-  var curCtx = Elaborator.Ctx.empty
+  
+  var curCtx = if file == predefFile then Elaborator.Ctx.empty else
+    val raise: Raise = throw _
+    
+    val block = os.read(predefFile)
+    val fph = new FastParseHelpers(block)
+    val origin = Origin(predefFile.toString, 0, fph)
+    
+    val lexer = new syntax.Lexer(origin, raise, dbg = dbgParsing.isSet)
+    val tokens = lexer.bracketedTokens
+    
+    if showParse.isSet || showParse.isSet || dbgParsing.isSet then
+      output(syntax.Lexer.printTokens(tokens))
+    
+    val p = new syntax.Parser(origin, tokens, raise, dbg = dbgParsing.isSet):
+      def doPrintDbg(msg: => Str): Unit = if dbg then output(msg)
+    val res = p.parseAll(p.block)
+    given Elaborator.Ctx = Elaborator.Ctx.empty
+    val elab = Elaborator(raise)
+    elab.importFrom(res)
+      
+  
+  
   
   @annotation.tailrec
   final def rec(lines: List[String]): Unit = lines match

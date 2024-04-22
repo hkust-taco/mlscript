@@ -94,7 +94,9 @@ class DiffTests(state: DiffTests.State)
     val relativeName = basePath.map(_ + "/").mkString + file.baseName
     test(relativeName):
       
-      val dm = new DiffMaker(file, relativeName)
+      val predefPath = dir/"decls"/"Predef.mls"
+      
+      val dm = new DiffMaker(file, predefPath, relativeName)
       
       if dm.failures.nonEmpty then
         fail(s"Unexpected test outcome(s) at: " +

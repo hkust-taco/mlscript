@@ -3,6 +3,10 @@
 fun (+) builtin: (Int, Int) -> Int
 //│ Elab: { fun Ident(builtin); }
 
+// TODO dedup
+fun (+): (Int, Int) -> Int
+//│ Elab: { fun Ident(+); }
+
 fun log: (Any) -> ()
 //│ Elab: { fun Ident(log); }
 
