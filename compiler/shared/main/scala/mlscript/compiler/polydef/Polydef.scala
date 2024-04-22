@@ -94,7 +94,7 @@ class Polydef(debug: Debug) {
   def freshVar(n: Var)(using TermId): ((ProdVar), (ConsVar)) =
    freshVar(n.name)
 
-  def apply(p: TypingUnit, additionalCtx: Map[Var, ProdVar] = Map()): Ls[Var -> ProdStrat] = 
+  def apply(p: TypingUnit)(using ctx: Map[Var, ProdVar] = Map(), outerConstructors: Map[Var, ProdObj] = Map()): (Ls[Var -> ProdStrat], ProdStrat) = 
     // if constraints.nonEmpty then return Nil
     val vars: Map[Var, ProdVar] = p.rawEntities.collect { 
       case fun: NuFunDef =>
@@ -104,41 +104,54 @@ class Polydef(debug: Debug) {
       case ty: NuTypeDef =>
         val bodyStrats = apply(ty.body) // TODO: Add additional ctx for class arguments, i.e. class X(num: Int)
         given TermId = noExprId
-        ty.nameVar -> ProdObj(Some(ty.nameVar), bodyStrats)
+        ty.nameVar -> ProdObj(Some(ty.nameVar), bodyStrats._1)
     }.toMap
-    val ctx = vars
-    p.rawEntities.map {
+    val fullCtx = ctx ++ vars 
+    val allConstructors = constructors ++ outerConstructors
+    val tys = p.rawEntities.flatMap{
       case f: NuFunDef => {
         val p = process(f.rhs match 
           case Left(value) => value
-          case Right(value) => ???)(using ctx, constructors)
+          case Right(value) => ???)(using fullCtx, allConstructors)
         val v = vars(f.nme)
         constrain(p, ConsVar(v.uid, v.name)()(using noExprId))
+        Some(p)
       }
       case t: Term => {
-        val topLevelProd = process(t)(using ctx, constructors)
-        constrain(topLevelProd, NoCons()(using noExprId))
+        val topLevelProd = process(t)(using fullCtx, allConstructors)
+        //constrain(topLevelProd, NoCons()(using noExprId))
+        Some(topLevelProd)
       }
       case other => {
         debug.writeLine(s"Skipping ${other}")
+        None
       }
     }
-    vars.toList
+    (vars.toList, tys.last)
 
   val termToProdType = mutable.Map.empty[TermId, ProdStrat]
   val selTermToType = mutable.Map.empty[TermId, ConsObj]
   //val ObjCreatorToType = mutable.Map.empty[TermId, ProdObj]
 
+  def builtinOps: Map[Var, ProdFun] = {
+    given TermId = noExprId
+    Map(
+      (Var("==") -> ProdFun(ConsTup(List(ConsPrim("Int"),ConsPrim("Int"))), ProdPrim("Bool")))
+    )
+  }
+
   def process(t: Term)(using ctx: Map[Var, ProdVar], constructors: Map[Var, ProdObj]): ProdStrat = 
     val res: ProdStrat = t match
       case IntLit(_) => ProdPrim("Int")(using t.uid)
       case DecLit(_) => ??? // floating point numbers as integers type
-      case StrLit(_) => ???
+      case StrLit(_) => ProdPrim("String")(using t.uid)
       case Var("true") | Var("false") => ProdPrim("Bool")(using t.uid)
-      case r @ Var(id) if constructors.contains(r) =>
-        constructors(r)
-      case r @ Var(id) =>// if varCtx(id).isDef then {
-        ctx(r).copy()(Some(r))(using t.uid)
+      case v @ Var(id) if constructors.contains(v) =>
+        constructors(v)
+      case v @ Var(id) if builtinOps.contains(v) =>
+        builtinOps(v)
+      case v @ Var(id) =>// if varCtx(id).isDef then {
+        ctx(v).copy()(Some(v))(using t.uid)
       //} else ctx(r).s.copy()(None)(using t.uid)
       case App(func, arg) => 
         val funcRes = process(func)
@@ -186,7 +199,7 @@ class Polydef(debug: Debug) {
           case (v, Fld(_, t)) => (v -> process(t))
         })(using t.uid)
       case Blk(stmts) => 
-        ???
+        apply(TypingUnit(stmts))(using ctx, constructors)._2
 
     registerTermToType(t, res)
   
@@ -258,6 +271,7 @@ class Polydef(debug: Debug) {
           objSetToMatchBranches(reciever, fieldName, rest, Left(IfThen(v, Sel(reciever, fieldName))) :: acc)
     t match
       case IntLit(_) => t
+      case StrLit(_) => t
       case Var(_) => t
       case App(func, arg) => 
         App(rewriteTerm(func), rewriteTerm(arg))
@@ -283,9 +297,11 @@ class Polydef(debug: Debug) {
         Rcd(fields.map{
           case (v, Fld(flags, t)) => (v, Fld(flags, rewriteTerm(t)))
         })
+      case Blk(stmts) => 
+        Blk(rewriteStatements(stmts))
     
-  def rewriteProgram(t: TypingUnit): TypingUnit = 
-    TypingUnit(t.rawEntities.map{
+  def rewriteStatements(stmts: List[Statement]): List[Statement] =
+    stmts.map{
       case ty: NuTypeDef => 
         ty.copy(body = rewriteProgram(ty.body))(None, None, Nil)
       case f: NuFunDef => 
@@ -295,7 +311,9 @@ class Polydef(debug: Debug) {
         )(f.declareLoc, f.virtualLoc, f.mutLoc, f.signature, f.outer, f.genField, f.annotations)
       case t: Term => 
         rewriteTerm(t)
-    })
+    }
+  def rewriteProgram(t: TypingUnit): TypingUnit = 
+    TypingUnit(rewriteStatements(t.rawEntities))
 
   private def registerTermToType(t: Term, s: ProdStrat) = {
     termToProdType.get(t.uid) match {

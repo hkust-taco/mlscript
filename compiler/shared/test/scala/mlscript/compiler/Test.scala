@@ -51,9 +51,9 @@ class DiffTestCompiler extends DiffTests {
       // output(s"Sel to Obj Types:\n${pd.selToObjTypes.mkString("\n")}")
       // output("Polydef end\n")
       val defuncAST = pd.rewriteProgram(rstUnit)
-      output(defuncAST.toString())
-      defuncAST.showDbg.split(";").map(output)
-      output("\n\n")
+      //output(defuncAST.toString())
+      output(defuncAST.showDbg.replace(";", "\n"))
+      output("End polydef\n")
       return (outputBuilder.toString().linesIterator.toList, Some(defuncAST))
     }
     if(mode.mono){

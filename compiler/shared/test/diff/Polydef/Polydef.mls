@@ -1,7 +1,6 @@
 :NewDefs
 
 :nolift
-:p
 class X() {
     val num = 6
 }
@@ -13,10 +12,6 @@ let obj = foo(true) in
     if obj is
         X then obj.num
         Y then obj.num
-//│ |#class| |X|(||)| |{|→|#val| |num| |#=| |6|←|↵|}|↵|#class| |Y|(||)| |{|→|#val| |num| |#=| |true|←|↵|}|↵|#fun| |foo|(|pred|)| |#=| |#if| |pred| |#then| |X|(||)| |#else| |Y|(||)|↵|#let| |obj| |#=| |foo|(|true|)| |#in| |→|#if| |obj| |is|→|X| |#then| |obj|.num|↵|Y| |#then| |obj|.num|←|←|
-//│ AST: TypingUnit(List(NuTypeDef(Cls,TypeName(X),List(),Some(Tup(List())),None,None,List(),None,None,TypingUnit(List(NuFunDef(Some(false),Var(num),None,List(),Left(IntLit(6)))))), NuTypeDef(Cls,TypeName(Y),List(),Some(Tup(List())),None,None,List(),None,None,TypingUnit(List(NuFunDef(Some(false),Var(num),None,List(),Left(Var(true)))))), NuFunDef(None,Var(foo),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(pred))))),If(IfThen(Var(pred),App(Var(X),Tup(List()))),Some(App(Var(Y),Tup(List()))))))), Let(false,Var(obj),App(Var(foo),Tup(List((None,Fld(_,Var(true)))))),Blk(List(If(IfOpApp(Var(obj),Var(is),IfBlock(List(Left(IfThen(Var(X),Sel(Var(obj),Var(num)))), Left(IfThen(Var(Y),Sel(Var(obj),Var(num))))))),None))))))
-//│ TypingUnit(List(NuTypeDef(Cls,TypeName(X),List(),Some(Tup(List())),None,None,List(),None,None,TypingUnit(List(NuFunDef(Some(false),Var(num),None,List(),Left(IntLit(6)))))), NuTypeDef(Cls,TypeName(Y),List(),Some(Tup(List())),None,None,List(),None,None,TypingUnit(List(NuFunDef(Some(false),Var(num),None,List(),Left(Var(true)))))), NuFunDef(None,Var(foo),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(pred))))),If(IfThen(Var(pred),App(Var(X),Tup(List()))),Some(App(Var(Y),Tup(List()))))))), Let(false,Var(obj),App(Var(foo),Tup(List((None,Fld(_,Var(true)))))),Blk(List(If(IfOpApp(Var(obj),Var(is),IfBlock(List(Left(IfThen(Var(X),Sel(Var(obj),Var(num)))), Left(IfThen(Var(Y),Sel(Var(obj),Var(num))))))),None))))))
-//│ Parsed: class X() {let num = 6}; class Y() {let num = true}; fun foo = (pred,) => if (pred) then X() else Y(); let obj = foo(true,) in {if obj is ‹(X) then (obj).num; (Y) then (obj).num›};
 //│ class X() {
 //│   val num: 6
 //│ }
@@ -28,10 +23,8 @@ let obj = foo(true) in
 //│ res
 //│     = 6
 
-
 :pd
 :nolift
-:p
 class X() {
     val num = 6
 }
@@ -40,21 +33,15 @@ class Y() {
 }
 fun foo(pred) = if pred then X() else Y()
 foo(true).num
-//│ |#class| |X|(||)| |{|→|#val| |num| |#=| |6|←|↵|}|↵|#class| |Y|(||)| |{|→|#val| |num| |#=| |true|←|↵|}|↵|#fun| |foo|(|pred|)| |#=| |#if| |pred| |#then| |X|(||)| |#else| |Y|(||)|↵|foo|(|true|)|.num|
-//│ AST: TypingUnit(List(NuTypeDef(Cls,TypeName(X),List(),Some(Tup(List())),None,None,List(),None,None,TypingUnit(List(NuFunDef(Some(false),Var(num),None,List(),Left(IntLit(6)))))), NuTypeDef(Cls,TypeName(Y),List(),Some(Tup(List())),None,None,List(),None,None,TypingUnit(List(NuFunDef(Some(false),Var(num),None,List(),Left(Var(true)))))), NuFunDef(None,Var(foo),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(pred))))),If(IfThen(Var(pred),App(Var(X),Tup(List()))),Some(App(Var(Y),Tup(List()))))))), Sel(App(Var(foo),Tup(List((None,Fld(_,Var(true)))))),Var(num))))
-//│ TypingUnit(List(NuTypeDef(Cls,TypeName(X),List(),Some(Tup(List())),None,None,List(),None,None,TypingUnit(List(NuFunDef(Some(false),Var(num),None,List(),Left(IntLit(6)))))), NuTypeDef(Cls,TypeName(Y),List(),Some(Tup(List())),None,None,List(),None,None,TypingUnit(List(NuFunDef(Some(false),Var(num),None,List(),Left(Var(true)))))), NuFunDef(None,Var(foo),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(pred))))),If(IfThen(Var(pred),App(Var(X),Tup(List()))),Some(App(Var(Y),Tup(List()))))))), Sel(App(Var(foo),Tup(List((None,Fld(_,Var(true)))))),Var(num))))
 //│ 
 //│ Polydef:
-//│ TypingUnit(List(NuTypeDef(Cls,TypeName(X),List(),Some(Tup(List())),None,None,List(),None,None,TypingUnit(List(NuFunDef(Some(false),Var(num),None,List(),Left(IntLit(6)))))), NuTypeDef(Cls,TypeName(Y),List(),Some(Tup(List())),None,None,List(),None,None,TypingUnit(List(NuFunDef(Some(false),Var(num),None,List(),Left(Var(true)))))), NuFunDef(None,Var(foo),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(pred))))),If(IfThen(Var(pred),App(Var(X),Tup(List()))),Some(App(Var(Y),Tup(List()))))))), Let(false,Var(selRes26),App(Var(foo),Tup(List((None,Fld(_,Var(true)))))),Blk(List(If(IfOpApp(Var(selRes26),Var(is),IfBlock(List(Left(IfThen(Var(Y),Sel(Var(selRes26),Var(num)))), Left(IfThen(Var(X),Sel(Var(selRes26),Var(num))))))),None))))))
 //│ {class X() {let num = 6}
 //│  class Y() {let num = true}
 //│  fun foo = (pred,) => if (pred) then X() else Y()
 //│  let selRes26 = foo(true,) in {if selRes26 is ‹(Y) then (selRes26).num
 //│  (X) then (selRes26).num›}}
+//│ End polydef
 //│ 
-//│ 
-//│ 
-//│ Parsed: class X() {let num = 6}; class Y() {let num = true}; fun foo = (pred,) => if (pred) then X() else Y(); let selRes26 = foo(true,) in {if selRes26 is ‹(Y) then (selRes26).num; (X) then (selRes26).num›};
 //│ class X() {
 //│   val num: 6
 //│ }
@@ -65,3 +52,43 @@ foo(true).num
 //│ 6 | true
 //│ res
 //│     = 6
+
+:pd
+:nolift
+class X() {
+    val num = 6
+}
+class Y() {
+    val num = true
+}
+class Z() {
+    val num = "abc"
+}
+fun foo(pred) =
+    if pred == 1 then X() else 
+        if pred == 2 then Y() else Z()
+foo(5).num
+//│ 
+//│ Polydef:
+//│ {class X() {let num = 6}
+//│  class Y() {let num = true}
+//│  class Z() {let num = "abc"}
+//│  fun foo = (pred,) => {if (==(pred, 1,)) then X() else {if (==(pred, 2,)) then Y() else Z()}}
+//│  let selRes58 = foo(5,) in {if selRes58 is ‹(Y) then (selRes58).num
+//│  (Z) then (selRes58).num
+//│  (X) then (selRes58).num›}}
+//│ End polydef
+//│ 
+//│ class X() {
+//│   val num: 6
+//│ }
+//│ class Y() {
+//│   val num: true
+//│ }
+//│ class Z() {
+//│   val num: "abc"
+//│ }
+//│ fun foo: Num -> (X | Y | Z)
+//│ "abc" | 6 | true
+//│ res
+//│     = 'abc'

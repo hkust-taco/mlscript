@@ -1,0 +1,40 @@
+:NewDefs
+
+:nolift
+fun getLambda(foo) =
+    if foo == 1 then 
+        (x) => x+5
+    else 
+        (x) => x+foo+10
+getLambda(1)(10)
+getLambda(2)(10)
+//│ fun getLambda: Int -> Int -> Int
+//│ Int
+//│ res
+//│     = 15
+//│ res
+//│     = 22
+
+:nolift
+class LAM1() {}
+class LAM2(val foo: Int) {}
+fun APPLY(lambda_object, argTuple) =
+    if lambda_object
+        is LAM1 then argTuple.0+5
+        is LAM2 then argTuple.0+lambda_object.foo+10
+fun getLambda_def(foo) =
+    if foo == 1 then
+        LAM1()
+    else
+        LAM2(foo)
+APPLY(getLambda_def(1), [10])
+APPLY(getLambda_def(2), [10])
+//│ class LAM1()
+//│ class LAM2(foo: Int)
+//│ fun APPLY: (LAM1 | LAM2, {0: Int}) -> Int
+//│ fun getLambda_def: Int -> (LAM1 | LAM2)
+//│ Int
+//│ res
+//│     = 15
+//│ res
+//│     = 22
