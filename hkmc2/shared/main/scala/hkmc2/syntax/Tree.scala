@@ -18,7 +18,8 @@ sealed trait Literal extends Located:
 
 
 enum Tree extends Located:
-  case Empty
+  case Empty()
+  case Error()
   case Ident(name: Str)
   case IntLit(value: BigInt)          extends Tree with Literal
   case DecLit(value: BigDecimal)      extends Tree with Literal
@@ -37,7 +38,7 @@ enum Tree extends Located:
   case InfixApp(lhs: Tree, kw: Keyword.Infix, rhs: Tree)
   
   def children: Ls[Tree] = this match
-    case Empty | Ident(_) | IntLit(_) | DecLit(_) | StrLit(_) | UnitLit(_) => Nil
+    case Empty() | Error() | Ident(_) | IntLit(_) | DecLit(_) | StrLit(_) | UnitLit(_) => Nil
     case Block(stmts) => stmts
     case Let(lhs, rhs, body) => Ls(lhs, rhs) ++ body
     case Val(body) => Ls(body)

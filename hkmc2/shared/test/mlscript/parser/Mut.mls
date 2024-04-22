@@ -8,7 +8,7 @@ mut
 //│ ║  l.6: 	mut
 //│ ╙──     	   ^
 //│ Parsed:
-//│ 	Empty
+//│ 	Error()
 
 mut x
 //│ Parsed:
@@ -90,6 +90,6 @@ mut let
 //│ ║  l.87: 	  x = 1
 //│ ╙──      	^^
 //│ Parsed:
-//│ 	Modified(keyword 'mut',Empty)
+//│ 	Modified(keyword 'mut',Error())
 
 

@@ -11,7 +11,7 @@ let let
 //│ ║  l.6: 	let let
 //│ ╙──     	       ^
 //│ Parsed:
-//│ 	Empty
+//│ 	Error()
 
 :pe
 let x = 1 let y = 2
@@ -46,8 +46,8 @@ let
 //│ ║  l.41: 	  y
 //│ ╙──      	   ^
 //│ Parsed:
-//│ 	Empty
-//│ 	Empty
+//│ 	Error()
+//│ 	Error()
 
 let
   x = 1

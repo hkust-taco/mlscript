@@ -149,7 +149,9 @@ abstract class Parser(
     raiseFun(mkDiag)
   
   private def errExpr =
-    Tree.Empty // TODO FIXME produce error term instead
+    Tree.Error().withLoc(cur.headOption.fold(lastLoc)(_._2 |> some))
+  private def empty =
+    Tree.Empty().withLoc(cur.headOption.fold(lastLoc)(_._2.left |> some))
   
   final def err(msgs: Ls[Message -> Opt[Loc]])(implicit l: Line, n: Name): Unit =
     printDbg(s"Error    [at syntax/Parser.scala:${l.value}]")

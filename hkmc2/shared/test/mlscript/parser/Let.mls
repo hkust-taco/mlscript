@@ -8,7 +8,7 @@ let
 //│ ║  l.6: 	let
 //│ ╙──     	   ^
 //│ Parsed:
-//│ 	Empty
+//│ 	Error()
 
 :pe
 let x
@@ -16,7 +16,7 @@ let x
 //│ ║  l.14: 	let x
 //│ ╙──      	     ^
 //│ Parsed:
-//│ 	Empty
+//│ 	Error()
 
 :pe
 let x =
@@ -24,7 +24,7 @@ let x =
 //│ ║  l.22: 	let x =
 //│ ╙──      	       ^
 //│ Parsed:
-//│ 	Empty
+//│ 	Error()
 
 let x = y
 //│ Parsed:
@@ -41,7 +41,7 @@ let x = y in
 //│ ║  l.39: 	let x = y in
 //│ ╙──      	            ^
 //│ Parsed:
-//│ 	Empty
+//│ 	Error()
 
 let x = y in z
 //│ Parsed:
@@ -71,7 +71,7 @@ let
 //│ ║  l.69: 	  x
 //│ ╙──      	   ^
 //│ Parsed:
-//│ 	Empty
+//│ 	Error()
 
 let
   x = 1
@@ -102,7 +102,7 @@ let x = 1
 //│ ║  l.100: 	  in x
 //│ ╙──       	^^
 //│ Parsed:
-//│ 	Empty
+//│ 	Error()
 
 :pe
 let
@@ -127,7 +127,7 @@ in x
 //│ ║  l.121: 	x = 1
 //│ ╙──       	  ^
 //│ Parsed:
-//│ 	Empty
+//│ 	Error()
 //│ 	Ident(x)
 
 :pe
@@ -137,7 +137,7 @@ let
 //│ ║  l.135: 	  with
 //│ ╙──       	  ^^^^
 //│ Parsed:
-//│ 	Empty
+//│ 	Error()
 
 
 :fixme
@@ -154,7 +154,7 @@ if
 //│ ║  l.152: 	if
 //│ ╙──       	^^
 //│ Parsed:
-//│ 	Empty
+//│ 	Error()
 
 
 

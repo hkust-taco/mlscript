@@ -35,15 +35,17 @@ class Elaborator(raise: Raise):
       ctx.locals.get(name) match
         case S(sym) => Term.Var(sym)
         case N =>
-          raise(
-            ErrorReport(msg"Unbound variable: $name" -> tree.toLoc :: Nil))
+          raise(ErrorReport(msg"Unbound variable: $name" -> tree.toLoc :: Nil))
           Term.Error
     case App(lhs, rhs) =>
       Term.App(term(lhs), term(rhs))
     case Tup(fields) =>
       Term.Tup(fields.map(f => Fld(FldFlags.empty, term(f))))
-    case Empty =>
-      ???
+    case Empty() =>
+      raise(ErrorReport(msg"A term was expected in this position, but no term was found." -> tree.toLoc :: Nil))
+      Term.Error
+    case Error() =>
+      Term.Error
     // case _ =>
     //   ???
     
