@@ -102,6 +102,8 @@ class DiffMaker(file: os.Path, relativeName: Str):
   var _allowTypeErrors = false
   var _showRelativeLineNums = false
   
+  var curCtx = Elaborator.Ctx.empty
+  
   @annotation.tailrec
   final def rec(lines: List[String]): Unit = lines match
     case "" :: Nil => // To prevent adding an extra newline at the end
@@ -188,8 +190,9 @@ class DiffMaker(file: os.Path, relativeName: Str):
         
         if parseOnly.isUnset then
           val elab = Elaborator(raise)
-          given Elaborator.Ctx = Elaborator.Ctx.empty
-          val e = elab.block(res)
+          given Elaborator.Ctx = curCtx
+          val (e, newCtx) = elab.block(res)
+          curCtx = newCtx
           output(s"Elab: ${e.showDbg}")
         
         catch

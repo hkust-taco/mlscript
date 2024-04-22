@@ -23,7 +23,7 @@ class Elaborator(raise: Raise):
     case Block(s :: Nil) =>
       term(s)
     case Block(sts) =>
-      block(sts)
+      block(sts)._1
     case lit: Literal =>
       Term.Lit(lit)
     case Let(lhs, rhs, bodo) =>
@@ -49,11 +49,11 @@ class Elaborator(raise: Raise):
     
     def unit: Term.Lit = Term.Lit(UnitLit(true))
     
-    def block(sts: Ls[Tree]): Ctxl[Term] =
-      def go(sts: Ls[Tree], acc: Ls[Statement]): Ctxl[Term.Blk] = sts match
+    def block(sts: Ls[Tree]): Ctxl[(Term, Ctx)] =
+      def go(sts: Ls[Tree], acc: Ls[Statement]): Ctxl[(Term.Blk, Ctx)] = sts match
         case Nil =>
           val res = unit
-          Term.Blk(acc.reverse, res)
+          (Term.Blk(acc.reverse, res), ctx)
         case Let(lhs, rhs, N) :: sts =>
           val (pat, syms) = pattern(lhs)
           val rhsTerm = term(rhs)
@@ -64,9 +64,9 @@ class Elaborator(raise: Raise):
           ???
         case (result: Tree) :: Nil =>
           val res = term(result)
-          Term.Blk(acc.reverse, res)
+          (Term.Blk(acc.reverse, res), ctx)
       sts match
-        case s :: Nil => term(s)
+        case s :: Nil => (term(s), ctx)
         case _ => go(sts, Nil)
     
     def pattern(t: Tree): Ctxl[(Pattern, Ls[Str -> VarSymbol])] =
