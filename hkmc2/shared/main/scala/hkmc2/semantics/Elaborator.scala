@@ -33,10 +33,13 @@ class Elaborator(raise: Raise):
       Term.Blk(List(LetBinding(pat, r)), b)
     case Ident(name) =>
       ctx.locals.get(name) match
-        case S(sym) => Term.Var(sym)
+        case S(sym) => Term.Ref(sym)
         case N =>
-          raise(ErrorReport(msg"Unbound variable: $name" -> tree.toLoc :: Nil))
-          Term.Error
+          ctx.members.get(name) match
+            case S(sym) => Term.Ref(sym)
+            case N =>
+              raise(ErrorReport(msg"Name not found: $name" -> tree.toLoc :: Nil))
+              Term.Error
     case App(lhs, rhs) =>
       Term.App(term(lhs), term(rhs))
     case Tup(fields) =>
@@ -46,12 +49,22 @@ class Elaborator(raise: Raise):
       Term.Error
     case Error() =>
       Term.Error
+    case TermDef(sym, nme, sign, rhs) =>
+      raise(ErrorReport(msg"Illegal definition in term position." -> tree.toLoc :: Nil))
+      Term.Error
     // case _ =>
     //   ???
     
     def unit: Term.Lit = Term.Lit(UnitLit(true))
     
-    def block(sts: Ls[Tree]): Ctxl[(Term, Ctx)] =
+    def block(sts: Ls[Tree])(using c: Ctx): (Term, Ctx) =
+      def getMemberSymbols(sts: Ls[Tree]): Ls[TermSymbol] = sts.collect {
+        case TermDef(sym, nme, sign, rhs) =>
+          val n = nme match
+            case S(id: Ident) => id
+          TermSymbol(S(n))
+      }
+      given Ctx = c.copy(members = c.members ++ getMemberSymbols(sts).map(s => s.name.get.name -> s))
       def go(sts: Ls[Tree], acc: Ls[Statement]): Ctxl[(Term.Blk, Ctx)] = sts match
         case Nil =>
           val res = unit
@@ -60,14 +73,20 @@ class Elaborator(raise: Raise):
           val (pat, syms) = pattern(lhs)
           val rhsTerm = term(rhs)
           go(sts, LetBinding(pat, rhsTerm) :: acc)(using ctx.copy(locals = ctx.locals ++ syms))
-        case Val(body) :: sts =>
-          ???
+        case TermDef(sym, nme, sign, rhs) :: sts =>
+          val n = nme match
+            case S(id: Ident) => id
+            // case _ => ???
+          val s = TermSymbol(S(n))
+          val b = rhs.map(term(_))
+          go(sts, TermDefinition(s, b) :: acc)
         case TypeDecl(head, extension, body) :: sts =>
           ???
         case (result: Tree) :: Nil =>
           val res = term(result)
           (Term.Blk(acc.reverse, res), ctx)
       sts match
+        case (s: TermDef) :: _ => go(sts, Nil)
         case s :: Nil => (term(s), ctx)
         case _ => go(sts, Nil)
     

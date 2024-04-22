@@ -12,7 +12,7 @@ let
 
 :pe
 let x
-//│ ╔══[PARSE ERROR] Expected '=' keyword after let binding head; found end of input instead
+//│ ╔══[PARSE ERROR] Expected '=' keyword after 'let' binding head; found end of input instead
 //│ ║  l.14: 	let x
 //│ ╙──      	     ^
 //│ Parsed:
@@ -20,7 +20,7 @@ let x
 
 :pe
 let x =
-//│ ╔══[PARSE ERROR] Expected expression after let binding equals sign; found end of input instead
+//│ ╔══[PARSE ERROR] Expected expression after 'let' binding equals sign; found end of input instead
 //│ ║  l.22: 	let x =
 //│ ╙──      	       ^
 //│ Parsed:
@@ -37,7 +37,7 @@ let x =
 
 :pe
 let x = y in
-//│ ╔══[PARSE ERROR] Expected expression after let binding `in` clause; found end of input instead
+//│ ╔══[PARSE ERROR] Expected expression after 'let' binding `in` clause; found end of input instead
 //│ ║  l.39: 	let x = y in
 //│ ╙──      	            ^
 //│ Parsed:
@@ -67,7 +67,7 @@ foo
 :pe
 let
   x
-//│ ╔══[PARSE ERROR] Expected '=' keyword after let binding head; found end of input instead
+//│ ╔══[PARSE ERROR] Expected '=' keyword after 'let' binding head; found end of input instead
 //│ ║  l.69: 	  x
 //│ ╙──      	   ^
 //│ Parsed:
@@ -98,7 +98,7 @@ in x
 :fixme
 let x = 1
   in x
-//│ ╔══[PARSE ERROR] Expected 'in' keyword or end of input after let binding right-hand side; found indented block instead
+//│ ╔══[PARSE ERROR] Expected 'in' keyword or end of input after 'let' binding right-hand side; found indented block instead
 //│ ║  l.100: 	  in x
 //│ ╙──       	^^
 //│ Parsed:
@@ -150,7 +150,7 @@ let x = 1 in
 
 :pe
 if
-//│ ╔══[PARSE ERROR] Expected 'val' keyword, 'let' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, or expression after start of statement; found 'if' keyword instead
+//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, or expression after start of statement; found 'if' keyword instead
 //│ ║  l.152: 	if
 //│ ╙──       	^^
 //│ Parsed:

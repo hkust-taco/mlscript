@@ -64,7 +64,26 @@ object ParseRule:
         ) { case (res, ()) => S(res) }
       )
   
-  val typeDeclBody: ParseRule[TypeDecl] = 
+  def termDefBody(k: TermDefKind): ParseRule[Tree] = 
+      ParseRule(s"'${k.str}' binding keyword")(
+        Expr(
+          ParseRule(s"'${k.str}' binding head")(
+            Expr(
+              ParseRule(s"'${k.str}' binding name part")(
+                funBody(k).map(b => (b, N)),
+                funSign(k),
+              )
+            ) { case (sym, (sign, rhs)) => (S(sym), sign, rhs) },
+            funBody(k).map(b => (N, N, b)),
+            funSign(k).map(sb => (N, sb._1, sb._2)),
+          )
+        ) {
+          case (lhs, (N, sign, rhs)) => TermDef(N, S(lhs), sign, rhs)
+          case (lhs, (sym, sign, rhs)) => TermDef(S(lhs), sym, sign, rhs)
+        }
+      )
+  
+  val typeDeclBody: ParseRule[TypeDecl] =
     ParseRule("type declaration start"):
       Expr(
         ParseRule("type declaration head")(
@@ -85,26 +104,17 @@ object ParseRule:
       ) { case (head, (ext, bod)) => TypeDecl(head, ext, bod) }
   
   val prefixRules: ParseRule[Tree] = ParseRule("start of statement")(
-    Kw(`val`):
-      ParseRule("'val' binding keyword")(
-        Expr(ParseRule("'val' head")(End(())))((body, _: Unit) => body),
-        // Expr(ParseRule("'val' head")(End(())))((body, _) => body),
-        Blk(
-          ParseRule("'val' block"):
-            End(())
-        ) { case (res, ()) => res }
-      ).map(Val.apply),
     Kw(`let`):
       ParseRule("'let' binding keyword")(
         Expr(
-          ParseRule("let binding head"):
+          ParseRule("'let' binding head"):
             Kw(`=`):
-              ParseRule("let binding equals sign"):
+              ParseRule("'let' binding equals sign"):
                 Expr(
-                  ParseRule("let binding right-hand side")(
+                  ParseRule("'let' binding right-hand side")(
                     Kw(`in`):
-                      ParseRule("let binding `in` clause"):
-                        Expr(ParseRule("let binding body")(End(())))((body, _: Unit) => S(body))
+                      ParseRule("'let' binding `in` clause"):
+                        Expr(ParseRule("'let' binding body")(End(())))((body, _: Unit) => S(body))
                     ,
                     End(N)
                   )
@@ -118,6 +128,8 @@ object ParseRule:
         // ) { case (lhs, body) => Let(lhs, lhs, body) }
       )
     ,
+    Kw(`fun`)(termDefBody(Fun)),
+    Kw(`val`)(termDefBody(Val)),
     Kw(`type`)(typeDeclBody),
     Kw(`class`)(typeDeclBody),
     Kw(`trait`)(typeDeclBody),
@@ -131,6 +143,23 @@ object ParseRule:
     modified(`private`),
     standaloneExpr,
   )
+  
+  def funSign(k: TermDefKind): Alt[(S[Tree], Opt[Tree])] =
+    Kw(`:`):
+      ParseRule(s"'${k.str}' binding colon"):
+        Expr(
+          ParseRule(s"'${k.str}' binding signature")(
+            funBody(k),
+            End(N),
+          )
+        ) { case (sign, rhs) => (S(sign), rhs) }
+  
+  def funBody(k: TermDefKind): Alt[S[Tree]] =
+    Kw(`=`):
+      ParseRule(s"'${k.str}' binding equals sign"):
+        Expr(
+          ParseRule(s"'${k.str}' binding right-hand side")(End(()))
+        ) { case (rhs, ()) => S(rhs) }
   
   val infixRules: ParseRule[Tree => Tree] = ParseRule("continuation of statement")(
     // TODO dedup:

@@ -46,19 +46,19 @@ class Foo extends Bar with val x
 //│ 	Error()
 
 class Foo extends Bar with
-  val x
+  val x: Int
 //│ Parsed:
-//│ 	TypeDecl(Ident(Foo),Some(Ident(Bar)),Some(Block(List(Val(Ident(x))))))
+//│ 	TypeDecl(Ident(Foo),Some(Ident(Bar)),Some(Block(List(TermDef(None,Some(Ident(x)),Some(Ident(Int)),None)))))
 
 class Foo with
-  val x
+  val x: Int
 //│ Parsed:
-//│ 	TypeDecl(Ident(Foo),None,Some(Block(List(Val(Ident(x))))))
+//│ 	TypeDecl(Ident(Foo),None,Some(Block(List(TermDef(None,Some(Ident(x)),Some(Ident(Int)),None)))))
 
 
 :pe
 with
-//│ ╔══[PARSE ERROR] Expected 'val' keyword, 'let' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, or expression after start of statement; found 'with' keyword instead
+//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, or expression after start of statement; found 'with' keyword instead
 //│ ║  l.60: 	with
 //│ ╙──      	^^^^
 //│ Parsed:

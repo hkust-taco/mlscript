@@ -30,6 +30,7 @@ object Keyword:
   
   val eqPrec = nextPrec
   val `=` = Keyword("=", eqPrec, eqPrec)
+  val `:` = Keyword(":", eqPrec, eqPrec)
   
   val `if` = Keyword("if", N, N)
   val `then` = Keyword("then", nextPrec, N)

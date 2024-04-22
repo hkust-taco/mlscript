@@ -1,13 +1,9 @@
 
 
-:fixme
-fun (+): Int -> Int -> Int
-//│ ╔══[PARSE ERROR] Expected 'val' keyword, 'let' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, or expression after start of statement; found 'fun' keyword instead
-//│ ║  l.4: 	fun (+): Int -> Int -> Int
-//│ ╙──     	^^^
-//│ ╔══[PARSE ERROR] Expected end of input; found parenthesis section instead
-//│ ║  l.4: 	fun (+): Int -> Int -> Int
-//│ ╙──     	    ^^^
-//│ Elab: <error>
+fun (+) builtin: (Int, Int) -> Int
+//│ Elab: { fun Ident(builtin); }
+
+fun log: (Any) -> ()
+//│ Elab: { fun Ident(log); }
 
 

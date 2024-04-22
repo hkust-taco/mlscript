@@ -1,0 +1,39 @@
+
+
+fun foo = 1
+//│ Elab: { fun Ident(foo) = 1; }
+
+foo
+//│ Elab: Ident(foo)
+
+fun (+) plus: Int
+//│ Elab: { fun Ident(plus); }
+
+fun (+) : Int
+//│ Elab: { fun Ident(+); }
+
+
+fun f = g
+fun g = f
+//│ Elab: { fun Ident(f) = Ident(g); fun Ident(g) = Ident(f); }
+
+
+fun (++) = 1
+//│ Elab: { fun Ident(++) = 1; }
+
+1 ++ 2
+//│ Elab: Ident(++)(1, 2)
+
+
+fun (**) pow = 1
+//│ Elab: { fun Ident(pow); }
+
+:fixme
+1 ** 2
+//│ ╔══[ERROR] Name not found: **
+//│ ║  l.32: 	1 ** 2
+//│ ╙──      	  ^^
+//│ Elab: <error>(1, 2)
+
+
+

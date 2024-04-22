@@ -7,7 +7,7 @@ let let
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found end of input instead
 //│ ║  l.6: 	let let
 //│ ╙──     	       ^
-//│ ╔══[PARSE ERROR] Expected '=' keyword after let binding head; found end of input instead
+//│ ╔══[PARSE ERROR] Expected '=' keyword after 'let' binding head; found end of input instead
 //│ ║  l.6: 	let let
 //│ ╙──     	       ^
 //│ Parsed:
@@ -39,10 +39,10 @@ let y = 2
 let
   x
   y
-//│ ╔══[PARSE ERROR] Expected '=' keyword after let binding head; found newline instead
+//│ ╔══[PARSE ERROR] Expected '=' keyword after 'let' binding head; found newline instead
 //│ ║  l.41: 	  y
 //│ ╙──      	   ^
-//│ ╔══[PARSE ERROR] Expected '=' keyword after let binding head; found end of input instead
+//│ ╔══[PARSE ERROR] Expected '=' keyword after 'let' binding head; found end of input instead
 //│ ║  l.41: 	  y
 //│ ╙──      	   ^
 //│ Parsed:

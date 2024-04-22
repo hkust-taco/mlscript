@@ -27,7 +27,7 @@ enum Tree extends Located:
   case UnitLit(undefinedOrNull: Bool) extends Tree with Literal
   case Block(stmts: Ls[Tree])
   case Let(lhs: Tree, rhs: Tree, body: Opt[Tree])
-  case Val(body: Tree)
+  case TermDef(symName: Opt[Tree], alphaName: Opt[Tree], sign: Opt[Tree], rhs: Opt[Tree])
   case TypeDecl(head: Tree, extension: Opt[Tree], body: Opt[Tree])
   case Modified(modifier: Keyword, body: Tree)
   case Quoted(body: Tree)
@@ -41,7 +41,6 @@ enum Tree extends Located:
     case Empty() | Error() | Ident(_) | IntLit(_) | DecLit(_) | StrLit(_) | UnitLit(_) => Nil
     case Block(stmts) => stmts
     case Let(lhs, rhs, body) => Ls(lhs, rhs) ++ body
-    case Val(body) => Ls(body)
     case TypeDecl(head, extension, body) => Ls(head) ++ extension ++ body
     case Modified(_, body) => Ls(body)
     case Quoted(body) => Ls(body)
@@ -50,6 +49,7 @@ enum Tree extends Located:
     case Tup(fields) => fields
     case App(lhs, rhs) => Ls(lhs, rhs)
     case InfixApp(lhs, _, rhs) => Ls(lhs, rhs)
+    case TermDef(symName, alphaName, sign, rhs) => symName.toList ++ alphaName ++ sign ++ rhs
   
   def describe: Str = ??? // TODO
   
@@ -57,5 +57,22 @@ enum Tree extends Located:
 
 object PlainTup:
   def apply(fields: Tree*): Tree = Tup(fields.toList)
+
+
+
+sealed abstract class OuterKind(val desc: Str)
+case object BlockKind extends OuterKind("block")
+sealed abstract class DeclKind(desc: Str) extends OuterKind(desc)
+sealed abstract class TermDefKind(val str: Str, desc: Str) extends DeclKind(desc)
+case object Val extends TermDefKind("val", "value")
+case object Fun extends TermDefKind("fun","function")
+sealed abstract class TypeDefKind(desc: Str) extends DeclKind(desc)
+sealed trait ObjDefKind
+sealed trait ClsLikeKind extends ObjDefKind
+case object Cls extends TypeDefKind("class") with ClsLikeKind
+case object Trt extends TypeDefKind("trait") with ObjDefKind
+case object Mxn extends TypeDefKind("mixin")
+case object Als extends TypeDefKind("type alias")
+case object Mod extends TypeDefKind("module") with ClsLikeKind
 
 

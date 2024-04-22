@@ -8,7 +8,7 @@ import syntax.*
 enum Term extends Statement with Located:
   case Error
   case Lit(lit: Literal)
-  case Var(symbol: VarSymbol)
+  case Ref(symbol: Symbol)
   case App(lhs: Term, rhs: Term)
   case Tup(fields: Ls[Fld])
   case If(body: TermSplit)
@@ -22,7 +22,7 @@ import Term.*
 trait Statement extends Located:
   def showDbg: Str = this match
     case Lit(lit) => lit.idStr
-    case Var(symbol) => symbol.toString
+    case Ref(symbol) => symbol.toString
     case App(lhs, tup: Tup) => s"${lhs.showDbg}${tup.showDbg}"
     case App(lhs, rhs) => s"${lhs.showDbg}(...${rhs.showDbg})"
     case If(body) => s"if $body"
@@ -33,8 +33,16 @@ trait Statement extends Located:
     case LetBinding(pat, rhs) => s"let ${pat.showDbg} = ${rhs.showDbg}"
     case Error => "<error>"
     case Tup(fields) => fields.map(_.showDbg).mkString("(", ", ", ")")
+    case TermDefinition(sym, body) => s"fun ${sym}${
+      body match
+        case S(x) => " = " + x.showDbg
+        case N => ""
+      }"
 
 final case class LetBinding(pat: Pattern, rhs: Term) extends Statement:
+  def children: Ls[Located] = ???
+
+final case class TermDefinition(sym: TermSymbol, body: Opt[Term]) extends Statement:
   def children: Ls[Located] = ???
 
 final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool) extends Located:
