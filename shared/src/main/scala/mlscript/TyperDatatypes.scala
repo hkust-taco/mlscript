@@ -649,52 +649,26 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     val prov = noProv
   }
 
-  class TupleSetConstraints(var constraints: Ls[Ls[ST]], var tvs: Ls[(Opt[Bool], ST)])(val prov: TypeProvenance) {
+  class TupleSetConstraints(var constraints: Ls[Ls[ST]], var tvs: Ls[(Bool, ST)])(val prov: TypeProvenance) {
     def updateImpl(index: Int, bound: ST)(implicit raise: Raise, ctx: Ctx) : Unit = {
-      val u = constraints.map(_(index)).map(TupleSetConstraints.lcg(tvs(index)._1, bound, _)(prov, ctx))
-      val ncs0 = constraints.zip(u).map {
-        case (u, v) => if (v.isEmpty) Nil else u
-      }.filter(_.nonEmpty)
-      if (!ncs0.isEmpty) {
-        val (tvs0, m) = u.flatten
-          .reduce[(Ls[(Opt[Bool], ST)], Map[(Opt[Bool], ST), Ls[ST]])] {
-            case ((xl, xm), (yl, ym)) =>
-              val l = (xl.filter(ym.contains(_)) ++ yl.filter(xm.contains(_))).distinct
-              (l, l.map(t => (t, xm(t) ++ ym(t))).toMap)
-          }
-        val cs = tvs0.map(m(_))
-        val cs0 = tvs0.zip(cs).map {
-          case ((_, v: TV), c) => c.map(S(_))
-          case ((S(true), lb), c) => c.map { ty =>
-            val dnf = DNF.mk(MaxLevel, Nil, lb & ty.neg(), true)
-            if (dnf.isBot || dnf.cs.forall(c => !(c.vars.isEmpty && c.nvars.isEmpty)))
-              S(ty)
-            else N
-          }
-          case ((S(false), ub), c) => c.map { ty =>
-            val dnf = DNF.mk(MaxLevel, Nil, ty & ub.neg(), true)
-            println(s"tag0: $ub, $ty, $dnf")
-            if (dnf.isBot || dnf.cs.forall(c => !(c.vars.isEmpty && c.nvars.isEmpty)))
-              S(ty)
-            else N
-          }
-          case ((N, b), c) => c.map { ty =>
-            val dnf = DNF.mk(MaxLevel, Nil, ty & b.neg(), true)
-            val dnf0 = DNF.mk(MaxLevel, Nil, b & ty.neg(), true)
-            if ((dnf.isBot || dnf.cs.forall(c => !(c.vars.isEmpty && c.nvars.isEmpty)))
-              && (dnf0.isBot || dnf0.cs.forall(c => !(c.vars.isEmpty && c.nvars.isEmpty))))
-              S(ty)
-            else N
-          }
+      val (cs0, u) = constraints.flatMap { c =>
+        TupleSetConstraints.lcg(tvs(index)._1, bound, c(index))(prov, ctx).map(u => (c, u))
+      }.unzip
+      constraints = cs0
+      if (!u.isEmpty) {
+        val (tvs0, m) = u.reduce[(Ls[(Bool, ST)], Map[(Bool, ST), Ls[ST]])] {
+          case ((xl, xm), (yl, ym)) =>
+            val l = (xl.filter(ym.contains(_)) ++ yl.filter(xm.contains(_))).distinct
+            (l, l.map(t => (t, xm(t) ++ ym(t))).toMap)
         }
-        val ncs = ncs0.zip(cs0.transpose).map {
-          case (u, v) => if (v.exists(_.isEmpty)) Nil else u ++ v.flatten
-        }.filter(_.nonEmpty)
-        constraints = ncs
-        tvs ++= tvs0
-        tvs.zipWithIndex.foreach {
-          case ((pol, tv: TV), i) => tv.tsc.update(this, i)
-          case _ => ()
+        if (!tvs0.isEmpty) {
+          val ncs = cs0.zip(tvs0.map(m(_)).transpose).map { case (u, v) => u ++ v }
+          constraints = ncs
+          tvs ++= tvs0
+          tvs.zipWithIndex.foreach {
+            case ((pol, tv: TV), i) => tv.tsc.update(this, i)
+            case _ => ()
+          }
         }
       }
     }
@@ -704,109 +678,110 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       println(s"TSC update: $tvs in $constraints")
       if (constraints.sizeCompare(1) === 0) {
         tvs.foreach {
-          case (pol, tv: TV) => tv.tsc.clear()
+          case (pol, tv: TV) => tv.tsc.remove(this)
           case _ => ()
         }
         constraints.head.zip(tvs).foreach {
           case (c, (pol, t)) =>
-            if (pol =/= S(true)) constrain(c, t)(raise, prov, ctx)
-            if (pol =/= S(false)) constrain(t, c)(raise, prov, ctx)
+            if (!pol) constrain(c, t)(raise, prov, ctx)
+            if (pol) constrain(t, c)(raise, prov, ctx)
         }
       }
     }
   }
   object TupleSetConstraints {
-    def lcgField(pol: Opt[Bool], first: FieldType, rest: FieldType)
+    def lcgField(pol: Bool, first: FieldType, rest: FieldType)
       (implicit prov: TypeProvenance, ctx: Ctx)
-        : Opt[(Ls[(Opt[Bool], ST)], Map[(Opt[Bool], ST), Ls[ST]])] = {
+        : Opt[(Ls[(Bool, ST)], Map[(Bool, ST), Ls[ST]])] = {
       for {
         (ubl, ubm) <- lcg(pol, first.ub, rest.ub)
         (lbl, lbm) <- {
           if (first.lb.isEmpty && rest.lb.isEmpty)
             S(Nil, Map())
           else
-            lcg(pol.map(!_), first.lb.getOrElse(BotType), rest.lb.getOrElse(BotType))
+            lcg(!pol, first.lb.getOrElse(BotType), rest.lb.getOrElse(BotType))
         }
       } yield {
         (ubl ++ lbl, ubm ++ lbm)
       }
     }
-    def lcg(pol: Opt[Bool], first: ST, rest: ST)
+    def lcg(pol: Bool, first: ST, rest: ST)
       (implicit prov: TypeProvenance, ctx: Ctx)
-        : Opt[(Ls[(Opt[Bool], ST)], Map[(Opt[Bool], ST), Ls[ST]])] = (first.unwrapProxies, rest.unwrapProxies) match {
+        : Opt[(Ls[(Bool, ST)], Map[(Bool, ST), Ls[ST]])] = (first.unwrapProxies, rest.unwrapProxies) match {
       case (a: TV, b: TV) if a.compare(b) === 0 => S(Nil, Map())
       case (a: TV, b) => S(List((pol, a)), Map((pol, a) -> List(b)))
       case (a, b: TV) => S(List((pol, a)), Map((pol, a) -> List(b)))
-      case (a: ComposedType, b) => S(List((pol, a)), Map((pol, a) -> List(b)))
-      case (a, b: ComposedType) => S(List((pol, a)), Map((pol, a) -> List(b)))
       case (a: FT, b: FT) => lcgFunction(pol, a, b)
       case (a: FT, b) => N
       case (a: ArrayType, b: ArrayType) =>
         for { (l, m) <- lcgField(pol, a.inner, b.inner) } yield {
           (l, m + ((pol, a) -> List(b)))
         }
-      case (a: ArrayType, b) => N
       case (a: TupleType, b: TupleType) if a.fields.sizeCompare(b.fields) === 0 =>
         val fs = a.fields.map(_._2).zip(b.fields.map(_._2)).map(u => lcgField(pol, u._1, u._2))
         if (!fs.contains(N)) {
-          val (l, m) = fs.flatten.reduce[(Ls[(Opt[Bool], ST)], Map[(Opt[Bool], ST), Ls[ST]])] {
+          val (l, m) = fs.flatten.reduce[(Ls[(Bool, ST)], Map[(Bool, ST), Ls[ST]])] {
             case ((xl, xm), (yl, ym)) => (xl ++ yl, xm ++ ym)
           }
           S(l, m + ((pol, a) -> List(b)))
         } else N
-      case (a: TupleType, b) => N
-      case (a: RecordType, b: RecordType) if pol.isDefined =>
-        val default = FieldType(N, if (pol === S(true)) TopType else BotType)(prov)
+      case (a: RecordType, b: RecordType) =>
+        val default = FieldType(N, if (pol) TopType else BotType)(prov)
         if (b.fields.map(_._1).forall(a.fields.map(_._1).contains)) {
           val u = a.fields.map {
             case (v, f) => lcgField(pol, f, b.fields.find(_._1 === v).fold(default)(_._2))
           }
           if (!u.contains(N)) {
-            val (l, m) = u.flatten.reduce[(Ls[(Opt[Bool], ST)], Map[(Opt[Bool], ST), Ls[ST]])] {
+            val (l, m) = u.flatten.reduce[(Ls[(Bool, ST)], Map[(Bool, ST), Ls[ST]])] {
               case ((xl, xm), (yl, ym)) => (xl ++ yl, xm ++ ym)
             }
             S(l, m + ((pol, a) -> List(b)))
           } else N
         } else N
       case (a, b) if a === b => S(Nil, Map((pol, a) -> List(b)))
-      case (a, b) => S(List((pol, a)), Map((pol, a) -> List(b)))
+      case (a, b) =>
+        val dnf = DNF.mk(MaxLevel, Nil, if (pol) a & b.neg() else b & a.neg(), true)
+        if (dnf.isBot)
+          S(Nil, Map((pol, a) -> List(b)))
+        else if (dnf.cs.forall(c => !(c.vars.isEmpty && c.nvars.isEmpty)))
+          S(List((pol, a)), Map((pol, a) -> List(b)))
+        else N
     }
-    def lcgFunction(pol: Opt[Bool], first: FT, rest: FT)
+    def lcgFunction(pol: Bool, first: FT, rest: FT)
       (implicit prov: TypeProvenance, ctx: Ctx)
-        : Opt[(Ls[(Opt[Bool], ST)], Map[(Opt[Bool], ST), Ls[ST]])] = {
+        : Opt[(Ls[(Bool, ST)], Map[(Bool, ST), Ls[ST]])] = {
       for {
-        (ll, lm) <- lcg(pol.map(!_), first.lhs, rest.lhs)
+        (ll, lm) <- lcg(!pol, first.lhs, rest.lhs)
         (rl, rm) <- lcg(pol, first.rhs, rest.rhs)
       } yield {
         (ll ++ rl,lm ++ rm + ((pol, first) -> List(rest)))
       }
     }
     def mk(ov: Overload, f: FT)(implicit raise: Raise, ctx: Ctx): Opt[TupleSetConstraints] = {
-      val u = ov.alts.map(lcgFunction(S(false), f, _)(ov.prov, ctx)).flatten
+      val u = ov.alts.map(lcgFunction(false, f, _)(ov.prov, ctx)).flatten
       if (u.isEmpty) { return N }
-      val (tvs, m) = u.reduce[(Ls[(Opt[Bool], ST)], Map[(Opt[Bool], ST), Ls[ST]])] {
+      val (tvs, m) = u.reduce[(Ls[(Bool, ST)], Map[(Bool, ST), Ls[ST]])] {
         case ((xl, xm), (yl, ym)) =>
           val l = (xl.filter(ym.contains(_)) ++ yl.filter(xm.contains(_))).distinct
           (l, l.map(t => (t, xm(t) ++ ym(t))).toMap)
       }
       val tsc = new TupleSetConstraints(tvs.map(m(_)).transpose, tvs)(ov.prov)
-      println(s"TSC mk: ${tsc.tvs} in ${tsc.constraints}")
       tvs.zipWithIndex.foreach {
         case ((pol, tv: TV), i) => tv.tsc.update(tsc, i)
-        case ((_, ty), i) => tsc.updateImpl(i, ty)
+        case _ => ()
       }
+      println(s"TSC mk: ${tsc.tvs} in ${tsc.constraints}")
       if (tsc.constraints.sizeCompare(1) === 0) {
         tvs.foreach {
-          case (pol, tv: TV) => tv.tsc.clear()
+          case (_, tv: TV) => tv.tsc.remove(tsc)
           case _ => ()
         }
         tsc.constraints.head.zip(tvs).foreach {
           case (c, (pol, t)) =>
-            if (pol =/= S(true)) constrain(c, t)(raise, ov.prov, ctx)
-            if (pol =/= S(false)) constrain(t, c)(raise, ov.prov, ctx)
+            if (!pol) constrain(c, t)(raise, ov.prov, ctx)
+            if (pol) constrain(t, c)(raise, ov.prov, ctx)
         }
       }
-      println(s"TSC mk: ${tsc.tvs} in ${tsc.constraints}")
       S(tsc)
     }
   }

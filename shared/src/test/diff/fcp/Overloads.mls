@@ -100,43 +100,41 @@ def f = fun x -> (if true then IISS else BBNN) x
 //│     [+'a, -'b] in {[bool, bool], [number, number]}
 //│     [+'a, -'b] in {[int, int], [string, string]}
 
-// * Q: why 3 elements in the tuple?
+// FIXME
 f(0)
-//│ res: 'a
-//│   where
-//│     [+'b, -'a] in {[bool, bool], [number, number]}
-//│     [+'b, -'a] in {[int, int], [string, string]}
+//│ ╔══[ERROR] Type mismatch in function type:
+//│ ║  l.13: 	def BBNN: bool -> bool & number -> number
+//│ ║        	                         ^^^^^^^^^^^^^^^^
+//│ ╟── variable of type `?a` does not match type `number`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.13: 	def BBNN: bool -> bool & number -> number
+//│ ╙──      	                         ^^^^^^
+//│ res: error
 
 // FIXME
 f(0) + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.111: 	f(0) + 1
+//│ ║  l.115: 	f(0) + 1
 //│ ║         	^^^^^^
-//│ ╟── application of type `?a` does not match type `int`
-//│ ║  l.95: 	def f = fun x -> (if true then IISS else BBNN) x
-//│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `number` is not an instance of type `int`
+//│ ║  l.13: 	def BBNN: bool -> bool & number -> number
+//│ ║        	                                   ^^^^^^
 //│ ╟── but it flows into application with expected type `int`
-//│ ║  l.111: 	f(0) + 1
+//│ ║  l.115: 	f(0) + 1
 //│ ╙──       	^^^^
 //│ res: error | int
 
 // FIXME
 f : int -> number
-//│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.124: 	f : int -> number
-//│ ║         	^
-//│ ╟── type `int` does not match type `?a`
-//│ ║  l.124: 	f : int -> number
-//│ ╙──       	    ^^^
 //│ res: int -> number
 
 :e
 f : number -> int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.134: 	f : number -> int
+//│ ║  l.132: 	f : number -> int
 //│ ║         	^
 //│ ╟── type `number` is not an instance of type `int`
-//│ ║  l.134: 	f : number -> int
+//│ ║  l.132: 	f : number -> int
 //│ ║         	    ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.12: 	def IISS: int -> int & string -> string
@@ -156,16 +154,16 @@ if true then IISS else BBNN
 :e
 (if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.157: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.155: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `int -> int & string -> string` is not a function
 //│ ║  l.12: 	def IISS: int -> int & string -> string
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(0 | 1 | true) -> number`
-//│ ║  l.157: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.155: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║         	              ^^^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.157: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.155: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╙──       	                                ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: (0 | 1 | true) -> number
 

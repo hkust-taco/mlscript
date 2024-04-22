@@ -58,10 +58,7 @@ f("abc", "abc")
 //│ ╟── but it flows into reference with expected type `("abc", "abc") -> ?a`
 //│ ║  l.51: 	f("abc", "abc")
 //│ ╙──      	^
-//│ 'a
-//│   where
-//│     'a :> error
-//│     [+"abc", +"abc", -'a, +"abc"] in {}
+//│ error
 //│ res
 //│     = <no result>
 //│       f is not implemented
@@ -84,19 +81,19 @@ let r = if true then id else (x, y) => [y, x]
 r(error)
 r(error, error)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.84: 	r(error)
+//│ ║  l.81: 	r(error)
 //│ ║        	^^^^^^^^
 //│ ╟── argument of type `[nothing]` does not match type `[?a, ?b]`
-//│ ║  l.84: 	r(error)
+//│ ║  l.81: 	r(error)
 //│ ║        	 ^^^^^^^
 //│ ╟── Note: constraint arises from tuple literal:
-//│ ║  l.78: 	let r = if true then id else (x, y) => [y, x]
+//│ ║  l.75: 	let r = if true then id else (x, y) => [y, x]
 //│ ╙──      	                              ^^^^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.85: 	r(error, error)
+//│ ║  l.82: 	r(error, error)
 //│ ║        	^^^^^^^^^^^^^^^
 //│ ╟── argument list of type `[nothing, nothing]` does not match type `[?a]`
-//│ ║  l.85: 	r(error, error)
+//│ ║  l.82: 	r(error, error)
 //│ ╙──      	 ^^^^^^^^^^^^^^
 //│ error | [nothing, nothing]
 //│ res
@@ -119,7 +116,7 @@ r of [0, 1]
 
 // Also currently parses the same:
 let r = if true then id else [x, y] => [y, x]
-//│ let r: forall 'a 'b 'c. (['a, 'b] & 'c) -> (['b, 'a] | 'c)
+//│ let r: forall 'a 'b 'c. (['b, 'c] & 'a) -> (['c, 'b] | 'a)
 //│ r
 //│   = [Function: id]
 

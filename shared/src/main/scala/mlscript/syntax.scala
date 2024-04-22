@@ -156,7 +156,7 @@ final case class Rem(base: Type, names: Ls[Var])         extends Type
 final case class Bounds(lb: Type, ub: Type)              extends Type
 final case class WithExtension(base: Type, rcd: Record)  extends Type
 final case class Splice(fields: Ls[Either[Type, Field]]) extends Type
-final case class Constrained(base: TypeLike, tvBounds: Ls[TypeVar -> Bounds], where: Ls[Bounds], tscs: Ls[Ls[(Opt[Bool], Type)] -> Ls[Ls[Type]]]) extends Type
+final case class Constrained(base: TypeLike, tvBounds: Ls[TypeVar -> Bounds], where: Ls[Bounds], tscs: Ls[Ls[(Bool, Type)] -> Ls[Ls[Type]]]) extends Type
 // final case class FirstClassDefn(defn: NuTypeDef)         extends Type // TODO
 // final case class Refinement(base: Type, decls: TypingUnit) extends Type // TODO
 

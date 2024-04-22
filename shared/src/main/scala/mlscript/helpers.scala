@@ -138,11 +138,8 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
         }.mkString
       }${tscs.map{
           case (tvs, constrs) =>
-            val s = tvs.map {
-              case (S(true), t) => "+" ++ t.showIn(ctx, 0)
-              case (S(false), t) => "-" ++ t.showIn(ctx, 0)
-              case (N, t) => "=" ++ t.showIn(ctx, 0)
-            }.mkString("[", ", ", "]")
+            val s = tvs.map(u => (if (u._1) "+" else "-") ++ u._2.showIn(ctx, 0))
+              .mkString("[", ", ", "]")
             s"\n${ctx.indStr}" + s +
             s" in ${constrs.map(_.map(_.showIn(ctx, 0)).mkString("[", ", ", "]")).mkString("{", ", ", "}")}"
         }.mkString}"

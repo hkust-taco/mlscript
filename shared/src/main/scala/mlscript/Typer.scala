@@ -1688,7 +1688,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
     val expandType = ()
     
     var bounds: Ls[TypeVar -> Bounds] = Nil
-    var tscs: Ls[Ls[(Opt[Bool], Type)] -> Ls[Ls[Type]]] = Nil
+    var tscs: Ls[Ls[(Bool, Type)] -> Ls[Ls[Type]]] = Nil
     
     val seenVars = mutable.Set.empty[TV]
     val seenTscs = mutable.Set.empty[TupleSetConstraints]
@@ -1872,7 +1872,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           val ftvs = b.freeTypeVariables ++
             newBounds.iterator.map(_._1) ++
             newBounds.iterator.flatMap(_._2.freeTypeVariables) ++
-            newTscs.iterator.flatMap(_._1)
+            newTscs.iterator.flatMap(_._1.map(_._2))
           val fvars = qvars.filter(tv => ftvs.contains(tv.asTypeVar))
           if (fvars.isEmpty) b else
             PolyType(fvars.map(_.asTypeVar pipe (R(_))).toList, b)

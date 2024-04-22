@@ -1568,14 +1568,24 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           freshened += tv -> v
           v.lowerBounds = tv.lowerBounds.mapConserve(freshen)
           v.upperBounds = tv.upperBounds.mapConserve(freshen)
-          v.tsc ++= tv.tsc.map { case (tsc, i) => freshenedTsc.get(tsc) match {
-            case S(tsc) => (tsc, i)
-            case N =>
-              val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov)
-              freshenedTsc += tsc -> t
-              t.tvs = t.tvs.map(x => (x._1, freshen(x._2)))
-              (t, i)
-          }}
+          tv.tsc.foreachEntry {
+            case (tsc, i) =>
+              val t = freshenedTsc.get(tsc) match {
+                case S(tsc) => tsc
+                case N =>
+                  val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov)
+                  freshenedTsc += tsc -> t
+                  t
+              }
+              t.tvs = t.tvs.zipWithIndex.map {
+                case ((p, tv: TV), j) if j == i => tv.tsc.remove(t); (p, v)
+                case (u, _) => u
+              }
+              t.tvs.zipWithIndex.foreach {
+                case ((_, tv: TV), i) => tv.tsc.update(t, i)
+                case _ => ()
+              }
+          }
           v
       }
       
