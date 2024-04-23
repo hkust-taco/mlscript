@@ -14,14 +14,17 @@ code"x => ${run(code"x")}"
 //│ Code[forall 'a. Code['a, anything] -> 'a, nothing]
 
 
-fun test(cde) =
+fun test[A](cde: Code[Int, A]) =
   code"x => x + ${cde}"
-//│ fun test: Code[Int, anything] -> Code[Int -> Int, nothing]
+//│ fun test: forall 'A. (cde: Code[Int, 'A]) -> Code[Int -> Int, 'A & ~??x]
 
 :e
 code"y => ${ run(test(code"y")), code"0" }"
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.22: 	code"y => ${ run(test(code"y")), code"0" }"
+//│ ║        	             ^^^^^^^^^^^^^^^^^^
+//│ ╙── type variable `?x` leaks out of its scope
 //│ Code[Int -> 0, nothing]
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 
 fun test(cde, f) =
@@ -32,22 +35,28 @@ run(test(code"1", id))
 //│ Int -> Int
 
 
-fun test(cde: Code[Int, 'a], f: forall 'c: Code[Int, 'c] -> Code[Int, 'c]) =
+fun test[A](cde: Code[Int, A], f: forall 'c: Code[Int, 'c] -> Code[Int, 'c]) =
   code"x => x + ${f(cde)}"
-//│ fun test: (cde: Code[Int, anything], f: forall 'c. Code[Int, 'c] -> Code[Int, 'c]) -> Code[Int -> Int, nothing]
+//│ fun test: forall 'A. (cde: Code[Int, 'A], f: forall 'c. Code[Int, 'c] -> Code[Int, 'c]) -> Code[Int -> Int, 'A & ~??x]
 
 run(test(code"1", id))
 //│ Int -> Int
 
 :e
 code"x => ${ run(test(code"x", id)), code"x" }"
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.46: 	code"x => ${ run(test(code"x", id)), code"x" }"
+//│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── type variable `?x` leaks out of its scope
 //│ Code[forall 'a. (Int & 'a) -> 'a, nothing]
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 :e
 code"x => ${ let c = code"x" in run(test(c, id)), c }"
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.54: 	code"x => ${ let c = code"x" in run(test(c, id)), c }"
+//│ ║        	                                ^^^^^^^^^^^^^^^^
+//│ ╙── type variable `?x` leaks out of its scope
 //│ Code[forall 'a. (Int & 'a) -> 'a, nothing]
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 
 fun test(f) =
@@ -61,23 +70,23 @@ let myrun = c => run(c)
 :e
 code"x => ${ test(myrun) }"
 //│ ╔══[ERROR] Type error in application
-//│ ║  l.62: 	code"x => ${ test(myrun) }"
+//│ ║  l.71: 	code"x => ${ test(myrun) }"
 //│ ║        	             ^^^^^^^^^^^
 //│ ╟── type variable `?x` leaks out of its scope
 //│ ╟── into type `nothing`
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
 //│ ╟── • this reference:
-//│ ║  l.54: 	  code"x => x + ${f(code"x + 1")}"
+//│ ║  l.63: 	  code"x => x + ${f(code"x + 1")}"
 //│ ╙──      	                  ^
 //│ Code[anything -> nothing, nothing]
 
 :e
 code"x => ${ test(c => run(c), code"0") }"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.75: 	code"x => ${ test(c => run(c), code"0") }"
+//│ ║  l.84: 	code"x => ${ test(c => run(c), code"0") }"
 //│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── argument list of type `[forall ?a ?b. ?b -> ?a, Code[0, nothing]]` does not match type `[?c]`
-//│ ║  l.75: 	code"x => ${ test(c => run(c), code"0") }"
+//│ ║  l.84: 	code"x => ${ test(c => run(c), code"0") }"
 //│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^
 //│ Code[anything -> Int -> Int, nothing]
 
@@ -85,10 +94,10 @@ code"x => ${ test(c => run(c), code"0") }"
 :e
 code"x => ${ test(c => run(c), code"x") }"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.86: 	code"x => ${ test(c => run(c), code"x") }"
+//│ ║  l.95: 	code"x => ${ test(c => run(c), code"x") }"
 //│ ║        	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── argument list of type `[forall ?a ?b. ?b -> ?a, Code[?c, ?x]]` does not match type `[?d]`
-//│ ║  l.86: 	code"x => ${ test(c => run(c), code"x") }"
+//│ ║  l.95: 	code"x => ${ test(c => run(c), code"x") }"
 //│ ╙──      	                 ^^^^^^^^^^^^^^^^^^^^^^
 //│ Code[anything -> Int -> Int, nothing]
 
@@ -96,11 +105,11 @@ code"x => ${ test(c => run(c), code"x") }"
 :e
 fun test2(a) = code"x => ${ test(c => run(c), a) }"
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.97: 	fun test2(a) = code"x => ${ test(c => run(c), a) }"
-//│ ║        	                            ^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.106: 	fun test2(a) = code"x => ${ test(c => run(c), a) }"
+//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^
 //│ ╟── argument list of type `[forall ?a ?b. ?b -> ?a, ?c]` does not match type `[?d]`
-//│ ║  l.97: 	fun test2(a) = code"x => ${ test(c => run(c), a) }"
-//│ ╙──      	                                ^^^^^^^^^^^^^^^^
+//│ ║  l.106: 	fun test2(a) = code"x => ${ test(c => run(c), a) }"
+//│ ╙──       	                                ^^^^^^^^^^^^^^^^
 //│ fun test2: anything -> Code[anything -> Int -> Int, nothing]
 
 type Hide[C] = C & (C | Int)

@@ -95,26 +95,26 @@ let f: Foo[?] = Foo(1)
 //│ f
 //│   = Foo {}
 
-let y: Foo[Foo[Int]]
-//│ ╔══[ERROR] `let` bindings must have a right-hand side
-//│ ║  l.98: 	let y: Foo[Foo[Int]]
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
+let y: Foo[Foo[Int]] = Foo(Foo(0))
 //│ let y: Foo[Foo[Int]]
 //│ y
-//│   = <missing implementation>
+//│   = Foo {}
 
 // * Correct error: Foo[Int] <: Foo[?] so Foo[Foo[?]] <: Foo[Foo[Int]] and not the other way around
 :e
 let f: Foo[Foo[?]] = y
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.109: 	let f: Foo[Foo[?]] = y
+//│ ║  l.105: 	let f: Foo[Foo[?]] = y
 //│ ║         	                     ^
-//│ ╙── expression of type `anything` is not an instance of type `Int`
+//│ ╟── type `anything` is not an instance of type `Int`
+//│ ║  l.105: 	let f: Foo[Foo[?]] = y
+//│ ║         	               ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.98: 	let y: Foo[Foo[Int]] = Foo(Foo(0))
+//│ ╙──      	               ^^^
 //│ let f: Foo[Foo[nothing]]
 //│ f
-//│   = <no result>
-//│     y is not implemented
+//│   = Foo {}
 
 (x: Foo[Foo[?]]) => x as Foo[Foo[Int]]
 //│ (x: Foo[Foo[nothing]]) -> Foo[Foo[Int]]
@@ -190,25 +190,25 @@ let x: Bar[Foo[?]] = MkBarFoo(1)
 //│ x
 //│   = MkBarFoo {}
 
-let x: Bar[Foo[?]]
-//│ ╔══[ERROR] `let` bindings must have a right-hand side
-//│ ║  l.193: 	let x: Bar[Foo[?]]
-//│ ╙──       	^^^^^^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
+let x: Bar[Foo[?]] = MkBarFoo(1)
 //│ let x: Bar[Foo[nothing]]
 //│ x
-//│   = <missing implementation>
+//│   = MkBarFoo {}
 
 :e
 x as Bar[Foo[Int]]
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.203: 	x as Bar[Foo[Int]]
+//│ ║  l.199: 	x as Bar[Foo[Int]]
 //│ ║         	^
-//│ ╙── expression of type `Int` does not match type `nothing`
+//│ ╟── type `anything` is not an instance of type `Int`
+//│ ║  l.193: 	let x: Bar[Foo[?]] = MkBarFoo(1)
+//│ ║         	               ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.199: 	x as Bar[Foo[Int]]
+//│ ╙──       	             ^^^
 //│ Bar[Foo[Int]]
 //│ res
-//│     = <no result>
-//│       x is not implemented
+//│     = MkBarFoo {}
 
 abstract class C[type A]: MkC
 class MkC() extends C[Int]
@@ -511,35 +511,30 @@ fun (?) wc(x, y) = x == y
 //│     = true
 
 class Foo[T](val a: T)
-let f: Foo[?]
-//│ ╔══[ERROR] `let` bindings must have a right-hand side
-//│ ║  l.514: 	let f: Foo[?]
-//│ ╙──       	^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
+let f: Foo[?] = Foo(1)
 //│ class Foo[T](a: T)
 //│ let f: Foo[anything]
 //│ f
-//│   = <missing implementation>
+//│   = Foo {}
 
 :e
 f.a : Int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.525: 	f.a : Int
+//│ ║  l.521: 	f.a : Int
 //│ ║         	^^^
 //│ ╟── field selection of type `anything` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.525: 	f.a : Int
+//│ ║  l.521: 	f.a : Int
 //│ ╙──       	      ^^^
 //│ Int
 //│ res
-//│     = <no result>
-//│       f is not implemented
+//│     = 1
 
 // * FIXME strange error!
 :e
 42 : f.a
 //│ ╔══[ERROR] Type mismatch in type selection:
-//│ ║  l.540: 	42 : f.a
+//│ ║  l.535: 	42 : f.a
 //│ ║         	      ^^
 //│ ╙── type `anything` cannot be reassigned
 //│ anything

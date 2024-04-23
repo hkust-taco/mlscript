@@ -121,19 +121,15 @@ class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
 //│ }
 
 
-:e // TODO
 fun test(a: Object) = if a is
   Cls then a.x
   else error
 //│ fun test: (a: Object) -> (??A & ??A0)
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
-:e // TODO
 fun test(a: Object) = if a is
   Cls then a.g(a.x) // a.x : a.A ; a.g : a.A -> a.A
   else 0
 //│ fun test: (a: Object) -> Int
-//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 
 class Cls[out A] { fun x: A = x }
@@ -195,11 +191,11 @@ fun test(f: ((IntLit | BoolLit) -> Int)) =
 :e
 class OopsLit() extends Expr[Bool]
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.196: 	class OopsLit() extends Expr[Bool]
+//│ ║  l.192: 	class OopsLit() extends Expr[Bool]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `#OopsLit` does not match type `BoolLit | IntLit`
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.184: 	abstract class Expr[A]: (IntLit | BoolLit) {}
+//│ ║  l.180: 	abstract class Expr[A]: (IntLit | BoolLit) {}
 //│ ╙──       	                        ^^^^^^^^^^^^^^^^^^
 //│ class OopsLit() extends Expr
 

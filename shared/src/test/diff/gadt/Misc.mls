@@ -225,14 +225,10 @@ true as x.T
 //│ res
 //│     = true
 
-let x: Ty[Int]
-//│ ╔══[ERROR] `let` bindings must have a right-hand side
-//│ ║  l.228: 	let x: Ty[Int]
-//│ ╙──       	^^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
+let x: Ty[Int] = new Ty
 //│ let x: Ty[Int]
 //│ x
-//│   = <missing implementation>
+//│   = Ty {}
 
 1 as x.T
 //│ Int
@@ -242,24 +238,20 @@ let x: Ty[Int]
 :e
 true as x.T
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.243: 	true as x.T
+//│ ║  l.239: 	true as x.T
 //│ ║         	^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.243: 	true as x.T
+//│ ║  l.239: 	true as x.T
 //│ ╙──       	         ^^
 //│ Int
 //│ res
 //│     = true
 
-let x: Some[Int]
-//│ ╔══[ERROR] `let` bindings must have a right-hand side
-//│ ║  l.255: 	let x: Some[Int]
-//│ ╙──       	^^^^^^^^^^^^^^^^
-//│ TEST CASE FAILURE: There was an unexpected type error
+let x: Some[Int] = Some(1)
 //│ let x: Some[Int]
 //│ x
-//│   = <missing implementation>
+//│   = Some {}
 
 1 as x.T
 //│ Int
@@ -269,11 +261,11 @@ let x: Some[Int]
 :e
 true as x.T
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.270: 	true as x.T
+//│ ║  l.262: 	true as x.T
 //│ ║         	^^^^
 //│ ╟── reference of type `true` is not an instance of type `Int`
 //│ ╟── Note: constraint arises from type selection:
-//│ ║  l.270: 	true as x.T
+//│ ║  l.262: 	true as x.T
 //│ ╙──       	         ^^
 //│ Int
 //│ res
@@ -311,13 +303,13 @@ u(MkU(1))
 fun w[T](x: U[T, T]): Bool = if x is
     MkU(s) then (s : x.A) : x.B
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.312: 	    MkU(s) then (s : x.A) : x.B
+//│ ║  l.304: 	    MkU(s) then (s : x.A) : x.B
 //│ ║         	                ^^^^^^^^^
 //│ ╟── type `T & ?B` is not an instance of type `Bool`
-//│ ║  l.312: 	    MkU(s) then (s : x.A) : x.B
+//│ ║  l.304: 	    MkU(s) then (s : x.A) : x.B
 //│ ║         	                             ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.311: 	fun w[T](x: U[T, T]): Bool = if x is
+//│ ║  l.303: 	fun w[T](x: U[T, T]): Bool = if x is
 //│ ╙──       	                      ^^^^
 //│ fun w: forall 'T. (x: U['T, 'T]) -> Bool
 
@@ -355,16 +347,16 @@ w(MkU(1))
 :e
 w(MkU(true))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.356: 	w(MkU(true))
+//│ ║  l.348: 	w(MkU(true))
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── reference of type `true` is not an instance of `Int`
-//│ ║  l.356: 	w(MkU(true))
+//│ ║  l.348: 	w(MkU(true))
 //│ ║         	      ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.338: 	class MkU[S](x: S) extends U[S, Int]
+//│ ║  l.330: 	class MkU[S](x: S) extends U[S, Int]
 //│ ║         	                                ^^^
 //│ ╟── Note: type parameter B is defined at:
-//│ ║  l.337: 	abstract class U[type A, type B]: MkU[A]
+//│ ║  l.329: 	abstract class U[type A, type B]: MkU[A]
 //│ ╙──       	                              ^
 //│ Int | error
 //│ res
