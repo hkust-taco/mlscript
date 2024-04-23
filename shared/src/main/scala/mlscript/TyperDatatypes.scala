@@ -676,17 +676,6 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       println(s"TSC update: $tvs in $constraints")
       updateImpl(index, bound)
       println(s"TSC update: $tvs in $constraints")
-      if (constraints.sizeCompare(1) === 0) {
-        tvs.foreach {
-          case (pol, tv: TV) => tv.tsc.remove(this)
-          case _ => ()
-        }
-        constraints.head.zip(tvs).foreach {
-          case (c, (pol, t)) =>
-            if (!pol) constrain(c, t)(raise, prov, ctx)
-            if (pol) constrain(t, c)(raise, prov, ctx)
-        }
-      }
     }
   }
   object TupleSetConstraints {
@@ -767,7 +756,12 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       }
       val tsc = new TupleSetConstraints(tvs.map(m(_)).transpose, tvs)(ov.prov)
       tvs.zipWithIndex.foreach {
-        case ((pol, tv: TV), i) => tv.tsc.update(tsc, i)
+        case ((true, tv: TV), i) =>
+          tv.tsc.update(tsc, i)
+          tv.lowerBounds.foreach(tsc.updateImpl(i, _))
+        case ((false, tv: TV), i) =>
+          tv.tsc.update(tsc, i)
+          tv.upperBounds.foreach(tsc.updateImpl(i, _))
         case _ => ()
       }
       println(s"TSC mk: ${tsc.tvs} in ${tsc.constraints}")

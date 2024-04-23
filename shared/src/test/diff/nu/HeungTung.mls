@@ -169,9 +169,19 @@ f(refined if true then 0 else false) // this one can be precise again!
 //│ ╔══[ERROR] identifier not found: refined
 //│ ║  l.165: 	f(refined if true then 0 else false) // this one can be precise again!
 //│ ╙──       	  ^^^^^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.165: 	f(refined if true then 0 else false) // this one can be precise again!
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Int -> Int & Bool -> Bool` is not a function
+//│ ║  l.50: 	fun f: (Int -> Int) & (Bool -> Bool)
+//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── but it flows into reference with expected type `?a -> ?b`
+//│ ║  l.165: 	f(refined if true then 0 else false) // this one can be precise again!
+//│ ╙──       	^
 //│ 'a
 //│   where
-//│     [+'b, -'a] in {[Int, Int], [Bool, Bool]}
+//│     'a :> error
+//│     [+'b, -'a] in {}
 //│ Code generation encountered an error:
 //│   unresolved symbol refined
 
@@ -227,7 +237,7 @@ type T = List[Int]
 :e // TODO application types
 type Res = M(T)
 //│ ╔══[ERROR] Wrong number of type arguments – expected 0, found 1
-//│ ║  l.228: 	type Res = M(T)
+//│ ║  l.238: 	type Res = M(T)
 //│ ╙──       	           ^^^^
 //│ type Res = M
 
@@ -250,7 +260,7 @@ fun f: Int -> Int
 fun f: Bool -> Bool
 fun f = id
 //│ ╔══[ERROR] A type signature for 'f' was already given
-//│ ║  l.250: 	fun f: Bool -> Bool
+//│ ║  l.260: 	fun f: Bool -> Bool
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ fun f: forall 'a. 'a -> 'a
 //│ fun f: Int -> Int
@@ -258,13 +268,13 @@ fun f = id
 :e // TODO support
 f: (Int -> Int) & (Bool -> Bool)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.259: 	f: (Int -> Int) & (Bool -> Bool)
+//│ ║  l.269: 	f: (Int -> Int) & (Bool -> Bool)
 //│ ║         	^
 //│ ╟── type `Bool` is not an instance of `Int`
-//│ ║  l.259: 	f: (Int -> Int) & (Bool -> Bool)
+//│ ║  l.269: 	f: (Int -> Int) & (Bool -> Bool)
 //│ ║         	                   ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.249: 	fun f: Int -> Int
+//│ ║  l.259: 	fun f: Int -> Int
 //│ ╙──       	       ^^^
 //│ Int -> Int & Bool -> Bool
 //│ res
@@ -331,14 +341,14 @@ fun test(x) = refined if x is
   A then 0
   B then 1
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.330: 	fun test(x) = refined if x is
+//│ ║  l.340: 	fun test(x) = refined if x is
 //│ ║         	              ^^^^^^^^^^^^^^^
-//│ ║  l.331: 	  A then 0
+//│ ║  l.341: 	  A then 0
 //│ ║         	^^^^^^^^^^
-//│ ║  l.332: 	  B then 1
+//│ ║  l.342: 	  B then 1
 //│ ╙──       	^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: refined
-//│ ║  l.330: 	fun test(x) = refined if x is
+//│ ║  l.340: 	fun test(x) = refined if x is
 //│ ╙──       	              ^^^^^^^
 //│ fun test: (A | B) -> error
 //│ Code generation encountered an error:
@@ -396,8 +406,12 @@ fun w = x => q(x)
 //│   where
 //│     [+'a, -'b] in {[0 | 1, true], [1 | 2, false]}
 
+// TODO
 w(0)
-//│ true
+//│ forall 'a. 'a
+//│   where
+//│     'a :> true
+//│     [+'b, -'a] in {[0 | 1, true], [1 | 2, false]}
 //│ res
 //│     = <no result>
 //│       w and q are not implemented
@@ -422,11 +436,9 @@ x => r(r(x))
 //│     = <no result>
 //│       r is not implemented
 
-// FIXME
+
 r(r(0))
-//│ 'a
-//│   where
-//│     [+'b, -'a] in {[Int, Int], [Bool, Bool]}
+//│ Int
 //│ res
 //│     = <no result>
 //│       r is not implemented
@@ -471,12 +483,14 @@ let g = x => s(r(x))
 
 :e
 g(0)
-//│ ╔══[ERROR] Type mismatch in function type:
-//│ ║  l.410: 	fun r: Int -> Int & Bool -> Bool
-//│ ║         	                    ^^^^^^^^^^^^
-//│ ╟── expression of type `Int` does not match type `?a`
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.485: 	g(0)
+//│ ║         	^^^^
+//│ ╟── integer literal of type `Int` does not match type `?a`
+//│ ║  l.485: 	g(0)
+//│ ║         	  ^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.461: 	let g = x => s(r(x))
+//│ ║  l.473: 	let g = x => s(r(x))
 //│ ╙──       	               ^^^^
 //│ forall 'a. error | 'a
 //│   where
