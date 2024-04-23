@@ -176,6 +176,7 @@ class DiffTests
       allowEscape: Bool = false,
       mono: Bool = false,
       polydef: Bool = false,
+      postProcessAfterTyping: Bool = false,
       lift: Bool = false,
       nolift: Bool = false,
       // noProvs: Bool = false,
@@ -283,6 +284,7 @@ class DiffTests
           case "r" | "showRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
           case "mono" => {mode.copy(mono = true)}
+          case "ppat" => {mode.copy(postProcessAfterTyping = true)}
           case "pd" => {mode.copy(polydef = true)}
           case "lift" => {mode.copy(lift = true)}
           case "nolift" => {mode.copy(nolift = true)}
@@ -454,12 +456,17 @@ class DiffTests
             if (mode.showParse)
               output(s"AST: $res")
             
-            val (postLines, nuRes) = postProcess(mode, basePath, testName, res, output)
+            val (postLines, nuRes) = 
+              if (mode.postProcessAfterTyping) {
+                (Nil, None)
+              } else { 
+                postProcess(mode, basePath, testName, res, output)
+              }
             postLines.foreach(output)            
             
             if (parseOnly)
               Success(Pgrm(Nil), 0)
-            else if (mode.mono || mode.lift || mode.polydef) {
+            else if ((mode.mono || mode.lift || mode.polydef) && !mode.postProcessAfterTyping) {
               import Message._
               Success(Pgrm(nuRes.getOrElse({
                 raise(ErrorReport(msg"Post-process failed to produce AST, defaulting to standard AST" -> None :: Nil, true, Diagnostic.Compilation))
@@ -883,6 +890,12 @@ class DiffTests
             val executionResults: Result \/ Ls[(ReplHost.Reply, Str)] = if (!allowTypeErrors &&
                 file.ext =:= "mls" && !mode.noGeneration && !noJavaScript) {
               import codeGenTestHelpers._
+              val pp = 
+                if (mode.postProcessAfterTyping) {
+                 Pgrm(postProcess(mode, basePath, testName, TypingUnit(p.tops), output)._2.fold(???)(_.entities)) 
+                } else { 
+                  p
+                }
               backend(p, mode.allowEscape, newDefs && newParser, prettyPrintQQ) match {
                 case testCode @ TestCode(prelude, queries) => {
                   // Display the generated code.

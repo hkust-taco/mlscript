@@ -2,53 +2,31 @@
 
 :nolift
 :pd
-class X(val foo: Int) {}
-class Y(val foo: Str) {}
-fun foo(pred) = if pred then X(1) else Y("abc")
-foo(true).foo
-//│ 
-//│ Polydef:
-//│ {class X(val foo: Int,) {}
-//│  class Y(val foo: Str,) {}
-//│  fun foo = (pred,) => if (pred) then X(1,) else Y("abc",)
-//│  let selRes$30 = foo(true,) in {if selRes$30 is ‹(Y) then (selRes$30).foo
-//│  (X) then (selRes$30).foo›}}
-//│ End polydef
-//│ 
-//│ class X(foo: Int)
-//│ class Y(foo: Str)
-//│ fun foo: Object -> (X | Y)
-//│ Int | Str
-//│ res
-//│     = 1
-
-:nolift
-:pd
-class X(val foo: Int) {}
-class Y(val foo: Str) {}
+class X(val bar: Int) {}
+class Y(val bar: Str) {}
 class A(val foo: X) {}
 class B(val foo: Y) {}
-fun foo(pred) = if pred then A(X(1)) else B(Y("abc"))
-val x = foo(true)
-x.foo.foo
+fun getObj(pred) = if pred then A(X(1)) else B(Y("abc"))
+val x = getObj(true)
+x.foo.bar
 //│ 
 //│ Polydef:
-//│ {class X(val foo: Int,) {}
-//│  class Y(val foo: Str,) {}
+//│ {class X(val bar: Int,) {}
+//│  class Y(val bar: Str,) {}
 //│  class A(val foo: X,) {}
 //│  class B(val foo: Y,) {}
-//│  fun foo = (pred,) => if (pred) then A(X(1,),) else B(Y("abc",),)
-//│  let x = foo(true,)
-//│  let selRes$54 = let selRes$56 = x in {if selRes$56 is ‹(A) then (selRes$56).foo
-//│  (B) then (selRes$56).foo›} in {if selRes$54 is ‹(Y) then (selRes$54).foo
-//│  (X) then (selRes$54).foo›}}
+//│  fun getObj = (pred,) => if (pred) then A(X(1,),) else B(Y("abc",),)
+//│  let x = getObj(true,)
+//│  let selRes$54 = let selRes$56 = x in case selRes$56 of { A => (selRes$56).foo
+//│  B => (selRes$56).foo } in case selRes$54 of { Y => (selRes$54).bar
+//│  X => (selRes$54).bar }}
 //│ End polydef
 //│ 
-//│ class X(foo: Int)
-//│ class Y(foo: Str)
+//│ class X(bar: Int)
+//│ class Y(bar: Str)
 //│ class A(foo: X)
 //│ class B(foo: Y)
-//│ fun foo: Object -> (A | B)
+//│ fun getObj: Object -> (A | B)
 //│ val x: A | B
 //│ Int | Str
 //│ x

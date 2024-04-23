@@ -108,26 +108,32 @@ class Polydef(debug: Debug) {
     val constructors: Map[Var, ProdObj] = p.rawEntities.collect { 
       case ty: NuTypeDef =>
         debug.writeLine(s"Completing type info for class ${ty.nameVar} with ctors ${constructorPrototypes.map((v, s) => (v, s._1))}")
-        val bodyStrats = apply(ty.body)(using fullCtx) // TODO: Add additional ctx for class arguments, i.e. class X(num: Int)
         given TermId = noExprId
         val argTup = ty.params.get
         val (pList, cList) = argTup.fields.map{
           case (Some(v), Fld(flags, _)) if flags.genGetter =>
             val fldVar = freshVar(s"${argTup.uid}_${v.name}")(using noExprId)
             ((v, fldVar._1), (v, fldVar._2))
-          case _ => ??? // Unsupported
+          case (Some(v), Fld(flags, _)) if !flags.genGetter => 
+            debug.writeLine(s"Non val ${v} class parameter is not supported.")
+            ??? // Unsupported
+          case other =>
+            debug.writeLine(s"${other} class parameter is not supported.")
+            ??? // Unsupported
         }.unzip
+        val bodyStrats = apply(ty.body)(using fullCtx ++ pList.toMap) // TODO: Add additional ctx for class arguments, i.e. class X(num: Int)
         constrain(ProdFun(ConsTup(cList.map(_._2)),ProdObj(Some(ty.nameVar), bodyStrats._1 ++ pList)), constructorPrototypes(ty.nameVar)._2)
         ty.nameVar -> ProdObj(Some(ty.nameVar), bodyStrats._1)
     }.toMap
     val tys = p.rawEntities.flatMap{
       case f: NuFunDef => {
-        val p = process(f.rhs match 
-          case Left(value) => value
-          case Right(value) => ???)(using fullCtx)
-        val v = vars(f.nme)
-        constrain(p, ConsVar(v.uid, v.name)()(using noExprId))
-        Some(p)
+        f.rhs match 
+          case Left(value) => 
+            val p = process(value)(using fullCtx)
+            val v = vars(f.nme)
+            constrain(p, ConsVar(v.uid, v.name)()(using noExprId))
+            Some(p)
+          case Right(value) => None
       }
       case t: Term => {
         val topLevelProd = process(t)(using fullCtx)
@@ -148,7 +154,12 @@ class Polydef(debug: Debug) {
   def builtinOps: Map[Var, ProdFun] = {
     given TermId = noExprId
     Map(
-      (Var("==") -> ProdFun(ConsTup(List(ConsPrim("Int"),ConsPrim("Int"))), ProdPrim("Bool")))
+      (Var("+") -> ProdFun(ConsTup(List(ConsPrim("Int"),ConsPrim("Int"))), ProdPrim("Int"))),
+      (Var("-") -> ProdFun(ConsTup(List(ConsPrim("Int"),ConsPrim("Int"))), ProdPrim("Int"))),
+      (Var("*") -> ProdFun(ConsTup(List(ConsPrim("Int"),ConsPrim("Int"))), ProdPrim("Int"))),
+      (Var("==") -> ProdFun(ConsTup(List(ConsPrim("Int"),ConsPrim("Int"))), ProdPrim("Bool"))),
+      (Var("concat") -> ProdFun(ConsTup(List(ConsPrim("String"))), ProdFun(ConsTup(List(ConsPrim("String"))), ProdPrim("String")))),
+      (Var("toString") -> ProdFun(ConsTup(List(ConsPrim("Int"))), ProdPrim("String")))
     )
   }
 
@@ -180,7 +191,9 @@ class Polydef(debug: Debug) {
         val mapping = args.map{
           case (None, Fld(_, v: Var)) =>
             (v, freshVar(s"${t.uid}_${v.name}")(using noExprId))
-          case _ => ??? // Unsupported
+          case other => 
+            debug.writeLine(s"${other}")
+            ??? // Unsupported
         }
         ProdFun(ConsTup(mapping.map(_._2._2))(using t.uid),
           process(body)(using ctx ++ mapping.map((i, s) => (i, s._1))))(using t.uid)
@@ -223,7 +236,7 @@ class Polydef(debug: Debug) {
 
   def constrain(prod: ProdStrat, cons: ConsStrat): Unit = {
     debug.writeLine(s"constraining ${prod} -> ${cons}")
-    if (constraintCache.contains(prod -> cons)) return ()
+    if (constraintCache.contains(prod -> cons)) return () else constraintCache += (prod -> cons)
     
     (prod, cons) match
         case (ProdPrim(n), NoCons()) =>
@@ -267,20 +280,24 @@ class Polydef(debug: Debug) {
                 constrain(res1, res2)
           })
   }
+
+  // TODO: remove redundancy between selToObjTypes and selTermToType
   lazy val selToObjTypes: Map[TermId, Set[ProdObj]] = selTermToType.map((termId, cons) =>
-    (termId, selectionSource(cons).map{
-        case p:ProdObj => p
-        //case other => ???
+    (termId, selectionSource(cons).flatMap{
+        case p:ProdObj => Some(p)
+        case other => 
+          debug.writeLine(s"${other}")
+          None
       }
     )
   ).toMap
 
   def rewriteTerm(t: Term): Term = 
-    def objSetToMatchBranches(reciever: Var, fieldName: Var, objSet: List[ProdObj], acc: List[Either[IfBody,Statement]] = Nil /*List(Left(IfElse(Var("error"))))*/): List[Either[IfBody,Statement]] =
+    def objSetToMatchBranches(receiver: Var, fieldName: Var, objSet: List[ProdObj], acc: CaseBranches = NoCases): CaseBranches =
       objSet match 
         case Nil => acc
         case ProdObj(Some(v), _) :: rest => 
-          objSetToMatchBranches(reciever, fieldName, rest, Left(IfThen(v, Sel(reciever, fieldName))) :: acc)
+          objSetToMatchBranches(receiver, fieldName, rest, Case(v, Sel(receiver, fieldName), acc))
     t match
       case IntLit(_) => t
       case StrLit(_) => t
@@ -301,7 +318,7 @@ class Polydef(debug: Debug) {
       case Sel(receiver, fieldName) =>
         val letName = Var(s"selRes$$${t.uid}")
         Let(false, letName, rewriteTerm(receiver),
-          Blk(List(If(IfOpApp(letName, Var("is"), IfBlock(objSetToMatchBranches(letName, fieldName, selToObjTypes(t.uid).toList))), None)))
+          CaseOf(letName, objSetToMatchBranches(letName, fieldName, selToObjTypes(t.uid).toList))
         )
       case Bra(true, t) =>
         Bra(true, rewriteTerm(t))
@@ -315,11 +332,11 @@ class Polydef(debug: Debug) {
   def rewriteStatements(stmts: List[Statement]): List[Statement] =
     stmts.map{
       case ty: NuTypeDef => 
-        ty.copy(body = rewriteProgram(ty.body))(None, None, Nil)
+        ty.copy(body = rewriteProgram(ty.body))(ty.declareLoc, ty.abstractLoc, ty.annotations)
       case f: NuFunDef => 
         f.copy(rhs = f.rhs match
           case Left(t) => Left(rewriteTerm(t))
-          case Right(_) => ???
+          case Right(_) => f.rhs
         )(f.declareLoc, f.virtualLoc, f.mutLoc, f.signature, f.outer, f.genField, f.annotations)
       case t: Term => 
         rewriteTerm(t)
