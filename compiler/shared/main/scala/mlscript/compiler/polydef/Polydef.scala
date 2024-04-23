@@ -94,31 +94,43 @@ class Polydef(debug: Debug) {
   def freshVar(n: Var)(using TermId): ((ProdVar), (ConsVar)) =
    freshVar(n.name)
 
-  def apply(p: TypingUnit)(using ctx: Map[Var, ProdVar] = Map(), outerConstructors: Map[Var, ProdObj] = Map()): (Ls[Var -> ProdStrat], ProdStrat) = 
+  def apply(p: TypingUnit)(using ctx: Map[Var, ProdVar] = Map()): (Ls[Var -> ProdStrat], ProdStrat) = 
     // if constraints.nonEmpty then return Nil
     val vars: Map[Var, ProdVar] = p.rawEntities.collect { 
       case fun: NuFunDef =>
         fun.nme -> freshVar(fun.name)(using noExprId)._1
     }.toMap
+    val constructorPrototypes: Map[Var, Cnstr] = p.rawEntities.collect { 
+      case ty: NuTypeDef =>
+        ty.nameVar -> freshVar(ty.nameVar)(using noExprId)
+    }.toMap
+    val fullCtx = ctx ++ vars ++ constructorPrototypes.map((v, s) => (v, s._1.asInstanceOf[ProdVar]))
     val constructors: Map[Var, ProdObj] = p.rawEntities.collect { 
       case ty: NuTypeDef =>
-        val bodyStrats = apply(ty.body) // TODO: Add additional ctx for class arguments, i.e. class X(num: Int)
+        debug.writeLine(s"Completing type info for class ${ty.nameVar} with ctors ${constructorPrototypes.map((v, s) => (v, s._1))}")
+        val bodyStrats = apply(ty.body)(using fullCtx) // TODO: Add additional ctx for class arguments, i.e. class X(num: Int)
         given TermId = noExprId
+        val argTup = ty.params.get
+        val (pList, cList) = argTup.fields.map{
+          case (Some(v), Fld(flags, _)) if flags.genGetter =>
+            val fldVar = freshVar(s"${argTup.uid}_${v.name}")(using noExprId)
+            ((v, fldVar._1), (v, fldVar._2))
+          case _ => ??? // Unsupported
+        }.unzip
+        constrain(ProdFun(ConsTup(cList.map(_._2)),ProdObj(Some(ty.nameVar), bodyStrats._1 ++ pList)), constructorPrototypes(ty.nameVar)._2)
         ty.nameVar -> ProdObj(Some(ty.nameVar), bodyStrats._1)
     }.toMap
-    val fullCtx = ctx ++ vars 
-    val allConstructors = constructors ++ outerConstructors
     val tys = p.rawEntities.flatMap{
       case f: NuFunDef => {
         val p = process(f.rhs match 
           case Left(value) => value
-          case Right(value) => ???)(using fullCtx, allConstructors)
+          case Right(value) => ???)(using fullCtx)
         val v = vars(f.nme)
         constrain(p, ConsVar(v.uid, v.name)()(using noExprId))
         Some(p)
       }
       case t: Term => {
-        val topLevelProd = process(t)(using fullCtx, allConstructors)
+        val topLevelProd = process(t)(using fullCtx)
         //constrain(topLevelProd, NoCons()(using noExprId))
         Some(topLevelProd)
       }
@@ -127,7 +139,7 @@ class Polydef(debug: Debug) {
         None
       }
     }
-    (vars.toList, tys.last)
+    (vars.toList, tys.lastOption.getOrElse(ProdPrim("unit")(using noExprId)))
 
   val termToProdType = mutable.Map.empty[TermId, ProdStrat]
   val selTermToType = mutable.Map.empty[TermId, ConsObj]
@@ -140,26 +152,26 @@ class Polydef(debug: Debug) {
     )
   }
 
-  def process(t: Term)(using ctx: Map[Var, ProdVar], constructors: Map[Var, ProdObj]): ProdStrat = 
+  def process(t: Term)(using ctx: Map[Var, ProdVar]): ProdStrat = 
+    debug.writeLine(s"Processing term ${t} under")
+    debug.indent()
+    debug.writeLine(s"${ctx}")
+    debug.outdent()
     val res: ProdStrat = t match
       case IntLit(_) => ProdPrim("Int")(using t.uid)
       case DecLit(_) => ??? // floating point numbers as integers type
       case StrLit(_) => ProdPrim("String")(using t.uid)
       case Var("true") | Var("false") => ProdPrim("Bool")(using t.uid)
-      case v @ Var(id) if constructors.contains(v) =>
-        constructors(v)
       case v @ Var(id) if builtinOps.contains(v) =>
         builtinOps(v)
       case v @ Var(id) =>// if varCtx(id).isDef then {
         ctx(v).copy()(Some(v))(using t.uid)
       //} else ctx(r).s.copy()(None)(using t.uid)
       case App(func, arg) => 
+        //debug.writeLine(s"${summon[Map[Var, ProdStrat]]}")
         val funcRes = process(func)
         val argRes = process(arg)
         funcRes match 
-          case ProdObj(ctor, fields) => 
-            // TODO: Handle object args i.e. class X(num: Int)
-            funcRes
           case _ =>
             val sv = freshVar(s"${t.uid}_callres")(using t.uid)
             constrain(funcRes, ConsFun(argRes, sv._2)(using noExprId))
@@ -199,7 +211,7 @@ class Polydef(debug: Debug) {
           case (v, Fld(_, t)) => (v -> process(t))
         })(using t.uid)
       case Blk(stmts) => 
-        apply(TypingUnit(stmts))(using ctx, constructors)._2
+        apply(TypingUnit(stmts))._2
 
     registerTermToType(t, res)
   
@@ -287,8 +299,8 @@ class Polydef(debug: Debug) {
           case _ => ??? // Unsupported
         })
       case Sel(receiver, fieldName) =>
-        val letName = Var(s"selRes${t.uid}")
-        Let(false, letName, receiver,
+        val letName = Var(s"selRes$$${t.uid}")
+        Let(false, letName, rewriteTerm(receiver),
           Blk(List(If(IfOpApp(letName, Var("is"), IfBlock(objSetToMatchBranches(letName, fieldName, selToObjTypes(t.uid).toList))), None)))
         )
       case Bra(true, t) =>

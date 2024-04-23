@@ -1,0 +1,64 @@
+:NewDefs
+
+:nolift
+class X(val foo: Int, val bar: Bool) {}
+class Y(val foo: Str, val bar: Int) {}
+class A(val foo: X) {}
+class B(val foo: Y) {}
+fun foo(pred) = if pred then A(X(1, false)) else B(Y("abc", 5))
+val x = foo(true)
+x.foo.bar
+foo(false).foo.bar
+//│ class X(foo: Int, bar: Bool)
+//│ class Y(foo: Str, bar: Int)
+//│ class A(foo: X)
+//│ class B(foo: Y)
+//│ fun foo: Object -> (A | B)
+//│ val x: A | B
+//│ Int | false | true
+//│ x
+//│   = A {}
+//│ res
+//│     = false
+//│ res
+//│     = 5
+
+:nolift
+:pd
+class X(val foo: Int, val bar: Bool) {}
+class Y(val foo: Str, val bar: Int) {}
+class A(val foo: X) {}
+class B(val foo: Y) {}
+fun foo(pred) = if pred then A(X(1, false)) else B(Y("abc", 5))
+val x = foo(true)
+x.foo.bar
+foo(false).foo.bar
+//│ 
+//│ Polydef:
+//│ {class X(val foo: Int, val bar: Bool,) {}
+//│  class Y(val foo: Str, val bar: Int,) {}
+//│  class A(val foo: X,) {}
+//│  class B(val foo: Y,) {}
+//│  fun foo = (pred,) => if (pred) then A(X(1, false,),) else B(Y("abc", 5,),)
+//│  let x = foo(true,)
+//│  let selRes$58 = let selRes$60 = x in {if selRes$60 is ‹(A) then (selRes$60).foo
+//│  (B) then (selRes$60).foo›} in {if selRes$58 is ‹(Y) then (selRes$58).bar
+//│  (X) then (selRes$58).bar›}
+//│  let selRes$64 = let selRes$66 = foo(false,) in {if selRes$66 is ‹(B) then (selRes$66).foo
+//│  (A) then (selRes$66).foo›} in {if selRes$64 is ‹(X) then (selRes$64).bar
+//│  (Y) then (selRes$64).bar›}}
+//│ End polydef
+//│ 
+//│ class X(foo: Int, bar: Bool)
+//│ class Y(foo: Str, bar: Int)
+//│ class A(foo: X)
+//│ class B(foo: Y)
+//│ fun foo: Object -> (A | B)
+//│ val x: A | B
+//│ Int | false | true
+//│ x
+//│   = A {}
+//│ res
+//│     = false
+//│ res
+//│     = 5

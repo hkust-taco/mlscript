@@ -38,8 +38,8 @@ foo(true).num
 //│ {class X() {let num = 6}
 //│  class Y() {let num = true}
 //│  fun foo = (pred,) => if (pred) then X() else Y()
-//│  let selRes26 = foo(true,) in {if selRes26 is ‹(Y) then (selRes26).num
-//│  (X) then (selRes26).num›}}
+//│  let selRes$26 = foo(true,) in {if selRes$26 is ‹(Y) then (selRes$26).num
+//│  (X) then (selRes$26).num›}}
 //│ End polydef
 //│ 
 //│ class X() {
@@ -54,6 +54,7 @@ foo(true).num
 //│     = 6
 
 :pd
+//:dpd
 :nolift
 class X() {
     val num = 6
@@ -61,22 +62,31 @@ class X() {
 class Y() {
     val num = true
 }
-class Z() {
-    val num = "abc"
+class A() {
+    val num = X()
+}
+class B() {
+    val num = Y()
+}
+class C() {
+    val num = X()
 }
 fun foo(pred) =
-    if pred == 1 then X() else 
-        if pred == 2 then Y() else Z()
-foo(5).num
+    if pred == 1 then A() else 
+        if pred == 2 then B() else C()
+foo(5).num.num
 //│ 
 //│ Polydef:
 //│ {class X() {let num = 6}
 //│  class Y() {let num = true}
-//│  class Z() {let num = "abc"}
-//│  fun foo = (pred,) => {if (==(pred, 1,)) then X() else {if (==(pred, 2,)) then Y() else Z()}}
-//│  let selRes58 = foo(5,) in {if selRes58 is ‹(Y) then (selRes58).num
-//│  (Z) then (selRes58).num
-//│  (X) then (selRes58).num›}}
+//│  class A() {let num = X()}
+//│  class B() {let num = Y()}
+//│  class C() {let num = X()}
+//│  fun foo = (pred,) => {if (==(pred, 1,)) then A() else {if (==(pred, 2,)) then B() else C()}}
+//│  let selRes$74 = let selRes$76 = foo(5,) in {if selRes$76 is ‹(B) then (selRes$76).num
+//│  (C) then (selRes$76).num
+//│  (A) then (selRes$76).num›} in {if selRes$74 is ‹(X) then (selRes$74).num
+//│  (Y) then (selRes$74).num›}}
 //│ End polydef
 //│ 
 //│ class X() {
@@ -85,10 +95,16 @@ foo(5).num
 //│ class Y() {
 //│   val num: true
 //│ }
-//│ class Z() {
-//│   val num: "abc"
+//│ class A() {
+//│   val num: X
 //│ }
-//│ fun foo: Num -> (X | Y | Z)
-//│ "abc" | 6 | true
+//│ class B() {
+//│   val num: Y
+//│ }
+//│ class C() {
+//│   val num: X
+//│ }
+//│ fun foo: Num -> (A | B | C)
+//│ 6 | true
 //│ res
-//│     = 'abc'
+//│     = 6

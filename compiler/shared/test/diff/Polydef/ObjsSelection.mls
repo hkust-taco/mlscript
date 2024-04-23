@@ -21,8 +21,8 @@ b.num
 //│  fun id = (x,) => x
 //│  let a = foo(true,)
 //│  let b = id(a,)
-//│  let selRes48 = b in {if selRes48 is ‹(Y) then (selRes48).num
-//│  (X) then (selRes48).num›}}
+//│  let selRes$48 = b in {if selRes$48 is ‹(Y) then (selRes$48).num
+//│  (X) then (selRes$48).num›}}
 //│ End polydef
 //│ 
 //│ class X() {
