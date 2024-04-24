@@ -218,20 +218,6 @@ class PreTyper extends Traceable with Diagnosable with Desugarer {
         self.baseTypes = bases
         println(s"base types of `${self.name}`: ${bases.iterator.map(_.name).mkString(", ")}")
       }
-      // Pass 1.2: Resolve signature types for collecting sealed derived types.
-      println("Resolve sealed signature types")
-      typeSymbols.foreach {
-        case _: MixinSymbol | _: TypeAliasSymbol | _: ModuleSymbol => ()
-        case symbol => symbol.defn.sig.foreach { unions =>
-          val derivedTypes = try extractSignatureTypes(unions) catch { case _: NotImplementedError => Nil }
-          symbol.sealedDerivedTypes = derivedTypes.flatMap { derivedType =>
-            val maybeSymbol = scopeWithTypes.getTypeSymbol(derivedType.name)
-            if (maybeSymbol.isEmpty) raiseError(msg"Undefined type $derivedType" -> derivedType.toLoc)
-            maybeSymbol
-          }
-          println(s">>> $name: ${symbol.sealedDerivedTypes.iterator.map(_.name).mkString(", ")}")
-        }
-      }
       // Pass 2: Build a complete scope and collect definitional terms and terms to be traversed.
       val (completeScope, thingsToTraverse) = statements.foldLeft[(Scope, Ls[(Term \/ DefinedTermSymbol, Scope)])](scopeWithTypes, Nil) {
         case ((scope, acc), term: Term) => (scope, (L(term), scope) :: acc)
@@ -278,31 +264,6 @@ class PreTyper extends Traceable with Diagnosable with Desugarer {
     trace(s"PreTyper <== $name: ${typingUnit.describe}") {
       traverseStatements(typingUnit.entities, name, scope)
     }({ scope => s"PreTyper ==> ${scope.showLocalSymbols}" })
-  
-  /**
-    * Extract types in class signatures. For example, for this piece of code
-    * ```mls
-    * abstract class Option[A]: Some[A] | None
-    * ```
-    * this function returns, `Some` and `None`.
-    *
-    * @param ty a type obtained from `NuTypeDef.sig`
-    * @return a list of type names, without any p
-    */
-  private def extractSignatureTypes(ty: Type): Ls[TypeName] = {
-    @tailrec
-    def rec(acc: Ls[TypeName], ty: Type): Ls[TypeName] = ty match {
-      case tn: TypeName => tn :: acc
-      case AppliedType(tn: TypeName, _) => tn :: acc
-      case Union(lhs, tn: TypeName) => rec(tn :: acc, lhs)
-      case Union(lhs, AppliedType(tn: TypeName, _)) => rec(tn :: acc, lhs)
-      case other =>
-        // Let's not raise warning for now.
-        // raiseWarning(msg"unknown type in signature" -> other.toLoc)
-        Nil
-    }
-    rec(Nil, ty).reverse
-  }
 
   def extractSuperTypes(parents: Ls[Term]): Ls[Var] = {
     @tailrec

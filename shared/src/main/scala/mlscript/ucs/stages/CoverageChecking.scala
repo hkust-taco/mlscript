@@ -213,10 +213,6 @@ object CoverageChecking {
       * set `{ Z }`. Set `{ B, C }` represents that the scrutinee can be further
       * refined to class `B` or `class C`. Set `{ Z }` represents that if the
       * scrutinee is not `A`, then it can be `Z`.
-      * 
-      * If `A` is sealed to `B`, `C`, and `D`, then we get `{ B, C, D }` and
-      * `{ Z }`. Because if the scrutinee is assumed to be `A`, then it can also
-      * be `D` other than `B`, `C`.
       *
       * @param classLikeSymbol the type symbol represents the class like type
       * @return If the pattern set doesn't include the given type symbol, this

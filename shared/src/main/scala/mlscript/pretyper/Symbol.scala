@@ -26,7 +26,6 @@ package object symbol {
     override def name: Str = defn.name
 
     var baseTypes: Ls[TypeSymbol] = Nil
-    var sealedDerivedTypes: Ls[TypeSymbol] = Nil
 
     @inline def hasBaseClass(baseClassLikeSymbol: TypeSymbol): Bool =
       baseTypes.exists(_ === baseClassLikeSymbol)
