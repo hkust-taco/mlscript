@@ -1684,12 +1684,6 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                   err("type identifier not found: " + nme, pat.toLoc)(raise)
                   bail()
               }
-            case Some(td) =>
-              td.kind match {
-                case Als | Mod | Mxn => val t = err(msg"can only match on classes and traits", pat.toLoc)(raise); t -> t
-                case Cls => val t = clsNameToNomTag(td)(tp(pat.toLoc, "class pattern"), ctx); t -> t
-                case Trt => val t = trtNameToNomTag(td)(tp(pat.toLoc, "trait pattern"), ctx); t -> t
-              }
           }
       }
       val newCtx = if (ctx.inQuote) ctx.enterQuotedScope else ctx.nest
