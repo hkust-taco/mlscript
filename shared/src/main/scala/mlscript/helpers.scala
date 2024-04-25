@@ -841,7 +841,7 @@ trait LitImpl { self: Lit =>
   }
 }
 
-trait VarImpl { self: Var =>
+trait VarImpl extends pretyper.symbol.Symbolic { self: Var =>
   /** Check if the variable name is an integer. */
   def isIndex: Bool = name.headOption match {
     case S('0') => name.length === 1
@@ -854,21 +854,6 @@ trait VarImpl { self: Var =>
     (name.head.isLetter && name.head.isLower || name.head === '_' || name.head === '$') && name =/= "true" && name =/= "false"
   def toVar: Var = this
   var uid: Opt[Int] = N
-
-  // PreTyper additions
-  import pretyper.symbol.Symbol
-
-  private var _symbol: Opt[Symbol] = N
-  def symbolOption: Opt[Symbol] = _symbol
-  def symbol: Symbol = _symbol.getOrElse(???)
-  def symbol_=(symbol: Symbol): Unit =
-    _symbol match {
-      case N => _symbol = S(symbol)
-      case S(`symbol`) => ()
-      case S(_) => ???
-    }
-  // def withSymbol: Var = { symbol = S(new ValueSymbol(this, false)); this }
-  def withSymbol(symbol: Symbol): Var = { this.symbol = symbol; this }
 }
 
 trait TupImpl { self: Tup =>

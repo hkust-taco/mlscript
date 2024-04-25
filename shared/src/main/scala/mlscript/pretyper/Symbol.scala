@@ -108,4 +108,22 @@ package object symbol {
 
     override def nameVar: Var = nme
   }
+
+  trait Symbolic {
+    val name: String
+
+    private var _symbol: Opt[Symbol] = N
+
+    def symbolOption: Opt[Symbol] = _symbol
+    def symbol: Symbol = _symbol.getOrElse(lastWords(s"Symbol not set for $name"))
+    def symbol_=(symbol: Symbol): Unit =
+      _symbol match {
+        case N => _symbol = S(symbol)
+        case S(`symbol`) => ()
+        case S(current) =>
+          println(s"symbol: old ${current.name} vs new ${symbol.name}")
+          lastWords(s"Symbol already set for $name")
+      }
+    def withSymbol(symbol: Symbol): this.type = { this.symbol = symbol; this }
+  }
 }
