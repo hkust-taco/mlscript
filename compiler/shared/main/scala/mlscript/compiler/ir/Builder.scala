@@ -261,13 +261,14 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
     case _ => throw IRError("unsupported NuFunDef")
   
   private def buildClassInfo(ntd: Statement): ClassInfo = ntd match
-    case NuTypeDef(Cls, TypeName(name), Nil, S(Tup(args)), N, N, parents, N, N, TypingUnit(Nil)) =>
+    case NuTypeDef(Cls, TypeName(name), Nil, S(Tup(args)), N, _, parents, N, N, TypingUnit(Nil)) =>
       val cls = ClassInfo(
         classUid.make,
         name, 
         args map {
           case N -> Fld(FldFlags.empty, Var(name)) => name
-          case _ => throw IRError("unsupported field")
+          case S(Var(name)) -> Fld(_, ty) => name
+          case x @ _ => throw IRError(s"unsupported field $x")
         }
       )
       cls.parents = parents.map { 
@@ -276,7 +277,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
         case _ => throw IRError("unsupported parent")
       }.toSet
       cls
-    case NuTypeDef(Cls, TypeName(name), Nil, N, N, N, parents, N, N, TypingUnit(Nil)) =>
+    case NuTypeDef(Cls | Mod, TypeName(name), Nil, N, N, _, parents, N, N, TypingUnit(Nil)) =>
       val cls = ClassInfo(
         classUid.make,
         name,
