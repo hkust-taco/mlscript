@@ -103,16 +103,25 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
             }
           case node @ _ => node |> unexpectedNode
         }
-        
-      case App(Var(name), xs @ Tup(_)) if name.isCapitalized =>
-        buildResultFromTerm(xs) {
-          case Result(args) => 
-            val v = fresh.make
-            LetExpr(v,
-              CtorApp(ctx.classCtx(name), args),
-              v |> ref |> sresult |> k).attachTag(tag)
-          case node @ _ => node |> unexpectedNode
-        }
+      case App(Var(name), xs @ Tup(_)) if name.isCapitalized || ctx.opCtx.contains(name) =>
+        if name.isCapitalized then
+          buildResultFromTerm(xs) {
+            case Result(args) => 
+              val v = fresh.make
+              LetExpr(v,
+                CtorApp(ctx.classCtx(name), args),
+                v |> ref |> sresult |> k).attachTag(tag)
+            case node @ _ => node |> unexpectedNode
+          }
+        else
+          buildResultFromTerm(xs) {
+            case Result(args) =>
+              val v = fresh.make
+              LetExpr(v,
+                BasicOp(name, args),
+                v |> ref |> sresult |> k).attachTag(tag)
+            case node @ _ => node |> unexpectedNode
+          }
       case App(
         member @ Sel(Var(clsName), Var(fld)), 
         xs @ Tup((_ -> Fld(_, Var(s))) :: _)) if clsName.isCapitalized =>
