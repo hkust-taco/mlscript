@@ -1,23 +1,24 @@
 package mlscript.compiler.optimizer
 
-import mlscript.compiler.ir.Program
-import mlscript.compiler.ir.Defn
-import mlscript.compiler.ir.Node
+import mlscript.compiler.ir._
 import mlscript.compiler.ir.Node._
 import scala.annotation.tailrec
-import mlscript.compiler.ir.FreshInt
-import mlscript.compiler.ir.Name
-import mlscript.compiler.ir.ClassInfo
-import mlscript.compiler.ir.DefnRef
-import mlscript.compiler.ir.Expr
 import mlscript.IntLit
-import mlscript.compiler.ir.resolveDefnRef
-import mlscript.compiler.ir.TrivialExpr
 import mlscript.utils.shorthands.Bool
 
 // fnUid should be the same FreshInt that was used to build the graph being passed into this class
 class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
   private type DefnGraph = Set[DefnNode]
+
+  class ModConsCall(defn: Defn)
+
+  private def getModConsCall(node: Node, defnAcc: Option[Defn]) = node match
+    case Result(res) => 
+    case Jump(defn, args) =>
+    case Case(scrut, cases) =>
+    case LetExpr(name, expr, body) =>
+    case LetCall(names, defn, args, body) =>
+    case AssignField(assignee, clsInfo, fieldName, value, body) =>
 
   // checks whether a list of names is equal to a list of trivial expressions referencing those names
   private def argsListEqual(names: List[Name], exprs: List[TrivialExpr]) =
@@ -42,7 +43,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
     case Jump(defn, args)                 => Nil // jump points are already optimized and we should not touch them
     case Case(scrut, cases)               => cases.flatMap((_, body) => findTailCalls(body))
     case LetExpr(name, expr, body)        => findTailCalls(body)
-    case AssignField(_, _, _, body)       => findTailCalls(body)
+    case AssignField(_, _, _, _, body)       => findTailCalls(body)
 
   // Partions a tail recursive call graph into strongly connected components
   // Refernece: https://en.wikipedia.org/wiki/Strongly_connected_component
@@ -181,7 +182,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
           Jump(jpDefnRef, transformStackFrame(args, defnInfoMap(defn.expectDefn.id))).attachTag(tag)
         else
           LetCall(names, defn, args, transformNode(body))
-      case AssignField(assignee, field, value, body) => AssignField(assignee, field, value, transformNode(body))
+      case AssignField(assignee, clsInfo, field, value, body) => AssignField(assignee, clsInfo, field, value, transformNode(body))
 
     // Tail calls to another function in the component will be replaced with a tail call
     // to the merged function
@@ -252,6 +253,8 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
     val nodeMap: Map[Int, DefnNode] = defns.foldLeft(Map.empty)((m, d) => m + (d.id -> DefnNode(d)))
     partitionNodes(nodeMap).map(g => g.map(d => d.defn))
   }
+
+   
 
   def apply(p: Program) = run(p)
 

@@ -68,7 +68,7 @@ class Interpreter(verbose: Bool):
     case LetExpr(name: Name, expr: Expr, body: Node)
     case LetJoin(joinName: Name, params: Ls[Name], rhs: Node, body: Node)
     case LetCall(resultNames: Ls[Name], defn: DefnRef, args: Ls[Expr], body: Node)
-    case AssignField(assignee: Name, fieldName: Str, value: Expr, body: Node)
+    case AssignField(assignee: Name, clsInfo: ClassInfo, fieldName: Str, value: Expr, body: Node)
 
     def show: Str =
       document.print
@@ -127,7 +127,7 @@ class Interpreter(verbose: Bool):
             <#> raw(")"),
           raw("in") <:> body.document |> indent
         )
-      case AssignField(Name(assignee), fieldName, value, body) =>
+      case AssignField(Name(assignee), clsInfo, fieldName, value, body) =>
         stack(
           raw("assign") 
             <:> raw(assignee)
@@ -166,7 +166,7 @@ class Interpreter(verbose: Bool):
     case INode.LetExpr(name, expr, body) => LetExpr(name, expr |> convert, body |> convert)
     case INode.LetCall(xs, defnref, args, body) =>
       LetCall(xs, DefnRef(Right(defnref.getName)), args |> convertArgs, body |> convert)
-    case INode.AssignField(assignee, fieldName, value, body) => AssignField(assignee, fieldName, value |> convert, body |> convert)
+    case INode.AssignField(assignee, clsInfo, fieldName, value, body) => AssignField(assignee, clsInfo, fieldName, value |> convert, body |> convert)
 
   private def convert(defn: IDefn): Defn =
     Defn(defn.name, defn.params, defn.body |> convert)
@@ -300,7 +300,7 @@ class Interpreter(verbose: Bool):
       }
       val ctx2 = ctx ++ xs.map{_.str}.zip(res)
       eval(using ctx2, clsctx)(body)
-    case AssignField(Name(assignee), fieldName, expr, body) =>
+    case AssignField(Name(assignee), clsInfo, fieldName, expr, body) =>
       val value = evalMayNotProgress(expr)
       val x = ctx.get(assignee) match
         case Some(x: CtorApp) =>
