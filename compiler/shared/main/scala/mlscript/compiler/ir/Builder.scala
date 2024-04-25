@@ -170,7 +170,9 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
               case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
               case node @ _ => node |> unexpectedNode
             }
-            Case(cond, Ls((ctx.classCtx("True"), tru2), (ctx.classCtx("False"), fls2)), None).attachTag(tag)
+            Case(cond, Ls(
+              (Pat.Class(ctx.classCtx("True")), tru2),
+              (Pat.Class(ctx.classCtx("False")), fls2)), None).attachTag(tag)
           case node @ _ => node |> unexpectedNode
         }
         
@@ -196,9 +198,9 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
             )
             ctx.jpAcc.addOne(jpdef)
             var defaultCase: Opt[Node] = None
-            val cases: Ls[(ClassInfo, Node)] = lines flatMap {
+            val cases: Ls[(Pat, Node)] = lines flatMap {
               case L(IfThen(App(Var(ctor), params: Tup), rhs)) =>
-                S(ctx.classCtx(ctor) -> {
+                S(Pat.Class(ctx.classCtx(ctor)) -> {
                   // need this because we have built terms (selections in case arms) containing names that are not in the original term
                   given Ctx = ctx.copy(nameCtx = ctx.nameCtx + (scrut.str -> scrut))
                   buildResultFromTerm(
@@ -214,7 +216,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
                 })
                 N
               case L(IfThen(Var(ctor), rhs)) =>
-                S(ctx.classCtx(ctor) -> buildResultFromTerm(rhs) {
+                S(Pat.Class(ctx.classCtx(ctor)) -> buildResultFromTerm(rhs) {
                   case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
                   case node @ _ => node |> unexpectedNode
                 })

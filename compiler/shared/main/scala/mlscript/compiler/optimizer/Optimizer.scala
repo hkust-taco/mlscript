@@ -157,9 +157,10 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
     def getIntro(n: Int, node: Node, intros: Map[Str, Intro]): Ls[Opt[Intro]] = node match
       case Case(scrut, cases, default) => 
         val cases_intros = cases.map {
-          (cls, node) =>
-            val x = getIntro(n, node, intros + (scrut.str -> ICtor(cls.ident)))
-            x
+          case (Pat.Class(cls), node) =>
+            getIntro(n, node, intros + (scrut.str -> ICtor(cls.ident)))
+          case (Pat.Lit(_), node) =>
+            getIntro(n, node, intros)
         }
         default match
           case None => combine_intros(cases_intros)
@@ -534,7 +535,7 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
         pre_defs.update(pre_name.str, pre_defn)
         
         val new_cases = cases.zip(arm_fv).map {
-          case ((cls, body), fv) =>
+          case ((Pat.Class(cls), body), fv) =>
             val post_name = fresh.make(defn.name + "$D")
             val post_params_list = fv.toList
             val post_params = post_params_list.map(Name(_))
@@ -550,16 +551,17 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
               .update(cls, PostFunction(post_name.str, post_params_list))
             post_defs.update(post_name.str, new_defn)
             (cls, (post_name.str, post_params_list))
+          case _ => ???
         }
-
 
         val (new_names, scrut_new_name) = make_new_names_for_free_variables(all_fv_list, scrut.str)
         val names_map = all_fv_list.zip(new_names).toMap
         val overwrite_defn = env.defn.copy(
           body =
             LetCall(new_names, DefnRef(Right(pre_name.str)), env.defn.params.map(Ref(_)),
-              Case(scrut_new_name.get, new_cases.map{
-                case (cls, (post_f, post_params)) => (cls, Jump(DefnRef(Right(post_f)), post_params.map{x => Ref(names_map(x))}).attachTag(tag))
+              Case(scrut_new_name.get, new_cases.map {
+                case (cls, (post_f, post_params)) => 
+                  (Pat.Class(cls), Jump(DefnRef(Right(post_f)), post_params.map{x => Ref(names_map(x))}).attachTag(tag))
               }, None).attachTag(tag)).attachTag(tag))
         overwrite_defs.put(defn.name, overwrite_defn).map(x => throw OptimizingError("Unexpected overwrite"))
 
@@ -656,9 +658,12 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
                 case _ => throw OptimizingError("Unexpected loc marker"))
             case None =>
           case _ =>
-        cases foreach { (cls, arm) => 
-          val intros2 = env.intros + (x.str -> ICtor(cls.ident))
-          f(env.copy(intros = intros2), arm)
+        cases foreach { 
+          case (Pat.Class(cls), arm) =>
+            val intros2 = env.intros + (x.str -> ICtor(cls.ident))
+            f(env.copy(intros = intros2), arm)
+          case (Pat.Lit(_), arm) =>
+            f(env, arm)
         }
         default foreach { x => f(env, x) }
       case LetExpr(x, e1, e2) =>
@@ -774,7 +779,7 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
           val new_names_2 = xs.map { _ => fresh.make }
           val names_map_2 = xs.map(_.str).zip(new_names_2).toMap
           
-          (cls, 
+          (Pat.Class(cls), 
             LetCall(new_names_2, DefnRef(Right(post_f)), post_params.map{x => Ref(names_map(x))},
               Jump(DefnRef(Right(new_jp.name)), fv_list.map{x => Ref(names_map_2.getOrElse(x, Name(x)))}).attachTag(tag)).attachTag(tag))
       }
@@ -841,7 +846,7 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
       val names_map = pre_retvals.zip(new_names).toMap
       val new_cases = cases.map {
         case (cls, PostFunction(post_f, post_params)) => (
-          cls, 
+          Pat.Class(cls), 
           Jump(DefnRef(Right(post_f)), post_params.map{x => Ref(names_map(x))}).attachTag(tag)
         )
       }
@@ -883,7 +888,10 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
       case Result(res) => node
       case Case(scrut, cases, default) =>
         Case(scrut, cases map {
-            (cls, arm) => (cls, f(env.copy(intros = env.intros + (scrut.str -> ICtor(cls.ident))), arm))
+          case (x @ Pat.Class(cls), arm) =>
+            (x, f(env.copy(intros = env.intros + (scrut.str -> ICtor(cls.ident))), arm))
+          case (x @ Pat.Lit(_), arm) =>
+            (x, f(env, arm))
         }, default map { x => f(env, x) }).copyTag(node)
       case LetExpr(x, e1, e2) =>
         val intros2 = IntroductionAnalysis.getIntro(e1, env.intros).map { y => env.intros + (x.str -> y) }.getOrElse(env.intros)
@@ -1025,8 +1033,10 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
     override def iterate(x: Case) = x match
       case Case(x, cases, default) =>
         cases foreach {
-          (cls, arm) => 
+          case (Pat.Class(cls), arm) => 
             intros = intros + (x.str -> ICtor(cls.ident))
+            arm.acceptIterator(this)
+          case (Pat.Lit(_), arm) =>
             arm.acceptIterator(this)
         }
         default foreach { x => x.acceptIterator(this) }
@@ -1276,7 +1286,10 @@ class Optimizer(fresh: Fresh, fn_uid: FreshInt, class_uid: FreshInt, tag: FreshI
       case Case(scrut, cases, default) if cctx.contains(scrut.str) =>
         cctx.get(scrut.str) match
           case Some(cls) =>
-            val arm = cases.find(_._1.ident == cls).get._2
+            val arm = cases.find{
+              case (Pat.Class(cls2), _) => cls2.ident == cls
+              case _ => false
+            }.get._2
             f(arm)
           case None =>
             default match

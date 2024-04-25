@@ -181,13 +181,28 @@ enum Expr:
     case CtorApp(name, args) => LocMarker.MCtorApp(name, args.map(_.toExpr.locMarker))
     case Select(name, cls, field) => LocMarker.MSelect(name.str, cls, field)
     case BasicOp(name, args) => LocMarker.MBasicOp(name, args.map(_.toExpr.locMarker))
+
+enum Pat:
+  case Lit(lit: Lit)
+  case Class(cls: ClassInfo)
+
+  def isTrue = this match
+    case Class(cls) => cls.ident == "True"
+    case _ => false
   
+  def isFalse = this match
+    case Class(cls) => cls.ident == "False"
+    case _ => false
+
+  override def toString(): String = this match
+    case Lit(lit) => s"$lit"
+    case Class(cls) => s"${cls.ident}"
 
 enum Node:
   // Terminal forms:
   case Result(res: Ls[TrivialExpr])
   case Jump(defn: DefnRef, args: Ls[TrivialExpr])
-  case Case(scrut: Name, cases: Ls[(ClassInfo, Node)], default: Opt[Node])
+  case Case(scrut: Name, cases: Ls[(Pat, Node)], default: Opt[Node])
   // Intermediate forms:
   case LetExpr(name: Name, expr: Expr, body: Node)
   case LetCall(names: Ls[Name], defn: DefnRef, args: Ls[TrivialExpr], body: Node)
@@ -235,7 +250,7 @@ enum Node:
       <#> raw(args |> show_args)
       <#> raw(")")
       <:> raw(s"-- $tag") 
-    case Case(x, Ls((tcls, tru), (fcls, fls)), N) if tcls.ident == "True" && fcls.ident == "False" =>
+    case Case(x, Ls((tpat, tru), (fpat, fls)), N) if tpat.isTrue && fpat.isFalse =>
       val first = raw("if") <:> raw(x.toString) <:> raw(s"-- $tag") 
       val tru2 = indent(stack(raw("true") <:> raw ("=>"), tru.toDocument |> indent))
       val fls2 = indent(stack(raw("false") <:> raw ("=>"), fls.toDocument |> indent))
@@ -243,8 +258,8 @@ enum Node:
     case Case(x, cases, default) =>
       val first = raw("case") <:> raw(x.toString) <:> raw("of") <:> raw(s"-- $tag") 
       val other = cases flatMap {
-        case (ClassInfo(_, name, _), node) =>
-          Ls(raw(name) <:> raw("=>"), node.toDocument |> indent)
+        case (pat, node) =>
+          Ls(raw(pat.toString) <:> raw("=>"), node.toDocument |> indent)
       }
       default match
         case N => stack(first, (Document.Stacked(other) |> indent))
@@ -508,7 +523,7 @@ enum LocMarker:
   case MBasicOp(name: Str, args: Ls[LocMarker])
   case MResult(res: Ls[LocMarker])
   case MJump(name: Str, args: Ls[LocMarker])
-  case MCase(scrut: Str, cases: Ls[ClassInfo], default: Bool)
+  case MCase(scrut: Str, cases: Ls[Pat], default: Bool)
   case MLetExpr(name: Str, expr: LocMarker)
   case MLetCall(names: Ls[Str], defn: Str, args: Ls[LocMarker])
   var tag = DefnTag(-1)
@@ -519,7 +534,7 @@ enum LocMarker:
       raw("jump")
       <:> raw(jp)
       <:> raw("...")
-    case MCase(x, Ls(tcls, fcls), false) if tcls.ident == "True" && fcls.ident == "False" =>
+    case MCase(x, Ls(tpat, fpat), false) if tpat.isTrue && fpat.isFalse =>
       raw("if") <:> raw(x.toString) <:> raw("...")
     case MCase(x, cases, default) =>
       raw("case") <:> raw(x.toString) <:> raw("of") <:> raw("...")

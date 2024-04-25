@@ -61,12 +61,14 @@ class CppCodeGen:
   private def toExpr(texpr: TrivialExpr, reifyUnit: Bool = false): Opt[Expr] = texpr match
     case IExpr.Ref(name) => S(Expr.Var(name |> mapName))
     case IExpr.Literal(mlscript.IntLit(x)) => S(mlsIntLit(x))
+    case IExpr.Literal(mlscript.DecLit(x)) => S(mlsIntLit(x.toBigInt))
     case IExpr.Literal(mlscript.StrLit(x)) => S(mlsStrLit(x))
     case IExpr.Literal(mlscript.UnitLit(_)) => if reifyUnit then S(mlsUnitValue) else None
   
   private def toExpr(texpr: TrivialExpr): Expr = texpr match
     case IExpr.Ref(name) => Expr.Var(name |> mapName)
     case IExpr.Literal(mlscript.IntLit(x)) => mlsIntLit(x)
+    case IExpr.Literal(mlscript.DecLit(x)) => mlsIntLit(x.toBigInt)
     case IExpr.Literal(mlscript.StrLit(x)) => mlsStrLit(x)
     case IExpr.Literal(mlscript.UnitLit(_)) => mlsUnitValue
   
@@ -77,7 +79,7 @@ class CppCodeGen:
       val init = Expr.Initializer(exprs.map{x => toExpr(x)})
       mlsTupleValue(init)
   
-  private def codegenCaseWithIfs(scrut: Name, cases: Ls[(ClassInfo, Node)], default: Opt[Node], storeInto: Str)(using decls: Ls[Decl], stmts: Ls[Stmt]): (Ls[Decl], Ls[Stmt]) =
+  private def codegenCaseWithIfs(scrut: Name, cases: Ls[(Pat, Node)], default: Opt[Node], storeInto: Str)(using decls: Ls[Decl], stmts: Ls[Stmt]): (Ls[Decl], Ls[Stmt]) =
     val scrutName = mapName(scrut)
     val init: Stmt = 
       default.fold(mlsThrowNonExhaustiveMatch)(x => {
@@ -85,10 +87,11 @@ class CppCodeGen:
         Stmt.Block(decls2, stmts2)
       })
     val stmt = cases.foldRight(S(init)) {
-      case ((cls, arm), nextarm) =>
+      case ((Pat.Class(cls), arm), nextarm) =>
         val (decls2, stmts2) = codegen(arm, storeInto)(using Ls.empty, Ls.empty[Stmt])
         val stmt = Stmt.If(mlsIsValueOf(cls.ident |> mapName, Expr.Var(scrutName)), Stmt.Block(decls2, stmts2), nextarm)
         S(stmt)
+      case _ => ???
     }
     (decls, stmt.fold(stmts)(x => stmts :+ x))
 
@@ -159,12 +162,12 @@ class CppCodeGen:
 
   private def sortClasses(prog: Program): Ls[ClassInfo] =
     var depgraph = prog.classes.map(x => (x.ident, x.parents)).toMap
-    var degree = depgraph.mapValues(_.size).toMap
+    var degree = depgraph.view.mapValues(_.size).toMap
     def removeNode(node: Str) =
       degree -= node
       depgraph -= node
-      depgraph = depgraph.mapValues(_.filter(_ != node)).toMap
-      degree = depgraph.mapValues(_.size).toMap
+      depgraph = depgraph.view.mapValues(_.filter(_ != node)).toMap
+      degree = depgraph.view.mapValues(_.size).toMap
     var sorted = Ls.empty[ClassInfo]
     var work = degree.filter(_._2 == 0).keys.toSet
     while work.nonEmpty do

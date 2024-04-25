@@ -65,7 +65,7 @@ class Interpreter(verbose: Bool):
   private enum Node:
     case Result(res: Ls[Expr])
     case Jump(defn: DefnRef, args: Ls[Expr])
-    case Case(scrut: Name, cases: Ls[(ClassInfo, Node)], default: Opt[Node])
+    case Case(scrut: Name, cases: Ls[(Pat, Node)], default: Opt[Node])
     case LetExpr(name: Name, expr: Expr, body: Node)
     case LetJoin(joinName: Name, params: Ls[Name], rhs: Node, body: Node)
     case LetCall(resultNames: Ls[Name], defn: DefnRef, args: Ls[Expr], body: Node)
@@ -83,7 +83,7 @@ class Interpreter(verbose: Bool):
         <#> raw("(")
         <#> raw(args |> showArgs)
         <#> raw(")") 
-      case Case(Name(x), Ls((tcls, tru), (fcls, fls)), N) if tcls.ident == "True" && fcls.ident == "False" =>
+      case Case(Name(x), Ls((tpat, tru), (fpat, fls)), N) if tpat.isTrue && fpat.isTrue =>
         val first = raw("if") <:> raw(x)
         val tru2 = indent(raw("true") <:> raw ("=>") <:> tru.document)
         val fls2 = indent(raw("false") <:> raw ("=>") <:> fls.document)
@@ -91,8 +91,8 @@ class Interpreter(verbose: Bool):
       case Case(Name(x), cases, default) =>
         val first = raw("case") <:> raw(x) <:> raw("of")
         val other = cases map {
-          case (ClassInfo(_, name, _), node) =>
-            raw(name) <:> raw("=>") <:> node.document
+          case (pat, node) =>
+            raw(pat.toString) <:> raw("=>") <:> node.document
         }
         default match
           case N => stack(first, (Document.Stacked(other) |> indent))
@@ -274,7 +274,10 @@ class Interpreter(verbose: Bool):
         case x: CtorApp => x
         case x => throw IRInterpreterError(s"not a class $x")
       }
-      val arm = cases.find{_._1 == cls} match {
+      val arm = cases.find{
+        case (Pat.Class(cls2), _) => cls == cls2
+        case _ => false
+      } match {
         case Some((_, x)) => x
         case _ => 
           default match
