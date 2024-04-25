@@ -1,6 +1,6 @@
 CXX := c++
 CFLAGS := $(CFLAGS) -O3 -Wall -Wextra -ggdb3 -std=c++17 # -fsanitize=address,leak
-LDFLAGS := $(LDFLAGS) -Wl,-stack_size -Wl,0x20000000
+LDFLAGS := $(LDFLAGS) -Wl,-stack_size -Wl,0x20000000 # -L/opt/homebrew/lib -lmimalloc
 SRC := mls.cpp
 INCLUDES = mlsprelude.h
 TARGET := mls
