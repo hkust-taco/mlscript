@@ -31,7 +31,32 @@ x => if x is
 //│ res
 //│     = [Function: res]
 
-// NOT OK
+:w
+:ducs:desugar.result,postprocess.result
+x => if x is
+  refined(None) then x
+  Some then x
+//│ Desugared UCS term:
+//│ if
+//│   x*‡ is refined None then x
+//│   x*‡ is Some then x
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   refined None*† -> x
+//│   Some*◊ -> x
+//│ ╔══[WARNING] inconsistent refined pattern
+//│ ║  l.37: 	  refined(None) then x
+//│ ║        	          ^^^^
+//│ ╟── pattern `Some` is not refined
+//│ ║  l.38: 	  Some then x
+//│ ║        	  ^^^^
+//│ ╟── but pattern `None` is refined
+//│ ║  l.37: 	  refined(None) then x
+//│ ╙──      	          ^^^^
+//│ (None | Some[anything]) -> Some[nothing]
+//│ res
+//│     = [Function: res]
+
 :ducs:desugar.result,postprocess.result
 x => if x is
   refined(None) then x
