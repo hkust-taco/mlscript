@@ -10,14 +10,14 @@ import mlscript.utils.shorthands.Bool
 class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
   private type DefnGraph = Set[DefnNode]
 
-  class ModConsCall(defn: Defn)
+  class ModConsCall(defn: Defn, valName: Name, clsInfo: ClassInfo, fieldName: String)
 
   private def getModConsCall(node: Node, defnAcc: Option[Defn]) = node match
     case Result(res) => 
     case Jump(defn, args) =>
     case Case(scrut, cases) =>
     case LetExpr(name, expr, body) =>
-    case LetCall(names, defn, args, body) =>
+    case LetCall(names, defn, args, body, _) =>
     case AssignField(assignee, clsInfo, fieldName, value, body) =>
 
   // checks whether a list of names is equal to a list of trivial expressions referencing those names
@@ -28,14 +28,14 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
   private def isIdentityJp(d: Defn): Bool = true
   
   private def isTailCall(node: Node): Boolean = node match
-    case LetCall(names, defn, args, body) => body match
+    case LetCall(names, defn, args, body, _) => body match
       case Result(res) => argsListEqual(names, res) 
       case Jump(defn, args) => argsListEqual(names, args) && isIdentityJp(defn.expectDefn)
       case _ => false
     case _ => false
   
   private def findTailCalls(node: Node)(implicit nodeMap: Map[Int, DefnNode]): List[DefnNode] = node match
-    case LetCall(names, defn, args, body) =>
+    case LetCall(names, defn, args, body, _) =>
       if isTailCall(node) then nodeMap(defn.expectDefn.id) :: Nil
       else findTailCalls(body)
     case Result(res)                      => Nil
@@ -150,9 +150,6 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
 
     val stackFrameIdxes = defnsList.foldLeft(1 :: Nil)((ls, defn) => defn.params.size + ls.head :: ls).drop(1).reverse
 
-    println(defnsList.map(_.name))
-    println(stackFrameIdxes)
-
     val defnInfoMap: Map[Int, DefnInfo] = (defnsList zip stackFrameIdxes)
       .foldLeft(Map.empty)((map, item) => map + (item._1.id -> DefnInfo(item._1, item._2)))
 
@@ -177,11 +174,11 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
       case Result(_)                                 => node
       case Case(scrut, cases)                        => Case(scrut, cases.map(n => (n._1, transformNode(n._2))))
       case LetExpr(name, expr, body)                 => LetExpr(name, expr, transformNode(body))
-      case LetCall(names, defn, args, body) =>
+      case LetCall(names, defn, args, body, isTailRec) =>
         if isTailCall(node) then
           Jump(jpDefnRef, transformStackFrame(args, defnInfoMap(defn.expectDefn.id))).attachTag(tag)
         else
-          LetCall(names, defn, args, transformNode(body))
+          LetCall(names, defn, args, transformNode(body), isTailRec)
       case AssignField(assignee, clsInfo, field, value, body) => AssignField(assignee, clsInfo, field, value, transformNode(body))
 
     // Tail calls to another function in the component will be replaced with a tail call
@@ -199,7 +196,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
       val names = (0 until resultNum).map(i => Name("r" + i.toString())).toList
       val namesExpr = names.map(Expr.Ref(_))
       val res = Result(namesExpr).attachTag(tag)
-      val call = LetCall(names, newDefnRef, args, res).attachTag(tag)
+      val call = LetCall(names, newDefnRef, args, res, false).attachTag(tag)
       Defn(defn.id, defn.name, defn.params, defn.resultNum, call)
     }
 

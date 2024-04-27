@@ -164,7 +164,7 @@ class Interpreter(verbose: Bool):
     case INode.Jump(defnref, args) => Jump(DefnRef(Right(defnref.getName)), args |> convertArgs)
     case INode.Case(scrut, cases) => Case(scrut, cases.map{(cls, node) => (cls, node |> convert)})
     case INode.LetExpr(name, expr, body) => LetExpr(name, expr |> convert, body |> convert)
-    case INode.LetCall(xs, defnref, args, body) =>
+    case INode.LetCall(xs, defnref, args, body, _) =>
       LetCall(xs, DefnRef(Right(defnref.getName)), args |> convertArgs, body |> convert)
     case INode.AssignField(assignee, clsInfo, fieldName, value, body) => AssignField(assignee, clsInfo, fieldName, value |> convert, body |> convert)
 

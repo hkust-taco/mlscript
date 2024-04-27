@@ -119,7 +119,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
         case Result(Ref(f) :: Nil) if ctx.fnCtx.contains(f.str) => buildResultFromTerm(xs) {
           case Result(args) =>
             val v = fresh.make
-            LetCall(List(v), DefnRef(Right(f.str)), args, v |> ref |> sresult |> k).attachTag(tag)
+            LetCall(List(v), DefnRef(Right(f.str)), args, v |> ref |> sresult |> k, false).attachTag(tag)
           case node @ _ => node |> unexpectedNode
         }
         case Result(Ref(f) :: Nil) => buildResultFromTerm(xs) {
@@ -226,6 +226,14 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
               v |> ref |> sresult |> k).attachTag(tag)
           case node @ _ => node |> unexpectedNode
         }
+      
+      case Ann(term, receiver) =>
+        // TODO: what happens if thetailrec is overridden?
+        (term, buildResultFromTerm(receiver)(k)) match
+          case (Var("tailrec"), LetCall(names, defn, args, body, isTailRec)) =>
+            LetCall(names, defn, args, body, true)
+          case _ => tm |> unexpectedTerm
+        
 
       case tup: Tup => buildResultFromTup(tup)(k)
 

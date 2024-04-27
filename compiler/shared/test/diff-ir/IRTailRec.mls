@@ -394,3 +394,105 @@ fun h(p, q, r, s) = f(0, 0, 0)
 //│ )
 //│ },
 //│ 2 -- #30)
+
+:interpIR
+class True
+class False
+class Cons(h, t)
+class Nil
+fun addOne(xs) =
+  if xs is
+    Cons(h, t) then Cons(h + 1, @tailrec addOne(t))
+    Nil then Nil
+addOne(Cons(1, Cons(2, Cons(3, Nil))))
+//│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#fun| |addOne|(|xs|)| |#=|→|#if| |xs| |is|→|Cons|(|h|,| |t|)| |#then| |Cons|(|h| |+| |1|,| |@|tailrec| |addOne|(|t|)|)|↵|Nil| |#then| |Nil|←|←|↵|addOne|(|Cons|(|1|,| |Cons|(|2|,| |Cons|(|3|,| |Nil|)|)|)|)|
+//│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; fun addOne = (xs,) => {if xs is ‹(Cons(h, t,)) then Cons(+(h,)(1,), @tailrec addOne(t,),); (Nil) then Nil›}; addOne(Cons(1, Cons(2, Cons(3, Nil,),),),)}
+//│ 
+//│ 
+//│ IR:
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, [])}, {
+//│ Def(0, addOne, [xs$0],
+//│ 1, 
+//│ case xs$0 of -- #27
+//│   Cons =>
+//│     let x$1 = xs$0.t in -- #23
+//│     let x$2 = xs$0.h in -- #22
+//│     let x$3 = +(x$2,1) in -- #21
+//│     let* (x$4) = @tailrec addOne(x$1) in -- #x
+//│     let x$5 = Cons(x$3,x$4) in -- #19
+//│     jump j$0(x$5) -- #18
+//│   Nil =>
+//│     let x$6 = Nil() in -- #26
+//│     jump j$0(x$6) -- #25
+//│ )
+//│ Def(1, j$0, [x$0],
+//│ 1, 
+//│ x$0 -- #1
+//│ )
+//│ },
+//│ let x$7 = Nil() in -- #52
+//│ let x$8 = Cons(3,x$7) in -- #51
+//│ let x$9 = Cons(2,x$8) in -- #50
+//│ let x$10 = Cons(1,x$9) in -- #49
+//│ let* (x$11) = addOne(x$10) in -- #48
+//│ x$11 -- #47)
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(j$0), Set(addOne))
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, [])}, {
+//│ Def(0, addOne, [xs$0],
+//│ 1, 
+//│ case xs$0 of -- #27
+//│   Cons =>
+//│     let x$1 = xs$0.t in -- #23
+//│     let x$2 = xs$0.h in -- #22
+//│     let x$3 = +(x$2,1) in -- #21
+//│     let* (x$4) = @tailrec addOne(x$1) in -- #x
+//│     let x$5 = Cons(x$3,x$4) in -- #19
+//│     jump j$0(x$5) -- #18
+//│   Nil =>
+//│     let x$6 = Nil() in -- #26
+//│     jump j$0(x$6) -- #25
+//│ )
+//│ Def(1, j$0, [x$0],
+//│ 1, 
+//│ x$0 -- #1
+//│ )
+//│ },
+//│ let x$7 = Nil() in -- #52
+//│ let x$8 = Cons(3,x$7) in -- #51
+//│ let x$9 = Cons(2,x$8) in -- #50
+//│ let x$10 = Cons(1,x$9) in -- #49
+//│ let* (x$11) = addOne(x$10) in -- #48
+//│ x$11 -- #47)
+//│ 
+//│ Promoted:
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, [])}, {
+//│ Def(0, addOne, [xs$0],
+//│ 1, 
+//│ case xs$0 of -- #27
+//│   Cons =>
+//│     let x$1 = xs$0.t in -- #23
+//│     let x$2 = xs$0.h in -- #22
+//│     let x$3 = +(x$2,1) in -- #21
+//│     let* (x$4) = @tailrec addOne(x$1) in -- #x
+//│     let x$5 = Cons(x$3,x$4) in -- #19
+//│     jump j$0(x$5) -- #18
+//│   Nil =>
+//│     let x$6 = Nil() in -- #26
+//│     jump j$0(x$6) -- #25
+//│ )
+//│ Def(1, j$0, [x$0],
+//│ 1, 
+//│ x$0 -- #1
+//│ )
+//│ },
+//│ let x$7 = Nil() in -- #52
+//│ let x$8 = Cons(3,x$7) in -- #51
+//│ let x$9 = Cons(2,x$8) in -- #50
+//│ let x$10 = Cons(1,x$9) in -- #49
+//│ let* (x$11) = addOne(x$10) in -- #48
+//│ x$11 -- #47)
+//│ 
+//│ Interpreted:
+//│ Cons(2,Cons(3,Cons(4,Nil())))
