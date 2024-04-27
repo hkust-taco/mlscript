@@ -1170,6 +1170,7 @@ object DiffTests {
     private val pattern = "^ducs(?::(\\s*(?:[A-Za-z\\.-]+)(?:,\\s*[A-Za-z\\.-]+)*))?$".r
     def unapply(flagsString: Str): Opt[Set[Str]] =
       flagsString match {
+        case "ducs" => S(Set.empty)
         case pattern(flags) => Option(flags).map(_.split(",\\s*").toSet)
         case _ => N
       }

@@ -4,8 +4,7 @@ import collection.mutable.{Buffer, SortedMap => MutSortedMap}
 import mlscript.{Lit, Loc, Located, SimpleTerm, TypeName, Var}
 import mlscript.pretyper.symbol.TypeSymbol
 import mlscript.utils._, shorthands._
-import mlscript.pretyper.symbol.DummyClassSymbol
-import mlscript.pretyper.symbol.ModuleSymbol
+import mlscript.pretyper.symbol.{ClassLikeSymbol, DummyClassSymbol, ModuleSymbol}
 
 sealed abstract class Pattern {
   private val locationsBuffer: Buffer[Loc] = Buffer.empty
@@ -40,7 +39,7 @@ sealed abstract class Pattern {
 
 object Pattern {
   final case class ClassLike(
-      val classLikeSymbol: TypeSymbol,
+      val classLikeSymbol: ClassLikeSymbol,
       scrutinee: Scrutinee
   )(override val refined: Bool) extends Pattern {
     private var unappliedVarOpt: Opt[Var] = N
@@ -79,13 +78,10 @@ object Pattern {
       case otherSymbol: TypeSymbol => otherSymbol.defn.kind.str
     })} `${classLikeSymbol.name}`"
 
+    /** Checks whether this pattern can cover the given pattern. */
     override def matches(pat: SimpleTerm): Bool =
       pat match {
-        case pat: Var => pat.symbolOption match {
-          case S(patternSymbol: TypeSymbol) =>
-            patternSymbol === classLikeSymbol || patternSymbol.hasBaseClass(classLikeSymbol)
-          case S(_) | N => false
-        }
+        case pat: Var => pat.getClassLikeSymbol.fold(false)(_ <:< classLikeSymbol)
         case _: Lit => false
       }
 

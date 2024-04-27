@@ -2,9 +2,12 @@ package mlscript.pretyper
 
 import collection.mutable.{Buffer, Map => MutMap, Set => MutSet}
 import mlscript.{Loc, NuFunDef, NuTypeDef, Term, Type, TypeName, Var}
+import mlscript.{App, TyApp, Tup}
 import mlscript.{Cls, Trt, Mxn, Als, Mod}
 import mlscript.utils._, shorthands._
 import mlscript.ucs.context.Matchable
+import scala.annotation.tailrec
+import scala.collection.immutable.SortedSet
 
 package object symbol {
   sealed trait Symbol {
@@ -25,24 +28,33 @@ package object symbol {
     
     override def name: Str = defn.name
 
-    var baseTypes: Ls[TypeSymbol] = Nil
-
-    @inline def hasBaseClass(baseClassLikeSymbol: TypeSymbol): Bool =
-      baseTypes.exists(_ === baseClassLikeSymbol)
-
     def showDbg: Str = s"${defn.kind.str} $name"
   }
 
   object TypeSymbol {
     def apply(defn: NuTypeDef): TypeSymbol =
       defn.kind match {
-        case Cls => new ClassSymbol(defn)
+        case Cls => new ClassSymbol(defn, extractSuperTypes(defn.parents))
         case Als => new TypeAliasSymbol(defn)
         case Mxn => new MixinSymbol(defn)
-        case Trt => new TraitSymbol(defn)
-        case Mod => new ModuleSymbol(defn)
+        case Trt => new TraitSymbol(defn, extractSuperTypes(defn.parents))
+        case Mod => new ModuleSymbol(defn, extractSuperTypes(defn.parents))
       }
     def unapply(symbol: TypeSymbol): Opt[NuTypeDef] = S(symbol.defn)
+
+    private def extractSuperTypes(parents: Ls[Term]): Ls[Var] = {
+      @tailrec
+      def rec(acc: Ls[Var], rest: Ls[Term]): Ls[Var] =
+        rest match {
+          case Nil => acc.reverse
+          case (nme: Var) :: tail => rec(nme :: acc, tail)
+          case (TyApp(ty, _)) :: tail => rec(acc, ty :: tail)
+          case (App(term, Tup(_))) :: tail => rec(acc, term :: tail)
+          case head :: _ =>
+            lastWords(s"unknown type in parent types: ${head.showDbg}")
+        }
+      rec(Nil, parents)
+    }
   }
 
   /**
@@ -51,7 +63,9 @@ package object symbol {
     *
     * @param nme the name of the expect type symbol.
     */
-  final class DummyClassSymbol(val nme: Var) extends TypeSymbol {
+  final class DummyClassSymbol(val nme: Var) extends ClassLikeSymbol {
+    override val parentTypeNames: Ls[Var] = Nil
+    
     override def defn: NuTypeDef = die
 
     override def name: Str = nme.name
@@ -59,11 +73,39 @@ package object symbol {
     override def showDbg: Str = s"dummy class $name"
   }
 
-  final class ClassSymbol(override val defn: NuTypeDef) extends TypeSymbol {
+  trait ClassLikeSymbol extends TypeSymbol {
+    val parentTypeNames: Ls[Var]
+
+    private val _baseClassLikeSymbols: Lazy[SortedSet[ClassLikeSymbol]] = new mlscript.utils.Lazy({
+      implicit val ord: Ordering[ClassLikeSymbol] = new Ordering[ClassLikeSymbol] {
+        override def compare(x: ClassLikeSymbol, y: ClassLikeSymbol): Int =
+          x.name.compareTo(y.name)
+      }
+      val parentClassLikeSymbols = parentTypeNames.iterator.map(_.symbol).collect {
+        case s: ClassLikeSymbol => s
+      }.toList
+      SortedSet.from(
+        parentClassLikeSymbols.iterator ++
+        parentClassLikeSymbols.iterator.flatMap(_.baseClassLikeSymbols))
+    })
+
+    lazy val baseClassLikeSymbols: SortedSet[ClassLikeSymbol] = _baseClassLikeSymbols.get_!
+
+    def <:<(that: ClassLikeSymbol): Bool =
+      this === that || baseClassLikeSymbols.contains(that)
+  }
+
+  final class ClassSymbol(
+    override val defn: NuTypeDef,
+    override val parentTypeNames: Ls[Var]
+  ) extends ClassLikeSymbol {
     require(defn.kind === Cls)
   }
 
-  final class TraitSymbol(override val defn: NuTypeDef) extends TypeSymbol {
+  final class TraitSymbol(
+    override val defn: NuTypeDef,
+    override val parentTypeNames: Ls[Var]
+  ) extends ClassLikeSymbol {
     require(defn.kind === Trt)
   }
 
@@ -75,7 +117,10 @@ package object symbol {
     require(defn.kind === Als)
   }
 
-  final class ModuleSymbol(override val defn: NuTypeDef) extends TypeSymbol with TermSymbol {
+  final class ModuleSymbol(
+    override val defn: NuTypeDef,
+    override val parentTypeNames: Ls[Var]
+  ) extends ClassLikeSymbol with TermSymbol {
     require(defn.kind === Mod)
 
     override def nameVar: Var = defn.nameVar
@@ -125,5 +170,9 @@ package object symbol {
           lastWords(s"Symbol already set for $name")
       }
     def withSymbol(symbol: Symbol): this.type = { this.symbol = symbol; this }
+
+    def getClassLikeSymbol: Opt[ClassLikeSymbol] = _symbol.collectFirst {
+      case symbol: ClassLikeSymbol => symbol
+    }
   }
 }

@@ -2,12 +2,9 @@ package mlscript.ucs.context
 
 import collection.mutable.{Buffer, SortedMap => MutSortedMap, SortedSet => MutSortedSet}
 import mlscript.{Lit, Loc, Var}
-import mlscript.pretyper.symbol.TypeSymbol
+import mlscript.pretyper.symbol.{ClassLikeSymbol, TypeSymbol}
 import mlscript.utils._, shorthands._
-import mlscript.DecLit
-import mlscript.IntLit
-import mlscript.StrLit
-import mlscript.UnitLit
+import mlscript.{DecLit, IntLit, StrLit, UnitLit}
 
 class Scrutinee(val context: Context, parent: Opt[Scrutinee]) {
   import Scrutinee._
@@ -36,7 +33,7 @@ class Scrutinee(val context: Context, parent: Opt[Scrutinee]) {
     * If there is already a `Pattern.ClassLike` for the given symbol, return it.
     * Otherwise, create a new `Pattern.ClassLike` and return it.
     */
-  def getOrCreateClassPattern(classLikeSymbol: TypeSymbol, refined: Bool): Pattern.ClassLike =
+  def getOrCreateClassPattern(classLikeSymbol: ClassLikeSymbol, refined: Bool): Pattern.ClassLike =
     classLikePatterns.getOrElseUpdate(classLikeSymbol, Pattern.ClassLike(classLikeSymbol, this)(refined))
 
   /**

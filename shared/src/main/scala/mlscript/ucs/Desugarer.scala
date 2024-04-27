@@ -47,8 +47,8 @@ trait Desugarer extends Transformation
       * get or create a dummy class symbol for it. The desugaring can continue
       * and `Typer` will throw an error for this miuse.
       */
-    private def requireClassLikeSymbol(symbol: TypeSymbol)(implicit context: Context): TypeSymbol = symbol match {
-      case symbol @ (_: TraitSymbol | _: ClassSymbol | _: ModuleSymbol | _: DummyClassSymbol) => symbol
+    private def requireClassLikeSymbol(symbol: TypeSymbol)(implicit context: Context): ClassLikeSymbol = symbol match {
+      case symbol: ClassLikeSymbol => symbol
       case symbol: MixinSymbol =>
         raiseDesugaringError(msg"Mixins are not allowed in pattern" -> nme.toLoc)
         context.getOrCreateDummyClassSymbol(nme)
@@ -127,7 +127,7 @@ trait Desugarer extends Transformation
     def withResolvedTermSymbol(implicit scope: Scope): Var = { nme.resolveTermSymbol; nme }
 
     /** Associate the `Var` with a class like symbol and returns the class like symbol. */
-    def resolveClassLikeSymbol(implicit scope: Scope, context: Context): TypeSymbol = {
+    def resolveClassLikeSymbol(implicit scope: Scope, context: Context): ClassLikeSymbol = {
       val symbol = scope.getTypeSymbol(nme.name) match {
         case S(symbol) => requireClassLikeSymbol(symbol)
         case N =>

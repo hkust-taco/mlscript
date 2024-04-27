@@ -79,7 +79,7 @@ trait CoverageChecking { self: Desugarer with Traceable =>
                 diagnostics ++ checkCoverage(body, newPending, working - namedScrutinee, seen)
               )
             case ((unseenPatterns, diagnostics), (className: Var) -> body) =>
-              val classSymbol = className.symbolOption.flatMap(_.typeSymbolOption).getOrElse {
+              val classSymbol = className.getClassLikeSymbol.getOrElse {
                 throw new Exception(s"$className is not associated with a type symbol")
               }
               println(s"class symbol: `${classSymbol.name}`")
@@ -190,7 +190,7 @@ object CoverageChecking {
     }
 
     /** Separate a class-like pattern if it appears in `patterns`. */
-    def separate(classLikeSymbol: TypeSymbol): Opt[(Pattern.ClassLike, Ls[Pattern.ClassLike])] = {
+    def separate(classLikeSymbol: ClassLikeSymbol): Opt[(Pattern.ClassLike, Ls[Pattern.ClassLike])] = {
       classLikePatterns.foldRight[(Opt[Pattern.ClassLike], Ls[Pattern.ClassLike])]((N, Nil)) {
         case (pattern, (S(separated), rest)) => (S(separated), pattern :: rest)
         case (pattern, (N, rest)) if pattern.classLikeSymbol === classLikeSymbol => (S(pattern), rest)
@@ -220,7 +220,7 @@ object CoverageChecking {
       *         locations where the pattern appears, the related patterns, and
       *         unrelated patterns.
       */
-    def split(classLikeSymbol: TypeSymbol): Opt[(Pattern.ClassLike, CaseSet, CaseSet)] = {
+    def split(classLikeSymbol: ClassLikeSymbol): Opt[(Pattern.ClassLike, CaseSet, CaseSet)] = {
       def mk(pattern: Pattern): Opt[Lit \/ TypeSymbol] = pattern match {
         case Pattern.ClassLike(classLikeSymbol, _) => S(R(classLikeSymbol))
         case Pattern.Literal(literal) => S(L(literal))

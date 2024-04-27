@@ -3,6 +3,7 @@ package mlscript.ucs
 import mlscript.{App, DecLit, Fld, FldFlags, IntLit, Lit, PlainTup, StrLit, Term, Tup, Var}
 import mlscript.pretyper.symbol.TypeSymbol
 import mlscript.utils._, shorthands._
+import mlscript.pretyper.symbol.ClassLikeSymbol
 
 package object stages {
   /**
@@ -53,7 +54,7 @@ package object stages {
     case (_, R(s)) if s.name === "Object" => true
     case (R(s1), R(s2)) if (s1.name === "true" || s1.name === "false") && s2.name === "Bool" => true
     case (R(s1), R(s2)) if s1.name === "Int" && s2.name === "Num" => true
-    case (R(s1), R(s2)) => s1 hasBaseClass s2
+    case (R(s1: ClassLikeSymbol), R(s2: ClassLikeSymbol)) => s1 <:< s2
     case (L(IntLit(_)), R(s)) if s.name === "Int" || s.name === "Num" => true
     case (L(StrLit(_)), R(s)) if s.name === "Str" => true
     case (L(DecLit(_)), R(s)) if s.name === "Num" => true

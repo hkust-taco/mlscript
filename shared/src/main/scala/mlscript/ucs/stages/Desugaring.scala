@@ -135,7 +135,7 @@ trait Desugaring { self: PreTyper =>
   private def flattenClassParameters(
       parentScrutineeVar: Var,
       parentScrutinee: Scrutinee,
-      parentClassLikeSymbol: TypeSymbol,
+      parentClassLikeSymbol: ClassLikeSymbol,
       parentRefined: Bool,
       parameters: Ls[s.Pattern],
   )(implicit context: Context): Ls[Opt[(Var, Opt[s.Pattern], Ls[Var])]] = {
