@@ -1,13 +1,10 @@
-package mlscript.ucs.stages
+package mlscript
+package ucs
+package stages
 
-import mlscript.{Case, CaseBranches, CaseOf, Let, Lit, Loc, NoCases, Term, Var, Wildcard}
-import mlscript.{Diagnostic, ErrorReport, WarningReport}
-import mlscript.Message, Message.MessageContext
-import mlscript.ucs.Desugarer
-import mlscript.ucs.context.{Context, Pattern, Scrutinee}
-import mlscript.pretyper.Traceable
-import mlscript.pretyper.symbol._
-import mlscript.utils._, shorthands._
+import utils._, shorthands._, Message.MessageContext
+import ucs.context.{Context, Pattern, Scrutinee}
+import pretyper.Traceable, pretyper.symbol._
 
 trait CoverageChecking { self: Desugarer with Traceable =>
   import CoverageChecking._

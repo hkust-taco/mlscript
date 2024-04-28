@@ -1,10 +1,9 @@
-package mlscript.ucs.context
+package mlscript
+package ucs.context
 
 import collection.mutable.{Buffer, SortedMap => MutSortedMap}
-import mlscript.{Lit, Loc, Located, SimpleTerm, TypeName, Var}
-import mlscript.pretyper.symbol.TypeSymbol
-import mlscript.utils._, shorthands._
-import mlscript.pretyper.symbol.{ClassLikeSymbol, DummyClassSymbol, ModuleSymbol}
+import utils._, shorthands._
+import pretyper.symbol.{ClassLikeSymbol, DummyClassSymbol, ModuleSymbol, TypeSymbol}
 
 sealed abstract class Pattern {
   private val locationsBuffer: Buffer[Loc] = Buffer.empty

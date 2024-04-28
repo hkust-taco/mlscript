@@ -1,14 +1,11 @@
-package mlscript.ucs.stages
+package mlscript
+package ucs
+package stages
 
-import mlscript.{App, CaseOf, DecLit, Fld, FldFlags, IntLit, Let, Lit, Loc, Sel, Term, Tup, Var, StrLit}
-import mlscript.{CaseBranches, Case, Wildcard, NoCases}
-import mlscript.Message, Message.MessageContext
-import mlscript.utils._, shorthands._
-import mlscript.ucs, mlscript.pretyper
-import ucs.{Desugarer, Lines, LinesOps, VariableGenerator}
-import ucs.context.{Context, Scrutinee}
-import ucs.display.{showNormalizedTerm, showSplit}
-import ucs.syntax.core.{Pattern, Branch, Split}
+import mlscript.utils._, shorthands._, Message.MessageContext
+import context.{Context, Scrutinee}
+import display.{showNormalizedTerm, showSplit}
+import syntax.core.{Pattern, Branch, Split}
 import pretyper.symbol._
 import pretyper.{Diagnosable, Scope, Traceable}
 

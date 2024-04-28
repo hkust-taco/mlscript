@@ -1,10 +1,8 @@
-package mlscript.pretyper
+package mlscript
+package pretyper
 
-import collection.immutable.Map
-import mlscript.utils._, shorthands._
-import mlscript.{Als, Mod, NuTypeDef, TypeName, TypingUnit, Var}
-import scala.annotation.tailrec
-import symbol._
+import annotation.tailrec, collection.immutable.Map
+import utils._, shorthands._, symbol._
 
 final class Scope(val enclosing: Opt[Scope], val types: Map[Str, TypeSymbol], val terms: Map[Str, TermSymbol]) {
   import Scope._

@@ -1,13 +1,13 @@
-package mlscript.ucs
+package mlscript
+package ucs
 
 import collection.mutable.{Map => MutMap}
 import syntax.{source => s, core => c}, stages._, context.{Context, Scrutinee}
 import mlscript.ucs.display.{showNormalizedTerm, showSplit}
 import mlscript.pretyper.{PreTyper, Scope}
 import mlscript.pretyper.symbol._
-import mlscript.{If, Loc, Located, Message, Var}, Message.MessageContext, mlscript.Diagnostic
-import mlscript.utils._, shorthands._
-import syntax.core.{Branch, Split}
+import Message.MessageContext
+import utils._, shorthands._
 
 /**
   * The main class of the UCS desugaring.
@@ -266,18 +266,18 @@ trait Desugarer extends Transformation
     * Traverse a desugared _core abstract syntax_ tree. The function takes care
     * of let bindings and resolves variables.
     */
-  private def traverseSplit(split: syntax.core.Split)(implicit scope: Scope): Unit =
+  private def traverseSplit(split: c.Split)(implicit scope: Scope): Unit =
     split match {
-      case Split.Cons(Branch(scrutinee, pattern, continuation), tail) => 
+      case c.Split.Cons(c.Branch(scrutinee, pattern, continuation), tail) => 
         traverseTerm(scrutinee)
         val patternSymbols = pattern.declaredVars.map(nme => nme -> nme.symbol)
         traverseSplit(continuation)(scope.withEntries(patternSymbols))
         traverseSplit(tail)
-      case Split.Let(isRec, name, rhs, tail) =>
+      case c.Split.Let(isRec, name, rhs, tail) =>
         val recScope = scope + name.symbol
         traverseTerm(rhs)(if (isRec) recScope else scope)
         traverseSplit(tail)(recScope)
-      case Split.Else(default) => traverseTerm(default)
-      case Split.Nil => ()
+      case c.Split.Else(default) => traverseTerm(default)
+      case c.Split.Nil => ()
     }
 }

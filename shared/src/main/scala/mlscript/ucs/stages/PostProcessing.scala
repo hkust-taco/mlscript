@@ -1,13 +1,11 @@
-package mlscript.ucs.stages
+package mlscript
+package ucs
+package stages
 
-import mlscript.{Case, CaseBranches, CaseOf, Let, Lit, Loc, NoCases, Term, Var, Wildcard}
-import mlscript.ucs.Desugarer
-import mlscript.ucs.context.{Context, Pattern, Scrutinee}
-import mlscript.pretyper.symbol._
-import mlscript.utils._, shorthands._
-import mlscript.Message, Message.MessageContext
-import scala.annotation.tailrec
-import mlscript.ucs.context.Pattern.ClassLike
+import annotation.tailrec
+import context.{Context, Pattern, Scrutinee}
+import pretyper.symbol._
+import utils._, shorthands._, Message.MessageContext
 
 trait PostProcessing { self: Desugarer with mlscript.pretyper.Traceable =>
   import PostProcessing._

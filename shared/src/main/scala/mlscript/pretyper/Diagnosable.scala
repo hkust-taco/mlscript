@@ -1,7 +1,8 @@
-package mlscript.pretyper
+package mlscript
+package pretyper
 
 import scala.collection.mutable.Buffer
-import mlscript.{Diagnostic, ErrorReport, Loc, Message, WarningReport}, Diagnostic.Source, Message.MessageContext
+import Diagnostic.Source, Message.MessageContext
 import mlscript.utils._, shorthands._
 
 /**

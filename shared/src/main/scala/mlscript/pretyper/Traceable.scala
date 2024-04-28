@@ -1,7 +1,7 @@
-package mlscript.pretyper
+package mlscript
+package pretyper
 
-import mlscript.Diagnostic
-import mlscript.utils._, shorthands._
+import utils._, shorthands._
 
 trait Traceable {
   /**

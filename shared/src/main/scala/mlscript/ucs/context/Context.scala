@@ -1,12 +1,11 @@
-package mlscript.ucs.context
+package mlscript
+package ucs
+package context
 
-import collection.mutable.{Buffer, Map => MutMap, SortedMap => MutSortedMap}
-import mlscript.{If, Loc, Var}
-import mlscript.pretyper.symbol.TypeSymbol
-import mlscript.pretyper.Scope
-import mlscript.ucs.VariableGenerator
-import mlscript.utils._, shorthands._
-import mlscript.pretyper.symbol.DummyClassSymbol
+import collection.mutable.{Buffer, Map => MutMap}
+import utils._, shorthands._
+import pretyper.symbol.{DummyClassSymbol, TypeSymbol}
+import pretyper.Scope
 
 class Context(originalTerm: If) {
   /** The prefix of all prefixes. */

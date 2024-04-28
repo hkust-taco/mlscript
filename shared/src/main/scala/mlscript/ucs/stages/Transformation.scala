@@ -1,12 +1,10 @@
-package mlscript.ucs.stages
+package mlscript
+package ucs
+package stages
 
-import mlscript.ucs, ucs.Desugarer, ucs.syntax.source._
-import mlscript.{If, IfBody, IfBlock, IfElse, IfLet, IfOpApp, IfOpsApp, IfThen}
-import mlscript.{Blk, Bra, Term, Var, App, Tup, Lit, Fld, Loc, NuFunDef, TyApp, PlainTup}
-import mlscript.pretyper.Traceable
-import mlscript.Message, Message._
-import mlscript.utils._, shorthands._
 import collection.immutable, annotation.tailrec, util.chaining._
+import utils._, shorthands._, Message._
+import syntax.source._, pretyper.Traceable
 
 /**
   * Transform the parsed AST into an AST similar to the one in the paper.

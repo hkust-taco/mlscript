@@ -1,6 +1,7 @@
-package mlscript.ucs.stages
+package mlscript
+package ucs.stages
 
-import mlscript.{App, PlainTup, Term, Var}, mlscript.utils._, shorthands._
+import utils._, shorthands._
 
 /**
   * A `PartialTerm` represents a possibly incomplete term.

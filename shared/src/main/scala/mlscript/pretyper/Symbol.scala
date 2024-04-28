@@ -1,13 +1,8 @@
-package mlscript.pretyper
+package mlscript
+package pretyper
 
-import collection.mutable.{Buffer, Map => MutMap, Set => MutSet}
-import mlscript.{Loc, NuFunDef, NuTypeDef, Term, Type, TypeName, Var}
-import mlscript.{App, TyApp, Tup}
-import mlscript.{Cls, Trt, Mxn, Als, Mod}
-import mlscript.utils._, shorthands._
-import mlscript.ucs.context.Matchable
-import scala.annotation.tailrec
-import scala.collection.immutable.SortedSet
+import annotation.tailrec, collection.immutable.SortedSet
+import utils._, shorthands._, ucs.context.Matchable
 
 package object symbol {
   sealed trait Symbol {

@@ -1,9 +1,8 @@
-package mlscript.ucs
+package mlscript
+package ucs
 
-import mlscript.{App, DecLit, Fld, FldFlags, IntLit, Lit, PlainTup, StrLit, Term, Tup, Var}
-import mlscript.pretyper.symbol.TypeSymbol
-import mlscript.utils._, shorthands._
-import mlscript.pretyper.symbol.ClassLikeSymbol
+import utils._, shorthands._
+import pretyper.symbol.{ClassLikeSymbol, TypeSymbol}
 
 package object stages {
   /**

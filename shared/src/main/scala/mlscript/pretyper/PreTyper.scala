@@ -1,7 +1,8 @@
-package mlscript.pretyper
+package mlscript
+package pretyper
 
 import annotation.tailrec, collection.mutable.{Set => MutSet}, collection.immutable.SortedMap, util.chaining._
-import mlscript._, utils._, shorthands._, Diagnostic.PreTyping, Message.MessageContext, symbol._, ucs.Desugarer
+import utils._, shorthands._, Diagnostic.PreTyping, Message.MessageContext, symbol._, ucs.Desugarer
 
 class PreTyper extends Traceable with Diagnosable with Desugarer {
   /** A shorthand function to raise errors without specifying the source. */
