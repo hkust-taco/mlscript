@@ -42,17 +42,23 @@ fun add2(x) = x+2
 //│   fun apply$Lambda1$2$3 = (this, x,) => +(x, 1,)
 //│   Code(List(main$$5()))
 //│ }
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Symbol already set for obj
-//│ 	at: mlscript.utils.package$.lastWords(package.scala:227)
-//│ 	at: mlscript.VarImpl.symbol_$eq(helpers.scala:870)
-//│ 	at: mlscript.VarImpl.symbol_$eq$(helpers.scala:864)
-//│ 	at: mlscript.Var.symbol_$eq(syntax.scala:67)
-//│ 	at: mlscript.ucs.Desugarer$VarOps.resolveTermSymbol(Desugarer.scala:124)
-//│ 	at: mlscript.ucs.Desugarer$VarOps.withResolvedTermSymbol(Desugarer.scala:129)
-//│ 	at: mlscript.ucs.stages.Desugaring.desugarPatternSplit(Desugaring.scala:432)
-//│ 	at: mlscript.ucs.stages.Desugaring.$anonfun$desugarTermBranch$2(Desugaring.scala:101)
-//│ 	at: mlscript.pretyper.Traceable.trace(Traceable.scala:39)
-//│ 	at: mlscript.pretyper.Traceable.trace$(Traceable.scala:36)
+//│ ╔══[ERROR] the `if` expression has already been desugared
+//│ ║  l.7: 	  fun map(f)= new List(f(e), tail.map(f))
+//│ ║       	                         ^
+//│ ╙── please make sure that the objects are copied
+//│ class Lambda1$3$4()
+//│ class Nil$2()
+//│ class List$1(e: Int, tail: List$1 | Nil$2)
+//│ class Lambda1$2$3()
+//│ fun map$List$1: (Object, Object) -> List$1
+//│ fun add2$1: Int -> Int
+//│ fun main$$5: () -> List$1
+//│ fun apply$Lambda1$3$4: (anything, Int) -> Int
+//│ fun map$Nil$2: forall 'a. ('a & (List$1 | Nil$2), anything) -> (Nil$2 | 'a)
+//│ fun apply$Lambda1$2$3: (anything, Int) -> Int
+//│ List$1
+//│ res
+//│     = List$1 {}
 
 :mono
 class List(e: Int, tail: List | Nil) {

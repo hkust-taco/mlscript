@@ -196,6 +196,15 @@ trait Desugarer extends Transformation
     * @param scope the scope of the `If` node
     */
   protected def traverseIf(`if`: If)(implicit scope: Scope): Unit = {
+    `if`.desugaredTerm match {
+      case S(desugaredTerm) =>
+        raiseDesugaringError(
+          msg"the `if` expression has already been desugared" -> `if`.getLoc,
+          msg"please make sure that the objects are copied" -> N,
+        )
+        return
+      case N => ()
+    }
     implicit val context: Context = new Context(`if`)
     trace("traverseIf") {
       // Stage 0: Transformation
