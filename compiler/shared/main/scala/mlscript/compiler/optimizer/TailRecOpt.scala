@@ -10,15 +10,33 @@ import mlscript.utils.shorthands.Bool
 class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
   private type DefnGraph = Set[DefnNode]
 
-  class ModConsCall(defn: Defn, valName: Name, clsInfo: ClassInfo, fieldName: String)
+  class ModConsCallInfo(defn: Defn, letCallName: Name, letCtorName: Name, fieldName: String, clsInfo: ClassInfo)
 
-  private def getModConsCall(node: Node, defnAcc: Option[Defn]) = node match
+  class TailCallInfo(defn: Defn)
+
+  private def getModConsCall(
+    node: Node, 
+    defnAcc: Option[Defn], 
+    letCallName: Option[Name], 
+    letCtorName: Option[Name], 
+    fieldName: Option[String], 
+    clsInfo: Option[ClassInfo], 
+    hasTailrecAnn: Boolean // has tailrec annotation
+  ): Option[ModConsCallInfo] = node match
     case Result(res) => 
-    case Jump(defn, args) =>
-    case Case(scrut, cases) =>
-    case LetExpr(name, expr, body) =>
-    case LetCall(names, defn, args, body, _) =>
-    case AssignField(assignee, clsInfo, fieldName, value, body) =>
+      (defnAcc, letCallName, letCtorName, fieldName, clsInfo) match
+        case (Some(defn), Some(letCallName), Some(letCtorName), Some(fieldName), Some(clsInfo)) =>
+          Some(ModConsCallInfo(defn, letCallName, letCtorName, fieldName, clsInfo))
+        case _ => None
+    case Jump(_, _) => None 
+    case Case(scrut, cases) => ???
+    case LetExpr(name, expr, body) => body match
+      case Result(res) =>  ???
+      case Jump(defn, args) => ???
+      case _ => getModConsCall(body, defnAcc, letCallName, letCtorName, fieldName, clsInfo, hasTailrecAnn)
+    
+    case LetCall(names, defn, args, body, _) => ???
+    case AssignField(assignee, clsInfo, fieldName, value, body) => ???
 
   // checks whether a list of names is equal to a list of trivial expressions referencing those names
   private def argsListEqual(names: List[Name], exprs: List[TrivialExpr]) =
@@ -35,9 +53,12 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
     case _ => false
   
   private def findTailCalls(node: Node)(implicit nodeMap: Map[Int, DefnNode]): List[DefnNode] = node match
-    case LetCall(names, defn, args, body, _) =>
+    case LetCall(names, defn, args, body, isTailRec) =>
       if isTailCall(node) then nodeMap(defn.expectDefn.id) :: Nil
-      else findTailCalls(body)
+      else 
+        if isTailRec then
+          throw IRError("not a tail call")
+        findTailCalls(body)
     case Result(res)                      => Nil
     // case Jump(defn, args)                 => nodeMap(defn.expectDefn.id) :: Nil // assume that all definition references are resolved
     case Jump(defn, args)                 => Nil // jump points are already optimized and we should not touch them
@@ -175,7 +196,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
       case Case(scrut, cases)                        => Case(scrut, cases.map(n => (n._1, transformNode(n._2))))
       case LetExpr(name, expr, body)                 => LetExpr(name, expr, transformNode(body))
       case LetCall(names, defn, args, body, isTailRec) =>
-        if isTailCall(node) then
+        if isTailCall(node) && defnInfoMap.contains(defn.expectDefn.id) then
           Jump(jpDefnRef, transformStackFrame(args, defnInfoMap(defn.expectDefn.id))).attachTag(tag)
         else
           LetCall(names, defn, args, transformNode(body), isTailRec)

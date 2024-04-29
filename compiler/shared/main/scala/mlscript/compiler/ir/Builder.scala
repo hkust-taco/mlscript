@@ -228,7 +228,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
         }
       
       case Ann(term, receiver) =>
-        // TODO: what happens if thetailrec is overridden?
+        // TODO: what happens if the tailrec module is overridden?
         (term, buildResultFromTerm(receiver)(k)) match
           case (Var("tailrec"), LetCall(names, defn, args, body, isTailRec)) =>
             LetCall(names, defn, args, body, true)
