@@ -10,33 +10,159 @@ import mlscript.utils.shorthands.Bool
 class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
   private type DefnGraph = Set[DefnNode]
 
-  class ModConsCallInfo(defn: Defn, letCallName: Name, letCtorName: Name, fieldName: String, clsInfo: ClassInfo)
+  case class LetCtorNodeInfo(node: LetExpr, ctor: Expr.CtorApp, ctorValName: Name, fieldName: String)
 
-  class TailCallInfo(defn: Defn)
+  enum CallInfo:
+    case TailCallInfo(defn: Defn) extends CallInfo
+    case ModConsCallInfo(defn: Defn, letCallNode: LetCall, letCtorNode: LetCtorNodeInfo) extends CallInfo
 
-  private def getModConsCall(
-    node: Node, 
-    defnAcc: Option[Defn], 
-    letCallName: Option[Name], 
-    letCtorName: Option[Name], 
-    fieldName: Option[String], 
-    clsInfo: Option[ClassInfo], 
-    hasTailrecAnn: Boolean // has tailrec annotation
-  ): Option[ModConsCallInfo] = node match
-    case Result(res) => 
-      (defnAcc, letCallName, letCtorName, fieldName, clsInfo) match
-        case (Some(defn), Some(letCallName), Some(letCtorName), Some(fieldName), Some(clsInfo)) =>
-          Some(ModConsCallInfo(defn, letCallName, letCtorName, fieldName, clsInfo))
-        case _ => None
-    case Jump(_, _) => None 
-    case Case(scrut, cases) => ???
-    case LetExpr(name, expr, body) => body match
-      case Result(res) =>  ???
-      case Jump(defn, args) => ???
-      case _ => getModConsCall(body, defnAcc, letCallName, letCtorName, fieldName, clsInfo, hasTailrecAnn)
+    def getDefn = this match
+      case TailCallInfo(defn) => defn
+      case ModConsCallInfo(defn, letCallNode, letCtorNode) => defn
     
-    case LetCall(names, defn, args, body, _) => ???
-    case AssignField(assignee, clsInfo, fieldName, value, body) => ???
+
+  import CallInfo._
+
+  private def getModConsCall(node: Node)(implicit
+      defn: Option[Defn],
+      letCallNode: Option[LetCall],
+      letCtorNode: Option[LetCtorNodeInfo],
+  ): Either[ModConsCallInfo, List[Node]] = 
+    node match // Left if mod cons call found, Right if none was found -- we return the next nodes to be scanned 
+      case Result(res) =>
+        (defn, letCallNode, letCtorNode) match
+          case (Some(defn), Some(letCallNode), Some(letCtorName)) =>
+            Left(ModConsCallInfo(defn, letCallNode, letCtorName))
+          case _ => Right(Nil)
+      case Jump(_, _)         => Right(Nil)
+      case Case(scrut, cases) => Right(cases.map(_._2))
+      case x: LetExpr =>
+        val LetExpr(name, expr, body) = x
+        expr match
+          // Check if this let binding references the mod cons call.
+          case Expr.Ref(name) => 
+            letCallNode match
+              case None => getModConsCall(body) // OK
+              case Some(LetCall(names, _, _, _, isTailRec)) =>
+                // for it to be mod cons, other values cannot use the return value from the call.
+                if names.contains(name) then
+                  // if the is marked as tail recursive, we must use that call as the mod cons call, so error. otherwise,
+                  // invalidate the discovered call and continue
+                  if isTailRec then throw IRError("not a mod cons call")
+                  else getModConsCall(body)(None, None, None) // invalidate everything that's been discovered
+                else
+                  getModConsCall(body) // OK
+          
+          case Expr.Literal(lit) => getModConsCall(body) // OK
+          case y: Expr.CtorApp =>
+            val Expr.CtorApp(clsInfo, ctorArgs) = y
+            // if expr is a constructor with a call to some function as a parameter
+            letCallNode match
+              case None => getModConsCall(body) // OK
+              case Some(LetCall(letCallNames, _, _, _, isTailRec)) => // there was a previous call
+                // 1. Check if the ctor application contains this call
+                val argNames = ctorArgs.collect { case Expr.Ref(name) => name }.toSet
+                val namesSet = letCallNames.toSet
+                val inters = argNames.intersect(namesSet)
+
+                if inters.isEmpty then
+                  // OK, this constructor does not use the mod cons call
+                  getModConsCall(body)
+                else
+                  // it does use it, further analyse
+                  letCtorNode match
+                    case None => 
+                      // First constructor discovered using this call as a parameter.
+                      // This is OK. Add this discovered information
+                      
+                      // TODO: for now, assume functions return only one value. handling multiple
+                      // values is a bit more complicated
+                      val ctorArgName = inters.head
+                      val ctorArgIndex = ctorArgs.indexWhere { 
+                        case Expr.Ref(nme) => nme == ctorArgName
+                        case _ => false 
+                      }
+
+                      val fieldName = clsInfo.fields(ctorArgIndex)
+                      
+                      // populate required values
+                      getModConsCall(body)(defn, letCallNode, Some(LetCtorNodeInfo(x, y, name, fieldName)))
+                    case Some(_) =>
+                      // another constructor is already using the call. Not OK
+
+                      // if the is marked as tail recursive, we must use that call as the mod cons call, so error. otherwise,
+                      // invalidate the discovered call and continue
+                      if isTailRec then throw IRError("not a mod cons call")
+                      else getModConsCall(body)(None, None, None) // invalidate everything that's been discovered
+
+          case Expr.Select(name, cls, field) =>
+            letCallNode match
+              case None => getModConsCall(body) // OK
+              case Some(LetCall(names, _, _, _, isTailRec)) =>
+                // for it to be mod cons, other values cannot use the return value from the call.
+                if names.contains(name) then
+                  // if the is marked as tail recursive, we must use that call as the mod cons call, so error. otherwise,
+                  // invalidate the discovered call and continue
+                  if isTailRec then throw IRError("not a mod cons call")
+                  else getModConsCall(body)(None, None, None) // invalidate everything that's been discovered
+                else
+                  getModConsCall(body) // OK
+          case Expr.BasicOp(name, args) =>
+            letCallNode match
+              case None => getModConsCall(body) // OK
+              case Some(LetCall(names, _, _, _, isTailRec)) =>
+                // for it to be mod cons, other values cannot use the return value from the call.
+                val argNames = args.collect { case Expr.Ref(name) => name }.toSet
+                val namesSet = names.toSet
+                val inters = argNames.intersect(namesSet)
+
+                if inters.isEmpty then
+                  getModConsCall(body) // OK
+                else
+                  // if the is marked as tail recursive, we must use that call as the mod cons call, so error. otherwise,
+                  // invalidate the discovered call and continue
+                  if isTailRec then throw IRError("not a mod cons call")
+                  else getModConsCall(body)(None, None, None) // invalidate everything that's been discovered
+      case x: LetCall =>
+        val LetCall(names, defn, args, body, isTailRec) = x
+        letCallNode match
+          case None => // OK, use this LetCall as the mod cons
+            getModConsCall(body)(Some(defn.expectDefn), Some(x), None)
+          case Some(LetCall(namesOld, defnOld, argsOld, bodyOld, isTailRecOld)) =>
+            if isTailRecOld && isTailRec then
+              // 1. If both the old and newly discovered call are marked with tailrec, error
+              throw IRError("multiple calls in the same branch marked with tailrec")
+            else if isTailRecOld then
+              // 2. old call is marked as tailrec so we must continue using it as the mod cons call.
+              // make sure the newly discovered call does not use the current call as a parameter
+              val argNames = args.collect { case Expr.Ref(name) => name }.toSet
+              val namesSet = namesOld.toSet
+              val inters = argNames.intersect(namesSet)
+
+              if inters.isEmpty then getModConsCall(body) // OK
+              else throw IRError("not a mod cons call") 
+            else
+              // old call is not tailrec, so we can override it however we want
+              // we take a lucky guess and mark this as the mod cons call, but the
+              // user really should mark which calls should be tailrec
+              getModConsCall(body)(Some(defn.expectDefn), Some(x), None)
+        
+      case AssignField(assignee, clsInfo, assignmentFieldName, value, body) =>
+        // make sure `value` is not the mod cons call
+        letCallNode match
+          case None => getModConsCall(body) // OK
+          case Some(LetCall(names, defn, args, body, isTailRec)) =>
+            value match
+              case Expr.Ref(name) =>
+                if names.contains(name) && isTailRec then throw IRError("not a mod cons call")
+                  else getModConsCall(body)(None, None, None) // invalidate everything that's been discovered
+              case _ =>
+                letCtorNode match
+                  case None => getModConsCall(body) // OK
+                  case Some(LetCtorNodeInfo(_, ctor, name, fieldName)) =>
+                    // If this assignment overwrites the mod cons value, forget it
+                    if fieldName == assignmentFieldName && isTailRec then throw IRError("not a mod cons call")
+                    else getModConsCall(body)(None, None, None) // invalidate everything that's been discovered 
 
   // checks whether a list of names is equal to a list of trivial expressions referencing those names
   private def argsListEqual(names: List[Name], exprs: List[TrivialExpr]) =
@@ -44,27 +170,27 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
     names == results
 
   private def isIdentityJp(d: Defn): Bool = true
-  
+
   private def isTailCall(node: Node): Boolean = node match
-    case LetCall(names, defn, args, body, _) => body match
-      case Result(res) => argsListEqual(names, res) 
-      case Jump(defn, args) => argsListEqual(names, args) && isIdentityJp(defn.expectDefn)
-      case _ => false
+    case LetCall(names, defn, args, body, _) =>
+      body match
+        case Result(res)      => argsListEqual(names, res)
+        case Jump(defn, args) => argsListEqual(names, args) && isIdentityJp(defn.expectDefn)
+        case _                => false
     case _ => false
-  
-  private def findTailCalls(node: Node)(implicit nodeMap: Map[Int, DefnNode]): List[DefnNode] = node match
+
+  private def findTailCalls(node: Node): List[CallInfo] = node match
     case LetCall(names, defn, args, body, isTailRec) =>
-      if isTailCall(node) then nodeMap(defn.expectDefn.id) :: Nil
-      else 
-        if isTailRec then
-          throw IRError("not a tail call")
+      if isTailCall(node) then TailCallInfo(defn.expectDefn) :: Nil
+      else
+        if isTailRec then throw IRError("not a tail call")
         findTailCalls(body)
-    case Result(res)                      => Nil
+    case Result(res) => Nil
     // case Jump(defn, args)                 => nodeMap(defn.expectDefn.id) :: Nil // assume that all definition references are resolved
-    case Jump(defn, args)                 => Nil // jump points are already optimized and we should not touch them
-    case Case(scrut, cases)               => cases.flatMap((_, body) => findTailCalls(body))
-    case LetExpr(name, expr, body)        => findTailCalls(body)
-    case AssignField(_, _, _, _, body)       => findTailCalls(body)
+    case Jump(defn, args)              => Nil // jump points are already optimized and we should not touch them
+    case Case(scrut, cases)            => cases.flatMap((_, body) => findTailCalls(body))
+    case LetExpr(name, expr, body)     => findTailCalls(body)
+    case AssignField(_, _, _, _, body) => findTailCalls(body)
 
   // Partions a tail recursive call graph into strongly connected components
   // Refernece: https://en.wikipedia.org/wiki/Strongly_connected_component
@@ -97,12 +223,13 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
       stack = src :: stack
 
       for (u <- findTailCalls(src.defn.body)) do {
-        if (u.visited) then
-          if (!u.processed)
-            src.lowest = u.num.min(src.lowest)
+        val neighbour = nodeMap(u.getDefn.id)
+        if (neighbour.visited) then
+          if (!neighbour.processed)
+            src.lowest = neighbour.num.min(src.lowest)
         else
-          dfs(u)
-          src.lowest = u.lowest.min(src.lowest)
+          dfs(neighbour)
+          src.lowest = neighbour.lowest.min(src.lowest)
       }
 
       src.processed = true
@@ -164,10 +291,8 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
     // TODO: make sure that name clashes aren't a problem
     val trName = Name("tailrecBranch");
 
-    // To be used to replace variable names inside a definition to avoid variable name clashes 
-    val nameMaps: Map[Int, Map[Name, Name]] = defnsList.map(
-      defn => defn.id -> defn.params.map(n => n -> Name(defn.name + "_" + n.str)).toMap
-    ).toMap
+    // To be used to replace variable names inside a definition to avoid variable name clashes
+    val nameMaps: Map[Int, Map[Name, Name]] = defnsList.map(defn => defn.id -> defn.params.map(n => n -> Name(defn.name + "_" + n.str)).toMap).toMap
 
     val stackFrameIdxes = defnsList.foldLeft(1 :: Nil)((ls, defn) => defn.params.size + ls.head :: ls).drop(1).reverse
 
@@ -191,15 +316,14 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
 
     // Build the node which will be contained inside the jump point.
     def transformNode(node: Node): Node = node match
-      case Jump(_, _)                                => node
-      case Result(_)                                 => node
-      case Case(scrut, cases)                        => Case(scrut, cases.map(n => (n._1, transformNode(n._2))))
-      case LetExpr(name, expr, body)                 => LetExpr(name, expr, transformNode(body))
+      case Jump(_, _)                => node
+      case Result(_)                 => node
+      case Case(scrut, cases)        => Case(scrut, cases.map(n => (n._1, transformNode(n._2))))
+      case LetExpr(name, expr, body) => LetExpr(name, expr, transformNode(body))
       case LetCall(names, defn, args, body, isTailRec) =>
         if isTailCall(node) && defnInfoMap.contains(defn.expectDefn.id) then
           Jump(jpDefnRef, transformStackFrame(args, defnInfoMap(defn.expectDefn.id))).attachTag(tag)
-        else
-          LetCall(names, defn, args, transformNode(body), isTailRec)
+        else LetCall(names, defn, args, transformNode(body), isTailRec)
       case AssignField(assignee, clsInfo, field, value, body) => AssignField(assignee, clsInfo, field, value, transformNode(body))
 
     // Tail calls to another function in the component will be replaced with a tail call
@@ -208,7 +332,8 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
       // TODO: Figure out how to substitute variables with dummy variables.
       val info = defnInfoMap(defn.id)
 
-      val start = stackFrame.take(info.stackFrameIdx).drop(1).map { _ => Expr.Literal(IntLit(0)) } // we drop tailrecBranch and replace it with the defn id
+      val start =
+        stackFrame.take(info.stackFrameIdx).drop(1).map { _ => Expr.Literal(IntLit(0)) } // we drop tailrecBranch and replace it with the defn id
       val end = stackFrame.drop(info.stackFrameIdx + defn.params.size).map { _ => Expr.Literal(IntLit(0)) }
       val args = asLit(info.defn.id) :: start ::: defn.params.map(Expr.Ref(_)) ::: end
 
@@ -235,9 +360,8 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
       ).attachTag(tag)
 
     def getOrKey[T](m: Map[T, T])(key: T): T = m.get(key) match
-      case None => key
+      case None        => key
       case Some(value) => value
-     
 
     val first = defnsList.head;
     val firstMap = nameMaps(first.id)
@@ -271,8 +395,6 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
     val nodeMap: Map[Int, DefnNode] = defns.foldLeft(Map.empty)((m, d) => m + (d.id -> DefnNode(d)))
     partitionNodes(nodeMap).map(g => g.map(d => d.defn))
   }
-
-   
 
   def apply(p: Program) = run(p)
 
