@@ -464,15 +464,17 @@ hello()
 //│ IR Processing Failed: not a tail call
 //│ 
 //│ mlscript.compiler.ir.IRError$.apply(IR.scala:14)
-//│ mlscript.compiler.optimizer.TailRecOpt.findTailCalls(TailRecOpt.scala:186)
-//│ mlscript.compiler.optimizer.TailRecOpt.dfs$1(TailRecOpt.scala:225)
-//│ mlscript.compiler.optimizer.TailRecOpt.partitionNodes$$anonfun$1(TailRecOpt.scala:261)
+//│ mlscript.compiler.optimizer.TailRecOpt.returnFailure$1(TailRecOpt.scala:38)
+//│ mlscript.compiler.optimizer.TailRecOpt.getOptimizableCalls(TailRecOpt.scala:46)
+//│ mlscript.compiler.optimizer.TailRecOpt.findTailCalls(TailRecOpt.scala:210)
+//│ mlscript.compiler.optimizer.TailRecOpt.dfs$1(TailRecOpt.scala:243)
+//│ mlscript.compiler.optimizer.TailRecOpt.partitionNodes$$anonfun$1(TailRecOpt.scala:289)
 //│ scala.runtime.function.JProcedure1.apply(JProcedure1.java:15)
 //│ scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
 //│ scala.collection.immutable.Set$Set1.foreach(Set.scala:168)
-//│ mlscript.compiler.optimizer.TailRecOpt.partitionNodes(TailRecOpt.scala:262)
-//│ mlscript.compiler.optimizer.TailRecOpt.partition(TailRecOpt.scala:396)
-//│ mlscript.compiler.optimizer.TailRecOpt.run_debug(TailRecOpt.scala:403)
+//│ mlscript.compiler.optimizer.TailRecOpt.partitionNodes(TailRecOpt.scala:290)
+//│ mlscript.compiler.optimizer.TailRecOpt.partition(TailRecOpt.scala:426)
+//│ mlscript.compiler.optimizer.TailRecOpt.run_debug(TailRecOpt.scala:433)
 //│ mlscript.compiler.IRDiffTestCompiler.postProcess(TestIR.scala:28)
 //│ mlscript.DiffTests.rec$1(DiffTests.scala:470)
 //│ mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1076)
@@ -570,72 +572,62 @@ addOne(Cons(1, Cons(2, Cons(3, Nil))))
 //│ let* (x$11) = addOne(x$10) in -- #48
 //│ x$11 -- #47)
 //│ 
-//│ IR Processing Failed: not a tail call
+//│ Strongly Connected Tail Calls:
+//│ List(Set(j$0), Set(addOne))
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, [])}, {
+//│ Def(0, addOne, [xs$0],
+//│ 1, 
+//│ case xs$0 of -- #27
+//│   Cons =>
+//│     let x$1 = xs$0.t in -- #23
+//│     let x$2 = xs$0.h in -- #22
+//│     let x$3 = +(x$2,1) in -- #21
+//│     let* (x$4) = @tailrec addOne(x$1) in -- #x
+//│     let x$5 = Cons(x$3,x$4) in -- #19
+//│     jump j$0(x$5) -- #18
+//│   Nil =>
+//│     let x$6 = Nil() in -- #26
+//│     jump j$0(x$6) -- #25
+//│ )
+//│ Def(1, j$0, [x$0],
+//│ 1, 
+//│ x$0 -- #1
+//│ )
+//│ },
+//│ let x$7 = Nil() in -- #52
+//│ let x$8 = Cons(3,x$7) in -- #51
+//│ let x$9 = Cons(2,x$8) in -- #50
+//│ let x$10 = Cons(1,x$9) in -- #49
+//│ let* (x$11) = addOne(x$10) in -- #48
+//│ x$11 -- #47)
 //│ 
-//│ mlscript.compiler.ir.IRError$.apply(IR.scala:14)
-//│ mlscript.compiler.optimizer.TailRecOpt.findTailCalls(TailRecOpt.scala:186)
-//│ mlscript.compiler.optimizer.TailRecOpt.findTailCalls$$anonfun$1(TailRecOpt.scala:191)
-//│ scala.collection.immutable.List.flatMap(List.scala:293)
-//│ mlscript.compiler.optimizer.TailRecOpt.findTailCalls(TailRecOpt.scala:191)
-//│ mlscript.compiler.optimizer.TailRecOpt.dfs$1(TailRecOpt.scala:225)
-//│ mlscript.compiler.optimizer.TailRecOpt.partitionNodes$$anonfun$1(TailRecOpt.scala:261)
-//│ scala.runtime.function.JProcedure1.apply(JProcedure1.java:15)
-//│ scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
-//│ scala.collection.immutable.Set$Set2.foreach(Set.scala:201)
-//│ mlscript.compiler.optimizer.TailRecOpt.partitionNodes(TailRecOpt.scala:262)
-//│ mlscript.compiler.optimizer.TailRecOpt.partition(TailRecOpt.scala:396)
-//│ mlscript.compiler.optimizer.TailRecOpt.run_debug(TailRecOpt.scala:403)
-//│ mlscript.compiler.IRDiffTestCompiler.postProcess(TestIR.scala:28)
-//│ mlscript.DiffTests.rec$1(DiffTests.scala:470)
-//│ mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1076)
-//│ org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
-//│ org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
-//│ org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
-//│ org.scalatest.Transformer.apply(Transformer.scala:22)
-//│ org.scalatest.Transformer.apply(Transformer.scala:20)
-//│ org.scalatest.funsuite.AnyFunSuiteLike$$anon$1.apply(AnyFunSuiteLike.scala:226)
-//│ org.scalatest.TestSuite.withFixture(TestSuite.scala:196)
-//│ org.scalatest.TestSuite.withFixture$(TestSuite.scala:195)
-//│ mlscript.DiffTests.org$scalatest$concurrent$TimeLimitedTests$$super$withFixture(DiffTests.scala:53)
-//│ org.scalatest.concurrent.TimeLimitedTests.$anonfun$withFixture$3(TimeLimitedTests.scala:154)
-//│ org.scalatest.enablers.Timed$$anon$1.timeoutAfter(Timed.scala:127)
-//│ org.scalatest.concurrent.TimeLimits$.failAfterImpl(TimeLimits.scala:282)
-//│ org.scalatest.concurrent.TimeLimitedTests.withFixture(TimeLimitedTests.scala:153)
-//│ org.scalatest.concurrent.TimeLimitedTests.withFixture$(TimeLimitedTests.scala:150)
-//│ mlscript.DiffTests.withFixture(DiffTests.scala:53)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.invokeWithFixture$1(AnyFunSuiteLike.scala:224)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.$anonfun$runTest$1(AnyFunSuiteLike.scala:236)
-//│ org.scalatest.SuperEngine.runTestImpl(Engine.scala:306)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.runTest(AnyFunSuiteLike.scala:236)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.runTest$(AnyFunSuiteLike.scala:218)
-//│ mlscript.DiffTests.org$scalatest$OneInstancePerTest$$super$runTest(DiffTests.scala:53)
-//│ org.scalatest.OneInstancePerTest.runTest(OneInstancePerTest.scala:131)
-//│ org.scalatest.OneInstancePerTest.runTest$(OneInstancePerTest.scala:123)
-//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$runTest(DiffTests.scala:53)
-//│ org.scalatest.ParallelTestExecution.runTest(ParallelTestExecution.scala:164)
-//│ org.scalatest.ParallelTestExecution.runTest$(ParallelTestExecution.scala:148)
-//│ mlscript.DiffTests.runTest(DiffTests.scala:53)
-//│ org.scalatest.OneInstancePerTest.runTests(OneInstancePerTest.scala:181)
-//│ org.scalatest.OneInstancePerTest.runTests$(OneInstancePerTest.scala:172)
-//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$runTests(DiffTests.scala:53)
-//│ org.scalatest.ParallelTestExecution.runTests(ParallelTestExecution.scala:97)
-//│ org.scalatest.ParallelTestExecution.runTests$(ParallelTestExecution.scala:79)
-//│ mlscript.DiffTests.runTests(DiffTests.scala:53)
-//│ org.scalatest.Suite.run(Suite.scala:1114)
-//│ org.scalatest.Suite.run$(Suite.scala:1096)
-//│ org.scalatest.funsuite.AnyFunSuite.org$scalatest$funsuite$AnyFunSuiteLike$$super$run(AnyFunSuite.scala:1563)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.$anonfun$run$1(AnyFunSuiteLike.scala:273)
-//│ org.scalatest.SuperEngine.runImpl(Engine.scala:535)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.run(AnyFunSuiteLike.scala:273)
-//│ org.scalatest.funsuite.AnyFunSuiteLike.run$(AnyFunSuiteLike.scala:272)
-//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$run(DiffTests.scala:53)
-//│ org.scalatest.ParallelTestExecution.run(ParallelTestExecution.scala:261)
-//│ org.scalatest.ParallelTestExecution.run$(ParallelTestExecution.scala:258)
-//│ mlscript.DiffTests.run(DiffTests.scala:53)
-//│ org.scalatest.tools.DistributedTestRunnerSuite.run(DistributedTestRunnerSuite.scala:22)
-//│ org.scalatest.tools.SuiteRunner.run(SuiteRunner.scala:47)
-//│ java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
-//│ java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-//│ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
-//│ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
-//│ java.base/java.lang.Thread.run(Thread.java:840)
+//│ Promoted:
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, [])}, {
+//│ Def(0, addOne, [xs$0],
+//│ 1, 
+//│ case xs$0 of -- #27
+//│   Cons =>
+//│     let x$1 = xs$0.t in -- #23
+//│     let x$2 = xs$0.h in -- #22
+//│     let x$3 = +(x$2,1) in -- #21
+//│     let* (x$4) = @tailrec addOne(x$1) in -- #x
+//│     let x$5 = Cons(x$3,x$4) in -- #19
+//│     jump j$0(x$5) -- #18
+//│   Nil =>
+//│     let x$6 = Nil() in -- #26
+//│     jump j$0(x$6) -- #25
+//│ )
+//│ Def(1, j$0, [x$0],
+//│ 1, 
+//│ x$0 -- #1
+//│ )
+//│ },
+//│ let x$7 = Nil() in -- #52
+//│ let x$8 = Cons(3,x$7) in -- #51
+//│ let x$9 = Cons(2,x$8) in -- #50
+//│ let x$10 = Cons(1,x$9) in -- #49
+//│ let* (x$11) = addOne(x$10) in -- #48
+//│ x$11 -- #47)
+//│ 
+//│ Interpreted:
+//│ Cons(2,Cons(3,Cons(4,Nil())))
