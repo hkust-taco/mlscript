@@ -22,7 +22,6 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
       case TailCallInfo(_, defn, _) => defn
       case ModConsCallInfo(_, _, defn, _, _) => defn
     
-
   private class DefnGraph(val nodes: Set[DefnNode], val edges: Set[CallInfo]):
     def removeMetadata: ScComponent = ScComponent(nodes.map(_.defn), edges)
   
@@ -290,13 +289,10 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
 
         sccs = DefnGraph(scc, sccEdges) :: sccs
       
-    
-
     for (v <- defns)
       if (!v.visited)
         dfs(v)
 
-    
     sccs
   
 
@@ -389,7 +385,6 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
       val call = LetCall(names, newDefnRef, args, res, false).attachTag(tag)
       Defn(defn.id, defn.name, defn.params, defn.resultNum, call)
     
-
     // given expressions value, e1, e2, transform it into
     // let scrut = tailrecBranch == value
     // in case scrut of True  -> e1
@@ -434,7 +429,6 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
 
     defns.map { d => transformDefn(d) } + newDefn + jpDefn
   
-
   private def partition(defns: Set[Defn]): List[ScComponent] = 
     val nodeMap: Map[Int, DefnNode] = defns.foldLeft(Map.empty)((m, d) => m + (d.id -> DefnNode(d)))
     partitionNodes(nodeMap).map(_.removeMetadata)
