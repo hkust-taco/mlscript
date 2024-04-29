@@ -85,7 +85,7 @@ class Watcher(dir: File):
       val path = os.Path(file.pathAsString)
       val basePath = path.segments.drop(dirPath.segmentCount).toList.init
       val relativeName = basePath.map(_ + "/").mkString + path.baseName
-      val predefPath = os.pwd/os.up/"shared"/"test"/"mlscript"/"decls"/"Predef.mls"
+      val predefPath = os.pwd/os.up/"shared"/"src"/"test"/"mlscript"/"decls"/"Predef.mls"
       val dm = new DiffMaker(path, predefPath, relativeName):
         override def unhandled(blockLineNum: Int, exc: Throwable): Unit =
           exc.printStackTrace()

@@ -28,7 +28,6 @@ lazy val root = project.in(file("."))
 lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
   .settings(
     scalaVersion := scala3Version,
-    sourceDirectory := baseDirectory.value.getParentFile()/"shared",
     watchSources += WatchSource(
       baseDirectory.value.getParentFile()/"shared"/"test"/"diff", "*.mls", NothingFilter),
     
@@ -38,17 +37,12 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
     libraryDependencies += "io.methvin" % "directory-watcher" % directoryWatcherVersion,
     libraryDependencies += "io.methvin" %% "directory-watcher-better-files" % directoryWatcherVersion,
     libraryDependencies += "com.lihaoyi" %%% "fansi" % "0.4.0",
-    // libraryDependencies += ("com.lihaoyi" %% "ammonite-ops" % "3.0.0-M1"),
-    // libraryDependencies += "com.lihaoyi" %% "ammonite-ops" % "2.4.0",
-    //.cross(CrossVersion.for3Use2_13),
-    // libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.8.0",
     libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.9.3",
     
     libraryDependencies += "org.scalactic" %%% "scalactic" % "3.2.18",
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.18" % "test",
     
     watchSources += WatchSource(
-      // sourceDirectory.value.getParentFile().getParentFile()/"shared/src/test/mlscript", "*.mls", NothingFilter),
       baseDirectory.value.getParentFile()/"shared"/"test"/"mlscript", "*.mls", NothingFilter),
     watchSources += WatchSource(
       baseDirectory.value.getParentFile()/"shared"/"test"/"mlscript", "*.cmd", NothingFilter),
@@ -56,7 +50,6 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
     Test/run/fork := true, // so that CTRL+C actually terminates the watcher
   )
   .jvmSettings(
-    // libraryDependencies += "com.lihaoyi" %% "ammonite-ops" % "2.4.0",
   )
   .dependsOn(core)
 

@@ -21,7 +21,7 @@ object DiffTests:
     val workingDir = if pwd.last == "jvm"
       then pwd/up/up // For some reason, when run from ~hkmc2JVM/Test/run in sbt, the pwd is ".../hkmc2/jvm"
       else pwd
-    val dir = workingDir/"hkmc2"/"shared"/"test"/"mlscript"
+    val dir = workingDir/"hkmc2"/"shared"/"src"/"test"/"mlscript"
     
     val validExt = Set("mls")
     
@@ -57,6 +57,7 @@ class DiffTests(state: DiffTests.State)
 :
   import state.*
   
+  // def newInstance = ???
   def this() = this(DiffTests.State)
   
   private val inParallel = isInstanceOf[ParallelTestExecution]
