@@ -9,9 +9,9 @@ class False
 fun double(x) = x * 2
 fun f(n, acc) = if n == 0 then double(acc) else g(n - 1, acc + 1)
 fun g(m, acc) = if m == 0 then -double(acc) else f(m - 1, acc + 1)
-g(5, 0)
-//│ |#class| |True|↵|#class| |False|↵|#fun| |double|(|x|)| |#=| |x| |*| |2|↵|#fun| |f|(|n|,| |acc|)| |#=| |#if| |n| |==| |0| |#then| |double|(|acc|)| |#else| |g|(|n| |-| |1|,| |acc| |+| |1|)|↵|#fun| |g|(|m|,| |acc|)| |#=| |#if| |m| |==| |0| |#then| |-|double|(|acc|)| |#else| |f|(|m| |-| |1|,| |acc| |+| |1|)|↵|g|(|5|,| |0|)|
-//│ Parsed: {class True {}; class False {}; fun double = (x,) => *(x,)(2,); fun f = (n, acc,) => if (==(n,)(0,)) then double(acc,) else g(-(n,)(1,), +(acc,)(1,),); fun g = (m, acc,) => if (==(m,)(0,)) then -(0,)(double(acc,),) else f(-(m,)(1,), +(acc,)(1,),); g(5, 0,)}
+g(6, 0)
+//│ |#class| |True|↵|#class| |False|↵|#fun| |double|(|x|)| |#=| |x| |*| |2|↵|#fun| |f|(|n|,| |acc|)| |#=| |#if| |n| |==| |0| |#then| |double|(|acc|)| |#else| |g|(|n| |-| |1|,| |acc| |+| |1|)|↵|#fun| |g|(|m|,| |acc|)| |#=| |#if| |m| |==| |0| |#then| |-|double|(|acc|)| |#else| |f|(|m| |-| |1|,| |acc| |+| |1|)|↵|g|(|6|,| |0|)|
+//│ Parsed: {class True {}; class False {}; fun double = (x,) => *(x,)(2,); fun f = (n, acc,) => if (==(n,)(0,)) then double(acc,) else g(-(n,)(1,), +(acc,)(1,),); fun g = (m, acc,) => if (==(m,)(0,)) then -(0,)(double(acc,),) else f(-(m,)(1,), +(acc,)(1,),); g(6, 0,)}
 //│ 
 //│ 
 //│ IR:
@@ -57,7 +57,7 @@ g(5, 0)
 //│ x$9 -- #35
 //│ )
 //│ },
-//│ let* (x$15) = g(5,0) in -- #70
+//│ let* (x$15) = g(6,0) in -- #70
 //│ x$15 -- #69)
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
 //│ Def(0, double, [x$0],
@@ -101,7 +101,7 @@ g(5, 0)
 //│ x$9 -- #35
 //│ )
 //│ },
-//│ let* (x$15) = g(5,0) in -- #70
+//│ let* (x$15) = g(6,0) in -- #70
 //│ x$15 -- #69)
 //│ 
 //│ Promoted:
@@ -147,11 +147,11 @@ g(5, 0)
 //│ x$9 -- #35
 //│ )
 //│ },
-//│ let* (x$15) = g(5,0) in -- #70
+//│ let* (x$15) = g(6,0) in -- #70
 //│ x$15 -- #69)
 //│ 
 //│ Interpreted:
-//│ 10
+//│ -12
 
 :interpIR
 class True
@@ -159,9 +159,9 @@ class False
 fun double(x) = x * 2
 fun f(n, acc) = if n == 0 then double(acc) else g(n - 1, acc + 1)
 fun g(m, acc) = if m == 0 then -double(acc) else f(m - 1, acc + 1)
-g(5, 0)
-//│ |#class| |True|↵|#class| |False|↵|#fun| |double|(|x|)| |#=| |x| |*| |2|↵|#fun| |f|(|n|,| |acc|)| |#=| |#if| |n| |==| |0| |#then| |double|(|acc|)| |#else| |g|(|n| |-| |1|,| |acc| |+| |1|)|↵|#fun| |g|(|m|,| |acc|)| |#=| |#if| |m| |==| |0| |#then| |-|double|(|acc|)| |#else| |f|(|m| |-| |1|,| |acc| |+| |1|)|↵|g|(|5|,| |0|)|
-//│ Parsed: {class True {}; class False {}; fun double = (x,) => *(x,)(2,); fun f = (n, acc,) => if (==(n,)(0,)) then double(acc,) else g(-(n,)(1,), +(acc,)(1,),); fun g = (m, acc,) => if (==(m,)(0,)) then -(0,)(double(acc,),) else f(-(m,)(1,), +(acc,)(1,),); g(5, 0,)}
+g(6, 0)
+//│ |#class| |True|↵|#class| |False|↵|#fun| |double|(|x|)| |#=| |x| |*| |2|↵|#fun| |f|(|n|,| |acc|)| |#=| |#if| |n| |==| |0| |#then| |double|(|acc|)| |#else| |g|(|n| |-| |1|,| |acc| |+| |1|)|↵|#fun| |g|(|m|,| |acc|)| |#=| |#if| |m| |==| |0| |#then| |-|double|(|acc|)| |#else| |f|(|m| |-| |1|,| |acc| |+| |1|)|↵|g|(|6|,| |0|)|
+//│ Parsed: {class True {}; class False {}; fun double = (x,) => *(x,)(2,); fun f = (n, acc,) => if (==(n,)(0,)) then double(acc,) else g(-(n,)(1,), +(acc,)(1,),); fun g = (m, acc,) => if (==(m,)(0,)) then -(0,)(double(acc,),) else f(-(m,)(1,), +(acc,)(1,),); g(6, 0,)}
 //│ 
 //│ 
 //│ IR:
@@ -207,7 +207,7 @@ g(5, 0)
 //│ x$9 -- #35
 //│ )
 //│ },
-//│ let* (x$15) = g(5,0) in -- #70
+//│ let* (x$15) = g(6,0) in -- #70
 //│ x$15 -- #69)
 //│ 
 //│ Strongly Connected Tail Calls:
@@ -267,7 +267,7 @@ g(5, 0)
 //│ jump _g_f_opt_jp(tailrecBranch,g_m$0,g_acc$1,f_n$0,f_acc$0) -- #76
 //│ )
 //│ },
-//│ let* (x$15) = g(5,0) in -- #70
+//│ let* (x$15) = g(6,0) in -- #70
 //│ x$15 -- #69)
 //│ 
 //│ Promoted:
@@ -326,11 +326,11 @@ g(5, 0)
 //│ jump _g_f_opt_jp(tailrecBranch,g_m$0,g_acc$1,f_n$0,f_acc$0) -- #76
 //│ )
 //│ },
-//│ let* (x$15) = g(5,0) in -- #70
+//│ let* (x$15) = g(6,0) in -- #70
 //│ x$15 -- #69)
 //│ 
 //│ Interpreted:
-//│ 10
+//│ -12
 
 class True
 class False
