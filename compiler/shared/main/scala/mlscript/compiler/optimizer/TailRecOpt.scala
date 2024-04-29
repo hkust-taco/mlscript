@@ -14,6 +14,10 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
     case TailCallInfo(src: Defn, defn: Defn, letCallNode: LetCall) extends CallInfo
     case ModConsCallInfo(src: Defn, defn: Defn, letCallNode: LetCall, letCtorNode: LetCtorNodeInfo) extends CallInfo
 
+    def getSrc = this match
+      case TailCallInfo(src, _, _) => src
+      case ModConsCallInfo(src, _, _, _) => src 
+
     def getDefn = this match
       case TailCallInfo(_, defn, _) => defn
       case ModConsCallInfo(_, defn, _, _) => defn
@@ -33,6 +37,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
     calledDefn: Option[Defn],
     letCallNode: Option[LetCall],
     letCtorNode: Option[LetCtorNodeInfo],
+    candReturnName: Option[Name]
   ): Either[CallInfo, List[Node]] = 
     def returnFailure = letCallNode match
       case Some(LetCall(_, _, _, _, isTailRec)) if isTailRec => throw IRError("not a tail call")
@@ -40,16 +45,18 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
 
     node match // Left if mod cons call found, Right if none was found -- we return the next nodes to be scanned 
       case Result(res) =>
-        (calledDefn, letCallNode, letCtorNode) match
-          case (Some(defn), Some(letCallNode), Some(letCtorName)) =>
-            Left(ModConsCallInfo(src, defn, letCallNode, letCtorName))
+        (calledDefn, letCallNode, letCtorNode, candReturnName) match
+          case (Some(defn), Some(letCallNode), Some(letCtorName), Some(candReturnName)) =>
+            if argsListEqual(List(candReturnName), res) then
+              Left(ModConsCallInfo(src, defn, letCallNode, letCtorName))
+            else
+              returnFailure
           case _ => returnFailure
       case Jump(jp, args) => 
         // different cases
-        (calledDefn, letCallNode, letCtorNode) match
-          case (Some(defn), Some(letCallNode), Some(letCtorName)) =>
-            val ctorValName = letCtorName.node.name
-            if argsListEqual(List(ctorValName), args) && isIdentityJp(jp.expectDefn) then
+        (calledDefn, letCallNode, letCtorNode, candReturnName) match
+          case (Some(defn), Some(letCallNode), Some(letCtorName), Some(candReturnName)) =>
+            if argsListEqual(List(candReturnName), args) && isIdentityJp(jp.expectDefn) then
               Left(ModConsCallInfo(src, defn, letCallNode, letCtorName))
             else
               returnFailure
@@ -69,7 +76,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
                   // if the is marked as tail recursive, we must use that call as the mod cons call, so error. otherwise,
                   // invalidate the discovered call and continue
                   if isTailRec then throw IRError("not a mod cons call")
-                  else getOptimizableCalls(body)(src, None, None, None) // invalidate everything that's been discovered
+                  else getOptimizableCalls(body)(src, None, None, None, None) // invalidate everything that's been discovered
                 else
                   getOptimizableCalls(body) // OK
           
@@ -87,7 +94,10 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
 
                 if inters.isEmpty then
                   // OK, this constructor does not use the mod cons call
-                  getOptimizableCalls(body)
+                  // Now check if the constructor uses the previous ctor.
+                  candReturnName match
+                    case None => getOptimizableCalls(body) // no previous ctor, just continue
+                    case Some(value) => getOptimizableCalls(body)(src, calledDefn, letCallNode, letCtorNode, Some(name)) 
                 else
                   // it does use it, further analyse
                   letCtorNode match
@@ -106,14 +116,14 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
                       val fieldName = clsInfo.fields(ctorArgIndex)
                       
                       // populate required values
-                      getOptimizableCalls(body)(src, calledDefn, letCallNode, Some(LetCtorNodeInfo(x, y, name, fieldName)))
+                      getOptimizableCalls(body)(src, calledDefn, letCallNode, Some(LetCtorNodeInfo(x, y, name, fieldName)), Some(name))
                     case Some(_) =>
                       // another constructor is already using the call. Not OK
 
                       // if the is marked as tail recursive, we must use that call as the mod cons call, so error. otherwise,
                       // invalidate the discovered call and continue
                       if isTailRec then throw IRError("not a mod cons call")
-                      else getOptimizableCalls(body)(src, None, None, None) // invalidate everything that's been discovered
+                      else getOptimizableCalls(body)(src, None, None, None, None) // invalidate everything that's been discovered
 
           case Expr.Select(name, cls, field) =>
             letCallNode match
@@ -124,7 +134,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
                   // if the is marked as tail recursive, we must use that call as the mod cons call, so error. otherwise,
                   // invalidate the discovered call and continue
                   if isTailRec then throw IRError("not a mod cons call")
-                  else getOptimizableCalls(body)(src, None, None, None) // invalidate everything that's been discovered
+                  else getOptimizableCalls(body)(src, None, None, None, None) // invalidate everything that's been discovered
                 else
                   getOptimizableCalls(body) // OK
           case Expr.BasicOp(name, args) =>
@@ -142,7 +152,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
                   // if the is marked as tail recursive, we must use that call as the mod cons call, so error. otherwise,
                   // invalidate the discovered call and continue
                   if isTailRec then throw IRError("not a mod cons call")
-                  else getOptimizableCalls(body)(src, None, None, None) // invalidate everything that's been discovered
+                  else getOptimizableCalls(body)(src, None, None, None, None) // invalidate everything that's been discovered
       case x: LetCall =>
         val LetCall(names, defn, args, body, isTailRec) = x
 
@@ -151,7 +161,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
         else
           letCallNode match
             case None => // OK, use this LetCall as the mod cons
-              getOptimizableCalls(body)(src, Some(defn.expectDefn), Some(x), None)
+              getOptimizableCalls(body)(src, Some(defn.expectDefn), Some(x), None, None)
             case Some(LetCall(namesOld, defnOld, argsOld, bodyOld, isTailRecOld)) =>
               if isTailRecOld && isTailRec then
                 // 1. If both the old and newly discovered call are marked with tailrec, error
@@ -169,7 +179,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
                 // old call is not tailrec, so we can override it however we want
                 // we take a lucky guess and mark this as the mod cons call, but the
                 // user really should mark which calls should be tailrec
-                getOptimizableCalls(body)(src, Some(defn.expectDefn), Some(x), None)
+                getOptimizableCalls(body)(src, Some(defn.expectDefn), Some(x), None, None)
         
       case AssignField(assignee, clsInfo, assignmentFieldName, value, body) =>
         // make sure `value` is not the mod cons call
@@ -179,14 +189,14 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
             value match
               case Expr.Ref(name) =>
                 if names.contains(name) && isTailRec then throw IRError("not a mod cons call")
-                  else getOptimizableCalls(body)(src, None, None, None) // invalidate everything that's been discovered
+                  else getOptimizableCalls(body)(src, None, None, None, None) // invalidate everything that's been discovered
               case _ =>
                 letCtorNode match
                   case None => getOptimizableCalls(body) // OK
                   case Some(LetCtorNodeInfo(_, ctor, name, fieldName)) =>
                     // If this assignment overwrites the mod cons value, forget it
                     if fieldName == assignmentFieldName && isTailRec then throw IRError("not a mod cons call")
-                    else getOptimizableCalls(body)(src, None, None, None) // invalidate everything that's been discovered 
+                    else getOptimizableCalls(body)(src, None, None, None, None) // invalidate everything that's been discovered 
 
   // checks whether a list of names is equal to a list of trivial expressions referencing those names
   private def argsListEqual(names: List[Name], exprs: List[TrivialExpr]) =
@@ -207,7 +217,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
     case _ => false
 
   private def findTailCalls(node: Node)(implicit src: Defn): Set[CallInfo] = 
-    getOptimizableCalls(node)(src, None, None, None) match
+    getOptimizableCalls(node)(src, None, None, None, None) match
       case Left(callInfo) => Set(callInfo)
       case Right(nodes) => nodes.foldLeft(Set())((calls, node) => calls ++ findTailCalls(node))
   
@@ -242,7 +252,6 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
       
       val tailCalls = findTailCalls(src.defn.body)(src.defn)
       stack = (src, tailCalls) :: stack
-
       for (u <- tailCalls) do {
         val neighbour = nodeMap(u.getDefn.id)
         if (neighbour.visited) then
@@ -279,7 +288,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
         scc = scc + vertex
         val sccIds = scc.map { d => d.defn.id }
         sccEdges = sccEdges.filter { c => sccIds.contains(c.getDefn.id)}
-   
+
         sccs = DefnGraph(scc, sccEdges) :: sccs
       }
     }
@@ -289,6 +298,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt) {
         dfs(v)
     }
 
+    
     sccs
   }
 
