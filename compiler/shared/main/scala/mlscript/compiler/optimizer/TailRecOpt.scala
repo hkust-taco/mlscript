@@ -8,11 +8,17 @@ import mlscript.utils.shorthands.Bool
 
 // fnUid should be the same FreshInt that was used to build the graph being passed into this class
 class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
-  case class LetCtorNodeInfo(node: LetExpr, ctor: Expr.CtorApp, ctorValName: Name, fieldName: String)
+  case class LetCtorNodeInfo(node: LetExpr, ctor: Expr.CtorApp, cls: ClassInfo, ctorValName: Name, fieldName: String)
 
   enum CallInfo:
     case TailCallInfo(src: Defn, defn: Defn, letCallNode: LetCall) extends CallInfo
     case ModConsCallInfo(src: Defn, startNode: Node, defn: Defn, letCallNode: LetCall, letCtorNode: LetCtorNodeInfo) extends CallInfo
+
+    override def toString(): String = this match
+      case TailCallInfo(src, defn, letCallNode) => 
+        f"TailCall { ${src.name}$$${src.id} -> ${defn.name}$$${defn.id} }"
+      case ModConsCallInfo(src, startNode, defn, letCallNode, letCtorNode) =>
+        f"ModConsCall { ${src.name}$$${src.id} -> ${defn.name}$$${defn.id}, class: ${letCtorNode.cls.ident}, field: ${letCtorNode.fieldName} }"
 
     def getSrc = this match
       case TailCallInfo(src, _, _) => src
@@ -115,7 +121,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
                       val fieldName = clsInfo.fields(ctorArgIndex)
                       
                       // populate required values
-                      getOptimizableCalls(body)(src, start, calledDefn, letCallNode, Some(LetCtorNodeInfo(x, y, name, fieldName)), Some(name))
+                      getOptimizableCalls(body)(src, start, calledDefn, letCallNode, Some(LetCtorNodeInfo(x, y, clsInfo, name, fieldName)), Some(name))
                     case Some(_) =>
                       // another constructor is already using the call. Not OK
 
@@ -192,7 +198,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
               case _ =>
                 letCtorNode match
                   case None => getOptimizableCalls(body) // OK
-                  case Some(LetCtorNodeInfo(_, ctor, name, fieldName)) =>
+                  case Some(LetCtorNodeInfo(_, ctor, _, name, fieldName)) =>
                     // If this assignment overwrites the mod cons value, forget it
                     if fieldName == assignmentFieldName && isTailRec then throw IRError("not a mod cons call")
                     else getOptimizableCalls(body)(src, start, None, None, None, None) // invalidate everything that's been discovered 
@@ -250,7 +256,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
       
       val tailCalls = findTailCalls(src.defn.body)(src.defn)
       stack = (src, tailCalls) :: stack
-      for (u <- tailCalls) do {
+      for u <- tailCalls do
         val neighbour = nodeMap(u.getDefn.id)
         if (neighbour.visited) then
           if (!neighbour.processed)
@@ -258,7 +264,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
         else
           dfs(neighbour)
           src.lowest = neighbour.lowest.min(src.lowest)
-      }
+      
 
       src.processed = true
 
@@ -276,7 +282,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
 
         while (vertex != src) {
           scc = scc + vertex
-          sccEdges = sccEdges ++ edges
+          sccEdges = edges ++ sccEdges
           
           val next = pop()
           vertex = next._1
@@ -284,12 +290,14 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
         }
 
         scc = scc + vertex
+        sccEdges = edges ++ sccEdges
+
         val sccIds = scc.map { d => d.defn.id }
         sccEdges = sccEdges.filter { c => sccIds.contains(c.getDefn.id)}
 
         sccs = DefnGraph(scc, sccEdges) :: sccs
       
-    for (v <- defns)
+    for v <- defns do
       if (!v.visited)
         dfs(v)
 
@@ -303,14 +311,19 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
   // Given a strongly connected component `defns` of mutually mod cons functions,
   // returns a set containing mutually tail recursive versions of them and
   // the original functions pointing to the optimized ones. 
-  private def optimizeModCons(component: ScComponent, classes: Set[ClassInfo]): Set[Defn] = ???
+  private def optimizeModCons(component: ScComponent, classes: Set[ClassInfo]): Set[Defn] = 
+    // no mod cons, just return the original
+    if component.edges.collect { case x: ModConsCallInfo => x }.isEmpty then
+      component.nodes
+    else
+      ???
 
 
   // Given a strongly connected component `defns` of mutually
   // tail recursive functions, returns a set containing the optimized function and the
   // original functions pointing to an optimized function.
   private def optimizeTailRec(component: ScComponent, classes: Set[ClassInfo]): Set[Defn] = 
-
+    println(component.edges)
     // To build the case block, we need to compare integers and check if the result is "True"
     val trueClass = classes.find(c => c.ident == "True").get
     val falseClass = classes.find(c => c.ident == "False").get

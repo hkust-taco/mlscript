@@ -464,17 +464,17 @@ hello()
 //│ IR Processing Failed: not a tail call
 //│ 
 //│ mlscript.compiler.ir.IRError$.apply(IR.scala:14)
-//│ mlscript.compiler.optimizer.TailRecOpt.returnFailure$1(TailRecOpt.scala:43)
-//│ mlscript.compiler.optimizer.TailRecOpt.getOptimizableCalls(TailRecOpt.scala:54)
-//│ mlscript.compiler.optimizer.TailRecOpt.findTailCalls(TailRecOpt.scala:220)
-//│ mlscript.compiler.optimizer.TailRecOpt.dfs$1(TailRecOpt.scala:252)
-//│ mlscript.compiler.optimizer.TailRecOpt.partitionNodes$$anonfun$1(TailRecOpt.scala:297)
+//│ mlscript.compiler.optimizer.TailRecOpt.returnFailure$1(TailRecOpt.scala:48)
+//│ mlscript.compiler.optimizer.TailRecOpt.getOptimizableCalls(TailRecOpt.scala:59)
+//│ mlscript.compiler.optimizer.TailRecOpt.findTailCalls(TailRecOpt.scala:225)
+//│ mlscript.compiler.optimizer.TailRecOpt.dfs$1(TailRecOpt.scala:257)
+//│ mlscript.compiler.optimizer.TailRecOpt.partitionNodes$$anonfun$1(TailRecOpt.scala:302)
 //│ scala.runtime.function.JProcedure1.apply(JProcedure1.java:15)
 //│ scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
 //│ scala.collection.immutable.Set$Set1.foreach(Set.scala:168)
-//│ mlscript.compiler.optimizer.TailRecOpt.partitionNodes(TailRecOpt.scala:297)
-//│ mlscript.compiler.optimizer.TailRecOpt.partition(TailRecOpt.scala:440)
-//│ mlscript.compiler.optimizer.TailRecOpt.run_debug(TailRecOpt.scala:447)
+//│ mlscript.compiler.optimizer.TailRecOpt.partitionNodes(TailRecOpt.scala:302)
+//│ mlscript.compiler.optimizer.TailRecOpt.partition(TailRecOpt.scala:447)
+//│ mlscript.compiler.optimizer.TailRecOpt.run_debug(TailRecOpt.scala:454)
 //│ mlscript.compiler.IRDiffTestCompiler.postProcess(TestIR.scala:28)
 //│ mlscript.DiffTests.rec$1(DiffTests.scala:470)
 //│ mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1076)
@@ -821,3 +821,179 @@ a(S(S(S(Zero))))
 //│ 
 //│ Interpreted:
 //│ S(S(S(S(S(S(Zero()))))))
+
+:interpIR
+class True
+class False
+class A(m, n)
+fun a(x) =
+  if x.n < 0 then A(-1, x.n)
+  else A(2, b(x.n - 2))
+fun b(n) =
+  if n < 0 then A(0, n)
+  else a(A(0, n - 1))
+b(20)
+//│ |#class| |True|↵|#class| |False|↵|#class| |A|(|m|,| |n|)|↵|#fun| |a|(|x|)| |#=|→|#if| |x|.n| |<| |0| |#then| |A|(|-|1|,| |x|.n|)|↵|#else| |A|(|2|,| |b|(|x|.n| |-| |2|)|)|←|↵|#fun| |b|(|n|)| |#=|→|#if| |n| |<| |0| |#then| |A|(|0|,| |n|)|↵|#else| |a|(|A|(|0|,| |n| |-| |1|)|)|←|↵|b|(|20|)|
+//│ Parsed: {class True {}; class False {}; class A(m, n,) {}; fun a = (x,) => {if (<((x).n,)(0,)) then A(-1, (x).n,) else A(2, b(-((x).n,)(2,),),)}; fun b = (n,) => {if (<(n,)(0,)) then A(0, n,) else a(A(0, -(n,)(1,),),)}; b(20,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, [m,n])}, {
+//│ Def(0, a, [x$0],
+//│ 1, 
+//│ let x$1 = x$0.n in -- #35
+//│ let x$2 = <(x$1,0) in -- #34
+//│ if x$2 -- #33
+//│   true =>
+//│     let x$4 = x$0.n in -- #14
+//│     let x$5 = A(-1,x$4) in -- #13
+//│     jump j$0(x$5) -- #12
+//│   false =>
+//│     let x$6 = x$0.n in -- #32
+//│     let x$7 = -(x$6,2) in -- #31
+//│     let* (x$8) = b(x$7) in -- #30
+//│     let x$9 = A(2,x$8) in -- #29
+//│     jump j$0(x$9) -- #28
+//│ )
+//│ Def(1, j$0, [x$3],
+//│ 1, 
+//│ x$3 -- #4
+//│ )
+//│ Def(2, b, [n$0],
+//│ 1, 
+//│ let x$10 = <(n$0,0) in -- #65
+//│ if x$10 -- #64
+//│   true =>
+//│     let x$12 = A(0,n$0) in -- #47
+//│     jump j$1(x$12) -- #46
+//│   false =>
+//│     let x$13 = -(n$0,1) in -- #63
+//│     let x$14 = A(0,x$13) in -- #62
+//│     let* (x$15) = a(x$14) in -- #61
+//│     jump j$1(x$15) -- #60
+//│ )
+//│ Def(3, j$1, [x$11],
+//│ 1, 
+//│ x$11 -- #39
+//│ )
+//│ },
+//│ let* (x$16) = b(20) in -- #71
+//│ x$16 -- #70)
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(j$1), Set(j$0), Set(b, a))
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, [m,n])}, {
+//│ Def(0, a, [x$0],
+//│ 1, 
+//│ let* (r0) = _b_a_opt(0,0,x$0) in -- #80
+//│ r0 -- #79
+//│ )
+//│ Def(1, j$0, [x$3],
+//│ 1, 
+//│ x$3 -- #4
+//│ )
+//│ Def(2, b, [n$0],
+//│ 1, 
+//│ let* (r0) = _b_a_opt(2,n$0,0) in -- #78
+//│ r0 -- #77
+//│ )
+//│ Def(3, j$1, [x$11],
+//│ 1, 
+//│ x$11 -- #39
+//│ )
+//│ Def(4, _b_a_opt_jp, [tailrecBranch,b_n$0,a_x$0],
+//│ 1, 
+//│ let scrut = ==(0,tailrecBranch) in -- #75
+//│ if scrut -- #73
+//│   true =>
+//│     let x$1 = a_x$0.n in -- #x
+//│     let x$2 = <(x$1,0) in -- #x
+//│     if x$2 -- #x
+//│       true =>
+//│         let x$4 = a_x$0.n in -- #x
+//│         let x$5 = A(-1,x$4) in -- #x
+//│         jump j$0(x$5) -- #x
+//│       false =>
+//│         let x$6 = a_x$0.n in -- #x
+//│         let x$7 = -(x$6,2) in -- #x
+//│         let* (x$8) = b(x$7) in -- #x
+//│         let x$9 = A(2,x$8) in -- #x
+//│         jump j$0(x$9) -- #x
+//│   false =>
+//│     let x$10 = <(b_n$0,0) in -- #x
+//│     if x$10 -- #x
+//│       true =>
+//│         let x$12 = A(0,b_n$0) in -- #x
+//│         jump j$1(x$12) -- #x
+//│       false =>
+//│         let x$13 = -(b_n$0,1) in -- #x
+//│         let x$14 = A(0,x$13) in -- #x
+//│         jump _b_a_opt_jp(0,b_n$0,x$14) -- #72
+//│ )
+//│ Def(5, _b_a_opt, [tailrecBranch,b_n$0,a_x$0],
+//│ 1, 
+//│ jump _b_a_opt_jp(tailrecBranch,b_n$0,a_x$0) -- #76
+//│ )
+//│ },
+//│ let* (x$16) = b(20) in -- #71
+//│ x$16 -- #70)
+//│ 
+//│ Promoted:
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, [m,n])}, {
+//│ Def(0, a, [x$0],
+//│ 1, 
+//│ let* (r0) = _b_a_opt(0,0,x$0) in -- #80
+//│ r0 -- #79
+//│ )
+//│ Def(1, j$0, [x$3],
+//│ 1, 
+//│ x$3 -- #4
+//│ )
+//│ Def(2, b, [n$0],
+//│ 1, 
+//│ let* (r0) = _b_a_opt(2,n$0,0) in -- #78
+//│ r0 -- #77
+//│ )
+//│ Def(3, j$1, [x$11],
+//│ 1, 
+//│ x$11 -- #39
+//│ )
+//│ Def(4, _b_a_opt_jp, [tailrecBranch,b_n$0,a_x$0],
+//│ 1, 
+//│ let scrut = ==(0,tailrecBranch) in -- #75
+//│ if scrut -- #73
+//│   true =>
+//│     let x$1 = a_x$0.n in -- #x
+//│     let x$2 = <(x$1,0) in -- #x
+//│     if x$2 -- #x
+//│       true =>
+//│         let x$4 = a_x$0.n in -- #x
+//│         let x$5 = A(-1,x$4) in -- #x
+//│         jump j$0(x$5) -- #x
+//│       false =>
+//│         let x$6 = a_x$0.n in -- #x
+//│         let x$7 = -(x$6,2) in -- #x
+//│         let* (x$8) = b(x$7) in -- #x
+//│         let x$9 = A(2,x$8) in -- #x
+//│         jump j$0(x$9) -- #x
+//│   false =>
+//│     let x$10 = <(b_n$0,0) in -- #x
+//│     if x$10 -- #x
+//│       true =>
+//│         let x$12 = A(0,b_n$0) in -- #x
+//│         jump j$1(x$12) -- #x
+//│       false =>
+//│         let x$13 = -(b_n$0,1) in -- #x
+//│         let x$14 = A(0,x$13) in -- #x
+//│         jump _b_a_opt_jp(0,b_n$0,x$14) -- #72
+//│ )
+//│ Def(5, _b_a_opt, [tailrecBranch,b_n$0,a_x$0],
+//│ 1, 
+//│ jump _b_a_opt_jp(tailrecBranch,b_n$0,a_x$0) -- #76
+//│ )
+//│ },
+//│ let* (x$16) = b(20) in -- #71
+//│ x$16 -- #70)
+//│ 
+//│ Interpreted:
+//│ A(2,A(2,A(2,A(2,A(2,A(2,A(2,A(0,-1))))))))
