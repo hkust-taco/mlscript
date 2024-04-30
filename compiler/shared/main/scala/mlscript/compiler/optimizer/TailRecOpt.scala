@@ -329,118 +329,158 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
     val falseClass = classes.find(c => c.ident == "False").get
 
     val defns = component.nodes
+    val edges = component.edges
 
-    // currently, single tail recursive functions are already optimised
-    if (defns.size <= 1)
+    // dummy case, should not happen
+    if (defns.size == 0)
       return defns
 
-    // concretely order the functions as soon as possible, since the order of the functions matter
-    val defnsList = defns.toList
+    // for single tail recursive functions, just move the body into a join point
+    if (defns.size <= 1)
+      val defn = defns.head
+      
+      // if the function does not even tail call itself, just return
+      if edges.size == 0 then
+        return defns
+      
+      val jpName = defn.name + "_jp"
+      val jpDefnRef = DefnRef(Right(jpName))
+      
+      def transformNode(node: Node): Node = node match
+        case Result(res) => node
+        case Jump(defn, args) => node
+        case Case(scrut, cases) => Case(scrut, cases.map((cls, body) => (cls, transformNode(body)))).attachTag(tag)
+        case LetExpr(name, expr, body) => LetExpr(name, expr, transformNode(body)).attachTag(tag)
+        case LetCall(names, defn_, args, body, isTailRec) =>
+          if isTailCall(node) && defn_.expectDefn.id == defn.id then
+            Jump(jpDefnRef, args)
+          else
+            LetCall(names, defn_, args, transformNode(body), isTailRec).attachTag(tag)
+        case AssignField(assignee, clsInfo, fieldName, value, body) => 
+          AssignField(assignee, clsInfo, fieldName, value, transformNode(body)).attachTag(tag)
+      
+      val jpDef = Defn(fnUid.make, jpName, defn.params, defn.resultNum, transformNode(defn.body))
+      
+      val rets = defn.params.map { case Name(x) => Name(x + "_") }
+      val callJpNode = LetCall(
+        rets, 
+        DefnRef(Left(jpDef)),
+        defn.params.map(Expr.Ref(_)),
+        Result(rets.map(Expr.Ref(_))),
+        false
+        )
+      
+      val newDefn = Defn(fnUid.make, defn.name, defn.params, defn.resultNum, callJpNode)
+      Set(newDefn, jpDef)
 
-    // assume all defns have the same number of results
-    // in fact, they should theoretically have the same return type if the program type checked
-    val resultNum = defnsList.head.resultNum
+    else
+      // concretely order the functions as soon as possible, since the order of the functions matter
+      val defnsList = defns.toList
 
-    // TODO: make sure that name clashes aren't a problem
-    val trName = Name("tailrecBranch");
+      // assume all defns have the same number of results
+      // in fact, they should theoretically have the same return type if the program type checked
+      val resultNum = defnsList.head.resultNum
 
-    // To be used to replace variable names inside a definition to avoid variable name clashes
-    val nameMaps: Map[Int, Map[Name, Name]] = defnsList.map(defn => defn.id -> defn.params.map(n => n -> Name(defn.name + "_" + n.str)).toMap).toMap
+      // TODO: make sure that name clashes aren't a problem
+      val trName = Name("tailrecBranch");
 
-    val stackFrameIdxes = defnsList.foldLeft(1 :: Nil)((ls, defn) => defn.params.size + ls.head :: ls).drop(1).reverse
+      // To be used to replace variable names inside a definition to avoid variable name clashes
+      val nameMaps: Map[Int, Map[Name, Name]] = defnsList.map(defn => defn.id -> defn.params.map(n => n -> Name(defn.name + "_" + n.str)).toMap).toMap
 
-    val defnInfoMap: Map[Int, DefnInfo] = (defnsList zip stackFrameIdxes)
-      .foldLeft(Map.empty)((map, item) => map + (item._1.id -> DefnInfo(item._1, item._2)))
+      val stackFrameIdxes = defnsList.foldLeft(1 :: Nil)((ls, defn) => defn.params.size + ls.head :: ls).drop(1).reverse
 
-    val stackFrame = trName :: defnsList.flatMap(d => d.params.map(n => nameMaps(d.id)(n))) // take union of stack frames
+      val defnInfoMap: Map[Int, DefnInfo] = (defnsList zip stackFrameIdxes)
+        .foldLeft(Map.empty)((map, item) => map + (item._1.id -> DefnInfo(item._1, item._2)))
 
-    // TODO: This works fine for now, but ideally should find a way to guarantee the new
-    // name is unique
-    val newName = defns.foldLeft("")(_ + "_" + _.name) + "_opt"
-    val jpName = defns.foldLeft("")(_ + "_" + _.name) + "_opt_jp"
+      val stackFrame = trName :: defnsList.flatMap(d => d.params.map(n => nameMaps(d.id)(n))) // take union of stack frames
 
-    val newDefnRef = DefnRef(Right(newName))
-    val jpDefnRef = DefnRef(Right(jpName))
+      // TODO: This works fine for now, but ideally should find a way to guarantee the new
+      // name is unique
+      val newName = defns.foldLeft("")(_ + "_" + _.name) + "_opt"
+      val jpName = defns.foldLeft("")(_ + "_" + _.name) + "_opt_jp"
 
-    def transformStackFrame(args: List[TrivialExpr], info: DefnInfo) =
-      val start = stackFrame.take(info.stackFrameIdx).drop(1).map { Expr.Ref(_) } // we drop tailrecBranch and replace it with the defn id
-      val end = stackFrame.drop(info.stackFrameIdx + args.size).map { Expr.Ref(_) }
-      asLit(info.defn.id) :: start ::: args ::: end
+      val newDefnRef = DefnRef(Right(newName))
+      val jpDefnRef = DefnRef(Right(jpName))
 
-    // Build the node which will be contained inside the jump point.
-    def transformNode(node: Node): Node = node match
-      case Jump(_, _)                => node
-      case Result(_)                 => node
-      case Case(scrut, cases)        => Case(scrut, cases.map(n => (n._1, transformNode(n._2))))
-      case LetExpr(name, expr, body) => LetExpr(name, expr, transformNode(body))
-      case LetCall(names, defn, args, body, isTailRec) =>
-        if isTailCall(node) && defnInfoMap.contains(defn.expectDefn.id) then
-          Jump(jpDefnRef, transformStackFrame(args, defnInfoMap(defn.expectDefn.id))).attachTag(tag)
-        else LetCall(names, defn, args, transformNode(body), isTailRec)
-      case AssignField(assignee, clsInfo, field, value, body) => AssignField(assignee, clsInfo, field, value, transformNode(body))
+      def transformStackFrame(args: List[TrivialExpr], info: DefnInfo) =
+        val start = stackFrame.take(info.stackFrameIdx).drop(1).map { Expr.Ref(_) } // we drop tailrecBranch and replace it with the defn id
+        val end = stackFrame.drop(info.stackFrameIdx + args.size).map { Expr.Ref(_) }
+        asLit(info.defn.id) :: start ::: args ::: end
 
-    // Tail calls to another function in the component will be replaced with a tail call
-    // to the merged function
-    def transformDefn(defn: Defn): Defn =
-      // TODO: Figure out how to substitute variables with dummy variables.
-      val info = defnInfoMap(defn.id)
+      // Build the node which will be contained inside the jump point.
+      def transformNode(node: Node): Node = node match
+        case Jump(_, _)                => node
+        case Result(_)                 => node
+        case Case(scrut, cases)        => Case(scrut, cases.map(n => (n._1, transformNode(n._2))))
+        case LetExpr(name, expr, body) => LetExpr(name, expr, transformNode(body))
+        case LetCall(names, defn, args, body, isTailRec) =>
+          if isTailCall(node) && defnInfoMap.contains(defn.expectDefn.id) then
+            Jump(jpDefnRef, transformStackFrame(args, defnInfoMap(defn.expectDefn.id))).attachTag(tag)
+          else LetCall(names, defn, args, transformNode(body), isTailRec).attachTag(tag)
+        case AssignField(assignee, clsInfo, field, value, body) => AssignField(assignee, clsInfo, field, value, transformNode(body)).attachTag(tag)
 
-      val start =
-        stackFrame.take(info.stackFrameIdx).drop(1).map { _ => Expr.Literal(IntLit(0)) } // we drop tailrecBranch and replace it with the defn id
-      val end = stackFrame.drop(info.stackFrameIdx + defn.params.size).map { _ => Expr.Literal(IntLit(0)) }
-      val args = asLit(info.defn.id) :: start ::: defn.params.map(Expr.Ref(_)) ::: end
+      // Tail calls to another function in the component will be replaced with a tail call
+      // to the merged function
+      def transformDefn(defn: Defn): Defn =
+        // TODO: Figure out how to substitute variables with dummy variables.
+        val info = defnInfoMap(defn.id)
 
-      // We use a let call instead of a jump to avoid newDefn from being turned into a join point,
-      // which would cause it to be inlined and result in code duplication.
-      val names = (0 until resultNum).map(i => Name("r" + i.toString())).toList
-      val namesExpr = names.map(Expr.Ref(_))
-      val res = Result(namesExpr).attachTag(tag)
-      val call = LetCall(names, newDefnRef, args, res, false).attachTag(tag)
-      Defn(defn.id, defn.name, defn.params, defn.resultNum, call)
-    
-    // given expressions value, e1, e2, transform it into
-    // let scrut = tailrecBranch == value
-    // in case scrut of True  -> e1
-    //                  False -> e2
-    def makeCaseBranch(value: Int, e1: Node, e2: Node): Node =
-      val name = Name("scrut")
-      val cases = Case(name, List((trueClass, e1), (falseClass, e2))).attachTag(tag)
-      LetExpr(
-        name,
-        Expr.BasicOp("==", List(asLit(value), Expr.Ref(trName))),
-        cases
-      ).attachTag(tag)
+        val start =
+          stackFrame.take(info.stackFrameIdx).drop(1).map { _ => Expr.Literal(IntLit(0)) } // we drop tailrecBranch and replace it with the defn id
+        val end = stackFrame.drop(info.stackFrameIdx + defn.params.size).map { _ => Expr.Literal(IntLit(0)) }
+        val args = asLit(info.defn.id) :: start ::: defn.params.map(Expr.Ref(_)) ::: end
 
-    def getOrKey[T](m: Map[T, T])(key: T): T = m.get(key) match
-      case None        => key
-      case Some(value) => value
+        // We use a let call instead of a jump to avoid newDefn from being turned into a join point,
+        // which would cause it to be inlined and result in code duplication.
+        val names = (0 until resultNum).map(i => Name("r" + i.toString())).toList
+        val namesExpr = names.map(Expr.Ref(_))
+        val res = Result(namesExpr).attachTag(tag)
+        val call = LetCall(names, newDefnRef, args, res, false).attachTag(tag)
+        Defn(defn.id, defn.name, defn.params, defn.resultNum, call)
+      
+      // given expressions value, e1, e2, transform it into
+      // let scrut = tailrecBranch == value
+      // in case scrut of True  -> e1
+      //                  False -> e2
+      def makeCaseBranch(value: Int, e1: Node, e2: Node): Node =
+        val name = Name("scrut")
+        val cases = Case(name, List((trueClass, e1), (falseClass, e2))).attachTag(tag)
+        LetExpr(
+          name,
+          Expr.BasicOp("==", List(asLit(value), Expr.Ref(trName))),
+          cases
+        ).attachTag(tag)
 
-    val first = defnsList.head;
-    val firstMap = nameMaps(first.id)
-    val firstBodyRenamed = first.body.mapName(getOrKey(firstMap))
-    val firstNode = transformNode(firstBodyRenamed)
+      def getOrKey[T](m: Map[T, T])(key: T): T = m.get(key) match
+        case None        => key
+        case Some(value) => value
 
-    val newNode = defnsList.tail
-      .foldLeft(firstNode)((elz, defn) =>
-        val nmeNap = nameMaps(defn.id)
-        val renamed = defn.body.mapName(getOrKey(nmeNap))
-        val thisNode = transformNode(renamed)
-        makeCaseBranch(defn.id, thisNode, elz)
-      )
-      .attachTag(tag)
+      val first = defnsList.head;
+      val firstMap = nameMaps(first.id)
+      val firstBodyRenamed = first.body.mapName(getOrKey(firstMap))
+      val firstNode = transformNode(firstBodyRenamed)
 
-    val jpDefn = Defn(fnUid.make, jpName, stackFrame, resultNum, newNode)
+      val newNode = defnsList.tail
+        .foldLeft(firstNode)((elz, defn) =>
+          val nmeNap = nameMaps(defn.id)
+          val renamed = defn.body.mapName(getOrKey(nmeNap))
+          val thisNode = transformNode(renamed)
+          makeCaseBranch(defn.id, thisNode, elz)
+        )
+        .attachTag(tag)
 
-    val jmp = Jump(jpDefnRef, stackFrame.map(Expr.Ref(_))).attachTag(tag)
-    val newDefn = Defn(fnUid.make, newName, stackFrame, resultNum, jmp)
+      val jpDefn = Defn(fnUid.make, jpName, stackFrame, resultNum, newNode)
 
-    // This is the definition that will be called
-    // val createIntermidDefn =
+      val jmp = Jump(jpDefnRef, stackFrame.map(Expr.Ref(_))).attachTag(tag)
+      val newDefn = Defn(fnUid.make, newName, stackFrame, resultNum, jmp)
 
-    jpDefnRef.defn = Left(jpDefn)
-    newDefnRef.defn = Left(newDefn)
+      // This is the definition that will be called
+      // val createIntermidDefn =
 
-    defns.map { d => transformDefn(d) } + newDefn + jpDefn
+      jpDefnRef.defn = Left(jpDefn)
+      newDefnRef.defn = Left(newDefn)
+
+      defns.map { d => transformDefn(d) } + newDefn + jpDefn
   
   private def partition(defns: Set[Defn]): List[ScComponent] = 
     val nodeMap: Map[Int, DefnNode] = defns.foldLeft(Map.empty)((m, d) => m + (d.id -> DefnNode(d)))
