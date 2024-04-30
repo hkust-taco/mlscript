@@ -323,7 +323,7 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
   // tail recursive functions, returns a set containing the optimized function and the
   // original functions pointing to an optimized function.
   private def optimizeTailRec(component: ScComponent, classes: Set[ClassInfo]): Set[Defn] = 
-    println(component.edges)
+    // println(component.edges)
     // To build the case block, we need to compare integers and check if the result is "True"
     val trueClass = classes.find(c => c.ident == "True").get
     val falseClass = classes.find(c => c.ident == "False").get
