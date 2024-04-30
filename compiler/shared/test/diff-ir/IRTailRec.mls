@@ -123,19 +123,19 @@ fact(1, 5)
 //│ )
 //│ Def(2, fact_jp, [acc$0,n$0],
 //│ 1, 
-//│ let x$0 = ==(n$0,0) in -- #34
-//│ if x$0 -- #33
+//│ let x$0 = ==(n$0,0) in -- #36
+//│ if x$0 -- #35
 //│   true =>
-//│     jump j$0(acc$0) -- #5
+//│     jump j$0(acc$0) -- #31
 //│   false =>
-//│     let x$2 = *(acc$0,n$0) in -- #32
-//│     let x$3 = -(n$0,1) in -- #31
-//│     jump fact_jp(x$2,x$3) -- #x
+//│     let x$2 = *(acc$0,n$0) in -- #34
+//│     let x$3 = -(n$0,1) in -- #33
+//│     jump fact_jp(x$2,x$3) -- #32
 //│ )
 //│ Def(3, fact, [acc$0,n$0],
 //│ 1, 
-//│ let* (acc$0_,n$0_) = fact_jp(acc$0,n$0) in -- #x
-//│ acc$0_,n$0_ -- #x
+//│ let* (acc$0_,n$0_) = fact_jp(acc$0,n$0) in -- #38
+//│ acc$0_,n$0_ -- #37
 //│ )
 //│ },
 //│ let* (x$5) = fact(1,5) in -- #30
@@ -149,19 +149,19 @@ fact(1, 5)
 //│ )
 //│ Def(2, fact_jp, [acc$0,n$0],
 //│ 1, 
-//│ let x$0 = ==(n$0,0) in -- #34
-//│ if x$0 -- #33
+//│ let x$0 = ==(n$0,0) in -- #36
+//│ if x$0 -- #35
 //│   true =>
-//│     jump j$0(acc$0) -- #5
+//│     jump j$0(acc$0) -- #31
 //│   false =>
-//│     let x$2 = *(acc$0,n$0) in -- #32
-//│     let x$3 = -(n$0,1) in -- #31
-//│     jump fact_jp(x$2,x$3) -- #x
+//│     let x$2 = *(acc$0,n$0) in -- #34
+//│     let x$3 = -(n$0,1) in -- #33
+//│     jump fact_jp(x$2,x$3) -- #32
 //│ )
 //│ Def(3, fact, [acc$0,n$0],
 //│ 1, 
-//│ let* (acc$0_,n$0_) = fact_jp(acc$0,n$0) in -- #x
-//│ acc$0_,n$0_ -- #x
+//│ let* (acc$0_,n$0_) = fact_jp(acc$0,n$0) in -- #38
+//│ acc$0_,n$0_ -- #37
 //│ )
 //│ },
 //│ let* (x$5) = fact(1,5) in -- #30
@@ -388,8 +388,8 @@ g(6, 0)
 //│ )
 //│ Def(1, f, [n$0,acc$0],
 //│ 1, 
-//│ let* (r0) = _g_f_opt(1,0,0,n$0,acc$0) in -- #82
-//│ r0 -- #81
+//│ let* (r0) = _g_f_opt(1,0,0,n$0,acc$0) in -- #100
+//│ r0 -- #99
 //│ )
 //│ Def(2, j$0, [x$3],
 //│ 1, 
@@ -397,8 +397,8 @@ g(6, 0)
 //│ )
 //│ Def(3, g, [m$0,acc$1],
 //│ 1, 
-//│ let* (r0) = _g_f_opt(3,m$0,acc$1,0,0) in -- #80
-//│ r0 -- #79
+//│ let* (r0) = _g_f_opt(3,m$0,acc$1,0,0) in -- #98
+//│ r0 -- #97
 //│ )
 //│ Def(4, j$1, [x$9],
 //│ 1, 
@@ -406,33 +406,33 @@ g(6, 0)
 //│ )
 //│ Def(5, _g_f_opt_jp, [tailrecBranch,g_m$0,g_acc$1,f_n$0,f_acc$0],
 //│ 1, 
-//│ let scrut = ==(1,tailrecBranch) in -- #77
-//│ if scrut -- #75
+//│ let scrut = ==(1,tailrecBranch) in -- #95
+//│ if scrut -- #94
 //│   true =>
-//│     let x$2 = ==(f_n$0,0) in -- #x
-//│     if x$2 -- #x
+//│     let x$2 = ==(f_n$0,0) in -- #93
+//│     if x$2 -- #92
 //│       true =>
-//│         let* (x$4) = double(f_acc$0) in -- #73
-//│         jump j$0(x$4) -- #x
+//│         let* (x$4) = double(f_acc$0) in -- #88
+//│         jump j$0(x$4) -- #87
 //│       false =>
-//│         let x$5 = -(f_n$0,1) in -- #x
-//│         let x$6 = +(f_acc$0,1) in -- #x
-//│         jump _g_f_opt_jp(3,x$5,x$6,f_n$0,f_acc$0) -- #74
+//│         let x$5 = -(f_n$0,1) in -- #91
+//│         let x$6 = +(f_acc$0,1) in -- #90
+//│         jump _g_f_opt_jp(3,x$5,x$6,f_n$0,f_acc$0) -- #89
 //│   false =>
-//│     let x$8 = ==(g_m$0,0) in -- #x
-//│     if x$8 -- #x
+//│     let x$8 = ==(g_m$0,0) in -- #86
+//│     if x$8 -- #85
 //│       true =>
-//│         let* (x$10) = double(g_acc$1) in -- #71
-//│         let x$11 = -(0,x$10) in -- #x
-//│         jump j$1(x$11) -- #x
+//│         let* (x$10) = double(g_acc$1) in -- #81
+//│         let x$11 = -(0,x$10) in -- #80
+//│         jump j$1(x$11) -- #79
 //│       false =>
-//│         let x$12 = -(g_m$0,1) in -- #x
-//│         let x$13 = +(g_acc$1,1) in -- #x
-//│         jump _g_f_opt_jp(1,g_m$0,g_acc$1,x$12,x$13) -- #72
+//│         let x$12 = -(g_m$0,1) in -- #84
+//│         let x$13 = +(g_acc$1,1) in -- #83
+//│         jump _g_f_opt_jp(1,g_m$0,g_acc$1,x$12,x$13) -- #82
 //│ )
 //│ Def(6, _g_f_opt, [tailrecBranch,g_m$0,g_acc$1,f_n$0,f_acc$0],
 //│ 1, 
-//│ jump _g_f_opt_jp(tailrecBranch,g_m$0,g_acc$1,f_n$0,f_acc$0) -- #78
+//│ jump _g_f_opt_jp(tailrecBranch,g_m$0,g_acc$1,f_n$0,f_acc$0) -- #96
 //│ )
 //│ },
 //│ let* (x$15) = g(6,0) in -- #70
@@ -447,8 +447,8 @@ g(6, 0)
 //│ )
 //│ Def(1, f, [n$0,acc$0],
 //│ 1, 
-//│ let* (r0) = _g_f_opt(1,0,0,n$0,acc$0) in -- #82
-//│ r0 -- #81
+//│ let* (r0) = _g_f_opt(1,0,0,n$0,acc$0) in -- #100
+//│ r0 -- #99
 //│ )
 //│ Def(2, j$0, [x$3],
 //│ 1, 
@@ -456,8 +456,8 @@ g(6, 0)
 //│ )
 //│ Def(3, g, [m$0,acc$1],
 //│ 1, 
-//│ let* (r0) = _g_f_opt(3,m$0,acc$1,0,0) in -- #80
-//│ r0 -- #79
+//│ let* (r0) = _g_f_opt(3,m$0,acc$1,0,0) in -- #98
+//│ r0 -- #97
 //│ )
 //│ Def(4, j$1, [x$9],
 //│ 1, 
@@ -465,33 +465,33 @@ g(6, 0)
 //│ )
 //│ Def(5, _g_f_opt_jp, [tailrecBranch,g_m$0,g_acc$1,f_n$0,f_acc$0],
 //│ 1, 
-//│ let scrut = ==(1,tailrecBranch) in -- #77
-//│ if scrut -- #75
+//│ let scrut = ==(1,tailrecBranch) in -- #95
+//│ if scrut -- #94
 //│   true =>
-//│     let x$2 = ==(f_n$0,0) in -- #x
-//│     if x$2 -- #x
+//│     let x$2 = ==(f_n$0,0) in -- #93
+//│     if x$2 -- #92
 //│       true =>
-//│         let* (x$4) = double(f_acc$0) in -- #73
-//│         jump j$0(x$4) -- #x
+//│         let* (x$4) = double(f_acc$0) in -- #88
+//│         jump j$0(x$4) -- #87
 //│       false =>
-//│         let x$5 = -(f_n$0,1) in -- #x
-//│         let x$6 = +(f_acc$0,1) in -- #x
-//│         jump _g_f_opt_jp(3,x$5,x$6,f_n$0,f_acc$0) -- #74
+//│         let x$5 = -(f_n$0,1) in -- #91
+//│         let x$6 = +(f_acc$0,1) in -- #90
+//│         jump _g_f_opt_jp(3,x$5,x$6,f_n$0,f_acc$0) -- #89
 //│   false =>
-//│     let x$8 = ==(g_m$0,0) in -- #x
-//│     if x$8 -- #x
+//│     let x$8 = ==(g_m$0,0) in -- #86
+//│     if x$8 -- #85
 //│       true =>
-//│         let* (x$10) = double(g_acc$1) in -- #71
-//│         let x$11 = -(0,x$10) in -- #x
-//│         jump j$1(x$11) -- #x
+//│         let* (x$10) = double(g_acc$1) in -- #81
+//│         let x$11 = -(0,x$10) in -- #80
+//│         jump j$1(x$11) -- #79
 //│       false =>
-//│         let x$12 = -(g_m$0,1) in -- #x
-//│         let x$13 = +(g_acc$1,1) in -- #x
-//│         jump _g_f_opt_jp(1,g_m$0,g_acc$1,x$12,x$13) -- #72
+//│         let x$12 = -(g_m$0,1) in -- #84
+//│         let x$13 = +(g_acc$1,1) in -- #83
+//│         jump _g_f_opt_jp(1,g_m$0,g_acc$1,x$12,x$13) -- #82
 //│ )
 //│ Def(6, _g_f_opt, [tailrecBranch,g_m$0,g_acc$1,f_n$0,f_acc$0],
 //│ 1, 
-//│ jump _g_f_opt_jp(tailrecBranch,g_m$0,g_acc$1,f_n$0,f_acc$0) -- #78
+//│ jump _g_f_opt_jp(tailrecBranch,g_m$0,g_acc$1,f_n$0,f_acc$0) -- #96
 //│ )
 //│ },
 //│ let* (x$15) = g(6,0) in -- #70
@@ -551,16 +551,16 @@ fun h(p, q, r, s) = f(0, 0, 0)
 //│ Def(3, _h_g_f_opt_jp, [tailrecBranch,h_p$0,h_q$0,h_r$0,h_s$0,g_d$0,g_e$0,f_a$0,f_b$0,f_c$0],
 //│ 1, 
 //│ let scrut = ==(0,tailrecBranch) in -- #38
-//│ if scrut -- #36
+//│ if scrut -- #37
 //│   true =>
-//│     jump _h_g_f_opt_jp(1,h_p$0,h_q$0,h_r$0,h_s$0,0,0,f_a$0,f_b$0,f_c$0) -- #35
+//│     jump _h_g_f_opt_jp(1,h_p$0,h_q$0,h_r$0,h_s$0,0,0,f_a$0,f_b$0,f_c$0) -- #34
 //│   false =>
-//│     let scrut = ==(1,tailrecBranch) in -- #34
-//│     if scrut -- #33
+//│     let scrut = ==(1,tailrecBranch) in -- #36
+//│     if scrut -- #35
 //│       true =>
-//│         jump _h_g_f_opt_jp(2,0,0,0,0,g_d$0,g_e$0,f_a$0,f_b$0,f_c$0) -- #32
+//│         jump _h_g_f_opt_jp(2,0,0,0,0,g_d$0,g_e$0,f_a$0,f_b$0,f_c$0) -- #33
 //│       false =>
-//│         jump _h_g_f_opt_jp(0,h_p$0,h_q$0,h_r$0,h_s$0,g_d$0,g_e$0,0,0,0) -- #31
+//│         jump _h_g_f_opt_jp(0,h_p$0,h_q$0,h_r$0,h_s$0,g_d$0,g_e$0,0,0,0) -- #32
 //│ )
 //│ Def(4, _h_g_f_opt, [tailrecBranch,h_p$0,h_q$0,h_r$0,h_s$0,g_d$0,g_e$0,f_a$0,f_b$0,f_c$0],
 //│ 1, 
@@ -589,16 +589,16 @@ fun h(p, q, r, s) = f(0, 0, 0)
 //│ Def(3, _h_g_f_opt_jp, [tailrecBranch,h_p$0,h_q$0,h_r$0,h_s$0,g_d$0,g_e$0,f_a$0,f_b$0,f_c$0],
 //│ 1, 
 //│ let scrut = ==(0,tailrecBranch) in -- #38
-//│ if scrut -- #36
+//│ if scrut -- #37
 //│   true =>
-//│     jump _h_g_f_opt_jp(1,h_p$0,h_q$0,h_r$0,h_s$0,0,0,f_a$0,f_b$0,f_c$0) -- #35
+//│     jump _h_g_f_opt_jp(1,h_p$0,h_q$0,h_r$0,h_s$0,0,0,f_a$0,f_b$0,f_c$0) -- #34
 //│   false =>
-//│     let scrut = ==(1,tailrecBranch) in -- #34
-//│     if scrut -- #33
+//│     let scrut = ==(1,tailrecBranch) in -- #36
+//│     if scrut -- #35
 //│       true =>
-//│         jump _h_g_f_opt_jp(2,0,0,0,0,g_d$0,g_e$0,f_a$0,f_b$0,f_c$0) -- #32
+//│         jump _h_g_f_opt_jp(2,0,0,0,0,g_d$0,g_e$0,f_a$0,f_b$0,f_c$0) -- #33
 //│       false =>
-//│         jump _h_g_f_opt_jp(0,h_p$0,h_q$0,h_r$0,h_s$0,g_d$0,g_e$0,0,0,0) -- #31
+//│         jump _h_g_f_opt_jp(0,h_p$0,h_q$0,h_r$0,h_s$0,g_d$0,g_e$0,0,0,0) -- #32
 //│ )
 //│ Def(4, _h_g_f_opt, [tailrecBranch,h_p$0,h_q$0,h_r$0,h_s$0,g_d$0,g_e$0,f_a$0,f_b$0,f_c$0],
 //│ 1, 
@@ -622,12 +622,12 @@ hello()
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
 //│ Def(0, hello, [],
 //│ 1, 
-//│ let* (x$0) = @tailrec hello() in -- #x
+//│ let* (x$0) = @tailrec hello() in -- #5
 //│ 2 -- #3
 //│ )
 //│ },
-//│ let* (x$1) = hello() in -- #8
-//│ x$1 -- #7)
+//│ let* (x$1) = hello() in -- #9
+//│ x$1 -- #8)
 //│ 
 //│ IR Processing Failed: not a tail call
 //│ 
@@ -641,8 +641,8 @@ hello()
 //│ scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
 //│ scala.collection.immutable.Set$Set1.foreach(Set.scala:168)
 //│ mlscript.compiler.optimizer.TailRecOpt.partitionNodes(TailRecOpt.scala:302)
-//│ mlscript.compiler.optimizer.TailRecOpt.partition(TailRecOpt.scala:487)
-//│ mlscript.compiler.optimizer.TailRecOpt.run_debug(TailRecOpt.scala:494)
+//│ mlscript.compiler.optimizer.TailRecOpt.partition(TailRecOpt.scala:501)
+//│ mlscript.compiler.optimizer.TailRecOpt.run_debug(TailRecOpt.scala:508)
 //│ mlscript.compiler.IRDiffTestCompiler.postProcess(TestIR.scala:28)
 //│ mlscript.DiffTests.rec$1(DiffTests.scala:470)
 //│ mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1076)
@@ -716,29 +716,29 @@ addOne(Cons(1, Cons(2, Cons(3, Nil))))
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, [])}, {
 //│ Def(0, addOne, [xs$0],
 //│ 1, 
-//│ case xs$0 of -- #27
+//│ case xs$0 of -- #28
 //│   Cons =>
-//│     let x$1 = xs$0.t in -- #23
-//│     let x$2 = xs$0.h in -- #22
-//│     let x$3 = +(x$2,1) in -- #21
-//│     let* (x$4) = @tailrec addOne(x$1) in -- #x
+//│     let x$1 = xs$0.t in -- #24
+//│     let x$2 = xs$0.h in -- #23
+//│     let x$3 = +(x$2,1) in -- #22
+//│     let* (x$4) = @tailrec addOne(x$1) in -- #21
 //│     let x$5 = Cons(x$3,x$4) in -- #19
 //│     jump j$0(x$5) -- #18
 //│   Nil =>
-//│     let x$6 = Nil() in -- #26
-//│     jump j$0(x$6) -- #25
+//│     let x$6 = Nil() in -- #27
+//│     jump j$0(x$6) -- #26
 //│ )
 //│ Def(1, j$0, [x$0],
 //│ 1, 
 //│ x$0 -- #1
 //│ )
 //│ },
-//│ let x$7 = Nil() in -- #52
-//│ let x$8 = Cons(3,x$7) in -- #51
-//│ let x$9 = Cons(2,x$8) in -- #50
-//│ let x$10 = Cons(1,x$9) in -- #49
-//│ let* (x$11) = addOne(x$10) in -- #48
-//│ x$11 -- #47)
+//│ let x$7 = Nil() in -- #53
+//│ let x$8 = Cons(3,x$7) in -- #52
+//│ let x$9 = Cons(2,x$8) in -- #51
+//│ let x$10 = Cons(1,x$9) in -- #50
+//│ let* (x$11) = addOne(x$10) in -- #49
+//│ x$11 -- #48)
 //│ 
 //│ Strongly Connected Tail Calls:
 //│ List(Set(j$0), Set(addOne))
@@ -749,30 +749,30 @@ addOne(Cons(1, Cons(2, Cons(3, Nil))))
 //│ )
 //│ Def(2, addOne_jp, [xs$0],
 //│ 1, 
-//│ case xs$0 of -- #59
+//│ case xs$0 of -- #62
 //│   Cons =>
-//│     let x$1 = xs$0.t in -- #57
-//│     let x$2 = xs$0.h in -- #56
-//│     let x$3 = +(x$2,1) in -- #55
-//│     let* (x$4) = @tailrec addOne(x$1) in -- #54
-//│     let x$5 = Cons(x$3,x$4) in -- #53
-//│     jump j$0(x$5) -- #18
+//│     let x$1 = xs$0.t in -- #59
+//│     let x$2 = xs$0.h in -- #58
+//│     let x$3 = +(x$2,1) in -- #57
+//│     let* (x$4) = @tailrec addOne(x$1) in -- #56
+//│     let x$5 = Cons(x$3,x$4) in -- #55
+//│     jump j$0(x$5) -- #54
 //│   Nil =>
-//│     let x$6 = Nil() in -- #58
-//│     jump j$0(x$6) -- #25
+//│     let x$6 = Nil() in -- #61
+//│     jump j$0(x$6) -- #60
 //│ )
 //│ Def(3, addOne, [xs$0],
 //│ 1, 
-//│ let* (xs$0_) = addOne_jp(xs$0) in -- #x
-//│ xs$0_ -- #x
+//│ let* (xs$0_) = addOne_jp(xs$0) in -- #64
+//│ xs$0_ -- #63
 //│ )
 //│ },
-//│ let x$7 = Nil() in -- #52
-//│ let x$8 = Cons(3,x$7) in -- #51
-//│ let x$9 = Cons(2,x$8) in -- #50
-//│ let x$10 = Cons(1,x$9) in -- #49
-//│ let* (x$11) = addOne(x$10) in -- #48
-//│ x$11 -- #47)
+//│ let x$7 = Nil() in -- #53
+//│ let x$8 = Cons(3,x$7) in -- #52
+//│ let x$9 = Cons(2,x$8) in -- #51
+//│ let x$10 = Cons(1,x$9) in -- #50
+//│ let* (x$11) = addOne(x$10) in -- #49
+//│ x$11 -- #48)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, [])}, {
@@ -782,30 +782,30 @@ addOne(Cons(1, Cons(2, Cons(3, Nil))))
 //│ )
 //│ Def(2, addOne_jp, [xs$0],
 //│ 1, 
-//│ case xs$0 of -- #59
+//│ case xs$0 of -- #62
 //│   Cons =>
-//│     let x$1 = xs$0.t in -- #57
-//│     let x$2 = xs$0.h in -- #56
-//│     let x$3 = +(x$2,1) in -- #55
-//│     let* (x$4) = @tailrec addOne(x$1) in -- #54
-//│     let x$5 = Cons(x$3,x$4) in -- #53
-//│     jump j$0(x$5) -- #18
+//│     let x$1 = xs$0.t in -- #59
+//│     let x$2 = xs$0.h in -- #58
+//│     let x$3 = +(x$2,1) in -- #57
+//│     let* (x$4) = @tailrec addOne(x$1) in -- #56
+//│     let x$5 = Cons(x$3,x$4) in -- #55
+//│     jump j$0(x$5) -- #54
 //│   Nil =>
-//│     let x$6 = Nil() in -- #58
-//│     jump j$0(x$6) -- #25
+//│     let x$6 = Nil() in -- #61
+//│     jump j$0(x$6) -- #60
 //│ )
 //│ Def(3, addOne, [xs$0],
 //│ 1, 
-//│ let* (xs$0_) = addOne_jp(xs$0) in -- #x
-//│ xs$0_ -- #x
+//│ let* (xs$0_) = addOne_jp(xs$0) in -- #64
+//│ xs$0_ -- #63
 //│ )
 //│ },
-//│ let x$7 = Nil() in -- #52
-//│ let x$8 = Cons(3,x$7) in -- #51
-//│ let x$9 = Cons(2,x$8) in -- #50
-//│ let x$10 = Cons(1,x$9) in -- #49
-//│ let* (x$11) = addOne(x$10) in -- #48
-//│ x$11 -- #47)
+//│ let x$7 = Nil() in -- #53
+//│ let x$8 = Cons(3,x$7) in -- #52
+//│ let x$9 = Cons(2,x$8) in -- #51
+//│ let x$10 = Cons(1,x$9) in -- #50
+//│ let* (x$11) = addOne(x$10) in -- #49
+//│ x$11 -- #48)
 //│ 
 //│ Interpreted:
 //│ Cons(2,Cons(3,Cons(4,Nil())))
@@ -832,16 +832,16 @@ a(S(S(S(Zero))))
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Zero, []),ClassInfo(3, S, [x])}, {
 //│ Def(0, a, [n$0],
 //│ 1, 
-//│ case n$0 of -- #23
+//│ case n$0 of -- #24
 //│   S =>
-//│     let x$1 = n$0.x in -- #15
-//│     let* (x$2) = @tailrec b(x$1) in -- #x
+//│     let x$1 = n$0.x in -- #16
+//│     let* (x$2) = @tailrec b(x$1) in -- #15
 //│     let x$3 = S(x$2) in -- #13
 //│     jump j$0(x$3) -- #12
 //│   Zero =>
-//│     let x$4 = Zero() in -- #22
-//│     let x$5 = S(x$4) in -- #21
-//│     jump j$0(x$5) -- #20
+//│     let x$4 = Zero() in -- #23
+//│     let x$5 = S(x$4) in -- #22
+//│     jump j$0(x$5) -- #21
 //│ )
 //│ Def(1, j$0, [x$0],
 //│ 1, 
@@ -849,38 +849,38 @@ a(S(S(S(Zero))))
 //│ )
 //│ Def(2, b, [n$1],
 //│ 1, 
-//│ case n$1 of -- #55
+//│ case n$1 of -- #57
 //│   S =>
-//│     let x$7 = n$1.x in -- #43
-//│     let* (x$8) = @tailrec a(x$7) in -- #x
-//│     let x$9 = S(x$8) in -- #41
-//│     let x$10 = S(x$9) in -- #40
-//│     jump j$1(x$10) -- #39
+//│     let x$7 = n$1.x in -- #45
+//│     let* (x$8) = @tailrec a(x$7) in -- #44
+//│     let x$9 = S(x$8) in -- #42
+//│     let x$10 = S(x$9) in -- #41
+//│     jump j$1(x$10) -- #40
 //│   Zero =>
-//│     let x$11 = Zero() in -- #54
-//│     let x$12 = S(x$11) in -- #53
-//│     let x$13 = S(x$12) in -- #52
-//│     jump j$1(x$13) -- #51
+//│     let x$11 = Zero() in -- #56
+//│     let x$12 = S(x$11) in -- #55
+//│     let x$13 = S(x$12) in -- #54
+//│     jump j$1(x$13) -- #53
 //│ )
 //│ Def(3, j$1, [x$6],
 //│ 1, 
-//│ x$6 -- #25
+//│ x$6 -- #26
 //│ )
 //│ },
-//│ let x$14 = Zero() in -- #74
-//│ let x$15 = S(x$14) in -- #73
-//│ let x$16 = S(x$15) in -- #72
-//│ let x$17 = S(x$16) in -- #71
-//│ let* (x$18) = a(x$17) in -- #70
-//│ x$18 -- #69)
+//│ let x$14 = Zero() in -- #76
+//│ let x$15 = S(x$14) in -- #75
+//│ let x$16 = S(x$15) in -- #74
+//│ let x$17 = S(x$16) in -- #73
+//│ let* (x$18) = a(x$17) in -- #72
+//│ x$18 -- #71)
 //│ 
 //│ Strongly Connected Tail Calls:
 //│ List(Set(j$1), Set(j$0), Set(b, a))
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Zero, []),ClassInfo(3, S, [x])}, {
 //│ Def(0, a, [n$0],
 //│ 1, 
-//│ let* (r0) = _b_a_opt(0,0,n$0) in -- #84
-//│ r0 -- #83
+//│ let* (r0) = _b_a_opt(0,0,n$0) in -- #111
+//│ r0 -- #110
 //│ )
 //│ Def(1, j$0, [x$0],
 //│ 1, 
@@ -888,60 +888,60 @@ a(S(S(S(Zero))))
 //│ )
 //│ Def(2, b, [n$1],
 //│ 1, 
-//│ let* (r0) = _b_a_opt(2,n$1,0) in -- #82
-//│ r0 -- #81
+//│ let* (r0) = _b_a_opt(2,n$1,0) in -- #109
+//│ r0 -- #108
 //│ )
 //│ Def(3, j$1, [x$6],
 //│ 1, 
-//│ x$6 -- #25
+//│ x$6 -- #26
 //│ )
 //│ Def(4, _b_a_opt_jp, [tailrecBranch,b_n$1,a_n$0],
 //│ 1, 
-//│ let scrut = ==(0,tailrecBranch) in -- #79
-//│ if scrut -- #77
+//│ let scrut = ==(0,tailrecBranch) in -- #106
+//│ if scrut -- #105
 //│   true =>
-//│     case a_n$0 of -- #x
+//│     case a_n$0 of -- #104
 //│       S =>
-//│         let x$1 = a_n$0.x in -- #x
-//│         let* (x$2) = @tailrec b(x$1) in -- #76
-//│         let x$3 = S(x$2) in -- #x
-//│         jump j$0(x$3) -- #x
+//│         let x$1 = a_n$0.x in -- #100
+//│         let* (x$2) = @tailrec b(x$1) in -- #99
+//│         let x$3 = S(x$2) in -- #98
+//│         jump j$0(x$3) -- #97
 //│       Zero =>
-//│         let x$4 = Zero() in -- #x
-//│         let x$5 = S(x$4) in -- #x
-//│         jump j$0(x$5) -- #x
+//│         let x$4 = Zero() in -- #103
+//│         let x$5 = S(x$4) in -- #102
+//│         jump j$0(x$5) -- #101
 //│   false =>
-//│     case b_n$1 of -- #x
+//│     case b_n$1 of -- #96
 //│       S =>
-//│         let x$7 = b_n$1.x in -- #x
-//│         let* (x$8) = @tailrec a(x$7) in -- #75
-//│         let x$9 = S(x$8) in -- #x
-//│         let x$10 = S(x$9) in -- #x
-//│         jump j$1(x$10) -- #x
+//│         let x$7 = b_n$1.x in -- #91
+//│         let* (x$8) = @tailrec a(x$7) in -- #90
+//│         let x$9 = S(x$8) in -- #89
+//│         let x$10 = S(x$9) in -- #88
+//│         jump j$1(x$10) -- #87
 //│       Zero =>
-//│         let x$11 = Zero() in -- #x
-//│         let x$12 = S(x$11) in -- #x
-//│         let x$13 = S(x$12) in -- #x
-//│         jump j$1(x$13) -- #x
+//│         let x$11 = Zero() in -- #95
+//│         let x$12 = S(x$11) in -- #94
+//│         let x$13 = S(x$12) in -- #93
+//│         jump j$1(x$13) -- #92
 //│ )
 //│ Def(5, _b_a_opt, [tailrecBranch,b_n$1,a_n$0],
 //│ 1, 
-//│ jump _b_a_opt_jp(tailrecBranch,b_n$1,a_n$0) -- #80
+//│ jump _b_a_opt_jp(tailrecBranch,b_n$1,a_n$0) -- #107
 //│ )
 //│ },
-//│ let x$14 = Zero() in -- #74
-//│ let x$15 = S(x$14) in -- #73
-//│ let x$16 = S(x$15) in -- #72
-//│ let x$17 = S(x$16) in -- #71
-//│ let* (x$18) = a(x$17) in -- #70
-//│ x$18 -- #69)
+//│ let x$14 = Zero() in -- #76
+//│ let x$15 = S(x$14) in -- #75
+//│ let x$16 = S(x$15) in -- #74
+//│ let x$17 = S(x$16) in -- #73
+//│ let* (x$18) = a(x$17) in -- #72
+//│ x$18 -- #71)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Zero, []),ClassInfo(3, S, [x])}, {
 //│ Def(0, a, [n$0],
 //│ 1, 
-//│ let* (r0) = _b_a_opt(0,0,n$0) in -- #84
-//│ r0 -- #83
+//│ let* (r0) = _b_a_opt(0,0,n$0) in -- #111
+//│ r0 -- #110
 //│ )
 //│ Def(1, j$0, [x$0],
 //│ 1, 
@@ -949,53 +949,53 @@ a(S(S(S(Zero))))
 //│ )
 //│ Def(2, b, [n$1],
 //│ 1, 
-//│ let* (r0) = _b_a_opt(2,n$1,0) in -- #82
-//│ r0 -- #81
+//│ let* (r0) = _b_a_opt(2,n$1,0) in -- #109
+//│ r0 -- #108
 //│ )
 //│ Def(3, j$1, [x$6],
 //│ 1, 
-//│ x$6 -- #25
+//│ x$6 -- #26
 //│ )
 //│ Def(4, _b_a_opt_jp, [tailrecBranch,b_n$1,a_n$0],
 //│ 1, 
-//│ let scrut = ==(0,tailrecBranch) in -- #79
-//│ if scrut -- #77
+//│ let scrut = ==(0,tailrecBranch) in -- #106
+//│ if scrut -- #105
 //│   true =>
-//│     case a_n$0 of -- #x
+//│     case a_n$0 of -- #104
 //│       S =>
-//│         let x$1 = a_n$0.x in -- #x
-//│         let* (x$2) = @tailrec b(x$1) in -- #76
-//│         let x$3 = S(x$2) in -- #x
-//│         jump j$0(x$3) -- #x
+//│         let x$1 = a_n$0.x in -- #100
+//│         let* (x$2) = @tailrec b(x$1) in -- #99
+//│         let x$3 = S(x$2) in -- #98
+//│         jump j$0(x$3) -- #97
 //│       Zero =>
-//│         let x$4 = Zero() in -- #x
-//│         let x$5 = S(x$4) in -- #x
-//│         jump j$0(x$5) -- #x
+//│         let x$4 = Zero() in -- #103
+//│         let x$5 = S(x$4) in -- #102
+//│         jump j$0(x$5) -- #101
 //│   false =>
-//│     case b_n$1 of -- #x
+//│     case b_n$1 of -- #96
 //│       S =>
-//│         let x$7 = b_n$1.x in -- #x
-//│         let* (x$8) = @tailrec a(x$7) in -- #75
-//│         let x$9 = S(x$8) in -- #x
-//│         let x$10 = S(x$9) in -- #x
-//│         jump j$1(x$10) -- #x
+//│         let x$7 = b_n$1.x in -- #91
+//│         let* (x$8) = @tailrec a(x$7) in -- #90
+//│         let x$9 = S(x$8) in -- #89
+//│         let x$10 = S(x$9) in -- #88
+//│         jump j$1(x$10) -- #87
 //│       Zero =>
-//│         let x$11 = Zero() in -- #x
-//│         let x$12 = S(x$11) in -- #x
-//│         let x$13 = S(x$12) in -- #x
-//│         jump j$1(x$13) -- #x
+//│         let x$11 = Zero() in -- #95
+//│         let x$12 = S(x$11) in -- #94
+//│         let x$13 = S(x$12) in -- #93
+//│         jump j$1(x$13) -- #92
 //│ )
 //│ Def(5, _b_a_opt, [tailrecBranch,b_n$1,a_n$0],
 //│ 1, 
-//│ jump _b_a_opt_jp(tailrecBranch,b_n$1,a_n$0) -- #80
+//│ jump _b_a_opt_jp(tailrecBranch,b_n$1,a_n$0) -- #107
 //│ )
 //│ },
-//│ let x$14 = Zero() in -- #74
-//│ let x$15 = S(x$14) in -- #73
-//│ let x$16 = S(x$15) in -- #72
-//│ let x$17 = S(x$16) in -- #71
-//│ let* (x$18) = a(x$17) in -- #70
-//│ x$18 -- #69)
+//│ let x$14 = Zero() in -- #76
+//│ let x$15 = S(x$14) in -- #75
+//│ let x$16 = S(x$15) in -- #74
+//│ let x$17 = S(x$16) in -- #73
+//│ let* (x$18) = a(x$17) in -- #72
+//│ x$18 -- #71)
 //│ 
 //│ Interpreted:
 //│ S(S(S(S(S(S(Zero()))))))
@@ -1063,8 +1063,8 @@ b(20)
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, [m,n])}, {
 //│ Def(0, a, [x$0],
 //│ 1, 
-//│ let* (r0) = _b_a_opt(0,0,x$0) in -- #81
-//│ r0 -- #80
+//│ let* (r0) = _b_a_opt(0,0,x$0) in -- #103
+//│ r0 -- #102
 //│ )
 //│ Def(1, j$0, [x$3],
 //│ 1, 
@@ -1072,8 +1072,8 @@ b(20)
 //│ )
 //│ Def(2, b, [n$0],
 //│ 1, 
-//│ let* (r0) = _b_a_opt(2,n$0,0) in -- #79
-//│ r0 -- #78
+//│ let* (r0) = _b_a_opt(2,n$0,0) in -- #101
+//│ r0 -- #100
 //│ )
 //│ Def(3, j$1, [x$11],
 //│ 1, 
@@ -1081,36 +1081,36 @@ b(20)
 //│ )
 //│ Def(4, _b_a_opt_jp, [tailrecBranch,b_n$0,a_x$0],
 //│ 1, 
-//│ let scrut = ==(0,tailrecBranch) in -- #76
-//│ if scrut -- #74
+//│ let scrut = ==(0,tailrecBranch) in -- #98
+//│ if scrut -- #97
 //│   true =>
-//│     let x$1 = a_x$0.n in -- #x
-//│     let x$2 = <(x$1,0) in -- #x
-//│     if x$2 -- #x
+//│     let x$1 = a_x$0.n in -- #96
+//│     let x$2 = <(x$1,0) in -- #95
+//│     if x$2 -- #94
 //│       true =>
-//│         let x$4 = a_x$0.n in -- #x
-//│         let x$5 = A(-1,x$4) in -- #x
-//│         jump j$0(x$5) -- #x
+//│         let x$4 = a_x$0.n in -- #88
+//│         let x$5 = A(-1,x$4) in -- #87
+//│         jump j$0(x$5) -- #86
 //│       false =>
-//│         let x$6 = a_x$0.n in -- #x
-//│         let x$7 = -(x$6,2) in -- #x
-//│         let* (x$8) = b(x$7) in -- #73
-//│         let x$9 = A(2,x$8) in -- #x
-//│         jump j$0(x$9) -- #x
+//│         let x$6 = a_x$0.n in -- #93
+//│         let x$7 = -(x$6,2) in -- #92
+//│         let* (x$8) = b(x$7) in -- #91
+//│         let x$9 = A(2,x$8) in -- #90
+//│         jump j$0(x$9) -- #89
 //│   false =>
-//│     let x$10 = <(b_n$0,0) in -- #x
-//│     if x$10 -- #x
+//│     let x$10 = <(b_n$0,0) in -- #85
+//│     if x$10 -- #84
 //│       true =>
-//│         let x$12 = A(0,b_n$0) in -- #x
-//│         jump j$1(x$12) -- #x
+//│         let x$12 = A(0,b_n$0) in -- #80
+//│         jump j$1(x$12) -- #79
 //│       false =>
-//│         let x$13 = -(b_n$0,1) in -- #x
-//│         let x$14 = A(0,x$13) in -- #x
-//│         jump _b_a_opt_jp(0,b_n$0,x$14) -- #72
+//│         let x$13 = -(b_n$0,1) in -- #83
+//│         let x$14 = A(0,x$13) in -- #82
+//│         jump _b_a_opt_jp(0,b_n$0,x$14) -- #81
 //│ )
 //│ Def(5, _b_a_opt, [tailrecBranch,b_n$0,a_x$0],
 //│ 1, 
-//│ jump _b_a_opt_jp(tailrecBranch,b_n$0,a_x$0) -- #77
+//│ jump _b_a_opt_jp(tailrecBranch,b_n$0,a_x$0) -- #99
 //│ )
 //│ },
 //│ let* (x$16) = b(20) in -- #71
@@ -1120,8 +1120,8 @@ b(20)
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, [m,n])}, {
 //│ Def(0, a, [x$0],
 //│ 1, 
-//│ let* (r0) = _b_a_opt(0,0,x$0) in -- #81
-//│ r0 -- #80
+//│ let* (r0) = _b_a_opt(0,0,x$0) in -- #103
+//│ r0 -- #102
 //│ )
 //│ Def(1, j$0, [x$3],
 //│ 1, 
@@ -1129,8 +1129,8 @@ b(20)
 //│ )
 //│ Def(2, b, [n$0],
 //│ 1, 
-//│ let* (r0) = _b_a_opt(2,n$0,0) in -- #79
-//│ r0 -- #78
+//│ let* (r0) = _b_a_opt(2,n$0,0) in -- #101
+//│ r0 -- #100
 //│ )
 //│ Def(3, j$1, [x$11],
 //│ 1, 
@@ -1138,36 +1138,36 @@ b(20)
 //│ )
 //│ Def(4, _b_a_opt_jp, [tailrecBranch,b_n$0,a_x$0],
 //│ 1, 
-//│ let scrut = ==(0,tailrecBranch) in -- #76
-//│ if scrut -- #74
+//│ let scrut = ==(0,tailrecBranch) in -- #98
+//│ if scrut -- #97
 //│   true =>
-//│     let x$1 = a_x$0.n in -- #x
-//│     let x$2 = <(x$1,0) in -- #x
-//│     if x$2 -- #x
+//│     let x$1 = a_x$0.n in -- #96
+//│     let x$2 = <(x$1,0) in -- #95
+//│     if x$2 -- #94
 //│       true =>
-//│         let x$4 = a_x$0.n in -- #x
-//│         let x$5 = A(-1,x$4) in -- #x
-//│         jump j$0(x$5) -- #x
+//│         let x$4 = a_x$0.n in -- #88
+//│         let x$5 = A(-1,x$4) in -- #87
+//│         jump j$0(x$5) -- #86
 //│       false =>
-//│         let x$6 = a_x$0.n in -- #x
-//│         let x$7 = -(x$6,2) in -- #x
-//│         let* (x$8) = b(x$7) in -- #73
-//│         let x$9 = A(2,x$8) in -- #x
-//│         jump j$0(x$9) -- #x
+//│         let x$6 = a_x$0.n in -- #93
+//│         let x$7 = -(x$6,2) in -- #92
+//│         let* (x$8) = b(x$7) in -- #91
+//│         let x$9 = A(2,x$8) in -- #90
+//│         jump j$0(x$9) -- #89
 //│   false =>
-//│     let x$10 = <(b_n$0,0) in -- #x
-//│     if x$10 -- #x
+//│     let x$10 = <(b_n$0,0) in -- #85
+//│     if x$10 -- #84
 //│       true =>
-//│         let x$12 = A(0,b_n$0) in -- #x
-//│         jump j$1(x$12) -- #x
+//│         let x$12 = A(0,b_n$0) in -- #80
+//│         jump j$1(x$12) -- #79
 //│       false =>
-//│         let x$13 = -(b_n$0,1) in -- #x
-//│         let x$14 = A(0,x$13) in -- #x
-//│         jump _b_a_opt_jp(0,b_n$0,x$14) -- #72
+//│         let x$13 = -(b_n$0,1) in -- #83
+//│         let x$14 = A(0,x$13) in -- #82
+//│         jump _b_a_opt_jp(0,b_n$0,x$14) -- #81
 //│ )
 //│ Def(5, _b_a_opt, [tailrecBranch,b_n$0,a_x$0],
 //│ 1, 
-//│ jump _b_a_opt_jp(tailrecBranch,b_n$0,a_x$0) -- #77
+//│ jump _b_a_opt_jp(tailrecBranch,b_n$0,a_x$0) -- #99
 //│ )
 //│ },
 //│ let* (x$16) = b(20) in -- #71

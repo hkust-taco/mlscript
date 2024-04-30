@@ -307,15 +307,38 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
   private case class DefnInfo(defn: Defn, stackFrameIdx: Int)
 
   def asLit(x: Int) = Expr.Literal(IntLit(x))
+
+  private def makeSwitch(scrutName: Name, cases: List[(Int, Node)], default: Node)(implicit trueClass: ClassInfo, falseClass: ClassInfo): Node =
+    // given expressions value, e1, e2, transform it into
+    // let scrut = tailrecBranch == value
+    // in case scrut of True  -> e1
+    //                  False -> e2
+    def makeCaseBranch(value: Int, e1: Node, e2: Node): Node =
+      val name = Name("scrut")
+      val cases = Case(name, List((trueClass, e1), (falseClass, e2))).attachTag(tag)
+      LetExpr(
+        name,
+        Expr.BasicOp("==", List(asLit(value), Expr.Ref(scrutName))),
+        cases
+      ).attachTag(tag)
+      
+    cases.foldLeft(default)((elz, item) => 
+      val cmpValue = item._1
+      val nodeIfTrue = item._2
+      makeCaseBranch(cmpValue, nodeIfTrue, elz)
+    )
   
   // Given a strongly connected component `defns` of mutually mod cons functions,
   // returns a set containing mutually tail recursive versions of them and
   // the original functions pointing to the optimized ones. 
   private def optimizeModCons(component: ScComponent, classes: Set[ClassInfo]): Set[Defn] = 
+    val modConsCalls = component.edges.collect { case x: ModConsCallInfo => x }
+    
     // no mod cons, just return the original
-    if component.edges.collect { case x: ModConsCallInfo => x }.isEmpty then
+    if modConsCalls.isEmpty then
       component.nodes
     else
+      
       ???
 
 
@@ -347,13 +370,13 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
       val jpDefnRef = DefnRef(Right(jpName))
       
       def transformNode(node: Node): Node = node match
-        case Result(res) => node
-        case Jump(defn, args) => node
+        case Result(res) => node.attachTag(tag)
+        case Jump(defn, args) => node.attachTag(tag)
         case Case(scrut, cases) => Case(scrut, cases.map((cls, body) => (cls, transformNode(body)))).attachTag(tag)
         case LetExpr(name, expr, body) => LetExpr(name, expr, transformNode(body)).attachTag(tag)
         case LetCall(names, defn_, args, body, isTailRec) =>
           if isTailCall(node) && defn_.expectDefn.id == defn.id then
-            Jump(jpDefnRef, args)
+            Jump(jpDefnRef, args).attachTag(tag)
           else
             LetCall(names, defn_, args, transformNode(body), isTailRec).attachTag(tag)
         case AssignField(assignee, clsInfo, fieldName, value, body) => 
@@ -366,14 +389,18 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
         rets, 
         DefnRef(Left(jpDef)),
         defn.params.map(Expr.Ref(_)),
-        Result(rets.map(Expr.Ref(_))),
+        Result(rets.map(Expr.Ref(_))).attachTag(tag),
         false
-        )
+      ).attachTag(tag)
       
       val newDefn = Defn(fnUid.make, defn.name, defn.params, defn.resultNum, callJpNode)
       Set(newDefn, jpDef)
 
     else
+      // Note that we do not use the actual edges in ScCompoennt here.
+      // We assume the only things we can optimize are tail calls, which
+      // are cheap to identify, and nothing else.
+
       // concretely order the functions as soon as possible, since the order of the functions matter
       val defnsList = defns.toList
 
@@ -409,10 +436,10 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
 
       // Build the node which will be contained inside the jump point.
       def transformNode(node: Node): Node = node match
-        case Jump(_, _)                => node
-        case Result(_)                 => node
-        case Case(scrut, cases)        => Case(scrut, cases.map(n => (n._1, transformNode(n._2))))
-        case LetExpr(name, expr, body) => LetExpr(name, expr, transformNode(body))
+        case Jump(_, _)                => node.attachTag(tag)
+        case Result(_)                 => node.attachTag(tag)
+        case Case(scrut, cases)        => Case(scrut, cases.map(n => (n._1, transformNode(n._2)))).attachTag(tag)
+        case LetExpr(name, expr, body) => LetExpr(name, expr, transformNode(body)).attachTag(tag)
         case LetCall(names, defn, args, body, isTailRec) =>
           if isTailCall(node) && defnInfoMap.contains(defn.expectDefn.id) then
             Jump(jpDefnRef, transformStackFrame(args, defnInfoMap(defn.expectDefn.id))).attachTag(tag)
@@ -437,19 +464,6 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
         val res = Result(namesExpr).attachTag(tag)
         val call = LetCall(names, newDefnRef, args, res, false).attachTag(tag)
         Defn(defn.id, defn.name, defn.params, defn.resultNum, call)
-      
-      // given expressions value, e1, e2, transform it into
-      // let scrut = tailrecBranch == value
-      // in case scrut of True  -> e1
-      //                  False -> e2
-      def makeCaseBranch(value: Int, e1: Node, e2: Node): Node =
-        val name = Name("scrut")
-        val cases = Case(name, List((trueClass, e1), (falseClass, e2))).attachTag(tag)
-        LetExpr(
-          name,
-          Expr.BasicOp("==", List(asLit(value), Expr.Ref(trName))),
-          cases
-        ).attachTag(tag)
 
       def getOrKey[T](m: Map[T, T])(key: T): T = m.get(key) match
         case None        => key
@@ -460,14 +474,14 @@ class TailRecOpt(fnUid: FreshInt, tag: FreshInt):
       val firstBodyRenamed = first.body.mapName(getOrKey(firstMap))
       val firstNode = transformNode(firstBodyRenamed)
 
-      val newNode = defnsList.tail
-        .foldLeft(firstNode)((elz, defn) =>
-          val nmeNap = nameMaps(defn.id)
-          val renamed = defn.body.mapName(getOrKey(nmeNap))
-          val thisNode = transformNode(renamed)
-          makeCaseBranch(defn.id, thisNode, elz)
-        )
-        .attachTag(tag)
+      val valsAndNodes = defnsList.map(defn =>
+        val nmeMap = nameMaps(defn.id)
+        val renamed = defn.body.mapName(getOrKey(nmeMap))
+        val transformed = transformNode(renamed)
+        (defn.id, transformed)
+      )
+
+      val newNode = makeSwitch(trName, valsAndNodes.tail, valsAndNodes.head._2)(trueClass, falseClass)
 
       val jpDefn = Defn(fnUid.make, jpName, stackFrame, resultNum, newNode)
 
