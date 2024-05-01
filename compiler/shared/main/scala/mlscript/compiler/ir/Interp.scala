@@ -222,6 +222,7 @@ class Interpreter(verbose: Bool):
 
   private def evalArgs(using ctx: Ctx, clsctx: ClassCtx)(exprs: Ls[Expr]): Either[Ls[Expr], Ls[Expr]] = 
     var changed = false
+
     val xs = exprs.map {
       arg => eval(arg) match
         case Left(expr) => changed = true; expr
@@ -242,7 +243,7 @@ class Interpreter(verbose: Bool):
     case CtorApp(name, args) =>
       evalArgs(args) match
         case Left(xs) => Left(CtorApp(name, xs)) 
-        case _ => Right(expr)
+        case Right(xs) => Right(CtorApp(name, xs)) // TODO: This makes recursion modulo cons work, but should be investigated further.
     case Select(name, cls, field) => 
       ctx.get(name.str).map {
         case CtorApp(cls2, xs) if cls == cls2 =>
@@ -306,7 +307,7 @@ class Interpreter(verbose: Bool):
         case Some(x: CtorApp) =>
           val CtorApp(cls, args) = x
           val idx = cls.fields.indexOf(fieldName)
-          val newArgs = args.take(idx - 1) ::: value :: args.drop(idx + 1)
+          val newArgs = args.updated(idx, value)
           x.args = newArgs
         case Some(_) => IRInterpreterError("tried to assign a field of a non-ctor")
         case None => IRInterpreterError("could not find value " + assignee)

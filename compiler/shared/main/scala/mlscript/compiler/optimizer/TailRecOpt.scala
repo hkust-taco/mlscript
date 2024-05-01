@@ -8,24 +8,24 @@ import mlscript.utils.shorthands.Bool
 
 // fnUid should be the same FreshInt that was used to build the graph being passed into this class
 class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
-  case class LetCtorNodeInfo(node: LetExpr, ctor: Expr.CtorApp, cls: ClassInfo, ctorValName: Name, fieldName: String)
+  case class LetCtorNodeInfo(node: LetExpr, ctor: Expr.CtorApp, cls: ClassInfo, ctorValName: Name, fieldName: String, idx: Int)
 
   enum CallInfo:
-    case TailCallInfo(src: Defn, defn: Defn, letCallNode: LetCall) extends CallInfo
+    case TailCallInfo(src: Defn, defn: Defn) extends CallInfo
     case ModConsCallInfo(src: Defn, startNode: Node, defn: Defn, letCallNode: LetCall, letCtorNode: LetCtorNodeInfo, retName: Name, retNode: Node) extends CallInfo
 
     override def toString(): String = this match
-      case TailCallInfo(src, defn, letCallNode) => 
+      case TailCallInfo(src, defn) => 
         f"TailCall { ${src.name}$$${src.id} -> ${defn.name}$$${defn.id} }"
       case ModConsCallInfo(src, startNode, defn, letCallNode, letCtorNode, _, _) =>
         f"ModConsCall { ${src.name}$$${src.id} -> ${defn.name}$$${defn.id}, class: ${letCtorNode.cls.ident}, field: ${letCtorNode.fieldName} }"
 
     def getSrc = this match
-      case TailCallInfo(src, _, _) => src
+      case TailCallInfo(src, _) => src
       case ModConsCallInfo(src, _, _, _, _, _, _) => src 
 
     def getDefn = this match
-      case TailCallInfo(_, defn, _) => defn
+      case TailCallInfo(_, defn) => defn
       case ModConsCallInfo(_, _, defn, _, _, _, _) => defn
     
   private class DefnGraph(val nodes: Set[DefnNode], val edges: Set[CallInfo], val joinPoints: Set[Defn]):
@@ -109,8 +109,8 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
       case Jump(jp, args) => 
         def mergeCalls(acc: Map[Int, Set[CallInfo]], calls: Set[CallInfo]) =
           val newCalls = calls.map {
-            case TailCallInfo(_, defn, letCallNode) => 
-              TailCallInfo(src, defn, letCallNode)
+            case TailCallInfo(_, defn) => 
+              TailCallInfo(src, defn)
             case ModConsCallInfo(_, startNode, defn, letCallNode, letCtorNode, retName, retNode) =>
               ModConsCallInfo(src, startNode, defn, letCallNode, letCtorNode, retName, retNode)
           }
@@ -196,7 +196,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
                       val fieldName = clsInfo.fields(ctorArgIndex)
                       
                       // populate required values
-                      discoverOptimizableCalls(body)(acc, src, start, calledDefn, letCallNode, Some(LetCtorNodeInfo(x, y, clsInfo, name, fieldName)), Set(name))
+                      discoverOptimizableCalls(body)(acc, src, start, calledDefn, letCallNode, Some(LetCtorNodeInfo(x, y, clsInfo, name, fieldName, ctorArgIndex)), Set(name))
                     case Some(_) =>
                       // another constructor is already using the call. Not OK
 
@@ -237,7 +237,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
         val LetCall(names, defn, args, isTailRec, body) = x
 
         if isTailCall(x) then
-          Left(updateMapSimple(TailCallInfo(src, defn.expectDefn, x)))
+          Left(updateMapSimple(TailCallInfo(src, defn.expectDefn)))
         else
           letCallNode match
             case None => // OK, use this LetCall as the mod cons
@@ -260,10 +260,11 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
                 if inters.isEmpty then discoverOptimizableCalls(body) // OK
                 else throw IRError("not a mod cons call") 
               else
-                // old call is not tailrec, so we can override it however we want
-                // we take a lucky guess and mark this as the mod cons call, but the
-                // user really should mark which calls should be tailrec
-                if defn.expectDefn.resultNum == 1 then
+                // only include mod cons calls that have one return value
+                if defn.expectDefn.resultNum == 1 then 
+                  // old call is not tailrec, so we can override it however we want
+                  // we take a lucky guess and mark this as the mod cons call, but the
+                  // user really should mark which calls should be tailrec
                   discoverOptimizableCalls(body)(acc, src, start, Some(defn.expectDefn), Some(x), None, Set())
                 else
                   // shadow all the variables in this letcall
@@ -281,7 +282,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
               case _ =>
                 letCtorNode match
                   case None => discoverOptimizableCalls(body) // OK
-                  case Some(LetCtorNodeInfo(_, ctor, _, name, fieldName)) =>
+                  case Some(LetCtorNodeInfo(_, ctor, _, name, fieldName, _)) =>
                     // If this assignment overwrites the mod cons value, forget it
                     if fieldName == assignmentFieldName && isTailRec then throw IRError("not a mod cons call")
                     else discoverOptimizableCalls(body)(acc, src, start, None, None, None, Set()) // invalidate everything that's been discovered
@@ -448,17 +449,20 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
   final val ID_CTX_CLASS = ClassInfo(classUid.make, ID_CONTEXT_NAME, Nil)
   final val CTX_CLASS = ClassInfo(classUid.make, CONTEXT_NAME, List("acc", "ptr", "field"))
   
-  // Given a strongly connected component `defns` of mutually mod cons functions,
-  // returns a set containing mutually tail recursive versions of them and
-  // the original functions pointing to the optimized ones. 
-  private def optimizeModCons(component: ScComponent, classes: Set[ClassInfo]): (Set[Defn], Set[ClassInfo]) = 
+  // Given a strongly connected component `defns` of mutually
+  // tail recursive functions, returns a strongly connected component contaning the
+  // optimized functions and their associated join points, and also
+  // new function definitions not in this component, such as the
+  // original functions pointing to an optimized function and the context
+  // composition and application functions.
+  private def optimizeModCons(component: ScComponent, classes: Set[ClassInfo]): (ScComponent, Set[Defn]) = 
     val modConsCalls = component.edges.collect { case x: ModConsCallInfo => x }
     val defns = component.nodes
     val defnsIdSet = defns.map(_.id).toSet
 
     // no mod cons, just return the original
     if modConsCalls.isEmpty then
-      (component.nodes, classes)
+      (component, Set())
     else
       val trueClass = classes.find(c => c.ident == "True").get
       val falseClass = classes.find(c => c.ident == "False").get
@@ -497,7 +501,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
             Name("ptr"), 
             cls, 
             fieldName, 
-            Expr.Ref(appValName), 
+            Expr.Ref(appValName),
             LetExpr(
               Name("acc"), 
               Expr.Select(appCtxName, CTX_CLASS, "acc"), // this could be a join point but it's not that bad
@@ -515,7 +519,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
       val ctxBranch = LetExpr(
         Name("field"), Expr.Select(appCtxName, CTX_CLASS, "field"),
         makeSwitch(Name("field"), assignmentCases.tail, assignmentCases.head._2)(trueClass, falseClass)
-      )
+      ).attachTag(tag)
       
       val idBranch = Result(List(Expr.Ref(appValName))).attachTag(tag)
 
@@ -573,17 +577,58 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
       // a bit hacky but it's the most elegant way
       // First, build a map of all branches that contain a mod cons call
       val modConsBranches = modConsCalls.toList.map(call => (call.startNode.tag.inner -> call)).toMap
-      
-      val MOD_CONS_PTR_NAME = Name("_mod_cons_ptr")
 
-      val modConsMap = defns.map(d => d.id -> DefnRef(Right(d.name + "_modcons"))).toMap
+      val modConsRefs = defns.map(d => d.id -> DefnRef(Right(d.name + "_modcons"))).toMap
+      val jpRefs = component.joinPoints.map(jp => jp.id -> DefnRef(Right(jp.name + "_modcons"))).toMap
+
+      def makeRet(ret: TrivialExpr): Node =
+        LetCall(
+          List(Name("res")),
+          DefnRef(Left(appDefn)),
+          List(Expr.Ref(Name("ctx")), ret),
+          false,
+          Result(List(Expr.Ref(Name("res")))).attachTag(tag)
+        ).attachTag(tag)
       
-      def transformModConsBranch(node: Node, call: ModConsCallInfo): (Node, Set[Defn]) = 
-        
+      // Here, we assume we are inside the modcons version of the function and hence have an extra
+      // `ctx` parameter at the start.
+      def transformNode(node: Node): Node = 
+        modConsBranches.get(node.tag.inner) match
+          case Some(call) => transformModConsBranch(node)(call)
+          case None => node match
+            case Result(res) => 
+              makeRet(res.head)
+            case Jump(defn, args) => 
+              if isIdentityJp(defn.expectDefn) then makeRet(args.head) 
+              else jpRefs.get(defn.expectDefn.id) match
+                case None => throw IRError("could not find jump point with id" + defn.expectDefn.id)
+                case Some(value) => Jump(value, Expr.Ref(Name("ctx")) :: args)
+              
+            case Case(scrut, cases) => Case(scrut, cases.map { (cls, body) => (cls, transformNode(body)) }).attachTag(tag)
+            case LetExpr(name, expr, body) => LetExpr(name, expr, transformNode(body)).attachTag(tag)
+            case LetCall(names, defn, args, isTailRec, body) =>
+              // Handle the case when we see a tail call.
+              // This case is not handled by the paper. The way to transform this is: 
+              // let res = foo(*args) in res
+              // --> let res = foo_modcons(ctx, *args) in res
+              if isTailCall(node) && defnsIdSet.contains(defn.expectDefn.id) then
+                // Transform it into a tail recursive call where we pass on the current context
+                LetCall(
+                  List(Name("res")), 
+                  modConsRefs(defn.expectDefn.id), Expr.Ref(Name("ctx")) :: args, 
+                  isTailRec,
+                  Result(List(Expr.Ref(Name("res")))).attachTag(tag)
+                ).attachTag(tag)
+              else 
+                LetCall(names, defn, args, isTailRec, transformNode(body)).attachTag(tag)
+            case AssignField(assignee, clsInfo, fieldName, value, body) => 
+              AssignField(assignee, clsInfo, fieldName, value, transformNode(body)).attachTag(tag)
+
+      def transformModConsBranch(node: Node)(implicit call: ModConsCallInfo): Node = 
         def makeCall =
           val field = assignToIdx((call.letCtorNode.cls.id, call.letCtorNode.fieldName))
           
-          // let composed = comp(ctx, ctx2) in
+          // let composed = comp(ctx, Ctx(retVal, ptr, field)) in
           // f(composed, *args)
           LetExpr(
             Name("ctx2"),
@@ -595,8 +640,8 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
               false,
               LetCall(
                 List(Name("res")), 
-                modConsMap(call.defn.id),
-                Expr.Ref(Name("composed")) :: call.letCallNode.args, // TODO: change
+                modConsRefs(call.defn.id),
+                Expr.Ref(Name("composed")) :: call.letCallNode.args,
                 false,
                 Result(
                   List(Expr.Ref(Name("res")))
@@ -606,64 +651,79 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
           ).attachTag(tag)
 
         node match
-          case Result(res) => (node, Set())
-          case Jump(defn, args) => ???
-          case Case(scrut, cases) => ???
-          case LetExpr(name, expr, body) => ???
-          case LetCall(names, defn, args, isTailRec, body) => ???
-          case AssignField(assignee, clsInfo, fieldName, value, body) => ???
-      
-      // Here, we assume we are inside the modcons function and hence have an extra
-      // `ctx` parameter at the start.
-      def transformNode(node: Node): (Node, Set[Defn]) = 
-        modConsBranches.get(node.tag.inner) match
-          case Some(call) => transformModConsBranch(node, call)
-          case None => node match
-            case Result(_) => (node.attachTag(tag), Set())
-            case Jump(_, _) => (node.attachTag(tag), Set())
-            case Case(scrut, cases) => 
-              val casesAndDefns = cases.map { (cls, body) => (cls, transformNode(body)) }
-
-              val transformedCases = casesAndDefns.map { (cls, item) => (cls, item._1) } 
-              val newDefns: Set[Defn] = casesAndDefns.map((_, item) => item._2).foldLeft(Set())((a, b) => a ++ b)
-
-              (Case(scrut, transformedCases).attachTag(tag), newDefns)
-            case LetExpr(name, expr, body) => 
-              val (transformed, newDefns) = transformNode(body)
-              (LetExpr(name, expr, transformed).attachTag(tag), newDefns)
-            case LetCall(names, defn, args, isTailRec, body) =>
-              // This case is not handled by the paper. The way to transform this is: 
-              // let res = foo(*args) in res
-              // --> let res = foo_modcons(ctx, *args) in res
-              if isTailCall(node) && defnsIdSet.contains(defn.expectDefn.id) then
-                // Transform it into a tail recursive call where we pass on the current context
-                (
-                  LetCall(
-                    List(Name("res")), 
-                    modConsMap(defn.expectDefn.id), Expr.Ref(Name("ctx")) :: args, 
-                    isTailRec,
-                    Result(List(Expr.Ref(Name("res"))))
-                  ),
-                  Set()
-                )
-              else 
-                val (transformed, newDefns) = transformNode(body)
-                (LetCall(names, defn, args, isTailRec, transformed).attachTag(tag), newDefns)
-            case AssignField(assignee, clsInfo, fieldName, value, body) => 
-              val (transformed, newDefns) = transformNode(body)
-              (AssignField(assignee, clsInfo, fieldName, value, transformed).attachTag(tag), newDefns)
+          case Result(res) if node.tag.inner == call.retNode.tag.inner =>
+            makeCall
+          case Jump(defn, args) if node.tag.inner == call.retNode.tag.inner =>
+            makeCall
+          case LetExpr(name, expr, body) => 
+            if node.tag.inner == call.letCtorNode.node.tag.inner then
+              // rewrite the ctor, but set the field containing the call as to 0
+              val idx = call.letCtorNode.idx
+              val argsList = call.letCtorNode.ctor.args.updated(idx, asLit(0))
+              LetExpr(name, Expr.CtorApp(call.letCtorNode.cls, argsList), transformModConsBranch(body)).attachTag(tag)
+            else
+              LetExpr(name, expr, transformModConsBranch(body)).attachTag(tag)
+          case LetCall(names, defn, args, isTailRec, body) =>
+            if node.tag.inner == call.letCallNode.tag.inner then
+              // discard it
+              transformModConsBranch(body)
+            else
+              LetCall(names, defn, args, isTailRec, transformModConsBranch(body)).attachTag(tag)
+          case AssignField(assignee, clsInfo, fieldName, value, body) =>
+            AssignField(assignee, clsInfo, fieldName, value, transformModConsBranch(body)).attachTag(tag)
+          case _ => throw IRError("unreachable case when transforming mod cons call")
 
       // will create two definitions: one has the same signature as the original function,
       // while the other one will have extra parameters to support mod cons
+      // replaceOriginal should be false if and only if the definition is a join point
+      def rewriteDefn(d: Defn): Defn =
+        val transformed = transformNode(d.body)
+        Defn(fnUid.make, d.name + "_modcons", Name("ctx") :: d.params, d.resultNum, transformed)
+      
+      // returns (new defn, mod cons defn)
+      // where new defn has the same signature and ids as the original, but immediately calls the mod cons defn
+      // and mod cons defn is the rewritten definition
+      def replaceDefn(d: Defn): (Defn, Defn) =
+        val modConsDefn = rewriteDefn(d)
+        val modConsCall = 
+          LetExpr(
+            Name("idCtx"),
+            Expr.CtorApp(ID_CTX_CLASS, Nil),
+              LetCall(
+              List(Name("res")), 
+              DefnRef(Left(modConsDefn)),
+              Expr.Ref(Name("idCtx")) :: d.params.map(Expr.Ref(_)),
+              false,
+              Result(List(Expr.Ref(Name("res")))).attachTag(tag)
+            ).attachTag(tag)
+          ).attachTag(tag)
+        val newDefn = Defn(d.id, d.name, d.params, d.resultNum, modConsCall)
+        (newDefn, modConsDefn)
 
-      // We will need to rewrite join points, thus new definitions may be created.
-      def transformDefn(d: Defn): Set[Defn] =
-        val (transformed, newDefns) = transformNode(d.body)
-        newDefns + Defn(fnUid.make, d.name + "_modcons", Name("ctx") :: d.params, d.resultNum, transformed)
+        //newDefns + Defn(fnUid.make, d.name + "_modcons", Name("ctx") :: d.params, d.resultNum, transformed)
 
-      ???
-        
+      val jpsTransformed = component.joinPoints.map(d => d.id -> rewriteDefn(d)).toMap
+      val defnsTransformed = component.nodes.map(d => d.id -> replaceDefn(d)).toMap
 
+      // update defn refs
+      for (id, ref) <- jpRefs do
+        ref.defn = Left(jpsTransformed(id))
+      
+      for (id, ref) <- modConsRefs do
+        ref.defn = Left(defnsTransformed(id)._2) // set it to the mod cons defn, not the one with the original signature
+
+      val jps = jpsTransformed.values.toSet
+      val modConsDefs = defnsTransformed.values.map((a, b) => b).toSet 
+      val normalDefs = defnsTransformed.values.map((a, b) => a).toSet + appDefn + cmpDefn
+
+      // the edges are not used later, but still, rewrite them for correctness
+      val newEdges = component.edges.map { c =>
+        val src = c.getSrc
+        val defn = c.getDefn
+        TailCallInfo(defnsTransformed(src.id)._2, defnsTransformed(defn.id)._2) 
+      }
+
+      (ScComponent(modConsDefs, newEdges, jps), normalDefs)
 
   // Given a strongly connected component `defns` of mutually
   // tail recursive functions, returns a set containing the optimized function and the
@@ -733,8 +793,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
       // in fact, they should theoretically have the same return type if the program type checked
       val resultNum = defnsList.head.resultNum
 
-      // TODO: make sure that name clashes aren't a problem
-      val trName = Name("tailrecBranch");
+      val trName = Name("tailrecBranch$");
 
       // To be used to replace variable names inside a definition to avoid variable name clashes
       val nameMaps: Map[Int, Map[Name, Name]] = defnsList.map(defn => defn.id -> defn.params.map(n => n -> Name(defn.name + "_" + n.str)).toMap).toMap
@@ -828,19 +887,25 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
   private def partition(defns: Set[Defn]): List[ScComponent] = 
     val nodeMap: Map[Int, DefnNode] = defns.foldLeft(Map.empty)((m, d) => m + (d.id -> DefnNode(d)))
     partitionNodes(nodeMap).map(_.removeMetadata)
-  
+
+  private def optimizeParition(component: ScComponent, classes: Set[ClassInfo]): Set[Defn] =
+    val (modConsComp, other) = optimizeModCons(component, classes)
+    // val trOpt = optimizeTailRec(modConsComp, classes)
+    // other ++ trOpt
+    modConsComp.nodes ++ modConsComp.joinPoints ++ other
 
   def apply(p: Program) = run(p)
 
   def run_debug(p: Program): (Program, List[Set[String]]) = 
     // val rewritten = p.defs.map(d => Defn(d.id, d.name, d.params, d.resultNum, rewriteTailCalls(d.body)))
     val partitions = partition(p.defs)
-    val newDefs: Set[Defn] = partitions.flatMap { optimizeTailRec(_, p.classes) }.toSet
+
+    val newDefs: Set[Defn] = partitions.flatMap { optimizeParition(_, p.classes) }.toSet
 
     // update the definition refs
     newDefs.foreach { defn => resolveDefnRef(defn.body, newDefs, true) }
     resolveDefnRef(p.main, newDefs, true)
 
-    (Program(p.classes, newDefs, p.main), partitions.map(t => t.nodes.map(f => f.name)))
+    (Program(p.classes + ID_CTX_CLASS + CTX_CLASS, newDefs, p.main), partitions.map(t => t.nodes.map(f => f.name)))
 
   def run(p: Program): Program = run_debug(p)._1
