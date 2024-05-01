@@ -8,7 +8,7 @@ import scala.collection.mutable.{Set => MutSet}
 import scala.util.control.NonFatal
 import scala.util.chaining._
 
-abstract class JSBackend(allowUnresolvedSymbols: Bool) {
+abstract class JSBackend {
   def oldDefs: Bool
 
   protected implicit class TermOps(term: Term) {
@@ -146,10 +146,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
           return Left(CodeGenError(s"type alias ${name} is not a valid expression"))
         case S(_) => lastWords("register mismatch in scope")
         case N =>
-          if (allowUnresolvedSymbols)
-            JSIdent(name)
-          else
-            return Left(CodeGenError(s"unresolved symbol ${name}"))
+          return Left(CodeGenError(s"unresolved symbol ${name}"))
       }
     })
 
@@ -1317,7 +1314,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
   
 }
 
-class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
+class JSWebBackend extends JSBackend {
   def oldDefs = false
   
   // Name of the array that contains execution results
@@ -1448,7 +1445,7 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
     if (newDefs) generateNewDef(pgrm) else generate(pgrm)
 }
 
-abstract class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
+abstract class JSTestBackend extends JSBackend {
   
   private val lastResultSymbol = topLevelScope.declareValue("res", Some(false), false, N)
   private val resultIdent = JSIdent(lastResultSymbol.runtimeName)

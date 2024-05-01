@@ -54,17 +54,19 @@ module Foo {
 
 // * FIXME add initialization checking for non-lazy fields
 module Foo {
-  let foo = 0
+  val foo = tmp
   fun bar = foo
+  let tmp = 0
 }
 [Foo.foo, Foo.bar]
 //│ module Foo {
 //│   fun bar: 0
-//│   let foo: 0
+//│   val foo: 0
+//│   let tmp: 0
 //│ }
 //│ [0, 0]
 //│ res
-//│     = [ undefined, 0 ]
+//│     = [ undefined, undefined ]
 
 
 module Bar {
@@ -79,7 +81,7 @@ module Bar {
 :e
 hello
 //│ ╔══[ERROR] identifier not found: hello
-//│ ║  l.80: 	hello
+//│ ║  l.82: 	hello
 //│ ╙──      	^^^^^
 //│ error
 //│ Code generation encountered an error:
@@ -88,7 +90,7 @@ hello
 :e
 1 : I
 //│ ╔══[ERROR] type identifier not found: I
-//│ ║  l.89: 	1 : I
+//│ ║  l.91: 	1 : I
 //│ ╙──      	    ^
 //│ error
 //│ res
@@ -99,20 +101,20 @@ hello
 :w
 class Foo[A] { 42: A }
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.100: 	class Foo[A] { 42: A }
+//│ ║  l.102: 	class Foo[A] { 42: A }
 //│ ║         	               ^^
 //│ ╟── integer literal of type `42` does not match type `A`
 //│ ╟── Note: constraint arises from type parameter:
-//│ ║  l.100: 	class Foo[A] { 42: A }
+//│ ║  l.102: 	class Foo[A] { 42: A }
 //│ ╙──       	          ^
 //│ ╔══[WARNING] Expression in statement position should have type `()`.
 //│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
 //│ ╟── Type mismatch in type ascription:
-//│ ║  l.100: 	class Foo[A] { 42: A }
+//│ ║  l.102: 	class Foo[A] { 42: A }
 //│ ║         	               ^^
 //│ ╟── expression in statement position of type `A` does not match type `()`
 //│ ╟── Note: type parameter A is defined at:
-//│ ║  l.100: 	class Foo[A] { 42: A }
+//│ ║  l.102: 	class Foo[A] { 42: A }
 //│ ╙──       	          ^
 //│ class Foo[A] {
 //│   constructor()
@@ -122,7 +124,7 @@ class Foo[A] { 42: A }
 :e
 class C1 { fun oops = this.x }
 //│ ╔══[ERROR] Type `#C1` does not contain member `x`
-//│ ║  l.123: 	class C1 { fun oops = this.x }
+//│ ║  l.125: 	class C1 { fun oops = this.x }
 //│ ╙──       	                          ^^
 //│ class C1 {
 //│   constructor()
@@ -133,10 +135,10 @@ class C1 { fun oops = this.x }
 :e
 class C { fun x: Int }
 //│ ╔══[ERROR] Member `x` is declared (or its declaration is inherited) but is not implemented in `C`
-//│ ║  l.134: 	class C { fun x: Int }
+//│ ║  l.136: 	class C { fun x: Int }
 //│ ║         	      ^
 //│ ╟── Declared here:
-//│ ║  l.134: 	class C { fun x: Int }
+//│ ║  l.136: 	class C { fun x: Int }
 //│ ╙──       	          ^^^^^^^^^^
 //│ class C {
 //│   constructor()
@@ -146,10 +148,10 @@ class C { fun x: Int }
 :e
 class C { val x: Int }
 //│ ╔══[ERROR] Member `x` is declared (or its declaration is inherited) but is not implemented in `C`
-//│ ║  l.147: 	class C { val x: Int }
+//│ ║  l.149: 	class C { val x: Int }
 //│ ║         	      ^
 //│ ╟── Declared here:
-//│ ║  l.147: 	class C { val x: Int }
+//│ ║  l.149: 	class C { val x: Int }
 //│ ╙──       	          ^^^^^^^^^^
 //│ class C {
 //│   constructor()

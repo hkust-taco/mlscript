@@ -195,14 +195,14 @@ run(code"x => x + ${x}")(1)
 run(code"x => x + ${code"x"}")(1)
 //│ Int
 
-let v: Var[Int, nothing]
-//│ let v: Var[Int, nothing]
+val v: Var[Int, nothing]
+//│ val v: Var[Int, nothing]
 
 run(v)
 //│ Int
 
-let v: Var[Int, anything]
-//│ let v: Var[Int, anything]
+val v: Var[Int, anything]
+//│ val v: Var[Int, anything]
 
 :e
 run(v)

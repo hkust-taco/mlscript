@@ -10,6 +10,9 @@ ThisBuild / scalacOptions ++= Seq(
   "-deprecation",
   "-feature",
   "-unchecked",
+  "-language:higherKinds",
+  if (insideCI.value) "-Wconf:any:error"
+  else                "-Wconf:any:warning",
 )
 
 lazy val root = project.in(file("."))
@@ -23,14 +26,9 @@ lazy val mlscript = crossProject(JSPlatform, JVMPlatform).in(file("."))
   .settings(
     name := "mlscript",
     scalacOptions ++= Seq(
-      "-language:higherKinds",
       "-Ywarn-value-discard",
       "-Ypatmat-exhaust-depth:160",
     ),
-    scalacOptions ++= {
-      if (insideCI.value) Seq("-Wconf:any:error")
-      else                Seq("-Wconf:any:warning")
-    },
     wartremoverWarnings ++= Warts.allBut(
       Recursion, Throw, Nothing, Return, While, IsInstanceOf,
       Var, MutableDataStructures, NonUnitStatements,
