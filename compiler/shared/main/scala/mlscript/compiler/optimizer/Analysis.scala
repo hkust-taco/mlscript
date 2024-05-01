@@ -45,7 +45,7 @@ class UsefulnessAnalysis(verbose: Bool = false):
     case Jump(defn, args) => args.foreach(f)
     case Case(scrut, cases) => addUse(scrut); cases.foreach { case (cls, body) => f(body) }
     case LetExpr(name, expr, body) => f(expr); addDef(name); f(body)
-    case LetCall(names, defn, args, body, _) => args.foreach(f); names.foreach(addDef); f(body)
+    case LetCall(names, defn, args, _, body) => args.foreach(f); names.foreach(addDef); f(body)
     case AssignField(assignee, clsInfo, fieldName, value, body) => f(value); f(body)
   
   def run(x: Defn) =
@@ -86,7 +86,7 @@ class FreeVarAnalysis(extended_scope: Bool = true, verbose: Bool = false):
       val fv2 = f(using defined)(expr, fv)
       val defined2 = defined + name.str
       f(using defined2)(body, fv2)
-    case LetCall(resultNames, defnref, args, body, _) =>
+    case LetCall(resultNames, defnref, args, _, body) =>
       var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
       val defined2 = resultNames.foldLeft(defined)((acc, name) => acc + name.str)
       if (extended_scope && !visited.contains(defnref.getName))

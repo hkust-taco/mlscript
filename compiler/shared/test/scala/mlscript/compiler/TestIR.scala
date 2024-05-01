@@ -17,14 +17,15 @@ class IRDiffTestCompiler extends DiffTests {
       try
         output("\n\nIR:")
         val fnUid = FreshInt()
+        val classUid = FreshInt()
         val tag = FreshInt()
 
-        val gb = Builder(Fresh(), fnUid,  FreshInt(), tag)
+        val gb = Builder(Fresh(), fnUid, classUid, tag)
         val graph_ = gb.buildGraph(unit)
         output(graph_.toString())
 
         val graph = if (!mode.noTailRecOpt) {
-          val tailRecOpt = new TailRecOpt(fnUid, tag)
+          val tailRecOpt = new TailRecOpt(fnUid, classUid, tag)
           val (g, comps) = tailRecOpt.run_debug(graph_)
           output("\nStrongly Connected Tail Calls:")
           output(comps.toString)

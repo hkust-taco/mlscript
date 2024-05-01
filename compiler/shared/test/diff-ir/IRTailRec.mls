@@ -134,8 +134,8 @@ fact(1, 5)
 //│ )
 //│ Def(3, fact, [acc$0,n$0],
 //│ 1, 
-//│ let* (acc$0_,n$0_) = fact_jp(acc$0,n$0) in -- #38
-//│ acc$0_,n$0_ -- #37
+//│ let* (r0) = fact_jp(acc$0,n$0) in -- #38
+//│ r0 -- #37
 //│ )
 //│ },
 //│ let* (x$5) = fact(1,5) in -- #30
@@ -160,12 +160,134 @@ fact(1, 5)
 //│ )
 //│ Def(3, fact, [acc$0,n$0],
 //│ 1, 
-//│ let* (acc$0_,n$0_) = fact_jp(acc$0,n$0) in -- #38
-//│ acc$0_,n$0_ -- #37
+//│ let* (r0) = fact_jp(acc$0,n$0) in -- #38
+//│ r0 -- #37
 //│ )
 //│ },
 //│ let* (x$5) = fact(1,5) in -- #30
 //│ x$5 -- #29)
+//│ 
+//│ Interpreted:
+//│ 120
+
+:interpIR
+class True
+class False
+fun fact(acc, n) =
+  val x = if n > 0 then n - 1
+    else 0
+  if x <= 0 then
+    acc
+  else 
+    @tailrec fact(n * acc, x) 
+fact(1, 5)
+//│ |#class| |True|↵|#class| |False|↵|#fun| |fact|(|acc|,| |n|)| |#=|→|#val| |x| |#=| |#if| |n| |>| |0| |#then| |n| |-| |1|→|#else| |0|←|↵|#if| |x| |<=| |0| |#then|→|acc|←|↵|#else| |→|@|tailrec| |fact|(|n| |*| |acc|,| |x|)| |←|←|↵|fact|(|1|,| |5|)|
+//│ Parsed: {class True {}; class False {}; fun fact = (acc, n,) => {let x = if (>(n,)(0,)) then -(n,)(1,) else 0; if (<=(x,)(0,)) then {acc} else {@tailrec fact(*(n,)(acc,), x,)}}; fact(1, 5,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Def(0, fact, [acc$0,n$0],
+//│ 1, 
+//│ let x$0 = >(n$0,0) in -- #32
+//│ if x$0 -- #31
+//│   true =>
+//│     let x$6 = -(n$0,1) in -- #28
+//│     jump j$0(x$6,acc$0,n$0) -- #27
+//│   false =>
+//│     jump j$0(0,acc$0,n$0) -- #30
+//│ )
+//│ Def(1, j$1, [x$3],
+//│ 1, 
+//│ x$3 -- #7
+//│ )
+//│ Def(2, j$0, [x$1,acc$0,n$0],
+//│ 1, 
+//│ let x$2 = <=(x$1,0) in -- #23
+//│ if x$2 -- #22
+//│   true =>
+//│     jump j$1(acc$0) -- #9
+//│   false =>
+//│     let x$4 = *(n$0,acc$0) in -- #21
+//│     let* (x$5) = @tailrec fact(x$4,x$1) in -- #20
+//│     jump j$1(x$5) -- #19
+//│ )
+//│ },
+//│ let* (x$7) = fact(1,5) in -- #40
+//│ x$7 -- #39)
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(j$0), Set(j$1), Set(fact))
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Def(1, j$1, [x$3],
+//│ 1, 
+//│ x$3 -- #7
+//│ )
+//│ Def(2, j$0, [x$1,acc$0,n$0],
+//│ 1, 
+//│ let x$2 = <=(x$1,0) in -- #23
+//│ if x$2 -- #22
+//│   true =>
+//│     jump j$1(acc$0) -- #9
+//│   false =>
+//│     let x$4 = *(n$0,acc$0) in -- #21
+//│     let* (x$5) = @tailrec fact(x$4,x$1) in -- #20
+//│     jump j$1(x$5) -- #19
+//│ )
+//│ Def(3, fact_jp, [acc$0,n$0],
+//│ 1, 
+//│ let x$0 = >(n$0,0) in -- #45
+//│ if x$0 -- #44
+//│   true =>
+//│     let x$6 = -(n$0,1) in -- #42
+//│     jump j$0(x$6,acc$0,n$0) -- #41
+//│   false =>
+//│     jump j$0(0,acc$0,n$0) -- #43
+//│ )
+//│ Def(4, fact, [acc$0,n$0],
+//│ 1, 
+//│ let* (r0) = fact_jp(acc$0,n$0) in -- #47
+//│ r0 -- #46
+//│ )
+//│ },
+//│ let* (x$7) = fact(1,5) in -- #40
+//│ x$7 -- #39)
+//│ 
+//│ Promoted:
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Def(1, j$1, [x$3],
+//│ 1, 
+//│ x$3 -- #7
+//│ )
+//│ Def(2, j$0, [x$1,acc$0,n$0],
+//│ 1, 
+//│ let x$2 = <=(x$1,0) in -- #23
+//│ if x$2 -- #22
+//│   true =>
+//│     jump j$1(acc$0) -- #9
+//│   false =>
+//│     let x$4 = *(n$0,acc$0) in -- #21
+//│     let* (x$5) = @tailrec fact(x$4,x$1) in -- #20
+//│     jump j$1(x$5) -- #19
+//│ )
+//│ Def(3, fact_jp, [acc$0,n$0],
+//│ 1, 
+//│ let x$0 = >(n$0,0) in -- #45
+//│ if x$0 -- #44
+//│   true =>
+//│     let x$6 = -(n$0,1) in -- #42
+//│     jump j$0(x$6,acc$0,n$0) -- #41
+//│   false =>
+//│     jump j$0(0,acc$0,n$0) -- #43
+//│ )
+//│ Def(4, fact, [acc$0,n$0],
+//│ 1, 
+//│ let* (r0) = fact_jp(acc$0,n$0) in -- #47
+//│ r0 -- #46
+//│ )
+//│ },
+//│ let* (x$7) = fact(1,5) in -- #40
+//│ x$7 -- #39)
 //│ 
 //│ Interpreted:
 //│ 120
@@ -608,6 +730,7 @@ fun h(p, q, r, s) = f(0, 0, 0)
 //│ 2 -- #30)
 
 // TODO: should error, but it seems IR errors are not considered errors by the unit test framework
+// :e
 class True
 class False
 fun hello() =
@@ -622,28 +745,28 @@ hello()
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
 //│ Def(0, hello, [],
 //│ 1, 
-//│ let* (x$0) = @tailrec hello() in -- #5
+//│ let* (x$0) = @tailrec hello() in -- #4
 //│ 2 -- #3
 //│ )
 //│ },
-//│ let* (x$1) = hello() in -- #9
-//│ x$1 -- #8)
+//│ let* (x$1) = hello() in -- #8
+//│ x$1 -- #7)
 //│ 
 //│ IR Processing Failed: not a tail call
 //│ 
 //│ mlscript.compiler.ir.IRError$.apply(IR.scala:14)
-//│ mlscript.compiler.optimizer.TailRecOpt.returnFailure$1(TailRecOpt.scala:48)
-//│ mlscript.compiler.optimizer.TailRecOpt.getOptimizableCalls(TailRecOpt.scala:59)
-//│ mlscript.compiler.optimizer.TailRecOpt.findTailCalls(TailRecOpt.scala:225)
-//│ mlscript.compiler.optimizer.TailRecOpt.dfs$1(TailRecOpt.scala:257)
-//│ mlscript.compiler.optimizer.TailRecOpt.partitionNodes$$anonfun$1(TailRecOpt.scala:302)
-//│ scala.runtime.function.JProcedure1.apply(JProcedure1.java:15)
-//│ scala.runtime.function.JProcedure1.apply(JProcedure1.java:10)
-//│ scala.collection.immutable.Set$Set1.foreach(Set.scala:168)
-//│ mlscript.compiler.optimizer.TailRecOpt.partitionNodes(TailRecOpt.scala:302)
-//│ mlscript.compiler.optimizer.TailRecOpt.partition(TailRecOpt.scala:501)
-//│ mlscript.compiler.optimizer.TailRecOpt.run_debug(TailRecOpt.scala:508)
-//│ mlscript.compiler.IRDiffTestCompiler.postProcess(TestIR.scala:28)
+//│ mlscript.compiler.optimizer.TailRecOpt.returnFailure$1(TailRecOpt.scala:98)
+//│ mlscript.compiler.optimizer.TailRecOpt.discoverOptimizableCalls(TailRecOpt.scala:108)
+//│ mlscript.compiler.optimizer.TailRecOpt.discoverCallsCont(TailRecOpt.scala:308)
+//│ mlscript.compiler.optimizer.TailRecOpt.discoverCalls(TailRecOpt.scala:313)
+//│ mlscript.compiler.optimizer.TailRecOpt.$anonfun$3(TailRecOpt.scala:338)
+//│ scala.collection.IterableOnceOps.foldLeft(IterableOnce.scala:646)
+//│ scala.collection.IterableOnceOps.foldLeft$(IterableOnce.scala:642)
+//│ scala.collection.AbstractIterable.foldLeft(Iterable.scala:926)
+//│ mlscript.compiler.optimizer.TailRecOpt.partitionNodes(TailRecOpt.scala:338)
+//│ mlscript.compiler.optimizer.TailRecOpt.partition(TailRecOpt.scala:829)
+//│ mlscript.compiler.optimizer.TailRecOpt.run_debug(TailRecOpt.scala:836)
+//│ mlscript.compiler.IRDiffTestCompiler.postProcess(TestIR.scala:29)
 //│ mlscript.DiffTests.rec$1(DiffTests.scala:470)
 //│ mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1076)
 //│ org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
@@ -716,29 +839,29 @@ addOne(Cons(1, Cons(2, Cons(3, Nil))))
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, [])}, {
 //│ Def(0, addOne, [xs$0],
 //│ 1, 
-//│ case xs$0 of -- #28
+//│ case xs$0 of -- #27
 //│   Cons =>
-//│     let x$1 = xs$0.t in -- #24
-//│     let x$2 = xs$0.h in -- #23
-//│     let x$3 = +(x$2,1) in -- #22
-//│     let* (x$4) = @tailrec addOne(x$1) in -- #21
+//│     let x$1 = xs$0.t in -- #23
+//│     let x$2 = xs$0.h in -- #22
+//│     let x$3 = +(x$2,1) in -- #21
+//│     let* (x$4) = @tailrec addOne(x$1) in -- #20
 //│     let x$5 = Cons(x$3,x$4) in -- #19
 //│     jump j$0(x$5) -- #18
 //│   Nil =>
-//│     let x$6 = Nil() in -- #27
-//│     jump j$0(x$6) -- #26
+//│     let x$6 = Nil() in -- #26
+//│     jump j$0(x$6) -- #25
 //│ )
 //│ Def(1, j$0, [x$0],
 //│ 1, 
 //│ x$0 -- #1
 //│ )
 //│ },
-//│ let x$7 = Nil() in -- #53
-//│ let x$8 = Cons(3,x$7) in -- #52
-//│ let x$9 = Cons(2,x$8) in -- #51
-//│ let x$10 = Cons(1,x$9) in -- #50
-//│ let* (x$11) = addOne(x$10) in -- #49
-//│ x$11 -- #48)
+//│ let x$7 = Nil() in -- #52
+//│ let x$8 = Cons(3,x$7) in -- #51
+//│ let x$9 = Cons(2,x$8) in -- #50
+//│ let x$10 = Cons(1,x$9) in -- #49
+//│ let* (x$11) = addOne(x$10) in -- #48
+//│ x$11 -- #47)
 //│ 
 //│ Strongly Connected Tail Calls:
 //│ List(Set(j$0), Set(addOne))
@@ -749,30 +872,30 @@ addOne(Cons(1, Cons(2, Cons(3, Nil))))
 //│ )
 //│ Def(2, addOne_jp, [xs$0],
 //│ 1, 
-//│ case xs$0 of -- #62
+//│ case xs$0 of -- #61
 //│   Cons =>
-//│     let x$1 = xs$0.t in -- #59
-//│     let x$2 = xs$0.h in -- #58
-//│     let x$3 = +(x$2,1) in -- #57
-//│     let* (x$4) = @tailrec addOne(x$1) in -- #56
-//│     let x$5 = Cons(x$3,x$4) in -- #55
-//│     jump j$0(x$5) -- #54
+//│     let x$1 = xs$0.t in -- #58
+//│     let x$2 = xs$0.h in -- #57
+//│     let x$3 = +(x$2,1) in -- #56
+//│     let* (x$4) = @tailrec addOne(x$1) in -- #55
+//│     let x$5 = Cons(x$3,x$4) in -- #54
+//│     jump j$0(x$5) -- #53
 //│   Nil =>
-//│     let x$6 = Nil() in -- #61
-//│     jump j$0(x$6) -- #60
+//│     let x$6 = Nil() in -- #60
+//│     jump j$0(x$6) -- #59
 //│ )
 //│ Def(3, addOne, [xs$0],
 //│ 1, 
-//│ let* (xs$0_) = addOne_jp(xs$0) in -- #64
-//│ xs$0_ -- #63
+//│ let* (r0) = addOne_jp(xs$0) in -- #63
+//│ r0 -- #62
 //│ )
 //│ },
-//│ let x$7 = Nil() in -- #53
-//│ let x$8 = Cons(3,x$7) in -- #52
-//│ let x$9 = Cons(2,x$8) in -- #51
-//│ let x$10 = Cons(1,x$9) in -- #50
-//│ let* (x$11) = addOne(x$10) in -- #49
-//│ x$11 -- #48)
+//│ let x$7 = Nil() in -- #52
+//│ let x$8 = Cons(3,x$7) in -- #51
+//│ let x$9 = Cons(2,x$8) in -- #50
+//│ let x$10 = Cons(1,x$9) in -- #49
+//│ let* (x$11) = addOne(x$10) in -- #48
+//│ x$11 -- #47)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, [])}, {
@@ -782,30 +905,30 @@ addOne(Cons(1, Cons(2, Cons(3, Nil))))
 //│ )
 //│ Def(2, addOne_jp, [xs$0],
 //│ 1, 
-//│ case xs$0 of -- #62
+//│ case xs$0 of -- #61
 //│   Cons =>
-//│     let x$1 = xs$0.t in -- #59
-//│     let x$2 = xs$0.h in -- #58
-//│     let x$3 = +(x$2,1) in -- #57
-//│     let* (x$4) = @tailrec addOne(x$1) in -- #56
-//│     let x$5 = Cons(x$3,x$4) in -- #55
-//│     jump j$0(x$5) -- #54
+//│     let x$1 = xs$0.t in -- #58
+//│     let x$2 = xs$0.h in -- #57
+//│     let x$3 = +(x$2,1) in -- #56
+//│     let* (x$4) = @tailrec addOne(x$1) in -- #55
+//│     let x$5 = Cons(x$3,x$4) in -- #54
+//│     jump j$0(x$5) -- #53
 //│   Nil =>
-//│     let x$6 = Nil() in -- #61
-//│     jump j$0(x$6) -- #60
+//│     let x$6 = Nil() in -- #60
+//│     jump j$0(x$6) -- #59
 //│ )
 //│ Def(3, addOne, [xs$0],
 //│ 1, 
-//│ let* (xs$0_) = addOne_jp(xs$0) in -- #64
-//│ xs$0_ -- #63
+//│ let* (r0) = addOne_jp(xs$0) in -- #63
+//│ r0 -- #62
 //│ )
 //│ },
-//│ let x$7 = Nil() in -- #53
-//│ let x$8 = Cons(3,x$7) in -- #52
-//│ let x$9 = Cons(2,x$8) in -- #51
-//│ let x$10 = Cons(1,x$9) in -- #50
-//│ let* (x$11) = addOne(x$10) in -- #49
-//│ x$11 -- #48)
+//│ let x$7 = Nil() in -- #52
+//│ let x$8 = Cons(3,x$7) in -- #51
+//│ let x$9 = Cons(2,x$8) in -- #50
+//│ let x$10 = Cons(1,x$9) in -- #49
+//│ let* (x$11) = addOne(x$10) in -- #48
+//│ x$11 -- #47)
 //│ 
 //│ Interpreted:
 //│ Cons(2,Cons(3,Cons(4,Nil())))
@@ -832,16 +955,16 @@ a(S(S(S(Zero))))
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Zero, []),ClassInfo(3, S, [x])}, {
 //│ Def(0, a, [n$0],
 //│ 1, 
-//│ case n$0 of -- #24
+//│ case n$0 of -- #23
 //│   S =>
-//│     let x$1 = n$0.x in -- #16
-//│     let* (x$2) = @tailrec b(x$1) in -- #15
+//│     let x$1 = n$0.x in -- #15
+//│     let* (x$2) = @tailrec b(x$1) in -- #14
 //│     let x$3 = S(x$2) in -- #13
 //│     jump j$0(x$3) -- #12
 //│   Zero =>
-//│     let x$4 = Zero() in -- #23
-//│     let x$5 = S(x$4) in -- #22
-//│     jump j$0(x$5) -- #21
+//│     let x$4 = Zero() in -- #22
+//│     let x$5 = S(x$4) in -- #21
+//│     jump j$0(x$5) -- #20
 //│ )
 //│ Def(1, j$0, [x$0],
 //│ 1, 
@@ -849,38 +972,38 @@ a(S(S(S(Zero))))
 //│ )
 //│ Def(2, b, [n$1],
 //│ 1, 
-//│ case n$1 of -- #57
+//│ case n$1 of -- #55
 //│   S =>
-//│     let x$7 = n$1.x in -- #45
-//│     let* (x$8) = @tailrec a(x$7) in -- #44
-//│     let x$9 = S(x$8) in -- #42
-//│     let x$10 = S(x$9) in -- #41
-//│     jump j$1(x$10) -- #40
+//│     let x$7 = n$1.x in -- #43
+//│     let* (x$8) = @tailrec a(x$7) in -- #42
+//│     let x$9 = S(x$8) in -- #41
+//│     let x$10 = S(x$9) in -- #40
+//│     jump j$1(x$10) -- #39
 //│   Zero =>
-//│     let x$11 = Zero() in -- #56
-//│     let x$12 = S(x$11) in -- #55
-//│     let x$13 = S(x$12) in -- #54
-//│     jump j$1(x$13) -- #53
+//│     let x$11 = Zero() in -- #54
+//│     let x$12 = S(x$11) in -- #53
+//│     let x$13 = S(x$12) in -- #52
+//│     jump j$1(x$13) -- #51
 //│ )
 //│ Def(3, j$1, [x$6],
 //│ 1, 
-//│ x$6 -- #26
+//│ x$6 -- #25
 //│ )
 //│ },
-//│ let x$14 = Zero() in -- #76
-//│ let x$15 = S(x$14) in -- #75
-//│ let x$16 = S(x$15) in -- #74
-//│ let x$17 = S(x$16) in -- #73
-//│ let* (x$18) = a(x$17) in -- #72
-//│ x$18 -- #71)
+//│ let x$14 = Zero() in -- #74
+//│ let x$15 = S(x$14) in -- #73
+//│ let x$16 = S(x$15) in -- #72
+//│ let x$17 = S(x$16) in -- #71
+//│ let* (x$18) = a(x$17) in -- #70
+//│ x$18 -- #69)
 //│ 
 //│ Strongly Connected Tail Calls:
 //│ List(Set(j$1), Set(j$0), Set(b, a))
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Zero, []),ClassInfo(3, S, [x])}, {
 //│ Def(0, a, [n$0],
 //│ 1, 
-//│ let* (r0) = _b_a_opt(0,0,n$0) in -- #111
-//│ r0 -- #110
+//│ let* (r0) = _b_a_opt(0,0,n$0) in -- #109
+//│ r0 -- #108
 //│ )
 //│ Def(1, j$0, [x$0],
 //│ 1, 
@@ -888,60 +1011,60 @@ a(S(S(S(Zero))))
 //│ )
 //│ Def(2, b, [n$1],
 //│ 1, 
-//│ let* (r0) = _b_a_opt(2,n$1,0) in -- #109
-//│ r0 -- #108
+//│ let* (r0) = _b_a_opt(2,n$1,0) in -- #107
+//│ r0 -- #106
 //│ )
 //│ Def(3, j$1, [x$6],
 //│ 1, 
-//│ x$6 -- #26
+//│ x$6 -- #25
 //│ )
 //│ Def(4, _b_a_opt_jp, [tailrecBranch,b_n$1,a_n$0],
 //│ 1, 
-//│ let scrut = ==(0,tailrecBranch) in -- #106
-//│ if scrut -- #105
+//│ let scrut = ==(0,tailrecBranch) in -- #104
+//│ if scrut -- #103
 //│   true =>
-//│     case a_n$0 of -- #104
+//│     case a_n$0 of -- #102
 //│       S =>
-//│         let x$1 = a_n$0.x in -- #100
-//│         let* (x$2) = @tailrec b(x$1) in -- #99
-//│         let x$3 = S(x$2) in -- #98
-//│         jump j$0(x$3) -- #97
+//│         let x$1 = a_n$0.x in -- #98
+//│         let* (x$2) = @tailrec b(x$1) in -- #97
+//│         let x$3 = S(x$2) in -- #96
+//│         jump j$0(x$3) -- #95
 //│       Zero =>
-//│         let x$4 = Zero() in -- #103
-//│         let x$5 = S(x$4) in -- #102
-//│         jump j$0(x$5) -- #101
+//│         let x$4 = Zero() in -- #101
+//│         let x$5 = S(x$4) in -- #100
+//│         jump j$0(x$5) -- #99
 //│   false =>
-//│     case b_n$1 of -- #96
+//│     case b_n$1 of -- #94
 //│       S =>
-//│         let x$7 = b_n$1.x in -- #91
-//│         let* (x$8) = @tailrec a(x$7) in -- #90
-//│         let x$9 = S(x$8) in -- #89
-//│         let x$10 = S(x$9) in -- #88
-//│         jump j$1(x$10) -- #87
+//│         let x$7 = b_n$1.x in -- #89
+//│         let* (x$8) = @tailrec a(x$7) in -- #88
+//│         let x$9 = S(x$8) in -- #87
+//│         let x$10 = S(x$9) in -- #86
+//│         jump j$1(x$10) -- #85
 //│       Zero =>
-//│         let x$11 = Zero() in -- #95
-//│         let x$12 = S(x$11) in -- #94
-//│         let x$13 = S(x$12) in -- #93
-//│         jump j$1(x$13) -- #92
+//│         let x$11 = Zero() in -- #93
+//│         let x$12 = S(x$11) in -- #92
+//│         let x$13 = S(x$12) in -- #91
+//│         jump j$1(x$13) -- #90
 //│ )
 //│ Def(5, _b_a_opt, [tailrecBranch,b_n$1,a_n$0],
 //│ 1, 
-//│ jump _b_a_opt_jp(tailrecBranch,b_n$1,a_n$0) -- #107
+//│ jump _b_a_opt_jp(tailrecBranch,b_n$1,a_n$0) -- #105
 //│ )
 //│ },
-//│ let x$14 = Zero() in -- #76
-//│ let x$15 = S(x$14) in -- #75
-//│ let x$16 = S(x$15) in -- #74
-//│ let x$17 = S(x$16) in -- #73
-//│ let* (x$18) = a(x$17) in -- #72
-//│ x$18 -- #71)
+//│ let x$14 = Zero() in -- #74
+//│ let x$15 = S(x$14) in -- #73
+//│ let x$16 = S(x$15) in -- #72
+//│ let x$17 = S(x$16) in -- #71
+//│ let* (x$18) = a(x$17) in -- #70
+//│ x$18 -- #69)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Zero, []),ClassInfo(3, S, [x])}, {
 //│ Def(0, a, [n$0],
 //│ 1, 
-//│ let* (r0) = _b_a_opt(0,0,n$0) in -- #111
-//│ r0 -- #110
+//│ let* (r0) = _b_a_opt(0,0,n$0) in -- #109
+//│ r0 -- #108
 //│ )
 //│ Def(1, j$0, [x$0],
 //│ 1, 
@@ -949,56 +1072,200 @@ a(S(S(S(Zero))))
 //│ )
 //│ Def(2, b, [n$1],
 //│ 1, 
-//│ let* (r0) = _b_a_opt(2,n$1,0) in -- #109
-//│ r0 -- #108
+//│ let* (r0) = _b_a_opt(2,n$1,0) in -- #107
+//│ r0 -- #106
 //│ )
 //│ Def(3, j$1, [x$6],
 //│ 1, 
-//│ x$6 -- #26
+//│ x$6 -- #25
 //│ )
 //│ Def(4, _b_a_opt_jp, [tailrecBranch,b_n$1,a_n$0],
 //│ 1, 
-//│ let scrut = ==(0,tailrecBranch) in -- #106
-//│ if scrut -- #105
+//│ let scrut = ==(0,tailrecBranch) in -- #104
+//│ if scrut -- #103
 //│   true =>
-//│     case a_n$0 of -- #104
+//│     case a_n$0 of -- #102
 //│       S =>
-//│         let x$1 = a_n$0.x in -- #100
-//│         let* (x$2) = @tailrec b(x$1) in -- #99
-//│         let x$3 = S(x$2) in -- #98
-//│         jump j$0(x$3) -- #97
+//│         let x$1 = a_n$0.x in -- #98
+//│         let* (x$2) = @tailrec b(x$1) in -- #97
+//│         let x$3 = S(x$2) in -- #96
+//│         jump j$0(x$3) -- #95
 //│       Zero =>
-//│         let x$4 = Zero() in -- #103
-//│         let x$5 = S(x$4) in -- #102
-//│         jump j$0(x$5) -- #101
+//│         let x$4 = Zero() in -- #101
+//│         let x$5 = S(x$4) in -- #100
+//│         jump j$0(x$5) -- #99
 //│   false =>
-//│     case b_n$1 of -- #96
+//│     case b_n$1 of -- #94
 //│       S =>
-//│         let x$7 = b_n$1.x in -- #91
-//│         let* (x$8) = @tailrec a(x$7) in -- #90
-//│         let x$9 = S(x$8) in -- #89
-//│         let x$10 = S(x$9) in -- #88
-//│         jump j$1(x$10) -- #87
+//│         let x$7 = b_n$1.x in -- #89
+//│         let* (x$8) = @tailrec a(x$7) in -- #88
+//│         let x$9 = S(x$8) in -- #87
+//│         let x$10 = S(x$9) in -- #86
+//│         jump j$1(x$10) -- #85
 //│       Zero =>
-//│         let x$11 = Zero() in -- #95
-//│         let x$12 = S(x$11) in -- #94
-//│         let x$13 = S(x$12) in -- #93
-//│         jump j$1(x$13) -- #92
+//│         let x$11 = Zero() in -- #93
+//│         let x$12 = S(x$11) in -- #92
+//│         let x$13 = S(x$12) in -- #91
+//│         jump j$1(x$13) -- #90
 //│ )
 //│ Def(5, _b_a_opt, [tailrecBranch,b_n$1,a_n$0],
 //│ 1, 
-//│ jump _b_a_opt_jp(tailrecBranch,b_n$1,a_n$0) -- #107
+//│ jump _b_a_opt_jp(tailrecBranch,b_n$1,a_n$0) -- #105
 //│ )
 //│ },
-//│ let x$14 = Zero() in -- #76
-//│ let x$15 = S(x$14) in -- #75
-//│ let x$16 = S(x$15) in -- #74
-//│ let x$17 = S(x$16) in -- #73
-//│ let* (x$18) = a(x$17) in -- #72
-//│ x$18 -- #71)
+//│ let x$14 = Zero() in -- #74
+//│ let x$15 = S(x$14) in -- #73
+//│ let x$16 = S(x$15) in -- #72
+//│ let x$17 = S(x$16) in -- #71
+//│ let* (x$18) = a(x$17) in -- #70
+//│ x$18 -- #69)
 //│ 
 //│ Interpreted:
 //│ S(S(S(S(S(S(Zero()))))))
+
+:interpIR
+class True
+class False
+class Cons(h, t)
+class Nil
+fun addOne(xs) =
+  if xs is 
+    Cons(h, t) then
+      val next = @tailrec addOne(t)
+      val ret = Cons(h + 1, nnext)
+      val rett = ret
+      rett
+    Nil then 
+      Nil
+addOne(Cons(1, Cons(2, Cons(3, Nil))))
+//│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#fun| |addOne|(|xs|)| |#=|→|#if| |xs| |is| |→|Cons|(|h|,| |t|)| |#then|→|#val| |next| |#=| |@|tailrec| |addOne|(|t|)|↵|#val| |ret| |#=| |Cons|(|h| |+| |1|,| |nnext|)|↵|#val| |rett| |#=| |ret|↵|rett|←|↵|Nil| |#then| |→|Nil|←|←|←|↵|addOne|(|Cons|(|1|,| |Cons|(|2|,| |Cons|(|3|,| |Nil|)|)|)|)|
+//│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; fun addOne = (xs,) => {if xs is ‹(Cons(h, t,)) then {let next = @tailrec addOne(t,); let ret = Cons(+(h,)(1,), nnext,); let rett = ret; rett}; (Nil) then {Nil}›}; addOne(Cons(1, Cons(2, Cons(3, Nil,),),),)}
+//│ 
+//│ 
+//│ IR:
+//│ 
+//│ IR Processing Failed: unknown name nnext in Ctx(HashMap(xs -> xs$0, t -> x$1, < -> <, >= -> >=, == -> ==, next -> x$3, * -> *, <= -> <=, - -> -, xs$0 -> xs$0, addOne -> addOne, + -> +, != -> !=, h -> x$2, / -> /, > -> >),Map(True -> ClassInfo(0, True, []), False -> ClassInfo(1, False, []), Cons -> ClassInfo(2, Cons, [h,t]), Nil -> ClassInfo(3, Nil, [])),Map(h -> (Cons,ClassInfo(2, Cons, [h,t])), t -> (Cons,ClassInfo(2, Cons, [h,t]))),Set(addOne),HashSet(<, >=, -, ==, +, !=, *, <=, /, >),ListBuffer(Def(1, j$0, [x$0],
+//│ 1, 
+//│ x$0 -- #1
+//│ )))
+//│ 
+//│ mlscript.compiler.ir.IRError$.apply(IR.scala:14)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:108)
+//│ mlscript.compiler.ir.Builder.buildResultFromTup(Builder.scala:59)
+//│ mlscript.compiler.ir.Builder.buildResultFromTup$$anonfun$1(Builder.scala:57)
+//│ mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ mlscript.compiler.ir.Builder.$anonfun$8$$anonfun$1(Builder.scala:123)
+//│ mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:98)
+//│ mlscript.compiler.ir.Builder.$anonfun$8(Builder.scala:125)
+//│ mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:107)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:127)
+//│ mlscript.compiler.ir.Builder.buildResultFromTup(Builder.scala:59)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:239)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:137)
+//│ mlscript.compiler.ir.Builder.buildBinding(Builder.scala:48)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:226)
+//│ mlscript.compiler.ir.Builder.buildBinding$$anonfun$1(Builder.scala:40)
+//│ mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ mlscript.compiler.ir.Builder.buildLetCall$1$$anonfun$1$$anonfun$1(Builder.scala:83)
+//│ mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ mlscript.compiler.ir.Builder.buildResultFromTup$$anonfun$1$$anonfun$1(Builder.scala:55)
+//│ mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ mlscript.compiler.ir.Builder.buildResultFromTup(Builder.scala:60)
+//│ mlscript.compiler.ir.Builder.buildResultFromTup$$anonfun$1(Builder.scala:57)
+//│ mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:107)
+//│ mlscript.compiler.ir.Builder.buildResultFromTup(Builder.scala:59)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:239)
+//│ mlscript.compiler.ir.Builder.buildLetCall$1$$anonfun$1(Builder.scala:88)
+//│ mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:107)
+//│ mlscript.compiler.ir.Builder.buildLetCall$1(Builder.scala:94)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:140)
+//│ mlscript.compiler.ir.Builder.buildBinding(Builder.scala:48)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:226)
+//│ mlscript.compiler.ir.Builder.buildBinding$$anonfun$1(Builder.scala:40)
+//│ mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ mlscript.compiler.ir.Builder.$anonfun$22(Builder.scala:235)
+//│ mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:107)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:237)
+//│ mlscript.compiler.ir.Builder.buildBinding(Builder.scala:48)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:143)
+//│ mlscript.compiler.ir.Builder.buildBinding$$anonfun$1(Builder.scala:40)
+//│ mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ mlscript.compiler.ir.Builder.$anonfun$22(Builder.scala:235)
+//│ mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:107)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:237)
+//│ mlscript.compiler.ir.Builder.buildBinding(Builder.scala:48)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:143)
+//│ mlscript.compiler.ir.Builder.$anonfun$21(Builder.scala:203)
+//│ scala.collection.immutable.List.map(List.scala:246)
+//│ mlscript.compiler.ir.Builder.$anonfun$17(Builder.scala:211)
+//│ mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:107)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:214)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:218)
+//│ mlscript.compiler.ir.Builder.buildDefFromNuFunDef(Builder.scala:258)
+//│ mlscript.compiler.ir.Builder.$anonfun$36(Builder.scala:320)
+//│ scala.collection.immutable.List.map(List.scala:246)
+//│ mlscript.compiler.ir.Builder.buildGraph(Builder.scala:320)
+//│ mlscript.compiler.IRDiffTestCompiler.postProcess(TestIR.scala:24)
+//│ mlscript.DiffTests.rec$1(DiffTests.scala:470)
+//│ mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1076)
+//│ org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+//│ org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+//│ org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+//│ org.scalatest.Transformer.apply(Transformer.scala:22)
+//│ org.scalatest.Transformer.apply(Transformer.scala:20)
+//│ org.scalatest.funsuite.AnyFunSuiteLike$$anon$1.apply(AnyFunSuiteLike.scala:226)
+//│ org.scalatest.TestSuite.withFixture(TestSuite.scala:196)
+//│ org.scalatest.TestSuite.withFixture$(TestSuite.scala:195)
+//│ mlscript.DiffTests.org$scalatest$concurrent$TimeLimitedTests$$super$withFixture(DiffTests.scala:53)
+//│ org.scalatest.concurrent.TimeLimitedTests.$anonfun$withFixture$3(TimeLimitedTests.scala:154)
+//│ org.scalatest.enablers.Timed$$anon$1.timeoutAfter(Timed.scala:127)
+//│ org.scalatest.concurrent.TimeLimits$.failAfterImpl(TimeLimits.scala:282)
+//│ org.scalatest.concurrent.TimeLimitedTests.withFixture(TimeLimitedTests.scala:153)
+//│ org.scalatest.concurrent.TimeLimitedTests.withFixture$(TimeLimitedTests.scala:150)
+//│ mlscript.DiffTests.withFixture(DiffTests.scala:53)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.invokeWithFixture$1(AnyFunSuiteLike.scala:224)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.$anonfun$runTest$1(AnyFunSuiteLike.scala:236)
+//│ org.scalatest.SuperEngine.runTestImpl(Engine.scala:306)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.runTest(AnyFunSuiteLike.scala:236)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.runTest$(AnyFunSuiteLike.scala:218)
+//│ mlscript.DiffTests.org$scalatest$OneInstancePerTest$$super$runTest(DiffTests.scala:53)
+//│ org.scalatest.OneInstancePerTest.runTest(OneInstancePerTest.scala:131)
+//│ org.scalatest.OneInstancePerTest.runTest$(OneInstancePerTest.scala:123)
+//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$runTest(DiffTests.scala:53)
+//│ org.scalatest.ParallelTestExecution.runTest(ParallelTestExecution.scala:164)
+//│ org.scalatest.ParallelTestExecution.runTest$(ParallelTestExecution.scala:148)
+//│ mlscript.DiffTests.runTest(DiffTests.scala:53)
+//│ org.scalatest.OneInstancePerTest.runTests(OneInstancePerTest.scala:181)
+//│ org.scalatest.OneInstancePerTest.runTests$(OneInstancePerTest.scala:172)
+//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$runTests(DiffTests.scala:53)
+//│ org.scalatest.ParallelTestExecution.runTests(ParallelTestExecution.scala:97)
+//│ org.scalatest.ParallelTestExecution.runTests$(ParallelTestExecution.scala:79)
+//│ mlscript.DiffTests.runTests(DiffTests.scala:53)
+//│ org.scalatest.Suite.run(Suite.scala:1114)
+//│ org.scalatest.Suite.run$(Suite.scala:1096)
+//│ org.scalatest.funsuite.AnyFunSuite.org$scalatest$funsuite$AnyFunSuiteLike$$super$run(AnyFunSuite.scala:1563)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.$anonfun$run$1(AnyFunSuiteLike.scala:273)
+//│ org.scalatest.SuperEngine.runImpl(Engine.scala:535)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.run(AnyFunSuiteLike.scala:273)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.run$(AnyFunSuiteLike.scala:272)
+//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$run(DiffTests.scala:53)
+//│ org.scalatest.ParallelTestExecution.run(ParallelTestExecution.scala:261)
+//│ org.scalatest.ParallelTestExecution.run$(ParallelTestExecution.scala:258)
+//│ mlscript.DiffTests.run(DiffTests.scala:53)
+//│ org.scalatest.tools.DistributedTestRunnerSuite.run(DistributedTestRunnerSuite.scala:22)
+//│ org.scalatest.tools.SuiteRunner.run(SuiteRunner.scala:47)
+//│ java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:539)
+//│ java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+//│ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+//│ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+//│ java.base/java.lang.Thread.run(Thread.java:840)
 
 :interpIR
 class True

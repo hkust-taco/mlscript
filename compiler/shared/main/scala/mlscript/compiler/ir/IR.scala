@@ -137,7 +137,7 @@ enum Node:
   case Case(scrut: Name, cases: Ls[(ClassInfo, Node)])
   // Intermediate forms:
   case LetExpr(name: Name, expr: Expr, body: Node)
-  case LetCall(names: Ls[Name], defn: DefnRef, args: Ls[TrivialExpr], body: Node, isTailRec: Bool)
+  case LetCall(names: Ls[Name], defn: DefnRef, args: Ls[TrivialExpr], isTailRec: Bool, body: Node)
   case AssignField(assignee: Name, clsInfo: ClassInfo, fieldName: Str, value: TrivialExpr, body: Node)
 
   var tag = DefnTag(-1)
@@ -161,7 +161,7 @@ enum Node:
     case Jump(defn, args) => Jump(defn, args.map(_.mapNameOfTrivialExpr(f)))
     case Case(scrut, cases) => Case(f(scrut), cases.map { (cls, arm) => (cls, arm.mapName(f)) })
     case LetExpr(name, expr, body) => LetExpr(f(name), expr.mapName(f), body.mapName(f))
-    case LetCall(names, defn, args, body, isTailRec) => LetCall(names.map(f), defn, args.map(_.mapNameOfTrivialExpr(f)), body.mapName(f), isTailRec)
+    case LetCall(names, defn, args, isTailRec, body) => LetCall(names.map(f), defn, args.map(_.mapNameOfTrivialExpr(f)), isTailRec, body.mapName(f))
     case AssignField(assignee, fieldName, clsInfo, value, body) =>
       AssignField(f(assignee), fieldName, clsInfo, value.mapNameOfTrivialExpr(f), body.mapName(f))
   
@@ -172,9 +172,9 @@ enum Node:
     case LetExpr(name, expr, body) => 
       val name_copy = name.copy
       LetExpr(name_copy, expr.mapName(_.trySubst(ctx)), body.copy(ctx + (name_copy.str -> name_copy)))
-    case LetCall(names, defn, args, body, isTailRec) => 
+    case LetCall(names, defn, args, isTailRec, body) => 
       val names_copy = names.map(_.copy)
-      LetCall(names_copy, defn, args.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))), body.copy(ctx ++ names_copy.map(x => x.str -> x)), isTailRec)
+      LetCall(names_copy, defn, args.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))), isTailRec, body.copy(ctx ++ names_copy.map(x => x.str -> x)))
     case AssignField(assignee, clsInfo, fieldName, value, body) =>
       AssignField(assignee.trySubst(ctx), clsInfo, fieldName, value.mapNameOfTrivialExpr(_.trySubst(ctx)), body.copy(ctx))
 
@@ -208,7 +208,7 @@ enum Node:
           <:> raw("in")
           <:> raw(s"-- $tag"),
         body.toDocument)
-    case LetCall(xs, defn, args, body, isTailRec) => 
+    case LetCall(xs, defn, args, isTailRec, body) => 
       stack(
         raw("let*")
           <:> raw("(")

@@ -72,6 +72,28 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
     tm
 
   private def buildResultFromTerm(using ctx: Ctx)(tm: Term)(k: Node => Node): Node =
+    def buildLetCall(f: Term, xs: Tup, ann: Option[Term]) =
+      buildResultFromTerm(f) { node => node match
+        case Result(Ref(f) :: Nil) if ctx.fnCtx.contains(f.str) => buildResultFromTerm(xs) {
+          case Result(args) =>
+            val v = fresh.make
+            
+            ann match
+              case Some(Var(nme)) if nme == "tailrec" => 
+                LetCall(List(v), DefnRef(Right(f.str)), args, true, v |> ref |> sresult |> k).attachTag(tag)
+              case Some(_) => node |> unexpectedNode
+              case None => LetCall(List(v), DefnRef(Right(f.str)), args, false, v |> ref |> sresult |> k).attachTag(tag)   
+            
+          case node @ _ => node |> unexpectedNode
+        }
+        case Result(Ref(f) :: Nil) => buildResultFromTerm(xs) {
+          case Result(args) =>
+            throw IRError(s"not supported: apply")
+          case node @ _ => node |> unexpectedNode
+        }
+        case node @ _ => node |> unexpectedNode
+      }
+
     val res = tm match
       case lit: Lit => Literal(lit) |> sresult |> k
       case v @ Var(name) =>
@@ -114,21 +136,8 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
           case node @ _ => node |> unexpectedNode
         }
 
-      case App(f, xs @ Tup(_)) =>
-        buildResultFromTerm(f) {
-        case Result(Ref(f) :: Nil) if ctx.fnCtx.contains(f.str) => buildResultFromTerm(xs) {
-          case Result(args) =>
-            val v = fresh.make
-            LetCall(List(v), DefnRef(Right(f.str)), args, v |> ref |> sresult |> k, false).attachTag(tag)
-          case node @ _ => node |> unexpectedNode
-        }
-        case Result(Ref(f) :: Nil) => buildResultFromTerm(xs) {
-          case Result(args) =>
-            throw IRError(s"not supported: apply")
-          case node @ _ => node |> unexpectedNode
-        }
-        case node @ _ => node |> unexpectedNode
-      }
+      case App(f, xs @ Tup(_)) => buildLetCall(f, xs, None)
+      case Ann(ann, App(f, xs @ Tup(_))) => buildLetCall(f, xs, Some(ann))
 
       case Let(false, Var(name), rhs, body) => 
         buildBinding(name, rhs, body)(k)
@@ -226,14 +235,6 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
               v |> ref |> sresult |> k).attachTag(tag)
           case node @ _ => node |> unexpectedNode
         }
-      
-      case Ann(term, receiver) =>
-        // TODO: what happens if the tailrec module is overridden?
-        (term, buildResultFromTerm(receiver)(k)) match
-          case (Var("tailrec"), LetCall(names, defn, args, body, isTailRec)) =>
-            LetCall(names, defn, args, body, true).attachTag(tag)
-          case _ => tm |> unexpectedTerm
-        
 
       case tup: Tup => buildResultFromTup(tup)(k)
 

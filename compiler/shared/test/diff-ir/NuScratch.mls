@@ -1,3 +1,154 @@
 :NewParser
 :ParseOnly
 :UseIR
+
+:interpIR
+class True
+class False
+fun fact(acc, n) =
+  val x = if n > 0 then n - 1 else 0
+  if x <= 0 then
+    acc
+  else 
+    @tailrec fact(n * acc, x) 
+fact(1, 5)
+//│ |#class| |True|↵|#class| |False|↵|#fun| |fact|(|acc|,| |n|)| |#=|→|#val| |x| |#=| |#if| |n| |>| |0| |#then| |n| |-| |1| |#else| |0|↵|#if| |x| |<=| |0| |#then|→|acc|←|↵|#else| |→|@|tailrec| |fact|(|n| |*| |acc|,| |x|)| |←|←|↵|fact|(|1|,| |5|)|
+//│ Parsed: {class True {}; class False {}; fun fact = (acc, n,) => {let x = if (>(n,)(0,)) then -(n,)(1,) else 0; if (<=(x,)(0,)) then {acc} else {@tailrec fact(*(n,)(acc,), x,)}}; fact(1, 5,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Def(0, fact, [acc$0,n$0],
+//│ 1, 
+//│ let x$0 = >(n$0,0) in -- #32
+//│ if x$0 -- #31
+//│   true =>
+//│     let x$6 = -(n$0,1) in -- #28
+//│     jump j$0(x$6,acc$0,n$0) -- #27
+//│   false =>
+//│     jump j$0(0,acc$0,n$0) -- #30
+//│ )
+//│ Def(1, j$1, [x$3],
+//│ 1, 
+//│ x$3 -- #7
+//│ )
+//│ Def(2, j$0, [x$1,acc$0,n$0],
+//│ 1, 
+//│ let x$2 = <=(x$1,0) in -- #23
+//│ if x$2 -- #22
+//│   true =>
+//│     jump j$1(acc$0) -- #9
+//│   false =>
+//│     let x$4 = *(n$0,acc$0) in -- #21
+//│     let* (x$5) = @tailrec fact(x$4,x$1) in -- #20
+//│     jump j$1(x$5) -- #19
+//│ )
+//│ },
+//│ let* (x$7) = fact(1,5) in -- #40
+//│ x$7 -- #39)
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(j$0), Set(j$1), Set(fact))
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Def(0, fact, [acc$0,n$0],
+//│ 1, 
+//│ let* (r0) = _fact_j$0_opt(0,acc$0,n$0,0,0,0) in -- #60
+//│ r0 -- #59
+//│ )
+//│ Def(1, j$1, [x$3],
+//│ 1, 
+//│ x$3 -- #7
+//│ )
+//│ Def(2, j$0, [x$1,acc$0,n$0],
+//│ 1, 
+//│ let x$2 = <=(x$1,0) in -- #23
+//│ if x$2 -- #22
+//│   true =>
+//│     jump j$1(acc$0) -- #9
+//│   false =>
+//│     let x$4 = *(n$0,acc$0) in -- #21
+//│     let* (x$5) = @tailrec fact(x$4,x$1) in -- #20
+//│     jump j$1(x$5) -- #19
+//│ )
+//│ Def(3, _fact_j$0_opt_jp, [tailrecBranch,fact_acc$0,fact_n$0,j$0_x$1,j$0_acc$0,j$0_n$0],
+//│ 1, 
+//│ let scrut = ==(2,tailrecBranch) in -- #57
+//│ if scrut -- #56
+//│   true =>
+//│     let x$2 = <=(j$0_x$1,0) in -- #55
+//│     if x$2 -- #54
+//│       true =>
+//│         jump j$1(j$0_acc$0) -- #51
+//│       false =>
+//│         let x$4 = *(j$0_n$0,j$0_acc$0) in -- #53
+//│         jump _fact_j$0_opt_jp(0,x$4,j$0_x$1,j$0_x$1,j$0_acc$0,j$0_n$0) -- #52
+//│   false =>
+//│     let x$0 = >(fact_n$0,0) in -- #50
+//│     if x$0 -- #49
+//│       true =>
+//│         let x$6 = -(fact_n$0,1) in -- #47
+//│         jump _fact_j$0_opt_jp(2,fact_acc$0,fact_n$0,x$6,fact_acc$0,fact_n$0) -- #46
+//│       false =>
+//│         jump _fact_j$0_opt_jp(2,fact_acc$0,fact_n$0,0,fact_acc$0,fact_n$0) -- #48
+//│ )
+//│ Def(4, _fact_j$0_opt, [tailrecBranch,fact_acc$0,fact_n$0,j$0_x$1,j$0_acc$0,j$0_n$0],
+//│ 1, 
+//│ jump _fact_j$0_opt_jp(tailrecBranch,fact_acc$0,fact_n$0,j$0_x$1,j$0_acc$0,j$0_n$0) -- #58
+//│ )
+//│ },
+//│ let* (x$7) = fact(1,5) in -- #40
+//│ x$7 -- #39)
+//│ 
+//│ Promoted:
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Def(0, fact, [acc$0,n$0],
+//│ 1, 
+//│ let* (r0) = _fact_j$0_opt(0,acc$0,n$0,0,0,0) in -- #60
+//│ r0 -- #59
+//│ )
+//│ Def(1, j$1, [x$3],
+//│ 1, 
+//│ x$3 -- #7
+//│ )
+//│ Def(2, j$0, [x$1,acc$0,n$0],
+//│ 1, 
+//│ let x$2 = <=(x$1,0) in -- #23
+//│ if x$2 -- #22
+//│   true =>
+//│     jump j$1(acc$0) -- #9
+//│   false =>
+//│     let x$4 = *(n$0,acc$0) in -- #21
+//│     let* (x$5) = @tailrec fact(x$4,x$1) in -- #20
+//│     jump j$1(x$5) -- #19
+//│ )
+//│ Def(3, _fact_j$0_opt_jp, [tailrecBranch,fact_acc$0,fact_n$0,j$0_x$1,j$0_acc$0,j$0_n$0],
+//│ 1, 
+//│ let scrut = ==(2,tailrecBranch) in -- #57
+//│ if scrut -- #56
+//│   true =>
+//│     let x$2 = <=(j$0_x$1,0) in -- #55
+//│     if x$2 -- #54
+//│       true =>
+//│         jump j$1(j$0_acc$0) -- #51
+//│       false =>
+//│         let x$4 = *(j$0_n$0,j$0_acc$0) in -- #53
+//│         jump _fact_j$0_opt_jp(0,x$4,j$0_x$1,j$0_x$1,j$0_acc$0,j$0_n$0) -- #52
+//│   false =>
+//│     let x$0 = >(fact_n$0,0) in -- #50
+//│     if x$0 -- #49
+//│       true =>
+//│         let x$6 = -(fact_n$0,1) in -- #47
+//│         jump _fact_j$0_opt_jp(2,fact_acc$0,fact_n$0,x$6,fact_acc$0,fact_n$0) -- #46
+//│       false =>
+//│         jump _fact_j$0_opt_jp(2,fact_acc$0,fact_n$0,0,fact_acc$0,fact_n$0) -- #48
+//│ )
+//│ Def(4, _fact_j$0_opt, [tailrecBranch,fact_acc$0,fact_n$0,j$0_x$1,j$0_acc$0,j$0_n$0],
+//│ 1, 
+//│ jump _fact_j$0_opt_jp(tailrecBranch,fact_acc$0,fact_n$0,j$0_x$1,j$0_acc$0,j$0_n$0) -- #58
+//│ )
+//│ },
+//│ let* (x$7) = fact(1,5) in -- #40
+//│ x$7 -- #39)
+//│ 
+//│ Interpreted:
+//│ 120
