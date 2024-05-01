@@ -795,7 +795,7 @@ hello()
 //│ scala.collection.AbstractIterable.foldLeft(Iterable.scala:926)
 //│ mlscript.compiler.optimizer.TailRecOpt.partitionNodes(TailRecOpt.scala:340)
 //│ mlscript.compiler.optimizer.TailRecOpt.partition(TailRecOpt.scala:884)
-//│ mlscript.compiler.optimizer.TailRecOpt.run_debug(TailRecOpt.scala:896)
+//│ mlscript.compiler.optimizer.TailRecOpt.run_debug(TailRecOpt.scala:894)
 //│ mlscript.compiler.IRDiffTestCompiler.postProcess(TestIR.scala:29)
 //│ mlscript.DiffTests.rec$1(DiffTests.scala:470)
 //│ mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1076)
@@ -1909,6 +1909,7 @@ b(16)
 //│ Interpreted:
 //│ Cons(64,Cons(56,Cons(48,Cons(40,Cons(32,Cons(24,Cons(16,Cons(8,Cons(0,Nil())))))))))
 
+:noTailRec
 :interpIR
 class True
 class False
@@ -1918,35 +1919,39 @@ fun foo(xs) =
   if xs is 
     Cons(h, t) then
       if h > 5 then foo(t)
-      else Cons(0, Cons(h, foo(t)))
+      else 
+        val item = if h < 3 then -1 else 100 
+        Cons(item, Cons(h, foo(t)))
     Nil then 
       Nil
 foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil))))))))
-//│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#fun| |foo|(|xs|)| |#=|→|#if| |xs| |is| |→|Cons|(|h|,| |t|)| |#then|→|#if| |h| |>| |5| |#then| |foo|(|t|)|↵|#else| |Cons|(|0|,| |Cons|(|h|,| |foo|(|t|)|)|)|←|↵|Nil| |#then| |→|Nil|←|←|←|↵|foo|(|Cons|(|1|,| |Cons|(|6|,| |Cons|(|7|,| |Cons|(|4|,| |Cons|(|2|,| |Cons|(|3|,| |Cons|(|9|,| |Nil|)|)|)|)|)|)|)|)|
-//│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; fun foo = (xs,) => {if xs is ‹(Cons(h, t,)) then {if (>(h,)(5,)) then foo(t,) else Cons(0, Cons(h, foo(t,),),)}; (Nil) then {Nil}›}; foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil,),),),),),),),)}
+//│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#fun| |foo|(|xs|)| |#=|→|#if| |xs| |is| |→|Cons|(|h|,| |t|)| |#then|→|#if| |h| |>| |5| |#then| |foo|(|t|)|↵|#else| |→|#val| |item| |#=| |#if| |h| |<| |3| |#then| |-|1| |#else| |100| |↵|Cons|(|item|,| |Cons|(|h|,| |foo|(|t|)|)|)|←|←|↵|Nil| |#then| |→|Nil|←|←|←|↵|foo|(|Cons|(|1|,| |Cons|(|6|,| |Cons|(|7|,| |Cons|(|4|,| |Cons|(|2|,| |Cons|(|3|,| |Cons|(|9|,| |Nil|)|)|)|)|)|)|)|)|
+//│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; fun foo = (xs,) => {if xs is ‹(Cons(h, t,)) then {if (>(h,)(5,)) then foo(t,) else {let item = if (<(h,)(3,)) then -1 else 100; Cons(item, Cons(h, foo(t,),),)}}; (Nil) then {Nil}›}; foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil,),),),),),),),)}
 //│ 
 //│ 
 //│ IR:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, [])}, {
 //│ Def(0, foo, [xs$0],
 //│ 1, 
-//│ case xs$0 of -- #44
+//│ case xs$0 of -- #54
 //│   Cons =>
-//│     let x$1 = xs$0.t in -- #40
-//│     let x$2 = xs$0.h in -- #39
-//│     let x$3 = >(x$2,5) in -- #38
-//│     if x$3 -- #37
+//│     let x$1 = xs$0.t in -- #50
+//│     let x$2 = xs$0.h in -- #49
+//│     let x$3 = >(x$2,5) in -- #48
+//│     if x$3 -- #47
 //│       true =>
 //│         let* (x$5) = foo(x$1) in -- #17
 //│         jump j$1(x$5) -- #16
 //│       false =>
-//│         let* (x$6) = foo(x$1) in -- #36
-//│         let x$7 = Cons(x$2,x$6) in -- #35
-//│         let x$8 = Cons(0,x$7) in -- #34
-//│         jump j$1(x$8) -- #33
+//│         let x$6 = <(x$2,3) in -- #46
+//│         if x$6 -- #45
+//│           true =>
+//│             jump j$2(-1,x$1,x$2) -- #42
+//│           false =>
+//│             jump j$2(100,x$1,x$2) -- #44
 //│   Nil =>
-//│     let x$9 = Nil() in -- #43
-//│     jump j$0(x$9) -- #42
+//│     let x$11 = Nil() in -- #53
+//│     jump j$0(x$11) -- #52
 //│ )
 //│ Def(1, j$0, [x$0],
 //│ 1, 
@@ -1956,26 +1961,206 @@ foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil))))))))
 //│ 1, 
 //│ jump j$0(x$4) -- #10
 //│ )
+//│ Def(3, j$2, [x$7,x$1,x$2],
+//│ 1, 
+//│ let* (x$8) = foo(x$1) in -- #40
+//│ let x$9 = Cons(x$2,x$8) in -- #39
+//│ let x$10 = Cons(x$7,x$9) in -- #38
+//│ jump j$1(x$10) -- #37
+//│ )
 //│ },
-//│ let x$10 = Nil() in -- #93
-//│ let x$11 = Cons(9,x$10) in -- #92
-//│ let x$12 = Cons(3,x$11) in -- #91
-//│ let x$13 = Cons(2,x$12) in -- #90
-//│ let x$14 = Cons(4,x$13) in -- #89
-//│ let x$15 = Cons(7,x$14) in -- #88
-//│ let x$16 = Cons(6,x$15) in -- #87
-//│ let x$17 = Cons(1,x$16) in -- #86
-//│ let* (x$18) = foo(x$17) in -- #85
-//│ x$18 -- #84)
+//│ let x$12 = Nil() in -- #103
+//│ let x$13 = Cons(9,x$12) in -- #102
+//│ let x$14 = Cons(3,x$13) in -- #101
+//│ let x$15 = Cons(2,x$14) in -- #100
+//│ let x$16 = Cons(4,x$15) in -- #99
+//│ let x$17 = Cons(7,x$16) in -- #98
+//│ let x$18 = Cons(6,x$17) in -- #97
+//│ let x$19 = Cons(1,x$18) in -- #96
+//│ let* (x$20) = foo(x$19) in -- #95
+//│ x$20 -- #94)
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, [])}, {
+//│ Def(0, foo, [xs$0],
+//│ 1, 
+//│ case xs$0 of -- #54
+//│   Cons =>
+//│     let x$1 = xs$0.t in -- #50
+//│     let x$2 = xs$0.h in -- #49
+//│     let x$3 = >(x$2,5) in -- #48
+//│     if x$3 -- #47
+//│       true =>
+//│         let* (x$5) = foo(x$1) in -- #17
+//│         jump j$1(x$5) -- #16
+//│       false =>
+//│         let x$6 = <(x$2,3) in -- #46
+//│         if x$6 -- #45
+//│           true =>
+//│             jump j$2(-1,x$1,x$2) -- #42
+//│           false =>
+//│             jump j$2(100,x$1,x$2) -- #44
+//│   Nil =>
+//│     let x$11 = Nil() in -- #53
+//│     jump j$0(x$11) -- #52
+//│ )
+//│ Def(1, j$0, [x$0],
+//│ 1, 
+//│ x$0 -- #1
+//│ )
+//│ Def(2, j$1, [x$4],
+//│ 1, 
+//│ jump j$0(x$4) -- #10
+//│ )
+//│ Def(3, j$2, [x$7,x$1,x$2],
+//│ 1, 
+//│ let* (x$8) = foo(x$1) in -- #40
+//│ let x$9 = Cons(x$2,x$8) in -- #39
+//│ let x$10 = Cons(x$7,x$9) in -- #38
+//│ jump j$1(x$10) -- #37
+//│ )
+//│ },
+//│ let x$12 = Nil() in -- #103
+//│ let x$13 = Cons(9,x$12) in -- #102
+//│ let x$14 = Cons(3,x$13) in -- #101
+//│ let x$15 = Cons(2,x$14) in -- #100
+//│ let x$16 = Cons(4,x$15) in -- #99
+//│ let x$17 = Cons(7,x$16) in -- #98
+//│ let x$18 = Cons(6,x$17) in -- #97
+//│ let x$19 = Cons(1,x$18) in -- #96
+//│ let* (x$20) = foo(x$19) in -- #95
+//│ x$20 -- #94)
+//│ 
+//│ Promoted:
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, [])}, {
+//│ Def(0, foo, [xs$0],
+//│ 1, 
+//│ case xs$0 of -- #54
+//│   Cons =>
+//│     let x$1 = xs$0.t in -- #50
+//│     let x$2 = xs$0.h in -- #49
+//│     let x$3 = >(x$2,5) in -- #48
+//│     if x$3 -- #47
+//│       true =>
+//│         let* (x$5) = foo(x$1) in -- #17
+//│         jump j$1(x$5) -- #16
+//│       false =>
+//│         let x$6 = <(x$2,3) in -- #46
+//│         if x$6 -- #45
+//│           true =>
+//│             jump j$2(-1,x$1,x$2) -- #42
+//│           false =>
+//│             jump j$2(100,x$1,x$2) -- #44
+//│   Nil =>
+//│     let x$11 = Nil() in -- #53
+//│     jump j$0(x$11) -- #52
+//│ )
+//│ Def(1, j$0, [x$0],
+//│ 1, 
+//│ x$0 -- #1
+//│ )
+//│ Def(2, j$1, [x$4],
+//│ 1, 
+//│ jump j$0(x$4) -- #10
+//│ )
+//│ Def(3, j$2, [x$7,x$1,x$2],
+//│ 1, 
+//│ let* (x$8) = foo(x$1) in -- #40
+//│ let x$9 = Cons(x$2,x$8) in -- #39
+//│ let x$10 = Cons(x$7,x$9) in -- #38
+//│ jump j$1(x$10) -- #37
+//│ )
+//│ },
+//│ let x$12 = Nil() in -- #103
+//│ let x$13 = Cons(9,x$12) in -- #102
+//│ let x$14 = Cons(3,x$13) in -- #101
+//│ let x$15 = Cons(2,x$14) in -- #100
+//│ let x$16 = Cons(4,x$15) in -- #99
+//│ let x$17 = Cons(7,x$16) in -- #98
+//│ let x$18 = Cons(6,x$17) in -- #97
+//│ let x$19 = Cons(1,x$18) in -- #96
+//│ let* (x$20) = foo(x$19) in -- #95
+//│ x$20 -- #94)
+//│ 
+//│ Interpreted:
+//│ Cons(-1,Cons(1,Cons(100,Cons(4,Cons(-1,Cons(2,Cons(100,Cons(3,Nil()))))))))
+
+:interpIR
+class True
+class False
+class Cons(h, t)
+class Nil
+fun foo(xs) =
+  if xs is 
+    Cons(h, t) then
+      if h > 5 then foo(t)
+      else 
+        val item = if h < 3 then -1 else 100 
+        Cons(item, Cons(h, foo(t)))
+    Nil then 
+      Nil
+foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil))))))))
+//│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#fun| |foo|(|xs|)| |#=|→|#if| |xs| |is| |→|Cons|(|h|,| |t|)| |#then|→|#if| |h| |>| |5| |#then| |foo|(|t|)|↵|#else| |→|#val| |item| |#=| |#if| |h| |<| |3| |#then| |-|1| |#else| |100| |↵|Cons|(|item|,| |Cons|(|h|,| |foo|(|t|)|)|)|←|←|↵|Nil| |#then| |→|Nil|←|←|←|↵|foo|(|Cons|(|1|,| |Cons|(|6|,| |Cons|(|7|,| |Cons|(|4|,| |Cons|(|2|,| |Cons|(|3|,| |Cons|(|9|,| |Nil|)|)|)|)|)|)|)|)|
+//│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; fun foo = (xs,) => {if xs is ‹(Cons(h, t,)) then {if (>(h,)(5,)) then foo(t,) else {let item = if (<(h,)(3,)) then -1 else 100; Cons(item, Cons(h, foo(t,),),)}}; (Nil) then {Nil}›}; foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil,),),),),),),),)}
+//│ 
+//│ 
+//│ IR:
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, [])}, {
+//│ Def(0, foo, [xs$0],
+//│ 1, 
+//│ case xs$0 of -- #54
+//│   Cons =>
+//│     let x$1 = xs$0.t in -- #50
+//│     let x$2 = xs$0.h in -- #49
+//│     let x$3 = >(x$2,5) in -- #48
+//│     if x$3 -- #47
+//│       true =>
+//│         let* (x$5) = foo(x$1) in -- #17
+//│         jump j$1(x$5) -- #16
+//│       false =>
+//│         let x$6 = <(x$2,3) in -- #46
+//│         if x$6 -- #45
+//│           true =>
+//│             jump j$2(-1,x$1,x$2) -- #42
+//│           false =>
+//│             jump j$2(100,x$1,x$2) -- #44
+//│   Nil =>
+//│     let x$11 = Nil() in -- #53
+//│     jump j$0(x$11) -- #52
+//│ )
+//│ Def(1, j$0, [x$0],
+//│ 1, 
+//│ x$0 -- #1
+//│ )
+//│ Def(2, j$1, [x$4],
+//│ 1, 
+//│ jump j$0(x$4) -- #10
+//│ )
+//│ Def(3, j$2, [x$7,x$1,x$2],
+//│ 1, 
+//│ let* (x$8) = foo(x$1) in -- #40
+//│ let x$9 = Cons(x$2,x$8) in -- #39
+//│ let x$10 = Cons(x$7,x$9) in -- #38
+//│ jump j$1(x$10) -- #37
+//│ )
+//│ },
+//│ let x$12 = Nil() in -- #103
+//│ let x$13 = Cons(9,x$12) in -- #102
+//│ let x$14 = Cons(3,x$13) in -- #101
+//│ let x$15 = Cons(2,x$14) in -- #100
+//│ let x$16 = Cons(4,x$15) in -- #99
+//│ let x$17 = Cons(7,x$16) in -- #98
+//│ let x$18 = Cons(6,x$17) in -- #97
+//│ let x$19 = Cons(1,x$18) in -- #96
+//│ let* (x$20) = foo(x$19) in -- #95
+//│ x$20 -- #94)
 //│ 
 //│ Strongly Connected Tail Calls:
-//│ List(Set(j$1), Set(j$0), Set(foo))
+//│ List(Set(j$2), Set(j$1), Set(j$0), Set(foo))
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, _IdContext, []),ClassInfo(5, _Context, [acc,ptr,field])}, {
 //│ Def(0, foo, [xs$0],
 //│ 1, 
-//│ let idCtx = _IdContext() in -- #125
-//│ let* (res) = foo_modcons(idCtx,xs$0) in -- #124
-//│ res -- #123
+//│ let idCtx = _IdContext() in -- #137
+//│ let* (res) = foo_modcons(idCtx,xs$0) in -- #136
+//│ res -- #135
 //│ )
 //│ Def(1, j$0, [x$0],
 //│ 1, 
@@ -1985,72 +2170,93 @@ foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil))))))))
 //│ 1, 
 //│ jump j$0(x$4) -- #10
 //│ )
-//│ Def(3, _foo_ctx_app, [ctx,x],
+//│ Def(3, j$2, [x$7,x$1,x$2],
 //│ 1, 
-//│ case ctx of -- #100
+//│ let* (x$8) = foo(x$1) in -- #40
+//│ let x$9 = Cons(x$2,x$8) in -- #39
+//│ let x$10 = Cons(x$7,x$9) in -- #38
+//│ jump j$1(x$10) -- #37
+//│ )
+//│ Def(4, _foo_ctx_app, [ctx,x],
+//│ 1, 
+//│ case ctx of -- #110
 //│   _IdContext =>
-//│     x -- #99
+//│     x -- #109
 //│   _Context =>
-//│     let field = ctx.field in -- #98
-//│     let ptr = ctx.ptr in -- #97
-//│     assign ptr.t := x in -- #96
-//│     let acc = ctx.acc in -- #95
-//│     acc -- #94
+//│     let field = ctx.field in -- #108
+//│     let ptr = ctx.ptr in -- #107
+//│     assign ptr.t := x in -- #106
+//│     let acc = ctx.acc in -- #105
+//│     acc -- #104
 //│ )
-//│ Def(4, _foo_ctx_comp, [ctx1,ctx2],
+//│ Def(5, _foo_ctx_comp, [ctx1,ctx2],
 //│ 1, 
-//│ let ctx2acc = ctx2.acc in -- #106
-//│ let ctx2ptr = ctx2.ptr in -- #105
-//│ let ctx2field = ctx2.field in -- #104
-//│ let* (newAcc) = _foo_ctx_app(ctx1,ctx2acc) in -- #103
-//│ let ret = _Context(newAcc,ctx2ptr,ctx2field) in -- #102
-//│ ret -- #101
-//│ )
-//│ Def(6, foo_modcons_jp, [ctx,xs$0],
-//│ 1, 
-//│ case xs$0 of -- #139
-//│   Cons =>
-//│     let x$1 = xs$0.t in -- #135
-//│     let x$2 = xs$0.h in -- #134
-//│     let x$3 = >(x$2,5) in -- #133
-//│     if x$3 -- #132
-//│       true =>
-//│         jump foo_modcons_jp(ctx,x$1) -- #126
-//│       false =>
-//│         let x$7 = Cons(x$2,0) in -- #131
-//│         let x$8 = Cons(0,x$7) in -- #130
-//│         let ctx2 = _Context(x$8,x$7,0) in -- #129
-//│         let* (composed) = _foo_ctx_comp(ctx,ctx2) in -- #128
-//│         jump foo_modcons_jp(composed,x$1) -- #127
-//│   Nil =>
-//│     let x$9 = Nil() in -- #138
-//│     let* (res) = _foo_ctx_app(ctx,x$9) in -- #137
-//│     res -- #136
+//│ let ctx2acc = ctx2.acc in -- #116
+//│ let ctx2ptr = ctx2.ptr in -- #115
+//│ let ctx2field = ctx2.field in -- #114
+//│ let* (newAcc) = _foo_ctx_app(ctx1,ctx2acc) in -- #113
+//│ let ret = _Context(newAcc,ctx2ptr,ctx2field) in -- #112
+//│ ret -- #111
 //│ )
 //│ Def(7, foo_modcons, [ctx,xs$0],
 //│ 1, 
-//│ let* (r0) = foo_modcons_jp(ctx,xs$0) in -- #141
-//│ r0 -- #140
+//│ let* (r0) = _foo_modcons_j$2_modcons_opt(7,ctx,xs$0,0,0,0,0) in -- #173
+//│ r0 -- #172
+//│ )
+//│ Def(8, _foo_modcons_j$2_modcons_opt_jp, [tailrecBranch$,foo_modcons_ctx,foo_modcons_xs$0,j$2_modcons_ctx,j$2_modcons_x$7,j$2_modcons_x$1,j$2_modcons_x$2],
+//│ 1, 
+//│ let scrut = ==(6,tailrecBranch$) in -- #170
+//│ if scrut -- #169
+//│   true =>
+//│     let x$9 = Cons(j$2_modcons_x$2,0) in -- #168
+//│     let x$10 = Cons(j$2_modcons_x$7,x$9) in -- #167
+//│     let ctx2 = _Context(x$10,x$9,0) in -- #166
+//│     let* (composed) = _foo_ctx_comp(j$2_modcons_ctx,ctx2) in -- #165
+//│     jump _foo_modcons_j$2_modcons_opt_jp(7,composed,j$2_modcons_x$1,j$2_modcons_ctx,j$2_modcons_x$7,j$2_modcons_x$1,j$2_modcons_x$2) -- #164
+//│   false =>
+//│     case foo_modcons_xs$0 of -- #163
+//│       Cons =>
+//│         let x$1 = foo_modcons_xs$0.t in -- #159
+//│         let x$2 = foo_modcons_xs$0.h in -- #158
+//│         let x$3 = >(x$2,5) in -- #157
+//│         if x$3 -- #156
+//│           true =>
+//│             jump _foo_modcons_j$2_modcons_opt_jp(7,foo_modcons_ctx,x$1,j$2_modcons_ctx,j$2_modcons_x$7,j$2_modcons_x$1,j$2_modcons_x$2) -- #151
+//│           false =>
+//│             let x$6 = <(x$2,3) in -- #155
+//│             if x$6 -- #154
+//│               true =>
+//│                 jump _foo_modcons_j$2_modcons_opt_jp(6,foo_modcons_ctx,foo_modcons_xs$0,foo_modcons_ctx,-1,x$1,x$2) -- #152
+//│               false =>
+//│                 jump _foo_modcons_j$2_modcons_opt_jp(6,foo_modcons_ctx,foo_modcons_xs$0,foo_modcons_ctx,100,x$1,x$2) -- #153
+//│       Nil =>
+//│         let x$11 = Nil() in -- #162
+//│         let* (res) = _foo_ctx_app(foo_modcons_ctx,x$11) in -- #161
+//│         res -- #160
+//│ )
+//│ Def(9, _foo_modcons_j$2_modcons_opt, [tailrecBranch$,foo_modcons_ctx,foo_modcons_xs$0,j$2_modcons_ctx,j$2_modcons_x$7,j$2_modcons_x$1,j$2_modcons_x$2],
+//│ 1, 
+//│ jump _foo_modcons_j$2_modcons_opt_jp(tailrecBranch$,foo_modcons_ctx,foo_modcons_xs$0,j$2_modcons_ctx,j$2_modcons_x$7,j$2_modcons_x$1,j$2_modcons_x$2) -- #171
 //│ )
 //│ },
-//│ let x$10 = Nil() in -- #93
-//│ let x$11 = Cons(9,x$10) in -- #92
-//│ let x$12 = Cons(3,x$11) in -- #91
-//│ let x$13 = Cons(2,x$12) in -- #90
-//│ let x$14 = Cons(4,x$13) in -- #89
-//│ let x$15 = Cons(7,x$14) in -- #88
-//│ let x$16 = Cons(6,x$15) in -- #87
-//│ let x$17 = Cons(1,x$16) in -- #86
-//│ let* (x$18) = foo(x$17) in -- #85
-//│ x$18 -- #84)
+//│ let x$12 = Nil() in -- #103
+//│ let x$13 = Cons(9,x$12) in -- #102
+//│ let x$14 = Cons(3,x$13) in -- #101
+//│ let x$15 = Cons(2,x$14) in -- #100
+//│ let x$16 = Cons(4,x$15) in -- #99
+//│ let x$17 = Cons(7,x$16) in -- #98
+//│ let x$18 = Cons(6,x$17) in -- #97
+//│ let x$19 = Cons(1,x$18) in -- #96
+//│ let* (x$20) = foo(x$19) in -- #95
+//│ x$20 -- #94)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, _IdContext, []),ClassInfo(5, _Context, [acc,ptr,field])}, {
 //│ Def(0, foo, [xs$0],
 //│ 1, 
-//│ let idCtx = _IdContext() in -- #125
-//│ let* (res) = foo_modcons(idCtx,xs$0) in -- #124
-//│ res -- #123
+//│ let idCtx = _IdContext() in -- #137
+//│ let* (res) = foo_modcons(idCtx,xs$0) in -- #136
+//│ res -- #135
 //│ )
 //│ Def(1, j$0, [x$0],
 //│ 1, 
@@ -2060,64 +2266,85 @@ foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil))))))))
 //│ 1, 
 //│ jump j$0(x$4) -- #10
 //│ )
-//│ Def(3, _foo_ctx_app, [ctx,x],
+//│ Def(3, j$2, [x$7,x$1,x$2],
 //│ 1, 
-//│ case ctx of -- #100
+//│ let* (x$8) = foo(x$1) in -- #40
+//│ let x$9 = Cons(x$2,x$8) in -- #39
+//│ let x$10 = Cons(x$7,x$9) in -- #38
+//│ jump j$1(x$10) -- #37
+//│ )
+//│ Def(4, _foo_ctx_app, [ctx,x],
+//│ 1, 
+//│ case ctx of -- #110
 //│   _IdContext =>
-//│     x -- #99
+//│     x -- #109
 //│   _Context =>
-//│     let field = ctx.field in -- #98
-//│     let ptr = ctx.ptr in -- #97
-//│     assign ptr.t := x in -- #96
-//│     let acc = ctx.acc in -- #95
-//│     acc -- #94
+//│     let field = ctx.field in -- #108
+//│     let ptr = ctx.ptr in -- #107
+//│     assign ptr.t := x in -- #106
+//│     let acc = ctx.acc in -- #105
+//│     acc -- #104
 //│ )
-//│ Def(4, _foo_ctx_comp, [ctx1,ctx2],
+//│ Def(5, _foo_ctx_comp, [ctx1,ctx2],
 //│ 1, 
-//│ let ctx2acc = ctx2.acc in -- #106
-//│ let ctx2ptr = ctx2.ptr in -- #105
-//│ let ctx2field = ctx2.field in -- #104
-//│ let* (newAcc) = _foo_ctx_app(ctx1,ctx2acc) in -- #103
-//│ let ret = _Context(newAcc,ctx2ptr,ctx2field) in -- #102
-//│ ret -- #101
-//│ )
-//│ Def(6, foo_modcons_jp, [ctx,xs$0],
-//│ 1, 
-//│ case xs$0 of -- #139
-//│   Cons =>
-//│     let x$1 = xs$0.t in -- #135
-//│     let x$2 = xs$0.h in -- #134
-//│     let x$3 = >(x$2,5) in -- #133
-//│     if x$3 -- #132
-//│       true =>
-//│         jump foo_modcons_jp(ctx,x$1) -- #126
-//│       false =>
-//│         let x$7 = Cons(x$2,0) in -- #131
-//│         let x$8 = Cons(0,x$7) in -- #130
-//│         let ctx2 = _Context(x$8,x$7,0) in -- #129
-//│         let* (composed) = _foo_ctx_comp(ctx,ctx2) in -- #128
-//│         jump foo_modcons_jp(composed,x$1) -- #127
-//│   Nil =>
-//│     let x$9 = Nil() in -- #138
-//│     let* (res) = _foo_ctx_app(ctx,x$9) in -- #137
-//│     res -- #136
+//│ let ctx2acc = ctx2.acc in -- #116
+//│ let ctx2ptr = ctx2.ptr in -- #115
+//│ let ctx2field = ctx2.field in -- #114
+//│ let* (newAcc) = _foo_ctx_app(ctx1,ctx2acc) in -- #113
+//│ let ret = _Context(newAcc,ctx2ptr,ctx2field) in -- #112
+//│ ret -- #111
 //│ )
 //│ Def(7, foo_modcons, [ctx,xs$0],
 //│ 1, 
-//│ let* (r0) = foo_modcons_jp(ctx,xs$0) in -- #141
-//│ r0 -- #140
+//│ let* (r0) = _foo_modcons_j$2_modcons_opt(7,ctx,xs$0,0,0,0,0) in -- #173
+//│ r0 -- #172
+//│ )
+//│ Def(8, _foo_modcons_j$2_modcons_opt_jp, [tailrecBranch$,foo_modcons_ctx,foo_modcons_xs$0,j$2_modcons_ctx,j$2_modcons_x$7,j$2_modcons_x$1,j$2_modcons_x$2],
+//│ 1, 
+//│ let scrut = ==(6,tailrecBranch$) in -- #170
+//│ if scrut -- #169
+//│   true =>
+//│     let x$9 = Cons(j$2_modcons_x$2,0) in -- #168
+//│     let x$10 = Cons(j$2_modcons_x$7,x$9) in -- #167
+//│     let ctx2 = _Context(x$10,x$9,0) in -- #166
+//│     let* (composed) = _foo_ctx_comp(j$2_modcons_ctx,ctx2) in -- #165
+//│     jump _foo_modcons_j$2_modcons_opt_jp(7,composed,j$2_modcons_x$1,j$2_modcons_ctx,j$2_modcons_x$7,j$2_modcons_x$1,j$2_modcons_x$2) -- #164
+//│   false =>
+//│     case foo_modcons_xs$0 of -- #163
+//│       Cons =>
+//│         let x$1 = foo_modcons_xs$0.t in -- #159
+//│         let x$2 = foo_modcons_xs$0.h in -- #158
+//│         let x$3 = >(x$2,5) in -- #157
+//│         if x$3 -- #156
+//│           true =>
+//│             jump _foo_modcons_j$2_modcons_opt_jp(7,foo_modcons_ctx,x$1,j$2_modcons_ctx,j$2_modcons_x$7,j$2_modcons_x$1,j$2_modcons_x$2) -- #151
+//│           false =>
+//│             let x$6 = <(x$2,3) in -- #155
+//│             if x$6 -- #154
+//│               true =>
+//│                 jump _foo_modcons_j$2_modcons_opt_jp(6,foo_modcons_ctx,foo_modcons_xs$0,foo_modcons_ctx,-1,x$1,x$2) -- #152
+//│               false =>
+//│                 jump _foo_modcons_j$2_modcons_opt_jp(6,foo_modcons_ctx,foo_modcons_xs$0,foo_modcons_ctx,100,x$1,x$2) -- #153
+//│       Nil =>
+//│         let x$11 = Nil() in -- #162
+//│         let* (res) = _foo_ctx_app(foo_modcons_ctx,x$11) in -- #161
+//│         res -- #160
+//│ )
+//│ Def(9, _foo_modcons_j$2_modcons_opt, [tailrecBranch$,foo_modcons_ctx,foo_modcons_xs$0,j$2_modcons_ctx,j$2_modcons_x$7,j$2_modcons_x$1,j$2_modcons_x$2],
+//│ 1, 
+//│ jump _foo_modcons_j$2_modcons_opt_jp(tailrecBranch$,foo_modcons_ctx,foo_modcons_xs$0,j$2_modcons_ctx,j$2_modcons_x$7,j$2_modcons_x$1,j$2_modcons_x$2) -- #171
 //│ )
 //│ },
-//│ let x$10 = Nil() in -- #93
-//│ let x$11 = Cons(9,x$10) in -- #92
-//│ let x$12 = Cons(3,x$11) in -- #91
-//│ let x$13 = Cons(2,x$12) in -- #90
-//│ let x$14 = Cons(4,x$13) in -- #89
-//│ let x$15 = Cons(7,x$14) in -- #88
-//│ let x$16 = Cons(6,x$15) in -- #87
-//│ let x$17 = Cons(1,x$16) in -- #86
-//│ let* (x$18) = foo(x$17) in -- #85
-//│ x$18 -- #84)
+//│ let x$12 = Nil() in -- #103
+//│ let x$13 = Cons(9,x$12) in -- #102
+//│ let x$14 = Cons(3,x$13) in -- #101
+//│ let x$15 = Cons(2,x$14) in -- #100
+//│ let x$16 = Cons(4,x$15) in -- #99
+//│ let x$17 = Cons(7,x$16) in -- #98
+//│ let x$18 = Cons(6,x$17) in -- #97
+//│ let x$19 = Cons(1,x$18) in -- #96
+//│ let* (x$20) = foo(x$19) in -- #95
+//│ x$20 -- #94)
 //│ 
 //│ Interpreted:
-//│ Cons(0,Cons(1,Cons(0,Cons(4,Cons(0,Cons(2,Cons(0,Cons(3,Nil()))))))))
+//│ Cons(-1,Cons(1,Cons(100,Cons(4,Cons(-1,Cons(2,Cons(100,Cons(3,Nil()))))))))
