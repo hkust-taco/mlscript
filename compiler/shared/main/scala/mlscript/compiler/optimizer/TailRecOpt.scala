@@ -338,7 +338,6 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
     val defns = nodeMap.values.toSet
     val inital = Map[Int, Set[CallInfo]]()
     val edges = defns.foldLeft(inital)((acc, defn) => discoverCalls(defn.defn.body)(defn.defn, acc)).withDefaultValue(Set())
-    print(edges)
 
     var ctr = 0
     // nodes, edges
@@ -393,7 +392,6 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
         sccEdges = sccEdges.filter { c => sccIds.contains(c.getDefn.id)}
 
         val joinPoints = scc.foldLeft(Set[Defn]())((jps, defn) => discoverJoinPoints(defn.defn.body, jps))
-        println(joinPoints.map(_.name))
         sccs = DefnGraph(scc, sccEdges, joinPoints) :: sccs
       
     for v <- defns do
@@ -446,6 +444,8 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
   // ptr:       Represents the object containing the "hole" to be written to.
   // field:     Integer representing which class and field the "hole" belongs to. Which class and field this
   //            represents is different for each strongly connected component.
+  //
+  // The idea to use `ptr` and `field` to represent a pointer is by @LPTK.
   final val ID_CTX_CLASS = ClassInfo(classUid.make, ID_CONTEXT_NAME, Nil)
   final val CTX_CLASS = ClassInfo(classUid.make, CONTEXT_NAME, List("acc", "ptr", "field"))
   
@@ -700,8 +700,6 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
         val newDefn = Defn(d.id, d.name, d.params, d.resultNum, modConsCall)
         (newDefn, modConsDefn)
 
-        //newDefns + Defn(fnUid.make, d.name + "_modcons", Name("ctx") :: d.params, d.resultNum, transformed)
-
       val jpsTransformed = component.joinPoints.map(d => d.id -> rewriteDefn(d)).toMap
       val defnsTransformed = component.nodes.map(d => d.id -> replaceDefn(d)).toMap
 
@@ -876,9 +874,6 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
       val jmp = Jump(jpDefnRef, stackFrame.map(Expr.Ref(_))).attachTag(tag)
       val newDefn = Defn(fnUid.make, newName, stackFrame, resultNum, jmp)
 
-      // This is the definition that will be called
-      // val createIntermidDefn =
-
       jpDefnRef.defn = Left(jpDefn)
       newDefnRef.defn = Left(newDefn)
 
@@ -890,14 +885,12 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
 
   private def optimizeParition(component: ScComponent, classes: Set[ClassInfo]): Set[Defn] =
     val (modConsComp, other) = optimizeModCons(component, classes)
-    // val trOpt = optimizeTailRec(modConsComp, classes)
-    // other ++ trOpt
-    modConsComp.nodes ++ modConsComp.joinPoints ++ other
+    val trOpt = optimizeTailRec(modConsComp, classes)
+    other ++ trOpt
 
   def apply(p: Program) = run(p)
 
   def run_debug(p: Program): (Program, List[Set[String]]) = 
-    // val rewritten = p.defs.map(d => Defn(d.id, d.name, d.params, d.resultNum, rewriteTailCalls(d.body)))
     val partitions = partition(p.defs)
 
     val newDefs: Set[Defn] = partitions.flatMap { optimizeParition(_, p.classes) }.toSet
