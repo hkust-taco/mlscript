@@ -1,0 +1,209 @@
+:NewParser
+:ParseOnly
+:UseIR
+
+:interpIR
+:genCpp
+module C
+fun testMatch(x) =
+  if x is
+    0 then 1
+    1 then 2
+    C then 3
+testMatch(0)
+//│ |#module| |C|↵|#fun| |testMatch|(|x|)| |#=|→|#if| |x| |is|→|0| |#then| |1|↵|1| |#then| |2|↵|C| |#then| |3|←|←|↵|testMatch|(|0|)|
+//│ Parsed: {module C {}; fun testMatch = (x,) => {if x is ‹(0) then 1; (1) then 2; (C) then 3›}; testMatch(0,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program({ClassInfo(0, C, [])}, {
+//│ Def(0, testMatch, [x$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ case x$0 of -- #8
+//│   IntLit(0) =>
+//│     jump j$0(1) -- #3
+//│   IntLit(1) =>
+//│     jump j$0(2) -- #5
+//│   C =>
+//│     jump j$0(3) -- #7
+//│ )
+//│ Def(1, j$0, [x$1], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ x$1 -- #1
+//│ )
+//│ },
+//│ let* (x$2) = testMatch(0) in -- #14
+//│ x$2 -- #13)
+//│ 
+//│ Promoted:
+//│ Program({ClassInfo(0, C, [])}, {
+//│ Def(0, testMatch, [x$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ case x$0 of -- #8
+//│   IntLit(0) =>
+//│     jump j$0(1) -- #3
+//│   IntLit(1) =>
+//│     jump j$0(2) -- #5
+//│   C =>
+//│     jump j$0(3) -- #7
+//│ )
+//│ Def(1, j$0, [x$1], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ x$1 -- #1
+//│ )
+//│ },
+//│ let* (x$2) = testMatch(0) in -- #14
+//│ x$2 -- #13)
+//│ 
+//│ Interpreted:
+//│ 1
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_C;
+//│ _mlsValue _mls_testMatch(_mlsValue);
+//│ _mlsValue _mls_j_0(_mlsValue);
+//│ _mlsValue _mlsMain();
+//│ struct _mls_C: public _mlsObject {
+//│ 
+//│   constexpr static inline const char *typeName = "C";
+//│   constexpr static inline uint32_t typeTag = 0;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_C; _mlsVal->refCount = 1; _mlsVal->tag = 0;  return _mlsValue(_mlsVal); }
+//│ };
+//│ _mlsValue _mls_testMatch(_mlsValue _mls_x_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isIntLit(_mls_x_0, 0)){
+//│     _mls_retval = _mls_j_0(_mlsValue::fromIntLit(1));
+//│   } else if (_mlsValue::isIntLit(_mls_x_0, 1)){
+//│     _mls_retval = _mls_j_0(_mlsValue::fromIntLit(2));
+//│   } else if (_mlsValue::isValueOf<_mls_C>(_mls_x_0)){
+//│     _mls_retval = _mls_j_0(_mlsValue::fromIntLit(3));
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_2 = _mls_testMatch(_mlsValue::fromIntLit(0));
+//│   _mls_retval = _mls_x_2;
+//│   return _mls_retval;
+//│ }
+//│ int main() { auto res = _mlsMain(); res.print(); }
+
+:interpIR
+:genCpp
+class Box(inner) 
+fun unbox(x) = Box.inner(x)
+fun f() =
+  let a = Box(1)
+  let b = unbox(a) + 1
+  b
+f()
+//│ |#class| |Box|(|inner|)| |↵|#fun| |unbox|(|x|)| |#=| |Box|.inner|(|x|)|↵|#fun| |f|(||)| |#=|→|#let| |a| |#=| |Box|(|1|)|↵|#let| |b| |#=| |unbox|(|a|)| |+| |1|↵|b|←|↵|f|(||)|
+//│ Parsed: {class Box(inner,) {}; fun unbox = (x,) => (Box).inner(x,); fun f = () => {let a = Box(1,); let b = +(unbox(a,),)(1,); b}; f()}
+//│ 
+//│ 
+//│ IR:
+//│ Program({ClassInfo(0, Box, [inner])}, {
+//│ Def(0, unbox, [x$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$1 = Box.inner(x$0) in -- #4
+//│ x$1 -- #3
+//│ )
+//│ Def(1, f, [], [],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$2 = Box(1) in -- #19
+//│ let* (x$3) = unbox(x$2) in -- #18
+//│ let x$4 = +(x$3,1) in -- #17
+//│ x$4 -- #16
+//│ )
+//│ },
+//│ let* (x$5) = f() in -- #23
+//│ x$5 -- #22)
+//│ 
+//│ Promoted:
+//│ Program({ClassInfo(0, Box, [inner])}, {
+//│ Def(0, unbox, [x$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$1 = Box.inner(x$0) in -- #4
+//│ x$1 -- #3
+//│ )
+//│ Def(1, f, [], [],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$2 = Box(1) in -- #19
+//│ let* (x$3) = unbox(x$2) in -- #18
+//│ let x$4 = +(x$3,1) in -- #17
+//│ x$4 -- #16
+//│ )
+//│ },
+//│ let* (x$5) = f() in -- #23
+//│ x$5 -- #22)
+//│ 
+//│ Interpreted:
+//│ 2
+//│ 
+//│ Cpp:
+//│ #include "mlsprelude.h"
+//│ struct _mls_Box;
+//│ _mlsValue _mls_unbox(_mlsValue);
+//│ _mlsValue _mls_f();
+//│ _mlsValue _mlsMain();
+//│ struct _mls_Box: public _mlsObject {
+//│   _mlsValue _mls_inner;
+//│   constexpr static inline const char *typeName = "Box";
+//│   constexpr static inline uint32_t typeTag = 0;
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_inner.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_inner);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_inner) { auto _mlsVal = new (std::align_val_t(align)) _mls_Box; _mlsVal->refCount = 1; _mlsVal->tag = 0; _mlsVal->_mls_inner = _mls_inner;  return _mlsValue(_mlsVal); }
+//│ };
+//│ _mlsValue _mls_unbox(_mlsValue _mls_x_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_1 = _mlsValue::as<_mls_Box>(_mls_x_0)->_mls_inner;
+//│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_f(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_2 = _mlsValue::create<_mls_Box>(_mlsValue::fromIntLit(1));
+//│   auto _mls_x_3 = _mls_unbox(_mls_x_2);
+//│   auto _mls_x_4 = (_mls_x_3+_mlsValue::fromIntLit(1));
+//│   _mls_retval = _mls_x_4;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_5 = _mls_f();
+//│   _mls_retval = _mls_x_5;
+//│   return _mls_retval;
+//│ }
+//│ int main() { auto res = _mlsMain(); res.print(); }
