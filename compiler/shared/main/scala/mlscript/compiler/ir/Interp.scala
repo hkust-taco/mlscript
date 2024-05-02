@@ -270,19 +270,30 @@ class Interpreter(verbose: Bool):
       val ctx1 = ctx ++ defn.params.map{_.str}.zip(xs)
       eval(using ctx1, clsctx)(defn.body)
     case Case(scrut, cases, default) =>
-      val CtorApp(cls, xs) = (Ref(scrut):Expr) |> evalMayNotProgress(using ctx, clsctx) match {
-        case x: CtorApp => x
+      val arm = (Ref(scrut):Expr) |> evalMayNotProgress(using ctx, clsctx) match {
+        case CtorApp(cls, xs) =>
+          cases.find{
+            case (Pat.Class(cls2), _) => cls == cls2
+            case _ => false
+          } match {
+            case Some((_, x)) => x
+            case _ =>
+              default match
+                case S(x) => x
+                case N =>throw IRInterpreterError(s"can not find the matched case, $cls expected")
+          }
+        case Literal(lit) =>
+          cases.find{
+            case (Pat.Lit(lit2), _) => lit == lit2
+            case _ => false
+          } match {
+            case Some((_, x)) => x
+            case _ => 
+              default match
+                case S(x) => x
+                case N =>throw IRInterpreterError(s"can not find the matched case, $lit expected")
+          }
         case x => throw IRInterpreterError(s"not a class $x")
-      }
-      val arm = cases.find{
-        case (Pat.Class(cls2), _) => cls == cls2
-        case _ => false
-      } match {
-        case Some((_, x)) => x
-        case _ => 
-          default match
-            case S(x) => x
-            case N =>throw IRInterpreterError(s"can not find the matched case, $cls expected")
       }
       eval(arm)
     case LetExpr(name, expr, body) =>

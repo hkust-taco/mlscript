@@ -142,6 +142,10 @@ public:
     return v.asObject()->tag == T::typeTag;
   }
 
+  static bool isIntLit(const _mlsValue &v, uint64_t n) {
+    return v.asInt63() == n;
+  }
+
   template <typename T> static T *as(const _mlsValue &v) {
     return dynamic_cast<T *>(v.asObject());
   }

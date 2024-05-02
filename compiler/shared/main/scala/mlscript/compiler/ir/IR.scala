@@ -183,7 +183,7 @@ enum Expr:
     case BasicOp(name, args) => LocMarker.MBasicOp(name, args.map(_.toExpr.locMarker))
 
 enum Pat:
-  case Lit(lit: Lit)
+  case Lit(lit: mlscript.Lit)
   case Class(cls: ClassInfo)
 
   def isTrue = this match

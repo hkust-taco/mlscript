@@ -186,11 +186,6 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
         }
         
       case If(IfOpApp(lhs, Var("is"), IfBlock(lines)), N)
-        if lines forall {
-          case L(IfThen(App(Var(ctor), Tup((N -> Fld(FldFlags.empty, _: Var)) :: _)), _)) => ctor.isCapitalized
-          case L(IfThen(Var(ctor), _)) => ctor.isCapitalized || ctor == "_"
-          case _ => false
-        }
         => buildResultFromTerm(lhs) {
           case Result(Ref(scrut) :: Nil) =>
             val jp = fresh make "j"
@@ -217,6 +212,11 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
                       case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
                       case node @ _ => node |> unexpectedNode
                     }
+                })
+              case L(IfThen(lit @ IntLit(_), rhs)) =>
+                S(Pat.Lit(lit) -> buildResultFromTerm(rhs) {
+                  case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
+                  case node @ _ => node |> unexpectedNode
                 })
               case L(IfThen(Var("_"), rhs)) =>
                 defaultCase = Some(buildResultFromTerm(rhs) {
