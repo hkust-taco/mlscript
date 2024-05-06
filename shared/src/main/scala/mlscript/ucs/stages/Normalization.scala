@@ -32,7 +32,7 @@ trait Normalization { self: Desugarer with Traceable =>
           these.copy(tail = fillImpl(tail, those)(scope, context, declaredVars + nme, false))
         }
       case _: Split.Else => these
-      case Split.Nil => those.withoutBindings(declaredVars)
+      case Split.Nil => those.withoutBindings(declaredVars).markAsFallback()
     })
 
   private implicit class SplitOps(these: Split) {
@@ -49,7 +49,7 @@ trait Normalization { self: Desugarer with Traceable =>
         scope: Scope,
         context: Context,
     ): Split =
-      trace(s"fill <== ${declaredVars.iterator.map(_.name).mkString("{", ", ", "}")}") {
+      trace(s"fill <== vars = ${declaredVars.iterator.map(_.name).mkString("{", ", ", "}")}") {
         println(s"LHS: ${showSplit(these)}")
         println(s"RHS: ${showSplit(those)}")
         fillImpl(these, those)(scope, context, declaredVars, shouldReportDiscarded)
@@ -121,7 +121,7 @@ trait Normalization { self: Desugarer with Traceable =>
   private def normalizeToTerm(split: Split, declaredVars: Set[Var])(implicit
       scope: Scope,
       context: Context,
-  ): Term = trace("normalizeToTerm <==") {
+  ): Term = trace(s"normalizeToTerm <== ${showSplit(split)}") {
     split match {
       case Split.Cons(Branch(scrutinee, Pattern.Name(nme), continuation), tail) =>
         println(s"ALIAS: ${scrutinee.name} is ${nme.name}")
@@ -138,15 +138,15 @@ trait Normalization { self: Desugarer with Traceable =>
         println(s"entire split: ${showSplit(split)}")
         val concatenatedTrueBranch = continuation.fill(tail, declaredVars, false)
         // println(s"true branch: ${showSplit(concatenatedTrueBranch)}")
-        val trueBranch = normalizeToTerm(specialize(concatenatedTrueBranch, true)(scrutineeVar, scrutinee, pattern, context), declaredVars)
+        val trueBranch = normalizeToTerm(specialize(concatenatedTrueBranch, true, scrutineeVar, scrutinee, pattern), declaredVars)
         // println(s"false branch: ${showSplit(tail)}")
-        val falseBranch = normalizeToCaseBranches(specialize(tail, false)(scrutineeVar, scrutinee, pattern, context), declaredVars)
+        val falseBranch = normalizeToCaseBranches(specialize(tail, false, scrutineeVar, scrutinee, pattern), declaredVars)
         CaseOf(scrutineeVar, Case(literal, trueBranch, falseBranch)(refined = false))
       case Split.Cons(Branch(Scrutinee.WithVar(scrutineeVar, scrutinee), pattern @ Pattern.Class(nme, _, rfd), continuation), tail) =>
         println(s"CLASS: ${scrutineeVar.name} is ${nme.name}")
         // println(s"match ${scrutineeVar.name} with $nme (has location: ${nme.toLoc.isDefined})")
-        val trueBranch = normalizeToTerm(specialize(continuation.fill(tail, declaredVars, false), true)(scrutineeVar, scrutinee, pattern, context), declaredVars)
-        val falseBranch = normalizeToCaseBranches(specialize(tail, false)(scrutineeVar, scrutinee, pattern, context), declaredVars)
+        val trueBranch = normalizeToTerm(specialize(continuation.fill(tail, declaredVars, false), true, scrutineeVar, scrutinee, pattern), declaredVars)
+        val falseBranch = normalizeToCaseBranches(specialize(tail, false, scrutineeVar, scrutinee, pattern), declaredVars)
         CaseOf(scrutineeVar, Case(nme, trueBranch, falseBranch)(refined = pattern.refined))
       case Split.Cons(Branch(scrutinee, pattern, continuation), tail) =>
         raiseDesugaringError(msg"unsupported pattern: ${pattern.toString}" -> pattern.toLoc)
@@ -164,7 +164,7 @@ trait Normalization { self: Desugarer with Traceable =>
         println(s"DFLT: ${default.showDbg}")
         default
       case Split.Nil =>
-        raiseDesugaringError(msg"unexpected empty split found" -> N)
+        // raiseDesugaringError(msg"unexpected empty split found" -> N)
         errorTerm
     }
   }(split => "normalizeToTerm ==> " + showNormalizedTerm(split))
@@ -197,57 +197,108 @@ trait Normalization { self: Desugarer with Traceable =>
     * `scrutinee` matches `pattern`. Otherwise, the function _removes_ branches
     * that agree on `scrutinee` matches `pattern`.
     */
-  private def specialize
-      (split: Split, matchOrNot: Bool)
-      (implicit scrutineeVar: Var, scrutinee: Scrutinee, pattern: Pattern, context: Context): Split =
-  trace[Split](s"S${if (matchOrNot) "+" else "-"} <== ${scrutineeVar.name} is ${pattern}") {
-    (matchOrNot, split) match {
-      // Name patterns are translated to let bindings.
-      case (m, Split.Cons(Branch(otherScrutineeVar, Pattern.Name(alias), continuation), tail)) =>
-        Split.Let(false, alias, otherScrutineeVar, specialize(continuation, m))
-      case (m, Split.Cons(head @ Branch(test, Pattern.Class(Var("true"), _, _), continuation), tail)) if context.isTestVar(test) =>
-        println(s"TEST: ${test.name} is true")
-        head.copy(continuation = specialize(continuation, m)) :: specialize(tail, m)
-      case (true, split @ Split.Cons(head @ Branch(Scrutinee.WithVar(otherScrutineeVar, otherScrutinee), otherPattern, continuation), tail)) =>
-        if (scrutinee === otherScrutinee) {
-          println(s"Case 1: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
-          if (otherPattern =:= pattern) {
-            println(s"Case 1.1: $pattern =:= $otherPattern")
-            otherPattern reportInconsistentRefinedWith pattern
-            specialize(continuation, true) :++ specialize(tail, true)
-          } else if (otherPattern <:< pattern) {
-            println(s"Case 1.2: $pattern <:< $otherPattern")
-            pattern.markAsRefined; split
+  private def specialize(
+      split: Split,
+      matchOrNot: Bool,
+      scrutineeVar: Var,
+      scrutinee: Scrutinee,
+      pattern: Pattern
+  )(implicit context: Context): Split = 
+    trace(s"S${if (matchOrNot) "+" else "-"} <== ${scrutineeVar.name} is ${pattern} : ${showSplit(split, true)}"){
+      val specialized = specializeImpl(split)(matchOrNot, scrutineeVar, scrutinee, pattern, context)
+      // if (split =/= Split.Nil && specialized === Split.Nil && !split.isFallback) {
+      //   raiseDesugaringWarning(msg"the case is unreachable" -> split.toLoc)
+      // }
+      specialized
+    }(r => s"S${if (matchOrNot) "+" else "-"} ==> ${showSplit(r, true)}")
+
+  /** This function does not trace. Call it when handling `tail`s. */
+  private def specializeImpl(split: Split)(implicit
+      keepOrRemove: Bool,
+      scrutineeVar: Var,
+      scrutinee: Scrutinee,
+      pattern: Pattern,
+      context: Context): Split =split match {
+    case split @ Split.Cons(head, tail) =>
+      println(s"CASE Cons ${head.showDbg}")
+      lazy val continuation = specialize(head.continuation, keepOrRemove, scrutineeVar, scrutinee, pattern)
+      head match {
+        case Branch(otherScrutineeVar, Pattern.Name(alias), _) =>
+          Split.Let(false, alias, otherScrutineeVar, continuation)
+        case Branch(test, Pattern.Class(Var("true"), _, _), _) if context.isTestVar(test) =>
+          head.copy(continuation = continuation) :: specializeImpl(tail)
+        case Branch(Scrutinee.WithVar(otherScrutineeVar, otherScrutinee), otherPattern, _) =>
+          if (scrutinee === otherScrutinee) {
+            if (keepOrRemove) {
+              println(s"Case 1.1: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
+              if (otherPattern =:= pattern) {
+                println(s"Case 1.1.1: $pattern =:= $otherPattern")
+                otherPattern reportInconsistentRefinedWith pattern
+                continuation :++ specializeImpl(tail)
+              } else if (otherPattern <:< pattern) {
+                println(s"Case 1.1.2: $pattern <:< $otherPattern")
+                pattern.markAsRefined; split
+              } else {
+                println(s"Case 1.1.3: $pattern is unrelated with $otherPattern")
+                // The `continuation` is discarded because `otherPattern` is unrelated
+                // to the specialization topic.
+                if (!split.isFallback) {
+                  println(s"report warning")
+                  if (pattern <:< otherPattern) {
+                    raiseDesugaringWarning(
+                      msg"the pattern always matches" -> otherPattern.toLoc,
+                      msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
+                      msg"which is a subtype of ${otherPattern.toString}" -> (pattern match {
+                        case Pattern.Class(_, symbol, _) => symbol.defn.toLoc
+                        case _ => otherPattern.getLoc
+                      }))
+                    continuation :++ specializeImpl(tail)
+                  } else {
+                    raiseDesugaringWarning(
+                      msg"possibly conflicted patterns" -> otherPattern.toLoc,
+                      msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
+                      msg"which is unrelated with ${otherPattern.toString}" -> otherPattern.toLoc)
+                    specializeImpl(tail)
+                  }
+                } else {
+                  specializeImpl(tail)
+                }
+              }
+            } else {
+              println(s"Case 1.2: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
+              otherPattern reportInconsistentRefinedWith pattern
+              if (otherPattern =:= pattern || otherPattern <:< pattern) {
+                println(s"Case 1.2.1: $pattern =:= (or <:<) $otherPattern")
+                // The `continuation` is discarded because `otherPattern` is related
+                // to the specialization topic.
+                // println(s"is fallback = ${split.isFallback}")
+                // if (!split.isFallback) {
+                //   println(s"report warning")
+                //   raiseDesugaringWarning(
+                //     msg"possibly duplicated cases" -> otherPattern.toLoc,
+                //     msg"the case can be covered by ${pattern.toString}" -> pattern.toLoc,
+                //   )
+                // }
+                specializeImpl(tail)
+              } else {
+                println(s"Case 1.2.2: $pattern are unrelated with $otherPattern")
+                split.copy(tail = specializeImpl(tail))
+              }
+            }
           } else {
-            println(s"Case 1.3: $pattern are unrelated with $otherPattern")
-            specialize(tail, true)
+            println(s"Case 2: ${scrutineeVar.name} =/= ${otherScrutineeVar.name}")
+            head.copy(continuation = continuation) :: specializeImpl(tail)
           }
-        } else {
-          println(s"Case 2: ${scrutineeVar.name} =/= ${otherScrutineeVar.name}")
-          head.copy(continuation = specialize(continuation, true)) :: specialize(tail, true)
-        }
-      case (false, split @ Split.Cons(head @ Branch(Scrutinee.WithVar(otherScrutineeVar, otherScrutinee), otherPattern, continuation), tail)) =>
-        if (scrutinee === otherScrutinee) {
-          println(s"Case 1: ${scrutineeVar.name} === ${otherScrutineeVar.name}")
-          otherPattern reportInconsistentRefinedWith pattern
-          if (otherPattern =:= pattern || otherPattern <:< pattern) {
-            println(s"Case 1.1: $pattern =:= (or <:<) $otherPattern")
-            specialize(tail, false)
-          } else {
-            println(s"Case 1.2: $pattern are unrelated with $otherPattern")
-            split.copy(tail = specialize(tail, false))
-          }
-        } else {
-          println(s"Case 2: ${scrutineeVar.name} =/= ${otherScrutineeVar.name}")
-          head.copy(continuation = specialize(continuation, false)) :: specialize(tail, false)
-        }
-      case (_, split @ Split.Cons(Branch(_, pattern, _), _)) =>
-        raiseDesugaringError(msg"unsupported pattern" -> pattern.toLoc)
-        split
-      case (m, let @ Split.Let(_, nme, _, tail)) => let.copy(tail = specialize(tail, m))
-      case (_, end @ (Split.Else(_) | Split.Nil)) => println("the end"); end
-    }
-  }()
+        case _ =>
+          raiseDesugaringError(msg"unsupported pattern" -> pattern.toLoc)
+          split
+      }
+    case split @ Split.Let(_, nme, _, tail) =>
+      println(s"CASE Let ${nme.name}")
+      split.copy(tail = specializeImpl(tail))
+    case Split.Else(_) => println("CASE Else"); split
+    case Split.Nil => println("CASE Nil"); split
+  }
 
   /**
     * If you want to prepend `tail` to another `Split` where the `nme` takes

@@ -1,0 +1,183 @@
+:NewDefs
+
+// This test file contains the cases containing cases with identical patterns.
+
+:w
+:ducs:normalize.result
+fun f(x) = if x is
+  "a" then 1
+  "b" then 2
+  "a" then 3
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   "a" -> 1
+//│   _ ->
+//│     case x*‡ of
+//│       "b" -> 2
+//│ fun f: ("a" | "b") -> (1 | 2)
+//│ TEST CASE FAILURE: There was an unexpected lack of warning
+
+class X
+class Y
+//│ class X {
+//│   constructor()
+//│ }
+//│ class Y {
+//│   constructor()
+//│ }
+
+:w
+:ducs:normalize.result
+fun f(x) = if x is
+  X then 1
+  X then 2
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   X*◊ -> 1
+//│ fun f: X -> 1
+//│ TEST CASE FAILURE: There was an unexpected lack of warning
+
+:w
+:ducs:normalize.result
+fun f(x) = if x is
+  X then 1
+  Y then 2
+  X then 3
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   X*◊ -> 1
+//│   _ ->
+//│     case x*‡ of
+//│       Y*◊ -> 2
+//│ fun f: (X | Y) -> (1 | 2)
+//│ TEST CASE FAILURE: There was an unexpected lack of warning
+
+class Box[T](value: T)
+//│ class Box[T](value: T)
+
+:ducs:normalize,normalize.result
+fun f(x) = if x is
+  Box(1) then true
+  Box then false
+//│ | | | | | STEP 2
+//│ | | | | | normalizeToTerm <== if
+//│ | | | | |   x*‡ is Box
+//│ | | | | |     let ucs$args_x$Box*† = (Box).unapply(x,)
+//│ | | | | |     let x$Box_0*‡ = (ucs$args_x$Box).0
+//│ | | | | |     x$Box_0*‡ is 1 then true
+//│ | | | | |   x*‡ is Box then false
+//│ | | | | | | CLASS: x is Box
+//│ | | | | | | fill <== vars = {}
+//│ | | | | | | | LHS: if
+//│ | | | | | | |   let ucs$args_x$Box*† = (Box).unapply(x,)
+//│ | | | | | | |   let x$Box_0*‡ = (ucs$args_x$Box).0
+//│ | | | | | | |   x$Box_0*‡ is 1 then true
+//│ | | | | | | | RHS: if x*‡ is Box then false
+//│ | | | | | | | fill let binding ucs$args_x$Box
+//│ | | | | | | | fill let binding x$Box_0
+//│ | | | | | | fill ==> if
+//│ | | | | | |   let ucs$args_x$Box*† = (Box).unapply(x,)
+//│ | | | | | |   let x$Box_0*‡ = (ucs$args_x$Box).0
+//│ | | | | | |   x$Box_0*‡ is 1 then true
+//│ | | | | | |   x*‡ is Box then false
+//│ | | | | | | S+ <== x is Box : if
+//│ | | | | | |   let ucs$args_x$Box*† = (Box).unapply(x,)
+//│ | | | | | |   let x$Box_0*‡ = (ucs$args_x$Box).0
+//│ | | | | | |   x$Box_0*‡ is 1 then ...
+//│ | | | | | |   x*‡ is Box then ...
+//│ | | | | | | | CASE Let ucs$args_x$Box
+//│ | | | | | | | CASE Let x$Box_0
+//│ | | | | | | | CASE Cons x$Box_0 is 1
+//│ | | | | | | | Case 2: x =/= x$Box_0
+//│ | | | | | | | S+ <== x is Box : if then true
+//│ | | | | | | | | CASE Else
+//│ | | | | | | | S+ ==> if then true
+//│ | | | | | | | CASE Cons x is Box
+//│ | | | | | | | Case 1.1: x === x
+//│ | | | | | | | Case 1.1.1: Box =:= Box
+//│ | | | | | | | S+ <== x is Box : if then false
+//│ | | | | | | | | CASE Else
+//│ | | | | | | | S+ ==> if then false
+//│ | | | | | | | tail is discarded
+//│ | | | | | | S+ ==> if
+//│ | | | | | |   let ucs$args_x$Box*† = (Box).unapply(x,)
+//│ | | | | | |   let x$Box_0*‡ = (ucs$args_x$Box).0
+//│ | | | | | |   x$Box_0*‡ is 1 then ...
+//│ | | | | | |   else false
+//│ | | | | | | normalizeToTerm <== if
+//│ | | | | | |   let ucs$args_x$Box*† = (Box).unapply(x,)
+//│ | | | | | |   let x$Box_0*‡ = (ucs$args_x$Box).0
+//│ | | | | | |   x$Box_0*‡ is 1 then true
+//│ | | | | | |   else false
+//│ | | | | | | | LET: generated ucs$args_x$Box
+//│ | | | | | | | normalizeToTerm <== if
+//│ | | | | | | |   let x$Box_0*‡ = (ucs$args_x$Box).0
+//│ | | | | | | |   x$Box_0*‡ is 1 then true
+//│ | | | | | | |   else false
+//│ | | | | | | | | LET: x$Box_0
+//│ | | | | | | | | normalizeToTerm <== if
+//│ | | | | | | | |   x$Box_0*‡ is 1 then true
+//│ | | | | | | | |   else false
+//│ | | | | | | | | | LITERAL: x$Box_0 is 1
+//│ | | | | | | | | | entire split: if
+//│ | | | | | | | | |   x$Box_0*‡ is 1 then true
+//│ | | | | | | | | |   else false
+//│ | | | | | | | | | fill <== vars = {ucs$args_x$Box}
+//│ | | | | | | | | | | LHS: if then true
+//│ | | | | | | | | | | RHS: if then false
+//│ | | | | | | | | | fill ==> if then true
+//│ | | | | | | | | | S+ <== x$Box_0 is 1 : if then true
+//│ | | | | | | | | | | CASE Else
+//│ | | | | | | | | | S+ ==> if then true
+//│ | | | | | | | | | normalizeToTerm <== if then true
+//│ | | | | | | | | | | DFLT: true
+//│ | | | | | | | | | normalizeToTerm ==> true
+//│ | | | | | | | | | S- <== x$Box_0 is 1 : if then false
+//│ | | | | | | | | | | CASE Else
+//│ | | | | | | | | | S- ==> if then false
+//│ | | | | | | | | | normalizeToCaseBranches <==
+//│ | | | | | | | | | normalizeToCaseBranches ==>
+//│ | | | | | | | | normalizeToTerm ==> case x$Box_0*‡ of
+//│ | | | | | | | |   1 -> true
+//│ | | | | | | | |   _ -> false
+//│ | | | | | | | normalizeToTerm ==> let x$Box_0*‡ = (ucs$args_x$Box).0
+//│ | | | | | | | case x$Box_0*‡ of
+//│ | | | | | | |   1 -> true
+//│ | | | | | | |   _ -> false
+//│ | | | | | | normalizeToTerm ==> let ucs$args_x$Box*† = (Box).unapply(x,)
+//│ | | | | | | let x$Box_0*‡ = (ucs$args_x$Box).0
+//│ | | | | | | case x$Box_0*‡ of
+//│ | | | | | |   1 -> true
+//│ | | | | | |   _ -> false
+//│ | | | | | | S- <== x is Box : if x*‡ is Box then ...
+//│ | | | | | | | CASE Cons x is Box
+//│ | | | | | | | Case 1.2: x === x
+//│ | | | | | | | Case 1.2.1: Box =:= (or <:<) Box
+//│ | | | | | | | CASE Nil
+//│ | | | | | | S- ==> if
+//│ | | | | | | normalizeToCaseBranches <==
+//│ | | | | | | normalizeToCaseBranches ==>
+//│ | | | | | normalizeToTerm ==> case x*‡ of
+//│ | | | | |   Box*◊ ->
+//│ | | | | |     let ucs$args_x$Box*† = (Box).unapply(x,)
+//│ | | | | |     let x$Box_0*‡ = (ucs$args_x$Box).0
+//│ | | | | |     case x$Box_0*‡ of
+//│ | | | | |       1 -> true
+//│ | | | | |       _ -> false
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   Box*◊ ->
+//│     let ucs$args_x$Box*† = (Box).unapply(x,)
+//│     let x$Box_0*‡ = (ucs$args_x$Box).0
+//│     case x$Box_0*‡ of
+//│       1 -> true
+//│       _ -> false
+//│ fun f: Box[Object] -> Bool
+
+f(Box(0))
+f(Box(1))
+//│ Bool
+//│ res
+//│     = false
+//│ res
+//│     = true

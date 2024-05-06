@@ -327,8 +327,6 @@ fun f(x) =
 //│ ╔══[ERROR] Syntactic split of patterns are not supported
 //│ ║  l.325: 	    0 ::
 //│ ╙──       	      ^^
-//│ ╔══[ERROR] unexpected empty split found
-//│ ╙──
 //│ fun f: anything -> nothing
 
 fun f(x) =
@@ -370,22 +368,22 @@ test(false)
 test(0)
 test(1)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.370: 	test(0)
+//│ ║  l.368: 	test(0)
 //│ ║         	^^^^^^^
 //│ ╟── integer literal of type `0` is not an instance of type `Bool`
-//│ ║  l.370: 	test(0)
+//│ ║  l.368: 	test(0)
 //│ ║         	     ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.358: 	fun test(x) = if x then 0 else "oops"
+//│ ║  l.356: 	fun test(x) = if x then 0 else "oops"
 //│ ╙──       	                 ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.371: 	test(1)
+//│ ║  l.369: 	test(1)
 //│ ║         	^^^^^^^
 //│ ╟── integer literal of type `1` is not an instance of type `Bool`
-//│ ║  l.371: 	test(1)
+//│ ║  l.369: 	test(1)
 //│ ║         	     ^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.358: 	fun test(x) = if x then 0 else "oops"
+//│ ║  l.356: 	fun test(x) = if x then 0 else "oops"
 //│ ╙──       	                 ^
 //│ "oops" | 0 | error
 //│ res

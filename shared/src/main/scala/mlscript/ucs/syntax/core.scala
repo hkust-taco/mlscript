@@ -43,6 +43,8 @@ package object core {
 
   final case class Branch(scrutinee: Var, pattern: Pattern, continuation: Split) extends Located {
     override def children: List[Located] = scrutinee :: pattern :: continuation :: Nil
+
+    def showDbg: String = s"${scrutinee.showDbg} is $pattern"
   }
 
   sealed abstract class Split extends Located {
@@ -83,6 +85,26 @@ package object core {
       case Split.Let(rec, name, term, tail) => name :: term :: tail :: Nil
       case Split.Else(default) => default :: Nil
       case Split.Nil => Nil
+    }
+
+    // TODO: Make the following flag temporary. It is only meaningful in a
+    // single run of specialization. The flag is useless outside specialization
+    // functions.
+
+    private var _fallback: Bool = false
+
+    def isFallback: Bool = _fallback
+
+    def markAsFallback(): this.type = {
+      _fallback = true;
+      this match {
+        case Split.Cons(head, tail) =>
+          head.continuation.markAsFallback()
+          tail.markAsFallback()
+        case Split.Let(_, _, _, tail) => tail.markAsFallback()
+        case _: Split.Else | Split.Nil => ()
+      }
+      this
     }
   }
 

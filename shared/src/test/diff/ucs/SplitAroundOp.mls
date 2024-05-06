@@ -61,8 +61,6 @@ if x is
 //│ ╔══[ERROR] identifier `x` not found
 //│ ║  l.38: 	if x is
 //│ ╙──      	   ^
-//│ ╔══[ERROR] unexpected empty split found
-//│ ╙──
 //│ ╔══[ERROR] identifier not found: x
 //│ ║  l.38: 	if x is
 //│ ╙──      	   ^

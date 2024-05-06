@@ -71,9 +71,10 @@ package object display {
     ("if" #: termSplit(split, true, true)).toIndentedString
   }
 
-  @inline def showSplit(s: c.Split)(implicit context: Context): Str = showSplit("if", s)
+  @inline def showSplit(s: c.Split, showFirstLevel: Bool = false)(implicit context: Context): Str =
+    showSplit("if", s, showFirstLevel)
 
-  def showSplit(prefix: Str, s: c.Split)(implicit context: Context): Str = {
+  def showSplit(prefix: Str, s: c.Split, showFirstLevel: Bool)(implicit context: Context): Str = {
     def split(s: c.Split, isFirst: Bool, isTopLevel: Bool): Lines = s match {
       case c.Split.Cons(head, tail) => (branch(head, isTopLevel) match {
         case (n, line) :: tail => (n, (if (isTopLevel) "" else "and ") + s"$line") :: tail
@@ -87,7 +88,15 @@ package object display {
     }
     def branch(b: c.Branch, isTopLevel: Bool): Lines = {
       val c.Branch(scrutinee, pattern, continuation) = b
-      s"${showVar(scrutinee)} is $pattern" #: split(continuation, true, isTopLevel)
+      if (showFirstLevel) {
+        val continuation = b.continuation match {
+          case c.Split.Nil => "empty"
+          case c.Split.Else(_) => "then ..."
+          case _ => "and ..."
+        }
+        (0, s"${showVar(scrutinee)} is $pattern " + continuation) :: Nil
+      }
+      else s"${showVar(scrutinee)} is $pattern" #: split(continuation, true, isTopLevel)
     }
     val lines = split(s, true, true)
     (if (prefix.isEmpty) lines else prefix #: lines).toIndentedString
