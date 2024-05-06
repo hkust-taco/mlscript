@@ -1,8 +1,7 @@
-package mlscript.ucs.syntax
+package mlscript
+package ucs.syntax
 
-import mlscript.{Diagnostic, Lit, Loc, Located, Message, Term, Var}
-import mlscript.utils._, shorthands._
-import mlscript.pretyper.symbol.TypeSymbol
+import utils._, shorthands._, pretyper.symbol.ClassLikeSymbol
 
 package object core {
   sealed abstract class Pattern extends Located {
@@ -28,7 +27,7 @@ package object core {
       * @param originallyRefined whether the class is marked as refined from
       *                          in source AST
       */
-    final case class Class(nme: Var, symbol: TypeSymbol, originallyRefined: Bool) extends Pattern {
+    final case class Class(nme: Var, symbol: ClassLikeSymbol, originallyRefined: Bool) extends Pattern {
       override def children: Ls[Located] = nme :: Nil
 
       /**
