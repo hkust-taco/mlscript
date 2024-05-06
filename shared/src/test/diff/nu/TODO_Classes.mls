@@ -15,7 +15,7 @@ class D(x: Int)
 
 :e
 fun foo(c) = new c
-//│ ╔══[ERROR] type identifier not found: c
+//│ ╔══[ERROR] Unexpected type `?a` after `new` keyword
 //│ ║  l.17: 	fun foo(c) = new c
 //│ ╙──      	                 ^
 //│ fun foo: anything -> error
@@ -39,7 +39,7 @@ foo(C)
 
 :e
 fun bar(c) = new c(123)
-//│ ╔══[ERROR] type identifier not found: c
+//│ ╔══[ERROR] Unexpected type `?a` after `new` keyword
 //│ ║  l.41: 	fun bar(c) = new c(123)
 //│ ╙──      	                 ^
 //│ fun bar: anything -> error
@@ -100,10 +100,13 @@ let c = new Cls
 
 // FIXME
 let y: c.A = c.x
-//│ ╔══[ERROR] type identifier not found: c
+//│ ╔══[ERROR] Type `Cls[?A]` does not contain member `A`
 //│ ║  l.102: 	let y: c.A = c.x
-//│ ╙──       	       ^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╙──       	        ^^
+//│ let y: error
+//│ y
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
 
 
 
@@ -123,14 +126,14 @@ fun test(a: Object) = if a is
   Cls then a.x
   else error
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.122: 	fun test(a: Object) = if a is
+//│ ║  l.125: 	fun test(a: Object) = if a is
 //│ ║         	                         ^^^^
-//│ ║  l.123: 	  Cls then a.x
+//│ ║  l.126: 	  Cls then a.x
 //│ ║         	^^^^^^^^^^^^^^
-//│ ║  l.124: 	  else error
+//│ ║  l.127: 	  else error
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.113: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
+//│ ║  l.116: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
 //│ ╙──       	          ^
 //│ fun test: (a: Object) -> anything
 
@@ -139,14 +142,14 @@ fun test(a: Object) = if a is
   Cls then a.g(a.x) // a.x : a.A ; a.g : a.A -> a.A
   else 0
 //│ ╔══[ERROR] Type error in `case` expression
-//│ ║  l.138: 	fun test(a: Object) = if a is
+//│ ║  l.141: 	fun test(a: Object) = if a is
 //│ ║         	                         ^^^^
-//│ ║  l.139: 	  Cls then a.g(a.x) // a.x : a.A ; a.g : a.A -> a.A
+//│ ║  l.142: 	  Cls then a.g(a.x) // a.x : a.A ; a.g : a.A -> a.A
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.140: 	  else 0
+//│ ║  l.143: 	  else 0
 //│ ║         	^^^^^^^^
 //│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.113: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
+//│ ║  l.116: 	class Cls[A] { fun x: A = x; fun g: A -> Int; fun g = g }
 //│ ╙──       	          ^
 //│ fun test: (a: Object) -> Int
 
@@ -210,11 +213,11 @@ fun test(f: ((IntLit | BoolLit) -> Int)) =
 :e
 class OopsLit() extends Expr[Bool]
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.211: 	class OopsLit() extends Expr[Bool]
+//│ ║  l.214: 	class OopsLit() extends Expr[Bool]
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `#OopsLit` does not match type `BoolLit | IntLit`
 //│ ╟── Note: constraint arises from union type:
-//│ ║  l.199: 	abstract class Expr[A]: (IntLit | BoolLit) {}
+//│ ║  l.202: 	abstract class Expr[A]: (IntLit | BoolLit) {}
 //│ ╙──       	                        ^^^^^^^^^^^^^^^^^^
 //│ class OopsLit() extends Expr
 

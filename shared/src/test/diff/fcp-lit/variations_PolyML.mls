@@ -75,7 +75,7 @@ rec def mem x l = case l of
   }
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a <: {head: ?, tail: Cons[?] & 'a}
+//│     'a <: {head: #?, tail: Cons[?] & 'a}
 //│ ║  l.72: 	rec def mem x l = case l of
 //│ ╙──      	                       ^
 //│ mem: anything -> 'a -> Bool

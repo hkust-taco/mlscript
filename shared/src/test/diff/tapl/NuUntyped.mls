@@ -1,4 +1,5 @@
 :NewDefs
+// :NoProvs
 
 fun (++) concatOp(a, b) = concat(a)(b)
 //│ fun (++) concatOp: (Str, Str) -> Str
@@ -228,6 +229,20 @@ showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
 //│ res
 //│     = '((&x. x) x) DOES NOT have free variable y'
 
+// // :d
+// fun fv(t) =
+//   if t is
+//     Var(name) then list1(error)
+//     App(lhs, rhs) then listConcat(error, fv(rhs))
+
+// fun fv(t) =
+//   if t is
+//     Var(name) then list1(error)
+//     App(lhs, rhs) then listConcat(fv(lhs), fv(rhs))
+
+:Fuel 100000
+// :d
+// :ex
 fun fv(t) =
   if t is
     Var(name) then list1(name)
@@ -236,6 +251,7 @@ fun fv(t) =
 //│ fun fv: forall 'A. (Abs | App | Var) -> (Cons['A] | Nil)
 //│   where
 //│     'A :> Str
+:ResetFuel
 
 fun showFv(t) =
   showTerm(t) ++ if fv(t) is
@@ -319,7 +335,7 @@ fun subst(t, n, v) =
       _ then Abs(Var(name), subst(body, n, v))
     App(lhs, rhs) then App(subst(lhs, n, v), subst(rhs, n, v))
     _ then t
-//│ fun subst: forall 'a. (Abs | App | Term & Object & 'a & ~#Abs & ~#App & ~#Var | Var, anything, Term & Object & 'a) -> ('a | Abs | App | Var)
+//│ fun subst: forall 'a. (Abs | App | Term & Object & 'a & ~#Abs & ~#App & ~#Var | Var, anything, Term & Object & 'a) -> (Abs | App | Var | 'a)
 
 fun showSubst(t, n, v) =
   showTerm(t) ++ " [" ++ n ++ " / " ++ showTerm(v) ++ "]" ++ " => " ++ showTerm(subst(t, n, v))

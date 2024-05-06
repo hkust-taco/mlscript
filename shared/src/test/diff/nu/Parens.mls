@@ -68,7 +68,7 @@ val x: (1,)
 
 :e
 val x: (1, 2)
-//│ ╔══[ERROR] type identifier not found: ,
+//│ ╔══[ERROR] cannot lift variable , to type
 //│ ║  l.70: 	val x: (1, 2)
 //│ ╙──      	       ^^^^^^
 //│ val x: error
@@ -77,7 +77,7 @@ val x: (1, 2)
 
 :e
 val x: (1, 2,)
-//│ ╔══[ERROR] type identifier not found: ,
+//│ ╔══[ERROR] cannot lift variable , to type
 //│ ║  l.79: 	val x: (1, 2,)
 //│ ╙──      	       ^^^^^^^
 //│ val x: error

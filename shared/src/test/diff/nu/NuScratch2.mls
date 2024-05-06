@@ -1,0 +1,243 @@
+:NewDefs
+
+abstract class Foo0[type T] {
+  fun x: T
+}
+abstract class Bar0 extends Foo0[Int]
+//│ abstract class Foo0[T] {
+//│   fun x: T
+//│ }
+//│ abstract class Bar0 extends Foo0 {
+//│   fun x: 'T
+//│ }
+//│ where
+//│   'T := Int
+
+abstract class Foo[type T]: (Bar | Baz) {
+  fun x: T
+  fun f: T -> Int
+}
+abstract class Bar extends Foo[Int]
+abstract class Baz extends Foo[Str]
+//│ abstract class Foo[T]: Bar | Baz {
+//│   fun f: T -> Int
+//│   fun x: T
+//│ }
+//│ abstract class Bar: Bar | Baz extends Foo {
+//│   fun f: 'T -> Int
+//│   fun x: 'T
+//│ }
+//│ abstract class Baz: Bar | Baz extends Foo {
+//│   fun f: 'T0 -> Int
+//│   fun x: 'T0
+//│ }
+//│ where
+//│   'T0 := Str
+//│   'T := Int
+
+:e // Expected
+fun test(f: Foo) = f.f(f.x)
+//│ ╔══[ERROR] Type error in application
+//│ ║  l.39: 	fun test(f: Foo) = f.f(f.x)
+//│ ║        	                   ^^^^^^^^
+//│ ╟── type variable `T` leaks out of its scope
+//│ ║  l.17: 	  fun x: T
+//│ ║        	      ^^^^
+//│ ╟── back into type variable `T`
+//│ ║  l.16: 	abstract class Foo[type T]: (Bar | Baz) {
+//│ ╙──      	                        ^
+//│ fun test: (f: Foo[?]) -> (Int | error)
+
+:e
+fun test(f: Foo) = if f is
+  Foo then f.f(f.x)
+//│ ╔══[ERROR] Type error in `case` expression
+//│ ║  l.52: 	fun test(f: Foo) = if f is
+//│ ║        	                      ^^^^
+//│ ║  l.53: 	  Foo then f.f(f.x)
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `T` leaks out of its scope
+//│ ║  l.16: 	abstract class Foo[type T]: (Bar | Baz) {
+//│ ╙──      	                        ^
+//│ fun test: (f: Foo[?]) -> (Int | error)
+
+:e
+fun test(f: Foo) = if f is
+  Foo then f.x : f.T
+//│ ╔══[ERROR] Type error in `case` expression
+//│ ║  l.65: 	fun test(f: Foo) = if f is
+//│ ║        	                      ^^^^
+//│ ║  l.66: 	  Foo then f.x : f.T
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── type variable `T` leaks out of its scope
+//│ ║  l.16: 	abstract class Foo[type T]: (Bar | Baz) {
+//│ ╙──      	                        ^
+//│ fun test: (f: Foo[?]) -> anything
+
+// FIXME
+fun test(f: Foo['a]) = if f is
+  Foo then f.x : f.T
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
+fun test(f: Foo0['a]) = if f is
+  Foo0 then f.x : f.T // here, locally we have f.T =:= `T & 'a where `T is the local skolem for x.T
+//│ fun test: forall 'a. (f: Foo0['a]) -> nothing
+//│   where
+//│     'a <: nothing
+
+// * NOTE: refined f.T =:= `T & 'a
+fun test(f: Foo0['a]) = if f is
+  Foo0 then f.x : f.T
+  _ then error
+//│ fun test: forall 'a. (f: Foo0['a]) -> nothing
+//│   where
+//│     'a <: nothing
+
+// * TODO: why don't we get 'a in the result whereas we do in the Foo0 case above?
+fun test(f: Foo0['a]) = if f is
+  Bar0 then 123 : f.T
+  _ then error
+//│ fun test: forall 'a. (f: Foo0['a]) -> Int
+
+// ^ What's haoppening:
+// Bar & {} <: { T: 'l..'u }
+// ^ What SHOULD be haoppening:
+// Bar & Foo0['a] <: { T: 'l..'u }
+// Notice that field T in `Bar & Foo0['a]` should yield `'a | Int .. 'a & Int`
+// Alternative (not great; not clear how to do it generally/in a principled way):
+// Bar & {T: 'a .. 'a } <: { T: 'l..'u }
+
+
+fun test(x: 'a, g: Foo0[x], f: Foo0[x]) = if f is
+  Bar0 then 123 : g.T
+  _ then error
+//│ fun test: forall 'a. (x: 'a, g: Foo0['a], f: Foo0['a]) -> 'a
+//│   where
+//│     'a :> 123
+
+:e
+fun test(f: Foo) = if f is
+  Foo then f.f(f.x : f.T)
+//│ ╔══[ERROR] Type error in `case` expression
+//│ ║  l.119: 	fun test(f: Foo) = if f is
+//│ ║         	                      ^^^^
+//│ ║  l.120: 	  Foo then f.f(f.x : f.T)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `T` leaks out of its scope
+//│ ║  l.16: 	abstract class Foo[type T]: (Bar | Baz) {
+//│ ╙──      	                        ^
+//│ fun test: (f: Foo[?]) -> (Int | error)
+
+fun test(f: Foo) = if f is
+    Bar then f.x
+  else error
+//│ fun test: (f: Foo[?]) -> Int
+
+fun test(f: Foo) = if f is
+    Bar then f.x : f.T
+  else error
+//│ fun test: (f: Foo[?]) -> Int
+
+// FIXME
+fun test(f: Foo) = if f is
+    Bar then 123 : f.T
+    Baz then error
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.142: 	fun test(f: Foo) = if f is
+//│ ║         	                      ^^^^
+//│ ║  l.143: 	    Bar then 123 : f.T
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.144: 	    Baz then error
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Foo[?]` does not match type `Bar | Baz`
+//│ ║  l.142: 	fun test(f: Foo) = if f is
+//│ ║         	            ^^^
+//│ ╟── but it flows into reference with expected type `Bar | Baz`
+//│ ║  l.142: 	fun test(f: Foo) = if f is
+//│ ╙──       	                      ^
+//│ fun test: (f: Foo[?]) -> Int
+
+fun test(f: Foo) = if f is
+    Bar then 123 : f.T
+    Baz then "hello" : f.T
+    _ then error
+//│ fun test: (f: Foo[?]) -> (Int | Str)
+
+// FIXME
+fun test(f: Foo['a]) = if f is
+    Bar then 123 : f.T
+    Baz then "hello" : f.T
+    _ then error
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
+fun test(f: Foo, x) = x : f.T
+//│ fun test: (f: Foo[?], ??T) -> ??T0
+
+// FIXME
+fun test[A](f: Foo[A]): A = if f is
+    Bar then 123 : f.T
+    Baz then "hello" : f.T
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
+// FIXME
+fun test(f: Foo['a]): f.T = if f is
+    Bar then 123 : f.T
+    Baz then "hello" : f.T
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
+// FIXME
+:e // expected
+test(error, 1)
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
+// FIXME
+fun test[T](f: Foo[T]): T = if f is
+    Bar then 123 : f.T
+    Baz then error
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
+// FIXME
+fun test(f: Foo['a]) = if f is
+  Foo then f.x
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+
+// * infinite loop in expand(Bar) (making Bar non abstract fixes the problem)
+// * abstract Bar expands to `#Bar<Object,Foo> & (Bar | Baz)`
+// * non abstract Bar expands to `#Bar<Object,Foo>`
+
+abstract class Foo[type T]: (Bar | Baz) {
+  fun x: T
+  fun f: T -> Int
+}
+class Bar(val x: Int) extends Foo[Int] { fun f(y) = this.x + y }
+class Baz(val x: Str) extends Foo[Str] { fun f(y) = 0 }
+//│ abstract class Foo[T]: Bar | Baz {
+//│   fun f: T -> Int
+//│   fun x: T
+//│ }
+//│ class Bar(x: Int) extends Foo {
+//│   fun f: Int -> Int
+//│ }
+//│ class Baz(x: Str) extends Foo {
+//│   fun f: anything -> 0
+//│ }
+
+fun test(f: Foo['a]) = if f is
+  Foo then f.x
+//│ fun test: forall 'a. (f: Foo['a]) -> ('a & (Int | Str))
+
+abstract class Foo[T]: Bar { fun x: T }
+abstract class Bar extends Foo[Int]
+//│ abstract class Foo[T]: Bar {
+//│   fun x: T
+//│ }
+//│ abstract class Bar: Bar extends Foo {
+//│   fun x: 'T
+//│ }
+//│ where
+//│   'T := Int
+
+// FIXME
+fun test(f: Foo['a]) = if f is
+  Foo then f.x
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError

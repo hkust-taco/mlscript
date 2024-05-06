@@ -13,7 +13,7 @@ fun f: (Str | [Str, Int])
 
 :e
 fun f: Str | (Str, Int)
-//│ ╔══[ERROR] type identifier not found: ,
+//│ ╔══[ERROR] cannot lift variable , to type
 //│ ║  l.15: 	fun f: Str | (Str, Int)
 //│ ╙──      	             ^^^^^^^^^^
 //│ fun f: Str | error
@@ -24,7 +24,7 @@ fun f: Str | ([Str, Int])
 
 :e
 fun f: Str | ((Str, Int))
-//│ ╔══[ERROR] type identifier not found: ,
+//│ ╔══[ERROR] cannot lift variable , to type
 //│ ║  l.26: 	fun f: Str | ((Str, Int))
 //│ ╙──      	             ^^^^^^^^^^^^
 //│ fun f: Str | error

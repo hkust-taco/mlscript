@@ -1,0 +1,78 @@
+:NewDefs
+
+let y = 1
+//│ let y: 1
+//│ y
+//│   = 1
+
+1 : y
+//│ 1
+//│ res
+//│     = 1
+
+let x: y = 1
+//│ let x: 1
+//│ x
+//│   = 1
+
+:e
+let x: (1, 2) = (1, 2)
+//│ ╔══[ERROR] cannot lift variable , to type
+//│ ║  l.19: 	let x: (1, 2) = (1, 2)
+//│ ╙──      	       ^^^^^^
+//│ let x: error
+//│ x
+//│   = 2
+
+:e
+let x: (1, 2,) = (1, 2,)
+//│ ╔══[ERROR] cannot lift variable , to type
+//│ ║  l.28: 	let x: (1, 2,) = (1, 2,)
+//│ ╙──      	       ^^^^^^^
+//│ let x: error
+//│ x
+//│   = 2
+
+class Foo[A, B]
+//│ class Foo[A, B] {
+//│   constructor()
+//│ }
+
+let x: Foo[1, 2] = new Foo
+//│ let x: Foo[1, 2]
+//│ x
+//│   = Foo {}
+
+let y: Foo = new Foo
+//│ let y: Foo[?, ?]
+//│ y
+//│   = Foo {}
+
+:e
+let z: y[1, 2]
+//│ ╔══[ERROR] `let` bindings must have a right-hand side
+//│ ║  l.52: 	let z: y[1, 2]
+//│ ╙──      	^^^^^^^^^^^^^^
+//│ ╔══[ERROR] cannot lift expression y to type
+//│ ║  l.52: 	let z: y[1, 2]
+//│ ║        	       ^^^^^^^
+//│ ╟── as defined in
+//│ ║  l.46: 	let y: Foo = new Foo
+//│ ╙──      	    ^^^^^^^^^^^^^^^^
+//│ let z: error
+//│ z
+//│   = <missing implementation>
+
+:e
+2 : (1, 2)
+//│ ╔══[ERROR] cannot lift variable , to type
+//│ ║  l.67: 	2 : (1, 2)
+//│ ╙──      	    ^^^^^^
+//│ error
+//│ res
+//│     = 2
+
+1 : Int
+//│ Int
+//│ res
+//│     = 1

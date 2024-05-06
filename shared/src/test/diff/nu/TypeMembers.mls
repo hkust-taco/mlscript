@@ -1,0 +1,113 @@
+:NewDefs
+
+:AllowTypeErrors
+
+class Test { type T = Int }
+//│ class Test {
+//│   constructor()
+//│   type T = Int
+//│ }
+
+1 : Test.T
+//│ Int
+
+
+trait Test { type T = Int }
+//│ trait Test {
+//│   type T = Int
+//│ }
+
+1 : Test.T
+//│ ╔══[ERROR] Access to type alias member T not yet supported
+//│ ║  l.20: 	1 : Test.T
+//│ ╙──      	        ^^
+//│ ╔══[ERROR] Type mismatch in type selection:
+//│ ║  l.20: 	1 : Test.T
+//│ ║        	        ^^
+//│ ╙── type `error` cannot be reassigned
+//│ error
+
+// TODO inspect
+class Foo[T](x: T) { 
+  type T = T
+} 
+//│ class Foo[T](x: T) {
+//│   type T = T
+//│ }
+
+1 : Foo(1).T
+//│ ╔══[ERROR] Access to type alias member T not yet supported
+//│ ║  l.38: 	1 : Foo(1).T
+//│ ╙──      	          ^^
+//│ ╔══[ERROR] Type mismatch in type selection:
+//│ ║  l.38: 	1 : Foo(1).T
+//│ ║        	          ^^
+//│ ╙── type `error` cannot be reassigned
+//│ error
+
+:e
+false : Foo(1).T
+//│ ╔══[ERROR] Access to type alias member T not yet supported
+//│ ║  l.49: 	false : Foo(1).T
+//│ ╙──      	              ^^
+//│ ╔══[ERROR] Type mismatch in type selection:
+//│ ║  l.49: 	false : Foo(1).T
+//│ ║        	              ^^
+//│ ╙── type `error` cannot be reassigned
+//│ error
+
+// TODO
+class Foo[type T](x: T) { 
+  type T = T
+} 
+//│ class Foo[T](x: T) {
+//│   type T = T
+//│ }
+
+// TODO
+class Foo[type T](x: Int) { 
+  type T = Int
+} 
+//│ class Foo[T](x: Int) {
+//│   type T = Int
+//│ }
+
+abstract class Foo { type T = Int }
+//│ abstract class Foo {
+//│   type T = Int
+//│ }
+
+:e
+class Bar extends Foo { type T = Bool }
+//│ ╔══[ERROR] Type alias member 'T' cannot override type alias member of the same name declared in parent
+//│ ║  l.81: 	class Bar extends Foo { type T = Bool }
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Originally declared here:
+//│ ║  l.75: 	abstract class Foo { type T = Int }
+//│ ╙──      	                     ^^^^^^
+//│ class Bar extends Foo {
+//│   constructor()
+//│   type T = Bool
+//│ }
+
+abstract class Foo[type T]
+//│ abstract class Foo[T]
+
+:e
+class Bar extends Foo { type T = Bool }
+//│ ╔══[ERROR] Type alias member 'T' cannot override type alias member of the same name declared in parent
+//│ ║  l.97: 	class Bar extends Foo { type T = Bool }
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── Originally declared here:
+//│ ║  l.93: 	abstract class Foo[type T]
+//│ ╙──      	                        ^
+//│ class Bar extends Foo {
+//│   constructor()
+//│   type T = Bool
+//│ }
+
+// TODO
+module Foo { type A = A }
+//│ module Foo {
+//│   type A = A
+//│ }

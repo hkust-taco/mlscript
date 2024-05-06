@@ -29,12 +29,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     ErrorReport(
       msg"${info.decl.kind.str.capitalize} `${info.decl.name}` does not contain member `${fld.name}`" -> fld.toLoc :: Nil, newDefs)
   
-  def lookupMember(clsNme: Str, rfnt: Var => Opt[FieldType], fld: Var)
-        (implicit ctx: Ctx, raise: Raise)
+  def lookupMember(clsNme: Str, rfnt: Var => Opt[FieldType], fld: Var)(implicit ctx: Ctx, raise: Raise)
         : Either[Diagnostic, NuMember]
-        = {
-    val info = ctx.tyDefs2.getOrElse(clsNme, ???/*TODO*/)
-    
+        = ctx.tyDefs2.get(clsNme).toRight(ErrorReport(msg"Cannot find class ${clsNme}" -> N :: Nil, newDefs)) flatMap { info =>
     if (info.isComputing) {
       
       ??? // TODO support?
@@ -109,7 +106,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                     Nil)
                 S(p.ty)
               case S(m) =>
-                S(err(msg"Access to ${m.kind.str} member not yet supported", fld.toLoc).toUpper(noProv))
+                S(err(msg"Access to ${m.kind.str} member ${fld.name} not yet supported", fld.toLoc).toUpper(noProv))
               case N => N
             }
           
@@ -131,17 +128,20 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         implicit val shadows: Shadows = Shadows.empty
         
         info.tparams.foreach { case (tn, _tv, vi) =>
-          val targ = rfnt(Var(info.decl.name + "#" + tn.name)) match {
+          val targ = rfnt(tparamField(TypeName(info.decl.name), tn, vi.visible)) match {
             // * TODO to avoid infinite recursion due to ever-expanding type args,
             // *  we should set the shadows of the targ to be the same as that of the parameter it replaces... 
-            case S(fty) if vi === S(VarianceInfo.co) => fty.ub
-            case S(fty) if vi === S(VarianceInfo.contra) => fty.lb.getOrElse(BotType)
+            case S(fty) if vi.varinfo === S(VarianceInfo.co) => 
+              println(s"Lookup: Found $fty")
+              fty.ub
+            case S(fty) if vi.varinfo === S(VarianceInfo.contra) => 
+              println(s"Lookup: Found $fty")
+              fty.lb.getOrElse(BotType)
             case S(fty) =>
-              TypeBounds.mk(
-                fty.lb.getOrElse(BotType),
-                fty.ub,
-              )
+              println(s"Lookup: Found $fty")
+              TypeBounds.mk(fty.lb.getOrElse(BotType), fty.ub)
             case N =>
+              println(s"Lookup: field not found, creating new bounds")
               TypeBounds(
                 // _tv.lowerBounds.foldLeft(BotType: ST)(_ | _),
                 // _tv.upperBounds.foldLeft(TopType: ST)(_ & _),
@@ -190,6 +190,9 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }
     
   }()
+  
+  
+  private val DummyTV: TV = freshVar(noProv, N, S("<DUMMY>"), Nil, Nil, false)(-1)
   
   
   // * Each type has a shadow which identifies all variables created from copying

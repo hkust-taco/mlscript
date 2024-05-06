@@ -29,10 +29,16 @@ foo(M.mkC(42))
 
 :e
 42 : M.mkC
-//│ ╔══[ERROR] Illegal selection of value member in type position
+//│ ╔══[ERROR] Type mismatch in type selection:
+//│ ║  l.31: 	42 : M.mkC
+//│ ║        	      ^^^^
+//│ ╟── member of type `(n: Int) -> C` is not mutable
+//│ ║  l.7: 	  fun mkC = C
+//│ ║       	      ^^^^^^^
+//│ ╟── but it flows into type selection with expected type `?mkC`
 //│ ║  l.31: 	42 : M.mkC
 //│ ╙──      	      ^^^^
-//│ error
+//│ (n: Int) -> C
 //│ res
 //│     = 42
 
