@@ -16,7 +16,7 @@ trait Normalization { self: Desugarer with Traceable =>
       declaredVars: Set[Var],
       shouldReportDiscarded: Bool
   ): Split =
-    if (these.hasElse) {
+    if (these.isFull) {
       reportUnreachableCase(those, these, onlyIf = those =/= Split.Nil && shouldReportDiscarded)
     } else (these match {
       case these @ Split.Cons(head, tail) =>
@@ -56,7 +56,7 @@ trait Normalization { self: Desugarer with Traceable =>
       }(sp => s"fill ==> ${showSplit(sp)}")
 
     def :++(tail: => Split): Split = {
-      if (these.hasElse) {
+      if (these.isFull) {
         println("tail is discarded")
         // raiseDesugaringWarning(msg"Discarded split because of else branch" -> these.toLoc)
         these

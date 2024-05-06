@@ -52,9 +52,9 @@ package object core {
     /**
       * Returns true if the split has an else branch.
       */
-    lazy val hasElse: Bool = this match {
-      case Split.Cons(_, tail) => tail.hasElse
-      case Split.Let(_, _, _, tail) => tail.hasElse
+    lazy val isFull: Bool = this match {
+      case Split.Cons(_, tail) => tail.isFull
+      case Split.Let(_, _, _, tail) => tail.isFull
       case Split.Else(_) => true
       case Split.Nil => false
     }
