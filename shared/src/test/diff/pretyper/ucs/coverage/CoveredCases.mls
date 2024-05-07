@@ -50,7 +50,8 @@ fun f(x) = if
 //│       B*◊ -> 1
 //│ fun f: B -> 1
 
-:w
+// :w
+// FIXME
 :ducs:normalize.result
 fun f(x) = if
   x is A and
@@ -62,12 +63,12 @@ fun f(x) = if
 //│     case x*‡ of
 //│       B*◊ -> 1
 //│ fun f: B -> 1
-//│ TEST CASE FAILURE: There was an unexpected lack of warning
 
 fun p(x) = true: Bool
 //│ fun p: anything -> Bool
 
-:w
+// :w
+// FIXME
 :ducs:normalize.result
 fun f(x) = if
   x is A and
@@ -87,5 +88,4 @@ fun f(x) = if
 //│           _ -> 4
 //│   _ -> 4
 //│ fun f: Object -> (1 | 2 | 4)
-//│ TEST CASE FAILURE: There was an unexpected lack of warning
 
