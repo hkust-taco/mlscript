@@ -19,7 +19,7 @@ fun testF(x) = if x is
 //│ ╔══[WARNING] found a duplicated case
 //│ ║  l.18: 	  Foo(a) then a
 //│ ║        	  ^^^
-//│ ╟── the case is covered by pattern Foo
+//│ ╟── there is an identical pattern Foo
 //│ ║  l.17: 	  Foo(a) then a
 //│ ╙──      	  ^^^
 //│ fun testF: forall 'a. Foo['a] -> 'a

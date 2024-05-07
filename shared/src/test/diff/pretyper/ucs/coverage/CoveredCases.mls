@@ -15,7 +15,7 @@ fun f(x) = if
 //│ ╔══[WARNING] found a duplicated case
 //│ ║  l.14: 	  x is A then 2
 //│ ║        	       ^
-//│ ╟── the case is covered by pattern A
+//│ ╟── there is an identical pattern A
 //│ ║  l.13: 	  x is A then 1
 //│ ╙──      	       ^
 //│ fun f: A -> 1
@@ -33,7 +33,10 @@ fun f(x) = if
 //│ ║        	       ^
 //│ ╟── the case is covered by pattern A
 //│ ║  l.26: 	  x is A then 1
-//│ ╙──      	       ^
+//│ ║        	       ^
+//│ ╟── due to the subtyping relation
+//│ ║  l.7: 	class B() extends A()
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^
 //│ fun f: A -> 1
 
 :ducs:normalize.result
@@ -85,3 +88,4 @@ fun f(x) = if
 //│   _ -> 4
 //│ fun f: Object -> (1 | 2 | 4)
 //│ TEST CASE FAILURE: There was an unexpected lack of warning
+

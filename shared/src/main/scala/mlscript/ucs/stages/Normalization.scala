@@ -290,10 +290,21 @@ trait Normalization { self: Desugarer with Traceable =>
                 println(s"already removed = $full")
                 if (!split.isFallback && full && !head.continuation.isEmpty) {
                   println(s"report warning")
-                  raiseDesugaringWarning(
-                    msg"found a duplicated case" -> thatPattern.toLoc,
-                    msg"the case is covered by pattern ${pattern.toString}" -> pattern.toLoc,
-                  )
+                  if (pattern === thatPattern) {
+                    raiseDesugaringWarning(
+                      msg"found a duplicated case" -> thatPattern.toLoc,
+                      msg"there is an identical pattern ${pattern.toString}" -> pattern.toLoc,
+                    )
+                  } else {
+                    raiseDesugaringWarning(
+                      msg"found a duplicated case" -> thatPattern.toLoc,
+                      msg"the case is covered by pattern ${pattern.toString}" -> pattern.toLoc,
+                      msg"due to the subtyping relation" -> (thatPattern match {
+                        case Pattern.Class(_, symbol, _) => symbol.defn.getLoc
+                        case _ => thatPattern.toLoc
+                      })
+                    )
+                  }
                 }
                 specializeImpl(tail)(
                   `-`(if (samePattern) continuation.isFull else full),

@@ -40,7 +40,7 @@ fun p(x, y) =
 //│ ╔══[WARNING] found a duplicated case
 //│ ║  l.39: 	    x is Some and y is Some then 0
 //│ ║        	                       ^^^^
-//│ ╟── the case is covered by pattern Some
+//│ ╟── there is an identical pattern Some
 //│ ║  l.38: 	    y is Some and x is Some then 1
 //│ ╙──      	         ^^^^
 //│ ╔══[ERROR] `y` has 1 missing case

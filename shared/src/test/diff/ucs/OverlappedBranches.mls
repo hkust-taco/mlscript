@@ -25,13 +25,19 @@ fun f1(x) = if x is
 //│ ║        	  ^^^^^^^^
 //│ ╟── the case is covered by pattern Base
 //│ ║  l.17: 	  Base then "b"
-//│ ╙──      	  ^^^^
+//│ ║        	  ^^^^
+//│ ╟── due to the subtyping relation
+//│ ║  l.4: 	class Derived1() extends Base()
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╔══[WARNING] found a duplicated case
 //│ ║  l.19: 	  Derived2 then "d2"
 //│ ║        	  ^^^^^^^^
 //│ ╟── the case is covered by pattern Base
 //│ ║  l.17: 	  Base then "b"
-//│ ╙──      	  ^^^^
+//│ ║        	  ^^^^
+//│ ╟── due to the subtyping relation
+//│ ║  l.5: 	class Derived2() extends Base()
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ fun f1: Base -> "b"
 
 f1(Base())
