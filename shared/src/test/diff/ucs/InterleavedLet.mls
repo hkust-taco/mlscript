@@ -37,6 +37,12 @@ fun p(x, y) =
     x is Some and y is None then 0
     y is Some and x is Some then 1
     x is Some and y is Some then 0
+//│ ╔══[WARNING] found a duplicated case
+//│ ║  l.39: 	    x is Some and y is Some then 0
+//│ ║        	                       ^^^^
+//│ ╟── the case is covered by pattern Some
+//│ ║  l.38: 	    y is Some and x is Some then 1
+//│ ╙──      	         ^^^^
 //│ ╔══[ERROR] `y` has 1 missing case
 //│ ║  l.38: 	    y is Some and x is Some then 1
 //│ ║        	    ^
@@ -73,10 +79,10 @@ fun f(a, y) =
       Right(x) then x + y
     else 0
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.72: 	      let y = v + 1
+//│ ║  l.78: 	      let y = v + 1
 //│ ║        	              ^^^^^
 //│ ╟── reference of type `Right[?B]` is not an instance of type `Int`
-//│ ║  l.72: 	      let y = v + 1
+//│ ║  l.78: 	      let y = v + 1
 //│ ╙──      	              ^
 //│ fun f: forall 'a. (Object & ~#Some | Some[Int | Left['a] | Right[Int]], anything) -> (Int | 'a)
 
@@ -87,9 +93,9 @@ fun q(a) =
     let y = a + 1
     then y
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
-//│ ║  l.87: 	    let y = a + 1
+//│ ║  l.93: 	    let y = a + 1
 //│ ║        	            ^^^^^
-//│ ║  l.88: 	    then y
+//│ ║  l.94: 	    then y
 //│ ╙──      	^^^^^^^^^^
 //│ fun q: forall 'a. (Left['a] | Object & ~#Left) -> (() | 'a)
 
@@ -106,11 +112,11 @@ fun w() =
     B then "B"
     else "?"
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.104: 	    A then "A"
+//│ ║  l.110: 	    A then "A"
 //│ ║         	    ^
 //│ ╙── reference of type `() -> A` is not an instance of type `Bool`
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.106: 	    B then "B"
+//│ ║  l.112: 	    B then "B"
 //│ ║         	    ^
 //│ ╙── reference of type `() -> B` is not an instance of type `Bool`
 //│ fun w: () -> ("?" | "A" | "B")
@@ -167,13 +173,13 @@ fun ip(y) =
     y == z * z then "bruh"
   else "rocks"
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.165: 	  if q(y) and
+//│ ║  l.171: 	  if q(y) and
 //│ ║         	     ^^^^
 //│ ╟── undefined literal of type `()` is not an instance of type `Bool`
-//│ ║  l.88: 	    then y
+//│ ║  l.94: 	    then y
 //│ ║        	          ^
 //│ ╟── but it flows into application with expected type `Bool`
-//│ ║  l.165: 	  if q(y) and
+//│ ║  l.171: 	  if q(y) and
 //│ ╙──       	     ^^^^
 //│ fun ip: Int -> ("bruh" | "rocks")
 

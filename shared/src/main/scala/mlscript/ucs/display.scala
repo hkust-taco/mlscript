@@ -77,7 +77,7 @@ package object display {
   def showSplit(prefix: Str, s: c.Split, showFirstLevel: Bool)(implicit context: Context): Str = {
     def split(s: c.Split, isFirst: Bool, isTopLevel: Bool): Lines = s match {
       case c.Split.Cons(head, tail) => (branch(head, isTopLevel) match {
-        case (n, line) :: tail => (n, (if (isTopLevel) "" else "and ") + line) :: tail
+        case (n, line) :: tail => (n, (if (isTopLevel) "" else "and ") + (if (s.isFallback) "?" else "") + line) :: tail
         case Nil => Nil
       }) ::: split(tail, false, isTopLevel)
       case c.Split.Let(_, nme, rhs, tail) =>

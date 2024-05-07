@@ -3,6 +3,7 @@ package ucs.context
 
 import collection.mutable.{Buffer, SortedMap => MutSortedMap, SortedSet => MutSortedSet}
 import pretyper.symbol.{ClassLikeSymbol, TermSymbol, TypeSymbol}, utils._, shorthands._
+import scala.annotation.tailrec
 
 class Scrutinee(val context: Context, parent: Opt[Scrutinee]) {
   import Scrutinee._
@@ -98,6 +99,12 @@ class Scrutinee(val context: Context, parent: Opt[Scrutinee]) {
         }
     }
   }
+
+  @tailrec
+  final def isSubScrutineeOf(scrutinee: Scrutinee): Bool = this === scrutinee || (parent match {
+    case Some(parentScrutinee) => parentScrutinee.isSubScrutineeOf(scrutinee)
+    case N => false
+  })
 }
 
 object Scrutinee {

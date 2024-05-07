@@ -12,8 +12,13 @@ class B() extends A()
 fun f(x) = if
   x is A then 1
   x is A then 2
+//│ ╔══[WARNING] found a duplicated case
+//│ ║  l.14: 	  x is A then 2
+//│ ║        	       ^
+//│ ╟── the case is covered by pattern A
+//│ ║  l.13: 	  x is A then 1
+//│ ╙──      	       ^
 //│ fun f: A -> 1
-//│ TEST CASE FAILURE: There was an unexpected lack of warning
 
 :w
 :ducs:normalize.result
@@ -23,8 +28,13 @@ fun f(x) = if
 //│ Normalized UCS term:
 //│ case x*‡ of
 //│   A*◊ -> 1
+//│ ╔══[WARNING] found a duplicated case
+//│ ║  l.27: 	  x is B then 2
+//│ ║        	       ^
+//│ ╟── the case is covered by pattern A
+//│ ║  l.26: 	  x is A then 1
+//│ ╙──      	       ^
 //│ fun f: A -> 1
-//│ TEST CASE FAILURE: There was an unexpected lack of warning
 
 :ducs:normalize.result
 fun f(x) = if

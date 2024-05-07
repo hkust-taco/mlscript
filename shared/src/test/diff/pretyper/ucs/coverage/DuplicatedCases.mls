@@ -14,8 +14,13 @@ fun f(x) = if x is
 //│   _ ->
 //│     case x*‡ of
 //│       "b" -> 2
+//│ ╔══[WARNING] found a duplicated case
+//│ ║  l.10: 	  "a" then 3
+//│ ║        	  ^^^
+//│ ╟── the case is covered by pattern "a"
+//│ ║  l.8: 	  "a" then 1
+//│ ╙──     	  ^^^
 //│ fun f: ("a" | "b") -> (1 | 2)
-//│ TEST CASE FAILURE: There was an unexpected lack of warning
 
 class X
 class Y
@@ -34,8 +39,13 @@ fun f(x) = if x is
 //│ Normalized UCS term:
 //│ case x*‡ of
 //│   X*◊ -> 1
+//│ ╔══[WARNING] found a duplicated case
+//│ ║  l.38: 	  X then 2
+//│ ║        	  ^
+//│ ╟── the case is covered by pattern X
+//│ ║  l.37: 	  X then 1
+//│ ╙──      	  ^
 //│ fun f: X -> 1
-//│ TEST CASE FAILURE: There was an unexpected lack of warning
 
 :w
 :ducs:normalize.result
@@ -49,121 +59,21 @@ fun f(x) = if x is
 //│   _ ->
 //│     case x*‡ of
 //│       Y*◊ -> 2
+//│ ╔══[WARNING] found a duplicated case
+//│ ║  l.55: 	  X then 3
+//│ ║        	  ^
+//│ ╟── the case is covered by pattern X
+//│ ║  l.53: 	  X then 1
+//│ ╙──      	  ^
 //│ fun f: (X | Y) -> (1 | 2)
-//│ TEST CASE FAILURE: There was an unexpected lack of warning
 
 class Box[T](value: T)
 //│ class Box[T](value: T)
 
-:ducs:normalize,normalize.result
+:ducs:normalize.result
 fun f(x) = if x is
   Box(1) then true
   Box then false
-//│ | | | | | STEP 2
-//│ | | | | | normalizeToTerm <== if
-//│ | | | | |   x*‡ is Box
-//│ | | | | |     let ucs$args_x$Box*† = (Box).unapply(x,)
-//│ | | | | |     let x$Box_0*‡ = (ucs$args_x$Box).0
-//│ | | | | |     x$Box_0*‡ is 1 then true
-//│ | | | | |   x*‡ is Box then false
-//│ | | | | | | CLASS: x is Box
-//│ | | | | | | fill <== vars = {}
-//│ | | | | | | | LHS: if
-//│ | | | | | | |   let ucs$args_x$Box*† = (Box).unapply(x,)
-//│ | | | | | | |   let x$Box_0*‡ = (ucs$args_x$Box).0
-//│ | | | | | | |   x$Box_0*‡ is 1 then true
-//│ | | | | | | | RHS: if x*‡ is Box then false
-//│ | | | | | | | fill let binding ucs$args_x$Box
-//│ | | | | | | | fill let binding x$Box_0
-//│ | | | | | | fill ==> if
-//│ | | | | | |   let ucs$args_x$Box*† = (Box).unapply(x,)
-//│ | | | | | |   let x$Box_0*‡ = (ucs$args_x$Box).0
-//│ | | | | | |   x$Box_0*‡ is 1 then true
-//│ | | | | | |   x*‡ is Box then false
-//│ | | | | | | S+ <== x is Box : if
-//│ | | | | | |   let ucs$args_x$Box*† = (Box).unapply(x,)
-//│ | | | | | |   let x$Box_0*‡ = (ucs$args_x$Box).0
-//│ | | | | | |   x$Box_0*‡ is 1 then ...
-//│ | | | | | |   x*‡ is Box then ...
-//│ | | | | | | | CASE Let ucs$args_x$Box
-//│ | | | | | | | CASE Let x$Box_0
-//│ | | | | | | | CASE Cons x$Box_0 is 1
-//│ | | | | | | | Case 2: x =/= x$Box_0
-//│ | | | | | | | S+ <== x is Box : if then true
-//│ | | | | | | | | CASE Else
-//│ | | | | | | | S+ ==> if then true
-//│ | | | | | | | CASE Cons x is Box
-//│ | | | | | | | Case 1.1: x === x
-//│ | | | | | | | Case 1.1.1: Box =:= Box
-//│ | | | | | | | S+ <== x is Box : if then false
-//│ | | | | | | | | CASE Else
-//│ | | | | | | | S+ ==> if then false
-//│ | | | | | | | tail is discarded
-//│ | | | | | | S+ ==> if
-//│ | | | | | |   let ucs$args_x$Box*† = (Box).unapply(x,)
-//│ | | | | | |   let x$Box_0*‡ = (ucs$args_x$Box).0
-//│ | | | | | |   x$Box_0*‡ is 1 then ...
-//│ | | | | | |   else false
-//│ | | | | | | normalizeToTerm <== if
-//│ | | | | | |   let ucs$args_x$Box*† = (Box).unapply(x,)
-//│ | | | | | |   let x$Box_0*‡ = (ucs$args_x$Box).0
-//│ | | | | | |   x$Box_0*‡ is 1 then true
-//│ | | | | | |   else false
-//│ | | | | | | | LET: generated ucs$args_x$Box
-//│ | | | | | | | normalizeToTerm <== if
-//│ | | | | | | |   let x$Box_0*‡ = (ucs$args_x$Box).0
-//│ | | | | | | |   x$Box_0*‡ is 1 then true
-//│ | | | | | | |   else false
-//│ | | | | | | | | LET: x$Box_0
-//│ | | | | | | | | normalizeToTerm <== if
-//│ | | | | | | | |   x$Box_0*‡ is 1 then true
-//│ | | | | | | | |   else false
-//│ | | | | | | | | | LITERAL: x$Box_0 is 1
-//│ | | | | | | | | | entire split: if
-//│ | | | | | | | | |   x$Box_0*‡ is 1 then true
-//│ | | | | | | | | |   else false
-//│ | | | | | | | | | fill <== vars = {ucs$args_x$Box}
-//│ | | | | | | | | | | LHS: if then true
-//│ | | | | | | | | | | RHS: if then false
-//│ | | | | | | | | | fill ==> if then true
-//│ | | | | | | | | | S+ <== x$Box_0 is 1 : if then true
-//│ | | | | | | | | | | CASE Else
-//│ | | | | | | | | | S+ ==> if then true
-//│ | | | | | | | | | normalizeToTerm <== if then true
-//│ | | | | | | | | | | DFLT: true
-//│ | | | | | | | | | normalizeToTerm ==> true
-//│ | | | | | | | | | S- <== x$Box_0 is 1 : if then false
-//│ | | | | | | | | | | CASE Else
-//│ | | | | | | | | | S- ==> if then false
-//│ | | | | | | | | | normalizeToCaseBranches <==
-//│ | | | | | | | | | normalizeToCaseBranches ==>
-//│ | | | | | | | | normalizeToTerm ==> case x$Box_0*‡ of
-//│ | | | | | | | |   1 -> true
-//│ | | | | | | | |   _ -> false
-//│ | | | | | | | normalizeToTerm ==> let x$Box_0*‡ = (ucs$args_x$Box).0
-//│ | | | | | | | case x$Box_0*‡ of
-//│ | | | | | | |   1 -> true
-//│ | | | | | | |   _ -> false
-//│ | | | | | | normalizeToTerm ==> let ucs$args_x$Box*† = (Box).unapply(x,)
-//│ | | | | | | let x$Box_0*‡ = (ucs$args_x$Box).0
-//│ | | | | | | case x$Box_0*‡ of
-//│ | | | | | |   1 -> true
-//│ | | | | | |   _ -> false
-//│ | | | | | | S- <== x is Box : if x*‡ is Box then ...
-//│ | | | | | | | CASE Cons x is Box
-//│ | | | | | | | Case 1.2: x === x
-//│ | | | | | | | Case 1.2.1: Box =:= (or <:<) Box
-//│ | | | | | | | CASE Nil
-//│ | | | | | | S- ==> if
-//│ | | | | | | normalizeToCaseBranches <==
-//│ | | | | | | normalizeToCaseBranches ==>
-//│ | | | | | normalizeToTerm ==> case x*‡ of
-//│ | | | | |   Box*◊ ->
-//│ | | | | |     let ucs$args_x$Box*† = (Box).unapply(x,)
-//│ | | | | |     let x$Box_0*‡ = (ucs$args_x$Box).0
-//│ | | | | |     case x$Box_0*‡ of
-//│ | | | | |       1 -> true
-//│ | | | | |       _ -> false
 //│ Normalized UCS term:
 //│ case x*‡ of
 //│   Box*◊ ->
@@ -181,3 +91,622 @@ f(Box(1))
 //│     = false
 //│ res
 //│     = true
+
+:ducs:postprocess.result
+fun a_tale_of_scrutinees(x, y) =
+  if
+    x is "A" and y is "B" then "AB"
+    y is "A" and x is "B" then "BA"
+    y is "A" and x is "A" then "AA"
+    x is "B" and y is "B" then "BB"
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   "A" ->
+//│     case y*‡ of
+//│       "B" -> "AB"
+//│       "A" -> "AA"
+//│   "B" ->
+//│     case y*‡ of
+//│       "A" -> "BA"
+//│       "B" -> "BB"
+//│ fun a_tale_of_scrutinees: ("A" | "B", "A" | "B") -> ("AA" | "AB" | "BA" | "BB")
+
+:ducs:normalize.result
+fun test(x, p) = if x is
+  Bool and p(x) then "great"
+  true then "false"
+  false then "true"
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   refined Bool*◊ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† -> "great"
+//│       _ ->
+//│         case x*‡ of
+//│           true*† -> "false"
+//│           _ ->
+//│             case x*‡ of
+//│               false*† -> "true"
+//│ fun test: forall 'a. ('a & Bool, (Bool & 'a) -> Bool) -> ("false" | "great" | "true")
+
+class P[A](x: A)
+class Q[A, B](x: A, y: B)
+//│ class P[A](x: A)
+//│ class Q[A, B](x: A, y: B)
+
+fun f(x) =
+  if x is
+    P(1) then 1
+    P(y) then 2
+//│ fun f: P[Object] -> (1 | 2)
+
+:ducs:normalize.result
+fun f(x) =
+  if x is
+    Q(a, b) and a is 1 and b is 1 then 1
+    Q(a, b) and b is 1 then 2
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   Q*◊ ->
+//│     let ucs$args_x$Q*† = (Q).unapply(x,)
+//│     let a*‡ = (ucs$args_x$Q).0
+//│     let b*‡ = (ucs$args_x$Q).1
+//│     case a*‡ of
+//│       1 ->
+//│         case b*‡ of
+//│           1 -> 1
+//│       _ ->
+//│         case b*‡ of
+//│           1 -> 2
+//│ fun f: Q[Object, 1] -> (1 | 2)
+
+:e
+fun f(x) =
+  if x is
+    Q(a, b) and a is 1 and b is 2 then 1
+    Q(a, b) and b is 1 then 2
+//│ ╔══[ERROR] when `x` is `Q`
+//│ ║  l.167: 	    Q(a, b) and a is 1 and b is 2 then 1
+//│ ║         	    ^
+//│ ╟── the second argument of `Q` has 1 missing case
+//│ ║  l.168: 	    Q(a, b) and b is 1 then 2
+//│ ║         	                ^
+//│ ╟── it can be literal 2
+//│ ║  l.167: 	    Q(a, b) and a is 1 and b is 2 then 1
+//│ ╙──       	                                ^
+//│ fun f: Q[Object, 1] -> (1 | 2)
+
+:ducs:normalize.result
+fun f(x) =
+  if x is
+    Q(1, 1) then 1
+    Q(y, 1) then 2
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   Q*◊ ->
+//│     let ucs$args_x$Q*† = (Q).unapply(x,)
+//│     let x$Q_0*‡ = (ucs$args_x$Q).0
+//│     let x$Q_1*‡ = (ucs$args_x$Q).1
+//│     case x$Q_0*‡ of
+//│       1 ->
+//│         case x$Q_1*‡ of
+//│           1 -> 1
+//│           _ -> (ucs$args_x$Q).0
+//│       _ ->
+//│         let y*‡ = (ucs$args_x$Q).0
+//│         case x$Q_1*‡ of
+//│           1 -> 2
+//│ fun f: forall 'a. Q[Object & 'a, 1] -> (1 | 2 | 'a)
+
+:ducs:normalize
+fun f(x) =
+  if x is
+    Q(0, 0) then 1
+    Q(1, 1) then 2
+    Q(y, 1) then 3
+    _       then 4
+//│ | | | | | | | STEP 2
+//│ | | | | | | | normalizeToTerm <== if
+//│ | | | | | | |   x*‡ is Q
+//│ | | | | | | |     let ucs$args_x$Q*† = (Q).unapply(x,)
+//│ | | | | | | |     let x$Q_0*‡ = (ucs$args_x$Q).0
+//│ | | | | | | |     let x$Q_1*‡ = (ucs$args_x$Q).1
+//│ | | | | | | |     x$Q_0*‡ is 0 x$Q_1*‡ is 0 then 1
+//│ | | | | | | |   x*‡ is Q
+//│ | | | | | | |     let ucs$args_x$Q*† = (Q).unapply(x,)
+//│ | | | | | | |     let x$Q_0*‡ = (ucs$args_x$Q).0
+//│ | | | | | | |     let x$Q_1*‡ = (ucs$args_x$Q).1
+//│ | | | | | | |     x$Q_0*‡ is 1 x$Q_1*‡ is 1 then 2
+//│ | | | | | | |   x*‡ is Q
+//│ | | | | | | |     let ucs$args_x$Q*† = (Q).unapply(x,)
+//│ | | | | | | |     let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | |     let x$Q_1*‡ = (ucs$args_x$Q).1
+//│ | | | | | | |     x$Q_1*‡ is 1 then 3
+//│ | | | | | | |   else 4
+//│ | | | | | | | | CONS: x is Q
+//│ | | | | | | | | fill <== vars = {}
+//│ | | | | | | | | | LHS: if
+//│ | | | | | | | | |   let ucs$args_x$Q*† = (Q).unapply(x,)
+//│ | | | | | | | | |   let x$Q_0*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | |   let x$Q_1*‡ = (ucs$args_x$Q).1
+//│ | | | | | | | | |   x$Q_0*‡ is 0 x$Q_1*‡ is 0 then 1
+//│ | | | | | | | | | RHS: if
+//│ | | | | | | | | |   x*‡ is Q
+//│ | | | | | | | | |     let ucs$args_x$Q*† = (Q).unapply(x,)
+//│ | | | | | | | | |     let x$Q_0*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | |     let x$Q_1*‡ = (ucs$args_x$Q).1
+//│ | | | | | | | | |     x$Q_0*‡ is 1 x$Q_1*‡ is 1 then 2
+//│ | | | | | | | | |   x*‡ is Q
+//│ | | | | | | | | |     let ucs$args_x$Q*† = (Q).unapply(x,)
+//│ | | | | | | | | |     let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | |     let x$Q_1*‡ = (ucs$args_x$Q).1
+//│ | | | | | | | | |     x$Q_1*‡ is 1 then 3
+//│ | | | | | | | | |   else 4
+//│ | | | | | | | | | fill let binding ucs$args_x$Q
+//│ | | | | | | | | | fill let binding x$Q_0
+//│ | | | | | | | | | fill let binding x$Q_1
+//│ | | | | | | | | fill ==> if
+//│ | | | | | | | |   let ucs$args_x$Q*† = (Q).unapply(x,)
+//│ | | | | | | | |   let x$Q_0*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | |   let x$Q_1*‡ = (ucs$args_x$Q).1
+//│ | | | | | | | |   x$Q_0*‡ is 0 x$Q_1*‡ is 0 then 1
+//│ | | | | | | | |   ?x*‡ is Q ?x$Q_0*‡ is 1 ?x$Q_1*‡ is 1 then 2
+//│ | | | | | | | |   ?x*‡ is Q
+//│ | | | | | | | |     let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | |     ?x$Q_1*‡ is 1 then 3
+//│ | | | | | | | |   else 4
+//│ | | | | | | | | S+ <== x is Q : if
+//│ | | | | | | | |   let ucs$args_x$Q*† = (Q).unapply(x,)
+//│ | | | | | | | |   let x$Q_0*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | |   let x$Q_1*‡ = (ucs$args_x$Q).1
+//│ | | | | | | | |   x$Q_0*‡ is 0 and ...
+//│ | | | | | | | |   ?x*‡ is Q and ...
+//│ | | | | | | | |   ?x*‡ is Q and ...
+//│ | | | | | | | |   else 4
+//│ | | | | | | | | | CASE Let ucs$args_x$Q
+//│ | | | | | | | | | CASE Let x$Q_0
+//│ | | | | | | | | | CASE Let x$Q_1
+//│ | | | | | | | | | CASE Cons x$Q_0 is 0
+//│ | | | | | | | | | Case 2: x =/= x$Q_0
+//│ | | | | | | | | | S+ <== x is Q : if x$Q_1*‡ is 0 then ...
+//│ | | | | | | | | | | CASE Cons x$Q_1 is 0
+//│ | | | | | | | | | | Case 2: x =/= x$Q_1
+//│ | | | | | | | | | | S+ <== x is Q : if then 1
+//│ | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | S+ ==> if then 1
+//│ | | | | | | | | | | CASE Nil
+//│ | | | | | | | | | S+ ==> if x$Q_1*‡ is 0 then ...
+//│ | | | | | | | | | CASE Cons x is Q
+//│ | | | | | | | | | Case 1.1: x === x
+//│ | | | | | | | | | Case 1.1.1: Q =:= Q
+//│ | | | | | | | | | S+ <== x is Q : if ?x$Q_0*‡ is 1 and ...
+//│ | | | | | | | | | | CASE Cons x$Q_0 is 1
+//│ | | | | | | | | | | Case 2: x =/= x$Q_0
+//│ | | | | | | | | | | S+ <== x is Q : if ?x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | | | | CASE Cons x$Q_1 is 1
+//│ | | | | | | | | | | | Case 2: x =/= x$Q_1
+//│ | | | | | | | | | | | S+ <== x is Q : if then 2
+//│ | | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | | S+ ==> if then 2
+//│ | | | | | | | | | | | CASE Nil
+//│ | | | | | | | | | | S+ ==> if ?x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | | | CASE Nil
+//│ | | | | | | | | | S+ ==> if ?x$Q_0*‡ is 1 and ...
+//│ | | | | | | | | | CASE Cons x is Q
+//│ | | | | | | | | | Case 1.1: x === x
+//│ | | | | | | | | | Case 1.1.1: Q =:= Q
+//│ | | | | | | | | | S+ <== x is Q : if
+//│ | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | |   ?x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | | | CASE Let y
+//│ | | | | | | | | | | CASE Cons x$Q_1 is 1
+//│ | | | | | | | | | | Case 2: x =/= x$Q_1
+//│ | | | | | | | | | | S+ <== x is Q : if then 3
+//│ | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | S+ ==> if then 3
+//│ | | | | | | | | | | CASE Nil
+//│ | | | | | | | | | S+ ==> if
+//│ | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | |   ?x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | | CASE Else
+//│ | | | | | | | | S+ ==> if
+//│ | | | | | | | |   let ucs$args_x$Q*† = (Q).unapply(x,)
+//│ | | | | | | | |   let x$Q_0*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | |   let x$Q_1*‡ = (ucs$args_x$Q).1
+//│ | | | | | | | |   x$Q_0*‡ is 0 and ...
+//│ | | | | | | | |   x$Q_0*‡ is 1 and ...
+//│ | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | |   x$Q_1*‡ is 1 then ...
+//│ | | | | | | | |   else 4
+//│ | | | | | | | | normalizeToTerm <== if
+//│ | | | | | | | |   let ucs$args_x$Q*† = (Q).unapply(x,)
+//│ | | | | | | | |   let x$Q_0*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | |   let x$Q_1*‡ = (ucs$args_x$Q).1
+//│ | | | | | | | |   x$Q_0*‡ is 0 x$Q_1*‡ is 0 then 1
+//│ | | | | | | | |   x$Q_0*‡ is 1 ?x$Q_1*‡ is 1 then 2
+//│ | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | |   x$Q_1*‡ is 1 then 3
+//│ | | | | | | | |   else 4
+//│ | | | | | | | | | LET: generated ucs$args_x$Q
+//│ | | | | | | | | | LET: x$Q_0
+//│ | | | | | | | | | LET: x$Q_1
+//│ | | | | | | | | | CONS: x$Q_0 is 0
+//│ | | | | | | | | | fill <== vars = {ucs$args_x$Q}
+//│ | | | | | | | | | | LHS: if x$Q_1*‡ is 0 then 1
+//│ | | | | | | | | | | RHS: if
+//│ | | | | | | | | | |   x$Q_0*‡ is 1 ?x$Q_1*‡ is 1 then 2
+//│ | | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | | |   x$Q_1*‡ is 1 then 3
+//│ | | | | | | | | | |   else 4
+//│ | | | | | | | | | fill ==> if
+//│ | | | | | | | | |   x$Q_1*‡ is 0 then 1
+//│ | | | | | | | | |   ?x$Q_0*‡ is 1 ?x$Q_1*‡ is 1 then 2
+//│ | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | |   ?x$Q_1*‡ is 1 then 3
+//│ | | | | | | | | |   else 4
+//│ | | | | | | | | | S+ <== x$Q_0 is 0 : if
+//│ | | | | | | | | |   x$Q_1*‡ is 0 then ...
+//│ | | | | | | | | |   ?x$Q_0*‡ is 1 and ...
+//│ | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | |   ?x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | |   else 4
+//│ | | | | | | | | | | CASE Cons x$Q_1 is 0
+//│ | | | | | | | | | | Case 2: x$Q_0 =/= x$Q_1
+//│ | | | | | | | | | | S+ <== x$Q_0 is 0 : if then 1
+//│ | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | S+ ==> if then 1
+//│ | | | | | | | | | | CASE Cons x$Q_0 is 1
+//│ | | | | | | | | | | Case 1.1: x$Q_0 === x$Q_0
+//│ | | | | | | | | | | Case 1.1.3: 0 is unrelated with 1
+//│ | | | | | | | | | | CASE Let y
+//│ | | | | | | | | | | CASE Cons x$Q_1 is 1
+//│ | | | | | | | | | | Case 2: x$Q_0 =/= x$Q_1
+//│ | | | | | | | | | | S+ <== x$Q_0 is 0 : if then 3
+//│ | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | S+ ==> if then 3
+//│ | | | | | | | | | | CASE Else
+//│ | | | | | | | | | S+ ==> if
+//│ | | | | | | | | |   x$Q_1*‡ is 0 then ...
+//│ | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | |   ?x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | |   else 4
+//│ | | | | | | | | | normalizeToTerm <== if
+//│ | | | | | | | | |   x$Q_1*‡ is 0 then 1
+//│ | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | |   ?x$Q_1*‡ is 1 then 3
+//│ | | | | | | | | |   else 4
+//│ | | | | | | | | | | CONS: x$Q_1 is 0
+//│ | | | | | | | | | | fill <== vars = {ucs$args_x$Q}
+//│ | | | | | | | | | | | LHS: if then 1
+//│ | | | | | | | | | | | RHS: if
+//│ | | | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | | | |   ?x$Q_1*‡ is 1 then 3
+//│ | | | | | | | | | | |   else 4
+//│ | | | | | | | | | | fill ==> if then 1
+//│ | | | | | | | | | | S+ <== x$Q_1 is 0 : if then 1
+//│ | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | S+ ==> if then 1
+//│ | | | | | | | | | | normalizeToTerm <== if then 1
+//│ | | | | | | | | | | | DFLT: 1
+//│ | | | | | | | | | | normalizeToTerm ==> 1
+//│ | | | | | | | | | | S-(true) <== x$Q_1 is 0 : if
+//│ | | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | | |   ?x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | | |   else 4
+//│ | | | | | | | | | | | CASE Let y
+//│ | | | | | | | | | | | CASE Cons x$Q_1 is 1
+//│ | | | | | | | | | | | Case 1.2: x$Q_1 === x$Q_1
+//│ | | | | | | | | | | | Case 1.2.2: 0 are unrelated with 1
+//│ | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | S-(true) ==> if
+//│ | | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | | |   x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | | |   else 4
+//│ | | | | | | | | | | normalizeToCaseBranches <==
+//│ | | | | | | | | | | | normalizeToCaseBranches <==
+//│ | | | | | | | | | | | | normalizeToTerm <== if
+//│ | | | | | | | | | | | |   x$Q_1*‡ is 1 then 3
+//│ | | | | | | | | | | | |   else 4
+//│ | | | | | | | | | | | | | CONS: x$Q_1 is 1
+//│ | | | | | | | | | | | | | fill <== vars = {ucs$args_x$Q}
+//│ | | | | | | | | | | | | | | LHS: if then 3
+//│ | | | | | | | | | | | | | | RHS: if then 4
+//│ | | | | | | | | | | | | | fill ==> if then 3
+//│ | | | | | | | | | | | | | S+ <== x$Q_1 is 1 : if then 3
+//│ | | | | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | | | | S+ ==> if then 3
+//│ | | | | | | | | | | | | | normalizeToTerm <== if then 3
+//│ | | | | | | | | | | | | | | DFLT: 3
+//│ | | | | | | | | | | | | | normalizeToTerm ==> 3
+//│ | | | | | | | | | | | | | S-(true) <== x$Q_1 is 1 : if then 4
+//│ | | | | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | | | | S-(true) ==> if then 4
+//│ | | | | | | | | | | | | | normalizeToCaseBranches <==
+//│ | | | | | | | | | | | | | normalizeToCaseBranches ==>
+//│ | | | | | | | | | | | | normalizeToTerm ==> case x$Q_1*‡ of
+//│ | | | | | | | | | | | |   1 -> 3
+//│ | | | | | | | | | | | |   _ -> 4
+//│ | | | | | | | | | | | normalizeToCaseBranches ==>
+//│ | | | | | | | | | | normalizeToCaseBranches ==>
+//│ | | | | | | | | | normalizeToTerm ==> case x$Q_1*‡ of
+//│ | | | | | | | | |   0 -> 1
+//│ | | | | | | | | |   _ ->
+//│ | | | | | | | | |     let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | |     case x$Q_1*‡ of
+//│ | | | | | | | | |       1 -> 3
+//│ | | | | | | | | |       _ -> 4
+//│ | | | | | | | | | S-(false) <== x$Q_0 is 0 : if
+//│ | | | | | | | | |   x$Q_0*‡ is 1 and ...
+//│ | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | |   x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | |   else 4
+//│ | | | | | | | | | | CASE Cons x$Q_0 is 1
+//│ | | | | | | | | | | Case 1.2: x$Q_0 === x$Q_0
+//│ | | | | | | | | | | Case 1.2.2: 0 are unrelated with 1
+//│ | | | | | | | | | | CASE Let y
+//│ | | | | | | | | | | CASE Cons x$Q_1 is 1
+//│ | | | | | | | | | | Case 2: x$Q_0 =/= x$Q_1
+//│ | | | | | | | | | | S-(false) <== x$Q_0 is 0 : if then 3
+//│ | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | S-(false) ==> if then 3
+//│ | | | | | | | | | | CASE Else
+//│ | | | | | | | | | S-(false) ==> if
+//│ | | | | | | | | |   x$Q_0*‡ is 1 and ...
+//│ | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | |   x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | |   else 4
+//│ | | | | | | | | | normalizeToCaseBranches <==
+//│ | | | | | | | | | | normalizeToTerm <== if
+//│ | | | | | | | | | |   x$Q_0*‡ is 1 x$Q_1*‡ is 1 then 2
+//│ | | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | | |   x$Q_1*‡ is 1 then 3
+//│ | | | | | | | | | |   else 4
+//│ | | | | | | | | | | | CONS: x$Q_0 is 1
+//│ | | | | | | | | | | | fill <== vars = {ucs$args_x$Q}
+//│ | | | | | | | | | | | | LHS: if x$Q_1*‡ is 1 then 2
+//│ | | | | | | | | | | | | RHS: if
+//│ | | | | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | | | | |   x$Q_1*‡ is 1 then 3
+//│ | | | | | | | | | | | |   else 4
+//│ | | | | | | | | | | | fill ==> if
+//│ | | | | | | | | | | |   x$Q_1*‡ is 1 then 2
+//│ | | | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | | | |   ?x$Q_1*‡ is 1 then 3
+//│ | | | | | | | | | | |   else 4
+//│ | | | | | | | | | | | S+ <== x$Q_0 is 1 : if
+//│ | | | | | | | | | | |   x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | | | |   ?x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | | | |   else 4
+//│ | | | | | | | | | | | | CASE Cons x$Q_1 is 1
+//│ | | | | | | | | | | | | Case 2: x$Q_0 =/= x$Q_1
+//│ | | | | | | | | | | | | S+ <== x$Q_0 is 1 : if then 2
+//│ | | | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | | | S+ ==> if then 2
+//│ | | | | | | | | | | | | CASE Let y
+//│ | | | | | | | | | | | | CASE Cons x$Q_1 is 1
+//│ | | | | | | | | | | | | Case 2: x$Q_0 =/= x$Q_1
+//│ | | | | | | | | | | | | S+ <== x$Q_0 is 1 : if then 3
+//│ | | | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | | | S+ ==> if then 3
+//│ | | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | | S+ ==> if
+//│ | | | | | | | | | | |   x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | | | |   ?x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | | | |   else 4
+//│ | | | | | | | | | | | normalizeToTerm <== if
+//│ | | | | | | | | | | |   x$Q_1*‡ is 1 then 2
+//│ | | | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | | | |   ?x$Q_1*‡ is 1 then 3
+//│ | | | | | | | | | | |   else 4
+//│ | | | | | | | | | | | | CONS: x$Q_1 is 1
+//│ | | | | | | | | | | | | fill <== vars = {ucs$args_x$Q}
+//│ | | | | | | | | | | | | | LHS: if then 2
+//│ | | | | | | | | | | | | | RHS: if
+//│ | | | | | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | | | | | |   ?x$Q_1*‡ is 1 then 3
+//│ | | | | | | | | | | | | |   else 4
+//│ | | | | | | | | | | | | fill ==> if then 2
+//│ | | | | | | | | | | | | S+ <== x$Q_1 is 1 : if then 2
+//│ | | | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | | | S+ ==> if then 2
+//│ | | | | | | | | | | | | normalizeToTerm <== if then 2
+//│ | | | | | | | | | | | | | DFLT: 2
+//│ | | | | | | | | | | | | normalizeToTerm ==> 2
+//│ | | | | | | | | | | | | S-(true) <== x$Q_1 is 1 : if
+//│ | | | | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | | | | |   ?x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | | | | |   else 4
+//│ | | | | | | | | | | | | | CASE Let y
+//│ | | | | | | | | | | | | | CASE Cons x$Q_1 is 1
+//│ | | | | | | | | | | | | | Case 1.2: x$Q_1 === x$Q_1
+//│ | | | | | | | | | | | | | Case 1.2.1: 1 =:= (or <:<) 1
+//│ | | | | | | | | | | | | | `x$Q_1 is 1` is fallback
+//│ | | | | | | | | | | | | | already removed = true
+//│ | | | | | | | | | | | | | S-(true) <== x$Q_1 is 1 : if then 3
+//│ | | | | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | | | | S-(true) ==> if then 3
+//│ | | | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | | | S-(true) ==> if
+//│ | | | | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | | | | |   else 4
+//│ | | | | | | | | | | | | normalizeToCaseBranches <==
+//│ | | | | | | | | | | | | | normalizeToCaseBranches <==
+//│ | | | | | | | | | | | | | normalizeToCaseBranches ==>
+//│ | | | | | | | | | | | | normalizeToCaseBranches ==>
+//│ | | | | | | | | | | | normalizeToTerm ==> case x$Q_1*‡ of
+//│ | | | | | | | | | | |   1 -> 2
+//│ | | | | | | | | | | |   _ ->
+//│ | | | | | | | | | | |     let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | | | |     4
+//│ | | | | | | | | | | | S-(false) <== x$Q_0 is 1 : if
+//│ | | | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | | | |   x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | | | |   else 4
+//│ | | | | | | | | | | | | CASE Let y
+//│ | | | | | | | | | | | | CASE Cons x$Q_1 is 1
+//│ | | | | | | | | | | | | Case 2: x$Q_0 =/= x$Q_1
+//│ | | | | | | | | | | | | S-(false) <== x$Q_0 is 1 : if then 3
+//│ | | | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | | | S-(false) ==> if then 3
+//│ | | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | | S-(false) ==> if
+//│ | | | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | | | |   ?x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | | | |   else 4
+//│ | | | | | | | | | | | normalizeToCaseBranches <==
+//│ | | | | | | | | | | | | normalizeToCaseBranches <==
+//│ | | | | | | | | | | | | | normalizeToTerm <== if
+//│ | | | | | | | | | | | | |   x$Q_1*‡ is 1 then 3
+//│ | | | | | | | | | | | | |   else 4
+//│ | | | | | | | | | | | | | | CONS: x$Q_1 is 1
+//│ | | | | | | | | | | | | | | fill <== vars = {ucs$args_x$Q}
+//│ | | | | | | | | | | | | | | | LHS: if then 3
+//│ | | | | | | | | | | | | | | | RHS: if then 4
+//│ | | | | | | | | | | | | | | fill ==> if then 3
+//│ | | | | | | | | | | | | | | S+ <== x$Q_1 is 1 : if then 3
+//│ | | | | | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | | | | | S+ ==> if then 3
+//│ | | | | | | | | | | | | | | normalizeToTerm <== if then 3
+//│ | | | | | | | | | | | | | | | DFLT: 3
+//│ | | | | | | | | | | | | | | normalizeToTerm ==> 3
+//│ | | | | | | | | | | | | | | S-(true) <== x$Q_1 is 1 : if then 4
+//│ | | | | | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | | | | | S-(true) ==> if then 4
+//│ | | | | | | | | | | | | | | normalizeToCaseBranches <==
+//│ | | | | | | | | | | | | | | normalizeToCaseBranches ==>
+//│ | | | | | | | | | | | | | normalizeToTerm ==> case x$Q_1*‡ of
+//│ | | | | | | | | | | | | |   1 -> 3
+//│ | | | | | | | | | | | | |   _ -> 4
+//│ | | | | | | | | | | | | normalizeToCaseBranches ==>
+//│ | | | | | | | | | | | normalizeToCaseBranches ==>
+//│ | | | | | | | | | | normalizeToTerm ==> case x$Q_0*‡ of
+//│ | | | | | | | | | |   1 ->
+//│ | | | | | | | | | |     case x$Q_1*‡ of
+//│ | | | | | | | | | |       1 -> 2
+//│ | | | | | | | | | |       _ ->
+//│ | | | | | | | | | |         let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | | |         4
+//│ | | | | | | | | | |   _ ->
+//│ | | | | | | | | | |     let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | | |     case x$Q_1*‡ of
+//│ | | | | | | | | | |       1 -> 3
+//│ | | | | | | | | | |       _ -> 4
+//│ | | | | | | | | | normalizeToCaseBranches ==>
+//│ | | | | | | | | normalizeToTerm ==> let ucs$args_x$Q*† = (Q).unapply(x,)
+//│ | | | | | | | | let x$Q_0*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | let x$Q_1*‡ = (ucs$args_x$Q).1
+//│ | | | | | | | | case x$Q_0*‡ of
+//│ | | | | | | | |   0 ->
+//│ | | | | | | | |     case x$Q_1*‡ of
+//│ | | | | | | | |       0 -> 1
+//│ | | | | | | | |       _ ->
+//│ | | | | | | | |         let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | |         case x$Q_1*‡ of
+//│ | | | | | | | |           1 -> 3
+//│ | | | | | | | |           _ -> 4
+//│ | | | | | | | |   _ ->
+//│ | | | | | | | |     case x$Q_0*‡ of
+//│ | | | | | | | |       1 ->
+//│ | | | | | | | |         case x$Q_1*‡ of
+//│ | | | | | | | |           1 -> 2
+//│ | | | | | | | |           _ ->
+//│ | | | | | | | |             let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | |             4
+//│ | | | | | | | |       _ ->
+//│ | | | | | | | |         let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | |         case x$Q_1*‡ of
+//│ | | | | | | | |           1 -> 3
+//│ | | | | | | | |           _ -> 4
+//│ | | | | | | | | S-(false) <== x is Q : if
+//│ | | | | | | | |   x*‡ is Q and ...
+//│ | | | | | | | |   x*‡ is Q and ...
+//│ | | | | | | | |   else 4
+//│ | | | | | | | | | CASE Cons x is Q
+//│ | | | | | | | | | Case 1.2: x === x
+//│ | | | | | | | | | Case 1.2.1: Q =:= (or <:<) Q
+//│ | | | | | | | | | `x is Q` is not fallback
+//│ | | | | | | | | | already removed = false
+//│ | | | | | | | | | S-(false) <== x is Q : if
+//│ | | | | | | | | |   let ucs$args_x$Q*† = (Q).unapply(x,)
+//│ | | | | | | | | |   let x$Q_0*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | |   let x$Q_1*‡ = (ucs$args_x$Q).1
+//│ | | | | | | | | |   x$Q_0*‡ is 1 and ...
+//│ | | | | | | | | | | CASE Let ucs$args_x$Q
+//│ | | | | | | | | | | CASE Let x$Q_0
+//│ | | | | | | | | | | CASE Let x$Q_1
+//│ | | | | | | | | | | CASE Cons x$Q_0 is 1
+//│ | | | | | | | | | | Case 2: x =/= x$Q_0
+//│ | | | | | | | | | | S-(false) <== x is Q : if x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | | | | CASE Cons x$Q_1 is 1
+//│ | | | | | | | | | | | Case 2: x =/= x$Q_1
+//│ | | | | | | | | | | | S-(false) <== x is Q : if then 2
+//│ | | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | | S-(false) ==> if then 2
+//│ | | | | | | | | | | | CASE Nil
+//│ | | | | | | | | | | S-(false) ==> if x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | | | CASE Nil
+//│ | | | | | | | | | S-(false) ==> if
+//│ | | | | | | | | |   let ucs$args_x$Q*† = (Q).unapply(x,)
+//│ | | | | | | | | |   let x$Q_0*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | |   let x$Q_1*‡ = (ucs$args_x$Q).1
+//│ | | | | | | | | |   x$Q_0*‡ is 1 and ...
+//│ | | | | | | | | | CASE Cons x is Q
+//│ | | | | | | | | | Case 1.2: x === x
+//│ | | | | | | | | | Case 1.2.1: Q =:= (or <:<) Q
+//│ | | | | | | | | | `x is Q` is not fallback
+//│ | | | | | | | | | already removed = false
+//│ | | | | | | | | | S-(false) <== x is Q : if
+//│ | | | | | | | | |   let ucs$args_x$Q*† = (Q).unapply(x,)
+//│ | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | |   let x$Q_1*‡ = (ucs$args_x$Q).1
+//│ | | | | | | | | |   x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | | | CASE Let ucs$args_x$Q
+//│ | | | | | | | | | | CASE Let y
+//│ | | | | | | | | | | CASE Let x$Q_1
+//│ | | | | | | | | | | CASE Cons x$Q_1 is 1
+//│ | | | | | | | | | | Case 2: x =/= x$Q_1
+//│ | | | | | | | | | | S-(false) <== x is Q : if then 3
+//│ | | | | | | | | | | | CASE Else
+//│ | | | | | | | | | | S-(false) ==> if then 3
+//│ | | | | | | | | | | CASE Nil
+//│ | | | | | | | | | S-(false) ==> if
+//│ | | | | | | | | |   let ucs$args_x$Q*† = (Q).unapply(x,)
+//│ | | | | | | | | |   let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | | | |   let x$Q_1*‡ = (ucs$args_x$Q).1
+//│ | | | | | | | | |   x$Q_1*‡ is 1 then ...
+//│ | | | | | | | | | CASE Else
+//│ | | | | | | | | S-(false) ==> if then 4
+//│ | | | | | | | | normalizeToCaseBranches <==
+//│ | | | | | | | | normalizeToCaseBranches ==>
+//│ | | | | | | | normalizeToTerm ==> case x*‡ of
+//│ | | | | | | |   Q*◊ ->
+//│ | | | | | | |     let ucs$args_x$Q*† = (Q).unapply(x,)
+//│ | | | | | | |     let x$Q_0*‡ = (ucs$args_x$Q).0
+//│ | | | | | | |     let x$Q_1*‡ = (ucs$args_x$Q).1
+//│ | | | | | | |     case x$Q_0*‡ of
+//│ | | | | | | |       0 ->
+//│ | | | | | | |         case x$Q_1*‡ of
+//│ | | | | | | |           0 -> 1
+//│ | | | | | | |           _ ->
+//│ | | | | | | |             let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | |             case x$Q_1*‡ of
+//│ | | | | | | |               1 -> 3
+//│ | | | | | | |               _ -> 4
+//│ | | | | | | |       _ ->
+//│ | | | | | | |         case x$Q_0*‡ of
+//│ | | | | | | |           1 ->
+//│ | | | | | | |             case x$Q_1*‡ of
+//│ | | | | | | |               1 -> 2
+//│ | | | | | | |               _ ->
+//│ | | | | | | |                 let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | |                 4
+//│ | | | | | | |           _ ->
+//│ | | | | | | |             let y*‡ = (ucs$args_x$Q).0
+//│ | | | | | | |             case x$Q_1*‡ of
+//│ | | | | | | |               1 -> 3
+//│ | | | | | | |               _ -> 4
+//│ | | | | | | |   _ -> 4
+//│ fun f: (Object & ~#Q | Q[Object, Object]) -> (1 | 2 | 3 | 4)

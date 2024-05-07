@@ -10,12 +10,28 @@ class Derived3() extends Derived2()
 //│ class Derived3() extends Base, Derived2
 
 // The very basic case.
-// :w
-// Should warn about that the last two cases are unreachable.
+// It should warn about that the last two cases are unreachable.
+:w
+:ducs:normalize.result
 fun f1(x) = if x is
   Base then "b"
   Derived1 then "d1"
   Derived2 then "d2"
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   Base*◊ -> "b"
+//│ ╔══[WARNING] found a duplicated case
+//│ ║  l.18: 	  Derived1 then "d1"
+//│ ║        	  ^^^^^^^^
+//│ ╟── the case is covered by pattern Base
+//│ ║  l.17: 	  Base then "b"
+//│ ╙──      	  ^^^^
+//│ ╔══[WARNING] found a duplicated case
+//│ ║  l.19: 	  Derived2 then "d2"
+//│ ║        	  ^^^^^^^^
+//│ ╟── the case is covered by pattern Base
+//│ ║  l.17: 	  Base then "b"
+//│ ╙──      	  ^^^^
 //│ fun f1: Base -> "b"
 
 f1(Base())
