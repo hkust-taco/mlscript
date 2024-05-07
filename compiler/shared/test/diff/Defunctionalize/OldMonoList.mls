@@ -1,6 +1,7 @@
 :NewDefs
 :AllowRuntimeErrors
 
+// FIXME
 :mono
 class List(e: Int, tail: List | Nil) {
   fun map: (Int -> Int) -> List 
@@ -42,23 +43,7 @@ fun add2(x) = x+2
 //│   fun apply$Lambda1$2$3 = (this, x,) => +(x, 1,)
 //│   Code(List(main$$5()))
 //│ }
-//│ ╔══[ERROR] the `if` expression has already been desugared
-//│ ║  l.7: 	  fun map(f)= new List(f(e), tail.map(f))
-//│ ║       	                         ^
-//│ ╙── please make sure that the objects are copied
-//│ class Lambda1$3$4()
-//│ class Nil$2()
-//│ class List$1(e: Int, tail: List$1 | Nil$2)
-//│ class Lambda1$2$3()
-//│ fun map$List$1: (Object, Object) -> List$1
-//│ fun add2$1: Int -> Int
-//│ fun main$$5: () -> List$1
-//│ fun apply$Lambda1$3$4: (anything, Int) -> Int
-//│ fun map$Nil$2: forall 'a. ('a & (List$1 | Nil$2), anything) -> (Nil$2 | 'a)
-//│ fun apply$Lambda1$2$3: (anything, Int) -> Int
-//│ List$1
-//│ res
-//│     = List$1 {}
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: the `if` expression has already been desugared, please make sure that the objects are copied
 
 :mono
 class List(e: Int, tail: List | Nil) {
