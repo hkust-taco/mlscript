@@ -93,7 +93,7 @@ class Scrutinee(val context: Context, parent: Opt[Scrutinee]) {
         parentScrutinee.classLikePatterns.iterator.flatMap { case (symbol, pattern) =>
           pattern.findSubScrutinee(this).map(_ -> symbol.name)
         }.nextOption() match {
-          case S(index -> typeName) => s"${index.toOrdinalWord} argument of `${typeName}`"
+          case S(index -> typeName) => s"the ${index.toOrdinalWord} argument of `${typeName}`"
           case N => s"`${scrutineeVar.name}`" // Still not the best.
         }
     }

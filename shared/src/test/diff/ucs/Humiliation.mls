@@ -52,20 +52,20 @@ fun foo(x) = if x is
 //│ ╔══[ERROR] when `x` is `Pair`, and
 //│ ║  l.50: 	  Pair(Z(), Z()) then "zeros"
 //│ ║        	  ^^^^
-//│ ╟── first argument of `Pair` is `Z`,
+//│ ╟── the first argument of `Pair` is `Z`,
 //│ ║  l.50: 	  Pair(Z(), Z()) then "zeros"
 //│ ║        	       ^
-//│ ╟── second argument of `Pair` has 1 missing case
+//│ ╟── the second argument of `Pair` has 1 missing case
 //│ ╟── it can be class `O`
 //│ ║  l.51: 	  Pair(O(), O()) then "ones"
 //│ ╙──      	            ^
 //│ ╔══[ERROR] when `x` is `Pair`, and
 //│ ║  l.50: 	  Pair(Z(), Z()) then "zeros"
 //│ ║        	  ^^^^
-//│ ╟── first argument of `Pair` is `O`,
+//│ ╟── the first argument of `Pair` is `O`,
 //│ ║  l.51: 	  Pair(O(), O()) then "ones"
 //│ ║        	       ^
-//│ ╟── second argument of `Pair` has 1 missing case
+//│ ╟── the second argument of `Pair` has 1 missing case
 //│ ╟── it can be class `Z`
 //│ ║  l.50: 	  Pair(Z(), Z()) then "zeros"
 //│ ╙──      	            ^
@@ -139,7 +139,7 @@ fun foo(x) = if x is
 //│ ╔══[ERROR] when `x` is `Pair`
 //│ ║  l.136: 	  Pair(Z(), Z()) then "zeros"
 //│ ║         	  ^^^^
-//│ ╟── second argument of `Pair` has 1 missing case
+//│ ╟── the second argument of `Pair` has 1 missing case
 //│ ╟── it can be class `Z`
 //│ ║  l.136: 	  Pair(Z(), Z()) then "zeros"
 //│ ╙──       	            ^

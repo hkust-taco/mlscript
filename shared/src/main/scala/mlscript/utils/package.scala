@@ -29,6 +29,7 @@ package object utils {
         case 1 => "first"
         case 2 => "second"
         case 3 => "third"
+        case n @ (11 | 12 | 13) => s"${n}th"
         case n => self.toString + (n % 10 match {
           case 1 => "st"
           case 2 => "nd"
