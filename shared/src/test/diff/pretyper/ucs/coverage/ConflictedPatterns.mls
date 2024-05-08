@@ -24,7 +24,7 @@ fun f(x) = if
 //│ case x*‡ of
 //│   X*◊ -> 2
 //│   _ -> 2
-//│ ╔══[WARNING] possibly conflicted patterns
+//│ ╔══[WARNING] possibly conflicting patterns
 //│ ║  l.21: 	  x is X and x is Y then 1
 //│ ║        	                  ^
 //│ ╟── the scrutinee was matched against X
@@ -47,7 +47,7 @@ fun f(x) = if
 //│ case x*‡ of
 //│   X*◊ -> 3
 //│   _ -> 3
-//│ ╔══[WARNING] possibly conflicted patterns
+//│ ╔══[WARNING] possibly conflicting patterns
 //│ ║  l.43: 	    x is Y then 1
 //│ ║        	         ^
 //│ ╟── the scrutinee was matched against X
@@ -56,7 +56,7 @@ fun f(x) = if
 //│ ╟── which is unrelated with Y
 //│ ║  l.43: 	    x is Y then 1
 //│ ╙──      	         ^
-//│ ╔══[WARNING] possibly conflicted patterns
+//│ ╔══[WARNING] possibly conflicting patterns
 //│ ║  l.44: 	    x is Y then 2
 //│ ║        	         ^
 //│ ╟── the scrutinee was matched against X
@@ -78,7 +78,7 @@ fun f(x) = if
 //│ case x*‡ of
 //│   X*◊ -> 3
 //│   _ -> 3
-//│ ╔══[WARNING] possibly conflicted patterns
+//│ ╔══[WARNING] possibly conflicting patterns
 //│ ║  l.74: 	    x is Y then 1
 //│ ║        	         ^
 //│ ╟── the scrutinee was matched against X
@@ -87,7 +87,7 @@ fun f(x) = if
 //│ ╟── which is unrelated with Y
 //│ ║  l.74: 	    x is Y then 1
 //│ ╙──      	         ^
-//│ ╔══[WARNING] possibly conflicted patterns
+//│ ╔══[WARNING] possibly conflicting patterns
 //│ ║  l.75: 	    x is Z then 2
 //│ ║        	         ^
 //│ ╟── the scrutinee was matched against X
@@ -109,7 +109,7 @@ fun f(x) = if
 //│ case x*‡ of
 //│   X*◊ -> 2
 //│   _ -> 2
-//│ ╔══[WARNING] possibly conflicted patterns
+//│ ╔══[WARNING] possibly conflicting patterns
 //│ ║  l.105: 	    x is Y and
 //│ ║         	         ^
 //│ ╟── the scrutinee was matched against X
