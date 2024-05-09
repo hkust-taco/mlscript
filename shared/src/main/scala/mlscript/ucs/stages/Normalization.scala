@@ -269,7 +269,7 @@ trait Normalization { self: Desugarer with Traceable =>
                     continuation :++ specializeImpl(tail)
                   } else {
                     raiseDesugaringWarning(
-                      msg"possibly conflicting patterns" -> thatPattern.toLoc,
+                      msg"possibly conflicting patterns for this scrutinee" -> scrutineeVar.toLoc,
                       msg"the scrutinee was matched against ${pattern.toString}" -> pattern.toLoc,
                       msg"which is unrelated with ${thatPattern.toString}" -> thatPattern.toLoc)
                     specializeImpl(tail)

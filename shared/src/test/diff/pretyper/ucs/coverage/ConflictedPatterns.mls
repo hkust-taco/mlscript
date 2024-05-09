@@ -24,9 +24,9 @@ fun f(x) = if
 //│ case x*‡ of
 //│   X*◊ -> 2
 //│   _ -> 2
-//│ ╔══[WARNING] possibly conflicting patterns
+//│ ╔══[WARNING] possibly conflicting patterns for this scrutinee
 //│ ║  l.21: 	  x is X and x is Y then 1
-//│ ║        	                  ^
+//│ ║        	  ^
 //│ ╟── the scrutinee was matched against X
 //│ ║  l.21: 	  x is X and x is Y then 1
 //│ ║        	       ^
@@ -47,18 +47,18 @@ fun f(x) = if
 //│ case x*‡ of
 //│   X*◊ -> 3
 //│   _ -> 3
-//│ ╔══[WARNING] possibly conflicting patterns
-//│ ║  l.43: 	    x is Y then 1
-//│ ║        	         ^
+//│ ╔══[WARNING] possibly conflicting patterns for this scrutinee
+//│ ║  l.42: 	  x is X and
+//│ ║        	  ^
 //│ ╟── the scrutinee was matched against X
 //│ ║  l.42: 	  x is X and
 //│ ║        	       ^
 //│ ╟── which is unrelated with Y
 //│ ║  l.43: 	    x is Y then 1
 //│ ╙──      	         ^
-//│ ╔══[WARNING] possibly conflicting patterns
-//│ ║  l.44: 	    x is Y then 2
-//│ ║        	         ^
+//│ ╔══[WARNING] possibly conflicting patterns for this scrutinee
+//│ ║  l.42: 	  x is X and
+//│ ║        	  ^
 //│ ╟── the scrutinee was matched against X
 //│ ║  l.42: 	  x is X and
 //│ ║        	       ^
@@ -78,18 +78,18 @@ fun f(x) = if
 //│ case x*‡ of
 //│   X*◊ -> 3
 //│   _ -> 3
-//│ ╔══[WARNING] possibly conflicting patterns
-//│ ║  l.74: 	    x is Y then 1
-//│ ║        	         ^
+//│ ╔══[WARNING] possibly conflicting patterns for this scrutinee
+//│ ║  l.73: 	  x is X and
+//│ ║        	  ^
 //│ ╟── the scrutinee was matched against X
 //│ ║  l.73: 	  x is X and
 //│ ║        	       ^
 //│ ╟── which is unrelated with Y
 //│ ║  l.74: 	    x is Y then 1
 //│ ╙──      	         ^
-//│ ╔══[WARNING] possibly conflicting patterns
-//│ ║  l.75: 	    x is Z then 2
-//│ ║        	         ^
+//│ ╔══[WARNING] possibly conflicting patterns for this scrutinee
+//│ ║  l.73: 	  x is X and
+//│ ║        	  ^
 //│ ╟── the scrutinee was matched against X
 //│ ║  l.73: 	  x is X and
 //│ ║        	       ^
@@ -109,9 +109,9 @@ fun f(x) = if
 //│ case x*‡ of
 //│   X*◊ -> 2
 //│   _ -> 2
-//│ ╔══[WARNING] possibly conflicting patterns
-//│ ║  l.105: 	    x is Y and
-//│ ║         	         ^
+//│ ╔══[WARNING] possibly conflicting patterns for this scrutinee
+//│ ║  l.104: 	  x is X and
+//│ ║         	  ^
 //│ ╟── the scrutinee was matched against X
 //│ ║  l.104: 	  x is X and
 //│ ║         	       ^
