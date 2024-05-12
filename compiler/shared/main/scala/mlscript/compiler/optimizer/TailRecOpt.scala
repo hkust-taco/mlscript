@@ -11,20 +11,25 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
   case class LetCtorNodeInfo(node: LetExpr, ctor: Expr.CtorApp, cls: ClassInfo, ctorValName: Name, fieldName: String, idx: Int)
 
   enum CallInfo:
+    case NormalCallInfo(src: Defn, defn: Defn) extends CallInfo
     case TailCallInfo(src: Defn, defn: Defn) extends CallInfo
     case ModConsCallInfo(src: Defn, startNode: Node, defn: Defn, letCallNode: LetCall, letCtorNode: LetCtorNodeInfo, retName: Name, retNode: Node) extends CallInfo
 
     override def toString(): String = this match
+      case NormalCallInfo(src, defn) =>
+        f"Call { ${src.name}$$${src.id} -> ${defn.name}$$${defn.id} }"
       case TailCallInfo(src, defn) => 
         f"TailCall { ${src.name}$$${src.id} -> ${defn.name}$$${defn.id} }"
       case ModConsCallInfo(src, startNode, defn, letCallNode, letCtorNode, _, _) =>
         f"ModConsCall { ${src.name}$$${src.id} -> ${defn.name}$$${defn.id}, class: ${letCtorNode.cls.ident}, field: ${letCtorNode.fieldName} }"
 
     def getSrc = this match
+      case NormalCallInfo(src, _) => src 
       case TailCallInfo(src, _) => src
       case ModConsCallInfo(src, _, _, _, _, _, _) => src 
 
     def getDefn = this match
+      case NormalCallInfo(_, defn) => defn
       case TailCallInfo(_, defn) => defn
       case ModConsCallInfo(_, _, defn, _, _, _, _) => defn
     
@@ -34,6 +39,12 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
   private class ScComponent(val nodes: Set[Defn], val edges: Set[CallInfo], val joinPoints: Set[Defn])
 
   import CallInfo._
+
+  def filterOptCalls(calls: Iterable[CallInfo]) =
+    calls.collect { case c: TailCallInfo => c; case c: ModConsCallInfo => c }
+
+  def filterNormalCalls(calls: Iterable[CallInfo]) =
+    calls.collect { case c: NormalCallInfo => c }
 
   // Hack to make scala think discoverJoinPoints is tail recursive and be
   // partially optimized :P
@@ -66,37 +77,57 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
       if names.contains(nme) then Some(nme)
       else None
 
-  // would prefer to have this inside discoverOptimizableCalls, but this makes scala think it's not tail recursive
+  // would prefer to have this inside discoverOptCalls, but scala does not support partially tail recursive functions directly
   def shadowAndCont(next: Node, nme: Name)(implicit
-    acc: Map[Int, Set[CallInfo]],
+    acc: Set[CallInfo],
     src: Defn,
+    scc: Set[Defn],
     start: Node,
     calledDefn: Option[Defn],
     letCallNode: Option[LetCall],
     letCtorNode: Option[LetCtorNodeInfo],
     containingCtors: Set[Name]
-  ) = discoverOptimizableCalls(next)(acc, src, start, calledDefn, letCallNode, letCtorNode, containingCtors - nme) 
+  ) = searchOptCalls(next)(acc, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors - nme) 
+
+  // same here...
+  def invalidateAndCont(body: Node)(implicit
+    acc: Set[CallInfo],
+    src: Defn,
+    scc: Set[Defn],
+    start: Node,
+    calledDefn: Option[Defn],
+    letCallNode: Option[LetCall],
+    letCtorNode: Option[LetCtorNodeInfo],
+    containingCtors: Set[Name]
+  ) =
+    letCallNode match
+      case None => searchOptCalls(body)(acc, src, scc, start, None, None, None, Set()) // invalidate everything that's been discovered
+      case Some(LetCall(_, defn, _, isTailRec, _)) =>
+        if isTailRec then 
+          throw IRError("not a tail call")
+        else 
+          val newAcc = acc + NormalCallInfo(src, defn.expectDefn)
+          searchOptCalls(body)(newAcc, src, scc, start, None, None, None, Set()) // invalidate everything that's been discovered
   
   @tailrec
-  private def discoverOptimizableCalls(node: Node)(implicit
-    acc: Map[Int, Set[CallInfo]],
+  private def searchOptCalls(node: Node)(implicit
+    acc: Set[CallInfo],
     src: Defn,
+    scc: Set[Defn],
     start: Node,
     calledDefn: Option[Defn], // The definition that was called in a tailrec mod cons call
     letCallNode: Option[LetCall], // The place where that definition was called
     letCtorNode: Option[LetCtorNodeInfo], // The place where the result from that call was put into a constructor
     containingCtors: Set[Name], // Value names of ctors containing the constructor containing the result from the call
-  ): Either[Map[Int, Set[CallInfo]], List[Node]] = 
-    def updateMap(acc: Map[Int, Set[CallInfo]], c: Set[CallInfo]) =
-      acc.get(src.id) match
-        case None => acc + (src.id -> c)
-        case Some(value) => acc + (src.id -> (value ++ c))
-    
-    def updateMapSimple(c: CallInfo) = updateMap(acc, Set(c))
+  ): Either[Set[CallInfo], List[Node]] = 
+
+    def updateMapSimple(c: CallInfo) = acc + c
 
     def returnNone = letCallNode match
       case Some(LetCall(_, _, _, isTailRec, _)) if isTailRec => throw IRError("not a tail call")
-      case _ => Right(Nil)
+      case _ => calledDefn match
+        case None => Left(acc)
+        case Some(dest) => Left(updateMapSimple(NormalCallInfo(src, dest))) // treat the discovered call as a normal call
 
     node match // Left if mod cons call found, Right if none was found -- we return the next nodes to be scanned 
       case Result(res) =>
@@ -130,8 +161,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
                 if names.contains(name) then
                   // if the is marked as tail recursive, we must use that call as the mod cons call, so error. otherwise,
                   // invalidate the discovered call and continue
-                  if isTailRec then throw IRError("not a mod cons call")
-                  else discoverOptimizableCalls(body)(acc, src, start, None, None, None, Set()) // invalidate everything that's been discovered
+                  invalidateAndCont(body)
                 else
                   shadowAndCont(body, name) // OK
           
@@ -157,7 +187,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
                     shadowAndCont(body, name) // does not use, OK to ignore this one
                   else 
                     // add this name to the list of constructors containing the call
-                    discoverOptimizableCalls(body)(acc, src, start, calledDefn, letCallNode, letCtorNode, containingCtors + name) 
+                    searchOptCalls(body)(acc, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors + name) 
                 else
                   // it does use it, further analyse
                   letCtorNode match
@@ -176,14 +206,13 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
                       val fieldName = clsInfo.fields(ctorArgIndex)
                       
                       // populate required values
-                      discoverOptimizableCalls(body)(acc, src, start, calledDefn, letCallNode, Some(LetCtorNodeInfo(x, y, clsInfo, name, fieldName, ctorArgIndex)), Set(name))
+                      searchOptCalls(body)(acc, src, scc, start, calledDefn, letCallNode, Some(LetCtorNodeInfo(x, y, clsInfo, name, fieldName, ctorArgIndex)), Set(name))
                     case Some(_) =>
                       // another constructor is already using the call. Not OK
 
                       // if the is marked as tail recursive, we must use that call as the mod cons call, so error. otherwise,
                       // invalidate the discovered call and continue
-                      if isTailRec then throw IRError("not a mod cons call")
-                      else discoverOptimizableCalls(body)(acc, src, start, None, None, None, Set()) // invalidate everything that's been discovered
+                      invalidateAndCont(body)
 
           case Expr.Select(name, cls, field) =>
             letCallNode match
@@ -193,8 +222,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
                 if names.contains(name) then
                   // if the is marked as tail recursive, we must use that call as the mod cons call, so error. otherwise,
                   // invalidate the discovered call and continue
-                  if isTailRec then throw IRError("not a mod cons call")
-                  else discoverOptimizableCalls(body)(acc, src, start, None, None, None, Set()) // invalidate everything that's been discovered
+                  invalidateAndCont(body)
                 else
                   shadowAndCont(body, name) // OK
           case Expr.BasicOp(_, args) =>
@@ -211,21 +239,25 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
                 else
                   // if the is marked as tail recursive, we must use that call as the mod cons call, so error. otherwise,
                   // invalidate the discovered call and continue
-                  if isTailRec then throw IRError("not a mod cons call")
-                  else discoverOptimizableCalls(body)(acc, src, start, None, None, None, Set()) // invalidate everything that's been discovered
+                  invalidateAndCont(body)
       case x: LetCall =>
         val LetCall(names, defn, args, isTailRec, body) = x
 
-        if isTailCall(x) then
+        val callInScc = scc.contains(defn.expectDefn)
+        
+        // Only deal with
+        if callInScc && isTailCall(x) then
           Left(updateMapSimple(TailCallInfo(src, defn.expectDefn)))
         else
           letCallNode match
-            case None => // OK, use this LetCall as the mod cons
+            case None => // OK, we may use this LetCall as the mod cons
               // For now, only optimize functions which return one value
-              if defn.expectDefn.resultNum == 1 then
-                discoverOptimizableCalls(body)(acc, src, start, Some(defn.expectDefn), Some(x), None, Set())
+              if callInScc && defn.expectDefn.resultNum == 1 then
+                searchOptCalls(body)(acc, src, scc, start, Some(defn.expectDefn), Some(x), None, Set())
               else
-                discoverOptimizableCalls(body)
+                // Treat this as a normal call
+                val newMap = updateMapSimple(NormalCallInfo(src, defn.expectDefn))
+                searchOptCalls(body)(newMap, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors)
             case Some(LetCall(namesOld, defnOld, argsOld, isTailRecOld, bodyOld)) =>
               if isTailRecOld && isTailRec then
                 // 1. If both the old and newly discovered call are marked with tailrec, error
@@ -237,35 +269,43 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
                 val namesSet = namesOld.toSet
                 val inters = argNames.intersect(namesSet)
 
-                if inters.isEmpty then discoverOptimizableCalls(body) // OK
-                else throw IRError("not a mod cons call") 
+                if inters.isEmpty then 
+                  // Treat this as a normal call
+                  val newMap = updateMapSimple(NormalCallInfo(src, defn.expectDefn))
+                  searchOptCalls(body)(newMap, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors) // OK
+                else throw IRError("not a tail call") 
               else
                 // only include mod cons calls that have one return value
-                if defn.expectDefn.resultNum == 1 then 
+                if callInScc && defn.expectDefn.resultNum == 1 then 
                   // old call is not tailrec, so we can override it however we want
                   // we take a lucky guess and mark this as the mod cons call, but the
                   // user really should mark which calls should be tailrec
-                  discoverOptimizableCalls(body)(acc, src, start, Some(defn.expectDefn), Some(x), None, Set())
+                    
+                  // Treat the old call as a normal call
+                  val newMap = updateMapSimple(NormalCallInfo(src, defnOld.expectDefn))
+                  searchOptCalls(body)(newMap, src, scc, start, Some(defn.expectDefn), Some(x), None, Set())
                 else
                   // shadow all the variables in this letcall
-                  discoverOptimizableCalls(body)(acc, src, start, calledDefn, letCallNode, letCtorNode, containingCtors -- names)
+                  
+                  // Treat this as a normal call
+                  val newMap = updateMapSimple(NormalCallInfo(src, defn.expectDefn))
+                  searchOptCalls(body)(acc, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors -- names)
         
       case AssignField(assignee, clsInfo, assignmentFieldName, value, body) =>
         // make sure `value` is not the mod cons call
         letCallNode match
-          case None => discoverOptimizableCalls(body) // OK
+          case None => searchOptCalls(body) // OK
           case Some(LetCall(names, defn, args, isTailRec, body)) =>
             value match
               case Expr.Ref(name) =>
-                if names.contains(name) && isTailRec then throw IRError("not a mod cons call")
-                  else discoverOptimizableCalls(body)(acc, src, start, None, None, None, Set()) // invalidate everything that's been discovered
+                invalidateAndCont(body)
               case _ =>
                 letCtorNode match
-                  case None => discoverOptimizableCalls(body) // OK
+                  case None => searchOptCalls(body) // OK
                   case Some(LetCtorNodeInfo(_, ctor, _, name, fieldName, _)) =>
                     // If this assignment overwrites the mod cons value, forget it
-                    if fieldName == assignmentFieldName && isTailRec then throw IRError("not a mod cons call")
-                    else discoverOptimizableCalls(body)(acc, src, start, None, None, None, Set()) // invalidate everything that's been discovered
+                    if containingCtors.contains(assignee) then invalidateAndCont(body)
+                    else searchOptCalls(body)
 
   // checks whether a list of names is equal to a list of trivial expressions referencing those names
   private def argsListEqual(names: List[Name], exprs: List[TrivialExpr]) =
@@ -288,20 +328,32 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
         case _                => false
     case _ => false
 
-  private def discoverCallsCont(node: Node)(implicit src: Defn, acc: Map[Int, Set[CallInfo]]): Map[Int, Set[CallInfo]] =
-    discoverOptimizableCalls(node)(acc, src, node, None, None, None, Set()) match
+  private def discoverOptCallsNode(node: Node)(implicit src: Defn, scc: Set[Defn], acc: Set[CallInfo]): Set[CallInfo] = 
+    searchOptCalls(node)(acc, src, scc, node, None, None, None, Set()) match
       case Left(acc) => acc
-      case Right(nodes) => nodes.foldLeft(acc)((acc, node) => discoverCallsNode(node)(src, acc))
+      case Right(nodes) => nodes.foldLeft(acc)((acc, node) => discoverOptCallsNode(node)(src, scc, acc))
 
-  private def discoverCallsNode(node: Node)(implicit src: Defn, acc: Map[Int, Set[CallInfo]]): Map[Int, Set[CallInfo]] = 
-    val ret = discoverCallsCont(node)
-    ret.get(src.id) match
-      case None => ret + (src.id -> Set())
-      case Some(value) => ret
-
-  private def discoverCalls(defn: Defn, jps: Set[Defn])(implicit acc: Map[Int, Set[CallInfo]]): Map[Int, Set[CallInfo]] =
+  private def discoverOptCalls(defn: Defn, jps: Set[Defn])(implicit scc: Set[Defn], acc: Set[CallInfo]): Set[CallInfo] =
     val combined = jps + defn
-    combined.foldLeft(acc)((acc, defn_) => discoverCallsNode(defn_.body)(defn, acc))
+    combined.foldLeft(acc)((acc, defn_) => discoverOptCallsNode(defn_.body)(defn, scc, acc))
+
+  private def searchCalls(node: Node)(implicit src: Defn, acc: Map[Int, Set[Defn]]): Map[Int, Set[Defn]] =
+    node match
+      case Result(res) => acc
+      case Jump(defn, args) => acc
+      case Case(scrut, cases) => cases.foldLeft(acc)((acc, item) => searchCalls(item._2)(src, acc))
+      case LetExpr(name, expr, body) => searchCalls(body)
+      case LetCall(names, defn, args, isTailRec, body) => 
+        val newSet = acc.get(src.id) match
+          case None => Set(defn.expectDefn)
+          case Some(defns) => defns + defn.expectDefn
+        searchCalls(body)(src, acc + (src.id -> newSet))
+      case AssignField(assignee, clsInfo, fieldName, value, body) => searchCalls(body)
+    
+
+  private def discoverCalls(defn: Defn, jps: Set[Defn])(implicit acc: Map[Int, Set[Defn]]): Map[Int, Set[Defn]] =
+    val combined = jps + defn
+    combined.foldLeft(acc)((acc, defn_) => searchCalls(defn_.body)(defn, acc))
   
   // Partions a tail recursive call graph into strongly connected components
   // Refernece: https://en.wikipedia.org/wiki/Strongly_connected_component
@@ -320,13 +372,13 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
 
   private def partitionNodes(implicit nodeMap: Map[Int, DefnNode]): List[DefnGraph] =
     val defns = nodeMap.values.toSet
-    val inital = Map[Int, Set[CallInfo]]()
+    val inital = Map[Int, Set[Defn]]()
     val joinPoints = defns.map(d => (d.defn.id -> discoverJoinPoints(d.defn.body, Set()))).toMap
     val edges = defns.foldLeft(inital)((acc, defn) => discoverCalls(defn.defn, joinPoints(defn.defn.id))(acc)).withDefaultValue(Set())
 
     var ctr = 0
     // nodes, edges
-    var stack: List[(DefnNode, Set[CallInfo])] = Nil
+    var stack: List[DefnNode] = Nil
     var sccs: List[DefnGraph] = Nil
 
     def dfs(src: DefnNode): Unit =
@@ -336,9 +388,9 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
       src.visited = true
       
       val tailCalls = edges(src.defn.id)
-      stack = (src, tailCalls) :: stack
+      stack = src :: stack
       for u <- tailCalls do
-        val neighbour = nodeMap(u.getDefn.id)
+        val neighbour = nodeMap(u.id)
         if (neighbour.visited) then
           if (!neighbour.processed)
             src.lowest = neighbour.num.min(src.lowest)
@@ -351,33 +403,37 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
 
       if (src.num == src.lowest) then
         var scc: Set[DefnNode] = Set()
-        var sccEdges: Set[CallInfo] = Set()
 
-        def pop(): (DefnNode, Set[CallInfo]) =
+        def pop(): DefnNode =
           val ret = stack.head
           stack = stack.tail
           ret
         
 
-        var (vertex, edges) = pop()
+        var vertex = pop()
 
         while (vertex != src) {
           scc = scc + vertex
-          sccEdges = edges ++ sccEdges
           
           val next = pop()
-          vertex = next._1
-          edges = next._2
+          vertex = next
         }
 
         scc = scc + vertex
-        sccEdges = edges ++ sccEdges
 
         val sccIds = scc.map { d => d.defn.id }
-        sccEdges = sccEdges.filter { c => sccIds.contains(c.getDefn.id)}
 
         val sccJoinPoints = scc.foldLeft(Set[Defn]())((jps, defn) => joinPoints(defn.defn.id))
-        sccs = DefnGraph(scc, sccEdges, sccJoinPoints) :: sccs
+
+        val sccDefns = scc.map(d => d.defn)
+
+        val categorizedEdges = scc
+          .foldLeft(Set[CallInfo]())(
+            (calls, defn) => discoverOptCalls(defn.defn, joinPoints(defn.defn.id))(sccDefns, calls)
+          )
+          .filter(c => sccDefns.contains(c.getDefn))
+
+        sccs = DefnGraph(scc, categorizedEdges, sccJoinPoints) :: sccs
       
     for v <- defns do
       if (!v.visited)
@@ -729,7 +785,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
       val defn = defns.head
       
       // if the function does not even tail call itself, just return
-      if edges.size == 0 then
+      if filterOptCalls(edges).size == 0 then
         return (defns, defns.head)
       
       val jpName = defn.name + "_jp"
@@ -867,6 +923,11 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
     partitionNodes(nodeMap).map(_.removeMetadata)
 
   private def optimizeParition(component: ScComponent, classes: Set[ClassInfo]): (Set[Defn], Defn) =
+    val isTailRec = component.nodes.find { _.isTailRec }.isDefined
+    // println(component.edges)
+    if isTailRec && filterNormalCalls(component.edges).size != 0 then
+      throw IRError("at least one function is not tail recursive") // TODO: better error message
+
     val (modConsComp, other) = optimizeModCons(component, classes)
     val (trOpt, mergedDefn) = optimizeTailRec(modConsComp, classes)
     (other ++ trOpt, mergedDefn)
@@ -879,8 +940,6 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
     val optimized = partitions.map { optimizeParition(_, p.classes) } 
     val newDefs: Set[Defn] = optimized.flatMap { _._1 }.toSet
     val mergedDefs: List[Defn] = optimized.map { _._2 }
-
-    // Build the call graph of the program
 
     // update the definition refs
     newDefs.foreach { defn => resolveDefnRef(defn.body, newDefs, true) }

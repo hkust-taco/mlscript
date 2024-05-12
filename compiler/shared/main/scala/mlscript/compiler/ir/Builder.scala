@@ -260,7 +260,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
         params = names,
         resultNum = 1,
         buildResultFromTerm(body) { x => x },
-        nfd.annotations.find { case Var("annotation") => true; case _ => false }.isDefined
+        nfd.annotations.find { case Var("tailrec") => true; case _ => false }.isDefined
       )
     case _ => throw IRError("unsupported NuFunDef")
   
