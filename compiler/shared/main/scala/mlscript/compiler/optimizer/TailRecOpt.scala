@@ -94,7 +94,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
     
     def updateMapSimple(c: CallInfo) = updateMap(acc, Set(c))
 
-    def returnFailure = letCallNode match
+    def returnNone = letCallNode match
       case Some(LetCall(_, _, _, isTailRec, _)) if isTailRec => throw IRError("not a tail call")
       case _ => Right(Nil)
 
@@ -103,38 +103,18 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
         (calledDefn, letCallNode, letCtorNode) match
           case (Some(defn), Some(letCallNode), Some(letCtorName)) =>
             getRetName(containingCtors, res) match
-              case None => returnFailure
+              case None => returnNone
               case Some(value) => Left(updateMapSimple(ModConsCallInfo(src, start, defn, letCallNode, letCtorName, value, node)))
-          case _ => returnFailure
+          case _ => returnNone
       case Jump(jp, args) => 
-        def mergeCalls(acc: Map[Int, Set[CallInfo]], calls: Set[CallInfo]) =
-          val newCalls = calls.map {
-            case TailCallInfo(_, defn) => 
-              TailCallInfo(src, defn)
-            case ModConsCallInfo(_, startNode, defn, letCallNode, letCtorNode, retName, retNode) =>
-              ModConsCallInfo(src, startNode, defn, letCallNode, letCtorNode, retName, retNode)
-          }
-          updateMap(acc, newCalls)
-
-        def updateAndMergeJpCalls = letCallNode match
-          case Some(LetCall(_, _, _, isTailRec, _)) if isTailRec => throw IRError("not a tail call")
-          case _ => 
-            val jpDefn = jp.expectDefn
-            acc.get(jpDefn.id) match
-              case None => // explore the join point
-                val newAcc = discoverCalls(jpDefn.body)(jpDefn, acc)
-                mergeCalls(newAcc, newAcc(jpDefn.id))
-              case Some(value) => mergeCalls(acc, value)
-
         // different cases
         (calledDefn, letCallNode, letCtorNode) match
           case (Some(defn), Some(letCallNode), Some(letCtorName)) =>
             getRetName(containingCtors, args) match
               case Some(value) if isIdentityJp(jp.expectDefn) => 
                 Left(updateMapSimple(ModConsCallInfo(src, start, defn, letCallNode, letCtorName, value, node)))
-              case _ => 
-                Left(updateAndMergeJpCalls)
-          case _ => Left(updateAndMergeJpCalls)
+              case _ => returnNone
+          case _ => returnNone
         
       case Case(scrut, cases) => Right(cases.map(_._2))
       case x: LetExpr =>
@@ -311,13 +291,17 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
   private def discoverCallsCont(node: Node)(implicit src: Defn, acc: Map[Int, Set[CallInfo]]): Map[Int, Set[CallInfo]] =
     discoverOptimizableCalls(node)(acc, src, node, None, None, None, Set()) match
       case Left(acc) => acc
-      case Right(nodes) => nodes.foldLeft(acc)((acc, node) => discoverCalls(node)(src, acc))
+      case Right(nodes) => nodes.foldLeft(acc)((acc, node) => discoverCallsNode(node)(src, acc))
 
-  private def discoverCalls(node: Node)(implicit src: Defn, acc: Map[Int, Set[CallInfo]]): Map[Int, Set[CallInfo]] = 
+  private def discoverCallsNode(node: Node)(implicit src: Defn, acc: Map[Int, Set[CallInfo]]): Map[Int, Set[CallInfo]] = 
     val ret = discoverCallsCont(node)
     ret.get(src.id) match
       case None => ret + (src.id -> Set())
       case Some(value) => ret
+
+  private def discoverCalls(defn: Defn, jps: Set[Defn])(implicit acc: Map[Int, Set[CallInfo]]): Map[Int, Set[CallInfo]] =
+    val combined = jps + defn
+    combined.foldLeft(acc)((acc, defn_) => discoverCallsNode(defn_.body)(defn, acc))
   
   // Partions a tail recursive call graph into strongly connected components
   // Refernece: https://en.wikipedia.org/wiki/Strongly_connected_component
@@ -337,7 +321,8 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
   private def partitionNodes(implicit nodeMap: Map[Int, DefnNode]): List[DefnGraph] =
     val defns = nodeMap.values.toSet
     val inital = Map[Int, Set[CallInfo]]()
-    val edges = defns.foldLeft(inital)((acc, defn) => discoverCalls(defn.defn.body)(defn.defn, acc)).withDefaultValue(Set())
+    val joinPoints = defns.map(d => (d.defn.id -> discoverJoinPoints(d.defn.body, Set()))).toMap
+    val edges = defns.foldLeft(inital)((acc, defn) => discoverCalls(defn.defn, joinPoints(defn.defn.id))(acc)).withDefaultValue(Set())
 
     var ctr = 0
     // nodes, edges
@@ -391,8 +376,8 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
         val sccIds = scc.map { d => d.defn.id }
         sccEdges = sccEdges.filter { c => sccIds.contains(c.getDefn.id)}
 
-        val joinPoints = scc.foldLeft(Set[Defn]())((jps, defn) => discoverJoinPoints(defn.defn.body, jps))
-        sccs = DefnGraph(scc, sccEdges, joinPoints) :: sccs
+        val sccJoinPoints = scc.foldLeft(Set[Defn]())((jps, defn) => joinPoints(defn.defn.id))
+        sccs = DefnGraph(scc, sccEdges, sccJoinPoints) :: sccs
       
     for v <- defns do
       if (!v.visited)
@@ -530,7 +515,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
         )
       ).attachTag(tag)
 
-      val appDefn = Defn(fnUid.make, ctxAppName, List(appCtxName, appValName), 1, appNode)
+      val appDefn = Defn(fnUid.make, ctxAppName, List(appCtxName, appValName), 1, appNode, false)
 
       // CONTEXT COMPOSITION
       val cmpCtx1Name = Name("ctx1")
@@ -571,7 +556,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
         ).attachTag(tag)
       ).attachTag(tag)
 
-      val cmpDefn = Defn(fnUid.make, ctxCompName, List(cmpCtx1Name, cmpCtx2Name), 1, cmpNode)
+      val cmpDefn = Defn(fnUid.make, ctxCompName, List(cmpCtx1Name, cmpCtx2Name), 1, cmpNode, false)
 
       // We use tags to identify nodes
       // a bit hacky but it's the most elegant way
@@ -673,12 +658,9 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
             AssignField(assignee, clsInfo, fieldName, value, transformModConsBranch(body)).attachTag(tag)
           case _ => throw IRError("unreachable case when transforming mod cons call")
 
-      // will create two definitions: one has the same signature as the original function,
-      // while the other one will have extra parameters to support mod cons
-      // replaceOriginal should be false if and only if the definition is a join point
       def rewriteDefn(d: Defn): Defn =
         val transformed = transformNode(d.body)
-        Defn(fnUid.make, d.name + "_modcons", Name("ctx") :: d.params, d.resultNum, transformed)
+        Defn(fnUid.make, d.name + "_modcons", Name("ctx") :: d.params, d.resultNum, transformed, d.isTailRec)
       
       // returns (new defn, mod cons defn)
       // where new defn has the same signature and ids as the original, but immediately calls the mod cons defn
@@ -697,7 +679,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
               Result(List(Expr.Ref(Name("res")))).attachTag(tag)
             ).attachTag(tag)
           ).attachTag(tag)
-        val newDefn = Defn(d.id, d.name, d.params, d.resultNum, modConsCall)
+        val newDefn = Defn(d.id, d.name, d.params, d.resultNum, modConsCall, false)
         (newDefn, modConsDefn)
 
       val jpsTransformed = component.joinPoints.map(d => d.id -> rewriteDefn(d)).toMap
@@ -726,7 +708,8 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
   // Given a strongly connected component `defns` of mutually
   // tail recursive functions, returns a set containing the optimized function and the
   // original functions pointing to an optimized function.
-  private def optimizeTailRec(component: ScComponent, classes: Set[ClassInfo]): Set[Defn] = 
+  // Explicitly returns the merged function in case tailrec needs to be checked.
+  private def optimizeTailRec(component: ScComponent, classes: Set[ClassInfo]): (Set[Defn], Defn) = 
     // println(component.edges)
     // To build the case block, we need to compare integers and check if the result is "True"
     val trueClass = classes.find(c => c.ident == "True").get
@@ -739,7 +722,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
 
     // dummy case, should not happen
     if (defns.size == 0)
-      return defns
+      throw IRError("strongly connected component was empty")
 
     // for single tail recursive functions, just move the body into a join point
     if (defns.size <= 1)
@@ -747,7 +730,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
       
       // if the function does not even tail call itself, just return
       if edges.size == 0 then
-        return defns
+        return (defns, defns.head)
       
       val jpName = defn.name + "_jp"
       val jpDefnRef = DefnRef(Right(jpName))
@@ -765,7 +748,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
         case AssignField(assignee, clsInfo, fieldName, value, body) => 
           AssignField(assignee, clsInfo, fieldName, value, transformNode(body)).attachTag(tag)
       
-      val jpDef = Defn(fnUid.make, jpName, defn.params, defn.resultNum, transformNode(defn.body))
+      val jpDef = Defn(fnUid.make, jpName, defn.params, defn.resultNum, transformNode(defn.body), false)
       
       val rets = (0 until defn.resultNum).map(n => Name("r" + n.toString)).toList
       val callJpNode = LetCall(
@@ -776,8 +759,8 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
         Result(rets.map(Expr.Ref(_))).attachTag(tag),
       ).attachTag(tag)
       
-      val newDefn = Defn(fnUid.make, defn.name, defn.params, defn.resultNum, callJpNode)
-      Set(newDefn, jpDef)
+      val newDefn = Defn(fnUid.make, defn.name, defn.params, defn.resultNum, callJpNode, true)
+      (Set(newDefn, jpDef), newDefn)
 
     else
       // Note that we do not use the actual edges in ScCompoennt here.
@@ -849,7 +832,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
         val namesExpr = names.map(Expr.Ref(_))
         val res = Result(namesExpr).attachTag(tag)
         val call = LetCall(names, newDefnRef, args, false, res).attachTag(tag)
-        Defn(defn.id, defn.name, defn.params, defn.resultNum, call)
+        Defn(defn.id, defn.name, defn.params, defn.resultNum, call, false)
 
       def getOrKey[T](m: Map[T, T])(key: T): T = m.get(key) match
         case None        => key
@@ -869,31 +852,35 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
 
       val newNode = makeSwitch(trName, valsAndNodes.tail, valsAndNodes.head._2)(trueClass, falseClass)
 
-      val jpDefn = Defn(fnUid.make, jpName, stackFrame, resultNum, newNode)
+      val jpDefn = Defn(fnUid.make, jpName, stackFrame, resultNum, newNode, false)
 
       val jmp = Jump(jpDefnRef, stackFrame.map(Expr.Ref(_))).attachTag(tag)
-      val newDefn = Defn(fnUid.make, newName, stackFrame, resultNum, jmp)
+      val newDefn = Defn(fnUid.make, newName, stackFrame, resultNum, jmp, defnsNoJp.find { _.isTailRec }.isDefined )
 
       jpDefnRef.defn = Left(jpDefn)
       newDefnRef.defn = Left(newDefn)
 
-      defnsNoJp.map { d => transformDefn(d) } + newDefn + jpDefn
+      (defnsNoJp.map { d => transformDefn(d) } + newDefn + jpDefn, newDefn)
   
   private def partition(defns: Set[Defn]): List[ScComponent] = 
     val nodeMap: Map[Int, DefnNode] = defns.foldLeft(Map.empty)((m, d) => m + (d.id -> DefnNode(d)))
     partitionNodes(nodeMap).map(_.removeMetadata)
 
-  private def optimizeParition(component: ScComponent, classes: Set[ClassInfo]): Set[Defn] =
+  private def optimizeParition(component: ScComponent, classes: Set[ClassInfo]): (Set[Defn], Defn) =
     val (modConsComp, other) = optimizeModCons(component, classes)
-    val trOpt = optimizeTailRec(modConsComp, classes)
-    other ++ trOpt
+    val (trOpt, mergedDefn) = optimizeTailRec(modConsComp, classes)
+    (other ++ trOpt, mergedDefn)
 
   def apply(p: Program) = run(p)
 
   def run_debug(p: Program): (Program, List[Set[String]]) = 
     val partitions = partition(p.defs)
 
-    val newDefs: Set[Defn] = partitions.flatMap { optimizeParition(_, p.classes) }.toSet
+    val optimized = partitions.map { optimizeParition(_, p.classes) } 
+    val newDefs: Set[Defn] = optimized.flatMap { _._1 }.toSet
+    val mergedDefs: List[Defn] = optimized.map { _._2 }
+
+    // Build the call graph of the program
 
     // update the definition refs
     newDefs.foreach { defn => resolveDefnRef(defn.body, newDefs, true) }

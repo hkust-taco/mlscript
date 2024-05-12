@@ -67,7 +67,8 @@ case class Defn(
   val name: Str,
   val params: Ls[Name],
   val resultNum: Int,
-  val body: Node
+  val body: Node,
+  val isTailRec: Bool 
 ):
   override def hashCode: Int = id
   def getName: String = name

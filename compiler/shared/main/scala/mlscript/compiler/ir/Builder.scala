@@ -156,7 +156,8 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
               jp.str,
               params = res :: fvs.map(x => Name(x)),
               resultNum = 1,
-              jpbody
+              jpbody,
+              false
             )
             ctx.jpAcc.addOne(jpdef)
             val tru2 = buildResultFromTerm(tru) {
@@ -189,6 +190,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
               params = res :: fvs.map(x => Name(x)),
               resultNum = 1,
               jpbody,
+              false
             )
             ctx.jpAcc.addOne(jpdef)
             val cases: Ls[(ClassInfo, Node)] = lines map {
@@ -243,7 +245,9 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
     res
   
   private def buildDefFromNuFunDef(using ctx: Ctx)(nfd: Statement): Defn = nfd match
-    case NuFunDef(_, Var(name), None, Nil, L(Lam(Tup(fields), body))) =>
+    case nfd: NuFunDef =>
+      val NuFunDef(_, Var(name), None, Nil, L(Lam(Tup(fields), body))) = nfd
+
       val strs = fields map {
           case N -> Fld(FldFlags.empty, Var(x)) => x
           case _ => throw IRError("unsupported field") 
@@ -255,7 +259,8 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
         name,
         params = names,
         resultNum = 1,
-        buildResultFromTerm(body) { x => x }
+        buildResultFromTerm(body) { x => x },
+        nfd.annotations.find { case Var("annotation") => true; case _ => false }.isDefined
       )
     case _ => throw IRError("unsupported NuFunDef")
   
