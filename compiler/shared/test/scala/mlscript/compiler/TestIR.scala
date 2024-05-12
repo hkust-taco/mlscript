@@ -46,10 +46,12 @@ class IRDiffTestCompiler extends DiffTests {
       catch
         case err: Exception =>
           output(s"\nIR Processing Failed: ${err.getMessage()}")
-          output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))
+          if (mode.irVerbose) then
+            output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))
         case err: StackOverflowError =>
           output(s"\nIR Processing Failed: ${err.getMessage()}")
-          output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))
+          if (mode.irVerbose) then
+            output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))
       
     (outputBuilder.toString().linesIterator.toList, None)
   
