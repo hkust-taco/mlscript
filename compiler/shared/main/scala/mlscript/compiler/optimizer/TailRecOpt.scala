@@ -766,7 +766,6 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
   // original functions pointing to an optimized function.
   // Explicitly returns the merged function in case tailrec needs to be checked.
   private def optimizeTailRec(component: ScComponent, classes: Set[ClassInfo]): (Set[Defn], Defn) = 
-    // println(component.edges)
     // To build the case block, we need to compare integers and check if the result is "True"
     val trueClass = classes.find(c => c.ident == "True").get
     val falseClass = classes.find(c => c.ident == "False").get
@@ -924,7 +923,6 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
 
   private def optimizeParition(component: ScComponent, classes: Set[ClassInfo]): (Set[Defn], Defn) =
     val isTailRec = component.nodes.find { _.isTailRec }.isDefined
-    // println(component.edges)
     if isTailRec && filterNormalCalls(component.edges).size != 0 then
       throw IRError("at least one function is not tail recursive") // TODO: better error message
 
