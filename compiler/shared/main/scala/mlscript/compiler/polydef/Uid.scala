@@ -15,5 +15,4 @@ object Uid:
           case Some(v) => Some(v + 1)
         }.get
   object TypeVar extends Handler[TypeVar]
-  object Ident extends Handler[Ident]
   object Term extends Handler[Term]

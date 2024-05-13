@@ -13,44 +13,9 @@ type TypeVarId = Uid[TypeVar]
 type Cnstr = ProdStrat -> ConsStrat
 
 
-def toSuperscript(i: String) = i.map {
-  case '0' => '⁰'; case '1' => '¹'; case '2' => '²'
-  case '3' => '³'; case '4' => '⁴'; case '5' => '⁵'
-  case '6' => '⁶'; case '7' => '⁷'; case '8' => '⁸'
-  case '9' => '⁹'; case c => c
-}
-
-case class Ident(isDef: Bool, tree: Var, uid: Uid[Ident]) {
-  def pp(using config: PrettyPrintConfig): Str = s"${tree.name}${if config.showIuid then s"${toSuperscript(uid.toString)}" else ""}"
-  //def copyToNewDeforest(using newd: Deforest): Ident = newd.nextIdent(isDef, tree)
-}
-
-case class PrettyPrintConfig(
-  multiline: Boolean,
-  showEuid: Boolean,
-  showIuid: Boolean,
-  showRefEuid: Boolean,
-  showVuid: Boolean,
-  showPolarity: Boolean,
-  showVboundary: Boolean,
-  showPath: Boolean,
-  pathAsIdent: Boolean,
-) {
-  lazy val multilineOn = copy(multiline = true)
-  lazy val showEuidOn = copy(showEuid = true)
-  lazy val showIuidOn = copy(showIuid = true)
-  lazy val showRefEuidOn = copy(showRefEuid = true)
-  lazy val showVuidOn = copy(showVuid = true)
-  lazy val showPolarityOn = copy(showPolarity = true)
-  lazy val showVboundaryOn = copy(showVboundary = true)
-  lazy val showPathOn = copy(showPath = true)
-  lazy val pathAsIdentOn = copy(pathAsIdent = true)
-}
-object InitPpConfig extends PrettyPrintConfig(false, false, false, false, false, false, false, false, false)
-
 enum ProdStrat(using val euid: TermId) {
   case NoProd()(using TermId) extends ProdStrat
-  case ProdObj(ctor: Option[Var], fields: Ls[Var -> ProdStrat])(using TermId) extends ProdStrat
+  case ProdObj(ctor: Option[Var], fields: Ls[Var -> ProdStrat])(using TermId) extends ProdStrat, ProdObjImpl
   case ProdPrim(name: String)(using TermId) extends ProdStrat
   case ProdFun(lhs: ConsStrat, rhs: ProdStrat)(using TermId) extends ProdStrat
   case ProdVar(uid: TypeVarId, name: String)(boundary: Option[Var] = None)(using TermId) extends ProdStrat
@@ -58,13 +23,21 @@ enum ProdStrat(using val euid: TermId) {
 }
 enum ConsStrat(using val euid: TermId) {
   case NoCons()(using TermId) extends ConsStrat
-  case ConsObj(name: Option[Var], fields: Ls[Var -> ConsStrat])(using TermId) extends ConsStrat
+  case ConsObj(name: Option[Var], fields: Ls[Var -> ConsStrat])(using TermId) extends ConsStrat, ConsObjImpl
   case ConsPrim(name: String)(using TermId) extends ConsStrat
   case ConsFun(lhs: ProdStrat, rhs: ConsStrat)(using TermId) extends ConsStrat
   case ConsVar(uid: TypeVarId, name: String)(boundary: Option[Var] = None)(using TermId) extends ConsStrat
   case ConsTup(fields: Ls[ConsStrat])(using TermId) extends ConsStrat
 }
 import ProdStrat.*, ConsStrat.*
+
+trait ConsObjImpl { self: ConsObj =>
+  var selectionSource: Set[ProdStrat] = Set()
+}
+
+trait ProdObjImpl { self: ProdObj =>
+  var objDestination: Set[ConsStrat] = Set()
+}
 
 class Polydef(debug: Debug) {
   
@@ -231,8 +204,6 @@ class Polydef(debug: Debug) {
   val constraintCache = mutable.Set.empty[(ProdStrat, ConsStrat)]
   val upperBounds = mutable.Map.empty[TypeVarId, Ls[ConsStrat]].withDefaultValue(Nil)
   val lowerBounds = mutable.Map.empty[TypeVarId, Ls[ProdStrat]].withDefaultValue(Nil)
-  val selectionSource = mutable.Map.empty[ConsObj, Set[ProdStrat]].withDefaultValue(Set())
-  val objDestination = mutable.Map.empty[ProdObj, Set[ConsStrat]].withDefaultValue(Set())
 
   def constrain(prod: ProdStrat, cons: ConsStrat): Unit = {
     debug.writeLine(s"constraining ${prod} -> ${cons}")
@@ -247,7 +218,7 @@ class Polydef(debug: Debug) {
         case (pv@ProdVar(v, _), _) =>
           cons match {
             case c: ConsObj if lowerBounds(v).isEmpty =>
-              selectionSource += c -> (selectionSource(c) + pv)
+              c.selectionSource = c.selectionSource + pv
             case _ => ()
           }
           upperBounds += v -> (cons :: upperBounds(v))
@@ -255,7 +226,7 @@ class Polydef(debug: Debug) {
         case (_, cv@ConsVar(v, _)) =>
           prod match {
             case p: ProdObj if upperBounds(v).isEmpty =>
-              objDestination += p -> (objDestination(p) + cv)
+              p.objDestination = p.objDestination + cv
             case _ => ()
           }
           lowerBounds += v -> (prod :: lowerBounds(v))
@@ -275,15 +246,15 @@ class Polydef(debug: Debug) {
             fields1.find(_._1 == key) match 
               case None => ???
               case Some((_, res1)) => 
-                selectionSource += cv -> (selectionSource(cv) + pv)
-                objDestination += pv -> (objDestination(pv) + cv)
+                cv.selectionSource = cv.selectionSource + pv
+                pv.objDestination = pv.objDestination + cv
                 constrain(res1, res2)
           })
   }
 
   // TODO: remove redundancy between selToObjTypes and selTermToType
   lazy val selToObjTypes: Map[TermId, Set[ProdObj]] = selTermToType.map((termId, cons) =>
-    (termId, selectionSource(cons).flatMap{
+    (termId, cons.selectionSource.flatMap{
         case p:ProdObj => Some(p)
         case other => 
           debug.writeLine(s"${other}")
