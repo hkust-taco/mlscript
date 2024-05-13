@@ -107,6 +107,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case Literal(StrLit(s)) => "\"" + s + "\""
     case Literal(UnitLit(b)) =>
       if (b) if (ctx.newDefs) "()" else "undefined" else "null"
+    case Literal(CharLit(c)) => "char\"" + c + "\"" 
     case PolyType(Nil, body) => body.showIn(outerPrec)
     case PolyType(targs, body) => parensIf(
         s"${targs.iterator.map(_.fold(_.name, _.showIn(0)))
@@ -550,6 +551,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       case IntLit(value) => "integer literal"
       case DecLit(value) => "decimal literal"
       case StrLit(value) => "string literal"
+      case CharLit(value) => "character literal"
       case UnitLit(value) => if (value) "undefined literal" else "null literal"
       case Var(name) => "reference" // "variable reference"
       case Asc(trm, ty) => "type ascription"
@@ -602,6 +604,7 @@ trait TermImpl extends StatementImpl { self: Term =>
     case IntLit(value) => value.toString
     case DecLit(value) => value.toString
     case StrLit(value) => '"'.toString + value + '"'
+    case CharLit(value) => "char\"" + value + '"'
     case UnitLit(value) => if (value) "undefined" else "null"
     case v @ Var(name) => name + v.uid.fold("")("::"+_.toString)
     case Asc(trm, ty) => s"${trm.showDbg} : ${ty.showDbg2}"  |> bra
@@ -670,6 +673,7 @@ trait TermImpl extends StatementImpl { self: Term =>
       case IntLit(value) => value.toString
       case DecLit(value) => value.toString
       case StrLit(value) => '"'.toString + value + '"'
+      case CharLit(value) => "char\"" + value + '"'
       case UnitLit(value) => if (ctx.newDefs) "()" else if (value) "undefined" else "null"
       case Var(name) => name
       case Asc(trm, ty) => s"$trm : ${ty.show(ctx.newDefs)}" |> bra
@@ -819,12 +823,14 @@ trait LitImpl { self: Lit =>
     case _: IntLit => Set.single(TypeName("int")) + TypeName("number")
     case _: StrLit => Set.single(TypeName("string"))
     case _: DecLit => Set.single(TypeName("number"))
+    case _: CharLit => Set.single(TypeName("char"))
     case _: UnitLit => Set.empty
   }
   def baseClassesNu: Set[TypeName] = this match {
     case _: IntLit => Set.single(TypeName("Int")) + TypeName("Num") + TypeName("Object")
     case _: StrLit => Set.single(TypeName("Str")) + TypeName("Object")
     case _: DecLit => Set.single(TypeName("Num")) + TypeName("Object")
+    case _: CharLit => Set.single(TypeName("Char")) + TypeName("Object")
     case _: UnitLit => Set.single(TypeName("Object"))
   }
 }

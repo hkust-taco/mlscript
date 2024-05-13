@@ -218,6 +218,11 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
                   case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
                   case node @ _ => node |> unexpectedNode
                 })
+              case L(IfThen(lit @ CharLit(_), rhs)) =>
+                S(Pat.Lit(lit) -> buildResultFromTerm(rhs) {
+                  case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
+                  case node @ _ => node |> unexpectedNode
+                })
               case L(IfThen(Var("_"), rhs)) =>
                 defaultCase = Some(buildResultFromTerm(rhs) {
                   case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)

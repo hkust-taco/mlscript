@@ -161,6 +161,60 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     }
   }
 
+  final
+  def char(i: Int): (Char, Int) = {
+    if (i < length) {
+      bytes(i) match {
+        case '\\' => {
+          val j = i + 1
+          if (j < length)
+            bytes(j) match {
+              case 'n' => ('\n', j + 1)
+              case 't' => ('\t', j + 1)
+              case 'r' => ('\r', j + 1)
+              case 'b' => ('\b', j + 1)
+              case 'f' => ('\f', j + 1)
+              case '\'' => ('\'', j + 1)
+              case '"' => ('"', j + 1)
+              case '\\' => ('\\', j + 1)
+              case ch =>
+                raise(ErrorReport(msg"Invalid escape character" -> S(loc(j, j + 1)) :: Nil,
+                  newDefs = true, source = Lexing))
+                ('\u0000', j + 1)
+            }
+          else {
+            raise(ErrorReport(msg"Expect an escape character" -> S(loc(i, i + 1)) :: Nil,
+              newDefs = true, source = Lexing))
+            ('\u0000', i + 1)
+          }
+        }
+        case '\n' | '\r' =>
+          raise(ErrorReport(msg"Unexpected newline in a char literal" -> S(loc(i, i + 1)) :: Nil,
+            newDefs = true, source = Lexing))
+          ('\u0000', i + 1)
+        case '\"' =>
+          raise(ErrorReport(msg"Empty character literal" -> S(loc(i, i + 1)) :: Nil,
+            newDefs = true, source = Lexing))
+          ('\u0000', i + 1)
+        case ch =>
+          (ch, i + 1)
+      }
+    }
+    else {
+      raise(ErrorReport(msg"Expect a character literal" -> S(loc(i, i + 1)) :: Nil,
+        newDefs = true, source = Lexing))
+      ('\u0000', i)
+    }
+  }
+
+  final def closeChar(i: Int): Int =
+    if (bytes.lift(i) === Some('\"')) i + 1
+    else {
+      raise(ErrorReport(msg"Unclosed character literal" -> S(loc(i, i + 1)) :: Nil,
+        newDefs = true, source = Lexing))
+      i
+    }
+
   // * Check the end of a string (either single quotation or triple quotation)
   final def closeStr(i: Int, isTriple: Bool): Int =
     if (!isTriple && bytes.lift(i) === Some('"')) i + 1
@@ -226,7 +280,6 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
     def isQuasiquoteTripleOpening(i: Int): Bool =  matches(i, BracketKind.QuasiquoteTriple.beg, 0)
     def isUnquoteOpening(i: Int): Bool = matches(i, BracketKind.Unquote.beg, 0)
     def isQuasiquoteTripleClosing(i: Int): Bool = matches(i, BracketKind.QuasiquoteTriple.end, 0)
-    // @inline 
     // def go(j: Int, tok: Token) = lex(j, ind, (tok, loc(i, j)) :: acc)
     def next(j: Int, tok: Token) = (tok, loc(i, j)) :: acc
     c match {
@@ -248,6 +301,11 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
           BracketKind.Quasiquote
         val len = bracket_kind.beg.length
         lex(i + len, ind, next(i + len, OPEN_BRACKET(bracket_kind)))(bracket_kind :: qqList)
+      case 'c' if matches(i, "char\"", 0) =>
+        val j = i + "char\"".length
+        val (ch, k) = char(j)
+        val m = closeChar(k)
+        lex(m, ind, next(m, LITVAL(CharLit(ch))))
       case '$' if isUnquoteOpening(i) =>
         lex(i + 2, ind, next(i + 2, OPEN_BRACKET(BracketKind.Unquote)))
       case '$' if i + 1 < length && isIdentFirstChar(bytes(i + 1)) =>

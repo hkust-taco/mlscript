@@ -124,6 +124,7 @@ enum Expr:
   case IntLit(value: BigInt)
   case FloatLit(value: Float)
   case StrLit(value: Str)
+  case CharLit(value: Char)
   case Call(func: Expr, args: Ls[Expr])
   case Member(expr: Expr, member: Str)
   case Index(expr: Expr, index: Expr)
@@ -138,6 +139,7 @@ enum Expr:
       case IntLit(value) => value.toString |> raw
       case FloatLit(value) => value.toString |> raw
       case StrLit(value) => value |> raw
+      case CharLit(value) => value.toInt.toString |> raw
       case Call(func, args) => aux(func) <#> raw("(") <#> Expr.toDocuments(args, sep = raw(", ")) <#> raw(")")
       case Member(expr, member) => aux(expr) <#> raw("->") <#> raw(member)
       case Index(expr, index) => aux(expr) <#> raw("[") <#> aux(index) <#> raw("]")

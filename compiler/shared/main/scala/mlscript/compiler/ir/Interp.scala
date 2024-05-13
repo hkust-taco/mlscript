@@ -54,6 +54,7 @@ class Interpreter(verbose: Bool):
       case Literal(IntLit(lit)) => s"$lit" |> raw
       case Literal(DecLit(lit)) => s"$lit" |> raw
       case Literal(StrLit(lit)) => s"$lit" |> raw
+      case Literal(CharLit(lit)) => s"'$lit'" |> raw
       case Literal(UnitLit(lit)) => s"$lit" |> raw
       case CtorApp(ClassInfo(_, name, _), args) =>
         raw(name) <#> raw("(") <#> raw(args |> showArgs) <#> raw(")")

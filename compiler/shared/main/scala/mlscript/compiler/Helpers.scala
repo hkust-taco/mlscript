@@ -91,6 +91,7 @@ object Helpers:
                 case DecLit(value) => CaseBranch.Constant(Expr.Literal(value), term2Expr(body))
                 case IntLit(value) => CaseBranch.Constant(Expr.Literal(value), term2Expr(body))
                 case StrLit(value) => CaseBranch.Constant(Expr.Literal(value), term2Expr(body))
+                case CharLit(value) => CaseBranch.Constant(Expr.Literal(BigInt(value.toInt)), term2Expr(body))
                 case UnitLit(undefinedOrNull) => CaseBranch.Constant(Expr.Literal(UnitValue.Undefined), term2Expr(body))
               buffer.addOne(newCase)
               rec(rest)

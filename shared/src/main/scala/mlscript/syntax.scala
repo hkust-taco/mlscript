@@ -122,6 +122,7 @@ final case object NoCases extends CaseBranches
 final case class IntLit(value: BigInt)            extends Lit
 final case class DecLit(value: BigDecimal)        extends Lit
 final case class StrLit(value: Str)               extends Lit
+final case class CharLit(value: Char)             extends Lit
 final case class UnitLit(undefinedOrNull: Bool)   extends Lit
 
 trait IdentifiedTerm

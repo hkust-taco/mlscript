@@ -22,9 +22,11 @@ class CppCodeGen:
   private val mlsEntryPoint = s"int main() { auto res = _mlsMain(); res.print(); }";
   private def mlsIntLit(x: BigInt) = Expr.Call(Expr.Var("_mlsValue::fromIntLit"), Ls(Expr.IntLit(x)))
   private def mlsStrLit(x: Str) = Expr.Call(Expr.Var("_mlsValue::fromStrLit"), Ls(Expr.StrLit(x)))
+  private def mlsCharLit(x: Char) = Expr.Call(Expr.Var("_mlsValue::fromIntLit"), Ls(Expr.CharLit(x)))
   private def mlsNewValue(cls: Str, args: Ls[Expr]) = Expr.Call(Expr.Var(s"_mlsValue::create<$cls>"), args)
   private def mlsIsValueOf(cls: Str, scrut: Expr) = Expr.Call(Expr.Var(s"_mlsValue::isValueOf<$cls>"), Ls(scrut))
   private def mlsIsIntLit(scrut: Expr, lit: mlscript.IntLit) = Expr.Call(Expr.Var("_mlsValue::isIntLit"), Ls(scrut, Expr.IntLit(lit.value)))
+  private def mlsIsCharLit(scrut: Expr, lit: mlscript.CharLit) = Expr.Call(Expr.Var("_mlsValue::isIntLit"), Ls(scrut, Expr.CharLit(lit.value)))
   private def mlsDebugPrint(x: Expr) = Expr.Call(Expr.Var("_mlsValue::print"), Ls(x))
   private def mlsTupleValue(init: Expr) = Expr.Constructor("_mlsValue::tuple", init)
   private def mlsAs(name: Str, cls: Str) = Expr.Var(s"_mlsValue::as<$cls>($name)")
@@ -64,6 +66,7 @@ class CppCodeGen:
     case IExpr.Literal(mlscript.IntLit(x)) => S(mlsIntLit(x))
     case IExpr.Literal(mlscript.DecLit(x)) => S(mlsIntLit(x.toBigInt))
     case IExpr.Literal(mlscript.StrLit(x)) => S(mlsStrLit(x))
+    case IExpr.Literal(mlscript.CharLit(x)) => S(mlsCharLit(x))
     case IExpr.Literal(mlscript.UnitLit(_)) => if reifyUnit then S(mlsUnitValue) else None
   
   private def toExpr(texpr: TrivialExpr): Expr = texpr match
@@ -71,6 +74,7 @@ class CppCodeGen:
     case IExpr.Literal(mlscript.IntLit(x)) => mlsIntLit(x)
     case IExpr.Literal(mlscript.DecLit(x)) => mlsIntLit(x.toBigInt)
     case IExpr.Literal(mlscript.StrLit(x)) => mlsStrLit(x)
+    case IExpr.Literal(mlscript.CharLit(x)) => mlsCharLit(x)
     case IExpr.Literal(mlscript.UnitLit(_)) => mlsUnitValue
   
 
@@ -95,6 +99,10 @@ class CppCodeGen:
       case ((Pat.Lit(i @ mlscript.IntLit(_)), arm), nextarm) =>
         val (decls2, stmts2) = codegen(arm, storeInto)(using Ls.empty, Ls.empty[Stmt])
         val stmt = Stmt.If(mlsIsIntLit(Expr.Var(scrutName), i), Stmt.Block(decls2, stmts2), nextarm)
+        S(stmt)
+      case ((Pat.Lit(c @ mlscript.CharLit(_)), arm), nextarm) =>
+        val (decls2, stmts2) = codegen(arm, storeInto)(using Ls.empty, Ls.empty[Stmt])
+        val stmt = Stmt.If(mlsIsCharLit(Expr.Var(scrutName), c), Stmt.Block(decls2, stmts2), nextarm)
         S(stmt)
       case _ => ???
     }
