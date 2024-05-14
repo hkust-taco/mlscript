@@ -27,7 +27,7 @@ struct _mlsObject {
   virtual void print() const = 0;
   virtual void destroy() = 0;
 };
-
+struct _mlsCallable;
 struct _mls_True;
 struct _mls_False;
 
@@ -217,10 +217,48 @@ public:
   }
 };
 
+struct _mlsCallable : public _mlsObject {
+  virtual _mlsValue apply0() { throw std::runtime_error("Not implemented"); }
+  virtual _mlsValue apply1(_mlsValue arg1) {
+    throw std::runtime_error("Not implemented");
+  }
+  virtual _mlsValue apply2(_mlsValue arg1, _mlsValue arg2) {
+    throw std::runtime_error("Not implemented");
+  }
+  virtual _mlsValue apply3(_mlsValue arg1, _mlsValue arg2, _mlsValue arg3) {
+    throw std::runtime_error("Not implemented");
+  }
+  virtual _mlsValue apply4(_mlsValue arg1, _mlsValue arg2, _mlsValue arg3,
+                           _mlsValue arg4) {
+    throw std::runtime_error("Not implemented");
+  }
+};
+
+inline _mlsCallable *_mlsToCallable(_mlsValue fn) {
+  auto *ptr = _mlsValue::as<_mlsCallable>(fn);
+  if (!ptr)
+    throw std::runtime_error("Not a callable object");
+  return ptr;
+}
+
+template <typename... U>
+static _mlsValue _mlsCall(_mlsValue f, U... args) {
+  static_assert(sizeof...(U) <= 5, "Too many arguments");
+  if constexpr (sizeof...(U) == 0)
+    return _mlsToCallable(f)->apply0();
+  else if constexpr (sizeof...(U) == 1)
+    return _mlsToCallable(f)->apply1(args...);
+  else if constexpr (sizeof...(U) == 2)
+    return _mlsToCallable(f)->apply2(args...);
+  else if constexpr (sizeof...(U) == 3)
+    return _mlsToCallable(f)->apply3(args...);
+  else if constexpr (sizeof...(U) == 4)
+    return _mlsToCallable(f)->apply4(args...);
+}
+
 _mlsValue _mlsMain();
 
-struct _mls_Boolean : public _mlsObject {
-};
+struct _mls_Boolean : public _mlsObject {};
 
 struct _mls_True final : public _mls_Boolean {
   constexpr static inline const char *typeName = "True";
