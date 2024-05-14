@@ -68,7 +68,7 @@ class Interpreter(verbose: Bool):
     case Jump(defn: DefnRef, args: Ls[Expr])
     case Case(scrut: Name, cases: Ls[(Pat, Node)], default: Opt[Node])
     case LetExpr(name: Name, expr: Expr, body: Node)
-    case LetJoin(joinName: Name, params: Ls[Name], rhs: Node, body: Node)
+    case LetApply(name: Ls[Name], fn: Name, args: Ls[Expr], body: Node)
     case LetCall(resultNames: Ls[Name], defn: DefnRef, args: Ls[Expr], body: Node)
 
     def show: Str =
@@ -107,18 +107,14 @@ class Interpreter(verbose: Bool):
             <:> raw("=")
             <:> expr.document,
           raw("in") <:> body.document |> indent)
-      case LetJoin(Name(x), params, rhs, body) =>
+      case LetApply(resultNames, Name(fn), rhs, body) =>
         stack(
           raw("let")
-            <:> raw("join")
-            <:> raw(x)
-            <#> raw("(")
-            <#> raw(params.map{ x => x.toString }.mkString(","))
+            <:> raw("(")
+            <#> raw(resultNames.map{ x => x.toString }.mkString(","))
             <#> raw(")")
-            <:> raw("=")
-            <:> (rhs.document |> indent |> indent),
-          raw("in") <:> body.document |> indent
-        )
+            <:> raw(fn),
+          raw("in") <:> body.document |> indent)
       case LetCall(resultNames, defn, args, body) => 
         stack(
           raw("let*")
@@ -159,6 +155,7 @@ class Interpreter(verbose: Bool):
     case INode.Jump(defnref, args) => Jump(DefnRef(Right(defnref.getName)), args |> convertArgs)
     case INode.Case(scrut, cases, default) => Case(scrut, cases.map{(cls, node) => (cls, node |> convert)}, default map convert)
     case INode.LetExpr(name, expr, body) => LetExpr(name, expr |> convert, body |> convert)
+    case INode.LetApply(name, fn, args, body) => LetApply(name, fn, args |> convertArgs, body |> convert)
     case INode.LetCall(xs, defnref, args, body) =>
       LetCall(xs, DefnRef(Right(defnref.getName)), args |> convertArgs, body |> convert)
 
@@ -168,7 +165,7 @@ class Interpreter(verbose: Bool):
   private def resolveDefnRef(defs: Set[Defn], node: Node): Unit = node match
     case Case(_, cases, default) => cases.foreach { case (cls, node) => resolveDefnRef(defs, node) }; default.foreach(resolveDefnRef(defs, _))
     case LetExpr(name, expr, body) => resolveDefnRef(defs, body)
-    case LetJoin(joinName, params, rhs, body) => resolveDefnRef(defs, body)
+    case LetApply(_, _, _, body) => resolveDefnRef(defs, body)
     case Jump(defnref, args) => defnref.defn = Left(defs.find(_.name == defnref.name).get)
     case LetCall(xs, defnref, args, body) =>
       defnref.defn = Left(defs.find(_.name == defnref.name).get)
@@ -190,13 +187,16 @@ class Interpreter(verbose: Bool):
 
     Program(classes, defs, main)
 
-  private type Ctx = Map[Str, Expr]
-  private type ClassCtx = Map[Str, ClassInfo]
+  private final case class Ctx(
+    val bindCtx: Map[Str, Expr],
+    val classCtx: Map[Str, ClassInfo],
+    val defnCtx: Map[Str, Defn],
+  )
 
-  private def getTrue(using clsctx: ClassCtx) = CtorApp(clsctx("True"), Ls.empty)
-  private def getFalse(using clsctx: ClassCtx) = CtorApp(clsctx("False"), Ls.empty)
+  private def getTrue(using ctx: Ctx) = CtorApp(ctx.classCtx("True"), Ls.empty)
+  private def getFalse(using ctx: Ctx) = CtorApp(ctx.classCtx("False"), Ls.empty)
 
-  private def eval(using ctx: Ctx, clsctx: ClassCtx)(op: Str, x1: Expr, x2: Expr): Opt[Expr] = (op, x1, x2) match
+  private def eval(using ctx: Ctx)(op: Str, x1: Expr, x2: Expr): Opt[Expr] = (op, x1, x2) match
     case ("+", Literal(IntLit(x)), Literal(IntLit(y))) => Some(Literal(IntLit(x + y)))
     case ("-", Literal(IntLit(x)), Literal(IntLit(y))) => Some(Literal(IntLit(x - y)))
     case ("*", Literal(IntLit(x)), Literal(IntLit(y))) => Some(Literal(IntLit(x * y)))
@@ -214,7 +214,7 @@ class Interpreter(verbose: Bool):
       case Left(expr) => expr
       case Right(expr) => expr 
 
-  private def evalArgs(using ctx: Ctx, clsctx: ClassCtx)(exprs: Ls[Expr]): Either[Ls[Expr], Ls[Expr]] = 
+  private def evalArgs(using ctx: Ctx)(exprs: Ls[Expr]): Either[Ls[Expr], Ls[Expr]] = 
     var changed = false
     val xs = exprs.map {
       arg => eval(arg) match
@@ -223,22 +223,22 @@ class Interpreter(verbose: Bool):
     }
     if (changed) Left(xs) else Right(exprs)
 
-  private def evalArgsMayNotProgress(using ctx: Ctx, clsctx: ClassCtx)(exprs: Ls[Expr]) = 
+  private def evalArgsMayNotProgress(using ctx: Ctx)(exprs: Ls[Expr]) = 
     exprs.map {
       arg => eval(arg) |> unifyEvalResult
     }
 
-  private def evalMayNotProgress(using ctx: Ctx, clsctx: ClassCtx)(expr: Expr) = eval(expr) |> unifyEvalResult
+  private def evalMayNotProgress(using ctx: Ctx)(expr: Expr) = eval(expr) |> unifyEvalResult
     
-  private def eval(using ctx: Ctx, clsctx: ClassCtx)(expr: Expr): Either[Expr, Expr] = expr match
-    case Ref(Name(x)) => ctx.get(x).toLeft(expr)
+  private def eval(using ctx: Ctx)(expr: Expr): Either[Expr, Expr] = expr match
+    case Ref(Name(x)) => ctx.bindCtx.get(x).toLeft(expr)
     case Literal(x) => Right(expr)
     case CtorApp(name, args) =>
       evalArgs(args) match
         case Left(xs) => Left(CtorApp(name, xs)) 
         case _ => Right(expr)
     case Select(name, cls, field) => 
-      ctx.get(name.str).map {
+      ctx.bindCtx.get(name.str).map {
         case CtorApp(cls2, xs) if cls == cls2 =>
           xs.zip(cls2.fields).find{_._2 == field} match
             case Some((x, _)) => x
@@ -249,7 +249,7 @@ class Interpreter(verbose: Bool):
       val xs = evalArgsMayNotProgress(args)
       val x = name match
         case "+" | "-" | "*" | "/" | "==" | "!=" | "<=" | ">=" | "<" | ">" => 
-          eval(using ctx, clsctx)(name, xs.head, xs.tail.head)
+          eval(using ctx)(name, xs.head, xs.tail.head)
         case _ => throw IRInterpreterError("unexpected basic operation")
       x.toLeft(expr)
 
@@ -257,10 +257,10 @@ class Interpreter(verbose: Bool):
     case Left(value) => value
     case Right(value) => throw IRInterpreterError("only has the name of definition")
 
-  private def evalMayNotProgress(using ctx: Ctx, clsctx: ClassCtx)(node: Node) = eval(node) |> unifyEvalResult
+  private def evalMayNotProgress(using ctx: Ctx)(node: Node) = eval(node) |> unifyEvalResult
 
   @tailrec
-  private def eval(using ctx: Ctx, clsctx: ClassCtx)(node: Node): Either[Node, Node] = node match
+  private def eval(using ctx: Ctx)(node: Node): Either[Node, Node] = node match
     case Result(xs) =>
       xs |> evalArgs match
         case Left(xs) => Left(Result(xs))
@@ -268,10 +268,10 @@ class Interpreter(verbose: Bool):
     case Jump(defnref, args) =>
       val xs = args |> evalArgsMayNotProgress
       val defn = defnref |> expectDefn
-      val ctx1 = ctx ++ defn.params.map{_.str}.zip(xs)
-      eval(using ctx1, clsctx)(defn.body)
+      val ctx1 = ctx.copy(bindCtx = ctx.bindCtx ++ defn.params.map{_.str}.zip(xs))
+      eval(using ctx1)(defn.body)
     case Case(scrut, cases, default) =>
-      val arm = (Ref(scrut):Expr) |> evalMayNotProgress(using ctx, clsctx) match {
+      val arm = (Ref(scrut):Expr) |> evalMayNotProgress(using ctx) match {
         case CtorApp(cls, xs) =>
           cases.find{
             case (Pat.Class(cls2), _) => cls == cls2
@@ -299,24 +299,42 @@ class Interpreter(verbose: Bool):
       eval(arm)
     case LetExpr(name, expr, body) =>
       val x = evalMayNotProgress(expr)
-      val ctx1 = ctx + (name.str -> x)
-      eval(using ctx1, clsctx)(body)
+      val ctx1 = ctx.copy(bindCtx = ctx.bindCtx + (name.str -> x))
+      eval(using ctx1)(body)
+    case LetApply(xs, fn, args, body) =>
+      val ys = args |> evalArgsMayNotProgress
+      ctx.bindCtx.get(fn.str) match
+        case None => throw IRInterpreterError(s"undefined function variable $fn")
+        case Some(value) => 
+          val defn = value match
+            case Ref(Name(fn)) => ctx.defnCtx.get(fn) match
+              case Some(defn) => defn
+              case None => throw IRInterpreterError(s"undefined function $fn")
+            case x @ _ => throw IRInterpreterError(s"undefined function $x")
+          val ctx1 = ctx.copy(bindCtx = ctx.bindCtx ++ defn.params.map{_.str}.zip(ys))
+          val res = evalMayNotProgress(using ctx1)(defn.body) match {
+            case Result(xs) => xs
+            case _ => throw IRInterpreterError("unexpected node")
+          }
+          val ctx2 = ctx1.copy(bindCtx = ctx1.bindCtx ++ xs.map{_.str}.zip(res))
+          eval(using ctx2)(body)
+       
     case LetCall(xs, defnref, args, body) =>
       val defn = defnref |> expectDefn
       val ys = args |> evalArgsMayNotProgress
-      val ctx1 = ctx ++ defn.params.map{_.str}.zip(ys)
-      val res = evalMayNotProgress(using ctx1, clsctx)(defn.body) match {
+      val ctx1 = ctx.copy(bindCtx = ctx.bindCtx ++ defn.params.map{_.str}.zip(ys))
+      val res = evalMayNotProgress(using ctx1)(defn.body) match {
         case Result(xs) => xs
         case _ => throw IRInterpreterError("unexpected node")
       }
-      val ctx2 = ctx ++ xs.map{_.str}.zip(res)
-      eval(using ctx2, clsctx)(body)
-    case _ => throw IRInterpreterError("unexpected node")
+      val ctx2 = ctx1.copy(bindCtx = ctx1.bindCtx ++ xs.map{_.str}.zip(res))
+      eval(using ctx2)(body)
 
   private def interpret(prog: Program): Node =
     val Program(classes, defs, main) = prog
     val clsctx = classes.map(x => x.ident -> x).toMap
-    evalMayNotProgress(using Map.empty, clsctx)(main)
+    val defctx = defs.map(x => x.name -> x).toMap
+    evalMayNotProgress(using Ctx(Map.empty, clsctx, defctx))(main)
     
   def interpret(irprog: ir.Program): Str =
     val prog = convert(irprog)

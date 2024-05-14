@@ -144,7 +144,8 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
         }
         case Result(Ref(f) :: Nil) => buildResultFromTerm(xs) {
           case Result(args) =>
-            throw IRError(s"not supported: apply")
+            val v = fresh.make
+            LetApply(List(v), f, args, v |> ref |> sresult |> k).attachTag(tag)
           case node @ _ => node |> unexpectedNode
         }
         case node @ _ => node |> unexpectedNode

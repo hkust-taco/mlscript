@@ -36,7 +36,7 @@ class CppCodeGen:
     val parameters = fields.map{x => s"_mlsValue $x"}.mkString(", ")
     val fieldsAssignment = fields.map{x => s"_mlsVal->$x = $x; "}.mkString
     s"template <std::size_t align> static _mlsValue create($parameters) { auto _mlsVal = new (std::align_val_t(align)) $cls; _mlsVal->refCount = 1; _mlsVal->tag = $id; $fieldsAssignment return _mlsValue(_mlsVal); }"
-  private def mlsCommonPrintMethod(cls: Str, fields: Ls[Str]) =
+  private def mlsCommonPrintMethod(fields: Ls[Str]) =
     if fields.isEmpty then s"virtual void print() const override { std::printf(\"%s\", typeName); }"
     else
       val fieldsPrint = fields.map{x => s"this->$x.print(); "}.mkString("std::printf(\", \"); ")
@@ -45,6 +45,17 @@ class CppCodeGen:
     val fieldsDeletion = fields.map{x => s"_mlsValue::destroy(this->$x); "}.mkString
     s"virtual void destroy() override { $fieldsDeletion operator delete (this, std::align_val_t(_mlsAlignment)); }"
   private def mlsThrowNonExhaustiveMatch = Stmt.Raw("throw std::runtime_error(\"Non-exhaustive match\");");
+  private def mlsCall(fn: Str, args: Ls[Expr]) = Expr.Call(Expr.Var("_mlsCall"), Expr.Var(fn) :: args)
+  private def mlsFnWrapperName(fn: Str) = s"_mlsFn_$fn"
+  private def mlsFnWrapperCreate(fn: Str) = Expr.Call(Expr.Var(s"_mlsValue::create<${mlsFnWrapperName(fn)}>"), Ls())
+  private def mlsFnCreateMethod(fn: Str) = s"template <std::size_t align> static _mlsValue create() { static _mlsFn_$fn mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }"
+  private def mlsFnApplyNMethod(fn: Str, n: Int) = 
+    Def.FuncDef(Type.Qualifier(mlsValType, "virtual"), s"apply$n", (0 until n).map{x => (s"arg$x", mlsValType)}.toList,
+      Stmt.Block(Ls(), Ls(Stmt.Return(Expr.Call(Expr.Var(fn), (0 until n).map{x => Expr.Var(s"arg$x")}.toList)))), true)
+
+  private case class Ctx(
+    val defnCtx: Set[Str],
+  )
 
   private def codegenClassInfo(cls: ClassInfo): (Opt[Def], Decl) =
     val fields = cls.fields.map{x => (x |> mapName, mlsValType)}
@@ -56,12 +67,25 @@ class CppCodeGen:
       if parents.nonEmpty then Some(parents) else None,
       Ls(Def.RawDef(mlsObjectNameMethod(cls.ident)),
          Def.RawDef(mlsTypeTag(cls.id)),
-         Def.RawDef(mlsCommonPrintMethod(cls.ident, cls.fields.map(mapName))),
+         Def.RawDef(mlsCommonPrintMethod(cls.fields.map(mapName))),
          Def.RawDef(mlsCommonDestructorMethod(cls.ident |> mapName, cls.fields.map(mapName))),
          Def.RawDef(mlsCommonCreateMethod(cls.ident |> mapName, cls.fields.map(mapName), cls.id))))
     (S(theDef), decl)
 
-  private def toExpr(texpr: TrivialExpr, reifyUnit: Bool = false): Opt[Expr] = texpr match
+  def codegenDefnClass(defn: Defn): Opt[(Def, Decl)] =
+    val decl = Decl.StructDecl(defn.name |> mapName)
+    val theDef = Def.StructDef(
+      mlsFnWrapperName(defn.name |> mapName), Ls(),
+      S(Ls("_mlsCallable")),
+      Ls(Def.RawDef(mlsObjectNameMethod(s"<${defn.name}>")),
+         Def.RawDef(mlsTypeTag(0xffffffff)),
+         Def.RawDef(mlsCommonPrintMethod(Ls())),
+         Def.RawDef(mlsFnCreateMethod(defn.name |> mapName)),
+         mlsFnApplyNMethod(defn.name |> mapName, defn.params.size)))
+    S((theDef, decl))
+  
+  private def toExpr(texpr: TrivialExpr, reifyUnit: Bool = false)(using ctx: Ctx): Opt[Expr] = texpr match
+    case IExpr.Ref(name) if ctx.defnCtx.contains(name.str) => S(mlsFnWrapperCreate(name.str |> mapName))
     case IExpr.Ref(name) => S(Expr.Var(name |> mapName))
     case IExpr.Literal(mlscript.IntLit(x)) => S(mlsIntLit(x))
     case IExpr.Literal(mlscript.DecLit(x)) => S(mlsIntLit(x.toBigInt))
@@ -69,7 +93,8 @@ class CppCodeGen:
     case IExpr.Literal(mlscript.CharLit(x)) => S(mlsCharLit(x))
     case IExpr.Literal(mlscript.UnitLit(_)) => if reifyUnit then S(mlsUnitValue) else None
   
-  private def toExpr(texpr: TrivialExpr): Expr = texpr match
+  private def toExpr(texpr: TrivialExpr)(using ctx: Ctx): Expr = texpr match
+    case IExpr.Ref(name) if ctx.defnCtx.contains(name.str) => mlsFnWrapperCreate(name.str |> mapName)
     case IExpr.Ref(name) => Expr.Var(name |> mapName)
     case IExpr.Literal(mlscript.IntLit(x)) => mlsIntLit(x)
     case IExpr.Literal(mlscript.DecLit(x)) => mlsIntLit(x.toBigInt)
@@ -78,13 +103,13 @@ class CppCodeGen:
     case IExpr.Literal(mlscript.UnitLit(_)) => mlsUnitValue
   
 
-  private def wrapMultiValues(exprs: Ls[TrivialExpr]): Expr = exprs match
+  private def wrapMultiValues(exprs: Ls[TrivialExpr])(using ctx: Ctx): Expr = exprs match
     case x :: Nil => toExpr(x, reifyUnit = true).get
     case _ => 
       val init = Expr.Initializer(exprs.map{x => toExpr(x)})
       mlsTupleValue(init)
   
-  private def codegenCaseWithIfs(scrut: Name, cases: Ls[(Pat, Node)], default: Opt[Node], storeInto: Str)(using decls: Ls[Decl], stmts: Ls[Stmt]): (Ls[Decl], Ls[Stmt]) =
+  private def codegenCaseWithIfs(scrut: Name, cases: Ls[(Pat, Node)], default: Opt[Node], storeInto: Str)(using decls: Ls[Decl], stmts: Ls[Stmt])(using ctx: Ctx): (Ls[Decl], Ls[Stmt]) =
     val scrutName = mapName(scrut)
     val init: Stmt = 
       default.fold(mlsThrowNonExhaustiveMatch)(x => {
@@ -108,12 +133,12 @@ class CppCodeGen:
     }
     (decls, stmt.fold(stmts)(x => stmts :+ x))
 
-  private def codegenJumpWithCall(defn: DefnRef, args: Ls[TrivialExpr], storeInto: Opt[Str])(using decls: Ls[Decl], stmts: Ls[Stmt]): (Ls[Decl], Ls[Stmt]) =
+  private def codegenJumpWithCall(defn: DefnRef, args: Ls[TrivialExpr], storeInto: Opt[Str])(using decls: Ls[Decl], stmts: Ls[Stmt])(using ctx: Ctx): (Ls[Decl], Ls[Stmt]) =
     val call = Expr.Call(Expr.Var(defn.getName |> mapName), args.map(toExpr))
     val stmts2 = stmts ++ Ls(storeInto.fold(Stmt.Return(call))(x => Stmt.Assign(x, call)))
     (decls, stmts2)
 
-  private def codegenOps(op: Str, args: Ls[TrivialExpr]) = op match
+  private def codegenOps(op: Str, args: Ls[TrivialExpr])(using ctx: Ctx) = op match
     case "+" => Expr.Binary("+", toExpr(args(0)), toExpr(args(1)))
     case "-" => Expr.Binary("-", toExpr(args(0)), toExpr(args(1)))
     case "*" => Expr.Binary("*", toExpr(args(0)), toExpr(args(1)))
@@ -131,13 +156,13 @@ class CppCodeGen:
     case _ => ???
 
 
-  private def codegen(expr: IExpr): Expr = expr match
+  private def codegen(expr: IExpr)(using ctx: Ctx): Expr = expr match
     case x @ (IExpr.Ref(_) | IExpr.Literal(_)) => toExpr(x, reifyUnit = true).get
     case IExpr.CtorApp(name, args) => mlsNewValue(name.ident |> mapName, args.map(toExpr))
     case IExpr.Select(name, cls, field) => Expr.Member(mlsAs(name |> mapName, cls.ident |> mapName), field |> mapName)
     case IExpr.BasicOp(name, args) => codegenOps(name, args)
   
-  private def codegen(body: Node, storeInto: Str)(using decls: Ls[Decl], stmts: Ls[Stmt]): (Ls[Decl], Ls[Stmt]) = body match
+  private def codegen(body: Node, storeInto: Str)(using decls: Ls[Decl], stmts: Ls[Stmt])(using ctx: Ctx): (Ls[Decl], Ls[Stmt]) = body match
     case Node.Result(res) => 
       val expr = wrapMultiValues(res)
       val stmts2 = stmts ++ Ls(Stmt.Assign(storeInto, expr))
@@ -147,6 +172,10 @@ class CppCodeGen:
     case Node.LetExpr(name, expr, body) =>
       val stmts2 = stmts ++ Ls(Stmt.AutoBind(Ls(name |> mapName), codegen(expr)))
       codegen(body, storeInto)(using decls, stmts2)
+    case Node.LetApply(names, fn, args, body) =>
+      val call = mlsCall(fn.str |> mapName, args.map(toExpr))
+      val stmts2 = stmts ++ Ls(Stmt.AutoBind(names.map(mapName), call))
+      codegen(body, storeInto)(using decls, stmts2)
     case Node.LetCall(names, defn, args, body) =>
       val call = Expr.Call(Expr.Var(defn.getName |> mapName), args.map(toExpr))
       val stmts2 = stmts ++ Ls(Stmt.AutoBind(names.map(mapName), call))
@@ -154,7 +183,7 @@ class CppCodeGen:
     case Node.Case(scrut, cases, default) =>
       codegenCaseWithIfs(scrut, cases, default, storeInto)
     
-  private def codegenDefn(defn: Defn): (Def, Decl) = defn match
+  private def codegenDefn(using ctx: Ctx)(defn: Defn): (Def, Decl) = defn match
     case Defn(id, name, params, resultNum, specialized, body) =>
       val decls = Ls(mlsRetValueDecl)
       val stmts = Ls.empty[Stmt]
@@ -164,7 +193,7 @@ class CppCodeGen:
       val decl = Decl.FuncDecl(mlsValType, name |> mapName, params.map(x => mlsValType))
       (theDef, decl)
 
-  private def codegenTopNode(node: Node): (Def, Decl) =
+  private def codegenTopNode(node: Node)(using ctx: Ctx): (Def, Decl) =
     val decls = Ls(mlsRetValueDecl)
     val stmts = Ls.empty[Stmt]
     val (decls2, stmts2) = codegen(node, mlsRetValue)(using decls, stmts)
@@ -194,10 +223,12 @@ class CppCodeGen:
       val cycle = depgraph.keys.mkString(", ")
       throw new Exception(s"Cycle detected in class hierarchy: $cycle")
     sorted
-  
+
   def codegen(prog: Program): CompilationUnit =
     val sortedClasses = sortClasses(prog)
     val (defs, decls) = sortedClasses.map(codegenClassInfo).unzip
-    val (defs2, decls2) = prog.defs.map(codegenDefn).unzip
-    val (defMain, declMain) = codegenTopNode(prog.main)
-    CompilationUnit(Ls(mlsPrelude), decls ++ decls2 :+ declMain, defs.flatten ++ defs2 :+ defMain :+ Def.RawDef(mlsEntryPoint))
+    val (defs2, decls2) = prog.defs.flatMap(codegenDefnClass).unzip
+    val defnCtx = prog.defs.map(_.name)
+    val (defs3, decls3) = prog.defs.map(codegenDefn(using Ctx(defnCtx))).unzip
+    val (defMain, declMain) = codegenTopNode(prog.main)(using Ctx(defnCtx))
+    CompilationUnit(Ls(mlsPrelude), decls ++ decls2 ++ decls3 :+ declMain, defs.flatten ++ defs2 ++ defs3 :+ defMain :+ Def.RawDef(mlsEntryPoint))

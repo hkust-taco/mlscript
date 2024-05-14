@@ -74,16 +74,38 @@ fib(20)
 //│ x$7 -- #45)
 //│ 
 //│ Interpreted:
-//│ 6765
+//│ 277
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"
 //│ struct _mls_Boolean;
 //│ struct _mls_True;
 //│ struct _mls_False;
+//│ struct _mls_fib;
+//│ struct _mls_j_0;
 //│ _mlsValue _mls_fib(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mlsMain();
+//│ struct _mlsFn__mls_fib: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<fib>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_fib mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_fib(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_0: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$0>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_0(arg0);
+//│   }
+//│ };
 //│ _mlsValue _mls_fib(_mlsValue _mls_n_0){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_0 = (_mls_n_0<_mlsValue::fromIntLit(2));
@@ -250,21 +272,70 @@ foo()
 //│ struct _mls_Boolean;
 //│ struct _mls_True;
 //│ struct _mls_False;
+//│ struct _mls_j_1;
+//│ struct _mls_j_0;
+//│ struct _mls_odd;
+//│ struct _mls_even;
+//│ struct _mls_foo;
 //│ _mlsValue _mls_odd(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_foo();
 //│ _mlsValue _mls_even(_mlsValue);
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mlsMain();
+//│ struct _mlsFn__mls_j_1: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$1>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_1(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_foo: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<foo>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_foo mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply0() override{
+//│     return _mls_foo();
+//│   }
+//│ };
+//│ struct _mlsFn__mls_even: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<even>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_even mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_even(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_0: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$0>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_0(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_odd: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<odd>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_odd mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_odd(arg0);
+//│   }
+//│ };
 //│ _mlsValue _mls_j_1(_mlsValue _mls_x_8){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_8;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_foo(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_12 = _mls_odd(_mlsValue::fromIntLit(10));
-//│   _mls_retval = _mls_x_12;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_2){
@@ -296,6 +367,12 @@ foo()
 //│     auto _mls_x_5 = _mls_even(_mls_x_4);
 //│     _mls_retval = _mls_j_0(_mls_x_5);
 //│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_foo(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_12 = _mls_odd(_mlsValue::fromIntLit(10));
+//│   _mls_retval = _mls_x_12;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -451,6 +528,11 @@ main()
 //│ struct _mls_A;
 //│ struct _mls_True;
 //│ struct _mls_False;
+//│ struct _mls_main;
+//│ struct _mls_j_1;
+//│ struct _mls_j_0;
+//│ struct _mls_not;
+//│ struct _mls_foo;
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_main();
 //│ _mlsValue _mls_not(_mlsValue);
@@ -481,24 +563,56 @@ main()
 //│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A; _mlsVal->refCount = 1; _mlsVal->tag = 4;  return _mlsValue(_mlsVal); }
 //│ };
-//│ _mlsValue _mls_foo(_mlsValue _mls_x_4){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_4)){
-//│     auto _mls_x_6 = _mlsValue::create<_mls_A>();
-//│     _mls_retval = _mls_j_1(_mls_x_6);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_4)){
-//│     auto _mls_x_7 = _mls_not(_mls_x_4);
-//│     auto _mls_x_8 = _mls_foo(_mls_x_7);
-//│     auto _mls_x_9 = _mlsValue::create<_mls_B>(_mls_x_8);
-//│     _mls_retval = _mls_j_1(_mls_x_9);
-//│   } else throw std::runtime_error("Non-exhaustive match");
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_5){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_5;
-//│   return _mls_retval;
-//│ }
+//│ struct _mlsFn__mls_foo: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<foo>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_foo mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_foo(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_1: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$1>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_1(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_not: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<not>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_not mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_not(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_0: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$0>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_0(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_main: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<main>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply0() override{
+//│     return _mls_main();
+//│   }
+//│ };
 //│ _mlsValue _mls_not(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
 //│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_0)){
@@ -520,6 +634,24 @@ main()
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_5){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_5;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_foo(_mlsValue _mls_x_4){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_4)){
+//│     auto _mls_x_6 = _mlsValue::create<_mls_A>();
+//│     _mls_retval = _mls_j_1(_mls_x_6);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_4)){
+//│     auto _mls_x_7 = _mls_not(_mls_x_4);
+//│     auto _mls_x_8 = _mls_foo(_mls_x_7);
+//│     auto _mls_x_9 = _mlsValue::create<_mls_B>(_mls_x_8);
+//│     _mls_retval = _mls_j_1(_mls_x_9);
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -764,6 +896,14 @@ main()
 //│ struct _mls_A;
 //│ struct _mls_True;
 //│ struct _mls_False;
+//│ struct _mls_main;
+//│ struct _mls_bbb;
+//│ struct _mls_j_1;
+//│ struct _mls_aaa;
+//│ struct _mls_not;
+//│ struct _mls_foo;
+//│ struct _mls_j_0;
+//│ struct _mls_j_2;
 //│ _mlsValue _mls_aaa();
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_j_2(_mlsValue);
@@ -797,19 +937,101 @@ main()
 //│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A; _mlsVal->refCount = 1; _mlsVal->tag = 4;  return _mlsValue(_mlsVal); }
 //│ };
+//│ struct _mlsFn__mls_foo: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<foo>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_foo mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_foo(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_1: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$1>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_1(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_bbb: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<bbb>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_bbb mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply0() override{
+//│     return _mls_bbb();
+//│   }
+//│ };
+//│ struct _mlsFn__mls_not: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<not>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_not mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_not(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_2: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$2>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_2(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_aaa: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<aaa>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_aaa mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply0() override{
+//│     return _mls_aaa();
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_0: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$0>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_0(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_main: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<main>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply0() override{
+//│     return _mls_main();
+//│   }
+//│ };
+//│ _mlsValue _mls_aaa(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_0 = _mlsValue::fromIntLit(1);
+//│   auto _mls_x_1 = _mlsValue::fromIntLit(2);
+//│   auto _mls_x_2 = _mlsValue::fromIntLit(3);
+//│   auto _mls_x_3 = _mlsValue::fromIntLit(4);
+//│   auto _mls_x_4 = (_mls_x_0+_mls_x_1);
+//│   auto _mls_x_5 = (_mls_x_4-_mls_x_2);
+//│   auto _mls_x_6 = (_mls_x_5+_mls_x_3);
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_j_1(_mlsValue _mls_x_15){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_15;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_0(_mlsValue _mls_x_11){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_11;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_22){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_22;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_foo(_mlsValue _mls_x_14){
@@ -825,16 +1047,18 @@ main()
 //│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_aaa(){
+//│ _mlsValue _mls_main(){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_0 = _mlsValue::fromIntLit(1);
-//│   auto _mls_x_1 = _mlsValue::fromIntLit(2);
-//│   auto _mls_x_2 = _mlsValue::fromIntLit(3);
-//│   auto _mls_x_3 = _mlsValue::fromIntLit(4);
-//│   auto _mls_x_4 = (_mls_x_0+_mls_x_1);
-//│   auto _mls_x_5 = (_mls_x_4-_mls_x_2);
-//│   auto _mls_x_6 = (_mls_x_5+_mls_x_3);
-//│   _mls_retval = _mls_x_6;
+//│   auto _mls_x_20 = _mlsValue::create<_mls_False>();
+//│   auto _mls_x_21 = _mls_foo(_mls_x_20);
+//│   if (_mlsValue::isValueOf<_mls_A>(_mls_x_21)){
+//│     auto _mls_x_23 = _mls_aaa();
+//│     _mls_retval = _mls_j_2(_mls_x_23);
+//│   } else if (_mlsValue::isValueOf<_mls_B>(_mls_x_21)){
+//│     auto _mls_x_24 = _mlsValue::as<_mls_B>(_mls_x_21)->_mls_b;
+//│     auto _mls_x_25 = _mls_bbb();
+//│     _mls_retval = _mls_j_2(_mls_x_25);
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_not(_mlsValue _mls_x_10){
@@ -856,18 +1080,14 @@ main()
 //│   _mls_retval = _mls_x_9;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_main(){
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_22){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_20 = _mlsValue::create<_mls_False>();
-//│   auto _mls_x_21 = _mls_foo(_mls_x_20);
-//│   if (_mlsValue::isValueOf<_mls_A>(_mls_x_21)){
-//│     auto _mls_x_23 = _mls_aaa();
-//│     _mls_retval = _mls_j_2(_mls_x_23);
-//│   } else if (_mlsValue::isValueOf<_mls_B>(_mls_x_21)){
-//│     auto _mls_x_24 = _mlsValue::as<_mls_B>(_mls_x_21)->_mls_b;
-//│     auto _mls_x_25 = _mls_bbb();
-//│     _mls_retval = _mls_j_2(_mls_x_25);
-//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   _mls_retval = _mls_x_22;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_11){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_11;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -1219,6 +1439,13 @@ foo()
 //│ struct _mls_S;
 //│ struct _mls_True;
 //│ struct _mls_False;
+//│ struct _mls_j_1;
+//│ struct _mls_odd;
+//│ struct _mls_mk;
+//│ struct _mls_j_0;
+//│ struct _mls_j_2;
+//│ struct _mls_even;
+//│ struct _mls_foo;
 //│ _mlsValue _mls_odd(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_foo();
@@ -1251,50 +1478,81 @@ foo()
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_s);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_s) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->refCount = 1; _mlsVal->tag = 4; _mlsVal->_mls_s = _mls_s;  return _mlsValue(_mlsVal); }
 //│ };
-//│ _mlsValue _mls_even(_mlsValue _mls_x_5){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_5)){
-//│     auto _mls_x_7 = _mlsValue::create<_mls_True>();
-//│     _mls_retval = _mls_j_1(_mls_x_7);
-//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_5)){
-//│     auto _mls_x_8 = _mlsValue::as<_mls_S>(_mls_x_5)->_mls_s;
-//│     auto _mls_x_9 = _mls_odd(_mls_x_8);
-//│     _mls_retval = _mls_j_1(_mls_x_9);
-//│   } else throw std::runtime_error("Non-exhaustive match");
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_6;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_0)){
-//│     auto _mls_x_2 = _mlsValue::create<_mls_False>();
-//│     _mls_retval = _mls_j_0(_mls_x_2);
-//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_0)){
-//│     auto _mls_x_3 = _mlsValue::as<_mls_S>(_mls_x_0)->_mls_s;
-//│     auto _mls_x_4 = _mls_even(_mls_x_3);
-//│     _mls_retval = _mls_j_0(_mls_x_4);
-//│   } else throw std::runtime_error("Non-exhaustive match");
-//│   return _mls_retval;
-//│ }
+//│ struct _mlsFn__mls_j_1: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$1>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_1(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_foo: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<foo>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_foo mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply0() override{
+//│     return _mls_foo();
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_2: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$2>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_2(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_even: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<even>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_even mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_even(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_mk: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<mk>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_mk mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_mk(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_0: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$0>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_0(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_odd: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<odd>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_odd mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_odd(arg0);
+//│   }
+//│ };
 //│ _mlsValue _mls_foo(){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_16 = _mls_mk(_mlsValue::fromIntLit(10));
 //│   auto _mls_x_17 = _mls_odd(_mls_x_16);
 //│   _mls_retval = _mls_x_17;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_11;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_1;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_mk(_mlsValue _mls_n_0){
@@ -1309,6 +1567,45 @@ foo()
 //│     auto _mls_x_15 = _mlsValue::create<_mls_O>();
 //│     _mls_retval = _mls_j_2(_mls_x_15);
 //│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_11;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_even(_mlsValue _mls_x_5){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_5)){
+//│     auto _mls_x_7 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_1(_mls_x_7);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_5)){
+//│     auto _mls_x_8 = _mlsValue::as<_mls_S>(_mls_x_5)->_mls_s;
+//│     auto _mls_x_9 = _mls_odd(_mls_x_8);
+//│     _mls_retval = _mls_j_1(_mls_x_9);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_0)){
+//│     auto _mls_x_2 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_0)){
+//│     auto _mls_x_3 = _mlsValue::as<_mls_S>(_mls_x_0)->_mls_s;
+//│     auto _mls_x_4 = _mls_even(_mls_x_3);
+//│     _mls_retval = _mls_j_0(_mls_x_4);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_6;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -1518,6 +1815,13 @@ foo()
 //│ struct _mls_S;
 //│ struct _mls_True;
 //│ struct _mls_False;
+//│ struct _mls_j_1;
+//│ struct _mls_odd;
+//│ struct _mls_mk;
+//│ struct _mls_j_0;
+//│ struct _mls_j_2;
+//│ struct _mls_even;
+//│ struct _mls_foo;
 //│ _mlsValue _mls_odd(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_foo();
@@ -1550,30 +1854,93 @@ foo()
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_s);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_s) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->refCount = 1; _mlsVal->tag = 4; _mlsVal->_mls_s = _mls_s;  return _mlsValue(_mlsVal); }
 //│ };
-//│ _mlsValue _mls_even(_mlsValue _mls_x_5){
+//│ struct _mlsFn__mls_j_1: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$1>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_1(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_foo: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<foo>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_foo mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply0() override{
+//│     return _mls_foo();
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_2: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$2>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_2(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_even: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<even>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_even mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_even(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_mk: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<mk>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_mk mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_mk(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_0: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$0>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_0(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_odd: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<odd>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_odd mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_odd(arg0);
+//│   }
+//│ };
+//│ _mlsValue _mls_mk(_mlsValue _mls_n_0){
 //│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_5)){
-//│     auto _mls_x_7 = _mlsValue::create<_mls_True>();
-//│     _mls_retval = _mls_j_1(_mls_x_7);
-//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_5)){
-//│     auto _mls_x_8 = _mlsValue::as<_mls_S>(_mls_x_5)->_mls_s;
-//│     auto _mls_x_9 = _mls_odd(_mls_x_8);
-//│     _mls_retval = _mls_j_1(_mls_x_9);
+//│   auto _mls_x_10 = (_mls_n_0>_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_10)){
+//│     auto _mls_x_12 = (_mls_n_0-_mlsValue::fromIntLit(1));
+//│     auto _mls_x_13 = _mls_mk(_mls_x_12);
+//│     auto _mls_x_14 = _mlsValue::create<_mls_S>(_mls_x_13);
+//│     _mls_retval = _mls_j_2(_mls_x_14);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_10)){
+//│     auto _mls_x_15 = _mlsValue::create<_mls_O>();
+//│     _mls_retval = _mls_j_2(_mls_x_15);
 //│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_foo(){
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_16 = _mls_mk(_mlsValue::fromIntLit(10));
-//│   auto _mls_x_17 = _mlsValue::create<_mls_S>(_mls_x_16);
-//│   auto _mls_x_18 = _mlsValue::create<_mls_S>(_mls_x_17);
-//│   auto _mls_x_19 = _mls_odd(_mls_x_18);
-//│   _mls_retval = _mls_x_19;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_6;
+//│   _mls_retval = _mls_x_11;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
@@ -1588,27 +1955,34 @@ foo()
 //│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_11;
-//│   return _mls_retval;
-//│ }
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_1;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_mk(_mlsValue _mls_n_0){
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_10 = (_mls_n_0>_mlsValue::fromIntLit(0));
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_10)){
-//│     auto _mls_x_12 = (_mls_n_0-_mlsValue::fromIntLit(1));
-//│     auto _mls_x_13 = _mls_mk(_mls_x_12);
-//│     auto _mls_x_14 = _mlsValue::create<_mls_S>(_mls_x_13);
-//│     _mls_retval = _mls_j_2(_mls_x_14);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_10)){
-//│     auto _mls_x_15 = _mlsValue::create<_mls_O>();
-//│     _mls_retval = _mls_j_2(_mls_x_15);
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_foo(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_16 = _mls_mk(_mlsValue::fromIntLit(10));
+//│   auto _mls_x_17 = _mlsValue::create<_mls_S>(_mls_x_16);
+//│   auto _mls_x_18 = _mlsValue::create<_mls_S>(_mls_x_17);
+//│   auto _mls_x_19 = _mls_odd(_mls_x_18);
+//│   _mls_retval = _mls_x_19;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_even(_mlsValue _mls_x_5){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_5)){
+//│     auto _mls_x_7 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_1(_mls_x_7);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_5)){
+//│     auto _mls_x_8 = _mlsValue::as<_mls_S>(_mls_x_5)->_mls_s;
+//│     auto _mls_x_9 = _mls_odd(_mls_x_8);
+//│     _mls_retval = _mls_j_1(_mls_x_9);
 //│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
@@ -1866,6 +2240,15 @@ main()
 //│ struct _mls_S;
 //│ struct _mls_True;
 //│ struct _mls_False;
+//│ struct _mls_j_1;
+//│ struct _mls_j_3;
+//│ struct _mls_odd;
+//│ struct _mls_main;
+//│ struct _mls_bar;
+//│ struct _mls_j_0;
+//│ struct _mls_j_2;
+//│ struct _mls_even;
+//│ struct _mls_foo;
 //│ _mlsValue _mls_odd(_mlsValue);
 //│ _mlsValue _mls_bar();
 //│ _mlsValue _mls_j_0(_mlsValue);
@@ -1900,36 +2283,101 @@ main()
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_s);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_s) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->refCount = 1; _mlsVal->tag = 4; _mlsVal->_mls_s = _mls_s;  return _mlsValue(_mlsVal); }
 //│ };
-//│ _mlsValue _mls_bar(){
+//│ struct _mlsFn__mls_j_1: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$1>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_1(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_foo: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<foo>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_foo mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply0() override{
+//│     return _mls_foo();
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_2: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$2>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_2(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_even: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<even>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_even mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_even(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_bar: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<bar>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_bar mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply0() override{
+//│     return _mls_bar();
+//│   }
+//│ };
+//│ struct _mlsFn__mls_main: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<main>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply0() override{
+//│     return _mls_main();
+//│   }
+//│ };
+//│ struct _mlsFn__mls_odd: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<odd>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_odd mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_odd(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_3: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$3>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_3 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_3(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_0: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$0>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_0(arg0);
+//│   }
+//│ };
+//│ _mlsValue _mls_main(){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_16 = (_mlsValue::fromIntLit(10)>_mlsValue::fromIntLit(0));
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_16)){
-//│     auto _mls_x_18 = _mlsValue::create<_mls_O>();
-//│     auto _mls_x_19 = _mlsValue::create<_mls_S>(_mls_x_18);
-//│     auto _mls_x_20 = _mls_odd(_mls_x_19);
-//│     _mls_retval = _mls_j_3(_mls_x_20);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_16)){
-//│     auto _mls_x_21 = _mlsValue::create<_mls_O>();
-//│     auto _mls_x_22 = _mls_odd(_mls_x_21);
-//│     _mls_retval = _mls_j_3(_mls_x_22);
-//│   } else throw std::runtime_error("Non-exhaustive match");
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_even(_mlsValue _mls_x_5){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_5)){
-//│     auto _mls_x_7 = _mlsValue::create<_mls_True>();
-//│     _mls_retval = _mls_j_1(_mls_x_7);
-//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_5)){
-//│     auto _mls_x_8 = _mlsValue::as<_mls_S>(_mls_x_5)->_mls_s;
-//│     auto _mls_x_9 = _mls_odd(_mls_x_8);
-//│     _mls_retval = _mls_j_1(_mls_x_9);
-//│   } else throw std::runtime_error("Non-exhaustive match");
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_6;
+//│   auto _mls_x_23 = _mls_foo();
+//│   auto _mls_x_24 = _mls_bar();
+//│   _mls_retval = _mls_x_24;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_foo(){
@@ -1945,6 +2393,24 @@ main()
 //│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_12 = _mls_odd(_mls_x_11);
+//│   _mls_retval = _mls_x_12;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_even(_mlsValue _mls_x_5){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_5)){
+//│     auto _mls_x_7 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_1(_mls_x_7);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_5)){
+//│     auto _mls_x_8 = _mlsValue::as<_mls_S>(_mls_x_5)->_mls_s;
+//│     auto _mls_x_9 = _mls_odd(_mls_x_8);
+//│     _mls_retval = _mls_j_1(_mls_x_9);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
 //│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_0)){
@@ -1957,11 +2423,14 @@ main()
 //│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_main(){
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_23 = _mls_foo();
-//│   auto _mls_x_24 = _mls_bar();
-//│   _mls_retval = _mls_x_24;
+//│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_6;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_j_3(_mlsValue _mls_x_17){
@@ -1969,15 +2438,19 @@ main()
 //│   _mls_retval = _mls_x_17;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
+//│ _mlsValue _mls_bar(){
 //│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_1;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_12 = _mls_odd(_mls_x_11);
-//│   _mls_retval = _mls_x_12;
+//│   auto _mls_x_16 = (_mlsValue::fromIntLit(10)>_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_16)){
+//│     auto _mls_x_18 = _mlsValue::create<_mls_O>();
+//│     auto _mls_x_19 = _mlsValue::create<_mls_S>(_mls_x_18);
+//│     auto _mls_x_20 = _mls_odd(_mls_x_19);
+//│     _mls_retval = _mls_j_3(_mls_x_20);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_16)){
+//│     auto _mls_x_21 = _mlsValue::create<_mls_O>();
+//│     auto _mls_x_22 = _mls_odd(_mls_x_21);
+//│     _mls_retval = _mls_j_3(_mls_x_22);
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -2221,6 +2694,14 @@ main(False)
 //│ struct _mls_A;
 //│ struct _mls_True;
 //│ struct _mls_False;
+//│ struct _mls_main;
+//│ struct _mls_bbb;
+//│ struct _mls_j_1;
+//│ struct _mls_aaa;
+//│ struct _mls_not;
+//│ struct _mls_foo;
+//│ struct _mls_j_0;
+//│ struct _mls_j_2;
 //│ _mlsValue _mls_aaa();
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_main(_mlsValue);
@@ -2254,32 +2735,101 @@ main(False)
 //│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A; _mlsVal->refCount = 1; _mlsVal->tag = 4;  return _mlsValue(_mlsVal); }
 //│ };
-//│ _mlsValue _mls_main(_mlsValue _mls_flag_0){
+//│ struct _mlsFn__mls_foo: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<foo>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_foo mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_foo(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_1: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$1>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_1(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_bbb: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<bbb>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_bbb mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply0() override{
+//│     return _mls_bbb();
+//│   }
+//│ };
+//│ struct _mlsFn__mls_not: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<not>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_not mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_not(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_2: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$2>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_2(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_aaa: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<aaa>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_aaa mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply0() override{
+//│     return _mls_aaa();
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_0: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$0>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_0(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_main: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<main>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_main(arg0);
+//│   }
+//│ };
+//│ _mlsValue _mls_aaa(){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_20 = _mls_foo(_mls_flag_0);
-//│   if (_mlsValue::isValueOf<_mls_A>(_mls_x_20)){
-//│     auto _mls_x_22 = _mls_aaa();
-//│     _mls_retval = _mls_j_2(_mls_x_22);
-//│   } else if (_mlsValue::isValueOf<_mls_B>(_mls_x_20)){
-//│     auto _mls_x_23 = _mlsValue::as<_mls_B>(_mls_x_20)->_mls_b;
-//│     auto _mls_x_24 = _mls_bbb();
-//│     _mls_retval = _mls_j_2(_mls_x_24);
-//│   } else throw std::runtime_error("Non-exhaustive match");
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_21){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_21;
+//│   auto _mls_x_0 = _mlsValue::fromIntLit(1);
+//│   auto _mls_x_1 = _mlsValue::fromIntLit(2);
+//│   auto _mls_x_2 = _mlsValue::fromIntLit(3);
+//│   auto _mls_x_3 = _mlsValue::fromIntLit(4);
+//│   auto _mls_x_4 = (_mls_x_0+_mls_x_1);
+//│   auto _mls_x_5 = (_mls_x_4-_mls_x_2);
+//│   auto _mls_x_6 = (_mls_x_5+_mls_x_3);
+//│   _mls_retval = _mls_x_6;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_j_1(_mlsValue _mls_x_15){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_15;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_0(_mlsValue _mls_x_11){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_11;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_foo(_mlsValue _mls_x_14){
@@ -2293,18 +2843,6 @@ main(False)
 //│     auto _mls_x_19 = _mlsValue::create<_mls_B>(_mls_x_18);
 //│     _mls_retval = _mls_j_1(_mls_x_19);
 //│   } else throw std::runtime_error("Non-exhaustive match");
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_aaa(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_0 = _mlsValue::fromIntLit(1);
-//│   auto _mls_x_1 = _mlsValue::fromIntLit(2);
-//│   auto _mls_x_2 = _mlsValue::fromIntLit(3);
-//│   auto _mls_x_3 = _mlsValue::fromIntLit(4);
-//│   auto _mls_x_4 = (_mls_x_0+_mls_x_1);
-//│   auto _mls_x_5 = (_mls_x_4-_mls_x_2);
-//│   auto _mls_x_6 = (_mls_x_5+_mls_x_3);
-//│   _mls_retval = _mls_x_6;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_not(_mlsValue _mls_x_10){
@@ -2324,6 +2862,29 @@ main(False)
 //│   auto _mls_x_8 = (_mls_x_7*_mlsValue::fromIntLit(100));
 //│   auto _mls_x_9 = (_mls_x_8+_mlsValue::fromIntLit(4));
 //│   _mls_retval = _mls_x_9;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_21){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_21;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(_mlsValue _mls_flag_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_20 = _mls_foo(_mls_flag_0);
+//│   if (_mlsValue::isValueOf<_mls_A>(_mls_x_20)){
+//│     auto _mls_x_22 = _mls_aaa();
+//│     _mls_retval = _mls_j_2(_mls_x_22);
+//│   } else if (_mlsValue::isValueOf<_mls_B>(_mls_x_20)){
+//│     auto _mls_x_23 = _mlsValue::as<_mls_B>(_mls_x_20)->_mls_b;
+//│     auto _mls_x_24 = _mls_bbb();
+//│     _mls_retval = _mls_j_2(_mls_x_24);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_11){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_11;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -2517,6 +3078,12 @@ main()
 //│ struct _mls_Cons;
 //│ struct _mls_True;
 //│ struct _mls_False;
+//│ struct _mls_main;
+//│ struct _mls_j_1;
+//│ struct _mls_is_empty;
+//│ struct _mls_j_0;
+//│ struct _mls_is_none;
+//│ struct _mls_head_opt;
 //│ _mlsValue _mls_is_empty(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_main();
@@ -2573,14 +3140,69 @@ main()
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = 4; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
+//│ struct _mlsFn__mls_j_1: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$1>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_1(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_is_none: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<is_none>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_is_none mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_is_none(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_is_empty: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<is_empty>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_is_empty mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_is_empty(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_head_opt: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<head_opt>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_head_opt mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_head_opt(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_0: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$0>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_0(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_main: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<main>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply0() override{
+//│     return _mls_main();
+//│   }
+//│ };
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_0;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_5){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_5;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_is_empty(_mlsValue _mls_l_1){
@@ -2588,6 +3210,18 @@ main()
 //│   auto _mls_x_9 = _mls_head_opt(_mls_l_1);
 //│   auto _mls_x_10 = _mls_is_none(_mls_x_9);
 //│   _mls_retval = _mls_x_10;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_is_none(_mlsValue _mls_o_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_None>(_mls_o_0)){
+//│     auto _mls_x_6 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_1(_mls_x_6);
+//│   } else if (_mlsValue::isValueOf<_mls_Some>(_mls_o_0)){
+//│     auto _mls_x_7 = _mlsValue::as<_mls_Some>(_mls_o_0)->_mls_x;
+//│     auto _mls_x_8 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_1(_mls_x_8);
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_head_opt(_mlsValue _mls_l_0){
@@ -2603,16 +3237,9 @@ main()
 //│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_is_none(_mlsValue _mls_o_0){
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_5){
 //│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_None>(_mls_o_0)){
-//│     auto _mls_x_6 = _mlsValue::create<_mls_True>();
-//│     _mls_retval = _mls_j_1(_mls_x_6);
-//│   } else if (_mlsValue::isValueOf<_mls_Some>(_mls_o_0)){
-//│     auto _mls_x_7 = _mlsValue::as<_mls_Some>(_mls_o_0)->_mls_x;
-//│     auto _mls_x_8 = _mlsValue::create<_mls_False>();
-//│     _mls_retval = _mls_j_1(_mls_x_8);
-//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   _mls_retval = _mls_x_5;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_main(){
@@ -2857,6 +3484,14 @@ main()
 //│ struct _mls_Cons;
 //│ struct _mls_True;
 //│ struct _mls_False;
+//│ struct _mls_main;
+//│ struct _mls_j_1;
+//│ struct _mls_is_empty;
+//│ struct _mls_is_none;
+//│ struct _mls_head_opt;
+//│ struct _mls_mk_list;
+//│ struct _mls_j_0;
+//│ struct _mls_j_2;
 //│ _mlsValue _mls_is_empty(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_j_2(_mlsValue);
@@ -2915,9 +3550,96 @@ main()
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = 4; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
+//│ struct _mlsFn__mls_j_1: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$1>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_1(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_is_none: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<is_none>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_is_none mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_is_none(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_2: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$2>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_2(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_is_empty: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<is_empty>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_is_empty mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_is_empty(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_mk_list: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<mk_list>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_mk_list mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_mk_list(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_head_opt: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<head_opt>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_head_opt mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_head_opt(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_0: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$0>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_0(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_main: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<main>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply0() override{
+//│     return _mls_main();
+//│   }
+//│ };
+//│ _mlsValue _mls_is_none(_mlsValue _mls_o_0){
 //│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_6;
+//│   if (_mlsValue::isValueOf<_mls_None>(_mls_o_0)){
+//│     auto _mls_x_12 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_2(_mls_x_12);
+//│   } else if (_mlsValue::isValueOf<_mls_Some>(_mls_o_0)){
+//│     auto _mls_x_13 = _mlsValue::as<_mls_Some>(_mls_o_0)->_mls_x;
+//│     auto _mls_x_14 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_2(_mls_x_14);
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_mk_list(_mlsValue _mls_n_0){
@@ -2934,40 +3656,11 @@ main()
 //│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_main(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_17 = _mls_mk_list(_mlsValue::fromIntLit(10));
-//│   auto _mls_x_18 = _mls_is_empty(_mls_x_17);
-//│   _mls_retval = _mls_x_18;
-//│   return _mls_retval;
-//│ }
 //│ _mlsValue _mls_is_empty(_mlsValue _mls_l_1){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_15 = _mls_head_opt(_mls_l_1);
 //│   auto _mls_x_16 = _mls_is_none(_mls_x_15);
 //│   _mls_retval = _mls_x_16;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_is_none(_mlsValue _mls_o_0){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_None>(_mls_o_0)){
-//│     auto _mls_x_12 = _mlsValue::create<_mls_True>();
-//│     _mls_retval = _mls_j_2(_mls_x_12);
-//│   } else if (_mlsValue::isValueOf<_mls_Some>(_mls_o_0)){
-//│     auto _mls_x_13 = _mlsValue::as<_mls_Some>(_mls_o_0)->_mls_x;
-//│     auto _mls_x_14 = _mlsValue::create<_mls_False>();
-//│     _mls_retval = _mls_j_2(_mls_x_14);
-//│   } else throw std::runtime_error("Non-exhaustive match");
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_11;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_1;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_head_opt(_mlsValue _mls_l_0){
@@ -2981,6 +3674,28 @@ main()
 //│     auto _mls_x_10 = _mlsValue::create<_mls_Some>(_mls_x_9);
 //│     _mls_retval = _mls_j_1(_mls_x_10);
 //│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_11;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_17 = _mls_mk_list(_mlsValue::fromIntLit(10));
+//│   auto _mls_x_18 = _mls_is_empty(_mls_x_17);
+//│   _mls_retval = _mls_x_18;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_6;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -3168,7 +3883,7 @@ main()
 //│ x$17 -- #87)
 //│ 
 //│ Interpreted:
-//│ Some(1)
+//│ Some(0)
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"
@@ -3181,6 +3896,12 @@ main()
 //│ struct _mls_Cons;
 //│ struct _mls_True;
 //│ struct _mls_False;
+//│ struct _mls_main;
+//│ struct _mls_j_1;
+//│ struct _mls_last_opt;
+//│ struct _mls_mk_list;
+//│ struct _mls_j_0;
+//│ struct _mls_j_2;
 //│ _mlsValue _mls_last_opt(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_j_2(_mlsValue);
@@ -3237,6 +3958,92 @@ main()
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = 4; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
+//│ struct _mlsFn__mls_j_1: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$1>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_1(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_2: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$2>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_2(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_0: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$0>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_0(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_main: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<main>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply0() override{
+//│     return _mls_main();
+//│   }
+//│ };
+//│ struct _mlsFn__mls_last_opt: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<last_opt>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_last_opt mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_last_opt(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_mk_list: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<mk_list>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_mk_list mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_mk_list(arg0);
+//│   }
+//│ };
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_10){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_j_1(_mls_x_10);
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_mk_list(_mlsValue _mls_n_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_0 = (_mls_n_0==_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_0)){
+//│     auto _mls_x_2 = _mlsValue::create<_mls_Nil>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_0)){
+//│     auto _mls_x_3 = (_mls_n_0-_mlsValue::fromIntLit(1));
+//│     auto _mls_x_4 = _mls_mk_list(_mls_x_3);
+//│     auto _mls_x_5 = _mlsValue::create<_mls_Cons>(_mls_n_0, _mls_x_4);
+//│     _mls_retval = _mls_j_0(_mls_x_5);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_15 = _mls_mk_list(_mlsValue::fromIntLit(10));
+//│   auto _mls_x_16 = _mls_last_opt(_mls_x_15);
+//│   _mls_retval = _mls_x_16;
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_last_opt(_mlsValue _mls_l_0){
 //│   _mlsValue _mls_retval;
 //│   if (_mlsValue::isValueOf<_mls_Nil>(_mls_l_0)){
@@ -3257,40 +4064,14 @@ main()
 //│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_6;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_mk_list(_mlsValue _mls_n_0){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_0 = (_mls_n_0==_mlsValue::fromIntLit(0));
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_0)){
-//│     auto _mls_x_2 = _mlsValue::create<_mls_Nil>();
-//│     _mls_retval = _mls_j_0(_mls_x_2);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_0)){
-//│     auto _mls_x_3 = (_mls_n_0-_mlsValue::fromIntLit(1));
-//│     auto _mls_x_4 = _mls_mk_list(_mls_x_3);
-//│     auto _mls_x_5 = _mlsValue::create<_mls_Cons>(_mls_n_0, _mls_x_4);
-//│     _mls_retval = _mls_j_0(_mls_x_5);
-//│   } else throw std::runtime_error("Non-exhaustive match");
-//│   return _mls_retval;
-//│ }
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_1;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_main(){
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_15 = _mls_mk_list(_mlsValue::fromIntLit(10));
-//│   auto _mls_x_16 = _mls_last_opt(_mls_x_15);
-//│   _mls_retval = _mls_x_16;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_10){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_j_1(_mls_x_10);
+//│   _mls_retval = _mls_x_6;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -3601,6 +4382,16 @@ main()
 //│ struct _mls_Cons;
 //│ struct _mls_True;
 //│ struct _mls_False;
+//│ struct _mls_j_1;
+//│ struct _mls_e1;
+//│ struct _mls_is_some;
+//│ struct _mls_e0;
+//│ struct _mls_main;
+//│ struct _mls_f;
+//│ struct _mls_j_0;
+//│ struct _mls_j_2;
+//│ struct _mls_e3;
+//│ struct _mls_e2;
 //│ _mlsValue _mls_e0(_mlsValue);
 //│ _mlsValue _mls_e2(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
@@ -3661,64 +4452,109 @@ main()
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = 4; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
+//│ struct _mlsFn__mls_j_1: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$1>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_1(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_e1: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<e1>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_e1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply2(_mlsValue arg0, _mlsValue arg1) override{
+//│     return _mls_e1(arg0, arg1);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_e0: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<e0>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_e0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_e0(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_2: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$2>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_2(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_e3: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<e3>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_e3 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_e3(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_is_some: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<is_some>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_is_some mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_is_some(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_e2: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<e2>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_e2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_e2(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_0: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$0>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_0(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_f: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<f>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_f mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_f(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_main: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<main>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply0() override{
+//│     return _mls_main();
+//│   }
+//│ };
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_0;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_e3(_mlsValue _mls_c_1){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_11 = _mlsValue::fromIntLit(4);
-//│   auto _mls_x_12 = _mlsValue::fromIntLit(5);
-//│   auto _mls_x_13 = _mlsValue::fromIntLit(6);
-//│   auto _mls_x_14 = _mlsValue::fromIntLit(7);
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_c_1)){
-//│     auto _mls_x_16 = (_mls_x_11+_mls_x_12);
-//│     auto _mls_x_17 = (_mls_x_16+_mls_x_13);
-//│     auto _mls_x_18 = (_mls_x_17+_mls_x_14);
-//│     _mls_retval = _mls_j_1(_mls_x_18);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_c_1)){
-//│     auto _mls_x_19 = (_mls_x_11+_mls_x_12);
-//│     auto _mls_x_20 = (_mls_x_19-_mls_x_13);
-//│     auto _mls_x_21 = (_mls_x_20+_mls_x_14);
-//│     _mls_retval = _mls_j_1(_mls_x_21);
-//│   } else throw std::runtime_error("Non-exhaustive match");
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_29){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_30 = _mls_e0(_mls_x_29);
-//│   _mls_retval = _mls_x_30;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_is_some(_mlsValue _mls_o_0){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_Some>(_mls_o_0)){
-//│     auto _mls_x_1 = _mlsValue::as<_mls_Some>(_mls_o_0)->_mls_x;
-//│     auto _mls_x_2 = _mlsValue::create<_mls_True>();
-//│     _mls_retval = _mls_j_0(_mls_x_2);
-//│   } else if (_mlsValue::isValueOf<_mls_None>(_mls_o_0)){
-//│     auto _mls_x_3 = _mlsValue::create<_mls_False>();
-//│     _mls_retval = _mls_j_0(_mls_x_3);
-//│   } else throw std::runtime_error("Non-exhaustive match");
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_main(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_34 = _mlsValue::create<_mls_Some>(_mlsValue::fromIntLit(2));
-//│   auto _mls_x_35 = _mls_f(_mls_x_34);
-//│   auto _mls_x_36 = _mlsValue::create<_mls_None>();
-//│   auto _mls_x_37 = _mls_f(_mls_x_36);
-//│   auto _mls_x_38 = (_mls_x_35+_mls_x_37);
-//│   _mls_retval = _mls_x_38;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_e0(_mlsValue _mls_w_0){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_4 = (_mls_w_0+_mlsValue::fromIntLit(8));
-//│   auto _mls_x_5 = (_mls_x_4+_mlsValue::fromIntLit(9));
-//│   auto _mls_x_6 = (_mls_x_5+_mlsValue::fromIntLit(10));
-//│   _mls_retval = _mls_x_6;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_e1(_mlsValue _mls_a_0, _mlsValue _mls_c_0){
@@ -3744,6 +4580,16 @@ main()
 //│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_34 = _mlsValue::create<_mls_Some>(_mlsValue::fromIntLit(2));
+//│   auto _mls_x_35 = _mls_f(_mls_x_34);
+//│   auto _mls_x_36 = _mlsValue::create<_mls_None>();
+//│   auto _mls_x_37 = _mls_f(_mls_x_36);
+//│   auto _mls_x_38 = (_mls_x_35+_mls_x_37);
+//│   _mls_retval = _mls_x_38;
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_e2(_mlsValue _mls_x_22){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_23 = (_mls_x_22+_mlsValue::fromIntLit(12));
@@ -3752,9 +4598,54 @@ main()
 //│   _mls_retval = _mls_x_25;
 //│   return _mls_retval;
 //│ }
+//│ _mlsValue _mls_e3(_mlsValue _mls_c_1){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_11 = _mlsValue::fromIntLit(4);
+//│   auto _mls_x_12 = _mlsValue::fromIntLit(5);
+//│   auto _mls_x_13 = _mlsValue::fromIntLit(6);
+//│   auto _mls_x_14 = _mlsValue::fromIntLit(7);
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_c_1)){
+//│     auto _mls_x_16 = (_mls_x_11+_mls_x_12);
+//│     auto _mls_x_17 = (_mls_x_16+_mls_x_13);
+//│     auto _mls_x_18 = (_mls_x_17+_mls_x_14);
+//│     _mls_retval = _mls_j_1(_mls_x_18);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_c_1)){
+//│     auto _mls_x_19 = (_mls_x_11+_mls_x_12);
+//│     auto _mls_x_20 = (_mls_x_19-_mls_x_13);
+//│     auto _mls_x_21 = (_mls_x_20+_mls_x_14);
+//│     _mls_retval = _mls_j_1(_mls_x_21);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_e0(_mlsValue _mls_w_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_4 = (_mls_w_0+_mlsValue::fromIntLit(8));
+//│   auto _mls_x_5 = (_mls_x_4+_mlsValue::fromIntLit(9));
+//│   auto _mls_x_6 = (_mls_x_5+_mlsValue::fromIntLit(10));
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_29){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_30 = _mls_e0(_mls_x_29);
+//│   _mls_retval = _mls_x_30;
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_j_1(_mlsValue _mls_x_15){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_15;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_is_some(_mlsValue _mls_o_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_Some>(_mls_o_0)){
+//│     auto _mls_x_1 = _mlsValue::as<_mls_Some>(_mls_o_0)->_mls_x;
+//│     auto _mls_x_2 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_None>(_mls_o_0)){
+//│     auto _mls_x_3 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_3);
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -4087,6 +4978,17 @@ main()
 //│ struct _mls_Cons;
 //│ struct _mls_True;
 //│ struct _mls_False;
+//│ struct _mls_j_1;
+//│ struct _mls_e1;
+//│ struct _mls_is_some;
+//│ struct _mls_j_3;
+//│ struct _mls_e0;
+//│ struct _mls_main;
+//│ struct _mls_f;
+//│ struct _mls_j_0;
+//│ struct _mls_j_2;
+//│ struct _mls_e3;
+//│ struct _mls_e2;
 //│ _mlsValue _mls_e0(_mlsValue);
 //│ _mlsValue _mls_e2(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
@@ -4148,11 +5050,116 @@ main()
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = 4; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
-//│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_0;
-//│   return _mls_retval;
-//│ }
+//│ struct _mlsFn__mls_j_1: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$1>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_1(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_e1: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<e1>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_e1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply2(_mlsValue arg0, _mlsValue arg1) override{
+//│     return _mls_e1(arg0, arg1);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_e0: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<e0>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_e0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_e0(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_2: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$2>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_2(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_e3: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<e3>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_e3 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_e3(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_is_some: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<is_some>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_is_some mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_is_some(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_e2: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<e2>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_e2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_e2(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_3: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$3>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_3 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_3(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_0: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$0>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_0(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_f: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<f>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_f mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_f(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_main: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<main>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply0() override{
+//│     return _mls_main();
+//│   }
+//│ };
 //│ _mlsValue _mls_e3(_mlsValue _mls_c_0){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_12 = _mlsValue::fromIntLit(4);
@@ -4172,19 +5179,6 @@ main()
 //│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_8){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_8;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_e2(_mlsValue _mls_x_23){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_24 = (_mls_x_23+_mlsValue::fromIntLit(12));
-//│   auto _mls_x_25 = (_mls_x_24+_mlsValue::fromIntLit(13));
-//│   auto _mls_x_26 = (_mls_x_25+_mlsValue::fromIntLit(14));
-//│   _mls_retval = _mls_x_26;
-//│   return _mls_retval;
-//│ }
 //│ _mlsValue _mls_is_some(_mlsValue _mls_o_0){
 //│   _mlsValue _mls_retval;
 //│   if (_mlsValue::isValueOf<_mls_Some>(_mls_o_0)){
@@ -4195,25 +5189,6 @@ main()
 //│     auto _mls_x_3 = _mlsValue::create<_mls_False>();
 //│     _mls_retval = _mls_j_0(_mls_x_3);
 //│   } else throw std::runtime_error("Non-exhaustive match");
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_16){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_16;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_3(_mlsValue _mls_x_30){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_31 = _mls_e0(_mls_x_30);
-//│   _mls_retval = _mls_x_31;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_e0(_mlsValue _mls_w_0){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_4 = (_mls_w_0+_mlsValue::fromIntLit(8));
-//│   auto _mls_x_5 = (_mls_x_4+_mlsValue::fromIntLit(9));
-//│   auto _mls_x_6 = (_mls_x_5+_mlsValue::fromIntLit(10));
-//│   _mls_retval = _mls_x_6;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_e1(_mlsValue _mls_a_0, _mlsValue _mls_z_0){
@@ -4239,6 +5214,19 @@ main()
 //│   _mls_retval = _mls_x_39;
 //│   return _mls_retval;
 //│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_16){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_16;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_e0(_mlsValue _mls_w_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_4 = (_mls_w_0+_mlsValue::fromIntLit(8));
+//│   auto _mls_x_5 = (_mls_x_4+_mlsValue::fromIntLit(9));
+//│   auto _mls_x_6 = (_mls_x_5+_mlsValue::fromIntLit(10));
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_f(_mlsValue _mls_x_27){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_28 = _mls_is_some(_mls_x_27);
@@ -4251,6 +5239,30 @@ main()
 //│     auto _mls_x_34 = _mls_e2(_mls_x_29);
 //│     _mls_retval = _mls_j_3(_mls_x_34);
 //│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_8){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_8;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_0;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_e2(_mlsValue _mls_x_23){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_24 = (_mls_x_23+_mlsValue::fromIntLit(12));
+//│   auto _mls_x_25 = (_mls_x_24+_mlsValue::fromIntLit(13));
+//│   auto _mls_x_26 = (_mls_x_25+_mlsValue::fromIntLit(14));
+//│   _mls_retval = _mls_x_26;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_3(_mlsValue _mls_x_30){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_31 = _mls_e0(_mls_x_30);
+//│   _mls_retval = _mls_x_31;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -4584,6 +5596,18 @@ main()
 //│ struct _mls_S;
 //│ struct _mls_True;
 //│ struct _mls_False;
+//│ struct _mls_fib;
+//│ struct _mls_main;
+//│ struct _mls_to_nat;
+//│ struct _mls_j_5;
+//│ struct _mls_j_3;
+//│ struct _mls_to_int;
+//│ struct _mls_pred;
+//│ struct _mls_plus;
+//│ struct _mls_j_4;
+//│ struct _mls_j_1;
+//│ struct _mls_j_0;
+//│ struct _mls_j_2;
 //│ _mlsValue _mls_pred(_mlsValue);
 //│ _mlsValue _mls_fib(_mlsValue);
 //│ _mlsValue _mls_j_5(_mlsValue);
@@ -4621,9 +5645,158 @@ main()
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_x);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->refCount = 1; _mlsVal->tag = 4; _mlsVal->_mls_x = _mls_x;  return _mlsValue(_mlsVal); }
 //│ };
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_7){
+//│ struct _mlsFn__mls_j_1: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$1>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_1(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_fib: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<fib>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_fib mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_fib(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_to_nat: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<to_nat>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_to_nat mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_to_nat(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_5: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$5>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_5 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_5(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_pred: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<pred>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_pred mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_pred(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_plus: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<plus>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_plus mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply2(_mlsValue arg0, _mlsValue arg1) override{
+//│     return _mls_plus(arg0, arg1);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_2: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$2>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_2(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_4: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$4>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_4 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_4(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_to_int: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<to_int>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_to_int mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_to_int(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_main: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<main>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply0() override{
+//│     return _mls_main();
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_3: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$3>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_3 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_3(arg0);
+//│   }
+//│ };
+//│ struct _mlsFn__mls_j_0: public _mlsCallable {
+//│ 
+//│   constexpr static inline const char *typeName = "<j$0>";
+//│   constexpr static inline uint32_t typeTag = -1;
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
+//│   _mlsValue virtual apply1(_mlsValue arg0) override{
+//│     return _mls_j_0(arg0);
+//│   }
+//│ };
+//│ _mlsValue _mls_to_int(_mlsValue _mls_n_2){
 //│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_7;
+//│   if (_mlsValue::isValueOf<_mls_Z>(_mls_n_2)){
+//│     _mls_retval = _mls_j_4(_mlsValue::fromIntLit(0));
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_n_2)){
+//│     auto _mls_x_19 = _mlsValue::as<_mls_S>(_mls_n_2)->_mls_x;
+//│     auto _mls_x_20 = _mls_to_int(_mls_x_19);
+//│     auto _mls_x_21 = (_mlsValue::fromIntLit(1)+_mls_x_20);
+//│     _mls_retval = _mls_j_4(_mls_x_21);
+//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_fib(_mlsValue _mls_n_1){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_Z>(_mls_n_1)){
+//│     auto _mls_x_8 = _mlsValue::create<_mls_Z>();
+//│     auto _mls_x_9 = _mlsValue::create<_mls_S>(_mls_x_8);
+//│     _mls_retval = _mls_j_2(_mls_x_9);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_n_1)){
+//│     auto _mls_x_10 = _mlsValue::as<_mls_S>(_mls_n_1)->_mls_x;
+//│     if (_mlsValue::isValueOf<_mls_Z>(_mls_x_10)){
+//│       auto _mls_x_12 = _mlsValue::create<_mls_Z>();
+//│       auto _mls_x_13 = _mlsValue::create<_mls_S>(_mls_x_12);
+//│       _mls_retval = _mls_j_3(_mls_x_13);
+//│     } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_10)){
+//│       auto _mls_x_14 = _mlsValue::as<_mls_S>(_mls_x_10)->_mls_x;
+//│       auto _mls_x_15 = _mls_fib(_mls_x_10);
+//│       auto _mls_x_16 = _mls_fib(_mls_x_14);
+//│       auto _mls_x_17 = _mls_plus(_mls_x_15, _mls_x_16);
+//│       _mls_retval = _mls_j_3(_mls_x_17);
+//│     } else throw std::runtime_error("Non-exhaustive match");
+//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
@@ -4631,9 +5804,9 @@ main()
 //│   _mls_retval = _mls_x_0;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_3){
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_7){
 //│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_3;
+//│   _mls_retval = _mls_x_7;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_to_nat(_mlsValue _mls_n_3){
@@ -4650,24 +5823,14 @@ main()
 //│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_main(){
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_3){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_28 = _mls_to_nat(_mlsValue::fromIntLit(30));
-//│   auto _mls_x_29 = _mls_fib(_mls_x_28);
-//│   auto _mls_x_30 = _mls_to_int(_mls_x_29);
-//│   _mls_retval = _mls_x_30;
+//│   _mls_retval = _mls_x_3;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_to_int(_mlsValue _mls_n_2){
+//│ _mlsValue _mls_j_3(_mlsValue _mls_x_11){
 //│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_Z>(_mls_n_2)){
-//│     _mls_retval = _mls_j_4(_mlsValue::fromIntLit(0));
-//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_n_2)){
-//│     auto _mls_x_19 = _mlsValue::as<_mls_S>(_mls_n_2)->_mls_x;
-//│     auto _mls_x_20 = _mls_to_int(_mls_x_19);
-//│     auto _mls_x_21 = (_mlsValue::fromIntLit(1)+_mls_x_20);
-//│     _mls_retval = _mls_j_4(_mls_x_21);
-//│   } else throw std::runtime_error("Non-exhaustive match");
+//│   _mls_retval = _mls_j_2(_mls_x_11);
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_j_5(_mlsValue _mls_x_23){
@@ -4675,9 +5838,12 @@ main()
 //│   _mls_retval = _mls_x_23;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_j_3(_mlsValue _mls_x_11){
+//│ _mlsValue _mls_main(){
 //│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_j_2(_mls_x_11);
+//│   auto _mls_x_28 = _mls_to_nat(_mlsValue::fromIntLit(30));
+//│   auto _mls_x_29 = _mls_fib(_mls_x_28);
+//│   auto _mls_x_30 = _mls_to_int(_mls_x_29);
+//│   _mls_retval = _mls_x_30;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_pred(_mlsValue _mls_n_0){
@@ -4706,28 +5872,6 @@ main()
 //│ _mlsValue _mls_j_4(_mlsValue _mls_x_18){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_18;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_fib(_mlsValue _mls_n_1){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_Z>(_mls_n_1)){
-//│     auto _mls_x_8 = _mlsValue::create<_mls_Z>();
-//│     auto _mls_x_9 = _mlsValue::create<_mls_S>(_mls_x_8);
-//│     _mls_retval = _mls_j_2(_mls_x_9);
-//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_n_1)){
-//│     auto _mls_x_10 = _mlsValue::as<_mls_S>(_mls_n_1)->_mls_x;
-//│     if (_mlsValue::isValueOf<_mls_Z>(_mls_x_10)){
-//│       auto _mls_x_12 = _mlsValue::create<_mls_Z>();
-//│       auto _mls_x_13 = _mlsValue::create<_mls_S>(_mls_x_12);
-//│       _mls_retval = _mls_j_3(_mls_x_13);
-//│     } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_10)){
-//│       auto _mls_x_14 = _mlsValue::as<_mls_S>(_mls_x_10)->_mls_x;
-//│       auto _mls_x_15 = _mls_fib(_mls_x_10);
-//│       auto _mls_x_16 = _mls_fib(_mls_x_14);
-//│       auto _mls_x_17 = _mls_plus(_mls_x_15, _mls_x_16);
-//│       _mls_retval = _mls_j_3(_mls_x_17);
-//│     } else throw std::runtime_error("Non-exhaustive match");
-//│   } else throw std::runtime_error("Non-exhaustive match");
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){

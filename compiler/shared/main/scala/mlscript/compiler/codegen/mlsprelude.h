@@ -17,7 +17,10 @@ struct _mlsObject {
   constexpr static inline uint32_t stickyRefCount =
       std::numeric_limits<decltype(refCount)>::max();
 
-  void incRef() { ++refCount; }
+  void incRef() {
+    if (refCount != stickyRefCount)
+      ++refCount;
+  }
   bool decRef() {
     if (refCount != stickyRefCount && --refCount == 0)
       return true;
@@ -27,7 +30,7 @@ struct _mlsObject {
   virtual void print() const = 0;
   virtual void destroy() = 0;
 };
-struct _mlsCallable;
+
 struct _mls_True;
 struct _mls_False;
 
@@ -219,19 +222,19 @@ public:
 
 struct _mlsCallable : public _mlsObject {
   virtual _mlsValue apply0() { throw std::runtime_error("Not implemented"); }
-  virtual _mlsValue apply1(_mlsValue arg1) {
+  virtual _mlsValue apply1(_mlsValue) {
     throw std::runtime_error("Not implemented");
   }
-  virtual _mlsValue apply2(_mlsValue arg1, _mlsValue arg2) {
+  virtual _mlsValue apply2(_mlsValue, _mlsValue) {
     throw std::runtime_error("Not implemented");
   }
-  virtual _mlsValue apply3(_mlsValue arg1, _mlsValue arg2, _mlsValue arg3) {
+  virtual _mlsValue apply3(_mlsValue, _mlsValue, _mlsValue) {
     throw std::runtime_error("Not implemented");
   }
-  virtual _mlsValue apply4(_mlsValue arg1, _mlsValue arg2, _mlsValue arg3,
-                           _mlsValue arg4) {
+  virtual _mlsValue apply4(_mlsValue, _mlsValue, _mlsValue, _mlsValue) {
     throw std::runtime_error("Not implemented");
   }
+  virtual void destroy() override {}
 };
 
 inline _mlsCallable *_mlsToCallable(_mlsValue fn) {
@@ -242,8 +245,8 @@ inline _mlsCallable *_mlsToCallable(_mlsValue fn) {
 }
 
 template <typename... U>
-static _mlsValue _mlsCall(_mlsValue f, U... args) {
-  static_assert(sizeof...(U) <= 5, "Too many arguments");
+inline static _mlsValue _mlsCall(_mlsValue f, U... args) {
+  static_assert(sizeof...(U) <= 4, "Too many arguments");
   if constexpr (sizeof...(U) == 0)
     return _mlsToCallable(f)->apply0();
   else if constexpr (sizeof...(U) == 1)

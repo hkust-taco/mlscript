@@ -170,7 +170,7 @@ enum Decl:
 enum Def:
   case StructDef(name: Str, fields: Ls[(Str, Type)], inherit: Opt[Ls[Str]], methods: Ls[Def] = Ls.empty)
   case EnumDef(name: Str, fields: Ls[(Str, Opt[Int])])
-  case FuncDef(specret: Type, name: Str, args: Ls[(Str, Type)], body: Stmt.Block)
+  case FuncDef(specret: Type, name: Str, args: Ls[(Str, Type)], body: Stmt.Block, or: Bool = false)
   case VarDef(typ: Type, name: Str, init: Opt[Expr])
   case RawDef(raw: Str)
 
@@ -189,8 +189,8 @@ enum Def:
         raw(s"enum $name") <:> raw("{") <#> stack_list(fields.map {
           case (name, value) => value.fold(raw(s"$name"))(x => raw(s"$name = $x"))
         }) <#> raw("};")
-      case FuncDef(specret, name, args, body) =>
-        specret.toDocument() <#> raw(s" $name(") <#> Type.toDocuments(args, sep = raw(", ")) <#> raw(")") <#> body.toDocument
+      case FuncDef(specret, name, args, body, or) =>
+        specret.toDocument() <#> raw(s" $name(") <#> Type.toDocuments(args, sep = raw(", ")) <#> raw(")") <#> (if or then raw(" override") else raw(""))  <#> body.toDocument
       case VarDef(typ, name, init) =>
         typ.toDocument() <#> raw(s" $name") <#> init.fold(raw(""))(x => raw(" = ") <#> x.toDocument) <#> raw(";")
       case RawDef(x) => x |> raw
