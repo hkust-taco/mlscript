@@ -1,0 +1,21 @@
+[
+  {
+    "arguments": [
+      "/usr/bin/c++",
+      "-c",
+      "-O3",
+      "-Wall",
+      "-Wextra",
+      "-ggdb3",
+      "-std=c++20",
+      "-I/opt/homebrew/Cellar/boost/1.85.0/include",
+      "-I/opt/homebrew/Cellar/gmp/6.3.0/include",
+      "-o",
+      "mls",
+      "gcd.cpp"
+    ],
+    "directory": "/Users/waterlens/Projects/mlscript/compiler/shared/test/diff-ir/cpp",
+    "file": "/Users/waterlens/Projects/mlscript/compiler/shared/test/diff-ir/cpp/gcd.cpp",
+    "output": "/Users/waterlens/Projects/mlscript/compiler/shared/test/diff-ir/cpp/mls"
+  }
+]

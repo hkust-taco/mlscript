@@ -12,7 +12,10 @@ import mlscript.compiler.optimizer.OptimizingError
 
 class IRDiffTestCompiler extends DiffTests {
   import IRDiffTestCompiler.*
-
+  def printToFile(f: java.io.File)(op: java.io.PrintWriter => Unit) = {
+    val p = new java.io.PrintWriter(f)
+    try { op(p) } finally { p.close() }
+  }
   override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (List[Str], Option[TypingUnit]) = 
     val outputBuilder = StringBuilder()
     if (mode.useIR || mode.irVerbose)
@@ -33,6 +36,9 @@ class IRDiffTestCompiler extends DiffTests {
         if (mode.genCpp)
           output("\nCpp:")
           val cpp = CppCodeGen().codegen(graph)
+          printToFile(new java.io.File((os.pwd/"compiler"/"shared"/"test"/"diff-ir"/"cpp"/s"${testName}.cpp").toString())) { p =>
+            p.println(cpp.toDocument.print)
+          }
           output(cpp.toDocument.print)
 
         if (mode.irOpt)

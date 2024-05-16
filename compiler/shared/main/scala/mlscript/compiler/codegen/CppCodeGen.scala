@@ -7,11 +7,11 @@ import mlscript.utils.shorthands._
 
 
 class CppCodeGen:
-  private def mapName(name: Name): Str = "_mls_" + name.str.replace('$', '_')
-  private def mapName(name: Str): Str = "_mls_" + name.replace('$', '_')
+  private def mapName(name: Name): Str = "_mls_" + name.str.replace('$', '_').replace('\'', '_')
+  private def mapName(name: Str): Str = "_mls_" + name.replace('$', '_').replace('\'', '_')
   private val freshName = Fresh(div = '_');
   private val mlsValType = Type.Prim("_mlsValue")
-  private val mlsUnitValue = Expr.Var("_mlsValue::unit")
+  private val mlsUnitValue = Expr.Call(Expr.Var("_mlsValue::create<_mls_Unit>"), Ls());
   private val mlsRetValue  = "_mls_retval"
   private val mlsRetValueDecl = Decl.VarDecl(mlsRetValue, mlsValType)
   private val mlsMainName = "_mlsMain"
@@ -19,6 +19,7 @@ class CppCodeGen:
   private val mlsPreludeImpl = "#include \"mlsprelude.cpp\""
   private val mlsInternalClass = Set("True", "False", "Boolean")
   private val mlsObject = "_mlsObject"
+  private val mlsBuiltin = "builtin"
   private val mlsEntryPoint = s"int main() { auto res = _mlsMain(); res.print(); }";
   private def mlsIntLit(x: BigInt) = Expr.Call(Expr.Var("_mlsValue::fromIntLit"), Ls(Expr.IntLit(x)))
   private def mlsStrLit(x: Str) = Expr.Call(Expr.Var("_mlsValue::fromStrLit"), Ls(Expr.StrLit(x)))
@@ -30,12 +31,14 @@ class CppCodeGen:
   private def mlsDebugPrint(x: Expr) = Expr.Call(Expr.Var("_mlsValue::print"), Ls(x))
   private def mlsTupleValue(init: Expr) = Expr.Constructor("_mlsValue::tuple", init)
   private def mlsAs(name: Str, cls: Str) = Expr.Var(s"_mlsValue::as<$cls>($name)")
+  private def mlsAsUnchecked(name: Str, cls: Str) = Expr.Var(s"_mlsValue::cast<$cls>($name)")
   private def mlsObjectNameMethod(name: Str) = s"constexpr static inline const char *typeName = \"${name}\";"
-  private def mlsTypeTag(id: Int) = s"constexpr static inline uint32_t typeTag = $id;"
+  private def mlsTypeTag() = s"constexpr static inline uint32_t typeTag = nextTypeTag();"
+  private def mlsTypeTag(n: Int) = s"constexpr static inline uint32_t typeTag = $n;"
   private def mlsCommonCreateMethod(cls: Str, fields: Ls[Str], id: Int) =
     val parameters = fields.map{x => s"_mlsValue $x"}.mkString(", ")
     val fieldsAssignment = fields.map{x => s"_mlsVal->$x = $x; "}.mkString
-    s"template <std::size_t align> static _mlsValue create($parameters) { auto _mlsVal = new (std::align_val_t(align)) $cls; _mlsVal->refCount = 1; _mlsVal->tag = $id; $fieldsAssignment return _mlsValue(_mlsVal); }"
+    s"template <std::size_t align> static _mlsValue create($parameters) { auto _mlsVal = new (std::align_val_t(align)) $cls; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; $fieldsAssignment return _mlsValue(_mlsVal); }"
   private def mlsCommonPrintMethod(fields: Ls[Str]) =
     if fields.isEmpty then s"virtual void print() const override { std::printf(\"%s\", typeName); }"
     else
@@ -44,7 +47,7 @@ class CppCodeGen:
   private def mlsCommonDestructorMethod(cls: Str, fields: Ls[Str]) = 
     val fieldsDeletion = fields.map{x => s"_mlsValue::destroy(this->$x); "}.mkString
     s"virtual void destroy() override { $fieldsDeletion operator delete (this, std::align_val_t(_mlsAlignment)); }"
-  private def mlsThrowNonExhaustiveMatch = Stmt.Raw("throw std::runtime_error(\"Non-exhaustive match\");");
+  private def mlsThrowNonExhaustiveMatch = Stmt.Raw("_mlsNonExhaustiveMatch();");
   private def mlsCall(fn: Str, args: Ls[Expr]) = Expr.Call(Expr.Var("_mlsCall"), Expr.Var(fn) :: args)
   private def mlsFnWrapperName(fn: Str) = s"_mlsFn_$fn"
   private def mlsFnWrapperCreate(fn: Str) = Expr.Call(Expr.Var(s"_mlsValue::create<${mlsFnWrapperName(fn)}>"), Ls())
@@ -52,6 +55,7 @@ class CppCodeGen:
   private def mlsFnApplyNMethod(fn: Str, n: Int) = 
     Def.FuncDef(Type.Qualifier(mlsValType, "virtual"), s"apply$n", (0 until n).map{x => (s"arg$x", mlsValType)}.toList,
       Stmt.Block(Ls(), Ls(Stmt.Return(Expr.Call(Expr.Var(fn), (0 until n).map{x => Expr.Var(s"arg$x")}.toList)))), true)
+  private def mlsNeverValue(n: Int) = if (n <= 1) then Expr.Call(Expr.Var(s"_mlsValue::never"), Ls()) else Expr.Call(Expr.Var(s"_mlsValue::never<$n>"), Ls())
 
   private case class Ctx(
     val defnCtx: Set[Str],
@@ -66,7 +70,7 @@ class CppCodeGen:
       cls.ident |> mapName, fields,
       if parents.nonEmpty then Some(parents) else None,
       Ls(Def.RawDef(mlsObjectNameMethod(cls.ident)),
-         Def.RawDef(mlsTypeTag(cls.id)),
+         Def.RawDef(mlsTypeTag()),
          Def.RawDef(mlsCommonPrintMethod(cls.fields.map(mapName))),
          Def.RawDef(mlsCommonDestructorMethod(cls.ident |> mapName, cls.fields.map(mapName))),
          Def.RawDef(mlsCommonCreateMethod(cls.ident |> mapName, cls.fields.map(mapName), cls.id))))
@@ -159,9 +163,13 @@ class CppCodeGen:
   private def codegen(expr: IExpr)(using ctx: Ctx): Expr = expr match
     case x @ (IExpr.Ref(_) | IExpr.Literal(_)) => toExpr(x, reifyUnit = true).get
     case IExpr.CtorApp(name, args) => mlsNewValue(name.ident |> mapName, args.map(toExpr))
-    case IExpr.Select(name, cls, field) => Expr.Member(mlsAs(name |> mapName, cls.ident |> mapName), field |> mapName)
+    case IExpr.Select(name, cls, field) => Expr.Member(mlsAsUnchecked(name |> mapName, cls.ident |> mapName), field |> mapName)
     case IExpr.BasicOp(name, args) => codegenOps(name, args)
-  
+
+  private def codegenBuiltin(names: Ls[Name], builtin: Str, args: Ls[TrivialExpr])(using ctx: Ctx): Ls[Stmt] = builtin match
+    case "error" => Ls(Stmt.Raw("throw std::runtime_error(\"Error\");"), Stmt.AutoBind(names.map(mapName), mlsNeverValue(names.size)))
+    case _ => Ls(Stmt.AutoBind(names.map(mapName), Expr.Call(Expr.Var("_mls_builtin_" + builtin), args.map(toExpr))))
+
   private def codegen(body: Node, storeInto: Str)(using decls: Ls[Decl], stmts: Ls[Stmt])(using ctx: Ctx): (Ls[Decl], Ls[Stmt]) = body match
     case Node.Result(res) => 
       val expr = wrapMultiValues(res)
@@ -171,6 +179,9 @@ class CppCodeGen:
       codegenJumpWithCall(defn, args, S(storeInto))
     case Node.LetExpr(name, expr, body) =>
       val stmts2 = stmts ++ Ls(Stmt.AutoBind(Ls(name |> mapName), codegen(expr)))
+      codegen(body, storeInto)(using decls, stmts2)
+    case Node.LetApply(names, fn, args, body) if fn.str == "builtin" =>
+      val stmts2 = stmts ++ codegenBuiltin(names, args.head.toString.replace("\"", ""), args.tail)
       codegen(body, storeInto)(using decls, stmts2)
     case Node.LetApply(names, fn, args, body) =>
       val call = mlsCall(fn.str |> mapName, args.map(toExpr))

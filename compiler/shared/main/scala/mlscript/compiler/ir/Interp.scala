@@ -304,7 +304,11 @@ class Interpreter(verbose: Bool):
     case LetApply(xs, fn, args, body) =>
       val ys = args |> evalArgsMayNotProgress
       ctx.bindCtx.get(fn.str) match
-        case None => throw IRInterpreterError(s"undefined function variable $fn")
+        case None => 
+          if fn.str == "builtin" then
+            throw IRInterpreterError("builtin function cannot be interpreted here")
+          else
+            throw IRInterpreterError(s"undefined function variable $fn")
         case Some(value) => 
           val defn = value match
             case Ref(Name(fn)) => ctx.defnCtx.get(fn) match

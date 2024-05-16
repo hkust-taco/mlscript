@@ -1,1 +1,0 @@
-DYLD_INSERT_LIBRARIES=/opt/homebrew/Cellar/mimalloc/2.1.2/lib/libmimalloc.dylib ./mls

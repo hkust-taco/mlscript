@@ -7,6 +7,7 @@ import mlscript._
 import collection.mutable.ListBuffer
 
 final val ops = Set("+", "-", "*", "/", ">", "<", ">=", "<=", "!=", "==")
+final val builtin = Set("builtin")
 
 final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
   import Node._
@@ -275,7 +276,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
         specialized = None,
         buildResultFromTerm(body) { x => x }
       )
-    case _ => throw IRError("unsupported NuFunDef")
+    case fd @ _ => throw IRError("unsupported NuFunDef " + fd.toString())
   
   private def buildClassInfo(ntd: Statement): ClassInfo = ntd match
     case NuTypeDef(Cls, TypeName(name), Nil, S(Tup(args)), N, _, parents, N, N, TypingUnit(Nil)) =>
@@ -330,7 +331,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
       val class_ctx: ClassCtx = cls.map { case ClassInfo(_, name, _) => name }.zip(cls).toMap
       val field_ctx: FieldCtx = cls.flatMap { case ClassInfo(_, name, fields) => fields.map((_, (name, class_ctx(name)))) }.toMap
       val fn_ctx: FnCtx = defn_names.toSet
-      var name_ctx: NameCtx = defn_names.zip(defn_names.map(Name(_))).toMap ++ ops.map { op => (op, Name(op)) }.toList
+      var name_ctx: NameCtx = builtin.zip(builtin.map(Name(_))).toMap ++ defn_names.zip(defn_names.map(Name(_))).toMap ++ ops.map { op => (op, Name(op)) }.toList
 
       val jp_acc = ListBuffer.empty[Defn]
       given Ctx = Ctx(
