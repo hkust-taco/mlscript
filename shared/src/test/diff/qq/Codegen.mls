@@ -372,3 +372,30 @@ x `=>
     `0
   v.value
 //│ Code[forall 'a. 'a -> 'a, ??y & ~??x]
+
+:ne
+x `=>
+  class A(y: Code[Int, nothing]) {
+    val z = x `+ y
+  }
+  A(`0).z
+//│ Code[Int -> Int, nothing]
+
+:ne
+x `=>
+  class A() {
+    constructor() {
+      log(x)
+    }
+  }
+  new A(), x
+//│ Code[forall 'a. 'a -> 'a, nothing]
+
+class Foo(x: Code[Int, anything])
+//│ class Foo(x: Code[Int, anything])
+
+:ne
+x `=>
+  class B() extends Foo(x)
+  `x
+//│ Code[forall 'a. (Int & 'a) -> 'a, nothing]
