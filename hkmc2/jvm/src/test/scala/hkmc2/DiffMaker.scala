@@ -133,6 +133,14 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
       out.println(line)
       resetCommands
       rec(ls)
+    case ":exit" :: ls =>
+      out.println(":exit")
+      out.println(exitMarker)
+      ls.dropWhile(_ =:= exitMarker).tails.foreach {
+        case Nil =>
+        case lastLine :: Nil => out.print(lastLine)
+        case l :: _ => out.println(l)
+      }
     case line :: ls if line.startsWith(":") =>
       out.println(line)
       
@@ -213,7 +221,7 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
         if parseOnly.isUnset then
           val elab = Elaborator(raise)
           given Elaborator.Ctx = curCtx
-          val (e, newCtx) = elab.block(res)
+          val (e, newCtx) = elab.topLevel(res)
           curCtx = newCtx
           output(s"Elab: ${e.showDbg}")
         

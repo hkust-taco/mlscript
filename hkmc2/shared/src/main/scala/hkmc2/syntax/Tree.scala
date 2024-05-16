@@ -3,6 +3,7 @@ package syntax
 
 import mlscript.utils.*, shorthands.*
 
+import hkmc2.Message.MessageContext
 import Tree._
 
 
@@ -27,21 +28,24 @@ enum Tree extends Located:
   case UnitLit(undefinedOrNull: Bool) extends Tree with Literal
   case Block(stmts: Ls[Tree])
   case Let(lhs: Tree, rhs: Tree, body: Opt[Tree])
-  case TermDef(symName: Opt[Tree], alphaName: Opt[Tree], sign: Opt[Tree], rhs: Opt[Tree])
-  case TypeDecl(head: Tree, extension: Opt[Tree], body: Opt[Tree])
+  // case TermDef(k: TermDefKind, symName: Opt[Tree], alphaName: Opt[Tree], sign: Opt[Tree], rhs: Opt[Tree])
+  case TermDef(k: TermDefKind, symName: Opt[Tree], alphaName: Opt[Tree], rhs: Opt[Tree]) extends Tree with TermDefImpl
+  case TypeDef(k: TypeDefKind, head: Tree, extension: Opt[Tree], body: Opt[Tree]) extends Tree with TypeDefImpl
   case Modified(modifier: Keyword, body: Tree)
   case Quoted(body: Tree)
   case Unquoted(body: Tree)
   case Lam(lhs: Tree, rhs: Tree)
   case Tup(fields: Ls[Tree])
   case App(lhs: Tree, rhs: Tree)
+  case TyApp(lhs: Tree, targs: Ls[Tree])
+  case Sel(prefix: Tree, name: Ident)
   case InfixApp(lhs: Tree, kw: Keyword.Infix, rhs: Tree)
   
   def children: Ls[Tree] = this match
     case Empty() | Error() | Ident(_) | IntLit(_) | DecLit(_) | StrLit(_) | UnitLit(_) => Nil
     case Block(stmts) => stmts
     case Let(lhs, rhs, body) => Ls(lhs, rhs) ++ body
-    case TypeDecl(head, extension, body) => Ls(head) ++ extension ++ body
+    case TypeDef(k, head, extension, body) => Ls(head) ++ extension ++ body
     case Modified(_, body) => Ls(body)
     case Quoted(body) => Ls(body)
     case Unquoted(body) => Ls(body)
@@ -49,7 +53,7 @@ enum Tree extends Located:
     case Tup(fields) => fields
     case App(lhs, rhs) => Ls(lhs, rhs)
     case InfixApp(lhs, _, rhs) => Ls(lhs, rhs)
-    case TermDef(symName, alphaName, sign, rhs) => symName.toList ++ alphaName ++ sign ++ rhs
+    case TermDef(k, symName, alphaName, rhs) => symName.toList ++ alphaName ++ rhs
   
   def describe: Str = ??? // TODO
   
@@ -75,4 +79,30 @@ case object Mxn extends TypeDefKind("mixin")
 case object Als extends TypeDefKind("type alias")
 case object Mod extends TypeDefKind("module") with ClsLikeKind
 
+
+
+private def getName(t: Tree): Diagnostic \/ Ident =
+  t match
+    case id: Ident =>
+      R(id)
+    case TyApp(base, args) =>
+      getName(base)
+    case App(base, args) =>
+      getName(base)
+    case _ => L(ErrorReport(
+      msg"Expected a valid definition head, found ${t.describe} instead" -> t.toLoc :: Nil))
+
+trait TermDefImpl:
+  this: TermDef =>
+  lazy val name: Diagnostic \/ Ident = alphaName.orElse(symName) match
+    case S(InfixApp(id: Ident, Keyword.`:`, _)) =>
+      R(id)
+    case S(id: Ident) =>
+      R(id)
+    case S(App(id: Ident, args)) =>
+      R(id)
+
+trait TypeDefImpl:
+  this: TypeDef =>
+  lazy val name: Diagnostic \/ Ident = getName(head)
 

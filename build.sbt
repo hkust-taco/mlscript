@@ -29,7 +29,7 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
   .settings(
     scalaVersion := scala3Version,
     watchSources += WatchSource(
-      baseDirectory.value.getParentFile()/"shared"/"test"/"diff", "*.mls", NothingFilter),
+      baseDirectory.value.getParentFile()/"shared"/"src"/"test"/"diff", "*.mls", NothingFilter),
     
     // scalacOptions ++= Seq("-indent", "-rewrite"),
     scalacOptions ++= Seq("-new-syntax", "-rewrite"),
@@ -43,9 +43,9 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.18" % "test",
     
     watchSources += WatchSource(
-      baseDirectory.value.getParentFile()/"shared"/"test"/"mlscript", "*.mls", NothingFilter),
+      baseDirectory.value.getParentFile()/"shared"/"src"/"test"/"mlscript", "*.mls", NothingFilter),
     watchSources += WatchSource(
-      baseDirectory.value.getParentFile()/"shared"/"test"/"mlscript", "*.cmd", NothingFilter),
+      baseDirectory.value.getParentFile()/"shared"/"src"/"test"/"mlscript", "*.cmd", NothingFilter),
     
     Test/run/fork := true, // so that CTRL+C actually terminates the watcher
   )

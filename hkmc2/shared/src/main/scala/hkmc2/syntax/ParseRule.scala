@@ -7,6 +7,8 @@ import hkmc2.Message._
 import BracketKind._
 
 
+// * TODO: add lookahead to Expr as a PartialFunction[Ls[Token], Bool]
+
 enum Alt[+A]:
   case Kw[Rest](kw: Keyword)(val rest: ParseRule[Rest]) extends Alt[Rest]
   case Expr[Rest, +Res](rest: ParseRule[Rest])(val k: (Tree, Rest) => Res) extends Alt[Res]
@@ -64,6 +66,7 @@ object ParseRule:
         ) { case (res, ()) => S(res) }
       )
   
+  /*
   def termDefBody(k: TermDefKind): ParseRule[Tree] = 
       ParseRule(s"'${k.str}' binding keyword")(
         Expr(
@@ -78,12 +81,31 @@ object ParseRule:
             funSign(k).map(sb => (N, sb._1, sb._2)),
           )
         ) {
-          case (lhs, (N, sign, rhs)) => TermDef(N, S(lhs), sign, rhs)
-          case (lhs, (sym, sign, rhs)) => TermDef(S(lhs), sym, sign, rhs)
+          case (lhs, (N, sign, rhs)) => TermDef(k, N, S(lhs), sign, rhs)
+          case (lhs, (sym, sign, rhs)) => TermDef(k, S(lhs), sym, sign, rhs)
+        }
+      )
+  */
+  def termDefBody(k: TermDefKind): ParseRule[Tree] = 
+      ParseRule(s"'${k.str}' binding keyword")(
+        Expr(
+          ParseRule(s"'${k.str}' binding head")(
+            Expr(
+              ParseRule(s"'${k.str}' binding name part")(
+                funBody(k),
+                End(N),
+              )
+            ) { case (sym, rhs) => (S(sym), rhs) },
+            funBody(k).map(b => (N, b)),
+            End((N, N)),
+          )
+        ) {
+          case (lhs, (N, rhs)) => TermDef(k, N, S(lhs), rhs)
+          case (lhs, (sym, rhs)) => TermDef(k, S(lhs), sym, rhs)
         }
       )
   
-  val typeDeclBody: ParseRule[TypeDecl] =
+  def typeDeclBody(k: TypeDefKind): ParseRule[TypeDef] =
     ParseRule("type declaration start"):
       Expr(
         ParseRule("type declaration head")(
@@ -101,7 +123,7 @@ object ParseRule:
           typeDeclTemplate.map(bod => (N, bod)),
         )
       // ) { case (head, ext, bod) => TypeDecl(head, ext, bod) }
-      ) { case (head, (ext, bod)) => TypeDecl(head, ext, bod) }
+      ) { case (head, (ext, bod)) => TypeDef(k, head, ext, bod) }
   
   val prefixRules: ParseRule[Tree] = ParseRule("start of statement")(
     Kw(`let`):
@@ -130,10 +152,10 @@ object ParseRule:
     ,
     Kw(`fun`)(termDefBody(Fun)),
     Kw(`val`)(termDefBody(Val)),
-    Kw(`type`)(typeDeclBody),
-    Kw(`class`)(typeDeclBody),
-    Kw(`trait`)(typeDeclBody),
-    Kw(`module`)(typeDeclBody),
+    Kw(`type`)(typeDeclBody(Als)),
+    Kw(`class`)(typeDeclBody(Cls)),
+    Kw(`trait`)(typeDeclBody(Trt)),
+    Kw(`module`)(typeDeclBody(Mod)),
     modified(`abstract`),
     modified(`mut`),
     modified(`virtual`),
@@ -144,6 +166,7 @@ object ParseRule:
     standaloneExpr,
   )
   
+  /* 
   def funSign(k: TermDefKind): Alt[(S[Tree], Opt[Tree])] =
     Kw(`:`):
       ParseRule(s"'${k.str}' binding colon"):
@@ -153,6 +176,7 @@ object ParseRule:
             End(N),
           )
         ) { case (sign, rhs) => (S(sign), rhs) }
+  */
   
   def funBody(k: TermDefKind): Alt[S[Tree]] =
     Kw(`=`):
@@ -177,6 +201,11 @@ object ParseRule:
       ParseRule("'then' operator")(
         Expr(ParseRule("'then' operator right-hand side")(End(())))(
           (rhs, _: Unit) => lhs => InfixApp(lhs, `then`, rhs))
+      ),
+    Kw(`:`):
+      ParseRule("type ascription operator")(
+        Expr(ParseRule("ascribed type")(End(())))(
+          (rhs, _: Unit) => lhs => InfixApp(lhs, `:`, rhs))
       ),
   )
 

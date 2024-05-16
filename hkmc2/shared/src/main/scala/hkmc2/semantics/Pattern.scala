@@ -49,8 +49,8 @@ enum Pattern extends Located:
     case Var(nme) => nme.toString
     case Empty(_) => "•"
     case Class(sym, ps, rfd) => (if rfd then "refined " else "") + (ps match {
-      case N => sym.name
-      case S(parameters) => parameters.mkString(s"${sym.name}(", ", ", ")")
+      case N => sym.nme
+      case S(parameters) => parameters.mkString(s"${sym.nme}(", ", ", ")")
     })
     case Tuple(fields) => fields.mkString("(", ", ", ")")
     case Record(Nil) => "{}"

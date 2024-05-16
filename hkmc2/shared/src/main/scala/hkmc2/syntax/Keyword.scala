@@ -86,7 +86,7 @@ object Keyword:
   val modifiers = Set(
     `abstract`, mut, virtual, `override`, declare, public, `private`)
   
-  type Infix = `and`.type | `or`.type | `then`.type
+  type Infix = `and`.type | `or`.type | `then`.type | `:`.type
   
   val maxPrec = curPrec
   

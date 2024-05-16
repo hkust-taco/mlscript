@@ -12,7 +12,7 @@ class
 
 class Foo
 //│ Parsed:
-//│ 	TypeDecl(Ident(Foo),None,None)
+//│ 	TypeDef(Cls,Ident(Foo),None,None)
 
 :pe
 class Foo extends
@@ -24,7 +24,7 @@ class Foo extends
 
 class Foo extends Bar
 //│ Parsed:
-//│ 	TypeDecl(Ident(Foo),Some(Ident(Bar)),None)
+//│ 	TypeDef(Cls,Ident(Foo),Some(Ident(Bar)),None)
 
 :pe
 class Foo extends Bar with
@@ -48,12 +48,12 @@ class Foo extends Bar with val x
 class Foo extends Bar with
   val x: Int
 //│ Parsed:
-//│ 	TypeDecl(Ident(Foo),Some(Ident(Bar)),Some(Block(List(TermDef(None,Some(Ident(x)),Some(Ident(Int)),None)))))
+//│ 	TypeDef(Cls,Ident(Foo),Some(Ident(Bar)),Some(Block(List(TermDef(Val,None,Some(InfixApp(Ident(x),keyword ':',Ident(Int))),None)))))
 
 class Foo with
   val x: Int
 //│ Parsed:
-//│ 	TypeDecl(Ident(Foo),None,Some(Block(List(TermDef(None,Some(Ident(x)),Some(Ident(Int)),None)))))
+//│ 	TypeDef(Cls,Ident(Foo),None,Some(Block(List(TermDef(Val,None,Some(InfixApp(Ident(x),keyword ':',Ident(Int))),None)))))
 
 
 :pe
@@ -68,22 +68,22 @@ with
 class
   Foo
 //│ Parsed:
-//│ 	TypeDecl(Ident(Foo),None,None)
+//│ 	TypeDef(Cls,Ident(Foo),None,None)
 
 class
   Foo
   Bar
 //│ Parsed:
-//│ 	TypeDecl(Ident(Foo),None,None)
-//│ 	TypeDecl(Ident(Bar),None,None)
+//│ 	TypeDef(Cls,Ident(Foo),None,None)
+//│ 	TypeDef(Cls,Ident(Bar),None,None)
 
 class
   Foo extends Bar
   Bar with
     x
 //│ Parsed:
-//│ 	TypeDecl(Ident(Foo),Some(Ident(Bar)),None)
-//│ 	TypeDecl(Ident(Bar),None,Some(Block(List(Ident(x)))))
+//│ 	TypeDef(Cls,Ident(Foo),Some(Ident(Bar)),None)
+//│ 	TypeDef(Cls,Ident(Bar),None,Some(Block(List(Ident(x)))))
 
 
 :pe
@@ -106,13 +106,13 @@ extends Bar
 //│ ║  l.102: 	extends Bar
 //│ ╙──       	
 //│ Parsed:
-//│ 	TypeDecl(Ident(Foo),None,None)
+//│ 	TypeDef(Cls,Ident(Foo),None,None)
 
 class
   Foo
   extends Bar
 //│ Parsed:
-//│ 	TypeDecl(Ident(Foo),Some(Ident(Bar)),None)
+//│ 	TypeDef(Cls,Ident(Foo),Some(Ident(Bar)),None)
 
 class
   Foo
@@ -120,18 +120,18 @@ class
   Bar
   extends Baz
 //│ Parsed:
-//│ 	TypeDecl(Ident(Foo),Some(Ident(Bar)),None)
-//│ 	TypeDecl(Ident(Bar),Some(Ident(Baz)),None)
+//│ 	TypeDef(Cls,Ident(Foo),Some(Ident(Bar)),None)
+//│ 	TypeDef(Cls,Ident(Bar),Some(Ident(Baz)),None)
 
 class Foo
 extends Bar
 //│ Parsed:
-//│ 	TypeDecl(Ident(Foo),Some(Ident(Bar)),None)
+//│ 	TypeDef(Cls,Ident(Foo),Some(Ident(Bar)),None)
 
 class Foo
 extends
   Bar
 //│ Parsed:
-//│ 	TypeDecl(Ident(Foo),Some(Ident(Bar)),None)
+//│ 	TypeDef(Cls,Ident(Foo),Some(Ident(Bar)),None)
 
 

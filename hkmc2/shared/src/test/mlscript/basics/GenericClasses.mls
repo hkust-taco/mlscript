@@ -1,0 +1,41 @@
+
+
+class Foo[A]
+//│ Elab: { class Foo[A@1] { }‹›; }‹›
+
+class Foo[A]()
+//│ Elab: { class Foo[A@1]() { }‹›; }‹›
+
+class Foo[A](x: A)
+//│ Elab: { class Foo[out A@1](x@2: A@1) { }‹›; }‹›
+
+class Foo[A](x: A -> Int)
+//│ Elab: { class Foo[in A@1](x@2: (A@1)‹› -> Int‹›) { }‹›; }‹›
+
+class Foo[A](x: Foo[A])
+//│ Elab: { class Foo[A@1](x@2: class:Foo[Ref(A@1)]‹›) { }‹›; }‹›
+
+class Foo[A](x: Foo[A] -> A)
+//│ Elab: { class Foo[in out A@1](x@2: (class:Foo[Ref(A@1)]‹›)‹› -> A@1‹›) { }‹›; }‹›
+
+class Foo[A](x: Bar[A])
+class Bar[B](x: Foo[Int], y: B -> Int)
+//│ Elab: { class Foo[in A@1](x@2: class:Bar[Ref(A@1)]‹›) { }‹›; class Bar[in B@3](x@4: class:Foo[Ref(Int)]‹›, y@5: (B@3)‹› -> Int‹›) { }‹›; }‹›
+
+class Foo[A](x: Bar[A])
+class Baz[C](x: C)
+class Bar[B](x: Foo[Int], y: Baz[B] -> Int)
+//│ Elab: { class Foo[in A@1](x@2: class:Bar[Ref(A@1)]‹›) { }‹›; class Baz[out C@3](x@4: C@3) { }‹›; class Bar[in B@5](x@6: class:Foo[Ref(Int)]‹›, y@7: (class:Baz[Ref(B@5)]‹›)‹› -> Int‹›) { }‹›; }‹›
+
+
+:fixme
+:e
+class Foo[A](x: Foo[A, A])
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+:fixme
+:e
+class Foo[A](x: Bar[A])
+class Bar(x: Foo[Int])
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+

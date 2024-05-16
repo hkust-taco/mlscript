@@ -482,10 +482,10 @@ abstract class Parser(
       case (SPACE, l0) :: _ =>
         consume
         exprCont(acc, prec, allowNewlines)
-        /*
       case (SELECT(name), l0) :: _ => // TODO precedence?
         consume
-        exprCont(Sel(acc, Var(name).withLoc(S(l0))), prec, allowNewlines)
+        exprCont(Sel(acc, new Ident(name).withLoc(S(l0))), prec, allowNewlines)
+        /*
       // case (br @ BRACKETS(Indent, (SELECT(name), l0) :: toks), _) :: _ =>
       case (br @ BRACKETS(Indent, (SELECT(name), l0) :: toks), _) :: _ if prec <= 1 =>
         consume
@@ -559,20 +559,14 @@ abstract class Parser(
           case L(ifb) => L(ifb) // TODO something else?
           case R(res) => exprCont(res, 0, allowNewlines)
         }
-        
+        */
       case (br @ BRACKETS(Angle | Square, toks), loc) :: _ =>
         consume
-        val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.argsMaybeIndented())
+        val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
         // val res = TyApp(acc, as.map(_.mapSecond.to))
-        val res = TyApp(acc, as.map {
-          case (N, Fld(FldFlags(false, false, _), trm)) => trm.toType match {
-            case L(d) => raise(d); Top // TODO better
-            case R(ty) => ty
-          }
-          case _ => ???
-        }).withLoc(acc.toLoc.fold(some(loc))(_ ++ loc |> some))
+        val res = TyApp(acc, as).withLoc(acc.toLoc.fold(some(loc))(_ ++ loc |> some))
         exprCont(res, prec, allowNewlines)
-        
+        /*
       /*case (br @ BRACKETS(Square, toks), loc) :: _ => // * Currently unreachable because we match Square brackets as tparams
         consume
         val idx = rec(toks, S(br.innerLoc), "subscript").concludeWith(_.expr(0))

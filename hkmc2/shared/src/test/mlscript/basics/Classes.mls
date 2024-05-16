@@ -1,0 +1,24 @@
+
+
+class Foo
+//│ Elab: { class Foo { }‹›; }‹›
+
+class Foo()
+//│ Elab: { class Foo() { }‹›; }‹›
+
+class Foo(x: Int)
+//│ Elab: { class Foo(x@1: Int) { }‹›; }‹›
+
+class Foo(x: Int, y: Str)
+//│ Elab: { class Foo(x@1: Int, y@2: Str) { }‹›; }‹›
+
+class Foo(x: Int) with
+  val y = x
+//│ Elab: { class Foo(x@1: Int) { val y = x@1; }‹›; }‹›
+
+
+:fixme
+class Foo(42)
+//│ /!!!\ Uncaught error: scala.MatchError: IntLit(42) (of class hkmc2.syntax.Tree$IntLit)
+
+
