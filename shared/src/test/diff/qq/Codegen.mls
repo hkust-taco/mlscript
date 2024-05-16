@@ -358,3 +358,17 @@ fun foo(dbg) =
 :ne
 code"x => let c = 42 in ${code"x"}"
 //│ Code[forall 'a. 'a -> 'a, nothing]
+
+class Ref[A](init: A) { mut val value: A = init }
+//│ class Ref[A](init: A) {
+//│   mut val value: A
+//│ }
+
+:ne
+x `=>
+  let v = Ref(x)
+  let _ = y `=>
+    set v.value = y
+    `0
+  v.value
+//│ Code[forall 'a. 'a -> 'a, ??y & ~??x]

@@ -300,13 +300,21 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
       else Let(rec, Var(name), desugarQuote(value), desugarQuote(body)(letScope, isQuoted, freeVars))
     case Blk(stmts) =>
       val blkScope = scope.derive("blk")
-      val res = stmts.map {
+      if (isQuoted) createASTCall("Blk", stmts.map {
         case t: Term =>
           desugarQuote(t)(blkScope, isQuoted, freeVars)
         case s => throw CodeGenError(s"statement $s is not supported in quasiquotes")
-      }
-      if (isQuoted) createASTCall("Blk", res)
-      else Blk(res)
+      })
+      else Blk(stmts.map {
+        case t: Term =>
+          desugarQuote(t)(blkScope, isQuoted, freeVars)
+        case nd @ NuFunDef(isLetRec, nme, symbol, tparams, rhs) => // * TODO: other cases in addition to let?
+          NuFunDef(isLetRec, nme, symbol, tparams, rhs match {
+            case L(t) => L(desugarQuote(t)(blkScope, isQuoted, freeVars))
+            case R(t) => R(t)
+          })(nd.declareLoc, nd.virtualLoc, nd.mutLoc, nd.signature, nd.outer, nd.genField, nd.annotations)
+        case s => throw CodeGenError(s"statement $s is not supported in quasiquotes")
+      })
     case Tup(eles) =>
       def toVar(b: Bool) = if (b) Var("true") else Var("false")
       def toVars(flg: FldFlags) = toVar(flg.mut) :: toVar(flg.spec) :: toVar(flg.genGetter) :: Nil
