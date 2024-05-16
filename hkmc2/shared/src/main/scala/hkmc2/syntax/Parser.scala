@@ -7,6 +7,7 @@ import mlscript.utils.*, shorthands.*
 import hkmc2.Message._
 import BracketKind._
 
+import Tree.*
 import Parser.*
 
 
@@ -357,12 +358,20 @@ abstract class Parser(
       exprCont(lit.asTree, prec, allowNewlines = true)
     case (BRACKETS(Round, toks), loc) :: _ if toks.forall(_ is SPACE) =>
       consume
-      val res = Tree.UnitLit(false).withLoc(S(loc))
+      val res = Tree.UnitLit(true).withLoc(S(loc))
       exprCont(res, prec, allowNewlines = true)
-    case (BRACKETS(Round, toks), loc) :: _ =>
+    case (br @ BRACKETS(Round, toks), loc) :: _ =>
       consume
-      val res = rec(toks, S(loc), "parenthesized expression").concludeWith(_.expr(0))
-      exprCont(res, prec, allowNewlines = true)
+      yeetSpaces match
+        case (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ =>
+          consume
+          val ps = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
+          val rhs = expr(kw.rightPrecOrMin)
+          val res = InfixApp(PlainTup(ps*), kw, rhs)
+          exprCont(res, prec, allowNewlines = true)
+        case _ =>
+          val res = rec(toks, S(loc), "parenthesized expression").concludeWith(_.expr(0))
+          exprCont(res, prec, allowNewlines = true)
     case (BRACKETS(Indent, _), loc) :: _ =>
       err((msg"Expected an expression; found indented block instead" -> lastLoc :: Nil))
       errExpr
@@ -373,8 +382,6 @@ abstract class Parser(
       errExpr
   
   
-  import Tree.*
-  
   private def unsupportedQuote(loc: Opt[Loc]) = {
     err(msg"This quote syntax is not supported yet" -> loc :: Nil)
     errExpr
@@ -383,13 +390,13 @@ abstract class Parser(
   final def exprCont(acc: Tree, prec: Int, allowNewlines: Bool): Tree = wrap(prec, s"`$acc`", allowNewlines):
     cur match {
       case (QUOTE, l) :: _ => cur match {
-        case _ :: (KEYWORD(kw @ Keyword.`=>`), l0) :: _ if kw.leftPrecOrMin > prec =>
+        case _ :: (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ if kw.leftPrecOrMin > prec =>
           consume
           consume
-          exprCont(Quoted(Lam(acc match {
+          exprCont(Quoted(InfixApp(acc match {
             case t: Tup => t
             case _ => PlainTup(acc)
-          }, Unquoted(expr(kw.rightPrecOrMin)))), prec, allowNewlines)
+          }, kw, Unquoted(expr(kw.rightPrecOrMin)))), prec, allowNewlines)
         case _ :: (br @ BRACKETS(Round, toks), loc) :: _ =>
           consume
           consume
@@ -433,10 +440,10 @@ abstract class Parser(
         val rhs = Blk(typingUnit.entities)
         R(Lam(PlainTup(acc), rhs))
         */
-      case (KEYWORD(kw @ Keyword.`=>`), l0) :: _ if kw.leftPrecOrMin > prec =>
+      case (KEYWORD(kw @ (Keyword.`->` | Keyword.`=>`)), l0) :: _ if kw.leftPrecOrMin > prec =>
         consume
         val rhs = expr(kw.rightPrecOrMin)
-        val res = Lam(PlainTup(acc), rhs)
+        val res = InfixApp(PlainTup(acc), kw, rhs)
         exprCont(res, prec, allowNewlines)
         /* 
       case (IDENT(".", _), l0) :: (br @ BRACKETS(Square, toks), l1) :: _ =>

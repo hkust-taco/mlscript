@@ -57,7 +57,7 @@ sealed trait Statement extends Located:
     case Lam(params, body) => body :: Nil
     case Blk(stats, res) => stats.flatMap(_.subTerms) ::: res :: Nil
     case LetBinding(pat, rhs) => rhs :: Nil
-    case TermDefinition(k, _, body) => body.toList
+    case TermDefinition(k, _, sign, body) => sign.toList ::: body.toList
     case cls: ClassDef =>
       cls.paramsOpt.toList.flatMap(_.flatMap(_.subTerms)) ::: cls.body.blk :: Nil
   
@@ -85,7 +85,7 @@ sealed trait Statement extends Located:
     case LetBinding(pat, rhs) => s"let ${pat.showDbg} = ${rhs.showDbg}"
     case Error => "<error>"
     case Tup(fields) => fields.map(_.showDbg).mkString("(", ", ", ")")
-    case TermDefinition(k, sym, body) => s"${k.str} ${sym}${
+    case TermDefinition(k, sym, sign, body) => s"${k.str} ${sym}${sign.fold("")(": "+_.showDbg)}${
       body match
         case S(x) => " = " + x.showDbg
         case N => ""
@@ -98,7 +98,7 @@ sealed trait Statement extends Located:
 final case class LetBinding(pat: Pattern, rhs: Term) extends Statement:
   def children: Ls[Located] = ???
 
-final case class TermDefinition(k: TermDefKind, sym: TermSymbol, body: Opt[Term]) extends Companion:
+final case class TermDefinition(k: TermDefKind, sym: TermSymbol, sign: Opt[Term], body: Opt[Term]) extends Companion:
   def children: Ls[Located] = ???
 
 case class ObjBody(blk: Term.Blk):

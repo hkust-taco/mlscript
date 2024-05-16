@@ -82,11 +82,12 @@ object Keyword:
   // *  it should associate very strongly on the left and very loosely on the right
   // *  so that we can write things like `f() |> x => x is 0` ie `(f()) |> (x => (x is 0))`
   val `=>` = Keyword("=>", nextPrec, eqPrec)
+  val `->` = Keyword("->", curPrec, eqPrec)
   
   val modifiers = Set(
     `abstract`, mut, virtual, `override`, declare, public, `private`)
   
-  type Infix = `and`.type | `or`.type | `then`.type | `:`.type
+  type Infix = `and`.type | `or`.type | `then`.type | `:`.type | `->`.type | `=>`.type
   
   val maxPrec = curPrec
   

@@ -7,14 +7,14 @@ class Foo()
 //│ Elab: { class Foo() { }‹›; }‹›
 
 class Foo(x: Int)
-//│ Elab: { class Foo(x@1: class:Int#0) { }‹›; }‹›
+//│ Elab: { class Foo(x@1: class:Int#3) { }‹›; }‹›
 
 class Foo(x: Int, y: Str)
-//│ Elab: { class Foo(x@1: class:Int#1, y@2: class:Str#0) { }‹›; }‹›
+//│ Elab: { class Foo(x@1: class:Int#4, y@2: class:Str#0) { }‹›; }‹›
 
 class Foo(x: Int) with
   val y = x
-//│ Elab: { class Foo(x@1: class:Int#2) { val y = x@1#0; }‹›; }‹›
+//│ Elab: { class Foo(x@1: class:Int#5) { val y = x@1#0; }‹›; }‹›
 
 
 :fixme

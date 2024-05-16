@@ -1,15 +1,16 @@
 
 
+class Any
 class Int
 class Str
 class Bool
-//│ Elab: { class Int { }‹›; class Str { }‹›; class Bool { }‹›; }‹›
+//│ Elab: { class Any { }‹›; class Int { }‹›; class Str { }‹›; class Bool { }‹›; }‹›
 
 
 fun (+): (Int, Int) -> Int
-//│ Elab: { fun +; }‹›
+//│ Elab: { fun +: (class:Int#0, class:Int#1)‹› -> class:Int#2‹›; }‹›
 
 fun log: (Any) -> ()
-//│ Elab: { fun log; }‹›
+//│ Elab: { fun log: (class:Any#0)‹› -> undefined‹›‹›; }‹›
 
 

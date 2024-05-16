@@ -34,7 +34,6 @@ enum Tree extends Located:
   case Modified(modifier: Keyword, body: Tree)
   case Quoted(body: Tree)
   case Unquoted(body: Tree)
-  case Lam(lhs: Tree, rhs: Tree)
   case Tup(fields: Ls[Tree])
   case App(lhs: Tree, rhs: Tree)
   case TyApp(lhs: Tree, targs: Ls[Tree])
@@ -49,7 +48,6 @@ enum Tree extends Located:
     case Modified(_, body) => Ls(body)
     case Quoted(body) => Ls(body)
     case Unquoted(body) => Ls(body)
-    case Lam(lhs, rhs) => Ls(lhs, rhs)
     case Tup(fields) => fields
     case App(lhs, rhs) => Ls(lhs, rhs)
     case InfixApp(lhs, _, rhs) => Ls(lhs, rhs)
@@ -94,13 +92,13 @@ private def getName(t: Tree): Diagnostic \/ Ident =
 
 trait TermDefImpl:
   this: TermDef =>
-  lazy val name: Diagnostic \/ Ident = alphaName.orElse(symName) match
-    case S(InfixApp(id: Ident, Keyword.`:`, _)) =>
-      R(id)
+  lazy val (name, signature): (Diagnostic \/ Ident, Opt[Tree]) = alphaName.orElse(symName) match
+    case S(InfixApp(id: Ident, Keyword.`:`, sign)) =>
+      (R(id), S(sign))
     case S(id: Ident) =>
-      R(id)
+      (R(id), N)
     case S(App(id: Ident, args)) =>
-      R(id)
+      (R(id), N)
   lazy val symbolicName: Opt[Ident] = symName match
     case S(id: Ident) => S(id)
     case _ => N

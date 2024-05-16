@@ -7,10 +7,10 @@ foo
 //│ Elab: { foo#0 }‹›
 
 fun (+) plus: Int
-//│ Elab: { fun plus; }‹›
+//│ Elab: { fun plus: class:Int#3; }‹›
 
 fun (+) : Int
-//│ Elab: { fun +; }‹›
+//│ Elab: { fun +: class:Int#4; }‹›
 
 
 fun f = g

@@ -46,8 +46,8 @@ class Elaborator(raise: Raise):
               Term.Error
     case TyApp(lhs, targs) =>
       Term.TyApp(term(lhs), targs.map(term(_)))
-    case App(Ident("->"), Tup(l :: r :: Nil)) => // TODO also forbit other refs/definitions of ->
-      Term.FunTy(term(Tup(l :: Nil)), term(r)) // FIXME handle multi params properly in parser
+    case InfixApp(lhs, Keyword.`->`, rhs) =>
+      Term.FunTy(term(lhs), term(rhs))
     case App(lhs, rhs) =>
       Term.App(term(lhs), term(rhs))
     case Sel(pre, nme) =>
@@ -125,9 +125,9 @@ class Elaborator(raise: Raise):
           case R(id) =>
             val s = newMembers(id.name).asInstanceOf[TermSymbol] // TODO improve
             val b = rhs.map(term(_))
-            val td = TermDefinition(k, s, b)
-            s.defn = S(td)
-            go(sts, td :: acc)
+            val tdf = TermDefinition(k, s, td.signature.map(term), b)
+            s.defn = S(tdf)
+            go(sts, tdf :: acc)
           case L(d) => go(sts, acc) // error already raised in newMembers initialization
       case TypeDef(k, head, extension, body) :: sts =>
         assert((k is Cls) || (k is Mod), k)
@@ -215,7 +215,8 @@ class Elaborator(raise: Raise):
   def computeVariances(s: Statement): Unit =
     val trav = VarianceTraverser()
     def go(s: Statement): Unit = s match
-      case TermDefinition(_, sym, body) =>
+      case TermDefinition(k, sym, sign, body) =>
+        sign.foreach(trav.traverseType(S(true)))
         body match
           case S(b) =>
             go(b)
@@ -262,6 +263,7 @@ class Elaborator(raise: Raise):
       case _ => super.traverseType(pol)(trm)
   abstract class Traverser:
     def traverseType(pol: Pol)(trm: Term): Unit = trm match
+      case Term.Lit(_) | Term.Error =>
       case Term.TyApp(lhs, targs) =>
         // lhs.resolveSymbol
         // targs.foreach(traverseType(pol))

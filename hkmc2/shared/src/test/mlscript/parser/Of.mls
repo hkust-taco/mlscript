@@ -4,7 +4,7 @@
 
 f of ()
 //│ Parsed:
-//│ 	App(Ident(f),Tup(List(UnitLit(false))))
+//│ 	App(Ident(f),Tup(List(UnitLit(true))))
 
 f of 1
 //│ Parsed:

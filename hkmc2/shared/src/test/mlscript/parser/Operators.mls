@@ -16,6 +16,6 @@
 
 1 => 2
 //│ Parsed:
-//│ 	Lam(Tup(List(IntLit(1))),IntLit(2))
+//│ 	InfixApp(Tup(List(IntLit(1))),keyword '=>',IntLit(2))
 
 
