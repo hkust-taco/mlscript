@@ -37,10 +37,10 @@ class Elaborator(raise: Raise):
       Term.Blk(List(LetBinding(pat, r)), b)
     case Ident(name) =>
       ctx.locals.get(name) match
-        case S(sym) => Term.Ref(sym)
+        case S(sym) => sym.ref
         case N =>
           ctx.members.get(name) match
-            case S(sym) => Term.Ref(sym)
+            case S(sym) => sym.ref
             case N =>
               raise(ErrorReport(msg"Name not found: $name" -> tree.toLoc :: Nil))
               Term.Error

@@ -8,7 +8,7 @@ import syntax.*
 enum Term extends Statement with Located:
   case Error
   case Lit(lit: Literal)
-  case Ref(sym: Symbol)
+  case Ref(sym: Symbol)(val refNum: Int)
   case App(lhs: Term, rhs: Term)
   case TyApp(lhs: Term, targs: Ls[Term])
   case Sel(prefix: Term, nme: Tree.Ident)
@@ -70,7 +70,7 @@ sealed trait Statement extends Located:
       showPlain
   def showPlain: Str = this match
     case Lit(lit) => lit.idStr
-    case Ref(symbol) => symbol.toString
+    case r @ Ref(symbol) => symbol.toString+"#"+r.refNum
     case App(lhs, tup: Tup) => s"${lhs.showDbg}${tup.showDbg}"
     case App(lhs, rhs) => s"${lhs.showDbg}(...${rhs.showDbg})"
     case FunTy(lhs: Tup, rhs) => s"${lhs.showDbg} -> ${rhs.showDbg}"

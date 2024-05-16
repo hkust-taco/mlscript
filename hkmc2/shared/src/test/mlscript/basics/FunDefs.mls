@@ -4,7 +4,7 @@ fun foo = 1
 //│ Elab: { fun foo = 1‹›; }‹›
 
 foo
-//│ Elab: { foo }‹›
+//│ Elab: { foo#0 }‹›
 
 fun (+) plus: Int
 //│ Elab: { fun plus; }‹›
@@ -15,14 +15,14 @@ fun (+) : Int
 
 fun f = g
 fun g = f
-//│ Elab: { fun f = g; fun g = f; }‹›
+//│ Elab: { fun f = g#0; fun g = f#0; }‹›
 
 
 fun (++) = 1
 //│ Elab: { fun ++ = 1‹›; }‹›
 
 1 ++ 2
-//│ Elab: { ++(1‹›, 2‹›)‹›‹› }‹›
+//│ Elab: { ++#0(1‹›, 2‹›)‹›‹› }‹›
 
 
 fun (**) pow = 1

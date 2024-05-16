@@ -1,6 +1,8 @@
 package hkmc2
 package semantics
 
+import collection.mutable
+
 import mlscript.utils.*, shorthands.*
 import syntax.*
 
@@ -11,6 +13,11 @@ abstract class Symbol extends Located:
   def children: List[Located] = Nil
   def nme: Str
   val uid: Uid[Symbol] = suid.nextUid
+  val directRefs: mutable.Buffer[Term.Ref] = mutable.Buffer.empty
+  def ref: Term.Ref =
+    val res = new Term.Ref(this)(directRefs.size)
+    directRefs += res
+    res
 
 class VarSymbol(val name: Str, uid: Int) extends Symbol:
   def nme: Str = name

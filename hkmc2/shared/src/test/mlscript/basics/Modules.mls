@@ -24,8 +24,8 @@ module Foo with
 //│ Elab: { class Foo { val x = 1‹›; }‹›; }‹›
 
 Foo
-//│ Elab: { class:Foo }‹›
+//│ Elab: { class:Foo#0 }‹›
 
 Foo.x
-//│ Elab: { class:Foo.x‹› }‹›
+//│ Elab: { class:Foo#1.x‹› }‹›
 
