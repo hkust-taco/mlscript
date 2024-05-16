@@ -101,6 +101,9 @@ trait TermDefImpl:
       R(id)
     case S(App(id: Ident, args)) =>
       R(id)
+  lazy val symbolicName: Opt[Ident] = symName match
+    case S(id: Ident) => S(id)
+    case _ => N
 
 trait TypeDefImpl:
   this: TypeDef =>

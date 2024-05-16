@@ -81,12 +81,22 @@ class Elaborator(raise: Raise):
       case td: TermDef =>
         td.name match
           case R(id) =>
+            lazy val s = TermSymbol(id)
             newMembers.get(id.name) match
               case S(sym) =>
                 raise(ErrorReport(msg"Duplicate definition of ${id.name}" -> td.toLoc
                   :: msg"aready defined gere" -> sym.toLoc :: Nil))
               case N =>
-                newMembers += id.name -> TermSymbol(S(id))
+                newMembers += id.name -> s
+            td.symbolicName match
+              case S(Ident(nme)) =>
+                newMembers.get(nme) match
+                  case S(sym) =>
+                    raise(ErrorReport(msg"Duplicate definition of $nme" -> td.toLoc
+                      :: msg"aready defined gere" -> sym.toLoc :: Nil))
+                  case N =>
+                    newMembers += nme -> s
+              case N =>
           case L(d) => raise(d)
       case td: TypeDef =>
         td.name match
@@ -110,16 +120,15 @@ class Elaborator(raise: Raise):
         val (pat, syms) = pattern(lhs)
         val rhsTerm = term(rhs)
         go(sts, LetBinding(pat, rhsTerm) :: acc)(using ctx.copy(locals = ctx.locals ++ syms))
-      case TermDef(k, sym, nme, rhs) :: sts =>
-        val n = nme match
-          case S(id: Ident) => id
-          case S(InfixApp(id: Ident, Keyword.`:`, _)) => id
-          // case _ => ???
-        val s = TermSymbol(S(n))
-        val b = rhs.map(term(_))
-        val td = TermDefinition(k, s, b)
-        s.defn = S(td)
-        go(sts, td :: acc)
+      case (td @ TermDef(k, sym, nme, rhs)) :: sts =>
+        td.name match
+          case R(id) =>
+            val s = newMembers(id.name).asInstanceOf[TermSymbol] // TODO improve
+            val b = rhs.map(term(_))
+            val td = TermDefinition(k, s, b)
+            s.defn = S(td)
+            go(sts, td :: acc)
+          case L(d) => go(sts, acc) // error already raised in newMembers initialization
       case TypeDef(k, head, extension, body) :: sts =>
         assert((k is Cls) || (k is Mod), k)
         def processHead(head: Tree): Ctxl[(Ident, Ls[TyParam], Opt[Ls[Param]], Ctx)] = head match

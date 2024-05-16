@@ -1,17 +1,15 @@
 
 
-fun (+) builtin: (Int, Int) -> Int
-//│ Elab: { fun builtin; }‹›
+class Int
+class Str
+class Bool
+//│ Elab: { class Int { }‹›; class Str { }‹›; class Bool { }‹›; }‹›
 
-// TODO dedup
+
 fun (+): (Int, Int) -> Int
 //│ Elab: { fun +; }‹›
 
 fun log: (Any) -> ()
 //│ Elab: { fun log; }‹›
 
-
-fun Int
-fun Str
-//│ Elab: { fun Int; fun Str; }‹›
 

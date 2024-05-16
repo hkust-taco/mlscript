@@ -28,10 +28,9 @@ abstract class MemberSymbol extends Symbol:
   def nme: Str
   var defn: Opt[Definition] = N
 
-// No name means it's a built-in operator symbol
-class TermSymbol(val name: Opt[Tree.Ident]) extends MemberSymbol:
-  def nme: Str = name.fold("")(_.name) // FIXME
-  override def toString: Str = s"${name.fold("‹builtin›")(_.name)}"
+class TermSymbol(val id: Tree.Ident) extends MemberSymbol:
+  def nme: Str = id.name
+  override def toString: Str = s"${id.name}"
 
 class ClassSymbol(val id: Tree.Ident) extends MemberSymbol:
   def nme = id.name
