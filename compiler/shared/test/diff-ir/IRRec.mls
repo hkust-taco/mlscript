@@ -132,7 +132,7 @@ fib(20)
 //│   _mls_retval = _mls_x_7;
 //│   return _mls_retval;
 //│ }
-//│ int main() { auto res = _mlsMain(); res.print(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 //│ 
 
 :interpIR
@@ -381,7 +381,7 @@ foo()
 //│   _mls_retval = _mls_x_13;
 //│   return _mls_retval;
 //│ }
-//│ int main() { auto res = _mlsMain(); res.print(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 //│ 
 
 :interpIR
@@ -660,7 +660,7 @@ main()
 //│   _mls_retval = _mls_x_12;
 //│   return _mls_retval;
 //│ }
-//│ int main() { auto res = _mlsMain(); res.print(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 //│ 
 
 :interpIR
@@ -1096,7 +1096,7 @@ main()
 //│   _mls_retval = _mls_x_26;
 //│   return _mls_retval;
 //│ }
-//│ int main() { auto res = _mlsMain(); res.print(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 //│ 
 
 
@@ -1614,7 +1614,7 @@ foo()
 //│   _mls_retval = _mls_x_18;
 //│   return _mls_retval;
 //│ }
-//│ int main() { auto res = _mlsMain(); res.print(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 //│ 
 
 :interpIR
@@ -1992,7 +1992,7 @@ foo()
 //│   _mls_retval = _mls_x_20;
 //│   return _mls_retval;
 //│ }
-//│ int main() { auto res = _mlsMain(); res.print(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 //│ 
 
 :interpIR
@@ -2459,7 +2459,7 @@ main()
 //│   _mls_retval = _mls_x_25;
 //│   return _mls_retval;
 //│ }
-//│ int main() { auto res = _mlsMain(); res.print(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 //│ 
 
 :interpIR
@@ -2894,7 +2894,7 @@ main(False)
 //│   _mls_retval = _mls_x_26;
 //│   return _mls_retval;
 //│ }
-//│ int main() { auto res = _mlsMain(); res.print(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 //│ 
 
 
@@ -3257,7 +3257,7 @@ main()
 //│   _mls_retval = _mls_x_15;
 //│   return _mls_retval;
 //│ }
-//│ int main() { auto res = _mlsMain(); res.print(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 //│ 
 
 :interpIR
@@ -3704,7 +3704,7 @@ main()
 //│   _mls_retval = _mls_x_19;
 //│   return _mls_retval;
 //│ }
-//│ int main() { auto res = _mlsMain(); res.print(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 //│ 
 
 :interpIR
@@ -4080,7 +4080,7 @@ main()
 //│   _mls_retval = _mls_x_17;
 //│   return _mls_retval;
 //│ }
-//│ int main() { auto res = _mlsMain(); res.print(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 //│ 
 
 :interpIR
@@ -4654,7 +4654,7 @@ main()
 //│   _mls_retval = _mls_x_39;
 //│   return _mls_retval;
 //│ }
-//│ int main() { auto res = _mlsMain(); res.print(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 //│ 
 
 :interpIR
@@ -5271,7 +5271,7 @@ main()
 //│   _mls_retval = _mls_x_40;
 //│   return _mls_retval;
 //│ }
-//│ int main() { auto res = _mlsMain(); res.print(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 //│ 
 
 :genCpp
@@ -5880,5 +5880,5 @@ main()
 //│   _mls_retval = _mls_x_31;
 //│   return _mls_retval;
 //│ }
-//│ int main() { auto res = _mlsMain(); res.print(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 //│ 

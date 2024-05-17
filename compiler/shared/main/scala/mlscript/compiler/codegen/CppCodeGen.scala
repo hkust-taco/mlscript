@@ -20,7 +20,7 @@ class CppCodeGen:
   private val mlsInternalClass = Set("True", "False", "Boolean")
   private val mlsObject = "_mlsObject"
   private val mlsBuiltin = "builtin"
-  private val mlsEntryPoint = s"int main() { auto res = _mlsMain(); res.print(); }";
+  private val mlsEntryPoint = s"int main() { return _mlsLargeStack(_mlsMainWrapper); }";
   private def mlsIntLit(x: BigInt) = Expr.Call(Expr.Var("_mlsValue::fromIntLit"), Ls(Expr.IntLit(x)))
   private def mlsStrLit(x: Str) = Expr.Call(Expr.Var("_mlsValue::fromStrLit"), Ls(Expr.StrLit(x)))
   private def mlsCharLit(x: Char) = Expr.Call(Expr.Var("_mlsValue::fromIntLit"), Ls(Expr.CharLit(x)))

@@ -1,11 +1,12 @@
-#include <_types/_uint64_t.h>
 #include <cassert>
 #include <cinttypes>
 #include <cstdint>
 #include <cstdio>
 #include <limits>
 #include <new>
+#include <pthread.h>
 #include <stdexcept>
+#include <sys/resource.h>
 #include <tuple>
 #include <typeinfo>
 #include <utility>
@@ -308,7 +309,30 @@ inline static _mlsValue _mlsCall(_mlsValue f, U... args) {
     return _mlsToCallable(f)->apply4(args...);
 }
 
+inline int _mlsLargeStack(void *(*fn)(void *)) {
+  pthread_t thread;
+  pthread_attr_t attr;
+
+  size_t stacksize = 512 * 1024 * 1024;
+  pthread_attr_init(&attr);
+  pthread_attr_setstacksize(&attr, stacksize);
+
+  int rc = pthread_create(&thread, &attr, fn, nullptr);
+  if (rc) {
+    printf("ERROR: return code from pthread_create() is %d\n", rc);
+    return 1;
+  }
+  pthread_join(thread, NULL);
+  return 0;
+}
+
 _mlsValue _mlsMain();
+
+inline void *_mlsMainWrapper(void *) {
+  _mlsValue res = _mlsMain();
+  res.print();
+  return nullptr;
+}
 
 struct _mls_Unit final : public _mlsObject {
   constexpr static inline const char *typeName = "Unit";
@@ -444,8 +468,7 @@ struct _mls_ZInt final : public _mlsObject {
   }
 };
 
-__attribute__((noinline))
-inline void _mlsNonExhaustiveMatch() {
+__attribute__((noinline)) inline void _mlsNonExhaustiveMatch() {
   throw std::runtime_error("Non-exhaustive match");
 }
 

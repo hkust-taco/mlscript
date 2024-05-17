@@ -3791,7 +3791,7 @@ main()
 //│   _mls_retval = _mls_x_227;
 //│   return _mls_retval;
 //│ }
-//│ int main() { auto res = _mlsMain(); res.print(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 
 :interpIR
 :genCpp
@@ -4079,7 +4079,7 @@ testMap()
 //│   _mls_retval = _mls_x_15;
 //│   return _mls_retval;
 //│ }
-//│ int main() { auto res = _mlsMain(); res.print(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 
 
 :interpIR
@@ -4201,7 +4201,7 @@ testChar(char"a")
 //│   _mls_retval = _mls_x_2;
 //│   return _mls_retval;
 //│ }
-//│ int main() { auto res = _mlsMain(); res.print(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 
 :interpIR
 :genCpp
@@ -4329,7 +4329,7 @@ testMatch(0)
 //│   _mls_retval = _mls_x_2;
 //│   return _mls_retval;
 //│ }
-//│ int main() { auto res = _mlsMain(); res.print(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 
 :interpIR
 :genCpp
@@ -4451,4 +4451,4 @@ f()
 //│   _mls_retval = _mls_x_5;
 //│   return _mls_retval;
 //│ }
-//│ int main() { auto res = _mlsMain(); res.print(); }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }

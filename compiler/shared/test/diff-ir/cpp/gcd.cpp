@@ -1938,4 +1938,4 @@ _mlsValue _mlsMain(){
   _mls_retval = _mls_x_255;
   return _mls_retval;
 }
-int main() { auto res = _mlsMain(); res.print(); }
+int main() { return _mlsLargeStack(_mlsMainWrapper); }
