@@ -8,7 +8,7 @@ import scala.collection.mutable.{Set => MutSet}
 import scala.util.control.NonFatal
 import scala.util.chaining._
 
-abstract class JSBackend(allowUnresolvedSymbols: Bool) {
+abstract class JSBackend {
   def oldDefs: Bool
 
   protected implicit class TermOps(term: Term) {
@@ -75,8 +75,9 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     case TyApp(base, _) =>
       translatePattern(base)
     case Inst(bod) => translatePattern(bod)
+    case Ann(ann, receiver) => translatePattern(receiver)
     case _: Lam | _: App | _: Sel | _: Let | _: Blk | _: Bind | _: Test | _: With | _: CaseOf | _: Subs | _: Assign
-        | If(_, _) | New(_, _)  | NuNew(_) | _: Splc | _: Forall | _: Where | _: Super | _: Eqn | _: AdtMatchWith
+        | _: If | _: New  | _: NuNew | _: Splc | _: Forall | _: Where | _: Super | _: Eqn | _: AdtMatchWith
         | _: Rft | _: While | _: Quoted | _: Unquoted =>
       throw CodeGenError(s"term $t is not a valid pattern")
   }
@@ -145,10 +146,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
           return Left(CodeGenError(s"type alias ${name} is not a valid expression"))
         case S(_) => lastWords("register mismatch in scope")
         case N =>
-          if (allowUnresolvedSymbols)
-            JSIdent(name)
-          else
-            return Left(CodeGenError(s"unresolved symbol ${name}"))
+          return Left(CodeGenError(s"unresolved symbol ${name}"))
       }
     })
 
@@ -343,8 +341,9 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     case Inst(body) if !isQuoted => Inst(desugarQuote(body))
     case _: Super if !isQuoted => term
     case Eqn(lhs, rhs) if !isQuoted => Eqn(lhs, desugarQuote(rhs))
+    case Ann(ann, receiver) => Ann(desugarQuote(ann), desugarQuote(receiver))
     case While(cond, body) if !isQuoted => While(desugarQuote(cond), desugarQuote(body))
-    case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: AdtMatchWith | _: Rft | _: New
+    case _: Bind | _: Test | _: If  | _: Splc | _: Where | _: AdtMatchWith | _: Rft | _: New
         | _: Assign | _: NuNew | _: TyApp | _: Forall | _: Inst | _: Super | _: Eqn | _: While =>
       throw CodeGenError("this quote syntax is not supported yet.")
   }
@@ -531,7 +530,8 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     case Quoted(body) =>
       val quotedScope = scope.derive("quote")
       translateTerm(desugarQuote(body)(quotedScope, true, new FreeVars(Set.empty)))(quotedScope)
-    case _: Bind | _: Test | If(_, _)  | _: Splc | _: Where | _: AdtMatchWith | _: Rft | _: Unquoted =>
+    case Ann(ann, receiver) => translateTerm(receiver)
+    case _: Bind | _: Test | _: If  | _: Splc | _: Where | _: AdtMatchWith | _: Rft | _: Unquoted =>
       throw CodeGenError(s"cannot generate code for term $term")
   }
 
@@ -1341,7 +1341,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
   
 }
 
-class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
+class JSWebBackend extends JSBackend {
   def oldDefs = false
   
   // Name of the array that contains execution results
@@ -1472,7 +1472,7 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
     if (newDefs) generateNewDef(pgrm) else generate(pgrm)
 }
 
-abstract class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
+abstract class JSTestBackend extends JSBackend {
   
   private val lastResultSymbol = topLevelScope.declareValue("res", Some(false), false, N)
   private val resultIdent = JSIdent(lastResultSymbol.runtimeName)

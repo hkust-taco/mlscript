@@ -306,7 +306,9 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       S(res, _cur)
     }
   }
-  final def block(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] =
+  final def block(implicit et: ExpectThen, fe: FoundErr): Ls[IfBody \/ Statement] = {
+    val annotations = parseAnnotations(true)
+
     cur match {
       case Nil => Nil
       case (NEWLINE, _) :: _ => consume; block
@@ -422,7 +424,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
             }
             val ctor = ctors.headOption
             val res =
-              NuTypeDef(kind, tn, tparams, params, ctor, sig, ps2, N, N, tu)(isDecl, isAbs)
+              NuTypeDef(kind, tn, tparams, params, ctor, sig, ps2, N, N, tu)(isDecl, isAbs, annotations)
             R(res.withLoc(S(l0 ++ tn.getLoc ++ res.getLoc)))
             R(res.withLoc(S(l0 ++ res.getLoc)))
           
@@ -524,7 +526,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                     case _ =>
                       R(NuFunDef(
                           isLetRec, v, opStr, tparams, L(ps.foldRight(annotatedBody)((i, acc) => Lam(i, acc)))
-                        )(isDecl, isVirtual, isMut, N, N, genField).withLoc(S(l0 ++ annotatedBody.toLoc)))
+                        )(isDecl, isVirtual, isMut, N, N, genField, annotations).withLoc(S(l0 ++ annotatedBody.toLoc)))
                   }
                 case c =>
                   asc match {
@@ -533,7 +535,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                       R(NuFunDef(isLetRec, v, opStr, tparams, R(PolyType(Nil, ps.foldRight(ty)((p, r) => Function(p.toType match {
                         case L(diag) => raise(diag); Top // TODO better
                         case R(tp) => tp
-                      }, r)))))(isDecl, isVirtual, isMut, N, N, genField).withLoc(S(l0 ++ ty.toLoc)))
+                      }, r)))))(isDecl, isVirtual, isMut, N, N, genField, annotations).withLoc(S(l0 ++ ty.toLoc)))
                       // TODO rm PolyType after FCP is merged
                     case N =>
                       // TODO dedup:
@@ -544,12 +546,12 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
                       val bod = errExpr
                       R(NuFunDef(
                           isLetRec, v, opStr, Nil, L(ps.foldRight(bod: Term)((i, acc) => Lam(i, acc)))
-                        )(isDecl, isVirtual, isMut, N, N, genField).withLoc(S(l0 ++ bod.toLoc)))
+                        )(isDecl, isVirtual, isMut, N, N, genField, annotations).withLoc(S(l0 ++ bod.toLoc)))
                   }
               }
             }
           case _ =>
-            exprOrIf(0, allowSpace = false)
+            exprOrIf(0, allowSpace = false, annotations = annotations)
         }
         val finalTerm = yeetSpaces match {
           case (KEYWORD("="), l0) :: _ => t match {
@@ -563,12 +565,42 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
           }
           case _ => t
         }
+              
         yeetSpaces match {
           case (SEMI, _) :: _ => consume; finalTerm :: block
           case (NEWLINE, _) :: _ => consume; finalTerm :: block
           case _ => finalTerm :: Nil
         }
     }
+  }
+
+  private def parseAnnotations(allowNewLines: Bool): Ls[Term] = {
+    @tailrec
+    def rec(acc: Ls[Term]): Ls[Term] = cur match {
+      case (SPACE, _) :: c => 
+        consume
+        rec(acc)
+      case (NEWLINE, _) :: c if allowNewLines =>
+        consume
+        rec(acc)
+      case (IDENT("@", true), l0) :: c => {
+        consume
+        val (name, loc) = c match {
+          case (IDENT(nme, false), l1) :: next => (nme, l1)
+          case c =>
+            val (tkstr, loc) = c.headOption.fold(("end of input", lastLoc))(_.mapFirst(_.describe).mapSecond(some))
+            err((msg"Expected an identifier; found ${tkstr} instead" -> loc :: Nil))
+            ("<error>", l0)
+        }
+        consume
+
+        val annotation = Var(name).withLoc(S(loc))
+        rec(annotation :: acc)
+      }
+      case _ => acc.reverse
+    }
+    rec(Nil)
+  }
   
   private def yeetSpaces: Ls[TokLoc] =
     cur.dropWhile(tkloc =>
@@ -666,8 +698,16 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     }
   }
 
-  final def exprOrIf(prec: Int, allowSpace: Bool = true)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, allowSpace) { l =>
-    cur match {
+  final def exprOrIf(prec: Int, allowSpace: Bool = true, annotations: Ls[Term] = Nil)(implicit et: ExpectThen, fe: FoundErr, l: Line): IfBody \/ Term = wrap(prec, allowSpace) { l =>
+    val moreAnnotations: Ls[Term] = parseAnnotations(false)
+
+    if (moreAnnotations.nonEmpty) {
+      yeetSpaces
+    }
+
+    val allAnns = annotations ++ moreAnnotations
+    
+    val res = cur match {
       case (SPACE, l0) :: _ if allowSpace => // Q: do we really need the `allowSpace` flag?
         consume
         exprOrIf(prec, allowSpace)
@@ -923,7 +963,24 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         err(msg"Unexpected ${tk.describe} in expression position" -> S(l0) :: Nil)
         consume
         exprOrIf(prec)(et = et, fe = true, l = implicitly)
-  }}
+    }
+    
+    if (allAnns.isEmpty) res
+    else res match {
+      case Left(body) => body match {
+        case IfThen(expr, rhs) =>
+          Left(IfThen(wrapAnns(expr, allAnns), rhs))
+        case _ =>
+          err(msg"Unexpected annotation" -> allAnns.head.toLoc :: Nil)
+          L(body) // discard annotations for now
+      }
+
+      case Right(term) => R(wrapAnns(term, allAnns))
+    }
+  }
+
+  private def wrapAnns(trm: Term, anns: List[Term]) =
+    anns.foldRight(trm)(Ann(_, _))
   
   private def errExpr =
     // Tup(Nil).withLoc(lastLoc) // TODO FIXME produce error term instead

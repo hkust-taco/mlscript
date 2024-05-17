@@ -290,14 +290,14 @@ def append ls elem = L { h = elem; t = S { v = ls } }
 
 :ns
 append
-//│ res: forall 'h 'a 'b 'T 't 'v 'T0 'c. 'c -> 'a -> 'b
+//│ res: forall 'a 'b 'v 'T 'c 'h 'T0 't. 'a -> 'b -> 'c
 //│   where
-//│     'b :> #L & {h: 'h, t: 't, L#T = 'T0}
+//│     'c :> #L & {h: 'h, t: 't, L#T = 'T0}
 //│     't :> #S & {v: 'v, S#T = 'T}
 //│        <: O[L['T0]]
-//│     'a <: 'h
+//│     'b <: 'h
 //│     'h <: 'T0
-//│     'c <: 'v
+//│     'a <: 'v
 //│     'v <: L['T0] & 'T
 //│     'T := L['T0]
 

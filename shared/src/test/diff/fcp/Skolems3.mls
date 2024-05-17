@@ -87,12 +87,12 @@ def bar y =
 
 def bar y =
   (fun x -> y (lift x)) : forall 'a. MutArray['a] -> 'a
-//│ bar: (MutArray[in 'a out 'a | MutArray[in ??a out ??a0]] -> ??a) -> (forall 'a0. MutArray['a0] -> 'a0)
+//│ bar: (MutArray[in 'a out MutArray[in ??a out ??a0] | 'a] -> ??a) -> (forall 'a0. MutArray['a0] -> 'a0)
 //│    = [Function: bar6]
 
 def bar y =
   (fun x -> y (lift x)) : forall 'a. MutArray['a] -> MutArray['a]
-//│ bar: (MutArray[in 'a out 'a | MutArray[in ??a out ??a0]] -> MutArray[in ??a0 out ??a]) -> (forall 'a0. MutArray['a0] -> MutArray['a0])
+//│ bar: (MutArray[in 'a out MutArray[in ??a out ??a0] | 'a] -> MutArray[in ??a0 out ??a]) -> (forall 'a0. MutArray['a0] -> MutArray['a0])
 //│    = [Function: bar7]
 
 // * Again, we can still make it fail using contrived annotations.

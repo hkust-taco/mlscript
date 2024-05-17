@@ -317,7 +317,7 @@ def a2_ (x: A1) =
 //│   = [Function: a11]
 //│ a3: 'a -> (forall 'b. anything -> 'b
 //│   where
-//│     'a <: (forall 'c 'd 'e. ('e -> 'c & 'c -> 'd) -> 'e -> 'd) -> 'b)
+//│     'a <: (forall 'c 'd 'e. ('c -> 'd & 'd -> 'e) -> 'c -> 'e) -> 'b)
 //│   = [Function: a31]
 //│ a2: A1 -> (forall 'a. anything -> 'a
 //│   where
@@ -355,9 +355,9 @@ def a2' (x: A1') =
   ) a3
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b 'c 'a 'd. nothing -> ('d -> 'b | 'c)
+//│     'a :> forall 'a 'b 'c 'd. nothing -> ('b -> 'c | 'd)
 //│       where
-//│         'a | Sid <: (forall 'e 'b 'd. ('d -> 'e & 'e -> 'b) -> 'd -> 'b) -> 'c
+//│         Sid | 'a <: (forall 'b 'e 'c. ('b -> 'e & 'e -> 'c) -> 'b -> 'c) -> 'd
 //│ ║  l.198: 	type A1' = forall 'a. (('a | Sid) -> 'a) -> 'a -> ('a | Sid)
 //│ ╙──       	                  ^^
 //│ a2': A1' -> (forall 'a. anything -> 'a

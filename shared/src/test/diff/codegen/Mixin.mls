@@ -242,7 +242,7 @@ TestLang.eval(mk(0))
 //│ fun mk: forall 'a. Object -> (Lit | 'a)
 //│ Int
 //│ where
-//│   'a :> Neg[Lit | 'a] | Add[Lit | 'a]
+//│   'a :> Add[Lit | 'a] | Neg[Lit | 'a]
 //│ res
 //│     = 0
 

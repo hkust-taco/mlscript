@@ -1,5 +1,6 @@
 :NewDefs
 
+
 mut let i = 0
 //│ mut let i: 0
 //│ i
@@ -118,19 +119,19 @@ let x = 1
 set x = 2
 x
 //│ ╔══[ERROR] definition `x` is not mutable and cannot be reassigned
-//│ ║  l.118: 	set x = 2
+//│ ║  l.119: 	set x = 2
 //│ ╙──       	^^^^^^^^^
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.118: 	set x = 2
+//│ ║  l.119: 	set x = 2
 //│ ║         	^^^^^^^^^
 //│ ╟── integer literal of type `2` does not match type `1`
-//│ ║  l.118: 	set x = 2
+//│ ║  l.119: 	set x = 2
 //│ ║         	        ^
 //│ ╟── Note: constraint arises from integer literal:
-//│ ║  l.117: 	let x = 1
+//│ ║  l.118: 	let x = 1
 //│ ║         	        ^
 //│ ╟── from definition of let binding x:
-//│ ║  l.117: 	let x = 1
+//│ ║  l.118: 	let x = 1
 //│ ╙──       	    ^^^^^
 //│ let x: 1
 //│ 1
@@ -188,10 +189,52 @@ fun repmin =
 :e
 mut val lol[A] = (x: A) => x
 //│ ╔══[ERROR] Type parameters are not yet supported in this position
-//│ ║  l.189: 	mut val lol[A] = (x: A) => x
+//│ ║  l.190: 	mut val lol[A] = (x: A) => x
 //│ ╙──       	            ^
 //│ mut val lol: (x: 'A) -> 'A
 //│ lol
 //│     = [Function: lol]
+
+
+
+:NoJS
+
+
+mut let foo_ty = error
+//│ mut let foo_ty: nothing
+
+:ns
+let rec body(x) =
+  log of x.m + 1
+  set foo_ty = body
+  x
+//│ let rec body: forall 'a 'm. 'a -> 'a
+//│   where
+//│     'a :> 'b
+//│        <: 'c & {m: 'm}
+//│     'm :> 'm0
+//│        <: Int
+//│     'c :> 'b
+//│     'b <: {m: 'm0}
+//│     'm0 <: Int
+
+foo_ty of {m: 1}
+//│ {m: 1}
+
+foo_ty of {m: 2}
+//│ {m: 1 | 2}
+
+body({m: 3})
+//│ {m: 1 | 2 | 3}
+
+body({m: 4})
+//│ {m: 1 | 2 | 4}
+
+body
+//│ forall 'a. ({m: Int} & 'a) -> ({m: 1 | 2} | 'a)
+
+foo_ty
+//│ ({m: Int} & 'a) -> ({m: 1 | 2 | 3 | 4} | 'a)
+
 
 

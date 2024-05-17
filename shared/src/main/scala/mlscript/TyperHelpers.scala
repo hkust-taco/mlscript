@@ -216,7 +216,7 @@ abstract class TyperHelpers { Typer: Typer =>
     def rebuild(cs: Ls[Ls[ST]]): ST =
       cs.iterator.map(_.foldLeft(TopType: ST)(_ & _)).foldLeft(BotType: ST)(_ | _)
     if (cs.sizeCompare(1) <= 0) return rebuild(cs)
-    val factors = MutMap.empty[Factorizable, Int]
+    val factors = LinkedHashMap.empty[Factorizable, Int]
     cs.foreach { c =>
       c.foreach {
         case tv: TV =>

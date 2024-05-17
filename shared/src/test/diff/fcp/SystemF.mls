@@ -145,7 +145,7 @@ iter256() = iter4() (iter4())
 def iter256_ty: () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 iter256_ty() = iter4_ty() (iter4_ty())
 iter256_ty = iter256
-//│ iter256: () -> ('a -> ('a & 'b) & ('b | 'c) -> ('a & 'c)) -> 'a -> 'c
+//│ iter256: () -> ('a -> ('a & 'b) & ('c | 'b) -> ('a & 'c)) -> 'a -> 'c
 //│   where
 //│     'a :> 'c
 //│        = [Function: iter256]
@@ -155,7 +155,7 @@ iter256_ty = iter256
 //│   <:  iter256_ty:
 //│ () -> (forall 'X. ('X -> 'X) -> 'X -> 'X)
 //│           = [Function: iter256_ty]
-//│ () -> ('a -> ('a & 'b) & ('b | 'c) -> ('a & 'c)) -> 'a -> 'c
+//│ () -> ('a -> ('a & 'b) & ('c | 'b) -> ('a & 'c)) -> 'a -> 'c
 //│   where
 //│     'a :> 'c
 //│   <:  iter256_ty:
@@ -399,7 +399,7 @@ E q = q id
 // shallow (not (not true))        -- Shallow encoding.
 // λid.id(λb t f.b f t)(id(λb t f.b f t)(λx y.x))
 sh id = (id not) ((id not) tru)
-//│ sh: ((forall 'a 'b 'c. ('c -> 'a -> 'b) -> 'a -> 'c -> 'b) -> ('d -> 'e & (forall 'f. 'f -> anything -> 'f) -> 'd)) -> 'e
+//│ sh: ((forall 'a 'b 'c. ('a -> 'b -> 'c) -> 'b -> 'a -> 'c) -> ('d -> 'e & (forall 'f. 'f -> anything -> 'f) -> 'd)) -> 'e
 //│   = [Function: sh]
 
 // E[forall X.X->X->X](shallow (not( not true)))

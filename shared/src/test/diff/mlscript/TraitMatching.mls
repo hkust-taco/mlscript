@@ -12,7 +12,7 @@ test1 1
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.11: 	test1 1
 //│ ║        	^^^^^^^
-//│ ╟── expression of type `1 & #MyTrait | 1 & ~?a` does not have field 'value'
+//│ ╟── expression of type `1 & ~?a | 1 & #MyTrait` does not have field 'value'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.6: 	def test1 x = case x of { MyTrait -> x.value | _ -> 0 }
 //│ ║       	                                     ^^^^^^^
@@ -92,7 +92,7 @@ test2 (C2 { default = "oops" })
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.91: 	test2 (C2 { default = "oops" })
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── expression of type `C2 & {default: ?default} & #MyTrait | C2 & {default: ?default} & ~?a` does not have field 'value'
+//│ ╟── expression of type `C2 & {default: ?default} & ~?a | C2 & {default: ?default} & #MyTrait` does not have field 'value'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.45: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ║        	                                     ^^^^^^^
@@ -112,7 +112,7 @@ test2 c2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.111: 	test2 c2
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `C2 & {default: ?default} & #MyTrait | C2 & {default: ?default} & ~?a` does not have field 'value'
+//│ ╟── expression of type `C2 & {default: ?default} & ~?a | C2 & {default: ?default} & #MyTrait` does not have field 'value'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.45: 	def test2 x = case x of { MyTrait -> x.value | _ -> x.default }
 //│ ║        	                                     ^^^^^^^

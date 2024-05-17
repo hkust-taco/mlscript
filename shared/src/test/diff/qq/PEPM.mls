@@ -156,7 +156,7 @@ fun showAndRet(n: Code['a, anything]) =
 
 :ne
 fun bar(x: Code['a, 'b]) = x
-//│ fun bar: forall 'b 'a. (x: Code['a, 'b]) -> Code['a, 'b]
+//│ fun bar: forall 'a 'b. (x: Code['a, 'b]) -> Code['a, 'b]
 
 
 :ne

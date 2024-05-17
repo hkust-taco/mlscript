@@ -3,15 +3,15 @@
 
 :escape
 // We need to use some native methods on `String`.
-let String: nothing
-let asNativeString: anything => { length: Int, charCodeAt: Int => Int, charAt: Int => Str, slice: Int => Str } = String
-let StringInstance: { fromCharCode: Int => Str } = String
+val String: nothing
+val asNativeString: anything => { length: Int, charCodeAt: Int => Int, charAt: Int => Str, slice: Int => Str } = String
+val StringInstance: { fromCharCode: Int => Str } = String
 // We will validate our implementation with the built-in `JSON.parse`.
-let JSON: { parse: Str => anything, stringify: anything => Str }
-//│ let asNativeString: anything -> {charAt: Int -> Str, charCodeAt: Int -> Int, length: Int, slice: Int -> Str}
-//│ let StringInstance: {fromCharCode: Int -> Str}
-//│ let JSON: {parse: Str -> anything, stringify: anything -> Str}
-//│ let String: nothing
+val JSON: { parse: Str => anything, stringify: anything => Str }
+//│ val asNativeString: anything -> {charAt: Int -> Str, charCodeAt: Int -> Int, length: Int, slice: Int -> Str}
+//│ val StringInstance: {fromCharCode: Int -> Str}
+//│ val JSON: {parse: Str -> anything, stringify: anything -> Str}
+//│ val String: nothing
 //│ String
 //│        = <missing implementation>
 //│ asNativeString
@@ -309,7 +309,7 @@ fun parse(scanner) =
 //│ fun parseElements: Scanner -> ParseResult[List[JsonValue]]
 //│ fun parseStringContent: anything -> ParseResult[Str]
 //│ fun parseNumber: anything -> ParseResult[JsonNumber]
-//│ fun parse: forall 'T. Scanner -> (ParseFailure | ParseSuccess[in JsonValue & 'T out JsonNull | 'T | JsonBoolean | JsonString | JsonObject | JsonArray] | ParseResult[JsonNumber])
+//│ fun parse: forall 'T. Scanner -> (ParseFailure | ParseSuccess[in JsonValue & 'T out JsonNull | 'T | JsonBoolean | JsonString | JsonArray | JsonObject] | ParseResult[JsonNumber])
 
 :ng
 toString of parse of scan of "    true"

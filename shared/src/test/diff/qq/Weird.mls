@@ -42,7 +42,7 @@ let p3 = y `=>
 
 fun bind(rhs, k: forall 'g : Code['a, 'g] -> Code['b, 'c | 'g]) =
   `let x = rhs `in k(x)
-//│ fun bind: forall 'a 'c 'b. (Code['a, 'c], k: forall 'g. Code['a, 'g] -> Code['b, 'g | 'c]) -> Code['b, 'c]
+//│ fun bind: forall 'a 'c 'b. (Code['a, 'c], k: forall 'g. Code['a, 'g] -> Code['b, 'c | 'g]) -> Code['b, 'c]
 
 
 // fun body: forall 'g : (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]

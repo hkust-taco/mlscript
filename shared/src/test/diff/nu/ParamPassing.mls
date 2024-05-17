@@ -54,7 +54,7 @@ class Foo(x: Int)
 
 :e
 Foo(1).x
-//│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
+//│ ╔══[ERROR] Parameter 'x' cannot be accessed as a field
 //│ ║  l.56: 	Foo(1).x
 //│ ║        	      ^^
 //│ ╟── Either make the parameter a `val` or access it through destructuring
@@ -98,7 +98,7 @@ if Foo(1) is Foo(x) then x
 
 :e
 class Bar(x: Int) extends Foo(x)
-//│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
+//│ ╔══[ERROR] Inherited parameter named 'x' is not virtual and cannot be overridden
 //│ ║  l.100: 	class Bar(x: Int) extends Foo(x)
 //│ ║         	          ^
 //│ ╟── Originally declared here:
@@ -108,7 +108,7 @@ class Bar(x: Int) extends Foo(x)
 
 :e
 Bar(11).x
-//│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
+//│ ╔══[ERROR] Parameter 'x' cannot be accessed as a field
 //│ ║  l.110: 	Bar(11).x
 //│ ║         	       ^^
 //│ ╟── Either make the parameter a `val` or access it through destructuring
@@ -121,7 +121,7 @@ Bar(11).x
 
 :e
 class Bar(val x: Int) extends Foo(x + 1)
-//│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
+//│ ╔══[ERROR] Inherited parameter named 'x' is not virtual and cannot be overridden
 //│ ║  l.123: 	class Bar(val x: Int) extends Foo(x + 1)
 //│ ║         	              ^
 //│ ╟── Originally declared here:
@@ -136,7 +136,7 @@ Bar(11).x
 
 :e
 class Bar extends Foo(1) { val x: 2 }
-//│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
+//│ ╔══[ERROR] Inherited parameter named 'x' is not virtual and cannot be overridden
 //│ ║  l.138: 	class Bar extends Foo(1) { val x: 2 }
 //│ ║         	                           ^^^^^^^^
 //│ ╟── Originally declared here:
@@ -149,7 +149,7 @@ class Bar extends Foo(1) { val x: 2 }
 
 :e
 module Bar extends Foo(1) { fun x = 2 }
-//│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
+//│ ╔══[ERROR] Inherited parameter named 'x' is not virtual and cannot be overridden
 //│ ║  l.151: 	module Bar extends Foo(1) { fun x = 2 }
 //│ ║         	                                ^^^^^
 //│ ╟── Originally declared here:
@@ -180,7 +180,7 @@ module B extends A(42)
 
 :e
 B.x
-//│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
+//│ ╔══[ERROR] Parameter 'x' cannot be accessed as a field
 //│ ║  l.182: 	B.x
 //│ ║         	 ^^
 //│ ╟── Either make the parameter a `val` or access it through destructuring
@@ -222,7 +222,7 @@ module Baz extends Foo(0) { fun i = id }
 module Bazz extends Foo(0) {
   val x: 2
 }
-//│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
+//│ ╔══[ERROR] Inherited parameter named 'x' is not virtual and cannot be overridden
 //│ ║  l.223: 	  val x: 2
 //│ ║         	  ^^^^^^^^
 //│ ╟── Originally declared here:

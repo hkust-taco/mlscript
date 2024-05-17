@@ -2,6 +2,7 @@ package mlscript
 
 import scala.util.chaining._
 import scala.collection.mutable.{Map => MutMap, SortedMap => SortedMutMap, Set => MutSet, Buffer}
+import scala.collection.immutable.SortedMap
 
 import math.Ordered.orderingToOrdered
 
@@ -285,7 +286,7 @@ trait TypeImpl extends Located { self: Type =>
 
 
 final case class ShowCtx(
-    vs: Map[TypeVar, Str],
+    vs: SortedMap[TypeVar, Str],
     debug: Bool, // TODO make use of `debug` or rm
     indentLevel: Int,
     newDefs: Bool,
@@ -331,7 +332,7 @@ object ShowCtx {
     val namedMap = (namedVars ++ hintedVars).map { case (nh, tv) =>
       // tv -> assignName(nh.dropWhile(_ === '\''))
       tv -> assignName(nh.stripPrefix(_pre))
-    }.toMap
+    }.toSortedMap
     val used = usedNames.keySet
     
     // * Generate names for unnamed variables
@@ -459,7 +460,7 @@ trait NuDeclImpl extends Located { self: NuDecl =>
       }))
       NuFunDef(N, Var("unapply"), N, Nil, L(Lam(
         Tup(N -> Fld(FldFlags.empty, Var("x")) :: Nil),
-        ret)))(N, N, N, N, N, true)
+        ret)))(N, N, N, N, N, true, Nil)
     }
     case _ => N
   }
@@ -489,7 +490,7 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
     val declaredValueMembers = rawEntities.collect{ case fd: NuFunDef if fd.rhs.isRight => fd.nme.name }.toSet
     rawEntities.map {
       case Eqn(lhs, rhs) if declaredValueMembers(lhs.name) =>
-        NuFunDef(N, lhs, N, Nil, L(rhs))(N, N, N, N, N, true)
+        NuFunDef(N, lhs, N, Nil, L(rhs))(N, N, N, N, N, true, Nil)
       case e => e
     }
   }
@@ -541,6 +542,8 @@ trait TermImpl extends StatementImpl { self: Term =>
   def describe: Str = sugaredTerm match {
     case S(t) => t.describe
     case N => this match {
+      case Ann(_, Ann(_, receiver)) => receiver.describe
+      case Ann(_, receiver) => "annotated " + receiver.describe
       case Bra(true, Tup(_ :: _ :: _) | Tup((S(_), _) :: _) | Blk(_)) => "record"
       case Bra(_, trm) => trm.describe
       case Blk((trm: Term) :: Nil) => trm.describe
@@ -592,6 +595,7 @@ trait TermImpl extends StatementImpl { self: Term =>
   def print(brackets: Bool): Str = {
       def bra(str: Str): Str = if (brackets) s"($str)" else str
       this match {
+    case Ann(ann, receiver) => bra("@" + ann.print(false) + " ") + receiver.print(false)
     case Bra(true, trm) => s"'{' ${trm.showDbg} '}'"
     case Bra(false, trm) => s"'(' ${trm.showDbg} ')'"
     case Blk(stmts) => stmts.iterator.map(_.showDbg).mkString("{", "; ", "}")
@@ -650,6 +654,7 @@ trait TermImpl extends StatementImpl { self: Term =>
   def showIn(brackets: Bool)(implicit ctx: ShowCtx): Str = {
     def bra(str: Str): Str = if (brackets) s"($str)" else str
     this match {
+      case Ann(ann, receiver) => bra(s"@${ann.toString()} ${receiver.showIn(false)}")
       case Bra(true, trm) => trm.showIn(false)
       case Bra(false, trm) => s"(${trm.showIn(false)})"
       case Blk(stmts) =>
@@ -1074,6 +1079,7 @@ trait StatementImpl extends Located { self: Statement =>
   }
   
   def children: List[Located] = this match {
+    case Ann(ann, trm) => ann :: trm :: Nil
     case Bra(_, trm) => trm :: Nil
     case Var(name) => Nil
     case Asc(trm, ty) => trm :: Nil
