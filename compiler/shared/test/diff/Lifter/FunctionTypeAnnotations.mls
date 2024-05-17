@@ -1,6 +1,6 @@
 :NewDefs 
 
-:e // FIXME: Preserve type annotations in lifting
+:e // TODO: Preserve type annotations in lifting
 :mono
 fun foo(x: Int) =
     (y) => x+y
