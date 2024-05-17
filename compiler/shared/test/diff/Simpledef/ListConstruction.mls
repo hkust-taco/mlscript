@@ -2,7 +2,7 @@
 
 :nolift
 :ppat
-:pd
+:sd
 abstract class List() {
     fun getRes: Str
     fun map: error
@@ -34,7 +34,7 @@ mkList(5).map(x => x*2).getRes
 //│ fun mkList: Int -> (Cons | Nil)
 //│ Str
 //│ 
-//│ Polydef:
+//│ Simpledef:
 //│ {class List() {fun getRes: Str
 //│  fun map: error}
 //│  class Cons(val x: Int, val xs: List,): List {fun getRes = concat(concat(toString(x,),)(" :: ",),)(let selRes$30 = xs in case selRes$30 of { Nil => (selRes$30).getRes
@@ -47,7 +47,7 @@ mkList(5).map(x => x*2).getRes
 //│  let selRes$126 = (let selRes$128 = mkList(5,) in case selRes$128 of { Cons => (selRes$128).map
 //│  Nil => (selRes$128).map })((x::3,) => *(x, 2,),) in case selRes$126 of { Cons => (selRes$126).getRes
 //│  Nil => (selRes$126).getRes }}
-//│ End polydef
+//│ End simpledef
 //│ 
 //│ res
 //│     = '10 :: 8 :: 6 :: 4 :: 2 :: Nil'

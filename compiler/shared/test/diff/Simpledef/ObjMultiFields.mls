@@ -24,7 +24,7 @@ foo(false).foo.bar
 //│     = 5
 
 :nolift
-:pd
+:sd
 class X(val foo: Int, val bar: Bool) {}
 class Y(val foo: Str, val bar: Int) {}
 class A(val foo: X) {}
@@ -34,7 +34,7 @@ val x = foo(true)
 x.foo.bar
 foo(false).foo.bar
 //│ 
-//│ Polydef:
+//│ Simpledef:
 //│ {class X(val foo: Int, val bar: Bool,) {}
 //│  class Y(val foo: Str, val bar: Int,) {}
 //│  class A(val foo: X,) {}
@@ -47,7 +47,7 @@ foo(false).foo.bar
 //│  let selRes$64 = let selRes$66 = foo(false,) in case selRes$66 of { B => (selRes$66).foo
 //│  A => (selRes$66).foo } in case selRes$64 of { X => (selRes$64).bar
 //│  Y => (selRes$64).bar }}
-//│ End polydef
+//│ End simpledef
 //│ 
 //│ class X(foo: Int, bar: Bool)
 //│ class Y(foo: Str, bar: Int)

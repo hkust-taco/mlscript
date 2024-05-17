@@ -1,6 +1,6 @@
 :NewDefs
 
-//:pd
+//:sd
 :p
 :nolift
 val a = {
@@ -19,8 +19,8 @@ if a.number then 5 else 6
 //│     = 5
 
 
-//:pd
-//:dpd
+//:sd
+//:dsd
 :nolift
 :p
 class X() {

@@ -29,7 +29,7 @@ abstract class ModeType {
   def dbgUCS: Bool
   def dbgLifting: Bool
   def dbgDefunc: Bool
-  def dbgPolydef: Bool
+  def dbgSimpledef: Bool
   def fullExceptionStack: Bool
   def stats: Bool
   def stdout: Bool
@@ -43,7 +43,7 @@ abstract class ModeType {
   def showRepl: Bool
   def allowEscape: Bool
   def mono: Bool
-  def polydef: Bool
+  def simpledef: Bool
   def lift: Bool
   def nolift: Bool
 }
@@ -160,7 +160,7 @@ class DiffTests
       dbgUCS: Bool = false,
       dbgLifting: Bool = false,
       dbgDefunc: Bool = false,
-      dbgPolydef: Bool = false,
+      dbgSimpledef: Bool = false,
       fullExceptionStack: Bool = false,
       stats: Bool = false,
       stdout: Bool = false,
@@ -175,7 +175,7 @@ class DiffTests
       showRepl: Bool = false,
       allowEscape: Bool = false,
       mono: Bool = false,
-      polydef: Bool = false,
+      simpledef: Bool = false,
       postProcessAfterTyping: Bool = false,
       lift: Bool = false,
       nolift: Bool = false,
@@ -229,7 +229,7 @@ class DiffTests
           case "ds" => mode.copy(dbgSimplif = true)
           case "dl" => mode.copy(dbgLifting = true)
           case "dd" => mode.copy(dbgDefunc = true)
-          case "dpd" => mode.copy(dbgPolydef = true)
+          case "dsd" => mode.copy(dbgSimpledef = true)
           case "ducs" => mode.copy(dbg = true, dbgUCS = true)
           case "s" => mode.copy(fullExceptionStack = true)
           case "v" | "verbose" => mode.copy(verbose = true)
@@ -285,7 +285,7 @@ class DiffTests
           case "escape" => mode.copy(allowEscape = true)
           case "mono" => {mode.copy(mono = true)}
           case "ppat" => {mode.copy(postProcessAfterTyping = true)}
-          case "pd" => {mode.copy(polydef = true)}
+          case "sd" => {mode.copy(simpledef = true)}
           case "lift" => {mode.copy(lift = true)}
           case "nolift" => {mode.copy(nolift = true)}
           case "exit" =>
@@ -466,7 +466,7 @@ class DiffTests
             
             if (parseOnly)
               Success(Pgrm(Nil), 0)
-            else if ((mode.mono || mode.lift || mode.polydef) && !mode.postProcessAfterTyping) {
+            else if ((mode.mono || mode.lift || mode.simpledef) && !mode.postProcessAfterTyping) {
               import Message._
               Success(Pgrm(nuRes.getOrElse({
                 raise(ErrorReport(msg"Post-process failed to produce AST, defaulting to standard AST" -> None :: Nil, true, Diagnostic.Compilation))

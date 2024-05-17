@@ -3,7 +3,7 @@
 :NewDefs
 
 :nolift
-:pd
+:sd
 :ppat
 abstract class Exp() {
     virtual fun derive(): Exp
@@ -61,7 +61,7 @@ Mul(Pow(Variable("x"), Numeric(2)), Pow(Variable("y"), Numeric(2))).derive().get
 //│ }
 //│ Str
 //│ 
-//│ Polydef:
+//│ Simpledef:
 //│ {class Exp() {fun derive: () -> Exp
 //│  fun getVal: Str}
 //│  class Numeric(val i: Int,): Exp {fun derive = () => Numeric(0,)
@@ -103,7 +103,7 @@ Mul(Pow(Variable("x"), Numeric(2)), Pow(Variable("y"), Numeric(2))).derive().get
 //│  let selRes$346 = (let selRes$348 = Mul(Variable("x",), Numeric(3,),) in case selRes$348 of { Mul => (selRes$348).derive })() in case selRes$346 of { Sum => (selRes$346).getVal }
 //│  let selRes$376 = (let selRes$378 = Pow(Variable("x",), Numeric(3,),) in case selRes$378 of { Pow => (selRes$378).derive })() in case selRes$376 of { Mul => (selRes$376).getVal }
 //│  let selRes$406 = (let selRes$408 = Mul(Pow(Variable("x",), Numeric(2,),), Pow(Variable("y",), Numeric(2,),),) in case selRes$408 of { Mul => (selRes$408).derive })() in case selRes$406 of { Sum => (selRes$406).getVal }}
-//│ End polydef
+//│ End simpledef
 //│ 
 //│ res
 //│     = '(1 + 0)'

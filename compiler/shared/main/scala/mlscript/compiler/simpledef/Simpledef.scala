@@ -1,6 +1,6 @@
 package mlscript
 package compiler
-package polydef
+package simpledef
 
 import mlscript.utils.*, shorthands.*
 import scala.collection.mutable
@@ -37,7 +37,7 @@ trait ProdObjImpl { self: ProdObj =>
   var objDestination: Set[ConsStrat] = Set()
 }
 
-class Polydef(debug: Debug) {
+class SimpleDef(debug: Debug) {
   
   extension (t: Term) {
     def uid = termMap.getOrElse(t, {
@@ -141,8 +141,8 @@ class Polydef(debug: Debug) {
     debug.outdent()
     val res: ProdStrat = t match
       case IntLit(_) => ProdObj(Some(Var("prim$Int")), Nil)(using t.uid)
-      case DecLit(_) => ??? // floating point numbers as integers type
       case StrLit(_) => ProdObj(Some(Var("prim$String")), Nil)(using t.uid)
+      case UnitLit(_) => ProdObj(Some(Var("prim$Unit")), Nil)(using t.uid)
       case Var("true") | Var("false") => ProdObj(Some(Var("prim$Bool")), Nil)(using t.uid)
       case v @ Var(id) if builtinOps.contains(v) =>
         builtinOps(v)
@@ -196,6 +196,7 @@ class Polydef(debug: Debug) {
         })(using t.uid)
       case Blk(stmts) => 
         apply(TypingUnit(stmts))._2
+      case other => lastWords(s"Unsupported term ${other}")
 
     registerTermToType(t, res)
   
@@ -235,27 +236,30 @@ class Polydef(debug: Debug) {
           )
         case (pv@ProdObj(nme1, fields1), cv@ConsObj(nme2, fields2)) =>
           nme2 match 
-            case Some(name) if name != nme1.get => ???
+            case Some(name) if name != nme1.get => lastWords(s"Could not constrain ${(prod -> cons)}")
             case _ => ()
           fields2.map((key, res2) => {
             fields1.find(_._1 == key) match 
-              case None => ???
+              case None => lastWords(s"Could not constrain ${(prod -> cons)}")
               case Some((_, res1)) => 
                 cv.selectionSource = cv.selectionSource + pv
                 pv.objDestination = pv.objDestination + cv
                 constrain(res1, res2)
           })
+        case (pv@ProdTup(fields1), cv@ConsObj(nme2, fields2)) =>
+          nme2 match 
+            case Some(name) => lastWords(s"Could not constrain ${(prod -> cons)}")
+            case _ => ()
+          fields2.map((key, res2) => {
+            cv.selectionSource = cv.selectionSource + pv
+            constrain(fields1(key.name.toInt), res2)
+          })
+        case other => lastWords(s"Could not constrain ${other}")
   }
 
   // TODO: remove redundancy between selToObjTypes and selTermToType
-  lazy val selToObjTypes: Map[TermId, Set[ProdObj]] = selTermToType.map((termId, cons) =>
-    (termId, cons.selectionSource.flatMap{
-        case p:ProdObj => Some(p)
-        case other => 
-          debug.writeLine(s"${other}")
-          None
-      }
-    )
+  lazy val selToResTypes: Map[TermId, Set[ProdStrat]] = selTermToType.map((termId, cons) =>
+    (termId, cons.selectionSource)
   ).toMap
 
   def rewriteTerm(t: Term): Term = 
@@ -264,10 +268,9 @@ class Polydef(debug: Debug) {
         case Nil => acc
         case ProdObj(Some(v), _) :: rest => 
           objSetToMatchBranches(receiver, fieldName, rest, Case(v, Sel(receiver, fieldName), acc))
+        case other => lastWords(s"Unexpected  ${other}")
     t match
-      case IntLit(_) => t
-      case StrLit(_) => t
-      case Var(_) => t
+      case Var(_) | IntLit(_) | UnitLit(_) | StrLit(_) => t
       case App(func, arg) => 
         App(rewriteTerm(func), rewriteTerm(arg))
       case Lam(t @ Tup(args), body) =>
@@ -282,10 +285,18 @@ class Polydef(debug: Debug) {
           case _ => ??? // Unsupported
         })
       case Sel(receiver, fieldName) =>
-        val letName = Var(s"selRes$$${t.uid}")
-        Let(false, letName, rewriteTerm(receiver),
-          CaseOf(letName, objSetToMatchBranches(letName, fieldName, selToObjTypes(t.uid).toList))
-        )
+        if (selToResTypes(t.uid).forall{
+          case _: (ProdObj | ProdVar) => true
+          case _ => false
+        }) {
+          val letName = Var(s"selRes$$${t.uid}")
+          Let(false, letName, rewriteTerm(receiver),
+            CaseOf(letName, objSetToMatchBranches(letName, fieldName, selToResTypes(t.uid).collect{case x: ProdObj => x}.toList))
+          )
+        } else {
+          debug.writeLine(s"${selToResTypes(t.uid)}")
+          Sel(rewriteTerm(receiver), fieldName)
+        }
       case Bra(true, t) =>
         Bra(true, rewriteTerm(t))
       case Rcd(fields) =>
@@ -294,6 +305,7 @@ class Polydef(debug: Debug) {
         })
       case Blk(stmts) => 
         Blk(rewriteStatements(stmts))
+      case other => lastWords(s"Unsupported term ${other}")
     
   def rewriteStatements(stmts: List[Statement]): List[Statement] =
     stmts.map{
@@ -306,6 +318,7 @@ class Polydef(debug: Debug) {
         )(f.declareLoc, f.virtualLoc, f.mutLoc, f.signature, f.outer, f.genField, f.annotations)
       case t: Term => 
         rewriteTerm(t)
+      case other => lastWords(s"Unsupported term ${other}")
     }
   def rewriteProgram(t: TypingUnit): TypingUnit = 
     TypingUnit(rewriteStatements(t.rawEntities))

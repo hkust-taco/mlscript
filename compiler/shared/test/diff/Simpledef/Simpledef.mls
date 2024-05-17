@@ -23,7 +23,7 @@ let obj = foo(true) in
 //│ res
 //│     = 6
 
-:pd
+:sd
 :nolift
 class X() {
     val num = 6
@@ -34,13 +34,13 @@ class Y() {
 fun foo(pred) = if pred then X() else Y()
 foo(true).num
 //│ 
-//│ Polydef:
+//│ Simpledef:
 //│ {class X() {let num = 6}
 //│  class Y() {let num = true}
 //│  fun foo = (pred,) => if (pred) then X() else Y()
 //│  let selRes$26 = foo(true,) in case selRes$26 of { Y => (selRes$26).num
 //│  X => (selRes$26).num }}
-//│ End polydef
+//│ End simpledef
 //│ 
 //│ class X() {
 //│   val num: 6
@@ -53,8 +53,8 @@ foo(true).num
 //│ res
 //│     = 6
 
-:pd
-//:dpd
+:sd
+//:dsd
 :nolift
 class X() {
     val num = 6
@@ -76,7 +76,7 @@ fun foo(pred) =
         if pred == 2 then B() else C()
 foo(5).num.num
 //│ 
-//│ Polydef:
+//│ Simpledef:
 //│ {class X() {let num = 6}
 //│  class Y() {let num = true}
 //│  class A() {let num = X()}
@@ -87,7 +87,7 @@ foo(5).num.num
 //│  C => (selRes$76).num
 //│  A => (selRes$76).num } in case selRes$74 of { X => (selRes$74).num
 //│  Y => (selRes$74).num }}
-//│ End polydef
+//│ End simpledef
 //│ 
 //│ class X() {
 //│   val num: 6

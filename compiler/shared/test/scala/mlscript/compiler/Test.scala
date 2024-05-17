@@ -8,7 +8,8 @@ import mlscript.compiler.TreeDebug
 import mlscript.compiler.mono.Monomorph
 import mlscript.compiler.mono.MonomorphError
 import mlscript.Polyfill
-import mlscript.compiler.polydef.Polydef
+import mlscript.compiler.simpledef.SimpleDef
+import simpledef.SimpleDef
 
 class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*
@@ -36,15 +37,15 @@ class DiffTestCompiler extends DiffTests {
         outputBuilder ++= "Lifting failed: " ++ err.toString()
         if mode.fullExceptionStack then 
           outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
-    if(mode.polydef) {
-      output("\nPolydef:")
-      val treeDebug = new TreeDebug(if mode.dbgPolydef then output else (str) => ())
-      val pd = Polydef(treeDebug)
+    if(mode.simpledef) {
+      output("\nSimpledef:")
+      val treeDebug = new TreeDebug(if mode.dbgSimpledef then output else (str) => ())
+      val pd = SimpleDef(treeDebug)
       pd(rstUnit)
       val defuncAST = pd.rewriteProgram(rstUnit)
       //output(s"${defuncAST}\n")
       output(defuncAST.showDbg.replace(";", "\n"))
-      output("End polydef\n")
+      output("End simpledef\n")
       return (outputBuilder.toString().linesIterator.toList, Some(defuncAST))
     }
     if(mode.mono){

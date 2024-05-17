@@ -1,6 +1,6 @@
 package mlscript
 package compiler
-package polydef
+package simpledef
 
 opaque type Uid[T] = Int
 
