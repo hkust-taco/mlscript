@@ -357,12 +357,12 @@ abstract class JSBackend {
         NuFunDef(isLetRec, nme, symbol, tparams, rhs match {
           case L(t) => L(desugarQuote(t))
           case R(t) => R(t)
-        })(nd.declareLoc, nd.virtualLoc, nd.mutLoc, nd.signature, nd.outer, nd.genField)
+        })(nd.declareLoc, nd.virtualLoc, nd.mutLoc, nd.signature, nd.outer, nd.genField, nd.annotations)
       case nt @ NuTypeDef(kind, nme, tparams, params, ctor, sig, parents, superAnnot, thisAnnot, TypingUnit(body)) =>
         NuTypeDef(kind, nme, tparams, params, ctor.map(c => desugarStatementInUnquote(c) match {
           case c: Constructor => c
           case _ => die
-        }), sig, parents.map(p => desugarQuote(p)), superAnnot, thisAnnot, TypingUnit(body.map(s => desugarStatementInUnquote(s))))(nt.declareLoc, nt.abstractLoc)
+        }), sig, parents.map(p => desugarQuote(p)), superAnnot, thisAnnot, TypingUnit(body.map(s => desugarStatementInUnquote(s))))(nt.declareLoc, nt.abstractLoc, nt.annotations)
       case Constructor(ps, body) => Constructor(ps, desugarQuote(body) match {
         case b: Blk => b
         case _ => die
