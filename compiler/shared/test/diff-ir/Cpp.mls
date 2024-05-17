@@ -257,7 +257,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$0) = builtin(error) in -- #5
+//│ let** (x$0) = builtin(error) in -- #5
 //│ x$0 -- #4
 //│ )
 //│ Def(1, z_of_int, [x$1], [{}],
@@ -265,7 +265,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$2) = builtin(z_of_int,x$1) in -- #13
+//│ let** (x$2) = builtin(z_of_int,x$1) in -- #13
 //│ x$2 -- #12
 //│ )
 //│ Def(2, z_to_int, [x$3], [{}],
@@ -273,7 +273,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$4) = builtin(z_to_int,x$3) in -- #21
+//│ let** (x$4) = builtin(z_to_int,x$3) in -- #21
 //│ x$4 -- #20
 //│ )
 //│ Def(3, z_add, [x$5,y$0], [{},{}],
@@ -281,7 +281,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$6) = builtin(z_add,x$5,y$0) in -- #31
+//│ let** (x$6) = builtin(z_add,x$5,y$0) in -- #31
 //│ x$6 -- #30
 //│ )
 //│ Def(4, z_sub, [x$7,y$1], [{},{}],
@@ -289,7 +289,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$8) = builtin(z_sub,x$7,y$1) in -- #41
+//│ let** (x$8) = builtin(z_sub,x$7,y$1) in -- #41
 //│ x$8 -- #40
 //│ )
 //│ Def(5, z_div, [x$9,y$2], [{},{}],
@@ -297,7 +297,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$10) = builtin(z_div,x$9,y$2) in -- #51
+//│ let** (x$10) = builtin(z_div,x$9,y$2) in -- #51
 //│ x$10 -- #50
 //│ )
 //│ Def(6, z_mul, [x$11,y$3], [{},{}],
@@ -305,7 +305,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$12) = builtin(z_mul,x$11,y$3) in -- #61
+//│ let** (x$12) = builtin(z_mul,x$11,y$3) in -- #61
 //│ x$12 -- #60
 //│ )
 //│ Def(7, z_mod, [x$13,y$4], [{},{}],
@@ -313,7 +313,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$14) = builtin(z_mod,x$13,y$4) in -- #71
+//│ let** (x$14) = builtin(z_mod,x$13,y$4) in -- #71
 //│ x$14 -- #70
 //│ )
 //│ Def(8, z_lt, [x$15,y$5], [{},{}],
@@ -321,7 +321,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$16) = builtin(z_lt,x$15,y$5) in -- #81
+//│ let** (x$16) = builtin(z_lt,x$15,y$5) in -- #81
 //│ x$16 -- #80
 //│ )
 //│ Def(9, z_leq, [x$17,y$6], [{},{}],
@@ -329,7 +329,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$18) = builtin(z_leq,x$17,y$6) in -- #91
+//│ let** (x$18) = builtin(z_leq,x$17,y$6) in -- #91
 //│ x$18 -- #90
 //│ )
 //│ Def(10, z_equal, [x$19,y$7], [{},{}],
@@ -337,7 +337,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$20) = builtin(z_equal,x$19,y$7) in -- #101
+//│ let** (x$20) = builtin(z_equal,x$19,y$7) in -- #101
 //│ x$20 -- #100
 //│ )
 //│ Def(11, z_gt, [x$21,y$8], [{},{}],
@@ -345,7 +345,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$22) = builtin(z_gt,x$21,y$8) in -- #111
+//│ let** (x$22) = builtin(z_gt,x$21,y$8) in -- #111
 //│ x$22 -- #110
 //│ )
 //│ Def(12, z_geq, [x$23,y$9], [{},{}],
@@ -353,7 +353,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$24) = builtin(z_geq,x$23,y$9) in -- #121
+//│ let** (x$24) = builtin(z_geq,x$23,y$9) in -- #121
 //│ x$24 -- #120
 //│ )
 //│ Def(13, map, [f$0,ls$0], [{},{}],
@@ -365,7 +365,7 @@ main()
 //│   Cons =>
 //│     let x$26 = Cons.t(ls$0) in -- #153
 //│     let x$27 = Cons.h(ls$0) in -- #152
-//│     let List(x$28) = f$0(x$27) in -- #151
+//│     let** (x$28) = f$0(x$27) in -- #151
 //│     let* (x$29) = map(f$0,x$26) in -- #150
 //│     let x$30 = Cons(x$28,x$29) in -- #149
 //│     jump j$0(x$30) -- #148
@@ -389,7 +389,7 @@ main()
 //│   Cons =>
 //│     let x$33 = Cons.t(ls$1) in -- #202
 //│     let x$34 = Cons.h(ls$1) in -- #201
-//│     let List(x$35) = f$1(x$34) in -- #200
+//│     let** (x$35) = f$1(x$34) in -- #200
 //│     if x$35 -- #199
 //│       true =>
 //│         let* (x$37) = filter(f$1,x$33) in -- #189
@@ -425,7 +425,7 @@ main()
 //│   Cons =>
 //│     let x$42 = Cons.t(ls$2) in -- #236
 //│     let x$43 = Cons.h(ls$2) in -- #235
-//│     let List(x$44) = f$2(i$0,x$43) in -- #234
+//│     let** (x$44) = f$2(i$0,x$43) in -- #234
 //│     let* (x$45) = foldl(f$2,x$44,x$42) in -- #233
 //│     jump j$3(x$45) -- #232
 //│   Nil =>
@@ -448,7 +448,7 @@ main()
 //│     let x$47 = Cons.t(ls$3) in -- #269
 //│     let x$48 = Cons.h(ls$3) in -- #268
 //│     let* (x$49) = foldr(f$3,i$1,x$47) in -- #267
-//│     let List(x$50) = f$3(x$48,x$49) in -- #266
+//│     let** (x$50) = f$3(x$48,x$49) in -- #266
 //│     jump j$4(x$50) -- #265
 //│   Nil =>
 //│     jump j$4(i$1) -- #271
@@ -511,7 +511,7 @@ main()
 //│       Cons =>
 //│         let x$66 = Cons.t(ys$1) in -- #373
 //│         let x$67 = Cons.h(ys$1) in -- #372
-//│         let List(x$68) = f$4(x$64,x$67) in -- #371
+//│         let** (x$68) = f$4(x$64,x$67) in -- #371
 //│         let* (x$69) = zipWith(f$4,x$63,x$66) in -- #370
 //│         let x$70 = Cons(x$68,x$69) in -- #369
 //│         jump j$8(x$70) -- #368
@@ -1139,7 +1139,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$0) = builtin(error) in -- #5
+//│ let** (x$0) = builtin(error) in -- #5
 //│ x$0 -- #4
 //│ )
 //│ Def(1, z_of_int, [x$1], [{}],
@@ -1147,7 +1147,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$2) = builtin(z_of_int,x$1) in -- #13
+//│ let** (x$2) = builtin(z_of_int,x$1) in -- #13
 //│ x$2 -- #12
 //│ )
 //│ Def(2, z_to_int, [x$3], [{}],
@@ -1155,7 +1155,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$4) = builtin(z_to_int,x$3) in -- #21
+//│ let** (x$4) = builtin(z_to_int,x$3) in -- #21
 //│ x$4 -- #20
 //│ )
 //│ Def(3, z_add, [x$5,y$0], [{},{}],
@@ -1163,7 +1163,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$6) = builtin(z_add,x$5,y$0) in -- #31
+//│ let** (x$6) = builtin(z_add,x$5,y$0) in -- #31
 //│ x$6 -- #30
 //│ )
 //│ Def(4, z_sub, [x$7,y$1], [{},{}],
@@ -1171,7 +1171,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$8) = builtin(z_sub,x$7,y$1) in -- #41
+//│ let** (x$8) = builtin(z_sub,x$7,y$1) in -- #41
 //│ x$8 -- #40
 //│ )
 //│ Def(5, z_div, [x$9,y$2], [{},{}],
@@ -1179,7 +1179,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$10) = builtin(z_div,x$9,y$2) in -- #51
+//│ let** (x$10) = builtin(z_div,x$9,y$2) in -- #51
 //│ x$10 -- #50
 //│ )
 //│ Def(6, z_mul, [x$11,y$3], [{},{}],
@@ -1187,7 +1187,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$12) = builtin(z_mul,x$11,y$3) in -- #61
+//│ let** (x$12) = builtin(z_mul,x$11,y$3) in -- #61
 //│ x$12 -- #60
 //│ )
 //│ Def(7, z_mod, [x$13,y$4], [{},{}],
@@ -1195,7 +1195,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$14) = builtin(z_mod,x$13,y$4) in -- #71
+//│ let** (x$14) = builtin(z_mod,x$13,y$4) in -- #71
 //│ x$14 -- #70
 //│ )
 //│ Def(8, z_lt, [x$15,y$5], [{},{}],
@@ -1203,7 +1203,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$16) = builtin(z_lt,x$15,y$5) in -- #81
+//│ let** (x$16) = builtin(z_lt,x$15,y$5) in -- #81
 //│ x$16 -- #80
 //│ )
 //│ Def(9, z_leq, [x$17,y$6], [{},{}],
@@ -1211,7 +1211,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$18) = builtin(z_leq,x$17,y$6) in -- #91
+//│ let** (x$18) = builtin(z_leq,x$17,y$6) in -- #91
 //│ x$18 -- #90
 //│ )
 //│ Def(10, z_equal, [x$19,y$7], [{},{}],
@@ -1219,7 +1219,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$20) = builtin(z_equal,x$19,y$7) in -- #101
+//│ let** (x$20) = builtin(z_equal,x$19,y$7) in -- #101
 //│ x$20 -- #100
 //│ )
 //│ Def(11, z_gt, [x$21,y$8], [{},{}],
@@ -1227,7 +1227,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$22) = builtin(z_gt,x$21,y$8) in -- #111
+//│ let** (x$22) = builtin(z_gt,x$21,y$8) in -- #111
 //│ x$22 -- #110
 //│ )
 //│ Def(12, z_geq, [x$23,y$9], [{},{}],
@@ -1235,7 +1235,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let List(x$24) = builtin(z_geq,x$23,y$9) in -- #121
+//│ let** (x$24) = builtin(z_geq,x$23,y$9) in -- #121
 //│ x$24 -- #120
 //│ )
 //│ Def(13, map, [f$0,ls$0], [{},{}],
@@ -1247,7 +1247,7 @@ main()
 //│   Cons =>
 //│     let x$26 = Cons.t(ls$0) in -- #153
 //│     let x$27 = Cons.h(ls$0) in -- #152
-//│     let List(x$28) = f$0(x$27) in -- #151
+//│     let** (x$28) = f$0(x$27) in -- #151
 //│     let* (x$29) = map(f$0,x$26) in -- #150
 //│     let x$30 = Cons(x$28,x$29) in -- #149
 //│     jump j$0(x$30) -- #148
@@ -1271,7 +1271,7 @@ main()
 //│   Cons =>
 //│     let x$33 = Cons.t(ls$1) in -- #202
 //│     let x$34 = Cons.h(ls$1) in -- #201
-//│     let List(x$35) = f$1(x$34) in -- #200
+//│     let** (x$35) = f$1(x$34) in -- #200
 //│     if x$35 -- #199
 //│       true =>
 //│         let* (x$37) = filter(f$1,x$33) in -- #189
@@ -1307,7 +1307,7 @@ main()
 //│   Cons =>
 //│     let x$42 = Cons.t(ls$2) in -- #236
 //│     let x$43 = Cons.h(ls$2) in -- #235
-//│     let List(x$44) = f$2(i$0,x$43) in -- #234
+//│     let** (x$44) = f$2(i$0,x$43) in -- #234
 //│     let* (x$45) = foldl(f$2,x$44,x$42) in -- #233
 //│     jump j$3(x$45) -- #232
 //│   Nil =>
@@ -1330,7 +1330,7 @@ main()
 //│     let x$47 = Cons.t(ls$3) in -- #269
 //│     let x$48 = Cons.h(ls$3) in -- #268
 //│     let* (x$49) = foldr(f$3,i$1,x$47) in -- #267
-//│     let List(x$50) = f$3(x$48,x$49) in -- #266
+//│     let** (x$50) = f$3(x$48,x$49) in -- #266
 //│     jump j$4(x$50) -- #265
 //│   Nil =>
 //│     jump j$4(i$1) -- #271
@@ -1393,7 +1393,7 @@ main()
 //│       Cons =>
 //│         let x$66 = Cons.t(ys$1) in -- #373
 //│         let x$67 = Cons.h(ys$1) in -- #372
-//│         let List(x$68) = f$4(x$64,x$67) in -- #371
+//│         let** (x$68) = f$4(x$64,x$67) in -- #371
 //│         let* (x$69) = zipWith(f$4,x$63,x$66) in -- #370
 //│         let x$70 = Cons(x$68,x$69) in -- #369
 //│         jump j$8(x$70) -- #368
@@ -3831,7 +3831,7 @@ testMap()
 //│     let x$2 = Cons.t(xs$0) in -- #38
 //│     let x$3 = Cons.h(xs$0) in -- #37
 //│     let x$4 = Box.inner(f$0) in -- #36
-//│     let List(x$5) = x$4(x$3) in -- #35
+//│     let** (x$5) = x$4(x$3) in -- #35
 //│     let* (x$6) = map(f$0,x$2) in -- #34
 //│     let x$7 = Cons(x$5,x$6) in -- #33
 //│     jump j$0(x$7) -- #32
@@ -3882,7 +3882,7 @@ testMap()
 //│     let x$2 = Cons.t(xs$0) in -- #38
 //│     let x$3 = Cons.h(xs$0) in -- #37
 //│     let x$4 = Box.inner(f$0) in -- #36
-//│     let List(x$5) = x$4(x$3) in -- #35
+//│     let** (x$5) = x$4(x$3) in -- #35
 //│     let* (x$6) = map(f$0,x$2) in -- #34
 //│     let x$7 = Cons(x$5,x$6) in -- #33
 //│     jump j$0(x$7) -- #32

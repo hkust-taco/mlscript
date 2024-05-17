@@ -282,10 +282,12 @@ enum Node:
           <:> raw("in")
           <:> raw(s"-- $tag"),
         body.toDocument)
-    case LetApply(x, f, args, body) =>
+    case LetApply(xs, f, args, body) =>
       stack(
-        raw("let")
-          <:> raw(x.toString)
+        raw("let**")
+          <:> raw("(")
+          <#> raw(xs.map(_.toString).mkString(","))
+          <#> raw(")")
           <:> raw("=")
           <:> raw(f.toString)
           <#> raw("(")
