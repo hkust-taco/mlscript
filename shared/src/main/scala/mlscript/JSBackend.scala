@@ -308,7 +308,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
       else Blk(stmts.map {
         case t: Term =>
           desugarQuote(t)(blkScope, isQuoted, freeVars)
-        case s => desugarStatementForQuote(s)(blkScope, isQuoted, freeVars)
+        case s => desugarStatementInUnquote(s)(blkScope, freeVars)
       })
     case Tup(eles) =>
       def toVar(b: Bool) = if (b) Var("true") else Var("false")
@@ -349,23 +349,28 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
       throw CodeGenError("this quote syntax is not supported yet.")
   }
 
-  private def desugarStatementForQuote(s: Statement)(implicit scope: Scope, isQuoted: Bool, freeVars: FreeVars): Statement = s match {
-    case nd @ NuFunDef(isLetRec, nme, symbol, tparams, rhs) =>
-      NuFunDef(isLetRec, nme, symbol, tparams, rhs match {
-        case L(t) => L(desugarQuote(t))
-        case R(t) => R(t)
-      })(nd.declareLoc, nd.virtualLoc, nd.mutLoc, nd.signature, nd.outer, nd.genField)
-    case nt @ NuTypeDef(kind, nme, tparams, params, ctor, sig, parents, superAnnot, thisAnnot, TypingUnit(body)) =>
-      NuTypeDef(kind, nme, tparams, params, ctor.map(c => desugarStatementForQuote(c) match {
-        case c: Constructor => c
+  // * Statements inside **Unquote** can refer to quoted code fragments.
+  // * Desugar them recursively.
+  private def desugarStatementInUnquote(s: Statement)(implicit scope: Scope, freeVars: FreeVars): Statement = {
+    implicit val isQuoted: Bool = false
+    s match {
+      case nd @ NuFunDef(isLetRec, nme, symbol, tparams, rhs) =>
+        NuFunDef(isLetRec, nme, symbol, tparams, rhs match {
+          case L(t) => L(desugarQuote(t))
+          case R(t) => R(t)
+        })(nd.declareLoc, nd.virtualLoc, nd.mutLoc, nd.signature, nd.outer, nd.genField)
+      case nt @ NuTypeDef(kind, nme, tparams, params, ctor, sig, parents, superAnnot, thisAnnot, TypingUnit(body)) =>
+        NuTypeDef(kind, nme, tparams, params, ctor.map(c => desugarStatementInUnquote(c) match {
+          case c: Constructor => c
+          case _ => die
+        }), sig, parents.map(p => desugarQuote(p)), superAnnot, thisAnnot, TypingUnit(body.map(s => desugarStatementInUnquote(s))))(nt.declareLoc, nt.abstractLoc)
+      case Constructor(ps, body) => Constructor(ps, desugarQuote(body) match {
+        case b: Blk => b
         case _ => die
-      }), sig, parents.map(p => desugarQuote(p)), superAnnot, thisAnnot, TypingUnit(body.map(s => desugarStatementForQuote(s))))(nt.declareLoc, nt.abstractLoc)
-    case Constructor(ps, body) => Constructor(ps, desugarQuote(body) match {
-      case b: Blk => b
-      case _ => die
-    })
-    case t: Term => desugarQuote(t)
-    case _: LetS | _: DataDefn | _: DatatypeDefn | _: TypeDef | _: Def => die // * Impossible. newDef is true
+      })
+      case t: Term => desugarQuote(t)
+      case _: LetS | _: DataDefn | _: DatatypeDefn | _: TypeDef | _: Def => die // * Impossible. newDef is true
+    }
   }
 
   /**
