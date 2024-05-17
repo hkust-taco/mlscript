@@ -472,7 +472,7 @@ class DiffTests
               if (mode.postProcessAfterTyping) {
                 (Nil, None)
               } else { 
-                postProcess(mode, basePath, testName, res, output)
+                postProcess(newMode, basePath, testName, res, output)
               }
             postLines.foreach(output)            
             
