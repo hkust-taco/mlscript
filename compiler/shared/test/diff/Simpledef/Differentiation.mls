@@ -60,6 +60,32 @@ Mul(Pow(Variable("x"), Numeric(2)), Pow(Variable("y"), Numeric(2))).derive().get
 //│   fun getVal: Str
 //│ }
 //│ Str
+//│ Lifted:
+//│ TypingUnit {
+//│   class Exp([]) {fun derive = () -> Exp; fun getVal = Str}
+//│   class Numeric([val i: Int,]): Exp {
+//│     fun derive = () => Numeric(0,)
+//│     fun getNum = i
+//│     fun getVal = toString(i,)
+//│   }
+//│   class Variable([val nm: Str,]): Exp {fun derive = () => Numeric(1,); fun getVal = nm}
+//│   class Sum([val lhs: Exp, val rhs: Exp,]): Exp {
+//│     fun derive = () => Sum((lhs).derive(), (rhs).derive(),)
+//│     fun getVal = concat("(",)(concat(concat(concat((lhs).getVal,)(" + ",),)((rhs).getVal,),)(")",),)
+//│   }
+//│   class Mul([val lhs: Exp, val rhs: Exp,]): Exp {
+//│     fun derive = () => Sum(Mul((lhs).derive(), rhs,), Mul(lhs, (rhs).derive(),),)
+//│     fun getVal = concat("(",)(concat(concat(concat((lhs).getVal,)(" * ",),)((rhs).getVal,),)(")",),)
+//│   }
+//│   class Pow([val lhs: Variable, val rhs: Numeric,]): Exp {
+//│     fun derive = () => Mul(rhs, Pow(lhs, Numeric(-((rhs).getNum, 1,),),),)
+//│     fun getVal = concat("(",)(concat(concat(concat((lhs).getVal,)(" ^ ",),)((rhs).getVal,),)(")",),)
+//│   }
+//│   Code(List(((Sum(Variable("x",), Numeric(3,),)).derive()).getVal))
+//│   Code(List(((Mul(Variable("x",), Numeric(3,),)).derive()).getVal))
+//│   Code(List(((Pow(Variable("x",), Numeric(3,),)).derive()).getVal))
+//│   Code(List(((Mul(Pow(Variable("x",), Numeric(2,),), Pow(Variable("y",), Numeric(2,),),)).derive()).getVal))
+//│ }
 //│ 
 //│ Simpledef:
 //│ {class Exp() {fun derive: () -> Exp

@@ -234,7 +234,7 @@ const2 x y = y
 
 // A2
 choose id
-//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+//│ res: 'a -> (forall 'a0. 'a0 -> 'a0 | 'a)
 //│    = [Function (anonymous)]
 
 // A3
@@ -264,7 +264,7 @@ id auto_
 
 // A7
 choose id auto
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('b -> 'b | 'a0)
 //│    = [Function: id1]
 
 // A8
@@ -461,7 +461,7 @@ cons (head ids) ids
 
 // F8
 choose (head ids)
-//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+//│ res: 'a -> (forall 'a0. 'a0 -> 'a0 | 'a)
 //│    = [Function (anonymous)]
 
 // F9
@@ -471,7 +471,7 @@ let f = revapp id in f poly
 
 // F10
 a = choose id (fun (x: (forall 'a. 'a -> 'a)) -> auto_ x)
-//│ a: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+//│ a: (forall 'a. 'a -> 'a & 'a0) -> ('b -> 'b | 'a0)
 //│  = [Function: id1]
 
 a id
@@ -479,11 +479,11 @@ a id
 //│    = [Function: id1]
 
 choose id (fun x -> auto_ x)
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('b -> 'b | 'a0)
 //│    = [Function: id1]
 
 a = choose id auto_
-//│ a: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'b -> 'b)
+//│ a: (forall 'a. 'a -> 'a & 'a0) -> ('b -> 'b | 'a0)
 //│  = [Function: id1]
 
 a id
@@ -520,7 +520,7 @@ choose id (fun (x: ('a -> 'a)) -> auto_ x)
 
 // * The skolem used to (unsafely) leak into this type – see also `Skolems.mls`:
 res
-//│ res: (anything -> ??a & 'a) -> (error | 'a | 'b -> 'b)
+//│ res: (anything -> ??a & 'a) -> (error | 'b -> 'b | 'a)
 //│    = [Function: id1]
 
 :e // skolem extrusion
@@ -552,7 +552,7 @@ a (fun x -> { u = x })
 //│ ╟── Note: constraint arises from type variable:
 //│ ║  l.172: 	def auto_ : (forall 'a. 'a -> 'a) -> 'b -> 'b
 //│ ╙──       	                              ^^
-//│ res: error | 'b -> ('b | {u: 'b})
+//│ res: error | 'b -> ({u: 'b} | 'b)
 //│    = [Function (anonymous)]
 
 

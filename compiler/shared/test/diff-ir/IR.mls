@@ -1,0 +1,156 @@
+:NewParser
+:ParseOnly
+:UseIR
+
+:interpIR
+class Pair(x, y)
+fun mktup2(x, y) = mktup(x, y)
+fun mktup(x, y) = Pair(x, y)
+fun foo() =
+  mktup2(1, 2)
+foo()
+//│ |#class| |Pair|(|x|,| |y|)|↵|#fun| |mktup2|(|x|,| |y|)| |#=| |mktup|(|x|,| |y|)|↵|#fun| |mktup|(|x|,| |y|)| |#=| |Pair|(|x|,| |y|)|↵|#fun| |foo|(||)| |#=|→|mktup2|(|1|,| |2|)|←|↵|foo|(||)|
+//│ Parsed: {class Pair(x, y,) {}; fun mktup2 = (x, y,) => mktup(x, y,); fun mktup = (x, y,) => Pair(x, y,); fun foo = () => {mktup2(1, 2,)}; foo()}
+
+:interpIR
+class Pair(x, y)
+fun foo(pair) =
+  if pair is
+    Pair(x, y) then Pair(x, y)
+fun bar() =
+  foo(Pair(1, 2))
+bar()
+//│ |#class| |Pair|(|x|,| |y|)|↵|#fun| |foo|(|pair|)| |#=|→|#if| |pair| |is|→|Pair|(|x|,| |y|)| |#then| |Pair|(|x|,| |y|)|←|←|↵|#fun| |bar|(||)| |#=|→|foo|(|Pair|(|1|,| |2|)|)|←|↵|bar|(||)|
+//│ Parsed: {class Pair(x, y,) {}; fun foo = (pair,) => {if pair is ‹(Pair(x, y,)) then Pair(x, y,)›}; fun bar = () => {foo(Pair(1, 2,),)}; bar()}
+
+
+
+:interpIR
+class Pair(x, y) {}
+fun silly(pair) =
+  let _ = 0
+  let n = if pair is
+    Pair(x1, x2) then
+      if pair is
+        Pair (x3, x4) then x3 + 1
+  n + 1
+fun foo() =
+    let a = Pair(0, 1)
+    let b = silly(a)
+    b
+foo()
+//│ |#class| |Pair|(|x|,| |y|)| |{||}|↵|#fun| |silly|(|pair|)| |#=|→|#let| |_| |#=| |0|↵|#let| |n| |#=| |#if| |pair| |is|→|Pair|(|x1|,| |x2|)| |#then|→|#if| |pair| |is|→|Pair| |(|x3|,| |x4|)| |#then| |x3| |+| |1|←|←|←|↵|n| |+| |1|←|↵|#fun| |foo|(||)| |#=|→|#let| |a| |#=| |Pair|(|0|,| |1|)|↵|#let| |b| |#=| |silly|(|a|)|↵|b|←|↵|foo|(||)|
+//│ Parsed: {class Pair(x, y,) {}; fun silly = (pair,) => {let _ = 0; let n = if pair is ‹(Pair(x1, x2,)) then {if pair is ‹(Pair(x3, x4,)) then +(x3,)(1,)›}›; +(n,)(1,)}; fun foo = () => {let a = Pair(0, 1,); let b = silly(a,); b}; foo()}
+
+
+
+
+:interpIR
+class Pair(x, y)
+fun inc_fst(pair) =
+  let c = 2
+  if pair is
+    Pair(x1, x2) then x1 + c
+fun foo() =
+    let a = Pair(0, 1)
+    let b = inc_fst(a)
+    b
+foo()
+//│ |#class| |Pair|(|x|,| |y|)|↵|#fun| |inc_fst|(|pair|)| |#=|→|#let| |c| |#=| |2|↵|#if| |pair| |is|→|Pair|(|x1|,| |x2|)| |#then| |x1| |+| |c|←|←|↵|#fun| |foo|(||)| |#=|→|#let| |a| |#=| |Pair|(|0|,| |1|)|↵|#let| |b| |#=| |inc_fst|(|a|)|↵|b|←|↵|foo|(||)|
+//│ Parsed: {class Pair(x, y,) {}; fun inc_fst = (pair,) => {let c = 2; if pair is ‹(Pair(x1, x2,)) then +(x1,)(c,)›}; fun foo = () => {let a = Pair(0, 1,); let b = inc_fst(a,); b}; foo()}
+
+:interpIR
+class Pair(x, y)
+fun inc_fst(pair) =
+  let _ = 0
+  if pair is
+    Pair(x1, x2) then x2 + 1
+fun foo() =
+    let b = inc_fst(Pair(0, 1))
+    b
+foo()
+//│ |#class| |Pair|(|x|,| |y|)|↵|#fun| |inc_fst|(|pair|)| |#=|→|#let| |_| |#=| |0|↵|#if| |pair| |is|→|Pair|(|x1|,| |x2|)| |#then| |x2| |+| |1|←|←|↵|#fun| |foo|(||)| |#=|→|#let| |b| |#=| |inc_fst|(|Pair|(|0|,| |1|)|)|↵|b|←|↵|foo|(||)|
+//│ Parsed: {class Pair(x, y,) {}; fun inc_fst = (pair,) => {let _ = 0; if pair is ‹(Pair(x1, x2,)) then +(x2,)(1,)›}; fun foo = () => {let b = inc_fst(Pair(0, 1,),); b}; foo()}
+
+:interpIR
+class Left(x)
+class Right(y)
+fun foo(a, b) =
+  let t = if a is
+    Left(x) then Left(x + 1)
+    Right(y) then Right(b)
+  if t is
+    Left(x) then x
+    Right(y) then y
+fun bar() =
+  foo(Right(2), 2)
+bar()
+//│ |#class| |Left|(|x|)|↵|#class| |Right|(|y|)|↵|#fun| |foo|(|a|,| |b|)| |#=|→|#let| |t| |#=| |#if| |a| |is|→|Left|(|x|)| |#then| |Left|(|x| |+| |1|)|↵|Right|(|y|)| |#then| |Right|(|b|)|←|↵|#if| |t| |is|→|Left|(|x|)| |#then| |x|↵|Right|(|y|)| |#then| |y|←|←|↵|#fun| |bar|(||)| |#=|→|foo|(|Right|(|2|)|,| |2|)|←|↵|bar|(||)|
+//│ Parsed: {class Left(x,) {}; class Right(y,) {}; fun foo = (a, b,) => {let t = if a is ‹(Left(x,)) then Left(+(x,)(1,),); (Right(y,)) then Right(b,)›; if t is ‹(Left(x,)) then x; (Right(y,)) then y›}; fun bar = () => {foo(Right(2,), 2,)}; bar()}
+
+:interpIR
+class True
+class False
+class Pair(x, y)
+fun foo(a) = a.x + a.y
+fun bar() =
+  foo(Pair(1, 0))
+bar()
+//│ |#class| |True|↵|#class| |False|↵|#class| |Pair|(|x|,| |y|)|↵|#fun| |foo|(|a|)| |#=| |a|.x| |+| |a|.y|↵|#fun| |bar|(||)| |#=|→|foo|(|Pair|(|1|,| |0|)|)|←|↵|bar|(||)|
+//│ Parsed: {class True {}; class False {}; class Pair(x, y,) {}; fun foo = (a,) => +((a).x,)((a).y,); fun bar = () => {foo(Pair(1, 0,),)}; bar()}
+
+
+:interpIR
+class C1(x, y)
+class C2(z)
+fun foo(a) = if a is
+  C1(x, y) then x
+  C2(z) then z
+fun bar() =
+  foo(C1(0, 1))
+bar()
+//│ |#class| |C1|(|x|,| |y|)|↵|#class| |C2|(|z|)|↵|#fun| |foo|(|a|)| |#=| |#if| |a| |is|→|C1|(|x|,| |y|)| |#then| |x|↵|C2|(|z|)| |#then| |z|←|↵|#fun| |bar|(||)| |#=|→|foo|(|C1|(|0|,| |1|)|)|←|↵|bar|(||)|
+//│ Parsed: {class C1(x, y,) {}; class C2(z,) {}; fun foo = (a,) => if a is ‹(C1(x, y,)) then x; (C2(z,)) then z›; fun bar = () => {foo(C1(0, 1,),)}; bar()}
+
+:interpIR
+class Pair(x, y)
+fun foo(a, b) =
+  let x1 = a.x
+  let y1 = a.y
+  let x2 = b.x
+  let y2 = b.y
+  x1 + y1 + x2 + y2
+fun bar(c) =
+  foo(Pair(0, 1), c)
+  foo(c, Pair(2, 3))
+  foo(Pair(0, 1), Pair(2, 3))
+fun baz() =
+  bar(Pair(4,5))
+baz()
+//│ |#class| |Pair|(|x|,| |y|)|↵|#fun| |foo|(|a|,| |b|)| |#=|→|#let| |x1| |#=| |a|.x|↵|#let| |y1| |#=| |a|.y|↵|#let| |x2| |#=| |b|.x|↵|#let| |y2| |#=| |b|.y|↵|x1| |+| |y1| |+| |x2| |+| |y2|←|↵|#fun| |bar|(|c|)| |#=|→|foo|(|Pair|(|0|,| |1|)|,| |c|)|↵|foo|(|c|,| |Pair|(|2|,| |3|)|)|↵|foo|(|Pair|(|0|,| |1|)|,| |Pair|(|2|,| |3|)|)|←|↵|#fun| |baz|(||)| |#=|→|bar|(|Pair|(|4|,|5|)|)|←|↵|baz|(||)|
+//│ Parsed: {class Pair(x, y,) {}; fun foo = (a, b,) => {let x1 = (a).x; let y1 = (a).y; let x2 = (b).x; let y2 = (b).y; +(+(+(x1,)(y1,),)(x2,),)(y2,)}; fun bar = (c,) => {foo(Pair(0, 1,), c,); foo(c, Pair(2, 3,),); foo(Pair(0, 1,), Pair(2, 3,),)}; fun baz = () => {bar(Pair(4, 5,),)}; baz()}
+
+:interpIR
+class Pair(x, y)
+fun foo() =
+  let p = Pair(0, 1)
+  let b = p.x
+  b
+foo()
+//│ |#class| |Pair|(|x|,| |y|)|↵|#fun| |foo|(||)| |#=|→|#let| |p| |#=| |Pair|(|0|,| |1|)|↵|#let| |b| |#=| |p|.x|↵|b|←|↵|foo|(||)|
+//│ Parsed: {class Pair(x, y,) {}; fun foo = () => {let p = Pair(0, 1,); let b = (p).x; b}; foo()}
+
+:interpIR
+class S(s)
+class O
+fun foo() =
+  bar(S(O))
+fun bar(x) =
+  baz(x)
+fun baz(x) =
+  if x is
+    S(s) then s
+    O then x
+foo()
+//│ |#class| |S|(|s|)|↵|#class| |O|↵|#fun| |foo|(||)| |#=|→|bar|(|S|(|O|)|)|←|↵|#fun| |bar|(|x|)| |#=|→|baz|(|x|)|←|↵|#fun| |baz|(|x|)| |#=|→|#if| |x| |is|→|S|(|s|)| |#then| |s|↵|O| |#then| |x|←|←|↵|foo|(||)|
+//│ Parsed: {class S(s,) {}; class O {}; fun foo = () => {bar(S(O,),)}; fun bar = (x,) => {baz(x,)}; fun baz = (x,) => {if x is ‹(S(s,)) then s; (O) then x›}; foo()}

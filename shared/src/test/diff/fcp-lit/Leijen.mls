@@ -314,7 +314,7 @@ choose (fun x -> fun y -> x) (fun x -> fun y -> y)
 
 // ,("choose id", ok "forall (a >= forall b. b -> b). a -> a")
 choose id
-//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+//│ res: 'a -> (forall 'a0. 'a0 -> 'a0 | 'a)
 //│    = [Function (anonymous)]
 
 // ]
@@ -456,12 +456,12 @@ app (map head) (single ids)
 
 // ,("choose id auto", ok "(forall a. a -> a) -> (forall a. a -> a)")
 choose id auto
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'a1 -> 'a1)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a1 -> 'a1 | 'a0)
 //│    = [Function: id1]
 
 // ,("choose auto id", ok "(forall a. a -> a) -> (forall a. a -> a)")
 choose auto id
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'a1 -> 'a1)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a1 -> 'a1 | 'a0)
 //│    = [Function: auto]
 
 // ,("choose xauto xauto", ok "forall a. (forall b. b -> b) -> a -> a")
@@ -471,12 +471,12 @@ choose xauto xauto
 
 // ,("choose id xauto", Wrong)
 choose id xauto
-//│ res: (forall 'b. 'b -> 'b & 'a) -> ('a | 'a0 -> 'a0)
+//│ res: (forall 'b. 'b -> 'b & 'a) -> ('a0 -> 'a0 | 'a)
 //│    = [Function: id1]
 
 // ,("choose xauto id", Wrong)
 choose xauto id
-//│ res: (forall 'b. 'b -> 'b & 'a) -> ('a | 'a0 -> 'a0)
+//│ res: (forall 'b. 'b -> 'b & 'a) -> ('a0 -> 'a0 | 'a)
 //│    = [Function: xauto]
 
 // -- these fail too in ghc: (choose ids []) is accepted while (choose [] ids) is rejected
@@ -681,7 +681,7 @@ single id
 
 // ,("choose id",ok "forall (a >= forall b. b -> b). a -> a")
 choose id
-//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+//│ res: 'a -> (forall 'a0. 'a0 -> 'a0 | 'a)
 //│    = [Function (anonymous)]
 
 // ,("choose id inc", ok "Int -> Int")
@@ -691,7 +691,7 @@ choose id inc
 
 // ,("choose id auto", ok "(forall a. a -> a) -> (forall a. a -> a)")
 choose id auto
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'a1 -> 'a1)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a1 -> 'a1 | 'a0)
 //│    = [Function: id1]
 
 // ,("\\x y -> x", ok "forall a. forall (b >= forall c. c -> a). a -> b")
@@ -753,12 +753,12 @@ choose inc id
 
 // ,("choose id", ok "forall a. (a -> a) -> (a -> a)")
 choose id
-//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+//│ res: 'a -> (forall 'a0. 'a0 -> 'a0 | 'a)
 //│    = [Function (anonymous)]
 
 // ,("choose (rigid id)", ok "(forall a. a -> a) -> (forall a. a -> a)")
 choose id
-//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+//│ res: 'a -> (forall 'a0. 'a0 -> 'a0 | 'a)
 //│    = [Function (anonymous)]
 
 // ,("revapp (rigid id) auto", ok "forall a. a -> a")

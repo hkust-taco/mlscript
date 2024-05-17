@@ -53,7 +53,6 @@ let b = foo(23, false)
 //│   let b$2 = foo$3(23, false,)
 //│ }
 //│ Mono:
-//│ Bounds for Var(foo$3) not found during defunc.
 //│ ╔══[ERROR] Post-process failed to produce AST, defaulting to standard AST
 //│ ╙──
 //│ fun foo: forall 'a. ('a, Object) -> (1337 | 'a)

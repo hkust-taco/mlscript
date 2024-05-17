@@ -9,6 +9,17 @@ fun foo(pred) = if pred then A(X(1, false)) else B(Y("abc", 5))
 val x = foo(true)
 x.foo.bar
 foo(false).foo.bar
+//│ Lifted:
+//│ TypingUnit {
+//│   class X([val foo: Int, val bar: Bool,]) {}
+//│   class Y([val foo: Str, val bar: Int,]) {}
+//│   class A([val foo: X,]) {}
+//│   class B([val foo: Y,]) {}
+//│   fun foo = (pred,) => if (pred) then A(X(1, false,),) else B(Y("abc", 5,),)
+//│   let x = foo(true,)
+//│   Code(List(((x).foo).bar))
+//│   Code(List(((foo(false,)).foo).bar))
+//│ }
 //│ class X(foo: Int, bar: Bool)
 //│ class Y(foo: Str, bar: Int)
 //│ class A(foo: X)
@@ -33,6 +44,17 @@ fun foo(pred) = if pred then A(X(1, false)) else B(Y("abc", 5))
 val x = foo(true)
 x.foo.bar
 foo(false).foo.bar
+//│ Lifted:
+//│ TypingUnit {
+//│   class X([val foo: Int, val bar: Bool,]) {}
+//│   class Y([val foo: Str, val bar: Int,]) {}
+//│   class A([val foo: X,]) {}
+//│   class B([val foo: Y,]) {}
+//│   fun foo = (pred,) => if (pred) then A(X(1, false,),) else B(Y("abc", 5,),)
+//│   let x = foo(true,)
+//│   Code(List(((x).foo).bar))
+//│   Code(List(((foo(false,)).foo).bar))
+//│ }
 //│ 
 //│ Simpledef:
 //│ {class X(val foo: Int, val bar: Bool,) {}

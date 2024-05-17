@@ -15,7 +15,7 @@ fun f(p: Pair['a, 'b]) = p.lhs
 
 fun f(e) = if e is
   Pair(l, r) then [l, r]
-//│ fun f: forall 'a 'b. Pair['b, 'a] -> ['b, 'a]
+//│ fun f: forall 'a 'b. Pair['a, 'b] -> ['a, 'b]
 // f: (Exp['a] & Pair) -> 0
 
 

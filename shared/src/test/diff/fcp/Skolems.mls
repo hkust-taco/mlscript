@@ -175,7 +175,7 @@ fun (x: ('a -> 'a)) -> swapWith x
 //│ ╟── back into type variable `'y`
 //│ ║  l.155: 	def swapWith: (forall 'x 'y. (('x, 'y),) -> ('y, 'x)) -> ('a, 'b) -> ('b, 'a)
 //│ ╙──       	                                             ^^
-//│ res: (('a | (??x, ??y,)) -> ((??y0, ??x0,) & 'a)) -> (error | ('a0, 'b,) -> ('b, 'a0,))
+//│ res: (((??x, ??y,) | 'a) -> ((??y0, ??x0,) & 'a)) -> (error | ('a0, 'b,) -> ('b, 'a0,))
 //│    = [Function: res]
 
 foo = fun (x: ('a -> 'b)) -> swapWith x

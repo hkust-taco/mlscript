@@ -148,7 +148,7 @@ fun foo(x) =
 
 fun foo(x) =
   `if `(1 == 1) then x else `2
-//│ fun foo: forall 'a 'b. Code['b, 'a] -> Code[2 | 'b, 'a]
+//│ fun foo: forall 'a 'b. Code['a, 'b] -> Code[2 | 'a, 'b]
 
 
 `if `1 `< `2 `and `1 `> `2 then `0 else `1

@@ -3,6 +3,8 @@
 :nolift
 :sd
 [0,"abc",()].2
+//│ Lifted:
+//│ TypingUnit {Code(List(([0, "abc", undefined,]).2))}
 //│ 
 //│ Simpledef:
 //│ {([0, "abc", undefined,]).2}

@@ -152,7 +152,7 @@ h4("should be me", "not me", _ => true) // WRONG!
 h4(None, "not me", _ => true) // WRONG!
 h4(None, "should be me", _ => false)
 h4("anything", "not me", _ => false)
-//│ fun h4: forall 'a 'b. (None | Object & 'b & ~#None, 'a, (None | 'b) -> Object) -> ("default" | 'a)
+//│ fun h4: forall 'a 'b. (None | Object & 'a & ~#None, 'b, (None | 'a) -> Object) -> ("default" | 'b)
 //│ "default" | "not me"
 //│ res
 //│     = 'not me'

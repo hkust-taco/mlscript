@@ -4,7 +4,7 @@ import scala.collection.mutable.{Map => MutMap}
 import scala.collection.immutable.ListMap
 
 
-abstract class MonoVal extends MonoValImpl
+sealed abstract class MonoVal extends MonoValImpl
 final case class TypeVal(name: String) extends MonoVal
 final case class ObjVal(name: String, params: List[String], fields: MutMap[String, BoundedTerm]) extends MonoVal with ObjValImpl
 final case class FuncVal(name: String, params: Option[List[String]], ctx: List[(String, BoundedTerm)]) extends MonoVal
@@ -38,7 +38,7 @@ trait MonoValImpl { self: MonoVal =>
     case UnknownVal() =>  s"UnknownVal"
     case PrimVal() => s"PrimVal()"
     case VarVal(vx, version, _) => s"VarVal(${vx})"
-      }
+  }
 }
 
 trait VarValImpl { 
@@ -70,7 +70,6 @@ trait ObjValImpl { self: ObjVal =>
 trait BoundedTermImpl { self: BoundedTerm =>
   override def toString: String = self.values.map(_.toString).mkString(";")
   def getObjNames(): Set[String] = self.values.flatMap{
-    // case FunctionValue(name, body, prm, ctx) => Some(name)
     case ObjVal(name, _, _) => Some(name)
     case _ => None
   }
@@ -144,12 +143,7 @@ trait BoundedTermImpl { self: BoundedTerm =>
 
       var ret2 = restVals1 ++ restVals2
       // TODO: eliminate redundant values
-      // if(ret2.count(x => (x.isInstanceOf[LiteralVal] || x.isInstanceOf[PrimVal])) > 1){
-      //   ret2 = ret2.filterNot(_.isInstanceOf[LiteralVal])// + PrimVal()
-      // }
       val retVals = BoundedTerm(ret ++ ret2)
-      // retVals.updateCnt = this.updateCnt
-      // if(this.compare(retVals)) retVals.updateCnt += 1
       retVals
     }
   }

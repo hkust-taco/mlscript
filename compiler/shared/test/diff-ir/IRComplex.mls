@@ -1,0 +1,94 @@
+:NewParser
+:ParseOnly
+:UseIR
+
+:interpIR
+class A(x, y, z)
+class B(m, n)
+fun complex_foo(t) =
+  let r = if t is
+    A(x, y, z) then x + y * z
+    B(m, n) then m - n
+  let s = B(1, 2)
+  let u = if s is
+    A(x, y, z) then 3
+    B(m, n) then 4
+  r + u
+fun bar() =
+  complex_foo(A(6, 7, 8))
+  complex_foo(B(9, 10))
+bar()
+//│ |#class| |A|(|x|,| |y|,| |z|)|↵|#class| |B|(|m|,| |n|)|↵|#fun| |complex_foo|(|t|)| |#=|→|#let| |r| |#=| |#if| |t| |is|→|A|(|x|,| |y|,| |z|)| |#then| |x| |+| |y| |*| |z|↵|B|(|m|,| |n|)| |#then| |m| |-| |n|←|↵|#let| |s| |#=| |B|(|1|,| |2|)|↵|#let| |u| |#=| |#if| |s| |is|→|A|(|x|,| |y|,| |z|)| |#then| |3|↵|B|(|m|,| |n|)| |#then| |4|←|↵|r| |+| |u|←|↵|#fun| |bar|(||)| |#=|→|complex_foo|(|A|(|6|,| |7|,| |8|)|)|↵|complex_foo|(|B|(|9|,| |10|)|)|←|↵|bar|(||)|
+//│ Parsed: {class A(x, y, z,) {}; class B(m, n,) {}; fun complex_foo = (t,) => {let r = if t is ‹(A(x, y, z,)) then +(x,)(*(y,)(z,),); (B(m, n,)) then -(m,)(n,)›; let s = B(1, 2,); let u = if s is ‹(A(x, y, z,)) then 3; (B(m, n,)) then 4›; +(r,)(u,)}; fun bar = () => {complex_foo(A(6, 7, 8,),); complex_foo(B(9, 10,),)}; bar()}
+
+:interpIR
+class A(w, x)
+class B(y)
+class C(z)
+fun complex_foo(t) =
+  let a = 1 + 2
+  let b = 1 * 2
+  let x = if t is
+    A(x, y) then y
+    B(x) then B(x + b)
+    C(x) then C(0)
+  let z = A(5, x)
+  let v = B(6)
+  let y = if x is
+    A(x, y) then
+      let m = x + a + b
+      if y is
+        A(x, y) then x
+        B(x) then m
+        C(x) then 0
+    B(x) then 2
+    C(x) then 3
+  if z is
+    A(x, y) then x
+    B(x) then 4
+    C(x) then
+      if v is
+        A(x, y) then x
+        B(x) then 7
+        C(x) then 8
+fun bar() =
+  complex_foo(A(10, A(9, B(10))))
+bar()
+//│ |#class| |A|(|w|,| |x|)|↵|#class| |B|(|y|)|↵|#class| |C|(|z|)|↵|#fun| |complex_foo|(|t|)| |#=|→|#let| |a| |#=| |1| |+| |2|↵|#let| |b| |#=| |1| |*| |2|↵|#let| |x| |#=| |#if| |t| |is|→|A|(|x|,| |y|)| |#then| |y|↵|B|(|x|)| |#then| |B|(|x| |+| |b|)|↵|C|(|x|)| |#then| |C|(|0|)|←|↵|#let| |z| |#=| |A|(|5|,| |x|)|↵|#let| |v| |#=| |B|(|6|)|↵|#let| |y| |#=| |#if| |x| |is|→|A|(|x|,| |y|)| |#then|→|#let| |m| |#=| |x| |+| |a| |+| |b|↵|#if| |y| |is|→|A|(|x|,| |y|)| |#then| |x|↵|B|(|x|)| |#then| |m|↵|C|(|x|)| |#then| |0|←|←|↵|B|(|x|)| |#then| |2|↵|C|(|x|)| |#then| |3|←|↵|#if| |z| |is|→|A|(|x|,| |y|)| |#then| |x|↵|B|(|x|)| |#then| |4|↵|C|(|x|)| |#then|→|#if| |v| |is|→|A|(|x|,| |y|)| |#then| |x|↵|B|(|x|)| |#then| |7|↵|C|(|x|)| |#then| |8|←|←|←|←|↵|#fun| |bar|(||)| |#=|→|complex_foo|(|A|(|10|,| |A|(|9|,| |B|(|10|)|)|)|)|←|↵|bar|(||)|
+//│ Parsed: {class A(w, x,) {}; class B(y,) {}; class C(z,) {}; fun complex_foo = (t,) => {let a = +(1,)(2,); let b = *(1,)(2,); let x = if t is ‹(A(x, y,)) then y; (B(x,)) then B(+(x,)(b,),); (C(x,)) then C(0,)›; let z = A(5, x,); let v = B(6,); let y = if x is ‹(A(x, y,)) then {let m = +(+(x,)(a,),)(b,); if y is ‹(A(x, y,)) then x; (B(x,)) then m; (C(x,)) then 0›}; (B(x,)) then 2; (C(x,)) then 3›; if z is ‹(A(x, y,)) then x; (B(x,)) then 4; (C(x,)) then {if v is ‹(A(x, y,)) then x; (B(x,)) then 7; (C(x,)) then 8›}›}; fun bar = () => {complex_foo(A(10, A(9, B(10,),),),)}; bar()}
+
+:interpIR
+class A(w, x)
+class B(y)
+class C(z)
+fun complex_foo(t) =
+  let a = 1 + 2
+  let b = 1 * 2
+  let x = if t is
+    A(x, y) then A(x, C(0))
+    B(x) then B(x + b)
+    C(x) then C(0)
+  let z = A(5, x)
+  let v = B(6)
+  let y = if x is
+    A(x, y) then
+      let m = x + a + b
+      if y is
+        A(x, y) then x
+        B(x) then m
+        C(x) then 0
+    B(x) then 2
+    C(x) then 3
+  if z is
+    A(x, y) then x
+    B(x) then 4
+    C(x) then
+      if v is
+        A(x, y) then x
+        B(x) then 7
+        C(x) then 8
+fun bar() =
+  complex_foo(A(10, A(9, B(10))))
+bar()
+//│ |#class| |A|(|w|,| |x|)|↵|#class| |B|(|y|)|↵|#class| |C|(|z|)|↵|#fun| |complex_foo|(|t|)| |#=|→|#let| |a| |#=| |1| |+| |2|↵|#let| |b| |#=| |1| |*| |2|↵|#let| |x| |#=| |#if| |t| |is|→|A|(|x|,| |y|)| |#then| |A|(|x|,| |C|(|0|)|)|↵|B|(|x|)| |#then| |B|(|x| |+| |b|)|↵|C|(|x|)| |#then| |C|(|0|)|←|↵|#let| |z| |#=| |A|(|5|,| |x|)|↵|#let| |v| |#=| |B|(|6|)|↵|#let| |y| |#=| |#if| |x| |is|→|A|(|x|,| |y|)| |#then|→|#let| |m| |#=| |x| |+| |a| |+| |b|↵|#if| |y| |is|→|A|(|x|,| |y|)| |#then| |x|↵|B|(|x|)| |#then| |m|↵|C|(|x|)| |#then| |0|←|←|↵|B|(|x|)| |#then| |2|↵|C|(|x|)| |#then| |3|←|↵|#if| |z| |is|→|A|(|x|,| |y|)| |#then| |x|↵|B|(|x|)| |#then| |4|↵|C|(|x|)| |#then|→|#if| |v| |is|→|A|(|x|,| |y|)| |#then| |x|↵|B|(|x|)| |#then| |7|↵|C|(|x|)| |#then| |8|←|←|←|←|↵|#fun| |bar|(||)| |#=|→|complex_foo|(|A|(|10|,| |A|(|9|,| |B|(|10|)|)|)|)|←|↵|bar|(||)|
+//│ Parsed: {class A(w, x,) {}; class B(y,) {}; class C(z,) {}; fun complex_foo = (t,) => {let a = +(1,)(2,); let b = *(1,)(2,); let x = if t is ‹(A(x, y,)) then A(x, C(0,),); (B(x,)) then B(+(x,)(b,),); (C(x,)) then C(0,)›; let z = A(5, x,); let v = B(6,); let y = if x is ‹(A(x, y,)) then {let m = +(+(x,)(a,),)(b,); if y is ‹(A(x, y,)) then x; (B(x,)) then m; (C(x,)) then 0›}; (B(x,)) then 2; (C(x,)) then 3›; if z is ‹(A(x, y,)) then x; (B(x,)) then 4; (C(x,)) then {if v is ‹(A(x, y,)) then x; (B(x,)) then 7; (C(x,)) then 8›}›}; fun bar = () => {complex_foo(A(10, A(9, B(10,),),),)}; bar()}

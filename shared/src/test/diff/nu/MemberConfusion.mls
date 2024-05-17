@@ -32,9 +32,9 @@ class C(a: Int) extends B
 //│ class C(a: Int) extends B
 
 
-mixin M { let b = "hi" }
+mixin M { val b = "hi" }
 //│ mixin M() {
-//│   let b: "hi"
+//│   val b: "hi"
 //│ }
 
 class B { virtual val a = 1 : Int }
@@ -45,7 +45,7 @@ class B { virtual val a = 1 : Int }
 
 class C(val a: Int, val b: Int) extends B, M
 //│ class C(a: Int, b: Int) extends B {
-//│   let b: "hi"
+//│   val b: "hi"
 //│ }
 
 let c = C(2, 3)

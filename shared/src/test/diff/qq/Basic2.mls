@@ -69,7 +69,7 @@ code"f => x => f(${run(x)})"
 //│ ║  l.67: 	code"f => x => f(${run(x)})"
 //│ ║        	                   ^^^^^^
 //│ ╙── expression of type `?x` does not match type `nothing`
-//│ Code[forall 'a 'b. ('b -> 'a) -> Code['b, anything] -> 'a, nothing]
+//│ Code[forall 'a 'b. ('a -> 'b) -> Code['a, anything] -> 'b, nothing]
 
 
 run(code"(x => x + 1)(${Const(42)})")

@@ -215,7 +215,7 @@ final case class NuTypeDef(
   }
 
 final case class NuFunDef(
-  isLetRec: Opt[Bool], // None means it's a `fun`, which is always recursive; Some means it's a `let` or `val`
+  isLetRec: Opt[Bool], // None means it's a `fun`, which is always recursive; Some means it's a `let`/`let rec` or `val`
   nme: Var,
   symbolicNme: Opt[Var],
   tparams: Ls[TypeName],
@@ -232,7 +232,9 @@ final case class NuFunDef(
   val body: Located = rhs.fold(identity, identity)
   def kind: DeclKind = Val
   val abstractLoc: Opt[Loc] = None
-
+  
+  def isLetOrLetRec: Bool = isLetRec.isDefined && !genField
+  
   // If the member has no implementation, it is virtual automatically
   def isVirtual: Bool = virtualLoc.nonEmpty || rhs.isRight
   

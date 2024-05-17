@@ -8,7 +8,7 @@ import scala.collection.mutable.{Set => MutSet}
 import scala.util.control.NonFatal
 import scala.util.chaining._
 
-abstract class JSBackend(allowUnresolvedSymbols: Bool) {
+abstract class JSBackend {
   def oldDefs: Bool
 
   protected implicit class TermOps(term: Term) {
@@ -146,10 +146,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
           return Left(CodeGenError(s"type alias ${name} is not a valid expression"))
         case S(_) => lastWords("register mismatch in scope")
         case N =>
-          if (allowUnresolvedSymbols)
-            JSIdent(name)
-          else
-            return Left(CodeGenError(s"unresolved symbol ${name}"))
+          return Left(CodeGenError(s"unresolved symbol ${name}"))
       }
     })
 
@@ -301,13 +298,16 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
       else Let(rec, Var(name), desugarQuote(value), desugarQuote(body)(letScope, isQuoted, freeVars))
     case Blk(stmts) =>
       val blkScope = scope.derive("blk")
-      val res = stmts.map {
+      if (isQuoted) createASTCall("Blk", stmts.map {
         case t: Term =>
           desugarQuote(t)(blkScope, isQuoted, freeVars)
         case s => throw CodeGenError(s"statement $s is not supported in quasiquotes")
-      }
-      if (isQuoted) createASTCall("Blk", res)
-      else Blk(res)
+      })
+      else Blk(stmts.map {
+        case t: Term =>
+          desugarQuote(t)(blkScope, isQuoted, freeVars)
+        case s => desugarStatementInUnquote(s)(blkScope, freeVars)
+      })
     case Tup(eles) =>
       def toVar(b: Bool) = if (b) Var("true") else Var("false")
       def toVars(flg: FldFlags) = toVar(flg.mut) :: toVar(flg.spec) :: toVar(flg.genGetter) :: Nil
@@ -346,6 +346,30 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
     case _: Bind | _: Test | _: If  | _: Splc | _: Where | _: AdtMatchWith | _: Rft | _: New
         | _: Assign | _: NuNew | _: TyApp | _: Forall | _: Inst | _: Super | _: Eqn | _: While =>
       throw CodeGenError("this quote syntax is not supported yet.")
+  }
+
+  // * Statements inside **Unquote** can refer to quoted code fragments.
+  // * Desugar them recursively.
+  private def desugarStatementInUnquote(s: Statement)(implicit scope: Scope, freeVars: FreeVars): Statement = {
+    implicit val isQuoted: Bool = false
+    s match {
+      case nd @ NuFunDef(isLetRec, nme, symbol, tparams, rhs) =>
+        NuFunDef(isLetRec, nme, symbol, tparams, rhs match {
+          case L(t) => L(desugarQuote(t))
+          case R(t) => R(t)
+        })(nd.declareLoc, nd.virtualLoc, nd.mutLoc, nd.signature, nd.outer, nd.genField, nd.annotations)
+      case nt @ NuTypeDef(kind, nme, tparams, params, ctor, sig, parents, superAnnot, thisAnnot, TypingUnit(body)) =>
+        NuTypeDef(kind, nme, tparams, params, ctor.map(c => desugarStatementInUnquote(c) match {
+          case c: Constructor => c
+          case _ => die
+        }), sig, parents.map(p => desugarQuote(p)), superAnnot, thisAnnot, TypingUnit(body.map(s => desugarStatementInUnquote(s))))(nt.declareLoc, nt.abstractLoc, nt.annotations)
+      case Constructor(ps, body) => Constructor(ps, desugarQuote(body) match {
+        case b: Blk => b
+        case _ => die
+      })
+      case t: Term => desugarQuote(t)
+      case _: LetS | _: DataDefn | _: DatatypeDefn | _: TypeDef | _: Def => die // * Impossible. newDef is true
+    }
   }
 
   /**
@@ -1317,7 +1341,7 @@ abstract class JSBackend(allowUnresolvedSymbols: Bool) {
   
 }
 
-class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
+class JSWebBackend extends JSBackend {
   def oldDefs = false
   
   // Name of the array that contains execution results
@@ -1448,7 +1472,7 @@ class JSWebBackend extends JSBackend(allowUnresolvedSymbols = true) {
     if (newDefs) generateNewDef(pgrm) else generate(pgrm)
 }
 
-abstract class JSTestBackend extends JSBackend(allowUnresolvedSymbols = false) {
+abstract class JSTestBackend extends JSBackend {
   
   private val lastResultSymbol = topLevelScope.declareValue("res", Some(false), false, N)
   private val resultIdent = JSIdent(lastResultSymbol.runtimeName)

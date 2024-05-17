@@ -40,7 +40,6 @@ count(new List(new List(new Nil(undefined, false), true), true))
 //│   Code(List(count$1((new List$1)((new List$1)((new Nil$2)(undefined, false,), true,), true,),)))
 //│ }
 //│ Mono:
-//│ Variable lst not found during evaluation
 //│ ╔══[ERROR] Post-process failed to produce AST, defaulting to standard AST
 //│ ╙──
 //│ class List(l: List | Nil | (), hasTail: Bool)

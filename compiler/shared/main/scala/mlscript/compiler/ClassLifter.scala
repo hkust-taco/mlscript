@@ -309,8 +309,6 @@ class ClassLifter(logDebugMsg: Boolean = false) {
         (globFuncs.get(v).get)
       }
       else if(cache.contains(TypeName(v.name))){
-        //val ret = liftConstr(TypeName(v.name), Tup(Nil))
-        //App(Var(ret._1.name), ret._2) -> ret._3
         val cls@ClassInfoCache(_, nm, capParams, _, _, _, out, _, _) = cache.get(TypeName(v.name)).get
         (Var(nm.name), emptyCtx)
       }
@@ -645,7 +643,6 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     val nameInfoMap: MutMap[String, ClassInfoCache] = MutMap(clsInfos.toSeq: _*)
     val nameFuncMap: MutMap[String, LocalContext] = MutMap(funcInfos.toSeq: _*)
     log(s"mix cls infos $nameInfoMap, $nameFuncMap")
-    // val fullMp = cache ++ nameInfoMap
     val clsNmsAsTypeNm = clsInfos.keySet.map(x => TypeName(x))
     val len = clsInfos.size + nameFuncMap.size
     for(_ <- 0 to len){
@@ -763,7 +760,6 @@ class ClassLifter(logDebugMsg: Boolean = false) {
     globalFunctions.clear()
     val re = liftEntities(rawUnit.entities)(using emptyCtx, Map(), Map(), None)
     log(s"freeVars: ${re._2}")
-    // println(logOutput.toString())
     TypingUnit(retSeq.toList ++ globalFunctions.toList ++ re._1)
   }
 }

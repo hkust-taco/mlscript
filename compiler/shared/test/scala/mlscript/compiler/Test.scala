@@ -15,26 +15,20 @@ class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*
   override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (List[Str], Option[TypingUnit]) = 
     val outputBuilder = StringBuilder()
-    //output("Parsed:")    
-    //output(unit.toString())
     if (mode.lift) output(PrettyPrinter.showTypingUnit(unit))
 
-    //outputBuilder ++= "\nLifted:\n"
+    output("Lifted:")
     var rstUnit = unit;
     try
       val lifter = ClassLifter(mode.fullExceptionStack)
-      if (!mode.nolift)
-        output("Lifted:")
-        rstUnit = lifter.liftTypingUnit(unit)
-        output(PrettyPrinter.showTypingUnit(rstUnit))
+      if (!mode.nolift) rstUnit = lifter.liftTypingUnit(unit)
       if (mode.showParse) output(rstUnit.toString())
-      //outputBuilder ++= s"${mlscript.codegen.Helpers.inspect(rstUnit)}\n"
-      //outputBuilder ++= PrettyPrinter.showTypingUnit(rstUnit)
+      output(PrettyPrinter.showTypingUnit(rstUnit))
       if (mode.dbgLifting) 
         output(lifter.getLog)
     catch
       case NonFatal(err) =>
-        outputBuilder ++= "Lifting failed: " ++ err.toString()
+        output("Lifting failed: " ++ err.toString())
         if mode.fullExceptionStack then 
           outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
     if(mode.simpledef) {
@@ -50,23 +44,20 @@ class DiffTestCompiler extends DiffTests {
     }
     if(mode.mono){
       output("Mono:")
-      //outputBuilder ++= "\nMono:\n"
       val treeDebug = new TreeDebug(if mode.dbgDefunc then output else (str) => ())
       try{
         val monomorph = new Monomorph(treeDebug)
         val defuncAST = monomorph.defunctionalize(rstUnit)
-        //output(defuncAST.toString())
+        if (mode.showParse) output(defuncAST.toString())
         output(PrettyPrinter.showTypingUnit(defuncAST))
-        //outputBuilder ++= s"${mlscript.codegen.Helpers.inspect(defuncAST)}\n"
-        //outputBuilder ++= PrettyPrinter.showTypingUnit(defuncAST)++"\n"
-        //if mode.dbgDefunc then
-        //  outputBuilder ++= treeDebug.getLines.mkString("\n")
         return (outputBuilder.toString().linesIterator.toList, Some(defuncAST))
       }catch{
-        case error: MonomorphError => outputBuilder ++= (error.getMessage()/* :: error.getStackTrace().map(_.toString()).toList).mkString("\n"*/)
+        case error: MonomorphError => 
+          if (mode.expectCodeGenErrors)
+            output(error.getMessage() ++ "\n" ++ (error.getStackTrace().take(10).map(_.toString()).toList).mkString("\n"))
+        return (Nil, None)
         // case error: StackOverflowError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().take(40).map(_.toString()).toList).mkString("\n")
       }
-      // outputBuilder ++= treeDebug.getLines.mkString("\n")
     }
     if (mode.lift) {
       (outputBuilder.toString().linesIterator.toList, Some(rstUnit))  

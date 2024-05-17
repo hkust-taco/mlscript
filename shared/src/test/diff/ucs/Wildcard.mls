@@ -243,7 +243,7 @@ fun w7(x, f) =
       None then x
     Left(x) then x + 1
     Right(x) then x + 2
-//│ fun w7: forall 'a 'b. (Left[Int] | Object & 'a & ~#Left & ~#Right | Right[Int], 'a -> (None | Some['b])) -> (Int | 'a | 'b)
+//│ fun w7: forall 'a 'b. (Left[Int] | Object & 'a & ~#Left & ~#Right | Right[Int], 'a -> (None | Some['b])) -> (Int | 'b | 'a)
 
 // The results are wrong:
 w7(Left(99), _ => Some(0)) // => 0

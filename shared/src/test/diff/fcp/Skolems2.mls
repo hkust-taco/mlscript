@@ -221,7 +221,7 @@ def oops (i: forall 'c. ('c -> 'c, 0)) =
     in let r = (f id) "hello"
     in let _ = log r
     in f) i
-//│ oops: (forall 'c. ('c -> 'c, 0,)) -> ("hello" -> anything & 'c0) -> (forall 'a. 'c0 | 'a -> 'a)
+//│ oops: (forall 'c. ('c -> 'c, 0,)) -> ("hello" -> anything & 'c0) -> (forall 'a. 'a -> 'a | 'c0)
 //│     = [Function: oops2]
 
 

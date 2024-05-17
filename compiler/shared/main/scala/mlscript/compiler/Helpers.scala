@@ -1,7 +1,7 @@
 package mlscript
 package compiler
 
-import mlscript.compiler.mono.{Monomorph, MonomorphError}
+import mlscript.compiler.mono.*
 import scala.collection.mutable.ArrayBuffer
 import mlscript.CaseBranches
 import mlscript.Case

@@ -1,6 +1,6 @@
 :NewDefs
-
 :AllowRuntimeErrors
+
 fun foo() =
   let local(x) =
     class Foo {

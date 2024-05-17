@@ -360,7 +360,7 @@ foo((x: Int) => 1)
 
 :e
 fun foo(f: ((x: Int) => Int) | 'a) = f(x: 123)
-//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `'a | (x: Int) -> Int` for applying named arguments
+//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `(x: Int) -> Int | 'a` for applying named arguments
 //│ ║  l.362: 	fun foo(f: ((x: Int) => Int) | 'a) = f(x: 123)
 //│ ╙──       	                                     ^
 //│ fun foo: (f: anything) -> error

@@ -12,6 +12,13 @@ let obj = foo(true) in
     if obj is
         X then obj.num
         Y then obj.num
+//│ Lifted:
+//│ TypingUnit {
+//│   class X([]) {let num = 6}
+//│   class Y([]) {let num = true}
+//│   fun foo = (pred,) => if (pred) then X() else Y()
+//│   Code(List(let obj = foo(true,) in {if obj is ‹(X) then (obj).num; (Y) then (obj).num›}))
+//│ }
 //│ class X() {
 //│   val num: 6
 //│ }
@@ -33,6 +40,13 @@ class Y() {
 }
 fun foo(pred) = if pred then X() else Y()
 foo(true).num
+//│ Lifted:
+//│ TypingUnit {
+//│   class X([]) {let num = 6}
+//│   class Y([]) {let num = true}
+//│   fun foo = (pred,) => if (pred) then X() else Y()
+//│   Code(List((foo(true,)).num))
+//│ }
 //│ 
 //│ Simpledef:
 //│ {class X() {let num = 6}
@@ -75,6 +89,16 @@ fun foo(pred) =
     if pred == 1 then A() else 
         if pred == 2 then B() else C()
 foo(5).num.num
+//│ Lifted:
+//│ TypingUnit {
+//│   class X([]) {let num = 6}
+//│   class Y([]) {let num = true}
+//│   class A([]) {let num = X()}
+//│   class B([]) {let num = Y()}
+//│   class C([]) {let num = X()}
+//│   fun foo = (pred,) => {if (==(pred, 1,)) then A() else {if (==(pred, 2,)) then B() else C()}}
+//│   Code(List(((foo(5,)).num).num))
+//│ }
 //│ 
 //│ Simpledef:
 //│ {class X() {let num = 6}
