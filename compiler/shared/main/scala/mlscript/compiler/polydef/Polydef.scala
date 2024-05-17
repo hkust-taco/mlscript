@@ -16,7 +16,6 @@ type Cnstr = ProdStrat -> ConsStrat
 enum ProdStrat(using val euid: TermId) {
   case NoProd()(using TermId) extends ProdStrat
   case ProdObj(ctor: Option[Var], fields: Ls[Var -> ProdStrat])(using TermId) extends ProdStrat, ProdObjImpl
-  case ProdPrim(name: String)(using TermId) extends ProdStrat
   case ProdFun(lhs: ConsStrat, rhs: ProdStrat)(using TermId) extends ProdStrat
   case ProdVar(uid: TypeVarId, name: String)(boundary: Option[Var] = None)(using TermId) extends ProdStrat
   case ProdTup(fields: Ls[ProdStrat])(using TermId) extends ProdStrat
@@ -24,7 +23,6 @@ enum ProdStrat(using val euid: TermId) {
 enum ConsStrat(using val euid: TermId) {
   case NoCons()(using TermId) extends ConsStrat
   case ConsObj(name: Option[Var], fields: Ls[Var -> ConsStrat])(using TermId) extends ConsStrat, ConsObjImpl
-  case ConsPrim(name: String)(using TermId) extends ConsStrat
   case ConsFun(lhs: ProdStrat, rhs: ConsStrat)(using TermId) extends ConsStrat
   case ConsVar(uid: TypeVarId, name: String)(boundary: Option[Var] = None)(using TermId) extends ConsStrat
   case ConsTup(fields: Ls[ConsStrat])(using TermId) extends ConsStrat
@@ -118,7 +116,7 @@ class Polydef(debug: Debug) {
         None
       }
     }
-    (vars.toList, tys.lastOption.getOrElse(ProdPrim("unit")(using noExprId)))
+    (vars.toList, tys.lastOption.getOrElse(ProdObj(Some(Var("prim$Unit")), Nil)(using noExprId)))
 
   val termToProdType = mutable.Map.empty[TermId, ProdStrat]
   val selTermToType = mutable.Map.empty[TermId, ConsObj]
@@ -127,12 +125,12 @@ class Polydef(debug: Debug) {
   def builtinOps: Map[Var, ProdFun] = {
     given TermId = noExprId
     Map(
-      (Var("+") -> ProdFun(ConsTup(List(ConsPrim("Int"),ConsPrim("Int"))), ProdPrim("Int"))),
-      (Var("-") -> ProdFun(ConsTup(List(ConsPrim("Int"),ConsPrim("Int"))), ProdPrim("Int"))),
-      (Var("*") -> ProdFun(ConsTup(List(ConsPrim("Int"),ConsPrim("Int"))), ProdPrim("Int"))),
-      (Var("==") -> ProdFun(ConsTup(List(ConsPrim("Int"),ConsPrim("Int"))), ProdPrim("Bool"))),
-      (Var("concat") -> ProdFun(ConsTup(List(ConsPrim("String"))), ProdFun(ConsTup(List(ConsPrim("String"))), ProdPrim("String")))),
-      (Var("toString") -> ProdFun(ConsTup(List(ConsPrim("Int"))), ProdPrim("String")))
+      (Var("+") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$Int")), Nil),ConsObj(Some(Var("prim$Int")), Nil))), ProdObj(Some(Var("prim$Int")), Nil))),
+      (Var("-") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$Int")), Nil),ConsObj(Some(Var("prim$Int")), Nil))), ProdObj(Some(Var("prim$Int")), Nil))),
+      (Var("*") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$Int")), Nil),ConsObj(Some(Var("prim$Int")), Nil))), ProdObj(Some(Var("prim$Int")), Nil))),
+      (Var("==") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$Int")), Nil),ConsObj(Some(Var("prim$Int")), Nil))), ProdObj(Some(Var("prim$Bool")), Nil))),
+      (Var("concat") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$String")), Nil))), ProdFun(ConsTup(List(ConsObj(Some(Var("prim$String")), Nil))), ProdObj(Some(Var("prim$String")), Nil)))),
+      (Var("toString") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$Int")), Nil))), ProdObj(Some(Var("prim$String")), Nil)))
     )
   }
 
@@ -142,10 +140,10 @@ class Polydef(debug: Debug) {
     debug.writeLine(s"${ctx}")
     debug.outdent()
     val res: ProdStrat = t match
-      case IntLit(_) => ProdPrim("Int")(using t.uid)
+      case IntLit(_) => ProdObj(Some(Var("prim$Int")), Nil)(using t.uid)
       case DecLit(_) => ??? // floating point numbers as integers type
-      case StrLit(_) => ProdPrim("String")(using t.uid)
-      case Var("true") | Var("false") => ProdPrim("Bool")(using t.uid)
+      case StrLit(_) => ProdObj(Some(Var("prim$String")), Nil)(using t.uid)
+      case Var("true") | Var("false") => ProdObj(Some(Var("prim$Bool")), Nil)(using t.uid)
       case v @ Var(id) if builtinOps.contains(v) =>
         builtinOps(v)
       case v @ Var(id) =>// if varCtx(id).isDef then {
@@ -171,7 +169,7 @@ class Polydef(debug: Debug) {
         ProdFun(ConsTup(mapping.map(_._2._2))(using t.uid),
           process(body)(using ctx ++ mapping.map((i, s) => (i, s._1))))(using t.uid)
       case If(IfThen(scrut, thenn), S(elze)) =>
-        constrain(process(scrut), ConsPrim("Bool")(using noExprId))
+        constrain(process(scrut), ConsObj(Some(Var("prim$Bool")), Nil)(using noExprId))
         val res = freshVar(s"${t.uid}_ifres")(using t.uid)
         constrain(process(thenn), res._2)
         constrain(process(elze), res._2)
@@ -210,9 +208,6 @@ class Polydef(debug: Debug) {
     if (constraintCache.contains(prod -> cons)) return () else constraintCache += (prod -> cons)
     
     (prod, cons) match
-        case (ProdPrim(n), NoCons()) =>
-          ()
-        case (ProdPrim(p1), ConsPrim(p2)) if p1 == p2 => ()
         case (ProdVar(v, pn), ConsVar(w, cn))
           if v === w => ()
         case (pv@ProdVar(v, _), _) =>
@@ -240,7 +235,7 @@ class Polydef(debug: Debug) {
           )
         case (pv@ProdObj(nme1, fields1), cv@ConsObj(nme2, fields2)) =>
           nme2 match 
-            case Some(name) if name != nme1 => ???
+            case Some(name) if name != nme1.get => ???
             case _ => ()
           fields2.map((key, res2) => {
             fields1.find(_._1 == key) match 
