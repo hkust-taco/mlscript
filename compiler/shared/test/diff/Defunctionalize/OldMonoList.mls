@@ -1,4 +1,5 @@
 :NewDefs
+:AllowRuntimeErrors
 
 :mono
 class List(e: Int, tail: List | Nil) {
@@ -56,7 +57,6 @@ fun add2(x) = x+2
 //│     = List$1 {}
 
 :mono
-:AllowRuntimeErrors
 class List(e: Int, tail: List | Nil) {
   fun count(): Int
   fun count() = 1 + tail.count()

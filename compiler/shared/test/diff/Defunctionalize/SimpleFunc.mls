@@ -41,7 +41,7 @@ f(2)+3
 //│ res
 //│     = 6
 
-:e // FIXME: Evaluate unused terms
+// TODO: Evaluate unused terms
 :mono 
 fun foo(x, #b) = if b then x else 1337
 let a = foo(42, true)
@@ -53,12 +53,6 @@ let b = foo(23, false)
 //│   let b$2 = foo$3(23, false,)
 //│ }
 //│ Mono:
-//│ ╔══[ERROR] Post-process failed to produce AST, defaulting to standard AST
+//│ ╔══[ERROR] Post-process failed to produce AST.
 //│ ╙──
-//│ fun foo: forall 'a. ('a, Object) -> (1337 | 'a)
-//│ let a: 1337 | 42
-//│ let b: 1337 | 23
-//│ a
-//│   = 42
-//│ b
-//│   = 1337
+//│ 

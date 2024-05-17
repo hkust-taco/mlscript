@@ -21,7 +21,7 @@ fac(5)
 //│ res
 //│     = 120
 
-:e //FIXME: Strange syntax
+// FIXME: Strange syntax
 :mono
 class List(val l: List | Nil | undefined, val hasTail: Bool)  {}
 class Nil(val l: List | Nil | undefined, val hasTail: Bool)  {}
@@ -40,13 +40,6 @@ count(new List(new List(new Nil(undefined, false), true), true))
 //│   Code(List(count$1((new List$1)((new List$1)((new Nil$2)(undefined, false,), true,), true,),)))
 //│ }
 //│ Mono:
-//│ ╔══[ERROR] Post-process failed to produce AST, defaulting to standard AST
+//│ ╔══[ERROR] Post-process failed to produce AST.
 //│ ╙──
-//│ class List(l: List | Nil | (), hasTail: Bool)
-//│ class Nil(l: List | Nil | (), hasTail: Bool)
-//│ fun count: forall 'a. 'a -> Int
-//│ Int
-//│ where
-//│   'a <: {hasTail: Object, l: Object & 'a & ~() | ()}
-//│ res
-//│     = 2
+//│ 

@@ -5,7 +5,8 @@ package mono
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.ArrayBuffer
-import mlscript.compiler.Helpers.*
+import Helpers.*
+
 class Specializer(monoer: Monomorph)(using debug: Debug){
 
   /*

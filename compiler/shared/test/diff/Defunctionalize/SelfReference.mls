@@ -1,7 +1,7 @@
 :NewDefs
+:AllowRuntimeErrors
 
 :mono
-:AllowRuntimeErrors
 fun f(x) = f(x)
 f(0)
 f(1)

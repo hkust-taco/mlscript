@@ -1,7 +1,7 @@
 :NewDefs
+:AllowRuntimeErrors
 
 :mono
-:AllowRuntimeErrors
 val any = -20
 fun f(x) = 
   if x > any then 0
