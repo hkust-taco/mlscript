@@ -76,11 +76,11 @@ class SimpleDef(debug: Debug) {
         ty.nameVar -> freshVar(ty.nameVar)(using noExprId)
     }.toMap
     val fullCtx = ctx ++ vars ++ constructorPrototypes.map((v, s) => (v, s._1.asInstanceOf[ProdVar]))
-    val constructors: Map[Var, ProdObj] = p.rawEntities.collect { 
+    val constructors: Map[Var, ProdStrat] = p.rawEntities.collect { 
       case ty: NuTypeDef =>
         debug.writeLine(s"Completing type info for class ${ty.nameVar} with ctors ${constructorPrototypes.map((v, s) => (v, s._1))}")
         given TermId = noExprId
-        val argTup = ty.params.get
+        val argTup = ty.params.getOrElse(Tup(Nil))
         val (pList, cList) = argTup.fields.map{
           case (Some(v), Fld(flags, _)) if flags.genGetter =>
             val fldVar = freshVar(s"${argTup.uid}_${v.name}")(using noExprId)
@@ -93,8 +93,16 @@ class SimpleDef(debug: Debug) {
             ??? // Unsupported
         }.unzip
         val bodyStrats = apply(ty.body)(using fullCtx ++ pList.toMap) // TODO: Add additional ctx for class arguments, i.e. class X(num: Int)
-        constrain(ProdFun(ConsTup(cList.map(_._2)),ProdObj(Some(ty.nameVar), bodyStrats._1 ++ pList)), constructorPrototypes(ty.nameVar)._2)
-        ty.nameVar -> ProdObj(Some(ty.nameVar), bodyStrats._1)
+        ty.kind match
+          case Cls => 
+            constrain(ProdFun(ConsTup(cList.map(_._2)),ProdObj(Some(ty.nameVar), bodyStrats._1 ++ pList)), constructorPrototypes(ty.nameVar)._2)
+            ty.nameVar -> ProdFun(ConsTup(cList.map(_._2)),ProdObj(Some(ty.nameVar), bodyStrats._1 ++ pList))
+          case Mod =>
+            constrain(ProdObj(Some(ty.nameVar), bodyStrats._1 ++ pList), constructorPrototypes(ty.nameVar)._2)
+            ty.nameVar -> ProdObj(Some(ty.nameVar), bodyStrats._1)
+          case other => 
+            lastWords(s"Unsupported class kind ${other}")
+            ???
     }.toMap
     val tys = p.rawEntities.flatMap{
       case f: NuFunDef => {
@@ -174,7 +182,6 @@ class SimpleDef(debug: Debug) {
         constrain(process(thenn), res._2)
         constrain(process(elze), res._2)
         res._1
-      case If(_) => ??? // Desugar first (resolved by pretyper OR moving post-process point)
       case Tup(fields) =>
         val mapping = fields.map{
           case (None, Fld(_, fieldTerm: Term)) =>

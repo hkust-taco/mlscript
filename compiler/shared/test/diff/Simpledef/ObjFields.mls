@@ -9,16 +9,6 @@ class B(val foo: Y) {}
 fun getObj(pred) = if pred then A(X(1)) else B(Y("abc"))
 val x = getObj(true)
 x.foo.bar
-//│ Lifted:
-//│ TypingUnit {
-//│   class X([val bar: Int,]) {}
-//│   class Y([val bar: Str,]) {}
-//│   class A([val foo: X,]) {}
-//│   class B([val foo: Y,]) {}
-//│   fun getObj = (pred,) => if (pred) then A(X(1,),) else B(Y("abc",),)
-//│   let x = getObj(true,)
-//│   Code(List(((x).foo).bar))
-//│ }
 //│ 
 //│ Simpledef:
 //│ {class X(val bar: Int,) {}

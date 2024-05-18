@@ -17,13 +17,15 @@ class DiffTestCompiler extends DiffTests {
     val outputBuilder = StringBuilder()
     if (mode.lift) output(PrettyPrinter.showTypingUnit(unit))
 
-    output("Lifted:")
     var rstUnit = unit;
     try
       val lifter = ClassLifter(mode.fullExceptionStack)
-      if (!mode.nolift) rstUnit = lifter.liftTypingUnit(unit)
+      if (!mode.nolift) {
+        output("Lifted:")
+        rstUnit = lifter.liftTypingUnit(unit)
+        output(PrettyPrinter.showTypingUnit(rstUnit))
+      }
       if (mode.showParse) output(rstUnit.toString())
-      output(PrettyPrinter.showTypingUnit(rstUnit))
       if (mode.dbgLifting) 
         output(lifter.getLog)
     catch

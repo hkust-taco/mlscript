@@ -13,16 +13,6 @@ fun id(x) = x
 val a = foo(true)
 val b = id(a)
 b.num
-//│ Lifted:
-//│ TypingUnit {
-//│   class X([]) {let num = 6}
-//│   class Y([]) {let num = true}
-//│   fun foo = (pred,) => if (pred) then X() else Y()
-//│   fun id = (x,) => x
-//│   let a = foo(true,)
-//│   let b = id(a,)
-//│   Code(List((b).num))
-//│ }
 //│ 
 //│ Simpledef:
 //│ {class X() {let num = 6}

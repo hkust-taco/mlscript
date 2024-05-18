@@ -33,17 +33,6 @@ mkList(5).map(x => x*2).getRes
 //│ }
 //│ fun mkList: Int -> (Cons | Nil)
 //│ Str
-//│ Lifted:
-//│ TypingUnit {
-//│   class List([]) {fun getRes = Str; fun map = error}
-//│   class Cons([val x: Int, val xs: List,]): List {
-//│     fun getRes = concat(concat(toString(x,),)(" :: ",),)((xs).getRes,)
-//│     fun map = (f::0,) => Cons(f(x,), (xs).map(f,),)
-//│   }
-//│   class Nil([]): List {fun getRes = "Nil"; fun map = (f::1,) => Nil()}
-//│   fun mkList = (len::2,) => {if (==(len, 0,)) then Nil() else Cons(len, mkList(-(len, 1,),),)}
-//│   Code(List(((mkList(5,)).map((x::3,) => *(x, 2,),)).getRes))
-//│ }
 //│ 
 //│ Simpledef:
 //│ {class List() {fun getRes: Str
