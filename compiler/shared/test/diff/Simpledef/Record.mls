@@ -1,0 +1,32 @@
+:NewDefs
+
+:nolift
+:sd
+class K() {
+    val f = true
+}
+val x = {
+    5: "five",
+    7: "seven",
+    f: 6
+}
+fun muddle(pred) = if pred then K() else x
+muddle(false).f
+//│ 
+//│ Simpledef:
+//│ {class K() {let f = true}
+//│  let x = '{' {5: "five", 7: "seven", f: 6} '}'
+//│  fun muddle = (pred,) => if (pred) then K() else x
+//│  (muddle(false,)).f}
+//│ End simpledef
+//│ 
+//│ class K() {
+//│   val f: true
+//│ }
+//│ val x: {5: "five", 7: "seven", f: 6}
+//│ fun muddle: Object -> (K | {5: "five", 7: "seven", f: 6})
+//│ 6 | true
+//│ x
+//│   = { '5': 'five', '7': 'seven', f: 6 }
+//│ res
+//│     = 6

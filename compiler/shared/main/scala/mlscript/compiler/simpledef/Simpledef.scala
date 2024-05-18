@@ -86,11 +86,9 @@ class SimpleDef(debug: Debug) {
             val fldVar = freshVar(s"${argTup.uid}_${v.name}")(using noExprId)
             ((v, fldVar._1), (v, fldVar._2))
           case (Some(v), Fld(flags, _)) if !flags.genGetter => 
-            debug.writeLine(s"Non val ${v} class parameter is not supported.")
-            ??? // Unsupported
+            lastWords(s"Non val ${v} class parameter is not supported.")
           case other =>
-            debug.writeLine(s"${other} class parameter is not supported.")
-            ??? // Unsupported
+            lastWords(s"${other} class parameter is not supported.")
         }.unzip
         val bodyStrats = apply(ty.body)(using fullCtx ++ pList.toMap) // TODO: Add additional ctx for class arguments, i.e. class X(num: Int)
         ty.kind match
@@ -102,7 +100,6 @@ class SimpleDef(debug: Debug) {
             ty.nameVar -> ProdObj(Some(ty.nameVar), bodyStrats._1)
           case other => 
             lastWords(s"Unsupported class kind ${other}")
-            ???
     }.toMap
     val tys = p.rawEntities.flatMap{
       case f: NuFunDef => {
@@ -171,8 +168,7 @@ class SimpleDef(debug: Debug) {
           case (None, Fld(_, v: Var)) =>
             (v, freshVar(s"${t.uid}_${v.name}")(using noExprId))
           case other => 
-            debug.writeLine(s"${other}")
-            ??? // Unsupported
+            lastWords(s"Unsupported term ${other}")
         }
         ProdFun(ConsTup(mapping.map(_._2._2))(using t.uid),
           process(body)(using ctx ++ mapping.map((i, s) => (i, s._1))))(using t.uid)
@@ -186,7 +182,7 @@ class SimpleDef(debug: Debug) {
         val mapping = fields.map{
           case (None, Fld(_, fieldTerm: Term)) =>
             process(fieldTerm)
-          case _ => ??? // Unsupported
+          case other => lastWords(s"Unsupported tuple structure ${other}") 
         }
         ProdTup(mapping)(using t.uid)
       case Sel(receiver, fieldName) =>
@@ -284,16 +280,16 @@ class SimpleDef(debug: Debug) {
         Lam(rewriteTerm(t), rewriteTerm(body))
       case If(IfThen(scrut, thenn), S(elze)) =>
         If(IfThen(rewriteTerm(scrut), rewriteTerm(thenn)), S(rewriteTerm(elze)))
-      case If(_) => ??? // Desugar first (resolved by pretyper OR moving post-process point)
       case Tup(fields) =>
         Tup(fields.map{
           case (None, Fld(flags, fieldTerm: Term)) =>
             (None, Fld(flags, rewriteTerm(fieldTerm)))
-          case _ => ??? // Unsupported
+          case other => lastWords(s"Unsupported tuple structure ${other}")
         })
       case Sel(receiver, fieldName) =>
         if (selToResTypes(t.uid).forall{
-          case _: (ProdObj | ProdVar) => true
+          case _: ProdVar => true
+          case x: ProdObj if x.ctor.isDefined => true
           case _ => false
         }) {
           val letName = Var(s"selRes$$${t.uid}")
