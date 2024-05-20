@@ -157,7 +157,7 @@ final case class AppliedType(base: TypeName, targs: List[Type]) extends Type wit
 final case class Selection(base: Type, name: TypeName)   extends Type
 final case class Neg(base: Type)                         extends Type
 final case class Rem(base: Type, names: Ls[Var])         extends Type
-final case class Bounds(lb: Type, ub: Type)              extends Type
+final case class Bounds(lb: Type, ub: Type)              extends Type // TODO repurpose to use as wildcard type arg
 final case class WithExtension(base: Type, rcd: Record)  extends Type
 final case class Splice(fields: Ls[Either[Type, Field]]) extends Type
 final case class Constrained(base: TypeLike, tvBounds: Ls[TypeVar -> Bounds], where: Ls[Bounds]) extends Type
@@ -201,7 +201,7 @@ sealed trait Outer { def kind: OuterKind }
 final case class NuTypeDef(
   kind: TypeDefKind,
   nme: TypeName,
-  tparams: Ls[(Opt[VarianceInfo], TypeName)],
+  tparams: Ls[(TypeParamInfo, TypeName)],
   params: Opt[Tup], // the specialized parameters for that type
   ctor: Opt[Constructor],
   sig: Opt[Type],
@@ -248,7 +248,8 @@ final case class NuFunDef(
 
 final case class Constructor(params: Tup, body: Blk) extends DesugaredStatement with ConstructorImpl // constructor(...) { ... }
 
-
+// TODO lb and ub not handled in typing
+final case class TypeParamInfo(varinfo: Opt[VarianceInfo], visible: Bool, lb: Opt[TypeName], ub: Opt[TypeName])
 
 final case class VarianceInfo(isCovariant: Bool, isContravariant: Bool) {
   

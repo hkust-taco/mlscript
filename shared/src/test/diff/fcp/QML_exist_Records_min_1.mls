@@ -153,22 +153,19 @@ def step arr k = k (arr stepImpl)
 //│ ║  l.142: 	def step arr k = k (arr stepImpl)
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type variable `'b` leaks out of its scope
-//│ ║  l.126: 	type ArraysImpl2[Rep] = { fold: forall 'b. 'b -> Rep -> 'b }
-//│ ║         	                                           ^^
+//│ ║  l.132: 	def stepImpl arrImpl = { fold = fun f -> fun r0 -> arrImpl.fold f r0 }
+//│ ║         	                                                                ^
 //│ ╟── back into type variable `'b`
 //│ ║  l.126: 	type ArraysImpl2[Rep] = { fold: forall 'b. 'b -> Rep -> 'b }
-//│ ║         	                                                        ^^
+//│ ║         	                                       ^^
 //│ ╟── adding a type annotation to any of the following terms may help resolve the problem
-//│ ╟── • this function:
-//│ ║  l.132: 	def stepImpl arrImpl = { fold = fun f -> fun r0 -> arrImpl.fold f r0 }
-//│ ║         	                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── • this application:
-//│ ║  l.142: 	def step arr k = k (arr stepImpl)
-//│ ║         	                    ^^^^^^^^^^^^
 //│ ╟── • this applied expression:
 //│ ║  l.142: 	def step arr k = k (arr stepImpl)
 //│ ║         	                 ^
-//│ ╟── Note: constraint arises from application:
+//│ ╟── • this application:
+//│ ║  l.142: 	def step arr k = k (arr stepImpl)
+//│ ║         	                    ^^^^^^^^^^^^
+//│ ╟── • this application:
 //│ ║  l.132: 	def stepImpl arrImpl = { fold = fun f -> fun r0 -> arrImpl.fold f r0 }
 //│ ╙──       	                                                   ^^^^^^^^^^^^^^^^^
 

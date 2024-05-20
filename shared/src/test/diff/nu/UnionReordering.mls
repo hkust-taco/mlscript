@@ -37,7 +37,7 @@ type RegionLang = BaseLang[RegionLang] | ExtLang[RegionLang]
 type RegionLang1 = ExtLang[RegionLang] | BaseLang[RegionLang]
 type RegionLang2 = ExtLang[C] | ExtLang[D]
 //│ type RegionLang1 = BaseLang[RegionLang] | ExtLang[RegionLang]
-//│ type RegionLang2 = ExtLang[out C[?] | D[?]]
+//│ type RegionLang2 = ExtLang[in C[?] | D[?] out nothing]
 
 // * There is currently no deep reordering, though:
 type RegionLang1 = ExtLang[C] -> Int & ExtLang[D] -> Str

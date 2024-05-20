@@ -33,7 +33,7 @@ let inner1 = code"1"
 let inner2(x) = code"y => ${x} + 1"
 let t = code"let x = inner1 in inner2(x)"
 //│ let inner1: Code[1, nothing]
-//│ let inner2: forall 'a. Code[Int, 'a] -> Code[anything -> Int, 'a]
+//│ let inner2: Code[Int, anything] -> Code[anything -> Int, nothing]
 //│ let t: Code[Code[anything -> Int, nothing], nothing]
 
 run(run(t))(0)
@@ -89,18 +89,18 @@ run(r)("happy")
 
 let inner4(x) = code"let x = inner2 in ${x}"
 let c2 = code"let x = inner1 in inner4(x)"
-//│ let inner4: anything -> Code[forall 'a. Code[Int, 'a] -> Code[anything -> Int, 'a], nothing]
-//│ let c2: Code[Code[forall 'a. Code[Int, 'a] -> Code[anything -> Int, 'a], nothing], nothing]
+//│ let inner4: anything -> Code[Code[Int, anything] -> Code[anything -> Int, nothing], nothing]
+//│ let c2: Code[Code[Code[Int, anything] -> Code[anything -> Int, nothing], nothing], nothing]
 let r = run(c2)
-//│ let r: Code[forall 'a. Code[Int, 'a] -> Code[anything -> Int, 'a], nothing]
+//│ let r: Code[Code[Int, anything] -> Code[anything -> Int, nothing], nothing]
 let rr = run(r)
-//│ let rr: forall 'a. Code[Int, 'a] -> Code[anything -> Int, 'a]
+//│ let rr: Code[Int, anything] -> Code[anything -> Int, nothing]
 rr(code"123")
 //│ Code[anything -> Int, nothing]
 
 let inner4(x) = code"let y = 100 in ${x}"
 let c3 = code"let x1 = inner1 in let x2 = inner2 in inner4(x)"
-//│ let inner4: forall 'a 'b. Code['a, 'b] -> Code['a, 'b]
+//│ let inner4: forall 'a. Code['a, anything] -> Code['a, nothing]
 //│ let c3: Code[Code[2, nothing], nothing]
 let r = run(c3)
 //│ let r: Code[2, nothing]
@@ -147,7 +147,7 @@ code"x => ${code"${code"${code"x"}"}"}"
 
 fun f(cde) = code"x => ${code"${code"${code"x + ${cde}"}"}"}"
 run(f(Const(114)))(514)
-//│ fun f: forall 'a. Code[Int, 'a] -> Code[Int -> Int, 'a]
+//│ fun f: Code[Int, anything] -> Code[Int -> Int, nothing]
 //│ Int
 
 fun f(x) = code"${run(x)} + 1"

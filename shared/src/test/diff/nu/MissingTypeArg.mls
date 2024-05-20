@@ -72,7 +72,7 @@ fun test(pt1, pt2) = pt1.color === pt1.color and
   else test(p1, p2)
 //│ fun test: forall 'a 'b 'c. ('a, 'c) -> Bool
 //│   where
-//│     'c <: {parent: Object & 'c}
+//│     'c <: {parent: 'c & (Object & ~() | ())}
 //│     'a <: {color: Eql['b] & 'b, parent: Object & 'a & ~() | ()}
 
 :e // TODO support

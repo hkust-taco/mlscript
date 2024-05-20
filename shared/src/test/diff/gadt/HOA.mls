@@ -1,0 +1,88 @@
+:NewDefs
+
+abstract class HOA[type T]: Lit[T] | Abs[?,?] | App[?,T]
+class Lit[A](x: A) extends HOA[A]
+class Abs[A, B](f: A => HOA[B]) extends HOA[A => B]
+class App[A, B](f: HOA[A => B], x: HOA[A]) extends HOA[B]
+//│ abstract class HOA[T]: Abs[nothing, ?] | App[?, T] | Lit[T]
+//│ class Lit[A](x: A) extends HOA
+//│ class Abs[A, B](f: A -> HOA[B]) extends HOA
+//│ class App[A, B](f: HOA[A -> B], x: HOA[A]) extends HOA
+
+fun eval: forall 'T : HOA['T] -> 'T
+fun eval(e: HOA['T]): e.T = if e is
+    Lit(x) then x
+    Abs(f) then x => eval(f(x))
+    App(f, x) then eval(f)(eval(x))
+//│ fun eval: forall 'T 'a. (e: HOA['T]) -> 'a
+//│ fun eval: forall 'T0. HOA['T0] -> 'T0
+//│ where
+//│   'T <: 'a | ~(nothing -> ??B)
+
+eval(App(Abs(x => Lit(x + 1)), Lit(1)))
+//│ Int
+//│ res
+//│     = 2
+
+:e
+eval(App(Abs(x => Lit(x + 1)), Lit(true)))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.28: 	eval(App(Abs(x => Lit(x + 1)), Lit(true)))
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `true` is not an instance of `Int`
+//│ ║  l.28: 	eval(App(Abs(x => Lit(x + 1)), Lit(true)))
+//│ ║        	                                   ^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.28: 	eval(App(Abs(x => Lit(x + 1)), Lit(true)))
+//│ ║        	                      ^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.6: 	class App[A, B](f: HOA[A => B], x: HOA[A]) extends HOA[B]
+//│ ╙──     	          ^
+//│ Int
+//│ res
+//│     = 2
+
+abstract class HList[type T]: HNil | HCons[?,?]
+module HNil extends HList[[]]
+class HCons[type A, type B](h: A, t: HList[B]) extends HList[[A, B]]
+//│ abstract class HList[T]: HCons[anything, ?] | HNil
+//│ module HNil extends HList
+//│ class HCons[A, B](h: A, t: HList[B]) extends HList
+
+// FIXME
+fun hhead : HList[['A, 'B]] -> 'A
+fun hhead[A, B](xs: HList[[A, B]]): A = 
+  if xs is HCons(h, t) then h : xs.A else error
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.55: 	  if xs is HCons(h, t) then h : xs.A else error
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `anything` does not match type `A | ~??A`
+//│ ║  l.55: 	  if xs is HCons(h, t) then h : xs.A else error
+//│ ║        	                                  ^^
+//│ ╟── Note: method type parameter A is defined at:
+//│ ║  l.54: 	fun hhead[A, B](xs: HList[[A, B]]): A = 
+//│ ╙──      	          ^
+//│ fun hhead: forall 'A 'B. (xs: HList[['A, 'B]]) -> 'A
+//│ fun hhead: forall 'A0 'B0. HList[['A0, 'B0]] -> 'A0
+
+// FIXME
+fun htail : HList[['A, 'B]] -> HList['B]
+fun htail[A, B](xs: HList[[A, B]]): HList[B] = 
+  if xs is HCons(h, t) then t : HList[xs.B] else error
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.71: 	  if xs is HCons(h, t) then t : HList[xs.B] else error
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `B` does not match type `nothing`
+//│ ║  l.70: 	fun htail[A, B](xs: HList[[A, B]]): HList[B] = 
+//│ ║        	             ^
+//│ ╟── Note: constraint arises from type selection:
+//│ ║  l.71: 	  if xs is HCons(h, t) then t : HList[xs.B] else error
+//│ ╙──      	                                        ^^
+//│ fun htail: forall 'A 'B. (xs: HList[['A, 'B]]) -> HList['B]
+//│ fun htail: forall 'A0 'B0. HList[['A0, 'B0]] -> HList['B0]
+
+fun hlen : HList['A] -> Int
+fun hlen(xs: HList['a]): Int =
+  if xs is HCons(h, t) then 1 + hlen(t) else 0
+//│ fun hlen: forall 'a. (xs: HList['a]) -> Int
+//│ fun hlen: forall 'A. HList['A] -> Int

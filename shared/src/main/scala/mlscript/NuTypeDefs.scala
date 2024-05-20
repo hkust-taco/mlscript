@@ -13,7 +13,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
   
   
   type Params = Ls[Var -> FieldType]
-  type TyParams = Ls[(TN, TV, Opt[VarianceInfo])]
+  type TyParams = Ls[(TN, TV, TypeParamInfo)]
   
   
   sealed abstract class NuDeclInfo
@@ -174,8 +174,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     // TODO dedup with the one in TypedNuCls
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
-      case (nme @ TypeName(name), tv, _) => 
-        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO), isPublic = true)(level)
+      case (nme @ TypeName(name), tv, TypeParamInfo(_, v, _, _)) => 
+        tparamField(td.nme, nme, v).name -> 
+          NuParam(nme, FieldType(S(tv), tv)(provTODO), isPublic = true)(level)
     } ++ parentTP
     
     def freshenAbove(lim: Int, rigidify: Bool)
@@ -239,8 +240,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
     /** Includes class-name-coded type parameter fields. */
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
-      case (nme @ TypeName(name), tv, _) => 
-        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO), isPublic = true)(level)
+      case (nme @ TypeName(name), tv, TypeParamInfo(_, v, _, _)) => 
+        tparamField(td.nme, nme, v).name -> NuParam(nme, FieldType(S(tv), tv)(provTODO), isPublic = true)(level)
     } ++ parentTP
     
     // TODO
@@ -283,7 +284,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           }
           
           // TODO check consistency with explicitVariances
-          val res = store ++ tparams.iterator.collect { case (_, tv, S(vi)) => tv -> vi }
+          val res = store ++ tparams.iterator.collect { case (_, tv, TypeParamInfo(S(vi), _, _, _)) => tv -> vi }
           
           _variances = S(res)
           
@@ -356,9 +357,9 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     def isPublic = true // TODO
 
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
-      case (nme @ TypeName(name), tv, _) => 
-        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO), isPublic = false)(level)
-    }
+      case (nme @ TypeName(name), tv, TypeParamInfo(_, v, _, _)) => 
+        tparamField(td.nme, nme, v).name -> NuParam(nme, FieldType(S(tv), tv)(provTODO), isPublic = false)(level)
+    } 
     
     def freshenAbove(lim: Int, rigidify: Bool)
           (implicit ctx: Ctx, freshened: MutMap[TV,ST])
@@ -586,7 +587,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                 fd.copy()(fd.declareLoc, fd.virtualLoc, fd.mutLoc, fd.signature, outer, fd.genField, fd.annotations)
             }
           case td: NuTypeDef =>
-            if (td.nme.name in reservedTypeNames)
+            if (td.nme.name.in(reservedTypeNames))
               err(msg"Type name '${td.nme.name}' is reserved", td.toLoc)
             td
         }
@@ -929,19 +930,23 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     lazy val tparams: TyParams = ctx.nest.nextLevel { implicit ctx =>
       decl match {
         case td: NuTypeDef =>
-          td.tparams.map(tp =>
-            (tp._2, freshVar(
+          td.tparams.map(tp => {
+            val fv = freshVar(
               TypeProvenance(tp._2.toLoc, "type parameter",
                 S(tp._2.name),
                 isType = true),
-              N, S(tp._2.name)), tp._1))
+              N, S(tp._2.name))
+            // TODO assign the correct bounds (`typeType` causes cycle)
+            // fv.lowerBounds = tp._1.lb.toList.map(TypeRef(_, Nil)(provTODO))
+            // fv.upperBounds = tp._1.ub.toList.map(TypeRef(_, Nil)(provTODO))
+            (tp._2, fv, tp._1) })
         case fd: NuFunDef =>
           fd.tparams.map { tn =>
             (tn, freshVar(
               TypeProvenance(tn.toLoc, "method type parameter",
                 originName = S(tn.name),
                 isType = true),
-              N, S(tn.name)), N)
+              N, S(tn.name)), TypeParamInfo(N, false, N, N))
           }
       }
     }
@@ -950,7 +955,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     }
     
     lazy val explicitVariances: VarianceStore =
-      MutMap.from(tparams.iterator.map(tp => tp._2 -> tp._3.getOrElse(VarianceInfo.in)))
+      MutMap.from(tparams.iterator.map(tp => tp._2 -> tp._3.varinfo.getOrElse(VarianceInfo.in)))
     
     def varianceOf(tv: TV)(implicit ctx: Ctx): VarianceInfo =
       // TODO make use of inferred vce if result is completed
@@ -1109,7 +1114,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           err(msg"${raw.kind.str} $rawName expects ${
             raw.tparams.size.toString} type parameter(s); got ${pta.size.toString}", Loc(v :: pta))
       }
-      refreshHelper2(raw: PolyNuDecl, v: Var, parTargs.map(_.map(typeType(_))))
+      refreshHelper2(raw: PolyNuDecl, v: Var, parTargs.map(_.map(typeType(_))), true)
     }
     
     def complete()(implicit raise: Raise): TypedNuDecl = result.getOrElse {
@@ -1480,8 +1485,11 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     
                     val allMembers = (
                       trtMembers.iterator.map(d => d.name -> d)
-                      ++ ttu.implementedMembers.map(d => d.name -> d)
-                      ++ typedSignatureMembers
+                      ++ ttu.implementedMembers.map {
+                        case als: TypedNuAls => als.name -> NuParam(TypeName(als.name), 
+                          FieldType(S(als.body), als.body)(als.body.prov), true)(als.level)
+                        case td => td.name -> td
+                    } ++ typedSignatureMembers
                     ).toMap
                     
                     // check trait overriding
@@ -1541,7 +1549,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val finalType = thisTV
                     
                     val tparamMems = tparams.map { case (tp, tv, vi) => // TODO use vi
-                      val fldNme = td.nme.name + "#" + tp.name
+                      val fldNme = tparamField(td.name, tp.name, vi.visible)
                       val skol = SkolemTag(tv)(tv.prov)
                       NuParam(TypeName(fldNme).withLocOf(tp), FieldType(S(skol), skol)(tv.prov), isPublic = true)(lvl)
                     }
@@ -1681,7 +1689,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     
                     println(s"baseClsImplemMembers ${baseClsImplemMembers}")
                     
-                    val newImplems = ttu.implementedMembers
+                    val newImplems = ttu.implementedMembers.map {
+                      // * transform type alias member to type member
+                      case als: TypedNuAls => 
+                        if (tparamFields.map(_._1.name).contains(als.name))
+                          err(msg"Class type member '${als.name}' already exists", als.toLoc)
+                        NuParam(TypeName(als.name), FieldType(S(als.body), als.body)(als.body.prov), true)(als.level)
+                      case td => td
+                    }
                     
                     val clsSigns = typedSignatureMembers.map(_._2)
                     
@@ -1889,7 +1904,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     
   }
   
-  def refreshHelper2(raw: PolyNuDecl, v: Var, parTargs: Opt[Ls[ST]])
+  def refreshHelper2(raw: PolyNuDecl, v: Var, parTargs: Opt[Ls[SimpleTypeOrWildcard]], pol: Bool)
         (implicit ctx: Ctx): (MutMap[TV, ST], Map[Str, NuParam]) = {
     val freshened: MutMap[TV, ST] = MutMap.empty
     val rawName = v.name
@@ -1901,8 +1916,26 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         case tv: TV => 
           println(s"Passing ${tn.name} :: ${_tv} <=< ${tv}")
           tv
-        case _ =>
-          println(s"Assigning ${tn.name} :: ${_tv} := $targ where ${targ.showBounds}")
+        case wc: WildcardArg =>
+          println(s"Assigning ${tn.name} :: ${_tv} := $wc")
+          val tv =
+            freshVar(_tv.prov, S(_tv), _tv.nameHint,
+              lbs = _tv.lowerBounds,
+              ubs = _tv.upperBounds,
+              )(targ.level)
+          println(s"Set ${tv} ~> ${_tv}")
+          assert(tv.assignedTo.isEmpty)
+          assert(tv.lowerBounds.isEmpty, tv.lowerBounds)
+          assert(tv.upperBounds.isEmpty, tv.upperBounds)
+          // TODO use pol
+          tv.assignedTo = S(
+            if (pol) TypeBounds(wc.lb, wc.ub)(wc.prov) else TypeBounds(wc.ub, wc.lb)(wc.prov)
+          )
+          
+          println(s"Assigned ${tv.assignedTo}")
+          tv
+        case st: ST =>
+          println(s"Assigning ${tn.name} :: ${_tv} := $st where ${st.showBounds}")
           val tv =
             freshVar(_tv.prov, S(_tv), _tv.nameHint,
               lbs = _tv.lowerBounds,
@@ -1915,13 +1948,14 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           // * When we support bounded types, bounds check will be needed at the type definition site
           assert(tv.lowerBounds.isEmpty, tv.lowerBounds)
           assert(tv.upperBounds.isEmpty, tv.upperBounds)
-          tv.assignedTo = S(targ)
+          tv.assignedTo = S(st)
           
-          // println(s"Assigned ${tv.assignedTo}")
+          println(s"Assigned ${tv.assignedTo}")
           tv
       })
       freshened += _tv -> tv
-      rawName+"#"+tn.name -> NuParam(tn, FieldType(S(tv), tv)(provTODO), isPublic = true)(ctx.lvl)
+      tparamField(rawName, tn.name, vi.visible) -> 
+        NuParam(tn, FieldType(S(tv), tv)(provTODO), isPublic = true)(ctx.lvl)
     }
     
     freshened -> parTP.toMap

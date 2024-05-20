@@ -164,7 +164,27 @@ module M {
 //│ ╔══[ERROR] undeclared `this`
 //│ ║  l.161: 	  fun a: this.A
 //│ ╙──       	         ^^^^
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[ERROR] Type mismatch in definition of method a:
+//│ ║  l.162: 	  fun a = 1
+//│ ║         	      ^^^^^
+//│ ╟── integer literal of type `1` does not match type `A`
+//│ ║  l.162: 	  fun a = 1
+//│ ║         	          ^
+//│ ╟── but it flows into definition of method a with expected type `A`
+//│ ║  l.162: 	  fun a = 1
+//│ ║         	      ^^^^^
+//│ ╟── Note: constraint arises from type selection:
+//│ ║  l.161: 	  fun a: this.A
+//│ ║         	             ^^
+//│ ╟── from signature of member `a`:
+//│ ║  l.161: 	  fun a: this.A
+//│ ╙──       	      ^^^^^^^^^
+//│ module M {
+//│   class A {
+//│     constructor()
+//│   }
+//│   fun a: error
+//│ }
 
 // FIXME similar
 module M {
@@ -188,7 +208,7 @@ fun f(Int): Int
 :e
 fun f(x): Int
 //│ ╔══[ERROR] type identifier not found: x
-//│ ║  l.189: 	fun f(x): Int
+//│ ║  l.209: 	fun f(x): Int
 //│ ╙──       	      ^
 //│ fun f: error -> Int
 

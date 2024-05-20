@@ -14,8 +14,8 @@ mixin EvalBase {
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   this: {eval: 'a -> Int}
-//│   fun eval: (Add['a] | Lit) -> Int
+//│   this: {eval: (??E & 'E) -> Int}
+//│   fun eval: (Add['E] | Lit) -> Int
 //│ }
 
 
@@ -30,8 +30,8 @@ mixin EvalNeg {
 }
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
-//│   this: {eval: 'c -> Int}
-//│   fun eval: (Neg['c] | Object & 'a & ~#Neg) -> (Int | 'b)
+//│   this: {eval: (??A & 'A) -> Int}
+//│   fun eval: (Neg['A] | Object & 'a & ~#Neg) -> (Int | 'b)
 //│ }
 
 
@@ -41,9 +41,9 @@ mixin EvalNegNeg {
     else super.eval(e)
 }
 //│ mixin EvalNegNeg() {
-//│   super: {eval: (Neg[nothing] | 'a) -> 'b}
-//│   this: {eval: 'c -> 'b}
-//│   fun eval: (Neg[Neg['c] | Object & ~#Neg] | Object & 'a & ~#Neg) -> 'b
+//│   super: {eval: (Neg[??A & 'A] | 'a) -> 'b}
+//│   this: {eval: (??A0 & 'A0) -> 'b}
+//│   fun eval: (Neg['A & (Neg['A0] | Object & ~#Neg | ~??A)] | Object & 'a & ~#Neg) -> 'b
 //│ }
 
 
@@ -52,9 +52,8 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│   fun eval: (Neg['A] | Object & 'a & ~#Neg) -> Int
 //│ }
 //│ where
-//│   'A <: 'b & (Neg['b] | Object & ~#Neg)
-//│   'b <: Neg['A] | Object & 'a & ~#Neg
-//│   'a <: Add['b] | Lit | Neg['b]
+//│   'A <: Neg['A] & ~#Neg | Neg['A & (Neg['A] | Object & 'a & ~#Neg | ~??A)] | Object & 'a & ~#Neg | ~??A0
+//│   'a <: Add[Neg['A] | Object & 'a & ~#Neg | ~??E] | Lit | Neg[Neg['A] | Object & 'a & ~#Neg | ~??A1]
 
 
 fun mk(n) = if n is

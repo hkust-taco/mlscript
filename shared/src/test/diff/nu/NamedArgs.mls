@@ -369,7 +369,7 @@ fun foo(f: ((x: Int) => Int) | 'a) = f(x: 123)
 // * the result of the if-then-else is a TV with two LBs: the type of x and the function type
 :e
 fun foo(x) = (if true then (x: Int) => x + 1 else x)(x: 123)
-//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `(x: Int) -> ?a | ?b` for applying named arguments
+//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `?a | ?b` for applying named arguments
 //│ ║  l.371: 	fun foo(x) = (if true then (x: Int) => x + 1 else x)(x: 123)
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ fun foo: anything -> error
@@ -382,7 +382,7 @@ foo((y: Int) => y)
 
 :e // TODO later: this could be made to work...
 fun foo(x) = (if true then (x: Int) => x + 1 else (x: Int) => x + 1)(x: 123)
-//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `(x: Int) -> (?a | ?b)` for applying named arguments
+//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `(x: Int) -> ?a | ?b` for applying named arguments
 //│ ║  l.384: 	fun foo(x) = (if true then (x: Int) => x + 1 else (x: Int) => x + 1)(x: 123)
 //│ ╙──       	             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ fun foo: anything -> error

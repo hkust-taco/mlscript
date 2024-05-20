@@ -142,10 +142,10 @@ Test : Test<'a>
 
 
 fun test(x) = if x is Test then x.foo
-//│ fun test: forall 'A. Test['A] -> 'A -> 'A
+//│ fun test: forall 'A 'A0. Test[in 'A out 'A0] -> ('A & 'A0) -> (??A & 'A0)
 
 test(Test)
-//│ 'A -> 'A
+//│ 'A -> (??A & 'A)
 //│ res
 //│     = [Function: id]
 

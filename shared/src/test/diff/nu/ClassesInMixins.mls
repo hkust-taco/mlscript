@@ -29,7 +29,7 @@ M.f.n
 
 :e
 M.Foo
-//│ ╔══[ERROR] Access to class member not yet supported
+//│ ╔══[ERROR] Access to class member Foo not yet supported
 //│ ║  l.31: 	M.Foo
 //│ ╙──      	 ^^^^
 //│ error
@@ -82,19 +82,14 @@ mixin Test {
   fun size(x) = if x is
     Add(l, r) then this.size(l) + this.size(r)
 }
-//│ ╔══[ERROR] Type error in application
-//│ ║  l.80: 	    fun cached = size(this)
-//│ ║        	                 ^^^^^^^^^^
-//│ ╟── type variable `A` leaks out of its scope
-//│ ║  l.78: 	  class Add<A>(lhs: A, rhs: A) {
-//│ ╙──      	            ^
 //│ mixin Test() {
-//│   this: {size: anything -> Int}
+//│   this: {size: ??A -> Int}
 //│   class Add[A](lhs: A, rhs: A) {
-//│     fun cached: Int | error
+//│     fun cached: Int
 //│   }
 //│   class Lit(n: Int)
-//│   fun size: Add[??A & 'a] -> Int
+//│   fun size: Add['A] -> Int
 //│ }
+//│ TEST CASE FAILURE: There was an unexpected lack of type error
 
 

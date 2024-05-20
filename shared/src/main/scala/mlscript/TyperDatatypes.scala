@@ -156,8 +156,56 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     def unapply(ot: OtherTypeLike): S[TypedTypingUnit] = S(ot.self)
   }
   
+  sealed trait SimpleTypeOrWildcard {
+    def prov: TypeProvenance
+    def level: Level
+    def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level
+    def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST]): SimpleTypeOrWildcard
+
+    def <:<?(that: SimpleTypeOrWildcard)
+      (implicit ctx: Ctx, crt: CompareRecTypes = true, cache: MutMap[ST -> ST, Bool] = MutMap.empty): Bool = 
+        (this, that) match { case (l: ST, r: ST) => l <:< r ; case _ => false }
+
+    // def &?(that: SimpleTypeOrWildcard): SimpleTypeOrWildcard = (this, that) match {
+    //   case (l: WildcardArg, r: WildcardArg) => WildcardArg(l.lb | r.lb, l.ub & r.ub)(l.prov)
+    //   case (l: WildcardArg, r: ST) => WildcardArg(l.lb | r, l.ub & r)(l.prov)
+    //   case (l: ST, r: WildcardArg) => WildcardArg(r.lb | l, r.ub & l)(r.prov)
+    //   case (l: ST, r: ST) => l & r
+    // }
+
+    // def |?(that: SimpleTypeOrWildcard): SimpleTypeOrWildcard = (this, that) match {
+    //   case (l: WildcardArg, r: WildcardArg) => WildcardArg(l.lb & r.lb, l.ub | r.ub)(l.prov)
+    //   case (l: WildcardArg, r: ST) => WildcardArg(l.lb & r, l.ub | r)(l.prov)
+    //   case (l: ST, r: WildcardArg) => WildcardArg(r.lb & l, r.ub | l)(r.prov)
+    //   case (l: ST, r: ST) => l | r
+    // }
+  }
+  
+  // * As in `Foo[Nat..Int]` or `Foo[?]` which is syntax sugar for `Foo[nothing..anything]`
+  // TODO generate when finding Bounds in class type argument positions
+  // TODO treat specially in `def expand` to turn into proper TypeBounds: turn Foo[?] into #Foo & { A: Bot..Top }
+  // TODO separate this from the SimpleType hierarchy; make it a subtype of SimpleTypeOrWildcard
+  case class WildcardArg(lb: ST, ub: ST)(val prov: TP) extends SimpleTypeOrWildcard {
+    def level: Level = lb.level max ub.level
+    def levelBelow(ubnd: Level)(implicit cache: MutSet[TV]): Level =
+      lb.levelBelow(ubnd) max ub.levelBelow(ubnd)
+    override def toString: Str = s"? :> $lb <: $ub"
+
+    def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST]): WildcardArg =
+      WildcardArg(lb.freshenAbove(lim,rigidify), ub.freshenAbove(lim,rigidify))(prov)
+  }
+  object WildcardArg {
+    def mk(lb: ST, ub: ST, prov: TP = noProv)(implicit ctx: Ctx): SimpleTypeOrWildcard =
+      if ((lb is ub)
+        || lb === ub
+        || !lb.mentionsTypeBounds && !ub.mentionsTypeBounds && lb <:< ub && ub <:< lb
+      ) lb else (lb, ub) match {
+        case _ => WildcardArg(lb, ub)(prov)
+      }
+  }
+  
   /** A general type form (TODO: rename to AnyType). */
-  sealed abstract class SimpleType extends TypeLike with SimpleTypeImpl {
+  sealed abstract class SimpleType extends TypeLike with SimpleTypeImpl with SimpleTypeOrWildcard {
     val prov: TypeProvenance
     def level: Level
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level
@@ -316,7 +364,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       elems.map{ case L(l) => l.levelBelow(ub) case R(r) => r.levelBelow(ub) }.max
     
     lazy val inner: FieldType = elems.map {
-      case L(l) => l match { case a: ArrayBase => a.inner case _ => ??? }
+      case L(l) => l match { case a: ArrayBase => a.inner case _ => die }
       case R(r) => r
     }.reduceLeft(_ || _)
 
@@ -332,9 +380,9 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     override def toString = if (pol) "⊥" else "⊤"
   }
   
-  /** Represents a type variable skolem that was extruded outsdie its polym level.
+  /** Represents a type variable skolem that was extruded outside its polym level.
     * The goal is to retain precise information to produce good errors,
-    * but still have this be functionally equivalent to `ExtrType(pol)`. */
+    * but still have this be functionally equivalent to `ExtrType(!pol)`. */
   case class Extruded(pol: Bool, underlying: SkolemTag)(val prov: TypeProvenance, val reason: Ls[Ls[ST]]) extends AbstractTag with TypeVarOrRigidVar {
     val level: Level = MinLevel
     val id = underlying.id
@@ -399,7 +447,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
   
   type TR = TypeRef
   val TR: TypeRef.type = TypeRef
-  case class TypeRef(defn: TypeName, targs: Ls[SimpleType])(val prov: TypeProvenance) extends SimpleType with TypeRefImpl {
+  case class TypeRef(defn: TypeName, targs: Ls[SimpleTypeOrWildcard])(val prov: TypeProvenance) extends SimpleType with TypeRefImpl {
     def level: Level = targs.iterator.map(_.level).maxOption.getOrElse(MinLevel)
     def levelBelow(ub: Level)(implicit cache: MutSet[TV]): Level = targs.iterator.map(_.levelBelow(ub)).maxOption.getOrElse(MinLevel)
     override def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST]): TypeRef =
@@ -416,6 +464,8 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     def compare(that: TypeTag): Int = (this, that) match {
       case (obj1: ObjectTag, obj2: ObjectTag) => obj1.id compare obj2.id
       case (SkolemTag(id1), SkolemTag(id2)) => id1 compare id2
+      case (Extruded(true, id1), Extruded(false, id2)) => -1
+      case (Extruded(false, id1), Extruded(true, id2)) => 1
       case (Extruded(_, id1), Extruded(_, id2)) => id1 compare id2
       case (_: ObjectTag, _: SkolemTag | _: Extruded) => -1
       case (_: SkolemTag | _: Extruded, _: ObjectTag) => 1
@@ -478,12 +528,12 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     override def toString = s"$lb..$ub"
   }
   object TypeBounds {
-    final def mkSimple(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv): SimpleType = (lb, ub) match {
+    def mkSimple(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv): SimpleType = (lb, ub) match {
       case (TypeBounds(lb, _), ub) => mkSimple(lb, ub, prov)
       case (lb, TypeBounds(_, ub)) => mkSimple(lb, ub, prov)
       case _ => TypeBounds(lb, ub)(prov)
     }
-    final def mk(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv)(implicit ctx: Ctx): SimpleType =
+    def mk(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv)(implicit ctx: Ctx): SimpleType =
       if ((lb is ub)
         || lb === ub
         || !lb.mentionsTypeBounds && !ub.mentionsTypeBounds && lb <:< ub && ub <:< lb
@@ -495,7 +545,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       * (in particular, the `transform` function may replace TV bounds `TypeBound` bundles,
       * and creating these `TypeBound`s should NOT rely on the bounds still being there at the time
       * the bundle is constructed). */
-    final def mkSafe(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv)(implicit ctx: Ctx): SimpleType =
+    def mkSafe(lb: SimpleType, ub: SimpleType, prov: TypeProvenance = noProv)(implicit ctx: Ctx): SimpleType =
       if ((lb is ub)
         || lb === ub
       ) lb else (lb, ub) match {
@@ -555,7 +605,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     private var _assignedTo: Opt[ST] = N
     def assignedTo: Opt[ST] = _assignedTo
     def assignedTo_=(value: Opt[ST]): Unit = {
-      require(value.forall(_.level <= level))
+      require(value.forall(_.level <= level), (this, value))
       _assignedTo = value
     }
     

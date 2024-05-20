@@ -76,7 +76,7 @@ fun x ->
    | Cons(1, b) -> Cons(0, b)
    | Cons(a, b) -> b
    | Nil -> Nil
-//│ res: List[int & 'A] -> List[0 | 'A]
+//│ res: List[int] -> List[nothing]
 
 fun x ->
   match x with

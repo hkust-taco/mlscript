@@ -8,7 +8,6 @@ module M {
 }
 //│ module M {
 //│   class C(n: Int)
-//│   type T = Int -> Int
 //│   fun mkC: (n: Int) -> C
 //│ }
 
@@ -29,10 +28,16 @@ foo(M.mkC(42))
 
 :e
 42 : M.mkC
-//│ ╔══[ERROR] Illegal selection of value member in type position
-//│ ║  l.31: 	42 : M.mkC
+//│ ╔══[ERROR] Type mismatch in type selection:
+//│ ║  l.30: 	42 : M.mkC
+//│ ║        	      ^^^^
+//│ ╟── member of type `(n: Int) -> C` is not mutable
+//│ ║  l.7: 	  fun mkC = C
+//│ ║       	      ^^^^^^^
+//│ ╟── but it flows into type selection with expected type `?mkC`
+//│ ║  l.30: 	42 : M.mkC
 //│ ╙──      	      ^^^^
-//│ error
+//│ (n: Int) -> C
 //│ res
 //│     = 42
 

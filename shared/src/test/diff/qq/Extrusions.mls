@@ -5,28 +5,28 @@
 
 // * This definition is not good as it leads to extrusion; we need `k` to be polymorphic (which requires annotation)
 fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(code"x")}"
-//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, 'b]) -> Code['c, 'b]
+//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, anything]) -> Code['c, 'b]
 
 fun (%>) bind(rhs, k) = code"let x = ${rhs} in ${k(x)}"
-//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Var['a, in ??x out ??x0] -> Code['c, 'b]) -> Code['c, 'b]
+//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Var['a, in ??x out ??x0] -> Code['c, anything]) -> Code['c, 'b]
 
 // * Notice the extrusion
 fun foo(k) = code"x => ${k(code"x")}"
-//│ fun foo: forall 'a 'b 'c. (Code['a, ??x] -> Code['b, 'c]) -> Code['a -> 'b, 'c]
+//│ fun foo: forall 'a 'b. (Code['a, ??x] -> Code['b, anything]) -> Code['a -> 'b, nothing]
 
 fun (%>) bind(rhs, k) = code"(x => ${k(code"x")})(${rhs})"
-//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, 'b]) -> Code['c, 'b]
+//│ fun (%>) bind: forall 'a 'b 'c. (Code['a, 'b], Code['a, ??x] -> Code['c, anything]) -> Code['c, 'b]
 
 fun app = code"(f, x) => f(x)"
 fun (%>) bind(rhs, k) = code"${app}(x => ${k(code"x")}, ${rhs})"
 //│ fun app: forall 'a 'b. Code[('a -> 'b, 'a) -> 'b, nothing]
-//│ fun (%>) bind: forall 'c 'd 'e. (Code['c, 'd], Code['c, ??x] -> Code['e, 'd]) -> Code['e, 'd]
+//│ fun (%>) bind: forall 'c 'd 'e. (Code['c, 'd], Code['c, ??x] -> Code['e, anything]) -> Code['e, 'd]
 
 
 fun app(f, x) = f(x)
 fun bind2(rhs, k) = code"app(x => ${k(code"x")}, ${rhs})"
 //│ fun app: forall 'a 'b. ('a -> 'b, 'a) -> 'b
-//│ fun bind2: forall 'c 'd 'e. (Code['c, 'd], Code['c, ??x] -> Code['e, 'd]) -> Code['e, 'd]
+//│ fun bind2: forall 'c 'd 'e. (Code['c, 'd], Code['c, ??x] -> Code['e, anything]) -> Code['e, 'd]
 
 :e
 fun foo() =
@@ -44,7 +44,7 @@ code"1 ++ 2"
 
 // G <: ??x | 'a
 fun bind(rhs, k: forall 'C: Code['A, 'C] -> Code['B, 'C | 'G]) = code"let x = ${rhs} in ${k(code"x")}"
-//│ fun bind: forall 'A 'a 'B. (Code['A, 'a], k: forall 'C. Code['A, 'C] -> Code['B, 'C | 'a]) -> Code['B, 'a]
+//│ fun bind: forall 'A 'a 'B. (Code['A, 'a], k: Code['A, anything] -> Code['B, anything]) -> Code['B, 'a]
 
 bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
 //│ forall 'a 'g. (Code['a, 'g], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
@@ -52,12 +52,12 @@ bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 
 
 fun foo(dbg) =
   code"x => ${let c = code"(${x}, ${foo(dbg)})" in dbg(c)}"
-//│ fun foo: forall 'a 'b. (Code[anything -> 'a, anything] -> Code['a, 'b]) -> Code[anything -> 'a, 'b]
+//│ fun foo: forall 'a. (Code[anything -> 'a, ??x] -> Code['a, anything]) -> Code[anything -> 'a, nothing]
 
 fun power(x) = case
   0 then `1.0
   n then x `*. power(x)(n - 1)
-//│ fun power: forall 'a. Code[Num, 'a] -> (0 | Int & ~0) -> Code[Num, 'a]
+//│ fun power: Code[Num, anything] -> (0 | Int & ~0) -> Code[1.0, nothing]
 
 :e
 let p3 = y `=>

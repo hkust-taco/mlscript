@@ -1,0 +1,243 @@
+:NewDefs
+
+abstract class Foo[type T]: Bar | Baz[?]
+class Bar extends Foo[Int]
+class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ abstract class Foo[T]: Bar | Baz[?]
+//│ class Bar extends Foo {
+//│   constructor()
+//│ }
+//│ class Baz[T](x: Foo[T]) extends Foo
+
+fun foo: Foo['T] -> Int
+fun foo[T](f: Foo[T]): Int = if f is
+    Bar then 1
+    Baz(x) then 1 + foo(x)
+//│ fun foo: forall 'T. (f: Foo['T]) -> Int
+//│ fun foo: forall 'T0. Foo['T0] -> Int
+
+foo(Baz(Baz(new Bar)))
+//│ Int
+//│ res
+//│     = 3
+
+fun foo: Foo['a] -> Int
+fun foo(f: Foo['a]) = if f is
+    Bar then 1
+    Baz(x) then 1 + foo(x)
+//│ fun foo: forall 'a. (f: Foo['a]) -> Int
+//│ fun foo: forall 'a0. Foo['a0] -> Int
+
+fun foo: Foo['a] -> Int
+fun foo(f) = if f is
+    Bar then 1
+    Baz(x) then 1 + foo(x)
+//│ fun foo: (Bar | Baz[?]) -> Int
+//│ fun foo: forall 'a. Foo['a] -> Int
+
+fun foo: Foo[?] -> Int
+fun foo(f: Foo[?]): Int = if f is
+    Bar then 1
+    Baz(x) then 1 + foo(x)
+//│ fun foo: (f: Foo[?]) -> Int
+//│ fun foo: Foo[?] -> Int
+
+fun bar(f) = if f is 
+    Bar then 0
+    Baz(_) then 1
+//│ fun bar: (Bar | Baz[?]) -> (0 | 1)
+
+bar(Baz(new Bar))
+//│ 0 | 1
+//│ res
+//│     = 1
+
+// FIXME
+fun baz : (Foo['T], Foo['T]) -> Bool
+fun baz[T](x: Foo[T], y: Foo[T]): Bool =
+    if x is Baz(a) and y is Baz(b) then baz(a, b)
+    else if x is Bar and y is Bar then true
+    else false
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.58: 	    if x is Baz(a) and y is Baz(b) then baz(a, b)
+//│ ║        	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.59: 	    else if x is Bar and y is Bar then true
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.60: 	    else false
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── type `??T & ~??T0` does not match type `~??T1`
+//│ ║  l.56: 	fun baz : (Foo['T], Foo['T]) -> Bool
+//│ ╙──      	               ^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.58: 	    if x is Baz(a) and y is Baz(b) then baz(a, b)
+//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.59: 	    else if x is Bar and y is Bar then true
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.60: 	    else false
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── expression of type `anything` does not match type `~??T`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.56: 	fun baz : (Foo['T], Foo['T]) -> Bool
+//│ ║        	                        ^^
+//│ ╟── from type variable:
+//│ ║  l.56: 	fun baz : (Foo['T], Foo['T]) -> Bool
+//│ ║        	               ^^
+//│ ╟── Note: type parameter T is defined at:
+//│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ╙──     	          ^
+//│ fun baz: forall 'T. (x: Foo['T], y: Foo['T]) -> Bool
+//│ fun baz: forall 'T0. (Foo['T0], Foo['T0]) -> Bool
+
+// FIXME
+fun baz : (Foo['T], Foo['T]) -> Bool
+fun baz[T](x: Foo[T], y: Foo[T]): Bool =
+    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
+    else if x is Bar and y is Bar then true
+    else false
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.94: 	    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
+//│ ║        	                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.95: 	    else if x is Bar and y is Bar then true
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.96: 	    else false
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── type `??T & ~[nothing]` does not match type `~(Int & ??T0)`
+//│ ║  l.94: 	    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
+//│ ╙──      	                                                          ^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.94: 	    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
+//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.95: 	    else if x is Bar and y is Bar then true
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.96: 	    else false
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── expression of type `anything` does not match type `~([anything] & ??T)`
+//│ ╟── Note: constraint arises from type selection:
+//│ ║  l.94: 	    if x is Baz(a) and y is Baz(b) then baz(a, (b as Foo[a.T]))
+//│ ║        	                                                          ^^
+//│ ╟── Note: type parameter T is defined at:
+//│ ║  l.5: 	class Baz[T](val x: Foo[T]) extends Foo[[T]]
+//│ ╙──     	          ^
+//│ fun baz: forall 'T. (x: Foo['T], y: Foo['T]) -> Bool
+//│ fun baz: forall 'T0. (Foo['T0], Foo['T0]) -> Bool
+
+abstract class C[type T]: D1 | D2[?, ?]
+class D1 extends C[Int]
+class D2[A, B](val a: C[A], val b: C[B]) extends C[[A, B]]
+//│ abstract class C[T]: D1 | D2[?, ?]
+//│ class D1 extends C {
+//│   constructor()
+//│ }
+//│ class D2[A, B](a: C[A], b: C[B]) extends C
+
+abstract class C[type T]: C1[T] | C2
+class C1[type A](c: A) extends C[A]
+class C2 extends C[Int]
+//│ abstract class C[T]: C1[T] | C2
+//│ class C1[A](c: A) extends C
+//│ class C2 extends C {
+//│   constructor()
+//│ }
+
+:e // Needs type annot on parameter for GADT reasoning
+fun foo: C['T] -> 'T
+fun foo(x) = if x is
+    C1(c) then c : x.T
+    C2    then 0 : x.T
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.144: 	fun foo(x) = if x is
+//│ ║         	    ^^^^^^^^^^^^^^^^
+//│ ║  l.145: 	    C1(c) then c : x.T
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.146: 	    C2    then 0 : x.T
+//│ ║         	^^^^^^^^^^^^^^^^
+//│ ╟── type `Int` does not match type `'T`
+//│ ║  l.135: 	class C2 extends C[Int]
+//│ ║         	                   ^^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.143: 	fun foo: C['T] -> 'T
+//│ ╙──       	                  ^^
+//│ fun foo: forall 'A. (C1['A] | C2) -> (Int | ??A & 'A)
+//│ fun foo: forall 'T. C['T] -> 'T
+
+foo(C1(true))
+//│ true
+//│ res
+//│     = true
+
+foo(new C2)
+//│ Int
+//│ res
+//│     = 0
+
+fun foo(x: C['a]): x.T = if x is
+    C1(c) then c : x.T
+    C2    then 0 : x.T
+//│ fun foo: forall 'a. (x: C['a]) -> (Int & 'a)
+
+abstract class Option[type out T]: None | Some[T]
+module None extends Option[nothing]
+class Some[A](get: A) extends Option[A]
+//│ abstract class Option[T]: None | Some[T]
+//│ module None extends Option
+//│ class Some[A](get: A) extends Option
+
+fun getOr(x, d) = if x is
+    None then d
+    Some(g) then g
+//│ fun getOr: forall 'A 'a. (None | Some['A], 'a) -> (??A & 'A | 'a)
+
+fun getOr(x: Option['a], d) = if x is
+    None then d
+    Some(g) then g
+//│ fun getOr: forall 'a 'b. (x: Option['a], 'b) -> (??A & 'a | 'b)
+
+fun getOr[T](x: Option[T], d: T): T = if x is
+    None then d
+    Some(g) then g
+//│ fun getOr: forall 'T. (x: Option['T], d: 'T) -> 'T
+
+fun get(x) = if x is Some(r) then r else error
+//│ fun get: forall 'A. (Object & ~#Some | Some['A]) -> (??A & 'A)
+
+fun get(x: Option['a]): x.T = if x is Some(r) then r else error
+//│ fun get: (x: Option[anything]) -> nothing
+
+None as Option[Int]
+//│ Option[Int]
+//│ res
+//│     = None { class: [class None extends Option] }
+
+fun test(x, y) = 
+    if x is Some(a) and y is Some(b) then eq(a)(b) 
+    else if x is None and y is None then true 
+    else false
+//│ fun test: (Object & ~#Some | Some[anything], None | Object & ~#None & ~#Some | Some[anything]) -> Bool
+
+test(Some(1), Some(1))
+//│ Bool
+//│ res
+//│     = true
+
+test(Some(1), None)
+//│ Bool
+//│ res
+//│     = false
+
+
+fun test[T](x: Option[T], y: Option[T]): Bool = 
+    if x is Some(a) and y is Some(b) then eq(a)(b) 
+    else if x is None and y is None then true 
+    else false
+//│ fun test: (x: Option[anything], y: Option[anything]) -> Bool
+
+test(Some(None), Some(None))
+//│ Bool
+//│ res
+//│     = true
+
+test(Some(None), Some(1))
+//│ Bool
+//│ res
+//│     = false
+

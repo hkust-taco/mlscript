@@ -19,17 +19,18 @@ mixin EvalBase {
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   this: {eval: 'a -> 'b & 'c -> Int}
-//│   fun eval: (Add['c] | Lit | Neg['c & (Neg['a] | Object & ~#Neg)]) -> (Int | 'b)
+//│   this: {eval: (??A & 'A) -> 'a & (??A0 & 'A0 | ??E & 'E) -> Int}
+//│   fun eval: (Add['E] | Lit | Neg['A0 & (Neg['A] | Object & ~#Neg | ~??A0)]) -> (Int | 'a)
 //│ }
 
 // module TestLang extends EvalBase, EvalNeg
 module TestLang extends EvalBase
 //│ module TestLang {
-//│   fun eval: 'a -> Int
+//│   fun eval: (Add['E] | Lit | Neg['A]) -> Int
 //│ }
 //│ where
-//│   'a <: Add['a] | Lit | Neg['a & (Neg['a] | Object & ~#Neg)]
+//│   'E <: Add['E] | Lit | Neg['A] | ~??E
+//│   'A <: Add['E] | Lit | Neg['A] & ~#Neg | Neg['A & (Add['E] | Lit | Neg['A] | ~??A)] | ~??A0
 
 
 fun mk(n) = if n is
@@ -45,8 +46,8 @@ TestLang.eval(mk(0))
 //│ Int
 //│ res
 //│     = 0
-//│ constrain calls  : 179
-//│ annoying  calls  : 51
-//│ subtyping calls  : 1203
+//│ constrain calls  : 246
+//│ annoying  calls  : 55
+//│ subtyping calls  : 2390
 
 

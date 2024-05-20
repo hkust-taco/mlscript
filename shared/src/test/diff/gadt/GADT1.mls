@@ -1,0 +1,390 @@
+:NewDefs
+
+// natural numbers for index //
+
+class Z
+class S[type P]
+//│ class Z {
+//│   constructor()
+//│ }
+//│ class S[P] {
+//│   constructor()
+//│ }
+
+// sized list //
+
+abstract class Vec[type L, type T]: Nil[T] | Cons[?, T]
+class Nil[T] extends Vec[Z, T]
+class Cons[H, T](val h: T, val t: Vec[H, T]) extends Vec[S[H], T]
+//│ abstract class Vec[L, T]: Cons[?, T] | Nil[T]
+//│ class Nil[T] extends Vec {
+//│   constructor()
+//│ }
+//│ class Cons[H, T](h: T, t: Vec[H, T]) extends Vec
+
+// functions //
+
+fun head[T](xs: Vec[S['l], T]): T =
+    if xs is Cons(h, t) then h : xs.T else error
+//│ fun head: forall 'l 'T. (xs: Vec[S['l], 'T]) -> 'T
+
+fun tail[L, T](xs: Vec[S[L], T]): Vec[L, T] =
+    if xs is Cons(h, t) then t : Vec[xs.L.P, xs.T] else error
+//│ fun tail: forall 'L 'T. (xs: Vec[S['L], 'T]) -> Vec['L, 'T]
+
+fun len: Vec['l, 'a] -> Int
+fun len(xs: Vec['l, 'a]) = if xs is
+    Nil then 0
+    Cons(h, t) then 1 + len(t)
+//│ fun len: forall 'l 'a. (xs: Vec['l, 'a]) -> Int
+//│ fun len: forall 'l0 'a0. Vec['l0, 'a0] -> Int
+
+fun map: ('A -> 'B, Vec['L, 'A]) -> Vec['L, 'B]
+fun map[L, A, B](f, xs: Vec[L, A]): Vec[xs.L, 'B] = if xs is
+    Nil then new Nil
+    Cons(h, t) then Cons(f(h), map(f, t)) 
+//│ fun map: forall 'A 'B 'L 'L0 'B0 'B1. ((??T & 'A) -> 'B, xs: Vec['L, 'A]) -> Vec[in S[in ??H out nothing] & 'L0 | Z & 'L1 | 'L out 'L & (Z & 'L0 | 'L1 & (S[out ??H] | 'L0)), in 'B0 | 'B & 'B1 out 'B0 & ('B | 'B1)]
+//│ fun map: forall 'A0 'B2 'L2. ('A0 -> 'B2, Vec['L2, 'A0]) -> Vec['L2, 'B2]
+
+// TODO
+fun zipSum: (Vec['L, Int], Vec['L, Int]) -> Vec['L, Int]
+fun zipSum[L, A](xs: Vec[L, Int], ys: Vec[L, Int]): Vec[L, Int] = 
+    if xs is Nil and ys is Nil then 
+        new Nil : Vec[xs.L, Int]
+    else if xs is Cons(x, tx) and ys is Cons(y, ty) then 
+        Cons(x + y, zipSum(tx, ty)) : Vec[xs.L, Int]
+    else error
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.54: 	    else if xs is Cons(x, tx) and ys is Cons(y, ty) then 
+//│ ║        	                                  ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.55: 	        Cons(x + y, zipSum(tx, ty)) : Vec[xs.L, Int]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.56: 	    else error
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── type `??H & ~??H0` does not match type `~??H1`
+//│ ║  l.50: 	fun zipSum: (Vec['L, Int], Vec['L, Int]) -> Vec['L, Int]
+//│ ╙──      	                 ^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.52: 	    if xs is Nil and ys is Nil then 
+//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.53: 	        new Nil : Vec[xs.L, Int]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.54: 	    else if xs is Cons(x, tx) and ys is Cons(y, ty) then 
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.55: 	        Cons(x + y, zipSum(tx, ty)) : Vec[xs.L, Int]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.56: 	    else error
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── expression of type `anything` does not match type `~??H`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.50: 	fun zipSum: (Vec['L, Int], Vec['L, Int]) -> Vec['L, Int]
+//│ ║        	                               ^^
+//│ ╟── from type variable:
+//│ ║  l.50: 	fun zipSum: (Vec['L, Int], Vec['L, Int]) -> Vec['L, Int]
+//│ ║        	                 ^^
+//│ ╟── Note: type parameter H is defined at:
+//│ ║  l.18: 	class Cons[H, T](val h: T, val t: Vec[H, T]) extends Vec[S[H], T]
+//│ ╙──      	           ^
+//│ fun zipSum: forall 'L. (xs: Vec['L, Int], ys: Vec['L, Int]) -> Vec['L, Int]
+//│ fun zipSum: forall 'L0. (Vec['L0, Int], Vec['L0, Int]) -> Vec['L0, Int]
+
+// FIXME
+fun zip: (Vec['L, 'A], Vec['L, 'B]) -> Vec['L, ['A, 'B]]
+fun zip[L, A, B](xs: Vec[L, A], ys: Vec[L, B]): Vec[L, [A, B]] = 
+    if xs is Nil and ys is Nil then 
+        (new Nil) as Vec[xs.L, [A, B]]
+    else if xs is Cons(x, tx) and ys is Cons(y, ty) then 
+        Cons([x, y], zip(tx, ty)) as Vec[xs.L, [A, B]]
+    else error
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.96: 	    else if xs is Cons(x, tx) and ys is Cons(y, ty) then 
+//│ ║        	                                  ^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.97: 	        Cons([x, y], zip(tx, ty)) as Vec[xs.L, [A, B]]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.98: 	    else error
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── type `??H & ~??H0` does not match type `~??H1`
+//│ ║  l.92: 	fun zip: (Vec['L, 'A], Vec['L, 'B]) -> Vec['L, ['A, 'B]]
+//│ ╙──      	              ^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.94: 	    if xs is Nil and ys is Nil then 
+//│ ║        	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.95: 	        (new Nil) as Vec[xs.L, [A, B]]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.96: 	    else if xs is Cons(x, tx) and ys is Cons(y, ty) then 
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.97: 	        Cons([x, y], zip(tx, ty)) as Vec[xs.L, [A, B]]
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.98: 	    else error
+//│ ║        	^^^^^^^^^^^^^^
+//│ ╟── expression of type `anything` does not match type `~??H`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.92: 	fun zip: (Vec['L, 'A], Vec['L, 'B]) -> Vec['L, ['A, 'B]]
+//│ ║        	                           ^^
+//│ ╟── from type variable:
+//│ ║  l.92: 	fun zip: (Vec['L, 'A], Vec['L, 'B]) -> Vec['L, ['A, 'B]]
+//│ ║        	              ^^
+//│ ╟── Note: type parameter H is defined at:
+//│ ║  l.18: 	class Cons[H, T](val h: T, val t: Vec[H, T]) extends Vec[S[H], T]
+//│ ╙──      	           ^
+//│ fun zip: forall 'L 'A 'B. (xs: Vec['L, 'A], ys: Vec['L, 'B]) -> Vec['L, ['A, 'B]]
+//│ fun zip: forall 'L0 'A0 'B0. (Vec['L0, 'A0], Vec['L0, 'B0]) -> Vec['L0, ['A0, 'B0]]
+
+fun sum: Vec['l, Int] -> Int
+fun sum(xs) = if xs is
+    Nil then 0
+    Cons(h, t) then h + sum(t)
+//│ fun sum: (Cons[?, in Int & ~??T out Int | ~??T0] | Nil[?]) -> Int
+//│ fun sum: forall 'l. Vec['l, Int] -> Int
+
+// construct lisp style list lol
+// fun toList: (Vec['l, 'a]) -> (['a, 'xs] as 'xs)
+fun toList: (((Vec['l, 'a]) -> 'xs) where ['a, 'xs] | [] : 'xs)
+fun toList(xs) = if xs is
+    Nil then []
+    Cons(h, t) then [h, toList(t)]
+//│ fun toList: forall 'T 'xs. (Cons[?, out 'T] | Nil[?]) -> 'xs
+//│ fun toList: forall 'l 'a 'xs0. Vec['l, 'a] -> 'xs0
+//│ where
+//│   'xs0 :> Array['a | 'xs0]
+//│   'xs :> Array[??T & 'T | 'xs]
+
+:e
+head(new Nil)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.153: 	head(new Nil)
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── type `Z` is not an instance of `S['l]`
+//│ ║  l.17: 	class Nil[T] extends Vec[Z, T]
+//│ ║        	                         ^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.27: 	fun head[T](xs: Vec[S['l], T]): T =
+//│ ╙──      	                    ^^^^^
+//│ error
+//│ res
+//│ Runtime error:
+//│   Error: an error was thrown
+
+:e
+tail(new Nil)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.169: 	tail(new Nil)
+//│ ║         	^^^^^^^^^^^^^
+//│ ╟── type `Z` is not an instance of `S[?L]`
+//│ ║  l.17: 	class Nil[T] extends Vec[Z, T]
+//│ ║        	                         ^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.31: 	fun tail[L, T](xs: Vec[S[L], T]): Vec[L, T] =
+//│ ╙──      	                       ^^^^
+//│ Vec['L, 'T] | error
+//│ res
+//│ Runtime error:
+//│   Error: an error was thrown
+
+head(Cons(1, Cons(2, new Nil)))
+//│ 1 | 2
+//│ res
+//│     = 1
+
+tail(Cons(1, Cons(2, new Nil)))
+//│ Vec[S[Z], 'T]
+//│   where
+//│     'T :> 1 | 2
+//│ res
+//│     = Cons {}
+
+len(new Nil)
+//│ Int
+//│ res
+//│     = 0
+
+len(Cons(1, Cons(2, new Nil)))
+//│ Int
+//│ res
+//│     = 2
+
+:e
+zip(Cons(1, new Nil), new Nil)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.207: 	zip(Cons(1, new Nil), new Nil)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Z` is not an instance of `S[?H]`
+//│ ║  l.17: 	class Nil[T] extends Vec[Z, T]
+//│ ║        	                         ^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.18: 	class Cons[H, T](val h: T, val t: Vec[H, T]) extends Vec[S[H], T]
+//│ ║        	                                                         ^^^^
+//│ ╟── from type variable:
+//│ ║  l.92: 	fun zip: (Vec['L, 'A], Vec['L, 'B]) -> Vec['L, ['A, 'B]]
+//│ ╙──      	                           ^^
+//│ Vec[out S[Z] | Z, ['A, 'B]] | error
+//│   where
+//│     'A :> 1
+//│ res
+//│ Runtime error:
+//│   Error: an error was thrown
+
+zip(Cons(1, new Nil), Cons(2, new Nil))
+//│ Vec[S[Z], ['A, 'B]]
+//│   where
+//│     'B :> 2
+//│     'A :> 1
+//│ res
+//│     = Cons {}
+
+let vec1 = Cons(1, Cons(2, Cons(3, new Nil)))
+//│ let vec1: Cons[S[S[Z]], 'T]
+//│   where
+//│     'T :> 1 | 2 | 3
+//│ vec1
+//│      = Cons {}
+
+vec1 : Vec['l, Int]
+//│ Vec[S[S[S[Z]]], Int]
+//│ res
+//│     = Cons {}
+
+:e
+vec1 : Vec[Z, Int]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.248: 	vec1 : Vec[Z, Int]
+//│ ║         	^^^^
+//│ ╟── type `S[?H]` is not an instance of `Z`
+//│ ║  l.18: 	class Cons[H, T](val h: T, val t: Vec[H, T]) extends Vec[S[H], T]
+//│ ║        	                                                         ^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.248: 	vec1 : Vec[Z, Int]
+//│ ╙──       	           ^
+//│ Vec[Z, Int]
+//│ res
+//│     = Cons {}
+
+map(x => x * 2, vec1)
+//│ Vec[S[S[S[Z]]], 'B]
+//│   where
+//│     'B :> Int
+//│ res
+//│     = Cons {}
+
+sum(vec1)
+//│ Int
+//│ res
+//│     = 6
+
+toList(vec1)
+//│ forall 'xs. 'xs
+//│   where
+//│     'xs :> Array[Int | 'xs]
+//│ res
+//│     = [ 1, [ 2, [ 3, [] ] ] ]
+
+fun head2[A](h: Vec[S[S['a]], A]): A =
+    if h is Cons(_, Cons(h, _)) then h else error
+//│ fun head2: forall 'a 'A. (h: Vec[S[S['a]], 'A]) -> 'A
+
+:e
+head2(Cons(1, new Nil))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.286: 	head2(Cons(1, new Nil))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Z` is not an instance of `S['a]`
+//│ ║  l.17: 	class Nil[T] extends Vec[Z, T]
+//│ ║        	                         ^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.281: 	fun head2[A](h: Vec[S[S['a]], A]): A =
+//│ ╙──       	                      ^^^^^
+//│ 1 | error
+//│ res
+//│ Runtime error:
+//│   Error: an error was thrown
+
+// FIXME this should failed
+fun verr: (Vec['L, Int], Vec['L, Int]) -> Bool
+fun verr[L](xs: Vec[L, Int], ys: Vec[L, Int]): Bool =
+    if xs is Cons(x, tx) and ys is Cons(y, ty) 
+        then verr(tx, Cons(0, ty))  // <- unequal size here
+        else false
+//│ ╔══[ERROR] Type error in `case` expression
+//│ ║  l.304: 	    if xs is Cons(x, tx) and ys is Cons(y, ty) 
+//│ ║         	                             ^^^^^^^^^^^^^^^^^^
+//│ ║  l.305: 	        then verr(tx, Cons(0, ty))  // <- unequal size here
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.306: 	        else false
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `H` leaks out of its scope
+//│ ║  l.18: 	class Cons[H, T](val h: T, val t: Vec[H, T]) extends Vec[S[H], T]
+//│ ║        	           ^
+//│ ╟── into type `nothing`
+//│ ╟── adding a type annotation to any of the following terms may help resolve the problem
+//│ ╟── • this application:
+//│ ║  l.305: 	        then verr(tx, Cons(0, ty))  // <- unequal size here
+//│ ║         	                      ^^^^^^^^^^^
+//│ ╟── • this reference:
+//│ ║  l.305: 	        then verr(tx, Cons(0, ty))  // <- unequal size here
+//│ ╙──       	             ^^^^
+//│ ╔══[ERROR] Type `??H` does not contain member `P`
+//│ ║  l.6: 	class S[type P]
+//│ ╙──     	             ^
+//│ fun verr: forall 'L. (xs: Vec['L, Int], ys: Vec['L, Int]) -> Bool
+//│ fun verr: forall 'L0. (Vec['L0, Int], Vec['L0, Int]) -> Bool
+
+// TODO somehow checks
+fun vecEq: (Vec['L, Int], Vec['L, Int]) -> Bool
+fun vecEq[L](xs: Vec[L, Int], ys: Vec[L, Int]): Bool =
+    if xs is Nil and ys is Nil then true
+    else if xs is Cons(x, tx) and ys is Cons(y, ty) then (x == y) && vecEq(tx, ty)
+    else false
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.335: 	    else if xs is Cons(x, tx) and ys is Cons(y, ty) then (x == y) && vecEq(tx, ty)
+//│ ║         	                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.336: 	    else false
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── type `??H & ~??H0` does not match type `~??H1`
+//│ ║  l.332: 	fun vecEq: (Vec['L, Int], Vec['L, Int]) -> Bool
+//│ ╙──       	                ^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.334: 	    if xs is Nil and ys is Nil then true
+//│ ║         	       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.335: 	    else if xs is Cons(x, tx) and ys is Cons(y, ty) then (x == y) && vecEq(tx, ty)
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.336: 	    else false
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── expression of type `anything` does not match type `~??H`
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.332: 	fun vecEq: (Vec['L, Int], Vec['L, Int]) -> Bool
+//│ ║         	                              ^^
+//│ ╟── from type variable:
+//│ ║  l.332: 	fun vecEq: (Vec['L, Int], Vec['L, Int]) -> Bool
+//│ ║         	                ^^
+//│ ╟── Note: type parameter H is defined at:
+//│ ║  l.18: 	class Cons[H, T](val h: T, val t: Vec[H, T]) extends Vec[S[H], T]
+//│ ╙──      	           ^
+//│ fun vecEq: forall 'L. (xs: Vec['L, Int], ys: Vec['L, Int]) -> Bool
+//│ fun vecEq: forall 'L0. (Vec['L0, Int], Vec['L0, Int]) -> Bool
+
+vecEq(Cons(1, Cons(2, new Nil)), Cons(1, Cons(2, new Nil)))
+vecEq(Cons(2, Cons(1, new Nil)), Cons(1, Cons(2, new Nil)))
+//│ Bool
+//│ res
+//│     = true
+//│ res
+//│     = false
+
+:e
+vecEq(Cons(1, Cons(2, new Nil)), Cons(2, new Nil))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.374: 	vecEq(Cons(1, Cons(2, new Nil)), Cons(2, new Nil))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Z` is not an instance of `S[?H]`
+//│ ║  l.17: 	class Nil[T] extends Vec[Z, T]
+//│ ║        	                         ^
+//│ ╟── Note: constraint arises from applied type reference:
+//│ ║  l.18: 	class Cons[H, T](val h: T, val t: Vec[H, T]) extends Vec[S[H], T]
+//│ ║        	                                                         ^^^^
+//│ ╟── Note: type parameter H is defined at:
+//│ ║  l.18: 	class Cons[H, T](val h: T, val t: Vec[H, T]) extends Vec[S[H], T]
+//│ ╙──      	           ^
+//│ error | false | true
+//│ res
+//│     = false
+

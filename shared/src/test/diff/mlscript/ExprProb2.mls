@@ -185,7 +185,7 @@ eval2_fixed_2 e1
 //│ res: int
 //│    = 6
 //│ constrain calls  : 267
-//│ annoying  calls  : 140
+//│ annoying  calls  : 158
 //│ subtyping calls  : 1865
 
 :stats
@@ -193,7 +193,7 @@ eval2_fixed_2 e2
 //│ res: int
 //│    = -5
 //│ constrain calls  : 648
-//│ annoying  calls  : 345
+//│ annoying  calls  : 389
 //│ subtyping calls  : 5049
 
 
@@ -375,7 +375,7 @@ fix eval2f_oops e2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.+1: 	fix eval2f_oops e2
 //│ ║        	^^^^^^^^^^^^^^^
-//│ ╟── function of type `?a -> (forall ?b. ?b)` does not match type `Add[?] & ?c | Lit & ?d`
+//│ ╟── function of type `?a -> ?b` does not match type `Add[?] & ?c | Lit & ?d`
 //│ ║  l.173: 	def fix f = let fixed = fun x -> f (fun v -> (x x) v) in fixed fixed!
 //│ ║         	                                    ^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:

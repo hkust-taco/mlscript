@@ -12,7 +12,7 @@ fun f(x, b) =
       "1" then "s1"
       "2" then "s2"
   else ":p"  
-//│ fun f: (Eql["0" | "1" | "2" | 0 | 1 | 2], Object) -> (":p" | "n0" | "n1" | "n2" | "s0" | "s1" | "s2")
+//│ fun f: (Eql[out "0" | "1" | "2" | 0 | 1 | 2], Object) -> (":p" | "n0" | "n1" | "n2" | "s0" | "s1" | "s2")
 
 fun f(x, y, a, b) =
   if x === 0

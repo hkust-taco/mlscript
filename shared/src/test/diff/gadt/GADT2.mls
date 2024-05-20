@@ -1,0 +1,175 @@
+:NewDefs
+
+fun fst([x, y]) = x
+fun snd([x, y]) = y 
+//│ fun fst: forall 'a. (['a, anything]) -> 'a
+//│ fun snd: forall 'b. ([anything, 'b]) -> 'b
+
+// dependent types //
+
+abstract class Rep[type T]: IntRep | BoolRep | PairRep[?,?]
+class IntRep extends Rep[Int]
+class BoolRep extends Rep[Bool]
+class PairRep[A, B](val a: Rep[A], val b: Rep[B]) extends Rep[[A, B]]
+//│ abstract class Rep[T]: BoolRep | IntRep | PairRep[?, ?]
+//│ class IntRep extends Rep {
+//│   constructor()
+//│ }
+//│ class BoolRep extends Rep {
+//│   constructor()
+//│ }
+//│ class PairRep[A, B](a: Rep[A], b: Rep[B]) extends Rep
+
+fun equal: (Rep['T], 'T, 'T) -> Bool
+fun equal[T](ev: Rep[T], x: T, y: T) = if ev is
+    IntRep then (x : ev.T) == (y : ev.T)
+    BoolRep then ((x : ev.T) && (y : ev.T)) || (not(x : ev.T) && not(y : ev.T))
+    PairRep(a, b) then equal(a, fst(x : ev.T), fst(y : ev.T)) && equal(b, snd(x : ev.T), snd(y : ev.T))
+//│ fun equal: forall 'T. (ev: Rep['T], x: 'T, y: 'T) -> Bool
+//│ fun equal: forall 'T0. (Rep['T0], 'T0, 'T0) -> Bool
+
+equal(new IntRep, 1+1, 2)
+//│ Bool
+//│ res
+//│     = true
+
+:e
+equal(new BoolRep, 1+1, true)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.37: 	equal(new BoolRep, 1+1, true)
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── operator application of type `Int` is not an instance of type `Bool`
+//│ ║  l.37: 	equal(new BoolRep, 1+1, true)
+//│ ║        	                   ^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.12: 	class BoolRep extends Rep[Bool]
+//│ ║        	                          ^^^^
+//│ ╟── from type variable:
+//│ ║  l.23: 	fun equal: (Rep['T], 'T, 'T) -> Bool
+//│ ╙──      	                     ^^
+//│ error | false | true
+//│ res
+//│     = true
+
+equal(PairRep(PairRep(new IntRep, new IntRep), new IntRep), [[1,0], 2], [[4,1], 3])
+//│ Bool
+//│ res
+//│     = false
+
+equal(PairRep(new IntRep, new BoolRep), [1, false], [1, false])
+//│ Bool
+//│ res
+//│     = true
+
+:e
+equal(PairRep(new IntRep, new IntRep), [1, 3], [1, true])
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.65: 	equal(PairRep(new IntRep, new IntRep), [1, 3], [1, true])
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── reference of type `true` is not an instance of `Int`
+//│ ║  l.65: 	equal(PairRep(new IntRep, new IntRep), [1, 3], [1, true])
+//│ ║        	                                                   ^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.11: 	class IntRep extends Rep[Int]
+//│ ║        	                         ^^^
+//│ ╟── Note: type parameter B is defined at:
+//│ ║  l.13: 	class PairRep[A, B](val a: Rep[A], val b: Rep[B]) extends Rep[[A, B]]
+//│ ╙──      	                 ^
+//│ error | false | true
+//│ res
+//│     = false
+
+fun equal: (Rep['T], 'T, 'T) -> Bool
+fun equal[T](ev: Rep[T], x: T, y: T): Bool = if ev is
+    IntRep then (x as ev.T) == (y as ev.T)
+    BoolRep then ((x as ev.T) && (y as ev.T)) || (not(x as ev.T) && not(y as ev.T))
+    PairRep(a, b) then equal(a, fst(x as ev.T), fst(y as ev.T)) && equal(b, snd(x as ev.T), snd(y as ev.T))
+//│ fun equal: forall 'T. (ev: Rep['T], x: 'T, y: 'T) -> Bool
+//│ fun equal: forall 'T0. (Rep['T0], 'T0, 'T0) -> Bool
+
+// perfect binary tree //
+
+abstract class Perfect[type T]: Leaf | Node[?]
+class Leaf(val a: Int) extends Perfect[Int]
+class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
+//│ abstract class Perfect[T]: Leaf | Node[?]
+//│ class Leaf(a: Int) extends Perfect
+//│ class Node[A](l: Perfect[A], r: Perfect[A]) extends Perfect
+
+fun size: Perfect['T] -> Int
+fun size[T](t: Perfect[T]): Int = if t is
+    Node(l, r) then size(l) + size(r)
+    else 1
+//│ fun size: forall 'T. (t: Perfect['T]) -> Int
+//│ fun size: forall 'T0. Perfect['T0] -> Int
+
+fun head: Perfect['T] -> Int
+fun head[T](t: Perfect[T]): Int = if t is
+    Leaf(a) then a
+    Node(l, r) then head(l)
+//│ fun head: forall 'T. (t: Perfect['T]) -> Int
+//│ fun head: forall 'T0. Perfect['T0] -> Int
+
+fun flip: Perfect['A] -> Perfect['A]
+fun flip[A](t: Perfect[A]): Perfect[t.T] = if t is
+    Leaf(a) then Leaf(a) 
+    Node(l, r) then Node(flip(r), flip(l))
+//│ fun flip: forall 'A 'T. (t: Perfect['A]) -> Perfect[in Int & 'T0 | [nothing, nothing] & 'T | 'A out 'A & ([??A, ??A] & 'T0 | 'T & (Int | 'T0))]
+//│ fun flip: forall 'A0. Perfect['A0] -> Perfect['A0]
+
+let test1 = Node(Node(Leaf(1), Leaf(2)), Node(Leaf(3), Leaf(4)))
+//│ let test1: Node[[Int, Int]]
+//│ test1
+//│       = Node {}
+
+:e
+let test2 = Node(Leaf(1), Node(Leaf(2), Leaf(3)))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.126: 	let test2 = Node(Leaf(1), Node(Leaf(2), Leaf(3)))
+//│ ║         	            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `[?A, ?A]` is not an instance of type `Int`
+//│ ║  l.94: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
+//│ ║        	                                                                    ^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.93: 	class Leaf(val a: Int) extends Perfect[Int]
+//│ ║        	                                       ^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.94: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
+//│ ╙──      	           ^
+//│ let test2: Node[out Int | [Int, Int]] | error
+//│ test2
+//│       = Node {}
+
+:e
+head(Node(Node(Leaf(1), Leaf(2)), Leaf(3)))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.144: 	head(Node(Node(Leaf(1), Leaf(2)), Leaf(3)))
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Int` is not a 2-element tuple
+//│ ║  l.93: 	class Leaf(val a: Int) extends Perfect[Int]
+//│ ║        	                                       ^^^
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.94: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
+//│ ║        	                                                                    ^^^^^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.94: 	class Node[A](val l: Perfect[A], val r: Perfect[A]) extends Perfect[[A, A]]
+//│ ╙──      	           ^
+//│ Int
+//│ res
+//│     = 1
+
+head(test1)
+//│ Int
+//│ res
+//│     = 1
+
+flip(test1)
+//│ Perfect[[[Int, Int], [Int, Int]]]
+//│ res
+//│     = Node {}
+
+size(test1)
+//│ Int
+//│ res
+//│     = 4
+

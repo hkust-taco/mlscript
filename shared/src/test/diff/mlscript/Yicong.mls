@@ -14,7 +14,7 @@ case r of { T1 -> r | _ -> 0 }
 
 // TODO also factor ClassTag-s like `2`:
 case r of { T1 -> r | T2 -> r }
-//│ res: 1 & #T1 | 'a | #T2 & (2 & ~#T1 | 2 & ~#T2 | 2 & ~'a | 2 & #T1)
+//│ res: 1 & #T1 | 'a | #T2 & (2 & ~#T1 | 2 & ~'a | 2 & #T1)
 //│    = [Number: 1]
 
 r = if true then T1 ((1,2,3)) else T2 ((3,4,5,4))

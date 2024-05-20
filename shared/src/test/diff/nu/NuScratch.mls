@@ -1,3 +1,305 @@
 :NewDefs
 
 
+// ?A' :> `S <: `S
+// ?A :> ??S <: ??S and ?A' :> `S | ?A <: `S & ?A'
+// the bounds of ??A are now eqt to ?A :> Top <: Bot
+// which fails
+
+
+class Box[type A](val get: A)
+abstract class F[type A]: MkF
+class MkF[T](t: T) extends F[Box[T]]
+//│ class Box[A](get: A)
+//│ abstract class F[A]: MkF[anything]
+//│ class MkF[T](t: T) extends F
+
+// :d
+fun f[T](x: F[T]): T = if x is MkF(t) then Box(t) as x.A
+//│ fun f: forall 'T. (x: F['T]) -> 'T
+
+
+
+fun f: Box[?]
+//│ fun f: Box[anything]
+
+// :ds
+f
+//│ Box[anything]
+//│ res
+//│     = <no result>
+//│       f is not implemented
+
+
+fun foo(b: Box['X]) = b.get + 1
+//│ fun foo: forall 'X. (b: Box['X]) -> Int
+//│   where
+//│     'X <: Int
+
+fun foo(b: Box['X] & Box[Int]) = [b, b.get + 1]
+//│ fun foo: forall 'X. (b: Box[Int | 'X]) -> [Box[Int & 'X], Int]
+
+
+type List[out A] = Cons[A]
+module Nil
+class Cons[A](head: A, tail: List[A])
+//│ type List[A] = Cons[A]
+//│ module Nil
+//│ class Cons[A](head: A, tail: List[A])
+
+fun listConcat(xs) =
+  if xs is
+    Cons(x, xs2) then Cons(x, listConcat(xs2))
+//│ fun listConcat: forall 'A 'A0. Cons['A] -> Cons['A0]
+//│   where
+//│     'A0 :> ??A & 'A
+
+
+
+
+
+module T {
+  fun unapply(x) = [x]
+}
+//│ module T {
+//│   fun unapply: forall 'a. 'a -> ['a]
+//│ }
+
+:e
+fun foo(a) = if a is T(x) then x else 0
+//│ ╔══[ERROR] module T expects 0 parameter but found 1 parameter
+//│ ║  l.69: 	fun foo(a) = if a is T(x) then x else 0
+//│ ╙──      	                     ^^^^
+//│ fun foo: anything -> error
+//│ Code generation encountered an error:
+//│   if expression was not desugared
+
+
+
+class C(x: Int, y: Str)
+//│ class C(x: Int, y: Str)
+
+
+:d
+fun foo(c) = if c is C(a, b) then [a, b]
+//│ 0. Typing TypingUnit(List(NuFunDef(None,Var(foo),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(c))))),If(IfThen(App(Var(is),Tup(List((None,Fld(_,Var(c))), (None,Fld(_,App(Var(C),Tup(List((None,Fld(_,Var(a))), (None,Fld(_,Var(b))))))))))),Tup(List((None,Fld(_,Var(a))), (None,Fld(_,Var(b)))))),None))))))
+//│ | 0. Created lazy type info for NuFunDef(None,Var(foo),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(c))))),If(IfThen(App(Var(is),Tup(List((None,Fld(_,Var(c))), (None,Fld(_,App(Var(C),Tup(List((None,Fld(_,Var(a))), (None,Fld(_,Var(b))))))))))),Tup(List((None,Fld(_,Var(a))), (None,Fld(_,Var(b)))))),None))))
+//│ | Completing fun foo = (c,) => if (is(c, C(a, b,),)) then [a, b,]
+//│ | | Type params 
+//│ | | Params 
+//│ | | Type foo polymorphically? true && (0 === 0 || false || false
+//│ | | 1. Typing term (c,) => if (is(c, C(a, b,),)) then [a, b,]
+//│ | | | 1. Typing pattern [c,]
+//│ | | | | 1. Typing pattern c
+//│ | | | | 1. : c179'
+//│ | | | 1. : (c179',)
+//│ | | | 1. Typing term if (is(c, C(a, b,),)) then [a, b,]
+//│ | | | | [Desugarer.destructPattern] scrutinee = Var(c); pattern = App(Var(C),Tup(List((None,Fld(_,Var(a))), (None,Fld(_,Var(b))))))
+//│ | | | | [Desugarer.destructPattern] Result: «c is Var(C)»
+//│ | | | | Desugared term: case c of { C => let $unapp = (C).unapply(c,) in let a = ($unapp).0 in let b = ($unapp).1 in [a, b,] }
+//│ | | | | 1. Typing term case c of { C => let $unapp = (C).unapply(c,) in let a = ($unapp).0 in let b = ($unapp).1 in [a, b,] }
+//│ | | | | | 1. Typing term c
+//│ | | | | | 1. : c179'
+//│ | | | | | CONSTRAIN c179' <! Object
+//│ | | | | |   where 
+//│ | | | | | 1. C c179' <! Object    (0)
+//│ | | | | | | NEW c179' UB (0)
+//│ | | | | | Match arm C: #C<Object> & ⊤ intl ⊤
+//│ | | | | | var rfn: c :: ⊤ & #C<Object> & ⊤
+//│ | | | | | 2. Typing term let $unapp = (C).unapply(c,) in let a = ($unapp).0 in let b = ($unapp).1 in [a, b,]
+//│ | | | | | | 2. Typing term (C).unapply(c,)
+//│ | | | | | | | 2. Typing term (C).unapply
+//│ | | | | | | | | 2. Typing term (x,) => let _ = x : C in [(x).#x, (x).#y,]
+//│ | | | | | | | | | TYPING POLY LAM
+//│ | | | | | | | | | 3. Typing pattern [x,]
+//│ | | | | | | | | | | 3. Typing pattern x
+//│ | | | | | | | | | | 3. : x181'''
+//│ | | | | | | | | | 3. : (x181''',)
+//│ | | | | | | | | | 3. Typing term let _ = x : C in [(x).#x, (x).#y,]
+//│ | | | | | | | | | | 3. Typing term x : C
+//│ | | | | | | | | | | | 3. Typing term x
+//│ | | | | | | | | | | | 3. : x181'''
+//│ | | | | | | | | | | | Typing type TypeName(C)
+//│ | | | | | | | | | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | | | | | | | | | 3. type TypeName(C)
+//│ | | | | | | | | | | | | => C
+//│ | | | | | | | | | | | => C ——— 
+//│ | | | | | | | | | | | CONSTRAIN x181''' <! C
+//│ | | | | | | | | | | |   where 
+//│ | | | | | | | | | | | 3. C x181''' <! C    (0)
+//│ | | | | | | | | | | | | NEW x181''' UB (0)
+//│ | | | | | | | | | | 3. : C
+//│ | | | | | | | | | | 3. Typing term [(x).#x, (x).#y,]
+//│ | | | | | | | | | | | 3. Typing term (x).#x
+//│ | | | | | | | | | | | | 3. Typing term x
+//│ | | | | | | | | | | | | 3. : x181'''
+//│ | | | | | | | | | | | | CONSTRAIN x181''' <! {#x: #x182'''}
+//│ | | | | | | | | | | | |   where 
+//│ 		x181''' <: C
+//│ | | | | | | | | | | | | 3. C x181''' <! {#x: #x182'''}    (0)
+//│ | | | | | | | | | | | | | NEW x181''' UB (3)
+//│ | | | | | | | | | | | 3. : #x182'''
+//│ | | | | | | | | | | | 3. Typing term (x).#y
+//│ | | | | | | | | | | | | 3. Typing term x
+//│ | | | | | | | | | | | | 3. : x181'''
+//│ | | | | | | | | | | | | CONSTRAIN x181''' <! {#y: #y183'''}
+//│ | | | | | | | | | | | |   where 
+//│ 		x181''' <: {#x: #x182'''} & C
+//│ | | | | | | | | | | | | 3. C x181''' <! {#y: #y183'''}    (0)
+//│ | | | | | | | | | | | | | NEW x181''' UB (3)
+//│ | | | | | | | | | | | 3. : #y183'''
+//│ | | | | | | | | | | 3. : (#x182''', #y183''',)
+//│ | | | | | | | | | 3. : (#x182''', #y183''',)
+//│ | | | | | | | | | Inferred poly constr: (x181''' -> (#x182''', #y183''',))  —— where 
+//│ 		x181''' <: {#y: #y183'''} & {#x: #x182'''} & C
+//│ | | | | | | | | 2. : ‹∀ 2. (x181''' -> (#x182''', #y183''',))›
+//│ | | | | | | | 2. : ‹∀ 2. (x181''' -> (#x182''', #y183''',))›
+//│ | | | | | | | 2. Typing term c
+//│ | | | | | | | 2. : #C<Object>
+//│ | | | | | | | CONSTRAIN ‹∀ 2. (x181''' -> (#x182''', #y183''',))› <! (#C<Object> -> α184'')
+//│ | | | | | | |   where 
+//│ 		x181''' <: {#y: #y183'''} & {#x: #x182'''} & C
+//│ | | | | | | | 2. C ‹∀ 2. (x181''' -> (#x182''', #y183''',))› <! (#C<Object> -> α184'')    (0)
+//│ | | | | | | | | could be distribbed: Set(#x182''', #y183''')
+//│ | | | | | | | | cannot be distribbed: Set(x181''', #x182''', #y183''')
+//│ | | | | | | | | INST [2]   ‹∀ 2. (x181''' -> (#x182''', #y183''',))›
+//│ | | | | | | | |   where  
+//│ 		x181''' <: {#y: #y183'''} & {#x: #x182'''} & C
+//│ | | | | | | | | TO [2] ~>  (x181_185'' -> (#x182_187'', #y183_186'',))
+//│ | | | | | | | |   where  
+//│ 		x181_185'' <: {#y: #y183_186''} & {#x: #x182_187''} & C
+//│ | | | | | | | | 2. C (x181_185'' -> (#x182_187'', #y183_186'',)) <! (#C<Object> -> α184'')    (2)
+//│ | | | | | | | | | 2. C (#C<Object>,) <! (x181_185'',)    (2)
+//│ | | | | | | | | | | 2. C #C<Object> <! x181_185''    (3)
+//│ | | | | | | | | | | | NEW x181_185'' LB (0)
+//│ | | | | | | | | | | | 2. C #C<Object> <! {#y: #y183_186''}    (6)
+//│ | | | | | | | | | | | | Looking up field #y in Some(C) & TreeSet() & {...}
+//│ | | | | | | | | | | | | | Lookup C.y : Some(Str) where 
+//│ | | | | | | | | | | | | | Fresh[0] C.y : Some(Str) where Some()
+//│ | | | | | | | | | | | | |   & None  (from refinement)
+//│ | | | | | | | | | | | | 2. C Str <! #y183_186''    (5)
+//│ | | | | | | | | | | | | | NEW #y183_186'' LB (0)
+//│ | | | | | | | | | | | 2. C #C<Object> <! {#x: #x182_187''}    (6)
+//│ | | | | | | | | | | | | Looking up field #x in Some(C) & TreeSet() & {...}
+//│ | | | | | | | | | | | | | Lookup C.x : Some(Int) where 
+//│ | | | | | | | | | | | | | Fresh[0] C.x : Some(Int) where Some()
+//│ | | | | | | | | | | | | |   & None  (from refinement)
+//│ | | | | | | | | | | | | 2. C Int <! #x182_187''    (5)
+//│ | | | | | | | | | | | | | NEW #x182_187'' LB (0)
+//│ | | | | | | | | | | | 2. C #C<Object> <! C    (6)
+//│ | | | | | | | | | | | | 2. C #C<Object> <! #C<Object>    (8)
+//│ | | | | | | | | | | | | | Already a subtype by <:<
+//│ | | | | | | | | | 2. C (#x182_187'', #y183_186'',) <! α184''    (2)
+//│ | | | | | | | | | | NEW α184'' LB (2)
+//│ | | | | | | 2. : α184''
+//│ | | | | | | 2. Typing term let a = ($unapp).0 in let b = ($unapp).1 in [a, b,]
+//│ | | | | | | | 2. Typing term ($unapp).0
+//│ | | | | | | | | 2. Typing term $unapp
+//│ | | | | | | | | 2. : α184''
+//│ | | | | | | | | CONSTRAIN α184'' <! {0: α188''}
+//│ | | | | | | | |   where 
+//│ 		α184'' :> (#x182_187'', #y183_186'',)
+//│ 		#y183_186'' :> Str
+//│ 		#x182_187'' :> Int
+//│ | | | | | | | | 2. C α184'' <! {0: α188''}    (0)
+//│ | | | | | | | | | NEW α184'' UB (2)
+//│ | | | | | | | | | 2. C (#x182_187'', #y183_186'',) <! {0: α188''}    (2)
+//│ | | | | | | | | | | 2. C {0: #x182_187'', 1: #y183_186''} <! {0: α188''}    (4)
+//│ | | | | | | | | | | | 2. C #x182_187'' <! α188''    (3)
+//│ | | | | | | | | | | | | NEW #x182_187'' UB (2)
+//│ | | | | | | | | | | | | 2. C Int <! α188''    (5)
+//│ | | | | | | | | | | | | | NEW α188'' LB (0)
+//│ | | | | | | | 2. : α188''
+//│ | | | | | | | 2. Typing term let b = ($unapp).1 in [a, b,]
+//│ | | | | | | | | 2. Typing term ($unapp).1
+//│ | | | | | | | | | 2. Typing term $unapp
+//│ | | | | | | | | | 2. : α184''
+//│ | | | | | | | | | CONSTRAIN α184'' <! {1: α189''}
+//│ | | | | | | | | |   where 
+//│ 		α184'' :> (#x182_187'', #y183_186'',) <: {0: α188''}
+//│ 		#y183_186'' :> Str
+//│ 		#x182_187'' :> Int <: α188''
+//│ 		α188'' :> Int
+//│ | | | | | | | | | 2. C α184'' <! {1: α189''}    (0)
+//│ | | | | | | | | | | NEW α184'' UB (2)
+//│ | | | | | | | | | | 2. C (#x182_187'', #y183_186'',) <! {1: α189''}    (2)
+//│ | | | | | | | | | | | 2. C {0: #x182_187'', 1: #y183_186''} <! {1: α189''}    (4)
+//│ | | | | | | | | | | | | 2. C #y183_186'' <! α189''    (3)
+//│ | | | | | | | | | | | | | NEW #y183_186'' UB (2)
+//│ | | | | | | | | | | | | | 2. C Str <! α189''    (5)
+//│ | | | | | | | | | | | | | | NEW α189'' LB (0)
+//│ | | | | | | | | 2. : α189''
+//│ | | | | | | | | 2. Typing term [a, b,]
+//│ | | | | | | | | | 2. Typing term a
+//│ | | | | | | | | | 2. : α188''
+//│ | | | | | | | | | 2. Typing term b
+//│ | | | | | | | | | 2. : α189''
+//│ | | | | | | | | 2. : (α188'', α189'',)
+//│ | | | | | | | 2. : (α188'', α189'',)
+//│ | | | | | | 2. : (α188'', α189'',)
+//│ | | | | | 2. : (α188'', α189'',)
+//│ | | | | | CONSTRAIN (α188'', α189'',) <! α180'
+//│ | | | | |   where 
+//│ 		α188'' :> Int
+//│ 		α189'' :> Str
+//│ | | | | | 2. C (α188'', α189'',) <! α180'    (0)
+//│ | | | | | | wrong level: 2
+//│ | | | | | | EXTR[+] (α188'', α189'',) || 1 .. 1024  2 false
+//│ | | | | | | | EXTR[+] α188'' || 1 .. 1024  2 false
+//│ | | | | | | | | EXTR[+] Int || 1 .. 1024  0 true
+//│ | | | | | | | | => Int
+//│ | | | | | | | => α188_190'
+//│ | | | | | | | EXTR[+] α189'' || 1 .. 1024  2 false
+//│ | | | | | | | | EXTR[+] Str || 1 .. 1024  0 true
+//│ | | | | | | | | => Str
+//│ | | | | | | | => α189_191'
+//│ | | | | | | => (α188_190', α189_191',)
+//│ | | | | | | RECONSTRAINING TVs
+//│ | | | | | | | Reconstraining α188_190'
+//│ | | | | | | | Reconstraining α189_191'
+//│ | | | | | | EXTR LHS  ~>  (α188_190', α189_191',)  to 1
+//│ | | | | | |  where 
+//│ 		α188_190' :> Int
+//│ 		α189_191' :> Str
+//│ | | | | | | 2. C (α188_190', α189_191',) <! α180'    (0)
+//│ | | | | | | | NEW α180' LB (1)
+//│ | | | | | finishing branch: [(#C<Object>,⊤)] + List() and [α180'] | ⊥
+//│ | | | | | finishing case c179' <: #C<Object>
+//│ | | | | | CONSTRAIN c179' <! #C<Object>
+//│ | | | | |   where 
+//│ 		c179' <: Object
+//│ | | | | | 1. C c179' <! #C<Object>    (0)
+//│ | | | | | | NEW c179' UB (0)
+//│ | | | | 1. : α180'
+//│ | | | 1. : α180'
+//│ | | 1. : (c179' -> α180')
+//│ | | CONSTRAIN (c179' -> α180') <! foo192'
+//│ | |   where 
+//│ 		c179' <: #C<Object> & Object
+//│ 		α180' :> (α188_190', α189_191',)
+//│ 		α188_190' :> Int
+//│ 		α189_191' :> Str
+//│ | | 1. C (c179' -> α180') <! foo192'    (0)
+//│ | | | NEW foo192' LB (1)
+//│ | Completed TypedNuFun(0,NuFunDef(None,Var(foo),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(c))))),If(IfThen(App(Var(is),Tup(List((None,Fld(_,Var(c))), (None,Fld(_,App(Var(C),Tup(List((None,Fld(_,Var(a))), (None,Fld(_,Var(b))))))))))),Tup(List((None,Fld(_,Var(a))), (None,Fld(_,Var(b)))))),None)))),(c179' -> α180')) where 
+//│ 		c179' <: #C<Object> & Object
+//│ 		α180' :> (α188_190', α189_191',)
+//│ 		α188_190' :> Int
+//│ 		α189_191' :> Str
+//│ | Typing unit statements
+//│ | : None
+//│ ======== TYPED ========
+//│ fun foo: ‹∀ 0. (c179' -> α180')› where 
+//│ |		c179' <: #C<Object> & Object
+//│ |		α180' :> (α188_190', α189_191',)
+//│ |		α188_190' :> Int
+//│ |		α189_191' :> Str
+//│ fun foo: C -> [Int, Str]
+
+
+
+
+
+
+
+

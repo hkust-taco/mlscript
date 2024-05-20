@@ -99,7 +99,7 @@ def find_A table key =
   if isnil table then none
   else if eq (fst (car table)) key then some (snd (car table))
   else find_A (cdr table) key
-//│ List[(anything, 'b,)] -> anything -> Option['b]
+//│ List[(anything, anything,)] -> anything -> Option[in anything out nothing]
 //│   <:  find_A:
 //│ List[(anything, 'b,)] -> anything -> Option['b]
 

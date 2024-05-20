@@ -1,0 +1,19 @@
+:NewDefs
+
+
+
+class Arr[A](xs: A -> A)
+//│ class Arr[A](xs: A -> A)
+
+module N extends Arr[nothing](id)
+//│ module N extends Arr
+
+fun test(k) = id(x => k(if true then N else Arr(x)))
+//│ fun test: forall 'A 'A0 'a. ((Arr[in 'A out 'A | 'A0] | N) -> 'a) -> (forall 'A1. (('A | 'A1) -> ('A0 & 'A1)) -> 'a)
+
+test(x => x)(id)
+//│ Arr['A] | N
+//│ res
+//│     = N { class: [class N extends Arr] }
+
+

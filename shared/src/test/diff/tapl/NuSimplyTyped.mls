@@ -67,8 +67,15 @@ fun find(t, k) =
       sgt(k, k') then find(r, k)
       _ then Some(v)
     Empty then None
-//│ fun insert: forall 'A. (Empty | Node['A], Str, 'A) -> Node['A]
-//│ fun find: forall 'A0. (Empty | Node['A0], Str) -> (None | Some['A0])
+//│ fun insert: forall 'A 'A0 'A1 'A2. (Empty | Node[in 'A out 'A0], Str, 'A & 'A2) -> Node[in 'A2 out 'A1]
+//│ fun find: forall 'A3. (Empty | Node[out 'A3], Str) -> (None | Some[??A & 'A3])
+//│ where
+//│   'A :> ??A0 & 'A0 | 'A1
+//│      <: 'A2 & 'A0
+//│   'A0 :> 'A1
+//│       <: 'A & 'A2 | ~??A0
+//│   'A2 <: 'A
+//│   'A1 :> ??A0 & 'A0 | 'A
 
 fun showType(ty) =
   if ty is
@@ -97,7 +104,7 @@ fun typeEqual(t1, t2) =
     t1 is FunctionType(lhs1, rhs1) and t2 is FunctionType(lhs2, rhs2) then
       typeEqual(lhs1, lhs2) and typeEqual(rhs1, rhs2)
     _ then false
-//│ fun typeEqual: (Object, Object) -> Bool
+//│ fun typeEqual: (Object, FunctionType | Object & ~#FunctionType & ~#PrimitiveType | PrimitiveType) -> Bool
 
 fun showTerm(t) =
   if t is
@@ -123,6 +130,7 @@ showTerm(App(Abs(Var("x"), _t("int"), Var("y")), Var("z")))
 //│ res
 //│     = '((&x: int => z) z)'
 
+// :e // FIXME recursion depth excess
 // Removing the return type annotation causes stack overflow.
 fun typeTerm(t: Term, ctx: TreeMap[Type]): Result[Type, Str] =
   if t is
@@ -165,3 +173,4 @@ showTypeTerm(App(Var("f"), Lit("0", _t("int"))), insert(Empty, "f", _t("Str")))
 //│     = 'Type error: expect the argument to be of type `int` but found `float`'
 //│ res
 //│     = 'Type error: cannot apply primitive type `Str`'
+

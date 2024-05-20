@@ -437,7 +437,12 @@ fun findFreshName(name, freeNames) =
 // Find a fresh name to replace `name` that does not conflict with any bound
 // variables in the `body`.
 fun freshName(name, body) = findFreshName(name, fv(body))
-//│ freshName: (string, Abs & 'a | App & 'b | Var,) -> string
+//│ ╔══[ERROR] Cyclic-looking constraint while typing application; a type annotation may be required
+//│ ║  l.439: 	fun freshName(name, body) = findFreshName(name, fv(body))
+//│ ║         	                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╙── Note: use flag `:ex` to see internal error info.
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ freshName: (string, Abs & 'a | App & 'b | Var,) -> (error | string)
 //│   where
 //│     'a <: {lhs: Var, rhs: Abs & 'a | App & 'b | Var}
 //│     'b <: {lhs: Abs & 'a | App & 'b | Var, rhs: Abs & 'a | App & 'b | Var}
@@ -452,21 +457,24 @@ fun subst(t, n, v) =
       _ then Abs(Var(name), subst(body, n, v))
     App(lhs, rhs) then App(subst(lhs, n, v), subst(rhs, n, v))
     _ then t
-//│ subst: (Abs & 'a | App & 'b | Var & 'c | 'd & ~#Abs & ~#App & ~#Var, anything, 'e & (Var & 'd & ~#Var | Var & 'c | 'f & (App & 'd & ~#App | 'b & (App & 'g | App & ~#App)) | 'h & (Abs & 'd & ~#Abs | 'a & (Abs & 'i | Abs & ~#Abs))),) -> (Var & {name: string} | 'e | 'c | 'a | 'd)
+//│ subst: (Abs & 'a | App & 'b | Var & 'c | 'd & ~#Abs & ~#App & ~#Var, anything, 'e & (Var & 'd & ~#Var | Var & 'c | 'f & (App & 'd & ~#App | 'b & (App & 'g | App & ~#App)) | 'h & (Abs & 'd & ~#Abs | 'a & (Abs & 'i | Abs & ~#Abs))),) -> (Var & {name: error | string} | 'e | 'c | 'a | 'd)
 //│   where
 //│     'g <: {
 //│       lhs: Abs & 'i | App & 'g | Var | ~Abs & ~App & ~Var,
 //│       rhs: Abs & 'i | App & 'g | Var | ~Abs & ~App & ~Var
 //│     }
 //│     'i <: {lhs: anything, rhs: Abs & 'i | App & 'g | Var | ~Abs & ~App & ~Var}
-//│     'a :> Abs & {lhs: Var & {name: string}, rhs: Var & {name: string} | 'e | 'c | 'a | 'd | 'rhs}
+//│     'a :> Abs & {
+//│       lhs: Var & {name: error | string},
+//│       rhs: Var & {name: error | string} | 'e | 'c | 'a | 'd | 'rhs
+//│     }
 //│        <: Abs & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'a & 'h | App & 'b & 'f | Var & 'c} & 'h | App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'a & 'h | App & 'b & 'f | Var & 'c} & 'b & 'f | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'a & 'h | App & 'b & 'f | Var & 'c} & 'c | 'd & (App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'a & 'h | App & 'b & 'f | Var & 'c} & 'f & ~#App | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'a & 'h | App & 'b & 'f | Var & 'c} & ~#Var)
-//│     'e :> Abs & {lhs: Var & {name: string}, rhs: 'rhs} | App & {
-//│       lhs: Var & {name: string} | 'e | 'c | 'a | 'd,
-//│       rhs: Var & {name: string} | 'e | 'c | 'a | 'd
-//│     } | Var & {name: string} | 'c | 'a | 'd
-//│     'rhs :> Var & {name: string} | 'e | 'c | 'a | 'd
-//│     'c :> Var & {name: string}
+//│     'e :> Abs & {lhs: Var & {name: error | string}, rhs: 'rhs} | App & {
+//│       lhs: Var & {name: error | string} | 'e | 'c | 'a | 'd,
+//│       rhs: Var & {name: error | string} | 'e | 'c | 'a | 'd
+//│     } | Var & {name: error | string} | 'c | 'a | 'd
+//│     'rhs :> Var & {name: error | string} | 'e | 'c | 'a | 'd
+//│     'c :> Var & {name: error | string}
 //│        <: Abs & {name: anything} & 'a & 'h | App & {name: anything} & 'b & 'f | Var | 'd & (Abs & {name: anything} & 'h & ~#Abs | App & {name: anything} & 'f & ~#App)
 //│     'b <: {
 //│       lhs: Abs & 'a | App & 'b | Var & 'c | 'd & ~#Abs & ~#App & ~#Var,
@@ -540,30 +548,30 @@ fun stepByValue(t) =
           Abs(Var(name), body) then Some(subst(body, name, rhs))
           _ then None()
 //│ stepByValue: (Abs | App & 'a | Var) -> (None | Some & {
-//│   value: Var & {name: string} | App & {
-//│     lhs: Var & {name: string} | App & {lhs: 'lhs, rhs: Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e} | 'rhs | 'b | 'c | 'd | 'e,
+//│   value: Var & {name: error | string} | App & {
+//│     lhs: Var & {name: error | string} | App & {lhs: 'lhs, rhs: Var & {name: error | string} | 'rhs | 'b | 'c | 'd | 'e} | 'rhs | 'b | 'c | 'd | 'e,
 //│     rhs: 'rhs
-//│   } | App & {lhs: 'lhs, rhs: Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e} | 'rhs | 'b | 'c | 'd | 'e
+//│   } | App & {lhs: 'lhs, rhs: Var & {name: error | string} | 'rhs | 'b | 'c | 'd | 'e} | 'rhs | 'b | 'c | 'd | 'e
 //│ })
 //│ where
 //│   'a <: {lhs: 'lhs, rhs: 'rhs}
 //│   'lhs <: Abs & ~#Abs | Abs & {rhs: Abs & 'd | App & 'f | Var & 'b | 'e & ~#Abs & ~#App & ~#Var} | App & 'a | Var
 //│   'd :> Abs & {
-//│     lhs: Var & {name: string},
-//│     rhs: Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e | 'rhs0
+//│     lhs: Var & {name: error | string},
+//│     rhs: Var & {name: error | string} | 'rhs | 'b | 'c | 'd | 'e | 'rhs0
 //│   }
 //│      <: Abs & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'd & 'g | App & 'h & 'f | Var & 'b} & 'g | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'd & 'g | App & 'h & 'f | Var & 'b} & 'e & ~#Var | Var & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'd & 'g | App & 'h & 'f | Var & 'b} & 'b | 'h & (App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'd & 'g | App & 'h & 'f | Var & 'b} & 'e & ~#App | App & {lhs: Var & {name: string} | ~Var, rhs: Abs & 'd & 'g | App & 'h & 'f | Var & 'b} & 'f)
-//│   'c :> Abs & {lhs: Var & {name: string}, rhs: 'rhs0} | App & {
-//│     lhs: Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e,
-//│     rhs: Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e
-//│   } | Var & {name: string} | 'rhs | 'b | 'd | 'e
-//│   'rhs0 :> Var & {name: string} | 'rhs | 'b | 'c | 'd | 'e
+//│   'c :> Abs & {lhs: Var & {name: error | string}, rhs: 'rhs0} | App & {
+//│     lhs: Var & {name: error | string} | 'rhs | 'b | 'c | 'd | 'e,
+//│     rhs: Var & {name: error | string} | 'rhs | 'b | 'c | 'd | 'e
+//│   } | Var & {name: error | string} | 'rhs | 'b | 'd | 'e
+//│   'rhs0 :> Var & {name: error | string} | 'rhs | 'b | 'c | 'd | 'e
 //│   'rhs <: Abs & 'd & 'g & 'i | App & 'a & 'h & 'f & 'j | Var & 'b
 //│   'f <: {
 //│     lhs: Abs & 'd | App & 'f | Var & 'b | 'e & ~#Abs & ~#App & ~#Var,
 //│     rhs: Abs & 'd | App & 'f | Var & 'b | 'e & ~#Abs & ~#App & ~#Var
 //│   }
-//│   'b :> Var & {name: string}
+//│   'b :> Var & {name: error | string}
 //│      <: Var | 'h & (App & {name: anything} & 'e & ~#App | App & {name: anything} & 'f) | 'g & (Abs & {name: anything} & 'e & ~#Abs | Abs & {name: anything} & 'd)
 //│   'e <: Var & ~#Var | Var & 'b | 'h & (App & 'f | App & ~#App) | 'g & (Abs & 'd | Abs & ~#Abs)
 //│   'i <: {lhs: anything, rhs: Abs & 'i | App & 'j | Var | ~Abs & ~App & ~Var}

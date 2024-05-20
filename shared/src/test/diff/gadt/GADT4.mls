@@ -1,0 +1,169 @@
+:NewDefs
+
+fun fst([x, y]) = x
+fun snd([x, y]) = y 
+fun (++) stringConcat(a, b) = concat(a)(b)
+//│ fun fst: forall 'a. (['a, anything]) -> 'a
+//│ fun snd: forall 'b. ([anything, 'b]) -> 'b
+//│ fun (++) stringConcat: (Str, Str) -> Str
+
+// statically typed format //
+
+abstract class Format[type F]: D[?] | B[?] | L[F] | E
+class D[F](fmt: Format[F]) extends Format[Int -> F]
+class B[F](fmt: Format[F]) extends Format[Bool -> F]
+class L[F](s: Str, fmt: Format[F]) extends Format[F]
+module E extends Format[Str]
+//│ abstract class Format[F]: B[?] | D[?] | E | L[F]
+//│ class D[F](fmt: Format[F]) extends Format
+//│ class B[F](fmt: Format[F]) extends Format
+//│ class L[F](s: Str, fmt: Format[F]) extends Format
+//│ module E extends Format
+
+fun fmtGo: (Str, Format['F]) -> 'F
+fun fmtGo[F](acc: Str, f:  Format[F]): F = if f is
+    D(fmt)    then (i => fmtGo(acc ++ toString(i), fmt)) : f.F
+    B(fmt)    then (i => fmtGo(acc ++ toString(i), fmt)) : f.F
+    L(s, fmt) then fmtGo(acc ++ s, fmt) : f.F
+    E         then acc : f.F
+//│ fun fmtGo: forall 'F. (acc: Str, f: Format['F]) -> 'F
+//│ fun fmtGo: forall 'F0. (Str, Format['F0]) -> 'F0
+
+fun fmt(f) = fmtGo("", f)
+//│ fun fmt: forall 'F. Format['F] -> 'F
+
+let test = L("int i = ", D(L(", bool b = ", B(E))))
+//│ let test: L[Int -> Bool -> Str]
+//│ test
+//│      = L {}
+
+fmt(test)
+//│ Int -> Bool -> Str
+//│ res
+//│     = [Function (anonymous)]
+
+fmt(test)(114)(false)
+//│ Str
+//│ res
+//│     = 'int i = 114, bool b = false'
+
+:e
+fmt(test)("hello")("world")
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.51: 	fmt(test)("hello")("world")
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"hello"` is not an instance of type `Int`
+//│ ║  l.51: 	fmt(test)("hello")("world")
+//│ ║        	          ^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.13: 	class D[F](fmt: Format[F]) extends Format[Int -> F]
+//│ ╙──      	                                          ^^^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.51: 	fmt(test)("hello")("world")
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── string literal of type `"world"` is not an instance of type `Bool`
+//│ ║  l.51: 	fmt(test)("hello")("world")
+//│ ║        	                   ^^^^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.14: 	class B[F](fmt: Format[F]) extends Format[Bool -> F]
+//│ ╙──      	                                          ^^^^
+//│ Str | error
+//│ res
+//│     = 'int i = hello, bool b = world'
+
+fun fmt(f) = fmtGo("", f)
+//│ fun fmt: forall 'F. Format['F] -> 'F
+
+
+// typed ast //
+
+abstract class Expr[type T]: Lit | Plus| Equals | If[T] | Pair[?,?] | Fst[T,?]
+// type Expr[type T] = Lit | Plus| Equals | If[?] | Pair[?,?] | Fst[?,?]
+class Lit(i: Int) extends Expr[Int]
+class Plus(a: Expr[Int], b: Expr[Int]) extends Expr[Int]
+class Equals(a: Expr[Int], b: Expr[Int]) extends Expr[Bool]
+class If[A](p: Expr[Bool],a: Expr[A],b: Expr[A]) extends Expr[A]
+class Pair[A, B](a: Expr[A], b: Expr[B]) extends Expr[[A, B]]
+class Fst[A, B](p: Expr[[A, B]]) extends Expr[A]
+//│ abstract class Expr[T]: Equals | Fst[T, ?] | If[T] | Lit | Pair[?, ?] | Plus
+//│ class Lit(i: Int) extends Expr
+//│ class Plus(a: Expr[Int], b: Expr[Int]) extends Expr
+//│ class Equals(a: Expr[Int], b: Expr[Int]) extends Expr
+//│ class If[A](p: Expr[Bool], a: Expr[A], b: Expr[A]) extends Expr
+//│ class Pair[A, B](a: Expr[A], b: Expr[B]) extends Expr
+//│ class Fst[A, B](p: Expr[[A, B]]) extends Expr
+
+fun eval: Expr['T] -> 'T
+fun eval[T](e: Expr[T]): T = if e is
+    Lit(i) then i : e.T
+    Plus(a, b) then eval(a) + eval(b) : e.T
+    Equals(a, b) then (eval(a) == eval(b)) : e.T
+    If(p, a, b) then if eval(p) then eval(a) : e.T else eval(b) : e.T
+    Pair(a, b) then [eval(a), eval(b)] : e.T
+    Fst(p) then fst(eval(p)) : e.T
+//│ fun eval: forall 'T. (e: Expr['T]) -> 'T
+//│ fun eval: forall 'T0. Expr['T0] -> 'T0
+
+fun eval: Expr['T] -> 'T
+fun eval[T](e: Expr[T]): e.T = if e is
+    Lit(i) then i
+    Plus(a, b) then eval(a) + eval(b)
+    Equals(a, b) then (eval(a) == eval(b))
+    If(p, a, b) then if eval(p) then eval(a) else eval(b)
+    Pair(a, b) then [eval(a), eval(b)]
+    Fst(p) then fst(eval(p))
+//│ fun eval: forall 'T. (e: Expr['T]) -> (??A & 'T)
+//│ fun eval: forall 'T0. Expr['T0] -> 'T0
+
+eval(Plus(Lit(1), Lit(1)))
+//│ Int
+//│ res
+//│     = 2
+
+eval(If(Equals(Lit(3), Plus(Lit(1), Lit(1))), Fst(Pair(Lit(1), Lit(2))), Lit(3)))
+//│ Int
+//│ res
+//│     = 3
+
+:e
+eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.129: 	eval(Plus(Equals(Lit(1), Lit(2)), Lit(3)))
+//│ ║         	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Bool` is not an instance of type `Int`
+//│ ║  l.84: 	class Equals(a: Expr[Int], b: Expr[Int]) extends Expr[Bool]
+//│ ║        	                                                      ^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.83: 	class Plus(a: Expr[Int], b: Expr[Int]) extends Expr[Int]
+//│ ╙──      	                   ^^^
+//│ nothing
+//│ res
+//│     = 3
+
+fun foo: Expr['T] -> 'T
+fun foo[T](e: Expr[T]): T = if e is
+    Pair(a, b) then [foo(a), foo(b)] : e.T
+    else error
+//│ fun foo: forall 'T. (e: Expr['T]) -> 'T
+//│ fun foo: forall 'T0. Expr['T0] -> 'T0
+
+:e
+fun errval: Expr['T] -> 'T
+fun errval[T](e: Expr[T]): T = if e is
+    Pair(a, b) then [errval(b), errval(a)] : e.T
+    else error
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.152: 	fun errval[T](e: Expr[T]): T = if e is
+//│ ║         	                                  ^^^^
+//│ ║  l.153: 	    Pair(a, b) then [errval(b), errval(a)] : e.T
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.154: 	    else error
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── type `??A & ??B` does not match type `nothing`
+//│ ║  l.151: 	fun errval: Expr['T] -> 'T
+//│ ║         	                 ^^
+//│ ╟── but it flows into application with expected type `nothing`
+//│ ║  l.153: 	    Pair(a, b) then [errval(b), errval(a)] : e.T
+//│ ╙──       	                     ^^^^^^^^^
+//│ fun errval: forall 'T. (e: Expr['T]) -> 'T
+//│ fun errval: forall 'T0. Expr['T0] -> 'T0

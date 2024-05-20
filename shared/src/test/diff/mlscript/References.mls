@@ -177,17 +177,17 @@ move ri rn
 
 
 def swap a b = let tmp = a.Get in (a.Set b.Get, b.Set tmp)
-//│ swap: Ref[in 'A & 'A0 out 'A | 'A0] -> Ref[in 'A1 & 'A0 out 'A | 'A1] -> (unit, unit,)
+//│ swap: Ref[in 'A & 'A0 out 'A | 'A0] -> Ref[in 'A1 & ('A | 'A2) out 'A0 & 'A1 | 'A2] -> (unit, unit,)
 //│     = [Function: swap]
 
 swap r
 swap ri
 swap rn
-//│ res: Ref[in 'A out 1 | 'A] -> (unit, unit,)
+//│ res: Ref[in 'A & (1 | 'A0) out 'A | 'A0] -> (unit, unit,)
 //│    = [Function (anonymous)]
-//│ res: Ref[int] -> (unit, unit,)
+//│ res: Ref[out 'A] -> (unit, unit,)
 //│    = [Function (anonymous)]
-//│ res: Ref[number] -> (unit, unit,)
+//│ res: Ref[out 'A] -> (unit, unit,)
 //│    = [Function (anonymous)]
 
 swap r ri
@@ -269,7 +269,7 @@ res.Swap
 //│ res: ('A & ((int | string) & 'b | 'd & (int | string))) -> ('b & 'd | 'A)
 
 refin: Ref['a..'b] | Ref['c..'d]
-//│ res: Ref[in 'd & (int | string | ~'d) out 'd]
+//│ res: Ref[in 'd | 'b & (int | string | ~'d) out 'b & 'd]
 //│    = <no result>
 //│      refin is not implemented
 
@@ -337,7 +337,7 @@ consrefin (RefImpl { mut value = error })
 
 
 def refun: Ref[int] | Ref[string]
-//│ refun: Ref[out int | string]
+//│ refun: Ref[in int | string out nothing]
 //│      = <missing implementation>
 
 // * Errors happen because we constrain `Ref[int] | Ref[string] <: Ref['A]`

@@ -4,7 +4,7 @@
 fun power(x) = case
   0 then `1.0
   n then x `*. power(x)(n - 1)
-//│ fun power: forall 'a. Code[Num, 'a] -> (0 | Int & ~0) -> Code[Num, 'a]
+//│ fun power: Code[Num, anything] -> (0 | Int & ~0) -> Code[1.0, nothing]
 
 
 :e
@@ -42,7 +42,7 @@ let p3 = y `=>
 
 fun bind(rhs, k: forall 'g : Code['a, 'g] -> Code['b, 'c | 'g]) =
   `let x = rhs `in k(x)
-//│ fun bind: forall 'a 'c 'b. (Code['a, 'c], k: forall 'g. Code['a, 'g] -> Code['b, 'c | 'g]) -> Code['b, 'c]
+//│ fun bind: forall 'a 'c 'b. (Code['a, 'c], k: Code['a, anything] -> Code['b, anything]) -> Code['b, 'c]
 
 
 // fun body: forall 'g : (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
@@ -50,7 +50,7 @@ fun body(x, y) = case
   0 then x
   1 then y
   n then bind of x `+ y, z => body(y, z)(n - 1)
-//│ fun body: forall 'a. (Code[Int, anything] & 'a, Code[Int, anything] & 'a) -> (0 | 1 | Int & ~0 & ~1) -> (Code[Int, anything] | 'a)
+//│ fun body: forall 'a. (Code[Int, anything] & 'a, Code[Int, anything] & 'a) -> (0 | 1 | Int & ~0 & ~1) -> (Code[Int, ??g] | 'a)
 
 
 n => (x, y) `=> body(x, y)(n)

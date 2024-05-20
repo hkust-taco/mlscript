@@ -54,7 +54,7 @@ fun (:-) listExclude(xs, x) =
     Cons(x', xs') and
       x === x' then xs' :- x
       else x' :: (xs' :- x)
-//│ fun (:-) listExclude: forall 'A. (Cons['A] | Nil, Eql['A]) -> (Nil | List['A])
+//│ fun (:-) listExclude: forall 'A. (Cons['A] | Nil, Eql[??A & 'A]) -> (Nil | List[??A & 'A])
 
 (Nil :- 0).join(", ")
 ((0 :: Nil) :- 0).join(", ")

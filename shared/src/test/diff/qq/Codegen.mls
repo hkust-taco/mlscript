@@ -323,7 +323,7 @@ code"p => if p.x ===
 :ne
 fun test(cde, f) =
   code"x => x + ${f(cde)}"
-//│ fun test: forall 'a 'b. ('a, 'a -> Code[Int, 'b]) -> Code[Int -> Int, 'b]
+//│ fun test: forall 'a. ('a, 'a -> Code[Int, anything]) -> Code[Int -> Int, nothing]
 //│ // Prelude
 //│ class TypingUnit25 {}
 //│ const typing_unit25 = new TypingUnit25;
@@ -353,7 +353,7 @@ code"""let x = ${log("foo"), Const(0)} in x + 1"""
 :ne
 fun foo(dbg) =
   code"x => ${let c = code"x" in dbg(c)}"
-//│ fun foo: forall 'a 'b 'c. (Code['a, ??x] -> Code['b, 'c]) -> Code['a -> 'b, 'c]
+//│ fun foo: forall 'a 'b. (Code['a, ??x] -> Code['b, anything]) -> Code['a -> 'b, nothing]
 
 :ne
 code"x => let c = 42 in ${code"x"}"

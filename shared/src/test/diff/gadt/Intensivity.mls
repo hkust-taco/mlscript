@@ -1,0 +1,68 @@
+:NewDefs
+
+// * Notice that when doing pattern matching,
+// * we can recover the type argument of the Bar case
+// * even though it was left off in the self-signature clause:
+
+
+abstract class Foo[type T]: Bar | Int
+class Bar[S](val a: S) extends Foo[S]
+//│ abstract class Foo[T]: Bar[anything] | Int
+//│ class Bar[S](a: S) extends Foo
+
+fun foo(x: Foo['a]) = if x is
+  Bar then x.a : x.T
+//│ fun foo: forall 'a 'b. (x: Foo['a]) -> 'b
+//│   where
+//│     'a <: 'b | ~(??S & ??S0)
+
+
+abstract class Foo[type T]: Bar
+class Bar[type S](val a: S) extends Foo[S]
+//│ abstract class Foo[T]: Bar[anything]
+//│ class Bar[S](a: S) extends Foo
+
+fun foo(x: Foo['a]) = if x is
+  Bar then x.a : x.S
+//│ fun foo: forall 'a. (x: Foo['a]) -> (??S & ??S0)
+
+
+// * But this information is NOT accessible purely from the type level,
+// * in that subtyping expands the raw self signatures and doesn't perform the local reasoning:
+
+:e
+(error : Foo[Int]) : Bar['a] | Int
+//│ ╔══[ERROR] Type error in type ascription
+//│ ║  l.34: 	(error : Foo[Int]) : Bar['a] | Int
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `S` leaks out of its scope
+//│ ║  l.34: 	(error : Foo[Int]) : Bar['a] | Int
+//│ ║        	                         ^^
+//│ ╟── back into type variable `S`
+//│ ║  l.21: 	class Bar[type S](val a: S) extends Foo[S]
+//│ ╙──      	               ^
+//│ Bar['a] | Int
+//│   where
+//│     'a :> ??S
+//│        <: ??S0
+//│ res
+//│ Runtime error:
+//│   Error: an error was thrown
+
+
+
+// * Some other tests:
+
+abstract class Foo[T](val x: T): Bar
+class Bar extends Foo[Int](42)
+//│ abstract class Foo[T](x: T): Bar
+//│ class Bar extends Foo {
+//│   constructor()
+//│ }
+
+fun foo(x: Foo[Int]) = if x is
+  Bar then x.x
+//│ fun foo: (x: Foo[Int]) -> 42
+
+
+

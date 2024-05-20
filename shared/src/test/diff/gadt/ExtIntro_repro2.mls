@@ -1,0 +1,108 @@
+:NewDefs
+:DontDistributeForalls
+
+:NoJS
+
+
+class Z 
+class S[type P](val pred: P)
+//│ class Z {
+//│   constructor()
+//│ }
+//│ class S[P](pred: P)
+
+// abstract class K[type T]: KS[?]
+abstract class K[type T]: KS
+class KS[type A](val ev: K[A]) extends K[S[A]]
+//│ abstract class K[T]: KS[?]
+//│ class KS[A](ev: K[A]) extends K
+
+// * TODO investigate: 'L0 :> ??A <: ??A0 bad bounds?
+// :d
+// :e
+fun fr[L](l: K[L]) = if l is KS(e1) then () => (e1 as K['X])
+//│ fun fr: forall 'L. (l: K['L]) -> () -> K[in ??A]
+
+// Doesn't happen here:
+fun fr[L](l: K[L]) = if l is KS(e1) then (e1 as K['X])
+//│ fun fr: forall 'L. (l: K['L]) -> K[in ??A]
+
+// fun fr[L](l: K[L]) = if l is KS(e1) then () => [(e1 as K['X]), e1 as K['X]]
+
+// MIN
+// :d
+// fun fr[L](l: K[L], r: K[L]) =
+//   if l is KS(e1) and r is KS(e2) then [e1, e2] as [K['X], K['X]]
+
+// :d
+fun helper[L, A1, A2](l: KS[A1] & K[L], r: KS[A2] & K[L]) =
+  // (l.ev : K[A1]), ()
+  // (l : K[l.T.Pred]), ()
+  // (l : KS[l.T]), ()
+  (l : K[r.T]), ()
+  (l : K[r.T] & KS[A1]), ()
+  (l : K[r.T] & KS[l.T.P]), ()
+  // ((l : K[r.T] & KS[A1]) : KS[A1] & KS[A2]), ()
+  ((error : l.T.P) : A1), ()
+  ((error : A1) : l.T.P), ()
+  // ((error : l.T.P)), ()
+  // ()
+  (l : K[r.T] & KS[l.T.P]).ev
+//│ fun helper: forall 'A1 'L 'A2. (l: KS['A1] & K['L], r: KS['A2] & K['L]) -> K['A1]
+
+fun helper[L, A1, A2](l: KS[A1] & K[L], r: KS[A2] & K[L]) =
+  // (l : KS[l.T.P]).ev
+  // (r : KS[r.T.P]).ev
+  [(l : KS[l.T.P]).ev, (r : KS[r.T.P]).ev]
+//│ fun helper: forall 'A1 'L 'A2. (l: KS['A1] & K['L], r: KS['A2] & K['L]) -> [K['A1], K['A2]]
+
+
+fun rec_sig: (K['L], K['L]) -> Int
+//│ fun rec_sig: forall 'L. (K['L], K['L]) -> Int
+
+fun helper[L, A1, A2](l: KS[A1] & K[L], r: KS[A2] & K[L]): [K[A1], K[A1]] = error
+//│ fun helper: forall 'A1 'L 'A2. (l: KS['A1] & K['L], r: KS['A2] & K['L]) -> [K['A1], K['A1]]
+
+fun fr[L](l: K[L], r: K[L]) =
+  if l is KS(e1) and r is KS(e2) then
+    let tmp = helper(l, r)
+    rec_sig(tmp.0, tmp.1)
+//│ fun fr: forall 'L. (l: K['L], r: K['L]) -> Int
+
+
+
+
+fun sig: (K['L], K['L]) -> Int
+//│ fun sig: forall 'L. (K['L], K['L]) -> Int
+
+// :d
+fun fr[L](l: K[L], r: K[L]) =
+  if l is KS(e1) and r is KS(e2) then sig(e1, e2)
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.80: 	  if l is KS(e1) and r is KS(e2) then sig(e1, e2)
+//│ ║        	                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `??A & ??A0 & ~??A1` does not match type `~??A2`
+//│ ║  l.75: 	fun sig: (K['L], K['L]) -> Int
+//│ ║        	            ^^
+//│ ╟── Note: type parameter A is defined at:
+//│ ║  l.16: 	class KS[type A](val ev: K[A]) extends K[S[A]]
+//│ ╙──      	              ^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ ╔══[ERROR] Type error in `case` expression
+//│ ║  l.80: 	  if l is KS(e1) and r is KS(e2) then sig(e1, e2)
+//│ ║        	     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `A` leaks out of its scope
+//│ ║  l.16: 	class KS[type A](val ev: K[A]) extends K[S[A]]
+//│ ║        	              ^
+//│ ╟── into type `~??A`
+//│ ║  l.75: 	fun sig: (K['L], K['L]) -> Int
+//│ ║        	                   ^^
+//│ ╟── Note: constraint arises from type variable:
+//│ ║  l.75: 	fun sig: (K['L], K['L]) -> Int
+//│ ╙──      	            ^^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ fun fr: forall 'L. (l: K['L], r: K['L]) -> (Int | error)
+
+
+
+

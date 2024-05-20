@@ -85,7 +85,7 @@ run(code"x => ${power'(code"x", 10)}")
 //│   fun floor: (x: Num) -> Int
 //│ }
 //│ fun even: Int -> Bool
-//│ fun power': forall 'a. (Code[Int, 'a], Int) -> Code[Int, 'a]
+//│ fun power': (Code[Int, anything], Int) -> Code[Int, nothing]
 //│ Int -> Int
 //│ res
 //│     = Quoted:

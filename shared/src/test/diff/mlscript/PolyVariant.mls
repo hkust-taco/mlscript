@@ -193,7 +193,7 @@ class Tuple[a, b]: { _1: a; _2: b }
 //│ Defined class Tuple[+a, +b]
 
 def t2: Tuple[A | B, anything] | Tuple[anything, A | B] 
-//│ t2: in Tuple[A | B, A | B] out Tuple[?, ?]
+//│ t2: Tuple[A | B, A | B]
 //│   = <missing implementation>
 def t3: Tuple[anything, anything]
 //│ t3: Tuple[?, ?]
@@ -201,7 +201,7 @@ def t3: Tuple[anything, anything]
 
 t3 = t2
 t2 = t3
-//│ Tuple[?, ?]
+//│ Tuple[A | B, A | B]
 //│   <:  t3:
 //│ Tuple[?, ?]
 //│   = <no result>

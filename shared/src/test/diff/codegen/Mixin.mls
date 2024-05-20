@@ -70,8 +70,8 @@ mixin EvalBase {
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   this: {eval: 'a -> Int}
-//│   fun eval: (Add['a] | Lit) -> Int
+//│   this: {eval: (??E & 'E) -> Int}
+//│   fun eval: (Add['E] | Lit) -> Int
 //│ }
 //│ // Prelude
 //│ class TypingUnit1 {
@@ -87,10 +87,7 @@ mixin EvalBase {
 //│         const qualifier1 = this;
 //│         return ((() => {
 //│           let a;
-//│           return (a = e, a instanceof Lit.class ? (([n]) => n)(Lit.unapply(e)) : a instanceof Add.class ? (([
-//│             l,
-//│             r
-//│           ]) => qualifier1.eval(l) + qualifier1.eval(r))(Add.unapply(e)) : (() => {
+//│           return (a = e, a instanceof Lit.class ? (($unapp) => ((n) => n)($unapp[0]))(Lit.unapply(e)) : a instanceof Add.class ? (($unapp) => ((l) => ((r) => qualifier1.eval(l) + qualifier1.eval(r))($unapp[1]))($unapp[0]))(Add.unapply(e)) : (() => {
 //│             throw new Error("non-exhaustive case expression");
 //│           })());
 //│         })());
@@ -142,8 +139,8 @@ mixin EvalNeg {
 }
 //│ mixin EvalNeg() {
 //│   super: {eval: 'a -> 'b}
-//│   this: {eval: 'c -> Int}
-//│   fun eval: (Neg['c] | Object & 'a & ~#Neg) -> (Int | 'b)
+//│   this: {eval: (??A & 'A) -> Int}
+//│   fun eval: (Neg['A] | Object & 'a & ~#Neg) -> (Int | 'b)
 //│ }
 //│ // Prelude
 //│ class TypingUnit3 {
@@ -158,7 +155,7 @@ mixin EvalNeg {
 //│       eval(e) {
 //│         const qualifier1 = this;
 //│         return ((() => {
-//│           return e instanceof Neg.class ? (([d]) => 0 - qualifier1.eval(d))(Neg.unapply(e)) : super.eval(e);
+//│           return e instanceof Neg.class ? (($unapp) => ((d) => 0 - qualifier1.eval(d))($unapp[0]))(Neg.unapply(e)) : super.eval(e);
 //│         })());
 //│       }
 //│     });
@@ -175,9 +172,9 @@ mixin EvalNegNeg {
     else super.eval(e)
 }
 //│ mixin EvalNegNeg() {
-//│   super: {eval: (Neg[nothing] | 'a) -> 'b}
-//│   this: {eval: 'c -> 'b}
-//│   fun eval: (Neg[Neg['c] | Object & ~#Neg] | Object & 'a & ~#Neg) -> 'b
+//│   super: {eval: (Neg[??A & 'A] | 'a) -> 'b}
+//│   this: {eval: (??A0 & 'A0) -> 'b}
+//│   fun eval: (Neg['A & (Neg['A0] | Object & ~#Neg | ~??A)] | Object & 'a & ~#Neg) -> 'b
 //│ }
 //│ // Prelude
 //│ class TypingUnit4 {
@@ -192,7 +189,7 @@ mixin EvalNegNeg {
 //│       eval(e) {
 //│         const qualifier1 = this;
 //│         return ((() => {
-//│           return e instanceof Neg.class ? (([tmp0]) => tmp0 instanceof Neg.class ? (([d]) => qualifier1.eval(d))(Neg.unapply(tmp0)) : super.eval(e))(Neg.unapply(e)) : super.eval(e);
+//│           return e instanceof Neg.class ? (($unapp) => ((tmp0) => tmp0 instanceof Neg.class ? (($unapp) => ((d) => qualifier1.eval(d))($unapp[0]))(Neg.unapply(tmp0)) : super.eval(e))($unapp[0]))(Neg.unapply(e)) : super.eval(e);
 //│         })());
 //│       }
 //│     });
@@ -208,9 +205,8 @@ module TestLang extends EvalBase, EvalNeg, EvalNegNeg
 //│   fun eval: (Neg['A] | Object & 'a & ~#Neg) -> Int
 //│ }
 //│ where
-//│   'A <: 'b & (Neg['b] | Object & ~#Neg)
-//│   'b <: Neg['A] | Object & 'a & ~#Neg
-//│   'a <: Add['b] | Lit | Neg['b]
+//│   'A <: Neg['A] & ~#Neg | Neg['A & (Neg['A] | Object & 'a & ~#Neg | ~??A)] | Object & 'a & ~#Neg | ~??A0
+//│   'a <: Add[Neg['A] | Object & 'a & ~#Neg | ~??E] | Lit | Neg[Neg['A] | Object & 'a & ~#Neg | ~??A1]
 //│ // Prelude
 //│ class TypingUnit5 {
 //│   #TestLang;
@@ -372,7 +368,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.372: 	  fun x = y
+//│ ║  l.368: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error

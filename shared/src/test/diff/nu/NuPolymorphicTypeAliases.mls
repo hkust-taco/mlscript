@@ -17,15 +17,13 @@ fun f = forall 'B:
 module A {
   type F[A] = forall 'a: (A, 'a) -> [A, 'a]
 }
-//│ module A {
-//│   type F[A] = forall 'a. (A, 'a) -> [A, 'a]
-//│ }
+//│ module A
 
 :pe // TODO
 fun f[B] =
   ((x: B, y) => [x, y]) : A.F[B]
 //│ ╔══[PARSE ERROR] Not a recognized type
-//│ ║  l.26: 	  ((x: B, y) => [x, y]) : A.F[B]
+//│ ║  l.24: 	  ((x: B, y) => [x, y]) : A.F[B]
 //│ ╙──      	                          ^^^^^^
 //│ fun f: anything
 

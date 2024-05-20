@@ -26,7 +26,7 @@ fun test(x: Id & 'b) =
 fun test(x: Int | 'b) =
   let foo(y) = (if true then x else y) : (Int | 'c)
   foo
-//│ fun test: forall 'c. (x: Int | 'c) -> (forall 'c0. (Int | 'c0) -> (Int | 'c | 'c0))
+//│ fun test: forall 'b. (x: Int | 'b) -> (forall 'c. (Int | 'c) -> (Int | 'b & ~Int | 'c))
 
 
 
@@ -77,27 +77,25 @@ fun test(x, y) =
   let tmp = mk(x, y)
   let foo(z) = mk(z, tmp) : MyClass['x]
   foo
-//│ fun test: forall 'a 'b 'b0 'a0 'a1 'a2 'x. (Ref['a], Ref['b]) -> (forall 'a3 'x0. Ref['a3] -> MyClass['x0])
+//│ fun test: forall 'a 'b 'b0 'x 'x0 'a0 'a1. (Ref['a], Ref['b]) -> (forall 'a2 'x1. Ref['a2] -> MyClass['x1])
 //│   where
-//│     'x0 <: 'x
-//│     'a3 :> 'a2 | 'a1
-//│         <: 'a0
-//│     'b <: Ref[?] | Ref[?] & ~{MyClass#A = 'a} | Ref[in 'b0 out 'b0 & (MyClass[?] & ~{MyClass#A :> 'a0 & 'a1} | MyClass[in 'x out nothing] | {MyClass#A :> 'x <: nothing} & ~{MyClass#A :> 'a2 <: 'a2 | 'a0} | ~#MyClass | ~{MyClass#A :> 'a2 & 'a0 & 'a1})] & {
-//│       Ref#T :> 'b0 <: 'b0 & (MyClass[?] & ~{MyClass#A :> 'a0 & 'a1 <: 'a2 | 'a1} | MyClass[in 'x out nothing] | {MyClass#A = 'x} & ~{MyClass#A :> 'a2 <: 'a2 | 'a0} | ~#MyClass | ~{MyClass#A :> 'a2 & 'a0 & 'a1 <: 'a2 | 'a0 | 'a1})
-//│     } | ~MyClass['a]
+//│     'x1 :> 'x0
+//│         <: 'x
+//│     'a2 :> 'a0
+//│         <: 'a1
+//│     'b <: Ref[?] | Ref[?] & ~{MyClass#A = 'a} | Ref[in 'b0 out 'b0 & (MyClass[in 'x out 'x & 'x0] | ~{MyClass#A :> 'a0 <: 'a0 | 'a1} | ~#MyClass)] | ~MyClass['a]
 
 fun test(x, y) =
   let tmp = mk(x, y)
   let foo(z) = mk(z, tmp) : MyClass['x]
   [tmp, foo]
-//│ fun test: forall 'a 'b 'b0 'a0 'a1 'a2 'x. (Ref['a], Ref['b]) -> [MyClass['a] & 'b, forall 'a3 'x0. Ref['a3] -> MyClass['x0]]
+//│ fun test: forall 'a 'b 'b0 'x 'x0 'a0 'a1. (Ref['a], Ref['b]) -> [MyClass['a] & 'b, forall 'a2 'x1. Ref['a2] -> MyClass['x1]]
 //│   where
-//│     'x0 <: 'x
-//│     'a3 :> 'a2 | 'a1
-//│         <: 'a0
-//│     'b <: Ref[?] | Ref[?] & ~{MyClass#A = 'a} | Ref[in 'b0 out 'b0 & (MyClass[?] & ~{MyClass#A :> 'a0 & 'a1} | MyClass[in 'x out nothing] | {MyClass#A :> 'x <: nothing} & ~{MyClass#A :> 'a2 <: 'a2 | 'a0} | ~#MyClass | ~{MyClass#A :> 'a2 & 'a0 & 'a1})] & {
-//│       Ref#T :> 'b0 <: 'b0 & (MyClass[?] & ~{MyClass#A :> 'a0 & 'a1 <: 'a2 | 'a1} | MyClass[in 'x out nothing] | {MyClass#A = 'x} & ~{MyClass#A :> 'a2 <: 'a2 | 'a0} | ~#MyClass | ~{MyClass#A :> 'a2 & 'a0 & 'a1 <: 'a2 | 'a0 | 'a1})
-//│     } | ~MyClass['a]
+//│     'x1 :> 'x0
+//│         <: 'x
+//│     'a2 :> 'a0
+//│         <: 'a1
+//│     'b <: Ref[?] | Ref[?] & ~{MyClass#A = 'a} | Ref[in 'b0 out 'b0 & (MyClass[in 'x out 'x & 'x0] | ~{MyClass#A :> 'a0 <: 'a0 | 'a1} | ~#MyClass)] | ~MyClass['a]
 
 
 
@@ -114,13 +112,13 @@ fun test(x, y) =
   let tmp = ref(mk(x, y))
   let foo(z) = mk(z, tmp) : MyClass['x]
   foo
-//│ fun test: forall 'a 'b 'a0 'a1 'a2 'a3 'x 'x0. (Ref['a], Ref['b]) -> (forall 'a4 'x1. Ref['a4] -> MyClass['x1])
+//│ fun test: forall 'a 'b 'x 'x0 'a0 'a1. (Ref['a], Ref['b]) -> (forall 'a2 'x1. Ref['a2] -> MyClass['x1])
 //│   where
 //│     'x1 :> 'x0
 //│         <: 'x
-//│     'a4 :> 'a2 | 'a1
-//│         <: 'a0 & 'a3
-//│     'b <: MyClass[?] & ~{MyClass#A :> 'a0 & 'a1 | 'a <: 'a & ('a2 | 'a1 | 'a3)} | MyClass[in 'x out 'x & 'x0] | {MyClass#A :> 'x <: 'x & 'x0} & ~{MyClass#A :> 'a2 | 'a <: 'a & ('a2 | 'a0)} | ~MyClass[in 'a | 'a2 & ('a0 & 'a1 | 'a) out 'a & ('a2 | 'a0 | 'a1 | 'a3)]
+//│     'a2 :> 'a0
+//│         <: 'a1
+//│     'b <: MyClass[in 'x out 'x & 'x0] | ~MyClass[in 'a0 | 'a out 'a & ('a0 | 'a1)]
 
 
 
@@ -144,9 +142,7 @@ fun test(x: 'x) =
 fun test(x: 'x) =
   let foo(y) = refined(x, y) : Ref['r]
   foo
-//│ fun test: forall 'B 'r. (x: Ref[?] & ~'B | Ref[in 'r out nothing] | ~'B) -> (forall 'r0. 'B -> Ref['r0])
-//│   where
-//│     'r0 <: 'r
+//│ fun test: forall 'x. (x: 'x) -> (forall 'r. (Ref['r] | ~'x) -> Ref['r])
 
 
 

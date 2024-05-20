@@ -7,7 +7,7 @@ class C<A>
 //│ }
 
 fun f(x) = if x is C then x
-//│ fun f: forall 'A. C['A] -> C['A]
+//│ fun f: forall 'A 'A0. C[in 'A out 'A0] -> C[in 'A & 'A0 out ??A & 'A0]
 
 // * TODO parse class tags?
 // f(C : #C)
@@ -27,10 +27,10 @@ c.a
 //│     = 1
 
 fun f(x) = if x is C(a) then a
-//│ fun f: forall 'a. C['a] -> 'a
+//│ fun f: forall 'A. C['A] -> (??A & 'A)
 
 f(c)
-//│ 1
+//│ 1 & ??A
 //│ res
 //│     = 1
 
@@ -158,12 +158,12 @@ opt.map(x => x > 0)
 
 
 if opt is Some then opt.value else 0
-//│ 0 | 123
+//│ 0 | 123 & ??A
 //│ res
 //│     = 123
 
 if opt is Some(v) then v else 0
-//│ 0 | 123
+//│ 0 | 123 & ??A
 //│ res
 //│     = 123
 
@@ -171,7 +171,7 @@ if opt is Some(v) then v else 0
 fun map(x, f) = if x is
   None then None
   Some(v) then Some(f(v))
-//│ fun map: forall 'a 'A. (None | Some['a], 'a -> 'A) -> (None | Some['A])
+//│ fun map: forall 'A 'a. (None | Some['A], (??A & 'A) -> 'a) -> (None | Some['a])
 
 let mo = map(opt, succ)
 //│ let mo: None | Some[Int]

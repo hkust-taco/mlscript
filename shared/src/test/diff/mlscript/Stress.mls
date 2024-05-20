@@ -63,7 +63,7 @@ foo arg
 //│ arg: A[int] | B[int]
 //│ res: int
 //│ constrain calls  : 36
-//│ annoying  calls  : 20
+//│ annoying  calls  : 22
 //│ subtyping calls  : 276
 
 
@@ -81,7 +81,7 @@ foo arg
 //│ arg: A[int] | B[int] | C[int]
 //│ res: int
 //│ constrain calls  : 48
-//│ annoying  calls  : 30
+//│ annoying  calls  : 33
 //│ subtyping calls  : 522
 
 
@@ -100,21 +100,21 @@ foo arg
 //│ arg: A[int] | B[int] | C[int] | D[int]
 //│ res: int
 //│ constrain calls  : 60
-//│ annoying  calls  : 40
+//│ annoying  calls  : 44
 //│ subtyping calls  : 852
 
 :stats
 foo (arg with { x = 1} with { y = 2 })
 //│ res: int
 //│ constrain calls  : 35
-//│ annoying  calls  : 37
+//│ annoying  calls  : 41
 //│ subtyping calls  : 369
 
 :stats
 foo (arg with { x = 1; y = 2; z = 3 })
 //│ res: int
 //│ constrain calls  : 35
-//│ annoying  calls  : 37
+//│ annoying  calls  : 41
 //│ subtyping calls  : 345
 
 
@@ -134,7 +134,7 @@ foo arg
 //│ arg: A[int] | B[int] | C[int] | D[int] | E[int]
 //│ res: int
 //│ constrain calls  : 72
-//│ annoying  calls  : 50
+//│ annoying  calls  : 55
 //│ subtyping calls  : 1274
 
 
@@ -155,7 +155,7 @@ foo arg
 //│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int]
 //│ res: int
 //│ constrain calls  : 84
-//│ annoying  calls  : 60
+//│ annoying  calls  : 66
 //│ subtyping calls  : 1796
 
 
@@ -177,7 +177,7 @@ foo arg
 //│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int]
 //│ res: int
 //│ constrain calls  : 96
-//│ annoying  calls  : 70
+//│ annoying  calls  : 77
 //│ subtyping calls  : 2426
 
 
@@ -200,7 +200,7 @@ foo arg
 //│ arg: A[int] | B[int] | C[int] | D[int] | E[int] | F[int] | G[int] | H[int]
 //│ res: int
 //│ constrain calls  : 108
-//│ annoying  calls  : 80
+//│ annoying  calls  : 88
 //│ subtyping calls  : 3172
 
 

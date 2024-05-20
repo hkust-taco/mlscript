@@ -88,7 +88,7 @@ rec def getNegT1 x = case x of {
 //│         = [Function: getNegT1]
 
 nt1 = getNegT1 {}
-//│ nt1: ~#T1
+//│ nt1: 'a | ~(#T1 & (#T1 | 'a & ~#T1))
 //│    = {}
 
 T1
@@ -96,7 +96,7 @@ T1
 //│    = [Function: build]
 
 t1nt1 = T1 nt1
-//│ t1nt1: nothing
+//│ t1nt1: #T1 & ('a | ~#T1 & ~('a & ~#T1))
 //│      = {}
 
 :re

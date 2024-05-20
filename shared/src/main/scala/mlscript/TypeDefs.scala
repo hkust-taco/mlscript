@@ -110,9 +110,11 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
     }
   }
   
-  
-  def tparamField(clsNme: TypeName, tparamNme: TypeName): Var =
-    Var(clsNme.name + "#" + tparamNme.name)
+  def tparamField(clsNme: TypeName, tparamNme: TypeName, visible: Bool): Var =
+    Var(tparamField(clsNme.name, tparamNme.name, visible))
+
+  def tparamField(clsNme: String, tparamNme: String, visible: Bool): String =
+    if (!visible) clsNme + "#" + tparamNme else tparamNme
   
   def clsNameToNomTag(td: NuTypeDef)(prov: TypeProvenance, ctx: Ctx): ClassTag = {
     require((td.kind is Cls) || (td.kind is Mod), td.kind)
@@ -158,7 +160,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
   {
     ty match {
       case tr @ TypeRef(td, targs) =>
-        fieldsOf(tr.expandWith(paramTags, selfTy = false), paramTags)
+        fieldsOf(tr.expandWith(paramTags, selfTy = false, pol = true), paramTags)
       case ComposedType(false, l, r) =>
         mergeMap(fieldsOf(l, paramTags), fieldsOf(r, paramTags))(_ && _)
       case RecordType(fs) => fs.toMap
@@ -231,7 +233,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
           case TypeRef(tn, _) if travsersed(L(tn)) =>
             err(msg"illegal cycle involving type ${tn}", prov.loco)
             false
-          case tr @ TypeRef(tn, targs) => checkCycle(tr.expand)(travsersed + L(tn))
+          case tr @ TypeRef(tn, targs) => checkCycle(tr.expand(true))(travsersed + L(tn))
           case ComposedType(_, l, r) => checkCycle(l) && checkCycle(r)
           case NegType(u) => checkCycle(u)
           case p: ProxyType => checkCycle(p.underlying)
@@ -275,8 +277,8 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
                         false
                       } tap (_ => parentsClasses += tr)
                     } else
-                      checkParents(tr.expand)
-                  case Trt => checkParents(tr.expand)
+                      checkParents(tr.expand(true))
+                  case Trt => checkParents(tr.expand(true))
                   case Mod =>
                     err(msg"cannot inherit from a module", prov.loco)
                     false
@@ -343,7 +345,8 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
                 case _ =>
                   val fields = fieldsOf(td.bodyTy, paramTags = true)
                   val tparamTags = td.tparamsargs.map { case (tp, tv) =>
-                    tparamField(td.nme, tp) -> FieldType(Some(tv), tv)(tv.prov) }
+                    // `false` means using `C#A` (old type member names)
+                    tparamField(td.nme, tp, false) -> FieldType(Some(tv), tv)(tv.prov) }
                   val ctor = k match {
                     case Cls =>
                       val nomTag = clsNameToNomTag(td)(originProv(td.nme.toLoc, "class", td.nme.name), ctx)
@@ -384,13 +387,16 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
         }
         def checkRegular(ty: SimpleType)(implicit reached: Map[Str, Ls[SimpleType]]): Bool = ty match {
           case tr @ TypeRef(defn, targs) => reached.get(defn.name) match {
-            case None => checkRegular(tr.expandWith(false, selfTy = false))(reached + (defn.name -> targs))
+            case None => checkRegular(tr.expandWith(false, selfTy = false, pol = true))(reached + (defn.name -> targs.map { 
+              case w: WildcardArg => TypeBounds(w.lb, w.ub)(w.prov)
+              case st: ST => st 
+            }))
             case Some(tys) =>
               // Note: this check *has* to be relatively syntactic because
               //    the termination of constraint solving relies on recursive type occurrences
               //    obtained from unrolling a recursive type to be *equal* to the original type
               //    and to have the same has hashCode (see: the use of a cache MutSet)
-              if (defn === td.nme && tys =/= targs) {
+              if (defn === td.nme && tys =/= targs.map{ case w: WildcardArg => TypeBounds(w.lb, w.ub)(w.prov) ; case st: ST => st }) {
                 err(msg"Type definition is not regular: it occurs within itself as ${
                   expandType(tr).show(Typer.newDefs)
                 }, but is defined as ${
@@ -525,7 +531,10 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
                 MethodSet(tr.defn, Nil, Map.empty, Map.empty)
               case S(td2) =>
           implicit val thisCtx: Ctx = ctx.nest
-          val targsMap = td2.tparams.iterator.map(_.name).zip(tr.targs).toMap
+          val targsMap = td2.tparams.iterator.map(_.name).zip(tr.targs.map { 
+            case w: WildcardArg => TypeBounds(w.lb, w.ub)(w.prov)
+            case st: ST => st 
+          }).toMap
           val declared = MutMap.empty[Str, Opt[Loc]]
           val defined = MutMap.empty[Str, Opt[Loc]]
           
@@ -584,9 +593,10 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
                   //    If the method is already in the environment,
                   //    it means it belongs to a previously-defined class/trait (not the one being typed),
                   //    in which case we need to perform a substitution on the corresponding method body...
-                  val targsMap3 = td2.targs.lazyZip(tr.targs).toMap[ST, ST] +
-                    (td2.thisTv -> td.thisTv) +
-                    (td.thisTv -> td.thisTv)
+                  val targsMap3 = td2.targs.lazyZip(tr.targs.map { 
+                    case w: WildcardArg => TypeBounds(w.lb, w.ub)(w.prov)
+                    case st: ST => st
+                  }).toMap[ST, ST] + (td2.thisTv -> td.thisTv) + (td.thisTv -> td.thisTv)
                   // Subsitute parent this TVs to current this TV.
                   PolymorphicType(mt.bodyPT.level, subst(mt.bodyPT.body, targsMap3) match {
                     // Try to wnwrap one layer of prov, which would have been wrapped by `MethodType.bodyPT`,
@@ -610,7 +620,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
             }
             nme.name -> mthTy
           }
-          MethodSet(td2.nme, filterTR(tr.expand).map(rec(_)(thisCtx)),
+          MethodSet(td2.nme, filterTR(tr.expand(true)).map(rec(_)(thisCtx)),
             td2.mthDecls.iterator.map(go).toMap, td2.mthDefs.iterator.map(go).toMap)
         }
         val mds = rec(TypeRef(td.nme, rigidtargs)(tp(td.toLoc, "type definition")), true)(ctx)
@@ -652,7 +662,7 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
       *   false polarity if contravariant position visit
       *   both if invariant position visit
       */
-    def updateVariance(ty: SimpleType, curVariance: VarianceInfo)(implicit tyDef: TypeDef, visited: MutSet[Bool -> TypeVariable]): Unit = {
+    def updateVariance(ty: SimpleTypeOrWildcard, curVariance: VarianceInfo)(implicit tyDef: TypeDef, visited: MutSet[Bool -> TypeVariable]): Unit = {
       def fieldVarianceHelper(fieldTy: FieldType): Unit = {
           fieldTy.lb.foreach(lb => updateVariance(lb, curVariance.flip))
           updateVariance(fieldTy.ub, curVariance)
@@ -714,6 +724,9 @@ class TypeDefs extends NuTypeDefs { Typer: Typer =>
             updateVariance(lhs, curVariance)
             updateVariance(rhs, curVariance)
           case TypeBounds(lb, ub) =>
+            updateVariance(lb, VarianceInfo.contra)
+            updateVariance(ub, VarianceInfo.co)
+          case WildcardArg(lb, ub) =>
             updateVariance(lb, VarianceInfo.contra)
             updateVariance(ub, VarianceInfo.co)
           case ArrayType(inner) => fieldVarianceHelper(inner)

@@ -1,0 +1,373 @@
+:NewDefs
+
+class Ty[type T]
+//│ class Ty[T] {
+//│   constructor()
+//│ }
+
+abstract class Foo[type A](val a: A): Bar | Baz
+module Bar extends Foo[Int](1)
+module Baz extends Foo[Bool](true)
+//│ abstract class Foo[A](a: A): Bar | Baz
+//│ module Bar extends Foo
+//│ module Baz extends Foo
+
+fun foo(t)(x: Foo[t.T]): t.T = if x is 
+    Bar then x.a
+    Baz then x.a
+//│ fun foo: forall 'T 'T0. {T :> 1 | true | 'T <: 'T0} -> (x: Foo[in 'T out 'T0]) -> 'T0
+
+foo(new Ty)(Bar)
+//│ 1 | true
+//│ res
+//│     = 1
+
+abstract class S[type T]: A | B
+module A extends S[Int]
+module B extends S[Bool]
+//│ abstract class S[T]: A | B
+//│ module A extends S
+//│ module B extends S
+
+fun f(x: S['a]) = if x is
+    A then 1 : x.T
+    B then 2 : x.T
+//│ fun f: forall 'a. (x: S['a]) -> ('a & (Int | false | true))
+//│   where
+//│     'a :> 2
+
+f(A)
+//│ Int
+//│ res
+//│     = 1
+
+:e
+f(B)
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.45: 	f(B)
+//│ ║        	^^^^
+//│ ╟── integer literal of type `2` is not an instance of type `Bool`
+//│ ║  l.34: 	    B then 2 : x.T
+//│ ║        	           ^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.27: 	module B extends S[Bool]
+//│ ║        	                   ^^^^
+//│ ╟── Note: type parameter T is defined at:
+//│ ║  l.25: 	abstract class S[type T]: A | B
+//│ ╙──      	                      ^
+//│ 2 | error | false | true
+//│ res
+//│     = 2
+
+:e
+fun f(x: S): x.T = if x is A then 1 else 0
+//│ ╔══[ERROR] Type error in `case` expression
+//│ ║  l.63: 	fun f(x: S): x.T = if x is A then 1 else 0
+//│ ║        	                      ^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type variable `T` leaks out of its scope
+//│ ║  l.63: 	fun f(x: S): x.T = if x is A then 1 else 0
+//│ ╙──      	                                         ^
+//│ fun f: (x: S[?]) -> anything
+
+fun f(x: S[?]) = if x is 
+    A then 1 : x.T
+    B then true : x.T
+//│ fun f: (x: S[?]) -> (Int | false | true)
+
+f(A)
+//│ Int | false | true
+//│ res
+//│     = 1
+
+fun f(x: S[?]): x.T = if x is 
+    A then 1 : x.T
+    B then true : x.T
+//│ fun f: (x: S[?]) -> (Int | false | true)
+
+f(A)
+//│ Int | false | true
+//│ res
+//│     = 1
+
+abstract class C[type S, type T]: R[S | T] | I[S]   // TODO just a trick
+class R[A] extends C[A, A]
+class I[A](val f: A => Int) extends C[A, Int]
+//│ abstract class C[S, T]: I[S] | R[S | T]
+//│ class R[A] extends C {
+//│   constructor()
+//│ }
+//│ class I[A](f: A -> Int) extends C
+
+fun foo[A, B](x: A, ev: C[A, B]): B = if ev is 
+    R then (x : ev.S) : ev.T
+    I(f) then ev.f(x : ev.S) : ev.T
+//│ fun foo: forall 'A 'B. (x: 'A, ev: C['A, 'B]) -> 'B
+
+foo(true, new R)
+//│ true
+//│ res
+//│     = true
+
+foo(1, I(x => x + 1))
+//│ Int
+//│ res
+//│     = 2
+
+module Foo { val a = 1 }
+//│ module Foo {
+//│   val a: 1
+//│ }
+
+Foo.a
+//│ 1
+//│ res
+//│     = 1
+
+abstract class Option[type out T]: None | Some[T]
+module None extends Option[nothing]
+class Some[A](get: A) extends Option[A]
+//│ abstract class Option[T]: None | Some[T]
+//│ module None extends Option
+//│ class Some[A](get: A) extends Option
+
+fun optToInt(w: Option[?]) = if w is Some then 1 else 0
+//│ fun optToInt: (w: Option[anything]) -> (0 | 1)
+
+optToInt(Some(11))
+//│ 0 | 1
+//│ res
+//│     = 1
+
+optToInt(Some(1) as Option[Int])
+//│ 0 | 1
+//│ res
+//│     = 1
+
+optToInt(None)
+//│ 0 | 1
+//│ res
+//│     = 0
+
+optToInt(None as Option[nothing])
+//│ 0 | 1
+//│ res
+//│     = 0
+
+let x = Some(Some(1))
+let y = Some(None)
+//│ let x: Some['A]
+//│ let y: Some['A0]
+//│ where
+//│   'A0 :> None
+//│   'A :> Some['A1]
+//│   'A1 :> 1
+//│ x
+//│   = Some {}
+//│ y
+//│   = Some {}
+
+x : Option[Option[Int]]
+//│ Option[Option[Int]]
+//│ res
+//│     = Some {}
+
+y : Option[Option[nothing]]
+//│ Option[Option[nothing]]
+//│ res
+//│     = Some {}
+
+abstract class W[type T]: MkW[?]
+class MkW[A](val w: A) extends W[Ty[A]]
+//│ abstract class W[T]: MkW[anything]
+//│ class MkW[A](w: A) extends W
+
+fun test(w: W[Ty[Int]]) = if w is MkW(x) then x
+//│ fun test: (w: W[Ty[Int]]) -> ??A
+
+test(MkW(1))
+//│ ??A
+//│ res
+//│     = 1
+
+fun test(w: W[?]) = if w is MkW(x) then x
+//│ fun test: (w: W[?]) -> ??A
+
+test(MkW(1))
+//│ ??A
+//│ res
+//│     = 1
+
+:e
+fun test(a: Some[Int]) = true as a.T
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.201: 	fun test(a: Some[Int]) = true as a.T
+//│ ║         	                         ^^^^
+//│ ╟── reference of type `true` is not an instance of type `Int`
+//│ ╟── Note: constraint arises from type selection:
+//│ ║  l.201: 	fun test(a: Some[Int]) = true as a.T
+//│ ╙──       	                                  ^^
+//│ fun test: (a: Some[Int]) -> Int
+
+fun test() = 
+    let a = Some(1)
+    true as a.T
+//│ fun test: () -> (1 | true)
+
+let x = Some(1)
+//│ let x: Some['A]
+//│   where
+//│     'A :> 1
+//│ x
+//│   = Some {}
+
+true as x.T
+//│ 1 | true
+//│ res
+//│     = true
+
+let x: Ty[Int] = new Ty
+//│ let x: Ty[Int]
+//│ x
+//│   = Ty {}
+
+1 as x.T
+//│ Int
+//│ res
+//│     = 1
+
+:e
+true as x.T
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.239: 	true as x.T
+//│ ║         	^^^^
+//│ ╟── reference of type `true` is not an instance of type `Int`
+//│ ╟── Note: constraint arises from type selection:
+//│ ║  l.239: 	true as x.T
+//│ ╙──       	         ^^
+//│ Int
+//│ res
+//│     = true
+
+let x: Some[Int] = Some(1)
+//│ let x: Some[Int]
+//│ x
+//│   = Some {}
+
+1 as x.T
+//│ Int
+//│ res
+//│     = 1
+
+:e
+true as x.T
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.262: 	true as x.T
+//│ ║         	^^^^
+//│ ╟── reference of type `true` is not an instance of type `Int`
+//│ ╟── Note: constraint arises from type selection:
+//│ ║  l.262: 	true as x.T
+//│ ╙──       	         ^^
+//│ Int
+//│ res
+//│     = true
+
+1 : (Some(1)).T
+//│ 1
+//│ res
+//│     = 1
+
+abstract class U[type A, type B]: MkU[?]
+class MkU[S](x: S) extends U[S, Int]
+//│ abstract class U[A, B]: MkU[anything]
+//│ class MkU[S](x: S) extends U
+
+fun uu[T](x: MkU[T]): T = if x is
+    MkU(s) then s : x.A
+//│ fun uu: forall 'T. (x: MkU['T]) -> 'T
+
+uu(MkU(true))
+//│ true
+//│ res
+//│     = true
+
+fun u(x: U[?, ?]): x.A = if x is
+    MkU(s) then s : x.A
+//│ fun u: (x: U[?, ?]) -> ??S
+
+u(MkU(1))
+//│ ??S
+//│ res
+//│     = 1
+
+:e
+fun w[T](x: U[T, T]): Bool = if x is
+    MkU(s) then (s : x.A) : x.B
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.304: 	    MkU(s) then (s : x.A) : x.B
+//│ ║         	                ^^^^^^^^^
+//│ ╟── type `T & ?B` is not an instance of type `Bool`
+//│ ║  l.304: 	    MkU(s) then (s : x.A) : x.B
+//│ ║         	                             ^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.303: 	fun w[T](x: U[T, T]): Bool = if x is
+//│ ╙──       	                      ^^^^
+//│ fun w: forall 'T. (x: U['T, 'T]) -> Bool
+
+fun w[T](x: U[T, T]): Int = if x is
+    MkU(s) then (s : x.A) : x.B
+//│ fun w: forall 'T. (x: U['T, 'T]) -> Int
+
+fun u[T](x: U[T, 'b]): T = if x is
+    MkU(s) then s : x.A
+//│ fun u: forall 'T 'b. (x: U['T, 'b]) -> 'T
+
+u(MkU(1))
+//│ 1
+//│ res
+//│     = 1
+
+abstract class U[type A, type B]: MkU[A]
+class MkU[S](x: S) extends U[S, Int]
+//│ abstract class U[A, B]: MkU[A]
+//│ class MkU[S](x: S) extends U
+
+fun u[T](x: U[T, 'b]): T = if x is
+    MkU(s) then s : x.A
+//│ fun u: forall 'T 'b. (x: U['T, 'b]) -> 'T
+
+fun w[T](x: U[T, T]): Int = if x is
+    MkU(s) then (s : x.A) : x.B
+//│ fun w: forall 'T. (x: U['T, 'T]) -> Int
+
+w(MkU(1))
+//│ Int
+//│ res
+//│     = 1
+
+:e
+w(MkU(true))
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.348: 	w(MkU(true))
+//│ ║         	^^^^^^^^^^^^
+//│ ╟── reference of type `true` is not an instance of `Int`
+//│ ║  l.348: 	w(MkU(true))
+//│ ║         	      ^^^^
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.330: 	class MkU[S](x: S) extends U[S, Int]
+//│ ║         	                                ^^^
+//│ ╟── Note: type parameter B is defined at:
+//│ ║  l.329: 	abstract class U[type A, type B]: MkU[A]
+//│ ╙──       	                              ^
+//│ Int | error
+//│ res
+//│     = true
+
+abstract class U[type A, type B]: MkU
+class MkU[S](x: S) extends U[S, Int]
+//│ abstract class U[A, B]: MkU[anything]
+//│ class MkU[S](x: S) extends U
+
+fun u[T](x: U[T, 'b]): T = if x is
+    MkU(s) then s : x.A
+//│ fun u: forall 'T 'b. (x: U['T, 'b]) -> 'T
+

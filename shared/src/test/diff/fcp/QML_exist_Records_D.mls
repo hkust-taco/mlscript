@@ -186,11 +186,11 @@ ssb (fun arr ->
 
 rec def mkMonoArray n =
   if n == 0 then base else step (mkMonoArray (n - 1))
-//│ mkMonoArray: int -> Arrays['a]
+//│ mkMonoArray: int -> Arrays[in 'a | 'a0 out 'a & 'a0]
 //│            = [Function: mkMonoArray]
 
 snb = mkMonoArray 3
-//│ snb: Arrays['a]
+//│ snb: Arrays[in 'a | 'a0 out 'a & 'a0]
 //│    = [Function (anonymous)]
 
 // * Here we are trying to leak the internally-quantified representation, resulting in `anything` being returned
@@ -257,11 +257,11 @@ ssb (fun arr ->
 
 rec def mkMonoArray n =
   if n == 0 then base else step2 (mkMonoArray (n - 1))
-//│ mkMonoArray: int -> Arrays['a]
+//│ mkMonoArray: int -> Arrays[in 'a | 'a0 out 'a & 'a0]
 //│            = [Function: mkMonoArray1]
 
 snb = mkMonoArray 3
-//│ snb: Arrays['a]
+//│ snb: Arrays[in 'a | 'a0 out 'a & 'a0]
 //│    = [Function (anonymous)]
 
 // * Here we are trying to leak the internally-quantified representation, resulting in `anything` being returned
@@ -328,7 +328,7 @@ def step arr = arr (fun impl -> fun k -> k (stepImpl_ty impl))
 :e
 def step (arr: Arrays['a]) = arr (fun impl -> fun k -> k (stepImpl impl))
 //│ Arrays['a] -> ({
-//│   fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> ((??rep, anything,),) -> 'b,
+//│   fold: ('a -> 'b -> 'b) -> 'b -> ((??rep, anything,),) -> 'b,
 //│   init: 'a -> (anything, "hi",),
 //│   sub: ((??rep, anything,),) -> int -> 'a,
 //│   update: ((??rep, anything,),) -> int -> 'a -> (anything, "hey",)
@@ -359,6 +359,19 @@ def step arr = arr (forall 'a. fun impl -> forall 'r. fun (k: ArraysImplConsumer
 //│ ((forall 'a 'r 'r0. ArraysImpl['a, 'r] -> ArraysImplConsumer['a, 'r0] -> 'r0) -> 'b) -> 'b
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.358: 	def step arr = arr (forall 'a. fun impl -> forall 'r. fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl impl))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `'r` does not match type `'r0`
+//│ ║  l.20: 	type Arrays[A] = forall 'r. ArraysImplConsumer[A, 'r] -> 'r
+//│ ║        	                                                  ^^
+//│ ╟── Note: constraint arises from rigid type variable:
+//│ ║  l.358: 	def step arr = arr (forall 'a. fun impl -> forall 'r. fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl impl))
+//│ ║         	                                                  ^^
+//│ ╟── Note: quantified type variable 'r is defined at:
+//│ ║  l.20: 	type Arrays[A] = forall 'r. ArraysImplConsumer[A, 'r] -> 'r
+//│ ╙──      	                        ^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│     = [Function: step7]
 
 // * ...unless we use `stepImpl_ty` instead of `stepImpl`
@@ -369,6 +382,19 @@ def step arr = arr (fun impl -> forall 'r. fun (k: ArraysImplConsumer['a, 'r]) -
 //│         <: 'a0
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.378: 	def step arr = arr (fun impl -> forall 'r. fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl_ty impl))
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `'r` does not match type `'r0`
+//│ ║  l.20: 	type Arrays[A] = forall 'r. ArraysImplConsumer[A, 'r] -> 'r
+//│ ║        	                                                  ^^
+//│ ╟── Note: constraint arises from rigid type variable:
+//│ ║  l.378: 	def step arr = arr (fun impl -> forall 'r. fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl_ty impl))
+//│ ║         	                                       ^^
+//│ ╟── Note: quantified type variable 'r is defined at:
+//│ ║  l.20: 	type Arrays[A] = forall 'r. ArraysImplConsumer[A, 'r] -> 'r
+//│ ╙──      	                        ^^
+//│ TEST CASE FAILURE: There was an unexpected type error
 //│     = [Function: step8]
 
 

@@ -426,16 +426,16 @@ rec def eval4 subst = eval_lexpr' eval4 subst
 //│     'tail3 <: Cons[?] & 'f | Nil
 //│     'f <: {head: {0: string, 1: 'result0}, tail: 'tail3}
 //│     'tail2 <: Cons[?] & 'e | Nil
-//│     'e <: {head: {0: string, 1: 'result0}, tail: 'tail2}
+//│     'e <: {head: {0: string, 1: 'result}, tail: 'tail2}
 //│     'tail1 <: Cons[?] & 'd | Nil
-//│     'd <: {head: {0: string, 1: 'result0}, tail: 'tail1}
+//│     'd <: {head: {0: string, 1: 'result}, tail: 'tail1}
 //│     'tail0 <: Cons[?] & 'c | Nil
-//│     'c <: {head: {0: string, 1: 'result}, tail: 'tail0}
+//│     'c <: {head: {0: string, 1: 'result0}, tail: 'tail0}
 //│     'tail <: Cons[?] & 'b | Nil
-//│     'b <: {head: {0: string, 1: 'result}, tail: 'tail}
-//│     'result :> 'i
-//│             <: Abs[?] & 'j & 'k | 'lhs & (Abs[?] & 'k & ~#Abs | Add[?] & 'l | App[?] & 'm | Mul[?] & 'n | Numb & 'o | Var & 'p)
-//│     'i :> Abs['i] | App['a]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | Numb | 'result0 | Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | 'q | 'result
+//│     'b <: {head: {0: string, 1: 'result0}, tail: 'tail}
+//│     'result0 :> 'i
+//│              <: Abs[?] & 'j & 'k | 'lhs & (Abs[?] & 'k & ~#Abs | Add[?] & 'l | App[?] & 'm | Mul[?] & 'n | Numb & 'o | Var & 'p)
+//│     'i :> Abs['i] | App['a]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | Numb | 'result | Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | 'q | 'result0
 //│     'a :> Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | App['a]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Numb | 'i
 //│     'lhs :> Add['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | App['a]\lhs\rhs & {lhs: 'lhs, rhs: 'rhs} | Mul['i]\lhs\rhs & {lhs: 'i, rhs: 'i} | Numb | Var
 //│          <: 'h & 'a
@@ -443,11 +443,11 @@ rec def eval4 subst = eval_lexpr' eval4 subst
 //│     'k <: Abs[?] | App[?] | Var & 'q
 //│     'q :> Var
 //│        <: Abs[?] & 'j & 'k | 'lhs & (Abs[?] & 'k & ~#Abs | Add[?] & {name: string} & 'l | App[?] & {name: string} & 'm | Mul[?] & {name: string} & 'n | Numb & {name: string} & 'o | Var & 'p)
-//│     'l <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result0 | Var & 'p & 'lhs
-//│     'result0 :> Numb | Var | 'i
-//│              <: Abs[?] & 'j & 'k | 'lhs & (Add[?] & 'l | App[?] & 'm | Mul[?] & 'n | Numb & 'o | Var & 'p)
-//│     'o <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result0 | Var & 'p & 'lhs
-//│     'n <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result0 | Var & 'p & 'lhs
+//│     'l <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result | Var & 'p & 'lhs
+//│     'result :> Numb | Var | 'i
+//│             <: Abs[?] & 'j & 'k | 'lhs & (Add[?] & 'l | App[?] & 'm | Mul[?] & 'n | Numb & 'o | Var & 'p)
+//│     'o <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result | Var & 'p & 'lhs
+//│     'n <: Add[?] & {lhs: 'h, rhs: 'h} | Mul[?] & {lhs: 'h, rhs: 'h} | Numb & 'result | Var & 'p & 'lhs
 //│     'p <: Var & 'q
 //│     'm <: Abs[?] & {body: 'h} | App[?] & {lhs: 'h, rhs: 'h} | Var & 'q
 //│     'j <: {body: 'h, name: string}
@@ -497,9 +497,9 @@ rec def eval4 subst = eval_lexpr' eval4 subst
 //│     'rhs :> 'i
 //│      = <no result>
 //│        eval_lexpr', eval_var, list_assoc and eq are not implemented
-//│ constrain calls  : 10599
-//│ annoying  calls  : 2300
-//│ subtyping calls  : 319664
+//│ constrain calls  : 10623
+//│ annoying  calls  : 2768
+//│ subtyping calls  : 320018
 
 :ResetFuel
 

@@ -95,7 +95,8 @@ trait TypeSimplifier { self: Typer =>
       case ProvType(ty) => process(ty, parent, canDistribForall = canDistribForall)
       
       case tr @ TypeRef(defn, targs) if builtinTypes.contains(defn) && tr.canExpand =>
-        process(tr.expandOrCrash, parent)
+        assert(tr.targs.isEmpty)
+        process(tr.expandOrCrash(true), parent)
       
       case RecordType(fields) => RecordType.mk(fields.flatMap { case (v @ Var(fnme), fty) =>
         // * We make a pass to transform the LB and UB of variant type parameter fields into their extrema
@@ -127,7 +128,7 @@ trait TypeSimplifier { self: Typer =>
                         else  v -> default :: Nil
                     }
                   case S(trt: TypedNuTrt) => // TODO factor w/ above & generalize
-                    trt.tparams.iterator.find(_._1.name === postfix).flatMap(_._3).getOrElse(VarianceInfo.in) match {
+                    trt.tparams.iterator.find(_._1.name === postfix).flatMap(_._3.varinfo).getOrElse(VarianceInfo.in) match {
                       case VarianceInfo(true, true) => Nil
                       case VarianceInfo(co, contra) =>
                         if (co) v -> FieldType(S(BotType), process(fty.ub, N))(fty.prov) :: Nil
@@ -223,7 +224,10 @@ trait TypeSimplifier { self: Typer =>
             
             val trs2 = trs.map {
               case (d, tr @ TypeRef(defn, targs)) =>
-                d -> TypeRef(defn, tr.mapTargs(pol)((pol, ta) => go(ta, pol)))(tr.prov)
+                d -> TypeRef(defn, tr.mapTargs2(pol)((pol, ta) => ta match {
+                  case w@WildcardArg(lb, ub) => WildcardArg(go(lb, pol.map(!_)), go(ub, pol))(w.prov)
+                  case st: ST => go(st, pol)
+                }))(tr.prov)
             }
             
             val traitPrefixes =
@@ -248,8 +252,11 @@ trait TypeSimplifier { self: Typer =>
                 
                 // * Reconstruct a TypeRef from its current structural components
                 val typeRef = TypeRef(td.nme, td.tparamsargs.zipWithIndex.map { case ((tp, tv), tpidx) =>
-                  val fieldTagNme = tparamField(clsTyNme, tp)
-                  val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
+                  val fieldTagNme = tparamField(clsTyNme, tp, false) // `false` means using `C#A` (old def type member names)
+                  val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { 
+                    case wc@WildcardArg(lb, ub) => FieldType(S(lb), ub)(wc.prov) 
+                    case ta: ST => FieldType(S(ta), ta)(noProv) 
+                  })
                   fromTyRef.++(rcd2.fields.iterator.filter(_._1 === fieldTagNme).map(_._2))
                     .foldLeft((BotType: ST, TopType: ST)) {
                       case ((acc_lb, acc_ub), FieldType(lb, ub)) =>
@@ -257,40 +264,15 @@ trait TypeSimplifier { self: Typer =>
                     }.pipe {
                       case (lb, ub) =>
                         vs(tv) match {
-                          case VarianceInfo(true, true) => TypeBounds.mk(BotType, TopType)
-                          case VarianceInfo(false, false) =>
-                            // * FIXME: this usage of type bounds is wrong!
-                            // * We're here using it as though it meant a bounded wildcard,
-                            // * for the purpose of type pretty-printing...
-                            // * But this is inconsistent with other uses of these types as *absolute* type ranges!
-                            TypeBounds.mk(lb, ub)
-                            // * However, the fix is to make all TR arguments actual bounded wildcards
-                            // * which is not easy as it requires extensive refactoring
-                            // * 
-                            // * Note that the version below doesn't work because the refinement redundancy tests
-                            // * below require non-polar types to compare against, so TypeBounds is inadequate.
-                            /* 
-                            pol match {
-                              case N => ???
-                                TypeBounds.mk(lb, ub)
-                              case S(true) => 
-                                TypeBounds.mk(lb, ub)
-                              case S(false) => 
-                                TypeBounds.mk(ub, lb)
-                            }
-                            */
-                            // * FIXME In fact, the use of such subtyping checks should render
-                            // * all uses of TypeBounds produced by the simplifier inadequate!
-                            // * We should find a proper solution to this at some point...
-                            // * (Probably by only using proper wildcards in the type simplifier.)
-                          case VarianceInfo(co, contra) =>
-                            if (co) ub else lb
+                          case VarianceInfo(true, true) => WildcardArg.mk(BotType, TopType)
+                          case VarianceInfo(false, false) => WildcardArg.mk(lb, ub)
+                          case VarianceInfo(co, contra) => if (co) ub else lb
                         }
                     }
                 })(noProv)
                 println(s"typeRef ${typeRef}")
                 
-                val clsFields = fieldsOf(typeRef.expandWith(paramTags = true, selfTy = false), paramTags = true)
+                val clsFields = fieldsOf(typeRef.expandWith(paramTags = true, selfTy = false, pol.getOrElse(die /* TODO */)), paramTags = true)
                 println(s"clsFields ${clsFields.mkString(", ")}")
                 
                 val cleanPrefixes = ps.map(_.name.capitalize) + clsNme ++ traitPrefixes
@@ -358,8 +340,11 @@ trait TypeSimplifier { self: Typer =>
                 
                 // * Reconstruct a TypeRef from its current structural components
                 val typeRef = TypeRef(cls.td.nme, cls.tparams.zipWithIndex.map { case ((tp, tv, vi), tpidx) =>
-                  val fieldTagNme = tparamField(clsTyNme, tp)
-                  val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { ta => FieldType(S(ta), ta)(noProv) })
+                  val fieldTagNme = tparamField(clsTyNme, tp, vi.visible)
+                  val fromTyRef = trs2.get(clsTyNme).map(_.targs(tpidx) |> { 
+                    case wc@WildcardArg(lb, ub) => FieldType(S(lb), ub)(wc.prov) 
+                    case ta: ST => FieldType(S(ta), ta)(noProv) 
+                  })
                   fromTyRef.++(rcd2.fields.iterator.filter(_._1 === fieldTagNme).map(_._2))
                     .foldLeft((BotType: ST, TopType: ST)) {
                       case ((acc_lb, acc_ub), FieldType(lb, ub)) =>
@@ -367,16 +352,15 @@ trait TypeSimplifier { self: Typer =>
                     }.pipe {
                       case (lb, ub) =>
                         cls.varianceOf(tv) match {
-                          case VarianceInfo(true, true) => TypeBounds.mk(BotType, TopType)
-                          case VarianceInfo(false, false) => TypeBounds.mk(lb, ub)
-                          case VarianceInfo(co, contra) =>
-                            if (co) ub else lb
+                          case VarianceInfo(true, true) => WildcardArg.mk(BotType, TopType)
+                          case VarianceInfo(false, false) => WildcardArg.mk(lb, ub)
+                          case VarianceInfo(co, contra) => if (co) ub else lb
                         }
                     }
                 })(noProv)
                 println(s"typeRef ${typeRef}")
                 
-                val clsFields = fieldsOf(typeRef.expandWith(paramTags = true, selfTy = false), paramTags = true)
+                val clsFields = fieldsOf(typeRef.expandWith(paramTags = true, selfTy = false, pol = pol.getOrElse(die /* TODO */)), paramTags = true)
                 println(s"clsFields ${clsFields.mkString(", ")}")
                 
                 val cleanPrefixes = ps.map(_.name.capitalize) + clsNme ++ traitPrefixes
@@ -1056,7 +1040,10 @@ trait TypeSimplifier { self: Typer =>
         RecordType(fs.mapValues(_.update(transform(_, pol.contravar, semp), transform(_, pol, semp))))(noProv))(noProv)
       case ProxyType(underlying) => transform(underlying, pol, parents, canDistribForall)
       case tr @ TypeRef(defn, targs) =>
-        TypeRef(defn, tr.mapTargs(pol)((pol, ty) => transform(ty, pol, semp)))(tr.prov)
+        TypeRef(defn, tr.mapTargs2(pol)((pol, ty) => ty match {
+          case w@WildcardArg(lb, ub) => WildcardArg(transform(lb, pol.contravar, semp), transform(ub, pol.covar, semp))(w.prov)
+          case ty: ST => transform(ty, pol, semp)
+        }))(tr.prov)
       case wo @ Without(base, names) =>
         if (names.isEmpty) transform(base, pol, semp, canDistribForall)
         else if (pol.base === S(true)) transform(base, pol, semp, canDistribForall).withoutPos(names)
@@ -1233,7 +1220,12 @@ trait TypeSimplifier { self: Typer =>
                         case (ProxyType(underlying1), _) => unify(underlying1, ty2)
                         case (_, ProxyType(underlying2)) => unify(ty1, underlying2)
                         case (TypeRef(defn1, targs1), TypeRef(defn2, targs2)) =>
-                          (defn1 === defn2 || nope) && targs1.lazyZip(targs2).forall(unify)
+                          (defn1 === defn2 || nope) && targs1.lazyZip(targs2).forall {
+                            case (WildcardArg(l1, u1), WildcardArg(l2, u2)) => unify(l1, l2) && unify(u1, u2)
+                            case (WildcardArg(l1, u1), ta2: ST) => nope // TODO correctly unify wildcard
+                            case (ta1: ST, WildcardArg(l2, u2)) => nope // TODO correctly unify wildcard
+                            case (ta1: ST, ta2: ST) => unify(ta1, ta2)
+                          }
                         case _ => nope
                       }
                     }
