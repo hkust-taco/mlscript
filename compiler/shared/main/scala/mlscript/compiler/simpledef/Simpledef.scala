@@ -14,18 +14,18 @@ type Cnstr = ProdStrat -> ConsStrat
 
 
 enum ProdStrat(using val euid: TermId) {
-  case NoProd()(using TermId) extends ProdStrat
+  case NoProd()(using TermId) 
   case ProdObj(ctor: Option[Var], fields: Ls[Var -> ProdStrat])(using TermId) extends ProdStrat, ProdObjImpl
-  case ProdFun(lhs: ConsStrat, rhs: ProdStrat)(using TermId) extends ProdStrat
-  case ProdVar(uid: TypeVarId, name: String)(boundary: Option[Var] = None)(using TermId) extends ProdStrat
-  case ProdTup(fields: Ls[ProdStrat])(using TermId) extends ProdStrat
+  case ProdFun(lhs: ConsStrat, rhs: ProdStrat)(using TermId) 
+  case ProdVar(uid: TypeVarId, name: String)(boundary: Option[Var] = None)(using TermId) 
+  case ProdTup(fields: Ls[ProdStrat])(using TermId) 
 }
 enum ConsStrat(using val euid: TermId) {
-  case NoCons()(using TermId) extends ConsStrat
+  case NoCons()(using TermId) 
   case ConsObj(name: Option[Var], fields: Ls[Var -> ConsStrat])(using TermId) extends ConsStrat, ConsObjImpl
-  case ConsFun(lhs: ProdStrat, rhs: ConsStrat)(using TermId) extends ConsStrat
-  case ConsVar(uid: TypeVarId, name: String)(boundary: Option[Var] = None)(using TermId) extends ConsStrat
-  case ConsTup(fields: Ls[ConsStrat])(using TermId) extends ConsStrat
+  case ConsFun(lhs: ProdStrat, rhs: ConsStrat)(using TermId) 
+  case ConsVar(uid: TypeVarId, name: String)(boundary: Option[Var] = None)(using TermId) 
+  case ConsTup(fields: Ls[ConsStrat])(using TermId) 
 }
 import ProdStrat.*, ConsStrat.*
 
@@ -55,18 +55,17 @@ class SimpleDef(debug: Debug) {
   val euid = Uid.Term.State()
   val noExprId = euid.nextUid
 
-  def freshVar(n: String)(using TermId): ((ProdVar), (ConsVar)) =
+  def freshVar(n: String)(using TermId): (ProdVar, ConsVar) =
     val vid = vuid.nextUid
     val pv = ProdVar(vid, n)()
     val cv = ConsVar(vid, n)()
     varsName += vid -> n
     log(s"fresh var '$n")
     (pv, cv)
-  def freshVar(n: Var)(using TermId): ((ProdVar), (ConsVar)) =
+  def freshVar(n: Var)(using TermId): (ProdVar, ConsVar) =
    freshVar(n.name)
 
   def apply(p: TypingUnit)(using ctx: Map[Var, ProdVar] = Map()): (Ls[Var -> ProdStrat], ProdStrat) = 
-    // if constraints.nonEmpty then return Nil
     val vars: Map[Var, ProdVar] = p.rawEntities.collect { 
       case fun: NuFunDef =>
         fun.nme -> freshVar(fun.name)(using noExprId)._1
@@ -90,7 +89,7 @@ class SimpleDef(debug: Debug) {
           case other =>
             lastWords(s"${other} class parameter is not supported.")
         }.unzip
-        val bodyStrats = apply(ty.body)(using fullCtx ++ pList.toMap) // TODO: Add additional ctx for class arguments, i.e. class X(num: Int)
+        val bodyStrats = apply(ty.body)(using fullCtx ++ pList.toMap)
         ty.kind match
           case Cls => 
             constrain(ProdFun(ConsTup(cList.map(_._2)),ProdObj(Some(ty.nameVar), bodyStrats._1 ++ pList)), constructorPrototypes(ty.nameVar)._2)
@@ -113,7 +112,6 @@ class SimpleDef(debug: Debug) {
       }
       case t: Term => {
         val topLevelProd = process(t)(using fullCtx)
-        //constrain(topLevelProd, NoCons()(using noExprId))
         Some(topLevelProd)
       }
       case other => {
@@ -125,7 +123,6 @@ class SimpleDef(debug: Debug) {
 
   val termToProdType = mutable.Map.empty[TermId, ProdStrat]
   val selTermToType = mutable.Map.empty[TermId, ConsObj]
-  //val ObjCreatorToType = mutable.Map.empty[TermId, ProdObj]
 
   def builtinOps: Map[Var, ProdFun] = {
     given TermId = noExprId
@@ -151,11 +148,9 @@ class SimpleDef(debug: Debug) {
       case Var("true") | Var("false") => ProdObj(Some(Var("prim$Bool")), Nil)(using t.uid)
       case v @ Var(id) if builtinOps.contains(v) =>
         builtinOps(v)
-      case v @ Var(id) =>// if varCtx(id).isDef then {
+      case v @ Var(id) =>
         ctx(v).copy()(Some(v))(using t.uid)
-      //} else ctx(r).s.copy()(None)(using t.uid)
       case App(func, arg) => 
-        //debug.writeLine(s"${summon[Map[Var, ProdStrat]]}")
         val funcRes = process(func)
         val argRes = process(arg)
         funcRes match 
@@ -260,7 +255,6 @@ class SimpleDef(debug: Debug) {
         case other => lastWords(s"Could not constrain ${other}")
   }
 
-  // TODO: remove redundancy between selToObjTypes and selTermToType
   lazy val selToResTypes: Map[TermId, Set[ProdStrat]] = selTermToType.map((termId, cons) =>
     (termId, cons.selectionSource)
   ).toMap
