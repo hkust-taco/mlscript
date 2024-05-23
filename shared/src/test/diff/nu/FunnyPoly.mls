@@ -124,17 +124,17 @@ fun test(x, y) =
 
 
 
-fun refined: forall 'A, 'B: (r: 'A) -> ('A & Ref['B])
-//│ fun refined: forall 'A 'B. (r: 'A) -> (Ref['B] & 'A)
+fun refined': forall 'A, 'B: (r: 'A) -> ('A & Ref['B])
+//│ fun refined': forall 'A 'B. (r: 'A) -> (Ref['B] & 'A)
 
 fun test(x: 'x) =
-  let foo() = refined(x)
+  let foo() = refined'(x)
   foo
 //│ fun test: forall 'x. (x: 'x) -> (forall 'B. () -> (Ref['B] & 'x))
 
-// fun refined: forall 'A, 'B, 'C: (r: 'A, s: 'B) -> ('A & 'B & Ref['C])
-fun refined: forall 'A, 'B, 'C: (r: 'A, s: 'B) -> ('A & 'B)
-//│ fun refined: forall 'A 'B. (r: 'A, s: 'B) -> ('A & 'B)
+// fun refined': forall 'A, 'B, 'C: (r: 'A, s: 'B) -> ('A & 'B & Ref['C])
+fun refined': forall 'A, 'B, 'C: (r: 'A, s: 'B) -> ('A & 'B)
+//│ fun refined': forall 'A 'B. (r: 'A, s: 'B) -> ('A & 'B)
 
 fun test(x: 'x) =
   let foo(y: Ref['r] & 'y) = y
@@ -142,7 +142,7 @@ fun test(x: 'x) =
 //│ fun test: forall 'r 'y. (x: Ref['r] & 'y) -> (Ref['r] & 'y)
 
 fun test(x: 'x) =
-  let foo(y) = refined(x, y) : Ref['r]
+  let foo(y) = refined'(x, y) : Ref['r]
   foo
 //│ fun test: forall 'B 'r. (x: Ref[?] & ~'B | Ref[in 'r out nothing] | ~'B) -> (forall 'r0. 'B -> Ref['r0])
 //│   where

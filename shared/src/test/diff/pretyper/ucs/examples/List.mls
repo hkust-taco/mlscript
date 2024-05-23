@@ -1,0 +1,30 @@
+:NewDefs
+
+// TODO
+abstract class List[out A]: (Cons[A] | Nil) {
+  fun isEmpty: Bool
+  fun map[B]: (A -> B) -> List[B]
+}
+class Cons[out A](head: A, tail: List[A]) extends List[A] {
+  fun isEmpty: Bool = false
+  fun map(f) = Cons(f(head), tail.map(f))
+}
+module Nil extends List {
+  fun isEmpty: Bool = true
+  fun map(f) = Nil
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
+//│ ║  l.10: 	  fun map(f) = Cons(f(head), tail.map(f))
+//│ ╙──      	                                 ^^^^
+//│ abstract class List[A]: Cons[A] | Nil {
+//│   fun isEmpty: Bool
+//│   fun map: forall 'B. (A -> 'B) -> List['B]
+//│ }
+//│ class Cons[A](head: A, tail: List[A]) extends List {
+//│   fun isEmpty: Bool
+//│   fun map: forall 'A. (A -> 'A) -> Cons['A]
+//│ }
+//│ module Nil extends List {
+//│   fun isEmpty: Bool
+//│   fun map: anything -> Nil
+//│ }

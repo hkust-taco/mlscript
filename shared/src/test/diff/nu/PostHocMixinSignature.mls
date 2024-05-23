@@ -8,7 +8,7 @@ mixin Foo {
 //│   fun foo: 'a -> 'a
 //│ }
 //│ where
-//│   'a <: {a: Object, b: 'a}
+//│   'a <: {a: Bool, b: 'a}
 
 
 module ValA {
@@ -34,7 +34,7 @@ module Test extends Foo
 //│   fun foo: forall 'a. 'a -> 'a
 //│ }
 //│ where
-//│   'a <: {a: Object, b: 'a}
+//│   'a <: {a: Bool, b: 'a}
 
 [Test.foo(ValA), Test.foo(ValB)]
 //│ [ValA | ValB, ValA | ValB]

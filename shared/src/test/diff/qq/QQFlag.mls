@@ -104,7 +104,9 @@ run(code"x => if (x == 42) then 42 else 0")
 //│ res
 //│     = Quoted:
 //│       (x_6) =>
-//│         match ((x_6 == 42)):
-//│           case true => 42
-//│           _ => 0)
+//│         let ucs$test$0_0 =
+//│           ((x_6 == 42))
+//│           in match ucs$test$0_0:
+//│             case true => 42
+//│             _ => 0)
 //│       undefined

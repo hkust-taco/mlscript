@@ -1,24 +1,27 @@
-:NewParser
+:NewDefs
 
 
-class Foo(x)
-//│ Defined class Foo
-//│ Foo: 'x -> (Foo & {x: 'x})
-//│    = [Function: Foo1]
+class Foo[A](x: A)
+//│ class Foo[A](x: A)
 
 let f = Foo(1)
-//│ f: Foo & {x: 1}
-//│  = Foo { x: 1 }
+//│ let f: Foo['A]
+//│   where
+//│     'A :> 1
+//│ f
+//│   = Foo {}
 
 // let f = new Foo(1)
 
 if f is Foo then 1 else 0
-//│ res: 0 | 1
-//│    = 1
+//│ 0 | 1
+//│ res
+//│     = 1
 
 if f is Foo(a) then a else 0
-//│ res: 0 | 1
-//│    = 1
+//│ 0 | 1
+//│ res
+//│     = 1
 
 // case f of
 //   { Foo ->
@@ -31,18 +34,19 @@ if f is Foo(a) then a else 0
 
 
 fun test(x) = if x is Foo(a) then a
-//│ test: (Foo & {x: 'x}) -> 'x
-//│     = [Function: test]
+//│ fun test: forall 'a. Foo['a] -> 'a
 
 test(f)
-//│ res: 1
-//│    = 1
+//│ 1
+//│ res
+//│     = 1
 
-class PoInt(x, y)
-//│ Defined class PoInt
-//│ PoInt: ('x, 'y,) -> (PoInt & {x: 'x, y: 'y})
-//│      = [Function: PoInt1]
+class PoInt(x: Int, y: Int)
+//│ class PoInt(x: Int, y: Int)
 
-// let origin = new PoInt(0, 0)
+let origin = new PoInt(0, 0)
+//│ let origin: PoInt
+//│ origin
+//│        = PoInt {}
 
 

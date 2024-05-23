@@ -21,6 +21,24 @@ package object utils {
     def in(xs: A => Bool): Bool = xs(self)
     def in(xs: Seq[_ >: A]): Bool = xs.exists(_ === self)
   }
+
+  implicit class IntOps(private val self: Int) extends AnyVal {
+    def toOrdinalWord: String = {
+      require(self >= 0)
+      self + 1 match {
+        case 1 => "first"
+        case 2 => "second"
+        case 3 => "third"
+        case n @ (11 | 12 | 13) => s"${n}th"
+        case n => self.toString + (n % 10 match {
+          case 1 => "st"
+          case 2 => "nd"
+          case 3 => "rd"
+          case _ => "th"
+        })
+      }
+    }
+  }
   
   implicit class StringOps(private val self: String) extends AnyVal {
     import collection.mutable
@@ -45,8 +63,9 @@ package object utils {
     def decapitalize: String =
       if (self.length === 0 || !self.charAt(0).isUpper) self
       else self.updated(0, self.charAt(0).toLower)
-    def pluralize(quantity: Int, es: Boolean = false): String =
-      if (quantity > 1) self + (if (es) "es" else "s") else self
+    def pluralize(quantity: Int, inclusive: Boolean = false, es: Boolean = false): String =
+      (if (inclusive) quantity.toString + " " else "") +
+        (if (quantity > 1 || quantity === 0) self + (if (es) "es" else "s") else self)
     @SuppressWarnings(Array("org.wartremover.warts.Equals"))
     def ===(other: String): Bool = self.equals(other)
   }

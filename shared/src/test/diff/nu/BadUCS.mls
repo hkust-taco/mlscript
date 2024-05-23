@@ -23,60 +23,86 @@ fun foo(x) = if x is Bar then 0
 //│ fun foo: Bar -> 0
 
 :e
+:ge
 fun foo(x) = if x is Foo0 then 0
-//│ ╔══[ERROR] Cannot find constructor `Foo0` in scope
-//│ ║  l.26: 	fun foo(x) = if x is Foo0 then 0
+//│ ╔══[ERROR] type identifier `Foo0` not found
+//│ ║  l.27: 	fun foo(x) = if x is Foo0 then 0
 //│ ╙──      	                     ^^^^
-//│ fun foo: anything -> error
+//│ ╔══[ERROR] type identifier not found: Foo0
+//│ ║  l.27: 	fun foo(x) = if x is Foo0 then 0
+//│ ╙──      	                     ^^^^
+//│ fun foo: nothing -> error
 //│ Code generation encountered an error:
-//│   if expression was not desugared
+//│   unknown match case: Foo0
 
 
 type F = Foo
 //│ type F = Foo
 
 :e
+:ge
 fun foo(x) = if x is F then 0
-//│ ╔══[ERROR] Cannot find constructor `F` in scope
-//│ ║  l.39: 	fun foo(x) = if x is F then 0
+//│ ╔══[ERROR] Type alias is not allowed in pattern
+//│ ║  l.44: 	fun foo(x) = if x is F then 0
 //│ ╙──      	                     ^
-//│ fun foo: anything -> error
+//│ ╔══[ERROR] can only match on classes and traits
+//│ ║  l.44: 	fun foo(x) = if x is F then 0
+//│ ╙──      	                     ^
+//│ fun foo: nothing -> error
 //│ Code generation encountered an error:
-//│   if expression was not desugared
+//│   cannot match type alias F
 
 :e
+:ge
 fun foo(x) = if x is F() then 0
-//│ ╔══[ERROR] Illegal pattern `F`
-//│ ║  l.48: 	fun foo(x) = if x is F() then 0
+//│ ╔══[ERROR] Type alias is not allowed in pattern
+//│ ║  l.57: 	fun foo(x) = if x is F() then 0
 //│ ╙──      	                     ^
-//│ fun foo: anything -> error
+//│ ╔══[ERROR] can only match on classes and traits
+//│ ║  l.57: 	fun foo(x) = if x is F() then 0
+//│ ╙──      	                     ^
+//│ fun foo: nothing -> error
 //│ Code generation encountered an error:
-//│   if expression was not desugared
+//│   cannot match type alias F
 
 
 mixin M
 //│ mixin M()
 
 :e
+:ge
 fun foo(x) = if x is M then 0
-//│ ╔══[ERROR] Cannot find constructor `M` in scope
-//│ ║  l.61: 	fun foo(x) = if x is M then 0
+//│ ╔══[ERROR] Mixins are not allowed in pattern
+//│ ║  l.74: 	fun foo(x) = if x is M then 0
 //│ ╙──      	                     ^
-//│ fun foo: anything -> error
+//│ ╔══[ERROR] can only match on classes and traits
+//│ ║  l.74: 	fun foo(x) = if x is M then 0
+//│ ╙──      	                     ^
+//│ fun foo: nothing -> error
 //│ Code generation encountered an error:
-//│   if expression was not desugared
+//│   unknown match case: M
 
 :e
+:ge
 fun foo(x) = if x is M() then 0
-//│ ╔══[ERROR] Illegal pattern `M`
-//│ ║  l.70: 	fun foo(x) = if x is M() then 0
+//│ ╔══[ERROR] Mixins are not allowed in pattern
+//│ ║  l.87: 	fun foo(x) = if x is M() then 0
 //│ ╙──      	                     ^
-//│ fun foo: anything -> error
+//│ ╔══[ERROR] can only match on classes and traits
+//│ ║  l.87: 	fun foo(x) = if x is M() then 0
+//│ ╙──      	                     ^
+//│ fun foo: nothing -> error
 //│ Code generation encountered an error:
-//│   if expression was not desugared
+//│   unknown match case: M
 
-
+:w
 fun foo0(x, y) = if x is y then 0
+//│ ╔══[WARNING] the outer binding `y`
+//│ ║  l.99: 	fun foo0(x, y) = if x is y then 0
+//│ ║        	            ^
+//│ ╟── is shadowed by name pattern `y`
+//│ ║  l.99: 	fun foo0(x, y) = if x is y then 0
+//│ ╙──      	                         ^
 //│ fun foo0: (anything, anything) -> 0
 
 
@@ -84,22 +110,29 @@ fun foo = 0
 //│ fun foo: 0
 
 :e
+:ge
 fun foo0(x) = if x is foo() then 0
-//│ ╔══[ERROR] Illegal pattern `foo`
-//│ ║  l.87: 	fun foo0(x) = if x is foo() then 0
-//│ ╙──      	                      ^^^
-//│ fun foo0: anything -> error
+//│ ╔══[ERROR] type identifier `foo` not found
+//│ ║  l.114: 	fun foo0(x) = if x is foo() then 0
+//│ ╙──       	                      ^^^
+//│ ╔══[ERROR] can only match on classes and traits
+//│ ║  l.114: 	fun foo0(x) = if x is foo() then 0
+//│ ╙──       	                      ^^^
+//│ fun foo0: nothing -> error
 //│ Code generation encountered an error:
-//│   if expression was not desugared
+//│   unknown match case: foo
 
 :e
+:ge
+// FIXME: Typer.scala:1497
 fun foo(x) = if x is foo() then 0
-//│ ╔══[ERROR] Illegal pattern `foo`
-//│ ║  l.96: 	fun foo(x) = if x is foo() then 0
-//│ ╙──      	                     ^^^
-//│ fun foo: anything -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[ERROR] type identifier `foo` not found
+//│ ║  l.128: 	fun foo(x) = if x is foo() then 0
+//│ ╙──       	                     ^^^
+//│ ╔══[ERROR] can only match on classes and traits
+//│ ║  l.128: 	fun foo(x) = if x is foo() then 0
+//│ ╙──       	                     ^^^
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Program reached and unexpected state.
 
 module Nil
 class Cons[out A](head: A, tail: Cons[A] | Nil)

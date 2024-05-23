@@ -1,16 +1,16 @@
 :NewDefs
 
 :mono
-fun f(x: Int) = if x then 42 else 1337
+fun f(x: Bool) = if x then 42 else 1337
 //│ Lifted:
 //│ TypingUnit {
-//│   fun f$1 = (x: Int,) => if (x) then 42 else 1337
+//│   fun f$1 = (x: Bool,) => if (x) then 42 else 1337
 //│ }
 //│ Mono:
 //│ TypingUnit {
-//│   fun f$1 = (x: Int,) => if (x) then 42 else 1337
+//│   fun f$1 = (x: Bool,) => if (x) then 42 else 1337
 //│ }
-//│ fun f$1: (x: Int) -> (1337 | 42)
+//│ fun f$1: (x: Bool) -> (1337 | 42)
 
 :mono
 fun foo() = 42

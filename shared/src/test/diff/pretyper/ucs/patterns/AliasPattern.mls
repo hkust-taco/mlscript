@@ -1,0 +1,57 @@
+:NewDefs
+
+abstract class Option[out A]
+class Some[out A](val value: A) extends Option[A]
+module None extends Option[nothing]
+//│ abstract class Option[A]
+//│ class Some[A](value: A) extends Option
+//│ module None extends Option
+
+:ducs:postprocess.result
+fun map(f) = case
+  Some(x)   then Some(f(x))
+  None as n then n
+//│ Post-processed UCS term:
+//│ case case$scrut*‡ of
+//│   Some*◊ ->
+//│     let ucs$args_case$scrut$Some*† = (Some).unapply(case$scrut,)
+//│     let x*‡ = (ucs$args_case$scrut$Some).0
+//│     Some(f(x,),)
+//│   None*† ->
+//│     let n*† = case$scrut
+//│     n
+//│ fun map: forall 'a 'A. ('a -> 'A) -> (None | Some['a]) -> (None | Some['A])
+
+:ducs:postprocess.result
+fun map(f) = case
+  Some(x as n) then Some of f(n)
+  None as n then n
+//│ Post-processed UCS term:
+//│ case case$scrut*‡ of
+//│   Some*◊ ->
+//│     let ucs$args_case$scrut$Some*† = (Some).unapply(case$scrut,)
+//│     let x*‡ = (ucs$args_case$scrut$Some).0
+//│     let n*‡ = x
+//│     Some(f(n,),)
+//│   None*† ->
+//│     let n*† = case$scrut
+//│     n
+//│ fun map: forall 'a 'A. ('a -> 'A) -> (None | Some['a]) -> (None | Some['A])
+
+:ducs:postprocess.result
+fun foo = case
+  Some(Some(a as b) as c) as d then [a, b, c, d]
+//│ Post-processed UCS term:
+//│ let d*† = case$scrut
+//│ case case$scrut*‡ of
+//│   Some*◊ ->
+//│     let ucs$args_case$scrut$Some*† = (Some).unapply(case$scrut,)
+//│     let case$scrut$Some_0*‡ = (ucs$args_case$scrut$Some).0
+//│     case case$scrut$Some_0*‡ of
+//│       Some*◊ ->
+//│         let ucs$args_case$scrut$Some_0$Some*† = (Some).unapply(case$scrut$Some_0,)
+//│         let a*‡ = (ucs$args_case$scrut$Some_0$Some).0
+//│         let b*‡ = a
+//│         let c*‡ = case$scrut$Some_0
+//│         [a, b, c, d,]
+//│ fun foo: forall 'A 'a. (Some[Some['A]] & 'a) -> ['A, 'A, Some['A], 'a]
