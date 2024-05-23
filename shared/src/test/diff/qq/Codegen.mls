@@ -358,3 +358,135 @@ fun foo(dbg) =
 :ne
 code"x => let c = 42 in ${code"x"}"
 //│ Code[forall 'a. 'a -> 'a, nothing]
+
+class Ref[A](init: A) { mut val value: A = init }
+//│ class Ref[A](init: A) {
+//│   mut val value: A
+//│ }
+
+:ne
+:js
+x `=>
+  let v = Ref(x)
+  let _ = y `=>
+    set v.value = y
+    `0
+  v.value
+//│ Code[forall 'a. 'a -> 'a, ??y & ~??x]
+//│ // Prelude
+//│ class TypingUnit30 {}
+//│ const typing_unit30 = new TypingUnit30;
+//│ // Query 1
+//│ res = ((x1) => Lam(Var(x1), (() => {
+//│   let v = Ref(Var(x1));
+//│   let _ = ((y1) => Lam(Var(y1), (() => {
+//│     void(v.value = Var(y1));
+//│     return IntLit(0);
+//│   })()))(freshName("y"));
+//│   return v.value;
+//│ })()))(freshName("x"));
+//│ // End of generated code
+
+:ne
+:js
+x `=>
+  class A(y: Code[Int, nothing]) {
+    val z = x `+ y
+  }
+  A(`0).z
+//│ Code[Int -> Int, nothing]
+//│ // Prelude
+//│ class TypingUnit31 {}
+//│ const typing_unit31 = new TypingUnit31;
+//│ // Query 1
+//│ res = ((x1) => Lam(Var(x1), (() => {
+//│   const A = (() => {
+//│     class A {
+//│       #y;
+//│       #z;
+//│       get z() { return this.#z; }
+//│       constructor(y) {
+//│         this.#y = y;
+//│         this.#z = App(Var("+"), Var(x1), y);
+//│         const z = this.#z;
+//│       }
+//│     static
+//│       unapply(x) {
+//│         return [x.#y];
+//│       }
+//│     }
+//│     let ctor;
+//│     ctor = ((y) => new A(y));
+//│     ctor.class = A;
+//│     return ctor;
+//│   })();
+//│   return A(IntLit(0)).z;
+//│ })()))(freshName("x"));
+//│ // End of generated code
+
+:ne
+:js
+x `=>
+  class A() {
+    constructor() {
+      log(x)
+    }
+  }
+  new A(), x
+//│ Code[forall 'a. 'a -> 'a, nothing]
+//│ // Prelude
+//│ class TypingUnit32 {}
+//│ const typing_unit32 = new TypingUnit32;
+//│ // Query 1
+//│ res = ((x1) => Lam(Var(x1), (() => {
+//│   const A = (() => {
+//│     class A {
+//│       constructor() {
+//│         log(Var(x1));
+//│       }
+//│     static
+//│       unapply(x) {
+//│         return [];
+//│       }
+//│     }
+//│     let ctor;
+//│     ctor = (() => new A());
+//│     ctor.class = A;
+//│     return ctor;
+//│   })();
+//│   return new A.class() , Var(x1);
+//│ })()))(freshName("x"));
+//│ // End of generated code
+
+class Foo(x: Code[Int, anything])
+//│ class Foo(x: Code[Int, anything])
+
+:ne
+:js
+x `=>
+  class B() extends Foo(x)
+  `x
+//│ Code[forall 'a. (Int & 'a) -> 'a, nothing]
+//│ // Prelude
+//│ class TypingUnit34 {}
+//│ const typing_unit34 = new TypingUnit34;
+//│ // Query 1
+//│ res = ((x1) => Lam(Var(x1), (() => {
+//│   const B = (() => {
+//│     class B extends Foo.class {
+//│       constructor() {
+//│         super(Var(x1));
+//│       }
+//│     static
+//│       unapply(x) {
+//│         return [];
+//│       }
+//│     }
+//│     let ctor;
+//│     ctor = (() => new B());
+//│     ctor.class = B;
+//│     return ctor;
+//│   })();
+//│   return Var(x1);
+//│ })()))(freshName("x"));
+//│ // End of generated code
