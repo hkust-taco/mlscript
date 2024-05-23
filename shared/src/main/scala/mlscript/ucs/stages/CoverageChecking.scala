@@ -3,7 +3,7 @@ package ucs
 package stages
 
 import utils._, shorthands._, Message.MessageContext
-import ucs.context.{Context, Pattern, Scrutinee}
+import context.{Context, Pattern, Scrutinee}
 import pretyper.Traceable, pretyper.symbol._
 
 trait CoverageChecking { self: Desugarer with Traceable =>

@@ -38,7 +38,8 @@ class Derived(y: Int) extends Base(y + 1)
 //│ class Base(x: Int)
 //│ class Derived(y: Int) extends Base
 
-:ducs:postprocess.result,coverage
+// Notice that Derived is not in the inferred type.
+:ducs:postprocess.result
 fun example3(t) =
   if t is
     Base(x) and p1(x) then x
@@ -60,41 +61,12 @@ fun example3(t) =
 //│             y
 //│           _ -> 42
 //│   _ -> 42
-//│ | | | | | | | STEP 4
-//│ | | | | | | | collected match registry: 
-//│ | | | | | | | >>> t => [class `Base`, class `Derived`]
-//│ | | | | | | | >>> x => []
-//│ | | | | | | | >>> y => []
-//│ | | | | | | | checkCoverage <== 0 pending, 3 working, 0 seen
-//│ | | | | | | | | CASE t
-//│ | | | | | | | | SEEN: empty
-//│ | | | | | | | | class symbol: `Base`
-//│ | | | | | | | | REMOVE `Base` from working
-//│ | | | | | | | | unseen: [class `Base`, class `Derived`]
-//│ | | | | | | | | remaining: []
-//│ | | | | | | | | checkCoverage <== LET `ucs$args_t$Base`
-//│ | | | | | | | | checkCoverage <== LET `x`
-//│ | | | | | | | | checkCoverage <== LET `ucs$test$0`
-//│ | | | | | | | | checkCoverage <== TEST `ucs$test$0`
-//│ | | | | | | | | checkCoverage <== TERM x
-//│ | | | | | | | | checkCoverage <== 0 pending, 2 working, 1 seen
-//│ | | | | | | | | | CASE t
-//│ | | | | | | | | | SEEN: t is Base
-//│ | | | | | | | | | class symbol: `Derived`
-//│ | | | | | | | | | REMOVE `Derived` from working
-//│ | | | | | | | | | unseen: [class `Derived`]
-//│ | | | | | | | | | remaining: []
-//│ | | | | | | | | | checkCoverage <== LET `ucs$args_t$Derived`
-//│ | | | | | | | | | checkCoverage <== LET `y`
-//│ | | | | | | | | | checkCoverage <== TERM y
-//│ | | | | | | | | | remaining cases should be covered by the wildcard
-//│ | | | | | | | | | checkCoverage <== TERM 42
-//│ | | | | | | | | checkCoverage ==> 0 diagnostics
-//│ | | | | | | | | remaining cases should be covered by the wildcard
-//│ | | | | | | | | checkCoverage <== TERM 42
-//│ | | | | | | | checkCoverage ==> 0 diagnostics
-//│ | | | | | | | Coverage checking result: 0 errors
 //│ fun example3: forall 'a. (Base & {#x: Num & 'a} | Object & ~#Base) -> (Int | 'a)
+
+example3(Derived(1))
+//│ Int
+//│ res
+//│     = 1
 
 fun example4(t, x) =
   if t is
@@ -119,3 +91,16 @@ example4(Derived(1), 4) ~~> 5
 //│ "passed"
 //│ res
 //│     = 'passed'
+
+class Base(x: Int)
+class Derived[A](y: A) extends Base(1)
+//│ class Base(x: Int)
+//│ class Derived[A](y: A) extends Base
+
+// Notice that now Derived is generic, so it's appear in the inferred type.
+fun example5(t) =
+  if t is
+    Base(x) and p1(x) then x
+    Derived(y) then y
+    else 42
+//│ fun example5: forall 'a 'b. (Base & {#x: Num & 'a} & ~#Derived | Derived['b] & {#x: Num & 'a} | Object & ~#Base) -> (42 | 'a | 'b)

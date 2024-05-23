@@ -9,7 +9,7 @@ import pretyper.Scope
 
 class Context(originalTerm: If) {
   /** The prefix of all prefixes. */
-  private val prefix = Context.freshPrefix()
+  private val prefix = Context.freshPrefix
   private val cachePrefix = prefix + "$cache$"
   private val scrutineePrefix = prefix + "$scrut$"
   private val testPrefix = prefix + "$test$"
@@ -60,5 +60,5 @@ class Context(originalTerm: If) {
 }
 
 object Context {
-  private def freshPrefix(): Str = "ucs"
+  private val freshPrefix: Str = "ucs"
 }
