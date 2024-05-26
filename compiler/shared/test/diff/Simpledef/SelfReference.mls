@@ -1,0 +1,23 @@
+:NewDefs
+:AllowRuntimeErrors
+
+:sd
+:nolift
+fun f(x) = f(x)
+f(0)
+f(1)
+//│ 
+//│ Simpledef:
+//│ {fun f = (x,) => f(x,)
+//│  f(0,)
+//│  f(1,)}
+//│ End simpledef
+//│ 
+//│ fun f: anything -> nothing
+//│ nothing
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded

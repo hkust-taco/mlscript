@@ -1,0 +1,32 @@
+:NewDefs
+
+:sd
+:nolift
+fun fac(n) = 
+  if (n > 1) then fac(n - 1) * n else 1
+fac(5)
+//│ 
+//│ Simpledef:
+//│ {fun fac = (n,) => {if ('(' >(n, 1,) ')') then *(fac(-(n, 1,),), n,) else 1}
+//│  fac(5,)}
+//│ End simpledef
+//│ 
+//│ fun fac: Int -> Int
+//│ Int
+//│ res
+//│     = 120
+
+// FIXME: Strange syntax
+:sd
+:nolift
+class List(val l: List | Nil | undefined, val hasTail: Bool)  {}
+class Nil(val l: List | Nil | undefined, val hasTail: Bool)  {}
+fun count(lst) =
+  if lst.hasTail then
+    let l = lst.l
+    if l is undefined then 1 else count(l)+1
+  else 0
+count(new List(new List(new Nil(undefined, false), true), true))
+//│ 
+//│ Simpledef:
+//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Var(is)

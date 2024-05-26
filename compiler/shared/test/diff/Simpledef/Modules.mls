@@ -1,7 +1,8 @@
 :NewDefs
 
-:nolift
+
 :sd
+:nolift
 class Foo() {fun f = 0}
 module x { val y = Foo() }
 x.y.f

@@ -1,8 +1,9 @@
 :NewDefs
 
-:nolift
+
 :ppat
 :sd
+:nolift
 abstract class List() {
     fun getRes: Str
     fun map: error
@@ -39,13 +40,13 @@ mkList(5).map(x => x*2).getRes
 //│  fun map: error}
 //│  class Cons(val x: Int, val xs: List,): List {fun getRes = concat(concat(toString(x,),)(" :: ",),)(let selRes$30 = xs in case selRes$30 of { Nil => (selRes$30).getRes
 //│  Cons => (selRes$30).getRes },)
-//│  fun map = (f::0,) => Cons(f(x,), (let selRes$50 = xs in case selRes$50 of { Nil => (selRes$50).map
-//│  Cons => (selRes$50).map })(f,),)}
+//│  fun map = (f::0,) => Cons(f(x,), let selRes$50 = xs in case selRes$50 of { Nil => (selRes$50).map(f,)
+//│  Cons => (selRes$50).map(f,) },)}
 //│  class Nil(): List {fun getRes = "Nil"
 //│  fun map = (f::1,) => Nil()}
 //│  fun mkList = (len::2,) => {if (==(len, 0,)) then Nil() else Cons(len, mkList(-(len, 1,),),)}
-//│  let selRes$126 = (let selRes$128 = mkList(5,) in case selRes$128 of { Cons => (selRes$128).map
-//│  Nil => (selRes$128).map })((x::3,) => *(x, 2,),) in case selRes$126 of { Cons => (selRes$126).getRes
+//│  let selRes$126 = let selRes$128 = mkList(5,) in case selRes$128 of { Cons => (selRes$128).map((x::3,) => *(x, 2,),)
+//│  Nil => (selRes$128).map((x::3,) => *(x, 2,),) } in case selRes$126 of { Cons => (selRes$126).getRes
 //│  Nil => (selRes$126).getRes }}
 //│ End simpledef
 //│ 

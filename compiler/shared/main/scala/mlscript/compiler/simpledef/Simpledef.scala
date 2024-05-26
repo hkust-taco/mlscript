@@ -15,7 +15,7 @@ type Cnstr = ProdStrat -> ConsStrat
 
 enum ProdStrat(using val euid: TermId) {
   case NoProd()(using TermId) 
-  case ProdObj(ctor: Option[Var], fields: Ls[Var -> ProdStrat])(using TermId) extends ProdStrat, ProdObjImpl
+  case ProdObj(ctor: Option[Var], fields: Ls[Var -> ProdStrat], parents: Ls[ProdStrat] = Nil)(using TermId) extends ProdStrat, ProdObjImpl
   case ProdFun(lhs: ConsStrat, rhs: ProdStrat)(using TermId) 
   case ProdVar(uid: TypeVarId, name: String)(boundary: Option[Var] = None)(using TermId) 
   case ProdTup(fields: Ls[ProdStrat])(using TermId) 
@@ -74,8 +74,12 @@ class SimpleDef(debug: Debug) {
       case ty: NuTypeDef =>
         ty.nameVar -> freshVar(ty.nameVar)(using noExprId)
     }.toMap
+    val objectPrototypes: Map[Var, Cnstr] = p.rawEntities.collect { 
+      case ty: NuTypeDef =>
+        ty.nameVar -> freshVar(ty.nameVar)(using noExprId)
+    }.toMap
     val fullCtx = ctx ++ vars ++ constructorPrototypes.map((v, s) => (v, s._1.asInstanceOf[ProdVar]))
-    val constructors: Map[Var, ProdStrat] = p.rawEntities.collect { 
+    val classes: Map[Var, ProdObj] = p.rawEntities.collect { 
       case ty: NuTypeDef =>
         debug.writeLine(s"Completing type info for class ${ty.nameVar} with ctors ${constructorPrototypes.map((v, s) => (v, s._1))}")
         given TermId = noExprId
@@ -90,13 +94,24 @@ class SimpleDef(debug: Debug) {
             lastWords(s"${other} class parameter is not supported.")
         }.unzip
         val bodyStrats = apply(ty.body)(using fullCtx ++ pList.toMap)
+        val parents = ty.parents.map{
+          case v: Var => objectPrototypes(v)._1
+          case App(v: Var, _) => objectPrototypes(v)._1
+          case other => lastWords(s"Unsupported inheritance pattern ${other}")
+        }
+        if parents.length > 1 then lastWords(s"Multiple Inheritance at ${ty} not supported yet")
         ty.kind match
           case Cls => 
-            constrain(ProdFun(ConsTup(cList.map(_._2)),ProdObj(Some(ty.nameVar), bodyStrats._1 ++ pList)), constructorPrototypes(ty.nameVar)._2)
-            ty.nameVar -> ProdFun(ConsTup(cList.map(_._2)),ProdObj(Some(ty.nameVar), bodyStrats._1 ++ pList))
+            val obj = ProdObj(Some(ty.nameVar), bodyStrats._1 ++ pList, parents)
+            val func = ProdFun(ConsTup(cList.map(_._2)),obj)
+            constrain(func, constructorPrototypes(ty.nameVar)._2)
+            constrain(obj, objectPrototypes(ty.nameVar)._2)
+            ty.nameVar -> obj
           case Mod =>
-            constrain(ProdObj(Some(ty.nameVar), bodyStrats._1 ++ pList), constructorPrototypes(ty.nameVar)._2)
-            ty.nameVar -> ProdObj(Some(ty.nameVar), bodyStrats._1)
+            val obj = ProdObj(Some(ty.nameVar), bodyStrats._1 ++ pList, parents) 
+            constrain(obj, constructorPrototypes(ty.nameVar)._2)
+            constrain(obj, objectPrototypes(ty.nameVar)._2)
+            ty.nameVar -> obj
           case other => 
             lastWords(s"Unsupported class kind ${other}")
     }.toMap
@@ -130,8 +145,10 @@ class SimpleDef(debug: Debug) {
       (Var("+") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$Int")), Nil),ConsObj(Some(Var("prim$Int")), Nil))), ProdObj(Some(Var("prim$Int")), Nil))),
       (Var("-") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$Int")), Nil),ConsObj(Some(Var("prim$Int")), Nil))), ProdObj(Some(Var("prim$Int")), Nil))),
       (Var("*") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$Int")), Nil),ConsObj(Some(Var("prim$Int")), Nil))), ProdObj(Some(Var("prim$Int")), Nil))),
+      (Var(">") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$Int")), Nil),ConsObj(Some(Var("prim$Int")), Nil))), ProdObj(Some(Var("prim$Bool")), Nil))),
       (Var("==") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$Int")), Nil),ConsObj(Some(Var("prim$Int")), Nil))), ProdObj(Some(Var("prim$Bool")), Nil))),
       (Var("concat") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$String")), Nil))), ProdFun(ConsTup(List(ConsObj(Some(Var("prim$String")), Nil))), ProdObj(Some(Var("prim$String")), Nil)))),
+      (Var("log") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$String")), Nil))), ProdObj(Some(Var("prim$Unit")), Nil))),
       (Var("toString") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$Int")), Nil))), ProdObj(Some(Var("prim$String")), Nil)))
     )
   }
@@ -162,6 +179,8 @@ class SimpleDef(debug: Debug) {
         val mapping = args.map{
           case (None, Fld(_, v: Var)) =>
             (v, freshVar(s"${t.uid}_${v.name}")(using noExprId))
+          case (Some(v1: Var), Fld(_, v2: Var)) =>
+            (v1, freshVar(s"${t.uid}_${v1.name}")(using noExprId))
           case other => 
             lastWords(s"Unsupported term ${other}")
         }
@@ -194,6 +213,8 @@ class SimpleDef(debug: Debug) {
         })(using t.uid)
       case Blk(stmts) => 
         apply(TypingUnit(stmts))._2
+      case Bra(false, term) =>
+        process(term)
       case other => lastWords(s"Unsupported term ${other}")
 
     registerTermToType(t, res)
@@ -232,13 +253,16 @@ class SimpleDef(debug: Debug) {
           (fields1 zip fields2).map((p, c) =>
             constrain(p, c)
           )
-        case (pv@ProdObj(nme1, fields1), cv@ConsObj(nme2, fields2)) =>
+        case (pv@ProdObj(nme1, fields1, parents), cv@ConsObj(nme2, fields2)) =>
           nme2 match 
             case Some(name) if name != nme1.get => lastWords(s"Could not constrain ${(prod -> cons)}")
             case _ => ()
           fields2.map((key, res2) => {
             fields1.find(_._1 == key) match 
-              case None => lastWords(s"Could not constrain ${(prod -> cons)}")
+              case None => 
+                debug.writeLine("field not found, try parent") 
+                // TODO: Handle multiple inheritance properly, currently assume only one parent
+                constrain(parents.head, cv)
               case Some((_, res1)) => 
                 cv.selectionSource = cv.selectionSource + pv
                 pv.objDestination = pv.objDestination + cv
@@ -260,14 +284,30 @@ class SimpleDef(debug: Debug) {
   ).toMap
 
   def rewriteTerm(t: Term): Term = 
-    def objSetToMatchBranches(receiver: Var, fieldName: Var, objSet: List[ProdObj], acc: CaseBranches = NoCases): CaseBranches =
+    def objSetToMatchBranches(receiver: Var, fieldName: Var, objSet: List[ProdObj], acc: CaseBranches = NoCases)(using funcApp: Option[Term] = None): CaseBranches =
       objSet match 
         case Nil => acc
-        case ProdObj(Some(v), _) :: rest => 
-          objSetToMatchBranches(receiver, fieldName, rest, Case(v, Sel(receiver, fieldName), acc))
+        case (p :: rest) if p.ctor.isDefined => 
+          if funcApp.isDefined 
+          then objSetToMatchBranches(receiver, fieldName, rest, Case(p.ctor.get, App(Sel(receiver, fieldName), funcApp.get), acc))
+          else objSetToMatchBranches(receiver, fieldName, rest, Case(p.ctor.get, Sel(receiver, fieldName), acc))
         case other => lastWords(s"Unexpected  ${other}")
     t match
       case Var(_) | IntLit(_) | UnitLit(_) | StrLit(_) => t
+      case App(t @ Sel(receiver, fieldName), arg) => 
+        if (selToResTypes(t.uid).forall{
+          case _: ProdVar => true
+          case x: ProdObj if x.ctor.isDefined => true
+          case _ => false
+        }) {
+          val letName = Var(s"selRes$$${t.uid}")
+          Let(false, letName, rewriteTerm(receiver),
+            CaseOf(letName, objSetToMatchBranches(letName, fieldName, selToResTypes(t.uid).collect{case x: ProdObj => x}.toList)(using Some(rewriteTerm(arg))))
+          )
+        } else {
+          debug.writeLine(s"${selToResTypes(t.uid)}")
+          Sel(rewriteTerm(receiver), fieldName)
+        }
       case App(func, arg) => 
         App(rewriteTerm(func), rewriteTerm(arg))
       case Lam(t @ Tup(args), body) =>
@@ -276,9 +316,8 @@ class SimpleDef(debug: Debug) {
         If(IfThen(rewriteTerm(scrut), rewriteTerm(thenn)), S(rewriteTerm(elze)))
       case Tup(fields) =>
         Tup(fields.map{
-          case (None, Fld(flags, fieldTerm: Term)) =>
-            (None, Fld(flags, rewriteTerm(fieldTerm)))
-          case other => lastWords(s"Unsupported tuple structure ${other}")
+          case (x, Fld(flags, fieldTerm: Term)) =>
+            (x, Fld(flags, rewriteTerm(fieldTerm)))
         })
       case Sel(receiver, fieldName) =>
         if (selToResTypes(t.uid).forall{
@@ -302,6 +341,8 @@ class SimpleDef(debug: Debug) {
         })
       case Blk(stmts) => 
         Blk(rewriteStatements(stmts))
+      case Bra(false, term) =>
+        Bra(false, rewriteTerm(term))
       case other => lastWords(s"Unsupported term ${other}")
     
   def rewriteStatements(stmts: List[Statement]): List[Statement] =

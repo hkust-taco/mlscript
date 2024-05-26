@@ -1,0 +1,37 @@
+:NewDefs
+:AllowRuntimeErrors
+
+// FIXME: Class parameters not annotated
+:sd
+:nolift
+fun foo(x) = 
+  (f => f(x))(z => z+1)
+foo(2)
+//│ 
+//│ Simpledef:
+//│ {fun foo = (x,) => {'(' (f,) => f(x,) ')'((z,) => +(z, 1,),)}
+//│  foo(2,)}
+//│ End simpledef
+//│ 
+//│ fun foo: Int -> Int
+//│ Int
+//│ res
+//│     = 3
+
+// FIXME: Class parameters not annotated
+:sd
+:nolift
+fun f(x) =
+  (y => f(x+y))(x+1)
+f(1)
+//│ 
+//│ Simpledef:
+//│ {fun f = (x,) => {'(' (y,) => f(+(x, y,),) ')'(+(x, 1,),)}
+//│  f(1,)}
+//│ End simpledef
+//│ 
+//│ fun f: Int -> nothing
+//│ nothing
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded

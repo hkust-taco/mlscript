@@ -2,6 +2,7 @@
 
 :sd
 :nolift
+
 class X() {
     val num = 6
 }
@@ -10,15 +11,13 @@ class Y() {
 }
 fun foo(pred) = if pred then X() else Y()
 foo(true).num
-//│ 
-//│ Simpledef:
-//│ {class X() {let num = 6}
-//│  class Y() {let num = true}
-//│  fun foo = (pred,) => if (pred) then X() else Y()
-//│  let selRes$26 = foo(true,) in case selRes$26 of { Y => (selRes$26).num
-//│  X => (selRes$26).num }}
-//│ End simpledef
-//│ 
+//│ Lifted:
+//│ TypingUnit {
+//│   class X$1([]) {let num = 6}
+//│   class Y$2([]) {let num = true}
+//│   fun foo$1 = (pred,) => if (pred) then X$1() else Y$2()
+//│   Code(List((foo$1(true,)).num))
+//│ }
 //│ class X() {
 //│   val num: 6
 //│ }
@@ -32,6 +31,7 @@ foo(true).num
 
 :sd
 :nolift
+
 class X() {
     val num = 6
 }
@@ -51,20 +51,16 @@ fun foo(pred) =
     if pred == 1 then A() else 
         if pred == 2 then B() else C()
 foo(5).num.num
-//│ 
-//│ Simpledef:
-//│ {class X() {let num = 6}
-//│  class Y() {let num = true}
-//│  class A() {let num = X()}
-//│  class B() {let num = Y()}
-//│  class C() {let num = X()}
-//│  fun foo = (pred,) => {if (==(pred, 1,)) then A() else {if (==(pred, 2,)) then B() else C()}}
-//│  let selRes$74 = let selRes$76 = foo(5,) in case selRes$76 of { B => (selRes$76).num
-//│  C => (selRes$76).num
-//│  A => (selRes$76).num } in case selRes$74 of { X => (selRes$74).num
-//│  Y => (selRes$74).num }}
-//│ End simpledef
-//│ 
+//│ Lifted:
+//│ TypingUnit {
+//│   class X$1([]) {let num = 6}
+//│   class Y$2([]) {let num = true}
+//│   class A$3([]) {let num = X$1()}
+//│   class B$4([]) {let num = Y$2()}
+//│   class C$5([]) {let num = X$1()}
+//│   fun foo$1 = (pred,) => {if (==(pred, 1,)) then A$3() else {if (==(pred, 2,)) then B$4() else C$5()}}
+//│   Code(List(((foo$1(5,)).num).num))
+//│ }
 //│ class X() {
 //│   val num: 6
 //│ }

@@ -1,0 +1,21 @@
+:NewDefs
+
+// FIXME: Preserve local state in classes
+:sd
+:nolift
+class G(val num: Int) {
+    val x = 
+        log("once on construction")
+        num+2
+    val y() =
+        log("once every call")
+        num+2
+}
+val g = new G(6)
+g.y()
+g.x
+g.y()
+g.x
+//│ 
+//│ Simpledef:
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Unsupported term NuNew(Var(G))

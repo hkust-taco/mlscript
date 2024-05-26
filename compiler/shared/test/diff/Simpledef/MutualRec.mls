@@ -1,0 +1,30 @@
+:NewDefs
+:AllowRuntimeErrors
+
+:sd
+:nolift
+val any = -20
+fun f(x) = 
+  if x > any then 0
+  else g(x - 1)
+fun g(x) = 
+  if x > any then g(x - 1)
+  else f(x - 2)
+g(1)
+//│ 
+//│ Simpledef:
+//│ {let any = -20
+//│  fun f = (x,) => {if (>(x, any,)) then 0 else g(-(x, 1,),)}
+//│  fun g = (x,) => {if (>(x, any,)) then g(-(x, 1,),) else f(-(x, 2,),)}
+//│  g(1,)}
+//│ End simpledef
+//│ 
+//│ val any: -20
+//│ fun f: Int -> 0
+//│ fun g: Int -> 0
+//│ 0
+//│ any
+//│     = -20
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded
