@@ -42,7 +42,6 @@ abstract class ModeType {
   def expectCodeGenErrors: Bool
   def showRepl: Bool
   def allowEscape: Bool
-  def mono: Bool
   def simpledef: Bool
   def lift: Bool
   def nolift: Bool
@@ -177,7 +176,6 @@ class DiffTests
       expectCodeGenErrors: Bool = false,
       showRepl: Bool = false,
       allowEscape: Bool = false,
-      mono: Bool = false,
       simpledef: Bool = false,
       postProcessAfterTyping: Bool = false,
       lift: Bool = false,
@@ -291,7 +289,6 @@ class DiffTests
           case "re" => mode.copy(expectRuntimeErrors = true)
           case "r" | "showRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
-          case "mono" => {mode.copy(mono = true)}
           case "ppat" => {mode.copy(postProcessAfterTyping = true)}
           case "sd" => {mode.copy(simpledef = true)}
           case "lift" => {mode.copy(lift = true)}
@@ -478,7 +475,7 @@ class DiffTests
             
             if (parseOnly)
               Success(Pgrm(Nil), 0)
-            else if ((mode.mono || mode.lift || mode.simpledef) && !mode.postProcessAfterTyping) {
+            else if ((mode.lift || mode.simpledef) && !mode.postProcessAfterTyping) {
               import Message._
               Success(Pgrm(nuRes.getOrElse({
                 raise(ErrorReport(msg"Post-process failed to produce AST." -> None :: Nil, true, Diagnostic.Compilation))

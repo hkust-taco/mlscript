@@ -8,7 +8,6 @@ import scala.collection.mutable.Map as MutMap
 import scala.collection.mutable.Set as MutSet
 import scala.collection.mutable.ArrayBuffer as ArrayBuffer
 import mlscript.codegen.CodeGenError
-import mlscript.compiler.mono.MonomorphError
 
 class ClassLifter(logDebugMsg: Boolean = false) {
   type ClassName = String

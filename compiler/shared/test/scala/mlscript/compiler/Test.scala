@@ -5,8 +5,6 @@ import scala.util.control.NonFatal
 import scala.collection.mutable.StringBuilder
 import mlscript.{DiffTests, ModeType, TypingUnit}
 import mlscript.compiler.TreeDebug
-import mlscript.compiler.mono.Monomorph
-import mlscript.compiler.mono.MonomorphError
 import mlscript.Polyfill
 import mlscript.compiler.simpledef.SimpleDef
 import simpledef.SimpleDef
@@ -43,23 +41,6 @@ class DiffTestCompiler extends DiffTests {
       output(defuncAST.showDbg.replace(";", "\n"))
       output("End simpledef\n")
       return (outputBuilder.toString().linesIterator.toList, Some(defuncAST))
-    }
-    if(mode.mono){
-      output("Mono:")
-      val treeDebug = new TreeDebug(if mode.dbgDefunc then output else (str) => ())
-      try{
-        val monomorph = new Monomorph(treeDebug)
-        val defuncAST = monomorph.defunctionalize(rstUnit)
-        if (mode.showParse) output(defuncAST.toString())
-        output(PrettyPrinter.showTypingUnit(defuncAST))
-        return (outputBuilder.toString().linesIterator.toList, Some(defuncAST))
-      }catch{
-        case error: MonomorphError => 
-          if (mode.expectCodeGenErrors)
-            output(error.getMessage() ++ "\n" ++ (error.getStackTrace().take(10).map(_.toString()).toList).mkString("\n"))
-        return (Nil, None)
-        // case error: StackOverflowError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().take(40).map(_.toString()).toList).mkString("\n")
-      }
     }
     if (mode.lift) {
       (outputBuilder.toString().linesIterator.toList, Some(rstUnit))  
