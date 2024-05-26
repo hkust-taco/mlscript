@@ -30,7 +30,7 @@ b.num
 //│ class Y() {
 //│   val num: true
 //│ }
-//│ fun foo: Object -> (X | Y)
+//│ fun foo: Bool -> (X | Y)
 //│ fun id: forall 'a. 'a -> 'a
 //│ val a: X | Y
 //│ val b: X | Y

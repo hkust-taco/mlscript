@@ -289,8 +289,8 @@ class SimpleDef(debug: Debug) {
         case Nil => acc
         case (p :: rest) if p.ctor.isDefined => 
           if funcApp.isDefined 
-          then objSetToMatchBranches(receiver, fieldName, rest, Case(p.ctor.get, App(Sel(receiver, fieldName), funcApp.get), acc))
-          else objSetToMatchBranches(receiver, fieldName, rest, Case(p.ctor.get, Sel(receiver, fieldName), acc))
+          then objSetToMatchBranches(receiver, fieldName, rest, Case(p.ctor.get, App(Sel(receiver, fieldName), funcApp.get), acc)(false))
+          else objSetToMatchBranches(receiver, fieldName, rest, Case(p.ctor.get, Sel(receiver, fieldName), acc)(false))
         case other => lastWords(s"Unexpected  ${other}")
     t match
       case Var(_) | IntLit(_) | UnitLit(_) | StrLit(_) => t

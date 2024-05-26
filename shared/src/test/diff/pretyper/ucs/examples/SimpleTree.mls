@@ -1,0 +1,31 @@
+:NewDefs
+
+// abstract class Tree[out A]: (Empty | Node[A])
+// class Node[out A](value: A, left: Tree[A], right: Tree[A]) extends Tree[A]
+// module Empty extends Tree
+// //│ abstract class Tree[A]: Empty | Node[A]
+// //│ class Node[A](value: A, left: Tree[A], right: Tree[A]) extends Tree
+// //│ module Empty extends Tree
+
+// fun insert(t, v) = if t is
+//   Node(v', l, r) and
+//     v < v' then Node(v', insert(l, v), r)
+//     v > v' then Node(v', l, insert(r, v))
+//     _ then t
+//   Empty then Node(v, Empty, Empty)
+// //│ fun insert: forall 'A. (Empty | Node[Num & 'A], Num & 'A) -> (Node[nothing] | Node['A])
+
+abstract class List[out T]: (Cons[T] | Nil)
+class Cons[out T](val head: T, val tail: List[T]) extends List[T]
+module Nil extends List
+//│ abstract class List[T]: Cons[T] | Nil
+//│ class Cons[T](head: T, tail: List[T]) extends List
+//│ module Nil extends List
+
+fun (::) cons(head, tail) = Cons(head, tail)
+//│ fun (::) cons: forall 'T. ('T, List['T]) -> Cons['T]
+
+1 :: 2 :: 3 :: 4 :: Nil
+//│ Cons[1 | 2 | 3 | 4]
+//│ res
+//│     = Cons {}

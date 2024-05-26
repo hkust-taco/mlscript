@@ -25,7 +25,7 @@ muddle(false).f
 //│   val f: true
 //│ }
 //│ val x: {5: "five", 7: "seven", f: 6}
-//│ fun muddle: Object -> (K | {5: "five", 7: "seven", f: 6})
+//│ fun muddle: Bool -> (K | {5: "five", 7: "seven", f: 6})
 //│ 6 | true
 //│ x
 //│   = { '5': 'five', '7': 'seven', f: 6 }

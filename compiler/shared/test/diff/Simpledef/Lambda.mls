@@ -17,7 +17,7 @@ x(true).foo(5)
 //│ 
 //│ class X(foo: Int -> Int)
 //│ class Y(foo: Int -> Bool)
-//│ fun x: Object -> (X | Y)
+//│ fun x: Bool -> (X | Y)
 //│ Int | false | true
 //│ res
 //│     = 6

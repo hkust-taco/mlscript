@@ -66,6 +66,20 @@ DT.unapply({ x: 42 })
 //│   TypeError: Cannot read private member #x from an object whose class did not declare it
 
 
+// * Currently, support for unapply is pretty broken: it accesses an _unqualified_ private field
+// * although the same private field may be defined in different classes of the same hierarchy,
+// * which leads to unsoundness:
+
+class DS(x: Int) extends DT[Str]("a")
+//│ class DS(x: Int) extends DT
+
+// * Wrong type!
+DT.unapply(DS(42))
+//│ [Int]
+//│ res
+//│     = [ 'a' ]
+
+
 // * TODO improve `unapply` logic: currently it picks up shadowing fields/methods
 
 class Foo(x: Int) {
@@ -98,8 +112,8 @@ if Foo(123) is Foo(a) then a
 fun D(x: Int) = {x}
 module D { fun unapply(a) = [a.x] }
 //│ ╔══[ERROR] Redefinition of 'D'
-//│ ║  l.99: 	module D { fun unapply(a) = [a.x] }
-//│ ╙──      	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.113: 	module D { fun unapply(a) = [a.x] }
+//│ ╙──       	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ fun D: (x: Int) -> {x: Int}
 //│ module D {
 //│   fun unapply: forall 'x. {x: 'x} -> ['x]

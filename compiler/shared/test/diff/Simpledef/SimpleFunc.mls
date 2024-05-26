@@ -2,13 +2,13 @@
 
 :sd
 :nolift
-fun f(x: Int) = if x then 42 else 1337
+fun f(x: Bool) = if x then 42 else 1337
 //│ 
 //│ Simpledef:
-//│ {fun f = (x: Int,) => if (x) then 42 else 1337}
+//│ {fun f = (x: Bool,) => if (x) then 42 else 1337}
 //│ End simpledef
 //│ 
-//│ fun f: (x: Int) -> (1337 | 42)
+//│ fun f: (x: Bool) -> (1337 | 42)
 
 :sd
 :nolift
@@ -48,7 +48,7 @@ let b = foo(23, false)
 //│  let b = foo(23, false,)}
 //│ End simpledef
 //│ 
-//│ fun foo: forall 'a. ('a, Object) -> (1337 | 'a)
+//│ fun foo: forall 'a. ('a, Bool) -> (1337 | 'a)
 //│ let a: 1337 | 42
 //│ let b: 1337 | 23
 //│ a

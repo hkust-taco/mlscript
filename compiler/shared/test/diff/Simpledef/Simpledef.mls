@@ -24,7 +24,7 @@ foo(true).num
 //│ class Y() {
 //│   val num: true
 //│ }
-//│ fun foo: Object -> (X | Y)
+//│ fun foo: Bool -> (X | Y)
 //│ 6 | true
 //│ res
 //│     = 6

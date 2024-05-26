@@ -24,12 +24,17 @@ class Foo(val x: Int){
 
 :sd
 :nolift
+:ppat
 class OneInt(val a: Int){
   fun fac: () -> Int
   fun fac = () ->
     if(a > 0) then (OneInt(a - 1)).fac() else 1 
 }
 (OneInt(10)).fac()
+//│ class OneInt(a: Int) {
+//│   fun fac: () -> Int
+//│ }
+//│ Int
 //│ 
 //│ Simpledef:
 //│ {class OneInt(val a: Int,) {fun fac: () -> Int
@@ -37,9 +42,5 @@ class OneInt(val a: Int){
 //│  let selRes$50 = '(' OneInt(10,) ')' in case selRes$50 of { OneInt => (selRes$50).fac() }}
 //│ End simpledef
 //│ 
-//│ class OneInt(a: Int) {
-//│   fun fac: () -> Int
-//│ }
-//│ Int
 //│ res
 //│     = 1

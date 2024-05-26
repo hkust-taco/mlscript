@@ -142,7 +142,7 @@ fun map_expr(f, v) =
     Numb then v
     Add(l, r) then Add(f(l), f(r))
     Mul(l, r) then Mul(f(l), f(r))
-//│ fun map_expr: forall 'a 'A 'b 'A0. ('a -> 'A & 'b -> 'A0, Add['a] | Mul['b] | Numb | Var) -> (Add['A] | Mul['A0] | Numb | Var)
+//│ fun map_expr: forall 'a 'A 'b 'A0. ('a -> 'A & 'b -> 'A0, Add['b] | Mul['a] | Numb | Var) -> (Add['A0] | Mul['A] | Numb | Var)
 
 mixin EvalExpr {
   fun eval(sub, v) =

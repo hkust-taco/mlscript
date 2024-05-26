@@ -1,30 +1,34 @@
-:NewParser
+:NewDefs
 
-class Point(x, y)
-//│ Defined class Point
-//│ Point: ('x, 'y,) -> (Point & {x: 'x, y: 'y})
-//│      = [Function: Point1]
+class Point(x: Int, y: Int)
+//│ class Point(x: Int, y: Int)
 
 :e
-:ge
 fun f(p) =
   if p is
     Point(x, y, z) then x + y + z
-//│ ╔══[ERROR] class Point expects 2 parameters but found 3 parameters
-//│ ║  l.12: 	    Point(x, y, z) then x + y + z
-//│ ╙──      	    ^^^^^^^^^^^^^^
-//│ f: anything -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ╟── tuple literal of type `{0: ?#x, 1: ?#y}` does not have field '2'
+//│ ║  l.3: 	class Point(x: Int, y: Int)
+//│ ║       	            ^^^^^^^^^
+//│ ╟── but it flows into operator application with expected type `{2: ?a}`
+//│ ║  l.8: 	  if p is
+//│ ║       	     ^^^^
+//│ ║  l.9: 	    Point(x, y, z) then x + y + z
+//│ ╙──     	^^^^^^^^^
+//│ fun f: Point -> Int
 
 :e
 :ge
 fun g(xs) =
   if xs is
     head :: _ then head
-//│ ╔══[ERROR] Cannot find operator `::` in the context
-//│ ║  l.24: 	    head :: _ then head
+//│ ╔══[ERROR] type identifier `::` not found
+//│ ║  l.25: 	    head :: _ then head
 //│ ╙──      	         ^^
-//│ g: anything -> error
+//│ ╔══[ERROR] type identifier not found: ::
+//│ ║  l.25: 	    head :: _ then head
+//│ ╙──      	         ^^
+//│ fun g: nothing -> error
 //│ Code generation encountered an error:
-//│   if expression was not desugared
+//│   unresolved symbol ::

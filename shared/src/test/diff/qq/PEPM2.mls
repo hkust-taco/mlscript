@@ -35,9 +35,11 @@ run(checkedDiv)
 //│     = Quoted:
 //│       (x_2) =>
 //│         (y_0) =>
-//│           (x_2 / match (y_0 == 0):
-//│             case true => error
-//│             _ => y_0))
+//│           (x_2 / let ucs$test$0_0 =
+//│             (y_0 == 0)
+//│             in match ucs$test$0_0:
+//│               case true => error
+//│               _ => y_0))
 //│       undefined
 
 fun show: Code[anything, anything] -> Str = _ => "debug"

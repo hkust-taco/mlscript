@@ -30,7 +30,7 @@ foo(false).foo.bar
 //│ class Y(foo: Str, bar: Int)
 //│ class A(foo: X)
 //│ class B(foo: Y)
-//│ fun foo: Object -> (A | B)
+//│ fun foo: Bool -> (A | B)
 //│ val x: A | B
 //│ Int | false | true
 //│ x

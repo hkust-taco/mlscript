@@ -27,7 +27,7 @@ x.foo.bar
 //│ class Y(bar: Str)
 //│ class A(foo: X)
 //│ class B(foo: Y)
-//│ fun getObj: Object -> (A | B)
+//│ fun getObj: Bool -> (A | B)
 //│ val x: A | B
 //│ Int | Str
 //│ x
