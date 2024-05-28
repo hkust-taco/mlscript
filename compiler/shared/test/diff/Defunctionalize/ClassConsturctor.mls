@@ -1,10 +1,19 @@
 :NewDefs
 
-// TODO: Support NuNew
 class X {
     val num = 5
 }
 (new X).num
 //│ 
 //│ Simpledef:
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Unsupported term NuNew(Var(X))
+//│ {class X {let num = 5}
+//│  let selRes$4 = '(' new X ')' in case selRes$4 of { X => (selRes$4).num }}
+//│ End simpledef
+//│ 
+//│ class X {
+//│   constructor()
+//│   val num: 5
+//│ }
+//│ 5
+//│ res
+//│     = 5

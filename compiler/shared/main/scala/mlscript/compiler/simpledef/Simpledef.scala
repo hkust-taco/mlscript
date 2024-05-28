@@ -167,14 +167,20 @@ class SimpleDef(debug: Debug) {
         builtinOps(v)
       case v @ Var(id) =>
         ctx(v).copy()(Some(v))(using t.uid)
+      case NuNew(cls) =>
+        process(App(NuNew(cls), Tup(Nil).withLoc(t.toLoc.map(_.right))))
+      case App(NuNew(cls), arg) => 
+        val clsRes = process(cls)
+        val argRes = process(arg)
+        val sv = freshVar(s"${t.uid}_callres")(using t.uid)
+        constrain(clsRes, ConsFun(argRes, sv._2)(using noExprId))
+        sv._1
       case App(func, arg) => 
         val funcRes = process(func)
         val argRes = process(arg)
-        funcRes match 
-          case _ =>
-            val sv = freshVar(s"${t.uid}_callres")(using t.uid)
-            constrain(funcRes, ConsFun(argRes, sv._2)(using noExprId))
-            sv._1
+        val sv = freshVar(s"${t.uid}_callres")(using t.uid)
+        constrain(funcRes, ConsFun(argRes, sv._2)(using noExprId))
+        sv._1
       case Lam(t @ Tup(args), body) =>
         val mapping = args.map{
           case (None, Fld(_, v: Var)) =>
@@ -343,6 +349,8 @@ class SimpleDef(debug: Debug) {
         Blk(rewriteStatements(stmts))
       case Bra(false, term) =>
         Bra(false, rewriteTerm(term))
+      case NuNew(cls) => 
+        NuNew(rewriteTerm(cls))
       case other => lastWords(s"Unsupported term ${other}")
     
   def rewriteStatements(stmts: List[Statement]): List[Statement] =
