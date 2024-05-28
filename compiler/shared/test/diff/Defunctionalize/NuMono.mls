@@ -1,8 +1,6 @@
 :NewDefs
 
 // old "new" syntax
-//:sd
-:nolift
 //class A() {
 //    val num() = 0
 //}
@@ -13,8 +11,6 @@
 //foo(10).num()
 
 
-:sd
-:nolift
 class A() {
     val num() = 0
 }
@@ -44,8 +40,6 @@ foo(10).num()
 //│     = 0
 
 
-:sd
-:nolift
 class A(val num1: Int, val num2: Int) {
     fun foo() = num1-num2
 }

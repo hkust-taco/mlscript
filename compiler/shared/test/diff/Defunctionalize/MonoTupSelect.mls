@@ -1,7 +1,5 @@
 :NewDefs
 
-:sd
-:nolift
 class Foo() {fun f() = 0}
 class Bar() {fun f = 0}
 [Foo(), Bar()].0.f()

@@ -1,8 +1,6 @@
 :NewDefs
 
 // FIXME: Pattern matches on superclass instead of subclass
-:sd
-:nolift
 class Sup() {
     fun add(num1, num2) = num1+num2
 }

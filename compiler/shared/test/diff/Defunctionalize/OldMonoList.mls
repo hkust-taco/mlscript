@@ -1,7 +1,5 @@
 :NewDefs
 
-:sd
-:nolift
 class List(val e: Int, val tail: List | Nil) {
   fun map: (Int -> Int) -> List 
   fun map(f)= List(f(e), tail.map(f))
@@ -41,8 +39,6 @@ fun add2(x) = x+2
 //│ res
 //│     = List {}
 
-:sd
-:nolift
 class List(val e: Int, val tail: List | Nil) {
   fun count(): Int
   fun count() = 1 + tail.count()
@@ -74,7 +70,7 @@ foo(generate(50))
 //│ class Nil() {
 //│   fun count: () -> 0
 //│ }
-//│ fun foo: (List | Nil) -> Int
+//│ fun foo: forall 'a. {count: () -> 'a} -> 'a
 //│ fun generate: Int -> (List | Nil)
 //│ Int
 //│ res
@@ -82,8 +78,6 @@ foo(generate(50))
 //│ res
 //│     = 50
 
-:sd
-:nolift
 class Cons(val e: 'A, val tail: Cons | Nil) {
   fun count(): Int
   fun count() = 1 + tail.count()
@@ -126,20 +120,18 @@ foo(Lambda2(2))
 //│   fun count: () -> 0
 //│ }
 //│ class Lambda() {
-//│   fun apply: (Cons | Nil) -> Int
+//│   fun apply: forall 'a. {count: () -> 'a} -> 'a
 //│ }
 //│ class Lambda2(a: Int) {
 //│   fun apply: (Cons | Nil) -> Int
 //│ }
-//│ fun foo: (Lambda | Lambda2) -> Int
+//│ fun foo: {apply: (Cons | Nil) -> Int} -> Int
 //│ Int
 //│ res
 //│     = 1
 //│ res
 //│     = 3
 
-:sd
-:nolift
 class Cons(val e: Int, val tail: Cons | Nil) {
   fun count(): Int
   fun count() = 1 + tail.count()

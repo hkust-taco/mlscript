@@ -1,16 +1,10 @@
 :NewDefs
 
 // TODO: Support NuNew
-:sd
 class X {
     val num = 5
 }
 (new X).num
-//│ Lifted:
-//│ TypingUnit {
-//│   class X$1([]) {let num = 5}
-//│   Code(List(('(' (new X$1)() ')').num))
-//│ }
 //│ 
 //│ Simpledef:
-//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Unsupported term NuNew(Var(X$1))
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Unsupported term NuNew(Var(X))

@@ -9,6 +9,8 @@ import scala.collection.mutable.Set as MutSet
 import scala.collection.mutable.ArrayBuffer as ArrayBuffer
 import mlscript.codegen.CodeGenError
 
+class MonomorphError(error: String) extends Error(error)
+
 class ClassLifter(logDebugMsg: Boolean = false) {
   type ClassName = String
   type FieldName = String

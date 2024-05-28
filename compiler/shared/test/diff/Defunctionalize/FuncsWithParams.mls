@@ -1,8 +1,6 @@
 :NewDefs
 
 
-:sd
-:nolift
 abstract class Arithmetic() {
     virtual fun use(num1: Int, num2: Int): Int
 }

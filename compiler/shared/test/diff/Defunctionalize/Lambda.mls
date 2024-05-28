@@ -1,7 +1,6 @@
 :NewDefs
 
-:nolift
-:sd
+
 class X(val foo: Int => Int){}
 class Y(val foo: Int => Bool){}
 fun x(pred) = if pred then X(x => x+1) else Y(x => true)

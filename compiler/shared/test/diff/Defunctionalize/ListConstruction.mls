@@ -2,8 +2,6 @@
 
 
 :ppat
-:sd
-:nolift
 abstract class List() {
     fun getRes: Str
     fun map: error

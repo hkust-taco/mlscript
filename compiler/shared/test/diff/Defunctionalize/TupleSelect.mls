@@ -1,8 +1,6 @@
 :NewDefs
 
 
-:sd
-:nolift
 [0,"abc",()].2
 //│ 
 //│ Simpledef:

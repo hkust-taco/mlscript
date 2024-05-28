@@ -1,7 +1,5 @@
 :NewDefs
 
-:sd
-:nolift
 class Bar(val x: Int) {
   fun foo(x) = x
   fun FooMinus(y: Int) = x + y

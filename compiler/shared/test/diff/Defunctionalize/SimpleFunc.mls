@@ -1,7 +1,5 @@
 :NewDefs
 
-:sd
-:nolift
 fun f(x: Bool) = if x then 42 else 1337
 //│ 
 //│ Simpledef:
@@ -10,8 +8,6 @@ fun f(x: Bool) = if x then 42 else 1337
 //│ 
 //│ fun f: (x: Bool) -> (1337 | 42)
 
-:sd
-:nolift
 fun foo() = 42
 //│ 
 //│ Simpledef:
@@ -20,8 +16,6 @@ fun foo() = 42
 //│ 
 //│ fun foo: () -> 42
 
-:sd
-:nolift
 fun f(x) =
   if(x > 0) then x+1 else x - 1
 f(2)+3
@@ -36,8 +30,6 @@ f(2)+3
 //│ res
 //│     = 6
 
-:sd
-:nolift 
 fun foo(x, #b) = if b then x else 1337
 let a = foo(42, true)
 let b = foo(23, false)

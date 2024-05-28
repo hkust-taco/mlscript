@@ -1,7 +1,5 @@
 :NewDefs
 
-:sd
-:nolift
 class Foo(val x: Int){
   fun bar(y) = x+y
   fun boo(z) = bar(z)+x
@@ -22,8 +20,6 @@ class Foo(val x: Int){
 //│ res
 //│     = 4
 
-:sd
-:nolift
 :ppat
 class OneInt(val a: Int){
   fun fac: () -> Int

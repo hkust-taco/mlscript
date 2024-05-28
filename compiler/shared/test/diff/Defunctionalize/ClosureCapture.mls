@@ -2,8 +2,6 @@
 :AllowRuntimeErrors
 
 // FIXME: Class parameters not annotated
-:sd
-:nolift
 fun foo(x) = 
   (f => f(x))(z => z+1)
 foo(2)
@@ -19,8 +17,6 @@ foo(2)
 //│     = 3
 
 // FIXME: Class parameters not annotated
-:sd
-:nolift
 fun f(x) =
   (y => f(x+y))(x+1)
 f(1)

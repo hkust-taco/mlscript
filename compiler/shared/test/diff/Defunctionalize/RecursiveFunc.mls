@@ -1,7 +1,5 @@
 :NewDefs
 
-:sd
-:nolift
 fun fac(n) = 
   if (n > 1) then fac(n - 1) * n else 1
 fac(5)
@@ -17,8 +15,6 @@ fac(5)
 //│     = 120
 
 // FIXME: Strange syntax
-:sd
-:nolift
 class List(val l: List | Nil | undefined, val hasTail: Bool)  {}
 class Nil(val l: List | Nil | undefined, val hasTail: Bool)  {}
 fun count(lst) =

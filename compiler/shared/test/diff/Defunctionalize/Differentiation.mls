@@ -2,8 +2,7 @@
 
 :NewDefs
 
-:nolift
-:sd
+
 :ppat
 abstract class Exp() {
     virtual fun derive(): Exp

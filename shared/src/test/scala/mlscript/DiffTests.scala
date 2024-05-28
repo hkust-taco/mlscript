@@ -41,12 +41,12 @@ abstract class ModeType {
   def expectCodeGenErrors: Bool
   def showRepl: Bool
   def allowEscape: Bool
-  def simpledef: Bool
-  def lift: Bool
-  def nolift: Bool
   def useIR: Bool
   def interpIR: Bool
   def irVerbose: Bool
+  def simpledef: Bool
+  def lift: Bool
+  def nolift: Bool
 }
 
 class DiffTests

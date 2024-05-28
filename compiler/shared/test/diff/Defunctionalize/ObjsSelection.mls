@@ -1,8 +1,5 @@
 :NewDefs
 
-:sd
-:nolift
-
 class X() {
     val num = 6
 }
@@ -14,16 +11,18 @@ fun id(x) = x
 val a = foo(true)
 val b = id(a)
 b.num
-//│ Lifted:
-//│ TypingUnit {
-//│   class X$1([]) {let num = 6}
-//│   class Y$2([]) {let num = true}
-//│   fun foo$3 = (pred,) => if (pred) then X$1() else Y$2()
-//│   fun id$4 = (x,) => x
-//│   let a$1 = foo$3(true,)
-//│   let b$2 = id$4(a$1,)
-//│   Code(List((b$2).num))
-//│ }
+//│ 
+//│ Simpledef:
+//│ {class X() {let num = 6}
+//│  class Y() {let num = true}
+//│  fun foo = (pred,) => if (pred) then X() else Y()
+//│  fun id = (x,) => x
+//│  let a = foo(true,)
+//│  let b = id(a,)
+//│  let selRes$48 = b in case selRes$48 of { Y => (selRes$48).num
+//│  X => (selRes$48).num }}
+//│ End simpledef
+//│ 
 //│ class X() {
 //│   val num: 6
 //│ }

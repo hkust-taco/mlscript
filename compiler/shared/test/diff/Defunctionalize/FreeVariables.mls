@@ -1,7 +1,5 @@
 :NewDefs
 
-:sd
-:nolift
 class X() {
     val num = 5
     fun get() = num

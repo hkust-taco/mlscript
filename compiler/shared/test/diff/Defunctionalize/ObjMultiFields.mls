@@ -1,7 +1,6 @@
 :NewDefs
 
-:nolift
-:sd
+
 class X(val foo: Int, val bar: Bool) {}
 class Y(val foo: Str, val bar: Int) {}
 class A(val foo: X) {}

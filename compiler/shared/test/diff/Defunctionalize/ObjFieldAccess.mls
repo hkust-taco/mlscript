@@ -1,7 +1,5 @@
 :NewDefs
 
-:sd
-:nolift
 class A(val i: Int) {
     fun get1() = i
     fun get2 = i
@@ -31,8 +29,6 @@ a.get2
 //│ res
 //│     = 6
 
-:sd
-:nolift
 class A(val i: Str) {
     fun get1() = i
     fun get2 = i
@@ -62,8 +58,6 @@ a.get2
 //│ res
 //│     = '6'
 
-:sd
-:nolift
 class X()
 class Y(val foo: X) {
     fun get1() = foo
@@ -96,8 +90,6 @@ a.get2
 //│ res
 //│     = X {}
 
-:sd
-:nolift
 class I() {}
 class J() {}
 class K(val foo: I, val bar: J) {

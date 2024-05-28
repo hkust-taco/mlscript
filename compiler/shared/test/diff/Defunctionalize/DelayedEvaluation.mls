@@ -1,8 +1,6 @@
 :NewDefs
 
 // FIXME: Preserve local state in classes
-:sd
-:nolift
 class G(val num: Int) {
     val x = 
         log("once on construction")

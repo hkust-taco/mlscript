@@ -18,7 +18,7 @@ class DiffTestCompiler extends DiffTests {
     var rstUnit = unit;
     try
       val lifter = ClassLifter(mode.fullExceptionStack)
-      if (!mode.nolift) {
+      if (mode.lift || basePath.contains("Lifter")) {
         output("Lifted:")
         rstUnit = lifter.liftTypingUnit(unit)
         output(PrettyPrinter.showTypingUnit(rstUnit))
@@ -31,7 +31,7 @@ class DiffTestCompiler extends DiffTests {
         output("Lifting failed: " ++ err.toString())
         if mode.fullExceptionStack then 
           outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
-    if(mode.simpledef) {
+    if(mode.simpledef || basePath.contains("Defunctionalize")) {
       output("\nSimpledef:")
       val treeDebug = new TreeDebug(if mode.dbgSimpledef then output else (str) => ())
       val pd = SimpleDef(treeDebug)

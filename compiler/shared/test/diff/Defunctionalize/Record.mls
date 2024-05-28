@@ -1,8 +1,6 @@
 :NewDefs
 
 
-:sd
-:nolift
 class K() {
     val f = true
 }
