@@ -1,7 +1,6 @@
 :NewDefs
 :AllowRuntimeErrors
 
-// FIXME: Class parameters not annotated
 fun foo(x) = 
   (f => f(x))(z => z+1)
 foo(2)
@@ -16,7 +15,6 @@ foo(2)
 //│ res
 //│     = 3
 
-// FIXME: Class parameters not annotated
 fun f(x) =
   (y => f(x+y))(x+1)
 f(1)

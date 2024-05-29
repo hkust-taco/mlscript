@@ -14,7 +14,10 @@ fac(5)
 //│ res
 //│     = 120
 
-// FIXME: Strange syntax
+// TODO: Support for specialized pattern matching types
+// In this example, the type of l in count(l) would need to be constrained to
+// object & ~(), which requires implementing neg types, intersections, etc.
+:ppat
 class List(val l: List | Nil | undefined, val hasTail: Bool)  {}
 class Nil(val l: List | Nil | undefined, val hasTail: Bool)  {}
 fun count(lst) =
@@ -23,6 +26,12 @@ fun count(lst) =
     if l is undefined then 1 else count(l)+1
   else 0
 count(new List(new List(new Nil(undefined, false), true), true))
+//│ class List(l: List | Nil | (), hasTail: Bool)
+//│ class Nil(l: List | Nil | (), hasTail: Bool)
+//│ fun count: forall 'a. 'a -> Int
+//│ Int
+//│ where
+//│   'a <: {hasTail: Bool, l: Object & 'a & ~() | ()}
 //│ 
 //│ Simpledef:
-//│ /!!!\ Uncaught error: java.util.NoSuchElementException: key not found: Var(is)
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Could not constrain (ProdObj(Some(Var(prim$Unit)),List(),List()),ConsObj(None,List((Var(l),ConsVar(15,13_selres)))))

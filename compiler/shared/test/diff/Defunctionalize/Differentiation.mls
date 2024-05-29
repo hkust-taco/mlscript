@@ -68,31 +68,31 @@ Mul(Pow(Variable("x"), Numeric(2)), Pow(Variable("y"), Numeric(2))).derive().get
 //│  fun getVal = toString(i,)}
 //│  class Variable(val nm: Str,): Exp {fun derive = () => Numeric(1,)
 //│  fun getVal = nm}
-//│  class Sum(val lhs: Exp, val rhs: Exp,): Exp {fun derive = () => Sum(let selRes$48 = lhs in case selRes$48 of { Mul => (selRes$48).derive()
+//│  class Sum(val lhs: Exp, val rhs: Exp,): Exp {fun derive = () => Sum(let selRes$48 = lhs in case selRes$48 of { Variable => (selRes$48).derive()
+//│  Mul => (selRes$48).derive()
 //│  Sum => (selRes$48).derive()
-//│  Numeric => (selRes$48).derive()
-//│  Variable => (selRes$48).derive() }, let selRes$56 = rhs in case selRes$56 of { Numeric => (selRes$56).derive()
+//│  Numeric => (selRes$48).derive() }, let selRes$56 = rhs in case selRes$56 of { Numeric => (selRes$56).derive()
 //│  Sum => (selRes$56).derive()
 //│  Mul => (selRes$56).derive() },)
-//│  fun getVal = concat("(",)(concat(concat(concat(let selRes$84 = lhs in case selRes$84 of { Mul => (selRes$84).getVal
+//│  fun getVal = concat("(",)(concat(concat(concat(let selRes$84 = lhs in case selRes$84 of { Variable => (selRes$84).getVal
+//│  Mul => (selRes$84).getVal
 //│  Sum => (selRes$84).getVal
-//│  Numeric => (selRes$84).getVal
-//│  Variable => (selRes$84).getVal },)(" + ",),)(let selRes$102 = rhs in case selRes$102 of { Numeric => (selRes$102).getVal
+//│  Numeric => (selRes$84).getVal },)(" + ",),)(let selRes$102 = rhs in case selRes$102 of { Numeric => (selRes$102).getVal
 //│  Sum => (selRes$102).getVal
 //│  Mul => (selRes$102).getVal },),)(")",),)}
-//│  class Mul(val lhs: Exp, val rhs: Exp,): Exp {fun derive = () => Sum(Mul(let selRes$132 = lhs in case selRes$132 of { Mul => (selRes$132).derive()
+//│  class Mul(val lhs: Exp, val rhs: Exp,): Exp {fun derive = () => Sum(Mul(let selRes$132 = lhs in case selRes$132 of { Variable => (selRes$132).derive()
+//│  Mul => (selRes$132).derive()
 //│  Sum => (selRes$132).derive()
 //│  Numeric => (selRes$132).derive()
-//│  Pow => (selRes$132).derive()
-//│  Variable => (selRes$132).derive() }, rhs,), Mul(lhs, let selRes$150 = rhs in case selRes$150 of { Mul => (selRes$150).derive()
+//│  Pow => (selRes$132).derive() }, rhs,), Mul(lhs, let selRes$150 = rhs in case selRes$150 of { Mul => (selRes$150).derive()
 //│  Sum => (selRes$150).derive()
 //│  Numeric => (selRes$150).derive()
 //│  Pow => (selRes$150).derive() },),)
-//│  fun getVal = concat("(",)(concat(concat(concat(let selRes$182 = lhs in case selRes$182 of { Mul => (selRes$182).getVal
+//│  fun getVal = concat("(",)(concat(concat(concat(let selRes$182 = lhs in case selRes$182 of { Variable => (selRes$182).getVal
+//│  Mul => (selRes$182).getVal
 //│  Sum => (selRes$182).getVal
 //│  Numeric => (selRes$182).getVal
-//│  Pow => (selRes$182).getVal
-//│  Variable => (selRes$182).getVal },)(" * ",),)(let selRes$200 = rhs in case selRes$200 of { Mul => (selRes$200).getVal
+//│  Pow => (selRes$182).getVal },)(" * ",),)(let selRes$200 = rhs in case selRes$200 of { Mul => (selRes$200).getVal
 //│  Sum => (selRes$200).getVal
 //│  Numeric => (selRes$200).getVal
 //│  Pow => (selRes$200).getVal },),)(")",),)}

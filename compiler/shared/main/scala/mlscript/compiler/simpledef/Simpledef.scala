@@ -37,6 +37,18 @@ trait ProdObjImpl { self: ProdObj =>
   var objDestination: Set[ConsStrat] = Set()
 }
 
+class Context(
+  variables: Map[Var, ProdVar],
+  classes: Map[Var, ProdObj]) 
+{
+  def apply(v: Var): ProdVar =
+    variables(v)
+  def ++(other: IterableOnce[(Var, ProdVar)]): Context =
+    Context(variables ++ other, classes)
+  def +(other: (Var -> ProdVar)): Context =
+    Context(variables + other, classes)
+}
+
 class SimpleDef(debug: Debug) {
   
   extension (t: Term) {
@@ -65,7 +77,7 @@ class SimpleDef(debug: Debug) {
   def freshVar(n: Var)(using TermId): (ProdVar, ConsVar) =
    freshVar(n.name)
 
-  def apply(p: TypingUnit)(using ctx: Map[Var, ProdVar] = Map()): (Ls[Var -> ProdStrat], ProdStrat) = 
+  def apply(p: TypingUnit)(using ctx: Context = Context(Map(), Map())): (Ls[Var -> ProdStrat], ProdStrat) = 
     val vars: Map[Var, ProdVar] = p.rawEntities.collect { 
       case fun: NuFunDef =>
         fun.nme -> freshVar(fun.name)(using noExprId)._1
@@ -147,13 +159,14 @@ class SimpleDef(debug: Debug) {
       (Var("*") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$Int")), Nil),ConsObj(Some(Var("prim$Int")), Nil))), ProdObj(Some(Var("prim$Int")), Nil))),
       (Var(">") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$Int")), Nil),ConsObj(Some(Var("prim$Int")), Nil))), ProdObj(Some(Var("prim$Bool")), Nil))),
       (Var("==") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$Int")), Nil),ConsObj(Some(Var("prim$Int")), Nil))), ProdObj(Some(Var("prim$Bool")), Nil))),
+      (Var("is") -> ProdFun(ConsTup(List(freshVar("is$rhs")._2,freshVar("is$lhs")._2)), ProdObj(Some(Var("prim$Bool")), Nil))),
       (Var("concat") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$String")), Nil))), ProdFun(ConsTup(List(ConsObj(Some(Var("prim$String")), Nil))), ProdObj(Some(Var("prim$String")), Nil)))),
       (Var("log") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$String")), Nil))), ProdObj(Some(Var("prim$Unit")), Nil))),
       (Var("toString") -> ProdFun(ConsTup(List(ConsObj(Some(Var("prim$Int")), Nil))), ProdObj(Some(Var("prim$String")), Nil)))
     )
   }
 
-  def process(t: Term)(using ctx: Map[Var, ProdVar]): ProdStrat = 
+  def process(t: Term)(using ctx: Context): ProdStrat = 
     debug.writeLine(s"Processing term ${t} under")
     debug.indent()
     debug.writeLine(s"${ctx}")
@@ -167,6 +180,14 @@ class SimpleDef(debug: Debug) {
         builtinOps(v)
       case v @ Var(id) =>
         ctx(v).copy()(Some(v))(using t.uid)
+      case Asc(trm, ty) =>
+        // TODO: Enforce type ascription?
+        process(trm)
+      case Let(isRec, nme, rhs, body) =>
+        val rhsRes = process(rhs)
+        val sv = freshVar(s"${t.uid}_let")(using t.uid)
+        constrain(rhsRes, sv._2)
+        process(body)(using ctx + (nme -> sv._1))
       case NuNew(cls) =>
         process(App(NuNew(cls), Tup(Nil).withLoc(t.toLoc.map(_.right))))
       case App(NuNew(cls), arg) => 
@@ -198,6 +219,11 @@ class SimpleDef(debug: Debug) {
         constrain(process(thenn), res._2)
         constrain(process(elze), res._2)
         res._1
+      case elf: If =>
+        elf.desugaredTerm match {
+          case S(desugared) => process(desugared)
+          case N => lastWords(s"Undesugared UCS term ${t} found")
+        }
       case Tup(fields) =>
         val mapping = fields.map{
           case (None, Fld(_, fieldTerm: Term)) =>
@@ -221,9 +247,22 @@ class SimpleDef(debug: Debug) {
         apply(TypingUnit(stmts))._2
       case Bra(false, term) =>
         process(term)
+      case CaseOf(trm, cases) =>
+        val scrutRes = process(trm)
+        val sv = freshVar(s"${t.uid}_caseres")(using t.uid)
+        ???
+        // TODO
       case other => lastWords(s"Unsupported term ${other}")
 
     registerTermToType(t, res)
+
+  def processCases(scrut: ProdVar, cs: CaseBranches)(using ctx: Context, resCons: ConsVar): Unit =
+    cs match
+      case Wildcard(body) => 
+        constrain(process(body), resCons)
+      case NoCases => ()
+      case Case(pat, body, rest) => ???
+
   
   val constraintCache = mutable.Set.empty[(ProdStrat, ConsStrat)]
   val upperBounds = mutable.Map.empty[TypeVarId, Ls[ConsStrat]].withDefaultValue(Nil)
@@ -268,7 +307,11 @@ class SimpleDef(debug: Debug) {
               case None => 
                 debug.writeLine("field not found, try parent") 
                 // TODO: Handle multiple inheritance properly, currently assume only one parent
-                constrain(parents.head, cv)
+                parents match
+                  case head :: next => 
+                    constrain(head, cv)
+                  case Nil => 
+                    lastWords(s"Could not constrain ${(prod -> cons)}")
               case Some((_, res1)) => 
                 cv.selectionSource = cv.selectionSource + pv
                 pv.objDestination = pv.objDestination + cv
