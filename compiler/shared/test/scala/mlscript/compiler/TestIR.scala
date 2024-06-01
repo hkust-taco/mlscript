@@ -7,11 +7,12 @@ import scala.collection.mutable.StringBuilder
 import mlscript.{DiffTests, ModeType, TypingUnit}
 import mlscript.compiler.ir.{Interpreter, Fresh, FreshInt, Builder}
 import mlscript.compiler.optimizer.TailRecOpt
+import mlscript.Diagnostic
 
 class IRDiffTestCompiler extends DiffTests {
   import IRDiffTestCompiler.*
 
-  override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (List[Str], Option[TypingUnit]) = 
+  override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit, raise: Diagnostic => Unit): (List[Str], Option[TypingUnit]) = 
     val outputBuilder = StringBuilder()
     if (mode.useIR || mode.irVerbose)
       try
@@ -25,7 +26,7 @@ class IRDiffTestCompiler extends DiffTests {
         output(graph_.toString())
 
         val graph = if (!mode.noTailRecOpt) {
-          val tailRecOpt = new TailRecOpt(fnUid, classUid, tag)
+          val tailRecOpt = new TailRecOpt(fnUid, classUid, tag, raise)
           val (g, comps) = tailRecOpt.run_debug(graph_)
           output("\nStrongly Connected Tail Calls:")
           output(comps.toString)

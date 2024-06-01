@@ -71,7 +71,7 @@ case class Defn(
   val resultNum: Int,
   val body: Node,
   val isTailRec: Bool,
-  val declareLoc: Opt[Loc] = None
+  val loc: Opt[Loc] = None
 ):
   override def hashCode: Int = id
   def getName: String = name

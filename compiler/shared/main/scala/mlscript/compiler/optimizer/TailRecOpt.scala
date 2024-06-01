@@ -5,13 +5,18 @@ import mlscript.compiler.ir.Node._
 import scala.annotation.tailrec
 import mlscript.IntLit
 import mlscript.utils.shorthands.Bool
+import mlscript.Diagnostic
+import mlscript.ErrorReport
+import mlscript.Message
+import mlscript.Message.MessageContext
+import mlscript.Loc
 
 // fnUid should be the same FreshInt that was used to build the graph being passed into this class
-class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
+class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diagnostic => Unit):
   case class LetCtorNodeInfo(node: LetExpr, ctor: Expr.CtorApp, cls: ClassInfo, ctorValName: Name, fieldName: String, idx: Int)
 
   enum CallInfo:
-    case NormalCallInfo(src: Defn, defn: Defn) extends CallInfo
+    case NormalCallInfo(src: Defn, defn: Defn)(val loc: Option[Loc]) extends CallInfo
     case TailCallInfo(src: Defn, defn: Defn) extends CallInfo
     case ModConsCallInfo(src: Defn, startNode: Node, defn: Defn, letCallNode: LetCall, letCtorNode: LetCtorNodeInfo, retName: Name, retNode: Node) extends CallInfo
 
@@ -101,12 +106,13 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
   ) =
     letCallNode match
       case None => searchOptCalls(body)(acc, src, scc, start, None, None, None, Set()) // invalidate everything that's been discovered
-      case Some(LetCall(_, defn, _, isTailRec, _)) =>
+      case Some(x: LetCall) =>
+        val LetCall(_, defn, _, isTailRec, _) = x
         if isTailRec then 
-          throw IRError("not a tail call")
-        else 
-          val newAcc = acc + NormalCallInfo(src, defn.expectDefn)
-          searchOptCalls(body)(newAcc, src, scc, start, None, None, None, Set()) // invalidate everything that's been discovered
+          raise(ErrorReport(List(msg"not a tail call" -> x.loc), true, Diagnostic.Compilation))
+
+        val newAcc = acc + NormalCallInfo(src, defn.expectDefn)(x.loc)
+        searchOptCalls(body)(newAcc, src, scc, start, None, None, None, Set()) // invalidate everything that's been discovered
   
   @tailrec
   private def searchOptCalls(node: Node)(implicit
@@ -122,11 +128,18 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
 
     def updateMapSimple(c: CallInfo) = acc + c
 
+    def returnNoneCont = calledDefn match
+      case None => Left(acc)
+      case Some(dest) => 
+        Left(updateMapSimple(NormalCallInfo(src, dest)(letCallNode.flatMap(_.loc)))) // treat the discovered call as a normal call
+
     def returnNone = letCallNode match
-      case Some(LetCall(_, _, _, isTailRec, _)) if isTailRec => throw IRError("not a tail call")
-      case _ => calledDefn match
-        case None => Left(acc)
-        case Some(dest) => Left(updateMapSimple(NormalCallInfo(src, dest))) // treat the discovered call as a normal call
+      case Some(x: LetCall) =>
+        val LetCall(_, _, _, isTailRec, _) = x
+        if isTailRec then
+          raise(ErrorReport(List(msg"not a tail call" -> x.loc), true, Diagnostic.Compilation))
+        returnNoneCont
+      case _ => returnNoneCont
 
     node match // Left if mod cons call found, Right if none was found -- we return the next nodes to be scanned 
       case Result(res) =>
@@ -259,9 +272,32 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
 
         val callInScc = scc.contains(defn.expectDefn)
         
-        // Only deal with
+        // Only deal with calls in the scc
         if callInScc && isTailCall(x) then
-          Left(updateMapSimple(TailCallInfo(src, defn.expectDefn)))
+          // If there is an old call marked as @tailcall, it cannot be a tail call, error
+
+          val updatedMap = letCallNode match
+            case Some(y) =>
+              // If both these calls are marked @tailrec, error
+              if y.isTailRec && x.isTailRec then
+                raise(ErrorReport(
+                  List(
+                    msg"multiple calls in the same branch marked with @tailcall" -> None,
+                    msg"first call" -> y.loc,
+                    msg"second call" -> x.loc,
+                  ),
+                  true,
+                  Diagnostic.Compilation
+                  )
+                )
+              if y.isTailRec then
+                raise(ErrorReport(List(msg"not a tail call" -> y.loc), true, Diagnostic.Compilation)) 
+
+              updateMapSimple(NormalCallInfo(src, y.defn.expectDefn)(y.loc))
+
+            case None => acc
+            
+          Left(updatedMap + TailCallInfo(src, defn.expectDefn))
         else
           letCallNode match
             case None => // OK, we may use this LetCall as the mod cons
@@ -270,24 +306,34 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
                 searchOptCalls(body)(acc, src, scc, start, Some(defn.expectDefn), Some(x), None, Set())
               else
                 // Treat this as a normal call
-                val newMap = updateMapSimple(NormalCallInfo(src, defn.expectDefn))
+                val newMap = updateMapSimple(NormalCallInfo(src, defn.expectDefn)(x.loc))
                 searchOptCalls(body)(newMap, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors)
-            case Some(LetCall(namesOld, defnOld, argsOld, isTailRecOld, bodyOld)) =>
-              if isTailRecOld && isTailRec then
+            case Some(y: LetCall) =>
+              val LetCall(namesOld, defnOld, argsOld, isTailRecOld, bodyOld) = y
+              if isTailRecOld then
                 // 1. If both the old and newly discovered call are marked with tailrec, error
-                throw IRError("multiple calls in the same branch marked with tailrec")
-              else if isTailRecOld then
+                if isTailRec then 
+                  raise(ErrorReport(
+                    List(
+                      msg"multiple calls in the same branch marked with @tailcall" -> None,
+                      msg"first call" -> y.loc,
+                      msg"second call" -> x.loc,
+                    ),
+                    true,
+                    Diagnostic.Compilation
+                    )
+                  )
                 // 2. old call is marked as tailrec so we must continue using it as the mod cons call.
                 // make sure the newly discovered call does not use the current call as a parameter
                 val argNames = args.collect { case Expr.Ref(name) => name }.toSet
                 val namesSet = namesOld.toSet
                 val inters = argNames.intersect(namesSet)
 
-                if inters.isEmpty then 
-                  // Treat this as a normal call
-                  val newMap = updateMapSimple(NormalCallInfo(src, defn.expectDefn))
-                  searchOptCalls(body)(newMap, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors) // OK
-                else throw IRError("not a tail call") 
+                if !inters.isEmpty then
+                  raise(ErrorReport(List(msg"not a tail call" -> y.loc), true, Diagnostic.Compilation)) 
+                // Treat new call as a normal call
+                val newMap = updateMapSimple(NormalCallInfo(src, defn.expectDefn)(x.loc))
+                searchOptCalls(body)(newMap, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors) // OK
               else
                 // only include mod cons calls that have one return value
                 if callInScc && defn.expectDefn.resultNum == 1 then 
@@ -296,13 +342,13 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
                   // user really should mark which calls should be tailrec
                     
                   // Treat the old call as a normal call
-                  val newMap = updateMapSimple(NormalCallInfo(src, defnOld.expectDefn))
+                  val newMap = updateMapSimple(NormalCallInfo(src, defnOld.expectDefn)(y.loc))
                   searchOptCalls(body)(newMap, src, scc, start, Some(defn.expectDefn), Some(x), None, Set())
                 else
                   // shadow all the variables in this letcall
                   
                   // Treat this as a normal call
-                  val newMap = updateMapSimple(NormalCallInfo(src, defn.expectDefn))
+                  val newMap = updateMapSimple(NormalCallInfo(src, defn.expectDefn)(x.loc))
                   searchOptCalls(body)(acc, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors -- names)
 
   // checks whether a list of names is equal to a list of trivial expressions referencing those names
@@ -915,9 +961,19 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
     partitionNodes(nodeMap).map(_.removeMetadata)
 
   private def optimizeParition(component: ScComponent, classes: Set[ClassInfo]): Set[Defn] =
-    val isTailRec = component.nodes.find { _.isTailRec }.isDefined
-    if isTailRec && filterNormalCalls(component.edges).size != 0 then
-      throw IRError("at least one function is not tail recursive") // TODO: better error message
+    val trFn = component.nodes.find { _.isTailRec }.headOption
+    val normalCall = filterNormalCalls(component.edges).headOption
+    
+    (trFn, normalCall) match
+      case (Some(fn), Some(call)) => 
+        raise(ErrorReport(
+          List(
+            msg"function `${fn.name}` is not tail-recursive, but is marked as @tailrec" -> fn.loc,
+            msg"it could self-recursive through this call, which may not be a tail-call" -> call.loc
+          ), 
+          true, Diagnostic.Compilation)
+        )
+      case _ =>
 
     val (modConsComp, other) = optimizeModCons(component, classes)
     val (trOpt, mergedDefn) = optimizeTailRec(modConsComp, classes)
