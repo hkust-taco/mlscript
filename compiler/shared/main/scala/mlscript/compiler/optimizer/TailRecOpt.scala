@@ -969,7 +969,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
         raise(ErrorReport(
           List(
             msg"function `${fn.name}` is not tail-recursive, but is marked as @tailrec" -> fn.loc,
-            msg"it could self-recursive through this call, which may not be a tail-call" -> call.loc
+            msg"it could self-recurse through this call, which may not be a tail-call" -> call.loc
           ), 
           true, Diagnostic.Compilation)
         )

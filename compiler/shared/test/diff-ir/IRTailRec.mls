@@ -658,13 +658,13 @@ hello()
 //│ x$2 -- #11)
 //│ ╔══[COMPILATION ERROR] multiple calls in the same branch marked with @tailcall
 //│ ╟── first call
-//│ ║  l.491: 	    @tailcall hello()
+//│ ║  l.640: 	    @tailcall hello()
 //│ ║         	              ^^^^^
 //│ ╟── second call
-//│ ║  l.492: 	    @tailcall hello()
+//│ ║  l.641: 	    @tailcall hello()
 //│ ╙──       	              ^^^^^
 //│ ╔══[COMPILATION ERROR] not a tail call
-//│ ║  l.491: 	    @tailcall hello()
+//│ ║  l.640: 	    @tailcall hello()
 //│ ╙──       	              ^^^^^
 //│ 
 //│ Strongly Connected Tail Calls:
@@ -714,7 +714,7 @@ hello()
 //│ let* (x$1) = hello() in -- #8
 //│ x$1 -- #7)
 //│ ╔══[COMPILATION ERROR] not a tail call
-//│ ║  l.530: 	    @tailcall hello()
+//│ ║  l.699: 	    @tailcall hello()
 //│ ╙──       	              ^^^^^
 //│ 
 //│ Strongly Connected Tail Calls:
@@ -2094,10 +2094,10 @@ a()
 //│ let* (x$6) = a() in -- #27
 //│ x$6 -- #26)
 //│ ╔══[COMPILATION ERROR] function `a` is not tail-recursive, but is marked as @tailrec
-//│ ║  l.1450: 	@tailrec 
+//│ ║  l.2061: 	@tailrec 
 //│ ║          	 ^^^^^^^
-//│ ╟── it could self-recursive through this call, which may not be a tail-call
-//│ ║  l.1448: 	  a()
+//│ ╟── it could self-recurse through this call, which may not be a tail-call
+//│ ║  l.2059: 	  a()
 //│ ╙──        	  ^
 //│ 
 //│ Strongly Connected Tail Calls:
@@ -2217,10 +2217,10 @@ a()
 //│ let* (x$7) = a() in -- #36
 //│ x$7 -- #35)
 //│ ╔══[COMPILATION ERROR] function `a` is not tail-recursive, but is marked as @tailrec
-//│ ║  l.1513: 	@tailrec
+//│ ║  l.2186: 	@tailrec
 //│ ║          	 ^^^^^^^
-//│ ╟── it could self-recursive through this call, which may not be a tail-call
-//│ ║  l.1515: 	fun b() = A(@tailcall a(), c())
+//│ ╟── it could self-recurse through this call, which may not be a tail-call
+//│ ║  l.2188: 	fun b() = A(@tailcall a(), c())
 //│ ╙──        	                           ^
 //│ 
 //│ Strongly Connected Tail Calls:
