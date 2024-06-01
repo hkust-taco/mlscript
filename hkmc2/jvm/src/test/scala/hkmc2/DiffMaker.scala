@@ -74,6 +74,8 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
   val showParse = NullaryCommand("p")
   val parseOnly = NullaryCommand("parseOnly")
   
+  val bbml = NullaryCommand("bbml")
+  
   
   val tests = Command("tests"){ case "" =>
     new DiffTests(new DiffTests.State).execute()
@@ -224,9 +226,12 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
           val (e, newCtx) = elab.topLevel(res)
           curCtx = newCtx
           output(s"Elab: ${e.showDbg}")
-          val typer = typing.TypeChecker(raise)
-          val ty = typer.typeProd(e)
-          output(s"Type: ${ty}")
+          if bbml.isSet then
+            output(s"Magic!")
+          else
+            val typer = typing.TypeChecker(raise)
+            val ty = typer.typeProd(e)
+            output(s"Type: ${ty}")
         
       catch
         case oh_noes: ThreadDeath => throw oh_noes

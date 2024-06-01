@@ -11,8 +11,6 @@ import Producer as P
 import Consumer as C
 import Label as L
 import hkmc2.syntax.Tree
-import os.stat
-import scala.collection.immutable.LazyList.cons
 
 
 class TypeChecker(raise: Raise):
