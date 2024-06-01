@@ -23,7 +23,9 @@ class IRDiffTestCompiler extends DiffTests {
 
         val gb = Builder(Fresh(), fnUid, classUid, tag)
         val graph_ = gb.buildGraph(unit)
-        output(graph_.toString())
+        
+        if mode.noTailRecOpt then 
+          output(graph_.toString())
 
         val graph = if (!mode.noTailRecOpt) {
           val tailRecOpt = new TailRecOpt(fnUid, classUid, tag, raise)
@@ -34,7 +36,10 @@ class IRDiffTestCompiler extends DiffTests {
         } else {
           graph_
         }
-        output(graph.toString())
+
+        if mode.noTailRecOpt then
+          output(graph.toString())
+        
         output("\nPromoted:")
         output(graph.toString())
         var interp_result: Opt[Str] = None
