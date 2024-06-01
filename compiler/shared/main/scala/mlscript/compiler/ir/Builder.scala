@@ -74,15 +74,15 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
   private def buildResultFromTerm(using ctx: Ctx)(tm: Term)(k: Node => Node): Node =
     def buildLetCall(f: Term, xs: Tup, ann: Option[Term]) =
       buildResultFromTerm(f) { node => node match
-        case Result(Ref(f) :: Nil) if ctx.fnCtx.contains(f.str) => buildResultFromTerm(xs) {
+        case Result(Ref(g) :: Nil) if ctx.fnCtx.contains(g.str) => buildResultFromTerm(xs) {
           case Result(args) =>
             val v = fresh.make
             
             ann match
               case Some(Var(nme)) if nme == "tailcall" => 
-                LetCall(List(v), DefnRef(Right(f.str)), args, true, v |> ref |> sresult |> k).attachTag(tag)
+                LetCall(List(v), DefnRef(Right(g.str)), args, true, v |> ref |> sresult |> k)(f.toLoc).attachTag(tag)
               case Some(_) => node |> unexpectedNode
-              case None => LetCall(List(v), DefnRef(Right(f.str)), args, false, v |> ref |> sresult |> k).attachTag(tag)   
+              case None => LetCall(List(v), DefnRef(Right(g.str)), args, false, v |> ref |> sresult |> k)(f.toLoc).attachTag(tag)   
             
           case node @ _ => node |> unexpectedNode
         }
@@ -157,7 +157,8 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
               params = res :: fvs.map(x => Name(x)),
               resultNum = 1,
               jpbody,
-              false
+              false,
+              None
             )
             ctx.jpAcc.addOne(jpdef)
             val tru2 = buildResultFromTerm(tru) {
@@ -190,7 +191,8 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
               params = res :: fvs.map(x => Name(x)),
               resultNum = 1,
               jpbody,
-              false
+              false,
+              None
             )
             ctx.jpAcc.addOne(jpdef)
             val cases: Ls[(ClassInfo, Node)] = lines map {
@@ -253,13 +255,16 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
           }
         val names = strs map (fresh.make(_))
         given Ctx = ctx.copy(nameCtx = ctx.nameCtx ++ (strs zip names))
+        val trAnn = nfd.annotations.find { case Var("tailrec") => true; case _ => false }
+
         Defn(
           fnUid.make,
           name,
           params = names,
           resultNum = 1,
           buildResultFromTerm(body) { x => x },
-          nfd.annotations.find { case Var("tailrec") => true; case _ => false }.isDefined
+          trAnn.isDefined,
+          trAnn.flatMap(_.toLoc)
         )
       case _ => throw IRError("unsupported NuFunDef")
     case _ => throw IRError("unsupported NuFunDef")

@@ -6,6 +6,8 @@ import mlscript.utils.shorthands._
 import mlscript.compiler.ir._
 import mlscript.compiler.optimizer._
 
+import mlscript.Loc
+
 import collection.mutable.{Map as MutMap, Set as MutSet, HashMap, ListBuffer}
 import annotation.unused
 import util.Sorting
@@ -68,7 +70,8 @@ case class Defn(
   val params: Ls[Name],
   val resultNum: Int,
   val body: Node,
-  val isTailRec: Bool 
+  val isTailRec: Bool,
+  val declareLoc: Opt[Loc] = None
 ):
   override def hashCode: Int = id
   def getName: String = name
@@ -147,7 +150,7 @@ enum Node:
   case Case(scrut: Name, cases: Ls[(ClassInfo, Node)])
   // Intermediate forms:
   case LetExpr(name: Name, expr: Expr, body: Node)
-  case LetCall(names: Ls[Name], defn: DefnRef, args: Ls[TrivialExpr], isTailRec: Bool, body: Node)
+  case LetCall(names: Ls[Name], defn: DefnRef, args: Ls[TrivialExpr], isTailRec: Bool, body: Node)(val loc: Opt[Loc] = None)
 
   var tag = DefnTag(-1)
 
@@ -170,7 +173,9 @@ enum Node:
     case Jump(defn, args) => Jump(defn, args.map(_.mapNameOfTrivialExpr(f)))
     case Case(scrut, cases) => Case(f(scrut), cases.map { (cls, arm) => (cls, arm.mapName(f)) })
     case LetExpr(name, expr, body) => LetExpr(f(name), expr.mapName(f), body.mapName(f))
-    case LetCall(names, defn, args, isTailRec, body) => LetCall(names.map(f), defn, args.map(_.mapNameOfTrivialExpr(f)), isTailRec, body.mapName(f))
+    case x: LetCall => 
+      val LetCall(names, defn, args, isTailRec, body) = x
+      LetCall(names.map(f), defn, args.map(_.mapNameOfTrivialExpr(f)), isTailRec, body.mapName(f))(x.loc)
   
   def copy(ctx: Map[Str, Name]): Node = this match
     case Result(res) => Result(res.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))))
@@ -179,9 +184,10 @@ enum Node:
     case LetExpr(name, expr, body) => 
       val name_copy = name.copy
       LetExpr(name_copy, expr.mapName(_.trySubst(ctx)), body.copy(ctx + (name_copy.str -> name_copy)))
-    case LetCall(names, defn, args, isTailRec, body) => 
+    case x: LetCall => 
+      val LetCall(names, defn, args, isTailRec, body) = x
       val names_copy = names.map(_.copy)
-      LetCall(names_copy, defn, args.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))), isTailRec, body.copy(ctx ++ names_copy.map(x => x.str -> x)))
+      LetCall(names_copy, defn, args.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))), isTailRec, body.copy(ctx ++ names_copy.map(x => x.str -> x)))(x.loc)
 
   private def toDocument: Document = this match
     case Result(res) => raw(res |> show_args) <:> raw(s"-- $tag")

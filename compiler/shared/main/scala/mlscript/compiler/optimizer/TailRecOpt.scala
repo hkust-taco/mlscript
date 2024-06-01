@@ -607,7 +607,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
                   List(Expr.Ref(Name("ret")))
                 ).attachTag(tag)
               ).attachTag(tag),
-            ).attachTag(tag)
+            )().attachTag(tag)
           ).attachTag(tag)
         ).attachTag(tag)
       ).attachTag(tag)
@@ -629,7 +629,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
           List(Expr.Ref(Name("ctx")), ret),
           false,
           Result(List(Expr.Ref(Name("res")))).attachTag(tag)
-        ).attachTag(tag)
+        )().attachTag(tag)
       
       // Here, we assume we are inside the modcons version of the function and hence have an extra
       // `ctx` parameter at the start.
@@ -659,9 +659,9 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
                   modConsRefs(defn.expectDefn.id), Expr.Ref(Name("ctx")) :: args, 
                   isTailRec,
                   Result(List(Expr.Ref(Name("res")))).attachTag(tag)
-                ).attachTag(tag)
+                )().attachTag(tag)
               else 
-                LetCall(names, defn, args, isTailRec, transformNode(body)).attachTag(tag)
+                LetCall(names, defn, args, isTailRec, transformNode(body))().attachTag(tag)
 
       def transformModConsBranch(node: Node)(implicit call: ModConsCallInfo): Node = 
         def makeCall =
@@ -685,8 +685,8 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
                 Result(
                   List(Expr.Ref(Name("res")))
                 ).attachTag(tag)
-              ).attachTag(tag)
-            ).attachTag(tag)
+              )().attachTag(tag)
+            )().attachTag(tag)
           ).attachTag(tag)
 
         node match
@@ -707,7 +707,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
               // discard it
               transformModConsBranch(body)
             else
-              LetCall(names, defn, args, isTailRec, transformModConsBranch(body)).attachTag(tag)
+              LetCall(names, defn, args, isTailRec, transformModConsBranch(body))().attachTag(tag)
           case _ => throw IRError("unreachable case when transforming mod cons call")
 
       def rewriteDefn(d: Defn): Defn =
@@ -729,7 +729,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
               Expr.Ref(Name("idCtx")) :: d.params.map(Expr.Ref(_)),
               false,
               Result(List(Expr.Ref(Name("res")))).attachTag(tag)
-            ).attachTag(tag)
+            )().attachTag(tag)
           ).attachTag(tag)
         val newDefn = Defn(d.id, d.name, d.params, d.resultNum, modConsCall, false)
         (newDefn, modConsDefn)
@@ -795,7 +795,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
           if isTailCall(node) && defn_.expectDefn.id == defn.id then
             Jump(jpDefnRef, args).attachTag(tag)
           else
-            LetCall(names, defn_, args, isTailRec, transformNode(body)).attachTag(tag)
+            LetCall(names, defn_, args, isTailRec, transformNode(body))().attachTag(tag)
       
       val jpDef = Defn(fnUid.make, jpName, defn.params, defn.resultNum, transformNode(defn.body), false)
       
@@ -806,7 +806,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
         defn.params.map(Expr.Ref(_)),
         false,
         Result(rets.map(Expr.Ref(_))).attachTag(tag),
-      ).attachTag(tag)
+      )().attachTag(tag)
       
       val newDefn = Defn(fnUid.make, defn.name, defn.params, defn.resultNum, callJpNode, true)
       (Set(newDefn, jpDef), newDefn)
@@ -861,7 +861,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
         case LetCall(names, defn, args, isTailRec, body) =>
           if isTailCall(node) && defnInfoMap.contains(defn.expectDefn.id) then
             Jump(jpDefnRef, transformStackFrame(args, defnInfoMap(defn.expectDefn.id))).attachTag(tag)
-          else LetCall(names, defn, args, isTailRec, transformNode(body)).attachTag(tag)
+          else LetCall(names, defn, args, isTailRec, transformNode(body))().attachTag(tag)
 
       // Tail calls to another function in the component will be replaced with a tail call
       // to the merged function
@@ -879,7 +879,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
         val names = (0 until resultNum).map(i => Name("r" + i.toString())).toList
         val namesExpr = names.map(Expr.Ref(_))
         val res = Result(namesExpr).attachTag(tag)
-        val call = LetCall(names, newDefnRef, args, false, res).attachTag(tag)
+        val call = LetCall(names, newDefnRef, args, false, res)().attachTag(tag)
         Defn(defn.id, defn.name, defn.params, defn.resultNum, call, false)
 
       def getOrKey[T](m: Map[T, T])(key: T): T = m.get(key) match
