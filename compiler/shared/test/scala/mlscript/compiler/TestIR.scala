@@ -24,7 +24,7 @@ class IRDiffTestCompiler extends DiffTests {
         val gb = Builder(Fresh(), fnUid, classUid, tag)
         val graph_ = gb.buildGraph(unit)
         
-        if mode.noTailRecOpt then 
+        if !mode.noTailRecOpt then 
           output(graph_.toString())
 
         val graph = if (!mode.noTailRecOpt) {
@@ -37,7 +37,7 @@ class IRDiffTestCompiler extends DiffTests {
           graph_
         }
 
-        if mode.noTailRecOpt then
+        if !mode.noTailRecOpt then
           output(graph.toString())
         
         output("\nPromoted:")
