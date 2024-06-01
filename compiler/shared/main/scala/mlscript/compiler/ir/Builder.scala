@@ -79,7 +79,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
             val v = fresh.make
             
             ann match
-              case Some(Var(nme)) if nme == "tailrec" => 
+              case Some(Var(nme)) if nme == "tailcall" => 
                 LetCall(List(v), DefnRef(Right(f.str)), args, true, v |> ref |> sresult |> k).attachTag(tag)
               case Some(_) => node |> unexpectedNode
               case None => LetCall(List(v), DefnRef(Right(f.str)), args, false, v |> ref |> sresult |> k).attachTag(tag)   

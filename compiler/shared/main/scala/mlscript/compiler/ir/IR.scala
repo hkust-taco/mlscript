@@ -220,7 +220,7 @@ enum Node:
           <#> raw(xs.map(_.toString).mkString(","))
           <#> raw(")")
           <:> raw("=")
-          <:> raw((if isTailRec then "@tailrec " else "") + defn.getName)
+          <:> raw((if isTailRec then "@tailcall " else "") + defn.getName)
           <#> raw("(")
           <#> raw(args.map{ x => x.toString }.mkString(","))
           <#> raw(")")
