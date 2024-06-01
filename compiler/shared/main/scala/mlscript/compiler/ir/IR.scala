@@ -97,6 +97,7 @@ enum Expr:
   case CtorApp(name: ClassInfo, args: Ls[TrivialExpr])
   case Select(name: Name, cls: ClassInfo, field: Str)
   case BasicOp(name: Str, args: Ls[TrivialExpr])
+  case AssignField(assignee: Name, clsInfo: ClassInfo, fieldName: Str, value: TrivialExpr)
   
   override def toString: String = show
 
@@ -115,6 +116,13 @@ enum Expr:
       raw(s.toString) <#> raw(".") <#> raw(fld)
     case BasicOp(name: Str, args) =>
       raw(name) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
+    case AssignField(assignee, clsInfo, fieldName, value) => 
+      stack(
+        raw("assign")
+          <:> raw(assignee.toString + "." + fieldName)
+          <:> raw(":=")
+          <:> value.toDocument
+        )
 
   def mapName(f: Name => Name): Expr = this match
     case Ref(name) => Ref(f(name))
@@ -122,6 +130,7 @@ enum Expr:
     case CtorApp(cls, args) => CtorApp(cls, args.map(_.mapNameOfTrivialExpr(f)))
     case Select(x, cls, field) => Select(f(x), cls, field)
     case BasicOp(name, args) => BasicOp(name, args.map(_.mapNameOfTrivialExpr(f)))
+    case AssignField(assignee, clsInfo, fieldName, value) => AssignField(f(assignee), clsInfo, fieldName, value.mapNameOfTrivialExpr(f))
 
   def locMarker: LocMarker = this match
     case Ref(name) => LocMarker.MRef(name.str)
@@ -129,7 +138,7 @@ enum Expr:
     case CtorApp(name, args) => LocMarker.MCtorApp(name, args.map(_.toExpr.locMarker))
     case Select(name, cls, field) => LocMarker.MSelect(name.str, cls, field)
     case BasicOp(name, args) => LocMarker.MBasicOp(name, args.map(_.toExpr.locMarker))
-  
+    case AssignField(assignee, clsInfo, fieldName, value) => LocMarker.MAssignField(assignee.str, fieldName, value.toExpr.locMarker)
 
 enum Node:
   // Terminal forms:
@@ -139,7 +148,6 @@ enum Node:
   // Intermediate forms:
   case LetExpr(name: Name, expr: Expr, body: Node)
   case LetCall(names: Ls[Name], defn: DefnRef, args: Ls[TrivialExpr], isTailRec: Bool, body: Node)
-  case AssignField(assignee: Name, clsInfo: ClassInfo, fieldName: Str, value: TrivialExpr, body: Node)
 
   var tag = DefnTag(-1)
 
@@ -163,8 +171,6 @@ enum Node:
     case Case(scrut, cases) => Case(f(scrut), cases.map { (cls, arm) => (cls, arm.mapName(f)) })
     case LetExpr(name, expr, body) => LetExpr(f(name), expr.mapName(f), body.mapName(f))
     case LetCall(names, defn, args, isTailRec, body) => LetCall(names.map(f), defn, args.map(_.mapNameOfTrivialExpr(f)), isTailRec, body.mapName(f))
-    case AssignField(assignee, fieldName, clsInfo, value, body) =>
-      AssignField(f(assignee), fieldName, clsInfo, value.mapNameOfTrivialExpr(f), body.mapName(f))
   
   def copy(ctx: Map[Str, Name]): Node = this match
     case Result(res) => Result(res.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))))
@@ -176,8 +182,6 @@ enum Node:
     case LetCall(names, defn, args, isTailRec, body) => 
       val names_copy = names.map(_.copy)
       LetCall(names_copy, defn, args.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))), isTailRec, body.copy(ctx ++ names_copy.map(x => x.str -> x)))
-    case AssignField(assignee, clsInfo, fieldName, value, body) =>
-      AssignField(assignee.trySubst(ctx), clsInfo, fieldName, value.mapNameOfTrivialExpr(_.trySubst(ctx)), body.copy(ctx))
 
   private def toDocument: Document = this match
     case Result(res) => raw(res |> show_args) <:> raw(s"-- $tag")
@@ -223,15 +227,6 @@ enum Node:
           <:> raw("in") 
           <:> raw(s"-- $tag"),
         body.toDocument)
-    case AssignField(assignee, clsInfo, fieldName, value, body) => 
-      stack(
-        raw("assign")
-          <:> raw(assignee.toString + "." + fieldName)
-          <:> raw(":=")
-          <:> value.toDocument
-          <:> raw("in")
-          <:> raw(s"-- $tag"),
-        body.toDocument)
   def locMarker: LocMarker =
     val marker = this match
       case Result(res) => LocMarker.MResult(res.map(_.toExpr.locMarker))
@@ -239,7 +234,6 @@ enum Node:
       case Case(scrut, cases) => LocMarker.MCase(scrut.str, cases.map(_._1))
       case LetExpr(name, expr, _) => LocMarker.MLetExpr(name.str, expr.locMarker)
       case LetCall(names, defn, args, _, _) => LocMarker.MLetCall(names.map(_.str), defn.getName, args.map(_.toExpr.locMarker))
-      case AssignField(assignee, clsInfo, field, value, _) => LocMarker.MAssignField(assignee.toString, field, value.toExpr.locMarker)
     marker.tag = this.tag
     marker
 

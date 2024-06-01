@@ -849,7 +849,7 @@ addOne(Cons(1, Cons(2, Cons(3, Nil))))
 //│   _Context =>
 //│     let field = ctx.field in -- #57
 //│     let ptr = ctx.ptr in -- #56
-//│     assign ptr.t := x in -- #55
+//│     let _ = assign ptr.t := x in -- #55
 //│     let acc = ctx.acc in -- #54
 //│     acc -- #53
 //│ )
@@ -911,7 +911,7 @@ addOne(Cons(1, Cons(2, Cons(3, Nil))))
 //│   _Context =>
 //│     let field = ctx.field in -- #57
 //│     let ptr = ctx.ptr in -- #56
-//│     assign ptr.t := x in -- #55
+//│     let _ = assign ptr.t := x in -- #55
 //│     let acc = ctx.acc in -- #54
 //│     acc -- #53
 //│ )
@@ -1209,7 +1209,7 @@ a(S(S(S(Zero))))
 //│   _Context =>
 //│     let field = ctx.field in -- #79
 //│     let ptr = ctx.ptr in -- #78
-//│     assign ptr.x := x in -- #77
+//│     let _ = assign ptr.x := x in -- #77
 //│     let acc = ctx.acc in -- #76
 //│     acc -- #75
 //│ )
@@ -1307,7 +1307,7 @@ a(S(S(S(Zero))))
 //│   _Context =>
 //│     let field = ctx.field in -- #79
 //│     let ptr = ctx.ptr in -- #78
-//│     assign ptr.x := x in -- #77
+//│     let _ = assign ptr.x := x in -- #77
 //│     let acc = ctx.acc in -- #76
 //│     acc -- #75
 //│ )
@@ -1446,7 +1446,7 @@ addOne(Cons(1, Cons(2, Cons(3, Nil))))
 //│   _Context =>
 //│     let field = ctx.field in -- #60
 //│     let ptr = ctx.ptr in -- #59
-//│     assign ptr.t := x in -- #58
+//│     let _ = assign ptr.t := x in -- #58
 //│     let acc = ctx.acc in -- #57
 //│     acc -- #56
 //│ )
@@ -1508,7 +1508,7 @@ addOne(Cons(1, Cons(2, Cons(3, Nil))))
 //│   _Context =>
 //│     let field = ctx.field in -- #60
 //│     let ptr = ctx.ptr in -- #59
-//│     assign ptr.t := x in -- #58
+//│     let _ = assign ptr.t := x in -- #58
 //│     let acc = ctx.acc in -- #57
 //│     acc -- #56
 //│ )
@@ -1665,7 +1665,7 @@ b(16)
 //│   _Context =>
 //│     let field = ctx.field in -- #86
 //│     let ptr = ctx.ptr in -- #85
-//│     assign ptr.n := x in -- #84
+//│     let _ = assign ptr.n := x in -- #84
 //│     let acc = ctx.acc in -- #83
 //│     acc -- #82
 //│ )
@@ -1770,7 +1770,7 @@ b(16)
 //│   _Context =>
 //│     let field = ctx.field in -- #86
 //│     let ptr = ctx.ptr in -- #85
-//│     assign ptr.n := x in -- #84
+//│     let _ = assign ptr.n := x in -- #84
 //│     let acc = ctx.acc in -- #83
 //│     acc -- #82
 //│ )
@@ -2120,7 +2120,7 @@ foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil))))))))
 //│   _Context =>
 //│     let field = ctx.field in -- #108
 //│     let ptr = ctx.ptr in -- #107
-//│     assign ptr.t := x in -- #106
+//│     let _ = assign ptr.t := x in -- #106
 //│     let acc = ctx.acc in -- #105
 //│     acc -- #104
 //│ )
@@ -2216,7 +2216,7 @@ foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil))))))))
 //│   _Context =>
 //│     let field = ctx.field in -- #108
 //│     let ptr = ctx.ptr in -- #107
-//│     assign ptr.t := x in -- #106
+//│     let _ = assign ptr.t := x in -- #106
 //│     let acc = ctx.acc in -- #105
 //│     acc -- #104
 //│ )
@@ -2387,7 +2387,7 @@ a()
 //│   _Context =>
 //│     let field = ctx.field in -- #38
 //│     let ptr = ctx.ptr in -- #37
-//│     assign ptr.a := x in -- #36
+//│     let _ = assign ptr.a := x in -- #36
 //│     let acc = ctx.acc in -- #35
 //│     acc -- #34
 //│ )
@@ -2461,7 +2461,7 @@ a()
 //│   _Context =>
 //│     let field = ctx.field in -- #38
 //│     let ptr = ctx.ptr in -- #37
-//│     assign ptr.a := x in -- #36
+//│     let _ = assign ptr.a := x in -- #36
 //│     let acc = ctx.acc in -- #35
 //│     acc -- #34
 //│ )
@@ -2575,12 +2575,12 @@ a()
 //│     if scrut -- #42
 //│       true =>
 //│         let ptr = ctx.ptr in -- #41
-//│         assign ptr.a := x in -- #40
+//│         let _ = assign ptr.a := x in -- #40
 //│         let acc = ctx.acc in -- #39
 //│         acc -- #38
 //│       false =>
 //│         let ptr = ctx.ptr in -- #37
-//│         assign ptr.b := x in -- #36
+//│         let _ = assign ptr.b := x in -- #36
 //│         let acc = ctx.acc in -- #35
 //│         acc -- #34
 //│ )
@@ -2657,12 +2657,12 @@ a()
 //│     if scrut -- #42
 //│       true =>
 //│         let ptr = ctx.ptr in -- #41
-//│         assign ptr.a := x in -- #40
+//│         let _ = assign ptr.a := x in -- #40
 //│         let acc = ctx.acc in -- #39
 //│         acc -- #38
 //│       false =>
 //│         let ptr = ctx.ptr in -- #37
-//│         assign ptr.b := x in -- #36
+//│         let _ = assign ptr.b := x in -- #36
 //│         let acc = ctx.acc in -- #35
 //│         acc -- #34
 //│ )

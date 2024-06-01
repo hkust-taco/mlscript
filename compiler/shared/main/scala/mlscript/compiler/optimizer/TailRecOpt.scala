@@ -67,7 +67,6 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
       case Case(scrut, cases) => casesToJps(cases, acc)
       case LetExpr(name, expr, body) => discoverJoinPoints(body, acc)
       case LetCall(names, defn, args, isTailRec, body) => discoverJoinPoints(body, acc)
-      case AssignField(assignee, clsInfo, fieldName, value, body) => discoverJoinPoints(body, acc)
 
   private def getRetName(names: Set[Name], retVals: List[TrivialExpr]): Option[Name] =
     val names = retVals.collect { case Expr.Ref(nme) => nme }
@@ -240,6 +239,21 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
                   // if the is marked as tail recursive, we must use that call as the mod cons call, so error. otherwise,
                   // invalidate the discovered call and continue
                   invalidateAndCont(body)
+          case Expr.AssignField(assignee, clsInfo, assignmentFieldName, value) =>
+            // make sure `value` is not the mod cons call
+            letCallNode match
+              case None => searchOptCalls(body) // OK
+              case Some(LetCall(names, defn, args, isTailRec, _)) =>
+                value match
+                  case Expr.Ref(name) =>
+                    invalidateAndCont(body)
+                  case _ =>
+                    letCtorNode match
+                      case None => searchOptCalls(body) // OK
+                      case Some(LetCtorNodeInfo(_, ctor, _, name, fieldName, _)) =>
+                        // If this assignment overwrites the mod cons value, forget it
+                        if containingCtors.contains(assignee) then invalidateAndCont(body)
+                        else searchOptCalls(body)
       case x: LetCall =>
         val LetCall(names, defn, args, isTailRec, body) = x
 
@@ -290,22 +304,6 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
                   // Treat this as a normal call
                   val newMap = updateMapSimple(NormalCallInfo(src, defn.expectDefn))
                   searchOptCalls(body)(acc, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors -- names)
-        
-      case AssignField(assignee, clsInfo, assignmentFieldName, value, body) =>
-        // make sure `value` is not the mod cons call
-        letCallNode match
-          case None => searchOptCalls(body) // OK
-          case Some(LetCall(names, defn, args, isTailRec, body)) =>
-            value match
-              case Expr.Ref(name) =>
-                invalidateAndCont(body)
-              case _ =>
-                letCtorNode match
-                  case None => searchOptCalls(body) // OK
-                  case Some(LetCtorNodeInfo(_, ctor, _, name, fieldName, _)) =>
-                    // If this assignment overwrites the mod cons value, forget it
-                    if containingCtors.contains(assignee) then invalidateAndCont(body)
-                    else searchOptCalls(body)
 
   // checks whether a list of names is equal to a list of trivial expressions referencing those names
   private def argsListEqual(names: List[Name], exprs: List[TrivialExpr]) =
@@ -348,7 +346,6 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
           case None => Set(defn.expectDefn)
           case Some(defns) => defns + defn.expectDefn
         searchCalls(body)(src, acc + (src.id -> newSet))
-      case AssignField(assignee, clsInfo, fieldName, value, body) => searchCalls(body)
     
 
   private def discoverCalls(defn: Defn, jps: Set[Defn])(implicit acc: Map[Int, Set[Defn]]): Map[Int, Set[Defn]] =
@@ -538,11 +535,14 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
         val node = LetExpr(
           Name("ptr"), 
           Expr.Select(appCtxName, CTX_CLASS, "ptr"),
-          AssignField(
-            Name("ptr"), 
-            cls, 
-            fieldName, 
-            Expr.Ref(appValName),
+          LetExpr(
+            Name("_"), 
+            Expr.AssignField(
+              Name("ptr"), 
+              cls, 
+              fieldName, 
+              Expr.Ref(appValName)
+            ),
             LetExpr(
               Name("acc"), 
               Expr.Select(appCtxName, CTX_CLASS, "acc"), // this could be a join point but it's not that bad
@@ -662,8 +662,6 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
                 ).attachTag(tag)
               else 
                 LetCall(names, defn, args, isTailRec, transformNode(body)).attachTag(tag)
-            case AssignField(assignee, clsInfo, fieldName, value, body) => 
-              AssignField(assignee, clsInfo, fieldName, value, transformNode(body)).attachTag(tag)
 
       def transformModConsBranch(node: Node)(implicit call: ModConsCallInfo): Node = 
         def makeCall =
@@ -710,8 +708,6 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
               transformModConsBranch(body)
             else
               LetCall(names, defn, args, isTailRec, transformModConsBranch(body)).attachTag(tag)
-          case AssignField(assignee, clsInfo, fieldName, value, body) =>
-            AssignField(assignee, clsInfo, fieldName, value, transformModConsBranch(body)).attachTag(tag)
           case _ => throw IRError("unreachable case when transforming mod cons call")
 
       def rewriteDefn(d: Defn): Defn =
@@ -800,8 +796,6 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
             Jump(jpDefnRef, args).attachTag(tag)
           else
             LetCall(names, defn_, args, isTailRec, transformNode(body)).attachTag(tag)
-        case AssignField(assignee, clsInfo, fieldName, value, body) => 
-          AssignField(assignee, clsInfo, fieldName, value, transformNode(body)).attachTag(tag)
       
       val jpDef = Defn(fnUid.make, jpName, defn.params, defn.resultNum, transformNode(defn.body), false)
       
@@ -868,7 +862,6 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
           if isTailCall(node) && defnInfoMap.contains(defn.expectDefn.id) then
             Jump(jpDefnRef, transformStackFrame(args, defnInfoMap(defn.expectDefn.id))).attachTag(tag)
           else LetCall(names, defn, args, isTailRec, transformNode(body)).attachTag(tag)
-        case AssignField(assignee, clsInfo, field, value, body) => AssignField(assignee, clsInfo, field, value, transformNode(body)).attachTag(tag)
 
       // Tail calls to another function in the component will be replaced with a tail call
       // to the merged function
@@ -921,23 +914,21 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
     val nodeMap: Map[Int, DefnNode] = defns.foldLeft(Map.empty)((m, d) => m + (d.id -> DefnNode(d)))
     partitionNodes(nodeMap).map(_.removeMetadata)
 
-  private def optimizeParition(component: ScComponent, classes: Set[ClassInfo]): (Set[Defn], Defn) =
+  private def optimizeParition(component: ScComponent, classes: Set[ClassInfo]): Set[Defn] =
     val isTailRec = component.nodes.find { _.isTailRec }.isDefined
     if isTailRec && filterNormalCalls(component.edges).size != 0 then
       throw IRError("at least one function is not tail recursive") // TODO: better error message
 
     val (modConsComp, other) = optimizeModCons(component, classes)
     val (trOpt, mergedDefn) = optimizeTailRec(modConsComp, classes)
-    (other ++ trOpt, mergedDefn)
+    other ++ trOpt
 
   def apply(p: Program) = run(p)
 
   def run_debug(p: Program): (Program, List[Set[String]]) = 
     val partitions = partition(p.defs)
 
-    val optimized = partitions.map { optimizeParition(_, p.classes) } 
-    val newDefs: Set[Defn] = optimized.flatMap { _._1 }.toSet
-    val mergedDefs: List[Defn] = optimized.map { _._2 }
+    val newDefs = partitions.flatMap { optimizeParition(_, p.classes) }.toSet
 
     // update the definition refs
     newDefs.foreach { defn => resolveDefnRef(defn.body, newDefs, true) }
