@@ -49,7 +49,8 @@ class Elaborator(raise: Raise):
     case InfixApp(lhs, Keyword.`->`, rhs) =>
       Term.FunTy(term(lhs), term(rhs))
     case App(lhs, rhs) =>
-      Term.App(term(lhs), term(rhs))
+      val sym = FlowSymbol("‹app-res›", nextUid)
+      Term.App(term(lhs), term(rhs))(sym)
     case Sel(pre, nme) =>
       Term.Sel(term(pre), nme)
     case Tup(fields) =>
@@ -124,8 +125,12 @@ class Elaborator(raise: Raise):
         td.name match
           case R(id) =>
             val s = newMembers(id.name).asInstanceOf[TermSymbol] // TODO improve
-            val b = rhs.map(term(_))
-            val tdf = TermDefinition(k, s, td.signature.map(term), b)
+            val (ps, newCtx) = td.params match
+              case S(t) => params(t).mapFirst(some)
+              case N => (N, ctx)
+            val b = rhs.map(term(_)(using newCtx))
+            val r = FlowSymbol(s"‹result of ${s}›", nextUid)
+            val tdf = TermDefinition(k, s, ps, td.signature.map(term), b, r)
             s.defn = S(tdf)
             go(sts, tdf :: acc)
           case L(d) => go(sts, acc) // error already raised in newMembers initialization
@@ -156,15 +161,10 @@ class Elaborator(raise: Raise):
             val (name, tas, as, newCtx) = processHead(base)
             // TODO reject duplicated as
             
-            val ps =
+            val (ps, newCtx2) =
               given Ctx = newCtx
-              args match
-              case Tup(ps) =>
-                ps.flatMap:
-                  case InfixApp(lhs: Ident, Keyword.`:`, rhs) =>
-                    Param(FldFlags.empty, VarSymbol(lhs.name, nextUid), term(rhs)) :: Nil
-                  // case _ =>
-            (name, tas, S(ps), newCtx.copy(locals = ctx.locals ++ ps.map(p => p.sym.name -> p.sym)))
+              params(args)
+            (name, tas, S(ps), newCtx2)
           case id: Ident =>
             (id, Nil, N, ctx)
           // case _ => ???
@@ -186,6 +186,15 @@ class Elaborator(raise: Raise):
       case (_: TermDef | _: TypeDef) :: _ => go(sts, Nil)
       // case s :: Nil => (term(s), ctx)
       case _ => go(sts, Nil)
+  
+  def params(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
+    case Tup(ps) =>
+      val res = ps.flatMap:
+        case id: Ident =>
+          Param(FldFlags.empty, VarSymbol(id.name, nextUid), N) :: Nil
+        case InfixApp(lhs: Ident, Keyword.`:`, rhs) =>
+          Param(FldFlags.empty, VarSymbol(lhs.name, nextUid), S(term(rhs))) :: Nil
+      (res, ctx.copy(locals = ctx.locals ++ res.map(p => p.sym.name -> p.sym)))
   
   def pattern(t: Tree): Ctxl[(Pattern, Ls[Str -> VarSymbol])] =
     val boundVars = mutable.HashMap.empty[Str, VarSymbol]
@@ -215,7 +224,8 @@ class Elaborator(raise: Raise):
   def computeVariances(s: Statement): Unit =
     val trav = VarianceTraverser()
     def go(s: Statement): Unit = s match
-      case TermDefinition(k, sym, sign, body) =>
+      case TermDefinition(k, sym, ps, sign, body, r) =>
+        ps.foreach(_.foreach(trav.traverseType(S(false))))
         sign.foreach(trav.traverseType(S(true)))
         body match
           case S(b) =>
@@ -224,7 +234,7 @@ class Elaborator(raise: Raise):
       case ClassDef(sym, tps, pso, body) =>
         pso.foreach: ps =>
           ps.foreach: p =>
-            trav.traverseType(S(true))(p.sign)
+            p.sign.foreach(trav.traverseType(S(true)))
         body.blk.stats.foreach(go)
         // s.subStatements.foreach(go)
       case _ =>
@@ -279,6 +289,8 @@ class Elaborator(raise: Raise):
     def traverseType(pol: Pol)(f: Fld): Unit =
       traverseType(pol)(f.value)
       f.asc.foreach(traverseType(pol))
+    def traverseType(pol: Pol)(f: Param): Unit =
+      f.sign.foreach(traverseType(pol))
 end Elaborator
 
 type Pol = Opt[Bool]

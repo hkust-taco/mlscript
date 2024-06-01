@@ -15,6 +15,7 @@ sealed trait Literal extends Located:
     case DecLit(value) => value.toString
     case StrLit(value) => '"'.toString + value + '"'
     case UnitLit(value) => if value then "undefined" else "null"
+    case BoolLit(value) => value.toString
   // def children: List[Located] = Nil
 
 
@@ -26,6 +27,7 @@ enum Tree extends Located:
   case DecLit(value: BigDecimal)      extends Tree with Literal
   case StrLit(value: Str)             extends Tree with Literal
   case UnitLit(undefinedOrNull: Bool) extends Tree with Literal
+  case BoolLit(value: Bool)           extends Tree with Literal
   case Block(stmts: Ls[Tree])
   case Let(lhs: Tree, rhs: Tree, body: Opt[Tree])
   // case TermDef(k: TermDefKind, symName: Opt[Tree], alphaName: Opt[Tree], sign: Opt[Tree], rhs: Opt[Tree])
@@ -92,13 +94,13 @@ private def getName(t: Tree): Diagnostic \/ Ident =
 
 trait TermDefImpl:
   this: TermDef =>
-  lazy val (name, signature): (Diagnostic \/ Ident, Opt[Tree]) = alphaName.orElse(symName) match
+  lazy val (name, params, signature): (Diagnostic \/ Ident, Opt[Tree], Opt[Tree]) = alphaName.orElse(symName) match
     case S(InfixApp(id: Ident, Keyword.`:`, sign)) =>
-      (R(id), S(sign))
+      (R(id), N, S(sign))
     case S(id: Ident) =>
-      (R(id), N)
+      (R(id), N, N)
     case S(App(id: Ident, args)) =>
-      (R(id), N)
+      (R(id), S(args), N)
   lazy val symbolicName: Opt[Ident] = symName match
     case S(id: Ident) => S(id)
     case _ => N

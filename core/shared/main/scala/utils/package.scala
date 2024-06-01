@@ -205,6 +205,7 @@ package object utils {
   }
   
   def TODO(msg: Any): Nothing = throw new NotImplementedError(msg.toString)
+  def TODO(msg: Any, cond: Bool): Unit = if (cond) TODO(msg)
   def die: Nothing = lastWords("Program reached and unexpected state.")
   def lastWords(msg: String): Nothing = throw new Exception(s"Internal Error: $msg")
   def wat(msg: String, wat: Any): Nothing = lastWords(s"$msg ($wat)")

@@ -224,21 +224,24 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
           val (e, newCtx) = elab.topLevel(res)
           curCtx = newCtx
           output(s"Elab: ${e.showDbg}")
+          val typer = typing.TypeChecker(raise)
+          val ty = typer.typeProd(e)
+          output(s"Type: ${ty}")
         
-        catch
-          case oh_noes: ThreadDeath => throw oh_noes
-          case err: Throwable =>
-            if fixme.isUnset then
-              failures += allLines.size - lines.size + 1
-              unhandled(blockLineNum, err)
-            // err.printStackTrace(out)
-            // println(err.getCause())
-            output("/!!!\\ Uncaught error: " + err +
-              err.getStackTrace().take(
-                if fullExceptionStack.isSet then Int.MaxValue
-                else if fixme.isSet || err.isInstanceOf[StackOverflowError] then 0
-                else 10
-              ).map("\n" + "\tat: " + _).mkString)
+      catch
+        case oh_noes: ThreadDeath => throw oh_noes
+        case err: Throwable =>
+          if fixme.isUnset then
+            failures += allLines.size - lines.size + 1
+            unhandled(blockLineNum, err)
+          // err.printStackTrace(out)
+          // println(err.getCause())
+          output("/!!!\\ Uncaught error: " + err +
+            err.getStackTrace().take(
+              if fullExceptionStack.isSet then Int.MaxValue
+              else if fixme.isSet || err.isInstanceOf[StackOverflowError] then 0
+              else 10
+            ).map("\n" + "\tat: " + _).mkString)
       
       rec(lines.drop(block.size))
     case Nil =>

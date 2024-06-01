@@ -5,12 +5,15 @@ class Int
 class Str
 class Bool
 //│ Elab: { class Any { }‹›; class Int { }‹›; class Str { }‹›; class Bool { }‹›; }‹›
+//│ Type: Ctor(lit:UnitLit(true),List())
 
 
 fun (+): (Int, Int) -> Int
 //│ Elab: { fun +: (class:Int#0, class:Int#1)‹› -> class:Int#2‹›; }‹›
+//│ Type: Ctor(lit:UnitLit(true),List())
 
 fun log: (Any) -> ()
 //│ Elab: { fun log: (class:Any#0)‹› -> undefined‹›‹›; }‹›
+//│ Type: Ctor(lit:UnitLit(true),List())
 
 

@@ -1,0 +1,32 @@
+
+
+fun id(x) = x
+//│ Elab: { fun id(x@1) = x@1#0; }‹›
+//│ Type: Ctor(lit:UnitLit(true),List())
+
+id(1)
+//│ Elab: { id#0(1‹›)‹›‹› }‹›
+//│ Type: Flow(‹app-res›@1)
+
+id(true)
+//│ Elab: { id#1(true‹›)‹›‹› }‹›
+//│ Type: Flow(‹app-res›@1)
+
+
+fun foo(x) = x + x
+//│ Elab: { fun foo(x@1) = +#0(x@1#0, x@1#1)‹›‹›; }‹›
+//│ Type: Ctor(lit:UnitLit(true),List())
+
+
+
+
+
+:fixme
+(x, x) => x
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Tup(List(Ident(x), Ident(x))),keyword '=>',Ident(x)) (of class hkmc2.syntax.Tree$InfixApp)
+:fixme
+(x, y) => x
+//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(Tup(List(Ident(x), Ident(y))),keyword '=>',Ident(x)) (of class hkmc2.syntax.Tree$InfixApp)
+
+
+

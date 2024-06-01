@@ -164,6 +164,8 @@ object ParseRule:
     modified(`public`),
     modified(`private`),
     standaloneExpr,
+    Kw(`true`)(ParseRule("'true' keyword")(End(BoolLit(true)))),
+    Kw(`false`)(ParseRule("'false' keyword")(End(BoolLit(false)))),
   )
   
   /* 

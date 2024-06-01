@@ -298,7 +298,7 @@ abstract class Parser(
             ParseRule.prefixRules.kwAlts.get(id.name) match
             case S(subRule) =>
               // parse(subRule)
-              val e = parseRule(kw.assumeRightPrec, subRule).getOrElse(errExpr)
+              val e = parseRule(kw.rightPrecOrMin, subRule).getOrElse(errExpr)
               parseRule(prec, exprAlt.rest).map(res => exprAlt.k(e, res))
             case N =>
               tryEmpty(tok, loc)

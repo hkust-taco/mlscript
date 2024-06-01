@@ -2,35 +2,48 @@
 
 fun foo = 1
 //│ Elab: { fun foo = 1‹›; }‹›
+//│ Type: Ctor(lit:UnitLit(true),List())
 
 foo
 //│ Elab: { foo#0 }‹›
+//│ Type: Flow(‹result of foo›@1)
 
 fun (+) plus: Int
 //│ Elab: { fun plus: class:Int#3; }‹›
+//│ Type: Ctor(lit:UnitLit(true),List())
 
 fun (+) : Int
 //│ Elab: { fun +: class:Int#4; }‹›
+//│ Type: Ctor(lit:UnitLit(true),List())
+
+1 + 2
+//│ Elab: { +#0(1‹›, 2‹›)‹›‹› }‹›
+//│ Type: Flow(‹app-res›@1)
 
 
 fun f = g
 fun g = f
 //│ Elab: { fun f = g#0; fun g = f#0; }‹›
+//│ Type: Ctor(lit:UnitLit(true),List())
 
 
-fun (++) = 1
-//│ Elab: { fun ++ = 1‹›; }‹›
+fun (++)(x, y) = 1
+//│ Elab: { fun ++(x@1, y@2) = 1‹›; }‹›
+//│ Type: Ctor(lit:UnitLit(true),List())
 
 1 ++ 2
 //│ Elab: { ++#0(1‹›, 2‹›)‹›‹› }‹›
+//│ Type: Flow(‹app-res›@1)
 
 
 fun (**) pow = 1
 //│ Elab: { fun pow = 1‹›; }‹›
+//│ Type: Ctor(lit:UnitLit(true),List())
 
 :fixme
 1 ** 2
 //│ Elab: { pow#0(1‹›, 2‹›)‹›‹› }‹›
+//│ Type: Flow(‹app-res›@1)
 
 
 

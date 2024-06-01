@@ -9,7 +9,7 @@ enum Term extends Statement with Located:
   case Error
   case Lit(lit: Literal)
   case Ref(sym: Symbol)(val refNum: Int)
-  case App(lhs: Term, rhs: Term)
+  case App(lhs: Term, rhs: Term)(val resSym: FlowSymbol)
   case TyApp(lhs: Term, targs: Ls[Term])
   case Sel(prefix: Term, nme: Tree.Ident)
   case Tup(fields: Ls[Fld])
@@ -57,7 +57,8 @@ sealed trait Statement extends Located:
     case Lam(params, body) => body :: Nil
     case Blk(stats, res) => stats.flatMap(_.subTerms) ::: res :: Nil
     case LetBinding(pat, rhs) => rhs :: Nil
-    case TermDefinition(k, _, sign, body) => sign.toList ::: body.toList
+    case TermDefinition(k, _, ps, sign, body, res) =>
+      ps.toList.flatMap(_.flatMap(_.subTerms)) ::: sign.toList ::: body.toList
     case cls: ClassDef =>
       cls.paramsOpt.toList.flatMap(_.flatMap(_.subTerms)) ::: cls.body.blk :: Nil
   
@@ -85,7 +86,9 @@ sealed trait Statement extends Located:
     case LetBinding(pat, rhs) => s"let ${pat.showDbg} = ${rhs.showDbg}"
     case Error => "<error>"
     case Tup(fields) => fields.map(_.showDbg).mkString("(", ", ", ")")
-    case TermDefinition(k, sym, sign, body) => s"${k.str} ${sym}${sign.fold("")(": "+_.showDbg)}${
+    case TermDefinition(k, sym, ps, sign, body, res) => s"${k.str} ${sym}${
+      ps.fold("")(_.map(_.showDbg).mkString("(", ", ", ")"))
+    }${sign.fold("")(": "+_.showDbg)}${
       body match
         case S(x) => " = " + x.showDbg
         case N => ""
@@ -98,7 +101,14 @@ sealed trait Statement extends Located:
 final case class LetBinding(pat: Pattern, rhs: Term) extends Statement:
   def children: Ls[Located] = ???
 
-final case class TermDefinition(k: TermDefKind, sym: TermSymbol, sign: Opt[Term], body: Opt[Term]) extends Companion:
+final case class TermDefinition(
+    k: TermDefKind,
+    sym: TermSymbol,
+    params: Opt[Ls[Param]],
+    sign: Opt[Term],
+    body: Opt[Term],
+    resSym: FlowSymbol,
+) extends Companion:
   def children: Ls[Located] = ???
 
 case class ObjBody(blk: Term.Blk):
@@ -157,11 +167,11 @@ final case class TyParam(flags: FldFlags, sym: VarSymbol) extends Declaration:
       if isContravariant then "" else "out "
       else if isContravariant then "in " else "in out ") +
     flags.showDbg + sym
-final case class Param(flags: FldFlags, sym: VarSymbol, sign: Term):
-  def subTerms: Ls[Term] = sign :: Nil
+final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term]):
+  def subTerms: Ls[Term] = sign.toList
   // def children: Ls[Located] = self.value :: self.asc.toList ::: Nil
   // def showDbg: Str = flags.showDbg + sym.name + ": " + sign.showDbg
-  def showDbg: Str = flags.showDbg + sym + ": " + sign.showDbg
+  def showDbg: Str = flags.showDbg + sym + sign.fold("")(": " + _.showDbg)
 
 object FldFlags { val empty: FldFlags = FldFlags(false, false, false) }
 
