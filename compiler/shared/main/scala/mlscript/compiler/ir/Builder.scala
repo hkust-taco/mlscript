@@ -245,23 +245,23 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
     res
   
   private def buildDefFromNuFunDef(using ctx: Ctx)(nfd: Statement): Defn = nfd match
-    case nfd: NuFunDef =>
-      val NuFunDef(_, Var(name), None, Nil, L(Lam(Tup(fields), body))) = nfd
-
-      val strs = fields map {
-          case N -> Fld(FldFlags.empty, Var(x)) => x
-          case _ => throw IRError("unsupported field") 
-        }
-      val names = strs map (fresh.make(_))
-      given Ctx = ctx.copy(nameCtx = ctx.nameCtx ++ (strs zip names))
-      Defn(
-        fnUid.make,
-        name,
-        params = names,
-        resultNum = 1,
-        buildResultFromTerm(body) { x => x },
-        nfd.annotations.find { case Var("tailrec") => true; case _ => false }.isDefined
-      )
+    case nfd: NuFunDef => nfd match
+      case NuFunDef(_, Var(name), None, Nil, L(Lam(Tup(fields), body))) =>
+        val strs = fields map {
+            case N -> Fld(FldFlags.empty, Var(x)) => x
+            case _ => throw IRError("unsupported field") 
+          }
+        val names = strs map (fresh.make(_))
+        given Ctx = ctx.copy(nameCtx = ctx.nameCtx ++ (strs zip names))
+        Defn(
+          fnUid.make,
+          name,
+          params = names,
+          resultNum = 1,
+          buildResultFromTerm(body) { x => x },
+          nfd.annotations.find { case Var("tailrec") => true; case _ => false }.isDefined
+        )
+      case _ => throw IRError("unsupported NuFunDef")
     case _ => throw IRError("unsupported NuFunDef")
   
   private def buildClassInfo(ntd: Statement): ClassInfo = ntd match
