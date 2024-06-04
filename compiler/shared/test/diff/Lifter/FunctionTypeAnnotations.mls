@@ -12,9 +12,38 @@ foo(2)(2)
 //│   Code(List(foo$1(1,)(2,)))
 //│   Code(List(foo$1(2,)(2,)))
 //│ }
-//│ fun foo: Int -> Int -> Int
-//│ Int
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ║  l.5: 	    (y) => x+y
+//│ ╙──     	           ^
+//│ ╔══[ERROR] Parameter 'x' cannot be accessed as a field
+//│ ║  l.5: 	    (y) => x+y
+//│ ╙──     	           ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.6: 	foo(1)(2)
+//│ ║       	    ^^^^
+//│ ╟── application of type `Lambda1$2$1` is not a function
+//│ ║  l.5: 	    (y) => x+y
+//│ ║       	           ^
+//│ ╟── but it flows into application with expected type `2 -> ?a`
+//│ ║  l.6: 	foo(1)(2)
+//│ ╙──     	    ^
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.7: 	foo(2)(2)
+//│ ║       	    ^^^^
+//│ ╟── application of type `Lambda1$2$1` is not a function
+//│ ║  l.5: 	    (y) => x+y
+//│ ║       	           ^
+//│ ╟── but it flows into application with expected type `2 -> ?a`
+//│ ║  l.7: 	foo(2)(2)
+//│ ╙──     	    ^
+//│ class Lambda1$2$1(x: error) {
+//│   fun apply: Int -> Int
+//│ }
+//│ fun foo$1: error -> Lambda1$2$1
+//│ error
 //│ res
-//│     = 3
+//│ Runtime error:
+//│   TypeError: foo$1(...) is not a function
 //│ res
-//│     = 4
+//│ Runtime error:
+//│   TypeError: foo$1(...) is not a function

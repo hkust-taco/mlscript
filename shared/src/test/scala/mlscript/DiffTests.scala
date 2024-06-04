@@ -479,7 +479,7 @@ class DiffTests
             
             if (parseOnly)
               Success(Pgrm(Nil), 0)
-            else if ((mode.lift || mode.simpledef) && !mode.postProcessAfterTyping) {
+            else if ((mode.lift || mode.simpledef || basePath.contains("Lifter") || basePath.contains("Defunctionalize")) && !mode.postProcessAfterTyping) {
               import Message._
               Success(Pgrm(nuRes.getOrElse({
                 raise(ErrorReport(msg"Post-process failed to produce AST." -> None :: Nil, true, Diagnostic.Compilation))

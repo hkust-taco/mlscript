@@ -70,7 +70,7 @@ foo(generate(50))
 //│ class Nil() {
 //│   fun count: () -> 0
 //│ }
-//│ fun foo: forall 'a. {count: () -> 'a} -> 'a
+//│ fun foo: (List | Nil) -> Int
 //│ fun generate: Int -> (List | Nil)
 //│ Int
 //│ res
@@ -120,12 +120,12 @@ foo(Lambda2(2))
 //│   fun count: () -> 0
 //│ }
 //│ class Lambda() {
-//│   fun apply: forall 'a. {count: () -> 'a} -> 'a
+//│   fun apply: (Cons | Nil) -> Int
 //│ }
 //│ class Lambda2(a: Int) {
 //│   fun apply: (Cons | Nil) -> Int
 //│ }
-//│ fun foo: {apply: (Cons | Nil) -> Int} -> Int
+//│ fun foo: (Lambda | Lambda2) -> Int
 //│ Int
 //│ res
 //│     = 1

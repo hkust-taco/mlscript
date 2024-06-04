@@ -42,7 +42,7 @@ class DiffTestCompiler extends DiffTests {
       output("End simpledef\n")
       return (outputBuilder.toString().linesIterator.toList, Some(defuncAST))
     }
-    if (mode.lift) {
+    if (mode.lift || basePath.contains("Lifter")) {
       (outputBuilder.toString().linesIterator.toList, Some(rstUnit))  
     } else {
       (outputBuilder.toString().linesIterator.toList, None)

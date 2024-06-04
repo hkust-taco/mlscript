@@ -21,20 +21,20 @@ class Sub2(c: Int) extends Sub(c+c){
 //│   Code(List(('(' Sub$2(10,) ')').foo()))
 //│   Code(List(('(' Sub2$3(c$1,) ')').foo()))
 //│ }
-//│ val c: 5
-//│ class Sup(a: Int) {
+//│ ╔══[ERROR] identifier not found: this
+//│ ╙──
+//│ ╔══[ERROR] identifier not found: this
+//│ ╙──
+//│ class Sup$1(a: Int) {
 //│   fun foo: () -> Int
 //│ }
-//│ class Sub(b: Int) extends Sup {
+//│ class Sub$2(b: Int) extends Sup$1 {
 //│   fun foo: () -> Int
 //│ }
-//│ class Sub2(c: Int) extends Sub, Sup {
+//│ class Sub2$3(c: Int) extends Sub$2, Sup$1 {
 //│   fun foo: () -> Int
 //│ }
+//│ val c$1: 5
 //│ Int
-//│ c
-//│   = 5
-//│ res
-//│     = 20
-//│ res
-//│     = 10
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding c$1
