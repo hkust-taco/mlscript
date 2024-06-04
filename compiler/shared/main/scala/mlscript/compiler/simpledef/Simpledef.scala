@@ -373,6 +373,7 @@ class SimpleDef(debug: Debug) {
         case other => lastWords(s"Unexpected  ${other}")
     t match
       case Var(_) | IntLit(_) | UnitLit(_) | StrLit(_) => t
+      // TODO: Remove the following case when eta expansion is supported, currently a workaround.
       case App(t @ Sel(receiver, fieldName), arg) => 
         if (selToResTypes(t.uid).forall{
           case _: ProdVar => true
