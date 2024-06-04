@@ -4,5 +4,20 @@
 
 123
 //│ Elab: { 123‹› }‹›
-//│ Magic!
+//│ Type: Int
 
+3.14
+//│ Elab: { 3.14‹› }‹›
+//│ Type: Num
+
+false
+//│ Elab: { false‹› }‹›
+//│ Type: Bool
+
+"bbml"
+//│ Elab: { "bbml"‹› }‹›
+//│ Type: Str
+
+()
+//│ Elab: { }‹›
+//│ Type: ⊤

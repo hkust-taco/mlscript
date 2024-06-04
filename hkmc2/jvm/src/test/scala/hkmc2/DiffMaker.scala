@@ -3,6 +3,7 @@ package hkmc2
 import scala.collection.mutable
 import mlscript.utils.*, shorthands.*
 import hkmc2.semantics.Elaborator
+import hkmc2.bbml.*
 
 
 class Outputter(val out: java.io.PrintWriter):
@@ -227,7 +228,9 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
           curCtx = newCtx
           output(s"Elab: ${e.showDbg}")
           if bbml.isSet then
-            output(s"Magic!")
+            val typer = BBTyper(raise)
+            val ty = typer.typeCheck(e)(using new Ctx())
+            output(s"Type: ${ty}")
           else
             val typer = typing.TypeChecker(raise)
             val ty = typer.typeProd(e)

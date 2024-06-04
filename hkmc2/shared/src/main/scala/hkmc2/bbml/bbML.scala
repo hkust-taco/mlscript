@@ -22,40 +22,49 @@ enum Type extends TypeArg:
   case PolymorphicType(lvl: Int, tv: Ls[InfVar], body: Type)
   case Top // TODO: level?
   case Bot
+  override def toString(): String = this match
+    case ClassType(name, targs) => s"${name.nme}" // TODO: targs
+    case InfVar(lvl, uid, state) => ???
+    case FunType(args, ret, eff) => ???
+    case ComposedType(lhs, rhs, pol) => ???
+    case NegType(ty) => ???
+    case PolymorphicType(lvl, tv, body) => ???
+    case Top => "⊤"
+    case Bot => "⊥"
 
-opaque type RefType = Type.ClassType
+type RefType = Type.ClassType
 object RefType:
   def apply(cnt: TypeArg, reg: TypeArg): RefType = Type.ClassType(ClassSymbol(Tree.Ident("Ref")), cnt :: reg :: Nil)
 
-opaque type RegionType = Type.ClassType
+type RegionType = Type.ClassType
 object RegionType:
   def apply(skolem: TypeArg): RegionType = Type.ClassType(ClassSymbol(Tree.Ident("Region")), skolem :: Nil)
 
-opaque type CodeBaseType = Type.ClassType
+type CodeBaseType = Type.ClassType
 object CodeBaseType:
   def apply(cr: TypeArg, isVar: TypeArg): CodeBaseType = Type.ClassType(ClassSymbol(Tree.Ident("CodeBase")), cr :: isVar :: Nil)
 
-opaque type CodeType = CodeBaseType
+type CodeType = CodeBaseType
 object CodeType:
   def apply(cr: TypeArg): CodeType = CodeBaseType(cr, Type.Top)
 
-opaque type VarType = CodeBaseType
+type VarType = CodeBaseType
 object VarType:
   def apply(cr: TypeArg): VarType = CodeBaseType(cr, Type.Bot)
 
-opaque type IntType = Type.ClassType
+type IntType = Type.ClassType
 object IntType:
   def apply(): IntType = Type.ClassType(ClassSymbol(Tree.Ident("Int")), Nil)
 
-opaque type NumType = Type.ClassType
+type NumType = Type.ClassType
 object NumType:
   def apply(): NumType = Type.ClassType(ClassSymbol(Tree.Ident("Num")), Nil)
 
-opaque type StrType = Type.ClassType
+type StrType = Type.ClassType
 object StrType:
   def apply(): StrType = Type.ClassType(ClassSymbol(Tree.Ident("Str")), Nil)
 
-opaque type BoolType = Type.ClassType
+type BoolType = Type.ClassType
 object BoolType:
   def apply(): BoolType = Type.ClassType(ClassSymbol(Tree.Ident("Bool")), Nil)
 
@@ -77,11 +86,12 @@ class BBTyper(raise: Raise):
     case Ref(cls: ClassSymbol) =>
       ???
     case Blk(stats, res) =>
+      typeCheck(res) // TODO: stats
+    case Lit(lit) => lit match
+      case _: IntLit => IntType()
+      case _: DecLit => NumType()
+      case _: StrLit => StrType()
+      case _: UnitLit => Type.Top
+      case _: BoolLit => BoolType()
+    case Lam(params, body) =>
       ???
-    case Lit(lit) =>
-      ???
-  
-
-
-
-

@@ -1,0 +1,55 @@
+:global
+:bbml
+:parseOnly
+
+class Foo
+//│ Parsed:
+//│ 	TypeDef(Cls,Ident(Foo),None,None)
+
+class Bar(x: Int)
+//│ Parsed:
+//│ 	TypeDef(Cls,App(Ident(Bar),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int))))),None,None)
+
+class Baz[A]
+//│ Parsed:
+//│ 	TypeDef(Cls,TyApp(Ident(Baz),List(Ident(A))),None,None)
+
+class BazBaz[A](f: A -> A)
+//│ Parsed:
+//│ 	TypeDef(Cls,App(TyApp(Ident(BazBaz),List(Ident(A))),Tup(List(InfixApp(Ident(f),keyword ':',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))))),None,None)
+
+let x = 42 in x + 0
+//│ Parsed:
+//│ 	Let(Ident(x),IntLit(42),Some(App(Ident(+),Tup(List(Ident(x), IntLit(0))))))
+
+fun id(x) = x
+//│ Parsed:
+//│ 	TermDef(Fun,None,Some(App(Ident(id),Tup(List(Ident(x))))),Some(Ident(x)))
+
+x => x + 1
+//│ Parsed:
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',App(Ident(+),Tup(List(Ident(x), IntLit(1)))))
+
+:fixme
+fun fact(x) = case
+  0 then 1
+  n then n * fact(n - 1)
+//│ ╔══[PARSE ERROR] Expected expression after 'fun' binding equals sign; found 'case' keyword instead
+//│ ║  l.34: 	fun fact(x) = case
+//│ ╙──      	              ^^^^
+//│ Parsed:
+//│ 	Error()
+
+:fixme
+`42
+//│ /!!!\ Uncaught error: scala.NotImplementedError: QUOTE
+
+x `=> x
+//│ Parsed:
+//│ 	Quoted(InfixApp(Tup(List(Ident(x))),keyword '=>',Unquoted(Ident(x))))
+
+:fixme
+`let x = `42 `in x
+//│ /!!!\ Uncaught error: scala.NotImplementedError: QUOTE
+
+// TODO: region & effects
