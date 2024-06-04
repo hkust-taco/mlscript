@@ -12,6 +12,12 @@ type TermId = Uid[Term]
 type TypeVarId = Uid[TypeVar]
 type Cnstr = ProdStrat -> ConsStrat
 
+/** Performs defunctionalization on selections on objects using simple-sub as for control-flow analysis.
+ *  First we traverse the program and process all terms, constraining them to Producers and Consumers.
+ *  During the constraining, we keep track of the input points of selection terms.
+ *  Lastly, we rewrite selection terms by generating pattern matches on their possible inputs.
+ */
+
 
 enum ProdStrat(using val euid: TermId) {
   case NoProd()(using TermId) 
@@ -61,8 +67,6 @@ class SimpleDef(debug: Debug) {
     })
   }
 
-  var log: Str => Unit = (s) => ()
-  var constraints: Ls[Cnstr] = Nil
   val termMap = new IdentityHashMap[Term, TermId]().asScala
   val varsName = mutable.Map.empty[TypeVarId, Str]
   val vuid = Uid.TypeVar.State()
@@ -80,14 +84,17 @@ class SimpleDef(debug: Debug) {
    freshVar(n.name)
 
   def apply(p: TypingUnit)(using ctx: Context = Context(Map(), Map())): (Ls[Var -> ProdStrat], ProdStrat) = 
+    // Top-level def prototypes
     val vars: Map[Var, ProdVar] = p.rawEntities.collect { 
       case fun: NuFunDef =>
         fun.nme -> freshVar(fun.name)(using noExprId)._1
     }.toMap
+    // Top-level constructor prototypes
     val constructorPrototypes: Map[Var, Cnstr] = p.rawEntities.collect { 
       case ty: NuTypeDef =>
         ty.nameVar -> freshVar(ty.nameVar)(using noExprId)
     }.toMap
+    // Prototypes of constructor outputs, used for inheritance
     val objectPrototypes: Map[Var, Cnstr] = p.rawEntities.collect { 
       case ty: NuTypeDef =>
         ty.nameVar -> freshVar(ty.nameVar)(using noExprId)
@@ -166,8 +173,9 @@ class SimpleDef(debug: Debug) {
       }
     }
     (vars.toList, tys.lastOption.getOrElse(ProdObj(Some(Var("prim$Unit")), Nil)(using noExprId)))
-
+  
   val termToProdType = mutable.Map.empty[TermId, ProdStrat]
+  // Selection terms -> Object types that they Consume
   val selTermToType = mutable.Map.empty[TermId, ConsObj]
 
   def builtinOps: Map[Var, ProdFun] = {
@@ -264,11 +272,8 @@ class SimpleDef(debug: Debug) {
         apply(TypingUnit(stmts))._2
       case Bra(false, term) =>
         process(term)
-      case CaseOf(trm, cases) =>
-        val scrutRes = process(trm)
-        val sv = freshVar(s"${t.uid}_caseres")(using t.uid)
+      case CaseOf(trm, cases) => //TODO
         ???
-        // TODO
       case Eqn(lhs, rhs) =>
         process(lhs)
         process(rhs)
@@ -277,6 +282,7 @@ class SimpleDef(debug: Debug) {
     debug.outdent()
     registerTermToType(t, res)
 
+  //TODO
   def processCases(scrut: ProdVar, cs: CaseBranches)(using ctx: Context, resCons: ConsVar): Unit =
     cs match
       case Wildcard(body) => 
@@ -351,10 +357,12 @@ class SimpleDef(debug: Debug) {
         case other => lastWords(s"Could not constrain ${other}")
   }
 
+  // Selection terms -> Producers that they consume
   lazy val selToResTypes: Map[TermId, Set[ProdStrat]] = selTermToType.map((termId, cons) =>
     (termId, cons.selectionSource)
   ).toMap
 
+  // Rewrite terms, replacing selections with pattern matches if they only select on objects
   def rewriteTerm(t: Term): Term = 
     def objSetToMatchBranches(receiver: Var, fieldName: Var, objSet: List[ProdObj], acc: CaseBranches = NoCases)(using funcApp: Option[Term] = None): CaseBranches =
       objSet match 
