@@ -1,8 +1,6 @@
 :NewDefs
-:AllowRuntimeErrors
-//TODO: Current Lifter implementation does not work on its own
+:ParseOnly
 
-:e
 fun foo() =
   let local(x) =
     class Foo {
@@ -11,6 +9,8 @@ fun foo() =
     (new Foo()).bar
   local(1)
 foo()
+//│ |#fun| |foo|(||)| |#=|→|#let| |local|(|x|)| |#=|→|#class| |Foo| |{|→|#fun| |bar| |#=| |x| |+| |foo|(||)|←|↵|}|↵|(|#new| |Foo|(||)|)|.bar|←|↵|local|(|1|)|←|↵|foo|(||)|
+//│ Parsed: {fun foo = () => {let local = (x,) => {class Foo {fun bar = +(x, foo(),)}; ('(' (new Foo)() ')').bar}; local(1,)}; foo()}
 //│ Lifted:
 //│ TypingUnit {
 //│   class Foo$1([x,]) {fun bar = +((this).x, foo$1(),)}
@@ -18,60 +18,28 @@ foo()
 //│   fun foo$1 = () => {local$2(1,)}
 //│   Code(List(foo$1()))
 //│ }
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.9: 	      fun bar = x + foo()
-//│ ╙──     	                ^
-//│ ╔══[ERROR] Parameter 'x' cannot be accessed as a field
-//│ ║  l.9: 	      fun bar = x + foo()
-//│ ╙──     	                ^
-//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
-//│ ║  l.11: 	    (new Foo()).bar
-//│ ╙──      	               ^^^^
-//│ class Foo$1(x: error) {
-//│   fun bar: Int
-//│ }
-//│ val local$2: error -> error
-//│ fun foo$1: () -> error
-//│ error
-//│ local$2
-//│         = [Function: local$2]
-//│ res
-//│ Runtime error:
-//│   RangeError: Maximum call stack size exceeded
+//│ 
 
-:e
 fun foo(f) = 
   f(1)
 foo(x => x+1)
+//│ |#fun| |foo|(|f|)| |#=| |→|f|(|1|)|←|↵|foo|(|x| |#=>| |x|+|1|)|
+//│ Parsed: {fun foo = (f,) => {f(1,)}; foo((x,) => +(x, 1,),)}
 //│ Lifted:
 //│ TypingUnit {
 //│   class Lambda1$2$1([]) {fun apply = (x,) => +(x, 1,)}
 //│   fun foo$1 = (f,) => {f(1,)}
 //│   Code(List(foo$1({Lambda1$2$1()},)))
 //│ }
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ╟── expression of type `Lambda1$2$1` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.47: 	  f(1)
-//│ ║        	  ^^^
-//│ ╟── from reference:
-//│ ║  l.47: 	  f(1)
-//│ ╙──      	  ^
-//│ class Lambda1$2$1() {
-//│   fun apply: Int -> Int
-//│ }
-//│ fun foo$1: forall 'a. (1 -> 'a) -> 'a
-//│ error
-//│ res
-//│ Runtime error:
-//│   TypeError: f is not a function
+//│ 
 
-:e
 fun foo(x) = 
   let bar(f) = 
     f(x)
   bar(y => y+x)
 foo(1)
+//│ |#fun| |foo|(|x|)| |#=| |→|#let| |bar|(|f|)| |#=| |→|f|(|x|)|←|↵|bar|(|y| |#=>| |y|+|x|)|←|↵|foo|(|1|)|
+//│ Parsed: {fun foo = (x,) => {let bar = (f,) => {f(x,)}; bar((y,) => +(y, x,),)}; foo(1,)}
 //│ Lifted:
 //│ TypingUnit {
 //│   class Lambda1$3$1([x,]) {fun apply = (y,) => +(y, (this).x,)}
@@ -79,39 +47,8 @@ foo(1)
 //│   fun foo$1 = (x,) => {bar$2({Lambda1$3$1(x,)}, x,)}
 //│   Code(List(foo$1(1,)))
 //│ }
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.77: 	  bar(y => y+x)
-//│ ╙──      	             ^
-//│ ╔══[ERROR] Parameter 'x' cannot be accessed as a field
-//│ ║  l.77: 	  bar(y => y+x)
-//│ ╙──      	             ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.76: 	    f(x)
-//│ ║        	      ^^
-//│ ║  l.77: 	  bar(y => y+x)
-//│ ║        	^^^^^^^^^^^^^^
-//│ ╟── application of type `Lambda1$3$1` is not a function
-//│ ║  l.77: 	  bar(y => y+x)
-//│ ║        	             ^
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.76: 	    f(x)
-//│ ║        	    ^^^
-//│ ╟── from reference:
-//│ ║  l.76: 	    f(x)
-//│ ╙──      	    ^
-//│ class Lambda1$3$1(x: error) {
-//│   fun apply: Int -> Int
-//│ }
-//│ val bar$2: forall 'a 'b. ('a -> 'b, 'a) -> 'b
-//│ fun foo$1: error -> error
-//│ error
-//│ bar$2
-//│       = [Function: bar$2]
-//│ res
-//│ Runtime error:
-//│   TypeError: f is not a function
+//│ 
 
-:e
 fun foo(f) = 
     f(1)
 class A(y: Int){
@@ -120,6 +57,8 @@ class A(y: Int){
 fun app(a) = 
   foo(z => a.bar(z))
 app(new A(1))
+//│ |#fun| |foo|(|f|)| |#=| |→|f|(|1|)|←|↵|#class| |A|(|y|#:| |Int|)|{|→|#fun| |bar|(|z|)| |#=| |y|+|z|←|↵|}|↵|#fun| |app|(|a|)| |#=| |→|foo|(|z| |#=>| |a|.bar|(|z|)|)|←|↵|app|(|#new| |A|(|1|)|)|
+//│ Parsed: {fun foo = (f,) => {f(1,)}; class A(y: Int,) {fun bar = (z,) => +(y, z,)}; fun app = (a,) => {foo((z,) => (a).bar(z,),)}; app((new A)(1,),)}
 //│ Lifted:
 //│ TypingUnit {
 //│   class A$1([y: Int,]) {fun bar = (z,) => +((this).y, z,)}
@@ -128,34 +67,4 @@ app(new A(1))
 //│   fun app$1 = (a,) => {foo$2({Lambda1$3$2(a,)},)}
 //│   Code(List(app$1((new A$1)(1,),)))
 //│ }
-//│ ╔══[ERROR] Parameter 'y' cannot be accessed as a field
-//│ ║  l.125: 	  fun bar(z) = y+z
-//│ ╙──       	               ^
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.128: 	  foo(z => a.bar(z))
-//│ ╙──       	           ^
-//│ ╔══[ERROR] Parameter 'a' cannot be accessed as a field
-//│ ║  l.128: 	  foo(z => a.bar(z))
-//│ ╙──       	           ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.128: 	  foo(z => a.bar(z))
-//│ ║         	           ^
-//│ ╟── application of type `Lambda1$3$2` is not a function
-//│ ╟── Note: constraint arises from application:
-//│ ║  l.123: 	    f(1)
-//│ ║         	    ^^^
-//│ ╟── from reference:
-//│ ║  l.123: 	    f(1)
-//│ ╙──       	    ^
-//│ class A$1(y: Int) {
-//│   fun bar: Int -> Int
-//│ }
-//│ class Lambda1$3$2(a: error) {
-//│   fun apply: anything -> error
-//│ }
-//│ fun foo$2: forall 'a. (1 -> 'a) -> 'a
-//│ fun app$1: error -> error
-//│ error
-//│ res
-//│ Runtime error:
-//│   TypeError: f is not a function
+//│ 

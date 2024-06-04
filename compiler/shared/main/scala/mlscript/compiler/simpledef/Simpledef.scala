@@ -78,7 +78,6 @@ class SimpleDef(debug: Debug) {
     val pv = ProdVar(vid, n)()
     val cv = ConsVar(vid, n)()
     varsName += vid -> n
-    log(s"fresh var '$n")
     (pv, cv)
   def freshVar(n: Var)(using TermId): (ProdVar, ConsVar) =
    freshVar(n.name)
