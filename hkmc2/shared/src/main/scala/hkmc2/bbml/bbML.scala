@@ -6,7 +6,8 @@ import scala.collection.mutable
 import mlscript.utils.*, shorthands.*
 import Message.MessageContext
 import semantics.*, semantics.Term.*
-
+import syntax.*
+import Tree.*
 
 sealed abstract class TypeArg
 
@@ -22,21 +23,41 @@ enum Type extends TypeArg:
   case Top // TODO: level?
   case Bot
 
-// TODO: apply
 opaque type RefType = Type.ClassType
-object RefType
+object RefType:
+  def apply(cnt: TypeArg, reg: TypeArg): RefType = Type.ClassType(ClassSymbol(Tree.Ident("Ref")), cnt :: reg :: Nil)
 
 opaque type RegionType = Type.ClassType
-object RegionType
+object RegionType:
+  def apply(skolem: TypeArg): RegionType = Type.ClassType(ClassSymbol(Tree.Ident("Region")), skolem :: Nil)
 
 opaque type CodeBaseType = Type.ClassType
-object CodeBaseType
+object CodeBaseType:
+  def apply(cr: TypeArg, isVar: TypeArg): CodeBaseType = Type.ClassType(ClassSymbol(Tree.Ident("CodeBase")), cr :: isVar :: Nil)
 
 opaque type CodeType = CodeBaseType
-object CodeType
+object CodeType:
+  def apply(cr: TypeArg): CodeType = CodeBaseType(cr, Type.Top)
 
 opaque type VarType = CodeBaseType
-object VarType
+object VarType:
+  def apply(cr: TypeArg): VarType = CodeBaseType(cr, Type.Bot)
+
+opaque type IntType = Type.ClassType
+object IntType:
+  def apply(): IntType = Type.ClassType(ClassSymbol(Tree.Ident("Int")), Nil)
+
+opaque type NumType = Type.ClassType
+object NumType:
+  def apply(): NumType = Type.ClassType(ClassSymbol(Tree.Ident("Num")), Nil)
+
+opaque type StrType = Type.ClassType
+object StrType:
+  def apply(): StrType = Type.ClassType(ClassSymbol(Tree.Ident("Str")), Nil)
+
+opaque type BoolType = Type.ClassType
+object BoolType:
+  def apply(): BoolType = Type.ClassType(ClassSymbol(Tree.Ident("Bool")), Nil)
 
 // TODO: builtin functions
 
