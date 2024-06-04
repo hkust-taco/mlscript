@@ -1,0 +1,22 @@
+:NewDefs
+
+((f, g) => f(g))(f => f, true)
+//│ 
+//│ Simpledef:
+//│ {'(' (f, g,) => f(g,) ')'((f,) => f, true,)}
+//│ End simpledef
+//│ 
+//│ true
+//│ res
+//│     = true
+
+(b => if b then true else false) (true)
+//│ 
+//│ Simpledef:
+//│ {'(' (b,) => if (b) then true else false ')'(true,)}
+//│ End simpledef
+//│ 
+//│ Bool
+//│ res
+//│     = true
+

@@ -47,6 +47,8 @@ class Context(
     Context(variables ++ other, classes)
   def +(other: (Var -> ProdVar)): Context =
     Context(variables + other, classes)
+  override def toString(): String =
+    s"${variables}"
 }
 
 class SimpleDef(debug: Debug) {
@@ -114,11 +116,28 @@ class SimpleDef(debug: Debug) {
         if parents.length > 1 then lastWords(s"Multiple Inheritance at ${ty} not supported yet")
         ty.kind match
           case Cls => 
-            val obj = ProdObj(Some(ty.nameVar), bodyStrats._1 ++ pList, parents)
-            val func = ProdFun(ConsTup(cList.map(_._2)),obj)
-            constrain(func, constructorPrototypes(ty.nameVar)._2)
-            constrain(obj, objectPrototypes(ty.nameVar)._2)
-            ty.nameVar -> obj
+            ty.ctor match
+              case None => 
+                val obj = ProdObj(Some(ty.nameVar), bodyStrats._1 ++ pList, parents)
+                val func = ProdFun(ConsTup(cList.map(_._2)),obj)
+                constrain(func, constructorPrototypes(ty.nameVar)._2)
+                constrain(obj, objectPrototypes(ty.nameVar)._2)
+                ty.nameVar -> obj
+              case Some(Constructor(t @ Tup(params), body)) =>
+                val mapping = params.map{
+                  case (None, Fld(_, v: Var)) =>
+                    (v, freshVar(s"${t.uid}_${v.name}")(using noExprId))
+                  case (Some(v1: Var), Fld(_, v2: Var)) =>
+                    (v1, freshVar(s"${t.uid}_${v1.name}")(using noExprId))
+                  case other => 
+                    lastWords(s"Unsupported term ${other}")
+                }
+                process(body)(using fullCtx ++ pList.toMap ++ mapping.map((i, s) => (i, s._1)))
+                val obj = ProdObj(Some(ty.nameVar), bodyStrats._1 ++ pList, parents)
+                val func = ProdFun(ConsTup(mapping.map(_._2._2)),obj)
+                constrain(func, constructorPrototypes(ty.nameVar)._2)
+                constrain(obj, objectPrototypes(ty.nameVar)._2)
+                ty.nameVar -> obj
           case Mod =>
             val obj = ProdObj(Some(ty.nameVar), bodyStrats._1 ++ pList, parents) 
             constrain(obj, constructorPrototypes(ty.nameVar)._2)
@@ -167,10 +186,8 @@ class SimpleDef(debug: Debug) {
   }
 
   def process(t: Term)(using ctx: Context): ProdStrat = 
-    debug.writeLine(s"Processing term ${t} under")
+    debug.writeLine(s"Processing term ${t}")
     debug.indent()
-    debug.writeLine(s"${ctx}")
-    debug.outdent()
     val res: ProdStrat = t match
       case IntLit(_) => ProdObj(Some(Var("prim$Int")), Nil)(using t.uid)
       case StrLit(_) => ProdObj(Some(Var("prim$String")), Nil)(using t.uid)
@@ -252,8 +269,12 @@ class SimpleDef(debug: Debug) {
         val sv = freshVar(s"${t.uid}_caseres")(using t.uid)
         ???
         // TODO
+      case Eqn(lhs, rhs) =>
+        process(lhs)
+        process(rhs)
       case other => lastWords(s"Unsupported term ${other}")
 
+    debug.outdent()
     registerTermToType(t, res)
 
   def processCases(scrut: ProdVar, cs: CaseBranches)(using ctx: Context, resCons: ConsVar): Unit =
@@ -294,7 +315,9 @@ class SimpleDef(debug: Debug) {
         case (ProdFun(lhs1, rhs1), ConsFun(lhs2, rhs2)) =>
           constrain(lhs2, lhs1)
           constrain(rhs1, rhs2)
-        case (ProdTup(fields1), ConsTup(fields2)) =>
+        case (pt@ProdTup(fields1), ct@ConsTup(fields2)) =>
+          if pt.fields.length != ct.fields.length
+          then lastWords("Tuple size mismatch")
           (fields1 zip fields2).map((p, c) =>
             constrain(p, c)
           )
