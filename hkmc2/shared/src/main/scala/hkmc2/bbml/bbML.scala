@@ -68,25 +68,65 @@ type BoolType = Type.ClassType
 object BoolType:
   def apply(): BoolType = Type.ClassType(ClassSymbol(Tree.Ident("Bool")), Nil)
 
-// TODO: builtin functions
-
 class VarState:
   var lowerBounds: Ls[Type] = Nil
   var upperBounds: Ls[Type] = Nil
 
 object InfVarUid extends Uid.Handler[Type.InfVar]
 
-final case class Ctx(parent: Option[Ctx], lvl: Int, env: mutable.HashMap[Uid[Symbol], Type]):
-  def +=(p: VarSymbol -> Type): Unit = env += p._1.uid -> p._2
-  def get(sym: VarSymbol): Option[Type] = env.get(sym.uid) orElse parent.dlof(_.get(sym))(None)
-  def nest: Ctx = Ctx(Some(this), lvl, mutable.HashMap.empty)
+type EnvType = mutable.HashMap[Uid[Symbol], Type]
+type clsDefType = mutable.HashMap[Str, ClassSymbol]
+final case class Ctx(parent: Option[Ctx], lvl: Int, clsDefs: clsDefType, env: EnvType):
+  def +=(p: Symbol -> Type): Unit = env += p._1.uid -> p._2
+  def get(sym: Symbol): Option[Type] = env.get(sym.uid) orElse parent.dlof(_.get(sym))(None)
+  def *=(cls: ClassSymbol): Unit = clsDefs += cls.id.name -> cls
+  def getDef(name: Str): Option[ClassSymbol] = clsDefs.get(name) orElse parent.dlof(_.getDef(name))(None)
+  def nest: Ctx = Ctx(Some(this), lvl, mutable.HashMap.empty, mutable.HashMap.empty)
+
 object Ctx:
-  def init(): Ctx = new Ctx(None, 0, mutable.HashMap.empty)
+  def intTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Int").getOrElse(???), Nil)
+  def numTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Num").getOrElse(???), Nil)
+  def strTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Str").getOrElse(???), Nil)
+  def boolTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Bool").getOrElse(???), Nil) // TODO: ???
+  private val builtinClasses = Ls(
+    "Any", "Int", "Num", "Str", "Bool" // TODO
+  )
+  private val int2IntBinTy =
+    (ctx: Ctx) => Type.FunType(intTy(using ctx) :: intTy(using ctx) :: Nil, intTy(using ctx), Type.Bot)
+  private val int2NumBinTy =
+    (ctx: Ctx) => Type.FunType(intTy(using ctx) :: intTy(using ctx) :: Nil, numTy(using ctx), Type.Bot)
+  private val builtinFuns = Map(
+    "+" -> int2IntBinTy,
+    "-" -> int2IntBinTy,
+    "*" -> int2IntBinTy,
+    "/" -> int2NumBinTy,
+    // TODO
+  )
+  def init(predefs: Map[Str, Symbol]): Ctx =
+    val ctx = new Ctx(None, 0, mutable.HashMap.empty, mutable.HashMap.empty)
+    builtinClasses.foreach(
+      cls =>
+        predefs.get(cls) match
+          case Some(cls: ClassSymbol) => ctx *= cls
+          case _ => ???
+    )
+    builtinFuns.foreach(
+      p =>
+        predefs.get(p._1) match
+          case Some(v: Symbol) => ctx += v -> p._2(ctx)
+          case _ => ???
+    )
+    ctx
 
 class BBTyper(raise: Raise):
 
+  private val solver = new ConstraintSolver(raise)
   private val infVarState = new InfVarUid.State()
   private def freshVar(using ctx: Ctx) = Type.InfVar(ctx.lvl, infVarState.nextUid, new VarState())
+
+  private def typeCheckArgs(args: Term)(using ctx: Ctx): Ls[Type] = args match
+    case Term.Tup(flds) => flds.map(f => typeCheck(f.value))
+    case _ => ???
 
   def typeCheck(t: Term)(using ctx: Ctx): Type = t match
     case Ref(sym: VarSymbol) =>
@@ -95,16 +135,22 @@ class BBTyper(raise: Raise):
         case _ =>
           raise(ErrorReport(msg"Variable not found: ${sym.name}" -> t.toLoc :: Nil))
           Type.Bot // TODO: error type?
+    case Ref(sym: TermSymbol) =>
+      ctx.get(sym) match
+        case Some(ty) => ty
+        case _ =>
+          raise(ErrorReport(msg"Definition not found: ${sym.nme}" -> t.toLoc :: Nil))
+          Type.Bot // TODO: error type?
     case Ref(cls: ClassSymbol) =>
       ???
     case Blk(stats, res) =>
       typeCheck(res) // TODO: stats
     case Lit(lit) => lit match
-      case _: IntLit => IntType()
-      case _: DecLit => NumType()
-      case _: StrLit => StrType()
+      case _: IntLit => Ctx.intTy
+      case _: DecLit => Ctx.numTy
+      case _: StrLit => Ctx.strTy
       case _: UnitLit => Type.Top
-      case _: BoolLit => BoolType()
+      case _: BoolLit => Ctx.boolTy
     case Lam(params, body) =>
       val nestCtx = ctx.nest
       given Ctx = nestCtx
@@ -115,3 +161,10 @@ class BBTyper(raise: Raise):
           v
       )
       Type.FunType(tvs, typeCheck(body), Type.Bot) // TODO: effect
+    case Term.App(lhs, rhs) =>
+      val funTy = typeCheck(lhs)
+      val argTy = typeCheckArgs(rhs)
+      val effVar = freshVar
+      val retVar = freshVar
+      solver.constrain(funTy, Type.FunType(argTy, retVar, effVar))
+      retVar
