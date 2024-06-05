@@ -26,7 +26,7 @@ bar()
 //│ IR:
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, [x,y,z]),ClassInfo(3, B, [m,n])}, {
 //│ Def(0, complex_foo, [t$0],
 //│ 1, 
 //│ case t$0 of -- #63
@@ -117,7 +117,7 @@ bar()
 //│ IR:
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, [w,x]),ClassInfo(3, B, [y]),ClassInfo(4, C, [z])}, {
 //│ Def(0, complex_foo, [t$0],
 //│ 1, 
 //│ let x$0 = +(1,2) in -- #140
@@ -256,7 +256,7 @@ bar()
 //│ IR:
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, [w,x]),ClassInfo(3, B, [y]),ClassInfo(4, C, [z])}, {
 //│ Def(0, complex_foo, [t$0],
 //│ 1, 
 //│ let x$0 = +(1,2) in -- #150

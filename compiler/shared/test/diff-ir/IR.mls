@@ -17,7 +17,7 @@ foo()
 //│ IR:
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Pair, [x,y])}, {
 //│ Def(0, mktup2, [x$0,y$0],
 //│ 1, 
 //│ let* (x$1) = mktup(x$0,y$0) in -- #7
@@ -55,7 +55,7 @@ bar()
 //│ IR:
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Pair, [x,y])}, {
 //│ Def(0, foo, [pair$0],
 //│ 1, 
 //│ case pair$0 of -- #16
@@ -105,7 +105,7 @@ foo()
 //│ IR:
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Pair, [x,y])}, {
 //│ Def(0, silly, [pair$0],
 //│ 1, 
 //│ let x$0 = 0 in -- #29
@@ -163,7 +163,7 @@ foo()
 //│ IR:
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Pair, [x,y])}, {
 //│ Def(0, inc_fst, [pair$0],
 //│ 1, 
 //│ let x$0 = 2 in -- #15
@@ -208,7 +208,7 @@ foo()
 //│ IR:
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Pair, [x,y])}, {
 //│ Def(0, inc_fst, [pair$0],
 //│ 1, 
 //│ let x$0 = 0 in -- #15
@@ -256,7 +256,7 @@ bar()
 //│ IR:
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Left, [x]),ClassInfo(3, Right, [y])}, {
 //│ Def(0, foo, [a$0,b$0],
 //│ 1, 
 //│ case a$0 of -- #36
@@ -298,15 +298,13 @@ bar()
 //│ 2
 
 :interpIR
-class True
-class False
 class Pair(x, y)
 fun foo(a) = a.x + a.y
 fun bar() =
   foo(Pair(1, 0))
 bar()
-//│ |#class| |True|↵|#class| |False|↵|#class| |Pair|(|x|,| |y|)|↵|#fun| |foo|(|a|)| |#=| |a|.x| |+| |a|.y|↵|#fun| |bar|(||)| |#=|→|foo|(|Pair|(|1|,| |0|)|)|←|↵|bar|(||)|
-//│ Parsed: {class True {}; class False {}; class Pair(x, y,) {}; fun foo = (a,) => +((a).x,)((a).y,); fun bar = () => {foo(Pair(1, 0,),)}; bar()}
+//│ |#class| |Pair|(|x|,| |y|)|↵|#fun| |foo|(|a|)| |#=| |a|.x| |+| |a|.y|↵|#fun| |bar|(||)| |#=|→|foo|(|Pair|(|1|,| |0|)|)|←|↵|bar|(||)|
+//│ Parsed: {class Pair(x, y,) {}; fun foo = (a,) => +((a).x,)((a).y,); fun bar = () => {foo(Pair(1, 0,),)}; bar()}
 //│ 
 //│ 
 //│ IR:
@@ -350,7 +348,7 @@ bar()
 //│ IR:
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, C1, [x,y]),ClassInfo(1, C2, [z])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, C1, [x,y]),ClassInfo(3, C2, [z])}, {
 //│ Def(0, foo, [a$0],
 //│ 1, 
 //│ case a$0 of -- #15
@@ -401,7 +399,7 @@ baz()
 //│ IR:
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Pair, [x,y])}, {
 //│ Def(0, foo, [a$0,b$0],
 //│ 1, 
 //│ let x$0 = a$0.x in -- #21
@@ -451,7 +449,7 @@ foo()
 //│ IR:
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Pair, [x,y])}, {
 //│ Def(0, foo, [],
 //│ 1, 
 //│ let x$0 = Pair(0,1) in -- #10
@@ -484,7 +482,7 @@ foo()
 //│ IR:
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, S, [s]),ClassInfo(1, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
 //│ Def(0, foo, [],
 //│ 1, 
 //│ let x$0 = O() in -- #10

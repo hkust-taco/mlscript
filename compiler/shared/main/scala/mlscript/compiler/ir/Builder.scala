@@ -307,7 +307,10 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
 
       import scala.collection.mutable.{ HashSet => MutHSet }
 
-      val cls = grouped.getOrElse(0, Nil).map(buildClassInfo)
+      val cls = ClassInfo(classUid.make, "True", List()) // TODO: add "True" amd "False" at some pointgrouped.getOrElse(0, Nil).map(buildClassInfo)
+        :: ClassInfo(classUid.make, "False", List()) 
+        :: grouped.getOrElse(0, Nil).map(buildClassInfo)
+
       cls.foldLeft(Set.empty)(checkDuplicateField(_, _))
 
       val clsinfo = cls.toSet
@@ -342,10 +345,5 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
 
       resolveDefnRef(main, defs, true)
       validate(main, defs)
-
-      // TODO: should properly import built-in types
-      val clsWithBool = clsinfo
-        + ClassInfo(classUid.make, "True", List())
-        + ClassInfo(classUid.make, "False", List())
       
       Program(clsinfo, defs, main)
