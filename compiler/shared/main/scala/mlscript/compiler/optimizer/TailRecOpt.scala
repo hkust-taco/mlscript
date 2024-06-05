@@ -583,12 +583,14 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
       val trueClass = classes.find(c => c.ident == "True").get
       val falseClass = classes.find(c => c.ident == "False").get
       
-      // CONOTEXT APPLICATION
-
+      // CONTEXT APPLICATION
+      
       val mergedNames = defns.foldLeft("")(_ + "_" + _.name)
       
-      val ctxAppName = mergedNames + "_ctx_app"
-      val ctxCompName = mergedNames + "_ctx_comp"
+      val ctxAppId = fnUid.make
+      val ctxAppName = mergedNames + "_ctx_app$" + ctxAppId
+      val ctxCompId = fnUid.make
+      val ctxCompName = mergedNames + "_ctx_comp$" + ctxCompId
       
       // map integers to classes and fields which will be assigned to
       val classIdMap = classes.map(c => c.id -> c).toMap
@@ -649,7 +651,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
         )
       ).attachTag(tag)
 
-      val appDefn = Defn(fnUid.make, ctxAppName, List(appCtxName, appValName), 1, appNode, false)
+      val appDefn = Defn(ctxAppId, ctxAppName, List(appCtxName, appValName), 1, appNode, false)
 
       // CONTEXT COMPOSITION
       val cmpCtx1Name = Name("ctx1")
@@ -690,7 +692,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
         ).attachTag(tag)
       ).attachTag(tag)
 
-      val cmpDefn = Defn(fnUid.make, ctxCompName, List(cmpCtx1Name, cmpCtx2Name), 1, cmpNode, false)
+      val cmpDefn = Defn(ctxCompId, ctxCompName, List(cmpCtx1Name, cmpCtx2Name), 1, cmpNode, false)
 
       // We use tags to identify nodes
       // a bit hacky but it's the most elegant way
@@ -790,7 +792,8 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
 
       def rewriteDefn(d: Defn): Defn =
         val transformed = transformNode(d.body)
-        Defn(fnUid.make, d.name + "_modcons", Name("ctx") :: d.params, d.resultNum, transformed, d.isTailRec)
+        val id = fnUid.make
+        Defn(id, d.name + "_modcons$" + id, Name("ctx") :: d.params, d.resultNum, transformed, d.isTailRec)
       
       // returns (new defn, mod cons defn)
       // where new defn has the same signature and ids as the original, but immediately calls the mod cons defn
@@ -915,8 +918,10 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
 
       // TODO: This works fine for now, but ideally should find a way to guarantee the new
       // name is unique
-      val newName = defns.foldLeft("")(_ + "_" + _.name) + "_opt"
-      val jpName = defns.foldLeft("")(_ + "_" + _.name) + "_opt_jp"
+      val newId = fnUid.make
+      val newName = defns.foldLeft("")(_ + "_" + _.name) + "_opt$" + newId
+      val jpId = fnUid.make
+      val jpName = defns.foldLeft("")(_ + "_" + _.name) + "_opt_jp$" + jpId
 
       val newDefnRef = DefnRef(Right(newName))
       val jpDefnRef = DefnRef(Right(jpName))
@@ -978,10 +983,10 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
 
       val newNode = makeSwitch(trName, valsAndNodes.tail, valsAndNodes.head._2)(trueClass, falseClass)
 
-      val jpDefn = Defn(fnUid.make, jpName, stackFrame, resultNum, newNode, false)
+      val jpDefn = Defn(jpId, jpName, stackFrame, resultNum, newNode, false)
 
       val jmp = Jump(jpDefnRef, stackFrame.map(Expr.Ref(_))).attachTag(tag)
-      val newDefn = Defn(fnUid.make, newName, stackFrame, resultNum, jmp, defnsNoJp.find { _.isTailRec }.isDefined )
+      val newDefn = Defn(newId, newName, stackFrame, resultNum, jmp, defnsNoJp.find { _.isTailRec }.isDefined )
 
       jpDefnRef.defn = Left(jpDefn)
       newDefnRef.defn = Left(newDefn)
