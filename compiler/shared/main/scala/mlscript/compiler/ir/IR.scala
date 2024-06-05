@@ -15,9 +15,6 @@ import scala.collection.immutable.SortedSet
 
 final case class IRError(message: String) extends Exception(message)
 
-class Undefined:
-  override def toString = "undefined"
-
 case class Program(
   classes: Set[ClassInfo],
   defs: Set[Defn],
@@ -99,7 +96,7 @@ private def show_args(args: Ls[TrivialExpr]) = args map (_.show) mkString ","
 
 enum Expr:
   case Ref(name: Name) extends Expr, TrivialExpr 
-  case Literal(lit: Lit | Undefined) extends Expr, TrivialExpr
+  case Literal(lit: Lit) extends Expr, TrivialExpr
   case CtorApp(name: ClassInfo, args: Ls[TrivialExpr])
   case Select(name: Name, cls: ClassInfo, field: Str)
   case BasicOp(name: Str, args: Ls[TrivialExpr])
@@ -112,11 +109,10 @@ enum Expr:
   
   def toDocument: Document = this match
     case Ref(s) => s.toString |> raw
-    case Literal(_: Undefined) => "undefined" |> raw
     case Literal(IntLit(lit)) => s"$lit" |> raw
     case Literal(DecLit(lit)) => s"$lit" |> raw
     case Literal(StrLit(lit)) => s"$lit" |> raw
-    case Literal(UnitLit(lit)) => s"$lit" |> raw
+    case Literal(UnitLit(lit)) => (if lit then "undefined" else "null") |> raw
     case CtorApp(ClassInfo(_, name, _), args) =>
       raw(name) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
     case Select(s, _, fld) =>
@@ -262,7 +258,7 @@ case class DefnLocMarker(val defn: Str, val marker: LocMarker):
 
 enum LocMarker:
   case MRef(name: Str)
-  case MLit(lit: Lit | Undefined)
+  case MLit(lit: Lit)
   case MCtorApp(name: ClassInfo, args: Ls[LocMarker])
   case MSelect(name: Str, cls: ClassInfo, field: Str)
   case MBasicOp(name: Str, args: Ls[LocMarker])
@@ -301,7 +297,7 @@ enum LocMarker:
     case MLit(IntLit(lit)) => s"$lit" |> raw
     case MLit(DecLit(lit)) => s"$lit" |> raw
     case MLit(StrLit(lit)) => s"$lit" |> raw
-    case MLit(UnitLit(lit)) => s"$lit" |> raw
+    case MLit(UnitLit(lit)) => (if lit then "undefined" else "null") |> raw
     case _ => raw("...")
 
   def show = s"$tag-" + toDocument.print

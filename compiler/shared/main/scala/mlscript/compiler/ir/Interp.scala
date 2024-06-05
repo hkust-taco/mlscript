@@ -38,7 +38,7 @@ class Interpreter(verbose: Bool):
 
   private enum Expr:
     case Ref(name: Name)
-    case Literal(lit: Lit | Undefined)
+    case Literal(lit: Lit)
     case CtorApp(name: ClassInfo, var args: Ls[Expr])
     case Select(name: Name, cls: ClassInfo, field: Str)
     case BasicOp(name: Str, args: Ls[Expr])
@@ -51,7 +51,6 @@ class Interpreter(verbose: Bool):
 
     def document: Document = this match
       case Ref(Name(s)) => s |> raw
-      case Literal(_: Undefined) => "undefined" |> raw
       case Literal(IntLit(lit)) => s"$lit" |> raw
       case Literal(DecLit(lit)) => s"$lit" |> raw
       case Literal(StrLit(lit)) => s"$lit" |> raw

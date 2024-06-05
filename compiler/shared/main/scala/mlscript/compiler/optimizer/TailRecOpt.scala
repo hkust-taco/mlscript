@@ -847,7 +847,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
     val trueClass = classes.find(c => c.ident == "True").get
     val falseClass = classes.find(c => c.ident == "False").get
     // undefined for dummy values
-    val dummyVal = Expr.Literal(Undefined())
+    val dummyVal = Expr.Literal(UnitLit(true))
     
     // join points need to be rewritten. For now, just combine them into the rest of the function. They will be inlined anyways
     val defns = component.nodes ++ component.joinPoints
