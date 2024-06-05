@@ -15,6 +15,9 @@ import scala.collection.immutable.SortedSet
 
 final case class IRError(message: String) extends Exception(message)
 
+class Undefined:
+  override def toString = "undefined"
+
 case class Program(
   classes: Set[ClassInfo],
   defs: Set[Defn],
@@ -96,7 +99,7 @@ private def show_args(args: Ls[TrivialExpr]) = args map (_.show) mkString ","
 
 enum Expr:
   case Ref(name: Name) extends Expr, TrivialExpr 
-  case Literal(lit: Lit) extends Expr, TrivialExpr
+  case Literal(lit: Lit | Undefined) extends Expr, TrivialExpr
   case CtorApp(name: ClassInfo, args: Ls[TrivialExpr])
   case Select(name: Name, cls: ClassInfo, field: Str)
   case BasicOp(name: Str, args: Ls[TrivialExpr])
@@ -109,6 +112,7 @@ enum Expr:
   
   def toDocument: Document = this match
     case Ref(s) => s.toString |> raw
+    case Literal(_: Undefined) => "undefined" |> raw
     case Literal(IntLit(lit)) => s"$lit" |> raw
     case Literal(DecLit(lit)) => s"$lit" |> raw
     case Literal(StrLit(lit)) => s"$lit" |> raw
@@ -258,7 +262,7 @@ case class DefnLocMarker(val defn: Str, val marker: LocMarker):
 
 enum LocMarker:
   case MRef(name: Str)
-  case MLit(lit: Lit)
+  case MLit(lit: Lit | Undefined)
   case MCtorApp(name: ClassInfo, args: Ls[LocMarker])
   case MSelect(name: Str, cls: ClassInfo, field: Str)
   case MBasicOp(name: Str, args: Ls[LocMarker])

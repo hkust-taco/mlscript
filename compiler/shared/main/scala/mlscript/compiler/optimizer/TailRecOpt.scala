@@ -846,6 +846,8 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
     // To build the case block, we need to compare integers and check if the result is "True"
     val trueClass = classes.find(c => c.ident == "True").get
     val falseClass = classes.find(c => c.ident == "False").get
+    // undefined for dummy values
+    val dummyVal = Expr.Literal(Undefined())
     
     // join points need to be rewritten. For now, just combine them into the rest of the function. They will be inlined anyways
     val defns = component.nodes ++ component.joinPoints
@@ -916,8 +918,6 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
 
       val stackFrame = trName :: defnsList.flatMap(d => d.params.map(n => nameMaps(d.id)(n))) // take union of stack frames
 
-      // TODO: This works fine for now, but ideally should find a way to guarantee the new
-      // name is unique
       val newId = fnUid.make
       val newName = defns.foldLeft("")(_ + "_" + _.name) + "_opt$" + newId
       val jpId = fnUid.make
@@ -946,15 +946,16 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
             Jump(jpDefnRef, transformStackFrame(args, defnInfoMap(defn.expectDefn.id))).attachTag(tag)
           else LetCall(names, defn, args, isTailRec, transformNode(body))().attachTag(tag)
 
-      // Tail calls to another function in the component will be replaced with a tail call
+      // Tail calls to another function in the component will be replaced with a call
       // to the merged function
+      // i.e. for mutually tailrec functions f(a, b) and g(c, d),
+      // f's body will be replaced with a call f_g(a, b, *, *), where * is a dummy value
       def transformDefn(defn: Defn): Defn =
-        // TODO: Figure out how to substitute variables with dummy variables.
         val info = defnInfoMap(defn.id)
 
         val start =
-          stackFrame.take(info.stackFrameIdx).drop(1).map { _ => Expr.Literal(IntLit(0)) } // we drop tailrecBranch and replace it with the defn id
-        val end = stackFrame.drop(info.stackFrameIdx + defn.params.size).map { _ => Expr.Literal(IntLit(0)) }
+          stackFrame.take(info.stackFrameIdx).drop(1).map { _ => dummyVal } // we drop tailrecBranch and replace it with the defn id
+        val end = stackFrame.drop(info.stackFrameIdx + defn.params.size).map { _ => dummyVal }
         val args = asLit(info.defn.id) :: start ::: defn.params.map(Expr.Ref(_)) ::: end
 
         // We use a let call instead of a jump to avoid newDefn from being turned into a join point,

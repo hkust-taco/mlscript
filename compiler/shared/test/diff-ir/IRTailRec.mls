@@ -177,7 +177,7 @@ fact(1, 5)
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, _IdContext, []),ClassInfo(3, _Context, [acc,ptr,field])}, {
 //│ Def(0, fact, [acc$0,n$0],
 //│ 1, 
-//│ let* (r0) = _fact_j$0_opt$3(0,acc$0,n$0,0,0,0) in -- #60
+//│ let* (r0) = _fact_j$0_opt$3(0,acc$0,n$0,undefined,undefined,undefined) in -- #60
 //│ r0 -- #59
 //│ )
 //│ Def(1, j$1, [x$3],
@@ -217,7 +217,7 @@ fact(1, 5)
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, _IdContext, []),ClassInfo(3, _Context, [acc,ptr,field])}, {
 //│ Def(0, fact, [acc$0,n$0],
 //│ 1, 
-//│ let* (r0) = _fact_j$0_opt$3(0,acc$0,n$0,0,0,0) in -- #60
+//│ let* (r0) = _fact_j$0_opt$3(0,acc$0,n$0,undefined,undefined,undefined) in -- #60
 //│ r0 -- #59
 //│ )
 //│ Def(1, j$1, [x$3],
@@ -382,7 +382,7 @@ g(6, 0)
 //│ )
 //│ Def(1, f, [n$0,acc$0],
 //│ 1, 
-//│ let* (r0) = _g_f_opt$5(1,0,0,n$0,acc$0) in -- #100
+//│ let* (r0) = _g_f_opt$5(1,undefined,undefined,n$0,acc$0) in -- #100
 //│ r0 -- #99
 //│ )
 //│ Def(2, j$0, [x$3],
@@ -391,7 +391,7 @@ g(6, 0)
 //│ )
 //│ Def(3, g, [m$0,acc$1],
 //│ 1, 
-//│ let* (r0) = _g_f_opt$5(3,m$0,acc$1,0,0) in -- #98
+//│ let* (r0) = _g_f_opt$5(3,m$0,acc$1,undefined,undefined) in -- #98
 //│ r0 -- #97
 //│ )
 //│ Def(4, j$1, [x$9],
@@ -441,7 +441,7 @@ g(6, 0)
 //│ )
 //│ Def(1, f, [n$0,acc$0],
 //│ 1, 
-//│ let* (r0) = _g_f_opt$5(1,0,0,n$0,acc$0) in -- #100
+//│ let* (r0) = _g_f_opt$5(1,undefined,undefined,n$0,acc$0) in -- #100
 //│ r0 -- #99
 //│ )
 //│ Def(2, j$0, [x$3],
@@ -450,7 +450,7 @@ g(6, 0)
 //│ )
 //│ Def(3, g, [m$0,acc$1],
 //│ 1, 
-//│ let* (r0) = _g_f_opt$5(3,m$0,acc$1,0,0) in -- #98
+//│ let* (r0) = _g_f_opt$5(3,m$0,acc$1,undefined,undefined) in -- #98
 //│ r0 -- #97
 //│ )
 //│ Def(4, j$1, [x$9],
@@ -527,17 +527,17 @@ g(6, 0)
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, _IdContext, []),ClassInfo(3, _Context, [acc,ptr,field])}, {
 //│ Def(0, f, [a$0,b$0,c$0],
 //│ 1, 
-//│ let* (r0) = _h_g_f_opt$3(0,0,0,0,0,0,0,a$0,b$0,c$0) in -- #45
+//│ let* (r0) = _h_g_f_opt$3(0,undefined,undefined,undefined,undefined,undefined,undefined,a$0,b$0,c$0) in -- #45
 //│ r0 -- #44
 //│ )
 //│ Def(1, g, [d$0,e$0],
 //│ 1, 
-//│ let* (r0) = _h_g_f_opt$3(1,0,0,0,0,d$0,e$0,0,0,0) in -- #43
+//│ let* (r0) = _h_g_f_opt$3(1,undefined,undefined,undefined,undefined,d$0,e$0,undefined,undefined,undefined) in -- #43
 //│ r0 -- #42
 //│ )
 //│ Def(2, h, [p$0,q$0,r$0,s$0],
 //│ 1, 
-//│ let* (r0) = _h_g_f_opt$3(2,p$0,q$0,r$0,s$0,0,0,0,0,0) in -- #41
+//│ let* (r0) = _h_g_f_opt$3(2,p$0,q$0,r$0,s$0,undefined,undefined,undefined,undefined,undefined) in -- #41
 //│ r0 -- #40
 //│ )
 //│ Def(3, _h_g_f_opt$3, [tailrecBranch$,h_p$0,h_q$0,h_r$0,h_s$0,g_d$0,g_e$0,f_a$0,f_b$0,f_c$0],
@@ -565,17 +565,17 @@ g(6, 0)
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, _IdContext, []),ClassInfo(3, _Context, [acc,ptr,field])}, {
 //│ Def(0, f, [a$0,b$0,c$0],
 //│ 1, 
-//│ let* (r0) = _h_g_f_opt$3(0,0,0,0,0,0,0,a$0,b$0,c$0) in -- #45
+//│ let* (r0) = _h_g_f_opt$3(0,undefined,undefined,undefined,undefined,undefined,undefined,a$0,b$0,c$0) in -- #45
 //│ r0 -- #44
 //│ )
 //│ Def(1, g, [d$0,e$0],
 //│ 1, 
-//│ let* (r0) = _h_g_f_opt$3(1,0,0,0,0,d$0,e$0,0,0,0) in -- #43
+//│ let* (r0) = _h_g_f_opt$3(1,undefined,undefined,undefined,undefined,d$0,e$0,undefined,undefined,undefined) in -- #43
 //│ r0 -- #42
 //│ )
 //│ Def(2, h, [p$0,q$0,r$0,s$0],
 //│ 1, 
-//│ let* (r0) = _h_g_f_opt$3(2,p$0,q$0,r$0,s$0,0,0,0,0,0) in -- #41
+//│ let* (r0) = _h_g_f_opt$3(2,p$0,q$0,r$0,s$0,undefined,undefined,undefined,undefined,undefined) in -- #41
 //│ r0 -- #40
 //│ )
 //│ Def(3, _h_g_f_opt$3, [tailrecBranch$,h_p$0,h_q$0,h_r$0,h_s$0,g_d$0,g_e$0,f_a$0,f_b$0,f_c$0],
@@ -1042,12 +1042,12 @@ a(S(S(S(Zero))))
 //│ )
 //│ Def(6, b_modcons$6, [ctx,n$1],
 //│ 1, 
-//│ let* (r0) = _b_modcons$6_a_modcons$7_opt$8(6,ctx,n$1,0,0) in -- #156
+//│ let* (r0) = _b_modcons$6_a_modcons$7_opt$8(6,ctx,n$1,undefined,undefined) in -- #156
 //│ r0 -- #155
 //│ )
 //│ Def(7, a_modcons$7, [ctx,n$0],
 //│ 1, 
-//│ let* (r0) = _b_modcons$6_a_modcons$7_opt$8(7,0,0,ctx,n$0) in -- #158
+//│ let* (r0) = _b_modcons$6_a_modcons$7_opt$8(7,undefined,undefined,ctx,n$0) in -- #158
 //│ r0 -- #157
 //│ )
 //│ Def(8, _b_modcons$6_a_modcons$7_opt$8, [tailrecBranch$,b_modcons$6_ctx,b_modcons$6_n$1,a_modcons$7_ctx,a_modcons$7_n$0],
@@ -1140,12 +1140,12 @@ a(S(S(S(Zero))))
 //│ )
 //│ Def(6, b_modcons$6, [ctx,n$1],
 //│ 1, 
-//│ let* (r0) = _b_modcons$6_a_modcons$7_opt$8(6,ctx,n$1,0,0) in -- #156
+//│ let* (r0) = _b_modcons$6_a_modcons$7_opt$8(6,ctx,n$1,undefined,undefined) in -- #156
 //│ r0 -- #155
 //│ )
 //│ Def(7, a_modcons$7, [ctx,n$0],
 //│ 1, 
-//│ let* (r0) = _b_modcons$6_a_modcons$7_opt$8(7,0,0,ctx,n$0) in -- #158
+//│ let* (r0) = _b_modcons$6_a_modcons$7_opt$8(7,undefined,undefined,ctx,n$0) in -- #158
 //│ r0 -- #157
 //│ )
 //│ Def(8, _b_modcons$6_a_modcons$7_opt$8, [tailrecBranch$,b_modcons$6_ctx,b_modcons$6_n$1,a_modcons$7_ctx,a_modcons$7_n$0],
@@ -1494,12 +1494,12 @@ b(16)
 //│ )
 //│ Def(7, b_modcons$7, [ctx,n$0],
 //│ 1, 
-//│ let* (r0) = _b_modcons$7_a_modcons$8_opt$9(7,ctx,n$0,0,0) in -- #170
+//│ let* (r0) = _b_modcons$7_a_modcons$8_opt$9(7,ctx,n$0,undefined,undefined) in -- #170
 //│ r0 -- #169
 //│ )
 //│ Def(8, a_modcons$8, [ctx,x$0],
 //│ 1, 
-//│ let* (r0) = _b_modcons$7_a_modcons$8_opt$9(8,0,0,ctx,x$0) in -- #172
+//│ let* (r0) = _b_modcons$7_a_modcons$8_opt$9(8,undefined,undefined,ctx,x$0) in -- #172
 //│ r0 -- #171
 //│ )
 //│ Def(9, _b_modcons$7_a_modcons$8_opt$9, [tailrecBranch$,b_modcons$7_ctx,b_modcons$7_n$0,a_modcons$8_ctx,a_modcons$8_x$0],
@@ -1599,12 +1599,12 @@ b(16)
 //│ )
 //│ Def(7, b_modcons$7, [ctx,n$0],
 //│ 1, 
-//│ let* (r0) = _b_modcons$7_a_modcons$8_opt$9(7,ctx,n$0,0,0) in -- #170
+//│ let* (r0) = _b_modcons$7_a_modcons$8_opt$9(7,ctx,n$0,undefined,undefined) in -- #170
 //│ r0 -- #169
 //│ )
 //│ Def(8, a_modcons$8, [ctx,x$0],
 //│ 1, 
-//│ let* (r0) = _b_modcons$7_a_modcons$8_opt$9(8,0,0,ctx,x$0) in -- #172
+//│ let* (r0) = _b_modcons$7_a_modcons$8_opt$9(8,undefined,undefined,ctx,x$0) in -- #172
 //│ r0 -- #171
 //│ )
 //│ Def(9, _b_modcons$7_a_modcons$8_opt$9, [tailrecBranch$,b_modcons$7_ctx,b_modcons$7_n$0,a_modcons$8_ctx,a_modcons$8_x$0],
@@ -1840,7 +1840,7 @@ foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil))))))))
 //│ )
 //│ Def(7, foo_modcons$7, [ctx,xs$0],
 //│ 1, 
-//│ let* (r0) = _foo_modcons$7_j$2_modcons$6_opt$8(7,ctx,xs$0,0,0,0,0) in -- #173
+//│ let* (r0) = _foo_modcons$7_j$2_modcons$6_opt$8(7,ctx,xs$0,undefined,undefined,undefined,undefined) in -- #173
 //│ r0 -- #172
 //│ )
 //│ Def(8, _foo_modcons$7_j$2_modcons$6_opt$8, [tailrecBranch$,foo_modcons$7_ctx,foo_modcons$7_xs$0,j$2_modcons$6_ctx,j$2_modcons$6_x$7,j$2_modcons$6_x$1,j$2_modcons$6_x$2],
@@ -1929,7 +1929,7 @@ foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil))))))))
 //│ )
 //│ Def(7, foo_modcons$7, [ctx,xs$0],
 //│ 1, 
-//│ let* (r0) = _foo_modcons$7_j$2_modcons$6_opt$8(7,ctx,xs$0,0,0,0,0) in -- #173
+//│ let* (r0) = _foo_modcons$7_j$2_modcons$6_opt$8(7,ctx,xs$0,undefined,undefined,undefined,undefined) in -- #173
 //│ r0 -- #172
 //│ )
 //│ Def(8, _foo_modcons$7_j$2_modcons$6_opt$8, [tailrecBranch$,foo_modcons$7_ctx,foo_modcons$7_xs$0,j$2_modcons$6_ctx,j$2_modcons$6_x$7,j$2_modcons$6_x$1,j$2_modcons$6_x$2],
@@ -2201,17 +2201,17 @@ a()
 //│ )
 //│ Def(5, c_modcons$5, [ctx],
 //│ 1, 
-//│ let* (r0) = _c_modcons$5_b_modcons$6_a_modcons$7_opt$8(5,ctx,0,0) in -- #104
+//│ let* (r0) = _c_modcons$5_b_modcons$6_a_modcons$7_opt$8(5,ctx,undefined,undefined) in -- #104
 //│ r0 -- #103
 //│ )
 //│ Def(6, b_modcons$6, [ctx],
 //│ 1, 
-//│ let* (r0) = _c_modcons$5_b_modcons$6_a_modcons$7_opt$8(6,0,ctx,0) in -- #106
+//│ let* (r0) = _c_modcons$5_b_modcons$6_a_modcons$7_opt$8(6,undefined,ctx,undefined) in -- #106
 //│ r0 -- #105
 //│ )
 //│ Def(7, a_modcons$7, [ctx],
 //│ 1, 
-//│ let* (r0) = _c_modcons$5_b_modcons$6_a_modcons$7_opt$8(7,0,0,ctx) in -- #108
+//│ let* (r0) = _c_modcons$5_b_modcons$6_a_modcons$7_opt$8(7,undefined,undefined,ctx) in -- #108
 //│ r0 -- #107
 //│ )
 //│ Def(8, _c_modcons$5_b_modcons$6_a_modcons$7_opt$8, [tailrecBranch$,c_modcons$5_ctx,b_modcons$6_ctx,a_modcons$7_ctx],
@@ -2297,17 +2297,17 @@ a()
 //│ )
 //│ Def(5, c_modcons$5, [ctx],
 //│ 1, 
-//│ let* (r0) = _c_modcons$5_b_modcons$6_a_modcons$7_opt$8(5,ctx,0,0) in -- #104
+//│ let* (r0) = _c_modcons$5_b_modcons$6_a_modcons$7_opt$8(5,ctx,undefined,undefined) in -- #104
 //│ r0 -- #103
 //│ )
 //│ Def(6, b_modcons$6, [ctx],
 //│ 1, 
-//│ let* (r0) = _c_modcons$5_b_modcons$6_a_modcons$7_opt$8(6,0,ctx,0) in -- #106
+//│ let* (r0) = _c_modcons$5_b_modcons$6_a_modcons$7_opt$8(6,undefined,ctx,undefined) in -- #106
 //│ r0 -- #105
 //│ )
 //│ Def(7, a_modcons$7, [ctx],
 //│ 1, 
-//│ let* (r0) = _c_modcons$5_b_modcons$6_a_modcons$7_opt$8(7,0,0,ctx) in -- #108
+//│ let* (r0) = _c_modcons$5_b_modcons$6_a_modcons$7_opt$8(7,undefined,undefined,ctx) in -- #108
 //│ r0 -- #107
 //│ )
 //│ Def(8, _c_modcons$5_b_modcons$6_a_modcons$7_opt$8, [tailrecBranch$,c_modcons$5_ctx,b_modcons$6_ctx,a_modcons$7_ctx],
@@ -2429,12 +2429,12 @@ a()
 //│ )
 //│ Def(5, b_modcons$5, [ctx],
 //│ 1, 
-//│ let* (r0) = _b_modcons$5_a_modcons$6_opt$7(5,ctx,0) in -- #81
+//│ let* (r0) = _b_modcons$5_a_modcons$6_opt$7(5,ctx,undefined) in -- #81
 //│ r0 -- #80
 //│ )
 //│ Def(6, a_modcons$6, [ctx],
 //│ 1, 
-//│ let* (r0) = _b_modcons$5_a_modcons$6_opt$7(6,0,ctx) in -- #83
+//│ let* (r0) = _b_modcons$5_a_modcons$6_opt$7(6,undefined,ctx) in -- #83
 //│ r0 -- #82
 //│ )
 //│ Def(7, _b_modcons$5_a_modcons$6_opt$7, [tailrecBranch$,b_modcons$5_ctx,a_modcons$6_ctx],
@@ -2503,12 +2503,12 @@ a()
 //│ )
 //│ Def(5, b_modcons$5, [ctx],
 //│ 1, 
-//│ let* (r0) = _b_modcons$5_a_modcons$6_opt$7(5,ctx,0) in -- #81
+//│ let* (r0) = _b_modcons$5_a_modcons$6_opt$7(5,ctx,undefined) in -- #81
 //│ r0 -- #80
 //│ )
 //│ Def(6, a_modcons$6, [ctx],
 //│ 1, 
-//│ let* (r0) = _b_modcons$5_a_modcons$6_opt$7(6,0,ctx) in -- #83
+//│ let* (r0) = _b_modcons$5_a_modcons$6_opt$7(6,undefined,ctx) in -- #83
 //│ r0 -- #82
 //│ )
 //│ Def(7, _b_modcons$5_a_modcons$6_opt$7, [tailrecBranch$,b_modcons$5_ctx,a_modcons$6_ctx],
