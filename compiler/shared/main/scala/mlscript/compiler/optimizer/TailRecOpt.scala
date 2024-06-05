@@ -1,15 +1,13 @@
-package mlscript.compiler.optimizer
+package mlscript
+package compiler.optimizer
 
-import mlscript.compiler.ir._
-import mlscript.compiler.ir.Node._
 import scala.annotation.tailrec
-import mlscript.IntLit
-import mlscript.utils.shorthands.Bool
-import mlscript.Diagnostic
-import mlscript.ErrorReport
-import mlscript.Message
-import mlscript.Message.MessageContext
-import mlscript.Loc
+
+import utils.shorthands._
+import Message.MessageContext
+
+import compiler.ir._
+import compiler.ir.Node._
 
 // fnUid should be the same FreshInt that was used to build the graph being passed into this class
 class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diagnostic => Unit):
@@ -58,6 +56,27 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
   
   def discoverJoinPointsCont(defn: Defn, acc: Set[Defn]) =
     discoverJoinPoints(defn.body, acc) + defn
+
+  // TODO: implement proper purity checking. This is a very simple purity check that only allows the last
+  // parameter of a mod cons call to be optimised.
+  private val pureCache: scala.collection.mutable.Map[Int, Bool] = scala.collection.mutable.Map[Int, Bool]()
+  private def isPure(node: Node): Bool = 
+    pureCache.get(node.tag.inner) match
+      case None => 
+        val ret = node match
+          case Jump(defn, args) => isIdentityJp(defn.expectDefn)
+          case _: LetCall => false
+          case Case(scrut, cases) => cases.foldLeft(true)((value, branch) => value && isPure(branch._2))
+          case LetExpr(name, expr: Expr.AssignField, body) => false
+          case x: LetExpr => true
+          case Result(res) => true
+        pureCache.put(node.tag.inner, ret)
+        ret
+    
+      case Some(value) => value
+
+    
+
 
   // do a DFS to discover join points
   @tailrec
@@ -299,12 +318,19 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
             
           Left(updatedMap + TailCallInfo(src, defn.expectDefn))
         else
+          val restIsPure = isPure(body)
           letCallNode match
             case None => // OK, we may use this LetCall as the mod cons
               // For now, only optimize functions which return one value
-              if callInScc && defn.expectDefn.resultNum == 1 then
+              if callInScc && defn.expectDefn.resultNum == 1 && restIsPure then
                 searchOptCalls(body)(acc, src, scc, start, Some(defn.expectDefn), Some(x), None, Set())
               else
+                if isTailRec then
+                  if !restIsPure then
+                    raise(ErrorReport(List(msg"not a tail call, as the remaining functions may be impure" -> x.loc), true, Diagnostic.Compilation))
+                  else
+                    raise(ErrorReport(List(msg"not a tail call" -> x.loc), true, Diagnostic.Compilation)) 
+                  
                 // Treat this as a normal call
                 val newMap = updateMapSimple(NormalCallInfo(src, defn.expectDefn)(x.loc))
                 searchOptCalls(body)(newMap, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors)
@@ -336,7 +362,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
                 searchOptCalls(body)(newMap, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors) // OK
               else
                 // only include mod cons calls that have one return value
-                if callInScc && defn.expectDefn.resultNum == 1 then 
+                if callInScc && defn.expectDefn.resultNum == 1 && restIsPure then 
                   // old call is not tailrec, so we can override it however we want
                   // we take a lucky guess and mark this as the mod cons call, but the
                   // user really should mark which calls should be tailrec
@@ -345,6 +371,11 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
                   val newMap = updateMapSimple(NormalCallInfo(src, defnOld.expectDefn)(y.loc))
                   searchOptCalls(body)(newMap, src, scc, start, Some(defn.expectDefn), Some(x), None, Set())
                 else
+                  if isTailRec then
+                    if !restIsPure then
+                      raise(ErrorReport(List(msg"not a tail call, as the remaining functions may be impure" -> x.loc), true, Diagnostic.Compilation))
+                    else
+                      raise(ErrorReport(List(msg"not a tail call" -> x.loc), true, Diagnostic.Compilation)) 
                   // shadow all the variables in this letcall
                   
                   // Treat this as a normal call
@@ -417,6 +448,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
     val defns = nodeMap.values.toSet
     val inital = Map[Int, Set[Defn]]()
     val joinPoints = defns.map(d => (d.defn.id -> discoverJoinPoints(d.defn.body, Set()))).toMap
+    val allJoinPoints = joinPoints.values.flatMap(x => x).toSet
     val edges = defns.foldLeft(inital)((acc, defn) => discoverCalls(defn.defn, joinPoints(defn.defn.id))(acc)).withDefaultValue(Set())
 
     var ctr = 0
@@ -479,7 +511,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
         sccs = DefnGraph(scc, categorizedEdges, sccJoinPoints) :: sccs
       
     for v <- defns do
-      if (!v.visited)
+      if !allJoinPoints.contains(v.defn) && !v.visited then
         dfs(v)
 
     sccs

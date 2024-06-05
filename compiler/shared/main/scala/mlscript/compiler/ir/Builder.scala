@@ -342,5 +342,10 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
 
       resolveDefnRef(main, defs, true)
       validate(main, defs)
+
+      // TODO: should properly import built-in types
+      val clsWithBool = clsinfo
+        + ClassInfo(classUid.make, "True", List())
+        + ClassInfo(classUid.make, "False", List())
       
       Program(clsinfo, defs, main)
