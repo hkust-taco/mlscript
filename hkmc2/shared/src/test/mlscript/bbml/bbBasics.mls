@@ -21,3 +21,46 @@ false
 ()
 //│ Elab: { }‹›
 //│ Type: ⊤
+
+fun id(x) = x
+//│ Elab: { fun id(x@1) = x@1#0; }‹›
+//│ Type: ⊤
+
+fun inc(x) = x + 1
+//│ Elab: { fun inc(x@1) = +#0(x@1#0, 1‹›)‹›‹›; }‹›
+//│ Type: ⊤
+
+:fixme
+x => x
+//│ Elab: { λx. Ref(x@1)‹› }‹›
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+:fixme
+(x, y) => x + y
+//│ Elab: { λx, y. App(Ref(+),Tup(List(Fld(‹›,Ref(x@1),None), Fld(‹›,Ref(y@2),None))))‹› }‹›
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+:fixme
+let x = 42 in x
+//│ Elab: { { let x@1 = 42‹›; x@1#0 }‹› }‹›
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+:fixme
+inc(42)
+//│ Elab: { inc#0(42‹›)‹›‹› }‹›
+//│ /!!!\ Uncaught error: scala.MatchError: App(Ref(inc),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))) (of class hkmc2.semantics.Term$App)
+
+class Foo(x: Int)
+//│ Elab: { class Foo(x@1: class:Int#3) { }‹›; }‹›
+//│ Type: ⊤
+
+:fixme
+let foo = new Foo(42)
+//│ ╔══[PARSE ERROR] Expected expression after 'let' binding equals sign; found 'new' keyword instead
+//│ ║  l.78: 	let foo = new Foo(42)
+//│ ╙──      	          ^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
+//│ ║  l.78: 	let foo = new Foo(42)
+//│ ╙──      	              ^^^
+//│ Elab: { <error>‹› }‹›
+//│ /!!!\ Uncaught error: scala.MatchError: Error (of class hkmc2.semantics.Term$$anon$1)

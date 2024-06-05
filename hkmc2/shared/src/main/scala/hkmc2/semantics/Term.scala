@@ -17,6 +17,9 @@ enum Term extends Statement with Located:
   case Lam(params: Ls[VarSymbol], body: Term)
   case FunTy(lhs: Term, rhs: Term)
   case Blk(stats: Ls[Statement], res: Term)
+  case Quoted(body: Term)
+  case Unquoted(body: Term)
+  case New(cls: ClassSymbol, args: Ls[Term])
   
   var symbol: Opt[Symbol] = N
   
@@ -56,6 +59,9 @@ sealed trait Statement extends Located:
     case If(body) => ???
     case Lam(params, body) => body :: Nil
     case Blk(stats, res) => stats.flatMap(_.subTerms) ::: res :: Nil
+    case Quoted(term) => term :: Nil
+    case Unquoted(term) => term :: Nil
+    case New(_, args) => args
     case LetBinding(pat, rhs) => rhs :: Nil
     case TermDefinition(k, _, ps, sign, body, res) =>
       ps.toList.flatMap(_.flatMap(_.subTerms)) ::: sign.toList ::: body.toList
@@ -79,10 +85,13 @@ sealed trait Statement extends Located:
     case TyApp(lhs, targs) => s"${lhs.showDbg}[${targs.mkString(", ")}]"
     case Sel(pre, nme) => s"${pre.showDbg}.${nme.name}"
     case If(body) => s"if $body"
-    // case Lam(params, body) => s"λ${params.map(_.name).join(", ")}. $body"
+    case Lam(params, body) => s"λ${params.map(_.name).mkString(", ")}. $body"
     case Blk(stats, res) =>
       (stats.map(_.showDbg + "; ") :+ (res match { case Lit(Tree.UnitLit(true)) => "" case x => x.showDbg + " " }))
       .mkString("{ ", "", "}")
+    case Quoted(term) => s"""code"${term.showDbg}""""
+    case Unquoted(term) => s"$${${term.showDbg}}"
+    case New(cls, args) => s"new ${cls.toString}(${args.mkString(", ")})"
     case LetBinding(pat, rhs) => s"let ${pat.showDbg} = ${rhs.showDbg}"
     case Error => "<error>"
     case Tup(fields) => fields.map(_.showDbg).mkString("(", ", ", ")")

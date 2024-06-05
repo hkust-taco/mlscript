@@ -48,6 +48,9 @@ class Elaborator(raise: Raise):
       Term.TyApp(term(lhs), targs.map(term(_)))
     case InfixApp(lhs, Keyword.`->`, rhs) =>
       Term.FunTy(term(lhs), term(rhs))
+    case InfixApp(lhs, Keyword.`=>`, rhs) =>
+      val (_, syms) = pattern(lhs)
+      Term.Lam(syms.map(_._2), term(rhs)(using ctx.copy(locals = ctx.locals ++ syms)))
     case App(lhs, rhs) =>
       val sym = FlowSymbol("‹app-res›", nextUid)
       Term.App(term(lhs), term(rhs))(sym)
@@ -203,9 +206,13 @@ class Elaborator(raise: Raise):
         val sym = boundVars.getOrElseUpdate(name, VarSymbol(name, nextUid))
         Pattern.Var(sym)
       case Tup(fields) =>
-        // val pats = fields.map(pattern)
-        // Pattern.Tup(pats)
-        ???
+        val pats = fields.map(
+          f => pattern(f) match
+            case (pat, vars) =>
+              boundVars ++= vars
+              pat
+        )
+        Pattern.Tuple(pats)
       case _ =>
         ???
     (go(t), boundVars.toList)

@@ -229,7 +229,7 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
           output(s"Elab: ${e.showDbg}")
           if bbml.isSet then
             val typer = BBTyper(raise)
-            val ty = typer.typeCheck(e)(using new Ctx())
+            val ty = typer.typeCheck(e)(using Ctx.init())
             output(s"Type: ${ty}")
           else
             val typer = typing.TypeChecker(raise)

@@ -76,7 +76,9 @@ class VarState:
 
 object InfVarUid extends Uid.Handler[Type.InfVar]
 
-class Ctx
+class Ctx(lvl: Int)
+object Ctx:
+  def init(): Ctx = new Ctx(0)
 
 class BBTyper(raise: Raise):
   

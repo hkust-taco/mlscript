@@ -31,12 +31,34 @@ x => x + 1
 //│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',App(Ident(+),Tup(List(Ident(x), IntLit(1)))))
 
 :fixme
-fun fact(x) = case
+let bar = new Bar(42)
+//│ ╔══[PARSE ERROR] Expected expression after 'let' binding equals sign; found 'new' keyword instead
+//│ ║  l.34: 	let bar = new Bar(42)
+//│ ╙──      	          ^^^
+//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
+//│ ║  l.34: 	let bar = new Bar(42)
+//│ ╙──      	              ^^^
+//│ Parsed:
+//│ 	Error()
+
+:fixme
+if 1 < 2 then 1 else 0
+//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'if' keyword instead
+//│ ║  l.45: 	if 1 < 2 then 1 else 0
+//│ ╙──      	^^
+//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
+//│ ║  l.45: 	if 1 < 2 then 1 else 0
+//│ ╙──      	   ^
+//│ Parsed:
+//│ 	Error()
+
+:fixme
+fun fact = case
   0 then 1
   n then n * fact(n - 1)
 //│ ╔══[PARSE ERROR] Expected expression after 'fun' binding equals sign; found 'case' keyword instead
-//│ ║  l.34: 	fun fact(x) = case
-//│ ╙──      	              ^^^^
+//│ ║  l.56: 	fun fact = case
+//│ ╙──      	           ^^^^
 //│ Parsed:
 //│ 	Error()
 
@@ -47,6 +69,10 @@ fun fact(x) = case
 x `=> x
 //│ Parsed:
 //│ 	Quoted(InfixApp(Tup(List(Ident(x))),keyword '=>',Unquoted(Ident(x))))
+
+:fixme
+`1 `+ `1
+//│ /!!!\ Uncaught error: scala.NotImplementedError: QUOTE
 
 :fixme
 `let x = `42 `in x
