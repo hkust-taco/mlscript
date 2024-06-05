@@ -23,11 +23,11 @@ fun foo(x) = x + x
 
 :fixme
 (x, x) => x
-//│ Elab: { λx. Ref(x@2)‹› }‹›
+//│ Elab: { λx. x@2#0‹› }‹›
 //│ /!!!\ Uncaught error: scala.MatchError: Lam(List(x@2),Ref(x@2)) (of class hkmc2.semantics.Term$Lam)
 :fixme
 (x, y) => x
-//│ Elab: { λx, y. Ref(x@1)‹› }‹›
+//│ Elab: { λx, y. x@1#0‹› }‹›
 //│ /!!!\ Uncaught error: scala.MatchError: Lam(List(x@1, y@2),Ref(x@1)) (of class hkmc2.semantics.Term$Lam)
 
 

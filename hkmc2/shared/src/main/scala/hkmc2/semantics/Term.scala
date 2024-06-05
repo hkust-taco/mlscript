@@ -85,7 +85,7 @@ sealed trait Statement extends Located:
     case TyApp(lhs, targs) => s"${lhs.showDbg}[${targs.mkString(", ")}]"
     case Sel(pre, nme) => s"${pre.showDbg}.${nme.name}"
     case If(body) => s"if $body"
-    case Lam(params, body) => s"λ${params.map(_.name).mkString(", ")}. $body"
+    case Lam(params, body) => s"λ${params.map(_.name).mkString(", ")}. ${body.showDbg}"
     case Blk(stats, res) =>
       (stats.map(_.showDbg + "; ") :+ (res match { case Lit(Tree.UnitLit(true)) => "" case x => x.showDbg + " " }))
       .mkString("{ ", "", "}")

@@ -24,8 +24,8 @@ enum Type extends TypeArg:
   case Bot
   override def toString(): String = this match
     case ClassType(name, targs) => s"${name.nme}" // TODO: targs
-    case InfVar(lvl, uid, state) => ???
-    case FunType(args, ret, eff) => ???
+    case InfVar(lvl, uid, state) => s"α${uid}" // TODO: bounds?
+    case FunType(args, ret, eff) => s"(${args.mkString(", ")}) ->{${eff}} ${ret}"
     case ComposedType(lhs, rhs, pol) => ???
     case NegType(ty) => ???
     case PolymorphicType(lvl, tv, body) => ???
@@ -76,15 +76,25 @@ class VarState:
 
 object InfVarUid extends Uid.Handler[Type.InfVar]
 
-class Ctx(lvl: Int)
+final case class Ctx(parent: Option[Ctx], lvl: Int, env: mutable.HashMap[Uid[Symbol], Type]):
+  def +=(p: VarSymbol -> Type): Unit = env += p._1.uid -> p._2
+  def get(sym: VarSymbol): Option[Type] = env.get(sym.uid) orElse parent.dlof(_.get(sym))(None)
+  def nest: Ctx = Ctx(Some(this), lvl, mutable.HashMap.empty)
 object Ctx:
-  def init(): Ctx = new Ctx(0)
+  def init(): Ctx = new Ctx(None, 0, mutable.HashMap.empty)
 
 class BBTyper(raise: Raise):
-  
-  def typeCheck(t: Term)(using Ctx): Type = t match
+
+  private val infVarState = new InfVarUid.State()
+  private def freshVar(using ctx: Ctx) = Type.InfVar(ctx.lvl, infVarState.nextUid, new VarState())
+
+  def typeCheck(t: Term)(using ctx: Ctx): Type = t match
     case Ref(sym: VarSymbol) =>
-      ???
+      ctx.get(sym) match
+        case Some(ty) => ty
+        case _ =>
+          raise(ErrorReport(msg"Variable not found: ${sym.name}" -> t.toLoc :: Nil))
+          Type.Bot // TODO: error type?
     case Ref(cls: ClassSymbol) =>
       ???
     case Blk(stats, res) =>
@@ -96,4 +106,12 @@ class BBTyper(raise: Raise):
       case _: UnitLit => Type.Top
       case _: BoolLit => BoolType()
     case Lam(params, body) =>
-      ???
+      val nestCtx = ctx.nest
+      given Ctx = nestCtx
+      val tvs = params.map(
+        sym =>
+          val v = freshVar
+          nestCtx += sym -> v
+          v
+      )
+      Type.FunType(tvs, typeCheck(body), Type.Bot) // TODO: effect
