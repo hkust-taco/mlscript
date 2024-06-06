@@ -11,7 +11,9 @@ import Tree.*
 
 sealed abstract class TypeArg
 
-case class Wildcard(in: Type, out: Type) extends TypeArg
+case class Wildcard(in: Type, out: Type) extends TypeArg {
+  override def toString(): String = s"in $in out $out"
+}
 
 enum Type extends TypeArg:
   case ClassType(name: ClassSymbol, targs: Ls[TypeArg])
@@ -23,11 +25,12 @@ enum Type extends TypeArg:
   case Top // TODO: level?
   case Bot
   override def toString(): String = this match
-    case ClassType(name, targs) => s"${name.nme}" // TODO: targs
+    case ClassType(name, targs) =>
+      if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.mkString(", ")}]"
     case InfVar(lvl, uid, state) => s"α${uid}" // TODO: bounds?
     case FunType(args, ret, eff) => s"(${args.mkString(", ")}) ->{${eff}} ${ret}"
-    case ComposedType(lhs, rhs, pol) => ???
-    case NegType(ty) => ???
+    case ComposedType(lhs, rhs, pol) => s"${lhs} ${if pol then "∨" else "∧"} ${rhs}"
+    case NegType(ty) => s"¬${ty}"
     case PolymorphicType(lvl, tv, body) => ???
     case Top => "⊤"
     case Bot => "⊥"
