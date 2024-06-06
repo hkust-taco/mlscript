@@ -13,9 +13,13 @@ object NormalForm:
     override def toString(): String = if targs.isEmpty then s"${cls.nme}" else s"${cls.nme}[${targs.map{
       case (in, out) => s"in $in out $out"
     }.mkString(", ")}]"
+    def toType: Type = Type.ClassType(cls, targs.map {
+      case (in, out) => Wildcard(in.toType, out.toType)
+    })
   }
   final case class NormalFunType(args: List[Disj], ret: Disj, eff: Disj) {
     override def toString(): String = s"(${args.mkString(", ")}) ->{${eff}} ${ret}"
+    def toType: Type = Type.FunType(args.map(_.toType), ret.toType, eff.toType)
   }
 
   enum Disj: // * D ::=
@@ -27,6 +31,11 @@ object NormalForm:
       case Con(conj) => conj.toString()
       case DC(disj, conj) => s"$disj ∨ $conj"
     }
+    def toType: Type = this match
+      case Bot => Type.Bot
+      case Con(conj) => conj.toType
+      case DC(disj, conj) => Type.ComposedType(disj.toType, conj.toType, true)
+
   enum Conj: // * C ::=
     case INU(i: Inter, u: Union) // * I /\ ~U |
     case CVar(conj: Conj, v: Type.InfVar) // * C /\ a |
@@ -49,6 +58,10 @@ object NormalForm:
       case CVar(conj, v) => s"$conj ∧ $v"
       case INU(i, u) => s"$i ∧ ¬ $u"
     }
+    def toType: Type = this match
+      case INU(i, u) => Type.ComposedType(i.toType, Type.NegType(u.toType), false)
+      case CVar(conj, v) => Type.ComposedType(conj.toType, v, false)
+      case CNVar(conj, v) => Type.ComposedType(conj.toType, Type.NegType(v), false)
     
   enum Inter: // * I ::=
     case Top // * ⊤ |
@@ -70,6 +83,10 @@ object NormalForm:
       case Top => "⊤"
       case Fun(f) => f.toString()
       case Cls(c) => c.toString()
+    def toType: Type = this match
+      case Top => Type.Top
+      case Fun(f) => f.toType
+      case Cls(c) => c.toType
     
   enum Union: // * U ::=
     case Bot // * ⊥ |
@@ -94,7 +111,10 @@ object NormalForm:
       case Bot => "⊥"
       case Fun(f) => f.toString()
       case Uni(lhs, rhs) => s"$lhs ∨ $rhs"
-    
+    def toType: Type = this match
+      case Bot => Type.Bot
+      case Fun(f) => f.toType
+      case Uni(lhs, rhs) => Type.ComposedType(lhs.toType, rhs.toType, true)
 
   private lazy val topConj = Conj.INU(Inter.Top, Union.Bot)
 
