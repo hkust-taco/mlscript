@@ -231,7 +231,8 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
             val typer = BBTyper(raise)
             val ctx = Ctx.init(curCtx.members)
             val ty = typer.typeCheck(e)(using ctx)
-            output(s"Type: ${ty}")
+            val printer = PrettyPrinter((msg: String) => output(msg))
+            printer.print(ty)
           else
             val typer = typing.TypeChecker(raise)
             val ty = typer.typeProd(e)

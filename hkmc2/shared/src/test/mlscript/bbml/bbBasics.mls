@@ -41,10 +41,17 @@ x => x
 (x, y) => x + y
 //│ Elab: { λx, y. +#2(x@1#0, y@2#0)‹›‹›‹› }‹›
 //│ Type: (α0, α1) ->{⊥} α3
+//│ Where:
+//│   α0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   α1 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   Int ∧ ¬⊥ <: α3
 
 ((x, y) => x + y)(40, 2)
 //│ Elab: { λx, y. +#3(x@2#0, y@3#0)‹›‹›‹›(40‹›, 2‹›)‹›‹› }‹›
 //│ Type: α5
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α3 <: α5
+//│   Int ∧ ¬⊥ <: α3
 
 :e
 114 + "514"
@@ -52,6 +59,8 @@ x => x
 //│ ╔══[ERROR] Can not solve Str <: ⊥
 //│ ╙──
 //│ Type: α1
+//│ Where:
+//│   Int ∧ ¬⊥ <: α1
 
 :fixme
 let x = 42 in x
@@ -70,10 +79,10 @@ class Foo(x: Int)
 :fixme
 let foo = new Foo(42)
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding equals sign; found 'new' keyword instead
-//│ ║  l.69: 	let foo = new Foo(42)
+//│ ║  l.80: 	let foo = new Foo(42)
 //│ ╙──      	          ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.69: 	let foo = new Foo(42)
+//│ ║  l.80: 	let foo = new Foo(42)
 //│ ╙──      	              ^^^
 //│ Elab: { <error>‹› }‹›
 //│ /!!!\ Uncaught error: scala.MatchError: Error (of class hkmc2.semantics.Term$$anon$1)
