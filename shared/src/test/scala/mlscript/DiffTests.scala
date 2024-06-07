@@ -47,6 +47,7 @@ abstract class ModeType {
   def simpledef: Bool
   def lift: Bool
   def nolift: Bool
+  def postProcessAfterTyping: Bool
 }
 
 class DiffTests
@@ -913,10 +914,9 @@ class DiffTests
                 file.ext =:= "mls" && !mode.noGeneration && !noJavaScript) {
               import codeGenTestHelpers._
               val pp = 
-                if (mode.postProcessAfterTyping) {
-                  Pgrm(postTypingProcess(mode, basePath, testName, TypingUnit(p.tops), output)._2.fold(???)(_.entities)) 
-                } else { 
-                  p
+                postTypingProcess(mode, basePath, testName, TypingUnit(p.tops), output) match {
+                  case (_, Some(stmts)) => Pgrm(stmts.entities)
+                  case _ => p
                 }
               backend(p, mode.allowEscape, newDefs && newParser, prettyPrintQQ) match {
                 case testCode @ TestCode(prelude, queries) => {

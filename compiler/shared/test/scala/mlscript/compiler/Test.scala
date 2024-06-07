@@ -48,6 +48,9 @@ class DiffTestCompiler extends DiffTests {
     }
   
   override def postTypingProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (List[Str], Option[TypingUnit]) = 
+    if (!mode.postProcessAfterTyping) 
+      return (Nil, None)
+    
     val outputBuilder = StringBuilder()
 
     if(mode.simpledef || basePath.contains("Defunctionalize")) {
