@@ -37,7 +37,6 @@ class DiffTestCompiler extends DiffTests {
       val pd = SimpleDef(treeDebug)
       pd(rstUnit)
       val defuncAST = pd.rewriteProgram(rstUnit)
-      //output(s"${defuncAST}\n")
       output(defuncAST.showDbg.replace(";", "\n"))
       output("End simpledef\n")
       return (outputBuilder.toString().linesIterator.toList, Some(defuncAST))
@@ -48,6 +47,21 @@ class DiffTestCompiler extends DiffTests {
       (outputBuilder.toString().linesIterator.toList, None)
     }
   
+  override def postTypingProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (List[Str], Option[TypingUnit]) = 
+    val outputBuilder = StringBuilder()
+
+    if(mode.simpledef || basePath.contains("Defunctionalize")) {
+      output("\nSimpledef:")
+      val treeDebug = new TreeDebug(if mode.dbgSimpledef then output else (str) => ())
+      val pd = SimpleDef(treeDebug)
+      pd(unit)
+      val defuncAST = pd.rewriteProgram(unit)
+      output(defuncAST.showDbg.replace(";", "\n"))
+      output("End simpledef\n")
+      return (outputBuilder.toString().linesIterator.toList, Some(defuncAST))
+    }
+    (outputBuilder.toString().linesIterator.toList, None)
+    
   override protected lazy val files = allFiles.filter { file =>
       val fileName = file.baseName
       validExt(file.ext) && filter(file.relativeTo(pwd))

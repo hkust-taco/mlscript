@@ -18,7 +18,6 @@ type Cnstr = ProdStrat -> ConsStrat
  *  Lastly, we rewrite selection terms by generating pattern matches on their possible inputs.
  */
 
-
 enum ProdStrat(using val euid: TermId) {
   case NoProd()(using TermId) 
   case ProdObj(ctor: Option[Var], fields: Ls[Var -> ProdStrat], parents: Ls[ProdStrat] = Nil)(using TermId) extends ProdStrat, ProdObjImpl
@@ -45,8 +44,8 @@ trait ProdObjImpl { self: ProdObj =>
 
 class Context(
   variables: Map[Var, ProdVar],
-  classes: Map[Var, ProdObj]) 
-{
+  classes: Map[Var, ProdObj],
+) {
   def apply(v: Var): ProdVar =
     variables(v)
   def ++(other: IterableOnce[(Var, ProdVar)]): Context =
@@ -271,7 +270,7 @@ class SimpleDef(debug: Debug) {
         apply(TypingUnit(stmts))._2
       case Bra(false, term) =>
         process(term)
-      case CaseOf(trm, cases) => //TODO
+      case CaseOf(trm, cases) => // TODO: Complete constraining in conjunction with processCases
         ???
       case Eqn(lhs, rhs) =>
         process(lhs)
@@ -281,7 +280,7 @@ class SimpleDef(debug: Debug) {
     debug.outdent()
     registerTermToType(t, res)
 
-  //TODO
+  // TODO: Complete constraining for CaseBranches after implementing negative types and intersections
   def processCases(scrut: ProdVar, cs: CaseBranches)(using ctx: Context, resCons: ConsVar): Unit =
     cs match
       case Wildcard(body) => 

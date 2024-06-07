@@ -58,6 +58,7 @@ class DiffTests
   
   /**  Hook for dependent projects, like the monomorphizer. */
   def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (Ls[Str], Option[TypingUnit]) = (Nil, None)
+  def postTypingProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (Ls[Str], Option[TypingUnit]) = (Nil, None)
   
   
   @SuppressWarnings(Array("org.wartremover.warts.RedundantIsInstanceOf"))
@@ -913,7 +914,7 @@ class DiffTests
               import codeGenTestHelpers._
               val pp = 
                 if (mode.postProcessAfterTyping) {
-                 Pgrm(postProcess(mode, basePath, testName, TypingUnit(p.tops), output)._2.fold(???)(_.entities)) 
+                  Pgrm(postTypingProcess(mode, basePath, testName, TypingUnit(p.tops), output)._2.fold(???)(_.entities)) 
                 } else { 
                   p
                 }
