@@ -10,6 +10,11 @@ val object = X()
 (new X()).a
 object.a
 object.a
+//│ class X() {
+//│   val a: 6
+//│ }
+//│ val object: X
+//│ 6
 //│ 
 //│ Simpledef:
 //│ {class X() {let a = {log("ok",)
@@ -21,11 +26,6 @@ object.a
 //│  let selRes$44 = object in case selRes$44 of { X => (selRes$44).a }}
 //│ End simpledef
 //│ 
-//│ class X() {
-//│   val a: 6
-//│ }
-//│ val object: X
-//│ 6
 //│ object
 //│        = X {}
 //│ // Output

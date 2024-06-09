@@ -2,11 +2,11 @@
 
 
 [0,"abc",()].2
+//│ ()
 //│ 
 //│ Simpledef:
 //│ {([0, "abc", undefined,]).2}
 //│ End simpledef
 //│ 
-//│ ()
 //│ res
 //│     = undefined

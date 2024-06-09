@@ -4,15 +4,15 @@
 fun f(x) = f(x)
 f(0)
 f(1)
+//│ fun f: anything -> nothing
+//│ nothing
 //│ 
 //│ Simpledef:
-//│ {fun f = (x,) => f(x,)
+//│ {fun f = (x::0,) => f(x,)
 //│  f(0,)
 //│  f(1,)}
 //│ End simpledef
 //│ 
-//│ fun f: anything -> nothing
-//│ nothing
 //│ res
 //│ Runtime error:
 //│   RangeError: Maximum call stack size exceeded

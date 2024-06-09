@@ -5,6 +5,11 @@ class X() {
     fun get() = num
 }
 X().get()
+//│ class X() {
+//│   fun get: () -> 5
+//│   val num: 5
+//│ }
+//│ 5
 //│ 
 //│ Simpledef:
 //│ {class X() {let num = 5
@@ -12,10 +17,5 @@ X().get()
 //│  let selRes$10 = X() in case selRes$10 of { X => (selRes$10).get() }}
 //│ End simpledef
 //│ 
-//│ class X() {
-//│   fun get: () -> 5
-//│   val num: 5
-//│ }
-//│ 5
 //│ res
 //│     = 5

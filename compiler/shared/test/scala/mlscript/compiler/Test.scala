@@ -31,28 +31,13 @@ class DiffTestCompiler extends DiffTests {
         output("Lifting failed: " ++ err.toString())
         if mode.fullExceptionStack then 
           outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
-    if(mode.simpledef || basePath.contains("Defunctionalize")) {
-      output("\nSimpledef:")
-      val treeDebug = new TreeDebug(if mode.dbgSimpledef then output else (str) => ())
-      val pd = SimpleDef(treeDebug)
-      pd(rstUnit)
-      val defuncAST = pd.rewriteProgram(rstUnit)
-      output(defuncAST.showDbg.replace(";", "\n"))
-      output("End simpledef\n")
-      return (outputBuilder.toString().linesIterator.toList, Some(defuncAST))
-    }
     if (mode.lift || basePath.contains("Lifter")) {
       (outputBuilder.toString().linesIterator.toList, Some(rstUnit))  
     } else {
       (outputBuilder.toString().linesIterator.toList, None)
     }
   
-  override def postTypingProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (List[Str], Option[TypingUnit]) = 
-    if (!mode.postProcessAfterTyping) 
-      return (Nil, None)
-    
-    val outputBuilder = StringBuilder()
-
+  override def postTypingProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit): Option[TypingUnit] = 
     if(mode.simpledef || basePath.contains("Defunctionalize")) {
       output("\nSimpledef:")
       val treeDebug = new TreeDebug(if mode.dbgSimpledef then output else (str) => ())
@@ -61,9 +46,9 @@ class DiffTestCompiler extends DiffTests {
       val defuncAST = pd.rewriteProgram(unit)
       output(defuncAST.showDbg.replace(";", "\n"))
       output("End simpledef\n")
-      return (outputBuilder.toString().linesIterator.toList, Some(defuncAST))
+      return Some(defuncAST)
     }
-    (outputBuilder.toString().linesIterator.toList, None)
+    None
     
   override protected lazy val files = allFiles.filter { file =>
       val fileName = file.baseName

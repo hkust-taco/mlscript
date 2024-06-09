@@ -7,6 +7,12 @@ class A(val i: Int) {
 val a = A(6)
 a.get1()
 a.get2
+//│ class A(i: Int) {
+//│   fun get1: () -> Int
+//│   fun get2: Int
+//│ }
+//│ val a: A
+//│ Int
 //│ 
 //│ Simpledef:
 //│ {class A(val i: Int,) {fun get1 = () => i
@@ -16,12 +22,6 @@ a.get2
 //│  let selRes$28 = a in case selRes$28 of { A => (selRes$28).get2 }}
 //│ End simpledef
 //│ 
-//│ class A(i: Int) {
-//│   fun get1: () -> Int
-//│   fun get2: Int
-//│ }
-//│ val a: A
-//│ Int
 //│ a
 //│   = A {}
 //│ res
@@ -36,6 +36,12 @@ class A(val i: Str) {
 val a = A("6")
 a.get1()
 a.get2
+//│ class A(i: Str) {
+//│   fun get1: () -> Str
+//│   fun get2: Str
+//│ }
+//│ val a: A
+//│ Str
 //│ 
 //│ Simpledef:
 //│ {class A(val i: Str,) {fun get1 = () => i
@@ -45,12 +51,6 @@ a.get2
 //│  let selRes$28 = a in case selRes$28 of { A => (selRes$28).get2 }}
 //│ End simpledef
 //│ 
-//│ class A(i: Str) {
-//│   fun get1: () -> Str
-//│   fun get2: Str
-//│ }
-//│ val a: A
-//│ Str
 //│ a
 //│   = A {}
 //│ res
@@ -66,6 +66,13 @@ class Y(val foo: X) {
 val a = Y(X())
 a.get1()
 a.get2
+//│ class X()
+//│ class Y(foo: X) {
+//│   fun get1: () -> X
+//│   fun get2: X
+//│ }
+//│ val a: Y
+//│ X
 //│ 
 //│ Simpledef:
 //│ {class X() {}
@@ -76,13 +83,6 @@ a.get2
 //│  let selRes$32 = a in case selRes$32 of { Y => (selRes$32).get2 }}
 //│ End simpledef
 //│ 
-//│ class X()
-//│ class Y(foo: X) {
-//│   fun get1: () -> X
-//│   fun get2: X
-//│ }
-//│ val a: Y
-//│ X
 //│ a
 //│   = Y {}
 //│ res
@@ -99,6 +99,14 @@ class K(val foo: I, val bar: J) {
 val k = K(I(), J())
 k.getFoo
 k.getBar
+//│ class I()
+//│ class J()
+//│ class K(foo: I, bar: J) {
+//│   fun getBar: J
+//│   fun getFoo: I
+//│ }
+//│ val k: K
+//│ J
 //│ 
 //│ Simpledef:
 //│ {class I() {}
@@ -110,14 +118,6 @@ k.getBar
 //│  let selRes$30 = k in case selRes$30 of { K => (selRes$30).getBar }}
 //│ End simpledef
 //│ 
-//│ class I()
-//│ class J()
-//│ class K(foo: I, bar: J) {
-//│   fun getBar: J
-//│   fun getFoo: I
-//│ }
-//│ val k: K
-//│ J
 //│ k
 //│   = K {}
 //│ res

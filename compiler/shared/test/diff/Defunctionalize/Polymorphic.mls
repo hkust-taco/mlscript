@@ -8,6 +8,14 @@ class OneBool(val b: Bool){
   fun get = () -> b
 }
 (if b then OneInt(1) else OneBool(true)).get()
+//│ let b: true
+//│ class OneInt(a: Int) {
+//│   fun get: () -> Int
+//│ }
+//│ class OneBool(b: Bool) {
+//│   fun get: () -> Bool
+//│ }
+//│ Int | false | true
 //│ 
 //│ Simpledef:
 //│ {let b = true
@@ -17,14 +25,6 @@ class OneBool(val b: Bool){
 //│  OneBool => (selRes$20).get() }}
 //│ End simpledef
 //│ 
-//│ let b: true
-//│ class OneInt(a: Int) {
-//│   fun get: () -> Int
-//│ }
-//│ class OneBool(b: Bool) {
-//│   fun get: () -> Bool
-//│ }
-//│ Int | false | true
 //│ b
 //│   = true
 //│ res

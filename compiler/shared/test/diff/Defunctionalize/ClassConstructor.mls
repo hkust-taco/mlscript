@@ -11,16 +11,6 @@ class Y(val num: Int) {
 let y = new Y(6)
 let x = new X
 (if true then y else x).num
-//│ 
-//│ Simpledef:
-//│ {class X {let num = 5}
-//│  class Y(val num: Int,) {}
-//│  let y = (new Y)(6,)
-//│  let x = new X
-//│  let selRes$40 = '(' if (true) then y else x ')' in case selRes$40 of { Y => (selRes$40).num
-//│  X => (selRes$40).num }}
-//│ End simpledef
-//│ 
 //│ class X {
 //│   constructor()
 //│   val num: 5
@@ -31,6 +21,16 @@ let x = new X
 //│ let y: Y
 //│ let x: X
 //│ Int
+//│ 
+//│ Simpledef:
+//│ {class X {let num = 5}
+//│  class Y(val num: Int,) {}
+//│  let y = (new Y)(6,)
+//│  let x = new X
+//│  let selRes$40 = '(' if (true) then y else x ')' in case selRes$40 of { Y => (selRes$40).num
+//│  X => (selRes$40).num }}
+//│ End simpledef
+//│ 
 //│ y
 //│   = Y {}
 //│ x
@@ -38,7 +38,6 @@ let x = new X
 //│ res
 //│     = 11
 
-:dsd
 class Z(val num1: Int) {
     constructor(y, x) {
         num1 = y+x
@@ -53,86 +52,6 @@ class W(val num1: Int, val num2: Int) {
 val w = new W(3)
 val z = new Z(6, 11)
 (if true then w else z).num1
-//│ 
-//│ Simpledef:
-//│ Completing type info for class Var(Z) with ctors Map(Var(Z) -> ProdVar(2,Z), Var(W) -> ProdVar(3,W))
-//│ Processing term Blk(List(Eqn(Var(num1),App(Var(+),Tup(List((None,Fld(_,Var(y))), (None,Fld(_,Var(x)))))))))
-//│ ║Processing term Eqn(Var(num1),App(Var(+),Tup(List((None,Fld(_,Var(y))), (None,Fld(_,Var(x)))))))
-//│ ║║Processing term Var(num1)
-//│ ║║Processing term App(Var(+),Tup(List((None,Fld(_,Var(y))), (None,Fld(_,Var(x))))))
-//│ ║║║Processing term Var(+)
-//│ ║║║Processing term Tup(List((None,Fld(_,Var(y))), (None,Fld(_,Var(x)))))
-//│ ║║║║Processing term Var(y)
-//│ ║║║║Processing term Var(x)
-//│ ║║║constraining ProdFun(ConsTup(List(ConsObj(Some(Var(prim$Int)),List()), ConsObj(Some(Var(prim$Int)),List()))),ProdObj(Some(Var(prim$Int)),List(),List())) -> ConsFun(ProdTup(List(ProdVar(7,3_y), ProdVar(8,4_x))),ConsVar(19,15_callres))
-//│ ║║║constraining ProdTup(List(ProdVar(7,3_y), ProdVar(8,4_x))) -> ConsTup(List(ConsObj(Some(Var(prim$Int)),List()), ConsObj(Some(Var(prim$Int)),List())))
-//│ ║║║constraining ProdVar(7,3_y) -> ConsObj(Some(Var(prim$Int)),List())
-//│ ║║║constraining ProdVar(8,4_x) -> ConsObj(Some(Var(prim$Int)),List())
-//│ ║║║constraining ProdObj(Some(Var(prim$Int)),List(),List()) -> ConsVar(19,15_callres)
-//│ constraining ProdFun(ConsTup(List(ConsVar(7,3_y), ConsVar(8,4_x))),ProdObj(Some(Var(Z)),List((Var(num1),ProdVar(6,1_num1))),List())) -> ConsVar(2,Z)
-//│ constraining ProdObj(Some(Var(Z)),List((Var(num1),ProdVar(6,1_num1))),List()) -> ConsVar(4,Z)
-//│ Completing type info for class Var(W) with ctors Map(Var(Z) -> ProdVar(2,Z), Var(W) -> ProdVar(3,W))
-//│ Processing term Blk(List(Eqn(Var(num1),Var(w)), Eqn(Var(num2),Var(w))))
-//│ ║Processing term Eqn(Var(num1),Var(w))
-//│ ║║Processing term Var(num1)
-//│ ║║Processing term Var(w)
-//│ ║Processing term Eqn(Var(num2),Var(w))
-//│ ║║Processing term Var(num2)
-//│ ║║Processing term Var(w)
-//│ constraining ProdFun(ConsTup(List(ConsVar(22,23_w))),ProdObj(Some(Var(W)),List((Var(num1),ProdVar(20,21_num1)), (Var(num2),ProdVar(21,22_num2))),List())) -> ConsVar(3,W)
-//│ constraining ProdObj(Some(Var(W)),List((Var(num1),ProdVar(20,21_num1)), (Var(num2),ProdVar(21,22_num2))),List()) -> ConsVar(5,W)
-//│ Skipping NuTypeDef(Cls,TypeName(Z),List(),Some(Tup(List((Some(Var(num1)),Fld(g,Var(Int)))))),Some(Constructor(Tup(List((None,Fld(_,Var(y))), (None,Fld(_,Var(x))))),Blk(List(Eqn(Var(num1),App(Var(+),Tup(List((None,Fld(_,Var(y))), (None,Fld(_,Var(x))))))))))),None,List(),None,None,TypingUnit(List()))
-//│ Skipping NuTypeDef(Cls,TypeName(W),List(),Some(Tup(List((Some(Var(num1)),Fld(g,Var(Int))), (Some(Var(num2)),Fld(g,Var(Int)))))),Some(Constructor(Tup(List((None,Fld(_,Var(w))))),Blk(List(Eqn(Var(num1),Var(w)), Eqn(Var(num2),Var(w)))))),None,List(),None,None,TypingUnit(List()))
-//│ Processing term App(NuNew(Var(W)),Tup(List((None,Fld(_,IntLit(3))))))
-//│ ║Processing term Var(W)
-//│ ║Processing term Tup(List((None,Fld(_,IntLit(3)))))
-//│ ║║Processing term IntLit(3)
-//│ ║constraining ProdVar(3,W) -> ConsFun(ProdTup(List(ProdObj(Some(Var(prim$Int)),List(),List()))),ConsVar(33,45_callres))
-//│ ║constraining ProdFun(ConsTup(List(ConsVar(22,23_w))),ProdObj(Some(Var(W)),List((Var(num1),ProdVar(20,21_num1)), (Var(num2),ProdVar(21,22_num2))),List())) -> ConsFun(ProdTup(List(ProdObj(Some(Var(prim$Int)),List(),List()))),ConsVar(33,45_callres))
-//│ ║constraining ProdTup(List(ProdObj(Some(Var(prim$Int)),List(),List()))) -> ConsTup(List(ConsVar(22,23_w)))
-//│ ║constraining ProdObj(Some(Var(prim$Int)),List(),List()) -> ConsVar(22,23_w)
-//│ ║constraining ProdObj(Some(Var(W)),List((Var(num1),ProdVar(20,21_num1)), (Var(num2),ProdVar(21,22_num2))),List()) -> ConsVar(33,45_callres)
-//│ constraining ProdVar(33,45_callres) -> ConsVar(0,w)
-//│ constraining ProdObj(Some(Var(W)),List((Var(num1),ProdVar(20,21_num1)), (Var(num2),ProdVar(21,22_num2))),List()) -> ConsVar(0,w)
-//│ Processing term App(NuNew(Var(Z)),Tup(List((None,Fld(_,IntLit(6))), (None,Fld(_,IntLit(11))))))
-//│ ║Processing term Var(Z)
-//│ ║Processing term Tup(List((None,Fld(_,IntLit(6))), (None,Fld(_,IntLit(11)))))
-//│ ║║Processing term IntLit(6)
-//│ ║║Processing term IntLit(11)
-//│ ║constraining ProdVar(2,Z) -> ConsFun(ProdTup(List(ProdObj(Some(Var(prim$Int)),List(),List()), ProdObj(Some(Var(prim$Int)),List(),List()))),ConsVar(36,55_callres))
-//│ ║constraining ProdFun(ConsTup(List(ConsVar(7,3_y), ConsVar(8,4_x))),ProdObj(Some(Var(Z)),List((Var(num1),ProdVar(6,1_num1))),List())) -> ConsFun(ProdTup(List(ProdObj(Some(Var(prim$Int)),List(),List()), ProdObj(Some(Var(prim$Int)),List(),List()))),ConsVar(36,55_callres))
-//│ ║constraining ProdTup(List(ProdObj(Some(Var(prim$Int)),List(),List()), ProdObj(Some(Var(prim$Int)),List(),List()))) -> ConsTup(List(ConsVar(7,3_y), ConsVar(8,4_x)))
-//│ ║constraining ProdObj(Some(Var(prim$Int)),List(),List()) -> ConsVar(7,3_y)
-//│ ║constraining ProdObj(Some(Var(prim$Int)),List(),List()) -> ConsObj(Some(Var(prim$Int)),List())
-//│ ║constraining ProdObj(Some(Var(prim$Int)),List(),List()) -> ConsVar(8,4_x)
-//│ ║constraining ProdObj(Some(Var(prim$Int)),List(),List()) -> ConsObj(Some(Var(prim$Int)),List())
-//│ ║constraining ProdObj(Some(Var(Z)),List((Var(num1),ProdVar(6,1_num1))),List()) -> ConsVar(36,55_callres)
-//│ constraining ProdVar(36,55_callres) -> ConsVar(1,z)
-//│ constraining ProdObj(Some(Var(Z)),List((Var(num1),ProdVar(6,1_num1))),List()) -> ConsVar(1,z)
-//│ Processing term Sel(Bra(false,If(IfThen(Var(true),Var(w)),Some(Var(z)))),Var(num1))
-//│ ║Processing term Bra(false,If(IfThen(Var(true),Var(w)),Some(Var(z))))
-//│ ║║Processing term If(IfThen(Var(true),Var(w)),Some(Var(z)))
-//│ ║║║Processing term Var(true)
-//│ ║║║constraining ProdObj(Some(Var(prim$Bool)),List(),List()) -> ConsObj(Some(Var(prim$Bool)),List())
-//│ ║║║Processing term Var(w)
-//│ ║║║constraining ProdVar(0,w) -> ConsVar(38,61_ifres)
-//│ ║║║constraining ProdObj(Some(Var(W)),List((Var(num1),ProdVar(20,21_num1)), (Var(num2),ProdVar(21,22_num2))),List()) -> ConsVar(38,61_ifres)
-//│ ║║║Processing term Var(z)
-//│ ║║║constraining ProdVar(1,z) -> ConsVar(38,61_ifres)
-//│ ║║║constraining ProdObj(Some(Var(Z)),List((Var(num1),ProdVar(6,1_num1))),List()) -> ConsVar(38,61_ifres)
-//│ ║constraining ProdVar(38,61_ifres) -> ConsObj(None,List((Var(num1),ConsVar(37,57_selres))))
-//│ ║constraining ProdObj(Some(Var(Z)),List((Var(num1),ProdVar(6,1_num1))),List()) -> ConsObj(None,List((Var(num1),ConsVar(37,57_selres))))
-//│ ║constraining ProdVar(6,1_num1) -> ConsVar(37,57_selres)
-//│ ║constraining ProdObj(Some(Var(W)),List((Var(num1),ProdVar(20,21_num1)), (Var(num2),ProdVar(21,22_num2))),List()) -> ConsObj(None,List((Var(num1),ConsVar(37,57_selres))))
-//│ ║constraining ProdVar(20,21_num1) -> ConsVar(37,57_selres)
-//│ {class Z(val num1: Int,) {}
-//│  class W(val num1: Int, val num2: Int,) {}
-//│  let w = (new W)(3,)
-//│  let z = (new Z)(6, 11,)
-//│  let selRes$58 = '(' if (true) then w else z ')' in case selRes$58 of { W => (selRes$58).num1
-//│  Z => (selRes$58).num1 }}
-//│ End simpledef
-//│ 
 //│ class Z(num1: Int) {
 //│   constructor(y: Int, x: Int)
 //│ }
@@ -142,6 +61,16 @@ val z = new Z(6, 11)
 //│ val w: W
 //│ val z: Z
 //│ Int
+//│ 
+//│ Simpledef:
+//│ {class Z(val num1: Int,) {}
+//│  class W(val num1: Int, val num2: Int,) {}
+//│  let w = (new W)(3,)
+//│  let z = (new Z)(6, 11,)
+//│  let selRes$58 = '(' if (true) then w else z ')' in case selRes$58 of { W => (selRes$58).num1
+//│  Z => (selRes$58).num1 }}
+//│ End simpledef
+//│ 
 //│ w
 //│   = W {}
 //│ z

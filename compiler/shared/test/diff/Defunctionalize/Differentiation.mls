@@ -3,7 +3,6 @@
 :NewDefs
 
 
-:ppat
 abstract class Exp() {
     virtual fun derive(): Exp
     virtual fun getVal: Str

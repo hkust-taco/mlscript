@@ -1,7 +1,6 @@
 :NewDefs
 
 
-:ppat
 abstract class List() {
     fun getRes: Str
     fun map: error

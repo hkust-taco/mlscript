@@ -13,6 +13,12 @@ g.y()
 g.x
 g.y()
 g.x
+//│ class G(num: Int) {
+//│   val x: Int
+//│   val y: () -> Int
+//│ }
+//│ val g: G
+//│ Int
 //│ 
 //│ Simpledef:
 //│ {class G(val num: Int,) {let x = {log("once on construction",)
@@ -26,12 +32,6 @@ g.x
 //│  let selRes$76 = g in case selRes$76 of { G => (selRes$76).x }}
 //│ End simpledef
 //│ 
-//│ class G(num: Int) {
-//│   val x: Int
-//│   val y: () -> Int
-//│ }
-//│ val g: G
-//│ Int
 //│ g
 //│   = G {}
 //│ // Output

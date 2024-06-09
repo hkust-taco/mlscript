@@ -3,21 +3,20 @@
 fun fac(n) = 
   if (n > 1) then fac(n - 1) * n else 1
 fac(5)
+//│ fun fac: Int -> Int
+//│ Int
 //│ 
 //│ Simpledef:
-//│ {fun fac = (n,) => {if ('(' >(n, 1,) ')') then *(fac(-(n, 1,),), n,) else 1}
+//│ {fun fac = (n::0,) => {if ('(' >(n, 1,) ')') then *(fac(-(n, 1,),), n,) else 1}
 //│  fac(5,)}
 //│ End simpledef
 //│ 
-//│ fun fac: Int -> Int
-//│ Int
 //│ res
 //│     = 120
 
 // TODO: Support for specialized pattern matching types
 // In this example, the type of l in count(l) would need to be constrained to
 // object & ~(), which requires implementing neg types, intersections, etc.
-:ppat
 class List(val l: List | Nil | undefined, val hasTail: Bool)  {}
 class Nil(val l: List | Nil | undefined, val hasTail: Bool)  {}
 fun count(lst) =

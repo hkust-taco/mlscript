@@ -11,6 +11,14 @@ a.x
 a.y()
 a.z
 a.w()
+//│ class A() {
+//│   fun w: () -> 5
+//│   val x: 2
+//│   val y: () -> 3
+//│   fun z: 4
+//│ }
+//│ val a: A
+//│ 5
 //│ 
 //│ Simpledef:
 //│ {class A() {let x = 2
@@ -24,14 +32,6 @@ a.w()
 //│  let selRes$40 = a in case selRes$40 of { A => (selRes$40).w() }}
 //│ End simpledef
 //│ 
-//│ class A() {
-//│   fun w: () -> 5
-//│   val x: 2
-//│   val y: () -> 3
-//│   fun z: 4
-//│ }
-//│ val a: A
-//│ 5
 //│ a
 //│   = A {}
 //│ res
