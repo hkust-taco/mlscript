@@ -6,6 +6,7 @@ import scala.collection.mutable.StringBuilder
 import mlscript.{DiffTests, ModeType, TypingUnit}
 import mlscript.compiler.TreeDebug
 import mlscript.Polyfill
+import simpledef.SimpleDef
 
 class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*

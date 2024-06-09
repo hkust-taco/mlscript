@@ -1,5 +1,6 @@
 package mlscript
 package compiler
+package simpledef
 
 import mlscript.utils.*, shorthands.*
 import scala.collection.mutable
