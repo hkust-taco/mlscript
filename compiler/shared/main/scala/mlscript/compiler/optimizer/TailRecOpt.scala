@@ -9,6 +9,62 @@ import Message.MessageContext
 import compiler.ir._
 import compiler.ir.Node._
 
+/*
+
+DOCUMENTATION OF SEMANTICS OF @tailcall and @tailrec
+
+@tailcall: Used to annotate specific function calls. Calls annotated with @tailcall 
+must be tail calls or tail modulo-cons calls. These calls may be optimized to not
+consume additional stack space. If such an optimization is not possible, then the
+compiler will throw an error.
+
+If there are multiple possible candidates for tail modulo-cons calls in a single
+branch of an expression, then @tailcall can be uesd to indicate which one will be
+optimized. For instance in
+
+fun foo() =
+  A(foo(), bar())
+
+we can use @tailcall to annotate the call foo() or bar(). If a call other than the
+last call is annotated with @tailcall, then the remaining functions must be pure
+to ensure that reordering computations does not change the result.
+
+If bar() is impure but you still want to optimize the call foo(), then you can do
+
+fun foo() =
+  let b = bar()
+  let a = @tailcall foo()
+  A(a, b)
+
+because here, you are taking responsibility for the reordering of the computations.
+
+@tailrec: Used to annotate functions. When this annotation is used on a function, say
+@tailrec fun foo(), the compiler will ensure no sequence of recursive calls back to foo()
+consume stack space, i.e. they are all tail calls. Note that a call to foo() may
+consume an arbitrary amount of stack space as long as foo() is only consuming finite
+stack space. For example,
+
+@tailrec fun foo() = bar()
+fun bar() =
+  bar()
+  bar()
+
+is valid. However,
+
+@tailrec fun foo() = bar()
+fun bar() =
+  foo()
+  bar()
+
+is invalid. If we swap the position of foo() and bar() in the body of bar, it is still invalid.
+
+Equivalently, if fun foo() is annotated with @tailrec, let S be the largest strongly
+connected component in the call-graph of the program that contains foo. Then an error
+will be thrown if and only if all edges (calls) connecting the nodes of the strongly
+connected component are tail calls or tail modulo-cons calls.
+
+*/
+
 // fnUid should be the same FreshInt that was used to build the graph being passed into this class
 class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diagnostic => Unit):
   case class LetCtorNodeInfo(node: LetExpr, ctor: Expr.CtorApp, cls: ClassInfo, ctorValName: Name, fieldName: String, idx: Int)
