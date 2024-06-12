@@ -27,7 +27,15 @@ fun id(x) = x
 //│ Type: ⊤
 
 fun inc(x) = x + 1
-//│ Elab: { fun inc(x@1) = +#0(x@1#0, 1‹›)‹›‹›; }‹›
+inc(42)
+//│ Elab: { fun inc(x@1) = +#0(x@1#0, 1‹›)‹›‹›; inc#0(42‹›)‹›‹› }‹›
+//│ Type: α4
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α2 <: α4
+//│   Int ∧ ¬⊥ <: α2
+
+fun mul(x, y) = x * y
+//│ Elab: { fun mul(x@1, y@2) = *#0(x@1#0, y@2#0)‹›‹›; }‹›
 //│ Type: ⊤
 
 x => x
@@ -81,11 +89,6 @@ let x = 0 in x + "1"
 //│ Type: α1
 //│ Where:
 //│   Int ∧ ¬⊥ <: α1
-
-:fixme
-inc(42)
-//│ Elab: { inc#0(42‹›)‹›‹› }‹›
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 class Foo(x: Int)
 //│ Elab: { class Foo(x@1: class:Int#11) { }‹›; }‹›

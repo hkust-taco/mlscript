@@ -154,6 +154,17 @@ class BBTyper(raise: Raise):
         case LetBinding(Pattern.Var(sym), rhs) =>
           val rhsTy = typeCheck(rhs)
           nestCtx += sym -> rhsTy
+        case TermDefinition(Fun, sym, Some(params), sign, Some(body), _) =>
+          val defCtx = nestCtx.nest
+          val argsTy = params.map {
+            case Param(_, sym, _) =>
+              val v = freshVar
+              defCtx += sym -> v
+              v
+          }
+          val bodyTy = typeCheck(body)(using defCtx)
+          ctx += sym -> Type.FunType(argsTy, bodyTy, Type.Bot) // TODO: eff
+        case ClassDef.Parameterized(sym, tparams, params, _, _) => () // TODO
         case _ => () // TODO
       }
       typeCheck(res)
