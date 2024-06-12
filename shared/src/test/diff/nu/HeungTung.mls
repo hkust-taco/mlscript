@@ -406,12 +406,8 @@ fun w = x => q(x)
 //│   where
 //│     [+'a, -'b] in {[0 | 1, true], [1 | 2, false]}
 
-// TODO
 w(0)
-//│ forall 'a. 'a
-//│   where
-//│     'a :> true
-//│     [+'b, -'a] in {[0 | 1, true], [1 | 2, false]}
+//│ true
 //│ res
 //│     = <no result>
 //│       w and q are not implemented
@@ -484,13 +480,13 @@ let g = x => s(r(x))
 :e
 g(0)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.485: 	g(0)
+//│ ║  l.481: 	g(0)
 //│ ║         	^^^^
 //│ ╟── integer literal of type `Int` does not match type `?a`
-//│ ║  l.485: 	g(0)
+//│ ║  l.481: 	g(0)
 //│ ║         	  ^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.473: 	let g = x => s(r(x))
+//│ ║  l.469: 	let g = x => s(r(x))
 //│ ╙──       	               ^^^^
 //│ forall 'a. error | 'a
 //│   where

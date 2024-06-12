@@ -1012,7 +1012,9 @@ abstract class TyperHelpers { Typer: Typer =>
           val couldBeDistribbed = bod.varsBetween(polymLevel, MaxLevel)
           println(s"could be distribbed: $couldBeDistribbed")
           if (couldBeDistribbed.isEmpty) return N
-          val cannotBeDistribbed = par.varsBetween(polymLevel, MaxLevel)
+          val cannotBeDistribbed = par.varsBetween(polymLevel, MaxLevel).flatMap { v =>
+            v :: v.tsc.keys.flatMap(_.tvs.flatMap(_._2.getVars)).toList
+          }
           println(s"cannot be distribbed: $cannotBeDistribbed")
           val canBeDistribbed = couldBeDistribbed -- cannotBeDistribbed
           if (canBeDistribbed.isEmpty) return N // TODO

@@ -1507,7 +1507,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         (implicit ctx: Ctx, freshened: MutMap[TV, ST])
         : SimpleType =
   {
-    val freshenedTsc: MutMap[TupleSetConstraints, TupleSetConstraints] = MutMap.empty
+    val freshenTsc: MutSet[TupleSetConstraints] = MutSet.empty
     def freshenImpl(ty: SimpleType, below: Level): SimpleType =
     // (trace(s"${lvl}. FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
     {
@@ -1586,24 +1586,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           freshened += tv -> v
           v.lowerBounds = tv.lowerBounds.mapConserve(freshen)
           v.upperBounds = tv.upperBounds.mapConserve(freshen)
-          tv.tsc.foreachEntry {
-            case (tsc, i) =>
-              val t = freshenedTsc.get(tsc) match {
-                case S(tsc) => tsc
-                case N =>
-                  val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov)
-                  freshenedTsc += tsc -> t
-                  t
-              }
-              t.tvs = t.tvs.zipWithIndex.map {
-                case ((p, tv: TV), j) if j == i => tv.tsc.remove(t); (p, v)
-                case (u, _) => u
-              }
-              t.tvs.zipWithIndex.foreach {
-                case ((_, tv: TV), i) => tv.tsc.update(t, i)
-                case _ => ()
-              }
-          }
+          tv.tsc.foreachEntry { case (tsc, _) => freshenTsc += tsc }
           v
       }
       
@@ -1650,7 +1633,17 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }}
     // (r => s"=> $r"))
     
-    freshenImpl(ty, below)
+    val r = freshenImpl(ty, below)
+    val fr = Map.empty[ST, ST] ++ freshened
+    freshenTsc.foreach { tsc =>
+      val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov)
+      t.tvs = t.tvs.map(x => (x._1, substSyntax(x._2)(fr)))
+      t.tvs.zipWithIndex.foreach {
+        case ((pol, tv: TV), i) => tv.tsc.update(t, i)
+        case _ => ()
+      }
+    }
+    r
   }
   
   
