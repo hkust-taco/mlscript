@@ -62,10 +62,25 @@ x => x
 //│ Where:
 //│   Int ∧ ¬⊥ <: α1
 
-:fixme
+
 let x = 42 in x
 //│ Elab: { { let x@1 = 42‹›; x@1#0 }‹› }‹›
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ Type: Int
+
+let x = 1 in let y = 2 in x + y
+//│ Elab: { { let x@1 = 1‹›; { let y@2 = 2‹›; +#5(x@1#0, y@2#0)‹›‹› }‹› }‹› }‹›
+//│ Type: α1
+//│ Where:
+//│   Int ∧ ¬⊥ <: α1
+
+:e
+let x = 0 in x + "1"
+//│ Elab: { { let x@1 = 0‹›; +#6(x@1#0, "1"‹›)‹›‹› }‹› }‹›
+//│ ╔══[ERROR] Can not solve Str <: ⊥
+//│ ╙──
+//│ Type: α1
+//│ Where:
+//│   Int ∧ ¬⊥ <: α1
 
 :fixme
 inc(42)
@@ -79,10 +94,10 @@ class Foo(x: Int)
 :fixme
 let foo = new Foo(42)
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding equals sign; found 'new' keyword instead
-//│ ║  l.80: 	let foo = new Foo(42)
+//│ ║  l.95: 	let foo = new Foo(42)
 //│ ╙──      	          ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.80: 	let foo = new Foo(42)
+//│ ║  l.95: 	let foo = new Foo(42)
 //│ ╙──      	              ^^^
 //│ Elab: { <error>‹› }‹›
 //│ /!!!\ Uncaught error: scala.MatchError: Error (of class hkmc2.semantics.Term$$anon$1)

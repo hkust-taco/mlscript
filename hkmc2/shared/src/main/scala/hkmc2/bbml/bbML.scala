@@ -147,7 +147,16 @@ class BBTyper(raise: Raise):
     case Ref(cls: ClassSymbol) =>
       ???
     case Blk(stats, res) =>
-      typeCheck(res) // TODO: stats
+      val nestCtx = ctx.nest
+      given Ctx = nestCtx
+      stats.foreach {
+        case term: Term => typeCheck(term)
+        case LetBinding(Pattern.Var(sym), rhs) =>
+          val rhsTy = typeCheck(rhs)
+          nestCtx += sym -> rhsTy
+        case _ => () // TODO
+      }
+      typeCheck(res)
     case Lit(lit) => lit match
       case _: IntLit => Ctx.intTy
       case _: DecLit => Ctx.numTy
