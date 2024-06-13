@@ -27,12 +27,8 @@ fun id(x) = x
 //│ Type: ⊤
 
 fun inc(x) = x + 1
-inc(42)
-//│ Elab: { fun inc(x@1) = +#0(x@1#0, 1‹›)‹›‹›; inc#0(42‹›)‹›‹› }‹›
-//│ Type: α4
-//│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α2 <: α4
-//│   Int ∧ ¬⊥ <: α2
+//│ Elab: { fun inc(x@1) = +#0(x@1#0, 1‹›)‹›‹›; }‹›
+//│ Type: ⊤
 
 fun mul(x, y) = x * y
 //│ Elab: { fun mul(x@1, y@2) = *#0(x@1#0, y@2#0)‹›‹›; }‹›
@@ -71,6 +67,13 @@ x => x
 //│   Int ∧ ¬⊥ <: α1
 
 
+inc(42)
+//│ Elab: { inc#0(42‹›)‹›‹› }‹›
+//│ Type: α1
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α2 <: α1
+//│   Int ∧ ¬⊥ <: α2
+
 let x = 42 in x
 //│ Elab: { { let x@1 = 42‹›; x@1#0 }‹› }‹›
 //│ Type: Int
@@ -97,10 +100,10 @@ class Foo(x: Int)
 :fixme
 let foo = new Foo(42)
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding equals sign; found 'new' keyword instead
-//│ ║  l.95: 	let foo = new Foo(42)
-//│ ╙──      	          ^^^
+//│ ║  l.101: 	let foo = new Foo(42)
+//│ ╙──       	          ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.95: 	let foo = new Foo(42)
-//│ ╙──      	              ^^^
+//│ ║  l.101: 	let foo = new Foo(42)
+//│ ╙──       	              ^^^
 //│ Elab: { <error>‹› }‹›
 //│ /!!!\ Uncaught error: scala.MatchError: Error (of class hkmc2.semantics.Term$$anon$1)

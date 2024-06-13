@@ -78,19 +78,19 @@ class VarState:
 object InfVarUid extends Uid.Handler[Type.InfVar]
 
 type EnvType = mutable.HashMap[Uid[Symbol], Type]
-type clsDefType = mutable.HashMap[Str, ClassSymbol]
+type clsDefType = mutable.HashMap[Str, ClassDef]
 final case class Ctx(parent: Option[Ctx], lvl: Int, clsDefs: clsDefType, env: EnvType):
   def +=(p: Symbol -> Type): Unit = env += p._1.uid -> p._2
   def get(sym: Symbol): Option[Type] = env.get(sym.uid) orElse parent.dlof(_.get(sym))(None)
-  def *=(cls: ClassSymbol): Unit = clsDefs += cls.id.name -> cls
-  def getDef(name: Str): Option[ClassSymbol] = clsDefs.get(name) orElse parent.dlof(_.getDef(name))(None)
+  def *=(cls: ClassDef): Unit = clsDefs += cls.sym.id.name -> cls
+  def getDef(name: Str): Option[ClassDef] = clsDefs.get(name) orElse parent.dlof(_.getDef(name))(None)
   def nest: Ctx = Ctx(Some(this), lvl, mutable.HashMap.empty, mutable.HashMap.empty)
 
 object Ctx:
-  def intTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Int").getOrElse(???), Nil)
-  def numTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Num").getOrElse(???), Nil)
-  def strTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Str").getOrElse(???), Nil)
-  def boolTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Bool").getOrElse(???), Nil) // TODO: ???
+  def intTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Int").getOrElse(???).sym, Nil)
+  def numTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Num").getOrElse(???).sym, Nil)
+  def strTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Str").getOrElse(???).sym, Nil)
+  def boolTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Bool").getOrElse(???).sym, Nil) // TODO: ???
   private val builtinClasses = Ls(
     "Any", "Int", "Num", "Str", "Bool" // TODO
   )
@@ -110,7 +110,7 @@ object Ctx:
     builtinClasses.foreach(
       cls =>
         predefs.get(cls) match
-          case Some(cls: ClassSymbol) => ctx *= cls
+          case Some(cls: ClassSymbol) => ctx *= ClassDef.Plain(cls, Nil, ObjBody(Term.Blk(Nil, Term.Lit(Tree.UnitLit(true)))), None)
           case _ => ???
     )
     builtinFuns.foreach(
@@ -164,7 +164,7 @@ class BBTyper(raise: Raise):
           }
           val bodyTy = typeCheck(body)(using defCtx)
           ctx += sym -> Type.FunType(argsTy, bodyTy, Type.Bot) // TODO: eff
-        case ClassDef.Parameterized(sym, tparams, params, _, _) => () // TODO
+        case clsDef: ClassDef => ctx *= clsDef
         case _ => () // TODO
       }
       typeCheck(res)

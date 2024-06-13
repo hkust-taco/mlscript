@@ -127,7 +127,7 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
     elab.importFrom(res)
       
   
-  
+  var bbmlCtx: Opt[Ctx] = None
   
   @annotation.tailrec
   final def rec(lines: List[String]): Unit = lines match
@@ -229,7 +229,9 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
           output(s"Elab: ${e.showDbg}")
           if bbml.isSet then
             val typer = BBTyper(raise)
-            val ctx = Ctx.init(curCtx.members)
+            if bbmlCtx.isEmpty then
+              bbmlCtx = S(Ctx.init(curCtx.members))
+            val ctx = bbmlCtx.get // ???
             val ty = typer.typeCheck(e)(using ctx)
             val printer = PrettyPrinter((msg: String) => output(msg))
             printer.print(ty)
