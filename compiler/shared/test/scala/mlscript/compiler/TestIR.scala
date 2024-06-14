@@ -22,7 +22,7 @@ class IRDiffTestCompiler extends DiffTests {
       try
         output("\n\nIR:")
         val (fresh, freshFnId, freshClassId, freshTag) = (Fresh(), FreshInt(), FreshInt(), FreshInt())
-        val gb = Builder(fresh, freshFnId, freshClassId, freshTag)
+        val gb = Builder(fresh, freshFnId, freshClassId, freshTag, mode.irVerbose)
         val graph = gb.buildGraph(unit)
         output(graph.toString())
         output("\nPromoted:")

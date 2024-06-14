@@ -14,64 +14,66 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ )}, {
 //│ Def(0, mktup2, [x$0,y$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$1) = mktup(x$0,y$0) in -- #7
-//│ x$1 -- #6
+//│ let* (x$1) = mktup(x$0,y$0) in -- #6
+//│ x$1 -- #5
 //│ )
 //│ Def(1, mktup, [x$2,y$1], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$3 = Pair(x$2,y$1) in -- #14
-//│ x$3 -- #13
+//│ let x$3 = Pair(x$2,y$1) in -- #13
+//│ x$3 -- #12
 //│ )
 //│ Def(2, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$4) = mktup2(1,2) in -- #22
-//│ x$4 -- #21
+//│ let* (x$4) = mktup2(1,2) in -- #20
+//│ x$4 -- #19
 //│ )
 //│ },
-//│ let* (x$5) = foo() in -- #26
-//│ x$5 -- #25)
+//│ let* (x$5) = foo() in -- #23
+//│ x$5 -- #22)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ )}, {
 //│ Def(0, mktup2, [x$0,y$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$1) = mktup(x$0,y$0) in -- #7
-//│ x$1 -- #6
+//│ let* (x$1) = mktup(x$0,y$0) in -- #6
+//│ x$1 -- #5
 //│ )
 //│ Def(1, mktup, [x$2,y$1], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$3 = Pair(x$2,y$1) in -- #14
-//│ x$3 -- #13
+//│ let x$3 = Pair(x$2,y$1) in -- #13
+//│ x$3 -- #12
 //│ )
 //│ Def(2, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$4) = mktup2(1,2) in -- #22
-//│ x$4 -- #21
+//│ let* (x$4) = mktup2(1,2) in -- #20
+//│ x$4 -- #19
 //│ )
 //│ },
-//│ let* (x$5) = foo() in -- #26
-//│ x$5 -- #25)
+//│ let* (x$5) = foo() in -- #23
+//│ x$5 -- #22)
 //│ 
 //│ Interpreted:
 //│ Pair(1,2)
@@ -89,7 +91,8 @@ bar()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ )}, {
 //│ Def(0, foo, [pair$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -114,16 +117,17 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$4 = Pair(1,2) in -- #32
-//│ let* (x$5) = foo(x$4) in -- #31
-//│ x$5 -- #30
+//│ let x$4 = Pair(1,2) in -- #31
+//│ let* (x$5) = foo(x$4) in -- #30
+//│ x$5 -- #29
 //│ )
 //│ },
-//│ let* (x$6) = bar() in -- #36
-//│ x$6 -- #35)
+//│ let* (x$6) = bar() in -- #34
+//│ x$6 -- #33)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ )}, {
 //│ Def(0, foo, [pair$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -148,13 +152,13 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$4 = Pair(1,2) in -- #32
-//│ let* (x$5) = foo(x$4) in -- #31
-//│ x$5 -- #30
+//│ let x$4 = Pair(1,2) in -- #31
+//│ let* (x$5) = foo(x$4) in -- #30
+//│ x$5 -- #29
 //│ )
 //│ },
-//│ let* (x$6) = bar() in -- #36
-//│ x$6 -- #35)
+//│ let* (x$6) = bar() in -- #34
+//│ x$6 -- #33)
 //│ 
 //│ Interpreted:
 //│ Pair(1,2)
@@ -180,7 +184,8 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ )}, {
 //│ Def(0, silly, [pair$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -218,16 +223,17 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$9 = Pair(0,1) in -- #51
-//│ let* (x$10) = silly(x$9) in -- #50
-//│ x$10 -- #49
+//│ let x$9 = Pair(0,1) in -- #50
+//│ let* (x$10) = silly(x$9) in -- #49
+//│ x$10 -- #48
 //│ )
 //│ },
-//│ let* (x$11) = foo() in -- #55
-//│ x$11 -- #54)
+//│ let* (x$11) = foo() in -- #53
+//│ x$11 -- #52)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ )}, {
 //│ Def(0, silly, [pair$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -265,13 +271,13 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$9 = Pair(0,1) in -- #51
-//│ let* (x$10) = silly(x$9) in -- #50
-//│ x$10 -- #49
+//│ let x$9 = Pair(0,1) in -- #50
+//│ let* (x$10) = silly(x$9) in -- #49
+//│ x$10 -- #48
 //│ )
 //│ },
-//│ let* (x$11) = foo() in -- #55
-//│ x$11 -- #54)
+//│ let* (x$11) = foo() in -- #53
+//│ x$11 -- #52)
 //│ 
 //│ Interpreted:
 //│ 2
@@ -295,7 +301,8 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ )}, {
 //│ Def(0, inc_fst, [pair$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -321,16 +328,17 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$5 = Pair(0,1) in -- #33
-//│ let* (x$6) = inc_fst(x$5) in -- #32
-//│ x$6 -- #31
+//│ let x$5 = Pair(0,1) in -- #32
+//│ let* (x$6) = inc_fst(x$5) in -- #31
+//│ x$6 -- #30
 //│ )
 //│ },
-//│ let* (x$7) = foo() in -- #37
-//│ x$7 -- #36)
+//│ let* (x$7) = foo() in -- #35
+//│ x$7 -- #34)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ )}, {
 //│ Def(0, inc_fst, [pair$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -356,13 +364,13 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$5 = Pair(0,1) in -- #33
-//│ let* (x$6) = inc_fst(x$5) in -- #32
-//│ x$6 -- #31
+//│ let x$5 = Pair(0,1) in -- #32
+//│ let* (x$6) = inc_fst(x$5) in -- #31
+//│ x$6 -- #30
 //│ )
 //│ },
-//│ let* (x$7) = foo() in -- #37
-//│ x$7 -- #36)
+//│ let* (x$7) = foo() in -- #35
+//│ x$7 -- #34)
 //│ 
 //│ Interpreted:
 //│ 2
@@ -382,7 +390,8 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ )}, {
 //│ Def(0, inc_fst, [pair$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -408,16 +417,17 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$5 = Pair(0,1) in -- #32
-//│ let* (x$6) = inc_fst(x$5) in -- #31
-//│ x$6 -- #30
+//│ let x$5 = Pair(0,1) in -- #31
+//│ let* (x$6) = inc_fst(x$5) in -- #30
+//│ x$6 -- #29
 //│ )
 //│ },
-//│ let* (x$7) = foo() in -- #36
-//│ x$7 -- #35)
+//│ let* (x$7) = foo() in -- #34
+//│ x$7 -- #33)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ )}, {
 //│ Def(0, inc_fst, [pair$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -443,13 +453,13 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$5 = Pair(0,1) in -- #32
-//│ let* (x$6) = inc_fst(x$5) in -- #31
-//│ x$6 -- #30
+//│ let x$5 = Pair(0,1) in -- #31
+//│ let* (x$6) = inc_fst(x$5) in -- #30
+//│ x$6 -- #29
 //│ )
 //│ },
-//│ let* (x$7) = foo() in -- #36
-//│ x$7 -- #35)
+//│ let* (x$7) = foo() in -- #34
+//│ x$7 -- #33)
 //│ 
 //│ Interpreted:
 //│ 2
@@ -472,7 +482,10 @@ bar()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
+//│ Program({ClassInfo(0, Left, [x], parents: , methods:
+//│ ),
+//│ ClassInfo(1, Right, [y], parents: , methods:
+//│ )}, {
 //│ Def(0, foo, [a$0,b$0], [{},{}],
 //│ I: [],
 //│ R: [None],
@@ -514,16 +527,19 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$9 = Right(2) in -- #56
-//│ let* (x$10) = foo(x$9,2) in -- #55
-//│ x$10 -- #54
+//│ let x$9 = Right(2) in -- #55
+//│ let* (x$10) = foo(x$9,2) in -- #54
+//│ x$10 -- #53
 //│ )
 //│ },
-//│ let* (x$11) = bar() in -- #60
-//│ x$11 -- #59)
+//│ let* (x$11) = bar() in -- #58
+//│ x$11 -- #57)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Left, [x]),ClassInfo(1, Right, [y])}, {
+//│ Program({ClassInfo(0, Left, [x], parents: , methods:
+//│ ),
+//│ ClassInfo(1, Right, [y], parents: , methods:
+//│ )}, {
 //│ Def(0, foo, [a$0,b$0], [{},{}],
 //│ I: [],
 //│ R: [None],
@@ -565,13 +581,13 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$9 = Right(2) in -- #56
-//│ let* (x$10) = foo(x$9,2) in -- #55
-//│ x$10 -- #54
+//│ let x$9 = Right(2) in -- #55
+//│ let* (x$10) = foo(x$9,2) in -- #54
+//│ x$10 -- #53
 //│ )
 //│ },
-//│ let* (x$11) = bar() in -- #60
-//│ x$11 -- #59)
+//│ let* (x$11) = bar() in -- #58
+//│ x$11 -- #57)
 //│ 
 //│ Interpreted:
 //│ 2
@@ -589,7 +605,12 @@ bar()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Pair, [x,y], parents: , methods:
+//│ )}, {
 //│ Def(0, foo, [a$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -605,16 +626,21 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$3 = Pair(1,0) in -- #23
-//│ let* (x$4) = foo(x$3) in -- #22
-//│ x$4 -- #21
+//│ let x$3 = Pair(1,0) in -- #22
+//│ let* (x$4) = foo(x$3) in -- #21
+//│ x$4 -- #20
 //│ )
 //│ },
-//│ let* (x$5) = bar() in -- #27
-//│ x$5 -- #26)
+//│ let* (x$5) = bar() in -- #25
+//│ x$5 -- #24)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Pair, [x,y], parents: , methods:
+//│ )}, {
 //│ Def(0, foo, [a$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -630,13 +656,13 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$3 = Pair(1,0) in -- #23
-//│ let* (x$4) = foo(x$3) in -- #22
-//│ x$4 -- #21
+//│ let x$3 = Pair(1,0) in -- #22
+//│ let* (x$4) = foo(x$3) in -- #21
+//│ x$4 -- #20
 //│ )
 //│ },
-//│ let* (x$5) = bar() in -- #27
-//│ x$5 -- #26)
+//│ let* (x$5) = bar() in -- #25
+//│ x$5 -- #24)
 //│ 
 //│ Interpreted:
 //│ 1
@@ -656,7 +682,10 @@ bar()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, C1, [x,y]),ClassInfo(1, C2, [z])}, {
+//│ Program({ClassInfo(0, C1, [x,y], parents: , methods:
+//│ ),
+//│ ClassInfo(1, C2, [z], parents: , methods:
+//│ )}, {
 //│ Def(0, foo, [a$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -683,16 +712,19 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$4 = C1(0,1) in -- #33
-//│ let* (x$5) = foo(x$4) in -- #32
-//│ x$5 -- #31
+//│ let x$4 = C1(0,1) in -- #32
+//│ let* (x$5) = foo(x$4) in -- #31
+//│ x$5 -- #30
 //│ )
 //│ },
-//│ let* (x$6) = bar() in -- #37
-//│ x$6 -- #36)
+//│ let* (x$6) = bar() in -- #35
+//│ x$6 -- #34)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, C1, [x,y]),ClassInfo(1, C2, [z])}, {
+//│ Program({ClassInfo(0, C1, [x,y], parents: , methods:
+//│ ),
+//│ ClassInfo(1, C2, [z], parents: , methods:
+//│ )}, {
 //│ Def(0, foo, [a$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -719,13 +751,13 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$4 = C1(0,1) in -- #33
-//│ let* (x$5) = foo(x$4) in -- #32
-//│ x$5 -- #31
+//│ let x$4 = C1(0,1) in -- #32
+//│ let* (x$5) = foo(x$4) in -- #31
+//│ x$5 -- #30
 //│ )
 //│ },
-//│ let* (x$6) = bar() in -- #37
-//│ x$6 -- #36)
+//│ let* (x$6) = bar() in -- #35
+//│ x$6 -- #34)
 //│ 
 //│ Interpreted:
 //│ 0
@@ -750,7 +782,8 @@ baz()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ )}, {
 //│ Def(0, foo, [a$0,b$0], [{},{}],
 //│ I: [],
 //│ R: [None],
@@ -770,30 +803,31 @@ baz()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$7 = Pair(0,1) in -- #77
-//│ let* (x$8) = foo(x$7,c$0) in -- #76
-//│ let x$9 = Pair(2,3) in -- #75
-//│ let* (x$10) = foo(c$0,x$9) in -- #74
-//│ let x$11 = Pair(0,1) in -- #73
-//│ let x$12 = Pair(2,3) in -- #72
-//│ let* (x$13) = foo(x$11,x$12) in -- #71
-//│ x$13 -- #70
+//│ let x$7 = Pair(0,1) in -- #74
+//│ let* (x$8) = foo(x$7,c$0) in -- #73
+//│ let x$9 = Pair(2,3) in -- #72
+//│ let* (x$10) = foo(c$0,x$9) in -- #71
+//│ let x$11 = Pair(0,1) in -- #70
+//│ let x$12 = Pair(2,3) in -- #69
+//│ let* (x$13) = foo(x$11,x$12) in -- #68
+//│ x$13 -- #67
 //│ )
 //│ Def(2, baz, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$14 = Pair(4,5) in -- #89
-//│ let* (x$15) = bar(x$14) in -- #88
-//│ x$15 -- #87
+//│ let x$14 = Pair(4,5) in -- #85
+//│ let* (x$15) = bar(x$14) in -- #84
+//│ x$15 -- #83
 //│ )
 //│ },
-//│ let* (x$16) = baz() in -- #93
-//│ x$16 -- #92)
+//│ let* (x$16) = baz() in -- #88
+//│ x$16 -- #87)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ )}, {
 //│ Def(0, foo, [a$0,b$0], [{},{}],
 //│ I: [],
 //│ R: [None],
@@ -813,27 +847,27 @@ baz()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$7 = Pair(0,1) in -- #77
-//│ let* (x$8) = foo(x$7,c$0) in -- #76
-//│ let x$9 = Pair(2,3) in -- #75
-//│ let* (x$10) = foo(c$0,x$9) in -- #74
-//│ let x$11 = Pair(0,1) in -- #73
-//│ let x$12 = Pair(2,3) in -- #72
-//│ let* (x$13) = foo(x$11,x$12) in -- #71
-//│ x$13 -- #70
+//│ let x$7 = Pair(0,1) in -- #74
+//│ let* (x$8) = foo(x$7,c$0) in -- #73
+//│ let x$9 = Pair(2,3) in -- #72
+//│ let* (x$10) = foo(c$0,x$9) in -- #71
+//│ let x$11 = Pair(0,1) in -- #70
+//│ let x$12 = Pair(2,3) in -- #69
+//│ let* (x$13) = foo(x$11,x$12) in -- #68
+//│ x$13 -- #67
 //│ )
 //│ Def(2, baz, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$14 = Pair(4,5) in -- #89
-//│ let* (x$15) = bar(x$14) in -- #88
-//│ x$15 -- #87
+//│ let x$14 = Pair(4,5) in -- #85
+//│ let* (x$15) = bar(x$14) in -- #84
+//│ x$15 -- #83
 //│ )
 //│ },
-//│ let* (x$16) = baz() in -- #93
-//│ x$16 -- #92)
+//│ let* (x$16) = baz() in -- #88
+//│ x$16 -- #87)
 //│ 
 //│ Interpreted:
 //│ 6
@@ -850,7 +884,8 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ )}, {
 //│ Def(0, foo, [], [],
 //│ I: [],
 //│ R: [None],
@@ -861,11 +896,12 @@ foo()
 //│ x$1 -- #10
 //│ )
 //│ },
-//│ let* (x$2) = foo() in -- #16
-//│ x$2 -- #15)
+//│ let* (x$2) = foo() in -- #15
+//│ x$2 -- #14)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y])}, {
+//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ )}, {
 //│ Def(0, foo, [], [],
 //│ I: [],
 //│ R: [None],
@@ -876,8 +912,8 @@ foo()
 //│ x$1 -- #10
 //│ )
 //│ },
-//│ let* (x$2) = foo() in -- #16
-//│ x$2 -- #15)
+//│ let* (x$2) = foo() in -- #15
+//│ x$2 -- #14)
 //│ 
 //│ Interpreted:
 //│ 0
@@ -899,90 +935,96 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, S, [s]),ClassInfo(1, O, [])}, {
+//│ Program({ClassInfo(0, S, [s], parents: , methods:
+//│ ),
+//│ ClassInfo(1, O, [], parents: , methods:
+//│ )}, {
 //│ Def(0, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = O() in -- #10
-//│ let x$1 = S(x$0) in -- #9
-//│ let* (x$2) = bar(x$1) in -- #8
-//│ x$2 -- #7
+//│ let x$0 = O() in -- #9
+//│ let x$1 = S(x$0) in -- #8
+//│ let* (x$2) = bar(x$1) in -- #7
+//│ x$2 -- #6
 //│ )
 //│ Def(1, bar, [x$3], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$4) = baz(x$3) in -- #16
-//│ x$4 -- #15
+//│ let* (x$4) = baz(x$3) in -- #14
+//│ x$4 -- #13
 //│ )
 //│ Def(2, baz, [x$5], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$5 of -- #28
+//│ case x$5 of -- #26
 //│   S =>
-//│     let x$7 = S.s(x$5) in -- #25
-//│     jump j$0(x$7) -- #24
+//│     let x$7 = S.s(x$5) in -- #23
+//│     jump j$0(x$7) -- #22
 //│   O =>
-//│     jump j$0(x$5) -- #27
+//│     jump j$0(x$5) -- #25
 //│ )
 //│ Def(3, j$0, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #18
+//│ x$6 -- #16
 //│ )
 //│ },
-//│ let* (x$8) = foo() in -- #32
-//│ x$8 -- #31)
+//│ let* (x$8) = foo() in -- #29
+//│ x$8 -- #28)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, S, [s]),ClassInfo(1, O, [])}, {
+//│ Program({ClassInfo(0, S, [s], parents: , methods:
+//│ ),
+//│ ClassInfo(1, O, [], parents: , methods:
+//│ )}, {
 //│ Def(0, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = O() in -- #10
-//│ let x$1 = S(x$0) in -- #9
-//│ let* (x$2) = bar(x$1) in -- #8
-//│ x$2 -- #7
+//│ let x$0 = O() in -- #9
+//│ let x$1 = S(x$0) in -- #8
+//│ let* (x$2) = bar(x$1) in -- #7
+//│ x$2 -- #6
 //│ )
 //│ Def(1, bar, [x$3], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$4) = baz(x$3) in -- #16
-//│ x$4 -- #15
+//│ let* (x$4) = baz(x$3) in -- #14
+//│ x$4 -- #13
 //│ )
 //│ Def(2, baz, [x$5], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$5 of -- #28
+//│ case x$5 of -- #26
 //│   S =>
-//│     let x$7 = S.s(x$5) in -- #25
-//│     jump j$0(x$7) -- #24
+//│     let x$7 = S.s(x$5) in -- #23
+//│     jump j$0(x$7) -- #22
 //│   O =>
-//│     jump j$0(x$5) -- #27
+//│     jump j$0(x$5) -- #25
 //│ )
 //│ Def(3, j$0, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #18
+//│ x$6 -- #16
 //│ )
 //│ },
-//│ let* (x$8) = foo() in -- #32
-//│ x$8 -- #31)
+//│ let* (x$8) = foo() in -- #29
+//│ x$8 -- #28)
 //│ 
 //│ Interpreted:
 //│ O()

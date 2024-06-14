@@ -17,7 +17,7 @@ class CppCodeGen:
   private val mlsMainName = "_mlsMain"
   private val mlsPrelude = "#include \"mlsprelude.h\""
   private val mlsPreludeImpl = "#include \"mlsprelude.cpp\""
-  private val mlsInternalClass = Set("True", "False", "Boolean")
+  private val mlsInternalClass = Set("True", "False", "Boolean", "Callable")
   private val mlsObject = "_mlsObject"
   private val mlsBuiltin = "builtin"
   private val mlsEntryPoint = s"int main() { return _mlsLargeStack(_mlsMainWrapper); }";
@@ -50,7 +50,6 @@ class CppCodeGen:
   private def mlsThrowNonExhaustiveMatch = Stmt.Raw("_mlsNonExhaustiveMatch();");
   private def mlsCall(fn: Str, args: Ls[Expr]) = Expr.Call(Expr.Var("_mlsCall"), Expr.Var(fn) :: args)
   private def mlsFnWrapperName(fn: Str) = s"_mlsFn_$fn"
-  private def mlsFnWrapperCreate(fn: Str) = Expr.Call(Expr.Var(s"_mlsValue::create<${mlsFnWrapperName(fn)}>"), Ls())
   private def mlsFnCreateMethod(fn: Str) = s"template <std::size_t align> static _mlsValue create() { static _mlsFn_$fn mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }"
   private def mlsFnApplyNMethod(fn: Str, n: Int) = 
     Def.FuncDef(Type.Qualifier(mlsValType, "virtual"), s"apply$n", (0 until n).map{x => (s"arg$x", mlsValType)}.toList,
@@ -61,7 +60,7 @@ class CppCodeGen:
     val defnCtx: Set[Str],
   )
 
-  private def codegenClassInfo(cls: ClassInfo): (Opt[Def], Decl) =
+  private def codegenClassInfo(using ctx: Ctx)(cls: ClassInfo): (Opt[Def], Decl) =
     val fields = cls.fields.map{x => (x |> mapName, mlsValType)}
     val parents = if cls.parents.nonEmpty then cls.parents.toList.map{x => x |> mapName} else mlsObject :: Nil
     val decl = Decl.StructDecl(cls.ident |> mapName)
@@ -73,23 +72,17 @@ class CppCodeGen:
          Def.RawDef(mlsTypeTag()),
          Def.RawDef(mlsCommonPrintMethod(cls.fields.map(mapName))),
          Def.RawDef(mlsCommonDestructorMethod(cls.ident |> mapName, cls.fields.map(mapName))),
-         Def.RawDef(mlsCommonCreateMethod(cls.ident |> mapName, cls.fields.map(mapName), cls.id))))
+         Def.RawDef(mlsCommonCreateMethod(cls.ident |> mapName, cls.fields.map(mapName), cls.id)))
+      ++ cls.methods.map{case (name, defn) => {
+        val (theDef, decl) = codegenDefn(using Ctx(ctx.defnCtx + cls.ident))(defn)
+        theDef match
+          case x @ Def.FuncDef(_, name, _, _, _) if name.startsWith("_mls_apply") => x.copy(or = true)
+          case _ => theDef
+      }}
+    )
     (S(theDef), decl)
-
-  def codegenDefnClass(defn: Defn): Opt[(Def, Decl)] =
-    val decl = Decl.StructDecl(defn.name |> mapName)
-    val theDef = Def.StructDef(
-      mlsFnWrapperName(defn.name |> mapName), Ls(),
-      S(Ls("_mlsCallable")),
-      Ls(Def.RawDef(mlsObjectNameMethod(s"<${defn.name}>")),
-         Def.RawDef(mlsTypeTag(0xffffffff)),
-         Def.RawDef(mlsCommonPrintMethod(Ls())),
-         Def.RawDef(mlsFnCreateMethod(defn.name |> mapName)),
-         mlsFnApplyNMethod(defn.name |> mapName, defn.params.size)))
-    S((theDef, decl))
   
   private def toExpr(texpr: TrivialExpr, reifyUnit: Bool = false)(using ctx: Ctx): Opt[Expr] = texpr match
-    case IExpr.Ref(name) if ctx.defnCtx.contains(name.str) => S(mlsFnWrapperCreate(name.str |> mapName))
     case IExpr.Ref(name) => S(Expr.Var(name |> mapName))
     case IExpr.Literal(mlscript.IntLit(x)) => S(mlsIntLit(x))
     case IExpr.Literal(mlscript.DecLit(x)) => S(mlsIntLit(x.toBigInt))
@@ -98,7 +91,6 @@ class CppCodeGen:
     case IExpr.Literal(mlscript.UnitLit(_)) => if reifyUnit then S(mlsUnitValue) else None
   
   private def toExpr(texpr: TrivialExpr)(using ctx: Ctx): Expr = texpr match
-    case IExpr.Ref(name) if ctx.defnCtx.contains(name.str) => mlsFnWrapperCreate(name.str |> mapName)
     case IExpr.Ref(name) => Expr.Var(name |> mapName)
     case IExpr.Literal(mlscript.IntLit(x)) => mlsIntLit(x)
     case IExpr.Literal(mlscript.DecLit(x)) => mlsIntLit(x.toBigInt)
@@ -237,9 +229,8 @@ class CppCodeGen:
 
   def codegen(prog: Program): CompilationUnit =
     val sortedClasses = sortClasses(prog)
-    val (defs, decls) = sortedClasses.map(codegenClassInfo).unzip
-    val (defs2, decls2) = prog.defs.flatMap(codegenDefnClass).unzip
     val defnCtx = prog.defs.map(_.name)
-    val (defs3, decls3) = prog.defs.map(codegenDefn(using Ctx(defnCtx))).unzip
+    val (defs, decls) = sortedClasses.map(codegenClassInfo(using Ctx(defnCtx))).unzip
+    val (defs2, decls2) = prog.defs.map(codegenDefn(using Ctx(defnCtx))).unzip
     val (defMain, declMain) = codegenTopNode(prog.main)(using Ctx(defnCtx))
-    CompilationUnit(Ls(mlsPrelude), decls ++ decls2 ++ decls3 :+ declMain, defs.flatten ++ defs2 ++ defs3 :+ defMain :+ Def.RawDef(mlsEntryPoint))
+    CompilationUnit(Ls(mlsPrelude), decls ++ decls2 :+ declMain, defs.flatten ++ defs2 :+ defMain :+ Def.RawDef(mlsEntryPoint))

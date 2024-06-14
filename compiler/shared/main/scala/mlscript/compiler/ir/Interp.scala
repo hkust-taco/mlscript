@@ -310,12 +310,15 @@ class Interpreter(verbose: Bool):
           else
             throw IRInterpreterError(s"undefined function variable $fn")
         case Some(value) => 
-          val defn = value match
+          val (ctx1, defn) = value match
             case Ref(Name(fn)) => ctx.defnCtx.get(fn) match
-              case Some(defn) => defn
+              case Some(defn) => (ctx.copy(bindCtx = ctx.bindCtx ++ defn.params.map{_.str}.zip(ys)), defn)
               case None => throw IRInterpreterError(s"undefined function $fn")
+            case CtorApp(cls, xs) =>
+              val method = convert(cls.methods(s"apply${args.length}"))
+              resolveDefnRef(ctx.defnCtx.values.toSet, method.body)
+              (ctx.copy(bindCtx = ctx.bindCtx ++ cls.fields.zip(xs) ++ method.params.map{_.str}.zip(ys)), method)
             case x @ _ => throw IRInterpreterError(s"undefined function $x")
-          val ctx1 = ctx.copy(bindCtx = ctx.bindCtx ++ defn.params.map{_.str}.zip(ys))
           val res = evalMayNotProgress(using ctx1)(defn.body) match {
             case Result(xs) => xs
             case _ => throw IRInterpreterError("unexpected node")

@@ -14,23 +14,28 @@ fib(20)
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ )}, {
 //│ Def(0, fib, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = <(n$0,2) in -- #40
-//│ if x$0 -- #39
+//│ let x$0 = <(n$0,2) in -- #38
+//│ if x$0 -- #37
 //│   true =>
 //│     jump j$0(n$0) -- #8
 //│   false =>
-//│     let x$2 = -(n$0,1) in -- #38
-//│     let* (x$3) = fib(x$2) in -- #37
-//│     let x$4 = -(n$0,2) in -- #36
-//│     let* (x$5) = fib(x$4) in -- #35
-//│     let x$6 = +(x$3,x$5) in -- #34
-//│     jump j$0(x$6) -- #33
+//│     let x$2 = -(n$0,1) in -- #36
+//│     let* (x$3) = fib(x$2) in -- #35
+//│     let x$4 = -(n$0,2) in -- #34
+//│     let* (x$5) = fib(x$4) in -- #33
+//│     let x$6 = +(x$3,x$5) in -- #32
+//│     jump j$0(x$6) -- #31
 //│ )
 //│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
@@ -40,27 +45,32 @@ fib(20)
 //│ x$1 -- #6
 //│ )
 //│ },
-//│ let* (x$7) = fib(20) in -- #46
-//│ x$7 -- #45)
+//│ let* (x$7) = fib(20) in -- #43
+//│ x$7 -- #42)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ )}, {
 //│ Def(0, fib, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = <(n$0,2) in -- #40
-//│ if x$0 -- #39
+//│ let x$0 = <(n$0,2) in -- #38
+//│ if x$0 -- #37
 //│   true =>
 //│     jump j$0(n$0) -- #8
 //│   false =>
-//│     let x$2 = -(n$0,1) in -- #38
-//│     let* (x$3) = fib(x$2) in -- #37
-//│     let x$4 = -(n$0,2) in -- #36
-//│     let* (x$5) = fib(x$4) in -- #35
-//│     let x$6 = +(x$3,x$5) in -- #34
-//│     jump j$0(x$6) -- #33
+//│     let x$2 = -(n$0,1) in -- #36
+//│     let* (x$3) = fib(x$2) in -- #35
+//│     let x$4 = -(n$0,2) in -- #34
+//│     let* (x$5) = fib(x$4) in -- #33
+//│     let x$6 = +(x$3,x$5) in -- #32
+//│     jump j$0(x$6) -- #31
 //│ )
 //│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
@@ -70,8 +80,8 @@ fib(20)
 //│ x$1 -- #6
 //│ )
 //│ },
-//│ let* (x$7) = fib(20) in -- #46
-//│ x$7 -- #45)
+//│ let* (x$7) = fib(20) in -- #43
+//│ x$7 -- #42)
 //│ 
 //│ Interpreted:
 //│ 277
@@ -81,31 +91,9 @@ fib(20)
 //│ struct _mls_Boolean;
 //│ struct _mls_True;
 //│ struct _mls_False;
-//│ struct _mls_fib;
-//│ struct _mls_j_0;
 //│ _mlsValue _mls_fib(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mlsFn__mls_fib: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<fib>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_fib mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_fib(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_0: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$0>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_0(arg0);
-//│   }
-//│ };
 //│ _mlsValue _mls_fib(_mlsValue _mls_n_0){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_0 = (_mls_n_0<_mlsValue::fromIntLit(2));
@@ -149,21 +137,26 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$1 = ==(x$0,0) in -- #24
-//│ if x$1 -- #23
+//│ let x$1 = ==(x$0,0) in -- #23
+//│ if x$1 -- #22
 //│   true =>
 //│     let x$3 = False() in -- #9
 //│     jump j$0(x$3) -- #8
 //│   false =>
-//│     let x$4 = -(x$0,1) in -- #22
-//│     let* (x$5) = even(x$4) in -- #21
-//│     jump j$0(x$5) -- #20
+//│     let x$4 = -(x$0,1) in -- #21
+//│     let* (x$5) = even(x$4) in -- #20
+//│     jump j$0(x$5) -- #19
 //│ )
 //│ Def(1, j$0, [x$2], [{}],
 //│ I: [],
@@ -177,51 +170,56 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$7 = ==(x$6,0) in -- #49
-//│ if x$7 -- #48
+//│ let x$7 = ==(x$6,0) in -- #47
+//│ if x$7 -- #46
 //│   true =>
-//│     let x$9 = True() in -- #34
-//│     jump j$1(x$9) -- #33
+//│     let x$9 = True() in -- #33
+//│     jump j$1(x$9) -- #32
 //│   false =>
-//│     let x$10 = -(x$6,1) in -- #47
-//│     let* (x$11) = odd(x$10) in -- #46
-//│     jump j$1(x$11) -- #45
+//│     let x$10 = -(x$6,1) in -- #45
+//│     let* (x$11) = odd(x$10) in -- #44
+//│     jump j$1(x$11) -- #43
 //│ )
 //│ Def(3, j$1, [x$8], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$8 -- #31
+//│ x$8 -- #30
 //│ )
 //│ Def(4, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$12) = odd(10) in -- #55
-//│ x$12 -- #54
+//│ let* (x$12) = odd(10) in -- #52
+//│ x$12 -- #51
 //│ )
 //│ },
-//│ let* (x$13) = foo() in -- #59
-//│ x$13 -- #58)
+//│ let* (x$13) = foo() in -- #55
+//│ x$13 -- #54)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$1 = ==(x$0,0) in -- #24
-//│ if x$1 -- #23
+//│ let x$1 = ==(x$0,0) in -- #23
+//│ if x$1 -- #22
 //│   true =>
 //│     let x$3 = False() in -- #9
 //│     jump j$0(x$3) -- #8
 //│   false =>
-//│     let x$4 = -(x$0,1) in -- #22
-//│     let* (x$5) = even(x$4) in -- #21
-//│     jump j$0(x$5) -- #20
+//│     let x$4 = -(x$0,1) in -- #21
+//│     let* (x$5) = even(x$4) in -- #20
+//│     jump j$0(x$5) -- #19
 //│ )
 //│ Def(1, j$0, [x$2], [{}],
 //│ I: [],
@@ -235,34 +233,34 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$7 = ==(x$6,0) in -- #49
-//│ if x$7 -- #48
+//│ let x$7 = ==(x$6,0) in -- #47
+//│ if x$7 -- #46
 //│   true =>
-//│     let x$9 = True() in -- #34
-//│     jump j$1(x$9) -- #33
+//│     let x$9 = True() in -- #33
+//│     jump j$1(x$9) -- #32
 //│   false =>
-//│     let x$10 = -(x$6,1) in -- #47
-//│     let* (x$11) = odd(x$10) in -- #46
-//│     jump j$1(x$11) -- #45
+//│     let x$10 = -(x$6,1) in -- #45
+//│     let* (x$11) = odd(x$10) in -- #44
+//│     jump j$1(x$11) -- #43
 //│ )
 //│ Def(3, j$1, [x$8], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$8 -- #31
+//│ x$8 -- #30
 //│ )
 //│ Def(4, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$12) = odd(10) in -- #55
-//│ x$12 -- #54
+//│ let* (x$12) = odd(10) in -- #52
+//│ x$12 -- #51
 //│ )
 //│ },
-//│ let* (x$13) = foo() in -- #59
-//│ x$13 -- #58)
+//│ let* (x$13) = foo() in -- #55
+//│ x$13 -- #54)
 //│ 
 //│ Interpreted:
 //│ False()
@@ -272,67 +270,12 @@ foo()
 //│ struct _mls_Boolean;
 //│ struct _mls_True;
 //│ struct _mls_False;
-//│ struct _mls_j_1;
-//│ struct _mls_j_0;
-//│ struct _mls_odd;
-//│ struct _mls_even;
-//│ struct _mls_foo;
 //│ _mlsValue _mls_odd(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_foo();
 //│ _mlsValue _mls_even(_mlsValue);
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mlsMain();
-//│ struct _mlsFn__mls_j_1: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$1>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_1(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_foo: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<foo>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_foo mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply0() override{
-//│     return _mls_foo();
-//│   }
-//│ };
-//│ struct _mlsFn__mls_even: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<even>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_even mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_even(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_0: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$0>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_0(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_odd: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<odd>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_odd mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_odd(arg0);
-//│   }
-//│ };
 //│ _mlsValue _mls_foo(){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_12 = _mls_odd(_mlsValue::fromIntLit(10));
@@ -404,7 +347,18 @@ main()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, AorB, []),ClassInfo(4, A, []),ClassInfo(5, B, [b])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, AorB, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, A, [], parents: AorB, methods:
+//│ ),
+//│ ClassInfo(5, B, [b], parents: AorB, methods:
+//│ )}, {
 //│ Def(0, not, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -430,15 +384,15 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if x$4 -- #30
+//│ if x$4 -- #28
 //│   true =>
 //│     let x$6 = A() in -- #13
 //│     jump j$1(x$6) -- #12
 //│   false =>
-//│     let* (x$7) = not(x$4) in -- #29
-//│     let* (x$8) = foo(x$7) in -- #28
-//│     let x$9 = B(x$8) in -- #27
-//│     jump j$1(x$9) -- #26
+//│     let* (x$7) = not(x$4) in -- #27
+//│     let* (x$8) = foo(x$7) in -- #26
+//│     let x$9 = B(x$8) in -- #25
+//│     jump j$1(x$9) -- #24
 //│ )
 //│ Def(3, j$1, [x$5], [{}],
 //│ I: [],
@@ -452,16 +406,27 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = False() in -- #37
-//│ let* (x$11) = foo(x$10) in -- #36
-//│ x$11 -- #35
+//│ let x$10 = False() in -- #34
+//│ let* (x$11) = foo(x$10) in -- #33
+//│ x$11 -- #32
 //│ )
 //│ },
-//│ let* (x$12) = main() in -- #41
-//│ x$12 -- #40)
+//│ let* (x$12) = main() in -- #37
+//│ x$12 -- #36)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, AorB, []),ClassInfo(4, A, []),ClassInfo(5, B, [b])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, AorB, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, A, [], parents: AorB, methods:
+//│ ),
+//│ ClassInfo(5, B, [b], parents: AorB, methods:
+//│ )}, {
 //│ Def(0, not, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -487,15 +452,15 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if x$4 -- #30
+//│ if x$4 -- #28
 //│   true =>
 //│     let x$6 = A() in -- #13
 //│     jump j$1(x$6) -- #12
 //│   false =>
-//│     let* (x$7) = not(x$4) in -- #29
-//│     let* (x$8) = foo(x$7) in -- #28
-//│     let x$9 = B(x$8) in -- #27
-//│     jump j$1(x$9) -- #26
+//│     let* (x$7) = not(x$4) in -- #27
+//│     let* (x$8) = foo(x$7) in -- #26
+//│     let x$9 = B(x$8) in -- #25
+//│     jump j$1(x$9) -- #24
 //│ )
 //│ Def(3, j$1, [x$5], [{}],
 //│ I: [],
@@ -509,13 +474,13 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = False() in -- #37
-//│ let* (x$11) = foo(x$10) in -- #36
-//│ x$11 -- #35
+//│ let x$10 = False() in -- #34
+//│ let* (x$11) = foo(x$10) in -- #33
+//│ x$11 -- #32
 //│ )
 //│ },
-//│ let* (x$12) = main() in -- #41
-//│ x$12 -- #40)
+//│ let* (x$12) = main() in -- #37
+//│ x$12 -- #36)
 //│ 
 //│ Interpreted:
 //│ B(A())
@@ -528,11 +493,6 @@ main()
 //│ struct _mls_A;
 //│ struct _mls_True;
 //│ struct _mls_False;
-//│ struct _mls_main;
-//│ struct _mls_j_1;
-//│ struct _mls_j_0;
-//│ struct _mls_not;
-//│ struct _mls_foo;
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_main();
 //│ _mlsValue _mls_not(_mlsValue);
@@ -562,56 +522,6 @@ main()
 //│   virtual void print() const override { std::printf("%s", typeName); }
 //│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
-//│ };
-//│ struct _mlsFn__mls_foo: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<foo>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_foo mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_foo(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_1: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$1>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_1(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_not: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<not>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_not mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_not(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_0: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$0>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_0(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_main: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<main>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply0() override{
-//│     return _mls_main();
-//│   }
 //│ };
 //│ _mlsValue _mls_not(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
@@ -696,7 +606,18 @@ main()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, AorB, []),ClassInfo(4, A, []),ClassInfo(5, B, [b])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, AorB, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, A, [], parents: AorB, methods:
+//│ ),
+//│ ClassInfo(5, B, [b], parents: AorB, methods:
+//│ )}, {
 //│ Def(0, aaa, [], [],
 //│ I: [],
 //│ R: [None],
@@ -716,82 +637,93 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$7) = aaa() in -- #43
-//│ let x$8 = *(x$7,100) in -- #42
-//│ let x$9 = +(x$8,4) in -- #41
-//│ x$9 -- #40
+//│ let* (x$7) = aaa() in -- #42
+//│ let x$8 = *(x$7,100) in -- #41
+//│ let x$9 = +(x$8,4) in -- #40
+//│ x$9 -- #39
 //│ )
 //│ Def(2, not, [x$10], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if x$10 -- #52
+//│ if x$10 -- #51
 //│   true =>
-//│     let x$12 = False() in -- #48
-//│     jump j$0(x$12) -- #47
+//│     let x$12 = False() in -- #47
+//│     jump j$0(x$12) -- #46
 //│   false =>
-//│     let x$13 = True() in -- #51
-//│     jump j$0(x$13) -- #50
+//│     let x$13 = True() in -- #50
+//│     jump j$0(x$13) -- #49
 //│ )
 //│ Def(3, j$0, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$11 -- #45
+//│ x$11 -- #44
 //│ )
 //│ Def(4, foo, [x$14], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if x$14 -- #74
+//│ if x$14 -- #71
 //│   true =>
-//│     let x$16 = A() in -- #57
-//│     jump j$1(x$16) -- #56
+//│     let x$16 = A() in -- #56
+//│     jump j$1(x$16) -- #55
 //│   false =>
-//│     let* (x$17) = not(x$14) in -- #73
-//│     let* (x$18) = foo(x$17) in -- #72
-//│     let x$19 = B(x$18) in -- #71
-//│     jump j$1(x$19) -- #70
+//│     let* (x$17) = not(x$14) in -- #70
+//│     let* (x$18) = foo(x$17) in -- #69
+//│     let x$19 = B(x$18) in -- #68
+//│     jump j$1(x$19) -- #67
 //│ )
 //│ Def(5, j$1, [x$15], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$15 -- #54
+//│ x$15 -- #53
 //│ )
 //│ Def(6, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$20 = False() in -- #99
-//│ let* (x$21) = foo(x$20) in -- #98
-//│ case x$21 of -- #97
+//│ let x$20 = False() in -- #93
+//│ let* (x$21) = foo(x$20) in -- #92
+//│ case x$21 of -- #91
 //│   A =>
-//│     let* (x$23) = aaa() in -- #86
-//│     jump j$2(x$23) -- #85
+//│     let* (x$23) = aaa() in -- #81
+//│     jump j$2(x$23) -- #80
 //│   B =>
-//│     let x$24 = B.b(x$21) in -- #96
-//│     let* (x$25) = bbb() in -- #95
-//│     jump j$2(x$25) -- #94
+//│     let x$24 = B.b(x$21) in -- #90
+//│     let* (x$25) = bbb() in -- #89
+//│     jump j$2(x$25) -- #88
 //│ )
 //│ Def(7, j$2, [x$22], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$22 -- #81
+//│ x$22 -- #77
 //│ )
 //│ },
-//│ let* (x$26) = main() in -- #103
-//│ x$26 -- #102)
+//│ let* (x$26) = main() in -- #96
+//│ x$26 -- #95)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, AorB, []),ClassInfo(4, A, []),ClassInfo(5, B, [b])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, AorB, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, A, [], parents: AorB, methods:
+//│ ),
+//│ ClassInfo(5, B, [b], parents: AorB, methods:
+//│ )}, {
 //│ Def(0, aaa, [], [],
 //│ I: [],
 //│ R: [None],
@@ -811,79 +743,79 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$7) = aaa() in -- #43
-//│ let x$8 = *(x$7,100) in -- #42
-//│ let x$9 = +(x$8,4) in -- #41
-//│ x$9 -- #40
+//│ let* (x$7) = aaa() in -- #42
+//│ let x$8 = *(x$7,100) in -- #41
+//│ let x$9 = +(x$8,4) in -- #40
+//│ x$9 -- #39
 //│ )
 //│ Def(2, not, [x$10], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if x$10 -- #52
+//│ if x$10 -- #51
 //│   true =>
-//│     let x$12 = False() in -- #48
-//│     jump j$0(x$12) -- #47
+//│     let x$12 = False() in -- #47
+//│     jump j$0(x$12) -- #46
 //│   false =>
-//│     let x$13 = True() in -- #51
-//│     jump j$0(x$13) -- #50
+//│     let x$13 = True() in -- #50
+//│     jump j$0(x$13) -- #49
 //│ )
 //│ Def(3, j$0, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$11 -- #45
+//│ x$11 -- #44
 //│ )
 //│ Def(4, foo, [x$14], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if x$14 -- #74
+//│ if x$14 -- #71
 //│   true =>
-//│     let x$16 = A() in -- #57
-//│     jump j$1(x$16) -- #56
+//│     let x$16 = A() in -- #56
+//│     jump j$1(x$16) -- #55
 //│   false =>
-//│     let* (x$17) = not(x$14) in -- #73
-//│     let* (x$18) = foo(x$17) in -- #72
-//│     let x$19 = B(x$18) in -- #71
-//│     jump j$1(x$19) -- #70
+//│     let* (x$17) = not(x$14) in -- #70
+//│     let* (x$18) = foo(x$17) in -- #69
+//│     let x$19 = B(x$18) in -- #68
+//│     jump j$1(x$19) -- #67
 //│ )
 //│ Def(5, j$1, [x$15], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$15 -- #54
+//│ x$15 -- #53
 //│ )
 //│ Def(6, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$20 = False() in -- #99
-//│ let* (x$21) = foo(x$20) in -- #98
-//│ case x$21 of -- #97
+//│ let x$20 = False() in -- #93
+//│ let* (x$21) = foo(x$20) in -- #92
+//│ case x$21 of -- #91
 //│   A =>
-//│     let* (x$23) = aaa() in -- #86
-//│     jump j$2(x$23) -- #85
+//│     let* (x$23) = aaa() in -- #81
+//│     jump j$2(x$23) -- #80
 //│   B =>
-//│     let x$24 = B.b(x$21) in -- #96
-//│     let* (x$25) = bbb() in -- #95
-//│     jump j$2(x$25) -- #94
+//│     let x$24 = B.b(x$21) in -- #90
+//│     let* (x$25) = bbb() in -- #89
+//│     jump j$2(x$25) -- #88
 //│ )
 //│ Def(7, j$2, [x$22], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$22 -- #81
+//│ x$22 -- #77
 //│ )
 //│ },
-//│ let* (x$26) = main() in -- #103
-//│ x$26 -- #102)
+//│ let* (x$26) = main() in -- #96
+//│ x$26 -- #95)
 //│ 
 //│ Interpreted:
 //│ 404
@@ -896,14 +828,6 @@ main()
 //│ struct _mls_A;
 //│ struct _mls_True;
 //│ struct _mls_False;
-//│ struct _mls_main;
-//│ struct _mls_bbb;
-//│ struct _mls_j_1;
-//│ struct _mls_aaa;
-//│ struct _mls_not;
-//│ struct _mls_foo;
-//│ struct _mls_j_0;
-//│ struct _mls_j_2;
 //│ _mlsValue _mls_aaa();
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_j_2(_mlsValue);
@@ -936,86 +860,6 @@ main()
 //│   virtual void print() const override { std::printf("%s", typeName); }
 //│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
-//│ };
-//│ struct _mlsFn__mls_foo: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<foo>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_foo mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_foo(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_1: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$1>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_1(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_bbb: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<bbb>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_bbb mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply0() override{
-//│     return _mls_bbb();
-//│   }
-//│ };
-//│ struct _mlsFn__mls_not: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<not>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_not mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_not(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_2: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$2>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_2(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_aaa: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<aaa>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_aaa mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply0() override{
-//│     return _mls_aaa();
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_0: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$0>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_0(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_main: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<main>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply0() override{
-//│     return _mls_main();
-//│   }
 //│ };
 //│ _mlsValue _mls_j_1(_mlsValue _mls_x_15){
 //│   _mlsValue _mls_retval;
@@ -1122,20 +966,31 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, Nat, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, S, [s], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(5, O, [], parents: Nat, methods:
+//│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$0 of -- #17
+//│ case x$0 of -- #16
 //│   O =>
 //│     let x$2 = False() in -- #4
 //│     jump j$0(x$2) -- #3
 //│   S =>
-//│     let x$3 = S.s(x$0) in -- #16
-//│     let* (x$4) = even(x$3) in -- #15
-//│     jump j$0(x$4) -- #14
+//│     let x$3 = S.s(x$0) in -- #15
+//│     let* (x$4) = even(x$3) in -- #14
+//│     jump j$0(x$4) -- #13
 //│ )
 //│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
@@ -1149,53 +1004,64 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$5 of -- #35
+//│ case x$5 of -- #33
 //│   O =>
-//│     let x$7 = True() in -- #22
-//│     jump j$1(x$7) -- #21
+//│     let x$7 = True() in -- #21
+//│     jump j$1(x$7) -- #20
 //│   S =>
-//│     let x$8 = S.s(x$5) in -- #34
-//│     let* (x$9) = odd(x$8) in -- #33
-//│     jump j$1(x$9) -- #32
+//│     let x$8 = S.s(x$5) in -- #32
+//│     let* (x$9) = odd(x$8) in -- #31
+//│     jump j$1(x$9) -- #30
 //│ )
 //│ Def(3, j$1, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #19
+//│ x$6 -- #18
 //│ )
 //│ Def(4, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = O() in -- #54
-//│ let x$11 = S(x$10) in -- #53
-//│ let x$12 = S(x$11) in -- #52
-//│ let x$13 = S(x$12) in -- #51
-//│ let* (x$14) = odd(x$13) in -- #50
-//│ x$14 -- #49
+//│ let x$10 = O() in -- #51
+//│ let x$11 = S(x$10) in -- #50
+//│ let x$12 = S(x$11) in -- #49
+//│ let x$13 = S(x$12) in -- #48
+//│ let* (x$14) = odd(x$13) in -- #47
+//│ x$14 -- #46
 //│ )
 //│ },
-//│ let* (x$15) = foo() in -- #58
-//│ x$15 -- #57)
+//│ let* (x$15) = foo() in -- #54
+//│ x$15 -- #53)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, Nat, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, S, [s], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(5, O, [], parents: Nat, methods:
+//│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$0 of -- #17
+//│ case x$0 of -- #16
 //│   O =>
 //│     let x$2 = False() in -- #4
 //│     jump j$0(x$2) -- #3
 //│   S =>
-//│     let x$3 = S.s(x$0) in -- #16
-//│     let* (x$4) = even(x$3) in -- #15
-//│     jump j$0(x$4) -- #14
+//│     let x$3 = S.s(x$0) in -- #15
+//│     let* (x$4) = even(x$3) in -- #14
+//│     jump j$0(x$4) -- #13
 //│ )
 //│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
@@ -1209,37 +1075,37 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$5 of -- #35
+//│ case x$5 of -- #33
 //│   O =>
-//│     let x$7 = True() in -- #22
-//│     jump j$1(x$7) -- #21
+//│     let x$7 = True() in -- #21
+//│     jump j$1(x$7) -- #20
 //│   S =>
-//│     let x$8 = S.s(x$5) in -- #34
-//│     let* (x$9) = odd(x$8) in -- #33
-//│     jump j$1(x$9) -- #32
+//│     let x$8 = S.s(x$5) in -- #32
+//│     let* (x$9) = odd(x$8) in -- #31
+//│     jump j$1(x$9) -- #30
 //│ )
 //│ Def(3, j$1, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #19
+//│ x$6 -- #18
 //│ )
 //│ Def(4, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = O() in -- #54
-//│ let x$11 = S(x$10) in -- #53
-//│ let x$12 = S(x$11) in -- #52
-//│ let x$13 = S(x$12) in -- #51
-//│ let* (x$14) = odd(x$13) in -- #50
-//│ x$14 -- #49
+//│ let x$10 = O() in -- #51
+//│ let x$11 = S(x$10) in -- #50
+//│ let x$12 = S(x$11) in -- #49
+//│ let x$13 = S(x$12) in -- #48
+//│ let* (x$14) = odd(x$13) in -- #47
+//│ x$14 -- #46
 //│ )
 //│ },
-//│ let* (x$15) = foo() in -- #58
-//│ x$15 -- #57)
+//│ let* (x$15) = foo() in -- #54
+//│ x$15 -- #53)
 //│ 
 //│ Interpreted:
 //│ True()
@@ -1269,20 +1135,31 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, Nat, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, S, [s], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(5, O, [], parents: Nat, methods:
+//│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$0 of -- #17
+//│ case x$0 of -- #16
 //│   O =>
 //│     let x$2 = False() in -- #4
 //│     jump j$0(x$2) -- #3
 //│   S =>
-//│     let x$3 = S.s(x$0) in -- #16
-//│     let* (x$4) = even(x$3) in -- #15
-//│     jump j$0(x$4) -- #14
+//│     let x$3 = S.s(x$0) in -- #15
+//│     let* (x$4) = even(x$3) in -- #14
+//│     jump j$0(x$4) -- #13
 //│ )
 //│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
@@ -1296,73 +1173,84 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$5 of -- #35
+//│ case x$5 of -- #33
 //│   O =>
-//│     let x$7 = True() in -- #22
-//│     jump j$1(x$7) -- #21
+//│     let x$7 = True() in -- #21
+//│     jump j$1(x$7) -- #20
 //│   S =>
-//│     let x$8 = S.s(x$5) in -- #34
-//│     let* (x$9) = odd(x$8) in -- #33
-//│     jump j$1(x$9) -- #32
+//│     let x$8 = S.s(x$5) in -- #32
+//│     let* (x$9) = odd(x$8) in -- #31
+//│     jump j$1(x$9) -- #30
 //│ )
 //│ Def(3, j$1, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #19
+//│ x$6 -- #18
 //│ )
 //│ Def(4, mk, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = >(n$0,0) in -- #64
-//│ if x$10 -- #63
+//│ let x$10 = >(n$0,0) in -- #61
+//│ if x$10 -- #60
 //│   true =>
-//│     let x$12 = -(n$0,1) in -- #59
-//│     let* (x$13) = mk(x$12) in -- #58
-//│     let x$14 = S(x$13) in -- #57
-//│     jump j$2(x$14) -- #56
+//│     let x$12 = -(n$0,1) in -- #56
+//│     let* (x$13) = mk(x$12) in -- #55
+//│     let x$14 = S(x$13) in -- #54
+//│     jump j$2(x$14) -- #53
 //│   false =>
-//│     let x$15 = O() in -- #62
-//│     jump j$2(x$15) -- #61
+//│     let x$15 = O() in -- #59
+//│     jump j$2(x$15) -- #58
 //│ )
 //│ Def(5, j$2, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$11 -- #42
+//│ x$11 -- #40
 //│ )
 //│ Def(6, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$16) = mk(10) in -- #75
-//│ let* (x$17) = odd(x$16) in -- #74
-//│ x$17 -- #73
+//│ let* (x$16) = mk(10) in -- #70
+//│ let* (x$17) = odd(x$16) in -- #69
+//│ x$17 -- #68
 //│ )
 //│ },
-//│ let* (x$18) = foo() in -- #79
-//│ x$18 -- #78)
+//│ let* (x$18) = foo() in -- #73
+//│ x$18 -- #72)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, Nat, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, S, [s], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(5, O, [], parents: Nat, methods:
+//│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$0 of -- #17
+//│ case x$0 of -- #16
 //│   O =>
 //│     let x$2 = False() in -- #4
 //│     jump j$0(x$2) -- #3
 //│   S =>
-//│     let x$3 = S.s(x$0) in -- #16
-//│     let* (x$4) = even(x$3) in -- #15
-//│     jump j$0(x$4) -- #14
+//│     let x$3 = S.s(x$0) in -- #15
+//│     let* (x$4) = even(x$3) in -- #14
+//│     jump j$0(x$4) -- #13
 //│ )
 //│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
@@ -1376,57 +1264,57 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$5 of -- #35
+//│ case x$5 of -- #33
 //│   O =>
-//│     let x$7 = True() in -- #22
-//│     jump j$1(x$7) -- #21
+//│     let x$7 = True() in -- #21
+//│     jump j$1(x$7) -- #20
 //│   S =>
-//│     let x$8 = S.s(x$5) in -- #34
-//│     let* (x$9) = odd(x$8) in -- #33
-//│     jump j$1(x$9) -- #32
+//│     let x$8 = S.s(x$5) in -- #32
+//│     let* (x$9) = odd(x$8) in -- #31
+//│     jump j$1(x$9) -- #30
 //│ )
 //│ Def(3, j$1, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #19
+//│ x$6 -- #18
 //│ )
 //│ Def(4, mk, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = >(n$0,0) in -- #64
-//│ if x$10 -- #63
+//│ let x$10 = >(n$0,0) in -- #61
+//│ if x$10 -- #60
 //│   true =>
-//│     let x$12 = -(n$0,1) in -- #59
-//│     let* (x$13) = mk(x$12) in -- #58
-//│     let x$14 = S(x$13) in -- #57
-//│     jump j$2(x$14) -- #56
+//│     let x$12 = -(n$0,1) in -- #56
+//│     let* (x$13) = mk(x$12) in -- #55
+//│     let x$14 = S(x$13) in -- #54
+//│     jump j$2(x$14) -- #53
 //│   false =>
-//│     let x$15 = O() in -- #62
-//│     jump j$2(x$15) -- #61
+//│     let x$15 = O() in -- #59
+//│     jump j$2(x$15) -- #58
 //│ )
 //│ Def(5, j$2, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$11 -- #42
+//│ x$11 -- #40
 //│ )
 //│ Def(6, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$16) = mk(10) in -- #75
-//│ let* (x$17) = odd(x$16) in -- #74
-//│ x$17 -- #73
+//│ let* (x$16) = mk(10) in -- #70
+//│ let* (x$17) = odd(x$16) in -- #69
+//│ x$17 -- #68
 //│ )
 //│ },
-//│ let* (x$18) = foo() in -- #79
-//│ x$18 -- #78)
+//│ let* (x$18) = foo() in -- #73
+//│ x$18 -- #72)
 //│ 
 //│ Interpreted:
 //│ False()
@@ -1439,13 +1327,6 @@ foo()
 //│ struct _mls_S;
 //│ struct _mls_True;
 //│ struct _mls_False;
-//│ struct _mls_j_1;
-//│ struct _mls_odd;
-//│ struct _mls_mk;
-//│ struct _mls_j_0;
-//│ struct _mls_j_2;
-//│ struct _mls_even;
-//│ struct _mls_foo;
 //│ _mlsValue _mls_odd(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_foo();
@@ -1477,76 +1358,6 @@ foo()
 //│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_s.print();  std::printf(")"); }
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_s);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_s) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_s = _mls_s;  return _mlsValue(_mlsVal); }
-//│ };
-//│ struct _mlsFn__mls_j_1: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$1>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_1(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_foo: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<foo>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_foo mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply0() override{
-//│     return _mls_foo();
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_2: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$2>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_2(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_even: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<even>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_even mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_even(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_mk: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<mk>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_mk mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_mk(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_0: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$0>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_0(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_odd: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<odd>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_odd mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_odd(arg0);
-//│   }
 //│ };
 //│ _mlsValue _mls_foo(){
 //│   _mlsValue _mls_retval;
@@ -1641,20 +1452,31 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, Nat, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, S, [s], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(5, O, [], parents: Nat, methods:
+//│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$0 of -- #17
+//│ case x$0 of -- #16
 //│   O =>
 //│     let x$2 = False() in -- #4
 //│     jump j$0(x$2) -- #3
 //│   S =>
-//│     let x$3 = S.s(x$0) in -- #16
-//│     let* (x$4) = even(x$3) in -- #15
-//│     jump j$0(x$4) -- #14
+//│     let x$3 = S.s(x$0) in -- #15
+//│     let* (x$4) = even(x$3) in -- #14
+//│     jump j$0(x$4) -- #13
 //│ )
 //│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
@@ -1668,75 +1490,86 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$5 of -- #35
+//│ case x$5 of -- #33
 //│   O =>
-//│     let x$7 = True() in -- #22
-//│     jump j$1(x$7) -- #21
+//│     let x$7 = True() in -- #21
+//│     jump j$1(x$7) -- #20
 //│   S =>
-//│     let x$8 = S.s(x$5) in -- #34
-//│     let* (x$9) = odd(x$8) in -- #33
-//│     jump j$1(x$9) -- #32
+//│     let x$8 = S.s(x$5) in -- #32
+//│     let* (x$9) = odd(x$8) in -- #31
+//│     jump j$1(x$9) -- #30
 //│ )
 //│ Def(3, j$1, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #19
+//│ x$6 -- #18
 //│ )
 //│ Def(4, mk, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = >(n$0,0) in -- #64
-//│ if x$10 -- #63
+//│ let x$10 = >(n$0,0) in -- #61
+//│ if x$10 -- #60
 //│   true =>
-//│     let x$12 = -(n$0,1) in -- #59
-//│     let* (x$13) = mk(x$12) in -- #58
-//│     let x$14 = S(x$13) in -- #57
-//│     jump j$2(x$14) -- #56
+//│     let x$12 = -(n$0,1) in -- #56
+//│     let* (x$13) = mk(x$12) in -- #55
+//│     let x$14 = S(x$13) in -- #54
+//│     jump j$2(x$14) -- #53
 //│   false =>
-//│     let x$15 = O() in -- #62
-//│     jump j$2(x$15) -- #61
+//│     let x$15 = O() in -- #59
+//│     jump j$2(x$15) -- #58
 //│ )
 //│ Def(5, j$2, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$11 -- #42
+//│ x$11 -- #40
 //│ )
 //│ Def(6, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$16) = mk(10) in -- #83
-//│ let x$17 = S(x$16) in -- #82
-//│ let x$18 = S(x$17) in -- #81
-//│ let* (x$19) = odd(x$18) in -- #80
-//│ x$19 -- #79
+//│ let* (x$16) = mk(10) in -- #78
+//│ let x$17 = S(x$16) in -- #77
+//│ let x$18 = S(x$17) in -- #76
+//│ let* (x$19) = odd(x$18) in -- #75
+//│ x$19 -- #74
 //│ )
 //│ },
-//│ let* (x$20) = foo() in -- #87
-//│ x$20 -- #86)
+//│ let* (x$20) = foo() in -- #81
+//│ x$20 -- #80)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, Nat, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, S, [s], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(5, O, [], parents: Nat, methods:
+//│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$0 of -- #17
+//│ case x$0 of -- #16
 //│   O =>
 //│     let x$2 = False() in -- #4
 //│     jump j$0(x$2) -- #3
 //│   S =>
-//│     let x$3 = S.s(x$0) in -- #16
-//│     let* (x$4) = even(x$3) in -- #15
-//│     jump j$0(x$4) -- #14
+//│     let x$3 = S.s(x$0) in -- #15
+//│     let* (x$4) = even(x$3) in -- #14
+//│     jump j$0(x$4) -- #13
 //│ )
 //│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
@@ -1750,59 +1583,59 @@ foo()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$5 of -- #35
+//│ case x$5 of -- #33
 //│   O =>
-//│     let x$7 = True() in -- #22
-//│     jump j$1(x$7) -- #21
+//│     let x$7 = True() in -- #21
+//│     jump j$1(x$7) -- #20
 //│   S =>
-//│     let x$8 = S.s(x$5) in -- #34
-//│     let* (x$9) = odd(x$8) in -- #33
-//│     jump j$1(x$9) -- #32
+//│     let x$8 = S.s(x$5) in -- #32
+//│     let* (x$9) = odd(x$8) in -- #31
+//│     jump j$1(x$9) -- #30
 //│ )
 //│ Def(3, j$1, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #19
+//│ x$6 -- #18
 //│ )
 //│ Def(4, mk, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = >(n$0,0) in -- #64
-//│ if x$10 -- #63
+//│ let x$10 = >(n$0,0) in -- #61
+//│ if x$10 -- #60
 //│   true =>
-//│     let x$12 = -(n$0,1) in -- #59
-//│     let* (x$13) = mk(x$12) in -- #58
-//│     let x$14 = S(x$13) in -- #57
-//│     jump j$2(x$14) -- #56
+//│     let x$12 = -(n$0,1) in -- #56
+//│     let* (x$13) = mk(x$12) in -- #55
+//│     let x$14 = S(x$13) in -- #54
+//│     jump j$2(x$14) -- #53
 //│   false =>
-//│     let x$15 = O() in -- #62
-//│     jump j$2(x$15) -- #61
+//│     let x$15 = O() in -- #59
+//│     jump j$2(x$15) -- #58
 //│ )
 //│ Def(5, j$2, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$11 -- #42
+//│ x$11 -- #40
 //│ )
 //│ Def(6, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$16) = mk(10) in -- #83
-//│ let x$17 = S(x$16) in -- #82
-//│ let x$18 = S(x$17) in -- #81
-//│ let* (x$19) = odd(x$18) in -- #80
-//│ x$19 -- #79
+//│ let* (x$16) = mk(10) in -- #78
+//│ let x$17 = S(x$16) in -- #77
+//│ let x$18 = S(x$17) in -- #76
+//│ let* (x$19) = odd(x$18) in -- #75
+//│ x$19 -- #74
 //│ )
 //│ },
-//│ let* (x$20) = foo() in -- #87
-//│ x$20 -- #86)
+//│ let* (x$20) = foo() in -- #81
+//│ x$20 -- #80)
 //│ 
 //│ Interpreted:
 //│ False()
@@ -1815,13 +1648,6 @@ foo()
 //│ struct _mls_S;
 //│ struct _mls_True;
 //│ struct _mls_False;
-//│ struct _mls_j_1;
-//│ struct _mls_odd;
-//│ struct _mls_mk;
-//│ struct _mls_j_0;
-//│ struct _mls_j_2;
-//│ struct _mls_even;
-//│ struct _mls_foo;
 //│ _mlsValue _mls_odd(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_foo();
@@ -1853,76 +1679,6 @@ foo()
 //│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_s.print();  std::printf(")"); }
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_s);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_s) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_s = _mls_s;  return _mlsValue(_mlsVal); }
-//│ };
-//│ struct _mlsFn__mls_j_1: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$1>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_1(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_foo: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<foo>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_foo mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply0() override{
-//│     return _mls_foo();
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_2: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$2>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_2(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_even: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<even>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_even mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_even(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_mk: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<mk>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_mk mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_mk(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_0: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$0>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_0(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_odd: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<odd>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_odd mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_odd(arg0);
-//│   }
 //│ };
 //│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
@@ -2022,20 +1778,31 @@ main()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, Nat, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, S, [s], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(5, O, [], parents: Nat, methods:
+//│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$0 of -- #17
+//│ case x$0 of -- #16
 //│   O =>
 //│     let x$2 = False() in -- #4
 //│     jump j$0(x$2) -- #3
 //│   S =>
-//│     let x$3 = S.s(x$0) in -- #16
-//│     let* (x$4) = even(x$3) in -- #15
-//│     jump j$0(x$4) -- #14
+//│     let x$3 = S.s(x$0) in -- #15
+//│     let* (x$4) = even(x$3) in -- #14
+//│     jump j$0(x$4) -- #13
 //│ )
 //│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
@@ -2049,97 +1816,108 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$5 of -- #35
+//│ case x$5 of -- #33
 //│   O =>
-//│     let x$7 = True() in -- #22
-//│     jump j$1(x$7) -- #21
+//│     let x$7 = True() in -- #21
+//│     jump j$1(x$7) -- #20
 //│   S =>
-//│     let x$8 = S.s(x$5) in -- #34
-//│     let* (x$9) = odd(x$8) in -- #33
-//│     jump j$1(x$9) -- #32
+//│     let x$8 = S.s(x$5) in -- #32
+//│     let* (x$9) = odd(x$8) in -- #31
+//│     jump j$1(x$9) -- #30
 //│ )
 //│ Def(3, j$1, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #19
+//│ x$6 -- #18
 //│ )
 //│ Def(4, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = >(10,0) in -- #59
-//│ if x$10 -- #58
+//│ let x$10 = >(10,0) in -- #56
+//│ if x$10 -- #55
 //│   true =>
-//│     let x$13 = O() in -- #54
-//│     let x$14 = S(x$13) in -- #53
-//│     jump j$2(x$14) -- #52
+//│     let x$13 = O() in -- #51
+//│     let x$14 = S(x$13) in -- #50
+//│     jump j$2(x$14) -- #49
 //│   false =>
-//│     let x$15 = O() in -- #57
-//│     jump j$2(x$15) -- #56
+//│     let x$15 = O() in -- #54
+//│     jump j$2(x$15) -- #53
 //│ )
 //│ Def(5, j$2, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$12) = odd(x$11) in -- #47
-//│ x$12 -- #46
+//│ let* (x$12) = odd(x$11) in -- #44
+//│ x$12 -- #43
 //│ )
 //│ Def(6, bar, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$16 = >(10,0) in -- #88
-//│ if x$16 -- #87
+//│ let x$16 = >(10,0) in -- #83
+//│ if x$16 -- #82
 //│   true =>
-//│     let x$18 = O() in -- #78
-//│     let x$19 = S(x$18) in -- #77
-//│     let* (x$20) = odd(x$19) in -- #76
-//│     jump j$3(x$20) -- #75
+//│     let x$18 = O() in -- #74
+//│     let x$19 = S(x$18) in -- #73
+//│     let* (x$20) = odd(x$19) in -- #72
+//│     jump j$3(x$20) -- #71
 //│   false =>
-//│     let x$21 = O() in -- #86
-//│     let* (x$22) = odd(x$21) in -- #85
-//│     jump j$3(x$22) -- #84
+//│     let x$21 = O() in -- #81
+//│     let* (x$22) = odd(x$21) in -- #80
+//│     jump j$3(x$22) -- #79
 //│ )
 //│ Def(7, j$3, [x$17], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$17 -- #66
+//│ x$17 -- #63
 //│ )
 //│ Def(8, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$23) = foo() in -- #96
-//│ let* (x$24) = bar() in -- #95
-//│ x$24 -- #94
+//│ let* (x$23) = foo() in -- #89
+//│ let* (x$24) = bar() in -- #88
+//│ x$24 -- #87
 //│ )
 //│ },
-//│ let* (x$25) = main() in -- #100
-//│ x$25 -- #99)
+//│ let* (x$25) = main() in -- #92
+//│ x$25 -- #91)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, Nat, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, S, [s], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(5, O, [], parents: Nat, methods:
+//│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$0 of -- #17
+//│ case x$0 of -- #16
 //│   O =>
 //│     let x$2 = False() in -- #4
 //│     jump j$0(x$2) -- #3
 //│   S =>
-//│     let x$3 = S.s(x$0) in -- #16
-//│     let* (x$4) = even(x$3) in -- #15
-//│     jump j$0(x$4) -- #14
+//│     let x$3 = S.s(x$0) in -- #15
+//│     let* (x$4) = even(x$3) in -- #14
+//│     jump j$0(x$4) -- #13
 //│ )
 //│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
@@ -2153,81 +1931,81 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$5 of -- #35
+//│ case x$5 of -- #33
 //│   O =>
-//│     let x$7 = True() in -- #22
-//│     jump j$1(x$7) -- #21
+//│     let x$7 = True() in -- #21
+//│     jump j$1(x$7) -- #20
 //│   S =>
-//│     let x$8 = S.s(x$5) in -- #34
-//│     let* (x$9) = odd(x$8) in -- #33
-//│     jump j$1(x$9) -- #32
+//│     let x$8 = S.s(x$5) in -- #32
+//│     let* (x$9) = odd(x$8) in -- #31
+//│     jump j$1(x$9) -- #30
 //│ )
 //│ Def(3, j$1, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #19
+//│ x$6 -- #18
 //│ )
 //│ Def(4, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = >(10,0) in -- #59
-//│ if x$10 -- #58
+//│ let x$10 = >(10,0) in -- #56
+//│ if x$10 -- #55
 //│   true =>
-//│     let x$13 = O() in -- #54
-//│     let x$14 = S(x$13) in -- #53
-//│     jump j$2(x$14) -- #52
+//│     let x$13 = O() in -- #51
+//│     let x$14 = S(x$13) in -- #50
+//│     jump j$2(x$14) -- #49
 //│   false =>
-//│     let x$15 = O() in -- #57
-//│     jump j$2(x$15) -- #56
+//│     let x$15 = O() in -- #54
+//│     jump j$2(x$15) -- #53
 //│ )
 //│ Def(5, j$2, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$12) = odd(x$11) in -- #47
-//│ x$12 -- #46
+//│ let* (x$12) = odd(x$11) in -- #44
+//│ x$12 -- #43
 //│ )
 //│ Def(6, bar, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$16 = >(10,0) in -- #88
-//│ if x$16 -- #87
+//│ let x$16 = >(10,0) in -- #83
+//│ if x$16 -- #82
 //│   true =>
-//│     let x$18 = O() in -- #78
-//│     let x$19 = S(x$18) in -- #77
-//│     let* (x$20) = odd(x$19) in -- #76
-//│     jump j$3(x$20) -- #75
+//│     let x$18 = O() in -- #74
+//│     let x$19 = S(x$18) in -- #73
+//│     let* (x$20) = odd(x$19) in -- #72
+//│     jump j$3(x$20) -- #71
 //│   false =>
-//│     let x$21 = O() in -- #86
-//│     let* (x$22) = odd(x$21) in -- #85
-//│     jump j$3(x$22) -- #84
+//│     let x$21 = O() in -- #81
+//│     let* (x$22) = odd(x$21) in -- #80
+//│     jump j$3(x$22) -- #79
 //│ )
 //│ Def(7, j$3, [x$17], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$17 -- #66
+//│ x$17 -- #63
 //│ )
 //│ Def(8, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$23) = foo() in -- #96
-//│ let* (x$24) = bar() in -- #95
-//│ x$24 -- #94
+//│ let* (x$23) = foo() in -- #89
+//│ let* (x$24) = bar() in -- #88
+//│ x$24 -- #87
 //│ )
 //│ },
-//│ let* (x$25) = main() in -- #100
-//│ x$25 -- #99)
+//│ let* (x$25) = main() in -- #92
+//│ x$25 -- #91)
 //│ 
 //│ Interpreted:
 //│ True()
@@ -2240,15 +2018,6 @@ main()
 //│ struct _mls_S;
 //│ struct _mls_True;
 //│ struct _mls_False;
-//│ struct _mls_j_1;
-//│ struct _mls_j_3;
-//│ struct _mls_odd;
-//│ struct _mls_main;
-//│ struct _mls_bar;
-//│ struct _mls_j_0;
-//│ struct _mls_j_2;
-//│ struct _mls_even;
-//│ struct _mls_foo;
 //│ _mlsValue _mls_odd(_mlsValue);
 //│ _mlsValue _mls_bar();
 //│ _mlsValue _mls_j_0(_mlsValue);
@@ -2282,96 +2051,6 @@ main()
 //│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_s.print();  std::printf(")"); }
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_s);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_s) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_s = _mls_s;  return _mlsValue(_mlsVal); }
-//│ };
-//│ struct _mlsFn__mls_j_1: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$1>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_1(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_foo: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<foo>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_foo mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply0() override{
-//│     return _mls_foo();
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_2: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$2>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_2(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_even: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<even>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_even mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_even(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_bar: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<bar>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_bar mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply0() override{
-//│     return _mls_bar();
-//│   }
-//│ };
-//│ struct _mlsFn__mls_main: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<main>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply0() override{
-//│     return _mls_main();
-//│   }
-//│ };
-//│ struct _mlsFn__mls_odd: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<odd>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_odd mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_odd(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_3: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$3>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_3 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_3(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_0: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$0>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_0(arg0);
-//│   }
 //│ };
 //│ _mlsValue _mls_main(){
 //│   _mlsValue _mls_retval;
@@ -2494,7 +2173,18 @@ main(False)
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, AorB, []),ClassInfo(4, A, []),ClassInfo(5, B, [b])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, AorB, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, A, [], parents: AorB, methods:
+//│ ),
+//│ ClassInfo(5, B, [b], parents: AorB, methods:
+//│ )}, {
 //│ Def(0, aaa, [], [],
 //│ I: [],
 //│ R: [None],
@@ -2514,82 +2204,93 @@ main(False)
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$7) = aaa() in -- #43
-//│ let x$8 = *(x$7,100) in -- #42
-//│ let x$9 = +(x$8,4) in -- #41
-//│ x$9 -- #40
+//│ let* (x$7) = aaa() in -- #42
+//│ let x$8 = *(x$7,100) in -- #41
+//│ let x$9 = +(x$8,4) in -- #40
+//│ x$9 -- #39
 //│ )
 //│ Def(2, not, [x$10], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if x$10 -- #52
+//│ if x$10 -- #51
 //│   true =>
-//│     let x$12 = False() in -- #48
-//│     jump j$0(x$12) -- #47
+//│     let x$12 = False() in -- #47
+//│     jump j$0(x$12) -- #46
 //│   false =>
-//│     let x$13 = True() in -- #51
-//│     jump j$0(x$13) -- #50
+//│     let x$13 = True() in -- #50
+//│     jump j$0(x$13) -- #49
 //│ )
 //│ Def(3, j$0, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$11 -- #45
+//│ x$11 -- #44
 //│ )
 //│ Def(4, foo, [x$14], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if x$14 -- #74
+//│ if x$14 -- #71
 //│   true =>
-//│     let x$16 = A() in -- #57
-//│     jump j$1(x$16) -- #56
+//│     let x$16 = A() in -- #56
+//│     jump j$1(x$16) -- #55
 //│   false =>
-//│     let* (x$17) = not(x$14) in -- #73
-//│     let* (x$18) = foo(x$17) in -- #72
-//│     let x$19 = B(x$18) in -- #71
-//│     jump j$1(x$19) -- #70
+//│     let* (x$17) = not(x$14) in -- #70
+//│     let* (x$18) = foo(x$17) in -- #69
+//│     let x$19 = B(x$18) in -- #68
+//│     jump j$1(x$19) -- #67
 //│ )
 //│ Def(5, j$1, [x$15], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$15 -- #54
+//│ x$15 -- #53
 //│ )
 //│ Def(6, main, [flag$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$20) = foo(flag$0) in -- #98
-//│ case x$20 of -- #97
+//│ let* (x$20) = foo(flag$0) in -- #92
+//│ case x$20 of -- #91
 //│   A =>
-//│     let* (x$22) = aaa() in -- #86
-//│     jump j$2(x$22) -- #85
+//│     let* (x$22) = aaa() in -- #81
+//│     jump j$2(x$22) -- #80
 //│   B =>
-//│     let x$23 = B.b(x$20) in -- #96
-//│     let* (x$24) = bbb() in -- #95
-//│     jump j$2(x$24) -- #94
+//│     let x$23 = B.b(x$20) in -- #90
+//│     let* (x$24) = bbb() in -- #89
+//│     jump j$2(x$24) -- #88
 //│ )
 //│ Def(7, j$2, [x$21], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$21 -- #81
+//│ x$21 -- #77
 //│ )
 //│ },
-//│ let x$25 = False() in -- #105
-//│ let* (x$26) = main(x$25) in -- #104
-//│ x$26 -- #103)
+//│ let x$25 = False() in -- #98
+//│ let* (x$26) = main(x$25) in -- #97
+//│ x$26 -- #96)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, AorB, []),ClassInfo(4, A, []),ClassInfo(5, B, [b])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, AorB, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, A, [], parents: AorB, methods:
+//│ ),
+//│ ClassInfo(5, B, [b], parents: AorB, methods:
+//│ )}, {
 //│ Def(0, aaa, [], [],
 //│ I: [],
 //│ R: [None],
@@ -2609,79 +2310,79 @@ main(False)
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$7) = aaa() in -- #43
-//│ let x$8 = *(x$7,100) in -- #42
-//│ let x$9 = +(x$8,4) in -- #41
-//│ x$9 -- #40
+//│ let* (x$7) = aaa() in -- #42
+//│ let x$8 = *(x$7,100) in -- #41
+//│ let x$9 = +(x$8,4) in -- #40
+//│ x$9 -- #39
 //│ )
 //│ Def(2, not, [x$10], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if x$10 -- #52
+//│ if x$10 -- #51
 //│   true =>
-//│     let x$12 = False() in -- #48
-//│     jump j$0(x$12) -- #47
+//│     let x$12 = False() in -- #47
+//│     jump j$0(x$12) -- #46
 //│   false =>
-//│     let x$13 = True() in -- #51
-//│     jump j$0(x$13) -- #50
+//│     let x$13 = True() in -- #50
+//│     jump j$0(x$13) -- #49
 //│ )
 //│ Def(3, j$0, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$11 -- #45
+//│ x$11 -- #44
 //│ )
 //│ Def(4, foo, [x$14], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if x$14 -- #74
+//│ if x$14 -- #71
 //│   true =>
-//│     let x$16 = A() in -- #57
-//│     jump j$1(x$16) -- #56
+//│     let x$16 = A() in -- #56
+//│     jump j$1(x$16) -- #55
 //│   false =>
-//│     let* (x$17) = not(x$14) in -- #73
-//│     let* (x$18) = foo(x$17) in -- #72
-//│     let x$19 = B(x$18) in -- #71
-//│     jump j$1(x$19) -- #70
+//│     let* (x$17) = not(x$14) in -- #70
+//│     let* (x$18) = foo(x$17) in -- #69
+//│     let x$19 = B(x$18) in -- #68
+//│     jump j$1(x$19) -- #67
 //│ )
 //│ Def(5, j$1, [x$15], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$15 -- #54
+//│ x$15 -- #53
 //│ )
 //│ Def(6, main, [flag$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$20) = foo(flag$0) in -- #98
-//│ case x$20 of -- #97
+//│ let* (x$20) = foo(flag$0) in -- #92
+//│ case x$20 of -- #91
 //│   A =>
-//│     let* (x$22) = aaa() in -- #86
-//│     jump j$2(x$22) -- #85
+//│     let* (x$22) = aaa() in -- #81
+//│     jump j$2(x$22) -- #80
 //│   B =>
-//│     let x$23 = B.b(x$20) in -- #96
-//│     let* (x$24) = bbb() in -- #95
-//│     jump j$2(x$24) -- #94
+//│     let x$23 = B.b(x$20) in -- #90
+//│     let* (x$24) = bbb() in -- #89
+//│     jump j$2(x$24) -- #88
 //│ )
 //│ Def(7, j$2, [x$21], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$21 -- #81
+//│ x$21 -- #77
 //│ )
 //│ },
-//│ let x$25 = False() in -- #105
-//│ let* (x$26) = main(x$25) in -- #104
-//│ x$26 -- #103)
+//│ let x$25 = False() in -- #98
+//│ let* (x$26) = main(x$25) in -- #97
+//│ x$26 -- #96)
 //│ 
 //│ Interpreted:
 //│ 404
@@ -2694,14 +2395,6 @@ main(False)
 //│ struct _mls_A;
 //│ struct _mls_True;
 //│ struct _mls_False;
-//│ struct _mls_main;
-//│ struct _mls_bbb;
-//│ struct _mls_j_1;
-//│ struct _mls_aaa;
-//│ struct _mls_not;
-//│ struct _mls_foo;
-//│ struct _mls_j_0;
-//│ struct _mls_j_2;
 //│ _mlsValue _mls_aaa();
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_main(_mlsValue);
@@ -2734,86 +2427,6 @@ main(False)
 //│   virtual void print() const override { std::printf("%s", typeName); }
 //│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
-//│ };
-//│ struct _mlsFn__mls_foo: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<foo>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_foo mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_foo(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_1: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$1>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_1(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_bbb: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<bbb>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_bbb mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply0() override{
-//│     return _mls_bbb();
-//│   }
-//│ };
-//│ struct _mlsFn__mls_not: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<not>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_not mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_not(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_2: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$2>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_2(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_aaa: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<aaa>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_aaa mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply0() override{
-//│     return _mls_aaa();
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_0: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$0>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_0(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_main: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<main>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_main(arg0);
-//│   }
 //│ };
 //│ _mlsValue _mls_main(_mlsValue _mls_flag_0){
 //│   _mlsValue _mls_retval;
@@ -2927,7 +2540,24 @@ main()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ )}, {
 //│ Def(0, head_opt, [l$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -2976,27 +2606,44 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$9) = head_opt(l$1) in -- #46
-//│ let* (x$10) = is_none(x$9) in -- #45
-//│ x$10 -- #44
+//│ let* (x$9) = head_opt(l$1) in -- #44
+//│ let* (x$10) = is_none(x$9) in -- #43
+//│ x$10 -- #42
 //│ )
 //│ Def(5, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$11 = Nil() in -- #65
-//│ let x$12 = Cons(2,x$11) in -- #64
-//│ let x$13 = Cons(1,x$12) in -- #63
-//│ let* (x$14) = is_empty(x$13) in -- #62
-//│ x$14 -- #61
+//│ let x$11 = Nil() in -- #62
+//│ let x$12 = Cons(2,x$11) in -- #61
+//│ let x$13 = Cons(1,x$12) in -- #60
+//│ let* (x$14) = is_empty(x$13) in -- #59
+//│ x$14 -- #58
 //│ )
 //│ },
-//│ let* (x$15) = main() in -- #69
-//│ x$15 -- #68)
+//│ let* (x$15) = main() in -- #65
+//│ x$15 -- #64)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ )}, {
 //│ Def(0, head_opt, [l$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -3045,24 +2692,24 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$9) = head_opt(l$1) in -- #46
-//│ let* (x$10) = is_none(x$9) in -- #45
-//│ x$10 -- #44
+//│ let* (x$9) = head_opt(l$1) in -- #44
+//│ let* (x$10) = is_none(x$9) in -- #43
+//│ x$10 -- #42
 //│ )
 //│ Def(5, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$11 = Nil() in -- #65
-//│ let x$12 = Cons(2,x$11) in -- #64
-//│ let x$13 = Cons(1,x$12) in -- #63
-//│ let* (x$14) = is_empty(x$13) in -- #62
-//│ x$14 -- #61
+//│ let x$11 = Nil() in -- #62
+//│ let x$12 = Cons(2,x$11) in -- #61
+//│ let x$13 = Cons(1,x$12) in -- #60
+//│ let* (x$14) = is_empty(x$13) in -- #59
+//│ x$14 -- #58
 //│ )
 //│ },
-//│ let* (x$15) = main() in -- #69
-//│ x$15 -- #68)
+//│ let* (x$15) = main() in -- #65
+//│ x$15 -- #64)
 //│ 
 //│ Interpreted:
 //│ False()
@@ -3078,12 +2725,6 @@ main()
 //│ struct _mls_Cons;
 //│ struct _mls_True;
 //│ struct _mls_False;
-//│ struct _mls_main;
-//│ struct _mls_j_1;
-//│ struct _mls_is_empty;
-//│ struct _mls_j_0;
-//│ struct _mls_is_none;
-//│ struct _mls_head_opt;
 //│ _mlsValue _mls_is_empty(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_main();
@@ -3139,66 +2780,6 @@ main()
 //│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
-//│ };
-//│ struct _mlsFn__mls_j_1: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$1>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_1(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_is_none: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<is_none>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_is_none mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_is_none(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_is_empty: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<is_empty>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_is_empty mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_is_empty(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_head_opt: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<head_opt>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_head_opt mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_head_opt(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_0: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$0>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_0(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_main: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<main>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply0() override{
-//│     return _mls_main();
-//│   }
 //│ };
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
@@ -3291,22 +2872,39 @@ main()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ )}, {
 //│ Def(0, mk_list, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = ==(n$0,0) in -- #30
-//│ if x$0 -- #29
+//│ let x$0 = ==(n$0,0) in -- #29
+//│ if x$0 -- #28
 //│   true =>
 //│     let x$2 = Nil() in -- #9
 //│     jump j$0(x$2) -- #8
 //│   false =>
-//│     let x$3 = -(n$0,1) in -- #28
-//│     let* (x$4) = mk_list(x$3) in -- #27
-//│     let x$5 = Cons(n$0,x$4) in -- #26
-//│     jump j$0(x$5) -- #25
+//│     let x$3 = -(n$0,1) in -- #27
+//│     let* (x$4) = mk_list(x$3) in -- #26
+//│     let x$5 = Cons(n$0,x$4) in -- #25
+//│     jump j$0(x$5) -- #24
 //│ )
 //│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
@@ -3320,83 +2918,100 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case l$0 of -- #52
+//│ case l$0 of -- #51
 //│   Nil =>
-//│     let x$7 = None() in -- #35
-//│     jump j$1(x$7) -- #34
+//│     let x$7 = None() in -- #34
+//│     jump j$1(x$7) -- #33
 //│   Cons =>
-//│     let x$8 = Cons.t(l$0) in -- #51
-//│     let x$9 = Cons.h(l$0) in -- #50
-//│     let x$10 = Some(x$9) in -- #49
-//│     jump j$1(x$10) -- #48
+//│     let x$8 = Cons.t(l$0) in -- #50
+//│     let x$9 = Cons.h(l$0) in -- #49
+//│     let x$10 = Some(x$9) in -- #48
+//│     jump j$1(x$10) -- #47
 //│ )
 //│ Def(3, j$1, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #32
+//│ x$6 -- #31
 //│ )
 //│ Def(4, is_none, [o$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case o$0 of -- #66
+//│ case o$0 of -- #65
 //│   None =>
-//│     let x$12 = True() in -- #57
-//│     jump j$2(x$12) -- #56
+//│     let x$12 = True() in -- #56
+//│     jump j$2(x$12) -- #55
 //│   Some =>
-//│     let x$13 = Some.x(o$0) in -- #65
-//│     let x$14 = False() in -- #64
-//│     jump j$2(x$14) -- #63
+//│     let x$13 = Some.x(o$0) in -- #64
+//│     let x$14 = False() in -- #63
+//│     jump j$2(x$14) -- #62
 //│ )
 //│ Def(5, j$2, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$11 -- #54
+//│ x$11 -- #53
 //│ )
 //│ Def(6, is_empty, [l$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$15) = head_opt(l$1) in -- #77
-//│ let* (x$16) = is_none(x$15) in -- #76
-//│ x$16 -- #75
+//│ let* (x$15) = head_opt(l$1) in -- #74
+//│ let* (x$16) = is_none(x$15) in -- #73
+//│ x$16 -- #72
 //│ )
 //│ Def(7, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$17) = mk_list(10) in -- #88
-//│ let* (x$18) = is_empty(x$17) in -- #87
-//│ x$18 -- #86
+//│ let* (x$17) = mk_list(10) in -- #83
+//│ let* (x$18) = is_empty(x$17) in -- #82
+//│ x$18 -- #81
 //│ )
 //│ },
-//│ let* (x$19) = main() in -- #92
-//│ x$19 -- #91)
+//│ let* (x$19) = main() in -- #86
+//│ x$19 -- #85)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ )}, {
 //│ Def(0, mk_list, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = ==(n$0,0) in -- #30
-//│ if x$0 -- #29
+//│ let x$0 = ==(n$0,0) in -- #29
+//│ if x$0 -- #28
 //│   true =>
 //│     let x$2 = Nil() in -- #9
 //│     jump j$0(x$2) -- #8
 //│   false =>
-//│     let x$3 = -(n$0,1) in -- #28
-//│     let* (x$4) = mk_list(x$3) in -- #27
-//│     let x$5 = Cons(n$0,x$4) in -- #26
-//│     jump j$0(x$5) -- #25
+//│     let x$3 = -(n$0,1) in -- #27
+//│     let* (x$4) = mk_list(x$3) in -- #26
+//│     let x$5 = Cons(n$0,x$4) in -- #25
+//│     jump j$0(x$5) -- #24
 //│ )
 //│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
@@ -3410,65 +3025,65 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case l$0 of -- #52
+//│ case l$0 of -- #51
 //│   Nil =>
-//│     let x$7 = None() in -- #35
-//│     jump j$1(x$7) -- #34
+//│     let x$7 = None() in -- #34
+//│     jump j$1(x$7) -- #33
 //│   Cons =>
-//│     let x$8 = Cons.t(l$0) in -- #51
-//│     let x$9 = Cons.h(l$0) in -- #50
-//│     let x$10 = Some(x$9) in -- #49
-//│     jump j$1(x$10) -- #48
+//│     let x$8 = Cons.t(l$0) in -- #50
+//│     let x$9 = Cons.h(l$0) in -- #49
+//│     let x$10 = Some(x$9) in -- #48
+//│     jump j$1(x$10) -- #47
 //│ )
 //│ Def(3, j$1, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #32
+//│ x$6 -- #31
 //│ )
 //│ Def(4, is_none, [o$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case o$0 of -- #66
+//│ case o$0 of -- #65
 //│   None =>
-//│     let x$12 = True() in -- #57
-//│     jump j$2(x$12) -- #56
+//│     let x$12 = True() in -- #56
+//│     jump j$2(x$12) -- #55
 //│   Some =>
-//│     let x$13 = Some.x(o$0) in -- #65
-//│     let x$14 = False() in -- #64
-//│     jump j$2(x$14) -- #63
+//│     let x$13 = Some.x(o$0) in -- #64
+//│     let x$14 = False() in -- #63
+//│     jump j$2(x$14) -- #62
 //│ )
 //│ Def(5, j$2, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$11 -- #54
+//│ x$11 -- #53
 //│ )
 //│ Def(6, is_empty, [l$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$15) = head_opt(l$1) in -- #77
-//│ let* (x$16) = is_none(x$15) in -- #76
-//│ x$16 -- #75
+//│ let* (x$15) = head_opt(l$1) in -- #74
+//│ let* (x$16) = is_none(x$15) in -- #73
+//│ x$16 -- #72
 //│ )
 //│ Def(7, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$17) = mk_list(10) in -- #88
-//│ let* (x$18) = is_empty(x$17) in -- #87
-//│ x$18 -- #86
+//│ let* (x$17) = mk_list(10) in -- #83
+//│ let* (x$18) = is_empty(x$17) in -- #82
+//│ x$18 -- #81
 //│ )
 //│ },
-//│ let* (x$19) = main() in -- #92
-//│ x$19 -- #91)
+//│ let* (x$19) = main() in -- #86
+//│ x$19 -- #85)
 //│ 
 //│ Interpreted:
 //│ False()
@@ -3484,14 +3099,6 @@ main()
 //│ struct _mls_Cons;
 //│ struct _mls_True;
 //│ struct _mls_False;
-//│ struct _mls_main;
-//│ struct _mls_j_1;
-//│ struct _mls_is_empty;
-//│ struct _mls_is_none;
-//│ struct _mls_head_opt;
-//│ struct _mls_mk_list;
-//│ struct _mls_j_0;
-//│ struct _mls_j_2;
 //│ _mlsValue _mls_is_empty(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_j_2(_mlsValue);
@@ -3549,86 +3156,6 @@ main()
 //│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
-//│ };
-//│ struct _mlsFn__mls_j_1: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$1>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_1(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_is_none: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<is_none>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_is_none mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_is_none(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_2: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$2>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_2(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_is_empty: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<is_empty>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_is_empty mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_is_empty(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_mk_list: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<mk_list>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_mk_list mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_mk_list(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_head_opt: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<head_opt>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_head_opt mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_head_opt(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_0: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$0>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_0(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_main: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<main>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply0() override{
-//│     return _mls_main();
-//│   }
 //│ };
 //│ _mlsValue _mls_mk_list(_mlsValue _mls_n_0){
 //│   _mlsValue _mls_retval;
@@ -3735,22 +3262,39 @@ main()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ )}, {
 //│ Def(0, mk_list, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = ==(n$0,0) in -- #30
-//│ if x$0 -- #29
+//│ let x$0 = ==(n$0,0) in -- #29
+//│ if x$0 -- #28
 //│   true =>
 //│     let x$2 = Nil() in -- #9
 //│     jump j$0(x$2) -- #8
 //│   false =>
-//│     let x$3 = -(n$0,1) in -- #28
-//│     let* (x$4) = mk_list(x$3) in -- #27
-//│     let x$5 = Cons(n$0,x$4) in -- #26
-//│     jump j$0(x$5) -- #25
+//│     let x$3 = -(n$0,1) in -- #27
+//│     let* (x$4) = mk_list(x$3) in -- #26
+//│     let x$5 = Cons(n$0,x$4) in -- #25
+//│     jump j$0(x$5) -- #24
 //│ )
 //│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
@@ -3764,67 +3308,84 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case l$0 of -- #73
+//│ case l$0 of -- #71
 //│   Nil =>
-//│     let x$7 = None() in -- #35
-//│     jump j$1(x$7) -- #34
+//│     let x$7 = None() in -- #34
+//│     jump j$1(x$7) -- #33
 //│   Cons =>
-//│     let x$8 = Cons.t(l$0) in -- #72
-//│     let x$9 = Cons.h(l$0) in -- #71
-//│     case x$8 of -- #70
+//│     let x$8 = Cons.t(l$0) in -- #70
+//│     let x$9 = Cons.h(l$0) in -- #69
+//│     case x$8 of -- #68
 //│       Nil =>
-//│         let x$11 = Some(x$9) in -- #52
-//│         jump j$2(x$11) -- #51
+//│         let x$11 = Some(x$9) in -- #51
+//│         jump j$2(x$11) -- #50
 //│       Cons =>
-//│         let x$12 = Cons.t(x$8) in -- #69
-//│         let x$13 = Cons.h(x$8) in -- #68
-//│         let* (x$14) = last_opt(x$8) in -- #67
-//│         jump j$2(x$14) -- #66
+//│         let x$12 = Cons.t(x$8) in -- #67
+//│         let x$13 = Cons.h(x$8) in -- #66
+//│         let* (x$14) = last_opt(x$8) in -- #65
+//│         jump j$2(x$14) -- #64
 //│ )
 //│ Def(3, j$1, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #32
+//│ x$6 -- #31
 //│ )
 //│ Def(4, j$2, [x$10], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ jump j$1(x$10) -- #46
+//│ jump j$1(x$10) -- #45
 //│ )
 //│ Def(5, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$15) = mk_list(10) in -- #84
-//│ let* (x$16) = last_opt(x$15) in -- #83
-//│ x$16 -- #82
+//│ let* (x$15) = mk_list(10) in -- #80
+//│ let* (x$16) = last_opt(x$15) in -- #79
+//│ x$16 -- #78
 //│ )
 //│ },
-//│ let* (x$17) = main() in -- #88
-//│ x$17 -- #87)
+//│ let* (x$17) = main() in -- #83
+//│ x$17 -- #82)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ )}, {
 //│ Def(0, mk_list, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = ==(n$0,0) in -- #30
-//│ if x$0 -- #29
+//│ let x$0 = ==(n$0,0) in -- #29
+//│ if x$0 -- #28
 //│   true =>
 //│     let x$2 = Nil() in -- #9
 //│     jump j$0(x$2) -- #8
 //│   false =>
-//│     let x$3 = -(n$0,1) in -- #28
-//│     let* (x$4) = mk_list(x$3) in -- #27
-//│     let x$5 = Cons(n$0,x$4) in -- #26
-//│     jump j$0(x$5) -- #25
+//│     let x$3 = -(n$0,1) in -- #27
+//│     let* (x$4) = mk_list(x$3) in -- #26
+//│     let x$5 = Cons(n$0,x$4) in -- #25
+//│     jump j$0(x$5) -- #24
 //│ )
 //│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
@@ -3838,49 +3399,49 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case l$0 of -- #73
+//│ case l$0 of -- #71
 //│   Nil =>
-//│     let x$7 = None() in -- #35
-//│     jump j$1(x$7) -- #34
+//│     let x$7 = None() in -- #34
+//│     jump j$1(x$7) -- #33
 //│   Cons =>
-//│     let x$8 = Cons.t(l$0) in -- #72
-//│     let x$9 = Cons.h(l$0) in -- #71
-//│     case x$8 of -- #70
+//│     let x$8 = Cons.t(l$0) in -- #70
+//│     let x$9 = Cons.h(l$0) in -- #69
+//│     case x$8 of -- #68
 //│       Nil =>
-//│         let x$11 = Some(x$9) in -- #52
-//│         jump j$2(x$11) -- #51
+//│         let x$11 = Some(x$9) in -- #51
+//│         jump j$2(x$11) -- #50
 //│       Cons =>
-//│         let x$12 = Cons.t(x$8) in -- #69
-//│         let x$13 = Cons.h(x$8) in -- #68
-//│         let* (x$14) = last_opt(x$8) in -- #67
-//│         jump j$2(x$14) -- #66
+//│         let x$12 = Cons.t(x$8) in -- #67
+//│         let x$13 = Cons.h(x$8) in -- #66
+//│         let* (x$14) = last_opt(x$8) in -- #65
+//│         jump j$2(x$14) -- #64
 //│ )
 //│ Def(3, j$1, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #32
+//│ x$6 -- #31
 //│ )
 //│ Def(4, j$2, [x$10], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ jump j$1(x$10) -- #46
+//│ jump j$1(x$10) -- #45
 //│ )
 //│ Def(5, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$15) = mk_list(10) in -- #84
-//│ let* (x$16) = last_opt(x$15) in -- #83
-//│ x$16 -- #82
+//│ let* (x$15) = mk_list(10) in -- #80
+//│ let* (x$16) = last_opt(x$15) in -- #79
+//│ x$16 -- #78
 //│ )
 //│ },
-//│ let* (x$17) = main() in -- #88
-//│ x$17 -- #87)
+//│ let* (x$17) = main() in -- #83
+//│ x$17 -- #82)
 //│ 
 //│ Interpreted:
 //│ Some(0)
@@ -3896,12 +3457,6 @@ main()
 //│ struct _mls_Cons;
 //│ struct _mls_True;
 //│ struct _mls_False;
-//│ struct _mls_main;
-//│ struct _mls_j_1;
-//│ struct _mls_last_opt;
-//│ struct _mls_mk_list;
-//│ struct _mls_j_0;
-//│ struct _mls_j_2;
 //│ _mlsValue _mls_last_opt(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_j_2(_mlsValue);
@@ -3957,66 +3512,6 @@ main()
 //│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
-//│ };
-//│ struct _mlsFn__mls_j_1: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$1>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_1(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_2: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$2>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_2(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_0: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$0>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_0(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_main: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<main>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply0() override{
-//│     return _mls_main();
-//│   }
-//│ };
-//│ struct _mlsFn__mls_last_opt: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<last_opt>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_last_opt mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_last_opt(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_mk_list: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<mk_list>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_mk_list mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_mk_list(arg0);
-//│   }
 //│ };
 //│ _mlsValue _mls_main(){
 //│   _mlsValue _mls_retval;
@@ -4125,7 +3620,24 @@ main()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ )}, {
 //│ Def(0, is_some, [o$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -4211,43 +3723,60 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$27) = is_some(x$26) in -- #169
-//│ let* (x$28) = e3(x$27) in -- #168
-//│ case x$26 of -- #167
+//│ let* (x$27) = is_some(x$26) in -- #164
+//│ let* (x$28) = e3(x$27) in -- #163
+//│ case x$26 of -- #162
 //│   Some =>
-//│     let x$31 = Some.x(x$26) in -- #159
-//│     let* (x$32) = e1(x$31,x$28) in -- #158
-//│     jump j$2(x$32) -- #157
+//│     let x$31 = Some.x(x$26) in -- #155
+//│     let* (x$32) = e1(x$31,x$28) in -- #154
+//│     jump j$2(x$32) -- #153
 //│   None =>
-//│     let* (x$33) = e2(x$28) in -- #166
-//│     jump j$2(x$33) -- #165
+//│     let* (x$33) = e2(x$28) in -- #161
+//│     jump j$2(x$33) -- #160
 //│ )
 //│ Def(8, j$2, [x$29], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$30) = e0(x$29) in -- #145
-//│ x$30 -- #144
+//│ let* (x$30) = e0(x$29) in -- #142
+//│ x$30 -- #141
 //│ )
 //│ Def(9, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$34 = Some(2) in -- #191
-//│ let* (x$35) = f(x$34) in -- #190
-//│ let x$36 = None() in -- #189
-//│ let* (x$37) = f(x$36) in -- #188
-//│ let x$38 = +(x$35,x$37) in -- #187
-//│ x$38 -- #186
+//│ let x$34 = Some(2) in -- #184
+//│ let* (x$35) = f(x$34) in -- #183
+//│ let x$36 = None() in -- #182
+//│ let* (x$37) = f(x$36) in -- #181
+//│ let x$38 = +(x$35,x$37) in -- #180
+//│ x$38 -- #179
 //│ )
 //│ },
-//│ let* (x$39) = main() in -- #195
-//│ x$39 -- #194)
+//│ let* (x$39) = main() in -- #187
+//│ x$39 -- #186)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ )}, {
 //│ Def(0, is_some, [o$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -4333,40 +3862,40 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$27) = is_some(x$26) in -- #169
-//│ let* (x$28) = e3(x$27) in -- #168
-//│ case x$26 of -- #167
+//│ let* (x$27) = is_some(x$26) in -- #164
+//│ let* (x$28) = e3(x$27) in -- #163
+//│ case x$26 of -- #162
 //│   Some =>
-//│     let x$31 = Some.x(x$26) in -- #159
-//│     let* (x$32) = e1(x$31,x$28) in -- #158
-//│     jump j$2(x$32) -- #157
+//│     let x$31 = Some.x(x$26) in -- #155
+//│     let* (x$32) = e1(x$31,x$28) in -- #154
+//│     jump j$2(x$32) -- #153
 //│   None =>
-//│     let* (x$33) = e2(x$28) in -- #166
-//│     jump j$2(x$33) -- #165
+//│     let* (x$33) = e2(x$28) in -- #161
+//│     jump j$2(x$33) -- #160
 //│ )
 //│ Def(8, j$2, [x$29], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$30) = e0(x$29) in -- #145
-//│ x$30 -- #144
+//│ let* (x$30) = e0(x$29) in -- #142
+//│ x$30 -- #141
 //│ )
 //│ Def(9, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$34 = Some(2) in -- #191
-//│ let* (x$35) = f(x$34) in -- #190
-//│ let x$36 = None() in -- #189
-//│ let* (x$37) = f(x$36) in -- #188
-//│ let x$38 = +(x$35,x$37) in -- #187
-//│ x$38 -- #186
+//│ let x$34 = Some(2) in -- #184
+//│ let* (x$35) = f(x$34) in -- #183
+//│ let x$36 = None() in -- #182
+//│ let* (x$37) = f(x$36) in -- #181
+//│ let x$38 = +(x$35,x$37) in -- #180
+//│ x$38 -- #179
 //│ )
 //│ },
-//│ let* (x$39) = main() in -- #195
-//│ x$39 -- #194)
+//│ let* (x$39) = main() in -- #187
+//│ x$39 -- #186)
 //│ 
 //│ Interpreted:
 //│ 115
@@ -4382,16 +3911,6 @@ main()
 //│ struct _mls_Cons;
 //│ struct _mls_True;
 //│ struct _mls_False;
-//│ struct _mls_j_1;
-//│ struct _mls_e1;
-//│ struct _mls_is_some;
-//│ struct _mls_e0;
-//│ struct _mls_main;
-//│ struct _mls_f;
-//│ struct _mls_j_0;
-//│ struct _mls_j_2;
-//│ struct _mls_e3;
-//│ struct _mls_e2;
 //│ _mlsValue _mls_e0(_mlsValue);
 //│ _mlsValue _mls_e2(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
@@ -4451,106 +3970,6 @@ main()
 //│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
-//│ };
-//│ struct _mlsFn__mls_j_1: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$1>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_1(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_e1: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<e1>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_e1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply2(_mlsValue arg0, _mlsValue arg1) override{
-//│     return _mls_e1(arg0, arg1);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_e0: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<e0>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_e0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_e0(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_2: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$2>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_2(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_e3: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<e3>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_e3 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_e3(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_is_some: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<is_some>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_is_some mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_is_some(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_e2: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<e2>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_e2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_e2(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_0: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$0>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_0(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_f: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<f>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_f mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_f(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_main: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<main>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply0() override{
-//│     return _mls_main();
-//│   }
 //│ };
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
@@ -4699,7 +4118,24 @@ main()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ )}, {
 //│ Def(0, is_some, [o$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -4736,15 +4172,15 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$7 = >(a$0,0) in -- #60
-//│ if x$7 -- #59
+//│ let x$7 = >(a$0,0) in -- #59
+//│ if x$7 -- #58
 //│   true =>
-//│     let x$9 = -(a$0,1) in -- #56
-//│     let x$10 = Some(x$9) in -- #55
-//│     let* (x$11) = f(x$10) in -- #54
-//│     jump j$1(x$11) -- #53
+//│     let x$9 = -(a$0,1) in -- #55
+//│     let x$10 = Some(x$9) in -- #54
+//│     let* (x$11) = f(x$10) in -- #53
+//│     jump j$1(x$11) -- #52
 //│   false =>
-//│     jump j$1(z$0) -- #58
+//│     jump j$1(z$0) -- #57
 //│ )
 //│ Def(4, j$1, [x$8], [{}],
 //│ I: [],
@@ -4758,81 +4194,98 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$12 = 4 in -- #111
-//│ let x$13 = 5 in -- #110
-//│ let x$14 = 6 in -- #109
-//│ let x$15 = 7 in -- #108
-//│ if c$0 -- #107
+//│ let x$12 = 4 in -- #110
+//│ let x$13 = 5 in -- #109
+//│ let x$14 = 6 in -- #108
+//│ let x$15 = 7 in -- #107
+//│ if c$0 -- #106
 //│   true =>
-//│     let x$17 = +(x$12,x$13) in -- #86
-//│     let x$18 = +(x$17,x$14) in -- #85
-//│     let x$19 = +(x$18,x$15) in -- #84
-//│     jump j$2(x$19) -- #83
+//│     let x$17 = +(x$12,x$13) in -- #85
+//│     let x$18 = +(x$17,x$14) in -- #84
+//│     let x$19 = +(x$18,x$15) in -- #83
+//│     jump j$2(x$19) -- #82
 //│   false =>
-//│     let x$20 = +(x$12,x$13) in -- #106
-//│     let x$21 = -(x$20,x$14) in -- #105
-//│     let x$22 = +(x$21,x$15) in -- #104
-//│     jump j$2(x$22) -- #103
+//│     let x$20 = +(x$12,x$13) in -- #105
+//│     let x$21 = -(x$20,x$14) in -- #104
+//│     let x$22 = +(x$21,x$15) in -- #103
+//│     jump j$2(x$22) -- #102
 //│ )
 //│ Def(6, j$2, [x$16], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$16 -- #66
+//│ x$16 -- #65
 //│ )
 //│ Def(7, e2, [x$23], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$24 = +(x$23,12) in -- #130
-//│ let x$25 = +(x$24,13) in -- #129
-//│ let x$26 = +(x$25,14) in -- #128
-//│ x$26 -- #127
+//│ let x$24 = +(x$23,12) in -- #129
+//│ let x$25 = +(x$24,13) in -- #128
+//│ let x$26 = +(x$25,14) in -- #127
+//│ x$26 -- #126
 //│ )
 //│ Def(8, f, [x$27], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$28) = is_some(x$27) in -- #172
-//│ let* (x$29) = e3(x$28) in -- #171
-//│ case x$27 of -- #170
+//│ let* (x$28) = is_some(x$27) in -- #166
+//│ let* (x$29) = e3(x$28) in -- #165
+//│ case x$27 of -- #164
 //│   Some =>
-//│     let x$32 = Some.x(x$27) in -- #162
-//│     let* (x$33) = e1(x$32,x$29) in -- #161
-//│     jump j$3(x$33) -- #160
+//│     let x$32 = Some.x(x$27) in -- #157
+//│     let* (x$33) = e1(x$32,x$29) in -- #156
+//│     jump j$3(x$33) -- #155
 //│   None =>
-//│     let* (x$34) = e2(x$29) in -- #169
-//│     jump j$3(x$34) -- #168
+//│     let* (x$34) = e2(x$29) in -- #163
+//│     jump j$3(x$34) -- #162
 //│ )
 //│ Def(9, j$3, [x$30], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$31) = e0(x$30) in -- #148
-//│ x$31 -- #147
+//│ let* (x$31) = e0(x$30) in -- #144
+//│ x$31 -- #143
 //│ )
 //│ Def(10, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$35 = Some(2) in -- #194
-//│ let* (x$36) = f(x$35) in -- #193
-//│ let x$37 = None() in -- #192
-//│ let* (x$38) = f(x$37) in -- #191
-//│ let x$39 = +(x$36,x$38) in -- #190
-//│ x$39 -- #189
+//│ let x$35 = Some(2) in -- #186
+//│ let* (x$36) = f(x$35) in -- #185
+//│ let x$37 = None() in -- #184
+//│ let* (x$38) = f(x$37) in -- #183
+//│ let x$39 = +(x$36,x$38) in -- #182
+//│ x$39 -- #181
 //│ )
 //│ },
-//│ let* (x$40) = main() in -- #198
-//│ x$40 -- #197)
+//│ let* (x$40) = main() in -- #189
+//│ x$40 -- #188)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, List, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Option, []),ClassInfo(7, Some, [x]),ClassInfo(8, None, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ )}, {
 //│ Def(0, is_some, [o$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -4869,15 +4322,15 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$7 = >(a$0,0) in -- #60
-//│ if x$7 -- #59
+//│ let x$7 = >(a$0,0) in -- #59
+//│ if x$7 -- #58
 //│   true =>
-//│     let x$9 = -(a$0,1) in -- #56
-//│     let x$10 = Some(x$9) in -- #55
-//│     let* (x$11) = f(x$10) in -- #54
-//│     jump j$1(x$11) -- #53
+//│     let x$9 = -(a$0,1) in -- #55
+//│     let x$10 = Some(x$9) in -- #54
+//│     let* (x$11) = f(x$10) in -- #53
+//│     jump j$1(x$11) -- #52
 //│   false =>
-//│     jump j$1(z$0) -- #58
+//│     jump j$1(z$0) -- #57
 //│ )
 //│ Def(4, j$1, [x$8], [{}],
 //│ I: [],
@@ -4891,78 +4344,78 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$12 = 4 in -- #111
-//│ let x$13 = 5 in -- #110
-//│ let x$14 = 6 in -- #109
-//│ let x$15 = 7 in -- #108
-//│ if c$0 -- #107
+//│ let x$12 = 4 in -- #110
+//│ let x$13 = 5 in -- #109
+//│ let x$14 = 6 in -- #108
+//│ let x$15 = 7 in -- #107
+//│ if c$0 -- #106
 //│   true =>
-//│     let x$17 = +(x$12,x$13) in -- #86
-//│     let x$18 = +(x$17,x$14) in -- #85
-//│     let x$19 = +(x$18,x$15) in -- #84
-//│     jump j$2(x$19) -- #83
+//│     let x$17 = +(x$12,x$13) in -- #85
+//│     let x$18 = +(x$17,x$14) in -- #84
+//│     let x$19 = +(x$18,x$15) in -- #83
+//│     jump j$2(x$19) -- #82
 //│   false =>
-//│     let x$20 = +(x$12,x$13) in -- #106
-//│     let x$21 = -(x$20,x$14) in -- #105
-//│     let x$22 = +(x$21,x$15) in -- #104
-//│     jump j$2(x$22) -- #103
+//│     let x$20 = +(x$12,x$13) in -- #105
+//│     let x$21 = -(x$20,x$14) in -- #104
+//│     let x$22 = +(x$21,x$15) in -- #103
+//│     jump j$2(x$22) -- #102
 //│ )
 //│ Def(6, j$2, [x$16], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$16 -- #66
+//│ x$16 -- #65
 //│ )
 //│ Def(7, e2, [x$23], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$24 = +(x$23,12) in -- #130
-//│ let x$25 = +(x$24,13) in -- #129
-//│ let x$26 = +(x$25,14) in -- #128
-//│ x$26 -- #127
+//│ let x$24 = +(x$23,12) in -- #129
+//│ let x$25 = +(x$24,13) in -- #128
+//│ let x$26 = +(x$25,14) in -- #127
+//│ x$26 -- #126
 //│ )
 //│ Def(8, f, [x$27], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$28) = is_some(x$27) in -- #172
-//│ let* (x$29) = e3(x$28) in -- #171
-//│ case x$27 of -- #170
+//│ let* (x$28) = is_some(x$27) in -- #166
+//│ let* (x$29) = e3(x$28) in -- #165
+//│ case x$27 of -- #164
 //│   Some =>
-//│     let x$32 = Some.x(x$27) in -- #162
-//│     let* (x$33) = e1(x$32,x$29) in -- #161
-//│     jump j$3(x$33) -- #160
+//│     let x$32 = Some.x(x$27) in -- #157
+//│     let* (x$33) = e1(x$32,x$29) in -- #156
+//│     jump j$3(x$33) -- #155
 //│   None =>
-//│     let* (x$34) = e2(x$29) in -- #169
-//│     jump j$3(x$34) -- #168
+//│     let* (x$34) = e2(x$29) in -- #163
+//│     jump j$3(x$34) -- #162
 //│ )
 //│ Def(9, j$3, [x$30], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$31) = e0(x$30) in -- #148
-//│ x$31 -- #147
+//│ let* (x$31) = e0(x$30) in -- #144
+//│ x$31 -- #143
 //│ )
 //│ Def(10, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$35 = Some(2) in -- #194
-//│ let* (x$36) = f(x$35) in -- #193
-//│ let x$37 = None() in -- #192
-//│ let* (x$38) = f(x$37) in -- #191
-//│ let x$39 = +(x$36,x$38) in -- #190
-//│ x$39 -- #189
+//│ let x$35 = Some(2) in -- #186
+//│ let* (x$36) = f(x$35) in -- #185
+//│ let x$37 = None() in -- #184
+//│ let* (x$38) = f(x$37) in -- #183
+//│ let x$39 = +(x$36,x$38) in -- #182
+//│ x$39 -- #181
 //│ )
 //│ },
-//│ let* (x$40) = main() in -- #198
-//│ x$40 -- #197)
+//│ let* (x$40) = main() in -- #189
+//│ x$40 -- #188)
 //│ 
 //│ Interpreted:
 //│ 179
@@ -4978,17 +4431,6 @@ main()
 //│ struct _mls_Cons;
 //│ struct _mls_True;
 //│ struct _mls_False;
-//│ struct _mls_j_1;
-//│ struct _mls_e1;
-//│ struct _mls_is_some;
-//│ struct _mls_j_3;
-//│ struct _mls_e0;
-//│ struct _mls_main;
-//│ struct _mls_f;
-//│ struct _mls_j_0;
-//│ struct _mls_j_2;
-//│ struct _mls_e3;
-//│ struct _mls_e2;
 //│ _mlsValue _mls_e0(_mlsValue);
 //│ _mlsValue _mls_e2(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
@@ -5049,116 +4491,6 @@ main()
 //│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
-//│ };
-//│ struct _mlsFn__mls_j_1: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$1>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_1(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_e1: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<e1>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_e1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply2(_mlsValue arg0, _mlsValue arg1) override{
-//│     return _mls_e1(arg0, arg1);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_e0: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<e0>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_e0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_e0(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_2: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$2>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_2(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_e3: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<e3>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_e3 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_e3(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_is_some: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<is_some>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_is_some mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_is_some(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_e2: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<e2>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_e2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_e2(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_3: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$3>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_3 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_3(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_0: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$0>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_0(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_f: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<f>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_f mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_f(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_main: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<main>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply0() override{
-//│     return _mls_main();
-//│   }
 //│ };
 //│ _mlsValue _mls_e1(_mlsValue _mls_a_0, _mlsValue _mls_z_0){
 //│   _mlsValue _mls_retval;
@@ -5311,7 +4643,18 @@ main()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, Nat, []),ClassInfo(4, S, [x]),ClassInfo(5, Z, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, S, [x], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(5, Z, [], parents: Nat, methods:
+//│ )}, {
 //│ Def(0, pred, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -5337,14 +4680,14 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case n1$0 of -- #35
+//│ case n1$0 of -- #34
 //│   Z =>
 //│     jump j$1(n2$0) -- #16
 //│   S =>
-//│     let x$4 = S.x(n1$0) in -- #34
-//│     let* (x$5) = plus(x$4,n2$0) in -- #33
-//│     let x$6 = S(x$5) in -- #32
-//│     jump j$1(x$6) -- #31
+//│     let x$4 = S.x(n1$0) in -- #33
+//│     let* (x$5) = plus(x$4,n2$0) in -- #32
+//│     let x$6 = S(x$5) in -- #31
+//│     jump j$1(x$6) -- #30
 //│ )
 //│ Def(3, j$1, [x$3], [{}],
 //│ I: [],
@@ -5358,99 +4701,110 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case n$1 of -- #85
+//│ case n$1 of -- #81
 //│   Z =>
-//│     let x$8 = Z() in -- #44
-//│     let x$9 = S(x$8) in -- #43
-//│     jump j$2(x$9) -- #42
+//│     let x$8 = Z() in -- #43
+//│     let x$9 = S(x$8) in -- #42
+//│     jump j$2(x$9) -- #41
 //│   S =>
-//│     let x$10 = S.x(n$1) in -- #84
-//│     case x$10 of -- #83
+//│     let x$10 = S.x(n$1) in -- #80
+//│     case x$10 of -- #79
 //│       Z =>
-//│         let x$12 = Z() in -- #58
-//│         let x$13 = S(x$12) in -- #57
-//│         jump j$3(x$13) -- #56
+//│         let x$12 = Z() in -- #57
+//│         let x$13 = S(x$12) in -- #56
+//│         jump j$3(x$13) -- #55
 //│       S =>
-//│         let x$14 = S.x(x$10) in -- #82
-//│         let* (x$15) = fib(x$10) in -- #81
-//│         let* (x$16) = fib(x$14) in -- #80
-//│         let* (x$17) = plus(x$15,x$16) in -- #79
-//│         jump j$3(x$17) -- #78
+//│         let x$14 = S.x(x$10) in -- #78
+//│         let* (x$15) = fib(x$10) in -- #77
+//│         let* (x$16) = fib(x$14) in -- #76
+//│         let* (x$17) = plus(x$15,x$16) in -- #75
+//│         jump j$3(x$17) -- #74
 //│ )
 //│ Def(5, j$2, [x$7], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$7 -- #37
+//│ x$7 -- #36
 //│ )
 //│ Def(6, j$3, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ jump j$2(x$11) -- #51
+//│ jump j$2(x$11) -- #50
 //│ )
 //│ Def(7, to_int, [n$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case n$2 of -- #108
+//│ case n$2 of -- #103
 //│   Z =>
-//│     jump j$4(0) -- #89
+//│     jump j$4(0) -- #85
 //│   S =>
-//│     let x$19 = S.x(n$2) in -- #107
-//│     let* (x$20) = to_int(x$19) in -- #106
-//│     let x$21 = +(1,x$20) in -- #105
-//│     jump j$4(x$21) -- #104
+//│     let x$19 = S.x(n$2) in -- #102
+//│     let* (x$20) = to_int(x$19) in -- #101
+//│     let x$21 = +(1,x$20) in -- #100
+//│     jump j$4(x$21) -- #99
 //│ )
 //│ Def(8, j$4, [x$18], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$18 -- #87
+//│ x$18 -- #83
 //│ )
 //│ Def(9, to_nat, [n$3], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$22 = ==(n$3,0) in -- #137
-//│ if x$22 -- #136
+//│ let x$22 = ==(n$3,0) in -- #131
+//│ if x$22 -- #130
 //│   true =>
-//│     let x$24 = Z() in -- #118
-//│     jump j$5(x$24) -- #117
+//│     let x$24 = Z() in -- #113
+//│     jump j$5(x$24) -- #112
 //│   false =>
-//│     let x$25 = -(n$3,1) in -- #135
-//│     let* (x$26) = to_nat(x$25) in -- #134
-//│     let x$27 = S(x$26) in -- #133
-//│     jump j$5(x$27) -- #132
+//│     let x$25 = -(n$3,1) in -- #129
+//│     let* (x$26) = to_nat(x$25) in -- #128
+//│     let x$27 = S(x$26) in -- #127
+//│     jump j$5(x$27) -- #126
 //│ )
 //│ Def(10, j$5, [x$23], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$23 -- #115
+//│ x$23 -- #110
 //│ )
 //│ Def(11, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$28) = to_nat(30) in -- #153
-//│ let* (x$29) = fib(x$28) in -- #152
-//│ let* (x$30) = to_int(x$29) in -- #151
-//│ x$30 -- #150
+//│ let* (x$28) = to_nat(30) in -- #144
+//│ let* (x$29) = fib(x$28) in -- #143
+//│ let* (x$30) = to_int(x$29) in -- #142
+//│ x$30 -- #141
 //│ )
 //│ },
-//│ let* (x$31) = main() in -- #157
-//│ x$31 -- #156)
+//│ let* (x$31) = main() in -- #147
+//│ x$31 -- #146)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, []),ClassInfo(1, True, []),ClassInfo(2, False, []),ClassInfo(3, Nat, []),ClassInfo(4, S, [x]),ClassInfo(5, Z, [])}, {
+//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ),
+//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, S, [x], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(5, Z, [], parents: Nat, methods:
+//│ )}, {
 //│ Def(0, pred, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -5476,14 +4830,14 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case n1$0 of -- #35
+//│ case n1$0 of -- #34
 //│   Z =>
 //│     jump j$1(n2$0) -- #16
 //│   S =>
-//│     let x$4 = S.x(n1$0) in -- #34
-//│     let* (x$5) = plus(x$4,n2$0) in -- #33
-//│     let x$6 = S(x$5) in -- #32
-//│     jump j$1(x$6) -- #31
+//│     let x$4 = S.x(n1$0) in -- #33
+//│     let* (x$5) = plus(x$4,n2$0) in -- #32
+//│     let x$6 = S(x$5) in -- #31
+//│     jump j$1(x$6) -- #30
 //│ )
 //│ Def(3, j$1, [x$3], [{}],
 //│ I: [],
@@ -5497,96 +4851,96 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case n$1 of -- #85
+//│ case n$1 of -- #81
 //│   Z =>
-//│     let x$8 = Z() in -- #44
-//│     let x$9 = S(x$8) in -- #43
-//│     jump j$2(x$9) -- #42
+//│     let x$8 = Z() in -- #43
+//│     let x$9 = S(x$8) in -- #42
+//│     jump j$2(x$9) -- #41
 //│   S =>
-//│     let x$10 = S.x(n$1) in -- #84
-//│     case x$10 of -- #83
+//│     let x$10 = S.x(n$1) in -- #80
+//│     case x$10 of -- #79
 //│       Z =>
-//│         let x$12 = Z() in -- #58
-//│         let x$13 = S(x$12) in -- #57
-//│         jump j$3(x$13) -- #56
+//│         let x$12 = Z() in -- #57
+//│         let x$13 = S(x$12) in -- #56
+//│         jump j$3(x$13) -- #55
 //│       S =>
-//│         let x$14 = S.x(x$10) in -- #82
-//│         let* (x$15) = fib(x$10) in -- #81
-//│         let* (x$16) = fib(x$14) in -- #80
-//│         let* (x$17) = plus(x$15,x$16) in -- #79
-//│         jump j$3(x$17) -- #78
+//│         let x$14 = S.x(x$10) in -- #78
+//│         let* (x$15) = fib(x$10) in -- #77
+//│         let* (x$16) = fib(x$14) in -- #76
+//│         let* (x$17) = plus(x$15,x$16) in -- #75
+//│         jump j$3(x$17) -- #74
 //│ )
 //│ Def(5, j$2, [x$7], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$7 -- #37
+//│ x$7 -- #36
 //│ )
 //│ Def(6, j$3, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ jump j$2(x$11) -- #51
+//│ jump j$2(x$11) -- #50
 //│ )
 //│ Def(7, to_int, [n$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case n$2 of -- #108
+//│ case n$2 of -- #103
 //│   Z =>
-//│     jump j$4(0) -- #89
+//│     jump j$4(0) -- #85
 //│   S =>
-//│     let x$19 = S.x(n$2) in -- #107
-//│     let* (x$20) = to_int(x$19) in -- #106
-//│     let x$21 = +(1,x$20) in -- #105
-//│     jump j$4(x$21) -- #104
+//│     let x$19 = S.x(n$2) in -- #102
+//│     let* (x$20) = to_int(x$19) in -- #101
+//│     let x$21 = +(1,x$20) in -- #100
+//│     jump j$4(x$21) -- #99
 //│ )
 //│ Def(8, j$4, [x$18], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$18 -- #87
+//│ x$18 -- #83
 //│ )
 //│ Def(9, to_nat, [n$3], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$22 = ==(n$3,0) in -- #137
-//│ if x$22 -- #136
+//│ let x$22 = ==(n$3,0) in -- #131
+//│ if x$22 -- #130
 //│   true =>
-//│     let x$24 = Z() in -- #118
-//│     jump j$5(x$24) -- #117
+//│     let x$24 = Z() in -- #113
+//│     jump j$5(x$24) -- #112
 //│   false =>
-//│     let x$25 = -(n$3,1) in -- #135
-//│     let* (x$26) = to_nat(x$25) in -- #134
-//│     let x$27 = S(x$26) in -- #133
-//│     jump j$5(x$27) -- #132
+//│     let x$25 = -(n$3,1) in -- #129
+//│     let* (x$26) = to_nat(x$25) in -- #128
+//│     let x$27 = S(x$26) in -- #127
+//│     jump j$5(x$27) -- #126
 //│ )
 //│ Def(10, j$5, [x$23], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$23 -- #115
+//│ x$23 -- #110
 //│ )
 //│ Def(11, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$28) = to_nat(30) in -- #153
-//│ let* (x$29) = fib(x$28) in -- #152
-//│ let* (x$30) = to_int(x$29) in -- #151
-//│ x$30 -- #150
+//│ let* (x$28) = to_nat(30) in -- #144
+//│ let* (x$29) = fib(x$28) in -- #143
+//│ let* (x$30) = to_int(x$29) in -- #142
+//│ x$30 -- #141
 //│ )
 //│ },
-//│ let* (x$31) = main() in -- #157
-//│ x$31 -- #156)
+//│ let* (x$31) = main() in -- #147
+//│ x$31 -- #146)
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"
@@ -5596,18 +4950,6 @@ main()
 //│ struct _mls_S;
 //│ struct _mls_True;
 //│ struct _mls_False;
-//│ struct _mls_fib;
-//│ struct _mls_main;
-//│ struct _mls_to_nat;
-//│ struct _mls_j_5;
-//│ struct _mls_j_3;
-//│ struct _mls_to_int;
-//│ struct _mls_pred;
-//│ struct _mls_plus;
-//│ struct _mls_j_4;
-//│ struct _mls_j_1;
-//│ struct _mls_j_0;
-//│ struct _mls_j_2;
 //│ _mlsValue _mls_pred(_mlsValue);
 //│ _mlsValue _mls_fib(_mlsValue);
 //│ _mlsValue _mls_j_5(_mlsValue);
@@ -5644,126 +4986,6 @@ main()
 //│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_x.print();  std::printf(")"); }
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_x);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_x = _mls_x;  return _mlsValue(_mlsVal); }
-//│ };
-//│ struct _mlsFn__mls_j_1: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$1>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_1 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_1(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_fib: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<fib>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_fib mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_fib(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_to_nat: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<to_nat>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_to_nat mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_to_nat(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_5: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$5>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_5 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_5(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_pred: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<pred>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_pred mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_pred(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_plus: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<plus>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_plus mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply2(_mlsValue arg0, _mlsValue arg1) override{
-//│     return _mls_plus(arg0, arg1);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_2: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$2>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_2 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_2(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_4: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$4>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_4 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_4(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_to_int: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<to_int>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_to_int mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_to_int(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_main: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<main>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_main mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply0() override{
-//│     return _mls_main();
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_3: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$3>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_3 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_3(arg0);
-//│   }
-//│ };
-//│ struct _mlsFn__mls_j_0: public _mlsCallable {
-//│ 
-//│   constexpr static inline const char *typeName = "<j$0>";
-//│   constexpr static inline uint32_t typeTag = -1;
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   template <std::size_t align> static _mlsValue create() { static _mlsFn__mls_j_0 mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }
-//│   _mlsValue virtual apply1(_mlsValue arg0) override{
-//│     return _mls_j_0(arg0);
-//│   }
 //│ };
 //│ _mlsValue _mls_to_int(_mlsValue _mls_n_2){
 //│   _mlsValue _mls_retval;

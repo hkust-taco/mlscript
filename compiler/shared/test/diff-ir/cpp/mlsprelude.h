@@ -270,25 +270,25 @@ public:
   }
 };
 
-struct _mlsCallable : public _mlsObject {
-  virtual _mlsValue apply0() { throw std::runtime_error("Not implemented"); }
-  virtual _mlsValue apply1(_mlsValue) {
+struct _mls_Callable : public _mlsObject {
+  virtual _mlsValue _mls_apply0() { throw std::runtime_error("Not implemented"); }
+  virtual _mlsValue _mls_apply1(_mlsValue) {
     throw std::runtime_error("Not implemented");
   }
-  virtual _mlsValue apply2(_mlsValue, _mlsValue) {
+  virtual _mlsValue _mls_apply2(_mlsValue, _mlsValue) {
     throw std::runtime_error("Not implemented");
   }
-  virtual _mlsValue apply3(_mlsValue, _mlsValue, _mlsValue) {
+  virtual _mlsValue _mls_apply3(_mlsValue, _mlsValue, _mlsValue) {
     throw std::runtime_error("Not implemented");
   }
-  virtual _mlsValue apply4(_mlsValue, _mlsValue, _mlsValue, _mlsValue) {
+  virtual _mlsValue _mls_apply4(_mlsValue, _mlsValue, _mlsValue, _mlsValue) {
     throw std::runtime_error("Not implemented");
   }
   virtual void destroy() override {}
 };
 
-inline _mlsCallable *_mlsToCallable(_mlsValue fn) {
-  auto *ptr = _mlsValue::as<_mlsCallable>(fn);
+inline _mls_Callable *_mlsToCallable(_mlsValue fn) {
+  auto *ptr = _mlsValue::as<_mls_Callable>(fn);
   if (!ptr)
     throw std::runtime_error("Not a callable object");
   return ptr;
@@ -298,15 +298,15 @@ template <typename... U>
 inline static _mlsValue _mlsCall(_mlsValue f, U... args) {
   static_assert(sizeof...(U) <= 4, "Too many arguments");
   if constexpr (sizeof...(U) == 0)
-    return _mlsToCallable(f)->apply0();
+    return _mlsToCallable(f)->_mls_apply0();
   else if constexpr (sizeof...(U) == 1)
-    return _mlsToCallable(f)->apply1(args...);
+    return _mlsToCallable(f)->_mls_apply1(args...);
   else if constexpr (sizeof...(U) == 2)
-    return _mlsToCallable(f)->apply2(args...);
+    return _mlsToCallable(f)->_mls_apply2(args...);
   else if constexpr (sizeof...(U) == 3)
-    return _mlsToCallable(f)->apply3(args...);
+    return _mlsToCallable(f)->_mls_apply3(args...);
   else if constexpr (sizeof...(U) == 4)
-    return _mlsToCallable(f)->apply4(args...);
+    return _mlsToCallable(f)->_mls_apply4(args...);
 }
 
 inline int _mlsLargeStack(void *(*fn)(void *)) {

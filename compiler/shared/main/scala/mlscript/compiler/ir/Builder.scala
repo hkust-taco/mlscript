@@ -9,23 +9,26 @@ import collection.mutable.ListBuffer
 final val ops = Set("+", "-", "*", "/", ">", "<", ">=", "<=", "!=", "==")
 final val builtin = Set("builtin")
 
-final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
+final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, verbose: Boolean = false):
   import Node._
   import Expr._
   
+  private def log(x: Any) = if verbose then println(x)
+
   private type NameCtx = Map[Str, Name]
   private type ClassCtx = Map[Str, ClassInfo]
   private type FieldCtx = Map[Str, (Str, ClassInfo)]
-  private type FnCtx = Set[Str]
+  private type FnCtx = Map[Str, Int]
   private type OpCtx = Set[Str]
   
   private final case class Ctx(
     val nameCtx: NameCtx = Map.empty,
     val classCtx: ClassCtx = Map.empty,
     val fieldCtx: FieldCtx = Map.empty,
-    val fnCtx: FnCtx = Set.empty,
+    val fnCtx: FnCtx = Map.empty,
     val opCtx: OpCtx = Set.empty,
     var jpAcc: ListBuffer[Defn],
+    var lcAcc: ListBuffer[ClassInfo],
   )
 
   private def ref(x: Name) = Ref(x)
@@ -72,6 +75,133 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
     }
     tm
 
+  private def freeVariablesIf(ucs: If): Set[Str] =
+    val ifbody: IfBody = ucs.body
+    val els: Opt[Term] = ucs.els
+
+    def f(ifbody: IfBody): Set[Str] = ifbody match
+      case IfBlock(lines) => lines.foldLeft(Set.empty[Str]) {
+        case (acc, Left(ifbody2)) => acc ++ f(ifbody2)
+        case (acc, Right(rhs)) => acc ++ freeVariables(rhs)._2
+      }
+      case IfElse(expr) => freeVariables(expr)
+      case IfLet(isRec, name, rhs, body) =>
+        if isRec then
+          (freeVariables(rhs) -- freeVariables(name)) ++ (f(body) -- freeVariables(name))
+        else
+          freeVariables(rhs) ++ (f(body) -- freeVariables(name))
+      case IfOpApp(lhs, op, rhs) => freeVariables(lhs) ++ f(rhs)
+      case IfOpsApp(lhs, opsRhss) => freeVariables(lhs) ++ opsRhss.foldLeft(Set.empty[Str]) {
+        case (acc, (op, rhs)) => acc ++ f(rhs)
+      }
+      case IfThen(expr, rhs) => freeVariables(rhs) -- freeVariables(expr)
+
+    val fvs1 = f(ifbody)
+    val fvs2 = els.fold(Set.empty[Str]) { freeVariables }
+
+    fvs1 ++ fvs2
+
+  private def freeVariables(tu: TypingUnit): Set[Str] =
+    var all_defined = tu.rawEntities.foldLeft(Set.empty[Str]) {
+      case (defined, stmt) => defined ++ freeVariables(stmt)._1
+    }
+    tu.rawEntities.foldLeft(Set.empty[Str]) {
+      case (acc, stmt) => acc ++ (freeVariables(stmt)._2 -- all_defined)
+    }
+
+  private def freeVariables(stmt: Statement): (Set[Str], Set[Str]) = stmt match
+    case DataDefn(body) => throw IRError("unsupported DataDefn")
+    case DatatypeDefn(head, body) => throw IRError("unsupported DatatypeDefn")
+    case LetS(isRec, pat, rhs) => throw IRError("unsupported LetS")
+    case ntd: NuTypeDef => 
+      val fvs = freeVariables(ntd.body) -- ntd.params.fold(Set.empty)(freeVariables)
+      (Set.empty, fvs)
+    case Constructor(params, body) => throw IRError("unsupported Constructor")
+    case nfd: NuFunDef =>
+      val fvs = nfd.isLetRec match
+        case None | Some(true) => nfd.rhs.fold(tm => freeVariables(tm) -- freeVariables(nfd.nme), ty => Set.empty)
+        case Some(false) => nfd.rhs.fold(tm => freeVariables(tm), ty => Set.empty)
+      (freeVariables(nfd.nme), fvs)
+    case Def(rec, nme, rhs, isByname) => throw IRError("unsupported Def")
+    case TypeDef(kind, nme, tparams, body, mthDecls, mthDefs, positionals, adtInfo) => throw IRError("unsupported TypeDef")
+    case x: Term =>
+      val fvs = freeVariables(x)
+      (Set.empty, fvs)
+
+  private def freeVariables(tm: Term): Set[Str] =tm match
+    case AdtMatchWith(cond, arms) =>
+      val inner: Set[Str] = arms.foldLeft(Set.empty){
+        case (acc, AdtMatchPat(pat, body)) => acc ++ freeVariables(body) -- freeVariables(pat)
+      }
+      freeVariables(cond) ++ inner
+    case Ann(ann, receiver) => freeVariables(receiver)
+    case App(lhs, rhs) => freeVariables(lhs) ++ freeVariables(rhs)
+    case Asc(trm, ty) => freeVariables(trm)
+    case Assign(lhs, rhs) => freeVariables(lhs) ++ freeVariables(rhs)
+    case Bind(lhs, rhs) => freeVariables(lhs)
+    case Blk(stmts) => 
+      var fvs = Set.empty[Str]
+      var defined = Set.empty[Str]
+      stmts.foreach {
+        stmt => {
+          val stmt_fvs = freeVariables(stmt)
+          fvs ++= stmt_fvs._2
+          fvs --= defined
+          defined ++= stmt_fvs._1
+        }
+      }
+      fvs
+    case Bra(rcd, trm) => freeVariables(trm)
+    case CaseOf(trm, cases) =>
+      import mlscript.{Case => CCase}
+      def f(pat: CaseBranches): Set[Str] =
+        pat match
+          case CCase(pat, body, rest) => freeVariables(body) -- freeVariables(pat) ++ f(rest)
+          case NoCases => Set.empty
+          case Wildcard(body) => freeVariables(body)
+      freeVariables(trm) ++ f(cases)
+    case Eqn(lhs, rhs) => freeVariables(rhs)
+    case Forall(params, body) => freeVariables(body)
+    case x: If => freeVariablesIf(x)
+    case Inst(body) => freeVariables(body)
+    case Lam(lhs, rhs) => 
+      freeVariables(rhs) -- freeVariables(lhs)
+    case Let(isRec, name, rhs, body) => 
+      if isRec then
+        (freeVariables(rhs) -- freeVariables(name)) ++ (freeVariables(body) -- freeVariables(name))
+      else
+        freeVariables(rhs) ++ (freeVariables(body) -- freeVariables(name))
+    case LetGroup(bindings) => throw IRError("unsupported LetGroup")
+    case New(head, body) => throw IRError("unsupported New")
+    case NuNew(cls) => freeVariables(cls)
+    case Quoted(body) => throw IRError("unsupported Quoted")
+    case Rcd(fields) => fields.foldLeft(Set.empty[Str]) {
+      case (acc, (_, Fld(_, trm))) => acc ++ freeVariables(trm)
+    }
+    case Rft(base, decls) => throw IRError("unsupported Rft")
+    case Sel(receiver, fieldName) => freeVariables(receiver)
+    case Splc(fields) => fields.foldLeft(Set.empty[Str]) {
+      case (acc, Left(trm)) => acc ++ freeVariables(trm) 
+      case (acc, Right(Fld(_, trm))) => acc ++ freeVariables(trm)
+    }
+    case Subs(arr, idx) => freeVariables(arr) ++ freeVariables(idx)
+    case Super() => Set.empty
+    case Test(trm, ty) => freeVariables(trm)
+    case Tup(fields) => fields.foldLeft(Set.empty[Str]) {
+      case (acc, (_, Fld(_, trm))) => acc ++ freeVariables(trm)
+    }
+    case TyApp(lhs, targs) => throw IRError("unsupported TyApp")
+    case Unquoted(body) => throw IRError("unsupported Unquoted")
+    case Where(body, where) => throw IRError("unsupported Where")
+    case While(cond, body) => freeVariables(cond) ++ freeVariables(body)
+    case With(trm, fields) => freeVariables(trm) ++ freeVariables(fields: Term)
+    case Var(name) => Set(name)
+    case CharLit(value) => Set.empty
+    case DecLit(value) => Set.empty
+    case IntLit(value) => Set.empty
+    case StrLit(value) => Set.empty
+    case UnitLit(undefinedOrNull) => Set.empty
+
   private def buildResultFromTerm(using ctx: Ctx)(tm: Term)(k: Node => Node): Node =
     val res = tm match
       case lit: Lit => Literal(lit) |> sresult |> k
@@ -81,16 +211,25 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
           LetExpr(v,
             CtorApp(ctx.classCtx(name), Nil),
             v |> ref |> sresult |> k).attachTag(tag)
+        else if (ctx.fnCtx.contains(name))
+          val arity = ctx.fnCtx(name)
+          val range = 0 until arity
+          val xs = range.map(_ => fresh.make.str).toList
+          val paramsAndArgs = Tup(xs.map(x => N -> Fld(FldFlags.empty, Var(x))))
+          val lam = Lam(paramsAndArgs, App(Var(name), paramsAndArgs))
+          buildResultFromTerm(lam)(k)
         else
           ctx.nameCtx.get(name) match {
             case Some(x) => x |> ref |> sresult |> k
-            case _ => throw IRError(s"unknown name $name in $ctx")
+            case None => throw IRError(s"unknown name $name in $ctx")
           }
-
-      case Lam(Tup(fields), body) =>
-        throw IRError("not supported: lambda")
+      case lam @ Lam(Tup(fields), body) =>
+        val tmp = fresh.make
+        buildResultFromTerm(Blk(
+          ((NuFunDef(S(true), Var(tmp.str), None, Nil, L(lam))(lam.getLoc, N, N, N, N, false, Nil)) : Statement)
+          :: Var(tmp.str) :: Nil))(k)
       case App(
-        App(Var(name), Tup((_ -> Fld(_, e1)) :: Nil)), 
+        App(Var(name), Tup((_ -> Fld(_, e1)) :: Nil)),
         Tup((_ -> Fld(_, e2)) :: Nil)) if ctx.opCtx.contains(name) =>
         buildResultFromTerm(e1) {
           case Result(v1 :: Nil) =>
@@ -135,21 +274,22 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
               v |> ref |> sresult |> k).attachTag(tag)
           case node @ _ => node |> unexpectedNode
         }
+      case App(Var(f), xs @ Tup(_)) if ctx.fnCtx.contains(f) =>
+        buildResultFromTerm(xs) {
+            case Result(args) =>
+              val v = fresh.make
+              LetCall(List(v), DefnRef(Right(f)), args, v |> ref |> sresult |> k).attachTag(tag)
+            case node @ _ => node |> unexpectedNode
+        }
       case App(f, xs @ Tup(_)) =>
         buildResultFromTerm(f) {
-        case Result(Ref(f) :: Nil) if ctx.fnCtx.contains(f.str) => buildResultFromTerm(xs) {
-          case Result(args) =>
-            val v = fresh.make
-            LetCall(List(v), DefnRef(Right(f.str)), args, v |> ref |> sresult |> k).attachTag(tag)
+          case Result(Ref(f) :: Nil) => buildResultFromTerm(xs) {
+            case Result(args) =>
+              val v = fresh.make
+              LetApply(List(v), f, args, v |> ref |> sresult |> k).attachTag(tag)
+            case node @ _ => node |> unexpectedNode
+          }
           case node @ _ => node |> unexpectedNode
-        }
-        case Result(Ref(f) :: Nil) => buildResultFromTerm(xs) {
-          case Result(args) =>
-            val v = fresh.make
-            LetApply(List(v), f, args, v |> ref |> sresult |> k).attachTag(tag)
-          case node @ _ => node |> unexpectedNode
-        }
-        case node @ _ => node |> unexpectedNode
       }
 
       case Let(false, Var(name), rhs, body) => 
@@ -249,10 +389,39 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
       case Blk((tm: Term) :: xs) => buildBinding("_", tm, Blk(xs))(k)
 
       case Blk(NuFunDef(S(false), Var(name), None, _, L(tm)) :: Nil) =>
-        buildBinding(name, tm, Var(name))(k)
+        throw IRError("unsupported let at tail position")
 
       case Blk(NuFunDef(S(false), Var(name), None, _, L(tm)) :: xs) =>
         buildBinding(name, tm, Blk(xs))(k)
+
+      case Blk(NuFunDef(S(true) | N, Var(name), None, _, L(tm)) :: Nil) =>
+        throw IRError("unsupported recursive definition at tail position")
+        
+      case Blk(NuFunDef(S(true) | N, Var(name), None, _, L(lam @ Lam(Tup(fields), body))) :: xs) =>
+        val lambdaName = fresh.make("Lambda")
+        var fvs = freeVariables(lam)
+        fvs --= ctx.opCtx
+        fvs --= ctx.fnCtx.keySet
+        if fvs.contains(name) then
+          fvs -= name
+        val fvsList = fvs.toList
+        val paramsTup = Tup(fvsList.map{ x => N -> Fld(FldFlags.empty, Var(x)) })
+        val newParams = if fvs.isEmpty then N else S(paramsTup)
+        val tmp = fresh.make
+        val result = (if fvs.isEmpty then Var(lambdaName.str) else App(Var(lambdaName.str), paramsTup))
+        val localCls = Blk(
+          NuTypeDef(Cls, TypeName(lambdaName.str), Nil, newParams, N, N, Ls(Var("Callable")), N, N, TypingUnit(
+            NuFunDef(N, Var(s"apply${fields.size}"), None, Nil, L(Lam(Tup(fields), body)))(tm.getLoc, N, N, N, N, false, Nil) :: Nil
+          ))(tm.getLoc, tm.getLoc, Nil)
+          :: NuFunDef(S(false), Var(name), None, Nil, L(result))(tm.getLoc, N, N, N, N, false, Nil)
+          :: xs)
+        buildResultFromTerm(localCls)(k)
+
+      case Blk((cls @ NuTypeDef(Cls | Mod, name, Nil, params, N, N, parents, N, N, body)) :: xs) =>
+        val classInfo = buildClassInfo(cls)
+        ctx.lcAcc.addOne(classInfo)
+        val ctx2 = ctx.copy(classCtx = ctx.classCtx + (name.name -> classInfo), nameCtx = ctx.nameCtx + (name.name -> Name(name.name)))
+        buildResultFromTerm(using ctx2)(Blk(xs))(k)
 
       case tup: Tup => buildResultFromTup(tup)(k)
 
@@ -264,7 +433,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
     case NuFunDef(_, Var(name), None, Nil, L(Lam(Tup(fields), body))) =>
       val strs = fields map {
           case N -> Fld(FldFlags.empty, Var(x)) => x
-          case _ => throw IRError("unsupported field") 
+          case f @ _ => throw IRError(s"unsupported field $f") 
         }
       val names = strs map (fresh.make(_))
       given Ctx = ctx.copy(nameCtx = ctx.nameCtx ++ (strs zip names))
@@ -278,39 +447,39 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
       )
     case fd @ _ => throw IRError("unsupported NuFunDef " + fd.toString())
   
-  private def buildClassInfo(ntd: Statement): ClassInfo = ntd match
-    case NuTypeDef(Cls, TypeName(name), Nil, S(Tup(args)), N, _, parents, N, N, TypingUnit(Nil)) =>
-      val cls = ClassInfo(
-        classUid.make,
-        name, 
-        args map {
-          case N -> Fld(FldFlags.empty, Var(name)) => name
-          case S(Var(name)) -> Fld(_, ty) => name
-          case x @ _ => throw IRError(s"unsupported field $x")
-        }
-      )
-      cls.parents = parents.map { 
-        case Var(name) if name.isCapitalized =>
-          name
-        case _ => throw IRError("unsupported parent")
-      }.toSet
-      cls
-    case NuTypeDef(Cls | Mod, TypeName(name), Nil, N, N, _, parents, N, N, TypingUnit(Nil)) =>
+  private def buildClassInfo(using ctx: Ctx)(ntd: Statement): ClassInfo = ntd match
+    case NuTypeDef(Cls | Mod, TypeName(name), Nil, params, N, _, parents, N, N, TypingUnit(methods)) =>
+      val paramsList = params.fold(Ls()) {
+        case Tup(xs) => 
+          xs map {
+            case N -> Fld(FldFlags.empty, Var(name)) => name
+            case S(Var(name)) -> Fld(_, ty) => name
+            case x @ _ => throw IRError(s"unsupported field $x")
+          }
+      }
       val cls = ClassInfo(
         classUid.make,
         name,
-        Ls(),
+        paramsList,
       )
       cls.parents = parents.map { 
         case Var(name) if name.isCapitalized =>
           name
         case _ => throw IRError("unsupported parent")
       }.toSet
+      given Ctx = ctx.copy(nameCtx = ctx.nameCtx ++ paramsList.map(x => x -> Name(x)), classCtx = ctx.classCtx + (name -> cls))
+      cls.methods = methods.map {
+        case x: NuFunDef => x.name -> buildDefFromNuFunDef(x)
+        case x @ _ => throw IRError(f"unsupported method $x")
+      }.toMap
       cls
     case x @ _ => throw IRError(f"unsupported NuTypeDef $x")
 
-  private def getDefinitionName(nfd: Statement): Str = nfd match
-    case NuFunDef(_, Var(name), _, _, _) => name
+
+  private def getDefinitionInfo(nfd: Statement): (Str, Int) = nfd match
+    case NuFunDef(_, Var(name), _, _, Left(Lam(Var(_), _))) => (name, 1)
+    case NuFunDef(_, Var(name), _, _, Left(Lam(Tup(fields), _))) => (name, fields.length)
+    case NuFunDef(_, Var(name), _, _, _) => (name, 0)
     case _ => throw IRError("unsupported NuFunDef")
 
   def buildGraph(unit: TypingUnit): Program = unit match
@@ -323,25 +492,41 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
       }
 
       import scala.collection.mutable.{ HashSet => MutHSet }
-
-      val cls = grouped.getOrElse(0, Nil).map(buildClassInfo)
-
-      val clsinfo = cls.toSet
-      val defn_names = grouped.getOrElse(1, Nil).map(getDefinitionName)
-      val class_ctx: ClassCtx = cls.map { case ClassInfo(_, name, _) => name }.zip(cls).toMap
-      val field_ctx: FieldCtx = cls.flatMap { case ClassInfo(_, name, fields) => fields.map((_, (name, class_ctx(name)))) }.toMap
-      val fn_ctx: FnCtx = defn_names.toSet
+      
+      val defns = grouped.getOrElse(1, Nil)
+      val defn_info = defns.map(getDefinitionInfo)
+      val fn_ctx: FnCtx = defn_info.toMap
+      val defn_names = defn_info.map(_._1)
       var name_ctx: NameCtx = builtin.zip(builtin.map(Name(_))).toMap ++ defn_names.zip(defn_names.map(Name(_))).toMap ++ ops.map { op => (op, Name(op)) }.toList
 
       val jp_acc = ListBuffer.empty[Defn]
-      given Ctx = Ctx(
+      val lc_acc = ListBuffer.empty[ClassInfo]
+      var ctx = Ctx(
+        nameCtx = name_ctx,
+        classCtx = Map.empty,
+        fieldCtx = Map.empty,
+        fnCtx = fn_ctx,
+        opCtx = ops,
+        jpAcc = jp_acc,
+        lcAcc = lc_acc,
+      )
+
+      val cls = grouped.getOrElse(0, Nil).map(x => buildClassInfo(using ctx)(x))
+      var clsinfo = cls.toSet
+      val class_ctx: ClassCtx = cls.map { case ClassInfo(_, name, _) => name }.zip(cls).toMap
+      val field_ctx: FieldCtx = cls.flatMap { case ClassInfo(_, name, fields) => fields.map((_, (name, class_ctx(name)))) }.toMap
+
+      ctx = Ctx(
         nameCtx = name_ctx,
         classCtx = class_ctx,
         fieldCtx = field_ctx,
         fnCtx = fn_ctx,
         opCtx = ops,
         jpAcc = jp_acc,
+        lcAcc = lc_acc,
       )
+
+      given Ctx = ctx
 
       var defs: Set[Defn] = grouped.getOrElse(1, Nil).map(buildDefFromNuFunDef).toSet
       val terms: Ls[Term] = grouped.getOrElse(2, Nil).map {
@@ -351,10 +536,11 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
 
       val main = buildResultFromTerm (terms match {
         case x :: Nil => x
-        case _ => throw IRError("only one term is allowed in the top level scope")
+        case _ => throw IRError("only exactly one term is allowed in the top level scope")
       }) { k => k }
 
       defs ++= jp_acc.toList
+      clsinfo ++= lc_acc.toList
 
       resolveDefnRef(main, defs, true)
       validate(main, defs)

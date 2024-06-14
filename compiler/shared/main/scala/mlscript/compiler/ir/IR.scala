@@ -24,7 +24,7 @@ case class Program(
     val t2 = defs.toArray
     Sorting.quickSort(t1)
     Sorting.quickSort(t2)
-    s"Program({${t1.mkString(",")}}, {\n${t2.mkString("\n")}\n},\n$main)"
+    s"Program({${t1.mkString(",\n")}}, {\n${t2.mkString("\n")}\n},\n$main)"
   def acceptIterator(v: Iterator) = v.iterate(this)
 
 implicit object ClassInfoOrdering extends Ordering[ClassInfo] {
@@ -37,9 +37,10 @@ case class ClassInfo(
   fields: Ls[Str],
 ):
   var parents: Set[Str] = Set.empty
+  var methods: Map[Str, Defn] = Map.empty
   override def hashCode: Int = id
   override def toString: String =
-    s"ClassInfo($id, $ident, [${fields mkString ","}])"
+    s"ClassInfo($id, $ident, [${fields mkString ","}], parents: ${parents mkString ","}, methods:\n${methods mkString ",\n"})"
   def acceptIterator(v: Iterator) = v.iterate(this)
 
 case class Name(val str: Str):

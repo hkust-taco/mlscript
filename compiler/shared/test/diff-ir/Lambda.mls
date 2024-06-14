@@ -1,0 +1,109 @@
+:NewParser
+:ParseOnly
+:UseIR
+
+:interpIR
+:genCpp
+:irVerbose
+module Callable
+module True
+module False
+fun local_rec_lambda() =
+  let rec f = x => if x == 0 then 0 else f(x - 1)
+  f(10)
+local_rec_lambda()
+//│ |#module| |Callable|↵|#module| |True|↵|#module| |False|↵|#fun| |local_rec_lambda|(||)| |#=|→|#let| |#rec| |f| |#=| |x| |#=>| |#if| |x| |==| |0| |#then| |0| |#else| |f|(|x| |-| |1|)|↵|f|(|10|)|←|↵|local_rec_lambda|(||)|
+//│ Parsed: {module Callable {}; module True {}; module False {}; fun local_rec_lambda = () => {let rec f = (x,) => if (==(x,)(0,)) then 0 else f(-(x,)(1,),); f(10,)}; local_rec_lambda()}
+//│ 
+//│ 
+//│ IR:
+//│ 
+//│ IR Processing Failed: unknown name f in Ctx(HashMap(x -> x$1, < -> <, >= -> >=, == -> ==, builtin -> builtin, + -> +, != -> !=, * -> *, <= -> <=, local_rec_lambda -> local_rec_lambda, - -> -, / -> /, > -> >),Map(Callable -> ClassInfo(0, Callable, [], parents: , methods:
+//│ ), True -> ClassInfo(1, True, [], parents: , methods:
+//│ ), False -> ClassInfo(2, False, [], parents: , methods:
+//│ ), Lambda$0 -> ClassInfo(3, Lambda$0, [], parents: Callable, methods:
+//│ )),Map(),Map(local_rec_lambda -> 0),HashSet(<, >=, -, ==, +, !=, *, <=, /, >),ListBuffer(Def(2, j$0, [x$3], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ x$3 -- #3
+//│ )),ListBuffer())
+//│ 
+//│ mlscript.compiler.ir.IRError$.apply(IR.scala:15)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:224)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:293)
+//│ mlscript.compiler.ir.Builder.$anonfun$26(Builder.scala:323)
+//│ mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ mlscript.compiler.ir.Builder.$anonfun$20$$anonfun$1(Builder.scala:241)
+//│ mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:207)
+//│ mlscript.compiler.ir.Builder.$anonfun$20(Builder.scala:243)
+//│ mlscript.utils.package$GenHelper$.$bar$greater$extension(package.scala:119)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:223)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:245)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:328)
+//│ mlscript.compiler.ir.Builder.buildDefFromNuFunDef(Builder.scala:446)
+//│ mlscript.compiler.ir.Builder.buildClassInfo$$anonfun$2(Builder.scala:472)
+//│ scala.collection.immutable.List.map(List.scala:246)
+//│ mlscript.compiler.ir.Builder.buildClassInfo(Builder.scala:474)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:421)
+//│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:418)
+//│ mlscript.compiler.ir.Builder.buildDefFromNuFunDef(Builder.scala:446)
+//│ mlscript.compiler.ir.Builder.$anonfun$55(Builder.scala:531)
+//│ scala.collection.immutable.List.map(List.scala:246)
+//│ mlscript.compiler.ir.Builder.buildGraph(Builder.scala:531)
+//│ mlscript.compiler.IRDiffTestCompiler.postProcess(TestIR.scala:26)
+//│ mlscript.DiffTests.rec$1(DiffTests.scala:460)
+//│ mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1059)
+//│ org.scalatest.OutcomeOf.outcomeOf(OutcomeOf.scala:85)
+//│ org.scalatest.OutcomeOf.outcomeOf$(OutcomeOf.scala:83)
+//│ org.scalatest.OutcomeOf$.outcomeOf(OutcomeOf.scala:104)
+//│ org.scalatest.Transformer.apply(Transformer.scala:22)
+//│ org.scalatest.Transformer.apply(Transformer.scala:20)
+//│ org.scalatest.funsuite.AnyFunSuiteLike$$anon$1.apply(AnyFunSuiteLike.scala:226)
+//│ org.scalatest.TestSuite.withFixture(TestSuite.scala:196)
+//│ org.scalatest.TestSuite.withFixture$(TestSuite.scala:195)
+//│ mlscript.DiffTests.org$scalatest$concurrent$TimeLimitedTests$$super$withFixture(DiffTests.scala:51)
+//│ org.scalatest.concurrent.TimeLimitedTests.$anonfun$withFixture$3(TimeLimitedTests.scala:154)
+//│ org.scalatest.enablers.Timed$$anon$1.timeoutAfter(Timed.scala:127)
+//│ org.scalatest.concurrent.TimeLimits$.failAfterImpl(TimeLimits.scala:282)
+//│ org.scalatest.concurrent.TimeLimitedTests.withFixture(TimeLimitedTests.scala:153)
+//│ org.scalatest.concurrent.TimeLimitedTests.withFixture$(TimeLimitedTests.scala:150)
+//│ mlscript.DiffTests.withFixture(DiffTests.scala:51)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.invokeWithFixture$1(AnyFunSuiteLike.scala:224)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.$anonfun$runTest$1(AnyFunSuiteLike.scala:236)
+//│ org.scalatest.SuperEngine.runTestImpl(Engine.scala:306)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.runTest(AnyFunSuiteLike.scala:236)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.runTest$(AnyFunSuiteLike.scala:218)
+//│ mlscript.DiffTests.org$scalatest$OneInstancePerTest$$super$runTest(DiffTests.scala:51)
+//│ org.scalatest.OneInstancePerTest.runTest(OneInstancePerTest.scala:131)
+//│ org.scalatest.OneInstancePerTest.runTest$(OneInstancePerTest.scala:123)
+//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$runTest(DiffTests.scala:51)
+//│ org.scalatest.ParallelTestExecution.runTest(ParallelTestExecution.scala:164)
+//│ org.scalatest.ParallelTestExecution.runTest$(ParallelTestExecution.scala:148)
+//│ mlscript.DiffTests.runTest(DiffTests.scala:51)
+//│ org.scalatest.OneInstancePerTest.runTests(OneInstancePerTest.scala:181)
+//│ org.scalatest.OneInstancePerTest.runTests$(OneInstancePerTest.scala:172)
+//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$runTests(DiffTests.scala:51)
+//│ org.scalatest.ParallelTestExecution.runTests(ParallelTestExecution.scala:97)
+//│ org.scalatest.ParallelTestExecution.runTests$(ParallelTestExecution.scala:79)
+//│ mlscript.DiffTests.runTests(DiffTests.scala:51)
+//│ org.scalatest.Suite.run(Suite.scala:1114)
+//│ org.scalatest.Suite.run$(Suite.scala:1096)
+//│ org.scalatest.funsuite.AnyFunSuite.org$scalatest$funsuite$AnyFunSuiteLike$$super$run(AnyFunSuite.scala:1563)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.$anonfun$run$1(AnyFunSuiteLike.scala:273)
+//│ org.scalatest.SuperEngine.runImpl(Engine.scala:535)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.run(AnyFunSuiteLike.scala:273)
+//│ org.scalatest.funsuite.AnyFunSuiteLike.run$(AnyFunSuiteLike.scala:272)
+//│ mlscript.DiffTests.org$scalatest$ParallelTestExecution$$super$run(DiffTests.scala:51)
+//│ org.scalatest.ParallelTestExecution.run(ParallelTestExecution.scala:261)
+//│ org.scalatest.ParallelTestExecution.run$(ParallelTestExecution.scala:258)
+//│ mlscript.DiffTests.run(DiffTests.scala:51)
+//│ org.scalatest.tools.DistributedTestRunnerSuite.run(DistributedTestRunnerSuite.scala:22)
+//│ org.scalatest.tools.SuiteRunner.run(SuiteRunner.scala:47)
+//│ java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+//│ java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+//│ java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+//│ java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+//│ java.base/java.lang.Thread.run(Thread.java:829)

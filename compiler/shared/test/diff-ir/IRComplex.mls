@@ -23,7 +23,10 @@ bar()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
+//│ Program({ClassInfo(0, A, [x,y,z], parents: , methods:
+//│ ),
+//│ ClassInfo(1, B, [m,n], parents: , methods:
+//│ )}, {
 //│ Def(0, complex_foo, [t$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -73,18 +76,21 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$17 = A(6,7,8) in -- #109
-//│ let* (x$18) = complex_foo(x$17) in -- #108
-//│ let x$19 = B(9,10) in -- #107
-//│ let* (x$20) = complex_foo(x$19) in -- #106
-//│ x$20 -- #105
+//│ let x$17 = A(6,7,8) in -- #107
+//│ let* (x$18) = complex_foo(x$17) in -- #106
+//│ let x$19 = B(9,10) in -- #105
+//│ let* (x$20) = complex_foo(x$19) in -- #104
+//│ x$20 -- #103
 //│ )
 //│ },
-//│ let* (x$21) = bar() in -- #113
-//│ x$21 -- #112)
+//│ let* (x$21) = bar() in -- #110
+//│ x$21 -- #109)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, A, [x,y,z]),ClassInfo(1, B, [m,n])}, {
+//│ Program({ClassInfo(0, A, [x,y,z], parents: , methods:
+//│ ),
+//│ ClassInfo(1, B, [m,n], parents: , methods:
+//│ )}, {
 //│ Def(0, complex_foo, [t$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -134,15 +140,15 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$17 = A(6,7,8) in -- #109
-//│ let* (x$18) = complex_foo(x$17) in -- #108
-//│ let x$19 = B(9,10) in -- #107
-//│ let* (x$20) = complex_foo(x$19) in -- #106
-//│ x$20 -- #105
+//│ let x$17 = A(6,7,8) in -- #107
+//│ let* (x$18) = complex_foo(x$17) in -- #106
+//│ let x$19 = B(9,10) in -- #105
+//│ let* (x$20) = complex_foo(x$19) in -- #104
+//│ x$20 -- #103
 //│ )
 //│ },
-//│ let* (x$21) = bar() in -- #113
-//│ x$21 -- #112)
+//│ let* (x$21) = bar() in -- #110
+//│ x$21 -- #109)
 //│ 
 //│ Interpreted:
 //│ 3
@@ -185,7 +191,12 @@ bar()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
+//│ Program({ClassInfo(0, A, [w,x], parents: , methods:
+//│ ),
+//│ ClassInfo(1, B, [y], parents: , methods:
+//│ ),
+//│ ClassInfo(2, C, [z], parents: , methods:
+//│ )}, {
 //│ Def(0, complex_foo, [t$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -292,18 +303,23 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$34 = B(10) in -- #202
-//│ let x$35 = A(9,x$34) in -- #201
-//│ let x$36 = A(10,x$35) in -- #200
-//│ let* (x$37) = complex_foo(x$36) in -- #199
-//│ x$37 -- #198
+//│ let x$34 = B(10) in -- #201
+//│ let x$35 = A(9,x$34) in -- #200
+//│ let x$36 = A(10,x$35) in -- #199
+//│ let* (x$37) = complex_foo(x$36) in -- #198
+//│ x$37 -- #197
 //│ )
 //│ },
-//│ let* (x$38) = bar() in -- #206
-//│ x$38 -- #205)
+//│ let* (x$38) = bar() in -- #204
+//│ x$38 -- #203)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
+//│ Program({ClassInfo(0, A, [w,x], parents: , methods:
+//│ ),
+//│ ClassInfo(1, B, [y], parents: , methods:
+//│ ),
+//│ ClassInfo(2, C, [z], parents: , methods:
+//│ )}, {
 //│ Def(0, complex_foo, [t$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -410,15 +426,15 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$34 = B(10) in -- #202
-//│ let x$35 = A(9,x$34) in -- #201
-//│ let x$36 = A(10,x$35) in -- #200
-//│ let* (x$37) = complex_foo(x$36) in -- #199
-//│ x$37 -- #198
+//│ let x$34 = B(10) in -- #201
+//│ let x$35 = A(9,x$34) in -- #200
+//│ let x$36 = A(10,x$35) in -- #199
+//│ let* (x$37) = complex_foo(x$36) in -- #198
+//│ x$37 -- #197
 //│ )
 //│ },
-//│ let* (x$38) = bar() in -- #206
-//│ x$38 -- #205)
+//│ let* (x$38) = bar() in -- #204
+//│ x$38 -- #203)
 //│ 
 //│ Interpreted:
 //│ 5
@@ -461,7 +477,12 @@ bar()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
+//│ Program({ClassInfo(0, A, [w,x], parents: , methods:
+//│ ),
+//│ ClassInfo(1, B, [y], parents: , methods:
+//│ ),
+//│ ClassInfo(2, C, [z], parents: , methods:
+//│ )}, {
 //│ Def(0, complex_foo, [t$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -570,18 +591,23 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$36 = B(10) in -- #212
-//│ let x$37 = A(9,x$36) in -- #211
-//│ let x$38 = A(10,x$37) in -- #210
-//│ let* (x$39) = complex_foo(x$38) in -- #209
-//│ x$39 -- #208
+//│ let x$36 = B(10) in -- #211
+//│ let x$37 = A(9,x$36) in -- #210
+//│ let x$38 = A(10,x$37) in -- #209
+//│ let* (x$39) = complex_foo(x$38) in -- #208
+//│ x$39 -- #207
 //│ )
 //│ },
-//│ let* (x$40) = bar() in -- #216
-//│ x$40 -- #215)
+//│ let* (x$40) = bar() in -- #214
+//│ x$40 -- #213)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, A, [w,x]),ClassInfo(1, B, [y]),ClassInfo(2, C, [z])}, {
+//│ Program({ClassInfo(0, A, [w,x], parents: , methods:
+//│ ),
+//│ ClassInfo(1, B, [y], parents: , methods:
+//│ ),
+//│ ClassInfo(2, C, [z], parents: , methods:
+//│ )}, {
 //│ Def(0, complex_foo, [t$0], [{}],
 //│ I: [],
 //│ R: [None],
@@ -690,15 +716,15 @@ bar()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$36 = B(10) in -- #212
-//│ let x$37 = A(9,x$36) in -- #211
-//│ let x$38 = A(10,x$37) in -- #210
-//│ let* (x$39) = complex_foo(x$38) in -- #209
-//│ x$39 -- #208
+//│ let x$36 = B(10) in -- #211
+//│ let x$37 = A(9,x$36) in -- #210
+//│ let x$38 = A(10,x$37) in -- #209
+//│ let* (x$39) = complex_foo(x$38) in -- #208
+//│ x$39 -- #207
 //│ )
 //│ },
-//│ let* (x$40) = bar() in -- #216
-//│ x$40 -- #215)
+//│ let* (x$40) = bar() in -- #214
+//│ x$40 -- #213)
 //│ 
 //│ Interpreted:
 //│ 5
