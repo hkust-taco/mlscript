@@ -4,21 +4,30 @@
 
 :interpIR
 :genCpp
-class Boolean
-class True extends Boolean
-class False extends Boolean
 fun fib(n) = if n < 2 then n else fib(n-1) + fib(n-2)
 fib(20)
-//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#fun| |fib|(|n|)| |#=| |#if| |n| |<| |2| |#then| |n| |#else| |fib|(|n|-|1|)| |+| |fib|(|n|-|2|)|↵|fib|(|20|)|
-//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; fun fib = (n,) => if (<(n, 2,)) then n else +(fib(-(n, 1,),), fib(-(n, 2,),),); fib(20,)}
+//│ |#fun| |fib|(|n|)| |#=| |#if| |n| |<| |2| |#then| |n| |#else| |fib|(|n|-|1|)| |+| |fib|(|n|-|2|)|↵|fib|(|20|)|
+//│ Parsed: {fun fib = (n,) => if (<(n, 2,)) then n else +(fib(-(n, 1,),), fib(-(n, 2,),),); fib(20,)}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
 //│ )}, {
 //│ Def(0, fib, [n$0], [{}],
 //│ I: [],
@@ -49,11 +58,23 @@ fib(20)
 //│ x$7 -- #42)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
 //│ )}, {
 //│ Def(0, fib, [n$0], [{}],
 //│ I: [],
@@ -88,12 +109,67 @@ fib(20)
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"
-//│ struct _mls_Boolean;
+//│ struct _mls_Option;
+//│ struct _mls_Some;
+//│ struct _mls_None;
+//│ struct _mls_List;
+//│ struct _mls_Nil;
+//│ struct _mls_Cons;
+//│ struct _mls_Callable;
 //│ struct _mls_True;
 //│ struct _mls_False;
 //│ _mlsValue _mls_fib(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mlsMain();
+//│ struct _mls_Option: public _mlsObject {
+//│ 
+//│   constexpr static inline const char *typeName = "Option";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Some: public _mls_Option {
+//│   _mlsValue _mls_x;
+//│   constexpr static inline const char *typeName = "Some";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_x.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_x);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_x = _mls_x;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_None: public _mls_Option {
+//│ 
+//│   constexpr static inline const char *typeName = "None";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_List: public _mlsObject {
+//│ 
+//│   constexpr static inline const char *typeName = "List";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Nil: public _mls_List {
+//│ 
+//│   constexpr static inline const char *typeName = "Nil";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Cons: public _mls_List {
+//│   _mlsValue _mls_h;
+//│   _mlsValue _mls_t;
+//│   constexpr static inline const char *typeName = "Cons";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
+//│ };
 //│ _mlsValue _mls_fib(_mlsValue _mls_n_0){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_0 = (_mls_n_0<_mlsValue::fromIntLit(2));
@@ -125,23 +201,32 @@ fib(20)
 
 :interpIR
 :genCpp
-class Boolean
-class True extends Boolean
-class False extends Boolean
 fun odd(x) = if x == 0 then False else even(x-1)
 fun even(x) = if x == 0 then True else odd(x-1)
 fun foo() = odd(10)
 foo()
-//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#fun| |odd|(|x|)| |#=| |#if| |x| |==| |0| |#then| |False| |#else| |even|(|x|-|1|)|↵|#fun| |even|(|x|)| |#=| |#if| |x| |==| |0| |#then| |True| |#else| |odd|(|x|-|1|)|↵|#fun| |foo|(||)| |#=| |odd|(|10|)|↵|foo|(||)|
-//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; fun odd = (x,) => if (==(x, 0,)) then False else even(-(x, 1,),); fun even = (x,) => if (==(x, 0,)) then True else odd(-(x, 1,),); fun foo = () => odd(10,); foo()}
+//│ |#fun| |odd|(|x|)| |#=| |#if| |x| |==| |0| |#then| |False| |#else| |even|(|x|-|1|)|↵|#fun| |even|(|x|)| |#=| |#if| |x| |==| |0| |#then| |True| |#else| |odd|(|x|-|1|)|↵|#fun| |foo|(||)| |#=| |odd|(|10|)|↵|foo|(||)|
+//│ Parsed: {fun odd = (x,) => if (==(x, 0,)) then False else even(-(x, 1,),); fun even = (x,) => if (==(x, 0,)) then True else odd(-(x, 1,),); fun foo = () => odd(10,); foo()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
 //│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
@@ -200,11 +285,23 @@ foo()
 //│ x$13 -- #54)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
 //│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
@@ -267,7 +364,13 @@ foo()
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"
-//│ struct _mls_Boolean;
+//│ struct _mls_Option;
+//│ struct _mls_Some;
+//│ struct _mls_None;
+//│ struct _mls_List;
+//│ struct _mls_Nil;
+//│ struct _mls_Cons;
+//│ struct _mls_Callable;
 //│ struct _mls_True;
 //│ struct _mls_False;
 //│ _mlsValue _mls_odd(_mlsValue);
@@ -276,6 +379,55 @@ foo()
 //│ _mlsValue _mls_even(_mlsValue);
 //│ _mlsValue _mls_j_1(_mlsValue);
 //│ _mlsValue _mlsMain();
+//│ struct _mls_Option: public _mlsObject {
+//│ 
+//│   constexpr static inline const char *typeName = "Option";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Some: public _mls_Option {
+//│   _mlsValue _mls_x;
+//│   constexpr static inline const char *typeName = "Some";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_x.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_x);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_x = _mls_x;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_None: public _mls_Option {
+//│ 
+//│   constexpr static inline const char *typeName = "None";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_List: public _mlsObject {
+//│ 
+//│   constexpr static inline const char *typeName = "List";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Nil: public _mls_List {
+//│ 
+//│   constexpr static inline const char *typeName = "Nil";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Cons: public _mls_List {
+//│   _mlsValue _mls_h;
+//│   _mlsValue _mls_t;
+//│   constexpr static inline const char *typeName = "Cons";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
+//│ };
 //│ _mlsValue _mls_foo(){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_12 = _mls_odd(_mlsValue::fromIntLit(10));
@@ -329,9 +481,6 @@ foo()
 
 :interpIR
 :genCpp
-class Boolean
-class True extends Boolean
-class False extends Boolean
 class AorB
 class A extends AorB
 class B(b) extends AorB
@@ -342,22 +491,34 @@ fun foo(x) =
        else B(foo(not(x)))
 fun main() = foo(False)
 main()
-//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |AorB|↵|#class| |A| |#extends| |AorB|↵|#class| |B|(|b|)| |#extends| |AorB|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A|→|#else| |B|(|foo|(|not|(|x|)|)|)|←|←|↵|#fun| |main|(||)| |#=| |foo|(|False|)|↵|main|(||)|
-//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class AorB {}; class A: AorB {}; class B(b,): AorB {}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = () => foo(False,); main()}
+//│ |#class| |AorB|↵|#class| |A| |#extends| |AorB|↵|#class| |B|(|b|)| |#extends| |AorB|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A|→|#else| |B|(|foo|(|not|(|x|)|)|)|←|←|↵|#fun| |main|(||)| |#=| |foo|(|False|)|↵|main|(||)|
+//│ Parsed: {class AorB {}; class A: AorB {}; class B(b,): AorB {}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = () => foo(False,); main()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
-//│ ClassInfo(3, AorB, [], parents: , methods:
+//│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
-//│ ClassInfo(4, A, [], parents: AorB, methods:
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
 //│ ),
-//│ ClassInfo(5, B, [b], parents: AorB, methods:
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, AorB, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, A, [], parents: AorB, methods:
+//│ ),
+//│ ClassInfo(11, B, [b], parents: AorB, methods:
 //│ )}, {
 //│ Def(0, not, [x$0], [{}],
 //│ I: [],
@@ -415,17 +576,29 @@ main()
 //│ x$12 -- #36)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
-//│ ClassInfo(3, AorB, [], parents: , methods:
+//│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
-//│ ClassInfo(4, A, [], parents: AorB, methods:
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
 //│ ),
-//│ ClassInfo(5, B, [b], parents: AorB, methods:
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, AorB, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, A, [], parents: AorB, methods:
+//│ ),
+//│ ClassInfo(11, B, [b], parents: AorB, methods:
 //│ )}, {
 //│ Def(0, not, [x$0], [{}],
 //│ I: [],
@@ -488,9 +661,15 @@ main()
 //│ Cpp:
 //│ #include "mlsprelude.h"
 //│ struct _mls_AorB;
-//│ struct _mls_Boolean;
-//│ struct _mls_B;
 //│ struct _mls_A;
+//│ struct _mls_B;
+//│ struct _mls_Option;
+//│ struct _mls_Some;
+//│ struct _mls_None;
+//│ struct _mls_List;
+//│ struct _mls_Nil;
+//│ struct _mls_Cons;
+//│ struct _mls_Callable;
 //│ struct _mls_True;
 //│ struct _mls_False;
 //│ _mlsValue _mls_j_0(_mlsValue);
@@ -507,6 +686,14 @@ main()
 //│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_AorB; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
 //│ };
+//│ struct _mls_A: public _mls_AorB {
+//│ 
+//│   constexpr static inline const char *typeName = "A";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
 //│ struct _mls_B: public _mls_AorB {
 //│   _mlsValue _mls_b;
 //│   constexpr static inline const char *typeName = "B";
@@ -515,13 +702,54 @@ main()
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_b);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_b) { auto _mlsVal = new (std::align_val_t(align)) _mls_B; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_b = _mls_b;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_A: public _mls_AorB {
+//│ struct _mls_Option: public _mlsObject {
 //│ 
-//│   constexpr static inline const char *typeName = "A";
+//│   constexpr static inline const char *typeName = "Option";
 //│   constexpr static inline uint32_t typeTag = nextTypeTag();
 //│   virtual void print() const override { std::printf("%s", typeName); }
 //│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Some: public _mls_Option {
+//│   _mlsValue _mls_x;
+//│   constexpr static inline const char *typeName = "Some";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_x.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_x);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_x = _mls_x;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_None: public _mls_Option {
+//│ 
+//│   constexpr static inline const char *typeName = "None";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_List: public _mlsObject {
+//│ 
+//│   constexpr static inline const char *typeName = "List";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Nil: public _mls_List {
+//│ 
+//│   constexpr static inline const char *typeName = "Nil";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Cons: public _mls_List {
+//│   _mlsValue _mls_h;
+//│   _mlsValue _mls_t;
+//│   constexpr static inline const char *typeName = "Cons";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
 //│ _mlsValue _mls_not(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
@@ -575,9 +803,6 @@ main()
 
 :interpIR
 :genCpp
-class Boolean
-class True extends Boolean
-class False extends Boolean
 class AorB
 class A() extends AorB
 class B(b) extends AorB
@@ -601,22 +826,34 @@ fun main() =
     A then aaa()
     B(b1) then bbb()
 main()
-//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |AorB|↵|#class| |A|(||)| |#extends| |AorB|↵|#class| |B|(|b|)| |#extends| |AorB|↵|#fun| |aaa|(||)| |#=|→|#let| |m| |#=| |1|↵|#let| |n| |#=| |2|↵|#let| |p| |#=| |3|↵|#let| |q| |#=| |4|↵|m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |bbb|(||)| |#=|→|#let| |x| |#=| |aaa|(||)|↵|x| |*| |100| |+| |4|←|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A|→|#else| |B|(|foo|(|not|(|x|)|)|)|←|←|↵|#fun| |main|(||)| |#=|→|#let| |x| |#=| |foo|(|False|)|↵|#if| |x| |is|→|A| |#then| |aaa|(||)|↵|B|(|b1|)| |#then| |bbb|(||)|←|←|↵|main|(||)|
-//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class AorB {}; class A(): AorB {}; class B(b,): AorB {}; fun aaa = () => {let m = 1; let n = 2; let p = 3; let q = 4; +(-(+(m, n,), p,), q,)}; fun bbb = () => {let x = aaa(); +(*(x, 100,), 4,)}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = () => {let x = foo(False,); if x is ‹(A) then aaa(); (B(b1,)) then bbb()›}; main()}
+//│ |#class| |AorB|↵|#class| |A|(||)| |#extends| |AorB|↵|#class| |B|(|b|)| |#extends| |AorB|↵|#fun| |aaa|(||)| |#=|→|#let| |m| |#=| |1|↵|#let| |n| |#=| |2|↵|#let| |p| |#=| |3|↵|#let| |q| |#=| |4|↵|m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |bbb|(||)| |#=|→|#let| |x| |#=| |aaa|(||)|↵|x| |*| |100| |+| |4|←|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A|→|#else| |B|(|foo|(|not|(|x|)|)|)|←|←|↵|#fun| |main|(||)| |#=|→|#let| |x| |#=| |foo|(|False|)|↵|#if| |x| |is|→|A| |#then| |aaa|(||)|↵|B|(|b1|)| |#then| |bbb|(||)|←|←|↵|main|(||)|
+//│ Parsed: {class AorB {}; class A(): AorB {}; class B(b,): AorB {}; fun aaa = () => {let m = 1; let n = 2; let p = 3; let q = 4; +(-(+(m, n,), p,), q,)}; fun bbb = () => {let x = aaa(); +(*(x, 100,), 4,)}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = () => {let x = foo(False,); if x is ‹(A) then aaa(); (B(b1,)) then bbb()›}; main()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
-//│ ClassInfo(3, AorB, [], parents: , methods:
+//│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
-//│ ClassInfo(4, A, [], parents: AorB, methods:
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
 //│ ),
-//│ ClassInfo(5, B, [b], parents: AorB, methods:
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, AorB, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, A, [], parents: AorB, methods:
+//│ ),
+//│ ClassInfo(11, B, [b], parents: AorB, methods:
 //│ )}, {
 //│ Def(0, aaa, [], [],
 //│ I: [],
@@ -712,17 +949,29 @@ main()
 //│ x$26 -- #95)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
-//│ ClassInfo(3, AorB, [], parents: , methods:
+//│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
-//│ ClassInfo(4, A, [], parents: AorB, methods:
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
 //│ ),
-//│ ClassInfo(5, B, [b], parents: AorB, methods:
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, AorB, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, A, [], parents: AorB, methods:
+//│ ),
+//│ ClassInfo(11, B, [b], parents: AorB, methods:
 //│ )}, {
 //│ Def(0, aaa, [], [],
 //│ I: [],
@@ -823,9 +1072,15 @@ main()
 //│ Cpp:
 //│ #include "mlsprelude.h"
 //│ struct _mls_AorB;
-//│ struct _mls_Boolean;
-//│ struct _mls_B;
 //│ struct _mls_A;
+//│ struct _mls_B;
+//│ struct _mls_Option;
+//│ struct _mls_Some;
+//│ struct _mls_None;
+//│ struct _mls_List;
+//│ struct _mls_Nil;
+//│ struct _mls_Cons;
+//│ struct _mls_Callable;
 //│ struct _mls_True;
 //│ struct _mls_False;
 //│ _mlsValue _mls_aaa();
@@ -845,6 +1100,14 @@ main()
 //│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_AorB; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
 //│ };
+//│ struct _mls_A: public _mls_AorB {
+//│ 
+//│   constexpr static inline const char *typeName = "A";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
 //│ struct _mls_B: public _mls_AorB {
 //│   _mlsValue _mls_b;
 //│   constexpr static inline const char *typeName = "B";
@@ -853,13 +1116,54 @@ main()
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_b);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_b) { auto _mlsVal = new (std::align_val_t(align)) _mls_B; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_b = _mls_b;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_A: public _mls_AorB {
+//│ struct _mls_Option: public _mlsObject {
 //│ 
-//│   constexpr static inline const char *typeName = "A";
+//│   constexpr static inline const char *typeName = "Option";
 //│   constexpr static inline uint32_t typeTag = nextTypeTag();
 //│   virtual void print() const override { std::printf("%s", typeName); }
 //│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Some: public _mls_Option {
+//│   _mlsValue _mls_x;
+//│   constexpr static inline const char *typeName = "Some";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_x.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_x);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_x = _mls_x;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_None: public _mls_Option {
+//│ 
+//│   constexpr static inline const char *typeName = "None";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_List: public _mlsObject {
+//│ 
+//│   constexpr static inline const char *typeName = "List";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Nil: public _mls_List {
+//│ 
+//│   constexpr static inline const char *typeName = "Nil";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Cons: public _mls_List {
+//│   _mlsValue _mls_h;
+//│   _mlsValue _mls_t;
+//│   constexpr static inline const char *typeName = "Cons";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
 //│ _mlsValue _mls_j_1(_mlsValue _mls_x_15){
 //│   _mlsValue _mls_retval;
@@ -945,9 +1249,6 @@ main()
 
 
 :interpIR
-class Boolean
-class True extends Boolean
-class False extends Boolean
 class Nat
 class S(s) extends Nat
 class O extends Nat
@@ -961,22 +1262,34 @@ fun even(x) =
     S(s) then odd(s)
 fun foo() = odd(S(S(S(O))))
 foo()
-//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |Nat|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|S|(|O|)|)|)|)|↵|foo|(||)|
-//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class Nat {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(S(S(S(O,),),),); foo()}
+//│ |#class| |Nat|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|S|(|O|)|)|)|)|↵|foo|(||)|
+//│ Parsed: {class Nat {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(S(S(S(O,),),),); foo()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
-//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
-//│ ClassInfo(4, S, [s], parents: Nat, methods:
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
 //│ ),
-//│ ClassInfo(5, O, [], parents: Nat, methods:
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, S, [s], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(11, O, [], parents: Nat, methods:
 //│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
@@ -1037,17 +1350,29 @@ foo()
 //│ x$15 -- #53)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
-//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
-//│ ClassInfo(4, S, [s], parents: Nat, methods:
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
 //│ ),
-//│ ClassInfo(5, O, [], parents: Nat, methods:
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, S, [s], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(11, O, [], parents: Nat, methods:
 //│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
@@ -1113,9 +1438,6 @@ foo()
 
 :interpIR
 :genCpp
-class Boolean
-class True extends Boolean
-class False extends Boolean
 class Nat
 class S(s) extends Nat
 class O extends Nat
@@ -1130,22 +1452,34 @@ fun even(x) =
 fun mk(n) = if n > 0 then S(mk(n - 1)) else O
 fun foo() = odd(mk(10))
 foo() 
-//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |Nat|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|mk|(|10|)|)|↵|foo|(||)| |
-//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class Nat {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n, 0,)) then S(mk(-(n, 1,),),) else O; fun foo = () => odd(mk(10,),); foo()}
+//│ |#class| |Nat|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|mk|(|10|)|)|↵|foo|(||)| |
+//│ Parsed: {class Nat {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n, 0,)) then S(mk(-(n, 1,),),) else O; fun foo = () => odd(mk(10,),); foo()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
-//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
-//│ ClassInfo(4, S, [s], parents: Nat, methods:
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
 //│ ),
-//│ ClassInfo(5, O, [], parents: Nat, methods:
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, S, [s], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(11, O, [], parents: Nat, methods:
 //│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
@@ -1226,17 +1560,29 @@ foo()
 //│ x$18 -- #72)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
-//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
-//│ ClassInfo(4, S, [s], parents: Nat, methods:
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
 //│ ),
-//│ ClassInfo(5, O, [], parents: Nat, methods:
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, S, [s], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(11, O, [], parents: Nat, methods:
 //│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
@@ -1322,11 +1668,17 @@ foo()
 //│ Cpp:
 //│ #include "mlsprelude.h"
 //│ struct _mls_Nat;
-//│ struct _mls_Boolean;
+//│ struct _mls_Option;
+//│ struct _mls_Some;
+//│ struct _mls_None;
+//│ struct _mls_List;
+//│ struct _mls_Nil;
+//│ struct _mls_Cons;
 //│ struct _mls_O;
-//│ struct _mls_S;
 //│ struct _mls_True;
 //│ struct _mls_False;
+//│ struct _mls_S;
+//│ struct _mls_Callable;
 //│ _mlsValue _mls_odd(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_foo();
@@ -1342,6 +1694,55 @@ foo()
 //│   virtual void print() const override { std::printf("%s", typeName); }
 //│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nat; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Option: public _mlsObject {
+//│ 
+//│   constexpr static inline const char *typeName = "Option";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Some: public _mls_Option {
+//│   _mlsValue _mls_x;
+//│   constexpr static inline const char *typeName = "Some";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_x.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_x);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_x = _mls_x;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_None: public _mls_Option {
+//│ 
+//│   constexpr static inline const char *typeName = "None";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_List: public _mlsObject {
+//│ 
+//│   constexpr static inline const char *typeName = "List";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Nil: public _mls_List {
+//│ 
+//│   constexpr static inline const char *typeName = "Nil";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Cons: public _mls_List {
+//│   _mlsValue _mls_h;
+//│   _mlsValue _mls_t;
+//│   constexpr static inline const char *typeName = "Cons";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
 //│ struct _mls_O: public _mls_Nat {
 //│ 
@@ -1430,9 +1831,6 @@ foo()
 
 :interpIR
 :genCpp
-class Boolean
-class True extends Boolean
-class False extends Boolean
 class Nat
 class S(s) extends Nat
 class O extends Nat
@@ -1447,22 +1845,34 @@ fun even(x) =
 fun mk(n) = if n > 0 then S(mk(n - 1)) else O
 fun foo() = odd(S(S(mk(10))))
 foo()
-//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |Nat|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|mk|(|10|)|)|)|)|↵|foo|(||)|
-//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class Nat {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n, 0,)) then S(mk(-(n, 1,),),) else O; fun foo = () => odd(S(S(mk(10,),),),); foo()}
+//│ |#class| |Nat|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|mk|(|10|)|)|)|)|↵|foo|(||)|
+//│ Parsed: {class Nat {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n, 0,)) then S(mk(-(n, 1,),),) else O; fun foo = () => odd(S(S(mk(10,),),),); foo()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
-//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
-//│ ClassInfo(4, S, [s], parents: Nat, methods:
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
 //│ ),
-//│ ClassInfo(5, O, [], parents: Nat, methods:
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, S, [s], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(11, O, [], parents: Nat, methods:
 //│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
@@ -1545,17 +1955,29 @@ foo()
 //│ x$20 -- #80)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
-//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
-//│ ClassInfo(4, S, [s], parents: Nat, methods:
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
 //│ ),
-//│ ClassInfo(5, O, [], parents: Nat, methods:
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, S, [s], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(11, O, [], parents: Nat, methods:
 //│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
@@ -1643,11 +2065,17 @@ foo()
 //│ Cpp:
 //│ #include "mlsprelude.h"
 //│ struct _mls_Nat;
-//│ struct _mls_Boolean;
+//│ struct _mls_Option;
+//│ struct _mls_Some;
+//│ struct _mls_None;
+//│ struct _mls_List;
+//│ struct _mls_Nil;
+//│ struct _mls_Cons;
 //│ struct _mls_O;
-//│ struct _mls_S;
 //│ struct _mls_True;
 //│ struct _mls_False;
+//│ struct _mls_S;
+//│ struct _mls_Callable;
 //│ _mlsValue _mls_odd(_mlsValue);
 //│ _mlsValue _mls_j_0(_mlsValue);
 //│ _mlsValue _mls_foo();
@@ -1663,6 +2091,55 @@ foo()
 //│   virtual void print() const override { std::printf("%s", typeName); }
 //│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nat; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Option: public _mlsObject {
+//│ 
+//│   constexpr static inline const char *typeName = "Option";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Some: public _mls_Option {
+//│   _mlsValue _mls_x;
+//│   constexpr static inline const char *typeName = "Some";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_x.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_x);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_x = _mls_x;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_None: public _mls_Option {
+//│ 
+//│   constexpr static inline const char *typeName = "None";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_List: public _mlsObject {
+//│ 
+//│   constexpr static inline const char *typeName = "List";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Nil: public _mls_List {
+//│ 
+//│   constexpr static inline const char *typeName = "Nil";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Cons: public _mls_List {
+//│   _mlsValue _mls_h;
+//│   _mlsValue _mls_t;
+//│   constexpr static inline const char *typeName = "Cons";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
 //│ struct _mls_O: public _mls_Nat {
 //│ 
@@ -1753,9 +2230,6 @@ foo()
 
 :interpIR
 :genCpp
-class Boolean
-class True extends Boolean
-class False extends Boolean
 class Nat
 class S(s) extends Nat
 class O extends Nat
@@ -1773,22 +2247,34 @@ fun main() =
   foo()
   bar()
 main()
-//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |Nat|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|#if| |10| |>| |0| |#then| |S|(|O|)| |#else| |O|)|↵|#fun| |bar|(||)| |#=| |#if| |10| |>| |0| |#then| |odd|(|S|(|O|)|)| |#else| |odd|(|O|)|↵|#fun| |main|(||)| |#=|→|foo|(||)|↵|bar|(||)|←|↵|main|(||)|
-//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class Nat {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(if (>(10, 0,)) then S(O,) else O,); fun bar = () => if (>(10, 0,)) then odd(S(O,),) else odd(O,); fun main = () => {foo(); bar()}; main()}
+//│ |#class| |Nat|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|#if| |10| |>| |0| |#then| |S|(|O|)| |#else| |O|)|↵|#fun| |bar|(||)| |#=| |#if| |10| |>| |0| |#then| |odd|(|S|(|O|)|)| |#else| |odd|(|O|)|↵|#fun| |main|(||)| |#=|→|foo|(||)|↵|bar|(||)|←|↵|main|(||)|
+//│ Parsed: {class Nat {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(if (>(10, 0,)) then S(O,) else O,); fun bar = () => if (>(10, 0,)) then odd(S(O,),) else odd(O,); fun main = () => {foo(); bar()}; main()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
-//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
-//│ ClassInfo(4, S, [s], parents: Nat, methods:
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
 //│ ),
-//│ ClassInfo(5, O, [], parents: Nat, methods:
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, S, [s], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(11, O, [], parents: Nat, methods:
 //│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
@@ -1893,17 +2379,29 @@ main()
 //│ x$25 -- #91)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
-//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
-//│ ClassInfo(4, S, [s], parents: Nat, methods:
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
 //│ ),
-//│ ClassInfo(5, O, [], parents: Nat, methods:
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, S, [s], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(11, O, [], parents: Nat, methods:
 //│ )}, {
 //│ Def(0, odd, [x$0], [{}],
 //│ I: [],
@@ -2013,11 +2511,17 @@ main()
 //│ Cpp:
 //│ #include "mlsprelude.h"
 //│ struct _mls_Nat;
-//│ struct _mls_Boolean;
+//│ struct _mls_Option;
+//│ struct _mls_Some;
+//│ struct _mls_None;
+//│ struct _mls_List;
+//│ struct _mls_Nil;
+//│ struct _mls_Cons;
 //│ struct _mls_O;
-//│ struct _mls_S;
 //│ struct _mls_True;
 //│ struct _mls_False;
+//│ struct _mls_S;
+//│ struct _mls_Callable;
 //│ _mlsValue _mls_odd(_mlsValue);
 //│ _mlsValue _mls_bar();
 //│ _mlsValue _mls_j_0(_mlsValue);
@@ -2035,6 +2539,55 @@ main()
 //│   virtual void print() const override { std::printf("%s", typeName); }
 //│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nat; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Option: public _mlsObject {
+//│ 
+//│   constexpr static inline const char *typeName = "Option";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Some: public _mls_Option {
+//│   _mlsValue _mls_x;
+//│   constexpr static inline const char *typeName = "Some";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_x.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_x);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_x = _mls_x;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_None: public _mls_Option {
+//│ 
+//│   constexpr static inline const char *typeName = "None";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_List: public _mlsObject {
+//│ 
+//│   constexpr static inline const char *typeName = "List";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Nil: public _mls_List {
+//│ 
+//│   constexpr static inline const char *typeName = "Nil";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Cons: public _mls_List {
+//│   _mlsValue _mls_h;
+//│   _mlsValue _mls_t;
+//│   constexpr static inline const char *typeName = "Cons";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
 //│ struct _mls_O: public _mls_Nat {
 //│ 
@@ -2143,9 +2696,6 @@ main()
 
 :interpIR
 :genCpp
-class Boolean
-class True extends Boolean
-class False extends Boolean
 class AorB
 class A extends AorB
 class B(b) extends AorB
@@ -2168,22 +2718,34 @@ fun main(flag) =
     A then aaa()
     B(b1) then bbb()
 main(False)
-//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |AorB|↵|#class| |A| |#extends| |AorB|↵|#class| |B|(|b|)| |#extends| |AorB|↵|#fun| |aaa|(||)| |#=|→|#let| |m| |#=| |1|↵|#let| |n| |#=| |2|↵|#let| |p| |#=| |3|↵|#let| |q| |#=| |4|↵|m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |bbb|(||)| |#=|→|#let| |x| |#=| |aaa|(||)|↵|x| |*| |100| |+| |4|←|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A| |#else| |B|(|foo|(|not|(|x|)|)|)|←|↵|#fun| |main|(|flag|)| |#=|→|#let| |x| |#=| |foo|(|flag|)|↵|#if| |x| |is|→|A| |#then| |aaa|(||)|↵|B|(|b1|)| |#then| |bbb|(||)|←|←|↵|main|(|False|)|
-//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class AorB {}; class A: AorB {}; class B(b,): AorB {}; fun aaa = () => {let m = 1; let n = 2; let p = 3; let q = 4; +(-(+(m, n,), p,), q,)}; fun bbb = () => {let x = aaa(); +(*(x, 100,), 4,)}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = (flag,) => {let x = foo(flag,); if x is ‹(A) then aaa(); (B(b1,)) then bbb()›}; main(False,)}
+//│ |#class| |AorB|↵|#class| |A| |#extends| |AorB|↵|#class| |B|(|b|)| |#extends| |AorB|↵|#fun| |aaa|(||)| |#=|→|#let| |m| |#=| |1|↵|#let| |n| |#=| |2|↵|#let| |p| |#=| |3|↵|#let| |q| |#=| |4|↵|m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |bbb|(||)| |#=|→|#let| |x| |#=| |aaa|(||)|↵|x| |*| |100| |+| |4|←|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A| |#else| |B|(|foo|(|not|(|x|)|)|)|←|↵|#fun| |main|(|flag|)| |#=|→|#let| |x| |#=| |foo|(|flag|)|↵|#if| |x| |is|→|A| |#then| |aaa|(||)|↵|B|(|b1|)| |#then| |bbb|(||)|←|←|↵|main|(|False|)|
+//│ Parsed: {class AorB {}; class A: AorB {}; class B(b,): AorB {}; fun aaa = () => {let m = 1; let n = 2; let p = 3; let q = 4; +(-(+(m, n,), p,), q,)}; fun bbb = () => {let x = aaa(); +(*(x, 100,), 4,)}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = (flag,) => {let x = foo(flag,); if x is ‹(A) then aaa(); (B(b1,)) then bbb()›}; main(False,)}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
-//│ ClassInfo(3, AorB, [], parents: , methods:
+//│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
-//│ ClassInfo(4, A, [], parents: AorB, methods:
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
 //│ ),
-//│ ClassInfo(5, B, [b], parents: AorB, methods:
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, AorB, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, A, [], parents: AorB, methods:
+//│ ),
+//│ ClassInfo(11, B, [b], parents: AorB, methods:
 //│ )}, {
 //│ Def(0, aaa, [], [],
 //│ I: [],
@@ -2279,17 +2841,29 @@ main(False)
 //│ x$26 -- #96)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
-//│ ClassInfo(3, AorB, [], parents: , methods:
+//│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
-//│ ClassInfo(4, A, [], parents: AorB, methods:
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
 //│ ),
-//│ ClassInfo(5, B, [b], parents: AorB, methods:
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, AorB, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, A, [], parents: AorB, methods:
+//│ ),
+//│ ClassInfo(11, B, [b], parents: AorB, methods:
 //│ )}, {
 //│ Def(0, aaa, [], [],
 //│ I: [],
@@ -2390,9 +2964,15 @@ main(False)
 //│ Cpp:
 //│ #include "mlsprelude.h"
 //│ struct _mls_AorB;
-//│ struct _mls_Boolean;
-//│ struct _mls_B;
 //│ struct _mls_A;
+//│ struct _mls_B;
+//│ struct _mls_Option;
+//│ struct _mls_Some;
+//│ struct _mls_None;
+//│ struct _mls_List;
+//│ struct _mls_Nil;
+//│ struct _mls_Cons;
+//│ struct _mls_Callable;
 //│ struct _mls_True;
 //│ struct _mls_False;
 //│ _mlsValue _mls_aaa();
@@ -2412,6 +2992,14 @@ main(False)
 //│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_AorB; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
 //│ };
+//│ struct _mls_A: public _mls_AorB {
+//│ 
+//│   constexpr static inline const char *typeName = "A";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
 //│ struct _mls_B: public _mls_AorB {
 //│   _mlsValue _mls_b;
 //│   constexpr static inline const char *typeName = "B";
@@ -2420,13 +3008,54 @@ main(False)
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_b);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_b) { auto _mlsVal = new (std::align_val_t(align)) _mls_B; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_b = _mls_b;  return _mlsValue(_mlsVal); }
 //│ };
-//│ struct _mls_A: public _mls_AorB {
+//│ struct _mls_Option: public _mlsObject {
 //│ 
-//│   constexpr static inline const char *typeName = "A";
+//│   constexpr static inline const char *typeName = "Option";
 //│   constexpr static inline uint32_t typeTag = nextTypeTag();
 //│   virtual void print() const override { std::printf("%s", typeName); }
 //│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_A; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Some: public _mls_Option {
+//│   _mlsValue _mls_x;
+//│   constexpr static inline const char *typeName = "Some";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_x.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_x);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_x = _mls_x;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_None: public _mls_Option {
+//│ 
+//│   constexpr static inline const char *typeName = "None";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_List: public _mlsObject {
+//│ 
+//│   constexpr static inline const char *typeName = "List";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Nil: public _mls_List {
+//│ 
+//│   constexpr static inline const char *typeName = "Nil";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Cons: public _mls_List {
+//│   _mlsValue _mls_h;
+//│   _mlsValue _mls_t;
+//│   constexpr static inline const char *typeName = "Cons";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
 //│ _mlsValue _mls_main(_mlsValue _mls_flag_0){
 //│   _mlsValue _mls_retval;
@@ -2513,9 +3142,6 @@ main(False)
 
 :interpIR
 :genCpp
-class Boolean
-class True extends Boolean
-class False extends Boolean
 class List
 class Cons(h, t) extends List
 class Nil extends List
@@ -2535,16 +3161,16 @@ fun is_empty(l) =
 fun main() =
   is_empty(Cons(1, Cons(2, Nil)))
 main()
-//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|Cons|(|1|,| |Cons|(|2|,| |Nil|)|)|)|←|↵|main|(||)|
-//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(Cons(1, Cons(2, Nil,),),)}; main()}
+//│ |#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|Cons|(|1|,| |Cons|(|2|,| |Nil|)|)|)|←|↵|main|(||)|
+//│ Parsed: {class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(Cons(1, Cons(2, Nil,),),)}; main()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
@@ -2557,6 +3183,18 @@ main()
 //│ ClassInfo(7, Some, [x], parents: Option, methods:
 //│ ),
 //│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(11, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(12, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(13, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(14, None, [], parents: Option, methods:
 //│ )}, {
 //│ Def(0, head_opt, [l$0], [{}],
 //│ I: [],
@@ -2626,11 +3264,11 @@ main()
 //│ x$15 -- #64)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
@@ -2643,6 +3281,18 @@ main()
 //│ ClassInfo(7, Some, [x], parents: Option, methods:
 //│ ),
 //│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(11, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(12, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(13, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(14, None, [], parents: Option, methods:
 //│ )}, {
 //│ Def(0, head_opt, [l$0], [{}],
 //│ I: [],
@@ -2716,13 +3366,13 @@ main()
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"
-//│ struct _mls_Boolean;
 //│ struct _mls_Option;
 //│ struct _mls_Some;
 //│ struct _mls_None;
 //│ struct _mls_List;
 //│ struct _mls_Nil;
 //│ struct _mls_Cons;
+//│ struct _mls_Callable;
 //│ struct _mls_True;
 //│ struct _mls_False;
 //│ _mlsValue _mls_is_empty(_mlsValue);
@@ -2843,9 +3493,6 @@ main()
 
 :interpIR
 :genCpp
-class Boolean
-class True extends Boolean
-class False extends Boolean
 class List
 class Cons(h, t) extends List
 class Nil extends List
@@ -2867,16 +3514,16 @@ fun is_empty(l) =
 fun main() =
   is_empty(mk_list(10))
 main()
-//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|mk_list|(|10|)|)|←|↵|main|(||)|
-//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun mk_list = (n,) => {if (==(n, 0,)) then Nil else Cons(n, mk_list(-(n, 1,),),)}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(mk_list(10,),)}; main()}
+//│ |#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|mk_list|(|10|)|)|←|↵|main|(||)|
+//│ Parsed: {class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun mk_list = (n,) => {if (==(n, 0,)) then Nil else Cons(n, mk_list(-(n, 1,),),)}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(mk_list(10,),)}; main()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
@@ -2889,6 +3536,18 @@ main()
 //│ ClassInfo(7, Some, [x], parents: Option, methods:
 //│ ),
 //│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(11, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(12, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(13, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(14, None, [], parents: Option, methods:
 //│ )}, {
 //│ Def(0, mk_list, [n$0], [{}],
 //│ I: [],
@@ -2979,11 +3638,11 @@ main()
 //│ x$19 -- #85)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
@@ -2996,6 +3655,18 @@ main()
 //│ ClassInfo(7, Some, [x], parents: Option, methods:
 //│ ),
 //│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(11, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(12, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(13, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(14, None, [], parents: Option, methods:
 //│ )}, {
 //│ Def(0, mk_list, [n$0], [{}],
 //│ I: [],
@@ -3090,13 +3761,13 @@ main()
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"
-//│ struct _mls_Boolean;
 //│ struct _mls_Option;
 //│ struct _mls_Some;
 //│ struct _mls_None;
 //│ struct _mls_List;
 //│ struct _mls_Nil;
 //│ struct _mls_Cons;
+//│ struct _mls_Callable;
 //│ struct _mls_True;
 //│ struct _mls_False;
 //│ _mlsValue _mls_is_empty(_mlsValue);
@@ -3236,9 +3907,6 @@ main()
 
 :interpIR
 :genCpp
-class Boolean
-class True extends Boolean
-class False extends Boolean
 class List
 class Cons(h, t) extends List
 class Nil extends List
@@ -3257,16 +3925,16 @@ fun last_opt(l) =
 fun main() =
   last_opt(mk_list(10))
 main()
-//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |last_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then|→|#if| |t| |is|→|Nil| |#then| |Some|(|h|)|↵|Cons|(|h2|,| |t2|)| |#then| |last_opt|(|t|)|←|←|←|←|↵|#fun| |main|(||)| |#=|→|last_opt|(|mk_list|(|10|)|)|←|↵|main|(||)|
-//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun mk_list = (n,) => {if (==(n, 0,)) then Nil else Cons(n, mk_list(-(n, 1,),),)}; fun last_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then {if t is ‹(Nil) then Some(h,); (Cons(h2, t2,)) then last_opt(t,)›}›}; fun main = () => {last_opt(mk_list(10,),)}; main()}
+//│ |#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |last_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then|→|#if| |t| |is|→|Nil| |#then| |Some|(|h|)|↵|Cons|(|h2|,| |t2|)| |#then| |last_opt|(|t|)|←|←|←|←|↵|#fun| |main|(||)| |#=|→|last_opt|(|mk_list|(|10|)|)|←|↵|main|(||)|
+//│ Parsed: {class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun mk_list = (n,) => {if (==(n, 0,)) then Nil else Cons(n, mk_list(-(n, 1,),),)}; fun last_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then {if t is ‹(Nil) then Some(h,); (Cons(h2, t2,)) then last_opt(t,)›}›}; fun main = () => {last_opt(mk_list(10,),)}; main()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
@@ -3279,6 +3947,18 @@ main()
 //│ ClassInfo(7, Some, [x], parents: Option, methods:
 //│ ),
 //│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(11, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(12, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(13, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(14, None, [], parents: Option, methods:
 //│ )}, {
 //│ Def(0, mk_list, [n$0], [{}],
 //│ I: [],
@@ -3353,11 +4033,11 @@ main()
 //│ x$17 -- #82)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
@@ -3370,6 +4050,18 @@ main()
 //│ ClassInfo(7, Some, [x], parents: Option, methods:
 //│ ),
 //│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(11, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(12, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(13, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(14, None, [], parents: Option, methods:
 //│ )}, {
 //│ Def(0, mk_list, [n$0], [{}],
 //│ I: [],
@@ -3448,13 +4140,13 @@ main()
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"
-//│ struct _mls_Boolean;
 //│ struct _mls_Option;
 //│ struct _mls_Some;
 //│ struct _mls_None;
 //│ struct _mls_List;
 //│ struct _mls_Nil;
 //│ struct _mls_Cons;
+//│ struct _mls_Callable;
 //│ struct _mls_True;
 //│ struct _mls_False;
 //│ _mlsValue _mls_last_opt(_mlsValue);
@@ -3580,9 +4272,6 @@ main()
 
 :interpIR
 :genCpp
-class Boolean
-class True extends Boolean
-class False extends Boolean
 class List
 class Cons(h, t) extends List
 class Nil extends List
@@ -3615,16 +4304,16 @@ fun f(x) =
 fun main() =
   f(Some(2)) + f(None)
 main()
-//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |is_some|(|o|)| |#=|→|#if| |o| |is|→|Some|(|x|)| |#then| |True|↵|None| |#then| |False|←|←|↵|#fun| |e0|(|w|)| |#=|→|w| |+| |8| |+| |9| |+| |10|←|↵|#fun| |e1|(|a|,| |c|)| |#=|→|a| |+| |1| |+| |2| |+| |3| |+| |4|←|↵|#fun| |e3|(|c|)| |#=|→|#let| |m| |#=| |4|↵|#let| |n| |#=| |5|↵|#let| |p| |#=| |6|↵|#let| |q| |#=| |7|↵|#if| |c| |#then| |m| |+| |n| |+| |p| |+| |q| |#else| |m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |e2|(|x|)| |#=|→|x| |+| |12| |+| |13| |+| |14|←|↵|#fun| |f|(|x|)| |#=|→|#let| |c1| |#=| |is_some|(|x|)|↵|#let| |z| |#=| |e3|(|c1|)|↵|#let| |w| |#=| |#if| |x| |is|→|Some|(|a|)| |#then| |e1|(|a|,| |z|)|↵|None| |#then| |e2|(|z|)|←|↵|e0|(|w|)|←|↵|#fun| |main|(||)| |#=|→|f|(|Some|(|2|)|)| |+| |f|(|None|)|←|↵|main|(||)|
-//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun is_some = (o,) => {if o is ‹(Some(x,)) then True; (None) then False›}; fun e0 = (w,) => {+(+(+(w, 8,), 9,), 10,)}; fun e1 = (a, c,) => {+(+(+(+(a, 1,), 2,), 3,), 4,)}; fun e3 = (c,) => {let m = 4; let n = 5; let p = 6; let q = 7; if (c) then +(+(+(m, n,), p,), q,) else +(-(+(m, n,), p,), q,)}; fun e2 = (x,) => {+(+(+(x, 12,), 13,), 14,)}; fun f = (x,) => {let c1 = is_some(x,); let z = e3(c1,); let w = if x is ‹(Some(a,)) then e1(a, z,); (None) then e2(z,)›; e0(w,)}; fun main = () => {+(f(Some(2,),), f(None,),)}; main()}
+//│ |#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |is_some|(|o|)| |#=|→|#if| |o| |is|→|Some|(|x|)| |#then| |True|↵|None| |#then| |False|←|←|↵|#fun| |e0|(|w|)| |#=|→|w| |+| |8| |+| |9| |+| |10|←|↵|#fun| |e1|(|a|,| |c|)| |#=|→|a| |+| |1| |+| |2| |+| |3| |+| |4|←|↵|#fun| |e3|(|c|)| |#=|→|#let| |m| |#=| |4|↵|#let| |n| |#=| |5|↵|#let| |p| |#=| |6|↵|#let| |q| |#=| |7|↵|#if| |c| |#then| |m| |+| |n| |+| |p| |+| |q| |#else| |m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |e2|(|x|)| |#=|→|x| |+| |12| |+| |13| |+| |14|←|↵|#fun| |f|(|x|)| |#=|→|#let| |c1| |#=| |is_some|(|x|)|↵|#let| |z| |#=| |e3|(|c1|)|↵|#let| |w| |#=| |#if| |x| |is|→|Some|(|a|)| |#then| |e1|(|a|,| |z|)|↵|None| |#then| |e2|(|z|)|←|↵|e0|(|w|)|←|↵|#fun| |main|(||)| |#=|→|f|(|Some|(|2|)|)| |+| |f|(|None|)|←|↵|main|(||)|
+//│ Parsed: {class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun is_some = (o,) => {if o is ‹(Some(x,)) then True; (None) then False›}; fun e0 = (w,) => {+(+(+(w, 8,), 9,), 10,)}; fun e1 = (a, c,) => {+(+(+(+(a, 1,), 2,), 3,), 4,)}; fun e3 = (c,) => {let m = 4; let n = 5; let p = 6; let q = 7; if (c) then +(+(+(m, n,), p,), q,) else +(-(+(m, n,), p,), q,)}; fun e2 = (x,) => {+(+(+(x, 12,), 13,), 14,)}; fun f = (x,) => {let c1 = is_some(x,); let z = e3(c1,); let w = if x is ‹(Some(a,)) then e1(a, z,); (None) then e2(z,)›; e0(w,)}; fun main = () => {+(f(Some(2,),), f(None,),)}; main()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
@@ -3637,6 +4326,18 @@ main()
 //│ ClassInfo(7, Some, [x], parents: Option, methods:
 //│ ),
 //│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(11, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(12, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(13, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(14, None, [], parents: Option, methods:
 //│ )}, {
 //│ Def(0, is_some, [o$0], [{}],
 //│ I: [],
@@ -3759,11 +4460,11 @@ main()
 //│ x$39 -- #186)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
@@ -3776,6 +4477,18 @@ main()
 //│ ClassInfo(7, Some, [x], parents: Option, methods:
 //│ ),
 //│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(11, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(12, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(13, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(14, None, [], parents: Option, methods:
 //│ )}, {
 //│ Def(0, is_some, [o$0], [{}],
 //│ I: [],
@@ -3902,13 +4615,13 @@ main()
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"
-//│ struct _mls_Boolean;
 //│ struct _mls_Option;
 //│ struct _mls_Some;
 //│ struct _mls_None;
 //│ struct _mls_List;
 //│ struct _mls_Nil;
 //│ struct _mls_Cons;
+//│ struct _mls_Callable;
 //│ struct _mls_True;
 //│ struct _mls_False;
 //│ _mlsValue _mls_e0(_mlsValue);
@@ -4078,9 +4791,6 @@ main()
 
 :interpIR
 :genCpp
-class Boolean
-class True extends Boolean
-class False extends Boolean
 class List
 class Cons(h, t) extends List
 class Nil extends List
@@ -4113,16 +4823,16 @@ fun f(x) =
 fun main() =
   f(Some(2)) + f(None)
 main()
-//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |is_some|(|o|)| |#=|→|#if| |o| |is|→|Some|(|x|)| |#then| |True|↵|None| |#then| |False|←|←|↵|#fun| |e0|(|w|)| |#=|→|w| |+| |8| |+| |9| |+| |10|←|↵|#fun| |e1|(|a|,| |z|)| |#=|→|#if| |a| |>| |0| |#then| |f|(|Some|(|a| |-| |1|)|)| |#else| |z|←|↵|#fun| |e3|(|c|)| |#=|→|#let| |m| |#=| |4|↵|#let| |n| |#=| |5|↵|#let| |p| |#=| |6|↵|#let| |q| |#=| |7|↵|#if| |c| |#then| |m| |+| |n| |+| |p| |+| |q| |#else| |m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |e2|(|x|)| |#=|→|x| |+| |12| |+| |13| |+| |14|←|↵|#fun| |f|(|x|)| |#=|→|#let| |c1| |#=| |is_some|(|x|)|↵|#let| |z| |#=| |e3|(|c1|)|↵|#let| |w| |#=| |#if| |x| |is|→|Some|(|a|)| |#then| |e1|(|a|,| |z|)|↵|None| |#then| |e2|(|z|)|←|↵|e0|(|w|)|←|↵|#fun| |main|(||)| |#=|→|f|(|Some|(|2|)|)| |+| |f|(|None|)|←|↵|main|(||)|
-//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun is_some = (o,) => {if o is ‹(Some(x,)) then True; (None) then False›}; fun e0 = (w,) => {+(+(+(w, 8,), 9,), 10,)}; fun e1 = (a, z,) => {if (>(a, 0,)) then f(Some(-(a, 1,),),) else z}; fun e3 = (c,) => {let m = 4; let n = 5; let p = 6; let q = 7; if (c) then +(+(+(m, n,), p,), q,) else +(-(+(m, n,), p,), q,)}; fun e2 = (x,) => {+(+(+(x, 12,), 13,), 14,)}; fun f = (x,) => {let c1 = is_some(x,); let z = e3(c1,); let w = if x is ‹(Some(a,)) then e1(a, z,); (None) then e2(z,)›; e0(w,)}; fun main = () => {+(f(Some(2,),), f(None,),)}; main()}
+//│ |#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |is_some|(|o|)| |#=|→|#if| |o| |is|→|Some|(|x|)| |#then| |True|↵|None| |#then| |False|←|←|↵|#fun| |e0|(|w|)| |#=|→|w| |+| |8| |+| |9| |+| |10|←|↵|#fun| |e1|(|a|,| |z|)| |#=|→|#if| |a| |>| |0| |#then| |f|(|Some|(|a| |-| |1|)|)| |#else| |z|←|↵|#fun| |e3|(|c|)| |#=|→|#let| |m| |#=| |4|↵|#let| |n| |#=| |5|↵|#let| |p| |#=| |6|↵|#let| |q| |#=| |7|↵|#if| |c| |#then| |m| |+| |n| |+| |p| |+| |q| |#else| |m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |e2|(|x|)| |#=|→|x| |+| |12| |+| |13| |+| |14|←|↵|#fun| |f|(|x|)| |#=|→|#let| |c1| |#=| |is_some|(|x|)|↵|#let| |z| |#=| |e3|(|c1|)|↵|#let| |w| |#=| |#if| |x| |is|→|Some|(|a|)| |#then| |e1|(|a|,| |z|)|↵|None| |#then| |e2|(|z|)|←|↵|e0|(|w|)|←|↵|#fun| |main|(||)| |#=|→|f|(|Some|(|2|)|)| |+| |f|(|None|)|←|↵|main|(||)|
+//│ Parsed: {class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun is_some = (o,) => {if o is ‹(Some(x,)) then True; (None) then False›}; fun e0 = (w,) => {+(+(+(w, 8,), 9,), 10,)}; fun e1 = (a, z,) => {if (>(a, 0,)) then f(Some(-(a, 1,),),) else z}; fun e3 = (c,) => {let m = 4; let n = 5; let p = 6; let q = 7; if (c) then +(+(+(m, n,), p,), q,) else +(-(+(m, n,), p,), q,)}; fun e2 = (x,) => {+(+(+(x, 12,), 13,), 14,)}; fun f = (x,) => {let c1 = is_some(x,); let z = e3(c1,); let w = if x is ‹(Some(a,)) then e1(a, z,); (None) then e2(z,)›; e0(w,)}; fun main = () => {+(f(Some(2,),), f(None,),)}; main()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
@@ -4135,6 +4845,18 @@ main()
 //│ ClassInfo(7, Some, [x], parents: Option, methods:
 //│ ),
 //│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(11, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(12, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(13, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(14, None, [], parents: Option, methods:
 //│ )}, {
 //│ Def(0, is_some, [o$0], [{}],
 //│ I: [],
@@ -4268,11 +4990,11 @@ main()
 //│ x$40 -- #188)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
@@ -4285,6 +5007,18 @@ main()
 //│ ClassInfo(7, Some, [x], parents: Option, methods:
 //│ ),
 //│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(11, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(12, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(13, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(14, None, [], parents: Option, methods:
 //│ )}, {
 //│ Def(0, is_some, [o$0], [{}],
 //│ I: [],
@@ -4422,13 +5156,13 @@ main()
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"
-//│ struct _mls_Boolean;
 //│ struct _mls_Option;
 //│ struct _mls_Some;
 //│ struct _mls_None;
 //│ struct _mls_List;
 //│ struct _mls_Nil;
 //│ struct _mls_Cons;
+//│ struct _mls_Callable;
 //│ struct _mls_True;
 //│ struct _mls_False;
 //│ _mlsValue _mls_e0(_mlsValue);
@@ -4607,9 +5341,6 @@ main()
 //│ 
 
 :genCpp
-class Boolean
-class True extends Boolean
-class False extends Boolean
 class Nat
 class S(x) extends Nat
 class Z extends Nat
@@ -4638,22 +5369,34 @@ fun to_nat(n) =
 fun main() =
   to_int(fib(to_nat(30)))
 main()
-//│ |#class| |Boolean|↵|#class| |True| |#extends| |Boolean|↵|#class| |False| |#extends| |Boolean|↵|#class| |Nat|↵|#class| |S|(|x|)| |#extends| |Nat|↵|#class| |Z| |#extends| |Nat|↵|#fun| |pred|(|n|)| |#=|→|#if| |n| |is|→|S|(|p|)| |#then| |p|↵|Z| |#then| |Z|←|←|↵|#fun| |plus|(|n1|,| |n2|)| |#=|→|#if| |n1| |is|→|Z| |#then| |n2|↵|S|(|p|)| |#then| |S|(|plus|(|p|,| |n2|)|)|←|←|↵|#fun| |fib|(|n|)| |#=|→|#if| |n| |is|→|Z| |#then| |S|(|Z|)|↵|S|(|p|)| |#then|→|#if| |p| |is|→|Z| |#then| |S|(|Z|)|↵|S|(|q|)| |#then| |plus|(|fib|(|p|)|,| |fib|(|q|)|)|←|←|←|←|↵|#fun| |to_int|(|n|)| |#=|→|#if| |n| |is|→|Z| |#then| |0|↵|S|(|p|)| |#then| |1| |+| |to_int|(|p|)|←|←|↵|#fun| |to_nat|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Z|↵|#else| |S|(|to_nat|(|n| |-| |1|)|)|←|↵|#fun| |main|(||)| |#=|→|to_int|(|fib|(|to_nat|(|30|)|)|)|←|↵|main|(||)|
-//│ Parsed: {class Boolean {}; class True: Boolean {}; class False: Boolean {}; class Nat {}; class S(x,): Nat {}; class Z: Nat {}; fun pred = (n,) => {if n is ‹(S(p,)) then p; (Z) then Z›}; fun plus = (n1, n2,) => {if n1 is ‹(Z) then n2; (S(p,)) then S(plus(p, n2,),)›}; fun fib = (n,) => {if n is ‹(Z) then S(Z,); (S(p,)) then {if p is ‹(Z) then S(Z,); (S(q,)) then plus(fib(p,), fib(q,),)›}›}; fun to_int = (n,) => {if n is ‹(Z) then 0; (S(p,)) then +(1, to_int(p,),)›}; fun to_nat = (n,) => {if (==(n, 0,)) then Z else S(to_nat(-(n, 1,),),)}; fun main = () => {to_int(fib(to_nat(30,),),)}; main()}
+//│ |#class| |Nat|↵|#class| |S|(|x|)| |#extends| |Nat|↵|#class| |Z| |#extends| |Nat|↵|#fun| |pred|(|n|)| |#=|→|#if| |n| |is|→|S|(|p|)| |#then| |p|↵|Z| |#then| |Z|←|←|↵|#fun| |plus|(|n1|,| |n2|)| |#=|→|#if| |n1| |is|→|Z| |#then| |n2|↵|S|(|p|)| |#then| |S|(|plus|(|p|,| |n2|)|)|←|←|↵|#fun| |fib|(|n|)| |#=|→|#if| |n| |is|→|Z| |#then| |S|(|Z|)|↵|S|(|p|)| |#then|→|#if| |p| |is|→|Z| |#then| |S|(|Z|)|↵|S|(|q|)| |#then| |plus|(|fib|(|p|)|,| |fib|(|q|)|)|←|←|←|←|↵|#fun| |to_int|(|n|)| |#=|→|#if| |n| |is|→|Z| |#then| |0|↵|S|(|p|)| |#then| |1| |+| |to_int|(|p|)|←|←|↵|#fun| |to_nat|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Z|↵|#else| |S|(|to_nat|(|n| |-| |1|)|)|←|↵|#fun| |main|(||)| |#=|→|to_int|(|fib|(|to_nat|(|30|)|)|)|←|↵|main|(||)|
+//│ Parsed: {class Nat {}; class S(x,): Nat {}; class Z: Nat {}; fun pred = (n,) => {if n is ‹(S(p,)) then p; (Z) then Z›}; fun plus = (n1, n2,) => {if n1 is ‹(Z) then n2; (S(p,)) then S(plus(p, n2,),)›}; fun fib = (n,) => {if n is ‹(Z) then S(Z,); (S(p,)) then {if p is ‹(Z) then S(Z,); (S(q,)) then plus(fib(p,), fib(q,),)›}›}; fun to_int = (n,) => {if n is ‹(Z) then 0; (S(p,)) then +(1, to_int(p,),)›}; fun to_nat = (n,) => {if (==(n, 0,)) then Z else S(to_nat(-(n, 1,),),)}; fun main = () => {to_int(fib(to_nat(30,),),)}; main()}
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
-//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
-//│ ClassInfo(4, S, [x], parents: Nat, methods:
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
 //│ ),
-//│ ClassInfo(5, Z, [], parents: Nat, methods:
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, S, [x], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(11, Z, [], parents: Nat, methods:
 //│ )}, {
 //│ Def(0, pred, [n$0], [{}],
 //│ I: [],
@@ -4793,17 +5536,29 @@ main()
 //│ x$31 -- #146)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Boolean, [], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, True, [], parents: Boolean, methods:
+//│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, False, [], parents: Boolean, methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
 //│ ),
-//│ ClassInfo(3, Nat, [], parents: , methods:
+//│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
-//│ ClassInfo(4, S, [x], parents: Nat, methods:
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
 //│ ),
-//│ ClassInfo(5, Z, [], parents: Nat, methods:
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Nat, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, S, [x], parents: Nat, methods:
+//│ ),
+//│ ClassInfo(11, Z, [], parents: Nat, methods:
 //│ )}, {
 //│ Def(0, pred, [n$0], [{}],
 //│ I: [],
@@ -4945,11 +5700,17 @@ main()
 //│ Cpp:
 //│ #include "mlsprelude.h"
 //│ struct _mls_Nat;
-//│ struct _mls_Boolean;
-//│ struct _mls_Z;
-//│ struct _mls_S;
+//│ struct _mls_Option;
+//│ struct _mls_Some;
+//│ struct _mls_None;
+//│ struct _mls_List;
+//│ struct _mls_Nil;
+//│ struct _mls_Cons;
 //│ struct _mls_True;
 //│ struct _mls_False;
+//│ struct _mls_Z;
+//│ struct _mls_S;
+//│ struct _mls_Callable;
 //│ _mlsValue _mls_pred(_mlsValue);
 //│ _mlsValue _mls_fib(_mlsValue);
 //│ _mlsValue _mls_j_5(_mlsValue);
@@ -4970,6 +5731,55 @@ main()
 //│   virtual void print() const override { std::printf("%s", typeName); }
 //│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nat; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Option: public _mlsObject {
+//│ 
+//│   constexpr static inline const char *typeName = "Option";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Some: public _mls_Option {
+//│   _mlsValue _mls_x;
+//│   constexpr static inline const char *typeName = "Some";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_x.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_x);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_x = _mls_x;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_None: public _mls_Option {
+//│ 
+//│   constexpr static inline const char *typeName = "None";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_List: public _mlsObject {
+//│ 
+//│   constexpr static inline const char *typeName = "List";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Nil: public _mls_List {
+//│ 
+//│   constexpr static inline const char *typeName = "Nil";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ };
+//│ struct _mls_Cons: public _mls_List {
+//│   _mlsValue _mls_h;
+//│   _mlsValue _mls_t;
+//│   constexpr static inline const char *typeName = "Cons";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
 //│ struct _mls_Z: public _mls_Nat {
 //│ 

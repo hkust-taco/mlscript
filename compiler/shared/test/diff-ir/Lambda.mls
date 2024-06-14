@@ -4,25 +4,30 @@
 
 :interpIR
 :genCpp
-:irVerbose
-module Callable
-module True
-module False
 fun local_rec_lambda() =
   let rec f = x => if x == 0 then 0 else f(x - 1)
   f(10)
 local_rec_lambda()
-//│ |#module| |Callable|↵|#module| |True|↵|#module| |False|↵|#fun| |local_rec_lambda|(||)| |#=|→|#let| |#rec| |f| |#=| |x| |#=>| |#if| |x| |==| |0| |#then| |0| |#else| |f|(|x| |-| |1|)|↵|f|(|10|)|←|↵|local_rec_lambda|(||)|
-//│ Parsed: {module Callable {}; module True {}; module False {}; fun local_rec_lambda = () => {let rec f = (x,) => if (==(x,)(0,)) then 0 else f(-(x,)(1,),); f(10,)}; local_rec_lambda()}
+//│ |#fun| |local_rec_lambda|(||)| |#=|→|#let| |#rec| |f| |#=| |x| |#=>| |#if| |x| |==| |0| |#then| |0| |#else| |f|(|x| |-| |1|)|↵|f|(|10|)|←|↵|local_rec_lambda|(||)|
+//│ Parsed: {fun local_rec_lambda = () => {let rec f = (x,) => if (==(x,)(0,)) then 0 else f(-(x,)(1,),); f(10,)}; local_rec_lambda()}
 //│ 
 //│ 
 //│ IR:
 //│ 
-//│ IR Processing Failed: unknown name f in Ctx(HashMap(x -> x$1, < -> <, >= -> >=, == -> ==, builtin -> builtin, + -> +, != -> !=, * -> *, <= -> <=, local_rec_lambda -> local_rec_lambda, - -> -, / -> /, > -> >),Map(Callable -> ClassInfo(0, Callable, [], parents: , methods:
-//│ ), True -> ClassInfo(1, True, [], parents: , methods:
-//│ ), False -> ClassInfo(2, False, [], parents: , methods:
-//│ ), Lambda$0 -> ClassInfo(3, Lambda$0, [], parents: Callable, methods:
-//│ )),Map(),Map(local_rec_lambda -> 0),HashSet(<, >=, -, ==, +, !=, *, <=, /, >),ListBuffer(Def(2, j$0, [x$3], [{}],
+//│ IR Processing Failed: unknown name f in Ctx(HashMap(x -> x$1, < -> <, >= -> >=, == -> ==, builtin -> builtin, + -> +, != -> !=, * -> *, <= -> <=, local_rec_lambda -> local_rec_lambda, - -> -, / -> /, > -> >),HashMap(Nil -> ClassInfo(5, Nil, [], parents: List, methods:
+//│ ), Lambda$0 -> ClassInfo(9, Lambda$0, [], parents: Callable, methods:
+//│ ), Cons -> ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ), Some -> ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ), Option -> ClassInfo(6, Option, [], parents: , methods:
+//│ ), None -> ClassInfo(8, None, [], parents: Option, methods:
+//│ ), List -> ClassInfo(3, List, [], parents: , methods:
+//│ ), Callable -> ClassInfo(2, Callable, [], parents: , methods:
+//│ ), True -> ClassInfo(0, True, [], parents: , methods:
+//│ ), False -> ClassInfo(1, False, [], parents: , methods:
+//│ )),Map(h -> (Cons,ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ )), t -> (Cons,ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ )), x -> (Some,ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ))),Map(local_rec_lambda -> 0),HashSet(<, >=, -, ==, +, !=, *, <=, /, >),ListBuffer(Def(2, j$0, [x$3], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -50,9 +55,9 @@ local_rec_lambda()
 //│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:421)
 //│ mlscript.compiler.ir.Builder.buildResultFromTerm(Builder.scala:418)
 //│ mlscript.compiler.ir.Builder.buildDefFromNuFunDef(Builder.scala:446)
-//│ mlscript.compiler.ir.Builder.$anonfun$55(Builder.scala:531)
+//│ mlscript.compiler.ir.Builder.$anonfun$55(Builder.scala:546)
 //│ scala.collection.immutable.List.map(List.scala:246)
-//│ mlscript.compiler.ir.Builder.buildGraph(Builder.scala:531)
+//│ mlscript.compiler.ir.Builder.buildGraph(Builder.scala:546)
 //│ mlscript.compiler.IRDiffTestCompiler.postProcess(TestIR.scala:26)
 //│ mlscript.DiffTests.rec$1(DiffTests.scala:460)
 //│ mlscript.DiffTests.$anonfun$new$3(DiffTests.scala:1059)

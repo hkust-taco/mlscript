@@ -14,7 +14,25 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
 //│ Def(0, mktup2, [x$0,y$0], [{},{}],
 //│ I: [],
@@ -45,7 +63,25 @@ foo()
 //│ x$5 -- #22)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
 //│ Def(0, mktup2, [x$0,y$0], [{},{}],
 //│ I: [],
@@ -91,7 +127,25 @@ bar()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
 //│ Def(0, foo, [pair$0], [{}],
 //│ I: [],
@@ -126,7 +180,25 @@ bar()
 //│ x$6 -- #33)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
 //│ Def(0, foo, [pair$0], [{}],
 //│ I: [],
@@ -184,7 +256,25 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
 //│ Def(0, silly, [pair$0], [{}],
 //│ I: [],
@@ -232,7 +322,25 @@ foo()
 //│ x$11 -- #52)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
 //│ Def(0, silly, [pair$0], [{}],
 //│ I: [],
@@ -301,7 +409,25 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
 //│ Def(0, inc_fst, [pair$0], [{}],
 //│ I: [],
@@ -337,7 +463,25 @@ foo()
 //│ x$7 -- #34)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
 //│ Def(0, inc_fst, [pair$0], [{}],
 //│ I: [],
@@ -390,7 +534,25 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
 //│ Def(0, inc_fst, [pair$0], [{}],
 //│ I: [],
@@ -426,7 +588,25 @@ foo()
 //│ x$7 -- #33)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
 //│ Def(0, inc_fst, [pair$0], [{}],
 //│ I: [],
@@ -482,9 +662,27 @@ bar()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Left, [x], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, Right, [y], parents: , methods:
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Left, [x], parents: , methods:
+//│ ),
+//│ ClassInfo(10, Right, [y], parents: , methods:
 //│ )}, {
 //│ Def(0, foo, [a$0,b$0], [{},{}],
 //│ I: [],
@@ -536,9 +734,27 @@ bar()
 //│ x$11 -- #57)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Left, [x], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, Right, [y], parents: , methods:
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Left, [x], parents: , methods:
+//│ ),
+//│ ClassInfo(10, Right, [y], parents: , methods:
 //│ )}, {
 //│ Def(0, foo, [a$0,b$0], [{},{}],
 //│ I: [],
@@ -609,7 +825,25 @@ bar()
 //│ ),
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, Pair, [x,y], parents: , methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(11, Pair, [x,y], parents: , methods:
 //│ )}, {
 //│ Def(0, foo, [a$0], [{}],
 //│ I: [],
@@ -639,7 +873,25 @@ bar()
 //│ ),
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
-//│ ClassInfo(2, Pair, [x,y], parents: , methods:
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(10, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(11, Pair, [x,y], parents: , methods:
 //│ )}, {
 //│ Def(0, foo, [a$0], [{}],
 //│ I: [],
@@ -682,9 +934,27 @@ bar()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, C1, [x,y], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, C2, [z], parents: , methods:
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, C1, [x,y], parents: , methods:
+//│ ),
+//│ ClassInfo(10, C2, [z], parents: , methods:
 //│ )}, {
 //│ Def(0, foo, [a$0], [{}],
 //│ I: [],
@@ -721,9 +991,27 @@ bar()
 //│ x$6 -- #34)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, C1, [x,y], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, C2, [z], parents: , methods:
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, C1, [x,y], parents: , methods:
+//│ ),
+//│ ClassInfo(10, C2, [z], parents: , methods:
 //│ )}, {
 //│ Def(0, foo, [a$0], [{}],
 //│ I: [],
@@ -782,7 +1070,25 @@ baz()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
 //│ Def(0, foo, [a$0,b$0], [{},{}],
 //│ I: [],
@@ -826,7 +1132,25 @@ baz()
 //│ x$16 -- #87)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
 //│ Def(0, foo, [a$0,b$0], [{},{}],
 //│ I: [],
@@ -884,7 +1208,25 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
 //│ Def(0, foo, [], [],
 //│ I: [],
@@ -900,7 +1242,25 @@ foo()
 //│ x$2 -- #14)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, Pair, [x,y], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
 //│ Def(0, foo, [], [],
 //│ I: [],
@@ -935,9 +1295,27 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, S, [s], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, O, [], parents: , methods:
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, S, [s], parents: , methods:
+//│ ),
+//│ ClassInfo(10, O, [], parents: , methods:
 //│ )}, {
 //│ Def(0, foo, [], [],
 //│ I: [],
@@ -981,9 +1359,27 @@ foo()
 //│ x$8 -- #28)
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, S, [s], parents: , methods:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
 //│ ),
-//│ ClassInfo(1, O, [], parents: , methods:
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, S, [s], parents: , methods:
+//│ ),
+//│ ClassInfo(10, O, [], parents: , methods:
 //│ )}, {
 //│ Def(0, foo, [], [],
 //│ I: [],

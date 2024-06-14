@@ -1,10 +1,16 @@
 #include "mlsprelude.h"
 struct _mls_Nat;
-struct _mls_Boolean;
-struct _mls_Z;
-struct _mls_S;
+struct _mls_Option;
+struct _mls_Some;
+struct _mls_None;
+struct _mls_List;
+struct _mls_Nil;
+struct _mls_Cons;
 struct _mls_True;
 struct _mls_False;
+struct _mls_Z;
+struct _mls_S;
+struct _mls_Callable;
 _mlsValue _mls_pred(_mlsValue);
 _mlsValue _mls_fib(_mlsValue);
 _mlsValue _mls_j_5(_mlsValue);
@@ -25,6 +31,55 @@ struct _mls_Nat: public _mlsObject {
   virtual void print() const override { std::printf("%s", typeName); }
   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nat; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+};
+struct _mls_Option: public _mlsObject {
+
+  constexpr static inline const char *typeName = "Option";
+  constexpr static inline uint32_t typeTag = nextTypeTag();
+  virtual void print() const override { std::printf("%s", typeName); }
+  virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+  template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Option; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+};
+struct _mls_Some: public _mls_Option {
+  _mlsValue _mls_x;
+  constexpr static inline const char *typeName = "Some";
+  constexpr static inline uint32_t typeTag = nextTypeTag();
+  virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_x.print();  std::printf(")"); }
+  virtual void destroy() override { _mlsValue::destroy(this->_mls_x);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+  template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_Some; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_x = _mls_x;  return _mlsValue(_mlsVal); }
+};
+struct _mls_None: public _mls_Option {
+
+  constexpr static inline const char *typeName = "None";
+  constexpr static inline uint32_t typeTag = nextTypeTag();
+  virtual void print() const override { std::printf("%s", typeName); }
+  virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+  template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+};
+struct _mls_List: public _mlsObject {
+
+  constexpr static inline const char *typeName = "List";
+  constexpr static inline uint32_t typeTag = nextTypeTag();
+  virtual void print() const override { std::printf("%s", typeName); }
+  virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+  template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_List; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+};
+struct _mls_Nil: public _mls_List {
+
+  constexpr static inline const char *typeName = "Nil";
+  constexpr static inline uint32_t typeTag = nextTypeTag();
+  virtual void print() const override { std::printf("%s", typeName); }
+  virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+  template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Nil; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+};
+struct _mls_Cons: public _mls_List {
+  _mlsValue _mls_h;
+  _mlsValue _mls_t;
+  constexpr static inline const char *typeName = "Cons";
+  constexpr static inline uint32_t typeTag = nextTypeTag();
+  virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_h.print(); std::printf(", "); this->_mls_t.print();  std::printf(")"); }
+  virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+  template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 };
 struct _mls_Z: public _mls_Nat {
 

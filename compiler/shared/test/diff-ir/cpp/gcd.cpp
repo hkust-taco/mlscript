@@ -1,9 +1,9 @@
 #include "mlsprelude.h"
-struct _mls_Pair2;
+struct _mls_Tuple3;
+struct _mls_Tuple2;
 struct _mls_Option;
 struct _mls_Some;
 struct _mls_None;
-struct _mls_Pair3;
 struct _mls_List;
 struct _mls_Nil;
 struct _mls_Cons;
@@ -106,14 +106,24 @@ _mlsValue _mls_z_of_int(_mlsValue);
 _mlsValue _mls_filter(_mlsValue, _mlsValue);
 _mlsValue _mls_take(_mlsValue, _mlsValue);
 _mlsValue _mlsMain();
-struct _mls_Pair2: public _mlsObject {
+struct _mls_Tuple3: public _mlsObject {
   _mlsValue _mls_x;
   _mlsValue _mls_y;
-  constexpr static inline const char *typeName = "Pair2";
+  _mlsValue _mls_z;
+  constexpr static inline const char *typeName = "Tuple3";
+  constexpr static inline uint32_t typeTag = nextTypeTag();
+  virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_x.print(); std::printf(", "); this->_mls_y.print(); std::printf(", "); this->_mls_z.print();  std::printf(")"); }
+  virtual void destroy() override { _mlsValue::destroy(this->_mls_x); _mlsValue::destroy(this->_mls_y); _mlsValue::destroy(this->_mls_z);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+  template <std::size_t align> static _mlsValue create(_mlsValue _mls_x, _mlsValue _mls_y, _mlsValue _mls_z) { auto _mlsVal = new (std::align_val_t(align)) _mls_Tuple3; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_x = _mls_x; _mlsVal->_mls_y = _mls_y; _mlsVal->_mls_z = _mls_z;  return _mlsValue(_mlsVal); }
+};
+struct _mls_Tuple2: public _mlsObject {
+  _mlsValue _mls_x;
+  _mlsValue _mls_y;
+  constexpr static inline const char *typeName = "Tuple2";
   constexpr static inline uint32_t typeTag = nextTypeTag();
   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_x.print(); std::printf(", "); this->_mls_y.print();  std::printf(")"); }
   virtual void destroy() override { _mlsValue::destroy(this->_mls_x); _mlsValue::destroy(this->_mls_y);  operator delete (this, std::align_val_t(_mlsAlignment)); }
-  template <std::size_t align> static _mlsValue create(_mlsValue _mls_x, _mlsValue _mls_y) { auto _mlsVal = new (std::align_val_t(align)) _mls_Pair2; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_x = _mls_x; _mlsVal->_mls_y = _mls_y;  return _mlsValue(_mlsVal); }
+  template <std::size_t align> static _mlsValue create(_mlsValue _mls_x, _mlsValue _mls_y) { auto _mlsVal = new (std::align_val_t(align)) _mls_Tuple2; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_x = _mls_x; _mlsVal->_mls_y = _mls_y;  return _mlsValue(_mlsVal); }
 };
 struct _mls_Option: public _mlsObject {
 
@@ -138,16 +148,6 @@ struct _mls_None: public _mls_Option {
   virtual void print() const override { std::printf("%s", typeName); }
   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_None; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
-};
-struct _mls_Pair3: public _mlsObject {
-  _mlsValue _mls_x;
-  _mlsValue _mls_y;
-  _mlsValue _mls_z;
-  constexpr static inline const char *typeName = "Pair3";
-  constexpr static inline uint32_t typeTag = nextTypeTag();
-  virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_x.print(); std::printf(", "); this->_mls_y.print(); std::printf(", "); this->_mls_z.print();  std::printf(")"); }
-  virtual void destroy() override { _mlsValue::destroy(this->_mls_x); _mlsValue::destroy(this->_mls_y); _mlsValue::destroy(this->_mls_z);  operator delete (this, std::align_val_t(_mlsAlignment)); }
-  template <std::size_t align> static _mlsValue create(_mlsValue _mls_x, _mlsValue _mls_y, _mlsValue _mls_z) { auto _mlsVal = new (std::align_val_t(align)) _mls_Pair3; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_x = _mls_x; _mlsVal->_mls_y = _mls_y; _mlsVal->_mls_z = _mls_z;  return _mlsValue(_mlsVal); }
 };
 struct _mls_List: public _mlsObject {
 
@@ -282,12 +282,6 @@ _mlsValue _mls_test(_mlsValue _mls_test_arg1_0){
   _mls_retval = _mls_x_197;
   return _mls_retval;
 }
-_mlsValue _mls_z_mod(_mlsValue _mls_x_13, _mlsValue _mls_y_4){
-  _mlsValue _mls_retval;
-  auto _mls_x_14 = _mls_builtin_z_mod(_mls_x_13, _mls_y_4);
-  _mls_retval = _mls_x_14;
-  return _mls_retval;
-}
 _mlsValue _mls_testGcd_nofib(_mlsValue _mls_testGcd_nofib_arg1_0){
   _mlsValue _mls_retval;
   auto _mls_x_274 = _mls_test(_mls_testGcd_nofib_arg1_0);
@@ -298,6 +292,21 @@ _mlsValue _mls_println(_mlsValue _mls_x_25){
   _mlsValue _mls_retval;
   auto _mls_x_26 = _mls_builtin_println(_mls_x_25);
   _mls_retval = _mls_x_26;
+  return _mls_retval;
+}
+_mlsValue _mls_listcomp_fun2(_mlsValue _mls_ms_1, _mlsValue _mls_listcomp_fun_ls_h_out_0, _mlsValue _mls_listcomp_fun_ls_t_out_0, _mlsValue _mls_listcomp_fun_para_1){
+  _mlsValue _mls_retval;
+  if (_mlsValue::isValueOf<_mls_Cons>(_mls_listcomp_fun_para_1)){
+    auto _mls_x_168 = _mlsValue::cast<_mls_Cons>(_mls_listcomp_fun_para_1)->_mls_t;
+    auto _mls_x_169 = _mlsValue::cast<_mls_Cons>(_mls_listcomp_fun_para_1)->_mls_h;
+    auto _mls_x_170 = _mlsValue::create<_mls_Tuple2>(_mls_listcomp_fun_ls_h_out_0, _mls_x_169);
+    auto _mls_x_171 = _mls_listcomp_fun2(_mls_ms_1, _mls_listcomp_fun_ls_h_out_0, _mls_listcomp_fun_ls_t_out_0, _mls_x_168);
+    auto _mls_x_172 = _mlsValue::create<_mls_Cons>(_mls_x_170, _mls_x_171);
+    _mls_retval = _mls_j_24(_mls_x_172);
+  } else if (_mlsValue::isValueOf<_mls_Nil>(_mls_listcomp_fun_para_1)){
+    auto _mls_x_173 = _mls_listcomp_fun1(_mls_ms_1, _mls_listcomp_fun_ls_t_out_0);
+    _mls_retval = _mls_j_24(_mls_x_173);
+  } else _mlsNonExhaustiveMatch();
   return _mls_retval;
 }
 _mlsValue _mls_concat(_mlsValue _mls_lss_0){
@@ -374,6 +383,35 @@ _mlsValue _mls_print(_mlsValue _mls_x_27){
 _mlsValue _mls_j_32(_mlsValue _mls_x_232){
   _mlsValue _mls_retval;
   _mls_retval = _mls_j_31(_mls_x_232);
+  return _mls_retval;
+}
+_mlsValue _mls_gcdE(_mlsValue _mls_gcdE_arg1_0, _mlsValue _mls_gcdE_arg2_0){
+  _mlsValue _mls_retval;
+  auto _mls_x_259 = _mls_const0();
+  auto _mls_x_260 = _mls_z_equal(_mls_gcdE_arg1_0, _mls_x_259);
+  if (_mlsValue::isValueOf<_mls_True>(_mls_x_260)){
+    auto _mls_x_262 = _mls_const0();
+    auto _mls_x_263 = _mls_const1();
+    auto _mls_x_264 = _mlsValue::create<_mls_Tuple3>(_mls_gcdE_arg2_0, _mls_x_262, _mls_x_263);
+    _mls_retval = _mls_j_36(_mls_x_264);
+  } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_260)){
+    auto _mls_x_265 = _mls_const1();
+    auto _mls_x_266 = _mls_const0();
+    auto _mls_x_267 = _mlsValue::create<_mls_Tuple3>(_mls_x_265, _mls_x_266, _mls_gcdE_arg1_0);
+    auto _mls_x_268 = _mls_const0();
+    auto _mls_x_269 = _mls_const1();
+    auto _mls_x_270 = _mlsValue::create<_mls_Tuple3>(_mls_x_268, _mls_x_269, _mls_gcdE_arg2_0);
+    auto _mls_x_271 = _mls_g(_mls_x_267, _mls_x_270);
+    _mls_retval = _mls_j_36(_mls_x_271);
+  } else _mlsNonExhaustiveMatch();
+  return _mls_retval;
+}
+_mlsValue _mls_quotRem(_mlsValue _mls_quotRem_arg1_0, _mlsValue _mls_quotRem_arg2_0){
+  _mlsValue _mls_retval;
+  auto _mls_x_204 = _mls_z_div(_mls_quotRem_arg1_0, _mls_quotRem_arg2_0);
+  auto _mls_x_205 = _mls_z_mod(_mls_quotRem_arg1_0, _mls_quotRem_arg2_0);
+  auto _mls_x_206 = _mlsValue::create<_mls_Tuple2>(_mls_x_204, _mls_x_205);
+  _mls_retval = _mls_x_206;
   return _mls_retval;
 }
 _mlsValue _mls_j_26(_mlsValue _mls_x_207){
@@ -482,6 +520,64 @@ _mlsValue _mls_zipWith(_mlsValue _mls_f_7_0, _mlsValue _mls_xs_4_0, _mlsValue _m
   } else if (_mlsValue::isValueOf<_mls_Nil>(_mls_xs_4_0)){
     auto _mls_x_78 = _mlsValue::create<_mls_Nil>();
     _mls_retval = _mls_j_7(_mls_x_78);
+  } else _mlsNonExhaustiveMatch();
+  return _mls_retval;
+}
+_mlsValue _mls_z_mod(_mlsValue _mls_x_13, _mlsValue _mls_y_4){
+  _mlsValue _mls_retval;
+  auto _mls_x_14 = _mls_builtin_z_mod(_mls_x_13, _mls_y_4);
+  _mls_retval = _mls_x_14;
+  return _mls_retval;
+}
+_mlsValue _mls_g(_mlsValue _mls_g_arg1_0, _mlsValue _mls_g_arg2_0){
+  _mlsValue _mls_retval;
+  if (_mlsValue::isValueOf<_mls_Tuple3>(_mls_g_arg1_0)){
+    auto _mls_x_220 = _mlsValue::cast<_mls_Tuple3>(_mls_g_arg1_0)->_mls_z;
+    auto _mls_x_221 = _mlsValue::cast<_mls_Tuple3>(_mls_g_arg1_0)->_mls_y;
+    auto _mls_x_222 = _mlsValue::cast<_mls_Tuple3>(_mls_g_arg1_0)->_mls_x;
+    if (_mlsValue::isValueOf<_mls_Tuple3>(_mls_g_arg2_0)){
+      auto _mls_x_224 = _mlsValue::cast<_mls_Tuple3>(_mls_g_arg2_0)->_mls_z;
+      auto _mls_x_225 = _mlsValue::cast<_mls_Tuple3>(_mls_g_arg2_0)->_mls_y;
+      auto _mls_x_226 = _mlsValue::cast<_mls_Tuple3>(_mls_g_arg2_0)->_mls_x;
+      auto _mls_x_227 = _mls_const0();
+      auto _mls_x_228 = _mls_z_equal(_mls_x_224, _mls_x_227);
+      if (_mlsValue::isValueOf<_mls_True>(_mls_x_228)){
+        auto _mls_x_230 = _mlsValue::create<_mls_Tuple3>(_mls_x_220, _mls_x_222, _mls_x_221);
+        _mls_retval = _mls_j_31(_mls_x_230);
+      } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_228)){
+        auto _mls_x_231 = _mls_quotRem(_mls_x_220, _mls_x_224);
+        if (_mlsValue::isValueOf<_mls_Tuple2>(_mls_x_231)){
+          auto _mls_x_233 = _mlsValue::cast<_mls_Tuple2>(_mls_x_231)->_mls_y;
+          auto _mls_x_234 = _mlsValue::cast<_mls_Tuple2>(_mls_x_231)->_mls_x;
+          auto _mls_x_235 = _mlsValue::create<_mls_Tuple3>(_mls_x_226, _mls_x_225, _mls_x_224);
+          auto _mls_x_236 = _mls_z_mul(_mls_x_234, _mls_x_226);
+          auto _mls_x_237 = _mls_z_sub(_mls_x_222, _mls_x_236);
+          auto _mls_x_238 = _mls_z_mul(_mls_x_234, _mls_x_225);
+          auto _mls_x_239 = _mls_z_sub(_mls_x_221, _mls_x_238);
+          auto _mls_x_240 = _mlsValue::create<_mls_Tuple3>(_mls_x_237, _mls_x_239, _mls_x_233);
+          auto _mls_x_241 = _mls_g(_mls_x_235, _mls_x_240);
+          _mls_retval = _mls_j_32(_mls_x_241);
+        } else _mlsNonExhaustiveMatch();
+      } else _mlsNonExhaustiveMatch();
+    } else _mlsNonExhaustiveMatch();
+  } else _mlsNonExhaustiveMatch();
+  return _mls_retval;
+}
+_mlsValue _mls_f2(_mlsValue _mls_f2_arg1_0){
+  _mlsValue _mls_retval;
+  if (_mlsValue::isValueOf<_mls_Tuple3>(_mls_f2_arg1_0)){
+    auto _mls_x_248 = _mlsValue::cast<_mls_Tuple3>(_mls_f2_arg1_0)->_mls_z;
+    auto _mls_x_249 = _mlsValue::cast<_mls_Tuple3>(_mls_f2_arg1_0)->_mls_y;
+    auto _mls_x_250 = _mlsValue::cast<_mls_Tuple3>(_mls_f2_arg1_0)->_mls_x;
+    if (_mlsValue::isValueOf<_mls_Tuple3>(_mls_x_248)){
+      auto _mls_x_252 = _mlsValue::cast<_mls_Tuple3>(_mls_x_248)->_mls_z;
+      auto _mls_x_253 = _mlsValue::cast<_mls_Tuple3>(_mls_x_248)->_mls_y;
+      auto _mls_x_254 = _mlsValue::cast<_mls_Tuple3>(_mls_x_248)->_mls_x;
+      auto _mls_x_255 = _mls_z_add(_mls_x_254, _mls_x_253);
+      auto _mls_x_256 = _mls_z_add(_mls_x_255, _mls_x_252);
+      auto _mls_x_257 = _mls_abs(_mls_x_256);
+      _mls_retval = _mls_j_35(_mls_x_257);
+    } else _mlsNonExhaustiveMatch();
   } else _mlsNonExhaustiveMatch();
   return _mls_retval;
 }
@@ -620,6 +716,28 @@ _mlsValue _mls_z_equal(_mlsValue _mls_x_19, _mlsValue _mls_y_7){
   _mls_retval = _mls_x_20;
   return _mls_retval;
 }
+_mlsValue _mls_zip(_mlsValue _mls_xs_0, _mlsValue _mls_ys_0){
+  _mlsValue _mls_retval;
+  if (_mlsValue::isValueOf<_mls_Cons>(_mls_xs_0)){
+    auto _mls_x_58 = _mlsValue::cast<_mls_Cons>(_mls_xs_0)->_mls_t;
+    auto _mls_x_59 = _mlsValue::cast<_mls_Cons>(_mls_xs_0)->_mls_h;
+    if (_mlsValue::isValueOf<_mls_Cons>(_mls_ys_0)){
+      auto _mls_x_61 = _mlsValue::cast<_mls_Cons>(_mls_ys_0)->_mls_t;
+      auto _mls_x_62 = _mlsValue::cast<_mls_Cons>(_mls_ys_0)->_mls_h;
+      auto _mls_x_63 = _mlsValue::create<_mls_Tuple2>(_mls_x_59, _mls_x_62);
+      auto _mls_x_64 = _mls_zip(_mls_x_58, _mls_x_61);
+      auto _mls_x_65 = _mlsValue::create<_mls_Cons>(_mls_x_63, _mls_x_64);
+      _mls_retval = _mls_j_6(_mls_x_65);
+    } else if (_mlsValue::isValueOf<_mls_Nil>(_mls_ys_0)){
+      auto _mls_x_66 = _mlsValue::create<_mls_Nil>();
+      _mls_retval = _mls_j_6(_mls_x_66);
+    } else _mlsNonExhaustiveMatch();
+  } else if (_mlsValue::isValueOf<_mls_Nil>(_mls_xs_0)){
+    auto _mls_x_67 = _mlsValue::create<_mls_Nil>();
+    _mls_retval = _mls_j_5(_mls_x_67);
+  } else _mlsNonExhaustiveMatch();
+  return _mls_retval;
+}
 _mlsValue _mls_z_lt(_mlsValue _mls_x_15, _mlsValue _mls_y_5){
   _mlsValue _mls_retval;
   auto _mls_x_16 = _mls_builtin_z_lt(_mls_x_15, _mls_y_5);
@@ -642,19 +760,9 @@ _mlsValue _mls_const1(){
   _mls_retval = _mls_x_272;
   return _mls_retval;
 }
-_mlsValue _mls_listcomp_fun2(_mlsValue _mls_ms_1, _mlsValue _mls_listcomp_fun_ls_h_out_0, _mlsValue _mls_listcomp_fun_ls_t_out_0, _mlsValue _mls_listcomp_fun_para_1){
+_mlsValue _mls_j_24(_mlsValue _mls_x_167){
   _mlsValue _mls_retval;
-  if (_mlsValue::isValueOf<_mls_Cons>(_mls_listcomp_fun_para_1)){
-    auto _mls_x_168 = _mlsValue::cast<_mls_Cons>(_mls_listcomp_fun_para_1)->_mls_t;
-    auto _mls_x_169 = _mlsValue::cast<_mls_Cons>(_mls_listcomp_fun_para_1)->_mls_h;
-    auto _mls_x_170 = _mlsValue::create<_mls_Pair2>(_mls_listcomp_fun_ls_h_out_0, _mls_x_169);
-    auto _mls_x_171 = _mls_listcomp_fun2(_mls_ms_1, _mls_listcomp_fun_ls_h_out_0, _mls_listcomp_fun_ls_t_out_0, _mls_x_168);
-    auto _mls_x_172 = _mlsValue::create<_mls_Cons>(_mls_x_170, _mls_x_171);
-    _mls_retval = _mls_j_24(_mls_x_172);
-  } else if (_mlsValue::isValueOf<_mls_Nil>(_mls_listcomp_fun_para_1)){
-    auto _mls_x_173 = _mls_listcomp_fun1(_mls_ms_1, _mls_listcomp_fun_ls_t_out_0);
-    _mls_retval = _mls_j_24(_mls_x_173);
-  } else _mlsNonExhaustiveMatch();
+  _mls_retval = _mls_x_167;
   return _mls_retval;
 }
 _mlsValue _mls_j_9(_mlsValue _mls_x_79){
@@ -662,46 +770,9 @@ _mlsValue _mls_j_9(_mlsValue _mls_x_79){
   _mls_retval = _mls_x_79;
   return _mls_retval;
 }
-_mlsValue _mls_f1(_mlsValue _mls_f1_arg1_0){
-  _mlsValue _mls_retval;
-  if (_mlsValue::isValueOf<_mls_Pair2>(_mls_f1_arg1_0)){
-    auto _mls_x_200 = _mlsValue::cast<_mls_Pair2>(_mls_f1_arg1_0)->_mls_y;
-    auto _mls_x_201 = _mlsValue::cast<_mls_Pair2>(_mls_f1_arg1_0)->_mls_x;
-    auto _mls_x_202 = _mls_gcdE(_mls_x_201, _mls_x_200);
-    auto _mls_x_203 = _mlsValue::create<_mls_Pair3>(_mls_x_201, _mls_x_200, _mls_x_202);
-    _mls_retval = _mls_j_25(_mls_x_203);
-  } else _mlsNonExhaustiveMatch();
-  return _mls_retval;
-}
-_mlsValue _mls_j_24(_mlsValue _mls_x_167){
-  _mlsValue _mls_retval;
-  _mls_retval = _mls_x_167;
-  return _mls_retval;
-}
 _mlsValue _mls_j_13(_mlsValue _mls_x_107){
   _mlsValue _mls_retval;
   _mls_retval = _mls_x_107;
-  return _mls_retval;
-}
-_mlsValue _mls_gcdE(_mlsValue _mls_gcdE_arg1_0, _mlsValue _mls_gcdE_arg2_0){
-  _mlsValue _mls_retval;
-  auto _mls_x_259 = _mls_const0();
-  auto _mls_x_260 = _mls_z_equal(_mls_gcdE_arg1_0, _mls_x_259);
-  if (_mlsValue::isValueOf<_mls_True>(_mls_x_260)){
-    auto _mls_x_262 = _mls_const0();
-    auto _mls_x_263 = _mls_const1();
-    auto _mls_x_264 = _mlsValue::create<_mls_Pair3>(_mls_gcdE_arg2_0, _mls_x_262, _mls_x_263);
-    _mls_retval = _mls_j_36(_mls_x_264);
-  } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_260)){
-    auto _mls_x_265 = _mls_const1();
-    auto _mls_x_266 = _mls_const0();
-    auto _mls_x_267 = _mlsValue::create<_mls_Pair3>(_mls_x_265, _mls_x_266, _mls_gcdE_arg1_0);
-    auto _mls_x_268 = _mls_const0();
-    auto _mls_x_269 = _mls_const1();
-    auto _mls_x_270 = _mlsValue::create<_mls_Pair3>(_mls_x_268, _mls_x_269, _mls_gcdE_arg2_0);
-    auto _mls_x_271 = _mls_g(_mls_x_267, _mls_x_270);
-    _mls_retval = _mls_j_36(_mls_x_271);
-  } else _mlsNonExhaustiveMatch();
   return _mls_retval;
 }
 _mlsValue _mls_j_17(_mlsValue _mls_x_127){
@@ -777,40 +848,6 @@ _mlsValue _mls_tail(_mlsValue _mls_ls_9_0){
   } else _mlsNonExhaustiveMatch();
   return _mls_retval;
 }
-_mlsValue _mls_g(_mlsValue _mls_g_arg1_0, _mlsValue _mls_g_arg2_0){
-  _mlsValue _mls_retval;
-  if (_mlsValue::isValueOf<_mls_Pair3>(_mls_g_arg1_0)){
-    auto _mls_x_220 = _mlsValue::cast<_mls_Pair3>(_mls_g_arg1_0)->_mls_z;
-    auto _mls_x_221 = _mlsValue::cast<_mls_Pair3>(_mls_g_arg1_0)->_mls_y;
-    auto _mls_x_222 = _mlsValue::cast<_mls_Pair3>(_mls_g_arg1_0)->_mls_x;
-    if (_mlsValue::isValueOf<_mls_Pair3>(_mls_g_arg2_0)){
-      auto _mls_x_224 = _mlsValue::cast<_mls_Pair3>(_mls_g_arg2_0)->_mls_z;
-      auto _mls_x_225 = _mlsValue::cast<_mls_Pair3>(_mls_g_arg2_0)->_mls_y;
-      auto _mls_x_226 = _mlsValue::cast<_mls_Pair3>(_mls_g_arg2_0)->_mls_x;
-      auto _mls_x_227 = _mls_const0();
-      auto _mls_x_228 = _mls_z_equal(_mls_x_224, _mls_x_227);
-      if (_mlsValue::isValueOf<_mls_True>(_mls_x_228)){
-        auto _mls_x_230 = _mlsValue::create<_mls_Pair3>(_mls_x_220, _mls_x_222, _mls_x_221);
-        _mls_retval = _mls_j_31(_mls_x_230);
-      } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_228)){
-        auto _mls_x_231 = _mls_quotRem(_mls_x_220, _mls_x_224);
-        if (_mlsValue::isValueOf<_mls_Pair2>(_mls_x_231)){
-          auto _mls_x_233 = _mlsValue::cast<_mls_Pair2>(_mls_x_231)->_mls_y;
-          auto _mls_x_234 = _mlsValue::cast<_mls_Pair2>(_mls_x_231)->_mls_x;
-          auto _mls_x_235 = _mlsValue::create<_mls_Pair3>(_mls_x_226, _mls_x_225, _mls_x_224);
-          auto _mls_x_236 = _mls_z_mul(_mls_x_234, _mls_x_226);
-          auto _mls_x_237 = _mls_z_sub(_mls_x_222, _mls_x_236);
-          auto _mls_x_238 = _mls_z_mul(_mls_x_234, _mls_x_225);
-          auto _mls_x_239 = _mls_z_sub(_mls_x_221, _mls_x_238);
-          auto _mls_x_240 = _mlsValue::create<_mls_Pair3>(_mls_x_237, _mls_x_239, _mls_x_233);
-          auto _mls_x_241 = _mls_g(_mls_x_235, _mls_x_240);
-          _mls_retval = _mls_j_32(_mls_x_241);
-        } else _mlsNonExhaustiveMatch();
-      } else _mlsNonExhaustiveMatch();
-    } else _mlsNonExhaustiveMatch();
-  } else _mlsNonExhaustiveMatch();
-  return _mls_retval;
-}
 _mlsValue _mls_sumAux(_mlsValue _mls_ls_15_0, _mlsValue _mls_a_4_0){
   _mlsValue _mls_retval;
   if (_mlsValue::isValueOf<_mls_Nil>(_mls_ls_15_0)){
@@ -860,6 +897,17 @@ _mlsValue _mls_enumFromTo(_mlsValue _mls_a_0, _mlsValue _mls_b_0){
   } else _mlsNonExhaustiveMatch();
   return _mls_retval;
 }
+_mlsValue _mls_f1(_mlsValue _mls_f1_arg1_0){
+  _mlsValue _mls_retval;
+  if (_mlsValue::isValueOf<_mls_Tuple2>(_mls_f1_arg1_0)){
+    auto _mls_x_200 = _mlsValue::cast<_mls_Tuple2>(_mls_f1_arg1_0)->_mls_y;
+    auto _mls_x_201 = _mlsValue::cast<_mls_Tuple2>(_mls_f1_arg1_0)->_mls_x;
+    auto _mls_x_202 = _mls_gcdE(_mls_x_201, _mls_x_200);
+    auto _mls_x_203 = _mlsValue::create<_mls_Tuple3>(_mls_x_201, _mls_x_200, _mls_x_202);
+    _mls_retval = _mls_j_25(_mls_x_203);
+  } else _mlsNonExhaustiveMatch();
+  return _mls_retval;
+}
 _mlsValue _mls_j_15(_mlsValue _mls_x_116){
   _mlsValue _mls_retval;
   _mls_retval = _mls_x_116;
@@ -869,14 +917,6 @@ _mlsValue _mls_const10000(){
   _mlsValue _mls_retval;
   auto _mls_x_198 = _mls_z_of_int(_mlsValue::fromIntLit(10000));
   _mls_retval = _mls_x_198;
-  return _mls_retval;
-}
-_mlsValue _mls_quotRem(_mlsValue _mls_quotRem_arg1_0, _mlsValue _mls_quotRem_arg2_0){
-  _mlsValue _mls_retval;
-  auto _mls_x_204 = _mls_z_div(_mls_quotRem_arg1_0, _mls_quotRem_arg2_0);
-  auto _mls_x_205 = _mls_z_mod(_mls_quotRem_arg1_0, _mls_quotRem_arg2_0);
-  auto _mls_x_206 = _mlsValue::create<_mls_Pair2>(_mls_x_204, _mls_x_205);
-  _mls_retval = _mls_x_206;
   return _mls_retval;
 }
 _mlsValue _mls_z_gt(_mlsValue _mls_x_21, _mlsValue _mls_y_8){
@@ -972,24 +1012,6 @@ _mlsValue _mls_mappend(_mlsValue _mls_xs_8_0, _mlsValue _mls_ys_8_0){
   } else _mlsNonExhaustiveMatch();
   return _mls_retval;
 }
-_mlsValue _mls_f2(_mlsValue _mls_f2_arg1_0){
-  _mlsValue _mls_retval;
-  if (_mlsValue::isValueOf<_mls_Pair3>(_mls_f2_arg1_0)){
-    auto _mls_x_248 = _mlsValue::cast<_mls_Pair3>(_mls_f2_arg1_0)->_mls_z;
-    auto _mls_x_249 = _mlsValue::cast<_mls_Pair3>(_mls_f2_arg1_0)->_mls_y;
-    auto _mls_x_250 = _mlsValue::cast<_mls_Pair3>(_mls_f2_arg1_0)->_mls_x;
-    if (_mlsValue::isValueOf<_mls_Pair3>(_mls_x_248)){
-      auto _mls_x_252 = _mlsValue::cast<_mls_Pair3>(_mls_x_248)->_mls_z;
-      auto _mls_x_253 = _mlsValue::cast<_mls_Pair3>(_mls_x_248)->_mls_y;
-      auto _mls_x_254 = _mlsValue::cast<_mls_Pair3>(_mls_x_248)->_mls_x;
-      auto _mls_x_255 = _mls_z_add(_mls_x_254, _mls_x_253);
-      auto _mls_x_256 = _mls_z_add(_mls_x_255, _mls_x_252);
-      auto _mls_x_257 = _mls_abs(_mls_x_256);
-      _mls_retval = _mls_j_35(_mls_x_257);
-    } else _mlsNonExhaustiveMatch();
-  } else _mlsNonExhaustiveMatch();
-  return _mls_retval;
-}
 _mlsValue _mls_filter(_mlsValue _mls_f_2_0, _mlsValue _mls_ls_2_0){
   _mlsValue _mls_retval;
   if (_mlsValue::isValueOf<_mls_Cons>(_mls_ls_2_0)){
@@ -1014,28 +1036,6 @@ _mlsValue _mls_z_add(_mlsValue _mls_x_5, _mlsValue _mls_y_0){
   _mlsValue _mls_retval;
   auto _mls_x_6 = _mls_builtin_z_add(_mls_x_5, _mls_y_0);
   _mls_retval = _mls_x_6;
-  return _mls_retval;
-}
-_mlsValue _mls_zip(_mlsValue _mls_xs_0, _mlsValue _mls_ys_0){
-  _mlsValue _mls_retval;
-  if (_mlsValue::isValueOf<_mls_Cons>(_mls_xs_0)){
-    auto _mls_x_58 = _mlsValue::cast<_mls_Cons>(_mls_xs_0)->_mls_t;
-    auto _mls_x_59 = _mlsValue::cast<_mls_Cons>(_mls_xs_0)->_mls_h;
-    if (_mlsValue::isValueOf<_mls_Cons>(_mls_ys_0)){
-      auto _mls_x_61 = _mlsValue::cast<_mls_Cons>(_mls_ys_0)->_mls_t;
-      auto _mls_x_62 = _mlsValue::cast<_mls_Cons>(_mls_ys_0)->_mls_h;
-      auto _mls_x_63 = _mlsValue::create<_mls_Pair2>(_mls_x_59, _mls_x_62);
-      auto _mls_x_64 = _mls_zip(_mls_x_58, _mls_x_61);
-      auto _mls_x_65 = _mlsValue::create<_mls_Cons>(_mls_x_63, _mls_x_64);
-      _mls_retval = _mls_j_6(_mls_x_65);
-    } else if (_mlsValue::isValueOf<_mls_Nil>(_mls_ys_0)){
-      auto _mls_x_66 = _mlsValue::create<_mls_Nil>();
-      _mls_retval = _mls_j_6(_mls_x_66);
-    } else _mlsNonExhaustiveMatch();
-  } else if (_mlsValue::isValueOf<_mls_Nil>(_mls_xs_0)){
-    auto _mls_x_67 = _mlsValue::create<_mls_Nil>();
-    _mls_retval = _mls_j_5(_mls_x_67);
-  } else _mlsNonExhaustiveMatch();
   return _mls_retval;
 }
 _mlsValue _mls_z_to_int(_mlsValue _mls_x_3){

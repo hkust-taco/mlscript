@@ -482,7 +482,22 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
     case NuFunDef(_, Var(name), _, _, _) => (name, 0)
     case _ => throw IRError("unsupported NuFunDef")
 
-  def buildGraph(unit: TypingUnit): Program = unit match
+  def buildGraph(unit: TypingUnit, addPrelude: Boolean = true): Program = 
+    val unit2 =  if addPrelude then
+      TypingUnit(
+        NuTypeDef(Mod,TypeName("True"),List(),None,None,None,List(),None,None,TypingUnit(List()))(N, N, Nil) ::
+        NuTypeDef(Mod,TypeName("False"),List(),None,None,None,List(),None,None,TypingUnit(List()))(N, N, Nil) ::
+        NuTypeDef(Mod,TypeName("Callable"),List(),None,None,None,List(),None,None,TypingUnit(List()))(N, N, Nil) ::
+        NuTypeDef(Mod,TypeName("List"),List(),None,None,None,List(),None,None,TypingUnit(List()))(N, N, Nil) ::
+        NuTypeDef(Cls,TypeName("Cons"),List(),Some(Tup(List((None,Fld(FldFlags.empty,Var("h"))), (None,Fld(FldFlags.empty,Var("t")))))),None,None,List(Var("List")),None,None,TypingUnit(List()))(N, N, Nil) ::
+        NuTypeDef(Mod,TypeName("Nil"),List(),None,None,None,List(Var("List")),None,None,TypingUnit(List()))(N, N, Nil) ::
+        NuTypeDef(Mod,TypeName("Option"),List(),None,None,None,List(),None,None,TypingUnit(List()))(N, N, Nil) ::
+        NuTypeDef(Cls,TypeName("Some"),List(),Some(Tup(List((None,Fld(FldFlags.empty,Var("x")))))),None,None,List(Var("Option")),None,None,TypingUnit(List()))(N, N, Nil) ::
+        NuTypeDef(Mod,TypeName("None"),List(),None,None,None,List(Var("Option")),None,None,TypingUnit(List()))(N, N, Nil) ::
+        unit.rawEntities
+      )
+      else unit
+    unit2 match
     case TypingUnit(entities) =>
       val grouped = entities groupBy {
         case ntd: NuTypeDef => 0
