@@ -714,6 +714,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
           }
           S(l, m + ((pol, a) -> List(b)))
         } else N
+      case (a: TupleType, b: RecordType) if pol => lcg(pol, a.toRecord, b)
       case (a: RecordType, b: RecordType) =>
         val default = FieldType(N, if (pol) TopType else BotType)(prov)
         if (b.fields.map(_._1).forall(a.fields.map(_._1).contains)) {

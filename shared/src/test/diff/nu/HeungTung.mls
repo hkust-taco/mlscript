@@ -494,3 +494,18 @@ g(0)
 //│ res
 //│     = <no result>
 //│       g and s are not implemented
+
+fun rt: {0: Int} -> Int & {0: Str} -> Str
+//│ fun rt: {0: Int} -> Int & {0: Str} -> Str
+
+rt([1,"str"])
+//│ Int
+//│ res
+//│     = <no result>
+//│       rt is not implemented
+
+rt(["str",1])
+//│ Str
+//│ res
+//│     = <no result>
+//│       rt is not implemented
