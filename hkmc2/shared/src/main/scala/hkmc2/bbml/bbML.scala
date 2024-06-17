@@ -189,6 +189,29 @@ class BBTyper(raise: Raise):
           v
       )
       Type.FunType(tvs, typeCheck(body), Type.Bot) // TODO: effect
+    case Term.App(Term.Sel(Term.Ref(cls: ClassSymbol), field), Term.Tup(Fld(_, term, asc) :: Nil)) =>
+      val ty = typeCheck(term)
+      ctx.getDef(cls.nme) match
+        case S(ClassDef.Parameterized(_, tparams, params, _, _)) =>
+          val nestCtx = ctx.nest
+          given Ctx = nestCtx
+          val targs = tparams.map {
+            case TyParam(_, targ) => // TODO: in/out
+              val tv = freshVar
+              nestCtx += targ -> tv
+              tv
+          }
+          solver.constrain(ty, Type.ClassType(cls, targs))
+          (params.map {
+            case Param(_, sym, sign) =>
+              if sym.nme == field.name then sign else N
+          }.filter(_.isDefined)) match
+            case S(res) :: Nil => typeCheck(res)
+            case _ => error(msg"${field.name} is not a valid member in class ${cls.nme}" -> t.toLoc :: Nil)
+        case S(ClassDef.Plain(_, tparams, _, _)) =>
+          ???
+        case N => 
+          error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil)
     case Term.App(lhs, rhs) =>
       val funTy = typeCheck(lhs)
       val argTy = typeCheckArgs(rhs)
@@ -203,13 +226,13 @@ class BBTyper(raise: Raise):
             error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil)
           else
             val nestCtx = ctx.nest
+            given Ctx = nestCtx
             val targs = tparams.map {
               case TyParam(_, targ) => // TODO: in/out
-                val tv = freshVar(using ctx)
+                val tv = freshVar
                 nestCtx += targ -> tv
                 tv
             }
-            given Ctx = nestCtx
             args.iterator.zip(params).foreach {
               case (arg, Param(_, _, S(sign))) =>
                 solver.constrain(typeCheck(arg), typeCheck(sign))

@@ -150,3 +150,22 @@ new Some(42)
 //│ Type: Some[α0]
 //│ Where:
 //│   Int ∧ ¬⊥ <: α0
+
+let p = new Point(1.0, 0.0, 0.0) in Point.x(p)
+//│ Elab: { { let p@1 = new class:Point(Lit(DecLit(1.0)), Lit(DecLit(0.0)), Lit(DecLit(0.0)))‹›; class:Point#0.x‹›(p@1#0)‹›‹› }‹› }‹›
+//│ Type: Num
+
+let t = new Some(true) in Some.value(t)
+//│ Elab: { { let t@1 = new class:Some(Lit(BoolLit(true)))‹›; class:Some#0.value‹›(t@1#0)‹›‹› }‹› }‹›
+//│ Type: α1
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α0 <: α1
+//│   ⊤ ∧ ¬⊥ ∧ α1 <: α0
+//│   Bool ∧ ¬⊥ <: α0
+
+:e
+Some.value(42)
+//│ Elab: { class:Some#1.value‹›(42‹›)‹›‹› }‹›
+//│ ╔══[ERROR] Can not solve Int <: ⊥
+//│ ╙──
+//│ Type: α0
