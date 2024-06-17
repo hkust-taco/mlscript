@@ -120,12 +120,14 @@ object Ctx:
           case _ => ???
     )
     ctx
+  private val infVarState = new InfVarUid.State()
+  def freshVar(using ctx: Ctx) = Type.InfVar(ctx.lvl, infVarState.nextUid, new VarState())
+  def freshWildcard(using ctx: Ctx) = Wildcard(freshVar, freshVar)
 
 class BBTyper(raise: Raise):
 
   private val solver = new ConstraintSolver(raise)
-  private val infVarState = new InfVarUid.State()
-  private def freshVar(using ctx: Ctx) = Type.InfVar(ctx.lvl, infVarState.nextUid, new VarState())
+  import Ctx.{freshVar, freshWildcard}
 
   private def typeCheckArgs(args: Term)(using ctx: Ctx): Ls[Type] = args match
     case Term.Tup(flds) => flds.map(f => typeCheck(f.value))
@@ -134,6 +136,23 @@ class BBTyper(raise: Raise):
   private def error(msg: Ls[Message -> Opt[Loc]]) =
     raise(ErrorReport(msg))
     Type.Bot // TODO: error type?
+
+  private def extract(asc: Term)(using map: Map[Uid[Symbol], Wildcard], pol: Bool)(using ctx: Ctx): Type = asc match
+    case Ref(cls: ClassSymbol) =>
+      ctx.getDef(cls.nme) match
+        case S(_) => Type.ClassType(cls, Nil) // TODO: tparams?
+        case N => 
+          error(msg"Definition not found: ${cls.nme}" -> asc.toLoc :: Nil)
+    case Ref(sym: VarSymbol) =>
+      map.get(sym.uid) match
+        case Some(Wildcard(in, out)) => if pol then out else in
+        case _ =>
+          error(msg"Type variable not found: ${sym.name}" -> asc.toLoc :: Nil)
+    case FunTy(Term.Tup(params), ret) =>
+      Type.FunType(params.map {
+        case Fld(_, p, _) => extract(p)(using map, !pol)
+      }, extract(ret), Type.Bot) // TODO: effect
+    case _ => error(msg"${asc.toString} is not a valid class member type" -> asc.toLoc :: Nil)
 
   def typeCheck(t: Term)(using ctx: Ctx): Type = t match
     case Ref(sym: VarSymbol) =>
@@ -146,11 +165,6 @@ class BBTyper(raise: Raise):
         case Some(ty) => ty
         case _ =>
           error(msg"Definition not found: ${sym.nme}" -> t.toLoc :: Nil)
-    case Ref(cls: ClassSymbol) =>
-      ctx.getDef(cls.nme) match
-        case S(_) => Type.ClassType(cls, Nil) // TODO: tparams?
-        case N => 
-          error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil)
     case Blk(stats, res) =>
       val nestCtx = ctx.nest
       given Ctx = nestCtx
@@ -193,20 +207,19 @@ class BBTyper(raise: Raise):
       val ty = typeCheck(term)
       ctx.getDef(cls.nme) match
         case S(ClassDef.Parameterized(_, tparams, params, _, _)) =>
-          val nestCtx = ctx.nest
-          given Ctx = nestCtx
+          val map = mutable.HashMap[Uid[Symbol], Wildcard]()
           val targs = tparams.map {
-            case TyParam(_, targ) => // TODO: in/out
-              val tv = freshVar
-              nestCtx += targ -> tv
-              tv
+            case TyParam(_, targ) =>
+              val ty = freshWildcard
+                map += targ.uid -> ty
+                ty
           }
           solver.constrain(ty, Type.ClassType(cls, targs))
           (params.map {
             case Param(_, sym, sign) =>
               if sym.nme == field.name then sign else N
           }.filter(_.isDefined)) match
-            case S(res) :: Nil => typeCheck(res)
+            case S(res) :: Nil => extract(res)(using map.toMap, true)
             case _ => error(msg"${field.name} is not a valid member in class ${cls.nme}" -> t.toLoc :: Nil)
         case S(ClassDef.Plain(_, tparams, _, _)) =>
           ???
@@ -225,17 +238,16 @@ class BBTyper(raise: Raise):
           if args.length != params.length then
             error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil)
           else
-            val nestCtx = ctx.nest
-            given Ctx = nestCtx
+            val map = mutable.HashMap[Uid[Symbol], Wildcard]()
             val targs = tparams.map {
-              case TyParam(_, targ) => // TODO: in/out
-                val tv = freshVar
-                nestCtx += targ -> tv
-                tv
+              case TyParam(_, targ) =>
+                val ty = freshWildcard
+                map += targ.uid -> ty
+                ty
             }
             args.iterator.zip(params).foreach {
               case (arg, Param(_, _, S(sign))) =>
-                solver.constrain(typeCheck(arg), typeCheck(sign))
+                solver.constrain(typeCheck(arg), extract(sign)(using map.toMap, true))
               case _ => ???
             }
             Type.ClassType(cls, targs)
