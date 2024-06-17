@@ -112,16 +112,24 @@ new 42
 //│ Elab: { <error>‹› }‹›
 //│ Type: ⊥
 
-:fixme
-let foo = new Foo(42)
-//│ Elab: { let foo@1 = new class:Foo(Lit(IntLit(42)))‹›; }‹›
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+new Foo(42)
+//│ Elab: { new class:Foo(Lit(IntLit(42)))‹› }‹›
+//│ Type: Foo
+
 
 class Point(x: Num, y: Num, z: Num)
 //│ Elab: { class Point(x@1: class:Num#1, y@2: class:Num#2, z@3: class:Num#3) { }‹›; }‹›
 //│ Type: ⊤
 
-:fixme
-let ori = new Point(0.0, 0.0, 0.0)
-//│ Elab: { let ori@1 = new class:Point(Lit(DecLit(0.0)), Lit(DecLit(0.0)), Lit(DecLit(0.0)))‹›; }‹›
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+new Point(0.0, 0.0, 0.0)
+//│ Elab: { new class:Point(Lit(DecLit(0.0)), Lit(DecLit(0.0)), Lit(DecLit(0.0)))‹› }‹›
+//│ Type: Point
+
+:e
+new Foo("1!5!")
+//│ Elab: { new class:Foo(Lit(StrLit(1!5!)))‹› }‹›
+//│ ╔══[ERROR] Can not solve Str <: ⊥
+//│ ╙──
+//│ Type: Foo

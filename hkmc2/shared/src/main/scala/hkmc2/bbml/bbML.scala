@@ -131,21 +131,26 @@ class BBTyper(raise: Raise):
     case Term.Tup(flds) => flds.map(f => typeCheck(f.value))
     case _ => ???
 
+  private def error(msg: Ls[Message -> Opt[Loc]]) =
+    raise(ErrorReport(msg))
+    Type.Bot // TODO: error type?
+
   def typeCheck(t: Term)(using ctx: Ctx): Type = t match
     case Ref(sym: VarSymbol) =>
       ctx.get(sym) match
         case Some(ty) => ty
         case _ =>
-          raise(ErrorReport(msg"Variable not found: ${sym.name}" -> t.toLoc :: Nil))
-          Type.Bot // TODO: error type?
+          error(msg"Variable not found: ${sym.name}" -> t.toLoc :: Nil)
     case Ref(sym: TermSymbol) =>
       ctx.get(sym) match
         case Some(ty) => ty
         case _ =>
-          raise(ErrorReport(msg"Definition not found: ${sym.nme}" -> t.toLoc :: Nil))
-          Type.Bot // TODO: error type?
+          error(msg"Definition not found: ${sym.nme}" -> t.toLoc :: Nil)
     case Ref(cls: ClassSymbol) =>
-      ???
+      ctx.getDef(cls.nme) match
+        case S(_) => Type.ClassType(cls, Nil) // TODO: tparams?
+        case N => 
+          error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil)
     case Blk(stats, res) =>
       val nestCtx = ctx.nest
       given Ctx = nestCtx
@@ -191,7 +196,21 @@ class BBTyper(raise: Raise):
       val retVar = freshVar
       solver.constrain(funTy, Type.FunType(argTy, retVar, effVar))
       retVar
-    case Term.New(cls, params) =>
-      ???
+    case Term.New(cls, args) =>
+      ctx.getDef(cls.nme) match
+        case S(ClassDef.Parameterized(_, tparams, params, _, _)) =>
+          if args.length != params.length then
+            error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil)
+          else
+            args.iterator.zip(params).foreach {
+              case (arg, Param(_, _, S(sign))) => // TODO: fresh tparams
+                solver.constrain(typeCheck(arg), typeCheck(sign))
+              case _ => ???
+            }
+            Type.ClassType(cls, Nil)
+        case S(ClassDef.Plain(_, tparams, _, _)) =>
+          ???
+        case N => 
+          error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil)
     case Term.Error =>
       Type.Bot // TODO: error type?
