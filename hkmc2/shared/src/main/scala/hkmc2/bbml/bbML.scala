@@ -202,12 +202,20 @@ class BBTyper(raise: Raise):
           if args.length != params.length then
             error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil)
           else
+            val nestCtx = ctx.nest
+            val targs = tparams.map {
+              case TyParam(_, targ) => // TODO: in/out
+                val tv = freshVar(using ctx)
+                nestCtx += targ -> tv
+                tv
+            }
+            given Ctx = nestCtx
             args.iterator.zip(params).foreach {
-              case (arg, Param(_, _, S(sign))) => // TODO: fresh tparams
+              case (arg, Param(_, _, S(sign))) =>
                 solver.constrain(typeCheck(arg), typeCheck(sign))
               case _ => ???
             }
-            Type.ClassType(cls, Nil)
+            Type.ClassType(cls, targs)
         case S(ClassDef.Plain(_, tparams, _, _)) =>
           ???
         case N => 

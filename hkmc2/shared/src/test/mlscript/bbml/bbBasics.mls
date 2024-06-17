@@ -133,3 +133,20 @@ new Foo("1!5!")
 //│ ╔══[ERROR] Can not solve Str <: ⊥
 //│ ╙──
 //│ Type: Foo
+
+
+class Some[A](value: A)
+//│ Elab: { class Some[out A@1](value@2: A@1#0) { }‹›; }‹›
+//│ Type: ⊤
+
+new Some(true)
+//│ Elab: { new class:Some(Lit(BoolLit(true)))‹› }‹›
+//│ Type: Some[α0]
+//│ Where:
+//│   Bool ∧ ¬⊥ <: α0
+
+new Some(42)
+//│ Elab: { new class:Some(Lit(IntLit(42)))‹› }‹›
+//│ Type: Some[α0]
+//│ Where:
+//│   Int ∧ ¬⊥ <: α0
