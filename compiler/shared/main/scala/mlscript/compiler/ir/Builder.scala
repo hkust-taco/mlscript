@@ -326,7 +326,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
 
       import scala.collection.mutable.{ HashSet => MutHSet }
 
-      val cls = ClassInfo(classUid.make, "True", List()) // TODO: add "True" amd "False" at some pointgrouped.getOrElse(0, Nil).map(buildClassInfo)
+      val cls = ClassInfo(classUid.make, "True", List()) // TODO: add "True" amd "False" at some point
         :: ClassInfo(classUid.make, "False", List()) 
         :: grouped.getOrElse(0, Nil).map(buildClassInfo)
 
