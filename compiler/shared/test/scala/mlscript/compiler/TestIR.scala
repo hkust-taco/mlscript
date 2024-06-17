@@ -21,7 +21,7 @@ class IRDiffTestCompiler extends DiffTests {
         val classUid = FreshInt()
         val tag = FreshInt()
 
-        val gb = Builder(Fresh(), fnUid, classUid, tag)
+        val gb = Builder(Fresh(), fnUid, classUid, tag, raise)
         val graph_ = gb.buildGraph(unit)
         
         if !mode.noTailRecOpt then 

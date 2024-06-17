@@ -4,11 +4,12 @@ import mlscript.compiler.optimizer.FreeVarAnalysis
 import mlscript.utils.shorthands._
 import mlscript.utils._
 import mlscript._
+import mlscript.Message._
 import collection.mutable.ListBuffer
 
 final val ops = Set("+", "-", "*", "/", ">", "<", ">=", "<=", "!=", "==")
 
-final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: FreshInt):
+final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diagnostic => Unit):
   import Node._
   import Expr._
   
@@ -79,8 +80,13 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
             val v = fresh.make
             
             ann match
-              case Some(Var(nme)) if nme == "tailcall" => 
-                LetCall(List(v), DefnRef(Right(g.str)), args, true, v |> ref |> sresult |> k)(f.toLoc).attachTag(tag)
+              case Some(ann @ Var(nme)) =>
+                if nme == "tailcall" then 
+                  LetCall(List(v), DefnRef(Right(g.str)), args, true, v |> ref |> sresult |> k)(f.toLoc).attachTag(tag)
+                else
+                  if nme == "tailrec" then
+                    raise(ErrorReport(List(msg"@tailrec is for annotating functions; try @tailcall instead" -> ann.toLoc), true, Diagnostic.Compilation))
+                  LetCall(List(v), DefnRef(Right(g.str)), args, false, v |> ref |> sresult |> k)(f.toLoc).attachTag(tag) 
               case Some(_) => node |> unexpectedNode
               case None => LetCall(List(v), DefnRef(Right(g.str)), args, false, v |> ref |> sresult |> k)(f.toLoc).attachTag(tag)   
             
@@ -138,6 +144,14 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
 
       case App(f, xs @ Tup(_)) => buildLetCall(f, xs, None)
       case Ann(ann, App(f, xs @ Tup(_))) => buildLetCall(f, xs, Some(ann))
+
+      case Ann(ann @ Var(name), recv) =>
+        if name == "tailcall" then
+          raise(ErrorReport(List(msg"@tailcall may only be used to annotate function calls" -> ann.toLoc), true, Diagnostic.Compilation))
+        else if name == "tailrec" then
+          raise(ErrorReport(List(msg"@tailrec may only be used to annotate functions" -> ann.toLoc), true, Diagnostic.Compilation))
+
+        buildResultFromTerm(recv)(k)
 
       case Let(false, Var(name), rhs, body) => 
         buildBinding(name, rhs, body)(k)
@@ -255,7 +269,12 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
           }
         val names = strs map (fresh.make(_))
         given Ctx = ctx.copy(nameCtx = ctx.nameCtx ++ (strs zip names))
-        val trAnn = nfd.annotations.find { case Var("tailrec") => true; case _ => false }
+        val trAnn = nfd.annotations.find { 
+          case Var("tailrec") => true
+          case ann @ Var("tailcall") =>
+            raise(ErrorReport(List(msg"@tailcall is for annotating function calls; try @tailrec instead" -> ann.toLoc), true, Diagnostic.Compilation))
+            false
+          case _ => false }
 
         Defn(
           fnUid.make,

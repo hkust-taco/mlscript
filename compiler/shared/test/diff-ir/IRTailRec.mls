@@ -2534,3 +2534,166 @@ a()
 //│ },
 //│ let* (x$6) = a() in -- #33
 //│ x$6 -- #32)
+
+:ce
+@tailcall 1
+//│ |@|tailcall| |1|
+//│ Parsed: {@tailcall 1}
+//│ 
+//│ 
+//│ IR:
+//│ ╔══[COMPILATION ERROR] @tailcall may only be used to annotate function calls
+//│ ║  l.2539: 	@tailcall 1
+//│ ╙──        	 ^^^^^^^^
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ 
+//│ },
+//│ 1 -- #0)
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List()
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, _IdContext, []),ClassInfo(3, _Context, [acc,ptr,field])}, {
+//│ 
+//│ },
+//│ 1 -- #0)
+//│ 
+//│ Promoted:
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, _IdContext, []),ClassInfo(3, _Context, [acc,ptr,field])}, {
+//│ 
+//│ },
+//│ 1 -- #0)
+
+:ce
+@tailrec 1
+//│ |@|tailrec| |1|
+//│ Parsed: {@tailrec 1}
+//│ 
+//│ 
+//│ IR:
+//│ ╔══[COMPILATION ERROR] @tailrec may only be used to annotate functions
+//│ ║  l.2567: 	@tailrec 1
+//│ ╙──        	 ^^^^^^^
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ 
+//│ },
+//│ 1 -- #0)
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List()
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, _IdContext, []),ClassInfo(3, _Context, [acc,ptr,field])}, {
+//│ 
+//│ },
+//│ 1 -- #0)
+//│ 
+//│ Promoted:
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, _IdContext, []),ClassInfo(3, _Context, [acc,ptr,field])}, {
+//│ 
+//│ },
+//│ 1 -- #0)
+
+:ce
+fun foo() =
+  @tailrec foo()
+foo()
+//│ |#fun| |foo|(||)| |#=|→|@|tailrec| |foo|(||)|←|↵|foo|(||)|
+//│ Parsed: {fun foo = () => {@tailrec foo()}; foo()}
+//│ 
+//│ 
+//│ IR:
+//│ ╔══[COMPILATION ERROR] @tailrec is for annotating functions; try @tailcall instead
+//│ ║  l.2596: 	  @tailrec foo()
+//│ ╙──        	   ^^^^^^^
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Def(0, foo, [],
+//│ 1, 
+//│ let* (x$0) = foo() in -- #3
+//│ x$0 -- #2
+//│ )
+//│ },
+//│ let* (x$1) = foo() in -- #7
+//│ x$1 -- #6)
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(foo))
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, _IdContext, []),ClassInfo(3, _Context, [acc,ptr,field])}, {
+//│ Def(1, foo_jp, [],
+//│ 1, 
+//│ jump foo_jp() -- #8
+//│ )
+//│ Def(2, foo, [],
+//│ 1, 
+//│ let* (r0) = foo_jp() in -- #10
+//│ r0 -- #9
+//│ )
+//│ },
+//│ let* (x$1) = foo() in -- #7
+//│ x$1 -- #6)
+//│ 
+//│ Promoted:
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, _IdContext, []),ClassInfo(3, _Context, [acc,ptr,field])}, {
+//│ Def(1, foo_jp, [],
+//│ 1, 
+//│ jump foo_jp() -- #8
+//│ )
+//│ Def(2, foo, [],
+//│ 1, 
+//│ let* (r0) = foo_jp() in -- #10
+//│ r0 -- #9
+//│ )
+//│ },
+//│ let* (x$1) = foo() in -- #7
+//│ x$1 -- #6)
+
+:ce
+@tailcall
+fun foo() =
+  foo()
+foo()
+//│ |@|tailcall|↵|#fun| |foo|(||)| |#=|→|foo|(||)|←|↵|foo|(||)|
+//│ Parsed: {fun foo = () => {foo()}; foo()}
+//│ 
+//│ 
+//│ IR:
+//│ ╔══[COMPILATION ERROR] @tailcall is for annotating function calls; try @tailrec instead
+//│ ║  l.2648: 	@tailcall
+//│ ╙──        	 ^^^^^^^^
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Def(0, foo, [],
+//│ 1, 
+//│ let* (x$0) = foo() in -- #3
+//│ x$0 -- #2
+//│ )
+//│ },
+//│ let* (x$1) = foo() in -- #7
+//│ x$1 -- #6)
+//│ 
+//│ Strongly Connected Tail Calls:
+//│ List(Set(foo))
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, _IdContext, []),ClassInfo(3, _Context, [acc,ptr,field])}, {
+//│ Def(1, foo_jp, [],
+//│ 1, 
+//│ jump foo_jp() -- #8
+//│ )
+//│ Def(2, foo, [],
+//│ 1, 
+//│ let* (r0) = foo_jp() in -- #10
+//│ r0 -- #9
+//│ )
+//│ },
+//│ let* (x$1) = foo() in -- #7
+//│ x$1 -- #6)
+//│ 
+//│ Promoted:
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, _IdContext, []),ClassInfo(3, _Context, [acc,ptr,field])}, {
+//│ Def(1, foo_jp, [],
+//│ 1, 
+//│ jump foo_jp() -- #8
+//│ )
+//│ Def(2, foo, [],
+//│ 1, 
+//│ let* (r0) = foo_jp() in -- #10
+//│ r0 -- #9
+//│ )
+//│ },
+//│ let* (x$1) = foo() in -- #7
+//│ x$1 -- #6)

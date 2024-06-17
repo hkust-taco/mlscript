@@ -235,8 +235,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
           case _ => returnNone
         
       case Case(scrut, cases) => Right(cases.map(_._2))
-      case x: LetExpr =>
-        val LetExpr(name, expr, body) = x
+      case x @ LetExpr(name, expr, body) =>
         expr match
           // Check if this let binding references the mod cons call.
           case Expr.Ref(name) => 
@@ -253,8 +252,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
                   shadowAndCont(body, name) // OK
           
           case Expr.Literal(lit) => shadowAndCont(body, name) // OK
-          case y: Expr.CtorApp =>
-            val Expr.CtorApp(clsInfo, ctorArgs) = y
+          case y @ Expr.CtorApp(clsInfo, ctorArgs) =>
             // if expr is a constructor with a call to some function as a parameter
             letCallNode match
               case None => shadowAndCont(body, name) // OK
@@ -342,9 +340,7 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
                         // If this assignment overwrites the mod cons value, forget it
                         if containingCtors.contains(assignee) then invalidateAndCont(body)
                         else searchOptCalls(body)
-      case x: LetCall =>
-        val LetCall(names, defn, args, isTailRec, body) = x
-
+      case x @ LetCall(names, defn, args, isTailRec, body) =>
         val callInScc = scc.contains(defn.expectDefn)
         
         // Only deal with calls in the scc
