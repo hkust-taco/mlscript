@@ -12,7 +12,15 @@ import Tree.*
 sealed abstract class TypeArg
 
 case class Wildcard(in: Type, out: Type) extends TypeArg {
-  override def toString(): String = s"in $in out $out"
+  private def printWhenSet(t: Type, in: Bool) = t match
+    case Type.InfVar(_, _, state) =>
+      if in && !state.upperBounds.isEmpty then S(s"in $t")
+      else if !in && !state.lowerBounds.isEmpty then S(s"out $t")
+      else N
+    case _ => S(t.toString())
+
+  override def toString(): String =
+    Ls(printWhenSet(in, true), printWhenSet(out, false)).filter(_.isDefined).map(_.get).mkString(" ")
 }
 
 enum Type extends TypeArg:

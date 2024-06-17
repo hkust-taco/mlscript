@@ -141,13 +141,13 @@ class Some[A](value: A)
 
 new Some(true)
 //│ Elab: { new class:Some(Lit(BoolLit(true)))‹› }‹›
-//│ Type: Some[in α27 out α28]
+//│ Type: Some[out α28]
 //│ Where:
 //│   Bool ∧ ¬⊥ <: α28
 
 new Some(42)
 //│ Elab: { new class:Some(Lit(IntLit(42)))‹› }‹›
-//│ Type: Some[in α29 out α30]
+//│ Type: Some[out α30]
 //│ Where:
 //│   Int ∧ ¬⊥ <: α30
 
@@ -181,7 +181,7 @@ fun foofoo(x) =
 
 new Printer(foofoo)
 //│ Elab: { new class:Printer(Ref(foofoo))‹› }‹›
-//│ Type: Printer[in α40 out α41]
+//│ Type: Printer[in α40]
 //│ Where:
 //│   α40 <: ¬⊤ ∧ ¬⊥ ∨ Int
 
