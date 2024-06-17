@@ -12,12 +12,11 @@ class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*
   override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (List[Str], Option[TypingUnit]) = 
     val outputBuilder = StringBuilder()
-    if (mode.lift) output(PrettyPrinter.showTypingUnit(unit))
 
     var rstUnit = unit;
     try
       val lifter = ClassLifter(mode.fullExceptionStack)
-      if (mode.lift || basePath.contains("Lifter")) {
+      if (mode.lift) {
         output("Lifted:")
         rstUnit = lifter.liftTypingUnit(unit)
         output(PrettyPrinter.showTypingUnit(rstUnit))
@@ -30,7 +29,7 @@ class DiffTestCompiler extends DiffTests {
         output("Lifting failed: " ++ err.toString())
         if mode.fullExceptionStack then 
           outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
-    if (mode.lift || basePath.contains("Lifter")) {
+    if (mode.lift) {
       (outputBuilder.toString().linesIterator.toList, Some(rstUnit))  
     } else {
       (outputBuilder.toString().linesIterator.toList, None)

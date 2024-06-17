@@ -1,6 +1,7 @@
 :NewDefs
 
 // FIXME: correctly lift parameterized inheritance
+:lift
 val c = 5
 class Sup(val a: Int){
   virtual fun foo = () -> a

@@ -1,6 +1,7 @@
 :NewDefs
 :ParseOnly
 
+:lift
 fun foo() =
   let local(x) =
     class Foo {
@@ -20,6 +21,7 @@ foo()
 //│ }
 //│ 
 
+:lift
 fun foo(f) = 
   f(1)
 foo(x => x+1)
@@ -33,6 +35,7 @@ foo(x => x+1)
 //│ }
 //│ 
 
+:lift
 fun foo(x) = 
   let bar(f) = 
     f(x)
@@ -49,6 +52,7 @@ foo(1)
 //│ }
 //│ 
 
+:lift
 fun foo(f) = 
     f(1)
 class A(y: Int){

@@ -6,10 +6,6 @@ fun test(a) =
   let f(x) = a + x
   f
 test(6)(4)
-//│ TypingUnit {
-//│   fun test = (a,) => {let f = (x,) => +(a, x,); f}
-//│   Code(List(test(6,)(4,)))
-//│ }
 //│ Lifted:
 //│ TypingUnit {
 //│   let f$2 = (x, a,) => +(a, x,)
