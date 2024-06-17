@@ -191,3 +191,7 @@ class BBTyper(raise: Raise):
       val retVar = freshVar
       solver.constrain(funTy, Type.FunType(argTy, retVar, effVar))
       retVar
+    case Term.New(cls, params) =>
+      ???
+    case Term.Error =>
+      Type.Bot // TODO: error type?

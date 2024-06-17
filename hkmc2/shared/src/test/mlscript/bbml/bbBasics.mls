@@ -97,13 +97,31 @@ class Foo(x: Int)
 //│ Elab: { class Foo(x@1: class:Int#11) { }‹›; }‹›
 //│ Type: ⊤
 
+:e
+new Nothingness(0)
+//│ ╔══[ERROR] Class Nothingness not found.
+//│ ║  l.101: 	new Nothingness(0)
+//│ ╙──       	               ^^^
+//│ Elab: { <error>‹› }‹›
+//│ Type: ⊥
+
+:e
+new 42
+//│ ╔══[ERROR] Illegal new expression.
+//│ ╙──
+//│ Elab: { <error>‹› }‹›
+//│ Type: ⊥
+
 :fixme
 let foo = new Foo(42)
-//│ ╔══[PARSE ERROR] Expected expression after 'let' binding equals sign; found 'new' keyword instead
-//│ ║  l.101: 	let foo = new Foo(42)
-//│ ╙──       	          ^^^
-//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.101: 	let foo = new Foo(42)
-//│ ╙──       	              ^^^
-//│ Elab: { <error>‹› }‹›
-//│ /!!!\ Uncaught error: scala.MatchError: Error (of class hkmc2.semantics.Term$$anon$1)
+//│ Elab: { let foo@1 = new class:Foo(Lit(IntLit(42)))‹›; }‹›
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+class Point(x: Num, y: Num, z: Num)
+//│ Elab: { class Point(x@1: class:Num#1, y@2: class:Num#2, z@3: class:Num#3) { }‹›; }‹›
+//│ Type: ⊤
+
+:fixme
+let ori = new Point(0.0, 0.0, 0.0)
+//│ Elab: { let ori@1 = new class:Point(Lit(DecLit(0.0)), Lit(DecLit(0.0)), Lit(DecLit(0.0)))‹›; }‹›
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing

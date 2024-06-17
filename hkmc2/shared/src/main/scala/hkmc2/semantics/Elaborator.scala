@@ -58,6 +58,16 @@ class Elaborator(raise: Raise):
       Term.Sel(term(pre), nme)
     case Tup(fields) =>
       Term.Tup(fields.map(fld(_)))
+    case New(body) => body match
+      case App(Ident(cls), Tup(params)) =>
+        ctx.members.get(cls) match
+          case S(sym: ClassSymbol) => Term.New(sym, params.map(term))
+          case _ =>
+            raise(ErrorReport(msg"Class $cls not found." -> tree.toLoc :: Nil))
+            Term.Error
+      case _ =>
+        raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
+        Term.Error
     case Empty() =>
       raise(ErrorReport(msg"A term was expected in this position, but no term was found." -> tree.toLoc :: Nil))
       Term.Error

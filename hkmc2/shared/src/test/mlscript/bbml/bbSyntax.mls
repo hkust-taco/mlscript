@@ -10,6 +10,10 @@ class Bar(x: Int)
 //│ Parsed:
 //│ 	TypeDef(Cls,App(Ident(Bar),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int))))),None,None)
 
+class Bar2(x: Int, y: Int)
+//│ Parsed:
+//│ 	TypeDef(Cls,App(Ident(Bar2),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int)), InfixApp(Ident(y),keyword ':',Ident(Int))))),None,None)
+
 class Baz[A]
 //│ Parsed:
 //│ 	TypeDef(Cls,TyApp(Ident(Baz),List(Ident(A))),None,None)
@@ -30,24 +34,29 @@ x => x + 1
 //│ Parsed:
 //│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',App(Ident(+),Tup(List(Ident(x), IntLit(1)))))
 
-:fixme
 let bar = new Bar(42)
-//│ ╔══[PARSE ERROR] Expected expression after 'let' binding equals sign; found 'new' keyword instead
-//│ ║  l.34: 	let bar = new Bar(42)
-//│ ╙──      	          ^^^
-//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.34: 	let bar = new Bar(42)
-//│ ╙──      	              ^^^
 //│ Parsed:
-//│ 	Error()
+//│ 	Let(Ident(bar),New(App(Ident(Bar),Tup(List(IntLit(42))))),None)
+
+let bar = new Bar2(1, 1)
+//│ Parsed:
+//│ 	Let(Ident(bar),New(App(Ident(Bar2),Tup(List(IntLit(1), IntLit(1))))),None)
+
+new Bar(0)
+//│ Parsed:
+//│ 	New(App(Ident(Bar),Tup(List(IntLit(0)))))
+
+new Bar2(114, 514)
+//│ Parsed:
+//│ 	New(App(Ident(Bar2),Tup(List(IntLit(114), IntLit(514)))))
 
 :fixme
 if 1 < 2 then 1 else 0
-//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'if' keyword instead
-//│ ║  l.45: 	if 1 < 2 then 1 else 0
+//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'if' keyword instead
+//│ ║  l.54: 	if 1 < 2 then 1 else 0
 //│ ╙──      	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.45: 	if 1 < 2 then 1 else 0
+//│ ║  l.54: 	if 1 < 2 then 1 else 0
 //│ ╙──      	   ^
 //│ Parsed:
 //│ 	Error()
@@ -57,7 +66,7 @@ fun fact = case
   0 then 1
   n then n * fact(n - 1)
 //│ ╔══[PARSE ERROR] Expected expression after 'fun' binding equals sign; found 'case' keyword instead
-//│ ║  l.56: 	fun fact = case
+//│ ║  l.65: 	fun fact = case
 //│ ╙──      	           ^^^^
 //│ Parsed:
 //│ 	Error()

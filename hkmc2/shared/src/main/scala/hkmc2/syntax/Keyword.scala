@@ -61,7 +61,7 @@ object Keyword:
   val `with` = Keyword("with", curPrec, curPrec)
   val `override` = Keyword("override", N, N)
   val `super` = Keyword("super", N, N)
-  val `new` = Keyword("new", N, N)
+  val `new` = Keyword("new", N, curPrec) // TODO: check the prec
   // val `namespace` = Keyword("namespace", N, N)
   val `module` = Keyword("module", N, N)
   val `type` = Keyword("type", N, N)
