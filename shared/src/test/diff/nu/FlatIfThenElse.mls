@@ -97,6 +97,7 @@ fun test(x: Option[Int]) =
 // Q: Support?
 :pe
 :e
+:w
 fun test(x: Option[Int]) =
   if x is
     None then [0, 0]
@@ -105,22 +106,55 @@ fun test(x: Option[Int]) =
     log(value)
     [value - 1, value + 1]
 //│ ╔══[PARSE ERROR] Unexpected 'then' keyword in expression position
-//│ ║  l.104: 	  then
+//│ ║  l.105: 	  then
 //│ ╙──       	  ^^^^
-//│ ╔══[ERROR] Illegal interleaved statement App(Var(Some),Tup(List((None,Fld(_,Var(value))))))
-//│ ║  l.103: 	    Some(value)
+//│ ╔══[ERROR] Unexpected statement in an if block
+//│ ║  l.104: 	    Some(value)
 //│ ╙──       	    ^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.102: 	  if x is
+//│ ║         	     ^^^^
+//│ ║  l.103: 	    None then [0, 0]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ╟── type `Some[Int]` is not an instance of type `None`
+//│ ║  l.4: 	type Option[out A] = Some[A] | None
+//│ ║       	                     ^^^^^^^
+//│ ╟── but it flows into reference with expected type `None`
+//│ ║  l.102: 	  if x is
+//│ ║         	     ^
+//│ ╟── Note: constraint arises from class pattern:
+//│ ║  l.103: 	    None then [0, 0]
+//│ ╙──       	    ^^^^
+//│ ╔══[WARNING] Expression in statement position should have type `()`.
+//│ ╟── Use a comma expression `... , ()` to explicitly discard non-unit values, making your intent clearer.
+//│ ╟── Type mismatch in if-else block:
+//│ ║  l.102: 	  if x is
+//│ ║         	     ^^^^
+//│ ║  l.103: 	    None then [0, 0]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.104: 	    Some(value)
+//│ ║         	^^^^^^^^^^^^^^^
+//│ ╟── tuple literal of type `[0, 0]` does not match type `()`
+//│ ║  l.103: 	    None then [0, 0]
+//│ ║         	              ^^^^^^
+//│ ╟── but it flows into expression in statement position with expected type `()`
+//│ ║  l.102: 	  if x is
+//│ ║         	     ^^^^
+//│ ║  l.103: 	    None then [0, 0]
+//│ ║         	^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.104: 	    Some(value)
+//│ ╙──       	^^^^^^^^^^^^^^^
 //│ ╔══[ERROR] identifier not found: value
-//│ ║  l.105: 	    log(value)
+//│ ║  l.106: 	    log(value)
 //│ ╙──       	        ^^^^^
 //│ ╔══[ERROR] identifier not found: value
-//│ ║  l.106: 	    [value - 1, value + 1]
+//│ ║  l.107: 	    [value - 1, value + 1]
 //│ ╙──       	     ^^^^^
 //│ ╔══[ERROR] identifier not found: value
-//│ ║  l.106: 	    [value - 1, value + 1]
+//│ ║  l.107: 	    [value - 1, value + 1]
 //│ ╙──       	                ^^^^^
 //│ fun test: (x: Option[Int]) -> [Int, Int]
 //│ Code generation encountered an error:
-//│   if expression was not desugared
+//│   unresolved symbol value
 
 

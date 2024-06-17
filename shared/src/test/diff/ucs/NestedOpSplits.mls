@@ -8,11 +8,9 @@ fun f(x) =
     1 +
       2 then 0
       _ then 1
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.7: 	  if x ==
-//│ ║       	     ^^^^
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.8: 	    1 +
-//│ ║       	^^^^^^^
+//│ ║       	      ^
 //│ ║  l.9: 	      2 then 0
 //│ ║       	^^^^^^^
 //│ ╟── operator application of type `Bool` is not an instance of type `Int`
@@ -20,6 +18,12 @@ fun f(x) =
 //│ ║       	     ^^^^
 //│ ║  l.8: 	    1 +
 //│ ╙──     	^^^^^^
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.8: 	    1 +
+//│ ║       	      ^
+//│ ║  l.9: 	      2 then 0
+//│ ║       	^^^^^^^
+//│ ╙── application of type `Int` is not an instance of type `Bool`
 //│ fun f: Num -> (0 | 1)
 
 

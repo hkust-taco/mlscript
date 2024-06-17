@@ -1,0 +1,32 @@
+:NewDefs
+
+type List[A] = Cons[A] | Nil
+class Cons[A](head: A, tail: List[A])
+module Nil
+//│ type List[A] = Cons[A] | Nil
+//│ class Cons[A](head: A, tail: List[A])
+//│ module Nil
+
+fun (::) cons(head, tail) = Cons(head, tail)
+//│ fun (::) cons: forall 'A. ('A, List['A]) -> Cons['A]
+
+fun map(f, xs) = if xs is
+  Cons(head, tail) then f(head) :: map(f, tail)
+  Nil then Nil
+//│ fun map: forall 'A 'A0. ('A -> 'A0, Cons['A] | Nil) -> (Cons['A0] | Nil)
+
+// fun main$$5 = () =>
+//   let obj =
+//     let obj = '(' (new List$1)(1, (new List$1)(2, (new Nil$2)(),),) ')' in
+//       if obj is ‹(List$1) then map$List$1(obj, {Lambda1$2$3()},); else error›
+//     in
+//       if obj is ‹(List$1) then map$List$1(obj, {Lambda1$3$4()},); else error›
+// Got: Internal Error: Symbol already set for obj
+fun main(f) =
+  let obj = (let obj = Cons(1, Cons(2, Nil)) in (if obj is Cons(head, tail) then f(head) :: tail else Nil)) in
+    if obj is Cons(head, tail) then f(head) :: tail else Nil
+//│ fun main: forall 'A 'A0. ((1 | 2 | 'A) -> 'A) -> (Cons['A0] | Nil)
+//│   where
+//│     'A <: 'A0
+//│     'A0 :> 1 | 2
+//│         <: 'A

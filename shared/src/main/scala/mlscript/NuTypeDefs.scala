@@ -1073,7 +1073,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     private lazy val isGeneralized: Bool = decl match {
       case fd: NuFunDef =>
         println(s"Type ${fd.nme.name} polymorphically? ${fd.isGeneralized} && (${ctx.lvl} === 0 || ${
-          fd.signature.nonEmpty} || ${fd.outer.exists(_.kind isnt Mxn)}")
+          fd.signature.nonEmpty} || ${fd.outer.exists(_.kind isnt Mxn)})")
         // * We only type polymorphically:
         // * definitions that can be generalized (ie `fun`s or function-valued `let`s and `val`s); and
         fd.isGeneralized && (

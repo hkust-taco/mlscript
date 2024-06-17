@@ -1,5 +1,8 @@
 :NewDefs
 
+fun (~~>) expect(a, b) = if a === b then () else error
+//│ fun (~~>) expect: forall 'a. (Eql['a], 'a) -> ()
+
 type Option[out T] = None | Some[T]
 module None
 class Some[out T](val value: T)
@@ -21,6 +24,11 @@ class Cons[out A](head: A, tail: List[A])
 //│ module Nil
 //│ class Cons[A](head: A, tail: List[A])
 
+fun justTrue(_) = true
+fun justFalse(_) = false
+//│ fun justTrue: anything -> true
+//│ fun justFalse: anything -> false
+
 fun h0(a) =
   if
     a is Some(Left(y)) then y
@@ -28,85 +36,53 @@ fun h0(a) =
     a is None then 0
 //│ fun h0: forall 'a. (None | Some[Left['a] | Right['a]]) -> (0 | 'a)
 
-// FIXME: Precise scrutinee identification (easy)
-// This seems fine. But the subtrees are not merged.
+// If a class parameter is bound to the same variable in different branches,
+// the bindings can be merged and can be typed and coverage checked. See the
+// desugared version below.
+:ducs:postprocess.result
+fun h0'(a) =
+  if
+    a is Some(x) and x is Left(y) then y
+    a is Some(x) and x is Right(z) then z
+    a is None then 0
+//│ Post-processed UCS term:
+//│ case a*‡ of
+//│   Some*◊ ->
+//│     let ucs$args_a$Some*† = (Some).unapply(a,)
+//│     let x*‡ = (ucs$args_a$Some).0
+//│     case x*‡ of
+//│       Left*◊ ->
+//│         let ucs$args_x$Left*† = (Left).unapply(x,)
+//│         let y*‡ = (ucs$args_x$Left).0
+//│         y
+//│       Right*◊ ->
+//│         let ucs$args_x$Right*† = (Right).unapply(x,)
+//│         let z*‡ = (ucs$args_x$Right).0
+//│         z
+//│   None*† -> 0
+//│ fun h0': forall 'a. (None | Some[Left['a] | Right['a]]) -> (0 | 'a)
+
+// However, if the class parameter is bound to different variables in different
+// branches, the bindings cannot be merged and the type will miss the latter
+// branch. See the desugared version below.
 fun h1(a) =
   if
     a is Some(x) and x is Left(y) then y
     a is Some(y) and y is Right(z) then z
     a is None then 0
-//│ fun h1: forall 'a. (None | Some[Right['a]]) -> (0 | 'a)
-
-// This is the desugared version of the test case above.
-fun h1'(a) =
-  if a is
-    Some then
-      let x = a.value
-      let y = a.value
-      if x is
-        Left then
-          let y = x.leftValue
-          y
-        _ then
-          if y is
-            Right then
-              let z = y.rightValue
-              z
-    None then 0
-//│ fun h1': forall 'rightValue. (None | Some[Right['rightValue]]) -> (0 | 'rightValue)
-
-// FIXME This seems fine but the desugared term does not merge the cases.
-// See the example below.
-fun h1''(a) =
-  if
-    a is Some(x) and x is Left(y) then y
-    a is Some(x) and x is Right(z) then z
-    a is None then 0
-//│ fun h1'': forall 'a. (None | Some[Left['a] | Right['a]]) -> (0 | 'a)
+//│ fun h1: forall 'a. (None | Some[Right[anything] & {#rightValue: 'a}]) -> (0 | 'a)
 
 // FIXME
 h1(Some(Left(0)))
-h1'(Some(Left(0)))
-h1''(Some(Left(0)))
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.68: 	h1(Some(Left(0)))
-//│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Left[?A]` is not an instance of type `Right`
-//│ ║  l.68: 	h1(Some(Left(0)))
-//│ ║        	        ^^^^^^^
-//│ ╟── Note: constraint arises from class pattern:
-//│ ║  l.36: 	    a is Some(y) and y is Right(z) then z
-//│ ║        	                          ^^^^^
-//│ ╟── from field selection:
-//│ ║  l.5: 	class Some[out T](val value: T)
-//│ ║       	                      ^^^^^
-//│ ╟── Note: type parameter T is defined at:
-//│ ║  l.5: 	class Some[out T](val value: T)
-//│ ╙──     	               ^
-//│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.69: 	h1'(Some(Left(0)))
-//│ ║        	^^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `Left[?A]` is not an instance of type `Right`
-//│ ║  l.69: 	h1'(Some(Left(0)))
-//│ ║        	         ^^^^^^^
-//│ ╟── Note: constraint arises from class pattern:
-//│ ║  l.52: 	            Right then
-//│ ║        	            ^^^^^
-//│ ╟── from field selection:
-//│ ║  l.45: 	      let y = a.value
-//│ ║        	              ^^^^^^^
-//│ ╟── Note: type parameter T is defined at:
-//│ ║  l.5: 	class Some[out T](val value: T)
-//│ ╙──     	               ^
-//│ 0
-//│ res
-//│     = 0
-//│ res
-//│     = 0
+//│ ╔══[ERROR] Type `Left[?A]` does not contain member `rightValue`
+//│ ║  l.15: 	class Right[B](val rightValue: B)
+//│ ╙──      	                   ^^^^^^^^^^
+//│ 0 | error
 //│ res
 //│     = 0
 
-// FIXME: Precise scrutinee identification (hard)
+// FIXME: It is also impossible to merge bindings of different variables if one
+// of them is bound via a let binding.
 fun h2(a) =
   if
     a is Some(x) and x is x' and x' is Left(y) then y
@@ -114,51 +90,126 @@ fun h2(a) =
       let y' = y
       y' is Right(z) then z
     a is None then 0
-//│ ╔══[ERROR] identifier not found: y
-//│ ║  l.114: 	      let y' = y
-//│ ╙──       	               ^
-//│ ╔══[ERROR] identifier not found: y
-//│ ║  l.114: 	      let y' = y
-//│ ╙──       	               ^
-//│ fun h2: forall 'a. (None | Some[Left['a] | Object & ~#Left]) -> (0 | error | 'a)
-//│ Code generation encountered an error:
-//│   unresolved symbol y
+//│ fun h2: forall 'a. (None | Some[Left['a]]) -> (0 | 'a)
 
-// FIXME: Some results are wrong.
+:ducs:postprocess.result
+:w
 fun h3(x, y, f, p) =
   if x is
     _ and f(x) is y and p(x) then y
     None then y
     _ then "anyway"
-h3("anything", "not me", _ => "should be me", _ => true)
-h3(None, "should be me", _ => "not me", _ => false)
-h3("anything", "anything", _ => "not me", _ => false)
-//│ fun h3: forall 'a 'b. (None | Object & 'a & ~#None, 'b, (None | 'a) -> anything, (None | 'a) -> Object) -> ("anyway" | 'b)
-//│ "anything" | "anyway"
-//│ res
-//│     = 'not me'
-//│ res
-//│     = 'should be me'
-//│ res
-//│     = 'anyway'
+//│ Post-processed UCS term:
+//│ let ucs$scrut$0*‡ = f(x,)
+//│ let ucs$shadow$0 = y
+//│ let y*‡ = ucs$scrut$0
+//│ let ucs$test$0*† = p(x,) : Bool
+//│ case ucs$test$0*† of
+//│   true*† -> y
+//│   _ ->
+//│     let y*‡ = ucs$shadow$0
+//│     case x*‡ of
+//│       None*† -> y
+//│       _ -> "anyway"
+//│ ╔══[WARNING] the outer binding `y`
+//│ ║  l.97: 	fun h3(x, y, f, p) =
+//│ ║        	          ^
+//│ ╟── is shadowed by name pattern `y`
+//│ ║  l.99: 	    _ and f(x) is y and p(x) then y
+//│ ╙──      	                  ^
+//│ fun h3: forall 'a 'b. (Object & 'a, 'b, 'a -> 'b, 'a -> Bool) -> ("anyway" | 'b)
 
-// FIXME: Some results are wrong.
+
+h3("anything", "not me", _ => "should be me", _ => true) ~~> "should be me"
+h3(None, "should be me", _ => "not me", _ => false) ~~> "should be me"
+h3("anything", "anything", _ => "not me", _ => false) ~~> "anyway"
+//│ ()
+//│ res
+//│     = undefined
+//│ res
+//│     = undefined
+//│ res
+//│     = undefined
+
+
+:ducs:postprocess.result
+:w
 fun h4(x, y, p) =
   if x is
     y and p(x) then y
     None then y
     _ then "default"
-h4("should be me", "not me", _ => true) // WRONG!
-h4(None, "not me", _ => true) // WRONG!
+//│ Post-processed UCS term:
+//│ let ucs$shadow$0 = y
+//│ let y*‡ = x
+//│ let ucs$test$0*† = p(x,) : Bool
+//│ case ucs$test$0*† of
+//│   true*† -> y
+//│   _ ->
+//│     let y*‡ = ucs$shadow$0
+//│     case x*‡ of
+//│       None*† -> y
+//│       _ -> "default"
+//│ ╔══[WARNING] the outer binding `y`
+//│ ║  l.137: 	fun h4(x, y, p) =
+//│ ║         	          ^
+//│ ╟── is shadowed by name pattern `y`
+//│ ║  l.139: 	    y and p(x) then y
+//│ ╙──       	    ^
+//│ fun h4: forall 'a 'b. (Object & 'a, 'b, 'a -> Bool) -> ("default" | 'a | 'b)
+
+h4("should be me", "not me", _ => true)
+h4(None, "not me", _ => true)
 h4(None, "should be me", _ => false)
 h4("anything", "not me", _ => false)
-//│ fun h4: forall 'a 'b. (None | Object & 'a & ~#None, 'b, (None | 'a) -> Object) -> ("default" | 'b)
-//│ "default" | "not me"
+//│ "anything" | "default" | "not me"
 //│ res
-//│     = 'not me'
+//│     = 'should be me'
 //│ res
-//│     = 'not me'
+//│     = None { class: [class None] }
 //│ res
 //│     = 'should be me'
 //│ res
 //│     = 'default'
+
+:ducs:postprocess.result
+fun h5(x, y, p) =
+  if x is
+    Some(y) and p(x) then y
+    None then y
+    _ then y
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   Some*◊ ->
+//│     let ucs$args_x$Some*† = (Some).unapply(x,)
+//│     let ucs$shadow$0 = y
+//│     let y*‡ = (ucs$args_x$Some).0
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† -> y
+//│       _ ->
+//│         let y*‡ = ucs$shadow$0
+//│         y
+//│   None*† -> y
+//│   _ -> y
+//│ fun h5: forall 'a. (Object & ~#Some | Some['a], 'a, Some[nothing] -> Bool) -> 'a
+
+h5(Some(1), 2, justTrue) ~~> 1
+h5(Some(1), 2, justFalse) ~~> 2
+h5(None, 0, justTrue) ~~> 0
+h5(None, 0, justFalse) ~~> 0
+h5("foo", 42, justTrue) ~~> 42
+h5("foo", 42, justFalse) ~~> 42
+//│ ()
+//│ res
+//│     = undefined
+//│ res
+//│     = undefined
+//│ res
+//│     = undefined
+//│ res
+//│     = undefined
+//│ res
+//│     = undefined
+//│ res
+//│     = undefined

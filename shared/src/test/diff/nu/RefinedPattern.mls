@@ -1,0 +1,43 @@
+:NewDefs
+
+
+class C
+//│ class C {
+//│   constructor()
+//│ }
+
+
+:e
+fun test(x) = if x is
+  C then x.a
+//│ ╔══[ERROR] Type `C` does not contain member `a`
+//│ ║  l.12: 	  C then x.a
+//│ ╙──      	          ^^
+//│ fun test: C -> error
+
+fun test(x) = if x is
+  refined(C) then x.a
+//│ fun test: forall 'a. (C & {a: 'a}) -> 'a
+
+class D(val a: Int) extends C
+//│ class D(a: Int) extends C
+
+test(D(123))
+//│ Int
+//│ res
+//│     = 123
+
+
+:e
+refined
+//│ ╔══[ERROR] Illegal use of reserved operator: refined
+//│ ║  l.32: 	refined
+//│ ╙──      	^^^^^^^
+//│ ╔══[ERROR] identifier not found: refined
+//│ ║  l.32: 	refined
+//│ ╙──      	^^^^^^^
+//│ error
+//│ Code generation encountered an error:
+//│   unresolved symbol refined
+
+

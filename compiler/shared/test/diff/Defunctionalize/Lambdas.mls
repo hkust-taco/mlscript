@@ -41,7 +41,7 @@
 //│   Code(List(main$$1()))
 //│ }
 //│ class Lambda1$1$1()
-//│ fun apply$Lambda1$1$1: (anything, Object) -> Bool
+//│ fun apply$Lambda1$1$1: (anything, Bool) -> Bool
 //│ fun main$$1: () -> Bool
 //│ Bool
 //│ res

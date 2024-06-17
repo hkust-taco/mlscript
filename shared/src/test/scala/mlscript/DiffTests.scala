@@ -6,13 +6,12 @@ import fastparse.Parsed.Success
 import sourcecode.Line
 import scala.collection.mutable
 import scala.collection.mutable.{Map => MutMap}
-import scala.collection.immutable
 import mlscript.utils._, shorthands._
 import mlscript.codegen.typescript.TsTypegenCodeBuilder
 import org.scalatest.{funsuite, ParallelTestExecution}
 import org.scalatest.time._
 import org.scalatest.concurrent.{TimeLimitedTests, Signaler}
-
+import pretyper.PreTyper
 
 abstract class ModeType {
   def expectTypeErrors: Bool
@@ -26,7 +25,7 @@ abstract class ModeType {
   def dbg: Bool
   def dbgParsing: Bool
   def dbgSimplif: Bool
-  def dbgUCS: Bool
+  def dbgUCS: Opt[Set[Str]]
   def dbgLifting: Bool
   def dbgDefunc: Bool
   def fullExceptionStack: Bool
@@ -146,6 +145,7 @@ class DiffTests
     var declared: Map[Str, typer.ST] = Map.empty
     val failures = mutable.Buffer.empty[Int]
     val unmergedChanges = mutable.Buffer.empty[Int]
+    var preTyperScope = mlscript.pretyper.Scope.global
     
     case class Mode(
       expectTypeErrors: Bool = false,
@@ -160,7 +160,7 @@ class DiffTests
       dbg: Bool = false,
       dbgParsing: Bool = false,
       dbgSimplif: Bool = false,
-      dbgUCS: Bool = false,
+      dbgUCS: Opt[Set[Str]] = N,
       dbgLifting: Bool = false,
       dbgDefunc: Bool = false,
       fullExceptionStack: Bool = false,
@@ -208,6 +208,8 @@ class DiffTests
     var irregularTypes = false
     var prettyPrintQQ = false
     var useIR = false
+    // Enable this to see the errors from unfinished `PreTyper`.
+    var showPreTyperErrors = false
     var noTailRec = false
     
     // * This option makes some test cases pass which assume generalization should happen in arbitrary arguments
@@ -217,7 +219,7 @@ class DiffTests
     var newParser = basePath.headOption.contains("parser") || basePath.headOption.contains("compiler")
     
     val backend = new JSTestBackend {
-      def oldDefs = !newDefs
+      override def oldDefs: Bool = !newDefs
     }
     var hostCreated = false
     lazy val host = { hostCreated = true; ReplHost() }
@@ -235,10 +237,10 @@ class DiffTests
           case "p" => mode.copy(showParse = true)
           case "d" => mode.copy(dbg = true)
           case "dp" => mode.copy(dbgParsing = true)
+          case DebugUCSFlags(x) => mode.copy(dbgUCS = mode.dbgUCS.fold(S(x))(y => S(y ++ x)))
           case "ds" => mode.copy(dbgSimplif = true)
           case "dl" => mode.copy(dbgLifting = true)
           case "dd" => mode.copy(dbgDefunc = true)
-          case "ducs" => mode.copy(dbg = true, dbgUCS = true)
           case "s" => mode.copy(fullExceptionStack = true)
           case "v" | "verbose" => mode.copy(verbose = true)
           case "ex" | "explain" => mode.copy(expectTypeErrors = true, explainErrors = true)
@@ -284,6 +286,8 @@ class DiffTests
             typer.startingFuel = line.drop(str.length + 2).toInt; mode
           case "ResetFuel" => typer.startingFuel = typer.defaultStartingFuel; mode
           case "QQ" => prettyPrintQQ = true; mode
+          // Enable this to see the errors from unfinished `PreTyper`.
+          case "ShowPreTyperErrors" => newParser = true; newDefs = true; showPreTyperErrors = true; mode
           case "ne" => mode.copy(noExecution = true)
           case "ng" => mode.copy(noGeneration = true)
           case "js" => mode.copy(showGeneratedJS = true)
@@ -518,7 +522,6 @@ class DiffTests
             // if (mode.isDebugging) typer.resetState()
             if (mode.stats) typer.resetStats()
             typer.dbg = mode.dbg
-            typer.dbgUCS = mode.dbgUCS
             // typer.recordProvenances = !noProvs
             typer.recordProvenances = !noProvs && !mode.dbg && !mode.dbgSimplif || mode.explainErrors
             typer.generalizeCurriedFunctions = generalizeCurriedFunctions
@@ -569,9 +572,18 @@ class DiffTests
             }
             
             val (typeDefs, stmts, newDefsResults) = if (newDefs) {
-              
               val vars: Map[Str, typer.SimpleType] = Map.empty
-              val tpd = typer.typeTypingUnit(TypingUnit(p.tops), N)(ctx, raise, vars)
+              val rootTypingUnit = TypingUnit(p.tops)
+              val preTyper = new PreTyper {
+                override def debugTopicFilters = mode.dbgUCS
+                override def emitString(str: String): Unit = output(str)
+              }
+              // This scope will be passed to typer and code generator after
+              // pretyper is completed.
+              preTyperScope = preTyper(rootTypingUnit, preTyperScope, "<root>")
+              report(preTyper.filterDiagnostics(_.source is Diagnostic.Desugaring))
+              if (showPreTyperErrors) report(preTyper.filterDiagnostics(_.source is Diagnostic.PreTyping))
+              val tpd = typer.typeTypingUnit(rootTypingUnit, N)(ctx, raise, vars)
               
               def showTTU(ttu: typer.TypedTypingUnit, ind: Int): Unit = {
                 val indStr = "  " * ind
@@ -1171,5 +1183,16 @@ object DiffTests {
       true
       // name.startsWith("new/")
       // file.segments.toList.init.lastOption.contains("parser")
+  }
+
+  object DebugUCSFlags {
+    // E.g. "ducs", "ducs:foo", "ducs:foo,bar", "ducs:a.b.c,foo"
+    private val pattern = "^ducs(?::(\\s*(?:[A-Za-z\\.-]+)(?:,\\s*[A-Za-z\\.-]+)*))?$".r
+    def unapply(flagsString: Str): Opt[Set[Str]] =
+      flagsString match {
+        case "ducs" => S(Set.empty)
+        case pattern(flags) => Option(flags).map(_.split(",\\s*").toSet)
+        case _ => N
+      }
   }
 }

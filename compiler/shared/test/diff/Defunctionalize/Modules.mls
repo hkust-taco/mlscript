@@ -20,8 +20,10 @@ x.y.f
 //│   fun main$$2 = () => let obj = let obj = x$2 in if obj is ‹(x$2) then y$x$2(obj,); else error› in if obj is ‹(Foo$1) then f$Foo$1(obj,); else error›
 //│   Code(List(main$$2()))
 //│ }
-//│ ╔══[WARNING] Found a redundant else branch
-//│ ╙──
+//│ ╔══[WARNING] the outer binding `x$2`
+//│ ╙── is shadowed by name pattern `x$2`
+//│ ╔══[WARNING] this case is unreachable
+//│ ╙── because it is subsumed by the branch
 //│ module x$2
 //│ class Foo$1()
 //│ let y$x$2: anything -> Foo$1

@@ -7,41 +7,21 @@ class Some[T](value: T)
 
 
 
-// TODO
 fun f(a, b) = if a is
   Some(av)
     and b is Some(bv) then av + bv
-//│ ╔══[ERROR] Illegal pattern `and`
-//│ ║  l.13: 	    and b is Some(bv) then av + bv
-//│ ╙──      	    ^^^
-//│ fun f: (anything, anything) -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ fun f: (Some[Int], Some[Int]) -> Int
 
-:p
 fun f(a, b) = if a is Some(av)
     and b is Some(bv)
     then av + bv
-//│ |#fun| |f|(|a|,| |b|)| |#=| |#if| |a| |is| |Some|(|av|)|→|and| |b| |is| |Some|(|bv|)|↵|#then| |av| |+| |bv|←|
-//│ AST: TypingUnit(List(NuFunDef(None,Var(f),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(a))), (None,Fld(_,Var(b))))),If(IfOpApp(Var(a),Var(is),IfOpsApp(App(Var(Some),Tup(List((None,Fld(_,Var(av)))))),List((Var(and),IfThen(App(Var(is),Tup(List((None,Fld(_,Var(b))), (None,Fld(_,App(Var(Some),Tup(List((None,Fld(_,Var(bv))))))))))),App(Var(+),Tup(List((None,Fld(_,Var(av))), (None,Fld(_,Var(bv))))))))))),None))))))
-//│ Parsed: fun f = (a, b,) => if a is Some(av,) ‹· and (is(b, Some(bv,),)) then +(av, bv,)›;
 //│ fun f: (Some[Int], Some[Int]) -> Int
 
-// TODO
-:p
 fun f(a, b) = if a is
   Some(av)
     and b is Some(bv)
     then av + bv
-//│ |#fun| |f|(|a|,| |b|)| |#=| |#if| |a| |is|→|Some|(|av|)|→|and| |b| |is| |Some|(|bv|)|↵|#then| |av| |+| |bv|←|←|
-//│ AST: TypingUnit(List(NuFunDef(None,Var(f),None,List(),Left(Lam(Tup(List((None,Fld(_,Var(a))), (None,Fld(_,Var(b))))),If(IfOpApp(Var(a),Var(is),IfBlock(List(Left(IfOpsApp(App(Var(Some),Tup(List((None,Fld(_,Var(av)))))),List((Var(and),IfThen(App(Var(is),Tup(List((None,Fld(_,Var(b))), (None,Fld(_,App(Var(Some),Tup(List((None,Fld(_,Var(bv))))))))))),App(Var(+),Tup(List((None,Fld(_,Var(av))), (None,Fld(_,Var(bv)))))))))))))),None))))))
-//│ Parsed: fun f = (a, b,) => if a is ‹Some(av,) ‹· and (is(b, Some(bv,),)) then +(av, bv,)››;
-//│ ╔══[ERROR] Illegal pattern `and`
-//│ ║  l.34: 	    and b is Some(bv)
-//│ ╙──      	    ^^^
-//│ fun f: (anything, anything) -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ fun f: (Some[Int], Some[Int]) -> Int
 
 
 
@@ -50,5 +30,5 @@ fun f(a, b) = if a is
   Some(av)
     and b is Some(bv) then av + bv
     
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ fun f: (Some[Int], Some[Int]) -> Int
 

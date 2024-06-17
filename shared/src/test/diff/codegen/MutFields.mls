@@ -186,7 +186,7 @@ class MySumCont extends Cont {
 //│ }
 
 fun f(b) = if b then 0 else new MySumCont
-//│ fun f: Object -> (0 | MySumCont)
+//│ fun f: Bool -> (0 | MySumCont)
 
 :js
 if f(false) is MySumCont then 1 else 2
@@ -195,7 +195,7 @@ if f(false) is MySumCont then 1 else 2
 //│ class TypingUnit14 {}
 //│ const typing_unit14 = new TypingUnit14;
 //│ // Query 1
-//│ res = ((tmp0) => tmp0 instanceof MySumCont ? 1 : 2)(f(false));
+//│ res = ((ucs$scrut$0) => ucs$scrut$0 instanceof MySumCont ? 1 : 2)(f(false));
 //│ // End of generated code
 //│ res
 //│     = 1

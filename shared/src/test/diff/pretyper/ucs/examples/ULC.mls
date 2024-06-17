@@ -1,0 +1,561 @@
+:NewDefs
+
+fun (++) concatOp(a, b) = concat(a)(b)
+fun (|>) pipe(a, f) = f(a)
+fun (!==) notEqual(x, y) = not(x === y)
+//│ fun (++) concatOp: (Str, Str) -> Str
+//│ fun (|>) pipe: forall 'a 'b. ('a, 'a -> 'b) -> 'b
+//│ fun (!==) notEqual: forall 'c. (Eql['c], 'c) -> Bool
+
+fun par(a) = "(" ++ a ++ ")"
+//│ fun par: Str -> Str
+
+declare fun String: nothing
+//│ fun String: nothing
+
+let makeString: anything => { length: Int, charCodeAt: Int => Int } = String
+let StringInstance: { fromCharCode: Int => Str } = String
+//│ let makeString: anything -> {charCodeAt: Int -> Int, length: Int}
+//│ let StringInstance: {fromCharCode: Int -> Str}
+//│ makeString
+//│            = [Function: String]
+//│ StringInstance
+//│                = [Function: String]
+
+let anythingToString = toString
+fun fromCharCode(n: Int) = StringInstance.fromCharCode(n)
+fun stringCharCodeAt(s: Str, i) = makeString(s).charCodeAt(i)
+fun stringLength(s: Str) = makeString(s).length
+//│ let anythingToString: anything -> Str
+//│ fun fromCharCode: (n: Int) -> Str
+//│ fun stringCharCodeAt: (s: Str, Int) -> Int
+//│ fun stringLength: (s: Str) -> Int
+//│ anythingToString
+//│                  = [Function: toString]
+
+type Option[A] = Some[A] | None
+class Some[A](value: A) {
+  fun toString() = "Some(" ++ anythingToString(value) ++ ")"
+}
+module None {
+  fun toString() = "None"
+}
+fun showOption(opt) =
+  if opt is
+    Some(x) then "Some(" ++ toString(x) ++ ")"
+    None then "None"
+//│ type Option[A] = None | Some[A]
+//│ class Some[A](value: A) {
+//│   fun toString: () -> Str
+//│ }
+//│ module None {
+//│   fun toString: () -> "None"
+//│ }
+//│ fun showOption: (None | Some[anything]) -> Str
+
+type List[A] = Cons[A] | Nil
+class Cons[A](head: A, tail: List[A])
+module Nil
+//│ type List[A] = Cons[A] | Nil
+//│ class Cons[A](head: A, tail: List[A])
+//│ module Nil
+
+fun (::) cons(head, tail) = Cons(head, tail)
+//│ fun (::) cons: forall 'A. ('A, List['A]) -> Cons['A]
+
+fun join(sep) =
+  let rec aux(acc, xs) =
+    if xs is
+      Nil then acc
+      Cons(x, xs') then aux(acc ++ sep ++ toString(x), xs')
+  (xs) =>
+    if xs is
+      Cons(x, xs') then aux(toString(x), xs')
+      Nil then ""
+//│ fun join: Str -> (forall 'A. (Cons['A] | Nil) -> Str)
+
+fun showList(xs) = "[" ++ join(", ")(xs) ++ "]"
+//│ fun showList: forall 'A. (Cons['A] | Nil) -> Str
+
+fun findFirst(list, p) =
+  if list is
+    Nil then None
+    Cons(x, xs) and
+      p(x) then Some(x)
+      else findFirst(xs, p)
+//│ fun findFirst: forall 'A 'A0. (Cons['A] | Nil, 'A -> Bool) -> (None | Some['A0])
+//│   where
+//│     'A <: 'A0
+
+fun (:::) listConcat(xs, ys) =
+  if xs is
+    Nil then ys
+    Cons(x, xs') then Cons(x, listConcat(xs', ys))
+//│ fun (:::) listConcat: forall 'A 'A0 'a. (Cons['A] | Nil, List['A0] & 'a) -> (Cons['A0] | 'a)
+//│   where
+//│     'A <: 'A0
+
+fun contains(xs, x) =
+  if xs is
+    Nil then false
+    Cons(x', xs') and
+      x === x' then true
+      else contains(xs', x)
+//│ fun contains: forall 'A. (Cons['A] | Nil, Eql['A]) -> Bool
+
+contains("x" :: "y" :: "z" :: Nil, "y")
+contains("x" :: "y" :: "z" :: Nil, "w")
+//│ Bool
+//│ res
+//│     = true
+//│ res
+//│     = false
+
+fun exclude(xs, x) =
+  if xs is
+    Nil then Nil
+    Cons(x', xs') and
+      x === x' then exclude(xs', x)
+      else Cons(x', exclude(xs', x))
+//│ fun exclude: forall 'A 'A0. (Cons['A] | Nil, Eql['A]) -> (Cons['A0] | Nil)
+//│   where
+//│     'A <: 'A0
+
+exclude("x" :: "y" :: "z" :: Nil, "y") |> showList
+exclude("x" :: "y" :: "z" :: Nil, "w") |> showList
+//│ Str
+//│ res
+//│     = '[x, z]'
+//│ res
+//│     = '[x, y, z]'
+
+fun reverse(xs: List['B]): List['B] =
+  let rec aux(acc: List['B], ys: List['B]): List['B] =
+    if ys is
+      Nil then acc
+      Cons(y, ys') then aux(Cons(y, acc), ys')
+  aux(Nil, xs)
+//│ fun reverse: forall 'B 'A. (xs: List['B]) -> List['A]
+//│   where
+//│     'B <: 'A
+
+reverse(1 :: 2 :: 3 :: Nil) |> showList
+reverse(3 :: 2 :: 1 :: Nil) |> showList
+//│ Str
+//│ res
+//│     = '[3, 2, 1]'
+//│ res
+//│     = '[1, 2, 3]'
+
+//  _____
+// |_   _|___  _ __  _ __ ___
+//   | | / _ \| '__|| '_ ` _ \
+//   | ||  __/| |   | | | | | |
+//   |_| \___||_|   |_| |_| |_|
+//
+
+type Term = Var | Abs | App
+class Var(name: Str)
+class Abs(lhs: Var, rhs: Term)
+class App(lhs: Term, rhs: Term)
+//│ type Term = Abs | App | Var
+//│ class Var(name: Str)
+//│ class Abs(lhs: Var, rhs: Term)
+//│ class App(lhs: Term, rhs: Term)
+
+fun showTerm(t) =
+  if t is
+    Var(name) then toString(name)
+    Abs(lhs, rhs) then "λ" ++ showTerm(lhs) ++ ". " ++ showTerm(rhs)
+    App(Abs(lhs0, lhs1), rhs) then
+      "((" ++ "λ" ++ showTerm(lhs0) ++ ". " ++ showTerm(lhs1) ++ ") " ++ showTerm(rhs) ++ ")"
+    App(lhs, rhs) then par(showTerm(lhs) ++ " " ++ showTerm(rhs))
+//│ fun showTerm: (Abs | App | Var) -> Str
+
+showTerm(Var("x"))
+showTerm(Abs(Var("x"), Var("y")))
+showTerm(App(Var("x"), Var("y")))
+showTerm(App(Abs(Var("x"), Var("y")), Var("z")))
+//│ Str
+//│ res
+//│     = 'x'
+//│ res
+//│     = 'λx. y'
+//│ res
+//│     = '(x y)'
+//│ res
+//│     = '((λx. y) z)'
+
+fun (=:=) equalTerm(t1: Term, t2: Term) =
+  if t1 is
+    Var(x1)        and t2 is Var(x2)        then x1 === x2
+    Abs(x1, t1')   and t2 is Abs(x2, t2')   then (x1 =:= x2) && (t1' =:= t2')
+    App(t1', t1'') and t2 is App(t2', t2'') then (t1' =:= t2') && (t1'' =:= t2'')
+    else false
+//│ fun (=:=) equalTerm: (t1: Term, t2: Term) -> Bool
+
+Var("x") =:= Var("x")
+Var("x") =:= Var("y")
+Abs(Var("x"), Var("x")) =:= Abs(Var("x"), Var("x"))
+Abs(Var("x"), Var("x")) =:= Abs(Var("x"), Var("y"))
+Abs(Var("x"), Var("y")) =:= Abs(Var("x"), Var("x"))
+//│ Bool
+//│ res
+//│     = true
+//│ res
+//│     = false
+//│ res
+//│     = true
+//│ res
+//│     = false
+//│ res
+//│     = false
+
+fun isValue(t) =
+  if t is
+    Abs then true
+    Var then false
+    App then false
+//│ fun isValue: (Abs | App | Var) -> Bool
+
+isValue(Var("x"))
+isValue(Abs(Var("x"), Var("y")))
+isValue(App(Var("x"), Var("y")))
+//│ Bool
+//│ res
+//│     = false
+//│ res
+//│     = true
+//│ res
+//│     = false
+
+fun hasFree(t, x) =
+  if t is
+    Var(x') then x === x'
+    Abs(Var(x'), body) and x === x' then false
+    Abs(Var(_), body) then hasFree(body, x)
+    App(lhs, rhs) then hasFree(lhs, x) || hasFree(rhs, x)
+    _ then false
+//│ fun hasFree: (Object, Eql[Str]) -> Bool
+
+fun showHasFree(t, n) =
+  showTerm(t) ++ (if hasFree(t, n) then " has " else " DOES NOT have ") ++ "free variable " ++ n
+//│ fun showHasFree: (Abs | App | Var, Eql[Str] & Str) -> Str
+
+showHasFree(Var("x"), "x")
+showHasFree(Var("x"), "y")
+showHasFree(Abs(Var("x"), Var("x")), "x")
+showHasFree(Abs(Var("x"), Var("x")), "y")
+showHasFree(Abs(Var("x"), Var("y")), "x")
+showHasFree(Abs(Var("x"), Var("y")), "y")
+showHasFree(App(Var("x"), Var("y")), "x")
+showHasFree(App(Var("x"), Var("y")), "y")
+showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "x")
+showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
+showHasFree(App(Abs(Var("x"), Var("x")), Var("y")), "y")
+showHasFree(App(Abs(Var("x"), Var("x")), Var("x")), "y")
+//│ Str
+//│ res
+//│     = 'x has free variable x'
+//│ res
+//│     = 'x DOES NOT have free variable y'
+//│ res
+//│     = 'λx. x DOES NOT have free variable x'
+//│ res
+//│     = 'λx. x DOES NOT have free variable y'
+//│ res
+//│     = 'λx. y DOES NOT have free variable x'
+//│ res
+//│     = 'λx. y has free variable y'
+//│ res
+//│     = '(x y) has free variable x'
+//│ res
+//│     = '(x y) has free variable y'
+//│ res
+//│     = '((λx. x) x) has free variable x'
+//│ res
+//│     = '((λx. x) x) DOES NOT have free variable y'
+//│ res
+//│     = '((λx. x) y) has free variable y'
+//│ res
+//│     = '((λx. x) x) DOES NOT have free variable y'
+
+fun freeVars(t) =
+  if t is
+    Var(x) then x :: Nil
+    Abs(Var(x), body) then exclude(freeVars(body), x)
+    App(lhs, rhs) then freeVars(lhs) ::: freeVars(rhs)
+//│ fun freeVars: forall 'A. (Abs | App | Var) -> (Cons['A] | Nil)
+//│   where
+//│     'A :> Str
+
+(freeVars of Var("x")) |> showList
+(freeVars of Abs(Var("x"), Var("x"))) |> showList
+(freeVars of Abs(Var("x"), Var("y"))) |> showList
+(freeVars of App(Var("x"), Var("y"))) |> showList
+(freeVars of App(Abs(Var("x"), Var("x")), Var("x"))) |> showList
+//│ Str
+//│ res
+//│     = '[x]'
+//│ res
+//│     = '[]'
+//│ res
+//│     = '[y]'
+//│ res
+//│     = '[x, y]'
+//│ res
+//│     = '[x]'
+
+let alphabet: List[Str] = "a" :: "b" :: "c" :: "d" :: "e" :: "f" :: "g" :: "h" :: "i" :: "j" :: "k" :: "l" :: "m" :: "n" :: "o" :: "p" :: "q" :: "r" :: "s" :: "t" :: "u" :: "v" :: "w" :: "x" :: "y" :: "z" :: Nil
+//│ let alphabet: List[Str]
+//│ alphabet
+//│          = Cons {}
+
+fun search(f: 'A -> Option['B], xs: List['A]): Option['B] =
+  if xs is
+    Nil then None
+    Cons(x, xs') and
+      f(x) is
+        Some(x') then Some(x')
+        None then search(f, xs')
+//│ fun search: forall 'A 'B 'A0. (f: 'A -> Option['B], xs: List['A]) -> Option['A0]
+//│   where
+//│     'B <: 'A0
+
+// =============================================================================
+// TO BE INVESTIGATED: The following version does not have a stable type.
+// The desugared term look like this:
+// let ucs$test$0 = <=(n, 0,) : Bool in
+// case ucs$test$0 of {
+//   true =>
+//     let x = |>(reverse(acc,), join("",),) in
+//     let ucs$test$1 = contains(xs, x,) : Bool in
+//     case ucs$test$1 of {
+//       true => None;
+//       _ => Some(x,)
+//     };
+//   _ => {
+//     search(('(' x ')',) => combinations(-(n, 1,), ::(x, acc,), alphabet, xs,), alphabet,)
+//   }
+// }
+// fun combinations(n: Int, acc: List['T], alphabet: List['T], xs: List[Str]): Option[Str] =
+//   if
+//     n <= 0 and
+//       let x = reverse(acc) |> join("")
+//       contains(xs, x) then None
+//       else Some(x)
+//     else
+//       search((x) => combinations(n - 1, x :: acc, alphabet, xs), alphabet)
+// //│ fun combinations: forall 'T 'A 'T0. (n: Int, acc: List['T], alphabet: List['T0], xs: List[Str]) -> Option[Str]
+// //│   where
+// //│     'T0 <: 'T & 'A
+// //│     'T :> 'A
+// //│     'A := 'T
+// =============================================================================
+
+fun combinations: forall 'a: (Int, List['a], List['a], List[Str]) -> Option[Str]
+fun combinations(n: Int, acc: List['T], alphabet: List['T], xs: List[Str]): Option[Str] =
+  if n <= 0 then
+    let x = reverse(acc) |> join("")
+    if contains(xs, x) then None else Some(x)
+  else
+    search((x) => combinations(n - 1, x :: acc, alphabet, xs), alphabet)
+//│ fun combinations: forall 'T. (n: Int, acc: List['T], alphabet: List['T], xs: List[Str]) -> Option[Str]
+//│ fun combinations: forall 'a. (Int, List['a], List['a], List[Str]) -> Option[Str]
+
+combinations(1, Nil, 1 :: 2 :: 3 :: Nil, Nil) |> showOption
+combinations(2, Nil, 1 :: 2 :: 3 :: Nil, Nil) |> showOption
+combinations(3, Nil, 1 :: 2 :: 3 :: Nil, Nil) |> showOption
+combinations(1, Nil, 1 :: 2 :: 3 :: Nil, "1" :: "3" :: Nil) |> showOption
+combinations(2, Nil, 1 :: 2 :: 3 :: Nil, "11" :: "12" :: "13" :: Nil) |> showOption
+combinations(3, Nil, 1 :: 2 :: 3 :: Nil, "111" :: "112" :: "113" :: "121" :: Nil) |> showOption
+//│ Str
+//│ res
+//│     = 'Some(1)'
+//│ res
+//│     = 'Some(11)'
+//│ res
+//│     = 'Some(111)'
+//│ res
+//│     = 'Some(2)'
+//│ res
+//│     = 'Some(21)'
+//│ res
+//│     = 'Some(122)'
+
+fun freshVar(t: Term): Str =
+  let fvs = freeVars(t)
+  let rec aux(n: Int): Str =
+    if combinations(n, Nil, alphabet, fvs) is
+      Some(x) then x
+      None then aux(n + 1)
+  aux(1)
+//│ fun freshVar: (t: Term) -> Str
+
+freshVar(Var("x"))
+freshVar(App(Var("a"), Var("b")))
+freshVar(App(Abs(Var("a"), Var("a")), Var("b")))
+//│ Str
+//│ res
+//│     = 'a'
+//│ res
+//│     = 'c'
+//│ res
+//│     = 'a'
+
+fun subst(t: Term, x: Str, v: Term): Term =
+  if t is
+    Var(y) and x === y then v
+    Abs(Var(y), t') and x !== y and
+      hasFree(v, y) then
+        let y' = freshVar(t')
+        let t'' = subst(t', y, Var(y'))
+        Abs(Var(y'), subst(t'', x, v))
+      else
+        Abs(Var(y), subst(t', x, v))
+    App(lhs, rhs) then App(subst(lhs, x, v), subst(rhs, x, v))
+    else t
+//│ fun subst: (t: Term, x: Str, v: Term) -> Term
+
+fun showSubst(t, n, v) =
+  showTerm(t) ++ " [" ++ n ++ " / " ++ showTerm(v) ++ "]" ++ " = " ++ showTerm(subst(t, n, v))
+//│ fun showSubst: (Abs & Term | App & Term | Var & Term, Str, Abs & Term | App & Term | Var & Term) -> Str
+
+showSubst(Var("x"), "x", Var("y"))
+showSubst(Abs(Var("x"), Var("x")), "x", Var("z"))
+showSubst(App(Var("x"), Var("y")), "x", Abs(Var("x"), Var("x")))
+showSubst(App(Abs(Var("x"), Var("x")), Var("x")), "x", Abs(Var("y"), Var("y")))
+showSubst(Abs(Var("x"), App(Var("x"), Var("y"))), "y", Var("x"))
+showSubst(Abs(Var("z"), Abs(Var("x"), App(Var("z"), App(Var("x"), Var("y"))))), "y", Var("x"))
+showSubst(Abs(Var("z"), Abs(Var("x"), App(Var("z"), App(Var("x"), Var("y"))))), "y", App(Var("x"), Var("z")))
+//│ Str
+//│ res
+//│     = 'x [x / y] = y'
+//│ res
+//│     = 'λx. x [x / z] = λx. x'
+//│ res
+//│     = '(x y) [x / λx. x] = ((λx. x) y)'
+//│ res
+//│     = '((λx. x) x) [x / λy. y] = ((λx. x) λy. y)'
+//│ res
+//│     = 'λx. (x y) [y / x] = λa. (a x)'
+//│ res
+//│     = 'λz. λx. (z (x y)) [y / x] = λz. λa. (z (a x))'
+//│ res
+//│     = 'λz. λx. (z (x y)) [y / (x z)] = λa. λb. (a (b (x z)))'
+
+//  ____                     _  _   ____   _
+// / ___|  _ __ ___    __ _ | || | / ___| | |_  ___  _ __
+// \___ \ | '_ ` _ \  / _` || || | \___ \ | __|/ _ \| '_ \
+//  ___) || | | | | || (_| || || |  ___) || |_|  __/| |_) |
+// |____/ |_| |_| |_| \__,_||_||_| |____/  \__|\___|| .__/
+//                                                  |_|
+
+type Result = Normal | Stuck | Stepped
+class Normal(term: Term) {
+  fun toString() = "Normal form: " ++ showTerm(term)
+}
+class Stuck(term: Term, part: Term) {
+  fun toString() = "Stuck: " ++ showTerm(part) ++ " in " ++ showTerm(term)
+}
+class Stepped(from: Term, to: Term) {
+  fun toString() = showTerm(from) ++ " => " ++ showTerm(to)
+}
+//│ type Result = Normal | Stepped | Stuck
+//│ class Normal(term: Term) {
+//│   fun toString: () -> Str
+//│ }
+//│ class Stuck(term: Term, part: Term) {
+//│   fun toString: () -> Str
+//│ }
+//│ class Stepped(from: Term, to: Term) {
+//│   fun toString: () -> Str
+//│ }
+
+fun stepByValue(t) =
+  if t is
+    Var then Stuck(t, t)
+    Abs then Normal(t)
+    App(lhs, rhs) and stepByValue(lhs) is
+      Stepped(_, lhs) then Stepped(t, App(lhs, rhs))
+      Stuck(_, part) then Stuck(t, part)
+      Normal and stepByValue(rhs) is
+        Stepped(_, rhs) then Stepped(t, App(lhs, rhs))
+        Stuck(_, part) then Stuck(t, part)
+        Normal and lhs is
+          Abs(Var(name), body) then Stepped(t, subst(body, name, rhs))
+          _ then Stuck(t, lhs)
+//│ fun stepByValue: (Abs | App | Var) -> (Normal | Stepped | Stuck)
+
+toString of stepByValue of Var("x")
+toString of stepByValue of Abs(Var("x"), Var("y"))
+toString of stepByValue of App(Var("x"), Var("y"))
+toString of stepByValue of App(Abs(Var("x"), Var("x")), Var("x"))
+toString of stepByValue of App(Abs(Var("x"), Var("x")), Abs(Var("y"), Var("y")))
+//│ Str
+//│ res
+//│     = 'Stuck: x in x'
+//│ res
+//│     = 'Normal form: λx. y'
+//│ res
+//│     = 'Stuck: x in (x y)'
+//│ res
+//│     = 'Stuck: x in ((λx. x) x)'
+//│ res
+//│     = '((λx. x) λy. y) => λy. y'
+
+//  _____               _                _    _
+// | ____|__   __ __ _ | | _   _   __ _ | |_ (_)  ___   _ __
+// |  _|  \ \ / // _` || || | | | / _` || __|| | / _ \ | '_ \
+// | |___  \ V /| (_| || || |_| || (_| || |_ | || (_) || | | |
+// |_____|  \_/  \__,_||_| \__,_| \__,_| \__||_| \___/ |_| |_|
+//
+
+fun eval(step) =
+  let rec aux(t) =
+    if step(t) is result and result is
+      Stepped(_, t') then aux(t')
+      else result
+  aux
+//│ fun eval: forall 'a 'b. ((Term | 'a) -> (Object & 'b & ~#Stepped | Stepped)) -> 'a -> 'b
+
+let evalByValue = eval(stepByValue)
+//│ let evalByValue: (Abs | App | Var) -> (Normal | Stuck)
+//│ evalByValue
+//│             = [Function: aux]
+
+// Let's program with Church encoding!
+let zero = Abs(Var("f"), Abs(Var("x"), Var("x")))
+let one = Abs(Var("f"), Abs(Var("x"), App(Var("f"), Var("x"))))
+toString of stepByValue of zero
+toString of stepByValue of one
+let succ = Abs(Var("n"), Abs(Var("f"), Abs(Var("x"), App(Var("f"), App(App(Var("n"), Var("f")), Var("x"))))))
+toString of stepByValue of succ
+toString of stepByValue of App(succ, zero)
+//│ let zero: Abs
+//│ let one: Abs
+//│ let succ: Abs
+//│ Str
+//│ zero
+//│      = Abs {}
+//│ one
+//│     = Abs {}
+//│ res
+//│     = 'Normal form: λf. λx. x'
+//│ res
+//│     = 'Normal form: λf. λx. (f x)'
+//│ succ
+//│      = Abs {}
+//│ res
+//│     = 'Normal form: λn. λf. λx. (f ((n f) x))'
+//│ res
+//│     = '((λn. λf. λx. (f ((n f) x))) λf. λx. x) => λf. λx. (f (((λf. λx. x) f) x))'
+
+toString of evalByValue of App(succ, App(succ, zero))
+toString of evalByValue of App(succ, App(succ, App(succ, App(succ, zero))))
+//│ Str
+//│ res
+//│     = 'Normal form: λf. λx. (f (((λf. λx. (f (((λf. λx. x) f) x))) f) x))'
+//│ res
+//│     = 'Normal form: λf. λx. (f (((λf. λx. (f (((λf. λx. (f (((λf. λx. (f (((λf. λx. x) f) x))) f) x))) f) x))) f) x))'
+
