@@ -50,13 +50,30 @@ new Bar2(114, 514)
 //│ Parsed:
 //│ 	New(App(Ident(Bar2),Tup(List(IntLit(114), IntLit(514)))))
 
+fun inc: Int -> Int
+//│ Parsed:
+//│ 	TermDef(Fun,None,Some(InfixApp(Ident(inc),keyword ':',InfixApp(Tup(List(Ident(Int))),keyword '->',Ident(Int)))),None)
+
+// TODO: weird...
+fun id: forall (a): a -> a
+//│ Parsed:
+//│ 	TermDef(Fun,None,Some(InfixApp(InfixApp(Ident(id),keyword ':',App(Ident(forall),Tup(List(Ident(a))))),keyword ':',InfixApp(Tup(List(Ident(a))),keyword '->',Ident(a)))),None)
+
+fun foo: forall (a, b): a -> b
+//│ Parsed:
+//│ 	TermDef(Fun,None,Some(InfixApp(InfixApp(Ident(foo),keyword ':',App(Ident(forall),Tup(List(Ident(a), Ident(b))))),keyword ':',InfixApp(Tup(List(Ident(a))),keyword '->',Ident(b)))),None)
+
+fun foo: forall (Int <: a <: Num): a -> a
+//│ Parsed:
+//│ 	TermDef(Fun,None,Some(InfixApp(InfixApp(Ident(foo),keyword ':',App(Ident(forall),Tup(List(App(Ident(<:),Tup(List(Ident(Int), App(Ident(<:),Tup(List(Ident(a), Ident(Num))))))))))),keyword ':',InfixApp(Tup(List(Ident(a))),keyword '->',Ident(a)))),None)
+
 :fixme
 if 1 < 2 then 1 else 0
 //│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'if' keyword instead
-//│ ║  l.54: 	if 1 < 2 then 1 else 0
+//│ ║  l.71: 	if 1 < 2 then 1 else 0
 //│ ╙──      	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.54: 	if 1 < 2 then 1 else 0
+//│ ║  l.71: 	if 1 < 2 then 1 else 0
 //│ ╙──      	   ^
 //│ Parsed:
 //│ 	Error()
@@ -66,7 +83,7 @@ fun fact = case
   0 then 1
   n then n * fact(n - 1)
 //│ ╔══[PARSE ERROR] Expected expression after 'fun' binding equals sign; found 'case' keyword instead
-//│ ║  l.65: 	fun fact = case
+//│ ║  l.82: 	fun fact = case
 //│ ╙──      	           ^^^^
 //│ Parsed:
 //│ 	Error()

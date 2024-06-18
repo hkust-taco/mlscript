@@ -42,6 +42,7 @@ enum Tree extends Located:
   case Sel(prefix: Tree, name: Ident)
   case InfixApp(lhs: Tree, kw: Keyword.Infix, rhs: Tree)
   case New(body: Tree)
+  case Forall(tvs: Ls[Tree], body: Tree) // TODO: bounds
 
   def children: Ls[Tree] = this match
     case Empty() | Error() | Ident(_) | IntLit(_) | DecLit(_) | StrLit(_) | UnitLit(_) => Nil
@@ -56,6 +57,7 @@ enum Tree extends Located:
     case InfixApp(lhs, _, rhs) => Ls(lhs, rhs)
     case TermDef(k, symName, alphaName, rhs) => symName.toList ++ alphaName ++ rhs
     case New(body) => body :: Nil
+    case Forall(tvs, body) => body :: tvs
   
   def describe: Str = ??? // TODO
   
@@ -103,6 +105,8 @@ trait TermDefImpl:
       (R(id), N, N)
     case S(App(id: Ident, args)) =>
       (R(id), S(args), N)
+    case S(InfixApp(InfixApp(id: Ident, Keyword.`:`, App(Ident("forall"), Tup(bd))), Keyword.`:`, sign)) =>
+      (R(id), N, S(Forall(bd, sign)))
   lazy val symbolicName: Opt[Ident] = symName match
     case S(id: Ident) => S(id)
     case _ => N

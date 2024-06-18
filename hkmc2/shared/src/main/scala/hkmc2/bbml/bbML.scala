@@ -39,7 +39,7 @@ enum Type extends TypeArg:
     case FunType(args, ret, eff) => s"(${args.mkString(", ")}) ->{${eff}} ${ret}"
     case ComposedType(lhs, rhs, pol) => s"${lhs} ${if pol then "∨" else "∧"} ${rhs}"
     case NegType(ty) => s"¬${ty}"
-    case PolymorphicType(lvl, tv, body) => ???
+    case PolymorphicType(lvl, tv, body) => s"forall($lvl) ${tv.mkString(", ")}: $body"
     case Top => "⊤"
     case Bot => "⊥"
 
@@ -87,12 +87,13 @@ object InfVarUid extends Uid.Handler[Type.InfVar]
 
 type EnvType = mutable.HashMap[Uid[Symbol], Type]
 type clsDefType = mutable.HashMap[Str, ClassDef]
-final case class Ctx(parent: Option[Ctx], lvl: Int, clsDefs: clsDefType, env: EnvType):
+final case class Ctx(parent: Option[Ctx], lvl: Int, clsDefs: clsDefType, env: EnvType): // TODO: skolem
   def +=(p: Symbol -> Type): Unit = env += p._1.uid -> p._2
   def get(sym: Symbol): Option[Type] = env.get(sym.uid) orElse parent.dlof(_.get(sym))(None)
   def *=(cls: ClassDef): Unit = clsDefs += cls.sym.id.name -> cls
   def getDef(name: Str): Option[ClassDef] = clsDefs.get(name) orElse parent.dlof(_.getDef(name))(None)
   def nest: Ctx = Ctx(Some(this), lvl, mutable.HashMap.empty, mutable.HashMap.empty)
+  def nextLevel: Ctx = Ctx(Some(this), lvl + 1, mutable.HashMap.empty, mutable.HashMap.empty)
 
 object Ctx:
   def intTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Int").getOrElse(???).sym, Nil)
@@ -133,7 +134,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
   private val infVarState = new InfVarUid.State()
   private val solver = new ConstraintSolver(raise)
 
-  private def freshVar(using ctx: Ctx) = Type.InfVar(ctx.lvl, infVarState.nextUid, new VarState())
+  private def freshVar(using ctx: Ctx): Type.InfVar = Type.InfVar(ctx.lvl, infVarState.nextUid, new VarState())
   private def freshWildcard(using ctx: Ctx) = Wildcard(freshVar, freshVar)
 
   private def typeCheckArgs(args: Term)(using ctx: Ctx): Ls[Type] = args match
@@ -162,6 +163,11 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
     case _ => error(msg"${asc.toString} is not a valid class member type" -> asc.toLoc :: Nil) // TODO
 
   private def typeType(ty: Term)(using ctx: Ctx): Type = ty match
+    case Ref(sym: VarSymbol) =>
+      ctx.get(sym) match
+        case Some(ty) => ty
+        case _ =>
+          error(msg"Variable not found: ${sym.name}" -> ty.toLoc :: Nil)
     case Ref(cls: ClassSymbol) =>
       ctx.getDef(cls.nme) match
         case S(_) => Type.ClassType(cls, Nil) // TODO: tparams?
@@ -171,6 +177,15 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       Type.FunType(params.map {
         case Fld(_, p, _) => typeType(p)
       }, typeType(ret), Type.Bot) // TODO: effect
+    case ForallTy(tvs, body) =>
+      val nestCtx = ctx.nextLevel
+      given Ctx = nestCtx
+      val bd = tvs.map:
+        case sym: VarSymbol =>
+          val tv = freshVar
+          nestCtx += sym -> tv // TODO: a type var symbol may be better...
+          tv
+      Type.PolymorphicType(nestCtx.lvl, bd, typeType(body))
     case _ => error(msg"${ty.toString} is not a valid type annotation" -> ty.toLoc :: Nil) // TODO
 
   def typeCheck(t: Term)(using ctx: Ctx): Type = t match
@@ -193,10 +208,15 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           val rhsTy = typeCheck(rhs)
           nestCtx += sym -> rhsTy
         case TermDefinition(Fun, sym, Some(params), sig, Some(body), _) =>
-          val (tvs, retAnno, effAnno) = sig.map(typeType) match
+          def rec(sig: Opt[Type]): (Ls[Type], Opt[Type], Opt[Type]) = sig match
             case S(ft @ Type.FunType(args, ret, eff)) => (args, S(ret), S(eff))
+            case S(Type.PolymorphicType(_, _, ty)) => rec(S(ty))
             case _ => (params.map(_ => freshVar), N, N)
-          val defCtx = nestCtx.nest
+          val sigTy = sig.map(typeType)
+          val (tvs, retAnno, effAnno) = rec(sigTy)
+          val defCtx = sigTy match
+            case S(_: Type.PolymorphicType) => nestCtx.nextLevel
+            case _ => nestCtx.nest
           if params.length != tvs.length then
              error(msg"Cannot type function ${t.toString} as ${sig.toString}" -> t.toLoc :: Nil)
           else
@@ -206,7 +226,11 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
                 ty
             val bodyTy = typeCheck(body)(using defCtx)
             retAnno.foreach(anno => solver.constrain(bodyTy, anno))
-            ctx += sym -> Type.FunType(argsTy, bodyTy, Type.Bot) // TODO: eff
+            sigTy match
+              case S(Type.PolymorphicType(lvl, bds, _)) =>
+                ctx += sym -> Type.PolymorphicType(lvl, bds, Type.FunType(argsTy, bodyTy, Type.Bot)) // TODO: eff
+              case _ =>
+                ctx += sym -> Type.FunType(argsTy, bodyTy, Type.Bot) // TODO: eff
         case clsDef: ClassDef => ctx *= clsDef
         case _ => () // TODO
       typeCheck(res)
@@ -279,7 +303,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
         case N => 
           error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil)
     case Term.Asc(term, ty) =>
-      val res = typeType(ty)
+      val res = typeType(ty) // TODO: poly
       solver.constrain(typeCheck(term), res)
       res
     case Term.Error =>

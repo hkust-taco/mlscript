@@ -70,6 +70,19 @@ class Elaborator(raise: Raise):
       case _ =>
         raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
         Term.Error
+    case Forall(tvs, body) =>
+      val boundVars = mutable.HashMap.empty[Str, VarSymbol]
+      val bds = tvs.collect:
+        case Tree.Ident(nme) =>
+          val sym = VarSymbol(nme, nextUid)
+          sym.decl = S(TyParam(FldFlags.empty, sym))
+          boundVars += nme -> sym
+          sym          
+      if bds.length != tvs.length then
+        raise(ErrorReport(msg"Illegal forall annotation." -> tree.toLoc :: Nil))
+        Term.Error
+      else
+        Term.ForallTy(bds, term(body)(using ctx.copy(locals = ctx.locals ++ boundVars)))
     case Empty() =>
       raise(ErrorReport(msg"A term was expected in this position, but no term was found." -> tree.toLoc :: Nil))
       Term.Error
@@ -310,6 +323,8 @@ class Elaborator(raise: Raise):
       case Term.FunTy(l, r) =>
         traverseType(pol.!)(l)
         traverseType(pol)(r)
+      case Term.ForallTy(_, body) =>
+        traverseType(pol)(body)
       case Term.Tup(fields) =>
         // fields.foreach(f => traverseType(pol)(f.value))
         fields.foreach(traverseType(pol))

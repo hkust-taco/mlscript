@@ -153,7 +153,7 @@ object ParseRule:
     Kw(`new`):
       ParseRule("`new` keyword"):
         Expr(ParseRule("`new` expression")(End(())))((body, _: Unit) => New(body))
-      ,
+    ,
     Kw(`fun`)(termDefBody(Fun)),
     Kw(`val`)(termDefBody(Val)),
     Kw(`type`)(typeDeclBody(Als)),

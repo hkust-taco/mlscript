@@ -1,0 +1,11 @@
+:global
+:bbml
+
+fun id: forall (a): a -> a
+fun id(x) = x
+//│ Elab: { fun id: forall a@2: FunTy(Tup(List(Fld(‹›,Ref(a@2),None))),Ref(a@2))‹›; fun id(x@3): forall a@5: FunTy(Tup(List(Fld(‹›,Ref(a@5),None))),Ref(a@5))‹› = x@3#0; }‹›
+//│ Type: ⊤
+
+id
+//│ Elab: { id#0 }‹›
+//│ Type: forall(1) α0: (α0) ->{⊥} α0
