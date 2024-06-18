@@ -168,16 +168,16 @@ mixin Text {
 :e
 module SizeText extends Text
 //│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
-//│ ║  l.322: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
+//│ ║  l.160: 	      Intersect then concat("the intersection of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                                     ^^^^^
 //│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
-//│ ║  l.320: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
+//│ ║  l.158: 	      Outside(a) then concat("outside a region of size ", toString(this.size(a)))
 //│ ╙──       	                                                                       ^^^^^
 //│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
-//│ ║  l.323: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
+//│ ║  l.161: 	      Translate then concat("a translated region of size ", toString(this.size(e)))
 //│ ╙──       	                                                                         ^^^^^
 //│ ╔══[ERROR] Type `#SizeText & {text: ?a -> (?b | ?c | ?d | ?e | ?f)}` does not contain member `size`
-//│ ║  l.321: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
+//│ ║  l.159: 	      Union then concat("the union of two regions of size ", toString(this.size(e)))
 //│ ╙──       	                                                                          ^^^^^
 //│ module SizeText {
 //│   fun text: (Circle | Intersect[anything] | Outside[anything] | Translate[anything] | Union[anything]) -> Str
@@ -399,13 +399,13 @@ Lang.size(mk(100))
 :re
 Lang.contains(mk(100), Vector(0, 0))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.834: 	Lang.contains(mk(100), Vector(0, 0))
+//│ ║  l.400: 	Lang.contains(mk(100), Vector(0, 0))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Scale[?Region]` does not match type `Circle | Intersect[?Region0] | Outside[?Region1] | Translate[?Region2] | Union[?Region3]`
-//│ ║  l.669: 	  _ then Scale(Vector(0, 0), mk(n))
+//│ ║  l.327: 	  _ then Scale(Vector(0, 0), mk(n))
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.215: 	    if a is
+//│ ║  l.113: 	    if a is
 //│ ║         	       ^
 //│ ╟── from field selection:
 //│ ║  l.13: 	class Outside[out Region](a: Region)
@@ -422,16 +422,16 @@ Lang.contains(mk(100), Vector(0, 0))
 :re
 Lang.text(mk(100))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.865: 	Lang.text(mk(100))
+//│ ║  l.423: 	Lang.text(mk(100))
 //│ ║         	^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Scale[?Region]` does not match type `Circle | Intersect[?Region0] | Outside[?Region1] | Translate[?Region2] | Union[?Region3]`
-//│ ║  l.669: 	  _ then Scale(Vector(0, 0), mk(n))
+//│ ║  l.327: 	  _ then Scale(Vector(0, 0), mk(n))
 //│ ║         	         ^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `Circle | Intersect[?Region4] | Outside[?Region5] | Translate[?Region6] | Union[?Region7]`
-//│ ║  l.865: 	Lang.text(mk(100))
+//│ ║  l.423: 	Lang.text(mk(100))
 //│ ║         	          ^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.318: 	    if e is
+//│ ║  l.156: 	    if e is
 //│ ╙──       	       ^
 //│ Str | error
 //│ res

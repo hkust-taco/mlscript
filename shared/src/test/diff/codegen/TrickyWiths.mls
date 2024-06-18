@@ -121,13 +121,13 @@ f { a = 12; b = 34 }
 :e
 f { a = "oops"; b = 34 }
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.229: 	f { a = "oops"; b = 34 }
+//│ ║  l.122: 	f { a = "oops"; b = 34 }
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── string literal of type `"oops"` is not an instance of type `int`
-//│ ║  l.229: 	f { a = "oops"; b = 34 }
+//│ ║  l.122: 	f { a = "oops"; b = 34 }
 //│ ║         	        ^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.202: 	def f x = x with { a = x.a + 1 }
+//│ ║  l.113: 	def f x = x with { a = x.a + 1 }
 //│ ╙──       	                       ^^^
 //│ res: error | {a: int, b: 34}
 //│    = { a: 'oops1', b: 34 }
@@ -157,19 +157,19 @@ r = a2 with { x = 1 }
 :e
 r : (A2 \ x) & {x: 1}
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.303: 	r : (A2 \ x) & {x: 1}
+//│ ║  l.158: 	r : (A2 \ x) & {x: 1}
 //│ ║         	^
 //│ ╟── application of type `A2` does not match type `{x: string}`
-//│ ║  l.285: 	a2 = A2{x="a"}
+//│ ║  l.147: 	a2 = A2{x="a"}
 //│ ║         	     ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `{x: string}`
-//│ ║  l.303: 	r : (A2 \ x) & {x: 1}
+//│ ║  l.158: 	r : (A2 \ x) & {x: 1}
 //│ ║         	^
 //│ ╟── Note: constraint arises from record type:
-//│ ║  l.271: 	class A2: { x: string }
+//│ ║  l.144: 	class A2: { x: string }
 //│ ║         	          ^^^^^^^^^^^^^
 //│ ╟── from intersection type:
-//│ ║  l.303: 	r : (A2 \ x) & {x: 1}
+//│ ║  l.158: 	r : (A2 \ x) & {x: 1}
 //│ ╙──       	    ^^^^^^^^^^^^^^^^^
 //│ res: A2\x & {x: 1}
 //│    = A2 { x: 1 }
@@ -177,13 +177,13 @@ r : (A2 \ x) & {x: 1}
 :e // * Field removal in negative position (see above)
 r2 = r : (A2 \ y) & {x: 1}
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.317: 	r2 = r : (A2 \ y) & {x: 1}
+//│ ║  l.178: 	r2 = r : (A2 \ y) & {x: 1}
 //│ ║         	     ^
 //│ ╟── integer literal of type `1` is not an instance of type `string`
-//│ ║  l.286: 	r = a2 with { x = 1 }
+//│ ║  l.148: 	r = a2 with { x = 1 }
 //│ ║         	                  ^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.271: 	class A2: { x: string }
+//│ ║  l.144: 	class A2: { x: string }
 //│ ╙──       	               ^^^^^^
 //│ r2: A2\y & {x: 1}
 //│   = A2 { x: 1 }

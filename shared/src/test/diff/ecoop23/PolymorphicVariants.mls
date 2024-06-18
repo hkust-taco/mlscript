@@ -171,16 +171,16 @@ Test2.eval(Cons(["a", Numb(1)], Nil), Var("a"))
 :e
 Test2.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.367: 	Test2.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
+//│ ║  l.172: 	Test2.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Numb | Var`
-//│ ║  l.367: 	Test2.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
+//│ ║  l.172: 	Test2.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
 //│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.260: 	  if v is
+//│ ║  l.125: 	  if v is
 //│ ║         	     ^
 //│ ╟── from reference:
-//│ ║  l.281: 	    let vv = map_expr(eta, v)
+//│ ║  l.135: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
 //│ Abs[Var] | Numb | Var | error
 //│ res
@@ -233,16 +233,16 @@ module Test3 extends EvalVar, EvalLambda, EvalExpr
 :e
 Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.486: 	Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
+//│ ║  l.234: 	Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── application of type `Abs[?A]` does not match type `Add[?A0] | Mul[?A1] | Numb | Var`
-//│ ║  l.486: 	Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
+//│ ║  l.234: 	Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
 //│ ║         	                                                 ^^^^^^^^^^^^^^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.260: 	  if v is
+//│ ║  l.125: 	  if v is
 //│ ║         	     ^
 //│ ╟── from reference:
-//│ ║  l.281: 	    let vv = map_expr(eta, v)
+//│ ║  l.135: 	    let vv = map_expr(eta, v)
 //│ ╙──       	                           ^
 //│ Abs[Var] | error | 'a
 //│   where
