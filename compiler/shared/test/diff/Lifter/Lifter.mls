@@ -1,6 +1,7 @@
 :NewDefs
 :ParseOnly
 
+:lift
 class A(x) {
   class B(y) {
     fun getX = x
@@ -56,6 +57,7 @@ class A(x) {
 //│ }
 //│ 
 
+:lift
 class A(x) {
   class B(y) {
     class C(z) {
@@ -75,7 +77,7 @@ class A(x) {
 //│ }
 //│ 
 
-
+:lift
 class A(x) {
   class B{
     fun foo = 1
@@ -108,7 +110,7 @@ new C{
 //│ 
 
 
-
+:lift
 class Parent<T, U, V>(x) { 
   fun foo(x: Int): T = x+1
   class Inner<W>(y: Int){
@@ -128,7 +130,7 @@ class Parent<T, U, V>(x) {
 //│ }
 //│ 
 
-
+:lift
 class B<T> {}
 class C {}
 class D(y: Int) {}
@@ -149,6 +151,7 @@ class A<T, U>(x: Int): ({a1: Int} & B<T> & D(x)) {
 //│ 
 // │ TypingUnit(NuTypeDef(class, B, (TypeName(T)), Tup(), (), TypingUnit()), NuTypeDef(class, C, (), Tup(), (), TypingUnit()), NuTypeDef(class, A, (TypeName(T), TypeName(U)), Tup(x: Var(Int)), (App(App(Var(&), Tup(_: Bra(rcd = true, Rcd(Var(a1) = Var(Int)})))), Tup(_: TyApp(Var(B), List(TypeName(T)))))), TypingUnit(NuFunDef(None, getA, [], Lam(Tup(), New(Some((TypeName(C),)), TypingUnit(List(fun foo = x: T, => x))))))))
 
+:lift
 class B<T> {}
 class C {}
 class D(y: Int) {}
@@ -168,6 +171,7 @@ class A<T, U>(x: Int) extends {a1: Int}, B<T>, D(x){
 //│ }
 //│ 
 
+:lift
 class Child<T, U>(x): ({ age: T } & { name: String}) {
   class Inner{
     fun foo = age
@@ -187,7 +191,7 @@ class Child<T, U>(x): ({ age: T } & { name: String}) {
 //│ }
 //│ 
 
-
+:lift
 class A(x: Int) {
   fun getA: Int = 0
   fun getA1 = 1
@@ -206,7 +210,7 @@ new A(0) {
 //│ }
 //│ 
 
-
+:lift
 class A(x) {
   class B(y) {  }
 }
@@ -228,7 +232,7 @@ new A(1) {
 //│ 
 
 
-
+:lift
 class A {
   fun getA = 0
   fun funcA = 10
@@ -260,7 +264,7 @@ new B{
 //│ }
 //│ 
 
-
+:lift
 class A{
   class B{
     fun funB = 1
@@ -296,7 +300,7 @@ class A{
 //│ }
 //│ 
 
-
+:lift
 class A{
   class B{
     fun funB = 1
@@ -349,7 +353,7 @@ class A{
 //│ }
 //│ 
 
-
+:lift
 class A{
   class B{
     fun foo = 1
@@ -367,7 +371,7 @@ new A
 //│ }
 //│ 
 
-
+:lift
 class A(x) {
   fun foo = 0
   fun bar = x
@@ -389,6 +393,7 @@ let x = new A{
 //│ }
 //│ 
 
+:lift
 class A {}
 new A{
   fun foo = 1

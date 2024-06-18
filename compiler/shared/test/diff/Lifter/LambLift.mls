@@ -1,6 +1,7 @@
 :NewDefs
-:AllowRuntimeErrors
+:ParseOnly
 
+:lift
 fun foo() =
   let local(x) =
     class Foo {
@@ -9,6 +10,8 @@ fun foo() =
     (new Foo()).bar
   local(1)
 foo()
+//│ |#fun| |foo|(||)| |#=|→|#let| |local|(|x|)| |#=|→|#class| |Foo| |{|→|#fun| |bar| |#=| |x| |+| |foo|(||)|←|↵|}|↵|(|#new| |Foo|(||)|)|.bar|←|↵|local|(|1|)|←|↵|foo|(||)|
+//│ Parsed: {fun foo = () => {let local = (x,) => {class Foo {fun bar = +(x, foo(),)}; ('(' (new Foo)() ')').bar}; local(1,)}; foo()}
 //│ Lifted:
 //│ TypingUnit {
 //│   class Foo$1([x,]) {fun bar = +((this).x, foo$1(),)}
@@ -16,31 +19,30 @@ foo()
 //│   fun foo$1 = () => {local$2(1,)}
 //│   Code(List(foo$1()))
 //│ }
-//│ fun foo: () -> Int
-//│ Int
-//│ res
-//│ Runtime error:
-//│   RangeError: Maximum call stack size exceeded
+//│ 
 
+:lift
 fun foo(f) = 
   f(1)
 foo(x => x+1)
+//│ |#fun| |foo|(|f|)| |#=| |→|f|(|1|)|←|↵|foo|(|x| |#=>| |x|+|1|)|
+//│ Parsed: {fun foo = (f,) => {f(1,)}; foo((x,) => +(x, 1,),)}
 //│ Lifted:
 //│ TypingUnit {
 //│   class Lambda1$2$1([]) {fun apply = (x,) => +(x, 1,)}
 //│   fun foo$1 = (f,) => {f(1,)}
 //│   Code(List(foo$1({Lambda1$2$1()},)))
 //│ }
-//│ fun foo: forall 'a. (1 -> 'a) -> 'a
-//│ Int
-//│ res
-//│     = 2
+//│ 
 
+:lift
 fun foo(x) = 
   let bar(f) = 
     f(x)
   bar(y => y+x)
 foo(1)
+//│ |#fun| |foo|(|x|)| |#=| |→|#let| |bar|(|f|)| |#=| |→|f|(|x|)|←|↵|bar|(|y| |#=>| |y|+|x|)|←|↵|foo|(|1|)|
+//│ Parsed: {fun foo = (x,) => {let bar = (f,) => {f(x,)}; bar((y,) => +(y, x,),)}; foo(1,)}
 //│ Lifted:
 //│ TypingUnit {
 //│   class Lambda1$3$1([x,]) {fun apply = (y,) => +(y, (this).x,)}
@@ -48,11 +50,9 @@ foo(1)
 //│   fun foo$1 = (x,) => {bar$2({Lambda1$3$1(x,)}, x,)}
 //│   Code(List(foo$1(1,)))
 //│ }
-//│ fun foo: Int -> Int
-//│ Int
-//│ res
-//│     = 2
+//│ 
 
+:lift
 fun foo(f) = 
     f(1)
 class A(y: Int){
@@ -61,6 +61,8 @@ class A(y: Int){
 fun app(a) = 
   foo(z => a.bar(z))
 app(new A(1))
+//│ |#fun| |foo|(|f|)| |#=| |→|f|(|1|)|←|↵|#class| |A|(|y|#:| |Int|)|{|→|#fun| |bar|(|z|)| |#=| |y|+|z|←|↵|}|↵|#fun| |app|(|a|)| |#=| |→|foo|(|z| |#=>| |a|.bar|(|z|)|)|←|↵|app|(|#new| |A|(|1|)|)|
+//│ Parsed: {fun foo = (f,) => {f(1,)}; class A(y: Int,) {fun bar = (z,) => +(y, z,)}; fun app = (a,) => {foo((z,) => (a).bar(z,),)}; app((new A)(1,),)}
 //│ Lifted:
 //│ TypingUnit {
 //│   class A$1([y: Int,]) {fun bar = (z,) => +((this).y, z,)}
@@ -69,11 +71,4 @@ app(new A(1))
 //│   fun app$1 = (a,) => {foo$2({Lambda1$3$2(a,)},)}
 //│   Code(List(app$1((new A$1)(1,),)))
 //│ }
-//│ fun foo: forall 'a. (1 -> 'a) -> 'a
-//│ class A(y: Int) {
-//│   fun bar: Int -> Int
-//│ }
-//│ fun app: forall 'b. {bar: 1 -> 'b} -> 'b
-//│ Int
-//│ res
-//│     = 2
+//│ 

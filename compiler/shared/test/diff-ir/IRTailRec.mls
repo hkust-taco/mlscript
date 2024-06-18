@@ -610,10 +610,10 @@ hello()
 //│ let* (x$2) = hello() in -- #12
 //│ x$2 -- #11)
 //│ ╔══[COMPILATION ERROR] not a tail call, as the remaining functions may be impure
-//│ ║  l.598: 	    @tailcall hello()
+//│ ║  l.594: 	    @tailcall hello()
 //│ ╙──       	              ^^^^^
 //│ ╔══[COMPILATION ERROR] not a tail call
-//│ ║  l.599: 	    @tailcall hello()
+//│ ║  l.595: 	    @tailcall hello()
 //│ ╙──       	              ^^^^^
 //│ 
 //│ Strongly Connected Tail Calls:
@@ -660,7 +660,7 @@ hello()
 //│ let* (x$1) = hello() in -- #8
 //│ x$1 -- #7)
 //│ ╔══[COMPILATION ERROR] not a tail call
-//│ ║  l.651: 	    @tailcall hello()
+//│ ║  l.646: 	    @tailcall hello()
 //│ ╙──       	              ^^^^^
 //│ 
 //│ Strongly Connected Tail Calls:
@@ -1998,10 +1998,10 @@ a()
 //│ let* (x$6) = a() in -- #27
 //│ x$6 -- #26)
 //│ ╔══[COMPILATION ERROR] function `a` is not tail-recursive, but is marked as @tailrec
-//│ ║  l.1977: 	@tailrec 
+//│ ║  l.1966: 	@tailrec 
 //│ ║          	 ^^^^^^^
 //│ ╟── it could self-recurse through this call, which may not be a tail-call
-//│ ║  l.1975: 	  a()
+//│ ║  l.1964: 	  a()
 //│ ╙──        	  ^
 //│ 
 //│ Strongly Connected Tail Calls:
@@ -2118,10 +2118,10 @@ a()
 //│ let* (x$7) = a() in -- #36
 //│ x$7 -- #35)
 //│ ╔══[COMPILATION ERROR] function `a` is not tail-recursive, but is marked as @tailrec
-//│ ║  l.2100: 	@tailrec
+//│ ║  l.2088: 	@tailrec
 //│ ║          	 ^^^^^^^
 //│ ╟── it could self-recurse through this call, which may not be a tail-call
-//│ ║  l.2102: 	fun b() = A(c(), @tailcall a())
+//│ ║  l.2090: 	fun b() = A(c(), @tailcall a())
 //│ ╙──        	            ^
 //│ 
 //│ Strongly Connected Tail Calls:
@@ -2351,13 +2351,13 @@ a()
 //│ let* (x$6) = a() in -- #33
 //│ x$6 -- #32)
 //│ ╔══[COMPILATION ERROR] not a tail call, as the remaining functions may be impure
-//│ ║  l.2337: 	fun b() = A(@tailcall a(), c())
+//│ ║  l.2324: 	fun b() = A(@tailcall a(), c())
 //│ ╙──        	                      ^
 //│ ╔══[COMPILATION ERROR] function `a` is not tail-recursive, but is marked as @tailrec
-//│ ║  l.2335: 	@tailrec
+//│ ║  l.2322: 	@tailrec
 //│ ║          	 ^^^^^^^
 //│ ╟── it could self-recurse through this call, which may not be a tail-call
-//│ ║  l.2337: 	fun b() = A(@tailcall a(), c())
+//│ ║  l.2324: 	fun b() = A(@tailcall a(), c())
 //│ ╙──        	                      ^
 //│ 
 //│ Strongly Connected Tail Calls:
@@ -2514,7 +2514,7 @@ a()
 //│ |@|tailcall| |1|
 //│ Parsed: {@tailcall 1}
 //│ ╔══[COMPILATION ERROR] @tailcall may only be used to annotate function calls
-//│ ║  l.2527: 	@tailcall 1
+//│ ║  l.2513: 	@tailcall 1
 //│ ╙──        	 ^^^^^^^^
 //│ 
 //│ IR:
@@ -2541,7 +2541,7 @@ a()
 //│ |@|tailrec| |1|
 //│ Parsed: {@tailrec 1}
 //│ ╔══[COMPILATION ERROR] @tailrec may only be used to annotate functions
-//│ ║  l.2555: 	@tailrec 1
+//│ ║  l.2540: 	@tailrec 1
 //│ ╙──        	 ^^^^^^^
 //│ 
 //│ IR:
@@ -2570,7 +2570,7 @@ foo()
 //│ |#fun| |foo|(||)| |#=|→|@|tailrec| |foo|(||)|←|↵|foo|(||)|
 //│ Parsed: {fun foo = () => {@tailrec foo()}; foo()}
 //│ ╔══[COMPILATION ERROR] @tailrec is for annotating functions; try @tailcall instead
-//│ ║  l.2584: 	  @tailrec foo()
+//│ ║  l.2568: 	  @tailrec foo()
 //│ ╙──        	   ^^^^^^^
 //│ 
 //│ IR:
@@ -2623,7 +2623,7 @@ foo()
 //│ |@|tailcall|↵|#fun| |foo|(||)| |#=|→|foo|(||)|←|↵|foo|(||)|
 //│ Parsed: {fun foo = () => {foo()}; foo()}
 //│ ╔══[COMPILATION ERROR] @tailcall is for annotating function calls; try @tailrec instead
-//│ ║  l.2636: 	@tailcall
+//│ ║  l.2619: 	@tailcall
 //│ ╙──        	 ^^^^^^^^
 //│ 
 //│ IR:

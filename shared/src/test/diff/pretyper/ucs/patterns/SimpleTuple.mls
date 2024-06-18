@@ -112,10 +112,10 @@ fun not_working(x) =
     else
       0
 //│ ╔══[WARNING] this case is unreachable
-//│ ║  l.113: 	      0
+//│ ║  l.122: 	      0
 //│ ║         	      ^
 //│ ╟── because it is subsumed by the branch
-//│ ║  l.111: 	      a + b + c
+//│ ║  l.120: 	      a + b + c
 //│ ╙──       	      ^^^^^^^^^
 //│ fun not_working: {0: Int, 1: Int, 2: Int} -> Int
 
@@ -127,18 +127,18 @@ not_working([1, 2, 3])
 :e
 not_working([1, 2])
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.128: 	not_working([1, 2])
+//│ ║  l.157: 	not_working([1, 2])
 //│ ║         	^^^^^^^^^^^^^^^^^^^
 //│ ╟── tuple literal of type `{0: 1, 1: 2}` does not have field '2'
-//│ ║  l.128: 	not_working([1, 2])
+//│ ║  l.157: 	not_working([1, 2])
 //│ ║         	            ^^^^^^
 //│ ╟── Note: constraint arises from field selection:
-//│ ║  l.109: 	  if x is
+//│ ║  l.118: 	  if x is
 //│ ║         	     ^^^^
-//│ ║  l.110: 	    [a, b, c] then
+//│ ║  l.119: 	    [a, b, c] then
 //│ ║         	^^^^^^^^^^^^
 //│ ╟── from reference:
-//│ ║  l.109: 	  if x is
+//│ ║  l.118: 	  if x is
 //│ ╙──       	     ^
 //│ Int | error
 //│ res

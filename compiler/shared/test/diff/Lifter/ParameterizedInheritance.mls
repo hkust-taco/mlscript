@@ -1,63 +1,41 @@
 :NewDefs
 
-:mono
-:e
+// FIXME: correctly lift parameterized inheritance
+:lift
 val c = 5
-class Sup(a: Int){
+class Sup(val a: Int){
   virtual fun foo = () -> a
 }
 class Sub(b: Int) extends Sup(b+b){
 }
 class Sub2(c: Int) extends Sub(c+c){
-  fun foo = () -> a+c
+  fun foo = () -> c+c
 }
 (Sub(10)).foo()
 (Sub2(c)).foo()
 //│ Lifted:
 //│ TypingUnit {
-//│   class Sup$1([a: Int,]) {fun foo = () => (this).a}
+//│   class Sup$1([val a: Int,]) {fun foo = () => (this).a}
 //│   class Sub$2([b: Int,]): Sup$1(+((this).b, (this).b,),) {}
-//│   class Sub2$3([c: Int,]): Sub$2(+(c$1, c$1,),) {fun foo = () => +((this).a, c$1,)}
+//│   class Sub2$3([c: Int,]): Sub$2(+(c$1, c$1,),) {fun foo = () => +(c$1, c$1,)}
 //│   let c$1 = 5
 //│   Code(List(('(' Sub$2(10,) ')').foo()))
 //│   Code(List(('(' Sub2$3(c$1,) ')').foo()))
 //│ }
-//│ Mono:
-//│ TypingUnit {
-//│   class Sub2$3([c: Int,]): Sub$2(+(c$1, c$1,),) {}
-//│   class Sup$1([a: Int,]) {}
-//│   class Sub$2([b: Int,]): Sup$1(+((this).b, (this).b,),) {}
-//│   let c$1 = 5
-//│   fun main$$5 = () => let obj = '(' Sub2$3(c$1,) ')' in if obj is ‹(Sub2$3) then foo$Sub2$3(obj,); else error›
-//│   fun main$$4 = () => let obj = '(' Sub$2(10,) ')' in if obj is ‹(Sub$2) then foo$Sup$1(obj,); else error›
-//│   fun foo$Sup$1 = (this,) => let obj = this in if obj is ‹(Sup$1) then 10; else error›
-//│   fun foo$Sub2$3 = (this,) => +(let obj = this in if obj is ‹(Sub2$3) then 5; else error›, c$1,)
-//│   Code(List(main$$4()))
-//│   Code(List(main$$5()))
+//│ ╔══[ERROR] identifier not found: this
+//│ ╙──
+//│ ╔══[ERROR] identifier not found: this
+//│ ╙──
+//│ class Sup$1(a: Int) {
+//│   fun foo: () -> Int
 //│ }
-//│ ╔══[ERROR] identifier not found: this
-//│ ╙──
-//│ ╔══[ERROR] identifier not found: this
-//│ ╙──
-//│ class Sub2$3(c: Int) extends Sub$2, Sup$1
-//│ class Sup$1(a: Int)
-//│ class Sub$2(b: Int) extends Sup$1
-//│ let c$1: 5
-//│ fun main$$5: () -> Int
-//│ fun main$$4: () -> 10
-//│ fun foo$Sup$1: Object -> 10
-//│ fun foo$Sub2$3: Object -> Int
+//│ class Sub$2(b: Int) extends Sup$1 {
+//│   fun foo: () -> Int
+//│ }
+//│ class Sub2$3(c: Int) extends Sub$2, Sup$1 {
+//│   fun foo: () -> Int
+//│ }
+//│ val c$1: 5
 //│ Int
 //│ Code generation encountered an error:
 //│   unguarded recursive use of by-value binding c$1
-
-// TODO: Handle recursive references in closure
-//:mono
-//:e 
-//class Foo(f: Int -> Int){
-//  fun foo = () -> f(1)
-//}
-//class F1() extends Foo(x => x+1){}
-//class F2() extends Foo(x => x+2){}
-//(new F1()).foo()
-//(new F2()).foo()

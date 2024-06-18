@@ -71,22 +71,22 @@ fun mix(x) = if x is
 :e
 [mix(false), mix(None)]
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.72: 	[mix(false), mix(None)]
-//│ ║        	 ^^^^^^^^^^
+//│ ║  l.123: 	[mix(false), mix(None)]
+//│ ║         	 ^^^^^^^^^^
 //│ ╟── reference of type `false` does not match type `0 | Some[?T] | true`
-//│ ║  l.72: 	[mix(false), mix(None)]
-//│ ║        	     ^^^^^
+//│ ║  l.123: 	[mix(false), mix(None)]
+//│ ║         	     ^^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.60: 	fun mix(x) = if x is
+//│ ║  l.91: 	fun mix(x) = if x is
 //│ ╙──      	                ^
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.72: 	[mix(false), mix(None)]
-//│ ║        	             ^^^^^^^^^
+//│ ║  l.123: 	[mix(false), mix(None)]
+//│ ║         	             ^^^^^^^^^
 //│ ╟── reference of type `None` does not match type `0 | Some[?T] | true`
-//│ ║  l.72: 	[mix(false), mix(None)]
-//│ ║        	                 ^^^^
+//│ ║  l.123: 	[mix(false), mix(None)]
+//│ ║         	                 ^^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.60: 	fun mix(x) = if x is
+//│ ║  l.91: 	fun mix(x) = if x is
 //│ ╙──      	                ^
 //│ ["Some" | "true" | "zero" | error, "Some" | "true" | "zero" | error]
 //│ res
