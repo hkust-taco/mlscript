@@ -1,13 +1,10 @@
-package mlscript.compiler
-
+package mlscript
+package compiler
 
 import mlscript.utils.shorthands._
 import mlscript.compiler.ir._
 import scala.collection.mutable.StringBuilder
-import mlscript.{DiffTests, ModeType, TypingUnit}
-import mlscript.compiler.ir.{Interpreter, Fresh, FreshInt, Builder}
 import mlscript.compiler.optimizer.TailRecOpt
-import mlscript.Diagnostic
 
 class IRDiffTestCompiler extends DiffTests {
   import IRDiffTestCompiler.*
@@ -27,15 +24,15 @@ class IRDiffTestCompiler extends DiffTests {
         if !mode.noTailRecOpt then 
           output(graph_.toString())
 
-        val graph = if (!mode.noTailRecOpt) {
-          val tailRecOpt = new TailRecOpt(fnUid, classUid, tag, raise)
-          val (g, comps) = tailRecOpt.run_debug(graph_)
-          output("\nStrongly Connected Tail Calls:")
-          output(comps.toString)
-          g
-        } else {
-          graph_
-        }
+        val graph = if !mode.noTailRecOpt
+          then
+            val tailRecOpt = new TailRecOpt(fnUid, classUid, tag, raise)
+            val (g, comps) = tailRecOpt.run_debug(graph_)
+            output("\nStrongly Connected Tail Calls:")
+            output(comps.toString)
+            g
+          else
+            graph_
 
         if !mode.noTailRecOpt then
           output(graph.toString())

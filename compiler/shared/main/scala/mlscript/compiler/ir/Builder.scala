@@ -81,10 +81,10 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
             
             ann match
               case Some(ann @ Var(nme)) =>
-                if nme == "tailcall" then 
+                if nme === "tailcall" then 
                   LetCall(List(v), DefnRef(Right(g.str)), args, true, v |> ref |> sresult |> k)(f.toLoc).attachTag(tag)
                 else
-                  if nme == "tailrec" then
+                  if nme === "tailrec" then
                     raise(ErrorReport(List(msg"@tailrec is for annotating functions; try @tailcall instead" -> ann.toLoc), true, Diagnostic.Compilation))
                   LetCall(List(v), DefnRef(Right(g.str)), args, false, v |> ref |> sresult |> k)(f.toLoc).attachTag(tag) 
               case Some(_) => node |> unexpectedNode
@@ -146,9 +146,9 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
       case Ann(ann, App(f, xs @ Tup(_))) => buildLetCall(f, xs, Some(ann))
 
       case Ann(ann @ Var(name), recv) =>
-        if name == "tailcall" then
+        if name === "tailcall" then
           raise(ErrorReport(List(msg"@tailcall may only be used to annotate function calls" -> ann.toLoc), true, Diagnostic.Compilation))
-        else if name == "tailrec" then
+        else if name === "tailrec" then
           raise(ErrorReport(List(msg"@tailrec may only be used to annotate functions" -> ann.toLoc), true, Diagnostic.Compilation))
 
         buildResultFromTerm(recv)(k)
