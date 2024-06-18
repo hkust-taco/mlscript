@@ -1,16 +1,53 @@
 :global
 :bbml
 
-:fixme
+
 fun add: (Int, Int) -> Int
 fun add(x, y) = x + y
-//│ ╔══[ERROR] Duplicate definition of add
-//│ ║  l.6: 	fun add(x, y) = x + y
-//│ ║       	       ^^^^^^^^^^^^
-//│ ╙── aready defined gere
-//│ Elab: { fun add: (class:Int#11, class:Int#12)‹› -> class:Int#13‹›; fun add(x@2, y@3) = +#0(x@2#0, y@3#0)‹›‹›; }‹›
+//│ Elab: { fun add: (class:Int#11, class:Int#12)‹› -> class:Int#13‹›; fun add(x@2, y@3): (class:Int#14, class:Int#15)‹› -> class:Int#16‹› = +#0(x@2#0, y@3#0)‹›‹›; }‹›
 //│ Type: ⊤
 
+:e
+fun foo: Int -> Int
+fun foo: Int -> Int
+//│ ╔══[ERROR] Duplicate definition of foo
+//│ ╙── aready defined gere
+//│ Elab: { fun foo: (class:Int#17)‹› -> class:Int#18‹›; fun foo: (class:Int#19)‹› -> class:Int#20‹›; }‹›
+//│ Type: ⊤
+
+:e
+fun id(x) = x
+fun id(y) = y
+//│ ╔══[ERROR] Duplicate definition of id
+//│ ║  l.20: 	fun id(y) = y
+//│ ║        	      ^^^
+//│ ╙── aready defined gere
+//│ Elab: { fun id(x@1) = x@1#0; fun id(y@3) = y@3#0; }‹›
+//│ Type: ⊤
+
+:e
+fun bar: Str -> Str
+fun bar(x) = let t = x + 1 in "aaa"
+//│ Elab: { fun bar: (class:Str#0)‹› -> class:Str#1‹›; fun bar(x@2): (class:Str#2)‹› -> class:Str#3‹› = { let t@3 = +#1(x@2#0, 1‹›)‹›‹›; "aaa"‹› }‹›; }‹›
+//│ ╔══[ERROR] Can not solve Str <: ⊥
+//│ ╙──
+//│ Type: ⊤
+
+:e
+fun baz: Int -> Int
+fun baz(x) = "bbb"
+//│ Elab: { fun baz: (class:Int#21)‹› -> class:Int#22‹›; fun baz(x@2): (class:Int#23)‹› -> class:Int#24‹› = "bbb"‹›; }‹›
+//│ ╔══[ERROR] Can not solve Str <: ⊥
+//│ ╙──
+//│ Type: ⊤
+
+add(1, 2)
+//│ Elab: { add#0(1‹›, 2‹›)‹›‹› }‹›
+//│ Type: α7
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α1 <: α7
+//│   Int ∧ ¬⊥ <: α1
+//│   α1 <: ¬⊤ ∧ ¬⊥ ∨ Int
 
 add(1, 2): Int
 //│ Elab: { App(Ref(add),Tup(List(Fld(‹›,Lit(IntLit(1)),None), Fld(‹›,Lit(IntLit(2)),None)))): Ref(class:Int)‹› }‹›

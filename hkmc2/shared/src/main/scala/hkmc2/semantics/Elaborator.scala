@@ -93,25 +93,30 @@ class Elaborator(raise: Raise):
   
   def block(sts: Ls[Tree])(using c: Ctx): (Term.Blk, Ctx) =
     val newMembers = mutable.Map.empty[Str, MemberSymbol]
+    val newSigMembers = mutable.Map.empty[Str, MemberSymbol]
+    val newSignatures = mutable.Map.empty[Str, Tree]
     sts.foreach:
       case td: TermDef =>
         td.name match
           case R(id) =>
             lazy val s = TermSymbol(id)
-            newMembers.get(id.name) match
+            val members = if td.signature.isEmpty then newMembers else newSigMembers
+            members.get(id.name) match
               case S(sym) =>
                 raise(ErrorReport(msg"Duplicate definition of ${id.name}" -> td.toLoc
                   :: msg"aready defined gere" -> sym.toLoc :: Nil))
               case N =>
-                newMembers += id.name -> s
+                members += id.name -> s
+                td.signature.foreach(newSignatures += id.name -> _)
             td.symbolicName match
               case S(Ident(nme)) =>
-                newMembers.get(nme) match
+                members.get(nme) match
                   case S(sym) =>
                     raise(ErrorReport(msg"Duplicate definition of $nme" -> td.toLoc
                       :: msg"aready defined gere" -> sym.toLoc :: Nil))
                   case N =>
-                    newMembers += nme -> s
+                    members += nme -> s
+                    td.signature.foreach(newSignatures += id.name -> _)
               case N =>
           case L(d) => raise(d)
       case td: TypeDef =>
@@ -126,6 +131,10 @@ class Elaborator(raise: Raise):
                 newMembers += id.name -> ClassSymbol(id)
           case L(d) => raise(d)
       case _ =>
+    newSigMembers.foreach:
+      case (name, sym) =>
+        if !newMembers.contains(name) then
+          newMembers += name -> sym
     given Ctx = c.copy(members = c.members ++ newMembers)
     @tailrec
     def go(sts: Ls[Tree], acc: Ls[Statement]): Ctxl[(Term.Blk, Ctx)] = sts match
@@ -145,7 +154,7 @@ class Elaborator(raise: Raise):
               case N => (N, ctx)
             val b = rhs.map(term(_)(using newCtx))
             val r = FlowSymbol(s"‹result of ${s}›", nextUid)
-            val tdf = TermDefinition(k, s, ps, td.signature.map(term), b, r)
+            val tdf = TermDefinition(k, s, ps, (td.signature orElse newSignatures.get(id.name)).map(term), b, r)
             s.defn = S(tdf)
             go(sts, tdf :: acc)
           case L(d) => go(sts, acc) // error already raised in newMembers initialization

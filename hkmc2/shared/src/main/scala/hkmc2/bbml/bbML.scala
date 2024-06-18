@@ -187,24 +187,28 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
     case Blk(stats, res) =>
       val nestCtx = ctx.nest
       given Ctx = nestCtx
-      stats.foreach {
+      stats.foreach:
         case term: Term => typeCheck(term)
         case LetBinding(Pattern.Var(sym), rhs) =>
           val rhsTy = typeCheck(rhs)
           nestCtx += sym -> rhsTy
-        case TermDefinition(Fun, sym, Some(params), sign, Some(body), _) =>
+        case TermDefinition(Fun, sym, Some(params), sig, Some(body), _) =>
+          val (tvs, retAnno, effAnno) = sig.map(typeType) match
+            case S(ft @ Type.FunType(args, ret, eff)) => (args, S(ret), S(eff))
+            case _ => (params.map(_ => freshVar), N, N)
           val defCtx = nestCtx.nest
-          val argsTy = params.map {
-            case Param(_, sym, _) =>
-              val v = freshVar
-              defCtx += sym -> v
-              v
-          }
-          val bodyTy = typeCheck(body)(using defCtx)
-          ctx += sym -> Type.FunType(argsTy, bodyTy, Type.Bot) // TODO: eff
+          if params.length != tvs.length then
+             error(msg"Cannot type function ${t.toString} as ${sig.toString}" -> t.toLoc :: Nil)
+          else
+            val argsTy = params.zip(tvs).map:
+              case (Param(_, sym, _), ty) =>
+                defCtx += sym -> ty
+                ty
+            val bodyTy = typeCheck(body)(using defCtx)
+            retAnno.foreach(anno => solver.constrain(bodyTy, anno))
+            ctx += sym -> Type.FunType(argsTy, bodyTy, Type.Bot) // TODO: eff
         case clsDef: ClassDef => ctx *= clsDef
         case _ => () // TODO
-      }
       typeCheck(res)
     case Lit(lit) => lit match
       case _: IntLit => Ctx.intTy
