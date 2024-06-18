@@ -20,6 +20,7 @@ enum Term extends Statement with Located:
   case Quoted(body: Term)
   case Unquoted(body: Term)
   case New(cls: ClassSymbol, args: Ls[Term])
+  case Asc(term: Term, ty: Term)
   
   var symbol: Opt[Symbol] = N
   
@@ -62,6 +63,7 @@ sealed trait Statement extends Located:
     case Quoted(term) => term :: Nil
     case Unquoted(term) => term :: Nil
     case New(_, args) => args
+    case Asc(term, ty) => term :: ty :: Nil
     case LetBinding(pat, rhs) => rhs :: Nil
     case TermDefinition(k, _, ps, sign, body, res) =>
       ps.toList.flatMap(_.flatMap(_.subTerms)) ::: sign.toList ::: body.toList
@@ -92,6 +94,7 @@ sealed trait Statement extends Located:
     case Quoted(term) => s"""code"${term.showDbg}""""
     case Unquoted(term) => s"$${${term.showDbg}}"
     case New(cls, args) => s"new ${cls.toString}(${args.mkString(", ")})"
+    case Asc(term, ty) => s"${term.toString}: ${ty.toString}"
     case LetBinding(pat, rhs) => s"let ${pat.showDbg} = ${rhs.showDbg}"
     case Error => "<error>"
     case Tup(fields) => fields.map(_.showDbg).mkString("(", ", ", ")")

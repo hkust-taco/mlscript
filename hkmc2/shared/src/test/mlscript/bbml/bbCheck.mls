@@ -1,0 +1,25 @@
+:global
+:bbml
+
+:fixme
+fun add: (Int, Int) -> Int
+fun add(x, y) = x + y
+//│ ╔══[ERROR] Duplicate definition of add
+//│ ║  l.6: 	fun add(x, y) = x + y
+//│ ║       	       ^^^^^^^^^^^^
+//│ ╙── aready defined gere
+//│ Elab: { fun add: (class:Int#11, class:Int#12)‹› -> class:Int#13‹›; fun add(x@2, y@3) = +#0(x@2#0, y@3#0)‹›‹›; }‹›
+//│ Type: ⊤
+
+
+add(1, 2): Int
+//│ Elab: { App(Ref(add),Tup(List(Fld(‹›,Lit(IntLit(1)),None), Fld(‹›,Lit(IntLit(2)),None)))): Ref(class:Int)‹› }‹›
+//│ Type: Int
+
+
+:e
+add(0, 0): Str
+//│ Elab: { App(Ref(add),Tup(List(Fld(‹›,Lit(IntLit(0)),None), Fld(‹›,Lit(IntLit(0)),None)))): Ref(class:Str)‹› }‹›
+//│ ╔══[ERROR] Can not solve Int <: ⊥
+//│ ╙──
+//│ Type: Str

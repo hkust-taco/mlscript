@@ -128,14 +128,13 @@ object Ctx:
           case _ => ???
     )
     ctx
+
+class BBTyper(raise: Raise, val initCtx: Ctx):
   private val infVarState = new InfVarUid.State()
-  def freshVar(using ctx: Ctx) = Type.InfVar(ctx.lvl, infVarState.nextUid, new VarState())
-  def freshWildcard(using ctx: Ctx) = Wildcard(freshVar, freshVar)
-
-class BBTyper(raise: Raise):
-
   private val solver = new ConstraintSolver(raise)
-  import Ctx.{freshVar, freshWildcard}
+
+  private def freshVar(using ctx: Ctx) = Type.InfVar(ctx.lvl, infVarState.nextUid, new VarState())
+  private def freshWildcard(using ctx: Ctx) = Wildcard(freshVar, freshVar)
 
   private def typeCheckArgs(args: Term)(using ctx: Ctx): Ls[Type] = args match
     case Term.Tup(flds) => flds.map(f => typeCheck(f.value))
@@ -160,7 +159,19 @@ class BBTyper(raise: Raise):
       Type.FunType(params.map {
         case Fld(_, p, _) => extract(p)(using map, !pol)
       }, extract(ret), Type.Bot) // TODO: effect
-    case _ => error(msg"${asc.toString} is not a valid class member type" -> asc.toLoc :: Nil)
+    case _ => error(msg"${asc.toString} is not a valid class member type" -> asc.toLoc :: Nil) // TODO
+
+  private def typeType(ty: Term)(using ctx: Ctx): Type = ty match
+    case Ref(cls: ClassSymbol) =>
+      ctx.getDef(cls.nme) match
+        case S(_) => Type.ClassType(cls, Nil) // TODO: tparams?
+        case N => 
+          error(msg"Definition not found: ${cls.nme}" -> ty.toLoc :: Nil)
+    case FunTy(Term.Tup(params), ret) =>
+      Type.FunType(params.map {
+        case Fld(_, p, _) => typeType(p)
+      }, typeType(ret), Type.Bot) // TODO: effect
+    case _ => error(msg"${ty.toString} is not a valid type annotation" -> ty.toLoc :: Nil) // TODO
 
   def typeCheck(t: Term)(using ctx: Ctx): Type = t match
     case Ref(sym: VarSymbol) =>
@@ -263,5 +274,9 @@ class BBTyper(raise: Raise):
           ???
         case N => 
           error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil)
+    case Term.Asc(term, ty) =>
+      val res = typeType(ty)
+      solver.constrain(typeCheck(term), res)
+      res
     case Term.Error =>
       Type.Bot // TODO: error type?

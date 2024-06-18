@@ -51,6 +51,8 @@ class Elaborator(raise: Raise):
     case InfixApp(lhs, Keyword.`=>`, rhs) =>
       val (_, syms) = pattern(lhs)
       Term.Lam(syms.map(_._2), term(rhs)(using ctx.copy(locals = ctx.locals ++ syms)))
+    case InfixApp(lhs, Keyword.`:`, rhs) =>
+      Term.Asc(term(lhs), term(rhs))
     case App(lhs, rhs) =>
       val sym = FlowSymbol("‹app-res›", nextUid)
       Term.App(term(lhs), term(rhs))(sym)
