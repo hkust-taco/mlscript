@@ -13,7 +13,6 @@ class IRDiffTestCompiler extends DiffTests {
     val outputBuilder = StringBuilder()
     if (mode.useIR || mode.irVerbose)
       try
-        output("\n\nIR:")
         val fnUid = FreshInt()
         val classUid = FreshInt()
         val tag = FreshInt()
@@ -22,10 +21,11 @@ class IRDiffTestCompiler extends DiffTests {
         val graph_ = gb.buildGraph(unit)
         
         if !mode.noTailRecOpt then 
+          output("\nIR:")
           output(graph_.toString())
 
-        val graph = if !mode.noTailRecOpt
-          then
+        val graph = 
+          if !mode.noTailRecOpt then
             val tailRecOpt = new TailRecOpt(fnUid, classUid, tag, raise)
             val (g, comps) = tailRecOpt.run_debug(graph_)
             output("\nStrongly Connected Tail Calls:")

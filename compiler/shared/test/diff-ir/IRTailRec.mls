@@ -11,9 +11,6 @@ fact(1, 5)
 //│ |#fun| |fact|(|acc|,| |n|)| |#=|→|#if| |n| |==| |0| |#then| |acc|↵|#else| |fact|(|acc| |*| |n|,| |n| |-| |1|)|←|↵|fact|(|1|,| |5|)|
 //│ Parsed: {fun fact = (acc, n,) => {if (==(n,)(0,)) then acc else fact(*(acc,)(n,), -(n,)(1,),)}; fact(1, 5,)}
 //│ 
-//│ 
-//│ IR:
-//│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
 //│ Def(0, fact, [acc$0,n$0],
@@ -47,7 +44,6 @@ fun fact(acc, n) =
 fact(1, 5)
 //│ |@|tailrec|↵|#fun| |fact|(|acc|,| |n|)| |#=|→|#if| |n| |==| |0| |#then| |acc|↵|#else| |fact|(|acc| |*| |n|,| |n| |-| |1|)|←|↵|fact|(|1|,| |5|)|
 //│ Parsed: {fun fact = (acc, n,) => {if (==(n,)(0,)) then acc else fact(*(acc,)(n,), -(n,)(1,),)}; fact(1, 5,)}
-//│ 
 //│ 
 //│ IR:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
@@ -139,7 +135,6 @@ fun fact(acc, n) =
 fact(1, 5)
 //│ |@|tailrec|↵|#fun| |fact|(|acc|,| |n|)| |#=|→|#val| |x| |#=| |#if| |n| |>| |0| |#then| |n| |-| |1|→|#else| |0|←|↵|#if| |x| |<=| |0| |#then|→|acc|←|↵|#else| |→|@|tailcall| |fact|(|n| |*| |acc|,| |x|)| |←|←|↵|fact|(|1|,| |5|)|
 //│ Parsed: {fun fact = (acc, n,) => {let x = if (>(n,)(0,)) then -(n,)(1,) else 0; if (<=(x,)(0,)) then {acc} else {@tailcall fact(*(n,)(acc,), x,)}}; fact(1, 5,)}
-//│ 
 //│ 
 //│ IR:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
@@ -265,9 +260,6 @@ g(6, 0)
 //│ |#fun| |double|(|x|)| |#=| |x| |*| |2|↵|#fun| |f|(|n|,| |acc|)| |#=| |#if| |n| |==| |0| |#then| |double|(|acc|)| |#else| |g|(|n| |-| |1|,| |acc| |+| |1|)|↵|#fun| |g|(|m|,| |acc|)| |#=| |#if| |m| |==| |0| |#then| |-|double|(|acc|)| |#else| |f|(|m| |-| |1|,| |acc| |+| |1|)|↵|g|(|6|,| |0|)|
 //│ Parsed: {fun double = (x,) => *(x,)(2,); fun f = (n, acc,) => if (==(n,)(0,)) then double(acc,) else g(-(n,)(1,), +(acc,)(1,),); fun g = (m, acc,) => if (==(m,)(0,)) then -(0,)(double(acc,),) else f(-(m,)(1,), +(acc,)(1,),); g(6, 0,)}
 //│ 
-//│ 
-//│ IR:
-//│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
 //│ Def(0, double, [x$0],
@@ -324,7 +316,6 @@ fun double(x) = x * 2
 g(6, 0)
 //│ |#fun| |double|(|x|)| |#=| |x| |*| |2|↵|@|tailrec| |#fun| |f|(|n|,| |acc|)| |#=| |#if| |n| |==| |0| |#then| |double|(|acc|)| |#else| |g|(|n| |-| |1|,| |acc| |+| |1|)|↵|@|tailrec| |#fun| |g|(|m|,| |acc|)| |#=| |#if| |m| |==| |0| |#then| |-|double|(|acc|)| |#else| |f|(|m| |-| |1|,| |acc| |+| |1|)|↵|g|(|6|,| |0|)|
 //│ Parsed: {fun double = (x,) => *(x,)(2,); fun f = (n, acc,) => if (==(n,)(0,)) then double(acc,) else g(-(n,)(1,), +(acc,)(1,),); fun g = (m, acc,) => if (==(m,)(0,)) then -(0,)(double(acc,),) else f(-(m,)(1,), +(acc,)(1,),); g(6, 0,)}
-//│ 
 //│ 
 //│ IR:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
@@ -501,7 +492,6 @@ g(6, 0)
 //│ |@|tailrec| |#fun| |f|(|a|,| |b|,| |c|)| |#=| |g|(|0|,| |0|)|↵|@|tailrec| |#fun| |g|(|d|,| |e|)| |#=| |h|(|0|,| |0|,| |0|,| |0|)|↵|@|tailrec| |#fun| |h|(|p|,| |q|,| |r|,| |s|)| |#=| |f|(|0|,| |0|,| |0|)|↵|2| |
 //│ Parsed: {fun f = (a, b, c,) => g(0, 0,); fun g = (d, e,) => h(0, 0, 0, 0,); fun h = (p, q, r, s,) => f(0, 0, 0,); 2}
 //│ 
-//│ 
 //│ IR:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
 //│ Def(0, f, [a$0,b$0,c$0],
@@ -608,7 +598,6 @@ hello()
 //│ |#fun| |hello|(||)| |#=|→|@|tailcall| |hello|(||)|↵|@|tailcall| |hello|(||)|↵|2|←|↵|hello|(||)| |
 //│ Parsed: {fun hello = () => {@tailcall hello(); @tailcall hello(); 2}; hello()}
 //│ 
-//│ 
 //│ IR:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
 //│ Def(0, hello, [],
@@ -621,10 +610,10 @@ hello()
 //│ let* (x$2) = hello() in -- #12
 //│ x$2 -- #11)
 //│ ╔══[COMPILATION ERROR] not a tail call, as the remaining functions may be impure
-//│ ║  l.604: 	    @tailcall hello()
+//│ ║  l.598: 	    @tailcall hello()
 //│ ╙──       	              ^^^^^
 //│ ╔══[COMPILATION ERROR] not a tail call
-//│ ║  l.605: 	    @tailcall hello()
+//│ ║  l.599: 	    @tailcall hello()
 //│ ╙──       	              ^^^^^
 //│ 
 //│ Strongly Connected Tail Calls:
@@ -660,7 +649,6 @@ hello()
 //│ |#fun| |hello|(||)| |#=|→|@|tailcall| |hello|(||)|↵|2|←|↵|hello|(||)| |
 //│ Parsed: {fun hello = () => {@tailcall hello(); 2}; hello()}
 //│ 
-//│ 
 //│ IR:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
 //│ Def(0, hello, [],
@@ -672,7 +660,7 @@ hello()
 //│ let* (x$1) = hello() in -- #8
 //│ x$1 -- #7)
 //│ ╔══[COMPILATION ERROR] not a tail call
-//│ ║  l.657: 	    @tailcall hello()
+//│ ║  l.651: 	    @tailcall hello()
 //│ ╙──       	              ^^^^^
 //│ 
 //│ Strongly Connected Tail Calls:
@@ -708,7 +696,6 @@ class Nil
 addOne(Cons(1, Cons(2, Cons(3, Nil))))
 //│ |#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|@|tailrec| |#fun| |addOne|(|xs|)| |#=|→|#if| |xs| |is|→|Cons|(|h|,| |t|)| |#then| |Cons|(|h| |+| |1|,| |@|tailcall| |addOne|(|t|)|)|↵|Nil| |#then| |Nil|←|←|↵|addOne|(|Cons|(|1|,| |Cons|(|2|,| |Cons|(|3|,| |Nil|)|)|)|)|
 //│ Parsed: {class Cons(h, t,) {}; class Nil {}; fun addOne = (xs,) => {if xs is ‹(Cons(h, t,)) then Cons(+(h,)(1,), @tailcall addOne(t,),); (Nil) then Nil›}; addOne(Cons(1, Cons(2, Cons(3, Nil,),),),)}
-//│ 
 //│ 
 //│ IR:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, [])}, {
@@ -882,9 +869,6 @@ a(S(S(S(Zero))))
 //│ |#class| |Zero|↵|#class| |S|(|x|)|↵|#fun| |a|(|n|)| |#=|→|#if| |n| |is|→|S|(|x|)| |#then| |S|(|@|tailcall| |b|(|x|)|)|↵|Zero| |#then| |S|(|Zero|)|←|←|↵|#fun| |b|(|n|)| |#=|→|#if| |n| |is|→|S|(|x|)| |#then| |S|(|S|(|@|tailcall| |a|(|x|)|)|)|↵|Zero| |#then| |S|(|S|(|Zero|)|)|←|←|↵|a|(|S|(|S|(|S|(|Zero|)|)|)|)|
 //│ Parsed: {class Zero {}; class S(x,) {}; fun a = (n,) => {if n is ‹(S(x,)) then S(@tailcall b(x,),); (Zero) then S(Zero,)›}; fun b = (n,) => {if n is ‹(S(x,)) then S(S(@tailcall a(x,),),); (Zero) then S(S(Zero,),)›}; a(S(S(S(Zero,),),),)}
 //│ 
-//│ 
-//│ IR:
-//│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Zero, []),ClassInfo(3, S, [x])}, {
 //│ Def(0, a, [n$0],
@@ -948,7 +932,6 @@ class S(x)
 a(S(S(S(Zero))))
 //│ |#class| |Zero|↵|#class| |S|(|x|)|↵|@|tailrec| |#fun| |a|(|n|)| |#=|→|#if| |n| |is|→|S|(|x|)| |#then| |S|(|@|tailcall| |b|(|x|)|)|↵|Zero| |#then| |S|(|Zero|)|←|←|↵|@|tailrec| |#fun| |b|(|n|)| |#=|→|#if| |n| |is|→|S|(|x|)| |#then| |S|(|S|(|@|tailcall| |a|(|x|)|)|)|↵|Zero| |#then| |S|(|S|(|Zero|)|)|←|←|↵|a|(|S|(|S|(|S|(|Zero|)|)|)|)|
 //│ Parsed: {class Zero {}; class S(x,) {}; fun a = (n,) => {if n is ‹(S(x,)) then S(@tailcall b(x,),); (Zero) then S(Zero,)›}; fun b = (n,) => {if n is ‹(S(x,)) then S(S(@tailcall a(x,),),); (Zero) then S(S(Zero,),)›}; a(S(S(S(Zero,),),),)}
-//│ 
 //│ 
 //│ IR:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Zero, []),ClassInfo(3, S, [x])}, {
@@ -1212,7 +1195,6 @@ addOne(Cons(1, Cons(2, Cons(3, Nil))))
 //│ |#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|@|tailrec| |#fun| |addOne|(|xs|)| |#=|→|#if| |xs| |is| |→|Cons|(|h|,| |t|)| |#then|→|#val| |next| |#=| |@|tailcall| |addOne|(|t|)|↵|#val| |ret| |#=| |Cons|(|h| |+| |1|,| |next|)|↵|#val| |rett| |#=| |ret|↵|rett|←|↵|Nil| |#then| |→|Nil|←|←|←|↵|addOne|(|Cons|(|1|,| |Cons|(|2|,| |Cons|(|3|,| |Nil|)|)|)|)|
 //│ Parsed: {class Cons(h, t,) {}; class Nil {}; fun addOne = (xs,) => {if xs is ‹(Cons(h, t,)) then {let next = @tailcall addOne(t,); let ret = Cons(+(h,)(1,), next,); let rett = ret; rett}; (Nil) then {Nil}›}; addOne(Cons(1, Cons(2, Cons(3, Nil,),),),)}
 //│ 
-//│ 
 //│ IR:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, [])}, {
 //│ Def(0, addOne, [xs$0],
@@ -1388,7 +1370,6 @@ class Cons(m, n)
 b(16)
 //│ |#class| |Nil|↵|#class| |Cons|(|m|,| |n|)|↵|@|tailrec| |#fun| |a|(|x|)| |#=|→|#if| |x| |is|→|Cons|(|m|,| |n|)| |#then|→|#if| |m| |<| |0| |#then|→|Cons|(|-|1|,| |Nil|)|←|↵|#else| |→|Cons|(|m| |*| |4|,| |b|(|m| |-| |2|)|)|←|←|↵|Nil| |#then| |Nil|←|←|↵|@|tailrec| |#fun| |b|(|n|)| |#=|→|#if| |n| |<=| |0| |#then| |→|Cons|(|0|,| |Nil|)|←|↵|#else| |→|a|(|Cons|(|n|,| |Nil|)|)|←|←|↵|b|(|16|)|
 //│ Parsed: {class Nil {}; class Cons(m, n,) {}; fun a = (x,) => {if x is ‹(Cons(m, n,)) then {if (<(m,)(0,)) then {Cons(-1, Nil,)} else {Cons(*(m,)(4,), b(-(m,)(2,),),)}}; (Nil) then Nil›}; fun b = (n,) => {if (<=(n,)(0,)) then {Cons(0, Nil,)} else {a(Cons(n, Nil,),)}}; b(16,)}
-//│ 
 //│ 
 //│ IR:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Nil, []),ClassInfo(3, Cons, [m,n])}, {
@@ -1675,9 +1656,6 @@ foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil))))))))
 //│ |#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#fun| |foo|(|xs|)| |#=|→|#if| |xs| |is| |→|Cons|(|h|,| |t|)| |#then|→|#if| |h| |>| |5| |#then| |foo|(|t|)|↵|#else| |→|#val| |item| |#=| |#if| |h| |<| |3| |#then| |-|1| |#else| |100| |↵|Cons|(|item|,| |Cons|(|h|,| |foo|(|t|)|)|)|←|←|↵|Nil| |#then| |→|Nil|←|←|←|↵|foo|(|Cons|(|1|,| |Cons|(|6|,| |Cons|(|7|,| |Cons|(|4|,| |Cons|(|2|,| |Cons|(|3|,| |Cons|(|9|,| |Nil|)|)|)|)|)|)|)|)|
 //│ Parsed: {class Cons(h, t,) {}; class Nil {}; fun foo = (xs,) => {if xs is ‹(Cons(h, t,)) then {if (>(h,)(5,)) then foo(t,) else {let item = if (<(h,)(3,)) then -1 else 100; Cons(item, Cons(h, foo(t,),),)}}; (Nil) then {Nil}›}; foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil,),),),),),),),)}
 //│ 
-//│ 
-//│ IR:
-//│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, [])}, {
 //│ Def(0, foo, [xs$0],
@@ -1747,7 +1725,6 @@ class Nil
 foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil))))))))
 //│ |#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|@|tailrec| |#fun| |foo|(|xs|)| |#=|→|#if| |xs| |is| |→|Cons|(|h|,| |t|)| |#then|→|#if| |h| |>| |5| |#then| |@|tailcall| |foo|(|t|)|↵|#else| |→|#val| |item| |#=| |#if| |h| |<| |3| |#then| |-|1| |#else| |100| |↵|Cons|(|item|,| |Cons|(|h|,| |@|tailcall| |foo|(|t|)|)|)|←|←|↵|Nil| |#then| |→|Nil|←|←|←|↵|foo|(|Cons|(|1|,| |Cons|(|6|,| |Cons|(|7|,| |Cons|(|4|,| |Cons|(|2|,| |Cons|(|3|,| |Cons|(|9|,| |Nil|)|)|)|)|)|)|)|)|
 //│ Parsed: {class Cons(h, t,) {}; class Nil {}; fun foo = (xs,) => {if xs is ‹(Cons(h, t,)) then {if (>(h,)(5,)) then @tailcall foo(t,) else {let item = if (<(h,)(3,)) then -1 else 100; Cons(item, Cons(h, @tailcall foo(t,),),)}}; (Nil) then {Nil}›}; foo(Cons(1, Cons(6, Cons(7, Cons(4, Cons(2, Cons(3, Cons(9, Nil,),),),),),),),)}
-//│ 
 //│ 
 //│ IR:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, [])}, {
@@ -1994,7 +1971,6 @@ a()
 //│ |#fun| |b|(||)| |#=|→|a|(||)|↵|a|(||)|←|↵|@|tailrec| |↵|#fun| |a|(||)| |#=| |→|#if| |0| |<| |1| |#then| |a|(||)|↵|#else| |b|(||)|←|↵|a|(||)|
 //│ Parsed: {fun b = () => {a(); a()}; fun a = () => {if (<(0,)(1,)) then a() else b()}; a()}
 //│ 
-//│ 
 //│ IR:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
 //│ Def(0, b, [],
@@ -2022,10 +1998,10 @@ a()
 //│ let* (x$6) = a() in -- #27
 //│ x$6 -- #26)
 //│ ╔══[COMPILATION ERROR] function `a` is not tail-recursive, but is marked as @tailrec
-//│ ║  l.1989: 	@tailrec 
+//│ ║  l.1977: 	@tailrec 
 //│ ║          	 ^^^^^^^
 //│ ╟── it could self-recurse through this call, which may not be a tail-call
-//│ ║  l.1987: 	  a()
+//│ ║  l.1975: 	  a()
 //│ ╙──        	  ^
 //│ 
 //│ Strongly Connected Tail Calls:
@@ -2117,7 +2093,6 @@ a()
 //│ |#class| |A|(|a|,| |b|)|↵|@|tailrec|↵|#fun| |a|(||)| |#=| |A|(|b|(||)|,| |1|)|↵|#fun| |b|(||)| |#=| |A|(|c|(||)|,| |@|tailcall| |a|(||)|)|↵|#fun| |c|(||)| |#=| |A|(|b|(||)|,| |1|)|↵|a|(||)|
 //│ Parsed: {class A(a, b,) {}; fun a = () => A(b(), 1,); fun b = () => A(c(), @tailcall a(),); fun c = () => A(b(), 1,); a()}
 //│ 
-//│ 
 //│ IR:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, [a,b])}, {
 //│ Def(0, a, [],
@@ -2143,10 +2118,10 @@ a()
 //│ let* (x$7) = a() in -- #36
 //│ x$7 -- #35)
 //│ ╔══[COMPILATION ERROR] function `a` is not tail-recursive, but is marked as @tailrec
-//│ ║  l.2112: 	@tailrec
+//│ ║  l.2100: 	@tailrec
 //│ ║          	 ^^^^^^^
 //│ ╟── it could self-recurse through this call, which may not be a tail-call
-//│ ║  l.2114: 	fun b() = A(c(), @tailcall a())
+//│ ║  l.2102: 	fun b() = A(c(), @tailcall a())
 //│ ╙──        	            ^
 //│ 
 //│ Strongly Connected Tail Calls:
@@ -2352,7 +2327,6 @@ a()
 //│ |#class| |A|(|a|,| |b|)|↵|@|tailrec|↵|#fun| |a|(||)| |#=| |A|(|b|(||)|,| |1|)|↵|#fun| |b|(||)| |#=| |A|(|@|tailcall| |a|(||)|,| |c|(||)|)|↵|#fun| |c|(||)| |#=| |A|(|0|,| |1|)|↵|a|(||)|
 //│ Parsed: {class A(a, b,) {}; fun a = () => A(b(), 1,); fun b = () => A(@tailcall a(), c(),); fun c = () => A(0, 1,); a()}
 //│ 
-//│ 
 //│ IR:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, [a,b])}, {
 //│ Def(0, a, [],
@@ -2377,13 +2351,13 @@ a()
 //│ let* (x$6) = a() in -- #33
 //│ x$6 -- #32)
 //│ ╔══[COMPILATION ERROR] not a tail call, as the remaining functions may be impure
-//│ ║  l.2349: 	fun b() = A(@tailcall a(), c())
+//│ ║  l.2337: 	fun b() = A(@tailcall a(), c())
 //│ ╙──        	                      ^
 //│ ╔══[COMPILATION ERROR] function `a` is not tail-recursive, but is marked as @tailrec
-//│ ║  l.2347: 	@tailrec
+//│ ║  l.2335: 	@tailrec
 //│ ║          	 ^^^^^^^
 //│ ╟── it could self-recurse through this call, which may not be a tail-call
-//│ ║  l.2349: 	fun b() = A(@tailcall a(), c())
+//│ ║  l.2337: 	fun b() = A(@tailcall a(), c())
 //│ ╙──        	                      ^
 //│ 
 //│ Strongly Connected Tail Calls:
@@ -2539,12 +2513,11 @@ a()
 @tailcall 1
 //│ |@|tailcall| |1|
 //│ Parsed: {@tailcall 1}
-//│ 
+//│ ╔══[COMPILATION ERROR] @tailcall may only be used to annotate function calls
+//│ ║  l.2527: 	@tailcall 1
+//│ ╙──        	 ^^^^^^^^
 //│ 
 //│ IR:
-//│ ╔══[COMPILATION ERROR] @tailcall may only be used to annotate function calls
-//│ ║  l.2539: 	@tailcall 1
-//│ ╙──        	 ^^^^^^^^
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
 //│ 
 //│ },
@@ -2567,12 +2540,11 @@ a()
 @tailrec 1
 //│ |@|tailrec| |1|
 //│ Parsed: {@tailrec 1}
-//│ 
+//│ ╔══[COMPILATION ERROR] @tailrec may only be used to annotate functions
+//│ ║  l.2555: 	@tailrec 1
+//│ ╙──        	 ^^^^^^^
 //│ 
 //│ IR:
-//│ ╔══[COMPILATION ERROR] @tailrec may only be used to annotate functions
-//│ ║  l.2567: 	@tailrec 1
-//│ ╙──        	 ^^^^^^^
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
 //│ 
 //│ },
@@ -2597,12 +2569,11 @@ fun foo() =
 foo()
 //│ |#fun| |foo|(||)| |#=|→|@|tailrec| |foo|(||)|←|↵|foo|(||)|
 //│ Parsed: {fun foo = () => {@tailrec foo()}; foo()}
-//│ 
+//│ ╔══[COMPILATION ERROR] @tailrec is for annotating functions; try @tailcall instead
+//│ ║  l.2584: 	  @tailrec foo()
+//│ ╙──        	   ^^^^^^^
 //│ 
 //│ IR:
-//│ ╔══[COMPILATION ERROR] @tailrec is for annotating functions; try @tailcall instead
-//│ ║  l.2596: 	  @tailrec foo()
-//│ ╙──        	   ^^^^^^^
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
 //│ Def(0, foo, [],
 //│ 1, 
@@ -2651,12 +2622,11 @@ fun foo() =
 foo()
 //│ |@|tailcall|↵|#fun| |foo|(||)| |#=|→|foo|(||)|←|↵|foo|(||)|
 //│ Parsed: {fun foo = () => {foo()}; foo()}
-//│ 
+//│ ╔══[COMPILATION ERROR] @tailcall is for annotating function calls; try @tailrec instead
+//│ ║  l.2636: 	@tailcall
+//│ ╙──        	 ^^^^^^^^
 //│ 
 //│ IR:
-//│ ╔══[COMPILATION ERROR] @tailcall is for annotating function calls; try @tailrec instead
-//│ ║  l.2648: 	@tailcall
-//│ ╙──        	 ^^^^^^^^
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
 //│ Def(0, foo, [],
 //│ 1, 

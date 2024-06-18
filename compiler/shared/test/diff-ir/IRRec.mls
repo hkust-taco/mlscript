@@ -11,9 +11,6 @@ fib(20)
 //│ |#class| |True|↵|#class| |False|↵|#fun| |fib|(|n|)| |#=| |#if| |n| |<| |2| |#then| |n| |#else| |fib|(|n|-|1|)| |+| |fib|(|n|-|2|)|↵|fib|(|20|)|
 //│ Parsed: {class True {}; class False {}; fun fib = (n,) => if (<(n,)(2,)) then n else +(fib(-(n,)(1,),),)(fib(-(n,)(2,),),); fib(20,)}
 //│ 
-//│ 
-//│ IR:
-//│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, [])}, {
 //│ Def(0, fib, [n$0],
@@ -50,9 +47,6 @@ fun foo() = odd(10)
 foo()
 //│ |#class| |True|↵|#class| |False|↵|#fun| |odd|(|x|)| |#=| |#if| |x| |==| |0| |#then| |False| |#else| |even|(|x|-|1|)|↵|#fun| |even|(|x|)| |#=| |#if| |x| |==| |0| |#then| |True| |#else| |odd|(|x|-|1|)|↵|#fun| |foo|(||)| |#=| |odd|(|10|)|↵|foo|(||)|
 //│ Parsed: {class True {}; class False {}; fun odd = (x,) => if (==(x,)(0,)) then False else even(-(x,)(1,),); fun even = (x,) => if (==(x,)(0,)) then True else odd(-(x,)(1,),); fun foo = () => odd(10,); foo()}
-//│ 
-//│ 
-//│ IR:
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, [])}, {
@@ -114,9 +108,6 @@ fun main() = foo(False)
 main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |A|↵|#class| |B|(|b|)|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A|→|#else| |B|(|foo|(|not|(|x|)|)|)|←|←|↵|#fun| |main|(||)| |#=| |foo|(|False|)|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class A {}; class B(b,) {}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = () => foo(False,); main()}
-//│ 
-//│ 
-//│ IR:
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, A, []),ClassInfo(5, B, [b])}, {
@@ -190,9 +181,6 @@ fun main() =
 main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |A|(||)|↵|#class| |B|(|b|)|↵|#fun| |aaa|(||)| |#=|→|#let| |m| |#=| |1|↵|#let| |n| |#=| |2|↵|#let| |p| |#=| |3|↵|#let| |q| |#=| |4|↵|m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |bbb|(||)| |#=|→|#let| |x| |#=| |aaa|(||)|↵|x| |*| |100| |+| |4|←|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A|→|#else| |B|(|foo|(|not|(|x|)|)|)|←|←|↵|#fun| |main|(||)| |#=|→|#let| |x| |#=| |foo|(|False|)|↵|#if| |x| |is|→|A| |#then| |aaa|(||)|↵|B|(|b1|)| |#then| |bbb|(||)|←|←|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class A() {}; class B(b,) {}; fun aaa = () => {let m = 1; let n = 2; let p = 3; let q = 4; +(-(+(m,)(n,),)(p,),)(q,)}; fun bbb = () => {let x = aaa(); +(*(x,)(100,),)(4,)}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = () => {let x = foo(False,); if x is ‹(A) then aaa(); (B(b1,)) then bbb()›}; main()}
-//│ 
-//│ 
-//│ IR:
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, A, []),ClassInfo(5, B, [b])}, {
@@ -287,9 +275,6 @@ foo()
 //│ |#class| |True|↵|#class| |False|↵|#class| |S|(|s|)|↵|#class| |O|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|S|(|O|)|)|)|)|↵|foo|(||)|
 //│ Parsed: {class True {}; class False {}; class S(s,) {}; class O {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(S(S(S(O,),),),); foo()}
 //│ 
-//│ 
-//│ IR:
-//│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
 //│ Def(0, odd, [x$0],
@@ -356,9 +341,6 @@ fun foo() = odd(mk(10))
 foo() 
 //│ |#class| |True|↵|#class| |False|↵|#class| |S|(|s|)|↵|#class| |O|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|mk|(|10|)|)|↵|foo|(||)| |
 //│ Parsed: {class True {}; class False {}; class S(s,) {}; class O {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n,)(0,)) then S(mk(-(n,)(1,),),) else O; fun foo = () => odd(mk(10,),); foo()}
-//│ 
-//│ 
-//│ IR:
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
@@ -441,9 +423,6 @@ fun foo() = odd(S(S(mk(10))))
 foo()
 //│ |#class| |True|↵|#class| |False|↵|#class| |S|(|s|)|↵|#class| |O|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|mk|(|10|)|)|)|)|↵|foo|(||)|
 //│ Parsed: {class True {}; class False {}; class S(s,) {}; class O {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n,)(0,)) then S(mk(-(n,)(1,),),) else O; fun foo = () => odd(S(S(mk(10,),),),); foo()}
-//│ 
-//│ 
-//│ IR:
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
@@ -531,9 +510,6 @@ fun main() =
 main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |S|(|s|)|↵|#class| |O|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|#if| |10| |>| |0| |#then| |S|(|O|)| |#else| |O|)|↵|#fun| |bar|(||)| |#=| |#if| |10| |>| |0| |#then| |odd|(|S|(|O|)|)| |#else| |odd|(|O|)|↵|#fun| |main|(||)| |#=|→|foo|(||)|↵|bar|(||)|←|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class S(s,) {}; class O {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(if (>(10,)(0,)) then S(O,) else O,); fun bar = () => if (>(10,)(0,)) then odd(S(O,),) else odd(O,); fun main = () => {foo(); bar()}; main()}
-//│ 
-//│ 
-//│ IR:
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
@@ -643,9 +619,6 @@ main(False)
 //│ |#class| |True|↵|#class| |False|↵|#class| |A|(||)|↵|#class| |B|(|b|)|↵|#fun| |aaa|(||)| |#=|→|#let| |m| |#=| |1|↵|#let| |n| |#=| |2|↵|#let| |p| |#=| |3|↵|#let| |q| |#=| |4|↵|m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |bbb|(||)| |#=|→|#let| |x| |#=| |aaa|(||)|↵|x| |*| |100| |+| |4|←|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A| |#else| |B|(|foo|(|not|(|x|)|)|)|←|↵|#fun| |main|(|flag|)| |#=|→|#let| |x| |#=| |foo|(|flag|)|↵|#if| |x| |is|→|A| |#then| |aaa|(||)|↵|B|(|b1|)| |#then| |bbb|(||)|←|←|↵|main|(|False|)|
 //│ Parsed: {class True {}; class False {}; class A() {}; class B(b,) {}; fun aaa = () => {let m = 1; let n = 2; let p = 3; let q = 4; +(-(+(m,)(n,),)(p,),)(q,)}; fun bbb = () => {let x = aaa(); +(*(x,)(100,),)(4,)}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = (flag,) => {let x = foo(flag,); if x is ‹(A) then aaa(); (B(b1,)) then bbb()›}; main(False,)}
 //│ 
-//│ 
-//│ IR:
-//│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, A, []),ClassInfo(5, B, [b])}, {
 //│ Def(0, aaa, [],
@@ -744,9 +717,6 @@ main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|Cons|(|1|,| |Cons|(|2|,| |Nil|)|)|)|←|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(Cons(1, Cons(2, Nil,),),)}; main()}
 //│ 
-//│ 
-//│ IR:
-//│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Some, [x]),ClassInfo(7, None, [])}, {
 //│ Def(0, head_opt, [l$0],
@@ -825,9 +795,6 @@ fun main() =
 main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|mk_list|(|10|)|)|←|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun mk_list = (n,) => {if (==(n,)(0,)) then Nil else Cons(n, mk_list(-(n,)(1,),),)}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(mk_list(10,),)}; main()}
-//│ 
-//│ 
-//│ IR:
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Some, [x]),ClassInfo(7, None, [])}, {
@@ -920,9 +887,6 @@ fun main() =
 main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |last_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then|→|#if| |t| |is|→|Nil| |#then| |Some|(|h|)|↵|Cons|(|h2|,| |t2|)| |#then| |last_opt|(|t|)|←|←|←|←|↵|#fun| |main|(||)| |#=|→|last_opt|(|mk_list|(|10|)|)|←|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun mk_list = (n,) => {if (==(n,)(0,)) then Nil else Cons(n, mk_list(-(n,)(1,),),)}; fun last_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then {if t is ‹(Nil) then Some(h,); (Cons(h2, t2,)) then last_opt(t,)›}›}; fun main = () => {last_opt(mk_list(10,),)}; main()}
-//│ 
-//│ 
-//│ IR:
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Some, [x]),ClassInfo(7, None, [])}, {
@@ -1019,9 +983,6 @@ fun main() =
 main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |is_some|(|o|)| |#=|→|#if| |o| |is|→|Some|(|x|)| |#then| |True|↵|None| |#then| |False|←|←|↵|#fun| |e0|(|w|)| |#=|→|w| |+| |8| |+| |9| |+| |10|←|↵|#fun| |e1|(|a|,| |c|)| |#=|→|a| |+| |1| |+| |2| |+| |3| |+| |4|←|↵|#fun| |e3|(|c|)| |#=|→|#let| |m| |#=| |4|↵|#let| |n| |#=| |5|↵|#let| |p| |#=| |6|↵|#let| |q| |#=| |7|↵|#if| |c| |#then| |m| |+| |n| |+| |p| |+| |q| |#else| |m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |e2|(|x|)| |#=|→|x| |+| |12| |+| |13| |+| |14|←|↵|#fun| |f|(|x|)| |#=|→|#let| |c1| |#=| |is_some|(|x|)|↵|#let| |z| |#=| |e3|(|c1|)|↵|#let| |w| |#=| |#if| |x| |is|→|Some|(|a|)| |#then| |e1|(|a|,| |z|)|↵|None| |#then| |e2|(|z|)|←|↵|e0|(|w|)|←|↵|#fun| |main|(||)| |#=|→|f|(|Some|(|2|)|)| |+| |f|(|None|)|←|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun is_some = (o,) => {if o is ‹(Some(x,)) then True; (None) then False›}; fun e0 = (w,) => {+(+(+(w,)(8,),)(9,),)(10,)}; fun e1 = (a, c,) => {+(+(+(+(a,)(1,),)(2,),)(3,),)(4,)}; fun e3 = (c,) => {let m = 4; let n = 5; let p = 6; let q = 7; if (c) then +(+(+(m,)(n,),)(p,),)(q,) else +(-(+(m,)(n,),)(p,),)(q,)}; fun e2 = (x,) => {+(+(+(x,)(12,),)(13,),)(14,)}; fun f = (x,) => {let c1 = is_some(x,); let z = e3(c1,); let w = if x is ‹(Some(a,)) then e1(a, z,); (None) then e2(z,)›; e0(w,)}; fun main = () => {+(f(Some(2,),),)(f(None,),)}; main()}
-//│ 
-//│ 
-//│ IR:
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Some, [x]),ClassInfo(7, None, [])}, {
@@ -1153,9 +1114,6 @@ fun main() =
 main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |is_some|(|o|)| |#=|→|#if| |o| |is|→|Some|(|x|)| |#then| |True|↵|None| |#then| |False|←|←|↵|#fun| |e0|(|w|)| |#=|→|w| |+| |8| |+| |9| |+| |10|←|↵|#fun| |e1|(|a|,| |z|)| |#=|→|#if| |a| |>| |0| |#then| |f|(|Some|(|a| |-| |1|)|)| |#else| |z|←|↵|#fun| |e3|(|c|)| |#=|→|#let| |m| |#=| |4|↵|#let| |n| |#=| |5|↵|#let| |p| |#=| |6|↵|#let| |q| |#=| |7|↵|#if| |c| |#then| |m| |+| |n| |+| |p| |+| |q| |#else| |m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |e2|(|x|)| |#=|→|x| |+| |12| |+| |13| |+| |14|←|↵|#fun| |f|(|x|)| |#=|→|#let| |c1| |#=| |is_some|(|x|)|↵|#let| |z| |#=| |e3|(|c1|)|↵|#let| |w| |#=| |#if| |x| |is|→|Some|(|a|)| |#then| |e1|(|a|,| |z|)|↵|None| |#then| |e2|(|z|)|←|↵|e0|(|w|)|←|↵|#fun| |main|(||)| |#=|→|f|(|Some|(|2|)|)| |+| |f|(|None|)|←|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun is_some = (o,) => {if o is ‹(Some(x,)) then True; (None) then False›}; fun e0 = (w,) => {+(+(+(w,)(8,),)(9,),)(10,)}; fun e1 = (a, z,) => {if (>(a,)(0,)) then f(Some(-(a,)(1,),),) else z}; fun e3 = (c,) => {let m = 4; let n = 5; let p = 6; let q = 7; if (c) then +(+(+(m,)(n,),)(p,),)(q,) else +(-(+(m,)(n,),)(p,),)(q,)}; fun e2 = (x,) => {+(+(+(x,)(12,),)(13,),)(14,)}; fun f = (x,) => {let c1 = is_some(x,); let z = e3(c1,); let w = if x is ‹(Some(a,)) then e1(a, z,); (None) then e2(z,)›; e0(w,)}; fun main = () => {+(f(Some(2,),),)(f(None,),)}; main()}
-//│ 
-//│ 
-//│ IR:
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Some, [x]),ClassInfo(7, None, [])}, {
