@@ -28,6 +28,7 @@ abstract class ModeType {
   def dbgUCS: Opt[Set[Str]]
   def dbgLifting: Bool
   def dbgDefunc: Bool
+  def dbgSimpledef: Bool
   def fullExceptionStack: Bool
   def stats: Bool
   def stdout: Bool
@@ -40,10 +41,10 @@ abstract class ModeType {
   def expectCodeGenErrors: Bool
   def showRepl: Bool
   def allowEscape: Bool
-  def mono: Bool
   def useIR: Bool
   def interpIR: Bool
   def irVerbose: Bool
+  def simpledef: Bool
   def lift: Bool
   def nolift: Bool
 }
@@ -57,6 +58,7 @@ class DiffTests
   
   /**  Hook for dependent projects, like the monomorphizer. */
   def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (Ls[Str], Option[TypingUnit]) = (Nil, None)
+  def postTypingProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit, output: Str => Unit): Option[TypingUnit] = None
   
   
   @SuppressWarnings(Array("org.wartremover.warts.RedundantIsInstanceOf"))
@@ -161,6 +163,7 @@ class DiffTests
       dbgUCS: Opt[Set[Str]] = N,
       dbgLifting: Bool = false,
       dbgDefunc: Bool = false,
+      dbgSimpledef: Bool = false,
       fullExceptionStack: Bool = false,
       stats: Bool = false,
       stdout: Bool = false,
@@ -174,7 +177,7 @@ class DiffTests
       expectCodeGenErrors: Bool = false,
       showRepl: Bool = false,
       allowEscape: Bool = false,
-      mono: Bool = false,
+      simpledef: Bool = false,
       lift: Bool = false,
       nolift: Bool = false,
       // noProvs: Bool = false,
@@ -235,6 +238,7 @@ class DiffTests
           case "ds" => mode.copy(dbgSimplif = true)
           case "dl" => mode.copy(dbgLifting = true)
           case "dd" => mode.copy(dbgDefunc = true)
+          case "dsd" => mode.copy(dbgSimpledef = true)
           case "s" => mode.copy(fullExceptionStack = true)
           case "v" | "verbose" => mode.copy(verbose = true)
           case "ex" | "explain" => mode.copy(expectTypeErrors = true, explainErrors = true)
@@ -289,7 +293,7 @@ class DiffTests
           case "re" => mode.copy(expectRuntimeErrors = true)
           case "r" | "showRepl" => mode.copy(showRepl = true)
           case "escape" => mode.copy(allowEscape = true)
-          case "mono" => {mode.copy(mono = true)}
+          case "sd" => {mode.copy(simpledef = true)}
           case "lift" => {mode.copy(lift = true)}
           case "nolift" => {mode.copy(nolift = true)}
           case "exit" =>
@@ -463,14 +467,14 @@ class DiffTests
             
             if (mode.showParse)
               output(s"AST: $res")
-            
             val newMode = if (useIR) { mode.copy(useIR = true) } else mode
-            val (postLines, nuRes) = postProcess(newMode, basePath, testName, res, output)
-            postLines.foreach(output)  
+            val (postLines, nuRes) = 
+              postProcess(newMode, basePath, testName, res, output)
+            postLines.foreach(output)            
             
             if (parseOnly)
               Success(Pgrm(Nil), 0)
-            else if (mode.mono || mode.lift) {
+            else if (mode.lift) {
               import Message._
               Success(Pgrm(nuRes.getOrElse({
                 raise(ErrorReport(msg"Post-process failed to produce AST." -> None :: Nil, true, Diagnostic.Compilation))
@@ -902,6 +906,11 @@ class DiffTests
             val executionResults: Result \/ Ls[(ReplHost.Reply, Str)] = if (!allowTypeErrors &&
                 file.ext =:= "mls" && !mode.noGeneration && !noJavaScript) {
               import codeGenTestHelpers._
+              val pp = 
+                postTypingProcess(mode, basePath, testName, TypingUnit(p.tops), output) match {
+                  case Some(stmts) => Pgrm(stmts.entities)
+                  case _ => p
+                }
               backend(p, mode.allowEscape, newDefs && newParser, prettyPrintQQ) match {
                 case testCode @ TestCode(prelude, queries) => {
                   // Display the generated code.

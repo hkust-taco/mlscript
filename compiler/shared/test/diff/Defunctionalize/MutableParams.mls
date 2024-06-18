@@ -1,25 +1,21 @@
 :NewDefs // TODO: Mutable Parameters
 
-//:mono
 //class Bar(#x)
 //fun foo(#b) = b
 //let a = foo(new Bar(1))
 //let b = foo(new Bar(2))
 
-//:mono
 //class OneInt(#a){
 //  fun inc() = a+1
 //}
 //(new OneInt(1)).inc()
 
-//:mono
 //class OneInt(#a){
 //  fun add(x) = 
 //    new OneInt(a+x.a)
 //}
 //(new OneInt(1)).add(new OneInt(2))
 
-//:mono
 //trait AnyFoo {
 //}
 //class FooPlus(#a): AnyFoo {

@@ -1,38 +1,31 @@
 :NewDefs
 
-:ge //TODO: Wrap resulting statements in module
-:mono
 let b = true
-class OneInt(a: Int){
+class OneInt(val a: Int){
   fun get = () -> a
 }
-class OneBool(b: Bool){
+class OneBool(val b: Bool){
   fun get = () -> b
 }
 (if b then OneInt(1) else OneBool(true)).get()
-//│ Lifted:
-//│ TypingUnit {
-//│   class OneInt$1([a: Int,]) {fun get = () => (this).a}
-//│   class OneBool$2([b: Bool,]) {fun get = () => b$1}
-//│   let b$1 = true
-//│   Code(List(('(' if (b$1) then OneInt$1(1,) else OneBool$2(true,) ')').get()))
+//│ let b: true
+//│ class OneInt(a: Int) {
+//│   fun get: () -> Int
 //│ }
-//│ Mono:
-//│ TypingUnit {
-//│   class OneInt$1([a: Int,]) {}
-//│   class OneBool$2([b: Bool,]) {}
-//│   fun get$OneInt$1 = (this,) => let obj = this in if obj is ‹(OneInt$1) then 1; else error›
-//│   fun get$OneBool$2 = (this,) => b$1
-//│   fun main$$3 = () => let obj = '(' if (b$1) then OneInt$1(1,) else OneBool$2(true,) ')' in if obj is ‹(OneBool$2) then get$OneBool$2(obj,); (OneInt$1) then get$OneInt$1(obj,); else error›
-//│   let b$1 = true
-//│   Code(List(main$$3()))
+//│ class OneBool(b: Bool) {
+//│   fun get: () -> Bool
 //│ }
-//│ class OneInt$1(a: Int)
-//│ class OneBool$2(b: Bool)
-//│ fun get$OneInt$1: Object -> 1
-//│ fun get$OneBool$2: anything -> true
-//│ fun main$$3: () -> (1 | true)
-//│ let b$1: true
-//│ 1 | true
-//│ Code generation encountered an error:
-//│   unguarded recursive use of by-value binding b$1
+//│ Int | false | true
+//│ 
+//│ Simpledef:
+//│ {let b = true
+//│  class OneInt(val a: Int,) {fun get = () => a}
+//│  class OneBool(val b: Bool,) {fun get = () => b}
+//│  let selRes$20 = '(' if (b) then OneInt(1,) else OneBool(true,) ')' in case selRes$20 of { OneInt => (selRes$20).get()
+//│  OneBool => (selRes$20).get() }}
+//│ End simpledef
+//│ 
+//│ b
+//│   = true
+//│ res
+//│     = 1

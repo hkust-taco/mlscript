@@ -1,38 +1,18 @@
 :NewDefs 
+:ParseOnly
 
-:e // TODO: Preserve type annotations in lifting
-:mono
-fun foo(x: Int) =
+:lift
+fun foo(x) =
     (y) => x+y
 foo(1)(2)
 foo(2)(2)
+//│ |#fun| |foo|(|x|)| |#=|→|(|y|)| |#=>| |x|+|y|←|↵|foo|(|1|)|(|2|)|↵|foo|(|2|)|(|2|)|
+//│ Parsed: {fun foo = (x,) => {('(' y ')',) => +(x, y,)}; foo(1,)(2,); foo(2,)(2,)}
 //│ Lifted:
 //│ TypingUnit {
 //│   class Lambda1$2$1([x,]) {fun apply = ('(' y ')',) => +((this).x, y,)}
-//│   fun foo$1 = (x: Int,) => {{Lambda1$2$1(x,)}}
+//│   fun foo$1 = (x,) => {{Lambda1$2$1(x,)}}
 //│   Code(List(foo$1(1,)(2,)))
 //│   Code(List(foo$1(2,)(2,)))
 //│ }
-//│ Mono:
-//│ TypingUnit {
-//│   class Lambda1$2$1([x,]) {}
-//│   fun apply$Lambda1$2$1 = (this, '(' y ')',) => +(let obj = this in if obj is ‹(Lambda1$2$1(x,)) then x; else error›, y,)
-//│   fun foo$1 = (x: Int,) => {{Lambda1$2$1(x,)}}
-//│   fun main$$3 = () => let obj = foo$1(2,) in if obj is ‹(Lambda1$2$1) then apply$Lambda1$2$1(obj, 2,); else error›
-//│   fun main$$2 = () => let obj = foo$1(1,) in if obj is ‹(Lambda1$2$1) then apply$Lambda1$2$1(obj, 2,); else error›
-//│   Code(List(main$$2()))
-//│   Code(List(main$$3()))
-//│ }
-//│ ╔══[ERROR] Class parameters currently need type annotations
-//│ ║  l.6: 	    (y) => x+y
-//│ ╙──     	           ^
-//│ class Lambda1$2$1(x: error)
-//│ fun apply$Lambda1$2$1: (Object, Int) -> Int
-//│ fun foo$1: (x: Int) -> Lambda1$2$1
-//│ fun main$$3: () -> Int
-//│ fun main$$2: () -> Int
-//│ Int
-//│ res
-//│     = 3
-//│ res
-//│     = 4
+//│ 
