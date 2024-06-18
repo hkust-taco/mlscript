@@ -4,7 +4,7 @@ package bbml
 class PrettyPrinter(output: String => Unit):
   def print(ty: Type): Unit =
     output(s"Type: ${ty}")
-    val bounds = PrettyPrinter.collectBounds(ty)(using Set.empty)
+    val bounds = PrettyPrinter.collectBounds(ty)(using Set.empty).distinct
     if !bounds.isEmpty then
       output("Where:")
       bounds.foreach {
@@ -29,5 +29,5 @@ object PrettyPrinter:
     case Type.FunType(args, ret, eff) => args.flatMap(collectBounds) ++ collectBounds(ret) ++ collectBounds(eff)
     case Type.ComposedType(lhs, rhs, pol) => collectBounds(lhs) ++ collectBounds(rhs)
     case Type.NegType(ty) => collectBounds(ty)
-    case Type.PolymorphicType(lvl, tv, body) => Nil // TODO
+    case Type.PolymorphicType(tvs, body) => tvs.flatMap(collectBounds) ++ collectBounds(body)
     case _ => Nil

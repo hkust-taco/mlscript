@@ -29,17 +29,17 @@ enum Type extends TypeArg:
   case FunType(args: Ls[Type], ret: Type, eff: Type)
   case ComposedType(lhs: Type, rhs: Type, pol: Bool) // * positive -> union
   case NegType(ty: Type)
-  case PolymorphicType(lvl: Int, tv: Ls[InfVar], body: Type)
+  case PolymorphicType(tv: Ls[InfVar], body: Type)
   case Top // TODO: level?
   case Bot
   override def toString(): String = this match
     case ClassType(name, targs) =>
       if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.mkString(", ")}]"
-    case InfVar(lvl, uid, state) => s"α${uid}" // TODO: bounds?
+    case InfVar(lvl, uid, _) => s"α${uid}_$lvl"
     case FunType(args, ret, eff) => s"(${args.mkString(", ")}) ->{${eff}} ${ret}"
     case ComposedType(lhs, rhs, pol) => s"${lhs} ${if pol then "∨" else "∧"} ${rhs}"
     case NegType(ty) => s"¬${ty}"
-    case PolymorphicType(lvl, tv, body) => s"forall($lvl) ${tv.mkString(", ")}: $body"
+    case PolymorphicType(tv, body) => s"forall ${tv.mkString(", ")}: $body"
     case Top => "⊤"
     case Bot => "⊥"
 
@@ -185,8 +185,12 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           val tv = freshVar
           nestCtx += sym -> tv // TODO: a type var symbol may be better...
           tv
-      Type.PolymorphicType(nestCtx.lvl, bd, typeType(body))
+      Type.PolymorphicType(bd, typeType(body))
     case _ => error(msg"${ty.toString} is not a valid type annotation" -> ty.toLoc :: Nil) // TODO
+
+  private def checkAgainst(lhs: Type, rhs: Type)(using ctx: Ctx): Unit = (lhs, rhs) match
+    case (lhs, Type.PolymorphicType(bds, body)) => checkAgainst(lhs, body) // TODO: ???
+    case _ => solver.constrain(lhs, rhs)
 
   def typeCheck(t: Term)(using ctx: Ctx): Type = t match
     case Ref(sym: VarSymbol) =>
@@ -210,7 +214,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
         case TermDefinition(Fun, sym, Some(params), sig, Some(body), _) =>
           def rec(sig: Opt[Type]): (Ls[Type], Opt[Type], Opt[Type]) = sig match
             case S(ft @ Type.FunType(args, ret, eff)) => (args, S(ret), S(eff))
-            case S(Type.PolymorphicType(_, _, ty)) => rec(S(ty))
+            case S(Type.PolymorphicType(_, ty)) => rec(S(ty))
             case _ => (params.map(_ => freshVar), N, N)
           val sigTy = sig.map(typeType)
           val (tvs, retAnno, effAnno) = rec(sigTy)
@@ -227,8 +231,8 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
             val bodyTy = typeCheck(body)(using defCtx)
             retAnno.foreach(anno => solver.constrain(bodyTy, anno))
             sigTy match
-              case S(Type.PolymorphicType(lvl, bds, _)) =>
-                ctx += sym -> Type.PolymorphicType(lvl, bds, Type.FunType(argsTy, bodyTy, Type.Bot)) // TODO: eff
+              case S(Type.PolymorphicType(bds, _)) =>
+                ctx += sym -> Type.PolymorphicType(bds, Type.FunType(argsTy, bodyTy, Type.Bot)) // TODO: eff
               case _ =>
                 ctx += sym -> Type.FunType(argsTy, bodyTy, Type.Bot) // TODO: eff
         case clsDef: ClassDef => ctx *= clsDef
@@ -303,8 +307,8 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
         case N => 
           error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil)
     case Term.Asc(term, ty) =>
-      val res = typeType(ty) // TODO: poly
-      solver.constrain(typeCheck(term), res)
+      val res = typeType(ty)
+      checkAgainst(typeCheck(term), res)
       res
     case Term.Error =>
       Type.Bot // TODO: error type?

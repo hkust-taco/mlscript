@@ -43,11 +43,11 @@ fun baz(x) = "bbb"
 
 add(1, 2)
 //│ Elab: { add#0(1‹›, 2‹›)‹›‹› }‹›
-//│ Type: α7
+//│ Type: α7_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α1 <: α7
-//│   Int ∧ ¬⊥ <: α1
-//│   α1 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   ⊤ ∧ ¬⊥ ∧ α1_0 <: α7_0
+//│   Int ∧ ¬⊥ <: α1_0
+//│   α1_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
 
 add(1, 2): Int
 //│ Elab: { App(Ref(add),Tup(List(Fld(‹›,Lit(IntLit(1)),None), Fld(‹›,Lit(IntLit(2)),None)))): Ref(class:Int)‹› }‹›

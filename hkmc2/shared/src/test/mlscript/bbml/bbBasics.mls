@@ -36,7 +36,7 @@ fun mul(x, y) = x * y
 
 x => x
 //│ Elab: { λx. x@1#0‹› }‹›
-//│ Type: (α8) ->{⊥} α8
+//│ Type: (α8_0) ->{⊥} α8_0
 
 +
 //│ Elab: { +#1 }‹›
@@ -44,35 +44,35 @@ x => x
 
 (x, y) => x + y
 //│ Elab: { λx, y. +#2(x@1#0, y@2#0)‹›‹›‹› }‹›
-//│ Type: (α9, α10) ->{⊥} α12
+//│ Type: (α9_0, α10_0) ->{⊥} α12_0
 //│ Where:
-//│   α9 <: ¬⊤ ∧ ¬⊥ ∨ Int
-//│   α10 <: ¬⊤ ∧ ¬⊥ ∨ Int
-//│   Int ∧ ¬⊥ <: α12
+//│   α9_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   α10_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   Int ∧ ¬⊥ <: α12_0
 
 ((x, y) => x + y)(40, 2)
 //│ Elab: { λx, y. +#3(x@2#0, y@3#0)‹›‹›‹›(40‹›, 2‹›)‹›‹› }‹›
-//│ Type: α18
+//│ Type: α18_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α16 <: α18
-//│   Int ∧ ¬⊥ <: α16
+//│   ⊤ ∧ ¬⊥ ∧ α16_0 <: α18_0
+//│   Int ∧ ¬⊥ <: α16_0
 
 :e
 114 + "514"
 //│ Elab: { +#4(114‹›, "514"‹›)‹›‹› }‹›
 //│ ╔══[ERROR] Can not solve Str <: ⊥
 //│ ╙──
-//│ Type: α20
+//│ Type: α20_0
 //│ Where:
-//│   Int ∧ ¬⊥ <: α20
+//│   Int ∧ ¬⊥ <: α20_0
 
 
 inc(42)
 //│ Elab: { inc#0(42‹›)‹›‹› }‹›
-//│ Type: α22
+//│ Type: α22_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α3 <: α22
-//│   Int ∧ ¬⊥ <: α3
+//│   ⊤ ∧ ¬⊥ ∧ α3_0 <: α22_0
+//│   Int ∧ ¬⊥ <: α3_0
 
 let x = 42 in x
 //│ Elab: { { let x@1 = 42‹›; x@1#0 }‹› }‹›
@@ -80,18 +80,18 @@ let x = 42 in x
 
 let x = 1 in let y = 2 in x + y
 //│ Elab: { { let x@1 = 1‹›; { let y@2 = 2‹›; +#5(x@1#0, y@2#0)‹›‹› }‹› }‹› }‹›
-//│ Type: α24
+//│ Type: α24_0
 //│ Where:
-//│   Int ∧ ¬⊥ <: α24
+//│   Int ∧ ¬⊥ <: α24_0
 
 :e
 let x = 0 in x + "1"
 //│ Elab: { { let x@1 = 0‹›; +#6(x@1#0, "1"‹›)‹›‹› }‹› }‹›
 //│ ╔══[ERROR] Can not solve Str <: ⊥
 //│ ╙──
-//│ Type: α26
+//│ Type: α26_0
 //│ Where:
-//│   Int ∧ ¬⊥ <: α26
+//│   Int ∧ ¬⊥ <: α26_0
 
 class Foo(x: Int)
 //│ Elab: { class Foo(x@1: class:Int#11) { }‹›; }‹›
@@ -141,15 +141,15 @@ class Some[A](value: A)
 
 new Some(true)
 //│ Elab: { new class:Some(Lit(BoolLit(true)))‹› }‹›
-//│ Type: Some[out α28]
+//│ Type: Some[out α28_0]
 //│ Where:
-//│   Bool ∧ ¬⊥ <: α28
+//│   Bool ∧ ¬⊥ <: α28_0
 
 new Some(42)
 //│ Elab: { new class:Some(Lit(IntLit(42)))‹› }‹›
-//│ Type: Some[out α30]
+//│ Type: Some[out α30_0]
 //│ Where:
-//│   Int ∧ ¬⊥ <: α30
+//│   Int ∧ ¬⊥ <: α30_0
 
 let p = new Point(1.0, 0.0, 0.0) in Point.x(p)
 //│ Elab: { { let p@1 = new class:Point(Lit(DecLit(1.0)), Lit(DecLit(0.0)), Lit(DecLit(0.0)))‹›; class:Point#0.x‹›(p@1#0)‹›‹› }‹› }‹›
@@ -157,17 +157,17 @@ let p = new Point(1.0, 0.0, 0.0) in Point.x(p)
 
 let t = new Some(true) in Some.value(t)
 //│ Elab: { { let t@1 = new class:Some(Lit(BoolLit(true)))‹›; class:Some#0.value‹›(t@1#0)‹›‹› }‹› }‹›
-//│ Type: α34
+//│ Type: α34_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α32 <: α34
-//│   Bool ∧ ¬⊥ <: α32
+//│   ⊤ ∧ ¬⊥ ∧ α32_0 <: α34_0
+//│   Bool ∧ ¬⊥ <: α32_0
 
 :e
 Some.value(42)
 //│ Elab: { class:Some#1.value‹›(42‹›)‹›‹› }‹›
 //│ ╔══[ERROR] Can not solve Int <: ⊥
 //│ ╙──
-//│ Type: α36
+//│ Type: α36_0
 
 
 class Printer[T](f: T -> Str)
@@ -181,24 +181,24 @@ fun foofoo(x) =
 
 new Printer(foofoo)
 //│ Elab: { new class:Printer(Ref(foofoo))‹› }‹›
-//│ Type: Printer[in α40]
+//│ Type: Printer[in α40_0]
 //│ Where:
-//│   α40 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   α40_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
 
 let ip = new Printer(foofoo) in Printer.f(ip)(42)
 //│ Elab: { { let ip@1 = new class:Printer(Ref(foofoo))‹›; class:Printer#0.f‹›(ip@1#0)‹›‹›(42‹›)‹›‹› }‹› }‹›
-//│ Type: α47
+//│ Type: α47_0
 //│ Where:
-//│   Str ∧ ¬⊥ <: α47
+//│   Str ∧ ¬⊥ <: α47_0
 
 :e
 let ip = new Printer(foofoo) in Printer.f(ip)("42")
 //│ Elab: { { let ip@1 = new class:Printer(Ref(foofoo))‹›; class:Printer#1.f‹›(ip@1#0)‹›‹›("42"‹›)‹›‹› }‹› }‹›
 //│ ╔══[ERROR] Can not solve Str <: ⊥
 //│ ╙──
-//│ Type: α53
+//│ Type: α53_0
 //│ Where:
-//│   Str ∧ ¬⊥ <: α53
+//│   Str ∧ ¬⊥ <: α53_0
 
 class TFun[T](f: T -> T)
 //│ Elab: { class TFun[in out T@1](f@2: (T@1#0)‹› -> T@1#1‹›) { }‹›; }‹›
@@ -210,29 +210,29 @@ fun inc(x) = x + 1
 
 new TFun(inc)
 //│ Elab: { new class:TFun(Ref(inc))‹› }‹›
-//│ Type: TFun[in α57 out α58]
+//│ Type: TFun[in α57_0 out α58_0]
 //│ Where:
-//│   α57 <: ¬⊤ ∧ ¬⊥ ∨ Int
-//│   ⊤ ∧ ¬⊥ ∧ α56 <: α58
-//│   Int ∧ ¬⊥ <: α56
+//│   α57_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   ⊤ ∧ ¬⊥ ∧ α56_0 <: α58_0
+//│   Int ∧ ¬⊥ <: α56_0
 
 let tf = new TFun(inc) in TFun.f(tf)(1)
 //│ Elab: { { let tf@1 = new class:TFun(Ref(inc))‹›; class:TFun#0.f‹›(tf@1#0)‹›‹›(1‹›)‹›‹› }‹› }‹›
-//│ Type: α64
+//│ Type: α64_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α62 <: α64
-//│   ⊤ ∧ ¬⊥ ∧ α60 <: α62
-//│   ⊤ ∧ ¬⊥ ∧ α56 <: α60
-//│   Int ∧ ¬⊥ <: α56
+//│   ⊤ ∧ ¬⊥ ∧ α62_0 <: α64_0
+//│   ⊤ ∧ ¬⊥ ∧ α60_0 <: α62_0
+//│   ⊤ ∧ ¬⊥ ∧ α56_0 <: α60_0
+//│   Int ∧ ¬⊥ <: α56_0
 
 :e
 let tf = new TFun(inc) in TFun.f(tf)("1")
 //│ Elab: { { let tf@1 = new class:TFun(Ref(inc))‹›; class:TFun#1.f‹›(tf@1#0)‹›‹›("1"‹›)‹›‹› }‹› }‹›
 //│ ╔══[ERROR] Can not solve Str <: ⊥
 //│ ╙──
-//│ Type: α70
+//│ Type: α70_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α68 <: α70
-//│   ⊤ ∧ ¬⊥ ∧ α66 <: α68
-//│   ⊤ ∧ ¬⊥ ∧ α56 <: α66
-//│   Int ∧ ¬⊥ <: α56
+//│   ⊤ ∧ ¬⊥ ∧ α68_0 <: α70_0
+//│   ⊤ ∧ ¬⊥ ∧ α66_0 <: α68_0
+//│   ⊤ ∧ ¬⊥ ∧ α56_0 <: α66_0
+//│   Int ∧ ¬⊥ <: α56_0

@@ -8,4 +8,22 @@ fun id(x) = x
 
 id
 //│ Elab: { id#0 }‹›
-//│ Type: forall(1) α0: (α0) ->{⊥} α0
+//│ Type: forall α0_1: (α0_1) ->{⊥} α0_1
+
+:fixme
+(x => x): forall (a): a -> a
+//│ Elab: { Lam(List(x@1),Ref(x@1)): ForallTy(List(a@2),FunTy(Tup(List(Fld(‹›,Ref(a@2),None))),Ref(a@2)))‹› }‹›
+//│ Type: forall α1_1: (α1_1) ->{⊥} α1_1
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α2_0 <: α1_1
+//│   ⊤ ∧ ¬⊥ ∧ α1_1 <: α2_0
+
+:e
+(x => x + 1): forall (a): a -> a
+//│ Elab: { Lam(List(x@1),App(Ref(+),Tup(List(Fld(‹›,Ref(x@1),None), Fld(‹›,Lit(IntLit(1)),None))))): ForallTy(List(a@3),FunTy(Tup(List(Fld(‹›,Ref(a@3),None))),Ref(a@3)))‹› }‹›
+//│ Type: forall α3_1: (α3_1) ->{⊥} α3_1
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α6_0 <: α3_1
+//│   Int ∧ ¬⊥ <: α6_0
+//│   α6_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   α3_1 <: ¬⊤ ∧ ¬⊥ ∨ Int
