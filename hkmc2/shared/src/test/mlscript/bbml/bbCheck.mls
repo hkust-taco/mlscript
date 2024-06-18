@@ -29,7 +29,7 @@ fun id(y) = y
 fun bar: Str -> Str
 fun bar(x) = let t = x + 1 in "aaa"
 //│ Elab: { fun bar: (class:Str#0)‹› -> class:Str#1‹›; fun bar(x@2): (class:Str#2)‹› -> class:Str#3‹› = { let t@3 = +#1(x@2#0, 1‹›)‹›‹›; "aaa"‹› }‹›; }‹›
-//│ ╔══[ERROR] Can not solve Str <: ⊥
+//│ ╔══[ERROR] Cannot solve Str <: ⊥
 //│ ╙──
 //│ Type: ⊤
 
@@ -37,7 +37,7 @@ fun bar(x) = let t = x + 1 in "aaa"
 fun baz: Int -> Int
 fun baz(x) = "bbb"
 //│ Elab: { fun baz: (class:Int#21)‹› -> class:Int#22‹›; fun baz(x@2): (class:Int#23)‹› -> class:Int#24‹› = "bbb"‹›; }‹›
-//│ ╔══[ERROR] Can not solve Str <: ⊥
+//│ ╔══[ERROR] Cannot solve Str <: ⊥
 //│ ╙──
 //│ Type: ⊤
 
@@ -57,6 +57,6 @@ add(1, 2): Int
 :e
 add(0, 0): Str
 //│ Elab: { App(Ref(add),Tup(List(Fld(‹›,Lit(IntLit(0)),None), Fld(‹›,Lit(IntLit(0)),None)))): Ref(class:Str)‹› }‹›
-//│ ╔══[ERROR] Can not solve Int <: ⊥
+//│ ╔══[ERROR] Cannot solve Int <: ⊥
 //│ ╙──
 //│ Type: Str

@@ -1,6 +1,17 @@
 :global
 :bbml
 
+42: forall (a): Int
+//│ Elab: { Lit(IntLit(42)): ForallTy(List(a@1),Ref(class:Int))‹› }‹›
+//│ Type: forall α0_1: Int
+
+:e
+42: forall (a): Str
+//│ Elab: { Lit(IntLit(42)): ForallTy(List(a@1),Ref(class:Str))‹› }‹›
+//│ ╔══[ERROR] Cannot solve Int <: ⊥
+//│ ╙──
+//│ Type: forall α1_1: Str
+
 fun id: forall (a): a -> a
 fun id(x) = x
 //│ Elab: { fun id: forall a@2: FunTy(Tup(List(Fld(‹›,Ref(a@2),None))),Ref(a@2))‹›; fun id(x@3): forall a@5: FunTy(Tup(List(Fld(‹›,Ref(a@5),None))),Ref(a@5))‹› = x@3#0; }‹›
@@ -8,22 +19,17 @@ fun id(x) = x
 
 id
 //│ Elab: { id#0 }‹›
-//│ Type: forall α0_1: (α0_1) ->{⊥} α0_1
+//│ Type: forall α2_1: (α2_1) ->{⊥} α2_1
 
-:fixme
 (x => x): forall (a): a -> a
 //│ Elab: { Lam(List(x@1),Ref(x@1)): ForallTy(List(a@2),FunTy(Tup(List(Fld(‹›,Ref(a@2),None))),Ref(a@2)))‹› }‹›
-//│ Type: forall α1_1: (α1_1) ->{⊥} α1_1
-//│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α2_0 <: α1_1
-//│   ⊤ ∧ ¬⊥ ∧ α1_1 <: α2_0
+//│ Type: forall α3_1: (α3_1) ->{⊥} α3_1
 
 :e
 (x => x + 1): forall (a): a -> a
 //│ Elab: { Lam(List(x@1),App(Ref(+),Tup(List(Fld(‹›,Ref(x@1),None), Fld(‹›,Lit(IntLit(1)),None))))): ForallTy(List(a@3),FunTy(Tup(List(Fld(‹›,Ref(a@3),None))),Ref(a@3)))‹› }‹›
-//│ Type: forall α3_1: (α3_1) ->{⊥} α3_1
-//│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α6_0 <: α3_1
-//│   Int ∧ ¬⊥ <: α6_0
-//│   α6_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
-//│   α3_1 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│ ╔══[ERROR] Cannot constrain skolem α4_1
+//│ ╙──
+//│ ╔══[ERROR] Cannot solve Int <: ⊥
+//│ ╙──
+//│ Type: forall α4_1: (α4_1) ->{⊥} α4_1

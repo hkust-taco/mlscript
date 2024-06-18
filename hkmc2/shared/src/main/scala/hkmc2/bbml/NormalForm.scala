@@ -7,8 +7,8 @@ import semantics.*
 import Message.MessageContext
 import mlscript.utils.*, shorthands.*
 
+// TODO: refactor! this file looks horrible!
 object NormalForm:
-  // TODO: level
   final case class NormalClassType(cls: ClassSymbol, targs: List[(Disj, Disj)]) {
     override def toString(): String = if targs.isEmpty then s"${cls.nme}" else s"${cls.nme}[${targs.map{
       case (in, out) => s"in $in out $out"
@@ -16,10 +16,14 @@ object NormalForm:
     def toType: Type = Type.ClassType(cls, targs.map {
       case (in, out) => Wildcard(in.toType, out.toType)
     })
+    def lvl(using skolems: SkolemSet): Int = targs.map {
+      case (in, out) => in.lvl.max(out.lvl)
+    }.maxOption.getOrElse(0)
   }
   final case class NormalFunType(args: List[Disj], ret: Disj, eff: Disj) {
     override def toString(): String = s"(${args.mkString(", ")}) ->{${eff}} ${ret}"
     def toType: Type = Type.FunType(args.map(_.toType), ret.toType, eff.toType)
+    def lvl(using skolems: SkolemSet): Int = (ret :: eff :: args).map(_.lvl).max
   }
 
   enum Disj: // * D ::=
@@ -35,6 +39,12 @@ object NormalForm:
       case Bot => Type.Bot
       case Con(conj) => conj.toType
       case DC(disj, conj) => Type.ComposedType(disj.toType, conj.toType, true)
+    def lvl(using skolems: SkolemSet): Int = this match
+      case Bot => 0
+      case Con(conj) => conj.lvl
+      case DC(disj, conj) => disj.lvl.max(conj.lvl)
+
+  type SkolemSet = Set[Uid[Type.InfVar]]
 
   enum Conj: // * C ::=
     case INU(i: Inter, u: Union) // * I /\ ~U |
@@ -62,7 +72,21 @@ object NormalForm:
       case INU(i, u) => Type.ComposedType(i.toType, Type.NegType(u.toType), false)
       case CVar(conj, v) => Type.ComposedType(conj.toType, v, false)
       case CNVar(conj, v) => Type.ComposedType(conj.toType, Type.NegType(v), false)
-    
+    def lvl(using skolems: SkolemSet): Int = this match
+      case INU(i, u) => i.lvl.max(u.lvl)
+      case CVar(conj, v) => conj.lvl.max(if skolems(v.uid) then Int.MaxValue else v.lvl)
+      case CNVar(conj, v) => conj.lvl.max(if skolems(v.uid) then Int.MaxValue else v.lvl)
+    def sort(using skolems: SkolemSet): Conj =
+      @tailrec
+      def rec(conj: Conj, prev: Ls[(Type.InfVar, Bool)]): (Ls[(Type.InfVar, Bool)], INU) = conj match // * tv -> pos/neg
+        case inu: INU => (prev, inu)
+        case CVar(conj, v) => rec(conj, (v, true) :: prev)
+        case CNVar(conj, v) => rec(conj, (v, false) :: prev)
+      val (vs, tail) = rec(this, Nil)
+      vs.sortWith {
+        case ((v1, _), (v2, _)) => skolems(v1.uid) || v1.lvl < v2.lvl
+      }.foldLeft[Conj](tail)((res, p) => if p._2 then CVar(res, p._1) else CNVar(res, p._1))
+
   enum Inter: // * I ::=
     case Top // * ⊤ |
     case Fun(fun: NormalFunType) // * D ->{D} D |
@@ -87,6 +111,10 @@ object NormalForm:
       case Top => Type.Top
       case Fun(f) => f.toType
       case Cls(c) => c.toType
+    def lvl(using skolems: SkolemSet): Int = this match
+      case Top => 0
+      case Fun(f) => f.lvl
+      case Cls(c) => c.lvl
     
   enum Union: // * U ::=
     case Bot // * ⊥ |
@@ -115,6 +143,10 @@ object NormalForm:
       case Bot => Type.Bot
       case Fun(f) => f.toType
       case Uni(lhs, rhs) => Type.ComposedType(lhs.toType, rhs.toType, true)
+    def lvl(using skolems: SkolemSet): Int = this match
+      case Bot => 0
+      case Fun(f) => f.lvl
+      case Uni(lhs, rhs) => lhs.lvl.max(rhs.lvl)
 
   private lazy val topConj = Conj.INU(Inter.Top, Union.Bot)
 

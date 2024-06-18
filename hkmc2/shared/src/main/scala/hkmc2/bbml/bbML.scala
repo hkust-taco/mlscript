@@ -9,7 +9,8 @@ import semantics.*, semantics.Term.*
 import syntax.*
 import Tree.*
 
-sealed abstract class TypeArg
+sealed abstract class TypeArg:
+  def lvl(using skolems: NormalForm.SkolemSet): Int
 
 case class Wildcard(in: Type, out: Type) extends TypeArg {
   private def printWhenSet(t: Type, in: Bool) = t match
@@ -21,6 +22,7 @@ case class Wildcard(in: Type, out: Type) extends TypeArg {
 
   override def toString(): String =
     Ls(printWhenSet(in, true), printWhenSet(out, false)).filter(_.isDefined).map(_.get).mkString(" ")
+  override def lvl(using skolems: NormalForm.SkolemSet): Int = in.lvl.max(out.lvl)
 }
 
 enum Type extends TypeArg:
@@ -42,6 +44,20 @@ enum Type extends TypeArg:
     case PolymorphicType(tv, body) => s"forall ${tv.mkString(", ")}: $body"
     case Top => "⊤"
     case Bot => "⊥"
+  override def lvl(using skolems: NormalForm.SkolemSet): Int = this match
+    case ClassType(name: ClassSymbol, targs: Ls[TypeArg]) =>
+      targs.map(_.lvl).maxOption.getOrElse(0)
+    case InfVar(lvl: Int, uid: Uid[InfVar], _) =>
+      if skolems(uid) then Int.MaxValue else lvl
+    case FunType(args: Ls[Type], ret: Type, eff: Type) =>
+      (ret :: eff :: args).map(_.lvl).max
+    case ComposedType(lhs: Type, rhs: Type, _) =>
+      lhs.lvl.max(rhs.lvl)
+    case NegType(ty: Type) => ty.lvl
+    case PolymorphicType(tv: Ls[InfVar], body: Type) =>
+      (body :: tv).map(_.lvl).max
+    case Top | Bot => 0
+  
 
 type RefType = Type.ClassType
 object RefType:
@@ -132,12 +148,14 @@ object Ctx:
 
 class BBTyper(raise: Raise, val initCtx: Ctx):
   private val infVarState = new InfVarUid.State()
-  private val solver = new ConstraintSolver(raise)
+  private val solver = new ConstraintSolver(raise, infVarState)
+
+  import NormalForm.SkolemSet
 
   private def freshVar(using ctx: Ctx): Type.InfVar = Type.InfVar(ctx.lvl, infVarState.nextUid, new VarState())
   private def freshWildcard(using ctx: Ctx) = Wildcard(freshVar, freshVar)
 
-  private def typeCheckArgs(args: Term)(using ctx: Ctx): Ls[Type] = args match
+  private def typeCheckArgs(args: Term)(using ctx: Ctx, skolems: SkolemSet): Ls[Type] = args match
     case Term.Tup(flds) => flds.map(f => typeCheck(f.value))
     case _ => ???
 
@@ -188,11 +206,25 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       Type.PolymorphicType(bd, typeType(body))
     case _ => error(msg"${ty.toString} is not a valid type annotation" -> ty.toLoc :: Nil) // TODO
 
-  private def checkAgainst(lhs: Type, rhs: Type)(using ctx: Ctx): Unit = (lhs, rhs) match
-    case (lhs, Type.PolymorphicType(bds, body)) => checkAgainst(lhs, body) // TODO: ???
-    case _ => solver.constrain(lhs, rhs)
+  private def checkAgainst(term: Term, ty: Type)(using ctx: Ctx, skolems: SkolemSet): Unit = ty match
+    case Type.PolymorphicType(bds, body) =>
+      val nestCtx = ctx.nextLevel
+      given Ctx = nestCtx
+      given SkolemSet = skolems ++ bds.map(_.uid)
+      (term, body) match
+        case (Lam(params, body), Type.FunType(targs, ret, eff)) => // TODO: forall ... : forall ... : ... ?
+          if params.length != targs.length then
+            error(msg"Cannot type check ${term.toString} with type ${ty.toString}" -> term.toLoc :: Nil)
+          else
+            params.zip(targs).foreach:
+              case (sym, t) => nestCtx += sym -> t
+            checkAgainst(body, ret) // TODO: eff
+        case _ => // TODO: list them
+          val lhsTy = typeCheck(term) // TODO: lhs is poly?
+          solver.constrain(lhsTy, body)
+    case _ => solver.constrain(typeCheck(term), ty) // TODO: inst
 
-  def typeCheck(t: Term)(using ctx: Ctx): Type = t match
+  def typeCheck(t: Term)(using ctx: Ctx, skolems: SkolemSet): Type = t match
     case Ref(sym: VarSymbol) =>
       ctx.get(sym) match
         case Some(ty) => ty
@@ -308,7 +340,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil)
     case Term.Asc(term, ty) =>
       val res = typeType(ty)
-      checkAgainst(typeCheck(term), res)
+      checkAgainst(term, res)
       res
     case Term.Error =>
       Type.Bot // TODO: error type?

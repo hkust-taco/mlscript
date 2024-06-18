@@ -60,7 +60,7 @@ x => x
 :e
 114 + "514"
 //│ Elab: { +#4(114‹›, "514"‹›)‹›‹› }‹›
-//│ ╔══[ERROR] Can not solve Str <: ⊥
+//│ ╔══[ERROR] Cannot solve Str <: ⊥
 //│ ╙──
 //│ Type: α20_0
 //│ Where:
@@ -87,7 +87,7 @@ let x = 1 in let y = 2 in x + y
 :e
 let x = 0 in x + "1"
 //│ Elab: { { let x@1 = 0‹›; +#6(x@1#0, "1"‹›)‹›‹› }‹› }‹›
-//│ ╔══[ERROR] Can not solve Str <: ⊥
+//│ ╔══[ERROR] Cannot solve Str <: ⊥
 //│ ╙──
 //│ Type: α26_0
 //│ Where:
@@ -130,7 +130,7 @@ new Point(0.0, 0.0, 0.0)
 :e
 new Foo("1!5!")
 //│ Elab: { new class:Foo(Lit(StrLit(1!5!)))‹› }‹›
-//│ ╔══[ERROR] Can not solve Str <: ⊥
+//│ ╔══[ERROR] Cannot solve Str <: ⊥
 //│ ╙──
 //│ Type: Foo
 
@@ -165,7 +165,7 @@ let t = new Some(true) in Some.value(t)
 :e
 Some.value(42)
 //│ Elab: { class:Some#1.value‹›(42‹›)‹›‹› }‹›
-//│ ╔══[ERROR] Can not solve Int <: ⊥
+//│ ╔══[ERROR] Cannot solve Int <: ⊥
 //│ ╙──
 //│ Type: α36_0
 
@@ -194,7 +194,7 @@ let ip = new Printer(foofoo) in Printer.f(ip)(42)
 :e
 let ip = new Printer(foofoo) in Printer.f(ip)("42")
 //│ Elab: { { let ip@1 = new class:Printer(Ref(foofoo))‹›; class:Printer#1.f‹›(ip@1#0)‹›‹›("42"‹›)‹›‹› }‹› }‹›
-//│ ╔══[ERROR] Can not solve Str <: ⊥
+//│ ╔══[ERROR] Cannot solve Str <: ⊥
 //│ ╙──
 //│ Type: α53_0
 //│ Where:
@@ -228,7 +228,7 @@ let tf = new TFun(inc) in TFun.f(tf)(1)
 :e
 let tf = new TFun(inc) in TFun.f(tf)("1")
 //│ Elab: { { let tf@1 = new class:TFun(Ref(inc))‹›; class:TFun#1.f‹›(tf@1#0)‹›‹›("1"‹›)‹›‹› }‹› }‹›
-//│ ╔══[ERROR] Can not solve Str <: ⊥
+//│ ╔══[ERROR] Cannot solve Str <: ⊥
 //│ ╙──
 //│ Type: α70_0
 //│ Where:
