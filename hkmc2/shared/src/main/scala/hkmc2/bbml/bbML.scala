@@ -15,14 +15,12 @@ sealed abstract class TypeArg:
 
 case class Wildcard(in: Type, out: Type) extends TypeArg {
   private def printWhenSet(t: Type, in: Bool) = t match
-    case Type.InfVar(_, _, state) =>
-      if in && !state.upperBounds.isEmpty then S(s"in $t")
-      else if !in && !state.lowerBounds.isEmpty then S(s"out $t")
-      else N
-    case _ => S(t.toString())
+    case Type.Top if !in => N
+    case Type.Bot if in => N
+    case _ => S(if in then s"in $t" else s"out $t")
 
   override def toString(): String =
-    Ls(printWhenSet(in, true), printWhenSet(out, false)).filter(_.isDefined).map(_.get).mkString(" ")
+    (printWhenSet(in, true).toList ++ printWhenSet(out, false).toList).mkString(" ")
   override def lvl(using skolems: NormalForm.SkolemSet): Int = in.lvl.max(out.lvl)
 }
 
@@ -206,7 +204,11 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           tv
       Type.PolymorphicType(bd, typeType(body))
     case Term.TyApp(lhs, targs) => typeType(lhs) match
-      case Type.ClassType(cls, _) => Type.ClassType(cls, targs.map(typeType))
+      case Type.ClassType(cls, _) => Type.ClassType(cls, targs.map {
+        case Term.WildcardTy(in, out) =>
+          Wildcard(in.map(typeType).getOrElse(Type.Bot), out.map(typeType).getOrElse(Type.Top))
+        case t => typeType(t)
+      })
       case _ => error(msg"${lhs.toString} is not a class" -> ty.toLoc :: Nil)
     case _ => error(msg"${ty.toString} is not a valid type annotation" -> ty.toLoc :: Nil) // TODO
 

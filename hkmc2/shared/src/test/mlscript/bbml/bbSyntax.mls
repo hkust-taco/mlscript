@@ -22,6 +22,22 @@ class BazBaz[A](f: A -> A)
 //│ Parsed:
 //│ 	TypeDef(Cls,App(TyApp(Ident(BazBaz),List(Ident(A))),Tup(List(InfixApp(Ident(f),keyword ':',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))))),None,None)
 
+Baz[Int]
+//│ Parsed:
+//│ 	TyApp(Ident(Baz),List(Ident(Int)))
+
+Baz[in Int]
+//│ Parsed:
+//│ 	TyApp(Ident(Baz),List(Modified(keyword 'in',Ident(Int))))
+
+Baz[out Int]
+//│ Parsed:
+//│ 	TyApp(Ident(Baz),List(Modified(keyword 'out',Ident(Int))))
+
+Baz[in Int out Int]
+//│ Parsed:
+//│ 	TyApp(Ident(Baz),List(Tup(List(Modified(keyword 'in',Ident(Int)), Modified(keyword 'out',Ident(Int))))))
+
 let x = 42 in x + 0
 //│ Parsed:
 //│ 	Let(Ident(x),IntLit(42),Some(App(Ident(+),Tup(List(Ident(x), IntLit(0))))))
@@ -73,11 +89,11 @@ fun foo: forall (Int <: a <: Num): a -> a
 
 :fixme
 if 1 < 2 then 1 else 0
-//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'if' keyword instead
-//│ ║  l.75: 	if 1 < 2 then 1 else 0
+//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'in' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'if' keyword instead
+//│ ║  l.91: 	if 1 < 2 then 1 else 0
 //│ ╙──      	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.75: 	if 1 < 2 then 1 else 0
+//│ ║  l.91: 	if 1 < 2 then 1 else 0
 //│ ╙──      	   ^
 //│ Parsed:
 //│ 	Error()
@@ -87,8 +103,8 @@ fun fact = case
   0 then 1
   n then n * fact(n - 1)
 //│ ╔══[PARSE ERROR] Expected expression after 'fun' binding equals sign; found 'case' keyword instead
-//│ ║  l.86: 	fun fact = case
-//│ ╙──      	           ^^^^
+//│ ║  l.102: 	fun fact = case
+//│ ╙──       	           ^^^^
 //│ Parsed:
 //│ 	Error()
 

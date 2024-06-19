@@ -154,6 +154,18 @@ object ParseRule:
       ParseRule("`new` keyword"):
         Expr(ParseRule("`new` expression")(End(())))((body, _: Unit) => New(body))
     ,
+    Kw(`in`):
+      ParseRule("modifier keyword `in`"):
+        Expr(
+          ParseRule("`in` expression")(
+            Kw(`out`)(ParseRule(s"modifier keyword `out`")(standaloneExpr)).map(s => S(Tree.Modified(`out`, s))),
+            End(N),
+          )
+        ) {
+          case (lhs, N) => Tree.Modified(`in`, lhs)
+          case (lhs, S(rhs)) => Tup(Tree.Modified(`in`, lhs) :: rhs :: Nil)
+        }
+    ,
     Kw(`fun`)(termDefBody(Fun)),
     Kw(`val`)(termDefBody(Val)),
     Kw(`type`)(typeDeclBody(Als)),
@@ -167,6 +179,7 @@ object ParseRule:
     modified(`declare`),
     modified(`public`),
     modified(`private`),
+    modified(`out`),
     standaloneExpr,
     Kw(`true`)(ParseRule("'true' keyword")(End(BoolLit(true)))),
     Kw(`false`)(ParseRule("'false' keyword")(End(BoolLit(false)))),

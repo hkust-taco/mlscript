@@ -17,6 +17,7 @@ enum Term extends Statement with Located:
   case Lam(params: Ls[VarSymbol], body: Term)
   case FunTy(lhs: Term, rhs: Term)
   case ForallTy(tvs: Ls[VarSymbol], body: Term)
+  case WildcardTy(in: Opt[Term], out: Opt[Term])
   case Blk(stats: Ls[Statement], res: Term)
   case Quoted(body: Term)
   case Unquoted(body: Term)
@@ -66,6 +67,7 @@ sealed trait Statement extends Located:
     case New(_, args) => args
     case Asc(term, ty) => term :: ty :: Nil
     case ForallTy(_, body) => body :: Nil
+    case WildcardTy(in, out) => in.toList ++ out.toList
     case LetBinding(pat, rhs) => rhs :: Nil
     case TermDefinition(k, _, ps, sign, body, res) =>
       ps.toList.flatMap(_.flatMap(_.subTerms)) ::: sign.toList ::: body.toList
@@ -88,6 +90,7 @@ sealed trait Statement extends Located:
     case FunTy(lhs, rhs) => s"(...${lhs.showDbg}) -> ${rhs.showDbg}"
     case TyApp(lhs, targs) => s"${lhs.showDbg}[${targs.mkString(", ")}]"
     case ForallTy(tvs, body) => s"forall ${tvs.mkString(", ")}: ${body.toString}"
+    case WildcardTy(in, out) => s"in ${in.map(_.toString).getOrElse("⊥")} out ${out.map(_.toString).getOrElse("⊤")}"
     case Sel(pre, nme) => s"${pre.showDbg}.${nme.name}"
     case If(body) => s"if $body"
     case Lam(params, body) => s"λ${params.map(_.name).mkString(", ")}. ${body.showDbg}"

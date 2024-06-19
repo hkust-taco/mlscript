@@ -47,7 +47,7 @@ object Keyword:
   val `let` = Keyword("let", nextPrec, curPrec)
   val `rec` = Keyword("rec", N, N)
   val `in` = Keyword("in", curPrec, curPrec)
-  val `out` = Keyword("out", N, N)
+  val `out` = Keyword("out", N, curPrec)
   val `mut` = Keyword("mut", N, nextPrec)
   val `set` = Keyword("set", N, N)
   val `do` = Keyword("do", N, N)

@@ -58,7 +58,7 @@ class Foo with
 
 :pe
 with
-//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'with' keyword instead
+//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'in' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'with' keyword instead
 //│ ║  l.60: 	with
 //│ ╙──      	^^^^
 //│ Parsed:

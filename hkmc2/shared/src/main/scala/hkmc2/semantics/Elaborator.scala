@@ -45,7 +45,13 @@ class Elaborator(raise: Raise):
               raise(ErrorReport(msg"Name not found: $name" -> tree.toLoc :: Nil))
               Term.Error
     case TyApp(lhs, targs) =>
-      Term.TyApp(term(lhs), targs.map(term(_)))
+      Term.TyApp(term(lhs), targs.map {
+        case Modified(Keyword.`in`, arg) => Term.WildcardTy(S(term(arg)), N)
+        case Modified(Keyword.`out`, arg) => Term.WildcardTy(N, S(term(arg)))
+        case Tup(Modified(Keyword.`in`, arg1) :: Modified(Keyword.`out`, arg2) :: Nil) =>
+          Term.WildcardTy(S(term(arg1)), S(term(arg2)))
+        case arg => term(arg)
+      })
     case InfixApp(lhs, Keyword.`->`, rhs) =>
       Term.FunTy(term(lhs), term(rhs))
     case InfixApp(lhs, Keyword.`=>`, rhs) =>
@@ -327,6 +333,9 @@ class Elaborator(raise: Raise):
         traverseType(pol)(r)
       case Term.ForallTy(_, body) =>
         traverseType(pol)(body)
+      case Term.WildcardTy(in, out) =>
+        in.foreach(t => traverseType(pol.!)(t))
+        out.foreach(t => traverseType(pol)(t))
       case Term.Tup(fields) =>
         // fields.foreach(f => traverseType(pol)(f.value))
         fields.foreach(traverseType(pol))

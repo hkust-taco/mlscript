@@ -60,26 +60,26 @@ class Pair[A, B](a: A, b: B)
 
 new Pair(42, true)
 //│ Elab: { new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹› }‹›
-//│ Type: Pair[out α15_0, out α17_0]
+//│ Type: Pair[in α14_0 out α15_0, in α16_0 out α17_0]
 //│ Where:
 //│   Int ∧ ¬⊥ <: α15_0
 //│   Bool ∧ ¬⊥ <: α17_0
 
-fun swap: forall (a, b): Pair[a, b] -> Pair[b, a]
+fun swap: forall (a, b): Pair[out a, out b] -> Pair[out b, out a]
 fun swap(p) = new Pair(Pair.b(p), Pair.a(p))
-//│ Elab: { fun swap: forall a@2, b@3: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:Pair),List(Ref(a@2), Ref(b@3))),None))),TyApp(Ref(class:Pair),List(Ref(b@3), Ref(a@2))))‹›; fun swap(p@4): forall a@8, b@9: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:Pair),List(Ref(a@8), Ref(b@9))),None))),TyApp(Ref(class:Pair),List(Ref(b@9), Ref(a@8))))‹› = new class:Pair(App(Sel(Ref(class:Pair),Ident(b)),Tup(List(Fld(‹›,Ref(p@4),None)))), App(Sel(Ref(class:Pair),Ident(a)),Tup(List(Fld(‹›,Ref(p@4),None)))))‹›; }‹›
+//│ Elab: { fun swap: forall a@2, b@3: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:Pair),List(WildcardTy(None,Some(Ref(a@2))), WildcardTy(None,Some(Ref(b@3))))),None))),TyApp(Ref(class:Pair),List(WildcardTy(None,Some(Ref(b@3))), WildcardTy(None,Some(Ref(a@2))))))‹›; fun swap(p@4): forall a@8, b@9: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:Pair),List(WildcardTy(None,Some(Ref(a@8))), WildcardTy(None,Some(Ref(b@9))))),None))),TyApp(Ref(class:Pair),List(WildcardTy(None,Some(Ref(b@9))), WildcardTy(None,Some(Ref(a@8))))))‹› = new class:Pair(App(Sel(Ref(class:Pair),Ident(b)),Tup(List(Fld(‹›,Ref(p@4),None)))), App(Sel(Ref(class:Pair),Ident(a)),Tup(List(Fld(‹›,Ref(p@4),None)))))‹›; }‹›
 //│ Type: ⊤
 
 
 swap
 //│ Elab: { swap#0 }‹›
-//│ Type: forall α18_1, α19_1: (Pair[α18_1, α19_1]) ->{⊥} Pair[α19_1, α18_1]
+//│ Type: forall α18_1, α19_1: (Pair[out α18_1, out α19_1]) ->{⊥} Pair[out α19_1, out α18_1]
 
 let t = new Pair(42, true) in swap(t)
 //│ Elab: { { let t@1 = new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›; swap#1(t@1#0)‹›‹› }‹› }‹›
 //│ Type: α37_0
 //│ Where:
-//│   Pair[⊤ ∧ ¬⊥ ∧ α39_0 ⊤ ∧ ¬⊥ ∧ α39_0, ⊤ ∧ ¬⊥ ∧ α38_0 ⊤ ∧ ¬⊥ ∧ α38_0] ∧ ¬⊥ <: α37_0
+//│   Pair[out ⊤ ∧ ¬⊥ ∧ α39_0, out ⊤ ∧ ¬⊥ ∧ α38_0] ∧ ¬⊥ <: α37_0
 //│   ⊤ ∧ ¬⊥ ∧ α35_0 <: α39_0
 //│   Bool ∧ ¬⊥ <: α35_0
 //│   ⊤ ∧ ¬⊥ ∧ α33_0 <: α38_0
@@ -89,7 +89,7 @@ let t = new Pair("114", "514") in swap(t)
 //│ Elab: { { let t@1 = new class:Pair(Lit(StrLit(114)), Lit(StrLit(514)))‹›; swap#2(t@1#0)‹›‹› }‹› }‹›
 //│ Type: α45_0
 //│ Where:
-//│   Pair[⊤ ∧ ¬⊥ ∧ α47_0 ⊤ ∧ ¬⊥ ∧ α47_0, ⊤ ∧ ¬⊥ ∧ α46_0 ⊤ ∧ ¬⊥ ∧ α46_0] ∧ ¬⊥ <: α45_0
+//│   Pair[out ⊤ ∧ ¬⊥ ∧ α47_0, out ⊤ ∧ ¬⊥ ∧ α46_0] ∧ ¬⊥ <: α45_0
 //│   ⊤ ∧ ¬⊥ ∧ α43_0 <: α47_0
 //│   Str ∧ ¬⊥ <: α43_0
 //│   ⊤ ∧ ¬⊥ ∧ α41_0 <: α46_0
