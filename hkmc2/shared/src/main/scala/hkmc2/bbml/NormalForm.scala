@@ -74,8 +74,8 @@ object NormalForm:
       case CNVar(conj, v) => Type.ComposedType(conj.toType, Type.NegType(v), false)
     def lvl(using skolems: SkolemSet): Int = this match
       case INU(i, u) => i.lvl.max(u.lvl)
-      case CVar(conj, v) => conj.lvl.max(if skolems(v.uid) then Int.MaxValue else v.lvl)
-      case CNVar(conj, v) => conj.lvl.max(if skolems(v.uid) then Int.MaxValue else v.lvl)
+      case CVar(conj, v) => v.lvl
+      case CNVar(conj, v) => v.lvl
     def sort(using skolems: SkolemSet): Conj =
       @tailrec
       def rec(conj: Conj, prev: Ls[(Type.InfVar, Bool)]): (Ls[(Type.InfVar, Bool)], INU) = conj match // * tv -> pos/neg

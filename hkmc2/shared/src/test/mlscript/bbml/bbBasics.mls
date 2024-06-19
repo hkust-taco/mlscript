@@ -236,3 +236,21 @@ let tf = new TFun(inc) in TFun.f(tf)("1")
 //│   ⊤ ∧ ¬⊥ ∧ α66_0 <: α68_0
 //│   ⊤ ∧ ¬⊥ ∧ α56_0 <: α66_0
 //│   Int ∧ ¬⊥ <: α56_0
+
+class Pair[A, B](fst: A, snd: B)
+//│ Elab: { class Pair[out A@1, out B@2](fst@3: A@1#0, snd@4: B@2#0) { }‹›; }‹›
+//│ Type: ⊤
+
+Pair.fst(new Pair(42, true))
+//│ Elab: { class:Pair#0.fst‹›(new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›)‹›‹› }‹›
+//│ Type: α76_0
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α72_0 <: α76_0
+//│   Int ∧ ¬⊥ <: α72_0
+
+Pair.snd(new Pair(42, true))
+//│ Elab: { class:Pair#1.snd‹›(new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›)‹›‹› }‹›
+//│ Type: α86_0
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α82_0 <: α86_0
+//│   Bool ∧ ¬⊥ <: α82_0

@@ -25,7 +25,12 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State):
       if pol then Type.Top else Type.Bot
     case v @ Type.InfVar(_, uid, _) =>
       val nv = freshXVar(lvl)
-      if pol then nv.state.upperBounds ::= v else nv.state.lowerBounds ::= v
+      if pol then
+        v.state.upperBounds ::= nv
+        nv.state.lowerBounds = v.state.lowerBounds.map(extrude) // * propagate
+      else
+        v.state.lowerBounds ::= nv
+        nv.state.upperBounds = v.state.upperBounds.map(extrude) // * propagate
       nv
     case Type.FunType(args, ret, eff) =>
       Type.FunType(args.map(arg => extrude(arg)(using skolems, lvl, !pol)), extrude(ret), extrude(eff))

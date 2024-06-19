@@ -30,7 +30,7 @@ id
 //│ Elab: { Lam(List(x@1),App(Ref(+),Tup(List(Fld(‹›,Ref(x@1),None), Fld(‹›,Lit(IntLit(1)),None))))): ForallTy(List(a@3),FunTy(Tup(List(Fld(‹›,Ref(a@3),None))),Ref(a@3)))‹› }‹›
 //│ ╔══[ERROR] Cannot constrain skolem α4_1
 //│ ╙──
-//│ ╔══[ERROR] Cannot solve Int <: ⊥
+//│ ╔══[ERROR] Cannot constrain skolem α4_1
 //│ ╙──
 //│ Type: forall α4_1: (α4_1) ->{⊥} α4_1
 
@@ -70,21 +70,10 @@ fun swap(p) = new Pair(Pair.b(p), Pair.a(p))
 //│ Elab: { fun swap: forall a@2, b@3: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:Pair),List(Ref(a@2), Ref(b@3))),None))),TyApp(Ref(class:Pair),List(Ref(b@3), Ref(a@2))))‹›; fun swap(p@4): forall a@8, b@9: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:Pair),List(Ref(a@8), Ref(b@9))),None))),TyApp(Ref(class:Pair),List(Ref(b@9), Ref(a@8))))‹› = new class:Pair(App(Sel(Ref(class:Pair),Ident(b)),Tup(List(Fld(‹›,Ref(p@4),None)))), App(Sel(Ref(class:Pair),Ident(a)),Tup(List(Fld(‹›,Ref(p@4),None)))))‹›; }‹›
 //│ Type: ⊤
 
-:fixme
+
 swap
 //│ Elab: { swap#0 }‹›
 //│ Type: forall α18_1, α19_1: (Pair[α18_1, α19_1]) ->{⊥} Pair[α19_1, α18_1]
-//│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α23_1 <: α18_1
-//│   ⊤ ∧ ¬⊥ ∧ α29_1 <: α23_1
-//│   ⊤ ∧ ¬⊥ ∧ α18_1 <: α29_1
-//│   ⊤ ∧ ¬⊥ ∧ α28_1 <: α18_1
-//│   ⊤ ∧ ¬⊥ ∧ α24_1 <: α18_1
-//│   ⊤ ∧ ¬⊥ ∧ α21_1 <: α19_1
-//│   ⊤ ∧ ¬⊥ ∧ α27_1 <: α21_1
-//│   ⊤ ∧ ¬⊥ ∧ α19_1 <: α27_1
-//│   ⊤ ∧ ¬⊥ ∧ α30_1 <: α19_1
-//│   ⊤ ∧ ¬⊥ ∧ α26_1 <: α19_1
 
 let t = new Pair(42, true) in swap(t)
 //│ Elab: { { let t@1 = new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›; swap#1(t@1#0)‹›‹› }‹› }‹›

@@ -234,10 +234,6 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       constrain(instantiate(bd)(using (tvs.map {
         case Type.InfVar(_, uid, state) =>
           val nv = freshVar
-          // state.lowerBounds.foreach:
-          //   nv.state.lowerBounds ::= _
-          // state.upperBounds.foreach:
-          //   nv.state.upperBounds ::= _  
           uid -> nv
       }).toMap), rhs)
     case _ => solver.constrain(lhs, rhs)
@@ -278,12 +274,14 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           val rhsTy = typeCheck(rhs)
           nestCtx += sym -> rhsTy
         case TermDefinition(Fun, sym, Some(params), sig, Some(body), _) =>
-          def rec(sig: Opt[Type]): (Ls[Type], Opt[Type], Opt[Type]) = sig match
-            case S(ft @ Type.FunType(args, ret, eff)) => (args, S(ret), S(eff))
-            case S(Type.PolymorphicType(_, ty)) => rec(S(ty))
-            case _ => (params.map(_ => freshVar), N, N)
+          // * parameters, return, effect, new skolems
+          def rec(sig: Opt[Type]): (Ls[Type], Opt[Type], Opt[Type], Ls[Type.InfVar]) = sig match
+            case S(ft @ Type.FunType(args, ret, eff)) => (args, S(ret), S(eff), Nil)
+            case S(Type.PolymorphicType(tvs, ty)) => rec(S(ty)) match
+              case (p, r, e, s) => (p, r, e, tvs ++ s)
+            case _ => (params.map(_ => freshVar), N, N, Nil)
           val sigTy = sig.map(typeType)
-          val (tvs, retAnno, effAnno) = rec(sigTy)
+          val (tvs, retAnno, effAnno, newSkolems) = rec(sigTy)
           val defCtx = sigTy match
             case S(_: Type.PolymorphicType) => nestCtx.nextLevel
             case _ => nestCtx.nest
@@ -294,7 +292,10 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
               case (Param(_, sym, _), ty) =>
                 defCtx += sym -> ty
                 ty
-            val bodyTy = typeCheck(body)(using defCtx)
+
+            given Ctx = defCtx
+            given SkolemSet = skolems ++ newSkolems.map(_.uid)
+            val bodyTy = typeCheck(body)
             retAnno.foreach(anno => constrain(bodyTy, anno))
             ctx += sym -> sigTy.getOrElse(Type.FunType(argsTy, bodyTy, Type.Bot)) // TODO: eff
         case clsDef: ClassDef => ctx *= clsDef
