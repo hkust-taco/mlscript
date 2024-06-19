@@ -2,6 +2,7 @@ package hkmc2
 package bbml
 
 import scala.collection.mutable
+import scala.annotation.tailrec
 
 import mlscript.utils.*, shorthands.*
 import Message.MessageContext
@@ -166,7 +167,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
   private def extract(asc: Term)(using map: Map[Uid[Symbol], Wildcard], pol: Bool)(using ctx: Ctx): Type = asc match
     case Ref(cls: ClassSymbol) =>
       ctx.getDef(cls.nme) match
-        case S(_) => Type.ClassType(cls, Nil) // TODO: tparams?
+        case S(_) => Type.ClassType(cls, Nil)
         case N => 
           error(msg"Definition not found: ${cls.nme}" -> asc.toLoc :: Nil)
     case Ref(sym: VarSymbol) =>
@@ -204,7 +205,42 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           nestCtx += sym -> tv // TODO: a type var symbol may be better...
           tv
       Type.PolymorphicType(bd, typeType(body))
+    case Term.TyApp(lhs, targs) => typeType(lhs) match
+      case Type.ClassType(cls, _) => Type.ClassType(cls, targs.map(typeType))
+      case _ => error(msg"${lhs.toString} is not a class" -> ty.toLoc :: Nil)
     case _ => error(msg"${ty.toString} is not a valid type annotation" -> ty.toLoc :: Nil) // TODO
+
+  private def instantiate(ty: Type)(using map: Map[Uid[Type.InfVar], Type.InfVar]): Type = ty match
+    case Type.ClassType(name, targs) =>
+      Type.ClassType(name, targs.map {
+        case Wildcard(in, out) => Wildcard(instantiate(in), instantiate(out))
+        case ty: Type => instantiate(ty)
+      })
+    case v @ Type.InfVar(lvl, uid, state) =>
+      map.get(uid).getOrElse(v)
+    case Type.FunType(args, ret, eff) =>
+      Type.FunType(args.map(instantiate), instantiate(ret), instantiate(eff))
+    case Type.ComposedType(lhs, rhs, pol) =>
+      Type.ComposedType(instantiate(lhs), instantiate(rhs), pol)
+    case Type.NegType(ty) => Type.NegType(instantiate(ty))
+    case Type.PolymorphicType(tv, body) => Type.PolymorphicType(tv, instantiate(body))
+    case Type.Top | Type.Bot => ty
+  
+  @tailrec
+  private def constrain(lhs: Type, rhs: Type)(using ctx: Ctx, skolems: SkolemSet): Unit = (lhs, rhs) match
+    case (Type.PolymorphicType(tvs1, bd1), Type.PolymorphicType(tvs2, bd2)) => ???
+    case (lhs, Type.PolymorphicType(tvs, bd)) => ???
+    case (Type.PolymorphicType(tvs, bd), rhs) =>
+      constrain(instantiate(bd)(using (tvs.map {
+        case Type.InfVar(_, uid, state) =>
+          val nv = freshVar
+          // state.lowerBounds.foreach:
+          //   nv.state.lowerBounds ::= _
+          // state.upperBounds.foreach:
+          //   nv.state.upperBounds ::= _  
+          uid -> nv
+      }).toMap), rhs)
+    case _ => solver.constrain(lhs, rhs)
 
   private def checkAgainst(term: Term, ty: Type)(using ctx: Ctx, skolems: SkolemSet): Unit = ty match
     case Type.PolymorphicType(bds, body) =>
@@ -219,10 +255,8 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
             params.zip(targs).foreach:
               case (sym, t) => nestCtx += sym -> t
             checkAgainst(body, ret) // TODO: eff
-        case _ => // TODO: list them
-          val lhsTy = typeCheck(term) // TODO: lhs is poly?
-          solver.constrain(lhsTy, body)
-    case _ => solver.constrain(typeCheck(term), ty) // TODO: inst
+        case _ => constrain(typeCheck(term), body)
+    case _ => constrain(typeCheck(term), ty)
 
   def typeCheck(t: Term)(using ctx: Ctx, skolems: SkolemSet): Type = t match
     case Ref(sym: VarSymbol) =>
@@ -261,12 +295,8 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
                 defCtx += sym -> ty
                 ty
             val bodyTy = typeCheck(body)(using defCtx)
-            retAnno.foreach(anno => solver.constrain(bodyTy, anno))
-            sigTy match
-              case S(Type.PolymorphicType(bds, _)) =>
-                ctx += sym -> Type.PolymorphicType(bds, Type.FunType(argsTy, bodyTy, Type.Bot)) // TODO: eff
-              case _ =>
-                ctx += sym -> Type.FunType(argsTy, bodyTy, Type.Bot) // TODO: eff
+            retAnno.foreach(anno => constrain(bodyTy, anno))
+            ctx += sym -> sigTy.getOrElse(Type.FunType(argsTy, bodyTy, Type.Bot)) // TODO: eff
         case clsDef: ClassDef => ctx *= clsDef
         case _ => () // TODO
       typeCheck(res)
@@ -286,7 +316,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           v
       )
       Type.FunType(tvs, typeCheck(body), Type.Bot) // TODO: effect
-    case Term.App(Term.Sel(Term.Ref(cls: ClassSymbol), field), Term.Tup(Fld(_, term, asc) :: Nil)) =>
+    case Term.App(Term.Sel(Term.Ref(cls: ClassSymbol), field), Term.Tup(Fld(_, term, asc) :: Nil)) => // * Sel
       val ty = typeCheck(term)
       ctx.getDef(cls.nme) match
         case S(ClassDef.Parameterized(_, tparams, params, _, _)) =>
@@ -297,7 +327,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
                 map += targ.uid -> ty
                 ty
           }
-          solver.constrain(ty, Type.ClassType(cls, targs))
+          constrain(ty, Type.ClassType(cls, targs))
           (params.map {
             case Param(_, sym, sign) =>
               if sym.nme == field.name then sign else N
@@ -313,7 +343,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       val argTy = typeCheckArgs(rhs)
       val effVar = freshVar
       val retVar = freshVar
-      solver.constrain(funTy, Type.FunType(argTy, retVar, effVar))
+      constrain(funTy, Type.FunType(argTy, retVar, effVar))
       retVar
     case Term.New(cls, args) =>
       ctx.getDef(cls.nme) match
@@ -330,7 +360,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
             }
             args.iterator.zip(params).foreach {
               case (arg, Param(_, _, S(sign))) =>
-                solver.constrain(typeCheck(arg), extract(sign)(using map.toMap, true))
+                constrain(typeCheck(arg), extract(sign)(using map.toMap, true))
               case _ => ???
             }
             Type.ClassType(cls, targs)

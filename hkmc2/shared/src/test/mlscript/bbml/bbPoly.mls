@@ -33,3 +33,75 @@ id
 //│ ╔══[ERROR] Cannot solve Int <: ⊥
 //│ ╙──
 //│ Type: forall α4_1: (α4_1) ->{⊥} α4_1
+
+let t = 42 in ((x => x): forall (a): a -> a)
+//│ Elab: { { let t@1 = 42‹›; Lam(List(x@2),Ref(x@2)): ForallTy(List(a@3),FunTy(Tup(List(Fld(‹›,Ref(a@3),None))),Ref(a@3)))‹› }‹› }‹›
+//│ Type: forall α7_1: (α7_1) ->{⊥} α7_1
+
+
+id(42)
+//│ Elab: { id#1(42‹›)‹›‹› }‹›
+//│ Type: α9_0
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α10_0 <: α9_0
+//│   Int ∧ ¬⊥ <: α10_0
+
+id("abc")
+//│ Elab: { id#2("abc"‹›)‹›‹› }‹›
+//│ Type: α12_0
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α13_0 <: α12_0
+//│   Str ∧ ¬⊥ <: α13_0
+
+
+class Pair[A, B](a: A, b: B)
+//│ Elab: { class Pair[out A@1, out B@2](a@3: A@1#0, b@4: B@2#0) { }‹›; }‹›
+//│ Type: ⊤
+
+new Pair(42, true)
+//│ Elab: { new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹› }‹›
+//│ Type: Pair[out α15_0, out α17_0]
+//│ Where:
+//│   Int ∧ ¬⊥ <: α15_0
+//│   Bool ∧ ¬⊥ <: α17_0
+
+fun swap: forall (a, b): Pair[a, b] -> Pair[b, a]
+fun swap(p) = new Pair(Pair.b(p), Pair.a(p))
+//│ Elab: { fun swap: forall a@2, b@3: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:Pair),List(Ref(a@2), Ref(b@3))),None))),TyApp(Ref(class:Pair),List(Ref(b@3), Ref(a@2))))‹›; fun swap(p@4): forall a@8, b@9: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:Pair),List(Ref(a@8), Ref(b@9))),None))),TyApp(Ref(class:Pair),List(Ref(b@9), Ref(a@8))))‹› = new class:Pair(App(Sel(Ref(class:Pair),Ident(b)),Tup(List(Fld(‹›,Ref(p@4),None)))), App(Sel(Ref(class:Pair),Ident(a)),Tup(List(Fld(‹›,Ref(p@4),None)))))‹›; }‹›
+//│ Type: ⊤
+
+:fixme
+swap
+//│ Elab: { swap#0 }‹›
+//│ Type: forall α18_1, α19_1: (Pair[α18_1, α19_1]) ->{⊥} Pair[α19_1, α18_1]
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α23_1 <: α18_1
+//│   ⊤ ∧ ¬⊥ ∧ α29_1 <: α23_1
+//│   ⊤ ∧ ¬⊥ ∧ α18_1 <: α29_1
+//│   ⊤ ∧ ¬⊥ ∧ α28_1 <: α18_1
+//│   ⊤ ∧ ¬⊥ ∧ α24_1 <: α18_1
+//│   ⊤ ∧ ¬⊥ ∧ α21_1 <: α19_1
+//│   ⊤ ∧ ¬⊥ ∧ α27_1 <: α21_1
+//│   ⊤ ∧ ¬⊥ ∧ α19_1 <: α27_1
+//│   ⊤ ∧ ¬⊥ ∧ α30_1 <: α19_1
+//│   ⊤ ∧ ¬⊥ ∧ α26_1 <: α19_1
+
+let t = new Pair(42, true) in swap(t)
+//│ Elab: { { let t@1 = new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›; swap#1(t@1#0)‹›‹› }‹› }‹›
+//│ Type: α37_0
+//│ Where:
+//│   Pair[⊤ ∧ ¬⊥ ∧ α39_0 ⊤ ∧ ¬⊥ ∧ α39_0, ⊤ ∧ ¬⊥ ∧ α38_0 ⊤ ∧ ¬⊥ ∧ α38_0] ∧ ¬⊥ <: α37_0
+//│   ⊤ ∧ ¬⊥ ∧ α35_0 <: α39_0
+//│   Bool ∧ ¬⊥ <: α35_0
+//│   ⊤ ∧ ¬⊥ ∧ α33_0 <: α38_0
+//│   Int ∧ ¬⊥ <: α33_0
+
+let t = new Pair("114", "514") in swap(t)
+//│ Elab: { { let t@1 = new class:Pair(Lit(StrLit(114)), Lit(StrLit(514)))‹›; swap#2(t@1#0)‹›‹› }‹› }‹›
+//│ Type: α45_0
+//│ Where:
+//│   Pair[⊤ ∧ ¬⊥ ∧ α47_0 ⊤ ∧ ¬⊥ ∧ α47_0, ⊤ ∧ ¬⊥ ∧ α46_0 ⊤ ∧ ¬⊥ ∧ α46_0] ∧ ¬⊥ <: α45_0
+//│   ⊤ ∧ ¬⊥ ∧ α43_0 <: α47_0
+//│   Str ∧ ¬⊥ <: α43_0
+//│   ⊤ ∧ ¬⊥ ∧ α41_0 <: α46_0
+//│   Str ∧ ¬⊥ <: α41_0

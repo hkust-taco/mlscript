@@ -45,9 +45,7 @@ add(1, 2)
 //│ Elab: { add#0(1‹›, 2‹›)‹›‹› }‹›
 //│ Type: α7_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α1_0 <: α7_0
-//│   Int ∧ ¬⊥ <: α1_0
-//│   α1_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   Int ∧ ¬⊥ <: α7_0
 
 add(1, 2): Int
 //│ Elab: { App(Ref(add),Tup(List(Fld(‹›,Lit(IntLit(1)),None), Fld(‹›,Lit(IntLit(2)),None)))): Ref(class:Int)‹› }‹›
