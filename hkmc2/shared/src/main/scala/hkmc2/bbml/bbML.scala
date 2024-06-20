@@ -171,12 +171,20 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
     case Ref(sym: VarSymbol) =>
       map.get(sym.uid) match
         case Some(Wildcard(in, out)) => if pol then out else in
-        case _ =>
-          error(msg"Type variable not found: ${sym.name}" -> asc.toLoc :: Nil)
+        case _ => ctx.get(sym).getOrElse(error(msg"Type variable not found: ${sym.name}" -> asc.toLoc :: Nil))
     case FunTy(Term.Tup(params), ret) =>
       Type.FunType(params.map {
         case Fld(_, p, _) => extract(p)(using map, !pol)
       }, extract(ret), Type.Bot) // TODO: effect
+    case Term.Forall(tvs, body) =>
+      val nestCtx = ctx.nextLevel
+      given Ctx = nestCtx
+      val bd = tvs.map:
+        case sym: VarSymbol =>
+          val tv = freshVar
+          nestCtx += sym -> tv // TODO: a type var symbol may be better...
+          tv
+      Type.PolymorphicType(bd, extract(body))
     case _ => error(msg"${asc.toString} is not a valid class member type" -> asc.toLoc :: Nil) // TODO
 
   private def typeType(ty: Term)(using ctx: Ctx): Type = ty match
@@ -230,12 +238,21 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
   
   @tailrec
   private def constrain(lhs: Type, rhs: Type)(using ctx: Ctx, skolems: SkolemSet): Unit = (lhs, rhs) match
-    case (Type.PolymorphicType(tvs1, bd1), Type.PolymorphicType(tvs2, bd2)) => ???
+    case (Type.PolymorphicType(tvs1, bd1), Type.PolymorphicType(tvs2, bd2)) =>
+      if tvs1.length != tvs2.length then
+        error(msg"Cannot check polymorphic types ${lhs.toString} and ${rhs.toString}" -> N :: Nil)
+      else
+        val mapping = tvs1.zip(tvs2).flatMap {
+          case (Type.InfVar(_, uid1, _), Type.InfVar(_, uid2, _)) =>
+            val nv = freshVar
+            uid1 -> nv :: uid2 -> nv :: Nil
+        }.toMap
+        constrain(instantiate(bd1)(using mapping), instantiate(bd2)(using mapping))
     case (lhs, Type.PolymorphicType(tvs, body)) =>
       constrain(lhs, body)(using ctx, skolems ++ tvs.map(_.uid))
     case (Type.PolymorphicType(tvs, bd), rhs) =>
       constrain(instantiate(bd)(using (tvs.map {
-        case Type.InfVar(_, uid, state) =>
+        case Type.InfVar(_, uid, _) =>
           val nv = freshVar
           uid -> nv
       }).toMap), rhs)
@@ -325,13 +342,21 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           ???
         case N => 
           error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil)
-    case Term.App(lhs, rhs) =>
-      val funTy = typeCheck(lhs)
-      val argTy = typeCheckArgs(rhs)
-      val effVar = freshVar
-      val retVar = freshVar
-      constrain(funTy, Type.FunType(argTy, retVar, effVar))
-      retVar
+    case Term.App(lhs, rhs) => typeCheck(lhs) match
+      case Type.FunType(args, ret, eff) => // * if the function type is known, we can directly use it
+        val argTy = typeCheckArgs(rhs)
+        if args.length != argTy.length then
+          error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil)
+        else
+          argTy.zip(args).foreach:
+            case (lhs, rhs) => constrain(lhs, rhs)
+          ret
+      case funTy =>
+        val argTy = typeCheckArgs(rhs)
+        val effVar = freshVar
+        val retVar = freshVar
+        constrain(funTy, Type.FunType(argTy, retVar, effVar))
+        retVar
     case Term.New(cls, args) =>
       ctx.getDef(cls.nme) match
         case S(ClassDef.Parameterized(_, tparams, params, _, _)) =>

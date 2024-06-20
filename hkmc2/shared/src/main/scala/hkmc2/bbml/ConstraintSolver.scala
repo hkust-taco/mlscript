@@ -44,7 +44,7 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State):
 
   private def constrainConj(conj: Conj)(using cache: Cache, skolems: SkolemSet): Unit = conj.sort match
     case Conj.INU(i, u) => (i, u) match
-      case (_, Union.Bot) => raise(ErrorReport(msg"Cannot solve ${i.toString()} <: ⊥" -> N :: Nil))
+      case (_, Union.Bot) => raise(ErrorReport(msg"Cannot solve ${i.toString()} ∧ ¬⊥" -> N :: Nil))
       case (Inter.Cls(NormalClassType(cls1, targs1)), Union.Uni(uni, NormalClassType(cls2, targs2))) =>
         if cls1.uid == cls2.uid then
           targs1.zip(targs2).foreach {

@@ -11,7 +11,7 @@ fun add(x, y) = x + y
 fun foo: Int -> Int
 fun foo: Int -> Int
 //│ ╔══[ERROR] Duplicate definition of foo
-//│ ╙── aready defined gere
+//│ ╙── aready defined here
 //│ Elab: { fun foo: (class:Int#17)‹› -> class:Int#18‹›; fun foo: (class:Int#19)‹› -> class:Int#20‹›; }‹›
 //│ Type: ⊤
 
@@ -21,7 +21,7 @@ fun id(y) = y
 //│ ╔══[ERROR] Duplicate definition of id
 //│ ║  l.20: 	fun id(y) = y
 //│ ║        	      ^^^
-//│ ╙── aready defined gere
+//│ ╙── aready defined here
 //│ Elab: { fun id(x@1) = x@1#0; fun id(y@3) = y@3#0; }‹›
 //│ Type: ⊤
 
@@ -29,7 +29,7 @@ fun id(y) = y
 fun bar: Str -> Str
 fun bar(x) = let t = x + 1 in "aaa"
 //│ Elab: { fun bar: (class:Str#0)‹› -> class:Str#1‹›; fun bar(x@2): (class:Str#2)‹› -> class:Str#3‹› = { let t@3 = +#1(x@2#0, 1‹›)‹›‹›; "aaa"‹› }‹›; }‹›
-//│ ╔══[ERROR] Cannot solve Str <: ⊥
+//│ ╔══[ERROR] Cannot solve Str ∧ ¬⊥
 //│ ╙──
 //│ Type: ⊤
 
@@ -37,15 +37,13 @@ fun bar(x) = let t = x + 1 in "aaa"
 fun baz: Int -> Int
 fun baz(x) = "bbb"
 //│ Elab: { fun baz: (class:Int#21)‹› -> class:Int#22‹›; fun baz(x@2): (class:Int#23)‹› -> class:Int#24‹› = "bbb"‹›; }‹›
-//│ ╔══[ERROR] Cannot solve Str <: ⊥
+//│ ╔══[ERROR] Cannot solve Str ∧ ¬⊥
 //│ ╙──
 //│ Type: ⊤
 
 add(1, 2)
 //│ Elab: { add#0(1‹›, 2‹›)‹›‹› }‹›
-//│ Type: α7_0
-//│ Where:
-//│   Int ∧ ¬⊥ <: α7_0
+//│ Type: Int
 
 add(1, 2): Int
 //│ Elab: { App(Ref(add),Tup(List(Fld(‹›,Lit(IntLit(1)),None), Fld(‹›,Lit(IntLit(2)),None)))): Ref(class:Int)‹› }‹›
@@ -55,6 +53,6 @@ add(1, 2): Int
 :e
 add(0, 0): Str
 //│ Elab: { App(Ref(add),Tup(List(Fld(‹›,Lit(IntLit(0)),None), Fld(‹›,Lit(IntLit(0)),None)))): Ref(class:Str)‹› }‹›
-//│ ╔══[ERROR] Cannot solve Int <: ⊥
+//│ ╔══[ERROR] Cannot solve Int ∧ ¬⊥
 //│ ╙──
 //│ Type: Str

@@ -123,7 +123,7 @@ class Elaborator(raise: Raise):
             members.get(id.name) match
               case S(sym) =>
                 raise(ErrorReport(msg"Duplicate definition of ${id.name}" -> td.toLoc
-                  :: msg"aready defined gere" -> sym.toLoc :: Nil))
+                  :: msg"aready defined here" -> sym.toLoc :: Nil))
               case N =>
                 members += id.name -> s
                 td.signature.foreach(newSignatures += id.name -> _)
@@ -132,7 +132,7 @@ class Elaborator(raise: Raise):
                 members.get(nme) match
                   case S(sym) =>
                     raise(ErrorReport(msg"Duplicate definition of $nme" -> td.toLoc
-                      :: msg"aready defined gere" -> sym.toLoc :: Nil))
+                      :: msg"aready defined here" -> sym.toLoc :: Nil))
                   case N =>
                     members += nme -> s
                     td.signature.foreach(newSignatures += id.name -> _)
@@ -145,7 +145,7 @@ class Elaborator(raise: Raise):
               // TODO pair up companions
               case S(sym) =>
                 raise(ErrorReport(msg"Duplicate definition of ${id.name}" -> td.toLoc
-                  :: msg"aready defined gere" -> sym.toLoc :: Nil))
+                  :: msg"aready defined here" -> sym.toLoc :: Nil))
               case N =>
                 newMembers += id.name -> ClassSymbol(id)
           case L(d) => raise(d)

@@ -8,7 +8,7 @@
 :e
 42: [A] -> Str
 //│ Elab: { Lit(IntLit(42)): Forall(List(A@1),Ref(class:Str))‹› }‹›
-//│ ╔══[ERROR] Cannot solve Int <: ⊥
+//│ ╔══[ERROR] Cannot solve Int ∧ ¬⊥
 //│ ╙──
 //│ Type: forall α1_1: Str
 
@@ -30,28 +30,53 @@ id
 //│ Elab: { forall A@1: Lam(List(Param(‹›,x@2,Some(Ref(A@1)))),App(Ref(+),Tup(List(Fld(‹›,Ref(x@2),None), Fld(‹›,Lit(IntLit(1)),None)))))‹› }‹›
 //│ ╔══[ERROR] Cannot constrain skolem α4_1
 //│ ╙──
-//│ Type: forall α4_1: (α4_1) ->{⊥} α6_1
+//│ Type: forall α4_1: (α4_1) ->{⊥} Int
+
+:e
+(x => x): [A] -> A -> A
+//│ Elab: { Lam(List(Param(‹›,x@1,None)),Ref(x@1)): Forall(List(A@2),FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2)))‹› }‹›
+//│ ╔══[ERROR] Cannot constrain skolem α5_1
+//│ ╙──
+//│ Type: forall α5_1: (α5_1) ->{⊥} α5_1
+
+id: [A] -> A -> A
+//│ Elab: { Ref(id): Forall(List(A@1),FunTy(Tup(List(Fld(‹›,Ref(A@1),None))),Ref(A@1)))‹› }‹›
+//│ Type: forall α7_1: (α7_1) ->{⊥} α7_1
+
+id: Int -> Int
+//│ Elab: { Ref(id): FunTy(Tup(List(Fld(‹›,Ref(class:Int),None))),Ref(class:Int))‹› }‹›
+//│ Type: (Int) ->{⊥} Int
+
+fun myInc(inc: Int -> Int, x: Int) = inc(x)
+//│ Elab: { fun myInc(inc@1: (class:Int#14)‹› -> class:Int#15‹›, x@2: class:Int#16) = inc@1#0(x@2#0)‹›‹›; }‹›
+//│ Type: ⊤
+
+myInc(id, 0)
+//│ Elab: { myInc#0(id#3, 0‹›)‹›‹› }‹›
+//│ Type: α13_0
 //│ Where:
-//│   Int ∧ ¬⊥ <: α6_1
+//│   ⊤ ∧ ¬⊥ ∧ α14_0 <: α13_0
+//│   ⊤ ∧ ¬⊥ ∧ α11_0 <: α14_0
+//│   Int ∧ ¬⊥ <: α11_0
 
 let t = 42 in [A] => (x: A) => x
 //│ Elab: { { let t@1 = 42‹›; forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹› }‹› }‹›
-//│ Type: forall α7_1: (α7_1) ->{⊥} α7_1
+//│ Type: forall α15_1: (α15_1) ->{⊥} α15_1
 
 
 id(42)
-//│ Elab: { id#1(42‹›)‹›‹› }‹›
-//│ Type: α9_0
+//│ Elab: { id#4(42‹›)‹›‹› }‹›
+//│ Type: α17_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α10_0 <: α9_0
-//│   Int ∧ ¬⊥ <: α10_0
+//│   ⊤ ∧ ¬⊥ ∧ α18_0 <: α17_0
+//│   Int ∧ ¬⊥ <: α18_0
 
 id("abc")
-//│ Elab: { id#2("abc"‹›)‹›‹› }‹›
-//│ Type: α12_0
+//│ Elab: { id#5("abc"‹›)‹›‹› }‹›
+//│ Type: α20_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α13_0 <: α12_0
-//│   Str ∧ ¬⊥ <: α13_0
+//│   ⊤ ∧ ¬⊥ ∧ α21_0 <: α20_0
+//│   Str ∧ ¬⊥ <: α21_0
 
 
 class Pair[A, B](a: A, b: B)
@@ -60,10 +85,10 @@ class Pair[A, B](a: A, b: B)
 
 new Pair(42, true)
 //│ Elab: { new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹› }‹›
-//│ Type: Pair[in α14_0 out α15_0, in α16_0 out α17_0]
+//│ Type: Pair[in α22_0 out α23_0, in α24_0 out α25_0]
 //│ Where:
-//│   Int ∧ ¬⊥ <: α15_0
-//│   Bool ∧ ¬⊥ <: α17_0
+//│   Int ∧ ¬⊥ <: α23_0
+//│   Bool ∧ ¬⊥ <: α25_0
 
 fun swap: [A, B] -> Pair[out A, out B] -> Pair[out B, out A]
 fun swap(p) = new Pair(Pair.b(p), Pair.a(p))
@@ -73,24 +98,101 @@ fun swap(p) = new Pair(Pair.b(p), Pair.a(p))
 
 swap
 //│ Elab: { swap#0 }‹›
-//│ Type: forall α18_1, α19_1: (Pair[out α18_1, out α19_1]) ->{⊥} Pair[out α19_1, out α18_1]
+//│ Type: forall α26_1, α27_1: (Pair[out α26_1, out α27_1]) ->{⊥} Pair[out α27_1, out α26_1]
 
 let t = new Pair(42, true) in swap(t)
 //│ Elab: { { let t@1 = new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›; swap#1(t@1#0)‹›‹› }‹› }‹›
-//│ Type: α37_0
-//│ Where:
-//│   Pair[out ⊤ ∧ ¬⊥ ∧ α39_0, out ⊤ ∧ ¬⊥ ∧ α38_0] ∧ ¬⊥ <: α37_0
-//│   ⊤ ∧ ¬⊥ ∧ α35_0 <: α39_0
-//│   Bool ∧ ¬⊥ <: α35_0
-//│   ⊤ ∧ ¬⊥ ∧ α33_0 <: α38_0
-//│   Int ∧ ¬⊥ <: α33_0
-
-let t = new Pair("114", "514") in swap(t)
-//│ Elab: { { let t@1 = new class:Pair(Lit(StrLit(114)), Lit(StrLit(514)))‹›; swap#2(t@1#0)‹›‹› }‹› }‹›
 //│ Type: α45_0
 //│ Where:
 //│   Pair[out ⊤ ∧ ¬⊥ ∧ α47_0, out ⊤ ∧ ¬⊥ ∧ α46_0] ∧ ¬⊥ <: α45_0
 //│   ⊤ ∧ ¬⊥ ∧ α43_0 <: α47_0
-//│   Str ∧ ¬⊥ <: α43_0
+//│   Bool ∧ ¬⊥ <: α43_0
 //│   ⊤ ∧ ¬⊥ ∧ α41_0 <: α46_0
-//│   Str ∧ ¬⊥ <: α41_0
+//│   Int ∧ ¬⊥ <: α41_0
+
+let t = new Pair("114", "514") in swap(t)
+//│ Elab: { { let t@1 = new class:Pair(Lit(StrLit(114)), Lit(StrLit(514)))‹›; swap#2(t@1#0)‹›‹› }‹› }‹›
+//│ Type: α53_0
+//│ Where:
+//│   Pair[out ⊤ ∧ ¬⊥ ∧ α55_0, out ⊤ ∧ ¬⊥ ∧ α54_0] ∧ ¬⊥ <: α53_0
+//│   ⊤ ∧ ¬⊥ ∧ α51_0 <: α55_0
+//│   Str ∧ ¬⊥ <: α51_0
+//│   ⊤ ∧ ¬⊥ ∧ α49_0 <: α54_0
+//│   Str ∧ ¬⊥ <: α49_0
+
+let id = [A] => (x: A) => x in new Pair(id(42), id("42"))
+//│ Elab: { { let id@1 = forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹›; new class:Pair(App(Ref(id@1),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))), App(Ref(id@1),Tup(List(Fld(‹›,Lit(StrLit(42)),None)))))‹› }‹› }‹›
+//│ Type: Pair[in α57_0 out α58_0, in α59_0 out α60_0]
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α62_0 <: α58_0
+//│   ⊤ ∧ ¬⊥ ∧ α63_0 <: α62_0
+//│   Int ∧ ¬⊥ <: α63_0
+//│   ⊤ ∧ ¬⊥ ∧ α65_0 <: α60_0
+//│   ⊤ ∧ ¬⊥ ∧ α66_0 <: α65_0
+//│   Str ∧ ¬⊥ <: α66_0
+
+fun foo: ([A] -> A -> A) -> Int
+fun foo(x) = 42
+//│ Elab: { fun foo: (forall A@2: FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2))‹›)‹› -> class:Int#17‹›; fun foo(x@3): (forall A@5: FunTy(Tup(List(Fld(‹›,Ref(A@5),None))),Ref(A@5))‹›)‹› -> class:Int#18‹› = 42‹›; }‹›
+//│ Type: ⊤
+
+foo
+//│ Elab: { foo#0 }‹›
+//│ Type: (forall α67_1: (α67_1) ->{⊥} α67_1) ->{⊥} Int
+
+foo(id)
+//│ Elab: { foo#1(id#6)‹›‹› }‹›
+//│ Type: Int
+
+foo([B] => (y: B) => y)
+//│ Elab: { foo#2(forall B@2: Lam(List(Param(‹›,y@3,Some(Ref(B@2)))),Ref(y@3))‹›)‹›‹› }‹›
+//│ Type: Int
+
+:e
+foo(x => x)
+//│ Elab: { foo#3(λx@2. x@2#0‹›)‹›‹› }‹›
+//│ ╔══[ERROR] Cannot constrain skolem α67_1
+//│ ╙──
+//│ Type: Int
+
+class Foo(foo: [A] -> A -> A)
+//│ Elab: { class Foo(foo@1: forall A@2: FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2))‹›) { }‹›; }‹›
+//│ Type: ⊤
+
+new Foo(id)
+//│ Elab: { new class:Foo(Ref(id))‹› }‹›
+//│ Type: Foo
+
+:e
+new Foo(x => x)
+//│ Elab: { new class:Foo(Lam(List(Param(‹›,x@1,None)),Ref(x@1)))‹› }‹›
+//│ ╔══[ERROR] Cannot constrain skolem α75_1
+//│ ╙──
+//│ Type: Foo
+
+let foo = new Foo(id) in Foo.foo(foo)(42)
+//│ Elab: { { let foo@1 = new class:Foo(Ref(id))‹›; class:Foo#0.foo‹›(foo@1#0)‹›‹›(42‹›)‹›‹› }‹› }‹›
+//│ Type: α80_0
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α81_0 <: α80_0
+//│   Int ∧ ¬⊥ <: α81_0
+
+class Bar[A](x: A, f: [B] -> B -> B)
+//│ Elab: { class Bar[out A@1](x@2: A@1#0, f@3: forall B@4: FunTy(Tup(List(Fld(‹›,Ref(B@4),None))),Ref(B@4))‹›) { }‹›; }‹›
+//│ Type: ⊤
+
+
+new Bar(0, id)
+//│ Elab: { new class:Bar(Lit(IntLit(0)), Ref(id))‹› }‹›
+//│ Type: Bar[in α82_0 out α83_0]
+//│ Where:
+//│   Int ∧ ¬⊥ <: α83_0
+
+let bar = new Bar(0, id) in Bar.f(bar)(Bar.x(bar))
+//│ Elab: { { let bar@1 = new class:Bar(Lit(IntLit(0)), Ref(id))‹›; class:Bar#0.f‹›(bar@1#0)‹›‹›(class:Bar#1.x‹›(bar@1#1)‹›‹›)‹›‹› }‹› }‹›
+//│ Type: α96_0
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α97_0 <: α96_0
+//│   ⊤ ∧ ¬⊥ ∧ α94_0 <: α97_0
+//│   ⊤ ∧ ¬⊥ ∧ α87_0 <: α94_0
+//│   Int ∧ ¬⊥ <: α87_0
