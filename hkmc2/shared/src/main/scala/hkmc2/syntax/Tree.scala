@@ -105,8 +105,6 @@ trait TermDefImpl:
       (R(id), N, N)
     case S(App(id: Ident, args)) =>
       (R(id), S(args), N)
-    case S(InfixApp(InfixApp(id: Ident, Keyword.`:`, App(Ident("forall"), Tup(bd))), Keyword.`:`, sign)) =>
-      (R(id), N, S(Forall(bd, sign)))
   lazy val symbolicName: Opt[Ident] = symName match
     case S(id: Ident) => S(id)
     case _ => N

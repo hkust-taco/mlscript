@@ -372,6 +372,14 @@ abstract class Parser(
         case _ =>
           val res = rec(toks, S(loc), "parenthesized expression").concludeWith(_.expr(0))
           exprCont(res, prec, allowNewlines = true)
+    case (br @ BRACKETS(Square, toks), loc) :: _ =>
+      consume
+      val res = rec(toks, S(loc), "forall qualifiers").concludeWith(_.expr(0))
+      def unfold(t: Tree): Ls[Tree] = t match
+        case _: Tree.Ident => t :: Nil
+        case App(Tree.Ident(","), Tup(eles)) => eles.flatMap(unfold)
+        case _ => ??? // TODO: bds?
+      exprCont(Tree.Forall(unfold(res), Tree.Empty()), prec, allowNewlines = true)
     case (BRACKETS(Indent, _), loc) :: _ =>
       err((msg"Expected an expression; found indented block instead" -> lastLoc :: Nil))
       errExpr
@@ -443,7 +451,9 @@ abstract class Parser(
       case (KEYWORD(kw @ (Keyword.`->` | Keyword.`=>`)), l0) :: _ if kw.leftPrecOrMin > prec =>
         consume
         val rhs = expr(kw.rightPrecOrMin)
-        val res = InfixApp(PlainTup(acc), kw, rhs)
+        val res = acc match
+          case Tree.Forall(tvs, _) => Tree.Forall(tvs, rhs)
+          case _ => InfixApp(PlainTup(acc), kw, rhs)
         exprCont(res, prec, allowNewlines)
         /* 
       case (IDENT(".", _), l0) :: (br @ BRACKETS(Square, toks), l1) :: _ =>

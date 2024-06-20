@@ -194,7 +194,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       Type.FunType(params.map {
         case Fld(_, p, _) => typeType(p)
       }, typeType(ret), Type.Bot) // TODO: effect
-    case ForallTy(tvs, body) =>
+    case Term.Forall(tvs, body) =>
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx
       val bd = tvs.map:
@@ -231,7 +231,8 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
   @tailrec
   private def constrain(lhs: Type, rhs: Type)(using ctx: Ctx, skolems: SkolemSet): Unit = (lhs, rhs) match
     case (Type.PolymorphicType(tvs1, bd1), Type.PolymorphicType(tvs2, bd2)) => ???
-    case (lhs, Type.PolymorphicType(tvs, bd)) => ???
+    case (lhs, Type.PolymorphicType(tvs, body)) =>
+      constrain(lhs, body)(using ctx, skolems ++ tvs.map(_.uid))
     case (Type.PolymorphicType(tvs, bd), rhs) =>
       constrain(instantiate(bd)(using (tvs.map {
         case Type.InfVar(_, uid, state) =>
@@ -239,22 +240,6 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           uid -> nv
       }).toMap), rhs)
     case _ => solver.constrain(lhs, rhs)
-
-  private def checkAgainst(term: Term, ty: Type)(using ctx: Ctx, skolems: SkolemSet): Unit = ty match
-    case Type.PolymorphicType(bds, body) =>
-      val nestCtx = ctx.nextLevel
-      given Ctx = nestCtx
-      given SkolemSet = skolems ++ bds.map(_.uid)
-      (term, body) match
-        case (Lam(params, body), Type.FunType(targs, ret, eff)) => // TODO: forall ... : forall ... : ... ?
-          if params.length != targs.length then
-            error(msg"Cannot type check ${term.toString} with type ${ty.toString}" -> term.toLoc :: Nil)
-          else
-            params.zip(targs).foreach:
-              case (sym, t) => nestCtx += sym -> t
-            checkAgainst(body, ret) // TODO: eff
-        case _ => constrain(typeCheck(term), body)
-    case _ => constrain(typeCheck(term), ty)
 
   def typeCheck(t: Term)(using ctx: Ctx, skolems: SkolemSet): Type = t match
     case Ref(sym: VarSymbol) =>
@@ -312,12 +297,11 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
     case Lam(params, body) =>
       val nestCtx = ctx.nest
       given Ctx = nestCtx
-      val tvs = params.map(
-        sym =>
-          val v = freshVar
-          nestCtx += sym -> v
-          v
-      )
+      val tvs = params.map:
+        case Param(_, sym, sign) =>
+          val ty = sign.map(typeType).getOrElse(freshVar)
+          nestCtx += sym -> ty
+          ty
       Type.FunType(tvs, typeCheck(body), Type.Bot) // TODO: effect
     case Term.App(Term.Sel(Term.Ref(cls: ClassSymbol), field), Term.Tup(Fld(_, term, asc) :: Nil)) => // * Sel
       val ty = typeCheck(term)
@@ -373,7 +357,15 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil)
     case Term.Asc(term, ty) =>
       val res = typeType(ty)
-      checkAgainst(term, res)
+      constrain(typeCheck(term), res)
       res
+    case Term.Forall(tvs, body) =>
+      val nestCtx = ctx.nextLevel
+      val bds = tvs.map:
+        case sym: VarSymbol =>
+          val tv = freshVar(using nestCtx)
+          nestCtx += sym -> tv // TODO: a type var symbol may be better...
+          tv
+      Type.PolymorphicType(bds, typeCheck(body)(using nestCtx, skolems ++ bds.map(_.uid)))
     case Term.Error =>
       Type.Bot // TODO: error type?

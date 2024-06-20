@@ -70,30 +70,37 @@ fun inc: Int -> Int
 //│ Parsed:
 //│ 	TermDef(Fun,None,Some(InfixApp(Ident(inc),keyword ':',InfixApp(Tup(List(Ident(Int))),keyword '->',Ident(Int)))),None)
 
-// TODO: weird...
-fun id: forall (a): a -> a
+[A] -> A -> A
 //│ Parsed:
-//│ 	TermDef(Fun,None,Some(InfixApp(InfixApp(Ident(id),keyword ':',App(Ident(forall),Tup(List(Ident(a))))),keyword ':',InfixApp(Tup(List(Ident(a))),keyword '->',Ident(a)))),None)
+//│ 	Forall(List(Ident(A)),InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))
 
-(x => x): forall (a): a -> a
+fun id: [A] -> A -> A
 //│ Parsed:
-//│ 	InfixApp(InfixApp(InfixApp(Tup(List(Ident(x))),keyword '=>',Ident(x)),keyword ':',App(Ident(forall),Tup(List(Ident(a))))),keyword ':',InfixApp(Tup(List(Ident(a))),keyword '->',Ident(a)))
+//│ 	TermDef(Fun,None,Some(InfixApp(Ident(id),keyword ':',Forall(List(Ident(A)),InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A))))),None)
 
-fun foo: forall (a, b): a -> b
+[A] => (x: A) => x
 //│ Parsed:
-//│ 	TermDef(Fun,None,Some(InfixApp(InfixApp(Ident(foo),keyword ':',App(Ident(forall),Tup(List(Ident(a), Ident(b))))),keyword ':',InfixApp(Tup(List(Ident(a))),keyword '->',Ident(b)))),None)
+//│ 	Forall(List(Ident(A)),InfixApp(Tup(List(InfixApp(Ident(x),keyword ':',Ident(A)))),keyword '=>',Ident(x)))
 
-fun foo: forall (Int <: a <: Num): a -> a
+[A, B] -> A -> B
 //│ Parsed:
-//│ 	TermDef(Fun,None,Some(InfixApp(InfixApp(Ident(foo),keyword ':',App(Ident(forall),Tup(List(App(Ident(<:),Tup(List(Ident(Int), App(Ident(<:),Tup(List(Ident(a), Ident(Num))))))))))),keyword ':',InfixApp(Tup(List(Ident(a))),keyword '->',Ident(a)))),None)
+//│ 	Forall(List(Ident(A), Ident(B)),InfixApp(Tup(List(Ident(A))),keyword '->',Ident(B)))
+
+[A, B, C] -> (A, B) -> C
+//│ Parsed:
+//│ 	Forall(List(Ident(A), Ident(B), Ident(C)),InfixApp(Tup(List(Ident(A), Ident(B))),keyword '->',Ident(C)))
+
+([A] -> A -> A) -> Int
+//│ Parsed:
+//│ 	InfixApp(Tup(List(Forall(List(Ident(A)),InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A))))),keyword '->',Ident(Int))
 
 :fixme
 if 1 < 2 then 1 else 0
 //│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'in' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found 'if' keyword instead
-//│ ║  l.91: 	if 1 < 2 then 1 else 0
+//│ ║  l.98: 	if 1 < 2 then 1 else 0
 //│ ╙──      	^^
 //│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.91: 	if 1 < 2 then 1 else 0
+//│ ║  l.98: 	if 1 < 2 then 1 else 0
 //│ ╙──      	   ^
 //│ Parsed:
 //│ 	Error()
@@ -103,7 +110,7 @@ fun fact = case
   0 then 1
   n then n * fact(n - 1)
 //│ ╔══[PARSE ERROR] Expected expression after 'fun' binding equals sign; found 'case' keyword instead
-//│ ║  l.102: 	fun fact = case
+//│ ║  l.109: 	fun fact = case
 //│ ╙──       	           ^^^^
 //│ Parsed:
 //│ 	Error()

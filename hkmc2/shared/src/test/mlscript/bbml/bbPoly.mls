@@ -1,41 +1,41 @@
 :global
 :bbml
 
-42: forall (a): Int
-//│ Elab: { Lit(IntLit(42)): ForallTy(List(a@1),Ref(class:Int))‹› }‹›
+42: [A] -> Int
+//│ Elab: { Lit(IntLit(42)): Forall(List(A@1),Ref(class:Int))‹› }‹›
 //│ Type: forall α0_1: Int
 
 :e
-42: forall (a): Str
-//│ Elab: { Lit(IntLit(42)): ForallTy(List(a@1),Ref(class:Str))‹› }‹›
+42: [A] -> Str
+//│ Elab: { Lit(IntLit(42)): Forall(List(A@1),Ref(class:Str))‹› }‹›
 //│ ╔══[ERROR] Cannot solve Int <: ⊥
 //│ ╙──
 //│ Type: forall α1_1: Str
 
-fun id: forall (a): a -> a
+fun id: [A] -> A -> A
 fun id(x) = x
-//│ Elab: { fun id: forall a@2: FunTy(Tup(List(Fld(‹›,Ref(a@2),None))),Ref(a@2))‹›; fun id(x@3): forall a@5: FunTy(Tup(List(Fld(‹›,Ref(a@5),None))),Ref(a@5))‹› = x@3#0; }‹›
+//│ Elab: { fun id: forall A@2: FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2))‹›; fun id(x@3): forall A@5: FunTy(Tup(List(Fld(‹›,Ref(A@5),None))),Ref(A@5))‹› = x@3#0; }‹›
 //│ Type: ⊤
 
 id
 //│ Elab: { id#0 }‹›
 //│ Type: forall α2_1: (α2_1) ->{⊥} α2_1
 
-(x => x): forall (a): a -> a
-//│ Elab: { Lam(List(x@1),Ref(x@1)): ForallTy(List(a@2),FunTy(Tup(List(Fld(‹›,Ref(a@2),None))),Ref(a@2)))‹› }‹›
+[A] => (x: A) => x
+//│ Elab: { forall A@1: Lam(List(Param(‹›,x@2,Some(Ref(A@1)))),Ref(x@2))‹› }‹›
 //│ Type: forall α3_1: (α3_1) ->{⊥} α3_1
 
 :e
-(x => x + 1): forall (a): a -> a
-//│ Elab: { Lam(List(x@1),App(Ref(+),Tup(List(Fld(‹›,Ref(x@1),None), Fld(‹›,Lit(IntLit(1)),None))))): ForallTy(List(a@3),FunTy(Tup(List(Fld(‹›,Ref(a@3),None))),Ref(a@3)))‹› }‹›
+[A] => (x: A) => x + 1
+//│ Elab: { forall A@1: Lam(List(Param(‹›,x@2,Some(Ref(A@1)))),App(Ref(+),Tup(List(Fld(‹›,Ref(x@2),None), Fld(‹›,Lit(IntLit(1)),None)))))‹› }‹›
 //│ ╔══[ERROR] Cannot constrain skolem α4_1
 //│ ╙──
-//│ ╔══[ERROR] Cannot constrain skolem α4_1
-//│ ╙──
-//│ Type: forall α4_1: (α4_1) ->{⊥} α4_1
+//│ Type: forall α4_1: (α4_1) ->{⊥} α6_1
+//│ Where:
+//│   Int ∧ ¬⊥ <: α6_1
 
-let t = 42 in ((x => x): forall (a): a -> a)
-//│ Elab: { { let t@1 = 42‹›; Lam(List(x@2),Ref(x@2)): ForallTy(List(a@3),FunTy(Tup(List(Fld(‹›,Ref(a@3),None))),Ref(a@3)))‹› }‹› }‹›
+let t = 42 in [A] => (x: A) => x
+//│ Elab: { { let t@1 = 42‹›; forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹› }‹› }‹›
 //│ Type: forall α7_1: (α7_1) ->{⊥} α7_1
 
 
@@ -65,9 +65,9 @@ new Pair(42, true)
 //│   Int ∧ ¬⊥ <: α15_0
 //│   Bool ∧ ¬⊥ <: α17_0
 
-fun swap: forall (a, b): Pair[out a, out b] -> Pair[out b, out a]
+fun swap: [A, B] -> Pair[out A, out B] -> Pair[out B, out A]
 fun swap(p) = new Pair(Pair.b(p), Pair.a(p))
-//│ Elab: { fun swap: forall a@2, b@3: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:Pair),List(WildcardTy(None,Some(Ref(a@2))), WildcardTy(None,Some(Ref(b@3))))),None))),TyApp(Ref(class:Pair),List(WildcardTy(None,Some(Ref(b@3))), WildcardTy(None,Some(Ref(a@2))))))‹›; fun swap(p@4): forall a@8, b@9: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:Pair),List(WildcardTy(None,Some(Ref(a@8))), WildcardTy(None,Some(Ref(b@9))))),None))),TyApp(Ref(class:Pair),List(WildcardTy(None,Some(Ref(b@9))), WildcardTy(None,Some(Ref(a@8))))))‹› = new class:Pair(App(Sel(Ref(class:Pair),Ident(b)),Tup(List(Fld(‹›,Ref(p@4),None)))), App(Sel(Ref(class:Pair),Ident(a)),Tup(List(Fld(‹›,Ref(p@4),None)))))‹›; }‹›
+//│ Elab: { fun swap: forall A@2, B@3: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:Pair),List(WildcardTy(None,Some(Ref(A@2))), WildcardTy(None,Some(Ref(B@3))))),None))),TyApp(Ref(class:Pair),List(WildcardTy(None,Some(Ref(B@3))), WildcardTy(None,Some(Ref(A@2))))))‹›; fun swap(p@4): forall A@8, B@9: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:Pair),List(WildcardTy(None,Some(Ref(A@8))), WildcardTy(None,Some(Ref(B@9))))),None))),TyApp(Ref(class:Pair),List(WildcardTy(None,Some(Ref(B@9))), WildcardTy(None,Some(Ref(A@8))))))‹› = new class:Pair(App(Sel(Ref(class:Pair),Ident(b)),Tup(List(Fld(‹›,Ref(p@4),None)))), App(Sel(Ref(class:Pair),Ident(a)),Tup(List(Fld(‹›,Ref(p@4),None)))))‹›; }‹›
 //│ Type: ⊤
 
 

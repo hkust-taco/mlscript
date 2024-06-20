@@ -55,10 +55,8 @@ class Elaborator(raise: Raise):
     case InfixApp(lhs, Keyword.`->`, rhs) =>
       Term.FunTy(term(lhs), term(rhs))
     case InfixApp(lhs, Keyword.`=>`, rhs) =>
-      val (_, syms) = pattern(lhs)
-      Term.Lam(syms.map(_._2), term(rhs)(using ctx.copy(locals = ctx.locals ++ syms)))
-    case InfixApp(InfixApp(lhs, Keyword.`:`, App(Ident("forall"), Tup(bd))), Keyword.`:`, sign) =>
-      Term.Asc(term(lhs), term(Forall(bd, sign))) // TODO: refactor
+      val (syms, nestCtx) = params(lhs)
+      Term.Lam(syms, term(rhs)(using nestCtx))
     case InfixApp(lhs, Keyword.`:`, rhs) =>
       Term.Asc(term(lhs), term(rhs))
     case App(lhs, rhs) =>
@@ -90,7 +88,7 @@ class Elaborator(raise: Raise):
         raise(ErrorReport(msg"Illegal forall annotation." -> tree.toLoc :: Nil))
         Term.Error
       else
-        Term.ForallTy(bds, term(body)(using ctx.copy(locals = ctx.locals ++ boundVars)))
+        Term.Forall(bds, term(body)(using ctx.copy(locals = ctx.locals ++ boundVars)))
     case Empty() =>
       raise(ErrorReport(msg"A term was expected in this position, but no term was found." -> tree.toLoc :: Nil))
       Term.Error
@@ -331,7 +329,7 @@ class Elaborator(raise: Raise):
       case Term.FunTy(l, r) =>
         traverseType(pol.!)(l)
         traverseType(pol)(r)
-      case Term.ForallTy(_, body) =>
+      case Term.Forall(_, body) =>
         traverseType(pol)(body)
       case Term.WildcardTy(in, out) =>
         in.foreach(t => traverseType(pol.!)(t))
