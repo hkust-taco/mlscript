@@ -196,3 +196,39 @@ let bar = new Bar(0, id) in Bar.f(bar)(Bar.x(bar))
 //│   ⊤ ∧ ¬⊥ ∧ α94_0 <: α97_0
 //│   ⊤ ∧ ¬⊥ ∧ α87_0 <: α94_0
 //│   Int ∧ ¬⊥ <: α87_0
+
+class Some[A](value: A)
+//│ Elab: { class Some[out A@1](value@2: A@1#0) { }‹›; }‹›
+//│ Type: ⊤
+
+:fixme
+new Some([A] => (x: A) => x)
+//│ Elab: { new class:Some(Forall(List(A@1),Lam(List(Param(‹›,x@2,Some(Ref(A@1)))),Ref(x@2))))‹› }‹›
+//│ Type: Some[in α98_0 out α99_0]
+//│ Where:
+//│   (⊤ ∧ ¬⊥ ∧ α101_0) ->{⊥} ⊤ ∧ ¬⊥ ∧ α101_0 ∧ ¬⊥ <: α99_0
+
+:fixme
+let s = new Some([A] => (x: A) => x) in let t = Some.value(s)(42) in Some.value(s)(false)
+//│ Elab: { { let s@1 = new class:Some(Forall(List(A@2),Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))))‹›; { let t@4 = class:Some#0.value‹›(s@1#0)‹›‹›(42‹›)‹›‹›; class:Some#1.value‹›(s@1#1)‹›‹›(false‹›)‹›‹› }‹› }‹› }‹›
+//│ Type: α113_0
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α105_0 <: α113_0
+//│   Bool ∧ ¬⊥ <: α105_0
+//│   Int ∧ ¬⊥ <: α105_0
+
+fun gen(x) =
+  let t = x + 1 in  [A] => (y: A) => y
+//│ Elab: { fun gen(x@1) = { let t@2 = +#1(x@1#0, 1‹›)‹›‹›; forall A@4: Lam(List(Param(‹›,y@5,Some(Ref(A@4)))),Ref(y@5))‹› }‹›; }‹›
+//│ Type: ⊤
+
+gen
+//│ Elab: { gen#0 }‹›
+//│ Type: (α114_0) ->{⊥} forall α115_1: (α115_1) ->{⊥} α115_1
+//│ Where:
+//│   α114_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+
+
+gen(42)
+//│ Elab: { gen#1(42‹›)‹›‹› }‹›
+//│ Type: forall α115_1: (α115_1) ->{⊥} α115_1

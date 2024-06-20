@@ -1,0 +1,28 @@
+:global
+:bbml
+
+fun f(y) =
+  let local = ([A] => (x: A) => y(x) + 1) in y
+//│ Elab: { fun f(y@1) = { let local@2 = forall A@3: Lam(List(Param(‹›,x@4,Some(Ref(A@3)))),App(Ref(+),Tup(List(Fld(‹›,App(Ref(y@1),Tup(List(Fld(‹›,Ref(x@4),None)))),None), Fld(‹›,Lit(IntLit(1)),None)))))‹›; y@1#1 }‹›; }‹›
+//│ Type: ⊤
+
+f
+//│ Elab: { f#0 }‹›
+//│ Type: (α0_0) ->{⊥} α0_0
+//│ Where:
+//│   α0_0 <: ¬⊤ ∧ ¬(⊤ ∧ ¬⊥ ∧ ⊤) ->{⊤ ∧ ¬⊥ ∧ α5_0} ⊤ ∧ ¬⊥ ∧ α4_0
+//│   α4_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+
+:e
+f([A] => (x: A) => x)
+//│ Elab: { f#1(forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹›)‹›‹› }‹›
+//│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
+//│ ╙──
+//│ Type: α0_0
+//│ Where:
+//│   (⊤ ∧ ¬⊥ ∧ α7_0) ->{⊥} ⊤ ∧ ¬⊥ ∧ α7_0 ∧ ¬⊥ <: α0_0
+//│   ⊤ ∧ ¬⊥ <: α7_0
+//│   α7_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   α0_0 <: ¬⊤ ∧ ¬(⊤ ∧ ¬⊥ ∧ ⊤) ->{⊤ ∧ ¬⊥ ∧ α5_0} ⊤ ∧ ¬⊥ ∧ α4_0
+//│   ⊤ ∧ ¬⊥ ∧ α7_0 <: α4_0
+//│   α4_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
