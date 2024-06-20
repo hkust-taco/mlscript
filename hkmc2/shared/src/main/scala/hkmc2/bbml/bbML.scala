@@ -288,7 +288,11 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
             case S(ft @ Type.FunType(args, ret, eff)) => (args, S(ret), S(eff), Nil)
             case S(Type.PolymorphicType(tvs, ty)) => rec(S(ty)) match
               case (p, r, e, s) => (p, r, e, tvs ++ s)
-            case _ => (params.map(_ => freshVar), N, N, Nil)
+            case _ => (params.map {
+              case Param(_, _, S(sign)) =>
+                typeType(sign)(using ctx, true)
+              case _ => freshVar
+            }, N, N, Nil)
           given Bool = true
           val sigTy = sig.map(typeType)
           val (tvs, retAnno, effAnno, newSkolems) = rec(sigTy)

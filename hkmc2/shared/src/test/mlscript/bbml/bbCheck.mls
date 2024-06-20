@@ -56,3 +56,33 @@ add(0, 0): Str
 //│ ╔══[ERROR] Cannot solve Int ∧ ¬⊥
 //│ ╙──
 //│ Type: Str
+
+:e
+fun errAdd(x: Int) = x + "1"
+//│ Elab: { fun errAdd(x@1: class:Int#26) = +#2(x@1#0, "1"‹›)‹›‹›; }‹›
+//│ ╔══[ERROR] Cannot solve Str ∧ ¬⊥
+//│ ╙──
+//│ Type: ⊤
+
+fun high(f: [A] -> A -> A) = f(42)
+//│ Elab: { fun high(f@1: forall A@2: FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2))‹›) = f@1#0(42‹›)‹›‹›; }‹›
+//│ Type: ⊤
+
+high
+//│ Elab: { high#0 }‹›
+//│ Type: (forall α2_1: (α2_1) ->{⊥} α2_1) ->{⊥} α4_0
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α5_0 <: α4_0
+//│   Int ∧ ¬⊥ <: α5_0
+
+:e
+high(x => x + 1)
+//│ Elab: { high#1(λx@2. +#3(x@2#0, 1‹›)‹›‹›‹›)‹›‹› }‹›
+//│ ╔══[ERROR] Cannot constrain skolem α2_1
+//│ ╙──
+//│ ╔══[ERROR] Cannot constrain skolem α2_1
+//│ ╙──
+//│ Type: α4_0
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α5_0 <: α4_0
+//│   Int ∧ ¬⊥ <: α5_0

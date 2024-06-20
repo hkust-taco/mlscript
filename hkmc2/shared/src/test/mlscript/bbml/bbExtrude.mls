@@ -6,6 +6,7 @@ fun f(y) =
 //│ Elab: { fun f(y@1) = { let local@2 = forall A@3: Lam(List(Param(‹›,x@4,Some(Ref(A@3)))),App(Ref(+),Tup(List(Fld(‹›,App(Ref(y@1),Tup(List(Fld(‹›,Ref(x@4),None)))),None), Fld(‹›,Lit(IntLit(1)),None)))))‹›; y@1#1 }‹›; }‹›
 //│ Type: ⊤
 
+// * the parameter type of y is extruded.
 f
 //│ Elab: { f#0 }‹›
 //│ Type: (α0_0) ->{⊥} α0_0
@@ -26,3 +27,30 @@ f([A] => (x: A) => x)
 //│   α0_0 <: ¬⊤ ∧ ¬(⊤ ∧ ¬⊥ ∧ ⊤) ->{⊤ ∧ ¬⊥ ∧ α5_0} ⊤ ∧ ¬⊥ ∧ α4_0
 //│   ⊤ ∧ ¬⊥ ∧ α7_0 <: α4_0
 //│   α4_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+
+fun g: ([A] -> A -> Int) -> ([A] -> A -> Int)
+fun g(y) =
+  let local = ([A] => (x: A) => y(x) + 1) in y
+//│ Elab: { fun g: (forall A@2: FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(class:Int))‹›)‹› -> forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(class:Int))‹›‹›; fun g(y@4): (forall A@11: FunTy(Tup(List(Fld(‹›,Ref(A@11),None))),Ref(class:Int))‹›)‹› -> forall A@12: FunTy(Tup(List(Fld(‹›,Ref(A@12),None))),Ref(class:Int))‹›‹› = { let local@5 = forall A@6: Lam(List(Param(‹›,x@7,Some(Ref(A@6)))),App(Ref(+),Tup(List(Fld(‹›,App(Ref(y@4),Tup(List(Fld(‹›,Ref(x@7),None)))),None), Fld(‹›,Lit(IntLit(1)),None)))))‹›; y@4#1 }‹›; }‹›
+//│ Type: ⊤
+
+g
+//│ Elab: { g#0 }‹›
+//│ Type: (forall α8_1: (α8_1) ->{⊥} Int) ->{⊥} forall α9_1: (α9_1) ->{⊥} Int
+
+g([A] => (x: A) => x)
+//│ Elab: { g#1(forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹›)‹›‹› }‹›
+//│ Type: forall α9_1: (α9_1) ->{⊥} Int
+
+fun h(y: [A] -> A -> Int) =
+  let local = ([A] => (x: A) => y(x) + 1) in y
+//│ Elab: { fun h(y@1: forall A@2: FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(class:Int))‹›) = { let local@3 = forall A@4: Lam(List(Param(‹›,x@5,Some(Ref(A@4)))),App(Ref(+),Tup(List(Fld(‹›,App(Ref(y@1),Tup(List(Fld(‹›,Ref(x@5),None)))),None), Fld(‹›,Lit(IntLit(1)),None)))))‹›; y@1#1 }‹›; }‹›
+//│ Type: ⊤
+
+h
+//│ Elab: { h#0 }‹›
+//│ Type: (forall α17_1: (α17_1) ->{⊥} Int) ->{⊥} forall α17_1: (α17_1) ->{⊥} Int
+
+h([A] => (x: A) => x)
+//│ Elab: { h#1(forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹›)‹›‹› }‹›
+//│ Type: forall α17_1: (α17_1) ->{⊥} Int
