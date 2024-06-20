@@ -201,7 +201,6 @@ class Some[A](value: A)
 //│ Elab: { class Some[out A@1](value@2: A@1#0) { }‹›; }‹›
 //│ Type: ⊤
 
-:fixme
 new Some([A] => (x: A) => x)
 //│ Elab: { new class:Some(Forall(List(A@1),Lam(List(Param(‹›,x@2,Some(Ref(A@1)))),Ref(x@2))))‹› }‹›
 //│ Type: Some[in α98_0 out α99_0]
@@ -218,7 +217,7 @@ let s = new Some([A] => (x: A) => x) in let t = Some.value(s)(42) in Some.value(
 //│   Int ∧ ¬⊥ <: α105_0
 
 fun gen(x) =
-  let t = x + 1 in  [A] => (y: A) => y
+  let t = x + 1 in [A] => (y: A) => y
 //│ Elab: { fun gen(x@1) = { let t@2 = +#1(x@1#0, 1‹›)‹›‹›; forall A@4: Lam(List(Param(‹›,y@5,Some(Ref(A@4)))),Ref(y@5))‹› }‹›; }‹›
 //│ Type: ⊤
 
@@ -232,3 +231,11 @@ gen
 gen(42)
 //│ Elab: { gen#1(42‹›)‹›‹› }‹›
 //│ Type: forall α115_1: (α115_1) ->{⊥} α115_1
+
+// FIXME: toLoc
+:fixme
+:e
+fun cnt: Some[out [A] -> A -> A] -> Int
+fun cnt(x) = 42
+//│ Elab: { fun cnt: (class:Some#2[WildcardTy(None,Some(Forall(List(A@2),FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2)))))]‹›)‹› -> class:Int#19‹›; fun cnt(x@3): (class:Some#3[WildcardTy(None,Some(Forall(List(A@5),FunTy(Tup(List(Fld(‹›,Ref(A@5),None))),Ref(A@5)))))]‹›)‹› -> class:Int#20‹› = 42‹›; }‹›
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing

@@ -187,7 +187,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       Type.PolymorphicType(bd, extract(body))
     case _ => error(msg"${asc.toString} is not a valid class member type" -> asc.toLoc :: Nil) // TODO
 
-  private def typeType(ty: Term)(using ctx: Ctx): Type = ty match
+  private def typeType(ty: Term)(using ctx: Ctx, allowPoly: Bool): Type = ty match
     case Ref(sym: VarSymbol) =>
       ctx.get(sym) match
         case Some(ty) => ty
@@ -202,7 +202,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       Type.FunType(params.map {
         case Fld(_, p, _) => typeType(p)
       }, typeType(ret), Type.Bot) // TODO: effect
-    case Term.Forall(tvs, body) =>
+    case Term.Forall(tvs, body) if allowPoly =>
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx
       val bd = tvs.map:
@@ -211,11 +211,16 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           nestCtx += sym -> tv // TODO: a type var symbol may be better...
           tv
       Type.PolymorphicType(bd, typeType(body))
+    case _: Term.Forall =>
+      error(msg"Polymorphic type is not allowed here." -> ty.toLoc :: Nil)
     case Term.TyApp(lhs, targs) => typeType(lhs) match
       case Type.ClassType(cls, _) => Type.ClassType(cls, targs.map {
         case Term.WildcardTy(in, out) =>
-          Wildcard(in.map(typeType).getOrElse(Type.Bot), out.map(typeType).getOrElse(Type.Top))
-        case t => typeType(t)
+          Wildcard(
+            in.map(t => typeType(t)(using ctx, false)).getOrElse(Type.Bot),
+            out.map(t => typeType(t)(using ctx, false)).getOrElse(Type.Top)
+          )
+        case t => typeType(t)(using ctx, false)
       })
       case _ => error(msg"${lhs.toString} is not a class" -> ty.toLoc :: Nil)
     case _ => error(msg"${ty.toString} is not a valid type annotation" -> ty.toLoc :: Nil) // TODO
@@ -284,6 +289,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
             case S(Type.PolymorphicType(tvs, ty)) => rec(S(ty)) match
               case (p, r, e, s) => (p, r, e, tvs ++ s)
             case _ => (params.map(_ => freshVar), N, N, Nil)
+          given Bool = true
           val sigTy = sig.map(typeType)
           val (tvs, retAnno, effAnno, newSkolems) = rec(sigTy)
           val defCtx = sigTy match
@@ -316,6 +322,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       given Ctx = nestCtx
       val tvs = params.map:
         case Param(_, sym, sign) =>
+          given Bool = true
           val ty = sign.map(typeType).getOrElse(freshVar)
           nestCtx += sym -> ty
           ty
@@ -381,6 +388,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
         case N => 
           error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil)
     case Term.Asc(term, ty) =>
+      given Bool = true
       val res = typeType(ty)
       constrain(typeCheck(term), res)
       res
