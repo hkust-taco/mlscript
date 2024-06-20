@@ -1,6 +1,7 @@
 :NewParser
 :ParseOnly
 :UseIR
+:NoTailRec
 
 :interpIR
 class True
@@ -10,33 +11,8 @@ fib(20)
 //│ |#class| |True|↵|#class| |False|↵|#fun| |fib|(|n|)| |#=| |#if| |n| |<| |2| |#then| |n| |#else| |fib|(|n|-|1|)| |+| |fib|(|n|-|2|)|↵|fib|(|20|)|
 //│ Parsed: {class True {}; class False {}; fun fib = (n,) => if (<(n,)(2,)) then n else +(fib(-(n,)(1,),),)(fib(-(n,)(2,),),); fib(20,)}
 //│ 
-//│ 
-//│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
-//│ Def(0, fib, [n$0],
-//│ 1, 
-//│ let x$0 = <(n$0,2) in -- #28
-//│ if x$0 -- #27
-//│   true =>
-//│     jump j$0(n$0) -- #5
-//│   false =>
-//│     let x$2 = -(n$0,1) in -- #26
-//│     let* (x$3) = fib(x$2) in -- #25
-//│     let x$4 = -(n$0,2) in -- #24
-//│     let* (x$5) = fib(x$4) in -- #23
-//│     let x$6 = +(x$3,x$5) in -- #22
-//│     jump j$0(x$6) -- #21
-//│ )
-//│ Def(1, j$0, [x$1],
-//│ 1, 
-//│ x$1 -- #3
-//│ )
-//│ },
-//│ let* (x$7) = fib(20) in -- #34
-//│ x$7 -- #33)
-//│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, [])}, {
 //│ Def(0, fib, [n$0],
 //│ 1, 
 //│ let x$0 = <(n$0,2) in -- #28
@@ -72,52 +48,8 @@ foo()
 //│ |#class| |True|↵|#class| |False|↵|#fun| |odd|(|x|)| |#=| |#if| |x| |==| |0| |#then| |False| |#else| |even|(|x|-|1|)|↵|#fun| |even|(|x|)| |#=| |#if| |x| |==| |0| |#then| |True| |#else| |odd|(|x|-|1|)|↵|#fun| |foo|(||)| |#=| |odd|(|10|)|↵|foo|(||)|
 //│ Parsed: {class True {}; class False {}; fun odd = (x,) => if (==(x,)(0,)) then False else even(-(x,)(1,),); fun even = (x,) => if (==(x,)(0,)) then True else odd(-(x,)(1,),); fun foo = () => odd(10,); foo()}
 //│ 
-//│ 
-//│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
-//│ Def(0, odd, [x$0],
-//│ 1, 
-//│ let x$1 = ==(x$0,0) in -- #18
-//│ if x$1 -- #17
-//│   true =>
-//│     let x$3 = False() in -- #6
-//│     jump j$0(x$3) -- #5
-//│   false =>
-//│     let x$4 = -(x$0,1) in -- #16
-//│     let* (x$5) = even(x$4) in -- #15
-//│     jump j$0(x$5) -- #14
-//│ )
-//│ Def(1, j$0, [x$2],
-//│ 1, 
-//│ x$2 -- #3
-//│ )
-//│ Def(2, even, [x$6],
-//│ 1, 
-//│ let x$7 = ==(x$6,0) in -- #37
-//│ if x$7 -- #36
-//│   true =>
-//│     let x$9 = True() in -- #25
-//│     jump j$1(x$9) -- #24
-//│   false =>
-//│     let x$10 = -(x$6,1) in -- #35
-//│     let* (x$11) = odd(x$10) in -- #34
-//│     jump j$1(x$11) -- #33
-//│ )
-//│ Def(3, j$1, [x$8],
-//│ 1, 
-//│ x$8 -- #22
-//│ )
-//│ Def(4, foo, [],
-//│ 1, 
-//│ let* (x$12) = odd(10) in -- #43
-//│ x$12 -- #42
-//│ )
-//│ },
-//│ let* (x$13) = foo() in -- #47
-//│ x$13 -- #46)
-//│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, [])}, {
 //│ Def(0, odd, [x$0],
 //│ 1, 
 //│ let x$1 = ==(x$0,0) in -- #18
@@ -177,51 +109,8 @@ main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |A|↵|#class| |B|(|b|)|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A|→|#else| |B|(|foo|(|not|(|x|)|)|)|←|←|↵|#fun| |main|(||)| |#=| |foo|(|False|)|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class A {}; class B(b,) {}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = () => foo(False,); main()}
 //│ 
-//│ 
-//│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
-//│ Def(0, not, [x$0],
-//│ 1, 
-//│ if x$0 -- #8
-//│   true =>
-//│     let x$2 = False() in -- #4
-//│     jump j$0(x$2) -- #3
-//│   false =>
-//│     let x$3 = True() in -- #7
-//│     jump j$0(x$3) -- #6
-//│ )
-//│ Def(1, j$0, [x$1],
-//│ 1, 
-//│ x$1 -- #1
-//│ )
-//│ Def(2, foo, [x$4],
-//│ 1, 
-//│ if x$4 -- #30
-//│   true =>
-//│     let x$6 = A() in -- #13
-//│     jump j$1(x$6) -- #12
-//│   false =>
-//│     let* (x$7) = not(x$4) in -- #29
-//│     let* (x$8) = foo(x$7) in -- #28
-//│     let x$9 = B(x$8) in -- #27
-//│     jump j$1(x$9) -- #26
-//│ )
-//│ Def(3, j$1, [x$5],
-//│ 1, 
-//│ x$5 -- #10
-//│ )
-//│ Def(4, main, [],
-//│ 1, 
-//│ let x$10 = False() in -- #37
-//│ let* (x$11) = foo(x$10) in -- #36
-//│ x$11 -- #35
-//│ )
-//│ },
-//│ let* (x$12) = main() in -- #41
-//│ x$12 -- #40)
-//│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, A, []),ClassInfo(5, B, [b])}, {
 //│ Def(0, not, [x$0],
 //│ 1, 
 //│ if x$0 -- #8
@@ -293,80 +182,8 @@ main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |A|(||)|↵|#class| |B|(|b|)|↵|#fun| |aaa|(||)| |#=|→|#let| |m| |#=| |1|↵|#let| |n| |#=| |2|↵|#let| |p| |#=| |3|↵|#let| |q| |#=| |4|↵|m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |bbb|(||)| |#=|→|#let| |x| |#=| |aaa|(||)|↵|x| |*| |100| |+| |4|←|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A|→|#else| |B|(|foo|(|not|(|x|)|)|)|←|←|↵|#fun| |main|(||)| |#=|→|#let| |x| |#=| |foo|(|False|)|↵|#if| |x| |is|→|A| |#then| |aaa|(||)|↵|B|(|b1|)| |#then| |bbb|(||)|←|←|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class A() {}; class B(b,) {}; fun aaa = () => {let m = 1; let n = 2; let p = 3; let q = 4; +(-(+(m,)(n,),)(p,),)(q,)}; fun bbb = () => {let x = aaa(); +(*(x,)(100,),)(4,)}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = () => {let x = foo(False,); if x is ‹(A) then aaa(); (B(b1,)) then bbb()›}; main()}
 //│ 
-//│ 
-//│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
-//│ Def(0, aaa, [],
-//│ 1, 
-//│ let x$0 = 1 in -- #17
-//│ let x$1 = 2 in -- #16
-//│ let x$2 = 3 in -- #15
-//│ let x$3 = 4 in -- #14
-//│ let x$4 = +(x$0,x$1) in -- #13
-//│ let x$5 = -(x$4,x$2) in -- #12
-//│ let x$6 = +(x$5,x$3) in -- #11
-//│ x$6 -- #10
-//│ )
-//│ Def(1, bbb, [],
-//│ 1, 
-//│ let* (x$7) = aaa() in -- #28
-//│ let x$8 = *(x$7,100) in -- #27
-//│ let x$9 = +(x$8,4) in -- #26
-//│ x$9 -- #25
-//│ )
-//│ Def(2, not, [x$10],
-//│ 1, 
-//│ if x$10 -- #37
-//│   true =>
-//│     let x$12 = False() in -- #33
-//│     jump j$0(x$12) -- #32
-//│   false =>
-//│     let x$13 = True() in -- #36
-//│     jump j$0(x$13) -- #35
-//│ )
-//│ Def(3, j$0, [x$11],
-//│ 1, 
-//│ x$11 -- #30
-//│ )
-//│ Def(4, foo, [x$14],
-//│ 1, 
-//│ if x$14 -- #59
-//│   true =>
-//│     let x$16 = A() in -- #42
-//│     jump j$1(x$16) -- #41
-//│   false =>
-//│     let* (x$17) = not(x$14) in -- #58
-//│     let* (x$18) = foo(x$17) in -- #57
-//│     let x$19 = B(x$18) in -- #56
-//│     jump j$1(x$19) -- #55
-//│ )
-//│ Def(5, j$1, [x$15],
-//│ 1, 
-//│ x$15 -- #39
-//│ )
-//│ Def(6, main, [],
-//│ 1, 
-//│ let x$20 = False() in -- #82
-//│ let* (x$21) = foo(x$20) in -- #81
-//│ case x$21 of -- #80
-//│   A =>
-//│     let* (x$23) = aaa() in -- #71
-//│     jump j$2(x$23) -- #70
-//│   B =>
-//│     let x$24 = x$21.b in -- #79
-//│     let* (x$25) = bbb() in -- #78
-//│     jump j$2(x$25) -- #77
-//│ )
-//│ Def(7, j$2, [x$22],
-//│ 1, 
-//│ x$22 -- #66
-//│ )
-//│ },
-//│ let* (x$26) = main() in -- #86
-//│ x$26 -- #85)
-//│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, A, []),ClassInfo(5, B, [b])}, {
 //│ Def(0, aaa, [],
 //│ 1, 
 //│ let x$0 = 1 in -- #17
@@ -458,54 +275,8 @@ foo()
 //│ |#class| |True|↵|#class| |False|↵|#class| |S|(|s|)|↵|#class| |O|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|S|(|O|)|)|)|)|↵|foo|(||)|
 //│ Parsed: {class True {}; class False {}; class S(s,) {}; class O {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(S(S(S(O,),),),); foo()}
 //│ 
-//│ 
-//│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x$0],
-//│ 1, 
-//│ case x$0 of -- #15
-//│   O =>
-//│     let x$2 = False() in -- #4
-//│     jump j$0(x$2) -- #3
-//│   S =>
-//│     let x$3 = x$0.s in -- #14
-//│     let* (x$4) = even(x$3) in -- #13
-//│     jump j$0(x$4) -- #12
-//│ )
-//│ Def(1, j$0, [x$1],
-//│ 1, 
-//│ x$1 -- #1
-//│ )
-//│ Def(2, even, [x$5],
-//│ 1, 
-//│ case x$5 of -- #31
-//│   O =>
-//│     let x$7 = True() in -- #20
-//│     jump j$1(x$7) -- #19
-//│   S =>
-//│     let x$8 = x$5.s in -- #30
-//│     let* (x$9) = odd(x$8) in -- #29
-//│     jump j$1(x$9) -- #28
-//│ )
-//│ Def(3, j$1, [x$6],
-//│ 1, 
-//│ x$6 -- #17
-//│ )
-//│ Def(4, foo, [],
-//│ 1, 
-//│ let x$10 = O() in -- #50
-//│ let x$11 = S(x$10) in -- #49
-//│ let x$12 = S(x$11) in -- #48
-//│ let x$13 = S(x$12) in -- #47
-//│ let* (x$14) = odd(x$13) in -- #46
-//│ x$14 -- #45
-//│ )
-//│ },
-//│ let* (x$15) = foo() in -- #54
-//│ x$15 -- #53)
-//│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
 //│ Def(0, odd, [x$0],
 //│ 1, 
 //│ case x$0 of -- #15
@@ -571,68 +342,8 @@ foo()
 //│ |#class| |True|↵|#class| |False|↵|#class| |S|(|s|)|↵|#class| |O|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|mk|(|10|)|)|↵|foo|(||)| |
 //│ Parsed: {class True {}; class False {}; class S(s,) {}; class O {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n,)(0,)) then S(mk(-(n,)(1,),),) else O; fun foo = () => odd(mk(10,),); foo()}
 //│ 
-//│ 
-//│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x$0],
-//│ 1, 
-//│ case x$0 of -- #15
-//│   O =>
-//│     let x$2 = False() in -- #4
-//│     jump j$0(x$2) -- #3
-//│   S =>
-//│     let x$3 = x$0.s in -- #14
-//│     let* (x$4) = even(x$3) in -- #13
-//│     jump j$0(x$4) -- #12
-//│ )
-//│ Def(1, j$0, [x$1],
-//│ 1, 
-//│ x$1 -- #1
-//│ )
-//│ Def(2, even, [x$5],
-//│ 1, 
-//│ case x$5 of -- #31
-//│   O =>
-//│     let x$7 = True() in -- #20
-//│     jump j$1(x$7) -- #19
-//│   S =>
-//│     let x$8 = x$5.s in -- #30
-//│     let* (x$9) = odd(x$8) in -- #29
-//│     jump j$1(x$9) -- #28
-//│ )
-//│ Def(3, j$1, [x$6],
-//│ 1, 
-//│ x$6 -- #17
-//│ )
-//│ Def(4, mk, [n$0],
-//│ 1, 
-//│ let x$10 = >(n$0,0) in -- #54
-//│ if x$10 -- #53
-//│   true =>
-//│     let x$12 = -(n$0,1) in -- #49
-//│     let* (x$13) = mk(x$12) in -- #48
-//│     let x$14 = S(x$13) in -- #47
-//│     jump j$2(x$14) -- #46
-//│   false =>
-//│     let x$15 = O() in -- #52
-//│     jump j$2(x$15) -- #51
-//│ )
-//│ Def(5, j$2, [x$11],
-//│ 1, 
-//│ x$11 -- #35
-//│ )
-//│ Def(6, foo, [],
-//│ 1, 
-//│ let* (x$16) = mk(10) in -- #65
-//│ let* (x$17) = odd(x$16) in -- #64
-//│ x$17 -- #63
-//│ )
-//│ },
-//│ let* (x$18) = foo() in -- #69
-//│ x$18 -- #68)
-//│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
 //│ Def(0, odd, [x$0],
 //│ 1, 
 //│ case x$0 of -- #15
@@ -691,7 +402,8 @@ foo()
 //│ x$18 -- #68)
 //│ 
 //│ Interpreted:
-//│ False()
+//│ 
+//│ IR Processing Failed: can not find the matched case, ClassInfo(0, True, []) expected
 
 :interpIR
 class True
@@ -712,70 +424,8 @@ foo()
 //│ |#class| |True|↵|#class| |False|↵|#class| |S|(|s|)|↵|#class| |O|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|mk|(|10|)|)|)|)|↵|foo|(||)|
 //│ Parsed: {class True {}; class False {}; class S(s,) {}; class O {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n,)(0,)) then S(mk(-(n,)(1,),),) else O; fun foo = () => odd(S(S(mk(10,),),),); foo()}
 //│ 
-//│ 
-//│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x$0],
-//│ 1, 
-//│ case x$0 of -- #15
-//│   O =>
-//│     let x$2 = False() in -- #4
-//│     jump j$0(x$2) -- #3
-//│   S =>
-//│     let x$3 = x$0.s in -- #14
-//│     let* (x$4) = even(x$3) in -- #13
-//│     jump j$0(x$4) -- #12
-//│ )
-//│ Def(1, j$0, [x$1],
-//│ 1, 
-//│ x$1 -- #1
-//│ )
-//│ Def(2, even, [x$5],
-//│ 1, 
-//│ case x$5 of -- #31
-//│   O =>
-//│     let x$7 = True() in -- #20
-//│     jump j$1(x$7) -- #19
-//│   S =>
-//│     let x$8 = x$5.s in -- #30
-//│     let* (x$9) = odd(x$8) in -- #29
-//│     jump j$1(x$9) -- #28
-//│ )
-//│ Def(3, j$1, [x$6],
-//│ 1, 
-//│ x$6 -- #17
-//│ )
-//│ Def(4, mk, [n$0],
-//│ 1, 
-//│ let x$10 = >(n$0,0) in -- #54
-//│ if x$10 -- #53
-//│   true =>
-//│     let x$12 = -(n$0,1) in -- #49
-//│     let* (x$13) = mk(x$12) in -- #48
-//│     let x$14 = S(x$13) in -- #47
-//│     jump j$2(x$14) -- #46
-//│   false =>
-//│     let x$15 = O() in -- #52
-//│     jump j$2(x$15) -- #51
-//│ )
-//│ Def(5, j$2, [x$11],
-//│ 1, 
-//│ x$11 -- #35
-//│ )
-//│ Def(6, foo, [],
-//│ 1, 
-//│ let* (x$16) = mk(10) in -- #73
-//│ let x$17 = S(x$16) in -- #72
-//│ let x$18 = S(x$17) in -- #71
-//│ let* (x$19) = odd(x$18) in -- #70
-//│ x$19 -- #69
-//│ )
-//│ },
-//│ let* (x$20) = foo() in -- #77
-//│ x$20 -- #76)
-//│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
 //│ Def(0, odd, [x$0],
 //│ 1, 
 //│ case x$0 of -- #15
@@ -836,7 +486,8 @@ foo()
 //│ x$20 -- #76)
 //│ 
 //│ Interpreted:
-//│ False()
+//│ 
+//│ IR Processing Failed: can not find the matched case, ClassInfo(0, True, []) expected
 
 :interpIR
 class True
@@ -860,86 +511,8 @@ main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |S|(|s|)|↵|#class| |O|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|#if| |10| |>| |0| |#then| |S|(|O|)| |#else| |O|)|↵|#fun| |bar|(||)| |#=| |#if| |10| |>| |0| |#then| |odd|(|S|(|O|)|)| |#else| |odd|(|O|)|↵|#fun| |main|(||)| |#=|→|foo|(||)|↵|bar|(||)|←|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class S(s,) {}; class O {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(if (>(10,)(0,)) then S(O,) else O,); fun bar = () => if (>(10,)(0,)) then odd(S(O,),) else odd(O,); fun main = () => {foo(); bar()}; main()}
 //│ 
-//│ 
-//│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
-//│ Def(0, odd, [x$0],
-//│ 1, 
-//│ case x$0 of -- #15
-//│   O =>
-//│     let x$2 = False() in -- #4
-//│     jump j$0(x$2) -- #3
-//│   S =>
-//│     let x$3 = x$0.s in -- #14
-//│     let* (x$4) = even(x$3) in -- #13
-//│     jump j$0(x$4) -- #12
-//│ )
-//│ Def(1, j$0, [x$1],
-//│ 1, 
-//│ x$1 -- #1
-//│ )
-//│ Def(2, even, [x$5],
-//│ 1, 
-//│ case x$5 of -- #31
-//│   O =>
-//│     let x$7 = True() in -- #20
-//│     jump j$1(x$7) -- #19
-//│   S =>
-//│     let x$8 = x$5.s in -- #30
-//│     let* (x$9) = odd(x$8) in -- #29
-//│     jump j$1(x$9) -- #28
-//│ )
-//│ Def(3, j$1, [x$6],
-//│ 1, 
-//│ x$6 -- #17
-//│ )
-//│ Def(4, foo, [],
-//│ 1, 
-//│ let x$10 = >(10,0) in -- #52
-//│ if x$10 -- #51
-//│   true =>
-//│     let x$13 = O() in -- #47
-//│     let x$14 = S(x$13) in -- #46
-//│     jump j$2(x$14) -- #45
-//│   false =>
-//│     let x$15 = O() in -- #50
-//│     jump j$2(x$15) -- #49
-//│ )
-//│ Def(5, j$2, [x$11],
-//│ 1, 
-//│ let* (x$12) = odd(x$11) in -- #40
-//│ x$12 -- #39
-//│ )
-//│ Def(6, bar, [],
-//│ 1, 
-//│ let x$16 = >(10,0) in -- #78
-//│ if x$16 -- #77
-//│   true =>
-//│     let x$18 = O() in -- #68
-//│     let x$19 = S(x$18) in -- #67
-//│     let* (x$20) = odd(x$19) in -- #66
-//│     jump j$3(x$20) -- #65
-//│   false =>
-//│     let x$21 = O() in -- #76
-//│     let* (x$22) = odd(x$21) in -- #75
-//│     jump j$3(x$22) -- #74
-//│ )
-//│ Def(7, j$3, [x$17],
-//│ 1, 
-//│ x$17 -- #56
-//│ )
-//│ Def(8, main, [],
-//│ 1, 
-//│ let* (x$23) = foo() in -- #86
-//│ let* (x$24) = bar() in -- #85
-//│ x$24 -- #84
-//│ )
-//│ },
-//│ let* (x$25) = main() in -- #90
-//│ x$25 -- #89)
-//│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, S, [s]),ClassInfo(3, O, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, S, [s]),ClassInfo(5, O, [])}, {
 //│ Def(0, odd, [x$0],
 //│ 1, 
 //│ case x$0 of -- #15
@@ -1016,7 +589,8 @@ main()
 //│ x$25 -- #89)
 //│ 
 //│ Interpreted:
-//│ True()
+//│ 
+//│ IR Processing Failed: can not find the matched case, ClassInfo(0, True, []) expected
 
 :interpIR
 class True
@@ -1045,80 +619,8 @@ main(False)
 //│ |#class| |True|↵|#class| |False|↵|#class| |A|(||)|↵|#class| |B|(|b|)|↵|#fun| |aaa|(||)| |#=|→|#let| |m| |#=| |1|↵|#let| |n| |#=| |2|↵|#let| |p| |#=| |3|↵|#let| |q| |#=| |4|↵|m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |bbb|(||)| |#=|→|#let| |x| |#=| |aaa|(||)|↵|x| |*| |100| |+| |4|←|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A| |#else| |B|(|foo|(|not|(|x|)|)|)|←|↵|#fun| |main|(|flag|)| |#=|→|#let| |x| |#=| |foo|(|flag|)|↵|#if| |x| |is|→|A| |#then| |aaa|(||)|↵|B|(|b1|)| |#then| |bbb|(||)|←|←|↵|main|(|False|)|
 //│ Parsed: {class True {}; class False {}; class A() {}; class B(b,) {}; fun aaa = () => {let m = 1; let n = 2; let p = 3; let q = 4; +(-(+(m,)(n,),)(p,),)(q,)}; fun bbb = () => {let x = aaa(); +(*(x,)(100,),)(4,)}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = (flag,) => {let x = foo(flag,); if x is ‹(A) then aaa(); (B(b1,)) then bbb()›}; main(False,)}
 //│ 
-//│ 
-//│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
-//│ Def(0, aaa, [],
-//│ 1, 
-//│ let x$0 = 1 in -- #17
-//│ let x$1 = 2 in -- #16
-//│ let x$2 = 3 in -- #15
-//│ let x$3 = 4 in -- #14
-//│ let x$4 = +(x$0,x$1) in -- #13
-//│ let x$5 = -(x$4,x$2) in -- #12
-//│ let x$6 = +(x$5,x$3) in -- #11
-//│ x$6 -- #10
-//│ )
-//│ Def(1, bbb, [],
-//│ 1, 
-//│ let* (x$7) = aaa() in -- #28
-//│ let x$8 = *(x$7,100) in -- #27
-//│ let x$9 = +(x$8,4) in -- #26
-//│ x$9 -- #25
-//│ )
-//│ Def(2, not, [x$10],
-//│ 1, 
-//│ if x$10 -- #37
-//│   true =>
-//│     let x$12 = False() in -- #33
-//│     jump j$0(x$12) -- #32
-//│   false =>
-//│     let x$13 = True() in -- #36
-//│     jump j$0(x$13) -- #35
-//│ )
-//│ Def(3, j$0, [x$11],
-//│ 1, 
-//│ x$11 -- #30
-//│ )
-//│ Def(4, foo, [x$14],
-//│ 1, 
-//│ if x$14 -- #59
-//│   true =>
-//│     let x$16 = A() in -- #42
-//│     jump j$1(x$16) -- #41
-//│   false =>
-//│     let* (x$17) = not(x$14) in -- #58
-//│     let* (x$18) = foo(x$17) in -- #57
-//│     let x$19 = B(x$18) in -- #56
-//│     jump j$1(x$19) -- #55
-//│ )
-//│ Def(5, j$1, [x$15],
-//│ 1, 
-//│ x$15 -- #39
-//│ )
-//│ Def(6, main, [flag$0],
-//│ 1, 
-//│ let* (x$20) = foo(flag$0) in -- #81
-//│ case x$20 of -- #80
-//│   A =>
-//│     let* (x$22) = aaa() in -- #71
-//│     jump j$2(x$22) -- #70
-//│   B =>
-//│     let x$23 = x$20.b in -- #79
-//│     let* (x$24) = bbb() in -- #78
-//│     jump j$2(x$24) -- #77
-//│ )
-//│ Def(7, j$2, [x$21],
-//│ 1, 
-//│ x$21 -- #66
-//│ )
-//│ },
-//│ let x$25 = False() in -- #88
-//│ let* (x$26) = main(x$25) in -- #87
-//│ x$26 -- #86)
-//│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, A, []),ClassInfo(3, B, [b])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, A, []),ClassInfo(5, B, [b])}, {
 //│ Def(0, aaa, [],
 //│ 1, 
 //│ let x$0 = 1 in -- #17
@@ -1215,60 +717,8 @@ main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|Cons|(|1|,| |Cons|(|2|,| |Nil|)|)|)|←|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(Cons(1, Cons(2, Nil,),),)}; main()}
 //│ 
-//│ 
-//│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(0, head_opt, [l$0],
-//│ 1, 
-//│ case l$0 of -- #17
-//│   Nil =>
-//│     let x$1 = None() in -- #4
-//│     jump j$0(x$1) -- #3
-//│   Cons =>
-//│     let x$2 = l$0.t in -- #16
-//│     let x$3 = l$0.h in -- #15
-//│     let x$4 = Some(x$3) in -- #14
-//│     jump j$0(x$4) -- #13
-//│ )
-//│ Def(1, j$0, [x$0],
-//│ 1, 
-//│ x$0 -- #1
-//│ )
-//│ Def(2, is_none, [o$0],
-//│ 1, 
-//│ case o$0 of -- #29
-//│   None =>
-//│     let x$6 = True() in -- #22
-//│     jump j$1(x$6) -- #21
-//│   Some =>
-//│     let x$7 = o$0.x in -- #28
-//│     let x$8 = False() in -- #27
-//│     jump j$1(x$8) -- #26
-//│ )
-//│ Def(3, j$1, [x$5],
-//│ 1, 
-//│ x$5 -- #19
-//│ )
-//│ Def(4, is_empty, [l$1],
-//│ 1, 
-//│ let* (x$9) = head_opt(l$1) in -- #40
-//│ let* (x$10) = is_none(x$9) in -- #39
-//│ x$10 -- #38
-//│ )
-//│ Def(5, main, [],
-//│ 1, 
-//│ let x$11 = Nil() in -- #59
-//│ let x$12 = Cons(2,x$11) in -- #58
-//│ let x$13 = Cons(1,x$12) in -- #57
-//│ let* (x$14) = is_empty(x$13) in -- #56
-//│ x$14 -- #55
-//│ )
-//│ },
-//│ let* (x$15) = main() in -- #63
-//│ x$15 -- #62)
-//│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Some, [x]),ClassInfo(7, None, [])}, {
 //│ Def(0, head_opt, [l$0],
 //│ 1, 
 //│ case l$0 of -- #17
@@ -1346,75 +796,8 @@ main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|mk_list|(|10|)|)|←|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun mk_list = (n,) => {if (==(n,)(0,)) then Nil else Cons(n, mk_list(-(n,)(1,),),)}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(mk_list(10,),)}; main()}
 //│ 
-//│ 
-//│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(0, mk_list, [n$0],
-//│ 1, 
-//│ let x$0 = ==(n$0,0) in -- #24
-//│ if x$0 -- #23
-//│   true =>
-//│     let x$2 = Nil() in -- #6
-//│     jump j$0(x$2) -- #5
-//│   false =>
-//│     let x$3 = -(n$0,1) in -- #22
-//│     let* (x$4) = mk_list(x$3) in -- #21
-//│     let x$5 = Cons(n$0,x$4) in -- #20
-//│     jump j$0(x$5) -- #19
-//│ )
-//│ Def(1, j$0, [x$1],
-//│ 1, 
-//│ x$1 -- #3
-//│ )
-//│ Def(2, head_opt, [l$0],
-//│ 1, 
-//│ case l$0 of -- #42
-//│   Nil =>
-//│     let x$7 = None() in -- #29
-//│     jump j$1(x$7) -- #28
-//│   Cons =>
-//│     let x$8 = l$0.t in -- #41
-//│     let x$9 = l$0.h in -- #40
-//│     let x$10 = Some(x$9) in -- #39
-//│     jump j$1(x$10) -- #38
-//│ )
-//│ Def(3, j$1, [x$6],
-//│ 1, 
-//│ x$6 -- #26
-//│ )
-//│ Def(4, is_none, [o$0],
-//│ 1, 
-//│ case o$0 of -- #54
-//│   None =>
-//│     let x$12 = True() in -- #47
-//│     jump j$2(x$12) -- #46
-//│   Some =>
-//│     let x$13 = o$0.x in -- #53
-//│     let x$14 = False() in -- #52
-//│     jump j$2(x$14) -- #51
-//│ )
-//│ Def(5, j$2, [x$11],
-//│ 1, 
-//│ x$11 -- #44
-//│ )
-//│ Def(6, is_empty, [l$1],
-//│ 1, 
-//│ let* (x$15) = head_opt(l$1) in -- #65
-//│ let* (x$16) = is_none(x$15) in -- #64
-//│ x$16 -- #63
-//│ )
-//│ Def(7, main, [],
-//│ 1, 
-//│ let* (x$17) = mk_list(10) in -- #76
-//│ let* (x$18) = is_empty(x$17) in -- #75
-//│ x$18 -- #74
-//│ )
-//│ },
-//│ let* (x$19) = main() in -- #80
-//│ x$19 -- #79)
-//│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Some, [x]),ClassInfo(7, None, [])}, {
 //│ Def(0, mk_list, [n$0],
 //│ 1, 
 //│ let x$0 = ==(n$0,0) in -- #24
@@ -1480,7 +863,8 @@ main()
 //│ x$19 -- #79)
 //│ 
 //│ Interpreted:
-//│ False()
+//│ 
+//│ IR Processing Failed: can not find the matched case, ClassInfo(1, False, []) expected
 
 :interpIR
 class True
@@ -1504,65 +888,8 @@ main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |last_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then|→|#if| |t| |is|→|Nil| |#then| |Some|(|h|)|↵|Cons|(|h2|,| |t2|)| |#then| |last_opt|(|t|)|←|←|←|←|↵|#fun| |main|(||)| |#=|→|last_opt|(|mk_list|(|10|)|)|←|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun mk_list = (n,) => {if (==(n,)(0,)) then Nil else Cons(n, mk_list(-(n,)(1,),),)}; fun last_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then {if t is ‹(Nil) then Some(h,); (Cons(h2, t2,)) then last_opt(t,)›}›}; fun main = () => {last_opt(mk_list(10,),)}; main()}
 //│ 
-//│ 
-//│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(0, mk_list, [n$0],
-//│ 1, 
-//│ let x$0 = ==(n$0,0) in -- #24
-//│ if x$0 -- #23
-//│   true =>
-//│     let x$2 = Nil() in -- #6
-//│     jump j$0(x$2) -- #5
-//│   false =>
-//│     let x$3 = -(n$0,1) in -- #22
-//│     let* (x$4) = mk_list(x$3) in -- #21
-//│     let x$5 = Cons(n$0,x$4) in -- #20
-//│     jump j$0(x$5) -- #19
-//│ )
-//│ Def(1, j$0, [x$1],
-//│ 1, 
-//│ x$1 -- #3
-//│ )
-//│ Def(2, last_opt, [l$0],
-//│ 1, 
-//│ case l$0 of -- #59
-//│   Nil =>
-//│     let x$7 = None() in -- #29
-//│     jump j$1(x$7) -- #28
-//│   Cons =>
-//│     let x$8 = l$0.t in -- #58
-//│     let x$9 = l$0.h in -- #57
-//│     case x$8 of -- #56
-//│       Nil =>
-//│         let x$11 = Some(x$9) in -- #42
-//│         jump j$2(x$11) -- #41
-//│       Cons =>
-//│         let x$12 = x$8.t in -- #55
-//│         let x$13 = x$8.h in -- #54
-//│         let* (x$14) = last_opt(x$8) in -- #53
-//│         jump j$2(x$14) -- #52
-//│ )
-//│ Def(3, j$1, [x$6],
-//│ 1, 
-//│ x$6 -- #26
-//│ )
-//│ Def(4, j$2, [x$10],
-//│ 1, 
-//│ jump j$1(x$10) -- #36
-//│ )
-//│ Def(5, main, [],
-//│ 1, 
-//│ let* (x$15) = mk_list(10) in -- #70
-//│ let* (x$16) = last_opt(x$15) in -- #69
-//│ x$16 -- #68
-//│ )
-//│ },
-//│ let* (x$17) = main() in -- #74
-//│ x$17 -- #73)
-//│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Some, [x]),ClassInfo(7, None, [])}, {
 //│ Def(0, mk_list, [n$0],
 //│ 1, 
 //│ let x$0 = ==(n$0,0) in -- #24
@@ -1618,7 +945,8 @@ main()
 //│ x$17 -- #73)
 //│ 
 //│ Interpreted:
-//│ Some(1)
+//│ 
+//│ IR Processing Failed: can not find the matched case, ClassInfo(1, False, []) expected
 
 :interpIR
 class True
@@ -1656,101 +984,8 @@ main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |is_some|(|o|)| |#=|→|#if| |o| |is|→|Some|(|x|)| |#then| |True|↵|None| |#then| |False|←|←|↵|#fun| |e0|(|w|)| |#=|→|w| |+| |8| |+| |9| |+| |10|←|↵|#fun| |e1|(|a|,| |c|)| |#=|→|a| |+| |1| |+| |2| |+| |3| |+| |4|←|↵|#fun| |e3|(|c|)| |#=|→|#let| |m| |#=| |4|↵|#let| |n| |#=| |5|↵|#let| |p| |#=| |6|↵|#let| |q| |#=| |7|↵|#if| |c| |#then| |m| |+| |n| |+| |p| |+| |q| |#else| |m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |e2|(|x|)| |#=|→|x| |+| |12| |+| |13| |+| |14|←|↵|#fun| |f|(|x|)| |#=|→|#let| |c1| |#=| |is_some|(|x|)|↵|#let| |z| |#=| |e3|(|c1|)|↵|#let| |w| |#=| |#if| |x| |is|→|Some|(|a|)| |#then| |e1|(|a|,| |z|)|↵|None| |#then| |e2|(|z|)|←|↵|e0|(|w|)|←|↵|#fun| |main|(||)| |#=|→|f|(|Some|(|2|)|)| |+| |f|(|None|)|←|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun is_some = (o,) => {if o is ‹(Some(x,)) then True; (None) then False›}; fun e0 = (w,) => {+(+(+(w,)(8,),)(9,),)(10,)}; fun e1 = (a, c,) => {+(+(+(+(a,)(1,),)(2,),)(3,),)(4,)}; fun e3 = (c,) => {let m = 4; let n = 5; let p = 6; let q = 7; if (c) then +(+(+(m,)(n,),)(p,),)(q,) else +(-(+(m,)(n,),)(p,),)(q,)}; fun e2 = (x,) => {+(+(+(x,)(12,),)(13,),)(14,)}; fun f = (x,) => {let c1 = is_some(x,); let z = e3(c1,); let w = if x is ‹(Some(a,)) then e1(a, z,); (None) then e2(z,)›; e0(w,)}; fun main = () => {+(f(Some(2,),),)(f(None,),)}; main()}
 //│ 
-//│ 
-//│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(0, is_some, [o$0],
-//│ 1, 
-//│ case o$0 of -- #11
-//│   Some =>
-//│     let x$1 = o$0.x in -- #7
-//│     let x$2 = True() in -- #6
-//│     jump j$0(x$2) -- #5
-//│   None =>
-//│     let x$3 = False() in -- #10
-//│     jump j$0(x$3) -- #9
-//│ )
-//│ Def(1, j$0, [x$0],
-//│ 1, 
-//│ x$0 -- #1
-//│ )
-//│ Def(2, e0, [w$0],
-//│ 1, 
-//│ let x$4 = +(w$0,8) in -- #21
-//│ let x$5 = +(x$4,9) in -- #20
-//│ let x$6 = +(x$5,10) in -- #19
-//│ x$6 -- #18
-//│ )
-//│ Def(3, e1, [a$0,c$0],
-//│ 1, 
-//│ let x$7 = +(a$0,1) in -- #34
-//│ let x$8 = +(x$7,2) in -- #33
-//│ let x$9 = +(x$8,3) in -- #32
-//│ let x$10 = +(x$9,4) in -- #31
-//│ x$10 -- #30
-//│ )
-//│ Def(4, e3, [c$1],
-//│ 1, 
-//│ let x$11 = 4 in -- #67
-//│ let x$12 = 5 in -- #66
-//│ let x$13 = 6 in -- #65
-//│ let x$14 = 7 in -- #64
-//│ if c$1 -- #63
-//│   true =>
-//│     let x$16 = +(x$11,x$12) in -- #51
-//│     let x$17 = +(x$16,x$13) in -- #50
-//│     let x$18 = +(x$17,x$14) in -- #49
-//│     jump j$1(x$18) -- #48
-//│   false =>
-//│     let x$19 = +(x$11,x$12) in -- #62
-//│     let x$20 = -(x$19,x$13) in -- #61
-//│     let x$21 = +(x$20,x$14) in -- #60
-//│     jump j$1(x$21) -- #59
-//│ )
-//│ Def(5, j$1, [x$15],
-//│ 1, 
-//│ x$15 -- #40
-//│ )
-//│ Def(6, e2, [x$22],
-//│ 1, 
-//│ let x$23 = +(x$22,12) in -- #77
-//│ let x$24 = +(x$23,13) in -- #76
-//│ let x$25 = +(x$24,14) in -- #75
-//│ x$25 -- #74
-//│ )
-//│ Def(7, f, [x$26],
-//│ 1, 
-//│ let* (x$27) = is_some(x$26) in -- #117
-//│ let* (x$28) = e3(x$27) in -- #116
-//│ case x$26 of -- #115
-//│   Some =>
-//│     let x$31 = x$26.x in -- #107
-//│     let* (x$32) = e1(x$31,x$28) in -- #106
-//│     jump j$2(x$32) -- #105
-//│   None =>
-//│     let* (x$33) = e2(x$28) in -- #114
-//│     jump j$2(x$33) -- #113
-//│ )
-//│ Def(8, j$2, [x$29],
-//│ 1, 
-//│ let* (x$30) = e0(x$29) in -- #95
-//│ x$30 -- #94
-//│ )
-//│ Def(9, main, [],
-//│ 1, 
-//│ let x$34 = Some(2) in -- #136
-//│ let* (x$35) = f(x$34) in -- #135
-//│ let x$36 = None() in -- #134
-//│ let* (x$37) = f(x$36) in -- #133
-//│ let x$38 = +(x$35,x$37) in -- #132
-//│ x$38 -- #131
-//│ )
-//│ },
-//│ let* (x$39) = main() in -- #140
-//│ x$39 -- #139)
-//│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Some, [x]),ClassInfo(7, None, [])}, {
 //│ Def(0, is_some, [o$0],
 //│ 1, 
 //│ case o$0 of -- #11
@@ -1880,109 +1115,8 @@ main()
 //│ |#class| |True|↵|#class| |False|↵|#class| |Cons|(|h|,| |t|)|↵|#class| |Nil|↵|#class| |Some|(|x|)|↵|#class| |None|↵|#fun| |is_some|(|o|)| |#=|→|#if| |o| |is|→|Some|(|x|)| |#then| |True|↵|None| |#then| |False|←|←|↵|#fun| |e0|(|w|)| |#=|→|w| |+| |8| |+| |9| |+| |10|←|↵|#fun| |e1|(|a|,| |z|)| |#=|→|#if| |a| |>| |0| |#then| |f|(|Some|(|a| |-| |1|)|)| |#else| |z|←|↵|#fun| |e3|(|c|)| |#=|→|#let| |m| |#=| |4|↵|#let| |n| |#=| |5|↵|#let| |p| |#=| |6|↵|#let| |q| |#=| |7|↵|#if| |c| |#then| |m| |+| |n| |+| |p| |+| |q| |#else| |m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |e2|(|x|)| |#=|→|x| |+| |12| |+| |13| |+| |14|←|↵|#fun| |f|(|x|)| |#=|→|#let| |c1| |#=| |is_some|(|x|)|↵|#let| |z| |#=| |e3|(|c1|)|↵|#let| |w| |#=| |#if| |x| |is|→|Some|(|a|)| |#then| |e1|(|a|,| |z|)|↵|None| |#then| |e2|(|z|)|←|↵|e0|(|w|)|←|↵|#fun| |main|(||)| |#=|→|f|(|Some|(|2|)|)| |+| |f|(|None|)|←|↵|main|(||)|
 //│ Parsed: {class True {}; class False {}; class Cons(h, t,) {}; class Nil {}; class Some(x,) {}; class None {}; fun is_some = (o,) => {if o is ‹(Some(x,)) then True; (None) then False›}; fun e0 = (w,) => {+(+(+(w,)(8,),)(9,),)(10,)}; fun e1 = (a, z,) => {if (>(a,)(0,)) then f(Some(-(a,)(1,),),) else z}; fun e3 = (c,) => {let m = 4; let n = 5; let p = 6; let q = 7; if (c) then +(+(+(m,)(n,),)(p,),)(q,) else +(-(+(m,)(n,),)(p,),)(q,)}; fun e2 = (x,) => {+(+(+(x,)(12,),)(13,),)(14,)}; fun f = (x,) => {let c1 = is_some(x,); let z = e3(c1,); let w = if x is ‹(Some(a,)) then e1(a, z,); (None) then e2(z,)›; e0(w,)}; fun main = () => {+(f(Some(2,),),)(f(None,),)}; main()}
 //│ 
-//│ 
-//│ IR:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
-//│ Def(0, is_some, [o$0],
-//│ 1, 
-//│ case o$0 of -- #11
-//│   Some =>
-//│     let x$1 = o$0.x in -- #7
-//│     let x$2 = True() in -- #6
-//│     jump j$0(x$2) -- #5
-//│   None =>
-//│     let x$3 = False() in -- #10
-//│     jump j$0(x$3) -- #9
-//│ )
-//│ Def(1, j$0, [x$0],
-//│ 1, 
-//│ x$0 -- #1
-//│ )
-//│ Def(2, e0, [w$0],
-//│ 1, 
-//│ let x$4 = +(w$0,8) in -- #21
-//│ let x$5 = +(x$4,9) in -- #20
-//│ let x$6 = +(x$5,10) in -- #19
-//│ x$6 -- #18
-//│ )
-//│ Def(3, e1, [a$0,z$0],
-//│ 1, 
-//│ let x$7 = >(a$0,0) in -- #43
-//│ if x$7 -- #42
-//│   true =>
-//│     let x$9 = -(a$0,1) in -- #39
-//│     let x$10 = Some(x$9) in -- #38
-//│     let* (x$11) = f(x$10) in -- #37
-//│     jump j$1(x$11) -- #36
-//│   false =>
-//│     jump j$1(z$0) -- #41
-//│ )
-//│ Def(4, j$1, [x$8],
-//│ 1, 
-//│ x$8 -- #25
-//│ )
-//│ Def(5, e3, [c$0],
-//│ 1, 
-//│ let x$12 = 4 in -- #76
-//│ let x$13 = 5 in -- #75
-//│ let x$14 = 6 in -- #74
-//│ let x$15 = 7 in -- #73
-//│ if c$0 -- #72
-//│   true =>
-//│     let x$17 = +(x$12,x$13) in -- #60
-//│     let x$18 = +(x$17,x$14) in -- #59
-//│     let x$19 = +(x$18,x$15) in -- #58
-//│     jump j$2(x$19) -- #57
-//│   false =>
-//│     let x$20 = +(x$12,x$13) in -- #71
-//│     let x$21 = -(x$20,x$14) in -- #70
-//│     let x$22 = +(x$21,x$15) in -- #69
-//│     jump j$2(x$22) -- #68
-//│ )
-//│ Def(6, j$2, [x$16],
-//│ 1, 
-//│ x$16 -- #49
-//│ )
-//│ Def(7, e2, [x$23],
-//│ 1, 
-//│ let x$24 = +(x$23,12) in -- #86
-//│ let x$25 = +(x$24,13) in -- #85
-//│ let x$26 = +(x$25,14) in -- #84
-//│ x$26 -- #83
-//│ )
-//│ Def(8, f, [x$27],
-//│ 1, 
-//│ let* (x$28) = is_some(x$27) in -- #126
-//│ let* (x$29) = e3(x$28) in -- #125
-//│ case x$27 of -- #124
-//│   Some =>
-//│     let x$32 = x$27.x in -- #116
-//│     let* (x$33) = e1(x$32,x$29) in -- #115
-//│     jump j$3(x$33) -- #114
-//│   None =>
-//│     let* (x$34) = e2(x$29) in -- #123
-//│     jump j$3(x$34) -- #122
-//│ )
-//│ Def(9, j$3, [x$30],
-//│ 1, 
-//│ let* (x$31) = e0(x$30) in -- #104
-//│ x$31 -- #103
-//│ )
-//│ Def(10, main, [],
-//│ 1, 
-//│ let x$35 = Some(2) in -- #145
-//│ let* (x$36) = f(x$35) in -- #144
-//│ let x$37 = None() in -- #143
-//│ let* (x$38) = f(x$37) in -- #142
-//│ let x$39 = +(x$36,x$38) in -- #141
-//│ x$39 -- #140
-//│ )
-//│ },
-//│ let* (x$40) = main() in -- #149
-//│ x$40 -- #148)
-//│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, Cons, [h,t]),ClassInfo(3, Nil, []),ClassInfo(4, Some, [x]),ClassInfo(5, None, [])}, {
+//│ Program({ClassInfo(0, True, []),ClassInfo(1, False, []),ClassInfo(2, True, []),ClassInfo(3, False, []),ClassInfo(4, Cons, [h,t]),ClassInfo(5, Nil, []),ClassInfo(6, Some, [x]),ClassInfo(7, None, [])}, {
 //│ Def(0, is_some, [o$0],
 //│ 1, 
 //│ case o$0 of -- #11
@@ -2082,4 +1216,5 @@ main()
 //│ x$40 -- #148)
 //│ 
 //│ Interpreted:
-//│ 179
+//│ 
+//│ IR Processing Failed: can not find the matched case, ClassInfo(0, True, []) expected

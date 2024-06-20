@@ -39,9 +39,10 @@ class Interpreter(verbose: Bool):
   private enum Expr:
     case Ref(name: Name)
     case Literal(lit: Lit)
-    case CtorApp(name: ClassInfo, args: Ls[Expr])
+    case CtorApp(name: ClassInfo, var args: Ls[Expr])
     case Select(name: Name, cls: ClassInfo, field: Str)
     case BasicOp(name: Str, args: Ls[Expr])
+    case AssignField(assignee: Name, clsInfo: ClassInfo, fieldName: Str, value: Expr)
   
     def show: Str =
       document.print
@@ -60,6 +61,15 @@ class Interpreter(verbose: Bool):
         raw(s) <#> raw(".") <#> raw(fld)
       case BasicOp(name: Str, args) =>
         raw(name) <#> raw("(") <#> raw(args |> show_args) <#> raw(")")
+      case AssignField(Name(assignee), clsInfo, fieldName, value) =>
+        stack(
+          raw("assign") 
+            <:> raw(assignee)
+            <#> raw(".")
+            <#> raw(fieldName)
+            <:> raw("=")
+            <:> value.document,
+        )
 
   private enum Node:
     case Result(res: Ls[Expr])
@@ -147,13 +157,14 @@ class Interpreter(verbose: Bool):
     case IExpr.CtorApp(name, args) => CtorApp(name, args |> convertArgs)
     case IExpr.Select(name, cls, field) => Select(name, cls, field)
     case IExpr.BasicOp(name, args) => BasicOp(name, args |> convertArgs)
+    case IExpr.AssignField(assignee, clsInfo, fieldName, value) => AssignField(assignee, clsInfo, fieldName, value |> convert)
 
   private def convert(node: INode): Node = node match
     case INode.Result(xs) => Result(xs |> convertArgs)
     case INode.Jump(defnref, args) => Jump(DefnRef(Right(defnref.getName)), args |> convertArgs)
     case INode.Case(scrut, cases) => Case(scrut, cases.map{(cls, node) => (cls, node |> convert)})
     case INode.LetExpr(name, expr, body) => LetExpr(name, expr |> convert, body |> convert)
-    case INode.LetCall(xs, defnref, args, body) =>
+    case INode.LetCall(xs, defnref, args, _, body) =>
       LetCall(xs, DefnRef(Right(defnref.getName)), args |> convertArgs, body |> convert)
 
   private def convert(defn: IDefn): Defn =
@@ -210,6 +221,7 @@ class Interpreter(verbose: Bool):
 
   private def evalArgs(using ctx: Ctx, clsctx: ClassCtx)(exprs: Ls[Expr]): Either[Ls[Expr], Ls[Expr]] = 
     var changed = false
+
     val xs = exprs.map {
       arg => eval(arg) match
         case Left(expr) => changed = true; expr
@@ -230,7 +242,7 @@ class Interpreter(verbose: Bool):
     case CtorApp(name, args) =>
       evalArgs(args) match
         case Left(xs) => Left(CtorApp(name, xs)) 
-        case _ => Right(expr)
+        case Right(xs) => Right(CtorApp(name, xs)) // TODO: This makes recursion modulo cons work, but should be investigated further.
     case Select(name, cls, field) => 
       ctx.get(name.str).map {
         case CtorApp(cls2, xs) if cls == cls2 =>
@@ -246,6 +258,17 @@ class Interpreter(verbose: Bool):
           eval(using ctx, clsctx)(name, xs.head, xs.tail.head)
         case _ => throw IRInterpreterError("unexpected basic operation")
       x.toLeft(expr)
+    case AssignField(assignee, clsInfo, fieldName, expr) =>
+      val value = evalMayNotProgress(expr)
+      ctx.get(assignee.str) match
+        case Some(x: CtorApp) =>
+          val CtorApp(cls, args) = x
+          val idx = cls.fields.indexOf(fieldName)
+          val newArgs = args.updated(idx, value)
+          x.args = newArgs
+          Left(x)
+        case Some(_) => throw IRInterpreterError("tried to assign a field of a non-ctor")
+        case None => throw IRInterpreterError("could not find value " + assignee)
 
   private def expectDefn(r: DefnRef) = r.defn match
     case Left(value) => value

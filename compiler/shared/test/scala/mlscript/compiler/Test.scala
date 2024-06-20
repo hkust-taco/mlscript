@@ -1,16 +1,15 @@
-package mlscript.compiler
+package mlscript
+package compiler
 
-import mlscript.utils.shorthands.*
+import utils.shorthands.*
 import scala.util.control.NonFatal
 import scala.collection.mutable.StringBuilder
-import mlscript.{DiffTests, ModeType, TypingUnit}
 import mlscript.compiler.TreeDebug
-import mlscript.Polyfill
 import simpledef.SimpleDef
 
 class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*
-  override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (List[Str], Option[TypingUnit]) = 
+  override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit, raise: Diagnostic => Unit): (List[Str], Option[TypingUnit]) = 
     val outputBuilder = StringBuilder()
 
     var rstUnit = unit;

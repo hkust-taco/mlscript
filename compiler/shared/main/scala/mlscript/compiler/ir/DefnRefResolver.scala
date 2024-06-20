@@ -11,7 +11,7 @@ private final class DefnRefResolver(defs: Set[Defn], allowInlineJp: Bool):
     case Result(res) =>
     case Case(scrut, cases) => cases map { (_, body) => f(body) }
     case LetExpr(name, expr, body) => f(body)
-    case LetCall(resultNames, defnref, args, body) =>
+    case LetCall(resultNames, defnref, args, _, body) =>
       defs.find{_.getName == defnref.getName} match
         case Some(defn) => defnref.defn = Left(defn)
         case None => throw IRError(f"unknown function ${defnref.getName} in ${defs.map{_.getName}.mkString(",")}")

@@ -40,6 +40,40 @@ Foo
 //│ res
 //│     = 5
 
+:e
+let x = 1
+@x 2
+//│ ╔══[ERROR] Type mismatch in annotated integer literal:
+//│ ║  l.45: 	@x 2
+//│ ║        	 ^^^
+//│ ╟── integer literal of type `1` is not an instance of type `Annotation`
+//│ ║  l.44: 	let x = 1
+//│ ║        	        ^
+//│ ╟── but it flows into reference with expected type `Annotation`
+//│ ║  l.45: 	@x 2
+//│ ╙──      	 ^
+//│ let x: 1
+//│ 2
+//│ x
+//│   = 1
+//│ res
+//│     = 2
+
+:e
+let x = 1
+@x
+fun foo(x) = 1
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.65: 	fun foo(x) = 1
+//│ ║        	    ^^^^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `Annotation`
+//│ ║  l.63: 	let x = 1
+//│ ╙──      	        ^
+//│ let x: 1
+//│ fun foo: anything -> 1
+//│ x
+//│   = 1
+
 fun foo(n) =
   if n > 0.5 then
     log(join of "hi ", String(n))

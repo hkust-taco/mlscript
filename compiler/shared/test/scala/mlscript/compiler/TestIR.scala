@@ -1,23 +1,42 @@
-package mlscript.compiler
-
+package mlscript
+package compiler
 
 import mlscript.utils.shorthands._
 import mlscript.compiler.ir._
 import scala.collection.mutable.StringBuilder
-import mlscript.{DiffTests, ModeType, TypingUnit}
-import mlscript.compiler.ir.{Interpreter, Fresh, FreshInt, Builder}
+import mlscript.compiler.optimizer.TailRecOpt
 
 class IRDiffTestCompiler extends DiffTests {
   import IRDiffTestCompiler.*
 
-  override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (List[Str], Option[TypingUnit]) = 
+  override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit, raise: Diagnostic => Unit): (List[Str], Option[TypingUnit]) = 
     val outputBuilder = StringBuilder()
     if (mode.useIR || mode.irVerbose)
       try
-        output("\n\nIR:")
-        val gb = Builder(Fresh(), FreshInt(),  FreshInt(), FreshInt())
-        val graph = gb.buildGraph(unit)
-        output(graph.toString())
+        val fnUid = FreshInt()
+        val classUid = FreshInt()
+        val tag = FreshInt()
+
+        val gb = Builder(Fresh(), fnUid, classUid, tag, raise)
+        val graph_ = gb.buildGraph(unit)
+        
+        if !mode.noTailRecOpt then 
+          output("\nIR:")
+          output(graph_.toString())
+
+        val graph = 
+          if !mode.noTailRecOpt then
+            val tailRecOpt = new TailRecOpt(fnUid, classUid, tag, raise)
+            val (g, comps) = tailRecOpt.run_debug(graph_)
+            output("\nStrongly Connected Tail Calls:")
+            output(comps.toString)
+            g
+          else
+            graph_
+
+        if !mode.noTailRecOpt then
+          output(graph.toString())
+        
         output("\nPromoted:")
         output(graph.toString())
         var interp_result: Opt[Str] = None
@@ -30,10 +49,12 @@ class IRDiffTestCompiler extends DiffTests {
       catch
         case err: Exception =>
           output(s"\nIR Processing Failed: ${err.getMessage()}")
-          output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))
+          if (mode.irVerbose) then
+            output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))
         case err: StackOverflowError =>
           output(s"\nIR Processing Failed: ${err.getMessage()}")
-          output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))
+          if (mode.irVerbose) then
+            output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))
       
     (outputBuilder.toString().linesIterator.toList, None)
   

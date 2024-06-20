@@ -11,7 +11,7 @@ private final class DefnRefInSet(defs: Set[Defn]):
     case Jump(defn, args) =>
     case Case(scrut, cases) => cases map { (_, body) => f(body) }
     case LetExpr(name, expr, body) => f(body)
-    case LetCall(res, defnref, args, body) =>
+    case LetCall(res, defnref, args, _, body) =>
       defnref.getDefn match {
         case Some(real_defn) => if (!defs.exists(_ eq real_defn)) throw IRError("ref is not in the set")
         case _ =>
