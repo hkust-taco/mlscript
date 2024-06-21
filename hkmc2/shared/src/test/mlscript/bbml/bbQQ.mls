@@ -1,0 +1,6 @@
+:global
+:bbml
+
+:fixme
+`42
+//│ /!!!\ Uncaught error: scala.MatchError: Quoted(IntLit(42)) (of class hkmc2.syntax.Tree$Quoted)

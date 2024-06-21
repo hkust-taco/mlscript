@@ -48,7 +48,7 @@ id: Int -> Int
 //│ Type: (Int) ->{⊥} Int
 
 fun myInc(inc: Int -> Int, x: Int) = inc(x)
-//│ Elab: { fun myInc(inc@1: (class:Int#14)‹› -> class:Int#15‹›, x@2: class:Int#16) = inc@1#0(x@2#0)‹›‹›; }‹›
+//│ Elab: { fun myInc(inc@1: (class:Int#18)‹› -> class:Int#19‹›, x@2: class:Int#20) = inc@1#0(x@2#0)‹›‹›; }‹›
 //│ Type: ⊤
 
 myInc(id, 0)
@@ -129,7 +129,7 @@ let id = [A] => (x: A) => x in new Pair(id(42), id("42"))
 
 fun foo: ([A] -> A -> A) -> Int
 fun foo(x) = 42
-//│ Elab: { fun foo: (forall A@2: FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2))‹›)‹› -> class:Int#17‹›; fun foo(x@3): (forall A@5: FunTy(Tup(List(Fld(‹›,Ref(A@5),None))),Ref(A@5))‹›)‹› -> class:Int#18‹› = 42‹›; }‹›
+//│ Elab: { fun foo: (forall A@2: FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2))‹›)‹› -> class:Int#21‹›; fun foo(x@3): (forall A@5: FunTy(Tup(List(Fld(‹›,Ref(A@5),None))),Ref(A@5))‹›)‹› -> class:Int#22‹› = 42‹›; }‹›
 //│ Type: ⊤
 
 foo
@@ -233,5 +233,5 @@ gen(42)
 :e
 fun cnt: Some[out [A] -> A -> A] -> Int
 fun cnt(x) = 42
-//│ Elab: { fun cnt: (class:Some#2[WildcardTy(None,Some(Forall(List(A@2),FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2)))))]‹›)‹› -> class:Int#19‹›; fun cnt(x@3): (class:Some#3[WildcardTy(None,Some(Forall(List(A@5),FunTy(Tup(List(Fld(‹›,Ref(A@5),None))),Ref(A@5)))))]‹›)‹› -> class:Int#20‹› = 42‹›; }‹›
+//│ Elab: { fun cnt: (class:Some#2[WildcardTy(None,Some(Forall(List(A@2),FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2)))))]‹›)‹› -> class:Int#23‹›; fun cnt(x@3): (class:Some#3[WildcardTy(None,Some(Forall(List(A@5),FunTy(Tup(List(Fld(‹›,Ref(A@5),None))),Ref(A@5)))))]‹›)‹› -> class:Int#24‹› = 42‹›; }‹›
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing

@@ -89,6 +89,8 @@ class Elaborator(raise: Raise):
         Term.Error
       else
         Term.Forall(bds, term(body)(using ctx.copy(locals = ctx.locals ++ boundVars)))
+    case IfElse(InfixApp(cond, Keyword.`then`, cons), alts) =>
+      Term.If(TermBranch.Boolean(term(cond), Split.`then`(term(cons))) :: Split.default(term(alts)))
     case Empty() =>
       raise(ErrorReport(msg"A term was expected in this position, but no term was found." -> tree.toLoc :: Nil))
       Term.Error

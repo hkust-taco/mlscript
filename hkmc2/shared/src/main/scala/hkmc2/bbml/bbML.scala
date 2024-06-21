@@ -78,22 +78,6 @@ type VarType = CodeBaseType
 object VarType:
   def apply(cr: TypeArg): VarType = CodeBaseType(cr, Type.Bot)
 
-type IntType = Type.ClassType
-object IntType:
-  def apply(): IntType = Type.ClassType(ClassSymbol(Tree.Ident("Int")), Nil)
-
-type NumType = Type.ClassType
-object NumType:
-  def apply(): NumType = Type.ClassType(ClassSymbol(Tree.Ident("Num")), Nil)
-
-type StrType = Type.ClassType
-object StrType:
-  def apply(): StrType = Type.ClassType(ClassSymbol(Tree.Ident("Str")), Nil)
-
-type BoolType = Type.ClassType
-object BoolType:
-  def apply(): BoolType = Type.ClassType(ClassSymbol(Tree.Ident("Bool")), Nil)
-
 class VarState:
   var lowerBounds: Ls[Type] = Nil
   var upperBounds: Ls[Type] = Nil
@@ -120,6 +104,8 @@ object Ctx:
   )
   private val int2IntBinTy =
     (ctx: Ctx) => Type.FunType(intTy(using ctx) :: intTy(using ctx) :: Nil, intTy(using ctx), Type.Bot)
+  private val int2BoolBinTy =
+    (ctx: Ctx) => Type.FunType(intTy(using ctx) :: intTy(using ctx) :: Nil, boolTy(using ctx), Type.Bot)
   private val int2NumBinTy =
     (ctx: Ctx) => Type.FunType(intTy(using ctx) :: intTy(using ctx) :: Nil, numTy(using ctx), Type.Bot)
   private val builtinFuns = Map(
@@ -127,6 +113,8 @@ object Ctx:
     "-" -> int2IntBinTy,
     "*" -> int2IntBinTy,
     "/" -> int2NumBinTy,
+    "<" -> int2BoolBinTy,
+    ">" -> int2BoolBinTy,
     // TODO
   )
   def init(predefs: Map[Str, Symbol]): Ctx =
@@ -404,5 +392,15 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           nestCtx += sym -> tv // TODO: a type var symbol may be better...
           tv
       Type.PolymorphicType(bds, typeCheck(body)(using nestCtx, skolems ++ bds.map(_.uid)))
+    case Term.If(Split.Cons(TermBranch.Boolean(cond, Split.Else(cons)), Split.Else(alts))) =>
+      constrain(typeCheck(cond), Ctx.boolTy)
+      (typeCheck(cons), typeCheck(alts)) match
+        case (lhs: Type.PolymorphicType, rhs) =>
+          constrain(lhs, rhs)
+          lhs
+        case (lhs, rhs: Type.PolymorphicType) =>
+          constrain(lhs, rhs)
+          rhs
+        case (lhs, rhs) => Type.ComposedType(lhs, rhs, true)
     case Term.Error =>
       Type.Bot // TODO: error type?

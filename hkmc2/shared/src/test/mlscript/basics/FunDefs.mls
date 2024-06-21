@@ -9,11 +9,11 @@ foo
 //│ Type: Flow(‹result of foo›@1)
 
 fun (+) plus: Int
-//│ Elab: { fun plus: class:Int#11; }‹›
+//│ Elab: { fun plus: class:Int#15; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 fun (+) : Int
-//│ Elab: { fun +: class:Int#12; }‹›
+//│ Elab: { fun +: class:Int#16; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 1 + 2

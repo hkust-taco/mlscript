@@ -4,7 +4,7 @@
 
 fun add: (Int, Int) -> Int
 fun add(x, y) = x + y
-//│ Elab: { fun add: (class:Int#11, class:Int#12)‹› -> class:Int#13‹›; fun add(x@2, y@3): (class:Int#14, class:Int#15)‹› -> class:Int#16‹› = +#0(x@2#0, y@3#0)‹›‹›; }‹›
+//│ Elab: { fun add: (class:Int#15, class:Int#16)‹› -> class:Int#17‹›; fun add(x@2, y@3): (class:Int#18, class:Int#19)‹› -> class:Int#20‹› = +#0(x@2#0, y@3#0)‹›‹›; }‹›
 //│ Type: ⊤
 
 :e
@@ -12,7 +12,7 @@ fun foo: Int -> Int
 fun foo: Int -> Int
 //│ ╔══[ERROR] Duplicate definition of foo
 //│ ╙── aready defined here
-//│ Elab: { fun foo: (class:Int#17)‹› -> class:Int#18‹›; fun foo: (class:Int#19)‹› -> class:Int#20‹›; }‹›
+//│ Elab: { fun foo: (class:Int#21)‹› -> class:Int#22‹›; fun foo: (class:Int#23)‹› -> class:Int#24‹›; }‹›
 //│ Type: ⊤
 
 :e
@@ -36,7 +36,7 @@ fun bar(x) = let t = x + 1 in "aaa"
 :e
 fun baz: Int -> Int
 fun baz(x) = "bbb"
-//│ Elab: { fun baz: (class:Int#21)‹› -> class:Int#22‹›; fun baz(x@2): (class:Int#23)‹› -> class:Int#24‹› = "bbb"‹›; }‹›
+//│ Elab: { fun baz: (class:Int#25)‹› -> class:Int#26‹›; fun baz(x@2): (class:Int#27)‹› -> class:Int#28‹› = "bbb"‹›; }‹›
 //│ ╔══[ERROR] Cannot solve Str ∧ ¬⊥
 //│ ╙──
 //│ Type: ⊤
@@ -59,7 +59,7 @@ add(0, 0): Str
 
 :e
 fun errAdd(x: Int) = x + "1"
-//│ Elab: { fun errAdd(x@1: class:Int#26) = +#2(x@1#0, "1"‹›)‹›‹›; }‹›
+//│ Elab: { fun errAdd(x@1: class:Int#30) = +#2(x@1#0, "1"‹›)‹›‹›; }‹›
 //│ ╔══[ERROR] Cannot solve Str ∧ ¬⊥
 //│ ╙──
 //│ Type: ⊤

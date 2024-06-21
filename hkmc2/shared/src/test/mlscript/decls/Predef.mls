@@ -13,7 +13,9 @@ fun (+): (Int, Int) -> Int
 fun (-): (Int, Int) -> Int
 fun (*): (Int, Int) -> Int
 fun (/): (Int, Int) -> Num
-//│ Elab: { fun +: (class:Int#0, class:Int#1)‹› -> class:Int#2‹›; fun -: (class:Int#3, class:Int#4)‹› -> class:Int#5‹›; fun *: (class:Int#6, class:Int#7)‹› -> class:Int#8‹›; fun /: (class:Int#9, class:Int#10)‹› -> class:Num#0‹›; }‹›
+fun (<): (Int, Int) -> Bool
+fun (>): (Int, Int) -> Bool
+//│ Elab: { fun +: (class:Int#0, class:Int#1)‹› -> class:Int#2‹›; fun -: (class:Int#3, class:Int#4)‹› -> class:Int#5‹›; fun *: (class:Int#6, class:Int#7)‹› -> class:Int#8‹›; fun /: (class:Int#9, class:Int#10)‹› -> class:Num#0‹›; fun <: (class:Int#11, class:Int#12)‹› -> class:Bool#0‹›; fun >: (class:Int#13, class:Int#14)‹› -> class:Bool#1‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 fun log: (Any) -> ()
