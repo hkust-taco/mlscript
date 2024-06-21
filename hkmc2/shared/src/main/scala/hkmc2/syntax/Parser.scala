@@ -530,7 +530,12 @@ abstract class Parser(
         */
       case (KEYWORD(kw @ (Keyword.`->` | Keyword.`=>`)), l0) :: _ if kw.leftPrecOrMin > prec =>
         consume
-        val rhs = expr(kw.rightPrecOrMin)
+        val rhs = yeetSpaces match
+          case (br @ BRACKETS(Curly, toks), loc) :: _ =>
+            consume
+            val eff = rec(toks, S(loc), "effect type").concludeWith(_.expr(0))
+            Effectful(eff, expr(kw.rightPrecOrMin))
+          case _ => expr(kw.rightPrecOrMin)
         val res = acc match
           case Tree.Forall(tvs, _) => Tree.Forall(tvs, rhs)
           case _ => InfixApp(PlainTup(acc), kw, rhs)

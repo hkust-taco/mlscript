@@ -48,6 +48,7 @@ enum Tree extends Located:
   case Region(name: Tree, body: Tree)
   case RegRef(reg: Tree, value: Tree)
   case Deref(ref: Tree)
+  case Effectful(eff: Tree, body: Tree)
 
   def children: Ls[Tree] = this match
     case Empty() | Error() | Ident(_) | IntLit(_) | DecLit(_) | StrLit(_) | UnitLit(_) => Nil
@@ -68,6 +69,7 @@ enum Tree extends Located:
     case Region(name, body) => name :: body :: Nil
     case RegRef(reg, value) => reg :: value :: Nil
     case Deref(ref) => ref :: Nil
+    case Effectful(eff, body) => eff :: body :: Nil
   
   def describe: Str = ??? // TODO
   

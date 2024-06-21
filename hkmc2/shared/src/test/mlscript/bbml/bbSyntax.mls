@@ -168,7 +168,10 @@ region x in
 //│ Parsed:
 //│ 	App(Ident(+),Tup(List(Deref(Ident(r)), IntLit(1))))
 
+Int ->{Any} Int
+//│ Parsed:
+//│ 	InfixApp(Tup(List(Ident(Int))),keyword '->',Effectful(Ident(Any),Ident(Int)))
 
-:fixme
-[A] -> Str ->{A} -> Str
-//│ /!!!\ Uncaught error: scala.NotImplementedError: BRACKETS(Curly,List((IDENT(A,false),Loc(14,15,bbSyntax.mls:+173))))
+[A] -> Str ->{A} Str
+//│ Parsed:
+//│ 	Forall(List(Ident(A)),InfixApp(Tup(List(Ident(Str))),keyword '->',Effectful(Ident(A),Ident(Str))))
