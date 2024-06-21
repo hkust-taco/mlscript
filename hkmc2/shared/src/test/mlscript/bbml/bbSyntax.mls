@@ -99,6 +99,9 @@ if 1 < 2 then 1 else 0
 //│ Parsed:
 //│ 	IfElse(InfixApp(App(Ident(<),Tup(List(IntLit(1), IntLit(2)))),keyword 'then',IntLit(1)),IntLit(0))
 
+if 1 is Int then 1 else 0
+//│ Parsed:
+//│ 	IfElse(InfixApp(InfixApp(IntLit(1),keyword 'is',Ident(Int)),keyword 'then',IntLit(1)),IntLit(0))
 
 fun fact = case
   0 then 1

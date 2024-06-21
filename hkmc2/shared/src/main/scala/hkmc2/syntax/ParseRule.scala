@@ -232,6 +232,11 @@ object ParseRule:
         Expr(ParseRule("'or' operator right-hand side")(End(())))(
           (rhs, _: Unit) => lhs => InfixApp(lhs, `or`, rhs))
       ),
+    Kw(`is`):
+      ParseRule("'is' operator")(
+        Expr(ParseRule("'is' operator right-hand side")(End(())))(
+          (rhs, _: Unit) => lhs => InfixApp(lhs, `is`, rhs))
+      ),
     Kw(`then`):
       ParseRule("'then' operator")(
         Expr(ParseRule("'then' operator right-hand side")(End(())))(

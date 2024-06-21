@@ -39,7 +39,7 @@ object Keyword:
   val `fun` = Keyword("fun", N, N)
   val `val` = Keyword("val", N, N)
   val `var` = Keyword("var", N, N)
-  val `is` = Keyword("is", N, N)
+  val `is` = Keyword("is", nextPrec, curPrec)
   val `as` = Keyword("as", N, N)
   val `of` = Keyword("of", N, N)
   val `or` = Keyword("or", nextPrec, curPrec)
@@ -87,7 +87,7 @@ object Keyword:
   val modifiers = Set(
     `abstract`, mut, virtual, `override`, declare, public, `private`)
   
-  type Infix = `and`.type | `or`.type | `then`.type | `:`.type | `->`.type | `=>`.type
+  type Infix = `and`.type | `or`.type | `then`.type | `is`.type | `:`.type | `->`.type | `=>`.type
   
   val maxPrec = curPrec
   
