@@ -380,6 +380,9 @@ abstract class Parser(
   def expr(prec: Int)(using Line): Tree = wrap(prec)(exprImpl(prec))
   def exprImpl(prec: Int): Tree =
     yeetSpaces match
+    case (IDENT("!", _), loc) :: _ =>
+      consume
+      exprCont(Deref(exprImpl(Int.MaxValue)), prec, allowNewlines = true) // TODO: the prec???
     case (IDENT(nme, sym), loc) :: _ =>
       consume
       exprCont(Tree.Ident(nme), prec, allowNewlines = true)
@@ -575,7 +578,9 @@ abstract class Parser(
         */
       case (SPACE, l0) :: _ =>
         consume
-        exprCont(acc, prec, allowNewlines)
+        acc match // TODO: looks fishy. a better way?
+          case Sel(reg, Ident("ref")) => RegRef(reg, exprImpl(0))
+          case _ => exprCont(acc, prec, allowNewlines)
       case (SELECT(name), l0) :: _ => // TODO precedence?
         consume
         exprCont(Sel(acc, new Ident(name).withLoc(S(l0))), prec, allowNewlines)

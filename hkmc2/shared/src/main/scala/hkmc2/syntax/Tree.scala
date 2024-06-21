@@ -45,6 +45,9 @@ enum Tree extends Located:
   case Forall(tvs: Ls[Tree], body: Tree) // TODO: bounds
   case IfElse(cond: Tree, alt: Tree)
   case Case(branches: Tree)
+  case Region(name: Tree, body: Tree)
+  case RegRef(reg: Tree, value: Tree)
+  case Deref(ref: Tree)
 
   def children: Ls[Tree] = this match
     case Empty() | Error() | Ident(_) | IntLit(_) | DecLit(_) | StrLit(_) | UnitLit(_) => Nil
@@ -62,6 +65,9 @@ enum Tree extends Located:
     case Forall(tvs, body) => body :: tvs
     case IfElse(cond, alt) => cond :: alt :: Nil
     case Case(bs) => Ls(bs)
+    case Region(name, body) => name :: body :: Nil
+    case RegRef(reg, value) => reg :: value :: Nil
+    case Deref(ref) => ref :: Nil
   
   def describe: Str = ??? // TODO
   

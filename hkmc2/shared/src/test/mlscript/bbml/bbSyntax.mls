@@ -147,29 +147,28 @@ x `=> x
 //│ Parsed:
 //│ 	Quoted(IfElse(InfixApp(Unquoted(Quoted(App(Ident(==),Tup(List(Unquoted(Ident(x)), Unquoted(Quoted(DecLit(0.0)))))))),keyword 'then',Unquoted(Quoted(DecLit(1.0)))),Unquoted(Ident(x))))
 
-:fixme
-region x in 42
-//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.151: 	region x in 42
-//│ ╙──       	       ^
-//│ Parsed:
-//│ 	Ident(region)
 
-:fixme
+region x in 42
+//│ Parsed:
+//│ 	Region(Ident(x),IntLit(42))
+
+
 region x in
   x.ref 42
-//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.159: 	region x in
-//│ ╙──       	       ^
 //│ Parsed:
-//│ 	Ident(region)
+//│ 	Region(Ident(x),Block(List(RegRef(Ident(x),IntLit(42)))))
 
-:fixme
+
 region x in
   let r = x.ref 42 in let t = r := 0 in !r
-//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.168: 	region x in
-//│ ╙──       	       ^
 //│ Parsed:
-//│ 	Ident(region)
+//│ 	Region(Ident(x),Block(List(Let(Ident(r),RegRef(Ident(x),IntLit(42)),Some(Let(Ident(t),App(Ident(:=),Tup(List(Ident(r), IntLit(0)))),Some(Deref(Ident(r)))))))))
 
+!r + 1
+//│ Parsed:
+//│ 	App(Ident(+),Tup(List(Deref(Ident(r)), IntLit(1))))
+
+
+:fixme
+[A] -> Str ->{A} -> Str
+//│ /!!!\ Uncaught error: scala.NotImplementedError: BRACKETS(Curly,List((IDENT(A,false),Loc(14,15,bbSyntax.mls:+173))))

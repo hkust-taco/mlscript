@@ -45,6 +45,7 @@ object Keyword:
   val `or` = Keyword("or", nextPrec, curPrec)
   val `and` = Keyword("and", nextPrec, curPrec)
   val `let` = Keyword("let", nextPrec, curPrec)
+  val `region` = Keyword("region", curPrec, curPrec)
   val `rec` = Keyword("rec", N, N)
   val `in` = Keyword("in", curPrec, curPrec)
   val `out` = Keyword("out", N, curPrec)

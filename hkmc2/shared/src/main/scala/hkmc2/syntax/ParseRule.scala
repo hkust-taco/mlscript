@@ -182,6 +182,17 @@ object ParseRule:
         Blk(ParseRule("`case` branches")(End(())))((body, _: Unit) => Case(body))
       )
     ,
+    Kw(`region`):
+      ParseRule("`region` keyword"):
+        Expr(
+          ParseRule("`region` variable"):
+            Kw(`in`):
+              ParseRule("`in` keyword")(
+                Expr(ParseRule("'region' expression")(End(())))((body, _: Unit) => body),
+                Blk(ParseRule("'region' block")(End(())))((body, _: Unit) => body)
+              )
+        ) { case (name, body) => Region(name, body) }
+    ,
     Kw(`fun`)(termDefBody(Fun)),
     Kw(`val`)(termDefBody(Val)),
     Kw(`type`)(typeDeclBody(Als)),
