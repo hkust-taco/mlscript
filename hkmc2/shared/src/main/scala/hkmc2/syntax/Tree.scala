@@ -43,6 +43,8 @@ enum Tree extends Located:
   case InfixApp(lhs: Tree, kw: Keyword.Infix, rhs: Tree)
   case New(body: Tree)
   case Forall(tvs: Ls[Tree], body: Tree) // TODO: bounds
+  case IfElse(cond: Tree, alt: Tree)
+  case Case(branches: Tree)
 
   def children: Ls[Tree] = this match
     case Empty() | Error() | Ident(_) | IntLit(_) | DecLit(_) | StrLit(_) | UnitLit(_) => Nil
@@ -58,6 +60,8 @@ enum Tree extends Located:
     case TermDef(k, symName, alphaName, rhs) => symName.toList ++ alphaName ++ rhs
     case New(body) => body :: Nil
     case Forall(tvs, body) => body :: tvs
+    case IfElse(cond, alt) => cond :: alt :: Nil
+    case Case(bs) => Ls(bs)
   
   def describe: Str = ??? // TODO
   

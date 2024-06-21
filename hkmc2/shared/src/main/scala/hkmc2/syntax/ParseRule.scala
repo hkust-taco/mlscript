@@ -166,6 +166,22 @@ object ParseRule:
           case (lhs, S(rhs)) => Tup(Tree.Modified(`in`, lhs) :: rhs :: Nil)
         }
     ,
+    Kw(`if`):
+      ParseRule("`if` keyword")(
+        Expr(
+          ParseRule("`if` expression"):
+            Kw(`else`):
+              ParseRule("`else` keyword")(
+                Expr(ParseRule("`else` branch")(End(())))((body, _: Unit) => body)
+              )
+        ) { case (cond, alt) => IfElse(cond, alt) }
+      )
+    ,
+    Kw(`case`):
+      ParseRule("`case` keyword")(
+        Blk(ParseRule("`case` branches")(End(())))((body, _: Unit) => Case(body))
+      )
+    ,
     Kw(`fun`)(termDefBody(Fun)),
     Kw(`val`)(termDefBody(Val)),
     Kw(`type`)(typeDeclBody(Als)),

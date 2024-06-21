@@ -20,6 +20,6 @@
 
 1 then 2 and 3
 //│ Parsed:
-//│ 	InfixApp(InfixApp(IntLit(1),keyword 'then',IntLit(2)),keyword 'and',IntLit(3))
+//│ 	InfixApp(IntLit(1),keyword 'then',InfixApp(IntLit(2),keyword 'and',IntLit(3)))
 
 
