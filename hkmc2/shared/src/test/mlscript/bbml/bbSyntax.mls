@@ -99,6 +99,18 @@ if 1 < 2 then 1 else 0
 //│ Parsed:
 //│ 	IfElse(InfixApp(App(Ident(<),Tup(List(IntLit(1), IntLit(2)))),keyword 'then',IntLit(1)),IntLit(0))
 
+if false then 0 else 42
+//│ Parsed:
+//│ 	IfElse(InfixApp(BoolLit(false),keyword 'then',IntLit(0)),IntLit(42))
+
+if 24 then false else true
+//│ Parsed:
+//│ 	IfElse(InfixApp(IntLit(24),keyword 'then',Ident(false)),BoolLit(true))
+
+if x then true else false
+//│ Parsed:
+//│ 	IfElse(InfixApp(Ident(x),keyword 'then',Ident(true)),BoolLit(false))
+
 if 1 is Int then 1 else 0
 //│ Parsed:
 //│ 	IfElse(InfixApp(InfixApp(IntLit(1),keyword 'is',Ident(Int)),keyword 'then',IntLit(1)),IntLit(0))
@@ -135,4 +147,29 @@ x `=> x
 //│ Parsed:
 //│ 	Quoted(IfElse(InfixApp(Unquoted(Quoted(App(Ident(==),Tup(List(Unquoted(Ident(x)), Unquoted(Quoted(DecLit(0.0)))))))),keyword 'then',Unquoted(Quoted(DecLit(1.0)))),Unquoted(Ident(x))))
 
-// TODO: region & effects
+:fixme
+region x in 42
+//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
+//│ ║  l.151: 	region x in 42
+//│ ╙──       	       ^
+//│ Parsed:
+//│ 	Ident(region)
+
+:fixme
+region x in
+  x.ref 42
+//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
+//│ ║  l.159: 	region x in
+//│ ╙──       	       ^
+//│ Parsed:
+//│ 	Ident(region)
+
+:fixme
+region x in
+  let r = x.ref 42 in let t = r := 0 in !r
+//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
+//│ ║  l.168: 	region x in
+//│ ╙──       	       ^
+//│ Parsed:
+//│ 	Ident(region)
+

@@ -299,7 +299,11 @@ abstract class Parser(
             case S(subRule) =>
               // parse(subRule)
               val e = parseRule(kw.rightPrecOrMin, subRule).getOrElse(errExpr)
-              parseRule(prec, exprAlt.rest).map(res => exprAlt.k(e, res))
+              if id.name == "true" || id.name == "false" then // * true & false are expressions, allow parsing `if true is Bool then ...`
+                val fe = exprCont(e, 0, false)
+                parseRule(prec, exprAlt.rest).map(res => exprAlt.k(fe, res))
+              else
+                parseRule(prec, exprAlt.rest).map(res => exprAlt.k(e, res))
             case N =>
               tryEmpty(tok, loc)
           case N =>

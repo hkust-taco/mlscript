@@ -238,16 +238,9 @@ if 1 < 2 then 1 else 0
 //│ Elab: { if Cons(Boolean(App(Ref(<),Tup(List(Fld(‹›,Lit(IntLit(1)),None), Fld(‹›,Lit(IntLit(2)),None)))),Else(Lit(IntLit(1)))),Else(Lit(IntLit(0))))‹› }‹›
 //│ Type: Int ∨ Int
 
-:fixme
 if false then 1 else "1"
-//│ ╔══[PARSE ERROR] Expected 'else' keyword after `if` expression; found 'then' keyword instead
-//│ ║  l.241: 	if false then 1 else "1"
-//│ ╙──       	         ^^^^
-//│ ╔══[PARSE ERROR] Expected end of input; found literal instead
-//│ ║  l.241: 	if false then 1 else "1"
-//│ ╙──       	              ^
-//│ Elab: { <error>‹› }‹›
-//│ Type: ⊥
+//│ Elab: { if Cons(Boolean(Lit(BoolLit(false)),Else(Lit(IntLit(1)))),Else(Lit(StrLit(1))))‹› }‹›
+//│ Type: Int ∨ Str
 
 :fixme
 if 1 is Int then 1 else 0
