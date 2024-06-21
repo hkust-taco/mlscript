@@ -106,20 +106,30 @@ fun fact = case
 //│ Parsed:
 //│ 	TermDef(Fun,None,Some(Ident(fact)),Some(Case(Block(List(InfixApp(IntLit(0),keyword 'then',IntLit(1)), InfixApp(Ident(n),keyword 'then',App(Ident(*),Tup(List(Ident(n), App(Ident(fact),Tup(List(App(Ident(-),Tup(List(Ident(n), IntLit(1))))))))))))))))
 
-:fixme
+
 `42
-//│ /!!!\ Uncaught error: scala.NotImplementedError: QUOTE
+//│ Parsed:
+//│ 	Quoted(IntLit(42))
 
 x `=> x
 //│ Parsed:
 //│ 	Quoted(InfixApp(Tup(List(Ident(x))),keyword '=>',Unquoted(Ident(x))))
 
-:fixme
-`1 `+ `1
-//│ /!!!\ Uncaught error: scala.NotImplementedError: QUOTE
+(x, y) `=> x `+ y
+//│ Parsed:
+//│ 	Quoted(InfixApp(Tup(List(App(Ident(,),Tup(List(Ident(x), Ident(y)))))),keyword '=>',Unquoted(Quoted(App(Ident(+),Tup(List(Unquoted(Ident(x)), Unquoted(Ident(y)))))))))
 
-:fixme
+`1 `+ `1
+//│ Parsed:
+//│ 	Quoted(App(Ident(+),Tup(List(Unquoted(Quoted(IntLit(1))), Unquoted(Quoted(IntLit(1)))))))
+
+
 `let x = `42 `in x
-//│ /!!!\ Uncaught error: scala.NotImplementedError: QUOTE
+//│ Parsed:
+//│ 	Quoted(Let(Ident(x),Unquoted(Quoted(IntLit(42))),Some(Unquoted(Ident(x)))))
+
+`if x `== `0.0 then `1.0 else x
+//│ Parsed:
+//│ 	Quoted(IfElse(InfixApp(Unquoted(Quoted(App(Ident(==),Tup(List(Unquoted(Ident(x)), Unquoted(Quoted(DecLit(0.0)))))))),keyword 'then',Unquoted(Quoted(DecLit(1.0)))),Unquoted(Ident(x))))
 
 // TODO: region & effects

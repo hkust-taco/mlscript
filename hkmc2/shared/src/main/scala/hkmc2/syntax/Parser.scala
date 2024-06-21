@@ -347,6 +347,32 @@ abstract class Parser(
           err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found end of input instead" -> lastLoc :: Nil))
           N
   
+  final def bindings(acc: Ls[Tree -> Tree]): Ls[Tree -> Tree] = 
+    cur match {
+      case (SPACE, _) :: _ =>
+        consume
+        bindings(acc)
+      case (NEWLINE | SEMI, _) :: _ => // TODO: | ...
+        acc.reverse
+      case (IDENT(nme, sym), l0) :: _ =>
+        consume
+        yeetSpaces match
+          case (IDENT("=", _), l1) :: _ => consume
+          case (tk, l1) :: _ =>
+            err((msg"Expected `=` after ${nme}; found ${tk.toString} instead" -> S(l1) :: Nil))
+        val rhs = exprImpl(0)
+        val v = Tree.Ident(nme).withLoc(S(l0))
+        cur match {
+          case (COMMA, l1) :: _ =>
+            consume
+            bindings((v -> rhs) :: acc)
+          case _ =>
+            ((v -> rhs) :: acc).reverse
+        }
+      case _ =>
+        Nil
+  }
+
   def expr(prec: Int)(using Line): Tree = wrap(prec)(exprImpl(prec))
   def exprImpl(prec: Int): Tree =
     yeetSpaces match
@@ -380,6 +406,53 @@ abstract class Parser(
         case App(Tree.Ident(","), Tup(eles)) => eles.flatMap(unfold)
         case _ => ??? // TODO: bds?
       exprCont(Tree.Forall(unfold(res), Tree.Empty()), prec, allowNewlines = true)
+    case (QUOTE, loc) :: _ =>
+      consume
+      cur match {
+        case (IDENT("let", _), l0) :: _ =>
+          consume
+          val bs = bindings(Nil)
+          val body = yeetSpaces match
+            case (QUOTE, l1) :: (IDENT("in", _), l2) :: _ =>
+              consume
+              consume
+              expr(0)
+            case (tk, loc) :: _ =>
+              err((msg"Expected an expression; found ${tk.toString} instead" -> S(loc) :: Nil))
+              errExpr
+            case Nil =>
+              err(msg"Expected '`in'; found end of input instead" -> lastLoc :: Nil)
+              errExpr
+          bs.foldRight(body) {
+            case ((v, r), acc) => Quoted(Let(v, Unquoted(r), S(Unquoted(acc))))
+          }
+        case (IDENT("if", _), l0) :: _ =>
+          consume
+          val term = exprImpl(prec)
+          yeetSpaces match
+            case (IDENT("else", _), l1) :: _ =>
+              consume
+              val ele = exprImpl(prec)
+              term match
+                case InfixApp(lhs, Keyword.`then`, rhs) =>
+                  Quoted(IfElse(InfixApp(Unquoted(lhs), Keyword.`then`, Unquoted(rhs)), Unquoted(ele)))
+                case tk =>
+                  err(msg"Expected '`in'; found ${tk.toString} instead" -> tk.toLoc :: Nil)
+                  errExpr
+            case (tk, loc) :: _ =>
+              err((msg"Expected 'else'; found ${tk.toString} instead" -> S(loc) :: Nil))
+              errExpr
+            case Nil =>
+              err(msg"Expected 'else'; found end of input instead" -> lastLoc :: Nil)
+              errExpr
+        case (IDENT(nme, sym), loc) :: _ =>
+          consume
+          exprCont(Tree.Quoted(Tree.Ident(nme).withLoc(S(loc))), prec, allowNewlines = false)
+        case (LITVAL(lit), l0) :: _ =>
+          consume
+          exprCont(Tree.Quoted(lit.asTree.withLoc(S(l0))), prec, allowNewlines = false)
+        case _ => unsupportedQuote(S(loc))
+      }
     case (BRACKETS(Indent, _), loc) :: _ =>
       err((msg"Expected an expression; found indented block instead" -> lastLoc :: Nil))
       errExpr
