@@ -381,6 +381,32 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           constrain(lhs, rhs)
           rhs
         case (lhs, rhs) => Type.ComposedType(lhs, rhs, true)
+    case Split.Cons(TermBranch.Match(scrutinee, Split.Cons(PatternBranch(Pattern.Class(sym, _, _), cons), Split.NoSplit)), alts) =>
+      val (clsTy, tv, emptyTy) = ctx.getDef(sym.nme) match
+        case S(ClassDef.Parameterized(_, tparams, _, _, _)) =>
+          (Type.ClassType(sym, tparams.map(_ => freshWildcard)), freshVar, Type.ClassType(sym, tparams.map(_ => Wildcard.empty)))
+        case S(ClassDef.Plain(_, tparams, _, _)) =>
+          (Type.ClassType(sym, tparams.map(_ => freshWildcard)), freshVar, Type.ClassType(sym, tparams.map(_ => Wildcard.empty)))
+        case _ =>
+          error(msg"Cannot match ${scrutinee.toString} as ${sym.toString}" -> split.toLoc :: Nil)
+          (Type.Bot, Type.Bot, Type.Bot)
+      val scrutineeTy = typeCheck(scrutinee)
+      constrain(scrutineeTy, Type.ComposedType(clsTy, Type.ComposedType(tv, Type.NegType(emptyTy), false), true))
+      val nestCtx1 = ctx.nest
+      val nestCtx2 = ctx.nest
+      scrutinee match // * refine
+        case Ref(sym: VarSymbol) =>
+          nestCtx1 += sym -> clsTy
+          nestCtx2 += sym -> tv
+        case _ => ()
+      (typeSplit(cons)(using nestCtx1), typeSplit(alts)(using nestCtx2)) match
+        case (lhs: Type.PolymorphicType, rhs) =>
+          constrain(lhs, rhs)
+          lhs
+        case (lhs, rhs: Type.PolymorphicType) =>
+          constrain(lhs, rhs)
+          rhs
+        case (lhs, rhs) => Type.ComposedType(lhs, rhs, true)
     case Split.Else(alts) => typeCheck(alts)
 
   

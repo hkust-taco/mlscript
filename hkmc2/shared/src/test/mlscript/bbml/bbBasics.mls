@@ -242,9 +242,26 @@ if false then 1 else "1"
 //│ Elab: { if Cons(Boolean(Lit(BoolLit(false)),Else(Lit(IntLit(1)))),Else(Lit(StrLit(1))))‹› }‹›
 //│ Type: Int ∨ Str
 
-:fixme
+
 if 1 is Int then 1 else 0
-//│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IntLit(1),keyword 'is',Ident(Int)) (of class hkmc2.syntax.Tree$InfixApp)
+//│ Elab: { if Cons(Match(Lit(IntLit(1)),Cons(PatternBranch(Class(class:Int,None,true),Else(Lit(IntLit(1)))),NoSplit)),Else(Lit(IntLit(0))))‹› }‹›
+//│ Type: Int ∨ Int
+
+fun test(x) =
+  if x is Int then x + 1 else 0
+test
+//│ Elab: { fun test(x@1) = if Cons(Match(Ref(x@1),Cons(PatternBranch(Class(class:Int,None,true),Else(App(Ref(+),Tup(List(Fld(‹›,Ref(x@1),None), Fld(‹›,Lit(IntLit(1)),None)))))),NoSplit)),Else(Lit(IntLit(0))))‹›; test#0 }‹›
+//│ Type: (α58_0) ->{⊥} Int ∨ Int
+//│ Where:
+//│   α58_0 <: ¬Int ∧ ¬⊥ ∨ Int
+
+test(1)
+//│ Elab: { test#1(1‹›)‹›‹› }‹›
+//│ Type: Int ∨ Int
+
+test("1")
+//│ Elab: { test#2("1"‹›)‹›‹› }‹›
+//│ Type: Int ∨ Int
 
 // TODO: annotation?
 fun fact: Int -> Int

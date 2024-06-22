@@ -93,6 +93,13 @@ class Elaborator(raise: Raise):
         Term.Error
       else
         Term.Forall(bds, term(body)(using ctx.copy(locals = ctx.locals ++ boundVars)))
+    case IfElse(InfixApp(InfixApp(scrutinee, Keyword.`is`, Ident(cls)), Keyword.`then`, cons), alts) =>
+      ctx.members.get(cls) match
+        case S(sym: ClassSymbol) =>
+          Term.If(TermBranch.Match(term(scrutinee), Split.single(PatternBranch(Pattern.Class(sym, N, true), Split.default(term(cons))))) :: Split.default(term(alts)))
+        case _ =>
+          raise(ErrorReport(msg"Illegal pattern $cls." -> tree.toLoc :: Nil))
+          Term.Error
     case IfElse(InfixApp(cond, Keyword.`then`, cons), alts) =>
       Term.If(TermBranch.Boolean(term(cond), Split.`then`(term(cons))) :: Split.default(term(alts)))
     case Tree.Quoted(body) => Term.Quoted(term(body))
