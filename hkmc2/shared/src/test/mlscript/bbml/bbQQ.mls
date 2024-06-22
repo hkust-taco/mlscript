@@ -74,3 +74,8 @@ f `=> x `=> y `=> f`(x, y)
 //│ ╔══[ERROR] Cannot solve Int ∧ ¬⊥
 //│ ╙──
 //│ Type: CodeBase[in ⊥ out α63_1, in ⊥ out ⊤]
+
+
+`if `true then `true else `false
+//│ Elab: { code"if Cons(Boolean(Unquoted(Quoted(Lit(BoolLit(true)))),Else(Unquoted(Quoted(Lit(BoolLit(true)))))),Else(Unquoted(Quoted(Lit(BoolLit(false))))))‹›"‹› }‹›
+//│ Type: CodeBase[in ⊥ out α64_1 ∨ α65_1 ∨ α66_1, in ⊥ out ⊤]

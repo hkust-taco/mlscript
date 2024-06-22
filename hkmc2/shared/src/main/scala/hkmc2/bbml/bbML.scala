@@ -300,6 +300,8 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       val uni = Type.ComposedType(bd, res, true)
       constrain(bodyTy, uni)
       res
+    case Term.If(Split.Cons(TermBranch.Boolean(cond, Split.Else(cons)), Split.Else(alts))) =>
+      Type.ComposedType(typeCode(cond), Type.ComposedType(typeCode(cons), typeCode(alts), true), true)
     case _ =>
       error(msg"Cannot quote ${code.toString}" -> code.toLoc :: Nil)
 
