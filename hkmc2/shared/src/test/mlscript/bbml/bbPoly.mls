@@ -94,13 +94,13 @@ fun swap(p) = new Pair(Pair.b(p), Pair.a(p))
 
 swap
 //│ Elab: { swap#0 }‹›
-//│ Type: forall α22_1, α23_1: (Pair[out α22_1, out α23_1]) ->{⊥} Pair[out α23_1, out α22_1]
+//│ Type: forall α22_1, α23_1: (Pair[in ⊥ out α22_1, in ⊥ out α23_1]) ->{⊥} Pair[in ⊥ out α23_1, in ⊥ out α22_1]
 
 let t = new Pair(42, true) in swap(t)
 //│ Elab: { { let t@1 = new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›; swap#1(t@1#0)‹›‹› }‹› }‹›
 //│ Type: α41_0
 //│ Where:
-//│   Pair[out ⊤ ∧ ¬⊥ ∧ α43_0, out ⊤ ∧ ¬⊥ ∧ α42_0] ∧ ¬⊥ <: α41_0
+//│   Pair[in ⊥ out ⊤ ∧ ¬⊥ ∧ α43_0, in ⊥ out ⊤ ∧ ¬⊥ ∧ α42_0] ∧ ¬⊥ <: α41_0
 //│   ⊤ ∧ ¬⊥ ∧ α39_0 <: α43_0
 //│   Bool ∧ ¬⊥ <: α39_0
 //│   ⊤ ∧ ¬⊥ ∧ α37_0 <: α42_0
@@ -110,7 +110,7 @@ let t = new Pair("114", "514") in swap(t)
 //│ Elab: { { let t@1 = new class:Pair(Lit(StrLit(114)), Lit(StrLit(514)))‹›; swap#2(t@1#0)‹›‹› }‹› }‹›
 //│ Type: α49_0
 //│ Where:
-//│   Pair[out ⊤ ∧ ¬⊥ ∧ α51_0, out ⊤ ∧ ¬⊥ ∧ α50_0] ∧ ¬⊥ <: α49_0
+//│   Pair[in ⊥ out ⊤ ∧ ¬⊥ ∧ α51_0, in ⊥ out ⊤ ∧ ¬⊥ ∧ α50_0] ∧ ¬⊥ <: α49_0
 //│   ⊤ ∧ ¬⊥ ∧ α47_0 <: α51_0
 //│   Str ∧ ¬⊥ <: α47_0
 //│   ⊤ ∧ ¬⊥ ∧ α45_0 <: α50_0

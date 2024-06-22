@@ -35,6 +35,8 @@ class Elaborator(raise: Raise):
       val r = term(rhs)
       val b = bodo.map(term(_)(using ctx.copy(locals = ctx.locals ++ syms))).getOrElse(unit)
       Term.Blk(List(LetBinding(pat, r)), b)
+    case Ident("true") => Term.Lit(Tree.BoolLit(true))
+    case Ident("false") => Term.Lit(Tree.BoolLit(false))
     case Ident(name) =>
       ctx.locals.get(name) match
         case S(sym) => sym.ref
@@ -91,6 +93,8 @@ class Elaborator(raise: Raise):
         Term.Forall(bds, term(body)(using ctx.copy(locals = ctx.locals ++ boundVars)))
     case IfElse(InfixApp(cond, Keyword.`then`, cons), alts) =>
       Term.If(TermBranch.Boolean(term(cond), Split.`then`(term(cons))) :: Split.default(term(alts)))
+    case Tree.Quoted(body) => Term.Quoted(term(body))
+    case Tree.Unquoted(body) => Term.Unquoted(term(body))
     case Empty() =>
       raise(ErrorReport(msg"A term was expected in this position, but no term was found." -> tree.toLoc :: Nil))
       Term.Error

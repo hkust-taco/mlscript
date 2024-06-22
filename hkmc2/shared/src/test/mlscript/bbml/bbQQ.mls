@@ -1,6 +1,19 @@
 :global
 :bbml
 
-:fixme
+
 `42
-//│ /!!!\ Uncaught error: scala.MatchError: Quoted(IntLit(42)) (of class hkmc2.syntax.Tree$Quoted)
+//│ Elab: { code"42‹›"‹› }‹›
+//│ Type: CodeBase[in ⊥ out ⊥, in ⊥ out ⊤]
+
+`false
+//│ Elab: { code"false‹›"‹› }‹›
+//│ Type: CodeBase[in ⊥ out ⊥, in ⊥ out ⊤]
+
+`"rua"
+//│ Elab: { code""rua"‹›"‹› }‹›
+//│ Type: CodeBase[in ⊥ out ⊥, in ⊥ out ⊤]
+
+`3.14
+//│ Elab: { code"3.14‹›"‹› }‹›
+//│ Type: CodeBase[in ⊥ out ⊥, in ⊥ out ⊤]

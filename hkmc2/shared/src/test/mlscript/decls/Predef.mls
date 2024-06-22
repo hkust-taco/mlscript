@@ -8,6 +8,13 @@ class Bool
 //│ Elab: { class Any { }‹›; class Int { }‹›; class Num { }‹›; class Str { }‹›; class Bool { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
+// TODO: move to a separate file?
+class CodeBase[T, S]
+class Region[T]
+class Ref[T, S]
+//│ Elab: { class CodeBase[T@1, S@2] { }‹›; class Region[T@3] { }‹›; class Ref[T@4, S@5] { }‹›; }‹›
+//│ Type: Ctor(lit:UnitLit(true),List())
+
 
 fun (+): (Int, Int) -> Int
 fun (-): (Int, Int) -> Int

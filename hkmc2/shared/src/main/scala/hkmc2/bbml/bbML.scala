@@ -1,7 +1,7 @@
 package hkmc2
 package bbml
 
-import scala.collection.mutable
+import scala.collection.mutable.{LinkedHashSet, HashMap}
 import scala.annotation.tailrec
 
 import mlscript.utils.*, shorthands.*
@@ -19,10 +19,15 @@ case class Wildcard(in: Type, out: Type) extends TypeArg {
     case Type.Bot if in => N
     case _ => S(if in then s"in $t" else s"out $t")
 
-  override def toString(): String =
-    (printWhenSet(in, true).toList ++ printWhenSet(out, false).toList).mkString(" ")
+  override def toString(): String = s"in $in out $out"
+    // (printWhenSet(in, true).toList ++ printWhenSet(out, false).toList).mkString(" ")
   override def lvl(using skolems: NormalForm.SkolemSet): Int = in.lvl.max(out.lvl)
 }
+
+object Wildcard:
+  def in(ty: Type): Wildcard = Wildcard(ty, Type.Top)
+  def out(ty: Type): Wildcard = Wildcard(Type.Bot, ty)
+  def empty: Wildcard = Wildcard(Type.Bot, Type.Top)
 
 enum Type extends TypeArg:
   case ClassType(name: ClassSymbol, targs: Ls[TypeArg])
@@ -66,41 +71,46 @@ type RegionType = Type.ClassType
 object RegionType:
   def apply(skolem: TypeArg): RegionType = Type.ClassType(ClassSymbol(Tree.Ident("Region")), skolem :: Nil)
 
-type CodeBaseType = Type.ClassType
-object CodeBaseType:
-  def apply(cr: TypeArg, isVar: TypeArg): CodeBaseType = Type.ClassType(ClassSymbol(Tree.Ident("CodeBase")), cr :: isVar :: Nil)
-
-type CodeType = CodeBaseType
-object CodeType:
-  def apply(cr: TypeArg): CodeType = CodeBaseType(cr, Type.Top)
-
-type VarType = CodeBaseType
-object VarType:
-  def apply(cr: TypeArg): VarType = CodeBaseType(cr, Type.Bot)
-
 class VarState:
   var lowerBounds: Ls[Type] = Nil
   var upperBounds: Ls[Type] = Nil
 
 object InfVarUid extends Uid.Handler[Type.InfVar]
 
-type EnvType = mutable.HashMap[Uid[Symbol], Type]
-type clsDefType = mutable.HashMap[Str, ClassDef]
-final case class Ctx(parent: Option[Ctx], lvl: Int, clsDefs: clsDefType, env: EnvType): // TODO: skolem
+type EnvType = HashMap[Uid[Symbol], Type]
+type clsDefType = HashMap[Str, ClassDef]
+final case class Ctx(
+  parent: Option[Ctx],
+  lvl: Int,
+  clsDefs: clsDefType,
+  env: EnvType,
+  inQuote: Bool,
+  quoteSkolemEnv: HashMap[Uid[Symbol], Type.InfVar], // * SkolemTag for variables in quasiquotes
+  freeVarsInCurrentQuote: LinkedHashSet[Type] // * Free variables appearing in the current quote scope
+):
   def +=(p: Symbol -> Type): Unit = env += p._1.uid -> p._2
   def get(sym: Symbol): Option[Type] = env.get(sym.uid) orElse parent.dlof(_.get(sym))(None)
   def *=(cls: ClassDef): Unit = clsDefs += cls.sym.id.name -> cls
   def getDef(name: Str): Option[ClassDef] = clsDefs.get(name) orElse parent.dlof(_.getDef(name))(None)
-  def nest: Ctx = Ctx(Some(this), lvl, mutable.HashMap.empty, mutable.HashMap.empty)
-  def nextLevel: Ctx = Ctx(Some(this), lvl + 1, mutable.HashMap.empty, mutable.HashMap.empty)
+  def nest: Ctx =
+    assert(!inQuote)
+    Ctx(Some(this), lvl, HashMap.empty, HashMap.empty, inQuote, quoteSkolemEnv, freeVarsInCurrentQuote)
+  def nextLevel: Ctx =
+    assert(!inQuote)
+    Ctx(Some(this), lvl + 1, HashMap.empty, HashMap.empty, inQuote, quoteSkolemEnv, freeVarsInCurrentQuote)
+  def enterQuotedScope: Ctx =
+    Ctx(Some(this), lvl + 1, HashMap.empty, HashMap.empty, true, HashMap.empty, LinkedHashSet.empty)
 
 object Ctx:
-  def intTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Int").getOrElse(???).sym, Nil)
-  def numTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Num").getOrElse(???).sym, Nil)
-  def strTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Str").getOrElse(???).sym, Nil)
-  def boolTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Bool").getOrElse(???).sym, Nil) // TODO: ???
+  def intTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Int").get.sym, Nil)
+  def numTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Num").get.sym, Nil)
+  def strTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Str").get.sym, Nil)
+  def boolTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Bool").get.sym, Nil)
+  private def codeBaseTy(cr: TypeArg, isVar: TypeArg)(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("CodeBase").get.sym, cr :: isVar :: Nil)
+  def codeTy(cr: Type)(using ctx: Ctx): Type = codeBaseTy(Wildcard.out(cr), Wildcard.out(Type.Top))
+  def varTy(cr: Type)(using ctx: Ctx): Type = codeBaseTy(Wildcard(cr, cr), Wildcard.out(Type.Bot))
   private val builtinClasses = Ls(
-    "Any", "Int", "Num", "Str", "Bool" // TODO
+    "Any", "Int", "Num", "Str", "Bool", "CodeBase", "Region", "Ref"
   )
   private val int2IntBinTy =
     (ctx: Ctx) => Type.FunType(intTy(using ctx) :: intTy(using ctx) :: Nil, intTy(using ctx), Type.Bot)
@@ -118,7 +128,7 @@ object Ctx:
     // TODO
   )
   def init(predefs: Map[Str, Symbol]): Ctx =
-    val ctx = new Ctx(None, 0, mutable.HashMap.empty, mutable.HashMap.empty)
+    val ctx = new Ctx(None, 0, HashMap.empty, HashMap.empty, false, HashMap.empty, LinkedHashSet.empty)
     builtinClasses.foreach(
       cls =>
         predefs.get(cls) match
@@ -251,6 +261,11 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       }).toMap), rhs)
     case _ => solver.constrain(lhs, rhs)
 
+  private def typeCode(code: Term)(using ctx: Ctx, skolems: SkolemSet): Type = code match
+    case Lit(_) => Type.Bot
+    case _ =>
+      error(msg"Cannot quote ${code.toString}" -> code.toLoc :: Nil)
+
   def typeCheck(t: Term)(using ctx: Ctx, skolems: SkolemSet): Type = t match
     case Ref(sym: VarSymbol) =>
       ctx.get(sym) match
@@ -323,7 +338,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       val ty = typeCheck(term)
       ctx.getDef(cls.nme) match
         case S(ClassDef.Parameterized(_, tparams, params, _, _)) =>
-          val map = mutable.HashMap[Uid[Symbol], Wildcard]()
+          val map = HashMap[Uid[Symbol], Wildcard]()
           val targs = tparams.map {
             case TyParam(_, targ) =>
               val ty = freshWildcard
@@ -362,7 +377,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           if args.length != params.length then
             error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil)
           else
-            val map = mutable.HashMap[Uid[Symbol], Wildcard]()
+            val map = HashMap[Uid[Symbol], Wildcard]()
             val targs = tparams.map {
               case TyParam(_, targ) =>
                 val ty = freshWildcard
@@ -402,5 +417,12 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           constrain(lhs, rhs)
           rhs
         case (lhs, rhs) => Type.ComposedType(lhs, rhs, true)
+    case Term.Quoted(body) =>
+      if ctx.inQuote then
+        error(msg"Netsed code is not allowed" -> t.toLoc :: Nil)
+      else
+        val nestCtx = ctx.enterQuotedScope
+        given Ctx = nestCtx
+        Ctx.codeTy(typeCode(body))
     case Term.Error =>
       Type.Bot // TODO: error type?
