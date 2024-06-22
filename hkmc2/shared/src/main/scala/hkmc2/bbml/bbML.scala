@@ -109,12 +109,15 @@ object Ctx:
   private val builtinClasses = Ls(
     "Any", "Int", "Num", "Str", "Bool", "CodeBase", "Region", "Ref"
   )
+  private val infVarState = new InfVarUid.State()
   private val int2IntBinTy =
     (ctx: Ctx) => Type.FunType(intTy(using ctx) :: intTy(using ctx) :: Nil, intTy(using ctx), Type.Bot)
   private val int2BoolBinTy =
     (ctx: Ctx) => Type.FunType(intTy(using ctx) :: intTy(using ctx) :: Nil, boolTy(using ctx), Type.Bot)
   private val int2NumBinTy =
     (ctx: Ctx) => Type.FunType(intTy(using ctx) :: intTy(using ctx) :: Nil, numTy(using ctx), Type.Bot)
+  private val num2NumBinTy =
+    (ctx: Ctx) => Type.FunType(numTy(using ctx) :: numTy(using ctx) :: Nil, numTy(using ctx), Type.Bot)
   private val builtinOps = Map(
     "+" -> int2IntBinTy,
     "-" -> int2IntBinTy,
@@ -122,7 +125,17 @@ object Ctx:
     "/" -> int2NumBinTy,
     "<" -> int2BoolBinTy,
     ">" -> int2BoolBinTy,
-    // TODO
+    "+." -> num2NumBinTy,
+    "-." -> num2NumBinTy,
+    "*." -> num2NumBinTy,
+    "/." -> num2NumBinTy,
+    "==" -> ((ctx: Ctx) => {
+      val tv: Type.InfVar = Type.InfVar(1, infVarState.nextUid, new VarState())
+      Type.PolymorphicType(tv :: Nil, Type.FunType(tv :: tv :: Nil, boolTy(using ctx), Type.Bot))
+    })
+  )
+  private val builtinFuns = Map(
+    "run" -> ((ctx: Ctx) => Type.FunType(codeTy(Type.Bot)(using ctx) :: Nil, Type.Top, Type.Bot))
   )
   def isOp(name: Str): Bool = builtinOps.contains(name)
   def init(predefs: Map[Str, Symbol]): Ctx =
@@ -133,7 +146,7 @@ object Ctx:
           case Some(cls: ClassSymbol) => ctx *= ClassDef.Plain(cls, Nil, ObjBody(Term.Blk(Nil, Term.Lit(Tree.UnitLit(true)))), None)
           case _ => ???
     )
-    builtinOps.foreach(
+    (builtinOps ++ builtinFuns).foreach(
       p =>
         predefs.get(p._1) match
           case Some(v: Symbol) => ctx += v -> p._2(ctx)

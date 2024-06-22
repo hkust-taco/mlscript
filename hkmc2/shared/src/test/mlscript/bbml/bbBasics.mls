@@ -106,7 +106,7 @@ new Foo(42)
 
 
 class Point(x: Num, y: Num, z: Num)
-//│ Elab: { class Point(x@1: class:Num#1, y@2: class:Num#2, z@3: class:Num#3) { }‹›; }‹›
+//│ Elab: { class Point(x@1: class:Num#13, y@2: class:Num#14, z@3: class:Num#15) { }‹›; }‹›
 //│ Type: ⊤
 
 

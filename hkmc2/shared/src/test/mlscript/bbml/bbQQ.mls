@@ -79,3 +79,37 @@ f `=> x `=> y `=> f`(x, y)
 `if `true then `true else `false
 //│ Elab: { code"if Cons(Boolean(Unquoted(Quoted(Lit(BoolLit(true)))),Else(Unquoted(Quoted(Lit(BoolLit(true)))))),Else(Unquoted(Quoted(Lit(BoolLit(false))))))‹›"‹› }‹›
 //│ Type: CodeBase[in ⊥ out α64_1 ∨ α65_1 ∨ α66_1, in ⊥ out ⊤]
+
+
+x `=> `if x `== `0.0 then `1.0 else x
+//│ Elab: { code"λx@1. ${code"if Cons(Boolean(Unquoted(Quoted(App(Ref(==),Tup(List(Fld(‹›,Unquoted(Ref(x@1)),None), Fld(‹›,Unquoted(Quoted(Lit(DecLit(0.0)))),None)))))),Else(Unquoted(Quoted(Lit(DecLit(1.0)))))),Else(Unquoted(Ref(x@1))))‹›"‹›}‹›‹›"‹› }‹›
+//│ Type: CodeBase[in ⊥ out α74_1, in ⊥ out ⊤]
+
+run(`1)
+//│ Elab: { run#0(code"1‹›"‹›)‹›‹› }‹›
+//│ Type: ⊤
+
+:e
+run(1)
+//│ Elab: { run#1(1‹›)‹›‹› }‹›
+//│ ╔══[ERROR] Cannot solve Int ∧ ¬⊥
+//│ ╙──
+//│ Type: ⊤
+
+:e
+x `=> run(x)
+//│ Elab: { code"λx@1. ${run#2(x@1#0)‹›‹›}‹›‹›"‹› }‹›
+//│ ╔══[ERROR] Cannot constrain skolem α75_2
+//│ ╙──
+//│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
+//│ ╙──
+//│ Type: CodeBase[in ⊥ out α77_1, in ⊥ out ⊤]
+
+:e
+`let x = `42 `in run(x)
+//│ Elab: { code"{ let x@1 = ${code"42‹›"‹›}‹›; ${run#3(x@1#0)‹›‹›}‹› }‹›"‹› }‹›
+//│ ╔══[ERROR] Cannot constrain skolem α79_2
+//│ ╙──
+//│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
+//│ ╙──
+//│ Type: CodeBase[in ⊥ out α81_1, in ⊥ out ⊤]
