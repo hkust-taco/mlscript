@@ -1,12 +1,13 @@
 :global
 :bbml
 
-:fixme
+fun power: [C] -> CodeBase[out C, out Any] -> Int -> CodeBase[out C, out Any]
 fun power(x) = case
   0 then `1.0
   n then x `*. power(x)(n - 1)
-//│ Elab: { fun power(x@1) = λn@2. if Cons(Boolean(App(Ref(==),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,Lit(IntLit(0)),None)))),Else(Quoted(Lit(DecLit(1.0))))),Else(Quoted(App(Ref(*.),Tup(List(Fld(‹›,Unquoted(Ref(x@1)),None), Fld(‹›,Unquoted(App(App(Ref(power),Tup(List(Fld(‹›,Ref(x@1),None)))),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,Lit(IntLit(1)),None)))),None))))),None)))))))‹›‹›; }‹›
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+power
+//│ Elab: { fun power: forall C@2: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(C@2))), WildcardTy(None,Some(Ref(class:Any))))),None))),FunTy(Tup(List(Fld(‹›,Ref(class:Int),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(C@2))), WildcardTy(None,Some(Ref(class:Any)))))))‹›; fun power(x@3): forall C@11: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(C@11))), WildcardTy(None,Some(Ref(class:Any))))),None))),FunTy(Tup(List(Fld(‹›,Ref(class:Int),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(C@11))), WildcardTy(None,Some(Ref(class:Any)))))))‹› = λn@4. if Cons(Boolean(App(Ref(==),Tup(List(Fld(‹›,Ref(n@4),None), Fld(‹›,Lit(IntLit(0)),None)))),Else(Quoted(Lit(DecLit(1.0))))),Else(Quoted(App(Ref(*.),Tup(List(Fld(‹›,Unquoted(Ref(x@3)),None), Fld(‹›,Unquoted(App(App(Ref(power),Tup(List(Fld(‹›,Ref(x@3),None)))),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@4),None), Fld(‹›,Lit(IntLit(1)),None)))),None))))),None)))))))‹›‹›; power#1 }‹›
+//│ Type: forall α0_1: (CodeBase[in ⊥ out α0_1, in ⊥ out ⊤]) ->{⊥} (Int) ->{⊥} CodeBase[in ⊥ out α0_1, in ⊥ out ⊤]
 
 
 fun id: [A] -> A -> A
@@ -24,7 +25,7 @@ fun assertNotZero(x) =
 let checkedDiv = x `=> y `=> x `/ assertNotZero(y)
 run(checkedDiv)
 //│ ╔══[ERROR] Name not found: error
-//│ ║  l.23: 	  `if (x `== `0.0) then `error else x
+//│ ║  l.24: 	  `if (x `== `0.0) then `error else x
 //│ ╙──      	                         ^^^^^
 //│ Elab: { fun assertNotZero(x@1) = code"if Cons(Boolean(Unquoted(Quoted(App(Ref(==),Tup(List(Fld(‹›,Unquoted(Ref(x@1)),None), Fld(‹›,Unquoted(Quoted(Lit(DecLit(0.0)))),None)))))),Else(Unquoted(Quoted(Error)))),Else(Unquoted(Ref(x@1))))‹›"‹›; let checkedDiv@4 = code"λx@5. ${code"λy@6. ${code"/#0(${x@5#0}‹›, ${assertNotZero#0(y@6#0)‹›‹›}‹›)‹›‹›"‹›}‹›‹›"‹›}‹›‹›"‹›; run#1(checkedDiv@4#0)‹›‹› }‹›
 //│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
@@ -35,7 +36,7 @@ fun inc(dbg) =
   x `=> let c = x `+ `1 in dbg(c), c
 inc(c => log(show(c)))
 //│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.35: 	  x `=> let c = x `+ `1 in dbg(c), c
+//│ ║  l.36: 	  x `=> let c = x `+ `1 in dbg(c), c
 //│ ╙──      	            ^
 //│ ╔══[ERROR] Name not found: Code
 //│ ╙──
@@ -60,18 +61,18 @@ let gn5 = run(gib_naive(5))
 fun bind(rhs, k) = `let x = rhs `in k(x)
 bind
 //│ Elab: { fun bind(rhs@1, k@2) = code"{ let x@3 = ${rhs@1#0}‹›; ${k@2#0(x@3#0)‹›‹›}‹› }‹›"‹›; bind#0 }‹›
-//│ Type: (α21_0, α22_0) ->{⊥} CodeBase[in ⊥ out α32_1, in ⊥ out ⊤]
+//│ Type: (α26_0, α27_0) ->{⊥} CodeBase[in ⊥ out α37_1, in ⊥ out ⊤]
 //│ Where:
-//│   α21_0 <: ¬⊤ ∧ ¬⊥ ∨ CodeBase[in ⊥ out ⊤ ∧ ¬⊥ ∧ α24_0, in ⊥ out ⊤ ∧ ¬⊥]
-//│   α22_0 <: ¬⊤ ∧ ¬(CodeBase[in ⊤ ∧ ¬⊥ ∧ ⊥ out ⊤ ∧ ¬⊥ ∧ ⊤, in ⊥ out ⊥] ∧ ¬⊥) ->{⊤ ∧ ¬⊥ ∧ α29_0} ⊤ ∧ ¬⊥ ∧ α28_0
-//│   α28_0 <: ¬⊤ ∧ ¬⊥ ∨ CodeBase[in ⊥ out ⊤ ∧ ¬⊥ ∧ α31_0, in ⊥ out ⊤ ∧ ¬⊥]
-//│   ⊤ ∧ ¬⊥ ∧ ¬⊥ ∧ α31_0 <: α32_1
+//│   α26_0 <: ¬⊤ ∧ ¬⊥ ∨ CodeBase[in ⊥ out ⊤ ∧ ¬⊥ ∧ α29_0, in ⊥ out ⊤ ∧ ¬⊥]
+//│   α27_0 <: ¬⊤ ∧ ¬(CodeBase[in ⊤ ∧ ¬⊥ ∧ ⊥ out ⊤ ∧ ¬⊥ ∧ ⊤, in ⊥ out ⊥] ∧ ¬⊥) ->{⊤ ∧ ¬⊥ ∧ α34_0} ⊤ ∧ ¬⊥ ∧ α33_0
+//│   α33_0 <: ¬⊤ ∧ ¬⊥ ∨ CodeBase[in ⊥ out ⊤ ∧ ¬⊥ ∧ α36_0, in ⊥ out ⊤ ∧ ¬⊥]
+//│   ⊤ ∧ ¬⊥ ∧ ¬⊥ ∧ α36_0 <: α37_1
 
 :fixme
 fun bind(rhs, k: forall 'g : Code['a, 'g] -> Code['b, 'c | 'g]) =
   `let x = rhs `in k(x)
 //│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.71: 	fun bind(rhs, k: forall 'g : Code['a, 'g] -> Code['b, 'c | 'g]) =
+//│ ║  l.72: 	fun bind(rhs, k: forall 'g : Code['a, 'g] -> Code['b, 'c | 'g]) =
 //│ ╙──      	                        ^^
 //│ ╔══[ERROR] Name not found: forall
 //│ ╙──

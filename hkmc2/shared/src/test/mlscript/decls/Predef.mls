@@ -5,7 +5,8 @@ class Int
 class Num
 class Str
 class Bool
-//│ Elab: { class Any { }‹›; class Int { }‹›; class Num { }‹›; class Str { }‹›; class Bool { }‹›; }‹›
+class Nothing
+//│ Elab: { class Any { }‹›; class Int { }‹›; class Num { }‹›; class Str { }‹›; class Bool { }‹›; class Nothing { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 // TODO: move to a separate file?

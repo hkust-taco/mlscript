@@ -107,7 +107,7 @@ object Ctx:
   def codeTy(cr: Type)(using ctx: Ctx): Type = codeBaseTy(Wildcard.out(cr), Wildcard.out(Type.Top))
   def varTy(cr: Type)(using ctx: Ctx): Type = codeBaseTy(Wildcard(cr, cr), Wildcard.out(Type.Bot))
   private val builtinClasses = Ls(
-    "Any", "Int", "Num", "Str", "Bool", "CodeBase", "Region", "Ref"
+    "Any", "Int", "Num", "Str", "Bool", "Nothing", "CodeBase", "Region", "Ref"
   )
   private val infVarState = new InfVarUid.State()
   private val int2IntBinTy =
@@ -174,7 +174,13 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
   private def extract(asc: Term)(using map: Map[Uid[Symbol], Wildcard], pol: Bool)(using ctx: Ctx): Type = asc match
     case Ref(cls: ClassSymbol) =>
       ctx.getDef(cls.nme) match
-        case S(_) => Type.ClassType(cls, Nil)
+        case S(_) =>
+          if cls.nme == "Any" then
+            Type.Top
+          else if cls.nme == "Nothing" then
+            Type.Bot
+          else
+            Type.ClassType(cls, Nil)
         case N => 
           error(msg"Definition not found: ${cls.nme}" -> asc.toLoc :: Nil)
     case Ref(sym: VarSymbol) =>
@@ -204,7 +210,13 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           error(msg"Variable not found: ${sym.name}" -> ty.toLoc :: Nil)
     case Ref(cls: ClassSymbol) =>
       ctx.getDef(cls.nme) match
-        case S(_) => Type.ClassType(cls, Nil) // TODO: tparams?
+        case S(_) =>
+          if cls.nme == "Any" then
+            Type.Top
+          else if cls.nme == "Nothing" then
+            Type.Bot
+          else
+            Type.ClassType(cls, Nil) // TODO: tparams?
         case N => 
           error(msg"Definition not found: ${cls.nme}" -> ty.toLoc :: Nil)
     case FunTy(Term.Tup(params), ret) =>
