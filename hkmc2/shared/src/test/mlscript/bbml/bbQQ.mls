@@ -17,3 +17,24 @@
 `3.14
 //│ Elab: { code"3.14‹›"‹› }‹›
 //│ Type: CodeBase[in ⊥ out ⊥, in ⊥ out ⊤]
+
+
+x `=> x
+//│ Elab: { code"λx@1. ${x@1#0}‹›‹›"‹› }‹›
+//│ Type: CodeBase[in ⊥ out α2_1, in ⊥ out ⊤]
+
+x `=> `42
+//│ Elab: { code"λx@1. ${code"42‹›"‹›}‹›‹›"‹› }‹›
+//│ Type: CodeBase[in ⊥ out α5_1, in ⊥ out ⊤]
+
+:e
+x `=> 42
+//│ Elab: { code"λx@1. ${42‹›}‹›‹›"‹› }‹›
+//│ ╔══[ERROR] Cannot solve Int ∧ ¬⊥
+//│ ╙──
+//│ Type: CodeBase[in ⊥ out α8_1, in ⊥ out ⊤]
+
+
+f `=> x `=> f`(x)
+//│ Elab: { code"λf@1. ${code"λx@2. ${code"${f@1#0}‹›(${x@2#0}‹›)‹›‹›"‹›}‹›‹›"‹›}‹›‹›"‹› }‹›
+//│ Type: CodeBase[in ⊥ out α16_1, in ⊥ out ⊤]

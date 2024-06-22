@@ -11,7 +11,7 @@ import syntax.*
 import Tree.*
 
 sealed abstract class TypeArg:
-  def lvl(using skolems: NormalForm.SkolemSet): Int
+  lazy val lvl: Int
 
 case class Wildcard(in: Type, out: Type) extends TypeArg {
   private def printWhenSet(t: Type, in: Bool) = t match
@@ -21,7 +21,7 @@ case class Wildcard(in: Type, out: Type) extends TypeArg {
 
   override def toString(): String = s"in $in out $out"
     // (printWhenSet(in, true).toList ++ printWhenSet(out, false).toList).mkString(" ")
-  override def lvl(using skolems: NormalForm.SkolemSet): Int = in.lvl.max(out.lvl)
+  override lazy val lvl: Int = in.lvl.max(out.lvl)
 }
 
 object Wildcard:
@@ -31,7 +31,7 @@ object Wildcard:
 
 enum Type extends TypeArg:
   case ClassType(name: ClassSymbol, targs: Ls[TypeArg])
-  case InfVar(lvl: Int, uid: Uid[InfVar], state: VarState)
+  case InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState)
   case FunType(args: Ls[Type], ret: Type, eff: Type)
   case ComposedType(lhs: Type, rhs: Type, pol: Bool) // * positive -> union
   case NegType(ty: Type)
@@ -48,17 +48,16 @@ enum Type extends TypeArg:
     case PolymorphicType(tv, body) => s"forall ${tv.mkString(", ")}: $body"
     case Top => "⊤"
     case Bot => "⊥"
-  override def lvl(using skolems: NormalForm.SkolemSet): Int = this match
-    case ClassType(name: ClassSymbol, targs: Ls[TypeArg]) =>
+  override lazy val lvl: Int = this match
+    case ClassType(name, targs) =>
       targs.map(_.lvl).maxOption.getOrElse(0)
-    case InfVar(lvl: Int, uid: Uid[InfVar], _) =>
-      if skolems(uid) then Int.MaxValue else lvl
-    case FunType(args: Ls[Type], ret: Type, eff: Type) =>
+    case InfVar(lvl, _, _) => lvl
+    case FunType(args, ret, eff) =>
       (ret :: eff :: args).map(_.lvl).max
-    case ComposedType(lhs: Type, rhs: Type, _) =>
+    case ComposedType(lhs, rhs, _) =>
       lhs.lvl.max(rhs.lvl)
-    case NegType(ty: Type) => ty.lvl
-    case PolymorphicType(tv: Ls[InfVar], body: Type) =>
+    case NegType(ty) => ty.lvl
+    case PolymorphicType(tv, body) =>
       (body :: tv).map(_.lvl).max
     case Top | Bot => 0
   
@@ -79,27 +78,25 @@ object InfVarUid extends Uid.Handler[Type.InfVar]
 
 type EnvType = HashMap[Uid[Symbol], Type]
 type clsDefType = HashMap[Str, ClassDef]
+type MutSkolemSet = LinkedHashSet[Uid[Type.InfVar]]
 final case class Ctx(
   parent: Option[Ctx],
   lvl: Int,
   clsDefs: clsDefType,
   env: EnvType,
-  inQuote: Bool,
   quoteSkolemEnv: HashMap[Uid[Symbol], Type.InfVar], // * SkolemTag for variables in quasiquotes
-  freeVarsInCurrentQuote: LinkedHashSet[Type] // * Free variables appearing in the current quote scope
 ):
   def +=(p: Symbol -> Type): Unit = env += p._1.uid -> p._2
   def get(sym: Symbol): Option[Type] = env.get(sym.uid) orElse parent.dlof(_.get(sym))(None)
   def *=(cls: ClassDef): Unit = clsDefs += cls.sym.id.name -> cls
   def getDef(name: Str): Option[ClassDef] = clsDefs.get(name) orElse parent.dlof(_.getDef(name))(None)
-  def nest: Ctx =
-    assert(!inQuote)
-    Ctx(Some(this), lvl, HashMap.empty, HashMap.empty, inQuote, quoteSkolemEnv, freeVarsInCurrentQuote)
-  def nextLevel: Ctx =
-    assert(!inQuote)
-    Ctx(Some(this), lvl + 1, HashMap.empty, HashMap.empty, inQuote, quoteSkolemEnv, freeVarsInCurrentQuote)
-  def enterQuotedScope: Ctx =
-    Ctx(Some(this), lvl + 1, HashMap.empty, HashMap.empty, true, HashMap.empty, LinkedHashSet.empty)
+  def &=(p: Symbol -> Type.InfVar)(using skolems: MutSkolemSet): Unit =
+    env += p._1.uid -> Ctx.varTy(p._2)(using this)
+    skolems += p._2.uid
+    quoteSkolemEnv += p._1.uid -> p._2
+  def getSk(sym: Symbol): Option[Type] = quoteSkolemEnv.get(sym.uid) orElse parent.dlof(_.getSk(sym))(None)
+  def nest: Ctx = Ctx(Some(this), lvl, HashMap.empty, HashMap.empty, quoteSkolemEnv)
+  def nextLevel: Ctx = Ctx(Some(this), lvl + 1, HashMap.empty, HashMap.empty, quoteSkolemEnv)
 
 object Ctx:
   def intTy(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Int").get.sym, Nil)
@@ -128,7 +125,7 @@ object Ctx:
     // TODO
   )
   def init(predefs: Map[Str, Symbol]): Ctx =
-    val ctx = new Ctx(None, 0, HashMap.empty, HashMap.empty, false, HashMap.empty, LinkedHashSet.empty)
+    val ctx = new Ctx(None, 0, HashMap.empty, HashMap.empty, HashMap.empty)
     builtinClasses.foreach(
       cls =>
         predefs.get(cls) match
@@ -152,7 +149,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
   private def freshVar(using ctx: Ctx): Type.InfVar = Type.InfVar(ctx.lvl, infVarState.nextUid, new VarState())
   private def freshWildcard(using ctx: Ctx) = Wildcard(freshVar, freshVar)
 
-  private def typeCheckArgs(args: Term)(using ctx: Ctx, skolems: SkolemSet): Ls[Type] = args match
+  private def typeCheckArgs(args: Term)(using ctx: Ctx, skolems: MutSkolemSet): Ls[Type] = args match
     case Term.Tup(flds) => flds.map(f => typeCheck(f.value))
     case _ => ???
 
@@ -240,7 +237,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
     case Type.Top | Type.Bot => ty
   
   @tailrec
-  private def constrain(lhs: Type, rhs: Type)(using ctx: Ctx, skolems: SkolemSet): Unit = (lhs, rhs) match
+  private def constrain(lhs: Type, rhs: Type)(using ctx: Ctx, skolems: MutSkolemSet): Unit = (lhs, rhs) match
     case (Type.PolymorphicType(tvs1, bd1), Type.PolymorphicType(tvs2, bd2)) =>
       if tvs1.length != tvs2.length then
         error(msg"Cannot check polymorphic types ${lhs.toString} and ${rhs.toString}" -> N :: Nil)
@@ -259,14 +256,36 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           val nv = freshVar
           uid -> nv
       }).toMap), rhs)
-    case _ => solver.constrain(lhs, rhs)
+    case _ =>
+      given SkolemSet = skolems.toSet
+      solver.constrain(lhs, rhs)
 
-  private def typeCode(code: Term)(using ctx: Ctx, skolems: SkolemSet): Type = code match
+  private def typeCode(code: Term)(using ctx: Ctx, skolems: MutSkolemSet): Type = code match
     case Lit(_) => Type.Bot
+    case Lam(params, body) =>
+      val nestCtx = ctx.nextLevel
+      given Ctx = nestCtx
+      val bds = params.map:
+        case Param(_, sym, _) =>
+          val sk = freshVar
+          nestCtx &= sym -> sk
+          sk
+      val bodyTy = typeCode(body)
+      val res = freshVar(using ctx)
+      val uni = Type.ComposedType(bds.foldLeft[Type](Type.Bot)((res, bd) => Type.ComposedType(res, bd, true)), res, true)
+      constrain(bodyTy, uni)
+      res
+    case Term.App(lhs, Term.Tup(rhs)) => // TODO: operators
+      Type.ComposedType(typeCode(lhs), rhs.foldLeft[Type](Type.Bot)((res, p) => Type.ComposedType(res, typeCode(p.value), true)), true)
+    case Term.Unquoted(body) =>
+      val ty = typeCheck(body)
+      val tv = freshVar
+      constrain(ty, Ctx.codeTy(tv))
+      tv
     case _ =>
       error(msg"Cannot quote ${code.toString}" -> code.toLoc :: Nil)
 
-  def typeCheck(t: Term)(using ctx: Ctx, skolems: SkolemSet): Type = t match
+  def typeCheck(t: Term)(using ctx: Ctx, skolems: MutSkolemSet): Type = t match
     case Ref(sym: VarSymbol) =>
       ctx.get(sym) match
         case Some(ty) => ty
@@ -311,7 +330,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
                 ty
 
             given Ctx = defCtx
-            given SkolemSet = skolems ++ newSkolems.map(_.uid)
+            given MutSkolemSet = skolems ++ newSkolems.map(_.uid)
             val bodyTy = typeCheck(body)
             retAnno.foreach(anno => constrain(bodyTy, anno))
             ctx += sym -> sigTy.getOrElse(Type.FunType(argsTy, bodyTy, Type.Bot)) // TODO: eff
@@ -418,11 +437,10 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           rhs
         case (lhs, rhs) => Type.ComposedType(lhs, rhs, true)
     case Term.Quoted(body) =>
-      if ctx.inQuote then
-        error(msg"Netsed code is not allowed" -> t.toLoc :: Nil)
-      else
-        val nestCtx = ctx.enterQuotedScope
-        given Ctx = nestCtx
-        Ctx.codeTy(typeCode(body))
+      val nestCtx = ctx.nextLevel
+      given Ctx = nestCtx
+      Ctx.codeTy(typeCode(body))
+    case _: Term.Unquoted =>
+      error(msg"Unquote should nest in quasiquote" -> t.toLoc :: Nil)
     case Term.Error =>
       Type.Bot // TODO: error type?

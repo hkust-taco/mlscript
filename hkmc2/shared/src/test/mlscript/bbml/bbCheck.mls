@@ -78,7 +78,7 @@ high
 :e
 high(x => x + 1)
 //│ Elab: { high#1(λx@2. +#3(x@2#0, 1‹›)‹›‹›‹›)‹›‹› }‹›
-//│ ╔══[ERROR] Cannot constrain skolem α2_1
+//│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
 //│ ╙──
 //│ ╔══[ERROR] Cannot constrain skolem α2_1
 //│ ╙──

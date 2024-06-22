@@ -35,7 +35,7 @@ id
 :e
 (x => x): [A] -> A -> A
 //│ Elab: { Lam(List(Param(‹›,x@1,None)),Ref(x@1)): Forall(List(A@2),FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2)))‹› }‹›
-//│ ╔══[ERROR] Cannot constrain skolem α5_1
+//│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: forall α5_1: (α5_1) ->{⊥} α5_1
 
@@ -147,7 +147,7 @@ foo([B] => (y: B) => y)
 :e
 foo(x => x)
 //│ Elab: { foo#3(λx@2. x@2#0‹›)‹›‹› }‹›
-//│ ╔══[ERROR] Cannot constrain skolem α63_1
+//│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: Int
 
@@ -162,7 +162,7 @@ new Foo(id)
 :e
 new Foo(x => x)
 //│ Elab: { new class:Foo(Lam(List(Param(‹›,x@1,None)),Ref(x@1)))‹› }‹›
-//│ ╔══[ERROR] Cannot constrain skolem α71_1
+//│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: Foo
 
