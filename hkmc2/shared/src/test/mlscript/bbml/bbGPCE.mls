@@ -1,0 +1,94 @@
+:global
+:bbml
+
+:fixme
+fun power(x) = case
+  0 then `1.0
+  n then x `*. power(x)(n - 1)
+//│ /!!!\ Uncaught error: scala.MatchError: Case(Block(List(InfixApp(IntLit(0),keyword 'then',Quoted(DecLit(1.0))), InfixApp(Ident(n),keyword 'then',Quoted(App(Ident(*.),Tup(List(Unquoted(Ident(x)), Unquoted(App(App(Ident(power),Tup(List(Ident(x)))),Tup(List(App(Ident(-),Tup(List(Ident(n), IntLit(1)))))))))))))))) (of class hkmc2.syntax.Tree$Case)
+
+
+fun id: [A] -> A -> A
+fun id(x) = x
+//│ Elab: { fun id: forall A@2: FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2))‹›; fun id(x@3): forall A@5: FunTy(Tup(List(Fld(‹›,Ref(A@5),None))),Ref(A@5))‹› = x@3#0; }‹›
+//│ Type: ⊤
+
+run(x `=> id(x) `* x)
+//│ Elab: { run#0(code"λx@2. ${code"*#0(${id#0(x@2#0)‹›‹›}‹›, ${x@2#1}‹›)‹›‹›"‹›}‹›‹›"‹›)‹›‹› }‹›
+//│ Type: ⊤
+
+:fixme
+fun assertNotZero(x) =
+  `if (x `== `0.0) then `error else x
+let checkedDiv = x `=> y `=> x `/ assertNotZero(y)
+run(checkedDiv)
+//│ ╔══[ERROR] Name not found: error
+//│ ║  l.22: 	  `if (x `== `0.0) then `error else x
+//│ ╙──      	                         ^^^^^
+//│ Elab: { fun assertNotZero(x@1) = code"if Cons(Boolean(Unquoted(Quoted(App(Ref(==),Tup(List(Fld(‹›,Unquoted(Ref(x@1)),None), Fld(‹›,Unquoted(Quoted(Lit(DecLit(0.0)))),None)))))),Else(Unquoted(Quoted(Error)))),Else(Unquoted(Ref(x@1))))‹›"‹›; let checkedDiv@4 = code"λx@5. ${code"λy@6. ${code"/#0(${x@5#0}‹›, ${assertNotZero#0(y@6#0)‹›‹›}‹›)‹›‹›"‹›}‹›‹›"‹›}‹›‹›"‹›; run#1(checkedDiv@4#0)‹›‹› }‹›
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+:fixme
+fun show: Code[anything, anything] -> Str = _ => "debug"
+fun inc(dbg) =
+  x `=> let c = x `+ `1 in dbg(c), c
+inc(c => log(show(c)))
+//│ ╔══[PARSE ERROR] Unexpected identifier here
+//│ ║  l.34: 	  x `=> let c = x `+ `1 in dbg(c), c
+//│ ╙──      	            ^
+//│ ╔══[ERROR] Name not found: Code
+//│ ╙──
+//│ ╔══[ERROR] Name not found: anything
+//│ ╙──
+//│ ╔══[ERROR] Name not found: anything
+//│ ╙──
+//│ ╔══[ERROR] Name not found: let
+//│ ╙──
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+:fixme
+fun body(x, y) = case
+  0 then x
+  1 then y
+  n then body(y, x `+ y)(n - 1)
+fun gib_naive(n) =
+  (x, y) `=> body(x, y)(n)
+let gn5 = run(gib_naive(5))
+//│ /!!!\ Uncaught error: scala.MatchError: Case(Block(List(InfixApp(IntLit(0),keyword 'then',Ident(x)), InfixApp(IntLit(1),keyword 'then',Ident(y)), InfixApp(Ident(n),keyword 'then',App(App(Ident(body),Tup(List(Ident(y), Quoted(App(Ident(+),Tup(List(Unquoted(Ident(x)), Unquoted(Ident(y))))))))),Tup(List(App(Ident(-),Tup(List(Ident(n), IntLit(1))))))))))) (of class hkmc2.syntax.Tree$Case)
+
+fun bind(rhs, k) = `let x = rhs `in k(x)
+bind
+//│ Elab: { fun bind(rhs@1, k@2) = code"{ let x@3 = ${rhs@1#0}‹›; ${k@2#0(x@3#0)‹›‹›}‹› }‹›"‹›; bind#0 }‹›
+//│ Type: (α14_0, α15_0) ->{⊥} CodeBase[in ⊥ out α25_1, in ⊥ out ⊤]
+//│ Where:
+//│   α14_0 <: ¬⊤ ∧ ¬⊥ ∨ CodeBase[in ⊥ out ⊤ ∧ ¬⊥ ∧ α17_0, in ⊥ out ⊤ ∧ ¬⊥]
+//│   α15_0 <: ¬⊤ ∧ ¬(CodeBase[in ⊤ ∧ ¬⊥ ∧ ⊥ out ⊤ ∧ ¬⊥ ∧ ⊤, in ⊥ out ⊥] ∧ ¬⊥) ->{⊤ ∧ ¬⊥ ∧ α22_0} ⊤ ∧ ¬⊥ ∧ α21_0
+//│   α21_0 <: ¬⊤ ∧ ¬⊥ ∨ CodeBase[in ⊥ out ⊤ ∧ ¬⊥ ∧ α24_0, in ⊥ out ⊤ ∧ ¬⊥]
+//│   ⊤ ∧ ¬⊥ ∧ ¬⊥ ∧ α24_0 <: α25_1
+
+:fixme
+fun bind(rhs, k: forall 'g : Code['a, 'g] -> Code['b, 'c | 'g]) =
+  `let x = rhs `in k(x)
+//│ ╔══[PARSE ERROR] Unexpected identifier here
+//│ ║  l.70: 	fun bind(rhs, k: forall 'g : Code['a, 'g] -> Code['b, 'c | 'g]) =
+//│ ╙──      	                        ^^
+//│ ╔══[ERROR] Name not found: forall
+//│ ╙──
+//│ Elab: { fun bind(rhs@1, k@2: <error>‹›) = code"{ let x@3 = ${rhs@1#0}‹›; ${k@2#0(x@3#0)‹›‹›}‹› }‹›"‹›; }‹›
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+:fixme
+fun body: forall 'g : (Code[Int, 'g], Code[Int, 'g]) -> Int -> Code[Int, 'g]
+fun body(x, y) = case
+  0 then x
+  1 then y
+  n then bind of x `+ y, z => body(y, z)(n - 1)
+fun gib(n) = ((x, y) `=> body(x, y)(n))
+let g5 = run(gib(5))
+//│ ╔══[ERROR] Name not found: Code
+//│ ╙──
+//│ ╔══[ERROR] Name not found: Code
+//│ ╙──
+//│ ╔══[ERROR] Name not found: Code
+//│ ╙──
+//│ /!!!\ Uncaught error: scala.MatchError: Case(Block(List(InfixApp(IntLit(0),keyword 'then',Ident(x)), InfixApp(IntLit(1),keyword 'then',Ident(y)), InfixApp(Ident(n),keyword 'then',App(Ident(bind),Tup(List(Quoted(App(Ident(+),Tup(List(Unquoted(Ident(x)), Unquoted(Ident(y)))))), InfixApp(Tup(List(Ident(z))),keyword '=>',App(App(Ident(body),Tup(List(Ident(y), Ident(z)))),Tup(List(App(Ident(-),Tup(List(Ident(n), IntLit(1))))))))))))))) (of class hkmc2.syntax.Tree$Case)
