@@ -237,12 +237,14 @@ class Elaborator(raise: Raise):
       case _ => go(sts, Nil)
   
   def params(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
+    case Tup(App(Ident(","), list) :: Nil) => params(list)
     case Tup(ps) =>
       val res = ps.flatMap:
         case id: Ident =>
           Param(FldFlags.empty, VarSymbol(id.name, nextUid), N) :: Nil
         case InfixApp(lhs: Ident, Keyword.`:`, rhs) =>
           Param(FldFlags.empty, VarSymbol(lhs.name, nextUid), S(term(rhs))) :: Nil
+        case App(Ident(","), list) => params(list)._1
       (res, ctx.copy(locals = ctx.locals ++ res.map(p => p.sym.name -> p.sym)))
   
   def pattern(t: Tree): Ctxl[(Pattern, Ls[Str -> VarSymbol])] =

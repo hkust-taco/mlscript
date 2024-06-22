@@ -134,6 +134,10 @@ x `=> x
 //│ Parsed:
 //│ 	Quoted(InfixApp(Tup(List(App(Ident(,),Tup(List(Ident(x), Ident(y)))))),keyword '=>',Unquoted(Quoted(App(Ident(+),Tup(List(Unquoted(Ident(x)), Unquoted(Ident(y)))))))))
 
+(x, y, z) `=> x `+ y `+ z
+//│ Parsed:
+//│ 	Quoted(InfixApp(Tup(List(App(Ident(,),Tup(List(Ident(x), App(Ident(,),Tup(List(Ident(y), Ident(z))))))))),keyword '=>',Unquoted(Quoted(App(Ident(+),Tup(List(Unquoted(Quoted(App(Ident(+),Tup(List(Unquoted(Ident(x)), Unquoted(Ident(y))))))), Unquoted(Ident(z)))))))))
+
 `1 `+ `1
 //│ Parsed:
 //│ 	Quoted(App(Ident(+),Tup(List(Unquoted(Quoted(IntLit(1))), Unquoted(Quoted(IntLit(1)))))))

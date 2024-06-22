@@ -115,7 +115,7 @@ object Ctx:
     (ctx: Ctx) => Type.FunType(intTy(using ctx) :: intTy(using ctx) :: Nil, boolTy(using ctx), Type.Bot)
   private val int2NumBinTy =
     (ctx: Ctx) => Type.FunType(intTy(using ctx) :: intTy(using ctx) :: Nil, numTy(using ctx), Type.Bot)
-  private val builtinFuns = Map(
+  private val builtinOps = Map(
     "+" -> int2IntBinTy,
     "-" -> int2IntBinTy,
     "*" -> int2IntBinTy,
@@ -124,6 +124,7 @@ object Ctx:
     ">" -> int2BoolBinTy,
     // TODO
   )
+  def isOp(name: Str): Bool = builtinOps.contains(name)
   def init(predefs: Map[Str, Symbol]): Ctx =
     val ctx = new Ctx(None, 0, HashMap.empty, HashMap.empty, HashMap.empty)
     builtinClasses.foreach(
@@ -132,7 +133,7 @@ object Ctx:
           case Some(cls: ClassSymbol) => ctx *= ClassDef.Plain(cls, Nil, ObjBody(Term.Blk(Nil, Term.Lit(Tree.UnitLit(true)))), None)
           case _ => ???
     )
-    builtinFuns.foreach(
+    builtinOps.foreach(
       p =>
         predefs.get(p._1) match
           case Some(v: Symbol) => ctx += v -> p._2(ctx)
@@ -275,7 +276,9 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       val uni = Type.ComposedType(bds.foldLeft[Type](Type.Bot)((res, bd) => Type.ComposedType(res, bd, true)), res, true)
       constrain(bodyTy, uni)
       res
-    case Term.App(lhs, Term.Tup(rhs)) => // TODO: operators
+    case Term.App(Ref(sym: TermSymbol), Term.Tup(rhs)) if Ctx.isOp(sym.nme) =>
+      rhs.foldLeft[Type](Type.Bot)((res, p) => Type.ComposedType(res, typeCode(p.value), true))
+    case Term.App(lhs, Term.Tup(rhs)) =>
       Type.ComposedType(typeCode(lhs), rhs.foldLeft[Type](Type.Bot)((res, p) => Type.ComposedType(res, typeCode(p.value), true)), true)
     case Term.Unquoted(body) =>
       val ty = typeCheck(body)

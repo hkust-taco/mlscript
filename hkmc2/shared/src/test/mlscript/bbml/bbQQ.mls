@@ -38,3 +38,17 @@ x `=> 42
 f `=> x `=> f`(x)
 //│ Elab: { code"λf@1. ${code"λx@2. ${code"${f@1#0}‹›(${x@2#0}‹›)‹›‹›"‹›}‹›‹›"‹›}‹›‹›"‹› }‹›
 //│ Type: CodeBase[in ⊥ out α16_1, in ⊥ out ⊤]
+
+
+x `=> y `=> x `+ y
+//│ Elab: { code"λx@1. ${code"λy@2. ${code"+#0(${x@1#0}‹›, ${y@2#0}‹›)‹›‹›"‹›}‹›‹›"‹›}‹›‹›"‹› }‹›
+//│ Type: CodeBase[in ⊥ out α24_1, in ⊥ out ⊤]
+
+
+(x, y) `=> x `+ y
+//│ Elab: { code"λx@1, y@2. ${code"+#1(${x@1#0}‹›, ${y@2#0}‹›)‹›‹›"‹›}‹›‹›"‹› }‹›
+//│ Type: CodeBase[in ⊥ out α30_1, in ⊥ out ⊤]
+
+(x, y, z) `=> x `+ y `+ z
+//│ Elab: { code"λx@1, y@2, z@3. ${code"+#2(${code"+#3(${x@1#0}‹›, ${y@2#0}‹›)‹›‹›"‹›}‹›, ${z@3#0}‹›)‹›‹›"‹›}‹›‹›"‹› }‹›
+//│ Type: CodeBase[in ⊥ out α39_1, in ⊥ out ⊤]
