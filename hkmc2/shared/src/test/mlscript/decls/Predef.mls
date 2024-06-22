@@ -18,7 +18,8 @@ class Ref[T, S]
 
 // the type here is fake.
 fun run: Any -> Any
-//│ Elab: { fun run: (class:Any#0)‹› -> class:Any#1‹›; }‹›
+val error: Nothing
+//│ Elab: { fun run: (class:Any#0)‹› -> class:Any#1‹›; val error: class:Nothing#0; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 fun (+): (Int, Int) -> Int

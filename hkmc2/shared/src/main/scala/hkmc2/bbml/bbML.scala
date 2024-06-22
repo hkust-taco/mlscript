@@ -134,8 +134,9 @@ object Ctx:
       Type.PolymorphicType(tv :: Nil, Type.FunType(tv :: tv :: Nil, boolTy(using ctx), Type.Bot))
     })
   )
-  private val builtinFuns = Map(
-    "run" -> ((ctx: Ctx) => Type.FunType(codeTy(Type.Bot)(using ctx) :: Nil, Type.Top, Type.Bot))
+  private val builtinVals = Map(
+    "run" -> ((ctx: Ctx) => Type.FunType(codeTy(Type.Bot)(using ctx) :: Nil, Type.Top, Type.Bot)),
+    "error" -> ((ctx: Ctx) => Type.Bot)
   )
   def isOp(name: Str): Bool = builtinOps.contains(name)
   def init(predefs: Map[Str, Symbol]): Ctx =
@@ -146,7 +147,7 @@ object Ctx:
           case Some(cls: ClassSymbol) => ctx *= ClassDef.Plain(cls, Nil, ObjBody(Term.Blk(Nil, Term.Lit(Tree.UnitLit(true)))), None)
           case _ => ???
     )
-    (builtinOps ++ builtinFuns).foreach(
+    (builtinOps ++ builtinVals).foreach(
       p =>
         predefs.get(p._1) match
           case Some(v: Symbol) => ctx += v -> p._2(ctx)
@@ -244,6 +245,8 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
         case t => typeType(t)(using ctx, false)
       })
       case _ => error(msg"${lhs.toString} is not a class" -> ty.toLoc :: Nil)
+    case CompType(lhs, rhs, pol) =>
+      Type.ComposedType(typeType(lhs), typeType(rhs), pol)
     case _ => error(msg"${ty.toString} is not a valid type annotation" -> ty.toLoc :: Nil) // TODO
 
   private def instantiate(ty: Type)(using map: Map[Uid[Type.InfVar], Type.InfVar]): Type = ty match
@@ -288,6 +291,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
 
   private def typeCode(code: Term)(using ctx: Ctx, skolems: MutSkolemSet): Type = code match
     case Lit(_) => Type.Bot
+    case Ref(sym: Symbol) if sym.nme == "error" => Type.Bot
     case Lam(params, body) =>
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx
@@ -365,6 +369,20 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           pctx += sym -> Type.FunType(argsTy, bodyTy, Type.Bot) // TODO: eff
     case _ => ???
 
+  private def typeSplit(split: TermSplit)(using ctx: Ctx, skolems: MutSkolemSet): Type = split match
+    case Split.Cons(TermBranch.Boolean(cond, Split.Else(cons)), alts) =>
+      constrain(typeCheck(cond), Ctx.boolTy)
+      (typeCheck(cons), typeSplit(alts)) match
+        case (lhs: Type.PolymorphicType, rhs) =>
+          constrain(lhs, rhs)
+          lhs
+        case (lhs, rhs: Type.PolymorphicType) =>
+          constrain(lhs, rhs)
+          rhs
+        case (lhs, rhs) => Type.ComposedType(lhs, rhs, true)
+    case Split.Else(alts) => typeCheck(alts)
+
+  
   def typeCheck(t: Term)(using ctx: Ctx, skolems: MutSkolemSet): Type = t match
     case Ref(sym: VarSymbol) =>
       ctx.get(sym) match
@@ -480,16 +498,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           nestCtx += sym -> tv // TODO: a type var symbol may be better...
           tv
       Type.PolymorphicType(bds, typeCheck(body)(using nestCtx, skolems ++ bds.map(_.uid)))
-    case Term.If(Split.Cons(TermBranch.Boolean(cond, Split.Else(cons)), Split.Else(alts))) =>
-      constrain(typeCheck(cond), Ctx.boolTy)
-      (typeCheck(cons), typeCheck(alts)) match
-        case (lhs: Type.PolymorphicType, rhs) =>
-          constrain(lhs, rhs)
-          lhs
-        case (lhs, rhs: Type.PolymorphicType) =>
-          constrain(lhs, rhs)
-          rhs
-        case (lhs, rhs) => Type.ComposedType(lhs, rhs, true)
+    case Term.If(branches) => typeSplit(branches)
     case Term.Quoted(body) =>
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx

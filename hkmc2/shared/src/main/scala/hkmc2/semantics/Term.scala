@@ -23,6 +23,7 @@ enum Term extends Statement with Located:
   case Unquoted(body: Term)
   case New(cls: ClassSymbol, args: Ls[Term])
   case Asc(term: Term, ty: Term)
+  case CompType(lhs: Term, rhs: Term, pol: Bool)
   
   var symbol: Opt[Symbol] = N
   
@@ -63,7 +64,7 @@ sealed trait Statement extends Located:
       case Split.Cons(branch, Split.Else(alts)) => branch match
         case TermBranch.Boolean(cond, Split.Else(cons)) => cond :: cons :: alts :: Nil
         case _ => ??? // TODO
-      case _ => ??? // TODO
+      case _ => Nil // TODO
     case Lam(params, body) => body :: Nil
     case Blk(stats, res) => stats.flatMap(_.subTerms) ::: res :: Nil
     case Quoted(term) => term :: Nil

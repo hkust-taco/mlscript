@@ -188,3 +188,7 @@ Int ->{Any} Int
 [A] -> Str ->{A} Str
 //│ Parsed:
 //│ 	Forall(List(Ident(A)),InfixApp(Tup(List(Ident(Str))),keyword '->',Effectful(Ident(A),Ident(Str))))
+
+A | B
+//│ Parsed:
+//│ 	App(Ident(|),Tup(List(Ident(A), Ident(B))))
