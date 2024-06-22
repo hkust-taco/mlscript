@@ -139,6 +139,15 @@ x `=> x
 //│ 	Quoted(App(Ident(+),Tup(List(Unquoted(Quoted(IntLit(1))), Unquoted(Quoted(IntLit(1)))))))
 
 
+f`(x)
+//│ Parsed:
+//│ 	Quoted(App(Unquoted(Ident(f)),Tup(List(Unquoted(Ident(x))))))
+
+g`(`1, `2)
+//│ Parsed:
+//│ 	Quoted(App(Unquoted(Ident(g)),Tup(List(Unquoted(Quoted(IntLit(1))), Unquoted(Quoted(IntLit(2)))))))
+
+
 `let x = `42 `in x
 //│ Parsed:
 //│ 	Quoted(Let(Ident(x),Unquoted(Quoted(IntLit(42))),Some(Unquoted(Ident(x)))))

@@ -488,7 +488,7 @@ abstract class Parser(
         case _ :: (br @ BRACKETS(Round, toks), loc) :: _ =>
           consume
           consume
-          val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
+          val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented).map(t => Unquoted(t))
           val res = App(Unquoted(acc), Tup(as).withLoc(S(loc)))
           exprCont(Quoted(res), prec, allowNewlines)
         case _ :: (OP(opStr), l0) :: _ =>
