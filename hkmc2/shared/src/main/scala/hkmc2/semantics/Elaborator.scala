@@ -95,6 +95,24 @@ class Elaborator(raise: Raise):
       Term.If(TermBranch.Boolean(term(cond), Split.`then`(term(cons))) :: Split.default(term(alts)))
     case Tree.Quoted(body) => Term.Quoted(term(body))
     case Tree.Unquoted(body) => Term.Unquoted(term(body))
+    case Tree.Case(Block(branches)) => branches.lastOption match
+      case S(InfixApp(Ident(name), Keyword.`then`, dflt)) =>
+        val sym = VarSymbol(name, nextUid)
+        val nestCtx = ctx.copy(locals = ctx.locals ++ Ls(name -> sym))
+        Term.Lam(
+          Param(FldFlags.empty, sym, N) :: Nil,
+          Term.If(branches.dropRight(1).foldRight[Split[TermBranch]](Split.Else(term(dflt)(using nestCtx)))((e, res) => e match
+            case InfixApp(target, Keyword.`then`, cons) =>
+              TermBranch.Boolean(
+                term(App(Ident("=="), Tree.Tup(Ident(name) :: target :: Nil)))(using nestCtx),
+                Split.`then`(term(cons)(using nestCtx))
+              ) :: res
+            case _ => ??? // TODO
+          ))
+        )
+      case _ =>
+        raise(ErrorReport(msg"Unsupported default case branch." -> tree.toLoc :: Nil))
+        Term.Error
     case Empty() =>
       raise(ErrorReport(msg"A term was expected in this position, but no term was found." -> tree.toLoc :: Nil))
       Term.Error

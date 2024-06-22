@@ -318,6 +318,41 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
     case _ =>
       error(msg"Cannot quote ${code.toString}" -> code.toLoc :: Nil)
 
+  // TODO: refactor
+  private def typeFunDef(sym: Symbol, lam: Term, sig: Opt[Term], t: Term, pctx: Ctx)(using ctx: Ctx, skolems: MutSkolemSet) = lam match
+    case Term.Lam(params, body) =>
+      // * parameters, return, effect, new skolems
+      def rec(sig: Opt[Type]): (Ls[Type], Opt[Type], Opt[Type], Ls[Type.InfVar]) = sig match
+        case S(ft @ Type.FunType(args, ret, eff)) => (args, S(ret), S(eff), Nil)
+        case S(Type.PolymorphicType(tvs, ty)) => rec(S(ty)) match
+          case (p, r, e, s) => (p, r, e, tvs ++ s)
+        case _ => (params.map {
+          case Param(_, _, S(sign)) =>
+            typeType(sign)(using ctx, true)
+          case _ => freshVar
+        }, N, N, Nil)
+      given Bool = true
+      val sigTy = sig.map(typeType)
+      sigTy.foreach(sig => pctx += sym -> sig) // for recursive types
+      val (tvs, retAnno, effAnno, newSkolems) = rec(sigTy)
+      val defCtx = sigTy match
+        case S(_: Type.PolymorphicType) => ctx.nextLevel
+        case _ => ctx.nest
+      if params.length != tvs.length then
+         error(msg"Cannot type function ${t.toString} as ${sig.toString}" -> t.toLoc :: Nil)
+      else
+        val argsTy = params.zip(tvs).map:
+          case (Param(_, sym, _), ty) =>
+            defCtx += sym -> ty
+            ty
+        given Ctx = defCtx
+        given MutSkolemSet = skolems ++ newSkolems.map(_.uid)
+        val bodyTy = typeCheck(body)
+        retAnno.foreach(anno => constrain(bodyTy, anno))
+        if sigTy.isEmpty then
+          pctx += sym -> Type.FunType(argsTy, bodyTy, Type.Bot) // TODO: eff
+    case _ => ???
+
   def typeCheck(t: Term)(using ctx: Ctx, skolems: MutSkolemSet): Type = t match
     case Ref(sym: VarSymbol) =>
       ctx.get(sym) match
@@ -338,37 +373,9 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           val rhsTy = typeCheck(rhs)
           nestCtx += sym -> rhsTy
         case TermDefinition(Fun, sym, Some(params), sig, Some(body), _) =>
-          // * parameters, return, effect, new skolems
-          def rec(sig: Opt[Type]): (Ls[Type], Opt[Type], Opt[Type], Ls[Type.InfVar]) = sig match
-            case S(ft @ Type.FunType(args, ret, eff)) => (args, S(ret), S(eff), Nil)
-            case S(Type.PolymorphicType(tvs, ty)) => rec(S(ty)) match
-              case (p, r, e, s) => (p, r, e, tvs ++ s)
-            case _ => (params.map {
-              case Param(_, _, S(sign)) =>
-                typeType(sign)(using ctx, true)
-              case _ => freshVar
-            }, N, N, Nil)
-          given Bool = true
-          val sigTy = sig.map(typeType)
-          sigTy.foreach(sig => ctx += sym -> sig) // for recursive types
-          val (tvs, retAnno, effAnno, newSkolems) = rec(sigTy)
-          val defCtx = sigTy match
-            case S(_: Type.PolymorphicType) => nestCtx.nextLevel
-            case _ => nestCtx.nest
-          if params.length != tvs.length then
-             error(msg"Cannot type function ${t.toString} as ${sig.toString}" -> t.toLoc :: Nil)
-          else
-            val argsTy = params.zip(tvs).map:
-              case (Param(_, sym, _), ty) =>
-                defCtx += sym -> ty
-                ty
-
-            given Ctx = defCtx
-            given MutSkolemSet = skolems ++ newSkolems.map(_.uid)
-            val bodyTy = typeCheck(body)
-            retAnno.foreach(anno => constrain(bodyTy, anno))
-            if sigTy.isEmpty then
-              ctx += sym -> Type.FunType(argsTy, bodyTy, Type.Bot) // TODO: eff
+          typeFunDef(sym, Term.Lam(params, body), sig, t, ctx)
+        case TermDefinition(Fun, sym, N, sig, Some(body), _) =>
+          typeFunDef(sym, body, sig, t, ctx)
         case clsDef: ClassDef => ctx *= clsDef
         case _ => () // TODO
       typeCheck(res)

@@ -257,8 +257,13 @@ fact
 //│ Elab: { fact#1 }‹›
 //│ Type: (Int) ->{⊥} Int
 
-:fixme
-fun fact = case
+fun fact2: Int -> Int
+fun fact2 = case
   0 then 1
   n then n * fact(n - 1)
-//│ /!!!\ Uncaught error: scala.MatchError: Case(Block(List(InfixApp(IntLit(0),keyword 'then',IntLit(1)), InfixApp(Ident(n),keyword 'then',App(Ident(*),Tup(List(Ident(n), App(Ident(fact),Tup(List(App(Ident(-),Tup(List(Ident(n), IntLit(1)))))))))))))) (of class hkmc2.syntax.Tree$Case)
+//│ Elab: { fun fact2: (class:Int#20)‹› -> class:Int#21‹›; fun fact2: (class:Int#22)‹› -> class:Int#23‹› = λn@2. if Cons(Boolean(App(Ref(==),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,Lit(IntLit(0)),None)))),Else(Lit(IntLit(1)))),Else(App(Ref(*),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,App(Ref(fact),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None))))))‹›‹›; }‹›
+//│ Type: ⊤
+
+fact2
+//│ Elab: { fact2#0 }‹›
+//│ Type: (Int) ->{⊥} Int
