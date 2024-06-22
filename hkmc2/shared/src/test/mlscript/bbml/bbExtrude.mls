@@ -49,11 +49,11 @@ fun h(y: [A] -> A -> Int) =
 
 h
 //│ Elab: { h#0 }‹›
-//│ Type: (forall α17_1: (α17_1) ->{⊥} Int) ->{⊥} forall α17_1: (α17_1) ->{⊥} Int
+//│ Type: (forall α15_1: (α15_1) ->{⊥} Int) ->{⊥} forall α15_1: (α15_1) ->{⊥} Int
 
 h([A] => (x: A) => x)
 //│ Elab: { h#1(forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹›)‹›‹› }‹›
-//│ Type: forall α17_1: (α17_1) ->{⊥} Int
+//│ Type: forall α15_1: (α15_1) ->{⊥} Int
 
 :fixme
 :e
@@ -64,4 +64,4 @@ y `=> (let t = run(x `=> x `+ y) in y)
 //│ ╔══[ERROR] Name not found: let
 //│ ╙──
 //│ Elab: { code"λy@1. ${<error>‹›}‹›‹›"‹› }‹›
-//│ Type: CodeBase[in ⊥ out α26_1, in ⊥ out ⊤]
+//│ Type: CodeBase[in ⊥ out α22_1, in ⊥ out ⊤]

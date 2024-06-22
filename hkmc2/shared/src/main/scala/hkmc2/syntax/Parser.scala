@@ -481,10 +481,13 @@ abstract class Parser(
         case _ :: (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ if kw.leftPrecOrMin > prec =>
           consume
           consume
+          val body = yeetSpaces match
+            case (KEYWORD(kw @ Keyword.`let`), l1) :: _ => Block(blockMaybeIndented)
+            case _ => expr(kw.rightPrecOrMin)
           exprCont(Quoted(InfixApp(acc match {
             case t: Tup => t
             case _ => PlainTup(acc)
-          }, kw, Unquoted(expr(kw.rightPrecOrMin)))), prec, allowNewlines)
+          }, kw, Unquoted(body))), prec, allowNewlines)
         case _ :: (br @ BRACKETS(Round, toks), loc) :: _ =>
           consume
           consume

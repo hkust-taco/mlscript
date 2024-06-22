@@ -136,7 +136,8 @@ object Ctx:
   )
   private val builtinVals = Map(
     "run" -> ((ctx: Ctx) => Type.FunType(codeTy(Type.Bot)(using ctx) :: Nil, Type.Top, Type.Bot)),
-    "error" -> ((ctx: Ctx) => Type.Bot)
+    "error" -> ((ctx: Ctx) => Type.Bot),
+    "log" -> ((ctx: Ctx) => Type.FunType(strTy(using ctx) :: Nil, Type.Top, Type.Bot)),
   )
   def isOp(name: Str): Bool = builtinOps.contains(name)
   def init(predefs: Map[Str, Symbol]): Ctx =
@@ -456,6 +457,20 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           argTy.zip(args).foreach:
             case (lhs, rhs) => constrain(lhs, rhs)
           ret
+      case Type.PolymorphicType(tvs, body) => instantiate(body)(using (tvs.map {
+        case Type.InfVar(_, uid, _) =>
+          val nv = freshVar
+          uid -> nv
+      }).toMap) match // TODO: refactor
+        case Type.FunType(args, ret, eff) => 
+          val argTy = typeCheckArgs(rhs)
+          if args.length != argTy.length then
+            error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil)
+          else
+            argTy.zip(args).foreach:
+              case (lhs, rhs) => constrain(lhs, rhs)
+            ret
+        case _ => ???
       case funTy =>
         val argTy = typeCheckArgs(rhs)
         val effVar = freshVar
