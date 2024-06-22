@@ -246,6 +246,17 @@ if false then 1 else "1"
 if 1 is Int then 1 else 0
 //│ /!!!\ Uncaught error: scala.MatchError: InfixApp(IntLit(1),keyword 'is',Ident(Int)) (of class hkmc2.syntax.Tree$InfixApp)
 
+// TODO: annotation?
+fun fact: Int -> Int
+fun fact(n) =
+  if n > 1 then n * fact(n - 1) else 1
+//│ Elab: { fun fact: (class:Int#16)‹› -> class:Int#17‹›; fun fact(n@2): (class:Int#18)‹› -> class:Int#19‹› = if Cons(Boolean(App(Ref(>),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,Lit(IntLit(1)),None)))),Else(App(Ref(*),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,App(Ref(fact),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))),Else(Lit(IntLit(1))))‹›; }‹›
+//│ Type: ⊤
+
+fact
+//│ Elab: { fact#1 }‹›
+//│ Type: (Int) ->{⊥} Int
+
 :fixme
 fun fact = case
   0 then 1

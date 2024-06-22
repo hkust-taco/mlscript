@@ -32,8 +32,8 @@ object Keyword:
   val `=` = Keyword("=", eqPrec, eqPrec)
   val `:` = Keyword(":", eqPrec, eqPrec)
   
-  val `if` = Keyword("if", N, N)
-  val `then` = Keyword("then", nextPrec, curPrec)
+  val `if` = Keyword("if", N, nextPrec)
+  val `then` = Keyword("then", curPrec, curPrec)
   val `else` = Keyword("else", N, curPrec)
   val `case` = Keyword("case", N, N)
   val `fun` = Keyword("fun", N, N)

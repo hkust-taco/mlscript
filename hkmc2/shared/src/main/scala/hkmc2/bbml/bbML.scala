@@ -350,6 +350,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
             }, N, N, Nil)
           given Bool = true
           val sigTy = sig.map(typeType)
+          sigTy.foreach(sig => ctx += sym -> sig) // for recursive types
           val (tvs, retAnno, effAnno, newSkolems) = rec(sigTy)
           val defCtx = sigTy match
             case S(_: Type.PolymorphicType) => nestCtx.nextLevel
@@ -366,7 +367,8 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
             given MutSkolemSet = skolems ++ newSkolems.map(_.uid)
             val bodyTy = typeCheck(body)
             retAnno.foreach(anno => constrain(bodyTy, anno))
-            ctx += sym -> sigTy.getOrElse(Type.FunType(argsTy, bodyTy, Type.Bot)) // TODO: eff
+            if sigTy.isEmpty then
+              ctx += sym -> Type.FunType(argsTy, bodyTy, Type.Bot) // TODO: eff
         case clsDef: ClassDef => ctx *= clsDef
         case _ => () // TODO
       typeCheck(res)
