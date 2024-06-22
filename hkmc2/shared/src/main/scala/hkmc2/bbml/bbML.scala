@@ -285,6 +285,21 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       val tv = freshVar
       constrain(ty, Ctx.codeTy(tv))
       tv
+    case Term.Blk(LetBinding(pat, rhs) :: Nil, body) => // TODO: more than one?
+      typeCode(rhs)(using ctx)
+      val nestCtx = ctx.nextLevel
+      given Ctx = nestCtx
+      val bd = pat match
+        case Pattern.Var(sym) =>
+          val sk = freshVar
+          nestCtx &= sym -> sk
+          sk
+        case _ => ???
+      val bodyTy = typeCode(body)
+      val res = freshVar(using ctx)
+      val uni = Type.ComposedType(bd, res, true)
+      constrain(bodyTy, uni)
+      res
     case _ =>
       error(msg"Cannot quote ${code.toString}" -> code.toLoc :: Nil)
 

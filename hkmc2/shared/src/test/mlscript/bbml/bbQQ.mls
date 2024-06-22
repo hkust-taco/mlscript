@@ -52,3 +52,25 @@ x `=> y `=> x `+ y
 (x, y, z) `=> x `+ y `+ z
 //│ Elab: { code"λx@1, y@2, z@3. ${code"+#2(${code"+#3(${x@1#0}‹›, ${y@2#0}‹›)‹›‹›"‹›}‹›, ${z@3#0}‹›)‹›‹›"‹›}‹›‹›"‹› }‹›
 //│ Type: CodeBase[in ⊥ out α39_1, in ⊥ out ⊤]
+
+f `=> x `=> y `=> f`(x, y)
+//│ Elab: { code"λf@1. ${code"λx@2. ${code"λy@3. ${code"${f@1#0}‹›(${x@2#0}‹›, ${y@3#0}‹›)‹›‹›"‹›}‹›‹›"‹›}‹›‹›"‹›}‹›‹›"‹› }‹›
+//│ Type: CodeBase[in ⊥ out α51_1, in ⊥ out ⊤]
+
+`let x = `42 `in x
+//│ Elab: { code"{ let x@1 = ${code"42‹›"‹›}‹›; ${x@1#0}‹› }‹›"‹› }‹›
+//│ Type: CodeBase[in ⊥ out α55_1, in ⊥ out ⊤]
+
+:e
+`let x = 42 `in x
+//│ Elab: { code"{ let x@1 = ${42‹›}‹›; ${x@1#0}‹› }‹›"‹› }‹›
+//│ ╔══[ERROR] Cannot solve Int ∧ ¬⊥
+//│ ╙──
+//│ Type: CodeBase[in ⊥ out α59_1, in ⊥ out ⊤]
+
+:e
+`let x = `0 `in 1
+//│ Elab: { code"{ let x@1 = ${code"0‹›"‹›}‹›; ${1‹›}‹› }‹›"‹› }‹›
+//│ ╔══[ERROR] Cannot solve Int ∧ ¬⊥
+//│ ╙──
+//│ Type: CodeBase[in ⊥ out α63_1, in ⊥ out ⊤]
