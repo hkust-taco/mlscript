@@ -106,6 +106,7 @@ object Ctx:
   private def codeBaseTy(cr: TypeArg, isVar: TypeArg)(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("CodeBase").get.sym, cr :: isVar :: Nil)
   def codeTy(cr: Type)(using ctx: Ctx): Type = codeBaseTy(Wildcard.out(cr), Wildcard.out(Type.Top))
   def varTy(cr: Type)(using ctx: Ctx): Type = codeBaseTy(Wildcard(cr, cr), Wildcard.out(Type.Bot))
+  def regionTy(sk: Type)(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Region").get.sym, Wildcard(sk, sk) :: Nil)
   private val builtinClasses = Ls(
     "Any", "Int", "Num", "Str", "Bool", "Nothing", "CodeBase", "Region", "Ref"
   )
@@ -540,6 +541,16 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           tv
       Type.PolymorphicType(bds, typeCheck(body)(using nestCtx, skolems ++ bds.map(_.uid)))
     case Term.If(branches) => typeSplit(branches)
+    case Term.Region(sym, body) =>
+      val nestCtx = ctx.nextLevel
+      given Ctx = nestCtx
+      val sk = freshVar
+      nestCtx += sym -> Ctx.regionTy(sk)
+      val newSkolems = skolems + sk.uid
+      given MutSkolemSet = newSkolems
+      val res = typeCheck(body)
+      // TODO: constrain
+      res
     case Term.Quoted(body) =>
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx

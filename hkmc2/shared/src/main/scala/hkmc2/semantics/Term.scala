@@ -24,6 +24,7 @@ enum Term extends Statement with Located:
   case New(cls: ClassSymbol, args: Ls[Term])
   case Asc(term: Term, ty: Term)
   case CompType(lhs: Term, rhs: Term, pol: Bool)
+  case Region(name: VarSymbol, body: Term)
   
   var symbol: Opt[Symbol] = N
   
@@ -74,6 +75,7 @@ sealed trait Statement extends Located:
     case Forall(_, body) => body :: Nil
     case WildcardTy(in, out) => in.toList ++ out.toList
     case LetBinding(pat, rhs) => rhs :: Nil
+    case Region(_, body) => body :: Nil
     case TermDefinition(k, _, ps, sign, body, res) =>
       ps.toList.flatMap(_.flatMap(_.subTerms)) ::: sign.toList ::: body.toList
     case cls: ClassDef =>
@@ -107,6 +109,8 @@ sealed trait Statement extends Located:
     case New(cls, args) => s"new ${cls.toString}(${args.mkString(", ")})"
     case Asc(term, ty) => s"${term.toString}: ${ty.toString}"
     case LetBinding(pat, rhs) => s"let ${pat.showDbg} = ${rhs.showDbg}"
+    case Region(name, body) => s"region ${name.nme} in ${body.showDbg}"
+    case CompType(lhs, rhs, pol) => s"${lhs.showDbg} ${if pol then "|" else "&"} ${rhs.showDbg}"
     case Error => "<error>"
     case Tup(fields) => fields.map(_.showDbg).mkString("(", ", ", ")")
     case TermDefinition(k, sym, ps, sign, body, res) => s"${k.str} ${sym}${

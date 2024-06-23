@@ -122,6 +122,10 @@ class Elaborator(raise: Raise):
       case _ =>
         raise(ErrorReport(msg"Unsupported default case branch." -> tree.toLoc :: Nil))
         Term.Error
+    case Tree.Region(Tree.Ident(name), body) =>
+      val sym = VarSymbol(name, nextUid)
+      val nestCtx = ctx.copy(locals = ctx.locals ++ Ls(name -> sym))
+      Term.Region(sym, term(body)(using nestCtx))
     case Empty() =>
       raise(ErrorReport(msg"A term was expected in this position, but no term was found." -> tree.toLoc :: Nil))
       Term.Error

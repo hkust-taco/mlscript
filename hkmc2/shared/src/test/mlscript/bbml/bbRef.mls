@@ -1,17 +1,22 @@
 :global
 :bbml
 
-:fixme
+
 region x in 42
-//│ /!!!\ Uncaught error: scala.MatchError: Region(Ident(x),IntLit(42)) (of class hkmc2.syntax.Tree$Region)
+//│ Elab: { region x in 42‹›‹› }‹›
+//│ Type: Int
+
+region x in x
+//│ Elab: { region x in x@1#0‹› }‹›
+//│ Type: Region[in α1_1 out α1_1]
 
 :fixme
 region x in
   x.ref 42
-//│ /!!!\ Uncaught error: scala.MatchError: Region(Ident(x),Block(List(RegRef(Ident(x),IntLit(42))))) (of class hkmc2.syntax.Tree$Region)
+//│ /!!!\ Uncaught error: scala.MatchError: RegRef(Ident(x),IntLit(42)) (of class hkmc2.syntax.Tree$RegRef)
 
 :fixme
 region x in
   let r = x.ref 42 in let t = r := 0 in !r
-//│ /!!!\ Uncaught error: scala.MatchError: Region(Ident(x),Block(List(Let(Ident(r),RegRef(Ident(x),IntLit(42)),Some(Let(Ident(t),App(Ident(:=),Tup(List(Ident(r), IntLit(0)))),Some(Deref(Ident(r))))))))) (of class hkmc2.syntax.Tree$Region)
+//│ /!!!\ Uncaught error: scala.MatchError: RegRef(Ident(x),IntLit(42)) (of class hkmc2.syntax.Tree$RegRef)
 
