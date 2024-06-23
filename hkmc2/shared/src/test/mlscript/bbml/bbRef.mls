@@ -35,20 +35,27 @@ let t = region x in x in t.ref 42
 //│   α10_0 <: ¬⊤ ∧ ¬⊥ ∧ ¬⊥
 
 
+region x in
+  let r = x.ref 42 in r := 0
+//│ Elab: { region x in { let r@2 = (x@1#0).ref 42‹›‹›; r@2#0 := 0‹›‹› }‹›‹› }‹›
+//│ Type: Int
+
+:e
+let t = region x in
+  x.ref 42
+in t := 0
+//│ Elab: { { let t@1 = region x in (x@2#0).ref 42‹›‹›‹›; t@1#0 := 0‹›‹› }‹› }‹›
+//│ ╔══[ERROR] Cannot constrain skolem α0_0
+//│ ╙──
+//│ Type: Int
+
 :fixme
 region x in
-  let r = x.ref 42 in let t = r := 0
-//│ ╔══[ERROR] Name not found: :=
-//│ ║  l.40: 	  let r = x.ref 42 in let t = r := 0
-//│ ╙──      	                                ^^
-//│ Elab: { region x in { let r@2 = (x@1#0).ref 42‹›‹›; { let t@3 = <error>‹›(r@2#0, 0‹›)‹›‹›; }‹› }‹›‹› }‹›
-//│ Type: ⊤
+  let r = x.ref 42 in !r
+//│ /!!!\ Uncaught error: scala.MatchError: Deref(Ident(r)) (of class hkmc2.syntax.Tree$Deref)
 
 :fixme
 region x in
   let r = x.ref 42 in let t = r := 0 in !r
-//│ ╔══[ERROR] Name not found: :=
-//│ ║  l.49: 	  let r = x.ref 42 in let t = r := 0 in !r
-//│ ╙──      	                                ^^
 //│ /!!!\ Uncaught error: scala.MatchError: Deref(Ident(r)) (of class hkmc2.syntax.Tree$Deref)
 
