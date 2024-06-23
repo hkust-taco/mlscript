@@ -36,7 +36,7 @@ fun mul(x, y) = x * y
 
 x => x
 //│ Elab: { λx@1. x@1#0‹› }‹›
-//│ Type: (α4_0) ->{⊥} α4_0
+//│ Type: (α5_0) ->{⊥} α5_0
 
 +
 //│ Elab: { +#1 }‹›
@@ -44,10 +44,10 @@ x => x
 
 (x, y) => x + y
 //│ Elab: { λx@1, y@2. +#2(x@1#0, y@2#0)‹›‹›‹› }‹›
-//│ Type: (α5_0, α6_0) ->{⊥} Int
+//│ Type: (α6_0, α7_0) ->{⊥ ∨ ⊥ ∨ ⊥ ∨ ⊥} Int
 //│ Where:
-//│   α5_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
 //│   α6_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   α7_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
 
 ((x, y) => x + y)(40, 2)
 //│ Elab: { λx@2, y@3. +#3(x@2#0, y@3#0)‹›‹›‹›(40‹›, 2‹›)‹›‹› }‹›
@@ -128,15 +128,15 @@ class Some[A](value: A)
 
 new Some(true)
 //│ Elab: { new class:Some(Lit(BoolLit(true)))‹› }‹›
-//│ Type: Some[in α9_0 out α10_0]
+//│ Type: Some[in α10_0 out α11_0]
 //│ Where:
-//│   Bool ∧ ¬⊥ <: α10_0
+//│   Bool ∧ ¬⊥ <: α11_0
 
 new Some(42)
 //│ Elab: { new class:Some(Lit(IntLit(42)))‹› }‹›
-//│ Type: Some[in α11_0 out α12_0]
+//│ Type: Some[in α12_0 out α13_0]
 //│ Where:
-//│   Int ∧ ¬⊥ <: α12_0
+//│   Int ∧ ¬⊥ <: α13_0
 
 let p = new Point(1.0, 0.0, 0.0) in Point.x(p)
 //│ Elab: { { let p@1 = new class:Point(Lit(DecLit(1.0)), Lit(DecLit(0.0)), Lit(DecLit(0.0)))‹›; class:Point#0.x‹›(p@1#0)‹›‹› }‹› }‹›
@@ -144,17 +144,17 @@ let p = new Point(1.0, 0.0, 0.0) in Point.x(p)
 
 let t = new Some(true) in Some.value(t)
 //│ Elab: { { let t@1 = new class:Some(Lit(BoolLit(true)))‹›; class:Some#0.value‹›(t@1#0)‹›‹› }‹› }‹›
-//│ Type: α16_0
+//│ Type: α17_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α14_0 <: α16_0
-//│   Bool ∧ ¬⊥ <: α14_0
+//│   ⊤ ∧ ¬⊥ ∧ α15_0 <: α17_0
+//│   Bool ∧ ¬⊥ <: α15_0
 
 :e
 Some.value(42)
 //│ Elab: { class:Some#1.value‹›(42‹›)‹›‹› }‹›
 //│ ╔══[ERROR] Cannot solve Int ∧ ¬⊥
 //│ ╙──
-//│ Type: α18_0
+//│ Type: α19_0
 
 
 class Printer[T](f: T -> Str)
@@ -168,9 +168,9 @@ fun foofoo(x) =
 
 new Printer(foofoo)
 //│ Elab: { new class:Printer(Ref(foofoo))‹› }‹›
-//│ Type: Printer[in α20_0 out α21_0]
+//│ Type: Printer[in α21_0 out α22_0]
 //│ Where:
-//│   α20_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   α21_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
 
 let ip = new Printer(foofoo) in Printer.f(ip)(42)
 //│ Elab: { { let ip@1 = new class:Printer(Ref(foofoo))‹›; class:Printer#0.f‹›(ip@1#0)‹›‹›(42‹›)‹›‹› }‹› }‹›
@@ -193,27 +193,27 @@ fun inc(x) = x + 1
 
 new TFun(inc)
 //│ Elab: { new class:TFun(Ref(inc))‹› }‹›
-//│ Type: TFun[in α31_0 out α32_0]
+//│ Type: TFun[in α32_0 out α33_0]
 //│ Where:
-//│   α31_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
-//│   Int ∧ ¬⊥ <: α32_0
+//│   α32_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   Int ∧ ¬⊥ <: α33_0
 
 let tf = new TFun(inc) in TFun.f(tf)(1)
 //│ Elab: { { let tf@1 = new class:TFun(Ref(inc))‹›; class:TFun#0.f‹›(tf@1#0)‹›‹›(1‹›)‹›‹› }‹› }‹›
-//│ Type: α36_0
+//│ Type: α37_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α34_0 <: α36_0
-//│   Int ∧ ¬⊥ <: α34_0
+//│   ⊤ ∧ ¬⊥ ∧ α35_0 <: α37_0
+//│   Int ∧ ¬⊥ <: α35_0
 
 :e
 let tf = new TFun(inc) in TFun.f(tf)("1")
 //│ Elab: { { let tf@1 = new class:TFun(Ref(inc))‹›; class:TFun#1.f‹›(tf@1#0)‹›‹›("1"‹›)‹›‹› }‹› }‹›
 //│ ╔══[ERROR] Cannot solve Str ∧ ¬⊥
 //│ ╙──
-//│ Type: α40_0
+//│ Type: α41_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α38_0 <: α40_0
-//│   Int ∧ ¬⊥ <: α38_0
+//│   ⊤ ∧ ¬⊥ ∧ α39_0 <: α41_0
+//│   Int ∧ ¬⊥ <: α39_0
 
 class Pair[A, B](fst: A, snd: B)
 //│ Elab: { class Pair[out A@1, out B@2](fst@3: A@1#0, snd@4: B@2#0) { }‹›; }‹›
@@ -221,17 +221,17 @@ class Pair[A, B](fst: A, snd: B)
 
 Pair.fst(new Pair(42, true))
 //│ Elab: { class:Pair#0.fst‹›(new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›)‹›‹› }‹›
-//│ Type: α46_0
+//│ Type: α47_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α42_0 <: α46_0
-//│   Int ∧ ¬⊥ <: α42_0
+//│   ⊤ ∧ ¬⊥ ∧ α43_0 <: α47_0
+//│   Int ∧ ¬⊥ <: α43_0
 
 Pair.snd(new Pair(42, true))
 //│ Elab: { class:Pair#1.snd‹›(new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›)‹›‹› }‹›
-//│ Type: α56_0
+//│ Type: α57_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α52_0 <: α56_0
-//│   Bool ∧ ¬⊥ <: α52_0
+//│   ⊤ ∧ ¬⊥ ∧ α53_0 <: α57_0
+//│   Bool ∧ ¬⊥ <: α53_0
 
 
 if 1 < 2 then 1 else 0
@@ -251,9 +251,9 @@ fun test(x) =
   if x is Int then x + 1 else 0
 test
 //│ Elab: { fun test(x@1) = if Cons(Match(Ref(x@1),Cons(PatternBranch(Class(class:Int,None,true),Else(App(Ref(+),Tup(List(Fld(‹›,Ref(x@1),None), Fld(‹›,Lit(IntLit(1)),None)))))),NoSplit)),Else(Lit(IntLit(0))))‹›; test#0 }‹›
-//│ Type: (α58_0) ->{⊥} Int ∨ Int
+//│ Type: (α59_0) ->{⊥ ∨ ⊥ ∨ ⊥ ∨ ⊥ ∨ ⊥ ∨ ⊥} Int ∨ Int
 //│ Where:
-//│   α58_0 <: ¬Int ∧ ¬⊥ ∨ Int
+//│   α59_0 <: ¬Int ∧ ¬⊥ ∨ Int
 
 test(1)
 //│ Elab: { test#1(1‹›)‹›‹› }‹›

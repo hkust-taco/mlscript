@@ -8,7 +8,7 @@ region x in 42
 
 region x in x
 //│ Elab: { region x in x@1#0‹› }‹›
-//│ Type: Region[in α1_1 out α1_1]
+//│ Type: Region[in α3_1 out α3_1]
 
 :fixme
 region x in

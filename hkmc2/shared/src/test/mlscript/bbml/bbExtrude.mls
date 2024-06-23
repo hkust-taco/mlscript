@@ -9,24 +9,24 @@ fun f(y) =
 // * the parameter type of y is extruded.
 f
 //│ Elab: { f#0 }‹›
-//│ Type: (α0_0) ->{⊥} α0_0
+//│ Type: (α1_0) ->{⊥ ∨ ⊥} α1_0
 //│ Where:
-//│   α0_0 <: ¬⊤ ∧ ¬(⊤ ∧ ¬⊥ ∧ ⊤) ->{⊤ ∧ ¬⊥ ∧ α5_0} ⊤ ∧ ¬⊥ ∧ α4_0
-//│   α4_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   α1_0 <: ¬⊤ ∧ ¬(⊤ ∧ ¬⊥ ∧ ⊤) ->{⊤ ∧ ¬⊥ ∧ α6_0} ⊤ ∧ ¬⊥ ∧ α5_0
+//│   α5_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
 
 :e
 f([A] => (x: A) => x)
 //│ Elab: { f#1(forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹›)‹›‹› }‹›
 //│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
 //│ ╙──
-//│ Type: α0_0
+//│ Type: α1_0
 //│ Where:
-//│   (⊤ ∧ ¬⊥ ∧ α7_0) ->{⊥} ⊤ ∧ ¬⊥ ∧ α7_0 ∧ ¬⊥ <: α0_0
-//│   ⊤ ∧ ¬⊥ <: α7_0
-//│   α7_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
-//│   α0_0 <: ¬⊤ ∧ ¬(⊤ ∧ ¬⊥ ∧ ⊤) ->{⊤ ∧ ¬⊥ ∧ α5_0} ⊤ ∧ ¬⊥ ∧ α4_0
-//│   ⊤ ∧ ¬⊥ ∧ α7_0 <: α4_0
-//│   α4_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   (⊤ ∧ ¬⊥ ∧ α8_0) ->{⊥} ⊤ ∧ ¬⊥ ∧ α8_0 ∧ ¬⊥ <: α1_0
+//│   ⊤ ∧ ¬⊥ <: α8_0
+//│   α8_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   α1_0 <: ¬⊤ ∧ ¬(⊤ ∧ ¬⊥ ∧ ⊤) ->{⊤ ∧ ¬⊥ ∧ α6_0} ⊤ ∧ ¬⊥ ∧ α5_0
+//│   ⊤ ∧ ¬⊥ ∧ α8_0 <: α5_0
+//│   α5_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
 
 fun g: ([A] -> A -> Int) -> ([A] -> A -> Int)
 fun g(y) =
@@ -36,11 +36,11 @@ fun g(y) =
 
 g
 //│ Elab: { g#0 }‹›
-//│ Type: (forall α8_1: (α8_1) ->{⊥} Int) ->{⊥} forall α9_1: (α9_1) ->{⊥} Int
+//│ Type: (forall α9_1: (α9_1) ->{⊥} Int) ->{⊥} forall α10_1: (α10_1) ->{⊥} Int
 
 g([A] => (x: A) => x)
 //│ Elab: { g#1(forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹›)‹›‹› }‹›
-//│ Type: forall α9_1: (α9_1) ->{⊥} Int
+//│ Type: forall α10_1: (α10_1) ->{⊥} Int
 
 fun h(y: [A] -> A -> Int) =
   let local = ([A] => (x: A) => y(x) + 1) in y
@@ -49,11 +49,11 @@ fun h(y: [A] -> A -> Int) =
 
 h
 //│ Elab: { h#0 }‹›
-//│ Type: (forall α15_1: (α15_1) ->{⊥} Int) ->{⊥} forall α15_1: (α15_1) ->{⊥} Int
+//│ Type: (forall α16_1: (α16_1) ->{⊥} Int) ->{⊥ ∨ ⊥} forall α16_1: (α16_1) ->{⊥} Int
 
 h([A] => (x: A) => x)
 //│ Elab: { h#1(forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹›)‹›‹› }‹›
-//│ Type: forall α15_1: (α15_1) ->{⊥} Int
+//│ Type: forall α16_1: (α16_1) ->{⊥} Int
 
 :fixme
 :e
@@ -64,4 +64,4 @@ y `=> (let t = run(x `=> x `+ y) in y)
 //│ ╔══[ERROR] Name not found: let
 //│ ╙──
 //│ Elab: { code"λy@1. ${<error>‹›}‹›‹›"‹› }‹›
-//│ Type: CodeBase[in ⊥ out α22_1, in ⊥ out ⊤]
+//│ Type: CodeBase[in ⊥ out α23_1, in ⊥ out ⊤]

@@ -21,69 +21,69 @@
 
 x `=> x
 //│ Elab: { code"λx@1. ${x@1#0}‹›‹›"‹› }‹›
-//│ Type: CodeBase[in ⊥ out α2_1, in ⊥ out ⊤]
+//│ Type: CodeBase[in ⊥ out α3_1, in ⊥ out ⊤]
 
 x `=> `42
 //│ Elab: { code"λx@1. ${code"42‹›"‹›}‹›‹›"‹› }‹›
-//│ Type: CodeBase[in ⊥ out α5_1, in ⊥ out ⊤]
+//│ Type: CodeBase[in ⊥ out α6_1, in ⊥ out ⊤]
 
 :e
 x `=> 42
 //│ Elab: { code"λx@1. ${42‹›}‹›‹›"‹› }‹›
 //│ ╔══[ERROR] Cannot solve Int ∧ ¬⊥
 //│ ╙──
-//│ Type: CodeBase[in ⊥ out α8_1, in ⊥ out ⊤]
+//│ Type: CodeBase[in ⊥ out α9_1, in ⊥ out ⊤]
 
 
 f `=> x `=> f`(x)
 //│ Elab: { code"λf@1. ${code"λx@2. ${code"${f@1#0}‹›(${x@2#0}‹›)‹›‹›"‹›}‹›‹›"‹›}‹›‹›"‹› }‹›
-//│ Type: CodeBase[in ⊥ out α16_1, in ⊥ out ⊤]
+//│ Type: CodeBase[in ⊥ out α17_1, in ⊥ out ⊤]
 
 
 x `=> y `=> x `+ y
 //│ Elab: { code"λx@1. ${code"λy@2. ${code"+#0(${x@1#0}‹›, ${y@2#0}‹›)‹›‹›"‹›}‹›‹›"‹›}‹›‹›"‹› }‹›
-//│ Type: CodeBase[in ⊥ out α24_1, in ⊥ out ⊤]
+//│ Type: CodeBase[in ⊥ out α25_1, in ⊥ out ⊤]
 
 
 (x, y) `=> x `+ y
 //│ Elab: { code"λx@1, y@2. ${code"+#1(${x@1#0}‹›, ${y@2#0}‹›)‹›‹›"‹›}‹›‹›"‹› }‹›
-//│ Type: CodeBase[in ⊥ out α30_1, in ⊥ out ⊤]
+//│ Type: CodeBase[in ⊥ out α31_1, in ⊥ out ⊤]
 
 (x, y, z) `=> x `+ y `+ z
 //│ Elab: { code"λx@1, y@2, z@3. ${code"+#2(${code"+#3(${x@1#0}‹›, ${y@2#0}‹›)‹›‹›"‹›}‹›, ${z@3#0}‹›)‹›‹›"‹›}‹›‹›"‹› }‹›
-//│ Type: CodeBase[in ⊥ out α39_1, in ⊥ out ⊤]
+//│ Type: CodeBase[in ⊥ out α40_1, in ⊥ out ⊤]
 
 f `=> x `=> y `=> f`(x, y)
 //│ Elab: { code"λf@1. ${code"λx@2. ${code"λy@3. ${code"${f@1#0}‹›(${x@2#0}‹›, ${y@3#0}‹›)‹›‹›"‹›}‹›‹›"‹›}‹›‹›"‹›}‹›‹›"‹› }‹›
-//│ Type: CodeBase[in ⊥ out α51_1, in ⊥ out ⊤]
+//│ Type: CodeBase[in ⊥ out α52_1, in ⊥ out ⊤]
 
 `let x = `42 `in x
 //│ Elab: { code"{ let x@1 = ${code"42‹›"‹›}‹›; ${x@1#0}‹› }‹›"‹› }‹›
-//│ Type: CodeBase[in ⊥ out α55_1, in ⊥ out ⊤]
+//│ Type: CodeBase[in ⊥ out α53_1 ∨ α56_1, in ⊥ out ⊤]
 
 :e
 `let x = 42 `in x
 //│ Elab: { code"{ let x@1 = ${42‹›}‹›; ${x@1#0}‹› }‹›"‹› }‹›
 //│ ╔══[ERROR] Cannot solve Int ∧ ¬⊥
 //│ ╙──
-//│ Type: CodeBase[in ⊥ out α59_1, in ⊥ out ⊤]
+//│ Type: CodeBase[in ⊥ out α57_1 ∨ α60_1, in ⊥ out ⊤]
 
 :e
 `let x = `0 `in 1
 //│ Elab: { code"{ let x@1 = ${code"0‹›"‹›}‹›; ${1‹›}‹› }‹›"‹› }‹›
 //│ ╔══[ERROR] Cannot solve Int ∧ ¬⊥
 //│ ╙──
-//│ Type: CodeBase[in ⊥ out α63_1, in ⊥ out ⊤]
+//│ Type: CodeBase[in ⊥ out α61_1 ∨ α64_1, in ⊥ out ⊤]
 
 
 `if `true then `true else `false
 //│ Elab: { code"if Cons(Boolean(Unquoted(Quoted(Lit(BoolLit(true)))),Else(Unquoted(Quoted(Lit(BoolLit(true)))))),Else(Unquoted(Quoted(Lit(BoolLit(false))))))‹›"‹› }‹›
-//│ Type: CodeBase[in ⊥ out α64_1 ∨ α65_1 ∨ α66_1, in ⊥ out ⊤]
+//│ Type: CodeBase[in ⊥ out α65_1 ∨ α66_1 ∨ α67_1, in ⊥ out ⊤]
 
 
 x `=> `if x `== `0.0 then `1.0 else x
 //│ Elab: { code"λx@1. ${code"if Cons(Boolean(Unquoted(Quoted(App(Ref(==),Tup(List(Fld(‹›,Unquoted(Ref(x@1)),None), Fld(‹›,Unquoted(Quoted(Lit(DecLit(0.0)))),None)))))),Else(Unquoted(Quoted(Lit(DecLit(1.0)))))),Else(Unquoted(Ref(x@1))))‹›"‹›}‹›‹›"‹› }‹›
-//│ Type: CodeBase[in ⊥ out α74_1, in ⊥ out ⊤]
+//│ Type: CodeBase[in ⊥ out α75_1, in ⊥ out ⊤]
 
 run(`1)
 //│ Elab: { run#0(code"1‹›"‹›)‹›‹› }‹›
@@ -99,17 +99,17 @@ run(1)
 :e
 x `=> run(x)
 //│ Elab: { code"λx@1. ${run#2(x@1#0)‹›‹›}‹›‹›"‹› }‹›
-//│ ╔══[ERROR] Cannot constrain skolem α75_2
+//│ ╔══[ERROR] Cannot constrain skolem α76_2
 //│ ╙──
 //│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
 //│ ╙──
-//│ Type: CodeBase[in ⊥ out α77_1, in ⊥ out ⊤]
+//│ Type: CodeBase[in ⊥ out α78_1, in ⊥ out ⊤]
 
 :e
 `let x = `42 `in run(x)
 //│ Elab: { code"{ let x@1 = ${code"42‹›"‹›}‹›; ${run#3(x@1#0)‹›‹›}‹› }‹›"‹› }‹›
-//│ ╔══[ERROR] Cannot constrain skolem α79_2
+//│ ╔══[ERROR] Cannot constrain skolem α80_2
 //│ ╙──
 //│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
 //│ ╙──
-//│ Type: CodeBase[in ⊥ out α81_1, in ⊥ out ⊤]
+//│ Type: CodeBase[in ⊥ out α79_1 ∨ α82_1, in ⊥ out ⊤]

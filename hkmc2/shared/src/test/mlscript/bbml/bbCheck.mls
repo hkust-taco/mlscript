@@ -70,17 +70,17 @@ fun high(f: [A] -> A -> A) = f(42)
 
 high
 //│ Elab: { high#0 }‹›
-//│ Type: (forall α2_1: (α2_1) ->{⊥} α2_1) ->{⊥} α3_0
+//│ Type: (forall α3_1: (α3_1) ->{⊥} α3_1) ->{⊥ ∨ ⊥ ∨ ⊥} α4_0
 //│ Where:
-//│   Int ∧ ¬⊥ <: α3_0
+//│   Int ∧ ¬⊥ <: α4_0
 
 :e
 high(x => x + 1)
 //│ Elab: { high#1(λx@2. +#3(x@2#0, 1‹›)‹›‹›‹›)‹›‹› }‹›
 //│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
 //│ ╙──
-//│ ╔══[ERROR] Cannot constrain skolem α2_1
+//│ ╔══[ERROR] Cannot constrain skolem α3_1
 //│ ╙──
-//│ Type: α3_0
+//│ Type: α4_0
 //│ Where:
-//│   Int ∧ ¬⊥ <: α3_0
+//│   Int ∧ ¬⊥ <: α4_0
