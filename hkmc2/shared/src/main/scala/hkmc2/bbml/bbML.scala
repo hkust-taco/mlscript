@@ -60,15 +60,6 @@ enum Type extends TypeArg:
     case PolymorphicType(tv, body) =>
       (body :: tv).map(_.lvl).max
     case Top | Bot => 0
-  
-
-type RefType = Type.ClassType
-object RefType:
-  def apply(cnt: TypeArg, reg: TypeArg): RefType = Type.ClassType(ClassSymbol(Tree.Ident("Ref")), cnt :: reg :: Nil)
-
-type RegionType = Type.ClassType
-object RegionType:
-  def apply(skolem: TypeArg): RegionType = Type.ClassType(ClassSymbol(Tree.Ident("Region")), skolem :: Nil)
 
 class VarState:
   var lowerBounds: Ls[Type] = Nil
@@ -107,6 +98,7 @@ object Ctx:
   def codeTy(cr: Type)(using ctx: Ctx): Type = codeBaseTy(Wildcard.out(cr), Wildcard.out(Type.Top))
   def varTy(cr: Type)(using ctx: Ctx): Type = codeBaseTy(Wildcard(cr, cr), Wildcard.out(Type.Bot))
   def regionTy(sk: Type)(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Region").get.sym, Wildcard(sk, sk) :: Nil)
+  def refTy(ct: Type, sk: Type)(using ctx: Ctx): Type = Type.ClassType(ctx.getDef("Ref").get.sym, Wildcard(ct, ct) :: Wildcard.out(sk) :: Nil)
   private val builtinClasses = Ls(
     "Any", "Int", "Num", "Str", "Bool", "Nothing", "CodeBase", "Region", "Ref"
   )
@@ -580,12 +572,17 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       given Ctx = nestCtx
       val sk = freshVar
       nestCtx += sym -> Ctx.regionTy(sk)
-      val newSkolems = skolems + sk.uid
-      given MutSkolemSet = newSkolems
+      skolems += sk.uid
       val (res, eff) = typeCheck(body)
       val tv = freshVar(using ctx)
-      constrain(eff, Type.ComposedType(tv, Type.ComposedType(sk, allocSkolem, true), true))
-      (res, tv)
+      constrain(eff, Type.ComposedType(tv, sk, true))
+      (res, Type.ComposedType(tv, allocSkolem, true))
+    case Term.RegRef(reg, value) =>
+      val (regTy, regEff) = typeCheck(reg)
+      val (valTy, valEff) = typeCheck(value)
+      val sk = freshVar
+      constrain(regTy, Ctx.regionTy(sk))
+      (Ctx.refTy(valTy, sk), Type.ComposedType(sk, Type.ComposedType(regEff, valEff, true), true))
     case Term.Quoted(body) =>
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx

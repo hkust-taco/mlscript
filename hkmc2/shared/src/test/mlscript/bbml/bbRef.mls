@@ -10,13 +10,45 @@ region x in x
 //│ Elab: { region x in x@1#0‹› }‹›
 //│ Type: Region[in α3_1 out α3_1]
 
-:fixme
+// TODO: check again
 region x in
   x.ref 42
-//│ /!!!\ Uncaught error: scala.MatchError: RegRef(Ident(x),IntLit(42)) (of class hkmc2.syntax.Tree$RegRef)
+//│ Elab: { region x in (x@1#0).ref 42‹›‹›‹› }‹›
+//│ Type: Ref[in Int out Int, in ⊥ out α6_1]
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α5_1 <: α6_1
+//│   α6_1 <: ¬⊤ ∧ ¬⊥ ∧ ¬α5_1 ∧ ¬α7_0
+//│   α7_0 <: ¬⊤ ∧ ¬⊥ ∧ ¬α0_0
+//│   α6_1 <: ¬⊤ ∧ ¬⊥ ∧ ¬α5_1
+
+:e
+let t = region x in x in t.ref 42
+//│ Elab: { { let t@1 = region x in x@2#0‹›; (t@1#0).ref 42‹›‹› }‹› }‹›
+//│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
+//│ ╙──
+//│ ╔══[ERROR] Cannot constrain skolem α0_0
+//│ ╙──
+//│ Type: Ref[in Int out Int, in ⊥ out α10_0]
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ ⊤ <: α10_0
+//│   α10_0 <: ¬⊤ ∧ ¬⊥ ∧ ¬α0_0
+//│   α10_0 <: ¬⊤ ∧ ¬⊥ ∧ ¬⊥
+
+
+:fixme
+region x in
+  let r = x.ref 42 in let t = r := 0
+//│ ╔══[ERROR] Name not found: :=
+//│ ║  l.40: 	  let r = x.ref 42 in let t = r := 0
+//│ ╙──      	                                ^^
+//│ Elab: { region x in { let r@2 = (x@1#0).ref 42‹›‹›; { let t@3 = <error>‹›(r@2#0, 0‹›)‹›‹›; }‹› }‹›‹› }‹›
+//│ Type: ⊤
 
 :fixme
 region x in
   let r = x.ref 42 in let t = r := 0 in !r
-//│ /!!!\ Uncaught error: scala.MatchError: RegRef(Ident(x),IntLit(42)) (of class hkmc2.syntax.Tree$RegRef)
+//│ ╔══[ERROR] Name not found: :=
+//│ ║  l.49: 	  let r = x.ref 42 in let t = r := 0 in !r
+//│ ╙──      	                                ^^
+//│ /!!!\ Uncaught error: scala.MatchError: Deref(Ident(r)) (of class hkmc2.syntax.Tree$Deref)
 
