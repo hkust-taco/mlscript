@@ -129,6 +129,7 @@ class Elaborator(raise: Raise):
       val nestCtx = ctx.copy(locals = ctx.locals ++ Ls(name -> sym))
       Term.Region(sym, term(body)(using nestCtx))
     case Tree.RegRef(reg, value) => Term.RegRef(term(reg), term(value))
+    case Tree.Deref(ref) => Term.Deref(term(ref))
     case Empty() =>
       raise(ErrorReport(msg"A term was expected in this position, but no term was found." -> tree.toLoc :: Nil))
       Term.Error

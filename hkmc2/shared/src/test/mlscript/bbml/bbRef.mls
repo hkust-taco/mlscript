@@ -49,13 +49,32 @@ in t := 0
 //│ ╙──
 //│ Type: Int
 
-:fixme
+
 region x in
   let r = x.ref 42 in !r
-//│ /!!!\ Uncaught error: scala.MatchError: Deref(Ident(r)) (of class hkmc2.syntax.Tree$Deref)
+//│ Elab: { region x in { let r@2 = (x@1#0).ref 42‹›‹›; !Ref(r@2)‹› }‹›‹› }‹›
+//│ Type: α22_1
+//│ Where:
+//│   Int ∧ ¬⊥ <: α22_1
+//│   α22_1 <: ¬⊤ ∧ ¬⊥ ∨ Int
 
-:fixme
+:e
+let t = region x in
+  x.ref 42
+in !t
+//│ Elab: { { let t@1 = region x in (x@2#0).ref 42‹›‹›‹›; !Ref(t@1)‹› }‹› }‹›
+//│ ╔══[ERROR] Cannot constrain skolem α0_0
+//│ ╙──
+//│ Type: α28_0
+//│ Where:
+//│   Int ∧ ¬⊥ <: α28_0
+//│   α28_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+
 region x in
   let r = x.ref 42 in let t = r := 0 in !r
-//│ /!!!\ Uncaught error: scala.MatchError: Deref(Ident(r)) (of class hkmc2.syntax.Tree$Deref)
+//│ Elab: { region x in { let r@2 = (x@1#0).ref 42‹›‹›; { let t@3 = r@2#0 := 0‹›‹›; !Ref(r@2)‹› }‹› }‹›‹› }‹›
+//│ Type: α33_1
+//│ Where:
+//│   Int ∧ ¬⊥ <: α33_1
+//│   α33_1 <: ¬⊤ ∧ ¬⊥ ∨ Int
 

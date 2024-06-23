@@ -589,6 +589,12 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       val sk = freshVar
       constrain(lhsTy, Ctx.refTy(rhsTy, sk))
       (rhsTy, Type.ComposedType(sk, Type.ComposedType(lhsEff, rhsEff, true), true))
+    case Term.Deref(ref) =>
+      val (refTy, refEff) = typeCheck(ref)
+      val sk = freshVar
+      val ctnt = freshVar
+      constrain(refTy, Ctx.refTy(ctnt, sk))
+      (ctnt, Type.ComposedType(sk, refEff, true))
     case Term.Quoted(body) =>
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx
