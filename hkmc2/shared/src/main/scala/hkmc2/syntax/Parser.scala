@@ -383,6 +383,8 @@ abstract class Parser(
     case (IDENT("!", _), loc) :: _ =>
       consume
       exprCont(Deref(exprImpl(Int.MaxValue)), prec, allowNewlines = true) // TODO: the prec???
+    case (IDENT(nme, sym), loc) :: _ if nme == "new" || nme == "let" || nme == "if" || nme == "case" || nme == "region" =>
+      parseRule(Keyword.all.get(nme).get.assumeRightPrec, ParseRule.prefixRules).getOrElse(Tree.Error())
     case (IDENT(nme, sym), loc) :: _ =>
       consume
       exprCont(Tree.Ident(nme), prec, allowNewlines = true)

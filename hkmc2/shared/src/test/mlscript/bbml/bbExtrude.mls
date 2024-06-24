@@ -57,13 +57,9 @@ h([A] => (x: A) => x)
 //│ Elab: { h#1(forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹›)‹›‹› }‹›
 //│ Type: forall α19_1: (α19_1) ->{⊥} Int
 
-:fixme
 :e
 y `=> (let t = run(x `=> x `+ y) in y)
-//│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.62: 	y `=> (let t = run(x `=> x `+ y) in y)
-//│ ╙──      	           ^
-//│ ╔══[ERROR] Name not found: let
+//│ Elab: { code"λy@1. ${{ let t@2 = run#0(code"λx@4. ${code"+#3(${x@4#0}‹›, ${y@1#0}‹›)‹›‹›"‹›}‹›‹›"‹›)‹›‹›; y@1#1 }‹›}‹›‹›"‹› }‹›
+//│ ╔══[ERROR] Cannot constrain skolem α24_2
 //│ ╙──
-//│ Elab: { code"λy@1. ${<error>‹›}‹›‹›"‹› }‹›
-//│ Type: CodeBase[in ⊥ out α26_1, in ⊥ out ⊤]
+//│ Type: CodeBase[in ⊥ out α31_1, in ⊥ out ⊤]
