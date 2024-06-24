@@ -490,7 +490,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           val ty = sign.map(typeType).getOrElse(freshVar)
           nestCtx += sym -> ty
           ty
-      val (bodyTy, eff) = typeCheck(body) 
+      val (bodyTy, eff) = typeCheck(body)
       (Type.FunType(tvs, bodyTy, eff), Type.Bot)
     case Term.App(Term.Sel(Term.Ref(cls: ClassSymbol), field), Term.Tup(Fld(_, term, asc) :: Nil)) => // * Sel
       val (ty, eff) = typeCheck(term)
@@ -633,6 +633,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       (Type.Bot, Type.Bot) // TODO: error type?
 
   def typePurely(t: Term): Type =
-    val (ty, eff) = typeCheck(t)(using initCtx, LinkedHashSet(allocSkolem.uid))
-    constrain(eff, allocSkolem)(using initCtx, LinkedHashSet(allocSkolem.uid))
+    val skolems = LinkedHashSet(allocSkolem.uid)
+    val (ty, eff) = typeCheck(t)(using initCtx, skolems)
+    constrain(eff, allocSkolem)(using initCtx, skolems)
     ty

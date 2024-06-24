@@ -78,3 +78,39 @@ region x in
 //│   Int ∧ ¬⊥ <: α33_1
 //│   α33_1 <: ¬⊤ ∧ ¬⊥ ∨ Int
 
+:e
+fun rid: [A] -> A -> A
+fun rid(x) =
+  let t = (region y in 42) in x
+//│ Elab: { fun rid: forall A@2: FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2))‹›; fun rid(x@3): forall A@7: FunTy(Tup(List(Fld(‹›,Ref(A@7),None))),Ref(A@7))‹› = { let t@4 = region y in 42‹›‹›; x@3#0 }‹›; }‹›
+//│ ╔══[ERROR] Cannot constrain skolem α0_0
+//│ ╙──
+//│ Type: ⊤
+
+:e
+region x in
+  [A] => x.ref 42
+//│ Elab: { region x in forall A@2: RegRef(Ref(x@1),Lit(IntLit(42)))‹›‹› }‹›
+//│ ╔══[ERROR] Cannot constrain skolem α38_1
+//│ ╙──
+//│ Type: forall α39_2: Ref[in Int out Int, in ⊥ out α40_2]
+//│ Where:
+//│   ⊤ ∧ ¬⊥ ∧ α38_1 <: α40_2
+//│   α40_2 <: ¬⊤ ∧ ¬⊥
+//│   α40_2 <: ¬⊤ ∧ ¬⊥ ∧ ¬α38_1
+
+
+:e
+let t =
+  region x in
+    y => x.ref y
+  in t(42)
+//│ Elab: { { let t@1 = region x in λy@3. (x@2#0).ref y@3#0‹›‹›‹›; t@1#0(42‹›)‹›‹› }‹› }‹›
+//│ ╔══[ERROR] Cannot constrain skolem α42_1
+//│ ╙──
+//│ Type: Ref[in α43_1 out α43_1, in ⊥ out α44_1]
+//│ Where:
+//│   Int ∧ ¬⊥ <: α43_1
+//│   ⊤ ∧ ¬⊥ ∧ α42_1 <: α44_1
+//│   α44_1 <: ¬⊤ ∧ ¬⊥ ∧ ¬α0_0
+//│   α44_1 <: ¬⊤ ∧ ¬⊥ ∧ ¬α42_1
