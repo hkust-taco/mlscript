@@ -368,7 +368,6 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       given Bool = true
       val sigTy = sig.map(typeType)
       val (tvs, retAnno, effAnno, newSkolems) = rec(sigTy)
-      System.out.println(s"yydz: $sigTy $effAnno")
       val poly = tvs.foldLeft(!newSkolems.isEmpty || retAnno.map(_.isPoly).getOrElse(false))((res, v) => res | v.isPoly)
       val funTy = sigTy match
         case S(sig) =>
