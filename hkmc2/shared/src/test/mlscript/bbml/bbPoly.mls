@@ -53,24 +53,26 @@ fun myInc(inc: Int -> Int, x: Int) = inc(x)
 
 myInc(id, 0)
 //│ Elab: { myInc#0(id#3, 0‹›)‹›‹› }‹›
-//│ Type: Int
-
-let t = 42 in [A] => (x: A) => x
-//│ Elab: { { let t@1 = 42‹›; forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹› }‹› }‹›
-//│ Type: forall α12_1: (α12_1) ->{⊥} α12_1
-
-
-id(42)
-//│ Elab: { id#4(42‹›)‹›‹› }‹›
 //│ Type: α13_0
 //│ Where:
 //│   Int ∧ ¬⊥ <: α13_0
 
+let t = 42 in [A] => (x: A) => x
+//│ Elab: { { let t@1 = 42‹›; forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹› }‹› }‹›
+//│ Type: forall α15_1: (α15_1) ->{⊥} α15_1
+
+
+id(42)
+//│ Elab: { id#4(42‹›)‹›‹› }‹›
+//│ Type: α16_0
+//│ Where:
+//│   Int ∧ ¬⊥ <: α16_0
+
 id("abc")
 //│ Elab: { id#5("abc"‹›)‹›‹› }‹›
-//│ Type: α14_0
+//│ Type: α17_0
 //│ Where:
-//│   Str ∧ ¬⊥ <: α14_0
+//│   Str ∧ ¬⊥ <: α17_0
 
 
 class Pair[A, B](a: A, b: B)
@@ -79,10 +81,10 @@ class Pair[A, B](a: A, b: B)
 
 new Pair(42, true)
 //│ Elab: { new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹› }‹›
-//│ Type: Pair[in α15_0 out α16_0, in α17_0 out α18_0]
+//│ Type: Pair[in α18_0 out α19_0, in α20_0 out α21_0]
 //│ Where:
-//│   Int ∧ ¬⊥ <: α16_0
-//│   Bool ∧ ¬⊥ <: α18_0
+//│   Int ∧ ¬⊥ <: α19_0
+//│   Bool ∧ ¬⊥ <: α21_0
 
 fun swap: [A, B] -> Pair[out A, out B] -> Pair[out B, out A]
 fun swap(p) = new Pair(Pair.b(p), Pair.a(p))
@@ -92,34 +94,34 @@ fun swap(p) = new Pair(Pair.b(p), Pair.a(p))
 
 swap
 //│ Elab: { swap#0 }‹›
-//│ Type: forall α19_1, α20_1: (Pair[in ⊥ out α19_1, in ⊥ out α20_1]) ->{⊥} Pair[in ⊥ out α20_1, in ⊥ out α19_1]
+//│ Type: forall α22_1, α23_1: (Pair[in ⊥ out α22_1, in ⊥ out α23_1]) ->{⊥} Pair[in ⊥ out α23_1, in ⊥ out α22_1]
 
 let t = new Pair(42, true) in swap(t)
 //│ Elab: { { let t@1 = new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›; swap#1(t@1#0)‹›‹› }‹› }‹›
-//│ Type: Pair[in ⊥ out α38_0, in ⊥ out α37_0]
+//│ Type: Pair[in ⊥ out α41_0, in ⊥ out α40_0]
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α36_0 <: α38_0
-//│   Bool ∧ ¬⊥ <: α36_0
-//│   ⊤ ∧ ¬⊥ ∧ α34_0 <: α37_0
-//│   Int ∧ ¬⊥ <: α34_0
+//│   ⊤ ∧ ¬⊥ ∧ α39_0 <: α41_0
+//│   Bool ∧ ¬⊥ <: α39_0
+//│   ⊤ ∧ ¬⊥ ∧ α37_0 <: α40_0
+//│   Int ∧ ¬⊥ <: α37_0
 
 let t = new Pair("114", "514") in swap(t)
 //│ Elab: { { let t@1 = new class:Pair(Lit(StrLit(114)), Lit(StrLit(514)))‹›; swap#2(t@1#0)‹›‹› }‹› }‹›
-//│ Type: Pair[in ⊥ out α44_0, in ⊥ out α43_0]
+//│ Type: Pair[in ⊥ out α47_0, in ⊥ out α46_0]
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α42_0 <: α44_0
-//│   Str ∧ ¬⊥ <: α42_0
-//│   ⊤ ∧ ¬⊥ ∧ α40_0 <: α43_0
-//│   Str ∧ ¬⊥ <: α40_0
+//│   ⊤ ∧ ¬⊥ ∧ α45_0 <: α47_0
+//│   Str ∧ ¬⊥ <: α45_0
+//│   ⊤ ∧ ¬⊥ ∧ α43_0 <: α46_0
+//│   Str ∧ ¬⊥ <: α43_0
 
 let id = [A] => (x: A) => x in new Pair(id(42), id("42"))
 //│ Elab: { { let id@1 = forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹›; new class:Pair(App(Ref(id@1),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))), App(Ref(id@1),Tup(List(Fld(‹›,Lit(StrLit(42)),None)))))‹› }‹› }‹›
-//│ Type: Pair[in α46_0 out α47_0, in α48_0 out α49_0]
+//│ Type: Pair[in α49_0 out α50_0, in α51_0 out α52_0]
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α50_0 <: α47_0
-//│   Int ∧ ¬⊥ <: α50_0
-//│   ⊤ ∧ ¬⊥ ∧ α51_0 <: α49_0
-//│   Str ∧ ¬⊥ <: α51_0
+//│   ⊤ ∧ ¬⊥ ∧ α53_0 <: α50_0
+//│   Int ∧ ¬⊥ <: α53_0
+//│   ⊤ ∧ ¬⊥ ∧ α54_0 <: α52_0
+//│   Str ∧ ¬⊥ <: α54_0
 
 fun foo: ([A] -> A -> A) -> Int
 fun foo(x) = 42
@@ -128,7 +130,7 @@ fun foo(x) = 42
 
 foo
 //│ Elab: { foo#0 }‹›
-//│ Type: (forall α52_1: (α52_1) ->{⊥} α52_1) ->{⊥} Int
+//│ Type: (forall α55_1: (α55_1) ->{⊥} α55_1) ->{⊥} Int
 
 foo(id)
 //│ Elab: { foo#1(id#6)‹›‹› }‹›
@@ -162,9 +164,9 @@ new Foo(x => x)
 
 let foo = new Foo(id) in Foo.foo(foo)(42)
 //│ Elab: { { let foo@1 = new class:Foo(Ref(id))‹›; class:Foo#0.foo‹›(foo@1#0)‹›‹›(42‹›)‹›‹› }‹› }‹›
-//│ Type: α64_0
+//│ Type: α67_0
 //│ Where:
-//│   Int ∧ ¬⊥ <: α64_0
+//│   Int ∧ ¬⊥ <: α67_0
 
 class Bar[A](x: A, f: [B] -> B -> B)
 //│ Elab: { class Bar[out A@1](x@2: A@1#0, f@3: forall B@4: FunTy(Tup(List(Fld(‹›,Ref(B@4),None))),Ref(B@4))‹›) { }‹›; }‹›
@@ -173,17 +175,17 @@ class Bar[A](x: A, f: [B] -> B -> B)
 
 new Bar(0, id)
 //│ Elab: { new class:Bar(Lit(IntLit(0)), Ref(id))‹› }‹›
-//│ Type: Bar[in α65_0 out α66_0]
+//│ Type: Bar[in α68_0 out α69_0]
 //│ Where:
-//│   Int ∧ ¬⊥ <: α66_0
+//│   Int ∧ ¬⊥ <: α69_0
 
 let bar = new Bar(0, id) in Bar.f(bar)(Bar.x(bar))
 //│ Elab: { { let bar@1 = new class:Bar(Lit(IntLit(0)), Ref(id))‹›; class:Bar#0.f‹›(bar@1#0)‹›‹›(class:Bar#1.x‹›(bar@1#1)‹›‹›)‹›‹› }‹› }‹›
-//│ Type: α76_0
+//│ Type: α79_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α78_0 <: α76_0
-//│   ⊤ ∧ ¬⊥ ∧ α70_0 <: α78_0
-//│   Int ∧ ¬⊥ <: α70_0
+//│   ⊤ ∧ ¬⊥ ∧ α81_0 <: α79_0
+//│   ⊤ ∧ ¬⊥ ∧ α73_0 <: α81_0
+//│   Int ∧ ¬⊥ <: α73_0
 
 class Some[A](value: A)
 //│ Elab: { class Some[out A@1](value@2: A@1#0) { }‹›; }‹›
@@ -191,18 +193,18 @@ class Some[A](value: A)
 
 new Some([A] => (x: A) => x)
 //│ Elab: { new class:Some(Forall(List(A@1),Lam(List(Param(‹›,x@2,Some(Ref(A@1)))),Ref(x@2))))‹› }‹›
-//│ Type: Some[in α79_0 out α80_0]
+//│ Type: Some[in α82_0 out α83_0]
 //│ Where:
-//│   (⊤ ∧ ¬⊥ ∧ α82_0) ->{⊥} ⊤ ∧ ¬⊥ ∧ α82_0 ∧ ¬⊥ <: α80_0
+//│   (⊤ ∧ ¬⊥ ∧ α85_0) ->{⊥} ⊤ ∧ ¬⊥ ∧ α85_0 ∧ ¬⊥ <: α83_0
 
 :fixme
 let s = new Some([A] => (x: A) => x) in let t = Some.value(s)(42) in Some.value(s)(false)
 //│ Elab: { { let s@1 = new class:Some(Forall(List(A@2),Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))))‹›; { let t@4 = class:Some#0.value‹›(s@1#0)‹›‹›(42‹›)‹›‹›; class:Some#1.value‹›(s@1#1)‹›‹›(false‹›)‹›‹› }‹› }‹› }‹›
-//│ Type: α94_0
+//│ Type: α97_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α86_0 <: α94_0
-//│   Bool ∧ ¬⊥ <: α86_0
-//│   Int ∧ ¬⊥ <: α86_0
+//│   ⊤ ∧ ¬⊥ ∧ α89_0 <: α97_0
+//│   Bool ∧ ¬⊥ <: α89_0
+//│   Int ∧ ¬⊥ <: α89_0
 
 fun gen(x) =
   let t = x + 1 in [A] => (y: A) => y
@@ -211,14 +213,14 @@ fun gen(x) =
 
 gen
 //│ Elab: { gen#0 }‹›
-//│ Type: (α95_0) ->{⊥ ∨ ⊥ ∨ ⊥ ∨ ⊥ ∨ ⊥} forall α96_1: (α96_1) ->{⊥} α96_1
+//│ Type: (α98_0) ->{⊥ ∨ ⊥ ∨ ⊥ ∨ ⊥ ∨ ⊥} forall α100_1: (α100_1) ->{⊥} α100_1
 //│ Where:
-//│   α95_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   α98_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
 
 
 gen(42)
 //│ Elab: { gen#1(42‹›)‹›‹› }‹›
-//│ Type: forall α96_1: (α96_1) ->{⊥} α96_1
+//│ Type: forall α100_1: (α100_1) ->{⊥} α100_1
 
 // FIXME: toLoc
 :fixme

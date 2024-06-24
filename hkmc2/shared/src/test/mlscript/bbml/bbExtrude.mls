@@ -9,24 +9,26 @@ fun f(y) =
 // * the parameter type of y is extruded.
 f
 //│ Elab: { f#0 }‹›
-//│ Type: (α1_0) ->{⊥ ∨ ⊥} α1_0
+//│ Type: α2_0
 //│ Where:
-//│   α1_0 <: ¬⊤ ∧ ¬(⊤ ∧ ¬⊥ ∧ ⊤) ->{⊤ ∧ ¬⊥ ∧ α6_0} ⊤ ∧ ¬⊥ ∧ α5_0
-//│   α5_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   (⊤ ∧ ¬⊥ ∧ α1_0) ->{⊥} ⊤ ∧ ¬⊥ ∧ α1_0 ∧ ¬⊥ <: α2_0
+//│   α1_0 <: ¬⊤ ∧ ¬(⊤ ∧ ¬⊥ ∧ ⊤) ->{⊤ ∧ ¬⊥ ∧ α7_0} ⊤ ∧ ¬⊥ ∧ α6_0
+//│   α6_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
 
 :e
 f([A] => (x: A) => x)
 //│ Elab: { f#1(forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹›)‹›‹› }‹›
 //│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
 //│ ╙──
-//│ Type: α1_0
+//│ Type: α10_0
 //│ Where:
-//│   (⊤ ∧ ¬⊥ ∧ α8_0) ->{⊥} ⊤ ∧ ¬⊥ ∧ α8_0 ∧ ¬⊥ <: α1_0
-//│   ⊤ ∧ ¬⊥ <: α8_0
-//│   α8_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
-//│   α1_0 <: ¬⊤ ∧ ¬(⊤ ∧ ¬⊥ ∧ ⊤) ->{⊤ ∧ ¬⊥ ∧ α6_0} ⊤ ∧ ¬⊥ ∧ α5_0
-//│   ⊤ ∧ ¬⊥ ∧ α8_0 <: α5_0
-//│   α5_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   ⊤ ∧ ¬⊥ ∧ α1_0 <: α10_0
+//│   (⊤ ∧ ¬⊥ ∧ α11_0) ->{⊥} ⊤ ∧ ¬⊥ ∧ α11_0 ∧ ¬⊥ <: α1_0
+//│   ⊤ ∧ ¬⊥ <: α11_0
+//│   α11_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   α1_0 <: ¬⊤ ∧ ¬(⊤ ∧ ¬⊥ ∧ ⊤) ->{⊤ ∧ ¬⊥ ∧ α7_0} ⊤ ∧ ¬⊥ ∧ α6_0
+//│   ⊤ ∧ ¬⊥ ∧ α11_0 <: α6_0
+//│   α6_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
 
 fun g: ([A] -> A -> Int) -> ([A] -> A -> Int)
 fun g(y) =
@@ -36,11 +38,11 @@ fun g(y) =
 
 g
 //│ Elab: { g#0 }‹›
-//│ Type: (forall α9_1: (α9_1) ->{⊥} Int) ->{⊥} forall α10_1: (α10_1) ->{⊥} Int
+//│ Type: (forall α12_1: (α12_1) ->{⊥} Int) ->{⊥} forall α13_1: (α13_1) ->{⊥} Int
 
 g([A] => (x: A) => x)
 //│ Elab: { g#1(forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹›)‹›‹› }‹›
-//│ Type: forall α10_1: (α10_1) ->{⊥} Int
+//│ Type: forall α13_1: (α13_1) ->{⊥} Int
 
 fun h(y: [A] -> A -> Int) =
   let local = ([A] => (x: A) => y(x) + 1) in y
@@ -49,19 +51,19 @@ fun h(y: [A] -> A -> Int) =
 
 h
 //│ Elab: { h#0 }‹›
-//│ Type: (forall α16_1: (α16_1) ->{⊥} Int) ->{⊥ ∨ ⊥} forall α16_1: (α16_1) ->{⊥} Int
+//│ Type: (forall α19_1: (α19_1) ->{⊥} Int) ->{⊥ ∨ ⊥} forall α19_1: (α19_1) ->{⊥} Int
 
 h([A] => (x: A) => x)
 //│ Elab: { h#1(forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹›)‹›‹› }‹›
-//│ Type: forall α16_1: (α16_1) ->{⊥} Int
+//│ Type: forall α19_1: (α19_1) ->{⊥} Int
 
 :fixme
 :e
 y `=> (let t = run(x `=> x `+ y) in y)
 //│ ╔══[PARSE ERROR] Unexpected identifier here
-//│ ║  l.60: 	y `=> (let t = run(x `=> x `+ y) in y)
+//│ ║  l.62: 	y `=> (let t = run(x `=> x `+ y) in y)
 //│ ╙──      	           ^
 //│ ╔══[ERROR] Name not found: let
 //│ ╙──
 //│ Elab: { code"λy@1. ${<error>‹›}‹›‹›"‹› }‹›
-//│ Type: CodeBase[in ⊥ out α23_1, in ⊥ out ⊤]
+//│ Type: CodeBase[in ⊥ out α26_1, in ⊥ out ⊤]

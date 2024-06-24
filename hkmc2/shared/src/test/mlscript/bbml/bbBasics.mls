@@ -36,7 +36,7 @@ fun mul(x, y) = x * y
 
 x => x
 //│ Elab: { λx@1. x@1#0‹› }‹›
-//│ Type: (α5_0) ->{⊥} α5_0
+//│ Type: (α8_0) ->{⊥} α8_0
 
 +
 //│ Elab: { +#1 }‹›
@@ -44,10 +44,10 @@ x => x
 
 (x, y) => x + y
 //│ Elab: { λx@1, y@2. +#2(x@1#0, y@2#0)‹›‹›‹› }‹›
-//│ Type: (α6_0, α7_0) ->{⊥ ∨ ⊥ ∨ ⊥ ∨ ⊥} Int
+//│ Type: (α9_0, α10_0) ->{⊥ ∨ ⊥ ∨ ⊥ ∨ ⊥} Int
 //│ Where:
-//│   α6_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
-//│   α7_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   α9_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   α10_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
 
 ((x, y) => x + y)(40, 2)
 //│ Elab: { λx@2, y@3. +#3(x@2#0, y@3#0)‹›‹›‹›(40‹›, 2‹›)‹›‹› }‹›
@@ -63,7 +63,9 @@ x => x
 
 inc(42)
 //│ Elab: { inc#0(42‹›)‹›‹› }‹›
-//│ Type: Int
+//│ Type: α14_0
+//│ Where:
+//│   Int ∧ ¬⊥ <: α14_0
 
 let x = 42 in x
 //│ Elab: { { let x@1 = 42‹›; x@1#0 }‹› }‹›
@@ -87,7 +89,7 @@ class Foo(x: Int)
 :e
 new Nothingness(0)
 //│ ╔══[ERROR] Class Nothingness not found.
-//│ ║  l.88: 	new Nothingness(0)
+//│ ║  l.90: 	new Nothingness(0)
 //│ ╙──      	               ^^^
 //│ Elab: { <error>‹› }‹›
 //│ Type: ⊥
@@ -128,15 +130,15 @@ class Some[A](value: A)
 
 new Some(true)
 //│ Elab: { new class:Some(Lit(BoolLit(true)))‹› }‹›
-//│ Type: Some[in α10_0 out α11_0]
+//│ Type: Some[in α15_0 out α16_0]
 //│ Where:
-//│   Bool ∧ ¬⊥ <: α11_0
+//│   Bool ∧ ¬⊥ <: α16_0
 
 new Some(42)
 //│ Elab: { new class:Some(Lit(IntLit(42)))‹› }‹›
-//│ Type: Some[in α12_0 out α13_0]
+//│ Type: Some[in α17_0 out α18_0]
 //│ Where:
-//│   Int ∧ ¬⊥ <: α13_0
+//│   Int ∧ ¬⊥ <: α18_0
 
 let p = new Point(1.0, 0.0, 0.0) in Point.x(p)
 //│ Elab: { { let p@1 = new class:Point(Lit(DecLit(1.0)), Lit(DecLit(0.0)), Lit(DecLit(0.0)))‹›; class:Point#0.x‹›(p@1#0)‹›‹› }‹› }‹›
@@ -144,17 +146,17 @@ let p = new Point(1.0, 0.0, 0.0) in Point.x(p)
 
 let t = new Some(true) in Some.value(t)
 //│ Elab: { { let t@1 = new class:Some(Lit(BoolLit(true)))‹›; class:Some#0.value‹›(t@1#0)‹›‹› }‹› }‹›
-//│ Type: α17_0
+//│ Type: α22_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α15_0 <: α17_0
-//│   Bool ∧ ¬⊥ <: α15_0
+//│   ⊤ ∧ ¬⊥ ∧ α20_0 <: α22_0
+//│   Bool ∧ ¬⊥ <: α20_0
 
 :e
 Some.value(42)
 //│ Elab: { class:Some#1.value‹›(42‹›)‹›‹› }‹›
 //│ ╔══[ERROR] Cannot solve Int ∧ ¬⊥
 //│ ╙──
-//│ Type: α19_0
+//│ Type: α24_0
 
 
 class Printer[T](f: T -> Str)
@@ -168,9 +170,9 @@ fun foofoo(x) =
 
 new Printer(foofoo)
 //│ Elab: { new class:Printer(Ref(foofoo))‹› }‹›
-//│ Type: Printer[in α21_0 out α22_0]
+//│ Type: Printer[in α27_0 out α28_0]
 //│ Where:
-//│   α21_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   α27_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
 
 let ip = new Printer(foofoo) in Printer.f(ip)(42)
 //│ Elab: { { let ip@1 = new class:Printer(Ref(foofoo))‹›; class:Printer#0.f‹›(ip@1#0)‹›‹›(42‹›)‹›‹› }‹› }‹›
@@ -193,27 +195,27 @@ fun inc(x) = x + 1
 
 new TFun(inc)
 //│ Elab: { new class:TFun(Ref(inc))‹› }‹›
-//│ Type: TFun[in α32_0 out α33_0]
+//│ Type: TFun[in α39_0 out α40_0]
 //│ Where:
-//│   α32_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
-//│   Int ∧ ¬⊥ <: α33_0
+//│   α39_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   Int ∧ ¬⊥ <: α40_0
 
 let tf = new TFun(inc) in TFun.f(tf)(1)
 //│ Elab: { { let tf@1 = new class:TFun(Ref(inc))‹›; class:TFun#0.f‹›(tf@1#0)‹›‹›(1‹›)‹›‹› }‹› }‹›
-//│ Type: α37_0
+//│ Type: α44_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α35_0 <: α37_0
-//│   Int ∧ ¬⊥ <: α35_0
+//│   ⊤ ∧ ¬⊥ ∧ α42_0 <: α44_0
+//│   Int ∧ ¬⊥ <: α42_0
 
 :e
 let tf = new TFun(inc) in TFun.f(tf)("1")
 //│ Elab: { { let tf@1 = new class:TFun(Ref(inc))‹›; class:TFun#1.f‹›(tf@1#0)‹›‹›("1"‹›)‹›‹› }‹› }‹›
 //│ ╔══[ERROR] Cannot solve Str ∧ ¬⊥
 //│ ╙──
-//│ Type: α41_0
+//│ Type: α48_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α39_0 <: α41_0
-//│   Int ∧ ¬⊥ <: α39_0
+//│   ⊤ ∧ ¬⊥ ∧ α46_0 <: α48_0
+//│   Int ∧ ¬⊥ <: α46_0
 
 class Pair[A, B](fst: A, snd: B)
 //│ Elab: { class Pair[out A@1, out B@2](fst@3: A@1#0, snd@4: B@2#0) { }‹›; }‹›
@@ -221,17 +223,17 @@ class Pair[A, B](fst: A, snd: B)
 
 Pair.fst(new Pair(42, true))
 //│ Elab: { class:Pair#0.fst‹›(new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›)‹›‹› }‹›
-//│ Type: α47_0
+//│ Type: α54_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α43_0 <: α47_0
-//│   Int ∧ ¬⊥ <: α43_0
+//│   ⊤ ∧ ¬⊥ ∧ α50_0 <: α54_0
+//│   Int ∧ ¬⊥ <: α50_0
 
 Pair.snd(new Pair(42, true))
 //│ Elab: { class:Pair#1.snd‹›(new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›)‹›‹› }‹›
-//│ Type: α57_0
+//│ Type: α64_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α53_0 <: α57_0
-//│   Bool ∧ ¬⊥ <: α53_0
+//│   ⊤ ∧ ¬⊥ ∧ α60_0 <: α64_0
+//│   Bool ∧ ¬⊥ <: α60_0
 
 
 if 1 < 2 then 1 else 0
@@ -251,36 +253,64 @@ fun test(x) =
   if x is Int then x + 1 else 0
 test
 //│ Elab: { fun test(x@1) = if Cons(Match(Ref(x@1),Cons(PatternBranch(Class(class:Int,None,true),Else(App(Ref(+),Tup(List(Fld(‹›,Ref(x@1),None), Fld(‹›,Lit(IntLit(1)),None)))))),NoSplit)),Else(Lit(IntLit(0))))‹›; test#0 }‹›
-//│ Type: (α59_0) ->{⊥ ∨ ⊥ ∨ ⊥ ∨ ⊥ ∨ ⊥ ∨ ⊥} Int ∨ Int
+//│ Type: α67_0
 //│ Where:
-//│   α59_0 <: ¬Int ∧ ¬⊥ ∨ Int
+//│   (⊤ ∧ ¬⊥ ∧ α66_0) ->{⊥} Int ∧ ¬⊥ ∨ Int ∧ ¬⊥ ∧ ¬⊥ <: α67_0
+//│   α66_0 <: ¬Int ∧ ¬⊥ ∨ Int
 
 test(1)
 //│ Elab: { test#1(1‹›)‹›‹› }‹›
-//│ Type: Int ∨ Int
+//│ Type: α70_0
+//│ Where:
+//│   Int ∧ ¬⊥ <: α70_0
 
 test("1")
 //│ Elab: { test#2("1"‹›)‹›‹› }‹›
-//│ Type: Int ∨ Int
+//│ Type: α72_0
+//│ Where:
+//│   Int ∧ ¬⊥ <: α72_0
 
-// TODO: annotation?
-fun fact: Int -> Int
+
 fun fact(n) =
   if n > 1 then n * fact(n - 1) else 1
-//│ Elab: { fun fact: (class:Int#16)‹› -> class:Int#17‹›; fun fact(n@2): (class:Int#18)‹› -> class:Int#19‹› = if Cons(Boolean(App(Ref(>),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,Lit(IntLit(1)),None)))),Else(App(Ref(*),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,App(Ref(fact),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))),Else(Lit(IntLit(1))))‹›; }‹›
+//│ Elab: { fun fact(n@1) = if Cons(Boolean(App(Ref(>),Tup(List(Fld(‹›,Ref(n@1),None), Fld(‹›,Lit(IntLit(1)),None)))),Else(App(Ref(*),Tup(List(Fld(‹›,Ref(n@1),None), Fld(‹›,App(Ref(fact),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@1),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))),Else(Lit(IntLit(1))))‹›; }‹›
 //│ Type: ⊤
 
 fact
 //│ Elab: { fact#1 }‹›
-//│ Type: (Int) ->{⊥} Int
+//│ Type: α74_0
+//│ Where:
+//│   (⊤ ∧ ¬⊥ ∧ α73_0) ->{⊥ ∨ ⊤ ∧ ¬⊥ ∧ α75_0} Int ∧ ¬⊥ ∨ Int ∧ ¬⊥ ∧ ¬⊥ <: α74_0
+//│   Int ∧ ¬⊥ <: α73_0
+//│   α73_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   α74_0 <: ¬⊤ ∧ ¬(Int ∧ ¬⊥) ->{⊤ ∧ ¬⊥ ∧ α75_0} ⊤ ∧ ¬⊥ ∧ α76_0
+//│   Int ∧ ¬⊥ <: α76_0
+//│   α76_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
 
-fun fact2: Int -> Int
+fact(1)
+//│ Elab: { fact#2(1‹›)‹›‹› }‹›
+//│ Type: α78_0
+//│ Where:
+//│   Int ∧ ¬⊥ <: α78_0
+
+
 fun fact2 = case
   0 then 1
   n then n * fact(n - 1)
-//│ Elab: { fun fact2: (class:Int#20)‹› -> class:Int#21‹›; fun fact2: (class:Int#22)‹› -> class:Int#23‹› = λn@2. if Cons(Boolean(App(Ref(==),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,Lit(IntLit(0)),None)))),Else(Lit(IntLit(1)))),Else(App(Ref(*),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,App(Ref(fact),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None))))))‹›‹›; }‹›
+//│ Elab: { fun fact2 = λn@1. if Cons(Boolean(App(Ref(==),Tup(List(Fld(‹›,Ref(n@1),None), Fld(‹›,Lit(IntLit(0)),None)))),Else(Lit(IntLit(1)))),Else(App(Ref(*),Tup(List(Fld(‹›,Ref(n@1),None), Fld(‹›,App(Ref(fact),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@1),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None))))))‹›‹›; }‹›
 //│ Type: ⊤
 
 fact2
 //│ Elab: { fact2#0 }‹›
-//│ Type: (Int) ->{⊥} Int
+//│ Type: α80_0
+//│ Where:
+//│   (⊤ ∧ ¬⊥ ∧ α79_0) ->{⊥ ∨ ⊤ ∧ ¬⊥ ∧ α82_0} Int ∧ ¬⊥ ∨ Int ∧ ¬⊥ ∧ ¬⊥ <: α80_0
+//│   α79_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   ⊤ ∧ ¬⊥ ∧ α75_0 <: α82_0
+//│   α75_0 <: ¬⊤ ∧ ¬⊥ ∧ ¬α0_0
+
+fact2(0)
+//│ Elab: { fact2#1(0‹›)‹›‹› }‹›
+//│ Type: α85_0
+//│ Where:
+//│   Int ∧ ¬⊥ <: α85_0

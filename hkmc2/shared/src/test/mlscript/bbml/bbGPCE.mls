@@ -38,15 +38,18 @@ fun inc(dbg) =
   x `=> let c = x `+ `1 in let t = dbg(c) in c
 inc
 //│ Elab: { fun inc(dbg@1) = code"λx@2. ${{ let c@3 = code"+#0(${x@2#0}‹›, ${code"1‹›"‹›}‹›)‹›‹›"‹›; { let t@5 = dbg@1#0(c@3#0)‹›‹›; c@3#1 }‹› }‹›}‹›‹›"‹›; inc#0 }‹›
-//│ Type: (α29_0) ->{⊥ ∨ α33_2 ∨ ⊥ ∨ ⊥ ∨ ⊥ ∨ ⊥ ∨ ⊥} CodeBase[in ⊥ out α40_1, in ⊥ out ⊤]
+//│ Type: α30_0
 //│ Where:
-//│   α29_0 <: ¬⊤ ∧ ¬(CodeBase[in ⊥ out ⊥ ∨ ⊤ ∧ ¬⊥ ∧ α35_0 ∨ ⊤ ∧ ¬⊥ ∧ α36_0, in ⊥ out ⊤ ∧ ¬⊥] ∧ ¬⊥) ->{⊤ ∧ ¬⊥ ∧ α38_0} ⊤ ∧ ¬⊥ ∧ α37_0
-//│   ⊤ ∧ ¬⊥ ∧ ⊤ <: α35_0
-//│   α38_0 <: α33_2
+//│   (⊤ ∧ ¬⊥ ∧ α29_0) ->{⊥ ∨ ⊤ ∧ ¬⊥ ∧ α43_0} CodeBase[in ⊥ out ⊤ ∧ ¬⊥ ∧ α42_0, in ⊥ out ⊤ ∧ ¬⊥] ∧ ¬⊥ ∧ ¬⊥ <: α30_0
+//│   α29_0 <: ¬⊤ ∧ ¬(CodeBase[in ⊥ out ⊥ ∨ ⊤ ∧ ¬⊥ ∧ α36_0 ∨ ⊤ ∧ ¬⊥ ∧ α37_0, in ⊥ out ⊤ ∧ ¬⊥] ∧ ¬⊥) ->{⊤ ∧ ¬⊥ ∧ α39_0} ⊤ ∧ ¬⊥ ∧ α38_0
+//│   ⊤ ∧ ¬⊥ ∧ ⊤ <: α36_0
+//│   α39_0 <: α43_0
 
 inc(c => log(show(c)))
 //│ Elab: { inc#1(λc@2. log#0(show#1(c@2#0)‹›‹›)‹›‹›‹›)‹›‹› }‹›
-//│ Type: CodeBase[in ⊥ out α40_1, in ⊥ out ⊤]
+//│ Type: α46_0
+//│ Where:
+//│   CodeBase[in ⊥ out ⊤ ∧ ¬⊥ ∧ α42_0, in ⊥ out ⊤ ∧ ¬⊥] ∧ ¬⊥ <: α46_0
 
 fun body: [T, C] -> (CodeBase[out T, out Any], CodeBase[out C, out Any]) -> Int -> CodeBase[out T | C, out Any]
 fun body(x, y) = case
@@ -62,20 +65,21 @@ let gn5 = run(gib_naive(5))
 fun bind(rhs, k) = `let x = rhs `in k(x)
 bind
 //│ Elab: { fun bind(rhs@1, k@2) = code"{ let x@3 = ${rhs@1#0}‹›; ${k@2#0(x@3#0)‹›‹›}‹› }‹›"‹›; bind#0 }‹›
-//│ Type: (α58_0, α59_0) ->{⊥ ∨ α63_2 ∨ ⊥ ∨ ⊥} CodeBase[in ⊥ out α60_1 ∨ α69_1, in ⊥ out ⊤]
+//│ Type: α69_0
 //│ Where:
-//│   α58_0 <: ¬⊤ ∧ ¬⊥ ∨ CodeBase[in ⊥ out ⊤ ∧ ¬⊥ ∧ α61_0, in ⊥ out ⊤ ∧ ¬⊥]
-//│   α59_0 <: ¬⊤ ∧ ¬(CodeBase[in ⊤ ∧ ¬⊥ ∧ ⊥ out ⊤ ∧ ¬⊥ ∧ ⊤, in ⊥ out ⊥] ∧ ¬⊥) ->{⊤ ∧ ¬⊥ ∧ α66_0} ⊤ ∧ ¬⊥ ∧ α65_0
-//│   α65_0 <: ¬⊤ ∧ ¬⊥ ∨ CodeBase[in ⊥ out ⊤ ∧ ¬⊥ ∧ α68_0, in ⊥ out ⊤ ∧ ¬⊥]
-//│   α61_0 <: α60_1
-//│   ⊤ ∧ ¬⊥ ∧ ¬⊥ ∧ α68_0 <: α69_1
-//│   α66_0 <: α63_2
+//│   (⊤ ∧ ¬⊥ ∧ α67_0, ⊤ ∧ ¬⊥ ∧ α68_0) ->{⊥ ∨ ⊤ ∧ ¬⊥ ∧ α82_0} CodeBase[in ⊥ out ⊤ ∧ ¬⊥ ∧ α80_0 ∨ ⊤ ∧ ¬⊥ ∧ α81_0, in ⊥ out ⊤ ∧ ¬⊥] ∧ ¬⊥ ∧ ¬⊥ <: α69_0
+//│   α67_0 <: ¬⊤ ∧ ¬⊥ ∨ CodeBase[in ⊥ out ⊤ ∧ ¬⊥ ∧ α71_0, in ⊥ out ⊤ ∧ ¬⊥]
+//│   α68_0 <: ¬⊤ ∧ ¬(CodeBase[in ⊤ ∧ ¬⊥ ∧ ⊥ out ⊤ ∧ ¬⊥ ∧ ⊤, in ⊥ out ⊥] ∧ ¬⊥) ->{⊤ ∧ ¬⊥ ∧ α76_0} ⊤ ∧ ¬⊥ ∧ α75_0
+//│   α75_0 <: ¬⊤ ∧ ¬⊥ ∨ CodeBase[in ⊥ out ⊤ ∧ ¬⊥ ∧ α78_0, in ⊥ out ⊤ ∧ ¬⊥]
+//│   α71_0 <: α80_0
+//│   ⊤ ∧ ¬⊥ ∧ ¬⊥ ∧ α78_0 <: α81_0
+//│   α76_0 <: α82_0
 
 fun bind: [G] -> (CodeBase[out G, out Any], [C] -> CodeBase[out C, out Any] -> CodeBase[out C | G, out Any]) -> CodeBase[out G, out Any]
 fun bind(rhs, k) = `let x = rhs `in k(x)
 bind
 //│ Elab: { fun bind: forall G@2: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(G@2))), WildcardTy(None,Some(Ref(class:Any))))),None), Fld(‹›,Forall(List(C@3),FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(C@3))), WildcardTy(None,Some(Ref(class:Any))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(CompType(Ref(C@3),Ref(G@2),true))), WildcardTy(None,Some(Ref(class:Any))))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(G@2))), WildcardTy(None,Some(Ref(class:Any))))))‹›; fun bind(rhs@4, k@5): forall G@9: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(G@9))), WildcardTy(None,Some(Ref(class:Any))))),None), Fld(‹›,Forall(List(C@10),FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(C@10))), WildcardTy(None,Some(Ref(class:Any))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(CompType(Ref(C@10),Ref(G@9),true))), WildcardTy(None,Some(Ref(class:Any))))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(G@9))), WildcardTy(None,Some(Ref(class:Any))))))‹› = code"{ let x@6 = ${rhs@4#0}‹›; ${k@5#0(x@6#0)‹›‹›}‹› }‹›"‹›; bind#0 }‹›
-//│ Type: forall α70_1: (CodeBase[in ⊥ out α70_1, in ⊥ out ⊤], forall α71_2: (CodeBase[in ⊥ out α71_2, in ⊥ out ⊤]) ->{⊥} CodeBase[in ⊥ out α71_2 ∨ α70_1, in ⊥ out ⊤]) ->{⊥} CodeBase[in ⊥ out α70_1, in ⊥ out ⊤]
+//│ Type: forall α83_1: (CodeBase[in ⊥ out α83_1, in ⊥ out ⊤], forall α84_2: (CodeBase[in ⊥ out α84_2, in ⊥ out ⊤]) ->{⊥} CodeBase[in ⊥ out α84_2 ∨ α83_1, in ⊥ out ⊤]) ->{⊥} CodeBase[in ⊥ out α83_1, in ⊥ out ⊤]
 
 
 fun body: [G] -> (CodeBase[out G, out Any], CodeBase[out G, out Any]) -> Int -> CodeBase[out G, out Any]

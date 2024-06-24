@@ -60,6 +60,10 @@ enum Type extends TypeArg:
     case PolymorphicType(tv, body) =>
       (body :: tv).map(_.lvl).max
     case Top | Bot => 0
+  lazy val isPoly: Bool = this match
+    case FunType(args, ret, _) => args.foldLeft(ret.isPoly)((res, a) => res | a.isPoly)
+    case _: PolymorphicType => true
+    case _: ClassType | _: InfVar | _: ComposedType | _: NegType | Top | Bot => false
 
 class VarState:
   var lowerBounds: Ls[Type] = Nil
@@ -359,8 +363,18 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
         }, N, N, Nil)
       given Bool = true
       val sigTy = sig.map(typeType)
-      sigTy.foreach(sig => pctx += sym -> sig) // for recursive types
       val (tvs, retAnno, effAnno, newSkolems) = rec(sigTy)
+      val poly = tvs.foldLeft(!newSkolems.isEmpty || retAnno.map(_.isPoly).getOrElse(false))((res, v) => res | v.isPoly)
+      val funTy = sigTy match
+        case S(sig) =>
+          pctx += sym -> sig
+          N
+        case _ =>
+          if !poly then
+            val funTy = freshVar
+            pctx += sym -> funTy // for recursive types
+            S(funTy)
+          else N
       val defCtx = sigTy match
         case S(_: Type.PolymorphicType) => ctx.nextLevel
         case _ => ctx.nest
@@ -376,8 +390,13 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
         val (bodyTy, eff) = typeCheck(body)
         retAnno.foreach(anno => constrain(bodyTy, anno))
         effAnno.foreach(anno => constrain(eff, anno))
-        if sigTy.isEmpty then
-          pctx += sym -> Type.FunType(argsTy, bodyTy, eff)
+        funTy match
+          case S(funTy) =>
+            if !bodyTy.isPoly then
+              constrain(Type.FunType(argsTy, bodyTy, eff), funTy)(using ctx)
+            else
+              pctx += sym -> Type.FunType(argsTy, bodyTy, eff)
+          case _ => if sigTy.isEmpty then pctx += sym -> Type.FunType(argsTy, bodyTy, eff)
     case _ => ???
 
   private def typeSplit(split: TermSplit)(using ctx: Ctx, skolems: MutSkolemSet): (Type, Type) = split match
@@ -522,7 +541,15 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
         val (argTy, argEff) = typeCheckArgs(rhs)
         val effVar = freshVar
         val retVar = freshVar
-        constrain(funTy, Type.FunType(argTy, retVar, effVar))
+        constrain(funTy, Type.FunType(argTy.map {
+          case Type.PolymorphicType(tvs, body) =>
+            instantiate(body)(using (tvs.map {
+              case Type.InfVar(_, uid, _) =>
+                val nv = freshVar
+                uid -> nv
+            }).toMap)
+          case ty => ty
+        }, retVar, effVar))
         (retVar, argEff.foldLeft[Type](Type.ComposedType(effVar, lhsEff, true))((res, e) => Type.ComposedType(res, e, true)))
     case Term.New(cls, args) =>
       ctx.getDef(cls.nme) match
