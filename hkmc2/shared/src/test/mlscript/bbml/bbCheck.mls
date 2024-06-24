@@ -4,7 +4,7 @@
 
 fun add: (Int, Int) -> Int
 fun add(x, y) = x + y
-//│ Elab: { fun add: (class:Int#15, class:Int#16)‹› -> class:Int#17‹›; fun add(x@2, y@3): (class:Int#18, class:Int#19)‹› -> class:Int#20‹› = +#0(x@2#0, y@3#0)‹›‹›; }‹›
+//│ Elab: { fun add: (class:Int#15, class:Int#16)‹› -> class:Int#17‹›; fun add(x@3, y@4): (class:Int#18, class:Int#19)‹› -> class:Int#20‹› = +#0(x@3#0, y@4#0)‹›‹›; }‹›
 //│ Type: ⊤
 
 :e
@@ -22,13 +22,13 @@ fun id(y) = y
 //│ ║  l.20: 	fun id(y) = y
 //│ ║        	      ^^^
 //│ ╙── aready defined here
-//│ Elab: { fun id(x@1) = x@1#0; fun id(y@3) = y@3#0; }‹›
+//│ Elab: { fun id(x@2) = x@2#0; fun id(y@4) = y@4#0; }‹›
 //│ Type: ⊤
 
 :e
 fun bar: Str -> Str
 fun bar(x) = let t = x + 1 in "aaa"
-//│ Elab: { fun bar: (class:Str#0)‹› -> class:Str#1‹›; fun bar(x@2): (class:Str#2)‹› -> class:Str#3‹› = { let t@3 = +#1(x@2#0, 1‹›)‹›‹›; "aaa"‹› }‹›; }‹›
+//│ Elab: { fun bar: (class:Str#0)‹› -> class:Str#1‹›; fun bar(x@3): (class:Str#2)‹› -> class:Str#3‹› = { let t@4 = +#1(x@3#0, 1‹›)‹›‹›; "aaa"‹› }‹›; }‹›
 //│ ╔══[ERROR] Cannot solve Str ∧ ¬⊥
 //│ ╙──
 //│ Type: ⊤
@@ -36,7 +36,7 @@ fun bar(x) = let t = x + 1 in "aaa"
 :e
 fun baz: Int -> Int
 fun baz(x) = "bbb"
-//│ Elab: { fun baz: (class:Int#25)‹› -> class:Int#26‹›; fun baz(x@2): (class:Int#27)‹› -> class:Int#28‹› = "bbb"‹›; }‹›
+//│ Elab: { fun baz: (class:Int#25)‹› -> class:Int#26‹›; fun baz(x@3): (class:Int#27)‹› -> class:Int#28‹› = "bbb"‹›; }‹›
 //│ ╔══[ERROR] Cannot solve Str ∧ ¬⊥
 //│ ╙──
 //│ Type: ⊤
@@ -59,28 +59,28 @@ add(0, 0): Str
 
 :e
 fun errAdd(x: Int) = x + "1"
-//│ Elab: { fun errAdd(x@1: class:Int#30) = +#2(x@1#0, "1"‹›)‹›‹›; }‹›
+//│ Elab: { fun errAdd(x@2: class:Int#30) = +#2(x@2#0, "1"‹›)‹›‹›; }‹›
 //│ ╔══[ERROR] Cannot solve Str ∧ ¬⊥
 //│ ╙──
 //│ Type: ⊤
 
 fun high(f: [A] -> A -> A) = f(42)
-//│ Elab: { fun high(f@1: forall A@2: FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2))‹›) = f@1#0(42‹›)‹›‹›; }‹›
+//│ Elab: { fun high(f@2: forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)‹›) = f@2#0(42‹›)‹›‹›; }‹›
 //│ Type: ⊤
 
 high
 //│ Elab: { high#0 }‹›
-//│ Type: (forall α6_1: (α6_1) ->{⊥} α6_1) ->{⊥ ∨ ⊥ ∨ ⊥} α7_0
+//│ Type: (forall α6_1: (α6_1) ->{⊥} α6_1) ->{((⊥) ∨ (⊥)) ∨ (⊥)} α7_0
 //│ Where:
-//│   Int ∧ ¬⊥ <: α7_0
+//│   (Int) ∧ (¬(⊥)) <: α7_0
 
 :e
 high(x => x + 1)
-//│ Elab: { high#1(λx@2. +#3(x@2#0, 1‹›)‹›‹›‹›)‹›‹› }‹›
+//│ Elab: { high#1(λx@3. +#3(x@3#0, 1‹›)‹›‹›‹›)‹›‹› }‹›
 //│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
 //│ ╙──
 //│ ╔══[ERROR] Cannot constrain skolem α6_1
 //│ ╙──
 //│ Type: α7_0
 //│ Where:
-//│   Int ∧ ¬⊥ <: α7_0
+//│   (Int) ∧ (¬(⊥)) <: α7_0

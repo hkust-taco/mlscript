@@ -15,7 +15,7 @@ enum Term extends Statement with Located:
   case Tup(fields: Ls[Fld])
   case If(body: TermSplit)
   case Lam(params: Ls[Param], body: Term)
-  case FunTy(lhs: Term, rhs: Term)
+  case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
   case Forall(tvs: Ls[VarSymbol], body: Term)
   case WildcardTy(in: Opt[Term], out: Opt[Term])
   case Blk(stats: Ls[Statement], res: Term)
@@ -60,7 +60,7 @@ sealed trait Statement extends Located:
   def subTerms: Ls[Term] = this match
     case Error | _: Lit | _: Ref => Nil
     case App(lhs, rhs) => lhs :: rhs :: Nil
-    case FunTy(lhs, rhs) => lhs :: rhs :: Nil
+    case FunTy(lhs, rhs, eff) => lhs :: rhs :: eff.toList
     case TyApp(pre, tarsg) => pre :: tarsg
     case Sel(pre, _) => pre :: Nil
     case Tup(fields) => fields.map(_.value)
@@ -99,8 +99,8 @@ sealed trait Statement extends Located:
     case r @ Ref(symbol) => symbol.toString+"#"+r.refNum
     case App(lhs, tup: Tup) => s"${lhs.showDbg}${tup.showDbg}"
     case App(lhs, rhs) => s"${lhs.showDbg}(...${rhs.showDbg})"
-    case FunTy(lhs: Tup, rhs) => s"${lhs.showDbg} -> ${rhs.showDbg}"
-    case FunTy(lhs, rhs) => s"(...${lhs.showDbg}) -> ${rhs.showDbg}"
+    case FunTy(lhs: Tup, rhs, eff) => s"${lhs.showDbg} ->${eff.map(e => s"{${e.showDbg}}").getOrElse("")} ${rhs.showDbg}"
+    case FunTy(lhs, rhs, eff) => s"(...${lhs.showDbg}) ->${eff.map(e => s"{${e.showDbg}}").getOrElse("")} ${rhs.showDbg}"
     case TyApp(lhs, targs) => s"${lhs.showDbg}[${targs.mkString(", ")}]"
     case Forall(tvs, body) => s"forall ${tvs.mkString(", ")}: ${body.toString}"
     case WildcardTy(in, out) => s"in ${in.map(_.toString).getOrElse("⊥")} out ${out.map(_.toString).getOrElse("⊤")}"

@@ -1,20 +1,20 @@
 
 
 fun id(x) = x
-//│ Elab: { fun id(x@1) = x@1#0; }‹›
+//│ Elab: { fun id(x@2) = x@2#0; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 id(1)
 //│ Elab: { id#0(1‹›)‹›‹› }‹›
-//│ Type: Flow(‹app-res›@1)
+//│ Type: Flow(‹app-res›@2)
 
 id(true)
 //│ Elab: { id#1(true‹›)‹›‹› }‹›
-//│ Type: Flow(‹app-res›@1)
+//│ Type: Flow(‹app-res›@2)
 
 
 fun foo(x) = x + x
-//│ Elab: { fun foo(x@1) = +#0(x@1#0, x@1#1)‹›‹›; }‹›
+//│ Elab: { fun foo(x@2) = +#0(x@2#0, x@2#1)‹›‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 
@@ -23,12 +23,12 @@ fun foo(x) = x + x
 
 :fixme
 (x, x) => x
-//│ Elab: { λx@1, x@2. x@2#0‹› }‹›
-//│ /!!!\ Uncaught error: scala.MatchError: Lam(List(Param(‹›,x@1,None), Param(‹›,x@2,None)),Ref(x@2)) (of class hkmc2.semantics.Term$Lam)
+//│ Elab: { λx@2, x@3. x@3#0‹› }‹›
+//│ /!!!\ Uncaught error: scala.MatchError: Lam(List(Param(‹›,x@2,None), Param(‹›,x@3,None)),Ref(x@3)) (of class hkmc2.semantics.Term$Lam)
 :fixme
 (x, y) => x
-//│ Elab: { λx@1, y@2. x@1#0‹› }‹›
-//│ /!!!\ Uncaught error: scala.MatchError: Lam(List(Param(‹›,x@1,None), Param(‹›,y@2,None)),Ref(x@1)) (of class hkmc2.semantics.Term$Lam)
+//│ Elab: { λx@2, y@3. x@2#0‹› }‹›
+//│ /!!!\ Uncaught error: scala.MatchError: Lam(List(Param(‹›,x@2,None), Param(‹›,y@3,None)),Ref(x@2)) (of class hkmc2.semantics.Term$Lam)
 
 
 

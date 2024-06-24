@@ -64,9 +64,9 @@ object NormalForm:
         case Left(inter) => i.merge(inter).map(INU(_, u))
         case Right(union) => Some(INU(i, u.merge(union)))
     override def toString(): String = this match {
-      case CNVar(conj, v) => s"$conj ∧ ¬$v"
-      case CVar(conj, v) => s"$conj ∧ $v"
-      case INU(i, u) => s"$i ∧ ¬ $u"
+      case CNVar(conj, v) => s"($conj) ∧ (¬$v)"
+      case CVar(conj, v) => s"($conj) ∧ ($v)"
+      case INU(i, u) => s"($i) ∧ (¬($u))"
     }
     def toType: Type = this match
       case INU(i, u) => Type.ComposedType(i.toType, Type.NegType(u.toType), false)

@@ -13,7 +13,7 @@ class Nothing
 class CodeBase[T, S]
 class Region[T]
 class Ref[T, S]
-//│ Elab: { class CodeBase[T@1, S@2] { }‹›; class Region[T@3] { }‹›; class Ref[T@4, S@5] { }‹›; }‹›
+//│ Elab: { class CodeBase[T@2, S@3] { }‹›; class Region[T@4] { }‹›; class Ref[T@5, S@6] { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 // the type here is fake.

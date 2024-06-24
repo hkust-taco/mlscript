@@ -22,6 +22,8 @@ class Elaborator(raise: Raise):
   
   private var curUi = 0
   def nextUid: Int = { curUi += 1; curUi }
+
+  private val allocSkolemUID = nextUid
   
   def term(tree: Tree): Ctxl[Term] = tree match
     case Block(s :: Nil) =>
@@ -37,6 +39,7 @@ class Elaborator(raise: Raise):
       Term.Blk(List(LetBinding(pat, r)), b)
     case Ident("true") => Term.Lit(Tree.BoolLit(true))
     case Ident("false") => Term.Lit(Tree.BoolLit(false))
+    case Ident("Alloc") => Term.Ref(VarSymbol("Alloc", allocSkolemUID))(1)
     case Ident(name) =>
       ctx.locals.get(name) match
         case S(sym) => sym.ref
@@ -54,8 +57,10 @@ class Elaborator(raise: Raise):
           Term.WildcardTy(S(term(arg1)), S(term(arg2)))
         case arg => term(arg)
       })
+    case InfixApp(lhs, Keyword.`->`, Effectful(eff, rhs)) =>
+      Term.FunTy(term(lhs), term(rhs), S(term(eff)))
     case InfixApp(lhs, Keyword.`->`, rhs) =>
-      Term.FunTy(term(lhs), term(rhs))
+      Term.FunTy(term(lhs), term(rhs), N)
     case InfixApp(lhs, Keyword.`=>`, rhs) =>
       val (syms, nestCtx) = params(lhs)
       Term.Lam(syms, term(rhs)(using nestCtx))
@@ -369,14 +374,16 @@ class Elaborator(raise: Raise):
         // targs.foreach(traverseType(pol))
         ???
       case r: Term.Ref =>
-      case Term.FunTy(l, r) =>
+      case Term.FunTy(l, r, e) =>
         traverseType(pol.!)(l)
         traverseType(pol)(r)
+        e.foreach(e => traverseType(pol)(e))
       case Term.Forall(_, body) =>
         traverseType(pol)(body)
       case Term.WildcardTy(in, out) =>
         in.foreach(t => traverseType(pol.!)(t))
         out.foreach(t => traverseType(pol)(t))
+      case Term.CompType(lhs, rhs, _) => () // TODO:
       case Term.Tup(fields) =>
         // fields.foreach(f => traverseType(pol)(f.value))
         fields.foreach(traverseType(pol))

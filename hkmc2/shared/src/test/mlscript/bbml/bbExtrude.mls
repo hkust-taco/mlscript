@@ -3,7 +3,7 @@
 
 fun f(y) =
   let local = ([A] => (x: A) => y(x) + 1) in y
-//│ Elab: { fun f(y@1) = { let local@2 = forall A@3: Lam(List(Param(‹›,x@4,Some(Ref(A@3)))),App(Ref(+),Tup(List(Fld(‹›,App(Ref(y@1),Tup(List(Fld(‹›,Ref(x@4),None)))),None), Fld(‹›,Lit(IntLit(1)),None)))))‹›; y@1#1 }‹›; }‹›
+//│ Elab: { fun f(y@2) = { let local@3 = forall A@4: Lam(List(Param(‹›,x@5,Some(Ref(A@4)))),App(Ref(+),Tup(List(Fld(‹›,App(Ref(y@2),Tup(List(Fld(‹›,Ref(x@5),None)))),None), Fld(‹›,Lit(IntLit(1)),None)))))‹›; y@2#1 }‹›; }‹›
 //│ Type: ⊤
 
 // * the parameter type of y is extruded.
@@ -11,29 +11,29 @@ f
 //│ Elab: { f#0 }‹›
 //│ Type: α2_0
 //│ Where:
-//│   (⊤ ∧ ¬⊥ ∧ α1_0) ->{⊥} ⊤ ∧ ¬⊥ ∧ α1_0 ∧ ¬⊥ <: α2_0
-//│   α1_0 <: ¬⊤ ∧ ¬(⊤ ∧ ¬⊥ ∧ ⊤) ->{⊤ ∧ ¬⊥ ∧ α7_0} ⊤ ∧ ¬⊥ ∧ α6_0
-//│   α6_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   ((((⊤) ∧ (¬(⊥))) ∧ (α1_0)) ->{⊥} ((⊤) ∧ (¬(⊥))) ∧ (α1_0)) ∧ (¬(⊥)) <: α2_0
+//│   α1_0 <: ¬((⊤) ∧ (¬((((⊤) ∧ (¬(⊥))) ∧ (⊤)) ->{((⊤) ∧ (¬(⊥))) ∧ (α7_0)} ((⊤) ∧ (¬(⊥))) ∧ (α6_0))))
+//│   α6_0 <: ¬((⊤) ∧ (¬((⊥) ∨ (Int))))
 
 :e
 f([A] => (x: A) => x)
-//│ Elab: { f#1(forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹›)‹›‹› }‹›
+//│ Elab: { f#1(forall A@3: Lam(List(Param(‹›,x@4,Some(Ref(A@3)))),Ref(x@4))‹›)‹›‹› }‹›
 //│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: α10_0
 //│ Where:
-//│   ⊤ ∧ ¬⊥ ∧ α1_0 <: α10_0
-//│   (⊤ ∧ ¬⊥ ∧ α11_0) ->{⊥} ⊤ ∧ ¬⊥ ∧ α11_0 ∧ ¬⊥ <: α1_0
-//│   ⊤ ∧ ¬⊥ <: α11_0
-//│   α11_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
-//│   α1_0 <: ¬⊤ ∧ ¬(⊤ ∧ ¬⊥ ∧ ⊤) ->{⊤ ∧ ¬⊥ ∧ α7_0} ⊤ ∧ ¬⊥ ∧ α6_0
-//│   ⊤ ∧ ¬⊥ ∧ α11_0 <: α6_0
-//│   α6_0 <: ¬⊤ ∧ ¬⊥ ∨ Int
+//│   ((⊤) ∧ (¬(⊥))) ∧ (α1_0) <: α10_0
+//│   ((((⊤) ∧ (¬(⊥))) ∧ (α11_0)) ->{⊥} ((⊤) ∧ (¬(⊥))) ∧ (α11_0)) ∧ (¬(⊥)) <: α1_0
+//│   (⊤) ∧ (¬(⊥)) <: α11_0
+//│   α11_0 <: ¬((⊤) ∧ (¬((⊥) ∨ (Int))))
+//│   α1_0 <: ¬((⊤) ∧ (¬((((⊤) ∧ (¬(⊥))) ∧ (⊤)) ->{((⊤) ∧ (¬(⊥))) ∧ (α7_0)} ((⊤) ∧ (¬(⊥))) ∧ (α6_0))))
+//│   ((⊤) ∧ (¬(⊥))) ∧ (α11_0) <: α6_0
+//│   α6_0 <: ¬((⊤) ∧ (¬((⊥) ∨ (Int))))
 
 fun g: ([A] -> A -> Int) -> ([A] -> A -> Int)
 fun g(y) =
   let local = ([A] => (x: A) => y(x) + 1) in y
-//│ Elab: { fun g: (forall A@2: FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(class:Int))‹›)‹› -> forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(class:Int))‹›‹›; fun g(y@4): (forall A@11: FunTy(Tup(List(Fld(‹›,Ref(A@11),None))),Ref(class:Int))‹›)‹› -> forall A@12: FunTy(Tup(List(Fld(‹›,Ref(A@12),None))),Ref(class:Int))‹›‹› = { let local@5 = forall A@6: Lam(List(Param(‹›,x@7,Some(Ref(A@6)))),App(Ref(+),Tup(List(Fld(‹›,App(Ref(y@4),Tup(List(Fld(‹›,Ref(x@7),None)))),None), Fld(‹›,Lit(IntLit(1)),None)))))‹›; y@4#1 }‹›; }‹›
+//│ Elab: { fun g: (forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(class:Int),None)‹›)‹› -> forall A@4: FunTy(Tup(List(Fld(‹›,Ref(A@4),None))),Ref(class:Int),None)‹›‹›; fun g(y@5): (forall A@12: FunTy(Tup(List(Fld(‹›,Ref(A@12),None))),Ref(class:Int),None)‹›)‹› -> forall A@13: FunTy(Tup(List(Fld(‹›,Ref(A@13),None))),Ref(class:Int),None)‹›‹› = { let local@6 = forall A@7: Lam(List(Param(‹›,x@8,Some(Ref(A@7)))),App(Ref(+),Tup(List(Fld(‹›,App(Ref(y@5),Tup(List(Fld(‹›,Ref(x@8),None)))),None), Fld(‹›,Lit(IntLit(1)),None)))))‹›; y@5#1 }‹›; }‹›
 //│ Type: ⊤
 
 g
@@ -41,25 +41,25 @@ g
 //│ Type: (forall α12_1: (α12_1) ->{⊥} Int) ->{⊥} forall α13_1: (α13_1) ->{⊥} Int
 
 g([A] => (x: A) => x)
-//│ Elab: { g#1(forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹›)‹›‹› }‹›
+//│ Elab: { g#1(forall A@3: Lam(List(Param(‹›,x@4,Some(Ref(A@3)))),Ref(x@4))‹›)‹›‹› }‹›
 //│ Type: forall α13_1: (α13_1) ->{⊥} Int
 
 fun h(y: [A] -> A -> Int) =
   let local = ([A] => (x: A) => y(x) + 1) in y
-//│ Elab: { fun h(y@1: forall A@2: FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(class:Int))‹›) = { let local@3 = forall A@4: Lam(List(Param(‹›,x@5,Some(Ref(A@4)))),App(Ref(+),Tup(List(Fld(‹›,App(Ref(y@1),Tup(List(Fld(‹›,Ref(x@5),None)))),None), Fld(‹›,Lit(IntLit(1)),None)))))‹›; y@1#1 }‹›; }‹›
+//│ Elab: { fun h(y@2: forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(class:Int),None)‹›) = { let local@4 = forall A@5: Lam(List(Param(‹›,x@6,Some(Ref(A@5)))),App(Ref(+),Tup(List(Fld(‹›,App(Ref(y@2),Tup(List(Fld(‹›,Ref(x@6),None)))),None), Fld(‹›,Lit(IntLit(1)),None)))))‹›; y@2#1 }‹›; }‹›
 //│ Type: ⊤
 
 h
 //│ Elab: { h#0 }‹›
-//│ Type: (forall α19_1: (α19_1) ->{⊥} Int) ->{⊥ ∨ ⊥} forall α19_1: (α19_1) ->{⊥} Int
+//│ Type: (forall α19_1: (α19_1) ->{⊥} Int) ->{(⊥) ∨ (⊥)} forall α19_1: (α19_1) ->{⊥} Int
 
 h([A] => (x: A) => x)
-//│ Elab: { h#1(forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹›)‹›‹› }‹›
+//│ Elab: { h#1(forall A@3: Lam(List(Param(‹›,x@4,Some(Ref(A@3)))),Ref(x@4))‹›)‹›‹› }‹›
 //│ Type: forall α19_1: (α19_1) ->{⊥} Int
 
 :e
 y `=> (let t = run(x `=> x `+ y) in y)
-//│ Elab: { code"λy@1. ${{ let t@2 = run#0(code"λx@4. ${code"+#3(${x@4#0}‹›, ${y@1#0}‹›)‹›‹›"‹›}‹›‹›"‹›)‹›‹›; y@1#1 }‹›}‹›‹›"‹› }‹›
+//│ Elab: { code"λy@2. ${{ let t@3 = run#0(code"λx@5. ${code"+#3(${x@5#0}‹›, ${y@2#0}‹›)‹›‹›"‹›}‹›‹›"‹›)‹›‹›; y@2#1 }‹›}‹›‹›"‹› }‹›
 //│ ╔══[ERROR] Cannot constrain skolem α24_2
 //│ ╙──
 //│ Type: CodeBase[in ⊥ out α31_1, in ⊥ out ⊤]

@@ -1,44 +1,44 @@
 
 
 class Foo[A]
-//│ Elab: { class Foo[A@1] { }‹›; }‹›
+//│ Elab: { class Foo[A@2] { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A]()
-//│ Elab: { class Foo[A@1]() { }‹›; }‹›
+//│ Elab: { class Foo[A@2]() { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A](x: A)
-//│ Elab: { class Foo[out A@1](x@2: A@1#0) { }‹›; }‹›
+//│ Elab: { class Foo[out A@2](x@3: A@2#0) { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A](x: A -> Int)
-//│ Elab: { class Foo[in A@1](x@2: (A@1#0)‹› -> class:Int#15‹›) { }‹›; }‹›
+//│ Elab: { class Foo[in A@2](x@3: (A@2#0)‹› -> class:Int#15‹›) { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A](x: Foo[A])
-//│ Elab: { class Foo[A@1](x@2: class:Foo#0[Ref(A@1)]‹›) { }‹›; }‹›
+//│ Elab: { class Foo[A@2](x@3: class:Foo#0[Ref(A@2)]‹›) { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A](x: Foo[A] -> A)
-//│ Elab: { class Foo[in out A@1](x@2: (class:Foo#0[Ref(A@1)]‹›)‹› -> A@1#1‹›) { }‹›; }‹›
+//│ Elab: { class Foo[in out A@2](x@3: (class:Foo#0[Ref(A@2)]‹›)‹› -> A@2#1‹›) { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A](x: Bar[A])
 class Bar[B](x: Foo[Int], y: B -> Int)
-//│ Elab: { class Foo[in A@1](x@2: class:Bar#0[Ref(A@1)]‹›) { }‹›; class Bar[in B@3](x@4: class:Foo#0[Ref(class:Int)]‹›, y@5: (B@3#0)‹› -> class:Int#17‹›) { }‹›; }‹›
+//│ Elab: { class Foo[in A@2](x@3: class:Bar#0[Ref(A@2)]‹›) { }‹›; class Bar[in B@4](x@5: class:Foo#0[Ref(class:Int)]‹›, y@6: (B@4#0)‹› -> class:Int#17‹›) { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A](x: Bar[A])
 class Baz[C](x: C)
 class Bar[B](x: Foo[Int], y: Baz[B] -> Int)
-//│ Elab: { class Foo[in A@1](x@2: class:Bar#0[Ref(A@1)]‹›) { }‹›; class Baz[out C@3](x@4: C@3#0) { }‹›; class Bar[in B@5](x@6: class:Foo#0[Ref(class:Int)]‹›, y@7: (class:Baz#0[Ref(B@5)]‹›)‹› -> class:Int#19‹›) { }‹›; }‹›
+//│ Elab: { class Foo[in A@2](x@3: class:Bar#0[Ref(A@2)]‹›) { }‹›; class Baz[out C@4](x@5: C@4#0) { }‹›; class Bar[in B@6](x@7: class:Foo#0[Ref(class:Int)]‹›, y@8: (class:Baz#0[Ref(B@6)]‹›)‹› -> class:Int#19‹›) { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 
 class Foo[A] with
   fun foo: A -> A
-//│ Elab: { class Foo[in out A@1] { fun foo: (A@1#0)‹› -> A@1#1‹›; }‹›; }‹›
+//│ Elab: { class Foo[in out A@2] { fun foo: (A@2#0)‹› -> A@2#1‹›; }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 

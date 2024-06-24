@@ -6,7 +6,7 @@ fun foo = 1
 
 foo
 //│ Elab: { foo#0 }‹›
-//│ Type: Flow(‹result of foo›@1)
+//│ Type: Flow(‹result of foo›@2)
 
 fun (+) plus: Int
 //│ Elab: { fun plus: class:Int#15; }‹›
@@ -18,7 +18,7 @@ fun (+) : Int
 
 1 + 2
 //│ Elab: { +#0(1‹›, 2‹›)‹›‹› }‹›
-//│ Type: Flow(‹app-res›@1)
+//│ Type: Flow(‹app-res›@2)
 
 
 fun f = g
@@ -28,12 +28,12 @@ fun g = f
 
 
 fun (++)(x, y) = 1
-//│ Elab: { fun ++(x@1, y@2) = 1‹›; }‹›
+//│ Elab: { fun ++(x@2, y@3) = 1‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 1 ++ 2
 //│ Elab: { ++#0(1‹›, 2‹›)‹›‹› }‹›
-//│ Type: Flow(‹app-res›@1)
+//│ Type: Flow(‹app-res›@2)
 
 
 fun (**) pow = 1
@@ -43,7 +43,7 @@ fun (**) pow = 1
 :fixme
 1 ** 2
 //│ Elab: { pow#0(1‹›, 2‹›)‹›‹› }‹›
-//│ Type: Flow(‹app-res›@1)
+//│ Type: Flow(‹app-res›@2)
 
 
 

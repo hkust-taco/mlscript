@@ -43,8 +43,8 @@ enum Type extends TypeArg:
       if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.mkString(", ")}]"
     case InfVar(lvl, uid, _) => s"α${uid}_$lvl"
     case FunType(args, ret, eff) => s"(${args.mkString(", ")}) ->{${eff}} ${ret}"
-    case ComposedType(lhs, rhs, pol) => s"${lhs} ${if pol then "∨" else "∧"} ${rhs}"
-    case NegType(ty) => s"¬${ty}"
+    case ComposedType(lhs, rhs, pol) => s"(${lhs}) ${if pol then "∨" else "∧"} (${rhs})"
+    case NegType(ty) => s"¬(${ty})"
     case PolymorphicType(tv, body) => s"forall ${tv.mkString(", ")}: $body"
     case Top => "⊤"
     case Bot => "⊥"
@@ -162,7 +162,8 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
   private def freshVar(using ctx: Ctx): Type.InfVar = Type.InfVar(ctx.lvl, infVarState.nextUid, new VarState())
   private def freshWildcard(using ctx: Ctx) = Wildcard(freshVar, freshVar)
 
-  private val allocSkolem = freshVar(using initCtx)
+  // * always extruded
+  private val allocSkolem: Type.InfVar = Type.InfVar(Int.MaxValue, infVarState.nextUid, new VarState())
 
   private def typeCheckArgs(args: Term)(using ctx: Ctx, skolems: MutSkolemSet): (Ls[Type], Ls[Type]) = args match
     case Term.Tup(flds) => flds.flatMap(f =>
@@ -191,10 +192,10 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       map.get(sym.uid) match
         case Some(Wildcard(in, out)) => if pol then out else in
         case _ => ctx.get(sym).getOrElse(error(msg"Type variable not found: ${sym.name}" -> asc.toLoc :: Nil))
-    case FunTy(Term.Tup(params), ret) =>
+    case FunTy(Term.Tup(params), ret, eff) =>
       Type.FunType(params.map {
         case Fld(_, p, _) => extract(p)(using map, !pol)
-      }, extract(ret), Type.Bot) // TODO: effect
+      }, extract(ret), eff.map(e => extract(e)).getOrElse(Type.Bot))
     case Term.Forall(tvs, body) =>
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx
@@ -211,7 +212,10 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       ctx.get(sym) match
         case Some(ty) => ty
         case _ =>
-          error(msg"Variable not found: ${sym.name}" -> ty.toLoc :: Nil)
+          if sym.nme == "Alloc" then
+            allocSkolem
+          else
+            error(msg"Variable not found: ${sym.name}" -> ty.toLoc :: Nil)
     case Ref(cls: ClassSymbol) =>
       ctx.getDef(cls.nme) match
         case S(_) =>
@@ -223,10 +227,10 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
             Type.ClassType(cls, Nil) // TODO: tparams?
         case N => 
           error(msg"Definition not found: ${cls.nme}" -> ty.toLoc :: Nil)
-    case FunTy(Term.Tup(params), ret) =>
+    case FunTy(Term.Tup(params), ret, eff) =>
       Type.FunType(params.map {
         case Fld(_, p, _) => typeType(p)
-      }, typeType(ret), Type.Bot) // TODO: effect
+      }, typeType(ret), eff.map(typeType).getOrElse(Type.Bot))
     case Term.Forall(tvs, body) if allowPoly =>
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx
@@ -364,6 +368,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       given Bool = true
       val sigTy = sig.map(typeType)
       val (tvs, retAnno, effAnno, newSkolems) = rec(sigTy)
+      System.out.println(s"yydz: $sigTy $effAnno")
       val poly = tvs.foldLeft(!newSkolems.isEmpty || retAnno.map(_.isPoly).getOrElse(false))((res, v) => res | v.isPoly)
       val funTy = sigTy match
         case S(sig) =>
