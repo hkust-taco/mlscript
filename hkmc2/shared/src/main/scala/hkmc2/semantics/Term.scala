@@ -79,6 +79,7 @@ sealed trait Statement extends Located:
     case Asc(term, ty) => term :: ty :: Nil
     case Forall(_, body) => body :: Nil
     case WildcardTy(in, out) => in.toList ++ out.toList
+    case CompType(lhs, rhs, _) => lhs :: rhs :: Nil
     case LetBinding(pat, rhs) => rhs :: Nil
     case Region(_, body) => body :: Nil
     case RegRef(reg, value) => reg :: value :: Nil

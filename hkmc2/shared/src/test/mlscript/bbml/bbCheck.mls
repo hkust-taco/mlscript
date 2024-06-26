@@ -64,23 +64,86 @@ fun errAdd(x: Int) = x + "1"
 //│ ╙──
 //│ Type: ⊤
 
-fun high(f: [A] -> A -> A) = f(42)
-//│ Elab: { fun high(f@2: forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)‹›) = f@2#0(42‹›)‹›‹›; }‹›
+fun high: ([A] -> A -> A) -> Int
+fun high(f) = f(42)
+//│ Elab: { fun high: (forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)‹›)‹› -> class:Int#31‹›; fun high(f@4): (forall A@7: FunTy(Tup(List(Fld(‹›,Ref(A@7),None))),Ref(A@7),None)‹›)‹› -> class:Int#32‹› = f@4#0(42‹›)‹›‹›; }‹›
 //│ Type: ⊤
 
 high
 //│ Elab: { high#0 }‹›
-//│ Type: (forall α6_1: (α6_1) ->{⊥} α6_1) ->{((⊥) ∨ (⊥)) ∨ (⊥)} α7_0
-//│ Where:
-//│   (Int) ∧ (¬(⊥)) <: α7_0
+//│ Type: (forall α6_1: (α6_1) ->{⊥} α6_1) ->{⊥} Int
+
+
+high((x => x): [A] -> A -> A)
+//│ Elab: { high#1(λx@3. x@3#0‹›)‹›‹› }‹›
+//│ Type: Int
+
+high(x => x)
+//│ Elab: { high#2(λx@3. x@3#0‹›)‹›‹› }‹›
+//│ Type: Int
 
 :e
 high(x => x + 1)
-//│ Elab: { high#1(λx@3. +#3(x@3#0, 1‹›)‹›‹›‹›)‹›‹› }‹›
-//│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
+//│ Elab: { high#3(λx@3. +#3(x@3#0, 1‹›)‹›‹›‹›)‹›‹› }‹›
+//│ ╔══[ERROR] Cannot constrain skolem α6_1
 //│ ╙──
 //│ ╔══[ERROR] Cannot constrain skolem α6_1
 //│ ╙──
-//│ Type: α7_0
-//│ Where:
-//│   (Int) ∧ (¬(⊥)) <: α7_0
+//│ Type: Int
+
+(let a = 0 in x => x): [A] -> A -> A
+//│ Elab: { Blk(List(LetBinding(Var(a@2),Lit(IntLit(0)))),Lam(List(Param(‹›,x@3,None)),Ref(x@3))): Forall(List(A@4),FunTy(Tup(List(Fld(‹›,Ref(A@4),None))),Ref(A@4),None))‹› }‹›
+//│ Type: forall α8_1: (α8_1) ->{⊥} α8_1
+
+(if false then x => x else y => y): [A] -> A -> A
+//│ Elab: { If(Cons(Boolean(Lit(BoolLit(false)),Else(Lam(List(Param(‹›,x@2,None)),Ref(x@2)))),Else(Lam(List(Param(‹›,y@3,None)),Ref(y@3))))): Forall(List(A@4),FunTy(Tup(List(Fld(‹›,Ref(A@4),None))),Ref(A@4),None))‹› }‹›
+//│ Type: forall α9_1: (α9_1) ->{⊥} α9_1
+
+fun baz: Int -> (([A] -> A -> A), Int) -> Int
+fun baz(z) =
+  (((f, x) => f(x)): (([A] -> A -> A), Int) -> Int)
+//│ Elab: { fun baz: (class:Int#33)‹› -> (forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)‹›, class:Int#34)‹› -> class:Int#35‹›‹›; fun baz(z@4): (class:Int#38)‹› -> (forall A@10: FunTy(Tup(List(Fld(‹›,Ref(A@10),None))),Ref(A@10),None)‹›, class:Int#39)‹› -> class:Int#40‹›‹› = Lam(List(Param(‹›,f@5,None), Param(‹›,x@6,None)),App(Ref(f@5),Tup(List(Fld(‹›,Ref(x@6),None))))): FunTy(Tup(List(Fld(‹›,Forall(List(A@8),FunTy(Tup(List(Fld(‹›,Ref(A@8),None))),Ref(A@8),None)),None), Fld(‹›,Ref(class:Int),None))),Ref(class:Int),None)‹›; }‹›
+//│ Type: ⊤
+
+
+baz: Int -> (([A] -> A -> A), Int) -> Int
+//│ Elab: { Ref(baz): FunTy(Tup(List(Fld(‹›,Ref(class:Int),None))),FunTy(Tup(List(Fld(‹›,Forall(List(A@2),FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2),None)),None), Fld(‹›,Ref(class:Int),None))),Ref(class:Int),None),None)‹› }‹›
+//│ Type: (Int) ->{⊥} (forall α10_1: (α10_1) ->{⊥} α10_1, Int) ->{⊥} Int
+
+
+baz(42)
+//│ Elab: { baz#1(42‹›)‹›‹› }‹›
+//│ Type: (forall α10_1: (α10_1) ->{⊥} α10_1, Int) ->{⊥} Int
+
+
+baz(42): (([A] -> A -> A), Int) -> Int
+//│ Elab: { App(Ref(baz),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))): FunTy(Tup(List(Fld(‹›,Forall(List(A@3),FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)),None), Fld(‹›,Ref(class:Int),None))),Ref(class:Int),None)‹› }‹›
+//│ Type: (forall α10_1: (α10_1) ->{⊥} α10_1, Int) ->{⊥} Int
+
+
+fun id: [A] -> A -> A
+fun id(x) = x
+//│ Elab: { fun id: forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)‹›; fun id(x@4): forall A@6: FunTy(Tup(List(Fld(‹›,Ref(A@6),None))),Ref(A@6),None)‹› = x@4#0; }‹›
+//│ Type: ⊤
+
+id: [A] -> A -> A
+//│ Elab: { Ref(id): Forall(List(A@2),FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2),None))‹› }‹›
+//│ Type: forall α19_1: (α19_1) ->{⊥} α19_1
+
+
+(id: [A] -> A -> A): [A] -> A -> A
+//│ Elab: { Asc(Ref(id),Forall(List(A@2),FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2),None))): Forall(List(A@3),FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None))‹› }‹›
+//│ Type: forall α21_1: (α21_1) ->{⊥} α21_1
+
+42: Int | Num
+//│ Elab: { Lit(IntLit(42)): CompType(Ref(class:Int),Ref(class:Num),true)‹› }‹›
+//│ Type: (Int) ∨ (Num)
+
+42: [A] -> Int
+//│ Elab: { Lit(IntLit(42)): Forall(List(A@2),Ref(class:Int))‹› }‹›
+//│ Type: forall α25_1: Int
+
+
+42: [A] -> Int | Num
+//│ Elab: { Lit(IntLit(42)): Forall(List(A@2),CompType(Ref(class:Int),Ref(class:Num),true))‹› }‹›
+//│ Type: forall α26_1: (Int) ∨ (Num)

@@ -251,10 +251,10 @@ fun test(x) =
   if x is Int then x + 1 else 0
 test
 //│ Elab: { fun test(x@2) = if Cons(Match(Ref(x@2),Cons(PatternBranch(Class(class:Int,None,true),Else(App(Ref(+),Tup(List(Fld(‹›,Ref(x@2),None), Fld(‹›,Lit(IntLit(1)),None)))))),NoSplit)),Else(Lit(IntLit(0))))‹›; test#0 }‹›
-//│ Type: α65_0
+//│ Type: α64_0
 //│ Where:
-//│   ((((⊤) ∧ (¬(⊥))) ∧ (α64_0)) ->{⊥} ((Int) ∧ (¬(⊥))) ∨ ((Int) ∧ (¬(⊥)))) ∧ (¬(⊥)) <: α65_0
-//│   α64_0 <: ¬((Int) ∧ (¬((⊥) ∨ (Int))))
+//│   ((((⊤) ∧ (¬(⊥))) ∧ (α65_0)) ->{⊥} ((Int) ∧ (¬(⊥))) ∨ ((Int) ∧ (¬(⊥)))) ∧ (¬(⊥)) <: α64_0
+//│   α65_0 <: ¬((Int) ∧ (¬((⊥) ∨ (Int))))
 
 test(1)
 //│ Elab: { test#1(1‹›)‹›‹› }‹›
@@ -276,12 +276,12 @@ fun fact(n) =
 
 fact
 //│ Elab: { fact#1 }‹›
-//│ Type: α72_0
+//│ Type: α71_0
 //│ Where:
-//│   ((((⊤) ∧ (¬(⊥))) ∧ (α71_0)) ->{(⊥) ∨ (((⊤) ∧ (¬(⊥))) ∧ (α73_0))} ((Int) ∧ (¬(⊥))) ∨ ((Int) ∧ (¬(⊥)))) ∧ (¬(⊥)) <: α72_0
-//│   (Int) ∧ (¬(⊥)) <: α71_0
-//│   α71_0 <: ¬((⊤) ∧ (¬((⊥) ∨ (Int))))
-//│   α72_0 <: ¬((⊤) ∧ (¬(((Int) ∧ (¬(⊥))) ->{((⊤) ∧ (¬(⊥))) ∧ (α73_0)} ((⊤) ∧ (¬(⊥))) ∧ (α74_0))))
+//│   ((((⊤) ∧ (¬(⊥))) ∧ (α72_0)) ->{(⊥) ∨ (((⊤) ∧ (¬(⊥))) ∧ (α73_0))} ((Int) ∧ (¬(⊥))) ∨ ((Int) ∧ (¬(⊥)))) ∧ (¬(⊥)) <: α71_0
+//│   (Int) ∧ (¬(⊥)) <: α72_0
+//│   α72_0 <: ¬((⊤) ∧ (¬((⊥) ∨ (Int))))
+//│   α71_0 <: ¬((⊤) ∧ (¬(((Int) ∧ (¬(⊥))) ->{((⊤) ∧ (¬(⊥))) ∧ (α73_0)} ((⊤) ∧ (¬(⊥))) ∧ (α74_0))))
 //│   (Int) ∧ (¬(⊥)) <: α74_0
 //│   α74_0 <: ¬((⊤) ∧ (¬((⊥) ∨ (Int))))
 
@@ -294,21 +294,23 @@ fact(1)
 
 fun fact2 = case
   0 then 1
-  n then n * fact(n - 1)
-//│ Elab: { fun fact2 = λn@2. if Cons(Boolean(App(Ref(==),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,Lit(IntLit(0)),None)))),Else(Lit(IntLit(1)))),Else(App(Ref(*),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,App(Ref(fact),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None))))))‹›‹›; }‹›
+  n then n * fact2(n - 1)
+//│ Elab: { fun fact2 = λn@2. if Cons(Boolean(App(Ref(==),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,Lit(IntLit(0)),None)))),Else(Lit(IntLit(1)))),Else(App(Ref(*),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,App(Ref(fact2),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None))))))‹›‹›; }‹›
 //│ Type: ⊤
 
 fact2
-//│ Elab: { fact2#0 }‹›
-//│ Type: α78_0
+//│ Elab: { fact2#1 }‹›
+//│ Type: α77_0
 //│ Where:
-//│   ((((⊤) ∧ (¬(⊥))) ∧ (α77_0)) ->{(⊥) ∨ (((⊤) ∧ (¬(⊥))) ∧ (α80_0))} ((Int) ∧ (¬(⊥))) ∨ ((Int) ∧ (¬(⊥)))) ∧ (¬(⊥)) <: α78_0
-//│   α77_0 <: ¬((⊤) ∧ (¬((⊥) ∨ (Int))))
-//│   ((⊤) ∧ (¬(⊥))) ∧ (α73_0) <: α80_0
-//│   α73_0 <: ¬((⊤) ∧ (¬(⊥)))
+//│   ((((⊤) ∧ (¬(⊥))) ∧ (α78_0)) ->{(⊥) ∨ (((⊤) ∧ (¬(⊥))) ∧ (α80_0))} ((Int) ∧ (¬(⊥))) ∨ ((Int) ∧ (¬(⊥)))) ∧ (¬(⊥)) <: α77_0
+//│   (Int) ∧ (¬(⊥)) <: α78_0
+//│   α78_0 <: ¬((⊤) ∧ (¬((⊥) ∨ (Int))))
+//│   α77_0 <: ¬((⊤) ∧ (¬(((Int) ∧ (¬(⊥))) ->{((⊤) ∧ (¬(⊥))) ∧ (α80_0)} ((⊤) ∧ (¬(⊥))) ∧ (α81_0))))
+//│   (Int) ∧ (¬(⊥)) <: α81_0
+//│   α81_0 <: ¬((⊤) ∧ (¬((⊥) ∨ (Int))))
 
 fact2(0)
-//│ Elab: { fact2#1(0‹›)‹›‹› }‹›
+//│ Elab: { fact2#2(0‹›)‹›‹› }‹›
 //│ Type: α83_0
 //│ Where:
 //│   (Int) ∧ (¬(⊥)) <: α83_0
