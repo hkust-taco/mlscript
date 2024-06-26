@@ -70,6 +70,8 @@ class Elaborator(raise: Raise):
       Term.CompType(term(lhs), term(rhs), true)
     case App(Ident(":="), Tree.Tup(lhs :: rhs :: Nil)) =>
       Term.Set(term(lhs), term(rhs))
+    case App(Ident("#"), Tree.Tup(Sel(pre, Ident(name)) :: Ident(proj) :: Nil)) =>
+      Term.SelProj(term(pre), term(Ident(name)), Ident(proj))
     case App(lhs, rhs) =>
       val sym = FlowSymbol("‹app-res›", nextUid)
       Term.App(term(lhs), term(rhs))(sym)

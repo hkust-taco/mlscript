@@ -22,6 +22,7 @@ enum Term extends Statement with Located:
   case Quoted(body: Term)
   case Unquoted(body: Term)
   case New(cls: ClassSymbol, args: Ls[Term])
+  case SelProj(prefix: Term, cls: Term, proj: Tree.Ident)
   case Asc(term: Term, ty: Term)
   case CompType(lhs: Term, rhs: Term, pol: Bool)
   case Region(name: VarSymbol, body: Term)
@@ -74,6 +75,7 @@ sealed trait Statement extends Located:
     case Quoted(term) => term :: Nil
     case Unquoted(term) => term :: Nil
     case New(_, args) => args
+    case SelProj(pre, cls, _) => pre :: cls :: Nil
     case Asc(term, ty) => term :: ty :: Nil
     case Forall(_, body) => body :: Nil
     case WildcardTy(in, out) => in.toList ++ out.toList
@@ -113,6 +115,7 @@ sealed trait Statement extends Located:
     case Quoted(term) => s"""code"${term.showDbg}""""
     case Unquoted(term) => s"$${${term.showDbg}}"
     case New(cls, args) => s"new ${cls.toString}(${args.mkString(", ")})"
+    case SelProj(pre, cls, proj) => s"${pre.showDbg}.${cls.showDbg}#${proj.name}"
     case Asc(term, ty) => s"${term.toString}: ${ty.toString}"
     case LetBinding(pat, rhs) => s"let ${pat.showDbg} = ${rhs.showDbg}"
     case Region(name, body) => s"region ${name.nme} in ${body.showDbg}"

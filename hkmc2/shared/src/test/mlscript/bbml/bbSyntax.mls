@@ -38,6 +38,18 @@ Baz[in Int out Int]
 //│ Parsed:
 //│ 	TyApp(Ident(Baz),List(Tup(List(Modified(keyword 'in',Ident(Int)), Modified(keyword 'out',Ident(Int))))))
 
+t.Bar#x
+//│ Parsed:
+//│ 	App(Ident(#),Tup(List(Sel(Ident(t),Ident(Bar)), Ident(x))))
+
+foo.Bar#baz(42)
+//│ Parsed:
+//│ 	App(App(Ident(#),Tup(List(Sel(Ident(foo),Ident(Bar)), Ident(baz)))),Tup(List(IntLit(42))))
+
+foo(42).Bar#baz(42)
+//│ Parsed:
+//│ 	App(App(Ident(#),Tup(List(Sel(App(Ident(foo),Tup(List(IntLit(42)))),Ident(Bar)), Ident(baz)))),Tup(List(IntLit(42))))
+
 let x = 42 in x + 0
 //│ Parsed:
 //│ 	Let(Ident(x),IntLit(42),Some(App(Ident(+),Tup(List(Ident(x), IntLit(0))))))

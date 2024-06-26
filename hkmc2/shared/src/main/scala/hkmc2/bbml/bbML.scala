@@ -496,7 +496,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           ty
       val (bodyTy, eff) = typeCheck(body)
       (Type.FunType(tvs, bodyTy, eff), Type.Bot)
-    case Term.App(Term.Sel(Term.Ref(cls: ClassSymbol), field), Term.Tup(Fld(_, term, asc) :: Nil)) => // * Sel
+    case Term.SelProj(term, Term.Ref(cls: ClassSymbol), field) =>
       val (ty, eff) = typeCheck(term)
       ctx.getDef(cls.nme) match
         case S(ClassDef.Parameterized(_, tparams, params, _, _)) =>
