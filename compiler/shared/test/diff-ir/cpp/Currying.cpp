@@ -74,8 +74,8 @@ struct _mls_Lambda_0: public _mls_Callable {
   template <std::size_t align> static _mlsValue create(_mlsValue _mls_a) { auto _mlsVal = new (std::align_val_t(align)) _mls_Lambda_0; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_a = _mls_a;  return _mlsValue(_mlsVal); }
 _mlsValue _mls_apply1(_mlsValue _mls_b_0){
     _mlsValue _mls_retval;
-    auto _mls_x_2 = (_mls_a+_mls_b_0);
-    _mls_retval = _mls_x_2;
+    auto _mls_x_1 = (_mls_a+_mls_b_0);
+    _mls_retval = _mls_x_1;
     return _mls_retval;
   }
 };
@@ -89,9 +89,9 @@ struct _mls_Lambda_2: public _mls_Callable {
   template <std::size_t align> static _mlsValue create(_mlsValue _mls_a, _mlsValue _mls_b) { auto _mlsVal = new (std::align_val_t(align)) _mls_Lambda_2; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_a = _mls_a; _mlsVal->_mls_b = _mls_b;  return _mlsValue(_mlsVal); }
 _mlsValue _mls_apply1(_mlsValue _mls_c_0){
     _mlsValue _mls_retval;
-    auto _mls_x_9 = (_mls_a+_mls_b);
-    auto _mls_x_10 = (_mls_x_9+_mls_c_0);
-    _mls_retval = _mls_x_10;
+    auto _mls_x_6 = (_mls_a+_mls_b);
+    auto _mls_x_7 = (_mls_x_6+_mls_c_0);
+    _mls_retval = _mls_x_7;
     return _mls_retval;
   }
 };
@@ -104,44 +104,44 @@ struct _mls_Lambda_1: public _mls_Callable {
   template <std::size_t align> static _mlsValue create(_mlsValue _mls_a) { auto _mlsVal = new (std::align_val_t(align)) _mls_Lambda_1; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_a = _mls_a;  return _mlsValue(_mlsVal); }
 _mlsValue _mls_apply1(_mlsValue _mls_b_2){
     _mlsValue _mls_retval;
-    auto _mls_x_11 = _mlsValue::create<_mls_Lambda_2>(_mls_a, _mls_b_2);
-    _mls_retval = _mls_x_11;
+    auto _mls_x_8 = _mlsValue::create<_mls_Lambda_2>(_mls_a, _mls_b_2);
+    _mls_retval = _mls_x_8;
     return _mls_retval;
   }
 };
 _mlsValue _mls_add2c(_mlsValue _mls_a_0){
   _mlsValue _mls_retval;
-  auto _mls_x_3 = _mlsValue::create<_mls_Lambda_0>(_mls_a_0);
-  _mls_retval = _mls_x_3;
+  auto _mls_x_2 = _mlsValue::create<_mls_Lambda_0>(_mls_a_0);
+  _mls_retval = _mls_x_2;
   return _mls_retval;
 }
 _mlsValue _mls_add2(_mlsValue _mls_a_1, _mlsValue _mls_b_1){
   _mlsValue _mls_retval;
-  auto _mls_x_4 = (_mls_a_1+_mls_b_1);
-  _mls_retval = _mls_x_4;
+  auto _mls_x_3 = (_mls_a_1+_mls_b_1);
+  _mls_retval = _mls_x_3;
   return _mls_retval;
 }
 _mlsValue _mls_add3c(_mlsValue _mls_a_2){
   _mlsValue _mls_retval;
-  auto _mls_x_12 = _mlsValue::create<_mls_Lambda_1>(_mls_a_2);
-  _mls_retval = _mls_x_12;
+  auto _mls_x_9 = _mlsValue::create<_mls_Lambda_1>(_mls_a_2);
+  _mls_retval = _mls_x_9;
   return _mls_retval;
 }
 _mlsValue _mls_main(){
   _mlsValue _mls_retval;
-  auto _mls_x_13 = _mls_add2c(_mlsValue::fromIntLit(1));
+  auto _mls_x_10 = _mls_add2c(_mlsValue::fromIntLit(1));
+  auto _mls_x_11 = _mlsCall(_mls_x_10, _mlsValue::fromIntLit(2));
+  auto _mls_x_12 = _mls_add2(_mlsValue::fromIntLit(1), _mlsValue::fromIntLit(2));
+  auto _mls_x_13 = _mls_add3c(_mlsValue::fromIntLit(1));
   auto _mls_x_14 = _mlsCall(_mls_x_13, _mlsValue::fromIntLit(2));
-  auto _mls_x_15 = _mls_add2(_mlsValue::fromIntLit(1), _mlsValue::fromIntLit(2));
-  auto _mls_x_16 = _mls_add3c(_mlsValue::fromIntLit(1));
-  auto _mls_x_17 = _mlsCall(_mls_x_16, _mlsValue::fromIntLit(2));
-  auto _mls_x_18 = _mlsCall(_mls_x_17, _mlsValue::fromIntLit(3));
-  _mls_retval = _mls_x_18;
+  auto _mls_x_15 = _mlsCall(_mls_x_14, _mlsValue::fromIntLit(3));
+  _mls_retval = _mls_x_15;
   return _mls_retval;
 }
 _mlsValue _mlsMain(){
   _mlsValue _mls_retval;
-  auto _mls_x_19 = _mls_main();
-  _mls_retval = _mls_x_19;
+  auto _mls_x_16 = _mls_main();
+  _mls_retval = _mls_x_16;
   return _mls_retval;
 }
 int main() { return _mlsLargeStack(_mlsMainWrapper); }

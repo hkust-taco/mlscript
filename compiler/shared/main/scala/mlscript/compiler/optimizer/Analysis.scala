@@ -45,6 +45,8 @@ class UsefulnessAnalysis(verbose: Bool = false):
     case Result(res) => res.foreach(f)
     case Jump(defn, args) => args.foreach(f)
     case Case(scrut, cases, default) => addUse(scrut); cases.foreach { case (cls, body) => f(body) }; default.foreach(f)
+    case LetMethodCall(names, cls, method, args, body) => addUse(method); args.foreach(f); names.foreach(addDef); f(body)
+    case LetApply(names, fn, args, body) => addUse(fn); args.foreach(f); names.foreach(addDef); f(body)
     case LetExpr(name, expr, body) => f(expr); addDef(name); f(body)
     case LetCall(names, defn, args, body) => args.foreach(f); names.foreach(addDef); f(body)
   
@@ -82,8 +84,15 @@ class FreeVarAnalysis(extended_scope: Bool = true, verbose: Bool = false):
       val fv3 = cases.foldLeft(fv2) {
         case (acc, (cls, body)) => f(using defined)(body, acc)
       }
-      // TODO
       fv3
+    case LetMethodCall(resultNames, cls, method, args, body) =>
+      var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
+      val defined2 = resultNames.foldLeft(defined)((acc, name) => acc + name.str)
+      f(using defined2)(body, fv2)
+    case LetApply(resultNames, fn, args, body) =>
+      var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
+      val defined2 = resultNames.foldLeft(defined)((acc, name) => acc + name.str)
+      f(using defined2)(body, fv2)
     case LetExpr(name, expr, body) =>
       val fv2 = f(using defined)(expr, fv)
       val defined2 = defined + name.str

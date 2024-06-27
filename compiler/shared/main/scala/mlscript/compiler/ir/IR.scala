@@ -25,7 +25,6 @@ case class Program(
     Sorting.quickSort(t1)
     Sorting.quickSort(t2)
     s"Program({${t1.mkString(",\n")}}, {\n${t2.mkString("\n")}\n},\n$main)"
-  def acceptIterator(v: Iterator) = v.iterate(this)
 
 implicit object ClassInfoOrdering extends Ordering[ClassInfo] {
   def compare(a: ClassInfo, b: ClassInfo) = a.id.compare(b.id)
@@ -41,7 +40,6 @@ case class ClassInfo(
   override def hashCode: Int = id
   override def toString: String =
     s"ClassInfo($id, $ident, [${fields mkString ","}], parents: ${parents mkString ","}, methods:\n${methods mkString ",\n"})"
-  def acceptIterator(v: Iterator) = v.iterate(this)
 
 case class Name(val str: Str):
   private var intro: Opt[Intro] = None
@@ -65,11 +63,6 @@ case class Name(val str: Str):
   override def toString: String =
     str
 
-  /* they will be deprecated soon. don't use */
-  def accept_def_iterator(v: NameIterator) = v.iterateNameDef(this)
-  def accept_use_iterator(v: NameIterator) = v.iterateNameUse(this)
-  def accept_param_iterator(v: NameIterator) = v.iterateParam(this)
-
 class DefnRef(var defn: Either[Defn, Str]):
   def getName: String = defn.fold(_.getName, x => x)
   def expectDefn: Defn = defn match {
@@ -82,8 +75,17 @@ class DefnRef(var defn: Either[Defn, Str]):
     case _ => false
   }
 
-  /* they will be deprecated soon. don't use */
-  def acceptIterator(v: Iterator) = v.iterate(this)
+class ClassRef(var cls: Either[ClassInfo, Str]):
+  def name: String = cls.fold(_.ident, x => x)
+  def expectClass: ClassInfo = cls match {
+    case Left(gocls) => gocls
+    case Right(name) => throw Exception(s"Expected a class, but got $name")
+  }
+  def getClass: Opt[ClassInfo] = cls.left.toOption
+  override def equals(o: Any): Bool = o match {
+    case o: ClassRef => o.name == this.name
+    case _ => false
+  }
 
 implicit object DefOrdering extends Ordering[Defn] {
   def compare(a: Defn, b: Defn) = a.id.compare(b.id)
@@ -107,9 +109,6 @@ case class Defn(
   override def hashCode: Int = id
   def getName: String = name
 
-  /* they will be deprecated soon. don't use */
-  def acceptIterator(v: Iterator) = v.iterate(this)
-
   override def toString: String =
     val ps = params.map(_.toString).mkString("[", ",", "]")
     val naps = newActiveParams.map(_.toSeq.sorted.mkString("{", ",", "}")).mkString("[", ",", "]")
@@ -122,11 +121,6 @@ sealed trait TrivialExpr:
   override def toString: String
   def show: String
   def toDocument: Document
-
-  /* they will be deprecated soon. don't use */
-  def acceptIterator(v: TrivialExprIterator): Unit = this match
-    case x: Ref => v.iterate(x)
-    case x: Literal => v.iterate(x)
 
   def mapNameOfTrivialExpr(f: Name => Name): TrivialExpr = this match
     case x: Ref => Ref(f(x.name))
@@ -168,14 +162,6 @@ enum Expr:
     case CtorApp(cls, args) => CtorApp(cls, args.map(_.mapNameOfTrivialExpr(f)))
     case Select(x, cls, field) => Select(f(x), cls, field)
     case BasicOp(name, args) => BasicOp(name, args.map(_.mapNameOfTrivialExpr(f)))
-
-  /* they will be deprecated soon. don't use */
-  def acceptIterator(v: Iterator): Unit = this match
-    case x: Ref => v.iterate(x)
-    case x: Literal => v.iterate(x)
-    case x: CtorApp => v.iterate(x)
-    case x: Select => v.iterate(x)
-    case x: BasicOp => v.iterate(x)
 
   def locMarker: LocMarker = this match
     case Ref(name) => LocMarker.MRef(name.str)
@@ -330,16 +316,6 @@ enum Node:
           <:> raw("in") 
           <:> raw(s"-- $tag"),
         body.toDocument)
-
-  /* they will be deprecated soon. don't use */
-  def acceptIterator(v: Iterator): Unit  = this match
-    case x: Result => v.iterate(x)
-    case x: Jump => v.iterate(x)
-    case x: Case => v.iterate(x)
-    case x: LetExpr => v.iterate(x)
-    case x: LetMethodCall => v.iterate(x)
-    case x: LetApply => v.iterate(x)
-    case x: LetCall => v.iterate(x)
   
   def locMarker: LocMarker =
     val marker = this match
@@ -354,74 +330,46 @@ enum Node:
     marker
 
 
-/* they will be deprecated soon. don't use */
-trait NameIterator:
-  def iterateNameDef(x: Name): Unit = ()
-  def iterateNameUse(x: Name): Unit = ()
-  def iterateParam(x: Name): Unit    = ()
-
-/* they will be deprecated soon. don't use */
-trait TrivialExprIterator extends NameIterator:
-  import Expr._
-  def iterate(x: Ref): Unit         = x.name.accept_use_iterator(this)
-  def iterate(x: Literal): Unit     = ()
-
-trait Iterator extends TrivialExprIterator:
-  import Expr._
-  import Node._
-  def iterate(x: CtorApp): Unit        = x match
-    case CtorApp(cls, xs)              => cls.acceptIterator(this); xs.foreach(_.acceptIterator(this))
-  def iterate(x: Select): Unit         = x match
-    case Select(x, cls, field)         => x.accept_use_iterator(this); cls.acceptIterator(this)
-  def iterate(x: BasicOp): Unit        = x match
-    case BasicOp(op, xs)               => xs.foreach(_.acceptIterator(this))
-  def iterate(x: Result): Unit         = x match
-    case Result(xs)                    => xs.foreach(_.acceptIterator(this))
-  def iterate(x: Jump): Unit           = x match
-    case Jump(jp, xs)                  => jp.acceptIterator(this); xs.foreach(_.acceptIterator(this))
-  def iterate(x: Case): Unit           = x match
-    case Case(x, cases, default)       => x.accept_use_iterator(this); cases foreach { (cls, arm) => arm.acceptIterator(this) }; default.foreach(_.acceptIterator(this))
-  def iterate(x: LetExpr): Unit        = x match
-    case LetExpr(x, e1, e2)            => x.accept_def_iterator(this); e1.acceptIterator(this); e2.acceptIterator(this)
-  def iterate(x: LetMethodCall): Unit  = x match
-    case LetMethodCall(xs, cls, f, as, e2) => xs.foreach(_.accept_def_iterator(this)); cls.acceptIterator(this); f.accept_use_iterator(this); as.foreach(_.acceptIterator(this)); e2.acceptIterator(this)
-  def iterate(x: LetApply): Unit       = x match
-    case LetApply(xs, f, as, e2)        => xs.foreach(_.accept_def_iterator(this)); f.accept_use_iterator(this); as.foreach(_.acceptIterator(this)); e2.acceptIterator(this)
-  def iterate(x: LetCall): Unit        = x match
-    case LetCall(xs, f, as, e2)        => xs.foreach(_.accept_def_iterator(this)); f.acceptIterator(this); as.foreach(_.acceptIterator(this)); e2.acceptIterator(this)
-  def iterate(x: DefnRef): Unit       = ()
-  def iterate(x: ClassInfo): Unit      = ()
-  def iterate(x: Defn): Unit =
-    x.params.foreach(_.accept_param_iterator(this))
-    x.body.acceptIterator(this)
-  def iterate(x: Program): Unit =
-    x.classes.foreach(_.acceptIterator(this))
-    x.defs.foreach(_.acceptIterator(this))
-    x.main.acceptIterator(this)
-
 trait DefTraversalOrdering:
   def ordered(entry: Node, defs: Set[Defn]): Ls[Defn]
   def orderedNames(entry: Node, defs: Set[Defn]): Ls[Str]
 
 object DefDfs:
   import Node._
-  private class Successors extends Iterator:
-    var succ: ListBuffer[Defn] = ListBuffer()
-    override def iterate(x: DefnRef) =
-      succ += x.expectDefn
-
-  private class SuccessorNames extends Iterator:
-    var succ: ListBuffer[Str] = ListBuffer()
-    override def iterate(x: DefnRef) =
-      succ += x.getName
+  
+  private object Successors:
+    def find(node: Node)(using acc: Ls[Defn]): Ls[Defn] =
+      node match
+        case Result(res) => acc
+        case Jump(defn, args) => defn.expectDefn :: acc
+        case Case(scrut, cases, default) =>
+          val acc2 = cases.map(_._2) ++ default.toList
+          acc2.foldLeft(acc)((acc, x) => find(x)(using acc))
+        case LetExpr(name, expr, body) => find(body)
+        case LetMethodCall(names, cls, method, args, body) => find(body)
+        case LetApply(names, fn, args, body) => find(body)
+        case LetCall(names, defn, args, body) => find(body)(using defn.expectDefn :: acc)
+      
+    def find(defn: Defn)(using acc: Ls[Defn]): Ls[Defn] = find(defn.body)
+    def findNames(node: Node)(using acc: Ls[Str]): Ls[Str] =
+      node match
+        case Result(res) => acc
+        case Jump(defn, args) => defn.getName :: acc
+        case Case(scrut, cases, default) =>
+          val acc2 = cases.map(_._2) ++ default.toList
+          acc2.foldLeft(acc)((acc, x) => findNames(x)(using acc))
+        case LetExpr(name, expr, body) => findNames(body)
+        case LetMethodCall(names, cls, method, args, body) => findNames(body)
+        case LetApply(names, fn, args, body) => findNames(body)
+        case LetCall(names, defn, args, body) => findNames(body)(using defn.getName :: acc)
+      
+    def findNames(defn: Defn)(using acc: Ls[Str]): Ls[Str] = findNames(defn.body)
 
   private def dfs(using visited: HashMap[Str, Bool], out: ListBuffer[Defn], postfix: Bool)(x: Defn): Unit =
     visited.update(x.name, true)
     if (!postfix)
       out += x
-    val succ = Successors()
-    x.acceptIterator(succ)
-    succ.succ.foreach { y =>
+    Successors.find(x)(using Nil).foreach { y =>
       if (!visited(y.name))
         dfs(y)
     }
@@ -429,9 +377,7 @@ object DefDfs:
       out += x
   
   private def dfs(using visited: HashMap[Str, Bool], out: ListBuffer[Defn], postfix: Bool)(x: Node): Unit =
-    val succ = Successors()
-    x.acceptIterator(succ)
-    succ.succ.foreach { y =>
+    Successors.find(x)(using Nil).foreach { y =>
       if (!visited(y.name))
         dfs(y)
     }
@@ -440,9 +386,7 @@ object DefDfs:
     visited.update(x.name, true)
     if (!postfix)
       out += x.name
-    val succ = SuccessorNames()
-    x.acceptIterator(succ)
-    succ.succ.foreach { y =>
+    Successors.findNames(x)(using Nil).foreach { y =>
       if (!visited(y))
         dfsNames(defs.find(_.name == y).get)
     }
@@ -450,9 +394,7 @@ object DefDfs:
       out += x.name
   
   private def dfsNames(using visited: HashMap[Str, Bool], defs: Set[Defn], out: ListBuffer[Str], postfix: Bool)(x: Node): Unit =
-    val succ = SuccessorNames()
-    x.acceptIterator(succ)
-    succ.succ.foreach { y =>
+    Successors.findNames(x)(using Nil).foreach { y =>
       if (!visited(y))
         dfsNames(defs.find(_.name == y).get)
     }

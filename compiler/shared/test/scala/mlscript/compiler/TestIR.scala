@@ -7,7 +7,6 @@ import scala.collection.mutable.StringBuilder
 import mlscript.{DiffTests, ModeType, TypingUnit}
 import mlscript.compiler.ir.{Interpreter, Fresh, FreshInt, Builder}
 import mlscript.compiler.codegen.cpp.CppCodeGen
-import mlscript.compiler.optimizer.Optimizer
 import mlscript.compiler.optimizer.OptimizingError
 
 class IRDiffTestCompiler extends DiffTests {
@@ -55,18 +54,18 @@ class IRDiffTestCompiler extends DiffTests {
         //       output(new_g.toString())
         //     fuel -= 1
 
-          if (mode.interpIR)
-            output("\nInterpreted:")
-            val ir = Interpreter(mode.irVerbose).interpret(g)
-            output(ir)
-            if ir != interp_result.get then
-              throw optimizer.OptimizingError("Interpreted result changed after optimization")
-            output("")
+        //   if (mode.interpIR)
+        //     output("\nInterpreted:")
+        //     val ir = Interpreter(mode.irVerbose).interpret(g)
+        //     output(ir)
+        //     if ir != interp_result.get then
+        //       throw optimizer.OptimizingError("Interpreted result changed after optimization")
+        //     output("")
 
-          output(s"\nFuel used: ${mode.irOptFuel - fuel}")
+        //   output(s"\nFuel used: ${mode.irOptFuel - fuel}")
 
-          if (fuel == 0)
-            throw optimizer.OptimizingError("Fuel exhausted")
+        //   if (fuel == 0)
+        //     throw optimizer.OptimizingError("Fuel exhausted")
 
       catch
         case err: OptimizingError =>
