@@ -2,17 +2,22 @@
 :ParseOnly
 :UseIR
 
-:interpIR
 :genCpp
-module Demo {
-  fun x() = 1
+module Fn extends Callable {
+  fun apply1(x) = builtin("print", x)
+}
+class Demo(n) {
+  fun x() = n
 }
 fun main() =
-  let d1 = Demo()
+  let d1 = Demo(2)
   Demo.x(d1)
+  let print = Fn()
+  Fn.apply1(print, 12345)
+  print(56789)
 main()
-//│ |#module| |Demo| |{|→|#fun| |x|(||)| |#=| |1|←|↵|}|↵|#fun| |main|(||)| |#=|→|#let| |d1| |#=| |Demo|(||)|↵|Demo|.x|(|d1|)|←|↵|main|(||)|
-//│ Parsed: {module Demo {fun x = () => 1}; fun main = () => {let d1 = Demo(); (Demo).x(d1,)}; main()}
+//│ |#module| |Fn| |#extends| |Callable| |{|→|#fun| |apply1|(|x|)| |#=| |builtin|(|"print"|,| |x|)|←|↵|}|↵|#class| |Demo|(|n|)| |{|→|#fun| |x|(||)| |#=| |n|←|↵|}|↵|#fun| |main|(||)| |#=|→|#let| |d1| |#=| |Demo|(|2|)|↵|Demo|.x|(|d1|)|↵|#let| |print| |#=| |Fn|(||)|↵|Fn|.apply1|(|print|,| |12345|)|↵|print|(|56789|)|←|↵|main|(||)|
+//│ Parsed: {module Fn: Callable {fun apply1 = (x,) => builtin("print", x,)}; class Demo(n,) {fun x = () => n}; fun main = () => {let d1 = Demo(2,); (Demo).x(d1,); let print = Fn(); (Fn).apply1(print, 12345,); print(56789,)}; main()}
 //│ 
 //│ 
 //│ IR:
@@ -34,26 +39,38 @@ main()
 //│ ),
 //│ ClassInfo(8, None, [], parents: Option, methods:
 //│ ),
-//│ ClassInfo(9, Demo, [], parents: , methods:
-//│ x -> Def(0, x, [], [],
+//│ ClassInfo(9, Fn, [], parents: Callable, methods:
+//│ apply1 -> Def(0, apply1, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ 1 -- #0
-//│ ))}, {
-//│ Def(1, main, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$0 = Demo() in -- #8
-//│ let x$1 = Demo.x(x$0) in -- #7
+//│ let** (x$1) = builtin(print,x$0) in -- #7
 //│ x$1 -- #6
+//│ )),
+//│ ClassInfo(10, Demo, [n], parents: , methods:
+//│ x -> Def(1, x, [], [],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ n -- #8
+//│ ))}, {
+//│ Def(2, main, [], [],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$2 = Demo(2) in -- #34
+//│ let x$3 = Demo.x(x$2) in -- #33
+//│ let x$4 = Fn() in -- #32
+//│ let x$5 = Fn.apply1(x$4,12345) in -- #31
+//│ let** (x$6) = x$4(56789) in -- #30
+//│ x$6 -- #29
 //│ )
 //│ },
-//│ let* (x$2) = main() in -- #11
-//│ x$2 -- #10)
+//│ let* (x$7) = main() in -- #37
+//│ x$7 -- #36)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, [], parents: , methods:
@@ -74,29 +91,38 @@ main()
 //│ ),
 //│ ClassInfo(8, None, [], parents: Option, methods:
 //│ ),
-//│ ClassInfo(9, Demo, [], parents: , methods:
-//│ x -> Def(0, x, [], [],
+//│ ClassInfo(9, Fn, [], parents: Callable, methods:
+//│ apply1 -> Def(0, apply1, [x$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ 1 -- #0
-//│ ))}, {
-//│ Def(1, main, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$0 = Demo() in -- #8
-//│ let x$1 = Demo.x(x$0) in -- #7
+//│ let** (x$1) = builtin(print,x$0) in -- #7
 //│ x$1 -- #6
+//│ )),
+//│ ClassInfo(10, Demo, [n], parents: , methods:
+//│ x -> Def(1, x, [], [],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ n -- #8
+//│ ))}, {
+//│ Def(2, main, [], [],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$2 = Demo(2) in -- #34
+//│ let x$3 = Demo.x(x$2) in -- #33
+//│ let x$4 = Fn() in -- #32
+//│ let x$5 = Fn.apply1(x$4,12345) in -- #31
+//│ let** (x$6) = x$4(56789) in -- #30
+//│ x$6 -- #29
 //│ )
 //│ },
-//│ let* (x$2) = main() in -- #11
-//│ x$2 -- #10)
-//│ 
-//│ Interpreted:
-//│ 1
+//│ let* (x$7) = main() in -- #37
+//│ x$7 -- #36)
 //│ 
 //│ Cpp:
 //│ #include "mlsprelude.h"
@@ -108,20 +134,21 @@ main()
 //│ struct _mls_Nil;
 //│ struct _mls_Cons;
 //│ struct _mls_Callable;
+//│ struct _mls_Fn;
 //│ struct _mls_True;
 //│ struct _mls_False;
 //│ _mlsValue _mls_main();
 //│ _mlsValue _mlsMain();
 //│ struct _mls_Demo: public _mlsObject {
-//│ 
+//│   _mlsValue _mls_n;
 //│   constexpr static inline const char *typeName = "Demo";
 //│   constexpr static inline uint32_t typeTag = nextTypeTag();
-//│   virtual void print() const override { std::printf("%s", typeName); }
-//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
-//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Demo; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_n.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_n);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_n) { auto _mlsVal = new (std::align_val_t(align)) _mls_Demo; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_n = _mls_n;  return _mlsValue(_mlsVal); }
 //│ _mlsValue _mls_x(){
 //│     _mlsValue _mls_retval;
-//│     _mls_retval = _mlsValue::fromIntLit(1);
+//│     _mls_retval = _mls_n;
 //│     return _mls_retval;
 //│   }
 //│ };
@@ -174,17 +201,34 @@ main()
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
+//│ struct _mls_Fn: public _mls_Callable {
+//│ 
+//│   constexpr static inline const char *typeName = "Fn";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Fn; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│ _mlsValue _mls_apply1(_mlsValue _mls_x_0){
+//│     _mlsValue _mls_retval;
+//│     auto _mls_x_1 = _mls_builtin_print(_mls_x_0);
+//│     _mls_retval = _mls_x_1;
+//│     return _mls_retval;
+//│   }
+//│ };
 //│ _mlsValue _mls_main(){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_0 = _mlsValue::create<_mls_Demo>();
-//│   auto _mls_x_1 = _mlsMethodCall<_mls_Demo>(_mls_x_0)->_mls_x();
-//│   _mls_retval = _mls_x_1;
+//│   auto _mls_x_2 = _mlsValue::create<_mls_Demo>(_mlsValue::fromIntLit(2));
+//│   auto _mls_x_3 = _mlsMethodCall<_mls_Demo>(_mls_x_2)->_mls_x();
+//│   auto _mls_x_4 = _mlsValue::create<_mls_Fn>();
+//│   auto _mls_x_5 = _mlsMethodCall<_mls_Fn>(_mls_x_4)->_mls_apply1(_mlsValue::fromIntLit(12345));
+//│   auto _mls_x_6 = _mlsCall(_mls_x_4, _mlsValue::fromIntLit(56789));
+//│   _mls_retval = _mls_x_6;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_2 = _mls_main();
-//│   _mls_retval = _mls_x_2;
+//│   auto _mls_x_7 = _mls_main();
+//│   _mls_retval = _mls_x_7;
 //│   return _mls_retval;
 //│ }
 //│ int main() { return _mlsLargeStack(_mlsMainWrapper); }

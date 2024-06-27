@@ -138,7 +138,7 @@ enum Expr:
       case Var(name) => name |> raw
       case IntLit(value) => value.toString |> raw
       case FloatLit(value) => value.toString |> raw
-      case StrLit(value) => value |> raw
+      case StrLit(value) => s"\"$value\"" |> raw // need more reliable escape utils
       case CharLit(value) => value.toInt.toString |> raw
       case Call(func, args) => aux(func) <#> raw("(") <#> Expr.toDocuments(args, sep = raw(", ")) <#> raw(")")
       case Member(expr, member) => aux(expr) <#> raw("->") <#> raw(member)

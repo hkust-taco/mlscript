@@ -27,7 +27,7 @@ class CppCodeGen:
   private def mlsNewValue(cls: Str, args: Ls[Expr]) = Expr.Call(Expr.Var(s"_mlsValue::create<$cls>"), args)
   private def mlsIsValueOf(cls: Str, scrut: Expr) = Expr.Call(Expr.Var(s"_mlsValue::isValueOf<$cls>"), Ls(scrut))
   private def mlsIsIntLit(scrut: Expr, lit: mlscript.IntLit) = Expr.Call(Expr.Var("_mlsValue::isIntLit"), Ls(scrut, Expr.IntLit(lit.value)))
-  private def mlsIsCharLit(scrut: Expr, lit: mlscript.CharLit) = Expr.Call(Expr.Var("_mlsValue::isIntLit"), Ls(scrut, Expr.CharLit(lit.value)))
+  private def mlsIsCharLit(scrut: Expr, lit: mlscript.CharLit) = Expr.Call(Expr.Var("_mlsValue::isCharLit"), Ls(scrut, Expr.CharLit(lit.value)))
   private def mlsDebugPrint(x: Expr) = Expr.Call(Expr.Var("_mlsValue::print"), Ls(x))
   private def mlsTupleValue(init: Expr) = Expr.Constructor("_mlsValue::tuple", init)
   private def mlsAs(name: Str, cls: Str) = Expr.Var(s"_mlsValue::as<$cls>($name)")
