@@ -41,19 +41,19 @@ class IRDiffTestCompiler extends DiffTests {
           }
           output(cpp.toDocument.print)
 
-        if (mode.irOpt)
-          val go = Optimizer(fresh, freshFnId, freshClassId, freshTag, mode.irVerbose)
-          var changed = true
-          var g = graph
-          var fuel = mode.irOptFuel
-          while (changed && fuel > 0)
-            val new_g = go.optimize(g)
-            changed = g != new_g
-            g = new_g
-            if (changed)
-              output("\nOptimized:")
-              output(new_g.toString())
-            fuel -= 1
+        // if (mode.irOpt)
+        //   val go = Optimizer(fresh, freshFnId, freshClassId, freshTag, mode.irVerbose)
+        //   var changed = true
+        //   var g = graph
+        //   var fuel = mode.irOptFuel
+        //   while (changed && fuel > 0)
+        //     val new_g = go.optimize(g)
+        //     changed = g != new_g
+        //     g = new_g
+        //     if (changed)
+        //       output("\nOptimized:")
+        //       output(new_g.toString())
+        //     fuel -= 1
 
           if (mode.interpIR)
             output("\nInterpreted:")
