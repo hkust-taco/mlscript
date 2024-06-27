@@ -11,6 +11,7 @@ private final class DefnRefInSet(defs: Set[Defn]):
     case Jump(defn, args) =>
     case Case(scrut, cases, default) => cases foreach { (_, body) => f(body) }; default foreach f
     case LetExpr(name, expr, body) => f(body)
+    case LetMethodCall(names, cls, method, args, body) => f(body)
     case LetApply(name, fn, args, body) => f(body)
     case LetCall(res, defnref, args, body) =>
       defnref.getDefn match {

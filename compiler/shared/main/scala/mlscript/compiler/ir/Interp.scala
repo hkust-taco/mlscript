@@ -9,6 +9,7 @@ import mlscript.utils._
 import scala.collection.immutable._
 import scala.annotation._
 import shorthands._
+import mlscript.VarianceInfo.co
 
 final case class IRInterpreterError(message: String) extends Exception(message)
 
@@ -68,6 +69,7 @@ class Interpreter(verbose: Bool):
     case Jump(defn: DefnRef, args: Ls[Expr])
     case Case(scrut: Name, cases: Ls[(Pat, Node)], default: Opt[Node])
     case LetExpr(name: Name, expr: Expr, body: Node)
+    case LetMethodCall(names: Ls[Name], cls: ClassInfo, method: Name, args: Ls[Expr], body: Node)
     case LetApply(name: Ls[Name], fn: Name, args: Ls[Expr], body: Node)
     case LetCall(resultNames: Ls[Name], defn: DefnRef, args: Ls[Expr], body: Node)
 
@@ -106,6 +108,18 @@ class Interpreter(verbose: Bool):
             <:> raw(x)
             <:> raw("=")
             <:> expr.document,
+          raw("in") <:> body.document |> indent)
+      case LetMethodCall(resultNames, cls, Name(method), args, body) =>
+        stack(
+          raw("let")
+            <:> raw(resultNames.map{ x => x.toString }.mkString(","))
+            <:> raw("=")
+            <:> raw(cls.ident)
+            <:> raw(".")
+            <:> raw(method)
+            <#> raw("(")
+            <#> raw(args.map{ x => x.toString }.mkString(","))
+            <#> raw(")"),
           raw("in") <:> body.document |> indent)
       case LetApply(resultNames, Name(fn), rhs, body) =>
         stack(
@@ -155,6 +169,7 @@ class Interpreter(verbose: Bool):
     case INode.Jump(defnref, args) => Jump(DefnRef(Right(defnref.getName)), args |> convertArgs)
     case INode.Case(scrut, cases, default) => Case(scrut, cases.map{(cls, node) => (cls, node |> convert)}, default map convert)
     case INode.LetExpr(name, expr, body) => LetExpr(name, expr |> convert, body |> convert)
+    case INode.LetMethodCall(names, cls, method, args, body) => LetMethodCall(names, cls, method, args |> convertArgs, body |> convert)
     case INode.LetApply(name, fn, args, body) => LetApply(name, fn, args |> convertArgs, body |> convert)
     case INode.LetCall(xs, defnref, args, body) =>
       LetCall(xs, DefnRef(Right(defnref.getName)), args |> convertArgs, body |> convert)
@@ -281,7 +296,7 @@ class Interpreter(verbose: Bool):
             case _ =>
               default match
                 case S(x) => x
-                case N =>throw IRInterpreterError(s"can not find the matched case, $cls expected")
+                case N => throw IRInterpreterError(s"can not find the matched case, $cls expected")
           }
         case Literal(lit) =>
           cases.find{
@@ -301,6 +316,22 @@ class Interpreter(verbose: Bool):
       val x = evalMayNotProgress(expr)
       val ctx1 = ctx.copy(bindCtx = ctx.bindCtx + (name.str -> x))
       eval(using ctx1)(body)
+
+    case LetMethodCall(xs, cls, m, args, body) =>
+      val ys = args |> evalArgsMayNotProgress
+      val (ctx1, defn) = ys match
+        case CtorApp(cls, xs) :: _ =>
+          val method = convert(cls.methods(m.str))
+          resolveDefnRef(ctx.defnCtx.values.toSet, method.body)
+          (ctx.copy(bindCtx = ctx.bindCtx ++ cls.fields.zip(xs) ++ method.params.map{_.str}.zip(ys)), method)
+        case x @ _ => throw IRInterpreterError(s"not a class $x")
+      val res = evalMayNotProgress(using ctx1)(defn.body) match {
+            case Result(xs) => xs
+            case _ => throw IRInterpreterError("unexpected node")
+          }
+      val ctx2 = ctx1.copy(bindCtx = ctx1.bindCtx ++ xs.map{_.str}.zip(res))
+      eval(using ctx2)(body)
+
     case LetApply(xs, fn, args, body) =>
       val ys = args |> evalArgsMayNotProgress
       ctx.bindCtx.get(fn.str) match

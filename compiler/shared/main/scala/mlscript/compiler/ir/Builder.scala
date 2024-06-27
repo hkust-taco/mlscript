@@ -265,13 +265,19 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
       case App(
         member @ Sel(Var(clsName), Var(fld)), 
         xs @ Tup((_ -> Fld(_, Var(s))) :: _)) if clsName.isCapitalized =>
-        buildResultFromTerm(xs) {
-          case Result(Ref(name) :: args) =>
+        buildResultFromTup(xs) {
+          case Result(xs @ (Ref(name) :: args)) =>
             val v = fresh.make
             val cls = ctx.classCtx(clsName)
-            LetExpr(v,
-              if args.isEmpty then Select(name, cls, fld) else throw IRError("not supported: method call"),
-              v |> ref |> sresult |> k).attachTag(tag)
+            val isField = cls.fields.contains(fld)
+            if isField then
+              LetExpr(v, Select(name, cls, fld),
+                v |> ref |> sresult |> k).attachTag(tag)
+            else
+              if cls.methods.contains(fld) then
+                LetMethodCall(Ls(v), cls, Name(fld), xs, v |> ref |> sresult |> k).attachTag(tag)
+              else
+                throw IRError(s"unknown field or method $fld in $cls")
           case node @ _ => node |> unexpectedNode
         }
       case App(Var(f), xs @ Tup(_)) if ctx.fnCtx.contains(f) =>

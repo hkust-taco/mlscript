@@ -287,7 +287,7 @@ struct _mls_Callable : public _mlsObject {
   virtual void destroy() override {}
 };
 
-inline _mls_Callable *_mlsToCallable(_mlsValue fn) {
+inline static _mls_Callable *_mlsToCallable(_mlsValue fn) {
   auto *ptr = _mlsValue::as<_mls_Callable>(fn);
   if (!ptr)
     throw std::runtime_error("Not a callable object");
@@ -307,6 +307,14 @@ inline static _mlsValue _mlsCall(_mlsValue f, U... args) {
     return _mlsToCallable(f)->_mls_apply3(args...);
   else if constexpr (sizeof...(U) == 4)
     return _mlsToCallable(f)->_mls_apply4(args...);
+}
+
+template <typename T>
+inline static T *_mlsMethodCall(_mlsValue self) {
+  auto *ptr = _mlsValue::as<T>(self);
+  if (!ptr)
+    throw std::runtime_error("unable to convert object for method calls");
+  return ptr;
 }
 
 inline int _mlsLargeStack(void *(*fn)(void *)) {

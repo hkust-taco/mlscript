@@ -207,6 +207,7 @@ enum Node:
   case Case(scrut: Name, cases: Ls[(Pat, Node)], default: Opt[Node])
   // Intermediate forms:
   case LetExpr(name: Name, expr: Expr, body: Node)
+  case LetMethodCall(names: Ls[Name], cls: ClassInfo, method: Name, args: Ls[TrivialExpr], body: Node)
   case LetApply(names: Ls[Name], fn: Name, args: Ls[TrivialExpr], body: Node)
   case LetCall(names: Ls[Name], defn: DefnRef, args: Ls[TrivialExpr], body: Node)
 
@@ -231,6 +232,7 @@ enum Node:
     case Jump(defn, args) => Jump(defn, args.map(_.mapNameOfTrivialExpr(f)))
     case Case(scrut, cases, default) => Case(f(scrut), cases.map { (cls, arm) => (cls, arm.mapName(f)) }, default.map(_.mapName(f)))
     case LetExpr(name, expr, body) => LetExpr(f(name), expr.mapName(f), body.mapName(f))
+    case LetMethodCall(names, cls, method, args, body) => LetMethodCall(names.map(f), cls, f(method), args.map(_.mapNameOfTrivialExpr(f)), body.mapName(f))
     case LetApply(names, fn, args, body) => LetApply(names.map(f), f(fn), args.map(_.mapNameOfTrivialExpr(f)), body.mapName(f))
     case LetCall(names, defn, args, body) => LetCall(names.map(f), defn, args.map(_.mapNameOfTrivialExpr(f)), body.mapName(f))  
   
@@ -241,6 +243,9 @@ enum Node:
     case LetExpr(name, expr, body) => 
       val name_copy = name.copy
       LetExpr(name_copy, expr.mapName(_.trySubst(ctx)), body.copy(ctx + (name_copy.str -> name_copy)))
+    case LetMethodCall(names, cls, method, args, body) =>
+      val names_copy = names.map(_.copy)
+      LetMethodCall(names_copy, cls, method.copy, args.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))), body.copy(ctx ++ names_copy.map(x => x.str -> x)))
     case LetApply(names, fn, args, body) =>
       val names_copy = names.map(_.copy)
       val fn_copy = fn.copy
@@ -283,6 +288,20 @@ enum Node:
           <:> raw("in")
           <:> raw(s"-- $tag"),
         body.toDocument)
+    case LetMethodCall(xs, cls, method, args, body) =>
+      stack(
+        raw("let")
+          <:> raw(xs.map(_.toString).mkString(","))
+          <:> raw("=")
+          <:> raw(cls.ident)
+          <#> raw(".")
+          <#> raw(method.toString)
+          <#> raw("(")
+          <#> raw(args.map{ x => x.toString }.mkString(","))
+          <#> raw(")")
+          <:> raw("in") 
+          <:> raw(s"-- $tag"),
+        body.toDocument)
     case LetApply(xs, f, args, body) =>
       stack(
         raw("let**")
@@ -318,6 +337,7 @@ enum Node:
     case x: Jump => v.iterate(x)
     case x: Case => v.iterate(x)
     case x: LetExpr => v.iterate(x)
+    case x: LetMethodCall => v.iterate(x)
     case x: LetApply => v.iterate(x)
     case x: LetCall => v.iterate(x)
   
@@ -327,6 +347,7 @@ enum Node:
       case Jump(defn, args) => LocMarker.MJump(defn.getName, args.map(_.toExpr.locMarker))
       case Case(scrut, cases, default) => LocMarker.MCase(scrut.str, cases.map(_._1), default.isDefined)
       case LetExpr(name, expr, _) => LocMarker.MLetExpr(name.str, expr.locMarker)
+      case LetMethodCall(names, cls, method, args, _) => LocMarker.MLetApply(names.map(_.str), method.str, args.map(_.toExpr.locMarker))
       case LetApply(names, fn, args, _) => LocMarker.MLetApply(names.map(_.str), fn.str, args.map(_.toExpr.locMarker))
       case LetCall(names, defn, args, _) => LocMarker.MLetCall(names.map(_.str), defn.getName, args.map(_.toExpr.locMarker))
     marker.tag = this.tag
@@ -362,6 +383,8 @@ trait Iterator extends TrivialExprIterator:
     case Case(x, cases, default)       => x.accept_use_iterator(this); cases foreach { (cls, arm) => arm.acceptIterator(this) }; default.foreach(_.acceptIterator(this))
   def iterate(x: LetExpr): Unit        = x match
     case LetExpr(x, e1, e2)            => x.accept_def_iterator(this); e1.acceptIterator(this); e2.acceptIterator(this)
+  def iterate(x: LetMethodCall): Unit  = x match
+    case LetMethodCall(xs, cls, f, as, e2) => xs.foreach(_.accept_def_iterator(this)); cls.acceptIterator(this); f.accept_use_iterator(this); as.foreach(_.acceptIterator(this)); e2.acceptIterator(this)
   def iterate(x: LetApply): Unit       = x match
     case LetApply(xs, f, as, e2)        => xs.foreach(_.accept_def_iterator(this)); f.accept_use_iterator(this); as.foreach(_.acceptIterator(this)); e2.acceptIterator(this)
   def iterate(x: LetCall): Unit        = x match
@@ -551,6 +574,7 @@ enum LocMarker:
   case MJump(name: Str, args: Ls[LocMarker])
   case MCase(scrut: Str, cases: Ls[Pat], default: Bool)
   case MLetExpr(name: Str, expr: LocMarker)
+  case MLetMethodCall(names: Ls[Str], cls: ClassInfo, method: Str, args: Ls[LocMarker])
   case MLetApply(names: Ls[Str], fn: Str, args: Ls[LocMarker])
   case MLetCall(names: Ls[Str], defn: Str, args: Ls[LocMarker])
   var tag = DefnTag(-1)
@@ -569,6 +593,14 @@ enum LocMarker:
       raw("let")
         <:> raw(x.toString)
         <:> raw("=")
+        <:> raw("...")
+    case MLetMethodCall(xs, cls, method, args) =>
+      raw("let")
+        <:> raw(xs.map(_.toString).mkString(","))
+        <:> raw("=")
+        <:> raw(cls.ident)
+        <:> raw(".")
+        <:> raw(method)
         <:> raw("...")
     case MLetApply(x, f, args) =>
       raw("let")

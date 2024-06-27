@@ -49,6 +49,8 @@ class CppCodeGen:
     s"virtual void destroy() override { $fieldsDeletion operator delete (this, std::align_val_t(_mlsAlignment)); }"
   private def mlsThrowNonExhaustiveMatch = Stmt.Raw("_mlsNonExhaustiveMatch();");
   private def mlsCall(fn: Str, args: Ls[Expr]) = Expr.Call(Expr.Var("_mlsCall"), Expr.Var(fn) :: args)
+  private def mlsMethodCall(cls: ClassInfo, method: Str, args: Ls[Expr]) =
+    Expr.Call(Expr.Member(Expr.Call(Expr.Var(s"_mlsMethodCall<${cls.ident |> mapName}>"), Ls(args.head)), method), args.tail)
   private def mlsFnWrapperName(fn: Str) = s"_mlsFn_$fn"
   private def mlsFnCreateMethod(fn: Str) = s"template <std::size_t align> static _mlsValue create() { static _mlsFn_$fn mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }"
   private def mlsFnApplyNMethod(fn: Str, n: Int) = 
@@ -76,7 +78,7 @@ class CppCodeGen:
       ++ cls.methods.map{case (name, defn) => {
         val (theDef, decl) = codegenDefn(using Ctx(ctx.defnCtx + cls.ident))(defn)
         theDef match
-          case x @ Def.FuncDef(_, name, _, _, _) if name.startsWith("_mls_apply") => x.copy(or = true)
+          case x @ Def.FuncDef(_, name, _, _, _, _) => x.copy(virt = true)
           case _ => theDef
       }}
     )
@@ -171,6 +173,10 @@ class CppCodeGen:
       codegenJumpWithCall(defn, args, S(storeInto))
     case Node.LetExpr(name, expr, body) =>
       val stmts2 = stmts ++ Ls(Stmt.AutoBind(Ls(name |> mapName), codegen(expr)))
+      codegen(body, storeInto)(using decls, stmts2)
+    case Node.LetMethodCall(names, cls, method, args, body) =>
+      val call = mlsMethodCall(cls, method.str |> mapName, args.map(toExpr))
+      val stmts2 = stmts ++ Ls(Stmt.AutoBind(names.map(mapName), call))
       codegen(body, storeInto)(using decls, stmts2)
     case Node.LetApply(names, fn, args, body) if fn.str == "builtin" =>
       val stmts2 = stmts ++ codegenBuiltin(names, args.head.toString.replace("\"", ""), args.tail)

@@ -751,6 +751,18 @@ main()
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_10 = _mlsValue::create<_mls_False>();
+//│   auto _mls_x_11 = _mls_foo(_mls_x_10);
+//│   _mls_retval = _mls_x_11;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_5){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_5;
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_not(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
 //│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_0)){
@@ -762,16 +774,9 @@ main()
 //│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_main(){
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_10 = _mlsValue::create<_mls_False>();
-//│   auto _mls_x_11 = _mls_foo(_mls_x_10);
-//│   _mls_retval = _mls_x_11;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_5){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_5;
+//│   _mls_retval = _mls_x_1;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_foo(_mlsValue _mls_x_4){
@@ -785,11 +790,6 @@ main()
 //│     auto _mls_x_9 = _mlsValue::create<_mls_B>(_mls_x_8);
 //│     _mls_retval = _mls_j_1(_mls_x_9);
 //│   } else _mlsNonExhaustiveMatch();
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_1;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -1170,6 +1170,19 @@ main()
 //│   _mls_retval = _mls_x_15;
 //│   return _mls_retval;
 //│ }
+//│ _mlsValue _mls_foo(_mlsValue _mls_x_14){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_14)){
+//│     auto _mls_x_16 = _mlsValue::create<_mls_A>();
+//│     _mls_retval = _mls_j_1(_mls_x_16);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_14)){
+//│     auto _mls_x_17 = _mls_not(_mls_x_14);
+//│     auto _mls_x_18 = _mls_foo(_mls_x_17);
+//│     auto _mls_x_19 = _mlsValue::create<_mls_B>(_mls_x_18);
+//│     _mls_retval = _mls_j_1(_mls_x_19);
+//│   } else _mlsNonExhaustiveMatch();
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_main(){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_20 = _mlsValue::create<_mls_False>();
@@ -1184,37 +1197,6 @@ main()
 //│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_bbb(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_7 = _mls_aaa();
-//│   auto _mls_x_8 = (_mls_x_7*_mlsValue::fromIntLit(100));
-//│   auto _mls_x_9 = (_mls_x_8+_mlsValue::fromIntLit(4));
-//│   _mls_retval = _mls_x_9;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_foo(_mlsValue _mls_x_14){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_14)){
-//│     auto _mls_x_16 = _mlsValue::create<_mls_A>();
-//│     _mls_retval = _mls_j_1(_mls_x_16);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_14)){
-//│     auto _mls_x_17 = _mls_not(_mls_x_14);
-//│     auto _mls_x_18 = _mls_foo(_mls_x_17);
-//│     auto _mls_x_19 = _mlsValue::create<_mls_B>(_mls_x_18);
-//│     _mls_retval = _mls_j_1(_mls_x_19);
-//│   } else _mlsNonExhaustiveMatch();
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_22){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_22;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_0(_mlsValue _mls_x_11){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_11;
-//│   return _mls_retval;
-//│ }
 //│ _mlsValue _mls_aaa(){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_0 = _mlsValue::fromIntLit(1);
@@ -1225,6 +1207,24 @@ main()
 //│   auto _mls_x_5 = (_mls_x_4-_mls_x_2);
 //│   auto _mls_x_6 = (_mls_x_5+_mls_x_3);
 //│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_11){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_11;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_bbb(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_7 = _mls_aaa();
+//│   auto _mls_x_8 = (_mls_x_7*_mlsValue::fromIntLit(100));
+//│   auto _mls_x_9 = (_mls_x_8+_mlsValue::fromIntLit(4));
+//│   _mls_retval = _mls_x_9;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_22){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_22;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_not(_mlsValue _mls_x_10){
@@ -1760,25 +1760,6 @@ foo()
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_s);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_s) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_s = _mls_s;  return _mlsValue(_mlsVal); }
 //│ };
-//│ _mlsValue _mls_foo(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_16 = _mls_mk(_mlsValue::fromIntLit(10));
-//│   auto _mls_x_17 = _mls_odd(_mls_x_16);
-//│   _mls_retval = _mls_x_17;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_0)){
-//│     auto _mls_x_2 = _mlsValue::create<_mls_False>();
-//│     _mls_retval = _mls_j_0(_mls_x_2);
-//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_0)){
-//│     auto _mls_x_3 = _mlsValue::cast<_mls_S>(_mls_x_0)->_mls_s;
-//│     auto _mls_x_4 = _mls_even(_mls_x_3);
-//│     _mls_retval = _mls_j_0(_mls_x_4);
-//│   } else _mlsNonExhaustiveMatch();
-//│   return _mls_retval;
-//│ }
 //│ _mlsValue _mls_even(_mlsValue _mls_x_5){
 //│   _mlsValue _mls_retval;
 //│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_5)){
@@ -1791,9 +1772,11 @@ foo()
 //│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
+//│ _mlsValue _mls_foo(){
 //│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_11;
+//│   auto _mls_x_16 = _mls_mk(_mlsValue::fromIntLit(10));
+//│   auto _mls_x_17 = _mls_odd(_mls_x_16);
+//│   _mls_retval = _mls_x_17;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_mk(_mlsValue _mls_n_0){
@@ -1810,14 +1793,31 @@ foo()
 //│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_11;
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_1;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
+//│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_6;
+//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_0)){
+//│     auto _mls_x_2 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_0)){
+//│     auto _mls_x_3 = _mlsValue::cast<_mls_S>(_mls_x_0)->_mls_s;
+//│     auto _mls_x_4 = _mls_even(_mls_x_3);
+//│     _mls_retval = _mls_j_0(_mls_x_4);
+//│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -2157,18 +2157,6 @@ foo()
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_s);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_s) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_s = _mls_s;  return _mlsValue(_mlsVal); }
 //│ };
-//│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_0)){
-//│     auto _mls_x_2 = _mlsValue::create<_mls_False>();
-//│     _mls_retval = _mls_j_0(_mls_x_2);
-//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_0)){
-//│     auto _mls_x_3 = _mlsValue::cast<_mls_S>(_mls_x_0)->_mls_s;
-//│     auto _mls_x_4 = _mls_even(_mls_x_3);
-//│     _mls_retval = _mls_j_0(_mls_x_4);
-//│   } else _mlsNonExhaustiveMatch();
-//│   return _mls_retval;
-//│ }
 //│ _mlsValue _mls_even(_mlsValue _mls_x_5){
 //│   _mlsValue _mls_retval;
 //│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_5)){
@@ -2179,11 +2167,6 @@ foo()
 //│     auto _mls_x_9 = _mls_odd(_mls_x_8);
 //│     _mls_retval = _mls_j_1(_mls_x_9);
 //│   } else _mlsNonExhaustiveMatch();
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_11;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_foo(){
@@ -2209,14 +2192,31 @@ foo()
 //│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_11;
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_1;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
+//│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_6;
+//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_0)){
+//│     auto _mls_x_2 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_0)){
+//│     auto _mls_x_3 = _mlsValue::cast<_mls_S>(_mls_x_0)->_mls_s;
+//│     auto _mls_x_4 = _mls_even(_mls_x_3);
+//│     _mls_retval = _mls_j_0(_mls_x_4);
+//│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -2605,25 +2605,6 @@ main()
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_s);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_s) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_s = _mls_s;  return _mlsValue(_mlsVal); }
 //│ };
-//│ _mlsValue _mls_main(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_23 = _mls_foo();
-//│   auto _mls_x_24 = _mls_bar();
-//│   _mls_retval = _mls_x_24;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_0)){
-//│     auto _mls_x_2 = _mlsValue::create<_mls_False>();
-//│     _mls_retval = _mls_j_0(_mls_x_2);
-//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_0)){
-//│     auto _mls_x_3 = _mlsValue::cast<_mls_S>(_mls_x_0)->_mls_s;
-//│     auto _mls_x_4 = _mls_even(_mls_x_3);
-//│     _mls_retval = _mls_j_0(_mls_x_4);
-//│   } else _mlsNonExhaustiveMatch();
-//│   return _mls_retval;
-//│ }
 //│ _mlsValue _mls_even(_mlsValue _mls_x_5){
 //│   _mlsValue _mls_retval;
 //│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_5)){
@@ -2636,10 +2617,52 @@ main()
 //│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
+//│ _mlsValue _mls_foo(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_10 = (_mlsValue::fromIntLit(10)>_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_10)){
+//│     auto _mls_x_13 = _mlsValue::create<_mls_O>();
+//│     auto _mls_x_14 = _mlsValue::create<_mls_S>(_mls_x_13);
+//│     _mls_retval = _mls_j_2(_mls_x_14);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_10)){
+//│     auto _mls_x_15 = _mlsValue::create<_mls_O>();
+//│     _mls_retval = _mls_j_2(_mls_x_15);
+//│   } else _mlsNonExhaustiveMatch();
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_j_2(_mlsValue _mls_x_11){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_12 = _mls_odd(_mls_x_11);
 //│   _mls_retval = _mls_x_12;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_23 = _mls_foo();
+//│   auto _mls_x_24 = _mls_bar();
+//│   _mls_retval = _mls_x_24;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_odd(_mlsValue _mls_x_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_O>(_mls_x_0)){
+//│     auto _mls_x_2 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_x_0)){
+//│     auto _mls_x_3 = _mlsValue::cast<_mls_S>(_mls_x_0)->_mls_s;
+//│     auto _mls_x_4 = _mls_even(_mls_x_3);
+//│     _mls_retval = _mls_j_0(_mls_x_4);
+//│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_bar(){
@@ -2657,32 +2680,9 @@ main()
 //│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_foo(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_10 = (_mlsValue::fromIntLit(10)>_mlsValue::fromIntLit(0));
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_10)){
-//│     auto _mls_x_13 = _mlsValue::create<_mls_O>();
-//│     auto _mls_x_14 = _mlsValue::create<_mls_S>(_mls_x_13);
-//│     _mls_retval = _mls_j_2(_mls_x_14);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_10)){
-//│     auto _mls_x_15 = _mlsValue::create<_mls_O>();
-//│     _mls_retval = _mls_j_2(_mls_x_15);
-//│   } else _mlsNonExhaustiveMatch();
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_1;
-//│   return _mls_retval;
-//│ }
 //│ _mlsValue _mls_j_3(_mlsValue _mls_x_17){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_17;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_6;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -3057,35 +3057,14 @@ main(False)
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
-//│ _mlsValue _mls_main(_mlsValue _mls_flag_0){
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_21){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_20 = _mls_foo(_mls_flag_0);
-//│   if (_mlsValue::isValueOf<_mls_A>(_mls_x_20)){
-//│     auto _mls_x_22 = _mls_aaa();
-//│     _mls_retval = _mls_j_2(_mls_x_22);
-//│   } else if (_mlsValue::isValueOf<_mls_B>(_mls_x_20)){
-//│     auto _mls_x_23 = _mlsValue::cast<_mls_B>(_mls_x_20)->_mls_b;
-//│     auto _mls_x_24 = _mls_bbb();
-//│     _mls_retval = _mls_j_2(_mls_x_24);
-//│   } else _mlsNonExhaustiveMatch();
+//│   _mls_retval = _mls_x_21;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_j_1(_mlsValue _mls_x_15){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_15;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_bbb(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_7 = _mls_aaa();
-//│   auto _mls_x_8 = (_mls_x_7*_mlsValue::fromIntLit(100));
-//│   auto _mls_x_9 = (_mls_x_8+_mlsValue::fromIntLit(4));
-//│   _mls_retval = _mls_x_9;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_21){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_21;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_foo(_mlsValue _mls_x_14){
@@ -3101,11 +3080,6 @@ main(False)
 //│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_j_0(_mlsValue _mls_x_11){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_11;
-//│   return _mls_retval;
-//│ }
 //│ _mlsValue _mls_aaa(){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_0 = _mlsValue::fromIntLit(1);
@@ -3116,6 +3090,32 @@ main(False)
 //│   auto _mls_x_5 = (_mls_x_4-_mls_x_2);
 //│   auto _mls_x_6 = (_mls_x_5+_mls_x_3);
 //│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_11){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_11;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_bbb(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_7 = _mls_aaa();
+//│   auto _mls_x_8 = (_mls_x_7*_mlsValue::fromIntLit(100));
+//│   auto _mls_x_9 = (_mls_x_8+_mlsValue::fromIntLit(4));
+//│   _mls_retval = _mls_x_9;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(_mlsValue _mls_flag_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_20 = _mls_foo(_mls_flag_0);
+//│   if (_mlsValue::isValueOf<_mls_A>(_mls_x_20)){
+//│     auto _mls_x_22 = _mls_aaa();
+//│     _mls_retval = _mls_j_2(_mls_x_22);
+//│   } else if (_mlsValue::isValueOf<_mls_B>(_mls_x_20)){
+//│     auto _mls_x_23 = _mlsValue::cast<_mls_B>(_mls_x_20)->_mls_b;
+//│     auto _mls_x_24 = _mls_bbb();
+//│     _mls_retval = _mls_j_2(_mls_x_24);
+//│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_not(_mlsValue _mls_x_10){
@@ -3443,19 +3443,6 @@ main()
 //│   _mls_retval = _mls_x_10;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_head_opt(_mlsValue _mls_l_0){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_Nil>(_mls_l_0)){
-//│     auto _mls_x_1 = _mlsValue::create<_mls_None>();
-//│     _mls_retval = _mls_j_0(_mls_x_1);
-//│   } else if (_mlsValue::isValueOf<_mls_Cons>(_mls_l_0)){
-//│     auto _mls_x_2 = _mlsValue::cast<_mls_Cons>(_mls_l_0)->_mls_t;
-//│     auto _mls_x_3 = _mlsValue::cast<_mls_Cons>(_mls_l_0)->_mls_h;
-//│     auto _mls_x_4 = _mlsValue::create<_mls_Some>(_mls_x_3);
-//│     _mls_retval = _mls_j_0(_mls_x_4);
-//│   } else _mlsNonExhaustiveMatch();
-//│   return _mls_retval;
-//│ }
 //│ _mlsValue _mls_j_1(_mlsValue _mls_x_5){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_5;
@@ -3470,6 +3457,19 @@ main()
 //│     auto _mls_x_7 = _mlsValue::cast<_mls_Some>(_mls_o_0)->_mls_x;
 //│     auto _mls_x_8 = _mlsValue::create<_mls_False>();
 //│     _mls_retval = _mls_j_1(_mls_x_8);
+//│   } else _mlsNonExhaustiveMatch();
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_head_opt(_mlsValue _mls_l_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_Nil>(_mls_l_0)){
+//│     auto _mls_x_1 = _mlsValue::create<_mls_None>();
+//│     _mls_retval = _mls_j_0(_mls_x_1);
+//│   } else if (_mlsValue::isValueOf<_mls_Cons>(_mls_l_0)){
+//│     auto _mls_x_2 = _mlsValue::cast<_mls_Cons>(_mls_l_0)->_mls_t;
+//│     auto _mls_x_3 = _mlsValue::cast<_mls_Cons>(_mls_l_0)->_mls_h;
+//│     auto _mls_x_4 = _mlsValue::create<_mls_Some>(_mls_x_3);
+//│     _mls_retval = _mls_j_0(_mls_x_4);
 //│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
@@ -3828,18 +3828,11 @@ main()
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
-//│ _mlsValue _mls_mk_list(_mlsValue _mls_n_0){
+//│ _mlsValue _mls_main(){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_0 = (_mls_n_0==_mlsValue::fromIntLit(0));
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_0)){
-//│     auto _mls_x_2 = _mlsValue::create<_mls_Nil>();
-//│     _mls_retval = _mls_j_0(_mls_x_2);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_0)){
-//│     auto _mls_x_3 = (_mls_n_0-_mlsValue::fromIntLit(1));
-//│     auto _mls_x_4 = _mls_mk_list(_mls_x_3);
-//│     auto _mls_x_5 = _mlsValue::create<_mls_Cons>(_mls_n_0, _mls_x_4);
-//│     _mls_retval = _mls_j_0(_mls_x_5);
-//│   } else _mlsNonExhaustiveMatch();
+//│   auto _mls_x_17 = _mls_mk_list(_mlsValue::fromIntLit(10));
+//│   auto _mls_x_18 = _mls_is_empty(_mls_x_17);
+//│   _mls_retval = _mls_x_18;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_is_empty(_mlsValue _mls_l_1){
@@ -3854,16 +3847,18 @@ main()
 //│   _mls_retval = _mls_x_11;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_main(){
+//│ _mlsValue _mls_mk_list(_mlsValue _mls_n_0){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_17 = _mls_mk_list(_mlsValue::fromIntLit(10));
-//│   auto _mls_x_18 = _mls_is_empty(_mls_x_17);
-//│   _mls_retval = _mls_x_18;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_1;
+//│   auto _mls_x_0 = (_mls_n_0==_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_0)){
+//│     auto _mls_x_2 = _mlsValue::create<_mls_Nil>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_0)){
+//│     auto _mls_x_3 = (_mls_n_0-_mlsValue::fromIntLit(1));
+//│     auto _mls_x_4 = _mls_mk_list(_mls_x_3);
+//│     auto _mls_x_5 = _mlsValue::create<_mls_Cons>(_mls_n_0, _mls_x_4);
+//│     _mls_retval = _mls_j_0(_mls_x_5);
+//│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_is_none(_mlsValue _mls_o_0){
@@ -3878,6 +3873,16 @@ main()
 //│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_head_opt(_mlsValue _mls_l_0){
 //│   _mlsValue _mls_retval;
 //│   if (_mlsValue::isValueOf<_mls_Nil>(_mls_l_0)){
@@ -3889,11 +3894,6 @@ main()
 //│     auto _mls_x_10 = _mlsValue::create<_mls_Some>(_mls_x_9);
 //│     _mls_retval = _mls_j_1(_mls_x_10);
 //│   } else _mlsNonExhaustiveMatch();
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_6;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -4212,9 +4212,33 @@ main()
 //│   _mls_retval = _mls_x_16;
 //│   return _mls_retval;
 //│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_6;
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_j_0(_mlsValue _mls_x_1){
 //│   _mlsValue _mls_retval;
 //│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_mk_list(_mlsValue _mls_n_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_0 = (_mls_n_0==_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_0)){
+//│     auto _mls_x_2 = _mlsValue::create<_mls_Nil>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_0)){
+//│     auto _mls_x_3 = (_mls_n_0-_mlsValue::fromIntLit(1));
+//│     auto _mls_x_4 = _mls_mk_list(_mls_x_3);
+//│     auto _mls_x_5 = _mlsValue::create<_mls_Cons>(_mls_n_0, _mls_x_4);
+//│     _mls_retval = _mls_j_0(_mls_x_5);
+//│   } else _mlsNonExhaustiveMatch();
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_10){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_j_1(_mls_x_10);
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_last_opt(_mlsValue _mls_l_0){
@@ -4234,30 +4258,6 @@ main()
 //│       auto _mls_x_14 = _mls_last_opt(_mls_x_8);
 //│       _mls_retval = _mls_j_2(_mls_x_14);
 //│     } else _mlsNonExhaustiveMatch();
-//│   } else _mlsNonExhaustiveMatch();
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_6){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_6;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_10){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_j_1(_mls_x_10);
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_mk_list(_mlsValue _mls_n_0){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_0 = (_mls_n_0==_mlsValue::fromIntLit(0));
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_0)){
-//│     auto _mls_x_2 = _mlsValue::create<_mls_Nil>();
-//│     _mls_retval = _mls_j_0(_mls_x_2);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_0)){
-//│     auto _mls_x_3 = (_mls_n_0-_mlsValue::fromIntLit(1));
-//│     auto _mls_x_4 = _mls_mk_list(_mls_x_3);
-//│     auto _mls_x_5 = _mlsValue::create<_mls_Cons>(_mls_n_0, _mls_x_4);
-//│     _mls_retval = _mls_j_0(_mls_x_5);
 //│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
@@ -4689,30 +4689,6 @@ main()
 //│   _mls_retval = _mls_x_0;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_e1(_mlsValue _mls_a_0, _mlsValue _mls_c_0){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_7 = (_mls_a_0+_mlsValue::fromIntLit(1));
-//│   auto _mls_x_8 = (_mls_x_7+_mlsValue::fromIntLit(2));
-//│   auto _mls_x_9 = (_mls_x_8+_mlsValue::fromIntLit(3));
-//│   auto _mls_x_10 = (_mls_x_9+_mlsValue::fromIntLit(4));
-//│   _mls_retval = _mls_x_10;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_15){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_15;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_main(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_34 = _mlsValue::create<_mls_Some>(_mlsValue::fromIntLit(2));
-//│   auto _mls_x_35 = _mls_f(_mls_x_34);
-//│   auto _mls_x_36 = _mlsValue::create<_mls_None>();
-//│   auto _mls_x_37 = _mls_f(_mls_x_36);
-//│   auto _mls_x_38 = (_mls_x_35+_mls_x_37);
-//│   _mls_retval = _mls_x_38;
-//│   return _mls_retval;
-//│ }
 //│ _mlsValue _mls_e3(_mlsValue _mls_c_1){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_11 = _mlsValue::fromIntLit(4);
@@ -4732,12 +4708,9 @@ main()
 //│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_e2(_mlsValue _mls_x_22){
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_15){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_23 = (_mls_x_22+_mlsValue::fromIntLit(12));
-//│   auto _mls_x_24 = (_mls_x_23+_mlsValue::fromIntLit(13));
-//│   auto _mls_x_25 = (_mls_x_24+_mlsValue::fromIntLit(14));
-//│   _mls_retval = _mls_x_25;
+//│   _mls_retval = _mls_x_15;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_is_some(_mlsValue _mls_o_0){
@@ -4750,6 +4723,20 @@ main()
 //│     auto _mls_x_3 = _mlsValue::create<_mls_False>();
 //│     _mls_retval = _mls_j_0(_mls_x_3);
 //│   } else _mlsNonExhaustiveMatch();
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_e2(_mlsValue _mls_x_22){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_23 = (_mls_x_22+_mlsValue::fromIntLit(12));
+//│   auto _mls_x_24 = (_mls_x_23+_mlsValue::fromIntLit(13));
+//│   auto _mls_x_25 = (_mls_x_24+_mlsValue::fromIntLit(14));
+//│   _mls_retval = _mls_x_25;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_29){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_30 = _mls_e0(_mls_x_29);
+//│   _mls_retval = _mls_x_30;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_f(_mlsValue _mls_x_26){
@@ -4766,6 +4753,15 @@ main()
 //│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
+//│ _mlsValue _mls_e1(_mlsValue _mls_a_0, _mlsValue _mls_c_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_7 = (_mls_a_0+_mlsValue::fromIntLit(1));
+//│   auto _mls_x_8 = (_mls_x_7+_mlsValue::fromIntLit(2));
+//│   auto _mls_x_9 = (_mls_x_8+_mlsValue::fromIntLit(3));
+//│   auto _mls_x_10 = (_mls_x_9+_mlsValue::fromIntLit(4));
+//│   _mls_retval = _mls_x_10;
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_e0(_mlsValue _mls_w_0){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_4 = (_mls_w_0+_mlsValue::fromIntLit(8));
@@ -4774,10 +4770,14 @@ main()
 //│   _mls_retval = _mls_x_6;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_29){
+//│ _mlsValue _mls_main(){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_30 = _mls_e0(_mls_x_29);
-//│   _mls_retval = _mls_x_30;
+//│   auto _mls_x_34 = _mlsValue::create<_mls_Some>(_mlsValue::fromIntLit(2));
+//│   auto _mls_x_35 = _mls_f(_mls_x_34);
+//│   auto _mls_x_36 = _mlsValue::create<_mls_None>();
+//│   auto _mls_x_37 = _mls_f(_mls_x_36);
+//│   auto _mls_x_38 = (_mls_x_35+_mls_x_37);
+//│   _mls_retval = _mls_x_38;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mlsMain(){
@@ -5226,27 +5226,17 @@ main()
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_h); _mlsValue::destroy(this->_mls_t);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_h, _mlsValue _mls_t) { auto _mlsVal = new (std::align_val_t(align)) _mls_Cons; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_h = _mls_h; _mlsVal->_mls_t = _mls_t;  return _mlsValue(_mlsVal); }
 //│ };
-//│ _mlsValue _mls_e1(_mlsValue _mls_a_0, _mlsValue _mls_z_0){
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_7 = (_mls_a_0>_mlsValue::fromIntLit(0));
-//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_7)){
-//│     auto _mls_x_9 = (_mls_a_0-_mlsValue::fromIntLit(1));
-//│     auto _mls_x_10 = _mlsValue::create<_mls_Some>(_mls_x_9);
-//│     auto _mls_x_11 = _mls_f(_mls_x_10);
-//│     _mls_retval = _mls_j_1(_mls_x_11);
-//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_7)){
-//│     _mls_retval = _mls_j_1(_mls_z_0);
-//│   } else _mlsNonExhaustiveMatch();
+//│   _mls_retval = _mls_x_0;
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_main(){
+//│ _mlsValue _mls_e0(_mlsValue _mls_w_0){
 //│   _mlsValue _mls_retval;
-//│   auto _mls_x_35 = _mlsValue::create<_mls_Some>(_mlsValue::fromIntLit(2));
-//│   auto _mls_x_36 = _mls_f(_mls_x_35);
-//│   auto _mls_x_37 = _mlsValue::create<_mls_None>();
-//│   auto _mls_x_38 = _mls_f(_mls_x_37);
-//│   auto _mls_x_39 = (_mls_x_36+_mls_x_38);
-//│   _mls_retval = _mls_x_39;
+//│   auto _mls_x_4 = (_mls_w_0+_mlsValue::fromIntLit(8));
+//│   auto _mls_x_5 = (_mls_x_4+_mlsValue::fromIntLit(9));
+//│   auto _mls_x_6 = (_mls_x_5+_mlsValue::fromIntLit(10));
+//│   _mls_retval = _mls_x_6;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_e3(_mlsValue _mls_c_0){
@@ -5268,31 +5258,6 @@ main()
 //│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_is_some(_mlsValue _mls_o_0){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_Some>(_mls_o_0)){
-//│     auto _mls_x_1 = _mlsValue::cast<_mls_Some>(_mls_o_0)->_mls_x;
-//│     auto _mls_x_2 = _mlsValue::create<_mls_True>();
-//│     _mls_retval = _mls_j_0(_mls_x_2);
-//│   } else if (_mlsValue::isValueOf<_mls_None>(_mls_o_0)){
-//│     auto _mls_x_3 = _mlsValue::create<_mls_False>();
-//│     _mls_retval = _mls_j_0(_mls_x_3);
-//│   } else _mlsNonExhaustiveMatch();
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_16){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_16;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_e0(_mlsValue _mls_w_0){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_4 = (_mls_w_0+_mlsValue::fromIntLit(8));
-//│   auto _mls_x_5 = (_mls_x_4+_mlsValue::fromIntLit(9));
-//│   auto _mls_x_6 = (_mls_x_5+_mlsValue::fromIntLit(10));
-//│   _mls_retval = _mls_x_6;
-//│   return _mls_retval;
-//│ }
 //│ _mlsValue _mls_f(_mlsValue _mls_x_27){
 //│   _mlsValue _mls_retval;
 //│   auto _mls_x_28 = _mls_is_some(_mls_x_27);
@@ -5307,14 +5272,22 @@ main()
 //│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_8){
+//│ _mlsValue _mls_e1(_mlsValue _mls_a_0, _mlsValue _mls_z_0){
 //│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_8;
+//│   auto _mls_x_7 = (_mls_a_0>_mlsValue::fromIntLit(0));
+//│   if (_mlsValue::isValueOf<_mls_True>(_mls_x_7)){
+//│     auto _mls_x_9 = (_mls_a_0-_mlsValue::fromIntLit(1));
+//│     auto _mls_x_10 = _mlsValue::create<_mls_Some>(_mls_x_9);
+//│     auto _mls_x_11 = _mls_f(_mls_x_10);
+//│     _mls_retval = _mls_j_1(_mls_x_11);
+//│   } else if (_mlsValue::isValueOf<_mls_False>(_mls_x_7)){
+//│     _mls_retval = _mls_j_1(_mls_z_0);
+//│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_16){
 //│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_0;
+//│   _mls_retval = _mls_x_16;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_e2(_mlsValue _mls_x_23){
@@ -5323,6 +5296,33 @@ main()
 //│   auto _mls_x_25 = (_mls_x_24+_mlsValue::fromIntLit(13));
 //│   auto _mls_x_26 = (_mls_x_25+_mlsValue::fromIntLit(14));
 //│   _mls_retval = _mls_x_26;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_8){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_8;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_35 = _mlsValue::create<_mls_Some>(_mlsValue::fromIntLit(2));
+//│   auto _mls_x_36 = _mls_f(_mls_x_35);
+//│   auto _mls_x_37 = _mlsValue::create<_mls_None>();
+//│   auto _mls_x_38 = _mls_f(_mls_x_37);
+//│   auto _mls_x_39 = (_mls_x_36+_mls_x_38);
+//│   _mls_retval = _mls_x_39;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_is_some(_mlsValue _mls_o_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_Some>(_mls_o_0)){
+//│     auto _mls_x_1 = _mlsValue::cast<_mls_Some>(_mls_o_0)->_mls_x;
+//│     auto _mls_x_2 = _mlsValue::create<_mls_True>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else if (_mlsValue::isValueOf<_mls_None>(_mls_o_0)){
+//│     auto _mls_x_3 = _mlsValue::create<_mls_False>();
+//│     _mls_retval = _mls_j_0(_mls_x_3);
+//│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_j_3(_mlsValue _mls_x_30){
@@ -5797,6 +5797,50 @@ main()
 //│   virtual void destroy() override { _mlsValue::destroy(this->_mls_x);  operator delete (this, std::align_val_t(_mlsAlignment)); }
 //│   template <std::size_t align> static _mlsValue create(_mlsValue _mls_x) { auto _mlsVal = new (std::align_val_t(align)) _mls_S; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_x = _mls_x;  return _mlsValue(_mlsVal); }
 //│ };
+//│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_0;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_1(_mlsValue _mls_x_3){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_3;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_5(_mlsValue _mls_x_23){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_23;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_3(_mlsValue _mls_x_11){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_j_2(_mls_x_11);
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_pred(_mlsValue _mls_n_0){
+//│   _mlsValue _mls_retval;
+//│   if (_mlsValue::isValueOf<_mls_S>(_mls_n_0)){
+//│     auto _mls_x_1 = _mlsValue::cast<_mls_S>(_mls_n_0)->_mls_x;
+//│     _mls_retval = _mls_j_0(_mls_x_1);
+//│   } else if (_mlsValue::isValueOf<_mls_Z>(_mls_n_0)){
+//│     auto _mls_x_2 = _mlsValue::create<_mls_Z>();
+//│     _mls_retval = _mls_j_0(_mls_x_2);
+//│   } else _mlsNonExhaustiveMatch();
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_j_2(_mlsValue _mls_x_7){
+//│   _mlsValue _mls_retval;
+//│   _mls_retval = _mls_x_7;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_28 = _mls_to_nat(_mlsValue::fromIntLit(30));
+//│   auto _mls_x_29 = _mls_fib(_mls_x_28);
+//│   auto _mls_x_30 = _mls_to_int(_mls_x_29);
+//│   _mls_retval = _mls_x_30;
+//│   return _mls_retval;
+//│ }
 //│ _mlsValue _mls_to_int(_mlsValue _mls_n_2){
 //│   _mlsValue _mls_retval;
 //│   if (_mlsValue::isValueOf<_mls_Z>(_mls_n_2)){
@@ -5807,21 +5851,6 @@ main()
 //│     auto _mls_x_21 = (_mlsValue::fromIntLit(1)+_mls_x_20);
 //│     _mls_retval = _mls_j_4(_mls_x_21);
 //│   } else _mlsNonExhaustiveMatch();
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_0(_mlsValue _mls_x_0){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_0;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_2(_mlsValue _mls_x_7){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_7;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_1(_mlsValue _mls_x_3){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_3;
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_to_nat(_mlsValue _mls_n_3){
@@ -5838,22 +5867,16 @@ main()
 //│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
-//│ _mlsValue _mls_j_3(_mlsValue _mls_x_11){
+//│ _mlsValue _mls_plus(_mlsValue _mls_n1_0, _mlsValue _mls_n2_0){
 //│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_j_2(_mls_x_11);
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_j_5(_mlsValue _mls_x_23){
-//│   _mlsValue _mls_retval;
-//│   _mls_retval = _mls_x_23;
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_main(){
-//│   _mlsValue _mls_retval;
-//│   auto _mls_x_28 = _mls_to_nat(_mlsValue::fromIntLit(30));
-//│   auto _mls_x_29 = _mls_fib(_mls_x_28);
-//│   auto _mls_x_30 = _mls_to_int(_mls_x_29);
-//│   _mls_retval = _mls_x_30;
+//│   if (_mlsValue::isValueOf<_mls_Z>(_mls_n1_0)){
+//│     _mls_retval = _mls_j_1(_mls_n2_0);
+//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_n1_0)){
+//│     auto _mls_x_4 = _mlsValue::cast<_mls_S>(_mls_n1_0)->_mls_x;
+//│     auto _mls_x_5 = _mls_plus(_mls_x_4, _mls_n2_0);
+//│     auto _mls_x_6 = _mlsValue::create<_mls_S>(_mls_x_5);
+//│     _mls_retval = _mls_j_1(_mls_x_6);
+//│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }
 //│ _mlsValue _mls_j_4(_mlsValue _mls_x_18){
@@ -5880,29 +5903,6 @@ main()
 //│       auto _mls_x_17 = _mls_plus(_mls_x_15, _mls_x_16);
 //│       _mls_retval = _mls_j_3(_mls_x_17);
 //│     } else _mlsNonExhaustiveMatch();
-//│   } else _mlsNonExhaustiveMatch();
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_pred(_mlsValue _mls_n_0){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_S>(_mls_n_0)){
-//│     auto _mls_x_1 = _mlsValue::cast<_mls_S>(_mls_n_0)->_mls_x;
-//│     _mls_retval = _mls_j_0(_mls_x_1);
-//│   } else if (_mlsValue::isValueOf<_mls_Z>(_mls_n_0)){
-//│     auto _mls_x_2 = _mlsValue::create<_mls_Z>();
-//│     _mls_retval = _mls_j_0(_mls_x_2);
-//│   } else _mlsNonExhaustiveMatch();
-//│   return _mls_retval;
-//│ }
-//│ _mlsValue _mls_plus(_mlsValue _mls_n1_0, _mlsValue _mls_n2_0){
-//│   _mlsValue _mls_retval;
-//│   if (_mlsValue::isValueOf<_mls_Z>(_mls_n1_0)){
-//│     _mls_retval = _mls_j_1(_mls_n2_0);
-//│   } else if (_mlsValue::isValueOf<_mls_S>(_mls_n1_0)){
-//│     auto _mls_x_4 = _mlsValue::cast<_mls_S>(_mls_n1_0)->_mls_x;
-//│     auto _mls_x_5 = _mls_plus(_mls_x_4, _mls_n2_0);
-//│     auto _mls_x_6 = _mlsValue::create<_mls_S>(_mls_x_5);
-//│     _mls_retval = _mls_j_1(_mls_x_6);
 //│   } else _mlsNonExhaustiveMatch();
 //│   return _mls_retval;
 //│ }

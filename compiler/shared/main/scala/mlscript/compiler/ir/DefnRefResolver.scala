@@ -11,6 +11,7 @@ private final class DefnRefResolver(defs: Set[Defn], allowInlineJp: Bool):
     case Result(res) =>
     case Case(scrut, cases, default) => cases foreach { (_, body) => f(body) }; default foreach f
     case LetExpr(name, expr, body) => f(body)
+    case LetMethodCall(names, cls, method, args, body) => f(body)
     case LetApply(name, fn, args, body) => f(body)
     case LetCall(resultNames, defnref, args, body) =>
       defs.find{_.getName == defnref.getName} match
