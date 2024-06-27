@@ -73,7 +73,7 @@ class FreeVarAnalysis(extended_scope: Bool = true, verbose: Bool = false):
     case Result(res) => res.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
     case Jump(defnref, args) =>
       var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
-      if (extended_scope && !visited.contains(defnref.getName))
+      if (extended_scope && !visited.contains(defnref.name))
         val defn = defnref.expectDefn
         visited.add(defn.name)
         val defined2 = defn.params.foldLeft(defined)((acc, param) => acc + param.str)
@@ -100,7 +100,7 @@ class FreeVarAnalysis(extended_scope: Bool = true, verbose: Bool = false):
     case LetCall(resultNames, defnref, args, body) =>
       var fv2 = args.foldLeft(fv)((acc, arg) => f(using defined)(arg.toExpr, acc))
       val defined2 = resultNames.foldLeft(defined)((acc, name) => acc + name.str)
-      if (extended_scope && !visited.contains(defnref.getName))
+      if (extended_scope && !visited.contains(defnref.name))
         val defn = defnref.expectDefn
         visited.add(defn.name)
         val defined2 = defn.params.foldLeft(defined)((acc, param) => acc + param.str)

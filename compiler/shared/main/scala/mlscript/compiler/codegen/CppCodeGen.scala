@@ -132,7 +132,7 @@ class CppCodeGen:
     (decls, stmt.fold(stmts)(x => stmts :+ x))
 
   private def codegenJumpWithCall(defn: DefnRef, args: Ls[TrivialExpr], storeInto: Opt[Str])(using decls: Ls[Decl], stmts: Ls[Stmt])(using ctx: Ctx): (Ls[Decl], Ls[Stmt]) =
-    val call = Expr.Call(Expr.Var(defn.getName |> mapName), args.map(toExpr))
+    val call = Expr.Call(Expr.Var(defn.name |> mapName), args.map(toExpr))
     val stmts2 = stmts ++ Ls(storeInto.fold(Stmt.Return(call))(x => Stmt.Assign(x, call)))
     (decls, stmts2)
 
@@ -186,7 +186,7 @@ class CppCodeGen:
       val stmts2 = stmts ++ Ls(Stmt.AutoBind(names.map(mapName), call))
       codegen(body, storeInto)(using decls, stmts2)
     case Node.LetCall(names, defn, args, body) =>
-      val call = Expr.Call(Expr.Var(defn.getName |> mapName), args.map(toExpr))
+      val call = Expr.Call(Expr.Var(defn.name |> mapName), args.map(toExpr))
       val stmts2 = stmts ++ Ls(Stmt.AutoBind(names.map(mapName), call))
       codegen(body, storeInto)(using decls, stmts2)
     case Node.Case(scrut, cases, default) =>

@@ -15,11 +15,12 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
   
   private def log(x: Any) = if verbose then println(x)
 
-  private type NameCtx = Map[Str, Name]
-  private type ClassCtx = Map[Str, ClassInfo]
-  private type FieldCtx = Map[Str, (Str, ClassInfo)]
-  private type FnCtx = Map[Str, Int]
-  private type OpCtx = Set[Str]
+  private final case class ClassInfoPartial(name: Str, fields: Set[Str], methods: Set[Str])
+
+  private type NameCtx = Map[Str, Name] // name -> new name
+  private type ClassCtx = Map[Str, ClassInfoPartial] // class name -> method names, field names
+  private type FnCtx = Map[Str, Int]    // fn name -> arity of return values
+  private type OpCtx = Set[Str]         // op names
   
   private final case class Ctx(
     val nameCtx: NameCtx = Map.empty,
@@ -63,7 +64,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
       }
       case Tup(Nil) => Nil |> result |> k
       
-  private def bindingPatternVariables(scrut: Str, tup: Tup, cls: ClassInfo, rhs: Term): Term =
+  private def bindingPatternVariables(scrut: Str, tup: Tup, cls: ClassInfoPartial, rhs: Term): Term =
     val params = tup.fields.map {
       case N -> Fld(FldFlags.empty, Var(name)) => name
       case _ => throw IRError("unsupported field")
@@ -71,7 +72,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
     val fields = cls.fields
     val tm = params.zip(fields).foldLeft(rhs) {
       case (tm, (param, field)) => 
-        Let(false, Var(param), App(Sel(Var(cls.ident), Var(field)), Tup(Ls(N -> Fld(FldFlags.empty, Var(scrut))))), tm)
+        Let(false, Var(param), App(Sel(Var(cls.name), Var(field)), Tup(Ls(N -> Fld(FldFlags.empty, Var(scrut))))), tm)
     }
     tm
 
@@ -209,7 +210,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
         if (name.isCapitalized)
           val v = fresh.make
           LetExpr(v,
-            CtorApp(ctx.classCtx(name), Nil),
+            CtorApp(ClassRef(Right(name)), Nil),
             v |> ref |> sresult |> k).attachTag(tag)
         else if (ctx.fnCtx.contains(name))
           val arity = ctx.fnCtx(name)
@@ -261,7 +262,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
             case Result(args) => 
               val v = fresh.make
               LetExpr(v,
-                CtorApp(ctx.classCtx(name), args),
+                CtorApp(ClassRef(Right(name)), args),
                 v |> ref |> sresult |> k).attachTag(tag)
             case node @ _ => node |> unexpectedNode
           }
@@ -283,11 +284,11 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
             val cls = ctx.classCtx(clsName)
             val isField = cls.fields.contains(fld)
             if isField then
-              LetExpr(v, Select(name, cls, fld),
+              LetExpr(v, Select(name, ClassRef(Right(clsName)), fld),
                 v |> ref |> sresult |> k).attachTag(tag)
             else
               if cls.methods.contains(fld) then
-                LetMethodCall(Ls(v), cls, Name(fld), xs, v |> ref |> sresult |> k).attachTag(tag)
+                LetMethodCall(Ls(v), ClassRef(Right(clsName)), Name(fld), xs, v |> ref |> sresult |> k).attachTag(tag)
               else
                 throw IRError(s"unknown field or method $fld in $cls")
           case node @ _ => node |> unexpectedNode
@@ -340,8 +341,8 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
               case node @ _ => node |> unexpectedNode
             }
             Case(cond, Ls(
-              (Pat.Class(ctx.classCtx("True")), tru2),
-              (Pat.Class(ctx.classCtx("False")), fls2)), None).attachTag(tag)
+              (Pat.Class(ClassRef(Right("True"))), tru2),
+              (Pat.Class(ClassRef(Right("False"))), fls2)), None).attachTag(tag)
           case node @ _ => node |> unexpectedNode
         }
         
@@ -364,7 +365,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
             var defaultCase: Opt[Node] = None
             val cases: Ls[(Pat, Node)] = lines flatMap {
               case L(IfThen(App(Var(ctor), params: Tup), rhs)) =>
-                S(Pat.Class(ctx.classCtx(ctor)) -> {
+                S(Pat.Class(ClassRef(Right(ctor))) -> {
                   // need this because we have built terms (selections in case arms) containing names that are not in the original term
                   given Ctx = ctx.copy(nameCtx = ctx.nameCtx + (scrut.str -> scrut))
                   buildResultFromTerm(
@@ -390,7 +391,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
                 })
                 N
               case L(IfThen(Var(ctor), rhs)) =>
-                S(Pat.Class(ctx.classCtx(ctor)) -> buildResultFromTerm(rhs) {
+                S(Pat.Class(ClassRef(Right(ctor))) -> buildResultFromTerm(rhs) {
                   case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
                   case node @ _ => node |> unexpectedNode
                 })
@@ -501,16 +502,36 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
   
   private def makeNameMap(str: IterableOnce[Str]) = str.iterator.map(x => (x, Name(x))).toMap
 
+  private def collectClassInfoPartial(ntds: Ls[NuTypeDef]): Ls[ClassInfoPartial] = 
+    ntds.foreach{
+      case ntd @ NuTypeDef(Cls | Mod, TypeName(name), Nil, params, N, _, parents, N, N, TypingUnit(methods)) =>
+        val fvs = freeVariables(ntd)
+        val fields = params.fold(Set.empty[Str]) {
+          case acc => acc ++ fvs
+        }
+      case x @ _ => throw IRError(f"unsupported NuTypeDef $x")
+    }
+    ???
+
   private def initContextForStatements(stmts: Ls[Statement]): Ctx =
     val (nfds, ntds, terms) = collectInfo(stmts)
     val ra = nfds.map(getDefnResultsArity)
-    val fnCtx = ra.toMap
     val fnNames = ra.keys.toList
+    val partialClassInfo = collectClassInfoPartial(ntds)
+    val fnCtx = ra.toMap
+    val opCtx = ops
     val nameCtx = makeNameMap(builtin) ++ makeNameMap(fnNames) ++ makeNameMap(ops)
+    val classCtx = partialClassInfo.map(x => (x.name, x)).toMap
 
-
-
-    ???
+    Ctx(
+      nameCtx = nameCtx,
+      classCtx = classCtx,
+      fnCtx = fnCtx,
+      opCtx = opCtx,
+      jpAcc = ListBuffer.empty,
+      defAcc = ListBuffer.empty,
+      lcAcc = ListBuffer.empty,
+    )
 
   def buildGraph(unit: TypingUnit, addPrelude: Boolean = true): Program = 
     val unit2 =  if addPrelude then
@@ -588,7 +609,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
       defs ++= def_acc.toList
       clsinfo ++= lc_acc.toList
 
-      resolveDefnRef(main, defs, true)
+      resolveRef(main, defs, clsinfo, true)
       validate(main, defs)
       
       Program(clsinfo, defs, main)
