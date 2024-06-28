@@ -190,7 +190,7 @@ enum Def:
           case (name, value) => value.fold(raw(s"$name"))(x => raw(s"$name = $x"))
         }) <#> raw("};")
       case FuncDef(specret, name, args, body, or, virt) =>
-        (if or then raw("virtual ") else raw("")) 
+        (if virt then raw("virtual ") else raw("")) 
         <#> specret.toDocument() <#> raw(s" $name(") <#> Type.toDocuments(args, sep = raw(", ")) <#> raw(")") <#> (if or then raw(" override") else raw("")) <#> body.toDocument
       case VarDef(typ, name, init) =>
         typ.toDocument() <#> raw(s" $name") <#> init.fold(raw(""))(x => raw(" = ") <#> x.toDocument) <#> raw(";")

@@ -181,7 +181,7 @@ struct _mls_Lambda_4: public _mls_Callable {
   virtual void print() const override { std::printf("%s", typeName); }
   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Lambda_4; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
-_mlsValue _mls_apply1(_mlsValue _mls_x_185){
+  virtual _mlsValue _mls_apply1(_mlsValue _mls_x_185){
     _mlsValue _mls_retval;
     auto _mls_x_186 = _mls_f1(_mls_x_185);
     _mls_retval = _mls_x_186;
@@ -195,7 +195,7 @@ struct _mls_Lambda_0: public _mls_Callable {
   virtual void print() const override { std::printf("%s", typeName); }
   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Lambda_0; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
-_mlsValue _mls_apply0(){
+  virtual _mlsValue _mls_apply0(){
     _mlsValue _mls_retval;
     auto _mls_x_84 = _mls_error();
     _mls_retval = _mls_x_84;
@@ -209,7 +209,7 @@ struct _mls_Lambda_3: public _mls_Callable {
   virtual void print() const override { std::printf("%s", typeName); }
   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Lambda_3; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
-_mlsValue _mls_apply0(){
+  virtual _mlsValue _mls_apply0(){
     _mlsValue _mls_retval;
     auto _mls_x_147 = _mls_error();
     _mls_retval = _mls_x_147;
@@ -223,7 +223,7 @@ struct _mls_Lambda_5: public _mls_Callable {
   virtual void print() const override { std::printf("%s", typeName); }
   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Lambda_5; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
-_mlsValue _mls_apply1(_mlsValue _mls_x_193){
+  virtual _mlsValue _mls_apply1(_mlsValue _mls_x_193){
     _mlsValue _mls_retval;
     auto _mls_x_194 = _mls_f2(_mls_x_193);
     _mls_retval = _mls_x_194;
@@ -237,7 +237,7 @@ struct _mls_Lambda_2: public _mls_Callable {
   virtual void print() const override { std::printf("%s", typeName); }
   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Lambda_2; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
-_mlsValue _mls_apply0(){
+  virtual _mlsValue _mls_apply0(){
     _mlsValue _mls_retval;
     auto _mls_x_136 = _mls_error();
     _mls_retval = _mls_x_136;
@@ -251,7 +251,7 @@ struct _mls_Lambda_1: public _mls_Callable {
   virtual void print() const override { std::printf("%s", typeName); }
   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
   template <std::size_t align> static _mlsValue create() { auto _mlsVal = new (std::align_val_t(align)) _mls_Lambda_1; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
-_mlsValue _mls_apply0(){
+  virtual _mlsValue _mls_apply0(){
     _mlsValue _mls_retval;
     auto _mls_x_91 = _mls_error();
     _mls_retval = _mls_x_91;

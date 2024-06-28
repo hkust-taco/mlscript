@@ -72,7 +72,7 @@ struct _mls_Lambda_0: public _mls_Callable {
   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_a.print();  std::printf(")"); }
   virtual void destroy() override { _mlsValue::destroy(this->_mls_a);  operator delete (this, std::align_val_t(_mlsAlignment)); }
   template <std::size_t align> static _mlsValue create(_mlsValue _mls_a) { auto _mlsVal = new (std::align_val_t(align)) _mls_Lambda_0; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_a = _mls_a;  return _mlsValue(_mlsVal); }
-_mlsValue _mls_apply1(_mlsValue _mls_b_0){
+  virtual _mlsValue _mls_apply1(_mlsValue _mls_b_0){
     _mlsValue _mls_retval;
     auto _mls_x_2 = (_mls_a+_mls_b_0);
     _mls_retval = _mls_x_2;
@@ -87,7 +87,7 @@ struct _mls_Lambda_2: public _mls_Callable {
   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_a.print(); std::printf(", "); this->_mls_b.print();  std::printf(")"); }
   virtual void destroy() override { _mlsValue::destroy(this->_mls_a); _mlsValue::destroy(this->_mls_b);  operator delete (this, std::align_val_t(_mlsAlignment)); }
   template <std::size_t align> static _mlsValue create(_mlsValue _mls_a, _mlsValue _mls_b) { auto _mlsVal = new (std::align_val_t(align)) _mls_Lambda_2; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_a = _mls_a; _mlsVal->_mls_b = _mls_b;  return _mlsValue(_mlsVal); }
-_mlsValue _mls_apply1(_mlsValue _mls_c_0){
+  virtual _mlsValue _mls_apply1(_mlsValue _mls_c_0){
     _mlsValue _mls_retval;
     auto _mls_x_9 = (_mls_a+_mls_b);
     auto _mls_x_10 = (_mls_x_9+_mls_c_0);
@@ -102,7 +102,7 @@ struct _mls_Lambda_1: public _mls_Callable {
   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_a.print();  std::printf(")"); }
   virtual void destroy() override { _mlsValue::destroy(this->_mls_a);  operator delete (this, std::align_val_t(_mlsAlignment)); }
   template <std::size_t align> static _mlsValue create(_mlsValue _mls_a) { auto _mlsVal = new (std::align_val_t(align)) _mls_Lambda_1; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_a = _mls_a;  return _mlsValue(_mlsVal); }
-_mlsValue _mls_apply1(_mlsValue _mls_b_2){
+  virtual _mlsValue _mls_apply1(_mlsValue _mls_b_2){
     _mlsValue _mls_retval;
     auto _mls_x_11 = _mlsValue::create<_mls_Lambda_2>(_mls_a, _mls_b_2);
     _mls_retval = _mls_x_11;
