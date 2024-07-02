@@ -825,7 +825,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             lhs.upperBounds ::= newBound // update the bound
-            lhs.tsc.foreachEntry {
+            lhs.tsc.toList.flatMap { case (k,v)=>v.map((k,_)) }.foreach {
               case (tsc, i) =>
                 if (!tsc.tvs(i)._1) {
                   tsc.updateOn(i, rhs)
@@ -846,7 +846,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             rhs.lowerBounds ::= newBound // update the bound
-            rhs.tsc.foreachEntry {
+            rhs.tsc.toList.flatMap { case (k,v)=>v.map((k,_)) }.foreach {
               case (tsc, i) =>
                 if(tsc.tvs(i)._1) {
                   tsc.updateOn(i, lhs)
@@ -1639,7 +1639,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov)
       t.tvs = t.tvs.map(x => (x._1, substSyntax(x._2)(fr)))
       t.tvs.zipWithIndex.foreach {
-        case ((pol, tv: TV), i) => tv.tsc.update(t, i)
+        case ((pol, tv: TV), i) => tv.tsc.updateWith(t)(_.map(_ + i).orElse(S(Set(i))))
         case _ => ()
       }
     }

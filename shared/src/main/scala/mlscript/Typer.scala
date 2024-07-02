@@ -601,7 +601,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           val tvs = typevars.map(x => (x._1, rec(x._2)))
           val tsc = new TupleSetConstraints(constrs.map(_.map(rec)), tvs)(res.prov)
           tvs.zipWithIndex.foreach {
-            case ((_, tv: TV), i) => tv.tsc += tsc -> i
+            case ((_, tv: TV), i) => tv.tsc.updateWith(tsc)(_.map(_ + i).orElse(S(Set(i))))
             case _ => ()
           }
         }

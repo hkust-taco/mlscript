@@ -535,7 +535,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       _assignedTo = value
     }
 
-    val tsc: LinkedHashMap[TupleSetConstraints, Int] = LinkedHashMap.empty
+    val tsc: LinkedHashMap[TupleSetConstraints, Set[Int]] = LinkedHashMap.empty
     
     // * Bounds should always be disregarded when `equatedTo` is defined, as they are then irrelevant:
     def lowerBounds: List[SimpleType] = { require(assignedTo.isEmpty, this); _lowerBounds }
@@ -666,7 +666,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
           constraints = ncs
           tvs ++= tvs0
           tvs.zipWithIndex.foreach {
-            case ((pol, tv: TV), i) => tv.tsc.update(this, i)
+            case ((pol, tv: TV), i) => tv.tsc.updateWith(this)(_.map(_ + i).orElse(S(Set(i))))
             case _ => ()
           }
         }
@@ -758,10 +758,10 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       val tsc = new TupleSetConstraints(tvs.map(m(_)).transpose, tvs)(ov.prov)
       tvs.zipWithIndex.foreach {
         case ((true, tv: TV), i) =>
-          tv.tsc.update(tsc, i)
+          tv.tsc.updateWith(tsc)(_.map(_ + i).orElse(S(Set(i))))
           tv.lowerBounds.foreach(tsc.updateImpl(i, _))
         case ((false, tv: TV), i) =>
-          tv.tsc.update(tsc, i)
+          tv.tsc.updateWith(tsc)(_.map(_ + i).orElse(S(Set(i))))
           tv.upperBounds.foreach(tsc.updateImpl(i, _))
         case _ => ()
       }

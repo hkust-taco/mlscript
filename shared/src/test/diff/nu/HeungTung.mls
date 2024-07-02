@@ -509,3 +509,27 @@ rt(["str",1])
 //│ res
 //│     = <no result>
 //│       rt is not implemented
+
+fun app (f:'a -> 'a) = x => f(x)
+//│ fun app: forall 'a. (f: 'a -> 'a) -> 'a -> 'a
+
+fun id: Int -> Int & Str -> Str
+//│ fun id: Int -> Int & Str -> Str
+
+fun id0 = app(id)
+//│ fun id0: forall 'a 'b. 'a -> 'b
+//│   where
+//│     'a <: 'b
+//│     [+'a, -'a, -'b] in {[Int, Int, Int], [Str, Str, Str]}
+
+x => id0(x): Int
+//│ Int -> Int
+//│ res
+//│     = <no result>
+//│       id0 and id are not implemented
+
+id0("str")
+//│ Str
+//│ res
+//│     = <no result>
+//│       id0 and id are not implemented

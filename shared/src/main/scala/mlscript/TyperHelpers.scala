@@ -756,9 +756,13 @@ abstract class TyperHelpers { Typer: Typer =>
           pol -> ty :: Nil
         case tv: TypeVariable =>
           val poltv = pol(tv)
+          val (tvs0, tvs1) = tv.tsc.toList.flatMap(_._1.tvs).partition(_._2 === tv)
           (if (poltv =/= S(false)) tv.lowerBounds.map(pol.at(tv.level, true) -> _) else Nil) :::
           (if (poltv =/= S(true)) tv.upperBounds.map(pol.at(tv.level, false) -> _) else Nil) :::
-          (tv.tsc.toList.flatMap { case (tsc, i) => (tsc.tvs.take(i) ++ tsc.tvs.drop(i+1)).map(PolMap.neu -> _._2) })
+          (if (poltv =/= S(false) && tvs0.exists(!_._1))
+            tvs1.map(u => pol.at(tv.level, true) -> u._2) else Nil) :::
+          (if (poltv =/= S(true) && tvs0.exists(_._1))
+            tvs1.map(u => pol.at(tv.level, false) -> u._2) else Nil)
         case FunctionType(l, r) => pol.contravar -> l :: pol.covar -> r :: Nil
         case Overload(as) => as.map(pol -> _)
         case ComposedType(_, l, r) => pol -> l :: pol -> r :: Nil
