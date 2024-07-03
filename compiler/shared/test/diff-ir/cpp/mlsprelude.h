@@ -175,12 +175,12 @@ public:
   static _mlsValue fromIntLit(uint64_t i) { return fromInt63(i); }
 
   template <unsigned N> static tuple_type<_mlsValue, N> never() {
-    throw std::runtime_error("unreachable");
+    __builtin_unreachable();
   }
-  static _mlsValue never() { throw std::runtime_error("unreachable"); }
+  static _mlsValue never() { __builtin_unreachable(); }
 
   template <typename T, typename... U> static _mlsValue create(U... args) {
-    return _mlsValue(T::template create<_mlsAlignment>(args...));
+    return _mlsValue(T::create(args...));
   }
 
   static void destroy(_mlsValue &v) { v.~_mlsValue(); }
@@ -346,8 +346,8 @@ struct _mls_Unit final : public _mlsObject {
   constexpr static inline const char *typeName = "Unit";
   constexpr static inline uint32_t typeTag = nextTypeTag();
   virtual void print() const override { std::printf(typeName); }
-  template <std::size_t align> static _mlsValue create() {
-    static _mls_Unit mlsUnit alignas(align);
+  static _mlsValue create() {
+    static _mls_Unit mlsUnit alignas(_mlsAlignment);
     mlsUnit.refCount = stickyRefCount;
     mlsUnit.tag = typeTag;
     return _mlsValue(&mlsUnit);
@@ -361,8 +361,8 @@ struct _mls_True final : public _mls_Boolean {
   constexpr static inline const char *typeName = "True";
   constexpr static inline uint32_t typeTag = nextTypeTag();
   virtual void print() const override { std::printf(typeName); }
-  template <std::size_t align> static _mlsValue create() {
-    static _mls_True mlsTrue alignas(align);
+  static _mlsValue create() {
+    static _mls_True mlsTrue alignas(_mlsAlignment);
     mlsTrue.refCount = stickyRefCount;
     mlsTrue.tag = typeTag;
     return _mlsValue(&mlsTrue);
@@ -374,8 +374,8 @@ struct _mls_False final : public _mls_Boolean {
   constexpr static inline const char *typeName = "False";
   constexpr static inline uint32_t typeTag = nextTypeTag();
   virtual void print() const override { std::printf(typeName); }
-  template <std::size_t align> static _mlsValue create() {
-    static _mls_False mlsFalse alignas(align);
+  static _mlsValue create() {
+    static _mls_False mlsFalse alignas(_mlsAlignment);
     mlsFalse.refCount = stickyRefCount;
     mlsFalse.tag = typeTag;
     return _mlsValue(&mlsFalse);
@@ -399,14 +399,14 @@ struct _mls_ZInt final : public _mlsObject {
     z.~number();
     operator delete(this, std::align_val_t(_mlsAlignment));
   }
-  template <std::size_t align> static _mlsValue create() {
-    auto _mlsVal = new (std::align_val_t(align)) _mls_ZInt;
+  static _mlsValue create() {
+    auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_ZInt;
     _mlsVal->refCount = 1;
     _mlsVal->tag = typeTag;
     return _mlsValue(_mlsVal);
   }
-  template <std::size_t align> static _mlsValue create(_mlsValue z) {
-    auto _mlsVal = new (std::align_val_t(align)) _mls_ZInt;
+  static _mlsValue create(_mlsValue z) {
+    auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_ZInt;
     _mlsVal->z = z.asInt();
     _mlsVal->refCount = 1;
     _mlsVal->tag = typeTag;
