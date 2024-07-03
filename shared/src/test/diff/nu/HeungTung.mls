@@ -527,6 +527,8 @@ x => app2(snd)(x):Int
 //│ ╟── Note: constraint arises from type reference:
 //│ ║  l.522: 	x => app2(snd)(x):Int
 //│ ╙──       	                  ^^^
+//│ ╔══[ERROR] ambiguous
+//│ ╙──
 //│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: α316_323' has no occurrences...
 
 fun app2_ (f:'a -> 'a -> 'a)(x) = f(x)(x)

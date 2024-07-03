@@ -91,10 +91,7 @@ IISS 0
 // * Conceptually we'd expect it to reduce to `int -> number`
 // * But it's tricky to do the actual reduction since technically
 // * 'a = Bot anf 'b = Top could satisfy all tuple alternatives
-:e
 def f = fun x -> (if true then IISS else BBNN) x
-//│ ╔══[ERROR] ambiguous
-//│ ╙──
 //│ f: 'a -> 'b
 //│   where
 //│     [+'a, -'b] in {[bool, bool], [number, number]}
@@ -106,13 +103,13 @@ f(0)
 // FIXME
 f(0) + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.107: 	f(0) + 1
+//│ ║  l.104: 	f(0) + 1
 //│ ║         	^^^^^^
 //│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.13: 	def BBNN: bool -> bool & number -> number
 //│ ║        	                                   ^^^^^^
 //│ ╟── but it flows into integer literal with expected type `int`
-//│ ║  l.107: 	f(0) + 1
+//│ ║  l.104: 	f(0) + 1
 //│ ╙──       	  ^
 //│ res: error | int
 
@@ -122,10 +119,10 @@ f : int -> number
 :e
 f : number -> int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.123: 	f : number -> int
+//│ ║  l.120: 	f : number -> int
 //│ ║         	^
 //│ ╟── type `number` does not match type `?a`
-//│ ║  l.123: 	f : number -> int
+//│ ║  l.120: 	f : number -> int
 //│ ╙──       	    ^^^^^^
 //│ res: number -> int
 
@@ -142,16 +139,16 @@ if true then IISS else BBNN
 :e
 (if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.143: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.140: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `int -> int & string -> string` is not a function
 //│ ║  l.12: 	def IISS: int -> int & string -> string
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(0 | 1 | true) -> number`
-//│ ║  l.143: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.140: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║         	              ^^^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.143: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.140: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╙──       	                                ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: (0 | 1 | true) -> number
 
