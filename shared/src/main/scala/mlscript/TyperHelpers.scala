@@ -756,13 +756,9 @@ abstract class TyperHelpers { Typer: Typer =>
           pol -> ty :: Nil
         case tv: TypeVariable =>
           val poltv = pol(tv)
-          val (tvs0, tvs1) = tv.tsc.toList.flatMap(_._1.tvs).partition(_._2 === tv)
           (if (poltv =/= S(false)) tv.lowerBounds.map(pol.at(tv.level, true) -> _) else Nil) :::
           (if (poltv =/= S(true)) tv.upperBounds.map(pol.at(tv.level, false) -> _) else Nil) :::
-          (if (poltv =/= S(false) && tvs0.exists(!_._1))
-            tvs1.map(u => pol.at(tv.level, true) -> u._2) else Nil) :::
-          (if (poltv =/= S(true) && tvs0.exists(_._1))
-            tvs1.map(u => pol.at(tv.level, false) -> u._2) else Nil)
+          (tv.tsc.keys.flatMap(_.tvs).toList.distinct.map(u => pol.at(tv.level,u._1) -> u._2))
         case FunctionType(l, r) => pol.contravar -> l :: pol.covar -> r :: Nil
         case Overload(as) => as.map(pol -> _)
         case ComposedType(_, l, r) => pol -> l :: pol -> r :: Nil
@@ -958,7 +954,7 @@ abstract class TyperHelpers { Typer: Typer =>
     def getVars: SortedSet[TypeVariable] = getVarsImpl(includeBounds = true)
     
     def showBounds: String =
-      getVars.iterator.filter(tv => (tv.assignedTo.nonEmpty || (tv.upperBounds ++ tv.lowerBounds).nonEmpty) && tv.tsc.isEmpty).map {
+      getVars.iterator.filter(tv => (tv.assignedTo.nonEmpty || (tv.upperBounds ++ tv.lowerBounds).nonEmpty)).map {
       case tv @ AssignedVariable(ty) => "\n\t\t" + tv.toString + " := " + ty
       case tv => ("\n\t\t" + tv.toString
           + (if (tv.lowerBounds.isEmpty) "" else " :> " + tv.lowerBounds.mkString(" | "))

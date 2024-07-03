@@ -373,6 +373,7 @@ q(0) : true
 //│     = <no result>
 //│       q is not implemented
 
+
 q(1)
 //│ 'a
 //│   where
@@ -480,13 +481,13 @@ let g = x => s(r(x))
 :e
 g(0)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.481: 	g(0)
+//│ ║  l.482: 	g(0)
 //│ ║         	^^^^
 //│ ╟── integer literal of type `Int` does not match type `?a`
-//│ ║  l.481: 	g(0)
+//│ ║  l.482: 	g(0)
 //│ ║         	  ^
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.469: 	let g = x => s(r(x))
+//│ ║  l.470: 	let g = x => s(r(x))
 //│ ╙──       	               ^^^^
 //│ forall 'a. error | 'a
 //│   where
@@ -510,26 +511,32 @@ rt(["str",1])
 //│     = <no result>
 //│       rt is not implemented
 
-fun app (f:'a -> 'a) = x => f(x)
-//│ fun app: forall 'a. (f: 'a -> 'a) -> 'a -> 'a
+fun app2: ('a -> 'a -> 'a) -> 'a -> 'a
+//│ fun app2: forall 'a. ('a -> 'a -> 'a) -> 'a -> 'a
 
-fun id: Int -> Int & Str -> Str
-//│ fun id: Int -> Int & Str -> Str
+fun snd: A -> Int -> Int & Str -> Str -> Str
+//│ fun snd: A -> Int -> Int & Str -> Str -> Str
 
-fun id0 = app(id)
-//│ fun id0: forall 'a 'b. 'a -> 'b
+// FIXME
+:e
+x => app2(snd)(x):Int
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.522: 	x => app2(snd)(x):Int
+//│ ║         	     ^^^^^^^^^^^^
+//│ ╟── application of type `'a` does not match type `nothing`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.522: 	x => app2(snd)(x):Int
+//│ ╙──       	                  ^^^
+//│ /!!!\ Uncaught error: java.lang.AssertionError: assertion failed: α316_323' has no occurrences...
+
+fun app2_ (f:'a -> 'a -> 'a)(x) = f(x)(x)
+//│ fun app2_: forall 'a. (f: 'a -> 'a -> 'a) -> 'a -> 'a
+
+app2_(snd)
+//│ 'a -> 'b
 //│   where
 //│     'a <: 'b
-//│     [+'a, -'a, -'b] in {[Int, Int, Int], [Str, Str, Str]}
-
-x => id0(x): Int
-//│ Int -> Int
+//│     [+'a, -'a, -'b] in {[A & Int, Int, Int], [Str, Str, Str]}
 //│ res
 //│     = <no result>
-//│       id0 and id are not implemented
-
-id0("str")
-//│ Str
-//│ res
-//│     = <no result>
-//│       id0 and id are not implemented
+//│       snd is not implemented
