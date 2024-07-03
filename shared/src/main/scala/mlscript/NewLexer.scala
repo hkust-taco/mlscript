@@ -342,10 +342,10 @@ class NewLexer(origin: Origin, raise: Diagnostic => Unit, dbg: Bool) {
             lex(k, ind, next(k, SELECT(name)))
           }
           else lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))
-        } else if (c == '?') {
-          println("dbg: " + s"n: $n and j: $j")
-          println("dbg: " + s"${i+1}, $ind, ${KEYWORD(c.toString())}")
-          lex(i+1, ind, next(i, KEYWORD(c.toString())))
+        } else if (c === '?') {
+          // println("dbg: " + s"n: $n and j: $j")
+          // println("dbg: " + s"${i+1}, $ind, ${KEYWORD(c.toString())}")
+          lex(i+1, ind, next(i, IDENT(c.toString(), true)))
         }
         // else go(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true))
         else lex(j, ind, next(j, if (isSymKeyword.contains(n)) KEYWORD(n) else IDENT(n, true)))

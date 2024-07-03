@@ -133,14 +133,14 @@ abstract class TyperHelpers { Typer: Typer =>
     // }(r => s"=> $r")
   
   def tupleIntersection(fs1: Ls[Opt[Var] -> FieldType], fs2: Ls[Opt[Var] -> FieldType]): Ls[Opt[Var] -> FieldType] = {
-    require(fs1.size === fs2.size)
+    require(fs1.sizeCompare(fs2) <= 0 && fs1.sizeCompare(fs2.filter(x => !x._2.opt)) >= 0)
     (fs1 lazyZip fs2).map {
       case ((S(n1), t1), (S(n2), t2)) if n1 =/= n2 => (N, t1 && t2)
       case ((no1, t1), (no2, t2)) => (no1 orElse no2, t1 && t2)
     }
   }
   def tupleUnion(fs1: Ls[Opt[Var] -> FieldType], fs2: Ls[Opt[Var] -> FieldType]): Ls[Opt[Var] -> FieldType] = {
-    require(fs1.size === fs2.size)
+    require(fs1.sizeCompare(fs2) <= 0 && fs1.sizeCompare(fs2.filter(x => !x._2.opt)) >= 0)
     (fs1 lazyZip fs2).map {
       case ((S(n1), t1), (S(n2), t2)) => (Option.when(n1 === n2)(n1), t1 || t2)
       case ((no1, t1), (no2, t2)) => (N, t1 || t2)
@@ -375,9 +375,9 @@ abstract class TyperHelpers { Typer: Typer =>
       case _: TypeVariable | _: TypeTag | _: ExtrType => this
     }
     
-    def toUpper(prov: TypeProvenance): FieldType = FieldType(None, this)(prov)
-    def toLower(prov: TypeProvenance): FieldType = FieldType(Some(this), TopType)(prov)
-    def toBoth(prov: TypeProvenance): FieldType = FieldType(S(this), this)(prov)
+    def toUpper(prov: TypeProvenance, opt: Bool = false): FieldType = FieldType(None, this, opt)(prov)
+    def toLower(prov: TypeProvenance, opt: Bool = false): FieldType = FieldType(Some(this), TopType, opt)(prov)
+    def toBoth(prov: TypeProvenance, opt: Bool = false): FieldType = FieldType(S(this), this, opt)(prov)
     
     def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
       case (TopType, _) => this
@@ -394,15 +394,19 @@ abstract class TyperHelpers { Typer: Typer =>
       case (_: RecordType, _: FunctionType) => TopType
       case (RecordType(fs1), RecordType(fs2)) =>
         RecordType(recordUnion(fs1, fs2))(prov)
-      case (t0 @ TupleType(fs0), t1 @ TupleType(fs1))
+      case (t0 @ TupleType(fs0), t1 @ TupleType(fs1)) if (fs0.sizeCompare(fs1) === 0) => // TODO[optional-fields]: check size is ok?
         // If the sizes are different, to merge these we'd have to return
         //  the awkward `t0.toArray & t0.toRecord | t1.toArray & t1.toRecord`
-      if fs0.sizeCompare(fs1) === 0 =>
+      if (!t0.isLengthCompatibleWith(t1)) BotType
+        println("Here, Union")
         TupleType(tupleUnion(fs0, fs1))(t0.prov)
       case _ if !swapped => that | (this, prov, swapped = true)
       case (`that`, _) => this
       case (NegType(`that`), _) => TopType
-      case _ => ComposedType(true, that, this)(prov)
+      case _ => {
+        println("Composed")
+        ComposedType(true, that, this)(prov)
+      }
     }
     
     /** This is to intersect two types that occur in negative position,
@@ -433,7 +437,7 @@ abstract class TyperHelpers { Typer: Typer =>
       case (RecordType(fs1), RecordType(fs2)) =>
         RecordType(mergeSortedMap(fs1, fs2)(_ && _).toList)(prov)
       case (t0 @ TupleType(fs0), t1 @ TupleType(fs1)) =>
-        if (fs0.sizeCompare(fs1) =/= 0) BotType
+        if (!t0.isLengthCompatibleWith(t1)) BotType
         else TupleType(tupleIntersection(fs0, fs1))(t0.prov)
       case _ if !swapped => that & (this, prov, swapped = true)
       case (`that`, _) => this
@@ -493,8 +497,8 @@ abstract class TyperHelpers { Typer: Typer =>
         // case (ClassTag(ErrTypeId, _), _) | (_, ClassTag(ErrTypeId, _)) => true
         case (_: TypeTag, _: TypeTag) | (_: TV, _: TV) if this === that => true
         case (ab: ArrayBase, at: ArrayType) => ab.inner <:< at.inner
-        case (TupleType(fs1), TupleType(fs2)) =>
-          fs1.sizeCompare(fs2) === 0 && fs1.lazyZip(fs2).forall {
+        case (t1 @ TupleType(fs1), t2 @ TupleType(fs2)) =>
+          t1.isLengthCompatibleWith(t2) && fs1.lazyZip(fs2).forall {
             case ((_, ty1), (_, ty2)) => ty1 <:< ty2
           }
         case (RecordType(Nil), _) => TopType <:< that
@@ -1157,7 +1161,7 @@ abstract class TyperHelpers { Typer: Typer =>
             val tvv = td.getVariancesOrDefault
             tparamField(defn, tp) -> FieldType(
               Some(if (tvv(tv).isCovariant) BotType else tv),
-              if (tvv(tv).isContravariant) TopType else tv)(prov)
+              if (tvv(tv).isContravariant) TopType else tv, false)(prov)
           })(noProv)
         else TopType
       subst(td.kind match {

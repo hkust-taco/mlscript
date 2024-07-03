@@ -1,0 +1,44 @@
+:NewDefs
+
+fun x(a: Int, b: Int) = a + b
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.3: 	fun x(a: Int, b: Int) = a + b
+//│ ║       	                        ^^^^^
+//│ ╟── type `()` is not an instance of type `Int`
+//│ ║  l.3: 	fun x(a: Int, b: Int) = a + b
+//│ ║       	         ^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.3: 	fun x(a: Int, b: Int) = a + b
+//│ ╙──     	                        ^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ fun x: (a: Int | (), b: Int | ()) -> (Int | error)
+
+fun y(a?:Int, b?:Int) = a + b 
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.16: 	fun y(a?:Int, b?:Int) = a + b 
+//│ ║        	                        ^^^^^
+//│ ╟── type `()` is not an instance of type `Int`
+//│ ║  l.16: 	fun y(a?:Int, b?:Int) = a + b 
+//│ ║        	         ^^^
+//│ ╟── but it flows into reference with expected type `Int`
+//│ ║  l.16: 	fun y(a?:Int, b?:Int) = a + b 
+//│ ╙──      	                        ^
+//│ TEST CASE FAILURE: There was an unexpected type error
+//│ fun y: (a: (Int | ())?, b: (Int | ())?) -> (Int | error)
+
+// [1, 2, 3]: [Int, Int?]
+
+// fun f1(a: Int, b: Int) = a + b
+
+
+// class C1
+// class C2 extends C1
+// let x = new C2()
+// let y: C1 = x
+
+// [x, y]: [C1, C1]
+
+
+// [x, y]: [C1, C1, C1?]
+
+// [1, 2, 3]: [Int, Int, Int]

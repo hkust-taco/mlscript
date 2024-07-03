@@ -175,7 +175,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     // TODO dedup with the one in TypedNuCls
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
       case (nme @ TypeName(name), tv, _) => 
-        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO), isPublic = true)(level)
+        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv, false)(provTODO), isPublic = true)(level)
     } ++ parentTP
     
     def freshenAbove(lim: Int, rigidify: Bool)
@@ -240,7 +240,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
     /** Includes class-name-coded type parameter fields. */
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
       case (nme @ TypeName(name), tv, _) => 
-        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO), isPublic = true)(level)
+        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv, false)(provTODO), isPublic = true)(level)
     } ++ parentTP
     
     // TODO
@@ -357,7 +357,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
 
     lazy val virtualMembers: Map[Str, NuMember] = members ++ tparams.map {
       case (nme @ TypeName(name), tv, _) => 
-        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv)(provTODO), isPublic = false)(level)
+        td.nme.name+"#"+name -> NuParam(nme, FieldType(S(tv), tv, false)(provTODO), isPublic = false)(level)
     }
     
     def freshenAbove(lim: Int, rigidify: Bool)
@@ -780,8 +780,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       mxn.params.size.toString} parameter(s); got ${parArgs.size.toString}", Loc(v :: parArgs.unzip._2))
                   
                   val paramMems = mxn.params.lazyZip(parArgs).flatMap {
-                    case (nme -> p, _ -> Fld(FldFlags(mut, spec, get), a)) => // TODO factor this with code for classes:
-                      assert(!mut && !spec && !get, "TODO") // TODO check mut, spec, get
+                    case (nme -> p, _ -> Fld(FldFlags(mut, spec, opt, get), a)) => // TODO factor this with code for classes:
+                      assert(!mut && !spec && !opt && !get, "TODO") // TODO check mut, spec, get
                       implicit val genLambdas: GenLambdas = true
                       val a_ty = typeTerm(a)
                       p.lb.foreach(constrain(_, a_ty))
@@ -789,8 +789,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                       val isPublic = mxn.members(nme.name).isPublic
                       val fty = if (p.lb.isDefined)
                           // * We don't refine the field type when it's mutable as that could lead to muable updates being rejected
-                          FieldType(p.lb, p.ub)(provTODO)
-                        else FieldType(p.lb, a_ty)(provTODO)
+                          FieldType(p.lb, p.ub, p.opt)(provTODO)
+                        else FieldType(p.lb, a_ty, p.opt)(provTODO)
                       Option.when(isPublic)(NuParam(nme, fty, isPublic = isPublic)(lvl))
                   }
                   
@@ -843,8 +843,8 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     case S(ps) =>
                       checkArgsNum(ps.size)
                       ps.lazyZip(parArgs).map {
-                        case (nme -> p_ty, _ -> Fld(FldFlags(mut, spec, get), a)) =>
-                          assert(!mut && !spec && !get, "TODO") // TODO check mut, spec, get
+                        case (nme -> p_ty, _ -> Fld(FldFlags(mut, spec, opt, get), a)) =>
+                          assert(!mut && !spec && !opt && !get, "TODO") // TODO check mut, spec, get
                           val a_ty = typeTerm(a)
                           constrain(a_ty, p_ty)
                       }
@@ -853,16 +853,16 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         case S(ps) =>
                           checkArgsNum(ps.size)
                           ps.lazyZip(parArgs).flatMap {
-                            case (nme -> p, _ -> Fld(FldFlags(mut, spec, get), a)) =>
-                              assert(!mut && !spec && !get, "TODO") // TODO check mut, spec, get
+                            case (nme -> p, _ -> Fld(FldFlags(mut, spec, opt, get), a)) =>
+                              assert(!mut && !spec && !opt && !get, "TODO") // TODO check mut, spec, get
                               val a_ty = typeTerm(a)
                               p.lb.foreach(constrain(_, a_ty))
                               constrain(a_ty, p.ub)
                               val isPublic = cls.members(nme.name).isPublic
                               val fty = if (p.lb.isDefined)
                                   // * We don't refine the field type when it's mutable as that could lead to muable updates being rejected
-                                  FieldType(p.lb, p.ub)(provTODO)
-                                else FieldType(p.lb, a_ty)(provTODO)
+                                  FieldType(p.lb, p.ub, opt)(provTODO)
+                                else FieldType(p.lb, a_ty, opt)(provTODO)
                               Option.when(isPublic)(NuParam(nme, fty, isPublic = isPublic)(lvl))
                           }
                         case N =>
@@ -963,16 +963,16 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
       decl match {
         case td: NuTypeDef =>
           td.params.map(_.fields.flatMap {
-            case (S(nme), Fld(FldFlags(mut, spec, getter), value)) =>
+            case (S(nme), Fld(FldFlags(mut, spec, opt, getter), value)) =>
               assert(!mut && !spec, "TODO") // TODO
               val tpe = value.toTypeRaise
               val ty = typeType(tpe)
-              nme -> FieldType(N, ty)(provTODO) :: Nil
-            case (N, Fld(FldFlags(mut, spec, getter), nme: Var)) =>
+              nme -> FieldType(N, ty, opt)(provTODO) :: Nil
+            case (N, Fld(FldFlags(mut, spec, opt, getter), nme: Var)) =>
               assert(!mut && !spec, "TODO") // TODO
               // nme -> FieldType(N, freshVar(ttp(nme), N, S(nme.name)))(provTODO)
               nme -> FieldType(N, err(msg"${td.kind.str.capitalize} parameters currently need type annotations",
-                nme.toLoc))(provTODO) :: Nil
+                nme.toLoc), opt)(provTODO) :: Nil
             case (_, fld) =>
               err(msg"Unsupported field specification", fld.toLoc)
               Nil
@@ -1060,7 +1060,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
         // -- privateFields
         -- inheritedFields /* parameters can be overridden by inherited fields/methods */
       ) ++ typedSignatures.iterator.map(fd_ty => fd_ty._1.nme -> (
-            if (fd_ty._1.isMut) FieldType(S(fd_ty._2), fd_ty._2)(
+            if (fd_ty._1.isMut) FieldType(S(fd_ty._2), fd_ty._2, false)(
               fd_ty._2.prov) // FIXME prov
             else fd_ty._2.toUpper(noProv)
           )) ++
@@ -1543,7 +1543,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                     val tparamMems = tparams.map { case (tp, tv, vi) => // TODO use vi
                       val fldNme = td.nme.name + "#" + tp.name
                       val skol = SkolemTag(tv)(tv.prov)
-                      NuParam(TypeName(fldNme).withLocOf(tp), FieldType(S(skol), skol)(tv.prov), isPublic = true)(lvl)
+                      NuParam(TypeName(fldNme).withLocOf(tp), FieldType(S(skol), skol, false)(tv.prov), isPublic = true)(lvl)
                     }
                     val tparamFields = tparamMems.map(p => p.nme.toVar -> p.ty)
                     assert(!typedParams.exists(_.keys.exists(tparamFields.keys.toSet)), ???)
@@ -1745,7 +1745,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                         def getterError(loco: Opt[Loc]) =
                           err(msg"Cannot use `val` in constructor parameters", loco)
                         val res = ps.fields.map {
-                          case (S(nme), Fld(FldFlags(mut, spec, getter), value)) =>
+                          case (S(nme), Fld(FldFlags(mut, spec, opt, getter), value)) =>
                             assert(!mut && !spec, "TODO") // TODO
                             if (getter)
                               // TODO we could support this to some extent
@@ -1756,7 +1756,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
                                 nme -> ty
                               case _ => ???
                             }
-                          case (N, Fld(FldFlags(mut, spec, getter), nme: Var)) =>
+                          case (N, Fld(FldFlags(mut, spec, opt, getter), nme: Var)) =>
                             assert(!mut && !spec, "TODO") // TODO
                             if (getter)
                               getterError(nme.toLoc)
@@ -1921,7 +1921,7 @@ class NuTypeDefs extends ConstraintSolver { self: Typer =>
           tv
       })
       freshened += _tv -> tv
-      rawName+"#"+tn.name -> NuParam(tn, FieldType(S(tv), tv)(provTODO), isPublic = true)(ctx.lvl)
+      rawName+"#"+tn.name -> NuParam(tn, FieldType(S(tv), tv, false)(provTODO), isPublic = true)(ctx.lvl)
     }
     
     freshened -> parTP.toMap
