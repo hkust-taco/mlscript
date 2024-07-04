@@ -61,7 +61,10 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
   
   val global = NullaryCommand("global")
   
-  val fixme = NullaryCommand("fixme")
+  val fixme = Command("fixme")(_ => ())
+  val todo = Command("todo")(_ => ())
+  def tolerateErrors = fixme.isSet || todo.isSet
+  
   val fullExceptionStack = NullaryCommand("s")
   
   val debug = NullaryCommand("d")
@@ -189,13 +192,13 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
             case Diagnostic.Source.Lexing =>
               TODO(d.source)
             case Diagnostic.Source.Parsing =>
-              if expectParseError.isUnset && fixme.isUnset then
+              if expectParseError.isUnset && !tolerateErrors then
                 failures += allLines.size - lines.size + 1
                 // doFail(fileName, blockLineNum, "unexpected parse error at ")
                 unexpected("parse error", blockLineNum)
                 // report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
             case Diagnostic.Source.Typing =>
-              if expectTypeErrors.isUnset && fixme.isUnset then
+              if expectTypeErrors.isUnset && !tolerateErrors then
                 failures += allLines.size - lines.size + 1
                 unexpected("type error", blockLineNum)
             case Diagnostic.Source.Compilation =>
@@ -242,7 +245,7 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
       catch
         case oh_noes: ThreadDeath => throw oh_noes
         case err: Throwable =>
-          if fixme.isUnset then
+          if !tolerateErrors then
             failures += allLines.size - lines.size + 1
             unhandled(blockLineNum, err)
           // err.printStackTrace(out)
@@ -250,7 +253,7 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
           output("/!!!\\ Uncaught error: " + err +
             err.getStackTrace().take(
               if fullExceptionStack.isSet then Int.MaxValue
-              else if fixme.isSet || err.isInstanceOf[StackOverflowError] then 0
+              else if tolerateErrors || err.isInstanceOf[StackOverflowError] then 0
               else 10
             ).map("\n" + "\tat: " + _).mkString)
       

@@ -375,7 +375,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
         pctx += sym -> funTy // for recursive types
         val (res, _) = typeCheck(lam)
         constrain(res, funTy)(using ctx)
-    case _ => ???
+    // case _ => ???
 
   private def typeSplit(split: TermSplit, sign: Opt[Type])(using ctx: Ctx, skolems: MutSkolemSet): (Type, Type) = split match
     case Split.Cons(TermBranch.Boolean(cond, Split.Else(cons)), alts) =>
