@@ -130,6 +130,10 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
     elab.importFrom(res)
       
   
+  val tl = new TraceLogger:
+    override def doTrace = debug.isSet
+    override def emitDbg(str: String): Unit = output(str)
+  
   var bbmlTyper: Opt[BBTyper] = None
   
   @annotation.tailrec
@@ -208,6 +212,10 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
           case Diagnostic.Kind.Warning =>
             TODO(d.kind)
           report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
+          // if debug.isSet then
+          //   throw d
+          // if debug.isSet then
+          //   d.printStackTrace
         val lexer = new syntax.Lexer(origin, raise, dbg = dbgParsing.isSet)
         val tokens = lexer.bracketedTokens
         
@@ -232,11 +240,14 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
           output(s"Elab: ${e.showDbg}")
           if bbml.isSet then
             if bbmlTyper.isEmpty then
-              bbmlTyper = S(BBTyper(raise, Ctx.init(curCtx.members)))
+              bbmlTyper = S(BBTyper(raise, Ctx.init(curCtx.members), tl))
             val typer = bbmlTyper.get // ???
             val ty = typer.typePurely(e)
             val printer = PrettyPrinter((msg: String) => output(msg))
-            printer.print(ty)
+            if debug.isSet then printer.print(ty)
+            val simplif = TypeSimplifier(tl)
+            val sty = simplif(true, 0)(ty)
+            printer.print(sty)
           else
             val typer = typing.TypeChecker(raise)
             val ty = typer.typeProd(e)
@@ -252,7 +263,7 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
           // println(err.getCause())
           output("/!!!\\ Uncaught error: " + err +
             err.getStackTrace().take(
-              if fullExceptionStack.isSet then Int.MaxValue
+              if fullExceptionStack.isSet || debug.isSet then Int.MaxValue
               else if tolerateErrors || err.isInstanceOf[StackOverflowError] then 0
               else 10
             ).map("\n" + "\tat: " + _).mkString)

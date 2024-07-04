@@ -7,7 +7,8 @@ import semantics.*
 import Message.MessageContext
 import mlscript.utils.*, shorthands.*
 
-class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State):
+class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogger):
+  import tl.{trace, log}
 
   import hkmc2.bbml.NormalForm.*
   type Cache = Set[(Type, Type)]
@@ -35,14 +36,15 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State):
     case Type.FunType(args, ret, eff) =>
       Type.FunType(args.map(arg => extrude(arg)(using skolems, lvl, !pol)), extrude(ret), extrude(eff))
     case Type.ComposedType(lhs, rhs, p) =>
-      Type.ComposedType(extrude(lhs), extrude(rhs), p)
-    case Type.NegType(ty) => Type.NegType(extrude(ty)(using skolems, lvl, !pol))
+      Type.mkComposedType(extrude(lhs), extrude(rhs), p)
+    case Type.NegType(ty) => Type.mkNegType(extrude(ty)(using skolems, lvl, !pol))
     case _: Type.PolymorphicType =>
       raise(ErrorReport(msg"Cannot extrude polymorphic type ${ty.toString()}" -> N :: Nil))
       ty
     case Type.Top | Type.Bot => ty
 
-  private def constrainConj(conj: Conj)(using cache: Cache, skolems: SkolemSet): Unit = conj.sort match
+  private def constrainConj(conj: Conj)(using cache: Cache, skolems: SkolemSet): Unit = trace(s"Constraining $conj"):
+    conj.sort match
     case Conj.INU(i, u) => (i, u) match
       case (_, Union.Bot) => raise(ErrorReport(msg"Cannot solve ${i.toString()} ∧ ¬⊥" -> N :: Nil))
       case (Inter.Cls(NormalClassType(cls1, targs1)), Union.Uni(uni, NormalClassType(cls2, targs2))) =>
@@ -66,7 +68,7 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State):
     case Conj.CNVar(_, v) if skolems(v.uid) =>
       raise(ErrorReport(msg"Cannot constrain skolem ${v.toString()}" -> N :: Nil))
     case Conj.CVar(conj, v) if v.lvl >= conj.lvl =>
-      val nc = Type.NegType(conj.toType)
+      val nc = Type.mkNegType(conj.toType)
       given Cache = cache + (v -> nc)
       v.state.upperBounds ::= nc
       v.state.lowerBounds.foreach(lb => constrain(lb, nc))
@@ -76,7 +78,7 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State):
       v.state.lowerBounds ::= c
       v.state.upperBounds.foreach(ub => constrain(c, ub))
     case Conj.CVar(conj, v) =>
-      val nc = Type.NegType(extrude(conj.toType)(using skolems, v.lvl, true))
+      val nc = Type.mkNegType(extrude(conj.toType)(using skolems, v.lvl, true))
       given Cache = cache + (v -> nc)
       v.state.upperBounds ::= nc
       v.state.lowerBounds.foreach(lb => constrain(lb, nc))
@@ -94,6 +96,8 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State):
       constrainConj(conj)
 
   private def constrainImpl(lhs: Type, rhs: Type)(using cache: Cache, skolems: SkolemSet) =
-    if cache((lhs, rhs)) then () else constrainDNF(dnf(Type.ComposedType(lhs, Type.NegType(rhs), false))(using raise))
+    if cache((lhs, rhs)) then log(s"Cached!")
+    else trace(s"CONSTRAINT $lhs <: $rhs"):
+      constrainDNF(dnf(lhs & rhs.!)(using raise))
   def constrain(lhs: Type, rhs: Type)(using skolems: SkolemSet): Unit =
     constrainImpl(lhs, rhs)(using Set.empty, skolems)

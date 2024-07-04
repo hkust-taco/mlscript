@@ -12,12 +12,14 @@ import Tree.*
 
 sealed abstract class TypeArg:
   lazy val lvl: Int
+  def map(f: Type => Type): TypeArg
 
 case class Wildcard(in: Type, out: Type) extends TypeArg {
   private def printWhenSet(t: Type, in: Bool) = t match
     case Type.Top if !in => N
     case Type.Bot if in => N
     case _ => S(if in then s"in $t" else s"out $t")
+  def map(f: Type => Type): Wildcard = Wildcard(f(in), f(out))
 
   override def toString(): String = s"in $in out $out"
     // (printWhenSet(in, true).toList ++ printWhenSet(out, false).toList).mkString(" ")
@@ -48,7 +50,7 @@ enum Type extends TypeArg:
     case PolymorphicType(tv, body) => s"forall ${tv.mkString(", ")}: $body"
     case Top => "⊤"
     case Bot => "⊥"
-  override lazy val lvl: Int = this match
+  lazy val lvl: Int = this match
     case ClassType(name, targs) =>
       targs.map(_.lvl).maxOption.getOrElse(0)
     case InfVar(lvl, _, _) => lvl
@@ -64,6 +66,56 @@ enum Type extends TypeArg:
     case FunType(args, ret, _) => args.foldLeft(ret.isPoly)((res, a) => res | a.isPoly)
     case _: PolymorphicType => true
     case _: ClassType | _: InfVar | _: ComposedType | _: NegType | Top | Bot => false
+  def & (that: Type): Type = this match
+    case Top => that
+    case Bot => Bot
+    case _ => that match
+      case Top => this
+      case Bot => Bot
+      case ComposedType(l, r, false) => this & l & r
+      case _ => if this === that
+        then this
+        else ComposedType(this, that, false)
+  def | (that: Type): Type = this match
+    case Top => Top
+    case Bot => that
+    case _ => that match
+      case Top => Top
+      case Bot => this
+      case ComposedType(l, r, true) => this | l | r
+      case _ => if this === that
+        then this
+        else ComposedType(this, that, true)
+  def ! : Type = this match
+    case Top => Bot
+    case Bot => Top
+    case NegType(res) => res
+    case ComposedType(l, r, true) => l.! & r.!
+    case ComposedType(l, r, false) => l.! | r.!
+    case _ => NegType(this)
+  def isSmall: Bool = this match
+    // (copilot:)
+    // case ClassType(_, targs) => targs.forall(_.isSmall)
+    // case InfVar(_, _, _) => true
+    // case FunType(args, ret, eff) => args.forall(_.isSmall) && ret.isSmall && eff.isSmall
+    // case ComposedType(lhs, rhs, _) => lhs.isSmall && rhs.isSmall
+    // case NegType(ty) => ty.isSmall
+    // case PolymorphicType(tv, body) => tv.forall(_.isSmall) && body.isSmall
+    // case Top | Bot => true
+    case _ => true
+  def map(f: Type => Type): Type = this match
+    case ClassType(name, targs) => ClassType(name, targs.map(_.map(f)))
+    case InfVar(lvl, uid, state) => f(this)
+    case FunType(args, ret, eff) => FunType(args.map(f), f(ret), f(eff))
+    case ComposedType(lhs, rhs, pol) => Type.mkComposedType(f(lhs), f(rhs), pol)
+    case NegType(ty) => Type.mkNegType(f(ty))
+    case PolymorphicType(tv, body) => PolymorphicType(tv, f(body))
+    case Top | Bot => f(this)
+object Type:
+  def mkComposedType(lhs: Type, rhs: Type, pol: Bool): Type = if pol
+    then lhs | rhs
+    else lhs & rhs
+  def mkNegType(ty: Type): Type = ty.!
 
 class VarState:
   var lowerBounds: Ls[Type] = Nil
@@ -138,7 +190,7 @@ object Ctx:
   )
   def isOp(name: Str): Bool = builtinOps.contains(name)
   def init(predefs: Map[Str, Symbol]): Ctx =
-    val ctx = new Ctx(None, 0, HashMap.empty, HashMap.empty, HashMap.empty)
+    val ctx = new Ctx(None, 1, HashMap.empty, HashMap.empty, HashMap.empty)
     builtinClasses.foreach(
       cls =>
         predefs.get(cls) match
@@ -153,9 +205,11 @@ object Ctx:
     )
     ctx
 
-class BBTyper(raise: Raise, val initCtx: Ctx):
+class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
+  import tl.{trace, log}
+  
   private val infVarState = new InfVarUid.State()
-  private val solver = new ConstraintSolver(raise, infVarState)
+  private val solver = new ConstraintSolver(raise, infVarState, tl)
 
   import NormalForm.SkolemSet
 
@@ -246,7 +300,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       })
       case _ => error(msg"${lhs.toString} is not a class" -> ty.toLoc :: Nil)
     case CompType(lhs, rhs, pol) =>
-      Type.ComposedType(typeType(lhs), typeType(rhs), pol)
+      Type.mkComposedType(typeType(lhs), typeType(rhs), pol)
     case _ => error(msg"${ty.toString} is not a valid type annotation" -> ty.toLoc :: Nil) // TODO
 
   private def subst(ty: Type)(using map: Map[Uid[Type.InfVar], Type.InfVar]): Type = ty match
@@ -260,8 +314,8 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
     case Type.FunType(args, ret, eff) =>
       Type.FunType(args.map(subst), subst(ret), subst(eff))
     case Type.ComposedType(lhs, rhs, pol) =>
-      Type.ComposedType(subst(lhs), subst(rhs), pol)
-    case Type.NegType(ty) => Type.NegType(subst(ty))
+      Type.mkComposedType(subst(lhs), subst(rhs), pol)
+    case Type.NegType(ty) => Type.mkNegType(subst(ty))
     case Type.PolymorphicType(tvs, body) =>
       Type.PolymorphicType(tvs, subst(body))
     case Type.Top | Type.Bot => ty
@@ -321,21 +375,21 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           sk
       val (bodyTy, eff) = typeCode(body)
       val res = freshVar(using ctx)
-      val uni = Type.ComposedType(bds.foldLeft[Type](Type.Bot)((res, bd) => Type.ComposedType(res, bd, true)), res, true)
+      val uni = Type.mkComposedType(bds.foldLeft[Type](Type.Bot)((res, bd) => Type.mkComposedType(res, bd, true)), res, true)
       constrain(bodyTy, uni)
       (res, eff)
     case Term.App(Ref(sym: TermSymbol), Term.Tup(rhs)) if Ctx.isOp(sym.nme) =>
       rhs.foldLeft[(Type, Type)]((Type.Bot, Type.Bot))((res, p) =>
         val (ty, eff) = typeCode(p.value)
-        (Type.ComposedType(res._1, ty, true), Type.ComposedType(res._2, eff, true))
+        (Type.mkComposedType(res._1, ty, true), Type.mkComposedType(res._2, eff, true))
       )
     case Term.App(lhs, Term.Tup(rhs)) =>
       val (ty1, eff1) = typeCode(lhs)
       val (ty2, eff2) = rhs.foldLeft[(Type, Type)]((Type.Bot, Type.Bot))((res, p) =>
         val (ty, eff) = typeCode(p.value)
-        (Type.ComposedType(res._1, ty, true), Type.ComposedType(res._2, eff, true))
+        (Type.mkComposedType(res._1, ty, true), Type.mkComposedType(res._2, eff, true))
       )
-      (Type.ComposedType(ty1, ty2, true), Type.ComposedType(eff1, eff2, true))
+      (Type.mkComposedType(ty1, ty2, true), Type.mkComposedType(eff1, eff2, true))
     case Term.Unquoted(body) =>
       val (ty, eff) = typeCheck(body)
       val tv = freshVar
@@ -353,13 +407,13 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
         case _ => ???
       val (bodyTy, bodyEff) = typeCode(body)
       val res = freshVar(using ctx)
-      constrain(bodyTy, Type.ComposedType(bd, res, true))
-      (Type.ComposedType(rhsTy, res, true), Type.ComposedType(rhsEff, bodyEff, true))
+      constrain(bodyTy, Type.mkComposedType(bd, res, true))
+      (Type.mkComposedType(rhsTy, res, true), Type.mkComposedType(rhsEff, bodyEff, true))
     case Term.If(Split.Cons(TermBranch.Boolean(cond, Split.Else(cons)), Split.Else(alts))) =>
       val (condTy, condEff) = typeCode(cond)
       val (consTy, consEff) = typeCode(cons)
       val (altsTy, altsEff) = typeCode(alts)
-      (Type.ComposedType(condTy, Type.ComposedType(consTy, altsTy, true), true), Type.ComposedType(condEff, Type.ComposedType(consEff, altsEff, true), true))
+      (Type.mkComposedType(condTy, Type.mkComposedType(consTy, altsTy, true), true), Type.mkComposedType(condEff, Type.mkComposedType(consEff, altsEff, true), true))
     case _ =>
       (error(msg"Cannot quote ${code.toString}" -> code.toLoc :: Nil), Type.Bot)
 
@@ -384,9 +438,9 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
         case S(sign) => ascribe(cons, sign)
         case _=> typeCheck(cons)
       val (altsTy, altsEff) = typeSplit(alts, sign)
-      val allEff = Type.ComposedType(condEff, Type.ComposedType(consEff, altsEff, true), true)
+      val allEff = Type.mkComposedType(condEff, Type.mkComposedType(consEff, altsEff, true), true)
       constrain(condTy, Ctx.boolTy)
-      (sign.getOrElse(Type.ComposedType(consTy, altsTy, true)), allEff)
+      (sign.getOrElse(Type.mkComposedType(consTy, altsTy, true)), allEff)
     case Split.Cons(TermBranch.Match(scrutinee, Split.Cons(PatternBranch(Pattern.Class(sym, _, _), cons), Split.NoSplit)), alts) =>
       val (clsTy, tv, emptyTy) = ctx.getDef(sym.nme) match
         case S(ClassDef.Parameterized(_, tparams, _, _, _)) =>
@@ -397,7 +451,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           error(msg"Cannot match ${scrutinee.toString} as ${sym.toString}" -> split.toLoc :: Nil)
           (Type.Bot, Type.Bot, Type.Bot)
       val (scrutineeTy, scrutineeEff) = typeCheck(scrutinee)
-      constrain(scrutineeTy, Type.ComposedType(clsTy, Type.ComposedType(tv, Type.NegType(emptyTy), false), true))
+      constrain(scrutineeTy, Type.mkComposedType(clsTy, Type.mkComposedType(tv, Type.mkNegType(emptyTy), false), true))
       val nestCtx1 = ctx.nest
       val nestCtx2 = ctx.nest
       scrutinee match // * refine
@@ -407,8 +461,8 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
         case _ => ()
       val (consTy, consEff) = typeSplit(cons, sign)(using nestCtx1)
       val (altsTy, altsEff) = typeSplit(alts, sign)(using nestCtx2)
-      val allEff = Type.ComposedType(scrutineeEff, Type.ComposedType(consEff, altsEff, true), true)
-      (sign.getOrElse(Type.ComposedType(consTy, altsTy, true)), allEff)
+      val allEff = Type.mkComposedType(scrutineeEff, Type.mkComposedType(consEff, altsEff, true), true)
+      (sign.getOrElse(Type.mkComposedType(consTy, altsTy, true)), allEff)
     case Split.Else(alts) => sign match
       case S(sign) => ascribe(alts, sign)
       case _=> typeCheck(alts)
@@ -437,7 +491,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       val (rhsTy, eff) = typeCheck(rhs)
       nestCtx += sym -> rhsTy
       val (resTy, resEff) = ascribe(body, ty)
-      (resTy, Type.ComposedType(eff, resEff, true))
+      (resTy, Type.mkComposedType(eff, resEff, true))
     case (Term.If(branches), ty) => // * propagate
       typeSplit(branches, S(ty))
     case (term, pt @ Type.PolymorphicType(tvs, body)) => // * generalize
@@ -475,7 +529,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
             val (ty, eff) = ascribe(f.value, t)
             Left(ty) :: Right(eff) :: Nil
           }.partitionMap(x => x)
-        (ret, argEff.foldLeft[Type](Type.ComposedType(eff, lhsEff, true))((res, e) => Type.ComposedType(res, e, true)))
+        (ret, argEff.foldLeft[Type](Type.mkComposedType(eff, lhsEff, true))((res, e) => Type.mkComposedType(res, e, true)))
     case (funTy, lhsEff) =>
       val (argTy, argEff) = rhs.flatMap(f =>
         val (ty, eff) = typeCheck(f.value)
@@ -488,9 +542,10 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
           instantiate(pt)
         case ty => ty
       }, retVar, effVar))
-      (retVar, argEff.foldLeft[Type](Type.ComposedType(effVar, lhsEff, true))((res, e) => Type.ComposedType(res, e, true)))
+      (retVar, argEff.foldLeft[Type](Type.mkComposedType(effVar, lhsEff, true))((res, e) => Type.mkComposedType(res, e, true)))
 
-  private def typeCheck(t: Term)(using ctx: Ctx, skolems: MutSkolemSet): (Type, Type) = t match
+  private def typeCheck(t: Term)(using ctx: Ctx, skolems: MutSkolemSet): (Type, Type) = trace[(Type, Type)](s"Typing ${t.showDbg}", res => s": $res"):
+    t match
     case Ref(sym: VarSymbol) =>
       ctx.get(sym) match
         case Some(ty) => (ty, Type.Bot)
@@ -519,7 +574,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
         case clsDef: ClassDef => ctx *= clsDef
         case _ => () // TODO
       val (ty, eff) = typeCheck(res)
-      (ty, effBuff.foldLeft(eff)((res, e) => Type.ComposedType(res, e, true)))
+      (ty, effBuff.foldLeft(eff)((res, e) => Type.mkComposedType(res, e, true)))
     case Lit(lit) => ((lit match
       case _: IntLit => Ctx.intTy
       case _: DecLit => Ctx.numTy
@@ -582,7 +637,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
                 effBuff += eff
               case _ => ???
             }
-            (Type.ClassType(cls, targs), effBuff.foldLeft[Type](Type.Bot)((res, e) => Type.ComposedType(res, e, true)))
+            (Type.ClassType(cls, targs), effBuff.foldLeft[Type](Type.Bot)((res, e) => Type.mkComposedType(res, e, true)))
         case S(ClassDef.Plain(_, tparams, _, _)) =>
           ???
         case N => 
@@ -612,26 +667,26 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
       skolems += sk.uid
       val (res, eff) = typeCheck(body)
       val tv = freshVar(using ctx)
-      constrain(eff, Type.ComposedType(tv, sk, true))
-      (res, Type.ComposedType(tv, allocSkolem, true))
+      constrain(eff, Type.mkComposedType(tv, sk, true))
+      (res, Type.mkComposedType(tv, allocSkolem, true))
     case Term.RegRef(reg, value) =>
       val (regTy, regEff) = typeCheck(reg)
       val (valTy, valEff) = typeCheck(value)
       val sk = freshVar
       constrain(regTy, Ctx.regionTy(sk))
-      (Ctx.refTy(valTy, sk), Type.ComposedType(sk, Type.ComposedType(regEff, valEff, true), true))
+      (Ctx.refTy(valTy, sk), Type.mkComposedType(sk, Type.mkComposedType(regEff, valEff, true), true))
     case Term.Set(lhs, rhs) =>
       val (lhsTy, lhsEff) = typeCheck(lhs)
       val (rhsTy, rhsEff) = typeCheck(rhs)
       val sk = freshVar
       constrain(lhsTy, Ctx.refTy(rhsTy, sk))
-      (rhsTy, Type.ComposedType(sk, Type.ComposedType(lhsEff, rhsEff, true), true))
+      (rhsTy, Type.mkComposedType(sk, Type.mkComposedType(lhsEff, rhsEff, true), true))
     case Term.Deref(ref) =>
       val (refTy, refEff) = typeCheck(ref)
       val sk = freshVar
       val ctnt = freshVar
       constrain(refTy, Ctx.refTy(ctnt, sk))
-      (ctnt, Type.ComposedType(sk, refEff, true))
+      (ctnt, Type.mkComposedType(sk, refEff, true))
     case Term.Quoted(body) =>
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx
@@ -647,3 +702,4 @@ class BBTyper(raise: Raise, val initCtx: Ctx):
     val (ty, eff) = typeCheck(t)(using initCtx, skolems)
     constrain(eff, allocSkolem)(using initCtx, skolems)
     ty
+

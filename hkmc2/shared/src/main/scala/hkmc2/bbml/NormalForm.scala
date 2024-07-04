@@ -69,9 +69,9 @@ object NormalForm:
       case INU(i, u) => s"($i) ∧ (¬($u))"
     }
     def toType: Type = this match
-      case INU(i, u) => Type.ComposedType(i.toType, Type.NegType(u.toType), false)
-      case CVar(conj, v) => Type.ComposedType(conj.toType, v, false)
-      case CNVar(conj, v) => Type.ComposedType(conj.toType, Type.NegType(v), false)
+      case INU(i, u) => Type.mkComposedType(i.toType, Type.mkNegType(u.toType), false)
+      case CVar(conj, v) => Type.mkComposedType(conj.toType, v, false)
+      case CNVar(conj, v) => Type.mkComposedType(conj.toType, Type.mkNegType(v), false)
     lazy val lvl: Int = this match
       case INU(i, u) => i.lvl.max(u.lvl)
       case CVar(conj, v) => v.lvl.max(conj.lvl)
