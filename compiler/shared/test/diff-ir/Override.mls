@@ -1,0 +1,117 @@
+:NewParser
+:ParseOnly
+:UseIR
+
+:genCpp
+module Base {
+  fun f() = 1
+}
+module Child extends Base {
+  fun f() = 2
+}
+fun main() =
+  let c = Child()
+  Base.f(c)
+  Child.f(c)
+main()
+//│ |#module| |Base| |{|→|#fun| |f|(||)| |#=| |1|←|↵|}|↵|#module| |Child| |#extends| |Base| |{|→|#fun| |f|(||)| |#=| |2|←|↵|}|↵|#fun| |main|(||)| |#=|→|#let| |c| |#=| |Child|(||)|↵|Base|.f|(|c|)|↵|Child|.f|(|c|)|←|↵|main|(||)|
+//│ Parsed: {module Base {fun f = () => 1}; module Child: Base {fun f = () => 2}; fun main = () => {let c = Child(); (Base).f(c,); (Child).f(c,)}; main()}
+//│ 
+//│ 
+//│ IR:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Base, [], parents: , methods:
+//│ f -> Def(0, f, [], [],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 1 -- #0
+//│ )),
+//│ ClassInfo(10, Child, [], parents: Base, methods:
+//│ f -> Def(1, f, [], [],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 2 -- #1
+//│ ))}, {
+//│ Def(2, main, [], [],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$0 = Child() in -- #14
+//│ let x$1 = Base.f(x$0) in -- #13
+//│ let x$2 = Child.f(x$0) in -- #12
+//│ x$2 -- #11
+//│ )
+//│ },
+//│ let* (x$3) = main() in -- #17
+//│ x$3 -- #16)
+//│ 
+//│ Promoted:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Base, [], parents: , methods:
+//│ f -> Def(0, f, [], [],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 1 -- #0
+//│ )),
+//│ ClassInfo(10, Child, [], parents: Base, methods:
+//│ f -> Def(1, f, [], [],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 2 -- #1
+//│ ))}, {
+//│ Def(2, main, [], [],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$0 = Child() in -- #14
+//│ let x$1 = Base.f(x$0) in -- #13
+//│ let x$2 = Child.f(x$0) in -- #12
+//│ x$2 -- #11
+//│ )
+//│ },
+//│ let* (x$3) = main() in -- #17
+//│ x$3 -- #16)

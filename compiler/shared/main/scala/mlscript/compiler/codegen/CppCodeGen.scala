@@ -27,7 +27,7 @@ class CppCodeGen:
   private def mlsNewValue(cls: Str, args: Ls[Expr]) = Expr.Call(Expr.Var(s"_mlsValue::create<$cls>"), args)
   private def mlsIsValueOf(cls: Str, scrut: Expr) = Expr.Call(Expr.Var(s"_mlsValue::isValueOf<$cls>"), Ls(scrut))
   private def mlsIsIntLit(scrut: Expr, lit: mlscript.IntLit) = Expr.Call(Expr.Var("_mlsValue::isIntLit"), Ls(scrut, Expr.IntLit(lit.value)))
-  private def mlsIsCharLit(scrut: Expr, lit: mlscript.CharLit) = Expr.Call(Expr.Var("_mlsValue::isIntLit"), Ls(scrut, Expr.CharLit(lit.value)))
+  private def mlsIsCharLit(scrut: Expr, lit: mlscript.CharLit) = Expr.Call(Expr.Var("_mlsValue::isCharLit"), Ls(scrut, Expr.CharLit(lit.value)))
   private def mlsDebugPrint(x: Expr) = Expr.Call(Expr.Var("_mlsValue::print"), Ls(x))
   private def mlsTupleValue(init: Expr) = Expr.Constructor("_mlsValue::tuple", init)
   private def mlsAs(name: Str, cls: Str) = Expr.Var(s"_mlsValue::as<$cls>($name)")
@@ -38,7 +38,7 @@ class CppCodeGen:
   private def mlsCommonCreateMethod(cls: Str, fields: Ls[Str], id: Int) =
     val parameters = fields.map{x => s"_mlsValue $x"}.mkString(", ")
     val fieldsAssignment = fields.map{x => s"_mlsVal->$x = $x; "}.mkString
-    s"template <std::size_t align> static _mlsValue create($parameters) { auto _mlsVal = new (std::align_val_t(align)) $cls; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; $fieldsAssignment return _mlsValue(_mlsVal); }"
+    s"static _mlsValue create($parameters) { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) $cls; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; $fieldsAssignment return _mlsValue(_mlsVal); }"
   private def mlsCommonPrintMethod(fields: Ls[Str]) =
     if fields.isEmpty then s"virtual void print() const override { std::printf(\"%s\", typeName); }"
     else
@@ -52,7 +52,7 @@ class CppCodeGen:
   private def mlsMethodCall(cls: ClassInfo, method: Str, args: Ls[Expr]) =
     Expr.Call(Expr.Member(Expr.Call(Expr.Var(s"_mlsMethodCall<${cls.ident |> mapName}>"), Ls(args.head)), method), args.tail)
   private def mlsFnWrapperName(fn: Str) = s"_mlsFn_$fn"
-  private def mlsFnCreateMethod(fn: Str) = s"template <std::size_t align> static _mlsValue create() { static _mlsFn_$fn mlsFn alignas(align); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }"
+  private def mlsFnCreateMethod(fn: Str) = s"static _mlsValue create() { static _mlsFn_$fn mlsFn alignas(_mlsAlignment); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }"
   private def mlsFnApplyNMethod(fn: Str, n: Int) = 
     Def.FuncDef(Type.Qualifier(mlsValType, "virtual"), s"apply$n", (0 until n).map{x => (s"arg$x", mlsValType)}.toList,
       Stmt.Block(Ls(), Ls(Stmt.Return(Expr.Call(Expr.Var(fn), (0 until n).map{x => Expr.Var(s"arg$x")}.toList)))), true)

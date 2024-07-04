@@ -138,7 +138,7 @@ enum Expr:
       case Var(name) => name |> raw
       case IntLit(value) => value.toString |> raw
       case FloatLit(value) => value.toString |> raw
-      case StrLit(value) => value |> raw
+      case StrLit(value) => s"\"$value\"" |> raw // need more reliable escape utils
       case CharLit(value) => value.toInt.toString |> raw
       case Call(func, args) => aux(func) <#> raw("(") <#> Expr.toDocuments(args, sep = raw(", ")) <#> raw(")")
       case Member(expr, member) => aux(expr) <#> raw("->") <#> raw(member)
@@ -190,7 +190,7 @@ enum Def:
           case (name, value) => value.fold(raw(s"$name"))(x => raw(s"$name = $x"))
         }) <#> raw("};")
       case FuncDef(specret, name, args, body, or, virt) =>
-        (if or then raw("virtual ") else raw("")) 
+        (if virt then raw("virtual ") else raw("")) 
         <#> specret.toDocument() <#> raw(s" $name(") <#> Type.toDocuments(args, sep = raw(", ")) <#> raw(")") <#> (if or then raw(" override") else raw("")) <#> body.toDocument
       case VarDef(typ, name, init) =>
         typ.toDocument() <#> raw(s" $name") <#> init.fold(raw(""))(x => raw(" = ") <#> x.toDocument) <#> raw(";")

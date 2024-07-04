@@ -6,7 +6,8 @@ import mlscript.compiler.ir._
 import scala.collection.mutable.StringBuilder
 import mlscript.{DiffTests, ModeType, TypingUnit}
 import mlscript.compiler.ir.{Interpreter, Fresh, FreshInt, Builder}
-import mlscript.compiler.codegen.cpp.CppCodeGen
+import mlscript.compiler.codegen.cpp.{CppCodeGen, CppCompilerHost}
+import mlscript.compiler.optimizer.Optimizer
 import mlscript.compiler.optimizer.OptimizingError
 
 class IRDiffTestCompiler extends DiffTests {
@@ -33,12 +34,22 @@ class IRDiffTestCompiler extends DiffTests {
           interp_result = Some(ir)
           output(ir)
         if (mode.genCpp)
-          output("\nCpp:")
           val cpp = CppCodeGen().codegen(graph)
-          printToFile(new java.io.File((os.pwd/"compiler"/"shared"/"test"/"diff-ir"/"cpp"/s"${testName}.cpp").toString())) { p =>
-            p.println(cpp.toDocument.print)
-          }
-          output(cpp.toDocument.print)
+          if (mode.showCpp)
+            output("\nCpp:")
+            output(cpp.toDocument.print)
+          if (mode.writeCpp)
+            printToFile(java.io.File(s"compiler/shared/test/diff-ir/cpp/${testName}.cpp")) { p =>
+              p.println(cpp.toDocument.print)
+            }
+          if (mode.runCpp)
+            val auxPath = os.pwd/"compiler"/"shared"/"test"/"diff-ir"/"cpp"
+            val cppHost = CppCompilerHost(auxPath.toString())
+            if !cppHost.ready then
+              output("\nCpp Compilation Failed: Cpp compiler or GNU Make not found")
+            else
+              output("\n")
+              cppHost.compileAndRun(cpp.toDocument.print, output)
 
         // if (mode.irOpt)
         //   val go = Optimizer(fresh, freshFnId, freshClassId, freshTag, mode.irVerbose)
