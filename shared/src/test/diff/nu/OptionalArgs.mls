@@ -1,44 +1,326 @@
 :NewDefs
 
+:d
 fun x(a: Int, b: Int) = a + b
-//│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.3: 	fun x(a: Int, b: Int) = a + b
-//│ ║       	                        ^^^^^
-//│ ╟── type `()` is not an instance of type `Int`
-//│ ║  l.3: 	fun x(a: Int, b: Int) = a + b
-//│ ║       	         ^^^
-//│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.3: 	fun x(a: Int, b: Int) = a + b
-//│ ╙──     	                        ^
-//│ TEST CASE FAILURE: There was an unexpected type error
-//│ fun x: (a: Int | (), b: Int | ()) -> (Int | error)
+//│ 0. Typing TypingUnit(List(NuFunDef(None,Var(x),None,List(),Left(Lam(Tup(List((Some(Var(a)),Fld(_,Var(Int))), (Some(Var(b)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(a))), (None,Fld(_,Var(b)))))))))))
+//│ | 0. Created lazy type info for NuFunDef(None,Var(x),None,List(),Left(Lam(Tup(List((Some(Var(a)),Fld(_,Var(Int))), (Some(Var(b)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(a))), (None,Fld(_,Var(b)))))))))
+//│ | Completing fun x = (a: Int, b: Int,) => +(a, b,)
+//│ | | Type params 
+//│ | | Params 
+//│ | | Type x polymorphically? true && (0 === 0 || false || false)
+//│ | | 1. Typing term Lam(Tup(List((Some(Var(a)),Fld(_,Var(Int))), (Some(Var(b)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(a))), (None,Fld(_,Var(b)))))))
+//│ | | | 1. Typing pattern Tup(List((Some(Var(a)),Fld(_,Var(Int))), (Some(Var(b)),Fld(_,Var(Int)))))
+//│ | | | | dbg [Typer.scala]: (Some(Var(a)),Fld(_,Asc(Var(a),TypeName(Int)))) opt: false
+//│ | | | | dbg [Typer.scala]: (Some(Var(b)),Fld(_,Asc(Var(b),TypeName(Int)))) opt: false
+//│ | | | | 1. Typing pattern Asc(Var(a),TypeName(Int))
+//│ | | | | | Typing type TypeName(Int)
+//│ | | | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | | | 1. type TypeName(Int)
+//│ | | | | | | => Int
+//│ | | | | | => Int ——— 
+//│ | | | | 1. : Int
+//│ | | | | 1. Typing pattern Asc(Var(b),TypeName(Int))
+//│ | | | | | Typing type TypeName(Int)
+//│ | | | | | | vars=Map() newDefsInfo=Map()
+//│ | | | | | | 1. type TypeName(Int)
+//│ | | | | | | => Int
+//│ | | | | | => Int ——— 
+//│ | | | | 1. : Int
+//│ | | | 1. : (a: Int, b: Int,)
+//│ | | | 1. Typing term App(Var(+),Tup(List((None,Fld(_,Var(a))), (None,Fld(_,Var(b))))))
+//│ | | | | 1. Typing term Var(+)
+//│ | | | | 1. : ((Int, Int,) -> Int)
+//│ | | | | 1. Typing term Var(a)
+//│ | | | | 1. : Int
+//│ | | | | 1. Typing term Var(b)
+//│ | | | | 1. : Int
+//│ | | | | CONSTRAIN ((Int, Int,) -> Int) <! ((Int, Int,) -> α52')
+//│ | | | |   where 
+//│ | | | | 1. C ((Int, Int,) -> Int) <! ((Int, Int,) -> α52')    (0)
+//│ | | | | | 1. C (Int, Int,) <! (Int, Int,)    (1)
+//│ | | | | | | Already a subtype by <:<
+//│ | | | | | 1. C Int <! α52'    (1)
+//│ | | | | | | NEW α52' LB (0)
+//│ | | | 1. : α52'
+//│ | | 1. : ((a: Int, b: Int,) -> α52')
+//│ | | CONSTRAIN ((a: Int, b: Int,) -> α52') <! x53'
+//│ | |   where 
+//│ 		α52' :> Int
+//│ | | 1. C ((a: Int, b: Int,) -> α52') <! x53'    (0)
+//│ | | | NEW x53' LB (1)
+//│ | Completed TypedNuFun(0,NuFunDef(None,Var(x),None,List(),Left(Lam(Tup(List((Some(Var(a)),Fld(_,Var(Int))), (Some(Var(b)),Fld(_,Var(Int))))),App(Var(+),Tup(List((None,Fld(_,Var(a))), (None,Fld(_,Var(b))))))))),((a: Int, b: Int,) -> α52')) where 
+//│ 		α52' :> Int
+//│ | Typing unit statements
+//│ | : None
+//│ ======== TYPED ========
+//│ fun x: ‹∀ 0. ((a: Int, b: Int,) -> α52')› where 
+//│ |		α52' :> Int
+//│ fun x: (a: Int, b: Int) -> Int
 
 fun y(a?:Int, b?:Int) = a + b 
+//│ fun y: (a: (Int)?, b: (Int)?) -> Int
+
+:e
+[1, 2, 3]: [Int, Int?]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.64: 	[1, 2, 3]: [Int, Int?]
+//│ ║        	^^^^^^^^^
+//│ ╟── tuple literal of type `[1, 2, 3]` does not match type `[Int, (Int)?]`
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.64: 	[1, 2, 3]: [Int, Int?]
+//│ ╙──      	           ^^^^^^^^^^^
+//│ [Int, (Int)?]
+//│ res
+//│     = [ 1, 2, 3 ]
+
+fun f1(a: Int, b: Int) = a + b
+//│ fun f1: (a: Int, b: Int) -> Int
+
+
+class C1
+//│ class C1 {
+//│   constructor()
+//│ }
+
+class C2 extends C1
+//│ class C2 extends C1 {
+//│   constructor()
+//│ }
+
+let x = new C2()
+//│ let x: C2
+//│ x
+//│   = C2 {}
+
+let y: C1 = x
+//│ let y: C1
+//│ y
+//│   = C2 {}
+
+[x, y]: [C1, C1]
+//│ [C1, C1]
+//│ res
+//│     = [ C2 {}, C2 {} ]
+
+
+[x, y]: [C1, C1, C1?]
+//│ [C1, C1, (C1)?]
+//│ res
+//│     = [ C2 {}, C2 {} ]
+
+[1, 2]: [Int, Int, Int?]
+//│ [Int, Int, (Int)?]
+//│ res
+//│     = [ 1, 2 ]
+
+
+fun f1(a?: Int, b?: Int) = a + b
+//│ fun f1: (a: (Int)?, b: (Int)?) -> Int
+
+fun f1(a: Int, b: Int) = a + b
+//│ fun f1: (a: Int, b: Int) -> Int
+
+:e
+[x]: [C1, C1, C1?]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.124: 	[x]: [C1, C1, C1?]
+//│ ║         	^^^
+//│ ╟── expression of type `[?a]` does not match type `[C1, C1, (C1)?]`
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.124: 	[x]: [C1, C1, C1?]
+//│ ╙──       	     ^^^^^^^^^^^^^
+//│ [C1, C1, (C1)?]
+//│ res
+//│     = [ C2 {} ]
+
+
+[x]: [C1, C1?, C1?]
+//│ [C1, (C1)?, (C1)?]
+//│ res
+//│     = [ C2 {} ]
+
+[1, 2, 3]: [Int, Int, Int]
+//│ [Int, Int, Int]
+//│ res
+//│     = [ 1, 2, 3 ]
+
+
+[1, 2]: [Int, Int?]
+//│ [Int, (Int)?]
+//│ res
+//│     = [ 1, 2 ]
+
+
+[1]: [Int, Int?]
+//│ [Int, (Int)?]
+//│ res
+//│     = [ 1 ]
+
+
+:e
+[]: [Int, Int?]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.161: 	[]: [Int, Int?]
+//│ ║         	^^
+//│ ╟── expression of type `[]` does not match type `[Int, (Int)?]`
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.161: 	[]: [Int, Int?]
+//│ ╙──       	    ^^^^^^^^^^^
+//│ [Int, (Int)?]
+//│ res
+//│     = []
+
+[]: [Int?, Int?]
+//│ [(Int)?, (Int)?]
+//│ res
+//│     = []
+
+:e
+[1, 2, 3]: [Int, Int?]
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.179: 	[1, 2, 3]: [Int, Int?]
+//│ ║         	^^^^^^^^^
+//│ ╟── tuple literal of type `[1, 2, 3]` does not match type `[Int, (Int)?]`
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.179: 	[1, 2, 3]: [Int, Int?]
+//│ ╙──       	           ^^^^^^^^^^^
+//│ [Int, (Int)?]
+//│ res
+//│     = [ 1, 2, 3 ]
+
+
+[1, 2]: [Int, Int, Int?]
+//│ [Int, Int, (Int)?]
+//│ res
+//│     = [ 1, 2 ]
+
+
+// * Harder case
+:p
+fun foo(xs: [Int] & 'a) = xs : [Int, Int?]
+//│ |#fun| |foo|(|xs|#:| |[|Int|]| |&| |'a|)| |#=| |xs| |#:| |[|Int|,| |Int|?|]|
+//│ AST: TypingUnit(List(NuFunDef(None,Var(foo),None,List(),Left(Lam(Tup(List((Some(Var(xs)),Fld(_,App(Var(&),Tup(List((None,Fld(_,Tup(List((None,Fld(_,Var(Int))))))), (None,Fld(_,Var('a)))))))))),Asc(Var(xs),Tuple(List((None,Field(None,TypeName(Int),false)), (None,Field(None,TypeName(Int),true))))))))))
+//│ Parsed: fun foo = (xs: &([Int,], 'a,),) => xs : [Int, (Int)?];
+//│ fun foo: (xs: [Int]) -> [Int, (Int)?]
+
+
+fun foo: [Int] | [Int?]
+//│ fun foo: [(Int)?]
+
+
+fun foo: [Int] & [Int?]
+//│ fun foo: [Int]
+
+fun foo: [Int] | [Int, Int?]
+//│ fun foo: [Int, (Int)?]
+
+fun foo: [Int] & [Int, Int?]
+//│ fun foo: [Int]
+
+fun foo: ([Int] & [Int, Int?]) -> Int
+//│ fun foo: ([Int]) -> Int
+
+:e
+foo([1, true])
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.224: 	foo([1, true])
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── tuple literal of type `[1, true]` does not match type `[Int]`
+//│ ║  l.224: 	foo([1, true])
+//│ ║         	    ^^^^^^^^^
+//│ ╟── Note: constraint arises from tuple type:
+//│ ║  l.220: 	fun foo: ([Int] & [Int, Int?]) -> Int
+//│ ╙──       	          ^^^^^
+//│ Int | error
+//│ res
+//│     = <no result>
+//│       foo is not implemented
+
+fun foo: ([Int] | [Int, Int?]) -> Int
+//│ fun foo: ([Int, (Int)?]) -> Int
+
+:e
+foo([1, true])
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.243: 	foo([1, true])
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── reference of type `true` is not an instance of type `Int`
+//│ ║  l.243: 	foo([1, true])
+//│ ╙──       	        ^^^^
+//│ Int | error
+//│ res
+//│     = <no result>
+//│       foo is not implemented
+
+fun foo: ([Int] | [Int, Bool?]) -> Int
+//│ fun foo: ([Int, (Bool)?]) -> Int
+
+:p
+foo([1, true])
+//│ |foo|(|[|1|,| |true|]|)|
+//│ AST: TypingUnit(List(App(Var(foo),Tup(List((None,Fld(_,Tup(List((None,Fld(_,IntLit(1))), (None,Fld(_,Var(true))))))))))))
+//│ Parsed: foo([1, true,],);
+//│ Int
+//│ res
+//│     = <no result>
+//│       foo is not implemented
+
+let x = [1, 2, 3]: [Int, Int, Int]
+//│ let x: [Int, Int, Int]
+//│ x
+//│   = [ 1, 2, 3 ]
+
+fun foo0(x: Int?) = if x is undefined then 0 else x + 1
+//│ fun foo0: (x: (Int)?) -> Int
+
+fun foo1(x?) = if x is undefined then 0 else x + 1
+//│ fun foo1: ((Int | ())?) -> Int
+
+
+// :e
+fun foo0(x: Int?) = x + 1
+//│ fun foo0: (x: (Int)?) -> Int
+
+:e
+fun foo1(x?) = x + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.16: 	fun y(a?:Int, b?:Int) = a + b 
-//│ ║        	                        ^^^^^
+//│ ║  l.285: 	fun foo1(x?) = x + 1
+//│ ║         	               ^^^^^
+//│ ╟── reference of type `()` is not an instance of type `Int`
+//│ ║  l.285: 	fun foo1(x?) = x + 1
+//│ ╙──       	               ^
+//│ fun foo1: ((Int | ())?) -> (Int | error)
+
+// :e
+fun ff(x: Int?) = x + 1
+//│ fun ff: (x: (Int)?) -> Int
+
+:e
+fun ff(x: Int | undefined) = x + 1
+//│ ╔══[ERROR] Type mismatch in operator application:
+//│ ║  l.299: 	fun ff(x: Int | undefined) = x + 1
+//│ ║         	                             ^^^^^
 //│ ╟── type `()` is not an instance of type `Int`
-//│ ║  l.16: 	fun y(a?:Int, b?:Int) = a + b 
-//│ ║        	         ^^^
+//│ ║  l.299: 	fun ff(x: Int | undefined) = x + 1
+//│ ║         	                ^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `Int`
-//│ ║  l.16: 	fun y(a?:Int, b?:Int) = a + b 
-//│ ╙──      	                        ^
+//│ ║  l.299: 	fun ff(x: Int | undefined) = x + 1
+//│ ╙──       	                             ^
+//│ fun ff: (x: Int | ()) -> (Int | error)
+
+:e
+fun foo1([x, y]?) = x + y
+//│ ╔══[ERROR] Error here
+//│ ║  l.312: 	fun foo1([x, y]?) = x + y
+//│ ╙──       	         ^^^^^^
+//│ fun foo1: (([Int, Int])?) -> Int
+
+
+[123?]
+//│ ╔══[ERROR] Error here
+//│ ║  l.319: 	[123?]
+//│ ╙──       	 ^^^
 //│ TEST CASE FAILURE: There was an unexpected type error
-//│ fun y: (a: (Int | ())?, b: (Int | ())?) -> (Int | error)
-
-// [1, 2, 3]: [Int, Int?]
-
-// fun f1(a: Int, b: Int) = a + b
-
-
-// class C1
-// class C2 extends C1
-// let x = new C2()
-// let y: C1 = x
-
-// [x, y]: [C1, C1]
-
-
-// [x, y]: [C1, C1, C1?]
-
-// [1, 2, 3]: [Int, Int, Int]
+//│ [(123)?]
+//│ res
+//│     = [ 123 ]

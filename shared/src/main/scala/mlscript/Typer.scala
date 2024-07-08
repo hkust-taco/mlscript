@@ -1018,22 +1018,27 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         typeTerms(tup :: Nil, false, Nil)
       case Tup(fs) =>
         TupleType(fs.mapConserve { case e @ (n, f @ Fld(flags, t)) =>
-          n match {
-            case S(v) if ctx.inPattern =>
-              (n, Fld(flags,
-                // Asc(v, t.toTypeRaise).withLoc(v.toLoc.fold(t.toLoc)(_ ++ t.toLoc |> some))))
-                Asc(v, Union(t.toTypeRaise, Literal(UnitLit(true)))).withLoc(v.toLoc.fold(t.toLoc)(_ ++ t.toLoc |>some))))
-            case N if flags.opt =>
-              t match {
-                case v: Var if ctx.inPattern =>
-                  (n, Fld(flags,
-                    Asc(v, Union(TypeVar(R(""), N), Literal(UnitLit(true)))).withLoc(v.toLoc.fold(t.toLoc)(_ ++ t.toLoc |> some))))
-                case _ =>
-                  // if ctx.inPattern // TODO[optional-fields]
-                  err("Error here", f.toLoc) // TODO[optional-fields]
-                  e
+          {
+            val res = n match {
+              case S(v) if ctx.inPattern =>
+                (n, Fld(flags,
+                  Asc(v, t.toTypeRaise).withLoc(v.toLoc.fold(t.toLoc)(_ ++ t.toLoc |> some))))
+              case N if flags.opt => {
+                val res = t match {
+                  case v: Var if ctx.inPattern =>
+                    (n, Fld(flags,
+                      Asc(v, Union(TypeVar(R(""), N), Literal(UnitLit(true)))).withLoc(v.toLoc.fold(t.toLoc)(_ ++ t.toLoc |> some))))
+                  case _ =>
+                    // if ctx.inPattern // TODO[optional-fields]
+                    err("Error here", f.toLoc) // TODO[optional-fields]
+                    e
+                }
+                res
               }
-            case _ => e
+              case _ => e
+            }
+            println(s"dbg [Typer.scala]: $res opt: ${flags.opt}")
+            res
           }
         }.map { case (n, Fld(FldFlags(mut, spec, opt, getter), t)) =>
           if (getter)
