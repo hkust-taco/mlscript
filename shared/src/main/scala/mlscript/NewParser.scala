@@ -1428,8 +1428,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case _ => N
     }
     val (argName, argOpt) = yeetSpaces match {
-      case (IDENT(idStr, false), l0) :: (IDENT("?", true), l1) :: (KEYWORD(":"), _) :: _ =>
-        consume
+      case (IDENT(idStr, false), l0) :: (IDENT("?:", true), l1) :: _ =>
         consume
         consume
         (S(Var(idStr).withLoc(S(l0))), S(l1))
@@ -1437,8 +1436,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         consume
         consume
         (S(Var(idStr).withLoc(S(l0))), N)
-      case (LITVAL(IntLit(i)), l0) :: (IDENT("?", true), l1) :: (KEYWORD(":"), _) :: _ => // TODO: | ...
-        consume
+      case (LITVAL(IntLit(i)), l0) :: (IDENT("?:", true), l1) :: _ => // TODO: | ...
         consume
         consume
         (S(Var(i.toString).withLoc(S(l0))), S(l1))
@@ -1448,8 +1446,10 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
         (S(Var(i.toString).withLoc(S(l0))), N)
       case _ => (N, N)
     }
-
     val body = exprOrIf(prec, true, anns)
+    
+    // println(s"dbg [NewParser.scala]: argName: ${argName}, argOpt: ${argOpt.isDefined}")
+
     val isOpt = cur match {
       case (IDENT("?", true), l0) :: _ =>
         consume
@@ -1457,12 +1457,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
       case _ =>
         false
     }
-    
-    // println(s"dbg: argName: ${argName}, argOpt: ${argOpt.isDefined}, isOpt: ${isOpt}")
-
-    // val e = expr(NoElsePrec) -> argMut.isDefined
     val e = body.map(Fld(FldFlags(argMut.isDefined, argSpec.isDefined, argOpt.isDefined || isOpt, argVal.isDefined), _))
-    
     def mkSeq = if (seqAcc.isEmpty) argName -> e else e match {
       case L(_) => ???
       case R(Fld(flags, res)) =>
