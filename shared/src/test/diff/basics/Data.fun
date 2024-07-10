@@ -13,7 +13,7 @@ data Person(name: string, age: int)
 //│ Parsed: data Person(...'(' {[name: string, age: int,]} ')');
 //│ Desugared: class Person: {age: int, name: string}
 //│ Desugared: def Person: (name: string, age: int) -> Person[]
-//│ AST: Def(false,Var(Person),Right(PolyType(List(),Function(Tuple(List((Some(Var(name)),Field(None,TypeName(string))), (Some(Var(age)),Field(None,TypeName(int))))),AppliedType(TypeName(Person),List())))),true)
+//│ AST: Def(false,Var(Person),Right(PolyType(List(),Function(Tuple(List((Some(Var(name)),Field(None,TypeName(string),false)), (Some(Var(age)),Field(None,TypeName(int),false)))),AppliedType(TypeName(Person),List())))),true)
 //│ Defined class Person
 //│ Person: (name: string, age: int,) -> Person
 

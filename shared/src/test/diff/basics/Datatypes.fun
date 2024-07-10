@@ -124,7 +124,7 @@ data type List a of
 //│ Desugared: def Nil: forall a. Nil[a]
 //│ AST: Def(false,Var(Nil),Right(PolyType(List(Left(TypeName(a))),AppliedType(TypeName(Nil),List(TypeName(a))))),true)
 //│ Desugared: def Cons: forall a. (head: a) -> (tail: anything) -> Cons[a]
-//│ AST: Def(false,Var(Cons),Right(PolyType(List(Left(TypeName(a))),Function(Tuple(List((Some(Var(head)),Field(None,TypeName(a))))),Function(Tuple(List((Some(Var(tail)),Field(None,Top)))),AppliedType(TypeName(Cons),List(TypeName(a))))))),true)
+//│ AST: Def(false,Var(Cons),Right(PolyType(List(Left(TypeName(a))),Function(Tuple(List((Some(Var(head)),Field(None,TypeName(a),false)))),Function(Tuple(List((Some(Var(tail)),Field(None,Top,false)))),AppliedType(TypeName(Cons),List(TypeName(a))))))),true)
 //│ Defined type alias List[+a]
 //│ Defined class Nil[±a]
 //│ Defined class Cons[+a]
