@@ -35,7 +35,7 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
       case Field(_, _, true) => true
       case Field(_, _, false) => false
     }
-    println(s"dbg: [helpers.scala] OK $f ### ${res} ${opt}")
+    // println(s"dbg: [helpers.scala] OK $f ### ${res} ${opt}")
     if (opt)
       s"($res)?"
     else
