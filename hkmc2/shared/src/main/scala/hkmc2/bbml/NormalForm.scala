@@ -7,7 +7,6 @@ import semantics.*
 import Message.MessageContext
 import mlscript.utils.*, shorthands.*
 
-// TODO: refactor! this file looks horrible!
 object NormalForm:
   final case class NormalClassType(cls: ClassSymbol, targs: List[(Disj, Disj)]) {
     override def toString(): String = if targs.isEmpty then s"${cls.nme}" else s"${cls.nme}[${targs.map{
@@ -199,9 +198,7 @@ object NormalForm:
     case Type.ComposedType(lhs, rhs, pol) =>
       if pol then inter(neg(lhs), neg(rhs)) else union(neg(lhs), neg(rhs))
     case Type.NegType(ty) => dnf(ty)
-    case _: Type.PolymorphicType =>
-      raise(ErrorReport(msg"Polymorphic type is not allowed." -> N :: Nil))
-      Disj.Bot
+
 
   def dnf(ty: Type)(using raise: Raise): Disj = ty match
     case Type.Top => Disj.Con(topConj)
@@ -221,6 +218,3 @@ object NormalForm:
     case Type.ComposedType(lhs, rhs, pol) =>
       if pol then union(dnf(lhs), dnf(rhs)) else inter(dnf(lhs), dnf(rhs))
     case Type.NegType(ty) => neg(ty)
-    case _: Type.PolymorphicType =>
-      raise(ErrorReport(msg"Polymorphic type is not allowed." -> N :: Nil))
-      Disj.Bot

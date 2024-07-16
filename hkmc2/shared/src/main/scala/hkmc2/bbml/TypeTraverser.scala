@@ -5,7 +5,7 @@ import mlscript.utils.*, shorthands.*
 import Type.*
 
 class TypeTraverser:
-  def apply(pol: Bool)(ty: Type): Unit = ty match
+  def apply(pol: Bool)(ty: GeneralType): Unit = ty match
     case Top | Bot =>
     case NegType(ty) => apply(!pol)(ty)
     case FunType(args, ret, eff) =>
@@ -26,6 +26,9 @@ class TypeTraverser:
     case ComposedType(lhs, rhs, _) =>
       apply(pol)(lhs)
       apply(pol)(rhs)
-    case PolymorphicType(tv, body) =>
+    case PolyType(tv, body) =>
       apply(pol)(body)
-  
+    case PolyFunType(args, ret, eff) =>
+      args.foreach(apply(!pol))
+      apply(pol)(ret)
+      apply(pol)(eff)  

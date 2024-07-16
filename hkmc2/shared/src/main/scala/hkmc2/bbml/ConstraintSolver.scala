@@ -38,9 +38,6 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogg
     case Type.ComposedType(lhs, rhs, p) =>
       Type.mkComposedType(extrude(lhs), extrude(rhs), p)
     case Type.NegType(ty) => Type.mkNegType(extrude(ty)(using skolems, lvl, !pol))
-    case _: Type.PolymorphicType =>
-      raise(ErrorReport(msg"Cannot extrude polymorphic type ${ty.toString()}" -> N :: Nil))
-      ty
     case Type.Top | Type.Bot => ty
 
   private def constrainConj(conj: Conj)(using cache: Cache, skolems: SkolemSet): Unit = trace(s"Constraining $conj"):

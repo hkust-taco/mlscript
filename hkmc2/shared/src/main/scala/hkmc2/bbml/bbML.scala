@@ -14,6 +14,12 @@ sealed abstract class TypeArg:
   lazy val lvl: Int
   def map(f: Type => Type): TypeArg
 
+sealed trait GeneralType:
+  lazy val isPoly: Bool
+  lazy val lvl: Int
+  def toString(): String
+  def monoOr(fallback: => Type): Type
+
 case class Wildcard(in: Type, out: Type) extends TypeArg {
   private def printWhenSet(t: Type, in: Bool) = t match
     case Type.Top if !in => N
@@ -22,7 +28,6 @@ case class Wildcard(in: Type, out: Type) extends TypeArg {
   def map(f: Type => Type): Wildcard = Wildcard(f(in), f(out))
 
   override def toString(): String = s"in $in out $out"
-    // (printWhenSet(in, true).toList ++ printWhenSet(out, false).toList).mkString(" ")
   override lazy val lvl: Int = in.lvl.max(out.lvl)
 }
 
@@ -31,14 +36,13 @@ object Wildcard:
   def out(ty: Type): Wildcard = Wildcard(Type.Bot, ty)
   def empty: Wildcard = Wildcard(Type.Bot, Type.Top)
 
-enum Type extends TypeArg:
+enum Type extends TypeArg with GeneralType:
   case ClassType(name: ClassSymbol, targs: Ls[TypeArg])
   case InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState)
   case FunType(args: Ls[Type], ret: Type, eff: Type)
   case ComposedType(lhs: Type, rhs: Type, pol: Bool) // * positive -> union
   case NegType(ty: Type)
-  case PolymorphicType(tv: Ls[InfVar], body: Type)
-  case Top // TODO: level?
+  case Top
   case Bot
   override def toString(): String = this match
     case ClassType(name, targs) =>
@@ -47,7 +51,6 @@ enum Type extends TypeArg:
     case FunType(args, ret, eff) => s"(${args.mkString(", ")}) ->{${eff}} ${ret}"
     case ComposedType(lhs, rhs, pol) => s"(${lhs}) ${if pol then "∨" else "∧"} (${rhs})"
     case NegType(ty) => s"¬(${ty})"
-    case PolymorphicType(tv, body) => s"forall ${tv.mkString(", ")}: $body"
     case Top => "⊤"
     case Bot => "⊥"
   lazy val lvl: Int = this match
@@ -59,13 +62,8 @@ enum Type extends TypeArg:
     case ComposedType(lhs, rhs, _) =>
       lhs.lvl.max(rhs.lvl)
     case NegType(ty) => ty.lvl
-    case PolymorphicType(tv, body) =>
-      (body :: tv).map(_.lvl).max
     case Top | Bot => 0
-  lazy val isPoly: Bool = this match
-    case FunType(args, ret, _) => args.foldLeft(ret.isPoly)((res, a) => res | a.isPoly)
-    case _: PolymorphicType => true
-    case _: ClassType | _: InfVar | _: ComposedType | _: NegType | Top | Bot => false
+  lazy val isPoly: Bool = false
   def & (that: Type): Type = this match
     case Top => that
     case Bot => Bot
@@ -109,13 +107,36 @@ enum Type extends TypeArg:
     case FunType(args, ret, eff) => FunType(args.map(f), f(ret), f(eff))
     case ComposedType(lhs, rhs, pol) => Type.mkComposedType(f(lhs), f(rhs), pol)
     case NegType(ty) => Type.mkNegType(f(ty))
-    case PolymorphicType(tv, body) => PolymorphicType(tv, f(body))
     case Top | Bot => f(this)
+  def monoOr(fallback: => Type): Type = this
 object Type:
   def mkComposedType(lhs: Type, rhs: Type, pol: Bool): Type = if pol
     then lhs | rhs
     else lhs & rhs
   def mkNegType(ty: Type): Type = ty.!
+
+// TODO: bounds
+case class PolyType(tv: Ls[Type.InfVar], body: GeneralType) extends GeneralType:
+  lazy val isPoly: Bool = true
+  lazy val lvl: Int = (body :: tv).map(_.lvl).max
+  override def toString(): String = s"forall ${tv.mkString(", ")}: $body"
+  def monoOr(fallback: => Type): Type = fallback
+  def map(f: GeneralType => GeneralType): GeneralType = ???
+
+case class PolyFunType(args: Ls[GeneralType], ret: GeneralType, eff: Type) extends GeneralType:
+  lazy val isPoly: Bool = (ret :: args).exists(_.isPoly)
+  lazy val lvl: Int = (ret :: eff :: args).map(_.lvl).max
+  override def toString(): String = s"(${args.mkString(", ")}) ->{${eff}} ${ret}"
+  lazy val mono: Option[Type.FunType] = if isPoly then N else
+    Some(Type.FunType(args.map {
+      case t: Type => t
+      case pf: PolyFunType => pf.mono.get
+    }, ret match {
+      case t: Type => t
+      case pf: PolyFunType => pf.mono.get
+    }, eff))
+  def monoOr(fallback: => Type): Type = mono.getOrElse(fallback)
+  def map(f: GeneralType => GeneralType): GeneralType = ???
 
 class VarState:
   var lowerBounds: Ls[Type] = Nil
@@ -123,7 +144,7 @@ class VarState:
 
 object InfVarUid extends Uid.Handler[Type.InfVar]
 
-type EnvType = HashMap[Uid[Symbol], Type]
+type EnvType = HashMap[Uid[Symbol], GeneralType]
 type clsDefType = HashMap[Str, ClassDef]
 type MutSkolemSet = LinkedHashSet[Uid[Type.InfVar]]
 final case class Ctx(
@@ -133,8 +154,8 @@ final case class Ctx(
   env: EnvType,
   quoteSkolemEnv: HashMap[Uid[Symbol], Type.InfVar], // * SkolemTag for variables in quasiquotes
 ):
-  def +=(p: Symbol -> Type): Unit = env += p._1.uid -> p._2
-  def get(sym: Symbol): Option[Type] = env.get(sym.uid) orElse parent.dlof(_.get(sym))(None)
+  def +=(p: Symbol -> GeneralType): Unit = env += p._1.uid -> p._2
+  def get(sym: Symbol): Option[GeneralType] = env.get(sym.uid) orElse parent.dlof(_.get(sym))(None)
   def *=(cls: ClassDef): Unit = clsDefs += cls.sym.id.name -> cls
   def getDef(name: Str): Option[ClassDef] = clsDefs.get(name) orElse parent.dlof(_.getDef(name))(None)
   def &=(p: Symbol -> Type.InfVar)(using skolems: MutSkolemSet): Unit =
@@ -180,7 +201,7 @@ object Ctx:
     "/." -> num2NumBinTy,
     "==" -> ((ctx: Ctx) => {
       val tv: Type.InfVar = Type.InfVar(1, infVarState.nextUid, new VarState())
-      Type.PolymorphicType(tv :: Nil, Type.FunType(tv :: tv :: Nil, boolTy(using ctx), Type.Bot))
+      PolyType(tv :: Nil, Type.FunType(tv :: tv :: Nil, boolTy(using ctx), Type.Bot))
     })
   )
   private val builtinVals = Map(
@@ -223,7 +244,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
     raise(ErrorReport(msg))
     Type.Bot // TODO: error type?
 
-  private def extract(asc: Term)(using map: Map[Uid[Symbol], Wildcard], pol: Bool)(using ctx: Ctx): Type = asc match
+  private def extract(asc: Term)(using map: Map[Uid[Symbol], Wildcard], pol: Bool)(using ctx: Ctx): GeneralType = asc match
     case Ref(cls: ClassSymbol) =>
       ctx.getDef(cls.nme) match
         case S(_) =>
@@ -240,9 +261,12 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
         case Some(Wildcard(in, out)) => if pol then out else in
         case _ => ctx.get(sym).getOrElse(error(msg"Type variable not found: ${sym.name}" -> asc.toLoc :: Nil))
     case FunTy(Term.Tup(params), ret, eff) =>
-      Type.FunType(params.map {
+      PolyFunType(params.map {
         case Fld(_, p, _) => extract(p)(using map, !pol)
-      }, extract(ret), eff.map(e => extract(e)).getOrElse(Type.Bot))
+      }, extract(ret), eff.map(e => extract(e) match {
+        case t: Type => t
+        case _ => error(msg"Effect cannot be polymorphic." -> asc.toLoc :: Nil)
+      }).getOrElse(Type.Bot))
     case Term.Forall(tvs, body) =>
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx
@@ -251,10 +275,10 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
           val tv = freshVar
           nestCtx += sym -> tv // TODO: a type var symbol may be better...
           tv
-      Type.PolymorphicType(bd, extract(body))
+      PolyType(bd, extract(body))
     case _ => error(msg"${asc.toString} is not a valid class member type" -> asc.toLoc :: Nil) // TODO
 
-  private def typeType(ty: Term)(using ctx: Ctx, allowPoly: Bool): Type = ty match
+  private def typeType(ty: Term)(using ctx: Ctx, allowPoly: Bool): GeneralType = ty match
     case Ref(sym: VarSymbol) =>
       ctx.get(sym) match
         case Some(ty) => ty
@@ -275,9 +299,12 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
         case N => 
           error(msg"Definition not found: ${cls.nme}" -> ty.toLoc :: Nil)
     case FunTy(Term.Tup(params), ret, eff) =>
-      Type.FunType(params.map {
+      PolyFunType(params.map {
         case Fld(_, p, _) => typeType(p)
-      }, typeType(ret), eff.map(typeType).getOrElse(Type.Bot))
+      }, typeType(ret), eff.map(typeType).getOrElse(Type.Bot) match {
+        case t: Type => t
+        case _ => error(msg"Effect cannot be polymorphic." -> ty.toLoc :: Nil)
+      })
     case Term.Forall(tvs, body) if allowPoly =>
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx
@@ -286,41 +313,55 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
           val tv = freshVar
           nestCtx += sym -> tv // TODO: a type var symbol may be better...
           tv
-      Type.PolymorphicType(bd, typeType(body))
+      PolyType(bd, typeType(body))
     case _: Term.Forall =>
       error(msg"Polymorphic type is not allowed here." -> ty.toLoc :: Nil)
     case Term.TyApp(lhs, targs) => typeType(lhs) match
       case Type.ClassType(cls, _) => Type.ClassType(cls, targs.map {
         case Term.WildcardTy(in, out) =>
           Wildcard(
-            in.map(t => typeType(t)(using ctx, false)).getOrElse(Type.Bot),
-            out.map(t => typeType(t)(using ctx, false)).getOrElse(Type.Top)
+            in.map(t => typeType(t)(using ctx, false)).getOrElse(Type.Bot).monoOr(error(msg"Polymorphic type is not allowed here." -> ty.toLoc :: Nil)),
+            out.map(t => typeType(t)(using ctx, false)).getOrElse(Type.Top).monoOr(error(msg"Polymorphic type is not allowed here." -> ty.toLoc :: Nil))
           )
-        case t => typeType(t)(using ctx, false)
+        case t => typeType(t)(using ctx, false).monoOr(error(msg"Polymorphic type is not allowed here." -> ty.toLoc :: Nil))
       })
       case _ => error(msg"${lhs.toString} is not a class" -> ty.toLoc :: Nil)
     case CompType(lhs, rhs, pol) =>
-      Type.mkComposedType(typeType(lhs), typeType(rhs), pol)
+      Type.mkComposedType(
+        typeType(lhs).monoOr(error(msg"Polymorphic type is not allowed here." -> lhs.toLoc :: Nil)),
+        typeType(rhs).monoOr(error(msg"Polymorphic type is not allowed here." -> rhs.toLoc :: Nil)),
+        pol
+      )
     case _ => error(msg"${ty.toString} is not a valid type annotation" -> ty.toLoc :: Nil) // TODO
 
-  private def subst(ty: Type)(using map: Map[Uid[Type.InfVar], Type.InfVar]): Type = ty match
+  private def subst(ty: GeneralType)(using map: Map[Uid[Type.InfVar], Type.InfVar]): GeneralType = ty match
     case Type.ClassType(name, targs) =>
       Type.ClassType(name, targs.map {
-        case Wildcard(in, out) => Wildcard(subst(in), subst(out))
-        case ty: Type => subst(ty)
+        case Wildcard(in, out) =>
+          Wildcard(
+            subst(in).monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)),
+            subst(out).monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil))
+          )
+        case ty: Type => subst(ty).monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil))
       })
     case v @ Type.InfVar(lvl, uid, state) =>
       map.get(uid).getOrElse(v)
+    case PolyFunType(args, ret, eff) =>
+      PolyFunType(args.map(subst), subst(ret), subst(eff).monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)))
     case Type.FunType(args, ret, eff) =>
-      Type.FunType(args.map(subst), subst(ret), subst(eff))
+      PolyFunType(args.map(subst), subst(ret), subst(eff).monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)))
     case Type.ComposedType(lhs, rhs, pol) =>
-      Type.mkComposedType(subst(lhs), subst(rhs), pol)
-    case Type.NegType(ty) => Type.mkNegType(subst(ty))
-    case Type.PolymorphicType(tvs, body) =>
-      Type.PolymorphicType(tvs, subst(body))
+      Type.mkComposedType(
+        subst(lhs).monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)),
+        subst(rhs).monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)),
+        pol
+      )
+    case Type.NegType(ty) => Type.mkNegType(subst(ty).monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)))
+    case PolyType(tvs, body) =>
+      PolyType(tvs, subst(body))
     case Type.Top | Type.Bot => ty
 
-  private def instantiate(ty: Type.PolymorphicType)(using ctx: Ctx): Type =
+  private def instantiate(ty: PolyType)(using ctx: Ctx): GeneralType =
     subst(ty.body)(using (ty.tv.map {
       case Type.InfVar(_, uid, _) =>
         val nv = freshVar
@@ -329,7 +370,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
   
   // * check if a poly lhs is equivalent to a poly rhs
   // TODO: refactor
-  private def checkPoly(lhs: Type, rhs: Type)(using ctx: Ctx): Bool = (lhs, rhs) match
+  private def checkPoly(lhs: GeneralType, rhs: GeneralType)(using ctx: Ctx): Bool = (lhs, rhs) match
     case (Type.ClassType(name1, targs1), Type.ClassType(name2, targs2)) if name1.uid == name2.uid && targs1.length == targs2.length =>
       targs1.zip(targs2).foldLeft(true)((res, p) => p match {
         case (Wildcard(in1, out1), Wildcard(in2, out2)) =>
@@ -341,12 +382,14 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
         case (ty1: Type, ty2: Type) => res && checkPoly(ty1, ty2)
       })
     case (Type.InfVar(_, uid1, _), Type.InfVar(_, uid2, _)) => uid1 == uid2
+    case (PolyFunType(args1, ret1, eff1), PolyFunType(args2, ret2, eff2)) if args1.length == args2.length =>
+      args1.zip(args2).foldLeft(checkPoly(ret1, ret2) && checkPoly(eff1, eff2))((res, p) => res && checkPoly(p._1, p._2))
     case (Type.FunType(args1, ret1, eff1), Type.FunType(args2, ret2, eff2)) if args1.length == args2.length =>
       args1.zip(args2).foldLeft(checkPoly(ret1, ret2) && checkPoly(eff1, eff2))((res, p) => res && checkPoly(p._1, p._2))
     case (Type.ComposedType(lhs1, rhs1, pol1), Type.ComposedType(lhs2, rhs2, pol2)) if pol1 == pol2 =>
       checkPoly(lhs1, lhs2) && checkPoly(rhs1, rhs2)
     case (Type.NegType(ty1), Type.NegType(ty2)) => checkPoly(ty1, ty2)
-    case (Type.PolymorphicType(tv1, body1), Type.PolymorphicType(tv2, body2)) if tv1.length == tv2.length =>
+    case (PolyType(tv1, body1), PolyType(tv2, body2)) if tv1.length == tv2.length =>
       val maps = (tv1.zip(tv2).flatMap{
         case (Type.InfVar(_, uid1, _), Type.InfVar(_, uid2, _)) =>
           val nv = freshVar
@@ -393,7 +436,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
     case Term.Unquoted(body) =>
       val (ty, eff) = typeCheck(body)
       val tv = freshVar
-      constrain(ty, Ctx.codeTy(tv))
+      constrain(ty.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), Ctx.codeTy(tv))
       (tv, eff)
     case Term.Blk(LetBinding(pat, rhs) :: Nil, body) => // TODO: more than one?
       val (rhsTy, rhsEff) = typeCode(rhs)(using ctx)
@@ -428,10 +471,10 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
         val funTy = freshVar
         pctx += sym -> funTy // for recursive types
         val (res, _) = typeCheck(lam)
-        constrain(res, funTy)(using ctx)
+        constrain(res.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), funTy)(using ctx)
     // case _ => ???
 
-  private def typeSplit(split: TermSplit, sign: Opt[Type])(using ctx: Ctx, skolems: MutSkolemSet): (Type, Type) = split match
+  private def typeSplit(split: TermSplit, sign: Opt[GeneralType])(using ctx: Ctx, skolems: MutSkolemSet): (GeneralType, Type) = split match
     case Split.Cons(TermBranch.Boolean(cond, Split.Else(cons)), alts) =>
       val (condTy, condEff) = typeCheck(cond)
       val (consTy, consEff) = sign match
@@ -439,8 +482,8 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
         case _=> typeCheck(cons)
       val (altsTy, altsEff) = typeSplit(alts, sign)
       val allEff = Type.mkComposedType(condEff, Type.mkComposedType(consEff, altsEff, true), true)
-      constrain(condTy, Ctx.boolTy)
-      (sign.getOrElse(Type.mkComposedType(consTy, altsTy, true)), allEff)
+      constrain(condTy.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), Ctx.boolTy)
+      (sign.getOrElse(Type.mkComposedType(consTy.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), altsTy.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), true)), allEff)
     case Split.Cons(TermBranch.Match(scrutinee, Split.Cons(PatternBranch(Pattern.Class(sym, _, _), cons), Split.NoSplit)), alts) =>
       val (clsTy, tv, emptyTy) = ctx.getDef(sym.nme) match
         case S(ClassDef.Parameterized(_, tparams, _, _, _)) =>
@@ -451,7 +494,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
           error(msg"Cannot match ${scrutinee.toString} as ${sym.toString}" -> split.toLoc :: Nil)
           (Type.Bot, Type.Bot, Type.Bot)
       val (scrutineeTy, scrutineeEff) = typeCheck(scrutinee)
-      constrain(scrutineeTy, Type.mkComposedType(clsTy, Type.mkComposedType(tv, Type.mkNegType(emptyTy), false), true))
+      constrain(scrutineeTy.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), Type.mkComposedType(clsTy, Type.mkComposedType(tv, Type.mkNegType(emptyTy), false), true))
       val nestCtx1 = ctx.nest
       val nestCtx2 = ctx.nest
       scrutinee match // * refine
@@ -462,12 +505,12 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
       val (consTy, consEff) = typeSplit(cons, sign)(using nestCtx1)
       val (altsTy, altsEff) = typeSplit(alts, sign)(using nestCtx2)
       val allEff = Type.mkComposedType(scrutineeEff, Type.mkComposedType(consEff, altsEff, true), true)
-      (sign.getOrElse(Type.mkComposedType(consTy, altsTy, true)), allEff)
+      (sign.getOrElse(Type.mkComposedType(consTy.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), altsTy.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), true)), allEff)
     case Split.Else(alts) => sign match
       case S(sign) => ascribe(alts, sign)
       case _=> typeCheck(alts)
 
-  private def ascribe(lhs: Term, rhs: Type)(using ctx: Ctx, skolems: MutSkolemSet): (Type, Type) = (lhs, rhs) match
+  private def ascribe(lhs: Term, rhs: GeneralType)(using ctx: Ctx, skolems: MutSkolemSet): (GeneralType, Type) = (lhs, rhs) match
     case (Term.Lam(params, body), ft @ Type.FunType(args, ret, eff)) => // * annoted functions
       if params.length != args.length then
          (error(msg"Cannot type function ${lhs.toString} as ${rhs.toString}" -> lhs.toLoc :: Nil), Type.Bot)
@@ -483,7 +526,24 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
           (error(msg"Cannot type function ${lhs.toString} as ${rhs.toString}" -> lhs.toLoc :: Nil), Type.Bot)
         else
           constrain(effTy, eff)
-          if !ret.isPoly then constrain(bodyTy, ret)
+          if !ret.isPoly then constrain(bodyTy.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), ret)
+          (ft, Type.Bot)
+    case (Term.Lam(params, body), ft @ PolyFunType(args, ret, eff)) => // * annoted functions
+      if params.length != args.length then
+         (error(msg"Cannot type function ${lhs.toString} as ${rhs.toString}" -> lhs.toLoc :: Nil), Type.Bot)
+      else
+        val nestCtx = ctx.nest
+        val argsTy = params.zip(args).map:
+          case (Param(_, sym, _), ty) =>
+            nestCtx += sym -> ty
+            ty
+        given Ctx = nestCtx
+        val (bodyTy, effTy) = typeCheck(body)
+        if ret.isPoly && !checkPoly(bodyTy, ret) then
+          (error(msg"Cannot type function ${lhs.toString} as ${rhs.toString}" -> lhs.toLoc :: Nil), Type.Bot)
+        else
+          constrain(effTy, eff)
+          if !ret.isPoly then constrain(bodyTy.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), ret.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)))
           (ft, Type.Bot)
     case (Term.Blk(LetBinding(Pattern.Var(sym), rhs) :: Nil, body), ty) => // * propagate
       val nestCtx = ctx.nest
@@ -494,12 +554,12 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
       (resTy, Type.mkComposedType(eff, resEff, true))
     case (Term.If(branches), ty) => // * propagate
       typeSplit(branches, S(ty))
-    case (term, pt @ Type.PolymorphicType(tvs, body)) => // * generalize
+    case (term, pt @ PolyType(tvs, body)) => // * generalize
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx
       val uids = tvs.map(_.uid)
       skolems ++= uids
-      constrain(ascribe(term, body)._2, Type.Bot) // * never generalize terms with effects
+      constrain(ascribe(term, body)._2.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), Type.Bot) // * never generalize terms with effects
       skolems --= uids
       (pt, Type.Bot)
     case (term, ft: Type.FunType) if ft.isPoly =>
@@ -511,16 +571,26 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
     case _ =>
       val (lhsTy, eff) = typeCheck(lhs)
       (lhsTy, rhs) match
-        case (lhs: Type.PolymorphicType, rhs: Type.PolymorphicType) => ???
-        case (lhs: Type.PolymorphicType, rhs) => constrain(instantiate(lhs), rhs)
-        case (lhs, rhs: Type.PolymorphicType) => ???
+        case (lhs: PolyType, rhs: PolyType) => ???
+        case (lhs: PolyType, rhs) => constrain(instantiate(lhs).monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), rhs.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)))
+        case (lhs, rhs: PolyType) => ???
         case _ =>
-          constrain(lhsTy, rhs)
+          constrain(lhsTy.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), rhs.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)))
       (rhs, eff)
 
   // TODO: t -> loc when toLoc is implemented
-  private def app(lhs: (Type, Type), rhs: Ls[Fld], t: Term)(using ctx: Ctx, skolems: MutSkolemSet): (Type, Type) = lhs match
+  private def app(lhs: (GeneralType, Type), rhs: Ls[Fld], t: Term)(using ctx: Ctx, skolems: MutSkolemSet): (GeneralType, Type) = lhs match
     case (Type.FunType(args, ret, eff), lhsEff) => // * if the function type is known, we can directly use it
+      if args.length != rhs.length then
+        (error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil), Type.Bot)
+      else
+        val (argTy, argEff) = rhs.zip(args).flatMap{
+          case (f, t) =>
+            val (ty, eff) = ascribe(f.value, t)
+            Left(ty) :: Right(eff) :: Nil
+          }.partitionMap(x => x)
+        (ret, argEff.foldLeft[Type](Type.mkComposedType(eff, lhsEff, true))((res, e) => Type.mkComposedType(res, e, true)))
+    case (PolyFunType(args, ret, eff), lhsEff) => // * if the function type is known, we can directly use it
       if args.length != rhs.length then
         (error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil), Type.Bot)
       else
@@ -537,14 +607,14 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
       ).partitionMap(x => x)
       val effVar = freshVar
       val retVar = freshVar
-      constrain(funTy, Type.FunType(argTy.map {
-        case pt: Type.PolymorphicType =>
-          instantiate(pt)
-        case ty => ty
+      constrain(funTy.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), Type.FunType(argTy.map {
+        case pt: PolyType => instantiate(pt).monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil))
+        case ty: Type => ty
+        case pf: PolyFunType => pf.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil))
       }, retVar, effVar))
       (retVar, argEff.foldLeft[Type](Type.mkComposedType(effVar, lhsEff, true))((res, e) => Type.mkComposedType(res, e, true)))
 
-  private def typeCheck(t: Term)(using ctx: Ctx, skolems: MutSkolemSet): (Type, Type) = trace[(Type, Type)](s"Typing ${t.showDbg}", res => s": $res"):
+  private def typeCheck(t: Term)(using ctx: Ctx, skolems: MutSkolemSet): (GeneralType, Type) = trace[(GeneralType, Type)](s"Typing ${t.showDbg}", res => s": $res"):
     t match
     case Ref(sym: VarSymbol) =>
       ctx.get(sym) match
@@ -590,7 +660,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
           nestCtx += sym -> ty
           ty
       val (bodyTy, eff) = typeCheck(body)
-      (Type.FunType(tvs, bodyTy, eff), Type.Bot)
+      (PolyFunType(tvs, bodyTy, eff), Type.Bot)
     case Term.SelProj(term, Term.Ref(cls: ClassSymbol), field) =>
       val (ty, eff) = typeCheck(term)
       ctx.getDef(cls.nme) match
@@ -602,7 +672,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
                 map += targ.uid -> ty
                 ty
           }
-          constrain(ty, Type.ClassType(cls, targs))
+          constrain(ty.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), Type.ClassType(cls, targs))
           (params.map {
             case Param(_, sym, sign) =>
               if sym.nme == field.name then sign else N
@@ -614,7 +684,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
         case N => 
           (error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil), Type.Bot)
     case Term.App(lhs, Term.Tup(rhs)) => typeCheck(lhs) match
-      case (pt: Type.PolymorphicType, lhsEff) =>
+      case (pt: PolyType, lhsEff) =>
         app((instantiate(pt), lhsEff), rhs, t)
       case (funTy, lhsEff) => app((funTy, lhsEff), rhs, t)
     case Term.New(cls, args) =>
@@ -657,7 +727,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
       val (bodyTy, eff) = typeCheck(body)(using nestCtx)
       constrain(eff, Type.Bot) // * never generalize terms with effects
       skolems --= uids
-      (Type.PolymorphicType(bds, bodyTy), Type.Bot)
+      (PolyType(bds, bodyTy), Type.Bot)
     case Term.If(branches) => typeSplit(branches, N)
     case Term.Region(sym, body) =>
       val nestCtx = ctx.nextLevel
@@ -673,19 +743,19 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
       val (regTy, regEff) = typeCheck(reg)
       val (valTy, valEff) = typeCheck(value)
       val sk = freshVar
-      constrain(regTy, Ctx.regionTy(sk))
-      (Ctx.refTy(valTy, sk), Type.mkComposedType(sk, Type.mkComposedType(regEff, valEff, true), true))
+      constrain(regTy.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), Ctx.regionTy(sk))
+      (Ctx.refTy(valTy.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), sk), Type.mkComposedType(sk, Type.mkComposedType(regEff, valEff, true), true))
     case Term.Set(lhs, rhs) =>
       val (lhsTy, lhsEff) = typeCheck(lhs)
       val (rhsTy, rhsEff) = typeCheck(rhs)
       val sk = freshVar
-      constrain(lhsTy, Ctx.refTy(rhsTy, sk))
-      (rhsTy, Type.mkComposedType(sk, Type.mkComposedType(lhsEff, rhsEff, true), true))
+      constrain(lhsTy.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), Ctx.refTy(rhsTy.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), sk))
+      (rhsTy.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), Type.mkComposedType(sk, Type.mkComposedType(lhsEff, rhsEff, true), true))
     case Term.Deref(ref) =>
       val (refTy, refEff) = typeCheck(ref)
       val sk = freshVar
       val ctnt = freshVar
-      constrain(refTy, Ctx.refTy(ctnt, sk))
+      constrain(refTy.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), Ctx.refTy(ctnt, sk))
       (ctnt, Type.mkComposedType(sk, refEff, true))
     case Term.Quoted(body) =>
       val nestCtx = ctx.nextLevel
@@ -697,7 +767,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
     case Term.Error =>
       (Type.Bot, Type.Bot) // TODO: error type?
 
-  def typePurely(t: Term): Type =
+  def typePurely(t: Term): GeneralType =
     val skolems = LinkedHashSet(allocSkolem.uid)
     val (ty, eff) = typeCheck(t)(using initCtx, skolems)
     constrain(eff, allocSkolem)(using initCtx, skolems)

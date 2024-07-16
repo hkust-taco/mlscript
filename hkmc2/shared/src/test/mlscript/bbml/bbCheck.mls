@@ -105,20 +105,28 @@ fun baz(z) =
 //│ Elab: { fun baz: (class:Int#33)‹› -> (forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)‹›, class:Int#34)‹› -> class:Int#35‹›‹›; fun baz(z@4): (class:Int#38)‹› -> (forall A@10: FunTy(Tup(List(Fld(‹›,Ref(A@10),None))),Ref(A@10),None)‹›, class:Int#39)‹› -> class:Int#40‹›‹› = Lam(List(Param(‹›,f@5,None), Param(‹›,x@6,None)),App(Ref(f@5),Tup(List(Fld(‹›,Ref(x@6),None))))): FunTy(Tup(List(Fld(‹›,Forall(List(A@8),FunTy(Tup(List(Fld(‹›,Ref(A@8),None))),Ref(A@8),None)),None), Fld(‹›,Ref(class:Int),None))),Ref(class:Int),None)‹›; }‹›
 //│ Type: ⊤
 
-
+:e
 baz: Int -> (([A] -> A -> A), Int) -> Int
 //│ Elab: { Ref(baz): FunTy(Tup(List(Fld(‹›,Ref(class:Int),None))),FunTy(Tup(List(Fld(‹›,Forall(List(A@2),FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2),None)),None), Fld(‹›,Ref(class:Int),None))),Ref(class:Int),None),None)‹› }‹›
-//│ Type: (Int) ->{⊥} (forall α10_2: (α10_2) ->{⊥} α10_2, Int) ->{⊥} Int
+//│ ╔══[ERROR] Polymorphic type is not allowed here.
+//│ ╙──
+//│ ╔══[ERROR] Polymorphic type is not allowed here.
+//│ ╙──
+//│ Type: (Int) ->{⊥} (forall α14_2: (α14_2) ->{⊥} α14_2, Int) ->{⊥} Int
 
 
 baz(42)
 //│ Elab: { baz#1(42‹›)‹›‹› }‹›
 //│ Type: (forall α10_2: (α10_2) ->{⊥} α10_2, Int) ->{⊥} Int
 
-
+:e
 baz(42): (([A] -> A -> A), Int) -> Int
 //│ Elab: { App(Ref(baz),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))): FunTy(Tup(List(Fld(‹›,Forall(List(A@3),FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)),None), Fld(‹›,Ref(class:Int),None))),Ref(class:Int),None)‹› }‹›
-//│ Type: (forall α10_2: (α10_2) ->{⊥} α10_2, Int) ->{⊥} Int
+//│ ╔══[ERROR] Polymorphic type is not allowed here.
+//│ ╙──
+//│ ╔══[ERROR] Polymorphic type is not allowed here.
+//│ ╙──
+//│ Type: (forall α15_2: (α15_2) ->{⊥} α15_2, Int) ->{⊥} Int
 
 
 fun id: [A] -> A -> A
@@ -128,12 +136,12 @@ fun id(x) = x
 
 id: [A] -> A -> A
 //│ Elab: { Ref(id): Forall(List(A@2),FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2),None))‹› }‹›
-//│ Type: forall α19_2: (α19_2) ->{⊥} α19_2
+//│ Type: forall α17_2: (α17_2) ->{⊥} α17_2
 
 
 (id: [A] -> A -> A): [A] -> A -> A
 //│ Elab: { Asc(Ref(id),Forall(List(A@2),FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2),None))): Forall(List(A@3),FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None))‹› }‹›
-//│ Type: forall α21_2: (α21_2) ->{⊥} α21_2
+//│ Type: forall α19_2: (α19_2) ->{⊥} α19_2
 
 42: Int | Num
 //│ Elab: { Lit(IntLit(42)): CompType(Ref(class:Int),Ref(class:Num),true)‹› }‹›
@@ -141,9 +149,9 @@ id: [A] -> A -> A
 
 42: [A] -> Int
 //│ Elab: { Lit(IntLit(42)): Forall(List(A@2),Ref(class:Int))‹› }‹›
-//│ Type: forall α25_2: Int
+//│ Type: forall α23_2: Int
 
 
 42: [A] -> Int | Num
 //│ Elab: { Lit(IntLit(42)): Forall(List(A@2),CompType(Ref(class:Int),Ref(class:Num),true))‹› }‹›
-//│ Type: forall α26_2: (Int) ∨ (Num)
+//│ Type: forall α24_2: (Int) ∨ (Num)

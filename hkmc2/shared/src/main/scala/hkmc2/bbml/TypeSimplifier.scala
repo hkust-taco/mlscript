@@ -16,7 +16,7 @@ final def printPol(pol: Bool): Str = pol match {
 class TypeSimplifier(tl: TraceLogger):
   import tl.{trace, log}
   
-  def apply(pol: Bool, lvl: Int)(ty: Type): Type =
+  def apply(pol: Bool, lvl: Int)(ty: GeneralType): GeneralType =
     
     type IV = InfVar
     
@@ -46,7 +46,7 @@ class TypeSimplifier(tl: TraceLogger):
         case N => tv
       }
       
-      override def apply(pol: Bool)(ty: Type): Unit =
+      override def apply(pol: Bool)(ty: GeneralType): Unit =
         trace(s"Analyse[${printPol(pol)}] $ty  [${curPath.reverseIterator.mkString(" ~> ")}]"):
           ty match
             case ty if ty.lvl <= lvl =>
@@ -120,7 +120,7 @@ class TypeSimplifier(tl: TraceLogger):
     val traversed: MutSet[IV] = MutSet.empty
     val transformed: MutMap[IV, Type] = MutMap.empty
     
-    def subst(ty: Type): Type = trace[Type](s"subst($ty)", r => s"= $r"):
+    def subst(ty: GeneralType): GeneralType = trace[GeneralType](s"subst($ty)", r => s"= $r"):
       ty match
         case ty if ty.lvl <= lvl => ty // TODO NOPE
         case _tv: IV =>
@@ -134,19 +134,19 @@ class TypeSimplifier(tl: TraceLogger):
               // TypeBounds(TopType, BotType)(noProv) // TODO improve? creates lots of junk...
               Top // FIXME arbitrary
             // TODO rm self-cycles
-            val newLBs = tv.state.lowerBounds.map(subst(_))
-            val newUBs = tv.state.upperBounds.map(subst(_))
+            val newLBs = tv.state.lowerBounds.map(subst(_).monoOr(Type.Bot)) // FIXME
+            val newUBs = tv.state.upperBounds.map(subst(_).monoOr(Type.Bot)) // FIXME
             tv.state.lowerBounds = newLBs
             tv.state.upperBounds = newUBs
             val isPos = Analysis.posVars.contains(tv)
             val isNeg = Analysis.negVars.contains(tv)
             // if (isPos && !isNeg && (Analysis.occsNum(tv) === 1 && {newLBs match { case (tv: IV) :: Nil => true; case _ => false }} || newLBs.forall(_.isSmall))) {
-            if isPos && !isNeg && ({newLBs match { case (tv: IV) :: Nil => true; case _ => false }} || newLBs.forall(_.isSmall)) then {
+            if isPos && !isNeg && ({newLBs match { case (tv: IV) :: Nil => true; case _ => false }} || newLBs.forall(_ => true)) then {
             // if (isPos && !isNeg && ({newLBs match { case (tv: IV) :: Nil => true; case _ => false }})) {
               newLBs.foldLeft(Bot: Type)(_ | _)
             } else
             // if (isNeg && !isPos && (Analysis.occsNum(tv) === 1 && {newUBs match { case (tv: IV) :: Nil => true; case _ => false }} || newUBs.forall(_.isSmall))) {
-            if isNeg && !isPos && ({newUBs match { case (tv: IV) :: Nil => true; case _ => false }} || newUBs.forall(_.isSmall)) then
+            if isNeg && !isPos && ({newUBs match { case (tv: IV) :: Nil => true; case _ => false }} || newUBs.forall(_ => true)) then
             // if (isNeg && !isPos && ({newUBs match { case (tv: IV) :: Nil => true; case _ => false }})) {
               newUBs.foldLeft(Top: Type)(_ & _)
             else
@@ -154,6 +154,8 @@ class TypeSimplifier(tl: TraceLogger):
               // tv.upperBounds = newUBs
               tv
           })
-        case _ => ty.map(subst(_))
+        case ty: Type => ty.map(subst(_).monoOr(Type.Bot)) // FIXME
+        case PolyType(tv, bodies) => PolyType(tv, subst(bodies).monoOr(Type.Bot)) // FIXME
+        case PolyFunType(args, ret, eff) => PolyFunType(args.map(subst(_)), subst(ret), subst(eff).monoOr(Type.Bot))
     
     subst(ty)
