@@ -22,7 +22,7 @@ object PrettyPrinter:
       case Wildcard(in, out) => collectBounds(in) ++ collectBounds(out)
       case ty: Type => collectBounds(ty)
     }
-    case v @ Type.InfVar(_, uid, state) if !cache(uid) =>
+    case v @ Type.InfVar(_, uid, state, _) if !cache(uid) =>
       val newCache = cache + uid
       given TVCache = newCache
       state.lowerBounds.flatMap(bd => (bd, v) :: collectBounds(bd)) ++ state.upperBounds.flatMap(bd => (v, bd) :: collectBounds(bd))

@@ -24,9 +24,9 @@ id
 :e
 (x => x + 1): [A] -> A -> A
 //│ Elab: { Lam(List(Param(‹›,x@2,None)),App(Ref(+),Tup(List(Fld(‹›,Ref(x@2),None), Fld(‹›,Lit(IntLit(1)),None))))): Forall(List(A@4),FunTy(Tup(List(Fld(‹›,Ref(A@4),None))),Ref(A@4),None))‹› }‹›
-//│ ╔══[ERROR] Cannot constrain skolem α4_2
+//│ ╔══[ERROR] Cannot constrain skolem <α>4_2
 //│ ╙──
-//│ ╔══[ERROR] Cannot constrain skolem α4_2
+//│ ╔══[ERROR] Cannot constrain skolem <α>4_2
 //│ ╙──
 //│ Type: forall α4_2: (α4_2) ->{⊥} α4_2
 

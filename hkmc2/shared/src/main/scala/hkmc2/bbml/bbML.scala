@@ -12,23 +12,19 @@ import Tree.*
 
 object InfVarUid extends Uid.Handler[Type.InfVar]
 
-type EnvType = HashMap[Uid[Symbol], GeneralType]
-type clsDefType = HashMap[Str, ClassDef]
-type MutSkolemSet = LinkedHashSet[Uid[Type.InfVar]]
 final case class Ctx(
   parent: Option[Ctx],
   lvl: Int,
-  clsDefs: clsDefType,
-  env: EnvType,
+  clsDefs: HashMap[Str, ClassDef],
+  env: HashMap[Uid[Symbol], GeneralType],
   quoteSkolemEnv: HashMap[Uid[Symbol], Type.InfVar], // * SkolemTag for variables in quasiquotes
 ):
   def +=(p: Symbol -> GeneralType): Unit = env += p._1.uid -> p._2
   def get(sym: Symbol): Option[GeneralType] = env.get(sym.uid) orElse parent.dlof(_.get(sym))(None)
   def *=(cls: ClassDef): Unit = clsDefs += cls.sym.id.name -> cls
   def getDef(name: Str): Option[ClassDef] = clsDefs.get(name) orElse parent.dlof(_.getDef(name))(None)
-  def &=(p: Symbol -> Type.InfVar)(using skolems: MutSkolemSet): Unit =
+  def &=(p: Symbol -> Type.InfVar): Unit =
     env += p._1.uid -> Ctx.varTy(p._2)(using this)
-    skolems += p._2.uid
     quoteSkolemEnv += p._1.uid -> p._2
   def getSk(sym: Symbol): Option[Type] = quoteSkolemEnv.get(sym.uid) orElse parent.dlof(_.getSk(sym))(None)
   def nest: Ctx = Ctx(Some(this), lvl, HashMap.empty, HashMap.empty, quoteSkolemEnv)
@@ -68,7 +64,7 @@ object Ctx:
     "*." -> num2NumBinTy,
     "/." -> num2NumBinTy,
     "==" -> ((ctx: Ctx) => {
-      val tv: Type.InfVar = Type.InfVar(1, infVarState.nextUid, new VarState())
+      val tv: Type.InfVar = Type.InfVar(1, infVarState.nextUid, new VarState(), false)
       PolyType(tv :: Nil, Type.FunType(tv :: tv :: Nil, boolTy(using ctx), Type.Bot))
     })
   )
@@ -100,13 +96,12 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
   private val infVarState = new InfVarUid.State()
   private val solver = new ConstraintSolver(raise, infVarState, tl)
 
-  import NormalForm.SkolemSet
-
-  private def freshVar(using ctx: Ctx): Type.InfVar = Type.InfVar(ctx.lvl, infVarState.nextUid, new VarState())
+  private def freshSkolem(using ctx: Ctx): Type.InfVar = Type.InfVar(ctx.lvl, infVarState.nextUid, new VarState(), true)
+  private def freshVar(using ctx: Ctx): Type.InfVar = Type.InfVar(ctx.lvl, infVarState.nextUid, new VarState(), false)
   private def freshWildcard(using ctx: Ctx) = Wildcard(freshVar, freshVar)
 
   // * always extruded
-  private val allocSkolem: Type.InfVar = Type.InfVar(Int.MaxValue, infVarState.nextUid, new VarState())
+  private val allocSkolem: Type.InfVar = Type.InfVar(Int.MaxValue, infVarState.nextUid, new VarState(), true)
 
   private def error(msg: Ls[Message -> Opt[Loc]]) =
     raise(ErrorReport(msg))
@@ -212,7 +207,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
           )
         case ty: Type => subst(ty).monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil))
       })
-    case v @ Type.InfVar(lvl, uid, state) =>
+    case v @ Type.InfVar(_, uid, _, _) =>
       map.get(uid).getOrElse(v)
     case PolyFunType(args, ret, eff) =>
       PolyFunType(args.map(subst), subst(ret), subst(eff).monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)))
@@ -231,7 +226,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
 
   private def instantiate(ty: PolyType)(using ctx: Ctx): GeneralType =
     subst(ty.body)(using (ty.tv.map {
-      case Type.InfVar(_, uid, _) =>
+      case Type.InfVar(_, uid, _, _) =>
         val nv = freshVar
         uid -> nv
     }).toMap)
@@ -249,7 +244,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
           res && checkPoly(in1, ty) && checkPoly(out1, ty)
         case (ty1: Type, ty2: Type) => res && checkPoly(ty1, ty2)
       })
-    case (Type.InfVar(_, uid1, _), Type.InfVar(_, uid2, _)) => uid1 == uid2
+    case (Type.InfVar(_, uid1, _, _), Type.InfVar(_, uid2, _, _)) => uid1 == uid2
     case (PolyFunType(args1, ret1, eff1), PolyFunType(args2, ret2, eff2)) if args1.length == args2.length =>
       args1.zip(args2).foldLeft(checkPoly(ret1, ret2) && checkPoly(eff1, eff2))((res, p) => res && checkPoly(p._1, p._2))
     case (Type.FunType(args1, ret1, eff1), Type.FunType(args2, ret2, eff2)) if args1.length == args2.length =>
@@ -259,7 +254,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
     case (Type.NegType(ty1), Type.NegType(ty2)) => checkPoly(ty1, ty2)
     case (PolyType(tv1, body1), PolyType(tv2, body2)) if tv1.length == tv2.length =>
       val maps = (tv1.zip(tv2).flatMap{
-        case (Type.InfVar(_, uid1, _), Type.InfVar(_, uid2, _)) =>
+        case (Type.InfVar(_, uid1, _, _), Type.InfVar(_, uid2, _, _)) =>
           val nv = freshVar
           (uid1 -> nv) :: (uid2 -> nv) :: Nil
       }).toMap
@@ -269,11 +264,9 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
     case _ =>
       false
 
-  private def constrain(lhs: Type, rhs: Type)(using ctx: Ctx, skolems: MutSkolemSet): Unit =
-    given SkolemSet = skolems.toSet
-    solver.constrain(lhs, rhs)
+  private def constrain(lhs: Type, rhs: Type)(using ctx: Ctx): Unit = solver.constrain(lhs, rhs)
 
-  private def typeCode(code: Term)(using ctx: Ctx, skolems: MutSkolemSet): (Type, Type) = code match
+  private def typeCode(code: Term)(using ctx: Ctx): (Type, Type) = code match
     case Lit(_) => (Type.Bot, Type.Bot)
     case Ref(sym: Symbol) if sym.nme == "error" => (Type.Bot, Type.Bot)
     case Lam(params, body) =>
@@ -281,7 +274,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
       given Ctx = nestCtx
       val bds = params.map:
         case Param(_, sym, _) =>
-          val sk = freshVar
+          val sk = freshSkolem
           nestCtx &= sym -> sk
           sk
       val (bodyTy, eff) = typeCode(body)
@@ -312,7 +305,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
       given Ctx = nestCtx
       val bd = pat match
         case Pattern.Var(sym) =>
-          val sk = freshVar
+          val sk = freshSkolem
           nestCtx &= sym -> sk
           sk
         case _ => ???
@@ -328,7 +321,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
     case _ =>
       (error(msg"Cannot quote ${code.toString}" -> code.toLoc :: Nil), Type.Bot)
 
-  private def typeFunDef(sym: Symbol, lam: Term, sig: Opt[Term], t: Term, pctx: Ctx)(using ctx: Ctx, skolems: MutSkolemSet) = lam match
+  private def typeFunDef(sym: Symbol, lam: Term, sig: Opt[Term], t: Term, pctx: Ctx)(using ctx: Ctx) = lam match
     case Term.Lam(params, body) => sig match
       case S(sig) =>
         val sigTy = typeType(sig)(using ctx, true)
@@ -342,7 +335,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
         constrain(res.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), funTy)(using ctx)
     // case _ => ???
 
-  private def typeSplit(split: TermSplit, sign: Opt[GeneralType])(using ctx: Ctx, skolems: MutSkolemSet): (GeneralType, Type) = split match
+  private def typeSplit(split: TermSplit, sign: Opt[GeneralType])(using ctx: Ctx): (GeneralType, Type) = split match
     case Split.Cons(TermBranch.Boolean(cond, Split.Else(cons)), alts) =>
       val (condTy, condEff) = typeCheck(cond)
       val (consTy, consEff) = sign match
@@ -378,7 +371,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
       case S(sign) => ascribe(alts, sign)
       case _=> typeCheck(alts)
 
-  private def ascribe(lhs: Term, rhs: GeneralType)(using ctx: Ctx, skolems: MutSkolemSet): (GeneralType, Type) = (lhs, rhs) match
+  private def ascribe(lhs: Term, rhs: GeneralType)(using ctx: Ctx): (GeneralType, Type) = (lhs, rhs) match
     case (Term.Lam(params, body), ft @ Type.FunType(args, ret, eff)) => // * annoted functions
       if params.length != args.length then
          (error(msg"Cannot type function ${lhs.toString} as ${rhs.toString}" -> lhs.toLoc :: Nil), Type.Bot)
@@ -425,10 +418,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
     case (term, pt @ PolyType(tvs, body)) => // * generalize
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx
-      val uids = tvs.map(_.uid)
-      skolems ++= uids
-      constrain(ascribe(term, body)._2.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), Type.Bot) // * never generalize terms with effects
-      skolems --= uids
+      constrain(ascribe(term, skolemize(tvs, body)(using false))._2.monoOr(error(msg"Polymorphic type is not allowed here." -> N :: Nil)), Type.Bot) // * never generalize terms with effects
       (pt, Type.Bot)
     case (term, ft: Type.FunType) if ft.isPoly =>
       val (ty, eff) = typeCheck(term)
@@ -447,7 +437,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
       (rhs, eff)
 
   // TODO: t -> loc when toLoc is implemented
-  private def app(lhs: (GeneralType, Type), rhs: Ls[Fld], t: Term)(using ctx: Ctx, skolems: MutSkolemSet): (GeneralType, Type) = lhs match
+  private def app(lhs: (GeneralType, Type), rhs: Ls[Fld], t: Term)(using ctx: Ctx): (GeneralType, Type) = lhs match
     case (Type.FunType(args, ret, eff), lhsEff) => // * if the function type is known, we can directly use it
       if args.length != rhs.length then
         (error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil), Type.Bot)
@@ -482,7 +472,22 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
       }, retVar, effVar))
       (retVar, argEff.foldLeft[Type](Type.mkComposedType(effVar, lhsEff, true))((res, e) => Type.mkComposedType(res, e, true)))
 
-  private def typeCheck(t: Term)(using ctx: Ctx, skolems: MutSkolemSet): (GeneralType, Type) = trace[(GeneralType, Type)](s"Typing ${t.showDbg}", res => s": $res"):
+  private def skolemize(tv: Ls[Type.InfVar], body: GeneralType)(using inv: Bool) =
+    val bds = tv.map(_.uid).toSet
+    def rec(ty: GeneralType): GeneralType = ty match
+      case Type.ClassType(name, targs) => Type.ClassType(name, targs.map(_.map(a => rec(a).monoOr(???))))
+      case v @ Type.InfVar(vlvl, uid, state, isSkolem) =>
+        if bds(uid) then Type.InfVar(vlvl, uid, state, !inv)
+        else v
+      case Type.FunType(args, ret, eff) => Type.FunType(args.map(a => rec(a).monoOr(???)), rec(ret).monoOr(???), rec(eff).monoOr(???))
+      case Type.ComposedType(lhs, rhs, pol) => Type.ComposedType(rec(lhs).monoOr(???), rec(rhs).monoOr(???), pol)
+      case Type.NegType(ty) => Type.NegType(rec(ty).monoOr(???))
+      case Type.Top | Type.Bot => ty
+      case PolyType(tv, body) => PolyType(tv, rec(body))
+      case PolyFunType(args, ret, eff) => PolyFunType(args.map(rec), rec(ret), rec(eff).monoOr(???))
+    rec(body)
+
+  private def typeCheck(t: Term)(using ctx: Ctx): (GeneralType, Type) = trace[(GeneralType, Type)](s"Typing ${t.showDbg}", res => s": $res"):
     t match
     case Ref(sym: VarSymbol) =>
       ctx.get(sym) match
@@ -587,22 +592,20 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
       val nestCtx = ctx.nextLevel
       val bds = tvs.map:
         case sym: VarSymbol =>
-          val tv = freshVar(using nestCtx)
+          val tv = freshSkolem(using nestCtx)
           nestCtx += sym -> tv // TODO: a type var symbol may be better...
           tv
-      val uids = bds.map(_.uid)
-      skolems ++= uids
       val (bodyTy, eff) = typeCheck(body)(using nestCtx)
       constrain(eff, Type.Bot) // * never generalize terms with effects
-      skolems --= uids
-      (PolyType(bds, bodyTy), Type.Bot)
+      (PolyType(bds.map {
+        case Type.InfVar(lvl, uid, st, _) => Type.InfVar(lvl, uid, st, false)
+      }, skolemize(bds, bodyTy)(using true)), Type.Bot)
     case Term.If(branches) => typeSplit(branches, N)
     case Term.Region(sym, body) =>
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx
-      val sk = freshVar
+      val sk = freshSkolem
       nestCtx += sym -> Ctx.regionTy(sk)
-      skolems += sk.uid
       val (res, eff) = typeCheck(body)
       val tv = freshVar(using ctx)
       constrain(eff, Type.mkComposedType(tv, sk, true))
@@ -636,8 +639,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
       (Type.Bot, Type.Bot) // TODO: error type?
 
   def typePurely(t: Term): GeneralType =
-    val skolems = LinkedHashSet(allocSkolem.uid)
-    val (ty, eff) = typeCheck(t)(using initCtx, skolems)
-    constrain(eff, allocSkolem)(using initCtx, skolems)
+    val (ty, eff) = typeCheck(t)(using initCtx)
+    constrain(eff, allocSkolem)(using initCtx)
     ty
 

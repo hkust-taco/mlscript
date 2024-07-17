@@ -43,8 +43,6 @@ object NormalForm:
       case Con(conj) => conj.lvl
       case DC(disj, conj) => disj.lvl.max(conj.lvl)
 
-  type SkolemSet = Set[Uid[Type.InfVar]]
-
   enum Conj: // * C ::=
     case INU(i: Inter, u: Union) // * I /\ ~U |
     case CVar(conj: Conj, v: Type.InfVar) // * C /\ a |
@@ -75,7 +73,7 @@ object NormalForm:
       case INU(i, u) => i.lvl.max(u.lvl)
       case CVar(conj, v) => v.lvl.max(conj.lvl)
       case CNVar(conj, v) => v.lvl.max(conj.lvl)
-    def sort(using skolems: SkolemSet): Conj =
+    def sort: Conj =
       @tailrec
       def rec(conj: Conj, prev: Ls[(Type.InfVar, Bool)]): (Ls[(Type.InfVar, Bool)], INU) = conj match // * tv -> pos/neg
         case inu: INU => (prev, inu)
@@ -83,7 +81,7 @@ object NormalForm:
         case CNVar(conj, v) => rec(conj, (v, false) :: prev)
       val (vs, tail) = rec(this, Nil)
       vs.sortWith {
-        case ((v1, _), (v2, _)) => skolems(v1.uid) || (!skolems(v2.uid) && v1.lvl < v2.lvl)
+        case ((v1, _), (v2, _)) => v1.isSkolem || (!v2.isSkolem && v1.lvl < v2.lvl)
       }.foldLeft[Conj](tail)((res, p) => if p._2 then CVar(res, p._1) else CNVar(res, p._1))
 
   enum Inter: // * I ::=

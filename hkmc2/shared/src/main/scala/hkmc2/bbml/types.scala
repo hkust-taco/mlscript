@@ -38,7 +38,7 @@ object Wildcard:
 
 enum Type extends GeneralType with TypeArg:
   case ClassType(name: ClassSymbol, targs: Ls[TypeArg])
-  case InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState)
+  case InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, isSkolem: Bool)
   case FunType(args: Ls[Type], ret: Type, eff: Type)
   case ComposedType(lhs: Type, rhs: Type, pol: Bool) // * Positive -> union
   case NegType(ty: Type)
@@ -50,7 +50,7 @@ enum Type extends GeneralType with TypeArg:
   override def toString(): String = this match
     case ClassType(name, targs) =>
       if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.mkString(", ")}]"
-    case InfVar(lvl, uid, _) => s"α${uid}_$lvl"
+    case InfVar(lvl, uid, _, isSkolem) => if isSkolem then s"<α>${uid}_$lvl" else s"α${uid}_$lvl"
     case FunType(args, ret, eff) => s"(${args.mkString(", ")}) ->{${eff}} ${ret}"
     case ComposedType(lhs, rhs, pol) => s"(${lhs}) ${if pol then "∨" else "∧"} (${rhs})"
     case NegType(ty) => s"¬(${ty})"
@@ -60,7 +60,7 @@ enum Type extends GeneralType with TypeArg:
   lazy val lvl: Int = this match
     case ClassType(name, targs) =>
       targs.map(_.lvl).maxOption.getOrElse(0)
-    case InfVar(lvl, _, _) => lvl
+    case InfVar(lvl, _, _, _) => lvl
     case FunType(args, ret, eff) =>
       (ret :: eff :: args).map(_.lvl).max
     case ComposedType(lhs, rhs, _) =>
@@ -100,7 +100,7 @@ enum Type extends GeneralType with TypeArg:
 
   override def map(f: Type => Type): Type = this match
     case ClassType(name, targs) => ClassType(name, targs.map(_.map(f)))
-    case InfVar(lvl, uid, state) => f(this)
+    case _: InfVar => f(this)
     case FunType(args, ret, eff) => FunType(args.map(f), f(ret), f(eff))
     case ComposedType(lhs, rhs, pol) => Type.mkComposedType(f(lhs), f(rhs), pol)
     case NegType(ty) => Type.mkNegType(f(ty))

@@ -13,18 +13,18 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogg
   import hkmc2.bbml.NormalForm.*
   type Cache = Set[(Type, Type)]
 
-  private def freshXVar(lvl: Int): Type.InfVar = Type.InfVar(lvl, infVarState.nextUid, new VarState())
+  private def freshXVar(lvl: Int): Type.InfVar = Type.InfVar(lvl, infVarState.nextUid, new VarState(), false)
 
-  private def extrude(ty: Type)(using skolems: SkolemSet, lvl: Int, pol: Bool): Type = if ty.lvl <= lvl then ty else ty match
+  private def extrude(ty: Type)(using lvl: Int, pol: Bool): Type = if ty.lvl <= lvl then ty else ty match
     case Type.ClassType(sym, targs) =>
       Type.ClassType(sym, targs.map {
         case Wildcard(in, out) =>
-          Wildcard(extrude(in)(using skolems, lvl, !pol), extrude(out))
+          Wildcard(extrude(in)(using lvl, !pol), extrude(out))
         case t => ??? // TODO
       })
-    case v @ Type.InfVar(_, uid, _) if skolems(uid) =>
+    case v @ Type.InfVar(_, uid, _, true) =>
       if pol then Type.Top else Type.Bot
-    case v @ Type.InfVar(_, uid, _) =>
+    case v @ Type.InfVar(_, uid, _, false) =>
       val nv = freshXVar(lvl)
       if pol then
         v.state.upperBounds ::= nv
@@ -34,13 +34,13 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogg
         nv.state.upperBounds = v.state.upperBounds.map(extrude) // * propagate
       nv
     case Type.FunType(args, ret, eff) =>
-      Type.FunType(args.map(arg => extrude(arg)(using skolems, lvl, !pol)), extrude(ret), extrude(eff))
+      Type.FunType(args.map(arg => extrude(arg)(using lvl, !pol)), extrude(ret), extrude(eff))
     case Type.ComposedType(lhs, rhs, p) =>
       Type.mkComposedType(extrude(lhs), extrude(rhs), p)
-    case Type.NegType(ty) => Type.mkNegType(extrude(ty)(using skolems, lvl, !pol))
+    case Type.NegType(ty) => Type.mkNegType(extrude(ty)(using lvl, !pol))
     case Type.Top | Type.Bot => ty
 
-  private def constrainConj(conj: Conj)(using cache: Cache, skolems: SkolemSet): Unit = trace(s"Constraining $conj"):
+  private def constrainConj(conj: Conj)(using cache: Cache): Unit = trace(s"Constraining $conj"):
     conj.sort match
     case Conj.INU(i, u) => (i, u) match
       case (_, Union.Bot) => raise(ErrorReport(msg"Cannot solve ${i.toString()} ∧ ¬⊥" -> N :: Nil))
@@ -60,9 +60,9 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogg
         constrain(ret1.toType, ret2.toType)
         constrain(eff1.toType, eff2.toType)
       case _ => raise(ErrorReport(msg"Cannot solve ${i.toString()} <: ${u.toString()}" -> N :: Nil))
-    case Conj.CVar(_, v) if skolems(v.uid) =>
+    case Conj.CVar(_, v) if v.isSkolem =>
       raise(ErrorReport(msg"Cannot constrain skolem ${v.toString()}" -> N :: Nil))
-    case Conj.CNVar(_, v) if skolems(v.uid) =>
+    case Conj.CNVar(_, v) if v.isSkolem =>
       raise(ErrorReport(msg"Cannot constrain skolem ${v.toString()}" -> N :: Nil))
     case Conj.CVar(conj, v) if v.lvl >= conj.lvl =>
       val nc = Type.mkNegType(conj.toType)
@@ -75,26 +75,26 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogg
       v.state.lowerBounds ::= c
       v.state.upperBounds.foreach(ub => constrain(c, ub))
     case Conj.CVar(conj, v) =>
-      val nc = Type.mkNegType(extrude(conj.toType)(using skolems, v.lvl, true))
+      val nc = Type.mkNegType(extrude(conj.toType)(using v.lvl, true))
       given Cache = cache + (v -> nc)
       v.state.upperBounds ::= nc
       v.state.lowerBounds.foreach(lb => constrain(lb, nc))
     case Conj.CNVar(conj, v) =>
-      val c = extrude(conj.toType)(using skolems, v.lvl, true)
+      val c = extrude(conj.toType)(using v.lvl, true)
       given Cache = cache + (c -> v)
       v.state.lowerBounds ::= c
       v.state.upperBounds.foreach(ub => constrain(c, ub))
 
-  private def constrainDNF(disj: Disj)(using cache: Cache, skolems: SkolemSet): Unit = disj match
+  private def constrainDNF(disj: Disj)(using cache: Cache): Unit = disj match
     case Disj.Bot => ()
     case Disj.Con(conj) => constrainConj(conj)
     case Disj.DC(disj, conj) =>
       constrainDNF(disj)
       constrainConj(conj)
 
-  private def constrainImpl(lhs: Type, rhs: Type)(using cache: Cache, skolems: SkolemSet) =
+  private def constrainImpl(lhs: Type, rhs: Type)(using cache: Cache) =
     if cache((lhs, rhs)) then log(s"Cached!")
     else trace(s"CONSTRAINT $lhs <: $rhs"):
       constrainDNF(dnf(lhs & rhs.!)(using raise))
-  def constrain(lhs: Type, rhs: Type)(using skolems: SkolemSet): Unit =
-    constrainImpl(lhs, rhs)(using Set.empty, skolems)
+  def constrain(lhs: Type, rhs: Type): Unit =
+    constrainImpl(lhs, rhs)(using Set.empty)

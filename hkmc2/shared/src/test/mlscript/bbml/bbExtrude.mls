@@ -43,6 +43,6 @@ g(foo)
 :e
 y `=> (let t = run(x `=> x `+ y) in y)
 //│ Elab: { code"λy@2. ${{ let t@3 = run#0(code"λx@5. ${code"+#2(${x@5#0}‹›, ${y@2#0}‹›)‹›‹›"‹›}‹›‹›"‹›)‹›‹›; y@2#1 }‹›}‹›‹›"‹› }‹›
-//│ ╔══[ERROR] Cannot constrain skolem α18_3
+//│ ╔══[ERROR] Cannot constrain skolem <α>18_3
 //│ ╙──
 //│ Type: CodeBase[in ⊥ out ⊥, in ⊥ out ⊤]
