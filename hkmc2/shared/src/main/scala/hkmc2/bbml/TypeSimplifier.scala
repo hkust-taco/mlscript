@@ -154,8 +154,8 @@ class TypeSimplifier(tl: TraceLogger):
               // tv.upperBounds = newUBs
               tv
           })
-        case ty: Type => ty.map(subst(_).monoOr(Type.Bot)) // FIXME
-        case PolyType(tv, bodies) => PolyType(tv, subst(bodies).monoOr(Type.Bot)) // FIXME
-        case PolyFunType(args, ret, eff) => PolyFunType(args.map(subst(_)), subst(ret), subst(eff).monoOr(Type.Bot))
+        case ty: Type => ty.map(subst(_).monoOr(???))
+        case pt: PolyType => pt.map(subst)
+        case pf: PolyFunType => pf.map(subst)
     
     subst(ty)

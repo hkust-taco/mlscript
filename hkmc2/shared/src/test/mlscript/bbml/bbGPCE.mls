@@ -79,7 +79,7 @@ fun bind: [G] -> (CodeBase[out G, out Any], [C] -> CodeBase[out C, out Any] -> C
 fun bind(rhs, k) = `let x = rhs `in k(x)
 bind
 //│ Elab: { fun bind: forall G@3: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(G@3))), WildcardTy(None,Some(Ref(class:Any))))),None), Fld(‹›,Forall(List(C@4),FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(C@4))), WildcardTy(None,Some(Ref(class:Any))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(CompType(Ref(C@4),Ref(G@3),true))), WildcardTy(None,Some(Ref(class:Any))))),None)),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(G@3))), WildcardTy(None,Some(Ref(class:Any))))),None)‹›; fun bind(rhs@5, k@6): forall G@10: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(G@10))), WildcardTy(None,Some(Ref(class:Any))))),None), Fld(‹›,Forall(List(C@11),FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(C@11))), WildcardTy(None,Some(Ref(class:Any))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(CompType(Ref(C@11),Ref(G@10),true))), WildcardTy(None,Some(Ref(class:Any))))),None)),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(G@10))), WildcardTy(None,Some(Ref(class:Any))))),None)‹› = code"{ let x@7 = ${rhs@5#0}‹›; ${k@6#0(x@7#0)‹›‹›}‹› }‹›"‹›; bind#0 }‹›
-//│ Type: forall α101_2: ⊥
+//│ Type: forall α101_2: (CodeBase[in ⊥ out α101_2, in ⊥ out ⊤], forall α102_3: (CodeBase[in ⊥ out α102_3, in ⊥ out ⊤]) ->{⊥} CodeBase[in ⊥ out (α102_3) ∨ (α101_2), in ⊥ out ⊤]) ->{⊥} CodeBase[in ⊥ out α101_2, in ⊥ out ⊤]
 
 
 fun body: [G] -> (CodeBase[out G, out Any], CodeBase[out G, out Any]) -> Int -> CodeBase[out G, out Any]
