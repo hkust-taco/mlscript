@@ -1,0 +1,170 @@
+:NewDefs
+:ParseOnly
+:UseIR
+
+:genCpp
+:runCpp
+fun main(init, key) =
+  fun ping(x) = if x <= 0 then key + 1 else pong(x - 1)
+  fun pong(x) = if x <= 0 then key + 2 else ping(x - 1)
+  ping(init)
+main(1, 42)
+//│ |#fun| |main|(|init|,| |key|)| |#=|→|#fun| |ping|(|x|)| |#=| |#if| |x| |<=| |0| |#then| |key| |+| |1| |#else| |pong|(|x| |-| |1|)|↵|#fun| |pong|(|x|)| |#=| |#if| |x| |<=| |0| |#then| |key| |+| |2| |#else| |ping|(|x| |-| |1|)|↵|ping|(|init|)|←|↵|main|(|1|,| |42|)|
+//│ Parsed: {fun main = (init, key,) => {fun ping = (x,) => if (<=(x, 0,)) then +(key, 1,) else pong(-(x, 1,),); fun pong = (x,) => if (<=(x, 0,)) then +(key, 2,) else ping(-(x, 1,),); ping(init,)}; main(1, 42,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ )}, {
+//│ Def(0, main, [init$0,key$0], [{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let* (x$1) = ping(init$0,key$0) in -- #11
+//│ x$1 -- #10
+//│ )
+//│ Def(1, ping, [x$2,key$1], [{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$3 = <=(x$2,0) in -- #40
+//│ if x$3 -- #39
+//│   true =>
+//│     let x$5 = +(key$1,1) in -- #26
+//│     jump j$0(x$5) -- #25
+//│   false =>
+//│     let x$6 = -(x$2,1) in -- #38
+//│     let* (x$7) = pong(x$6,key$1) in -- #37
+//│     jump j$0(x$7) -- #36
+//│ )
+//│ Def(2, j$0, [x$4], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ x$4 -- #18
+//│ )
+//│ Def(3, pong, [x$8,key$2], [{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$9 = <=(x$8,0) in -- #69
+//│ if x$9 -- #68
+//│   true =>
+//│     let x$11 = +(key$2,2) in -- #55
+//│     jump j$1(x$11) -- #54
+//│   false =>
+//│     let x$12 = -(x$8,1) in -- #67
+//│     let* (x$13) = ping(x$12,key$2) in -- #66
+//│     jump j$1(x$13) -- #65
+//│ )
+//│ Def(4, j$1, [x$10], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ x$10 -- #47
+//│ )
+//│ },
+//│ let* (x$0) = main(1,42) in -- #6
+//│ x$0 -- #5)
+//│ 
+//│ Promoted:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ )}, {
+//│ Def(0, main, [init$0,key$0], [{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let* (x$1) = ping(init$0,key$0) in -- #11
+//│ x$1 -- #10
+//│ )
+//│ Def(1, ping, [x$2,key$1], [{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$3 = <=(x$2,0) in -- #40
+//│ if x$3 -- #39
+//│   true =>
+//│     let x$5 = +(key$1,1) in -- #26
+//│     jump j$0(x$5) -- #25
+//│   false =>
+//│     let x$6 = -(x$2,1) in -- #38
+//│     let* (x$7) = pong(x$6,key$1) in -- #37
+//│     jump j$0(x$7) -- #36
+//│ )
+//│ Def(2, j$0, [x$4], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ x$4 -- #18
+//│ )
+//│ Def(3, pong, [x$8,key$2], [{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$9 = <=(x$8,0) in -- #69
+//│ if x$9 -- #68
+//│   true =>
+//│     let x$11 = +(key$2,2) in -- #55
+//│     jump j$1(x$11) -- #54
+//│   false =>
+//│     let x$12 = -(x$8,1) in -- #67
+//│     let* (x$13) = ping(x$12,key$2) in -- #66
+//│     jump j$1(x$13) -- #65
+//│ )
+//│ Def(4, j$1, [x$10], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ x$10 -- #47
+//│ )
+//│ },
+//│ let* (x$0) = main(1,42) in -- #6
+//│ x$0 -- #5)
+//│ 
+//│ 
+//│ Execution succeeded: 
+//│ 44
+//│ 
+

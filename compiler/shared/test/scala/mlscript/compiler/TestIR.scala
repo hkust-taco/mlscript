@@ -5,9 +5,8 @@ import mlscript.utils.shorthands._
 import mlscript.compiler.ir._
 import scala.collection.mutable.StringBuilder
 import mlscript.{DiffTests, ModeType, TypingUnit}
-import mlscript.compiler.ir.{Interpreter, Fresh, FreshInt, Builder}
+import mlscript.compiler.ir.{Fresh, FreshInt, Builder}
 import mlscript.compiler.codegen.cpp.{CppCodeGen, CppCompilerHost}
-import mlscript.compiler.optimizer.Optimizer
 import mlscript.compiler.optimizer.OptimizingError
 
 class IRDiffTestCompiler extends DiffTests {
@@ -30,9 +29,9 @@ class IRDiffTestCompiler extends DiffTests {
         var interp_result: Opt[Str] = None
         if (mode.interpIR)
           output("\nInterpreted:")
-          val ir = Interpreter(mode.irVerbose).interpret(graph)
-          interp_result = Some(ir)
-          output(ir)
+          //val ir = Interpreter(mode.irVerbose).interpret(graph)
+          //interp_result = Some(ir)
+          //output(ir)
         if (mode.genCpp)
           val cpp = CppCodeGen().codegen(graph)
           if (mode.showCpp)

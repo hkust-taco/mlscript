@@ -1,0 +1,339 @@
+:NewDefs
+:ParseOnly
+:UseIR
+
+:genCpp
+:runCpp
+fun main(x) =
+  class InnerClass(y) extends Callable {
+    fun apply1(z) = x + y + z
+  }
+  let ic = InnerClass(1)
+  ic(2) + ic(3)
+main(4)
+//│ |#fun| |main|(|x|)| |#=|→|#class| |InnerClass|(|y|)| |#extends| |Callable| |{|→|#fun| |apply1|(|z|)| |#=| |x| |+| |y| |+| |z|←|↵|}|↵|#let| |ic| |#=| |InnerClass|(|1|)|↵|ic|(|2|)| |+| |ic|(|3|)|←|↵|main|(|4|)|
+//│ Parsed: {fun main = (x,) => {class InnerClass(y,): Callable {fun apply1 = (z,) => +(+(x, y,), z,)}; let ic = InnerClass(1,); +(ic(2,), ic(3,),)}; main(4,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, InnerClass, [y,x], parents: Callable, methods:
+//│ apply1 -> Def(1, apply1, [z$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$6 = +(x,y) in -- #39
+//│ let x$7 = +(x$6,z$0) in -- #38
+//│ x$7 -- #37
+//│ ))}, {
+//│ Def(0, main, [x$1], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$2 = InnerClass(1,x$1) in -- #26
+//│ let** (x$3) = x$2(2) in -- #25
+//│ let** (x$4) = x$2(3) in -- #24
+//│ let x$5 = +(x$3,x$4) in -- #23
+//│ x$5 -- #22
+//│ )
+//│ },
+//│ let* (x$0) = main(4) in -- #4
+//│ x$0 -- #3)
+//│ 
+//│ Promoted:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, InnerClass, [y,x], parents: Callable, methods:
+//│ apply1 -> Def(1, apply1, [z$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$6 = +(x,y) in -- #39
+//│ let x$7 = +(x$6,z$0) in -- #38
+//│ x$7 -- #37
+//│ ))}, {
+//│ Def(0, main, [x$1], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$2 = InnerClass(1,x$1) in -- #26
+//│ let** (x$3) = x$2(2) in -- #25
+//│ let** (x$4) = x$2(3) in -- #24
+//│ let x$5 = +(x$3,x$4) in -- #23
+//│ x$5 -- #22
+//│ )
+//│ },
+//│ let* (x$0) = main(4) in -- #4
+//│ x$0 -- #3)
+//│ 
+//│ 
+//│ Execution succeeded: 
+//│ 15
+//│ 
+
+:genCpp
+:runCpp
+fun main(x) =
+  class InnerClass(y) extends Callable {
+    fun apply1(z) =
+      module InnerClass2 extends Callable {
+        fun apply1(w) = w + z
+      }
+      InnerClass2
+  }
+  let ic = InnerClass(1)
+  ic(2)(2) + ic(3)(1)
+main(4)
+//│ |#fun| |main|(|x|)| |#=|→|#class| |InnerClass|(|y|)| |#extends| |Callable| |{|→|#fun| |apply1|(|z|)| |#=|→|#module| |InnerClass2| |#extends| |Callable| |{|→|#fun| |apply1|(|w|)| |#=| |w| |+| |z|←|↵|}|↵|InnerClass2|←|←|↵|}|↵|#let| |ic| |#=| |InnerClass|(|1|)|↵|ic|(|2|)|(|2|)| |+| |ic|(|3|)|(|1|)|←|↵|main|(|4|)|
+//│ Parsed: {fun main = (x,) => {class InnerClass(y,): Callable {fun apply1 = (z,) => {module InnerClass2: Callable {fun apply1 = (w,) => +(w, z,)}; InnerClass2}}; let ic = InnerClass(1,); +(ic(2,)(2,), ic(3,)(1,),)}; main(4,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, InnerClass, [y], parents: Callable, methods:
+//│ apply1 -> Def(1, apply1, [z$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$8 = InnerClass2(z$0) in -- #38
+//│ x$8 -- #37
+//│ )),
+//│ ClassInfo(10, InnerClass2, [z], parents: Callable, methods:
+//│ apply1 -> Def(2, apply1, [w$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$9 = +(w$0,z) in -- #45
+//│ x$9 -- #44
+//│ ))}, {
+//│ Def(0, main, [x$1], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$2 = InnerClass(1) in -- #36
+//│ let** (x$3) = x$2(2) in -- #35
+//│ let** (x$4) = x$3(2) in -- #34
+//│ let** (x$5) = x$2(3) in -- #33
+//│ let** (x$6) = x$5(1) in -- #32
+//│ let x$7 = +(x$4,x$6) in -- #31
+//│ x$7 -- #30
+//│ )
+//│ },
+//│ let* (x$0) = main(4) in -- #4
+//│ x$0 -- #3)
+//│ 
+//│ Promoted:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, InnerClass, [y], parents: Callable, methods:
+//│ apply1 -> Def(1, apply1, [z$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$8 = InnerClass2(z$0) in -- #38
+//│ x$8 -- #37
+//│ )),
+//│ ClassInfo(10, InnerClass2, [z], parents: Callable, methods:
+//│ apply1 -> Def(2, apply1, [w$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$9 = +(w$0,z) in -- #45
+//│ x$9 -- #44
+//│ ))}, {
+//│ Def(0, main, [x$1], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$2 = InnerClass(1) in -- #36
+//│ let** (x$3) = x$2(2) in -- #35
+//│ let** (x$4) = x$3(2) in -- #34
+//│ let** (x$5) = x$2(3) in -- #33
+//│ let** (x$6) = x$5(1) in -- #32
+//│ let x$7 = +(x$4,x$6) in -- #31
+//│ x$7 -- #30
+//│ )
+//│ },
+//│ let* (x$0) = main(4) in -- #4
+//│ x$0 -- #3)
+//│ 
+//│ 
+//│ Execution succeeded: 
+//│ 8
+//│ 
+
+:genCpp
+:runCpp
+fun main(x) =
+  class InnerClass(y) extends Callable {
+    fun f(x) = y
+  }
+  let ic = InnerClass(1)
+  InnerClass.f(ic, Nil)
+main(2)
+//│ |#fun| |main|(|x|)| |#=|→|#class| |InnerClass|(|y|)| |#extends| |Callable| |{|→|#fun| |f|(|x|)| |#=| |y|←|↵|}|↵|#let| |ic| |#=| |InnerClass|(|1|)|↵|InnerClass|.f|(|ic|,| |Nil|)|←|↵|main|(|2|)|
+//│ Parsed: {fun main = (x,) => {class InnerClass(y,): Callable {fun f = (x,) => y}; let ic = InnerClass(1,); (InnerClass).f(ic, Nil,)}; main(2,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, InnerClass, [y], parents: Callable, methods:
+//│ f -> Def(1, f, [x$5], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ y -- #18
+//│ ))}, {
+//│ Def(0, main, [x$1], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$2 = InnerClass(1) in -- #17
+//│ let x$3 = Nil() in -- #16
+//│ let x$4 = InnerClass.f(x$2,x$3) in -- #15
+//│ x$4 -- #14
+//│ )
+//│ },
+//│ let* (x$0) = main(2) in -- #4
+//│ x$0 -- #3)
+//│ 
+//│ Promoted:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, InnerClass, [y], parents: Callable, methods:
+//│ f -> Def(1, f, [x$5], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ y -- #18
+//│ ))}, {
+//│ Def(0, main, [x$1], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$2 = InnerClass(1) in -- #17
+//│ let x$3 = Nil() in -- #16
+//│ let x$4 = InnerClass.f(x$2,x$3) in -- #15
+//│ x$4 -- #14
+//│ )
+//│ },
+//│ let* (x$0) = main(2) in -- #4
+//│ x$0 -- #3)
+//│ 
+//│ 
+//│ Execution succeeded: 
+//│ 1
+//│ 

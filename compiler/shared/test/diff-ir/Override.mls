@@ -38,34 +38,34 @@ main()
 //│ ClassInfo(8, None, [], parents: Option, methods:
 //│ ),
 //│ ClassInfo(9, Base, [], parents: , methods:
-//│ f -> Def(0, f, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 1 -- #0
-//│ )),
-//│ ClassInfo(10, Child, [], parents: Base, methods:
 //│ f -> Def(1, f, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ 2 -- #1
-//│ ))}, {
-//│ Def(2, main, [], [],
+//│ 1 -- #16
+//│ )),
+//│ ClassInfo(10, Child, [], parents: Base, methods:
+//│ f -> Def(2, f, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = Child() in -- #14
-//│ let x$1 = Base.f(x$0) in -- #13
-//│ let x$2 = Child.f(x$0) in -- #12
-//│ x$2 -- #11
+//│ 2 -- #17
+//│ ))}, {
+//│ Def(0, main, [], [],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$1 = Child() in -- #15
+//│ let x$2 = Base.f(x$1) in -- #14
+//│ let x$3 = Child.f(x$1) in -- #13
+//│ x$3 -- #12
 //│ )
 //│ },
-//│ let* (x$3) = main() in -- #17
-//│ x$3 -- #16)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, [], parents: , methods:
@@ -87,31 +87,31 @@ main()
 //│ ClassInfo(8, None, [], parents: Option, methods:
 //│ ),
 //│ ClassInfo(9, Base, [], parents: , methods:
-//│ f -> Def(0, f, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 1 -- #0
-//│ )),
-//│ ClassInfo(10, Child, [], parents: Base, methods:
 //│ f -> Def(1, f, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ 2 -- #1
-//│ ))}, {
-//│ Def(2, main, [], [],
+//│ 1 -- #16
+//│ )),
+//│ ClassInfo(10, Child, [], parents: Base, methods:
+//│ f -> Def(2, f, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = Child() in -- #14
-//│ let x$1 = Base.f(x$0) in -- #13
-//│ let x$2 = Child.f(x$0) in -- #12
-//│ x$2 -- #11
+//│ 2 -- #17
+//│ ))}, {
+//│ Def(0, main, [], [],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$1 = Child() in -- #15
+//│ let x$2 = Base.f(x$1) in -- #14
+//│ let x$3 = Child.f(x$1) in -- #13
+//│ x$3 -- #12
 //│ )
 //│ },
-//│ let* (x$3) = main() in -- #17
-//│ x$3 -- #16)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)

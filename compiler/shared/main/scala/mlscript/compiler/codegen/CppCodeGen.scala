@@ -49,8 +49,8 @@ class CppCodeGen:
     s"virtual void destroy() override { $fieldsDeletion operator delete (this, std::align_val_t(_mlsAlignment)); }"
   private def mlsThrowNonExhaustiveMatch = Stmt.Raw("_mlsNonExhaustiveMatch();");
   private def mlsCall(fn: Str, args: Ls[Expr]) = Expr.Call(Expr.Var("_mlsCall"), Expr.Var(fn) :: args)
-  private def mlsMethodCall(cls: ClassInfo, method: Str, args: Ls[Expr]) =
-    Expr.Call(Expr.Member(Expr.Call(Expr.Var(s"_mlsMethodCall<${cls.ident |> mapName}>"), Ls(args.head)), method), args.tail)
+  private def mlsMethodCall(cls: ClassRef, method: Str, args: Ls[Expr]) =
+    Expr.Call(Expr.Member(Expr.Call(Expr.Var(s"_mlsMethodCall<${cls.name |> mapName}>"), Ls(args.head)), method), args.tail)
   private def mlsFnWrapperName(fn: Str) = s"_mlsFn_$fn"
   private def mlsFnCreateMethod(fn: Str) = s"static _mlsValue create() { static _mlsFn_$fn mlsFn alignas(_mlsAlignment); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }"
   private def mlsFnApplyNMethod(fn: Str, n: Int) = 
@@ -65,18 +65,18 @@ class CppCodeGen:
   private def codegenClassInfo(using ctx: Ctx)(cls: ClassInfo): (Opt[Def], Decl) =
     val fields = cls.fields.map{x => (x |> mapName, mlsValType)}
     val parents = if cls.parents.nonEmpty then cls.parents.toList.map{x => x |> mapName} else mlsObject :: Nil
-    val decl = Decl.StructDecl(cls.ident |> mapName)
-    if mlsInternalClass.contains(cls.ident) then return (None, decl)
+    val decl = Decl.StructDecl(cls.name |> mapName)
+    if mlsInternalClass.contains(cls.name) then return (None, decl)
     val theDef = Def.StructDef(
-      cls.ident |> mapName, fields,
+      cls.name |> mapName, fields,
       if parents.nonEmpty then Some(parents) else None,
-      Ls(Def.RawDef(mlsObjectNameMethod(cls.ident)),
+      Ls(Def.RawDef(mlsObjectNameMethod(cls.name)),
          Def.RawDef(mlsTypeTag()),
          Def.RawDef(mlsCommonPrintMethod(cls.fields.map(mapName))),
-         Def.RawDef(mlsCommonDestructorMethod(cls.ident |> mapName, cls.fields.map(mapName))),
-         Def.RawDef(mlsCommonCreateMethod(cls.ident |> mapName, cls.fields.map(mapName), cls.id)))
+         Def.RawDef(mlsCommonDestructorMethod(cls.name |> mapName, cls.fields.map(mapName))),
+         Def.RawDef(mlsCommonCreateMethod(cls.name |> mapName, cls.fields.map(mapName), cls.id)))
       ++ cls.methods.map{case (name, defn) => {
-        val (theDef, decl) = codegenDefn(using Ctx(ctx.defnCtx + cls.ident))(defn)
+        val (theDef, decl) = codegenDefn(using Ctx(ctx.defnCtx + cls.name))(defn)
         theDef match
           case x @ Def.FuncDef(_, name, _, _, _, _) => x.copy(virt = true)
           case _ => theDef
@@ -117,7 +117,7 @@ class CppCodeGen:
     val stmt = cases.foldRight(S(init)) {
       case ((Pat.Class(cls), arm), nextarm) =>
         val (decls2, stmts2) = codegen(arm, storeInto)(using Ls.empty, Ls.empty[Stmt])
-        val stmt = Stmt.If(mlsIsValueOf(cls.ident |> mapName, Expr.Var(scrutName)), Stmt.Block(decls2, stmts2), nextarm)
+        val stmt = Stmt.If(mlsIsValueOf(cls.name |> mapName, Expr.Var(scrutName)), Stmt.Block(decls2, stmts2), nextarm)
         S(stmt)
       case ((Pat.Lit(i @ mlscript.IntLit(_)), arm), nextarm) =>
         val (decls2, stmts2) = codegen(arm, storeInto)(using Ls.empty, Ls.empty[Stmt])
@@ -156,8 +156,8 @@ class CppCodeGen:
 
   private def codegen(expr: IExpr)(using ctx: Ctx): Expr = expr match
     case x @ (IExpr.Ref(_) | IExpr.Literal(_)) => toExpr(x, reifyUnit = true).get
-    case IExpr.CtorApp(name, args) => mlsNewValue(name.ident |> mapName, args.map(toExpr))
-    case IExpr.Select(name, cls, field) => Expr.Member(mlsAsUnchecked(name |> mapName, cls.ident |> mapName), field |> mapName)
+    case IExpr.CtorApp(cls, args) => mlsNewValue(cls.name |> mapName, args.map(toExpr))
+    case IExpr.Select(name, cls, field) => Expr.Member(mlsAsUnchecked(name |> mapName, cls.name |> mapName), field |> mapName)
     case IExpr.BasicOp(name, args) => codegenOps(name, args)
 
   private def codegenBuiltin(names: Ls[Name], builtin: Str, args: Ls[TrivialExpr])(using ctx: Ctx): Ls[Stmt] = builtin match
@@ -212,7 +212,7 @@ class CppCodeGen:
     (theDef, decl)
 
   private def sortClasses(prog: Program): Ls[ClassInfo] =
-    var depgraph = prog.classes.map(x => (x.ident, x.parents)).toMap
+    var depgraph = prog.classes.map(x => (x.name, x.parents)).toMap
     var degree = depgraph.view.mapValues(_.size).toMap
     def removeNode(node: Str) =
       degree -= node
@@ -224,7 +224,7 @@ class CppCodeGen:
     while work.nonEmpty do
       val node = work.head
       work -= node
-      sorted = sorted :+ prog.classes.find(_.ident == node).get
+      sorted = sorted :+ prog.classes.find(_.name == node).get
       removeNode(node)
       val next = degree.filter(_._2 == 0).keys
       work = work ++ next

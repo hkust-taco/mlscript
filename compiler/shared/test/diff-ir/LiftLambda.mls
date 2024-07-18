@@ -1,0 +1,164 @@
+:NewDefs
+:ParseOnly
+:UseIR
+
+:genCpp
+:runCpp
+fun compose(f)(g)(x) = f(g(x))
+fun main(x) =
+  let y = 1
+  let lam = z => x + y + z
+  compose(lam)(lam)(2)
+main(3)
+//│ |#fun| |compose|(|f|)|(|g|)|(|x|)| |#=| |f|(|g|(|x|)|)|↵|#fun| |main|(|x|)| |#=|→|#let| |y| |#=| |1|↵|#let| |lam| |#=| |z| |#=>| |x| |+| |y| |+| |z|↵|compose|(|lam|)|(|lam|)|(|2|)|←|↵|main|(|3|)|
+//│ Parsed: {fun compose = (f,) => (g,) => (x,) => f(g(x,),); fun main = (x,) => {let y = 1; let lam = (z,) => +(+(x, y,), z,); compose(lam,)(lam,)(2,)}; main(3,)}
+//│ 
+//│ 
+//│ IR:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Lambda$0, [f], parents: Callable, methods:
+//│ apply1 -> Def(2, apply1, [g$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$11 = Lambda$2(f,g$0) in -- #27
+//│ x$11 -- #26
+//│ )),
+//│ ClassInfo(10, Lambda$1, [x,y], parents: Callable, methods:
+//│ apply1 -> Def(3, apply1, [z$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$12 = +(x,y) in -- #40
+//│ let x$13 = +(x$12,z$0) in -- #39
+//│ x$13 -- #38
+//│ )),
+//│ ClassInfo(11, Lambda$2, [f,g], parents: Callable, methods:
+//│ apply1 -> Def(4, apply1, [x$14], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let** (x$15) = g(x$14) in -- #51
+//│ let** (x$16) = f(x$15) in -- #50
+//│ x$16 -- #49
+//│ ))}, {
+//│ Def(0, compose, [f$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$2 = Lambda$0(f$0) in -- #6
+//│ x$2 -- #5
+//│ )
+//│ Def(1, main, [x$3], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$4 = 1 in -- #25
+//│ let x$6 = Lambda$1(x$3,x$4) in -- #24
+//│ let* (x$7) = compose(x$6) in -- #23
+//│ let** (x$8) = x$7(x$6) in -- #22
+//│ let** (x$9) = x$8(2) in -- #21
+//│ x$9 -- #20
+//│ )
+//│ },
+//│ let* (x$0) = main(3) in -- #4
+//│ x$0 -- #3)
+//│ 
+//│ Promoted:
+//│ Program({ClassInfo(0, True, [], parents: , methods:
+//│ ),
+//│ ClassInfo(1, False, [], parents: , methods:
+//│ ),
+//│ ClassInfo(2, Callable, [], parents: , methods:
+//│ ),
+//│ ClassInfo(3, List, [], parents: , methods:
+//│ ),
+//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
+//│ ),
+//│ ClassInfo(5, Nil, [], parents: List, methods:
+//│ ),
+//│ ClassInfo(6, Option, [], parents: , methods:
+//│ ),
+//│ ClassInfo(7, Some, [x], parents: Option, methods:
+//│ ),
+//│ ClassInfo(8, None, [], parents: Option, methods:
+//│ ),
+//│ ClassInfo(9, Lambda$0, [f], parents: Callable, methods:
+//│ apply1 -> Def(2, apply1, [g$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$11 = Lambda$2(f,g$0) in -- #27
+//│ x$11 -- #26
+//│ )),
+//│ ClassInfo(10, Lambda$1, [x,y], parents: Callable, methods:
+//│ apply1 -> Def(3, apply1, [z$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$12 = +(x,y) in -- #40
+//│ let x$13 = +(x$12,z$0) in -- #39
+//│ x$13 -- #38
+//│ )),
+//│ ClassInfo(11, Lambda$2, [f,g], parents: Callable, methods:
+//│ apply1 -> Def(4, apply1, [x$14], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let** (x$15) = g(x$14) in -- #51
+//│ let** (x$16) = f(x$15) in -- #50
+//│ x$16 -- #49
+//│ ))}, {
+//│ Def(0, compose, [f$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$2 = Lambda$0(f$0) in -- #6
+//│ x$2 -- #5
+//│ )
+//│ Def(1, main, [x$3], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ let x$4 = 1 in -- #25
+//│ let x$6 = Lambda$1(x$3,x$4) in -- #24
+//│ let* (x$7) = compose(x$6) in -- #23
+//│ let** (x$8) = x$7(x$6) in -- #22
+//│ let** (x$9) = x$8(2) in -- #21
+//│ x$9 -- #20
+//│ )
+//│ },
+//│ let* (x$0) = main(3) in -- #4
+//│ x$0 -- #3)
+//│ 
+//│ 
+//│ Execution succeeded: 
+//│ 10
+//│ 

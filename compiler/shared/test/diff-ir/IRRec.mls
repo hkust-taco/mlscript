@@ -34,28 +34,28 @@ fib(20)
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = <(n$0,2) in -- #38
-//│ if x$0 -- #37
+//│ let x$1 = <(n$0,2) in -- #43
+//│ if x$1 -- #42
 //│   true =>
-//│     jump j$0(n$0) -- #8
+//│     jump j$0(n$0) -- #13
 //│   false =>
-//│     let x$2 = -(n$0,1) in -- #36
-//│     let* (x$3) = fib(x$2) in -- #35
-//│     let x$4 = -(n$0,2) in -- #34
-//│     let* (x$5) = fib(x$4) in -- #33
-//│     let x$6 = +(x$3,x$5) in -- #32
-//│     jump j$0(x$6) -- #31
+//│     let x$3 = -(n$0,1) in -- #41
+//│     let* (x$4) = fib(x$3) in -- #40
+//│     let x$5 = -(n$0,2) in -- #39
+//│     let* (x$6) = fib(x$5) in -- #38
+//│     let x$7 = +(x$4,x$6) in -- #37
+//│     jump j$0(x$7) -- #36
 //│ )
-//│ Def(1, j$0, [x$1], [{}],
+//│ Def(1, j$0, [x$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$1 -- #6
+//│ x$2 -- #11
 //│ )
 //│ },
-//│ let* (x$7) = fib(20) in -- #43
-//│ x$7 -- #42)
+//│ let* (x$0) = fib(20) in -- #4
+//│ x$0 -- #3)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, [], parents: , methods:
@@ -81,31 +81,30 @@ fib(20)
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = <(n$0,2) in -- #38
-//│ if x$0 -- #37
+//│ let x$1 = <(n$0,2) in -- #43
+//│ if x$1 -- #42
 //│   true =>
-//│     jump j$0(n$0) -- #8
+//│     jump j$0(n$0) -- #13
 //│   false =>
-//│     let x$2 = -(n$0,1) in -- #36
-//│     let* (x$3) = fib(x$2) in -- #35
-//│     let x$4 = -(n$0,2) in -- #34
-//│     let* (x$5) = fib(x$4) in -- #33
-//│     let x$6 = +(x$3,x$5) in -- #32
-//│     jump j$0(x$6) -- #31
+//│     let x$3 = -(n$0,1) in -- #41
+//│     let* (x$4) = fib(x$3) in -- #40
+//│     let x$5 = -(n$0,2) in -- #39
+//│     let* (x$6) = fib(x$5) in -- #38
+//│     let x$7 = +(x$4,x$6) in -- #37
+//│     jump j$0(x$7) -- #36
 //│ )
-//│ Def(1, j$0, [x$1], [{}],
+//│ Def(1, j$0, [x$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$1 -- #6
+//│ x$2 -- #11
 //│ )
 //│ },
-//│ let* (x$7) = fib(20) in -- #43
-//│ x$7 -- #42)
+//│ let* (x$0) = fib(20) in -- #4
+//│ x$0 -- #3)
 //│ 
 //│ Interpreted:
-//│ 277
 //│ 
 
 :interpIR
@@ -137,61 +136,61 @@ foo()
 //│ ),
 //│ ClassInfo(8, None, [], parents: Option, methods:
 //│ )}, {
-//│ Def(0, odd, [x$0], [{}],
+//│ Def(0, odd, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$1 = ==(x$0,0) in -- #23
-//│ if x$1 -- #22
+//│ let x$2 = ==(x$1,0) in -- #26
+//│ if x$2 -- #25
 //│   true =>
-//│     let x$3 = False() in -- #9
-//│     jump j$0(x$3) -- #8
+//│     let x$4 = False() in -- #12
+//│     jump j$0(x$4) -- #11
 //│   false =>
-//│     let x$4 = -(x$0,1) in -- #21
-//│     let* (x$5) = even(x$4) in -- #20
-//│     jump j$0(x$5) -- #19
+//│     let x$5 = -(x$1,1) in -- #24
+//│     let* (x$6) = even(x$5) in -- #23
+//│     jump j$0(x$6) -- #22
 //│ )
-//│ Def(1, j$0, [x$2], [{}],
+//│ Def(1, j$0, [x$3], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$2 -- #6
+//│ x$3 -- #9
 //│ )
-//│ Def(2, even, [x$6], [{}],
+//│ Def(2, even, [x$7], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$7 = ==(x$6,0) in -- #47
-//│ if x$7 -- #46
+//│ let x$8 = ==(x$7,0) in -- #50
+//│ if x$8 -- #49
 //│   true =>
-//│     let x$9 = True() in -- #33
-//│     jump j$1(x$9) -- #32
+//│     let x$10 = True() in -- #36
+//│     jump j$1(x$10) -- #35
 //│   false =>
-//│     let x$10 = -(x$6,1) in -- #45
-//│     let* (x$11) = odd(x$10) in -- #44
-//│     jump j$1(x$11) -- #43
+//│     let x$11 = -(x$7,1) in -- #48
+//│     let* (x$12) = odd(x$11) in -- #47
+//│     jump j$1(x$12) -- #46
 //│ )
-//│ Def(3, j$1, [x$8], [{}],
+//│ Def(3, j$1, [x$9], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$8 -- #30
+//│ x$9 -- #33
 //│ )
 //│ Def(4, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$12) = odd(10) in -- #52
-//│ x$12 -- #51
+//│ let* (x$13) = odd(10) in -- #55
+//│ x$13 -- #54
 //│ )
 //│ },
-//│ let* (x$13) = foo() in -- #55
-//│ x$13 -- #54)
+//│ let* (x$0) = foo() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, [], parents: , methods:
@@ -212,64 +211,63 @@ foo()
 //│ ),
 //│ ClassInfo(8, None, [], parents: Option, methods:
 //│ )}, {
-//│ Def(0, odd, [x$0], [{}],
+//│ Def(0, odd, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$1 = ==(x$0,0) in -- #23
-//│ if x$1 -- #22
+//│ let x$2 = ==(x$1,0) in -- #26
+//│ if x$2 -- #25
 //│   true =>
-//│     let x$3 = False() in -- #9
-//│     jump j$0(x$3) -- #8
+//│     let x$4 = False() in -- #12
+//│     jump j$0(x$4) -- #11
 //│   false =>
-//│     let x$4 = -(x$0,1) in -- #21
-//│     let* (x$5) = even(x$4) in -- #20
-//│     jump j$0(x$5) -- #19
+//│     let x$5 = -(x$1,1) in -- #24
+//│     let* (x$6) = even(x$5) in -- #23
+//│     jump j$0(x$6) -- #22
 //│ )
-//│ Def(1, j$0, [x$2], [{}],
+//│ Def(1, j$0, [x$3], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$2 -- #6
+//│ x$3 -- #9
 //│ )
-//│ Def(2, even, [x$6], [{}],
+//│ Def(2, even, [x$7], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$7 = ==(x$6,0) in -- #47
-//│ if x$7 -- #46
+//│ let x$8 = ==(x$7,0) in -- #50
+//│ if x$8 -- #49
 //│   true =>
-//│     let x$9 = True() in -- #33
-//│     jump j$1(x$9) -- #32
+//│     let x$10 = True() in -- #36
+//│     jump j$1(x$10) -- #35
 //│   false =>
-//│     let x$10 = -(x$6,1) in -- #45
-//│     let* (x$11) = odd(x$10) in -- #44
-//│     jump j$1(x$11) -- #43
+//│     let x$11 = -(x$7,1) in -- #48
+//│     let* (x$12) = odd(x$11) in -- #47
+//│     jump j$1(x$12) -- #46
 //│ )
-//│ Def(3, j$1, [x$8], [{}],
+//│ Def(3, j$1, [x$9], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$8 -- #30
+//│ x$9 -- #33
 //│ )
 //│ Def(4, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$12) = odd(10) in -- #52
-//│ x$12 -- #51
+//│ let* (x$13) = odd(10) in -- #55
+//│ x$13 -- #54
 //│ )
 //│ },
-//│ let* (x$13) = foo() in -- #55
-//│ x$13 -- #54)
+//│ let* (x$0) = foo() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Interpreted:
-//│ False()
 //│ 
 
 :interpIR
@@ -313,60 +311,60 @@ main()
 //│ ),
 //│ ClassInfo(11, B, [b], parents: AorB, methods:
 //│ )}, {
-//│ Def(0, not, [x$0], [{}],
+//│ Def(0, not, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if x$0 -- #8
+//│ if x$1 -- #11
 //│   true =>
-//│     let x$2 = False() in -- #4
-//│     jump j$0(x$2) -- #3
-//│   false =>
-//│     let x$3 = True() in -- #7
+//│     let x$3 = False() in -- #7
 //│     jump j$0(x$3) -- #6
-//│ )
-//│ Def(1, j$0, [x$1], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ x$1 -- #1
-//│ )
-//│ Def(2, foo, [x$4], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ if x$4 -- #28
-//│   true =>
-//│     let x$6 = A() in -- #13
-//│     jump j$1(x$6) -- #12
 //│   false =>
-//│     let* (x$7) = not(x$4) in -- #27
-//│     let* (x$8) = foo(x$7) in -- #26
-//│     let x$9 = B(x$8) in -- #25
-//│     jump j$1(x$9) -- #24
+//│     let x$4 = True() in -- #10
+//│     jump j$0(x$4) -- #9
 //│ )
-//│ Def(3, j$1, [x$5], [{}],
+//│ Def(1, j$0, [x$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$5 -- #10
+//│ x$2 -- #4
+//│ )
+//│ Def(2, foo, [x$5], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ if x$5 -- #31
+//│   true =>
+//│     let x$7 = A() in -- #16
+//│     jump j$1(x$7) -- #15
+//│   false =>
+//│     let* (x$8) = not(x$5) in -- #30
+//│     let* (x$9) = foo(x$8) in -- #29
+//│     let x$10 = B(x$9) in -- #28
+//│     jump j$1(x$10) -- #27
+//│ )
+//│ Def(3, j$1, [x$6], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ x$6 -- #13
 //│ )
 //│ Def(4, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = False() in -- #34
-//│ let* (x$11) = foo(x$10) in -- #33
-//│ x$11 -- #32
+//│ let x$11 = False() in -- #37
+//│ let* (x$12) = foo(x$11) in -- #36
+//│ x$12 -- #35
 //│ )
 //│ },
-//│ let* (x$12) = main() in -- #37
-//│ x$12 -- #36)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, [], parents: , methods:
@@ -393,63 +391,62 @@ main()
 //│ ),
 //│ ClassInfo(11, B, [b], parents: AorB, methods:
 //│ )}, {
-//│ Def(0, not, [x$0], [{}],
+//│ Def(0, not, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if x$0 -- #8
+//│ if x$1 -- #11
 //│   true =>
-//│     let x$2 = False() in -- #4
-//│     jump j$0(x$2) -- #3
-//│   false =>
-//│     let x$3 = True() in -- #7
+//│     let x$3 = False() in -- #7
 //│     jump j$0(x$3) -- #6
-//│ )
-//│ Def(1, j$0, [x$1], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ x$1 -- #1
-//│ )
-//│ Def(2, foo, [x$4], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ if x$4 -- #28
-//│   true =>
-//│     let x$6 = A() in -- #13
-//│     jump j$1(x$6) -- #12
 //│   false =>
-//│     let* (x$7) = not(x$4) in -- #27
-//│     let* (x$8) = foo(x$7) in -- #26
-//│     let x$9 = B(x$8) in -- #25
-//│     jump j$1(x$9) -- #24
+//│     let x$4 = True() in -- #10
+//│     jump j$0(x$4) -- #9
 //│ )
-//│ Def(3, j$1, [x$5], [{}],
+//│ Def(1, j$0, [x$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$5 -- #10
+//│ x$2 -- #4
+//│ )
+//│ Def(2, foo, [x$5], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ if x$5 -- #31
+//│   true =>
+//│     let x$7 = A() in -- #16
+//│     jump j$1(x$7) -- #15
+//│   false =>
+//│     let* (x$8) = not(x$5) in -- #30
+//│     let* (x$9) = foo(x$8) in -- #29
+//│     let x$10 = B(x$9) in -- #28
+//│     jump j$1(x$10) -- #27
+//│ )
+//│ Def(3, j$1, [x$6], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ x$6 -- #13
 //│ )
 //│ Def(4, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = False() in -- #34
-//│ let* (x$11) = foo(x$10) in -- #33
-//│ x$11 -- #32
+//│ let x$11 = False() in -- #37
+//│ let* (x$12) = foo(x$11) in -- #36
+//│ x$12 -- #35
 //│ )
 //│ },
-//│ let* (x$12) = main() in -- #37
-//│ x$12 -- #36)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Interpreted:
-//│ B(A())
 //│ 
 
 :interpIR
@@ -511,93 +508,93 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = 1 in -- #26
-//│ let x$1 = 2 in -- #25
-//│ let x$2 = 3 in -- #24
-//│ let x$3 = 4 in -- #23
-//│ let x$4 = +(x$0,x$1) in -- #22
-//│ let x$5 = -(x$4,x$2) in -- #21
-//│ let x$6 = +(x$5,x$3) in -- #20
-//│ x$6 -- #19
+//│ let x$1 = 1 in -- #29
+//│ let x$2 = 2 in -- #28
+//│ let x$3 = 3 in -- #27
+//│ let x$4 = 4 in -- #26
+//│ let x$5 = +(x$1,x$2) in -- #25
+//│ let x$6 = -(x$5,x$3) in -- #24
+//│ let x$7 = +(x$6,x$4) in -- #23
+//│ x$7 -- #22
 //│ )
 //│ Def(1, bbb, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$7) = aaa() in -- #42
-//│ let x$8 = *(x$7,100) in -- #41
-//│ let x$9 = +(x$8,4) in -- #40
-//│ x$9 -- #39
+//│ let* (x$8) = aaa() in -- #45
+//│ let x$9 = *(x$8,100) in -- #44
+//│ let x$10 = +(x$9,4) in -- #43
+//│ x$10 -- #42
 //│ )
-//│ Def(2, not, [x$10], [{}],
+//│ Def(2, not, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if x$10 -- #51
+//│ if x$11 -- #54
 //│   true =>
-//│     let x$12 = False() in -- #47
-//│     jump j$0(x$12) -- #46
-//│   false =>
-//│     let x$13 = True() in -- #50
+//│     let x$13 = False() in -- #50
 //│     jump j$0(x$13) -- #49
-//│ )
-//│ Def(3, j$0, [x$11], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ x$11 -- #44
-//│ )
-//│ Def(4, foo, [x$14], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ if x$14 -- #71
-//│   true =>
-//│     let x$16 = A() in -- #56
-//│     jump j$1(x$16) -- #55
 //│   false =>
-//│     let* (x$17) = not(x$14) in -- #70
-//│     let* (x$18) = foo(x$17) in -- #69
-//│     let x$19 = B(x$18) in -- #68
-//│     jump j$1(x$19) -- #67
+//│     let x$14 = True() in -- #53
+//│     jump j$0(x$14) -- #52
 //│ )
-//│ Def(5, j$1, [x$15], [{}],
+//│ Def(3, j$0, [x$12], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$15 -- #53
+//│ x$12 -- #47
+//│ )
+//│ Def(4, foo, [x$15], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ if x$15 -- #74
+//│   true =>
+//│     let x$17 = A() in -- #59
+//│     jump j$1(x$17) -- #58
+//│   false =>
+//│     let* (x$18) = not(x$15) in -- #73
+//│     let* (x$19) = foo(x$18) in -- #72
+//│     let x$20 = B(x$19) in -- #71
+//│     jump j$1(x$20) -- #70
+//│ )
+//│ Def(5, j$1, [x$16], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ x$16 -- #56
 //│ )
 //│ Def(6, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$20 = False() in -- #93
-//│ let* (x$21) = foo(x$20) in -- #92
-//│ case x$21 of -- #91
+//│ let x$21 = False() in -- #96
+//│ let* (x$22) = foo(x$21) in -- #95
+//│ case x$22 of -- #94
 //│   A =>
-//│     let* (x$23) = aaa() in -- #81
-//│     jump j$2(x$23) -- #80
+//│     let* (x$24) = aaa() in -- #84
+//│     jump j$2(x$24) -- #83
 //│   B =>
-//│     let x$24 = B.b(x$21) in -- #90
-//│     let* (x$25) = bbb() in -- #89
-//│     jump j$2(x$25) -- #88
+//│     let x$25 = B.b(x$22) in -- #93
+//│     let* (x$26) = bbb() in -- #92
+//│     jump j$2(x$26) -- #91
 //│ )
-//│ Def(7, j$2, [x$22], [{}],
+//│ Def(7, j$2, [x$23], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$22 -- #77
+//│ x$23 -- #80
 //│ )
 //│ },
-//│ let* (x$26) = main() in -- #96
-//│ x$26 -- #95)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, [], parents: , methods:
@@ -629,96 +626,95 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = 1 in -- #26
-//│ let x$1 = 2 in -- #25
-//│ let x$2 = 3 in -- #24
-//│ let x$3 = 4 in -- #23
-//│ let x$4 = +(x$0,x$1) in -- #22
-//│ let x$5 = -(x$4,x$2) in -- #21
-//│ let x$6 = +(x$5,x$3) in -- #20
-//│ x$6 -- #19
+//│ let x$1 = 1 in -- #29
+//│ let x$2 = 2 in -- #28
+//│ let x$3 = 3 in -- #27
+//│ let x$4 = 4 in -- #26
+//│ let x$5 = +(x$1,x$2) in -- #25
+//│ let x$6 = -(x$5,x$3) in -- #24
+//│ let x$7 = +(x$6,x$4) in -- #23
+//│ x$7 -- #22
 //│ )
 //│ Def(1, bbb, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$7) = aaa() in -- #42
-//│ let x$8 = *(x$7,100) in -- #41
-//│ let x$9 = +(x$8,4) in -- #40
-//│ x$9 -- #39
+//│ let* (x$8) = aaa() in -- #45
+//│ let x$9 = *(x$8,100) in -- #44
+//│ let x$10 = +(x$9,4) in -- #43
+//│ x$10 -- #42
 //│ )
-//│ Def(2, not, [x$10], [{}],
+//│ Def(2, not, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if x$10 -- #51
+//│ if x$11 -- #54
 //│   true =>
-//│     let x$12 = False() in -- #47
-//│     jump j$0(x$12) -- #46
-//│   false =>
-//│     let x$13 = True() in -- #50
+//│     let x$13 = False() in -- #50
 //│     jump j$0(x$13) -- #49
-//│ )
-//│ Def(3, j$0, [x$11], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ x$11 -- #44
-//│ )
-//│ Def(4, foo, [x$14], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ if x$14 -- #71
-//│   true =>
-//│     let x$16 = A() in -- #56
-//│     jump j$1(x$16) -- #55
 //│   false =>
-//│     let* (x$17) = not(x$14) in -- #70
-//│     let* (x$18) = foo(x$17) in -- #69
-//│     let x$19 = B(x$18) in -- #68
-//│     jump j$1(x$19) -- #67
+//│     let x$14 = True() in -- #53
+//│     jump j$0(x$14) -- #52
 //│ )
-//│ Def(5, j$1, [x$15], [{}],
+//│ Def(3, j$0, [x$12], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$15 -- #53
+//│ x$12 -- #47
+//│ )
+//│ Def(4, foo, [x$15], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ if x$15 -- #74
+//│   true =>
+//│     let x$17 = A() in -- #59
+//│     jump j$1(x$17) -- #58
+//│   false =>
+//│     let* (x$18) = not(x$15) in -- #73
+//│     let* (x$19) = foo(x$18) in -- #72
+//│     let x$20 = B(x$19) in -- #71
+//│     jump j$1(x$20) -- #70
+//│ )
+//│ Def(5, j$1, [x$16], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ x$16 -- #56
 //│ )
 //│ Def(6, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$20 = False() in -- #93
-//│ let* (x$21) = foo(x$20) in -- #92
-//│ case x$21 of -- #91
+//│ let x$21 = False() in -- #96
+//│ let* (x$22) = foo(x$21) in -- #95
+//│ case x$22 of -- #94
 //│   A =>
-//│     let* (x$23) = aaa() in -- #81
-//│     jump j$2(x$23) -- #80
+//│     let* (x$24) = aaa() in -- #84
+//│     jump j$2(x$24) -- #83
 //│   B =>
-//│     let x$24 = B.b(x$21) in -- #90
-//│     let* (x$25) = bbb() in -- #89
-//│     jump j$2(x$25) -- #88
+//│     let x$25 = B.b(x$22) in -- #93
+//│     let* (x$26) = bbb() in -- #92
+//│     jump j$2(x$26) -- #91
 //│ )
-//│ Def(7, j$2, [x$22], [{}],
+//│ Def(7, j$2, [x$23], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$22 -- #77
+//│ x$23 -- #80
 //│ )
 //│ },
-//│ let* (x$26) = main() in -- #96
-//│ x$26 -- #95)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Interpreted:
-//│ 404
 //│ 
 
 
@@ -765,63 +761,63 @@ foo()
 //│ ),
 //│ ClassInfo(11, O, [], parents: Nat, methods:
 //│ )}, {
-//│ Def(0, odd, [x$0], [{}],
+//│ Def(0, odd, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$0 of -- #16
+//│ case x$1 of -- #19
 //│   O =>
-//│     let x$2 = False() in -- #4
-//│     jump j$0(x$2) -- #3
+//│     let x$3 = False() in -- #7
+//│     jump j$0(x$3) -- #6
 //│   S =>
-//│     let x$3 = S.s(x$0) in -- #15
-//│     let* (x$4) = even(x$3) in -- #14
-//│     jump j$0(x$4) -- #13
+//│     let x$4 = S.s(x$1) in -- #18
+//│     let* (x$5) = even(x$4) in -- #17
+//│     jump j$0(x$5) -- #16
 //│ )
-//│ Def(1, j$0, [x$1], [{}],
+//│ Def(1, j$0, [x$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$1 -- #1
+//│ x$2 -- #4
 //│ )
-//│ Def(2, even, [x$5], [{}],
+//│ Def(2, even, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$5 of -- #33
+//│ case x$6 of -- #36
 //│   O =>
-//│     let x$7 = True() in -- #21
-//│     jump j$1(x$7) -- #20
+//│     let x$8 = True() in -- #24
+//│     jump j$1(x$8) -- #23
 //│   S =>
-//│     let x$8 = S.s(x$5) in -- #32
-//│     let* (x$9) = odd(x$8) in -- #31
-//│     jump j$1(x$9) -- #30
+//│     let x$9 = S.s(x$6) in -- #35
+//│     let* (x$10) = odd(x$9) in -- #34
+//│     jump j$1(x$10) -- #33
 //│ )
-//│ Def(3, j$1, [x$6], [{}],
+//│ Def(3, j$1, [x$7], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #18
+//│ x$7 -- #21
 //│ )
 //│ Def(4, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = O() in -- #51
-//│ let x$11 = S(x$10) in -- #50
-//│ let x$12 = S(x$11) in -- #49
-//│ let x$13 = S(x$12) in -- #48
-//│ let* (x$14) = odd(x$13) in -- #47
-//│ x$14 -- #46
+//│ let x$11 = O() in -- #54
+//│ let x$12 = S(x$11) in -- #53
+//│ let x$13 = S(x$12) in -- #52
+//│ let x$14 = S(x$13) in -- #51
+//│ let* (x$15) = odd(x$14) in -- #50
+//│ x$15 -- #49
 //│ )
 //│ },
-//│ let* (x$15) = foo() in -- #54
-//│ x$15 -- #53)
+//│ let* (x$0) = foo() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, [], parents: , methods:
@@ -848,66 +844,65 @@ foo()
 //│ ),
 //│ ClassInfo(11, O, [], parents: Nat, methods:
 //│ )}, {
-//│ Def(0, odd, [x$0], [{}],
+//│ Def(0, odd, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$0 of -- #16
+//│ case x$1 of -- #19
 //│   O =>
-//│     let x$2 = False() in -- #4
-//│     jump j$0(x$2) -- #3
+//│     let x$3 = False() in -- #7
+//│     jump j$0(x$3) -- #6
 //│   S =>
-//│     let x$3 = S.s(x$0) in -- #15
-//│     let* (x$4) = even(x$3) in -- #14
-//│     jump j$0(x$4) -- #13
+//│     let x$4 = S.s(x$1) in -- #18
+//│     let* (x$5) = even(x$4) in -- #17
+//│     jump j$0(x$5) -- #16
 //│ )
-//│ Def(1, j$0, [x$1], [{}],
+//│ Def(1, j$0, [x$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$1 -- #1
+//│ x$2 -- #4
 //│ )
-//│ Def(2, even, [x$5], [{}],
+//│ Def(2, even, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$5 of -- #33
+//│ case x$6 of -- #36
 //│   O =>
-//│     let x$7 = True() in -- #21
-//│     jump j$1(x$7) -- #20
+//│     let x$8 = True() in -- #24
+//│     jump j$1(x$8) -- #23
 //│   S =>
-//│     let x$8 = S.s(x$5) in -- #32
-//│     let* (x$9) = odd(x$8) in -- #31
-//│     jump j$1(x$9) -- #30
+//│     let x$9 = S.s(x$6) in -- #35
+//│     let* (x$10) = odd(x$9) in -- #34
+//│     jump j$1(x$10) -- #33
 //│ )
-//│ Def(3, j$1, [x$6], [{}],
+//│ Def(3, j$1, [x$7], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #18
+//│ x$7 -- #21
 //│ )
 //│ Def(4, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = O() in -- #51
-//│ let x$11 = S(x$10) in -- #50
-//│ let x$12 = S(x$11) in -- #49
-//│ let x$13 = S(x$12) in -- #48
-//│ let* (x$14) = odd(x$13) in -- #47
-//│ x$14 -- #46
+//│ let x$11 = O() in -- #54
+//│ let x$12 = S(x$11) in -- #53
+//│ let x$13 = S(x$12) in -- #52
+//│ let x$14 = S(x$13) in -- #51
+//│ let* (x$15) = odd(x$14) in -- #50
+//│ x$15 -- #49
 //│ )
 //│ },
-//│ let* (x$15) = foo() in -- #54
-//│ x$15 -- #53)
+//│ let* (x$0) = foo() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Interpreted:
-//│ True()
 //│ 
 
 :interpIR
@@ -955,83 +950,83 @@ foo()
 //│ ),
 //│ ClassInfo(11, O, [], parents: Nat, methods:
 //│ )}, {
-//│ Def(0, odd, [x$0], [{}],
+//│ Def(0, odd, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$0 of -- #16
+//│ case x$1 of -- #19
 //│   O =>
-//│     let x$2 = False() in -- #4
-//│     jump j$0(x$2) -- #3
+//│     let x$3 = False() in -- #7
+//│     jump j$0(x$3) -- #6
 //│   S =>
-//│     let x$3 = S.s(x$0) in -- #15
-//│     let* (x$4) = even(x$3) in -- #14
-//│     jump j$0(x$4) -- #13
+//│     let x$4 = S.s(x$1) in -- #18
+//│     let* (x$5) = even(x$4) in -- #17
+//│     jump j$0(x$5) -- #16
 //│ )
-//│ Def(1, j$0, [x$1], [{}],
+//│ Def(1, j$0, [x$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$1 -- #1
+//│ x$2 -- #4
 //│ )
-//│ Def(2, even, [x$5], [{}],
+//│ Def(2, even, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$5 of -- #33
+//│ case x$6 of -- #36
 //│   O =>
-//│     let x$7 = True() in -- #21
-//│     jump j$1(x$7) -- #20
+//│     let x$8 = True() in -- #24
+//│     jump j$1(x$8) -- #23
 //│   S =>
-//│     let x$8 = S.s(x$5) in -- #32
-//│     let* (x$9) = odd(x$8) in -- #31
-//│     jump j$1(x$9) -- #30
+//│     let x$9 = S.s(x$6) in -- #35
+//│     let* (x$10) = odd(x$9) in -- #34
+//│     jump j$1(x$10) -- #33
 //│ )
-//│ Def(3, j$1, [x$6], [{}],
+//│ Def(3, j$1, [x$7], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #18
+//│ x$7 -- #21
 //│ )
 //│ Def(4, mk, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = >(n$0,0) in -- #61
-//│ if x$10 -- #60
+//│ let x$11 = >(n$0,0) in -- #64
+//│ if x$11 -- #63
 //│   true =>
-//│     let x$12 = -(n$0,1) in -- #56
-//│     let* (x$13) = mk(x$12) in -- #55
-//│     let x$14 = S(x$13) in -- #54
-//│     jump j$2(x$14) -- #53
+//│     let x$13 = -(n$0,1) in -- #59
+//│     let* (x$14) = mk(x$13) in -- #58
+//│     let x$15 = S(x$14) in -- #57
+//│     jump j$2(x$15) -- #56
 //│   false =>
-//│     let x$15 = O() in -- #59
-//│     jump j$2(x$15) -- #58
+//│     let x$16 = O() in -- #62
+//│     jump j$2(x$16) -- #61
 //│ )
-//│ Def(5, j$2, [x$11], [{}],
+//│ Def(5, j$2, [x$12], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$11 -- #40
+//│ x$12 -- #43
 //│ )
 //│ Def(6, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$16) = mk(10) in -- #70
-//│ let* (x$17) = odd(x$16) in -- #69
-//│ x$17 -- #68
+//│ let* (x$17) = mk(10) in -- #73
+//│ let* (x$18) = odd(x$17) in -- #72
+//│ x$18 -- #71
 //│ )
 //│ },
-//│ let* (x$18) = foo() in -- #73
-//│ x$18 -- #72)
+//│ let* (x$0) = foo() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, [], parents: , methods:
@@ -1058,86 +1053,85 @@ foo()
 //│ ),
 //│ ClassInfo(11, O, [], parents: Nat, methods:
 //│ )}, {
-//│ Def(0, odd, [x$0], [{}],
+//│ Def(0, odd, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$0 of -- #16
+//│ case x$1 of -- #19
 //│   O =>
-//│     let x$2 = False() in -- #4
-//│     jump j$0(x$2) -- #3
+//│     let x$3 = False() in -- #7
+//│     jump j$0(x$3) -- #6
 //│   S =>
-//│     let x$3 = S.s(x$0) in -- #15
-//│     let* (x$4) = even(x$3) in -- #14
-//│     jump j$0(x$4) -- #13
+//│     let x$4 = S.s(x$1) in -- #18
+//│     let* (x$5) = even(x$4) in -- #17
+//│     jump j$0(x$5) -- #16
 //│ )
-//│ Def(1, j$0, [x$1], [{}],
+//│ Def(1, j$0, [x$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$1 -- #1
+//│ x$2 -- #4
 //│ )
-//│ Def(2, even, [x$5], [{}],
+//│ Def(2, even, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$5 of -- #33
+//│ case x$6 of -- #36
 //│   O =>
-//│     let x$7 = True() in -- #21
-//│     jump j$1(x$7) -- #20
+//│     let x$8 = True() in -- #24
+//│     jump j$1(x$8) -- #23
 //│   S =>
-//│     let x$8 = S.s(x$5) in -- #32
-//│     let* (x$9) = odd(x$8) in -- #31
-//│     jump j$1(x$9) -- #30
+//│     let x$9 = S.s(x$6) in -- #35
+//│     let* (x$10) = odd(x$9) in -- #34
+//│     jump j$1(x$10) -- #33
 //│ )
-//│ Def(3, j$1, [x$6], [{}],
+//│ Def(3, j$1, [x$7], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #18
+//│ x$7 -- #21
 //│ )
 //│ Def(4, mk, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = >(n$0,0) in -- #61
-//│ if x$10 -- #60
+//│ let x$11 = >(n$0,0) in -- #64
+//│ if x$11 -- #63
 //│   true =>
-//│     let x$12 = -(n$0,1) in -- #56
-//│     let* (x$13) = mk(x$12) in -- #55
-//│     let x$14 = S(x$13) in -- #54
-//│     jump j$2(x$14) -- #53
+//│     let x$13 = -(n$0,1) in -- #59
+//│     let* (x$14) = mk(x$13) in -- #58
+//│     let x$15 = S(x$14) in -- #57
+//│     jump j$2(x$15) -- #56
 //│   false =>
-//│     let x$15 = O() in -- #59
-//│     jump j$2(x$15) -- #58
+//│     let x$16 = O() in -- #62
+//│     jump j$2(x$16) -- #61
 //│ )
-//│ Def(5, j$2, [x$11], [{}],
+//│ Def(5, j$2, [x$12], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$11 -- #40
+//│ x$12 -- #43
 //│ )
 //│ Def(6, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$16) = mk(10) in -- #70
-//│ let* (x$17) = odd(x$16) in -- #69
-//│ x$17 -- #68
+//│ let* (x$17) = mk(10) in -- #73
+//│ let* (x$18) = odd(x$17) in -- #72
+//│ x$18 -- #71
 //│ )
 //│ },
-//│ let* (x$18) = foo() in -- #73
-//│ x$18 -- #72)
+//│ let* (x$0) = foo() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Interpreted:
-//│ False()
 //│ 
 
 :interpIR
@@ -1185,85 +1179,85 @@ foo()
 //│ ),
 //│ ClassInfo(11, O, [], parents: Nat, methods:
 //│ )}, {
-//│ Def(0, odd, [x$0], [{}],
+//│ Def(0, odd, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$0 of -- #16
+//│ case x$1 of -- #19
 //│   O =>
-//│     let x$2 = False() in -- #4
-//│     jump j$0(x$2) -- #3
+//│     let x$3 = False() in -- #7
+//│     jump j$0(x$3) -- #6
 //│   S =>
-//│     let x$3 = S.s(x$0) in -- #15
-//│     let* (x$4) = even(x$3) in -- #14
-//│     jump j$0(x$4) -- #13
+//│     let x$4 = S.s(x$1) in -- #18
+//│     let* (x$5) = even(x$4) in -- #17
+//│     jump j$0(x$5) -- #16
 //│ )
-//│ Def(1, j$0, [x$1], [{}],
+//│ Def(1, j$0, [x$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$1 -- #1
+//│ x$2 -- #4
 //│ )
-//│ Def(2, even, [x$5], [{}],
+//│ Def(2, even, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$5 of -- #33
+//│ case x$6 of -- #36
 //│   O =>
-//│     let x$7 = True() in -- #21
-//│     jump j$1(x$7) -- #20
+//│     let x$8 = True() in -- #24
+//│     jump j$1(x$8) -- #23
 //│   S =>
-//│     let x$8 = S.s(x$5) in -- #32
-//│     let* (x$9) = odd(x$8) in -- #31
-//│     jump j$1(x$9) -- #30
+//│     let x$9 = S.s(x$6) in -- #35
+//│     let* (x$10) = odd(x$9) in -- #34
+//│     jump j$1(x$10) -- #33
 //│ )
-//│ Def(3, j$1, [x$6], [{}],
+//│ Def(3, j$1, [x$7], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #18
+//│ x$7 -- #21
 //│ )
 //│ Def(4, mk, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = >(n$0,0) in -- #61
-//│ if x$10 -- #60
+//│ let x$11 = >(n$0,0) in -- #64
+//│ if x$11 -- #63
 //│   true =>
-//│     let x$12 = -(n$0,1) in -- #56
-//│     let* (x$13) = mk(x$12) in -- #55
-//│     let x$14 = S(x$13) in -- #54
-//│     jump j$2(x$14) -- #53
+//│     let x$13 = -(n$0,1) in -- #59
+//│     let* (x$14) = mk(x$13) in -- #58
+//│     let x$15 = S(x$14) in -- #57
+//│     jump j$2(x$15) -- #56
 //│   false =>
-//│     let x$15 = O() in -- #59
-//│     jump j$2(x$15) -- #58
+//│     let x$16 = O() in -- #62
+//│     jump j$2(x$16) -- #61
 //│ )
-//│ Def(5, j$2, [x$11], [{}],
+//│ Def(5, j$2, [x$12], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$11 -- #40
+//│ x$12 -- #43
 //│ )
 //│ Def(6, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$16) = mk(10) in -- #78
-//│ let x$17 = S(x$16) in -- #77
-//│ let x$18 = S(x$17) in -- #76
-//│ let* (x$19) = odd(x$18) in -- #75
-//│ x$19 -- #74
+//│ let* (x$17) = mk(10) in -- #81
+//│ let x$18 = S(x$17) in -- #80
+//│ let x$19 = S(x$18) in -- #79
+//│ let* (x$20) = odd(x$19) in -- #78
+//│ x$20 -- #77
 //│ )
 //│ },
-//│ let* (x$20) = foo() in -- #81
-//│ x$20 -- #80)
+//│ let* (x$0) = foo() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, [], parents: , methods:
@@ -1290,88 +1284,87 @@ foo()
 //│ ),
 //│ ClassInfo(11, O, [], parents: Nat, methods:
 //│ )}, {
-//│ Def(0, odd, [x$0], [{}],
+//│ Def(0, odd, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$0 of -- #16
+//│ case x$1 of -- #19
 //│   O =>
-//│     let x$2 = False() in -- #4
-//│     jump j$0(x$2) -- #3
+//│     let x$3 = False() in -- #7
+//│     jump j$0(x$3) -- #6
 //│   S =>
-//│     let x$3 = S.s(x$0) in -- #15
-//│     let* (x$4) = even(x$3) in -- #14
-//│     jump j$0(x$4) -- #13
+//│     let x$4 = S.s(x$1) in -- #18
+//│     let* (x$5) = even(x$4) in -- #17
+//│     jump j$0(x$5) -- #16
 //│ )
-//│ Def(1, j$0, [x$1], [{}],
+//│ Def(1, j$0, [x$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$1 -- #1
+//│ x$2 -- #4
 //│ )
-//│ Def(2, even, [x$5], [{}],
+//│ Def(2, even, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$5 of -- #33
+//│ case x$6 of -- #36
 //│   O =>
-//│     let x$7 = True() in -- #21
-//│     jump j$1(x$7) -- #20
+//│     let x$8 = True() in -- #24
+//│     jump j$1(x$8) -- #23
 //│   S =>
-//│     let x$8 = S.s(x$5) in -- #32
-//│     let* (x$9) = odd(x$8) in -- #31
-//│     jump j$1(x$9) -- #30
+//│     let x$9 = S.s(x$6) in -- #35
+//│     let* (x$10) = odd(x$9) in -- #34
+//│     jump j$1(x$10) -- #33
 //│ )
-//│ Def(3, j$1, [x$6], [{}],
+//│ Def(3, j$1, [x$7], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #18
+//│ x$7 -- #21
 //│ )
 //│ Def(4, mk, [n$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = >(n$0,0) in -- #61
-//│ if x$10 -- #60
+//│ let x$11 = >(n$0,0) in -- #64
+//│ if x$11 -- #63
 //│   true =>
-//│     let x$12 = -(n$0,1) in -- #56
-//│     let* (x$13) = mk(x$12) in -- #55
-//│     let x$14 = S(x$13) in -- #54
-//│     jump j$2(x$14) -- #53
+//│     let x$13 = -(n$0,1) in -- #59
+//│     let* (x$14) = mk(x$13) in -- #58
+//│     let x$15 = S(x$14) in -- #57
+//│     jump j$2(x$15) -- #56
 //│   false =>
-//│     let x$15 = O() in -- #59
-//│     jump j$2(x$15) -- #58
+//│     let x$16 = O() in -- #62
+//│     jump j$2(x$16) -- #61
 //│ )
-//│ Def(5, j$2, [x$11], [{}],
+//│ Def(5, j$2, [x$12], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$11 -- #40
+//│ x$12 -- #43
 //│ )
 //│ Def(6, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$16) = mk(10) in -- #78
-//│ let x$17 = S(x$16) in -- #77
-//│ let x$18 = S(x$17) in -- #76
-//│ let* (x$19) = odd(x$18) in -- #75
-//│ x$19 -- #74
+//│ let* (x$17) = mk(10) in -- #81
+//│ let x$18 = S(x$17) in -- #80
+//│ let x$19 = S(x$18) in -- #79
+//│ let* (x$20) = odd(x$19) in -- #78
+//│ x$20 -- #77
 //│ )
 //│ },
-//│ let* (x$20) = foo() in -- #81
-//│ x$20 -- #80)
+//│ let* (x$0) = foo() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Interpreted:
-//│ False()
 //│ 
 
 :interpIR
@@ -1422,107 +1415,107 @@ main()
 //│ ),
 //│ ClassInfo(11, O, [], parents: Nat, methods:
 //│ )}, {
-//│ Def(0, odd, [x$0], [{}],
+//│ Def(0, odd, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$0 of -- #16
+//│ case x$1 of -- #19
 //│   O =>
-//│     let x$2 = False() in -- #4
-//│     jump j$0(x$2) -- #3
+//│     let x$3 = False() in -- #7
+//│     jump j$0(x$3) -- #6
 //│   S =>
-//│     let x$3 = S.s(x$0) in -- #15
-//│     let* (x$4) = even(x$3) in -- #14
-//│     jump j$0(x$4) -- #13
+//│     let x$4 = S.s(x$1) in -- #18
+//│     let* (x$5) = even(x$4) in -- #17
+//│     jump j$0(x$5) -- #16
 //│ )
-//│ Def(1, j$0, [x$1], [{}],
+//│ Def(1, j$0, [x$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$1 -- #1
+//│ x$2 -- #4
 //│ )
-//│ Def(2, even, [x$5], [{}],
+//│ Def(2, even, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$5 of -- #33
+//│ case x$6 of -- #36
 //│   O =>
-//│     let x$7 = True() in -- #21
-//│     jump j$1(x$7) -- #20
+//│     let x$8 = True() in -- #24
+//│     jump j$1(x$8) -- #23
 //│   S =>
-//│     let x$8 = S.s(x$5) in -- #32
-//│     let* (x$9) = odd(x$8) in -- #31
-//│     jump j$1(x$9) -- #30
+//│     let x$9 = S.s(x$6) in -- #35
+//│     let* (x$10) = odd(x$9) in -- #34
+//│     jump j$1(x$10) -- #33
 //│ )
-//│ Def(3, j$1, [x$6], [{}],
+//│ Def(3, j$1, [x$7], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #18
+//│ x$7 -- #21
 //│ )
 //│ Def(4, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = >(10,0) in -- #56
-//│ if x$10 -- #55
+//│ let x$11 = >(10,0) in -- #59
+//│ if x$11 -- #58
 //│   true =>
-//│     let x$13 = O() in -- #51
-//│     let x$14 = S(x$13) in -- #50
-//│     jump j$2(x$14) -- #49
+//│     let x$14 = O() in -- #54
+//│     let x$15 = S(x$14) in -- #53
+//│     jump j$2(x$15) -- #52
 //│   false =>
-//│     let x$15 = O() in -- #54
-//│     jump j$2(x$15) -- #53
+//│     let x$16 = O() in -- #57
+//│     jump j$2(x$16) -- #56
 //│ )
-//│ Def(5, j$2, [x$11], [{}],
+//│ Def(5, j$2, [x$12], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$12) = odd(x$11) in -- #44
-//│ x$12 -- #43
+//│ let* (x$13) = odd(x$12) in -- #47
+//│ x$13 -- #46
 //│ )
 //│ Def(6, bar, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$16 = >(10,0) in -- #83
-//│ if x$16 -- #82
+//│ let x$17 = >(10,0) in -- #86
+//│ if x$17 -- #85
 //│   true =>
-//│     let x$18 = O() in -- #74
-//│     let x$19 = S(x$18) in -- #73
-//│     let* (x$20) = odd(x$19) in -- #72
-//│     jump j$3(x$20) -- #71
+//│     let x$19 = O() in -- #77
+//│     let x$20 = S(x$19) in -- #76
+//│     let* (x$21) = odd(x$20) in -- #75
+//│     jump j$3(x$21) -- #74
 //│   false =>
-//│     let x$21 = O() in -- #81
-//│     let* (x$22) = odd(x$21) in -- #80
-//│     jump j$3(x$22) -- #79
+//│     let x$22 = O() in -- #84
+//│     let* (x$23) = odd(x$22) in -- #83
+//│     jump j$3(x$23) -- #82
 //│ )
-//│ Def(7, j$3, [x$17], [{}],
+//│ Def(7, j$3, [x$18], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$17 -- #63
+//│ x$18 -- #66
 //│ )
 //│ Def(8, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$23) = foo() in -- #89
-//│ let* (x$24) = bar() in -- #88
-//│ x$24 -- #87
+//│ let* (x$24) = foo() in -- #92
+//│ let* (x$25) = bar() in -- #91
+//│ x$25 -- #90
 //│ )
 //│ },
-//│ let* (x$25) = main() in -- #92
-//│ x$25 -- #91)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, [], parents: , methods:
@@ -1549,110 +1542,109 @@ main()
 //│ ),
 //│ ClassInfo(11, O, [], parents: Nat, methods:
 //│ )}, {
-//│ Def(0, odd, [x$0], [{}],
+//│ Def(0, odd, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$0 of -- #16
+//│ case x$1 of -- #19
 //│   O =>
-//│     let x$2 = False() in -- #4
-//│     jump j$0(x$2) -- #3
+//│     let x$3 = False() in -- #7
+//│     jump j$0(x$3) -- #6
 //│   S =>
-//│     let x$3 = S.s(x$0) in -- #15
-//│     let* (x$4) = even(x$3) in -- #14
-//│     jump j$0(x$4) -- #13
+//│     let x$4 = S.s(x$1) in -- #18
+//│     let* (x$5) = even(x$4) in -- #17
+//│     jump j$0(x$5) -- #16
 //│ )
-//│ Def(1, j$0, [x$1], [{}],
+//│ Def(1, j$0, [x$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$1 -- #1
+//│ x$2 -- #4
 //│ )
-//│ Def(2, even, [x$5], [{}],
+//│ Def(2, even, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case x$5 of -- #33
+//│ case x$6 of -- #36
 //│   O =>
-//│     let x$7 = True() in -- #21
-//│     jump j$1(x$7) -- #20
+//│     let x$8 = True() in -- #24
+//│     jump j$1(x$8) -- #23
 //│   S =>
-//│     let x$8 = S.s(x$5) in -- #32
-//│     let* (x$9) = odd(x$8) in -- #31
-//│     jump j$1(x$9) -- #30
+//│     let x$9 = S.s(x$6) in -- #35
+//│     let* (x$10) = odd(x$9) in -- #34
+//│     jump j$1(x$10) -- #33
 //│ )
-//│ Def(3, j$1, [x$6], [{}],
+//│ Def(3, j$1, [x$7], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #18
+//│ x$7 -- #21
 //│ )
 //│ Def(4, foo, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$10 = >(10,0) in -- #56
-//│ if x$10 -- #55
+//│ let x$11 = >(10,0) in -- #59
+//│ if x$11 -- #58
 //│   true =>
-//│     let x$13 = O() in -- #51
-//│     let x$14 = S(x$13) in -- #50
-//│     jump j$2(x$14) -- #49
+//│     let x$14 = O() in -- #54
+//│     let x$15 = S(x$14) in -- #53
+//│     jump j$2(x$15) -- #52
 //│   false =>
-//│     let x$15 = O() in -- #54
-//│     jump j$2(x$15) -- #53
+//│     let x$16 = O() in -- #57
+//│     jump j$2(x$16) -- #56
 //│ )
-//│ Def(5, j$2, [x$11], [{}],
+//│ Def(5, j$2, [x$12], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$12) = odd(x$11) in -- #44
-//│ x$12 -- #43
+//│ let* (x$13) = odd(x$12) in -- #47
+//│ x$13 -- #46
 //│ )
 //│ Def(6, bar, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$16 = >(10,0) in -- #83
-//│ if x$16 -- #82
+//│ let x$17 = >(10,0) in -- #86
+//│ if x$17 -- #85
 //│   true =>
-//│     let x$18 = O() in -- #74
-//│     let x$19 = S(x$18) in -- #73
-//│     let* (x$20) = odd(x$19) in -- #72
-//│     jump j$3(x$20) -- #71
+//│     let x$19 = O() in -- #77
+//│     let x$20 = S(x$19) in -- #76
+//│     let* (x$21) = odd(x$20) in -- #75
+//│     jump j$3(x$21) -- #74
 //│   false =>
-//│     let x$21 = O() in -- #81
-//│     let* (x$22) = odd(x$21) in -- #80
-//│     jump j$3(x$22) -- #79
+//│     let x$22 = O() in -- #84
+//│     let* (x$23) = odd(x$22) in -- #83
+//│     jump j$3(x$23) -- #82
 //│ )
-//│ Def(7, j$3, [x$17], [{}],
+//│ Def(7, j$3, [x$18], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$17 -- #63
+//│ x$18 -- #66
 //│ )
 //│ Def(8, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$23) = foo() in -- #89
-//│ let* (x$24) = bar() in -- #88
-//│ x$24 -- #87
+//│ let* (x$24) = foo() in -- #92
+//│ let* (x$25) = bar() in -- #91
+//│ x$25 -- #90
 //│ )
 //│ },
-//│ let* (x$25) = main() in -- #92
-//│ x$25 -- #91)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Interpreted:
-//│ True()
 //│ 
 
 :interpIR
@@ -1713,93 +1705,93 @@ main(False)
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = 1 in -- #26
-//│ let x$1 = 2 in -- #25
-//│ let x$2 = 3 in -- #24
-//│ let x$3 = 4 in -- #23
-//│ let x$4 = +(x$0,x$1) in -- #22
-//│ let x$5 = -(x$4,x$2) in -- #21
-//│ let x$6 = +(x$5,x$3) in -- #20
-//│ x$6 -- #19
+//│ let x$2 = 1 in -- #32
+//│ let x$3 = 2 in -- #31
+//│ let x$4 = 3 in -- #30
+//│ let x$5 = 4 in -- #29
+//│ let x$6 = +(x$2,x$3) in -- #28
+//│ let x$7 = -(x$6,x$4) in -- #27
+//│ let x$8 = +(x$7,x$5) in -- #26
+//│ x$8 -- #25
 //│ )
 //│ Def(1, bbb, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$7) = aaa() in -- #42
-//│ let x$8 = *(x$7,100) in -- #41
-//│ let x$9 = +(x$8,4) in -- #40
-//│ x$9 -- #39
+//│ let* (x$9) = aaa() in -- #48
+//│ let x$10 = *(x$9,100) in -- #47
+//│ let x$11 = +(x$10,4) in -- #46
+//│ x$11 -- #45
 //│ )
-//│ Def(2, not, [x$10], [{}],
+//│ Def(2, not, [x$12], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if x$10 -- #51
+//│ if x$12 -- #57
 //│   true =>
-//│     let x$12 = False() in -- #47
-//│     jump j$0(x$12) -- #46
+//│     let x$14 = False() in -- #53
+//│     jump j$0(x$14) -- #52
 //│   false =>
-//│     let x$13 = True() in -- #50
-//│     jump j$0(x$13) -- #49
+//│     let x$15 = True() in -- #56
+//│     jump j$0(x$15) -- #55
 //│ )
-//│ Def(3, j$0, [x$11], [{}],
+//│ Def(3, j$0, [x$13], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$11 -- #44
+//│ x$13 -- #50
 //│ )
-//│ Def(4, foo, [x$14], [{}],
+//│ Def(4, foo, [x$16], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if x$14 -- #71
+//│ if x$16 -- #77
 //│   true =>
-//│     let x$16 = A() in -- #56
-//│     jump j$1(x$16) -- #55
+//│     let x$18 = A() in -- #62
+//│     jump j$1(x$18) -- #61
 //│   false =>
-//│     let* (x$17) = not(x$14) in -- #70
-//│     let* (x$18) = foo(x$17) in -- #69
-//│     let x$19 = B(x$18) in -- #68
-//│     jump j$1(x$19) -- #67
+//│     let* (x$19) = not(x$16) in -- #76
+//│     let* (x$20) = foo(x$19) in -- #75
+//│     let x$21 = B(x$20) in -- #74
+//│     jump j$1(x$21) -- #73
 //│ )
-//│ Def(5, j$1, [x$15], [{}],
+//│ Def(5, j$1, [x$17], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$15 -- #53
+//│ x$17 -- #59
 //│ )
 //│ Def(6, main, [flag$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$20) = foo(flag$0) in -- #92
-//│ case x$20 of -- #91
+//│ let* (x$22) = foo(flag$0) in -- #98
+//│ case x$22 of -- #97
 //│   A =>
-//│     let* (x$22) = aaa() in -- #81
-//│     jump j$2(x$22) -- #80
+//│     let* (x$24) = aaa() in -- #87
+//│     jump j$2(x$24) -- #86
 //│   B =>
-//│     let x$23 = B.b(x$20) in -- #90
-//│     let* (x$24) = bbb() in -- #89
-//│     jump j$2(x$24) -- #88
+//│     let x$25 = B.b(x$22) in -- #96
+//│     let* (x$26) = bbb() in -- #95
+//│     jump j$2(x$26) -- #94
 //│ )
-//│ Def(7, j$2, [x$21], [{}],
+//│ Def(7, j$2, [x$23], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$21 -- #77
+//│ x$23 -- #83
 //│ )
 //│ },
-//│ let x$25 = False() in -- #98
-//│ let* (x$26) = main(x$25) in -- #97
-//│ x$26 -- #96)
+//│ let x$0 = False() in -- #5
+//│ let* (x$1) = main(x$0) in -- #4
+//│ x$1 -- #3)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, [], parents: , methods:
@@ -1831,96 +1823,95 @@ main(False)
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = 1 in -- #26
-//│ let x$1 = 2 in -- #25
-//│ let x$2 = 3 in -- #24
-//│ let x$3 = 4 in -- #23
-//│ let x$4 = +(x$0,x$1) in -- #22
-//│ let x$5 = -(x$4,x$2) in -- #21
-//│ let x$6 = +(x$5,x$3) in -- #20
-//│ x$6 -- #19
+//│ let x$2 = 1 in -- #32
+//│ let x$3 = 2 in -- #31
+//│ let x$4 = 3 in -- #30
+//│ let x$5 = 4 in -- #29
+//│ let x$6 = +(x$2,x$3) in -- #28
+//│ let x$7 = -(x$6,x$4) in -- #27
+//│ let x$8 = +(x$7,x$5) in -- #26
+//│ x$8 -- #25
 //│ )
 //│ Def(1, bbb, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$7) = aaa() in -- #42
-//│ let x$8 = *(x$7,100) in -- #41
-//│ let x$9 = +(x$8,4) in -- #40
-//│ x$9 -- #39
+//│ let* (x$9) = aaa() in -- #48
+//│ let x$10 = *(x$9,100) in -- #47
+//│ let x$11 = +(x$10,4) in -- #46
+//│ x$11 -- #45
 //│ )
-//│ Def(2, not, [x$10], [{}],
+//│ Def(2, not, [x$12], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if x$10 -- #51
+//│ if x$12 -- #57
 //│   true =>
-//│     let x$12 = False() in -- #47
-//│     jump j$0(x$12) -- #46
+//│     let x$14 = False() in -- #53
+//│     jump j$0(x$14) -- #52
 //│   false =>
-//│     let x$13 = True() in -- #50
-//│     jump j$0(x$13) -- #49
+//│     let x$15 = True() in -- #56
+//│     jump j$0(x$15) -- #55
 //│ )
-//│ Def(3, j$0, [x$11], [{}],
+//│ Def(3, j$0, [x$13], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$11 -- #44
+//│ x$13 -- #50
 //│ )
-//│ Def(4, foo, [x$14], [{}],
+//│ Def(4, foo, [x$16], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ if x$14 -- #71
+//│ if x$16 -- #77
 //│   true =>
-//│     let x$16 = A() in -- #56
-//│     jump j$1(x$16) -- #55
+//│     let x$18 = A() in -- #62
+//│     jump j$1(x$18) -- #61
 //│   false =>
-//│     let* (x$17) = not(x$14) in -- #70
-//│     let* (x$18) = foo(x$17) in -- #69
-//│     let x$19 = B(x$18) in -- #68
-//│     jump j$1(x$19) -- #67
+//│     let* (x$19) = not(x$16) in -- #76
+//│     let* (x$20) = foo(x$19) in -- #75
+//│     let x$21 = B(x$20) in -- #74
+//│     jump j$1(x$21) -- #73
 //│ )
-//│ Def(5, j$1, [x$15], [{}],
+//│ Def(5, j$1, [x$17], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$15 -- #53
+//│ x$17 -- #59
 //│ )
 //│ Def(6, main, [flag$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$20) = foo(flag$0) in -- #92
-//│ case x$20 of -- #91
+//│ let* (x$22) = foo(flag$0) in -- #98
+//│ case x$22 of -- #97
 //│   A =>
-//│     let* (x$22) = aaa() in -- #81
-//│     jump j$2(x$22) -- #80
+//│     let* (x$24) = aaa() in -- #87
+//│     jump j$2(x$24) -- #86
 //│   B =>
-//│     let x$23 = B.b(x$20) in -- #90
-//│     let* (x$24) = bbb() in -- #89
-//│     jump j$2(x$24) -- #88
+//│     let x$25 = B.b(x$22) in -- #96
+//│     let* (x$26) = bbb() in -- #95
+//│     jump j$2(x$26) -- #94
 //│ )
-//│ Def(7, j$2, [x$21], [{}],
+//│ Def(7, j$2, [x$23], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$21 -- #77
+//│ x$23 -- #83
 //│ )
 //│ },
-//│ let x$25 = False() in -- #98
-//│ let* (x$26) = main(x$25) in -- #97
-//│ x$26 -- #96)
+//│ let x$0 = False() in -- #5
+//│ let* (x$1) = main(x$0) in -- #4
+//│ x$1 -- #3)
 //│ 
 //│ Interpreted:
-//│ 404
 //│ 
 
 
@@ -1985,67 +1976,67 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case l$0 of -- #21
+//│ case l$0 of -- #24
 //│   Nil =>
-//│     let x$1 = None() in -- #4
-//│     jump j$0(x$1) -- #3
+//│     let x$2 = None() in -- #7
+//│     jump j$0(x$2) -- #6
 //│   Cons =>
-//│     let x$2 = Cons.t(l$0) in -- #20
-//│     let x$3 = Cons.h(l$0) in -- #19
-//│     let x$4 = Some(x$3) in -- #18
-//│     jump j$0(x$4) -- #17
+//│     let x$3 = Cons.t(l$0) in -- #23
+//│     let x$4 = Cons.h(l$0) in -- #22
+//│     let x$5 = Some(x$4) in -- #21
+//│     jump j$0(x$5) -- #20
 //│ )
-//│ Def(1, j$0, [x$0], [{}],
+//│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$0 -- #1
+//│ x$1 -- #4
 //│ )
 //│ Def(2, is_none, [o$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case o$0 of -- #35
+//│ case o$0 of -- #38
 //│   None =>
-//│     let x$6 = True() in -- #26
-//│     jump j$1(x$6) -- #25
+//│     let x$7 = True() in -- #29
+//│     jump j$1(x$7) -- #28
 //│   Some =>
-//│     let x$7 = Some.x(o$0) in -- #34
-//│     let x$8 = False() in -- #33
-//│     jump j$1(x$8) -- #32
+//│     let x$8 = Some.x(o$0) in -- #37
+//│     let x$9 = False() in -- #36
+//│     jump j$1(x$9) -- #35
 //│ )
-//│ Def(3, j$1, [x$5], [{}],
+//│ Def(3, j$1, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$5 -- #23
+//│ x$6 -- #26
 //│ )
 //│ Def(4, is_empty, [l$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$9) = head_opt(l$1) in -- #44
-//│ let* (x$10) = is_none(x$9) in -- #43
-//│ x$10 -- #42
+//│ let* (x$10) = head_opt(l$1) in -- #47
+//│ let* (x$11) = is_none(x$10) in -- #46
+//│ x$11 -- #45
 //│ )
 //│ Def(5, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$11 = Nil() in -- #62
-//│ let x$12 = Cons(2,x$11) in -- #61
-//│ let x$13 = Cons(1,x$12) in -- #60
-//│ let* (x$14) = is_empty(x$13) in -- #59
-//│ x$14 -- #58
+//│ let x$12 = Nil() in -- #65
+//│ let x$13 = Cons(2,x$12) in -- #64
+//│ let x$14 = Cons(1,x$13) in -- #63
+//│ let* (x$15) = is_empty(x$14) in -- #62
+//│ x$15 -- #61
 //│ )
 //│ },
-//│ let* (x$15) = main() in -- #65
-//│ x$15 -- #64)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, [], parents: , methods:
@@ -2083,70 +2074,69 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case l$0 of -- #21
+//│ case l$0 of -- #24
 //│   Nil =>
-//│     let x$1 = None() in -- #4
-//│     jump j$0(x$1) -- #3
+//│     let x$2 = None() in -- #7
+//│     jump j$0(x$2) -- #6
 //│   Cons =>
-//│     let x$2 = Cons.t(l$0) in -- #20
-//│     let x$3 = Cons.h(l$0) in -- #19
-//│     let x$4 = Some(x$3) in -- #18
-//│     jump j$0(x$4) -- #17
+//│     let x$3 = Cons.t(l$0) in -- #23
+//│     let x$4 = Cons.h(l$0) in -- #22
+//│     let x$5 = Some(x$4) in -- #21
+//│     jump j$0(x$5) -- #20
 //│ )
-//│ Def(1, j$0, [x$0], [{}],
+//│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$0 -- #1
+//│ x$1 -- #4
 //│ )
 //│ Def(2, is_none, [o$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case o$0 of -- #35
+//│ case o$0 of -- #38
 //│   None =>
-//│     let x$6 = True() in -- #26
-//│     jump j$1(x$6) -- #25
+//│     let x$7 = True() in -- #29
+//│     jump j$1(x$7) -- #28
 //│   Some =>
-//│     let x$7 = Some.x(o$0) in -- #34
-//│     let x$8 = False() in -- #33
-//│     jump j$1(x$8) -- #32
+//│     let x$8 = Some.x(o$0) in -- #37
+//│     let x$9 = False() in -- #36
+//│     jump j$1(x$9) -- #35
 //│ )
-//│ Def(3, j$1, [x$5], [{}],
+//│ Def(3, j$1, [x$6], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$5 -- #23
+//│ x$6 -- #26
 //│ )
 //│ Def(4, is_empty, [l$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$9) = head_opt(l$1) in -- #44
-//│ let* (x$10) = is_none(x$9) in -- #43
-//│ x$10 -- #42
+//│ let* (x$10) = head_opt(l$1) in -- #47
+//│ let* (x$11) = is_none(x$10) in -- #46
+//│ x$11 -- #45
 //│ )
 //│ Def(5, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$11 = Nil() in -- #62
-//│ let x$12 = Cons(2,x$11) in -- #61
-//│ let x$13 = Cons(1,x$12) in -- #60
-//│ let* (x$14) = is_empty(x$13) in -- #59
-//│ x$14 -- #58
+//│ let x$12 = Nil() in -- #65
+//│ let x$13 = Cons(2,x$12) in -- #64
+//│ let x$14 = Cons(1,x$13) in -- #63
+//│ let* (x$15) = is_empty(x$14) in -- #62
+//│ x$15 -- #61
 //│ )
 //│ },
-//│ let* (x$15) = main() in -- #65
-//│ x$15 -- #64)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Interpreted:
-//│ False()
 //│ 
 
 :interpIR
@@ -2212,88 +2202,88 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = ==(n$0,0) in -- #29
-//│ if x$0 -- #28
+//│ let x$1 = ==(n$0,0) in -- #32
+//│ if x$1 -- #31
 //│   true =>
-//│     let x$2 = Nil() in -- #9
-//│     jump j$0(x$2) -- #8
+//│     let x$3 = Nil() in -- #12
+//│     jump j$0(x$3) -- #11
 //│   false =>
-//│     let x$3 = -(n$0,1) in -- #27
-//│     let* (x$4) = mk_list(x$3) in -- #26
-//│     let x$5 = Cons(n$0,x$4) in -- #25
-//│     jump j$0(x$5) -- #24
+//│     let x$4 = -(n$0,1) in -- #30
+//│     let* (x$5) = mk_list(x$4) in -- #29
+//│     let x$6 = Cons(n$0,x$5) in -- #28
+//│     jump j$0(x$6) -- #27
 //│ )
-//│ Def(1, j$0, [x$1], [{}],
+//│ Def(1, j$0, [x$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$1 -- #6
+//│ x$2 -- #9
 //│ )
 //│ Def(2, head_opt, [l$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case l$0 of -- #51
+//│ case l$0 of -- #54
 //│   Nil =>
-//│     let x$7 = None() in -- #34
-//│     jump j$1(x$7) -- #33
+//│     let x$8 = None() in -- #37
+//│     jump j$1(x$8) -- #36
 //│   Cons =>
-//│     let x$8 = Cons.t(l$0) in -- #50
-//│     let x$9 = Cons.h(l$0) in -- #49
-//│     let x$10 = Some(x$9) in -- #48
-//│     jump j$1(x$10) -- #47
+//│     let x$9 = Cons.t(l$0) in -- #53
+//│     let x$10 = Cons.h(l$0) in -- #52
+//│     let x$11 = Some(x$10) in -- #51
+//│     jump j$1(x$11) -- #50
 //│ )
-//│ Def(3, j$1, [x$6], [{}],
+//│ Def(3, j$1, [x$7], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #31
+//│ x$7 -- #34
 //│ )
 //│ Def(4, is_none, [o$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case o$0 of -- #65
+//│ case o$0 of -- #68
 //│   None =>
-//│     let x$12 = True() in -- #56
-//│     jump j$2(x$12) -- #55
+//│     let x$13 = True() in -- #59
+//│     jump j$2(x$13) -- #58
 //│   Some =>
-//│     let x$13 = Some.x(o$0) in -- #64
-//│     let x$14 = False() in -- #63
-//│     jump j$2(x$14) -- #62
+//│     let x$14 = Some.x(o$0) in -- #67
+//│     let x$15 = False() in -- #66
+//│     jump j$2(x$15) -- #65
 //│ )
-//│ Def(5, j$2, [x$11], [{}],
+//│ Def(5, j$2, [x$12], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$11 -- #53
+//│ x$12 -- #56
 //│ )
 //│ Def(6, is_empty, [l$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$15) = head_opt(l$1) in -- #74
-//│ let* (x$16) = is_none(x$15) in -- #73
-//│ x$16 -- #72
+//│ let* (x$16) = head_opt(l$1) in -- #77
+//│ let* (x$17) = is_none(x$16) in -- #76
+//│ x$17 -- #75
 //│ )
 //│ Def(7, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$17) = mk_list(10) in -- #83
-//│ let* (x$18) = is_empty(x$17) in -- #82
-//│ x$18 -- #81
+//│ let* (x$18) = mk_list(10) in -- #86
+//│ let* (x$19) = is_empty(x$18) in -- #85
+//│ x$19 -- #84
 //│ )
 //│ },
-//│ let* (x$19) = main() in -- #86
-//│ x$19 -- #85)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, [], parents: , methods:
@@ -2331,91 +2321,90 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = ==(n$0,0) in -- #29
-//│ if x$0 -- #28
+//│ let x$1 = ==(n$0,0) in -- #32
+//│ if x$1 -- #31
 //│   true =>
-//│     let x$2 = Nil() in -- #9
-//│     jump j$0(x$2) -- #8
+//│     let x$3 = Nil() in -- #12
+//│     jump j$0(x$3) -- #11
 //│   false =>
-//│     let x$3 = -(n$0,1) in -- #27
-//│     let* (x$4) = mk_list(x$3) in -- #26
-//│     let x$5 = Cons(n$0,x$4) in -- #25
-//│     jump j$0(x$5) -- #24
+//│     let x$4 = -(n$0,1) in -- #30
+//│     let* (x$5) = mk_list(x$4) in -- #29
+//│     let x$6 = Cons(n$0,x$5) in -- #28
+//│     jump j$0(x$6) -- #27
 //│ )
-//│ Def(1, j$0, [x$1], [{}],
+//│ Def(1, j$0, [x$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$1 -- #6
+//│ x$2 -- #9
 //│ )
 //│ Def(2, head_opt, [l$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case l$0 of -- #51
+//│ case l$0 of -- #54
 //│   Nil =>
-//│     let x$7 = None() in -- #34
-//│     jump j$1(x$7) -- #33
+//│     let x$8 = None() in -- #37
+//│     jump j$1(x$8) -- #36
 //│   Cons =>
-//│     let x$8 = Cons.t(l$0) in -- #50
-//│     let x$9 = Cons.h(l$0) in -- #49
-//│     let x$10 = Some(x$9) in -- #48
-//│     jump j$1(x$10) -- #47
+//│     let x$9 = Cons.t(l$0) in -- #53
+//│     let x$10 = Cons.h(l$0) in -- #52
+//│     let x$11 = Some(x$10) in -- #51
+//│     jump j$1(x$11) -- #50
 //│ )
-//│ Def(3, j$1, [x$6], [{}],
+//│ Def(3, j$1, [x$7], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #31
+//│ x$7 -- #34
 //│ )
 //│ Def(4, is_none, [o$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case o$0 of -- #65
+//│ case o$0 of -- #68
 //│   None =>
-//│     let x$12 = True() in -- #56
-//│     jump j$2(x$12) -- #55
+//│     let x$13 = True() in -- #59
+//│     jump j$2(x$13) -- #58
 //│   Some =>
-//│     let x$13 = Some.x(o$0) in -- #64
-//│     let x$14 = False() in -- #63
-//│     jump j$2(x$14) -- #62
+//│     let x$14 = Some.x(o$0) in -- #67
+//│     let x$15 = False() in -- #66
+//│     jump j$2(x$15) -- #65
 //│ )
-//│ Def(5, j$2, [x$11], [{}],
+//│ Def(5, j$2, [x$12], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$11 -- #53
+//│ x$12 -- #56
 //│ )
 //│ Def(6, is_empty, [l$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$15) = head_opt(l$1) in -- #74
-//│ let* (x$16) = is_none(x$15) in -- #73
-//│ x$16 -- #72
+//│ let* (x$16) = head_opt(l$1) in -- #77
+//│ let* (x$17) = is_none(x$16) in -- #76
+//│ x$17 -- #75
 //│ )
 //│ Def(7, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$17) = mk_list(10) in -- #83
-//│ let* (x$18) = is_empty(x$17) in -- #82
-//│ x$18 -- #81
+//│ let* (x$18) = mk_list(10) in -- #86
+//│ let* (x$19) = is_empty(x$18) in -- #85
+//│ x$19 -- #84
 //│ )
 //│ },
-//│ let* (x$19) = main() in -- #86
-//│ x$19 -- #85)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Interpreted:
-//│ False()
 //│ 
 
 :interpIR
@@ -2478,72 +2467,72 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = ==(n$0,0) in -- #29
-//│ if x$0 -- #28
+//│ let x$1 = ==(n$0,0) in -- #32
+//│ if x$1 -- #31
 //│   true =>
-//│     let x$2 = Nil() in -- #9
-//│     jump j$0(x$2) -- #8
+//│     let x$3 = Nil() in -- #12
+//│     jump j$0(x$3) -- #11
 //│   false =>
-//│     let x$3 = -(n$0,1) in -- #27
-//│     let* (x$4) = mk_list(x$3) in -- #26
-//│     let x$5 = Cons(n$0,x$4) in -- #25
-//│     jump j$0(x$5) -- #24
+//│     let x$4 = -(n$0,1) in -- #30
+//│     let* (x$5) = mk_list(x$4) in -- #29
+//│     let x$6 = Cons(n$0,x$5) in -- #28
+//│     jump j$0(x$6) -- #27
 //│ )
-//│ Def(1, j$0, [x$1], [{}],
+//│ Def(1, j$0, [x$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$1 -- #6
+//│ x$2 -- #9
 //│ )
 //│ Def(2, last_opt, [l$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case l$0 of -- #71
+//│ case l$0 of -- #74
 //│   Nil =>
-//│     let x$7 = None() in -- #34
-//│     jump j$1(x$7) -- #33
+//│     let x$8 = None() in -- #37
+//│     jump j$1(x$8) -- #36
 //│   Cons =>
-//│     let x$8 = Cons.t(l$0) in -- #70
-//│     let x$9 = Cons.h(l$0) in -- #69
-//│     case x$8 of -- #68
+//│     let x$9 = Cons.t(l$0) in -- #73
+//│     let x$10 = Cons.h(l$0) in -- #72
+//│     case x$9 of -- #71
 //│       Nil =>
-//│         let x$11 = Some(x$9) in -- #51
-//│         jump j$2(x$11) -- #50
+//│         let x$12 = Some(x$10) in -- #54
+//│         jump j$2(x$12) -- #53
 //│       Cons =>
-//│         let x$12 = Cons.t(x$8) in -- #67
-//│         let x$13 = Cons.h(x$8) in -- #66
-//│         let* (x$14) = last_opt(x$8) in -- #65
-//│         jump j$2(x$14) -- #64
+//│         let x$13 = Cons.t(x$9) in -- #70
+//│         let x$14 = Cons.h(x$9) in -- #69
+//│         let* (x$15) = last_opt(x$9) in -- #68
+//│         jump j$2(x$15) -- #67
 //│ )
-//│ Def(3, j$1, [x$6], [{}],
+//│ Def(3, j$1, [x$7], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #31
+//│ x$7 -- #34
 //│ )
-//│ Def(4, j$2, [x$10], [{}],
+//│ Def(4, j$2, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ jump j$1(x$10) -- #45
+//│ jump j$1(x$11) -- #48
 //│ )
 //│ Def(5, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$15) = mk_list(10) in -- #80
-//│ let* (x$16) = last_opt(x$15) in -- #79
-//│ x$16 -- #78
+//│ let* (x$16) = mk_list(10) in -- #83
+//│ let* (x$17) = last_opt(x$16) in -- #82
+//│ x$17 -- #81
 //│ )
 //│ },
-//│ let* (x$17) = main() in -- #83
-//│ x$17 -- #82)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, [], parents: , methods:
@@ -2581,75 +2570,74 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$0 = ==(n$0,0) in -- #29
-//│ if x$0 -- #28
+//│ let x$1 = ==(n$0,0) in -- #32
+//│ if x$1 -- #31
 //│   true =>
-//│     let x$2 = Nil() in -- #9
-//│     jump j$0(x$2) -- #8
+//│     let x$3 = Nil() in -- #12
+//│     jump j$0(x$3) -- #11
 //│   false =>
-//│     let x$3 = -(n$0,1) in -- #27
-//│     let* (x$4) = mk_list(x$3) in -- #26
-//│     let x$5 = Cons(n$0,x$4) in -- #25
-//│     jump j$0(x$5) -- #24
+//│     let x$4 = -(n$0,1) in -- #30
+//│     let* (x$5) = mk_list(x$4) in -- #29
+//│     let x$6 = Cons(n$0,x$5) in -- #28
+//│     jump j$0(x$6) -- #27
 //│ )
-//│ Def(1, j$0, [x$1], [{}],
+//│ Def(1, j$0, [x$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$1 -- #6
+//│ x$2 -- #9
 //│ )
 //│ Def(2, last_opt, [l$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case l$0 of -- #71
+//│ case l$0 of -- #74
 //│   Nil =>
-//│     let x$7 = None() in -- #34
-//│     jump j$1(x$7) -- #33
+//│     let x$8 = None() in -- #37
+//│     jump j$1(x$8) -- #36
 //│   Cons =>
-//│     let x$8 = Cons.t(l$0) in -- #70
-//│     let x$9 = Cons.h(l$0) in -- #69
-//│     case x$8 of -- #68
+//│     let x$9 = Cons.t(l$0) in -- #73
+//│     let x$10 = Cons.h(l$0) in -- #72
+//│     case x$9 of -- #71
 //│       Nil =>
-//│         let x$11 = Some(x$9) in -- #51
-//│         jump j$2(x$11) -- #50
+//│         let x$12 = Some(x$10) in -- #54
+//│         jump j$2(x$12) -- #53
 //│       Cons =>
-//│         let x$12 = Cons.t(x$8) in -- #67
-//│         let x$13 = Cons.h(x$8) in -- #66
-//│         let* (x$14) = last_opt(x$8) in -- #65
-//│         jump j$2(x$14) -- #64
+//│         let x$13 = Cons.t(x$9) in -- #70
+//│         let x$14 = Cons.h(x$9) in -- #69
+//│         let* (x$15) = last_opt(x$9) in -- #68
+//│         jump j$2(x$15) -- #67
 //│ )
-//│ Def(3, j$1, [x$6], [{}],
+//│ Def(3, j$1, [x$7], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$6 -- #31
+//│ x$7 -- #34
 //│ )
-//│ Def(4, j$2, [x$10], [{}],
+//│ Def(4, j$2, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ jump j$1(x$10) -- #45
+//│ jump j$1(x$11) -- #48
 //│ )
 //│ Def(5, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$15) = mk_list(10) in -- #80
-//│ let* (x$16) = last_opt(x$15) in -- #79
-//│ x$16 -- #78
+//│ let* (x$16) = mk_list(10) in -- #83
+//│ let* (x$17) = last_opt(x$16) in -- #82
+//│ x$17 -- #81
 //│ )
 //│ },
-//│ let* (x$17) = main() in -- #83
-//│ x$17 -- #82)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Interpreted:
-//│ Some(0)
 //│ 
 
 :interpIR
@@ -2726,120 +2714,120 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case o$0 of -- #13
+//│ case o$0 of -- #16
 //│   Some =>
-//│     let x$1 = Some.x(o$0) in -- #9
-//│     let x$2 = True() in -- #8
-//│     jump j$0(x$2) -- #7
+//│     let x$2 = Some.x(o$0) in -- #12
+//│     let x$3 = True() in -- #11
+//│     jump j$0(x$3) -- #10
 //│   None =>
-//│     let x$3 = False() in -- #12
-//│     jump j$0(x$3) -- #11
+//│     let x$4 = False() in -- #15
+//│     jump j$0(x$4) -- #14
 //│ )
-//│ Def(1, j$0, [x$0], [{}],
+//│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$0 -- #1
+//│ x$1 -- #4
 //│ )
 //│ Def(2, e0, [w$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$4 = +(w$0,8) in -- #32
-//│ let x$5 = +(x$4,9) in -- #31
-//│ let x$6 = +(x$5,10) in -- #30
-//│ x$6 -- #29
+//│ let x$5 = +(w$0,8) in -- #35
+//│ let x$6 = +(x$5,9) in -- #34
+//│ let x$7 = +(x$6,10) in -- #33
+//│ x$7 -- #32
 //│ )
 //│ Def(3, e1, [a$0,c$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$7 = +(a$0,1) in -- #57
-//│ let x$8 = +(x$7,2) in -- #56
-//│ let x$9 = +(x$8,3) in -- #55
-//│ let x$10 = +(x$9,4) in -- #54
-//│ x$10 -- #53
+//│ let x$8 = +(a$0,1) in -- #60
+//│ let x$9 = +(x$8,2) in -- #59
+//│ let x$10 = +(x$9,3) in -- #58
+//│ let x$11 = +(x$10,4) in -- #57
+//│ x$11 -- #56
 //│ )
 //│ Def(4, e3, [c$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$11 = 4 in -- #108
-//│ let x$12 = 5 in -- #107
-//│ let x$13 = 6 in -- #106
-//│ let x$14 = 7 in -- #105
-//│ if c$1 -- #104
+//│ let x$12 = 4 in -- #111
+//│ let x$13 = 5 in -- #110
+//│ let x$14 = 6 in -- #109
+//│ let x$15 = 7 in -- #108
+//│ if c$1 -- #107
 //│   true =>
-//│     let x$16 = +(x$11,x$12) in -- #83
-//│     let x$17 = +(x$16,x$13) in -- #82
-//│     let x$18 = +(x$17,x$14) in -- #81
-//│     jump j$1(x$18) -- #80
+//│     let x$17 = +(x$12,x$13) in -- #86
+//│     let x$18 = +(x$17,x$14) in -- #85
+//│     let x$19 = +(x$18,x$15) in -- #84
+//│     jump j$1(x$19) -- #83
 //│   false =>
-//│     let x$19 = +(x$11,x$12) in -- #103
-//│     let x$20 = -(x$19,x$13) in -- #102
-//│     let x$21 = +(x$20,x$14) in -- #101
-//│     jump j$1(x$21) -- #100
+//│     let x$20 = +(x$12,x$13) in -- #106
+//│     let x$21 = -(x$20,x$14) in -- #105
+//│     let x$22 = +(x$21,x$15) in -- #104
+//│     jump j$1(x$22) -- #103
 //│ )
-//│ Def(5, j$1, [x$15], [{}],
+//│ Def(5, j$1, [x$16], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$15 -- #63
+//│ x$16 -- #66
 //│ )
-//│ Def(6, e2, [x$22], [{}],
+//│ Def(6, e2, [x$23], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$23 = +(x$22,12) in -- #127
-//│ let x$24 = +(x$23,13) in -- #126
-//│ let x$25 = +(x$24,14) in -- #125
-//│ x$25 -- #124
+//│ let x$24 = +(x$23,12) in -- #130
+//│ let x$25 = +(x$24,13) in -- #129
+//│ let x$26 = +(x$25,14) in -- #128
+//│ x$26 -- #127
 //│ )
-//│ Def(7, f, [x$26], [{}],
+//│ Def(7, f, [x$27], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$27) = is_some(x$26) in -- #164
-//│ let* (x$28) = e3(x$27) in -- #163
-//│ case x$26 of -- #162
+//│ let* (x$28) = is_some(x$27) in -- #167
+//│ let* (x$29) = e3(x$28) in -- #166
+//│ case x$27 of -- #165
 //│   Some =>
-//│     let x$31 = Some.x(x$26) in -- #155
-//│     let* (x$32) = e1(x$31,x$28) in -- #154
-//│     jump j$2(x$32) -- #153
+//│     let x$32 = Some.x(x$27) in -- #158
+//│     let* (x$33) = e1(x$32,x$29) in -- #157
+//│     jump j$2(x$33) -- #156
 //│   None =>
-//│     let* (x$33) = e2(x$28) in -- #161
-//│     jump j$2(x$33) -- #160
+//│     let* (x$34) = e2(x$29) in -- #164
+//│     jump j$2(x$34) -- #163
 //│ )
-//│ Def(8, j$2, [x$29], [{}],
+//│ Def(8, j$2, [x$30], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$30) = e0(x$29) in -- #142
-//│ x$30 -- #141
+//│ let* (x$31) = e0(x$30) in -- #145
+//│ x$31 -- #144
 //│ )
 //│ Def(9, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$34 = Some(2) in -- #184
-//│ let* (x$35) = f(x$34) in -- #183
-//│ let x$36 = None() in -- #182
-//│ let* (x$37) = f(x$36) in -- #181
-//│ let x$38 = +(x$35,x$37) in -- #180
-//│ x$38 -- #179
+//│ let x$35 = Some(2) in -- #187
+//│ let* (x$36) = f(x$35) in -- #186
+//│ let x$37 = None() in -- #185
+//│ let* (x$38) = f(x$37) in -- #184
+//│ let x$39 = +(x$36,x$38) in -- #183
+//│ x$39 -- #182
 //│ )
 //│ },
-//│ let* (x$39) = main() in -- #187
-//│ x$39 -- #186)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, [], parents: , methods:
@@ -2877,123 +2865,122 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case o$0 of -- #13
+//│ case o$0 of -- #16
 //│   Some =>
-//│     let x$1 = Some.x(o$0) in -- #9
-//│     let x$2 = True() in -- #8
-//│     jump j$0(x$2) -- #7
+//│     let x$2 = Some.x(o$0) in -- #12
+//│     let x$3 = True() in -- #11
+//│     jump j$0(x$3) -- #10
 //│   None =>
-//│     let x$3 = False() in -- #12
-//│     jump j$0(x$3) -- #11
+//│     let x$4 = False() in -- #15
+//│     jump j$0(x$4) -- #14
 //│ )
-//│ Def(1, j$0, [x$0], [{}],
+//│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$0 -- #1
+//│ x$1 -- #4
 //│ )
 //│ Def(2, e0, [w$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$4 = +(w$0,8) in -- #32
-//│ let x$5 = +(x$4,9) in -- #31
-//│ let x$6 = +(x$5,10) in -- #30
-//│ x$6 -- #29
+//│ let x$5 = +(w$0,8) in -- #35
+//│ let x$6 = +(x$5,9) in -- #34
+//│ let x$7 = +(x$6,10) in -- #33
+//│ x$7 -- #32
 //│ )
 //│ Def(3, e1, [a$0,c$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$7 = +(a$0,1) in -- #57
-//│ let x$8 = +(x$7,2) in -- #56
-//│ let x$9 = +(x$8,3) in -- #55
-//│ let x$10 = +(x$9,4) in -- #54
-//│ x$10 -- #53
+//│ let x$8 = +(a$0,1) in -- #60
+//│ let x$9 = +(x$8,2) in -- #59
+//│ let x$10 = +(x$9,3) in -- #58
+//│ let x$11 = +(x$10,4) in -- #57
+//│ x$11 -- #56
 //│ )
 //│ Def(4, e3, [c$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$11 = 4 in -- #108
-//│ let x$12 = 5 in -- #107
-//│ let x$13 = 6 in -- #106
-//│ let x$14 = 7 in -- #105
-//│ if c$1 -- #104
+//│ let x$12 = 4 in -- #111
+//│ let x$13 = 5 in -- #110
+//│ let x$14 = 6 in -- #109
+//│ let x$15 = 7 in -- #108
+//│ if c$1 -- #107
 //│   true =>
-//│     let x$16 = +(x$11,x$12) in -- #83
-//│     let x$17 = +(x$16,x$13) in -- #82
-//│     let x$18 = +(x$17,x$14) in -- #81
-//│     jump j$1(x$18) -- #80
+//│     let x$17 = +(x$12,x$13) in -- #86
+//│     let x$18 = +(x$17,x$14) in -- #85
+//│     let x$19 = +(x$18,x$15) in -- #84
+//│     jump j$1(x$19) -- #83
 //│   false =>
-//│     let x$19 = +(x$11,x$12) in -- #103
-//│     let x$20 = -(x$19,x$13) in -- #102
-//│     let x$21 = +(x$20,x$14) in -- #101
-//│     jump j$1(x$21) -- #100
+//│     let x$20 = +(x$12,x$13) in -- #106
+//│     let x$21 = -(x$20,x$14) in -- #105
+//│     let x$22 = +(x$21,x$15) in -- #104
+//│     jump j$1(x$22) -- #103
 //│ )
-//│ Def(5, j$1, [x$15], [{}],
+//│ Def(5, j$1, [x$16], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$15 -- #63
+//│ x$16 -- #66
 //│ )
-//│ Def(6, e2, [x$22], [{}],
+//│ Def(6, e2, [x$23], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$23 = +(x$22,12) in -- #127
-//│ let x$24 = +(x$23,13) in -- #126
-//│ let x$25 = +(x$24,14) in -- #125
-//│ x$25 -- #124
+//│ let x$24 = +(x$23,12) in -- #130
+//│ let x$25 = +(x$24,13) in -- #129
+//│ let x$26 = +(x$25,14) in -- #128
+//│ x$26 -- #127
 //│ )
-//│ Def(7, f, [x$26], [{}],
+//│ Def(7, f, [x$27], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$27) = is_some(x$26) in -- #164
-//│ let* (x$28) = e3(x$27) in -- #163
-//│ case x$26 of -- #162
+//│ let* (x$28) = is_some(x$27) in -- #167
+//│ let* (x$29) = e3(x$28) in -- #166
+//│ case x$27 of -- #165
 //│   Some =>
-//│     let x$31 = Some.x(x$26) in -- #155
-//│     let* (x$32) = e1(x$31,x$28) in -- #154
-//│     jump j$2(x$32) -- #153
+//│     let x$32 = Some.x(x$27) in -- #158
+//│     let* (x$33) = e1(x$32,x$29) in -- #157
+//│     jump j$2(x$33) -- #156
 //│   None =>
-//│     let* (x$33) = e2(x$28) in -- #161
-//│     jump j$2(x$33) -- #160
+//│     let* (x$34) = e2(x$29) in -- #164
+//│     jump j$2(x$34) -- #163
 //│ )
-//│ Def(8, j$2, [x$29], [{}],
+//│ Def(8, j$2, [x$30], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$30) = e0(x$29) in -- #142
-//│ x$30 -- #141
+//│ let* (x$31) = e0(x$30) in -- #145
+//│ x$31 -- #144
 //│ )
 //│ Def(9, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$34 = Some(2) in -- #184
-//│ let* (x$35) = f(x$34) in -- #183
-//│ let x$36 = None() in -- #182
-//│ let* (x$37) = f(x$36) in -- #181
-//│ let x$38 = +(x$35,x$37) in -- #180
-//│ x$38 -- #179
+//│ let x$35 = Some(2) in -- #187
+//│ let* (x$36) = f(x$35) in -- #186
+//│ let x$37 = None() in -- #185
+//│ let* (x$38) = f(x$37) in -- #184
+//│ let x$39 = +(x$36,x$38) in -- #183
+//│ x$39 -- #182
 //│ )
 //│ },
-//│ let* (x$39) = main() in -- #187
-//│ x$39 -- #186)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Interpreted:
-//│ 115
 //│ 
 
 :interpIR
@@ -3070,131 +3057,131 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case o$0 of -- #13
+//│ case o$0 of -- #16
 //│   Some =>
-//│     let x$1 = Some.x(o$0) in -- #9
-//│     let x$2 = True() in -- #8
-//│     jump j$0(x$2) -- #7
+//│     let x$2 = Some.x(o$0) in -- #12
+//│     let x$3 = True() in -- #11
+//│     jump j$0(x$3) -- #10
 //│   None =>
-//│     let x$3 = False() in -- #12
-//│     jump j$0(x$3) -- #11
+//│     let x$4 = False() in -- #15
+//│     jump j$0(x$4) -- #14
 //│ )
-//│ Def(1, j$0, [x$0], [{}],
+//│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$0 -- #1
+//│ x$1 -- #4
 //│ )
 //│ Def(2, e0, [w$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$4 = +(w$0,8) in -- #32
-//│ let x$5 = +(x$4,9) in -- #31
-//│ let x$6 = +(x$5,10) in -- #30
-//│ x$6 -- #29
+//│ let x$5 = +(w$0,8) in -- #35
+//│ let x$6 = +(x$5,9) in -- #34
+//│ let x$7 = +(x$6,10) in -- #33
+//│ x$7 -- #32
 //│ )
 //│ Def(3, e1, [a$0,z$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$7 = >(a$0,0) in -- #59
-//│ if x$7 -- #58
+//│ let x$8 = >(a$0,0) in -- #62
+//│ if x$8 -- #61
 //│   true =>
-//│     let x$9 = -(a$0,1) in -- #55
-//│     let x$10 = Some(x$9) in -- #54
-//│     let* (x$11) = f(x$10) in -- #53
-//│     jump j$1(x$11) -- #52
+//│     let x$10 = -(a$0,1) in -- #58
+//│     let x$11 = Some(x$10) in -- #57
+//│     let* (x$12) = f(x$11) in -- #56
+//│     jump j$1(x$12) -- #55
 //│   false =>
-//│     jump j$1(z$0) -- #57
+//│     jump j$1(z$0) -- #60
 //│ )
-//│ Def(4, j$1, [x$8], [{}],
+//│ Def(4, j$1, [x$9], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$8 -- #39
+//│ x$9 -- #42
 //│ )
 //│ Def(5, e3, [c$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$12 = 4 in -- #110
-//│ let x$13 = 5 in -- #109
-//│ let x$14 = 6 in -- #108
-//│ let x$15 = 7 in -- #107
-//│ if c$0 -- #106
+//│ let x$13 = 4 in -- #113
+//│ let x$14 = 5 in -- #112
+//│ let x$15 = 6 in -- #111
+//│ let x$16 = 7 in -- #110
+//│ if c$0 -- #109
 //│   true =>
-//│     let x$17 = +(x$12,x$13) in -- #85
-//│     let x$18 = +(x$17,x$14) in -- #84
-//│     let x$19 = +(x$18,x$15) in -- #83
-//│     jump j$2(x$19) -- #82
+//│     let x$18 = +(x$13,x$14) in -- #88
+//│     let x$19 = +(x$18,x$15) in -- #87
+//│     let x$20 = +(x$19,x$16) in -- #86
+//│     jump j$2(x$20) -- #85
 //│   false =>
-//│     let x$20 = +(x$12,x$13) in -- #105
-//│     let x$21 = -(x$20,x$14) in -- #104
-//│     let x$22 = +(x$21,x$15) in -- #103
-//│     jump j$2(x$22) -- #102
+//│     let x$21 = +(x$13,x$14) in -- #108
+//│     let x$22 = -(x$21,x$15) in -- #107
+//│     let x$23 = +(x$22,x$16) in -- #106
+//│     jump j$2(x$23) -- #105
 //│ )
-//│ Def(6, j$2, [x$16], [{}],
+//│ Def(6, j$2, [x$17], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$16 -- #65
+//│ x$17 -- #68
 //│ )
-//│ Def(7, e2, [x$23], [{}],
+//│ Def(7, e2, [x$24], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$24 = +(x$23,12) in -- #129
-//│ let x$25 = +(x$24,13) in -- #128
-//│ let x$26 = +(x$25,14) in -- #127
-//│ x$26 -- #126
+//│ let x$25 = +(x$24,12) in -- #132
+//│ let x$26 = +(x$25,13) in -- #131
+//│ let x$27 = +(x$26,14) in -- #130
+//│ x$27 -- #129
 //│ )
-//│ Def(8, f, [x$27], [{}],
+//│ Def(8, f, [x$28], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$28) = is_some(x$27) in -- #166
-//│ let* (x$29) = e3(x$28) in -- #165
-//│ case x$27 of -- #164
+//│ let* (x$29) = is_some(x$28) in -- #169
+//│ let* (x$30) = e3(x$29) in -- #168
+//│ case x$28 of -- #167
 //│   Some =>
-//│     let x$32 = Some.x(x$27) in -- #157
-//│     let* (x$33) = e1(x$32,x$29) in -- #156
-//│     jump j$3(x$33) -- #155
+//│     let x$33 = Some.x(x$28) in -- #160
+//│     let* (x$34) = e1(x$33,x$30) in -- #159
+//│     jump j$3(x$34) -- #158
 //│   None =>
-//│     let* (x$34) = e2(x$29) in -- #163
-//│     jump j$3(x$34) -- #162
+//│     let* (x$35) = e2(x$30) in -- #166
+//│     jump j$3(x$35) -- #165
 //│ )
-//│ Def(9, j$3, [x$30], [{}],
+//│ Def(9, j$3, [x$31], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$31) = e0(x$30) in -- #144
-//│ x$31 -- #143
+//│ let* (x$32) = e0(x$31) in -- #147
+//│ x$32 -- #146
 //│ )
 //│ Def(10, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$35 = Some(2) in -- #186
-//│ let* (x$36) = f(x$35) in -- #185
-//│ let x$37 = None() in -- #184
-//│ let* (x$38) = f(x$37) in -- #183
-//│ let x$39 = +(x$36,x$38) in -- #182
-//│ x$39 -- #181
+//│ let x$36 = Some(2) in -- #189
+//│ let* (x$37) = f(x$36) in -- #188
+//│ let x$38 = None() in -- #187
+//│ let* (x$39) = f(x$38) in -- #186
+//│ let x$40 = +(x$37,x$39) in -- #185
+//│ x$40 -- #184
 //│ )
 //│ },
-//│ let* (x$40) = main() in -- #189
-//│ x$40 -- #188)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, [], parents: , methods:
@@ -3232,134 +3219,133 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case o$0 of -- #13
+//│ case o$0 of -- #16
 //│   Some =>
-//│     let x$1 = Some.x(o$0) in -- #9
-//│     let x$2 = True() in -- #8
-//│     jump j$0(x$2) -- #7
+//│     let x$2 = Some.x(o$0) in -- #12
+//│     let x$3 = True() in -- #11
+//│     jump j$0(x$3) -- #10
 //│   None =>
-//│     let x$3 = False() in -- #12
-//│     jump j$0(x$3) -- #11
+//│     let x$4 = False() in -- #15
+//│     jump j$0(x$4) -- #14
 //│ )
-//│ Def(1, j$0, [x$0], [{}],
+//│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$0 -- #1
+//│ x$1 -- #4
 //│ )
 //│ Def(2, e0, [w$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$4 = +(w$0,8) in -- #32
-//│ let x$5 = +(x$4,9) in -- #31
-//│ let x$6 = +(x$5,10) in -- #30
-//│ x$6 -- #29
+//│ let x$5 = +(w$0,8) in -- #35
+//│ let x$6 = +(x$5,9) in -- #34
+//│ let x$7 = +(x$6,10) in -- #33
+//│ x$7 -- #32
 //│ )
 //│ Def(3, e1, [a$0,z$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$7 = >(a$0,0) in -- #59
-//│ if x$7 -- #58
+//│ let x$8 = >(a$0,0) in -- #62
+//│ if x$8 -- #61
 //│   true =>
-//│     let x$9 = -(a$0,1) in -- #55
-//│     let x$10 = Some(x$9) in -- #54
-//│     let* (x$11) = f(x$10) in -- #53
-//│     jump j$1(x$11) -- #52
+//│     let x$10 = -(a$0,1) in -- #58
+//│     let x$11 = Some(x$10) in -- #57
+//│     let* (x$12) = f(x$11) in -- #56
+//│     jump j$1(x$12) -- #55
 //│   false =>
-//│     jump j$1(z$0) -- #57
+//│     jump j$1(z$0) -- #60
 //│ )
-//│ Def(4, j$1, [x$8], [{}],
+//│ Def(4, j$1, [x$9], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$8 -- #39
+//│ x$9 -- #42
 //│ )
 //│ Def(5, e3, [c$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$12 = 4 in -- #110
-//│ let x$13 = 5 in -- #109
-//│ let x$14 = 6 in -- #108
-//│ let x$15 = 7 in -- #107
-//│ if c$0 -- #106
+//│ let x$13 = 4 in -- #113
+//│ let x$14 = 5 in -- #112
+//│ let x$15 = 6 in -- #111
+//│ let x$16 = 7 in -- #110
+//│ if c$0 -- #109
 //│   true =>
-//│     let x$17 = +(x$12,x$13) in -- #85
-//│     let x$18 = +(x$17,x$14) in -- #84
-//│     let x$19 = +(x$18,x$15) in -- #83
-//│     jump j$2(x$19) -- #82
+//│     let x$18 = +(x$13,x$14) in -- #88
+//│     let x$19 = +(x$18,x$15) in -- #87
+//│     let x$20 = +(x$19,x$16) in -- #86
+//│     jump j$2(x$20) -- #85
 //│   false =>
-//│     let x$20 = +(x$12,x$13) in -- #105
-//│     let x$21 = -(x$20,x$14) in -- #104
-//│     let x$22 = +(x$21,x$15) in -- #103
-//│     jump j$2(x$22) -- #102
+//│     let x$21 = +(x$13,x$14) in -- #108
+//│     let x$22 = -(x$21,x$15) in -- #107
+//│     let x$23 = +(x$22,x$16) in -- #106
+//│     jump j$2(x$23) -- #105
 //│ )
-//│ Def(6, j$2, [x$16], [{}],
+//│ Def(6, j$2, [x$17], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$16 -- #65
+//│ x$17 -- #68
 //│ )
-//│ Def(7, e2, [x$23], [{}],
+//│ Def(7, e2, [x$24], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$24 = +(x$23,12) in -- #129
-//│ let x$25 = +(x$24,13) in -- #128
-//│ let x$26 = +(x$25,14) in -- #127
-//│ x$26 -- #126
+//│ let x$25 = +(x$24,12) in -- #132
+//│ let x$26 = +(x$25,13) in -- #131
+//│ let x$27 = +(x$26,14) in -- #130
+//│ x$27 -- #129
 //│ )
-//│ Def(8, f, [x$27], [{}],
+//│ Def(8, f, [x$28], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$28) = is_some(x$27) in -- #166
-//│ let* (x$29) = e3(x$28) in -- #165
-//│ case x$27 of -- #164
+//│ let* (x$29) = is_some(x$28) in -- #169
+//│ let* (x$30) = e3(x$29) in -- #168
+//│ case x$28 of -- #167
 //│   Some =>
-//│     let x$32 = Some.x(x$27) in -- #157
-//│     let* (x$33) = e1(x$32,x$29) in -- #156
-//│     jump j$3(x$33) -- #155
+//│     let x$33 = Some.x(x$28) in -- #160
+//│     let* (x$34) = e1(x$33,x$30) in -- #159
+//│     jump j$3(x$34) -- #158
 //│   None =>
-//│     let* (x$34) = e2(x$29) in -- #163
-//│     jump j$3(x$34) -- #162
+//│     let* (x$35) = e2(x$30) in -- #166
+//│     jump j$3(x$35) -- #165
 //│ )
-//│ Def(9, j$3, [x$30], [{}],
+//│ Def(9, j$3, [x$31], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$31) = e0(x$30) in -- #144
-//│ x$31 -- #143
+//│ let* (x$32) = e0(x$31) in -- #147
+//│ x$32 -- #146
 //│ )
 //│ Def(10, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$35 = Some(2) in -- #186
-//│ let* (x$36) = f(x$35) in -- #185
-//│ let x$37 = None() in -- #184
-//│ let* (x$38) = f(x$37) in -- #183
-//│ let x$39 = +(x$36,x$38) in -- #182
-//│ x$39 -- #181
+//│ let x$36 = Some(2) in -- #189
+//│ let* (x$37) = f(x$36) in -- #188
+//│ let x$38 = None() in -- #187
+//│ let* (x$39) = f(x$38) in -- #186
+//│ let x$40 = +(x$37,x$39) in -- #185
+//│ x$40 -- #184
 //│ )
 //│ },
-//│ let* (x$40) = main() in -- #189
-//│ x$40 -- #188)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Interpreted:
-//│ 179
 //│ 
 
 :genCpp
@@ -3425,137 +3411,137 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case n$0 of -- #12
+//│ case n$0 of -- #15
 //│   S =>
-//│     let x$1 = S.x(n$0) in -- #8
-//│     jump j$0(x$1) -- #7
-//│   Z =>
-//│     let x$2 = Z() in -- #11
+//│     let x$2 = S.x(n$0) in -- #11
 //│     jump j$0(x$2) -- #10
+//│   Z =>
+//│     let x$3 = Z() in -- #14
+//│     jump j$0(x$3) -- #13
 //│ )
-//│ Def(1, j$0, [x$0], [{}],
+//│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$0 -- #1
+//│ x$1 -- #4
 //│ )
 //│ Def(2, plus, [n1$0,n2$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case n1$0 of -- #34
+//│ case n1$0 of -- #37
 //│   Z =>
-//│     jump j$1(n2$0) -- #16
+//│     jump j$1(n2$0) -- #19
 //│   S =>
-//│     let x$4 = S.x(n1$0) in -- #33
-//│     let* (x$5) = plus(x$4,n2$0) in -- #32
-//│     let x$6 = S(x$5) in -- #31
-//│     jump j$1(x$6) -- #30
+//│     let x$5 = S.x(n1$0) in -- #36
+//│     let* (x$6) = plus(x$5,n2$0) in -- #35
+//│     let x$7 = S(x$6) in -- #34
+//│     jump j$1(x$7) -- #33
 //│ )
-//│ Def(3, j$1, [x$3], [{}],
+//│ Def(3, j$1, [x$4], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$3 -- #14
+//│ x$4 -- #17
 //│ )
 //│ Def(4, fib, [n$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case n$1 of -- #81
+//│ case n$1 of -- #84
 //│   Z =>
-//│     let x$8 = Z() in -- #43
-//│     let x$9 = S(x$8) in -- #42
-//│     jump j$2(x$9) -- #41
+//│     let x$9 = Z() in -- #46
+//│     let x$10 = S(x$9) in -- #45
+//│     jump j$2(x$10) -- #44
 //│   S =>
-//│     let x$10 = S.x(n$1) in -- #80
-//│     case x$10 of -- #79
+//│     let x$11 = S.x(n$1) in -- #83
+//│     case x$11 of -- #82
 //│       Z =>
-//│         let x$12 = Z() in -- #57
-//│         let x$13 = S(x$12) in -- #56
-//│         jump j$3(x$13) -- #55
+//│         let x$13 = Z() in -- #60
+//│         let x$14 = S(x$13) in -- #59
+//│         jump j$3(x$14) -- #58
 //│       S =>
-//│         let x$14 = S.x(x$10) in -- #78
-//│         let* (x$15) = fib(x$10) in -- #77
-//│         let* (x$16) = fib(x$14) in -- #76
-//│         let* (x$17) = plus(x$15,x$16) in -- #75
-//│         jump j$3(x$17) -- #74
+//│         let x$15 = S.x(x$11) in -- #81
+//│         let* (x$16) = fib(x$11) in -- #80
+//│         let* (x$17) = fib(x$15) in -- #79
+//│         let* (x$18) = plus(x$16,x$17) in -- #78
+//│         jump j$3(x$18) -- #77
 //│ )
-//│ Def(5, j$2, [x$7], [{}],
+//│ Def(5, j$2, [x$8], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$7 -- #36
+//│ x$8 -- #39
 //│ )
-//│ Def(6, j$3, [x$11], [{}],
+//│ Def(6, j$3, [x$12], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ jump j$2(x$11) -- #50
+//│ jump j$2(x$12) -- #53
 //│ )
 //│ Def(7, to_int, [n$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case n$2 of -- #103
+//│ case n$2 of -- #106
 //│   Z =>
-//│     jump j$4(0) -- #85
+//│     jump j$4(0) -- #88
 //│   S =>
-//│     let x$19 = S.x(n$2) in -- #102
-//│     let* (x$20) = to_int(x$19) in -- #101
-//│     let x$21 = +(1,x$20) in -- #100
-//│     jump j$4(x$21) -- #99
+//│     let x$20 = S.x(n$2) in -- #105
+//│     let* (x$21) = to_int(x$20) in -- #104
+//│     let x$22 = +(1,x$21) in -- #103
+//│     jump j$4(x$22) -- #102
 //│ )
-//│ Def(8, j$4, [x$18], [{}],
+//│ Def(8, j$4, [x$19], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$18 -- #83
+//│ x$19 -- #86
 //│ )
 //│ Def(9, to_nat, [n$3], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$22 = ==(n$3,0) in -- #131
-//│ if x$22 -- #130
+//│ let x$23 = ==(n$3,0) in -- #134
+//│ if x$23 -- #133
 //│   true =>
-//│     let x$24 = Z() in -- #113
-//│     jump j$5(x$24) -- #112
+//│     let x$25 = Z() in -- #116
+//│     jump j$5(x$25) -- #115
 //│   false =>
-//│     let x$25 = -(n$3,1) in -- #129
-//│     let* (x$26) = to_nat(x$25) in -- #128
-//│     let x$27 = S(x$26) in -- #127
-//│     jump j$5(x$27) -- #126
+//│     let x$26 = -(n$3,1) in -- #132
+//│     let* (x$27) = to_nat(x$26) in -- #131
+//│     let x$28 = S(x$27) in -- #130
+//│     jump j$5(x$28) -- #129
 //│ )
-//│ Def(10, j$5, [x$23], [{}],
+//│ Def(10, j$5, [x$24], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$23 -- #110
+//│ x$24 -- #113
 //│ )
 //│ Def(11, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$28) = to_nat(30) in -- #144
-//│ let* (x$29) = fib(x$28) in -- #143
-//│ let* (x$30) = to_int(x$29) in -- #142
-//│ x$30 -- #141
+//│ let* (x$29) = to_nat(30) in -- #147
+//│ let* (x$30) = fib(x$29) in -- #146
+//│ let* (x$31) = to_int(x$30) in -- #145
+//│ x$31 -- #144
 //│ )
 //│ },
-//│ let* (x$31) = main() in -- #147
-//│ x$31 -- #146)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, [], parents: , methods:
@@ -3587,135 +3573,135 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case n$0 of -- #12
+//│ case n$0 of -- #15
 //│   S =>
-//│     let x$1 = S.x(n$0) in -- #8
-//│     jump j$0(x$1) -- #7
-//│   Z =>
-//│     let x$2 = Z() in -- #11
+//│     let x$2 = S.x(n$0) in -- #11
 //│     jump j$0(x$2) -- #10
+//│   Z =>
+//│     let x$3 = Z() in -- #14
+//│     jump j$0(x$3) -- #13
 //│ )
-//│ Def(1, j$0, [x$0], [{}],
+//│ Def(1, j$0, [x$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$0 -- #1
+//│ x$1 -- #4
 //│ )
 //│ Def(2, plus, [n1$0,n2$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case n1$0 of -- #34
+//│ case n1$0 of -- #37
 //│   Z =>
-//│     jump j$1(n2$0) -- #16
+//│     jump j$1(n2$0) -- #19
 //│   S =>
-//│     let x$4 = S.x(n1$0) in -- #33
-//│     let* (x$5) = plus(x$4,n2$0) in -- #32
-//│     let x$6 = S(x$5) in -- #31
-//│     jump j$1(x$6) -- #30
+//│     let x$5 = S.x(n1$0) in -- #36
+//│     let* (x$6) = plus(x$5,n2$0) in -- #35
+//│     let x$7 = S(x$6) in -- #34
+//│     jump j$1(x$7) -- #33
 //│ )
-//│ Def(3, j$1, [x$3], [{}],
+//│ Def(3, j$1, [x$4], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$3 -- #14
+//│ x$4 -- #17
 //│ )
 //│ Def(4, fib, [n$1], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case n$1 of -- #81
+//│ case n$1 of -- #84
 //│   Z =>
-//│     let x$8 = Z() in -- #43
-//│     let x$9 = S(x$8) in -- #42
-//│     jump j$2(x$9) -- #41
+//│     let x$9 = Z() in -- #46
+//│     let x$10 = S(x$9) in -- #45
+//│     jump j$2(x$10) -- #44
 //│   S =>
-//│     let x$10 = S.x(n$1) in -- #80
-//│     case x$10 of -- #79
+//│     let x$11 = S.x(n$1) in -- #83
+//│     case x$11 of -- #82
 //│       Z =>
-//│         let x$12 = Z() in -- #57
-//│         let x$13 = S(x$12) in -- #56
-//│         jump j$3(x$13) -- #55
+//│         let x$13 = Z() in -- #60
+//│         let x$14 = S(x$13) in -- #59
+//│         jump j$3(x$14) -- #58
 //│       S =>
-//│         let x$14 = S.x(x$10) in -- #78
-//│         let* (x$15) = fib(x$10) in -- #77
-//│         let* (x$16) = fib(x$14) in -- #76
-//│         let* (x$17) = plus(x$15,x$16) in -- #75
-//│         jump j$3(x$17) -- #74
+//│         let x$15 = S.x(x$11) in -- #81
+//│         let* (x$16) = fib(x$11) in -- #80
+//│         let* (x$17) = fib(x$15) in -- #79
+//│         let* (x$18) = plus(x$16,x$17) in -- #78
+//│         jump j$3(x$18) -- #77
 //│ )
-//│ Def(5, j$2, [x$7], [{}],
+//│ Def(5, j$2, [x$8], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$7 -- #36
+//│ x$8 -- #39
 //│ )
-//│ Def(6, j$3, [x$11], [{}],
+//│ Def(6, j$3, [x$12], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ jump j$2(x$11) -- #50
+//│ jump j$2(x$12) -- #53
 //│ )
 //│ Def(7, to_int, [n$2], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ case n$2 of -- #103
+//│ case n$2 of -- #106
 //│   Z =>
-//│     jump j$4(0) -- #85
+//│     jump j$4(0) -- #88
 //│   S =>
-//│     let x$19 = S.x(n$2) in -- #102
-//│     let* (x$20) = to_int(x$19) in -- #101
-//│     let x$21 = +(1,x$20) in -- #100
-//│     jump j$4(x$21) -- #99
+//│     let x$20 = S.x(n$2) in -- #105
+//│     let* (x$21) = to_int(x$20) in -- #104
+//│     let x$22 = +(1,x$21) in -- #103
+//│     jump j$4(x$22) -- #102
 //│ )
-//│ Def(8, j$4, [x$18], [{}],
+//│ Def(8, j$4, [x$19], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$18 -- #83
+//│ x$19 -- #86
 //│ )
 //│ Def(9, to_nat, [n$3], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$22 = ==(n$3,0) in -- #131
-//│ if x$22 -- #130
+//│ let x$23 = ==(n$3,0) in -- #134
+//│ if x$23 -- #133
 //│   true =>
-//│     let x$24 = Z() in -- #113
-//│     jump j$5(x$24) -- #112
+//│     let x$25 = Z() in -- #116
+//│     jump j$5(x$25) -- #115
 //│   false =>
-//│     let x$25 = -(n$3,1) in -- #129
-//│     let* (x$26) = to_nat(x$25) in -- #128
-//│     let x$27 = S(x$26) in -- #127
-//│     jump j$5(x$27) -- #126
+//│     let x$26 = -(n$3,1) in -- #132
+//│     let* (x$27) = to_nat(x$26) in -- #131
+//│     let x$28 = S(x$27) in -- #130
+//│     jump j$5(x$28) -- #129
 //│ )
-//│ Def(10, j$5, [x$23], [{}],
+//│ Def(10, j$5, [x$24], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ x$23 -- #110
+//│ x$24 -- #113
 //│ )
 //│ Def(11, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$28) = to_nat(30) in -- #144
-//│ let* (x$29) = fib(x$28) in -- #143
-//│ let* (x$30) = to_int(x$29) in -- #142
-//│ x$30 -- #141
+//│ let* (x$29) = to_nat(30) in -- #147
+//│ let* (x$30) = fib(x$29) in -- #146
+//│ let* (x$31) = to_int(x$30) in -- #145
+//│ x$31 -- #144
 //│ )
 //│ },
-//│ let* (x$31) = main() in -- #147
-//│ x$31 -- #146)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 

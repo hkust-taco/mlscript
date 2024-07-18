@@ -32,14 +32,14 @@ implicit object ClassInfoOrdering extends Ordering[ClassInfo] {
 
 case class ClassInfo(
   id: Int,
-  ident: Str,
+  name: Str,
   fields: Ls[Str],
 ):
   var parents: Set[Str] = Set.empty
   var methods: Map[Str, Defn] = Map.empty
   override def hashCode: Int = id
   override def toString: String =
-    s"ClassInfo($id, $ident, [${fields mkString ","}], parents: ${parents mkString ","}, methods:\n${methods mkString ",\n"})"
+    s"ClassInfo($id, $name, [${fields mkString ","}], parents: ${parents mkString ","}, methods:\n${methods mkString ",\n"})"
 
 case class Name(val str: Str):
   private var intro: Opt[Intro] = None
@@ -63,7 +63,7 @@ class DefnRef(var defn: Either[Defn, Str]):
   }
 
 class ClassRef(var cls: Either[ClassInfo, Str]):
-  def name: String = cls.fold(_.ident, x => x)
+  def name: String = cls.fold(_.name, x => x)
   def expectClass: ClassInfo = cls match {
     case Left(cls) => cls
     case Right(name) => throw Exception(s"Expected a class, but got $name")
@@ -524,7 +524,7 @@ enum LocMarker:
       raw("let")
         <:> raw(xs.map(_.toString).mkString(","))
         <:> raw("=")
-        <:> raw(cls.ident)
+        <:> raw(cls.name)
         <:> raw(".")
         <:> raw(method)
         <:> raw("...")

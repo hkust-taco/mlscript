@@ -51,59 +51,59 @@ main()
 //│ ClassInfo(8, None, [], parents: Option, methods:
 //│ ),
 //│ ClassInfo(9, Fn, [], parents: Callable, methods:
-//│ apply1 -> Def(0, apply1, [x$0], [{}],
+//│ apply1 -> Def(2, apply1, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$1) = builtin(println,x$0) in -- #7
-//│ x$1 -- #6
+//│ let** (x$12) = builtin(println,x$11) in -- #64
+//│ x$12 -- #63
 //│ )),
 //│ ClassInfo(10, Fn2, [a], parents: Callable, methods:
-//│ apply1 -> Def(1, apply1, [x$2], [{}],
+//│ apply1 -> Def(3, apply1, [x$13], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$3) = builtin(println,a) in -- #23
-//│ let** (x$4) = builtin(println,x$2) in -- #22
-//│ x$4 -- #21
+//│ let** (x$14) = builtin(println,a) in -- #80
+//│ let** (x$15) = builtin(println,x$13) in -- #79
+//│ x$15 -- #78
 //│ )),
 //│ ClassInfo(11, Demo, [n], parents: , methods:
-//│ x -> Def(2, x, [], [],
+//│ x -> Def(4, x, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ n -- #24
+//│ n -- #81
 //│ ))}, {
-//│ Def(3, f, [fn$0], [{}],
+//│ Def(0, f, [fn$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$5) = fn$0(1) in -- #30
-//│ x$5 -- #29
+//│ let** (x$1) = fn$0(1) in -- #8
+//│ x$1 -- #7
 //│ )
-//│ Def(4, main, [], [],
+//│ Def(1, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$6 = Demo(2) in -- #78
-//│ let x$7 = Demo.x(x$6) in -- #77
-//│ let x$8 = Fn() in -- #76
-//│ let x$9 = Fn.apply1(x$8,3) in -- #75
-//│ let* (x$10) = f(x$8) in -- #74
-//│ let x$11 = Fn2(4) in -- #73
-//│ let x$12 = Fn2.apply1(x$11,5) in -- #72
-//│ let** (x$13) = x$11(6) in -- #71
-//│ let* (x$14) = f(x$11) in -- #70
-//│ x$14 -- #69
+//│ let x$2 = Demo(2) in -- #56
+//│ let x$3 = Demo.x(x$2) in -- #55
+//│ let x$4 = Fn() in -- #54
+//│ let x$5 = Fn.apply1(x$4,3) in -- #53
+//│ let* (x$6) = f(x$4) in -- #52
+//│ let x$7 = Fn2(4) in -- #51
+//│ let x$8 = Fn2.apply1(x$7,5) in -- #50
+//│ let** (x$9) = x$7(6) in -- #49
+//│ let* (x$10) = f(x$7) in -- #48
+//│ x$10 -- #47
 //│ )
 //│ },
-//│ let* (x$15) = main() in -- #81
-//│ x$15 -- #80)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ Promoted:
 //│ Program({ClassInfo(0, True, [], parents: , methods:
@@ -125,59 +125,59 @@ main()
 //│ ClassInfo(8, None, [], parents: Option, methods:
 //│ ),
 //│ ClassInfo(9, Fn, [], parents: Callable, methods:
-//│ apply1 -> Def(0, apply1, [x$0], [{}],
+//│ apply1 -> Def(2, apply1, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$1) = builtin(println,x$0) in -- #7
-//│ x$1 -- #6
+//│ let** (x$12) = builtin(println,x$11) in -- #64
+//│ x$12 -- #63
 //│ )),
 //│ ClassInfo(10, Fn2, [a], parents: Callable, methods:
-//│ apply1 -> Def(1, apply1, [x$2], [{}],
+//│ apply1 -> Def(3, apply1, [x$13], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$3) = builtin(println,a) in -- #23
-//│ let** (x$4) = builtin(println,x$2) in -- #22
-//│ x$4 -- #21
+//│ let** (x$14) = builtin(println,a) in -- #80
+//│ let** (x$15) = builtin(println,x$13) in -- #79
+//│ x$15 -- #78
 //│ )),
 //│ ClassInfo(11, Demo, [n], parents: , methods:
-//│ x -> Def(2, x, [], [],
+//│ x -> Def(4, x, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ n -- #24
+//│ n -- #81
 //│ ))}, {
-//│ Def(3, f, [fn$0], [{}],
+//│ Def(0, f, [fn$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$5) = fn$0(1) in -- #30
-//│ x$5 -- #29
+//│ let** (x$1) = fn$0(1) in -- #8
+//│ x$1 -- #7
 //│ )
-//│ Def(4, main, [], [],
+//│ Def(1, main, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$6 = Demo(2) in -- #78
-//│ let x$7 = Demo.x(x$6) in -- #77
-//│ let x$8 = Fn() in -- #76
-//│ let x$9 = Fn.apply1(x$8,3) in -- #75
-//│ let* (x$10) = f(x$8) in -- #74
-//│ let x$11 = Fn2(4) in -- #73
-//│ let x$12 = Fn2.apply1(x$11,5) in -- #72
-//│ let** (x$13) = x$11(6) in -- #71
-//│ let* (x$14) = f(x$11) in -- #70
-//│ x$14 -- #69
+//│ let x$2 = Demo(2) in -- #56
+//│ let x$3 = Demo.x(x$2) in -- #55
+//│ let x$4 = Fn() in -- #54
+//│ let x$5 = Fn.apply1(x$4,3) in -- #53
+//│ let* (x$6) = f(x$4) in -- #52
+//│ let x$7 = Fn2(4) in -- #51
+//│ let x$8 = Fn2.apply1(x$7,5) in -- #50
+//│ let** (x$9) = x$7(6) in -- #49
+//│ let* (x$10) = f(x$7) in -- #48
+//│ x$10 -- #47
 //│ )
 //│ },
-//│ let* (x$15) = main() in -- #81
-//│ x$15 -- #80)
+//│ let* (x$0) = main() in -- #2
+//│ x$0 -- #1)
 //│ 
 //│ 
 //│ Execution succeeded: 
