@@ -4,6 +4,7 @@
 
 :genCpp
 :runCpp
+:irVerbose
 fun main(x) =
   class InnerClass(y) extends Callable {
     fun apply1(z) = x + y + z

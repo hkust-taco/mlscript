@@ -17,9 +17,11 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
 
   private final case class ClassInfoPartial(name: Str, fields: Ls[Str], methods: Set[Str]):
     var freeVars = Ls.empty[Str]
+    var ctx = ctxEmpty
 
   private final case class DefnInfoPartial(name: Str, params: Ls[Str]):
     var freeVars = Ls.empty[Str]
+    var ctx = ctxEmpty
 
   private type NameCtx = Map[Str, Name] // name -> new name
   private type ClassCtx = Map[Str, ClassInfoPartial] // class name -> partial class info
@@ -28,6 +30,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
   
   private final case class Ctx(
     nameCtx: NameCtx = Map.empty,
+    tyNameCtx: NameCtx = Map.empty,
     classCtx: ClassCtx = Map.empty,
     fnCtx: FnCtx = Map.empty,
     opCtx: OpCtx = Set.empty,
@@ -37,6 +40,29 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
   ):
     def hasClassLifted = lcAcc.nonEmpty
     def hasLifted = jpAcc.nonEmpty || defAcc.nonEmpty || lcAcc.nonEmpty
+
+  private def ctxEmpty = Ctx(
+      nameCtx = Map.empty,
+      tyNameCtx = Map.empty,
+      classCtx = Map.empty,
+      fnCtx = Map.empty,
+      opCtx = ops,
+      jpAcc = ListBuffer.empty,
+      defAcc = ListBuffer.empty,
+      lcAcc = ListBuffer.empty,
+  )
+
+  private def ctxJoin(c1: Ctx, c2: Ctx) =
+    Ctx(
+      nameCtx = c1.nameCtx ++ c2.nameCtx,
+      tyNameCtx = c1.tyNameCtx ++ c2.tyNameCtx,
+      classCtx = c1.classCtx ++ c2.classCtx,
+      fnCtx = c1.fnCtx ++ c2.fnCtx,
+      opCtx = c1.opCtx ++ c2.opCtx,
+      jpAcc = c1.jpAcc,
+      defAcc = c1.defAcc,
+      lcAcc = c1.lcAcc,
+    )
 
   private def ref(x: Name) = Ref(x)
   private def result(x: Ls[TrivialExpr]) = Result(x).attachTag(tag)
@@ -212,27 +238,31 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
       case lit: Lit => Literal(lit) |> sresult |> k
       case v @ Var(name) =>
         if (name.isCapitalized)
-          val v = fresh.make
-          ctx.classCtx.get(name) match
-            case Some(clsinfo) =>
-              log(clsinfo)
-              val args = (if clsinfo.freeVars.isEmpty then Nil else clsinfo.freeVars.map(x => Ref(ctx.nameCtx(x))))
-              LetExpr(v,
-                CtorApp(ClassRef(Right(name)), args),
-                v |> ref |> sresult |> k).attachTag(tag)
-            case None => throw IRError(s"unknown class $name in $ctx")
-        else if (ctx.fnCtx.contains(name))
-          val info = ctx.fnCtx(name)
-          val arity = info.params.size - info.freeVars.size
-          val range = 0 until arity
-          val xs = range.map(_ => fresh.make.str).toList
-          val params = Tup(xs.map(x => N -> Fld(FldFlags.empty, Var(x))))
-          val args = Tup(params.fields ++ info.freeVars.map(x => N -> Fld(FldFlags.empty, Var(x)))) 
-          val lam = Lam(params, App(Var(name), args))
-          buildResultFromTerm(lam)(k)
+          ctx.tyNameCtx.get(name) match
+            case Some(x) => 
+              val v = fresh.make
+              ctx.classCtx.get(x.str) match
+                case Some(clsinfo) =>
+                  val args = (if clsinfo.freeVars.isEmpty then Nil else clsinfo.freeVars.map(x => Ref(ctx.nameCtx(x))))
+                  LetExpr(v,
+                    CtorApp(ClassRef(Right(x.str)), args),
+                    v |> ref |> sresult |> k).attachTag(tag)
+                case None => throw IRError(s"unknown class $name in $ctx")
+            case None => throw IRError(s"unknown type name $name in $ctx")
         else
           ctx.nameCtx.get(name) match {
-            case Some(x) => x |> ref |> sresult |> k
+            case Some(x) =>
+              if (ctx.fnCtx.contains(x.str))
+                val info = ctx.fnCtx(x.str)
+                val arity = info.params.size - info.freeVars.size
+                val range = 0 until arity
+                val xs = range.map(_ => fresh.make.str).toList
+                val params = Tup(xs.map(x => N -> Fld(FldFlags.empty, Var(x))))
+                val args = Tup(params.fields ++ info.freeVars.map(x => N -> Fld(FldFlags.empty, Var(x))))
+                val lam = Lam(params, App(Var(x.str), args))
+                buildResultFromTerm(lam)(k)
+              else
+                x |> ref |> sresult |> k
             case None => throw IRError(s"unknown name $name in $ctx")
           }
       case lam @ Lam(Tup(fields), body) =>
@@ -264,14 +294,17 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
         if name.isCapitalized then
           buildResultFromTerm(xs) {
             case Result(args) => 
-              val v = fresh.make
-              ctx.classCtx.get(name) match
-                case Some(clsinfo) =>
-                  val args2 = args ++ clsinfo.freeVars.map(x => Ref(ctx.nameCtx(x)))
-                  LetExpr(v,
-                    CtorApp(ClassRef(Right(name)), args2),
-                    v |> ref |> sresult |> k).attachTag(tag)
-                case None => throw IRError(s"unknown class $name in $ctx")
+              ctx.tyNameCtx.get(name) match
+                case Some(x) =>
+                  val v = fresh.make
+                  ctx.classCtx.get(x.str) match
+                    case Some(clsinfo) =>
+                      val args2 = args ++ clsinfo.freeVars.map(x => Ref(ctx.nameCtx(x)))
+                      LetExpr(v,
+                        CtorApp(ClassRef(Right(x.str)), args2),
+                        v |> ref |> sresult |> k).attachTag(tag)
+                    case None => throw IRError(s"unknown class $name in $ctx")
+                case None => throw IRError(s"unknown type name $name in $ctx")
             case node @ _ => node |> unexpectedNode
           }
         else
@@ -288,28 +321,38 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
         xs @ Tup((_ -> Fld(_, Var(s))) :: _)) if clsName.isCapitalized =>
         buildResultFromTup(xs) {
           case Result(xs @ (Ref(name) :: args)) =>
-            val v = fresh.make
-            val cls = ctx.classCtx(clsName)
-            val isField = cls.fields.contains(fld)
-            if isField then
-              LetExpr(v, Select(name, ClassRef(Right(clsName)), fld),
-                v |> ref |> sresult |> k).attachTag(tag)
-            else
-              if cls.methods.contains(fld) then
-                LetMethodCall(Ls(v), ClassRef(Right(clsName)), Name(fld), xs, v |> ref |> sresult |> k).attachTag(tag)
-              else
-                throw IRError(s"unknown field or method $fld in $cls")
+            ctx.tyNameCtx.get(clsName) match
+              case Some(x) => 
+                val v = fresh.make
+                val cls = ctx.classCtx(x.str)
+                val isField = cls.fields.contains(fld)
+                if isField then
+                  LetExpr(v, Select(name, ClassRef(Right(x.str)), fld),
+                    v |> ref |> sresult |> k).attachTag(tag)
+                else
+                  if cls.methods.contains(fld) then
+                    LetMethodCall(Ls(v), ClassRef(Right(x.str)), Name(fld), xs, v |> ref |> sresult |> k).attachTag(tag)
+                  else
+                    throw IRError(s"unknown field or method $fld in $cls")
+              case None => throw IRError(s"unknown type name $clsName in $ctx")
           case node @ _ => node |> unexpectedNode
         }
-      case App(Var(f), xs @ Tup(_)) if ctx.fnCtx.contains(f) =>
+      case x @ App(Var(f), xs @ Tup(_)) if ctx.fnCtx.contains(f) || ctx.nameCtx.get(f).fold(false)(x => ctx.fnCtx.contains(x.str)) =>
         buildResultFromTerm(xs) {
             case Result(args) =>
               val v = fresh.make
-              ctx.fnCtx.get(f) match
-                case None => throw IRError(s"unknown function $f in $ctx")
-                case Some(clsinfo) =>
-                  log(ctx.nameCtx)
-                  LetCall(List(v), DefnRef(Right(f)), args ++ clsinfo.freeVars.map(x => Ref(ctx.nameCtx(x))), v |> ref |> sresult |> k).attachTag(tag)
+              ctx.nameCtx.get(f) match
+                case None => throw IRError(s"unknown name $f in $ctx")
+                case Some(f2) =>
+                  ctx.fnCtx.get(f2.str) match
+                    case None => throw IRError(s"unknown function $f2 in $ctx")
+                    case Some(dInfo) =>
+                      val args2 = 
+                        if args.size != dInfo.params.size then
+                          args ++ dInfo.freeVars.map(x => Ref(ctx.nameCtx(x))) // it's possible that the free vars as parameters have been filled when do eta expansion
+                        else
+                          args
+                      LetCall(List(v), DefnRef(Right(f2.str)), args2, v |> ref |> sresult |> k).attachTag(tag)
             case node @ _ => node |> unexpectedNode
         }
       case App(f, xs @ Tup(_)) =>
@@ -417,12 +460,15 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
 
       case Blk(stmts) =>
         val (nfds, ntds, terms) = collectInfo(stmts)
-        val ctx2 = initContextForStatementsFrom(nfds, ntds, terms)(using ctx)
+        val (ctx2, nfds2, ntds2) = renameToBeLifted(nfds, ntds)
+        val ctx3 = initContextForStatementsFrom(
+          nfds2, ntds2, terms, scanNamesInThisScope(stmts)
+        )(using ctx2)
 
-        ctx.lcAcc.addAll(ntds)
-        ctx.defAcc.addAll(nfds)
+        ctx.lcAcc.addAll(ntds2)
+        ctx.defAcc.addAll(nfds2)
 
-        buildResultFromTerms(using ctx2)(terms)(k)
+        buildResultFromTerms(using ctx3)(terms)(k)
 
       case tup: Tup => buildResultFromTup(tup)(k)
 
@@ -461,10 +507,11 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
 
   private def buildDefFromMethod(using ctx: Ctx)(fields: List[Str], nfd: Statement): Defn = nfd match
     case nfd @ NuFunDef(_, Var(name), None, Nil, L(Lam(xs @ Tup(_), body))) =>
-      val defnInfoPartial = getDefnInfoPartial(ctx.fnCtx.keySet ++ ctx.classCtx.keySet ++ fields)(nfd).get
+      val defnInfoPartial = getDefnInfoPartial(ctx.fnCtx.keySet ++ ctx.classCtx.keySet ++ fields, ctx)(nfd).get
       val params = defnInfoPartial.params
       val names = params map (fresh.make(_))
-      given Ctx = ctx.copy(nameCtx = ctx.nameCtx ++ (params zip names))
+      val ctx2 =  ctxJoin(ctx, defnInfoPartial.ctx)
+      given Ctx = ctx2.copy(nameCtx = ctx2.nameCtx ++ (params zip names))
       Defn(
         fnUid.make,
         name,
@@ -477,10 +524,11 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
 
   private def buildDefFromNuFunDef(using ctx: Ctx)(nfd: Statement): Defn = nfd match
     case nfd @ NuFunDef(_, Var(name), None, Nil, L(Lam(xs @ Tup(_), body))) =>
-      val defnInfoPartial = ctx.fnCtx.get(name).getOrElse(getDefnInfoPartial(ctx.fnCtx.keySet ++ ctx.classCtx.keySet)(nfd).get)
+      val defnInfoPartial = getDefnInfoPartial(ctx.fnCtx.keySet ++ ctx.classCtx.keySet, ctx)(nfd).get
       val params = defnInfoPartial.params
       val names = params map (fresh.make(_))
-      given Ctx = ctx.copy(nameCtx = ctx.nameCtx ++ (params zip names))
+      val ctx2 =  ctxJoin(ctx, defnInfoPartial.ctx)
+      given Ctx = ctx2.copy(nameCtx = ctx2.nameCtx ++ (params zip names))
       Defn(
         fnUid.make,
         name,
@@ -493,11 +541,12 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
 
   private def buildClassInfo(using ctx: Ctx)(ntd: Statement): ClassInfo = ntd match
     case ntd @ NuTypeDef(Cls | Mod, TypeName(name), Nil, params, N, _, parents, N, N, TypingUnit(methods)) =>
-      val clsInfoPartial = ctx.classCtx.get(name).getOrElse(getClassInfoPartial(ctx.classCtx.keySet ++ ctx.fnCtx.keySet)(ntd))
+      val clsInfoPartial = getClassInfoPartial(ctx.classCtx.keySet ++ ctx.fnCtx.keySet, ctx)(ntd)
       val cls = ClassInfo(classUid.make, name, clsInfoPartial.fields)
-      given Ctx = ctx.copy(
-        nameCtx = ctx.nameCtx ++ clsInfoPartial.fields.map(x => x -> Name(x)),
-        classCtx = ctx.classCtx + (name -> clsInfoPartial)
+      val ctx2 = ctxJoin(ctx, clsInfoPartial.ctx)
+      given Ctx = ctx2.copy(
+        nameCtx = ctx2.nameCtx ++ clsInfoPartial.fields.map(x => x -> Name(x)),
+        classCtx = ctx2.classCtx + (name -> clsInfoPartial)
       )
       cls.parents = parents.map {
         case Var(name) if name.isCapitalized => name
@@ -511,21 +560,44 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
     case x @ _ => throw IRError(f"unsupported NuTypeDef $x")
 
 
-  private def getDefnInfoPartial(names: Set[Str])(nfd: NuFunDef): Opt[DefnInfoPartial] =nfd match
+  private def getDefnInfoPartial(names: Set[Str], ctx: Ctx)(nfd: NuFunDef): Opt[DefnInfoPartial] = nfd match
     case NuFunDef(_, Var(name), _, _, Left(Lam(Var(x), _))) => 
-      val fvs = (freeVariables(nfd)._2 -- builtin -- ops -- names).toList
+      val originalFvs = freeVariables(nfd)._2
+      val fvs = (originalFvs -- builtin -- ops -- names).toList
       val params = x :: fvs
       val dip = DefnInfoPartial(name, params)
       dip.freeVars = fvs
+      dip.ctx = ctx
       S(dip)
     case NuFunDef(_, Var(name), _, _, Left(Lam(tp @ Tup(fields), _))) =>
-      val fvs = (freeVariables(nfd)._2 -- builtin -- ops -- names).toList
+      val originalFvs = freeVariables(nfd)._2
+      val fvs = (originalFvs -- builtin -- ops -- names).toList
       val params = getTupleFields(tp) ++ fvs
       val dip = DefnInfoPartial(name, params)
       dip.freeVars = fvs
+      dip.ctx = ctx
       S(dip)
     case NuFunDef(_, Var(name), _, _, _) => N
 
+
+  private def getClassInfoPartial(names: Set[Str], ctx: Ctx)(ntd: NuTypeDef): ClassInfoPartial = ntd match
+    case ntd @ NuTypeDef(Cls | Mod, TypeName(name), Nil, params, N, _, parents, N, N, TypingUnit(other)) =>
+      val originalFvs = freeVariables(ntd)._2
+      log(s"getClassInfoPartial $name")
+      log(originalFvs)
+      log(names)
+      val fvs = (originalFvs -- builtin -- ops -- names).toList
+      val fields = params.fold(fvs)(xs => getTupleFields(xs) ++ fvs)
+      val methods = other.map {
+        case x: NuFunDef => x.name
+        case x @ _ => throw IRError(f"unsupported method $x")
+      }
+      val cls = ClassInfoPartial(name, fields, methods.toSet)
+      cls.freeVars = fvs
+      cls.ctx = ctx
+      cls
+    case x @ _ => throw IRError(f"unsupported NuTypeDef $x")
+  
   private def collectInfo(stmts: Ls[Statement]): (Ls[NuFunDef], Ls[NuTypeDef], Ls[Statement]) =
     var nfds = ListBuffer.empty[NuFunDef]
     var ntds = ListBuffer.empty[NuTypeDef]
@@ -549,49 +621,53 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
       case _ => Nil
     }
     names.toSet
+  
+  private def renameToBeLifted(nfds: Ls[NuFunDef], ntds: Ls[NuTypeDef])(using ctx: Ctx): (Ctx, Ls[NuFunDef], Ls[NuTypeDef]) =
+    val oldFnNames = scanNamesInThisScope(nfds).toList
+    val oldTyNames = scanNamesInThisScope(ntds).toList
+    // TODO: currently, rename cause bugs
+    //val newFnNames = oldFnNames.map(x => fresh.make(x))
+    //val newTyNames = oldTyNames.map(x => if x.startsWith("Lambda$") then Name(x) else fresh.make(x))
+    val newFnNames = oldFnNames.map(Name(_))
+    val newTyNames = oldTyNames.map(Name(_))
+    val nameCtx = oldFnNames.zip(newFnNames).toMap
+    val tyNameCtx = oldTyNames.zip(newTyNames).toMap
+    val nfds2 = nfds.map(x => x.copy(nme = Var(nameCtx(x.name).str))(x.declareLoc, x.virtualLoc, x.mutLoc, x.signature, x.outer, x.genField, x.annotations))
+    val ntds2 = ntds.map(x => x.copy(nme = TypeName(tyNameCtx(x.name).str))(x.declareLoc, x.abstractLoc, x.annotations))
 
-  private def getClassInfoPartial(names: Set[Str])(ntd: NuTypeDef): ClassInfoPartial = ntd match
-    case ntd @ NuTypeDef(Cls | Mod, TypeName(name), Nil, params, N, _, parents, N, N, TypingUnit(other)) =>
-      val fvs = (freeVariables(ntd)._2 -- builtin -- ops -- names).toList
-      val fields = params.fold(fvs)(xs => getTupleFields(xs) ++ fvs)
-      val methods = other.map {
-        case x: NuFunDef => x.name
-        case x @ _ => throw IRError(f"unsupported method $x")
-      }
-      val cls = ClassInfoPartial(name, fields, methods.toSet)
-      cls.freeVars = fvs
-      cls
-    case x @ _ => throw IRError(f"unsupported NuTypeDef $x")
-    
+    (ctx.copy(nameCtx = ctx.nameCtx ++ nameCtx, tyNameCtx = ctx.tyNameCtx ++ tyNameCtx), nfds2, ntds2)
 
-  private def initContextForStatementsFrom(nfds: Ls[NuFunDef], ntds: Ls[NuTypeDef], terms: Ls[Statement])(using ctx: Ctx): Ctx =
-    val excludedNames = scanNamesInThisScope(nfds) ++ scanNamesInThisScope(ntds) ++ ctx.fnCtx.keySet ++ ctx.classCtx.keySet
-    val partialDefnInfo = nfds flatMap getDefnInfoPartial(excludedNames)
-    val partialClassInfo = ntds map getClassInfoPartial(excludedNames)
+  private def initContextForStatementsFrom(nfds: Ls[NuFunDef], ntds: Ls[NuTypeDef], terms: Ls[Statement], excluded: Set[Str])(using ctx: Ctx): Ctx =
+    // they are in the same mutual group or higher group, mustn't capture them
+    val excludedNames = excluded ++ scanNamesInThisScope(nfds) ++ scanNamesInThisScope(ntds) ++ ctx.fnCtx.keySet ++ ctx.classCtx.keySet
+    val partialDefnInfo = nfds flatMap getDefnInfoPartial(excludedNames, ctx)
+    val partialClassInfo = ntds map getClassInfoPartial(excludedNames, ctx)
     val fnNames = partialDefnInfo.map(_.name)
     val fnCtx = fnNames.zip(partialDefnInfo).toMap
     val nameCtx = makeNameMap(builtin) ++ makeNameMap(fnNames) ++ makeNameMap(ops)
-    val classCtx = partialClassInfo.map(x => (x.name, x)).toMap
+    val tyNames = partialClassInfo.map(_.name)
+    val tyNameCtx = makeNameMap(tyNames)
+    val classCtx = tyNames.zip(partialClassInfo).toMap
 
     ctx.copy(
+      tyNameCtx = ctx.tyNameCtx ++ tyNameCtx,
       nameCtx = ctx.nameCtx ++ nameCtx,
       classCtx = ctx.classCtx ++ classCtx,
       fnCtx = ctx.fnCtx ++ fnCtx,
-      opCtx = ops
     )
-
 
   private def initContextForStatements(nfds: Ls[NuFunDef], ntds: Ls[NuTypeDef], terms: Ls[Statement]): Ctx =
     val ctx = Ctx(
       nameCtx = Map.empty,
+      tyNameCtx = Map.empty,
       classCtx = Map.empty,
       fnCtx = Map.empty,
-      opCtx = Set.empty,
+      opCtx = ops,
       jpAcc = ListBuffer.empty,
       defAcc = ListBuffer.empty,
       lcAcc = ListBuffer.empty,
     )
-    initContextForStatementsFrom(nfds, ntds, terms)(using ctx)
+    initContextForStatementsFrom(nfds, ntds, terms, Set.empty)(using ctx)
 
   val prelude = 
     NuTypeDef(Mod,TypeName("True"),List(),None,None,None,List(),None,None,TypingUnit(List()))(N, N, Nil) ::
@@ -627,7 +703,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
       classes.addAll(curNtds.map(buildClassInfo(using ctx)))
       curNfds = ctx.defAcc.toList
       curNtds = ctx.lcAcc.toList
-      ctx = initContextForStatementsFrom(curNfds, curNtds, Nil)(using ctx)
+      ctx = initContextForStatementsFrom(curNfds, curNtds, Nil, Set.empty)(using ctx)
 
     val clsInfo = classes.toSet
     val defs = definitions.toSet
