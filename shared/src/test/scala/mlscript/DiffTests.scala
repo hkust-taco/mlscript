@@ -59,7 +59,7 @@ class DiffTests
   
   
   /**  Hook for dependent projects, like the monomorphizer. */
-  def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (Ls[Str], Option[TypingUnit]) = (Nil, None)
+  def postProcess(mode: ModeType, basePath: Ls[Str], testName: Str, unit: TypingUnit, output: Str => Unit, raise: Diagnostic => Unit): (Ls[Str], Option[TypingUnit]) = (Nil, None)
   
   
   @SuppressWarnings(Array("org.wartremover.warts.RedundantIsInstanceOf"))
@@ -466,7 +466,7 @@ class DiffTests
               output(s"AST: $res")
             
             val newMode = if (useIR) { mode.copy(useIR = true) } else mode
-            val (postLines, nuRes) = postProcess(newMode, basePath, testName, res, output)
+            val (postLines, nuRes) = postProcess(newMode, basePath, testName, res, output, raise)
             postLines.foreach(output)  
             
             if (parseOnly)

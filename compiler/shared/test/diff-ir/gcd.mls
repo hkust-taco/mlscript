@@ -235,7 +235,48 @@ testGcd_nofib(z_of_int(400))
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
+//│ apply5 -> Def(94, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #1315
 //│ ),
+//│ apply1 -> Def(90, apply1, [x0$1,x1$0], [{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #1311
+//│ ),
+//│ apply0 -> Def(89, apply0, [x0$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #1310
+//│ ),
+//│ apply4 -> Def(93, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #1314
+//│ ),
+//│ apply3 -> Def(92, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #1313
+//│ ),
+//│ apply2 -> Def(91, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #1312
+//│ )),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
 //│ ClassInfo(4, Cons, [h,t], parents: List, methods:
@@ -253,58 +294,58 @@ testGcd_nofib(z_of_int(400))
 //│ ClassInfo(10, Tuple3, [x,y,z], parents: , methods:
 //│ ),
 //│ ClassInfo(11, Lambda$0, [], parents: Callable, methods:
-//│ apply0 -> Def(89, apply0, [], [],
+//│ apply0 -> Def(95, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$270) = error() in -- #1312
-//│ x$270 -- #1311
+//│ let* (x$270) = error() in -- #1318
+//│ x$270 -- #1317
 //│ )),
 //│ ClassInfo(12, Lambda$1, [], parents: Callable, methods:
-//│ apply0 -> Def(90, apply0, [], [],
+//│ apply0 -> Def(96, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$271) = error() in -- #1315
-//│ x$271 -- #1314
+//│ let* (x$271) = error() in -- #1321
+//│ x$271 -- #1320
 //│ )),
 //│ ClassInfo(13, Lambda$2, [], parents: Callable, methods:
-//│ apply0 -> Def(91, apply0, [], [],
+//│ apply0 -> Def(97, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$272) = error() in -- #1318
-//│ x$272 -- #1317
+//│ let* (x$272) = error() in -- #1324
+//│ x$272 -- #1323
 //│ )),
 //│ ClassInfo(14, Lambda$3, [], parents: Callable, methods:
-//│ apply0 -> Def(92, apply0, [], [],
+//│ apply0 -> Def(98, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$273) = error() in -- #1321
-//│ x$273 -- #1320
+//│ let* (x$273) = error() in -- #1327
+//│ x$273 -- #1326
 //│ )),
 //│ ClassInfo(15, Lambda$4, [], parents: Callable, methods:
-//│ apply1 -> Def(93, apply1, [x$274], [{}],
+//│ apply1 -> Def(99, apply1, [x$274], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$275) = f1(x$274) in -- #1326
-//│ x$275 -- #1325
+//│ let* (x$275) = f1(x$274) in -- #1332
+//│ x$275 -- #1331
 //│ )),
 //│ ClassInfo(16, Lambda$5, [], parents: Callable, methods:
-//│ apply1 -> Def(94, apply1, [x$276], [{}],
+//│ apply1 -> Def(100, apply1, [x$276], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$277) = f2(x$276) in -- #1331
-//│ x$277 -- #1330
+//│ let* (x$277) = f2(x$276) in -- #1337
+//│ x$277 -- #1336
 //│ ))}, {
 //│ Def(0, error, [], [],
 //│ I: [],
@@ -1285,7 +1326,48 @@ testGcd_nofib(z_of_int(400))
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
+//│ apply5 -> Def(94, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #1315
 //│ ),
+//│ apply1 -> Def(90, apply1, [x0$1,x1$0], [{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #1311
+//│ ),
+//│ apply0 -> Def(89, apply0, [x0$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #1310
+//│ ),
+//│ apply4 -> Def(93, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #1314
+//│ ),
+//│ apply3 -> Def(92, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #1313
+//│ ),
+//│ apply2 -> Def(91, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #1312
+//│ )),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
 //│ ClassInfo(4, Cons, [h,t], parents: List, methods:
@@ -1303,58 +1385,58 @@ testGcd_nofib(z_of_int(400))
 //│ ClassInfo(10, Tuple3, [x,y,z], parents: , methods:
 //│ ),
 //│ ClassInfo(11, Lambda$0, [], parents: Callable, methods:
-//│ apply0 -> Def(89, apply0, [], [],
+//│ apply0 -> Def(95, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$270) = error() in -- #1312
-//│ x$270 -- #1311
+//│ let* (x$270) = error() in -- #1318
+//│ x$270 -- #1317
 //│ )),
 //│ ClassInfo(12, Lambda$1, [], parents: Callable, methods:
-//│ apply0 -> Def(90, apply0, [], [],
+//│ apply0 -> Def(96, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$271) = error() in -- #1315
-//│ x$271 -- #1314
+//│ let* (x$271) = error() in -- #1321
+//│ x$271 -- #1320
 //│ )),
 //│ ClassInfo(13, Lambda$2, [], parents: Callable, methods:
-//│ apply0 -> Def(91, apply0, [], [],
+//│ apply0 -> Def(97, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$272) = error() in -- #1318
-//│ x$272 -- #1317
+//│ let* (x$272) = error() in -- #1324
+//│ x$272 -- #1323
 //│ )),
 //│ ClassInfo(14, Lambda$3, [], parents: Callable, methods:
-//│ apply0 -> Def(92, apply0, [], [],
+//│ apply0 -> Def(98, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$273) = error() in -- #1321
-//│ x$273 -- #1320
+//│ let* (x$273) = error() in -- #1327
+//│ x$273 -- #1326
 //│ )),
 //│ ClassInfo(15, Lambda$4, [], parents: Callable, methods:
-//│ apply1 -> Def(93, apply1, [x$274], [{}],
+//│ apply1 -> Def(99, apply1, [x$274], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$275) = f1(x$274) in -- #1326
-//│ x$275 -- #1325
+//│ let* (x$275) = f1(x$274) in -- #1332
+//│ x$275 -- #1331
 //│ )),
 //│ ClassInfo(16, Lambda$5, [], parents: Callable, methods:
-//│ apply1 -> Def(94, apply1, [x$276], [{}],
+//│ apply1 -> Def(100, apply1, [x$276], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let* (x$277) = f2(x$276) in -- #1331
-//│ x$277 -- #1330
+//│ let* (x$277) = f2(x$276) in -- #1337
+//│ x$277 -- #1336
 //│ ))}, {
 //│ Def(0, error, [], [],
 //│ I: [],

@@ -20,7 +20,48 @@ main(3)
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
+//│ apply5 -> Def(7, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #31
 //│ ),
+//│ apply1 -> Def(3, apply1, [x0$1,x1$0], [{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #27
+//│ ),
+//│ apply0 -> Def(2, apply0, [x0$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #26
+//│ ),
+//│ apply4 -> Def(6, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #30
+//│ ),
+//│ apply3 -> Def(5, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #29
+//│ ),
+//│ apply2 -> Def(4, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #28
+//│ )),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
 //│ ClassInfo(4, Cons, [h,t], parents: List, methods:
@@ -34,33 +75,33 @@ main(3)
 //│ ClassInfo(8, None, [], parents: Option, methods:
 //│ ),
 //│ ClassInfo(9, Lambda$0, [f], parents: Callable, methods:
-//│ apply1 -> Def(2, apply1, [g$0], [{}],
+//│ apply1 -> Def(8, apply1, [g$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$11 = Lambda$2(f,g$0) in -- #27
-//│ x$11 -- #26
+//│ let x$11 = Lambda$2(f,g$0) in -- #33
+//│ x$11 -- #32
 //│ )),
 //│ ClassInfo(10, Lambda$1, [x,y], parents: Callable, methods:
-//│ apply1 -> Def(3, apply1, [z$0], [{}],
+//│ apply1 -> Def(9, apply1, [z$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$12 = +(x,y) in -- #40
-//│ let x$13 = +(x$12,z$0) in -- #39
-//│ x$13 -- #38
+//│ let x$12 = +(x,y) in -- #46
+//│ let x$13 = +(x$12,z$0) in -- #45
+//│ x$13 -- #44
 //│ )),
 //│ ClassInfo(11, Lambda$2, [f,g], parents: Callable, methods:
-//│ apply1 -> Def(4, apply1, [x$14], [{}],
+//│ apply1 -> Def(10, apply1, [x$14], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$15) = g(x$14) in -- #51
-//│ let** (x$16) = f(x$15) in -- #50
-//│ x$16 -- #49
+//│ let** (x$15) = g(x$14) in -- #57
+//│ let** (x$16) = f(x$15) in -- #56
+//│ x$16 -- #55
 //│ ))}, {
 //│ Def(0, compose, [f$0], [{}],
 //│ I: [],
@@ -92,7 +133,48 @@ main(3)
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
+//│ apply5 -> Def(7, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #31
 //│ ),
+//│ apply1 -> Def(3, apply1, [x0$1,x1$0], [{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #27
+//│ ),
+//│ apply0 -> Def(2, apply0, [x0$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #26
+//│ ),
+//│ apply4 -> Def(6, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #30
+//│ ),
+//│ apply3 -> Def(5, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #29
+//│ ),
+//│ apply2 -> Def(4, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #28
+//│ )),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
 //│ ClassInfo(4, Cons, [h,t], parents: List, methods:
@@ -106,33 +188,33 @@ main(3)
 //│ ClassInfo(8, None, [], parents: Option, methods:
 //│ ),
 //│ ClassInfo(9, Lambda$0, [f], parents: Callable, methods:
-//│ apply1 -> Def(2, apply1, [g$0], [{}],
+//│ apply1 -> Def(8, apply1, [g$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$11 = Lambda$2(f,g$0) in -- #27
-//│ x$11 -- #26
+//│ let x$11 = Lambda$2(f,g$0) in -- #33
+//│ x$11 -- #32
 //│ )),
 //│ ClassInfo(10, Lambda$1, [x,y], parents: Callable, methods:
-//│ apply1 -> Def(3, apply1, [z$0], [{}],
+//│ apply1 -> Def(9, apply1, [z$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let x$12 = +(x,y) in -- #40
-//│ let x$13 = +(x$12,z$0) in -- #39
-//│ x$13 -- #38
+//│ let x$12 = +(x,y) in -- #46
+//│ let x$13 = +(x$12,z$0) in -- #45
+//│ x$13 -- #44
 //│ )),
 //│ ClassInfo(11, Lambda$2, [f,g], parents: Callable, methods:
-//│ apply1 -> Def(4, apply1, [x$14], [{}],
+//│ apply1 -> Def(10, apply1, [x$14], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$15) = g(x$14) in -- #51
-//│ let** (x$16) = f(x$15) in -- #50
-//│ x$16 -- #49
+//│ let** (x$15) = g(x$14) in -- #57
+//│ let** (x$16) = f(x$15) in -- #56
+//│ x$16 -- #55
 //│ ))}, {
 //│ Def(0, compose, [f$0], [{}],
 //│ I: [],

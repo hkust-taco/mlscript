@@ -28,7 +28,48 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
+//│ apply5 -> Def(9, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #116
 //│ ),
+//│ apply1 -> Def(5, apply1, [x0$1,x1$0], [{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #112
+//│ ),
+//│ apply0 -> Def(4, apply0, [x0$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #111
+//│ ),
+//│ apply4 -> Def(8, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #115
+//│ ),
+//│ apply3 -> Def(7, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #114
+//│ ),
+//│ apply2 -> Def(6, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #113
+//│ )),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
 //│ ClassInfo(4, Cons, [h,t], parents: List, methods:
@@ -110,7 +151,48 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
+//│ apply5 -> Def(9, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #116
 //│ ),
+//│ apply1 -> Def(5, apply1, [x0$1,x1$0], [{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #112
+//│ ),
+//│ apply0 -> Def(4, apply0, [x0$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #111
+//│ ),
+//│ apply4 -> Def(8, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #115
+//│ ),
+//│ apply3 -> Def(7, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #114
+//│ ),
+//│ apply2 -> Def(6, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #113
+//│ )),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
 //│ ClassInfo(4, Cons, [h,t], parents: List, methods:
@@ -231,7 +313,48 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
+//│ apply5 -> Def(12, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #210
 //│ ),
+//│ apply1 -> Def(8, apply1, [x0$1,x1$0], [{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #206
+//│ ),
+//│ apply0 -> Def(7, apply0, [x0$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #205
+//│ ),
+//│ apply4 -> Def(11, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #209
+//│ ),
+//│ apply3 -> Def(10, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #208
+//│ ),
+//│ apply2 -> Def(9, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #207
+//│ )),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
 //│ ClassInfo(4, Cons, [h,t], parents: List, methods:
@@ -372,7 +495,48 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
+//│ apply5 -> Def(12, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #210
 //│ ),
+//│ apply1 -> Def(8, apply1, [x0$1,x1$0], [{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #206
+//│ ),
+//│ apply0 -> Def(7, apply0, [x0$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #205
+//│ ),
+//│ apply4 -> Def(11, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #209
+//│ ),
+//│ apply3 -> Def(10, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #208
+//│ ),
+//│ apply2 -> Def(9, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #207
+//│ )),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
 //│ ClassInfo(4, Cons, [h,t], parents: List, methods:
@@ -552,7 +716,48 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
+//│ apply5 -> Def(12, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #220
 //│ ),
+//│ apply1 -> Def(8, apply1, [x0$1,x1$0], [{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #216
+//│ ),
+//│ apply0 -> Def(7, apply0, [x0$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #215
+//│ ),
+//│ apply4 -> Def(11, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #219
+//│ ),
+//│ apply3 -> Def(10, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #218
+//│ ),
+//│ apply2 -> Def(9, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #217
+//│ )),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
 //│ ClassInfo(4, Cons, [h,t], parents: List, methods:
@@ -695,7 +900,48 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
+//│ apply5 -> Def(12, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #220
 //│ ),
+//│ apply1 -> Def(8, apply1, [x0$1,x1$0], [{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #216
+//│ ),
+//│ apply0 -> Def(7, apply0, [x0$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #215
+//│ ),
+//│ apply4 -> Def(11, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #219
+//│ ),
+//│ apply3 -> Def(10, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #218
+//│ ),
+//│ apply2 -> Def(9, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #217
+//│ )),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
 //│ ClassInfo(4, Cons, [h,t], parents: List, methods:

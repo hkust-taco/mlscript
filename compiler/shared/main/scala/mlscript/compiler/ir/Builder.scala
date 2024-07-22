@@ -672,7 +672,14 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
   val prelude = 
     NuTypeDef(Mod,TypeName("True"),List(),None,None,None,List(),None,None,TypingUnit(List()))(N, N, Nil) ::
     NuTypeDef(Mod,TypeName("False"),List(),None,None,None,List(),None,None,TypingUnit(List()))(N, N, Nil) ::
-    NuTypeDef(Mod,TypeName("Callable"),List(),None,None,None,List(),None,None,TypingUnit(List()))(N, N, Nil) ::
+    NuTypeDef(Mod,TypeName("Callable"),List(),None,None,None,List(),None,None,TypingUnit(List(
+      NuFunDef(N, Var("apply0"), None, Nil, L(Lam(Tup((0 to 0).map(x => None -> Fld(FldFlags.empty, Var("x" + x.toString()))).toList), IntLit(0))))(N, N, N, N, N, false, Nil),
+      NuFunDef(N, Var("apply1"), None, Nil, L(Lam(Tup((0 to 1).map(x => None -> Fld(FldFlags.empty, Var("x" + x.toString()))).toList), IntLit(0))))(N, N, N, N, N, false, Nil),
+      NuFunDef(N, Var("apply2"), None, Nil, L(Lam(Tup((0 to 2).map(x => None -> Fld(FldFlags.empty, Var("x" + x.toString()))).toList), IntLit(0))))(N, N, N, N, N, false, Nil),
+      NuFunDef(N, Var("apply3"), None, Nil, L(Lam(Tup((0 to 3).map(x => None -> Fld(FldFlags.empty, Var("x" + x.toString()))).toList), IntLit(0))))(N, N, N, N, N, false, Nil),
+      NuFunDef(N, Var("apply4"), None, Nil, L(Lam(Tup((0 to 4).map(x => None -> Fld(FldFlags.empty, Var("x" + x.toString()))).toList), IntLit(0))))(N, N, N, N, N, false, Nil),
+      NuFunDef(N, Var("apply5"), None, Nil, L(Lam(Tup((0 to 5).map(x => None -> Fld(FldFlags.empty, Var("x" + x.toString()))).toList), IntLit(0))))(N, N, N, N, N, false, Nil),
+    )))(N, N, Nil) ::
     NuTypeDef(Mod,TypeName("List"),List(),None,None,None,List(),None,None,TypingUnit(List()))(N, N, Nil) ::
     NuTypeDef(Cls,TypeName("Cons"),List(),Some(Tup(List((None,Fld(FldFlags.empty,Var("h"))), (None,Fld(FldFlags.empty,Var("t")))))),None,None,List(Var("List")),None,None,TypingUnit(List()))(N, N, Nil) ::
     NuTypeDef(Mod,TypeName("Nil"),List(),None,None,None,List(Var("List")),None,None,TypingUnit(List()))(N, N, Nil) ::

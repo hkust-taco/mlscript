@@ -8,10 +8,11 @@ import mlscript.compiler.debug.TreeDebug
 import mlscript.compiler.mono.Monomorph
 import mlscript.compiler.printer.ExprPrinter
 import mlscript.compiler.mono.MonomorphError
+import mlscript.Diagnostic
 
 class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*
-    override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit): (List[Str], Option[TypingUnit]) = 
+    override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit, raise: Diagnostic => Unit): (List[Str], Option[TypingUnit]) = 
     val outputBuilder = StringBuilder()
 
     output("\nLifted:")

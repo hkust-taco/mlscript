@@ -37,7 +37,48 @@ main()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
+//│ apply5 -> Def(7, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #62
 //│ ),
+//│ apply1 -> Def(3, apply1, [x0$1,x1$0], [{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #58
+//│ ),
+//│ apply0 -> Def(2, apply0, [x0$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #57
+//│ ),
+//│ apply4 -> Def(6, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #61
+//│ ),
+//│ apply3 -> Def(5, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #60
+//│ ),
+//│ apply2 -> Def(4, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #59
+//│ )),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
 //│ ClassInfo(4, Cons, [h,t], parents: List, methods:
@@ -51,31 +92,31 @@ main()
 //│ ClassInfo(8, None, [], parents: Option, methods:
 //│ ),
 //│ ClassInfo(9, Fn, [], parents: Callable, methods:
-//│ apply1 -> Def(2, apply1, [x$11], [{}],
+//│ apply1 -> Def(8, apply1, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$12) = builtin(println,x$11) in -- #64
-//│ x$12 -- #63
+//│ let** (x$12) = builtin(println,x$11) in -- #70
+//│ x$12 -- #69
 //│ )),
 //│ ClassInfo(10, Fn2, [a], parents: Callable, methods:
-//│ apply1 -> Def(3, apply1, [x$13], [{}],
+//│ apply1 -> Def(9, apply1, [x$13], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$14) = builtin(println,a) in -- #80
-//│ let** (x$15) = builtin(println,x$13) in -- #79
-//│ x$15 -- #78
+//│ let** (x$14) = builtin(println,a) in -- #86
+//│ let** (x$15) = builtin(println,x$13) in -- #85
+//│ x$15 -- #84
 //│ )),
 //│ ClassInfo(11, Demo, [n], parents: , methods:
-//│ x -> Def(4, x, [], [],
+//│ x -> Def(10, x, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ n -- #81
+//│ n -- #87
 //│ ))}, {
 //│ Def(0, f, [fn$0], [{}],
 //│ I: [],
@@ -111,7 +152,48 @@ main()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
+//│ apply5 -> Def(7, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #62
 //│ ),
+//│ apply1 -> Def(3, apply1, [x0$1,x1$0], [{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #58
+//│ ),
+//│ apply0 -> Def(2, apply0, [x0$0], [{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #57
+//│ ),
+//│ apply4 -> Def(6, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #61
+//│ ),
+//│ apply3 -> Def(5, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #60
+//│ ),
+//│ apply2 -> Def(4, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ I: [],
+//│ R: [None],
+//│ Rec: None,
+//│ 1, 
+//│ 0 -- #59
+//│ )),
 //│ ClassInfo(3, List, [], parents: , methods:
 //│ ),
 //│ ClassInfo(4, Cons, [h,t], parents: List, methods:
@@ -125,31 +207,31 @@ main()
 //│ ClassInfo(8, None, [], parents: Option, methods:
 //│ ),
 //│ ClassInfo(9, Fn, [], parents: Callable, methods:
-//│ apply1 -> Def(2, apply1, [x$11], [{}],
+//│ apply1 -> Def(8, apply1, [x$11], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$12) = builtin(println,x$11) in -- #64
-//│ x$12 -- #63
+//│ let** (x$12) = builtin(println,x$11) in -- #70
+//│ x$12 -- #69
 //│ )),
 //│ ClassInfo(10, Fn2, [a], parents: Callable, methods:
-//│ apply1 -> Def(3, apply1, [x$13], [{}],
+//│ apply1 -> Def(9, apply1, [x$13], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$14) = builtin(println,a) in -- #80
-//│ let** (x$15) = builtin(println,x$13) in -- #79
-//│ x$15 -- #78
+//│ let** (x$14) = builtin(println,a) in -- #86
+//│ let** (x$15) = builtin(println,x$13) in -- #85
+//│ x$15 -- #84
 //│ )),
 //│ ClassInfo(11, Demo, [n], parents: , methods:
-//│ x -> Def(4, x, [], [],
+//│ x -> Def(10, x, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ n -- #81
+//│ n -- #87
 //│ ))}, {
 //│ Def(0, f, [fn$0], [{}],
 //│ I: [],
