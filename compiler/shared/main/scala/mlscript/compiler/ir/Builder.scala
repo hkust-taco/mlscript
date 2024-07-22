@@ -709,6 +709,6 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
     val defs = definitions.toSet
 
     resolveRef(main, defs, clsInfo, true)
-    validate(main, defs)
+    validate(main, defs, clsInfo)
     
     Program(clsInfo, defs, main)
