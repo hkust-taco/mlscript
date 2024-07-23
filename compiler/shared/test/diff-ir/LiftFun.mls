@@ -4,6 +4,7 @@
 
 :genCpp
 :runCpp
+:interpIR
 fun main(init, key) =
   fun r(x) = if x <= 0 then key else r(x - 1)
   r(init)
@@ -18,42 +19,42 @@ main(1, 42)
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #17
 //│ ),
-//│ apply1 -> Def(2, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(2, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #13
 //│ ),
-//│ apply0 -> Def(1, apply0, [x0$0], [{}],
+//│ apply0 -> Def(1, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #12
 //│ ),
-//│ apply4 -> Def(5, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #16
 //│ ),
-//│ apply3 -> Def(4, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #15
 //│ ),
-//│ apply2 -> Def(3, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -111,42 +112,42 @@ main(1, 42)
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #17
 //│ ),
-//│ apply1 -> Def(2, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(2, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #13
 //│ ),
-//│ apply0 -> Def(1, apply0, [x0$0], [{}],
+//│ apply0 -> Def(1, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #12
 //│ ),
-//│ apply4 -> Def(5, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #16
 //│ ),
-//│ apply3 -> Def(4, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #15
 //│ ),
-//│ apply2 -> Def(3, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -197,6 +198,9 @@ main(1, 42)
 //│ },
 //│ let* (x$0) = main(1,42) in -- #6
 //│ x$0 -- #5)
+//│ 
+//│ Interpreted:
+//│ 42
 //│ 
 //│ 
 //│ Execution succeeded: 
@@ -205,13 +209,14 @@ main(1, 42)
 
 :genCpp
 :runCpp
+:interpIR
 fun main(init, key) =
-  fun pong(x) = if x <= 0 then key + 2 else ping(x - 1)
   fun ping(x) = if x <= 0 then key + 1 else pong(x - 1)
+  fun pong(x) = if x <= 0 then key + 2 else ping(x - 1)
   ping(init)
 main(1, 42)
-//│ |#fun| |main|(|init|,| |key|)| |#=|→|#fun| |pong|(|x|)| |#=| |#if| |x| |<=| |0| |#then| |key| |+| |2| |#else| |ping|(|x| |-| |1|)|↵|#fun| |ping|(|x|)| |#=| |#if| |x| |<=| |0| |#then| |key| |+| |1| |#else| |pong|(|x| |-| |1|)|↵|ping|(|init|)|←|↵|main|(|1|,| |42|)|
-//│ Parsed: {fun main = (init, key,) => {fun pong = (x,) => if (<=(x, 0,)) then +(key, 2,) else ping(-(x, 1,),); fun ping = (x,) => if (<=(x, 0,)) then +(key, 1,) else pong(-(x, 1,),); ping(init,)}; main(1, 42,)}
+//│ |#fun| |main|(|init|,| |key|)| |#=|→|#fun| |ping|(|x|)| |#=| |#if| |x| |<=| |0| |#then| |key| |+| |1| |#else| |pong|(|x| |-| |1|)|↵|#fun| |pong|(|x|)| |#=| |#if| |x| |<=| |0| |#then| |key| |+| |2| |#else| |ping|(|x| |-| |1|)|↵|ping|(|init|)|←|↵|main|(|1|,| |42|)|
+//│ Parsed: {fun main = (init, key,) => {fun ping = (x,) => if (<=(x, 0,)) then +(key, 1,) else pong(-(x, 1,),); fun pong = (x,) => if (<=(x, 0,)) then +(key, 2,) else ping(-(x, 1,),); ping(init,)}; main(1, 42,)}
 //│ 
 //│ 
 //│ IR:
@@ -220,42 +225,42 @@ main(1, 42)
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #17
 //│ ),
-//│ apply1 -> Def(2, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(2, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #13
 //│ ),
-//│ apply0 -> Def(1, apply0, [x0$0], [{}],
+//│ apply0 -> Def(1, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #12
 //│ ),
-//│ apply4 -> Def(5, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #16
 //│ ),
-//│ apply3 -> Def(4, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #15
 //│ ),
-//│ apply2 -> Def(3, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -282,7 +287,7 @@ main(1, 42)
 //│ let* (x$1) = ping(init$0,key$0) in -- #11
 //│ x$1 -- #10
 //│ )
-//│ Def(7, pong, [x$2,key$1], [{},{}],
+//│ Def(7, ping, [x$2,key$1], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -290,11 +295,11 @@ main(1, 42)
 //│ let x$3 = <=(x$2,0) in -- #46
 //│ if x$3 -- #45
 //│   true =>
-//│     let x$5 = +(key$1,2) in -- #32
+//│     let x$5 = +(key$1,1) in -- #32
 //│     jump j$0(x$5) -- #31
 //│   false =>
 //│     let x$6 = -(x$2,1) in -- #44
-//│     let* (x$7) = ping(x$6,key$1) in -- #43
+//│     let* (x$7) = pong(x$6,key$1) in -- #43
 //│     jump j$0(x$7) -- #42
 //│ )
 //│ Def(8, j$0, [x$4], [{}],
@@ -304,7 +309,7 @@ main(1, 42)
 //│ 1, 
 //│ x$4 -- #24
 //│ )
-//│ Def(9, ping, [x$8,key$2], [{},{}],
+//│ Def(9, pong, [x$8,key$2], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -312,11 +317,11 @@ main(1, 42)
 //│ let x$9 = <=(x$8,0) in -- #75
 //│ if x$9 -- #74
 //│   true =>
-//│     let x$11 = +(key$2,1) in -- #61
+//│     let x$11 = +(key$2,2) in -- #61
 //│     jump j$1(x$11) -- #60
 //│   false =>
 //│     let x$12 = -(x$8,1) in -- #73
-//│     let* (x$13) = pong(x$12,key$2) in -- #72
+//│     let* (x$13) = ping(x$12,key$2) in -- #72
 //│     jump j$1(x$13) -- #71
 //│ )
 //│ Def(10, j$1, [x$10], [{}],
@@ -336,42 +341,42 @@ main(1, 42)
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #17
 //│ ),
-//│ apply1 -> Def(2, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(2, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #13
 //│ ),
-//│ apply0 -> Def(1, apply0, [x0$0], [{}],
+//│ apply0 -> Def(1, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #12
 //│ ),
-//│ apply4 -> Def(5, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #16
 //│ ),
-//│ apply3 -> Def(4, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #15
 //│ ),
-//│ apply2 -> Def(3, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -398,7 +403,7 @@ main(1, 42)
 //│ let* (x$1) = ping(init$0,key$0) in -- #11
 //│ x$1 -- #10
 //│ )
-//│ Def(7, pong, [x$2,key$1], [{},{}],
+//│ Def(7, ping, [x$2,key$1], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -406,11 +411,11 @@ main(1, 42)
 //│ let x$3 = <=(x$2,0) in -- #46
 //│ if x$3 -- #45
 //│   true =>
-//│     let x$5 = +(key$1,2) in -- #32
+//│     let x$5 = +(key$1,1) in -- #32
 //│     jump j$0(x$5) -- #31
 //│   false =>
 //│     let x$6 = -(x$2,1) in -- #44
-//│     let* (x$7) = ping(x$6,key$1) in -- #43
+//│     let* (x$7) = pong(x$6,key$1) in -- #43
 //│     jump j$0(x$7) -- #42
 //│ )
 //│ Def(8, j$0, [x$4], [{}],
@@ -420,7 +425,7 @@ main(1, 42)
 //│ 1, 
 //│ x$4 -- #24
 //│ )
-//│ Def(9, ping, [x$8,key$2], [{},{}],
+//│ Def(9, pong, [x$8,key$2], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -428,11 +433,11 @@ main(1, 42)
 //│ let x$9 = <=(x$8,0) in -- #75
 //│ if x$9 -- #74
 //│   true =>
-//│     let x$11 = +(key$2,1) in -- #61
+//│     let x$11 = +(key$2,2) in -- #61
 //│     jump j$1(x$11) -- #60
 //│   false =>
 //│     let x$12 = -(x$8,1) in -- #73
-//│     let* (x$13) = pong(x$12,key$2) in -- #72
+//│     let* (x$13) = ping(x$12,key$2) in -- #72
 //│     jump j$1(x$13) -- #71
 //│ )
 //│ Def(10, j$1, [x$10], [{}],
@@ -446,6 +451,9 @@ main(1, 42)
 //│ let* (x$0) = main(1,42) in -- #6
 //│ x$0 -- #5)
 //│ 
+//│ Interpreted:
+//│ 44
+//│ 
 //│ 
 //│ Execution succeeded: 
 //│ 44
@@ -453,7 +461,7 @@ main(1, 42)
 
 :genCpp
 :runCpp
-:irVerbose
+:interpIR
 fun main(init, key) =
   let ping =
     fun ping(x) = if x <= 0 then key + 1 else pong(x - 1)
@@ -471,42 +479,42 @@ main(1, 42)
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #20
 //│ ),
-//│ apply1 -> Def(2, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(2, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #16
 //│ ),
-//│ apply0 -> Def(1, apply0, [x0$0], [{}],
+//│ apply0 -> Def(1, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #15
 //│ ),
-//│ apply4 -> Def(5, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #19
 //│ ),
-//│ apply3 -> Def(4, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #18
 //│ ),
-//│ apply2 -> Def(3, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -597,42 +605,42 @@ main(1, 42)
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #20
 //│ ),
-//│ apply1 -> Def(2, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(2, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #16
 //│ ),
-//│ apply0 -> Def(1, apply0, [x0$0], [{}],
+//│ apply0 -> Def(1, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #15
 //│ ),
-//│ apply4 -> Def(5, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #19
 //│ ),
-//│ apply3 -> Def(4, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #18
 //│ ),
-//│ apply2 -> Def(3, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -716,6 +724,9 @@ main(1, 42)
 //│ },
 //│ let* (x$0) = main(1,42) in -- #6
 //│ x$0 -- #5)
+//│ 
+//│ Interpreted:
+//│ 44
 //│ 
 //│ 
 //│ Execution succeeded: 

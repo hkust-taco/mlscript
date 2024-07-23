@@ -4,7 +4,7 @@
 
 :genCpp
 :runCpp
-:irVerbose
+:interpIR
 fun main(x) =
   class InnerClass(y) extends Callable {
     fun apply1(z) = x + y + z
@@ -22,42 +22,42 @@ main(4)
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #32
 //│ ),
-//│ apply1 -> Def(2, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(2, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #28
 //│ ),
-//│ apply0 -> Def(1, apply0, [x0$0], [{}],
+//│ apply0 -> Def(1, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #27
 //│ ),
-//│ apply4 -> Def(5, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #31
 //│ ),
-//│ apply3 -> Def(4, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #30
 //│ ),
-//│ apply2 -> Def(3, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -107,42 +107,42 @@ main(4)
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #32
 //│ ),
-//│ apply1 -> Def(2, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(2, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #28
 //│ ),
-//│ apply0 -> Def(1, apply0, [x0$0], [{}],
+//│ apply0 -> Def(1, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #27
 //│ ),
-//│ apply4 -> Def(5, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #31
 //│ ),
-//│ apply3 -> Def(4, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #30
 //│ ),
-//│ apply2 -> Def(3, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -186,6 +186,9 @@ main(4)
 //│ let* (x$0) = main(4) in -- #4
 //│ x$0 -- #3)
 //│ 
+//│ Interpreted:
+//│ 15
+//│ 
 //│ 
 //│ Execution succeeded: 
 //│ 15
@@ -193,6 +196,7 @@ main(4)
 
 :genCpp
 :runCpp
+:interpIR
 fun main(x) =
   class InnerClass(y) extends Callable {
     fun apply1(z) =
@@ -214,42 +218,42 @@ main(4)
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #42
 //│ ),
-//│ apply1 -> Def(2, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(2, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #38
 //│ ),
-//│ apply0 -> Def(1, apply0, [x0$0], [{}],
+//│ apply0 -> Def(1, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #37
 //│ ),
-//│ apply4 -> Def(5, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #41
 //│ ),
-//│ apply3 -> Def(4, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #40
 //│ ),
-//│ apply2 -> Def(3, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -309,42 +313,42 @@ main(4)
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #42
 //│ ),
-//│ apply1 -> Def(2, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(2, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #38
 //│ ),
-//│ apply0 -> Def(1, apply0, [x0$0], [{}],
+//│ apply0 -> Def(1, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #37
 //│ ),
-//│ apply4 -> Def(5, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #41
 //│ ),
-//│ apply3 -> Def(4, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #40
 //│ ),
-//│ apply2 -> Def(3, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -398,6 +402,9 @@ main(4)
 //│ let* (x$0) = main(4) in -- #4
 //│ x$0 -- #3)
 //│ 
+//│ Interpreted:
+//│ 8
+//│ 
 //│ 
 //│ Execution succeeded: 
 //│ 8
@@ -405,6 +412,7 @@ main(4)
 
 :genCpp
 :runCpp
+:interpIR
 fun main(x) =
   class InnerClass(y) extends Callable {
     fun f(x) = y
@@ -422,42 +430,42 @@ main(2)
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #23
 //│ ),
-//│ apply1 -> Def(2, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(2, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #19
 //│ ),
-//│ apply0 -> Def(1, apply0, [x0$0], [{}],
+//│ apply0 -> Def(1, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #18
 //│ ),
-//│ apply4 -> Def(5, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #22
 //│ ),
-//│ apply3 -> Def(4, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #21
 //│ ),
-//│ apply2 -> Def(3, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -504,42 +512,42 @@ main(2)
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #23
 //│ ),
-//│ apply1 -> Def(2, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(2, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #19
 //│ ),
-//│ apply0 -> Def(1, apply0, [x0$0], [{}],
+//│ apply0 -> Def(1, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #18
 //│ ),
-//│ apply4 -> Def(5, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #22
 //│ ),
-//│ apply3 -> Def(4, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #21
 //│ ),
-//│ apply2 -> Def(3, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -579,6 +587,9 @@ main(2)
 //│ },
 //│ let* (x$0) = main(2) in -- #4
 //│ x$0 -- #3)
+//│ 
+//│ Interpreted:
+//│ 1
 //│ 
 //│ 
 //│ Execution succeeded: 

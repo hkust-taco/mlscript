@@ -117,7 +117,7 @@ private def showArguments(args: Ls[TrivialExpr]) = args map (_.show) mkString ",
 enum Expr:
   case Ref(name: Name) extends Expr, TrivialExpr 
   case Literal(lit: Lit) extends Expr, TrivialExpr
-  case CtorApp(name: ClassRef, args: Ls[TrivialExpr])
+  case CtorApp(cls: ClassRef, args: Ls[TrivialExpr])
   case Select(name: Name, cls: ClassRef, field: Str)
   case BasicOp(name: Str, args: Ls[TrivialExpr])
   

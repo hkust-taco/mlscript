@@ -30,9 +30,9 @@ class IRDiffTestCompiler extends DiffTests {
         var interp_result: Opt[Str] = None
         if (mode.interpIR)
           output("\nInterpreted:")
-          //val ir = Interpreter(mode.irVerbose).interpret(graph)
-          //interp_result = Some(ir)
-          //output(ir)
+          val ir = Interpreter(mode.irVerbose).interpret(graph)
+          interp_result = Some(ir)
+          output(ir)
         if (mode.genCpp)
           val cpp = CppCodeGen().codegen(graph)
           if (mode.showCpp)

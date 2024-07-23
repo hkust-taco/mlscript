@@ -19,42 +19,42 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #29
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(4, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #25
 //│ ),
-//│ apply0 -> Def(3, apply0, [x0$0], [{}],
+//│ apply0 -> Def(3, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #24
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #28
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #27
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -109,42 +109,42 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #29
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(4, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #25
 //│ ),
-//│ apply0 -> Def(3, apply0, [x0$0], [{}],
+//│ apply0 -> Def(3, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #24
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #28
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #27
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -194,6 +194,7 @@ foo()
 //│ x$0 -- #1)
 //│ 
 //│ Interpreted:
+//│ Pair(1,2)
 
 :interpIR
 class Pair(x, y)
@@ -213,42 +214,42 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #40
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(4, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #36
 //│ ),
-//│ apply0 -> Def(3, apply0, [x0$0], [{}],
+//│ apply0 -> Def(3, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #35
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #39
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #38
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -307,42 +308,42 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #40
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(4, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #36
 //│ ),
-//│ apply0 -> Def(3, apply0, [x0$0], [{}],
+//│ apply0 -> Def(3, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #35
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #39
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #38
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -396,6 +397,7 @@ bar()
 //│ x$0 -- #1)
 //│ 
 //│ Interpreted:
+//│ Pair(1,2)
 
 
 
@@ -423,42 +425,42 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #59
 //│ ),
-//│ apply1 -> Def(5, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(5, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #55
 //│ ),
-//│ apply0 -> Def(4, apply0, [x0$0], [{}],
+//│ apply0 -> Def(4, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #54
 //│ ),
-//│ apply4 -> Def(8, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #58
 //│ ),
-//│ apply3 -> Def(7, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #57
 //│ ),
-//│ apply2 -> Def(6, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(6, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -530,42 +532,42 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #59
 //│ ),
-//│ apply1 -> Def(5, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(5, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #55
 //│ ),
-//│ apply0 -> Def(4, apply0, [x0$0], [{}],
+//│ apply0 -> Def(4, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #54
 //│ ),
-//│ apply4 -> Def(8, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #58
 //│ ),
-//│ apply3 -> Def(7, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #57
 //│ ),
-//│ apply2 -> Def(6, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(6, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -632,6 +634,7 @@ foo()
 //│ x$0 -- #1)
 //│ 
 //│ Interpreted:
+//│ 2
 
 
 
@@ -657,42 +660,42 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #41
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(4, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #37
 //│ ),
-//│ apply0 -> Def(3, apply0, [x0$0], [{}],
+//│ apply0 -> Def(3, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #36
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #40
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #39
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -752,42 +755,42 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #41
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(4, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #37
 //│ ),
-//│ apply0 -> Def(3, apply0, [x0$0], [{}],
+//│ apply0 -> Def(3, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #36
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #40
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #39
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -842,6 +845,7 @@ foo()
 //│ x$0 -- #1)
 //│ 
 //│ Interpreted:
+//│ 2
 
 :interpIR
 class Pair(x, y)
@@ -863,42 +867,42 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #40
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(4, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #36
 //│ ),
-//│ apply0 -> Def(3, apply0, [x0$0], [{}],
+//│ apply0 -> Def(3, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #35
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #39
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #38
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -958,42 +962,42 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #40
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(4, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #36
 //│ ),
-//│ apply0 -> Def(3, apply0, [x0$0], [{}],
+//│ apply0 -> Def(3, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #35
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #39
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #38
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -1048,6 +1052,7 @@ foo()
 //│ x$0 -- #1)
 //│ 
 //│ Interpreted:
+//│ 2
 
 :interpIR
 class Left(x)
@@ -1072,42 +1077,42 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #64
 //│ ),
-//│ apply1 -> Def(5, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(5, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #60
 //│ ),
-//│ apply0 -> Def(4, apply0, [x0$0], [{}],
+//│ apply0 -> Def(4, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #59
 //│ ),
-//│ apply4 -> Def(8, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #63
 //│ ),
-//│ apply3 -> Def(7, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #62
 //│ ),
-//│ apply2 -> Def(6, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(6, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -1185,42 +1190,42 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #64
 //│ ),
-//│ apply1 -> Def(5, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(5, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #60
 //│ ),
-//│ apply0 -> Def(4, apply0, [x0$0], [{}],
+//│ apply0 -> Def(4, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #59
 //│ ),
-//│ apply4 -> Def(8, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #63
 //│ ),
-//│ apply3 -> Def(7, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #62
 //│ ),
-//│ apply2 -> Def(6, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(6, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -1293,6 +1298,7 @@ bar()
 //│ x$0 -- #1)
 //│ 
 //│ Interpreted:
+//│ 2
 
 :interpIR
 class True
@@ -1312,42 +1318,42 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(7, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(7, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #31
 //│ ),
-//│ apply1 -> Def(3, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(3, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #27
 //│ ),
-//│ apply0 -> Def(2, apply0, [x0$0], [{}],
+//│ apply0 -> Def(2, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #26
 //│ ),
-//│ apply4 -> Def(6, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(6, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #30
 //│ ),
-//│ apply3 -> Def(5, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(5, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #29
 //│ ),
-//│ apply2 -> Def(4, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(4, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -1401,42 +1407,42 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(7, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(7, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #31
 //│ ),
-//│ apply1 -> Def(3, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(3, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #27
 //│ ),
-//│ apply0 -> Def(2, apply0, [x0$0], [{}],
+//│ apply0 -> Def(2, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #26
 //│ ),
-//│ apply4 -> Def(6, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(6, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #30
 //│ ),
-//│ apply3 -> Def(5, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(5, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #29
 //│ ),
-//│ apply2 -> Def(4, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(4, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -1485,6 +1491,7 @@ bar()
 //│ x$0 -- #1)
 //│ 
 //│ Interpreted:
+//│ 1
 
 
 :interpIR
@@ -1506,42 +1513,42 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #41
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(4, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #37
 //│ ),
-//│ apply0 -> Def(3, apply0, [x0$0], [{}],
+//│ apply0 -> Def(3, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #36
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #40
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #39
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -1604,42 +1611,42 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #41
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(4, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #37
 //│ ),
-//│ apply0 -> Def(3, apply0, [x0$0], [{}],
+//│ apply0 -> Def(3, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #36
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #40
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #39
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -1697,6 +1704,7 @@ bar()
 //│ x$0 -- #1)
 //│ 
 //│ Interpreted:
+//│ 0
 
 :interpIR
 class Pair(x, y)
@@ -1723,42 +1731,42 @@ baz()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #94
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(4, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #90
 //│ ),
-//│ apply0 -> Def(3, apply0, [x0$0], [{}],
+//│ apply0 -> Def(3, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #89
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #93
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #92
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -1826,42 +1834,42 @@ baz()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #94
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(4, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #90
 //│ ),
-//│ apply0 -> Def(3, apply0, [x0$0], [{}],
+//│ apply0 -> Def(3, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #89
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #93
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #92
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -1924,6 +1932,7 @@ baz()
 //│ x$0 -- #1)
 //│ 
 //│ Interpreted:
+//│ 6
 
 :interpIR
 class Pair(x, y)
@@ -1942,42 +1951,42 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #21
 //│ ),
-//│ apply1 -> Def(2, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(2, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #17
 //│ ),
-//│ apply0 -> Def(1, apply0, [x0$0], [{}],
+//│ apply0 -> Def(1, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #16
 //│ ),
-//│ apply4 -> Def(5, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #20
 //│ ),
-//│ apply3 -> Def(4, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #19
 //│ ),
-//│ apply2 -> Def(3, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -2017,42 +2026,42 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #21
 //│ ),
-//│ apply1 -> Def(2, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(2, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #17
 //│ ),
-//│ apply0 -> Def(1, apply0, [x0$0], [{}],
+//│ apply0 -> Def(1, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #16
 //│ ),
-//│ apply4 -> Def(5, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #20
 //│ ),
-//│ apply3 -> Def(4, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #19
 //│ ),
-//│ apply2 -> Def(3, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -2087,6 +2096,7 @@ foo()
 //│ x$0 -- #1)
 //│ 
 //│ Interpreted:
+//│ 0
 
 :interpIR
 class S(s)
@@ -2110,42 +2120,42 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #35
 //│ ),
-//│ apply1 -> Def(5, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(5, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #31
 //│ ),
-//│ apply0 -> Def(4, apply0, [x0$0], [{}],
+//│ apply0 -> Def(4, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #30
 //│ ),
-//│ apply4 -> Def(8, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #34
 //│ ),
-//│ apply3 -> Def(7, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #33
 //│ ),
-//│ apply2 -> Def(6, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(6, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -2215,42 +2225,42 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$5,x1$4,x2$3,x3$2,x4$1,x5$0], [{},{},{},{},{},{}],
+//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #35
 //│ ),
-//│ apply1 -> Def(5, apply1, [x0$1,x1$0], [{},{}],
+//│ apply1 -> Def(5, apply1, [x0$0], [{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #31
 //│ ),
-//│ apply0 -> Def(4, apply0, [x0$0], [{}],
+//│ apply0 -> Def(4, apply0, [], [],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #30
 //│ ),
-//│ apply4 -> Def(8, apply4, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
+//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #34
 //│ ),
-//│ apply3 -> Def(7, apply3, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
+//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
 //│ 0 -- #33
 //│ ),
-//│ apply2 -> Def(6, apply2, [x0$2,x1$1,x2$0], [{},{},{}],
+//│ apply2 -> Def(6, apply2, [x0$1,x1$0], [{},{}],
 //│ I: [],
 //│ R: [None],
 //│ Rec: None,
@@ -2315,3 +2325,4 @@ foo()
 //│ x$0 -- #1)
 //│ 
 //│ Interpreted:
+//│ O()
