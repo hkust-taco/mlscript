@@ -93,10 +93,10 @@ module Nil extends List[nothing] {
 // TODO should better simplify these types (reduce the List refinement)
 
 :ng
-let test0: Cons[Int] & List[Num]
-let test1: Nil & List[Int]
-//│ let test0: Cons[Int] & List[Num]
-//│ let test1: Nil & List[Int]
+val test0: Cons[Int] & List[Num]
+val test1: Nil & List[Int]
+//│ val test0: Cons[Int] & List[Num]
+//│ val test1: Nil & List[Int]
 
 
 
@@ -114,7 +114,7 @@ fun test(x, l) = list_assoc(42, Cons(x, l))
 fun test(x, l) = if l is
   Nil then list_assoc(42, Cons(x, l))
   Cons(h, t) then list_assoc(42, Cons(h, t))
-//│ fun test: forall 'A 'A0. ({_1: anything, _2: 'A}, Cons[{_1: anything, _2: 'A0}] | Nil) -> (Cons['A] | Nil | Cons['A0])
+//│ fun test: forall 'A. ({_1: anything, _2: 'A}, Cons[{_1: anything, _2: 'A}] | Nil) -> (Cons['A] | Nil)
 
 
 

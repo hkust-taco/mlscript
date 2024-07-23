@@ -16,7 +16,7 @@ class Foo1X(x: 0 | 1) extends Foo1(x) {
 //│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.14: 	  fun test2 = Foo1X(1).x
 //│ ╙──      	                      ^^
-//│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
+//│ ╔══[ERROR] Inherited parameter named 'x' is not virtual and cannot be overridden
 //│ ║  l.13: 	class Foo1X(x: 0 | 1) extends Foo1(x) {
 //│ ║        	            ^
 //│ ╟── Originally declared here:
@@ -42,7 +42,7 @@ class Foo2X(x: 0 | 1) extends Foo2(x) {
 //│ ╔══[ERROR] Indirectly-recursive member should have a type signature
 //│ ║  l.40: 	  fun test2 = Foo2X(1).x
 //│ ╙──      	                      ^^
-//│ ╔══[ERROR] Inherited parameter named `x` is not virtual and cannot be overridden
+//│ ╔══[ERROR] Inherited parameter named 'x' is not virtual and cannot be overridden
 //│ ║  l.39: 	class Foo2X(x: 0 | 1) extends Foo2(x) {
 //│ ║        	            ^
 //│ ╟── Originally declared here:
@@ -55,7 +55,7 @@ class Foo2X(x: 0 | 1) extends Foo2(x) {
 
 :e
 Foo2X(1).x
-//│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
+//│ ╔══[ERROR] Parameter 'x' cannot be accessed as a field
 //│ ║  l.57: 	Foo2X(1).x
 //│ ║        	        ^^
 //│ ╟── Either make the parameter a `val` or access it through destructuring

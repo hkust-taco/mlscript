@@ -116,10 +116,10 @@ declare trait FooPoly: forall 'a: (x: 'a) => 'a
 
 
 :e
-class Oops(y: Str) extends Foo
+class Oops(val y: Str) extends Foo
 //│ ╔══[ERROR] Type mismatch in type declaration:
-//│ ║  l.119: 	class Oops(y: Str) extends Foo
-//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.119: 	class Oops(val y: Str) extends Foo
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── expression of type `#Oops & {y: Str}` is not a function
 //│ ╟── Note: constraint arises from function type:
 //│ ║  l.96: 	declare trait Foo: ((x: Num) => Num) {

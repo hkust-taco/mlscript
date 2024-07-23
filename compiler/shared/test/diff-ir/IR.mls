@@ -1,6 +1,7 @@
 :NewParser
 :ParseOnly
 :UseIR
+:NoTailRec
 
 :interpIR
 class Pair(x, y)
@@ -19,45 +20,27 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #29
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(4, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #25
 //│ ),
-//│ apply0 -> Def(3, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(3, apply0, [],
 //│ 1, 
 //│ 0 -- #24
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #28
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #27
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #26
 //│ )),
@@ -75,26 +58,17 @@ foo()
 //│ ),
 //│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
-//│ Def(0, mktup2, [x$1,y$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, mktup2, [x$1,y$0],
 //│ 1, 
 //│ let* (x$2) = mktup(x$1,y$0) in -- #9
 //│ x$2 -- #8
 //│ )
-//│ Def(1, mktup, [x$3,y$1], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, mktup, [x$3,y$1],
 //│ 1, 
 //│ let x$4 = Pair(x$3,y$1) in -- #16
 //│ x$4 -- #15
 //│ )
-//│ Def(2, foo, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(2, foo, [],
 //│ 1, 
 //│ let* (x$5) = mktup2(1,2) in -- #23
 //│ x$5 -- #22
@@ -109,45 +83,27 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #29
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(4, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #25
 //│ ),
-//│ apply0 -> Def(3, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(3, apply0, [],
 //│ 1, 
 //│ 0 -- #24
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #28
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #27
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #26
 //│ )),
@@ -165,26 +121,17 @@ foo()
 //│ ),
 //│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
-//│ Def(0, mktup2, [x$1,y$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, mktup2, [x$1,y$0],
 //│ 1, 
 //│ let* (x$2) = mktup(x$1,y$0) in -- #9
 //│ x$2 -- #8
 //│ )
-//│ Def(1, mktup, [x$3,y$1], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, mktup, [x$3,y$1],
 //│ 1, 
 //│ let x$4 = Pair(x$3,y$1) in -- #16
 //│ x$4 -- #15
 //│ )
-//│ Def(2, foo, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(2, foo, [],
 //│ 1, 
 //│ let* (x$5) = mktup2(1,2) in -- #23
 //│ x$5 -- #22
@@ -214,45 +161,27 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #40
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(4, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #36
 //│ ),
-//│ apply0 -> Def(3, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(3, apply0, [],
 //│ 1, 
 //│ 0 -- #35
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #39
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #38
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #37
 //│ )),
@@ -270,10 +199,7 @@ bar()
 //│ ),
 //│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
-//│ Def(0, foo, [pair$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, foo, [pair$0],
 //│ 1, 
 //│ case pair$0 of -- #23
 //│   Pair =>
@@ -282,17 +208,11 @@ bar()
 //│     let x$4 = Pair(x$3,x$2) in -- #20
 //│     jump j$0(x$4) -- #19
 //│ )
-//│ Def(1, j$0, [x$1], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, j$0, [x$1],
 //│ 1, 
 //│ x$1 -- #4
 //│ )
-//│ Def(2, bar, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(2, bar, [],
 //│ 1, 
 //│ let x$5 = Pair(1,2) in -- #34
 //│ let* (x$6) = foo(x$5) in -- #33
@@ -308,45 +228,27 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #40
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(4, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #36
 //│ ),
-//│ apply0 -> Def(3, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(3, apply0, [],
 //│ 1, 
 //│ 0 -- #35
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #39
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #38
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #37
 //│ )),
@@ -364,10 +266,7 @@ bar()
 //│ ),
 //│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
-//│ Def(0, foo, [pair$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, foo, [pair$0],
 //│ 1, 
 //│ case pair$0 of -- #23
 //│   Pair =>
@@ -376,17 +275,11 @@ bar()
 //│     let x$4 = Pair(x$3,x$2) in -- #20
 //│     jump j$0(x$4) -- #19
 //│ )
-//│ Def(1, j$0, [x$1], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, j$0, [x$1],
 //│ 1, 
 //│ x$1 -- #4
 //│ )
-//│ Def(2, bar, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(2, bar, [],
 //│ 1, 
 //│ let x$5 = Pair(1,2) in -- #34
 //│ let* (x$6) = foo(x$5) in -- #33
@@ -425,45 +318,27 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #59
 //│ ),
-//│ apply1 -> Def(5, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(5, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #55
 //│ ),
-//│ apply0 -> Def(4, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(4, apply0, [],
 //│ 1, 
 //│ 0 -- #54
 //│ ),
-//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #58
 //│ ),
-//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #57
 //│ ),
-//│ apply2 -> Def(6, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(6, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #56
 //│ )),
@@ -481,10 +356,7 @@ foo()
 //│ ),
 //│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
-//│ Def(0, silly, [pair$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, silly, [pair$0],
 //│ 1, 
 //│ let x$1 = 0 in -- #40
 //│ case pair$0 of -- #39
@@ -498,25 +370,16 @@ foo()
 //│         let x$9 = +(x$8,1) in -- #33
 //│         jump j$1(x$9) -- #32
 //│ )
-//│ Def(1, j$0, [x$2], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, j$0, [x$2],
 //│ 1, 
 //│ let x$3 = +(x$2,1) in -- #9
 //│ x$3 -- #8
 //│ )
-//│ Def(2, j$1, [x$6], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(2, j$1, [x$6],
 //│ 1, 
 //│ jump j$0(x$6) -- #20
 //│ )
-//│ Def(3, foo, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(3, foo, [],
 //│ 1, 
 //│ let x$10 = Pair(0,1) in -- #53
 //│ let* (x$11) = silly(x$10) in -- #52
@@ -532,45 +395,27 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #59
 //│ ),
-//│ apply1 -> Def(5, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(5, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #55
 //│ ),
-//│ apply0 -> Def(4, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(4, apply0, [],
 //│ 1, 
 //│ 0 -- #54
 //│ ),
-//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #58
 //│ ),
-//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #57
 //│ ),
-//│ apply2 -> Def(6, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(6, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #56
 //│ )),
@@ -588,10 +433,7 @@ foo()
 //│ ),
 //│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
-//│ Def(0, silly, [pair$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, silly, [pair$0],
 //│ 1, 
 //│ let x$1 = 0 in -- #40
 //│ case pair$0 of -- #39
@@ -605,25 +447,16 @@ foo()
 //│         let x$9 = +(x$8,1) in -- #33
 //│         jump j$1(x$9) -- #32
 //│ )
-//│ Def(1, j$0, [x$2], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, j$0, [x$2],
 //│ 1, 
 //│ let x$3 = +(x$2,1) in -- #9
 //│ x$3 -- #8
 //│ )
-//│ Def(2, j$1, [x$6], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(2, j$1, [x$6],
 //│ 1, 
 //│ jump j$0(x$6) -- #20
 //│ )
-//│ Def(3, foo, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(3, foo, [],
 //│ 1, 
 //│ let x$10 = Pair(0,1) in -- #53
 //│ let* (x$11) = silly(x$10) in -- #52
@@ -660,45 +493,27 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #41
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(4, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #37
 //│ ),
-//│ apply0 -> Def(3, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(3, apply0, [],
 //│ 1, 
 //│ 0 -- #36
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #40
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #39
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #38
 //│ )),
@@ -716,10 +531,7 @@ foo()
 //│ ),
 //│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
-//│ Def(0, inc_fst, [pair$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, inc_fst, [pair$0],
 //│ 1, 
 //│ let x$1 = 2 in -- #22
 //│ case pair$0 of -- #21
@@ -729,17 +541,11 @@ foo()
 //│     let x$5 = +(x$4,x$1) in -- #18
 //│     jump j$0(x$5) -- #17
 //│ )
-//│ Def(1, j$0, [x$2], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, j$0, [x$2],
 //│ 1, 
 //│ x$2 -- #5
 //│ )
-//│ Def(2, foo, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(2, foo, [],
 //│ 1, 
 //│ let x$6 = Pair(0,1) in -- #35
 //│ let* (x$7) = inc_fst(x$6) in -- #34
@@ -755,45 +561,27 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #41
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(4, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #37
 //│ ),
-//│ apply0 -> Def(3, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(3, apply0, [],
 //│ 1, 
 //│ 0 -- #36
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #40
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #39
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #38
 //│ )),
@@ -811,10 +599,7 @@ foo()
 //│ ),
 //│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
-//│ Def(0, inc_fst, [pair$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, inc_fst, [pair$0],
 //│ 1, 
 //│ let x$1 = 2 in -- #22
 //│ case pair$0 of -- #21
@@ -824,17 +609,11 @@ foo()
 //│     let x$5 = +(x$4,x$1) in -- #18
 //│     jump j$0(x$5) -- #17
 //│ )
-//│ Def(1, j$0, [x$2], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, j$0, [x$2],
 //│ 1, 
 //│ x$2 -- #5
 //│ )
-//│ Def(2, foo, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(2, foo, [],
 //│ 1, 
 //│ let x$6 = Pair(0,1) in -- #35
 //│ let* (x$7) = inc_fst(x$6) in -- #34
@@ -867,45 +646,27 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #40
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(4, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #36
 //│ ),
-//│ apply0 -> Def(3, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(3, apply0, [],
 //│ 1, 
 //│ 0 -- #35
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #39
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #38
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #37
 //│ )),
@@ -923,10 +684,7 @@ foo()
 //│ ),
 //│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
-//│ Def(0, inc_fst, [pair$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, inc_fst, [pair$0],
 //│ 1, 
 //│ let x$1 = 0 in -- #22
 //│ case pair$0 of -- #21
@@ -936,17 +694,11 @@ foo()
 //│     let x$5 = +(x$3,1) in -- #18
 //│     jump j$0(x$5) -- #17
 //│ )
-//│ Def(1, j$0, [x$2], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, j$0, [x$2],
 //│ 1, 
 //│ x$2 -- #5
 //│ )
-//│ Def(2, foo, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(2, foo, [],
 //│ 1, 
 //│ let x$6 = Pair(0,1) in -- #34
 //│ let* (x$7) = inc_fst(x$6) in -- #33
@@ -962,45 +714,27 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #40
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(4, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #36
 //│ ),
-//│ apply0 -> Def(3, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(3, apply0, [],
 //│ 1, 
 //│ 0 -- #35
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #39
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #38
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #37
 //│ )),
@@ -1018,10 +752,7 @@ foo()
 //│ ),
 //│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
-//│ Def(0, inc_fst, [pair$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, inc_fst, [pair$0],
 //│ 1, 
 //│ let x$1 = 0 in -- #22
 //│ case pair$0 of -- #21
@@ -1031,17 +762,11 @@ foo()
 //│     let x$5 = +(x$3,1) in -- #18
 //│     jump j$0(x$5) -- #17
 //│ )
-//│ Def(1, j$0, [x$2], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, j$0, [x$2],
 //│ 1, 
 //│ x$2 -- #5
 //│ )
-//│ Def(2, foo, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(2, foo, [],
 //│ 1, 
 //│ let x$6 = Pair(0,1) in -- #34
 //│ let* (x$7) = inc_fst(x$6) in -- #33
@@ -1077,45 +802,27 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #64
 //│ ),
-//│ apply1 -> Def(5, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(5, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #60
 //│ ),
-//│ apply0 -> Def(4, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(4, apply0, [],
 //│ 1, 
 //│ 0 -- #59
 //│ ),
-//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #63
 //│ ),
-//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #62
 //│ ),
-//│ apply2 -> Def(6, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(6, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #61
 //│ )),
@@ -1135,10 +842,7 @@ bar()
 //│ ),
 //│ ClassInfo(10, Right, [y], parents: , methods:
 //│ )}, {
-//│ Def(0, foo, [a$0,b$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, foo, [a$0,b$0],
 //│ 1, 
 //│ case a$0 of -- #47
 //│   Left =>
@@ -1151,17 +855,11 @@ bar()
 //│     let x$9 = Right(b$0) in -- #45
 //│     jump j$0(x$9) -- #44
 //│ )
-//│ Def(1, j$1, [x$2], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, j$1, [x$2],
 //│ 1, 
 //│ x$2 -- #6
 //│ )
-//│ Def(2, j$0, [x$1], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(2, j$0, [x$1],
 //│ 1, 
 //│ case x$1 of -- #21
 //│   Left =>
@@ -1171,10 +869,7 @@ bar()
 //│     let x$4 = Right.y(x$1) in -- #20
 //│     jump j$1(x$4) -- #19
 //│ )
-//│ Def(3, bar, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(3, bar, [],
 //│ 1, 
 //│ let x$10 = Right(2) in -- #58
 //│ let* (x$11) = foo(x$10,2) in -- #57
@@ -1190,45 +885,27 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #64
 //│ ),
-//│ apply1 -> Def(5, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(5, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #60
 //│ ),
-//│ apply0 -> Def(4, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(4, apply0, [],
 //│ 1, 
 //│ 0 -- #59
 //│ ),
-//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #63
 //│ ),
-//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #62
 //│ ),
-//│ apply2 -> Def(6, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(6, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #61
 //│ )),
@@ -1248,10 +925,7 @@ bar()
 //│ ),
 //│ ClassInfo(10, Right, [y], parents: , methods:
 //│ )}, {
-//│ Def(0, foo, [a$0,b$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, foo, [a$0,b$0],
 //│ 1, 
 //│ case a$0 of -- #47
 //│   Left =>
@@ -1264,17 +938,11 @@ bar()
 //│     let x$9 = Right(b$0) in -- #45
 //│     jump j$0(x$9) -- #44
 //│ )
-//│ Def(1, j$1, [x$2], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, j$1, [x$2],
 //│ 1, 
 //│ x$2 -- #6
 //│ )
-//│ Def(2, j$0, [x$1], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(2, j$0, [x$1],
 //│ 1, 
 //│ case x$1 of -- #21
 //│   Left =>
@@ -1284,10 +952,7 @@ bar()
 //│     let x$4 = Right.y(x$1) in -- #20
 //│     jump j$1(x$4) -- #19
 //│ )
-//│ Def(3, bar, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(3, bar, [],
 //│ 1, 
 //│ let x$10 = Right(2) in -- #58
 //│ let* (x$11) = foo(x$10,2) in -- #57
@@ -1318,45 +983,27 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(7, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(7, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #31
 //│ ),
-//│ apply1 -> Def(3, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(3, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #27
 //│ ),
-//│ apply0 -> Def(2, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(2, apply0, [],
 //│ 1, 
 //│ 0 -- #26
 //│ ),
-//│ apply4 -> Def(6, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(6, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #30
 //│ ),
-//│ apply3 -> Def(5, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(5, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #29
 //│ ),
-//│ apply2 -> Def(4, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(4, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #28
 //│ )),
@@ -1378,20 +1025,14 @@ bar()
 //│ ),
 //│ ClassInfo(11, Pair, [x,y], parents: , methods:
 //│ )}, {
-//│ Def(0, foo, [a$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, foo, [a$0],
 //│ 1, 
 //│ let x$1 = Pair.x(a$0) in -- #14
 //│ let x$2 = Pair.y(a$0) in -- #13
 //│ let x$3 = +(x$1,x$2) in -- #12
 //│ x$3 -- #11
 //│ )
-//│ Def(1, bar, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, bar, [],
 //│ 1, 
 //│ let x$4 = Pair(1,0) in -- #25
 //│ let* (x$5) = foo(x$4) in -- #24
@@ -1407,45 +1048,27 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(7, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(7, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #31
 //│ ),
-//│ apply1 -> Def(3, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(3, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #27
 //│ ),
-//│ apply0 -> Def(2, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(2, apply0, [],
 //│ 1, 
 //│ 0 -- #26
 //│ ),
-//│ apply4 -> Def(6, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(6, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #30
 //│ ),
-//│ apply3 -> Def(5, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(5, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #29
 //│ ),
-//│ apply2 -> Def(4, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(4, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #28
 //│ )),
@@ -1467,20 +1090,14 @@ bar()
 //│ ),
 //│ ClassInfo(11, Pair, [x,y], parents: , methods:
 //│ )}, {
-//│ Def(0, foo, [a$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, foo, [a$0],
 //│ 1, 
 //│ let x$1 = Pair.x(a$0) in -- #14
 //│ let x$2 = Pair.y(a$0) in -- #13
 //│ let x$3 = +(x$1,x$2) in -- #12
 //│ x$3 -- #11
 //│ )
-//│ Def(1, bar, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, bar, [],
 //│ 1, 
 //│ let x$4 = Pair(1,0) in -- #25
 //│ let* (x$5) = foo(x$4) in -- #24
@@ -1513,45 +1130,27 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #41
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(4, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #37
 //│ ),
-//│ apply0 -> Def(3, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(3, apply0, [],
 //│ 1, 
 //│ 0 -- #36
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #40
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #39
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #38
 //│ )),
@@ -1571,10 +1170,7 @@ bar()
 //│ ),
 //│ ClassInfo(10, C2, [z], parents: , methods:
 //│ )}, {
-//│ Def(0, foo, [a$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, foo, [a$0],
 //│ 1, 
 //│ case a$0 of -- #24
 //│   C1 =>
@@ -1585,17 +1181,11 @@ bar()
 //│     let x$4 = C2.z(a$0) in -- #23
 //│     jump j$0(x$4) -- #22
 //│ )
-//│ Def(1, j$0, [x$1], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, j$0, [x$1],
 //│ 1, 
 //│ x$1 -- #4
 //│ )
-//│ Def(2, bar, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(2, bar, [],
 //│ 1, 
 //│ let x$5 = C1(0,1) in -- #35
 //│ let* (x$6) = foo(x$5) in -- #34
@@ -1611,45 +1201,27 @@ bar()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #41
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(4, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #37
 //│ ),
-//│ apply0 -> Def(3, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(3, apply0, [],
 //│ 1, 
 //│ 0 -- #36
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #40
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #39
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #38
 //│ )),
@@ -1669,10 +1241,7 @@ bar()
 //│ ),
 //│ ClassInfo(10, C2, [z], parents: , methods:
 //│ )}, {
-//│ Def(0, foo, [a$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, foo, [a$0],
 //│ 1, 
 //│ case a$0 of -- #24
 //│   C1 =>
@@ -1683,17 +1252,11 @@ bar()
 //│     let x$4 = C2.z(a$0) in -- #23
 //│     jump j$0(x$4) -- #22
 //│ )
-//│ Def(1, j$0, [x$1], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, j$0, [x$1],
 //│ 1, 
 //│ x$1 -- #4
 //│ )
-//│ Def(2, bar, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(2, bar, [],
 //│ 1, 
 //│ let x$5 = C1(0,1) in -- #35
 //│ let* (x$6) = foo(x$5) in -- #34
@@ -1731,45 +1294,27 @@ baz()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #94
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(4, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #90
 //│ ),
-//│ apply0 -> Def(3, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(3, apply0, [],
 //│ 1, 
 //│ 0 -- #89
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #93
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #92
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #91
 //│ )),
@@ -1787,10 +1332,7 @@ baz()
 //│ ),
 //│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
-//│ Def(0, foo, [a$0,b$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, foo, [a$0,b$0],
 //│ 1, 
 //│ let x$1 = Pair.x(a$0) in -- #32
 //│ let x$2 = Pair.y(a$0) in -- #31
@@ -1801,10 +1343,7 @@ baz()
 //│ let x$7 = +(x$6,x$4) in -- #26
 //│ x$7 -- #25
 //│ )
-//│ Def(1, bar, [c$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, bar, [c$0],
 //│ 1, 
 //│ let x$8 = Pair(0,1) in -- #77
 //│ let* (x$9) = foo(x$8,c$0) in -- #76
@@ -1815,10 +1354,7 @@ baz()
 //│ let* (x$14) = foo(x$12,x$13) in -- #71
 //│ x$14 -- #70
 //│ )
-//│ Def(2, baz, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(2, baz, [],
 //│ 1, 
 //│ let x$15 = Pair(4,5) in -- #88
 //│ let* (x$16) = bar(x$15) in -- #87
@@ -1834,45 +1370,27 @@ baz()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #94
 //│ ),
-//│ apply1 -> Def(4, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(4, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #90
 //│ ),
-//│ apply0 -> Def(3, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(3, apply0, [],
 //│ 1, 
 //│ 0 -- #89
 //│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #93
 //│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #92
 //│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #91
 //│ )),
@@ -1890,10 +1408,7 @@ baz()
 //│ ),
 //│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
-//│ Def(0, foo, [a$0,b$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, foo, [a$0,b$0],
 //│ 1, 
 //│ let x$1 = Pair.x(a$0) in -- #32
 //│ let x$2 = Pair.y(a$0) in -- #31
@@ -1904,10 +1419,7 @@ baz()
 //│ let x$7 = +(x$6,x$4) in -- #26
 //│ x$7 -- #25
 //│ )
-//│ Def(1, bar, [c$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, bar, [c$0],
 //│ 1, 
 //│ let x$8 = Pair(0,1) in -- #77
 //│ let* (x$9) = foo(x$8,c$0) in -- #76
@@ -1918,10 +1430,7 @@ baz()
 //│ let* (x$14) = foo(x$12,x$13) in -- #71
 //│ x$14 -- #70
 //│ )
-//│ Def(2, baz, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(2, baz, [],
 //│ 1, 
 //│ let x$15 = Pair(4,5) in -- #88
 //│ let* (x$16) = bar(x$15) in -- #87
@@ -1951,45 +1460,27 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #21
 //│ ),
-//│ apply1 -> Def(2, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(2, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #17
 //│ ),
-//│ apply0 -> Def(1, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(1, apply0, [],
 //│ 1, 
 //│ 0 -- #16
 //│ ),
-//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #20
 //│ ),
-//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #19
 //│ ),
-//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(3, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #18
 //│ )),
@@ -2007,10 +1498,7 @@ foo()
 //│ ),
 //│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
-//│ Def(0, foo, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, foo, [],
 //│ 1, 
 //│ let x$1 = Pair(0,1) in -- #15
 //│ let x$2 = Pair.x(x$1) in -- #14
@@ -2026,45 +1514,27 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #21
 //│ ),
-//│ apply1 -> Def(2, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(2, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #17
 //│ ),
-//│ apply0 -> Def(1, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(1, apply0, [],
 //│ 1, 
 //│ 0 -- #16
 //│ ),
-//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #20
 //│ ),
-//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #19
 //│ ),
-//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(3, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #18
 //│ )),
@@ -2082,10 +1552,7 @@ foo()
 //│ ),
 //│ ClassInfo(9, Pair, [x,y], parents: , methods:
 //│ )}, {
-//│ Def(0, foo, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, foo, [],
 //│ 1, 
 //│ let x$1 = Pair(0,1) in -- #15
 //│ let x$2 = Pair.x(x$1) in -- #14
@@ -2120,45 +1587,27 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #35
 //│ ),
-//│ apply1 -> Def(5, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(5, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #31
 //│ ),
-//│ apply0 -> Def(4, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(4, apply0, [],
 //│ 1, 
 //│ 0 -- #30
 //│ ),
-//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #34
 //│ ),
-//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #33
 //│ ),
-//│ apply2 -> Def(6, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(6, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #32
 //│ )),
@@ -2178,28 +1627,19 @@ foo()
 //│ ),
 //│ ClassInfo(10, O, [], parents: , methods:
 //│ )}, {
-//│ Def(0, foo, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, foo, [],
 //│ 1, 
 //│ let x$1 = O() in -- #12
 //│ let x$2 = S(x$1) in -- #11
 //│ let* (x$3) = bar(x$2) in -- #10
 //│ x$3 -- #9
 //│ )
-//│ Def(1, bar, [x$4], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, bar, [x$4],
 //│ 1, 
 //│ let* (x$5) = baz(x$4) in -- #17
 //│ x$5 -- #16
 //│ )
-//│ Def(2, baz, [x$6], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(2, baz, [x$6],
 //│ 1, 
 //│ case x$6 of -- #29
 //│   S =>
@@ -2208,10 +1648,7 @@ foo()
 //│   O =>
 //│     jump j$0(x$6) -- #28
 //│ )
-//│ Def(3, j$0, [x$7], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(3, j$0, [x$7],
 //│ 1, 
 //│ x$7 -- #19
 //│ )
@@ -2225,45 +1662,27 @@ foo()
 //│ ClassInfo(1, False, [], parents: , methods:
 //│ ),
 //│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
 //│ 1, 
 //│ 0 -- #35
 //│ ),
-//│ apply1 -> Def(5, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply1 -> Def(5, apply1, [x0$0],
 //│ 1, 
 //│ 0 -- #31
 //│ ),
-//│ apply0 -> Def(4, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply0 -> Def(4, apply0, [],
 //│ 1, 
 //│ 0 -- #30
 //│ ),
-//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0],
 //│ 1, 
 //│ 0 -- #34
 //│ ),
-//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0],
 //│ 1, 
 //│ 0 -- #33
 //│ ),
-//│ apply2 -> Def(6, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ apply2 -> Def(6, apply2, [x0$1,x1$0],
 //│ 1, 
 //│ 0 -- #32
 //│ )),
@@ -2283,28 +1702,19 @@ foo()
 //│ ),
 //│ ClassInfo(10, O, [], parents: , methods:
 //│ )}, {
-//│ Def(0, foo, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(0, foo, [],
 //│ 1, 
 //│ let x$1 = O() in -- #12
 //│ let x$2 = S(x$1) in -- #11
 //│ let* (x$3) = bar(x$2) in -- #10
 //│ x$3 -- #9
 //│ )
-//│ Def(1, bar, [x$4], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(1, bar, [x$4],
 //│ 1, 
 //│ let* (x$5) = baz(x$4) in -- #17
 //│ x$5 -- #16
 //│ )
-//│ Def(2, baz, [x$6], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(2, baz, [x$6],
 //│ 1, 
 //│ case x$6 of -- #29
 //│   S =>
@@ -2313,10 +1723,7 @@ foo()
 //│   O =>
 //│     jump j$0(x$6) -- #28
 //│ )
-//│ Def(3, j$0, [x$7], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
+//│ Def(3, j$0, [x$7],
 //│ 1, 
 //│ x$7 -- #19
 //│ )

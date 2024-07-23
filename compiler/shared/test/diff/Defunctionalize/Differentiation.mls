@@ -1,0 +1,113 @@
+// A usecase test for defunctionalization
+
+:NewDefs
+
+
+abstract class Exp() {
+    virtual fun derive(): Exp
+    virtual fun getVal: Str
+}
+class Numeric(val i: Int) extends Exp {
+    fun derive() = Numeric(0)
+    fun getNum = i
+    fun getVal = toString(i)
+}
+class Variable(val nm: Str) extends Exp {
+    fun derive() = Numeric(1)
+    fun getVal = nm
+}
+class Sum(val lhs: Exp, val rhs: Exp) extends Exp {
+    fun derive() = Sum(lhs.derive(), rhs.derive())
+    fun getVal = concat("(")(concat(concat(concat(lhs.getVal)(" + "))(rhs.getVal))(")"))
+}
+class Mul(val lhs: Exp, val rhs: Exp) extends Exp {
+    fun derive() = Sum(Mul(lhs.derive(), rhs), Mul(lhs, rhs.derive()))
+    fun getVal = concat("(")(concat(concat(concat(lhs.getVal)(" * "))(rhs.getVal))(")"))
+}
+class Pow(val lhs: Variable, val rhs: Numeric) extends Exp {
+    fun derive() = Mul(rhs, Pow(lhs, Numeric(rhs.getNum - 1)))
+    fun getVal = concat("(")(concat(concat(concat(lhs.getVal)(" ^ "))(rhs.getVal))(")"))
+}
+Sum(Variable("x"), Numeric(3)).derive().getVal
+Mul(Variable("x"), Numeric(3)).derive().getVal
+Pow(Variable("x"), Numeric(3)).derive().getVal
+Mul(Pow(Variable("x"), Numeric(2)), Pow(Variable("y"), Numeric(2))).derive().getVal
+//│ abstract class Exp() {
+//│   fun derive: () -> Exp
+//│   fun getVal: Str
+//│ }
+//│ class Numeric(i: Int) extends Exp {
+//│   fun derive: () -> Numeric
+//│   fun getNum: Int
+//│   fun getVal: Str
+//│ }
+//│ class Variable(nm: Str) extends Exp {
+//│   fun derive: () -> Numeric
+//│   fun getVal: Str
+//│ }
+//│ class Sum(lhs: Exp, rhs: Exp) extends Exp {
+//│   fun derive: () -> Sum
+//│   fun getVal: Str
+//│ }
+//│ class Mul(lhs: Exp, rhs: Exp) extends Exp {
+//│   fun derive: () -> Sum
+//│   fun getVal: Str
+//│ }
+//│ class Pow(lhs: Variable, rhs: Numeric) extends Exp {
+//│   fun derive: () -> Mul
+//│   fun getVal: Str
+//│ }
+//│ Str
+//│ 
+//│ Simpledef:
+//│ {class Exp() {fun derive: () -> Exp
+//│  fun getVal: Str}
+//│  class Numeric(val i: Int,): Exp {fun derive = () => Numeric(0,)
+//│  fun getNum = i
+//│  fun getVal = toString(i,)}
+//│  class Variable(val nm: Str,): Exp {fun derive = () => Numeric(1,)
+//│  fun getVal = nm}
+//│  class Sum(val lhs: Exp, val rhs: Exp,): Exp {fun derive = () => Sum(let selRes$48 = lhs in case selRes$48 of { Variable => (selRes$48).derive()
+//│  Mul => (selRes$48).derive()
+//│  Sum => (selRes$48).derive()
+//│  Numeric => (selRes$48).derive() }, let selRes$56 = rhs in case selRes$56 of { Numeric => (selRes$56).derive()
+//│  Sum => (selRes$56).derive()
+//│  Mul => (selRes$56).derive() },)
+//│  fun getVal = concat("(",)(concat(concat(concat(let selRes$84 = lhs in case selRes$84 of { Variable => (selRes$84).getVal
+//│  Mul => (selRes$84).getVal
+//│  Sum => (selRes$84).getVal
+//│  Numeric => (selRes$84).getVal },)(" + ",),)(let selRes$102 = rhs in case selRes$102 of { Numeric => (selRes$102).getVal
+//│  Sum => (selRes$102).getVal
+//│  Mul => (selRes$102).getVal },),)(")",),)}
+//│  class Mul(val lhs: Exp, val rhs: Exp,): Exp {fun derive = () => Sum(Mul(let selRes$132 = lhs in case selRes$132 of { Variable => (selRes$132).derive()
+//│  Mul => (selRes$132).derive()
+//│  Sum => (selRes$132).derive()
+//│  Numeric => (selRes$132).derive()
+//│  Pow => (selRes$132).derive() }, rhs,), Mul(lhs, let selRes$150 = rhs in case selRes$150 of { Mul => (selRes$150).derive()
+//│  Sum => (selRes$150).derive()
+//│  Numeric => (selRes$150).derive()
+//│  Pow => (selRes$150).derive() },),)
+//│  fun getVal = concat("(",)(concat(concat(concat(let selRes$182 = lhs in case selRes$182 of { Variable => (selRes$182).getVal
+//│  Mul => (selRes$182).getVal
+//│  Sum => (selRes$182).getVal
+//│  Numeric => (selRes$182).getVal
+//│  Pow => (selRes$182).getVal },)(" * ",),)(let selRes$200 = rhs in case selRes$200 of { Mul => (selRes$200).getVal
+//│  Sum => (selRes$200).getVal
+//│  Numeric => (selRes$200).getVal
+//│  Pow => (selRes$200).getVal },),)(")",),)}
+//│  class Pow(val lhs: Variable, val rhs: Numeric,): Exp {fun derive = () => Mul(rhs, Pow(lhs, Numeric(-(let selRes$238 = rhs in case selRes$238 of { Numeric => (selRes$238).getNum }, 1,),),),)
+//│  fun getVal = concat("(",)(concat(concat(concat(let selRes$276 = lhs in case selRes$276 of { Variable => (selRes$276).getVal },)(" ^ ",),)(let selRes$294 = rhs in case selRes$294 of { Numeric => (selRes$294).getVal },),)(")",),)}
+//│  let selRes$316 = let selRes$318 = Sum(Variable("x",), Numeric(3,),) in case selRes$318 of { Sum => (selRes$318).derive() } in case selRes$316 of { Sum => (selRes$316).getVal }
+//│  let selRes$346 = let selRes$348 = Mul(Variable("x",), Numeric(3,),) in case selRes$348 of { Mul => (selRes$348).derive() } in case selRes$346 of { Sum => (selRes$346).getVal }
+//│  let selRes$376 = let selRes$378 = Pow(Variable("x",), Numeric(3,),) in case selRes$378 of { Pow => (selRes$378).derive() } in case selRes$376 of { Mul => (selRes$376).getVal }
+//│  let selRes$406 = let selRes$408 = Mul(Pow(Variable("x",), Numeric(2,),), Pow(Variable("y",), Numeric(2,),),) in case selRes$408 of { Mul => (selRes$408).derive() } in case selRes$406 of { Sum => (selRes$406).getVal }}
+//│ End simpledef
+//│ 
+//│ res
+//│     = '(1 + 0)'
+//│ res
+//│     = '((1 * 3) + (x * 0))'
+//│ res
+//│     = '(3 * (x ^ 2))'
+//│ res
+//│     = '(((2 * (x ^ 1)) * (y ^ 2)) + ((x ^ 2) * (2 * (y ^ 1))))'

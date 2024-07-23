@@ -143,7 +143,7 @@ class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ╔══[ERROR] Type mismatch in method definition:
 //│ ║  l.+2: 	  method Empty = Complex { real = this.base }
 //│ ║        	         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── function of type `forall ?a ?b. ?b -> ?a` is not a record (expected a record with fields: real, imaginary)
+//│ ╟── function of type `forall ?a ?b. ?a -> ?b` is not a record (expected a record with fields: real, imaginary)
 //│ ║  l.31: 	def Complex real imaginary = Complex { real; imaginary }
 //│ ║        	                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into application with expected type `{imaginary: A, real: A}`
@@ -171,7 +171,7 @@ class ComplexMonoid_bad_0[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║  l.3: 	  method Empty: A
 //│ ╙──     	         ^^^^^^^^
 //│ Defined class ComplexMonoid_bad_0[=A]
-//│ Defined ComplexMonoid_bad_0.Empty: ComplexMonoid_bad_0['A] -> 'A0 -> (Complex['A0 | {real: Monoid['A]}] with {imaginary: 'A0, real: {real: Monoid['A]}})
+//│ Defined ComplexMonoid_bad_0.Empty: ComplexMonoid_bad_0['A] -> 'A0 -> (Complex[{real: Monoid['A]} | 'A0] with {imaginary: 'A0, real: {real: Monoid['A]}})
 //│ Defined ComplexMonoid_bad_0.Add: ComplexMonoid_bad_0['A] -> anything -> anything -> nothing
 
 
@@ -245,7 +245,7 @@ class ComplexMonoid_bad_1[A]: Monoid[Complex[A]] & { base: Monoid[A] }
 //│ ║  l.3: 	  method Empty: A
 //│ ╙──     	         ^^^^^^^^
 //│ Defined class ComplexMonoid_bad_1[=A]
-//│ Defined ComplexMonoid_bad_1.Empty: ComplexMonoid_bad_1['A] -> 'A0 -> (Complex['A0 | {imaginary: nothing, real: 'A}] with {imaginary: 'A0, real: {imaginary: nothing, real: 'A}})
+//│ Defined ComplexMonoid_bad_1.Empty: ComplexMonoid_bad_1['A] -> 'A0 -> (Complex[{imaginary: nothing, real: 'A} | 'A0] with {imaginary: 'A0, real: {imaginary: nothing, real: 'A}})
 //│ Defined ComplexMonoid_bad_1.Add: ComplexMonoid_bad_1['A] -> anything -> anything -> nothing
 
 

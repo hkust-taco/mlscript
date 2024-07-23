@@ -84,33 +84,33 @@ module Test1 extends EvalVar, EvalLambda
 //│ }
 //│ where
 //│   'b <: Abs['b] | App['b & (Abs['b] | Object & ~#Abs)] | Var
-//│   'a :> Var | App['a] | Abs['a]
+//│   'a :> Abs['a] | App['a] | Var
 
 Test1.eval(Nil, Var("a"))
 //│ 'a
 //│   where
-//│     'a :> Var | App['a] | Abs['a]
+//│     'a :> Abs['a] | App['a] | Var
 //│ res
 //│     = Var {}
 
 Test1.eval(Nil, Abs("b", Var("a")))
 //│ 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Var
+//│     'a :> Abs['a] | App['a] | Var
 //│ res
 //│     = Abs {}
 
 Test1.eval(Cons(["c", Var("d")], Nil), App(Abs("b", Var("b")), Var("c")))
 //│ 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Var
+//│     'a :> Abs['a] | App['a] | Var
 //│ res
 //│     = Var {}
 
 Test1.eval(Cons(["c", Abs("d", Var("d"))], Nil), App(Abs("b", Var("b")), Var("c")))
-//│ 'a
+//│ Abs['a] | 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Abs[Var] | Var
+//│     'a :> Abs['a] | App['a] | Var
 //│ res
 //│     = Abs {}
 
@@ -127,7 +127,7 @@ fun map_expr(f, v) =
     Numb then v
     Add(l, r) then Add(f(l), f(r))
     Mul(l, r) then Mul(f(l), f(r))
-//│ fun map_expr: forall 'a 'A 'b 'A0. ('a -> 'A & 'b -> 'A0, Add['a] | Mul['b] | Numb | Var) -> (Add['A] | Mul['A0] | Numb | Var)
+//│ fun map_expr: forall 'a 'A 'b 'A0. ('a -> 'A & 'b -> 'A0, Add['b] | Mul['a] | Numb | Var) -> (Add['A0] | Mul['A] | Numb | Var)
 
 mixin EvalExpr {
   fun eval(sub, v) =
@@ -147,7 +147,7 @@ mixin EvalExpr {
 
 module Test2 extends EvalVar, EvalExpr
 //│ module Test2 {
-//│   fun eval: forall 'a. (Cons[{0: anything, 1: Object & 'b}] | Nil, 'a & (Add['c] | Mul['c] | Numb | Var)) -> (Numb | Var | 'b | 'a | 'c)
+//│   fun eval: forall 'a. (Cons[{0: anything, 1: Object & 'b}] | Nil, 'a & (Add['c] | Mul['c] | Numb | Var)) -> (Numb | Var | 'b | 'c | 'a)
 //│ }
 //│ where
 //│   'c <: Add['c] | Mul['c] | Numb | Var
@@ -194,39 +194,39 @@ Test2.eval(Cons(["a", Abs("d", Var("d"))], Nil), Add(Numb(1), Var("a")))
 
 module Test3 extends EvalVar, EvalExpr, EvalLambda
 //│ module Test3 {
-//│   fun eval: (Cons[{0: anything, 1: 'a}] | Nil, 'b) -> 'c
+//│   fun eval: (Cons[{0: anything, 1: 'a}] | Nil, 'b) -> (Abs['c] | App['c] | 'c)
 //│ }
 //│ where
 //│   'a :> 'c
 //│      <: Object
-//│   'c :> App['c] | Abs['c] | 'a | 'd
+//│   'c :> 'a | 'd
 //│   'd <: Add['b] | Mul['b] | Numb | Var
 //│   'b <: Abs['b] | App['b & (Abs['b] | Object & ~#Abs)] | Object & 'd & ~#Abs & ~#App
 
 Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), Abs("a", Var("a")))
-//│ 'a
+//│ Abs['a] | 'a
 //│   where
-//│     'a :> Abs[Var] | Numb | Var | App['a] | Abs['a]
+//│     'a :> Abs['a] | App['a] | Numb | Var
 //│ res
 //│     = Abs {}
 
 Test3.eval(Cons(["c", Abs("d", Var("d"))], Nil), App(Abs("a", Var("a")), Add(Numb(1), Var("c"))))
-//│ 'a
+//│ Abs['a] | 'a
 //│   where
-//│     'a :> App['a] | Abs['a] | Abs[Var] | Add[Numb | Var] | Numb | Var
+//│     'a :> Abs['a] | Add[Numb | Var] | App['a] | Numb | Var
 //│ res
 //│     = Add {}
 
 // * Incorrect version, for regression testing – EvalLambda should be mixed in after EvalExpr
 module Test3 extends EvalVar, EvalLambda, EvalExpr
 //│ module Test3 {
-//│   fun eval: (Cons[{0: anything, 1: 'a}] | Nil, 'a & (Add['b] | Mul['b] | Numb | Var)) -> (Numb | 'a | 'b | 'c)
+//│   fun eval: (Cons[{0: anything, 1: 'a}] | Nil, 'a & (Add['b] | Mul['b] | Numb | Var)) -> (Numb | 'c | 'a | 'b)
 //│ }
 //│ where
-//│   'a :> 'c | 'b
+//│   'a :> 'b | 'c
 //│      <: Object
+//│   'c :> Abs['c | 'a] | App['c | 'a] | 'a
 //│   'b <: Add['b] | Mul['b] | Numb | Var
-//│   'c :> Abs['a | 'c] | App['a | 'c] | 'a
 
 // * Because EvalExpr does not dispatch lambdas to super and map_expr only
 // * handles exprs

@@ -1,24 +1,18 @@
-:NewParser
+:NewDefs
 
 fun f(x, y) =
   if x == 0 and
     y == 0 then "bruh"
     y == 1 then "lol"
   else "okay"
-//│ f: (number, number,) -> ("bruh" | "lol" | "okay")
-//│  = [Function: f]
+//│ fun f: (Num, Num) -> ("bruh" | "lol" | "okay")
 
 class A()
 class B()
-//│ Defined class A
-//│ Defined class B
-//│ A: () -> A
-//│  = [Function: A1]
-//│ B: () -> B
-//│  = [Function: B1]
+//│ class A()
+//│ class B()
 
 :e
-:ge
 fun f(x) =
   if x == 0 and
     x is
@@ -26,23 +20,46 @@ fun f(x) =
       B() then "B"
     x == 0 then "lol"
     else "bruh"
-//│ ╔══[ERROR] The case when this is false is not handled: ==(x,)(0,)
-//│ ║  l.23: 	  if x == 0 and
-//│ ╙──      	     ^^^^^^
-//│ f: anything -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.18: 	    x is
+//│ ║        	    ^^^^
+//│ ║  l.19: 	      A() then "A"
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.20: 	      B() then "B"
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.21: 	    x == 0 then "lol"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.22: 	    else "bruh"
+//│ ╙──      	^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.18: 	    x is
+//│ ║        	    ^^^^
+//│ ║  l.19: 	      A() then "A"
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.20: 	      B() then "B"
+//│ ║        	^^^^^^^^^^^^^^^^^^
+//│ ║  l.21: 	    x == 0 then "lol"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.22: 	    else "bruh"
+//│ ║        	^^^^^^^^^^^^^^^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ fun f: Num -> ("A" | "B" | "bruh" | "lol")
 
 :e
-:ge
 fun f(x, y) =
   if
     x == 0 and
       y == 0 then "bruh"
       else "lol"
-//│ ╔══[ERROR] The case when this is false is not handled: ==(x,)(0,)
-//│ ║  l.40: 	    x == 0 and
-//│ ╙──      	    ^^^^^^
-//│ f: (anything, anything,) -> error
-//│ Code generation encountered an error:
-//│   if expression was not desugared
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.52: 	      y == 0 then "bruh"
+//│ ║        	      ^^^^^^^^^^^^^^^^^^
+//│ ║  l.53: 	      else "lol"
+//│ ╙──      	^^^^^^^^^^^^^^^^
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.52: 	      y == 0 then "bruh"
+//│ ║        	      ^^^^^^^^^^^^^^^^^^
+//│ ║  l.53: 	      else "lol"
+//│ ║        	^^^^^^^^^^^^^^^^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
+//│ fun f: (Num, Num) -> ("bruh" | "lol")

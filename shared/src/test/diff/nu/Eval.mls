@@ -79,10 +79,10 @@ test
 //│   1
 
 
-abstract class Option[out A]
+abstract class Option[out A]: Some[A] | None
 class Some[out A](val value: A) extends Option[A]
 module None extends Option[nothing]
-//│ abstract class Option[A]
+//│ abstract class Option[A]: None | Some[A]
 //│ class Some[A](value: A) extends Option
 //│ module None extends Option
 
@@ -260,11 +260,11 @@ fun eval(t, env) = if t is
     else err(String(pree) ++ " does not have field " ++ nme)
   Rcd(fs) then
     Rcd of fs |> Lists.map of {key, value} => {key, value: eval(value, env)}
-//│ fun eval: forall 'a 'b 'c. ('a, Cons[{key: Eql[Str], value: 'b}] & {List#A <: {key: Eql[Str], value: 'b}} & List[{key: Eql[Str], value: 'b}] | Nil & {List#A <: {key: Eql[Str], value: 'b}} & List[{key: Eql[Str], value: 'b}]) -> 'c
+//│ fun eval: forall 'a 'b 'c. ('a, Cons[{key: Eql[Str], value: 'b}] & {List#A <: {key: Eql[Str], value: 'b}} & List[{key: Eql[Str], value: 'b}] | Nil & {List#A <: {key: Eql[Str], value: 'b}} & List[{key: Eql[Str], value: 'b}]) -> ('b | 'c)
 //│   where
 //│     'b :> 'c
 //│        <: Object & ~#Rcd | Rcd['b]
-//│     'c :> 'b | Lam | Lit[??A] | Rcd[Lam | Lit[??A] | 'c]
+//│     'c :> Lam | Lit[??A] | Rcd[Lam | Lit[??A] | 'b | 'c] | 'b
 //│     'a <: App | Lam | Lit[anything] | Rcd['a] | Sel | Var
 
 eval : (Term, List[{key: Str, value: Value}]) -> Value

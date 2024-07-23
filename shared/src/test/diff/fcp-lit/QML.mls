@@ -202,7 +202,7 @@ def sstep = fun xx -> xx (fun (xinit, xsub) ->
     then xsub r1 (div i 2)
     else xsub r2 (div i 2) in
   fun f -> f (init, sub))
-//│ ((forall 'a 'b 'c 'd 'e. ('a -> 'b, 'd -> int -> 'e,) -> (('a -> ('b, 'b,), (('d, 'd,),) -> int -> 'e,) -> 'c) -> 'c) -> 'f) -> 'f
+//│ ((forall 'a 'b 'c 'd 'e. ('a -> 'b, 'c -> int -> 'd,) -> (('a -> ('b, 'b,), (('c, 'c,),) -> int -> 'd,) -> 'e) -> 'e) -> 'f) -> 'f
 //│   <:  sstep:
 //│ ExSmall -> ExSmall
 //│ ╔══[ERROR] Type error in def definition
@@ -258,7 +258,7 @@ def sstep = fun xx -> xx (fun (xinit, xsub) ->
     then xsub r1 (div i 2)
     else xsub r2 (div i 2) in
   fun (f : forall 'r. ('a -> 'r, 'r -> int -> 'a) -> 'y) -> f (init, sub))
-//│ ((forall 'b 'a 'c. ('a -> 'c, 'c -> int -> 'a,) -> (forall 'r. ('a -> 'r, 'r -> int -> 'a,) -> 'b) -> 'b) -> 'd) -> 'd
+//│ ((forall 'a 'b 'c. ('a -> 'b, 'b -> int -> 'a,) -> (forall 'r. ('a -> 'r, 'r -> int -> 'a,) -> 'c) -> 'c) -> 'd) -> 'd
 //│   <:  sstep:
 //│ ExSmall -> ExSmall
 //│      = [Function: sstep1]
@@ -440,7 +440,7 @@ def step = fun xx -> xx (fun ((((xinit, xsub), xupdate), xfold),) ->
     else (fst r, xupdate (snd r) (div i 2) a) in
   let fold f b r = xfold f (xfold f b (fst r)) (snd r) in
     fun f -> f ((((init, sub), update), fold),) )
-//│ ((forall 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm 'n 'o 'p. (((('k -> 'a, 'p -> int -> 'g,), 'd -> int -> 'n -> 'l & 'h -> int -> 'n -> 'f,), 'c -> ('m -> 'i -> 'b & 'e -> 'j -> 'm),),) -> ((((('k -> ('a, 'a,), (('p, 'p,),) -> int -> 'g,), forall 'q 'r. (('d & 'q, 'h & 'r,),) -> int -> 'n -> ('l | 'q, 'r | 'f,),), 'c -> 'e -> (('j, 'i,),) -> 'b,),) -> 'o) -> 'o) -> 's) -> 's
+//│ ((forall 'a 'b 'c 'd 'e 'f 'g 'h 'i 'j 'k 'l 'm 'n 'o 'p. (((('a -> 'b, 'c -> int -> 'd,), 'e -> int -> 'f -> 'g & 'h -> int -> 'f -> 'i,), 'j -> ('k -> 'l -> 'm & 'n -> 'o -> 'k),),) -> ((((('a -> ('b, 'b,), (('c, 'c,),) -> int -> 'd,), forall 'q 'r. (('e & 'q, 'h & 'r,),) -> int -> 'f -> ('q | 'g, 'i | 'r,),), 'j -> 'n -> (('o, 'l,),) -> 'm,),) -> 'p) -> 'p) -> 's) -> 's
 //│   <:  step:
 //│ ExSig -> ExSig
 //│ ╔══[ERROR] Type error in def definition
@@ -557,7 +557,7 @@ def choose: 'a -> 'a -> 'a
 //│       = <missing implementation>
 
 choose (head ids)
-//│ res: 'a -> (forall 'b. 'a | 'b -> 'b)
+//│ res: 'a -> (forall 'b. 'b -> 'b | 'a)
 //│    = <no result>
 //│      choose is not implemented
 

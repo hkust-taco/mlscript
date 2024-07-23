@@ -1,46 +1,52 @@
-package mlscript.compiler
+package mlscript
+package compiler
 
-import mlscript.utils.shorthands.*
+import mlscript.utils.shorthands._
 import scala.util.control.NonFatal
 import scala.collection.mutable.StringBuilder
-import mlscript.{DiffTests, ModeType, TypingUnit}
-import mlscript.compiler.debug.TreeDebug
-import mlscript.compiler.mono.Monomorph
-import mlscript.compiler.printer.ExprPrinter
-import mlscript.compiler.mono.MonomorphError
-import mlscript.Diagnostic
+import mlscript.compiler.TreeDebug
+import simpledef.SimpleDef
 
 class DiffTestCompiler extends DiffTests {
   import DiffTestCompiler.*
-    override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit, raise: Diagnostic => Unit): (List[Str], Option[TypingUnit]) = 
+  override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit, raise: Diagnostic => Unit): (List[Str], Option[TypingUnit]) = 
     val outputBuilder = StringBuilder()
 
-    output("\nLifted:")
     var rstUnit = unit;
     try
-      rstUnit = ClassLifter(mode.fullExceptionStack).liftTypingUnit(unit)
-      output(PrettyPrinter.showTypingUnit(rstUnit))
+      val lifter = ClassLifter(mode.fullExceptionStack)
+      if (mode.lift) {
+        output("Lifted:")
+        rstUnit = lifter.liftTypingUnit(unit)
+        output(PrettyPrinter.showTypingUnit(rstUnit))
+      }
+      if (mode.showParse) output(rstUnit.toString())
+      if (mode.dbgLifting) 
+        output(lifter.getLog)
     catch
       case NonFatal(err) =>
         output("Lifting failed: " ++ err.toString())
         if mode.fullExceptionStack then 
-          output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))
-    if(mode.mono){
-      output("Mono:")
-      val treeDebug = new TreeDebug()
-      try{
-        val monomorph = new Monomorph(treeDebug)
-        val monomorphized = monomorph.defunctionalize(rstUnit)
-        output("\nDefunc result: ")
-        output(ExprPrinter.print(monomorphized))
-      }catch{
-        case error: MonomorphError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().map(_.toString()).toList).mkString("\n")
-        // case error: StackOverflowError => outputBuilder ++= (error.getMessage() :: error.getStackTrace().take(40).map(_.toString()).toList).mkString("\n")
-      }
-      // outputBuilder ++= treeDebug.getLines.mkString("\n")
+          outputBuilder ++= "\n" ++ err.getStackTrace().map(_.toString()).mkString("\n")
+    if (mode.lift) {
+      (outputBuilder.toString().linesIterator.toList, Some(rstUnit))  
+    } else {
+      (outputBuilder.toString().linesIterator.toList, None)
     }
-    (outputBuilder.toString().linesIterator.toList, Some(rstUnit))
   
+  override def postTypingProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit): Option[TypingUnit] = 
+    if(mode.simpledef || basePath.contains("Defunctionalize")) {
+      output("\nSimpledef:")
+      val treeDebug = new TreeDebug(if mode.dbgSimpledef then output else (str) => ())
+      val pd = SimpleDef(treeDebug)
+      pd(unit)
+      val defuncAST = pd.rewriteProgram(unit)
+      output(defuncAST.showDbg.replace(";", "\n"))
+      output("End simpledef\n")
+      return Some(defuncAST)
+    }
+    None
+    
   override protected lazy val files = allFiles.filter { file =>
       val fileName = file.baseName
       validExt(file.ext) && filter(file.relativeTo(pwd))

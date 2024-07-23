@@ -38,15 +38,15 @@ fun mk(n) = if n is
   _ then Add(mk(n), mk(n))
 //│ fun mk: forall 'a. Object -> (Lit | 'a)
 //│   where
-//│     'a :> Neg[Lit | 'a] | Add[Lit | 'a]
+//│     'a :> Add[Lit | 'a] | Neg[Lit | 'a]
 
 :stats
 TestLang.eval(mk(0))
 //│ Int
 //│ res
 //│     = 0
-//│ constrain calls  : 179
-//│ annoying  calls  : 51
-//│ subtyping calls  : 1203
+//│ constrain calls  : 254
+//│ annoying  calls  : 106
+//│ subtyping calls  : 1430
 
 

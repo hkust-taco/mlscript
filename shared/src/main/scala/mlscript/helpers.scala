@@ -2,10 +2,12 @@ package mlscript
 
 import scala.util.chaining._
 import scala.collection.mutable.{Map => MutMap, SortedMap => SortedMutMap, Set => MutSet, Buffer}
+import scala.collection.immutable.SortedMap
 
 import math.Ordered.orderingToOrdered
 
 import mlscript.utils._, shorthands._
+import scala.annotation.tailrec
 
 
 // Auxiliary definitions for types
@@ -107,7 +109,6 @@ trait TypeLikeImpl extends Located { self: TypeLike =>
     case Literal(StrLit(s)) => "\"" + s + "\""
     case Literal(UnitLit(b)) =>
       if (b) if (ctx.newDefs) "()" else "undefined" else "null"
-    case Literal(CharLit(c)) => "char\"" + c + "\"" 
     case PolyType(Nil, body) => body.showIn(outerPrec)
     case PolyType(targs, body) => parensIf(
         s"${targs.iterator.map(_.fold(_.name, _.showIn(0)))
@@ -286,7 +287,7 @@ trait TypeImpl extends Located { self: Type =>
 
 
 final case class ShowCtx(
-    vs: Map[TypeVar, Str],
+    vs: SortedMap[TypeVar, Str],
     debug: Bool, // TODO make use of `debug` or rm
     indentLevel: Int,
     newDefs: Bool,
@@ -332,7 +333,7 @@ object ShowCtx {
     val namedMap = (namedVars ++ hintedVars).map { case (nh, tv) =>
       // tv -> assignName(nh.dropWhile(_ === '\''))
       tv -> assignName(nh.stripPrefix(_pre))
-    }.toMap
+    }.toSortedMap
     val used = usedNames.keySet
     
     // * Generate names for unnamed variables
@@ -494,6 +495,14 @@ trait TypingUnitImpl extends Located { self: TypingUnit =>
       case e => e
     }
   }
+  def describe: Str = entities.iterator.map {
+    case term: Term => term.describe
+    case NuFunDef(S(rec), nme, _, _, _) =>
+      s"let ${if (rec) "rec " else ""}$nme"
+    case NuFunDef(N, nme, _, _, _) => s"fun $nme"
+    case typ: NuTypeDef => typ.describe
+    case other => "?"
+  }.mkString("{", "; ", "}")
 }
 
 trait ConstructorImpl { self: Constructor =>
@@ -507,6 +516,7 @@ trait TypeNameImpl extends Ordered[TypeName] { self: TypeName =>
   def targs: Ls[Type] = Nil
   def compare(that: TypeName): Int = this.name compare that.name
   lazy val toVar: Var = Var(name).withLocOf(this)
+  var symbol: Opt[pretyper.symbol.TypeSymbol] = N
 }
 
 trait FldFlagsImpl extends Located { self: FldFlags =>
@@ -551,7 +561,6 @@ trait TermImpl extends StatementImpl { self: Term =>
       case IntLit(value) => "integer literal"
       case DecLit(value) => "decimal literal"
       case StrLit(value) => "string literal"
-      case CharLit(value) => "character literal"
       case UnitLit(value) => if (value) "undefined literal" else "null literal"
       case Var(name) => "reference" // "variable reference"
       case Asc(trm, ty) => "type ascription"
@@ -564,7 +573,6 @@ trait TermImpl extends StatementImpl { self: Term =>
       case Rcd(fields) => "record"
       case Sel(receiver, fieldName) => "field selection"
       case Let(isRec, name, rhs, body) => "let binding"
-      case LetGroup(bindings) => "let group bindings"
       case Tup((N, Fld(_, x)) :: Nil) => x.describe
       case Tup((S(_), x) :: Nil) => "binding"
       case Tup(xs) => "tuple"
@@ -603,8 +611,11 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Blk(stmts) => stmts.iterator.map(_.showDbg).mkString("{", "; ", "}")
     case IntLit(value) => value.toString
     case DecLit(value) => value.toString
-    case StrLit(value) => '"'.toString + value + '"'
-    case CharLit(value) => "char\"" + value + '"'
+    case StrLit(value) => value.iterator.map {
+      case '\\' => "\\\\"; case '"' => "\\\""; case '\'' => "\\'"
+      case '\n' => "\\n"; case '\r' => "\\r"; case '\t' => "\\t"
+      case '\f' => "\\f"; case '\b' => "\\b"; case c => c.toString()
+    }.mkString("\"", "", "\"")
     case UnitLit(value) => if (value) "undefined" else "null"
     case v @ Var(name) => name + v.uid.fold("")("::"+_.toString)
     case Asc(trm, ty) => s"${trm.showDbg} : ${ty.showDbg2}"  |> bra
@@ -618,8 +629,6 @@ trait TermImpl extends StatementImpl { self: Term =>
     case Sel(receiver, fieldName) => "(" + receiver.showDbg + ")." + fieldName.showDbg
     case Let(isRec, Var(name), rhs, body) =>
       s"let${if (isRec) " rec" else ""} $name = ${rhs.showDbg} in ${body.showDbg}" |> bra
-    case LetGroup(bindings) =>
-      s"let { ${bindings.map{ case x => s"${x.showDbg}" }.mkString("; ")} }" |> bra
     case tup: Tup => "[" + tup.showElems + "]"
     case Splc(fields) => fields.map{
       case L(l) => s"...$l"
@@ -673,7 +682,6 @@ trait TermImpl extends StatementImpl { self: Term =>
       case IntLit(value) => value.toString
       case DecLit(value) => value.toString
       case StrLit(value) => '"'.toString + value + '"'
-      case CharLit(value) => "char\"" + value + '"'
       case UnitLit(value) => if (ctx.newDefs) "()" else if (value) "undefined" else "null"
       case Var(name) => name
       case Asc(trm, ty) => s"$trm : ${ty.show(ctx.newDefs)}" |> bra
@@ -823,19 +831,17 @@ trait LitImpl { self: Lit =>
     case _: IntLit => Set.single(TypeName("int")) + TypeName("number")
     case _: StrLit => Set.single(TypeName("string"))
     case _: DecLit => Set.single(TypeName("number"))
-    case _: CharLit => Set.single(TypeName("char"))
     case _: UnitLit => Set.empty
   }
   def baseClassesNu: Set[TypeName] = this match {
     case _: IntLit => Set.single(TypeName("Int")) + TypeName("Num") + TypeName("Object")
     case _: StrLit => Set.single(TypeName("Str")) + TypeName("Object")
     case _: DecLit => Set.single(TypeName("Num")) + TypeName("Object")
-    case _: CharLit => Set.single(TypeName("Char")) + TypeName("Object")
     case _: UnitLit => Set.single(TypeName("Object"))
   }
 }
 
-trait VarImpl { self: Var =>
+trait VarImpl extends pretyper.symbol.Symbolic { self: Var =>
   /** Check if the variable name is an integer. */
   def isIndex: Bool = name.headOption match {
     case S('0') => name.length === 1
@@ -886,9 +892,57 @@ trait FieldImpl extends Located { self: Field =>
 trait Located {
   def children: List[Located]
   
-  lazy val freeVars: Set[Var] = this match {
-    case v: Var => Set.single(v)
-    case _ => children.iterator.flatMap(_.freeVars.iterator).toSet
+  lazy val freeVars: Set[Var] = {
+    def statements(stmts: Ls[Statement]): Set[Var] =
+      stmts.iterator.foldRight(Set.empty[Var]) {
+        case (NuFunDef(isLetRec, nme, _, _, L(rhs)), fvs) => fvs - nme ++ (isLetRec match {
+          case N | S(true) => rhs.freeVars - nme
+          case S(false) => rhs.freeVars
+        })
+        case (td: NuTypeDef, fvs) =>
+          if (td.kind === Mod || td.kind === Cls || td.kind === Trt)
+            fvs - td.nameVar
+          else
+            fvs
+        case (statement, fvs) => fvs ++ statement.freeVars
+      }
+    this match {
+      // TypingUnit
+      case TypingUnit(entities) => statements(entities)
+      // Terms
+      case v: Var => Set.single(v)
+      case Lam(tup: Tup, body) => body.freeVars -- tup.freeVars
+      case App(lhs, rhs) => lhs.freeVars ++ rhs.freeVars
+      case Tup(fields) => fields.iterator.flatMap(_._2.value.freeVars.iterator).toSet
+      case Rcd(fields) => fields.iterator.flatMap(_._2.value.freeVars.iterator).toSet
+      case Sel(receiver, _) => receiver.freeVars
+      case Let(true, nme, rhs, body) => body.freeVars ++ rhs.freeVars - nme
+      case Let(false, nme, rhs, body) => body.freeVars - nme ++ rhs.freeVars
+      case Blk(stmts) => statements(stmts)
+      case Bra(_, trm) => trm.freeVars
+      case Asc(trm, _) => trm.freeVars
+      case Bind(lhs, rhs) => lhs.freeVars ++ rhs.freeVars
+      case Test(trm, _) => trm.freeVars
+      case With(trm, fields) => trm.freeVars ++ fields.freeVars
+      case CaseOf(trm, cases) => cases.foldLeft(trm.freeVars)(_ ++ _._2.freeVars)(_ ++ _.fold(Set.empty[Var])(_.freeVars))
+      case Subs(arr, idx) => arr.freeVars ++ idx.freeVars
+      case Assign(lhs, rhs) => lhs.freeVars ++ rhs.freeVars
+      case Splc(fields) => fields.iterator.flatMap(_.fold(_.freeVars, _.value.freeVars)).toSet
+      case New(head, body) => head.fold(Set.empty[Var])(_._2.freeVars) ++ body.freeVars
+      case NuNew(cls) => cls.freeVars
+      // Because `IfBody` uses the term to represent the pattern, direct
+      // traversal is not correct.
+      case If(_, _) => Set.empty
+      case TyApp(lhs, _) => lhs.freeVars
+      case Where(body, where) => body.freeVars ++ statements(where)
+      case Forall(_, body) => body.freeVars
+      case Inst(body) => body.freeVars
+      case Super() => Set.empty
+      case Eqn(lhs, rhs) => lhs.freeVars ++ rhs.freeVars
+      case Rft(base, decls) => base.freeVars ++ decls.freeVars
+      // Fallback for unsupported terms which is incorrect most of the time.
+      case _ => children.iterator.flatMap(_.freeVars.iterator).toSet
+    }
   }
   
   private var spanStart: Int = -1
@@ -1097,7 +1151,6 @@ trait StatementImpl extends Located { self: Statement =>
     case Rcd(fields) => fields.map(_._2.value)
     case Sel(receiver, fieldName) => receiver :: fieldName :: Nil
     case Let(isRec, name, rhs, body) => rhs :: body :: Nil
-    case LetGroup(bindings) => bindings
     case Blk(stmts) => stmts
     case LetS(_, pat, rhs) => pat :: rhs :: Nil
     case DatatypeDefn(head, body) => head :: body :: Nil
@@ -1159,6 +1212,13 @@ trait BlkImpl { self: Blk =>
   
 }
 
+trait CaseOfImpl extends Located { self: CaseOf =>
+  def isEmpty: Bool = {
+    val CaseOf(scrut, cases) = this
+    cases === NoCases
+  }
+}
+
 trait CaseBranchesImpl extends Located { self: CaseBranches =>
 
   def children: List[Located] = this match {
@@ -1174,15 +1234,34 @@ trait CaseBranchesImpl extends Located { self: CaseBranches =>
   }
   
   def print(isFirst: Bool): Str = this match {
-    case Case(pat, body, rest) =>
+    case c @ Case(pat, body, rest) =>
       (if (isFirst) { "" } else { "; " }) +
-      pat.print(false) + " => " + body.print(false) + rest.print(false)
+      (if (c.refined) "refined " else "") + pat.print(false) + " => " + body.print(false) + rest.print(false)
     case Wildcard(body) => 
       (if (isFirst) { "" } else { "; " }) +
       "_ => " + body.print(false)
     case NoCases => ""
   }
-  
+
+  def foldLeft[A, B](z: A)(f: (A, SimpleTerm -> Term) => A)(e: (A, Opt[Term]) => B): B = {
+    @tailrec
+    def rec(acc: A, current: CaseBranches): B = current match {
+      case Case(pat, body, rest) => rec(f(acc, pat -> body), rest)
+      case Wildcard(body) => e(acc, S(body))
+      case NoCases => e(acc, N)
+    }
+    rec(z, this)
+  }
+
+  def foreach(f: Opt[SimpleTerm] -> Term => Unit): Unit = {
+    @tailrec
+    def rec(current: CaseBranches): Unit = current match {
+      case Case(pat, body, rest) => f(S(pat) -> body); rec(rest)
+      case Wildcard(body) => f(N -> body)
+      case NoCases => ()
+    }
+    rec(this)
+  }
   def showIn(implicit ctx: ShowCtx): Str = this match {
     case Case(pat, body, rest) =>
       ctx.lnIndStr + pat.showIn(false) + " => " + body.showIn(false) + rest.showIn

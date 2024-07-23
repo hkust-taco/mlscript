@@ -125,7 +125,7 @@ fun walk(t, mn) = if t is
     Pair of n, Leaf(if n > 2 * mn then mn else n)
   Node(l, r) and walk(l, mn) is Pair(mn1, l1) and walk(r, mn) is Pair(mn2, r1) then
     Pair of min(mn1, mn2), Node(l1, r1)
-//│ fun walk: forall 'A 'a. (Leaf['A] | Node['A], Int & 'a) -> Pair['A, Leaf['A | 'a] | Node['A | 'a]]
+//│ fun walk: forall 'A 'a. (Leaf['A] | Node['A], Int & 'a) -> Pair['A, Leaf['a | 'A] | Node['a | 'A]]
 //│   where
 //│     'A <: Num
 
@@ -145,7 +145,7 @@ fun walkLazy(t, mn) = if t is
     let mnl = walkLazy(l, mn)
     let mnr = walkLazy(r, mn)
     [min(mnl.0, mnr.0), Lazy of () => Node of mnl.1.get, mnr.1.get]
-//│ fun walkLazy: forall 'get 'a. (Leaf[Num & 'a] | Node[Num & 'a], {get: Int & 'get}) -> ['a, Lazy[Leaf['get | 'a] | Node['get | 'a]]]
+//│ fun walkLazy: forall 'a 'get. (Leaf[Num & 'a] | Node[Num & 'a], {get: Int & 'get}) -> ['a, Lazy[Leaf['get | 'a] | Node['get | 'a]]]
 
 
 // * One way to tie the recursive knot
@@ -265,12 +265,18 @@ p => if p is Pair of a, b then a + b
 
 :e // TODO handle this pattern better in the parser?
 (p, q) => if p is Pair of a, b and q is Pair of a', b' then Pair of a + a', b + b'
-//│ ╔══[ERROR] Illegal pattern `and`
+//│ ╔══[ERROR] type identifier `and` not found
 //│ ║  l.267: 	(p, q) => if p is Pair of a, b and q is Pair of a', b' then Pair of a + a', b + b'
 //│ ╙──       	                               ^^^
-//│ (anything, anything) -> error
+//│ ╔══[ERROR] type identifier `is` not found
+//│ ║  l.267: 	(p, q) => if p is Pair of a, b and q is Pair of a', b' then Pair of a + a', b + b'
+//│ ╙──       	                                     ^^
+//│ ╔══[ERROR] type identifier not found: and
+//│ ║  l.267: 	(p, q) => if p is Pair of a, b and q is Pair of a', b' then Pair of a + a', b + b'
+//│ ╙──       	                               ^^^
+//│ (Pair[anything, nothing], anything) -> error
 //│ Code generation encountered an error:
-//│   if expression was not desugared
+//│   unresolved symbol is
 
 (p, q) => if p is (Pair of a, b) and q is Pair of a', b' then Pair of a + a', b + b'
 //│ (Pair[Int, Int], Pair[Int, Int]) -> Pair[Int, Int]

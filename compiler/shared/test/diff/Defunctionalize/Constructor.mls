@@ -1,0 +1,44 @@
+:NewDefs
+
+class X() {
+    val a = 
+        log("ok")
+        6
+}
+val object = X()
+(new X()).a
+(new X()).a
+object.a
+object.a
+//│ class X() {
+//│   val a: 6
+//│ }
+//│ val object: X
+//│ 6
+//│ 
+//│ Simpledef:
+//│ {class X() {let a = {log("ok",)
+//│  6}}
+//│  let object = X()
+//│  let selRes$20 = '(' (new X)() ')' in case selRes$20 of { X => (selRes$20).a }
+//│  let selRes$30 = '(' (new X)() ')' in case selRes$30 of { X => (selRes$30).a }
+//│  let selRes$40 = object in case selRes$40 of { X => (selRes$40).a }
+//│  let selRes$44 = object in case selRes$44 of { X => (selRes$44).a }}
+//│ End simpledef
+//│ 
+//│ object
+//│        = X {}
+//│ // Output
+//│ ok
+//│ res
+//│     = 6
+//│ // Output
+//│ ok
+//│ res
+//│     = 6
+//│ // Output
+//│ ok
+//│ res
+//│     = 6
+//│ res
+//│     = 6

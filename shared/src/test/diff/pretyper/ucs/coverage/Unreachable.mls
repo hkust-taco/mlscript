@@ -1,0 +1,68 @@
+:NewDefs
+
+class Some[T](value: T)
+module None
+type Option[T] = Some[T] | None
+class Pair[A, B](x: A, y: B)
+//│ class Some[T](value: T)
+//│ module None
+//│ type Option[T] = None | Some[T]
+//│ class Pair[A, B](x: A, y: B)
+
+fun f(x) = if x is Some(xv) and xv === 1 then true else false
+//│ fun f: (Object & ~#Some | Some[Eql[1]]) -> Bool
+
+f(Some(1))
+f(Some(2))
+f(None)
+//│ Bool
+//│ res
+//│     = true
+//│ res
+//│     = false
+//│ res
+//│     = false
+
+fun reachable_1(x) =
+  if x is
+    _ and f(x) then "cos"
+    Some(xv) then "sin"
+    None then "tan"
+//│ fun reachable_1: (None | Some[anything] & ~#Some | Some[Eql[1]]) -> ("cos" | "sin" | "tan")
+
+reachable_1(Some(1))
+reachable_1(Some(2))
+reachable_1(None)
+//│ "cos" | "sin" | "tan"
+//│ res
+//│     = 'cos'
+//│ res
+//│     = 'sin'
+//│ res
+//│     = 'tan'
+
+:w
+fun unreachable_1(x) =
+  if x is
+    _ and
+      f(x) then "tmux"
+      else "screen"
+    Some(xv) then "sin"
+    None then "tan"
+//│ ╔══[WARNING] this case is unreachable
+//│ ║  l.46: 	  if x is
+//│ ║        	     ^^^^
+//│ ║  l.47: 	    _ and
+//│ ║        	^^^^^^^^^
+//│ ║  l.48: 	      f(x) then "tmux"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.49: 	      else "screen"
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ║  l.50: 	    Some(xv) then "sin"
+//│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
+//│ ║  l.51: 	    None then "tan"
+//│ ║        	^^^^^^^^^^^^^^^^^^^
+//│ ╟── because it is subsumed by the branch
+//│ ║  l.49: 	      else "screen"
+//│ ╙──      	           ^^^^^^^^
+//│ fun unreachable_1: (Object & ~#Some | Some[Eql[1]]) -> ("screen" | "tmux")

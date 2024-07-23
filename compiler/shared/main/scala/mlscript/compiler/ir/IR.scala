@@ -7,6 +7,8 @@ import mlscript.compiler.utils._
 import mlscript.compiler.optimizer._
 import mlscript.compiler.ir._
 
+import mlscript.Loc
+
 import collection.mutable.{Map as MutMap, Set as MutSet, HashMap, ListBuffer}
 import annotation.unused
 import util.Sorting
@@ -42,9 +44,6 @@ case class ClassInfo(
     s"ClassInfo($id, $name, [${fields mkString ","}], parents: ${parents mkString ","}, methods:\n${methods mkString ",\n"})"
 
 case class Name(val str: Str):
-  private var intro: Opt[Intro] = None
-  private var elim: Set[Elim] = Set.empty
-
   def copy: Name = Name(str)
   def trySubst(map: Map[Str, Name]) = map.getOrElse(str, this)
   override def toString: String =
@@ -83,24 +82,15 @@ case class Defn(
   name: Str,
   params: Ls[Name],
   resultNum: Int,
-  specialized: Opt[Ls[Opt[Intro]]],
-  body: Node
+  body: Node,
+  isTailRec: Bool,
+  loc: Opt[Loc] = None
 ):
-  // used by optimizer
-  var activeInputs: Set[Ls[Opt[Intro]]] = Set()
-  var activeResults: Ls[Opt[Intro]] = Ls.fill(resultNum)(None)
-  var newActiveInputs: Set[Ls[Opt[IntroInfo]]] = Set()
-  var newActiveParams: Ls[SortedSet[ElimInfo]] = Ls.fill(params.length)(SortedSet())
-  var newActiveResults: Ls[Opt[IntroInfo]] = Ls.fill(resultNum)(None)
-  var recBoundary: Opt[Int] = None
   override def hashCode: Int = id
 
   override def toString: String =
     val ps = params.map(_.toString).mkString("[", ",", "]")
-    val naps = newActiveParams.map(_.toSeq.sorted.mkString("{", ",", "}")).mkString("[", ",", "]")
-    val ais = activeInputs.map(_.toSeq.sorted.mkString("[", ",", "]")).mkString("[", ",", "]")
-    val ars = activeResults.map(_.toString()).mkString("[", ",", "]")
-    s"Def($id, $name, $ps, $naps,\nI: $ais,\nR: $ars,\nRec: $recBoundary,\n$resultNum, \n$body\n)"
+    s"Def($id, $name, $ps,\n$resultNum, \n$body\n)"
 
 sealed trait TrivialExpr:
   import Expr._
@@ -120,6 +110,7 @@ enum Expr:
   case CtorApp(cls: ClassRef, args: Ls[TrivialExpr])
   case Select(name: Name, cls: ClassRef, field: Str)
   case BasicOp(name: Str, args: Ls[TrivialExpr])
+  case AssignField(assignee: Name, cls: ClassRef, field: Str, value: TrivialExpr)
   
   override def toString: String = show
 
@@ -131,14 +122,20 @@ enum Expr:
     case Literal(IntLit(lit)) => s"$lit" |> raw
     case Literal(DecLit(lit)) => s"$lit" |> raw
     case Literal(StrLit(lit)) => s"$lit" |> raw
-    case Literal(CharLit(lit)) => s"$lit" |> raw
     case Literal(UnitLit(lit)) => s"$lit" |> raw
     case CtorApp(cls, args) =>
       raw(cls.name) <#> raw("(") <#> raw(args |> showArguments) <#> raw(")")
     case Select(s, cls, fld) =>
       raw(cls.name) <#> raw(".") <#> raw(fld) <#> raw("(") <#> raw(s.toString) <#> raw(")")
     case BasicOp(name: Str, args) =>
-      raw(name) <#> raw("(") <#> raw(args |> showArguments) <#> raw(")")
+      raw(name) <#> raw("(") <#> raw(args |> showArguments) <#> raw(")")    
+    case AssignField(assignee, clsInfo, fieldName, value) => 
+      stack(
+        raw("assign")
+          <:> raw(assignee.toString + "." + fieldName)
+          <:> raw(":=")
+          <:> value.toDocument
+        )
 
   def mapName(f: Name => Name): Expr = this match
     case Ref(name) => Ref(f(name))
@@ -146,6 +143,7 @@ enum Expr:
     case CtorApp(cls, args) => CtorApp(cls, args.map(_.mapNameOfTrivialExpr(f)))
     case Select(x, cls, field) => Select(f(x), cls, field)
     case BasicOp(name, args) => BasicOp(name, args.map(_.mapNameOfTrivialExpr(f)))
+    case AssignField(assignee, clsInfo, fieldName, value) => AssignField(f(assignee), clsInfo, fieldName, value.mapNameOfTrivialExpr(f))
 
   def locMarker: LocMarker = this match
     case Ref(name) => LocMarker.MRef(name.str)
@@ -153,6 +151,7 @@ enum Expr:
     case CtorApp(cls, args) => LocMarker.MCtorApp(cls, args.map(_.toExpr.locMarker))
     case Select(name, cls, field) => LocMarker.MSelect(name.str, cls, field)
     case BasicOp(name, args) => LocMarker.MBasicOp(name, args.map(_.toExpr.locMarker))
+    case AssignField(assignee, clsInfo, fieldName, value) => LocMarker.MAssignField(assignee.str, fieldName, value.toExpr.locMarker)
 
 enum Pat:
   case Lit(lit: mlscript.Lit)
@@ -181,7 +180,7 @@ enum Node:
   // Deprecated:
   //   LetApply(names, fn, args, body) => LetMethodCall(names, ClassRef(R("Callable")), Name("apply" + args.length), (Ref(fn): TrivialExpr) :: args, body)
   // case LetApply(names: Ls[Name], fn: Name, args: Ls[TrivialExpr], body: Node)
-  case LetCall(names: Ls[Name], defn: DefnRef, args: Ls[TrivialExpr], body: Node)
+  case LetCall(names: Ls[Name], defn: DefnRef, args: Ls[TrivialExpr], isTailRec: Bool, body: Node)(val loc: Opt[Loc] = None)
 
   var tag = DefnTag(-1)
 
@@ -205,7 +204,7 @@ enum Node:
     case Case(scrut, cases, default) => Case(f(scrut), cases.map { (cls, arm) => (cls, arm.mapName(f)) }, default.map(_.mapName(f)))
     case LetExpr(name, expr, body) => LetExpr(f(name), expr.mapName(f), body.mapName(f))
     case LetMethodCall(names, cls, method, args, body) => LetMethodCall(names.map(f), cls, f(method), args.map(_.mapNameOfTrivialExpr(f)), body.mapName(f))
-    case LetCall(names, defn, args, body) => LetCall(names.map(f), defn, args.map(_.mapNameOfTrivialExpr(f)), body.mapName(f))  
+    case lc @ LetCall(names, defn, args, itr, body) => LetCall(names.map(f), defn, args.map(_.mapNameOfTrivialExpr(f)), itr, body.mapName(f))(lc.loc)
   
   def copy(ctx: Map[Str, Name]): Node = this match
     case Result(res) => Result(res.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))))
@@ -217,9 +216,9 @@ enum Node:
     case LetMethodCall(names, cls, method, args, body) =>
       val names_copy = names.map(_.copy)
       LetMethodCall(names_copy, cls, method.copy, args.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))), body.copy(ctx ++ names_copy.map(x => x.str -> x)))
-    case LetCall(names, defn, args, body) =>
+    case lc @ LetCall(names, defn, args, itr, body) =>
       val names_copy = names.map(_.copy)
-      LetCall(names_copy, defn, args.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))), body.copy(ctx ++ names_copy.map(x => x.str -> x)))
+      LetCall(names_copy, defn, args.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))), itr, body.copy(ctx ++ names_copy.map(x => x.str -> x)))(lc.loc)
 
   private def toDocument: Document = this match
     case Result(res) => raw(res |> showArguments) <:> raw(s"-- $tag")
@@ -269,14 +268,14 @@ enum Node:
           <:> raw("in") 
           <:> raw(s"-- $tag"),
         body.toDocument)
-    case LetCall(xs, defn, args, body) => 
+    case LetCall(xs, defn, args, itr, body) => 
       stack(
         raw("let*")
           <:> raw("(")
           <#> raw(xs.map(_.toString).mkString(","))
           <#> raw(")")
           <:> raw("=")
-          <:> raw(defn.name)
+          <:> raw((if itr then "@tailcall " else "") + defn.name)
           <#> raw("(")
           <#> raw(args.map{ x => x.toString }.mkString(","))
           <#> raw(")")
@@ -291,7 +290,7 @@ enum Node:
       case Case(scrut, cases, default) => LocMarker.MCase(scrut.str, cases.map(_._1), default.isDefined)
       case LetExpr(name, expr, _) => LocMarker.MLetExpr(name.str, expr.locMarker)
       case LetMethodCall(names, cls, method, args, _) => LocMarker.MLetMethodCall(names.map(_.str), cls, method.str, args.map(_.toExpr.locMarker))
-      case LetCall(names, defn, args, _) => LocMarker.MLetCall(names.map(_.str), defn.name, args.map(_.toExpr.locMarker))
+      case LetCall(names, defn, args, _, _) => LocMarker.MLetCall(names.map(_.str), defn.name, args.map(_.toExpr.locMarker))
     marker.tag = this.tag
     marker
 
@@ -313,7 +312,7 @@ object DefDfs:
           acc2.foldLeft(acc)((acc, x) => find(x)(using acc))
         case LetExpr(name, expr, body) => find(body)
         case LetMethodCall(names, cls, method, args, body) => find(body)
-        case LetCall(names, defn, args, body) => find(body)(using defn.expectDefn :: acc)
+        case LetCall(names, defn, args, _, body) => find(body)(using defn.expectDefn :: acc)
       
     def find(defn: Defn)(using acc: Ls[Defn]): Ls[Defn] = find(defn.body)
     def findNames(node: Node)(using acc: Ls[Str]): Ls[Str] =
@@ -325,7 +324,7 @@ object DefDfs:
           acc2.foldLeft(acc)((acc, x) => findNames(x)(using acc))
         case LetExpr(name, expr, body) => findNames(body)
         case LetMethodCall(names, cls, method, args, body) => findNames(body)
-        case LetCall(names, defn, args, body) => findNames(body)(using defn.name :: acc)
+        case LetCall(names, defn, args, _, body) => findNames(body)(using defn.name :: acc)
       
     def findNames(defn: Defn)(using acc: Ls[Str]): Ls[Str] = findNames(defn.body)
 
@@ -390,72 +389,6 @@ object DefRevPreOrdering extends DefTraversalOrdering:
     DefDfs.dfsNames(entry, defs, false).reverse
 
 
-case class ElimInfo(elim: Elim, loc: DefnLocMarker):
-  override def toString: String = s"<$elim@$loc>"
-
-implicit object ElimInfoOrdering extends Ordering[ElimInfo]:
-  override def compare(a: ElimInfo, b: ElimInfo) = a.toString.compare(b.toString)
-
-enum Elim:
-  case EDirect
-  case EApp(n: Int)
-  case EDestruct
-  case EIndirectDestruct
-  case ESelect(x: Str)
-
-  override def toString: String = this match
-    case EDirect => "EDirect"
-    case EApp(n) => s"EApp($n)"
-    case EDestruct => s"EDestruct"
-    case EIndirectDestruct => s"EIndirectDestruct"
-    case ESelect(x: Str) => s"ESelect($x)"
-
-  def toShortString: String = this match
-    case EDirect => "T"
-    case EApp(n) => s"A$n"
-    case EDestruct => s"D"
-    case EIndirectDestruct => s"I"
-    case ESelect(x: Str) => s"S($x)"
-  
-
-implicit object ElimOrdering extends Ordering[Elim]:
-  override def compare(a: Elim, b: Elim) = a.toString.compare(b.toString)
-
-case class IntroInfo(intro: Intro, loc: DefnLocMarker):
-  override def toString: String = s"$intro"
-
-enum Intro:
-  case ICtor(c: Str)
-  case ILam(n: Int)
-  case IMulti(n: Int)
-  case IMix(i: Set[Intro])
-
-  override def toString: String = this match
-    case ICtor(c) => s"ICtor($c)"
-    case ILam(n) => s"ILam($n)"
-    case IMulti(n) => s"IMulti($n)"
-    case IMix(i) => s"IMix(${i.toSeq.sorted.mkString(",")})"
-
-  def toShortString: String = this match
-    case ICtor(c) => s"C($c)"
-    case ILam(n) => s"L$n"
-    case IMulti(n) => s"M$n"
-    case IMix(i) => s"X(${i.toSeq.map(_.toShortString).sorted.mkString})"
-
-  override def equals(o: Any): Boolean = o match
-    case o: Intro if this.isInstanceOf[Intro] =>
-      (o, this) match
-        case (ICtor(c1), ICtor(c2)) => c1 == c2
-        case (ILam(n1), ILam(n2)) => n1 == n2
-        case (IMulti(n1), IMulti(n2)) => n1 == n2
-        case (IMix(i1), IMix(i2)) => 
-          i1 == i2
-        case _ => false
-    case _ => false
-
-implicit object IntroOrdering extends Ordering[Intro]:
-  override def compare(a: Intro, b: Intro) = a.toString.compare(b.toString)
-
 
 case class DefnTag(inner: Int):
   def is_valid = inner >= 0
@@ -476,6 +409,7 @@ enum LocMarker:
   case MCtorApp(name: ClassRef, args: Ls[LocMarker])
   case MSelect(name: Str, cls: ClassRef, field: Str)
   case MBasicOp(name: Str, args: Ls[LocMarker])
+  case MAssignField(assignee: Str, field: Str, value: LocMarker)
   case MResult(res: Ls[LocMarker])
   case MJump(name: Str, args: Ls[LocMarker])
   case MCase(scrut: Str, cases: Ls[Pat], default: Bool)
@@ -519,7 +453,6 @@ enum LocMarker:
     case MLit(IntLit(lit)) => s"$lit" |> raw
     case MLit(DecLit(lit)) => s"$lit" |> raw
     case MLit(StrLit(lit)) => s"$lit" |> raw
-    case MLit(CharLit(lit)) => s"$lit" |> raw
     case MLit(UnitLit(undefinedOrNull)) => (if undefinedOrNull then "undefined" else "null") |> raw
     case _ => raw("...")
 

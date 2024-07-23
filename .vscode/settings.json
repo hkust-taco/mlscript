@@ -14,5 +14,5 @@
             "strings": "off"
         }
     },
-    "files.autoSave": "onWindowChange"
+    "files.autoSave": "off"
 }

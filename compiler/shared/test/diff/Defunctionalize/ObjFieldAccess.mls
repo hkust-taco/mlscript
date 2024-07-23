@@ -1,0 +1,126 @@
+:NewDefs
+
+class A(val i: Int) {
+    fun get1() = i
+    fun get2 = i
+}
+val a = A(6)
+a.get1()
+a.get2
+//│ class A(i: Int) {
+//│   fun get1: () -> Int
+//│   fun get2: Int
+//│ }
+//│ val a: A
+//│ Int
+//│ 
+//│ Simpledef:
+//│ {class A(val i: Int,) {fun get1 = () => i
+//│  fun get2 = i}
+//│  let a = A(6,)
+//│  let selRes$20 = a in case selRes$20 of { A => (selRes$20).get1() }
+//│  let selRes$28 = a in case selRes$28 of { A => (selRes$28).get2 }}
+//│ End simpledef
+//│ 
+//│ a
+//│   = A {}
+//│ res
+//│     = 6
+//│ res
+//│     = 6
+
+class A(val i: Str) {
+    fun get1() = i
+    fun get2 = i
+}
+val a = A("6")
+a.get1()
+a.get2
+//│ class A(i: Str) {
+//│   fun get1: () -> Str
+//│   fun get2: Str
+//│ }
+//│ val a: A
+//│ Str
+//│ 
+//│ Simpledef:
+//│ {class A(val i: Str,) {fun get1 = () => i
+//│  fun get2 = i}
+//│  let a = A("6",)
+//│  let selRes$20 = a in case selRes$20 of { A => (selRes$20).get1() }
+//│  let selRes$28 = a in case selRes$28 of { A => (selRes$28).get2 }}
+//│ End simpledef
+//│ 
+//│ a
+//│   = A {}
+//│ res
+//│     = '6'
+//│ res
+//│     = '6'
+
+class X()
+class Y(val foo: X) {
+    fun get1() = foo
+    fun get2 = foo
+}
+val a = Y(X())
+a.get1()
+a.get2
+//│ class X()
+//│ class Y(foo: X) {
+//│   fun get1: () -> X
+//│   fun get2: X
+//│ }
+//│ val a: Y
+//│ X
+//│ 
+//│ Simpledef:
+//│ {class X() {}
+//│  class Y(val foo: X,) {fun get1 = () => foo
+//│  fun get2 = foo}
+//│  let a = Y(X(),)
+//│  let selRes$24 = a in case selRes$24 of { Y => (selRes$24).get1() }
+//│  let selRes$32 = a in case selRes$32 of { Y => (selRes$32).get2 }}
+//│ End simpledef
+//│ 
+//│ a
+//│   = Y {}
+//│ res
+//│     = X {}
+//│ res
+//│     = X {}
+
+class I() {}
+class J() {}
+class K(val foo: I, val bar: J) {
+    fun getFoo = foo
+    fun getBar = bar
+}
+val k = K(I(), J())
+k.getFoo
+k.getBar
+//│ class I()
+//│ class J()
+//│ class K(foo: I, bar: J) {
+//│   fun getBar: J
+//│   fun getFoo: I
+//│ }
+//│ val k: K
+//│ J
+//│ 
+//│ Simpledef:
+//│ {class I() {}
+//│  class J() {}
+//│  class K(val foo: I, val bar: J,) {fun getFoo = foo
+//│  fun getBar = bar}
+//│  let k = K(I(), J(),)
+//│  let selRes$26 = k in case selRes$26 of { K => (selRes$26).getFoo }
+//│  let selRes$30 = k in case selRes$30 of { K => (selRes$30).getBar }}
+//│ End simpledef
+//│ 
+//│ k
+//│   = K {}
+//│ res
+//│     = I {}
+//│ res
+//│     = J {}

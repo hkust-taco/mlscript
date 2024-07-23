@@ -275,7 +275,7 @@ code"if (1 == 2) then false else true"
 //│ class TypingUnit22 {}
 //│ const typing_unit22 = new TypingUnit22;
 //│ // Query 1
-//│ res = CaseOf(Bra(App(Var("=="), IntLit(1), IntLit(2))), Case(Var("true"), Var("false"), Wildcard(Var("true"))));
+//│ res = ((ucs$test$01) => Let(Var(ucs$test$01), Bra(App(Var("=="), IntLit(1), IntLit(2))), CaseOf(Var(ucs$test$01), Case(Var("true"), Var("false"), Wildcard(Var("true"))))))(freshName("ucs$test$0"));
 //│ // End of generated code
 
 
@@ -291,7 +291,7 @@ code"if 3 is
 //│ class TypingUnit23 {}
 //│ const typing_unit23 = new TypingUnit23;
 //│ // Query 1
-//│ res = ((tmp01) => Let(Var(tmp01), IntLit(3), ((tmp01) => Let(Var(tmp01), IntLit(3), CaseOf(Var(tmp01), Case(IntLit(1), IntLit(114), Case(IntLit(2), IntLit(514), Wildcard(IntLit(0)))))))(freshName("tmp0"))))(freshName("tmp0"));
+//│ res = ((ucs$scrut$01) => Let(Var(ucs$scrut$01), IntLit(3), CaseOf(Var(ucs$scrut$01), Case(IntLit(1), IntLit(114), Case(IntLit(2), IntLit(514), Wildcard(IntLit(0)))))))(freshName("ucs$scrut$0"));
 //│ // End of generated code
 
 
@@ -315,7 +315,7 @@ code"p => if p.x ===
 //│ // Query 2
 //│ globalThis.one = Const(1);
 //│ // Query 3
-//│ res = ((p1) => Lam(Var(p1), CaseOf(App(Var("==="), Sel(Var(p1), Var("x")), zero), Case(Var("true"), Var("true"), Wildcard(CaseOf(App(Var("==="), Sel(Var(p1), Var("x")), one), Case(Var("true"), Var("false"), Wildcard(Var("false")))))))))(freshName("p"));
+//│ res = ((p1) => Lam(Var(p1), ((ucs$cache$01) => Let(Var(ucs$cache$01), Sel(Var(p1), Var("x")), ((ucs$test$01) => Let(Var(ucs$test$01), App(Var("==="), Var(ucs$cache$01), zero), CaseOf(Var(ucs$test$01), Case(Var("true"), Var("true"), Wildcard(((ucs$test$11) => Let(Var(ucs$test$11), App(Var("==="), Var(ucs$cache$01), one), CaseOf(Var(ucs$test$11), Case(Var("true"), Var("false"), Wildcard(Var("false"))))))(freshName("ucs$test$1")))))))(freshName("ucs$test$0"))))(freshName("ucs$cache$0"))))(freshName("p"));
 //│ // End of generated code
 
 
@@ -358,3 +358,135 @@ fun foo(dbg) =
 :ne
 code"x => let c = 42 in ${code"x"}"
 //│ Code[forall 'a. 'a -> 'a, nothing]
+
+class Ref[A](init: A) { mut val value: A = init }
+//│ class Ref[A](init: A) {
+//│   mut val value: A
+//│ }
+
+:ne
+:js
+x `=>
+  let v = Ref(x)
+  let _ = y `=>
+    set v.value = y
+    `0
+  v.value
+//│ Code[forall 'a. 'a -> 'a, ??y & ~??x]
+//│ // Prelude
+//│ class TypingUnit30 {}
+//│ const typing_unit30 = new TypingUnit30;
+//│ // Query 1
+//│ res = ((x1) => Lam(Var(x1), (() => {
+//│   let v = Ref(Var(x1));
+//│   let _ = ((y1) => Lam(Var(y1), (() => {
+//│     void(v.value = Var(y1));
+//│     return IntLit(0);
+//│   })()))(freshName("y"));
+//│   return v.value;
+//│ })()))(freshName("x"));
+//│ // End of generated code
+
+:ne
+:js
+x `=>
+  class A(y: Code[Int, nothing]) {
+    val z = x `+ y
+  }
+  A(`0).z
+//│ Code[Int -> Int, nothing]
+//│ // Prelude
+//│ class TypingUnit31 {}
+//│ const typing_unit31 = new TypingUnit31;
+//│ // Query 1
+//│ res = ((x1) => Lam(Var(x1), (() => {
+//│   const A = (() => {
+//│     class A {
+//│       #y;
+//│       #z;
+//│       get z() { return this.#z; }
+//│       constructor(y) {
+//│         this.#y = y;
+//│         this.#z = App(Var("+"), Var(x1), y);
+//│         const z = this.#z;
+//│       }
+//│     static
+//│       unapply(x) {
+//│         return [x.#y];
+//│       }
+//│     }
+//│     let ctor;
+//│     ctor = ((y) => new A(y));
+//│     ctor.class = A;
+//│     return ctor;
+//│   })();
+//│   return A(IntLit(0)).z;
+//│ })()))(freshName("x"));
+//│ // End of generated code
+
+:ne
+:js
+x `=>
+  class A() {
+    constructor() {
+      log(x)
+    }
+  }
+  new A(), x
+//│ Code[forall 'a. 'a -> 'a, nothing]
+//│ // Prelude
+//│ class TypingUnit32 {}
+//│ const typing_unit32 = new TypingUnit32;
+//│ // Query 1
+//│ res = ((x1) => Lam(Var(x1), (() => {
+//│   const A = (() => {
+//│     class A {
+//│       constructor() {
+//│         log(Var(x1));
+//│       }
+//│     static
+//│       unapply(x) {
+//│         return [];
+//│       }
+//│     }
+//│     let ctor;
+//│     ctor = (() => new A());
+//│     ctor.class = A;
+//│     return ctor;
+//│   })();
+//│   return new A.class() , Var(x1);
+//│ })()))(freshName("x"));
+//│ // End of generated code
+
+class Foo(x: Code[Int, anything])
+//│ class Foo(x: Code[Int, anything])
+
+:ne
+:js
+x `=>
+  class B() extends Foo(x)
+  `x
+//│ Code[forall 'a. (Int & 'a) -> 'a, nothing]
+//│ // Prelude
+//│ class TypingUnit34 {}
+//│ const typing_unit34 = new TypingUnit34;
+//│ // Query 1
+//│ res = ((x1) => Lam(Var(x1), (() => {
+//│   const B = (() => {
+//│     class B extends Foo.class {
+//│       constructor() {
+//│         super(Var(x1));
+//│       }
+//│     static
+//│       unapply(x) {
+//│         return [];
+//│       }
+//│     }
+//│     let ctor;
+//│     ctor = (() => new B());
+//│     ctor.class = B;
+//│     return ctor;
+//│   })();
+//│   return Var(x1);
+//│ })()))(freshName("x"));
+//│ // End of generated code

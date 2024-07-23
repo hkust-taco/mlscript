@@ -148,7 +148,7 @@ fun foo(x) =
 
 fun foo(x) =
   `if `(1 == 1) then x else `2
-//│ fun foo: forall 'a 'b. Code['b, 'a] -> Code[2 | 'b, 'a]
+//│ fun foo: forall 'a 'b. Code['a, 'b] -> Code[2 | 'a, 'b]
 
 
 `if `1 `< `2 `and `1 `> `2 then `0 else `1
@@ -217,7 +217,10 @@ let x = `42
 //│ ╟── Note: 'if' expression starts here:
 //│ ║  l.189: 	`if x
 //│ ╙──       	 ^^
-//│ ╔══[ERROR] The case when this is false is not handled: ${x(undefined,)}
+//│ ╔══[ERROR] missing else branch
+//│ ║  l.190: 	  `> `1 then `0
+//│ ╙──       	  ^
+//│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.189: 	`if x
 //│ ║         	    ^
 //│ ║  l.190: 	  `> `1 then `0
@@ -225,20 +228,34 @@ let x = `42
 //│ ║  l.191: 	  `== `1 then `1
 //│ ║         	^^^^^^^^^^^^^^^^
 //│ ║  l.192: 	  _ then `2
-//│ ╙──       	^^^^^^^^^^^
+//│ ║         	^^^^^^^^^^^
+//│ ╟── code fragment of type `Code[42, nothing]` is not a function
+//│ ║  l.183: 	let x = `42
+//│ ║         	        ^^^
+//│ ╟── but it flows into reference with expected type `() -> ?a`
+//│ ║  l.189: 	`if x
+//│ ╙──       	    ^
+//│ ╔══[ERROR] Type mismatch in unquote:
+//│ ║  l.190: 	  `> `1 then `0
+//│ ║         	  ^
+//│ ╙── undefined literal of type `()` is not an instance of type `Code`
+//│ ╔══[ERROR] Type mismatch in `case` expression:
+//│ ║  l.190: 	  `> `1 then `0
+//│ ║         	  ^
+//│ ╙── expression of type `Bool` is not an instance of type `true`
 //│ Code[error, nothing]
 
 :pe
 `(x: Int) => x `+ `2
 //│ ╔══[PARSE ERROR] This quote syntax is not supported yet
-//│ ║  l.232: 	`(x: Int) => x `+ `2
+//│ ║  l.249: 	`(x: Int) => x `+ `2
 //│ ╙──       	 ^^^^^^^^
 //│ () -> Code[Int, nothing]
 
 :pe
 `
 //│ ╔══[PARSE ERROR] This quote syntax is not supported yet
-//│ ║  l.239: 	`
+//│ ║  l.256: 	`
 //│ ╙──       	^
 //│ ()
 
@@ -246,6 +263,6 @@ let x = `42
 :pe
 `42 `
 //│ ╔══[PARSE ERROR] This quote syntax is not supported yet
-//│ ║  l.247: 	`42 `
+//│ ║  l.264: 	`42 `
 //│ ╙──       	^^^
 //│ Code[42, nothing]

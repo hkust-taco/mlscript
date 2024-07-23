@@ -169,6 +169,27 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
   
   sealed abstract class BaseTypeOrTag extends SimpleType
   sealed abstract class BaseType extends BaseTypeOrTag {
+    def compareEquiv(that: BaseType): Int = (this, that) match {
+      case (a: TypeTag, b: TypeTag) => a.compare(b)
+      case (a: TypeTag, _) => -1
+      case (_, b: TypeTag) => 1
+      case (_: FunctionType, _: FunctionType) => 0
+      case (_: FunctionType, _) => -1
+      case (_, _: FunctionType) => 1
+      case (_: ArrayType, _: ArrayType) => 0
+      case (_: ArrayType, _) => -1
+      case (_, _: ArrayType) => 1
+      case (_: TupleType, _: TupleType) => 0
+      case (_: TupleType, _) => -1
+      case (_, _: TupleType) => 1
+      case (_: Without, _: Without) => 0
+      case (_: Without, _) => -1
+      case (_, _: Without) => 1
+      case (_: Overload, _: Overload) => 0
+      case (_: Overload, _) => -1
+      case (_, _: Overload) => 1
+      case (_: SpliceType, _: SpliceType) => 0
+    }
     def toRecord: RecordType = RecordType.empty
     protected def freshenAboveImpl(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST]): BaseType
     override def freshenAbove(lim: Int, rigidify: Bool)(implicit ctx: Ctx, freshened: MutMap[TV, ST]): BaseType =

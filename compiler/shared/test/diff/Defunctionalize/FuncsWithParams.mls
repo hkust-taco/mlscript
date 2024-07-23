@@ -1,0 +1,42 @@
+:NewDefs
+
+
+abstract class Arithmetic() {
+    virtual fun use(num1: Int, num2: Int): Int
+}
+class Add() extends Arithmetic {
+    fun use(num1, num2) = num1+num2
+}
+class Sub() extends Arithmetic {
+    fun use(num1, num2) = num1-num2
+}
+fun getArith(choice) = if choice == 1 then Add() else Sub()
+getArith(1).use(4,6)
+getArith(2).use(4,6)
+//│ abstract class Arithmetic() {
+//│   fun use: (num1: Int, num2: Int) -> Int
+//│ }
+//│ class Add() extends Arithmetic {
+//│   fun use: (Int, Int) -> Int
+//│ }
+//│ class Sub() extends Arithmetic {
+//│   fun use: (Int, Int) -> Int
+//│ }
+//│ fun getArith: Num -> (Add | Sub)
+//│ Int
+//│ 
+//│ Simpledef:
+//│ {class Arithmetic() {fun use: (num1: Int, num2: Int) -> Int}
+//│  class Add(): Arithmetic {fun use = (num1::0, num2::1,) => +(num1, num2,)}
+//│  class Sub(): Arithmetic {fun use = (num1::2, num2::3,) => -(num1, num2,)}
+//│  fun getArith = (choice::4,) => if (==(choice, 1,)) then Add() else Sub()
+//│  let selRes$58 = getArith(1,) in case selRes$58 of { Sub => (selRes$58).use(4, 6,)
+//│  Add => (selRes$58).use(4, 6,) }
+//│  let selRes$76 = getArith(2,) in case selRes$76 of { Sub => (selRes$76).use(4, 6,)
+//│  Add => (selRes$76).use(4, 6,) }}
+//│ End simpledef
+//│ 
+//│ res
+//│     = 10
+//│ res
+//│     = -2

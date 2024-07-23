@@ -71,14 +71,13 @@ final case class Tup(fields: Ls[Opt[Var] -> Fld])                    extends Ter
 final case class Rcd(fields: Ls[Var -> Fld])                         extends Term
 final case class Sel(receiver: Term, fieldName: Var)                 extends Term
 final case class Let(isRec: Bool, name: Var, rhs: Term, body: Term)  extends Term
-final case class LetGroup(bindings: Ls[NuFunDef])                    extends Term
 final case class Blk(stmts: Ls[Statement])                           extends Term with BlkImpl with Outer
 final case class Bra(rcd: Bool, trm: Term)                           extends Term
 final case class Asc(trm: Term, ty: Type)                            extends Term
 final case class Bind(lhs: Term, rhs: Term)                          extends Term
 final case class Test(trm: Term, ty: Term)                           extends Term
 final case class With(trm: Term, fields: Rcd)                        extends Term
-final case class CaseOf(trm: Term, cases: CaseBranches)              extends Term
+final case class CaseOf(trm: Term, cases: CaseBranches)              extends Term with CaseOfImpl
 final case class Subs(arr: Term, idx: Term)                          extends Term
 final case class Assign(lhs: Term, rhs: Term)                        extends Term
 final case class Splc(fields: Ls[Either[Term, Fld]])                 extends Term
@@ -115,14 +114,14 @@ final case class Fld(flags: FldFlags, value: Term) extends FldImpl
 object FldFlags { val empty: FldFlags = FldFlags(false, false, false) }
 
 sealed abstract class CaseBranches extends CaseBranchesImpl
-final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches) extends CaseBranches
+final case class Case(pat: SimpleTerm, body: Term, rest: CaseBranches)(val refined: Bool) extends CaseBranches
 final case class Wildcard(body: Term) extends CaseBranches
+// final case class TupleCase(numElems: Int, canHaveMore: Bool, body: Term, rest: CaseBranches) extends CaseBranches
 final case object NoCases extends CaseBranches
 
 final case class IntLit(value: BigInt)            extends Lit
 final case class DecLit(value: BigDecimal)        extends Lit
 final case class StrLit(value: Str)               extends Lit
-final case class CharLit(value: Char)             extends Lit
 final case class UnitLit(undefinedOrNull: Bool)   extends Lit
 
 trait IdentifiedTerm
@@ -217,7 +216,7 @@ final case class NuTypeDef(
   }
 
 final case class NuFunDef(
-  isLetRec: Opt[Bool], // None means it's a `fun`, which is always recursive; Some means it's a `let` or `val`
+  isLetRec: Opt[Bool], // None means it's a `fun`, which is always recursive; Some means it's a `let`/`let rec` or `val`
   nme: Var,
   symbolicNme: Opt[Var],
   tparams: Ls[TypeName],
@@ -234,7 +233,9 @@ final case class NuFunDef(
   val body: Located = rhs.fold(identity, identity)
   def kind: DeclKind = Val
   val abstractLoc: Opt[Loc] = None
-
+  
+  def isLetOrLetRec: Bool = isLetRec.isDefined && !genField
+  
   // If the member has no implementation, it is virtual automatically
   def isVirtual: Bool = virtualLoc.nonEmpty || rhs.isRight
   

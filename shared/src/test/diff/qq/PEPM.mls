@@ -67,7 +67,7 @@ fun power'(x, n) =
 //│ // Query 1
 //│ globalThis.power$ = function power$(x, n) {
 //│   return ((() => {
-//│     return (n == 0) === true ? Const(1) : even(n) === true ? ((t1) => Let(Var(t1), power$(x, Math.floor(n / 2)), App(Var("*"), Var(t1), Var(t1))))(freshName("t")) : App(Var("*"), x, power$(x, n - 1));
+//│     return ((ucs$test$0) => ucs$test$0 === true ? Const(1) : ((ucs$test$0) => ucs$test$0 === true ? ((t1) => Let(Var(t1), power$(x, Math.floor(n / 2)), App(Var("*"), Var(t1), Var(t1))))(freshName("t")) : App(Var("*"), x, power$(x, n - 1)))(even(n)))((n == 0));
 //│   })());
 //│ };
 //│ // End of generated code
@@ -130,7 +130,7 @@ code"x => ${ test(run) }"
 :ne
 fun assertNotZero(x) =
   code"if (${x} == 0) then error else ${x}"
-//│ fun assertNotZero: forall 'a 'b. Code[Num & 'b, 'a] -> Code['b, 'a]
+//│ fun assertNotZero: forall 'a 'b. Code[Num & 'a, 'b] -> Code['a, 'b]
 
 :ne
 fun safeDiv = run(code"x => y => let t = ${assertNotZero(code"y")} in x / t")

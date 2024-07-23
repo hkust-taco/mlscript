@@ -71,7 +71,7 @@ def evalN evalN e = case e of {
   | Neg -> 0 - evalN evalN e.e
   | _ -> eval evalN e
   }
-//│ evalN: ('a -> 'e -> int & 'a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'lhs}) | (Lit with {n: 'n}) | (Neg with {e: 'e})) -> (int | 'n)
+//│ evalN: ('a -> 'lhs -> int & 'a) -> ((Add with {lhs: 'lhs, rhs: 'lhs}) | (Lit with {n: 'n}) | (Neg with {e: 'lhs})) -> (int | 'n)
 //│      = [Function: evalN]
 
 evalN eval! e

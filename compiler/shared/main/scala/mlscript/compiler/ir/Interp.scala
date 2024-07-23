@@ -41,7 +41,6 @@ class Interpreter(verbose: Bool):
         case Literal(IntLit(lit)) => lit.toString
         case Literal(DecLit(lit)) => lit.toString
         case Literal(StrLit(lit)) => lit.toString
-        case Literal(CharLit(lit)) => lit.toString
         case Literal(UnitLit(undefinedOrNull)) => if undefinedOrNull then "undefined" else "null"
 
   private final case class Ctx(
@@ -111,6 +110,21 @@ class Interpreter(verbose: Bool):
               if xs.length < 2 then return L(StuckExpr(expr, s"not enough arguments for basic operation $name"))
               else eval(name, xs.head, xs.tail.head).toRight(StuckExpr(expr, s"unable to evaluate basic operation"))
             case _ => L(StuckExpr(expr, s"unexpected basic operation $name")))
+    case AssignField(assignee, cls, field, value) =>
+      for {
+        x <- eval(Ref(assignee): TrivialExpr)
+        y <- eval(value)
+        res <- x match
+          case obj @ Value.Class(cls2, xs) if cls.name == cls2.name =>
+            xs.zip(cls2.fields).find{_._2 == field} match
+              case Some((_, _)) =>
+                obj.fields = xs.map(x => if x == obj then y else x)
+                // Ideally, we should return a unit value here, but here we return the assignee value for simplicity.
+                R(obj)
+              case None => L(StuckExpr(expr, s"unable to find selected field $field"))
+          case Value.Class(cls2, xs) => L(StuckExpr(expr, s"unexpected class $cls2"))
+          case x => L(StuckExpr(expr, s"unexpected value $x"))
+      } yield res
 
   private def eval(node: Node)(using ctx: Ctx): Result[Ls[Value]] = node match
     case Result(res) => evalArgs(res)
@@ -131,7 +145,7 @@ class Interpreter(verbose: Bool):
             case None => 
               default match
                 case S(x) => eval(x)
-                case N => L(StuckNode(node, s"can not find the matched case, $cls expected"))
+                case N => L(StuckNode(node, s"can not find the matched case, ${cls.name} expected"))
           }
         case Value.Literal(lit) => 
           cases.find {
@@ -165,7 +179,7 @@ class Interpreter(verbose: Bool):
         res <- eval(body)(using ctx2)
       } yield res
     // case LetApply(names, fn, args, body) => eval(LetMethodCall(names, ClassRef(R("Callable")), Name("apply" + args.length), (Ref(fn): TrivialExpr) :: args, body))
-    case LetCall(names, defn, args, body) =>
+    case LetCall(names, defn, args, _, body) =>
       for {
         xs <- evalArgs(args)
         defn <- ctx.defnCtx.get(defn.name).toRight(StuckNode(node, s"undefined function ${defn.name}"))

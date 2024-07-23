@@ -57,9 +57,15 @@ class A(x0: Int) {
 //│ globalThis.A = typing_unit.A;
 //│ // End of generated code
 
-// FIXME: should be rejected
+:e
 A(0).x1
-//│ Int
+//│ ╔══[ERROR] Let binding 'x1' cannot tbe accessed as a field
+//│ ║  l.61: 	A(0).x1
+//│ ║        	    ^^^
+//│ ╟── Use a `val` declaration to make it a field
+//│ ║  l.5: 	  let x1 = x0 + 1
+//│ ╙──     	      ^^^^^^^^^^^
+//│ Int | error
 //│ res
 //│     = undefined
 //│ // Output
@@ -166,11 +172,11 @@ class B(x: Int, val y: Int)
 
 :e
 B(0, 0).x
-//│ ╔══[ERROR] Parameter 'x' cannot tbe accessed as a field
-//│ ║  l.168: 	B(0, 0).x
+//│ ╔══[ERROR] Parameter 'x' cannot be accessed as a field
+//│ ║  l.174: 	B(0, 0).x
 //│ ║         	       ^^
 //│ ╟── Either make the parameter a `val` or access it through destructuring
-//│ ║  l.130: 	class B(x: Int, val y: Int)
+//│ ║  l.136: 	class B(x: Int, val y: Int)
 //│ ╙──       	        ^
 //│ Int | error
 //│ res
@@ -187,7 +193,7 @@ class C {
   constructor(val x: Int, y: Int)
 }
 //│ ╔══[ERROR] Cannot use `val` in constructor parameters
-//│ ║  l.187: 	  constructor(val x: Int, y: Int)
+//│ ║  l.193: 	  constructor(val x: Int, y: Int)
 //│ ╙──       	                  ^
 //│ class C {
 //│   constructor(x: Int, y: Int)
@@ -220,14 +226,14 @@ class C {
 :e
 fun f(val x: Int) = x + 1
 //│ ╔══[ERROR] Cannot use `val` in this position
-//│ ║  l.221: 	fun f(val x: Int) = x + 1
+//│ ║  l.227: 	fun f(val x: Int) = x + 1
 //│ ╙──       	          ^^^^^^
 //│ fun f: (x: Int) -> Int
 
 :pe
 (val x: 1)
 //│ ╔══[PARSE ERROR] Illegal position for field specification
-//│ ║  l.228: 	(val x: 1)
+//│ ║  l.234: 	(val x: 1)
 //│ ╙──       	     ^^^^
 //│ 1
 //│ res
@@ -237,10 +243,10 @@ fun f(val x: Int) = x + 1
 :e
 (val x: 1) =>
 //│ ╔══[PARSE ERROR] Unexpected end of input; an expression was expected here
-//│ ║  l.238: 	(val x: 1) =>
+//│ ║  l.244: 	(val x: 1) =>
 //│ ╙──       	             ^
 //│ ╔══[ERROR] Cannot use `val` in this position
-//│ ║  l.238: 	(val x: 1) =>
+//│ ║  l.244: 	(val x: 1) =>
 //│ ╙──       	     ^^^^
 //│ (x: 1) -> ()
 //│ res
@@ -249,18 +255,18 @@ fun f(val x: Int) = x + 1
 :e
 (val x: 1) => ()
 //│ ╔══[ERROR] Cannot use `val` in this position
-//│ ║  l.250: 	(val x: 1) => ()
+//│ ║  l.256: 	(val x: 1) => ()
 //│ ╙──       	     ^^^^
 //│ (x: 1) -> ()
 //│ res
 //│     = [Function: res]
 
 class D(x: Int) {
-  let x = 1
+  val x = 1
 }
 if D(42) is D(x) then x else 0
 //│ class D(x: Int) {
-//│   let x: 1
+//│   val x: 1
 //│ }
 //│ 0 | 1
 //│ res
@@ -278,11 +284,11 @@ if E(42) is E(x) then x else 0
 //│     = 2
 
 class F(val x: Int) {
-  let x = 3
+  val x = 3
 }
 F(0).x
 //│ class F(x: Int) {
-//│   let x: 3
+//│   val x: 3
 //│ }
 //│ 3
 //│ res

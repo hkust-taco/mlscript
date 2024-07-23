@@ -102,7 +102,7 @@ code"x => ${ test(c => run(c), code"x") }"
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.101: 	code"x => ${ test(c => run(c), code"x") }"
 //│ ║         	             ^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ╟── argument list of type `[forall ?a ?b. ?a -> ?b, Code[?c, ?x]]` does not match type `[?d]`
+//│ ╟── argument list of type `[forall ?a ?b. ?b -> ?a, Code[?c, ?x]]` does not match type `[?d]`
 //│ ║  l.101: 	code"x => ${ test(c => run(c), code"x") }"
 //│ ╙──       	                 ^^^^^^^^^^^^^^^^^^^^^^
 //│ Code[anything -> Int -> Int, nothing]

@@ -1,0 +1,33 @@
+:NewDefs
+
+// FIXME: Pattern matches on superclass instead of subclass
+class Sup() {
+    fun add(num1, num2) = num1+num2
+}
+class Sub1() extends Sup() {}
+class Sub2() extends Sub1() {}
+Sub1().add(3,4)
+Sub2().add(5,6)
+//│ class Sup() {
+//│   fun add: (Int, Int) -> Int
+//│ }
+//│ class Sub1() extends Sup {
+//│   fun add: (Int, Int) -> Int
+//│ }
+//│ class Sub2() extends Sub1, Sup {
+//│   fun add: (Int, Int) -> Int
+//│ }
+//│ Int
+//│ 
+//│ Simpledef:
+//│ {class Sup() {fun add = (num1::0, num2::1,) => +(num1, num2,)}
+//│  class Sub1(): Sup() {}
+//│  class Sub2(): Sub1() {}
+//│  let selRes$16 = Sub1() in case selRes$16 of { Sup => (selRes$16).add(3, 4,) }
+//│  let selRes$32 = Sub2() in case selRes$32 of { Sup => (selRes$32).add(5, 6,) }}
+//│ End simpledef
+//│ 
+//│ res
+//│     = 7
+//│ res
+//│     = 11

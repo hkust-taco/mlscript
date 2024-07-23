@@ -1,0 +1,41 @@
+:NewDefs
+
+// FIXME: correctly lift parameterized inheritance
+:lift
+val c = 5
+class Sup(val a: Int){
+  virtual fun foo = () -> a
+}
+class Sub(b: Int) extends Sup(b+b){
+}
+class Sub2(c: Int) extends Sub(c+c){
+  fun foo = () -> c+c
+}
+(Sub(10)).foo()
+(Sub2(c)).foo()
+//│ Lifted:
+//│ TypingUnit {
+//│   class Sup$1([val a: Int,]) {fun foo = () => (this).a}
+//│   class Sub$2([b: Int,]): Sup$1(+((this).b, (this).b,),) {}
+//│   class Sub2$3([c: Int,]): Sub$2(+(c$1, c$1,),) {fun foo = () => +(c$1, c$1,)}
+//│   let c$1 = 5
+//│   Code(List(('(' Sub$2(10,) ')').foo()))
+//│   Code(List(('(' Sub2$3(c$1,) ')').foo()))
+//│ }
+//│ ╔══[ERROR] identifier not found: this
+//│ ╙──
+//│ ╔══[ERROR] identifier not found: this
+//│ ╙──
+//│ class Sup$1(a: Int) {
+//│   fun foo: () -> Int
+//│ }
+//│ class Sub$2(b: Int) extends Sup$1 {
+//│   fun foo: () -> Int
+//│ }
+//│ class Sub2$3(c: Int) extends Sub$2, Sup$1 {
+//│   fun foo: () -> Int
+//│ }
+//│ val c$1: 5
+//│ Int
+//│ Code generation encountered an error:
+//│   unguarded recursive use of by-value binding c$1

@@ -17,6 +17,9 @@ private final class RefResolver(defs: Map[Str, Defn], classes: Map[Str, ClassInf
       case None => throw IRError(f"unknown class ${cls.name} in ${classes.keySet.mkString(",")}")
       case Some(value) => cls.cls = Left(value)
     case Expr.BasicOp(name, args) =>
+    case Expr.AssignField(assigneee, cls, field, value) => classes.get(cls.name) match
+      case None => throw IRError(f"unknown class ${cls.name} in ${classes.keySet.mkString(",")}")
+      case Some(value) => cls.cls = Left(value)
 
   private def f(x: Pat): Unit = x match
     case Pat.Lit(lit) => 
@@ -29,7 +32,7 @@ private final class RefResolver(defs: Map[Str, Defn], classes: Map[Str, ClassInf
     case Case(scrut, cases, default) => cases foreach { (_, body) => f(body) }; default foreach f
     case LetExpr(name, expr, body) => f(expr); f(body)
     case LetMethodCall(names, cls, method, args, body) => f(body)
-    case LetCall(resultNames, defnref, args, body) =>
+    case LetCall(resultNames, defnref, args, _, body) =>
       defs.get(defnref.name) match
         case Some(defn) => defnref.defn = Left(defn)
         case None => throw IRError(f"unknown function ${defnref.name} in ${defs.keySet.mkString(",")}")

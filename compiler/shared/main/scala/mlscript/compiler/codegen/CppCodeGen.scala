@@ -27,7 +27,6 @@ class CppCodeGen:
   private def mlsNewValue(cls: Str, args: Ls[Expr]) = Expr.Call(Expr.Var(s"_mlsValue::create<$cls>"), args)
   private def mlsIsValueOf(cls: Str, scrut: Expr) = Expr.Call(Expr.Var(s"_mlsValue::isValueOf<$cls>"), Ls(scrut))
   private def mlsIsIntLit(scrut: Expr, lit: mlscript.IntLit) = Expr.Call(Expr.Var("_mlsValue::isIntLit"), Ls(scrut, Expr.IntLit(lit.value)))
-  private def mlsIsCharLit(scrut: Expr, lit: mlscript.CharLit) = Expr.Call(Expr.Var("_mlsValue::isCharLit"), Ls(scrut, Expr.CharLit(lit.value)))
   private def mlsDebugPrint(x: Expr) = Expr.Call(Expr.Var("_mlsValue::print"), Ls(x))
   private def mlsTupleValue(init: Expr) = Expr.Constructor("_mlsValue::tuple", init)
   private def mlsAs(name: Str, cls: Str) = Expr.Var(s"_mlsValue::as<$cls>($name)")
@@ -89,7 +88,6 @@ class CppCodeGen:
     case IExpr.Literal(mlscript.IntLit(x)) => S(mlsIntLit(x))
     case IExpr.Literal(mlscript.DecLit(x)) => S(mlsIntLit(x.toBigInt))
     case IExpr.Literal(mlscript.StrLit(x)) => S(mlsStrLit(x))
-    case IExpr.Literal(mlscript.CharLit(x)) => S(mlsCharLit(x))
     case IExpr.Literal(mlscript.UnitLit(_)) => if reifyUnit then S(mlsUnitValue) else None
   
   private def toExpr(texpr: TrivialExpr)(using ctx: Ctx): Expr = texpr match
@@ -97,7 +95,6 @@ class CppCodeGen:
     case IExpr.Literal(mlscript.IntLit(x)) => mlsIntLit(x)
     case IExpr.Literal(mlscript.DecLit(x)) => mlsIntLit(x.toBigInt)
     case IExpr.Literal(mlscript.StrLit(x)) => mlsStrLit(x)
-    case IExpr.Literal(mlscript.CharLit(x)) => mlsCharLit(x)
     case IExpr.Literal(mlscript.UnitLit(_)) => mlsUnitValue
   
 
@@ -122,10 +119,6 @@ class CppCodeGen:
       case ((Pat.Lit(i @ mlscript.IntLit(_)), arm), nextarm) =>
         val (decls2, stmts2) = codegen(arm, storeInto)(using Ls.empty, Ls.empty[Stmt])
         val stmt = Stmt.If(mlsIsIntLit(Expr.Var(scrutName), i), Stmt.Block(decls2, stmts2), nextarm)
-        S(stmt)
-      case ((Pat.Lit(c @ mlscript.CharLit(_)), arm), nextarm) =>
-        val (decls2, stmts2) = codegen(arm, storeInto)(using Ls.empty, Ls.empty[Stmt])
-        val stmt = Stmt.If(mlsIsCharLit(Expr.Var(scrutName), c), Stmt.Block(decls2, stmts2), nextarm)
         S(stmt)
       case _ => ???
     }
@@ -159,6 +152,8 @@ class CppCodeGen:
     case IExpr.CtorApp(cls, args) => mlsNewValue(cls.name |> mapName, args.map(toExpr))
     case IExpr.Select(name, cls, field) => Expr.Member(mlsAsUnchecked(name |> mapName, cls.name |> mapName), field |> mapName)
     case IExpr.BasicOp(name, args) => codegenOps(name, args)
+    // TODO: Implement this
+    case IExpr.AssignField(assignee, cls, field, value) => ???
 
   private def codegenBuiltin(names: Ls[Name], builtin: Str, args: Ls[TrivialExpr])(using ctx: Ctx): Ls[Stmt] = builtin match
     case "error" => Ls(Stmt.Raw("throw std::runtime_error(\"Error\");"), Stmt.AutoBind(names.map(mapName), mlsNeverValue(names.size)))
@@ -190,7 +185,7 @@ class CppCodeGen:
     //   val call = mlsCall(fn.str |> mapName, args.map(toExpr))
     //   val stmts2 = stmts ++ Ls(Stmt.AutoBind(names.map(mapName), call))
     //   codegen(body, storeInto)(using decls, stmts2)
-    case Node.LetCall(names, defn, args, body) =>
+    case Node.LetCall(names, defn, args, _, body) =>
       val call = Expr.Call(Expr.Var(defn.name |> mapName), args.map(toExpr))
       val stmts2 = stmts ++ Ls(Stmt.AutoBind(names.map(mapName), call))
       codegen(body, storeInto)(using decls, stmts2)
@@ -198,7 +193,7 @@ class CppCodeGen:
       codegenCaseWithIfs(scrut, cases, default, storeInto)
     
   private def codegenDefn(using ctx: Ctx)(defn: Defn): (Def, Decl) = defn match
-    case Defn(id, name, params, resultNum, specialized, body) =>
+    case Defn(id, name, params, resultNum, body, _, _) =>
       val decls = Ls(mlsRetValueDecl)
       val stmts = Ls.empty[Stmt]
       val (decls2, stmts2) = codegen(body, mlsRetValue)(using decls, stmts)

@@ -1,0 +1,31 @@
+:NewDefs
+:AllowRuntimeErrors
+
+fun foo(x) = 
+  (f => f(x))(z => z+1)
+foo(2)
+//│ fun foo: Int -> Int
+//│ Int
+//│ 
+//│ Simpledef:
+//│ {fun foo = (x::0,) => {'(' (f::1,) => f(x,) ')'((z::2,) => +(z, 1,),)}
+//│  foo(2,)}
+//│ End simpledef
+//│ 
+//│ res
+//│     = 3
+
+fun f(x) =
+  (y => f(x+y))(x+1)
+f(1)
+//│ fun f: Int -> nothing
+//│ nothing
+//│ 
+//│ Simpledef:
+//│ {fun f = (x::3,) => {'(' (y::4,) => f(+(x, y,),) ')'(+(x, 1,),)}
+//│  f(1,)}
+//│ End simpledef
+//│ 
+//│ res
+//│ Runtime error:
+//│   RangeError: Maximum call stack size exceeded

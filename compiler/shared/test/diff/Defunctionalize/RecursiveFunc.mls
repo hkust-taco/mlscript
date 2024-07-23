@@ -1,0 +1,36 @@
+:NewDefs
+
+fun fac(n) = 
+  if (n > 1) then fac(n - 1) * n else 1
+fac(5)
+//│ fun fac: Int -> Int
+//│ Int
+//│ 
+//│ Simpledef:
+//│ {fun fac = (n::0,) => {if ('(' >(n, 1,) ')') then *(fac(-(n, 1,),), n,) else 1}
+//│  fac(5,)}
+//│ End simpledef
+//│ 
+//│ res
+//│     = 120
+
+// TODO: Support for specialized pattern matching types
+// In this example, the type of l in count(l) would need to be constrained to
+// object & ~(), which requires implementing neg types, intersections, etc.
+class List(val l: List | Nil | undefined, val hasTail: Bool)  {}
+class Nil(val l: List | Nil | undefined, val hasTail: Bool)  {}
+fun count(lst) =
+  if lst.hasTail then
+    let l = lst.l
+    if l is undefined then 1 else count(l)+1
+  else 0
+count(new List(new List(new Nil(undefined, false), true), true))
+//│ class List(l: List | Nil | (), hasTail: Bool)
+//│ class Nil(l: List | Nil | (), hasTail: Bool)
+//│ fun count: forall 'a. 'a -> Int
+//│ Int
+//│ where
+//│   'a <: {hasTail: Bool, l: Object & 'a & ~() | ()}
+//│ 
+//│ Simpledef:
+//│ /!!!\ Uncaught error: java.lang.Exception: Internal Error: Could not constrain (ProdObj(Some(Var(prim$Unit)),List(),List()),ConsObj(None,List((Var(l),ConsVar(15,13_selres)))))

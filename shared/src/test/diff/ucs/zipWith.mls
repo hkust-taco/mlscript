@@ -2,9 +2,8 @@
 
 
 
-:escape
-let nothing: nothing
-//│ let nothing: nothing
+declare val nothing: nothing
+//│ val nothing: nothing
 //│ nothing
 //│         = <missing implementation>
 
@@ -46,29 +45,29 @@ fun zipWith_wrong(f, xs, ys) =
   then Some(Cons(f(x, y), tail))
   else None
 //│ ╔══[PARSE ERROR] Expected 'then'/'else' clause after 'if'; found operator application followed by newline instead
-//│ ║  l.43: 	  if  xs is Cons(x, xs)
+//│ ║  l.42: 	  if  xs is Cons(x, xs)
 //│ ║        	      ^^^^^^^^^^^^^^^^^
-//│ ║  l.44: 	  and ys is Cons(y, ys)
+//│ ║  l.43: 	  and ys is Cons(y, ys)
 //│ ║        	^^
 //│ ╟── Note: 'if' expression starts here:
-//│ ║  l.43: 	  if  xs is Cons(x, xs)
+//│ ║  l.42: 	  if  xs is Cons(x, xs)
 //│ ╙──      	  ^^
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
-//│ ║  l.44: 	  and ys is Cons(y, ys)
+//│ ║  l.43: 	  and ys is Cons(y, ys)
 //│ ╙──      	  ^^^
 //│ ╔══[PARSE ERROR] Unexpected operator in expression position
-//│ ║  l.45: 	  and zipWith_wrong(f, xs, ys) is Some(tail)
+//│ ║  l.44: 	  and zipWith_wrong(f, xs, ys) is Some(tail)
 //│ ╙──      	  ^^^
 //│ ╔══[PARSE ERROR] Expected an expression; found a 'then'/'else' clause instead
-//│ ║  l.43: 	  if  xs is Cons(x, xs)
+//│ ║  l.42: 	  if  xs is Cons(x, xs)
 //│ ║        	      ^^^^^^^^^^^^^^^^^
-//│ ║  l.44: 	  and ys is Cons(y, ys)
+//│ ║  l.43: 	  and ys is Cons(y, ys)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.45: 	  and zipWith_wrong(f, xs, ys) is Some(tail)
+//│ ║  l.44: 	  and zipWith_wrong(f, xs, ys) is Some(tail)
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.46: 	  then Some(Cons(f(x, y), tail))
+//│ ║  l.45: 	  then Some(Cons(f(x, y), tail))
 //│ ║        	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-//│ ║  l.47: 	  else None
+//│ ║  l.46: 	  else None
 //│ ╙──      	^^^^^^^^^^^
 //│ fun zipWith_wrong: (anything, anything, anything) -> ()
 

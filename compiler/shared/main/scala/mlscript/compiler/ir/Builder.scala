@@ -4,12 +4,13 @@ import mlscript.compiler.optimizer.FreeVarAnalysis
 import mlscript.utils.shorthands._
 import mlscript.utils._
 import mlscript._
-import collection.mutable.ListBuffer
+import mlscript.Message.MessageContext
+import scala.collection.mutable.ListBuffer
 
 final val ops = Set("+", "-", "*", "/", ">", "<", ">=", "<=", "!=", "==")
 final val builtin = Set("builtin")
 
-final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, verbose: Boolean = false):
+final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diagnostic => Unit, verbose: Boolean = false):
   import Node._
   import Expr._
   
@@ -202,7 +203,6 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
         (freeVariables(rhs) -- freeVariables(name)) ++ (freeVariables(body) -- freeVariables(name))
       else
         freeVariables(rhs) ++ (freeVariables(body) -- freeVariables(name))
-    case LetGroup(bindings) => throw IRError("unsupported LetGroup")
     case New(head, body) => throw IRError("unsupported New")
     case NuNew(cls) => freeVariables(cls)
     case Quoted(body) => throw IRError("unsupported Quoted")
@@ -227,12 +227,38 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
     case While(cond, body) => freeVariables(cond) ++ freeVariables(body)
     case With(trm, fields) => freeVariables(trm) ++ freeVariables(fields: Term)
     case Var(name) => Set(name)
-    case CharLit(value) => Set.empty
     case DecLit(value) => Set.empty
     case IntLit(value) => Set.empty
     case StrLit(value) => Set.empty
     case UnitLit(undefinedOrNull) => Set.empty
 
+    private def buildLetCall(using ctx: Ctx)(f: Var, xs: Tup, ann: Option[Term])(k: Node => Node) =        
+      buildResultFromTup(xs) {
+        case Result(args) =>
+          val v = fresh.make
+          ctx.nameCtx.get(f.name) match
+            case None => throw IRError(s"unknown name $f in $ctx")
+            case Some(f2) =>
+              ctx.fnCtx.get(f2.str) match
+                case None => throw IRError(s"unknown function $f2 in $ctx")
+                case Some(dInfo) =>
+                  val args2 = 
+                    if args.size != dInfo.params.size then
+                      args ++ dInfo.freeVars.map(x => Ref(ctx.nameCtx(x))) // it's possible that the free vars as parameters have been filled when do eta expansion
+                    else
+                      args
+                  ann match
+                    case Some(ann @ Var(nme)) =>
+                      if nme === "tailcall" then 
+                        LetCall(List(v), DefnRef(Right(f2.str)), args2, true, v |> ref |> sresult |> k)(f.toLoc).attachTag(tag)
+                      else
+                        if nme === "tailrec" then
+                          raise(ErrorReport(List(msg"@tailrec is for annotating functions; try @tailcall instead" -> ann.toLoc), true, Diagnostic.Compilation))
+                        LetCall(List(v), DefnRef(Right(f2.str)), args2, false, v |> ref |> sresult |> k)(f.toLoc).attachTag(tag) 
+                    case Some(_) => throw IRError("unsupported annotation")
+                    case None => LetCall(List(v), DefnRef(Right(f2.str)), args2, false, v |> ref |> sresult |> k)(f.toLoc).attachTag(tag)
+        case node @ _ => node |> unexpectedNode
+      }
   private def buildResultFromTerm(using ctx: Ctx)(tm: Statement)(k: Node => Node): Node =
     val res = tm match
       case lit: Lit => Literal(lit) |> sresult |> k
@@ -337,24 +363,10 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
               case None => throw IRError(s"unknown type name $clsName in $ctx")
           case node @ _ => node |> unexpectedNode
         }
-      case x @ App(Var(f), xs @ Tup(_)) if ctx.fnCtx.contains(f) || ctx.nameCtx.get(f).fold(false)(x => ctx.fnCtx.contains(x.str)) =>
-        buildResultFromTerm(xs) {
-            case Result(args) =>
-              val v = fresh.make
-              ctx.nameCtx.get(f) match
-                case None => throw IRError(s"unknown name $f in $ctx")
-                case Some(f2) =>
-                  ctx.fnCtx.get(f2.str) match
-                    case None => throw IRError(s"unknown function $f2 in $ctx")
-                    case Some(dInfo) =>
-                      val args2 = 
-                        if args.size != dInfo.params.size then
-                          args ++ dInfo.freeVars.map(x => Ref(ctx.nameCtx(x))) // it's possible that the free vars as parameters have been filled when do eta expansion
-                        else
-                          args
-                      LetCall(List(v), DefnRef(Right(f2.str)), args2, v |> ref |> sresult |> k).attachTag(tag)
-            case node @ _ => node |> unexpectedNode
-        }
+      case App(vf @ Var(f), xs @ Tup(_)) if ctx.fnCtx.contains(f) || ctx.nameCtx.get(f).fold(false)(x => ctx.fnCtx.contains(x.str)) => 
+        buildLetCall(vf, xs, None)(k)
+      case Ann(ann, App(vf @ Var(f), xs @ Tup(_))) if ctx.fnCtx.contains(f) || ctx.nameCtx.get(f).fold(false)(x => ctx.fnCtx.contains(x.str)) =>
+        buildLetCall(vf, xs, Some(ann))(k)
       case App(f, xs @ Tup(_)) =>
         buildResultFromTerm(f) {
           case Result(Ref(f) :: Nil) => buildResultFromTerm(xs) {
@@ -367,6 +379,13 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
           case node @ _ => node |> unexpectedNode
       }
 
+      case Ann(ann @ Var(name), recv) =>
+        if name === "tailcall" then
+          raise(ErrorReport(List(msg"@tailcall may only be used to annotate function calls" -> ann.toLoc), true, Diagnostic.Compilation))
+        else if name === "tailrec" then
+          raise(ErrorReport(List(msg"@tailrec may only be used to annotate functions" -> ann.toLoc), true, Diagnostic.Compilation))
+
+        buildResultFromTerm(recv)(k)
       case Let(false, Var(name), rhs, body) => 
         buildBinding(name, rhs, body)(k)
 
@@ -384,8 +403,9 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
               jp.str,
               params = res :: fvs.map(x => Name(x)),
               resultNum = 1,
-              specialized = None,
-              jpbody
+              jpbody,
+              false,
+              None
             )
             ctx.jpAcc.addOne(jpdef)
             val tru2 = buildResultFromTerm(tru) {
@@ -414,8 +434,9 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
               jp.str,
               params = res :: fvs.map(x => Name(x)),
               resultNum = 1,
-              specialized = None,
               jpbody,
+              false,
+              None,
             )
             ctx.jpAcc.addOne(jpdef)
             var defaultCase: Opt[Node] = None
@@ -431,11 +452,6 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
                     }
                 })
               case L(IfThen(lit @ IntLit(_), rhs)) =>
-                S(Pat.Lit(lit) -> buildResultFromTerm(rhs) {
-                  case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
-                  case node @ _ => node |> unexpectedNode
-                })
-              case L(IfThen(lit @ CharLit(_), rhs)) =>
                 S(Pat.Lit(lit) -> buildResultFromTerm(rhs) {
                   case Result(xs) => Jump(DefnRef(Right(jp.str)), xs ++ fvs.map(x => Ref(Name(x)))).attachTag(tag)
                   case node @ _ => node |> unexpectedNode
@@ -518,8 +534,9 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
         name,
         params = names,
         resultNum = 1,
-        specialized = None,
-        buildResultFromTerm(body) { x => x }
+        body = buildResultFromTerm(body) { x => x },
+        isTailRec = false,
+        loc = nfd.getLoc,
       )
     case fd @ _ => throw IRError("unsupported NuFunDef " + fd.toString())
 
@@ -530,13 +547,20 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
       val names = params map (fresh.make(_))
       val ctx2 =  ctxJoin(ctx, defnInfoPartial.ctx)
       given Ctx = ctx2.copy(nameCtx = ctx2.nameCtx ++ (params zip names))
+      val trAnn = nfd.annotations.find { 
+        case Var("tailrec") => true
+        case ann @ Var("tailcall") =>
+          raise(ErrorReport(List(msg"@tailcall is for annotating function calls; try @tailrec instead" -> ann.toLoc), true, Diagnostic.Compilation))
+          false
+        case _ => false }
       Defn(
         fnUid.make,
         name,
         params = names,
         resultNum = 1,
-        specialized = None,
-        buildResultFromTerm(body) { x => x }
+        buildResultFromTerm(body) { x => x },
+        trAnn.isDefined,
+        trAnn.flatMap(_.toLoc)
       )
     case fd @ _ => throw IRError("unsupported NuFunDef " + fd.toString())
 

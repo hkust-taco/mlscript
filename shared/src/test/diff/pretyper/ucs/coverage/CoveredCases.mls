@@ -1,0 +1,91 @@
+:NewDefs
+
+// This test file contains the cases where latter cases are covered by the former cases.
+
+// B <: A
+class A()
+class B() extends A()
+//│ class A()
+//│ class B() extends A
+
+:w
+fun f(x) = if
+  x is A then 1
+  x is A then 2
+//│ ╔══[WARNING] found a duplicated case
+//│ ║  l.14: 	  x is A then 2
+//│ ║        	       ^
+//│ ╟── there is an identical pattern A
+//│ ║  l.13: 	  x is A then 1
+//│ ╙──      	       ^
+//│ fun f: A -> 1
+
+:w
+:ducs:normalize.result
+fun f(x) = if
+  x is A then 1
+  x is B then 2
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   A*◊ -> 1
+//│ ╔══[WARNING] found a duplicated case
+//│ ║  l.27: 	  x is B then 2
+//│ ║        	       ^
+//│ ╟── the case is covered by pattern A
+//│ ║  l.26: 	  x is A then 1
+//│ ║        	       ^
+//│ ╟── due to the subtyping relation
+//│ ║  l.7: 	class B() extends A()
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^
+//│ fun f: A -> 1
+
+:ducs:normalize.result
+fun f(x) = if
+  x is A and
+    x is B then 1
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   refined A*◊ ->
+//│     case x*‡ of
+//│       B*◊ -> 1
+//│ fun f: B -> 1
+
+// :w
+// FIXME
+:ducs:normalize.result
+fun f(x) = if
+  x is A and
+    x is B then 1
+  x is B then 2
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   refined A*◊ ->
+//│     case x*‡ of
+//│       B*◊ -> 1
+//│ fun f: B -> 1
+
+fun p(x) = true: Bool
+//│ fun p: anything -> Bool
+
+// :w
+// FIXME
+:ducs:normalize.result
+fun f(x) = if
+  x is A and
+    x is B then 1
+    p(x) then 2
+  x is B then 3
+  else 4
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   refined A*◊ ->
+//│     case x*‡ of
+//│       B*◊ -> 1
+//│       _ ->
+//│         let ucs$test$0*† = p(x,) : Bool
+//│         case ucs$test$0*† of
+//│           true*† -> 2
+//│           _ -> 4
+//│   _ -> 4
+//│ fun f: Object -> (1 | 2 | 4)
+

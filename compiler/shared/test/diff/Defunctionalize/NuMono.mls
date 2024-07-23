@@ -1,0 +1,74 @@
+:NewDefs
+
+// old "new" syntax
+//class A() {
+//    val num() = 0
+//}
+//class B() {
+//    val num() = 1
+//}
+//fun foo(num: Int) = if false then new A() else new B()
+//foo(10).num()
+
+
+class A() {
+    val num() = 0
+}
+class B() {
+    val num() = 1
+}
+fun foo(num: Int) = if num > 5 then A() else B()
+foo(10).num()
+//│ class A() {
+//│   val num: () -> 0
+//│ }
+//│ class B() {
+//│   val num: () -> 1
+//│ }
+//│ fun foo: (num: Int) -> (A | B)
+//│ 0 | 1
+//│ 
+//│ Simpledef:
+//│ {class A() {let num = () => 0}
+//│  class B() {let num = () => 1}
+//│  fun foo = (num: Int,) => if (>(num, 5,)) then A() else B()
+//│  let selRes$42 = foo(10,) in case selRes$42 of { B => (selRes$42).num()
+//│  A => (selRes$42).num() }}
+//│ End simpledef
+//│ 
+//│ res
+//│     = 0
+
+
+class A(val num1: Int, val num2: Int) {
+    fun foo() = num1-num2
+}
+class B(val num1: Int, val num2: Int) {
+    fun foo() = num1+num2
+}
+fun foo(num: Int) = if num > 5 then A(10,6) else B(8,7)
+foo(10).foo()
+foo(0).foo()
+//│ class A(num1: Int, num2: Int) {
+//│   fun foo: () -> Int
+//│ }
+//│ class B(num1: Int, num2: Int) {
+//│   fun foo: () -> Int
+//│ }
+//│ fun foo: (num: Int) -> (A | B)
+//│ Int
+//│ 
+//│ Simpledef:
+//│ {class A(val num1: Int, val num2: Int,) {fun foo = () => -(num1, num2,)}
+//│  class B(val num1: Int, val num2: Int,) {fun foo = () => +(num1, num2,)}
+//│  fun foo = (num: Int,) => if (>(num, 5,)) then A(10, 6,) else B(8, 7,)
+//│  let selRes$70 = foo(10,) in case selRes$70 of { B => (selRes$70).foo()
+//│  A => (selRes$70).foo() }
+//│  let selRes$84 = foo(0,) in case selRes$84 of { B => (selRes$84).foo()
+//│  A => (selRes$84).foo() }}
+//│ End simpledef
+//│ 
+//│ res
+//│     = 4
+//│ res
+//│     = 15

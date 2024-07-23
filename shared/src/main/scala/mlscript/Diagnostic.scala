@@ -19,6 +19,8 @@ object Diagnostic {
   sealed abstract class Source
   case object Lexing      extends Source
   case object Parsing     extends Source
+  case object PreTyping   extends Source
+  case object Desugaring  extends Source
   case object Typing      extends Source
   case object Compilation extends Source
   case object Runtime     extends Source

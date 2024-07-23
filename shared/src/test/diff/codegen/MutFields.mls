@@ -173,7 +173,7 @@ t.x
 
 class Cont
 class MySumCont extends Cont {
-  let init(n) = n + 1
+  val init(n) = n + 1
   mut val pc = init(0)
 }
 //│ class Cont {
@@ -181,12 +181,12 @@ class MySumCont extends Cont {
 //│ }
 //│ class MySumCont extends Cont {
 //│   constructor()
-//│   let init: Int -> Int
+//│   val init: Int -> Int
 //│   mut val pc: Int
 //│ }
 
 fun f(b) = if b then 0 else new MySumCont
-//│ fun f: Object -> (0 | MySumCont)
+//│ fun f: Bool -> (0 | MySumCont)
 
 :js
 if f(false) is MySumCont then 1 else 2
@@ -195,16 +195,15 @@ if f(false) is MySumCont then 1 else 2
 //│ class TypingUnit14 {}
 //│ const typing_unit14 = new TypingUnit14;
 //│ // Query 1
-//│ res = ((tmp0) => tmp0 instanceof MySumCont ? 1 : 2)(f(false));
+//│ res = ((ucs$scrut$0) => ucs$scrut$0 instanceof MySumCont ? 1 : 2)(f(false));
 //│ // End of generated code
 //│ res
 //│     = 1
 
-// * FIXME reject: `let`is not accessible here
 new MySumCont().init
 //│ Int -> Int
 //│ res
-//│     = undefined
+//│     = [Function (anonymous)]
 
 
 :pe
@@ -212,10 +211,10 @@ new MySumCont().init
 :ng
 class Test(mut val x: Int)
 //│ ╔══[PARSE ERROR] Unexpected 'val' keyword in expression position
-//│ ║  l.213: 	class Test(mut val x: Int)
+//│ ║  l.212: 	class Test(mut val x: Int)
 //│ ╙──       	               ^^^
 //│ ╔══[ERROR] Unsupported field specification
-//│ ║  l.213: 	class Test(mut val x: Int)
+//│ ║  l.212: 	class Test(mut val x: Int)
 //│ ╙──       	                   ^
 //│ class Test()
 
@@ -228,13 +227,13 @@ module Foo { val x = 0 }
 :e
 fun test = set Foo.x = 1
 //│ ╔══[ERROR] Type mismatch in assignment:
-//│ ║  l.229: 	fun test = set Foo.x = 1
+//│ ║  l.228: 	fun test = set Foo.x = 1
 //│ ║         	           ^^^^^^^^^^^^^
 //│ ╟── member of type `0` is not mutable
-//│ ║  l.223: 	module Foo { val x = 0 }
+//│ ║  l.222: 	module Foo { val x = 0 }
 //│ ║         	                 ^^^^^
 //│ ╟── but it flows into assigned field with expected type `?x`
-//│ ║  l.229: 	fun test = set Foo.x = 1
+//│ ║  l.228: 	fun test = set Foo.x = 1
 //│ ╙──       	                  ^^
 //│ fun test: ()
 

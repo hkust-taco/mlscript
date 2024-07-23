@@ -1,0 +1,30 @@
+:NewDefs
+
+:e // FIXME: Incorrect lifting
+:lift
+fun test(a) =
+  let f(x) = a + x
+  f
+test(6)(4)
+//│ Lifted:
+//│ TypingUnit {
+//│   let f$2 = (x, a,) => +(a, x,)
+//│   fun test$1 = (a,) => {f$2}
+//│   Code(List(test$1(6,)(4,)))
+//│ }
+//│ ╔══[ERROR] Type mismatch in application:
+//│ ║  l.8: 	test(6)(4)
+//│ ║       	     ^^^^
+//│ ╟── argument of type `[4]` does not match type `[?a, ?b]`
+//│ ║  l.8: 	test(6)(4)
+//│ ║       	        ^
+//│ ╟── Note: constraint arises from tuple literal:
+//│ ║  l.6: 	  let f(x) = a + x
+//│ ╙──     	        ^^^^^^
+//│ val f$2: (Int, Int) -> Int
+//│ fun test$1: anything -> (Int, Int) -> Int
+//│ Int | error
+//│ f$2
+//│     = [Function: f$2]
+//│ res
+//│     = NaN

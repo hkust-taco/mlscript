@@ -1,4 +1,3 @@
-:NewParser
 :NewDefs
 
 :js
@@ -87,10 +86,7 @@ mixin EvalBase {
 //│         const qualifier1 = this;
 //│         return ((() => {
 //│           let a;
-//│           return (a = e, a instanceof Lit.class ? (([n]) => n)(Lit.unapply(e)) : a instanceof Add.class ? (([
-//│             l,
-//│             r
-//│           ]) => qualifier1.eval(l) + qualifier1.eval(r))(Add.unapply(e)) : (() => {
+//│           return (a = e, a instanceof Lit.class ? ((ucs$args_e$Lit) => ((n) => n)(ucs$args_e$Lit[0]))(Lit.unapply(e)) : a instanceof Add.class ? ((ucs$args_e$Add) => ((l) => ((r) => qualifier1.eval(l) + qualifier1.eval(r))(ucs$args_e$Add[1]))(ucs$args_e$Add[0]))(Add.unapply(e)) : (() => {
 //│             throw new Error("non-exhaustive case expression");
 //│           })());
 //│         })());
@@ -158,7 +154,7 @@ mixin EvalNeg {
 //│       eval(e) {
 //│         const qualifier1 = this;
 //│         return ((() => {
-//│           return e instanceof Neg.class ? (([d]) => 0 - qualifier1.eval(d))(Neg.unapply(e)) : super.eval(e);
+//│           return e instanceof Neg.class ? ((ucs$args_e$Neg) => ((d) => 0 - qualifier1.eval(d))(ucs$args_e$Neg[0]))(Neg.unapply(e)) : super.eval(e);
 //│         })());
 //│       }
 //│     });
@@ -192,7 +188,7 @@ mixin EvalNegNeg {
 //│       eval(e) {
 //│         const qualifier1 = this;
 //│         return ((() => {
-//│           return e instanceof Neg.class ? (([tmp0]) => tmp0 instanceof Neg.class ? (([d]) => qualifier1.eval(d))(Neg.unapply(tmp0)) : super.eval(e))(Neg.unapply(e)) : super.eval(e);
+//│           return e instanceof Neg.class ? ((ucs$args_e$Neg) => ((e$Neg_0) => e$Neg_0 instanceof Neg.class ? ((ucs$args_e$Neg_0$Neg) => ((d) => qualifier1.eval(d))(ucs$args_e$Neg_0$Neg[0]))(Neg.unapply(e$Neg_0)) : super.eval(e))(ucs$args_e$Neg[0]))(Neg.unapply(e)) : super.eval(e);
 //│         })());
 //│       }
 //│     });
@@ -242,7 +238,7 @@ TestLang.eval(mk(0))
 //│ fun mk: forall 'a. Object -> (Lit | 'a)
 //│ Int
 //│ where
-//│   'a :> Neg[Lit | 'a] | Add[Lit | 'a]
+//│   'a :> Add[Lit | 'a] | Neg[Lit | 'a]
 //│ res
 //│     = 0
 
@@ -372,7 +368,7 @@ mixin Base {
   fun x = y
 }
 //│ ╔══[ERROR] identifier not found: y
-//│ ║  l.372: 	  fun x = y
+//│ ║  l.368: 	  fun x = y
 //│ ╙──       	          ^
 //│ mixin Base() {
 //│   fun x: error

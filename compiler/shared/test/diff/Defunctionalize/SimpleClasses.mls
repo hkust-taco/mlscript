@@ -1,0 +1,41 @@
+:NewDefs
+
+class Foo(val x: Int){
+  fun bar(y) = x+y
+  fun boo(z) = bar(z)+x
+}
+(Foo(1)).boo(2)
+//│ class Foo(x: Int) {
+//│   fun bar: Int -> Int
+//│   fun boo: Int -> Int
+//│ }
+//│ Int
+//│ 
+//│ Simpledef:
+//│ {class Foo(val x: Int,) {fun bar = (y::0,) => +(x, y,)
+//│  fun boo = (z::1,) => +(bar(z,), x,)}
+//│  let selRes$38 = '(' Foo(1,) ')' in case selRes$38 of { Foo => (selRes$38).boo(2,) }}
+//│ End simpledef
+//│ 
+//│ res
+//│     = 4
+
+class OneInt(val a: Int){
+  fun fac: () -> Int
+  fun fac = () ->
+    if(a > 0) then (OneInt(a - 1)).fac() else 1 
+}
+(OneInt(10)).fac()
+//│ class OneInt(a: Int) {
+//│   fun fac: () -> Int
+//│ }
+//│ Int
+//│ 
+//│ Simpledef:
+//│ {class OneInt(val a: Int,) {fun fac: () -> Int
+//│  fun fac = () => {if ('(' >(a, 0,) ')') then let selRes$20 = '(' OneInt(-(a, 1,),) ')' in case selRes$20 of { OneInt => (selRes$20).fac() } else 1}}
+//│  let selRes$50 = '(' OneInt(10,) ')' in case selRes$50 of { OneInt => (selRes$50).fac() }}
+//│ End simpledef
+//│ 
+//│ res
+//│     = 1

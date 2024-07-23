@@ -35,9 +35,11 @@ run(checkedDiv)
 //│     = Quoted:
 //│       (x_2) =>
 //│         (y_0) =>
-//│           (x_2 / match (y_0 == 0):
-//│             case true => error
-//│             _ => y_0))
+//│           (x_2 / let ucs$test$0_0 =
+//│             (y_0 == 0)
+//│             in match ucs$test$0_0:
+//│               case true => error
+//│               _ => y_0))
 //│       undefined
 
 fun show: Code[anything, anything] -> Str = _ => "debug"
@@ -74,10 +76,10 @@ fun bind(rhs, k) = `let x = rhs `in k(x)
 
 fun bind(rhs, k: forall 'g : Code['a, 'g] -> Code['b, 'c | 'g]) =
   `let x = rhs `in k(x)
-//│ fun bind: forall 'a 'c 'b. (Code['a, 'c], k: forall 'g. Code['a, 'g] -> Code['b, 'g | 'c]) -> Code['b, 'c]
+//│ fun bind: forall 'a 'c 'b. (Code['a, 'c], k: forall 'g. Code['a, 'g] -> Code['b, 'c | 'g]) -> Code['b, 'c]
 
 bind : forall 'a, 'c, 'g: (Code['a, 'g], k: forall 'c: Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
-//│ forall 'g 'a. (Code['a, 'g], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
+//│ forall 'a 'g. (Code['a, 'g], k: forall 'c. Code['a, 'c] -> Code['b, 'c | 'g]) -> Code['b, 'g]
 //│ res
 //│     = [Function: bind1]
 

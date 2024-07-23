@@ -17,6 +17,10 @@ private final class DefnRefInSet(defs: Set[Defn], classes: Set[ClassInfo]):
       case _ =>
     }
     case BasicOp(name, args) =>
+    case AssignField(assignee, clsref, _, value) => clsref.getClass match {
+      case Some(real_class) => if (!classes.exists(_ eq real_class)) throw IRError("ref is not in the set")
+      case _ =>
+    }
   
   private def f(x: Node): Unit = x match
     case Result(res) => 
@@ -24,7 +28,7 @@ private final class DefnRefInSet(defs: Set[Defn], classes: Set[ClassInfo]):
     case Case(scrut, cases, default) => cases foreach { (_, body) => f(body) }; default foreach f
     case LetExpr(name, expr, body) => f(body)
     case LetMethodCall(names, cls, method, args, body) => f(body)
-    case LetCall(res, defnref, args, body) =>
+    case LetCall(res, defnref, args, _, body) =>
       defnref.getDefn match {
         case Some(real_defn) => if (!defs.exists(_ eq real_defn)) throw IRError("ref is not in the set")
         case _ =>

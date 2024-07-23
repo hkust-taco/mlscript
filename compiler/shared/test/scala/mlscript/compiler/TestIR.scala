@@ -7,8 +7,8 @@ import scala.collection.mutable.StringBuilder
 import mlscript.{DiffTests, ModeType, TypingUnit}
 import mlscript.compiler.ir.{Fresh, FreshInt, Builder}
 import mlscript.compiler.codegen.cpp.{CppCodeGen, CppCompilerHost}
-import mlscript.compiler.optimizer.OptimizingError
 import mlscript.Diagnostic
+import mlscript.compiler.optimizer.TailRecOpt
 
 class IRDiffTestCompiler extends DiffTests {
   import IRDiffTestCompiler.*
@@ -20,11 +20,20 @@ class IRDiffTestCompiler extends DiffTests {
     val outputBuilder = StringBuilder()
     if (mode.useIR || mode.irVerbose)
       try
-        output("\n\nIR:")
         val (fresh, freshFnId, freshClassId, freshTag) = (Fresh(), FreshInt(), FreshInt(), FreshInt())
-        val gb = Builder(fresh, freshFnId, freshClassId, freshTag, mode.irVerbose)
-        val graph = gb.buildGraph(unit)
-        output(graph.toString())
+        val gb = Builder(fresh, freshFnId, freshClassId, freshTag, raise, mode.irVerbose)
+        var graph = gb.buildGraph(unit)
+
+        if mode.noTailRecOpt then
+          output("\n\nIR:")
+          output(graph.toString())
+        else
+          val tailRecOpt = new TailRecOpt(freshFnId, freshClassId, freshTag, raise)
+          val (g, comps) = tailRecOpt.run_debug(graph)
+          output("\n\nStrongly Connected Tail Calls:")
+          output(comps.toString)
+          graph = g
+          output(graph.toString())
         output("\nPromoted:")
         output(graph.toString())
         var interp_result: Opt[Str] = None
@@ -50,38 +59,7 @@ class IRDiffTestCompiler extends DiffTests {
             else
               output("\n")
               cppHost.compileAndRun(cpp.toDocument.print, output)
-
-        // if (mode.irOpt)
-        //   val go = Optimizer(fresh, freshFnId, freshClassId, freshTag, mode.irVerbose)
-        //   var changed = true
-        //   var g = graph
-        //   var fuel = mode.irOptFuel
-        //   while (changed && fuel > 0)
-        //     val new_g = go.optimize(g)
-        //     changed = g != new_g
-        //     g = new_g
-        //     if (changed)
-        //       output("\nOptimized:")
-        //       output(new_g.toString())
-        //     fuel -= 1
-
-        //   if (mode.interpIR)
-        //     output("\nInterpreted:")
-        //     val ir = Interpreter(mode.irVerbose).interpret(g)
-        //     output(ir)
-        //     if ir != interp_result.get then
-        //       throw optimizer.OptimizingError("Interpreted result changed after optimization")
-        //     output("")
-
-        //   output(s"\nFuel used: ${mode.irOptFuel - fuel}")
-
-        //   if (fuel == 0)
-        //     throw optimizer.OptimizingError("Fuel exhausted")
-
       catch
-        case err: OptimizingError =>
-          output(s"\nOpt Failed: ${err.getMessage()}")
-          output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))
         case err: Exception =>
           output(s"\nIR Processing Failed: ${err.getMessage()}")
           output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))

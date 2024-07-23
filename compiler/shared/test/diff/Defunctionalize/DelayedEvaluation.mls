@@ -1,0 +1,50 @@
+:NewDefs
+
+class G(val num: Int) {
+    val x = 
+        log("once on construction")
+        num+2
+    val y() =
+        log("once every call")
+        num+2
+}
+val g = new G(6)
+g.y()
+g.x
+g.y()
+g.x
+//│ class G(num: Int) {
+//│   val x: Int
+//│   val y: () -> Int
+//│ }
+//│ val g: G
+//│ Int
+//│ 
+//│ Simpledef:
+//│ {class G(val num: Int,) {let x = {log("once on construction",)
+//│  +(num, 2,)}
+//│  let y = () => {log("once every call",)
+//│  +(num, 2,)}}
+//│  let g = (new G)(6,)
+//│  let selRes$56 = g in case selRes$56 of { G => (selRes$56).y() }
+//│  let selRes$64 = g in case selRes$64 of { G => (selRes$64).x }
+//│  let selRes$68 = g in case selRes$68 of { G => (selRes$68).y() }
+//│  let selRes$76 = g in case selRes$76 of { G => (selRes$76).x }}
+//│ End simpledef
+//│ 
+//│ g
+//│   = G {}
+//│ // Output
+//│ once on construction
+//│ res
+//│     = 8
+//│ // Output
+//│ once every call
+//│ res
+//│     = 8
+//│ res
+//│     = 8
+//│ // Output
+//│ once every call
+//│ res
+//│     = 8

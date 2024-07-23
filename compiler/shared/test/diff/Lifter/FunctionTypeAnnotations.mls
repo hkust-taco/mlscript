@@ -1,0 +1,18 @@
+:NewDefs 
+:ParseOnly
+
+:lift
+fun foo(x) =
+    (y) => x+y
+foo(1)(2)
+foo(2)(2)
+//│ |#fun| |foo|(|x|)| |#=|→|(|y|)| |#=>| |x|+|y|←|↵|foo|(|1|)|(|2|)|↵|foo|(|2|)|(|2|)|
+//│ Parsed: {fun foo = (x,) => {('(' y ')',) => +(x, y,)}; foo(1,)(2,); foo(2,)(2,)}
+//│ Lifted:
+//│ TypingUnit {
+//│   class Lambda1$2$1([x,]) {fun apply = ('(' y ')',) => +((this).x, y,)}
+//│   fun foo$1 = (x,) => {{Lambda1$2$1(x,)}}
+//│   Code(List(foo$1(1,)(2,)))
+//│   Code(List(foo$1(2,)(2,)))
+//│ }
+//│ 
