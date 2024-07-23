@@ -97,7 +97,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$12) = builtin(println,x$11) in -- #70
+//│ let x$12 = Callable.apply2(builtin,println,x$11) in -- #70
 //│ x$12 -- #69
 //│ )),
 //│ ClassInfo(10, Fn2, [a], parents: Callable, methods:
@@ -106,8 +106,8 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$14) = builtin(println,a) in -- #86
-//│ let** (x$15) = builtin(println,x$13) in -- #85
+//│ let x$14 = Callable.apply2(builtin,println,a) in -- #86
+//│ let x$15 = Callable.apply2(builtin,println,x$13) in -- #85
 //│ x$15 -- #84
 //│ )),
 //│ ClassInfo(11, Demo, [n], parents: , methods:
@@ -123,7 +123,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$1) = fn$0(1) in -- #8
+//│ let x$1 = Callable.apply1(fn$0,1) in -- #8
 //│ x$1 -- #7
 //│ )
 //│ Def(1, main, [], [],
@@ -138,7 +138,7 @@ main()
 //│ let* (x$6) = f(x$4) in -- #52
 //│ let x$7 = Fn2(4) in -- #51
 //│ let x$8 = Fn2.apply1(x$7,5) in -- #50
-//│ let** (x$9) = x$7(6) in -- #49
+//│ let x$9 = Callable.apply1(x$7,6) in -- #49
 //│ let* (x$10) = f(x$7) in -- #48
 //│ x$10 -- #47
 //│ )
@@ -212,7 +212,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$12) = builtin(println,x$11) in -- #70
+//│ let x$12 = Callable.apply2(builtin,println,x$11) in -- #70
 //│ x$12 -- #69
 //│ )),
 //│ ClassInfo(10, Fn2, [a], parents: Callable, methods:
@@ -221,8 +221,8 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$14) = builtin(println,a) in -- #86
-//│ let** (x$15) = builtin(println,x$13) in -- #85
+//│ let x$14 = Callable.apply2(builtin,println,a) in -- #86
+//│ let x$15 = Callable.apply2(builtin,println,x$13) in -- #85
 //│ x$15 -- #84
 //│ )),
 //│ ClassInfo(11, Demo, [n], parents: , methods:
@@ -238,7 +238,7 @@ main()
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$1) = fn$0(1) in -- #8
+//│ let x$1 = Callable.apply1(fn$0,1) in -- #8
 //│ x$1 -- #7
 //│ )
 //│ Def(1, main, [], [],
@@ -253,7 +253,7 @@ main()
 //│ let* (x$6) = f(x$4) in -- #52
 //│ let x$7 = Fn2(4) in -- #51
 //│ let x$8 = Fn2.apply1(x$7,5) in -- #50
-//│ let** (x$9) = x$7(6) in -- #49
+//│ let x$9 = Callable.apply1(x$7,6) in -- #49
 //│ let* (x$10) = f(x$7) in -- #48
 //│ x$10 -- #47
 //│ )

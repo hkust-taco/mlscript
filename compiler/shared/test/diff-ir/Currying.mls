@@ -135,11 +135,11 @@ main()
 //│ Rec: None,
 //│ 1, 
 //│ let* (x$6) = add2c(1) in -- #42
-//│ let** (x$7) = x$6(2) in -- #41
+//│ let x$7 = Callable.apply1(x$6,2) in -- #41
 //│ let* (x$8) = add2(1,2) in -- #40
 //│ let* (x$9) = add3c(1) in -- #39
-//│ let** (x$10) = x$9(2) in -- #38
-//│ let** (x$11) = x$10(3) in -- #37
+//│ let x$10 = Callable.apply1(x$9,2) in -- #38
+//│ let x$11 = Callable.apply1(x$10,3) in -- #37
 //│ x$11 -- #36
 //│ )
 //│ },
@@ -264,11 +264,11 @@ main()
 //│ Rec: None,
 //│ 1, 
 //│ let* (x$6) = add2c(1) in -- #42
-//│ let** (x$7) = x$6(2) in -- #41
+//│ let x$7 = Callable.apply1(x$6,2) in -- #41
 //│ let* (x$8) = add2(1,2) in -- #40
 //│ let* (x$9) = add3c(1) in -- #39
-//│ let** (x$10) = x$9(2) in -- #38
-//│ let** (x$11) = x$10(3) in -- #37
+//│ let x$10 = Callable.apply1(x$9,2) in -- #38
+//│ let x$11 = Callable.apply1(x$10,3) in -- #37
 //│ x$11 -- #36
 //│ )
 //│ },

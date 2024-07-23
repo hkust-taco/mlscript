@@ -174,17 +174,22 @@ class CppCodeGen:
     case Node.LetExpr(name, expr, body) =>
       val stmts2 = stmts ++ Ls(Stmt.AutoBind(Ls(name |> mapName), codegen(expr)))
       codegen(body, storeInto)(using decls, stmts2)
+    case Node.LetMethodCall(names, cls, method, IExpr.Ref(Name("builtin")) :: args, body) =>
+      val stmts2 = stmts ++ codegenBuiltin(names, args.head.toString.replace("\"", ""), args.tail)
+      codegen(body, storeInto)(using decls, stmts2)
     case Node.LetMethodCall(names, cls, method, args, body) =>
       val call = mlsMethodCall(cls, method.str |> mapName, args.map(toExpr))
       val stmts2 = stmts ++ Ls(Stmt.AutoBind(names.map(mapName), call))
       codegen(body, storeInto)(using decls, stmts2)
-    case Node.LetApply(names, fn, args, body) if fn.str == "builtin" =>
-      val stmts2 = stmts ++ codegenBuiltin(names, args.head.toString.replace("\"", ""), args.tail)
-      codegen(body, storeInto)(using decls, stmts2)
-    case Node.LetApply(names, fn, args, body) =>
-      val call = mlsCall(fn.str |> mapName, args.map(toExpr))
-      val stmts2 = stmts ++ Ls(Stmt.AutoBind(names.map(mapName), call))
-      codegen(body, storeInto)(using decls, stmts2)
+    // Use method calls instead of apply
+    // 
+    // case Node.LetApply(names, fn, args, body) if fn.str == "builtin" =>
+    //   val stmts2 = stmts ++ codegenBuiltin(names, args.head.toString.replace("\"", ""), args.tail)
+    //   codegen(body, storeInto)(using decls, stmts2)
+    // case Node.LetApply(names, fn, args, body) =>
+    //   val call = mlsCall(fn.str |> mapName, args.map(toExpr))
+    //   val stmts2 = stmts ++ Ls(Stmt.AutoBind(names.map(mapName), call))
+    //   codegen(body, storeInto)(using decls, stmts2)
     case Node.LetCall(names, defn, args, body) =>
       val call = Expr.Call(Expr.Var(defn.name |> mapName), args.map(toExpr))
       val stmts2 = stmts ++ Ls(Stmt.AutoBind(names.map(mapName), call))

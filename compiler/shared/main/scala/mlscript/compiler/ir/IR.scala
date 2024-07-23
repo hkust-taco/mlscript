@@ -150,8 +150,8 @@ enum Expr:
   def locMarker: LocMarker = this match
     case Ref(name) => LocMarker.MRef(name.str)
     case Literal(lit) => LocMarker.MLit(lit)
-    case CtorApp(cls, args) => LocMarker.MCtorApp(cls.expectClass, args.map(_.toExpr.locMarker))
-    case Select(name, cls, field) => LocMarker.MSelect(name.str, cls.expectClass, field)
+    case CtorApp(cls, args) => LocMarker.MCtorApp(cls, args.map(_.toExpr.locMarker))
+    case Select(name, cls, field) => LocMarker.MSelect(name.str, cls, field)
     case BasicOp(name, args) => LocMarker.MBasicOp(name, args.map(_.toExpr.locMarker))
 
 enum Pat:
@@ -178,7 +178,9 @@ enum Node:
   // Intermediate forms:
   case LetExpr(name: Name, expr: Expr, body: Node)
   case LetMethodCall(names: Ls[Name], cls: ClassRef, method: Name, args: Ls[TrivialExpr], body: Node)
-  case LetApply(names: Ls[Name], fn: Name, args: Ls[TrivialExpr], body: Node)
+  // Deprecated:
+  //   LetApply(names, fn, args, body) => LetMethodCall(names, ClassRef(R("Callable")), Name("apply" + args.length), (Ref(fn): TrivialExpr) :: args, body)
+  // case LetApply(names: Ls[Name], fn: Name, args: Ls[TrivialExpr], body: Node)
   case LetCall(names: Ls[Name], defn: DefnRef, args: Ls[TrivialExpr], body: Node)
 
   var tag = DefnTag(-1)
@@ -203,7 +205,6 @@ enum Node:
     case Case(scrut, cases, default) => Case(f(scrut), cases.map { (cls, arm) => (cls, arm.mapName(f)) }, default.map(_.mapName(f)))
     case LetExpr(name, expr, body) => LetExpr(f(name), expr.mapName(f), body.mapName(f))
     case LetMethodCall(names, cls, method, args, body) => LetMethodCall(names.map(f), cls, f(method), args.map(_.mapNameOfTrivialExpr(f)), body.mapName(f))
-    case LetApply(names, fn, args, body) => LetApply(names.map(f), f(fn), args.map(_.mapNameOfTrivialExpr(f)), body.mapName(f))
     case LetCall(names, defn, args, body) => LetCall(names.map(f), defn, args.map(_.mapNameOfTrivialExpr(f)), body.mapName(f))  
   
   def copy(ctx: Map[Str, Name]): Node = this match
@@ -216,10 +217,6 @@ enum Node:
     case LetMethodCall(names, cls, method, args, body) =>
       val names_copy = names.map(_.copy)
       LetMethodCall(names_copy, cls, method.copy, args.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))), body.copy(ctx ++ names_copy.map(x => x.str -> x)))
-    case LetApply(names, fn, args, body) =>
-      val names_copy = names.map(_.copy)
-      val fn_copy = fn.copy
-      LetApply(names_copy, fn_copy, args.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))), body.copy(ctx ++ names_copy.map(x => x.str -> x)))
     case LetCall(names, defn, args, body) =>
       val names_copy = names.map(_.copy)
       LetCall(names_copy, defn, args.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))), body.copy(ctx ++ names_copy.map(x => x.str -> x)))
@@ -272,20 +269,6 @@ enum Node:
           <:> raw("in") 
           <:> raw(s"-- $tag"),
         body.toDocument)
-    case LetApply(xs, f, args, body) =>
-      stack(
-        raw("let**")
-          <:> raw("(")
-          <#> raw(xs.map(_.toString).mkString(","))
-          <#> raw(")")
-          <:> raw("=")
-          <:> raw(f.toString)
-          <#> raw("(")
-          <#> raw(args.map{ x => x.toString }.mkString(","))
-          <#> raw(")")
-          <:> raw("in") 
-          <:> raw(s"-- $tag"),
-        body.toDocument)
     case LetCall(xs, defn, args, body) => 
       stack(
         raw("let*")
@@ -307,8 +290,7 @@ enum Node:
       case Jump(defn, args) => LocMarker.MJump(defn.name, args.map(_.toExpr.locMarker))
       case Case(scrut, cases, default) => LocMarker.MCase(scrut.str, cases.map(_._1), default.isDefined)
       case LetExpr(name, expr, _) => LocMarker.MLetExpr(name.str, expr.locMarker)
-      case LetMethodCall(names, cls, method, args, _) => LocMarker.MLetApply(names.map(_.str), method.str, args.map(_.toExpr.locMarker))
-      case LetApply(names, fn, args, _) => LocMarker.MLetApply(names.map(_.str), fn.str, args.map(_.toExpr.locMarker))
+      case LetMethodCall(names, cls, method, args, _) => LocMarker.MLetMethodCall(names.map(_.str), cls, method.str, args.map(_.toExpr.locMarker))
       case LetCall(names, defn, args, _) => LocMarker.MLetCall(names.map(_.str), defn.name, args.map(_.toExpr.locMarker))
     marker.tag = this.tag
     marker
@@ -331,7 +313,6 @@ object DefDfs:
           acc2.foldLeft(acc)((acc, x) => find(x)(using acc))
         case LetExpr(name, expr, body) => find(body)
         case LetMethodCall(names, cls, method, args, body) => find(body)
-        case LetApply(names, fn, args, body) => find(body)
         case LetCall(names, defn, args, body) => find(body)(using defn.expectDefn :: acc)
       
     def find(defn: Defn)(using acc: Ls[Defn]): Ls[Defn] = find(defn.body)
@@ -344,7 +325,6 @@ object DefDfs:
           acc2.foldLeft(acc)((acc, x) => findNames(x)(using acc))
         case LetExpr(name, expr, body) => findNames(body)
         case LetMethodCall(names, cls, method, args, body) => findNames(body)
-        case LetApply(names, fn, args, body) => findNames(body)
         case LetCall(names, defn, args, body) => findNames(body)(using defn.name :: acc)
       
     def findNames(defn: Defn)(using acc: Ls[Str]): Ls[Str] = findNames(defn.body)
@@ -493,15 +473,14 @@ case class DefnLocMarker(val defn: Str, val marker: LocMarker):
 enum LocMarker:
   case MRef(name: Str)
   case MLit(lit: Lit)
-  case MCtorApp(name: ClassInfo, args: Ls[LocMarker])
-  case MSelect(name: Str, cls: ClassInfo, field: Str)
+  case MCtorApp(name: ClassRef, args: Ls[LocMarker])
+  case MSelect(name: Str, cls: ClassRef, field: Str)
   case MBasicOp(name: Str, args: Ls[LocMarker])
   case MResult(res: Ls[LocMarker])
   case MJump(name: Str, args: Ls[LocMarker])
   case MCase(scrut: Str, cases: Ls[Pat], default: Bool)
   case MLetExpr(name: Str, expr: LocMarker)
-  case MLetMethodCall(names: Ls[Str], cls: ClassInfo, method: Str, args: Ls[LocMarker])
-  case MLetApply(names: Ls[Str], fn: Str, args: Ls[LocMarker])
+  case MLetMethodCall(names: Ls[Str], cls: ClassRef, method: Str, args: Ls[LocMarker])
   case MLetCall(names: Ls[Str], defn: Str, args: Ls[LocMarker])
   var tag = DefnTag(-1)
 
@@ -528,12 +507,6 @@ enum LocMarker:
         <:> raw(".")
         <:> raw(method)
         <:> raw("...")
-    case MLetApply(x, f, args) =>
-      raw("let")
-        <:> raw(x.toString)
-        <:> raw("=")
-        <:> raw(f)
-        <:> raw("(...)")
     case MLetCall(xs, defn, args) =>
       raw("let*")
         <:> raw("(")
@@ -547,7 +520,7 @@ enum LocMarker:
     case MLit(DecLit(lit)) => s"$lit" |> raw
     case MLit(StrLit(lit)) => s"$lit" |> raw
     case MLit(CharLit(lit)) => s"$lit" |> raw
-    case MLit(UnitLit(lit)) => s"$lit" |> raw
+    case MLit(UnitLit(undefinedOrNull)) => (if undefinedOrNull then "undefined" else "null") |> raw
     case _ => raw("...")
 
   def show = s"$tag-" + toDocument.print

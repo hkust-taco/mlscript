@@ -29,7 +29,6 @@ private final class RefResolver(defs: Map[Str, Defn], classes: Map[Str, ClassInf
     case Case(scrut, cases, default) => cases foreach { (_, body) => f(body) }; default foreach f
     case LetExpr(name, expr, body) => f(expr); f(body)
     case LetMethodCall(names, cls, method, args, body) => f(body)
-    case LetApply(name, fn, args, body) => f(body)
     case LetCall(resultNames, defnref, args, body) =>
       defs.get(defnref.name) match
         case Some(defn) => defnref.defn = Left(defn)

@@ -100,8 +100,8 @@ main(3)
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$15) = g(x$14) in -- #57
-//│ let** (x$16) = f(x$15) in -- #56
+//│ let x$15 = Callable.apply1(g,x$14) in -- #57
+//│ let x$16 = Callable.apply1(f,x$15) in -- #56
 //│ x$16 -- #55
 //│ ))}, {
 //│ Def(0, compose, [f$0], [{}],
@@ -120,8 +120,8 @@ main(3)
 //│ let x$4 = 1 in -- #25
 //│ let x$6 = Lambda$1(x$3,x$4) in -- #24
 //│ let* (x$7) = compose(x$6) in -- #23
-//│ let** (x$8) = x$7(x$6) in -- #22
-//│ let** (x$9) = x$8(2) in -- #21
+//│ let x$8 = Callable.apply1(x$7,x$6) in -- #22
+//│ let x$9 = Callable.apply1(x$8,2) in -- #21
 //│ x$9 -- #20
 //│ )
 //│ },
@@ -213,8 +213,8 @@ main(3)
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$15) = g(x$14) in -- #57
-//│ let** (x$16) = f(x$15) in -- #56
+//│ let x$15 = Callable.apply1(g,x$14) in -- #57
+//│ let x$16 = Callable.apply1(f,x$15) in -- #56
 //│ x$16 -- #55
 //│ ))}, {
 //│ Def(0, compose, [f$0], [{}],
@@ -233,8 +233,8 @@ main(3)
 //│ let x$4 = 1 in -- #25
 //│ let x$6 = Lambda$1(x$3,x$4) in -- #24
 //│ let* (x$7) = compose(x$6) in -- #23
-//│ let** (x$8) = x$7(x$6) in -- #22
-//│ let** (x$9) = x$8(2) in -- #21
+//│ let x$8 = Callable.apply1(x$7,x$6) in -- #22
+//│ let x$9 = Callable.apply1(x$8,2) in -- #21
 //│ x$9 -- #20
 //│ )
 //│ },

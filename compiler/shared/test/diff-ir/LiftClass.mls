@@ -92,8 +92,8 @@ main(4)
 //│ Rec: None,
 //│ 1, 
 //│ let x$2 = InnerClass(1,x$1) in -- #26
-//│ let** (x$3) = x$2(2) in -- #25
-//│ let** (x$4) = x$2(3) in -- #24
+//│ let x$3 = Callable.apply1(x$2,2) in -- #25
+//│ let x$4 = Callable.apply1(x$2,3) in -- #24
 //│ let x$5 = +(x$3,x$4) in -- #23
 //│ x$5 -- #22
 //│ )
@@ -177,8 +177,8 @@ main(4)
 //│ Rec: None,
 //│ 1, 
 //│ let x$2 = InnerClass(1,x$1) in -- #26
-//│ let** (x$3) = x$2(2) in -- #25
-//│ let** (x$4) = x$2(3) in -- #24
+//│ let x$3 = Callable.apply1(x$2,2) in -- #25
+//│ let x$4 = Callable.apply1(x$2,3) in -- #24
 //│ let x$5 = +(x$3,x$4) in -- #23
 //│ x$5 -- #22
 //│ )
@@ -296,10 +296,10 @@ main(4)
 //│ Rec: None,
 //│ 1, 
 //│ let x$2 = InnerClass(1) in -- #36
-//│ let** (x$3) = x$2(2) in -- #35
-//│ let** (x$4) = x$3(2) in -- #34
-//│ let** (x$5) = x$2(3) in -- #33
-//│ let** (x$6) = x$5(1) in -- #32
+//│ let x$3 = Callable.apply1(x$2,2) in -- #35
+//│ let x$4 = Callable.apply1(x$3,2) in -- #34
+//│ let x$5 = Callable.apply1(x$2,3) in -- #33
+//│ let x$6 = Callable.apply1(x$5,1) in -- #32
 //│ let x$7 = +(x$4,x$6) in -- #31
 //│ x$7 -- #30
 //│ )
@@ -391,10 +391,10 @@ main(4)
 //│ Rec: None,
 //│ 1, 
 //│ let x$2 = InnerClass(1) in -- #36
-//│ let** (x$3) = x$2(2) in -- #35
-//│ let** (x$4) = x$3(2) in -- #34
-//│ let** (x$5) = x$2(3) in -- #33
-//│ let** (x$6) = x$5(1) in -- #32
+//│ let x$3 = Callable.apply1(x$2,2) in -- #35
+//│ let x$4 = Callable.apply1(x$3,2) in -- #34
+//│ let x$5 = Callable.apply1(x$2,3) in -- #33
+//│ let x$6 = Callable.apply1(x$5,1) in -- #32
 //│ let x$7 = +(x$4,x$6) in -- #31
 //│ x$7 -- #30
 //│ )

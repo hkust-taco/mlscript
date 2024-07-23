@@ -360,7 +360,8 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
           case Result(Ref(f) :: Nil) => buildResultFromTerm(xs) {
             case Result(args) =>
               val v = fresh.make
-              LetApply(List(v), f, args, v |> ref |> sresult |> k).attachTag(tag)
+              // LetApply(List(v), f, args, v |> ref |> sresult |> k).attachTag(tag)
+              LetMethodCall(List(v), ClassRef(R("Callable")), Name("apply" + args.length), (Ref(f): TrivialExpr) :: args, v |> ref |> sresult |> k).attachTag(tag)
             case node @ _ => node |> unexpectedNode
           }
           case node @ _ => node |> unexpectedNode

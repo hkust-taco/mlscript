@@ -164,7 +164,7 @@ class Interpreter(verbose: Bool):
         ctx2 = ctx.copy(bindingCtx = ctx.bindingCtx ++ names.map{_.str}.zip(ys))
         res <- eval(body)(using ctx2)
       } yield res
-    case LetApply(names, fn, args, body) => eval(LetMethodCall(names, ClassRef(R("Callable")), Name("apply" + args.length), (Ref(fn): TrivialExpr) :: args, body))
+    // case LetApply(names, fn, args, body) => eval(LetMethodCall(names, ClassRef(R("Callable")), Name("apply" + args.length), (Ref(fn): TrivialExpr) :: args, body))
     case LetCall(names, defn, args, body) =>
       for {
         xs <- evalArgs(args)

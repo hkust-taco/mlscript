@@ -548,7 +548,7 @@ main(1, 42)
 //│ Rec: None,
 //│ 1, 
 //│ let x$3 = Lambda$0(key$0) in -- #14
-//│ let** (x$4) = x$3(init$0) in -- #13
+//│ let x$4 = Callable.apply1(x$3,init$0) in -- #13
 //│ x$4 -- #12
 //│ )
 //│ Def(7, ping, [x$5,key$1], [{},{}],
@@ -674,7 +674,7 @@ main(1, 42)
 //│ Rec: None,
 //│ 1, 
 //│ let x$3 = Lambda$0(key$0) in -- #14
-//│ let** (x$4) = x$3(init$0) in -- #13
+//│ let x$4 = Callable.apply1(x$3,init$0) in -- #13
 //│ x$4 -- #12
 //│ )
 //│ Def(7, ping, [x$5,key$1], [{},{}],

@@ -352,7 +352,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$2) = builtin(error) in -- #14
+//│ let x$2 = Callable.apply1(builtin,error) in -- #14
 //│ x$2 -- #13
 //│ )
 //│ Def(1, z_of_int, [x$3], [{}],
@@ -360,7 +360,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$4) = builtin(z_of_int,x$3) in -- #22
+//│ let x$4 = Callable.apply2(builtin,z_of_int,x$3) in -- #22
 //│ x$4 -- #21
 //│ )
 //│ Def(2, z_to_int, [x$5], [{}],
@@ -368,7 +368,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$6) = builtin(z_to_int,x$5) in -- #30
+//│ let x$6 = Callable.apply2(builtin,z_to_int,x$5) in -- #30
 //│ x$6 -- #29
 //│ )
 //│ Def(3, z_add, [x$7,y$0], [{},{}],
@@ -376,7 +376,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$8) = builtin(z_add,x$7,y$0) in -- #40
+//│ let x$8 = Callable.apply3(builtin,z_add,x$7,y$0) in -- #40
 //│ x$8 -- #39
 //│ )
 //│ Def(4, z_sub, [x$9,y$1], [{},{}],
@@ -384,7 +384,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$10) = builtin(z_sub,x$9,y$1) in -- #50
+//│ let x$10 = Callable.apply3(builtin,z_sub,x$9,y$1) in -- #50
 //│ x$10 -- #49
 //│ )
 //│ Def(5, z_div, [x$11,y$2], [{},{}],
@@ -392,7 +392,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$12) = builtin(z_div,x$11,y$2) in -- #60
+//│ let x$12 = Callable.apply3(builtin,z_div,x$11,y$2) in -- #60
 //│ x$12 -- #59
 //│ )
 //│ Def(6, z_mul, [x$13,y$3], [{},{}],
@@ -400,7 +400,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$14) = builtin(z_mul,x$13,y$3) in -- #70
+//│ let x$14 = Callable.apply3(builtin,z_mul,x$13,y$3) in -- #70
 //│ x$14 -- #69
 //│ )
 //│ Def(7, z_mod, [x$15,y$4], [{},{}],
@@ -408,7 +408,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$16) = builtin(z_mod,x$15,y$4) in -- #80
+//│ let x$16 = Callable.apply3(builtin,z_mod,x$15,y$4) in -- #80
 //│ x$16 -- #79
 //│ )
 //│ Def(8, z_lt, [x$17,y$5], [{},{}],
@@ -416,7 +416,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$18) = builtin(z_lt,x$17,y$5) in -- #90
+//│ let x$18 = Callable.apply3(builtin,z_lt,x$17,y$5) in -- #90
 //│ x$18 -- #89
 //│ )
 //│ Def(9, z_leq, [x$19,y$6], [{},{}],
@@ -424,7 +424,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$20) = builtin(z_leq,x$19,y$6) in -- #100
+//│ let x$20 = Callable.apply3(builtin,z_leq,x$19,y$6) in -- #100
 //│ x$20 -- #99
 //│ )
 //│ Def(10, z_equal, [x$21,y$7], [{},{}],
@@ -432,7 +432,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$22) = builtin(z_equal,x$21,y$7) in -- #110
+//│ let x$22 = Callable.apply3(builtin,z_equal,x$21,y$7) in -- #110
 //│ x$22 -- #109
 //│ )
 //│ Def(11, z_gt, [x$23,y$8], [{},{}],
@@ -440,7 +440,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$24) = builtin(z_gt,x$23,y$8) in -- #120
+//│ let x$24 = Callable.apply3(builtin,z_gt,x$23,y$8) in -- #120
 //│ x$24 -- #119
 //│ )
 //│ Def(12, z_geq, [x$25,y$9], [{},{}],
@@ -448,7 +448,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$26) = builtin(z_geq,x$25,y$9) in -- #130
+//│ let x$26 = Callable.apply3(builtin,z_geq,x$25,y$9) in -- #130
 //│ x$26 -- #129
 //│ )
 //│ Def(13, println, [x$27], [{}],
@@ -456,7 +456,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$28) = builtin(println,x$27) in -- #138
+//│ let x$28 = Callable.apply2(builtin,println,x$27) in -- #138
 //│ x$28 -- #137
 //│ )
 //│ Def(14, print, [x$29], [{}],
@@ -464,7 +464,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$30) = builtin(print,x$29) in -- #146
+//│ let x$30 = Callable.apply2(builtin,print,x$29) in -- #146
 //│ x$30 -- #145
 //│ )
 //│ Def(15, debug, [x$31], [{}],
@@ -472,7 +472,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$32) = builtin(debug,x$31) in -- #154
+//│ let x$32 = Callable.apply2(builtin,debug,x$31) in -- #154
 //│ x$32 -- #153
 //│ )
 //│ Def(16, map, [f$0,ls$0], [{},{}],
@@ -484,7 +484,7 @@ testGcd_nofib(z_of_int(400))
 //│   Cons =>
 //│     let x$34 = Cons.t(ls$0) in -- #185
 //│     let x$35 = Cons.h(ls$0) in -- #184
-//│     let** (x$36) = f$0(x$35) in -- #183
+//│     let x$36 = Callable.apply1(f$0,x$35) in -- #183
 //│     let* (x$37) = map(f$0,x$34) in -- #182
 //│     let x$38 = Cons(x$36,x$37) in -- #181
 //│     jump j$0(x$38) -- #180
@@ -508,7 +508,7 @@ testGcd_nofib(z_of_int(400))
 //│   Cons =>
 //│     let x$41 = Cons.t(ls_2$0) in -- #232
 //│     let x$42 = Cons.h(ls_2$0) in -- #231
-//│     let** (x$43) = f_2$0(x$42) in -- #230
+//│     let x$43 = Callable.apply1(f_2$0,x$42) in -- #230
 //│     if x$43 -- #229
 //│       true =>
 //│         let* (x$45) = filter(f_2$0,x$41) in -- #220
@@ -544,7 +544,7 @@ testGcd_nofib(z_of_int(400))
 //│   Cons =>
 //│     let x$50 = Cons.t(ls_4$0) in -- #265
 //│     let x$51 = Cons.h(ls_4$0) in -- #264
-//│     let** (x$52) = f_4$0(i$0,x$51) in -- #263
+//│     let x$52 = Callable.apply2(f_4$0,i$0,x$51) in -- #263
 //│     let* (x$53) = foldl(f_4$0,x$52,x$50) in -- #262
 //│     jump j$3(x$53) -- #261
 //│   Nil =>
@@ -567,7 +567,7 @@ testGcd_nofib(z_of_int(400))
 //│     let x$55 = Cons.t(ls_5$0) in -- #297
 //│     let x$56 = Cons.h(ls_5$0) in -- #296
 //│     let* (x$57) = foldr(f_5$0,i_1$0,x$55) in -- #295
-//│     let** (x$58) = f_5$0(x$56,x$57) in -- #294
+//│     let x$58 = Callable.apply2(f_5$0,x$56,x$57) in -- #294
 //│     jump j$4(x$58) -- #293
 //│   Nil =>
 //│     jump j$4(i_1$0) -- #299
@@ -630,7 +630,7 @@ testGcd_nofib(z_of_int(400))
 //│       Cons =>
 //│         let x$74 = Cons.t(ys_4$0) in -- #399
 //│         let x$75 = Cons.h(ys_4$0) in -- #398
-//│         let** (x$76) = f_7$0(x$72,x$75) in -- #397
+//│         let x$76 = Callable.apply2(f_7$0,x$72,x$75) in -- #397
 //│         let* (x$77) = zipWith(f_7$0,x$71,x$74) in -- #396
 //│         let x$78 = Cons(x$76,x$77) in -- #395
 //│         jump j$8(x$78) -- #394
@@ -1443,7 +1443,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$2) = builtin(error) in -- #14
+//│ let x$2 = Callable.apply1(builtin,error) in -- #14
 //│ x$2 -- #13
 //│ )
 //│ Def(1, z_of_int, [x$3], [{}],
@@ -1451,7 +1451,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$4) = builtin(z_of_int,x$3) in -- #22
+//│ let x$4 = Callable.apply2(builtin,z_of_int,x$3) in -- #22
 //│ x$4 -- #21
 //│ )
 //│ Def(2, z_to_int, [x$5], [{}],
@@ -1459,7 +1459,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$6) = builtin(z_to_int,x$5) in -- #30
+//│ let x$6 = Callable.apply2(builtin,z_to_int,x$5) in -- #30
 //│ x$6 -- #29
 //│ )
 //│ Def(3, z_add, [x$7,y$0], [{},{}],
@@ -1467,7 +1467,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$8) = builtin(z_add,x$7,y$0) in -- #40
+//│ let x$8 = Callable.apply3(builtin,z_add,x$7,y$0) in -- #40
 //│ x$8 -- #39
 //│ )
 //│ Def(4, z_sub, [x$9,y$1], [{},{}],
@@ -1475,7 +1475,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$10) = builtin(z_sub,x$9,y$1) in -- #50
+//│ let x$10 = Callable.apply3(builtin,z_sub,x$9,y$1) in -- #50
 //│ x$10 -- #49
 //│ )
 //│ Def(5, z_div, [x$11,y$2], [{},{}],
@@ -1483,7 +1483,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$12) = builtin(z_div,x$11,y$2) in -- #60
+//│ let x$12 = Callable.apply3(builtin,z_div,x$11,y$2) in -- #60
 //│ x$12 -- #59
 //│ )
 //│ Def(6, z_mul, [x$13,y$3], [{},{}],
@@ -1491,7 +1491,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$14) = builtin(z_mul,x$13,y$3) in -- #70
+//│ let x$14 = Callable.apply3(builtin,z_mul,x$13,y$3) in -- #70
 //│ x$14 -- #69
 //│ )
 //│ Def(7, z_mod, [x$15,y$4], [{},{}],
@@ -1499,7 +1499,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$16) = builtin(z_mod,x$15,y$4) in -- #80
+//│ let x$16 = Callable.apply3(builtin,z_mod,x$15,y$4) in -- #80
 //│ x$16 -- #79
 //│ )
 //│ Def(8, z_lt, [x$17,y$5], [{},{}],
@@ -1507,7 +1507,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$18) = builtin(z_lt,x$17,y$5) in -- #90
+//│ let x$18 = Callable.apply3(builtin,z_lt,x$17,y$5) in -- #90
 //│ x$18 -- #89
 //│ )
 //│ Def(9, z_leq, [x$19,y$6], [{},{}],
@@ -1515,7 +1515,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$20) = builtin(z_leq,x$19,y$6) in -- #100
+//│ let x$20 = Callable.apply3(builtin,z_leq,x$19,y$6) in -- #100
 //│ x$20 -- #99
 //│ )
 //│ Def(10, z_equal, [x$21,y$7], [{},{}],
@@ -1523,7 +1523,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$22) = builtin(z_equal,x$21,y$7) in -- #110
+//│ let x$22 = Callable.apply3(builtin,z_equal,x$21,y$7) in -- #110
 //│ x$22 -- #109
 //│ )
 //│ Def(11, z_gt, [x$23,y$8], [{},{}],
@@ -1531,7 +1531,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$24) = builtin(z_gt,x$23,y$8) in -- #120
+//│ let x$24 = Callable.apply3(builtin,z_gt,x$23,y$8) in -- #120
 //│ x$24 -- #119
 //│ )
 //│ Def(12, z_geq, [x$25,y$9], [{},{}],
@@ -1539,7 +1539,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$26) = builtin(z_geq,x$25,y$9) in -- #130
+//│ let x$26 = Callable.apply3(builtin,z_geq,x$25,y$9) in -- #130
 //│ x$26 -- #129
 //│ )
 //│ Def(13, println, [x$27], [{}],
@@ -1547,7 +1547,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$28) = builtin(println,x$27) in -- #138
+//│ let x$28 = Callable.apply2(builtin,println,x$27) in -- #138
 //│ x$28 -- #137
 //│ )
 //│ Def(14, print, [x$29], [{}],
@@ -1555,7 +1555,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$30) = builtin(print,x$29) in -- #146
+//│ let x$30 = Callable.apply2(builtin,print,x$29) in -- #146
 //│ x$30 -- #145
 //│ )
 //│ Def(15, debug, [x$31], [{}],
@@ -1563,7 +1563,7 @@ testGcd_nofib(z_of_int(400))
 //│ R: [None],
 //│ Rec: None,
 //│ 1, 
-//│ let** (x$32) = builtin(debug,x$31) in -- #154
+//│ let x$32 = Callable.apply2(builtin,debug,x$31) in -- #154
 //│ x$32 -- #153
 //│ )
 //│ Def(16, map, [f$0,ls$0], [{},{}],
@@ -1575,7 +1575,7 @@ testGcd_nofib(z_of_int(400))
 //│   Cons =>
 //│     let x$34 = Cons.t(ls$0) in -- #185
 //│     let x$35 = Cons.h(ls$0) in -- #184
-//│     let** (x$36) = f$0(x$35) in -- #183
+//│     let x$36 = Callable.apply1(f$0,x$35) in -- #183
 //│     let* (x$37) = map(f$0,x$34) in -- #182
 //│     let x$38 = Cons(x$36,x$37) in -- #181
 //│     jump j$0(x$38) -- #180
@@ -1599,7 +1599,7 @@ testGcd_nofib(z_of_int(400))
 //│   Cons =>
 //│     let x$41 = Cons.t(ls_2$0) in -- #232
 //│     let x$42 = Cons.h(ls_2$0) in -- #231
-//│     let** (x$43) = f_2$0(x$42) in -- #230
+//│     let x$43 = Callable.apply1(f_2$0,x$42) in -- #230
 //│     if x$43 -- #229
 //│       true =>
 //│         let* (x$45) = filter(f_2$0,x$41) in -- #220
@@ -1635,7 +1635,7 @@ testGcd_nofib(z_of_int(400))
 //│   Cons =>
 //│     let x$50 = Cons.t(ls_4$0) in -- #265
 //│     let x$51 = Cons.h(ls_4$0) in -- #264
-//│     let** (x$52) = f_4$0(i$0,x$51) in -- #263
+//│     let x$52 = Callable.apply2(f_4$0,i$0,x$51) in -- #263
 //│     let* (x$53) = foldl(f_4$0,x$52,x$50) in -- #262
 //│     jump j$3(x$53) -- #261
 //│   Nil =>
@@ -1658,7 +1658,7 @@ testGcd_nofib(z_of_int(400))
 //│     let x$55 = Cons.t(ls_5$0) in -- #297
 //│     let x$56 = Cons.h(ls_5$0) in -- #296
 //│     let* (x$57) = foldr(f_5$0,i_1$0,x$55) in -- #295
-//│     let** (x$58) = f_5$0(x$56,x$57) in -- #294
+//│     let x$58 = Callable.apply2(f_5$0,x$56,x$57) in -- #294
 //│     jump j$4(x$58) -- #293
 //│   Nil =>
 //│     jump j$4(i_1$0) -- #299
@@ -1721,7 +1721,7 @@ testGcd_nofib(z_of_int(400))
 //│       Cons =>
 //│         let x$74 = Cons.t(ys_4$0) in -- #399
 //│         let x$75 = Cons.h(ys_4$0) in -- #398
-//│         let** (x$76) = f_7$0(x$72,x$75) in -- #397
+//│         let x$76 = Callable.apply2(f_7$0,x$72,x$75) in -- #397
 //│         let* (x$77) = zipWith(f_7$0,x$71,x$74) in -- #396
 //│         let x$78 = Cons(x$76,x$77) in -- #395
 //│         jump j$8(x$78) -- #394

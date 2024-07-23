@@ -24,7 +24,6 @@ private final class DefnRefInSet(defs: Set[Defn], classes: Set[ClassInfo]):
     case Case(scrut, cases, default) => cases foreach { (_, body) => f(body) }; default foreach f
     case LetExpr(name, expr, body) => f(body)
     case LetMethodCall(names, cls, method, args, body) => f(body)
-    case LetApply(name, fn, args, body) => f(body)
     case LetCall(res, defnref, args, body) =>
       defnref.getDefn match {
         case Some(real_defn) => if (!defs.exists(_ eq real_defn)) throw IRError("ref is not in the set")
