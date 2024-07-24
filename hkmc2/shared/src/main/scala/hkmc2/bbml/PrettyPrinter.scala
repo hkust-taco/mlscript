@@ -15,20 +15,20 @@ object PrettyPrinter:
   def apply(output: String => Unit): PrettyPrinter = new PrettyPrinter(output)
 
   type Bound = (Type, Type) // * Type <: Type
-  type TVCache = Set[Uid[Type.InfVar]]
+  type TVCache = Set[Uid[InfVar]]
 
   private def collectBounds(ty: GeneralType)(using cache: TVCache): List[Bound] = ty match
-    case Type.ClassType(_, targs) => targs.flatMap {
+    case ClassType(_, targs) => targs.flatMap {
       case Wildcard(in, out) => collectBounds(in) ++ collectBounds(out)
       case ty: Type => collectBounds(ty)
     }
-    case v @ Type.InfVar(_, uid, state, _) if !cache(uid) =>
+    case v @ InfVar(_, uid, state, _) if !cache(uid) =>
       val newCache = cache + uid
       given TVCache = newCache
       state.lowerBounds.flatMap(bd => (bd, v) :: collectBounds(bd)) ++ state.upperBounds.flatMap(bd => (v, bd) :: collectBounds(bd))
-    case Type.FunType(args, ret, eff) => args.flatMap(collectBounds) ++ collectBounds(ret) ++ collectBounds(eff)
+    case FunType(args, ret, eff) => args.flatMap(collectBounds) ++ collectBounds(ret) ++ collectBounds(eff)
     case PolyFunType(args, ret, eff) => args.flatMap(collectBounds) ++ collectBounds(ret) ++ collectBounds(eff)
-    case Type.ComposedType(lhs, rhs, pol) => collectBounds(lhs) ++ collectBounds(rhs)
-    case Type.NegType(ty) => collectBounds(ty)
+    case ComposedType(lhs, rhs, pol) => collectBounds(lhs) ++ collectBounds(rhs)
+    case NegType(ty) => collectBounds(ty)
     case PolyType(tvs, body) => tvs.flatMap(collectBounds) ++ collectBounds(body)
     case _ => Nil

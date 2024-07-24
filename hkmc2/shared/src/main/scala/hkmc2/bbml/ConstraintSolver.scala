@@ -13,18 +13,18 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogg
   import hkmc2.bbml.NormalForm.*
   type Cache = Set[(Type, Type)]
 
-  private def freshXVar(lvl: Int): Type.InfVar = Type.InfVar(lvl, infVarState.nextUid, new VarState(), false)
+  private def freshXVar(lvl: Int): InfVar = InfVar(lvl, infVarState.nextUid, new VarState(), false)
 
   private def extrude(ty: Type)(using lvl: Int, pol: Bool): Type = if ty.lvl <= lvl then ty else ty match
-    case Type.ClassType(sym, targs) =>
-      Type.ClassType(sym, targs.map {
+    case ClassType(sym, targs) =>
+      ClassType(sym, targs.map {
         case Wildcard(in, out) =>
           Wildcard(extrude(in)(using lvl, !pol), extrude(out))
         case t => ??? // TODO
       })
-    case v @ Type.InfVar(_, uid, _, true) =>
-      if pol then Type.Top else Type.Bot
-    case v @ Type.InfVar(_, uid, _, false) =>
+    case v @ InfVar(_, uid, _, true) =>
+      if pol then Top else Bot
+    case v @ InfVar(_, uid, _, false) =>
       val nv = freshXVar(lvl)
       if pol then
         v.state.upperBounds ::= nv
@@ -33,17 +33,17 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogg
         v.state.lowerBounds ::= nv
         nv.state.upperBounds = v.state.upperBounds.map(extrude) // * propagate
       nv
-    case Type.FunType(args, ret, eff) =>
-      Type.FunType(args.map(arg => extrude(arg)(using lvl, !pol)), extrude(ret), extrude(eff))
-    case Type.ComposedType(lhs, rhs, p) =>
+    case FunType(args, ret, eff) =>
+      FunType(args.map(arg => extrude(arg)(using lvl, !pol)), extrude(ret), extrude(eff))
+    case ComposedType(lhs, rhs, p) =>
       Type.mkComposedType(extrude(lhs), extrude(rhs), p)
-    case Type.NegType(ty) => Type.mkNegType(extrude(ty)(using lvl, !pol))
-    case Type.Top | Type.Bot => ty
+    case NegType(ty) => Type.mkNegType(extrude(ty)(using lvl, !pol))
+    case Top | Bot => ty
 
   private def constrainConj(conj: Conj)(using cache: Cache): Unit = trace(s"Constraining $conj"):
     conj.sort match
     case Conj.INU(i, u) => (i, u) match
-      case (_, Union.Bot) => raise(ErrorReport(msg"Cannot solve ${i.toString()} ∧ ¬⊥" -> N :: Nil))
+      case (_, Union.UBot) => raise(ErrorReport(msg"Cannot solve ${i.toString()} ∧ ¬⊥" -> N :: Nil))
       case (Inter.Cls(NormalClassType(cls1, targs1)), Union.Uni(uni, NormalClassType(cls2, targs2))) =>
         if cls1.uid == cls2.uid then
           targs1.zip(targs2).foreach {
@@ -86,7 +86,7 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogg
       v.state.upperBounds.foreach(ub => constrain(c, ub))
 
   private def constrainDNF(disj: Disj)(using cache: Cache): Unit = disj match
-    case Disj.Bot => ()
+    case Disj.DBot => ()
     case Disj.Con(conj) => constrainConj(conj)
     case Disj.DC(disj, conj) =>
       constrainDNF(disj)

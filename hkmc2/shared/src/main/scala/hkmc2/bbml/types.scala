@@ -32,19 +32,11 @@ case class Wildcard(in: Type, out: Type) extends TypeArg {
 }
 
 object Wildcard:
-  def in(ty: Type): Wildcard = Wildcard(ty, Type.Top)
-  def out(ty: Type): Wildcard = Wildcard(Type.Bot, ty)
-  def empty: Wildcard = Wildcard(Type.Bot, Type.Top)
+  def in(ty: Type): Wildcard = Wildcard(ty, Top)
+  def out(ty: Type): Wildcard = Wildcard(Bot, ty)
+  def empty: Wildcard = Wildcard(Bot, Top)
 
-enum Type extends GeneralType with TypeArg:
-  case ClassType(name: ClassSymbol, targs: Ls[TypeArg])
-  case InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, isSkolem: Bool)
-  case FunType(args: Ls[Type], ret: Type, eff: Type)
-  case ComposedType(lhs: Type, rhs: Type, pol: Bool) // * Positive -> union
-  case NegType(ty: Type)
-  case Top
-  case Bot
-
+abstract class Type extends GeneralType with TypeArg:
   override protected type ThisType = Type
 
   override def toString(): String = this match
@@ -106,6 +98,15 @@ enum Type extends GeneralType with TypeArg:
     case NegType(ty) => Type.mkNegType(f(ty))
     case Top | Bot => f(this)
   def monoOr(fallback: => Type): Type = this
+
+case class ClassType(name: ClassSymbol, targs: Ls[TypeArg]) extends Type
+case class InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, isSkolem: Bool) extends Type
+case class FunType(args: Ls[Type], ret: Type, eff: Type) extends Type
+case class ComposedType(lhs: Type, rhs: Type, pol: Bool) extends Type // * Positive -> union
+case class NegType(ty: Type) extends Type
+object Top extends Type
+object Bot extends Type
+
 object Type:
   def mkComposedType(lhs: Type, rhs: Type, pol: Bool): Type = if pol
     then lhs | rhs
@@ -114,7 +115,7 @@ object Type:
 
 // TODO: bounds
 // * Poly types can not be used as type arguments
-case class PolyType(tv: Ls[Type.InfVar], body: GeneralType) extends GeneralType:
+case class PolyType(tv: Ls[InfVar], body: GeneralType) extends GeneralType:
   override protected type ThisType = GeneralType
 
   override lazy val isPoly: Bool = true
@@ -132,8 +133,8 @@ case class PolyFunType(args: Ls[GeneralType], ret: GeneralType, eff: Type) exten
   lazy val isPoly: Bool = (ret :: args).exists(_.isPoly)
   lazy val lvl: Int = (ret :: eff :: args).map(_.lvl).max
   override def toString(): String = s"(${args.mkString(", ")}) ->{${eff}} ${ret}"
-  private lazy val mono: Option[Type.FunType] = if isPoly then N else
-    Some(Type.FunType(args.map {
+  private lazy val mono: Option[FunType] = if isPoly then N else
+    Some(FunType(args.map {
       case t: Type => t
       case pf: PolyFunType => pf.mono.get
     }, ret match {
@@ -141,7 +142,7 @@ case class PolyFunType(args: Ls[GeneralType], ret: GeneralType, eff: Type) exten
       case pf: PolyFunType => pf.mono.get
     }, eff))
   override def monoOr(fallback: => Type): Type = if isPoly then fallback else
-    Type.FunType(args.map {
+    FunType(args.map {
       case t: Type => t
       case pt: PolyType => pt.monoOr(???) // * Must be mono
       case pf: PolyFunType => pf.monoOr(???) // * Must be mono
