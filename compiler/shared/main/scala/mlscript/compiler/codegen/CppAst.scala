@@ -139,6 +139,7 @@ enum Expr:
       case IntLit(value) => value.toString |> raw
       case FloatLit(value) => value.toString |> raw
       case StrLit(value) => s"\"$value\"" |> raw // need more reliable escape utils
+      case CharLit(value) => s"'$value'" |> raw
       case Call(func, args) => aux(func) <#> raw("(") <#> Expr.toDocuments(args, sep = raw(", ")) <#> raw(")")
       case Member(expr, member) => aux(expr) <#> raw("->") <#> raw(member)
       case Index(expr, index) => aux(expr) <#> raw("[") <#> aux(index) <#> raw("]")
