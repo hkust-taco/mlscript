@@ -99,7 +99,7 @@ run(1)
 :e
 x `=> run(x)
 //│ Elab: { code"λx@2. ${run#2(x@2#0)‹›‹›}‹›‹›"‹› }‹›
-//│ ╔══[ERROR] Cannot constrain skolem <α>76_3
+//│ ╔══[ERROR] Cannot solve (⊤) ∧ (⊤) ∧ ¬⊥
 //│ ╙──
 //│ ╔══[ERROR] Cannot solve (⊤) ∧ (⊤) ∧ ¬⊥
 //│ ╙──
@@ -108,7 +108,7 @@ x `=> run(x)
 :e
 `let x = `42 `in run(x)
 //│ Elab: { code"{ let x@2 = ${code"42‹›"‹›}‹›; ${run#3(x@2#0)‹›‹›}‹› }‹›"‹› }‹›
-//│ ╔══[ERROR] Cannot constrain skolem <α>80_3
+//│ ╔══[ERROR] Cannot solve (⊤) ∧ (⊤) ∧ ¬⊥
 //│ ╙──
 //│ ╔══[ERROR] Cannot solve (⊤) ∧ (⊤) ∧ ¬⊥
 //│ ╙──

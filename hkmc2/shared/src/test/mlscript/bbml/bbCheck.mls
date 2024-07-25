@@ -85,9 +85,9 @@ high(x => x)
 :e
 high(x => x + 1)
 //│ Elab: { high#3(λx@3. +#3(x@3#0, 1‹›)‹›‹›‹›)‹›‹› }‹›
-//│ ╔══[ERROR] Cannot constrain skolem <α>6_2
+//│ ╔══[ERROR] Cannot solve (⊤) ∧ (⊤) ∧ ¬⊥
 //│ ╙──
-//│ ╔══[ERROR] Cannot constrain skolem <α>6_2
+//│ ╔══[ERROR] Cannot solve (Int) ∧ (⊤) ∧ ¬⊥
 //│ ╙──
 //│ Type: Int
 

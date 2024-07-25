@@ -37,7 +37,8 @@ final class Conj(val i: Inter, val u: Union, val vars: Ls[(InfVar, Bool)]) exten
       case N => N
   def pick: Option[(InfVar, Bool)] = vars.foldLeft[Option[(InfVar, Bool)]](N)((res, p) => (res, p) match {
     case (S((InfVar(lv1, _, _, sk1), _)), (v @ InfVar(lv2, _, _, sk2), pol)) =>
-      if sk1 || (!sk2 && lv1 < lv2) then S(v, pol)
+      if sk1 && sk2 then if lv1 < lv2 then S(v, pol) else res
+      else if sk1 || lv1 < lv2 then S(v, pol)
       else res
     case (N, (v, p)) => S(v, p)
   })

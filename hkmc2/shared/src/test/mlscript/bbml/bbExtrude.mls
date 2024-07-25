@@ -11,7 +11,7 @@ f
 //│ Elab: { f#0 }‹›
 //│ Type: (((⊤) ∧ (⊤)) ∧ (α2_1)) ->{(⊥) ∨ (⊥)} ((⊤) ∧ (⊤)) ∧ (α2_1)
 //│ Where:
-//│   α2_1 <: (⊥) ->{⊥} ((⊤) ∧ (⊤)) ∧ (Int)
+//│   α2_1 <: ((⊤) ∧ (⊤)) ->{⊥} ((⊤) ∧ (⊤)) ∧ (Int)
 
 fun foo: [A] -> A -> Int
 fun foo(x) = 0
@@ -43,6 +43,6 @@ g(foo)
 :e
 y `=> (let t = run(x `=> x `+ y) in y)
 //│ Elab: { code"λy@2. ${{ let t@3 = run#0(code"λx@5. ${code"+#2(${x@5#0}‹›, ${y@2#0}‹›)‹›‹›"‹›}‹›‹›"‹›)‹›‹›; y@2#1 }‹›}‹›‹›"‹› }‹›
-//│ ╔══[ERROR] Cannot constrain skolem <α>18_3
+//│ ╔══[ERROR] Cannot solve (⊤) ∧ (⊤) ∧ ¬⊥
 //│ ╙──
 //│ Type: CodeBase[in ⊥ out ⊥, in ⊥ out ⊤]

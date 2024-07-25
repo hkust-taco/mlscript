@@ -42,20 +42,20 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogg
 
   private def constrainConj(conj: Conj)(using cache: Cache): Unit = trace(s"Constraining $conj"):
     conj.pick match
-      case S((v, pol)) => // TODO: ignore
-        if v.isSkolem then raise(ErrorReport(msg"Cannot constrain skolem ${v.toString()}" -> N :: Nil))
+      case S((v, pol)) =>
+        if v.isSkolem then constrainConj(conj.complement(v))
         else
           val comp = conj.complement(v).simp
           val bd = if v.lvl >= comp.lvl then comp else extrude(comp)(using v.lvl, true)
           if pol then
-            val nc = Type.mkNegType(comp)
+            val nc = Type.mkNegType(bd)
             given Cache = cache + (v -> nc)
             v.state.upperBounds ::= nc
             v.state.lowerBounds.foreach(lb => constrain(lb, nc))
           else
-            given Cache = cache + (comp -> v)
-            v.state.lowerBounds ::= comp
-            v.state.upperBounds.foreach(ub => constrain(comp, ub))
+            given Cache = cache + (bd -> v)
+            v.state.lowerBounds ::= bd
+            v.state.upperBounds.foreach(ub => constrain(bd, ub))
       case _ => (conj.i, conj.u) match
         case (_, Union(N, Nil)) => raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} ∧ ¬⊥" -> N :: Nil))
         case (Inter(S(NormalClassType(cls1, targs1))), Union(f, NormalClassType(cls2, targs2) :: rest)) =>
