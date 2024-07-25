@@ -36,7 +36,7 @@ Foo(123)
 
 new Foo(123)
 //│ Elab: { new class:Foo(Lit(IntLit(123)))‹› }‹›
-//│ Type: Foo[in ⊤ out ((Int) ∧ (⊤)) ∧ (⊤)]
+//│ Type: Foo[in ⊤ out Int]
 
 :todo proper error
 fun f(x) = f(Foo.a(x))

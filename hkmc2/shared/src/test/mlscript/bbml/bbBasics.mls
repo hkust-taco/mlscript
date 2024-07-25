@@ -60,7 +60,7 @@ x => x
 
 inc(42)
 //│ Elab: { inc#0(42‹›)‹›‹› }‹›
-//│ Type: ((Int) ∧ (⊤)) ∧ (⊤)
+//│ Type: Int
 
 let x = 42 in x
 //│ Elab: { { let x@2 = 42‹›; x@2#0 }‹› }‹›
@@ -125,11 +125,11 @@ class Some[A](value: A)
 
 new Some(true)
 //│ Elab: { new class:Some(Lit(BoolLit(true)))‹› }‹›
-//│ Type: Some[in ⊤ out ((Bool) ∧ (⊤)) ∧ (⊤)]
+//│ Type: Some[in ⊤ out Bool]
 
 new Some(42)
 //│ Elab: { new class:Some(Lit(IntLit(42)))‹› }‹›
-//│ Type: Some[in ⊤ out ((Int) ∧ (⊤)) ∧ (⊤)]
+//│ Type: Some[in ⊤ out Int]
 
 let p = new Point(1.0, 0.0, 0.0) in p.Point#x
 //│ Elab: { { let p@2 = new class:Point(Lit(DecLit(1.0)), Lit(DecLit(0.0)), Lit(DecLit(0.0)))‹›; p@2#0.class:Point#0#x‹› }‹› }‹›
@@ -137,7 +137,7 @@ let p = new Point(1.0, 0.0, 0.0) in p.Point#x
 
 let t = new Some(true) in t.Some#value
 //│ Elab: { { let t@2 = new class:Some(Lit(BoolLit(true)))‹›; t@2#0.class:Some#0#value‹› }‹› }‹›
-//│ Type: ((⊤) ∧ (⊤)) ∧ (Bool)
+//│ Type: Bool
 
 :fixme
 :e
@@ -179,18 +179,18 @@ fun inc(x) = x + 1
 
 new TFun(inc)
 //│ Elab: { new class:TFun(Ref(inc))‹› }‹›
-//│ Type: TFun[in Int out ((Int) ∧ (⊤)) ∧ (⊤)]
+//│ Type: TFun[in Int out Int]
 
 let tf = new TFun(inc) in tf.TFun#f(1)
 //│ Elab: { { let tf@2 = new class:TFun(Ref(inc))‹›; tf@2#0.class:TFun#0#f‹›(1‹›)‹›‹› }‹› }‹›
-//│ Type: ((⊤) ∧ (⊤)) ∧ (Int)
+//│ Type: Int
 
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
 //│ Elab: { { let tf@2 = new class:TFun(Ref(inc))‹›; tf@2#0.class:TFun#1#f‹›("1"‹›)‹›‹› }‹› }‹›
 //│ ╔══[ERROR] Cannot solve (Str) ∧ (⊤) ∧ ¬⊥
 //│ ╙──
-//│ Type: ((⊤) ∧ (⊤)) ∧ (Int)
+//│ Type: Int
 
 class Pair[A, B](fst: A, snd: B)
 //│ Elab: { class Pair[out A@2, out B@3](fst@4: A@2#0, snd@5: B@3#0) { }‹›; }‹›
@@ -198,11 +198,11 @@ class Pair[A, B](fst: A, snd: B)
 
 (new Pair(42, true)).Pair#fst
 //│ Elab: { new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›.class:Pair#0#fst‹› }‹›
-//│ Type: ((⊤) ∧ (⊤)) ∧ (Int)
+//│ Type: Int
 
 (new Pair(42, true)).Pair#snd
 //│ Elab: { new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›.class:Pair#1#snd‹› }‹›
-//│ Type: ((⊤) ∧ (⊤)) ∧ (Bool)
+//│ Type: Bool
 
 
 if 1 < 2 then 1 else 0
@@ -226,12 +226,12 @@ test
 
 test(1)
 //│ Elab: { test#1(1‹›)‹›‹› }‹›
-//│ Type: ((Int) ∧ (⊤)) ∧ (⊤)
+//│ Type: Int
 
 
 test("1")
 //│ Elab: { test#2("1"‹›)‹›‹› }‹›
-//│ Type: ((Int) ∧ (⊤)) ∧ (⊤)
+//│ Type: Int
 
 
 fun fact(n) =
@@ -245,7 +245,7 @@ fact
 
 fact(1)
 //│ Elab: { fact#2(1‹›)‹›‹› }‹›
-//│ Type: ((Int) ∧ (⊤)) ∧ (⊤)
+//│ Type: Int
 
 
 fun fact2 = case
@@ -260,4 +260,4 @@ fact2
 
 fact2(0)
 //│ Elab: { fact2#2(0‹›)‹›‹› }‹›
-//│ Type: ((Int) ∧ (⊤)) ∧ (⊤)
+//│ Type: Int

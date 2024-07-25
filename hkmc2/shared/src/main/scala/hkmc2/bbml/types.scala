@@ -39,6 +39,8 @@ object Wildcard:
 abstract class Type extends GeneralType with TypeArg:
   override protected type ThisType = Type
 
+  lazy val simp: Type = this
+
   override def toString(): String = this match
     case ClassType(name, targs) =>
       if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.mkString(", ")}]"
@@ -102,8 +104,23 @@ abstract class Type extends GeneralType with TypeArg:
 case class ClassType(name: ClassSymbol, targs: Ls[TypeArg]) extends Type
 final case class InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, isSkolem: Bool) extends Type
 case class FunType(args: Ls[Type], ret: Type, eff: Type) extends Type
-case class ComposedType(lhs: Type, rhs: Type, pol: Bool) extends Type // * Positive -> union
-final case class NegType(ty: Type) extends Type
+case class ComposedType(lhs: Type, rhs: Type, pol: Bool) extends Type: // * Positive -> union
+  override lazy val simp: Type = (lhs.simp, rhs.simp, pol) match
+    case (Top, _, true) => Top
+    case (_, Top, true) => Top
+    case (Bot, rhs, true) => rhs
+    case (lhs, Bot, true) => lhs
+    case (Top, rhs, false) => rhs
+    case (lhs, Top, false) => lhs
+    case (Bot, _, false) => Bot
+    case (_, Bot, false) => Bot
+    case (lhs, rhs, pol) => ComposedType(lhs, rhs, pol)
+  
+final case class NegType(ty: Type) extends Type:
+  override lazy val simp: Type = ty.simp match
+    case Top => Bot
+    case Bot => Top
+    case _ => this
 object Top extends Type
 object Bot extends Type
 
@@ -137,9 +154,11 @@ case class PolyFunType(args: Ls[GeneralType], ret: GeneralType, eff: Type) exten
     Some(FunType(args.map {
       case t: Type => t
       case pf: PolyFunType => pf.mono.get
+      case _ => ???
     }, ret match {
       case t: Type => t
       case pf: PolyFunType => pf.mono.get
+      case _ => ???
     }, eff))
   override def monoOr(fallback: => Type): Type = if isPoly then fallback else
     FunType(args.map {

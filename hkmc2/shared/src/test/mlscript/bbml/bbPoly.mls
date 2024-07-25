@@ -53,7 +53,7 @@ fun myInc(inc: Int -> Int, x: Int) = inc(x)
 
 myInc(id, 0)
 //│ Elab: { myInc#0(id#3, 0‹›)‹›‹› }‹›
-//│ Type: ((Int) ∧ (⊤)) ∧ (⊤)
+//│ Type: Int
 
 let t = 42 in [A] => (x: A) => x
 //│ Elab: { { let t@2 = 42‹›; forall A@3: Lam(List(Param(‹›,x@4,Some(Ref(A@3)))),Ref(x@4))‹› }‹› }‹›
@@ -62,11 +62,11 @@ let t = 42 in [A] => (x: A) => x
 
 id(42)
 //│ Elab: { id#4(42‹›)‹›‹› }‹›
-//│ Type: ((Int) ∧ (⊤)) ∧ (⊤)
+//│ Type: Int
 
 id("abc")
 //│ Elab: { id#5("abc"‹›)‹›‹› }‹›
-//│ Type: ((Str) ∧ (⊤)) ∧ (⊤)
+//│ Type: Str
 
 
 class Pair[A, B](a: A, b: B)
@@ -75,7 +75,7 @@ class Pair[A, B](a: A, b: B)
 
 new Pair(42, true)
 //│ Elab: { new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹› }‹›
-//│ Type: Pair[in ⊤ out ((Int) ∧ (⊤)) ∧ (⊤), in ⊤ out ((Bool) ∧ (⊤)) ∧ (⊤)]
+//│ Type: Pair[in ⊤ out Int, in ⊤ out Bool]
 
 fun swap: [A, B] -> Pair[out A, out B] -> Pair[out B, out A]
 fun swap(p) = new Pair(p.Pair#b, p.Pair#a)
@@ -89,15 +89,15 @@ swap
 
 let t = new Pair(42, true) in swap(t)
 //│ Elab: { { let t@2 = new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›; swap#1(t@2#0)‹›‹› }‹› }‹›
-//│ Type: Pair[in ⊥ out ((⊤) ∧ (⊤)) ∧ (Bool), in ⊥ out ((⊤) ∧ (⊤)) ∧ (Int)]
+//│ Type: Pair[in ⊥ out Bool, in ⊥ out Int]
 
 let t = new Pair("114", "514") in swap(t)
 //│ Elab: { { let t@2 = new class:Pair(Lit(StrLit(114)), Lit(StrLit(514)))‹›; swap#2(t@2#0)‹›‹› }‹› }‹›
-//│ Type: Pair[in ⊥ out ((⊤) ∧ (⊤)) ∧ (Str), in ⊥ out ((⊤) ∧ (⊤)) ∧ (Str)]
+//│ Type: Pair[in ⊥ out Str, in ⊥ out Str]
 
 let id = [A] => (x: A) => x in new Pair(id(42), id("42"))
 //│ Elab: { { let id@2 = forall A@3: Lam(List(Param(‹›,x@4,Some(Ref(A@3)))),Ref(x@4))‹›; new class:Pair(App(Ref(id@2),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))), App(Ref(id@2),Tup(List(Fld(‹›,Lit(StrLit(42)),None)))))‹› }‹› }‹›
-//│ Type: Pair[in ⊤ out ((Int) ∧ (⊤)) ∧ (⊤), in ⊤ out ((Str) ∧ (⊤)) ∧ (⊤)]
+//│ Type: Pair[in ⊤ out Int, in ⊤ out Str]
 
 fun foo: ([A] -> A -> A) -> Int
 fun foo(x) = 42
@@ -131,7 +131,7 @@ new Foo(x => x)
 
 let foo = new Foo(id) in foo.Foo#foo(42)
 //│ Elab: { { let foo@2 = new class:Foo(Ref(id))‹›; foo@2#0.class:Foo#0#foo‹›(42‹›)‹›‹› }‹› }‹›
-//│ Type: ((Int) ∧ (⊤)) ∧ (⊤)
+//│ Type: Int
 
 class Bar[A](x: A, f: [B] -> B -> B)
 //│ Elab: { class Bar[out A@2](x@3: A@2#0, f@4: forall B@5: FunTy(Tup(List(Fld(‹›,Ref(B@5),None))),Ref(B@5),None)‹›) { }‹›; }‹›
@@ -140,11 +140,11 @@ class Bar[A](x: A, f: [B] -> B -> B)
 
 new Bar(0, id)
 //│ Elab: { new class:Bar(Lit(IntLit(0)), Ref(id))‹› }‹›
-//│ Type: Bar[in ⊤ out ((Int) ∧ (⊤)) ∧ (⊤)]
+//│ Type: Bar[in ⊤ out Int]
 
 let bar = new Bar(0, id) in bar.Bar#f(bar.Bar#x)
 //│ Elab: { { let bar@2 = new class:Bar(Lit(IntLit(0)), Ref(id))‹›; bar@2#0.class:Bar#0#f‹›(bar@2#1.class:Bar#1#x‹›)‹›‹› }‹› }‹›
-//│ Type: ((⊤) ∧ (⊤)) ∧ (Int)
+//│ Type: Int
 
 class Some[A](value: A)
 //│ Elab: { class Some[out A@2](value@3: A@2#0) { }‹›; }‹›
@@ -157,7 +157,7 @@ new Some([A] => (x: A) => x)
 :fixme
 let s = new Some([A] => (x: A) => x) in let t = s.Some#value(42) in s.Some#value(false)
 //│ Elab: { { let s@2 = new class:Some(Forall(List(A@3),Lam(List(Param(‹›,x@4,Some(Ref(A@3)))),Ref(x@4))))‹›; { let t@5 = s@2#0.class:Some#0#value‹›(42‹›)‹›‹›; s@2#1.class:Some#1#value‹›(false‹›)‹›‹› }‹› }‹› }‹›
-//│ Type: ((⊤) ∧ (⊤)) ∧ ((((Bool) ∧ (⊤)) ∧ (⊤)) ∨ (((Int) ∧ (⊤)) ∧ (⊤)))
+//│ Type: (Bool) ∨ (Int)
 
 fun gen: Int -> [A] -> A -> A
 fun gen(x) =

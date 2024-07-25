@@ -45,7 +45,7 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogg
       case S((v, pol)) => // TODO: ignore
         if v.isSkolem then raise(ErrorReport(msg"Cannot constrain skolem ${v.toString()}" -> N :: Nil))
         else
-          val comp = conj.complement(v)
+          val comp = conj.complement(v).simp
           val bd = if v.lvl >= comp.lvl then comp else extrude(comp)(using v.lvl, true)
           if pol then
             val nc = Type.mkNegType(comp)

@@ -45,7 +45,7 @@ inc
 
 inc(c => log(show(c)))
 //│ Elab: { inc#1(λc@3. log#0(show#1(c@3#0)‹›‹›)‹›‹›‹›)‹›‹› }‹›
-//│ Type: ((CodeBase[in (⊥) ∨ (⊥) out (⊥) ∨ (⊥), in (⊥) ∨ (⊥) out (((⊤) ∧ (⊤)) ∧ (⊤)) ∨ (⊥)]) ∧ (⊤)) ∧ (⊤)
+//│ Type: CodeBase[in (⊥) ∨ (⊥) out (⊥) ∨ (⊥), in (⊥) ∨ (⊥) out (((⊤) ∧ (⊤)) ∧ (⊤)) ∨ (⊥)]
 
 fun body: [T, C] -> (CodeBase[out T, out Any], CodeBase[out C, out Any]) -> Int -> CodeBase[out T | C, out Any]
 fun body(x, y) = case

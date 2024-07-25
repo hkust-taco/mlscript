@@ -42,7 +42,7 @@ in t := 0
 region x in
   let r = x.ref 42 in !r
 //│ Elab: { region x in { let r@3 = (x@2#0).ref 42‹›‹›; !Ref(r@3)‹› }‹›‹› }‹›
-//│ Type: ((Int) ∧ (⊤)) ∧ (⊤)
+//│ Type: Int
 
 :e
 let t = region x in
@@ -51,12 +51,12 @@ in !t
 //│ Elab: { { let t@2 = region x in (x@3#0).ref 42‹›‹›‹›; !Ref(t@2)‹› }‹› }‹›
 //│ ╔══[ERROR] Cannot constrain skolem <α>0_2147483647
 //│ ╙──
-//│ Type: ((Int) ∧ (⊤)) ∧ (⊤)
+//│ Type: Int
 
 region x in
   let r = x.ref 42 in let t = r := 0 in !r
 //│ Elab: { region x in { let r@3 = (x@2#0).ref 42‹›‹›; { let t@4 = r@3#0 := 0‹›‹›; !Ref(r@3)‹› }‹› }‹›‹› }‹›
-//│ Type: ((Int) ∧ (⊤)) ∧ (⊤)
+//│ Type: Int
 
 :e
 fun rid: [A] -> A -> A
@@ -86,7 +86,7 @@ let t =
 //│ ╙──
 //│ Type: Ref[in α43_2 out α43_2, in ⊥ out ⊥]
 //│ Where:
-//│   ((Int) ∧ (⊤)) ∧ (⊤) <: α43_2
+//│   Int <: α43_2
 
 fun foo: [A] -> Int ->{A | Alloc} Int
 fun foo(x) =

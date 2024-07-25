@@ -8,7 +8,7 @@ fun id(x) = x
 
 id(1)
 //│ Elab: { id#0(1‹›)‹›‹› }‹›
-//│ Type: ((⊤) ∧ (⊤)) ∧ (Int)
+//│ Type: Int
 
 
 
