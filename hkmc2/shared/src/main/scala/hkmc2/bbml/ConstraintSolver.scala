@@ -41,60 +41,48 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogg
     case Top | Bot => ty
 
   private def constrainConj(conj: Conj)(using cache: Cache): Unit = trace(s"Constraining $conj"):
-    conj.sort match
-    case Conj.INU(i, u) => (i, u) match
-      case (_, Union.UBot) => raise(ErrorReport(msg"Cannot solve ${i.toString()} ∧ ¬⊥" -> N :: Nil))
-      case (Inter.Cls(NormalClassType(cls1, targs1)), Union.Uni(uni, NormalClassType(cls2, targs2))) =>
-        if cls1.uid == cls2.uid then
-          targs1.zip(targs2).foreach {
-            case ((in1, out1), (in2, out2)) =>
-              constrain(in2.toType, in1.toType)
-              constrain(out1.toType, out2.toType)
-          }
-        else constrainConj(Conj.INU(i, uni))
-      case (_, Union.Uni(uni, _)) => constrainConj(Conj.INU(i, uni))
-      case (Inter.Fun(NormalFunType(args1, ret1, eff1)), Union.Fun(NormalFunType(args2, ret2, eff2))) =>
-        args1.zip(args2).foreach { // TODO: check the length!
-          case (a1, a2) => constrain(a2.toType, a1.toType)
-        }
-        constrain(ret1.toType, ret2.toType)
-        constrain(eff1.toType, eff2.toType)
-      case _ => raise(ErrorReport(msg"Cannot solve ${i.toString()} <: ${u.toString()}" -> N :: Nil))
-    case Conj.CVar(_, v) if v.isSkolem =>
-      raise(ErrorReport(msg"Cannot constrain skolem ${v.toString()}" -> N :: Nil))
-    case Conj.CNVar(_, v) if v.isSkolem =>
-      raise(ErrorReport(msg"Cannot constrain skolem ${v.toString()}" -> N :: Nil))
-    case Conj.CVar(conj, v) if v.lvl >= conj.lvl =>
-      val nc = Type.mkNegType(conj.toType)
-      given Cache = cache + (v -> nc)
-      v.state.upperBounds ::= nc
-      v.state.lowerBounds.foreach(lb => constrain(lb, nc))
-    case Conj.CNVar(conj, v) if v.lvl >= conj.lvl =>
-      val c = conj.toType
-      given Cache = cache + (c -> v)
-      v.state.lowerBounds ::= c
-      v.state.upperBounds.foreach(ub => constrain(c, ub))
-    case Conj.CVar(conj, v) =>
-      val nc = Type.mkNegType(extrude(conj.toType)(using v.lvl, true))
-      given Cache = cache + (v -> nc)
-      v.state.upperBounds ::= nc
-      v.state.lowerBounds.foreach(lb => constrain(lb, nc))
-    case Conj.CNVar(conj, v) =>
-      val c = extrude(conj.toType)(using v.lvl, true)
-      given Cache = cache + (c -> v)
-      v.state.lowerBounds ::= c
-      v.state.upperBounds.foreach(ub => constrain(c, ub))
+    conj.pick match
+      case S((v, pol)) => // TODO: ignore
+        if v.isSkolem then raise(ErrorReport(msg"Cannot constrain skolem ${v.toString()}" -> N :: Nil))
+        else
+          val comp = conj.complement(v)
+          val bd = if v.lvl >= comp.lvl then comp else extrude(comp)(using v.lvl, true)
+          if pol then
+            val nc = Type.mkNegType(comp)
+            given Cache = cache + (v -> nc)
+            v.state.upperBounds ::= nc
+            v.state.lowerBounds.foreach(lb => constrain(lb, nc))
+          else
+            given Cache = cache + (comp -> v)
+            v.state.lowerBounds ::= comp
+            v.state.upperBounds.foreach(ub => constrain(comp, ub))
+      case _ => (conj.i, conj.u) match
+        case (_, Union(N, Nil)) => raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} ∧ ¬⊥" -> N :: Nil))
+        case (Inter(S(NormalClassType(cls1, targs1))), Union(f, NormalClassType(cls2, targs2) :: rest)) =>
+          if cls1.uid == cls2.uid then
+            targs1.zip(targs2).foreach {
+              case ((in1, out1), (in2, out2)) =>
+                constrain(in2, in1)
+                constrain(out1, out2)
+            }
+          else constrainConj(Conj(conj.i, Union(f, rest), Nil))
+        case (int: Inter, Union(f, _ :: rest)) => constrainConj(Conj(int, Union(f, rest), Nil))
+        case (Inter(S(NormalFunType(args1, ret1, eff1))), Union(S(NormalFunType(args2, ret2, eff2)), Nil)) =>
+          if args1.length != args2.length then
+            raise(ErrorReport(msg"Cannot constrain ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
+          else
+            args1.zip(args2).foreach {
+              case (a1, a2) => constrain(a2, a1)
+            }
+            constrain(ret1, ret2)
+            constrain(eff1, eff2)
+        case _ => raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
 
-  private def constrainDNF(disj: Disj)(using cache: Cache): Unit = disj match
-    case Disj.DBot => ()
-    case Disj.Con(conj) => constrainConj(conj)
-    case Disj.DC(disj, conj) =>
-      constrainDNF(disj)
-      constrainConj(conj)
+  private def constrainDNF(disj: Disj)(using cache: Cache): Unit = disj.conjs.foreach(constrainConj(_))
 
   private def constrainImpl(lhs: Type, rhs: Type)(using cache: Cache) =
     if cache((lhs, rhs)) then log(s"Cached!")
     else trace(s"CONSTRAINT $lhs <: $rhs"):
-      constrainDNF(dnf(lhs & rhs.!)(using raise))
+      constrainDNF(dnf(lhs & rhs.!)(using raise)) // TODO: inline skolem bounds
   def constrain(lhs: Type, rhs: Type): Unit =
     constrainImpl(lhs, rhs)(using Set.empty)

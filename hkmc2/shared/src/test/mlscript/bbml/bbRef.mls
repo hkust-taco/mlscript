@@ -19,11 +19,9 @@ region x in
 :e
 let t = region x in x in t.ref 42
 //│ Elab: { { let t@2 = region x in x@3#0‹›; (t@2#0).ref 42‹›‹› }‹› }‹›
-//│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
+//│ ╔══[ERROR] Cannot constrain skolem <α>0_2147483647
 //│ ╙──
-//│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
-//│ ╙──
-//│ Type: Ref[in Int out Int, in ⊥ out ⊤]
+//│ Type: Ref[in Int out Int, in ⊥ out ⊥]
 
 
 region x in
@@ -36,7 +34,7 @@ let t = region x in
   x.ref 42
 in t := 0
 //│ Elab: { { let t@2 = region x in (x@3#0).ref 42‹›‹›‹›; t@2#0 := 0‹›‹› }‹› }‹›
-//│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
+//│ ╔══[ERROR] Cannot constrain skolem <α>0_2147483647
 //│ ╙──
 //│ Type: Int
 
@@ -44,21 +42,21 @@ in t := 0
 region x in
   let r = x.ref 42 in !r
 //│ Elab: { region x in { let r@3 = (x@2#0).ref 42‹›‹›; !Ref(r@3)‹› }‹›‹› }‹›
-//│ Type: Int
+//│ Type: ((Int) ∧ (⊤)) ∧ (⊤)
 
 :e
 let t = region x in
   x.ref 42
 in !t
 //│ Elab: { { let t@2 = region x in (x@3#0).ref 42‹›‹›‹›; !Ref(t@2)‹› }‹› }‹›
-//│ ╔══[ERROR] Cannot solve ⊤ ∧ ¬⊥
+//│ ╔══[ERROR] Cannot constrain skolem <α>0_2147483647
 //│ ╙──
-//│ Type: Int
+//│ Type: ((Int) ∧ (⊤)) ∧ (⊤)
 
 region x in
   let r = x.ref 42 in let t = r := 0 in !r
 //│ Elab: { region x in { let r@3 = (x@2#0).ref 42‹›‹›; { let t@4 = r@3#0 := 0‹›‹›; !Ref(r@3)‹› }‹› }‹›‹› }‹›
-//│ Type: Int
+//│ Type: ((Int) ∧ (⊤)) ∧ (⊤)
 
 :e
 fun rid: [A] -> A -> A
@@ -84,11 +82,11 @@ let t =
     y => x.ref y
   in t(42)
 //│ Elab: { { let t@2 = region x in λy@4. (x@3#0).ref y@4#0‹›‹›‹›; t@2#0(42‹›)‹›‹› }‹› }‹›
-//│ ╔══[ERROR] Cannot constrain skolem <α>42_2
+//│ ╔══[ERROR] Cannot constrain skolem <α>0_2147483647
 //│ ╙──
 //│ Type: Ref[in α43_2 out α43_2, in ⊥ out ⊥]
 //│ Where:
-//│   Int <: α43_2
+//│   ((Int) ∧ (⊤)) ∧ (⊤) <: α43_2
 
 fun foo: [A] -> Int ->{A | Alloc} Int
 fun foo(x) =

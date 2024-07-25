@@ -100,10 +100,10 @@ abstract class Type extends GeneralType with TypeArg:
   def monoOr(fallback: => Type): Type = this
 
 case class ClassType(name: ClassSymbol, targs: Ls[TypeArg]) extends Type
-case class InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, isSkolem: Bool) extends Type
+final case class InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, isSkolem: Bool) extends Type
 case class FunType(args: Ls[Type], ret: Type, eff: Type) extends Type
 case class ComposedType(lhs: Type, rhs: Type, pol: Bool) extends Type // * Positive -> union
-case class NegType(ty: Type) extends Type
+final case class NegType(ty: Type) extends Type
 object Top extends Type
 object Bot extends Type
 
