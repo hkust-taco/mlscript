@@ -71,11 +71,11 @@ fun rid(x) =
 
 :e
 region x in
-  [A] => x.ref 42
-//│ Elab: { region x in forall A@3: RegRef(Ref(x@2),Lit(IntLit(42)))‹›‹› }‹›
+  (let dz = x.ref 42 in 42): [A] -> Int
+//│ Elab: { region x in Blk(List(LetBinding(Var(dz@3),RegRef(Ref(x@2),Lit(IntLit(42))))),Lit(IntLit(42))): Forall(List(A@4),Ref(class:Int))‹›‹› }‹›
 //│ ╔══[ERROR] Cannot solve (⊤) ∧ (⊤) ∧ ¬⊥
 //│ ╙──
-//│ Type: forall α39_3: Ref[in Int out Int, in ⊥ out ⊥]
+//│ Type: forall α39_3: Int
 
 
 :e

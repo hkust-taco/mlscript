@@ -31,17 +31,13 @@ id
 //│ Type: forall α4_2: (α4_2) ->{⊥} α4_2
 
 
-[A] => (x: A) => x
-//│ Elab: { forall A@2: Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))‹› }‹›
-//│ Type: forall α5_2: (α5_2) ->{⊥} α5_2
-
 (x => x): [A] -> A -> A
 //│ Elab: { Lam(List(Param(‹›,x@2,None)),Ref(x@2)): Forall(List(A@3),FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None))‹› }‹›
-//│ Type: forall α6_2: (α6_2) ->{⊥} α6_2
+//│ Type: forall α5_2: (α5_2) ->{⊥} α5_2
 
 id: [A] -> A -> A
 //│ Elab: { Ref(id): Forall(List(A@2),FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2),None))‹› }‹›
-//│ Type: forall α7_2: (α7_2) ->{⊥} α7_2
+//│ Type: forall α6_2: (α6_2) ->{⊥} α6_2
 
 id: Int -> Int
 //│ Elab: { Ref(id): FunTy(Tup(List(Fld(‹›,Ref(class:Int),None))),Ref(class:Int),None)‹› }‹›
@@ -55,9 +51,9 @@ myInc(id, 0)
 //│ Elab: { myInc#0(id#3, 0‹›)‹›‹› }‹›
 //│ Type: Int
 
-let t = 42 in [A] => (x: A) => x
-//│ Elab: { { let t@2 = 42‹›; forall A@3: Lam(List(Param(‹›,x@4,Some(Ref(A@3)))),Ref(x@4))‹› }‹› }‹›
-//│ Type: forall α14_2: (α14_2) ->{⊥} α14_2
+let t = 42 in ((x => x): [A] -> A -> A)
+//│ Elab: { { let t@2 = 42‹›; Lam(List(Param(‹›,x@3,None)),Ref(x@3)): Forall(List(A@4),FunTy(Tup(List(Fld(‹›,Ref(A@4),None))),Ref(A@4),None))‹› }‹› }‹›
+//│ Type: forall α13_2: (α13_2) ->{⊥} α13_2
 
 
 id(42)
@@ -85,7 +81,7 @@ fun swap(p) = new Pair(p.Pair#b, p.Pair#a)
 
 swap
 //│ Elab: { swap#0 }‹›
-//│ Type: forall α21_2, α22_2: (Pair[in ⊥ out α21_2, in ⊥ out α22_2]) ->{⊥} Pair[in ⊥ out α22_2, in ⊥ out α21_2]
+//│ Type: forall α20_2, α21_2: (Pair[in ⊥ out α20_2, in ⊥ out α21_2]) ->{⊥} Pair[in ⊥ out α21_2, in ⊥ out α20_2]
 
 let t = new Pair(42, true) in swap(t)
 //│ Elab: { { let t@2 = new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›; swap#1(t@2#0)‹›‹› }‹› }‹›
@@ -95,8 +91,8 @@ let t = new Pair("114", "514") in swap(t)
 //│ Elab: { { let t@2 = new class:Pair(Lit(StrLit(114)), Lit(StrLit(514)))‹›; swap#2(t@2#0)‹›‹› }‹› }‹›
 //│ Type: Pair[in ⊥ out Str, in ⊥ out Str]
 
-let id = [A] => (x: A) => x in new Pair(id(42), id("42"))
-//│ Elab: { { let id@2 = forall A@3: Lam(List(Param(‹›,x@4,Some(Ref(A@3)))),Ref(x@4))‹›; new class:Pair(App(Ref(id@2),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))), App(Ref(id@2),Tup(List(Fld(‹›,Lit(StrLit(42)),None)))))‹› }‹› }‹›
+let id = ((x => x): [A] -> A -> A) in new Pair(id(42), id("42"))
+//│ Elab: { { let id@2 = Lam(List(Param(‹›,x@3,None)),Ref(x@3)): Forall(List(A@4),FunTy(Tup(List(Fld(‹›,Ref(A@4),None))),Ref(A@4),None))‹›; new class:Pair(App(Ref(id@2),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))), App(Ref(id@2),Tup(List(Fld(‹›,Lit(StrLit(42)),None)))))‹› }‹› }‹›
 //│ Type: Pair[in ⊤ out Int, in ⊤ out Str]
 
 fun foo: ([A] -> A -> A) -> Int
@@ -106,7 +102,7 @@ fun foo(x) = 42
 
 foo
 //│ Elab: { foo#0 }‹›
-//│ Type: (forall α54_2: (α54_2) ->{⊥} α54_2) ->{⊥} Int
+//│ Type: (forall α53_2: (α53_2) ->{⊥} α53_2) ->{⊥} Int
 
 foo(id)
 //│ Elab: { foo#1(id#6)‹›‹› }‹›
@@ -150,13 +146,13 @@ class Some[A](value: A)
 //│ Elab: { class Some[out A@2](value@3: A@2#0) { }‹›; }‹›
 //│ Type: ⊤
 
-new Some([A] => (x: A) => x)
-//│ Elab: { new class:Some(Forall(List(A@2),Lam(List(Param(‹›,x@3,Some(Ref(A@2)))),Ref(x@3))))‹› }‹›
-//│ Type: Some[in ⊤ out (((⊤) ∧ (⊤)) ∧ (α80_1)) ->{(⊥) ∨ (⊥)} ((⊤) ∧ (⊤)) ∧ (α80_1)]
+new Some((x => x): [A] -> A -> A)
+//│ Elab: { new class:Some(Asc(Lam(List(Param(‹›,x@2,None)),Ref(x@2)),Forall(List(A@3),FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None))))‹› }‹›
+//│ Type: Some[in ⊤ out (((⊤) ∧ (⊤)) ∧ (α79_1)) ->{(⊥) ∨ (⊥)} ((⊤) ∧ (⊤)) ∧ (α79_1)]
 
 :fixme
-let s = new Some([A] => (x: A) => x) in let t = s.Some#value(42) in s.Some#value(false)
-//│ Elab: { { let s@2 = new class:Some(Forall(List(A@3),Lam(List(Param(‹›,x@4,Some(Ref(A@3)))),Ref(x@4))))‹›; { let t@5 = s@2#0.class:Some#0#value‹›(42‹›)‹›‹›; s@2#1.class:Some#1#value‹›(false‹›)‹›‹› }‹› }‹› }‹›
+let s = new Some((x => x): [A] -> A -> A) in let t = s.Some#value(42) in s.Some#value(false)
+//│ Elab: { { let s@2 = new class:Some(Asc(Lam(List(Param(‹›,x@3,None)),Ref(x@3)),Forall(List(A@4),FunTy(Tup(List(Fld(‹›,Ref(A@4),None))),Ref(A@4),None))))‹›; { let t@5 = s@2#0.class:Some#0#value‹›(42‹›)‹›‹›; s@2#1.class:Some#1#value‹›(false‹›)‹›‹› }‹› }‹› }‹›
 //│ Type: (Bool) ∨ (Int)
 
 fun gen: Int -> [A] -> A -> A
@@ -167,12 +163,12 @@ fun gen(x) =
 
 gen
 //│ Elab: { gen#0 }‹›
-//│ Type: (Int) ->{⊥} forall α93_2: (α93_2) ->{⊥} α93_2
+//│ Type: (Int) ->{⊥} forall α92_2: (α92_2) ->{⊥} α92_2
 
 
 gen(42)
 //│ Elab: { gen#1(42‹›)‹›‹› }‹›
-//│ Type: forall α93_2: (α93_2) ->{⊥} α93_2
+//│ Type: forall α92_2: (α92_2) ->{⊥} α92_2
 
 // FIXME: toLoc
 :fixme
@@ -184,4 +180,4 @@ fun cnt(x) = 42
 
 (x => x): [A] -> A -> A
 //│ Elab: { Lam(List(Param(‹›,x@2,None)),Ref(x@2)): Forall(List(A@3),FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None))‹› }‹›
-//│ Type: forall α97_2: (α97_2) ->{⊥} α97_2
+//│ Type: forall α96_2: (α96_2) ->{⊥} α96_2

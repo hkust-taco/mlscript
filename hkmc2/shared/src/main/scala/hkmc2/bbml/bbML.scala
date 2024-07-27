@@ -132,13 +132,16 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
     case Term.Forall(tvs, body) =>
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx
-      val bd = tvs.map:
-        case sym: VarSymbol =>
-          val tv = freshVar
-          nestCtx += sym -> tv // TODO: a type var symbol may be better...
-          tv
-      PolyType(bd, extract(body))
+      genPolyType(tvs, extract(body))
     case _ => error(msg"${asc.toString} is not a valid class member type" -> asc.toLoc :: Nil) // TODO
+
+  private def genPolyType(tvs: Ls[VarSymbol], body: => GeneralType)(using ctx: Ctx) =
+    val bd = tvs.map:
+      case sym: VarSymbol =>
+        val tv = freshVar
+        ctx += sym -> tv // TODO: a type var symbol may be better...
+        tv
+    PolyType(bd, body)
 
   private def typeMonoType(ty: Term)(using ctx: Ctx): Type = monoOrErr(typeType(ty), ty)
 
@@ -172,12 +175,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
     case Term.Forall(tvs, body) =>
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx
-      val bd = tvs.map:
-        case sym: VarSymbol =>
-          val tv = freshVar
-          nestCtx += sym -> tv // TODO: a type var symbol may be better...
-          tv
-      PolyType(bd, typeType(body))
+      genPolyType(tvs, typeType(body))
     case Term.TyApp(lhs, targs) => typeType(lhs) match
       case ClassType(cls, _) => ClassType(cls, targs.map {
         case Term.WildcardTy(in, out) =>
@@ -400,6 +398,11 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
           constrain(effTy, eff)
           if !ret.isPoly then constrain(monoOrErr(bodyTy, body), monoOrErr(ret, body))
           (ft, Bot)
+    case (term, pt @ PolyType(tvs, body)) => // * generalize
+      val nestCtx = ctx.nextLevel
+      given Ctx = nestCtx
+      constrain(ascribe(term, skolemize(tvs, body))._2, Bot) // * never generalize terms with effects
+      (pt, Bot)
     case (Term.Blk(LetBinding(Pattern.Var(sym), rhs) :: Nil, body), ty) => // * propagate
       val nestCtx = ctx.nest
       given Ctx = nestCtx
@@ -409,11 +412,6 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
       (resTy, eff | resEff)
     case (Term.If(branches), ty) => // * propagate
       typeSplit(branches, S(ty))
-    case (term, pt @ PolyType(tvs, body)) => // * generalize
-      val nestCtx = ctx.nextLevel
-      given Ctx = nestCtx
-      constrain(ascribe(term, skolemize(tvs, body)(using false))._2, Bot) // * never generalize terms with effects
-      (pt, Bot)
     case (term, ft: FunType) if ft.isPoly =>
       val (ty, eff) = typeCheck(term)
       if !checkPoly(ty, ft) then
@@ -466,12 +464,12 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
       }, retVar, effVar))
       (retVar, argEff.foldLeft[Type](effVar | lhsEff)((res, e) => res | e))
 
-  private def skolemize(tv: Ls[InfVar], body: GeneralType)(using inv: Bool) =
+  private def skolemize(tv: Ls[InfVar], body: GeneralType) =
     val bds = tv.map(_.uid).toSet
     def rec(ty: GeneralType): GeneralType = ty match
       case ClassType(name, targs) => ClassType(name, targs.map(_.map(a => rec(a).monoOr(???))))
-      case v @ InfVar(vlvl, uid, state, isSkolem) =>
-        if bds(uid) then InfVar(vlvl, uid, state, !inv)
+      case v @ InfVar(vlvl, uid, state, _) =>
+        if bds(uid) then InfVar(vlvl, uid, state, true)
         else v
       case FunType(args, ret, eff) => FunType(args.map(a => rec(a).monoOr(???)), rec(ret).monoOr(???), rec(eff).monoOr(???))
       case ComposedType(lhs, rhs, pol) => ComposedType(rec(lhs).monoOr(???), rec(rhs).monoOr(???), pol)
@@ -486,154 +484,140 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
   
   private def typeCheck(t: Term)(using ctx: Ctx): (GeneralType, Type) = trace[(GeneralType, Type)](s"Typing ${t.showDbg}", res => s": $res"):
     t match
-    case Ref(sym: VarSymbol) =>
-      ctx.get(sym) match
-        case Some(ty) => (ty, Bot)
-        case _ =>
-          (error(msg"Variable not found: ${sym.name}" -> t.toLoc :: Nil), Bot)
-    case Ref(sym: TermSymbol) =>
-      ctx.get(sym) match
-        case Some(ty) => (ty, Bot)
-        case _ =>
-          (error(msg"Definition not found: ${sym.nme}" -> t.toLoc :: Nil), Bot)
-    case Blk(stats, res) =>
-      val nestCtx = ctx.nest
-      given Ctx = nestCtx
-      val effBuff = ListBuffer.empty[Type]
-      stats.foreach:
-        case term: Term => typeCheck(term)
-        case LetBinding(Pattern.Var(sym), rhs) =>
-          val (rhsTy, eff) = typeCheck(rhs)
-          effBuff += eff
-          nestCtx += sym -> rhsTy
-        case TermDefinition(Fun, sym, params, sig, Some(body), _) =>
-          typeFunDef(sym, params match {
-            case S(params) => Term.Lam(params, body)
-            case _ => body // * via case expressions
-          }, sig, t, ctx)
-        case clsDef: ClassDef => ctx *= clsDef
-        case _ => () // TODO
-      val (ty, eff) = typeCheck(res)
-      (ty, effBuff.foldLeft(eff)((res, e) => res | e))
-    case Lit(lit) => ((lit match
-      case _: IntLit => Ctx.intTy
-      case _: DecLit => Ctx.numTy
-      case _: StrLit => Ctx.strTy
-      case _: UnitLit => Top
-      case _: BoolLit => Ctx.boolTy), Bot)
-    case Lam(params, body) =>
-      val nestCtx = ctx.nest
-      given Ctx = nestCtx
-      val tvs = params.map:
-        case Param(_, sym, sign) =>
-          val ty = sign.map(s => typeType(s)(using nestCtx)).getOrElse(freshVar)
-          nestCtx += sym -> ty
-          ty
-      val (bodyTy, eff) = typeCheck(body)
-      (PolyFunType(tvs, bodyTy, eff), Bot)
-    case Term.SelProj(term, Term.Ref(cls: ClassSymbol), field) =>
-      val (ty, eff) = typeCheck(term)
-      ctx.getDef(cls.nme) match
-        case S(ClassDef.Parameterized(_, tparams, params, _, _)) =>
-          val map = HashMap[Uid[Symbol], Wildcard]()
-          val targs = tparams.map {
-            case TyParam(_, targ) =>
-              val ty = freshWildcard
-                map += targ.uid -> ty
-                ty
-          }
-          constrain(monoOrErr(ty, term), ClassType(cls, targs))
-          (params.map {
-            case Param(_, sym, sign) =>
-              if sym.nme == field.name then sign else N
-          }.filter(_.isDefined)) match
-            case S(res) :: Nil => (extract(res)(using map.toMap, true), eff)
-            case _ => (error(msg"${field.name} is not a valid member in class ${cls.nme}" -> t.toLoc :: Nil), Bot)
-        case S(ClassDef.Plain(_, tparams, _, _)) =>
-          ???
-        case N => 
-          (error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil), Bot)
-    case Term.App(lhs, Term.Tup(rhs)) => typeCheck(lhs) match
-      case (pt: PolyType, lhsEff) =>
-        app((instantiate(pt), lhsEff), rhs, t)
-      case (funTy, lhsEff) => app((funTy, lhsEff), rhs, t)
-    case Term.New(cls, args) =>
-      ctx.getDef(cls.nme) match
-        case S(ClassDef.Parameterized(_, tparams, params, _, _)) =>
-          if args.length != params.length then
-            (error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil), Bot)
-          else
+      case Ref(sym: VarSymbol) =>
+        ctx.get(sym) match
+          case Some(ty) => (ty, Bot)
+          case _ =>
+            (error(msg"Variable not found: ${sym.name}" -> t.toLoc :: Nil), Bot)
+      case Ref(sym: TermSymbol) =>
+        ctx.get(sym) match
+          case Some(ty) => (ty, Bot)
+          case _ =>
+            (error(msg"Definition not found: ${sym.nme}" -> t.toLoc :: Nil), Bot)
+      case Blk(stats, res) =>
+        val nestCtx = ctx.nest
+        given Ctx = nestCtx
+        val effBuff = ListBuffer.empty[Type]
+        stats.foreach:
+          case term: Term => typeCheck(term)
+          case LetBinding(Pattern.Var(sym), rhs) =>
+            val (rhsTy, eff) = typeCheck(rhs)
+            effBuff += eff
+            nestCtx += sym -> rhsTy
+          case TermDefinition(Fun, sym, params, sig, Some(body), _) =>
+            typeFunDef(sym, params match {
+              case S(params) => Term.Lam(params, body)
+              case _ => body // * via case expressions
+            }, sig, t, ctx)
+          case clsDef: ClassDef => ctx *= clsDef
+          case _ => () // TODO
+        val (ty, eff) = typeCheck(res)
+        (ty, effBuff.foldLeft(eff)((res, e) => res | e))
+      case Lit(lit) => ((lit match
+        case _: IntLit => Ctx.intTy
+        case _: DecLit => Ctx.numTy
+        case _: StrLit => Ctx.strTy
+        case _: UnitLit => Top
+        case _: BoolLit => Ctx.boolTy), Bot)
+      case Lam(params, body) =>
+        val nestCtx = ctx.nest
+        given Ctx = nestCtx
+        val tvs = params.map:
+          case Param(_, sym, sign) =>
+            val ty = sign.map(s => typeType(s)(using nestCtx)).getOrElse(freshVar)
+            nestCtx += sym -> ty
+            ty
+        val (bodyTy, eff) = typeCheck(body)
+        (PolyFunType(tvs, bodyTy, eff), Bot)
+      case Term.SelProj(term, Term.Ref(cls: ClassSymbol), field) =>
+        val (ty, eff) = typeCheck(term)
+        ctx.getDef(cls.nme) match
+          case S(ClassDef.Parameterized(_, tparams, params, _, _)) =>
             val map = HashMap[Uid[Symbol], Wildcard]()
             val targs = tparams.map {
               case TyParam(_, targ) =>
                 val ty = freshWildcard
-                map += targ.uid -> ty
-                ty
+                  map += targ.uid -> ty
+                  ty
             }
-            val effBuff = ListBuffer.empty[Type]
-            args.iterator.zip(params).foreach {
-              case (arg, Param(_, _, S(sign))) =>
-                val (ty, eff) = ascribe(arg, extract(sign)(using map.toMap, true))
-                effBuff += eff
-              case _ => ???
-            }
-            (ClassType(cls, targs), effBuff.foldLeft[Type](Bot)((res, e) => res | e))
-        case S(ClassDef.Plain(_, tparams, _, _)) =>
-          ???
-        case N => 
-          (error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil), Bot)
-    case Term.Asc(term, ty) =>
-      val res = typeType(ty)(using ctx)
-      ascribe(term, res)
-    case Term.Forall(tvs, body) => // * e.g. [A] => (x: A) => ...
-      val nestCtx = ctx.nextLevel
-      val bds = tvs.map:
-        case sym: VarSymbol =>
-          val tv = freshSkolem(using nestCtx)
-          nestCtx += sym -> tv // TODO: a type var symbol may be better...
-          tv
-      val (bodyTy, eff) = typeCheck(body)(using nestCtx)
-      constrain(eff, Bot) // * never generalize terms with effects
-      (PolyType(bds.map {
-        case InfVar(lvl, uid, st, _) => InfVar(lvl, uid, st, false)
-      }, skolemize(bds, bodyTy)(using true)), Bot)
-    case Term.If(branches) => typeSplit(branches, N)
-    case Term.Region(sym, body) =>
-      val nestCtx = ctx.nextLevel
-      given Ctx = nestCtx
-      val sk = freshSkolem
-      nestCtx += sym -> Ctx.regionTy(sk)
-      val (res, eff) = typeCheck(body)
-      val tv = freshVar(using ctx)
-      constrain(eff, tv | sk)
-      (res, tv | allocSkolem)
-    case Term.RegRef(reg, value) =>
-      val (regTy, regEff) = typeCheck(reg)
-      val (valTy, valEff) = typeCheck(value)
-      val sk = freshVar
-      constrain(monoOrErr(regTy, reg), Ctx.regionTy(sk))
-      (Ctx.refTy(monoOrErr(valTy, value), sk), sk | (regEff | valEff))
-    case Term.Set(lhs, rhs) =>
-      val (lhsTy, lhsEff) = typeCheck(lhs)
-      val (rhsTy, rhsEff) = typeCheck(rhs)
-      val sk = freshVar
-      constrain(monoOrErr(lhsTy, lhs), Ctx.refTy(monoOrErr(rhsTy, rhs), sk))
-      (monoOrErr(rhsTy, rhs), sk | (lhsEff | rhsEff))
-    case Term.Deref(ref) =>
-      val (refTy, refEff) = typeCheck(ref)
-      val sk = freshVar
-      val ctnt = freshVar
-      constrain(monoOrErr(refTy, ref), Ctx.refTy(ctnt, sk))
-      (ctnt, sk | refEff)
-    case Term.Quoted(body) =>
-      val nestCtx = ctx.nextLevel
-      given Ctx = nestCtx
-      val (ctxTy, eff) = typeCode(body)
-      (Ctx.codeTy(ctxTy), eff)
-    case _: Term.Unquoted =>
-      (error(msg"Unquote should nest in quasiquote" -> t.toLoc :: Nil), Bot)
-    case Term.Error =>
-      (Bot, Bot) // TODO: error type?
+            constrain(monoOrErr(ty, term), ClassType(cls, targs))
+            (params.map {
+              case Param(_, sym, sign) =>
+                if sym.nme == field.name then sign else N
+            }.filter(_.isDefined)) match
+              case S(res) :: Nil => (extract(res)(using map.toMap, true), eff)
+              case _ => (error(msg"${field.name} is not a valid member in class ${cls.nme}" -> t.toLoc :: Nil), Bot)
+          case S(ClassDef.Plain(_, tparams, _, _)) => ??? // TODO
+          case N => 
+            (error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil), Bot)
+      case Term.App(lhs, Term.Tup(rhs)) => typeCheck(lhs) match
+        case (pt: PolyType, lhsEff) =>
+          app((instantiate(pt), lhsEff), rhs, t)
+        case (funTy, lhsEff) => app((funTy, lhsEff), rhs, t)
+      case Term.New(cls, args) =>
+        ctx.getDef(cls.nme) match
+          case S(ClassDef.Parameterized(_, tparams, params, _, _)) =>
+            if args.length != params.length then
+              (error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil), Bot)
+            else
+              val map = HashMap[Uid[Symbol], Wildcard]()
+              val targs = tparams.map {
+                case TyParam(_, targ) =>
+                  val ty = freshWildcard
+                  map += targ.uid -> ty
+                  ty
+              }
+              val effBuff = ListBuffer.empty[Type]
+              args.iterator.zip(params).foreach {
+                case (arg, Param(_, _, S(sign))) =>
+                  val (ty, eff) = ascribe(arg, extract(sign)(using map.toMap, true))
+                  effBuff += eff
+                case _ => ???
+              }
+              (ClassType(cls, targs), effBuff.foldLeft[Type](Bot)((res, e) => res | e))
+          case S(ClassDef.Plain(_, tparams, _, _)) => ??? // TODO
+          case N => 
+            (error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil), Bot)
+      case Term.Asc(term, ty) =>
+        val res = typeType(ty)(using ctx)
+        ascribe(term, res)
+      case Term.If(branches) => typeSplit(branches, N)
+      case Term.Region(sym, body) =>
+        val nestCtx = ctx.nextLevel
+        given Ctx = nestCtx
+        val sk = freshSkolem
+        nestCtx += sym -> Ctx.regionTy(sk)
+        val (res, eff) = typeCheck(body)
+        val tv = freshVar(using ctx)
+        constrain(eff, tv | sk)
+        (res, tv | allocSkolem)
+      case Term.RegRef(reg, value) =>
+        val (regTy, regEff) = typeCheck(reg)
+        val (valTy, valEff) = typeCheck(value)
+        val sk = freshVar
+        constrain(monoOrErr(regTy, reg), Ctx.regionTy(sk))
+        (Ctx.refTy(monoOrErr(valTy, value), sk), sk | (regEff | valEff))
+      case Term.Set(lhs, rhs) =>
+        val (lhsTy, lhsEff) = typeCheck(lhs)
+        val (rhsTy, rhsEff) = typeCheck(rhs)
+        val sk = freshVar
+        constrain(monoOrErr(lhsTy, lhs), Ctx.refTy(monoOrErr(rhsTy, rhs), sk))
+        (monoOrErr(rhsTy, rhs), sk | (lhsEff | rhsEff))
+      case Term.Deref(ref) =>
+        val (refTy, refEff) = typeCheck(ref)
+        val sk = freshVar
+        val ctnt = freshVar
+        constrain(monoOrErr(refTy, ref), Ctx.refTy(ctnt, sk))
+        (ctnt, sk | refEff)
+      case Term.Quoted(body) =>
+        val nestCtx = ctx.nextLevel
+        given Ctx = nestCtx
+        val (ctxTy, eff) = typeCode(body)
+        (Ctx.codeTy(ctxTy), eff)
+      case _: Term.Unquoted =>
+        (error(msg"Unquote should nest in quasiquote" -> t.toLoc :: Nil), Bot)
+      case Term.Error =>
+        (Bot, Bot) // TODO: error type?
 
   def typePurely(t: Term): GeneralType =
     val (ty, eff) = typeCheck(t)(using initCtx)
