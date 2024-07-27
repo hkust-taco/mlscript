@@ -184,4 +184,4 @@ fun cnt(x) = 42
 
 (x => x): [A] -> A -> A
 //│ Elab: { Lam(List(Param(‹›,x@2,None)),Ref(x@2)): Forall(List(A@3),FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None))‹› }‹›
-//│ Type: forall α96_2: (α96_2) ->{⊥} α96_2
+//│ Type: forall α97_2: (α97_2) ->{⊥} α97_2

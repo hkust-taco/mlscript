@@ -105,28 +105,22 @@ fun baz(z) =
 //│ Elab: { fun baz: (class:Int#33)‹› -> (forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)‹›, class:Int#34)‹› -> class:Int#35‹›‹›; fun baz(z@4): (class:Int#38)‹› -> (forall A@10: FunTy(Tup(List(Fld(‹›,Ref(A@10),None))),Ref(A@10),None)‹›, class:Int#39)‹› -> class:Int#40‹›‹› = Lam(List(Param(‹›,f@5,None), Param(‹›,x@6,None)),App(Ref(f@5),Tup(List(Fld(‹›,Ref(x@6),None))))): FunTy(Tup(List(Fld(‹›,Forall(List(A@8),FunTy(Tup(List(Fld(‹›,Ref(A@8),None))),Ref(A@8),None)),None), Fld(‹›,Ref(class:Int),None))),Ref(class:Int),None)‹›; }‹›
 //│ Type: ⊤
 
+:fixme // toLoc
 :e
 baz: Int -> (([A] -> A -> A), Int) -> Int
 //│ Elab: { Ref(baz): FunTy(Tup(List(Fld(‹›,Ref(class:Int),None))),FunTy(Tup(List(Fld(‹›,Forall(List(A@2),FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2),None)),None), Fld(‹›,Ref(class:Int),None))),Ref(class:Int),None),None)‹› }‹›
-//│ ╔══[ERROR] Polymorphic type is not allowed here.
-//│ ╙──
-//│ ╔══[ERROR] Polymorphic type is not allowed here.
-//│ ╙──
-//│ Type: (Int) ->{⊥} (forall α14_2: (α14_2) ->{⊥} α14_2, Int) ->{⊥} Int
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 
 baz(42)
 //│ Elab: { baz#1(42‹›)‹›‹› }‹›
 //│ Type: (forall α10_2: (α10_2) ->{⊥} α10_2, Int) ->{⊥} Int
 
+:fixme // toLoc
 :e
 baz(42): (([A] -> A -> A), Int) -> Int
 //│ Elab: { App(Ref(baz),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))): FunTy(Tup(List(Fld(‹›,Forall(List(A@3),FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)),None), Fld(‹›,Ref(class:Int),None))),Ref(class:Int),None)‹› }‹›
-//│ ╔══[ERROR] Polymorphic type is not allowed here.
-//│ ╙──
-//│ ╔══[ERROR] Polymorphic type is not allowed here.
-//│ ╙──
-//│ Type: (forall α15_2: (α15_2) ->{⊥} α15_2, Int) ->{⊥} Int
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 
 fun id: [A] -> A -> A
