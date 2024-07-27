@@ -100,8 +100,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
   private def freshVar(using ctx: Ctx): InfVar = InfVar(ctx.lvl, infVarState.nextUid, new VarState(), false)
   private def freshWildcard(using ctx: Ctx) = Wildcard(freshVar, freshVar)
 
-  // * always extruded
-  private val allocSkolem: InfVar = InfVar(Int.MaxValue, infVarState.nextUid, new VarState(), true)
+  private val allocSkolem: InfVar = InfVar(0, infVarState.nextUid, new VarState(), true)
 
   private def error(msg: Ls[Message -> Opt[Loc]]) =
     raise(ErrorReport(msg))

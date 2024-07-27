@@ -12,7 +12,8 @@ sealed abstract class GeneralType:
   // * Polymorphic level
   lazy val lvl: Int
   def toString(): String
-  // * Get the mono type, otherwise we return fallback
+  // * Return itself if it is actually monomorphic.
+  // * Otherwise, evaluate fallback
   def monoOr(fallback: => Type): Type
 
   // * The map function should not change the shape!
@@ -39,6 +40,8 @@ object Wildcard:
 abstract class Type extends GeneralType with TypeArg:
   override protected type ThisType = Type
 
+  // * Remove redundant Top/Bot.
+  // * e.g., Top & Int === Int
   lazy val simp: Type = this
 
   override def toString(): String = this match
@@ -154,11 +157,11 @@ case class PolyFunType(args: Ls[GeneralType], ret: GeneralType, eff: Type) exten
     Some(FunType(args.map {
       case t: Type => t
       case pf: PolyFunType => pf.mono.get
-      case _ => ???
+      case _ => ??? // * Impossible
     }, ret match {
       case t: Type => t
       case pf: PolyFunType => pf.mono.get
-      case _ => ???
+      case _ => ??? // * Impossible
     }, eff))
   override def monoOr(fallback: => Type): Type = if isPoly then fallback else
     FunType(args.map {

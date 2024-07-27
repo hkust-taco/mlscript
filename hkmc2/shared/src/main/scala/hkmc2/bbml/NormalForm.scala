@@ -7,7 +7,6 @@ import semantics.*
 import Message.MessageContext
 import mlscript.utils.*, shorthands.*
 
-sealed trait NormalForm
 final class Disj(val conjs: Ls[Conj]) extends ComposedType(conjs.foldLeft[Type](Bot)((res, c) => res | c), Bot, true) with NormalForm:
   lazy val isBot: Bool = conjs.isEmpty
 object Disj:
@@ -15,6 +14,7 @@ object Disj:
   def unapply(disj: Disj): Opt[Ls[Conj]] = S(disj.conjs)
   lazy val bot: Disj = Disj(Nil)
   lazy val top: Disj = Disj(Conj.empty :: Nil)
+
 final class Conj(val i: Inter, val u: Union, val vars: Ls[(InfVar, Bool)]) extends ComposedType(i,
   vars.foldLeft(Type.mkNegType(u))((res, v) => if v._2 then res & v._1 else res & Type.mkNegType(v._1)), false
 ) with NormalForm:
@@ -24,7 +24,7 @@ final class Conj(val i: Inter, val u: Union, val vars: Ls[(InfVar, Bool)]) exten
         val u = u1.merge(u2)
         val vars = (vars1 ++ vars2).sortWith {
           case ((InfVar(_, uid1, _, _), _), (InfVar(_, uid2, _, _), _)) => uid1 <= uid2
-        }.foldLeft[Opt[Ls[(InfVar, Bool)]]](S(Nil))((res, p) => (res, p) match {
+        }.foldLeft[Opt[Ls[(InfVar, Bool)]]](S(Nil))((res, p) => (res, p) match { // * None -> bot
           case (N, _) => N
           case (S(Nil), p) => S(p :: Nil)
           case (S((InfVar(v, uid1, s, k), p1) :: tail), (InfVar(_, uid2, _, _), p2)) if uid1 == uid2 =>
@@ -35,16 +35,12 @@ final class Conj(val i: Inter, val u: Union, val vars: Ls[(InfVar, Bool)]) exten
           case S(vars) => S(Conj(i, u, vars))
           case _ => N
       case N => N
-  def pick: Option[(InfVar, Bool)] = vars.foldLeft[Option[(InfVar, Bool)]](N)((res, p) => (res, p) match {
-    case (S((InfVar(lv1, _, _, sk1), _)), (v @ InfVar(lv2, _, _, sk2), pol)) =>
-      if sk1 && sk2 then if lv1 < lv2 then S(v, pol) else res
-      else if sk1 || lv1 < lv2 then S(v, pol)
-      else res
-    case (N, (v, p)) => S(v, p)
-  })
-  def complement(v: InfVar): Conj = Conj(i, u, vars.filterNot(p => p._1.uid == v.uid))
 object Conj:
-  def apply(i: Inter, u: Union, vars: Ls[(InfVar, Bool)]) = new Conj(i, u, vars)
+  // * DO NOT use new expressions to create Conj objects.
+  // * We sort vars in the apply function.
+  def apply(i: Inter, u: Union, vars: Ls[(InfVar, Bool)]) = new Conj(i, u, vars.sortWith {
+    case ((InfVar(lv1, _, _, sk1), _), (InfVar(lv2, _, _, sk2), _)) => !(sk1 || !sk2 && lv1 <= lv2)
+  })
   def unapply(conj: Conj): Opt[(Inter, Union, Ls[(InfVar, Bool)])] = S((conj.i, conj.u, conj.vars))
   lazy val empty: Conj = Conj(Inter.empty, Union.empty, Nil)
   def mkVar(v: InfVar, pol: Bool) = Conj(Inter.empty, Union.empty, (v, pol) :: Nil)
@@ -53,6 +49,8 @@ object Conj:
     case cls: NormalClassType => Union(N, cls :: Nil)
     case fun: NormalFunType => Union(S(fun), Nil)
   }, Nil)
+
+// * Some(NormalClassType) -> C[in D_i out D_i], Some(NormalFunType) -> D_1 ->{D_2} D_3, None -> Top
 final class Inter(val v: Opt[NormalClassType | NormalFunType]) extends ComposedType(v match {
   case S(c: NormalClassType) => c
   case S(f: NormalFunType) => f
@@ -69,13 +67,14 @@ final class Inter(val v: Opt[NormalClassType | NormalFunType]) extends ComposedT
         case (a1, a2) => NormalForm.union(a1, a2)
       }, NormalForm.inter(r1, r2), NormalForm.inter(e1, e2)))))
     case (S(v), N) => S(Inter(S(v)))
-    case (N, S(v)) => S(Inter(S(v)))
-    case (N, N) => S(Inter(N))
+    case (N, v) => S(Inter(v))
     case _ => N
 object Inter:
   def apply(v: Opt[NormalClassType | NormalFunType]) = new Inter(v)
   def unapply(i: Inter): Opt[Opt[NormalClassType | NormalFunType]] = S(i.v)
   lazy val empty: Inter = Inter(N)
+
+// * fun: Some(NormalFunType) -> D_1 ->{D_2} D_3, None -> bot
 final class Union(val fun: Opt[NormalFunType], val cls: Ls[NormalClassType]) extends ComposedType(fun.getOrElse(Bot),
   cls.foldLeft[Type](Bot)((res, c) => res | c), true
 ) with NormalForm:
@@ -87,7 +86,7 @@ final class Union(val fun: Opt[NormalFunType], val cls: Ls[NormalClassType]) ext
     case (S(f), N) => S(f)
     case (N, S(f)) => S(f)
     case _ => N
-  }, (cls ++ other.cls).sortWith {
+  }, (cls ++ other.cls).sortWith { // * Merge the same classes
     case (cls1, cls2) => cls1.cls.uid <= cls2.cls.uid
   }.foldLeft[Ls[NormalClassType]](Nil)((res, cls) => (res, cls) match {
     case (Nil, cls) => cls :: Nil
@@ -111,6 +110,7 @@ object NormalFunType:
   def apply(args: List[Disj], ret: Disj, eff: Disj) = new NormalFunType(args, ret, eff)
   def unapply(fun: NormalFunType): Opt[(List[Disj], Disj, Disj)] = S((fun.nargs, fun.nret, fun.neff))
 
+sealed trait NormalForm
 object NormalForm:
   def inter(lhs: Disj, rhs: Disj): Disj =
     if lhs.isBot || rhs.isBot then Disj.bot

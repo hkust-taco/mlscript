@@ -13,6 +13,7 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogg
   import hkmc2.bbml.NormalForm.*
   type Cache = Set[(Type, Type)]
 
+  // TODO: cache x-fresh
   private def freshXVar(lvl: Int): InfVar = InfVar(lvl, infVarState.nextUid, new VarState(), false)
 
   private def extrude(ty: Type)(using lvl: Int, pol: Bool): Type = if ty.lvl <= lvl then ty else ty match
@@ -20,9 +21,9 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogg
       ClassType(sym, targs.map {
         case Wildcard(in, out) =>
           Wildcard(extrude(in)(using lvl, !pol), extrude(out))
-        case t => ??? // TODO
+        case t: Type => Wildcard(extrude(t)(using lvl, !pol), extrude(t))
       })
-    case v @ InfVar(_, uid, _, true) =>
+    case v @ InfVar(_, uid, _, true) => // * skolem
       if pol then Top else Bot
     case v @ InfVar(_, uid, _, false) =>
       val nv = freshXVar(lvl)
@@ -41,29 +42,30 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogg
     case Top | Bot => ty
 
   private def constrainConj(conj: Conj)(using cache: Cache): Unit = trace(s"Constraining $conj"):
-    conj.pick match
-      case S((v, pol)) =>
-        if v.isSkolem then constrainConj(conj.complement(v))
+    conj match
+      case Conj(i, u, (v, pol) :: tail) =>
+        var rest = Conj(i, u, tail)
+        if v.isSkolem then constrainConj(rest)
         else
-          val comp = conj.complement(v).simp
+          val comp = rest.simp
           val bd = if v.lvl >= comp.lvl then comp else extrude(comp)(using v.lvl, true)
           if pol then
             val nc = Type.mkNegType(bd)
             given Cache = cache + (v -> nc)
             v.state.upperBounds ::= nc
-            v.state.lowerBounds.foreach(lb => constrain(lb, nc))
+            v.state.lowerBounds.foreach(lb => constrainImpl(lb, nc))
           else
             given Cache = cache + (bd -> v)
             v.state.lowerBounds ::= bd
-            v.state.upperBounds.foreach(ub => constrain(bd, ub))
-      case _ => (conj.i, conj.u) match
+            v.state.upperBounds.foreach(ub => constrainImpl(bd, ub))
+      case Conj(i, u, Nil) => (conj.i, conj.u) match
         case (_, Union(N, Nil)) => raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} ∧ ¬⊥" -> N :: Nil))
         case (Inter(S(NormalClassType(cls1, targs1))), Union(f, NormalClassType(cls2, targs2) :: rest)) =>
           if cls1.uid == cls2.uid then
             targs1.zip(targs2).foreach {
               case ((in1, out1), (in2, out2)) =>
-                constrain(in2, in1)
-                constrain(out1, out2)
+                constrainImpl(in2, in1)
+                constrainImpl(out1, out2)
             }
           else constrainConj(Conj(conj.i, Union(f, rest), Nil))
         case (int: Inter, Union(f, _ :: rest)) => constrainConj(Conj(int, Union(f, rest), Nil))
@@ -72,10 +74,10 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogg
             raise(ErrorReport(msg"Cannot constrain ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
           else
             args1.zip(args2).foreach {
-              case (a1, a2) => constrain(a2, a1)
+              case (a1, a2) => constrainImpl(a2, a1)
             }
-            constrain(ret1, ret2)
-            constrain(eff1, eff2)
+            constrainImpl(ret1, ret2)
+            constrainImpl(eff1, eff2)
         case _ => raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
 
   private def constrainDNF(disj: Disj)(using cache: Cache): Unit = disj.conjs.foreach(constrainConj(_))

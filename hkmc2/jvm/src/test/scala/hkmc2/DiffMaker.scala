@@ -241,7 +241,7 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
           if bbml.isSet then
             if bbmlTyper.isEmpty then
               bbmlTyper = S(BBTyper(raise, Ctx.init(curCtx.members), tl))
-            val typer = bbmlTyper.get // ???
+            val typer = bbmlTyper.get // TODO: getOrUpdate
             val ty = typer.typePurely(e)
             val printer = PrettyPrinter((msg: String) => output(msg))
             if debug.isSet then printer.print(ty)
