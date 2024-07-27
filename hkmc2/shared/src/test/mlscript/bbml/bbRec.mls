@@ -5,7 +5,7 @@
 :fixme // parsing
 fun f x = f
 //│ Elab: { fun x = x#0; }‹›
-//│ /!!!\ Uncaught error: scala.MatchError: Ref(x) (of class hkmc2.semantics.Term$Ref)
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 fun f(x) = f
 f
