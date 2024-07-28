@@ -179,16 +179,7 @@ case class PolyFunType(args: Ls[GeneralType], ret: GeneralType, eff: Type) exten
       case pf: PolyFunType => pf.mono.get
       case _ => ??? // * Impossible
     }, eff))
-  override def monoOr(fallback: => Type): Type = if isPoly then fallback else
-    FunType(args.map {
-      case t: Type => t
-      case pt: PolyType => pt.monoOr(???) // * Must be mono
-      case pf: PolyFunType => pf.monoOr(???) // * Must be mono
-    }, ret match {
-      case t: Type => t
-      case pt: PolyType => pt.monoOr(???) // * Must be mono
-      case pf: PolyFunType => pf.monoOr(???) // * Must be mono
-    }, eff)
+  override def monoOr(fallback: => Type): Type = mono.getOrElse(fallback)
   override def map(f: GeneralType => GeneralType): PolyFunType = PolyFunType(args.map(f), f(ret), f(eff).monoOr(???)) // * Must be mono
 
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =

@@ -134,8 +134,8 @@ class TypeSimplifier(tl: TraceLogger):
               // TypeBounds(TopType, BotType)(noProv) // TODO improve? creates lots of junk...
               Top // FIXME arbitrary
             // TODO rm self-cycles
-            val newLBs = tv.state.lowerBounds.map(subst(_).monoOr(Bot)) // FIXME
-            val newUBs = tv.state.upperBounds.map(subst(_).monoOr(Bot)) // FIXME
+            val newLBs = tv.state.lowerBounds.map(subst(_).monoOr(???))
+            val newUBs = tv.state.upperBounds.map(subst(_).monoOr(???))
             tv.state.lowerBounds = newLBs
             tv.state.upperBounds = newUBs
             val isPos = Analysis.posVars.contains(tv)
