@@ -114,9 +114,9 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           }.toList, innerTy)
 
         val ambiguous: Bool = innerTy.getVars.toList.flatMap(_.tsc)
-          .flatMap(_._1.tvs)
+          .flatMap(_._1.tvs).distinct
           .groupBy(_._2)
-          .exists { case (v,pvs) => pvs.distinct.sizeIs > 1 }
+          .exists { case (v,pvs) => pvs.sizeIs > 1 }
         if (ambiguous) raise(ErrorReport(Ls(fromStr("ambiguous") -> N), true))
 
         println(s"Inferred poly constr: $cty  —— where ${cty.showBounds}")

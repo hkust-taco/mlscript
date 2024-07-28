@@ -758,7 +758,7 @@ abstract class TyperHelpers { Typer: Typer =>
           val poltv = pol(tv)
           (if (poltv =/= S(false)) tv.lowerBounds.map(pol.at(tv.level, true) -> _) else Nil) :::
           (if (poltv =/= S(true)) tv.upperBounds.map(pol.at(tv.level, false) -> _) else Nil) :::
-          (tv.tsc.keys.flatMap(_.tvs).toList.distinct.map(u => pol.at(tv.level,u._1) -> u._2))
+          tv.tsc.keys.flatMap(_.tvs).map(u => pol.at(tv.level,u._1) -> u._2).toList
         case FunctionType(l, r) => pol.contravar -> l :: pol.covar -> r :: Nil
         case Overload(as) => as.map(pol -> _)
         case ComposedType(_, l, r) => pol -> l :: pol -> r :: Nil
@@ -1307,6 +1307,7 @@ abstract class TyperHelpers { Typer: Typer =>
         val poltv = pol(tv)
         if (poltv =/= S(false)) tv.lowerBounds.foreach(apply(pol.at(tv.level, true)))
         if (poltv =/= S(true)) tv.upperBounds.foreach(apply(pol.at(tv.level, false)))
+        tv.tsc.keys.flatMap(_.tvs).foreach(u => apply(pol.at(tv.level,u._1))(u._2))
       case FunctionType(l, r) => apply(pol.contravar)(l); apply(pol)(r)
       case Overload(as) => as.foreach(apply(pol))
       case ComposedType(_, l, r) => apply(pol)(l); apply(pol)(r)
@@ -1399,7 +1400,7 @@ abstract class TyperHelpers { Typer: Typer =>
     private val lvl = 0
     def apply(lvl: Level): Pol
     def quantifPolarity(lvl: Level): PolMap
-    final def apply(tv: TV): Pol = if (tv.tsc.isEmpty) apply(tv.level) else N
+    final def apply(tv: TV): Pol = apply(tv.level)
     def enter(polymLvl: Level): PolMap =
       new PolMap(base) {
         def apply(lvl: Level): Pol =
