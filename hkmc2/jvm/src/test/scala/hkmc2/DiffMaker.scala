@@ -212,10 +212,6 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
           case Diagnostic.Kind.Warning =>
             TODO(d.kind)
           report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
-          // if debug.isSet then
-          //   throw d
-          // if debug.isSet then
-          //   d.printStackTrace
         val lexer = new syntax.Lexer(origin, raise, dbg = dbgParsing.isSet)
         val tokens = lexer.bracketedTokens
         
@@ -241,7 +237,7 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
           if bbml.isSet then
             if bbmlTyper.isEmpty then
               bbmlTyper = S(BBTyper(raise, Ctx.init(curCtx.members), tl))
-            val typer = bbmlTyper.get // TODO: getOrUpdate
+            val typer = bbmlTyper.get
             val ty = typer.typePurely(e)
             val printer = PrettyPrinter((msg: String) => output(msg))
             if debug.isSet then printer.print(ty)

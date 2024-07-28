@@ -65,11 +65,7 @@ sealed trait Statement extends Located:
     case TyApp(pre, tarsg) => pre :: tarsg
     case Sel(pre, _) => pre :: Nil
     case Tup(fields) => fields.map(_.value)
-    case If(body) => body match
-      case Split.Cons(branch, Split.Else(alts)) => branch match
-        case TermBranch.Boolean(cond, Split.Else(cons)) => cond :: cons :: alts :: Nil
-        case _ => Nil // TODO
-      case _ => Nil // TODO
+    case If(body) => Nil // TODO
     case Lam(params, body) => body :: Nil
     case Blk(stats, res) => stats.flatMap(_.subTerms) ::: res :: Nil
     case Quoted(term) => term :: Nil

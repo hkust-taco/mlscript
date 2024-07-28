@@ -23,6 +23,7 @@ class Elaborator(raise: Raise):
   private var curUi = 0
   def nextUid: Int = { curUi += 1; curUi }
 
+  // * Ref allocation skolem UID, preserved
   private val allocSkolemUID = nextUid
   
   def term(tree: Tree): Ctxl[Term] = tree match
@@ -125,7 +126,9 @@ class Elaborator(raise: Raise):
                 term(App(Ident("=="), Tree.Tup(Ident(name) :: target :: Nil)))(using nestCtx),
                 Split.`then`(term(cons)(using nestCtx))
               ) :: res
-            case _ => ??? // TODO
+            case _ =>
+              raise(ErrorReport(msg"Unsupported case branch." -> tree.toLoc :: Nil))
+              Split.default(Term.Error)
           ))
         )
       case _ =>
@@ -159,22 +162,22 @@ class Elaborator(raise: Raise):
   def unit: Term.Lit = Term.Lit(UnitLit(true))
   
   def block(sts: Ls[Tree])(using c: Ctx): (Term.Blk, Ctx) =
-    val newMembers = mutable.Map.empty[Str, MemberSymbol]
-    val newSigMembers = mutable.Map.empty[Str, MemberSymbol]
-    val newSignatures = mutable.Map.empty[Str, Tree]
+    val newMembers = mutable.Map.empty[Str, MemberSymbol] // * Definitions with implementations
+    val newSignatures = mutable.Map.empty[Str, MemberSymbol] // * Definitions containing only signatures
+    val newSignatureTrees = mutable.Map.empty[Str, Tree] // * Store trees of signatures, passing them to definition objects
     sts.foreach:
       case td: TermDef =>
         td.name match
           case R(id) =>
             lazy val s = TermSymbol(id)
-            val members = if td.signature.isEmpty then newMembers else newSigMembers
+            val members = if td.signature.isEmpty then newMembers else newSignatures
             members.get(id.name) match
               case S(sym) =>
                 raise(ErrorReport(msg"Duplicate definition of ${id.name}" -> td.toLoc
                   :: msg"aready defined here" -> sym.toLoc :: Nil))
               case N =>
                 members += id.name -> s
-                td.signature.foreach(newSignatures += id.name -> _)
+                td.signature.foreach(newSignatureTrees += id.name -> _)
             td.symbolicName match
               case S(Ident(nme)) =>
                 members.get(nme) match
@@ -183,7 +186,7 @@ class Elaborator(raise: Raise):
                       :: msg"aready defined here" -> sym.toLoc :: Nil))
                   case N =>
                     members += nme -> s
-                    td.signature.foreach(newSignatures += id.name -> _)
+                    td.signature.foreach(newSignatureTrees += id.name -> _)
               case N =>
           case L(d) => raise(d)
       case td: TypeDef =>
@@ -198,7 +201,7 @@ class Elaborator(raise: Raise):
                 newMembers += id.name -> ClassSymbol(id)
           case L(d) => raise(d)
       case _ =>
-    newSigMembers.foreach:
+    newSignatures.foreach:
       case (name, sym) =>
         if !newMembers.contains(name) then
           newMembers += name -> sym
@@ -221,7 +224,7 @@ class Elaborator(raise: Raise):
               case N => (N, ctx)
             val b = rhs.map(term(_)(using newCtx))
             val r = FlowSymbol(s"‹result of ${s}›", nextUid)
-            val tdf = TermDefinition(k, s, ps, (td.signature orElse newSignatures.get(id.name)).map(term), b, r)
+            val tdf = TermDefinition(k, s, ps, (td.signature orElse newSignatureTrees.get(id.name)).map(term), b, r)
             s.defn = S(tdf)
             go(sts, tdf :: acc)
           case L(d) => go(sts, acc) // error already raised in newMembers initialization
