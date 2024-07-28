@@ -17,8 +17,9 @@ sealed abstract class GeneralType:
   def monoOr(fallback: => Type): Type
 
   // * The map function should not change the shape!
-  protected type ThisType
+  protected type ThisType <: GeneralType
   def map(f: ThisType => ThisType): ThisType
+  def subst(using map: Map[Uid[InfVar], InfVar]): ThisType
 
 // * Types that can be used as class type arguments
 sealed trait TypeArg:
@@ -104,10 +105,20 @@ abstract class Type extends GeneralType with TypeArg:
     case Top | Bot => f(this)
   def monoOr(fallback: => Type): Type = this
 
-case class ClassType(name: ClassSymbol, targs: Ls[TypeArg]) extends Type
-final case class InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, isSkolem: Bool) extends Type
-case class FunType(args: Ls[Type], ret: Type, eff: Type) extends Type
+case class ClassType(name: ClassSymbol, targs: Ls[TypeArg]) extends Type:
+  override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
+    ClassType(name, targs.map {
+        case Wildcard(in, out) => Wildcard(in.subst, out.subst)
+        case ty: Type => ty.subst
+      })
+final case class InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, isSkolem: Bool) extends Type:
+  override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = map.get(uid).getOrElse(this)
+case class FunType(args: Ls[Type], ret: Type, eff: Type) extends Type:
+  override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
+    FunType(args.map(_.subst), ret.subst, eff.subst)
 case class ComposedType(lhs: Type, rhs: Type, pol: Bool) extends Type: // * Positive -> union
+  override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
+    Type.mkComposedType(lhs.subst, rhs.subst, pol)
   override lazy val simp: Type = (lhs.simp, rhs.simp, pol) match
     case (Top, _, true) => Top
     case (_, Top, true) => Top
@@ -120,12 +131,15 @@ case class ComposedType(lhs: Type, rhs: Type, pol: Bool) extends Type: // * Posi
     case (lhs, rhs, pol) => ComposedType(lhs, rhs, pol)
   
 final case class NegType(ty: Type) extends Type:
+  override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = NegType(ty.subst)
   override lazy val simp: Type = ty.simp match
     case Top => Bot
     case Bot => Top
     case _ => this
-object Top extends Type
-object Bot extends Type
+object Top extends Type:
+  override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = Top
+object Bot extends Type:
+  override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = Bot
 
 object Type:
   def mkComposedType(lhs: Type, rhs: Type, pol: Bool): Type = if pol
@@ -143,6 +157,8 @@ case class PolyType(tv: Ls[InfVar], body: GeneralType) extends GeneralType:
   override def toString(): String = s"forall ${tv.mkString(", ")}: $body"
   override def monoOr(fallback: => Type): Type = fallback
   override def map(f: GeneralType => GeneralType): PolyType = PolyType(tv, f(body))
+
+  override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = PolyType(tv, body.subst)
 
 // * Functions that accept/return a polymorphic type.
 // * Note that effects are always monomorphic
@@ -174,6 +190,9 @@ case class PolyFunType(args: Ls[GeneralType], ret: GeneralType, eff: Type) exten
       case pf: PolyFunType => pf.monoOr(???) // * Must be mono
     }, eff)
   override def map(f: GeneralType => GeneralType): PolyFunType = PolyFunType(args.map(f), f(ret), f(eff).monoOr(???)) // * Must be mono
+
+  override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
+    PolyFunType(args.map(_.subst), ret.subst, eff.subst)
 
 class VarState:
   var lowerBounds: Ls[Type] = Nil
