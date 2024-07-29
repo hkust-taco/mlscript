@@ -43,8 +43,6 @@ abstract class ModeType {
   def allowEscape: Bool
   def useIR: Bool
   def interpIR: Bool
-  def irOpt: Bool
-  def irOptFuel: Int
   def irVerbose: Bool
   def genCpp: Bool
   def showCpp: Bool
@@ -328,8 +326,6 @@ class DiffTests
           case "UseIR" => useIR = true; mode
           case "useIR" => mode.copy(useIR = true)
           case "interpIR" => mode.copy(interpIR = true)
-          case "optIR" => mode.copy(irOpt = true)
-          case fuel if fuel.startsWith("optFuel") => mode.copy(irOptFuel = fuel.stripPrefix("optFuel").toInt)
           case "irVerbose" => mode.copy(irVerbose = true)
           case "genCpp" => mode.copy(genCpp = true)
           case "showCpp" => mode.copy(showCpp = true)
