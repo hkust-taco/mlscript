@@ -99,7 +99,7 @@ case class Defn(
     val ps = params.map(_.toString).mkString("[", ",", "]")
     val naps = newActiveParams.map(_.toSeq.sorted.mkString("{", ",", "}")).mkString("[", ",", "]")
     val ais = activeInputs.map(_.toSeq.sorted.mkString("[", ",", "]")).mkString("[", ",", "]")
-    val ars = activeResults.map(_.toString()).mkString("[", ",", "]")
+    val ars = activeResults.map(_.toString).mkString("[", ",", "]")
     s"Def($id, $name, $ps, $naps,\nI: $ais,\nR: $ars,\nRec: $recBoundary,\n$resultNum, \n$body\n)"
 
 sealed trait TrivialExpr:
@@ -464,7 +464,7 @@ case class DefnTag(inner: Int):
       (this, o) match
         case (DefnTag(a), DefnTag(b)) => this.is_valid && o.is_valid && a == b
     case _ => false
-  override def toString(): String = if is_valid then s"#$inner" else "#x"
+  override def toString: String = if is_valid then s"#$inner" else "#x"
 
 case class DefnLocMarker(val defn: Str, val marker: LocMarker):
   override def toString: String = s"$defn:$marker"
@@ -525,6 +525,6 @@ enum LocMarker:
 
   def show = s"$tag-" + toDocument.print
 
-  override def toString(): String = show
+  override def toString: String = show
 
   def matches(x: Node): Bool = this.tag == x.tag

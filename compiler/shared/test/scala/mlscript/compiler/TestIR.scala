@@ -24,9 +24,9 @@ class IRDiffTestCompiler extends DiffTests {
         val (fresh, freshFnId, freshClassId, freshTag) = (Fresh(), FreshInt(), FreshInt(), FreshInt())
         val gb = Builder(fresh, freshFnId, freshClassId, freshTag, mode.irVerbose)
         val graph = gb.buildGraph(unit)
-        output(graph.toString())
+        output(graph.toString)
         output("\nPromoted:")
-        output(graph.toString())
+        output(graph.toString)
         var interp_result: Opt[Str] = None
         if (mode.interpIR)
           output("\nInterpreted:")
@@ -44,7 +44,7 @@ class IRDiffTestCompiler extends DiffTests {
             }
           if (mode.runCpp)
             val auxPath = os.pwd/"compiler"/"shared"/"test"/"diff-ir"/"cpp"
-            val cppHost = CppCompilerHost(auxPath.toString())
+            val cppHost = CppCompilerHost(auxPath.toString)
             if !cppHost.ready then
               output("\nCpp Compilation Failed: Cpp compiler or GNU Make not found")
             else
@@ -62,7 +62,7 @@ class IRDiffTestCompiler extends DiffTests {
         //     g = new_g
         //     if (changed)
         //       output("\nOptimized:")
-        //       output(new_g.toString())
+        //       output(new_g.toString)
         //     fuel -= 1
 
         //   if (mode.interpIR)
@@ -81,15 +81,15 @@ class IRDiffTestCompiler extends DiffTests {
       catch
         case err: OptimizingError =>
           output(s"\nOpt Failed: ${err.getMessage()}")
-          output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))
+          output("\n" ++ err.getStackTrace().mkString("\n"))
         case err: Exception =>
           output(s"\nIR Processing Failed: ${err.getMessage()}")
-          output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))
+          output("\n" ++ err.getStackTrace().mkString("\n"))
         case err: StackOverflowError =>
           output(s"\nIR Processing Failed: ${err.getMessage()}")
-          output("\n" ++ err.getStackTrace().map(_.toString()).mkString("\n"))
+          output("\n" ++ err.getStackTrace().mkString("\n"))
       
-    (outputBuilder.toString().linesIterator.toList, None)
+    (outputBuilder.toString.linesIterator.toList, None)
   
   override protected lazy val files = allFiles.filter { file =>
       val fileName = file.baseName

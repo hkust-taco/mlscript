@@ -10,30 +10,30 @@ enum Specifier:
   case Static
   case Inline
 
-  def toDocument = this match
-    case Extern => "extern" |> raw 
-    case Static => "static" |> raw
-    case Inline => "inline" |> raw
+  def toDocument = raw(
+    this match
+    case Extern => "extern"
+    case Static => "static"
+    case Inline => "inline"
+  )
 
-  override def toString(): Str = toDocument.print
+  override def toString: Str = toDocument.print
 
 object Type:
   def toDocuments(args: Ls[Type], sep: Document, extraTypename: Bool = false): Document =
-    args.zipWithIndex.map {
-      case (x, i) =>
-        if i == 0 then
-          x.toDocument(extraTypename)
-        else
-          sep <#> x.toDocument(extraTypename)
+    args.iterator.zipWithIndex.map {
+      case (x, 0) =>
+        x.toDocument(extraTypename)
+      case (x, _) =>
+        sep <#> x.toDocument(extraTypename)
     }.fold(raw(""))(_ <#> _)
 
   def toDocuments(args: Ls[(Str, Type)], sep: Document): Document =
-    args.zipWithIndex.map {
-      case (x, i) =>
-        if i == 0 then
-          x._2.toDocument() <:> raw(x._1)
-        else
-          sep <#> x._2.toDocument() <:> raw(x._1)
+    args.iterator.zipWithIndex.map {
+      case (x, 0) =>
+        x._2.toDocument() <:> raw(x._1)
+      case (x, _) =>
+        sep <#> x._2.toDocument() <:> raw(x._1)
     }.fold(raw(""))(_ <#> _)
 
 enum Type:
@@ -62,7 +62,7 @@ enum Type:
       case Qualifier(inner, qual) => aux(inner) <:> raw(qual)
     aux(this)
 
-  override def toString(): Str = toDocument().print
+  override def toString: Str = toDocument().print
 
 object Stmt:
   def toDocuments(decl: Ls[Decl], stmts: Ls[Stmt]): Document =
