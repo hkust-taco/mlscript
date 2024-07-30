@@ -63,7 +63,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 36
 //│ annoying  calls  : 31
-//│ subtyping calls  : 698
+//│ subtyping calls  : 724
 
 :stats
 :e
@@ -83,7 +83,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 65
 //│ annoying  calls  : 90
-//│ subtyping calls  : 3208
+//│ subtyping calls  : 3498
 
 :stats
 :e
@@ -103,7 +103,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 82
 //│ annoying  calls  : 209
-//│ subtyping calls  : 16245
+//│ subtyping calls  : 17621
 
 
 // ====== 2 ====== //
@@ -131,7 +131,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 44
 //│ annoying  calls  : 31
-//│ subtyping calls  : 494
+//│ subtyping calls  : 520
 
 
 // ====== 3 ====== //
@@ -160,7 +160,7 @@ foo arg
 //│ res: error | int
 //│ constrain calls  : 76
 //│ annoying  calls  : 90
-//│ subtyping calls  : 2989
+//│ subtyping calls  : 3279
 
 
 // ====== 4 ====== //
@@ -190,7 +190,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 94
 //│ annoying  calls  : 131
-//│ subtyping calls  : 3984
+//│ subtyping calls  : 4350
 
 :stats
 :e
@@ -208,7 +208,7 @@ foo (arg with { x = 1} with { y = 2 })
 //│ res: error
 //│ constrain calls  : 69
 //│ annoying  calls  : 128
-//│ subtyping calls  : 3450
+//│ subtyping calls  : 3820
 
 :stats
 :e
@@ -226,7 +226,7 @@ foo (arg with { x = 1; y = 2; z = 3 })
 //│ res: error
 //│ constrain calls  : 69
 //│ annoying  calls  : 128
-//│ subtyping calls  : 3450
+//│ subtyping calls  : 3820
 
 
 // ====== 5 ====== //
@@ -257,7 +257,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 98
 //│ annoying  calls  : 131
-//│ subtyping calls  : 4272
+//│ subtyping calls  : 4638
 
 
 // ====== 6 ====== //
@@ -289,7 +289,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 102
 //│ annoying  calls  : 131
-//│ subtyping calls  : 4618
+//│ subtyping calls  : 4984
 
 
 // ====== 7 ====== //
@@ -322,7 +322,7 @@ foo arg
 //│ res: error
 //│ constrain calls  : 106
 //│ annoying  calls  : 131
-//│ subtyping calls  : 5027
+//│ subtyping calls  : 5393
 
 def foo_manual: ({fA: 'a} & a | {fB: 'a} & b & ~a | {fC: 'a} & c & ~a & ~b | {fD: 'a} & d & ~a & ~b & ~c | {fE: 'a} & e & ~a & ~b & ~c & ~d | {fF: 'a} & f & ~a & ~b & ~c & ~d & ~e | {fG: 'a} & g & ~a & ~b & ~c & ~d & ~e & ~f) -> 'a
 //│ foo_manual: ({fA: 'a} & #A | ~#A & ({fB: 'a} & #B | ~#B & ({fC: 'a} & #C | ~#C & ({fD: 'a} & #D | ~#D & ({fE: 'a} & #E | ~#E & ({fF: 'a} & #F | {fG: 'a} & #G & ~#F)))))) -> 'a
@@ -388,6 +388,6 @@ foo arg
 //│ res: error
 //│ constrain calls  : 110
 //│ annoying  calls  : 131
-//│ subtyping calls  : 5504
+//│ subtyping calls  : 5870
 
 

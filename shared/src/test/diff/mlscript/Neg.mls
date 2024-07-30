@@ -128,25 +128,37 @@ def f: (~Foo[1 | 2] & 'a | ~Foo[2 | 3] & 'a) -> 'a
 //│ f: ('a & ~Foo[?]) -> 'a
 //│  = <missing implementation>
 
-// * Notice the weird negative (in) type, and also see BooleanFail.mls
+// * Type ~{x: 1 | 2} & 'a | ~{x: 2 | 3} & 'a
+// *   is ~({x: 1 | 2} & {x: 2 | 3}) & 'a
+// *   is ~{x: 2}) & 'a
 def f: (~{x: 1 | 2} & 'a | ~{x: 2 | 3} & 'a) -> 'a
-//│ f: in forall 'a. nothing -> 'a out forall 'a. ('a & ~{x: 2}) -> 'a
+//│ f: ('a & ~{x: 2}) -> 'a
 //│  = <missing implementation>
 
 f = id
 //│ 'a -> 'a
 //│   <:  f:
-//│ nothing -> nothing
+//│ ('a & ~{x: 2}) -> 'a
 //│  = [Function: id]
 
+:e
 f x = case x of {}
 //│ nothing -> nothing
 //│   <:  f:
-//│ nothing -> nothing
+//│ ('a & ~{x: 2}) -> 'a
+//│ ╔══[ERROR] Type mismatch in def definition:
+//│ ║  l.145: 	f x = case x of {}
+//│ ║         	^^^^^^^^^^^^^^^^^^
+//│ ╟── type `'a & ~{x: 1 | 2}` does not match type `nothing`
+//│ ║  l.134: 	def f: (~{x: 1 | 2} & 'a | ~{x: 2 | 3} & 'a) -> 'a
+//│ ║         	        ^^^^^^^^^^^^^^^^
+//│ ╟── Note: constraint arises from reference:
+//│ ║  l.145: 	f x = case x of {}
+//│ ╙──       	           ^
 //│  = [Function: f2]
 
 def f: (~{x: 1 | 2} & ~lit & 'a | ~{x: 2 | 3} & ~lit & 'a) -> 'a
-//│ f: in forall 'a. nothing -> 'a out forall 'a. ('a & ~{x: 2} & ~#Lit) -> 'a
+//│ f: ('a & ~{x: 2} & ~#Lit) -> 'a
 //│  = <missing implementation>
 
 
