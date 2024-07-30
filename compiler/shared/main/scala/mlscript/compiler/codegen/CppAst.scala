@@ -122,7 +122,7 @@ object Expr:
 enum Expr:
   case Var(name: Str)
   case IntLit(value: BigInt)
-  case FloatLit(value: Float)
+  case DoubleLit(value: Float)
   case StrLit(value: Str)
   case CharLit(value: Char)
   case Call(func: Expr, args: Ls[Expr])
@@ -137,7 +137,7 @@ enum Expr:
     def aux(x: Expr): Document = x match
       case Var(name) => name |> raw
       case IntLit(value) => value.toString |> raw
-      case FloatLit(value) => value.toString |> raw
+      case DoubleLit(value) => value.toString |> raw
       case StrLit(value) => s"\"$value\"" |> raw // need more reliable escape utils
       case CharLit(value) => s"'$value'" |> raw
       case Call(func, args) => aux(func) <#> raw("(") <#> Expr.toDocuments(args, sep = raw(", ")) <#> raw(")")

@@ -6,7 +6,7 @@ import mlscript.compiler.ir._
 import scala.collection.mutable.StringBuilder
 import mlscript.{DiffTests, ModeType, TypingUnit}
 import mlscript.compiler.ir.{Fresh, FreshInt, Builder}
-import mlscript.compiler.codegen.cpp.{CppCodeGen, CppCompilerHost}
+import mlscript.compiler.codegen.cpp._
 import mlscript.Diagnostic
 import mlscript.compiler.optimizer.TailRecOpt
 
@@ -43,7 +43,7 @@ class IRDiffTestCompiler extends DiffTests {
           interp_result = Some(ir)
           output(ir)
         if (mode.genCpp)
-          val cpp = CppCodeGen().codegen(graph)
+          val cpp = codegen(graph)
           if (mode.showCpp)
             output("\nCpp:")
             output(cpp.toDocument.print)
