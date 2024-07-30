@@ -2,14 +2,3 @@
 :bbml
 
 
-fun id(x) = x
-//│ Elab: { fun id(x@2) = x@2#0; }‹›
-//│ Type: ⊤
-
-id(1)
-//│ Elab: { id#0(1‹›)‹›‹› }‹›
-//│ Type: Int
-
-
-
-
