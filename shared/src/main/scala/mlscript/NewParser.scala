@@ -1475,6 +1475,7 @@ abstract class NewParser(origin: Origin, tokens: Ls[Stroken -> Loc], newDefs: Bo
     
   }
   }
+
   final def bindings(acc: Ls[Var -> Term])(implicit fe: FoundErr): Ls[Var -> Term] = 
     cur match {
       case (SPACE, _) :: _ =>

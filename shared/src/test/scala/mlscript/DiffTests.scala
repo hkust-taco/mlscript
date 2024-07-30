@@ -500,6 +500,7 @@ class DiffTests
             
             val newMode = if (useIR) { mode.copy(useIR = true) } else mode
             val newNewMode = if (noTailRec) { newMode.copy(noTailRecOpt = true) } else newMode
+
             val (postLines, nuRes) = postProcess(newNewMode, basePath, testName, res, output, raise)
             postLines.foreach(output)
 
