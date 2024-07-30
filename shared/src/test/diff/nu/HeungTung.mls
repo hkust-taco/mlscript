@@ -251,7 +251,7 @@ f: (Int -> Int) & (Bool -> Bool)
 
 // * Notice: in positive position, this is equivalent to Bottom
 fun x: ~{ a: Int }
-//│ fun x: nothing
+//│ fun x: ~{a: Int}
 
 
 class A()
