@@ -122,7 +122,7 @@ object Expr:
 enum Expr:
   case Var(name: Str)
   case IntLit(value: BigInt)
-  case DoubleLit(value: Float)
+  case DoubleLit(value: Double)
   case StrLit(value: Str)
   case CharLit(value: Char)
   case Call(func: Expr, args: Ls[Expr])
