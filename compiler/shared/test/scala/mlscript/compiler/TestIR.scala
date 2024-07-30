@@ -6,8 +6,9 @@ import mlscript.compiler.ir._
 import scala.collection.mutable.StringBuilder
 import mlscript.compiler.optimizer.TailRecOpt
 
-class IRDiffTestCompiler extends DiffTests {
-  import IRDiffTestCompiler.*
+import IRDiffTestCompiler.*
+
+class IRDiffTestCompiler extends DiffTests(State) {
 
   override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit, raise: Diagnostic => Unit): (List[Str], Option[TypingUnit]) = 
     val outputBuilder = StringBuilder()
@@ -58,21 +59,11 @@ class IRDiffTestCompiler extends DiffTests {
       
     (outputBuilder.toString().linesIterator.toList, None)
   
-  override protected lazy val files = allFiles.filter { file =>
-      val fileName = file.baseName
-      validExt(file.ext) && filter(file.relativeTo(pwd))
-  }
 }
 
 object IRDiffTestCompiler {
-
-  private val pwd = os.pwd
-  private val dir = pwd/"compiler"/"shared"/"test"/"diff-ir"
   
-  private val allFiles = os.walk(dir).filter(_.toIO.isFile)
-  
-  private val validExt = Set("fun", "mls")
-
-  private def filter(file: os.RelPath) = DiffTests.filter(file)
+  lazy val State =
+    new DiffTests.State(DiffTests.pwd/"compiler"/"shared"/"test"/"diff-ir")
   
 }
