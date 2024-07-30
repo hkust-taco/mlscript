@@ -397,7 +397,7 @@ case class DefnTag(inner: Int):
       (this, o) match
         case (DefnTag(a), DefnTag(b)) => this.is_valid && o.is_valid && a == b
     case _ => false
-  override def toString(): String = if is_valid then s"#$inner" else "#x"
+  override def toString: String = if is_valid then s"#$inner" else "#x"
 
 case class DefnLocMarker(val defn: Str, val marker: LocMarker):
   override def toString: String = s"$defn:$marker"
@@ -458,6 +458,6 @@ enum LocMarker:
 
   def show = s"$tag-" + toDocument.print
 
-  override def toString(): String = show
+  override def toString: String = show
 
   def matches(x: Node): Bool = this.tag == x.tag

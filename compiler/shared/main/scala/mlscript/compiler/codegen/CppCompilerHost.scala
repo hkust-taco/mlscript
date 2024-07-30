@@ -32,7 +32,7 @@ final class CppCompilerHost(val auxPath: Str):
   
     stdout.clear()
     stderr.clear()
-    val runCmd = Seq(binPath.toString())
+    val runCmd = Seq(binPath.toString)
     val runResult = runCmd ! buildLogger
     if runResult != 0 then
       output("Execution failed: ")

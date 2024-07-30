@@ -52,9 +52,6 @@ class CppCodeGen:
     Expr.Call(Expr.Member(Expr.Call(Expr.Var(s"_mlsMethodCall<${cls.name |> mapName}>"), Ls(args.head)), method), args.tail)
   private def mlsFnWrapperName(fn: Str) = s"_mlsFn_$fn"
   private def mlsFnCreateMethod(fn: Str) = s"static _mlsValue create() { static _mlsFn_$fn mlsFn alignas(_mlsAlignment); mlsFn.refCount = stickyRefCount; mlsFn.tag = typeTag; return _mlsValue(&mlsFn); }"
-  private def mlsFnApplyNMethod(fn: Str, n: Int) = 
-    Def.FuncDef(Type.Qualifier(mlsValType, "virtual"), s"apply$n", (0 until n).map{x => (s"arg$x", mlsValType)}.toList,
-      Stmt.Block(Ls(), Ls(Stmt.Return(Expr.Call(Expr.Var(fn), (0 until n).map{x => Expr.Var(s"arg$x")}.toList)))), true)
   private def mlsNeverValue(n: Int) = if (n <= 1) then Expr.Call(Expr.Var(s"_mlsValue::never"), Ls()) else Expr.Call(Expr.Var(s"_mlsValue::never<$n>"), Ls())
 
   private case class Ctx(
