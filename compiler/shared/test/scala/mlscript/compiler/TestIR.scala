@@ -28,16 +28,16 @@ class IRDiffTestCompiler extends DiffTests(State) {
 
         if mode.noTailRecOpt then
           output("\n\nIR:")
-          output(graph.toString())
+          output(graph.show)
         else
           val tailRecOpt = new TailRecOpt(freshFnId, freshClassId, freshTag, raise)
           val (g, comps) = tailRecOpt.run_debug(graph)
           output("\n\nStrongly Connected Tail Calls:")
           output(comps.toString)
           graph = g
-          output(graph.toString())
+          output(graph.show)
         output("\nPromoted:")
-        output(graph.toString)
+        output(graph.show)
         var interp_result: Opt[Str] = None
         if (mode.interpIR)
           output("\nInterpreted:")

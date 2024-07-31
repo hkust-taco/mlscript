@@ -15,130 +15,78 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #29
-//│ ),
-//│ apply1 -> Def(4, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #25
-//│ ),
-//│ apply0 -> Def(3, apply0, [],
-//│ 1, 
-//│ 0 -- #24
-//│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #28
-//│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #27
-//│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #26
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Pair, [x,y], parents: , methods:
-//│ )}, {
-//│ Def(0, mktup2, [x$1,y$0],
-//│ 1, 
-//│ let* (x$2) = mktup(x$1,y$0) in -- #9
-//│ x$2 -- #8
-//│ )
-//│ Def(1, mktup, [x$3,y$1],
-//│ 1, 
-//│ let x$4 = Pair(x$3,y$1) in -- #16
-//│ x$4 -- #15
-//│ )
-//│ Def(2, foo, [],
-//│ 1, 
-//│ let* (x$5) = mktup2(1,2) in -- #23
-//│ x$5 -- #22
-//│ )
-//│ },
-//│ let* (x$0) = foo() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #29
+//│     def apply1(x0$0) =
+//│       0 -- #25
+//│     def apply0() =
+//│       0 -- #24
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #28
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #27
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #26
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Pair(x,y)
+//│   def mktup2(x$1,y$0) =
+//│     let* (x$2) = mktup(x$1,y$0) in -- #9
+//│     x$2 -- #8
+//│   def mktup(x$3,y$1) =
+//│     let x$4 = Pair(x$3,y$1) in -- #16
+//│     x$4 -- #15
+//│   def foo() =
+//│     let* (x$5) = mktup2(1,2) in -- #23
+//│     x$5 -- #22
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #29
-//│ ),
-//│ apply1 -> Def(4, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #25
-//│ ),
-//│ apply0 -> Def(3, apply0, [],
-//│ 1, 
-//│ 0 -- #24
-//│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #28
-//│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #27
-//│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #26
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Pair, [x,y], parents: , methods:
-//│ )}, {
-//│ Def(0, mktup2, [x$1,y$0],
-//│ 1, 
-//│ let* (x$2) = mktup(x$1,y$0) in -- #9
-//│ x$2 -- #8
-//│ )
-//│ Def(1, mktup, [x$3,y$1],
-//│ 1, 
-//│ let x$4 = Pair(x$3,y$1) in -- #16
-//│ x$4 -- #15
-//│ )
-//│ Def(2, foo, [],
-//│ 1, 
-//│ let* (x$5) = mktup2(1,2) in -- #23
-//│ x$5 -- #22
-//│ )
-//│ },
-//│ let* (x$0) = foo() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #29
+//│     def apply1(x0$0) =
+//│       0 -- #25
+//│     def apply0() =
+//│       0 -- #24
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #28
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #27
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #26
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Pair(x,y)
+//│   def mktup2(x$1,y$0) =
+//│     let* (x$2) = mktup(x$1,y$0) in -- #9
+//│     x$2 -- #8
+//│   def mktup(x$3,y$1) =
+//│     let x$4 = Pair(x$3,y$1) in -- #16
+//│     x$4 -- #15
+//│   def foo() =
+//│     let* (x$5) = mktup2(1,2) in -- #23
+//│     x$5 -- #22
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ Pair(1,2)
@@ -156,138 +104,86 @@ bar()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #40
-//│ ),
-//│ apply1 -> Def(4, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #36
-//│ ),
-//│ apply0 -> Def(3, apply0, [],
-//│ 1, 
-//│ 0 -- #35
-//│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #39
-//│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #38
-//│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #37
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Pair, [x,y], parents: , methods:
-//│ )}, {
-//│ Def(0, foo, [pair$0],
-//│ 1, 
-//│ case pair$0 of -- #23
-//│   Pair =>
-//│     let x$2 = Pair.y(pair$0) in -- #22
-//│     let x$3 = Pair.x(pair$0) in -- #21
-//│     let x$4 = Pair(x$3,x$2) in -- #20
-//│     jump j$0(x$4) -- #19
-//│ )
-//│ Def(1, j$0, [x$1],
-//│ 1, 
-//│ x$1 -- #4
-//│ )
-//│ Def(2, bar, [],
-//│ 1, 
-//│ let x$5 = Pair(1,2) in -- #34
-//│ let* (x$6) = foo(x$5) in -- #33
-//│ x$6 -- #32
-//│ )
-//│ },
-//│ let* (x$0) = bar() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #40
+//│     def apply1(x0$0) =
+//│       0 -- #36
+//│     def apply0() =
+//│       0 -- #35
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #39
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #38
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #37
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Pair(x,y)
+//│   def foo(pair$0) =
+//│     case pair$0 of -- #23
+//│       Pair =>
+//│         let x$2 = Pair.y(pair$0) in -- #22
+//│         let x$3 = Pair.x(pair$0) in -- #21
+//│         let x$4 = Pair(x$3,x$2) in -- #20
+//│         jump j$0(x$4) -- #19
+//│   def j$0(x$1) =
+//│     x$1 -- #4
+//│   def bar() =
+//│     let x$5 = Pair(1,2) in -- #34
+//│     let* (x$6) = foo(x$5) in -- #33
+//│     x$6 -- #32
+//│   let* (x$0) = bar() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #40
-//│ ),
-//│ apply1 -> Def(4, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #36
-//│ ),
-//│ apply0 -> Def(3, apply0, [],
-//│ 1, 
-//│ 0 -- #35
-//│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #39
-//│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #38
-//│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #37
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Pair, [x,y], parents: , methods:
-//│ )}, {
-//│ Def(0, foo, [pair$0],
-//│ 1, 
-//│ case pair$0 of -- #23
-//│   Pair =>
-//│     let x$2 = Pair.y(pair$0) in -- #22
-//│     let x$3 = Pair.x(pair$0) in -- #21
-//│     let x$4 = Pair(x$3,x$2) in -- #20
-//│     jump j$0(x$4) -- #19
-//│ )
-//│ Def(1, j$0, [x$1],
-//│ 1, 
-//│ x$1 -- #4
-//│ )
-//│ Def(2, bar, [],
-//│ 1, 
-//│ let x$5 = Pair(1,2) in -- #34
-//│ let* (x$6) = foo(x$5) in -- #33
-//│ x$6 -- #32
-//│ )
-//│ },
-//│ let* (x$0) = bar() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #40
+//│     def apply1(x0$0) =
+//│       0 -- #36
+//│     def apply0() =
+//│       0 -- #35
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #39
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #38
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #37
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Pair(x,y)
+//│   def foo(pair$0) =
+//│     case pair$0 of -- #23
+//│       Pair =>
+//│         let x$2 = Pair.y(pair$0) in -- #22
+//│         let x$3 = Pair.x(pair$0) in -- #21
+//│         let x$4 = Pair(x$3,x$2) in -- #20
+//│         jump j$0(x$4) -- #19
+//│   def j$0(x$1) =
+//│     x$1 -- #4
+//│   def bar() =
+//│     let x$5 = Pair(1,2) in -- #34
+//│     let* (x$6) = foo(x$5) in -- #33
+//│     x$6 -- #32
+//│   let* (x$0) = bar() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ Pair(1,2)
@@ -313,158 +209,102 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #59
-//│ ),
-//│ apply1 -> Def(5, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #55
-//│ ),
-//│ apply0 -> Def(4, apply0, [],
-//│ 1, 
-//│ 0 -- #54
-//│ ),
-//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #58
-//│ ),
-//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #57
-//│ ),
-//│ apply2 -> Def(6, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #56
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Pair, [x,y], parents: , methods:
-//│ )}, {
-//│ Def(0, silly, [pair$0],
-//│ 1, 
-//│ let x$1 = 0 in -- #40
-//│ case pair$0 of -- #39
-//│   Pair =>
-//│     let x$4 = Pair.y(pair$0) in -- #38
-//│     let x$5 = Pair.x(pair$0) in -- #37
-//│     case pair$0 of -- #36
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #59
+//│     def apply1(x0$0) =
+//│       0 -- #55
+//│     def apply0() =
+//│       0 -- #54
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #58
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #57
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #56
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Pair(x,y)
+//│   def silly(pair$0) =
+//│     let x$1 = 0 in -- #40
+//│     case pair$0 of -- #39
 //│       Pair =>
-//│         let x$7 = Pair.y(pair$0) in -- #35
-//│         let x$8 = Pair.x(pair$0) in -- #34
-//│         let x$9 = +(x$8,1) in -- #33
-//│         jump j$1(x$9) -- #32
-//│ )
-//│ Def(1, j$0, [x$2],
-//│ 1, 
-//│ let x$3 = +(x$2,1) in -- #9
-//│ x$3 -- #8
-//│ )
-//│ Def(2, j$1, [x$6],
-//│ 1, 
-//│ jump j$0(x$6) -- #20
-//│ )
-//│ Def(3, foo, [],
-//│ 1, 
-//│ let x$10 = Pair(0,1) in -- #53
-//│ let* (x$11) = silly(x$10) in -- #52
-//│ x$11 -- #51
-//│ )
-//│ },
-//│ let* (x$0) = foo() in -- #2
-//│ x$0 -- #1)
+//│         let x$4 = Pair.y(pair$0) in -- #38
+//│         let x$5 = Pair.x(pair$0) in -- #37
+//│         case pair$0 of -- #36
+//│           Pair =>
+//│             let x$7 = Pair.y(pair$0) in -- #35
+//│             let x$8 = Pair.x(pair$0) in -- #34
+//│             let x$9 = +(x$8,1) in -- #33
+//│             jump j$1(x$9) -- #32
+//│   def j$0(x$2) =
+//│     let x$3 = +(x$2,1) in -- #9
+//│     x$3 -- #8
+//│   def j$1(x$6) =
+//│     jump j$0(x$6) -- #20
+//│   def foo() =
+//│     let x$10 = Pair(0,1) in -- #53
+//│     let* (x$11) = silly(x$10) in -- #52
+//│     x$11 -- #51
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #59
-//│ ),
-//│ apply1 -> Def(5, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #55
-//│ ),
-//│ apply0 -> Def(4, apply0, [],
-//│ 1, 
-//│ 0 -- #54
-//│ ),
-//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #58
-//│ ),
-//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #57
-//│ ),
-//│ apply2 -> Def(6, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #56
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Pair, [x,y], parents: , methods:
-//│ )}, {
-//│ Def(0, silly, [pair$0],
-//│ 1, 
-//│ let x$1 = 0 in -- #40
-//│ case pair$0 of -- #39
-//│   Pair =>
-//│     let x$4 = Pair.y(pair$0) in -- #38
-//│     let x$5 = Pair.x(pair$0) in -- #37
-//│     case pair$0 of -- #36
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #59
+//│     def apply1(x0$0) =
+//│       0 -- #55
+//│     def apply0() =
+//│       0 -- #54
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #58
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #57
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #56
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Pair(x,y)
+//│   def silly(pair$0) =
+//│     let x$1 = 0 in -- #40
+//│     case pair$0 of -- #39
 //│       Pair =>
-//│         let x$7 = Pair.y(pair$0) in -- #35
-//│         let x$8 = Pair.x(pair$0) in -- #34
-//│         let x$9 = +(x$8,1) in -- #33
-//│         jump j$1(x$9) -- #32
-//│ )
-//│ Def(1, j$0, [x$2],
-//│ 1, 
-//│ let x$3 = +(x$2,1) in -- #9
-//│ x$3 -- #8
-//│ )
-//│ Def(2, j$1, [x$6],
-//│ 1, 
-//│ jump j$0(x$6) -- #20
-//│ )
-//│ Def(3, foo, [],
-//│ 1, 
-//│ let x$10 = Pair(0,1) in -- #53
-//│ let* (x$11) = silly(x$10) in -- #52
-//│ x$11 -- #51
-//│ )
-//│ },
-//│ let* (x$0) = foo() in -- #2
-//│ x$0 -- #1)
+//│         let x$4 = Pair.y(pair$0) in -- #38
+//│         let x$5 = Pair.x(pair$0) in -- #37
+//│         case pair$0 of -- #36
+//│           Pair =>
+//│             let x$7 = Pair.y(pair$0) in -- #35
+//│             let x$8 = Pair.x(pair$0) in -- #34
+//│             let x$9 = +(x$8,1) in -- #33
+//│             jump j$1(x$9) -- #32
+//│   def j$0(x$2) =
+//│     let x$3 = +(x$2,1) in -- #9
+//│     x$3 -- #8
+//│   def j$1(x$6) =
+//│     jump j$0(x$6) -- #20
+//│   def foo() =
+//│     let x$10 = Pair(0,1) in -- #53
+//│     let* (x$11) = silly(x$10) in -- #52
+//│     x$11 -- #51
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ 2
@@ -488,140 +328,88 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #41
-//│ ),
-//│ apply1 -> Def(4, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #37
-//│ ),
-//│ apply0 -> Def(3, apply0, [],
-//│ 1, 
-//│ 0 -- #36
-//│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #40
-//│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #39
-//│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #38
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Pair, [x,y], parents: , methods:
-//│ )}, {
-//│ Def(0, inc_fst, [pair$0],
-//│ 1, 
-//│ let x$1 = 2 in -- #22
-//│ case pair$0 of -- #21
-//│   Pair =>
-//│     let x$3 = Pair.y(pair$0) in -- #20
-//│     let x$4 = Pair.x(pair$0) in -- #19
-//│     let x$5 = +(x$4,x$1) in -- #18
-//│     jump j$0(x$5) -- #17
-//│ )
-//│ Def(1, j$0, [x$2],
-//│ 1, 
-//│ x$2 -- #5
-//│ )
-//│ Def(2, foo, [],
-//│ 1, 
-//│ let x$6 = Pair(0,1) in -- #35
-//│ let* (x$7) = inc_fst(x$6) in -- #34
-//│ x$7 -- #33
-//│ )
-//│ },
-//│ let* (x$0) = foo() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #41
+//│     def apply1(x0$0) =
+//│       0 -- #37
+//│     def apply0() =
+//│       0 -- #36
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #40
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #39
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #38
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Pair(x,y)
+//│   def inc_fst(pair$0) =
+//│     let x$1 = 2 in -- #22
+//│     case pair$0 of -- #21
+//│       Pair =>
+//│         let x$3 = Pair.y(pair$0) in -- #20
+//│         let x$4 = Pair.x(pair$0) in -- #19
+//│         let x$5 = +(x$4,x$1) in -- #18
+//│         jump j$0(x$5) -- #17
+//│   def j$0(x$2) =
+//│     x$2 -- #5
+//│   def foo() =
+//│     let x$6 = Pair(0,1) in -- #35
+//│     let* (x$7) = inc_fst(x$6) in -- #34
+//│     x$7 -- #33
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #41
-//│ ),
-//│ apply1 -> Def(4, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #37
-//│ ),
-//│ apply0 -> Def(3, apply0, [],
-//│ 1, 
-//│ 0 -- #36
-//│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #40
-//│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #39
-//│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #38
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Pair, [x,y], parents: , methods:
-//│ )}, {
-//│ Def(0, inc_fst, [pair$0],
-//│ 1, 
-//│ let x$1 = 2 in -- #22
-//│ case pair$0 of -- #21
-//│   Pair =>
-//│     let x$3 = Pair.y(pair$0) in -- #20
-//│     let x$4 = Pair.x(pair$0) in -- #19
-//│     let x$5 = +(x$4,x$1) in -- #18
-//│     jump j$0(x$5) -- #17
-//│ )
-//│ Def(1, j$0, [x$2],
-//│ 1, 
-//│ x$2 -- #5
-//│ )
-//│ Def(2, foo, [],
-//│ 1, 
-//│ let x$6 = Pair(0,1) in -- #35
-//│ let* (x$7) = inc_fst(x$6) in -- #34
-//│ x$7 -- #33
-//│ )
-//│ },
-//│ let* (x$0) = foo() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #41
+//│     def apply1(x0$0) =
+//│       0 -- #37
+//│     def apply0() =
+//│       0 -- #36
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #40
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #39
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #38
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Pair(x,y)
+//│   def inc_fst(pair$0) =
+//│     let x$1 = 2 in -- #22
+//│     case pair$0 of -- #21
+//│       Pair =>
+//│         let x$3 = Pair.y(pair$0) in -- #20
+//│         let x$4 = Pair.x(pair$0) in -- #19
+//│         let x$5 = +(x$4,x$1) in -- #18
+//│         jump j$0(x$5) -- #17
+//│   def j$0(x$2) =
+//│     x$2 -- #5
+//│   def foo() =
+//│     let x$6 = Pair(0,1) in -- #35
+//│     let* (x$7) = inc_fst(x$6) in -- #34
+//│     x$7 -- #33
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ 2
@@ -641,140 +429,88 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #40
-//│ ),
-//│ apply1 -> Def(4, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #36
-//│ ),
-//│ apply0 -> Def(3, apply0, [],
-//│ 1, 
-//│ 0 -- #35
-//│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #39
-//│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #38
-//│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #37
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Pair, [x,y], parents: , methods:
-//│ )}, {
-//│ Def(0, inc_fst, [pair$0],
-//│ 1, 
-//│ let x$1 = 0 in -- #22
-//│ case pair$0 of -- #21
-//│   Pair =>
-//│     let x$3 = Pair.y(pair$0) in -- #20
-//│     let x$4 = Pair.x(pair$0) in -- #19
-//│     let x$5 = +(x$3,1) in -- #18
-//│     jump j$0(x$5) -- #17
-//│ )
-//│ Def(1, j$0, [x$2],
-//│ 1, 
-//│ x$2 -- #5
-//│ )
-//│ Def(2, foo, [],
-//│ 1, 
-//│ let x$6 = Pair(0,1) in -- #34
-//│ let* (x$7) = inc_fst(x$6) in -- #33
-//│ x$7 -- #32
-//│ )
-//│ },
-//│ let* (x$0) = foo() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #40
+//│     def apply1(x0$0) =
+//│       0 -- #36
+//│     def apply0() =
+//│       0 -- #35
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #39
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #38
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #37
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Pair(x,y)
+//│   def inc_fst(pair$0) =
+//│     let x$1 = 0 in -- #22
+//│     case pair$0 of -- #21
+//│       Pair =>
+//│         let x$3 = Pair.y(pair$0) in -- #20
+//│         let x$4 = Pair.x(pair$0) in -- #19
+//│         let x$5 = +(x$3,1) in -- #18
+//│         jump j$0(x$5) -- #17
+//│   def j$0(x$2) =
+//│     x$2 -- #5
+//│   def foo() =
+//│     let x$6 = Pair(0,1) in -- #34
+//│     let* (x$7) = inc_fst(x$6) in -- #33
+//│     x$7 -- #32
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #40
-//│ ),
-//│ apply1 -> Def(4, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #36
-//│ ),
-//│ apply0 -> Def(3, apply0, [],
-//│ 1, 
-//│ 0 -- #35
-//│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #39
-//│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #38
-//│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #37
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Pair, [x,y], parents: , methods:
-//│ )}, {
-//│ Def(0, inc_fst, [pair$0],
-//│ 1, 
-//│ let x$1 = 0 in -- #22
-//│ case pair$0 of -- #21
-//│   Pair =>
-//│     let x$3 = Pair.y(pair$0) in -- #20
-//│     let x$4 = Pair.x(pair$0) in -- #19
-//│     let x$5 = +(x$3,1) in -- #18
-//│     jump j$0(x$5) -- #17
-//│ )
-//│ Def(1, j$0, [x$2],
-//│ 1, 
-//│ x$2 -- #5
-//│ )
-//│ Def(2, foo, [],
-//│ 1, 
-//│ let x$6 = Pair(0,1) in -- #34
-//│ let* (x$7) = inc_fst(x$6) in -- #33
-//│ x$7 -- #32
-//│ )
-//│ },
-//│ let* (x$0) = foo() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #40
+//│     def apply1(x0$0) =
+//│       0 -- #36
+//│     def apply0() =
+//│       0 -- #35
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #39
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #38
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #37
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Pair(x,y)
+//│   def inc_fst(pair$0) =
+//│     let x$1 = 0 in -- #22
+//│     case pair$0 of -- #21
+//│       Pair =>
+//│         let x$3 = Pair.y(pair$0) in -- #20
+//│         let x$4 = Pair.x(pair$0) in -- #19
+//│         let x$5 = +(x$3,1) in -- #18
+//│         jump j$0(x$5) -- #17
+//│   def j$0(x$2) =
+//│     x$2 -- #5
+//│   def foo() =
+//│     let x$6 = Pair(0,1) in -- #34
+//│     let* (x$7) = inc_fst(x$6) in -- #33
+//│     x$7 -- #32
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ 2
@@ -797,170 +533,112 @@ bar()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #64
-//│ ),
-//│ apply1 -> Def(5, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #60
-//│ ),
-//│ apply0 -> Def(4, apply0, [],
-//│ 1, 
-//│ 0 -- #59
-//│ ),
-//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #63
-//│ ),
-//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #62
-//│ ),
-//│ apply2 -> Def(6, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #61
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Left, [x], parents: , methods:
-//│ ),
-//│ ClassInfo(10, Right, [y], parents: , methods:
-//│ )}, {
-//│ Def(0, foo, [a$0,b$0],
-//│ 1, 
-//│ case a$0 of -- #47
-//│   Left =>
-//│     let x$5 = Left.x(a$0) in -- #35
-//│     let x$6 = +(x$5,1) in -- #34
-//│     let x$7 = Left(x$6) in -- #33
-//│     jump j$0(x$7) -- #32
-//│   Right =>
-//│     let x$8 = Right.y(a$0) in -- #46
-//│     let x$9 = Right(b$0) in -- #45
-//│     jump j$0(x$9) -- #44
-//│ )
-//│ Def(1, j$1, [x$2],
-//│ 1, 
-//│ x$2 -- #6
-//│ )
-//│ Def(2, j$0, [x$1],
-//│ 1, 
-//│ case x$1 of -- #21
-//│   Left =>
-//│     let x$3 = Left.x(x$1) in -- #13
-//│     jump j$1(x$3) -- #12
-//│   Right =>
-//│     let x$4 = Right.y(x$1) in -- #20
-//│     jump j$1(x$4) -- #19
-//│ )
-//│ Def(3, bar, [],
-//│ 1, 
-//│ let x$10 = Right(2) in -- #58
-//│ let* (x$11) = foo(x$10,2) in -- #57
-//│ x$11 -- #56
-//│ )
-//│ },
-//│ let* (x$0) = bar() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #64
+//│     def apply1(x0$0) =
+//│       0 -- #60
+//│     def apply0() =
+//│       0 -- #59
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #63
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #62
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #61
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Left(x)
+//│   class Right(y)
+//│   def foo(a$0,b$0) =
+//│     case a$0 of -- #47
+//│       Left =>
+//│         let x$5 = Left.x(a$0) in -- #35
+//│         let x$6 = +(x$5,1) in -- #34
+//│         let x$7 = Left(x$6) in -- #33
+//│         jump j$0(x$7) -- #32
+//│       Right =>
+//│         let x$8 = Right.y(a$0) in -- #46
+//│         let x$9 = Right(b$0) in -- #45
+//│         jump j$0(x$9) -- #44
+//│   def j$1(x$2) =
+//│     x$2 -- #6
+//│   def j$0(x$1) =
+//│     case x$1 of -- #21
+//│       Left =>
+//│         let x$3 = Left.x(x$1) in -- #13
+//│         jump j$1(x$3) -- #12
+//│       Right =>
+//│         let x$4 = Right.y(x$1) in -- #20
+//│         jump j$1(x$4) -- #19
+//│   def bar() =
+//│     let x$10 = Right(2) in -- #58
+//│     let* (x$11) = foo(x$10,2) in -- #57
+//│     x$11 -- #56
+//│   let* (x$0) = bar() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #64
-//│ ),
-//│ apply1 -> Def(5, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #60
-//│ ),
-//│ apply0 -> Def(4, apply0, [],
-//│ 1, 
-//│ 0 -- #59
-//│ ),
-//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #63
-//│ ),
-//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #62
-//│ ),
-//│ apply2 -> Def(6, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #61
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Left, [x], parents: , methods:
-//│ ),
-//│ ClassInfo(10, Right, [y], parents: , methods:
-//│ )}, {
-//│ Def(0, foo, [a$0,b$0],
-//│ 1, 
-//│ case a$0 of -- #47
-//│   Left =>
-//│     let x$5 = Left.x(a$0) in -- #35
-//│     let x$6 = +(x$5,1) in -- #34
-//│     let x$7 = Left(x$6) in -- #33
-//│     jump j$0(x$7) -- #32
-//│   Right =>
-//│     let x$8 = Right.y(a$0) in -- #46
-//│     let x$9 = Right(b$0) in -- #45
-//│     jump j$0(x$9) -- #44
-//│ )
-//│ Def(1, j$1, [x$2],
-//│ 1, 
-//│ x$2 -- #6
-//│ )
-//│ Def(2, j$0, [x$1],
-//│ 1, 
-//│ case x$1 of -- #21
-//│   Left =>
-//│     let x$3 = Left.x(x$1) in -- #13
-//│     jump j$1(x$3) -- #12
-//│   Right =>
-//│     let x$4 = Right.y(x$1) in -- #20
-//│     jump j$1(x$4) -- #19
-//│ )
-//│ Def(3, bar, [],
-//│ 1, 
-//│ let x$10 = Right(2) in -- #58
-//│ let* (x$11) = foo(x$10,2) in -- #57
-//│ x$11 -- #56
-//│ )
-//│ },
-//│ let* (x$0) = bar() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #64
+//│     def apply1(x0$0) =
+//│       0 -- #60
+//│     def apply0() =
+//│       0 -- #59
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #63
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #62
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #61
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Left(x)
+//│   class Right(y)
+//│   def foo(a$0,b$0) =
+//│     case a$0 of -- #47
+//│       Left =>
+//│         let x$5 = Left.x(a$0) in -- #35
+//│         let x$6 = +(x$5,1) in -- #34
+//│         let x$7 = Left(x$6) in -- #33
+//│         jump j$0(x$7) -- #32
+//│       Right =>
+//│         let x$8 = Right.y(a$0) in -- #46
+//│         let x$9 = Right(b$0) in -- #45
+//│         jump j$0(x$9) -- #44
+//│   def j$1(x$2) =
+//│     x$2 -- #6
+//│   def j$0(x$1) =
+//│     case x$1 of -- #21
+//│       Left =>
+//│         let x$3 = Left.x(x$1) in -- #13
+//│         jump j$1(x$3) -- #12
+//│       Right =>
+//│         let x$4 = Right.y(x$1) in -- #20
+//│         jump j$1(x$4) -- #19
+//│   def bar() =
+//│     let x$10 = Right(2) in -- #58
+//│     let* (x$11) = foo(x$10,2) in -- #57
+//│     x$11 -- #56
+//│   let* (x$0) = bar() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ 2
@@ -978,134 +656,82 @@ bar()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(7, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #31
-//│ ),
-//│ apply1 -> Def(3, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #27
-//│ ),
-//│ apply0 -> Def(2, apply0, [],
-//│ 1, 
-//│ 0 -- #26
-//│ ),
-//│ apply4 -> Def(6, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #30
-//│ ),
-//│ apply3 -> Def(5, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #29
-//│ ),
-//│ apply2 -> Def(4, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #28
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(10, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(11, Pair, [x,y], parents: , methods:
-//│ )}, {
-//│ Def(0, foo, [a$0],
-//│ 1, 
-//│ let x$1 = Pair.x(a$0) in -- #14
-//│ let x$2 = Pair.y(a$0) in -- #13
-//│ let x$3 = +(x$1,x$2) in -- #12
-//│ x$3 -- #11
-//│ )
-//│ Def(1, bar, [],
-//│ 1, 
-//│ let x$4 = Pair(1,0) in -- #25
-//│ let* (x$5) = foo(x$4) in -- #24
-//│ x$5 -- #23
-//│ )
-//│ },
-//│ let* (x$0) = bar() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #31
+//│     def apply1(x0$0) =
+//│       0 -- #27
+//│     def apply0() =
+//│       0 -- #26
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #30
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #29
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #28
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class True()
+//│   class False()
+//│   class Pair(x,y)
+//│   def foo(a$0) =
+//│     let x$1 = Pair.x(a$0) in -- #14
+//│     let x$2 = Pair.y(a$0) in -- #13
+//│     let x$3 = +(x$1,x$2) in -- #12
+//│     x$3 -- #11
+//│   def bar() =
+//│     let x$4 = Pair(1,0) in -- #25
+//│     let* (x$5) = foo(x$4) in -- #24
+//│     x$5 -- #23
+//│   let* (x$0) = bar() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(7, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #31
-//│ ),
-//│ apply1 -> Def(3, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #27
-//│ ),
-//│ apply0 -> Def(2, apply0, [],
-//│ 1, 
-//│ 0 -- #26
-//│ ),
-//│ apply4 -> Def(6, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #30
-//│ ),
-//│ apply3 -> Def(5, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #29
-//│ ),
-//│ apply2 -> Def(4, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #28
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(10, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(11, Pair, [x,y], parents: , methods:
-//│ )}, {
-//│ Def(0, foo, [a$0],
-//│ 1, 
-//│ let x$1 = Pair.x(a$0) in -- #14
-//│ let x$2 = Pair.y(a$0) in -- #13
-//│ let x$3 = +(x$1,x$2) in -- #12
-//│ x$3 -- #11
-//│ )
-//│ Def(1, bar, [],
-//│ 1, 
-//│ let x$4 = Pair(1,0) in -- #25
-//│ let* (x$5) = foo(x$4) in -- #24
-//│ x$5 -- #23
-//│ )
-//│ },
-//│ let* (x$0) = bar() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #31
+//│     def apply1(x0$0) =
+//│       0 -- #27
+//│     def apply0() =
+//│       0 -- #26
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #30
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #29
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #28
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class True()
+//│   class False()
+//│   class Pair(x,y)
+//│   def foo(a$0) =
+//│     let x$1 = Pair.x(a$0) in -- #14
+//│     let x$2 = Pair.y(a$0) in -- #13
+//│     let x$3 = +(x$1,x$2) in -- #12
+//│     x$3 -- #11
+//│   def bar() =
+//│     let x$4 = Pair(1,0) in -- #25
+//│     let* (x$5) = foo(x$4) in -- #24
+//│     x$5 -- #23
+//│   let* (x$0) = bar() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ 1
@@ -1125,146 +751,92 @@ bar()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #41
-//│ ),
-//│ apply1 -> Def(4, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #37
-//│ ),
-//│ apply0 -> Def(3, apply0, [],
-//│ 1, 
-//│ 0 -- #36
-//│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #40
-//│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #39
-//│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #38
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, C1, [x,y], parents: , methods:
-//│ ),
-//│ ClassInfo(10, C2, [z], parents: , methods:
-//│ )}, {
-//│ Def(0, foo, [a$0],
-//│ 1, 
-//│ case a$0 of -- #24
-//│   C1 =>
-//│     let x$2 = C1.y(a$0) in -- #16
-//│     let x$3 = C1.x(a$0) in -- #15
-//│     jump j$0(x$3) -- #14
-//│   C2 =>
-//│     let x$4 = C2.z(a$0) in -- #23
-//│     jump j$0(x$4) -- #22
-//│ )
-//│ Def(1, j$0, [x$1],
-//│ 1, 
-//│ x$1 -- #4
-//│ )
-//│ Def(2, bar, [],
-//│ 1, 
-//│ let x$5 = C1(0,1) in -- #35
-//│ let* (x$6) = foo(x$5) in -- #34
-//│ x$6 -- #33
-//│ )
-//│ },
-//│ let* (x$0) = bar() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #41
+//│     def apply1(x0$0) =
+//│       0 -- #37
+//│     def apply0() =
+//│       0 -- #36
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #40
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #39
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #38
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class C1(x,y)
+//│   class C2(z)
+//│   def foo(a$0) =
+//│     case a$0 of -- #24
+//│       C1 =>
+//│         let x$2 = C1.y(a$0) in -- #16
+//│         let x$3 = C1.x(a$0) in -- #15
+//│         jump j$0(x$3) -- #14
+//│       C2 =>
+//│         let x$4 = C2.z(a$0) in -- #23
+//│         jump j$0(x$4) -- #22
+//│   def j$0(x$1) =
+//│     x$1 -- #4
+//│   def bar() =
+//│     let x$5 = C1(0,1) in -- #35
+//│     let* (x$6) = foo(x$5) in -- #34
+//│     x$6 -- #33
+//│   let* (x$0) = bar() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #41
-//│ ),
-//│ apply1 -> Def(4, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #37
-//│ ),
-//│ apply0 -> Def(3, apply0, [],
-//│ 1, 
-//│ 0 -- #36
-//│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #40
-//│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #39
-//│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #38
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, C1, [x,y], parents: , methods:
-//│ ),
-//│ ClassInfo(10, C2, [z], parents: , methods:
-//│ )}, {
-//│ Def(0, foo, [a$0],
-//│ 1, 
-//│ case a$0 of -- #24
-//│   C1 =>
-//│     let x$2 = C1.y(a$0) in -- #16
-//│     let x$3 = C1.x(a$0) in -- #15
-//│     jump j$0(x$3) -- #14
-//│   C2 =>
-//│     let x$4 = C2.z(a$0) in -- #23
-//│     jump j$0(x$4) -- #22
-//│ )
-//│ Def(1, j$0, [x$1],
-//│ 1, 
-//│ x$1 -- #4
-//│ )
-//│ Def(2, bar, [],
-//│ 1, 
-//│ let x$5 = C1(0,1) in -- #35
-//│ let* (x$6) = foo(x$5) in -- #34
-//│ x$6 -- #33
-//│ )
-//│ },
-//│ let* (x$0) = bar() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #41
+//│     def apply1(x0$0) =
+//│       0 -- #37
+//│     def apply0() =
+//│       0 -- #36
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #40
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #39
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #38
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class C1(x,y)
+//│   class C2(z)
+//│   def foo(a$0) =
+//│     case a$0 of -- #24
+//│       C1 =>
+//│         let x$2 = C1.y(a$0) in -- #16
+//│         let x$3 = C1.x(a$0) in -- #15
+//│         jump j$0(x$3) -- #14
+//│       C2 =>
+//│         let x$4 = C2.z(a$0) in -- #23
+//│         jump j$0(x$4) -- #22
+//│   def j$0(x$1) =
+//│     x$1 -- #4
+//│   def bar() =
+//│     let x$5 = C1(0,1) in -- #35
+//│     let* (x$6) = foo(x$5) in -- #34
+//│     x$6 -- #33
+//│   let* (x$0) = bar() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ 0
@@ -1289,156 +861,104 @@ baz()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #94
-//│ ),
-//│ apply1 -> Def(4, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #90
-//│ ),
-//│ apply0 -> Def(3, apply0, [],
-//│ 1, 
-//│ 0 -- #89
-//│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #93
-//│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #92
-//│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #91
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Pair, [x,y], parents: , methods:
-//│ )}, {
-//│ Def(0, foo, [a$0,b$0],
-//│ 1, 
-//│ let x$1 = Pair.x(a$0) in -- #32
-//│ let x$2 = Pair.y(a$0) in -- #31
-//│ let x$3 = Pair.x(b$0) in -- #30
-//│ let x$4 = Pair.y(b$0) in -- #29
-//│ let x$5 = +(x$1,x$2) in -- #28
-//│ let x$6 = +(x$5,x$3) in -- #27
-//│ let x$7 = +(x$6,x$4) in -- #26
-//│ x$7 -- #25
-//│ )
-//│ Def(1, bar, [c$0],
-//│ 1, 
-//│ let x$8 = Pair(0,1) in -- #77
-//│ let* (x$9) = foo(x$8,c$0) in -- #76
-//│ let x$10 = Pair(2,3) in -- #75
-//│ let* (x$11) = foo(c$0,x$10) in -- #74
-//│ let x$12 = Pair(0,1) in -- #73
-//│ let x$13 = Pair(2,3) in -- #72
-//│ let* (x$14) = foo(x$12,x$13) in -- #71
-//│ x$14 -- #70
-//│ )
-//│ Def(2, baz, [],
-//│ 1, 
-//│ let x$15 = Pair(4,5) in -- #88
-//│ let* (x$16) = bar(x$15) in -- #87
-//│ x$16 -- #86
-//│ )
-//│ },
-//│ let* (x$0) = baz() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #94
+//│     def apply1(x0$0) =
+//│       0 -- #90
+//│     def apply0() =
+//│       0 -- #89
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #93
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #92
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #91
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Pair(x,y)
+//│   def foo(a$0,b$0) =
+//│     let x$1 = Pair.x(a$0) in -- #32
+//│     let x$2 = Pair.y(a$0) in -- #31
+//│     let x$3 = Pair.x(b$0) in -- #30
+//│     let x$4 = Pair.y(b$0) in -- #29
+//│     let x$5 = +(x$1,x$2) in -- #28
+//│     let x$6 = +(x$5,x$3) in -- #27
+//│     let x$7 = +(x$6,x$4) in -- #26
+//│     x$7 -- #25
+//│   def bar(c$0) =
+//│     let x$8 = Pair(0,1) in -- #77
+//│     let* (x$9) = foo(x$8,c$0) in -- #76
+//│     let x$10 = Pair(2,3) in -- #75
+//│     let* (x$11) = foo(c$0,x$10) in -- #74
+//│     let x$12 = Pair(0,1) in -- #73
+//│     let x$13 = Pair(2,3) in -- #72
+//│     let* (x$14) = foo(x$12,x$13) in -- #71
+//│     x$14 -- #70
+//│   def baz() =
+//│     let x$15 = Pair(4,5) in -- #88
+//│     let* (x$16) = bar(x$15) in -- #87
+//│     x$16 -- #86
+//│   let* (x$0) = baz() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(8, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #94
-//│ ),
-//│ apply1 -> Def(4, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #90
-//│ ),
-//│ apply0 -> Def(3, apply0, [],
-//│ 1, 
-//│ 0 -- #89
-//│ ),
-//│ apply4 -> Def(7, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #93
-//│ ),
-//│ apply3 -> Def(6, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #92
-//│ ),
-//│ apply2 -> Def(5, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #91
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Pair, [x,y], parents: , methods:
-//│ )}, {
-//│ Def(0, foo, [a$0,b$0],
-//│ 1, 
-//│ let x$1 = Pair.x(a$0) in -- #32
-//│ let x$2 = Pair.y(a$0) in -- #31
-//│ let x$3 = Pair.x(b$0) in -- #30
-//│ let x$4 = Pair.y(b$0) in -- #29
-//│ let x$5 = +(x$1,x$2) in -- #28
-//│ let x$6 = +(x$5,x$3) in -- #27
-//│ let x$7 = +(x$6,x$4) in -- #26
-//│ x$7 -- #25
-//│ )
-//│ Def(1, bar, [c$0],
-//│ 1, 
-//│ let x$8 = Pair(0,1) in -- #77
-//│ let* (x$9) = foo(x$8,c$0) in -- #76
-//│ let x$10 = Pair(2,3) in -- #75
-//│ let* (x$11) = foo(c$0,x$10) in -- #74
-//│ let x$12 = Pair(0,1) in -- #73
-//│ let x$13 = Pair(2,3) in -- #72
-//│ let* (x$14) = foo(x$12,x$13) in -- #71
-//│ x$14 -- #70
-//│ )
-//│ Def(2, baz, [],
-//│ 1, 
-//│ let x$15 = Pair(4,5) in -- #88
-//│ let* (x$16) = bar(x$15) in -- #87
-//│ x$16 -- #86
-//│ )
-//│ },
-//│ let* (x$0) = baz() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #94
+//│     def apply1(x0$0) =
+//│       0 -- #90
+//│     def apply0() =
+//│       0 -- #89
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #93
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #92
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #91
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Pair(x,y)
+//│   def foo(a$0,b$0) =
+//│     let x$1 = Pair.x(a$0) in -- #32
+//│     let x$2 = Pair.y(a$0) in -- #31
+//│     let x$3 = Pair.x(b$0) in -- #30
+//│     let x$4 = Pair.y(b$0) in -- #29
+//│     let x$5 = +(x$1,x$2) in -- #28
+//│     let x$6 = +(x$5,x$3) in -- #27
+//│     let x$7 = +(x$6,x$4) in -- #26
+//│     x$7 -- #25
+//│   def bar(c$0) =
+//│     let x$8 = Pair(0,1) in -- #77
+//│     let* (x$9) = foo(x$8,c$0) in -- #76
+//│     let x$10 = Pair(2,3) in -- #75
+//│     let* (x$11) = foo(c$0,x$10) in -- #74
+//│     let x$12 = Pair(0,1) in -- #73
+//│     let x$13 = Pair(2,3) in -- #72
+//│     let* (x$14) = foo(x$12,x$13) in -- #71
+//│     x$14 -- #70
+//│   def baz() =
+//│     let x$15 = Pair(4,5) in -- #88
+//│     let* (x$16) = bar(x$15) in -- #87
+//│     x$16 -- #86
+//│   let* (x$0) = baz() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ 6
@@ -1455,112 +975,68 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #21
-//│ ),
-//│ apply1 -> Def(2, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #17
-//│ ),
-//│ apply0 -> Def(1, apply0, [],
-//│ 1, 
-//│ 0 -- #16
-//│ ),
-//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #20
-//│ ),
-//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #19
-//│ ),
-//│ apply2 -> Def(3, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #18
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Pair, [x,y], parents: , methods:
-//│ )}, {
-//│ Def(0, foo, [],
-//│ 1, 
-//│ let x$1 = Pair(0,1) in -- #15
-//│ let x$2 = Pair.x(x$1) in -- #14
-//│ x$2 -- #13
-//│ )
-//│ },
-//│ let* (x$0) = foo() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #21
+//│     def apply1(x0$0) =
+//│       0 -- #17
+//│     def apply0() =
+//│       0 -- #16
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #20
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #19
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #18
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Pair(x,y)
+//│   def foo() =
+//│     let x$1 = Pair(0,1) in -- #15
+//│     let x$2 = Pair.x(x$1) in -- #14
+//│     x$2 -- #13
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #21
-//│ ),
-//│ apply1 -> Def(2, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #17
-//│ ),
-//│ apply0 -> Def(1, apply0, [],
-//│ 1, 
-//│ 0 -- #16
-//│ ),
-//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #20
-//│ ),
-//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #19
-//│ ),
-//│ apply2 -> Def(3, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #18
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Pair, [x,y], parents: , methods:
-//│ )}, {
-//│ Def(0, foo, [],
-//│ 1, 
-//│ let x$1 = Pair(0,1) in -- #15
-//│ let x$2 = Pair.x(x$1) in -- #14
-//│ x$2 -- #13
-//│ )
-//│ },
-//│ let* (x$0) = foo() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #21
+//│     def apply1(x0$0) =
+//│       0 -- #17
+//│     def apply0() =
+//│       0 -- #16
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #20
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #19
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #18
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Pair(x,y)
+//│   def foo() =
+//│     let x$1 = Pair(0,1) in -- #15
+//│     let x$2 = Pair.x(x$1) in -- #14
+//│     x$2 -- #13
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ 0
@@ -1582,154 +1058,96 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #35
-//│ ),
-//│ apply1 -> Def(5, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #31
-//│ ),
-//│ apply0 -> Def(4, apply0, [],
-//│ 1, 
-//│ 0 -- #30
-//│ ),
-//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #34
-//│ ),
-//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #33
-//│ ),
-//│ apply2 -> Def(6, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #32
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, S, [s], parents: , methods:
-//│ ),
-//│ ClassInfo(10, O, [], parents: , methods:
-//│ )}, {
-//│ Def(0, foo, [],
-//│ 1, 
-//│ let x$1 = O() in -- #12
-//│ let x$2 = S(x$1) in -- #11
-//│ let* (x$3) = bar(x$2) in -- #10
-//│ x$3 -- #9
-//│ )
-//│ Def(1, bar, [x$4],
-//│ 1, 
-//│ let* (x$5) = baz(x$4) in -- #17
-//│ x$5 -- #16
-//│ )
-//│ Def(2, baz, [x$6],
-//│ 1, 
-//│ case x$6 of -- #29
-//│   S =>
-//│     let x$8 = S.s(x$6) in -- #26
-//│     jump j$0(x$8) -- #25
-//│   O =>
-//│     jump j$0(x$6) -- #28
-//│ )
-//│ Def(3, j$0, [x$7],
-//│ 1, 
-//│ x$7 -- #19
-//│ )
-//│ },
-//│ let* (x$0) = foo() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #35
+//│     def apply1(x0$0) =
+//│       0 -- #31
+//│     def apply0() =
+//│       0 -- #30
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #34
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #33
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #32
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class S(s)
+//│   class O()
+//│   def foo() =
+//│     let x$1 = O() in -- #12
+//│     let x$2 = S(x$1) in -- #11
+//│     let* (x$3) = bar(x$2) in -- #10
+//│     x$3 -- #9
+//│   def bar(x$4) =
+//│     let* (x$5) = baz(x$4) in -- #17
+//│     x$5 -- #16
+//│   def baz(x$6) =
+//│     case x$6 of -- #29
+//│       S =>
+//│         let x$8 = S.s(x$6) in -- #26
+//│         jump j$0(x$8) -- #25
+//│       O =>
+//│         jump j$0(x$6) -- #28
+//│   def j$0(x$7) =
+//│     x$7 -- #19
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0],
-//│ 1, 
-//│ 0 -- #35
-//│ ),
-//│ apply1 -> Def(5, apply1, [x0$0],
-//│ 1, 
-//│ 0 -- #31
-//│ ),
-//│ apply0 -> Def(4, apply0, [],
-//│ 1, 
-//│ 0 -- #30
-//│ ),
-//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0],
-//│ 1, 
-//│ 0 -- #34
-//│ ),
-//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0],
-//│ 1, 
-//│ 0 -- #33
-//│ ),
-//│ apply2 -> Def(6, apply2, [x0$1,x1$0],
-//│ 1, 
-//│ 0 -- #32
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, S, [s], parents: , methods:
-//│ ),
-//│ ClassInfo(10, O, [], parents: , methods:
-//│ )}, {
-//│ Def(0, foo, [],
-//│ 1, 
-//│ let x$1 = O() in -- #12
-//│ let x$2 = S(x$1) in -- #11
-//│ let* (x$3) = bar(x$2) in -- #10
-//│ x$3 -- #9
-//│ )
-//│ Def(1, bar, [x$4],
-//│ 1, 
-//│ let* (x$5) = baz(x$4) in -- #17
-//│ x$5 -- #16
-//│ )
-//│ Def(2, baz, [x$6],
-//│ 1, 
-//│ case x$6 of -- #29
-//│   S =>
-//│     let x$8 = S.s(x$6) in -- #26
-//│     jump j$0(x$8) -- #25
-//│   O =>
-//│     jump j$0(x$6) -- #28
-//│ )
-//│ Def(3, j$0, [x$7],
-//│ 1, 
-//│ x$7 -- #19
-//│ )
-//│ },
-//│ let* (x$0) = foo() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #35
+//│     def apply1(x0$0) =
+//│       0 -- #31
+//│     def apply0() =
+//│       0 -- #30
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #34
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #33
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #32
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class S(s)
+//│   class O()
+//│   def foo() =
+//│     let x$1 = O() in -- #12
+//│     let x$2 = S(x$1) in -- #11
+//│     let* (x$3) = bar(x$2) in -- #10
+//│     x$3 -- #9
+//│   def bar(x$4) =
+//│     let* (x$5) = baz(x$4) in -- #17
+//│     x$5 -- #16
+//│   def baz(x$6) =
+//│     case x$6 of -- #29
+//│       S =>
+//│         let x$8 = S.s(x$6) in -- #26
+//│         jump j$0(x$8) -- #25
+//│       O =>
+//│         jump j$0(x$6) -- #28
+//│   def j$0(x$7) =
+//│     x$7 -- #19
+//│   let* (x$0) = foo() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ O()

@@ -13,6 +13,7 @@ import collection.mutable.{Map as MutMap, Set as MutSet, HashMap, ListBuffer}
 import annotation.unused
 import util.Sorting
 import scala.collection.immutable.SortedSet
+import scala.language.implicitConversions
 
 final case class IRError(message: String) extends Exception(message)
 
@@ -28,6 +29,21 @@ case class Program(
     Sorting.quickSort(t2)
     s"Program({${t1.mkString(",\n")}}, {\n${t2.mkString("\n")}\n},\n$main)"
 
+  def show = toDocument.print
+
+  def toDocument: Document =
+    val t1 = classes.toArray
+    val t2 = defs.toArray
+    Sorting.quickSort(t1)
+    Sorting.quickSort(t2)
+    given Conversion[String, Document] = raw
+    stack(
+      "Program:",
+      stack_list(t1.map(_.toDocument).toList) |> indent,
+      stack_list(t2.map(_.toDocument).toList) |> indent,
+      main.toDocument |> indent
+    )
+
 implicit object ClassInfoOrdering extends Ordering[ClassInfo] {
   def compare(a: ClassInfo, b: ClassInfo) = a.id.compare(b.id)
 }
@@ -42,6 +58,19 @@ case class ClassInfo(
   override def hashCode: Int = id
   override def toString: String =
     s"ClassInfo($id, $name, [${fields mkString ","}], parents: ${parents mkString ","}, methods:\n${methods mkString ",\n"})"
+
+  def show = toDocument.print
+  def toDocument: Document =
+    given Conversion[String, Document] = raw
+    val extension = if parents.isEmpty then "" else " extends " + parents.mkString(", ")
+    if methods.isEmpty then
+      "class" <:> name <#> "(" <#> fields.mkString(",") <#> ")" <#> extension
+    else
+      stack(
+        "class" <:> name <#> "(" <#> fields.mkString(",") <#> ")" <#> extension <:> "{",
+        stack_list( methods.map { (_, defn) => defn.toDocument |> indent }.toList),
+        "}"
+      )
 
 case class Name(val str: Str):
   def copy: Name = Name(str)
@@ -92,6 +121,15 @@ case class Defn(
     val ps = params.map(_.toString).mkString("[", ",", "]")
     s"Def($id, $name, $ps,\n$resultNum, \n$body\n)"
 
+  def show = toDocument.print
+
+  def toDocument: Document =
+    given Conversion[String, Document] = raw
+    stack(
+      "def" <:> name <#> "(" <#> params.map(_.toString).mkString(",")  <#> ")" <:> "=",
+      body.toDocument |> indent
+    )
+
 sealed trait TrivialExpr:
   import Expr._
   override def toString: String
@@ -117,25 +155,27 @@ enum Expr:
   def show: String =
     toDocument.print
   
-  def toDocument: Document = this match
-    case Ref(s) => s.toString |> raw
-    case Literal(IntLit(lit)) => s"$lit" |> raw
-    case Literal(DecLit(lit)) => s"$lit" |> raw
-    case Literal(StrLit(lit)) => s"$lit" |> raw
-    case Literal(UnitLit(lit)) => s"$lit" |> raw
+  def toDocument: Document = 
+    given Conversion[String, Document] = raw
+    this match
+    case Ref(s) => s.toString
+    case Literal(IntLit(lit)) => s"$lit"
+    case Literal(DecLit(lit)) => s"$lit"
+    case Literal(StrLit(lit)) => s"$lit"
+    case Literal(UnitLit(lit)) => s"$lit"
     case CtorApp(cls, args) =>
-      raw(cls.name) <#> raw("(") <#> raw(args |> showArguments) <#> raw(")")
+      cls.name <#> "(" <#> (args |> showArguments) <#> ")"
     case Select(s, cls, fld) =>
-      raw(cls.name) <#> raw(".") <#> raw(fld) <#> raw("(") <#> raw(s.toString) <#> raw(")")
+      cls.name <#> "." <#> fld <#> "(" <#> s.toString <#> ")"
     case BasicOp(name: Str, args) =>
-      raw(name) <#> raw("(") <#> raw(args |> showArguments) <#> raw(")")    
+      name <#> "(" <#> (args |> showArguments) <#> ")"
     case AssignField(assignee, clsInfo, fieldName, value) => 
       stack(
-        raw("assign")
-          <:> raw(assignee.toString + "." + fieldName)
-          <:> raw(":=")
-          <:> value.toDocument
-        )
+        "assign"
+        <:> (assignee.toString + "." + fieldName)
+        <:> ":="
+        <:> value.toDocument
+      )
 
   def mapName(f: Name => Name): Expr = this match
     case Ref(name) => Ref(f(name))
@@ -220,67 +260,69 @@ enum Node:
       val names_copy = names.map(_.copy)
       LetCall(names_copy, defn, args.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))), itr, body.copy(ctx ++ names_copy.map(x => x.str -> x)))(lc.loc)
 
-  private def toDocument: Document = this match
-    case Result(res) => raw(res |> showArguments) <:> raw(s"-- $tag")
+  def toDocument: Document =
+    given Conversion[String, Document] = raw
+    this match
+    case Result(res) => (res |> showArguments) <:> s"-- $tag"
     case Jump(jp, args) =>
-      raw("jump")
-      <:> raw(jp.name)
-      <#> raw("(")
-      <#> raw(args |> showArguments)
-      <#> raw(")")
-      <:> raw(s"-- $tag") 
+      "jump"
+      <:> jp.name
+      <#> "("
+      <#> (args |> showArguments)
+      <#> ")"
+      <:> s"-- $tag" 
     case Case(x, Ls((tpat, tru), (fpat, fls)), N) if tpat.isTrue && fpat.isFalse =>
-      val first = raw("if") <:> raw(x.toString) <:> raw(s"-- $tag") 
-      val tru2 = indent(stack(raw("true") <:> raw ("=>"), tru.toDocument |> indent))
-      val fls2 = indent(stack(raw("false") <:> raw ("=>"), fls.toDocument |> indent))
+      val first = "if" <:> x.toString <:> s"-- $tag" 
+      val tru2 = indent(stack("true" <:> "=>", tru.toDocument |> indent))
+      val fls2 = indent(stack("false" <:> "=>", fls.toDocument |> indent))
       Document.Stacked(Ls(first, tru2, fls2))
     case Case(x, cases, default) =>
-      val first = raw("case") <:> raw(x.toString) <:> raw("of") <:> raw(s"-- $tag") 
+      val first = "case" <:> x.toString <:> "of" <:> s"-- $tag" 
       val other = cases flatMap {
         case (pat, node) =>
-          Ls(raw(pat.toString) <:> raw("=>"), node.toDocument |> indent)
+          Ls(pat.toString <:> "=>", node.toDocument |> indent)
       }
       default match
         case N => stack(first, (Document.Stacked(other) |> indent))
         case S(dc) =>
-          val default = Ls(raw("_") <:> raw("=>"), dc.toDocument |> indent)
+          val default = Ls("_" <:> "=>", dc.toDocument |> indent)
           stack(first, (Document.Stacked(other ++ default) |> indent))
     case LetExpr(x, expr, body) => 
       stack(
-        raw("let")
-          <:> raw(x.toString)
-          <:> raw("=")
+        "let"
+          <:> x.toString
+          <:> "="
           <:> expr.toDocument
-          <:> raw("in")
-          <:> raw(s"-- $tag"),
+          <:> "in"
+          <:> s"-- $tag",
         body.toDocument)
     case LetMethodCall(xs, cls, method, args, body) =>
       stack(
-        raw("let")
-          <:> raw(xs.map(_.toString).mkString(","))
-          <:> raw("=")
-          <:> raw(cls.name)
-          <#> raw(".")
-          <#> raw(method.toString)
-          <#> raw("(")
-          <#> raw(args.map{ x => x.toString }.mkString(","))
-          <#> raw(")")
-          <:> raw("in") 
-          <:> raw(s"-- $tag"),
+        "let"
+          <:> xs.map(_.toString).mkString(",")
+          <:> "="
+          <:> cls.name
+          <#> "."
+          <#> method.toString
+          <#> "("
+          <#> args.map{ x => x.toString }.mkString(",")
+          <#> ")"
+          <:> "in" 
+          <:> s"-- $tag",
         body.toDocument)
     case LetCall(xs, defn, args, itr, body) => 
       stack(
-        raw("let*")
-          <:> raw("(")
-          <#> raw(xs.map(_.toString).mkString(","))
-          <#> raw(")")
-          <:> raw("=")
-          <:> raw((if itr then "@tailcall " else "") + defn.name)
-          <#> raw("(")
-          <#> raw(args.map{ x => x.toString }.mkString(","))
-          <#> raw(")")
-          <:> raw("in") 
-          <:> raw(s"-- $tag"),
+        "let*"
+          <:> "("
+          <#> xs.map(_.toString).mkString(",")
+          <#> ")"
+          <:> "="
+          <:> (if itr then "@tailcall " else "") + defn.name
+          <#> "("
+          <#> args.map{ x => x.toString }.mkString(",")
+          <#> ")"
+          <:> "in" 
+          <:> s"-- $tag",
         body.toDocument)
   
   def locMarker: LocMarker =
@@ -418,43 +460,45 @@ enum LocMarker:
   case MLetCall(names: Ls[Str], defn: Str, args: Ls[LocMarker])
   var tag = DefnTag(-1)
 
-  def toDocument: Document = this match
-    case MResult(res) => raw("...")
+  def toDocument: Document = 
+    given Conversion[String, Document] = raw
+    this match
+    case MResult(res) => "..."
     case MJump(jp, args) =>
-      raw("jump")
-      <:> raw(jp)
-      <:> raw("...")
+      "jump"
+      <:> jp
+      <:> "..."
     case MCase(x, Ls(tpat, fpat), false) if tpat.isTrue && fpat.isFalse =>
-      raw("if") <:> raw(x.toString) <:> raw("...")
+      "if" <:> x.toString <:> "..."
     case MCase(x, cases, default) =>
-      raw("case") <:> raw(x.toString) <:> raw("of") <:> raw("...")
+      "case" <:> x.toString <:> "of" <:> "..."
     case MLetExpr(x, expr) => 
-      raw("let")
-        <:> raw(x.toString)
-        <:> raw("=")
-        <:> raw("...")
+      "let"
+        <:> x.toString
+        <:> "="
+        <:> "..."
     case MLetMethodCall(xs, cls, method, args) =>
-      raw("let")
-        <:> raw(xs.map(_.toString).mkString(","))
-        <:> raw("=")
-        <:> raw(cls.name)
-        <:> raw(".")
-        <:> raw(method)
-        <:> raw("...")
+      "let"
+        <:> xs.map(_.toString).mkString(",")
+        <:> "="
+        <:> cls.name
+        <:> "."
+        <:> method
+        <:> "..."
     case MLetCall(xs, defn, args) =>
-      raw("let*")
-        <:> raw("(")
-        <#> raw(xs.map(_.toString).mkString(","))
-        <#> raw(")")
-        <:> raw("=")
-        <:> raw(defn)
-        <:> raw("...")
-    case MRef(s) => s.toString |> raw
-    case MLit(IntLit(lit)) => s"$lit" |> raw
-    case MLit(DecLit(lit)) => s"$lit" |> raw
-    case MLit(StrLit(lit)) => s"$lit" |> raw
-    case MLit(UnitLit(undefinedOrNull)) => (if undefinedOrNull then "undefined" else "null") |> raw
-    case _ => raw("...")
+      "let*"
+        <:> "("
+        <#> xs.map(_.toString).mkString(",")
+        <#> ")"
+        <:> "="
+        <:> defn
+        <:> "..."
+    case MRef(s) => s.toString
+    case MLit(IntLit(lit)) => s"$lit"
+    case MLit(DecLit(lit)) => s"$lit"
+    case MLit(StrLit(lit)) => s"$lit"
+    case MLit(UnitLit(undefinedOrNull)) => if undefinedOrNull then "undefined" else "null"
+    case _ => "..."
 
   def show = s"$tag-" + toDocument.print
 
