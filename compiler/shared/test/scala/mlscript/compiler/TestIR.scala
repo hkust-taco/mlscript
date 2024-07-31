@@ -24,9 +24,9 @@ class IRDiffTestCompiler extends DiffTests {
         val (fresh, freshFnId, freshClassId, freshTag) = (Fresh(), FreshInt(), FreshInt(), FreshInt())
         val gb = Builder(fresh, freshFnId, freshClassId, freshTag, mode.irVerbose)
         val graph = gb.buildGraph(unit)
-        output(graph.toString)
+        output(graph.show)
         output("\nPromoted:")
-        output(graph.toString)
+        output(graph.show)
         var interp_result: Opt[Str] = None
         if (mode.interpIR)
           output("\nInterpreted:")

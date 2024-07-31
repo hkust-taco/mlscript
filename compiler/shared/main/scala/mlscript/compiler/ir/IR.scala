@@ -27,6 +27,21 @@ case class Program(
     Sorting.quickSort(t2)
     s"Program({${t1.mkString(",\n")}}, {\n${t2.mkString("\n")}\n},\n$main)"
 
+  def show = toDocument.print
+
+  def toDocument: Document =
+    val t1 = classes.toArray
+    val t2 = defs.toArray
+    Sorting.quickSort(t1)
+    Sorting.quickSort(t2)
+    given Conversion[String, Document] = raw
+    stack(
+      "Program:",
+      stack_list(t1.map(_.toDocument).toList) |> indent,
+      stack_list(t2.map(_.toDocument).toList) |> indent,
+      main.toDocument |> indent
+    )
+
 implicit object ClassInfoOrdering extends Ordering[ClassInfo] {
   def compare(a: ClassInfo, b: ClassInfo) = a.id.compare(b.id)
 }
@@ -41,6 +56,19 @@ case class ClassInfo(
   override def hashCode: Int = id
   override def toString: String =
     s"ClassInfo($id, $name, [${fields mkString ","}], parents: ${parents mkString ","}, methods:\n${methods mkString ",\n"})"
+
+  def show = toDocument.print
+  def toDocument: Document =
+    given Conversion[String, Document] = raw
+    val extension = if parents.isEmpty then "" else " extends " + parents.mkString(", ")
+    if methods.isEmpty then
+      "class" <:> name <#> "(" <#> fields.mkString(",") <#> ")" <#> extension
+    else
+      stack(
+        "class" <:> name <#> "(" <#> fields.mkString(",") <#> ")" <#> extension <:> "{",
+        stack_list( methods.map { (_, defn) => defn.toDocument |> indent }.toList),
+        "}"
+      )
 
 case class Name(val str: Str):
   private var intro: Opt[Intro] = None
@@ -102,6 +130,15 @@ case class Defn(
     val ais = activeInputs.map(_.toSeq.sorted.mkString("[", ",", "]")).mkString("[", ",", "]")
     val ars = activeResults.map(_.toString).mkString("[", ",", "]")
     s"Def($id, $name, $ps, $naps,\nI: $ais,\nR: $ars,\nRec: $recBoundary,\n$resultNum, \n$body\n)"
+
+  def show = toDocument.print
+
+  def toDocument: Document =
+    given Conversion[String, Document] = raw
+    stack(
+      "def" <:> name <#> "(" <#> params.map(_.toString).mkString(",")  <#> ")" <:> "=",
+      body.toDocument |> indent
+    )
 
 sealed trait TrivialExpr:
   import Expr._
@@ -224,7 +261,7 @@ enum Node:
       val names_copy = names.map(_.copy)
       LetCall(names_copy, defn, args.map(_.mapNameOfTrivialExpr(_.trySubst(ctx))), body.copy(ctx ++ names_copy.map(x => x.str -> x)))
 
-  private def toDocument: Document =
+  def toDocument: Document =
     given Conversion[String, Document] = raw
     this match
     case Result(res) => (res |> showArguments) <:> s"-- $tag"

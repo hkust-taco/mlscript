@@ -32,234 +32,116 @@ main()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(7, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #62
-//│ ),
-//│ apply1 -> Def(3, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #58
-//│ ),
-//│ apply0 -> Def(2, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #57
-//│ ),
-//│ apply4 -> Def(6, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #61
-//│ ),
-//│ apply3 -> Def(5, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #60
-//│ ),
-//│ apply2 -> Def(4, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #59
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Fn, [], parents: Callable, methods:
-//│ apply1 -> Def(8, apply1, [x$11], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$12 = Callable.apply2(builtin,println,x$11) in -- #70
-//│ x$12 -- #69
-//│ )),
-//│ ClassInfo(10, Fn2, [a], parents: Callable, methods:
-//│ apply1 -> Def(9, apply1, [x$13], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$14 = Callable.apply2(builtin,println,a) in -- #86
-//│ let x$15 = Callable.apply2(builtin,println,x$13) in -- #85
-//│ x$15 -- #84
-//│ )),
-//│ ClassInfo(11, Demo, [n], parents: , methods:
-//│ x -> Def(10, x, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ n -- #87
-//│ ))}, {
-//│ Def(0, f, [fn$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$1 = Callable.apply1(fn$0,1) in -- #8
-//│ x$1 -- #7
-//│ )
-//│ Def(1, main, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$2 = Demo(2) in -- #56
-//│ let x$3 = Demo.x(x$2) in -- #55
-//│ let x$4 = Fn() in -- #54
-//│ let x$5 = Fn.apply1(x$4,3) in -- #53
-//│ let* (x$6) = f(x$4) in -- #52
-//│ let x$7 = Fn2(4) in -- #51
-//│ let x$8 = Fn2.apply1(x$7,5) in -- #50
-//│ let x$9 = Callable.apply1(x$7,6) in -- #49
-//│ let* (x$10) = f(x$7) in -- #48
-//│ x$10 -- #47
-//│ )
-//│ },
-//│ let* (x$0) = main() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #62
+//│     def apply1(x0$0) =
+//│       0 -- #58
+//│     def apply0() =
+//│       0 -- #57
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #61
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #60
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #59
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Fn() extends Callable {
+//│     def apply1(x$11) =
+//│       let x$12 = Callable.apply2(builtin,println,x$11) in -- #70
+//│       x$12 -- #69
+//│   }
+//│   class Fn2(a) extends Callable {
+//│     def apply1(x$13) =
+//│       let x$14 = Callable.apply2(builtin,println,a) in -- #86
+//│       let x$15 = Callable.apply2(builtin,println,x$13) in -- #85
+//│       x$15 -- #84
+//│   }
+//│   class Demo(n) {
+//│     def x() =
+//│       n -- #87
+//│   }
+//│   def f(fn$0) =
+//│     let x$1 = Callable.apply1(fn$0,1) in -- #8
+//│     x$1 -- #7
+//│   def main() =
+//│     let x$2 = Demo(2) in -- #56
+//│     let x$3 = Demo.x(x$2) in -- #55
+//│     let x$4 = Fn() in -- #54
+//│     let x$5 = Fn.apply1(x$4,3) in -- #53
+//│     let* (x$6) = f(x$4) in -- #52
+//│     let x$7 = Fn2(4) in -- #51
+//│     let x$8 = Fn2.apply1(x$7,5) in -- #50
+//│     let x$9 = Callable.apply1(x$7,6) in -- #49
+//│     let* (x$10) = f(x$7) in -- #48
+//│     x$10 -- #47
+//│   let* (x$0) = main() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(7, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #62
-//│ ),
-//│ apply1 -> Def(3, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #58
-//│ ),
-//│ apply0 -> Def(2, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #57
-//│ ),
-//│ apply4 -> Def(6, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #61
-//│ ),
-//│ apply3 -> Def(5, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #60
-//│ ),
-//│ apply2 -> Def(4, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #59
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Fn, [], parents: Callable, methods:
-//│ apply1 -> Def(8, apply1, [x$11], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$12 = Callable.apply2(builtin,println,x$11) in -- #70
-//│ x$12 -- #69
-//│ )),
-//│ ClassInfo(10, Fn2, [a], parents: Callable, methods:
-//│ apply1 -> Def(9, apply1, [x$13], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$14 = Callable.apply2(builtin,println,a) in -- #86
-//│ let x$15 = Callable.apply2(builtin,println,x$13) in -- #85
-//│ x$15 -- #84
-//│ )),
-//│ ClassInfo(11, Demo, [n], parents: , methods:
-//│ x -> Def(10, x, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ n -- #87
-//│ ))}, {
-//│ Def(0, f, [fn$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$1 = Callable.apply1(fn$0,1) in -- #8
-//│ x$1 -- #7
-//│ )
-//│ Def(1, main, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$2 = Demo(2) in -- #56
-//│ let x$3 = Demo.x(x$2) in -- #55
-//│ let x$4 = Fn() in -- #54
-//│ let x$5 = Fn.apply1(x$4,3) in -- #53
-//│ let* (x$6) = f(x$4) in -- #52
-//│ let x$7 = Fn2(4) in -- #51
-//│ let x$8 = Fn2.apply1(x$7,5) in -- #50
-//│ let x$9 = Callable.apply1(x$7,6) in -- #49
-//│ let* (x$10) = f(x$7) in -- #48
-//│ x$10 -- #47
-//│ )
-//│ },
-//│ let* (x$0) = main() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #62
+//│     def apply1(x0$0) =
+//│       0 -- #58
+//│     def apply0() =
+//│       0 -- #57
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #61
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #60
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #59
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Fn() extends Callable {
+//│     def apply1(x$11) =
+//│       let x$12 = Callable.apply2(builtin,println,x$11) in -- #70
+//│       x$12 -- #69
+//│   }
+//│   class Fn2(a) extends Callable {
+//│     def apply1(x$13) =
+//│       let x$14 = Callable.apply2(builtin,println,a) in -- #86
+//│       let x$15 = Callable.apply2(builtin,println,x$13) in -- #85
+//│       x$15 -- #84
+//│   }
+//│   class Demo(n) {
+//│     def x() =
+//│       n -- #87
+//│   }
+//│   def f(fn$0) =
+//│     let x$1 = Callable.apply1(fn$0,1) in -- #8
+//│     x$1 -- #7
+//│   def main() =
+//│     let x$2 = Demo(2) in -- #56
+//│     let x$3 = Demo.x(x$2) in -- #55
+//│     let x$4 = Fn() in -- #54
+//│     let x$5 = Fn.apply1(x$4,3) in -- #53
+//│     let* (x$6) = f(x$4) in -- #52
+//│     let x$7 = Fn2(4) in -- #51
+//│     let x$8 = Fn2.apply1(x$7,5) in -- #50
+//│     let x$9 = Callable.apply1(x$7,6) in -- #49
+//│     let* (x$10) = f(x$7) in -- #48
+//│     x$10 -- #47
+//│   let* (x$0) = main() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ 
 //│ Execution succeeded: 

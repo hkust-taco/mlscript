@@ -14,190 +14,86 @@ main(1, 42)
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #17
-//│ ),
-//│ apply1 -> Def(2, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #13
-//│ ),
-//│ apply0 -> Def(1, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #12
-//│ ),
-//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #16
-//│ ),
-//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #15
-//│ ),
-//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #14
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ )}, {
-//│ Def(0, main, [init$0,key$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x$1) = r(init$0,key$0) in -- #11
-//│ x$1 -- #10
-//│ )
-//│ Def(7, r, [x$2,key$1], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$3 = <=(x$2,0) in -- #40
-//│ if x$3 -- #39
-//│   true =>
-//│     jump j$0(key$1) -- #26
-//│   false =>
-//│     let x$5 = -(x$2,1) in -- #38
-//│     let* (x$6) = r(x$5,key$1) in -- #37
-//│     jump j$0(x$6) -- #36
-//│ )
-//│ Def(8, j$0, [x$4], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ x$4 -- #24
-//│ )
-//│ },
-//│ let* (x$0) = main(1,42) in -- #6
-//│ x$0 -- #5)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #17
+//│     def apply1(x0$0) =
+//│       0 -- #13
+//│     def apply0() =
+//│       0 -- #12
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #16
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #15
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #14
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   def main(init$0,key$0) =
+//│     let* (x$1) = r(init$0,key$0) in -- #11
+//│     x$1 -- #10
+//│   def r(x$2,key$1) =
+//│     let x$3 = <=(x$2,0) in -- #40
+//│     if x$3 -- #39
+//│       true =>
+//│         jump j$0(key$1) -- #26
+//│       false =>
+//│         let x$5 = -(x$2,1) in -- #38
+//│         let* (x$6) = r(x$5,key$1) in -- #37
+//│         jump j$0(x$6) -- #36
+//│   def j$0(x$4) =
+//│     x$4 -- #24
+//│   let* (x$0) = main(1,42) in -- #6
+//│   x$0 -- #5
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #17
-//│ ),
-//│ apply1 -> Def(2, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #13
-//│ ),
-//│ apply0 -> Def(1, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #12
-//│ ),
-//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #16
-//│ ),
-//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #15
-//│ ),
-//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #14
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ )}, {
-//│ Def(0, main, [init$0,key$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x$1) = r(init$0,key$0) in -- #11
-//│ x$1 -- #10
-//│ )
-//│ Def(7, r, [x$2,key$1], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$3 = <=(x$2,0) in -- #40
-//│ if x$3 -- #39
-//│   true =>
-//│     jump j$0(key$1) -- #26
-//│   false =>
-//│     let x$5 = -(x$2,1) in -- #38
-//│     let* (x$6) = r(x$5,key$1) in -- #37
-//│     jump j$0(x$6) -- #36
-//│ )
-//│ Def(8, j$0, [x$4], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ x$4 -- #24
-//│ )
-//│ },
-//│ let* (x$0) = main(1,42) in -- #6
-//│ x$0 -- #5)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #17
+//│     def apply1(x0$0) =
+//│       0 -- #13
+//│     def apply0() =
+//│       0 -- #12
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #16
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #15
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #14
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   def main(init$0,key$0) =
+//│     let* (x$1) = r(init$0,key$0) in -- #11
+//│     x$1 -- #10
+//│   def r(x$2,key$1) =
+//│     let x$3 = <=(x$2,0) in -- #40
+//│     if x$3 -- #39
+//│       true =>
+//│         jump j$0(key$1) -- #26
+//│       false =>
+//│         let x$5 = -(x$2,1) in -- #38
+//│         let* (x$6) = r(x$5,key$1) in -- #37
+//│         jump j$0(x$6) -- #36
+//│   def j$0(x$4) =
+//│     x$4 -- #24
+//│   let* (x$0) = main(1,42) in -- #6
+//│   x$0 -- #5
 //│ 
 //│ Interpreted:
 //│ 42
@@ -220,236 +116,112 @@ main(1, 42)
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #17
-//│ ),
-//│ apply1 -> Def(2, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #13
-//│ ),
-//│ apply0 -> Def(1, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #12
-//│ ),
-//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #16
-//│ ),
-//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #15
-//│ ),
-//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #14
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ )}, {
-//│ Def(0, main, [init$0,key$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x$1) = ping(init$0,key$0) in -- #11
-//│ x$1 -- #10
-//│ )
-//│ Def(7, ping, [x$2,key$1], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$3 = <=(x$2,0) in -- #46
-//│ if x$3 -- #45
-//│   true =>
-//│     let x$5 = +(key$1,1) in -- #32
-//│     jump j$0(x$5) -- #31
-//│   false =>
-//│     let x$6 = -(x$2,1) in -- #44
-//│     let* (x$7) = pong(x$6,key$1) in -- #43
-//│     jump j$0(x$7) -- #42
-//│ )
-//│ Def(8, j$0, [x$4], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ x$4 -- #24
-//│ )
-//│ Def(9, pong, [x$8,key$2], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$9 = <=(x$8,0) in -- #75
-//│ if x$9 -- #74
-//│   true =>
-//│     let x$11 = +(key$2,2) in -- #61
-//│     jump j$1(x$11) -- #60
-//│   false =>
-//│     let x$12 = -(x$8,1) in -- #73
-//│     let* (x$13) = ping(x$12,key$2) in -- #72
-//│     jump j$1(x$13) -- #71
-//│ )
-//│ Def(10, j$1, [x$10], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ x$10 -- #53
-//│ )
-//│ },
-//│ let* (x$0) = main(1,42) in -- #6
-//│ x$0 -- #5)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #17
+//│     def apply1(x0$0) =
+//│       0 -- #13
+//│     def apply0() =
+//│       0 -- #12
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #16
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #15
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #14
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   def main(init$0,key$0) =
+//│     let* (x$1) = ping(init$0,key$0) in -- #11
+//│     x$1 -- #10
+//│   def ping(x$2,key$1) =
+//│     let x$3 = <=(x$2,0) in -- #46
+//│     if x$3 -- #45
+//│       true =>
+//│         let x$5 = +(key$1,1) in -- #32
+//│         jump j$0(x$5) -- #31
+//│       false =>
+//│         let x$6 = -(x$2,1) in -- #44
+//│         let* (x$7) = pong(x$6,key$1) in -- #43
+//│         jump j$0(x$7) -- #42
+//│   def j$0(x$4) =
+//│     x$4 -- #24
+//│   def pong(x$8,key$2) =
+//│     let x$9 = <=(x$8,0) in -- #75
+//│     if x$9 -- #74
+//│       true =>
+//│         let x$11 = +(key$2,2) in -- #61
+//│         jump j$1(x$11) -- #60
+//│       false =>
+//│         let x$12 = -(x$8,1) in -- #73
+//│         let* (x$13) = ping(x$12,key$2) in -- #72
+//│         jump j$1(x$13) -- #71
+//│   def j$1(x$10) =
+//│     x$10 -- #53
+//│   let* (x$0) = main(1,42) in -- #6
+//│   x$0 -- #5
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #17
-//│ ),
-//│ apply1 -> Def(2, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #13
-//│ ),
-//│ apply0 -> Def(1, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #12
-//│ ),
-//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #16
-//│ ),
-//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #15
-//│ ),
-//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #14
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ )}, {
-//│ Def(0, main, [init$0,key$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x$1) = ping(init$0,key$0) in -- #11
-//│ x$1 -- #10
-//│ )
-//│ Def(7, ping, [x$2,key$1], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$3 = <=(x$2,0) in -- #46
-//│ if x$3 -- #45
-//│   true =>
-//│     let x$5 = +(key$1,1) in -- #32
-//│     jump j$0(x$5) -- #31
-//│   false =>
-//│     let x$6 = -(x$2,1) in -- #44
-//│     let* (x$7) = pong(x$6,key$1) in -- #43
-//│     jump j$0(x$7) -- #42
-//│ )
-//│ Def(8, j$0, [x$4], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ x$4 -- #24
-//│ )
-//│ Def(9, pong, [x$8,key$2], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$9 = <=(x$8,0) in -- #75
-//│ if x$9 -- #74
-//│   true =>
-//│     let x$11 = +(key$2,2) in -- #61
-//│     jump j$1(x$11) -- #60
-//│   false =>
-//│     let x$12 = -(x$8,1) in -- #73
-//│     let* (x$13) = ping(x$12,key$2) in -- #72
-//│     jump j$1(x$13) -- #71
-//│ )
-//│ Def(10, j$1, [x$10], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ x$10 -- #53
-//│ )
-//│ },
-//│ let* (x$0) = main(1,42) in -- #6
-//│ x$0 -- #5)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #17
+//│     def apply1(x0$0) =
+//│       0 -- #13
+//│     def apply0() =
+//│       0 -- #12
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #16
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #15
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #14
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   def main(init$0,key$0) =
+//│     let* (x$1) = ping(init$0,key$0) in -- #11
+//│     x$1 -- #10
+//│   def ping(x$2,key$1) =
+//│     let x$3 = <=(x$2,0) in -- #46
+//│     if x$3 -- #45
+//│       true =>
+//│         let x$5 = +(key$1,1) in -- #32
+//│         jump j$0(x$5) -- #31
+//│       false =>
+//│         let x$6 = -(x$2,1) in -- #44
+//│         let* (x$7) = pong(x$6,key$1) in -- #43
+//│         jump j$0(x$7) -- #42
+//│   def j$0(x$4) =
+//│     x$4 -- #24
+//│   def pong(x$8,key$2) =
+//│     let x$9 = <=(x$8,0) in -- #75
+//│     if x$9 -- #74
+//│       true =>
+//│         let x$11 = +(key$2,2) in -- #61
+//│         jump j$1(x$11) -- #60
+//│       false =>
+//│         let x$12 = -(x$8,1) in -- #73
+//│         let* (x$13) = ping(x$12,key$2) in -- #72
+//│         jump j$1(x$13) -- #71
+//│   def j$1(x$10) =
+//│     x$10 -- #53
+//│   let* (x$0) = main(1,42) in -- #6
+//│   x$0 -- #5
 //│ 
 //│ Interpreted:
 //│ 44
@@ -474,256 +246,124 @@ main(1, 42)
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #20
-//│ ),
-//│ apply1 -> Def(2, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #16
-//│ ),
-//│ apply0 -> Def(1, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #15
-//│ ),
-//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #19
-//│ ),
-//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #18
-//│ ),
-//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #17
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Lambda$0, [key], parents: Callable, methods:
-//│ apply1 -> Def(11, apply1, [x$17], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x$18) = ping(x$17,key) in -- #85
-//│ x$18 -- #84
-//│ ))}, {
-//│ Def(0, main, [init$0,key$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$3 = Lambda$0(key$0) in -- #14
-//│ let x$4 = Callable.apply1(x$3,init$0) in -- #13
-//│ x$4 -- #12
-//│ )
-//│ Def(7, ping, [x$5,key$1], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$6 = <=(x$5,0) in -- #49
-//│ if x$6 -- #48
-//│   true =>
-//│     let x$8 = +(key$1,1) in -- #35
-//│     jump j$0(x$8) -- #34
-//│   false =>
-//│     let x$9 = -(x$5,1) in -- #47
-//│     let* (x$10) = pong(x$9,key$1) in -- #46
-//│     jump j$0(x$10) -- #45
-//│ )
-//│ Def(8, j$0, [x$7], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ x$7 -- #27
-//│ )
-//│ Def(9, pong, [x$11,key$2], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$12 = <=(x$11,0) in -- #78
-//│ if x$12 -- #77
-//│   true =>
-//│     let x$14 = +(key$2,2) in -- #64
-//│     jump j$1(x$14) -- #63
-//│   false =>
-//│     let x$15 = -(x$11,1) in -- #76
-//│     let* (x$16) = ping(x$15,key$2) in -- #75
-//│     jump j$1(x$16) -- #74
-//│ )
-//│ Def(10, j$1, [x$13], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ x$13 -- #56
-//│ )
-//│ },
-//│ let* (x$0) = main(1,42) in -- #6
-//│ x$0 -- #5)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #20
+//│     def apply1(x0$0) =
+//│       0 -- #16
+//│     def apply0() =
+//│       0 -- #15
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #19
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #18
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #17
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Lambda$0(key) extends Callable {
+//│     def apply1(x$17) =
+//│       let* (x$18) = ping(x$17,key) in -- #85
+//│       x$18 -- #84
+//│   }
+//│   def main(init$0,key$0) =
+//│     let x$3 = Lambda$0(key$0) in -- #14
+//│     let x$4 = Callable.apply1(x$3,init$0) in -- #13
+//│     x$4 -- #12
+//│   def ping(x$5,key$1) =
+//│     let x$6 = <=(x$5,0) in -- #49
+//│     if x$6 -- #48
+//│       true =>
+//│         let x$8 = +(key$1,1) in -- #35
+//│         jump j$0(x$8) -- #34
+//│       false =>
+//│         let x$9 = -(x$5,1) in -- #47
+//│         let* (x$10) = pong(x$9,key$1) in -- #46
+//│         jump j$0(x$10) -- #45
+//│   def j$0(x$7) =
+//│     x$7 -- #27
+//│   def pong(x$11,key$2) =
+//│     let x$12 = <=(x$11,0) in -- #78
+//│     if x$12 -- #77
+//│       true =>
+//│         let x$14 = +(key$2,2) in -- #64
+//│         jump j$1(x$14) -- #63
+//│       false =>
+//│         let x$15 = -(x$11,1) in -- #76
+//│         let* (x$16) = ping(x$15,key$2) in -- #75
+//│         jump j$1(x$16) -- #74
+//│   def j$1(x$13) =
+//│     x$13 -- #56
+//│   let* (x$0) = main(1,42) in -- #6
+//│   x$0 -- #5
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(6, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #20
-//│ ),
-//│ apply1 -> Def(2, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #16
-//│ ),
-//│ apply0 -> Def(1, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #15
-//│ ),
-//│ apply4 -> Def(5, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #19
-//│ ),
-//│ apply3 -> Def(4, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #18
-//│ ),
-//│ apply2 -> Def(3, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #17
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Lambda$0, [key], parents: Callable, methods:
-//│ apply1 -> Def(11, apply1, [x$17], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x$18) = ping(x$17,key) in -- #85
-//│ x$18 -- #84
-//│ ))}, {
-//│ Def(0, main, [init$0,key$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$3 = Lambda$0(key$0) in -- #14
-//│ let x$4 = Callable.apply1(x$3,init$0) in -- #13
-//│ x$4 -- #12
-//│ )
-//│ Def(7, ping, [x$5,key$1], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$6 = <=(x$5,0) in -- #49
-//│ if x$6 -- #48
-//│   true =>
-//│     let x$8 = +(key$1,1) in -- #35
-//│     jump j$0(x$8) -- #34
-//│   false =>
-//│     let x$9 = -(x$5,1) in -- #47
-//│     let* (x$10) = pong(x$9,key$1) in -- #46
-//│     jump j$0(x$10) -- #45
-//│ )
-//│ Def(8, j$0, [x$7], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ x$7 -- #27
-//│ )
-//│ Def(9, pong, [x$11,key$2], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$12 = <=(x$11,0) in -- #78
-//│ if x$12 -- #77
-//│   true =>
-//│     let x$14 = +(key$2,2) in -- #64
-//│     jump j$1(x$14) -- #63
-//│   false =>
-//│     let x$15 = -(x$11,1) in -- #76
-//│     let* (x$16) = ping(x$15,key$2) in -- #75
-//│     jump j$1(x$16) -- #74
-//│ )
-//│ Def(10, j$1, [x$13], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ x$13 -- #56
-//│ )
-//│ },
-//│ let* (x$0) = main(1,42) in -- #6
-//│ x$0 -- #5)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #20
+//│     def apply1(x0$0) =
+//│       0 -- #16
+//│     def apply0() =
+//│       0 -- #15
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #19
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #18
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #17
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Lambda$0(key) extends Callable {
+//│     def apply1(x$17) =
+//│       let* (x$18) = ping(x$17,key) in -- #85
+//│       x$18 -- #84
+//│   }
+//│   def main(init$0,key$0) =
+//│     let x$3 = Lambda$0(key$0) in -- #14
+//│     let x$4 = Callable.apply1(x$3,init$0) in -- #13
+//│     x$4 -- #12
+//│   def ping(x$5,key$1) =
+//│     let x$6 = <=(x$5,0) in -- #49
+//│     if x$6 -- #48
+//│       true =>
+//│         let x$8 = +(key$1,1) in -- #35
+//│         jump j$0(x$8) -- #34
+//│       false =>
+//│         let x$9 = -(x$5,1) in -- #47
+//│         let* (x$10) = pong(x$9,key$1) in -- #46
+//│         jump j$0(x$10) -- #45
+//│   def j$0(x$7) =
+//│     x$7 -- #27
+//│   def pong(x$11,key$2) =
+//│     let x$12 = <=(x$11,0) in -- #78
+//│     if x$12 -- #77
+//│       true =>
+//│         let x$14 = +(key$2,2) in -- #64
+//│         jump j$1(x$14) -- #63
+//│       false =>
+//│         let x$15 = -(x$11,1) in -- #76
+//│         let* (x$16) = ping(x$15,key$2) in -- #75
+//│         jump j$1(x$16) -- #74
+//│   def j$1(x$13) =
+//│     x$13 -- #56
+//│   let* (x$0) = main(1,42) in -- #6
+//│   x$0 -- #5
 //│ 
 //│ Interpreted:
 //│ 44

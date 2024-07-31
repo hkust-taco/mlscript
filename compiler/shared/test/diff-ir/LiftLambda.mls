@@ -16,230 +16,112 @@ main(3)
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(7, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #31
-//│ ),
-//│ apply1 -> Def(3, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #27
-//│ ),
-//│ apply0 -> Def(2, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #26
-//│ ),
-//│ apply4 -> Def(6, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #30
-//│ ),
-//│ apply3 -> Def(5, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #29
-//│ ),
-//│ apply2 -> Def(4, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #28
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Lambda$0, [f], parents: Callable, methods:
-//│ apply1 -> Def(8, apply1, [g$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$11 = Lambda$2(f,g$0) in -- #33
-//│ x$11 -- #32
-//│ )),
-//│ ClassInfo(10, Lambda$1, [x,y], parents: Callable, methods:
-//│ apply1 -> Def(9, apply1, [z$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$12 = +(x,y) in -- #46
-//│ let x$13 = +(x$12,z$0) in -- #45
-//│ x$13 -- #44
-//│ )),
-//│ ClassInfo(11, Lambda$2, [f,g], parents: Callable, methods:
-//│ apply1 -> Def(10, apply1, [x$14], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$15 = Callable.apply1(g,x$14) in -- #57
-//│ let x$16 = Callable.apply1(f,x$15) in -- #56
-//│ x$16 -- #55
-//│ ))}, {
-//│ Def(0, compose, [f$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$2 = Lambda$0(f$0) in -- #6
-//│ x$2 -- #5
-//│ )
-//│ Def(1, main, [x$3], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$4 = 1 in -- #25
-//│ let x$6 = Lambda$1(x$3,x$4) in -- #24
-//│ let* (x$7) = compose(x$6) in -- #23
-//│ let x$8 = Callable.apply1(x$7,x$6) in -- #22
-//│ let x$9 = Callable.apply1(x$8,2) in -- #21
-//│ x$9 -- #20
-//│ )
-//│ },
-//│ let* (x$0) = main(3) in -- #4
-//│ x$0 -- #3)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #31
+//│     def apply1(x0$0) =
+//│       0 -- #27
+//│     def apply0() =
+//│       0 -- #26
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #30
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #29
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #28
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Lambda$0(f) extends Callable {
+//│     def apply1(g$0) =
+//│       let x$11 = Lambda$2(f,g$0) in -- #33
+//│       x$11 -- #32
+//│   }
+//│   class Lambda$1(x,y) extends Callable {
+//│     def apply1(z$0) =
+//│       let x$12 = +(x,y) in -- #46
+//│       let x$13 = +(x$12,z$0) in -- #45
+//│       x$13 -- #44
+//│   }
+//│   class Lambda$2(f,g) extends Callable {
+//│     def apply1(x$14) =
+//│       let x$15 = Callable.apply1(g,x$14) in -- #57
+//│       let x$16 = Callable.apply1(f,x$15) in -- #56
+//│       x$16 -- #55
+//│   }
+//│   def compose(f$0) =
+//│     let x$2 = Lambda$0(f$0) in -- #6
+//│     x$2 -- #5
+//│   def main(x$3) =
+//│     let x$4 = 1 in -- #25
+//│     let x$6 = Lambda$1(x$3,x$4) in -- #24
+//│     let* (x$7) = compose(x$6) in -- #23
+//│     let x$8 = Callable.apply1(x$7,x$6) in -- #22
+//│     let x$9 = Callable.apply1(x$8,2) in -- #21
+//│     x$9 -- #20
+//│   let* (x$0) = main(3) in -- #4
+//│   x$0 -- #3
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(7, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #31
-//│ ),
-//│ apply1 -> Def(3, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #27
-//│ ),
-//│ apply0 -> Def(2, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #26
-//│ ),
-//│ apply4 -> Def(6, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #30
-//│ ),
-//│ apply3 -> Def(5, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #29
-//│ ),
-//│ apply2 -> Def(4, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #28
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Lambda$0, [f], parents: Callable, methods:
-//│ apply1 -> Def(8, apply1, [g$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$11 = Lambda$2(f,g$0) in -- #33
-//│ x$11 -- #32
-//│ )),
-//│ ClassInfo(10, Lambda$1, [x,y], parents: Callable, methods:
-//│ apply1 -> Def(9, apply1, [z$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$12 = +(x,y) in -- #46
-//│ let x$13 = +(x$12,z$0) in -- #45
-//│ x$13 -- #44
-//│ )),
-//│ ClassInfo(11, Lambda$2, [f,g], parents: Callable, methods:
-//│ apply1 -> Def(10, apply1, [x$14], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$15 = Callable.apply1(g,x$14) in -- #57
-//│ let x$16 = Callable.apply1(f,x$15) in -- #56
-//│ x$16 -- #55
-//│ ))}, {
-//│ Def(0, compose, [f$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$2 = Lambda$0(f$0) in -- #6
-//│ x$2 -- #5
-//│ )
-//│ Def(1, main, [x$3], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$4 = 1 in -- #25
-//│ let x$6 = Lambda$1(x$3,x$4) in -- #24
-//│ let* (x$7) = compose(x$6) in -- #23
-//│ let x$8 = Callable.apply1(x$7,x$6) in -- #22
-//│ let x$9 = Callable.apply1(x$8,2) in -- #21
-//│ x$9 -- #20
-//│ )
-//│ },
-//│ let* (x$0) = main(3) in -- #4
-//│ x$0 -- #3)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #31
+//│     def apply1(x0$0) =
+//│       0 -- #27
+//│     def apply0() =
+//│       0 -- #26
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #30
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #29
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #28
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Lambda$0(f) extends Callable {
+//│     def apply1(g$0) =
+//│       let x$11 = Lambda$2(f,g$0) in -- #33
+//│       x$11 -- #32
+//│   }
+//│   class Lambda$1(x,y) extends Callable {
+//│     def apply1(z$0) =
+//│       let x$12 = +(x,y) in -- #46
+//│       let x$13 = +(x$12,z$0) in -- #45
+//│       x$13 -- #44
+//│   }
+//│   class Lambda$2(f,g) extends Callable {
+//│     def apply1(x$14) =
+//│       let x$15 = Callable.apply1(g,x$14) in -- #57
+//│       let x$16 = Callable.apply1(f,x$15) in -- #56
+//│       x$16 -- #55
+//│   }
+//│   def compose(f$0) =
+//│     let x$2 = Lambda$0(f$0) in -- #6
+//│     x$2 -- #5
+//│   def main(x$3) =
+//│     let x$4 = 1 in -- #25
+//│     let x$6 = Lambda$1(x$3,x$4) in -- #24
+//│     let* (x$7) = compose(x$6) in -- #23
+//│     let x$8 = Callable.apply1(x$7,x$6) in -- #22
+//│     let x$9 = Callable.apply1(x$8,2) in -- #21
+//│     x$9 -- #20
+//│   let* (x$0) = main(3) in -- #4
+//│   x$0 -- #3
 //│ 
 //│ Interpreted:
 //│ 10

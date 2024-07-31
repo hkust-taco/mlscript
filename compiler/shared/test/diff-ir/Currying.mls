@@ -18,262 +18,124 @@ main()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #48
-//│ ),
-//│ apply1 -> Def(5, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #44
-//│ ),
-//│ apply0 -> Def(4, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #43
-//│ ),
-//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #47
-//│ ),
-//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #46
-//│ ),
-//│ apply2 -> Def(6, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #45
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Lambda$0, [a], parents: Callable, methods:
-//│ apply1 -> Def(10, apply1, [b$1], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$12 = +(a,b$1) in -- #52
-//│ x$12 -- #51
-//│ )),
-//│ ClassInfo(10, Lambda$1, [a], parents: Callable, methods:
-//│ apply1 -> Def(11, apply1, [b$2], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$14 = Lambda$2(a,b$2) in -- #54
-//│ x$14 -- #53
-//│ )),
-//│ ClassInfo(11, Lambda$2, [a,b], parents: Callable, methods:
-//│ apply1 -> Def(12, apply1, [c$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$15 = +(a,b) in -- #61
-//│ let x$16 = +(x$15,c$0) in -- #60
-//│ x$16 -- #59
-//│ ))}, {
-//│ Def(0, add2c, [a$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$2 = Lambda$0(a$0) in -- #4
-//│ x$2 -- #3
-//│ )
-//│ Def(1, add2, [a$1,b$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$3 = +(a$1,b$0) in -- #8
-//│ x$3 -- #7
-//│ )
-//│ Def(2, add3c, [a$2], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$5 = Lambda$1(a$2) in -- #10
-//│ x$5 -- #9
-//│ )
-//│ Def(3, main, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x$6) = add2c(1) in -- #42
-//│ let x$7 = Callable.apply1(x$6,2) in -- #41
-//│ let* (x$8) = add2(1,2) in -- #40
-//│ let* (x$9) = add3c(1) in -- #39
-//│ let x$10 = Callable.apply1(x$9,2) in -- #38
-//│ let x$11 = Callable.apply1(x$10,3) in -- #37
-//│ x$11 -- #36
-//│ )
-//│ },
-//│ let* (x$0) = main() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #48
+//│     def apply1(x0$0) =
+//│       0 -- #44
+//│     def apply0() =
+//│       0 -- #43
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #47
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #46
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #45
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Lambda$0(a) extends Callable {
+//│     def apply1(b$1) =
+//│       let x$12 = +(a,b$1) in -- #52
+//│       x$12 -- #51
+//│   }
+//│   class Lambda$1(a) extends Callable {
+//│     def apply1(b$2) =
+//│       let x$14 = Lambda$2(a,b$2) in -- #54
+//│       x$14 -- #53
+//│   }
+//│   class Lambda$2(a,b) extends Callable {
+//│     def apply1(c$0) =
+//│       let x$15 = +(a,b) in -- #61
+//│       let x$16 = +(x$15,c$0) in -- #60
+//│       x$16 -- #59
+//│   }
+//│   def add2c(a$0) =
+//│     let x$2 = Lambda$0(a$0) in -- #4
+//│     x$2 -- #3
+//│   def add2(a$1,b$0) =
+//│     let x$3 = +(a$1,b$0) in -- #8
+//│     x$3 -- #7
+//│   def add3c(a$2) =
+//│     let x$5 = Lambda$1(a$2) in -- #10
+//│     x$5 -- #9
+//│   def main() =
+//│     let* (x$6) = add2c(1) in -- #42
+//│     let x$7 = Callable.apply1(x$6,2) in -- #41
+//│     let* (x$8) = add2(1,2) in -- #40
+//│     let* (x$9) = add3c(1) in -- #39
+//│     let x$10 = Callable.apply1(x$9,2) in -- #38
+//│     let x$11 = Callable.apply1(x$10,3) in -- #37
+//│     x$11 -- #36
+//│   let* (x$0) = main() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #48
-//│ ),
-//│ apply1 -> Def(5, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #44
-//│ ),
-//│ apply0 -> Def(4, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #43
-//│ ),
-//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #47
-//│ ),
-//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #46
-//│ ),
-//│ apply2 -> Def(6, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #45
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, Lambda$0, [a], parents: Callable, methods:
-//│ apply1 -> Def(10, apply1, [b$1], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$12 = +(a,b$1) in -- #52
-//│ x$12 -- #51
-//│ )),
-//│ ClassInfo(10, Lambda$1, [a], parents: Callable, methods:
-//│ apply1 -> Def(11, apply1, [b$2], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$14 = Lambda$2(a,b$2) in -- #54
-//│ x$14 -- #53
-//│ )),
-//│ ClassInfo(11, Lambda$2, [a,b], parents: Callable, methods:
-//│ apply1 -> Def(12, apply1, [c$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$15 = +(a,b) in -- #61
-//│ let x$16 = +(x$15,c$0) in -- #60
-//│ x$16 -- #59
-//│ ))}, {
-//│ Def(0, add2c, [a$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$2 = Lambda$0(a$0) in -- #4
-//│ x$2 -- #3
-//│ )
-//│ Def(1, add2, [a$1,b$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$3 = +(a$1,b$0) in -- #8
-//│ x$3 -- #7
-//│ )
-//│ Def(2, add3c, [a$2], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$5 = Lambda$1(a$2) in -- #10
-//│ x$5 -- #9
-//│ )
-//│ Def(3, main, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let* (x$6) = add2c(1) in -- #42
-//│ let x$7 = Callable.apply1(x$6,2) in -- #41
-//│ let* (x$8) = add2(1,2) in -- #40
-//│ let* (x$9) = add3c(1) in -- #39
-//│ let x$10 = Callable.apply1(x$9,2) in -- #38
-//│ let x$11 = Callable.apply1(x$10,3) in -- #37
-//│ x$11 -- #36
-//│ )
-//│ },
-//│ let* (x$0) = main() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #48
+//│     def apply1(x0$0) =
+//│       0 -- #44
+//│     def apply0() =
+//│       0 -- #43
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #47
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #46
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #45
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class Lambda$0(a) extends Callable {
+//│     def apply1(b$1) =
+//│       let x$12 = +(a,b$1) in -- #52
+//│       x$12 -- #51
+//│   }
+//│   class Lambda$1(a) extends Callable {
+//│     def apply1(b$2) =
+//│       let x$14 = Lambda$2(a,b$2) in -- #54
+//│       x$14 -- #53
+//│   }
+//│   class Lambda$2(a,b) extends Callable {
+//│     def apply1(c$0) =
+//│       let x$15 = +(a,b) in -- #61
+//│       let x$16 = +(x$15,c$0) in -- #60
+//│       x$16 -- #59
+//│   }
+//│   def add2c(a$0) =
+//│     let x$2 = Lambda$0(a$0) in -- #4
+//│     x$2 -- #3
+//│   def add2(a$1,b$0) =
+//│     let x$3 = +(a$1,b$0) in -- #8
+//│     x$3 -- #7
+//│   def add3c(a$2) =
+//│     let x$5 = Lambda$1(a$2) in -- #10
+//│     x$5 -- #9
+//│   def main() =
+//│     let* (x$6) = add2c(1) in -- #42
+//│     let x$7 = Callable.apply1(x$6,2) in -- #41
+//│     let* (x$8) = add2(1,2) in -- #40
+//│     let* (x$9) = add3c(1) in -- #39
+//│     let x$10 = Callable.apply1(x$9,2) in -- #38
+//│     let x$11 = Callable.apply1(x$10,3) in -- #37
+//│     x$11 -- #36
+//│   let* (x$0) = main() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ 6

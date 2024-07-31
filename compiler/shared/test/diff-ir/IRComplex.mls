@@ -23,250 +23,132 @@ bar()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #116
-//│ ),
-//│ apply1 -> Def(5, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #112
-//│ ),
-//│ apply0 -> Def(4, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #111
-//│ ),
-//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #115
-//│ ),
-//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #114
-//│ ),
-//│ apply2 -> Def(6, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #113
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, A, [x,y,z], parents: , methods:
-//│ ),
-//│ ClassInfo(10, B, [m,n], parents: , methods:
-//│ )}, {
-//│ Def(0, complex_foo, [t$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ case t$0 of -- #86
-//│   A =>
-//│     let x$10 = A.z(t$0) in -- #70
-//│     let x$11 = A.y(t$0) in -- #69
-//│     let x$12 = A.x(t$0) in -- #68
-//│     let x$13 = *(x$11,x$10) in -- #67
-//│     let x$14 = +(x$12,x$13) in -- #66
-//│     jump j$0(x$14) -- #65
-//│   B =>
-//│     let x$15 = B.n(t$0) in -- #85
-//│     let x$16 = B.m(t$0) in -- #84
-//│     let x$17 = -(x$16,x$15) in -- #83
-//│     jump j$0(x$17) -- #82
-//│ )
-//│ Def(1, j$1, [x$3,x$1], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$4 = +(x$1,x$3) in -- #16
-//│ x$4 -- #15
-//│ )
-//│ Def(2, j$0, [x$1], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$2 = B(1,2) in -- #47
-//│ case x$2 of -- #46
-//│   A =>
-//│     let x$5 = A.z(x$2) in -- #33
-//│     let x$6 = A.y(x$2) in -- #32
-//│     let x$7 = A.x(x$2) in -- #31
-//│     jump j$1(3,x$1) -- #30
-//│   B =>
-//│     let x$8 = B.n(x$2) in -- #45
-//│     let x$9 = B.m(x$2) in -- #44
-//│     jump j$1(4,x$1) -- #43
-//│ )
-//│ Def(3, bar, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$18 = A(6,7,8) in -- #110
-//│ let* (x$19) = complex_foo(x$18) in -- #109
-//│ let x$20 = B(9,10) in -- #108
-//│ let* (x$21) = complex_foo(x$20) in -- #107
-//│ x$21 -- #106
-//│ )
-//│ },
-//│ let* (x$0) = bar() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #116
+//│     def apply1(x0$0) =
+//│       0 -- #112
+//│     def apply0() =
+//│       0 -- #111
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #115
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #114
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #113
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class A(x,y,z)
+//│   class B(m,n)
+//│   def complex_foo(t$0) =
+//│     case t$0 of -- #86
+//│       A =>
+//│         let x$10 = A.z(t$0) in -- #70
+//│         let x$11 = A.y(t$0) in -- #69
+//│         let x$12 = A.x(t$0) in -- #68
+//│         let x$13 = *(x$11,x$10) in -- #67
+//│         let x$14 = +(x$12,x$13) in -- #66
+//│         jump j$0(x$14) -- #65
+//│       B =>
+//│         let x$15 = B.n(t$0) in -- #85
+//│         let x$16 = B.m(t$0) in -- #84
+//│         let x$17 = -(x$16,x$15) in -- #83
+//│         jump j$0(x$17) -- #82
+//│   def j$1(x$3,x$1) =
+//│     let x$4 = +(x$1,x$3) in -- #16
+//│     x$4 -- #15
+//│   def j$0(x$1) =
+//│     let x$2 = B(1,2) in -- #47
+//│     case x$2 of -- #46
+//│       A =>
+//│         let x$5 = A.z(x$2) in -- #33
+//│         let x$6 = A.y(x$2) in -- #32
+//│         let x$7 = A.x(x$2) in -- #31
+//│         jump j$1(3,x$1) -- #30
+//│       B =>
+//│         let x$8 = B.n(x$2) in -- #45
+//│         let x$9 = B.m(x$2) in -- #44
+//│         jump j$1(4,x$1) -- #43
+//│   def bar() =
+//│     let x$18 = A(6,7,8) in -- #110
+//│     let* (x$19) = complex_foo(x$18) in -- #109
+//│     let x$20 = B(9,10) in -- #108
+//│     let* (x$21) = complex_foo(x$20) in -- #107
+//│     x$21 -- #106
+//│   let* (x$0) = bar() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(9, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #116
-//│ ),
-//│ apply1 -> Def(5, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #112
-//│ ),
-//│ apply0 -> Def(4, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #111
-//│ ),
-//│ apply4 -> Def(8, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #115
-//│ ),
-//│ apply3 -> Def(7, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #114
-//│ ),
-//│ apply2 -> Def(6, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #113
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, A, [x,y,z], parents: , methods:
-//│ ),
-//│ ClassInfo(10, B, [m,n], parents: , methods:
-//│ )}, {
-//│ Def(0, complex_foo, [t$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ case t$0 of -- #86
-//│   A =>
-//│     let x$10 = A.z(t$0) in -- #70
-//│     let x$11 = A.y(t$0) in -- #69
-//│     let x$12 = A.x(t$0) in -- #68
-//│     let x$13 = *(x$11,x$10) in -- #67
-//│     let x$14 = +(x$12,x$13) in -- #66
-//│     jump j$0(x$14) -- #65
-//│   B =>
-//│     let x$15 = B.n(t$0) in -- #85
-//│     let x$16 = B.m(t$0) in -- #84
-//│     let x$17 = -(x$16,x$15) in -- #83
-//│     jump j$0(x$17) -- #82
-//│ )
-//│ Def(1, j$1, [x$3,x$1], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$4 = +(x$1,x$3) in -- #16
-//│ x$4 -- #15
-//│ )
-//│ Def(2, j$0, [x$1], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$2 = B(1,2) in -- #47
-//│ case x$2 of -- #46
-//│   A =>
-//│     let x$5 = A.z(x$2) in -- #33
-//│     let x$6 = A.y(x$2) in -- #32
-//│     let x$7 = A.x(x$2) in -- #31
-//│     jump j$1(3,x$1) -- #30
-//│   B =>
-//│     let x$8 = B.n(x$2) in -- #45
-//│     let x$9 = B.m(x$2) in -- #44
-//│     jump j$1(4,x$1) -- #43
-//│ )
-//│ Def(3, bar, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$18 = A(6,7,8) in -- #110
-//│ let* (x$19) = complex_foo(x$18) in -- #109
-//│ let x$20 = B(9,10) in -- #108
-//│ let* (x$21) = complex_foo(x$20) in -- #107
-//│ x$21 -- #106
-//│ )
-//│ },
-//│ let* (x$0) = bar() in -- #2
-//│ x$0 -- #1)
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #116
+//│     def apply1(x0$0) =
+//│       0 -- #112
+//│     def apply0() =
+//│       0 -- #111
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #115
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #114
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #113
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class A(x,y,z)
+//│   class B(m,n)
+//│   def complex_foo(t$0) =
+//│     case t$0 of -- #86
+//│       A =>
+//│         let x$10 = A.z(t$0) in -- #70
+//│         let x$11 = A.y(t$0) in -- #69
+//│         let x$12 = A.x(t$0) in -- #68
+//│         let x$13 = *(x$11,x$10) in -- #67
+//│         let x$14 = +(x$12,x$13) in -- #66
+//│         jump j$0(x$14) -- #65
+//│       B =>
+//│         let x$15 = B.n(t$0) in -- #85
+//│         let x$16 = B.m(t$0) in -- #84
+//│         let x$17 = -(x$16,x$15) in -- #83
+//│         jump j$0(x$17) -- #82
+//│   def j$1(x$3,x$1) =
+//│     let x$4 = +(x$1,x$3) in -- #16
+//│     x$4 -- #15
+//│   def j$0(x$1) =
+//│     let x$2 = B(1,2) in -- #47
+//│     case x$2 of -- #46
+//│       A =>
+//│         let x$5 = A.z(x$2) in -- #33
+//│         let x$6 = A.y(x$2) in -- #32
+//│         let x$7 = A.x(x$2) in -- #31
+//│         jump j$1(3,x$1) -- #30
+//│       B =>
+//│         let x$8 = B.n(x$2) in -- #45
+//│         let x$9 = B.m(x$2) in -- #44
+//│         jump j$1(4,x$1) -- #43
+//│   def bar() =
+//│     let x$18 = A(6,7,8) in -- #110
+//│     let* (x$19) = complex_foo(x$18) in -- #109
+//│     let x$20 = B(9,10) in -- #108
+//│     let* (x$21) = complex_foo(x$20) in -- #107
+//│     x$21 -- #106
+//│   let* (x$0) = bar() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ 3
@@ -309,368 +191,218 @@ bar()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(12, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #210
-//│ ),
-//│ apply1 -> Def(8, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #206
-//│ ),
-//│ apply0 -> Def(7, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #205
-//│ ),
-//│ apply4 -> Def(11, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #209
-//│ ),
-//│ apply3 -> Def(10, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #208
-//│ ),
-//│ apply2 -> Def(9, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #207
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, A, [w,x], parents: , methods:
-//│ ),
-//│ ClassInfo(10, B, [y], parents: , methods:
-//│ ),
-//│ ClassInfo(11, C, [z], parents: , methods:
-//│ )}, {
-//│ Def(0, complex_foo, [t$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$1 = +(1,2) in -- #183
-//│ let x$2 = *(1,2) in -- #182
-//│ case t$0 of -- #181
-//│   A =>
-//│     let x$28 = A.x(t$0) in -- #155
-//│     let x$29 = A.w(t$0) in -- #154
-//│     jump j$0(x$28,x$1,x$2) -- #153
-//│   B =>
-//│     let x$30 = B.y(t$0) in -- #169
-//│     let x$31 = +(x$30,x$2) in -- #168
-//│     let x$32 = B(x$31) in -- #167
-//│     jump j$0(x$32,x$1,x$2) -- #166
-//│   C =>
-//│     let x$33 = C.z(t$0) in -- #180
-//│     let x$34 = C(0) in -- #179
-//│     jump j$0(x$34,x$1,x$2) -- #178
-//│ )
-//│ Def(1, j$2, [x$7], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ x$7 -- #24
-//│ )
-//│ Def(2, j$3, [x$12], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ jump j$2(x$12) -- #50
-//│ )
-//│ Def(3, j$1, [x$6,x$4,x$5], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ case x$4 of -- #79
-//│   A =>
-//│     let x$8 = A.x(x$4) in -- #36
-//│     let x$9 = A.w(x$4) in -- #35
-//│     jump j$2(x$9) -- #34
-//│   B =>
-//│     let x$10 = B.y(x$4) in -- #43
-//│     jump j$2(4) -- #42
-//│   C =>
-//│     let x$11 = C.z(x$4) in -- #78
-//│     case x$5 of -- #77
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #210
+//│     def apply1(x0$0) =
+//│       0 -- #206
+//│     def apply0() =
+//│       0 -- #205
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #209
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #208
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #207
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class A(w,x)
+//│   class B(y)
+//│   class C(z)
+//│   def complex_foo(t$0) =
+//│     let x$1 = +(1,2) in -- #183
+//│     let x$2 = *(1,2) in -- #182
+//│     case t$0 of -- #181
 //│       A =>
-//│         let x$13 = A.x(x$5) in -- #62
-//│         let x$14 = A.w(x$5) in -- #61
-//│         jump j$3(x$14) -- #60
+//│         let x$28 = A.x(t$0) in -- #155
+//│         let x$29 = A.w(t$0) in -- #154
+//│         jump j$0(x$28,x$1,x$2) -- #153
 //│       B =>
-//│         let x$15 = B.y(x$5) in -- #69
-//│         jump j$3(7) -- #68
+//│         let x$30 = B.y(t$0) in -- #169
+//│         let x$31 = +(x$30,x$2) in -- #168
+//│         let x$32 = B(x$31) in -- #167
+//│         jump j$0(x$32,x$1,x$2) -- #166
 //│       C =>
-//│         let x$16 = C.z(x$5) in -- #76
-//│         jump j$3(8) -- #75
-//│ )
-//│ Def(4, j$4, [x$21,x$4,x$5], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ jump j$1(x$21,x$4,x$5) -- #95
-//│ )
-//│ Def(5, j$0, [x$3,x$1,x$2], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$4 = A(5,x$3) in -- #143
-//│ let x$5 = B(6) in -- #142
-//│ case x$3 of -- #141
-//│   A =>
-//│     let x$17 = A.x(x$3) in -- #126
-//│     let x$18 = A.w(x$3) in -- #125
-//│     let x$19 = +(x$18,x$1) in -- #124
-//│     let x$20 = +(x$19,x$2) in -- #123
-//│     case x$17 of -- #122
+//│         let x$33 = C.z(t$0) in -- #180
+//│         let x$34 = C(0) in -- #179
+//│         jump j$0(x$34,x$1,x$2) -- #178
+//│   def j$2(x$7) =
+//│     x$7 -- #24
+//│   def j$3(x$12) =
+//│     jump j$2(x$12) -- #50
+//│   def j$1(x$6,x$4,x$5) =
+//│     case x$4 of -- #79
 //│       A =>
-//│         let x$22 = A.x(x$17) in -- #107
-//│         let x$23 = A.w(x$17) in -- #106
-//│         jump j$4(x$23,x$4,x$5) -- #105
+//│         let x$8 = A.x(x$4) in -- #36
+//│         let x$9 = A.w(x$4) in -- #35
+//│         jump j$2(x$9) -- #34
 //│       B =>
-//│         let x$24 = B.y(x$17) in -- #114
-//│         jump j$4(x$20,x$4,x$5) -- #113
+//│         let x$10 = B.y(x$4) in -- #43
+//│         jump j$2(4) -- #42
 //│       C =>
-//│         let x$25 = C.z(x$17) in -- #121
-//│         jump j$4(0,x$4,x$5) -- #120
-//│   B =>
-//│     let x$26 = B.y(x$3) in -- #133
-//│     jump j$1(2,x$4,x$5) -- #132
-//│   C =>
-//│     let x$27 = C.z(x$3) in -- #140
-//│     jump j$1(3,x$4,x$5) -- #139
-//│ )
-//│ Def(6, bar, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$35 = B(10) in -- #204
-//│ let x$36 = A(9,x$35) in -- #203
-//│ let x$37 = A(10,x$36) in -- #202
-//│ let* (x$38) = complex_foo(x$37) in -- #201
-//│ x$38 -- #200
-//│ )
-//│ },
-//│ let* (x$0) = bar() in -- #2
-//│ x$0 -- #1)
+//│         let x$11 = C.z(x$4) in -- #78
+//│         case x$5 of -- #77
+//│           A =>
+//│             let x$13 = A.x(x$5) in -- #62
+//│             let x$14 = A.w(x$5) in -- #61
+//│             jump j$3(x$14) -- #60
+//│           B =>
+//│             let x$15 = B.y(x$5) in -- #69
+//│             jump j$3(7) -- #68
+//│           C =>
+//│             let x$16 = C.z(x$5) in -- #76
+//│             jump j$3(8) -- #75
+//│   def j$4(x$21,x$4,x$5) =
+//│     jump j$1(x$21,x$4,x$5) -- #95
+//│   def j$0(x$3,x$1,x$2) =
+//│     let x$4 = A(5,x$3) in -- #143
+//│     let x$5 = B(6) in -- #142
+//│     case x$3 of -- #141
+//│       A =>
+//│         let x$17 = A.x(x$3) in -- #126
+//│         let x$18 = A.w(x$3) in -- #125
+//│         let x$19 = +(x$18,x$1) in -- #124
+//│         let x$20 = +(x$19,x$2) in -- #123
+//│         case x$17 of -- #122
+//│           A =>
+//│             let x$22 = A.x(x$17) in -- #107
+//│             let x$23 = A.w(x$17) in -- #106
+//│             jump j$4(x$23,x$4,x$5) -- #105
+//│           B =>
+//│             let x$24 = B.y(x$17) in -- #114
+//│             jump j$4(x$20,x$4,x$5) -- #113
+//│           C =>
+//│             let x$25 = C.z(x$17) in -- #121
+//│             jump j$4(0,x$4,x$5) -- #120
+//│       B =>
+//│         let x$26 = B.y(x$3) in -- #133
+//│         jump j$1(2,x$4,x$5) -- #132
+//│       C =>
+//│         let x$27 = C.z(x$3) in -- #140
+//│         jump j$1(3,x$4,x$5) -- #139
+//│   def bar() =
+//│     let x$35 = B(10) in -- #204
+//│     let x$36 = A(9,x$35) in -- #203
+//│     let x$37 = A(10,x$36) in -- #202
+//│     let* (x$38) = complex_foo(x$37) in -- #201
+//│     x$38 -- #200
+//│   let* (x$0) = bar() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(12, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #210
-//│ ),
-//│ apply1 -> Def(8, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #206
-//│ ),
-//│ apply0 -> Def(7, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #205
-//│ ),
-//│ apply4 -> Def(11, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #209
-//│ ),
-//│ apply3 -> Def(10, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #208
-//│ ),
-//│ apply2 -> Def(9, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #207
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, A, [w,x], parents: , methods:
-//│ ),
-//│ ClassInfo(10, B, [y], parents: , methods:
-//│ ),
-//│ ClassInfo(11, C, [z], parents: , methods:
-//│ )}, {
-//│ Def(0, complex_foo, [t$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$1 = +(1,2) in -- #183
-//│ let x$2 = *(1,2) in -- #182
-//│ case t$0 of -- #181
-//│   A =>
-//│     let x$28 = A.x(t$0) in -- #155
-//│     let x$29 = A.w(t$0) in -- #154
-//│     jump j$0(x$28,x$1,x$2) -- #153
-//│   B =>
-//│     let x$30 = B.y(t$0) in -- #169
-//│     let x$31 = +(x$30,x$2) in -- #168
-//│     let x$32 = B(x$31) in -- #167
-//│     jump j$0(x$32,x$1,x$2) -- #166
-//│   C =>
-//│     let x$33 = C.z(t$0) in -- #180
-//│     let x$34 = C(0) in -- #179
-//│     jump j$0(x$34,x$1,x$2) -- #178
-//│ )
-//│ Def(1, j$2, [x$7], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ x$7 -- #24
-//│ )
-//│ Def(2, j$3, [x$12], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ jump j$2(x$12) -- #50
-//│ )
-//│ Def(3, j$1, [x$6,x$4,x$5], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ case x$4 of -- #79
-//│   A =>
-//│     let x$8 = A.x(x$4) in -- #36
-//│     let x$9 = A.w(x$4) in -- #35
-//│     jump j$2(x$9) -- #34
-//│   B =>
-//│     let x$10 = B.y(x$4) in -- #43
-//│     jump j$2(4) -- #42
-//│   C =>
-//│     let x$11 = C.z(x$4) in -- #78
-//│     case x$5 of -- #77
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #210
+//│     def apply1(x0$0) =
+//│       0 -- #206
+//│     def apply0() =
+//│       0 -- #205
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #209
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #208
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #207
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class A(w,x)
+//│   class B(y)
+//│   class C(z)
+//│   def complex_foo(t$0) =
+//│     let x$1 = +(1,2) in -- #183
+//│     let x$2 = *(1,2) in -- #182
+//│     case t$0 of -- #181
 //│       A =>
-//│         let x$13 = A.x(x$5) in -- #62
-//│         let x$14 = A.w(x$5) in -- #61
-//│         jump j$3(x$14) -- #60
+//│         let x$28 = A.x(t$0) in -- #155
+//│         let x$29 = A.w(t$0) in -- #154
+//│         jump j$0(x$28,x$1,x$2) -- #153
 //│       B =>
-//│         let x$15 = B.y(x$5) in -- #69
-//│         jump j$3(7) -- #68
+//│         let x$30 = B.y(t$0) in -- #169
+//│         let x$31 = +(x$30,x$2) in -- #168
+//│         let x$32 = B(x$31) in -- #167
+//│         jump j$0(x$32,x$1,x$2) -- #166
 //│       C =>
-//│         let x$16 = C.z(x$5) in -- #76
-//│         jump j$3(8) -- #75
-//│ )
-//│ Def(4, j$4, [x$21,x$4,x$5], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ jump j$1(x$21,x$4,x$5) -- #95
-//│ )
-//│ Def(5, j$0, [x$3,x$1,x$2], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$4 = A(5,x$3) in -- #143
-//│ let x$5 = B(6) in -- #142
-//│ case x$3 of -- #141
-//│   A =>
-//│     let x$17 = A.x(x$3) in -- #126
-//│     let x$18 = A.w(x$3) in -- #125
-//│     let x$19 = +(x$18,x$1) in -- #124
-//│     let x$20 = +(x$19,x$2) in -- #123
-//│     case x$17 of -- #122
+//│         let x$33 = C.z(t$0) in -- #180
+//│         let x$34 = C(0) in -- #179
+//│         jump j$0(x$34,x$1,x$2) -- #178
+//│   def j$2(x$7) =
+//│     x$7 -- #24
+//│   def j$3(x$12) =
+//│     jump j$2(x$12) -- #50
+//│   def j$1(x$6,x$4,x$5) =
+//│     case x$4 of -- #79
 //│       A =>
-//│         let x$22 = A.x(x$17) in -- #107
-//│         let x$23 = A.w(x$17) in -- #106
-//│         jump j$4(x$23,x$4,x$5) -- #105
+//│         let x$8 = A.x(x$4) in -- #36
+//│         let x$9 = A.w(x$4) in -- #35
+//│         jump j$2(x$9) -- #34
 //│       B =>
-//│         let x$24 = B.y(x$17) in -- #114
-//│         jump j$4(x$20,x$4,x$5) -- #113
+//│         let x$10 = B.y(x$4) in -- #43
+//│         jump j$2(4) -- #42
 //│       C =>
-//│         let x$25 = C.z(x$17) in -- #121
-//│         jump j$4(0,x$4,x$5) -- #120
-//│   B =>
-//│     let x$26 = B.y(x$3) in -- #133
-//│     jump j$1(2,x$4,x$5) -- #132
-//│   C =>
-//│     let x$27 = C.z(x$3) in -- #140
-//│     jump j$1(3,x$4,x$5) -- #139
-//│ )
-//│ Def(6, bar, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$35 = B(10) in -- #204
-//│ let x$36 = A(9,x$35) in -- #203
-//│ let x$37 = A(10,x$36) in -- #202
-//│ let* (x$38) = complex_foo(x$37) in -- #201
-//│ x$38 -- #200
-//│ )
-//│ },
-//│ let* (x$0) = bar() in -- #2
-//│ x$0 -- #1)
+//│         let x$11 = C.z(x$4) in -- #78
+//│         case x$5 of -- #77
+//│           A =>
+//│             let x$13 = A.x(x$5) in -- #62
+//│             let x$14 = A.w(x$5) in -- #61
+//│             jump j$3(x$14) -- #60
+//│           B =>
+//│             let x$15 = B.y(x$5) in -- #69
+//│             jump j$3(7) -- #68
+//│           C =>
+//│             let x$16 = C.z(x$5) in -- #76
+//│             jump j$3(8) -- #75
+//│   def j$4(x$21,x$4,x$5) =
+//│     jump j$1(x$21,x$4,x$5) -- #95
+//│   def j$0(x$3,x$1,x$2) =
+//│     let x$4 = A(5,x$3) in -- #143
+//│     let x$5 = B(6) in -- #142
+//│     case x$3 of -- #141
+//│       A =>
+//│         let x$17 = A.x(x$3) in -- #126
+//│         let x$18 = A.w(x$3) in -- #125
+//│         let x$19 = +(x$18,x$1) in -- #124
+//│         let x$20 = +(x$19,x$2) in -- #123
+//│         case x$17 of -- #122
+//│           A =>
+//│             let x$22 = A.x(x$17) in -- #107
+//│             let x$23 = A.w(x$17) in -- #106
+//│             jump j$4(x$23,x$4,x$5) -- #105
+//│           B =>
+//│             let x$24 = B.y(x$17) in -- #114
+//│             jump j$4(x$20,x$4,x$5) -- #113
+//│           C =>
+//│             let x$25 = C.z(x$17) in -- #121
+//│             jump j$4(0,x$4,x$5) -- #120
+//│       B =>
+//│         let x$26 = B.y(x$3) in -- #133
+//│         jump j$1(2,x$4,x$5) -- #132
+//│       C =>
+//│         let x$27 = C.z(x$3) in -- #140
+//│         jump j$1(3,x$4,x$5) -- #139
+//│   def bar() =
+//│     let x$35 = B(10) in -- #204
+//│     let x$36 = A(9,x$35) in -- #203
+//│     let x$37 = A(10,x$36) in -- #202
+//│     let* (x$38) = complex_foo(x$37) in -- #201
+//│     x$38 -- #200
+//│   let* (x$0) = bar() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ 5
@@ -713,372 +445,222 @@ bar()
 //│ 
 //│ 
 //│ IR:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(12, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #220
-//│ ),
-//│ apply1 -> Def(8, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #216
-//│ ),
-//│ apply0 -> Def(7, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #215
-//│ ),
-//│ apply4 -> Def(11, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #219
-//│ ),
-//│ apply3 -> Def(10, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #218
-//│ ),
-//│ apply2 -> Def(9, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #217
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, A, [w,x], parents: , methods:
-//│ ),
-//│ ClassInfo(10, B, [y], parents: , methods:
-//│ ),
-//│ ClassInfo(11, C, [z], parents: , methods:
-//│ )}, {
-//│ Def(0, complex_foo, [t$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$1 = +(1,2) in -- #193
-//│ let x$2 = *(1,2) in -- #192
-//│ case t$0 of -- #191
-//│   A =>
-//│     let x$28 = A.x(t$0) in -- #165
-//│     let x$29 = A.w(t$0) in -- #164
-//│     let x$30 = C(0) in -- #163
-//│     let x$31 = A(x$29,x$30) in -- #162
-//│     jump j$0(x$31,x$1,x$2) -- #161
-//│   B =>
-//│     let x$32 = B.y(t$0) in -- #179
-//│     let x$33 = +(x$32,x$2) in -- #178
-//│     let x$34 = B(x$33) in -- #177
-//│     jump j$0(x$34,x$1,x$2) -- #176
-//│   C =>
-//│     let x$35 = C.z(t$0) in -- #190
-//│     let x$36 = C(0) in -- #189
-//│     jump j$0(x$36,x$1,x$2) -- #188
-//│ )
-//│ Def(1, j$2, [x$7], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ x$7 -- #24
-//│ )
-//│ Def(2, j$3, [x$12], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ jump j$2(x$12) -- #50
-//│ )
-//│ Def(3, j$1, [x$6,x$4,x$5], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ case x$4 of -- #79
-//│   A =>
-//│     let x$8 = A.x(x$4) in -- #36
-//│     let x$9 = A.w(x$4) in -- #35
-//│     jump j$2(x$9) -- #34
-//│   B =>
-//│     let x$10 = B.y(x$4) in -- #43
-//│     jump j$2(4) -- #42
-//│   C =>
-//│     let x$11 = C.z(x$4) in -- #78
-//│     case x$5 of -- #77
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #220
+//│     def apply1(x0$0) =
+//│       0 -- #216
+//│     def apply0() =
+//│       0 -- #215
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #219
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #218
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #217
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class A(w,x)
+//│   class B(y)
+//│   class C(z)
+//│   def complex_foo(t$0) =
+//│     let x$1 = +(1,2) in -- #193
+//│     let x$2 = *(1,2) in -- #192
+//│     case t$0 of -- #191
 //│       A =>
-//│         let x$13 = A.x(x$5) in -- #62
-//│         let x$14 = A.w(x$5) in -- #61
-//│         jump j$3(x$14) -- #60
+//│         let x$28 = A.x(t$0) in -- #165
+//│         let x$29 = A.w(t$0) in -- #164
+//│         let x$30 = C(0) in -- #163
+//│         let x$31 = A(x$29,x$30) in -- #162
+//│         jump j$0(x$31,x$1,x$2) -- #161
 //│       B =>
-//│         let x$15 = B.y(x$5) in -- #69
-//│         jump j$3(7) -- #68
+//│         let x$32 = B.y(t$0) in -- #179
+//│         let x$33 = +(x$32,x$2) in -- #178
+//│         let x$34 = B(x$33) in -- #177
+//│         jump j$0(x$34,x$1,x$2) -- #176
 //│       C =>
-//│         let x$16 = C.z(x$5) in -- #76
-//│         jump j$3(8) -- #75
-//│ )
-//│ Def(4, j$4, [x$21,x$4,x$5], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ jump j$1(x$21,x$4,x$5) -- #95
-//│ )
-//│ Def(5, j$0, [x$3,x$1,x$2], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$4 = A(5,x$3) in -- #143
-//│ let x$5 = B(6) in -- #142
-//│ case x$3 of -- #141
-//│   A =>
-//│     let x$17 = A.x(x$3) in -- #126
-//│     let x$18 = A.w(x$3) in -- #125
-//│     let x$19 = +(x$18,x$1) in -- #124
-//│     let x$20 = +(x$19,x$2) in -- #123
-//│     case x$17 of -- #122
+//│         let x$35 = C.z(t$0) in -- #190
+//│         let x$36 = C(0) in -- #189
+//│         jump j$0(x$36,x$1,x$2) -- #188
+//│   def j$2(x$7) =
+//│     x$7 -- #24
+//│   def j$3(x$12) =
+//│     jump j$2(x$12) -- #50
+//│   def j$1(x$6,x$4,x$5) =
+//│     case x$4 of -- #79
 //│       A =>
-//│         let x$22 = A.x(x$17) in -- #107
-//│         let x$23 = A.w(x$17) in -- #106
-//│         jump j$4(x$23,x$4,x$5) -- #105
+//│         let x$8 = A.x(x$4) in -- #36
+//│         let x$9 = A.w(x$4) in -- #35
+//│         jump j$2(x$9) -- #34
 //│       B =>
-//│         let x$24 = B.y(x$17) in -- #114
-//│         jump j$4(x$20,x$4,x$5) -- #113
+//│         let x$10 = B.y(x$4) in -- #43
+//│         jump j$2(4) -- #42
 //│       C =>
-//│         let x$25 = C.z(x$17) in -- #121
-//│         jump j$4(0,x$4,x$5) -- #120
-//│   B =>
-//│     let x$26 = B.y(x$3) in -- #133
-//│     jump j$1(2,x$4,x$5) -- #132
-//│   C =>
-//│     let x$27 = C.z(x$3) in -- #140
-//│     jump j$1(3,x$4,x$5) -- #139
-//│ )
-//│ Def(6, bar, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$37 = B(10) in -- #214
-//│ let x$38 = A(9,x$37) in -- #213
-//│ let x$39 = A(10,x$38) in -- #212
-//│ let* (x$40) = complex_foo(x$39) in -- #211
-//│ x$40 -- #210
-//│ )
-//│ },
-//│ let* (x$0) = bar() in -- #2
-//│ x$0 -- #1)
+//│         let x$11 = C.z(x$4) in -- #78
+//│         case x$5 of -- #77
+//│           A =>
+//│             let x$13 = A.x(x$5) in -- #62
+//│             let x$14 = A.w(x$5) in -- #61
+//│             jump j$3(x$14) -- #60
+//│           B =>
+//│             let x$15 = B.y(x$5) in -- #69
+//│             jump j$3(7) -- #68
+//│           C =>
+//│             let x$16 = C.z(x$5) in -- #76
+//│             jump j$3(8) -- #75
+//│   def j$4(x$21,x$4,x$5) =
+//│     jump j$1(x$21,x$4,x$5) -- #95
+//│   def j$0(x$3,x$1,x$2) =
+//│     let x$4 = A(5,x$3) in -- #143
+//│     let x$5 = B(6) in -- #142
+//│     case x$3 of -- #141
+//│       A =>
+//│         let x$17 = A.x(x$3) in -- #126
+//│         let x$18 = A.w(x$3) in -- #125
+//│         let x$19 = +(x$18,x$1) in -- #124
+//│         let x$20 = +(x$19,x$2) in -- #123
+//│         case x$17 of -- #122
+//│           A =>
+//│             let x$22 = A.x(x$17) in -- #107
+//│             let x$23 = A.w(x$17) in -- #106
+//│             jump j$4(x$23,x$4,x$5) -- #105
+//│           B =>
+//│             let x$24 = B.y(x$17) in -- #114
+//│             jump j$4(x$20,x$4,x$5) -- #113
+//│           C =>
+//│             let x$25 = C.z(x$17) in -- #121
+//│             jump j$4(0,x$4,x$5) -- #120
+//│       B =>
+//│         let x$26 = B.y(x$3) in -- #133
+//│         jump j$1(2,x$4,x$5) -- #132
+//│       C =>
+//│         let x$27 = C.z(x$3) in -- #140
+//│         jump j$1(3,x$4,x$5) -- #139
+//│   def bar() =
+//│     let x$37 = B(10) in -- #214
+//│     let x$38 = A(9,x$37) in -- #213
+//│     let x$39 = A(10,x$38) in -- #212
+//│     let* (x$40) = complex_foo(x$39) in -- #211
+//│     x$40 -- #210
+//│   let* (x$0) = bar() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Promoted:
-//│ Program({ClassInfo(0, True, [], parents: , methods:
-//│ ),
-//│ ClassInfo(1, False, [], parents: , methods:
-//│ ),
-//│ ClassInfo(2, Callable, [], parents: , methods:
-//│ apply5 -> Def(12, apply5, [x0$4,x1$3,x2$2,x3$1,x4$0], [{},{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #220
-//│ ),
-//│ apply1 -> Def(8, apply1, [x0$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #216
-//│ ),
-//│ apply0 -> Def(7, apply0, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #215
-//│ ),
-//│ apply4 -> Def(11, apply4, [x0$3,x1$2,x2$1,x3$0], [{},{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #219
-//│ ),
-//│ apply3 -> Def(10, apply3, [x0$2,x1$1,x2$0], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #218
-//│ ),
-//│ apply2 -> Def(9, apply2, [x0$1,x1$0], [{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ 0 -- #217
-//│ )),
-//│ ClassInfo(3, List, [], parents: , methods:
-//│ ),
-//│ ClassInfo(4, Cons, [h,t], parents: List, methods:
-//│ ),
-//│ ClassInfo(5, Nil, [], parents: List, methods:
-//│ ),
-//│ ClassInfo(6, Option, [], parents: , methods:
-//│ ),
-//│ ClassInfo(7, Some, [x], parents: Option, methods:
-//│ ),
-//│ ClassInfo(8, None, [], parents: Option, methods:
-//│ ),
-//│ ClassInfo(9, A, [w,x], parents: , methods:
-//│ ),
-//│ ClassInfo(10, B, [y], parents: , methods:
-//│ ),
-//│ ClassInfo(11, C, [z], parents: , methods:
-//│ )}, {
-//│ Def(0, complex_foo, [t$0], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$1 = +(1,2) in -- #193
-//│ let x$2 = *(1,2) in -- #192
-//│ case t$0 of -- #191
-//│   A =>
-//│     let x$28 = A.x(t$0) in -- #165
-//│     let x$29 = A.w(t$0) in -- #164
-//│     let x$30 = C(0) in -- #163
-//│     let x$31 = A(x$29,x$30) in -- #162
-//│     jump j$0(x$31,x$1,x$2) -- #161
-//│   B =>
-//│     let x$32 = B.y(t$0) in -- #179
-//│     let x$33 = +(x$32,x$2) in -- #178
-//│     let x$34 = B(x$33) in -- #177
-//│     jump j$0(x$34,x$1,x$2) -- #176
-//│   C =>
-//│     let x$35 = C.z(t$0) in -- #190
-//│     let x$36 = C(0) in -- #189
-//│     jump j$0(x$36,x$1,x$2) -- #188
-//│ )
-//│ Def(1, j$2, [x$7], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ x$7 -- #24
-//│ )
-//│ Def(2, j$3, [x$12], [{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ jump j$2(x$12) -- #50
-//│ )
-//│ Def(3, j$1, [x$6,x$4,x$5], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ case x$4 of -- #79
-//│   A =>
-//│     let x$8 = A.x(x$4) in -- #36
-//│     let x$9 = A.w(x$4) in -- #35
-//│     jump j$2(x$9) -- #34
-//│   B =>
-//│     let x$10 = B.y(x$4) in -- #43
-//│     jump j$2(4) -- #42
-//│   C =>
-//│     let x$11 = C.z(x$4) in -- #78
-//│     case x$5 of -- #77
+//│ Program:
+//│   class True()
+//│   class False()
+//│   class Callable() {
+//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
+//│       0 -- #220
+//│     def apply1(x0$0) =
+//│       0 -- #216
+//│     def apply0() =
+//│       0 -- #215
+//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
+//│       0 -- #219
+//│     def apply3(x0$2,x1$1,x2$0) =
+//│       0 -- #218
+//│     def apply2(x0$1,x1$0) =
+//│       0 -- #217
+//│   }
+//│   class List()
+//│   class Cons(h,t) extends List
+//│   class Nil() extends List
+//│   class Option()
+//│   class Some(x) extends Option
+//│   class None() extends Option
+//│   class A(w,x)
+//│   class B(y)
+//│   class C(z)
+//│   def complex_foo(t$0) =
+//│     let x$1 = +(1,2) in -- #193
+//│     let x$2 = *(1,2) in -- #192
+//│     case t$0 of -- #191
 //│       A =>
-//│         let x$13 = A.x(x$5) in -- #62
-//│         let x$14 = A.w(x$5) in -- #61
-//│         jump j$3(x$14) -- #60
+//│         let x$28 = A.x(t$0) in -- #165
+//│         let x$29 = A.w(t$0) in -- #164
+//│         let x$30 = C(0) in -- #163
+//│         let x$31 = A(x$29,x$30) in -- #162
+//│         jump j$0(x$31,x$1,x$2) -- #161
 //│       B =>
-//│         let x$15 = B.y(x$5) in -- #69
-//│         jump j$3(7) -- #68
+//│         let x$32 = B.y(t$0) in -- #179
+//│         let x$33 = +(x$32,x$2) in -- #178
+//│         let x$34 = B(x$33) in -- #177
+//│         jump j$0(x$34,x$1,x$2) -- #176
 //│       C =>
-//│         let x$16 = C.z(x$5) in -- #76
-//│         jump j$3(8) -- #75
-//│ )
-//│ Def(4, j$4, [x$21,x$4,x$5], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ jump j$1(x$21,x$4,x$5) -- #95
-//│ )
-//│ Def(5, j$0, [x$3,x$1,x$2], [{},{},{}],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$4 = A(5,x$3) in -- #143
-//│ let x$5 = B(6) in -- #142
-//│ case x$3 of -- #141
-//│   A =>
-//│     let x$17 = A.x(x$3) in -- #126
-//│     let x$18 = A.w(x$3) in -- #125
-//│     let x$19 = +(x$18,x$1) in -- #124
-//│     let x$20 = +(x$19,x$2) in -- #123
-//│     case x$17 of -- #122
+//│         let x$35 = C.z(t$0) in -- #190
+//│         let x$36 = C(0) in -- #189
+//│         jump j$0(x$36,x$1,x$2) -- #188
+//│   def j$2(x$7) =
+//│     x$7 -- #24
+//│   def j$3(x$12) =
+//│     jump j$2(x$12) -- #50
+//│   def j$1(x$6,x$4,x$5) =
+//│     case x$4 of -- #79
 //│       A =>
-//│         let x$22 = A.x(x$17) in -- #107
-//│         let x$23 = A.w(x$17) in -- #106
-//│         jump j$4(x$23,x$4,x$5) -- #105
+//│         let x$8 = A.x(x$4) in -- #36
+//│         let x$9 = A.w(x$4) in -- #35
+//│         jump j$2(x$9) -- #34
 //│       B =>
-//│         let x$24 = B.y(x$17) in -- #114
-//│         jump j$4(x$20,x$4,x$5) -- #113
+//│         let x$10 = B.y(x$4) in -- #43
+//│         jump j$2(4) -- #42
 //│       C =>
-//│         let x$25 = C.z(x$17) in -- #121
-//│         jump j$4(0,x$4,x$5) -- #120
-//│   B =>
-//│     let x$26 = B.y(x$3) in -- #133
-//│     jump j$1(2,x$4,x$5) -- #132
-//│   C =>
-//│     let x$27 = C.z(x$3) in -- #140
-//│     jump j$1(3,x$4,x$5) -- #139
-//│ )
-//│ Def(6, bar, [], [],
-//│ I: [],
-//│ R: [None],
-//│ Rec: None,
-//│ 1, 
-//│ let x$37 = B(10) in -- #214
-//│ let x$38 = A(9,x$37) in -- #213
-//│ let x$39 = A(10,x$38) in -- #212
-//│ let* (x$40) = complex_foo(x$39) in -- #211
-//│ x$40 -- #210
-//│ )
-//│ },
-//│ let* (x$0) = bar() in -- #2
-//│ x$0 -- #1)
+//│         let x$11 = C.z(x$4) in -- #78
+//│         case x$5 of -- #77
+//│           A =>
+//│             let x$13 = A.x(x$5) in -- #62
+//│             let x$14 = A.w(x$5) in -- #61
+//│             jump j$3(x$14) -- #60
+//│           B =>
+//│             let x$15 = B.y(x$5) in -- #69
+//│             jump j$3(7) -- #68
+//│           C =>
+//│             let x$16 = C.z(x$5) in -- #76
+//│             jump j$3(8) -- #75
+//│   def j$4(x$21,x$4,x$5) =
+//│     jump j$1(x$21,x$4,x$5) -- #95
+//│   def j$0(x$3,x$1,x$2) =
+//│     let x$4 = A(5,x$3) in -- #143
+//│     let x$5 = B(6) in -- #142
+//│     case x$3 of -- #141
+//│       A =>
+//│         let x$17 = A.x(x$3) in -- #126
+//│         let x$18 = A.w(x$3) in -- #125
+//│         let x$19 = +(x$18,x$1) in -- #124
+//│         let x$20 = +(x$19,x$2) in -- #123
+//│         case x$17 of -- #122
+//│           A =>
+//│             let x$22 = A.x(x$17) in -- #107
+//│             let x$23 = A.w(x$17) in -- #106
+//│             jump j$4(x$23,x$4,x$5) -- #105
+//│           B =>
+//│             let x$24 = B.y(x$17) in -- #114
+//│             jump j$4(x$20,x$4,x$5) -- #113
+//│           C =>
+//│             let x$25 = C.z(x$17) in -- #121
+//│             jump j$4(0,x$4,x$5) -- #120
+//│       B =>
+//│         let x$26 = B.y(x$3) in -- #133
+//│         jump j$1(2,x$4,x$5) -- #132
+//│       C =>
+//│         let x$27 = C.z(x$3) in -- #140
+//│         jump j$1(3,x$4,x$5) -- #139
+//│   def bar() =
+//│     let x$37 = B(10) in -- #214
+//│     let x$38 = A(9,x$37) in -- #213
+//│     let x$39 = A(10,x$38) in -- #212
+//│     let* (x$40) = complex_foo(x$39) in -- #211
+//│     x$40 -- #210
+//│   let* (x$0) = bar() in -- #2
+//│   x$0 -- #1
 //│ 
 //│ Interpreted:
 //│ 5
