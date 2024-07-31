@@ -10,10 +10,10 @@ class Nothing
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 // TODO: move to a separate file?
-class CodeBase[T, S]
+class CodeBase[T, C, S]
 class Region[T]
 class Ref[T, S]
-//│ Elab: { class CodeBase[T@2, S@3] { }‹›; class Region[T@4] { }‹›; class Ref[T@5, S@6] { }‹›; }‹›
+//│ Elab: { class CodeBase[T@2, C@3, S@4] { }‹›; class Region[T@5] { }‹›; class Ref[T@6, S@7] { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 // the type here is fake.

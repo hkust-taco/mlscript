@@ -23,9 +23,9 @@ final case class Ctx(
   def get(sym: Symbol): Option[GeneralType] = env.get(sym.uid) orElse parent.dlof(_.get(sym))(None)
   def *=(cls: ClassDef): Unit = clsDefs += cls.sym.id.name -> cls
   def getDef(name: Str): Option[ClassDef] = clsDefs.get(name) orElse parent.dlof(_.getDef(name))(None)
-  def &=(p: Symbol -> InfVar): Unit =
-    env += p._1.uid -> Ctx.varTy(p._2)(using this)
-    quoteSkolemEnv += p._1.uid -> p._2
+  def &=(p: (Symbol, Type, InfVar)): Unit =
+    env += p._1.uid -> Ctx.varTy(p._2, p._3)(using this)
+    quoteSkolemEnv += p._1.uid -> p._3
   def getSk(sym: Symbol): Option[Type] = quoteSkolemEnv.get(sym.uid) orElse parent.dlof(_.getSk(sym))(None)
   def nest: Ctx = Ctx(Some(this), lvl, HashMap.empty, HashMap.empty, quoteSkolemEnv)
   def nextLevel: Ctx = Ctx(Some(this), lvl + 1, HashMap.empty, HashMap.empty, quoteSkolemEnv)
@@ -35,9 +35,9 @@ object Ctx:
   def numTy(using ctx: Ctx): Type = ClassType(ctx.getDef("Num").get.sym, Nil)
   def strTy(using ctx: Ctx): Type = ClassType(ctx.getDef("Str").get.sym, Nil)
   def boolTy(using ctx: Ctx): Type = ClassType(ctx.getDef("Bool").get.sym, Nil)
-  private def codeBaseTy(cr: TypeArg, isVar: TypeArg)(using ctx: Ctx): Type = ClassType(ctx.getDef("CodeBase").get.sym, cr :: isVar :: Nil)
-  def codeTy(cr: Type)(using ctx: Ctx): Type = codeBaseTy(Wildcard.out(cr), Wildcard.out(Top))
-  def varTy(cr: Type)(using ctx: Ctx): Type = codeBaseTy(Wildcard(cr, cr), Wildcard.out(Bot))
+  private def codeBaseTy(ct: TypeArg, cr: TypeArg, isVar: TypeArg)(using ctx: Ctx): Type = ClassType(ctx.getDef("CodeBase").get.sym, ct :: cr :: isVar :: Nil)
+  def codeTy(ct: Type, cr: Type)(using ctx: Ctx): Type = codeBaseTy(Wildcard.out(ct), Wildcard.out(cr), Wildcard.out(Top))
+  def varTy(ct: Type, cr: Type)(using ctx: Ctx): Type = codeBaseTy(ct, Wildcard(cr, cr), Wildcard.out(Bot))
   def regionTy(sk: Type)(using ctx: Ctx): Type = ClassType(ctx.getDef("Region").get.sym, Wildcard(sk, sk) :: Nil)
   def refTy(ct: Type, sk: Type)(using ctx: Ctx): Type = ClassType(ctx.getDef("Ref").get.sym, Wildcard(ct, ct) :: Wildcard.out(sk) :: Nil)
   private val builtinClasses = Ls(
@@ -69,7 +69,10 @@ object Ctx:
     })
   )
   private val builtinVals = Map(
-    "run" -> ((ctx: Ctx) => FunType(codeTy(Bot)(using ctx) :: Nil, Top, Bot)),
+    "run" -> ((ctx: Ctx) => {
+      val tv: InfVar = InfVar(1, infVarState.nextUid, new VarState(), false)
+      PolyType(tv :: Nil, FunType(codeTy(tv, Bot)(using ctx) :: Nil, tv, Bot))
+    }),
     "error" -> ((ctx: Ctx) => Bot),
     "log" -> ((ctx: Ctx) => FunType(strTy(using ctx) :: Nil, Top, Bot)),
   )
@@ -222,60 +225,76 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
   private def constrain(lhs: Type, rhs: Type)(using ctx: Ctx): Unit = solver.constrain(lhs, rhs)
 
   // TODO: content type
-  private def typeCode(code: Term)(using ctx: Ctx): (Type, Type) = code match
-    case Lit(_) => (Bot, Bot)
-    case Ref(sym: Symbol) if sym.nme == "error" => (Bot, Bot)
+  private def typeCode(code: Term)(using ctx: Ctx): (Type, Type, Type) = code match
+    case Lit(lit) => ((lit match
+      case _: IntLit => Ctx.intTy
+      case _: DecLit => Ctx.numTy
+      case _: StrLit => Ctx.strTy
+      case _: UnitLit => Top
+      case _: BoolLit => Ctx.boolTy), Bot, Bot)
+    case Ref(sym: Symbol) if sym.nme == "error" => (Bot, Bot, Bot)
     case Lam(params, body) =>
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx
       val bds = params.map:
         case Param(_, sym, _) =>
+          val tv = freshVar
           val sk = freshSkolem
-          nestCtx &= sym -> sk
-          sk
-      val (bodyTy, eff) = typeCode(body)
+          nestCtx &= (sym, tv, sk)
+          (tv, sk)
+      val (bodyTy, ctxTy, eff) = typeCode(body)
       val res = freshVar(using ctx)
-      val uni = bds.foldLeft[Type](Bot)((res, bd) => res | bd) | res
-      constrain(bodyTy, uni)
-      (res, eff)
-    case Term.App(Ref(sym: TermSymbol), Term.Tup(rhs)) if Ctx.isOp(sym.nme) =>
-      rhs.foldLeft[(Type, Type)]((Bot, Bot))((res, p) =>
-        val (ty, eff) = typeCode(p.value)
-        (res._1 | ty, res._2 | eff)
-      )
+      constrain(ctxTy, bds.foldLeft[Type](res)((res, bd) => res | bd._2))
+      (FunType(bds.map(_._1), bodyTy, Bot), res, eff)
+    case Term.App(Ref(sym: TermSymbol), Term.Tup(lhs :: rhs :: Nil)) if Ctx.isOp(sym.nme) =>
+      val op = ctx.get(sym) match
+        case Some(ty) => ty
+        case _ => error(msg"Operator not found: ${sym.nme}" -> code.toLoc :: Nil)
+      val (lhsTy, lhsCtx, lhsEff) = typeCode(lhs.value)
+      val (rhsTy, rhsCtx, rhsEff) = typeCode(rhs.value)
+      val resTy = freshVar
+      constrain(monoOrErr(op match {
+        case ty: PolyType => instantiate(ty)
+        case _ => op
+      }, code), FunType(lhsTy :: rhsTy :: Nil, resTy, Bot))
+      (resTy, lhsCtx | rhsCtx, lhsEff | rhsEff)
     case Term.App(lhs, Term.Tup(rhs)) =>
-      val (ty1, eff1) = typeCode(lhs)
-      val (ty2, eff2) = rhs.foldLeft[(Type, Type)]((Bot, Bot))((res, p) =>
-        val (ty, eff) = typeCode(p.value)
-        (res._1 | ty, res._2 | eff)
+      val (lhsTy, lhsCtx, lhsEff) = typeCode(lhs)
+      val (rhsTy, rhsCtx, rhsEff) = rhs.foldLeft[(Ls[Type], Type, Type)]((Nil, Bot, Bot))((res, p) =>
+        val (ty, ctx, eff) = typeCode(p.value)
+        (ty :: res._1, res._2 | ctx, res._3 | eff)
       )
-      (ty1 | ty2, eff1 | eff2)
+      val resTy = freshVar
+      constrain(lhsTy, FunType(rhsTy.reverse, resTy, Bot)) // TODO: right
+      (resTy, lhsCtx | rhsCtx, lhsEff | rhsEff)
     case Term.Unquoted(body) =>
       val (ty, eff) = typeCheck(body)
       val tv = freshVar
-      constrain(monoOrErr(ty, body), Ctx.codeTy(tv))
-      (tv, eff)
+      val cr = freshVar
+      constrain(monoOrErr(ty, body), Ctx.codeTy(tv, cr))
+      (tv, cr, eff)
     case Term.Blk(LetBinding(pat, rhs) :: Nil, body) => // TODO: more than one?
-      val (rhsTy, rhsEff) = typeCode(rhs)(using ctx)
+      val (rhsTy, rhsCtx, rhsEff) = typeCode(rhs)(using ctx)
       val nestCtx = ctx.nextLevel
       given Ctx = nestCtx
       val bd = pat match
         case Pattern.Var(sym) =>
           val sk = freshSkolem
-          nestCtx &= sym -> sk
+          nestCtx &= (sym, rhsTy, sk)
           sk
         case _ => ???
-      val (bodyTy, bodyEff) = typeCode(body)
+      val (bodyTy, bodyCtx, bodyEff) = typeCode(body)
       val res = freshVar(using ctx)
-      constrain(bodyTy, bd | res)
-      (rhsTy | res, rhsEff | bodyEff)
+      constrain(bodyCtx, bd | res)
+      (bodyTy, rhsCtx | res, rhsEff | bodyEff)
     case Term.If(Split.Cons(TermBranch.Boolean(cond, Split.Else(cons)), Split.Else(alts))) =>
-      val (condTy, condEff) = typeCode(cond)
-      val (consTy, consEff) = typeCode(cons)
-      val (altsTy, altsEff) = typeCode(alts)
-      (condTy | (consTy | altsTy), condEff | (consEff | altsEff))
+      val (condTy, condCtx, condEff) = typeCode(cond)
+      val (consTy, consCtx, consEff) = typeCode(cons)
+      val (altsTy, altsCtx, altsEff) = typeCode(alts)
+      constrain(condTy, Ctx.boolTy)
+      (consTy | altsTy, condCtx | consCtx | altsCtx, condEff | consEff | altsEff)
     case _ =>
-      (error(msg"Cannot quote ${code.toString}" -> code.toLoc :: Nil), Bot)
+      (error(msg"Cannot quote ${code.toString}" -> code.toLoc :: Nil), Bot, Bot)
 
   private def typeFunDef(sym: Symbol, lam: Term, sig: Opt[Term], pctx: Ctx)(using ctx: Ctx) = lam match
     case Term.Lam(params, body) => sig match
@@ -381,6 +400,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
           }.partitionMap(x => x)
         (ret, argEff.foldLeft[Type](eff | lhsEff)((res, e) => res | e))
     case (FunType(args, ret, eff), lhsEff) => app((PolyFunType(args, ret, eff), lhsEff), rhs, t)
+    case (ty: PolyType, eff) => app((instantiate(ty), eff), rhs, t)
     case (funTy, lhsEff) =>
       val (argTy, argEff) = rhs.flatMap(f =>
         val (ty, eff) = typeCheck(f.value)
@@ -471,8 +491,6 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
           case N => 
             (error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil), Bot)
       case Term.App(lhs, Term.Tup(rhs)) => typeCheck(lhs) match
-        case (pt: PolyType, lhsEff) =>
-          app((instantiate(pt), lhsEff), rhs, t)
         case (funTy, lhsEff) => app((funTy, lhsEff), rhs, t)
       case Term.New(cls, args) =>
         ctx.getDef(cls.nme) match
@@ -532,8 +550,8 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
       case Term.Quoted(body) =>
         val nestCtx = ctx.nextLevel
         given Ctx = nestCtx
-        val (ctxTy, eff) = typeCode(body)
-        (Ctx.codeTy(ctxTy), eff)
+        val (ty, ctxTy, eff) = typeCode(body)
+        (Ctx.codeTy(ty, ctxTy), eff)
       case _: Term.Unquoted =>
         (error(msg"Unquote should nest in quasiquote" -> t.toLoc :: Nil), Bot)
       case Term.Error =>
