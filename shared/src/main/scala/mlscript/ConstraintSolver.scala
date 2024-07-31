@@ -825,12 +825,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldRight(rhs)((c, ty) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             lhs.upperBounds ::= newBound // update the bound
-            lhs.tsc.toList.flatMap { case (k,v)=>v.map((k,_)) }.foreach {
-              case (tsc, i) =>
+            lhs.tsc.foreachEntry { (tsc, v) =>
+              v.foreach { i =>
                 if (!tsc.tvs(i)._1) {
                   tsc.updateOn(i, rhs)
                   if (tsc.constraints.isEmpty) reportError()
                 }
+              }
             }
             val u = lhs.tsc.filter(_._1.constraints.sizeCompare(1) === 0)
             u.foreachEntry { case (k, _) => lhs.tsc.remove(k) }
@@ -846,12 +847,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             val newBound = (cctx._1 ::: cctx._2.reverse).foldLeft(lhs)((ty, c) =>
               if (c.prov is noProv) ty else mkProxy(ty, c.prov))
             rhs.lowerBounds ::= newBound // update the bound
-            rhs.tsc.toList.flatMap { case (k,v)=>v.map((k,_)) }.foreach {
-              case (tsc, i) =>
+            rhs.tsc.foreachEntry { (tsc, v) =>
+              v.foreach { i =>
                 if(tsc.tvs(i)._1) {
                   tsc.updateOn(i, lhs)
                   if (tsc.constraints.isEmpty) reportError()
                 }
+              }
             }
             val u = rhs.tsc.filter(_._1.constraints.sizeCompare(1) === 0)
             u.foreachEntry { case (k, _) => rhs.tsc.remove(k) }
