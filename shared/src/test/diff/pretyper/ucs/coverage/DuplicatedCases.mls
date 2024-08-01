@@ -1,0 +1,215 @@
+:NewDefs
+
+// This test file contains the cases containing cases with identical patterns.
+
+:w
+:ducs:normalize.result
+fun f(x) = if x is
+  "a" then 1
+  "b" then 2
+  "a" then 3
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   "a" -> 1
+//│   _ ->
+//│     case x*‡ of
+//│       "b" -> 2
+//│ ╔══[WARNING] found a duplicated case
+//│ ║  l.10: 	  "a" then 3
+//│ ║        	  ^^^
+//│ ╟── there is an identical pattern "a"
+//│ ║  l.8: 	  "a" then 1
+//│ ╙──     	  ^^^
+//│ fun f: ("a" | "b") -> (1 | 2)
+
+class X
+class Y
+//│ class X {
+//│   constructor()
+//│ }
+//│ class Y {
+//│   constructor()
+//│ }
+
+:w
+:ducs:normalize.result
+fun f(x) = if x is
+  X then 1
+  X then 2
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   X*◊ -> 1
+//│ ╔══[WARNING] found a duplicated case
+//│ ║  l.38: 	  X then 2
+//│ ║        	  ^
+//│ ╟── there is an identical pattern X
+//│ ║  l.37: 	  X then 1
+//│ ╙──      	  ^
+//│ fun f: X -> 1
+
+:w
+:ducs:normalize.result
+fun f(x) = if x is
+  X then 1
+  Y then 2
+  X then 3
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   X*◊ -> 1
+//│   _ ->
+//│     case x*‡ of
+//│       Y*◊ -> 2
+//│ ╔══[WARNING] found a duplicated case
+//│ ║  l.55: 	  X then 3
+//│ ║        	  ^
+//│ ╟── there is an identical pattern X
+//│ ║  l.53: 	  X then 1
+//│ ╙──      	  ^
+//│ fun f: (X | Y) -> (1 | 2)
+
+class Box[T](value: T)
+//│ class Box[T](value: T)
+
+:ducs:normalize.result
+fun f(x) = if x is
+  Box(1) then true
+  Box then false
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   Box*◊ ->
+//│     let ucs$args_x$Box*† = (Box).unapply(x,)
+//│     let x$Box_0*‡ = (ucs$args_x$Box).0
+//│     case x$Box_0*‡ of
+//│       1 -> true
+//│       _ -> false
+//│ fun f: Box[Object] -> Bool
+
+f(Box(0))
+f(Box(1))
+//│ Bool
+//│ res
+//│     = false
+//│ res
+//│     = true
+
+:ducs:postprocess.result
+fun a_tale_of_scrutinees(x, y) =
+  if
+    x is "A" and y is "B" then "AB"
+    y is "A" and x is "B" then "BA"
+    y is "A" and x is "A" then "AA"
+    x is "B" and y is "B" then "BB"
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   "A" ->
+//│     case y*‡ of
+//│       "B" -> "AB"
+//│       "A" -> "AA"
+//│   "B" ->
+//│     case y*‡ of
+//│       "A" -> "BA"
+//│       "B" -> "BB"
+//│ fun a_tale_of_scrutinees: ("A" | "B", "A" | "B") -> ("AA" | "AB" | "BA" | "BB")
+
+:ducs:normalize.result
+fun test(x, p) = if x is
+  Bool and p(x) then "great"
+  true then "false"
+  false then "true"
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   refined Bool*◊ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† -> "great"
+//│       _ ->
+//│         case x*‡ of
+//│           true*† -> "false"
+//│           _ ->
+//│             case x*‡ of
+//│               false*† -> "true"
+//│ fun test: forall 'a. ('a & Bool, (Bool & 'a) -> Bool) -> ("false" | "great" | "true")
+
+class P[A](x: A)
+class Q[A, B](x: A, y: B)
+//│ class P[A](x: A)
+//│ class Q[A, B](x: A, y: B)
+
+fun f(x) =
+  if x is
+    P(1) then 1
+    P(y) then 2
+//│ fun f: P[Object] -> (1 | 2)
+
+:ducs:normalize.result
+fun f(x) =
+  if x is
+    Q(a, b) and a is 1 and b is 1 then 1
+    Q(a, b) and b is 1 then 2
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   Q*◊ ->
+//│     let ucs$args_x$Q*† = (Q).unapply(x,)
+//│     let a*‡ = (ucs$args_x$Q).0
+//│     let b*‡ = (ucs$args_x$Q).1
+//│     case a*‡ of
+//│       1 ->
+//│         case b*‡ of
+//│           1 -> 1
+//│       _ ->
+//│         case b*‡ of
+//│           1 -> 2
+//│ fun f: Q[Object, 1] -> (1 | 2)
+
+:e
+fun f(x) =
+  if x is
+    Q(a, b) and a is 1 and b is 2 then 1
+    Q(a, b) and b is 1 then 2
+//│ ╔══[ERROR] when `x` is `Q`
+//│ ║  l.167: 	    Q(a, b) and a is 1 and b is 2 then 1
+//│ ║         	    ^
+//│ ╟── the second argument of `Q` has 1 missing case
+//│ ║  l.168: 	    Q(a, b) and b is 1 then 2
+//│ ║         	                ^
+//│ ╟── it can be literal 2
+//│ ║  l.167: 	    Q(a, b) and a is 1 and b is 2 then 1
+//│ ╙──       	                                ^
+//│ fun f: Q[Object, 1] -> (1 | 2)
+
+:ducs:normalize.result
+fun f(x) =
+  if x is
+    Q(1, 1) then 1
+    Q(y, 1) then 2
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   Q*◊ ->
+//│     let ucs$args_x$Q*† = (Q).unapply(x,)
+//│     let x$Q_0*‡ = (ucs$args_x$Q).0
+//│     let x$Q_1*‡ = (ucs$args_x$Q).1
+//│     case x$Q_0*‡ of
+//│       1 ->
+//│         case x$Q_1*‡ of
+//│           1 -> 1
+//│           _ -> (ucs$args_x$Q).0
+//│       _ ->
+//│         let y*‡ = (ucs$args_x$Q).0
+//│         case x$Q_1*‡ of
+//│           1 -> 2
+//│ fun f: forall 'a. Q[Object & 'a, 1] -> (1 | 2 | 'a)
+
+fun f(x) =
+  if x is
+    Q(0, 0) then 1
+    Q(1, 1) then 2
+    Q(y, 1) then 3
+    _       then 4
+//│ fun f: (Object & ~#Q | Q[Object, Object]) -> (1 | 2 | 3 | 4)
+
+fun f(x) =
+  if x is
+    P(P(P(1))) then 1
+    P(P(1)) then 2
+    P(1) then 3
+//│ fun f: P[1 | P[1 | P[1]]] -> (1 | 2 | 3)

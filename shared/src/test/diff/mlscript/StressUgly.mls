@@ -44,7 +44,7 @@ eval1_ty = eval1_ty_ugly
 //│ ╙──      	                  ^^^
 //│         = <no result>
 //│           eval1_ty_ugly is not implemented
-//│ constrain calls  : 49
-//│ annoying  calls  : 42
-//│ subtyping calls  : 366
+//│ constrain calls  : 54
+//│ annoying  calls  : 46
+//│ subtyping calls  : 433
 

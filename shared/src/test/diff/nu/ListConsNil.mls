@@ -4,16 +4,88 @@
 
 type List[out A] = Cons[A] | Nil
 class Cons[out A](head: A, tail: List[A]) {
-  fun size : Int
-  fun size = 1 + tail.size
+  val size: Int
+  fun map: (A -> 'B) -> List['B]
+  size = 1 + tail.size
+  map(f) = Cons(f(head), tail.map(f))
 }
-module Nil { fun size = 0 }
+module Nil {
+  val size = 0
+  fun map(f) = Nil
+}
 //│ type List[A] = Cons[A] | Nil
 //│ class Cons[A](head: A, tail: List[A]) {
-//│   fun size: Int
+//│   fun map: forall 'B. (A -> 'B) -> List['B]
+//│   val size: Int
 //│ }
 //│ module Nil {
-//│   fun size: 0
+//│   fun map: anything -> Nil
+//│   val size: 0
+//│ }
+
+fun (::) cons(x, xs) = Cons(x, xs)
+//│ fun (::) cons: forall 'A. ('A, List['A]) -> Cons['A]
+
+fun show(xs) =
+  let rec go(xs) = if xs is
+    Cons(h, Nil) then String(h)
+    Cons(h, t)   then join(String(h), ", ", go(t))
+    Nil          then ""
+  join("[", go(xs), "]")
+//│ fun show: (Cons[anything] | Nil) -> Str
+
+let xs = 1 :: 2 :: 3 :: Nil
+//│ let xs: Cons[1 | 2 | 3]
+//│ xs
+//│    = Cons {}
+
+xs.size
+//│ Int
+//│ res
+//│     = 3
+
+show(xs)
+//│ Str
+//│ res
+//│     = '[1, 2, 3]'
+
+show(xs.map of x => succ of x)
+//│ Str
+//│ res
+//│     = '[2, 3, 4]'
+
+
+
+:e // TODO this should be made to work!
+abstract class List[out A]: (Cons[A] | Nil) {
+  val size: Int
+  fun map: (A -> 'B) -> List['B]
+}
+class Cons[out A](head: A, tail: List[A]) extends List[A] {
+  val size = 1 + tail.size
+  fun map(f) = Cons(f(head), tail.map(f))
+}
+module Nil extends List[nothing] {
+  val size = 0
+  fun map(f) = Nil
+}
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
+//│ ║  l.65: 	  val size = 1 + tail.size
+//│ ╙──      	                     ^^^^^
+//│ ╔══[ERROR] Indirectly-recursive member should have a type signature
+//│ ║  l.66: 	  fun map(f) = Cons(f(head), tail.map(f))
+//│ ╙──      	                                 ^^^^
+//│ abstract class List[A]: Cons[A] | Nil {
+//│   fun map: forall 'B. (A -> 'B) -> List['B]
+//│   val size: Int
+//│ }
+//│ class Cons[A](head: A, tail: List[A]) extends List {
+//│   fun map: forall 'A. (A -> 'A) -> Cons['A]
+//│   val size: Int
+//│ }
+//│ module Nil extends List {
+//│   fun map: anything -> Nil
+//│   val size: 0
 //│ }
 
 
@@ -21,10 +93,10 @@ module Nil { fun size = 0 }
 // TODO should better simplify these types (reduce the List refinement)
 
 :ng
-let test0: Cons[Int] & List[Num]
-let test1: Nil & List[Int]
-//│ let test0: Cons[Int] & List[Num]
-//│ let test1: Nil & List[Int]
+val test0: Cons[Int] & List[Num]
+val test1: Nil & List[Int]
+//│ val test0: Cons[Int] & List[Num]
+//│ val test1: Nil & List[Int]
 
 
 
@@ -42,7 +114,7 @@ fun test(x, l) = list_assoc(42, Cons(x, l))
 fun test(x, l) = if l is
   Nil then list_assoc(42, Cons(x, l))
   Cons(h, t) then list_assoc(42, Cons(h, t))
-//│ fun test: forall 'A 'A0. ({_1: anything, _2: 'A}, Cons[{_1: anything, _2: 'A0}] | Nil) -> (Cons['A] | Nil | Cons['A0])
+//│ fun test: forall 'A. ({_1: anything, _2: 'A}, Cons[{_1: anything, _2: 'A}] | Nil) -> (Cons['A] | Nil)
 
 
 

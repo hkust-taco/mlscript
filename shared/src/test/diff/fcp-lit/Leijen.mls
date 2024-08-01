@@ -314,7 +314,7 @@ choose (fun x -> fun y -> x) (fun x -> fun y -> y)
 
 // ,("choose id", ok "forall (a >= forall b. b -> b). a -> a")
 choose id
-//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+//│ res: 'a -> (forall 'a0. 'a0 -> 'a0 | 'a)
 //│    = [Function (anonymous)]
 
 // ]
@@ -364,7 +364,7 @@ runST (returnST 1)
 // ,("runST (newRef 1)", Wrong)
 :ng
 runST (newRef 1)
-//│ res: Ref[in ??s & 's out 's | ??s0, 1]
+//│ res: Ref[in ??s, 1]
 
 // ,("apply runST (returnST 1)", ok "Int")
 :ng
@@ -456,12 +456,12 @@ app (map head) (single ids)
 
 // ,("choose id auto", ok "(forall a. a -> a) -> (forall a. a -> a)")
 choose id auto
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'a1 -> 'a1)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a1 -> 'a1 | 'a0)
 //│    = [Function: id1]
 
 // ,("choose auto id", ok "(forall a. a -> a) -> (forall a. a -> a)")
 choose auto id
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'a1 -> 'a1)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a1 -> 'a1 | 'a0)
 //│    = [Function: auto]
 
 // ,("choose xauto xauto", ok "forall a. (forall b. b -> b) -> a -> a")
@@ -471,12 +471,12 @@ choose xauto xauto
 
 // ,("choose id xauto", Wrong)
 choose id xauto
-//│ res: (forall 'b. 'b -> 'b & 'a) -> ('a | 'a0 -> 'a0)
+//│ res: (forall 'b. 'b -> 'b & 'a) -> ('a0 -> 'a0 | 'a)
 //│    = [Function: id1]
 
 // ,("choose xauto id", Wrong)
 choose xauto id
-//│ res: (forall 'b. 'b -> 'b & 'a) -> ('a | 'a0 -> 'a0)
+//│ res: (forall 'b. 'b -> 'b & 'a) -> ('a0 -> 'a0 | 'a)
 //│    = [Function: xauto]
 
 // -- these fail too in ghc: (choose ids []) is accepted while (choose [] ids) is rejected
@@ -681,7 +681,7 @@ single id
 
 // ,("choose id",ok "forall (a >= forall b. b -> b). a -> a")
 choose id
-//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+//│ res: 'a -> (forall 'a0. 'a0 -> 'a0 | 'a)
 //│    = [Function (anonymous)]
 
 // ,("choose id inc", ok "Int -> Int")
@@ -691,7 +691,7 @@ choose id inc
 
 // ,("choose id auto", ok "(forall a. a -> a) -> (forall a. a -> a)")
 choose id auto
-//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a0 | 'a1 -> 'a1)
+//│ res: (forall 'a. 'a -> 'a & 'a0) -> ('a1 -> 'a1 | 'a0)
 //│    = [Function: id1]
 
 // ,("\\x y -> x", ok "forall a. forall (b >= forall c. c -> a). a -> b")
@@ -753,12 +753,12 @@ choose inc id
 
 // ,("choose id", ok "forall a. (a -> a) -> (a -> a)")
 choose id
-//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+//│ res: 'a -> (forall 'a0. 'a0 -> 'a0 | 'a)
 //│    = [Function (anonymous)]
 
 // ,("choose (rigid id)", ok "(forall a. a -> a) -> (forall a. a -> a)")
 choose id
-//│ res: 'a -> (forall 'a0. 'a | 'a0 -> 'a0)
+//│ res: 'a -> (forall 'a0. 'a0 -> 'a0 | 'a)
 //│    = [Function (anonymous)]
 
 // ,("revapp (rigid id) auto", ok "forall a. a -> a")
@@ -932,21 +932,21 @@ xauto : (forall 'a. 'a -> 'a) -> (forall 'a. 'a -> 'a)
 def runST2: forall 'a. (forall 's. (ST['s, 'a], ST['s, 'a])) -> 'a
 runST2 ((newRef 1, newRef 2))
 //│ runST2: (forall 's. (ST['s, 'a], ST['s, 'a],)) -> 'a
-//│ res: Ref[in ??s & 's out 's | ??s0, 1 | 2]
+//│ res: Ref[in ??s, 1 | 2]
 
 def runST3: forall 'a. (forall 's. ST[('s, 's), 'a]) -> 'a
 def newRef3: forall 'a 's. 'a -> ST[('s, 's), Ref['s, 'a]]
 runST3 (newRef3 1)
 //│ runST3: (forall 's. ST[('s, 's,), 'a]) -> 'a
 //│ newRef3: 'a -> ST[('s, 's,), Ref['s, 'a]]
-//│ res: Ref[in ??s & 's out 's | ??s0, 1]
+//│ res: Ref[in ??s, 1]
 
 def runST4: forall 'a 'b. (forall 's. ST['s, ('a, 'b)]) -> ('a, 'b)
 def newRef4: forall 'a 's. 'a -> ST['s, (Ref['s, 'a], Ref['s, 'a])]
 runST4 (newRef4 1)
 //│ runST4: (forall 's. ST['s, ('a, 'b,)]) -> ('a, 'b,)
 //│ newRef4: 'a -> ST['s, (Ref['s, 'a], Ref['s, 'a],)]
-//│ res: (Ref[in ??s & 's out 's | 's0 | ??s0, 1], Ref[in ??s & 's0 out 's | 's0 | ??s0, 1],)
+//│ res: (Ref[in ??s, 1], Ref[in ??s, 1],)
 
 
 // * Distributivity demonstration:

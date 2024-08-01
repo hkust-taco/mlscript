@@ -1,0 +1,29 @@
+:NewDefs
+if true then 1 else 0
+if 1+1 > 1 then 1 - 1 else 1*1
+//│ Int
+//│ 
+//│ Simpledef:
+//│ {if (true) then 1 else 0
+//│  if (>(+(1, 1,), 1,)) then -(1, 1,) else *(1, 1,)}
+//│ End simpledef
+//│ 
+//│ res
+//│     = 1
+//│ res
+//│     = 0
+
+let b = true
+if(b) then 1 else 2
+//│ let b: true
+//│ 1 | 2
+//│ 
+//│ Simpledef:
+//│ {let b = true
+//│  if ('(' b ')') then 1 else 2}
+//│ End simpledef
+//│ 
+//│ b
+//│   = true
+//│ res
+//│     = 1

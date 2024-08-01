@@ -27,17 +27,17 @@ def stepImpl_ty: ArraysImpl['a, 'r] -> ArraysImpl['a, ('r, string)]
 
 :ns
 def helper impl (k: ArraysImplConsumer['a2, 'res]) = k (stepImpl_ty impl)
-//│ helper: forall 'a 'a0 'r 'b 'r0. 'b -> (forall 'a2 'res 'a1 'c. ArraysImplConsumer['a2, 'res] -> 'c)
+//│ helper: forall 'b 'a 'a0 'r 'r0. 'b -> (forall 'a2 'res 'a1 'c. ArraysImplConsumer['a2, 'res] -> 'c)
 //│   where
 //│     'res <: 'c
-//│     'a2 :> 'a0
+//│     'a2 :> 'a
 //│         <: 'a1
-//│     'a1 :> 'a0
-//│         <: 'a2 & 'a
-//│     'b <: ArraysImpl[in 'a0 out 'a, in 'r0 out 'r]
-//│     'r :> 'r0
-//│     'a0 <: 'a
-//│     'a :> 'a0
+//│     'a1 :> 'a
+//│         <: 'a2 & 'a0
+//│     'b <: ArraysImpl[in 'a out 'a0, in 'r out 'r0]
+//│     'r0 :> 'r
+//│     'a <: 'a0
+//│     'a0 :> 'a
 
 // * Used to SOF in simplif:
 helper

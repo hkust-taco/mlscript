@@ -41,7 +41,7 @@ l1: Expr[Bool]
 //│ ╔══[ERROR] Type mismatch in type ascription:
 //│ ║  l.40: 	l1: Expr[Bool]
 //│ ║        	^^
-//│ ╟── type `Int` is not an instance of `Bool`
+//│ ╟── type `Int` is not an instance of type `Bool`
 //│ ║  l.4: 	class LitInt(n: Int) extends Expr[Int]
 //│ ║       	                                  ^^^
 //│ ╟── Note: constraint arises from type reference:

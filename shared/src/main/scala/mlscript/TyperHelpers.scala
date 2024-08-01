@@ -216,7 +216,7 @@ abstract class TyperHelpers { Typer: Typer =>
     def rebuild(cs: Ls[Ls[ST]]): ST =
       cs.iterator.map(_.foldLeft(TopType: ST)(_ & _)).foldLeft(BotType: ST)(_ | _)
     if (cs.sizeCompare(1) <= 0) return rebuild(cs)
-    val factors = MutMap.empty[Factorizable, Int]
+    val factors = LinkedHashMap.empty[Factorizable, Int]
     cs.foreach { c =>
       c.foreach {
         case tv: TV =>
@@ -377,10 +377,15 @@ abstract class TyperHelpers { Typer: Typer =>
     
     def toUpper(prov: TypeProvenance): FieldType = FieldType(None, this)(prov)
     def toLower(prov: TypeProvenance): FieldType = FieldType(Some(this), TopType)(prov)
+    def toBoth(prov: TypeProvenance): FieldType = FieldType(S(this), this)(prov)
     
     def | (that: SimpleType, prov: TypeProvenance = noProv, swapped: Bool = false): SimpleType = (this, that) match {
       case (TopType, _) => this
       case (BotType, _) => that
+      case (_, TopType) => that
+      case (_, BotType) => this
+      case (Extruded(true, sk), _) => that
+      case (Extruded(false, sk), _) => TopType
       
       // These were wrong! During constraint solving it's important to keep them!
       // case (_: RecordType, _: PrimType | _: FunctionType) => TopType
@@ -641,9 +646,6 @@ abstract class TyperHelpers { Typer: Typer =>
       case ComposedType(false, l, r) => l.negNormPos(f, p) | r.negNormPos(f, p)
       case NegType(n) => f(n).withProv(p)
       case tr: TypeRef if !preserveTypeRefs && tr.canExpand => tr.expandOrCrash.negNormPos(f, p)
-      case _: RecordType | _: FunctionType => BotType // Only valid in positive positions!
-        // Because Top<:{x:S}|{y:T}, any record type negation neg{x:S}<:{y:T} for any y=/=x,
-        // meaning negated records are basically bottoms.
       case rw => NegType(f(rw))(p)
     }
     def withProvOf(ty: SimpleType): ST = withProv(ty.prov)
@@ -1062,13 +1064,13 @@ abstract class TyperHelpers { Typer: Typer =>
           }
         case N =>
       }
-      expandWith(paramTags = true)
+      expandWith(paramTags = true, selfTy = true)
     }
     def expandOrCrash(implicit ctx: Ctx): SimpleType = {
       require(canExpand)
-      expandWith(paramTags = true)
+      expandWith(paramTags = true, selfTy = true)
     }
-    def expandWith(paramTags: Bool)(implicit ctx: Ctx): SimpleType =
+    def expandWith(paramTags: Bool, selfTy: Bool)(implicit ctx: Ctx): SimpleType =
       ctx.tyDefs2.get(defn.name).map { info =>
         lazy val mkTparamRcd = RecordType(info.tparams.lazyZip(targs).map {
             case ((tn, tv, vi), ta) =>
@@ -1086,7 +1088,7 @@ abstract class TyperHelpers { Typer: Typer =>
             assert(td.tparams.size === targs.size)
             // println(s"EXP ${td.sign}")
             val (freshenMap, _) = refreshHelper2(td, Var(td.name).withLoc(prov.loco), S(targs)) // infer ty args if not provided
-            val freshSelf = {
+            val freshSelf = if (!selfTy) TopType else {
               implicit val freshened: MutMap[TV, ST] = freshenMap
               implicit val shadows: Shadows = Shadows.empty
               td.sign.freshenAbove(td.level, rigidify = false)
@@ -1098,7 +1100,7 @@ abstract class TyperHelpers { Typer: Typer =>
           case S(td: TypedNuCls) =>
             assert(td.tparams.size === targs.size)
             val (freshenMap, _) = refreshHelper2(td, Var(td.name).withLoc(prov.loco), S(targs)) // infer ty args if not provided
-            val freshSelf = {
+            val freshSelf = if (!selfTy) TopType else {
               implicit val freshened: MutMap[TV, ST] = freshenMap
               implicit val shadows: Shadows = Shadows.empty
               td.sign.freshenAbove(td.level, rigidify = false)
@@ -1147,6 +1149,15 @@ abstract class TyperHelpers { Typer: Typer =>
     } //tap { res => println(s"Expand $this => $res") }
     private var tag: Opt[Opt[ClassTag]] = N
     def expansionFallback(implicit ctx: Ctx): Opt[ST] = mkClsTag
+    /** Note: self types can be inherited from parents if the definition is abstract
+      * (if it is not abstract, then the class is already known to subtype the inherited self-type) */
+    def mayHaveTransitiveSelfType(implicit ctx: Ctx): Bool = ctx.tyDefs2.get(defn.name) match {
+      case S(lti) => lti.decl match {
+        case td: NuTypeDef if !td.isAbstract => td.sig.nonEmpty
+        case _ => true
+      }
+      case _ => true
+    }
     def mkClsTag(implicit ctx: Ctx): Opt[ClassTag] = tag.getOrElse {
       val res = ctx.tyDefs.get(defn.name) match {
         case S(td: TypeDef) if (td.kind is Cls) || (td.kind is Mod) =>

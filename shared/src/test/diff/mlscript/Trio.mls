@@ -23,9 +23,9 @@ b = B { fB = "test" }
 foo b
 //│ res: "test"
 //│    = 'test'
-//│ constrain calls  : 24
+//│ constrain calls  : 22
 //│ annoying  calls  : 10
-//│ subtyping calls  : 168
+//│ subtyping calls  : 156
 
 
 def arg: A | B | C
@@ -37,25 +37,25 @@ foo arg
 //│ res: bool | int | string
 //│    = <no result>
 //│      arg is not implemented
-//│ constrain calls  : 40
+//│ constrain calls  : 37
 //│ annoying  calls  : 30
-//│ subtyping calls  : 369
+//│ subtyping calls  : 342
 
 :stats
 foo (arg with { fC = true })
 //│ res: int | string | true
 //│    = <no result>
 //│      arg is not implemented
-//│ constrain calls  : 33
+//│ constrain calls  : 30
 //│ annoying  calls  : 28
-//│ subtyping calls  : 302
+//│ subtyping calls  : 274
 
 def foo x = case x of {
   | A -> add x.fA x.payload
   | B -> x.fB
   | C -> { l = x.fC; r = x.payload }
   }
-//│ foo: (A & {payload: int} | (B with {fB: 'fB}) | (C with {fC: 'fC, payload: 'payload})) -> (int | 'fB | {l: 'fC, r: 'payload})
+//│ foo: (A & {payload: int} | (B with {fB: 'fB}) | (C with {fC: 'fC, payload: 'payload})) -> (int | {l: 'fC, r: 'payload} | 'fB)
 //│    = [Function: foo1]
 
 :e
@@ -79,16 +79,16 @@ foo arg
 //│ res: error | int | string | {l: bool, r: nothing}
 //│    = <no result>
 //│      arg is not implemented
-//│ constrain calls  : 53
+//│ constrain calls  : 48
 //│ annoying  calls  : 40
-//│ subtyping calls  : 468
+//│ subtyping calls  : 427
 
 :stats
 foo (arg with { payload = 1 })
 //│ res: int | string | {l: bool, r: 1}
 //│    = <no result>
 //│      arg is not implemented
-//│ constrain calls  : 47
+//│ constrain calls  : 42
 //│ annoying  calls  : 38
-//│ subtyping calls  : 376
+//│ subtyping calls  : 330
 

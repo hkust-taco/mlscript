@@ -1,0 +1,26 @@
+:NewDefs
+
+:e // FIXME: Nested class references not updated
+:lift
+class X() {
+    class Y() {}
+}
+X.Y()
+//│ Lifted:
+//│ TypingUnit {
+//│   class X$1_Y$2([par$X$1,]) {}
+//│   class X$1([]) {}
+//│   Code(List((X$1).Y()))
+//│ }
+//│ ╔══[ERROR] Class parameters currently need type annotations
+//│ ╙──
+//│ ╔══[ERROR] Type mismatch in field selection:
+//│ ║  l.8: 	X.Y()
+//│ ║       	 ^^
+//│ ╙── expression of type `() -> X$1` does not have field 'Y'
+//│ class X$1_Y$2(par$X$1: error)
+//│ class X$1()
+//│ error
+//│ res
+//│ Runtime error:
+//│   TypeError: X$1.Y is not a function

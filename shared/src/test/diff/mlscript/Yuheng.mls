@@ -40,7 +40,7 @@ f a2
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.39: 	f a2
 //│ ║        	^^^^
-//│ ╟── type `number` is not an instance of `int`
+//│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.34: 	a2 = A { x = 0: number }
 //│ ║        	                ^^^^^^
 //│ ╟── Note: constraint arises from type reference:
@@ -158,8 +158,8 @@ p = Pair {
 //│   rhs: Pair[?, ?] with {lhs: IntLit & {value: 2}, rhs: IntLit & {value: 3}}
 //│ }
 //│  = Pair {
-//│      lhs: IntLit { value: 1 },
-//│      rhs: Pair { lhs: IntLit { value: 2 }, rhs: IntLit { value: 3 } }
+//│      lhs: IntLit1 { value: 1 },
+//│      rhs: Pair { lhs: IntLit1 { value: 2 }, rhs: IntLit1 { value: 3 } }
 //│    }
 
 ep = eval p

@@ -1,0 +1,25 @@
+:NewDefs
+
+class Foo() {fun f() = 0}
+class Bar() {fun f = 0}
+[Foo(), Bar()].0.f()
+[Foo(), Bar()].1.f
+//│ class Foo() {
+//│   fun f: () -> 0
+//│ }
+//│ class Bar() {
+//│   fun f: 0
+//│ }
+//│ 0
+//│ 
+//│ Simpledef:
+//│ {class Foo() {fun f = () => 0}
+//│  class Bar() {fun f = 0}
+//│  let selRes$10 = ([Foo(), Bar(),]).0 in case selRes$10 of { Foo => (selRes$10).f() }
+//│  let selRes$32 = ([Foo(), Bar(),]).1 in case selRes$32 of { Bar => (selRes$32).f }}
+//│ End simpledef
+//│ 
+//│ res
+//│     = 0
+//│ res
+//│     = 0

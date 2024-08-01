@@ -2,6 +2,7 @@
 :NoJS // TODO support JS code-gen for datatypes
 
 
+
 datatype Option[A] = Some(A) | None
 //│ Defined class Option[+A]
 //│ Declared Option.Some: Option['A] -> ('A,)
@@ -10,6 +11,9 @@ datatype Option[A] = Some(A) | None
 //│ Defined class None[+A]
 //│ Some: 'a -> Option['a]
 //│ None: Option[nothing]
+
+
+// * Original
 
 def foo f = (f 123, f true)
 fooid = foo id
@@ -22,6 +26,74 @@ def bar f = (f (fun x -> x), f (fun x -> Some x))
 test = bar foo
 //│ bar: ((forall 'a. 'a -> 'a) -> 'b & (forall 'c. 'c -> Option['c]) -> 'd) -> ('b, 'd,)
 //│ test: ((123, true,), (Option[123], Option[true],),)
+
+
+// * Let-expanded
+
+def foo f = let g = f in (f 123, f true)
+fooid = foo id
+fooSome = foo Some
+//│ foo: (123 -> 'a & true -> 'b) -> ('a, 'b,)
+//│ fooid: (123, true,)
+//│ fooSome: (Option[123], Option[true],)
+
+def bar f = (f (fun x -> x), f (fun x -> Some x))
+test = bar foo
+//│ bar: ((forall 'a. 'a -> 'a) -> 'b & (forall 'c. 'c -> Option['c]) -> 'd) -> ('b, 'd,)
+//│ test: ((123, true,), (Option[123], Option[true],),)
+
+
+// * Eta-expanded (notice the lesser generality)
+
+def foo f = let g x = f x in (g 123, g true)
+fooid = foo id
+fooSome = foo Some
+//│ foo: ((123 | true) -> 'a) -> ('a, 'a,)
+//│ fooid: (123 | true, 123 | true,)
+//│ fooSome: (Option[123 | true], Option[123 | true],)
+
+def bar f = (f (fun x -> x), f (fun x -> Some x))
+test = bar foo
+//│ bar: ((forall 'a. 'a -> 'a) -> 'b & (forall 'c. 'c -> Option['c]) -> 'd) -> ('b, 'd,)
+//│ test: ((123 | true, 123 | true,), (Option[123 | true], Option[123 | true],),)
+
+
+// * With function type annotation (same lesser generality)
+
+def foo (f: 'x -> 'a) = (f 123, f true)
+fooid = foo id
+fooSome = foo Some
+//│ foo: ((123 | true) -> 'a) -> ('a, 'a,)
+//│ fooid: (123 | true, 123 | true,)
+//│ fooSome: (Option[123 | true], Option[123 | true],)
+
+def bar f = (f (fun x -> x), f (fun x -> Some x))
+test = bar foo
+//│ bar: ((forall 'a. 'a -> 'a) -> 'b & (forall 'c. 'c -> Option['c]) -> 'd) -> ('b, 'd,)
+//│ test: ((123 | true, 123 | true,), (Option[123 | true], Option[123 | true],),)
+
+
+// * Here's an idea: we could use application types to retain this function's precise typing
+
+// let g x = f x
+// g : forall 'a. 'a -> ('f 'a) where constraint: 'f <: 'a -> anything
+//                              extruded to 'f <: 'a0 -> anything where 'a <: 'a0
+// 
+// foo : 'f -> ('f 123, 'f true) where 'f <: 'a0 -> anything, 123 <: 'a0, true <: 'a0
+// foo : 'f -> ('f 123, 'f true) where 'f <: (123 | true) -> anything
+// 
+// foo Some -- ok because Some : (forall 'a. 'a -> Option['a]) <: (123 | true) -> anything
+// 
+
+// * Note: the old idea was to use constrained types, as in:
+
+// def example f = f 123
+// example : 'a -> ('a 123) where 'a <: 123 -> anything
+
+// * ... which worked, but CTs are a pain to work with/implement
+// * AND they may be silently inconsistent, delaying error reporting to use sites.
+// * Moreover, ensuring that CTs remain consistent defeats their purpose (can't solve tis problem anymore)
+
 
 
 datatype List[A] = Cons(A, List[A]) | Nil
@@ -42,15 +114,15 @@ rec def find(table, key) =
 
 
 ls = Cons({key=0; val=id}, Cons({key=1; val=fun x -> x x}, Nil))
-//│ ls: List[{key: 0 | 1, val: forall 'a 'b 'c. ('a -> 'b & 'c & 'a) -> ('b | 'c)}]
+//│ ls: List[{key: 0 | 1, val: forall 'a 'b 'c. ('a -> 'b & 'c & 'a) -> ('c | 'b)}]
 
 def found: Option[forall 'a 'b. ('a -> 'b & 'a) -> ('b | 'a)]
-//│ found: Option[forall 'a 'b. ('a -> 'b & 'a) -> ('a | 'b)]
+//│ found: Option[forall 'a 'b. ('a -> 'b & 'a) -> ('b | 'a)]
 
 found = find(ls, 1)
 //│ Option[forall 'a 'b 'c. ('a -> 'b & 'a & 'c) -> ('b | 'c)]
 //│   <:  found:
-//│ Option[forall 'a 'b. ('a -> 'b & 'a) -> ('a | 'b)]
+//│ Option[forall 'a 'b. ('a -> 'b & 'a) -> ('b | 'a)]
 
 match found with
   | None -> ("???", false)
@@ -65,5 +137,6 @@ use fnd = match fnd with
 
 use found
 //│ res: ("!!!" | "???", Bool,)
+
 
 

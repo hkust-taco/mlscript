@@ -374,7 +374,7 @@ object JSExpr {
   def arguments(exprs: Ls[JSExpr]): SourceCode =
     exprs.zipWithIndex
       .foldLeft(SourceCode.empty) { case (x, (y, i)) =>
-        x ++ y.toSourceCode ++ (if (i === exprs.length - 1) SourceCode.empty
+        x ++ y.embed(parentPrecedence = JSCommaExpr.outerPrecedence) ++ (if (i === exprs.length - 1) SourceCode.empty
                                 else SourceCode(", "))
       }
       .parenthesized
@@ -411,7 +411,7 @@ final case class JSArrowFn(params: Ls[JSPattern], body: JSExpr \/ Ls[JSStmt]) ex
           case pattern             => pattern.toSourceCode
         }) ++ (if (i === params.length - 1) SourceCode.empty else SourceCode(", "))
       }
-      .parenthesized ++ SourceCode(" => ") ++ (body match {
+      .parenthesized ++ SourceCode.fatArrow ++ (body match {
       // TODO: Figure out how `=>` competes with other operators.
       case L(expr: JSRecord) => expr.toSourceCode.parenthesized
       case L(expr)  => expr.embed
@@ -444,7 +444,7 @@ final case class JSImmEvalFn(
     case None =>
       (SourceCode(s"${JSExpr.params(params)} => ") ++ (body match {
         case Left(expr: JSRecord) => expr.toSourceCode.parenthesized
-        case Left(expr) => expr.toSourceCode
+        case Left(expr) => expr.embed(parentPrecedence = 2)
         case Right(stmts) =>
           stmts.foldLeft(SourceCode.empty) { _ + _.toSourceCode }.block
       })).parenthesized ++ JSExpr.arguments(arguments)
@@ -534,7 +534,8 @@ object JSBinary {
       "&&" -> 5,
       // infixl 4
       "||" -> 4,
-      "??" -> 4
+      "??" -> 4,
+      "," -> 1,
     )
   
   val operators: Set[Str] = opPrecMap.keySet
@@ -588,7 +589,7 @@ class JSMember(`object`: JSExpr, property: JSExpr) extends JSExpr {
   override def precedence: Int = 20
   override def toSourceCode: SourceCode =
     `object`.toSourceCode.parenthesized(
-      `object`.precedence < precedence || `object`.isInstanceOf[JSRecord]
+      `object`.precedence < precedence || `object`.isInstanceOf[JSRecord] || `object`.isInstanceOf[JSNew]
     ) ++ SourceCode("[") ++ property.toSourceCode ++ SourceCode("]")
 
   override def isSimple: Bool = `object`.isSimple
@@ -601,7 +602,7 @@ object JSMember {
 class JSField(`object`: JSExpr, val property: JSIdent) extends JSMember(`object`, property) {
   override def toSourceCode: SourceCode =
     `object`.toSourceCode.parenthesized(
-      `object`.precedence < precedence || `object`.isInstanceOf[JSRecord]
+      `object`.precedence < precedence || `object`.isInstanceOf[JSRecord] || `object`.isInstanceOf[JSNew]
     ) ++ SourceCode(
       if (JSField.isValidFieldName(property.name)) {
         s".${property.name}"
@@ -674,6 +675,13 @@ final case class JSForInStmt(pattern: JSPattern, iteratee: JSExpr, body: Ls[JSSt
     iteratee.toSourceCode ++
     SourceCode(")") ++
     body.foldLeft(SourceCode.empty) { _ + _.toSourceCode }.block
+}
+
+final case class JSWhileStmt(cond: JSExpr, body: JSExpr) extends JSStmt {
+  def toSourceCode: SourceCode = SourceCode("while (") ++
+    cond.toSourceCode ++
+    SourceCode(") ") ++
+    body.toSourceCode.block
 }
 
 // A single return statement.
@@ -768,6 +776,13 @@ final case class JSClassGetter(name: Str, body: JSExpr \/ Ls[JSStmt]) extends JS
     }).block
 }
 
+final case class JSClassSetter(name: Str) extends JSClassMemberDecl {
+  def toSourceCode: SourceCode =
+    SourceCode(s"set ${JSField.emitValidFieldName(name)}(value) ") ++ (
+      JSIdent(s"this.#$name") := JSIdent("value")
+    ).toSourceCode.block
+}
+
 final case class JSClassMethod(
     name: Str,
     params: Ls[JSPattern],
@@ -835,7 +850,7 @@ final case class JSClassDecl(
 final case class JSClassNewDecl(
     name: Str,
     fields: Ls[Str],
-    accessors: Ls[Str],
+    accessors: Ls[Bool -> Str], // mut -> name
     privateMems: Ls[Str],
     `extends`: Opt[JSExpr],
     superFields: Ls[JSExpr],
@@ -862,10 +877,12 @@ final case class JSClassNewDecl(
       privateMems.distinct.foreach(f => {
         buffer += s"  #${f};"
       })
-      accessors.distinct.foreach(f => {
+      accessors.distinct.foreach { case (mut, f) =>
         if (!privateMems.contains(f)) buffer += s"  #${f};"
         buffer += s"  get ${f}() { return this.#${f}; }"
-      })
+        if (mut) buffer +=
+          s"  set ${f}($$value) { return this.#${f} = $$value; }"
+      }
       buffer += s"  constructor($params) {"
       if (`extends`.isDefined) {
         val sf = superFields.iterator.zipWithIndex.foldLeft("")((res, p) =>

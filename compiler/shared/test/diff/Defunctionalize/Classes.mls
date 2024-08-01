@@ -1,0 +1,47 @@
+:NewDefs
+
+class Bar(val x: Int) {
+  fun foo(x) = x
+  fun FooMinus(y: Int) = x + y
+  fun car = foo(2)
+}
+class Car() {
+  fun da(b: Bar) = b.foo(2)
+}
+fun baz(b: Bar) = b.foo(2)
+let bar = Bar(42)
+baz(bar)
+(Car()).da(Bar(1337))
+bar.car
+//│ class Bar(x: Int) {
+//│   fun FooMinus: (y: Int) -> Int
+//│   fun car: 2
+//│   fun foo: forall 'a. 'a -> 'a
+//│ }
+//│ class Car() {
+//│   fun da: (b: Bar) -> 2
+//│ }
+//│ fun baz: (b: Bar) -> 2
+//│ let bar: Bar
+//│ 2
+//│ 
+//│ Simpledef:
+//│ {class Bar(val x: Int,) {fun foo = (x::0,) => x
+//│  fun FooMinus = (y: Int,) => +(x, y,)
+//│  fun car = foo(2,)}
+//│  class Car() {fun da = (b: Bar,) => let selRes$34 = b in case selRes$34 of { Bar => (selRes$34).foo(2,) }}
+//│  fun baz = (b: Bar,) => let selRes$48 = b in case selRes$48 of { Bar => (selRes$48).foo(2,) }
+//│  let bar = Bar(42,)
+//│  baz(bar,)
+//│  let selRes$76 = '(' Car() ')' in case selRes$76 of { Car => (selRes$76).da(Bar(1337,),) }
+//│  let selRes$98 = bar in case selRes$98 of { Bar => (selRes$98).car }}
+//│ End simpledef
+//│ 
+//│ bar
+//│     = Bar {}
+//│ res
+//│     = 2
+//│ res
+//│     = 2
+//│ res
+//│     = 2

@@ -1,0 +1,49 @@
+:NewDefs
+
+fun f(x: Bool) = if x then 42 else 1337
+//│ fun f: (x: Bool) -> (1337 | 42)
+//│ 
+//│ Simpledef:
+//│ {fun f = (x: Bool,) => if (x) then 42 else 1337}
+//│ End simpledef
+//│ 
+
+fun foo() = 42
+//│ fun foo: () -> 42
+//│ 
+//│ Simpledef:
+//│ {fun foo = () => 42}
+//│ End simpledef
+//│ 
+
+fun f(x) =
+  if(x > 0) then x+1 else x - 1
+f(2)+3
+//│ fun f: Int -> Int
+//│ Int
+//│ 
+//│ Simpledef:
+//│ {fun f = (x::0,) => {if ('(' >(x, 0,) ')') then +(x, 1,) else -(x, 1,)}
+//│  +(f(2,), 3,)}
+//│ End simpledef
+//│ 
+//│ res
+//│     = 6
+
+fun foo(x, #b) = if b then x else 1337
+let a = foo(42, true)
+let b = foo(23, false)
+//│ fun foo: forall 'a. ('a, Bool) -> (1337 | 'a)
+//│ let a: 1337 | 42
+//│ let b: 1337 | 23
+//│ 
+//│ Simpledef:
+//│ {fun foo = (x::1, #b::2,) => if (b) then x else 1337
+//│  let a = foo(42, true,)
+//│  let b = foo(23, false,)}
+//│ End simpledef
+//│ 
+//│ a
+//│   = 42
+//│ b
+//│   = 1337

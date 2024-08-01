@@ -23,7 +23,7 @@ class Pure[A](value: A) extends IO[A] {
 //│   fun run: AA
 //│ }
 //│ class Pure[A](value: A) extends IO {
-//│   fun bind: forall 'AA1. (A -> IO['AA1]) -> Bind[in A & 'A0 out A, 'AA1]
+//│   fun bind: forall 'AA1. ('A0 -> IO['AA1]) -> Bind['A0, 'AA1]
 //│   fun hey: IO['A0]
 //│   fun run: A
 //│ }
@@ -174,7 +174,7 @@ fun loop =
 
 
 
-val x: Bind['A, 'B] where undefined : 'A;; 'A : 'B
+val x: Bind['A, 'B] where undefined : 'A; 'A : 'B
 //│ val x: forall 'A 'B. Bind['A, 'B]
 //│   where
 //│     'A :> ()
@@ -189,7 +189,7 @@ x.run
 //│     = <no result>
 //│       x is not implemented
 
-val x: Bind['A, 'B] where 'A : undefined;; 'A : 'B
+val x: Bind['A, 'B] where 'A : undefined; 'A : 'B
 //│ val x: forall 'A 'B. Bind['A, 'B]
 //│   where
 //│     'A <: () & 'B

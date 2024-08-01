@@ -1,0 +1,15 @@
+:NewDefs
+
+class Foo(val x: Int) {
+}
+new Foo(5).x
+//│ class Foo(x: Int)
+//│ Int
+//│ 
+//│ Simpledef:
+//│ {class Foo(val x: Int,) {}
+//│  let selRes$4 = (new Foo)(5,) in case selRes$4 of { Foo => (selRes$4).x }}
+//│ End simpledef
+//│ 
+//│ res
+//│     = 5

@@ -41,7 +41,7 @@ x + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
 //│ ║  l.40: 	x + 1
 //│ ║        	^^^^^
-//│ ╟── reference of type `Num` is not an instance of `Int`
+//│ ╟── reference of type `Num` is not an instance of type `Int`
 //│ ║  l.34: 	let x = NaN
 //│ ║        	        ^^^
 //│ ╟── but it flows into reference with expected type `Int`

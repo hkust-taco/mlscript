@@ -73,9 +73,9 @@ succ = s
 
 :e // * Since "sound extrusion"
 succ n f = n f
-//│ 'a -> (forall 'b 'c. 'c -> 'b
+//│ 'a -> (forall 'b 'c. 'b -> 'c
 //│   where
-//│     'a <: 'c -> 'b)
+//│     'a <: 'b -> 'c)
 //│   <:  succ:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type error in def definition
@@ -142,9 +142,9 @@ rec def to_ch n =
 //│ ╙──
 //│ to_ch: number -> 'a
 //│   where
-//│     'a :> forall 'b. 'b -> (forall 'c 'd. 'd -> 'c
+//│     'a :> forall 'b. 'b -> (forall 'c 'd. 'c -> 'd
 //│       where
-//│         'a <: 'b -> 'd -> 'c) | ChurchInt
+//│         'a <: 'b -> 'c -> 'd) | ChurchInt
 //│      = <no result>
 //│        zero is not implemented
 
@@ -254,7 +254,7 @@ to_church = to_ch
 def to_ch n =
   if true then z
   else s (to_church n)
-//│ to_ch: int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd. ('b & 'd) -> ('d | 'c)
+//│ to_ch: int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd. ('b & 'd) -> ('c | 'd)
 //│   where
 //│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c))
 //│      = <no result>
@@ -262,7 +262,7 @@ def to_ch n =
 
 :e // * Since "sound extrusion"
 to_church = to_ch
-//│ int -> (forall 'a. 'a -> (forall 'b 'c 'd 'a. ('b & 'd) -> ('d | 'c)
+//│ int -> (forall 'a. 'a -> (forall 'a 'b 'c 'd. ('b & 'd) -> ('c | 'd)
 //│   where
 //│     forall 'M. ('M -> 'M) -> 'M -> 'M <: 'a -> 'b -> 'c))
 //│   <:  to_church:
@@ -559,7 +559,7 @@ rec def to_ch n =
 //│       where
 //│         'a <: 'b -> 'c -> 'd)
 //│ ╙──
-//│ to_ch: int -> 'a -> ('b -> ('b | 'c)
+//│ to_ch: int -> 'a -> ('b -> ('c | 'b)
 //│   where
 //│     'd <: 'a -> 'b -> 'c)
 //│ where
@@ -576,7 +576,7 @@ to_church = to_ch
 //│       where
 //│         'a <: 'b -> 'c -> 'd)
 //│ ╙──
-//│ int -> 'a -> ('b -> ('b | 'c)
+//│ int -> 'a -> ('b -> ('c | 'b)
 //│   where
 //│     'd <: 'a -> 'b -> 'c)
 //│ where
@@ -614,11 +614,11 @@ rec def to_ch_weird n =
 to_church = to_ch
 //│ ╔══[ERROR] Inferred recursive type: 'a
 //│   where
-//│     'a :> forall 'b 'c 'd 'e. (? & 'e) -> (('d & 'b) -> ('d | 'c)
+//│     'a :> forall 'b 'c 'd 'e. (? & 'b) -> (('e & 'c) -> ('e | 'd)
 //│       where
-//│         'a <: 'e -> 'b -> 'c)
+//│         'a <: 'b -> 'c -> 'd)
 //│ ╙──
-//│ int -> 'a -> ('b -> ('b | 'c)
+//│ int -> 'a -> ('b -> ('c | 'b)
 //│   where
 //│     'd <: 'a -> 'b -> 'c)
 //│ where

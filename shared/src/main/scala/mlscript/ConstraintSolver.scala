@@ -20,7 +20,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     // 200
     250
   
-  type ExtrCtx = MutMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
+  type ExtrCtx = MutSortMap[TV, Buffer[(Bool, ST)]] // tv, is-lower, bound
   
   protected var currentConstrainingRun = 0
   
@@ -77,14 +77,14 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         
         case S(fty) =>
           if (info.privateParams.contains(fld) && !allowPrivateAccess)
-            err(msg"Parameter '${fld.name}' cannot tbe accessed as a field" -> fld.toLoc :: Nil)
+            err(msg"Parameter '${fld.name}' cannot be accessed as a field" -> fld.toLoc :: Nil)
           S(fty)
         
         case N if info.isComputing =>
           
           if (info.allFields.contains(fld)) // TODO don't report this if the field can be found somewhere else!
             foundRec = S(ErrorReport(
-              msg"Indirectly-recursive member should have type annotation" -> fld.toLoc :: Nil, newDefs))
+              msg"Indirectly-recursive member should have a type signature" -> fld.toLoc :: Nil, newDefs))
           
           N
         
@@ -93,10 +93,18 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           def handle(virtualMembers: Map[Str, NuMember]): Opt[FieldType] =
             virtualMembers.get(fld.name) match {
               case S(d: TypedNuFun) =>
-                S(d.typeSignature.toUpper(provTODO))
+                if (d.fd.isLetOrLetRec)
+                  err(msg"Let binding '${d.name}' cannot tbe accessed as a field" -> fld.toLoc ::
+                    msg"Use a `val` declaration to make it a field" -> d.fd.toLoc ::
+                    Nil)
+                val ty = d.typeSignature
+                S(
+                  if (d.fd.isMut) FieldType(S(ty), ty)(d.prov)
+                  else ty.toUpper(d.prov)
+                )
               case S(p: NuParam) =>
                 if (!allowPrivateAccess && !p.isPublic)
-                  err(msg"Parameter '${p.nme.name}' cannot tbe accessed as a field" -> fld.toLoc ::
+                  err(msg"Parameter '${p.nme.name}' cannot be accessed as a field" -> fld.toLoc ::
                     msg"Either make the parameter a `val` or access it through destructuring" -> p.nme.toLoc ::
                     Nil)
                 S(p.ty)
@@ -174,10 +182,10 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         xs.foldRight(x)(_ && _)
       case Nil =>
         foundRec match {
-          case S(d) => err(d).toUpper(noProv)
+          case S(d) => err(d).toBoth(noProv)
           case N =>
             err(msg"Type `${mkType().expPos}` does not contain member `${fld.name}`" ->
-              fld.toLoc :: Nil).toUpper(noProv)
+              fld.toLoc :: Nil).toBoth(noProv)
         }
     }
     
@@ -646,8 +654,12 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         (lhs.lb, rhs.lb) match {
           case (Some(l), Some(r)) => rec(l, r, false)
           case (Some(l), None) =>
-            if (lhs.prov.loco.isEmpty || rhs.prov.loco.isEmpty) reportError()
-            else reportError(S(msg"is not mutable"))(
+            println(s"RHS not mutable! in $lhs <- $rhs")
+            reportError(
+              if (lhs.prov.loco.isEmpty || rhs.prov.loco.isEmpty)
+                S(msg"cannot be reassigned")
+              else S(msg"is not mutable")
+            )(
               (rhs.ub.withProv(rhs.prov) :: l.withProv(lhs.prov) :: Nil, l.withProv(noProv) :: Nil), ctx
             )
           case (None, Some(_)) | (None, None) => ()
@@ -668,11 +680,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       val newVars = res.getVars -- originalVars
       if (newVars.nonEmpty) trace(s"RECONSTRAINING TVs") {
         newVars.foreach {
-          case AssignedVariable(bnd) =>
+          case tv @ AssignedVariable(bnd) =>
+            println(s"No need to reconstrain assigned $tv")
             // * This is unlikely to happen, but it should be fine anyway,
             // * as all bounds of vars being assigned are checked against the assigned type.
             ()
           case tv =>
+            println(s"Reconstraining $tv")
             if (tv.level > lowerLvl) tv.lowerBounds.foreach(lb =>
               // * Q: is it fine to constrain with the current ctx's level?
               tv.upperBounds.foreach(ub => rec(lb, ub, false)))
@@ -987,7 +1001,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                   }
               }
             } else {
-              (tr1.mkClsTag, tr2.mkClsTag) match {
+              if (tr1.mayHaveTransitiveSelfType) rec(tr1.expand, tr2.expand, true)
+              else (tr1.mkClsTag, tr2.mkClsTag) match {
                 case (S(tag1), S(tag2)) if !(tag1 <:< tag2) =>
                   reportError()
                 case _ =>
@@ -1351,7 +1366,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
       case w @ Without(b, ns) => Without(extrude(b, lowerLvl, pol, upperLvl), ns)(w.prov)
       case tv @ AssignedVariable(ty) =>
         cache.getOrElse(tv -> true, {
-          val nv = freshVar(tv.prov, S(tv), tv.nameHint)(tv.level)
+          val nv = freshVar(tv.prov, S(tv), tv.nameHint)(lowerLvl)
           cache += tv -> true -> nv
           val tyPos = extrude(ty, lowerLvl, true, upperLvl)
           val tyNeg = extrude(ty, lowerLvl, false, upperLvl)
@@ -1393,7 +1408,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         }
         nv
       })
-      case n @ NegType(neg) => NegType(extrude(neg, lowerLvl, pol, upperLvl))(n.prov)
+      case n @ NegType(neg) => NegType(extrude(neg, lowerLvl, !pol, upperLvl))(n.prov)
       case e @ ExtrType(_) => e
       case p @ ProvType(und) => ProvType(extrude(und, lowerLvl, pol, upperLvl))(p.prov)
       case p @ ProxyType(und) => extrude(und, lowerLvl, pol, upperLvl)

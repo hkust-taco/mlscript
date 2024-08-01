@@ -1,4 +1,4 @@
-package mlscript.compiler.debug
+package mlscript.compiler
 
 abstract class Debug:
   def trace[T](name: String, pre: Any*)
@@ -6,6 +6,8 @@ abstract class Debug:
               (post: T => Any = Debug.noPostTrace): T
   def log(msg: => String): Unit
   def writeLine(line: String): Unit
+  def indent(): Unit
+  def outdent(): Unit
 
 object Debug:
   val noPostTrace: Any => Any = _ => ""

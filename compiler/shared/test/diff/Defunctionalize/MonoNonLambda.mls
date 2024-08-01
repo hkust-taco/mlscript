@@ -1,0 +1,44 @@
+:NewDefs
+
+class A() {
+    val x = 2
+    val y() = 3
+    fun z = 4
+    fun w() = 5
+}
+val a = A()
+a.x
+a.y()
+a.z
+a.w()
+//│ class A() {
+//│   fun w: () -> 5
+//│   val x: 2
+//│   val y: () -> 3
+//│   fun z: 4
+//│ }
+//│ val a: A
+//│ 5
+//│ 
+//│ Simpledef:
+//│ {class A() {let x = 2
+//│  let y = () => 3
+//│  fun z = 4
+//│  fun w = () => 5}
+//│  let a = A()
+//│  let selRes$24 = a in case selRes$24 of { A => (selRes$24).x }
+//│  let selRes$28 = a in case selRes$28 of { A => (selRes$28).y() }
+//│  let selRes$36 = a in case selRes$36 of { A => (selRes$36).z }
+//│  let selRes$40 = a in case selRes$40 of { A => (selRes$40).w() }}
+//│ End simpledef
+//│ 
+//│ a
+//│   = A {}
+//│ res
+//│     = 2
+//│ res
+//│     = 3
+//│ res
+//│     = 4
+//│ res
+//│     = 5

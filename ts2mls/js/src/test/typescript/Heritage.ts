@@ -13,7 +13,7 @@ class C<T> {
 
   private t: T
 
-  set(x: T) { this.t = x; }
+  sett(x: T) { this.t = x; } // FIXME support `set` methods...
   get() { return this.t; } 
 }
 

@@ -142,7 +142,7 @@ class Step'[A](from: Arrays[A]) extends Arrays[A] {
 //│ ║  l.124: 	    from.use of impl => k(StepImpl(impl))
 //│ ╙──       	    ^^^^^^^^
 //│ class Step'[A](from: Arrays[A]) extends Arrays {
-//│   fun use: forall 'R 'a. (StepImpl[A, in ??rep & 'R out 'R | ??rep0] -> 'a) -> 'a
+//│   fun use: forall 'a. (StepImpl[A, in ??rep] -> 'a) -> 'a
 //│ }
 //│ Syntax error:
 //│   Unexpected string
@@ -187,7 +187,7 @@ snb.use of impl =>
 // * Here we are trying to leak the internally-quantified representation, resulting in the `??rep` extrusion
 snb.use of impl => impl.init(true)
 // :d
-//│ true | ??rep
+//│ anything
 //│ res
 //│     = [
 //│         [ [ true, true ], [ true, true ] ],
@@ -329,7 +329,7 @@ snb.use of impl =>
 //│ ]
 
 snb.use of impl => impl.init(true)
-//│ true | ??rep
+//│ anything
 //│ res
 //│     = [
 //│         [ [ true, true ], [ true, true ] ],

@@ -16,13 +16,12 @@ trait TypeSimplifier { self: Typer =>
   /** Remove bounds that are not reachable by traversing the type following variances.
     * Note that doing this on annotated type signatures would need to use polarity None
     *   because a type signature can both be used (positively) and checked against (negatively). */
-  def removeIrrelevantBounds(ty: TypeLike, pol: Opt[Bool], inPlace: Bool = false)
+  def removeIrrelevantBounds(ty: TypeLike, pol: Opt[Bool], reverseBoundsOrder: Bool, inPlace: Bool = false)
         (implicit ctx: Ctx): TypeLike =
   {
     val _ctx = ctx
     
     val allVarPols = ty.getVarsPol(PolMap(pol))
-    // println("!!"+ty.childrenPol(PolMap(pol)))
     println(s"allVarPols: ${printPols(allVarPols)}")
     
     val renewed = MutMap.empty[TypeVariable, TypeVariable]
@@ -69,11 +68,15 @@ trait TypeSimplifier { self: Typer =>
           }
         case N =>
           nv.lowerBounds = if (allVarPols(tv).forall(_ === true))
-              tv.lowerBounds.reverseIterator.map(process(_, S(true -> tv)))
+              (if (reverseBoundsOrder) tv.lowerBounds.reverseIterator
+                else tv.lowerBounds.iterator
+              ).map(process(_, S(true -> tv)))
                 .reduceOption(_ | _).filterNot(_.isBot).toList
             else Nil
           nv.upperBounds = if (allVarPols(tv).forall(_ === false))
-              tv.upperBounds.reverseIterator.map(process(_, S(false -> tv)))
+              (if (reverseBoundsOrder) tv.upperBounds.reverseIterator
+                else tv.upperBounds.iterator
+              ).map(process(_, S(false -> tv)))
                 .reduceOption(_ &- _).filterNot(_.isTop).toList
             else Nil
           nv.tsc ++= tv.tsc.map { case (tsc, i) => renewedtsc.get(tsc) match {
@@ -208,7 +211,7 @@ trait TypeSimplifier { self: Typer =>
       // *  where `T` is `A & B & C`.
       // * It is fine to call `go` because we made sure A, B, C, etc. do not themsleves have any negative components.
       val csNegs2 = if (csNegs.isEmpty) BotType
-        else go(csNegs.foldLeft(TopType: ST)(_ & _.toType().neg()), pol.map(!_)).neg()
+        else go(csNegs.foldLeft(TopType: ST)(_ & _.toType(sort = true).neg()), pol.map(!_)).neg() // TODO sort?! csNegs and toType
       
       val otherCs2 = otherCs.sorted.map { c =>
         c.vars.foreach(processVar)
@@ -296,7 +299,7 @@ trait TypeSimplifier { self: Typer =>
                 })(noProv)
                 println(s"typeRef ${typeRef}")
                 
-                val clsFields = fieldsOf(typeRef.expandWith(paramTags = true), paramTags = true)
+                val clsFields = fieldsOf(typeRef.expandWith(paramTags = true, selfTy = false), paramTags = true)
                 println(s"clsFields ${clsFields.mkString(", ")}")
                 
                 val cleanPrefixes = ps.map(_.name.capitalize) + clsNme ++ traitPrefixes
@@ -382,7 +385,7 @@ trait TypeSimplifier { self: Typer =>
                 })(noProv)
                 println(s"typeRef ${typeRef}")
                 
-                val clsFields = fieldsOf(typeRef.expandWith(paramTags = true), paramTags = true)
+                val clsFields = fieldsOf(typeRef.expandWith(paramTags = true, selfTy = false), paramTags = true)
                 println(s"clsFields ${clsFields.mkString(", ")}")
                 
                 val cleanPrefixes = ps.map(_.name.capitalize) + clsNme ++ traitPrefixes
@@ -494,8 +497,10 @@ trait TypeSimplifier { self: Typer =>
           case S(ty) =>
             tv.assignedTo = S(go(ty, N))
           case N =>
-            tv.lowerBounds = tv.lowerBounds.map(go(_, S(true)))
-            tv.upperBounds = tv.upperBounds.map(go(_, S(false)))
+            // tv.lowerBounds = tv.lowerBounds.map(go(_, S(true)))
+            // tv.upperBounds = tv.upperBounds.map(go(_, S(false)))
+            tv.lowerBounds = tv.lowerBounds.reduceOption(_ | _).fold(nil[ST])(go(_, S(true)) :: Nil)
+            tv.upperBounds = tv.upperBounds.reduceOption(_ & _).fold(nil[ST])(go(_, S(false)) :: Nil)
         }
       }
     }
@@ -582,7 +587,7 @@ trait TypeSimplifier { self: Typer =>
     
     // * Note: for negatively-quantified vars, the notion of co-occurrence is reversed (wrt unions/inters)...
     
-    val coOccurrences: MutMap[(Bool, TypeVariable), MutSet[SimpleType]] = LinkedHashMap.empty
+    val coOccurrences: MutMap[(Bool, TypeVariable), LinkedHashSet[SimpleType]] = MutMap.empty
     
     // * Remember which TVs we analyzed at which polarity
     val analyzed2 = MutSet.empty[Bool -> ST]
@@ -686,7 +691,7 @@ trait TypeSimplifier { self: Typer =>
     }
     
     def processImpl(st: SimpleType, pol: PolMap, occPol: Bool) = {
-      val newOccs = MutSet.empty[SimpleType]
+      val newOccs = LinkedHashSet.empty[SimpleType]
       
       println(s">> Processing $st at [${printPol(S(occPol))}]")
       
@@ -724,7 +729,7 @@ trait TypeSimplifier { self: Typer =>
               case Some(os) =>
                 // Q: filter out vars of different level?
                 os.filterInPlace(occs) // computes the intersection
-              case None => coOccurrences(pol -> tv) = occs.clone() // `clone` not needed?
+              case None => coOccurrences(pol -> tv) = LinkedHashSet.from(occs) // copy not needed?
             }
           }
           pol(tv) match {
@@ -1294,7 +1299,9 @@ trait TypeSimplifier { self: Typer =>
       debugOutput(s"⬤ Initial: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       
-      cur = removeIrrelevantBounds(cur, pol, inPlace = false)
+      cur = removeIrrelevantBounds(cur, pol,
+        reverseBoundsOrder = true, // bounds are accumulated by type inference in reverse order of appearance; so nicer to reverse them here
+        inPlace = false)
       debugOutput(s"⬤ Cleaned up: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       
@@ -1315,7 +1322,9 @@ trait TypeSimplifier { self: Typer =>
       debugOutput(s"⬤ Normalized: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       
-      cur = removeIrrelevantBounds(cur, pol, inPlace = true)
+      cur = removeIrrelevantBounds(cur, pol,
+        reverseBoundsOrder = false,
+        inPlace = true)
       debugOutput(s"⬤ Cleaned up: ${cur}")
       debugOutput(s" where: ${cur.showBounds}")
       

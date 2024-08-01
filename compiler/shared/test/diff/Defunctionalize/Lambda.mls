@@ -1,0 +1,22 @@
+:NewDefs
+
+
+class X(val foo: Int => Int){}
+class Y(val foo: Int => Bool){}
+fun x(pred) = if pred then X(x => x+1) else Y(x => true)
+x(true).foo(5)
+//│ class X(foo: Int -> Int)
+//│ class Y(foo: Int -> Bool)
+//│ fun x: Bool -> (X | Y)
+//│ Int | false | true
+//│ 
+//│ Simpledef:
+//│ {class X(val foo: (Int,) => Int,) {}
+//│  class Y(val foo: (Int,) => Bool,) {}
+//│  fun x = (pred::0,) => if (pred) then X((x::1,) => +(x, 1,),) else Y((x::2,) => true,)
+//│  let selRes$46 = x(true,) in case selRes$46 of { Y => (selRes$46).foo(5,)
+//│  X => (selRes$46).foo(5,) }}
+//│ End simpledef
+//│ 
+//│ res
+//│     = 6

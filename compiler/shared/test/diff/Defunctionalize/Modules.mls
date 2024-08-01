@@ -1,0 +1,22 @@
+:NewDefs
+
+
+class Foo() {fun f = 0}
+module x { val y = Foo() }
+x.y.f
+//│ class Foo() {
+//│   fun f: 0
+//│ }
+//│ module x {
+//│   val y: Foo
+//│ }
+//│ 0
+//│ 
+//│ Simpledef:
+//│ {class Foo() {fun f = 0}
+//│  module x {let y = Foo()}
+//│  let selRes$10 = let selRes$12 = x in case selRes$12 of { x => (selRes$12).y } in case selRes$10 of { Foo => (selRes$10).f }}
+//│ End simpledef
+//│ 
+//│ res
+//│     = 0

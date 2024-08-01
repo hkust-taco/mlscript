@@ -1,0 +1,184 @@
+:NewDefs
+
+abstract class Option[out T]: Some[T] | None
+class Some[out T](value: T) extends Option[T]
+module None extends Option[nothing]
+//│ abstract class Option[T]: None | Some[T]
+//│ class Some[T](value: T) extends Option
+//│ module None extends Option
+
+abstract class List[out T]: Cons[T] | Nil
+class Cons[out T](head: T, tail: List[T]) extends List[T]
+module Nil extends List[nothing]
+//│ abstract class List[T]: Cons[T] | Nil
+//│ class Cons[T](head: T, tail: List[T]) extends List
+//│ module Nil extends List
+
+fun sum(acc, xs) = 
+  if xs is
+    Cons(x, xs) then sum(acc + x, xs)
+    Nil then acc
+//│ fun sum: (Int, Cons[Int] | Nil) -> Int
+
+:ducs:postprocess.result
+fun test(xs) =
+  if xs is
+    Some(Cons("add", Cons(x, Cons(y, Nil)))) then x + y
+    Some(Cons("mul", Cons(x, Cons(y, Nil)))) then x * y
+    Some(Cons("sum", xs)) then sum(0, xs)
+    Some(Nil) then "nothing"
+    None then "nothing"
+//│ Post-processed UCS term:
+//│ case xs*‡ of
+//│   Some*◊ ->
+//│     let ucs$args_xs$Some*† = (Some).unapply(xs,)
+//│     let xs$Some_0*‡ = (ucs$args_xs$Some).0
+//│     case xs$Some_0*‡ of
+//│       Cons*◊ ->
+//│         let ucs$args_xs$Some_0$Cons*† = (Cons).unapply(xs$Some_0,)
+//│         let xs$Some_0$Cons_0*‡ = (ucs$args_xs$Some_0$Cons).0
+//│         let xs$Some_0$Cons_1*‡ = (ucs$args_xs$Some_0$Cons).1
+//│         case xs$Some_0$Cons_0*‡ of
+//│           "add" ->
+//│             case xs$Some_0$Cons_1*‡ of
+//│               Cons*◊ ->
+//│                 let ucs$args_xs$Some_0$Cons_1$Cons*† = (Cons).unapply(xs$Some_0$Cons_1,)
+//│                 let x*‡ = (ucs$args_xs$Some_0$Cons_1$Cons).0
+//│                 let xs$Some_0$Cons_1$Cons_1*‡ = (ucs$args_xs$Some_0$Cons_1$Cons).1
+//│                 case xs$Some_0$Cons_1$Cons_1*‡ of
+//│                   Cons*◊ ->
+//│                     let ucs$args_xs$Some_0$Cons_1$Cons_1$Cons*† = (Cons).unapply(xs$Some_0$Cons_1$Cons_1,)
+//│                     let y*‡ = (ucs$args_xs$Some_0$Cons_1$Cons_1$Cons).0
+//│                     let xs$Some_0$Cons_1$Cons_1$Cons_1*‡ = (ucs$args_xs$Some_0$Cons_1$Cons_1$Cons).1
+//│                     case xs$Some_0$Cons_1$Cons_1$Cons_1*‡ of
+//│                       Nil*† -> +(x, y,)
+//│                       _ -> (ucs$args_xs$Some_0$Cons).1
+//│                   _ -> (ucs$args_xs$Some_0$Cons).1
+//│               _ -> (ucs$args_xs$Some_0$Cons).1
+//│           "sum" ->
+//│             let xs*‡ = (ucs$args_xs$Some_0$Cons).1
+//│             sum(0, xs,)
+//│           "mul" ->
+//│             case xs$Some_0$Cons_1*‡ of
+//│               Cons*◊ ->
+//│                 let ucs$args_xs$Some_0$Cons_1$Cons*† = (Cons).unapply(xs$Some_0$Cons_1,)
+//│                 let x*‡ = (ucs$args_xs$Some_0$Cons_1$Cons).0
+//│                 let xs$Some_0$Cons_1$Cons_1*‡ = (ucs$args_xs$Some_0$Cons_1$Cons).1
+//│                 case xs$Some_0$Cons_1$Cons_1*‡ of
+//│                   Cons*◊ ->
+//│                     let ucs$args_xs$Some_0$Cons_1$Cons_1$Cons*† = (Cons).unapply(xs$Some_0$Cons_1$Cons_1,)
+//│                     let y*‡ = (ucs$args_xs$Some_0$Cons_1$Cons_1$Cons).0
+//│                     let xs$Some_0$Cons_1$Cons_1$Cons_1*‡ = (ucs$args_xs$Some_0$Cons_1$Cons_1$Cons).1
+//│                     case xs$Some_0$Cons_1$Cons_1$Cons_1*‡ of
+//│                       Nil*† -> *(x, y,)
+//│                       _ -> (ucs$args_xs$Some_0$Cons).1
+//│                   _ -> (ucs$args_xs$Some_0$Cons).1
+//│               _ -> (ucs$args_xs$Some_0$Cons).1
+//│       Nil*† -> "nothing"
+//│   None*† -> "nothing"
+//│ fun test: (None | Some[Cons[nothing] | Nil]) -> ("nothing" | Int | List[nothing])
+
+:ducs:postprocess.result
+fun test(x, p) = if x is
+  Int and p(x) then "foo"
+  0 then "bar"
+  else "qax"
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   refined Int*◊ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† -> "foo"
+//│       _ ->
+//│         case x*‡ of
+//│           0 -> "bar"
+//│           _ -> "qax"
+//│   _ -> "qax"
+//│ fun test: forall 'a. (Int & 'a | Object & ~Int, (Int & 'a) -> Bool) -> ("bar" | "foo" | "qax")
+
+:ducs:postprocess.result
+fun test(x, p) = if x is
+  Str and p(x) then "foo"
+  "lol" then "bar"
+  else "qax"
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   refined Str*◊ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† -> "foo"
+//│       _ ->
+//│         case x*‡ of
+//│           "lol" -> "bar"
+//│           _ -> "qax"
+//│   _ -> "qax"
+//│ fun test: forall 'a. (Object & ~Str | Str & 'a, (Str & 'a) -> Bool) -> ("bar" | "foo" | "qax")
+
+test(0, _ => true)
+//│ "bar" | "foo" | "qax"
+//│ res
+//│     = 'qax'
+
+:ducs:postprocess.result
+fun test(x, p) = if x is
+  Num and p(x) then "great"
+  2.71828 then "E"
+  3.14159 then "PI"
+  else "other"
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   refined Num*◊ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† -> "great"
+//│       _ ->
+//│         case x*‡ of
+//│           2.71828 -> "E"
+//│           3.14159 -> "PI"
+//│           _ -> "other"
+//│   _ -> "other"
+//│ fun test: forall 'a. (Object & ~Num | 'a & (2.71828 | 3.14159 | Num & ~2.71828 & ~3.14159), (Num & 'a) -> Bool) -> ("E" | "PI" | "great" | "other")
+
+:ducs:postprocess.result
+fun test(x, p) = if x is
+  Bool and p(x) then "great"
+  true then "false"
+  false then "true"
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   refined Bool*◊ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† -> "great"
+//│       _ ->
+//│         case x*‡ of
+//│           true*† -> "false"
+//│           false*† -> "true"
+//│ fun test: forall 'a. ('a & Bool, (Bool & 'a) -> Bool) -> ("false" | "great" | "true")
+
+:ducs:postprocess.result
+:ge
+fun test(x, p) = if x is
+  Object and p(x) then "great"
+  Bool and p(x) then "great, again"
+  true then "false"
+  false then "true"
+//│ Post-processed UCS term:
+//│ case x*‡ of
+//│   refined Object*◊ ->
+//│     let ucs$test$0*† = p(x,) : Bool
+//│     case ucs$test$0*† of
+//│       true*† -> "great"
+//│       _ ->
+//│         case x*‡ of
+//│           refined Bool*◊ ->
+//│             let ucs$test$1*† = p(x,) : Bool
+//│             case ucs$test$1*† of
+//│               true*† -> "great, again"
+//│               _ ->
+//│                 case x*‡ of
+//│                   true*† -> "false"
+//│                   false*† -> "true"
+//│ fun test: forall 'a. ('a & Bool, (Object & 'a) -> Bool) -> ("false" | "great" | "great, again" | "true")
+//│ Code generation encountered an error:
+//│   unknown match case: Object

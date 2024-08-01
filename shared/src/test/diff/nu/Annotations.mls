@@ -1,0 +1,118 @@
+:NewDefs
+
+// This should not be needed once we implemented the @tailrec annotation internally.
+module tailrec extends Annotation
+//│ module tailrec extends Annotation
+
+tailrec
+//│ tailrec
+//│ res
+//│     = tailrec { class: [class tailrec extends Object] }
+
+@tailrec fun foo(n) =
+  if n > 0 then
+    log(join of "hi ", String(n))
+    foo(n - 1)
+  else ()
+//│ fun foo: Int -> ()
+
+
+module Foo extends Annotation { 
+}
+//│ module Foo extends Annotation
+
+@Foo 5
+//│ 5
+//│ res
+//│     = 5
+
+Foo
+//│ Foo
+//│ res
+//│     = Foo { class: [class Foo extends Object] }
+
+:e
+@Bar 5
+//│ ╔══[ERROR] identifier not found: Bar
+//│ ║  l.35: 	@Bar 5
+//│ ╙──      	 ^^^
+//│ 5
+//│ res
+//│     = 5
+
+:e
+let x = 1
+@x 2
+//│ ╔══[ERROR] Type mismatch in annotated integer literal:
+//│ ║  l.45: 	@x 2
+//│ ║        	 ^^^
+//│ ╟── integer literal of type `1` is not an instance of type `Annotation`
+//│ ║  l.44: 	let x = 1
+//│ ║        	        ^
+//│ ╟── but it flows into reference with expected type `Annotation`
+//│ ║  l.45: 	@x 2
+//│ ╙──      	 ^
+//│ let x: 1
+//│ 2
+//│ x
+//│   = 1
+//│ res
+//│     = 2
+
+:e
+let x = 1
+@x
+fun foo(x) = 1
+//│ ╔══[ERROR] Type mismatch in definition:
+//│ ║  l.65: 	fun foo(x) = 1
+//│ ║        	    ^^^^^^^^^^
+//│ ╟── integer literal of type `1` is not an instance of type `Annotation`
+//│ ║  l.63: 	let x = 1
+//│ ╙──      	        ^
+//│ let x: 1
+//│ fun foo: anything -> 1
+//│ x
+//│   = 1
+
+fun foo(n) =
+  if n > 0.5 then
+    log(join of "hi ", String(n))
+    foo(div of n,  2)
+    @tailrec foo(n - 1)
+  else ()
+//│ fun foo: Int -> ()
+
+foo(5)
+//│ ()
+//│ res
+//│     = undefined
+//│ // Output
+//│ hi 5
+//│ hi 2.5
+//│ hi 1.25
+//│ hi 0.625
+//│ hi 1.5
+//│ hi 0.75
+//│ hi 4
+//│ hi 2
+//│ hi 1
+//│ hi 1
+//│ hi 3
+//│ hi 1.5
+//│ hi 0.75
+//│ hi 2
+//│ hi 1
+//│ hi 1
+
+
+
+// TODO: Tail recursion modulo cons
+// fun foo(n) =
+//   ...
+//   Cons(a, foo(n - 1))
+// ———>
+// fun foo(n) =
+//   ...
+//   foo(n - 1, Cons(a, .))
+
+

@@ -1,0 +1,250 @@
+:NewDefs
+
+
+:js
+module Foo {
+  log("Creating Foo")
+  mut val x: Int = 1
+}
+//│ module Foo {
+//│   mut val x: Int
+//│ }
+//│ // Prelude
+//│ function log(x) {
+//│   return console.info(x);
+//│ }
+//│ let res;
+//│ class TypingUnit {
+//│   #Foo;
+//│   constructor() {
+//│   }
+//│   get Foo() {
+//│     const qualifier = this;
+//│     if (this.#Foo === undefined) {
+//│       class Foo {
+//│         #x;
+//│         get x() { return this.#x; }
+//│         set x($value) { return this.#x = $value; }
+//│         constructor() {
+//│           log("Creating Foo");
+//│           this.#x = 1;
+//│           const x = this.#x;
+//│         }
+//│       }
+//│       this.#Foo = new Foo();
+//│       this.#Foo.class = Foo;
+//│     }
+//│     return this.#Foo;
+//│   }
+//│ }
+//│ const typing_unit = new TypingUnit;
+//│ globalThis.Foo = typing_unit.Foo;
+//│ // End of generated code
+
+Foo
+//│ Foo
+//│ res
+//│     = Foo { class: [class Foo] }
+//│ // Output
+//│ Creating Foo
+
+log(Foo.x)
+//│ ()
+//│ res
+//│     = undefined
+//│ // Output
+//│ 1
+
+:js
+set Foo.x = Foo.x + 1
+//│ ()
+//│ // Prelude
+//│ class TypingUnit3 {}
+//│ const typing_unit3 = new TypingUnit3;
+//│ // Query 1
+//│ res = void(Foo.x = Foo.x + 1);
+//│ // End of generated code
+//│ res
+//│     = undefined
+
+:js
+log(Foo.x)
+//│ ()
+//│ // Prelude
+//│ class TypingUnit4 {}
+//│ const typing_unit4 = new TypingUnit4;
+//│ // Query 1
+//│ res = log(Foo.x);
+//│ // End of generated code
+//│ res
+//│     = undefined
+//│ // Output
+//│ 2
+
+
+:e
+set Foo.y = 123
+//│ ╔══[ERROR] Type `Foo` does not contain member `y`
+//│ ║  l.86: 	set Foo.y = 123
+//│ ╙──      	       ^^
+//│ ()
+//│ res
+//│     = undefined
+
+:e
+Foo.y
+//│ ╔══[ERROR] Type `Foo` does not contain member `y`
+//│ ║  l.95: 	Foo.y
+//│ ╙──      	   ^^
+//│ error
+//│ res
+//│     = 123
+
+:js
+class Test {
+  mut val x = 1
+  fun incr =
+    log(x)
+    set x = x + 1
+    log(x)
+}
+//│ class Test {
+//│   constructor()
+//│   fun incr: ()
+//│   mut val x: Int
+//│ }
+//│ // Prelude
+//│ class TypingUnit7 {
+//│   #Test;
+//│   constructor() {
+//│   }
+//│   get Test() {
+//│     const qualifier = this;
+//│     if (this.#Test === undefined) {
+//│       class Test {
+//│         #x;
+//│         get x() { return this.#x; }
+//│         set x($value) { return this.#x = $value; }
+//│         constructor() {
+//│           this.#x = 1;
+//│           const x = this.#x;
+//│         }
+//│         get incr() {
+//│           const qualifier1 = this;
+//│           return ((() => {
+//│             log(qualifier1.x);
+//│             void(qualifier1.x = qualifier1.x + 1);
+//│             return log(qualifier1.x);
+//│           })());
+//│         }
+//│       };
+//│       this.#Test = Test;
+//│     }
+//│     return this.#Test;
+//│   }
+//│ }
+//│ const typing_unit7 = new TypingUnit7;
+//│ globalThis.Test = typing_unit7.Test;
+//│ // End of generated code
+
+let t = new Test()
+//│ let t: Test
+//│ t
+//│   = Test {}
+
+t.x
+//│ Int
+//│ res
+//│     = 1
+
+t.incr
+//│ ()
+//│ res
+//│     = undefined
+//│ // Output
+//│ 1
+//│ 2
+
+t.x
+//│ Int
+//│ res
+//│     = 2
+
+
+class Cont
+class MySumCont extends Cont {
+  val init(n) = n + 1
+  mut val pc = init(0)
+}
+//│ class Cont {
+//│   constructor()
+//│ }
+//│ class MySumCont extends Cont {
+//│   constructor()
+//│   val init: Int -> Int
+//│   mut val pc: Int
+//│ }
+
+fun f(b) = if b then 0 else new MySumCont
+//│ fun f: Bool -> (0 | MySumCont)
+
+:js
+if f(false) is MySumCont then 1 else 2
+//│ 1 | 2
+//│ // Prelude
+//│ class TypingUnit14 {}
+//│ const typing_unit14 = new TypingUnit14;
+//│ // Query 1
+//│ res = ((ucs$scrut$0) => ucs$scrut$0 instanceof MySumCont ? 1 : 2)(f(false));
+//│ // End of generated code
+//│ res
+//│     = 1
+
+new MySumCont().init
+//│ Int -> Int
+//│ res
+//│     = [Function (anonymous)]
+
+
+:pe
+:e
+:ng
+class Test(mut val x: Int)
+//│ ╔══[PARSE ERROR] Unexpected 'val' keyword in expression position
+//│ ║  l.212: 	class Test(mut val x: Int)
+//│ ╙──       	               ^^^
+//│ ╔══[ERROR] Unsupported field specification
+//│ ║  l.212: 	class Test(mut val x: Int)
+//│ ╙──       	                   ^
+//│ class Test()
+
+
+module Foo { val x = 0 }
+//│ module Foo {
+//│   val x: 0
+//│ }
+
+:e
+fun test = set Foo.x = 1
+//│ ╔══[ERROR] Type mismatch in assignment:
+//│ ║  l.228: 	fun test = set Foo.x = 1
+//│ ║         	           ^^^^^^^^^^^^^
+//│ ╟── member of type `0` is not mutable
+//│ ║  l.222: 	module Foo { val x = 0 }
+//│ ║         	                 ^^^^^
+//│ ╟── but it flows into assigned field with expected type `?x`
+//│ ║  l.228: 	fun test = set Foo.x = 1
+//│ ╙──       	                  ^^
+//│ fun test: ()
+
+test
+//│ ()
+//│ res
+//│     = undefined
+
+Foo.x
+//│ 0
+//│ res
+//│     = 0
+
+

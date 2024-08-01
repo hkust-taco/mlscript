@@ -25,13 +25,16 @@ class C(a: Int) extends B
 //│ ╟── type `Int` does not match type `"hi"`
 //│ ╟── Note: constraint arises from string literal:
 //│ ║  l.14: 	class B { virtual val a = "hi" }
-//│ ╙──      	                          ^^^^
+//│ ║        	                          ^^^^
+//│ ╟── from definition of value a:
+//│ ║  l.14: 	class B { virtual val a = "hi" }
+//│ ╙──      	                      ^^^^^^^^
 //│ class C(a: Int) extends B
 
 
-mixin M { let b = "hi" }
+mixin M { val b = "hi" }
 //│ mixin M() {
-//│   let b: "hi"
+//│   val b: "hi"
 //│ }
 
 class B { virtual val a = 1 : Int }
@@ -42,7 +45,7 @@ class B { virtual val a = 1 : Int }
 
 class C(val a: Int, val b: Int) extends B, M
 //│ class C(a: Int, b: Int) extends B {
-//│   let b: "hi"
+//│   val b: "hi"
 //│ }
 
 let c = C(2, 3)

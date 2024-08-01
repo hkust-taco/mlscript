@@ -150,7 +150,7 @@ succ' {} {} {}
 //│   TypeError: n is not a function
 
 fun x -> succ' x x x x x x x x x
-//│ res: ('a -> 'a -> 'b & 'b -> 'a -> 'a -> 'a -> 'a -> 'a -> 'a -> 'c & 'a) -> 'c
+//│ res: ('a -> 'b -> 'b -> 'b -> 'b -> 'b -> 'b -> 'c & 'b -> 'b -> 'a & 'b) -> 'c
 //│    = [Function: res]
 
 
@@ -275,7 +275,7 @@ rec def wat n =
 //│ ╟── • this application:
 //│ ║  l.204: 	  succ wat n
 //│ ╙──       	  ^^^^^^^^^^
-//│ wat: ((??a | 'a) -> (??a0 & 'a & 'b)) -> (??a0 & 'a) -> (??a | 'b)
+//│ wat: (anything -> (??a & 'a)) -> (??a & 'a) -> anything
 //│    = [Function: wat1]
 
 // * Works with this option!
@@ -550,8 +550,8 @@ succ_ty = succ
 succ_ty = succ'
 //│ 'a -> (forall 'b. 'b -> (forall 'c 'd 'e. 'c -> 'e
 //│   where
-//│     'b <: 'd -> 'e
-//│     'a <: 'b -> 'c -> 'd))
+//│     'a <: 'b -> 'c -> 'd
+//│     'b <: 'd -> 'e))
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
 //│ ╔══[ERROR] Type error in def definition
@@ -575,8 +575,8 @@ succ_ty = succ'
 succ_ty = succ'
 //│ 'a -> 'b -> ('c -> 'd
 //│   where
-//│     'b <: 'e -> 'd
-//│     'a <: 'b -> 'c -> 'e)
+//│     'a <: 'b -> 'c -> 'e
+//│     'b <: 'e -> 'd)
 //│   <:  succ_ty:
 //│ ChurchInt -> ChurchInt
 //│        = [Function: succ$1]

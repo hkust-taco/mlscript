@@ -1,0 +1,112 @@
+:NewDefs
+:QQ
+
+
+run(code"42")
+//│ 42
+//│ res
+//│     = Quoted:
+//│       42
+//│       undefined
+
+:js
+run(code"x => x")
+//│ forall 'a. 'a -> 'a
+//│ // Prelude
+//│ class TypingUnit1 {}
+//│ const typing_unit1 = new TypingUnit1;
+//│ // Query 1
+//│ res = run(((x1) => Lam(Var(x1), Var(x1)))(freshName("x")));
+//│ // End of generated code
+//│ res
+//│     = Quoted:
+//│       (x_0) =>
+//│         x_0
+//│       undefined
+
+
+run(code"x => y => x + y")
+//│ Int -> Int -> Int
+//│ res
+//│     = Quoted:
+//│       (x_1) =>
+//│         (y_0) =>
+//│           (x_1 + y_0)
+//│       undefined
+
+
+run(code"(x => x + 1)(2)")
+//│ Int
+//│ res
+//│     = Quoted:
+//│       ((x_2) =>
+//│         (x_2 + 1))(2)
+//│       undefined
+
+
+run(code"x => x")
+//│ forall 'a. 'a -> 'a
+//│ res
+//│     = Quoted:
+//│       (x_3) =>
+//│         x_3
+//│       undefined
+
+
+run(code"let x = 42 in x + 0")
+//│ Int
+//│ res
+//│     = Quoted:
+//│       let x_4 =
+//│         42
+//│         in (x_4 + 0)
+//│       undefined
+
+:e
+run(code"code"114"")
+//│ ╔══[ERROR] Nested quotation is not allowed.
+//│ ║  l.66: 	run(code"code"114"")
+//│ ╙──      	         ^^^^^^^^^
+//│ error
+//│ Code generation encountered an error:
+//│   nested quotation is not allowed.
+
+
+declare module Math {
+  declare fun floor(x: Num): Int
+}
+fun even(n) = n % 2 == 0
+fun power'(x, n) =
+  if (n == 0) then Const(1)
+  else if (even(n)) then code"let t = ${power'(x, Math.floor(n / 2))} in t * t"
+  else code"${x} * ${power'(x, n - 1)}"
+run(code"x => ${power'(code"x", 10)}")
+//│ declare module Math {
+//│   fun floor: (x: Num) -> Int
+//│ }
+//│ fun even: Int -> Bool
+//│ fun power': forall 'a. (Code[Int, 'a], Int) -> Code[Int, 'a]
+//│ Int -> Int
+//│ res
+//│     = Quoted:
+//│       (x_5) =>
+//│         let t_0 =
+//│           (x_5 * let t_1 =
+//│             let t_2 =
+//│               (x_5 * 1)
+//│               in (t_2 * t_2)
+//│             in (t_1 * t_1))
+//│           in (t_0 * t_0)
+//│       undefined
+
+run(code"x => if (x == 42) then 42 else 0")
+//│ Num -> (0 | 42)
+//│ res
+//│     = Quoted:
+//│       (x_6) =>
+//│         let ucs$test$0_0 =
+//│           ((x_6 == 42))
+//│           in match ucs$test$0_0:
+//│             case true => 42
+//│             _ => 0)
+//│       undefined

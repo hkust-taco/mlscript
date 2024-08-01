@@ -1,6 +1,24 @@
 :NewDefs
 
-// FIXME: this looks like a bug about mutually-referential definitions
+
+// * Minimization of code that used to cause a problem:
+
+abstract class Option[T]: (None | ()) {
+  virtual fun filter: Option[T]
+}
+module None extends Option[nothing] {
+  fun filter = None
+}
+//│ abstract class Option[T]: None | () {
+//│   fun filter: Option[T]
+//│ }
+//│ module None extends Option {
+//│   fun filter: None
+//│ }
+
+
+// * Original code:
+
 abstract class Option[out T]: (Some[T] | None) {
   virtual fun filter: (p: T -> Bool) -> Option[T]
 }
@@ -10,18 +28,45 @@ class Some[out T](val value: T) extends Option[T] {
 module None extends Option[nothing] {
   fun filter(_) = None
 }
-//│ ╔══[ERROR] Type `#Some & {Some#T <: ?T}` does not contain member `Option#T`
-//│ ║  l.4: 	abstract class Option[out T]: (Some[T] | None) {
-//│ ╙──     	                          ^
-//│ ╔══[ERROR] Type `#None` does not contain member `Option#T`
-//│ ║  l.4: 	abstract class Option[out T]: (Some[T] | None) {
-//│ ╙──     	                          ^
 //│ abstract class Option[T]: None | Some[T] {
 //│   fun filter: (p: T -> Bool) -> Option[T]
 //│ }
 //│ class Some[T](value: T) extends Option {
-//│   fun filter: (T -> Object) -> (None | Some[T])
+//│   fun filter: (T -> Bool) -> (None | Some[T])
 //│ }
 //│ module None extends Option {
 //│   fun filter: anything -> None
 //│ }
+
+
+
+abstract class Boxful[T] {
+  virtual fun clone(): Boxful[T]
+}
+class MetalBox[T](value: T) extends Boxful[T] {
+  fun clone(): Boxful[T] = MetalBox(value)
+}
+//│ abstract class Boxful[T] {
+//│   fun clone: () -> Boxful[T]
+//│ }
+//│ class MetalBox[T](value: T) extends Boxful {
+//│   fun clone: () -> Boxful[T]
+//│ }
+
+
+fun makeMetalBox(value: 'A): Boxful['A] = MetalBox(value)
+abstract class Boxful[T] {
+  virtual fun clone(): Boxful[T]
+}
+class MetalBox[T](value: T) extends Boxful[T] {
+  fun clone(): Boxful[T] = makeMetalBox(value)
+}
+//│ fun makeMetalBox: forall 'T. (value: 'T) -> Boxful['T]
+//│ abstract class Boxful[T] {
+//│   fun clone: () -> Boxful[T]
+//│ }
+//│ class MetalBox[T](value: T) extends Boxful {
+//│   fun clone: () -> Boxful[T]
+//│ }
+
+

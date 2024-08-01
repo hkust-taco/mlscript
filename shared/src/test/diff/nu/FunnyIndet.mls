@@ -1,0 +1,68 @@
+:NewDefs
+
+
+2 +
+  2 *
+    3
+//│ Int
+//│ res
+//│     = 8
+
+2 -
+  3 -
+    4
+//│ Int
+//│ res
+//│     = 3
+
+2 +
+  2
+//│ Int
+//│ res
+//│     = 4
+
+2 +
+2
+//│ Int
+//│ res
+//│     = 4
+
+
+2 is
+  2
+//│ Bool
+//│ res
+//│     = true
+
+if 2 is 2 then true
+//│ true
+//│ res
+//│     = true
+
+2 is
+2
+//│ Bool
+//│ res
+//│     = true
+
+
+if 2 is
+2 then true
+//│ true
+//│ res
+//│     = true
+
+:pe // TODO support
+if 2 is
+2 then true
+1 then false
+//│ ╔══[PARSE ERROR] Unexpected 'then'/'else' clause
+//│ ║  l.58: 	1 then false
+//│ ╙──      	^^^^^^^^^^^^
+//│ ()
+//│ res
+//│     = true
+//│ res
+//│     = undefined
+
+

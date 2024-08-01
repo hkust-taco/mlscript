@@ -195,7 +195,7 @@ snb = mkMonoArray 3
 
 // * Here we are trying to leak the internally-quantified representation, resulting in `anything` being returned
 snb (fun arr -> arr.init true)
-//│ res: ??rep | ??rep0
+//│ res: anything
 //│    = [ [ [ true, 'hi' ], 'hi' ], 'hi' ]
 
 
@@ -266,7 +266,7 @@ snb = mkMonoArray 3
 
 // * Here we are trying to leak the internally-quantified representation, resulting in `anything` being returned
 snb (fun arr -> arr.init true)
-//│ res: ??rep | ??rep0
+//│ res: anything
 //│    = [ [ [ true, 'hi' ], 'hi' ], 'hi' ]
 
 
@@ -277,7 +277,7 @@ snb (fun arr -> arr.init true)
 // * Removing the `k` annotation breaks `step2`, even with `stepImpl_ty`, as before:
 :e
 def step2 = forall 'a. fun (arr: Arrays['a]) -> fun k -> arr (fun impl -> k (stepImpl_ty impl))
-//│ Arrays['a] -> (ArraysImpl['a, in (??rep & 'r, string,) out ('r | ??rep0, string,)] -> 'b) -> 'b
+//│ Arrays['a] -> (ArraysImpl['a, in (??rep, string,) out (anything, string,)] -> 'b) -> 'b
 //│   <:  step2:
 //│ Arrays['a] -> Arrays['a]
 //│ ╔══[ERROR] Type error in def definition
@@ -328,10 +328,10 @@ def step arr = arr (fun impl -> fun k -> k (stepImpl_ty impl))
 :e
 def step (arr: Arrays['a]) = arr (fun impl -> fun k -> k (stepImpl impl))
 //│ Arrays['a] -> ({
-//│   fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> ((??rep & 'r, anything,),) -> 'b,
-//│   init: 'a -> ('r | ??rep0, "hi",),
-//│   sub: ((??rep & 'r, anything,),) -> int -> 'a,
-//│   update: ((??rep & 'r, anything,),) -> int -> 'a -> ('r | ??rep0, "hey",)
+//│   fold: forall 'b. ('a -> 'b -> 'b) -> 'b -> ((??rep, anything,),) -> 'b,
+//│   init: 'a -> (anything, "hi",),
+//│   sub: ((??rep, anything,),) -> int -> 'a,
+//│   update: ((??rep, anything,),) -> int -> 'a -> (anything, "hey",)
 //│ } -> 'c) -> 'c
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
@@ -363,20 +363,20 @@ def step arr = arr (forall 'a. fun impl -> forall 'r. fun (k: ArraysImplConsumer
 
 // * ...unless we use `stepImpl_ty` instead of `stepImpl`
 def step arr = arr (fun impl -> forall 'r. fun (k: ArraysImplConsumer['a, 'r]) -> k (stepImpl_ty impl))
-//│ ((forall 'r 'a 'r0 'a0 'a1. ArraysImpl[in 'a0 & 'a1 out 'a0 | 'a1, 'r0] -> ArraysImplConsumer['a, 'r] -> 'r) -> 'b) -> 'b
+//│ ((forall 'a 'a0 'r 'a1 'r0. ArraysImpl[in 'a & 'a0 out 'a | 'a0, 'r] -> ArraysImplConsumer['a1, 'r0] -> 'r0) -> 'b) -> 'b
 //│   where
-//│     'a :> 'a0
-//│        <: 'a1
+//│     'a1 :> 'a
+//│         <: 'a0
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step8]
 
 
 def step arr = arr (fun impl -> (fun k -> k (stepImpl impl)) : Arrays['a])
-//│ ((forall 'a 'a0 'r. ArraysImpl[in 'a out 'a | 'a0, 'r] -> Arrays['a]) -> 'b) -> 'b
+//│ ((forall 'a 'a0 'r. ArraysImpl[in 'a & 'a0 out 'a, 'r] -> Arrays['a0]) -> 'b) -> 'b
 //│   where
-//│     'a := 'a0
-//│     'a0 :> 'a
+//│     'a :> 'a0
+//│     'a0 := 'a
 //│   <:  step:
 //│ Arrays['a] -> Arrays['a]
 //│     = [Function: step9]

@@ -17,7 +17,21 @@ fun x: forall 'a: 'a -> 'a = succ
 //│ ╙──     	              ^^
 //│ fun x: forall 'a. 'a -> 'a
 
-fun x: [Int -> Int,] = [id : forall 'a: 'a -> 'a,]
+fun x: [Int -> Int] = [id : forall 'a: 'a -> 'a]
+//│ fun x: [Int -> Int]
+
+:pe
+:e
+fun x: [Int -> Int] = [id : forall 'a: 'a -> 'a,]
+//│ ╔══[PARSE ERROR] Unexpected end of square bracket section; an expression was expected here
+//│ ║  l.25: 	fun x: [Int -> Int] = [id : forall 'a: 'a -> 'a,]
+//│ ╙──      	                                                ^
+//│ ╔══[ERROR] type identifier not found: ,
+//│ ║  l.25: 	fun x: [Int -> Int] = [id : forall 'a: 'a -> 'a,]
+//│ ╙──      	                                       ^^^^^^^^^
+//│ fun x: [Int -> Int]
+
+fun x: [Int -> Int,] = [id : forall 'a: 'a -> 'a]
 //│ fun x: [Int -> Int]
 
 

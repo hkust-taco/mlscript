@@ -1,0 +1,9 @@
+:NewDefs
+
+:lift
+class A() {}
+class B(foo: A) {}
+//│ Lifted:
+//│ TypingUnit {class A$1([]) {}; class B$2([foo: A$1,]) {}}
+//│ class A$1()
+//│ class B$2(foo: A$1)

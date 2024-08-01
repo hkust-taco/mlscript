@@ -88,13 +88,9 @@ x
 //│ |(|.|)|
 //│ Parsed: {.}
 
-:pe
 a, b
 //│ |a|,| |b|
-//│ ╔══[PARSE ERROR] Expected end of input; found comma instead
-//│ ║  l.92: 	a, b
-//│ ╙──      	 ^
-//│ Parsed: {a}
+//│ Parsed: {,(a, b,)}
 
 
 a .b .c
@@ -136,10 +132,10 @@ a +
   .c
 //│ |a| |+|→|b|↵|.c|←|
 //│ ╔══[PARSE ERROR] Unexpected selector in expression position
-//│ ║  l.136: 	  .c
+//│ ║  l.132: 	  .c
 //│ ╙──       	  ^^
 //│ ╔══[PARSE ERROR] Unexpected end of indented block; an expression was expected here
-//│ ║  l.136: 	  .c
+//│ ║  l.132: 	  .c
 //│ ╙──       	    ^
 //│ Parsed: {+(a,)({b; undefined},)}
 
@@ -187,7 +183,7 @@ a
     of c
 //│ |a|→|.b| |+|→|1|↵|#of| |c|←|←|
 //│ ╔══[PARSE ERROR] Unexpected 'of' keyword in expression position
-//│ ║  l.187: 	    of c
+//│ ║  l.183: 	    of c
 //│ ╙──       	    ^^
 //│ Parsed: {+((a).b,)({1; c},)}
 
@@ -226,7 +222,7 @@ a
   .b
 //│ |a|→|+|1|↵|*|2|↵|.b|←|
 //│ ╔══[PARSE ERROR] Unexpected selector in operator block
-//│ ║  l.226: 	  .b
+//│ ║  l.222: 	  .b
 //│ ╙──       	  ^^
 //│ Parsed: {*(+(a, 1,), 2,)}
 
@@ -251,7 +247,7 @@ a
 1 .+a 2
 //│ |1| |.+|a| |2|
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.251: 	1 .+a 2
+//│ ║  l.247: 	1 .+a 2
 //│ ╙──       	    ^^^
 //│ Parsed: {.+(1,)(a(2,),)}
 

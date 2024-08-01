@@ -1,9 +1,9 @@
 :NewDefs
 
 
-class Add<E>(lhs: E, rhs: E)
+class Add<out E>(lhs: E, rhs: E)
 class Lit(n: Int)
-class Neg<A>(expr: A)
+class Neg<out A>(expr: A)
 //│ class Add[E](lhs: E, rhs: E)
 //│ class Lit(n: Int)
 //│ class Neg[A](expr: A)
@@ -19,18 +19,17 @@ mixin EvalBase {
       Add(l, r) then this.eval(l) + this.eval(r)
 }
 //│ mixin EvalBase() {
-//│   this: {eval: 'a -> 'b & ('c | 'd) -> Int}
-//│   fun eval: (Add['d] | Lit | Neg['c & (Neg['a] | Object & ~#Neg)]) -> (Int | 'b)
+//│   this: {eval: 'a -> 'b & 'c -> Int}
+//│   fun eval: (Add['c] | Lit | Neg['c & (Neg['a] | Object & ~#Neg)]) -> (Int | 'b)
 //│ }
 
 // module TestLang extends EvalBase, EvalNeg
 module TestLang extends EvalBase
 //│ module TestLang {
-//│   fun eval: (Add['a] | Lit | Neg['b]) -> Int
+//│   fun eval: 'a -> Int
 //│ }
 //│ where
-//│   'a <: Add['a] | Lit | Neg['b]
-//│   'b <: 'a & (Neg['a] | Object & ~#Neg)
+//│   'a <: Add['a] | Lit | Neg['a & (Neg['a] | Object & ~#Neg)]
 
 
 fun mk(n) = if n is
@@ -39,15 +38,15 @@ fun mk(n) = if n is
   _ then Add(mk(n), mk(n))
 //│ fun mk: forall 'a. Object -> (Lit | 'a)
 //│   where
-//│     'a :> Neg[Lit | 'a] | Add[Lit | 'a]
+//│     'a :> Add[Lit | 'a] | Neg[Lit | 'a]
 
 :stats
 TestLang.eval(mk(0))
 //│ Int
 //│ res
 //│     = 0
-//│ constrain calls  : 190
-//│ annoying  calls  : 47
-//│ subtyping calls  : 1376
+//│ constrain calls  : 254
+//│ annoying  calls  : 106
+//│ subtyping calls  : 1430
 
 

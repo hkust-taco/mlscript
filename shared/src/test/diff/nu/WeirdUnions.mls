@@ -11,23 +11,23 @@ fun f: [Str] | [Str, Int]
 fun f: (Str | [Str, Int])
 //│ fun f: Str | [Str, Int]
 
-:pe
+:e
 fun f: Str | (Str, Int)
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ╔══[ERROR] type identifier not found: ,
 //│ ║  l.15: 	fun f: Str | (Str, Int)
 //│ ╙──      	             ^^^^^^^^^^
-//│ fun f: Str | [Str, Int]
+//│ fun f: Str | error
 
 
 fun f: Str | ([Str, Int])
 //│ fun f: Str | [Str, Int]
 
-:pe
+:e
 fun f: Str | ((Str, Int))
-//│ ╔══[PARSE ERROR] Expected '=>' or '->' after this parameter section
+//│ ╔══[ERROR] type identifier not found: ,
 //│ ║  l.26: 	fun f: Str | ((Str, Int))
-//│ ╙──      	              ^^^^^^^^^^
-//│ fun f: Str | [Str, Int]
+//│ ╙──      	             ^^^^^^^^^^^^
+//│ fun f: Str | error
 
 
 
@@ -116,7 +116,7 @@ r of [0, 1]
 
 // Also currently parses the same:
 let r = if true then id else [x, y] => [y, x]
-//│ let r: forall 'a 'b 'c. (['b, 'c] & 'a) -> (['c, 'b] | 'a)
+//│ let r: forall 'a 'b 'c. (['a, 'b] & 'c) -> (['b, 'a] | 'c)
 //│ r
 //│   = [Function: id]
 

@@ -25,7 +25,7 @@ class Hidden2[A]
   method Main (a: A) = this.Foo (a with { payload = 1 })
 //│ Defined class Hidden2[-A]
 //│ Defined Hidden2.Foo: Hidden2[?] -> ((Class1 with {payload: 'payload}) | ~Class1) -> (123 | 'payload)
-//│ Defined Hidden2.Main: Hidden2['A] -> 'A -> (123 | 1)
+//│ Defined Hidden2.Main: Hidden2['A] -> 'A -> (1 | 123)
 
 
 def foo: ("A" | "B" | "D" | "E" | "F" | "G" | "H" | "I" | "J") -> int

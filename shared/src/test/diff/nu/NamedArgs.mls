@@ -350,7 +350,7 @@ fun foo(f: (x: Int) => Int) = f(x: 123)
 //│ fun foo: (f: (x: Int) -> Int) -> Int
 
 fun foo(f: ((x: Int) => Int) & 'a) = [f(x: 123), f]
-//│ fun foo: forall 'a 'b. (f: (x: Int) -> Int & 123 -> 'b & 'a) -> ['b, (x: Int) -> Int & 'a]
+//│ fun foo: forall 'b 'a. (f: (x: Int) -> Int & 123 -> 'b & 'a) -> ['b, (x: Int) -> Int & 'a]
 
 foo((x: Int) => 1)
 //│ [1, (x: Int) -> 1]
@@ -360,7 +360,7 @@ foo((x: Int) => 1)
 
 :e
 fun foo(f: ((x: Int) => Int) | 'a) = f(x: 123)
-//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `'a | (x: Int) -> Int` for applying named arguments
+//│ ╔══[ERROR] Cannot retrieve appropriate function signature from type `(x: Int) -> Int | 'a` for applying named arguments
 //│ ║  l.362: 	fun foo(f: ((x: Int) => Int) | 'a) = f(x: 123)
 //│ ╙──       	                                     ^
 //│ fun foo: (f: anything) -> error

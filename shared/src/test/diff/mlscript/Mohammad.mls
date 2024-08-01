@@ -102,7 +102,7 @@ useTrt c
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.101: 	useTrt c
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `Class & {x: ?x} & #T | Class & {x: ?x} & ~?a` does not have field 'y'
+//│ ╟── expression of type `Class & {x: ?x} & ~?a | Class & {x: ?x} & #T` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.96: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ║        	                                ^^^
@@ -121,7 +121,7 @@ useTrt c
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.120: 	useTrt c
 //│ ║         	^^^^^^^^
-//│ ╟── expression of type `Class & {x: ?x} & #T | Class & {x: ?x} & ~?a` does not have field 'y'
+//│ ╟── expression of type `Class & {x: ?x} & ~?a | Class & {x: ?x} & #T` does not have field 'y'
 //│ ╟── Note: constraint arises from field selection:
 //│ ║  l.96: 	def useTrt t = case t of { T -> t.y | Class -> t.x }
 //│ ║        	                                ^^^

@@ -1,54 +1,55 @@
-:NewParser
+:NewDefs
 
-class Base
-class Derived1 extends Base
-class Derived2 extends Base
-class Derived3 extends Derived2
-//│ Defined class Base
-//│ Defined class Derived1
-//│ Defined class Derived2
-//│ Defined class Derived3
-//│ Base: () -> Base
-//│     = [Function: Base1]
-//│ Derived1: () -> Derived1
-//│         = [Function: Derived11]
-//│ Derived2: () -> Derived2
-//│         = [Function: Derived21]
-//│ Derived3: () -> Derived3
-//│         = [Function: Derived31]
+class Base()
+class Derived1() extends Base()
+class Derived2() extends Base()
+class Derived3() extends Derived2()
+//│ class Base()
+//│ class Derived1() extends Base
+//│ class Derived2() extends Base
+//│ class Derived3() extends Base, Derived2
 
 // The very basic case.
+// It should warn about that the last two cases are unreachable.
 :w
+:ducs:normalize.result
 fun f1(x) = if x is
   Base then "b"
   Derived1 then "d1"
   Derived2 then "d2"
-//│ ╔══[WARNING] Found a duplicated branch
-//│ ╟── This branch
-//│ ║  l.24: 	  Derived1 then "d1"
-//│ ║        	                ^^^^
-//│ ╟── is subsumed by the branch here.
-//│ ║  l.23: 	  Base then "b"
-//│ ╙──      	            ^^^
-//│ ╔══[WARNING] Found a duplicated branch
-//│ ╟── This branch
-//│ ║  l.25: 	  Derived2 then "d2"
-//│ ║        	                ^^^^
-//│ ╟── is subsumed by the branch here.
-//│ ║  l.23: 	  Base then "b"
-//│ ╙──      	            ^^^
-//│ f1: Base -> "b"
-//│   = [Function: f1]
+//│ Normalized UCS term:
+//│ case x*‡ of
+//│   Base*◊ -> "b"
+//│ ╔══[WARNING] found a duplicated case
+//│ ║  l.18: 	  Derived1 then "d1"
+//│ ║        	  ^^^^^^^^
+//│ ╟── the case is covered by pattern Base
+//│ ║  l.17: 	  Base then "b"
+//│ ║        	  ^^^^
+//│ ╟── due to the subtyping relation
+//│ ║  l.4: 	class Derived1() extends Base()
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ ╔══[WARNING] found a duplicated case
+//│ ║  l.19: 	  Derived2 then "d2"
+//│ ║        	  ^^^^^^^^
+//│ ╟── the case is covered by pattern Base
+//│ ║  l.17: 	  Base then "b"
+//│ ║        	  ^^^^
+//│ ╟── due to the subtyping relation
+//│ ║  l.5: 	class Derived2() extends Base()
+//│ ╙──     	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+//│ fun f1: Base -> "b"
 
 f1(Base())
 f1(Derived1())
 f1(Derived2())
-//│ res: "b"
-//│    = 'b'
-//│ res: "b"
-//│    = 'b'
-//│ res: "b"
-//│    = 'b'
+//│ "b"
+//│ res
+//│     = 'b'
+//│ res
+//│     = 'b'
+//│ res
+//│     = 'b'
 
 // Decision paths:
 // + «x is Base» and «p (x,)» => "b and p"
@@ -75,26 +76,28 @@ fun f2(x, p) = if x is
   Derived1 then "d1"
   Derived2 then "d2"
   else "otherwise"
-//│ f2: (Base & 'a | ~Base, 'a -> anything,) -> ("b and p" | "d1" | "d2" | "otherwise")
-//│   = [Function: f2]
+//│ fun f2: forall 'a. (Object & ~#Base | 'a & (Base & ~#Derived1 & ~#Derived2 | Derived1 | Derived2), (Base & 'a) -> Bool) -> ("b and p" | "d1" | "d2" | "otherwise")
 
 f2(Base(), _ => true) // => b and p
 f2(Base(), _ => false) // otherwise
-//│ res: "b and p" | "d1" | "d2" | "otherwise"
-//│    = 'b and p'
-//│ res: "b and p" | "d1" | "d2" | "otherwise"
-//│    = 'otherwise'
+//│ "b and p" | "d1" | "d2" | "otherwise"
+//│ res
+//│     = 'b and p'
+//│ res
+//│     = 'otherwise'
 
 f2(Derived1(), _ => true) // => b and p
 f2(Derived2(), _ => true) // => b and p
-//│ res: "b and p" | "d1" | "d2" | "otherwise"
-//│    = 'b and p'
-//│ res: "b and p" | "d1" | "d2" | "otherwise"
-//│    = 'b and p'
+//│ "b and p" | "d1" | "d2" | "otherwise"
+//│ res
+//│     = 'b and p'
+//│ res
+//│     = 'b and p'
 
 f2(Derived1(), _ => false) // => d1
 f2(Derived2(), _ => false) // => d2
-//│ res: "b and p" | "d1" | "d2" | "otherwise"
-//│    = 'd1'
-//│ res: "b and p" | "d1" | "d2" | "otherwise"
-//│    = 'd2'
+//│ "b and p" | "d1" | "d2" | "otherwise"
+//│ res
+//│     = 'd1'
+//│ res
+//│     = 'd2'
