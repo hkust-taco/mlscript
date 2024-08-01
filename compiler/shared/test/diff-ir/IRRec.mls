@@ -3,6 +3,36 @@
 :UseIR
 :NoTailRec
 
+:prelude
+module True
+module False
+module Callable {
+  fun apply0() = 0
+  fun apply1(x0) = 0
+  fun apply2(x0,x1) = 0
+  fun apply3(x0,x1,x2) = 0
+  fun apply4(x0,x1,x2,x3) = 0
+  fun apply5(x0,x1,x2,x3,x4) = 0
+}
+module List[A, B]
+class Cons[A, B](h: A, t: Cons[A, B]) extends List[A, B]
+module Nil[A, B] extends List[A, B]
+module Option[A]
+class Some[A](x: A) extends Option[A]
+module None[A] extends Option[A]
+class Pair[A, B](x: A, y: B)
+class Tuple2[A, B](x: A, y: B)
+class Tuple3[A, B, C](x: A, y: B, z: C)
+module Nat
+class S(s: Nat) extends Nat
+module O extends Nat
+class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O)
+//│ |#module| |True|↵|#module| |False|↵|#module| |Callable| |{|→|#fun| |apply0|(||)| |#=| |0|↵|#fun| |apply1|(|x0|)| |#=| |0|↵|#fun| |apply2|(|x0|,|x1|)| |#=| |0|↵|#fun| |apply3|(|x0|,|x1|,|x2|)| |#=| |0|↵|#fun| |apply4|(|x0|,|x1|,|x2|,|x3|)| |#=| |0|↵|#fun| |apply5|(|x0|,|x1|,|x2|,|x3|,|x4|)| |#=| |0|←|↵|}|↵|#module| |List|[|A|,| |B|]|↵|#class| |Cons|[|A|,| |B|]|(|h|#:| |A|,| |t|#:| |Cons|[|A|,| |B|]|)| |#extends| |List|[|A|,| |B|]|↵|#module| |Nil|[|A|,| |B|]| |#extends| |List|[|A|,| |B|]|↵|#module| |Option|[|A|]|↵|#class| |Some|[|A|]|(|x|#:| |A|)| |#extends| |Option|[|A|]|↵|#module| |None|[|A|]| |#extends| |Option|[|A|]|↵|#class| |Pair|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple2|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple3|[|A|,| |B|,| |C|]|(|x|#:| |A|,| |y|#:| |B|,| |z|#:| |C|)|↵|#module| |Nat|↵|#class| |S|(|s|#:| |Nat|)| |#extends| |Nat|↵|#module| |O| |#extends| |Nat|↵|#class| |HiddenTheseEntities|(|_0|#:| |HiddenTheseEntities|,| |_1|#:| |True|,| |_2|#:| |False|,| |_3|#:| |Callable|,| |_4|#:| |List|,| |_5|#:| |Cons|,| |_6|#:| |Nil|,| |_7|#:| |Option|,| |_8|#:| |Some|,| |_9|#:| |None|,| |_10|#:| |Pair|,| |_11|#:| |Tuple2|,| |_12|#:| |Tuple3|,| |_13|#:| |Nat|,| |_14|#:| |S|,| |_15|#:| |O|)|
+//│ Parsed: {module True {}; module False {}; module Callable {fun apply0 = () => 0; fun apply1 = (x0,) => 0; fun apply2 = (x0, x1,) => 0; fun apply3 = (x0, x1, x2,) => 0; fun apply4 = (x0, x1, x2, x3,) => 0; fun apply5 = (x0, x1, x2, x3, x4,) => 0}; module List‹A, B› {}; class Cons‹A, B›(h: A, t: Cons‹A, B›,): List‹A, B› {}; module Nil‹A, B›: List‹A, B› {}; module Option‹A› {}; class Some‹A›(x: A,): Option‹A› {}; module None‹A›: Option‹A› {}; class Pair‹A, B›(x: A, y: B,) {}; class Tuple2‹A, B›(x: A, y: B,) {}; class Tuple3‹A, B, C›(x: A, y: B, z: C,) {}; module Nat {}; class S(s: Nat,): Nat {}; module O: Nat {}; class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O,) {}}
+//│ 
+//│ Preluded.
+//│ 
+
 :interpIR
 :genCpp
 fun fib(n) = if n < 2 then n else fib(n-1) + fib(n-2)
@@ -13,69 +43,7 @@ fib(20)
 //│ 
 //│ IR:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #49
-//│     def apply1(x0$0) =
-//│       0 -- #45
-//│     def apply0() =
-//│       0 -- #44
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #48
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #47
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #46
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   def fib(n$0) =
-//│     let x$1 = <(n$0,2) in -- #43
-//│     if x$1 -- #42
-//│       true =>
-//│         jump j$0(n$0) -- #13
-//│       false =>
-//│         let x$3 = -(n$0,1) in -- #41
-//│         let* (x$4) = fib(x$3) in -- #40
-//│         let x$5 = -(n$0,2) in -- #39
-//│         let* (x$6) = fib(x$5) in -- #38
-//│         let x$7 = +(x$4,x$6) in -- #37
-//│         jump j$0(x$7) -- #36
-//│   def j$0(x$2) =
-//│     x$2 -- #11
-//│   let* (x$0) = fib(20) in -- #4
-//│   x$0 -- #3
 //│ 
-//│ Promoted:
-//│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #49
-//│     def apply1(x0$0) =
-//│       0 -- #45
-//│     def apply0() =
-//│       0 -- #44
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #48
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #47
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #46
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
 //│   def fib(n$0) =
 //│     let x$1 = <(n$0,2) in -- #43
 //│     if x$1 -- #42
@@ -109,82 +77,7 @@ foo()
 //│ 
 //│ IR:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #61
-//│     def apply1(x0$0) =
-//│       0 -- #57
-//│     def apply0() =
-//│       0 -- #56
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #60
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #59
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #58
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   def odd(x$1) =
-//│     let x$2 = ==(x$1,0) in -- #26
-//│     if x$2 -- #25
-//│       true =>
-//│         let x$4 = False() in -- #12
-//│         jump j$0(x$4) -- #11
-//│       false =>
-//│         let x$5 = -(x$1,1) in -- #24
-//│         let* (x$6) = even(x$5) in -- #23
-//│         jump j$0(x$6) -- #22
-//│   def j$0(x$3) =
-//│     x$3 -- #9
-//│   def even(x$7) =
-//│     let x$8 = ==(x$7,0) in -- #50
-//│     if x$8 -- #49
-//│       true =>
-//│         let x$10 = True() in -- #36
-//│         jump j$1(x$10) -- #35
-//│       false =>
-//│         let x$11 = -(x$7,1) in -- #48
-//│         let* (x$12) = odd(x$11) in -- #47
-//│         jump j$1(x$12) -- #46
-//│   def j$1(x$9) =
-//│     x$9 -- #33
-//│   def foo() =
-//│     let* (x$13) = odd(10) in -- #55
-//│     x$13 -- #54
-//│   let* (x$0) = foo() in -- #2
-//│   x$0 -- #1
 //│ 
-//│ Promoted:
-//│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #61
-//│     def apply1(x0$0) =
-//│       0 -- #57
-//│     def apply0() =
-//│       0 -- #56
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #60
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #59
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #58
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
 //│   def odd(x$1) =
 //│     let x$2 = ==(x$1,0) in -- #26
 //│     if x$2 -- #25
@@ -221,103 +114,20 @@ foo()
 
 :interpIR
 :genCpp
-class AorB
-class A extends AorB
-class B(b) extends AorB
 fun not(x) =
   if x then False else True
 fun foo(x) =
-  if x then A
-       else B(foo(not(x)))
+  if x then None
+       else Some(foo(not(x)))
 fun main() = foo(False)
 main()
-//│ |#class| |AorB|↵|#class| |A| |#extends| |AorB|↵|#class| |B|(|b|)| |#extends| |AorB|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A|→|#else| |B|(|foo|(|not|(|x|)|)|)|←|←|↵|#fun| |main|(||)| |#=| |foo|(|False|)|↵|main|(||)|
-//│ Parsed: {class AorB {}; class A: AorB {}; class B(b,): AorB {}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = () => foo(False,); main()}
+//│ |#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |None|→|#else| |Some|(|foo|(|not|(|x|)|)|)|←|←|↵|#fun| |main|(||)| |#=| |foo|(|False|)|↵|main|(||)|
+//│ Parsed: {fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then None else Some(foo(not(x,),),)}; fun main = () => foo(False,); main()}
 //│ 
 //│ 
 //│ IR:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #43
-//│     def apply1(x0$0) =
-//│       0 -- #39
-//│     def apply0() =
-//│       0 -- #38
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #42
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #41
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #40
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class AorB()
-//│   class A() extends AorB
-//│   class B(b) extends AorB
-//│   def not(x$1) =
-//│     if x$1 -- #11
-//│       true =>
-//│         let x$3 = False() in -- #7
-//│         jump j$0(x$3) -- #6
-//│       false =>
-//│         let x$4 = True() in -- #10
-//│         jump j$0(x$4) -- #9
-//│   def j$0(x$2) =
-//│     x$2 -- #4
-//│   def foo(x$5) =
-//│     if x$5 -- #31
-//│       true =>
-//│         let x$7 = A() in -- #16
-//│         jump j$1(x$7) -- #15
-//│       false =>
-//│         let* (x$8) = not(x$5) in -- #30
-//│         let* (x$9) = foo(x$8) in -- #29
-//│         let x$10 = B(x$9) in -- #28
-//│         jump j$1(x$10) -- #27
-//│   def j$1(x$6) =
-//│     x$6 -- #13
-//│   def main() =
-//│     let x$11 = False() in -- #37
-//│     let* (x$12) = foo(x$11) in -- #36
-//│     x$12 -- #35
-//│   let* (x$0) = main() in -- #2
-//│   x$0 -- #1
 //│ 
-//│ Promoted:
-//│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #43
-//│     def apply1(x0$0) =
-//│       0 -- #39
-//│     def apply0() =
-//│       0 -- #38
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #42
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #41
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #40
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class AorB()
-//│   class A() extends AorB
-//│   class B(b) extends AorB
 //│   def not(x$1) =
 //│     if x$1 -- #11
 //│       true =>
@@ -331,12 +141,12 @@ main()
 //│   def foo(x$5) =
 //│     if x$5 -- #31
 //│       true =>
-//│         let x$7 = A() in -- #16
+//│         let x$7 = None() in -- #16
 //│         jump j$1(x$7) -- #15
 //│       false =>
 //│         let* (x$8) = not(x$5) in -- #30
 //│         let* (x$9) = foo(x$8) in -- #29
-//│         let x$10 = B(x$9) in -- #28
+//│         let x$10 = Some(x$9) in -- #28
 //│         jump j$1(x$10) -- #27
 //│   def j$1(x$6) =
 //│     x$6 -- #13
@@ -348,14 +158,11 @@ main()
 //│   x$0 -- #1
 //│ 
 //│ Interpreted:
-//│ B(A())
+//│ Some(None())
 //│ 
 
 :interpIR
 :genCpp
-class AorB
-class A() extends AorB
-class B(b) extends AorB
 fun aaa() =
   let m = 1
   let n = 2
@@ -368,124 +175,21 @@ fun bbb() =
 fun not(x) =
   if x then False else True
 fun foo(x) =
-  if x then A
-       else B(foo(not(x)))
+  if x then None
+       else Some(foo(not(x)))
 fun main() =
   let x = foo(False)
   if x is
-    A then aaa()
-    B(b1) then bbb()
+    None then aaa()
+    Some(b1) then bbb()
 main()
-//│ |#class| |AorB|↵|#class| |A|(||)| |#extends| |AorB|↵|#class| |B|(|b|)| |#extends| |AorB|↵|#fun| |aaa|(||)| |#=|→|#let| |m| |#=| |1|↵|#let| |n| |#=| |2|↵|#let| |p| |#=| |3|↵|#let| |q| |#=| |4|↵|m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |bbb|(||)| |#=|→|#let| |x| |#=| |aaa|(||)|↵|x| |*| |100| |+| |4|←|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A|→|#else| |B|(|foo|(|not|(|x|)|)|)|←|←|↵|#fun| |main|(||)| |#=|→|#let| |x| |#=| |foo|(|False|)|↵|#if| |x| |is|→|A| |#then| |aaa|(||)|↵|B|(|b1|)| |#then| |bbb|(||)|←|←|↵|main|(||)|
-//│ Parsed: {class AorB {}; class A(): AorB {}; class B(b,): AorB {}; fun aaa = () => {let m = 1; let n = 2; let p = 3; let q = 4; +(-(+(m, n,), p,), q,)}; fun bbb = () => {let x = aaa(); +(*(x, 100,), 4,)}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = () => {let x = foo(False,); if x is ‹(A) then aaa(); (B(b1,)) then bbb()›}; main()}
+//│ |#fun| |aaa|(||)| |#=|→|#let| |m| |#=| |1|↵|#let| |n| |#=| |2|↵|#let| |p| |#=| |3|↵|#let| |q| |#=| |4|↵|m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |bbb|(||)| |#=|→|#let| |x| |#=| |aaa|(||)|↵|x| |*| |100| |+| |4|←|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |None|→|#else| |Some|(|foo|(|not|(|x|)|)|)|←|←|↵|#fun| |main|(||)| |#=|→|#let| |x| |#=| |foo|(|False|)|↵|#if| |x| |is|→|None| |#then| |aaa|(||)|↵|Some|(|b1|)| |#then| |bbb|(||)|←|←|↵|main|(||)|
+//│ Parsed: {fun aaa = () => {let m = 1; let n = 2; let p = 3; let q = 4; +(-(+(m, n,), p,), q,)}; fun bbb = () => {let x = aaa(); +(*(x, 100,), 4,)}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then None else Some(foo(not(x,),),)}; fun main = () => {let x = foo(False,); if x is ‹(None) then aaa(); (Some(b1,)) then bbb()›}; main()}
 //│ 
 //│ 
 //│ IR:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #102
-//│     def apply1(x0$0) =
-//│       0 -- #98
-//│     def apply0() =
-//│       0 -- #97
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #101
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #100
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #99
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class AorB()
-//│   class A() extends AorB
-//│   class B(b) extends AorB
-//│   def aaa() =
-//│     let x$1 = 1 in -- #29
-//│     let x$2 = 2 in -- #28
-//│     let x$3 = 3 in -- #27
-//│     let x$4 = 4 in -- #26
-//│     let x$5 = +(x$1,x$2) in -- #25
-//│     let x$6 = -(x$5,x$3) in -- #24
-//│     let x$7 = +(x$6,x$4) in -- #23
-//│     x$7 -- #22
-//│   def bbb() =
-//│     let* (x$8) = aaa() in -- #45
-//│     let x$9 = *(x$8,100) in -- #44
-//│     let x$10 = +(x$9,4) in -- #43
-//│     x$10 -- #42
-//│   def not(x$11) =
-//│     if x$11 -- #54
-//│       true =>
-//│         let x$13 = False() in -- #50
-//│         jump j$0(x$13) -- #49
-//│       false =>
-//│         let x$14 = True() in -- #53
-//│         jump j$0(x$14) -- #52
-//│   def j$0(x$12) =
-//│     x$12 -- #47
-//│   def foo(x$15) =
-//│     if x$15 -- #74
-//│       true =>
-//│         let x$17 = A() in -- #59
-//│         jump j$1(x$17) -- #58
-//│       false =>
-//│         let* (x$18) = not(x$15) in -- #73
-//│         let* (x$19) = foo(x$18) in -- #72
-//│         let x$20 = B(x$19) in -- #71
-//│         jump j$1(x$20) -- #70
-//│   def j$1(x$16) =
-//│     x$16 -- #56
-//│   def main() =
-//│     let x$21 = False() in -- #96
-//│     let* (x$22) = foo(x$21) in -- #95
-//│     case x$22 of -- #94
-//│       A =>
-//│         let* (x$24) = aaa() in -- #84
-//│         jump j$2(x$24) -- #83
-//│       B =>
-//│         let x$25 = B.b(x$22) in -- #93
-//│         let* (x$26) = bbb() in -- #92
-//│         jump j$2(x$26) -- #91
-//│   def j$2(x$23) =
-//│     x$23 -- #80
-//│   let* (x$0) = main() in -- #2
-//│   x$0 -- #1
 //│ 
-//│ Promoted:
-//│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #102
-//│     def apply1(x0$0) =
-//│       0 -- #98
-//│     def apply0() =
-//│       0 -- #97
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #101
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #100
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #99
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class AorB()
-//│   class A() extends AorB
-//│   class B(b) extends AorB
 //│   def aaa() =
 //│     let x$1 = 1 in -- #29
 //│     let x$2 = 2 in -- #28
@@ -513,12 +217,12 @@ main()
 //│   def foo(x$15) =
 //│     if x$15 -- #74
 //│       true =>
-//│         let x$17 = A() in -- #59
+//│         let x$17 = None() in -- #59
 //│         jump j$1(x$17) -- #58
 //│       false =>
 //│         let* (x$18) = not(x$15) in -- #73
 //│         let* (x$19) = foo(x$18) in -- #72
-//│         let x$20 = B(x$19) in -- #71
+//│         let x$20 = Some(x$19) in -- #71
 //│         jump j$1(x$20) -- #70
 //│   def j$1(x$16) =
 //│     x$16 -- #56
@@ -526,11 +230,11 @@ main()
 //│     let x$21 = False() in -- #96
 //│     let* (x$22) = foo(x$21) in -- #95
 //│     case x$22 of -- #94
-//│       A =>
+//│       None =>
 //│         let* (x$24) = aaa() in -- #84
 //│         jump j$2(x$24) -- #83
-//│       B =>
-//│         let x$25 = B.b(x$22) in -- #93
+//│       Some =>
+//│         let x$25 = Some.x(x$22) in -- #93
 //│         let* (x$26) = bbb() in -- #92
 //│         jump j$2(x$26) -- #91
 //│   def j$2(x$23) =
@@ -544,9 +248,6 @@ main()
 
 
 :interpIR
-class Nat
-class S(s) extends Nat
-class O extends Nat
 fun odd(x) =
   if x is
     O then False
@@ -557,96 +258,13 @@ fun even(x) =
     S(s) then odd(s)
 fun foo() = odd(S(S(S(O))))
 foo()
-//│ |#class| |Nat|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|S|(|O|)|)|)|)|↵|foo|(||)|
-//│ Parsed: {class Nat {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(S(S(S(O,),),),); foo()}
+//│ |#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|S|(|O|)|)|)|)|↵|foo|(||)|
+//│ Parsed: {fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(S(S(S(O,),),),); foo()}
 //│ 
 //│ 
 //│ IR:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #60
-//│     def apply1(x0$0) =
-//│       0 -- #56
-//│     def apply0() =
-//│       0 -- #55
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #59
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #58
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #57
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class Nat()
-//│   class S(s) extends Nat
-//│   class O() extends Nat
-//│   def odd(x$1) =
-//│     case x$1 of -- #19
-//│       O =>
-//│         let x$3 = False() in -- #7
-//│         jump j$0(x$3) -- #6
-//│       S =>
-//│         let x$4 = S.s(x$1) in -- #18
-//│         let* (x$5) = even(x$4) in -- #17
-//│         jump j$0(x$5) -- #16
-//│   def j$0(x$2) =
-//│     x$2 -- #4
-//│   def even(x$6) =
-//│     case x$6 of -- #36
-//│       O =>
-//│         let x$8 = True() in -- #24
-//│         jump j$1(x$8) -- #23
-//│       S =>
-//│         let x$9 = S.s(x$6) in -- #35
-//│         let* (x$10) = odd(x$9) in -- #34
-//│         jump j$1(x$10) -- #33
-//│   def j$1(x$7) =
-//│     x$7 -- #21
-//│   def foo() =
-//│     let x$11 = O() in -- #54
-//│     let x$12 = S(x$11) in -- #53
-//│     let x$13 = S(x$12) in -- #52
-//│     let x$14 = S(x$13) in -- #51
-//│     let* (x$15) = odd(x$14) in -- #50
-//│     x$15 -- #49
-//│   let* (x$0) = foo() in -- #2
-//│   x$0 -- #1
 //│ 
-//│ Promoted:
-//│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #60
-//│     def apply1(x0$0) =
-//│       0 -- #56
-//│     def apply0() =
-//│       0 -- #55
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #59
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #58
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #57
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class Nat()
-//│   class S(s) extends Nat
-//│   class O() extends Nat
 //│   def odd(x$1) =
 //│     case x$1 of -- #19
 //│       O =>
@@ -685,9 +303,6 @@ foo()
 
 :interpIR
 :genCpp
-class Nat
-class S(s) extends Nat
-class O extends Nat
 fun odd(x) =
   if x is
     O then False
@@ -699,106 +314,13 @@ fun even(x) =
 fun mk(n) = if n > 0 then S(mk(n - 1)) else O
 fun foo() = odd(mk(10))
 foo() 
-//│ |#class| |Nat|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|mk|(|10|)|)|↵|foo|(||)| |
-//│ Parsed: {class Nat {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n, 0,)) then S(mk(-(n, 1,),),) else O; fun foo = () => odd(mk(10,),); foo()}
+//│ |#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|mk|(|10|)|)|↵|foo|(||)| |
+//│ Parsed: {fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n, 0,)) then S(mk(-(n, 1,),),) else O; fun foo = () => odd(mk(10,),); foo()}
 //│ 
 //│ 
 //│ IR:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #79
-//│     def apply1(x0$0) =
-//│       0 -- #75
-//│     def apply0() =
-//│       0 -- #74
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #78
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #77
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #76
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class Nat()
-//│   class S(s) extends Nat
-//│   class O() extends Nat
-//│   def odd(x$1) =
-//│     case x$1 of -- #19
-//│       O =>
-//│         let x$3 = False() in -- #7
-//│         jump j$0(x$3) -- #6
-//│       S =>
-//│         let x$4 = S.s(x$1) in -- #18
-//│         let* (x$5) = even(x$4) in -- #17
-//│         jump j$0(x$5) -- #16
-//│   def j$0(x$2) =
-//│     x$2 -- #4
-//│   def even(x$6) =
-//│     case x$6 of -- #36
-//│       O =>
-//│         let x$8 = True() in -- #24
-//│         jump j$1(x$8) -- #23
-//│       S =>
-//│         let x$9 = S.s(x$6) in -- #35
-//│         let* (x$10) = odd(x$9) in -- #34
-//│         jump j$1(x$10) -- #33
-//│   def j$1(x$7) =
-//│     x$7 -- #21
-//│   def mk(n$0) =
-//│     let x$11 = >(n$0,0) in -- #64
-//│     if x$11 -- #63
-//│       true =>
-//│         let x$13 = -(n$0,1) in -- #59
-//│         let* (x$14) = mk(x$13) in -- #58
-//│         let x$15 = S(x$14) in -- #57
-//│         jump j$2(x$15) -- #56
-//│       false =>
-//│         let x$16 = O() in -- #62
-//│         jump j$2(x$16) -- #61
-//│   def j$2(x$12) =
-//│     x$12 -- #43
-//│   def foo() =
-//│     let* (x$17) = mk(10) in -- #73
-//│     let* (x$18) = odd(x$17) in -- #72
-//│     x$18 -- #71
-//│   let* (x$0) = foo() in -- #2
-//│   x$0 -- #1
 //│ 
-//│ Promoted:
-//│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #79
-//│     def apply1(x0$0) =
-//│       0 -- #75
-//│     def apply0() =
-//│       0 -- #74
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #78
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #77
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #76
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class Nat()
-//│   class S(s) extends Nat
-//│   class O() extends Nat
 //│   def odd(x$1) =
 //│     case x$1 of -- #19
 //│       O =>
@@ -847,9 +369,6 @@ foo()
 
 :interpIR
 :genCpp
-class Nat
-class S(s) extends Nat
-class O extends Nat
 fun odd(x) =
   if x is
     O then False
@@ -861,108 +380,13 @@ fun even(x) =
 fun mk(n) = if n > 0 then S(mk(n - 1)) else O
 fun foo() = odd(S(S(mk(10))))
 foo()
-//│ |#class| |Nat|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|mk|(|10|)|)|)|)|↵|foo|(||)|
-//│ Parsed: {class Nat {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n, 0,)) then S(mk(-(n, 1,),),) else O; fun foo = () => odd(S(S(mk(10,),),),); foo()}
+//│ |#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |mk|(|n|)| |#=| |#if| |n| |>| |0| |#then| |S|(|mk|(|n| |-| |1|)|)| |#else| |O|↵|#fun| |foo|(||)| |#=| |odd|(|S|(|S|(|mk|(|10|)|)|)|)|↵|foo|(||)|
+//│ Parsed: {fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun mk = (n,) => if (>(n, 0,)) then S(mk(-(n, 1,),),) else O; fun foo = () => odd(S(S(mk(10,),),),); foo()}
 //│ 
 //│ 
 //│ IR:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #87
-//│     def apply1(x0$0) =
-//│       0 -- #83
-//│     def apply0() =
-//│       0 -- #82
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #86
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #85
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #84
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class Nat()
-//│   class S(s) extends Nat
-//│   class O() extends Nat
-//│   def odd(x$1) =
-//│     case x$1 of -- #19
-//│       O =>
-//│         let x$3 = False() in -- #7
-//│         jump j$0(x$3) -- #6
-//│       S =>
-//│         let x$4 = S.s(x$1) in -- #18
-//│         let* (x$5) = even(x$4) in -- #17
-//│         jump j$0(x$5) -- #16
-//│   def j$0(x$2) =
-//│     x$2 -- #4
-//│   def even(x$6) =
-//│     case x$6 of -- #36
-//│       O =>
-//│         let x$8 = True() in -- #24
-//│         jump j$1(x$8) -- #23
-//│       S =>
-//│         let x$9 = S.s(x$6) in -- #35
-//│         let* (x$10) = odd(x$9) in -- #34
-//│         jump j$1(x$10) -- #33
-//│   def j$1(x$7) =
-//│     x$7 -- #21
-//│   def mk(n$0) =
-//│     let x$11 = >(n$0,0) in -- #64
-//│     if x$11 -- #63
-//│       true =>
-//│         let x$13 = -(n$0,1) in -- #59
-//│         let* (x$14) = mk(x$13) in -- #58
-//│         let x$15 = S(x$14) in -- #57
-//│         jump j$2(x$15) -- #56
-//│       false =>
-//│         let x$16 = O() in -- #62
-//│         jump j$2(x$16) -- #61
-//│   def j$2(x$12) =
-//│     x$12 -- #43
-//│   def foo() =
-//│     let* (x$17) = mk(10) in -- #81
-//│     let x$18 = S(x$17) in -- #80
-//│     let x$19 = S(x$18) in -- #79
-//│     let* (x$20) = odd(x$19) in -- #78
-//│     x$20 -- #77
-//│   let* (x$0) = foo() in -- #2
-//│   x$0 -- #1
 //│ 
-//│ Promoted:
-//│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #87
-//│     def apply1(x0$0) =
-//│       0 -- #83
-//│     def apply0() =
-//│       0 -- #82
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #86
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #85
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #84
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class Nat()
-//│   class S(s) extends Nat
-//│   class O() extends Nat
 //│   def odd(x$1) =
 //│     case x$1 of -- #19
 //│       O =>
@@ -1013,9 +437,6 @@ foo()
 
 :interpIR
 :genCpp
-class Nat
-class S(s) extends Nat
-class O extends Nat
 fun odd(x) =
   if x is
     O then False
@@ -1030,120 +451,13 @@ fun main() =
   foo()
   bar()
 main()
-//│ |#class| |Nat|↵|#class| |S|(|s|)| |#extends| |Nat|↵|#class| |O| |#extends| |Nat|↵|#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|#if| |10| |>| |0| |#then| |S|(|O|)| |#else| |O|)|↵|#fun| |bar|(||)| |#=| |#if| |10| |>| |0| |#then| |odd|(|S|(|O|)|)| |#else| |odd|(|O|)|↵|#fun| |main|(||)| |#=|→|foo|(||)|↵|bar|(||)|←|↵|main|(||)|
-//│ Parsed: {class Nat {}; class S(s,): Nat {}; class O: Nat {}; fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(if (>(10, 0,)) then S(O,) else O,); fun bar = () => if (>(10, 0,)) then odd(S(O,),) else odd(O,); fun main = () => {foo(); bar()}; main()}
+//│ |#fun| |odd|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |False|↵|S|(|s|)| |#then| |even|(|s|)|←|←|↵|#fun| |even|(|x|)| |#=|→|#if| |x| |is|→|O| |#then| |True|↵|S|(|s|)| |#then| |odd|(|s|)|←|←|↵|#fun| |foo|(||)| |#=| |odd|(|#if| |10| |>| |0| |#then| |S|(|O|)| |#else| |O|)|↵|#fun| |bar|(||)| |#=| |#if| |10| |>| |0| |#then| |odd|(|S|(|O|)|)| |#else| |odd|(|O|)|↵|#fun| |main|(||)| |#=|→|foo|(||)|↵|bar|(||)|←|↵|main|(||)|
+//│ Parsed: {fun odd = (x,) => {if x is ‹(O) then False; (S(s,)) then even(s,)›}; fun even = (x,) => {if x is ‹(O) then True; (S(s,)) then odd(s,)›}; fun foo = () => odd(if (>(10, 0,)) then S(O,) else O,); fun bar = () => if (>(10, 0,)) then odd(S(O,),) else odd(O,); fun main = () => {foo(); bar()}; main()}
 //│ 
 //│ 
 //│ IR:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #98
-//│     def apply1(x0$0) =
-//│       0 -- #94
-//│     def apply0() =
-//│       0 -- #93
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #97
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #96
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #95
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class Nat()
-//│   class S(s) extends Nat
-//│   class O() extends Nat
-//│   def odd(x$1) =
-//│     case x$1 of -- #19
-//│       O =>
-//│         let x$3 = False() in -- #7
-//│         jump j$0(x$3) -- #6
-//│       S =>
-//│         let x$4 = S.s(x$1) in -- #18
-//│         let* (x$5) = even(x$4) in -- #17
-//│         jump j$0(x$5) -- #16
-//│   def j$0(x$2) =
-//│     x$2 -- #4
-//│   def even(x$6) =
-//│     case x$6 of -- #36
-//│       O =>
-//│         let x$8 = True() in -- #24
-//│         jump j$1(x$8) -- #23
-//│       S =>
-//│         let x$9 = S.s(x$6) in -- #35
-//│         let* (x$10) = odd(x$9) in -- #34
-//│         jump j$1(x$10) -- #33
-//│   def j$1(x$7) =
-//│     x$7 -- #21
-//│   def foo() =
-//│     let x$11 = >(10,0) in -- #59
-//│     if x$11 -- #58
-//│       true =>
-//│         let x$14 = O() in -- #54
-//│         let x$15 = S(x$14) in -- #53
-//│         jump j$2(x$15) -- #52
-//│       false =>
-//│         let x$16 = O() in -- #57
-//│         jump j$2(x$16) -- #56
-//│   def j$2(x$12) =
-//│     let* (x$13) = odd(x$12) in -- #47
-//│     x$13 -- #46
-//│   def bar() =
-//│     let x$17 = >(10,0) in -- #86
-//│     if x$17 -- #85
-//│       true =>
-//│         let x$19 = O() in -- #77
-//│         let x$20 = S(x$19) in -- #76
-//│         let* (x$21) = odd(x$20) in -- #75
-//│         jump j$3(x$21) -- #74
-//│       false =>
-//│         let x$22 = O() in -- #84
-//│         let* (x$23) = odd(x$22) in -- #83
-//│         jump j$3(x$23) -- #82
-//│   def j$3(x$18) =
-//│     x$18 -- #66
-//│   def main() =
-//│     let* (x$24) = foo() in -- #92
-//│     let* (x$25) = bar() in -- #91
-//│     x$25 -- #90
-//│   let* (x$0) = main() in -- #2
-//│   x$0 -- #1
 //│ 
-//│ Promoted:
-//│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #98
-//│     def apply1(x0$0) =
-//│       0 -- #94
-//│     def apply0() =
-//│       0 -- #93
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #97
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #96
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #95
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class Nat()
-//│   class S(s) extends Nat
-//│   class O() extends Nat
 //│   def odd(x$1) =
 //│     case x$1 of -- #19
 //│       O =>
@@ -1206,9 +520,6 @@ main()
 
 :interpIR
 :genCpp
-class AorB
-class A extends AorB
-class B(b) extends AorB
 fun aaa() =
   let m = 1
   let n = 2
@@ -1221,123 +532,20 @@ fun bbb() =
 fun not(x) =
   if x then False else True
 fun foo(x) =
-  if x then A else B(foo(not(x)))
+  if x then None else Some(foo(not(x)))
 fun main(flag) =
   let x = foo(flag)
   if x is
-    A then aaa()
-    B(b1) then bbb()
+    None then aaa()
+    Some(b1) then bbb()
 main(False)
-//│ |#class| |AorB|↵|#class| |A| |#extends| |AorB|↵|#class| |B|(|b|)| |#extends| |AorB|↵|#fun| |aaa|(||)| |#=|→|#let| |m| |#=| |1|↵|#let| |n| |#=| |2|↵|#let| |p| |#=| |3|↵|#let| |q| |#=| |4|↵|m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |bbb|(||)| |#=|→|#let| |x| |#=| |aaa|(||)|↵|x| |*| |100| |+| |4|←|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |A| |#else| |B|(|foo|(|not|(|x|)|)|)|←|↵|#fun| |main|(|flag|)| |#=|→|#let| |x| |#=| |foo|(|flag|)|↵|#if| |x| |is|→|A| |#then| |aaa|(||)|↵|B|(|b1|)| |#then| |bbb|(||)|←|←|↵|main|(|False|)|
-//│ Parsed: {class AorB {}; class A: AorB {}; class B(b,): AorB {}; fun aaa = () => {let m = 1; let n = 2; let p = 3; let q = 4; +(-(+(m, n,), p,), q,)}; fun bbb = () => {let x = aaa(); +(*(x, 100,), 4,)}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then A else B(foo(not(x,),),)}; fun main = (flag,) => {let x = foo(flag,); if x is ‹(A) then aaa(); (B(b1,)) then bbb()›}; main(False,)}
+//│ |#fun| |aaa|(||)| |#=|→|#let| |m| |#=| |1|↵|#let| |n| |#=| |2|↵|#let| |p| |#=| |3|↵|#let| |q| |#=| |4|↵|m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |bbb|(||)| |#=|→|#let| |x| |#=| |aaa|(||)|↵|x| |*| |100| |+| |4|←|↵|#fun| |not|(|x|)| |#=|→|#if| |x| |#then| |False| |#else| |True|←|↵|#fun| |foo|(|x|)| |#=|→|#if| |x| |#then| |None| |#else| |Some|(|foo|(|not|(|x|)|)|)|←|↵|#fun| |main|(|flag|)| |#=|→|#let| |x| |#=| |foo|(|flag|)|↵|#if| |x| |is|→|None| |#then| |aaa|(||)|↵|Some|(|b1|)| |#then| |bbb|(||)|←|←|↵|main|(|False|)|
+//│ Parsed: {fun aaa = () => {let m = 1; let n = 2; let p = 3; let q = 4; +(-(+(m, n,), p,), q,)}; fun bbb = () => {let x = aaa(); +(*(x, 100,), 4,)}; fun not = (x,) => {if (x) then False else True}; fun foo = (x,) => {if (x) then None else Some(foo(not(x,),),)}; fun main = (flag,) => {let x = foo(flag,); if x is ‹(None) then aaa(); (Some(b1,)) then bbb()›}; main(False,)}
 //│ 
 //│ 
 //│ IR:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #104
-//│     def apply1(x0$0) =
-//│       0 -- #100
-//│     def apply0() =
-//│       0 -- #99
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #103
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #102
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #101
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class AorB()
-//│   class A() extends AorB
-//│   class B(b) extends AorB
-//│   def aaa() =
-//│     let x$2 = 1 in -- #32
-//│     let x$3 = 2 in -- #31
-//│     let x$4 = 3 in -- #30
-//│     let x$5 = 4 in -- #29
-//│     let x$6 = +(x$2,x$3) in -- #28
-//│     let x$7 = -(x$6,x$4) in -- #27
-//│     let x$8 = +(x$7,x$5) in -- #26
-//│     x$8 -- #25
-//│   def bbb() =
-//│     let* (x$9) = aaa() in -- #48
-//│     let x$10 = *(x$9,100) in -- #47
-//│     let x$11 = +(x$10,4) in -- #46
-//│     x$11 -- #45
-//│   def not(x$12) =
-//│     if x$12 -- #57
-//│       true =>
-//│         let x$14 = False() in -- #53
-//│         jump j$0(x$14) -- #52
-//│       false =>
-//│         let x$15 = True() in -- #56
-//│         jump j$0(x$15) -- #55
-//│   def j$0(x$13) =
-//│     x$13 -- #50
-//│   def foo(x$16) =
-//│     if x$16 -- #77
-//│       true =>
-//│         let x$18 = A() in -- #62
-//│         jump j$1(x$18) -- #61
-//│       false =>
-//│         let* (x$19) = not(x$16) in -- #76
-//│         let* (x$20) = foo(x$19) in -- #75
-//│         let x$21 = B(x$20) in -- #74
-//│         jump j$1(x$21) -- #73
-//│   def j$1(x$17) =
-//│     x$17 -- #59
-//│   def main(flag$0) =
-//│     let* (x$22) = foo(flag$0) in -- #98
-//│     case x$22 of -- #97
-//│       A =>
-//│         let* (x$24) = aaa() in -- #87
-//│         jump j$2(x$24) -- #86
-//│       B =>
-//│         let x$25 = B.b(x$22) in -- #96
-//│         let* (x$26) = bbb() in -- #95
-//│         jump j$2(x$26) -- #94
-//│   def j$2(x$23) =
-//│     x$23 -- #83
-//│   let x$0 = False() in -- #5
-//│   let* (x$1) = main(x$0) in -- #4
-//│   x$1 -- #3
 //│ 
-//│ Promoted:
-//│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #104
-//│     def apply1(x0$0) =
-//│       0 -- #100
-//│     def apply0() =
-//│       0 -- #99
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #103
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #102
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #101
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class AorB()
-//│   class A() extends AorB
-//│   class B(b) extends AorB
 //│   def aaa() =
 //│     let x$2 = 1 in -- #32
 //│     let x$3 = 2 in -- #31
@@ -1365,23 +573,23 @@ main(False)
 //│   def foo(x$16) =
 //│     if x$16 -- #77
 //│       true =>
-//│         let x$18 = A() in -- #62
+//│         let x$18 = None() in -- #62
 //│         jump j$1(x$18) -- #61
 //│       false =>
 //│         let* (x$19) = not(x$16) in -- #76
 //│         let* (x$20) = foo(x$19) in -- #75
-//│         let x$21 = B(x$20) in -- #74
+//│         let x$21 = Some(x$20) in -- #74
 //│         jump j$1(x$21) -- #73
 //│   def j$1(x$17) =
 //│     x$17 -- #59
 //│   def main(flag$0) =
 //│     let* (x$22) = foo(flag$0) in -- #98
 //│     case x$22 of -- #97
-//│       A =>
+//│       None =>
 //│         let* (x$24) = aaa() in -- #87
 //│         jump j$2(x$24) -- #86
-//│       B =>
-//│         let x$25 = B.b(x$22) in -- #96
+//│       Some =>
+//│         let x$25 = Some.x(x$22) in -- #96
 //│         let* (x$26) = bbb() in -- #95
 //│         jump j$2(x$26) -- #94
 //│   def j$2(x$23) =
@@ -1397,12 +605,6 @@ main(False)
 
 :interpIR
 :genCpp
-class List
-class Cons(h, t) extends List
-class Nil extends List
-class Option
-class Some(x) extends Option
-class None extends Option
 fun head_opt(l) =
   if l is
     Nil then None
@@ -1416,106 +618,13 @@ fun is_empty(l) =
 fun main() =
   is_empty(Cons(1, Cons(2, Nil)))
 main()
-//│ |#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|Cons|(|1|,| |Cons|(|2|,| |Nil|)|)|)|←|↵|main|(||)|
-//│ Parsed: {class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(Cons(1, Cons(2, Nil,),),)}; main()}
+//│ |#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|Cons|(|1|,| |Cons|(|2|,| |Nil|)|)|)|←|↵|main|(||)|
+//│ Parsed: {fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(Cons(1, Cons(2, Nil,),),)}; main()}
 //│ 
 //│ 
 //│ IR:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #71
-//│     def apply1(x0$0) =
-//│       0 -- #67
-//│     def apply0() =
-//│       0 -- #66
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #70
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #69
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #68
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   def head_opt(l$0) =
-//│     case l$0 of -- #24
-//│       Nil =>
-//│         let x$2 = None() in -- #7
-//│         jump j$0(x$2) -- #6
-//│       Cons =>
-//│         let x$3 = Cons.t(l$0) in -- #23
-//│         let x$4 = Cons.h(l$0) in -- #22
-//│         let x$5 = Some(x$4) in -- #21
-//│         jump j$0(x$5) -- #20
-//│   def j$0(x$1) =
-//│     x$1 -- #4
-//│   def is_none(o$0) =
-//│     case o$0 of -- #38
-//│       None =>
-//│         let x$7 = True() in -- #29
-//│         jump j$1(x$7) -- #28
-//│       Some =>
-//│         let x$8 = Some.x(o$0) in -- #37
-//│         let x$9 = False() in -- #36
-//│         jump j$1(x$9) -- #35
-//│   def j$1(x$6) =
-//│     x$6 -- #26
-//│   def is_empty(l$1) =
-//│     let* (x$10) = head_opt(l$1) in -- #47
-//│     let* (x$11) = is_none(x$10) in -- #46
-//│     x$11 -- #45
-//│   def main() =
-//│     let x$12 = Nil() in -- #65
-//│     let x$13 = Cons(2,x$12) in -- #64
-//│     let x$14 = Cons(1,x$13) in -- #63
-//│     let* (x$15) = is_empty(x$14) in -- #62
-//│     x$15 -- #61
-//│   let* (x$0) = main() in -- #2
-//│   x$0 -- #1
 //│ 
-//│ Promoted:
-//│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #71
-//│     def apply1(x0$0) =
-//│       0 -- #67
-//│     def apply0() =
-//│       0 -- #66
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #70
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #69
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #68
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
 //│   def head_opt(l$0) =
 //│     case l$0 of -- #24
 //│       Nil =>
@@ -1558,12 +667,6 @@ main()
 
 :interpIR
 :genCpp
-class List
-class Cons(h, t) extends List
-class Nil extends List
-class Option
-class Some(x) extends Option
-class None extends Option
 fun mk_list(n) =
   if n == 0 then Nil else Cons(n, mk_list(n - 1))
 fun head_opt(l) =
@@ -1579,117 +682,13 @@ fun is_empty(l) =
 fun main() =
   is_empty(mk_list(10))
 main()
-//│ |#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|mk_list|(|10|)|)|←|↵|main|(||)|
-//│ Parsed: {class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun mk_list = (n,) => {if (==(n, 0,)) then Nil else Cons(n, mk_list(-(n, 1,),),)}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(mk_list(10,),)}; main()}
+//│ |#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |head_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then| |Some|(|h|)|←|←|↵|#fun| |is_none|(|o|)| |#=|→|#if| |o| |is|→|None| |#then| |True|↵|Some|(|x|)| |#then| |False|←|←|↵|#fun| |is_empty|(|l|)| |#=|→|is_none|(|head_opt|(|l|)|)|←|↵|#fun| |main|(||)| |#=|→|is_empty|(|mk_list|(|10|)|)|←|↵|main|(||)|
+//│ Parsed: {fun mk_list = (n,) => {if (==(n, 0,)) then Nil else Cons(n, mk_list(-(n, 1,),),)}; fun head_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then Some(h,)›}; fun is_none = (o,) => {if o is ‹(None) then True; (Some(x,)) then False›}; fun is_empty = (l,) => {is_none(head_opt(l,),)}; fun main = () => {is_empty(mk_list(10,),)}; main()}
 //│ 
 //│ 
 //│ IR:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #92
-//│     def apply1(x0$0) =
-//│       0 -- #88
-//│     def apply0() =
-//│       0 -- #87
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #91
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #90
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #89
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   def mk_list(n$0) =
-//│     let x$1 = ==(n$0,0) in -- #32
-//│     if x$1 -- #31
-//│       true =>
-//│         let x$3 = Nil() in -- #12
-//│         jump j$0(x$3) -- #11
-//│       false =>
-//│         let x$4 = -(n$0,1) in -- #30
-//│         let* (x$5) = mk_list(x$4) in -- #29
-//│         let x$6 = Cons(n$0,x$5) in -- #28
-//│         jump j$0(x$6) -- #27
-//│   def j$0(x$2) =
-//│     x$2 -- #9
-//│   def head_opt(l$0) =
-//│     case l$0 of -- #54
-//│       Nil =>
-//│         let x$8 = None() in -- #37
-//│         jump j$1(x$8) -- #36
-//│       Cons =>
-//│         let x$9 = Cons.t(l$0) in -- #53
-//│         let x$10 = Cons.h(l$0) in -- #52
-//│         let x$11 = Some(x$10) in -- #51
-//│         jump j$1(x$11) -- #50
-//│   def j$1(x$7) =
-//│     x$7 -- #34
-//│   def is_none(o$0) =
-//│     case o$0 of -- #68
-//│       None =>
-//│         let x$13 = True() in -- #59
-//│         jump j$2(x$13) -- #58
-//│       Some =>
-//│         let x$14 = Some.x(o$0) in -- #67
-//│         let x$15 = False() in -- #66
-//│         jump j$2(x$15) -- #65
-//│   def j$2(x$12) =
-//│     x$12 -- #56
-//│   def is_empty(l$1) =
-//│     let* (x$16) = head_opt(l$1) in -- #77
-//│     let* (x$17) = is_none(x$16) in -- #76
-//│     x$17 -- #75
-//│   def main() =
-//│     let* (x$18) = mk_list(10) in -- #86
-//│     let* (x$19) = is_empty(x$18) in -- #85
-//│     x$19 -- #84
-//│   let* (x$0) = main() in -- #2
-//│   x$0 -- #1
 //│ 
-//│ Promoted:
-//│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #92
-//│     def apply1(x0$0) =
-//│       0 -- #88
-//│     def apply0() =
-//│       0 -- #87
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #91
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #90
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #89
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
 //│   def mk_list(n$0) =
 //│     let x$1 = ==(n$0,0) in -- #32
 //│     if x$1 -- #31
@@ -1743,12 +742,6 @@ main()
 
 :interpIR
 :genCpp
-class List
-class Cons(h, t) extends List
-class Nil extends List
-class Option
-class Some(x) extends Option
-class None extends Option
 fun mk_list(n) =
   if n == 0 then Nil else Cons(n, mk_list(n - 1))
 fun last_opt(l) =
@@ -1761,111 +754,13 @@ fun last_opt(l) =
 fun main() =
   last_opt(mk_list(10))
 main()
-//│ |#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |last_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then|→|#if| |t| |is|→|Nil| |#then| |Some|(|h|)|↵|Cons|(|h2|,| |t2|)| |#then| |last_opt|(|t|)|←|←|←|←|↵|#fun| |main|(||)| |#=|→|last_opt|(|mk_list|(|10|)|)|←|↵|main|(||)|
-//│ Parsed: {class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun mk_list = (n,) => {if (==(n, 0,)) then Nil else Cons(n, mk_list(-(n, 1,),),)}; fun last_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then {if t is ‹(Nil) then Some(h,); (Cons(h2, t2,)) then last_opt(t,)›}›}; fun main = () => {last_opt(mk_list(10,),)}; main()}
+//│ |#fun| |mk_list|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Nil| |#else| |Cons|(|n|,| |mk_list|(|n| |-| |1|)|)|←|↵|#fun| |last_opt|(|l|)| |#=|→|#if| |l| |is|→|Nil| |#then| |None|↵|Cons|(|h|,| |t|)| |#then|→|#if| |t| |is|→|Nil| |#then| |Some|(|h|)|↵|Cons|(|h2|,| |t2|)| |#then| |last_opt|(|t|)|←|←|←|←|↵|#fun| |main|(||)| |#=|→|last_opt|(|mk_list|(|10|)|)|←|↵|main|(||)|
+//│ Parsed: {fun mk_list = (n,) => {if (==(n, 0,)) then Nil else Cons(n, mk_list(-(n, 1,),),)}; fun last_opt = (l,) => {if l is ‹(Nil) then None; (Cons(h, t,)) then {if t is ‹(Nil) then Some(h,); (Cons(h2, t2,)) then last_opt(t,)›}›}; fun main = () => {last_opt(mk_list(10,),)}; main()}
 //│ 
 //│ 
 //│ IR:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #89
-//│     def apply1(x0$0) =
-//│       0 -- #85
-//│     def apply0() =
-//│       0 -- #84
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #88
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #87
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #86
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   def mk_list(n$0) =
-//│     let x$1 = ==(n$0,0) in -- #32
-//│     if x$1 -- #31
-//│       true =>
-//│         let x$3 = Nil() in -- #12
-//│         jump j$0(x$3) -- #11
-//│       false =>
-//│         let x$4 = -(n$0,1) in -- #30
-//│         let* (x$5) = mk_list(x$4) in -- #29
-//│         let x$6 = Cons(n$0,x$5) in -- #28
-//│         jump j$0(x$6) -- #27
-//│   def j$0(x$2) =
-//│     x$2 -- #9
-//│   def last_opt(l$0) =
-//│     case l$0 of -- #74
-//│       Nil =>
-//│         let x$8 = None() in -- #37
-//│         jump j$1(x$8) -- #36
-//│       Cons =>
-//│         let x$9 = Cons.t(l$0) in -- #73
-//│         let x$10 = Cons.h(l$0) in -- #72
-//│         case x$9 of -- #71
-//│           Nil =>
-//│             let x$12 = Some(x$10) in -- #54
-//│             jump j$2(x$12) -- #53
-//│           Cons =>
-//│             let x$13 = Cons.t(x$9) in -- #70
-//│             let x$14 = Cons.h(x$9) in -- #69
-//│             let* (x$15) = last_opt(x$9) in -- #68
-//│             jump j$2(x$15) -- #67
-//│   def j$1(x$7) =
-//│     x$7 -- #34
-//│   def j$2(x$11) =
-//│     jump j$1(x$11) -- #48
-//│   def main() =
-//│     let* (x$16) = mk_list(10) in -- #83
-//│     let* (x$17) = last_opt(x$16) in -- #82
-//│     x$17 -- #81
-//│   let* (x$0) = main() in -- #2
-//│   x$0 -- #1
 //│ 
-//│ Promoted:
-//│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #89
-//│     def apply1(x0$0) =
-//│       0 -- #85
-//│     def apply0() =
-//│       0 -- #84
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #88
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #87
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #86
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
 //│   def mk_list(n$0) =
 //│     let x$1 = ==(n$0,0) in -- #32
 //│     if x$1 -- #31
@@ -1913,12 +808,6 @@ main()
 
 :interpIR
 :genCpp
-class List
-class Cons(h, t) extends List
-class Nil extends List
-class Option
-class Some(x) extends Option
-class None extends Option
 fun is_some(o) =
   if o is
     Some(x) then True
@@ -1945,139 +834,13 @@ fun f(x) =
 fun main() =
   f(Some(2)) + f(None)
 main()
-//│ |#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |is_some|(|o|)| |#=|→|#if| |o| |is|→|Some|(|x|)| |#then| |True|↵|None| |#then| |False|←|←|↵|#fun| |e0|(|w|)| |#=|→|w| |+| |8| |+| |9| |+| |10|←|↵|#fun| |e1|(|a|,| |c|)| |#=|→|a| |+| |1| |+| |2| |+| |3| |+| |4|←|↵|#fun| |e3|(|c|)| |#=|→|#let| |m| |#=| |4|↵|#let| |n| |#=| |5|↵|#let| |p| |#=| |6|↵|#let| |q| |#=| |7|↵|#if| |c| |#then| |m| |+| |n| |+| |p| |+| |q| |#else| |m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |e2|(|x|)| |#=|→|x| |+| |12| |+| |13| |+| |14|←|↵|#fun| |f|(|x|)| |#=|→|#let| |c1| |#=| |is_some|(|x|)|↵|#let| |z| |#=| |e3|(|c1|)|↵|#let| |w| |#=| |#if| |x| |is|→|Some|(|a|)| |#then| |e1|(|a|,| |z|)|↵|None| |#then| |e2|(|z|)|←|↵|e0|(|w|)|←|↵|#fun| |main|(||)| |#=|→|f|(|Some|(|2|)|)| |+| |f|(|None|)|←|↵|main|(||)|
-//│ Parsed: {class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun is_some = (o,) => {if o is ‹(Some(x,)) then True; (None) then False›}; fun e0 = (w,) => {+(+(+(w, 8,), 9,), 10,)}; fun e1 = (a, c,) => {+(+(+(+(a, 1,), 2,), 3,), 4,)}; fun e3 = (c,) => {let m = 4; let n = 5; let p = 6; let q = 7; if (c) then +(+(+(m, n,), p,), q,) else +(-(+(m, n,), p,), q,)}; fun e2 = (x,) => {+(+(+(x, 12,), 13,), 14,)}; fun f = (x,) => {let c1 = is_some(x,); let z = e3(c1,); let w = if x is ‹(Some(a,)) then e1(a, z,); (None) then e2(z,)›; e0(w,)}; fun main = () => {+(f(Some(2,),), f(None,),)}; main()}
+//│ |#fun| |is_some|(|o|)| |#=|→|#if| |o| |is|→|Some|(|x|)| |#then| |True|↵|None| |#then| |False|←|←|↵|#fun| |e0|(|w|)| |#=|→|w| |+| |8| |+| |9| |+| |10|←|↵|#fun| |e1|(|a|,| |c|)| |#=|→|a| |+| |1| |+| |2| |+| |3| |+| |4|←|↵|#fun| |e3|(|c|)| |#=|→|#let| |m| |#=| |4|↵|#let| |n| |#=| |5|↵|#let| |p| |#=| |6|↵|#let| |q| |#=| |7|↵|#if| |c| |#then| |m| |+| |n| |+| |p| |+| |q| |#else| |m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |e2|(|x|)| |#=|→|x| |+| |12| |+| |13| |+| |14|←|↵|#fun| |f|(|x|)| |#=|→|#let| |c1| |#=| |is_some|(|x|)|↵|#let| |z| |#=| |e3|(|c1|)|↵|#let| |w| |#=| |#if| |x| |is|→|Some|(|a|)| |#then| |e1|(|a|,| |z|)|↵|None| |#then| |e2|(|z|)|←|↵|e0|(|w|)|←|↵|#fun| |main|(||)| |#=|→|f|(|Some|(|2|)|)| |+| |f|(|None|)|←|↵|main|(||)|
+//│ Parsed: {fun is_some = (o,) => {if o is ‹(Some(x,)) then True; (None) then False›}; fun e0 = (w,) => {+(+(+(w, 8,), 9,), 10,)}; fun e1 = (a, c,) => {+(+(+(+(a, 1,), 2,), 3,), 4,)}; fun e3 = (c,) => {let m = 4; let n = 5; let p = 6; let q = 7; if (c) then +(+(+(m, n,), p,), q,) else +(-(+(m, n,), p,), q,)}; fun e2 = (x,) => {+(+(+(x, 12,), 13,), 14,)}; fun f = (x,) => {let c1 = is_some(x,); let z = e3(c1,); let w = if x is ‹(Some(a,)) then e1(a, z,); (None) then e2(z,)›; e0(w,)}; fun main = () => {+(f(Some(2,),), f(None,),)}; main()}
 //│ 
 //│ 
 //│ IR:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #193
-//│     def apply1(x0$0) =
-//│       0 -- #189
-//│     def apply0() =
-//│       0 -- #188
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #192
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #191
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #190
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   def is_some(o$0) =
-//│     case o$0 of -- #16
-//│       Some =>
-//│         let x$2 = Some.x(o$0) in -- #12
-//│         let x$3 = True() in -- #11
-//│         jump j$0(x$3) -- #10
-//│       None =>
-//│         let x$4 = False() in -- #15
-//│         jump j$0(x$4) -- #14
-//│   def j$0(x$1) =
-//│     x$1 -- #4
-//│   def e0(w$0) =
-//│     let x$5 = +(w$0,8) in -- #35
-//│     let x$6 = +(x$5,9) in -- #34
-//│     let x$7 = +(x$6,10) in -- #33
-//│     x$7 -- #32
-//│   def e1(a$0,c$0) =
-//│     let x$8 = +(a$0,1) in -- #60
-//│     let x$9 = +(x$8,2) in -- #59
-//│     let x$10 = +(x$9,3) in -- #58
-//│     let x$11 = +(x$10,4) in -- #57
-//│     x$11 -- #56
-//│   def e3(c$1) =
-//│     let x$12 = 4 in -- #111
-//│     let x$13 = 5 in -- #110
-//│     let x$14 = 6 in -- #109
-//│     let x$15 = 7 in -- #108
-//│     if c$1 -- #107
-//│       true =>
-//│         let x$17 = +(x$12,x$13) in -- #86
-//│         let x$18 = +(x$17,x$14) in -- #85
-//│         let x$19 = +(x$18,x$15) in -- #84
-//│         jump j$1(x$19) -- #83
-//│       false =>
-//│         let x$20 = +(x$12,x$13) in -- #106
-//│         let x$21 = -(x$20,x$14) in -- #105
-//│         let x$22 = +(x$21,x$15) in -- #104
-//│         jump j$1(x$22) -- #103
-//│   def j$1(x$16) =
-//│     x$16 -- #66
-//│   def e2(x$23) =
-//│     let x$24 = +(x$23,12) in -- #130
-//│     let x$25 = +(x$24,13) in -- #129
-//│     let x$26 = +(x$25,14) in -- #128
-//│     x$26 -- #127
-//│   def f(x$27) =
-//│     let* (x$28) = is_some(x$27) in -- #167
-//│     let* (x$29) = e3(x$28) in -- #166
-//│     case x$27 of -- #165
-//│       Some =>
-//│         let x$32 = Some.x(x$27) in -- #158
-//│         let* (x$33) = e1(x$32,x$29) in -- #157
-//│         jump j$2(x$33) -- #156
-//│       None =>
-//│         let* (x$34) = e2(x$29) in -- #164
-//│         jump j$2(x$34) -- #163
-//│   def j$2(x$30) =
-//│     let* (x$31) = e0(x$30) in -- #145
-//│     x$31 -- #144
-//│   def main() =
-//│     let x$35 = Some(2) in -- #187
-//│     let* (x$36) = f(x$35) in -- #186
-//│     let x$37 = None() in -- #185
-//│     let* (x$38) = f(x$37) in -- #184
-//│     let x$39 = +(x$36,x$38) in -- #183
-//│     x$39 -- #182
-//│   let* (x$0) = main() in -- #2
-//│   x$0 -- #1
 //│ 
-//│ Promoted:
-//│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #193
-//│     def apply1(x0$0) =
-//│       0 -- #189
-//│     def apply0() =
-//│       0 -- #188
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #192
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #191
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #190
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
 //│   def is_some(o$0) =
 //│     case o$0 of -- #16
 //│       Some =>
@@ -2153,12 +916,6 @@ main()
 
 :interpIR
 :genCpp
-class List
-class Cons(h, t) extends List
-class Nil extends List
-class Option
-class Some(x) extends Option
-class None extends Option
 fun is_some(o) =
   if o is
     Some(x) then True
@@ -2185,145 +942,13 @@ fun f(x) =
 fun main() =
   f(Some(2)) + f(None)
 main()
-//│ |#class| |List|↵|#class| |Cons|(|h|,| |t|)| |#extends| |List|↵|#class| |Nil| |#extends| |List|↵|#class| |Option|↵|#class| |Some|(|x|)| |#extends| |Option|↵|#class| |None| |#extends| |Option|↵|#fun| |is_some|(|o|)| |#=|→|#if| |o| |is|→|Some|(|x|)| |#then| |True|↵|None| |#then| |False|←|←|↵|#fun| |e0|(|w|)| |#=|→|w| |+| |8| |+| |9| |+| |10|←|↵|#fun| |e1|(|a|,| |z|)| |#=|→|#if| |a| |>| |0| |#then| |f|(|Some|(|a| |-| |1|)|)| |#else| |z|←|↵|#fun| |e3|(|c|)| |#=|→|#let| |m| |#=| |4|↵|#let| |n| |#=| |5|↵|#let| |p| |#=| |6|↵|#let| |q| |#=| |7|↵|#if| |c| |#then| |m| |+| |n| |+| |p| |+| |q| |#else| |m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |e2|(|x|)| |#=|→|x| |+| |12| |+| |13| |+| |14|←|↵|#fun| |f|(|x|)| |#=|→|#let| |c1| |#=| |is_some|(|x|)|↵|#let| |z| |#=| |e3|(|c1|)|↵|#let| |w| |#=| |#if| |x| |is|→|Some|(|a|)| |#then| |e1|(|a|,| |z|)|↵|None| |#then| |e2|(|z|)|←|↵|e0|(|w|)|←|↵|#fun| |main|(||)| |#=|→|f|(|Some|(|2|)|)| |+| |f|(|None|)|←|↵|main|(||)|
-//│ Parsed: {class List {}; class Cons(h, t,): List {}; class Nil: List {}; class Option {}; class Some(x,): Option {}; class None: Option {}; fun is_some = (o,) => {if o is ‹(Some(x,)) then True; (None) then False›}; fun e0 = (w,) => {+(+(+(w, 8,), 9,), 10,)}; fun e1 = (a, z,) => {if (>(a, 0,)) then f(Some(-(a, 1,),),) else z}; fun e3 = (c,) => {let m = 4; let n = 5; let p = 6; let q = 7; if (c) then +(+(+(m, n,), p,), q,) else +(-(+(m, n,), p,), q,)}; fun e2 = (x,) => {+(+(+(x, 12,), 13,), 14,)}; fun f = (x,) => {let c1 = is_some(x,); let z = e3(c1,); let w = if x is ‹(Some(a,)) then e1(a, z,); (None) then e2(z,)›; e0(w,)}; fun main = () => {+(f(Some(2,),), f(None,),)}; main()}
+//│ |#fun| |is_some|(|o|)| |#=|→|#if| |o| |is|→|Some|(|x|)| |#then| |True|↵|None| |#then| |False|←|←|↵|#fun| |e0|(|w|)| |#=|→|w| |+| |8| |+| |9| |+| |10|←|↵|#fun| |e1|(|a|,| |z|)| |#=|→|#if| |a| |>| |0| |#then| |f|(|Some|(|a| |-| |1|)|)| |#else| |z|←|↵|#fun| |e3|(|c|)| |#=|→|#let| |m| |#=| |4|↵|#let| |n| |#=| |5|↵|#let| |p| |#=| |6|↵|#let| |q| |#=| |7|↵|#if| |c| |#then| |m| |+| |n| |+| |p| |+| |q| |#else| |m| |+| |n| |-| |p| |+| |q|←|↵|#fun| |e2|(|x|)| |#=|→|x| |+| |12| |+| |13| |+| |14|←|↵|#fun| |f|(|x|)| |#=|→|#let| |c1| |#=| |is_some|(|x|)|↵|#let| |z| |#=| |e3|(|c1|)|↵|#let| |w| |#=| |#if| |x| |is|→|Some|(|a|)| |#then| |e1|(|a|,| |z|)|↵|None| |#then| |e2|(|z|)|←|↵|e0|(|w|)|←|↵|#fun| |main|(||)| |#=|→|f|(|Some|(|2|)|)| |+| |f|(|None|)|←|↵|main|(||)|
+//│ Parsed: {fun is_some = (o,) => {if o is ‹(Some(x,)) then True; (None) then False›}; fun e0 = (w,) => {+(+(+(w, 8,), 9,), 10,)}; fun e1 = (a, z,) => {if (>(a, 0,)) then f(Some(-(a, 1,),),) else z}; fun e3 = (c,) => {let m = 4; let n = 5; let p = 6; let q = 7; if (c) then +(+(+(m, n,), p,), q,) else +(-(+(m, n,), p,), q,)}; fun e2 = (x,) => {+(+(+(x, 12,), 13,), 14,)}; fun f = (x,) => {let c1 = is_some(x,); let z = e3(c1,); let w = if x is ‹(Some(a,)) then e1(a, z,); (None) then e2(z,)›; e0(w,)}; fun main = () => {+(f(Some(2,),), f(None,),)}; main()}
 //│ 
 //│ 
 //│ IR:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #195
-//│     def apply1(x0$0) =
-//│       0 -- #191
-//│     def apply0() =
-//│       0 -- #190
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #194
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #193
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #192
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   def is_some(o$0) =
-//│     case o$0 of -- #16
-//│       Some =>
-//│         let x$2 = Some.x(o$0) in -- #12
-//│         let x$3 = True() in -- #11
-//│         jump j$0(x$3) -- #10
-//│       None =>
-//│         let x$4 = False() in -- #15
-//│         jump j$0(x$4) -- #14
-//│   def j$0(x$1) =
-//│     x$1 -- #4
-//│   def e0(w$0) =
-//│     let x$5 = +(w$0,8) in -- #35
-//│     let x$6 = +(x$5,9) in -- #34
-//│     let x$7 = +(x$6,10) in -- #33
-//│     x$7 -- #32
-//│   def e1(a$0,z$0) =
-//│     let x$8 = >(a$0,0) in -- #62
-//│     if x$8 -- #61
-//│       true =>
-//│         let x$10 = -(a$0,1) in -- #58
-//│         let x$11 = Some(x$10) in -- #57
-//│         let* (x$12) = f(x$11) in -- #56
-//│         jump j$1(x$12) -- #55
-//│       false =>
-//│         jump j$1(z$0) -- #60
-//│   def j$1(x$9) =
-//│     x$9 -- #42
-//│   def e3(c$0) =
-//│     let x$13 = 4 in -- #113
-//│     let x$14 = 5 in -- #112
-//│     let x$15 = 6 in -- #111
-//│     let x$16 = 7 in -- #110
-//│     if c$0 -- #109
-//│       true =>
-//│         let x$18 = +(x$13,x$14) in -- #88
-//│         let x$19 = +(x$18,x$15) in -- #87
-//│         let x$20 = +(x$19,x$16) in -- #86
-//│         jump j$2(x$20) -- #85
-//│       false =>
-//│         let x$21 = +(x$13,x$14) in -- #108
-//│         let x$22 = -(x$21,x$15) in -- #107
-//│         let x$23 = +(x$22,x$16) in -- #106
-//│         jump j$2(x$23) -- #105
-//│   def j$2(x$17) =
-//│     x$17 -- #68
-//│   def e2(x$24) =
-//│     let x$25 = +(x$24,12) in -- #132
-//│     let x$26 = +(x$25,13) in -- #131
-//│     let x$27 = +(x$26,14) in -- #130
-//│     x$27 -- #129
-//│   def f(x$28) =
-//│     let* (x$29) = is_some(x$28) in -- #169
-//│     let* (x$30) = e3(x$29) in -- #168
-//│     case x$28 of -- #167
-//│       Some =>
-//│         let x$33 = Some.x(x$28) in -- #160
-//│         let* (x$34) = e1(x$33,x$30) in -- #159
-//│         jump j$3(x$34) -- #158
-//│       None =>
-//│         let* (x$35) = e2(x$30) in -- #166
-//│         jump j$3(x$35) -- #165
-//│   def j$3(x$31) =
-//│     let* (x$32) = e0(x$31) in -- #147
-//│     x$32 -- #146
-//│   def main() =
-//│     let x$36 = Some(2) in -- #189
-//│     let* (x$37) = f(x$36) in -- #188
-//│     let x$38 = None() in -- #187
-//│     let* (x$39) = f(x$38) in -- #186
-//│     let x$40 = +(x$37,x$39) in -- #185
-//│     x$40 -- #184
-//│   let* (x$0) = main() in -- #2
-//│   x$0 -- #1
 //│ 
-//│ Promoted:
-//│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #195
-//│     def apply1(x0$0) =
-//│       0 -- #191
-//│     def apply0() =
-//│       0 -- #190
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #194
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #193
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #192
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
 //│   def is_some(o$0) =
 //│     case o$0 of -- #16
 //│       Some =>
@@ -2404,184 +1029,54 @@ main()
 //│ 
 
 :genCpp
-class Nat
-class S(x) extends Nat
-class Z extends Nat
 fun pred(n) =
   if n is
     S(p) then p
-    Z then Z
+    O then O
 fun plus(n1, n2) =
   if n1 is
-    Z then n2
+    O then n2
     S(p) then S(plus(p, n2))
 fun fib(n) =
   if n is
-    Z then S(Z)
+    O then S(O)
     S(p) then
       if p is
-        Z then S(Z)
+        O then S(O)
         S(q) then plus(fib(p), fib(q))
 fun to_int(n) =
   if n is
-    Z then 0
+    O then 0
     S(p) then 1 + to_int(p)
 fun to_nat(n) =
-  if n == 0 then Z
+  if n == 0 then O
   else S(to_nat(n - 1))
 fun main() =
   to_int(fib(to_nat(30)))
 main()
-//│ |#class| |Nat|↵|#class| |S|(|x|)| |#extends| |Nat|↵|#class| |Z| |#extends| |Nat|↵|#fun| |pred|(|n|)| |#=|→|#if| |n| |is|→|S|(|p|)| |#then| |p|↵|Z| |#then| |Z|←|←|↵|#fun| |plus|(|n1|,| |n2|)| |#=|→|#if| |n1| |is|→|Z| |#then| |n2|↵|S|(|p|)| |#then| |S|(|plus|(|p|,| |n2|)|)|←|←|↵|#fun| |fib|(|n|)| |#=|→|#if| |n| |is|→|Z| |#then| |S|(|Z|)|↵|S|(|p|)| |#then|→|#if| |p| |is|→|Z| |#then| |S|(|Z|)|↵|S|(|q|)| |#then| |plus|(|fib|(|p|)|,| |fib|(|q|)|)|←|←|←|←|↵|#fun| |to_int|(|n|)| |#=|→|#if| |n| |is|→|Z| |#then| |0|↵|S|(|p|)| |#then| |1| |+| |to_int|(|p|)|←|←|↵|#fun| |to_nat|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |Z|↵|#else| |S|(|to_nat|(|n| |-| |1|)|)|←|↵|#fun| |main|(||)| |#=|→|to_int|(|fib|(|to_nat|(|30|)|)|)|←|↵|main|(||)|
-//│ Parsed: {class Nat {}; class S(x,): Nat {}; class Z: Nat {}; fun pred = (n,) => {if n is ‹(S(p,)) then p; (Z) then Z›}; fun plus = (n1, n2,) => {if n1 is ‹(Z) then n2; (S(p,)) then S(plus(p, n2,),)›}; fun fib = (n,) => {if n is ‹(Z) then S(Z,); (S(p,)) then {if p is ‹(Z) then S(Z,); (S(q,)) then plus(fib(p,), fib(q,),)›}›}; fun to_int = (n,) => {if n is ‹(Z) then 0; (S(p,)) then +(1, to_int(p,),)›}; fun to_nat = (n,) => {if (==(n, 0,)) then Z else S(to_nat(-(n, 1,),),)}; fun main = () => {to_int(fib(to_nat(30,),),)}; main()}
+//│ |#fun| |pred|(|n|)| |#=|→|#if| |n| |is|→|S|(|p|)| |#then| |p|↵|O| |#then| |O|←|←|↵|#fun| |plus|(|n1|,| |n2|)| |#=|→|#if| |n1| |is|→|O| |#then| |n2|↵|S|(|p|)| |#then| |S|(|plus|(|p|,| |n2|)|)|←|←|↵|#fun| |fib|(|n|)| |#=|→|#if| |n| |is|→|O| |#then| |S|(|O|)|↵|S|(|p|)| |#then|→|#if| |p| |is|→|O| |#then| |S|(|O|)|↵|S|(|q|)| |#then| |plus|(|fib|(|p|)|,| |fib|(|q|)|)|←|←|←|←|↵|#fun| |to_int|(|n|)| |#=|→|#if| |n| |is|→|O| |#then| |0|↵|S|(|p|)| |#then| |1| |+| |to_int|(|p|)|←|←|↵|#fun| |to_nat|(|n|)| |#=|→|#if| |n| |==| |0| |#then| |O|↵|#else| |S|(|to_nat|(|n| |-| |1|)|)|←|↵|#fun| |main|(||)| |#=|→|to_int|(|fib|(|to_nat|(|30|)|)|)|←|↵|main|(||)|
+//│ Parsed: {fun pred = (n,) => {if n is ‹(S(p,)) then p; (O) then O›}; fun plus = (n1, n2,) => {if n1 is ‹(O) then n2; (S(p,)) then S(plus(p, n2,),)›}; fun fib = (n,) => {if n is ‹(O) then S(O,); (S(p,)) then {if p is ‹(O) then S(O,); (S(q,)) then plus(fib(p,), fib(q,),)›}›}; fun to_int = (n,) => {if n is ‹(O) then 0; (S(p,)) then +(1, to_int(p,),)›}; fun to_nat = (n,) => {if (==(n, 0,)) then O else S(to_nat(-(n, 1,),),)}; fun main = () => {to_int(fib(to_nat(30,),),)}; main()}
 //│ 
 //│ 
 //│ IR:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #153
-//│     def apply1(x0$0) =
-//│       0 -- #149
-//│     def apply0() =
-//│       0 -- #148
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #152
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #151
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #150
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class Nat()
-//│   class S(x) extends Nat
-//│   class Z() extends Nat
-//│   def pred(n$0) =
-//│     case n$0 of -- #15
-//│       S =>
-//│         let x$2 = S.x(n$0) in -- #11
-//│         jump j$0(x$2) -- #10
-//│       Z =>
-//│         let x$3 = Z() in -- #14
-//│         jump j$0(x$3) -- #13
-//│   def j$0(x$1) =
-//│     x$1 -- #4
-//│   def plus(n1$0,n2$0) =
-//│     case n1$0 of -- #37
-//│       Z =>
-//│         jump j$1(n2$0) -- #19
-//│       S =>
-//│         let x$5 = S.x(n1$0) in -- #36
-//│         let* (x$6) = plus(x$5,n2$0) in -- #35
-//│         let x$7 = S(x$6) in -- #34
-//│         jump j$1(x$7) -- #33
-//│   def j$1(x$4) =
-//│     x$4 -- #17
-//│   def fib(n$1) =
-//│     case n$1 of -- #84
-//│       Z =>
-//│         let x$9 = Z() in -- #46
-//│         let x$10 = S(x$9) in -- #45
-//│         jump j$2(x$10) -- #44
-//│       S =>
-//│         let x$11 = S.x(n$1) in -- #83
-//│         case x$11 of -- #82
-//│           Z =>
-//│             let x$13 = Z() in -- #60
-//│             let x$14 = S(x$13) in -- #59
-//│             jump j$3(x$14) -- #58
-//│           S =>
-//│             let x$15 = S.x(x$11) in -- #81
-//│             let* (x$16) = fib(x$11) in -- #80
-//│             let* (x$17) = fib(x$15) in -- #79
-//│             let* (x$18) = plus(x$16,x$17) in -- #78
-//│             jump j$3(x$18) -- #77
-//│   def j$2(x$8) =
-//│     x$8 -- #39
-//│   def j$3(x$12) =
-//│     jump j$2(x$12) -- #53
-//│   def to_int(n$2) =
-//│     case n$2 of -- #106
-//│       Z =>
-//│         jump j$4(0) -- #88
-//│       S =>
-//│         let x$20 = S.x(n$2) in -- #105
-//│         let* (x$21) = to_int(x$20) in -- #104
-//│         let x$22 = +(1,x$21) in -- #103
-//│         jump j$4(x$22) -- #102
-//│   def j$4(x$19) =
-//│     x$19 -- #86
-//│   def to_nat(n$3) =
-//│     let x$23 = ==(n$3,0) in -- #134
-//│     if x$23 -- #133
-//│       true =>
-//│         let x$25 = Z() in -- #116
-//│         jump j$5(x$25) -- #115
-//│       false =>
-//│         let x$26 = -(n$3,1) in -- #132
-//│         let* (x$27) = to_nat(x$26) in -- #131
-//│         let x$28 = S(x$27) in -- #130
-//│         jump j$5(x$28) -- #129
-//│   def j$5(x$24) =
-//│     x$24 -- #113
-//│   def main() =
-//│     let* (x$29) = to_nat(30) in -- #147
-//│     let* (x$30) = fib(x$29) in -- #146
-//│     let* (x$31) = to_int(x$30) in -- #145
-//│     x$31 -- #144
-//│   let* (x$0) = main() in -- #2
-//│   x$0 -- #1
 //│ 
-//│ Promoted:
-//│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #153
-//│     def apply1(x0$0) =
-//│       0 -- #149
-//│     def apply0() =
-//│       0 -- #148
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #152
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #151
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #150
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
-//│   class Nat()
-//│   class S(x) extends Nat
-//│   class Z() extends Nat
 //│   def pred(n$0) =
 //│     case n$0 of -- #15
 //│       S =>
-//│         let x$2 = S.x(n$0) in -- #11
+//│         let x$2 = S.s(n$0) in -- #11
 //│         jump j$0(x$2) -- #10
-//│       Z =>
-//│         let x$3 = Z() in -- #14
+//│       O =>
+//│         let x$3 = O() in -- #14
 //│         jump j$0(x$3) -- #13
 //│   def j$0(x$1) =
 //│     x$1 -- #4
 //│   def plus(n1$0,n2$0) =
 //│     case n1$0 of -- #37
-//│       Z =>
+//│       O =>
 //│         jump j$1(n2$0) -- #19
 //│       S =>
-//│         let x$5 = S.x(n1$0) in -- #36
+//│         let x$5 = S.s(n1$0) in -- #36
 //│         let* (x$6) = plus(x$5,n2$0) in -- #35
 //│         let x$7 = S(x$6) in -- #34
 //│         jump j$1(x$7) -- #33
@@ -2589,19 +1084,19 @@ main()
 //│     x$4 -- #17
 //│   def fib(n$1) =
 //│     case n$1 of -- #84
-//│       Z =>
-//│         let x$9 = Z() in -- #46
+//│       O =>
+//│         let x$9 = O() in -- #46
 //│         let x$10 = S(x$9) in -- #45
 //│         jump j$2(x$10) -- #44
 //│       S =>
-//│         let x$11 = S.x(n$1) in -- #83
+//│         let x$11 = S.s(n$1) in -- #83
 //│         case x$11 of -- #82
-//│           Z =>
-//│             let x$13 = Z() in -- #60
+//│           O =>
+//│             let x$13 = O() in -- #60
 //│             let x$14 = S(x$13) in -- #59
 //│             jump j$3(x$14) -- #58
 //│           S =>
-//│             let x$15 = S.x(x$11) in -- #81
+//│             let x$15 = S.s(x$11) in -- #81
 //│             let* (x$16) = fib(x$11) in -- #80
 //│             let* (x$17) = fib(x$15) in -- #79
 //│             let* (x$18) = plus(x$16,x$17) in -- #78
@@ -2612,10 +1107,10 @@ main()
 //│     jump j$2(x$12) -- #53
 //│   def to_int(n$2) =
 //│     case n$2 of -- #106
-//│       Z =>
+//│       O =>
 //│         jump j$4(0) -- #88
 //│       S =>
-//│         let x$20 = S.x(n$2) in -- #105
+//│         let x$20 = S.s(n$2) in -- #105
 //│         let* (x$21) = to_int(x$20) in -- #104
 //│         let x$22 = +(1,x$21) in -- #103
 //│         jump j$4(x$22) -- #102
@@ -2625,7 +1120,7 @@ main()
 //│     let x$23 = ==(n$3,0) in -- #134
 //│     if x$23 -- #133
 //│       true =>
-//│         let x$25 = Z() in -- #116
+//│         let x$25 = O() in -- #116
 //│         jump j$5(x$25) -- #115
 //│       false =>
 //│         let x$26 = -(n$3,1) in -- #132

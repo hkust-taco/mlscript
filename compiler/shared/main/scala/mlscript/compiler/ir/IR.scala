@@ -29,9 +29,9 @@ case class Program(
     Sorting.quickSort(t2)
     s"Program({${t1.mkString(",\n")}}, {\n${t2.mkString("\n")}\n},\n$main)"
 
-  def show = toDocument.print
+  def show(hiddenNames: Set[Str] = Set.empty) = toDocument(hiddenNames).print
 
-  def toDocument: Document =
+  def toDocument(hiddenNames: Set[Str] = Set.empty) : Document =
     val t1 = classes.toArray
     val t2 = defs.toArray
     Sorting.quickSort(t1)
@@ -39,7 +39,7 @@ case class Program(
     given Conversion[String, Document] = raw
     stack(
       "Program:",
-      stack_list(t1.map(_.toDocument).toList) |> indent,
+      stack_list(t1.filter(x => !hiddenNames.contains(x.name)).map(_.toDocument).toList) |> indent,
       stack_list(t2.map(_.toDocument).toList) |> indent,
       main.toDocument |> indent
     )

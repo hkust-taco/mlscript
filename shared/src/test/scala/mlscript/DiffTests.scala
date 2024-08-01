@@ -53,6 +53,7 @@ abstract class ModeType {
   def simpledef: Bool
   def lift: Bool
   def nolift: Bool
+  def prelude: Bool
 }
 
 class DiffTests(state: DiffTests.State)
@@ -199,6 +200,7 @@ class DiffTests(state: DiffTests.State)
       runCpp: Bool = false,
       writeCpp: Bool = false,
       noTailRecOpt: Bool = false,
+      prelude: Bool = false,
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
     }
@@ -333,6 +335,7 @@ class DiffTests(state: DiffTests.State)
           case "showCpp" => mode.copy(showCpp = true)
           case "runCpp" => mode.copy(runCpp = true)
           case "writeCpp" => mode.copy(writeCpp = true)
+          case "prelude" => mode.copy(prelude = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)

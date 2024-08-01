@@ -3,7 +3,8 @@ package mlscript.compiler
 
 import mlscript.utils.shorthands._
 import mlscript.compiler.ir._
-import scala.collection.mutable.StringBuilder
+import scala.collection.mutable.{ListBuffer, StringBuilder}
+import mlscript.Statement
 import mlscript.{DiffTests, ModeType, TypingUnit}
 import mlscript.compiler.ir.{Fresh, FreshInt, Builder}
 import mlscript.compiler.codegen.cpp._
@@ -18,26 +19,30 @@ class IRDiffTestCompiler extends DiffTests(State) {
     try { op(p) } finally { p.close() }
   }
 
-  override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit, raise: Diagnostic => Unit): (List[Str], Option[TypingUnit]) = 
+  val preludeSource = ListBuffer[Statement]()
+
+  override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, originalUnit: TypingUnit, output: Str => Unit, raise: Diagnostic => Unit): (List[Str], Option[TypingUnit]) = 
     val outputBuilder = StringBuilder()
-    if (mode.useIR || mode.irVerbose)
+    if (mode.prelude)
+      preludeSource.addAll(originalUnit.rawEntities)
+      output("\nPreluded.")
+    else if (mode.useIR || mode.irVerbose)
       try
         val (fresh, freshFnId, freshClassId, freshTag) = (Fresh(), FreshInt(), FreshInt(), FreshInt())
         val gb = Builder(fresh, freshFnId, freshClassId, freshTag, raise, mode.irVerbose)
-        var graph = gb.buildGraph(unit)
+        val prelude = TypingUnit(preludeSource.toList)
+        var graph = gb.buildGraph(prelude, originalUnit)
+        val hiddenNames = gb.getHiddenNames(prelude)
 
-        if mode.noTailRecOpt then
-          output("\n\nIR:")
-          output(graph.show)
-        else
+        output("\n\nIR:")
+        output(graph.show(hiddenNames))
+        if !mode.noTailRecOpt then
           val tailRecOpt = new TailRecOpt(freshFnId, freshClassId, freshTag, raise)
           val (g, comps) = tailRecOpt.run_debug(graph)
           output("\n\nStrongly Connected Tail Calls:")
           output(comps.toString)
           graph = g
-          output(graph.show)
-        output("\nPromoted:")
-        output(graph.show)
+          output(graph.show(hiddenNames))
         var interp_result: Opt[Str] = None
         if (mode.interpIR)
           output("\nInterpreted:")
