@@ -49,6 +49,7 @@ abstract class ModeType {
   def showCpp: Bool
   def runCpp: Bool
   def writeCpp: Bool
+  def prelude: Bool
 }
 
 class DiffTests
@@ -185,6 +186,7 @@ class DiffTests
       showCpp: Bool = false,
       runCpp: Bool = false,
       writeCpp: Bool = false,
+      prelude: Bool = false,
     ) extends ModeType {
       def isDebugging: Bool = dbg || dbgSimplif
     }
@@ -305,6 +307,7 @@ class DiffTests
           case "showCpp" => mode.copy(showCpp = true)
           case "runCpp" => mode.copy(runCpp = true)
           case "writeCpp" => mode.copy(writeCpp = true)
+          case "prelude" => mode.copy(prelude = true)
           case _ =>
             failures += allLines.size - lines.size
             output("/!\\ Unrecognized option " + line)

@@ -1,6 +1,37 @@
 :NewDefs
 :ParseOnly
 :UseIR
+:prelude
+
+:prelude
+module True
+module False
+module Callable {
+  fun apply0() = 0
+  fun apply1(x0) = 0
+  fun apply2(x0,x1) = 0
+  fun apply3(x0,x1,x2) = 0
+  fun apply4(x0,x1,x2,x3) = 0
+  fun apply5(x0,x1,x2,x3,x4) = 0
+}
+module List[A, B]
+class Cons[A, B](h: A, t: Cons[A, B]) extends List[A, B]
+module Nil[A, B] extends List[A, B]
+module Option[A]
+class Some[A](x: A) extends Option[A]
+module None[A] extends Option[A]
+class Pair[A, B](x: A, y: B)
+class Tuple2[A, B](x: A, y: B)
+class Tuple3[A, B, C](x: A, y: B, z: C)
+module Nat
+class S(s: Nat) extends Nat
+module O extends Nat
+class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O)
+//│ |#module| |True|↵|#module| |False|↵|#module| |Callable| |{|→|#fun| |apply0|(||)| |#=| |0|↵|#fun| |apply1|(|x0|)| |#=| |0|↵|#fun| |apply2|(|x0|,|x1|)| |#=| |0|↵|#fun| |apply3|(|x0|,|x1|,|x2|)| |#=| |0|↵|#fun| |apply4|(|x0|,|x1|,|x2|,|x3|)| |#=| |0|↵|#fun| |apply5|(|x0|,|x1|,|x2|,|x3|,|x4|)| |#=| |0|←|↵|}|↵|#module| |List|[|A|,| |B|]|↵|#class| |Cons|[|A|,| |B|]|(|h|#:| |A|,| |t|#:| |Cons|[|A|,| |B|]|)| |#extends| |List|[|A|,| |B|]|↵|#module| |Nil|[|A|,| |B|]| |#extends| |List|[|A|,| |B|]|↵|#module| |Option|[|A|]|↵|#class| |Some|[|A|]|(|x|#:| |A|)| |#extends| |Option|[|A|]|↵|#module| |None|[|A|]| |#extends| |Option|[|A|]|↵|#class| |Pair|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple2|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple3|[|A|,| |B|,| |C|]|(|x|#:| |A|,| |y|#:| |B|,| |z|#:| |C|)|↵|#module| |Nat|↵|#class| |S|(|s|#:| |Nat|)| |#extends| |Nat|↵|#module| |O| |#extends| |Nat|↵|#class| |HiddenTheseEntities|(|_0|#:| |HiddenTheseEntities|,| |_1|#:| |True|,| |_2|#:| |False|,| |_3|#:| |Callable|,| |_4|#:| |List|,| |_5|#:| |Cons|,| |_6|#:| |Nil|,| |_7|#:| |Option|,| |_8|#:| |Some|,| |_9|#:| |None|,| |_10|#:| |Pair|,| |_11|#:| |Tuple2|,| |_12|#:| |Tuple3|,| |_13|#:| |Nat|,| |_14|#:| |S|,| |_15|#:| |O|)|
+//│ Parsed: {module True {}; module False {}; module Callable {fun apply0 = () => 0; fun apply1 = (x0,) => 0; fun apply2 = (x0, x1,) => 0; fun apply3 = (x0, x1, x2,) => 0; fun apply4 = (x0, x1, x2, x3,) => 0; fun apply5 = (x0, x1, x2, x3, x4,) => 0}; module List‹A, B› {}; class Cons‹A, B›(h: A, t: Cons‹A, B›,): List‹A, B› {}; module Nil‹A, B›: List‹A, B› {}; module Option‹A› {}; class Some‹A›(x: A,): Option‹A› {}; module None‹A›: Option‹A› {}; class Pair‹A, B›(x: A, y: B,) {}; class Tuple2‹A, B›(x: A, y: B,) {}; class Tuple3‹A, B, C›(x: A, y: B, z: C,) {}; module Nat {}; class S(s: Nat,): Nat {}; module O: Nat {}; class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O,) {}}
+//│ 
+//│ Preluded.
+//│ 
 
 :genCpp
 :runCpp
@@ -18,28 +49,6 @@ main(4)
 //│ 
 //│ IR:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #32
-//│     def apply1(x0$0) =
-//│       0 -- #28
-//│     def apply0() =
-//│       0 -- #27
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #31
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #30
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #29
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
 //│   class InnerClass(y,x) extends Callable {
 //│     def apply1(z$0) =
 //│       let x$6 = +(x,y) in -- #45
@@ -57,28 +66,6 @@ main(4)
 //│ 
 //│ Promoted:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #32
-//│     def apply1(x0$0) =
-//│       0 -- #28
-//│     def apply0() =
-//│       0 -- #27
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #31
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #30
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #29
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
 //│   class InnerClass(y,x) extends Callable {
 //│     def apply1(z$0) =
 //│       let x$6 = +(x,y) in -- #45
@@ -122,28 +109,6 @@ main(4)
 //│ 
 //│ IR:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #42
-//│     def apply1(x0$0) =
-//│       0 -- #38
-//│     def apply0() =
-//│       0 -- #37
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #41
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #40
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #39
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
 //│   class InnerClass(y) extends Callable {
 //│     def apply1(z$0) =
 //│       let x$8 = InnerClass2(z$0) in -- #44
@@ -167,28 +132,6 @@ main(4)
 //│ 
 //│ Promoted:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #42
-//│     def apply1(x0$0) =
-//│       0 -- #38
-//│     def apply0() =
-//│       0 -- #37
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #41
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #40
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #39
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
 //│   class InnerClass(y) extends Callable {
 //│     def apply1(z$0) =
 //│       let x$8 = InnerClass2(z$0) in -- #44
@@ -234,28 +177,6 @@ main(2)
 //│ 
 //│ IR:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #23
-//│     def apply1(x0$0) =
-//│       0 -- #19
-//│     def apply0() =
-//│       0 -- #18
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #22
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #21
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #20
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
 //│   class InnerClass(y) extends Callable {
 //│     def f(x$5) =
 //│       y -- #24
@@ -270,28 +191,6 @@ main(2)
 //│ 
 //│ Promoted:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #23
-//│     def apply1(x0$0) =
-//│       0 -- #19
-//│     def apply0() =
-//│       0 -- #18
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #22
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #21
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #20
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
 //│   class InnerClass(y) extends Callable {
 //│     def f(x$5) =
 //│       y -- #24

@@ -221,7 +221,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
     case Tup(fields) => fields.foldLeft(Set.empty[Str]) {
       case (acc, (_, Fld(_, trm))) => acc ++ freeVariables(trm)
     }
-    case TyApp(lhs, targs) => throw IRError("unsupported TyApp")
+    case TyApp(lhs, targs) => freeVariables(lhs)
     case Unquoted(body) => throw IRError("unsupported Unquoted")
     case Where(body, where) => throw IRError("unsupported Where")
     case While(cond, body) => freeVariables(cond) ++ freeVariables(body)
@@ -541,7 +541,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
     case fd @ _ => throw IRError("unsupported NuFunDef " + fd.toString)
 
   private def buildClassInfo(using ctx: Ctx)(ntd: Statement): ClassInfo = ntd match
-    case ntd @ NuTypeDef(Cls | Mod, TypeName(name), Nil, params, N, _, parents, N, N, TypingUnit(methods)) =>
+    case ntd @ NuTypeDef(Cls | Mod, TypeName(name), _, params, N, _, parents, N, N, TypingUnit(methods)) =>
       val clsInfoPartial = getClassInfoPartial(ctx.classCtx.keySet ++ ctx.fnCtx.keySet, ctx)(ntd)
       val cls = ClassInfo(classUid.make, name, clsInfoPartial.fields)
       val ctx2 = ctxJoin(ctx, clsInfoPartial.ctx)
@@ -549,10 +549,13 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
         nameCtx = ctx2.nameCtx ++ clsInfoPartial.fields.map(x => x -> Name(x)),
         classCtx = ctx2.classCtx + (name -> clsInfoPartial)
       )
-      cls.parents = parents.map {
+      def resolveParentName(parent: Term): String = parent match {
         case Var(name) if name.isCapitalized => name
+        case TyApp(lhs, _) => resolveParentName(lhs)
+        case App(lhs, _) => resolveParentName(lhs)
         case _ => throw IRError("unsupported parent")
-      }.toSet
+      }
+      cls.parents = parents.map(resolveParentName).toSet
       cls.methods = methods.map {
         case x: NuFunDef => x.name -> buildDefFromMethod(clsInfoPartial.fields, x)
         case x @ _ => throw IRError(f"unsupported method $x")
@@ -582,7 +585,7 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
 
 
   private def getClassInfoPartial(names: Set[Str], ctx: Ctx)(ntd: NuTypeDef): ClassInfoPartial = ntd match
-    case ntd @ NuTypeDef(Cls | Mod, TypeName(name), Nil, params, N, _, parents, N, N, TypingUnit(other)) =>
+    case ntd @ NuTypeDef(Cls | Mod, TypeName(name), _, params, N, _, parents, N, N, TypingUnit(other)) =>
       val originalFvs = freeVariables(ntd)._2
       log(s"getClassInfoPartial $name")
       log(originalFvs)
@@ -670,26 +673,29 @@ final class Builder(fresh: Fresh, fnUid: FreshInt, classUid: FreshInt, tag: Fres
     )
     initContextForStatementsFrom(nfds, ntds, terms, Set.empty)(using ctx)
 
-  val prelude = 
-    NuTypeDef(Mod,TypeName("True"),List(),None,None,None,List(),None,None,TypingUnit(List()))(N, N, Nil) ::
-    NuTypeDef(Mod,TypeName("False"),List(),None,None,None,List(),None,None,TypingUnit(List()))(N, N, Nil) ::
-    NuTypeDef(Mod,TypeName("Callable"),List(),None,None,None,List(),None,None,TypingUnit(List(
-      NuFunDef(N, Var("apply0"), None, Nil, L(Lam(Tup((0 until 0).map(x => None -> Fld(FldFlags.empty, Var("x" + x.toString))).toList), IntLit(0))))(N, N, N, N, N, false, Nil),
-      NuFunDef(N, Var("apply1"), None, Nil, L(Lam(Tup((0 until 1).map(x => None -> Fld(FldFlags.empty, Var("x" + x.toString))).toList), IntLit(0))))(N, N, N, N, N, false, Nil),
-      NuFunDef(N, Var("apply2"), None, Nil, L(Lam(Tup((0 until 2).map(x => None -> Fld(FldFlags.empty, Var("x" + x.toString))).toList), IntLit(0))))(N, N, N, N, N, false, Nil),
-      NuFunDef(N, Var("apply3"), None, Nil, L(Lam(Tup((0 until 3).map(x => None -> Fld(FldFlags.empty, Var("x" + x.toString))).toList), IntLit(0))))(N, N, N, N, N, false, Nil),
-      NuFunDef(N, Var("apply4"), None, Nil, L(Lam(Tup((0 until 4).map(x => None -> Fld(FldFlags.empty, Var("x" + x.toString))).toList), IntLit(0))))(N, N, N, N, N, false, Nil),
-      NuFunDef(N, Var("apply5"), None, Nil, L(Lam(Tup((0 until 5).map(x => None -> Fld(FldFlags.empty, Var("x" + x.toString))).toList), IntLit(0))))(N, N, N, N, N, false, Nil),
-    )))(N, N, Nil) ::
-    NuTypeDef(Mod,TypeName("List"),List(),None,None,None,List(),None,None,TypingUnit(List()))(N, N, Nil) ::
-    NuTypeDef(Cls,TypeName("Cons"),List(),Some(Tup(List((None,Fld(FldFlags.empty,Var("h"))), (None,Fld(FldFlags.empty,Var("t")))))),None,None,List(Var("List")),None,None,TypingUnit(List()))(N, N, Nil) ::
-    NuTypeDef(Mod,TypeName("Nil"),List(),None,None,None,List(Var("List")),None,None,TypingUnit(List()))(N, N, Nil) ::
-    NuTypeDef(Mod,TypeName("Option"),List(),None,None,None,List(),None,None,TypingUnit(List()))(N, N, Nil) ::
-    NuTypeDef(Cls,TypeName("Some"),List(),Some(Tup(List((None,Fld(FldFlags.empty,Var("x")))))),None,None,List(Var("Option")),None,None,TypingUnit(List()))(N, N, Nil) ::
-    NuTypeDef(Mod,TypeName("None"),List(),None,None,None,List(Var("Option")),None,None,TypingUnit(List()))(N, N, Nil) :: Nil
+  def getHiddenNames(prelude: TypingUnit): Set[Str] =
+    def resolveTypeName(x: Term): Str = x match
+      case Var(name) => name
+      case TyApp(lhs, _) => resolveTypeName(lhs)
+      case App(lhs, _) => resolveTypeName(lhs)
+      case _ => throw IRError("unsupported type name")
+    val hidden = prelude.rawEntities.flatMap {
+      case NuFunDef(_, Var(name), _, _, _) => Nil
+      case NuTypeDef(_, TypeName(name), _, params, _, _, _, _, _, _) if name == "HiddenTheseEntities" =>
+        params.fold{Nil}{
+          x => x.fields.flatMap {
+            case S(Var(name)) -> Fld(FldFlags.empty, ty) => resolveTypeName(ty) :: Nil
+            case _ => Nil
+          }
+        }
+      case NuTypeDef(_, TypeName(name), _, _, _, _, _, _, _, _) => Nil
+      case _ => Nil
+    }
+    hidden.toSet
 
-  def buildGraph(unit: TypingUnit, addPrelude: Boolean = true): Program =
-    val unit2 = if addPrelude then TypingUnit(prelude ++ unit.rawEntities) else unit
+  def buildGraph(unit: TypingUnit, prelude: TypingUnit, addPrelude: Boolean = true): Program =
+    val unit2 = if addPrelude then TypingUnit(prelude.rawEntities ++ unit.rawEntities) else unit
+    val hiddenNames = getHiddenNames(unit2)
     val (nfds, ntds, terms) = collectInfo(unit2.rawEntities)
     var ctx = initContextForStatements(nfds, ntds, terms)
 

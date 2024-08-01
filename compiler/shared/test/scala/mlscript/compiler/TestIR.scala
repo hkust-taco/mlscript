@@ -3,7 +3,8 @@ package mlscript.compiler
 
 import mlscript.utils.shorthands._
 import mlscript.compiler.ir._
-import scala.collection.mutable.StringBuilder
+import scala.collection.mutable.{ListBuffer, StringBuilder}
+import mlscript.Statement
 import mlscript.{DiffTests, ModeType, TypingUnit}
 import mlscript.compiler.ir.{Fresh, FreshInt, Builder}
 import mlscript.compiler.codegen.cpp._
@@ -16,17 +17,25 @@ class IRDiffTestCompiler extends DiffTests {
     val p = new java.io.PrintWriter(f)
     try { op(p) } finally { p.close() }
   }
-  override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, unit: TypingUnit, output: Str => Unit, raise: Diagnostic => Unit): (List[Str], Option[TypingUnit]) = 
+
+  val preludeSource = ListBuffer[Statement]()
+
+  override def postProcess(mode: ModeType, basePath: List[Str], testName: Str, originalUnit: TypingUnit, output: Str => Unit, raise: Diagnostic => Unit): (List[Str], Option[TypingUnit]) = 
     val outputBuilder = StringBuilder()
-    if (mode.useIR || mode.irVerbose)
+    if (mode.prelude)
+      preludeSource.addAll(originalUnit.rawEntities)
+      output("\nPreluded.")
+    else if (mode.useIR || mode.irVerbose)
       try
         output("\n\nIR:")
         val (fresh, freshFnId, freshClassId, freshTag) = (Fresh(), FreshInt(), FreshInt(), FreshInt())
         val gb = Builder(fresh, freshFnId, freshClassId, freshTag, mode.irVerbose)
-        val graph = gb.buildGraph(unit)
-        output(graph.show)
+        val prelude = TypingUnit(preludeSource.toList)
+        val graph = gb.buildGraph(prelude, originalUnit)
+        val hiddenNames = gb.getHiddenNames(prelude)
+        output(graph.show(hiddenNames))
         output("\nPromoted:")
-        output(graph.show)
+        output(graph.show(hiddenNames))
         var interp_result: Opt[Str] = None
         if (mode.interpIR)
           output("\nInterpreted:")

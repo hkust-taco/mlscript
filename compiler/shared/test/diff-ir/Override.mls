@@ -1,4 +1,4 @@
-:NewParser
+:NewDefs
 :ParseOnly
 :UseIR
 
@@ -22,35 +22,13 @@ main()
 //│ 
 //│ IR:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #21
-//│     def apply1(x0$0) =
-//│       0 -- #17
-//│     def apply0() =
-//│       0 -- #16
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #20
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #19
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #18
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
 //│   class Base() {
 //│     def f() =
-//│       1 -- #22
+//│       1 -- #16
 //│   }
 //│   class Child() extends Base {
 //│     def f() =
-//│       2 -- #23
+//│       2 -- #17
 //│   }
 //│   def main() =
 //│     let x$1 = Child() in -- #15
@@ -62,35 +40,13 @@ main()
 //│ 
 //│ Promoted:
 //│ Program:
-//│   class True()
-//│   class False()
-//│   class Callable() {
-//│     def apply5(x0$4,x1$3,x2$2,x3$1,x4$0) =
-//│       0 -- #21
-//│     def apply1(x0$0) =
-//│       0 -- #17
-//│     def apply0() =
-//│       0 -- #16
-//│     def apply4(x0$3,x1$2,x2$1,x3$0) =
-//│       0 -- #20
-//│     def apply3(x0$2,x1$1,x2$0) =
-//│       0 -- #19
-//│     def apply2(x0$1,x1$0) =
-//│       0 -- #18
-//│   }
-//│   class List()
-//│   class Cons(h,t) extends List
-//│   class Nil() extends List
-//│   class Option()
-//│   class Some(x) extends Option
-//│   class None() extends Option
 //│   class Base() {
 //│     def f() =
-//│       1 -- #22
+//│       1 -- #16
 //│   }
 //│   class Child() extends Base {
 //│     def f() =
-//│       2 -- #23
+//│       2 -- #17
 //│   }
 //│   def main() =
 //│     let x$1 = Child() in -- #15
@@ -106,3 +62,4 @@ main()
 //│ 
 //│ Execution succeeded: 
 //│ 2
+//│ 
