@@ -28,9 +28,9 @@ module O extends Nat
 module Either[A, B]
 class Left[A, B](x: A) extends Either[A, B]
 class Right[A, B](y: B) extends Either[A, B]
-class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O, _16: Left, _17: Right)
-//│ |#module| |True|↵|#module| |False|↵|#module| |Callable| |{|→|#fun| |apply0|(||)| |#=| |0|↵|#fun| |apply1|(|x0|)| |#=| |0|↵|#fun| |apply2|(|x0|,|x1|)| |#=| |0|↵|#fun| |apply3|(|x0|,|x1|,|x2|)| |#=| |0|↵|#fun| |apply4|(|x0|,|x1|,|x2|,|x3|)| |#=| |0|↵|#fun| |apply5|(|x0|,|x1|,|x2|,|x3|,|x4|)| |#=| |0|←|↵|}|↵|#module| |List|[|A|,| |B|]|↵|#class| |Cons|[|A|,| |B|]|(|h|#:| |A|,| |t|#:| |Cons|[|A|,| |B|]|)| |#extends| |List|[|A|,| |B|]|↵|#module| |Nil|[|A|,| |B|]| |#extends| |List|[|A|,| |B|]|↵|#module| |Option|[|A|]|↵|#class| |Some|[|A|]|(|x|#:| |A|)| |#extends| |Option|[|A|]|↵|#module| |None|[|A|]| |#extends| |Option|[|A|]|↵|#class| |Pair|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple2|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple3|[|A|,| |B|,| |C|]|(|x|#:| |A|,| |y|#:| |B|,| |z|#:| |C|)|↵|#module| |Nat|↵|#class| |S|(|s|#:| |Nat|)| |#extends| |Nat|↵|#module| |O| |#extends| |Nat|↵|#module| |Either|[|A|,| |B|]|↵|#class| |Left|[|A|,| |B|]|(|x|#:| |A|)| |#extends| |Either|[|A|,| |B|]|↵|#class| |Right|[|A|,| |B|]|(|y|#:| |B|)| |#extends| |Either|[|A|,| |B|]|↵|#class| |HiddenTheseEntities|(|_0|#:| |HiddenTheseEntities|,| |_1|#:| |True|,| |_2|#:| |False|,| |_3|#:| |Callable|,| |_4|#:| |List|,| |_5|#:| |Cons|,| |_6|#:| |Nil|,| |_7|#:| |Option|,| |_8|#:| |Some|,| |_9|#:| |None|,| |_10|#:| |Pair|,| |_11|#:| |Tuple2|,| |_12|#:| |Tuple3|,| |_13|#:| |Nat|,| |_14|#:| |S|,| |_15|#:| |O|,| |_16|#:| |Left|,| |_17|#:| |Right|)|
-//│ Parsed: {module True {}; module False {}; module Callable {fun apply0 = () => 0; fun apply1 = (x0,) => 0; fun apply2 = (x0, x1,) => 0; fun apply3 = (x0, x1, x2,) => 0; fun apply4 = (x0, x1, x2, x3,) => 0; fun apply5 = (x0, x1, x2, x3, x4,) => 0}; module List‹A, B› {}; class Cons‹A, B›(h: A, t: Cons‹A, B›,): List‹A, B› {}; module Nil‹A, B›: List‹A, B› {}; module Option‹A› {}; class Some‹A›(x: A,): Option‹A› {}; module None‹A›: Option‹A› {}; class Pair‹A, B›(x: A, y: B,) {}; class Tuple2‹A, B›(x: A, y: B,) {}; class Tuple3‹A, B, C›(x: A, y: B, z: C,) {}; module Nat {}; class S(s: Nat,): Nat {}; module O: Nat {}; module Either‹A, B› {}; class Left‹A, B›(x: A,): Either‹A, B› {}; class Right‹A, B›(y: B,): Either‹A, B› {}; class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O, _16: Left, _17: Right,) {}}
+class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O, _16: Either, _17: Left, _18: Right)
+//│ |#module| |True|↵|#module| |False|↵|#module| |Callable| |{|→|#fun| |apply0|(||)| |#=| |0|↵|#fun| |apply1|(|x0|)| |#=| |0|↵|#fun| |apply2|(|x0|,|x1|)| |#=| |0|↵|#fun| |apply3|(|x0|,|x1|,|x2|)| |#=| |0|↵|#fun| |apply4|(|x0|,|x1|,|x2|,|x3|)| |#=| |0|↵|#fun| |apply5|(|x0|,|x1|,|x2|,|x3|,|x4|)| |#=| |0|←|↵|}|↵|#module| |List|[|A|,| |B|]|↵|#class| |Cons|[|A|,| |B|]|(|h|#:| |A|,| |t|#:| |Cons|[|A|,| |B|]|)| |#extends| |List|[|A|,| |B|]|↵|#module| |Nil|[|A|,| |B|]| |#extends| |List|[|A|,| |B|]|↵|#module| |Option|[|A|]|↵|#class| |Some|[|A|]|(|x|#:| |A|)| |#extends| |Option|[|A|]|↵|#module| |None|[|A|]| |#extends| |Option|[|A|]|↵|#class| |Pair|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple2|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple3|[|A|,| |B|,| |C|]|(|x|#:| |A|,| |y|#:| |B|,| |z|#:| |C|)|↵|#module| |Nat|↵|#class| |S|(|s|#:| |Nat|)| |#extends| |Nat|↵|#module| |O| |#extends| |Nat|↵|#module| |Either|[|A|,| |B|]|↵|#class| |Left|[|A|,| |B|]|(|x|#:| |A|)| |#extends| |Either|[|A|,| |B|]|↵|#class| |Right|[|A|,| |B|]|(|y|#:| |B|)| |#extends| |Either|[|A|,| |B|]|↵|#class| |HiddenTheseEntities|(|_0|#:| |HiddenTheseEntities|,| |_1|#:| |True|,| |_2|#:| |False|,| |_3|#:| |Callable|,| |_4|#:| |List|,| |_5|#:| |Cons|,| |_6|#:| |Nil|,| |_7|#:| |Option|,| |_8|#:| |Some|,| |_9|#:| |None|,| |_10|#:| |Pair|,| |_11|#:| |Tuple2|,| |_12|#:| |Tuple3|,| |_13|#:| |Nat|,| |_14|#:| |S|,| |_15|#:| |O|,| |_16|#:| |Either|,| |_17|#:| |Left|,| |_18|#:| |Right|)|
+//│ Parsed: {module True {}; module False {}; module Callable {fun apply0 = () => 0; fun apply1 = (x0,) => 0; fun apply2 = (x0, x1,) => 0; fun apply3 = (x0, x1, x2,) => 0; fun apply4 = (x0, x1, x2, x3,) => 0; fun apply5 = (x0, x1, x2, x3, x4,) => 0}; module List‹A, B› {}; class Cons‹A, B›(h: A, t: Cons‹A, B›,): List‹A, B› {}; module Nil‹A, B›: List‹A, B› {}; module Option‹A› {}; class Some‹A›(x: A,): Option‹A› {}; module None‹A›: Option‹A› {}; class Pair‹A, B›(x: A, y: B,) {}; class Tuple2‹A, B›(x: A, y: B,) {}; class Tuple3‹A, B, C›(x: A, y: B, z: C,) {}; module Nat {}; class S(s: Nat,): Nat {}; module O: Nat {}; module Either‹A, B› {}; class Left‹A, B›(x: A,): Either‹A, B› {}; class Right‹A, B›(y: B,): Either‹A, B› {}; class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O, _16: Either, _17: Left, _18: Right,) {}}
 //│ 
 //│ Preluded.
 //│ 
@@ -48,7 +48,7 @@ foo()
 //│ 
 //│ IR:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def mktup2(x$1,y$0) =
 //│     let* (x$2) = mktup(x$1,y$0) in -- #9
 //│     x$2 -- #8
@@ -63,7 +63,7 @@ foo()
 //│ 
 //│ Promoted:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def mktup2(x$1,y$0) =
 //│     let* (x$2) = mktup(x$1,y$0) in -- #9
 //│     x$2 -- #8
@@ -93,7 +93,7 @@ bar()
 //│ 
 //│ IR:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def foo(pair$0) =
 //│     case pair$0 of -- #23
 //│       Pair =>
@@ -112,7 +112,7 @@ bar()
 //│ 
 //│ Promoted:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def foo(pair$0) =
 //│     case pair$0 of -- #23
 //│       Pair =>
@@ -154,7 +154,7 @@ foo()
 //│ 
 //│ IR:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def silly(pair$0) =
 //│     let x$1 = 0 in -- #46
 //│     case pair$0 of -- #45
@@ -181,7 +181,7 @@ foo()
 //│ 
 //│ Promoted:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def silly(pair$0) =
 //│     let x$1 = 0 in -- #46
 //│     case pair$0 of -- #45
@@ -229,7 +229,7 @@ foo()
 //│ 
 //│ IR:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def inc_fst(pair$0) =
 //│     let x$1 = 2 in -- #25
 //│     case pair$0 of -- #24
@@ -249,7 +249,7 @@ foo()
 //│ 
 //│ Promoted:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def inc_fst(pair$0) =
 //│     let x$1 = 2 in -- #25
 //│     case pair$0 of -- #24
@@ -286,7 +286,7 @@ foo()
 //│ 
 //│ IR:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def inc_fst(pair$0) =
 //│     let x$1 = 0 in -- #25
 //│     case pair$0 of -- #24
@@ -306,7 +306,7 @@ foo()
 //│ 
 //│ Promoted:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def inc_fst(pair$0) =
 //│     let x$1 = 0 in -- #25
 //│     case pair$0 of -- #24
@@ -345,7 +345,7 @@ bar()
 //│ 
 //│ IR:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def foo(a$0,b$0) =
 //│     case a$0 of -- #50
 //│       Left =>
@@ -376,7 +376,7 @@ bar()
 //│ 
 //│ Promoted:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def foo(a$0,b$0) =
 //│     case a$0 of -- #50
 //│       Left =>
@@ -420,7 +420,7 @@ bar()
 //│ 
 //│ IR:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def foo(a$0) =
 //│     let x$1 = Pair.x(a$0) in -- #17
 //│     let x$2 = Pair.y(a$0) in -- #16
@@ -435,7 +435,7 @@ bar()
 //│ 
 //│ Promoted:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def foo(a$0) =
 //│     let x$1 = Pair.x(a$0) in -- #17
 //│     let x$2 = Pair.y(a$0) in -- #16
@@ -474,7 +474,7 @@ baz()
 //│ 
 //│ IR:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def foo(a$0,b$0) =
 //│     let x$1 = Pair.x(a$0) in -- #41
 //│     let x$2 = Pair.y(a$0) in -- #40
@@ -502,7 +502,7 @@ baz()
 //│ 
 //│ Promoted:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def foo(a$0,b$0) =
 //│     let x$1 = Pair.x(a$0) in -- #41
 //│     let x$2 = Pair.y(a$0) in -- #40
@@ -544,7 +544,7 @@ foo()
 //│ 
 //│ IR:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def foo() =
 //│     let x$1 = Pair(0,1) in -- #15
 //│     let x$2 = Pair.x(x$1) in -- #14
@@ -554,7 +554,7 @@ foo()
 //│ 
 //│ Promoted:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def foo() =
 //│     let x$1 = Pair(0,1) in -- #15
 //│     let x$2 = Pair.x(x$1) in -- #14
@@ -582,7 +582,7 @@ foo()
 //│ 
 //│ IR:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def foo() =
 //│     let x$1 = O() in -- #12
 //│     let x$2 = S(x$1) in -- #11
@@ -605,7 +605,7 @@ foo()
 //│ 
 //│ Promoted:
 //│ Program:
-//│   class Either()
+//│ 
 //│   def foo() =
 //│     let x$1 = O() in -- #12
 //│     let x$2 = S(x$1) in -- #11
