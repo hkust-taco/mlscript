@@ -26,7 +26,10 @@ succ / foo(1)
 let foo = (Int => Int) & (Bool => Bool)
 //│ foo: int -> int & bool -> bool
 
-foo(1) // returns int & bool, equivalent to nothing
+// used to return int & bool, equivalent to nothing
+// or approximated as int | bool in MLscript
+// overloaded function foo can now be used as either int -> int or bool -> bool
+foo(1)
 succ / foo(1)
 foo(true)
 not / foo(true)
