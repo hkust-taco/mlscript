@@ -1,6 +1,6 @@
 CXX := clang++
-CFLAGS := $(CFLAGS) -O3 -Wall -Wextra -std=c++20 -I. -I/opt/homebrew/include -Wno-inconsistent-missing-override
-LDFLAGS := $(LDFLAGS) -L/opt/homebrew/lib -lmimalloc -lgmp
+CFLAGS := $(CFLAGS) -O3 -Wall -Wextra -std=c++20 -I. -Wno-inconsistent-missing-override
+LDFLAGS := $(LDFLAGS) -lmimalloc -lgmp
 SRC :=
 INCLUDES = mlsprelude.h
 DST :=
