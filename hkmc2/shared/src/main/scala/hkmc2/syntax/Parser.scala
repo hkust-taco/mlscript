@@ -409,7 +409,7 @@ abstract class Parser(
           exprCont(res, prec, allowNewlines = true)
     case (br @ BRACKETS(Square, toks), loc) :: _ =>
       consume
-      val res = rec(toks, S(loc), "forall qualifiers").concludeWith(_.expr(0))
+      val res = rec(toks, S(loc), "type parameters").concludeWith(_.expr(0))
       def unfold(t: Tree): Ls[Tree] = t match
         case _: Tree.Ident => t :: Nil
         case App(Tree.Ident(","), Tup(eles)) => eles.flatMap(unfold)
