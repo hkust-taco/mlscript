@@ -185,7 +185,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
     case _ => error(msg"${ty.toString} is not a valid type annotation" -> ty.toLoc :: Nil)
 
   private def instantiate(ty: PolyType)(using ctx: Ctx): GeneralType =
-    ty.body.subst(using (ty.tv.map {
+    ty.body.subst(using (ty.tvs.map {
       case InfVar(_, uid, _, _) =>
         val nv = freshVar
         uid -> nv

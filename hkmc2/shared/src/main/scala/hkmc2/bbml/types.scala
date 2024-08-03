@@ -55,7 +55,7 @@ sealed abstract class Type extends GeneralType with TypeArg:
     case InfVar(lvl, uid, _, isSkolem) => if isSkolem then s"<α>${uid}_$lvl" else s"α${uid}_$lvl"
     case FunType(arg :: Nil, ret, eff) => s"${arg.paren} ->{${eff}} ${ret.paren}"
     case FunType(args, ret, eff) => s"(${args.mkString(", ")}) ->{${eff}} ${ret.paren}"
-    case ComposedType(lhs, rhs, pol) => s"(${lhs}) ${if pol then "∨" else "∧"} ${rhs.paren}"
+    case ComposedType(lhs, rhs, pol) => s"${lhs.paren} ${if pol then "∨" else "∧"} ${rhs.paren}"
     case NegType(ty) => s"¬${ty.paren}"
     case Top => "⊤"
     case Bot => "⊥"
@@ -103,11 +103,10 @@ sealed abstract class Type extends GeneralType with TypeArg:
 
   override def map(f: Type => Type): Type = this match
     case ClassType(name, targs) => ClassType(name, targs.map(_.map(f)))
-    case _: InfVar => f(this)
     case FunType(args, ret, eff) => FunType(args.map(f), f(ret), f(eff))
     case ComposedType(lhs, rhs, pol) => Type.mkComposedType(f(lhs), f(rhs), pol)
     case NegType(ty) => Type.mkNegType(f(ty))
-    case Top | Bot => f(this)
+    case Top | Bot | _: InfVar => this
   def monoOr(fallback: => Type): Type = this
 
 case class ClassType(name: ClassSymbol, targs: Ls[TypeArg]) extends Type:
@@ -143,16 +142,16 @@ object Type:
 
 // TODO: bounds
 // * Poly types can not be used as type arguments
-case class PolyType(tv: Ls[InfVar], body: GeneralType) extends GeneralType:
+case class PolyType(tvs: Ls[InfVar], body: GeneralType) extends GeneralType:
   override protected type ThisType = GeneralType
 
   override lazy val isPoly: Bool = true
-  override lazy val lvl: Int = (body :: tv).map(_.lvl).max
-  override def toString(): String = s"forall ${tv.mkString(", ")}: $body"
+  override lazy val lvl: Int = (body :: tvs).map(_.lvl).max
+  override def toString(): String = s"forall ${tvs.mkString(", ")}: $body"
   override def monoOr(fallback: => Type): Type = fallback
-  override def map(f: GeneralType => GeneralType): PolyType = PolyType(tv, f(body))
+  override def map(f: GeneralType => GeneralType): PolyType = PolyType(tvs, f(body))
 
-  override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = PolyType(tv, body.subst)
+  override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = PolyType(tvs, body.subst)
 
 // * Functions that accept/return a polymorphic type.
 // * Note that effects are always monomorphic
@@ -174,7 +173,8 @@ case class PolyFunType(args: Ls[GeneralType], ret: GeneralType, eff: Type) exten
       case _ => ??? // * Impossible
     }, eff))
   override def monoOr(fallback: => Type): Type = mono.getOrElse(fallback)
-  override def map(f: GeneralType => GeneralType): PolyFunType = PolyFunType(args.map(f), f(ret), f(eff).monoOr(???)) // * Must be mono
+  override def map(f: GeneralType => GeneralType): PolyFunType =
+    PolyFunType(args.map(f), f(ret), f(eff).monoOr(???)) // * Must be mono
 
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
     PolyFunType(args.map(_.subst), ret.subst, eff.subst)
