@@ -29,7 +29,17 @@ sealed trait TypeArg:
 case class Wildcard(in: Type, out: Type) extends TypeArg {
   override def map(f: Type => Type): Wildcard = Wildcard(f(in), f(out))
 
-  override def toString(): String = s"in $in out $out"
+  override def toString(): String = in match
+    case `out` => in.toString
+    case Bot =>
+      out match
+        case Top => "?"
+        case _ => s"out $out"
+    case _ =>
+      out match
+        case Top => s"in $in"
+        case _ => s"in $in out $out"
+  
   override lazy val lvl: Int = in.lvl.max(out.lvl)
 }
 

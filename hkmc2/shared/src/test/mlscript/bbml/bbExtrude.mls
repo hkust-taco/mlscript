@@ -45,6 +45,6 @@ y `=> (let t = run(x `=> x `+ y) in y)
 //│ Elab: { code"λy@2. ${{ let t@3 = run#0(code"λx@5. ${code"+#2(${x@5#0}‹›, ${y@2#0}‹›)‹›‹›"‹›}‹›‹›"‹›)‹›‹›; y@2#1 }‹›}‹›‹›"‹› }‹›
 //│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
 //│ ╙──
-//│ Type: CodeBase[in ⊥ out α18_3 ->{⊥} α18_3, in ⊥ out ⊥, in ⊥ out ⊤]
+//│ Type: CodeBase[out α18_3 ->{⊥} α18_3, ⊥, ?]
 //│ Where:
 //│   α18_3 <: Int

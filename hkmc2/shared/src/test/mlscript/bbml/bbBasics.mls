@@ -179,7 +179,7 @@ fun inc(x) = x + 1
 
 new TFun(inc)
 //│ Elab: { new class:TFun(Ref(inc))‹› }‹›
-//│ Type: TFun[in Int out Int]
+//│ Type: TFun[Int]
 
 let tf = new TFun(inc) in tf.TFun#f(1)
 //│ Elab: { { let tf@2 = new class:TFun(Ref(inc))‹›; tf@2#0.class:TFun#0#f‹›(1‹›)‹›‹› }‹› }‹›

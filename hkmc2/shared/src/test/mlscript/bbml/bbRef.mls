@@ -8,13 +8,13 @@ region x in 42
 
 region x in x
 //│ Elab: { region x in x@2#0‹› }‹›
-//│ Type: Region[in <α>3_2 out <α>3_2]
+//│ Type: Region[<α>3_2]
 
 
 region x in
   x.ref 42
 //│ Elab: { region x in (x@2#0).ref 42‹›‹›‹› }‹›
-//│ Type: Ref[in Int out Int, in ⊥ out ⊥]
+//│ Type: Ref[Int, ⊥]
 
 :e
 let t = region x in x in t.ref 42
@@ -23,7 +23,7 @@ let t = region x in x in t.ref 42
 //│ ╙──
 //│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
 //│ ╙──
-//│ Type: Ref[in Int out Int, in ⊥ out ⊤]
+//│ Type: Ref[Int, ?]
 
 
 region x in
@@ -86,7 +86,7 @@ let t =
 //│ Elab: { { let t@2 = region x in λy@4. (x@3#0).ref y@4#0‹›‹›‹›; t@2#0(42‹›)‹›‹› }‹› }‹›
 //│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
 //│ ╙──
-//│ Type: Ref[in α43_2 out α43_2, in ⊥ out ⊥]
+//│ Type: Ref[α43_2, ⊥]
 //│ Where:
 //│   Int <: α43_2
 
