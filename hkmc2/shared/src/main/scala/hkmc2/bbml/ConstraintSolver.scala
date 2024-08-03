@@ -51,10 +51,12 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogg
           val bd = if v.lvl >= comp.lvl then comp else extrude(comp)(using v.lvl, true)
           if pol then
             val nc = Type.mkNegType(bd)
+            log(s"New bound: $v <: $nc")
             given Cache = cache + (v -> nc)
             v.state.upperBounds ::= nc
             v.state.lowerBounds.foreach(lb => constrainImpl(lb, nc))
           else
+            log(s"New bound: $v :> $bd")
             given Cache = cache + (bd -> v)
             v.state.lowerBounds ::= bd
             v.state.upperBounds.foreach(ub => constrainImpl(bd, ub))

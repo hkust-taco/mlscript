@@ -8,7 +8,7 @@
 :e
 42: [A] -> Str
 //│ Elab: { Lit(IntLit(42)): Forall(List(A@2),Ref(class:Str))‹› }‹›
-//│ ╔══[ERROR] Cannot solve (Int) ∧ (⊤) ∧ ¬⊥
+//│ ╔══[ERROR] Cannot solve (Int) ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: forall α2_2: Str
 
@@ -24,9 +24,9 @@ id
 :e
 (x => x + 1): [A] -> A -> A
 //│ Elab: { Lam(List(Param(‹›,x@2,None)),App(Ref(+),Tup(List(Fld(‹›,Ref(x@2),None), Fld(‹›,Lit(IntLit(1)),None))))): Forall(List(A@4),FunTy(Tup(List(Fld(‹›,Ref(A@4),None))),Ref(A@4),None))‹› }‹›
-//│ ╔══[ERROR] Cannot solve (⊤) ∧ (⊤) ∧ ¬⊥
+//│ ╔══[ERROR] Cannot solve (⊤) ∧ ⊤ ∧ ¬⊥
 //│ ╙──
-//│ ╔══[ERROR] Cannot solve (Int) ∧ (⊤) ∧ ¬⊥
+//│ ╔══[ERROR] Cannot solve (Int) ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: forall α4_2: (α4_2) ->{⊥} α4_2
 
@@ -148,12 +148,12 @@ class Some[A](value: A)
 
 new Some((x => x): [A] -> A -> A)
 //│ Elab: { new class:Some(Asc(Lam(List(Param(‹›,x@2,None)),Ref(x@2)),Forall(List(A@3),FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None))))‹› }‹›
-//│ Type: Some[in ⊤ out (((⊤) ∧ (⊤)) ∧ (α79_1)) ->{(⊥) ∨ (⊥)} ((⊤) ∧ (⊤)) ∧ (α79_1)]
+//│ Type: Some[in ⊤ out (((⊤) ∧ ⊤) ∧ α79_1) ->{(⊥) ∨ ⊥} (((⊤) ∧ ⊤) ∧ α79_1)]
 
 :fixme
 let s = new Some((x => x): [A] -> A -> A) in let t = s.Some#value(42) in s.Some#value(false)
 //│ Elab: { { let s@2 = new class:Some(Asc(Lam(List(Param(‹›,x@3,None)),Ref(x@3)),Forall(List(A@4),FunTy(Tup(List(Fld(‹›,Ref(A@4),None))),Ref(A@4),None))))‹›; { let t@5 = s@2#0.class:Some#0#value‹›(42‹›)‹›‹›; s@2#1.class:Some#1#value‹›(false‹›)‹›‹› }‹› }‹› }‹›
-//│ Type: (Bool) ∨ (Int)
+//│ Type: (Bool) ∨ Int
 
 fun gen: Int -> [A] -> A -> A
 fun gen(x) =

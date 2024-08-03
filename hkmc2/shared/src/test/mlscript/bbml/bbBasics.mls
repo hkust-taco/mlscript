@@ -53,7 +53,7 @@ x => x
 :e
 114 + "514"
 //│ Elab: { +#4(114‹›, "514"‹›)‹›‹› }‹›
-//│ ╔══[ERROR] Cannot solve (Str) ∧ (⊤) ∧ ¬⊥
+//│ ╔══[ERROR] Cannot solve (Str) ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: Int
 
@@ -73,7 +73,7 @@ let x = 1 in let y = 2 in x + y
 :e
 let x = 0 in x + "1"
 //│ Elab: { { let x@2 = 0‹›; +#6(x@2#0, "1"‹›)‹›‹› }‹› }‹›
-//│ ╔══[ERROR] Cannot solve (Str) ∧ (⊤) ∧ ¬⊥
+//│ ╔══[ERROR] Cannot solve (Str) ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: Int
 
@@ -114,7 +114,7 @@ new Point(0.0, 0.0, 0.0)
 :e
 new Foo("1!5!")
 //│ Elab: { new class:Foo(Lit(StrLit(1!5!)))‹› }‹›
-//│ ╔══[ERROR] Cannot solve (Str) ∧ (⊤) ∧ ¬⊥
+//│ ╔══[ERROR] Cannot solve (Str) ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: Foo
 
@@ -165,7 +165,7 @@ let ip = new Printer(foofoo) in ip.Printer#f(42)
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ Elab: { { let ip@2 = new class:Printer(Ref(foofoo))‹›; ip@2#0.class:Printer#1#f‹›("42"‹›)‹›‹› }‹› }‹›
-//│ ╔══[ERROR] Cannot solve (Str) ∧ (⊤) ∧ ¬⊥
+//│ ╔══[ERROR] Cannot solve (Str) ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: Str
 
@@ -188,7 +188,7 @@ let tf = new TFun(inc) in tf.TFun#f(1)
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
 //│ Elab: { { let tf@2 = new class:TFun(Ref(inc))‹›; tf@2#0.class:TFun#1#f‹›("1"‹›)‹›‹› }‹› }‹›
-//│ ╔══[ERROR] Cannot solve (Str) ∧ (⊤) ∧ ¬⊥
+//│ ╔══[ERROR] Cannot solve (Str) ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: Int
 
@@ -211,7 +211,7 @@ if 1 < 2 then 1 else 0
 
 if false then 1 else "1"
 //│ Elab: { if Cons(Boolean(Lit(BoolLit(false)),Else(Lit(IntLit(1)))),Else(Lit(StrLit(1))))‹› }‹›
-//│ Type: (Int) ∨ (Str)
+//│ Type: (Int) ∨ Str
 
 
 if 1 is Int then 1 else 0
@@ -222,7 +222,7 @@ fun test(x) =
   if x is Int then x + 1 else 0
 test
 //│ Elab: { fun test(x@2) = if Cons(Match(Ref(x@2),Cons(PatternBranch(Class(class:Int,None,true),Else(App(Ref(+),Tup(List(Fld(‹›,Ref(x@2),None), Fld(‹›,Lit(IntLit(1)),None)))))),NoSplit)),Else(Lit(IntLit(0))))‹›; test#0 }‹›
-//│ Type: (((⊤) ∧ (⊤)) ∧ ((¬(Int)) ∨ (Int))) ->{(⊥) ∨ (⊥)} (((Int) ∧ (⊤)) ∧ (⊤)) ∨ (⊥)
+//│ Type: (((⊤) ∧ ⊤) ∧ ((¬Int) ∨ Int)) ->{(⊥) ∨ ⊥} ((((Int) ∧ ⊤) ∧ ⊤) ∨ ⊥)
 
 test(1)
 //│ Elab: { test#1(1‹›)‹›‹› }‹›
@@ -241,7 +241,7 @@ fun fact(n) =
 
 fact
 //│ Elab: { fact#1 }‹›
-//│ Type: (((⊤) ∧ (⊤)) ∧ (Int)) ->{⊥} (((Int) ∧ (⊤)) ∧ (⊤)) ∨ (⊥)
+//│ Type: (((⊤) ∧ ⊤) ∧ Int) ->{⊥} ((((Int) ∧ ⊤) ∧ ⊤) ∨ ⊥)
 
 fact(1)
 //│ Elab: { fact#2(1‹›)‹›‹› }‹›
@@ -256,7 +256,7 @@ fun fact2 = case
 
 fact2
 //│ Elab: { fact2#1 }‹›
-//│ Type: (((⊤) ∧ (⊤)) ∧ (Int)) ->{⊥} (((Int) ∧ (⊤)) ∧ (⊤)) ∨ (⊥)
+//│ Type: (((⊤) ∧ ⊤) ∧ Int) ->{⊥} ((((Int) ∧ ⊤) ∧ ⊤) ∨ ⊥)
 
 fact2(0)
 //│ Elab: { fact2#2(0‹›)‹›‹› }‹›

@@ -38,20 +38,25 @@ object Wildcard:
   def out(ty: Type): Wildcard = Wildcard(Bot, ty)
   def empty: Wildcard = Wildcard(Bot, Top)
 
-abstract class Type extends GeneralType with TypeArg:
+sealed abstract class Type extends GeneralType with TypeArg:
   override protected type ThisType = Type
 
   // * Remove redundant Top/Bot.
   // * e.g., Top & Int === Int
   lazy val simp: Type = this
-
-  override def toString(): String = this match
+  
+  protected def paren: Str = this match
+    case _: InfVar | _: ClassType | _: NegType | Top | Bot => toString
+    case _: ComposedType | _: FunType => s"($toString)"
+  
+  override def toString: String = this match
     case ClassType(name, targs) =>
       if targs.isEmpty then s"${name.nme}" else s"${name.nme}[${targs.mkString(", ")}]"
     case InfVar(lvl, uid, _, isSkolem) => if isSkolem then s"<α>${uid}_$lvl" else s"α${uid}_$lvl"
-    case FunType(args, ret, eff) => s"(${args.mkString(", ")}) ->{${eff}} ${ret}"
-    case ComposedType(lhs, rhs, pol) => s"(${lhs}) ${if pol then "∨" else "∧"} (${rhs})"
-    case NegType(ty) => s"¬(${ty})"
+    case FunType(arg :: Nil, ret, eff) => s"${arg.paren} ->{${eff}} ${ret.paren}"
+    case FunType(args, ret, eff) => s"(${args.mkString(", ")}) ->{${eff}} ${ret.paren}"
+    case ComposedType(lhs, rhs, pol) => s"(${lhs}) ${if pol then "∨" else "∧"} ${rhs.paren}"
+    case NegType(ty) => s"¬${ty.paren}"
     case Top => "⊤"
     case Bot => "⊥"
 
@@ -119,23 +124,12 @@ case class FunType(args: Ls[Type], ret: Type, eff: Type) extends Type:
 case class ComposedType(lhs: Type, rhs: Type, pol: Bool) extends Type: // * Positive -> union
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
     Type.mkComposedType(lhs.subst, rhs.subst, pol)
-  override lazy val simp: Type = (lhs.simp, rhs.simp, pol) match
-    case (Top, _, true) => Top
-    case (_, Top, true) => Top
-    case (Bot, rhs, true) => rhs
-    case (lhs, Bot, true) => lhs
-    case (Top, rhs, false) => rhs
-    case (lhs, Top, false) => lhs
-    case (Bot, _, false) => Bot
-    case (_, Bot, false) => Bot
-    case (lhs, rhs, pol) => ComposedType(lhs, rhs, pol)
+  override lazy val simp: Type =
+    Type.mkComposedType(lhs.simp, rhs.simp, pol)
   
 final case class NegType(ty: Type) extends Type:
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = NegType(ty.subst)
-  override lazy val simp: Type = ty.simp match
-    case Top => Bot
-    case Bot => Top
-    case _ => this
+  override lazy val simp: Type = ty.simp.!
 object Top extends Type:
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = Top
 object Bot extends Type:
