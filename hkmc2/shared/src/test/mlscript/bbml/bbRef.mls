@@ -86,22 +86,24 @@ fun rid(x) =
 //│ ╙──
 //│ Type: ⊤
 
-:fixme
+:e
 region x in
   (let dz = x.ref 42 in 42): [A] -> Int
 //│ Elab: { region x in Blk(List(LetBinding(Var(dz@3),RegRef(Ref(x@2),Lit(IntLit(42))))),Lit(IntLit(42))): Forall(List(A@4),Ref(class:Int))‹›‹› }‹›
 //│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
 //│ ╙──
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ Type: forall α59_3: Int
 
 
-:fixme
+:e
 let t =
   region x in
     y => x.ref y
   in t(42)
 //│ Elab: { { let t@2 = region x in λy@4. (x@3#0).ref y@4#0‹›‹›‹›; t@2#0(42‹›)‹›‹› }‹› }‹›
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
+//│ ╙──
+//│ Type: Ref[in α67_1 out α67_1 ∨ Int, ?]
 
 fun foo: [A] -> Int ->{A | Alloc} Int
 fun foo(x) =

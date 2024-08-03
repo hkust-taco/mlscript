@@ -222,10 +222,12 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
     case (Bot, Bot) => true
     case _ => false
 
-  private def extrude(ty: GeneralType)(using ctx: Ctx): GeneralType = ty match
-    case ty: Type => solver.extrude(ty)(using ctx.lvl, true)
-    case _ => ??? // TODO
-  
+  private def extrude(ty: GeneralType)(using ctx: Ctx, pol: Bool): GeneralType = ty match
+    case ty: Type => solver.extrude(ty)(using ctx.lvl, pol)
+    case PolyType(tvs, body) => PolyType(tvs, extrude(body))
+    case PolyFunType(args, ret, eff) =>
+      PolyFunType(args.map(extrude(_)(using ctx, !pol)), extrude(ret), solver.extrude(eff)(using ctx.lvl, pol))
+
   private def constrain(lhs: Type, rhs: Type)(using ctx: Ctx): Unit =
     solver.constrain(lhs, rhs)
 
@@ -534,7 +536,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
         val (res, eff) = typeCheck(body)
         val tv = freshVar(using ctx)
         constrain(eff, tv | sk)
-        (extrude(res)(using ctx), tv | allocSkolem)
+        (extrude(res)(using ctx, true), tv | allocSkolem)
       case Term.RegRef(reg, value) =>
         val (regTy, regEff) = typeCheck(reg)
         val (valTy, valEff) = typeCheck(value)
