@@ -63,26 +63,6 @@ main(1, 42)
 //│   let* (x$0) = main(1,42) in -- #6
 //│   x$0 -- #5
 //│ 
-//│ Promoted:
-//│ Program:
-//│ 
-//│   def main(init$0,key$0) =
-//│     let* (x$1) = r(init$0,key$0) in -- #11
-//│     x$1 -- #10
-//│   def r(x$2,key$1) =
-//│     let x$3 = <=(x$2,0) in -- #40
-//│     if x$3 -- #39
-//│       true =>
-//│         jump j$0(key$1) -- #26
-//│       false =>
-//│         let x$5 = -(x$2,1) in -- #38
-//│         let* (x$6) = r(x$5,key$1) in -- #37
-//│         jump j$0(x$6) -- #36
-//│   def j$0(x$4) =
-//│     x$4 -- #24
-//│   let* (x$0) = main(1,42) in -- #6
-//│   x$0 -- #5
-//│ 
 //│ Interpreted:
 //│ 42
 //│ 
@@ -104,39 +84,6 @@ main(1, 42)
 //│ 
 //│ 
 //│ IR:
-//│ Program:
-//│ 
-//│   def main(init$0,key$0) =
-//│     let* (x$1) = ping(init$0,key$0) in -- #11
-//│     x$1 -- #10
-//│   def ping(x$2,key$1) =
-//│     let x$3 = <=(x$2,0) in -- #46
-//│     if x$3 -- #45
-//│       true =>
-//│         let x$5 = +(key$1,1) in -- #32
-//│         jump j$0(x$5) -- #31
-//│       false =>
-//│         let x$6 = -(x$2,1) in -- #44
-//│         let* (x$7) = pong(x$6,key$1) in -- #43
-//│         jump j$0(x$7) -- #42
-//│   def j$0(x$4) =
-//│     x$4 -- #24
-//│   def pong(x$8,key$2) =
-//│     let x$9 = <=(x$8,0) in -- #75
-//│     if x$9 -- #74
-//│       true =>
-//│         let x$11 = +(key$2,2) in -- #61
-//│         jump j$1(x$11) -- #60
-//│       false =>
-//│         let x$12 = -(x$8,1) in -- #73
-//│         let* (x$13) = ping(x$12,key$2) in -- #72
-//│         jump j$1(x$13) -- #71
-//│   def j$1(x$10) =
-//│     x$10 -- #53
-//│   let* (x$0) = main(1,42) in -- #6
-//│   x$0 -- #5
-//│ 
-//│ Promoted:
 //│ Program:
 //│ 
 //│   def main(init$0,key$0) =
@@ -192,44 +139,6 @@ main(1, 42)
 //│ 
 //│ 
 //│ IR:
-//│ Program:
-//│   class Lambda$0(key) extends Callable {
-//│     def apply1(x$17) =
-//│       let* (x$18) = ping(x$17,key) in -- #85
-//│       x$18 -- #84
-//│   }
-//│   def main(init$0,key$0) =
-//│     let x$3 = Lambda$0(key$0) in -- #14
-//│     let x$4 = Callable.apply1(x$3,init$0) in -- #13
-//│     x$4 -- #12
-//│   def ping(x$5,key$1) =
-//│     let x$6 = <=(x$5,0) in -- #49
-//│     if x$6 -- #48
-//│       true =>
-//│         let x$8 = +(key$1,1) in -- #35
-//│         jump j$0(x$8) -- #34
-//│       false =>
-//│         let x$9 = -(x$5,1) in -- #47
-//│         let* (x$10) = pong(x$9,key$1) in -- #46
-//│         jump j$0(x$10) -- #45
-//│   def j$0(x$7) =
-//│     x$7 -- #27
-//│   def pong(x$11,key$2) =
-//│     let x$12 = <=(x$11,0) in -- #78
-//│     if x$12 -- #77
-//│       true =>
-//│         let x$14 = +(key$2,2) in -- #64
-//│         jump j$1(x$14) -- #63
-//│       false =>
-//│         let x$15 = -(x$11,1) in -- #76
-//│         let* (x$16) = ping(x$15,key$2) in -- #75
-//│         jump j$1(x$16) -- #74
-//│   def j$1(x$13) =
-//│     x$13 -- #56
-//│   let* (x$0) = main(1,42) in -- #6
-//│   x$0 -- #5
-//│ 
-//│ Promoted:
 //│ Program:
 //│   class Lambda$0(key) extends Callable {
 //│     def apply1(x$17) =

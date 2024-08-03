@@ -61,21 +61,6 @@ foo()
 //│   let* (x$0) = foo() in -- #2
 //│   x$0 -- #1
 //│ 
-//│ Promoted:
-//│ Program:
-//│ 
-//│   def mktup2(x$1,y$0) =
-//│     let* (x$2) = mktup(x$1,y$0) in -- #9
-//│     x$2 -- #8
-//│   def mktup(x$3,y$1) =
-//│     let x$4 = Pair(x$3,y$1) in -- #16
-//│     x$4 -- #15
-//│   def foo() =
-//│     let* (x$5) = mktup2(1,2) in -- #23
-//│     x$5 -- #22
-//│   let* (x$0) = foo() in -- #2
-//│   x$0 -- #1
-//│ 
 //│ Interpreted:
 //│ Pair(1,2)
 //│ 
@@ -92,25 +77,6 @@ bar()
 //│ 
 //│ 
 //│ IR:
-//│ Program:
-//│ 
-//│   def foo(pair$0) =
-//│     case pair$0 of -- #23
-//│       Pair =>
-//│         let x$2 = Pair.y(pair$0) in -- #22
-//│         let x$3 = Pair.x(pair$0) in -- #21
-//│         let x$4 = Pair(x$3,x$2) in -- #20
-//│         jump j$0(x$4) -- #19
-//│   def j$0(x$1) =
-//│     x$1 -- #4
-//│   def bar() =
-//│     let x$5 = Pair(1,2) in -- #34
-//│     let* (x$6) = foo(x$5) in -- #33
-//│     x$6 -- #32
-//│   let* (x$0) = bar() in -- #2
-//│   x$0 -- #1
-//│ 
-//│ Promoted:
 //│ Program:
 //│ 
 //│   def foo(pair$0) =
@@ -179,33 +145,6 @@ foo()
 //│   let* (x$0) = foo() in -- #2
 //│   x$0 -- #1
 //│ 
-//│ Promoted:
-//│ Program:
-//│ 
-//│   def silly(pair$0) =
-//│     let x$1 = 0 in -- #46
-//│     case pair$0 of -- #45
-//│       Pair =>
-//│         let x$4 = Pair.y(pair$0) in -- #44
-//│         let x$5 = Pair.x(pair$0) in -- #43
-//│         case pair$0 of -- #42
-//│           Pair =>
-//│             let x$7 = Pair.y(pair$0) in -- #41
-//│             let x$8 = Pair.x(pair$0) in -- #40
-//│             let x$9 = +(x$8,1) in -- #39
-//│             jump j$1(x$9) -- #38
-//│   def j$0(x$2) =
-//│     let x$3 = +(x$2,1) in -- #12
-//│     x$3 -- #11
-//│   def j$1(x$6) =
-//│     jump j$0(x$6) -- #23
-//│   def foo() =
-//│     let x$10 = Pair(0,1) in -- #59
-//│     let* (x$11) = silly(x$10) in -- #58
-//│     x$11 -- #57
-//│   let* (x$0) = foo() in -- #2
-//│   x$0 -- #1
-//│ 
 //│ Interpreted:
 //│ 2
 //│ 
@@ -247,26 +186,6 @@ foo()
 //│   let* (x$0) = foo() in -- #2
 //│   x$0 -- #1
 //│ 
-//│ Promoted:
-//│ Program:
-//│ 
-//│   def inc_fst(pair$0) =
-//│     let x$1 = 2 in -- #25
-//│     case pair$0 of -- #24
-//│       Pair =>
-//│         let x$3 = Pair.y(pair$0) in -- #23
-//│         let x$4 = Pair.x(pair$0) in -- #22
-//│         let x$5 = +(x$4,x$1) in -- #21
-//│         jump j$0(x$5) -- #20
-//│   def j$0(x$2) =
-//│     x$2 -- #5
-//│   def foo() =
-//│     let x$6 = Pair(0,1) in -- #38
-//│     let* (x$7) = inc_fst(x$6) in -- #37
-//│     x$7 -- #36
-//│   let* (x$0) = foo() in -- #2
-//│   x$0 -- #1
-//│ 
 //│ Interpreted:
 //│ 2
 //│ 
@@ -285,26 +204,6 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program:
-//│ 
-//│   def inc_fst(pair$0) =
-//│     let x$1 = 0 in -- #25
-//│     case pair$0 of -- #24
-//│       Pair =>
-//│         let x$3 = Pair.y(pair$0) in -- #23
-//│         let x$4 = Pair.x(pair$0) in -- #22
-//│         let x$5 = +(x$3,1) in -- #21
-//│         jump j$0(x$5) -- #20
-//│   def j$0(x$2) =
-//│     x$2 -- #5
-//│   def foo() =
-//│     let x$6 = Pair(0,1) in -- #37
-//│     let* (x$7) = inc_fst(x$6) in -- #36
-//│     x$7 -- #35
-//│   let* (x$0) = foo() in -- #2
-//│   x$0 -- #1
-//│ 
-//│ Promoted:
 //│ Program:
 //│ 
 //│   def inc_fst(pair$0) =
@@ -374,37 +273,6 @@ bar()
 //│   let* (x$0) = bar() in -- #2
 //│   x$0 -- #1
 //│ 
-//│ Promoted:
-//│ Program:
-//│ 
-//│   def foo(a$0,b$0) =
-//│     case a$0 of -- #50
-//│       Left =>
-//│         let x$5 = Left.x(a$0) in -- #38
-//│         let x$6 = +(x$5,1) in -- #37
-//│         let x$7 = Left(x$6) in -- #36
-//│         jump j$0(x$7) -- #35
-//│       Right =>
-//│         let x$8 = Right.y(a$0) in -- #49
-//│         let x$9 = Right(b$0) in -- #48
-//│         jump j$0(x$9) -- #47
-//│   def j$1(x$2) =
-//│     x$2 -- #6
-//│   def j$0(x$1) =
-//│     case x$1 of -- #21
-//│       Left =>
-//│         let x$3 = Left.x(x$1) in -- #13
-//│         jump j$1(x$3) -- #12
-//│       Right =>
-//│         let x$4 = Right.y(x$1) in -- #20
-//│         jump j$1(x$4) -- #19
-//│   def bar() =
-//│     let x$10 = Right(2) in -- #61
-//│     let* (x$11) = foo(x$10,2) in -- #60
-//│     x$11 -- #59
-//│   let* (x$0) = bar() in -- #2
-//│   x$0 -- #1
-//│ 
 //│ Interpreted:
 //│ 2
 //│ 
@@ -419,21 +287,6 @@ bar()
 //│ 
 //│ 
 //│ IR:
-//│ Program:
-//│ 
-//│   def foo(a$0) =
-//│     let x$1 = Pair.x(a$0) in -- #17
-//│     let x$2 = Pair.y(a$0) in -- #16
-//│     let x$3 = +(x$1,x$2) in -- #15
-//│     x$3 -- #14
-//│   def bar() =
-//│     let x$4 = Pair(1,0) in -- #28
-//│     let* (x$5) = foo(x$4) in -- #27
-//│     x$5 -- #26
-//│   let* (x$0) = bar() in -- #2
-//│   x$0 -- #1
-//│ 
-//│ Promoted:
 //│ Program:
 //│ 
 //│   def foo(a$0) =
@@ -500,34 +353,6 @@ baz()
 //│   let* (x$0) = baz() in -- #2
 //│   x$0 -- #1
 //│ 
-//│ Promoted:
-//│ Program:
-//│ 
-//│   def foo(a$0,b$0) =
-//│     let x$1 = Pair.x(a$0) in -- #41
-//│     let x$2 = Pair.y(a$0) in -- #40
-//│     let x$3 = Pair.x(b$0) in -- #39
-//│     let x$4 = Pair.y(b$0) in -- #38
-//│     let x$5 = +(x$1,x$2) in -- #37
-//│     let x$6 = +(x$5,x$3) in -- #36
-//│     let x$7 = +(x$6,x$4) in -- #35
-//│     x$7 -- #34
-//│   def bar(c$0) =
-//│     let x$8 = Pair(0,1) in -- #86
-//│     let* (x$9) = foo(x$8,c$0) in -- #85
-//│     let x$10 = Pair(2,3) in -- #84
-//│     let* (x$11) = foo(c$0,x$10) in -- #83
-//│     let x$12 = Pair(0,1) in -- #82
-//│     let x$13 = Pair(2,3) in -- #81
-//│     let* (x$14) = foo(x$12,x$13) in -- #80
-//│     x$14 -- #79
-//│   def baz() =
-//│     let x$15 = Pair(4,5) in -- #97
-//│     let* (x$16) = bar(x$15) in -- #96
-//│     x$16 -- #95
-//│   let* (x$0) = baz() in -- #2
-//│   x$0 -- #1
-//│ 
 //│ Interpreted:
 //│ 6
 //│ 
@@ -543,16 +368,6 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program:
-//│ 
-//│   def foo() =
-//│     let x$1 = Pair(0,1) in -- #15
-//│     let x$2 = Pair.x(x$1) in -- #14
-//│     x$2 -- #13
-//│   let* (x$0) = foo() in -- #2
-//│   x$0 -- #1
-//│ 
-//│ Promoted:
 //│ Program:
 //│ 
 //│   def foo() =
@@ -581,29 +396,6 @@ foo()
 //│ 
 //│ 
 //│ IR:
-//│ Program:
-//│ 
-//│   def foo() =
-//│     let x$1 = O() in -- #12
-//│     let x$2 = S(x$1) in -- #11
-//│     let* (x$3) = bar(x$2) in -- #10
-//│     x$3 -- #9
-//│   def bar(x$4) =
-//│     let* (x$5) = baz(x$4) in -- #17
-//│     x$5 -- #16
-//│   def baz(x$6) =
-//│     case x$6 of -- #29
-//│       S =>
-//│         let x$8 = S.s(x$6) in -- #26
-//│         jump j$0(x$8) -- #25
-//│       O =>
-//│         jump j$0(x$6) -- #28
-//│   def j$0(x$7) =
-//│     x$7 -- #19
-//│   let* (x$0) = foo() in -- #2
-//│   x$0 -- #1
-//│ 
-//│ Promoted:
 //│ Program:
 //│ 
 //│   def foo() =

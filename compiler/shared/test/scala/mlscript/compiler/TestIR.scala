@@ -34,8 +34,6 @@ class IRDiffTestCompiler extends DiffTests {
         val graph = gb.buildGraph(prelude, originalUnit)
         val hiddenNames = gb.getHiddenNames(prelude)
         output(graph.show(hiddenNames))
-        output("\nPromoted:")
-        output(graph.show(hiddenNames))
         var interp_result: Opt[Str] = None
         if (mode.interpIR)
           output("\nInterpreted:")

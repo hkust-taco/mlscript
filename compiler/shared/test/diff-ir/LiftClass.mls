@@ -64,23 +64,6 @@ main(4)
 //│   let* (x$0) = main(4) in -- #4
 //│   x$0 -- #3
 //│ 
-//│ Promoted:
-//│ Program:
-//│   class InnerClass(y,x) extends Callable {
-//│     def apply1(z$0) =
-//│       let x$6 = +(x,y) in -- #45
-//│       let x$7 = +(x$6,z$0) in -- #44
-//│       x$7 -- #43
-//│   }
-//│   def main(x$1) =
-//│     let x$2 = InnerClass(1,x$1) in -- #26
-//│     let x$3 = Callable.apply1(x$2,2) in -- #25
-//│     let x$4 = Callable.apply1(x$2,3) in -- #24
-//│     let x$5 = +(x$3,x$4) in -- #23
-//│     x$5 -- #22
-//│   let* (x$0) = main(4) in -- #4
-//│   x$0 -- #3
-//│ 
 //│ Interpreted:
 //│ 15
 //│ 
@@ -130,29 +113,6 @@ main(4)
 //│   let* (x$0) = main(4) in -- #4
 //│   x$0 -- #3
 //│ 
-//│ Promoted:
-//│ Program:
-//│   class InnerClass(y) extends Callable {
-//│     def apply1(z$0) =
-//│       let x$8 = InnerClass2(z$0) in -- #44
-//│       x$8 -- #43
-//│   }
-//│   class InnerClass2(z) extends Callable {
-//│     def apply1(w$0) =
-//│       let x$9 = +(w$0,z) in -- #51
-//│       x$9 -- #50
-//│   }
-//│   def main(x$1) =
-//│     let x$2 = InnerClass(1) in -- #36
-//│     let x$3 = Callable.apply1(x$2,2) in -- #35
-//│     let x$4 = Callable.apply1(x$3,2) in -- #34
-//│     let x$5 = Callable.apply1(x$2,3) in -- #33
-//│     let x$6 = Callable.apply1(x$5,1) in -- #32
-//│     let x$7 = +(x$4,x$6) in -- #31
-//│     x$7 -- #30
-//│   let* (x$0) = main(4) in -- #4
-//│   x$0 -- #3
-//│ 
 //│ Interpreted:
 //│ 8
 //│ 
@@ -176,20 +136,6 @@ main(2)
 //│ 
 //│ 
 //│ IR:
-//│ Program:
-//│   class InnerClass(y) extends Callable {
-//│     def f(x$5) =
-//│       y -- #24
-//│   }
-//│   def main(x$1) =
-//│     let x$2 = InnerClass(1) in -- #17
-//│     let x$3 = Nil() in -- #16
-//│     let x$4 = InnerClass.f(x$2,x$3) in -- #15
-//│     x$4 -- #14
-//│   let* (x$0) = main(2) in -- #4
-//│   x$0 -- #3
-//│ 
-//│ Promoted:
 //│ Program:
 //│   class InnerClass(y) extends Callable {
 //│     def f(x$5) =

@@ -77,38 +77,6 @@ main(3)
 //│   let* (x$0) = main(3) in -- #4
 //│   x$0 -- #3
 //│ 
-//│ Promoted:
-//│ Program:
-//│   class Lambda$0(f) extends Callable {
-//│     def apply1(g$0) =
-//│       let x$11 = Lambda$2(f,g$0) in -- #33
-//│       x$11 -- #32
-//│   }
-//│   class Lambda$1(x,y) extends Callable {
-//│     def apply1(z$0) =
-//│       let x$12 = +(x,y) in -- #46
-//│       let x$13 = +(x$12,z$0) in -- #45
-//│       x$13 -- #44
-//│   }
-//│   class Lambda$2(f,g) extends Callable {
-//│     def apply1(x$14) =
-//│       let x$15 = Callable.apply1(g,x$14) in -- #57
-//│       let x$16 = Callable.apply1(f,x$15) in -- #56
-//│       x$16 -- #55
-//│   }
-//│   def compose(f$0) =
-//│     let x$2 = Lambda$0(f$0) in -- #6
-//│     x$2 -- #5
-//│   def main(x$3) =
-//│     let x$4 = 1 in -- #25
-//│     let x$6 = Lambda$1(x$3,x$4) in -- #24
-//│     let* (x$7) = compose(x$6) in -- #23
-//│     let x$8 = Callable.apply1(x$7,x$6) in -- #22
-//│     let x$9 = Callable.apply1(x$8,2) in -- #21
-//│     x$9 -- #20
-//│   let* (x$0) = main(3) in -- #4
-//│   x$0 -- #3
-//│ 
 //│ Interpreted:
 //│ 10
 //│ 
