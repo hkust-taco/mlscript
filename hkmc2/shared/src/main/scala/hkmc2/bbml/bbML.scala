@@ -185,7 +185,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
     case _ => error(msg"${ty.toString} is not a valid type annotation" -> ty.toLoc :: Nil)
 
   private def instantiate(ty: PolyType)(using ctx: Ctx): GeneralType =
-    ty.body.subst(using (ty.tv.map {
+    ty.body.subst(using (ty.tvs.map {
       case InfVar(_, uid, _, _) =>
         val nv = freshVar
         uid -> nv
@@ -222,7 +222,12 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
     case (Bot, Bot) => true
     case _ => false
 
-  private def constrain(lhs: Type, rhs: Type)(using ctx: Ctx): Unit = solver.constrain(lhs, rhs)
+  private def extrude(ty: GeneralType)(using ctx: Ctx): GeneralType = ty match
+    case ty: Type => solver.extrude(ty)(using ctx.lvl, true)
+    case _ => ??? // TODO
+  
+  private def constrain(lhs: Type, rhs: Type)(using ctx: Ctx): Unit =
+    solver.constrain(lhs, rhs)
 
   // TODO: content type
   private def typeCode(code: Term)(using ctx: Ctx): (Type, Type, Type) = code match
@@ -420,7 +425,8 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
     body.subst(using bds)
 
   // TODO: implement toLoc
-  private def monoOrErr(ty: GeneralType, sc: Located) = ty.monoOr(error(msg"Polymorphic type is not allowed here." -> sc.toLoc :: Nil))
+  private def monoOrErr(ty: GeneralType, sc: Located) =
+    ty.monoOr(error(msg"General type is not allowed here." -> sc.toLoc :: Nil))
   
   private def typeCheck(t: Term)(using ctx: Ctx): (GeneralType, Type) = trace[(GeneralType, Type)](s"Typing ${t.showDbg}", res => s": $res"):
     t match
@@ -528,7 +534,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
         val (res, eff) = typeCheck(body)
         val tv = freshVar(using ctx)
         constrain(eff, tv | sk)
-        (res, tv | allocSkolem)
+        (extrude(res)(using ctx), tv | allocSkolem)
       case Term.RegRef(reg, value) =>
         val (regTy, regEff) = typeCheck(reg)
         val (valTy, valEff) = typeCheck(value)

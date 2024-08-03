@@ -15,11 +15,13 @@ object Disj:
   lazy val bot: Disj = Disj(Nil)
   lazy val top: Disj = Disj(Conj.empty :: Nil)
 
-final class Conj(val i: Inter, val u: Union, val vars: Ls[(InfVar, Bool)]) extends ComposedType(i,
+sealed abstract class Conj(val i: Inter, val u: Union, val vars: Ls[(InfVar, Bool)]) extends ComposedType(i,
   vars.foldLeft(Type.mkNegType(u))((res, v) => if v._2 then res & v._1 else res & Type.mkNegType(v._1)), false
 ) with NormalForm:
-  def merge(other: Conj): Option[Conj] = (this, other) match
-    case (Conj(i1, u1, vars1), Conj(i2, u2, vars2)) => i1.merge(i2) match
+  def merge(other: Conj): Option[Conj] =
+    val Conj(i1, u1, vars1) = this
+    val Conj(i2, u2, vars2) = other
+    i1.merge(i2) match
       case S(i) =>
         val u = u1.merge(u2)
         val vars = (vars1 ++ vars2).sortWith {
@@ -36,12 +38,12 @@ final class Conj(val i: Inter, val u: Union, val vars: Ls[(InfVar, Bool)]) exten
           case _ => N
       case N => N
 object Conj:
-  // * DO NOT use new expressions to create Conj objects.
-  // * We sort vars in the apply function.
+  // * Conj objects cannot be created with `new` except in this file.
+  // * This is because we want to sort the vars in the apply function.
   def apply(i: Inter, u: Union, vars: Ls[(InfVar, Bool)]) = new Conj(i, u, vars.sortWith {
     case ((InfVar(lv1, _, _, sk1), _), (InfVar(lv2, _, _, sk2), _)) => !(sk1 || !sk2 && lv1 <= lv2)
-  })
-  def unapply(conj: Conj): Opt[(Inter, Union, Ls[(InfVar, Bool)])] = S((conj.i, conj.u, conj.vars))
+  }){}
+  def unapply(conj: Conj): S[(Inter, Union, Ls[(InfVar, Bool)])] = S((conj.i, conj.u, conj.vars))
   lazy val empty: Conj = Conj(Inter.empty, Union.empty, Nil)
   def mkVar(v: InfVar, pol: Bool) = Conj(Inter.empty, Union.empty, (v, pol) :: Nil)
   def mkInter(inter: NormalClassType | NormalFunType) = Conj(Inter(S(inter)), Union.empty, Nil)

@@ -17,6 +17,27 @@ class TypeSimplifier(tl: TraceLogger):
   import tl.{trace, log}
   
   def apply(pol: Bool, lvl: Int)(ty: GeneralType): GeneralType =
+    ty |> simplifyStructure(pol, lvl) |> simplifyBounds(pol, lvl)
+  
+  def simplifyStructure(pol: Bool, lvl: Int)(ty: GeneralType): GeneralType =
+    val done = MutSet.empty[InfVar]
+    def goTV(tv: InfVar): InfVar =
+      if done.add(tv) then
+        tv.state.lowerBounds = tv.state.lowerBounds.map(goType)
+        tv.state.upperBounds = tv.state.upperBounds.map(goType)
+      tv
+    def goType(ty: Type): Type = ty match
+      case tv: InfVar => goTV(tv)
+      case _ => ty.map(goType).simp
+    def go(ty: GeneralType): GeneralType = ty match
+      case ty: Type => goType(ty)
+      case pt: PolyType =>
+        pt.tvs.foreach(goTV)
+        pt.map(go)
+      case pf: PolyFunType => pf.map(go)
+    go(ty)
+  
+  def simplifyBounds(pol: Bool, lvl: Int)(ty: GeneralType): GeneralType =
     
     type IV = InfVar
     

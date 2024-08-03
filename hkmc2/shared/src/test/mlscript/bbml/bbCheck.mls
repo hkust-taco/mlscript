@@ -29,7 +29,7 @@ fun id(y) = y
 fun bar: Str -> Str
 fun bar(x) = let t = x + 1 in "aaa"
 //│ Elab: { fun bar: (class:Str#0)‹› -> class:Str#1‹›; fun bar(x@3): (class:Str#2)‹› -> class:Str#3‹› = { let t@4 = +#1(x@3#0, 1‹›)‹›‹›; "aaa"‹› }‹›; }‹›
-//│ ╔══[ERROR] Cannot solve (Str) ∧ (⊤) ∧ ¬⊥
+//│ ╔══[ERROR] Cannot solve Str ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: ⊤
 
@@ -37,7 +37,7 @@ fun bar(x) = let t = x + 1 in "aaa"
 fun baz: Int -> Int
 fun baz(x) = "bbb"
 //│ Elab: { fun baz: (class:Int#25)‹› -> class:Int#26‹›; fun baz(x@3): (class:Int#27)‹› -> class:Int#28‹› = "bbb"‹›; }‹›
-//│ ╔══[ERROR] Cannot solve (Str) ∧ (⊤) ∧ ¬⊥
+//│ ╔══[ERROR] Cannot solve Str ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: ⊤
 
@@ -53,14 +53,14 @@ add(1, 2): Int
 :e
 add(0, 0): Str
 //│ Elab: { App(Ref(add),Tup(List(Fld(‹›,Lit(IntLit(0)),None), Fld(‹›,Lit(IntLit(0)),None)))): Ref(class:Str)‹› }‹›
-//│ ╔══[ERROR] Cannot solve (Int) ∧ (⊤) ∧ ¬⊥
+//│ ╔══[ERROR] Cannot solve Int ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: Str
 
 :e
 fun errAdd(x: Int) = x + "1"
 //│ Elab: { fun errAdd(x@2: class:Int#30) = +#2(x@2#0, "1"‹›)‹›‹›; }‹›
-//│ ╔══[ERROR] Cannot solve (Str) ∧ (⊤) ∧ ¬⊥
+//│ ╔══[ERROR] Cannot solve Str ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: ⊤
 
@@ -85,9 +85,9 @@ high(x => x)
 :e
 high(x => x + 1)
 //│ Elab: { high#3(λx@3. +#3(x@3#0, 1‹›)‹›‹›‹›)‹›‹› }‹›
-//│ ╔══[ERROR] Cannot solve (⊤) ∧ (⊤) ∧ ¬⊥
+//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
 //│ ╙──
-//│ ╔══[ERROR] Cannot solve (Int) ∧ (⊤) ∧ ¬⊥
+//│ ╔══[ERROR] Cannot solve Int ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: Int
 
@@ -139,7 +139,7 @@ id: [A] -> A -> A
 
 42: Int | Num
 //│ Elab: { Lit(IntLit(42)): CompType(Ref(class:Int),Ref(class:Num),true)‹› }‹›
-//│ Type: (Int) ∨ (Num)
+//│ Type: Int ∨ Num
 
 42: [A] -> Int
 //│ Elab: { Lit(IntLit(42)): Forall(List(A@2),Ref(class:Int))‹› }‹›
@@ -148,4 +148,4 @@ id: [A] -> A -> A
 
 42: [A] -> Int | Num
 //│ Elab: { Lit(IntLit(42)): Forall(List(A@2),CompType(Ref(class:Int),Ref(class:Num),true))‹› }‹›
-//│ Type: forall α24_2: (Int) ∨ (Num)
+//│ Type: forall α24_2: Int ∨ Num

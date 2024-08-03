@@ -18,9 +18,7 @@ abstract class TraceLogger:
   @inline def traceNot[T](pre: => String)(thunk: => T)(post: T => String = noPostTrace): T =
     thunk
   
-  def emitDbg(str: String): Unit = scala.Predef.println(str)
-  
-  // Shadow Predef functions with debugging-flag-enabled ones:
+  protected def emitDbg(str: String): Unit = scala.Predef.println(str)
   
   def log(msg: => Any): Unit = if doTrace then emitDbg("| " * indent + msg)
 
