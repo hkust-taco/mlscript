@@ -16,7 +16,7 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogg
   // TODO: cache x-fresh
   private def freshXVar(lvl: Int): InfVar = InfVar(lvl, infVarState.nextUid, new VarState(), false)
 
-  private def extrude(ty: Type)(using lvl: Int, pol: Bool): Type = if ty.lvl <= lvl then ty else ty match
+  def extrude(ty: Type)(using lvl: Int, pol: Bool): Type = if ty.lvl <= lvl then ty else ty match
     case ClassType(sym, targs) =>
       ClassType(sym, targs.map {
         case Wildcard(in, out) =>

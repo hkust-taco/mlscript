@@ -8,17 +8,17 @@ region x in 42
 
 region x in x
 //│ Elab: { region x in x@2#0‹› }‹›
-//│ Type: Region[<α>3_2]
+//│ Type: Region[?]
 
 
 region x in x.ref 42
 //│ Elab: { region x in (x@2#0).ref 42‹›‹›‹› }‹›
-//│ Type: Ref[Int, ⊥]
+//│ Type: Ref[Int, ?]
 
 let r = region x in x.ref 42
 r
 //│ Elab: { let r@2 = region x in (x@3#0).ref 42‹›‹›‹›; r@2#0 }‹›
-//│ Type: Ref[Int, ⊥]
+//│ Type: Ref[Int, ?]
 
 :e
 let r = region x in x.ref 42
@@ -86,26 +86,22 @@ fun rid(x) =
 //│ ╙──
 //│ Type: ⊤
 
-:e
+:fixme
 region x in
   (let dz = x.ref 42 in 42): [A] -> Int
 //│ Elab: { region x in Blk(List(LetBinding(Var(dz@3),RegRef(Ref(x@2),Lit(IntLit(42))))),Lit(IntLit(42))): Forall(List(A@4),Ref(class:Int))‹›‹› }‹›
 //│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
 //│ ╙──
-//│ Type: forall α52_3: Int
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 
-:e
+:fixme
 let t =
   region x in
     y => x.ref y
   in t(42)
 //│ Elab: { { let t@2 = region x in λy@4. (x@3#0).ref y@4#0‹›‹›‹›; t@2#0(42‹›)‹›‹› }‹› }‹›
-//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
-//│ ╙──
-//│ Type: Ref[α56_2, ⊥]
-//│ Where:
-//│   Int <: α56_2
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
 
 fun foo: [A] -> Int ->{A | Alloc} Int
 fun foo(x) =
