@@ -208,8 +208,22 @@ object ParseRule:
     modified(`private`),
     modified(`out`),
     standaloneExpr,
-    Kw(`true`)(ParseRule("'true' keyword")(End(BoolLit(true)))),
-    Kw(`false`)(ParseRule("'false' keyword")(End(BoolLit(false)))),
+    Kw(`true`)(ParseRule("'true' keyword")(
+      genInfixRule(`and`, (rhs, _: Unit) => InfixApp(BoolLit(true), `and`, rhs)),
+      genInfixRule(`or`, (rhs, _: Unit) => InfixApp(BoolLit(true), `or`, rhs)),
+      genInfixRule(`is`, (rhs, _: Unit) => InfixApp(BoolLit(true), `is`, rhs)),
+      genInfixRule(`then`, (rhs, _: Unit) => InfixApp(BoolLit(true), `then`, rhs)),
+      genInfixRule(`:`, (rhs, _: Unit) => InfixApp(BoolLit(true), `:`, rhs)),
+      End(BoolLit(true)))
+    ),
+    Kw(`false`)(ParseRule("'false' keyword")(
+      genInfixRule(`and`, (rhs, _: Unit) => InfixApp(BoolLit(false), `and`, rhs)),
+      genInfixRule(`or`, (rhs, _: Unit) => InfixApp(BoolLit(false), `or`, rhs)),
+      genInfixRule(`is`, (rhs, _: Unit) => InfixApp(BoolLit(false), `is`, rhs)),
+      genInfixRule(`then`, (rhs, _: Unit) => InfixApp(BoolLit(false), `then`, rhs)),
+      genInfixRule(`:`, (rhs, _: Unit) => InfixApp(BoolLit(false), `:`, rhs)),
+      End(BoolLit(false)))
+    ),
   )
   
   /* 
@@ -230,34 +244,19 @@ object ParseRule:
         Expr(
           ParseRule(s"'${k.str}' binding right-hand side")(End(()))
         ) { case (rhs, ()) => S(rhs) }
+
+  def genInfixRule[A](kw: Keyword, k: (Tree, Unit) => A): Alt[A] =
+    Kw(kw):
+      ParseRule(s"'${kw}' operator")(
+        Expr(ParseRule(s"'${kw}' operator right-hand side")(End(())))(k)
+      )
   
   val infixRules: ParseRule[Tree => Tree] = ParseRule("continuation of statement")(
-    // TODO dedup:
-    Kw(`and`):
-      ParseRule("'and' operator")(
-        Expr(ParseRule("'and' operator right-hand side")(End(())))(
-          (rhs, _: Unit) => lhs => InfixApp(lhs, `and`, rhs))
-      ),
-    Kw(`or`):
-      ParseRule("'or' operator")(
-        Expr(ParseRule("'or' operator right-hand side")(End(())))(
-          (rhs, _: Unit) => lhs => InfixApp(lhs, `or`, rhs))
-      ),
-    Kw(`is`):
-      ParseRule("'is' operator")(
-        Expr(ParseRule("'is' operator right-hand side")(End(())))(
-          (rhs, _: Unit) => lhs => InfixApp(lhs, `is`, rhs))
-      ),
-    Kw(`then`):
-      ParseRule("'then' operator")(
-        Expr(ParseRule("'then' operator right-hand side")(End(())))(
-          (rhs, _: Unit) => lhs => InfixApp(lhs, `then`, rhs))
-      ),
-    Kw(`:`):
-      ParseRule("type ascription operator")(
-        Expr(ParseRule("ascribed type")(End(())))(
-          (rhs, _: Unit) => lhs => InfixApp(lhs, `:`, rhs))
-      ),
+    genInfixRule(`and`, (rhs, _: Unit) => lhs => InfixApp(lhs, `and`, rhs)),
+    genInfixRule(`or`, (rhs, _: Unit) => lhs => InfixApp(lhs, `or`, rhs)),
+    genInfixRule(`is`, (rhs, _: Unit) => lhs => InfixApp(lhs, `is`, rhs)),
+    genInfixRule(`then`, (rhs, _: Unit) => lhs => InfixApp(lhs, `then`, rhs)),
+    genInfixRule(`:`, (rhs, _: Unit) => lhs => InfixApp(lhs, `:`, rhs)),
   )
 
 

@@ -74,8 +74,8 @@ object Keyword:
   val `abstract` = Keyword("abstract", N, N)
   val `constructor` = Keyword("constructor", N, N)
   val `virtual` = Keyword("virtual", N, N)
-  val `true` = Keyword("true", N, N)
-  val `false` = Keyword("false", N, N)
+  val `true` = Keyword("true", N, curPrec)
+  val `false` = Keyword("false", N, curPrec)
   val `public` = Keyword("public", N, N)
   val `private` = Keyword("private", N, N)
   

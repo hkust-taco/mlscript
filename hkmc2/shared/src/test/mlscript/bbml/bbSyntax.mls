@@ -62,6 +62,14 @@ x => x + 1
 //│ Parsed:
 //│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',App(Ident(+),Tup(List(Ident(x), IntLit(1)))))
 
+true and true
+//│ Parsed:
+//│ 	InfixApp(BoolLit(true),keyword 'and',BoolLit(true))
+
+false: Bool
+//│ Parsed:
+//│ 	InfixApp(BoolLit(false),keyword ':',Ident(Bool))
+
 let bar = new Bar(42)
 //│ Parsed:
 //│ 	Let(Ident(bar),New(App(Ident(Bar),Tup(List(IntLit(42))))),None)
@@ -117,11 +125,11 @@ if false then 0 else 42
 
 if 24 then false else true
 //│ Parsed:
-//│ 	IfElse(InfixApp(IntLit(24),keyword 'then',Ident(false)),BoolLit(true))
+//│ 	IfElse(InfixApp(IntLit(24),keyword 'then',BoolLit(false)),BoolLit(true))
 
 if x then true else false
 //│ Parsed:
-//│ 	IfElse(InfixApp(Ident(x),keyword 'then',Ident(true)),BoolLit(false))
+//│ 	IfElse(InfixApp(Ident(x),keyword 'then',BoolLit(true)),BoolLit(false))
 
 if 1 is Int then 1 else 0
 //│ Parsed:

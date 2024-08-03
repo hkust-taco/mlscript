@@ -299,11 +299,7 @@ abstract class Parser(
             case S(subRule) =>
               // parse(subRule)
               val e = parseRule(kw.rightPrecOrMin, subRule).getOrElse(errExpr)
-              if id.name == "true" || id.name == "false" then // * true & false are expressions, allow parsing `if true is Bool then ...`
-                val fe = exprCont(e, 0, false)
-                parseRule(prec, exprAlt.rest).map(res => exprAlt.k(fe, res))
-              else
-                parseRule(prec, exprAlt.rest).map(res => exprAlt.k(e, res))
+              parseRule(prec, exprAlt.rest).map(res => exprAlt.k(e, res))
             case N =>
               tryEmpty(tok, loc)
           case N =>
@@ -383,11 +379,19 @@ abstract class Parser(
     case (IDENT("!", _), loc) :: _ =>
       consume
       exprCont(Deref(exprImpl(Int.MaxValue)), prec, allowNewlines = true) // TODO: the prec???
-    case (IDENT(nme, sym), loc) :: _ if nme == "new" || nme == "let" || nme == "if" || nme == "case" || nme == "region" =>
-      parseRule(Keyword.all.get(nme).get.assumeRightPrec, ParseRule.prefixRules).getOrElse(Tree.Error())
     case (IDENT(nme, sym), loc) :: _ =>
-      consume
-      exprCont(Tree.Ident(nme), prec, allowNewlines = true)
+      Keyword.all.get(nme) match
+        case S(kw) =>
+          ParseRule.prefixRules.kwAlts.get(nme) match
+            case S(rule) =>
+              consume
+              parseRule(kw.assumeRightPrec, rule).getOrElse(errExpr)
+            case N =>
+              err((msg"Expected expression; found ${kw.toString} instead" -> S(loc) :: Nil))
+              errExpr
+        case N =>
+          consume
+          exprCont(Tree.Ident(nme), prec, allowNewlines = true)
     case (LITVAL(lit), loc) :: _ =>
       consume
       exprCont(lit.asTree, prec, allowNewlines = true)
