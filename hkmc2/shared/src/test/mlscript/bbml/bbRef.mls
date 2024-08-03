@@ -11,10 +11,27 @@ region x in x
 //│ Type: Region[<α>3_2]
 
 
-region x in
-  x.ref 42
+region x in x.ref 42
 //│ Elab: { region x in (x@2#0).ref 42‹›‹›‹› }‹›
 //│ Type: Ref[Int, ⊥]
+
+let r = region x in x.ref 42
+r
+//│ Elab: { let r@2 = region x in (x@3#0).ref 42‹›‹›‹›; r@2#0 }‹›
+//│ Type: Ref[Int, ⊥]
+
+:e
+let r = region x in x.ref 42
+!r
+//│ Elab: { let r@2 = region x in (x@3#0).ref 42‹›‹›‹›; !Ref(r@2)‹› }‹›
+//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
+//│ ╙──
+//│ Type: Int
+
+fun mkRef() = region x in x.ref 42
+mkRef
+//│ Elab: { fun mkRef() = region x in (x@2#0).ref 42‹›‹›‹›; mkRef#0 }‹›
+//│ Type: () ->{<α>0_0} Ref[Int, ?]
 
 :e
 let t = region x in x in t.ref 42
@@ -75,7 +92,7 @@ region x in
 //│ Elab: { region x in Blk(List(LetBinding(Var(dz@3),RegRef(Ref(x@2),Lit(IntLit(42))))),Lit(IntLit(42))): Forall(List(A@4),Ref(class:Int))‹›‹› }‹›
 //│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
 //│ ╙──
-//│ Type: forall α39_3: Int
+//│ Type: forall α52_3: Int
 
 
 :e
@@ -86,9 +103,9 @@ let t =
 //│ Elab: { { let t@2 = region x in λy@4. (x@3#0).ref y@4#0‹›‹›‹›; t@2#0(42‹›)‹›‹› }‹› }‹›
 //│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
 //│ ╙──
-//│ Type: Ref[α43_2, ⊥]
+//│ Type: Ref[α56_2, ⊥]
 //│ Where:
-//│   Int <: α43_2
+//│   Int <: α56_2
 
 fun foo: [A] -> Int ->{A | Alloc} Int
 fun foo(x) =
