@@ -343,8 +343,8 @@ class TailRecOpt(fnUid: FreshInt, classUid: FreshInt, tag: FreshInt, raise: Diag
                         if containingCtors.contains(assignee) then invalidateAndCont(body)
                         else searchOptCalls(body)
       case LetMethodCall(names, cls, method, args, body) =>
-        // TODO
-        ???
+        // method call is unresolved, just ignore it
+        searchOptCalls(body)(acc, src, scc, start, calledDefn, letCallNode, letCtorNode, containingCtors -- names.toSet) 
       case x @ LetCall(names, defn, args, isTailRec, body) =>
         val callInScc = scc.contains(defn.expectDefn)
         
