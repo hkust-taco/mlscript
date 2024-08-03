@@ -1,0 +1,95 @@
+:NewDefs
+:ParseOnly
+:UseIR
+:NoTailRec
+
+:prelude
+module True
+module False
+module Callable {
+  fun apply0() = 0
+  fun apply1(x0) = 0
+  fun apply2(x0,x1) = 0
+  fun apply3(x0,x1,x2) = 0
+  fun apply4(x0,x1,x2,x3) = 0
+  fun apply5(x0,x1,x2,x3,x4) = 0
+}
+module List[A, B]
+class Cons[A, B](h: A, t: Cons[A, B]) extends List[A, B]
+module Nil[A, B] extends List[A, B]
+module Option[A]
+class Some[A](x: A) extends Option[A]
+module None[A] extends Option[A]
+class Pair[A, B](x: A, y: B)
+class Tuple2[A, B](x: A, y: B)
+class Tuple3[A, B, C](x: A, y: B, z: C)
+module Nat
+class S(s: Nat) extends Nat
+module O extends Nat
+class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O)
+//│ |#module| |True|↵|#module| |False|↵|#module| |Callable| |{|→|#fun| |apply0|(||)| |#=| |0|↵|#fun| |apply1|(|x0|)| |#=| |0|↵|#fun| |apply2|(|x0|,|x1|)| |#=| |0|↵|#fun| |apply3|(|x0|,|x1|,|x2|)| |#=| |0|↵|#fun| |apply4|(|x0|,|x1|,|x2|,|x3|)| |#=| |0|↵|#fun| |apply5|(|x0|,|x1|,|x2|,|x3|,|x4|)| |#=| |0|←|↵|}|↵|#module| |List|[|A|,| |B|]|↵|#class| |Cons|[|A|,| |B|]|(|h|#:| |A|,| |t|#:| |Cons|[|A|,| |B|]|)| |#extends| |List|[|A|,| |B|]|↵|#module| |Nil|[|A|,| |B|]| |#extends| |List|[|A|,| |B|]|↵|#module| |Option|[|A|]|↵|#class| |Some|[|A|]|(|x|#:| |A|)| |#extends| |Option|[|A|]|↵|#module| |None|[|A|]| |#extends| |Option|[|A|]|↵|#class| |Pair|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple2|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple3|[|A|,| |B|,| |C|]|(|x|#:| |A|,| |y|#:| |B|,| |z|#:| |C|)|↵|#module| |Nat|↵|#class| |S|(|s|#:| |Nat|)| |#extends| |Nat|↵|#module| |O| |#extends| |Nat|↵|#class| |HiddenTheseEntities|(|_0|#:| |HiddenTheseEntities|,| |_1|#:| |True|,| |_2|#:| |False|,| |_3|#:| |Callable|,| |_4|#:| |List|,| |_5|#:| |Cons|,| |_6|#:| |Nil|,| |_7|#:| |Option|,| |_8|#:| |Some|,| |_9|#:| |None|,| |_10|#:| |Pair|,| |_11|#:| |Tuple2|,| |_12|#:| |Tuple3|,| |_13|#:| |Nat|,| |_14|#:| |S|,| |_15|#:| |O|)|
+//│ Parsed: {module True {}; module False {}; module Callable {fun apply0 = () => 0; fun apply1 = (x0,) => 0; fun apply2 = (x0, x1,) => 0; fun apply3 = (x0, x1, x2,) => 0; fun apply4 = (x0, x1, x2, x3,) => 0; fun apply5 = (x0, x1, x2, x3, x4,) => 0}; module List‹A, B› {}; class Cons‹A, B›(h: A, t: Cons‹A, B›,): List‹A, B› {}; module Nil‹A, B›: List‹A, B› {}; module Option‹A› {}; class Some‹A›(x: A,): Option‹A› {}; module None‹A›: Option‹A› {}; class Pair‹A, B›(x: A, y: B,) {}; class Tuple2‹A, B›(x: A, y: B,) {}; class Tuple3‹A, B, C›(x: A, y: B, z: C,) {}; module Nat {}; class S(s: Nat,): Nat {}; module O: Nat {}; class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O,) {}}
+//│ 
+//│ Preluded.
+//│ 
+
+:interpIR
+:genCpp
+:runCpp
+fun add2c(a)(b) = a + b
+fun add2(a, b) = a + b
+fun add3c(a)(b)(c) = a + b + c
+fun main() =
+  add2c(1)(2)
+  add2(1, 2)
+  add3c(1)(2)(3)
+main()
+//│ |#fun| |add2c|(|a|)|(|b|)| |#=| |a| |+| |b|↵|#fun| |add2|(|a|,| |b|)| |#=| |a| |+| |b|↵|#fun| |add3c|(|a|)|(|b|)|(|c|)| |#=| |a| |+| |b| |+| |c|↵|#fun| |main|(||)| |#=|→|add2c|(|1|)|(|2|)|↵|add2|(|1|,| |2|)|↵|add3c|(|1|)|(|2|)|(|3|)|←|↵|main|(||)|
+//│ Parsed: {fun add2c = (a,) => (b,) => +(a, b,); fun add2 = (a, b,) => +(a, b,); fun add3c = (a,) => (b,) => (c,) => +(+(a, b,), c,); fun main = () => {add2c(1,)(2,); add2(1, 2,); add3c(1,)(2,)(3,)}; main()}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│   class Lambda$0(a) extends Callable {
+//│     def apply1(b$1) =
+//│       let x$12 = +(a,b$1) in -- #58
+//│       x$12 -- #57
+//│   }
+//│   class Lambda$1(a) extends Callable {
+//│     def apply1(b$2) =
+//│       let x$14 = Lambda$2(a,b$2) in -- #60
+//│       x$14 -- #59
+//│   }
+//│   class Lambda$2(a,b) extends Callable {
+//│     def apply1(c$0) =
+//│       let x$15 = +(a,b) in -- #73
+//│       let x$16 = +(x$15,c$0) in -- #72
+//│       x$16 -- #71
+//│   }
+//│   def add2c(a$0) =
+//│     let x$2 = Lambda$0(a$0) in -- #4
+//│     x$2 -- #3
+//│   def add2(a$1,b$0) =
+//│     let x$3 = +(a$1,b$0) in -- #11
+//│     x$3 -- #10
+//│   def add3c(a$2) =
+//│     let x$5 = Lambda$1(a$2) in -- #13
+//│     x$5 -- #12
+//│   def main() =
+//│     let* (x$6) = add2c(1) in -- #45
+//│     let x$7 = Callable.apply1(x$6,2) in -- #44
+//│     let* (x$8) = add2(1,2) in -- #43
+//│     let* (x$9) = add3c(1) in -- #42
+//│     let x$10 = Callable.apply1(x$9,2) in -- #41
+//│     let x$11 = Callable.apply1(x$10,3) in -- #40
+//│     x$11 -- #39
+//│   let* (x$0) = main() in -- #2
+//│   x$0 -- #1
+//│ 
+//│ Interpreted:
+//│ 6
+//│ 
+//│ 
+//│ Execution succeeded: 
+//│ 6
+//│ 

@@ -1,0 +1,110 @@
+:NewDefs
+:ParseOnly
+:UseIR
+:NoTailRec
+
+:prelude
+module True
+module False
+module Callable {
+  fun apply0() = 0
+  fun apply1(x0) = 0
+  fun apply2(x0,x1) = 0
+  fun apply3(x0,x1,x2) = 0
+  fun apply4(x0,x1,x2,x3) = 0
+  fun apply5(x0,x1,x2,x3,x4) = 0
+}
+module List[A, B]
+class Cons[A, B](h: A, t: Cons[A, B]) extends List[A, B]
+module Nil[A, B] extends List[A, B]
+module Option[A]
+class Some[A](x: A) extends Option[A]
+module None[A] extends Option[A]
+class Pair[A, B](x: A, y: B)
+class Tuple2[A, B](x: A, y: B)
+class Tuple3[A, B, C](x: A, y: B, z: C)
+module Nat
+class S(s: Nat) extends Nat
+module O extends Nat
+class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O)
+//│ |#module| |True|↵|#module| |False|↵|#module| |Callable| |{|→|#fun| |apply0|(||)| |#=| |0|↵|#fun| |apply1|(|x0|)| |#=| |0|↵|#fun| |apply2|(|x0|,|x1|)| |#=| |0|↵|#fun| |apply3|(|x0|,|x1|,|x2|)| |#=| |0|↵|#fun| |apply4|(|x0|,|x1|,|x2|,|x3|)| |#=| |0|↵|#fun| |apply5|(|x0|,|x1|,|x2|,|x3|,|x4|)| |#=| |0|←|↵|}|↵|#module| |List|[|A|,| |B|]|↵|#class| |Cons|[|A|,| |B|]|(|h|#:| |A|,| |t|#:| |Cons|[|A|,| |B|]|)| |#extends| |List|[|A|,| |B|]|↵|#module| |Nil|[|A|,| |B|]| |#extends| |List|[|A|,| |B|]|↵|#module| |Option|[|A|]|↵|#class| |Some|[|A|]|(|x|#:| |A|)| |#extends| |Option|[|A|]|↵|#module| |None|[|A|]| |#extends| |Option|[|A|]|↵|#class| |Pair|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple2|[|A|,| |B|]|(|x|#:| |A|,| |y|#:| |B|)|↵|#class| |Tuple3|[|A|,| |B|,| |C|]|(|x|#:| |A|,| |y|#:| |B|,| |z|#:| |C|)|↵|#module| |Nat|↵|#class| |S|(|s|#:| |Nat|)| |#extends| |Nat|↵|#module| |O| |#extends| |Nat|↵|#class| |HiddenTheseEntities|(|_0|#:| |HiddenTheseEntities|,| |_1|#:| |True|,| |_2|#:| |False|,| |_3|#:| |Callable|,| |_4|#:| |List|,| |_5|#:| |Cons|,| |_6|#:| |Nil|,| |_7|#:| |Option|,| |_8|#:| |Some|,| |_9|#:| |None|,| |_10|#:| |Pair|,| |_11|#:| |Tuple2|,| |_12|#:| |Tuple3|,| |_13|#:| |Nat|,| |_14|#:| |S|,| |_15|#:| |O|)|
+//│ Parsed: {module True {}; module False {}; module Callable {fun apply0 = () => 0; fun apply1 = (x0,) => 0; fun apply2 = (x0, x1,) => 0; fun apply3 = (x0, x1, x2,) => 0; fun apply4 = (x0, x1, x2, x3,) => 0; fun apply5 = (x0, x1, x2, x3, x4,) => 0}; module List‹A, B› {}; class Cons‹A, B›(h: A, t: Cons‹A, B›,): List‹A, B› {}; module Nil‹A, B›: List‹A, B› {}; module Option‹A› {}; class Some‹A›(x: A,): Option‹A› {}; module None‹A›: Option‹A› {}; class Pair‹A, B›(x: A, y: B,) {}; class Tuple2‹A, B›(x: A, y: B,) {}; class Tuple3‹A, B, C›(x: A, y: B, z: C,) {}; module Nat {}; class S(s: Nat,): Nat {}; module O: Nat {}; class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Callable, _4: List, _5: Cons, _6: Nil, _7: Option, _8: Some, _9: None, _10: Pair, _11: Tuple2, _12: Tuple3, _13: Nat, _14: S, _15: O,) {}}
+//│ 
+//│ Preluded.
+//│ 
+
+:genCpp
+:runCpp
+module Fn extends Callable {
+  fun apply1(x) = builtin("println", x)
+}
+class Fn2(a) extends Callable {
+  fun apply1(x) =
+    builtin("println", a)
+    builtin("println", x)
+}
+class Demo(n) {
+  fun x() = n
+}
+fun f(fn) = fn(1)
+fun main() =
+  let d1 = Demo(2)
+  Demo.x(d1)
+  let print = Fn()
+  Fn.apply1(print, 3)
+  f(print)
+  let print2 = Fn2(4)
+  Fn2.apply1(print2, 5)
+  print2(6)
+  f(print2)
+main()
+//│ |#module| |Fn| |#extends| |Callable| |{|→|#fun| |apply1|(|x|)| |#=| |builtin|(|"println"|,| |x|)|←|↵|}|↵|#class| |Fn2|(|a|)| |#extends| |Callable| |{|→|#fun| |apply1|(|x|)| |#=|→|builtin|(|"println"|,| |a|)|↵|builtin|(|"println"|,| |x|)|←|←|↵|}|↵|#class| |Demo|(|n|)| |{|→|#fun| |x|(||)| |#=| |n|←|↵|}|↵|#fun| |f|(|fn|)| |#=| |fn|(|1|)|↵|#fun| |main|(||)| |#=|→|#let| |d1| |#=| |Demo|(|2|)|↵|Demo|.x|(|d1|)|↵|#let| |print| |#=| |Fn|(||)|↵|Fn|.apply1|(|print|,| |3|)|↵|f|(|print|)|↵|#let| |print2| |#=| |Fn2|(|4|)|↵|Fn2|.apply1|(|print2|,| |5|)|↵|print2|(|6|)|↵|f|(|print2|)|←|↵|main|(||)|
+//│ Parsed: {module Fn: Callable {fun apply1 = (x,) => builtin("println", x,)}; class Fn2(a,): Callable {fun apply1 = (x,) => {builtin("println", a,); builtin("println", x,)}}; class Demo(n,) {fun x = () => n}; fun f = (fn,) => fn(1,); fun main = () => {let d1 = Demo(2,); (Demo).x(d1,); let print = Fn(); (Fn).apply1(print, 3,); f(print,); let print2 = Fn2(4,); (Fn2).apply1(print2, 5,); print2(6,); f(print2,)}; main()}
+//│ 
+//│ 
+//│ IR:
+//│ Program:
+//│   class Fn() extends Callable {
+//│     def apply1(x$11) =
+//│       let x$12 = Callable.apply2(builtin,println,x$11) in -- #64
+//│       x$12 -- #63
+//│   }
+//│   class Fn2(a) extends Callable {
+//│     def apply1(x$13) =
+//│       let x$14 = Callable.apply2(builtin,println,a) in -- #80
+//│       let x$15 = Callable.apply2(builtin,println,x$13) in -- #79
+//│       x$15 -- #78
+//│   }
+//│   class Demo(n) {
+//│     def x() =
+//│       n -- #81
+//│   }
+//│   def f(fn$0) =
+//│     let x$1 = Callable.apply1(fn$0,1) in -- #8
+//│     x$1 -- #7
+//│   def main() =
+//│     let x$2 = Demo(2) in -- #56
+//│     let x$3 = Demo.x(x$2) in -- #55
+//│     let x$4 = Fn() in -- #54
+//│     let x$5 = Fn.apply1(x$4,3) in -- #53
+//│     let* (x$6) = f(x$4) in -- #52
+//│     let x$7 = Fn2(4) in -- #51
+//│     let x$8 = Fn2.apply1(x$7,5) in -- #50
+//│     let x$9 = Callable.apply1(x$7,6) in -- #49
+//│     let* (x$10) = f(x$7) in -- #48
+//│     x$10 -- #47
+//│   let* (x$0) = main() in -- #2
+//│   x$0 -- #1
+//│ 
+//│ 
+//│ Execution succeeded: 
+//│ 3
+//│ 1
+//│ 4
+//│ 5
+//│ 4
+//│ 6
+//│ 4
+//│ 1
+//│ Unit
+//│ 
