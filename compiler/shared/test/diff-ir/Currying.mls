@@ -1,6 +1,7 @@
 :NewDefs
 :ParseOnly
 :UseIR
+
 :prelude
 module True
 module False
