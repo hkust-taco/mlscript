@@ -34,6 +34,7 @@ class HiddenTheseEntities(_0: HiddenTheseEntities, _1: True, _2: False, _3: Call
 
 :genCpp
 :runCpp
+:showCpp
 module Fn extends Callable {
   fun apply1(x) = builtin("println", x)
 }
@@ -94,6 +95,77 @@ main()
 //│     x$10 -- #47
 //│   let* (x$0) = main() in -- #2
 //│   x$0 -- #1
+//│ 
+//│ Cpp:
+//│ struct _mls_Demo: public _mlsObject {
+//│   _mlsValue _mls_n;
+//│   constexpr static inline const char *typeName = "Demo";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_n.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_n);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   static _mlsValue create(_mlsValue _mls_n) { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_Demo; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_n = _mls_n;  return _mlsValue(_mlsVal); }
+//│   virtual _mlsValue _mls_x(){
+//│     _mlsValue _mls_retval;
+//│     _mls_retval = _mls_n;
+//│     return _mls_retval;
+//│   }
+//│ };
+//│ struct _mls_Fn: public _mls_Callable {
+//│ 
+//│   constexpr static inline const char *typeName = "Fn";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); }
+//│   virtual void destroy() override {  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   static _mlsValue create() { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_Fn; _mlsVal->refCount = 1; _mlsVal->tag = typeTag;  return _mlsValue(_mlsVal); }
+//│   virtual _mlsValue _mls_apply1(_mlsValue _mls_x_11){
+//│     _mlsValue _mls_retval;
+//│     auto _mls_x_12 = _mls_builtin_println(_mls_x_11);
+//│     _mls_retval = _mls_x_12;
+//│     return _mls_retval;
+//│   }
+//│ };
+//│ struct _mls_Fn2: public _mls_Callable {
+//│   _mlsValue _mls_a;
+//│   constexpr static inline const char *typeName = "Fn2";
+//│   constexpr static inline uint32_t typeTag = nextTypeTag();
+//│   virtual void print() const override { std::printf("%s", typeName); std::printf("("); this->_mls_a.print();  std::printf(")"); }
+//│   virtual void destroy() override { _mlsValue::destroy(this->_mls_a);  operator delete (this, std::align_val_t(_mlsAlignment)); }
+//│   static _mlsValue create(_mlsValue _mls_a) { auto _mlsVal = new (std::align_val_t(_mlsAlignment)) _mls_Fn2; _mlsVal->refCount = 1; _mlsVal->tag = typeTag; _mlsVal->_mls_a = _mls_a;  return _mlsValue(_mlsVal); }
+//│   virtual _mlsValue _mls_apply1(_mlsValue _mls_x_13){
+//│     _mlsValue _mls_retval;
+//│     auto _mls_x_14 = _mls_builtin_println(_mls_a);
+//│     auto _mls_x_15 = _mls_builtin_println(_mls_x_13);
+//│     _mls_retval = _mls_x_15;
+//│     return _mls_retval;
+//│   }
+//│ };
+//│ _mlsValue _mls_f(_mlsValue _mls_fn_0){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_1 = _mlsMethodCall<_mls_Callable>(_mls_fn_0)->_mls_apply1(_mlsValue::fromIntLit(1));
+//│   _mls_retval = _mls_x_1;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mls_main(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_2 = _mlsValue::create<_mls_Demo>(_mlsValue::fromIntLit(2));
+//│   auto _mls_x_3 = _mlsMethodCall<_mls_Demo>(_mls_x_2)->_mls_x();
+//│   auto _mls_x_4 = _mlsValue::create<_mls_Fn>();
+//│   auto _mls_x_5 = _mlsMethodCall<_mls_Fn>(_mls_x_4)->_mls_apply1(_mlsValue::fromIntLit(3));
+//│   auto _mls_x_6 = _mls_f(_mls_x_4);
+//│   auto _mls_x_7 = _mlsValue::create<_mls_Fn2>(_mlsValue::fromIntLit(4));
+//│   auto _mls_x_8 = _mlsMethodCall<_mls_Fn2>(_mls_x_7)->_mls_apply1(_mlsValue::fromIntLit(5));
+//│   auto _mls_x_9 = _mlsMethodCall<_mls_Callable>(_mls_x_7)->_mls_apply1(_mlsValue::fromIntLit(6));
+//│   auto _mls_x_10 = _mls_f(_mls_x_7);
+//│   _mls_retval = _mls_x_10;
+//│   return _mls_retval;
+//│ }
+//│ _mlsValue _mlsMain(){
+//│   _mlsValue _mls_retval;
+//│   auto _mls_x_0 = _mls_main();
+//│   _mls_retval = _mls_x_0;
+//│   return _mls_retval;
+//│ }
+//│ int main() { return _mlsLargeStack(_mlsMainWrapper); }
 //│ 
 //│ 
 //│ Execution succeeded: 

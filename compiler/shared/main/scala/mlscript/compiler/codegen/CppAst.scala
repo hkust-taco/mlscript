@@ -157,6 +157,14 @@ enum Expr:
 case class CompilationUnit(includes: Ls[Str], decls: Ls[Decl], defs: Ls[Def]):
   def toDocument: Document =
     stack_list(includes.map(x => raw(x)) ++ decls.map(_.toDocument) ++ defs.map(_.toDocument))
+  def toDocumentWithoutHidden: Document =
+    val hiddenNames = Set(
+      "HiddenTheseEntities", "True", "False", "Callable", "List", "Cons", "Nil", "Option", "Some", "None", "Pair", "Tuple2", "Tuple3", "Nat", "S", "O"
+    )
+    stack_list(defs.filterNot { 
+      case Def.StructDef(name, _, _, _) => hiddenNames.contains(name.stripPrefix("_mls_"))
+      case _ => false
+    }.map(_.toDocument))
 
 enum Decl:
   case StructDecl(name: Str)

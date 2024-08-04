@@ -44,7 +44,10 @@ class IRDiffTestCompiler extends DiffTests {
           val cpp = codegen(graph)
           if (mode.showCpp)
             output("\nCpp:")
-            output(cpp.toDocument.print)
+            if (mode.irVerbose)
+              output(cpp.toDocument.print)
+            else
+              output(cpp.toDocumentWithoutHidden.print)
           if (mode.writeCpp)
             printToFile(java.io.File(s"compiler/shared/test/diff-ir/cpp/${testName}.cpp")) { p =>
               p.println(cpp.toDocument.print)
