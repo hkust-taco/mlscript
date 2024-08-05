@@ -208,22 +208,8 @@ object ParseRule:
     modified(`private`),
     modified(`out`),
     standaloneExpr,
-    Kw(`true`)(ParseRule("'true' keyword")(
-      genInfixRule(`and`, (rhs, _: Unit) => InfixApp(BoolLit(true), `and`, rhs)),
-      genInfixRule(`or`, (rhs, _: Unit) => InfixApp(BoolLit(true), `or`, rhs)),
-      genInfixRule(`is`, (rhs, _: Unit) => InfixApp(BoolLit(true), `is`, rhs)),
-      genInfixRule(`then`, (rhs, _: Unit) => InfixApp(BoolLit(true), `then`, rhs)),
-      genInfixRule(`:`, (rhs, _: Unit) => InfixApp(BoolLit(true), `:`, rhs)),
-      End(BoolLit(true)))
-    ),
-    Kw(`false`)(ParseRule("'false' keyword")(
-      genInfixRule(`and`, (rhs, _: Unit) => InfixApp(BoolLit(false), `and`, rhs)),
-      genInfixRule(`or`, (rhs, _: Unit) => InfixApp(BoolLit(false), `or`, rhs)),
-      genInfixRule(`is`, (rhs, _: Unit) => InfixApp(BoolLit(false), `is`, rhs)),
-      genInfixRule(`then`, (rhs, _: Unit) => InfixApp(BoolLit(false), `then`, rhs)),
-      genInfixRule(`:`, (rhs, _: Unit) => InfixApp(BoolLit(false), `:`, rhs)),
-      End(BoolLit(false)))
-    ),
+    Kw(`true`)(ParseRule("'true' keyword")(End(BoolLit(true)))),
+    Kw(`false`)(ParseRule("'false' keyword")(End(BoolLit(false)))),
   )
   
   /* 

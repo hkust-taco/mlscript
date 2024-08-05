@@ -70,6 +70,10 @@ false: Bool
 //│ Parsed:
 //│ 	InfixApp(BoolLit(false),keyword ':',Ident(Bool))
 
+f of false
+//│ Parsed:
+//│ 	App(Ident(f),Tup(List(BoolLit(false))))
+
 let bar = new Bar(42)
 //│ Parsed:
 //│ 	Let(Ident(bar),New(App(Ident(Bar),Tup(List(IntLit(42))))),None)
@@ -114,6 +118,10 @@ fun id: [A] -> A -> A
 //│ Parsed:
 //│ 	InfixApp(Tup(List(Forall(List(Ident(A)),InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A))))),keyword '->',Ident(Int))
 
+
+x => if x == 0 then 1 else x
+//│ Parsed:
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',IfElse(InfixApp(App(Ident(==),Tup(List(Ident(x), IntLit(0)))),keyword 'then',IntLit(1)),Ident(x)))
 
 if 1 < 2 then 1 else 0
 //│ Parsed:
@@ -180,6 +188,10 @@ g`(`1, `2)
 //│ Parsed:
 //│ 	Quoted(IfElse(InfixApp(Unquoted(Quoted(App(Ident(==),Tup(List(Unquoted(Ident(x)), Unquoted(Quoted(DecLit(0.0)))))))),keyword 'then',Unquoted(Quoted(DecLit(1.0)))),Unquoted(Ident(x))))
 
+
+x `=> if 0 == 0 then x else `0
+//│ Parsed:
+//│ 	Quoted(InfixApp(Tup(List(Ident(x))),keyword '=>',Unquoted(IfElse(InfixApp(App(Ident(==),Tup(List(IntLit(0), IntLit(0)))),keyword 'then',Ident(x)),Quoted(IntLit(0))))))
 
 region x in 42
 //│ Parsed:
