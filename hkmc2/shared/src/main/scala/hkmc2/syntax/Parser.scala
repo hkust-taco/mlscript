@@ -406,6 +406,7 @@ abstract class Parser(
         case (QUOTE, l) :: (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ =>
             consume
             consume
+            // TODO: handle or reject effect annotations here
             bk match
               case Round =>
               case Square =>
@@ -416,7 +417,7 @@ abstract class Parser(
             exprCont(Quoted(InfixApp(Tup(ps), kw, Unquoted(body))), prec, allowNewlines = true)
         case (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ =>
           consume
-          val rhs = simpleExpr(kw.rightPrecOrMin)
+          val rhs = effectfulRhs(kw.rightPrecOrMin)
           val res = InfixApp(bk match
               case Round => Tup(ps)
               case Square => TyTup(ps)
@@ -493,6 +494,14 @@ abstract class Parser(
     errExpr
   }
   
+  def effectfulRhs(prec: Int)(using Line): Tree =
+    yeetSpaces match
+      case (br @ BRACKETS(Curly, toks), loc) :: _ =>
+        consume
+        val eff = rec(toks, S(loc), "effect type").concludeWith(_.simpleExpr(0))
+        Effectful(eff, simpleExpr(prec))
+      case _ => expr(prec)
+  
   final def exprCont(acc: Tree, prec: Int, allowNewlines: Bool)(using Line): Tree =
     wrap(prec, s"`$acc`", allowNewlines)(exprContImpl(acc, prec, allowNewlines))
   final def exprContImpl(acc: Tree, prec: Int, allowNewlines: Bool): Tree =
@@ -501,6 +510,7 @@ abstract class Parser(
         case _ :: (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ if kw.leftPrecOrMin > prec =>
           consume
           consume
+          // TODO: handle or reject effect annotations here
           val body = yeetSpaces match
             case (KEYWORD(kw @ Keyword.`let`), l1) :: _ => Block(blockMaybeIndented) // FIXME[CY] why this weird special case?
             case _ => expr(kw.rightPrecOrMin)
@@ -544,14 +554,9 @@ abstract class Parser(
         val rhs = Blk(typingUnit.entities)
         R(Lam(PlainTup(acc), rhs))
         */
-      case (KEYWORD(kw @ (Keyword.`->` | Keyword.`=>`)), l0) :: _ if kw.leftPrecOrMin > prec =>
+      case (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ if kw.leftPrecOrMin > prec =>
         consume
-        val rhs = yeetSpaces match
-          case (br @ BRACKETS(Curly, toks), loc) :: _ =>
-            consume
-            val eff = rec(toks, S(loc), "effect type").concludeWith(_.simpleExpr(0))
-            Effectful(eff, simpleExpr(kw.rightPrecOrMin))
-          case _ => expr(kw.rightPrecOrMin)
+        val rhs = effectfulRhs(kw.rightPrecOrMin)
         val res = acc match
           case _ => InfixApp(PlainTup(acc), kw, rhs)
         exprCont(res, prec, allowNewlines)
