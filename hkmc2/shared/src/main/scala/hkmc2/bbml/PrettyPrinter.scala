@@ -22,13 +22,11 @@ object PrettyPrinter:
     val cache = MutSet[Uid[InfVar]]()
     object CollectBounds extends TypeTraverser:
       override def apply(pol: Boolean)(ty: GeneralType): Unit = ty match
-        case v @ InfVar(_, uid, state, _) if !cache(uid) =>
-          cache += uid
-          res ++= state.lowerBounds.map(bd => (bd, v))
-          res ++= state.upperBounds.map(bd => (v, bd))
-          super.apply(pol)(ty)
-          cache -= uid
-        case _: InfVar => ()
+        case v @ InfVar(_, uid, state, _) =>
+          if cache.add(uid) then
+            res ++= state.lowerBounds.map(bd => (bd, v))
+            res ++= state.upperBounds.map(bd => (v, bd))
+            super.apply(pol)(ty)
         case _ => super.apply(pol)(ty)
     CollectBounds(true)(ty)
     res.toList
