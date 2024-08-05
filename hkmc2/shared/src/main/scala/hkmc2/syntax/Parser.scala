@@ -188,9 +188,10 @@ abstract class Parser(
   final def blockMaybeIndented: Ls[Tree] =
     maybeIndented(_.block)
   
-  def block: Ls[Tree] = blockOf(ParseRule.prefixRules)
+  def block(using Line): Ls[Tree] = blockOf(ParseRule.prefixRules)
   
-  def blockOf(rule: ParseRule[Tree]): Ls[Tree] = wrap(rule.name):
+  def blockOf(rule: ParseRule[Tree])(using Line): Ls[Tree] = wrap(rule.name)(blockOfImpl(rule))
+  def blockOfImpl(rule: ParseRule[Tree]): Ls[Tree] =
     cur match
     case Nil => Nil
     case (NEWLINE, _) :: _ => consume; blockOf(rule)
@@ -263,7 +264,9 @@ abstract class Parser(
           N
   
   /** A result of None means there was an error (already reported) and nothing could be parsed. */
-  def parseRule[A](prec: Int, rule: ParseRule[A]): Opt[A] = wrap(prec, rule):
+  def parseRule[A](prec: Int, rule: ParseRule[A])(using Line): Opt[A] =
+    wrap(prec, rule)(parseRuleImpl(prec, rule))
+  def parseRuleImpl[A](prec: Int, rule: ParseRule[A]): Opt[A] =
     def tryEmpty(tok: Token, loc: Loc) = rule.emptyAlt match
       case S(res) => S(res)
       case N =>
@@ -300,8 +303,7 @@ abstract class Parser(
             case S(subRule) =>
               // parse(subRule)
               val e = exprCont(parseRule(kw.rightPrecOrMin, subRule).getOrElse(errExpr), prec, false)
-              val res = parseRule(prec, exprAlt.rest).map(res => exprAlt.k(e, res))
-              res
+              parseRule(prec, exprAlt.rest).map(res => exprAlt.k(e, res))
             case N =>
               tryEmpty(tok, loc)
           case N =>
@@ -384,7 +386,8 @@ abstract class Parser(
     case (IDENT(nme, sym), loc) :: _ =>
       Keyword.all.get(nme) match
         case S(kw) => // * Expressions starting with keywords should be handled in parseRule
-          err((msg"Expected expression; found ${kw.toString} instead" -> S(loc) :: Nil))
+          // * I guess this case is not really supposed to be ever reached (?)
+          err((msg"Unexpected ${kw.toString} in this position" -> S(loc) :: Nil))
           errExpr
         case N =>
           consume
@@ -478,7 +481,9 @@ abstract class Parser(
     errExpr
   }
   
-  final def exprCont(acc: Tree, prec: Int, allowNewlines: Bool): Tree = wrap(prec, s"`$acc`", allowNewlines):
+  final def exprCont(acc: Tree, prec: Int, allowNewlines: Bool)(using Line): Tree =
+    wrap(prec, s"`$acc`", allowNewlines)(exprContImpl(acc, prec, allowNewlines))
+  final def exprContImpl(acc: Tree, prec: Int, allowNewlines: Bool): Tree =
     cur match {
       case (QUOTE, l) :: _ => cur match {
         case _ :: (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ if kw.leftPrecOrMin > prec =>
