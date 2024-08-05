@@ -377,6 +377,10 @@ abstract class Parser(
         Nil
   }
 
+  def expr(prec: Int)(using Line): Tree =
+    parseRule(prec, ParseRule.prefixRules)
+      .getOrElse(errExpr) // * a `None` result means an alread-reported error
+  
   def simpleExpr(prec: Int)(using Line): Tree = wrap(prec)(simpleExprImpl(prec))
   def simpleExprImpl(prec: Int): Tree =
     yeetSpaces match
@@ -409,7 +413,7 @@ abstract class Parser(
           val res = InfixApp(PlainTup(ps*), kw, rhs)
           exprCont(res, prec, allowNewlines = true)
         case _ =>
-          val res = rec(toks, S(loc), "parenthesized expression").concludeWith(_.parseRule(0, ParseRule.prefixRules)).getOrElse(errExpr)
+          val res = rec(toks, S(loc), "parenthesized expression").concludeWith(_.expr(0))
           exprCont(res, prec, allowNewlines = true)
     case (br @ BRACKETS(Square, toks), loc) :: _ =>
       consume
@@ -491,7 +495,7 @@ abstract class Parser(
           consume
           val body = yeetSpaces match
             case (KEYWORD(kw @ Keyword.`let`), l1) :: _ => Block(blockMaybeIndented)
-            case _ => parseRule(kw.rightPrecOrMin, ParseRule.prefixRules).getOrElse(errExpr)
+            case _ => expr(kw.rightPrecOrMin)
           exprCont(Quoted(InfixApp(acc match {
             case t: Tup => t
             case _ => PlainTup(acc)
@@ -511,7 +515,7 @@ abstract class Parser(
               case (NEWLINE, l0) :: _ => consume
               case _ =>
             }
-            val rhs = parseRule(opPrec(opStr)._2, ParseRule.prefixRules).getOrElse(errExpr)
+            val rhs = expr(opPrec(opStr)._2)
             exprCont(opStr match {
                 case "with" => unsupportedQuote(S(l0))
                 case _ => Quoted(App(v, PlainTup(Unquoted(acc), Unquoted(rhs))))
@@ -531,7 +535,7 @@ abstract class Parser(
           case (NEWLINE, _) :: _ => consume
           case _ =>
         }
-        val rhs = parseRule(prec, ParseRule.prefixRules).getOrElse(errExpr)
+        val rhs = expr(prec)
         App(Ident(",").withLoc(S(l0)), PlainTup(acc, rhs))
         /* 
       case (KEYWORD(opStr @ "=>"), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>
@@ -546,7 +550,7 @@ abstract class Parser(
             consume
             val eff = rec(toks, S(loc), "effect type").concludeWith(_.simpleExpr(0))
             Effectful(eff, simpleExpr(kw.rightPrecOrMin))
-          case _ => parseRule(kw.rightPrecOrMin, ParseRule.prefixRules).getOrElse(errExpr)
+          case _ => expr(kw.rightPrecOrMin)
         val res = acc match
           case Tree.Forall(tvs, _) => Tree.Forall(tvs, rhs)
           case _ => InfixApp(PlainTup(acc), kw, rhs)
@@ -727,7 +731,7 @@ abstract class Parser(
                     consume
                     ???
                   case _ =>
-                val rhs = parseRule(kw.rightPrecOrMin, ParseRule.prefixRules).getOrElse(errExpr)
+                val rhs = expr(kw.rightPrecOrMin)
                 parseRule(kw.rightPrecOrMin, exprAlt.rest).map: rest =>
                   exprCont(exprAlt.k(rhs, rest)(acc), prec, allowNewlines) // FIXME prec??
                 .getOrElse(errExpr)
