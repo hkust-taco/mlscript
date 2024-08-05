@@ -6,7 +6,7 @@ import scala.collection.immutable.{HashMap, ListMap}
 import scala.collection.mutable.{Map as MutMap, Set as MutSet}
 import scala.collection.mutable.ListBuffer
 import java.util.IdentityHashMap
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import mlscript.Mod
 
 class Monomorph(debug: Debug = DummyDebug):

@@ -41,7 +41,15 @@ enum Tree extends Located:
   case TyApp(lhs: Tree, targs: Ls[Tree])
   case Sel(prefix: Tree, name: Ident)
   case InfixApp(lhs: Tree, kw: Keyword.Infix, rhs: Tree)
-  
+  case New(body: Tree)
+  case Forall(tvs: Ls[Tree], body: Tree) // TODO: bounds
+  case IfElse(cond: Tree, alt: Tree)
+  case Case(branches: Tree)
+  case Region(name: Tree, body: Tree)
+  case RegRef(reg: Tree, value: Tree)
+  case Deref(ref: Tree)
+  case Effectful(eff: Tree, body: Tree)
+
   def children: Ls[Tree] = this match
     case Empty() | Error() | Ident(_) | IntLit(_) | DecLit(_) | StrLit(_) | UnitLit(_) => Nil
     case Block(stmts) => stmts
@@ -54,6 +62,14 @@ enum Tree extends Located:
     case App(lhs, rhs) => Ls(lhs, rhs)
     case InfixApp(lhs, _, rhs) => Ls(lhs, rhs)
     case TermDef(k, symName, alphaName, rhs) => symName.toList ++ alphaName ++ rhs
+    case New(body) => body :: Nil
+    case Forall(tvs, body) => body :: tvs
+    case IfElse(cond, alt) => cond :: alt :: Nil
+    case Case(bs) => Ls(bs)
+    case Region(name, body) => name :: body :: Nil
+    case RegRef(reg, value) => reg :: value :: Nil
+    case Deref(ref) => ref :: Nil
+    case Effectful(eff, body) => eff :: body :: Nil
   
   def describe: Str = ??? // TODO
   

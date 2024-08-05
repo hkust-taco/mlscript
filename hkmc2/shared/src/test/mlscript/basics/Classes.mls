@@ -9,16 +9,16 @@ class Foo()
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo(x: Int)
-//│ Elab: { class Foo(x@1: class:Int#3) { }‹›; }‹›
+//│ Elab: { class Foo(x@2: class:Int#15) { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo(x: Int, y: Str)
-//│ Elab: { class Foo(x@1: class:Int#4, y@2: class:Str#0) { }‹›; }‹›
+//│ Elab: { class Foo(x@2: class:Int#16, y@3: class:Str#0) { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo(x: Int) with
   val y = x
-//│ Elab: { class Foo(x@1: class:Int#5) { val y = x@1#0; }‹›; }‹›
+//│ Elab: { class Foo(x@2: class:Int#17) { val y = x@2#0; }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 

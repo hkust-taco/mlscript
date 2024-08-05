@@ -31,6 +31,9 @@ lazy val hkmc2 = crossProject(JSPlatform, JVMPlatform).in(file("hkmc2"))
     watchSources += WatchSource(
       baseDirectory.value.getParentFile()/"shared"/"src"/"test"/"diff", "*.mls", NothingFilter),
     
+    // TODO remove when codebase becomes production-ready
+    scalacOptions -= "-Wconf:any:error",
+    
     // scalacOptions ++= Seq("-indent", "-rewrite"),
     scalacOptions ++= Seq("-new-syntax", "-rewrite"),
     

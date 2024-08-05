@@ -188,9 +188,10 @@ abstract class Parser(
   final def blockMaybeIndented: Ls[Tree] =
     maybeIndented(_.block)
   
-  def block: Ls[Tree] = blockOf(ParseRule.prefixRules)
+  def block(using Line): Ls[Tree] = blockOf(ParseRule.prefixRules)
   
-  def blockOf(rule: ParseRule[Tree]): Ls[Tree] = wrap(rule.name):
+  def blockOf(rule: ParseRule[Tree])(using Line): Ls[Tree] = wrap(rule.name)(blockOfImpl(rule))
+  def blockOfImpl(rule: ParseRule[Tree]): Ls[Tree] =
     cur match
     case Nil => Nil
     case (NEWLINE, _) :: _ => consume; blockOf(rule)
@@ -206,7 +207,8 @@ abstract class Parser(
             consume
             rec(toks, S(tok.innerLoc), tok.describe).concludeWith(_.blockOf(subRule))
           case _ =>
-            parseRule(CommaPrecNext, subRule).getOrElse(errExpr) :: blockContOf(rule)
+            val res = parseRule(CommaPrecNext, subRule).getOrElse(errExpr)
+            exprCont(res, CommaPrecNext, false) :: blockContOf(rule)
         case N =>
           
           // TODO dedup this common-looking logic:
@@ -251,7 +253,7 @@ abstract class Parser(
   private def tryParseExp[A](prec: Int, tok: Token, loc: Loc, rule: ParseRule[A]): Opt[A] =
     rule.exprAlt match
       case S(exprAlt) =>
-        val e = expr(prec)
+        val e = simpleExpr(prec)
         parseRule(prec, exprAlt.rest).map(res => exprAlt.k(e, res))
       case N =>
         rule.emptyAlt match
@@ -262,7 +264,9 @@ abstract class Parser(
           N
   
   /** A result of None means there was an error (already reported) and nothing could be parsed. */
-  def parseRule[A](prec: Int, rule: ParseRule[A]): Opt[A] = wrap(prec, rule):
+  def parseRule[A](prec: Int, rule: ParseRule[A])(using Line): Opt[A] =
+    wrap(prec, rule)(parseRuleImpl(prec, rule))
+  def parseRuleImpl[A](prec: Int, rule: ParseRule[A]): Opt[A] =
     def tryEmpty(tok: Token, loc: Loc) = rule.emptyAlt match
       case S(res) => S(res)
       case N =>
@@ -298,7 +302,7 @@ abstract class Parser(
             ParseRule.prefixRules.kwAlts.get(id.name) match
             case S(subRule) =>
               // parse(subRule)
-              val e = parseRule(kw.rightPrecOrMin, subRule).getOrElse(errExpr)
+              val e = exprCont(parseRule(kw.rightPrecOrMin, subRule).getOrElse(errExpr), prec, false)
               parseRule(prec, exprAlt.rest).map(res => exprAlt.k(e, res))
             case N =>
               tryEmpty(tok, loc)
@@ -347,12 +351,51 @@ abstract class Parser(
           err((msg"Expected ${rule.whatComesAfter} after ${rule.name}; found end of input instead" -> lastLoc :: Nil))
           N
   
-  def expr(prec: Int)(using Line): Tree = wrap(prec)(exprImpl(prec))
-  def exprImpl(prec: Int): Tree =
+  final def bindings(acc: Ls[Tree -> Tree]): Ls[Tree -> Tree] = 
+    cur match {
+      case (SPACE, _) :: _ =>
+        consume
+        bindings(acc)
+      case (NEWLINE | SEMI, _) :: _ => // TODO: | ...
+        acc.reverse
+      case (IDENT(nme, sym), l0) :: _ =>
+        consume
+        yeetSpaces match
+          case (IDENT("=", _), l1) :: _ => consume
+          case (tk, l1) :: _ =>
+            err((msg"Expected `=` after ${nme}; found ${tk.toString} instead" -> S(l1) :: Nil))
+        val rhs = simpleExprImpl(0)
+        val v = Tree.Ident(nme).withLoc(S(l0))
+        cur match {
+          case (COMMA, l1) :: _ =>
+            consume
+            bindings((v -> rhs) :: acc)
+          case _ =>
+            ((v -> rhs) :: acc).reverse
+        }
+      case _ =>
+        Nil
+  }
+
+  def expr(prec: Int)(using Line): Tree =
+    parseRule(prec, ParseRule.prefixRules)
+      .getOrElse(errExpr) // * a `None` result means an alread-reported error
+  
+  def simpleExpr(prec: Int)(using Line): Tree = wrap(prec)(simpleExprImpl(prec))
+  def simpleExprImpl(prec: Int): Tree =
     yeetSpaces match
-    case (IDENT(nme, sym), loc) :: _ =>
+    case (IDENT("!", _), loc) :: _ =>
       consume
-      exprCont(Tree.Ident(nme), prec, allowNewlines = true)
+      exprCont(Deref(simpleExprImpl(Int.MaxValue)), prec, allowNewlines = true) // TODO: the prec???
+    case (IDENT(nme, sym), loc) :: _ =>
+      Keyword.all.get(nme) match
+        case S(kw) => // * Expressions starting with keywords should be handled in parseRule
+          // * I guess this case is not really supposed to be ever reached (?)
+          err((msg"Unexpected ${kw.toString} in this position" -> S(loc) :: Nil))
+          errExpr
+        case N =>
+          consume
+          exprCont(Tree.Ident(nme), prec, allowNewlines = true)
     case (LITVAL(lit), loc) :: _ =>
       consume
       exprCont(lit.asTree, prec, allowNewlines = true)
@@ -366,12 +409,67 @@ abstract class Parser(
         case (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ =>
           consume
           val ps = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
-          val rhs = expr(kw.rightPrecOrMin)
+          val rhs = simpleExpr(kw.rightPrecOrMin)
           val res = InfixApp(PlainTup(ps*), kw, rhs)
           exprCont(res, prec, allowNewlines = true)
         case _ =>
           val res = rec(toks, S(loc), "parenthesized expression").concludeWith(_.expr(0))
           exprCont(res, prec, allowNewlines = true)
+    case (br @ BRACKETS(Square, toks), loc) :: _ =>
+      consume
+      val res = rec(toks, S(loc), "type parameters").concludeWith(_.simpleExpr(0))
+      def unfold(t: Tree): Ls[Tree] = t match
+        case _: Tree.Ident => t :: Nil
+        case App(Tree.Ident(","), Tup(eles)) => eles.flatMap(unfold)
+        case _ => ??? // TODO: bds?
+      exprCont(Tree.Forall(unfold(res), Tree.Empty()), prec, allowNewlines = true)
+    case (QUOTE, loc) :: _ =>
+      consume
+      cur match {
+        case (IDENT("let", _), l0) :: _ =>
+          consume
+          val bs = bindings(Nil)
+          val body = yeetSpaces match
+            case (QUOTE, l1) :: (IDENT("in", _), l2) :: _ =>
+              consume
+              consume
+              simpleExpr(0)
+            case (tk, loc) :: _ =>
+              err((msg"Expected an expression; found ${tk.toString} instead" -> S(loc) :: Nil))
+              errExpr
+            case Nil =>
+              err(msg"Expected '`in'; found end of input instead" -> lastLoc :: Nil)
+              errExpr
+          bs.foldRight(body) {
+            case ((v, r), acc) => Quoted(Let(v, Unquoted(r), S(Unquoted(acc))))
+          }
+        case (IDENT("if", _), l0) :: _ =>
+          consume
+          val term = simpleExprImpl(prec)
+          yeetSpaces match
+            case (IDENT("else", _), l1) :: _ =>
+              consume
+              val ele = simpleExprImpl(prec)
+              term match
+                case InfixApp(lhs, Keyword.`then`, rhs) =>
+                  Quoted(IfElse(InfixApp(Unquoted(lhs), Keyword.`then`, Unquoted(rhs)), Unquoted(ele)))
+                case tk =>
+                  err(msg"Expected '`in'; found ${tk.toString} instead" -> tk.toLoc :: Nil)
+                  errExpr
+            case (tk, loc) :: _ =>
+              err((msg"Expected 'else'; found ${tk.toString} instead" -> S(loc) :: Nil))
+              errExpr
+            case Nil =>
+              err(msg"Expected 'else'; found end of input instead" -> lastLoc :: Nil)
+              errExpr
+        case (IDENT(nme, sym), loc) :: _ =>
+          consume
+          exprCont(Tree.Quoted(Tree.Ident(nme).withLoc(S(loc))), prec, allowNewlines = false)
+        case (LITVAL(lit), l0) :: _ =>
+          consume
+          exprCont(Tree.Quoted(lit.asTree.withLoc(S(l0))), prec, allowNewlines = false)
+        case _ => unsupportedQuote(S(loc))
+      }
     case (BRACKETS(Indent, _), loc) :: _ =>
       err((msg"Expected an expression; found indented block instead" -> lastLoc :: Nil))
       errExpr
@@ -387,20 +485,25 @@ abstract class Parser(
     errExpr
   }
   
-  final def exprCont(acc: Tree, prec: Int, allowNewlines: Bool): Tree = wrap(prec, s"`$acc`", allowNewlines):
+  final def exprCont(acc: Tree, prec: Int, allowNewlines: Bool)(using Line): Tree =
+    wrap(prec, s"`$acc`", allowNewlines)(exprContImpl(acc, prec, allowNewlines))
+  final def exprContImpl(acc: Tree, prec: Int, allowNewlines: Bool): Tree =
     cur match {
       case (QUOTE, l) :: _ => cur match {
         case _ :: (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ if kw.leftPrecOrMin > prec =>
           consume
           consume
+          val body = yeetSpaces match
+            case (KEYWORD(kw @ Keyword.`let`), l1) :: _ => Block(blockMaybeIndented)
+            case _ => expr(kw.rightPrecOrMin)
           exprCont(Quoted(InfixApp(acc match {
             case t: Tup => t
             case _ => PlainTup(acc)
-          }, kw, Unquoted(expr(kw.rightPrecOrMin)))), prec, allowNewlines)
+          }, kw, Unquoted(body))), prec, allowNewlines)
         case _ :: (br @ BRACKETS(Round, toks), loc) :: _ =>
           consume
           consume
-          val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
+          val as = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented).map(t => Unquoted(t))
           val res = App(Unquoted(acc), Tup(as).withLoc(S(loc)))
           exprCont(Quoted(res), prec, allowNewlines)
         case _ :: (OP(opStr), l0) :: _ =>
@@ -442,15 +545,22 @@ abstract class Parser(
         */
       case (KEYWORD(kw @ (Keyword.`->` | Keyword.`=>`)), l0) :: _ if kw.leftPrecOrMin > prec =>
         consume
-        val rhs = expr(kw.rightPrecOrMin)
-        val res = InfixApp(PlainTup(acc), kw, rhs)
+        val rhs = yeetSpaces match
+          case (br @ BRACKETS(Curly, toks), loc) :: _ =>
+            consume
+            val eff = rec(toks, S(loc), "effect type").concludeWith(_.simpleExpr(0))
+            Effectful(eff, simpleExpr(kw.rightPrecOrMin))
+          case _ => expr(kw.rightPrecOrMin)
+        val res = acc match
+          case Tree.Forall(tvs, _) => Tree.Forall(tvs, rhs)
+          case _ => InfixApp(PlainTup(acc), kw, rhs)
         exprCont(res, prec, allowNewlines)
         /* 
       case (IDENT(".", _), l0) :: (br @ BRACKETS(Square, toks), l1) :: _ =>
         consume
         consume
         val idx = rec(toks, S(br.innerLoc), br.describe)
-          .concludeWith(_.expr(0, allowSpace = true))
+          .concludeWith(_.simpleExpr(0, allowSpace = true))
         val newAcc = Subs(acc, idx).withLoc(S(l0 ++ l1 ++ idx.toLoc))
         exprCont(newAcc, prec, allowNewlines)
         */
@@ -461,7 +571,7 @@ abstract class Parser(
           case (NEWLINE, l0) :: _ => consume
           case _ =>
         }
-        val rhs = expr(opPrec(opStr)._2)
+        val rhs = simpleExpr(opPrec(opStr)._2)
         exprCont(opStr match {
           case "with" =>
             rhs match {
@@ -488,7 +598,9 @@ abstract class Parser(
         */
       case (SPACE, l0) :: _ =>
         consume
-        exprCont(acc, prec, allowNewlines)
+        acc match // TODO: looks fishy. a better way?
+          case Sel(reg, Ident("ref")) => RegRef(reg, simpleExprImpl(0))
+          case _ => exprCont(acc, prec, allowNewlines)
       case (SELECT(name), l0) :: _ => // TODO precedence?
         consume
         exprCont(Sel(acc, new Ident(name).withLoc(S(l0))), prec, allowNewlines)
@@ -576,7 +688,7 @@ abstract class Parser(
         /*
       /*case (br @ BRACKETS(Square, toks), loc) :: _ => // * Currently unreachable because we match Square brackets as tparams
         consume
-        val idx = rec(toks, S(br.innerLoc), "subscript").concludeWith(_.expr(0))
+        val idx = rec(toks, S(br.innerLoc), "subscript").concludeWith(_.simpleExpr(0))
         val res = Subs(acc, idx.withLoc(S(loc)))
         exprCont(res, prec, allowNewlines)*/
       */

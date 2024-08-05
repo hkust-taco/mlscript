@@ -150,6 +150,49 @@ object ParseRule:
         // ) { case (lhs, body) => Let(lhs, lhs, body) }
       )
     ,
+    Kw(`new`):
+      ParseRule("`new` keyword"):
+        Expr(ParseRule("`new` expression")(End(())))((body, _: Unit) => New(body))
+    ,
+    Kw(`in`):
+      ParseRule("modifier keyword `in`"):
+        Expr(
+          ParseRule("`in` expression")(
+            Kw(`out`)(ParseRule(s"modifier keyword `out`")(standaloneExpr)).map(s => S(Tree.Modified(`out`, s))),
+            End(N),
+          )
+        ) {
+          case (lhs, N) => Tree.Modified(`in`, lhs)
+          case (lhs, S(rhs)) => Tup(Tree.Modified(`in`, lhs) :: rhs :: Nil)
+        }
+    ,
+    Kw(`if`):
+      ParseRule("`if` keyword")(
+        Expr(
+          ParseRule("`if` expression"):
+            Kw(`else`):
+              ParseRule("`else` keyword")(
+                Expr(ParseRule("`else` branch")(End(())))((body, _: Unit) => body)
+              )
+        ) { case (cond, alt) => IfElse(cond, alt) }
+      )
+    ,
+    Kw(`case`):
+      ParseRule("`case` keyword")(
+        Blk(ParseRule("`case` branches")(End(())))((body, _: Unit) => Case(body))
+      )
+    ,
+    Kw(`region`):
+      ParseRule("`region` keyword"):
+        Expr(
+          ParseRule("`region` variable"):
+            Kw(`in`):
+              ParseRule("`in` keyword")(
+                Expr(ParseRule("'region' expression")(End(())))((body, _: Unit) => body),
+                Blk(ParseRule("'region' block")(End(())))((body, _: Unit) => body)
+              )
+        ) { case (name, body) => Region(name, body) }
+    ,
     Kw(`fun`)(termDefBody(Fun)),
     Kw(`val`)(termDefBody(Val)),
     Kw(`type`)(typeDeclBody(Als)),
@@ -163,6 +206,7 @@ object ParseRule:
     modified(`declare`),
     modified(`public`),
     modified(`private`),
+    modified(`out`),
     standaloneExpr,
     Kw(`true`)(ParseRule("'true' keyword")(End(BoolLit(true)))),
     Kw(`false`)(ParseRule("'false' keyword")(End(BoolLit(false)))),
@@ -186,29 +230,19 @@ object ParseRule:
         Expr(
           ParseRule(s"'${k.str}' binding right-hand side")(End(()))
         ) { case (rhs, ()) => S(rhs) }
+
+  def genInfixRule[A](kw: Keyword, k: (Tree, Unit) => A): Alt[A] =
+    Kw(kw):
+      ParseRule(s"'${kw}' operator")(
+        Expr(ParseRule(s"'${kw}' operator right-hand side")(End(())))(k)
+      )
   
   val infixRules: ParseRule[Tree => Tree] = ParseRule("continuation of statement")(
-    // TODO dedup:
-    Kw(`and`):
-      ParseRule("'and' operator")(
-        Expr(ParseRule("'and' operator right-hand side")(End(())))(
-          (rhs, _: Unit) => lhs => InfixApp(lhs, `and`, rhs))
-      ),
-    Kw(`or`):
-      ParseRule("'or' operator")(
-        Expr(ParseRule("'or' operator right-hand side")(End(())))(
-          (rhs, _: Unit) => lhs => InfixApp(lhs, `or`, rhs))
-      ),
-    Kw(`then`):
-      ParseRule("'then' operator")(
-        Expr(ParseRule("'then' operator right-hand side")(End(())))(
-          (rhs, _: Unit) => lhs => InfixApp(lhs, `then`, rhs))
-      ),
-    Kw(`:`):
-      ParseRule("type ascription operator")(
-        Expr(ParseRule("ascribed type")(End(())))(
-          (rhs, _: Unit) => lhs => InfixApp(lhs, `:`, rhs))
-      ),
+    genInfixRule(`and`, (rhs, _: Unit) => lhs => InfixApp(lhs, `and`, rhs)),
+    genInfixRule(`or`, (rhs, _: Unit) => lhs => InfixApp(lhs, `or`, rhs)),
+    genInfixRule(`is`, (rhs, _: Unit) => lhs => InfixApp(lhs, `is`, rhs)),
+    genInfixRule(`then`, (rhs, _: Unit) => lhs => InfixApp(lhs, `then`, rhs)),
+    genInfixRule(`:`, (rhs, _: Unit) => lhs => InfixApp(lhs, `:`, rhs)),
   )
 
 

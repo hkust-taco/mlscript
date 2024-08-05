@@ -3,6 +3,7 @@ package hkmc2
 import scala.collection.mutable
 import mlscript.utils.*, shorthands.*
 import hkmc2.semantics.Elaborator
+import hkmc2.bbml.*
 
 
 class Outputter(val out: java.io.PrintWriter):
@@ -60,7 +61,10 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
   
   val global = NullaryCommand("global")
   
-  val fixme = NullaryCommand("fixme")
+  val fixme = Command("fixme")(_ => ())
+  val todo = Command("todo")(_ => ())
+  def tolerateErrors = fixme.isSet || todo.isSet
+  
   val fullExceptionStack = NullaryCommand("s")
   
   val debug = NullaryCommand("d")
@@ -126,7 +130,11 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
     elab.importFrom(res)
       
   
+  val tl = new TraceLogger:
+    override def doTrace = debug.isSet
+    override def emitDbg(str: String): Unit = output(str)
   
+  var bbmlTyper: Opt[BBTyper] = None
   
   @annotation.tailrec
   final def rec(lines: List[String]): Unit = lines match
@@ -188,13 +196,13 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
             case Diagnostic.Source.Lexing =>
               TODO(d.source)
             case Diagnostic.Source.Parsing =>
-              if expectParseError.isUnset && fixme.isUnset then
+              if expectParseError.isUnset && !tolerateErrors then
                 failures += allLines.size - lines.size + 1
                 // doFail(fileName, blockLineNum, "unexpected parse error at ")
                 unexpected("parse error", blockLineNum)
                 // report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
             case Diagnostic.Source.Typing =>
-              if expectTypeErrors.isUnset && fixme.isUnset then
+              if expectTypeErrors.isUnset && !tolerateErrors then
                 failures += allLines.size - lines.size + 1
                 unexpected("type error", blockLineNum)
             case Diagnostic.Source.Compilation =>
@@ -227,7 +235,15 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
           curCtx = newCtx
           output(s"Elab: ${e.showDbg}")
           if bbml.isSet then
-            output(s"Magic!")
+            if bbmlTyper.isEmpty then
+              bbmlTyper = S(BBTyper(raise, Ctx.init(curCtx.members), tl))
+            val typer = bbmlTyper.get
+            val ty = typer.typePurely(e)
+            val printer = PrettyPrinter((msg: String) => output(msg))
+            if debug.isSet then printer.print(ty)
+            val simplif = TypeSimplifier(tl)
+            val sty = simplif(true, 0)(ty)
+            printer.print(sty)
           else
             val typer = typing.TypeChecker(raise)
             val ty = typer.typeProd(e)
@@ -236,15 +252,15 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
       catch
         case oh_noes: ThreadDeath => throw oh_noes
         case err: Throwable =>
-          if fixme.isUnset then
+          if !tolerateErrors then
             failures += allLines.size - lines.size + 1
             unhandled(blockLineNum, err)
           // err.printStackTrace(out)
           // println(err.getCause())
           output("/!!!\\ Uncaught error: " + err +
             err.getStackTrace().take(
-              if fullExceptionStack.isSet then Int.MaxValue
-              else if fixme.isSet || err.isInstanceOf[StackOverflowError] then 0
+              if fullExceptionStack.isSet || debug.isSet then Int.MaxValue
+              else if tolerateErrors || err.isInstanceOf[StackOverflowError] then 0
               else 10
             ).map("\n" + "\tat: " + _).mkString)
       

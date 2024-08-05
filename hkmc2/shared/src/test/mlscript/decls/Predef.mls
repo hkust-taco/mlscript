@@ -2,18 +2,49 @@
 
 class Any
 class Int
+class Num
 class Str
 class Bool
-//│ Elab: { class Any { }‹›; class Int { }‹›; class Str { }‹›; class Bool { }‹›; }‹›
+class Nothing
+//│ Elab: { class Any { }‹›; class Int { }‹›; class Num { }‹›; class Str { }‹›; class Bool { }‹›; class Nothing { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
+// TODO: move to a separate file?
+class CodeBase[T, C, S]
+class Region[T]
+class Ref[T, S]
+//│ Elab: { class CodeBase[T@2, C@3, S@4] { }‹›; class Region[T@5] { }‹›; class Ref[T@6, S@7] { }‹›; }‹›
+//│ Type: Ctor(lit:UnitLit(true),List())
+
+// the type here is fake.
+fun run: Any -> Any
+val error: Nothing
+//│ Elab: { fun run: (class:Any#0)‹› -> class:Any#1‹›; val error: class:Nothing#0; }‹›
+//│ Type: Ctor(lit:UnitLit(true),List())
 
 fun (+): (Int, Int) -> Int
-//│ Elab: { fun +: (class:Int#0, class:Int#1)‹› -> class:Int#2‹›; }‹›
+fun (-): (Int, Int) -> Int
+fun (*): (Int, Int) -> Int
+fun (/): (Int, Int) -> Num
+fun (<): (Int, Int) -> Bool
+fun (>): (Int, Int) -> Bool
+//│ Elab: { fun +: (class:Int#0, class:Int#1)‹› -> class:Int#2‹›; fun -: (class:Int#3, class:Int#4)‹› -> class:Int#5‹›; fun *: (class:Int#6, class:Int#7)‹› -> class:Int#8‹›; fun /: (class:Int#9, class:Int#10)‹› -> class:Num#0‹›; fun <: (class:Int#11, class:Int#12)‹› -> class:Bool#0‹›; fun >: (class:Int#13, class:Int#14)‹› -> class:Bool#1‹›; }‹›
+//│ Type: Ctor(lit:UnitLit(true),List())
+
+fun (+.): (Num, Num) -> Num
+fun (-.): (Num, Num) -> Num
+fun (*.): (Num, Num) -> Num
+fun (/.): (Num, Num) -> Num
+//│ Elab: { fun +.: (class:Num#1, class:Num#2)‹› -> class:Num#3‹›; fun -.: (class:Num#4, class:Num#5)‹› -> class:Num#6‹›; fun *.: (class:Num#7, class:Num#8)‹› -> class:Num#9‹›; fun /.: (class:Num#10, class:Num#11)‹› -> class:Num#12‹›; }‹›
+//│ Type: Ctor(lit:UnitLit(true),List())
+
+// poly is not supported here
+fun (==): (Any, Any) -> Bool
+//│ Elab: { fun ==: (class:Any#2, class:Any#3)‹› -> class:Bool#2‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 fun log: (Any) -> ()
-//│ Elab: { fun log: (class:Any#0)‹› -> undefined‹›‹›; }‹›
+//│ Elab: { fun log: (class:Any#4)‹› -> undefined‹›‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 

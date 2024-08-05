@@ -13,4 +13,5 @@ object Uid:
         curUid
       def reset = curUid = -1
   object Symbol extends Handler[semantics.Symbol]
-
+extension [T] (x: Uid[T])
+  def <=(rhs: Uid[T]) = x <= rhs

@@ -22,6 +22,9 @@ class Elaborator(raise: Raise):
   
   private var curUi = 0
   def nextUid: Int = { curUi += 1; curUi }
+
+  // * Ref allocation skolem UID, preserved
+  private val allocSkolemUID = nextUid
   
   def term(tree: Tree): Ctxl[Term] = tree match
     case Block(s :: Nil) =>
@@ -35,6 +38,9 @@ class Elaborator(raise: Raise):
       val r = term(rhs)
       val b = bodo.map(term(_)(using ctx.copy(locals = ctx.locals ++ syms))).getOrElse(unit)
       Term.Blk(List(LetBinding(pat, r)), b)
+    case Ident("true") => Term.Lit(Tree.BoolLit(true))
+    case Ident("false") => Term.Lit(Tree.BoolLit(false))
+    case Ident("Alloc") => Term.Ref(VarSymbol("Alloc", allocSkolemUID))(1)
     case Ident(name) =>
       ctx.locals.get(name) match
         case S(sym) => sym.ref
@@ -45,9 +51,28 @@ class Elaborator(raise: Raise):
               raise(ErrorReport(msg"Name not found: $name" -> tree.toLoc :: Nil))
               Term.Error
     case TyApp(lhs, targs) =>
-      Term.TyApp(term(lhs), targs.map(term(_)))
+      Term.TyApp(term(lhs), targs.map {
+        case Modified(Keyword.`in`, arg) => Term.WildcardTy(S(term(arg)), N)
+        case Modified(Keyword.`out`, arg) => Term.WildcardTy(N, S(term(arg)))
+        case Tup(Modified(Keyword.`in`, arg1) :: Modified(Keyword.`out`, arg2) :: Nil) =>
+          Term.WildcardTy(S(term(arg1)), S(term(arg2)))
+        case arg => term(arg)
+      })
+    case InfixApp(lhs, Keyword.`->`, Effectful(eff, rhs)) =>
+      Term.FunTy(term(lhs), term(rhs), S(term(eff)))
     case InfixApp(lhs, Keyword.`->`, rhs) =>
-      Term.FunTy(term(lhs), term(rhs))
+      Term.FunTy(term(lhs), term(rhs), N)
+    case InfixApp(lhs, Keyword.`=>`, rhs) =>
+      val (syms, nestCtx) = params(lhs)
+      Term.Lam(syms, term(rhs)(using nestCtx))
+    case InfixApp(lhs, Keyword.`:`, rhs) =>
+      Term.Asc(term(lhs), term(rhs))
+    case App(Ident("|"), Tree.Tup(lhs :: rhs :: Nil)) =>
+      Term.CompType(term(lhs), term(rhs), true)
+    case App(Ident(":="), Tree.Tup(lhs :: rhs :: Nil)) =>
+      Term.Set(term(lhs), term(rhs))
+    case App(Ident("#"), Tree.Tup(Sel(pre, Ident(name)) :: Ident(proj) :: Nil)) =>
+      Term.SelProj(term(pre), term(Ident(name)), Ident(proj))
     case App(lhs, rhs) =>
       val sym = FlowSymbol("‹app-res›", nextUid)
       Term.App(term(lhs), term(rhs))(sym)
@@ -55,6 +80,66 @@ class Elaborator(raise: Raise):
       Term.Sel(term(pre), nme)
     case Tup(fields) =>
       Term.Tup(fields.map(fld(_)))
+    case New(body) => body match
+      case App(Ident(cls), Tup(params)) =>
+        ctx.members.get(cls) match
+          case S(sym: ClassSymbol) => Term.New(sym, params.map(term))
+          case _ =>
+            raise(ErrorReport(msg"Class $cls not found." -> tree.toLoc :: Nil))
+            Term.Error
+      case _ =>
+        raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
+        Term.Error
+    case Forall(tvs, body) =>
+      val boundVars = mutable.HashMap.empty[Str, VarSymbol]
+      val bds = tvs.collect:
+        case Tree.Ident(nme) =>
+          val sym = VarSymbol(nme, nextUid)
+          sym.decl = S(TyParam(FldFlags.empty, sym))
+          boundVars += nme -> sym
+          sym          
+      if bds.length != tvs.length then
+        raise(ErrorReport(msg"Illegal forall annotation." -> tree.toLoc :: Nil))
+        Term.Error
+      else
+        Term.Forall(bds, term(body)(using ctx.copy(locals = ctx.locals ++ boundVars)))
+    case IfElse(InfixApp(InfixApp(scrutinee, Keyword.`is`, Ident(cls)), Keyword.`then`, cons), alts) =>
+      ctx.members.get(cls) match
+        case S(sym: ClassSymbol) =>
+          Term.If(TermBranch.Match(term(scrutinee), Split.single(PatternBranch(Pattern.Class(sym, N, true), Split.default(term(cons))))) :: Split.default(term(alts)))
+        case _ =>
+          raise(ErrorReport(msg"Illegal pattern $cls." -> tree.toLoc :: Nil))
+          Term.Error
+    case IfElse(InfixApp(cond, Keyword.`then`, cons), alts) =>
+      Term.If(TermBranch.Boolean(term(cond), Split.`then`(term(cons))) :: Split.default(term(alts)))
+    case Tree.Quoted(body) => Term.Quoted(term(body))
+    case Tree.Unquoted(body) => Term.Unquoted(term(body))
+    case Tree.Case(Block(branches)) => branches.lastOption match
+      case S(InfixApp(Ident(name), Keyword.`then`, dflt)) =>
+        val sym = VarSymbol(name, nextUid)
+        val nestCtx = ctx.copy(locals = ctx.locals ++ Ls(name -> sym))
+        Term.Lam(
+          Param(FldFlags.empty, sym, N) :: Nil,
+          Term.If(branches.dropRight(1).foldRight[Split[TermBranch]](Split.Else(term(dflt)(using nestCtx)))((e, res) => e match
+            case InfixApp(target, Keyword.`then`, cons) =>
+              TermBranch.Boolean(
+                term(App(Ident("=="), Tree.Tup(Ident(name) :: target :: Nil)))(using nestCtx),
+                Split.`then`(term(cons)(using nestCtx))
+              ) :: res
+            case _ =>
+              raise(ErrorReport(msg"Unsupported case branch." -> tree.toLoc :: Nil))
+              Split.default(Term.Error)
+          ))
+        )
+      case _ =>
+        raise(ErrorReport(msg"Unsupported default case branch." -> tree.toLoc :: Nil))
+        Term.Error
+    case Tree.Region(Tree.Ident(name), body) =>
+      val sym = VarSymbol(name, nextUid)
+      val nestCtx = ctx.copy(locals = ctx.locals ++ Ls(name -> sym))
+      Term.Region(sym, term(body)(using nestCtx))
+    case Tree.RegRef(reg, value) => Term.RegRef(term(reg), term(value))
+    case Tree.Deref(ref) => Term.Deref(term(ref))
     case Empty() =>
       raise(ErrorReport(msg"A term was expected in this position, but no term was found." -> tree.toLoc :: Nil))
       Term.Error
@@ -77,26 +162,31 @@ class Elaborator(raise: Raise):
   def unit: Term.Lit = Term.Lit(UnitLit(true))
   
   def block(sts: Ls[Tree])(using c: Ctx): (Term.Blk, Ctx) =
-    val newMembers = mutable.Map.empty[Str, MemberSymbol]
+    val newMembers = mutable.Map.empty[Str, MemberSymbol] // * Definitions with implementations
+    val newSignatures = mutable.Map.empty[Str, MemberSymbol] // * Definitions containing only signatures
+    val newSignatureTrees = mutable.Map.empty[Str, Tree] // * Store trees of signatures, passing them to definition objects
     sts.foreach:
       case td: TermDef =>
         td.name match
           case R(id) =>
             lazy val s = TermSymbol(id)
-            newMembers.get(id.name) match
+            val members = if td.signature.isEmpty then newMembers else newSignatures
+            members.get(id.name) match
               case S(sym) =>
                 raise(ErrorReport(msg"Duplicate definition of ${id.name}" -> td.toLoc
-                  :: msg"aready defined gere" -> sym.toLoc :: Nil))
+                  :: msg"aready defined here" -> sym.toLoc :: Nil))
               case N =>
-                newMembers += id.name -> s
+                members += id.name -> s
+                td.signature.foreach(newSignatureTrees += id.name -> _)
             td.symbolicName match
               case S(Ident(nme)) =>
-                newMembers.get(nme) match
+                members.get(nme) match
                   case S(sym) =>
                     raise(ErrorReport(msg"Duplicate definition of $nme" -> td.toLoc
-                      :: msg"aready defined gere" -> sym.toLoc :: Nil))
+                      :: msg"aready defined here" -> sym.toLoc :: Nil))
                   case N =>
-                    newMembers += nme -> s
+                    members += nme -> s
+                    td.signature.foreach(newSignatureTrees += id.name -> _)
               case N =>
           case L(d) => raise(d)
       case td: TypeDef =>
@@ -106,11 +196,15 @@ class Elaborator(raise: Raise):
               // TODO pair up companions
               case S(sym) =>
                 raise(ErrorReport(msg"Duplicate definition of ${id.name}" -> td.toLoc
-                  :: msg"aready defined gere" -> sym.toLoc :: Nil))
+                  :: msg"aready defined here" -> sym.toLoc :: Nil))
               case N =>
                 newMembers += id.name -> ClassSymbol(id)
           case L(d) => raise(d)
       case _ =>
+    newSignatures.foreach:
+      case (name, sym) =>
+        if !newMembers.contains(name) then
+          newMembers += name -> sym
     given Ctx = c.copy(members = c.members ++ newMembers)
     @tailrec
     def go(sts: Ls[Tree], acc: Ls[Statement]): Ctxl[(Term.Blk, Ctx)] = sts match
@@ -130,7 +224,7 @@ class Elaborator(raise: Raise):
               case N => (N, ctx)
             val b = rhs.map(term(_)(using newCtx))
             val r = FlowSymbol(s"‹result of ${s}›", nextUid)
-            val tdf = TermDefinition(k, s, ps, td.signature.map(term), b, r)
+            val tdf = TermDefinition(k, s, ps, (td.signature orElse newSignatureTrees.get(id.name)).map(term), b, r)
             s.defn = S(tdf)
             go(sts, tdf :: acc)
           case L(d) => go(sts, acc) // error already raised in newMembers initialization
@@ -188,12 +282,14 @@ class Elaborator(raise: Raise):
       case _ => go(sts, Nil)
   
   def params(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
+    case Tup(App(Ident(","), list) :: Nil) => params(list)
     case Tup(ps) =>
       val res = ps.flatMap:
         case id: Ident =>
           Param(FldFlags.empty, VarSymbol(id.name, nextUid), N) :: Nil
         case InfixApp(lhs: Ident, Keyword.`:`, rhs) =>
           Param(FldFlags.empty, VarSymbol(lhs.name, nextUid), S(term(rhs))) :: Nil
+        case App(Ident(","), list) => params(list)._1
       (res, ctx.copy(locals = ctx.locals ++ res.map(p => p.sym.name -> p.sym)))
   
   def pattern(t: Tree): Ctxl[(Pattern, Ls[Str -> VarSymbol])] =
@@ -203,9 +299,13 @@ class Elaborator(raise: Raise):
         val sym = boundVars.getOrElseUpdate(name, VarSymbol(name, nextUid))
         Pattern.Var(sym)
       case Tup(fields) =>
-        // val pats = fields.map(pattern)
-        // Pattern.Tup(pats)
-        ???
+        val pats = fields.map(
+          f => pattern(f) match
+            case (pat, vars) =>
+              boundVars ++= vars
+              pat
+        )
+        Pattern.Tuple(pats)
       case _ =>
         ???
     (go(t), boundVars.toList)
@@ -279,9 +379,16 @@ class Elaborator(raise: Raise):
         // targs.foreach(traverseType(pol))
         ???
       case r: Term.Ref =>
-      case Term.FunTy(l, r) =>
+      case Term.FunTy(l, r, e) =>
         traverseType(pol.!)(l)
         traverseType(pol)(r)
+        e.foreach(e => traverseType(pol)(e))
+      case Term.Forall(_, body) =>
+        traverseType(pol)(body)
+      case Term.WildcardTy(in, out) =>
+        in.foreach(t => traverseType(pol.!)(t))
+        out.foreach(t => traverseType(pol)(t))
+      case Term.CompType(lhs, rhs, _) => () // TODO:
       case Term.Tup(fields) =>
         // fields.foreach(f => traverseType(pol)(f.value))
         fields.foreach(traverseType(pol))

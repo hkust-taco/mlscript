@@ -14,9 +14,21 @@ enum Term extends Statement with Located:
   case Sel(prefix: Term, nme: Tree.Ident)
   case Tup(fields: Ls[Fld])
   case If(body: TermSplit)
-  case Lam(params: Ls[VarSymbol], body: Term)
-  case FunTy(lhs: Term, rhs: Term)
+  case Lam(params: Ls[Param], body: Term)
+  case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
+  case Forall(tvs: Ls[VarSymbol], body: Term)
+  case WildcardTy(in: Opt[Term], out: Opt[Term])
   case Blk(stats: Ls[Statement], res: Term)
+  case Quoted(body: Term)
+  case Unquoted(body: Term)
+  case New(cls: ClassSymbol, args: Ls[Term])
+  case SelProj(prefix: Term, cls: Term, proj: Tree.Ident)
+  case Asc(term: Term, ty: Term)
+  case CompType(lhs: Term, rhs: Term, pol: Bool)
+  case Region(name: VarSymbol, body: Term)
+  case RegRef(reg: Term, value: Term)
+  case Set(lhs: Term, rhs: Term)
+  case Deref(ref: Term)
   
   var symbol: Opt[Symbol] = N
   
@@ -49,14 +61,26 @@ sealed trait Statement extends Located:
   def subTerms: Ls[Term] = this match
     case Error | _: Lit | _: Ref => Nil
     case App(lhs, rhs) => lhs :: rhs :: Nil
-    case FunTy(lhs, rhs) => lhs :: rhs :: Nil
+    case FunTy(lhs, rhs, eff) => lhs :: rhs :: eff.toList
     case TyApp(pre, tarsg) => pre :: tarsg
     case Sel(pre, _) => pre :: Nil
     case Tup(fields) => fields.map(_.value)
-    case If(body) => ???
+    case If(body) => Nil // TODO
     case Lam(params, body) => body :: Nil
     case Blk(stats, res) => stats.flatMap(_.subTerms) ::: res :: Nil
+    case Quoted(term) => term :: Nil
+    case Unquoted(term) => term :: Nil
+    case New(_, args) => args
+    case SelProj(pre, cls, _) => pre :: cls :: Nil
+    case Asc(term, ty) => term :: ty :: Nil
+    case Forall(_, body) => body :: Nil
+    case WildcardTy(in, out) => in.toList ++ out.toList
+    case CompType(lhs, rhs, _) => lhs :: rhs :: Nil
     case LetBinding(pat, rhs) => rhs :: Nil
+    case Region(_, body) => body :: Nil
+    case RegRef(reg, value) => reg :: value :: Nil
+    case Set(lhs, rhs) => lhs :: rhs :: Nil
+    case Deref(term) => term :: Nil
     case TermDefinition(k, _, ps, sign, body, res) =>
       ps.toList.flatMap(_.flatMap(_.subTerms)) ::: sign.toList ::: body.toList
     case cls: ClassDef =>
@@ -74,16 +98,28 @@ sealed trait Statement extends Located:
     case r @ Ref(symbol) => symbol.toString+"#"+r.refNum
     case App(lhs, tup: Tup) => s"${lhs.showDbg}${tup.showDbg}"
     case App(lhs, rhs) => s"${lhs.showDbg}(...${rhs.showDbg})"
-    case FunTy(lhs: Tup, rhs) => s"${lhs.showDbg} -> ${rhs.showDbg}"
-    case FunTy(lhs, rhs) => s"(...${lhs.showDbg}) -> ${rhs.showDbg}"
+    case FunTy(lhs: Tup, rhs, eff) => s"${lhs.showDbg} ->${eff.map(e => s"{${e.showDbg}}").getOrElse("")} ${rhs.showDbg}"
+    case FunTy(lhs, rhs, eff) => s"(...${lhs.showDbg}) ->${eff.map(e => s"{${e.showDbg}}").getOrElse("")} ${rhs.showDbg}"
     case TyApp(lhs, targs) => s"${lhs.showDbg}[${targs.mkString(", ")}]"
+    case Forall(tvs, body) => s"forall ${tvs.mkString(", ")}: ${body.toString}"
+    case WildcardTy(in, out) => s"in ${in.map(_.toString).getOrElse("⊥")} out ${out.map(_.toString).getOrElse("⊤")}"
     case Sel(pre, nme) => s"${pre.showDbg}.${nme.name}"
     case If(body) => s"if $body"
-    // case Lam(params, body) => s"λ${params.map(_.name).join(", ")}. $body"
+    case Lam(params, body) => s"λ${params.map(_.showDbg).mkString(", ")}. ${body.showDbg}"
     case Blk(stats, res) =>
       (stats.map(_.showDbg + "; ") :+ (res match { case Lit(Tree.UnitLit(true)) => "" case x => x.showDbg + " " }))
       .mkString("{ ", "", "}")
+    case Quoted(term) => s"""code"${term.showDbg}""""
+    case Unquoted(term) => s"$${${term.showDbg}}"
+    case New(cls, args) => s"new ${cls.toString}(${args.mkString(", ")})"
+    case SelProj(pre, cls, proj) => s"${pre.showDbg}.${cls.showDbg}#${proj.name}"
+    case Asc(term, ty) => s"${term.toString}: ${ty.toString}"
     case LetBinding(pat, rhs) => s"let ${pat.showDbg} = ${rhs.showDbg}"
+    case Region(name, body) => s"region ${name.nme} in ${body.showDbg}"
+    case RegRef(reg, value) => s"(${reg.showDbg}).ref ${value.showDbg}"
+    case Set(lhs, rhs) => s"${lhs.showDbg} := ${rhs.showDbg}"
+    case Deref(term) => s"!$term"
+    case CompType(lhs, rhs, pol) => s"${lhs.showDbg} ${if pol then "|" else "&"} ${rhs.showDbg}"
     case Error => "<error>"
     case Tup(fields) => fields.map(_.showDbg).mkString("(", ", ", ")")
     case TermDefinition(k, sym, ps, sign, body, res) => s"${k.str} ${sym}${

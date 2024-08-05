@@ -1,0 +1,226 @@
+:global
+:bbml
+:parseOnly
+
+class Foo
+//│ Parsed:
+//│ 	TypeDef(Cls,Ident(Foo),None,None)
+
+class Bar(x: Int)
+//│ Parsed:
+//│ 	TypeDef(Cls,App(Ident(Bar),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int))))),None,None)
+
+class Bar2(x: Int, y: Int)
+//│ Parsed:
+//│ 	TypeDef(Cls,App(Ident(Bar2),Tup(List(InfixApp(Ident(x),keyword ':',Ident(Int)), InfixApp(Ident(y),keyword ':',Ident(Int))))),None,None)
+
+class Baz[A]
+//│ Parsed:
+//│ 	TypeDef(Cls,TyApp(Ident(Baz),List(Ident(A))),None,None)
+
+class BazBaz[A](f: A -> A)
+//│ Parsed:
+//│ 	TypeDef(Cls,App(TyApp(Ident(BazBaz),List(Ident(A))),Tup(List(InfixApp(Ident(f),keyword ':',InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))))),None,None)
+
+Baz[Int]
+//│ Parsed:
+//│ 	TyApp(Ident(Baz),List(Ident(Int)))
+
+Baz[in Int]
+//│ Parsed:
+//│ 	TyApp(Ident(Baz),List(Modified(keyword 'in',Ident(Int))))
+
+Baz[out Int]
+//│ Parsed:
+//│ 	TyApp(Ident(Baz),List(Modified(keyword 'out',Ident(Int))))
+
+Baz[in Int out Int]
+//│ Parsed:
+//│ 	TyApp(Ident(Baz),List(Tup(List(Modified(keyword 'in',Ident(Int)), Modified(keyword 'out',Ident(Int))))))
+
+t.Bar#x
+//│ Parsed:
+//│ 	App(Ident(#),Tup(List(Sel(Ident(t),Ident(Bar)), Ident(x))))
+
+foo.Bar#baz(42)
+//│ Parsed:
+//│ 	App(App(Ident(#),Tup(List(Sel(Ident(foo),Ident(Bar)), Ident(baz)))),Tup(List(IntLit(42))))
+
+foo(42).Bar#baz(42)
+//│ Parsed:
+//│ 	App(App(Ident(#),Tup(List(Sel(App(Ident(foo),Tup(List(IntLit(42)))),Ident(Bar)), Ident(baz)))),Tup(List(IntLit(42))))
+
+let x = 42 in x + 0
+//│ Parsed:
+//│ 	Let(Ident(x),IntLit(42),Some(App(Ident(+),Tup(List(Ident(x), IntLit(0))))))
+
+fun id(x) = x
+//│ Parsed:
+//│ 	TermDef(Fun,None,Some(App(Ident(id),Tup(List(Ident(x))))),Some(Ident(x)))
+
+x => x + 1
+//│ Parsed:
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',App(Ident(+),Tup(List(Ident(x), IntLit(1)))))
+
+true and true
+//│ Parsed:
+//│ 	InfixApp(BoolLit(true),keyword 'and',BoolLit(true))
+
+false: Bool
+//│ Parsed:
+//│ 	InfixApp(BoolLit(false),keyword ':',Ident(Bool))
+
+f of false
+//│ Parsed:
+//│ 	App(Ident(f),Tup(List(BoolLit(false))))
+
+let bar = new Bar(42)
+//│ Parsed:
+//│ 	Let(Ident(bar),New(App(Ident(Bar),Tup(List(IntLit(42))))),None)
+
+let bar = new Bar2(1, 1)
+//│ Parsed:
+//│ 	Let(Ident(bar),New(App(Ident(Bar2),Tup(List(IntLit(1), IntLit(1))))),None)
+
+new Bar(0)
+//│ Parsed:
+//│ 	New(App(Ident(Bar),Tup(List(IntLit(0)))))
+
+new Bar2(114, 514)
+//│ Parsed:
+//│ 	New(App(Ident(Bar2),Tup(List(IntLit(114), IntLit(514)))))
+
+fun inc: Int -> Int
+//│ Parsed:
+//│ 	TermDef(Fun,None,Some(InfixApp(Ident(inc),keyword ':',InfixApp(Tup(List(Ident(Int))),keyword '->',Ident(Int)))),None)
+
+[A] -> A -> A
+//│ Parsed:
+//│ 	Forall(List(Ident(A)),InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A)))
+
+fun id: [A] -> A -> A
+//│ Parsed:
+//│ 	TermDef(Fun,None,Some(InfixApp(Ident(id),keyword ':',Forall(List(Ident(A)),InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A))))),None)
+
+[A] => (x: A) => x
+//│ Parsed:
+//│ 	Forall(List(Ident(A)),InfixApp(Tup(List(InfixApp(Ident(x),keyword ':',Ident(A)))),keyword '=>',Ident(x)))
+
+[A, B] -> A -> B
+//│ Parsed:
+//│ 	Forall(List(Ident(A), Ident(B)),InfixApp(Tup(List(Ident(A))),keyword '->',Ident(B)))
+
+[A, B, C] -> (A, B) -> C
+//│ Parsed:
+//│ 	Forall(List(Ident(A), Ident(B), Ident(C)),InfixApp(Tup(List(Ident(A), Ident(B))),keyword '->',Ident(C)))
+
+([A] -> A -> A) -> Int
+//│ Parsed:
+//│ 	InfixApp(Tup(List(Forall(List(Ident(A)),InfixApp(Tup(List(Ident(A))),keyword '->',Ident(A))))),keyword '->',Ident(Int))
+
+
+x => if x == 0 then 1 else x
+//│ Parsed:
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',IfElse(InfixApp(App(Ident(==),Tup(List(Ident(x), IntLit(0)))),keyword 'then',IntLit(1)),Ident(x)))
+
+if 1 < 2 then 1 else 0
+//│ Parsed:
+//│ 	IfElse(InfixApp(App(Ident(<),Tup(List(IntLit(1), IntLit(2)))),keyword 'then',IntLit(1)),IntLit(0))
+
+if false then 0 else 42
+//│ Parsed:
+//│ 	IfElse(InfixApp(BoolLit(false),keyword 'then',IntLit(0)),IntLit(42))
+
+if 24 then false else true
+//│ Parsed:
+//│ 	IfElse(InfixApp(IntLit(24),keyword 'then',BoolLit(false)),BoolLit(true))
+
+if x then true else false
+//│ Parsed:
+//│ 	IfElse(InfixApp(Ident(x),keyword 'then',BoolLit(true)),BoolLit(false))
+
+if 1 is Int then 1 else 0
+//│ Parsed:
+//│ 	IfElse(InfixApp(InfixApp(IntLit(1),keyword 'is',Ident(Int)),keyword 'then',IntLit(1)),IntLit(0))
+
+fun fact = case
+  0 then 1
+  n then n * fact(n - 1)
+//│ Parsed:
+//│ 	TermDef(Fun,None,Some(Ident(fact)),Some(Case(Block(List(InfixApp(IntLit(0),keyword 'then',IntLit(1)), InfixApp(Ident(n),keyword 'then',App(Ident(*),Tup(List(Ident(n), App(Ident(fact),Tup(List(App(Ident(-),Tup(List(Ident(n), IntLit(1))))))))))))))))
+
+
+`42
+//│ Parsed:
+//│ 	Quoted(IntLit(42))
+
+x `=> x
+//│ Parsed:
+//│ 	Quoted(InfixApp(Tup(List(Ident(x))),keyword '=>',Unquoted(Ident(x))))
+
+(x, y) `=> x `+ y
+//│ Parsed:
+//│ 	Quoted(InfixApp(Tup(List(App(Ident(,),Tup(List(Ident(x), Ident(y)))))),keyword '=>',Unquoted(Quoted(App(Ident(+),Tup(List(Unquoted(Ident(x)), Unquoted(Ident(y)))))))))
+
+(x, y, z) `=> x `+ y `+ z
+//│ Parsed:
+//│ 	Quoted(InfixApp(Tup(List(App(Ident(,),Tup(List(Ident(x), App(Ident(,),Tup(List(Ident(y), Ident(z))))))))),keyword '=>',Unquoted(Quoted(App(Ident(+),Tup(List(Unquoted(Quoted(App(Ident(+),Tup(List(Unquoted(Ident(x)), Unquoted(Ident(y))))))), Unquoted(Ident(z)))))))))
+
+`1 `+ `1
+//│ Parsed:
+//│ 	Quoted(App(Ident(+),Tup(List(Unquoted(Quoted(IntLit(1))), Unquoted(Quoted(IntLit(1)))))))
+
+
+f`(x)
+//│ Parsed:
+//│ 	Quoted(App(Unquoted(Ident(f)),Tup(List(Unquoted(Ident(x))))))
+
+g`(`1, `2)
+//│ Parsed:
+//│ 	Quoted(App(Unquoted(Ident(g)),Tup(List(Unquoted(Quoted(IntLit(1))), Unquoted(Quoted(IntLit(2)))))))
+
+
+`let x = `42 `in x
+//│ Parsed:
+//│ 	Quoted(Let(Ident(x),Unquoted(Quoted(IntLit(42))),Some(Unquoted(Ident(x)))))
+
+`if x `== `0.0 then `1.0 else x
+//│ Parsed:
+//│ 	Quoted(IfElse(InfixApp(Unquoted(Quoted(App(Ident(==),Tup(List(Unquoted(Ident(x)), Unquoted(Quoted(DecLit(0.0)))))))),keyword 'then',Unquoted(Quoted(DecLit(1.0)))),Unquoted(Ident(x))))
+
+
+x `=> if 0 == 0 then x else `0
+//│ Parsed:
+//│ 	Quoted(InfixApp(Tup(List(Ident(x))),keyword '=>',Unquoted(IfElse(InfixApp(App(Ident(==),Tup(List(IntLit(0), IntLit(0)))),keyword 'then',Ident(x)),Quoted(IntLit(0))))))
+
+region x in 42
+//│ Parsed:
+//│ 	Region(Ident(x),IntLit(42))
+
+
+region x in
+  x.ref 42
+//│ Parsed:
+//│ 	Region(Ident(x),Block(List(RegRef(Ident(x),IntLit(42)))))
+
+
+region x in
+  let r = x.ref 42 in let t = r := 0 in !r
+//│ Parsed:
+//│ 	Region(Ident(x),Block(List(Let(Ident(r),RegRef(Ident(x),IntLit(42)),Some(Let(Ident(t),App(Ident(:=),Tup(List(Ident(r), IntLit(0)))),Some(Deref(Ident(r)))))))))
+
+!r + 1
+//│ Parsed:
+//│ 	App(Ident(+),Tup(List(Deref(Ident(r)), IntLit(1))))
+
+Int ->{Any} Int
+//│ Parsed:
+//│ 	InfixApp(Tup(List(Ident(Int))),keyword '->',Effectful(Ident(Any),Ident(Int)))
+
+[A] -> Str ->{A} Str
+//│ Parsed:
+//│ 	Forall(List(Ident(A)),InfixApp(Tup(List(Ident(Str))),keyword '->',Effectful(Ident(A),Ident(Str))))
+
+A | B
+//│ Parsed:
+//│ 	App(Ident(|),Tup(List(Ident(A), Ident(B))))
