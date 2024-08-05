@@ -92,7 +92,7 @@ region x in
 //│ Elab: { region x in Blk(List(LetBinding(Var(dz@3),RegRef(Ref(x@2),Lit(IntLit(42))))),Lit(IntLit(42))): Forall(List(A@4),Ref(class:Int))‹›‹› }‹›
 //│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
 //│ ╙──
-//│ Type: forall α59_3: Int
+//│ Type: forall α60_3: Int
 
 
 :e
@@ -103,7 +103,7 @@ let t =
 //│ Elab: { { let t@2 = region x in λy@4. (x@3#0).ref y@4#0‹›‹›‹›; t@2#0(42‹›)‹›‹› }‹› }‹›
 //│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
 //│ ╙──
-//│ Type: Ref[in α67_1 out α67_1 ∨ Int, ?]
+//│ Type: Ref[in α68_1 out α68_1 ∨ Int, ?]
 
 fun foo: [A] -> Int ->{A | Alloc} Int
 fun foo(x) =

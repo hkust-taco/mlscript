@@ -20,7 +20,7 @@ fun foo(x) = 0
 
 foo
 //│ Elab: { foo#0 }‹›
-//│ Type: forall α8_2: (⊤) ->{⊥} Int
+//│ Type: forall α9_2: (⊤) ->{⊥} Int
 
 f(foo)
 //│ Elab: { f#1(foo#1)‹›‹› }‹›
@@ -34,17 +34,17 @@ fun g(y) =
 
 g
 //│ Elab: { g#0 }‹›
-//│ Type: (forall α12_2: (⊥) ->{⊥} Int) ->{⊥} forall α13_2: (⊤) ->{⊥} Int
+//│ Type: (forall α15_2: (⊥) ->{⊥} Int) ->{⊥} forall α16_2: (⊤) ->{⊥} Int
 
 g(foo)
 //│ Elab: { g#1(foo#2)‹›‹› }‹›
-//│ Type: forall α13_2: (⊤) ->{⊥} Int
+//│ Type: forall α16_2: (⊤) ->{⊥} Int
 
 :e
 y `=> (let t = run(x `=> x `+ y) in y)
 //│ Elab: { code"λy@2. ${{ let t@3 = run#0(code"λx@5. ${code"+#2(${x@5#0}‹›, ${y@2#0}‹›)‹›‹›"‹›}‹›‹›"‹›)‹›‹›; y@2#1 }‹›}‹›‹›"‹› }‹›
 //│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
 //│ ╙──
-//│ Type: CodeBase[out α18_3 ->{⊥} α18_3, ⊥, ?]
+//│ Type: CodeBase[out α21_3 ->{⊥} α21_3, ⊥, ?]
 //│ Where:
-//│   α18_3 <: Int
+//│   α21_3 <: Int

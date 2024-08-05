@@ -457,6 +457,8 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
               case S(params) => Term.Lam(params, body)
               case _ => body // * may be a case expressions
             }, sig, ctx)
+          case TermDefinition(Fun, sym, _, S(sig), None, _) =>
+            ctx += sym -> typeType(sig)
           case clsDef: ClassDef => ctx *= clsDef
           case _ => () // TODO
         val (ty, eff) = typeCheck(res)
