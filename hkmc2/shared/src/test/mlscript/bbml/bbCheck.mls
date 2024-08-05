@@ -4,7 +4,7 @@
 
 fun add: (Int, Int) -> Int
 fun add(x, y) = x + y
-//│ Elab: { fun add: (class:Int#15, class:Int#16)‹› -> class:Int#17‹›; fun add(x@3, y@4): (class:Int#18, class:Int#19)‹› -> class:Int#20‹› = +#0(x@3#0, y@4#0)‹›‹›; }‹›
+//│ Elab: { fun add: class:Int#15, class:Int#16 -> class:Int#17‹›; fun add(x@3, y@4): class:Int#18, class:Int#19 -> class:Int#20‹› = +#0(x@3#0, y@4#0)‹›; }‹›
 //│ Type: ⊤
 
 :e
@@ -12,7 +12,7 @@ fun foo: Int -> Int
 fun foo: Int -> Int
 //│ ╔══[ERROR] Duplicate definition of foo
 //│ ╙── aready defined here
-//│ Elab: { fun foo: (class:Int#21)‹› -> class:Int#22‹›; fun foo: (class:Int#23)‹› -> class:Int#24‹›; }‹›
+//│ Elab: { fun foo: class:Int#21 -> class:Int#22‹›; fun foo: class:Int#23 -> class:Int#24‹›; }‹›
 //│ Type: ⊤
 
 :e
@@ -28,7 +28,7 @@ fun id(y) = y
 :e
 fun bar: Str -> Str
 fun bar(x) = let t = x + 1 in "aaa"
-//│ Elab: { fun bar: (class:Str#0)‹› -> class:Str#1‹›; fun bar(x@3): (class:Str#2)‹› -> class:Str#3‹› = { let t@4 = +#1(x@3#0, 1‹›)‹›‹›; "aaa"‹› }‹›; }‹›
+//│ Elab: { fun bar: class:Str#0 -> class:Str#1‹›; fun bar(x@3): class:Str#2 -> class:Str#3‹› = { let t@4 = +#1(x@3#0, 1‹›)‹›; "aaa"‹› }‹›; }‹›
 //│ ╔══[ERROR] Cannot solve Str ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: ⊤
@@ -36,13 +36,13 @@ fun bar(x) = let t = x + 1 in "aaa"
 :e
 fun baz: Int -> Int
 fun baz(x) = "bbb"
-//│ Elab: { fun baz: (class:Int#25)‹› -> class:Int#26‹›; fun baz(x@3): (class:Int#27)‹› -> class:Int#28‹› = "bbb"‹›; }‹›
+//│ Elab: { fun baz: class:Int#25 -> class:Int#26‹›; fun baz(x@3): class:Int#27 -> class:Int#28‹› = "bbb"‹›; }‹›
 //│ ╔══[ERROR] Cannot solve Str ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: ⊤
 
 add(1, 2)
-//│ Elab: { add#0(1‹›, 2‹›)‹›‹› }‹›
+//│ Elab: { add#0(1‹›, 2‹›)‹› }‹›
 //│ Type: Int
 
 add(1, 2): Int
@@ -59,14 +59,14 @@ add(0, 0): Str
 
 :e
 fun errAdd(x: Int) = x + "1"
-//│ Elab: { fun errAdd(x@2: class:Int#30) = +#2(x@2#0, "1"‹›)‹›‹›; }‹›
+//│ Elab: { fun errAdd(x@2: class:Int#30) = +#2(x@2#0, "1"‹›)‹›; }‹›
 //│ ╔══[ERROR] Cannot solve Str ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: ⊤
 
 fun high: ([A] -> A -> A) -> Int
 fun high(f) = f(42)
-//│ Elab: { fun high: (forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)‹›)‹› -> class:Int#31‹›; fun high(f@4): (forall A@7: FunTy(Tup(List(Fld(‹›,Ref(A@7),None))),Ref(A@7),None)‹›)‹› -> class:Int#32‹› = f@4#0(42‹›)‹›‹›; }‹›
+//│ Elab: { fun high: forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)‹› -> class:Int#31‹›; fun high(f@4): forall A@7: FunTy(Tup(List(Fld(‹›,Ref(A@7),None))),Ref(A@7),None)‹› -> class:Int#32‹› = f@4#0(42‹›)‹›; }‹›
 //│ Type: ⊤
 
 high
@@ -75,16 +75,16 @@ high
 
 
 high((x => x): [A] -> A -> A)
-//│ Elab: { high#1(λx@3. x@3#0‹›)‹›‹› }‹›
+//│ Elab: { high#1(λx@3. x@3#0‹›)‹› }‹›
 //│ Type: Int
 
 high(x => x)
-//│ Elab: { high#2(λx@3. x@3#0‹›)‹›‹› }‹›
+//│ Elab: { high#2(λx@3. x@3#0‹›)‹› }‹›
 //│ Type: Int
 
 :e
 high(x => x + 1)
-//│ Elab: { high#3(λx@3. +#3(x@3#0, 1‹›)‹›‹›‹›)‹›‹› }‹›
+//│ Elab: { high#3(λx@3. +#3(x@3#0, 1‹›)‹›‹›)‹› }‹›
 //│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ ╔══[ERROR] Cannot solve Int ∧ ⊤ ∧ ¬⊥
@@ -102,25 +102,33 @@ high(x => x + 1)
 fun baz: Int -> (([A] -> A -> A), Int) -> Int
 fun baz(z) =
   (((f, x) => f(x)): (([A] -> A -> A), Int) -> Int)
-//│ Elab: { fun baz: (class:Int#33)‹› -> (forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)‹›, class:Int#34)‹› -> class:Int#35‹›‹›; fun baz(z@4): (class:Int#38)‹› -> (forall A@10: FunTy(Tup(List(Fld(‹›,Ref(A@10),None))),Ref(A@10),None)‹›, class:Int#39)‹› -> class:Int#40‹›‹› = Lam(List(Param(‹›,f@5,None), Param(‹›,x@6,None)),App(Ref(f@5),Tup(List(Fld(‹›,Ref(x@6),None))))): FunTy(Tup(List(Fld(‹›,Forall(List(A@8),FunTy(Tup(List(Fld(‹›,Ref(A@8),None))),Ref(A@8),None)),None), Fld(‹›,Ref(class:Int),None))),Ref(class:Int),None)‹›; }‹›
+//│ Elab: { fun baz: class:Int#33 -> forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)‹›, class:Int#34 -> class:Int#35‹›‹›; fun baz(z@4): class:Int#38 -> forall A@10: FunTy(Tup(List(Fld(‹›,Ref(A@10),None))),Ref(A@10),None)‹›, class:Int#39 -> class:Int#40‹›‹› = Lam(List(Param(‹›,f@5,None), Param(‹›,x@6,None)),App(Ref(f@5),Tup(List(Fld(‹›,Ref(x@6),None))))): FunTy(Tup(List(Fld(‹›,Forall(List(A@8),FunTy(Tup(List(Fld(‹›,Ref(A@8),None))),Ref(A@8),None)),None), Fld(‹›,Ref(class:Int),None))),Ref(class:Int),None)‹›; }‹›
 //│ Type: ⊤
 
 :fixme // toLoc
 :e
 baz: Int -> (([A] -> A -> A), Int) -> Int
 //│ Elab: { Ref(baz): FunTy(Tup(List(Fld(‹›,Ref(class:Int),None))),FunTy(Tup(List(Fld(‹›,Forall(List(A@2),FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2),None)),None), Fld(‹›,Ref(class:Int),None))),Ref(class:Int),None),None)‹› }‹›
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[ERROR] General type is not allowed here.
+//│ ╙──
+//│ ╔══[ERROR] General type is not allowed here.
+//│ ╙──
+//│ Type: (Int) ->{⊥} (forall α16_2: (α16_2) ->{⊥} α16_2, Int) ->{⊥} Int
 
 
 baz(42)
-//│ Elab: { baz#1(42‹›)‹›‹› }‹›
+//│ Elab: { baz#1(42‹›)‹› }‹›
 //│ Type: (forall α12_2: (α12_2) ->{⊥} α12_2, Int) ->{⊥} Int
 
 :fixme // toLoc
 :e
 baz(42): (([A] -> A -> A), Int) -> Int
 //│ Elab: { App(Ref(baz),Tup(List(Fld(‹›,Lit(IntLit(42)),None)))): FunTy(Tup(List(Fld(‹›,Forall(List(A@3),FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)),None), Fld(‹›,Ref(class:Int),None))),Ref(class:Int),None)‹› }‹›
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ ╔══[ERROR] General type is not allowed here.
+//│ ╙──
+//│ ╔══[ERROR] General type is not allowed here.
+//│ ╙──
+//│ Type: (forall α17_2: (α17_2) ->{⊥} α17_2, Int) ->{⊥} Int
 
 
 fun id: [A] -> A -> A
@@ -152,7 +160,7 @@ id: [A] -> A -> A
 
 fun foo: Int -> Int
 foo
-//│ Elab: { fun foo: (class:Int#49)‹› -> class:Int#50‹›; foo#0 }‹›
+//│ Elab: { fun foo: class:Int#49 -> class:Int#50‹›; foo#0 }‹›
 //│ Type: (Int) ->{⊥} Int
 
 foo

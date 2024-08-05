@@ -37,12 +37,11 @@ enum Tree extends Located:
   case Quoted(body: Tree)
   case Unquoted(body: Tree)
   case Tup(fields: Ls[Tree])
+  case TyTup(tys: Ls[Tree])
   case App(lhs: Tree, rhs: Tree)
-  case TyApp(lhs: Tree, targs: Ls[Tree])
   case Sel(prefix: Tree, name: Ident)
   case InfixApp(lhs: Tree, kw: Keyword.Infix, rhs: Tree)
   case New(body: Tree)
-  case Forall(tvs: Ls[Tree], body: Tree) // TODO: bounds
   case IfElse(cond: Tree, alt: Tree)
   case Case(branches: Tree)
   case Region(name: Tree, body: Tree)
@@ -63,7 +62,6 @@ enum Tree extends Located:
     case InfixApp(lhs, _, rhs) => Ls(lhs, rhs)
     case TermDef(k, symName, alphaName, rhs) => symName.toList ++ alphaName ++ rhs
     case New(body) => body :: Nil
-    case Forall(tvs, body) => body :: tvs
     case IfElse(cond, alt) => cond :: alt :: Nil
     case Case(bs) => Ls(bs)
     case Region(name, body) => name :: body :: Nil
@@ -74,6 +72,14 @@ enum Tree extends Located:
   def describe: Str = ??? // TODO
   
   def showDbg: Str = toString // TODO
+
+object Tree:
+  object TyApp:
+    def apply(lhs: Tree, targs: Ls[Tree]): App =
+      App(lhs, TyTup(targs))
+    def unapply(t: App): Opt[(Tree, Ls[Tree])] = t match
+      case App(lhs, TyTup(targs)) => S(lhs, targs)
+      case _ => N
 
 object PlainTup:
   def apply(fields: Tree*): Tree = Tup(fields.toList)

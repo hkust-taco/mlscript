@@ -23,13 +23,13 @@ foo
 //│ Type: forall α9_2: (⊤) ->{⊥} Int
 
 f(foo)
-//│ Elab: { f#1(foo#1)‹›‹› }‹›
+//│ Elab: { f#1(foo#1)‹› }‹›
 //│ Type: ⊤ ->{⊥} Int
 
 fun g: ([A] -> A -> Int) -> ([A] -> A -> Int)
 fun g(y) =
   let local = ((x => y(x) + 1): ([A] -> A -> Int)) in y
-//│ Elab: { fun g: (forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(class:Int),None)‹›)‹› -> forall A@4: FunTy(Tup(List(Fld(‹›,Ref(A@4),None))),Ref(class:Int),None)‹›‹›; fun g(y@5): (forall A@12: FunTy(Tup(List(Fld(‹›,Ref(A@12),None))),Ref(class:Int),None)‹›)‹› -> forall A@13: FunTy(Tup(List(Fld(‹›,Ref(A@13),None))),Ref(class:Int),None)‹›‹› = { let local@6 = Lam(List(Param(‹›,x@7,None)),App(Ref(+),Tup(List(Fld(‹›,App(Ref(y@5),Tup(List(Fld(‹›,Ref(x@7),None)))),None), Fld(‹›,Lit(IntLit(1)),None))))): Forall(List(A@10),FunTy(Tup(List(Fld(‹›,Ref(A@10),None))),Ref(class:Int),None))‹›; y@5#1 }‹›; }‹›
+//│ Elab: { fun g: forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(class:Int),None)‹› -> forall A@4: FunTy(Tup(List(Fld(‹›,Ref(A@4),None))),Ref(class:Int),None)‹›‹›; fun g(y@5): forall A@12: FunTy(Tup(List(Fld(‹›,Ref(A@12),None))),Ref(class:Int),None)‹› -> forall A@13: FunTy(Tup(List(Fld(‹›,Ref(A@13),None))),Ref(class:Int),None)‹›‹› = { let local@6 = Lam(List(Param(‹›,x@7,None)),App(Ref(+),Tup(List(Fld(‹›,App(Ref(y@5),Tup(List(Fld(‹›,Ref(x@7),None)))),None), Fld(‹›,Lit(IntLit(1)),None))))): Forall(List(A@10),FunTy(Tup(List(Fld(‹›,Ref(A@10),None))),Ref(class:Int),None))‹›; y@5#1 }‹›; }‹›
 //│ Type: ⊤
 
 g
@@ -37,12 +37,12 @@ g
 //│ Type: (forall α15_2: (⊥) ->{⊥} Int) ->{⊥} forall α16_2: (⊤) ->{⊥} Int
 
 g(foo)
-//│ Elab: { g#1(foo#2)‹›‹› }‹›
+//│ Elab: { g#1(foo#2)‹› }‹›
 //│ Type: forall α16_2: (⊤) ->{⊥} Int
 
 :e
 y `=> (let t = run(x `=> x `+ y) in y)
-//│ Elab: { code"λy@2. ${{ let t@3 = run#0(code"λx@5. ${code"+#2(${x@5#0}‹›, ${y@2#0}‹›)‹›‹›"‹›}‹›‹›"‹›)‹›‹›; y@2#1 }‹›}‹›‹›"‹› }‹›
+//│ Elab: { code"λy@2. ${{ let t@3 = run#0(code"λx@5. ${code"+#2(${x@5#0}‹›, ${y@2#0}‹›)‹›"‹›}‹›‹›"‹›)‹›; y@2#1 }‹›}‹›‹›"‹› }‹›
 //│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: CodeBase[out α21_3 ->{⊥} α21_3, ⊥, ?]

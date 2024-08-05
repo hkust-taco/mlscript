@@ -399,30 +399,38 @@ abstract class Parser(
     case (LITVAL(lit), loc) :: _ =>
       consume
       exprCont(lit.asTree, prec, allowNewlines = true)
-    case (BRACKETS(Round, toks), loc) :: _ if toks.forall(_ is SPACE) =>
+    case (br @ BRACKETS(bk @ (Round | Square), toks), loc) :: _ =>
       consume
-      val res = Tree.UnitLit(true).withLoc(S(loc))
-      exprCont(res, prec, allowNewlines = true)
-    case (br @ BRACKETS(Round, toks), loc) :: _ =>
-      consume
+      val ps = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
       yeetSpaces match
+        case (QUOTE, l) :: (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ =>
+            consume
+            consume
+            bk match
+              case Round =>
+              case Square =>
+                ??? // TODO reject (not supported yet)
+            val body = yeetSpaces match
+              case (KEYWORD(kw @ Keyword.`let`), l1) :: _ => Block(blockMaybeIndented) // FIXME[CY] why this weird special case?
+              case _ => expr(kw.rightPrecOrMin)
+            exprCont(Quoted(InfixApp(Tup(ps), kw, Unquoted(body))), prec, allowNewlines = true)
         case (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ =>
           consume
-          val ps = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
           val rhs = simpleExpr(kw.rightPrecOrMin)
-          val res = InfixApp(PlainTup(ps*), kw, rhs)
+          val res = InfixApp(bk match
+              case Round => Tup(ps)
+              case Square => TyTup(ps)
+            , kw, rhs)
           exprCont(res, prec, allowNewlines = true)
         case _ =>
-          val res = rec(toks, S(loc), "parenthesized expression").concludeWith(_.expr(0))
+          val sts = ps
+          val res = bk match
+            case Square => Tup(sts)
+            case Round => sts match
+              case Nil => UnitLit(true)
+              case e :: Nil => e
+              case es => Block(es)
           exprCont(res, prec, allowNewlines = true)
-    case (br @ BRACKETS(Square, toks), loc) :: _ =>
-      consume
-      val res = rec(toks, S(loc), "type parameters").concludeWith(_.simpleExpr(0))
-      def unfold(t: Tree): Ls[Tree] = t match
-        case _: Tree.Ident => t :: Nil
-        case App(Tree.Ident(","), Tup(eles)) => eles.flatMap(unfold)
-        case _ => ??? // TODO: bds?
-      exprCont(Tree.Forall(unfold(res), Tree.Empty()), prec, allowNewlines = true)
     case (QUOTE, loc) :: _ =>
       consume
       cur match {
@@ -494,12 +502,9 @@ abstract class Parser(
           consume
           consume
           val body = yeetSpaces match
-            case (KEYWORD(kw @ Keyword.`let`), l1) :: _ => Block(blockMaybeIndented)
+            case (KEYWORD(kw @ Keyword.`let`), l1) :: _ => Block(blockMaybeIndented) // FIXME[CY] why this weird special case?
             case _ => expr(kw.rightPrecOrMin)
-          exprCont(Quoted(InfixApp(acc match {
-            case t: Tup => t
-            case _ => PlainTup(acc)
-          }, kw, Unquoted(body))), prec, allowNewlines)
+          exprCont(Quoted(InfixApp(PlainTup(acc), kw, Unquoted(body))), prec, allowNewlines)
         case _ :: (br @ BRACKETS(Round, toks), loc) :: _ =>
           consume
           consume
@@ -531,12 +536,8 @@ abstract class Parser(
       }
       case (COMMA, l0) :: _ if prec === 0 =>
         consume
-        yeetSpaces match {
-          case (NEWLINE, _) :: _ => consume
-          case _ =>
-        }
-        val rhs = expr(prec)
-        App(Ident(",").withLoc(S(l0)), PlainTup(acc, rhs))
+        err((msg"Unexpected comma in this position" -> S(l0) :: Nil))
+        acc
         /* 
       case (KEYWORD(opStr @ "=>"), l0) :: (NEWLINE, l1) :: _ if opPrec(opStr)._1 > prec =>
         consume
@@ -552,7 +553,6 @@ abstract class Parser(
             Effectful(eff, simpleExpr(kw.rightPrecOrMin))
           case _ => expr(kw.rightPrecOrMin)
         val res = acc match
-          case Tree.Forall(tvs, _) => Tree.Forall(tvs, rhs)
           case _ => InfixApp(PlainTup(acc), kw, rhs)
         exprCont(res, prec, allowNewlines)
         /* 

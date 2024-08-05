@@ -7,7 +7,7 @@ fun id(x) = x
 //│ Type: ⊤
 
 id(1)
-//│ Elab: { id#0(1‹›)‹›‹› }‹›
+//│ Elab: { id#0(1‹›)‹› }‹›
 //│ Type: Int
 
 id
@@ -17,7 +17,7 @@ id
 //│   Int <: α2_1
 
 id(true)
-//│ Elab: { id#2(true‹›)‹›‹› }‹›
+//│ Elab: { id#2(true‹›)‹› }‹›
 //│ Type: Bool ∨ Int
 
 id

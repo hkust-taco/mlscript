@@ -110,7 +110,10 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
   
   
   var curCtx = if file == predefFile then Elaborator.Ctx.empty else
-    val raise: Raise = throw _
+    // val raise: Raise = throw _
+    val raise: Raise = d =>
+      output(s"Error: $d")
+      ()
     
     val block = os.read(predefFile)
     val fph = new FastParseHelpers(block)
@@ -125,9 +128,13 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
     val p = new syntax.Parser(origin, tokens, raise, dbg = dbgParsing.isSet):
       def doPrintDbg(msg: => Str): Unit = if dbg then output(msg)
     val res = p.parseAll(p.block)
-    given Elaborator.Ctx = Elaborator.Ctx.empty
+    given ctx: Elaborator.Ctx = Elaborator.Ctx.empty
     val elab = Elaborator(raise)
-    elab.importFrom(res)
+    try elab.importFrom(res)
+    catch
+      case err: Throwable =>
+        output("/!!!\\ Uncaught error during Predef import: " + err)
+        ctx
       
   
   val tl = new TraceLogger:

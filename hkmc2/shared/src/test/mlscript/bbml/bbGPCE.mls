@@ -16,7 +16,7 @@ fun id(x) = x
 //│ Type: ⊤
 
 run(x `=> id(x) `* x)
-//│ Elab: { run#0(code"λx@3. ${code"*#0(${id#0(x@3#0)‹›‹›}‹›, ${x@3#1}‹›)‹›‹›"‹›}‹›‹›"‹›)‹›‹› }‹›
+//│ Elab: { run#0(code"λx@3. ${code"*#0(${id#0(x@3#0)‹›}‹›, ${x@3#1}‹›)‹›"‹›}‹›‹›"‹›)‹› }‹›
 //│ Type: Int ->{⊥} Int
 
 fun assertNotZero: [C] -> CodeBase[out Num, out C, out Any] -> CodeBase[out Num, out C, out Any]
@@ -24,7 +24,7 @@ fun assertNotZero(x) =
   `if (x `== `0.0) then `error else x
 let checkedDiv = x `=> y `=> x `/. (assertNotZero(y))
 run(checkedDiv)
-//│ Elab: { fun assertNotZero: forall C@3: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Num))), WildcardTy(None,Some(Ref(C@3))), WildcardTy(None,Some(Ref(class:Any))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Num))), WildcardTy(None,Some(Ref(C@3))), WildcardTy(None,Some(Ref(class:Any))))),None)‹›; fun assertNotZero(x@4): forall C@7: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Num))), WildcardTy(None,Some(Ref(C@7))), WildcardTy(None,Some(Ref(class:Any))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Num))), WildcardTy(None,Some(Ref(C@7))), WildcardTy(None,Some(Ref(class:Any))))),None)‹› = code"if Cons(Boolean(Unquoted(Quoted(App(Ref(==),Tup(List(Fld(‹›,Unquoted(Ref(x@4)),None), Fld(‹›,Unquoted(Quoted(Lit(DecLit(0.0)))),None)))))),Else(Unquoted(Quoted(Ref(error))))),Else(Unquoted(Ref(x@4))))‹›"‹›; let checkedDiv@8 = code"λx@9. ${code"λy@10. ${code"/.#0(${x@9#0}‹›, ${assertNotZero#0(y@10#0)‹›‹›}‹›)‹›‹›"‹›}‹›‹›"‹›}‹›‹›"‹›; run#1(checkedDiv@8#0)‹›‹› }‹›
+//│ Elab: { fun assertNotZero: forall C@3: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Num))), WildcardTy(None,Some(Ref(C@3))), WildcardTy(None,Some(Ref(class:Any))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Num))), WildcardTy(None,Some(Ref(C@3))), WildcardTy(None,Some(Ref(class:Any))))),None)‹›; fun assertNotZero(x@4): forall C@7: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Num))), WildcardTy(None,Some(Ref(C@7))), WildcardTy(None,Some(Ref(class:Any))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Num))), WildcardTy(None,Some(Ref(C@7))), WildcardTy(None,Some(Ref(class:Any))))),None)‹› = code"if Cons(Boolean(Unquoted(Quoted(App(Ref(==),Tup(List(Fld(‹›,Unquoted(Ref(x@4)),None), Fld(‹›,Unquoted(Quoted(Lit(DecLit(0.0)))),None)))))),Else(Unquoted(Quoted(Ref(error))))),Else(Unquoted(Ref(x@4))))‹›"‹›; let checkedDiv@8 = code"λx@9. ${code"λy@10. ${code"/.#0(${x@9#0}‹›, ${assertNotZero#0(y@10#0)‹›}‹›)‹›"‹›}‹›‹›"‹›}‹›‹›"‹›; run#1(checkedDiv@8#0)‹› }‹›
 //│ Type: Num ->{⊥} (Num ->{⊥} Num)
 
 
@@ -37,11 +37,11 @@ show
 fun inc(dbg) =
   x `=> let c = x `+ `1 in let t = dbg(c) in c
 inc
-//│ Elab: { fun inc(dbg@2) = code"λx@3. ${{ let c@4 = code"+#0(${x@3#0}‹›, ${code"1‹›"‹›}‹›)‹›‹›"‹›; { let t@6 = dbg@2#0(c@4#0)‹›‹›; c@4#1 }‹› }‹›}‹›‹›"‹›; inc#0 }‹›
+//│ Elab: { fun inc(dbg@2) = code"λx@3. ${{ let c@4 = code"+#0(${x@3#0}‹›, ${code"1‹›"‹›}‹›)‹›"‹›; { let t@6 = dbg@2#0(c@4#0)‹›; c@4#1 }‹› }‹›}‹›‹›"‹›; inc#0 }‹›
 //│ Type: (CodeBase[out Int, ?, ?] ->{α80_1} ⊤) ->{α80_1} CodeBase[out Int ->{⊥} Int, ⊥, ?]
 
 inc(c => log(show(c)))
-//│ Elab: { inc#1(λc@3. log#0(show#1(c@3#0)‹›‹›)‹›‹›‹›)‹›‹› }‹›
+//│ Elab: { inc#1(λc@3. log#0(show#1(c@3#0)‹›)‹›‹›)‹› }‹›
 //│ Type: CodeBase[out Int ->{⊥} Int, ⊥, ?]
 
 fun body: [T, C] -> (CodeBase[out Int, out T, out Any], CodeBase[out Int, out C, out Any]) -> Int -> CodeBase[out Int, out T | C, out Any]
@@ -52,12 +52,12 @@ fun body(x, y) = case
 fun gib_naive(n) =
   (x, y) `=> body(x, y)(n)
 let gn5 = run(gib_naive(5))
-//│ Elab: { fun body: forall T@3, C@4: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(T@3))), WildcardTy(None,Some(Ref(class:Any))))),None), Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(C@4))), WildcardTy(None,Some(Ref(class:Any))))),None))),FunTy(Tup(List(Fld(‹›,Ref(class:Int),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(CompType(Ref(T@3),Ref(C@4),true))), WildcardTy(None,Some(Ref(class:Any))))),None),None)‹›; fun body(x@5, y@6): forall T@15, C@16: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(T@15))), WildcardTy(None,Some(Ref(class:Any))))),None), Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(C@16))), WildcardTy(None,Some(Ref(class:Any))))),None))),FunTy(Tup(List(Fld(‹›,Ref(class:Int),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(CompType(Ref(T@15),Ref(C@16),true))), WildcardTy(None,Some(Ref(class:Any))))),None),None)‹› = λn@7. if Cons(Boolean(App(Ref(==),Tup(List(Fld(‹›,Ref(n@7),None), Fld(‹›,Lit(IntLit(0)),None)))),Else(Ref(x@5))),Cons(Boolean(App(Ref(==),Tup(List(Fld(‹›,Ref(n@7),None), Fld(‹›,Lit(IntLit(1)),None)))),Else(Ref(y@6))),Else(App(App(Ref(body),Tup(List(Fld(‹›,Ref(y@6),None), Fld(‹›,Quoted(App(Ref(+),Tup(List(Fld(‹›,Unquoted(Ref(x@5)),None), Fld(‹›,Unquoted(Ref(y@6)),None))))),None)))),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@7),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))))))‹›‹›; fun gib_naive(n@17) = code"λx@18, y@19. ${body#1(x@18#0, y@19#0)‹›‹›(n@17#0)‹›‹›}‹›‹›"‹›; let gn5@23 = run#2(gib_naive#0(5‹›)‹›‹›)‹›‹›; }‹›
+//│ Elab: { fun body: forall T@3, C@4: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(T@3))), WildcardTy(None,Some(Ref(class:Any))))),None), Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(C@4))), WildcardTy(None,Some(Ref(class:Any))))),None))),FunTy(Tup(List(Fld(‹›,Ref(class:Int),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(CompType(Ref(T@3),Ref(C@4),true))), WildcardTy(None,Some(Ref(class:Any))))),None),None)‹›; fun body(x@5, y@6): forall T@15, C@16: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(T@15))), WildcardTy(None,Some(Ref(class:Any))))),None), Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(C@16))), WildcardTy(None,Some(Ref(class:Any))))),None))),FunTy(Tup(List(Fld(‹›,Ref(class:Int),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(CompType(Ref(T@15),Ref(C@16),true))), WildcardTy(None,Some(Ref(class:Any))))),None),None)‹› = λn@7. if Cons(Boolean(App(Ref(==),Tup(List(Fld(‹›,Ref(n@7),None), Fld(‹›,Lit(IntLit(0)),None)))),Else(Ref(x@5))),Cons(Boolean(App(Ref(==),Tup(List(Fld(‹›,Ref(n@7),None), Fld(‹›,Lit(IntLit(1)),None)))),Else(Ref(y@6))),Else(App(App(Ref(body),Tup(List(Fld(‹›,Ref(y@6),None), Fld(‹›,Quoted(App(Ref(+),Tup(List(Fld(‹›,Unquoted(Ref(x@5)),None), Fld(‹›,Unquoted(Ref(y@6)),None))))),None)))),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@7),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))))))‹›‹›; fun gib_naive(n@17) = code"λx@18, y@19. ${body#1(x@18#0, y@19#0)‹›(n@17#0)‹›}‹›‹›"‹›; let gn5@23 = run#2(gib_naive#0(5‹›)‹›)‹›; }‹›
 //│ Type: ⊤
 
 fun bind(rhs, k) = `let x = rhs `in k(x)
 bind
-//│ Elab: { fun bind(rhs@2, k@3) = code"{ let x@4 = ${rhs@2#0}‹›; ${k@3#0(x@4#0)‹›‹›}‹› }‹›"‹›; bind#0 }‹›
+//│ Elab: { fun bind(rhs@2, k@3) = code"{ let x@4 = ${rhs@2#0}‹›; ${k@3#0(x@4#0)‹›}‹› }‹›"‹›; bind#0 }‹›
 //│ Type: (CodeBase[out α129_1, out α130_1, ?], CodeBase[in α134_1 out α134_1 ∨ α129_1, ?, ⊥] ->{α137_1} CodeBase[out α140_1, out α141_1, ?]) ->{α137_1} CodeBase[out α140_1, out α130_1 ∨ α141_1, ?]
 
 :e
@@ -80,7 +80,7 @@ fun body(x, y) = case
 fun bind: [G] -> (CodeBase[out Int, out G, out Any], [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out Int, out C | G, out Any]) -> CodeBase[out Int, out G, out Any]
 fun bind(rhs, k) = `let x = rhs `in k(x)
 bind
-//│ Elab: { fun bind: forall G@3: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(G@3))), WildcardTy(None,Some(Ref(class:Any))))),None), Fld(‹›,Forall(List(C@4),FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(C@4))), WildcardTy(None,Some(Ref(class:Any))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(CompType(Ref(C@4),Ref(G@3),true))), WildcardTy(None,Some(Ref(class:Any))))),None)),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(G@3))), WildcardTy(None,Some(Ref(class:Any))))),None)‹›; fun bind(rhs@5, k@6): forall G@10: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(G@10))), WildcardTy(None,Some(Ref(class:Any))))),None), Fld(‹›,Forall(List(C@11),FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(C@11))), WildcardTy(None,Some(Ref(class:Any))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(CompType(Ref(C@11),Ref(G@10),true))), WildcardTy(None,Some(Ref(class:Any))))),None)),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(G@10))), WildcardTy(None,Some(Ref(class:Any))))),None)‹› = code"{ let x@7 = ${rhs@5#0}‹›; ${k@6#0(x@7#0)‹›‹›}‹› }‹›"‹›; bind#0 }‹›
+//│ Elab: { fun bind: forall G@3: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(G@3))), WildcardTy(None,Some(Ref(class:Any))))),None), Fld(‹›,Forall(List(C@4),FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(C@4))), WildcardTy(None,Some(Ref(class:Any))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(CompType(Ref(C@4),Ref(G@3),true))), WildcardTy(None,Some(Ref(class:Any))))),None)),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(G@3))), WildcardTy(None,Some(Ref(class:Any))))),None)‹›; fun bind(rhs@5, k@6): forall G@10: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(G@10))), WildcardTy(None,Some(Ref(class:Any))))),None), Fld(‹›,Forall(List(C@11),FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(C@11))), WildcardTy(None,Some(Ref(class:Any))))),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(CompType(Ref(C@11),Ref(G@10),true))), WildcardTy(None,Some(Ref(class:Any))))),None)),None))),TyApp(Ref(class:CodeBase),List(WildcardTy(None,Some(Ref(class:Int))), WildcardTy(None,Some(Ref(G@10))), WildcardTy(None,Some(Ref(class:Any))))),None)‹› = code"{ let x@7 = ${rhs@5#0}‹›; ${k@6#0(x@7#0)‹›}‹› }‹›"‹›; bind#0 }‹›
 //│ Type: forall α171_2: (CodeBase[out Int, out α171_2, ?], forall α172_3: (CodeBase[out Int, out α172_3, ?]) ->{⊥} CodeBase[out Int, out α172_3 ∨ α171_2, ?]) ->{⊥} CodeBase[out Int, out α171_2, ?]
 
 
@@ -96,5 +96,5 @@ body
 fun gib(n) = (x, y) `=> body(x, y)(n)
 let g5 = run(gib(5))
 g5
-//│ Elab: { fun gib(n@2) = code"λx@3, y@4. ${body#2(x@3#0, y@4#0)‹›‹›(n@2#0)‹›‹›}‹›‹›"‹›; let g5@8 = run#3(gib#0(5‹›)‹›‹›)‹›‹›; g5@8#0 }‹›
+//│ Elab: { fun gib(n@2) = code"λx@3, y@4. ${body#2(x@3#0, y@4#0)‹›(n@2#0)‹›}‹›‹›"‹›; let g5@8 = run#3(gib#0(5‹›)‹›)‹›; g5@8#0 }‹›
 //│ Type: (Int, Int) ->{⊥} Int

@@ -17,7 +17,7 @@ fun (+) : Int
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 1 + 2
-//│ Elab: { +#0(1‹›, 2‹›)‹›‹› }‹›
+//│ Elab: { +#0(1‹›, 2‹›)‹› }‹›
 //│ Type: Flow(‹app-res›@2)
 
 
@@ -32,7 +32,7 @@ fun (++)(x, y) = 1
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 1 ++ 2
-//│ Elab: { ++#0(1‹›, 2‹›)‹›‹› }‹›
+//│ Elab: { ++#0(1‹›, 2‹›)‹› }‹›
 //│ Type: Flow(‹app-res›@2)
 
 
@@ -42,7 +42,7 @@ fun (**) pow = 1
 
 :fixme
 1 ** 2
-//│ Elab: { pow#0(1‹›, 2‹›)‹›‹› }‹›
+//│ Elab: { pow#0(1‹›, 2‹›)‹› }‹›
 //│ Type: Flow(‹app-res›@2)
 
 

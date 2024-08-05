@@ -566,6 +566,8 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
         (error(msg"Unquote should nest in quasiquote" -> t.toLoc :: Nil), Bot)
       case Term.Error =>
         (Bot, Bot) // TODO: error type?
+      case _ =>
+        (error(msg"Term shape not yet supported by BbML: ${t.toString}" -> t.toLoc :: Nil), Bot)
 
   def typePurely(t: Term): GeneralType =
     val (ty, eff) = typeCheck(t)(using initCtx)

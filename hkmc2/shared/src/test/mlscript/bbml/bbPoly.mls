@@ -44,11 +44,11 @@ id: Int -> Int
 //│ Type: (Int) ->{⊥} Int
 
 fun myInc(inc: Int -> Int, x: Int) = inc(x)
-//│ Elab: { fun myInc(inc@2: (class:Int#18)‹› -> class:Int#19‹›, x@3: class:Int#20) = inc@2#0(x@3#0)‹›‹›; }‹›
+//│ Elab: { fun myInc(inc@2: class:Int#18 -> class:Int#19‹›, x@3: class:Int#20) = inc@2#0(x@3#0)‹›; }‹›
 //│ Type: ⊤
 
 myInc(id, 0)
-//│ Elab: { myInc#0(id#3, 0‹›)‹›‹› }‹›
+//│ Elab: { myInc#0(id#3, 0‹›)‹› }‹›
 //│ Type: Int
 
 let t = 42 in ((x => x): [A] -> A -> A)
@@ -57,11 +57,11 @@ let t = 42 in ((x => x): [A] -> A -> A)
 
 
 id(42)
-//│ Elab: { id#4(42‹›)‹›‹› }‹›
+//│ Elab: { id#4(42‹›)‹› }‹›
 //│ Type: Int
 
 id("abc")
-//│ Elab: { id#5("abc"‹›)‹›‹› }‹›
+//│ Elab: { id#5("abc"‹›)‹› }‹›
 //│ Type: Str
 
 
@@ -84,11 +84,11 @@ swap
 //│ Type: forall α23_2, α24_2: (Pair[out α23_2, out α24_2]) ->{⊥} Pair[out α24_2, out α23_2]
 
 let t = new Pair(42, true) in swap(t)
-//│ Elab: { { let t@2 = new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›; swap#1(t@2#0)‹›‹› }‹› }‹›
+//│ Elab: { { let t@2 = new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›; swap#1(t@2#0)‹› }‹› }‹›
 //│ Type: Pair[out Bool, out Int]
 
 let t = new Pair("114", "514") in swap(t)
-//│ Elab: { { let t@2 = new class:Pair(Lit(StrLit(114)), Lit(StrLit(514)))‹›; swap#2(t@2#0)‹›‹› }‹› }‹›
+//│ Elab: { { let t@2 = new class:Pair(Lit(StrLit(114)), Lit(StrLit(514)))‹›; swap#2(t@2#0)‹› }‹› }‹›
 //│ Type: Pair[out Str, out Str]
 
 let id = ((x => x): [A] -> A -> A) in new Pair(id(42), id("42"))
@@ -97,7 +97,7 @@ let id = ((x => x): [A] -> A -> A) in new Pair(id(42), id("42"))
 
 fun foo: ([A] -> A -> A) -> Int
 fun foo(x) = 42
-//│ Elab: { fun foo: (forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)‹›)‹› -> class:Int#21‹›; fun foo(x@4): (forall A@6: FunTy(Tup(List(Fld(‹›,Ref(A@6),None))),Ref(A@6),None)‹›)‹› -> class:Int#22‹› = 42‹›; }‹›
+//│ Elab: { fun foo: forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)‹› -> class:Int#21‹›; fun foo(x@4): forall A@6: FunTy(Tup(List(Fld(‹›,Ref(A@6),None))),Ref(A@6),None)‹› -> class:Int#22‹› = 42‹›; }‹›
 //│ Type: ⊤
 
 foo
@@ -105,11 +105,11 @@ foo
 //│ Type: (forall α57_2: (α57_2) ->{⊥} α57_2) ->{⊥} Int
 
 foo(id)
-//│ Elab: { foo#1(id#6)‹›‹› }‹›
+//│ Elab: { foo#1(id#6)‹› }‹›
 //│ Type: Int
 
 foo(x => x)
-//│ Elab: { foo#2(λx@3. x@3#0‹›)‹›‹› }‹›
+//│ Elab: { foo#2(λx@3. x@3#0‹›)‹› }‹›
 //│ Type: Int
 
 class Foo(foo: [A] -> A -> A)
@@ -126,7 +126,7 @@ new Foo(x => x)
 //│ Type: Foo
 
 let foo = new Foo(id) in foo.Foo#foo(42)
-//│ Elab: { { let foo@2 = new class:Foo(Ref(id))‹›; foo@2#0.class:Foo#0#foo‹›(42‹›)‹›‹› }‹› }‹›
+//│ Elab: { { let foo@2 = new class:Foo(Ref(id))‹›; foo@2#0.class:Foo#0#foo‹›(42‹›)‹› }‹› }‹›
 //│ Type: Int
 
 class Bar[A](x: A, f: [B] -> B -> B)
@@ -139,7 +139,7 @@ new Bar(0, id)
 //│ Type: Bar[in ⊤ out Int]
 
 let bar = new Bar(0, id) in bar.Bar#f(bar.Bar#x)
-//│ Elab: { { let bar@2 = new class:Bar(Lit(IntLit(0)), Ref(id))‹›; bar@2#0.class:Bar#0#f‹›(bar@2#1.class:Bar#1#x‹›)‹›‹› }‹› }‹›
+//│ Elab: { { let bar@2 = new class:Bar(Lit(IntLit(0)), Ref(id))‹›; bar@2#0.class:Bar#0#f‹›(bar@2#1.class:Bar#1#x‹›)‹› }‹› }‹›
 //│ Type: Int
 
 class Some[A](value: A)
@@ -152,13 +152,13 @@ new Some((x => x): [A] -> A -> A)
 
 :fixme
 let s = new Some((x => x): [A] -> A -> A) in let t = s.Some#value(42) in s.Some#value(false)
-//│ Elab: { { let s@2 = new class:Some(Asc(Lam(List(Param(‹›,x@3,None)),Ref(x@3)),Forall(List(A@4),FunTy(Tup(List(Fld(‹›,Ref(A@4),None))),Ref(A@4),None))))‹›; { let t@5 = s@2#0.class:Some#0#value‹›(42‹›)‹›‹›; s@2#1.class:Some#1#value‹›(false‹›)‹›‹› }‹› }‹› }‹›
+//│ Elab: { { let s@2 = new class:Some(Asc(Lam(List(Param(‹›,x@3,None)),Ref(x@3)),Forall(List(A@4),FunTy(Tup(List(Fld(‹›,Ref(A@4),None))),Ref(A@4),None))))‹›; { let t@5 = s@2#0.class:Some#0#value‹›(42‹›)‹›; s@2#1.class:Some#1#value‹›(false‹›)‹› }‹› }‹› }‹›
 //│ Type: Bool ∨ Int
 
 fun gen: Int -> [A] -> A -> A
 fun gen(x) =
   let t = x + 1 in ((y => y): [A] -> A -> A)
-//│ Elab: { fun gen: (class:Int#23)‹› -> forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)‹›‹›; fun gen(x@4): (class:Int#24)‹› -> forall A@10: FunTy(Tup(List(Fld(‹›,Ref(A@10),None))),Ref(A@10),None)‹›‹› = { let t@5 = +#1(x@4#0, 1‹›)‹›‹›; Lam(List(Param(‹›,y@7,None)),Ref(y@7)): Forall(List(A@8),FunTy(Tup(List(Fld(‹›,Ref(A@8),None))),Ref(A@8),None))‹› }‹›; }‹›
+//│ Elab: { fun gen: class:Int#23 -> forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)‹›‹›; fun gen(x@4): class:Int#24 -> forall A@10: FunTy(Tup(List(Fld(‹›,Ref(A@10),None))),Ref(A@10),None)‹›‹› = { let t@5 = +#1(x@4#0, 1‹›)‹›; Lam(List(Param(‹›,y@7,None)),Ref(y@7)): Forall(List(A@8),FunTy(Tup(List(Fld(‹›,Ref(A@8),None))),Ref(A@8),None))‹› }‹›; }‹›
 //│ Type: ⊤
 
 gen
@@ -167,7 +167,7 @@ gen
 
 
 gen(42)
-//│ Elab: { gen#1(42‹›)‹›‹› }‹›
+//│ Elab: { gen#1(42‹›)‹› }‹›
 //│ Type: forall α97_2: (α97_2) ->{⊥} α97_2
 
 // FIXME: toLoc
@@ -175,9 +175,13 @@ gen(42)
 :e
 fun cnt: Some[out [A] -> A -> A] -> Int
 fun cnt(x) = 42
-//│ Elab: { fun cnt: (class:Some#2[WildcardTy(None,Some(Forall(List(A@3),FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None))))]‹›)‹› -> class:Int#25‹›; fun cnt(x@4): (class:Some#3[WildcardTy(None,Some(Forall(List(A@6),FunTy(Tup(List(Fld(‹›,Ref(A@6),None))),Ref(A@6),None))))]‹›)‹› -> class:Int#26‹› = 42‹›; }‹›
-//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+//│ Elab: { fun cnt: class:Some#2[WildcardTy(None,Some(Forall(List(A@3),FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None))))]‹› -> class:Int#25‹›; fun cnt(x@4): class:Some#3[WildcardTy(None,Some(Forall(List(A@6),FunTy(Tup(List(Fld(‹›,Ref(A@6),None))),Ref(A@6),None))))]‹› -> class:Int#26‹› = 42‹›; }‹›
+//│ ╔══[ERROR] General type is not allowed here.
+//│ ╙──
+//│ ╔══[ERROR] General type is not allowed here.
+//│ ╙──
+//│ Type: ⊤
 
 (x => x): [A] -> A -> A
 //│ Elab: { Lam(List(Param(‹›,x@2,None)),Ref(x@2)): Forall(List(A@3),FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None))‹› }‹›
-//│ Type: forall α101_2: (α101_2) ->{⊥} α101_2
+//│ Type: forall α102_2: (α102_2) ->{⊥} α102_2

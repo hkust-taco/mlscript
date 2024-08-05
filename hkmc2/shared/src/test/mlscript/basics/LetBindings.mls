@@ -11,7 +11,7 @@ let x = 1 in x
 let x = 1
 let y = 2
 x + y
-//│ Elab: { let x@2 = 1‹›; let y@3 = 2‹›; +#0(x@2#0, y@3#0)‹›‹› }‹›
+//│ Elab: { let x@2 = 1‹›; let y@3 = 2‹›; +#0(x@2#0, y@3#0)‹› }‹›
 //│ Type: Flow(‹app-res›@4)
 
 x
@@ -21,7 +21,7 @@ x
 :e
 let z = 3
 x + y + z
-//│ Elab: { let z@2 = 3‹›; +#1(+#2(x@2#2, y@3#1)‹›‹›, z@2#0)‹›‹› }‹›
+//│ Elab: { let z@2 = 3‹›; +#1(+#2(x@2#2, y@3#1)‹›, z@2#0)‹› }‹›
 //│ Type: Flow(‹app-res›@3)
 
 

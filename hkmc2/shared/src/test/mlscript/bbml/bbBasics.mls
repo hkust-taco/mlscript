@@ -27,11 +27,11 @@ fun id(x) = x
 //│ Type: ⊤
 
 fun inc(x) = x + 1
-//│ Elab: { fun inc(x@2) = +#0(x@2#0, 1‹›)‹›‹›; }‹›
+//│ Elab: { fun inc(x@2) = +#0(x@2#0, 1‹›)‹›; }‹›
 //│ Type: ⊤
 
 fun mul(x, y) = x * y
-//│ Elab: { fun mul(x@2, y@3) = *#0(x@2#0, y@3#0)‹›‹›; }‹›
+//│ Elab: { fun mul(x@2, y@3) = *#0(x@2#0, y@3#0)‹›; }‹›
 //│ Type: ⊤
 
 x => x
@@ -43,23 +43,23 @@ x => x
 //│ Type: (Int, Int) ->{⊥} Int
 
 (x, y) => x + y
-//│ Elab: { λx@2, y@3. +#2(x@2#0, y@3#0)‹›‹›‹› }‹›
+//│ Elab: { λx@2, y@3. +#2(x@2#0, y@3#0)‹›‹› }‹›
 //│ Type: (Int, Int) ->{⊥} Int
 
 ((x, y) => x + y)(40, 2)
-//│ Elab: { λx@3, y@4. +#3(x@3#0, y@4#0)‹›‹›‹›(40‹›, 2‹›)‹›‹› }‹›
+//│ Elab: { λx@3, y@4. +#3(x@3#0, y@4#0)‹›‹›(40‹›, 2‹›)‹› }‹›
 //│ Type: Int
 
 :e
 114 + "514"
-//│ Elab: { +#4(114‹›, "514"‹›)‹›‹› }‹›
+//│ Elab: { +#4(114‹›, "514"‹›)‹› }‹›
 //│ ╔══[ERROR] Cannot solve Str ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: Int
 
 
 inc(42)
-//│ Elab: { inc#0(42‹›)‹›‹› }‹›
+//│ Elab: { inc#0(42‹›)‹› }‹›
 //│ Type: Int
 
 let x = 42 in x
@@ -67,12 +67,12 @@ let x = 42 in x
 //│ Type: Int
 
 let x = 1 in let y = 2 in x + y
-//│ Elab: { { let x@2 = 1‹›; { let y@3 = 2‹›; +#5(x@2#0, y@3#0)‹›‹› }‹› }‹› }‹›
+//│ Elab: { { let x@2 = 1‹›; { let y@3 = 2‹›; +#5(x@2#0, y@3#0)‹› }‹› }‹› }‹›
 //│ Type: Int
 
 :e
 let x = 0 in x + "1"
-//│ Elab: { { let x@2 = 0‹›; +#6(x@2#0, "1"‹›)‹›‹› }‹› }‹›
+//│ Elab: { { let x@2 = 0‹›; +#6(x@2#0, "1"‹›)‹› }‹› }‹›
 //│ ╔══[ERROR] Cannot solve Str ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: Int
@@ -146,12 +146,12 @@ let t = new Some(true) in t.Some#value
 
 
 class Printer[T](f: T -> Str)
-//│ Elab: { class Printer[in T@2](f@3: (T@2#0)‹› -> class:Str#0‹›) { }‹›; }‹›
+//│ Elab: { class Printer[in T@2](f@3: T@2#0 -> class:Str#0‹›) { }‹›; }‹›
 //│ Type: ⊤
 
 fun foofoo(x) =
   let t = x + 1 in "foo"
-//│ Elab: { fun foofoo(x@2) = { let t@3 = +#7(x@2#0, 1‹›)‹›‹›; "foo"‹› }‹›; }‹›
+//│ Elab: { fun foofoo(x@2) = { let t@3 = +#7(x@2#0, 1‹›)‹›; "foo"‹› }‹›; }‹›
 //│ Type: ⊤
 
 new Printer(foofoo)
@@ -159,22 +159,22 @@ new Printer(foofoo)
 //│ Type: Printer[in Int out ⊥]
 
 let ip = new Printer(foofoo) in ip.Printer#f(42)
-//│ Elab: { { let ip@2 = new class:Printer(Ref(foofoo))‹›; ip@2#0.class:Printer#0#f‹›(42‹›)‹›‹› }‹› }‹›
+//│ Elab: { { let ip@2 = new class:Printer(Ref(foofoo))‹›; ip@2#0.class:Printer#0#f‹›(42‹›)‹› }‹› }‹›
 //│ Type: Str
 
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
-//│ Elab: { { let ip@2 = new class:Printer(Ref(foofoo))‹›; ip@2#0.class:Printer#1#f‹›("42"‹›)‹›‹› }‹› }‹›
+//│ Elab: { { let ip@2 = new class:Printer(Ref(foofoo))‹›; ip@2#0.class:Printer#1#f‹›("42"‹›)‹› }‹› }‹›
 //│ ╔══[ERROR] Cannot solve Str ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: Str
 
 class TFun[T](f: T -> T)
-//│ Elab: { class TFun[in out T@2](f@3: (T@2#0)‹› -> T@2#1‹›) { }‹›; }‹›
+//│ Elab: { class TFun[in out T@2](f@3: T@2#0 -> T@2#1‹›) { }‹›; }‹›
 //│ Type: ⊤
 
 fun inc(x) = x + 1
-//│ Elab: { fun inc(x@2) = +#8(x@2#0, 1‹›)‹›‹›; }‹›
+//│ Elab: { fun inc(x@2) = +#8(x@2#0, 1‹›)‹›; }‹›
 //│ Type: ⊤
 
 new TFun(inc)
@@ -182,12 +182,12 @@ new TFun(inc)
 //│ Type: TFun[Int]
 
 let tf = new TFun(inc) in tf.TFun#f(1)
-//│ Elab: { { let tf@2 = new class:TFun(Ref(inc))‹›; tf@2#0.class:TFun#0#f‹›(1‹›)‹›‹› }‹› }‹›
+//│ Elab: { { let tf@2 = new class:TFun(Ref(inc))‹›; tf@2#0.class:TFun#0#f‹›(1‹›)‹› }‹› }‹›
 //│ Type: Int
 
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
-//│ Elab: { { let tf@2 = new class:TFun(Ref(inc))‹›; tf@2#0.class:TFun#1#f‹›("1"‹›)‹›‹› }‹› }‹›
+//│ Elab: { { let tf@2 = new class:TFun(Ref(inc))‹›; tf@2#0.class:TFun#1#f‹›("1"‹›)‹› }‹› }‹›
 //│ ╔══[ERROR] Cannot solve Str ∧ ⊤ ∧ ¬⊥
 //│ ╙──
 //│ Type: Int
@@ -225,12 +225,12 @@ test
 //│ Type: (¬Int ∨ Int) ->{⊥} Int
 
 test(1)
-//│ Elab: { test#1(1‹›)‹›‹› }‹›
+//│ Elab: { test#1(1‹›)‹› }‹›
 //│ Type: Int
 
 
 test("1")
-//│ Elab: { test#2("1"‹›)‹›‹› }‹›
+//│ Elab: { test#2("1"‹›)‹› }‹›
 //│ Type: Int
 
 
@@ -244,7 +244,7 @@ fact
 //│ Type: Int ->{⊥} Int
 
 fact(1)
-//│ Elab: { fact#2(1‹›)‹›‹› }‹›
+//│ Elab: { fact#2(1‹›)‹› }‹›
 //│ Type: Int
 
 
@@ -259,5 +259,5 @@ fact2
 //│ Type: Int ->{⊥} Int
 
 fact2(0)
-//│ Elab: { fact2#2(0‹›)‹›‹› }‹›
+//│ Elab: { fact2#2(0‹›)‹› }‹›
 //│ Type: Int

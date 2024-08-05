@@ -50,7 +50,7 @@ enum Term extends Statement with Located:
     s
   
   def describe: Str = ???
-  def children: Ls[Located] = ???
+  def children: Ls[Located] = subTerms // TODO more precise (include located things that aren't terms)
 import Term.*
 
 sealed trait Statement extends Located:
@@ -96,10 +96,13 @@ sealed trait Statement extends Located:
   def showPlain: Str = this match
     case Lit(lit) => lit.idStr
     case r @ Ref(symbol) => symbol.toString+"#"+r.refNum
-    case App(lhs, tup: Tup) => s"${lhs.showDbg}${tup.showDbg}"
+    case App(lhs, tup: Tup) => s"${lhs.showDbg}(${tup.fields.map(_.showDbg).mkString(", ")})"
     case App(lhs, rhs) => s"${lhs.showDbg}(...${rhs.showDbg})"
-    case FunTy(lhs: Tup, rhs, eff) => s"${lhs.showDbg} ->${eff.map(e => s"{${e.showDbg}}").getOrElse("")} ${rhs.showDbg}"
-    case FunTy(lhs, rhs, eff) => s"(...${lhs.showDbg}) ->${eff.map(e => s"{${e.showDbg}}").getOrElse("")} ${rhs.showDbg}"
+    case FunTy(lhs: Tup, rhs, eff) =>
+      s"${lhs.fields.map(_.showDbg).mkString(", ")} ->${
+        eff.map(e => s"{${e.showDbg}}").getOrElse("")} ${rhs.showDbg}"
+    case FunTy(lhs, rhs, eff) =>
+      s"(...${lhs.showDbg}) ->${eff.map(e => s"{${e.showDbg}}").getOrElse("")} ${rhs.showDbg}"
     case TyApp(lhs, targs) => s"${lhs.showDbg}[${targs.mkString(", ")}]"
     case Forall(tvs, body) => s"forall ${tvs.mkString(", ")}: ${body.toString}"
     case WildcardTy(in, out) => s"in ${in.map(_.toString).getOrElse("⊥")} out ${out.map(_.toString).getOrElse("⊤")}"
@@ -121,7 +124,7 @@ sealed trait Statement extends Located:
     case Deref(term) => s"!$term"
     case CompType(lhs, rhs, pol) => s"${lhs.showDbg} ${if pol then "|" else "&"} ${rhs.showDbg}"
     case Error => "<error>"
-    case Tup(fields) => fields.map(_.showDbg).mkString("(", ", ", ")")
+    case Tup(fields) => fields.map(_.showDbg).mkString("[", ", ", "]")
     case TermDefinition(k, sym, ps, sign, body, res) => s"${k.str} ${sym}${
       ps.fold("")(_.map(_.showDbg).mkString("(", ", ", ")"))
     }${sign.fold("")(": "+_.showDbg)}${

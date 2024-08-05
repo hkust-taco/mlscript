@@ -58,6 +58,19 @@ class Elaborator(raise: Raise):
           Term.WildcardTy(S(term(arg1)), S(term(arg2)))
         case arg => term(arg)
       })
+    case InfixApp(TyTup(tvs), Keyword.`->`, body) =>
+      val boundVars = mutable.HashMap.empty[Str, VarSymbol]
+      val bds = tvs.collect:
+        case Tree.Ident(nme) =>
+          val sym = VarSymbol(nme, nextUid)
+          sym.decl = S(TyParam(FldFlags.empty, sym))
+          boundVars += nme -> sym
+          sym          
+      if bds.length != tvs.length then
+        raise(ErrorReport(msg"Illegal forall annotation." -> tree.toLoc :: Nil))
+        Term.Error
+      else
+        Term.Forall(bds, term(body)(using ctx.copy(locals = ctx.locals ++ boundVars)))
     case InfixApp(lhs, Keyword.`->`, Effectful(eff, rhs)) =>
       Term.FunTy(term(lhs), term(rhs), S(term(eff)))
     case InfixApp(lhs, Keyword.`->`, rhs) =>
@@ -90,19 +103,6 @@ class Elaborator(raise: Raise):
       case _ =>
         raise(ErrorReport(msg"Illegal new expression." -> tree.toLoc :: Nil))
         Term.Error
-    case Forall(tvs, body) =>
-      val boundVars = mutable.HashMap.empty[Str, VarSymbol]
-      val bds = tvs.collect:
-        case Tree.Ident(nme) =>
-          val sym = VarSymbol(nme, nextUid)
-          sym.decl = S(TyParam(FldFlags.empty, sym))
-          boundVars += nme -> sym
-          sym          
-      if bds.length != tvs.length then
-        raise(ErrorReport(msg"Illegal forall annotation." -> tree.toLoc :: Nil))
-        Term.Error
-      else
-        Term.Forall(bds, term(body)(using ctx.copy(locals = ctx.locals ++ boundVars)))
     case IfElse(InfixApp(InfixApp(scrutinee, Keyword.`is`, Ident(cls)), Keyword.`then`, cons), alts) =>
       ctx.members.get(cls) match
         case S(sym: ClassSymbol) =>
@@ -276,13 +276,15 @@ class Elaborator(raise: Raise):
       case (result: Tree) :: Nil =>
         val res = term(result)
         (Term.Blk(acc.reverse, res), ctx)
+      case (st: Tree) :: sts =>
+        val res = term(st) // TODO reject plain term statements? Currently, `(1, 2)` is allowed to elaborate (tho it should be rejected in type checking later)
+        go(sts, res :: acc)
     sts match
       case (_: TermDef | _: TypeDef) :: _ => go(sts, Nil)
       // case s :: Nil => (term(s), ctx)
       case _ => go(sts, Nil)
   
   def params(t: Tree): Ctxl[(Ls[Param], Ctx)] = t match
-    case Tup(App(Ident(","), list) :: Nil) => params(list)
     case Tup(ps) =>
       val res = ps.flatMap:
         case id: Ident =>
