@@ -227,11 +227,13 @@ class BBTyper(tl: TraceLogger):
     case PolyFunType(args, ret, eff) =>
       PolyFunType(args.map(extrude(_)(using ctx, !pol)), extrude(ret), solver.extrude(eff)(using ctx.lvl, pol))
 
-  private def constrain(lhs: Type, rhs: Type)(using ctx: Ctx): Unit =
+  private def constrain(lhs: Type, rhs: Type)(using ctx: Ctx, cctx: CCtx): Unit =
     solver.constrain(lhs, rhs)
 
   // TODO: content type
-  private def typeCode(code: Term)(using ctx: Ctx): (Type, Type, Type) = code match
+  private def typeCode(code: Term)(using ctx: Ctx): (Type, Type, Type) =
+    given CCtx = CCtx.init(code, N)
+    code match
     case Lit(lit) => ((lit match
       case _: IntLit => Ctx.intTy
       case _: DecLit => Ctx.numTy
@@ -313,10 +315,11 @@ class BBTyper(tl: TraceLogger):
         val funTy = freshVar
         pctx += sym -> funTy // for recursive types
         val (res, _) = typeCheck(lam)
+        given CCtx = CCtx.init(lam, N)
         constrain(monoOrErr(res, lam), funTy)(using ctx)
     case _ => error(msg"Can not define function ${sym.nme}" -> lam.toLoc :: Nil)
 
-  private def typeSplit(split: TermSplit, sign: Opt[GeneralType])(using ctx: Ctx): (GeneralType, Type) = split match
+  private def typeSplit(split: TermSplit, sign: Opt[GeneralType])(using ctx: Ctx)(using CCtx): (GeneralType, Type) = split match
     case Split.Cons(TermBranch.Boolean(cond, Split.Else(cons)), alts) => // * boolean condition
       val (condTy, condEff) = typeCheck(cond)
       val (consTy, consEff) = sign match
@@ -356,6 +359,7 @@ class BBTyper(tl: TraceLogger):
   // * Note: currently, the returned type is not used or useful, but it could be in the future
   private def ascribe(lhs: Term, rhs: GeneralType)(using ctx: Ctx): (GeneralType, Type) =
   trace[(GeneralType, Type)](s"${ctx.lvl}. Ascribing ${lhs.showDbg} : ${rhs}", res => s": ${res._2}"):
+    given CCtx = CCtx.init(lhs, S(rhs))
     (lhs, rhs) match
     case (Term.Lam(params, body), ft @ PolyFunType(args, ret, eff)) => // * annoted functions
       if params.length != args.length then
@@ -397,7 +401,7 @@ class BBTyper(tl: TraceLogger):
       (rhs, eff)
 
   // TODO: t -> loc when toLoc is implemented
-  private def app(lhs: (GeneralType, Type), rhs: Ls[Fld], t: Term)(using ctx: Ctx): (GeneralType, Type) = lhs match
+  private def app(lhs: (GeneralType, Type), rhs: Ls[Fld], t: Term)(using ctx: Ctx)(using CCtx): (GeneralType, Type) = lhs match
     case (PolyFunType(params, ret, eff), lhsEff) =>
       // * if the function type is known, we can directly use it
       if params.length != rhs.length
@@ -435,6 +439,7 @@ class BBTyper(tl: TraceLogger):
   
   private def typeCheck(t: Term)(using ctx: Ctx): (GeneralType, Type) =
   trace[(GeneralType, Type)](s"${ctx.lvl}. Typing ${t.showDbg}", res => s": $res"):
+    given CCtx = CCtx.init(t, N)
     t match
       case Ref(sym: VarSymbol) =>
         ctx.get(sym) match
@@ -576,5 +581,6 @@ class BBTyper(tl: TraceLogger):
 
   def typePurely(t: Term)(using Ctx): GeneralType =
     val (ty, eff) = typeCheck(t)
+    given CCtx = CCtx.init(t, N)
     constrain(eff, allocSkolem)
     ty

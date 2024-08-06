@@ -43,8 +43,11 @@ g(foo)
 :e
 y `=> (let t = run(x `=> x `+ y) in y)
 //│ Elab: { code"λy@2. ${{ let t@3 = run#0(code"λx@5. ${code"+#2(${x@5#0}‹›, ${y@2#0}‹›)‹›"‹›}‹›‹›"‹›)‹›; y@2#1 }‹›}‹›‹›"‹› }‹›
-//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
-//│ ╙──
+//│ ╔══[ERROR] Type error in term Quoted(Lam(List(Param(‹›,x@5,None)),Unquoted(Quoted(App(Ref(+),Tup(List(Fld(‹›,Unquoted(Ref(x@5)),None), Fld(‹›,Unquoted(Ref(y@2)),None)))))))) with expected type CodeBase[out α23_3, ⊥, ?]
+//│ ╟── because: cannot constrain  CodeBase[out α24_5 ->{⊥} α31_5, out α33_4, ?]  <:  CodeBase[out α23_3, ⊥, ?]
+//│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ α33_4) ∨ ⊥  <:  ⊥ ∨ ⊥
+//│ ╟── because: cannot constrain  α33_4  <:  ⊥
+//│ ╙── because: cannot constrain  <α>22_3  <:  ⊥
 //│ Type: CodeBase[out α21_3 ->{⊥} α21_3, ⊥, ?]
 //│ Where:
 //│   α21_3 <: Int

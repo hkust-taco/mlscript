@@ -24,8 +24,11 @@ r
 let r = region x in x.ref 42
 !r
 //│ Elab: { let r@2 = region x in (x@3#0).ref 42‹›‹›‹›; !Ref(r@2)‹› }‹›
-//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
-//│ ╙──
+//│ ╔══[ERROR] Type error in term Blk(List(LetBinding(Var(r@2),Region(x@3,RegRef(Ref(x@3),Lit(IntLit(42)))))),Deref(Ref(r@2)))
+//│ ╟── because: cannot constrain  (α17_1 ∨ α15_1) ∨ <α>0_0  <:  <α>0_0
+//│ ╟── because: cannot constrain  α17_1  <:  <α>0_0
+//│ ╟── because: cannot constrain  α16_1  <:  <α>0_0
+//│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
 //│ Type: Int
 
 fun mkRef() = region x in x.ref 42
@@ -36,10 +39,15 @@ mkRef
 :e
 let t = region x in x in t.ref 42
 //│ Elab: { { let t@2 = region x in x@3#0‹›; (t@2#0).ref 42‹›‹› }‹› }‹›
-//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
-//│ ╙──
-//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
-//│ ╙──
+//│ ╔══[ERROR] Type error in term RegRef(Ref(t@2),Lit(IntLit(42)))
+//│ ╟── because: cannot constrain  Region[?]  <:  Region[α26_1]
+//│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥  <:  ((⊤ ∧ ⊤) ∧ α26_1) ∨ ⊥
+//│ ╟── because: cannot constrain  ⊤  <:  α26_1
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
+//│ ╔══[ERROR] Type error in term Blk(List(),Blk(List(LetBinding(Var(t@2),Region(x@3,Ref(x@3)))),RegRef(Ref(t@2),Lit(IntLit(42)))))
+//│ ╟── because: cannot constrain  (α26_1 ∨ α25_1) ∨ <α>0_0  <:  <α>0_0
+//│ ╟── because: cannot constrain  α26_1  <:  <α>0_0
+//│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
 //│ Type: Ref[Int, ?]
 
 
@@ -53,8 +61,11 @@ let t = region x in
   x.ref 42
 in t := 0
 //│ Elab: { { let t@2 = region x in (x@3#0).ref 42‹›‹›‹›; t@2#0 := 0‹›‹› }‹› }‹›
-//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
-//│ ╙──
+//│ ╔══[ERROR] Type error in term Blk(List(),Blk(List(LetBinding(Var(t@2),Region(x@3,RegRef(Ref(x@3),Lit(IntLit(42)))))),Set(Ref(t@2),Lit(IntLit(0)))))
+//│ ╟── because: cannot constrain  (α35_1 ∨ α33_1) ∨ <α>0_0  <:  <α>0_0
+//│ ╟── because: cannot constrain  α35_1  <:  <α>0_0
+//│ ╟── because: cannot constrain  α34_1  <:  <α>0_0
+//│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
 //│ Type: Int
 
 
@@ -68,8 +79,11 @@ let t = region x in
   x.ref 42
 in !t
 //│ Elab: { { let t@2 = region x in (x@3#0).ref 42‹›‹›‹›; !Ref(t@2)‹› }‹› }‹›
-//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
-//│ ╙──
+//│ ╔══[ERROR] Type error in term Blk(List(),Blk(List(LetBinding(Var(t@2),Region(x@3,RegRef(Ref(x@3),Lit(IntLit(42)))))),Deref(Ref(t@2))))
+//│ ╟── because: cannot constrain  (α46_1 ∨ α44_1) ∨ <α>0_0  <:  <α>0_0
+//│ ╟── because: cannot constrain  α46_1  <:  <α>0_0
+//│ ╟── because: cannot constrain  α45_1  <:  <α>0_0
+//│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
 //│ Type: Int
 
 region x in
@@ -82,16 +96,17 @@ fun rid: [A] -> A -> A
 fun rid(x) =
   let t = (region y in 42) in x
 //│ Elab: { fun rid: forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)‹›; fun rid(x@4): forall A@8: FunTy(Tup(List(Fld(‹›,Ref(A@8),None))),Ref(A@8),None)‹› = { let t@5 = region y in 42‹›‹›; x@4#0 }‹›; }‹›
-//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
-//│ ╙──
+//│ ╔══[ERROR] Type error in term Lam(List(Param(‹›,x@4,None)),Blk(List(LetBinding(Var(t@5),Region(y@6,Lit(IntLit(42))))),Ref(x@4))) with expected type (<α>56_2) ->{⊥} <α>56_2
+//│ ╙── because: cannot constrain  α58_2 ∨ <α>0_0  <:  ⊥
 //│ Type: ⊤
 
 :e
 region x in
   (let dz = x.ref 42 in 42): [A] -> Int
 //│ Elab: { region x in Blk(List(LetBinding(Var(dz@3),RegRef(Ref(x@2),Lit(IntLit(42))))),Lit(IntLit(42))): Forall(List(A@4),Ref(class:Int))‹›‹› }‹›
-//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
-//│ ╙──
+//│ ╔══[ERROR] Type error in term Blk(List(LetBinding(Var(dz@3),RegRef(Ref(x@2),Lit(IntLit(42))))),Lit(IntLit(42))) with expected type forall α60_3: Int
+//│ ╟── because: cannot constrain  α61_3  <:  ⊥
+//│ ╙── because: cannot constrain  <α>59_2  <:  ⊥
 //│ Type: forall α60_3: Int
 
 
@@ -101,8 +116,10 @@ let t =
     y => x.ref y
   in t(42)
 //│ Elab: { { let t@2 = region x in λy@4. (x@3#0).ref y@4#0‹›‹›‹›; t@2#0(42‹›)‹› }‹› }‹›
-//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
-//│ ╙──
+//│ ╔══[ERROR] Type error in term Blk(List(),Blk(List(LetBinding(Var(t@2),Region(x@3,Lam(List(Param(‹›,y@4,None)),RegRef(Ref(x@3),Ref(y@4)))))),App(Ref(t@2),Tup(List(Fld(‹›,Lit(IntLit(42)),None))))))
+//│ ╟── because: cannot constrain  (α71_1 ∨ α66_1) ∨ <α>0_0  <:  <α>0_0
+//│ ╟── because: cannot constrain  α71_1  <:  <α>0_0
+//│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
 //│ Type: Ref[in α68_1 out α68_1 ∨ Int, ?]
 
 fun foo: [A] -> Int ->{A | Alloc} Int

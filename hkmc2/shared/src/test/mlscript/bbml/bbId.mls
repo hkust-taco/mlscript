@@ -35,8 +35,13 @@ fun id(x) = x
 :e
 id : [A] -> A -> A
 //│ Elab: { Ref(id): Forall(List(A@2),FunTy(Tup(List(Fld(‹›,Ref(A@2),None))),Ref(A@2),None))‹› }‹›
-//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
-//│ ╙──
+//│ ╔══[ERROR] Type error in term Ref(id) with expected type (<α>9_2) ->{⊥} <α>9_2
+//│ ╟── because: cannot constrain  α7_1  <:  <α>9_2 ->{⊥} <α>9_2
+//│ ╟── because: cannot constrain  α7_1  <:  (⊤ ∧ ⊤) ->{⊥ ∨ ⊥} ⊥
+//│ ╟── because: cannot constrain  (((⊤ ∧ ⊤) ∧ α8_1) ∨ ⊥) ->{⊥ ∨ ⊥} (((⊤ ∧ ⊤) ∧ α8_1) ∨ ⊥)  <:  (⊤ ∧ ⊤) ->{⊥ ∨ ⊥} ⊥
+//│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ α8_1) ∨ ⊥  <:  ⊥ ∨ ⊥
+//│ ╟── because: cannot constrain  α8_1  <:  ⊥
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: forall α9_2: (α9_2) ->{⊥} α9_2
 
 
@@ -48,8 +53,12 @@ id : [A] -> A -> A
 fun id(x) = x
 (y => id(y)) : [A] -> A -> A
 //│ Elab: { fun id(x@2) = x@2#0; Lam(List(Param(‹›,y@4,None)),App(Ref(id),Tup(List(Fld(‹›,Ref(y@4),None))))): Forall(List(A@6),FunTy(Tup(List(Fld(‹›,Ref(A@6),None))),Ref(A@6),None))‹› }‹›
-//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
-//│ ╙──
+//│ ╔══[ERROR] Type error in term Lam(List(Param(‹›,y@4,None)),App(Ref(id),Tup(List(Fld(‹›,Ref(y@4),None))))) with expected type (<α>13_2) ->{⊥} <α>13_2
+//│ ╟── because: cannot constrain  α15_2  <:  <α>13_2
+//│ ╟── because: cannot constrain  α16_1  <:  <α>13_2
+//│ ╟── because: cannot constrain  α16_1  <:  ⊥
+//│ ╟── because: cannot constrain  α12_1  <:  ⊥
+//│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: forall α13_2: (α13_2) ->{⊥} α13_2
 
 

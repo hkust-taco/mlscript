@@ -53,8 +53,8 @@ x => x
 :e
 114 + "514"
 //│ Elab: { +#4(114‹›, "514"‹›)‹› }‹›
-//│ ╔══[ERROR] Cannot solve Str ∧ ⊤ ∧ ¬⊥
-//│ ╙──
+//│ ╔══[ERROR] Type error in term Lit(StrLit(514)) with expected type Int
+//│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Int
 
 
@@ -73,8 +73,8 @@ let x = 1 in let y = 2 in x + y
 :e
 let x = 0 in x + "1"
 //│ Elab: { { let x@2 = 0‹›; +#6(x@2#0, "1"‹›)‹› }‹› }‹›
-//│ ╔══[ERROR] Cannot solve Str ∧ ⊤ ∧ ¬⊥
-//│ ╙──
+//│ ╔══[ERROR] Type error in term Lit(StrLit(1)) with expected type Int
+//│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Int
 
 class Foo(x: Int)
@@ -114,8 +114,8 @@ new Point(0.0, 0.0, 0.0)
 :e
 new Foo("1!5!")
 //│ Elab: { new class:Foo(Lit(StrLit(1!5!)))‹› }‹›
-//│ ╔══[ERROR] Cannot solve Str ∧ ⊤ ∧ ¬⊥
-//│ ╙──
+//│ ╔══[ERROR] Type error in term Lit(StrLit(1!5!)) with expected type Int
+//│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Foo
 
 
@@ -165,8 +165,11 @@ let ip = new Printer(foofoo) in ip.Printer#f(42)
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ Elab: { { let ip@2 = new class:Printer(Ref(foofoo))‹›; ip@2#0.class:Printer#1#f‹›("42"‹›)‹› }‹› }‹›
-//│ ╔══[ERROR] Cannot solve Str ∧ ⊤ ∧ ¬⊥
-//│ ╙──
+//│ ╔══[ERROR] Type error in term Lit(StrLit(42)) with expected type α33_1
+//│ ╟── because: cannot constrain  Str  <:  α33_1
+//│ ╟── because: cannot constrain  Str  <:  α31_1
+//│ ╟── because: cannot constrain  Str  <:  α24_1
+//│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Str
 
 class TFun[T](f: T -> T)
@@ -188,8 +191,11 @@ let tf = new TFun(inc) in tf.TFun#f(1)
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
 //│ Elab: { { let tf@2 = new class:TFun(Ref(inc))‹›; tf@2#0.class:TFun#1#f‹›("1"‹›)‹› }‹› }‹›
-//│ ╔══[ERROR] Cannot solve Str ∧ ⊤ ∧ ¬⊥
-//│ ╙──
+//│ ╔══[ERROR] Type error in term Lit(StrLit(1)) with expected type α45_1
+//│ ╟── because: cannot constrain  Str  <:  α45_1
+//│ ╟── because: cannot constrain  Str  <:  α43_1
+//│ ╟── because: cannot constrain  Str  <:  α36_1
+//│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Int
 
 class Pair[A, B](fst: A, snd: B)

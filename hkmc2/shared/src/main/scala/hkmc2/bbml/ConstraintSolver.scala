@@ -7,11 +7,33 @@ import semantics.*
 import Message.MessageContext
 import mlscript.utils.*, shorthands.*
 
+// * TODO use mutabnle cache instead for correct asymptotic complexity
+type Cache = Set[(Type, Type)]
+
+case class CCtx(cache: Cache, parents: Ls[(Type, Type)], origin: Term, exp: Opt[GeneralType]):
+  def err(using Raise) =
+    raise(ErrorReport(
+      msg"Type error in term ${origin.toString}${exp match
+          case S(ty) => msg" with expected type ${ty.toString}"
+          case N => msg""
+        }" -> origin.toLoc
+      :: parents.reverse.map(p =>
+        msg"because: cannot constrain  ${p._1.toString}  <:  ${p._2.toString}" -> N
+      )
+    ))
+  def nest(sub: (Type, Type)): CCtx =
+    copy(cache = cache + sub, parents = parents match
+      case `sub` :: _ => parents
+      case _ =>  sub :: parents
+    )
+object CCtx:
+  inline def init(origin: Term, exp: Opt[GeneralType]) = CCtx(Set.empty, Nil, origin, exp)
+def cctx(using CCtx): CCtx = summon
+
 class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
   import tl.{trace, log}
 
   import hkmc2.bbml.NormalForm.*
-  type Cache = Set[(Type, Type)]
 
   // TODO: cache x-fresh
   private def freshXVar(lvl: Int): InfVar = InfVar(lvl, infVarState.nextUid, new VarState(), false)
@@ -41,7 +63,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
     case NegType(ty) => Type.mkNegType(extrude(ty)(using lvl, !pol))
     case Top | Bot => ty
 
-  private def constrainConj(conj: Conj)(using cache: Cache)(using Ctx): Unit = trace(s"Constraining $conj"):
+  private def constrainConj(conj: Conj)(using Ctx, CCtx): Unit = trace(s"Constraining $conj"):
     conj match
       case Conj(i, u, (v, pol) :: tail) =>
         var rest = Conj(i, u, tail)
@@ -52,16 +74,18 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
           if pol then
             val nc = Type.mkNegType(bd)
             log(s"New bound: $v <: $nc")
-            given Cache = cache + (v -> nc)
-            v.state.upperBounds ::= nc
-            v.state.lowerBounds.foreach(lb => constrainImpl(lb, nc))
+            cctx.nest(v -> nc) in:
+              v.state.upperBounds ::= nc
+              v.state.lowerBounds.foreach(lb => constrainImpl(lb, nc))
           else
             log(s"New bound: $v :> $bd")
-            given Cache = cache + (bd -> v)
-            v.state.lowerBounds ::= bd
-            v.state.upperBounds.foreach(ub => constrainImpl(bd, ub))
+            cctx.nest(bd -> v) in:
+              v.state.lowerBounds ::= bd
+              v.state.upperBounds.foreach(ub => constrainImpl(bd, ub))
       case Conj(i, u, Nil) => (conj.i, conj.u) match
-        case (_, Union(N, Nil)) => raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} ∧ ¬⊥" -> N :: Nil))
+        case (_, Union(N, Nil)) =>
+          // raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} ∧ ¬⊥" -> N :: Nil))
+          cctx.err
         case (Inter(S(NormalClassType(cls1, targs1))), Union(f, NormalClassType(cls2, targs2) :: rest)) =>
           if cls1.uid == cls2.uid then
             targs1.zip(targs2).foreach {
@@ -73,21 +97,26 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
         case (int: Inter, Union(f, _ :: rest)) => constrainConj(Conj(int, Union(f, rest), Nil))
         case (Inter(S(NormalFunType(args1, ret1, eff1))), Union(S(NormalFunType(args2, ret2, eff2)), Nil)) =>
           if args1.length != args2.length then
-            raise(ErrorReport(msg"Cannot constrain ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
+            // raise(ErrorReport(msg"Cannot constrain ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
+            cctx.err
           else
             args1.zip(args2).foreach {
               case (a1, a2) => constrainImpl(a2, a1)
             }
             constrainImpl(ret1, ret2)
             constrainImpl(eff1, eff2)
-        case _ => raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
+        case _ =>
+          // raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
+          cctx.err
 
-  private def constrainDNF(disj: Disj)(using cache: Cache)(using Ctx): Unit =
+  private def constrainDNF(disj: Disj)(using Ctx, CCtx): Unit =
     disj.conjs.foreach(constrainConj(_))
 
-  private def constrainImpl(lhs: Type, rhs: Type)(using cache: Cache)(using Ctx) =
-    if cache((lhs, rhs)) then log(s"Cached!")
+  private def constrainImpl(lhs: Type, rhs: Type)(using Ctx, CCtx) =
+    if cctx.cache((lhs, rhs)) then log(s"Cached!")
     else trace(s"CONSTRAINT $lhs <: $rhs"):
-      constrainDNF(dnf(lhs & rhs.!)(using raise)) // TODO: inline skolem bounds
-  def constrain(lhs: Type, rhs: Type)(using Ctx): Unit =
-    constrainImpl(lhs, rhs)(using Set.empty)
+      cctx.nest(lhs -> rhs) in:
+        constrainDNF(dnf(lhs & rhs.!)(using raise)) // TODO: inline skolem bounds
+  def constrain(lhs: Type, rhs: Type)(using Ctx, CCtx): Unit =
+    constrainImpl(lhs, rhs)
+

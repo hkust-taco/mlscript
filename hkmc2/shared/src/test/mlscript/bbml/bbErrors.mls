@@ -1,0 +1,19 @@
+:global
+:bbml
+:e
+
+
+2(2)
+//│ Elab: { 2‹›(2‹›)‹› }‹›
+//│ ╔══[ERROR] Type error in term App(Lit(IntLit(2)),Tup(List(Fld(‹›,Lit(IntLit(2)),None))))
+//│ ╙── because: cannot constrain  Int  <:  Int ->{α1_1} α2_1
+//│ Type: ⊥
+
+(x => x(0))(1)
+//│ Elab: { λx@3. x@3#0(0‹›)‹›‹›(1‹›)‹› }‹›
+//│ ╔══[ERROR] Type error in term Lit(IntLit(1)) with expected type α3_1
+//│ ╟── because: cannot constrain  Int  <:  α3_1
+//│ ╙── because: cannot constrain  Int  <:  (((Int ∧ ⊤) ∧ ⊤) ∨ ⊥) ->{((⊤ ∧ ⊤) ∧ α4_1) ∨ ⊥} (((⊤ ∧ ⊤) ∧ α5_1) ∨ ⊥)
+//│ Type: ⊥
+
+
