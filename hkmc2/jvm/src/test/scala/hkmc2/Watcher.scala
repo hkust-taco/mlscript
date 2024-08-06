@@ -10,8 +10,8 @@ import io.methvin.watcher.hashing.{FileHash, FileHasher}
 import java.time.LocalDateTime
 import java.time.temporal._
 
-// Note: when SBT's `fork` is set to `false`, the path should be `File("hkmc2/shared/")` instead...
-object MainWatcher extends Watcher(File("../shared/")):
+// Note: when SBT's `fork` is set to `false`, the path should be `File("hkmc2/")` instead...
+object MainWatcher extends Watcher(File("../")):
   def main(args: Array[String]): Unit = run
 
 class Watcher(dir: File):

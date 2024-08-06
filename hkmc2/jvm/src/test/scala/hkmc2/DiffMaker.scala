@@ -4,6 +4,7 @@ import scala.collection.mutable
 import mlscript.utils.*, shorthands.*
 import hkmc2.semantics.Elaborator
 import hkmc2.bbml.*
+import hkmc2.syntax.Keyword.all
 
 
 class Outputter(val out: java.io.PrintWriter):
@@ -78,7 +79,7 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
   val showParse = NullaryCommand("p")
   val parseOnly = NullaryCommand("parseOnly")
   
-  val bbml = NullaryCommand("bbml")
+  val bbmlOpt = NullaryCommand("bbml")
   
   
   val tests = Command("tests"){ case "" =>
@@ -136,6 +137,8 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
         output("/!!!\\ Uncaught error during Predef import: " + err)
         ctx
       
+  
+  lazy val bbCtx = bbml.Ctx.init(_ => die, curCtx.members)
   
   val tl = new TraceLogger:
     override def doTrace = debug.isSet
@@ -241,9 +244,10 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
           val (e, newCtx) = elab.topLevel(res)
           curCtx = newCtx
           output(s"Elab: ${e.showDbg}")
-          if bbml.isSet then
+          if bbmlOpt.isSet then
             if bbmlTyper.isEmpty then
-              bbmlTyper = S(BBTyper(raise, Ctx.init(curCtx.members), tl))
+              bbmlTyper = S(BBTyper(tl))
+            given hkmc2.bbml.Ctx = bbCtx.copy(raise = raise)
             val typer = bbmlTyper.get
             val ty = typer.typePurely(e)
             val printer = PrettyPrinter((msg: String) => output(msg))

@@ -13,6 +13,7 @@ import Tree.*
 object InfVarUid extends Uid.Handler[InfVar]
 
 final case class Ctx(
+  raise: Raise,
   parent: Option[Ctx],
   lvl: Int,
   clsDefs: HashMap[Str, ClassDef],
@@ -27,8 +28,10 @@ final case class Ctx(
     env += p._1.uid -> Ctx.varTy(p._2, p._3)(using this)
     quoteSkolemEnv += p._1.uid -> p._3
   def getSk(sym: Symbol): Option[Type] = quoteSkolemEnv.get(sym.uid) orElse parent.dlof(_.getSk(sym))(None)
-  def nest: Ctx = Ctx(Some(this), lvl, HashMap.empty, HashMap.empty, quoteSkolemEnv)
-  def nextLevel: Ctx = Ctx(Some(this), lvl + 1, HashMap.empty, HashMap.empty, quoteSkolemEnv)
+  def nest: Ctx = Ctx(raise, Some(this), lvl, HashMap.empty, HashMap.empty, quoteSkolemEnv)
+  def nextLevel: Ctx = Ctx(raise, Some(this), lvl + 1, HashMap.empty, HashMap.empty, quoteSkolemEnv)
+
+given (using ctx: Ctx): Raise = ctx.raise
 
 object Ctx:
   def intTy(using ctx: Ctx): Type = ClassType(ctx.getDef("Int").get.sym, Nil)
@@ -77,27 +80,23 @@ object Ctx:
     "log" -> ((ctx: Ctx) => FunType(strTy(using ctx) :: Nil, Top, Bot)),
   )
   def isOp(name: Str): Bool = builtinOps.contains(name)
-  def init(predefs: Map[Str, Symbol]): Ctx =
-    val ctx = new Ctx(None, 1, HashMap.empty, HashMap.empty, HashMap.empty)
-    builtinClasses.foreach(
-      cls =>
-        predefs.get(cls) match
-          case Some(cls: ClassSymbol) => ctx *= ClassDef.Plain(cls, Nil, ObjBody(Term.Blk(Nil, Term.Lit(Tree.UnitLit(true)))), None)
-          case _ => ???
-    )
-    (builtinOps ++ builtinVals).foreach(
-      p =>
-        predefs.get(p._1) match
-          case Some(v: Symbol) => ctx += v -> p._2(ctx)
-          case _ => ???
-    )
+  def init(raise: Raise, predefs: Map[Str, Symbol]): Ctx =
+    val ctx = new Ctx(raise, None, 1, HashMap.empty, HashMap.empty, HashMap.empty)
+    builtinClasses.foreach: cls =>
+      predefs.get(cls) match
+        case Some(cls: ClassSymbol) => ctx *= ClassDef.Plain(cls, Nil, ObjBody(Term.Blk(Nil, Term.Lit(Tree.UnitLit(true)))), None)
+        case _ => ???
+    (builtinOps ++ builtinVals).foreach: p =>
+      predefs.get(p._1) match
+        case Some(v: Symbol) => ctx += v -> p._2(ctx)
+        case _ => ???
     ctx
 
-class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
+class BBTyper(tl: TraceLogger):
   import tl.{trace, log}
   
   private val infVarState = new InfVarUid.State()
-  private val solver = new ConstraintSolver(raise, infVarState, tl)
+  private val solver = new ConstraintSolver(infVarState, tl)
 
   private def freshSkolem(using ctx: Ctx): InfVar = InfVar(ctx.lvl, infVarState.nextUid, new VarState(), true)
   private def freshVar(using ctx: Ctx): InfVar = InfVar(ctx.lvl, infVarState.nextUid, new VarState(), false)
@@ -105,7 +104,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
 
   private val allocSkolem: InfVar = InfVar(0, infVarState.nextUid, new VarState(), true)
 
-  private def error(msg: Ls[Message -> Opt[Loc]]) =
+  private def error(msg: Ls[Message -> Opt[Loc]])(using Ctx) =
     raise(ErrorReport(msg))
     Bot // TODO: error type?
 
@@ -354,7 +353,10 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
       case S(sign) => ascribe(alts, sign)
       case _=> typeCheck(alts)
 
-  private def ascribe(lhs: Term, rhs: GeneralType)(using ctx: Ctx): (GeneralType, Type) = (lhs, rhs) match
+  // * Note: currently, the returned type is not used or useful, but it could be in the future
+  private def ascribe(lhs: Term, rhs: GeneralType)(using ctx: Ctx): (GeneralType, Type) =
+  trace[(GeneralType, Type)](s"${ctx.lvl}. Ascribing ${lhs.showDbg} : ${rhs}", res => s": ${res._2}"):
+    (lhs, rhs) match
     case (Term.Lam(params, body), ft @ PolyFunType(args, ret, eff)) => // * annoted functions
       if params.length != args.length then
          (error(msg"Cannot type function ${lhs.toString} as ${rhs.toString}" -> lhs.toLoc :: Nil), Bot)
@@ -374,8 +376,8 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
           (ft, Bot)
     case (Term.Lam(params, body), ft @ FunType(args, ret, eff)) => ascribe(lhs, PolyFunType(args, ret, eff))
     case (term, pt @ PolyType(tvs, body)) => // * generalize
-      val nestCtx = ctx.nextLevel
-      given Ctx = nestCtx
+      val nextCtx = ctx.nextLevel
+      given Ctx = nextCtx
       constrain(ascribe(term, skolemize(tvs, body))._2, Bot) // * never generalize terms with effects
       (pt, Bot)
     case (Term.Blk(LetBinding(Pattern.Var(sym), rhs) :: Nil, body), ty) => // * propagate
@@ -396,17 +398,17 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
 
   // TODO: t -> loc when toLoc is implemented
   private def app(lhs: (GeneralType, Type), rhs: Ls[Fld], t: Term)(using ctx: Ctx): (GeneralType, Type) = lhs match
-    case (PolyFunType(args, ret, eff), lhsEff) => // * if the function type is known, we can directly use it
-      if args.length != rhs.length then
-        (error(msg"The number of parameters is incorrect" -> t.toLoc :: Nil), Bot)
+    case (PolyFunType(params, ret, eff), lhsEff) =>
+      // * if the function type is known, we can directly use it
+      if params.length != rhs.length
+      then (error(msg"Incorrect number of arguments" -> t.toLoc :: Nil), Bot)
       else
-        val (argTy, argEff) = rhs.zip(args).flatMap{
-          case (f, t) =>
-            val (ty, eff) = ascribe(f.value, t)
-            Left(ty) :: Right(eff) :: Nil
-          }.partitionMap(x => x)
-        (ret, argEff.foldLeft[Type](eff | lhsEff)((res, e) => res | e))
-    case (FunType(args, ret, eff), lhsEff) => app((PolyFunType(args, ret, eff), lhsEff), rhs, t)
+        var resEff: Type = lhsEff | eff
+        rhs.lazyZip(params).foreach: (f, t) =>
+          val (ty, ef) = ascribe(f.value, t)
+          resEff |= ef
+        (ret, resEff)
+    case (FunType(params, ret, eff), lhsEff) => app((PolyFunType(params, ret, eff), lhsEff), rhs, t)
     case (ty: PolyType, eff) => app((instantiate(ty), eff), rhs, t)
     case (funTy, lhsEff) =>
       val (argTy, argEff) = rhs.flatMap(f =>
@@ -422,15 +424,17 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
       }, retVar, effVar))
       (retVar, argEff.foldLeft[Type](effVar | lhsEff)((res, e) => res | e))
 
-  private def skolemize(tv: Ls[InfVar], body: GeneralType) =
-    val bds = tv.map(v => (v.uid, InfVar(v.vlvl, v.uid, v.state, true))).toMap
+  private def skolemize(tv: Ls[InfVar], body: GeneralType)(using ctx: Ctx) =
+    // * Note that by this point, the state is supposed to be frozen/treated as immutable
+    val bds = tv.map(v => (v.uid, InfVar(ctx.lvl, v.uid, v.state, true))).toMap
     body.subst(using bds)
 
   // TODO: implement toLoc
-  private def monoOrErr(ty: GeneralType, sc: Located) =
+  private def monoOrErr(ty: GeneralType, sc: Located)(using Ctx) =
     ty.monoOr(error(msg"General type is not allowed here." -> sc.toLoc :: Nil))
   
-  private def typeCheck(t: Term)(using ctx: Ctx): (GeneralType, Type) = trace[(GeneralType, Type)](s"Typing ${t.showDbg}", res => s": $res"):
+  private def typeCheck(t: Term)(using ctx: Ctx): (GeneralType, Type) =
+  trace[(GeneralType, Type)](s"${ctx.lvl}. Typing ${t.showDbg}", res => s": $res"):
     t match
       case Ref(sym: VarSymbol) =>
         ctx.get(sym) match
@@ -500,8 +504,9 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
           case S(ClassDef.Plain(_, tparams, _, _)) => ??? // TODO
           case N => 
             (error(msg"Definition not found: ${cls.nme}" -> t.toLoc :: Nil), Bot)
-      case Term.App(lhs, Term.Tup(rhs)) => typeCheck(lhs) match
-        case (funTy, lhsEff) => app((funTy, lhsEff), rhs, t)
+      case Term.App(lhs, Term.Tup(rhs)) =>
+        val (funTy, lhsEff) = typeCheck(lhs)
+        app((funTy, lhsEff), rhs, t)
       case Term.New(cls, args) =>
         ctx.getDef(cls.nme) match
           case S(ClassDef.Parameterized(_, tparams, params, _, _)) =>
@@ -569,7 +574,7 @@ class BBTyper(raise: Raise, val initCtx: Ctx, tl: TraceLogger):
       case _ =>
         (error(msg"Term shape not yet supported by BbML: ${t.toString}" -> t.toLoc :: Nil), Bot)
 
-  def typePurely(t: Term): GeneralType =
-    val (ty, eff) = typeCheck(t)(using initCtx)
-    constrain(eff, allocSkolem)(using initCtx)
+  def typePurely(t: Term)(using Ctx): GeneralType =
+    val (ty, eff) = typeCheck(t)
+    constrain(eff, allocSkolem)
     ty

@@ -8,6 +8,7 @@ import math.Ordered.orderingToOrdered
 
 
 type Raise = Diagnostic => Unit
+def raise(using r: Raise): Raise = r
 
 
 trait TypeLike:

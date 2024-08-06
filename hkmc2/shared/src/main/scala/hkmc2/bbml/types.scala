@@ -125,11 +125,16 @@ case class ClassType(name: ClassSymbol, targs: Ls[TypeArg]) extends Type:
         case Wildcard(in, out) => Wildcard(in.subst, out.subst)
         case ty: Type => ty.subst
       })
+
 final case class InfVar(vlvl: Int, uid: Uid[InfVar], state: VarState, isSkolem: Bool) extends Type:
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = map.get(uid).getOrElse(this)
+
+given Ordering[InfVar] = Ordering.by(_.uid)
+
 case class FunType(args: Ls[Type], ret: Type, eff: Type) extends Type:
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
     FunType(args.map(_.subst), ret.subst, eff.subst)
+
 case class ComposedType(lhs: Type, rhs: Type, pol: Bool) extends Type: // * Positive -> union
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType =
     Type.mkComposedType(lhs.subst, rhs.subst, pol)
@@ -139,8 +144,10 @@ case class ComposedType(lhs: Type, rhs: Type, pol: Bool) extends Type: // * Posi
 final case class NegType(ty: Type) extends Type:
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = NegType(ty.subst)
   override lazy val simp: Type = ty.simp.!
+
 object Top extends Type:
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = Top
+
 object Bot extends Type:
   override def subst(using map: Map[Uid[InfVar], InfVar]): ThisType = Bot
 

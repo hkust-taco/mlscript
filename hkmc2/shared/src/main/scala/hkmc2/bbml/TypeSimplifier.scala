@@ -131,11 +131,11 @@ class TypeSimplifier(tl: TraceLogger):
     Analysis.varSubst.valuesIterator.foreach { Analysis.getRepr(_) }
     // log("Unif-pst: " + Analysis.varSubst)
     
-    log("Occ#: " + Analysis.occsNum)
-    log("Pos: " + Analysis.posVars)
-    log("Neg: " + Analysis.negVars)
-    log("Rec: " + Analysis.recVars)
-    log("Unif: " + Analysis.varSubst)
+    log("Occ#: " + Analysis.occsNum.toSortedMap)
+    log("Pos: " + Analysis.posVars.toSortedSet)
+    log("Neg: " + Analysis.negVars.toSortedSet)
+    log("Rec: " + Analysis.recVars.toSortedSet)
+    log("Unif: " + Analysis.varSubst.toSortedMap)
     
     val cache: MutMap[IV, Type] = MutMap.empty
     val traversed: MutSet[IV] = MutSet.empty

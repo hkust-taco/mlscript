@@ -7,7 +7,7 @@ import semantics.*
 import Message.MessageContext
 import mlscript.utils.*, shorthands.*
 
-class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogger):
+class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
   import tl.{trace, log}
 
   import hkmc2.bbml.NormalForm.*
@@ -41,7 +41,7 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogg
     case NegType(ty) => Type.mkNegType(extrude(ty)(using lvl, !pol))
     case Top | Bot => ty
 
-  private def constrainConj(conj: Conj)(using cache: Cache): Unit = trace(s"Constraining $conj"):
+  private def constrainConj(conj: Conj)(using cache: Cache)(using Ctx): Unit = trace(s"Constraining $conj"):
     conj match
       case Conj(i, u, (v, pol) :: tail) =>
         var rest = Conj(i, u, tail)
@@ -82,11 +82,12 @@ class ConstraintSolver(raise: Raise, infVarState: InfVarUid.State, tl: TraceLogg
             constrainImpl(eff1, eff2)
         case _ => raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
 
-  private def constrainDNF(disj: Disj)(using cache: Cache): Unit = disj.conjs.foreach(constrainConj(_))
+  private def constrainDNF(disj: Disj)(using cache: Cache)(using Ctx): Unit =
+    disj.conjs.foreach(constrainConj(_))
 
-  private def constrainImpl(lhs: Type, rhs: Type)(using cache: Cache) =
+  private def constrainImpl(lhs: Type, rhs: Type)(using cache: Cache)(using Ctx) =
     if cache((lhs, rhs)) then log(s"Cached!")
     else trace(s"CONSTRAINT $lhs <: $rhs"):
       constrainDNF(dnf(lhs & rhs.!)(using raise)) // TODO: inline skolem bounds
-  def constrain(lhs: Type, rhs: Type): Unit =
+  def constrain(lhs: Type, rhs: Type)(using Ctx): Unit =
     constrainImpl(lhs, rhs)(using Set.empty)

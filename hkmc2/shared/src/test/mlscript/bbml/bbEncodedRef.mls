@@ -1,0 +1,95 @@
+:global
+:bbml
+
+
+
+fun letreg: [E,Res] -> ([R] -> Region[R] ->{E | R} Res) ->{E} Res
+//│ Elab: { fun letreg: forall E@3, Res@4: FunTy(Tup(List(Fld(‹›,Forall(List(R@5),FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:Region),List(Ref(R@5))),None))),Ref(Res@4),Some(CompType(Ref(E@3),Ref(R@5),true)))),None))),Ref(Res@4),Some(Ref(E@3)))‹›; }‹›
+//│ Type: ⊤
+
+letreg
+//│ Elab: { letreg#0 }‹›
+//│ Type: forall α1_2, α2_2: (forall α3_3: (Region[α3_3]) ->{α1_2 ∨ α3_3} α2_2) ->{α1_2} α2_2
+
+letreg(r => r)
+//│ Elab: { letreg#1(λr@3. r@3#0‹›)‹› }‹›
+//│ Type: Region[?]
+
+:e
+letreg(r => r).ref 1
+//│ Elab: { (letreg#2(λr@3. r@3#0‹›)‹›).ref 1‹›‹› }‹›
+//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
+//│ ╙──
+//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
+//│ ╙──
+//│ Type: Ref[Int, ?]
+
+letreg(r => r.ref 1)
+//│ Elab: { letreg#3(λr@3. (r@3#0).ref 1‹›‹›‹›)‹› }‹›
+//│ Type: Ref[Int, ?]
+
+letreg(r => !(r.ref 1))
+//│ Elab: { letreg#4(λr@3. !RegRef(Ref(r@3),Lit(IntLit(1)))‹›‹›)‹› }‹›
+//│ Type: Int
+
+:e
+!letreg(r => r.ref 1)
+//│ Elab: { !Ref(letreg)‹›(λr@3. (r@3#0).ref 1‹›‹›‹›)‹› }‹›
+//│ ╔══[ERROR] General type is not allowed here.
+//│ ╙──
+//│ Type: ⊥
+
+:fixme
+letreg of r =>
+  let x = ref 1
+  x := !x + 1
+  !x
+//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found indented block instead
+//│ ║  l.44: 	  let x = ref 1
+//│ ╙──      	^^
+//│ Elab: { letreg#6(λr@3. <error>‹›‹›)‹› }‹›
+//│ Type: ⊥
+
+let f = letreg(r => arg => r.ref arg)
+//│ Elab: { let f@2 = letreg#7(λr@4. λarg@5. (r@4#0).ref arg@5#0‹›‹›‹›)‹›; }‹›
+//│ Type: ⊤
+
+:e
+f
+//│ Elab: { f@2#0 }‹›
+//│ ╔══[ERROR] Variable not found: f
+//│ ╙──
+//│ Type: ⊥
+
+:e
+letreg(r => arg => r.ref arg)(0)
+//│ Elab: { letreg#8(λr@4. λarg@5. (r@4#0).ref arg@5#0‹›‹›‹›)‹›(0‹›)‹› }‹›
+//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
+//│ ╙──
+//│ Type: Ref[in α40_1 out α40_1 ∨ Int, ?]
+
+
+
+// * An incorrect one, just for testing the error:
+
+fun letreg: [E,Res] -> ([R] -> Region[R] -> Res) ->{E} Res
+//│ Elab: { fun letreg: forall E@3, Res@4: FunTy(Tup(List(Fld(‹›,Forall(List(R@5),FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:Region),List(Ref(R@5))),None))),Ref(Res@4),None)),None))),Ref(Res@4),Some(Ref(E@3)))‹›; }‹›
+//│ Type: ⊤
+
+:e
+letreg(r => r.ref 1)
+//│ Elab: { letreg#0(λr@3. (r@3#0).ref 1‹›‹›‹›)‹› }‹›
+//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
+//│ ╙──
+//│ Type: Ref[Int, ?]
+
+:e
+letreg(r => !(r.ref 1))
+//│ Elab: { letreg#1(λr@3. !RegRef(Ref(r@3),Lit(IntLit(1)))‹›‹›)‹› }‹›
+//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
+//│ ╙──
+//│ ╔══[ERROR] Cannot solve ⊤ ∧ ⊤ ∧ ¬⊥
+//│ ╙──
+//│ Type: Int
+
+
