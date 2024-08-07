@@ -51,3 +51,49 @@ y `=> (let t = run(x `=> x `+ y) in y)
 //│ Type: CodeBase[out α21_3 ->{⊥} α21_3, ⊥, ?]
 //│ Where:
 //│   α21_3 <: Int
+
+class C[A](m: A, n: A -> Int)
+//│ Elab: { class C[in out A@2](m@3: A@2#0, n@4: A@2#1 -> class:Int#23‹›) { }‹›; }‹›
+//│ Type: ⊤
+
+
+fun f: [A] -> ([B] -> (C[out B] & A) -> B) -> A -> Int
+f
+//│ Elab: { fun f: forall A@3: FunTy(Tup(List(Fld(‹›,Forall(List(B@4),FunTy(Tup(List(Fld(‹›,CompType(TyApp(Ref(class:C),List(WildcardTy(None,Some(Ref(B@4))))),Ref(A@3),false),None))),Ref(B@4),None)),None))),FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(class:Int),None),None)‹›; f#0 }‹›
+//│ Type: forall α39_2: (forall α40_3: (C[out α40_3] ∧ α39_2) ->{⊥} α40_3) ->{⊥} (α39_2) ->{⊥} Int
+
+fun g: [D] -> C[in Int out D] -> D
+g
+//│ Elab: { fun g: forall D@3: FunTy(Tup(List(Fld(‹›,TyApp(Ref(class:C),List(WildcardTy(Some(Ref(class:Int)),Some(Ref(D@3))))),None))),Ref(D@3),None)‹›; g#0 }‹›
+//│ Type: forall α41_2: (C[in Int out α41_2]) ->{⊥} α41_2
+
+
+f(g)
+//│ Elab: { f#1(g#1)‹› }‹›
+//│ Type: (¬C[?] ∨ C[in Int out ⊥]) ->{⊥} Int
+
+fun foo: C[in Int out Nothing]
+foo
+//│ Elab: { fun foo: class:C#2[WildcardTy(Some(Ref(class:Int)),Some(Ref(class:Nothing)))]‹›; foo#0 }‹›
+//│ Type: C[in Int out ⊥]
+
+fun bar: C[in Int out Int]
+bar
+//│ Elab: { fun bar: class:C#3[WildcardTy(Some(Ref(class:Int)),Some(Ref(class:Int)))]‹›; bar#0 }‹›
+//│ Type: C[Int]
+
+f(g)(foo)
+//│ Elab: { f#2(g#2)‹›(foo#1)‹› }‹›
+//│ Type: Int
+
+:fixme // ???
+f(g)(bar)
+//│ Elab: { f#3(g#3)‹›(bar#1)‹› }‹›
+//│ ╔══[ERROR] Type error in term Ref(bar) with expected type α48_1
+//│ ╟── because: cannot constrain  C[Int]  <:  α48_1
+//│ ╟── because: cannot constrain  C[((Int ∧ ⊤) ∧ ⊤) ∨ ⊥]  <:  α48_1
+//│ ╟── because: cannot constrain  C[((Int ∧ ⊤) ∧ ⊤) ∨ ⊥]  <:  ¬C[in ⊥ ∨ ⊥ out ⊤ ∧ ⊤] ∨ C[in ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥ out (⊤ ∧ ⊤) ∧ α50_1]
+//│ ╟── because: cannot constrain  ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥  <:  ((⊤ ∧ ⊤) ∧ α50_1) ∨ ⊥
+//│ ╟── because: cannot constrain  Int  <:  α50_1
+//│ ╙── because: cannot constrain  Int  <:  ⊥
+//│ Type: Int

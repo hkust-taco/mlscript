@@ -82,6 +82,8 @@ class Elaborator(raise: Raise):
       Term.Asc(term(lhs), term(rhs))
     case App(Ident("|"), Tree.Tup(lhs :: rhs :: Nil)) =>
       Term.CompType(term(lhs), term(rhs), true)
+    case App(Ident("&"), Tree.Tup(lhs :: rhs :: Nil)) =>
+      Term.CompType(term(lhs), term(rhs), false)
     case App(Ident(":="), Tree.Tup(lhs :: rhs :: Nil)) =>
       Term.Set(term(lhs), term(rhs))
     case App(Ident("#"), Tree.Tup(Sel(pre, Ident(name)) :: Ident(proj) :: Nil)) =>
