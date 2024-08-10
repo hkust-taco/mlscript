@@ -9,6 +9,7 @@ import scala.collection.immutable._
 import scala.annotation._
 import shorthands._
 import scala.collection.mutable.ListBuffer
+import scala.util.boundary, boundary.break
 
 enum Stuck:
   case StuckExpr(expr: Expr, msg: Str)
@@ -102,12 +103,13 @@ class Interpreter(verbose: Bool):
         case Value.Class(cls2, xs) => L(StuckExpr(expr, s"unexpected class $cls2"))
         case x => L(StuckExpr(expr, s"unexpected value $x"))
       }
-    case BasicOp(name, args) =>
+    case BasicOp(name, args) => boundary:
       evalArgs(args).flatMap(
         xs => 
           name match
             case "+" | "-" | "*" | "/" | "==" | "!=" | "<=" | ">=" | "<" | ">" => 
-              if xs.length < 2 then return L(StuckExpr(expr, s"not enough arguments for basic operation $name"))
+              if xs.length < 2 then break:
+                L(StuckExpr(expr, s"not enough arguments for basic operation $name"))
               else eval(name, xs.head, xs.tail.head).toRight(StuckExpr(expr, s"unable to evaluate basic operation"))
             case _ => L(StuckExpr(expr, s"unexpected basic operation $name")))
     case AssignField(assignee, cls, field, value) =>
