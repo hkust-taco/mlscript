@@ -1,0 +1,25 @@
+:global
+:bbml
+
+
+class Option[A](inspect: [E, Res] -> (() ->{E} Res, A ->{E} Res) ->{E} Res)
+//│ Type: ⊤
+
+opt => opt.Option#inspect
+//│ Type: (Option[out α3_1]) ->{⊥} forall α4_2, α5_2: (() ->{α4_2} α5_2, (α3_1) ->{α4_2} α5_2) ->{α4_2} α5_2
+
+opt => opt.Option#inspect(
+  () => 42
+  n => n + 1
+)
+//│ Type: (Option[out Int]) ->{⊥} Int
+
+opt => opt.Option#inspect of () => 42, n => n + 1
+//│ Type: (Option[out Int]) ->{⊥} Int
+
+opt => opt.Option#inspect of
+  () => 42
+  n => n + 1
+//│ Type: (Option[out Int]) ->{⊥} Int
+
+

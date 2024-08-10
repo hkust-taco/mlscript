@@ -91,6 +91,8 @@ class Elaborator(raise: Raise):
       Term.Set(term(lhs), term(rhs))
     case App(Ident("#"), Tree.Tup(Sel(pre, Ident(name)) :: Ident(proj) :: Nil)) =>
       Term.SelProj(term(pre), term(Ident(name)), Ident(proj))
+    case App(Ident("#"), Tree.Tup(Sel(pre, Ident(name)) :: App(Ident(proj), args) :: Nil)) =>
+      term(App(App(Ident("#"), Tree.Tup(Sel(pre, Ident(name)) :: Ident(proj) :: Nil)), args))
     case App(Ident("!"), Tree.Tup(rhs :: Nil)) =>
       Term.Deref(term(rhs))
     case App(Ident("~"), Tree.Tup(rhs :: Nil)) =>
