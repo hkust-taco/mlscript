@@ -15,6 +15,8 @@ jobs:
       - uses: rrbutani/use-nix-shell-action@v1
         with:
           devShell: .#default
+      - name: Install TypeScript
+        run: npm ci
       - name: Run test
         run: sbt -J-Xmx4096M -J-Xss4M test
       - name: Check no changes
