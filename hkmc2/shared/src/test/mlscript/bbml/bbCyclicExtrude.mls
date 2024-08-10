@@ -14,31 +14,27 @@ let foo = f => (x => f(x(x)) : [A] -> A -> A) in foo
 //│ Where:
 //│   α5_1 <: α5_1 ->{⊥} α9_1
 
-:fixme // extrusion of cyclic bounds
-f => (let g = x => x(x) in let tmp = g(g) in f(g)) : [A] -> A -> A
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
-
 f => (let g = x => x(x) in f(g(g))) : [A] -> A -> A
-//│ Type: (⊥ ->{⊥} (⊤ ->{⊥} ⊥)) ->{⊥} forall α1184_2: (α1184_2) ->{⊥} α1184_2
+//│ Type: (⊥ ->{⊥} (⊤ ->{⊥} ⊥)) ->{⊥} forall α17_2: (α17_2) ->{⊥} α17_2
 
 :e
 f => (let g = x => f(x(x)) in g) : [A] -> A -> A
-//│ ╔══[ERROR] Type error in term g@3#0 with expected type (<α>1194_2) ->{⊥} <α>1194_2
-//│ ╟── because: cannot constrain  α1195_2 ->{α1198_2 ∨ α1196_2} α1199_2  <:  <α>1194_2 ->{⊥} <α>1194_2
-//│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ <α>1194_2) ∨ ⊥  <:  ((⊤ ∧ ⊤) ∧ α1195_2) ∨ ⊥
-//│ ╟── because: cannot constrain  <α>1194_2  <:  α1195_2
-//│ ╙── because: cannot constrain  <α>1194_2  <:  (((⊤ ∧ ⊤) ∧ α1195_2) ∨ ⊥) ->{((⊤ ∧ ⊤) ∧ α1196_2) ∨ ⊥} (((⊤ ∧ ⊤) ∧ α1197_2) ∨ ⊥)
-//│ Type: (⊥ ->{⊥} ⊥) ->{⊥} forall α1194_2: (α1194_2) ->{⊥} α1194_2
+//│ ╔══[ERROR] Type error in term g@3#0 with expected type (<α>27_2) ->{⊥} <α>27_2
+//│ ╟── because: cannot constrain  α28_2 ->{α31_2 ∨ α29_2} α32_2  <:  <α>27_2 ->{⊥} <α>27_2
+//│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ <α>27_2) ∨ ⊥  <:  ((⊤ ∧ ⊤) ∧ α28_2) ∨ ⊥
+//│ ╟── because: cannot constrain  <α>27_2  <:  α28_2
+//│ ╙── because: cannot constrain  <α>27_2  <:  (((⊤ ∧ ⊤) ∧ α28_2) ∨ ⊥) ->{((⊤ ∧ ⊤) ∧ α29_2) ∨ ⊥} (((⊤ ∧ ⊤) ∧ α30_2) ∨ ⊥)
+//│ Type: (⊥ ->{⊥} ⊥) ->{⊥} forall α27_2: (α27_2) ->{⊥} α27_2
 
 f => (x => f(x(x)) : [A] -> A -> A)
-//│ Type: (α1208_1 ->{⊥} (⊤ ->{⊥} ⊥)) ->{⊥} (α1204_1 ->{⊥} α1208_1) ->{⊥} forall α1205_2: (α1205_2) ->{⊥} α1205_2
+//│ Type: (α41_1 ->{⊥} (⊤ ->{⊥} ⊥)) ->{⊥} (α37_1 ->{⊥} α41_1) ->{⊥} forall α38_2: (α38_2) ->{⊥} α38_2
 //│ Where:
-//│   α1204_1 <: α1204_1 ->{⊥} α1208_1
+//│   α37_1 <: α37_1 ->{⊥} α41_1
 
 let foo = f => (f(x => x(x)) : [A] -> A -> A) in foo
-//│ Type: (((α1222_1 ->{α1225_1} α1224_1) ->{α1225_1} α1224_1) ->{⊥} (⊤ ->{⊥} ⊥)) ->{⊥} forall α1216_2: (α1216_2) ->{⊥} α1216_2
+//│ Type: (((α55_1 ->{α58_1} α57_1) ->{α58_1} α57_1) ->{⊥} (⊤ ->{⊥} ⊥)) ->{⊥} forall α49_2: (α49_2) ->{⊥} α49_2
 //│ Where:
-//│   α1222_1 <: α1222_1 ->{α1225_1} α1224_1
+//│   α55_1 <: α55_1 ->{α58_1} α57_1
 
 :todo
 let foo(f) = (f(x => x(x)) : [A] -> A -> A) in foo
@@ -50,5 +46,8 @@ fun foo(f) = (f(x => x(x)) : [A] -> A -> A)
 //│ ╙──
 //│ Type: ⊤
 
+:fixme // extrusion of cyclic bounds
+f => (let g = x => x(x) in let tmp = g(g) in f(g)) : [A] -> A -> A
+//│ /!!!\ Uncaught error: java.lang.StackOverflowError
 
 
