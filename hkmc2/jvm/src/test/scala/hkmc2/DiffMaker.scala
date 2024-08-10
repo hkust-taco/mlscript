@@ -254,7 +254,7 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
           given Elaborator.Ctx = curCtx
           val (e, newCtx) = elab.topLevel(res)
           curCtx = newCtx
-          if showParse.isSet || debug.isSet then
+          if showElab.isSet || debug.isSet then
             output(s"Elab: ${e.showDbg}")
           if bbmlOpt.isSet then
             if bbmlTyper.isEmpty then

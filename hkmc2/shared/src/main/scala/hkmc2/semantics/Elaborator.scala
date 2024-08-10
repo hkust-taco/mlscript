@@ -25,6 +25,9 @@ class Elaborator(raise: Raise):
 
   // * Ref allocation skolem UID, preserved
   private val allocSkolemUID = nextUid
+  private val allocSkolemSym = VarSymbol("Alloc", allocSkolemUID)
+  private val allocSkolemDef = TyParam(FldFlags.empty, allocSkolemSym)
+  allocSkolemSym.decl = S(allocSkolemDef)
   
   def term(tree: Tree): Ctxl[Term] = tree match
     case Block(s :: Nil) =>
@@ -40,7 +43,7 @@ class Elaborator(raise: Raise):
       Term.Blk(List(LetBinding(pat, r)), b)
     case Ident("true") => Term.Lit(Tree.BoolLit(true))
     case Ident("false") => Term.Lit(Tree.BoolLit(false))
-    case Ident("Alloc") => Term.Ref(VarSymbol("Alloc", allocSkolemUID))(1)
+    case Ident("Alloc") => Term.Ref(allocSkolemSym)(1)
     case Ident(name) =>
       ctx.locals.get(name) match
         case S(sym) => sym.ref
@@ -376,7 +379,9 @@ class Elaborator(raise: Raise):
             if pol =/= S(false) && ty.isContravariant then
               changed = true
               ty.isContravariant = false
-          case _ => ???
+          // case _ => ???
+          case N =>
+            lastWords(s"VarSymbol ${sym.name} has no declaration")
       case _ => super.traverseType(pol)(trm)
   abstract class Traverser:
     def traverseType(pol: Pol)(trm: Term): Unit = trm match
