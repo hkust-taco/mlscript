@@ -88,6 +88,10 @@ class Elaborator(raise: Raise):
       Term.Set(term(lhs), term(rhs))
     case App(Ident("#"), Tree.Tup(Sel(pre, Ident(name)) :: Ident(proj) :: Nil)) =>
       Term.SelProj(term(pre), term(Ident(name)), Ident(proj))
+    case App(Ident("!"), Tree.Tup(rhs :: Nil)) =>
+      Term.Deref(term(rhs))
+    case App(Ident("~"), Tree.Tup(rhs :: Nil)) =>
+      term(rhs)
     case App(lhs, rhs) =>
       val sym = FlowSymbol("‹app-res›", nextUid)
       Term.App(term(lhs), term(rhs))(sym)
@@ -141,7 +145,6 @@ class Elaborator(raise: Raise):
       val nestCtx = ctx.copy(locals = ctx.locals ++ Ls(name -> sym))
       Term.Region(sym, term(body)(using nestCtx))
     case Tree.RegRef(reg, value) => Term.RegRef(term(reg), term(value))
-    case Tree.Deref(ref) => Term.Deref(term(ref))
     case Empty() =>
       raise(ErrorReport(msg"A term was expected in this position, but no term was found." -> tree.toLoc :: Nil))
       Term.Error

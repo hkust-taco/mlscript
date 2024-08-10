@@ -185,7 +185,7 @@ object ParseRule:
     Kw(`region`):
       ParseRule("`region` keyword"):
         Expr(
-          ParseRule("`region` variable"):
+          ParseRule("`region` declaration"):
             Kw(`in`):
               ParseRule("`in` keyword")(
                 Expr(ParseRule("'region' expression")(End(())))((body, _: Unit) => body),

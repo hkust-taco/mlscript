@@ -207,11 +207,11 @@ region x in
 region x in
   let r = x.ref 42 in let t = r := 0 in !r
 //│ Parsed:
-//│ 	Region(Ident(x),Block(List(Let(Ident(r),RegRef(Ident(x),IntLit(42)),Some(Let(Ident(t),App(Ident(:=),Tup(List(Ident(r), IntLit(0)))),Some(Deref(Ident(r)))))))))
+//│ 	Region(Ident(x),Block(List(Let(Ident(r),RegRef(Ident(x),IntLit(42)),Some(Let(Ident(t),App(Ident(:=),Tup(List(Ident(r), IntLit(0)))),Some(App(Ident(!),Tup(List(Ident(r)))))))))))
 
 !r + 1
 //│ Parsed:
-//│ 	App(Ident(+),Tup(List(Deref(Ident(r)), IntLit(1))))
+//│ 	App(Ident(+),Tup(List(App(Ident(!),Tup(List(Ident(r)))), IntLit(1))))
 
 Int ->{Any} Int
 //│ Parsed:
@@ -224,3 +224,5 @@ Int ->{Any} Int
 A | B
 //│ Parsed:
 //│ 	App(Ident(|),Tup(List(Ident(A), Ident(B))))
+
+

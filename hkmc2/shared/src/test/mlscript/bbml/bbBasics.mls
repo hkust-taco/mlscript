@@ -18,7 +18,8 @@ false
 //│ Type: ⊤
 
 fun id(x) = x
-//│ Type: ⊤
+id
+//│ Type: α2_1 ->{⊥} α2_1
 
 fun inc(x) = x + 1
 //│ Type: ⊤
@@ -66,7 +67,7 @@ class Foo(x: Int)
 :e
 new Nothingness(0)
 //│ ╔══[ERROR] Class Nothingness not found.
-//│ ║  l.67: 	new Nothingness(0)
+//│ ║  l.68: 	new Nothingness(0)
 //│ ╙──      	               ^^^
 //│ Type: ⊥
 

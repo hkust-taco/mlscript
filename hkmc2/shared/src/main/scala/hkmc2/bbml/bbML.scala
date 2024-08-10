@@ -179,6 +179,8 @@ class BBTyper(tl: TraceLogger):
         case t => typeMonoType(t)(using ctx)
       })
       case _ => error(msg"${lhs.toString} is not a class" -> ty.toLoc :: Nil)
+    case Neg(rhs) =>
+      typeMonoType(rhs).!
     case CompType(lhs, rhs, pol) =>
       Type.mkComposedType(typeMonoType(lhs), typeMonoType(rhs), pol)
     case _ => error(msg"${ty.toString} is not a valid type annotation" -> ty.toLoc :: Nil)

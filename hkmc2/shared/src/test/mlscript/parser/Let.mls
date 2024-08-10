@@ -135,18 +135,51 @@ let
 //│ 	Error()
 
 
-:fixme
 let x = 1 in
   x
 //│ Parsed:
 //│ 	Let(Ident(x),IntLit(1),Some(Ident(x)))
 
+x => let x = 1 in x
+//│ Parsed:
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Let(Ident(x),IntLit(1),Some(Ident(x))))
+
+x => let x = 1 in
+  x
+//│ Parsed:
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Let(Ident(x),IntLit(1),Some(Ident(x))))
+
+x => let x = 1
+  in x
+//│ Parsed:
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Let(Ident(x),IntLit(1),Some(Ident(x))))
+
+x =>
+  let x = 1
+  in x
+//│ Parsed:
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Block(List(Let(Ident(x),IntLit(1),Some(Ident(x))))))
+
+x =>
+  let x = 1
+  x
+//│ Parsed:
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Block(List(Let(Ident(x),IntLit(1),None), Ident(x))))
+
+:pe
+x => let x = 1
+  x
+//│ ╔══[PARSE ERROR] Unexpected identifier here
+//│ ║  l.171: 	  x
+//│ ╙──       	  ^
+//│ Parsed:
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Let(Ident(x),IntLit(1),None))
 
 
 :pe
 if
 //│ ╔══[PARSE ERROR] Expected expression after `if` keyword; found end of input instead
-//│ ║  l.147: 	if
+//│ ║  l.180: 	if
 //│ ╙──       	  ^
 //│ Parsed:
 //│ 	Error()

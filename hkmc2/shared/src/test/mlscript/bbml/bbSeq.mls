@@ -1,0 +1,76 @@
+:global
+:bbml
+
+
+
+class Seq[A, E](f: () ->{E} A)
+//│ Type: ⊤
+
+fun map: [A, B, E] -> Seq[out A, out E] -> (A ->{E} B) -> Seq[out B, out E]
+//│ Type: ⊤
+
+// * Note: equivalent assuming Seq is covariant:
+// fun map: [A, B, E, F] -> Seq[A, E] -> (A ->{F} B) -> Seq[B, E | F]
+
+map
+//│ Type: forall α1_2, α2_2, α3_2: (Seq[out α1_2, out α3_2]) ->{⊥} ((α1_2) ->{α3_2} α2_2) ->{⊥} Seq[out α2_2, out α3_2]
+
+
+// * Dummy implementation
+fun mapi: [A, E] -> Seq[out A, out E] -> ((Int, A) ->{E} A) -> Seq[out A, out E]
+fun mapi = s => f =>
+  map(s) of x => f(0, x)
+//│ Type: ⊤
+
+:fixme
+// * Dummy implementation
+fun mapi: [A, E] -> Seq[out A, out E] -> ((Int, A) ->{E} A) -> Seq[out A, out E]
+fun mapi = s => f =>
+  region r in
+    map(s) of x => f(0, x)
+//│ ╔══[ERROR] Type error in term λs@5. λf@6. region r in map#2(s@5#0)(λx@10. f@6#0(0, x@10#0)) with expected type (Seq[out <α>16_2, out <α>17_2]) ->{⊥} ((Int, <α>16_2) ->{<α>17_2} <α>16_2) ->{⊥} Seq[out <α>16_2, out <α>17_2]
+//│ ╟── because: cannot constrain  α18_2 ->{α28_2 ∨ <α>0_0} Seq[out α29_2, out α30_2]  <:  ((Int, <α>16_2) ->{<α>17_2} <α>16_2) ->{⊥} Seq[out <α>16_2, out <α>17_2]
+//│ ╙── because: cannot constrain  (((⊤ ∧ ⊤) ∧ α28_2) ∨ ((⊤ ∧ ⊤) ∧ <α>0_0)) ∨ ⊥  <:  ⊥ ∨ ⊥
+//│ Type: ⊤
+
+:fixme
+fun mapi: [A, E] -> Seq[out A, out E] -> ((Int, A) ->{E} A) -> Seq[out A, out E]
+fun mapi = s => f =>
+  region r in
+    let i = r.ref 0
+    map(s) of x =>
+      i := !i + 1
+      f(i, x)
+//│ ╔══[ERROR] Type error in term λs@5. λf@6. region r in { let i@8 = (r@7#0).ref 0; map#3(s@5#0)(λx@11. { i@8#0 := +#0(!Ref(i@8), 1); f@6#0(i@8#2, x@11#0) }) } with expected type (Seq[out <α>33_2, out <α>34_2]) ->{⊥} ((Int, <α>33_2) ->{<α>34_2} <α>33_2) ->{⊥} Seq[out <α>33_2, out <α>34_2]
+//│ ╟── because: cannot constrain  α35_2 ->{α50_2 ∨ <α>0_0} Seq[out α51_2, out α52_2]  <:  ((Int, <α>33_2) ->{<α>34_2} <α>33_2) ->{⊥} Seq[out <α>33_2, out <α>34_2]
+//│ ╟── because: cannot constrain  ((((((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, ((⊤ ∧ ⊤) ∧ <α>33_2) ∨ ⊥) ->{((⊤ ∧ ⊤) ∧ <α>34_2) ∨ ⊥} (((⊤ ∧ ⊤) ∧ <α>33_2) ∨ ⊥)) ∧ ⊤) ∧ ⊤) ∨ ⊥  <:  ((⊤ ∧ ⊤) ∧ α35_2) ∨ ⊥
+//│ ╟── because: cannot constrain  (((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, ((⊤ ∧ ⊤) ∧ <α>33_2) ∨ ⊥) ->{((⊤ ∧ ⊤) ∧ <α>34_2) ∨ ⊥} (((⊤ ∧ ⊤) ∧ <α>33_2) ∨ ⊥)  <:  α35_2
+//│ ╟── because: cannot constrain  (((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, ((⊤ ∧ ⊤) ∧ <α>33_2) ∨ ⊥) ->{((⊤ ∧ ⊤) ∧ <α>34_2) ∨ ⊥} (((⊤ ∧ ⊤) ∧ <α>33_2) ∨ ⊥)  <:  (Ref[((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out (⊤ ∧ ⊤) ∧ α46_2], (⊤ ∧ ⊤) ∧ α47_2) ->{(⊤ ∧ ⊤) ∧ α49_2} ((⊤ ∧ ⊤) ∧ α48_2)
+//│ ╙── because: cannot constrain  ((Ref[((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ α46_2) ∨ ⊥] ∧ ⊤) ∧ ⊤) ∨ ⊥  <:  ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥
+//│ ╔══[ERROR] Type error in term λs@5. λf@6. region r in { let i@8 = (r@7#0).ref 0; map#3(s@5#0)(λx@11. { i@8#0 := +#0(!Ref(i@8), 1); f@6#0(i@8#2, x@11#0) }) } with expected type (Seq[out <α>33_2, out <α>34_2]) ->{⊥} ((Int, <α>33_2) ->{<α>34_2} <α>33_2) ->{⊥} Seq[out <α>33_2, out <α>34_2]
+//│ ╟── because: cannot constrain  α35_2 ->{α50_2 ∨ <α>0_0} Seq[out α51_2, out α52_2]  <:  ((Int, <α>33_2) ->{<α>34_2} <α>33_2) ->{⊥} Seq[out <α>33_2, out <α>34_2]
+//│ ╟── because: cannot constrain  ((Seq[in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ α51_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ α52_2) ∨ ⊥] ∧ ⊤) ∧ ⊤) ∨ ⊥  <:  ((Seq[in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>33_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>34_2) ∨ ⊥] ∧ ⊤) ∧ ⊤) ∨ ⊥
+//│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ α52_2) ∨ ⊥  <:  ((⊤ ∧ ⊤) ∧ <α>34_2) ∨ ⊥
+//│ ╟── because: cannot constrain  α52_2  <:  <α>34_2
+//│ ╟── because: cannot constrain  α53_2  <:  <α>34_2
+//│ ╙── because: cannot constrain  ⊤  <:  <α>34_2
+//│ ╔══[ERROR] Type error in term λs@5. λf@6. region r in { let i@8 = (r@7#0).ref 0; map#3(s@5#0)(λx@11. { i@8#0 := +#0(!Ref(i@8), 1); f@6#0(i@8#2, x@11#0) }) } with expected type (Seq[out <α>33_2, out <α>34_2]) ->{⊥} ((Int, <α>33_2) ->{<α>34_2} <α>33_2) ->{⊥} Seq[out <α>33_2, out <α>34_2]
+//│ ╟── because: cannot constrain  α35_2 ->{α50_2 ∨ <α>0_0} Seq[out α51_2, out α52_2]  <:  ((Int, <α>33_2) ->{<α>34_2} <α>33_2) ->{⊥} Seq[out <α>33_2, out <α>34_2]
+//│ ╟── because: cannot constrain  ((Seq[in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ α51_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ α52_2) ∨ ⊥] ∧ ⊤) ∧ ⊤) ∨ ⊥  <:  ((Seq[in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>33_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>34_2) ∨ ⊥] ∧ ⊤) ∧ ⊤) ∨ ⊥
+//│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ α52_2) ∨ ⊥  <:  ((⊤ ∧ ⊤) ∧ <α>34_2) ∨ ⊥
+//│ ╟── because: cannot constrain  α52_2  <:  <α>34_2
+//│ ╟── because: cannot constrain  α54_2  <:  <α>34_2
+//│ ╙── because: cannot constrain  ⊤  <:  <α>34_2
+//│ ╔══[ERROR] Type error in term λs@5. λf@6. region r in { let i@8 = (r@7#0).ref 0; map#3(s@5#0)(λx@11. { i@8#0 := +#0(!Ref(i@8), 1); f@6#0(i@8#2, x@11#0) }) } with expected type (Seq[out <α>33_2, out <α>34_2]) ->{⊥} ((Int, <α>33_2) ->{<α>34_2} <α>33_2) ->{⊥} Seq[out <α>33_2, out <α>34_2]
+//│ ╟── because: cannot constrain  α35_2 ->{α50_2 ∨ <α>0_0} Seq[out α51_2, out α52_2]  <:  ((Int, <α>33_2) ->{<α>34_2} <α>33_2) ->{⊥} Seq[out <α>33_2, out <α>34_2]
+//│ ╙── because: cannot constrain  (((⊤ ∧ ⊤) ∧ α50_2) ∨ ((⊤ ∧ ⊤) ∧ <α>0_0)) ∨ ⊥  <:  ⊥ ∨ ⊥
+//│ Type: ⊤
+
+mapi
+//│ Type: forall α33_2, α34_2: (Seq[out α33_2, out α34_2]) ->{⊥} ((Int, α33_2) ->{α34_2} α33_2) ->{⊥} Seq[out α33_2, out α34_2]
+
+
+
+
+
+

@@ -35,9 +35,12 @@ letreg(r => !(r.ref 1))
 
 :e
 !letreg(r => r.ref 1)
-//│ ╔══[ERROR] General type is not allowed here.
-//│ ╙──
-//│ Type: ⊥
+//│ ╔══[ERROR] Type error in term { !App(Ref(letreg),Tup(List(Fld(‹›,Lam(List(Param(‹›,r@3,None)),RegRef(Ref(r@3),Lit(IntLit(1)))),None)))) }
+//│ ╟── because: cannot constrain  α22_1 ∨ α18_1  <:  <α>0_0
+//│ ╟── because: cannot constrain  α22_1  <:  <α>0_0
+//│ ╟── because: cannot constrain  α21_1  <:  <α>0_0
+//│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
+//│ Type: Int
 
 letreg of r =>
   let x = r.ref 1

@@ -10,13 +10,12 @@ f
 f((x => x), 42)
 //│ Type: Int
 
-:p
 f(x => x, 42)
-//│ |f|(|x| |=>| |x|,| |42|)|
-//│ Parsed:
-//│ 	App(Ident(f),Tup(List(InfixApp(Tup(List(Ident(x))),keyword '=>',Ident(x)), IntLit(42))))
-//│ Elab: { f#2(λx@3. x@3#0, 42) }
 //│ Type: Int
 
+
+fun id: [A] -> A -> A
+id(id) : [A] -> A -> A
+//│ Type: forall α13_2: (α13_2) ->{⊥} α13_2
 
 

@@ -25,6 +25,7 @@ enum Term extends Statement with Located:
   case SelProj(prefix: Term, cls: Term, proj: Tree.Ident)
   case Asc(term: Term, ty: Term)
   case CompType(lhs: Term, rhs: Term, pol: Bool)
+  case Neg(rhs: Term)
   case Region(name: VarSymbol, body: Term)
   case RegRef(reg: Term, value: Term)
   case Set(lhs: Term, rhs: Term)

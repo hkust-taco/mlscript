@@ -39,6 +39,7 @@ object Parser:
       "+ -",
       // "* / %",
       "* %",
+      "", // Precedence of prefix operators
       "", // Precedence of application
       ".",
     ).zipWithIndex.flatMap {
@@ -49,6 +50,7 @@ object Parser:
   private val CommaPrec = 0
   private val CommaPrecNext = CommaPrec + 1
   private val AppPrec = prec('.') - 1
+  private val PrefixOpsPrec = AppPrec - 1
   
   final def opCharPrec(opChar: Char): Int = prec(opChar)
   final def opPrec(opStr: Str): (Int, Int) = opStr match {
@@ -60,6 +62,7 @@ object Parser:
       val r = opStr.last
       (prec(opStr.head), prec(r) - (if r === '@' || r === '/' || r === ',' || r === ':' then 1 else 0))
   }
+  val prefixOps: Set[Str] = Set("!", "+", "-", "~", "@")
   
   object KEYWORD:
     def unapply(t: Token): Opt[Keyword] = t match
@@ -379,9 +382,6 @@ abstract class Parser(
   def simpleExpr(prec: Int)(using Line): Tree = wrap(prec)(simpleExprImpl(prec))
   def simpleExprImpl(prec: Int): Tree =
     yeetSpaces match
-    case (IDENT("!", _), loc) :: _ =>
-      consume
-      exprCont(Deref(simpleExprImpl(Int.MaxValue)), prec, allowNewlines = true) // TODO: the prec???
     case (IDENT(nme, sym), loc) :: _ =>
       Keyword.all.get(nme) match
         case S(kw) => // * Expressions starting with keywords should be handled in parseRule
@@ -390,7 +390,14 @@ abstract class Parser(
           errExpr
         case N =>
           consume
-          exprCont(Tree.Ident(nme), prec, allowNewlines = true)
+          if prefixOps.contains(nme)
+          then
+            yeetSpaces match
+              case Nil => Tree.Ident(nme)
+              case _ =>
+                val rhs = expr(PrefixOpsPrec)
+                exprCont(App(Tree.Ident(nme), PlainTup(rhs)), prec, allowNewlines = true)
+          else exprCont(Tree.Ident(nme), prec, allowNewlines = true)
     case (LITVAL(lit), loc) :: _ =>
       consume
       exprCont(lit.asTree, prec, allowNewlines = true)

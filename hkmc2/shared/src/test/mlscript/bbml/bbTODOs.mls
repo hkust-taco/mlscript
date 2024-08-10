@@ -1,0 +1,21 @@
+:global
+:bbml
+
+
+:todo
+let id: [A] -> A -> A = x => x
+//│ /!!!\ Uncaught error: scala.NotImplementedError: an implementation is missing
+
+:todo
+fun id[A](x: A) = x
+//│ /!!!\ Uncaught error: scala.MatchError: Some(App(App(Ident(id),TyTup(List(Ident(A)))),Tup(List(InfixApp(Ident(x),keyword ':',Ident(A)))))) (of class scala.Some)
+
+:fixme
+fun id: [A] -> A -> A => x = x
+//│ ╔══[ERROR] Name not found: x
+//│ ╙──
+//│ ╔══[ERROR] Name not found: x
+//│ ╙──
+//│ /!!!\ Uncaught error: scala.MatchError: Lam(List(Param(‹›,A@4,None)),Error) (of class hkmc2.semantics.Term$Lam)
+
+

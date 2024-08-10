@@ -1,0 +1,65 @@
+:global
+:bbml
+
+
+class Reg[Rg, Br]
+//│ Type: ⊤
+
+fun letreg: [E, Res] -> ([Rg] -> Reg[Rg, E] ->{E | Rg} Res) ->{E} Res
+//│ Type: ⊤
+
+fun subreg: [E, Rg, Br, Res] -> Reg[Rg, Br] -> ([Rg2] -> Reg[Rg2 & ~Rg, E] ->{E | Rg2} Res) ->{E} Res
+//│ Type: ⊤
+
+fun read: [Rg, Br] -> Reg[Rg, Br] ->{Br} Int
+fun write: [Rg, Br] -> Reg[Rg, Br] ->{Rg} Int
+//│ Type: ⊤
+
+
+fun borrow: [Rg, Br, Res] -> Reg[Rg, Br] ->{Rg} (() ->{Br} Res) ->{Br} Res
+//│ Type: ⊤
+
+letreg of r =>
+  read(r)
+  borrow(r) of () =>
+    read(r)
+  write(r)
+//│ Type: Int
+
+:e
+letreg of r =>
+  read(r)
+  borrow(r) of () =>
+    write(r)
+    read(r)
+  write(r)
+//│ ╔══[ERROR] Type error in term { letreg#1(λr@3. { read#2(r@3#0); borrow#1(r@3#1)(λ. { write#1(r@3#2); read#3(r@3#3) }); write#2(r@3#4) }) }
+//│ ╟── because: cannot constrain  α27_1  <:  <α>0_0
+//│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
+//│ Type: Int
+
+
+fun borrow: [Rg, Br, Res] -> Reg[Rg, Br] ->{Rg} (() ->{Br | ~Rg} Res) ->{Br} Res
+//│ Type: ⊤
+
+letreg of r =>
+  read(r)
+  borrow(r) of () =>
+    read(r)
+  write(r)
+//│ Type: Int
+
+// FIXME should fail test
+:e
+letreg of r =>
+  read(r)
+  borrow(r) of () =>
+    write(r)
+    read(r)
+  write(r)
+//│ Type: Int
+
+
+// * TODO...
+
+
