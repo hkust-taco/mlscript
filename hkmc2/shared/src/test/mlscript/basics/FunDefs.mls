@@ -31,7 +31,6 @@ fun (++)(x, y) = 1
 fun (**) pow = 1
 //│ Type: Ctor(lit:UnitLit(true),List())
 
-:fixme
 1 ** 2
 //│ Type: Flow(‹app-res›@2)
 

@@ -49,8 +49,8 @@ letreg of r =>
   write(r)
 //│ Type: Int
 
-// FIXME should fail test
-:e
+// FIXME why no error?
+// :e
 letreg of r =>
   read(r)
   borrow(r) of () =>

@@ -14,7 +14,6 @@ x + y
 x
 //│ Type: Lab(Flow(x@2),Exit(x@2,2,false))
 
-:e
 let z = 3
 x + y + z
 //│ Type: Flow(‹app-res›@3)

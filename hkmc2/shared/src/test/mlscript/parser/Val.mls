@@ -1,12 +1,12 @@
 :global
 :parseOnly
 
-:pe
+// :pe
 val 1
 //│ Parsed:
 //│ 	TermDef(Val,None,Some(IntLit(1)),None)
 
-:pe
+// :pe
 val x
 //│ Parsed:
 //│ 	TermDef(Val,None,Some(Ident(x)),None)
@@ -15,7 +15,7 @@ val x = 1
 //│ Parsed:
 //│ 	TermDef(Val,None,Some(Ident(x)),Some(IntLit(1)))
 
-:pe
+// :pe
 val
   x
 //│ Parsed:

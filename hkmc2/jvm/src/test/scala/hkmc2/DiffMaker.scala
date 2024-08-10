@@ -23,6 +23,7 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
     unexpected("exception", blockLineNum)
   
   final def unexpected(what: Str, blockLineNum: Int): Unit =
+    output(s"FAILURE: Unexpected $what")
     doFail(blockLineNum, s"unexpected $what at $relativeName.${file.ext}:" + blockLineNum)
   
   
@@ -71,8 +72,9 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
   val debug = NullaryCommand("d")
   val dbgParsing = NullaryCommand("dp")
   
-  val expectParseError = NullaryCommand("pe") // TODO handle lack of errors
-  val expectTypeErrors = NullaryCommand("e") // TODO handle lack of errors
+  val expectParseError = NullaryCommand("pe")
+  val expectTypeErrors = NullaryCommand("e")
+  val expectRuntimeError = NullaryCommand("re")
   val expectWarnings = NullaryCommand("w")
   val showRelativeLineNums = NullaryCommand("showRelativeLineNums")
   
@@ -183,7 +185,7 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
       out.println(line)
       rec(ls)
     case l :: ls =>
-    
+      
       val blockLineNum = (allLines.size - lines.size) + 1
       
       val block = (l :: ls.takeWhile(l => l.nonEmpty && !(
@@ -199,28 +201,36 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
         
       try
         
+        var parseErrors, typeErrors, compilationErrors, runtimeErrors, warnings = 0
+        
         val origin = Origin(fileName, globalStartLineNum, fph)
         val raise: Raise = d =>
           d.kind match
           case Diagnostic.Kind.Error =>
             d.source match
             case Diagnostic.Source.Lexing =>
+              parseErrors += 1
               TODO(d.source)
             case Diagnostic.Source.Parsing =>
+              parseErrors += 1
               if expectParseError.isUnset && !tolerateErrors then
-                failures += allLines.size - lines.size + 1
+                failures += globalStartLineNum
                 // doFail(fileName, blockLineNum, "unexpected parse error at ")
                 unexpected("parse error", blockLineNum)
                 // report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
             case Diagnostic.Source.Typing =>
+              typeErrors += 1
               if expectTypeErrors.isUnset && !tolerateErrors then
-                failures += allLines.size - lines.size + 1
+                failures += globalStartLineNum
                 unexpected("type error", blockLineNum)
             case Diagnostic.Source.Compilation =>
+              compilationErrors += 1
               TODO(d.source)
             case Diagnostic.Source.Runtime =>
+              runtimeErrors += 1
               TODO(d.source)
           case Diagnostic.Kind.Warning =>
+            warnings += 1
             TODO(d.kind)
           report(blockLineNum, d :: Nil, showRelativeLineNums.isSet)
         val lexer = new syntax.Lexer(origin, raise, dbg = dbgParsing.isSet)
@@ -261,6 +271,23 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
             val typer = typing.TypeChecker(raise)
             val ty = typer.typeProd(e)
             output(s"Type: ${ty}")
+        
+        if expectParseError.isSet && parseErrors == 0 then
+          failures += globalStartLineNum
+          unexpected("lack of parse error", blockLineNum)
+        if expectTypeErrors.isSet && typeErrors == 0 then
+          failures += globalStartLineNum
+          unexpected("lack of type error", blockLineNum)
+        if expectRuntimeError.isSet && runtimeErrors == 0 then
+          failures += globalStartLineNum
+          unexpected("lack of runtime error", blockLineNum)
+        if expectWarnings.isSet && warnings == 0 then
+          failures += globalStartLineNum
+          unexpected("lack of warnings", blockLineNum)
+        
+        if fixme.isSet && (parseErrors + typeErrors + compilationErrors + runtimeErrors) == 0 then
+          failures += globalStartLineNum
+          unexpected("lack of error to fix", blockLineNum)
         
       catch
         case oh_noes: ThreadDeath => throw oh_noes
