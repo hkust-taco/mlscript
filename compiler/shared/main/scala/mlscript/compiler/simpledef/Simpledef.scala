@@ -5,7 +5,7 @@ package simpledef
 import mlscript.utils.*, shorthands.*
 import scala.collection.mutable
 import java.util.IdentityHashMap
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters.*
 
 type TypeVar
 type TermId = Uid[Term]
