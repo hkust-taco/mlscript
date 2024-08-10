@@ -21,12 +21,13 @@
           devShells.default = mkShell {
             buildInputs = [
               clang
+              gcc
               gnumake
               boost
               gmp
               mimalloc
               sbt
-              nodejs_18
+              nodejs_22
             ];
           };
       });

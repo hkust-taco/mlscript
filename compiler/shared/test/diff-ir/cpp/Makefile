@@ -1,4 +1,4 @@
-CXX := clang++
+CXX := g++
 CFLAGS := $(CFLAGS) -O3 -Wall -Wextra -std=c++20 -I. -Wno-inconsistent-missing-override
 LDFLAGS := $(LDFLAGS) -lmimalloc -lgmp
 SRC :=
