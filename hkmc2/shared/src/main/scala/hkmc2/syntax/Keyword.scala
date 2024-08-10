@@ -29,8 +29,9 @@ object Keyword:
     S(res)
   
   val eqPrec = nextPrec
+  val ascPrec = nextPrec // * `x => x : T` should parsed as `x => (x : T)`
   val `=` = Keyword("=", eqPrec, eqPrec)
-  val `:` = Keyword(":", eqPrec, eqPrec)
+  val `:` = Keyword(":", ascPrec, eqPrec)
   
   val `if` = Keyword("if", N, nextPrec)
   val `then` = Keyword("then", curPrec, curPrec)

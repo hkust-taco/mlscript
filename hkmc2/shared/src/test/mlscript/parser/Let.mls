@@ -94,24 +94,19 @@ in x
 //│ Parsed:
 //│ 	Let(Ident(x),IntLit(1),Some(Ident(x)))
 
-// [todo:0]
-:fixme
 let x = 1
   in x
-//│ ╔══[PARSE ERROR] Expected 'in' keyword or end of input after 'let' binding right-hand side; found indented block instead
-//│ ║  l.100: 	  in x
-//│ ╙──       	^^
 //│ Parsed:
-//│ 	Error()
+//│ 	Let(Ident(x),IntLit(1),Some(Ident(x)))
 
 :pe
 let
   x = 1
 in x
 //│ ╔══[PARSE ERROR] Expected end of input; found newline instead
-//│ ║  l.109: 	  x = 1
+//│ ║  l.104: 	  x = 1
 //│ ║         	       ^
-//│ ║  l.110: 	in x
+//│ ║  l.105: 	in x
 //│ ╙──       	
 //│ Parsed:
 //│ 	Let(Ident(x),IntLit(1),None)
@@ -121,10 +116,10 @@ let
 x = 1
 in x
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found newline instead
-//│ ║  l.122: 	in x
+//│ ║  l.117: 	in x
 //│ ╙──       	    ^
 //│ ╔══[PARSE ERROR] Expected end of input; found '=' keyword instead
-//│ ║  l.121: 	x = 1
+//│ ║  l.116: 	x = 1
 //│ ╙──       	  ^
 //│ Parsed:
 //│ 	Error()
@@ -134,7 +129,7 @@ in x
 let
   with
 //│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found 'with' keyword instead
-//│ ║  l.135: 	  with
+//│ ║  l.130: 	  with
 //│ ╙──       	  ^^^^
 //│ Parsed:
 //│ 	Error()
@@ -151,7 +146,7 @@ let x = 1 in
 :pe
 if
 //│ ╔══[PARSE ERROR] Expected expression after `if` keyword; found end of input instead
-//│ ║  l.152: 	if
+//│ ║  l.147: 	if
 //│ ╙──       	  ^
 //│ Parsed:
 //│ 	Error()

@@ -9,11 +9,11 @@ x
 :pe
 x
   y
-//│ ╔══[PARSE ERROR] Expected end of input after expression; found indented block instead
+//│ ╔══[PARSE ERROR] Unexpected identifier here
 //│ ║  l.11: 	  y
-//│ ╙──      	^^
+//│ ╙──      	  ^
 //│ Parsed:
-//│ 	Error()
+//│ 	Ident(x)
 
 
 

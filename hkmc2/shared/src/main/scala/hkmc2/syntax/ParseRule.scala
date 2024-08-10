@@ -22,7 +22,7 @@ enum Alt[+A]:
     case End(a) => End(f(a))
     case b: Blk[rest, A] => Blk(b.rest)((tree, rest) => f(b.k(tree, rest)))
 
-class ParseRule[+A](val name: Str)(alts: Alt[A]*):
+class ParseRule[+A](val name: Str)(val alts: Alt[A]*):
   def map[B](f: A => B): ParseRule[B] =
     ParseRule(name)(alts.map(_.map(f))*)
   
@@ -211,6 +211,14 @@ object ParseRule:
     Kw(`true`)(ParseRule("'true' keyword")(End(BoolLit(true)))),
     Kw(`false`)(ParseRule("'false' keyword")(End(BoolLit(false)))),
   )
+  
+  val prefixRulesAllowIndentedBlock: ParseRule[Tree] =
+    ParseRule(prefixRules.name)(prefixRules.alts :+ 
+        (Blk(
+          ParseRule("???????????????????????????????????????????"):
+            End(())
+        ) { case (res, ()) => res })
+    : _*)
   
   /* 
   def funSign(k: TermDefKind): Alt[(S[Tree], Opt[Tree])] =

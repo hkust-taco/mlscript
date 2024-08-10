@@ -86,10 +86,10 @@ mut
 mut let
   x = 1
   y = 2
-//│ ╔══[PARSE ERROR] Expected expression after 'let' binding keyword; found indented block instead
-//│ ║  l.87: 	  x = 1
-//│ ╙──      	^^
+//│ ╔══[PARSE ERROR] Unexpected identifier here
+//│ ║  l.88: 	  y = 2
+//│ ╙──      	  ^
 //│ Parsed:
-//│ 	Modified(keyword 'mut',Error())
+//│ 	Modified(keyword 'mut',Let(Ident(x),IntLit(1),None))
 
 

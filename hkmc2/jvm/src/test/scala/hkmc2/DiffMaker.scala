@@ -129,7 +129,7 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
     
     val p = new syntax.Parser(origin, tokens, raise, dbg = dbgParsing.isSet):
       def doPrintDbg(msg: => Str): Unit = if dbg then output(msg)
-    val res = p.parseAll(p.block)
+    val res = p.parseAll(p.block(allowNewlines = true))
     given ctx: Elaborator.Ctx = Elaborator.Ctx.empty
     val elab = Elaborator(raise)
     try elab.importFrom(res)
@@ -231,7 +231,7 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
         
         val p = new syntax.Parser(origin, tokens, raise, dbg = dbgParsing.isSet):
           def doPrintDbg(msg: => Str): Unit = if dbg then output(msg)
-        val res = p.parseAll(p.block)
+        val res = p.parseAll(p.block(allowNewlines = true))
         
         if parseOnly.isSet || showParse.isSet then
           output(s"Parsed:${res.map("\n\t"+_.showDbg).mkString}")

@@ -1,0 +1,22 @@
+:global
+:bbml
+
+
+fun f(x, y) = x(y)
+f
+//│ Type: (α3_1 ->{α4_1} α5_1, α3_1) ->{α4_1} α5_1
+
+
+f((x => x), 42)
+//│ Type: Int
+
+:p
+f(x => x, 42)
+//│ |f|(|x| |=>| |x|,| |42|)|
+//│ Parsed:
+//│ 	App(Ident(f),Tup(List(InfixApp(Tup(List(Ident(x))),keyword '=>',Ident(x)), IntLit(42))))
+//│ Elab: { f#2(λx@3. x@3#0, 42) }
+//│ Type: Int
+
+
+

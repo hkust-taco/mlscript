@@ -74,6 +74,11 @@ enum Tree extends Located:
   def showDbg: Str = toString // TODO
 
 object Tree:
+  object Block:
+    def mk(stmts: Ls[Tree]): Tree = stmts match
+      case Nil => UnitLit(true)
+      case e :: Nil => e
+      case es => Block(es)
   object TyApp:
     def apply(lhs: Tree, targs: Ls[Tree]): App =
       App(lhs, TyTup(targs))

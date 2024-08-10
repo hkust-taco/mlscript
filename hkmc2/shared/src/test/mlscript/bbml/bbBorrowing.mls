@@ -1,0 +1,117 @@
+:global
+:bbml
+
+
+class Reg[Rg, Br]
+//│ Type: ⊤
+
+// fun letreg: [E,Outer,Res] -> ([R] -> Reg[R, Out] ->{E | R} Res) ->{E} Res
+
+fun letreg: [E, Res] -> ([Rg] -> Reg[Rg, E] ->{E | Rg} Res) ->{E} Res
+//│ Type: ⊤
+
+letreg
+//│ Type: forall α1_2, α2_2: (forall α3_3: (Reg[α3_3, α1_2]) ->{α1_2 ∨ α3_3} α2_2) ->{α1_2} α2_2
+
+fun use: [Rg, Br] -> Reg[Rg, Br] ->{Rg} Int
+//│ Type: ⊤
+
+
+class MutVec[A, Rg, Br]
+//│ Type: ⊤
+
+fun mkVec: [A, Rg, Br] -> Reg[Rg, Br] -> MutVec[A, Rg, Br]
+//│ Type: ⊤
+
+fun clear: [A, Rg, Br] -> MutVec[A, Rg, Br] ->{Rg} Int
+//│ Type: ⊤
+
+clear
+//│ Type: forall α9_2, α10_2, α11_2: (MutVec[α9_2, α10_2, α11_2]) ->{α10_2} Int
+
+class Iter[A, Rg]
+//│ Type: ⊤
+
+fun iterate: [A, Rg, Br, Res] -> MutVec[A, Rg, Br] -> (Iter[A, Br] ->{Br} Res) ->{Br} Res
+//│ Type: ⊤
+
+fun integers: [Rg, Br, Res] -> Reg[Rg, Br] ->{Rg} (Iter[Int, Br] ->{Br} Res) ->{Br} Res
+//│ Type: ⊤
+
+
+fun next: [A, Br] -> Iter[A, Br] ->{Br} A
+//│ Type: ⊤
+
+letreg(r => r)
+//│ Type: Reg[?, α21_1]
+//│ Where:
+//│   α21_1 <: <α>0_0
+
+letreg of r =>
+  let b = mkVec(r)
+  clear(b)
+  iterate(b) of it =>
+    next(it)
+    123
+  clear(b)
+  r
+//│ Type: Reg[?, α23_1]
+//│ Where:
+//│   α23_1 <: <α>0_0
+
+:e
+letreg of r =>
+  let b = mkVec(r)
+  clear(b)
+  iterate(b) of it =>
+    next(it)
+    clear(b)
+    123
+  clear(b)
+  r
+//│ ╔══[ERROR] Type error in term { letreg#3(λr@3. { let b@4 = mkVec#1(r@3#0); clear#3(b@4#0); iterate#1(b@4#1)(λit@9. { next#1(it@9#0); clear#4(b@4#2); 123 }); clear#5(b@4#3); r@3#1 }) }
+//│ ╟── because: cannot constrain  α40_1  <:  <α>0_0
+//│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
+//│ Type: Reg[?, α40_1]
+//│ Where:
+//│   ⊤ <: α40_1
+//│   α40_1 <: <α>0_0
+
+
+letreg of r =>
+  use(r)
+  integers(r) of it =>
+    next(it)
+  use(r)
+  r
+//│ Type: Reg[?, α60_1]
+//│ Where:
+//│   α60_1 <: <α>0_0
+
+:e
+letreg of r =>
+  use(r)
+  integers(r) of it =>
+    use(r)
+    next(it)
+  use(r)
+  r
+//│ ╔══[ERROR] Type error in term { letreg#5(λr@3. { use#2(r@3#0); integers#1(r@3#1)(λit@7. { use#3(r@3#2); next#3(it@7#0) }); use#4(r@3#3); r@3#4 }) }
+//│ ╟── because: cannot constrain  α71_1  <:  <α>0_0
+//│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
+//│ Type: Reg[?, α71_1]
+//│ Where:
+//│   ⊤ <: α71_1
+//│   α71_1 <: <α>0_0
+
+letreg of r0 =>
+  letreg of r1 =>
+    integers(r1) of it =>
+      use(r0)
+      next(it)
+    use(r1)
+    r1
+//│ Type: Reg[?, in α97_1]
+//│ Where:
+//│   α97_1 <: <α>0_0
+

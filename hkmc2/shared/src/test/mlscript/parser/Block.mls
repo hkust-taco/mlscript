@@ -28,3 +28,73 @@ class A, res
 //│ 	Ident(res)
 
 
+foo of
+  a,
+  b
+//│ Parsed:
+//│ 	App(Ident(foo),Tup(List(Ident(a), Ident(b))))
+
+foo of
+  a
+  b
+//│ Parsed:
+//│ 	App(Ident(foo),Tup(List(Ident(a), Ident(b))))
+
+
+x => x
+//│ Parsed:
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Ident(x))
+
+x =>
+  x
+//│ Parsed:
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Block(List(Ident(x))))
+
+x =>
+  foo
+  x
+//│ Parsed:
+//│ 	InfixApp(Tup(List(Ident(x))),keyword '=>',Block(List(Ident(foo), Ident(x))))
+
+
+
+// --- ERROR CASES ---
+
+:global
+:pe
+
+foo a
+//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
+//│ ║  l.66: 	foo a
+//│ ╙──      	    ^
+//│ Parsed:
+//│ 	Ident(foo)
+
+foo
+  a
+//│ ╔══[PARSE ERROR] Unexpected identifier here
+//│ ║  l.74: 	  a
+//│ ╙──      	  ^
+//│ Parsed:
+//│ 	Ident(foo)
+
+foo
+  a
+  b
+//│ ╔══[PARSE ERROR] Unexpected identifier here
+//│ ║  l.82: 	  a
+//│ ╙──      	  ^
+//│ Parsed:
+//│ 	Ident(foo)
+
+foo
+  a,
+  b
+//│ ╔══[PARSE ERROR] Unexpected identifier here
+//│ ║  l.91: 	  a,
+//│ ╙──      	  ^
+//│ Parsed:
+//│ 	Ident(foo)
+
+
+

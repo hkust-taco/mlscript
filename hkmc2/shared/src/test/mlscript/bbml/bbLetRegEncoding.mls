@@ -39,15 +39,11 @@ letreg(r => !(r.ref 1))
 //│ ╙──
 //│ Type: ⊥
 
-:fixme
 letreg of r =>
-  let x = ref 1
+  let x = r.ref 1
   x := !x + 1
   !x
-//│ ╔══[PARSE ERROR] Expected 'let' keyword, 'new' keyword, 'in' keyword, 'if' keyword, 'case' keyword, 'region' keyword, 'fun' keyword, 'val' keyword, 'type' keyword, 'class' keyword, 'trait' keyword, 'module' keyword, 'abstract' keyword, 'mut' keyword, 'virtual' keyword, 'override' keyword, 'declare' keyword, 'public' keyword, 'private' keyword, 'out' keyword, expression, 'true' keyword, or 'false' keyword after start of statement; found indented block instead
-//│ ║  l.44: 	  let x = ref 1
-//│ ╙──      	^^
-//│ Type: ⊥
+//│ Type: Int
 
 let f = letreg(r => arg => r.ref arg)
 //│ Type: ⊤
@@ -61,11 +57,11 @@ f
 :e
 letreg(r => arg => r.ref arg)(0)
 //│ ╔══[ERROR] Type error in term { letreg#8(λr@4. λarg@5. (r@4#0).ref arg@5#0)(0) }
-//│ ╟── because: cannot constrain  α44_1 ∨ α35_1  <:  <α>0_0
-//│ ╟── because: cannot constrain  α44_1  <:  <α>0_0
-//│ ╟── because: cannot constrain  α43_1  <:  <α>0_0
+//│ ╟── because: cannot constrain  α50_1 ∨ α41_1  <:  <α>0_0
+//│ ╟── because: cannot constrain  α50_1  <:  <α>0_0
+//│ ╟── because: cannot constrain  α49_1  <:  <α>0_0
 //│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
-//│ Type: Ref[in α40_1 out α40_1 ∨ Int, ?]
+//│ Type: Ref[in α46_1 out α46_1 ∨ Int, ?]
 
 
 
@@ -76,22 +72,22 @@ fun letreg: [E,Res] -> ([R] -> Region[R] -> Res) ->{E} Res
 
 :e
 letreg(r => r.ref 1)
-//│ ╔══[ERROR] Type error in term λr@3. (r@3#0).ref 1 with expected type (Region[<α>48_2]) ->{⊥} α50_1
-//│ ╟── because: cannot constrain  α51_2  <:  ⊥
-//│ ╙── because: cannot constrain  <α>48_2  <:  ⊥
+//│ ╔══[ERROR] Type error in term λr@3. (r@3#0).ref 1 with expected type (Region[<α>54_2]) ->{⊥} α56_1
+//│ ╟── because: cannot constrain  α57_2  <:  ⊥
+//│ ╙── because: cannot constrain  <α>54_2  <:  ⊥
 //│ Type: Ref[Int, ?]
 
 :e
 letreg(r => !(r.ref 1))
-//│ ╔══[ERROR] Type error in term λr@3. !RegRef(Ref(r@3),Lit(IntLit(1))) with expected type (Region[<α>48_2]) ->{⊥} α54_1
-//│ ╟── because: cannot constrain  α56_2 ∨ α55_2  <:  ⊥
-//│ ╟── because: cannot constrain  α56_2  <:  ⊥
-//│ ╟── because: cannot constrain  α55_2  <:  ⊥
-//│ ╙── because: cannot constrain  <α>48_2  <:  ⊥
-//│ ╔══[ERROR] Type error in term λr@3. !RegRef(Ref(r@3),Lit(IntLit(1))) with expected type (Region[<α>48_2]) ->{⊥} α54_1
-//│ ╟── because: cannot constrain  α56_2 ∨ α55_2  <:  ⊥
-//│ ╟── because: cannot constrain  α55_2  <:  ⊥
-//│ ╙── because: cannot constrain  <α>48_2  <:  ⊥
+//│ ╔══[ERROR] Type error in term λr@3. !RegRef(Ref(r@3),Lit(IntLit(1))) with expected type (Region[<α>54_2]) ->{⊥} α60_1
+//│ ╟── because: cannot constrain  α62_2 ∨ α61_2  <:  ⊥
+//│ ╟── because: cannot constrain  α62_2  <:  ⊥
+//│ ╟── because: cannot constrain  α61_2  <:  ⊥
+//│ ╙── because: cannot constrain  <α>54_2  <:  ⊥
+//│ ╔══[ERROR] Type error in term λr@3. !RegRef(Ref(r@3),Lit(IntLit(1))) with expected type (Region[<α>54_2]) ->{⊥} α60_1
+//│ ╟── because: cannot constrain  α62_2 ∨ α61_2  <:  ⊥
+//│ ╟── because: cannot constrain  α61_2  <:  ⊥
+//│ ╙── because: cannot constrain  <α>54_2  <:  ⊥
 //│ Type: Int
 
 
