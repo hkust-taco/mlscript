@@ -77,6 +77,7 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
   val showRelativeLineNums = NullaryCommand("showRelativeLineNums")
   
   val showParse = NullaryCommand("p")
+  val showElab = NullaryCommand("el")
   val parseOnly = NullaryCommand("parseOnly")
   
   val bbmlOpt = NullaryCommand("bbml")
@@ -123,7 +124,7 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
     val lexer = new syntax.Lexer(origin, raise, dbg = dbgParsing.isSet)
     val tokens = lexer.bracketedTokens
     
-    if showParse.isSet || showParse.isSet || dbgParsing.isSet then
+    if showParse.isSet || dbgParsing.isSet then
       output(syntax.Lexer.printTokens(tokens))
     
     val p = new syntax.Parser(origin, tokens, raise, dbg = dbgParsing.isSet):
@@ -225,7 +226,7 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
         val lexer = new syntax.Lexer(origin, raise, dbg = dbgParsing.isSet)
         val tokens = lexer.bracketedTokens
         
-        if showParse.isSet || showParse.isSet || dbgParsing.isSet then
+        if showParse.isSet || dbgParsing.isSet then
           output(syntax.Lexer.printTokens(tokens))
         
         val p = new syntax.Parser(origin, tokens, raise, dbg = dbgParsing.isSet):
@@ -243,7 +244,8 @@ class DiffMaker(file: os.Path, predefFile: os.Path, relativeName: Str):
           given Elaborator.Ctx = curCtx
           val (e, newCtx) = elab.topLevel(res)
           curCtx = newCtx
-          output(s"Elab: ${e.showDbg}")
+          if showParse.isSet || debug.isSet then
+            output(s"Elab: ${e.showDbg}")
           if bbmlOpt.isSet then
             if bbmlTyper.isEmpty then
               bbmlTyper = S(BBTyper(tl))

@@ -1,44 +1,35 @@
 
 
 class Foo[A]
-//│ Elab: { class Foo[A@2] { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A]()
-//│ Elab: { class Foo[A@2]() { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A](x: A)
-//│ Elab: { class Foo[out A@2](x@3: A@2#0) { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A](x: A -> Int)
-//│ Elab: { class Foo[in A@2](x@3: A@2#0 -> class:Int#15‹›) { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A](x: Foo[A])
-//│ Elab: { class Foo[A@2](x@3: class:Foo#0[Ref(A@2)]‹›) { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A](x: Foo[A] -> A)
-//│ Elab: { class Foo[in out A@2](x@3: class:Foo#0[Ref(A@2)]‹› -> A@2#1‹›) { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A](x: Bar[A])
 class Bar[B](x: Foo[Int], y: B -> Int)
-//│ Elab: { class Foo[in A@2](x@3: class:Bar#0[Ref(A@2)]‹›) { }‹›; class Bar[in B@4](x@5: class:Foo#0[Ref(class:Int)]‹›, y@6: B@4#0 -> class:Int#17‹›) { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 class Foo[A](x: Bar[A])
 class Baz[C](x: C)
 class Bar[B](x: Foo[Int], y: Baz[B] -> Int)
-//│ Elab: { class Foo[in A@2](x@3: class:Bar#0[Ref(A@2)]‹›) { }‹›; class Baz[out C@4](x@5: C@4#0) { }‹›; class Bar[in B@6](x@7: class:Foo#0[Ref(class:Int)]‹›, y@8: class:Baz#0[Ref(B@6)]‹› -> class:Int#19‹›) { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 
 class Foo[A] with
   fun foo: A -> A
-//│ Elab: { class Foo[in out A@2] { fun foo: A@2#0 -> A@2#1‹›; }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 
@@ -49,7 +40,6 @@ class Foo[A] with
 class Foo[A](x: Foo[A, A])
 //│ ╔══[ERROR] Wrong number of type arguments
 //│ ╙──
-//│ Elab: { class Foo[A@2](x@3: class:Foo#0[Ref(A@2), Ref(A@2)]‹›) { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 :fixme
@@ -58,6 +48,5 @@ class Foo[A](x: Bar[A])
 class Bar(x: Foo[Int])
 //│ ╔══[ERROR] Wrong number of type arguments
 //│ ╙──
-//│ Elab: { class Foo[A@2](x@3: class:Bar#0[Ref(A@2)]‹›) { }‹›; class Bar(x@4: class:Foo#0[Ref(class:Int)]‹›) { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 

@@ -1,38 +1,32 @@
 
 module Foo
-//│ Elab: { class Foo { }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 :pe
 module Foo with
 //│ ╔══[PARSE ERROR] Expected indented block after type declaration body; found end of input instead
-//│ ║  l.7: 	module Foo with
+//│ ║  l.6: 	module Foo with
 //│ ╙──     	               ^
-//│ Elab: { <error>‹› }‹›
 //│ Type: Ctor(Bot,List())
 
 :fixme
 module Foo with val x = 1
 //│ ╔══[PARSE ERROR] Expected indented block after type declaration body; found 'val' keyword instead
-//│ ║  l.15: 	module Foo with val x = 1
+//│ ║  l.13: 	module Foo with val x = 1
 //│ ╙──      	                ^^^
 //│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
-//│ ║  l.15: 	module Foo with val x = 1
+//│ ║  l.13: 	module Foo with val x = 1
 //│ ╙──      	                    ^
-//│ Elab: { <error>‹› }‹›
 //│ Type: Ctor(Bot,List())
 
 module Foo with
   val x = 1
-//│ Elab: { class Foo { val x = 1‹›; }‹›; }‹›
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 Foo
-//│ Elab: { class:Foo#0 }‹›
 //│ Type: Ctor(class:Foo,List())
 
 :fixme
 Foo.x
-//│ Elab: { class:Foo#1.x‹› }‹›
 //│ /!!!\ Uncaught error: scala.MatchError: Sel(Ref(class:Foo),Ident(x)) (of class hkmc2.semantics.Term$Sel)
 

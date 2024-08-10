@@ -4,56 +4,47 @@
 
 :fixme // parsing
 fun f x = f
-//│ Elab: { fun x = x#0; }‹›
 //│ ╔══[ERROR] Can not define function x
 //│ ╙──
 //│ Type: ⊤
 
 fun f(x) = f
 f
-//│ Elab: { fun f(x@2) = f#0; f#1 }‹›
 //│ Type: ⊤ ->{⊥} α1_1
 //│ Where:
 //│   ⊤ ->{⊥} α1_1 <: α1_1
 
 fun f(x) = f(x)
 f
-//│ Elab: { fun f(x@2) = f#0(x@2#0)‹›; f#1 }‹›
 //│ Type: ⊤ ->{⊥} ⊥
 
 :todo
 fun f(x) = f(x.a)
-//│ Elab: { fun f(x@2) = f#0(x@2#0.a‹›)‹›; }‹›
 //│ ╔══[ERROR] Term shape not yet supported by BbML: Sel(Ref(x@2),Ident(a))
 //│ ╙──
 //│ Type: ⊤
 
 
 class Foo[A](a: A)
-//│ Elab: { class Foo[out A@2](a@3: A@2#0) { }‹›; }‹›
 //│ Type: ⊤
 
 :todo proper error
 Foo(123)
-//│ Elab: { class:Foo#0(123‹›)‹› }‹›
 //│ ╔══[ERROR] Term shape not yet supported by BbML: Ref(class:Foo)
 //│ ╙──
 //│ Type: ⊥
 
 new Foo(123)
-//│ Elab: { new class:Foo(Lit(IntLit(123)))‹› }‹›
 //│ Type: Foo[in ⊤ out Int]
 
 :todo proper error
 fun f(x) = f(Foo.a(x))
-//│ Elab: { fun f(x@2) = f#0(class:Foo#1.a‹›(x@2#0)‹›)‹›; }‹›
 //│ ╔══[ERROR] Term shape not yet supported by BbML: Sel(Ref(class:Foo),Ident(a))
 //│ ╙──
 //│ Type: ⊤
 
 fun f(x) = f(x.Foo#a)
 f
-//│ Elab: { fun f(x@2) = f#0(x@2#0.class:Foo#2#a‹›)‹›; f#1 }‹›
 //│ Type: Foo[out α22_1] ->{⊥} ⊥
 //│ Where:
 //│   α22_1 <: Foo[out α22_1]

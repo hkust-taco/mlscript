@@ -86,11 +86,14 @@ sealed trait Statement extends Located:
     case cls: ClassDef =>
       cls.paramsOpt.toList.flatMap(_.flatMap(_.subTerms)) ::: cls.body.blk :: Nil
   
+  def show: Str = showDbg // TODO use Document
+  
   def showDbg: Str = this match
     case r: Ref =>
       showPlain
     case trm: Term =>
-      s"$showPlain‹${trm.symbol.getOrElse("")}›"
+      // s"$showPlain‹${trm.symbol.getOrElse("")}›"
+      s"$showPlain${trm.symbol.fold("")("‹"+_+"›")}"
     case _ =>
       showPlain
   def showPlain: Str = this match

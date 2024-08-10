@@ -3,140 +3,111 @@
 
 
 123
-//│ Elab: { 123‹› }‹›
 //│ Type: Int
 
 3.14
-//│ Elab: { 3.14‹› }‹›
 //│ Type: Num
 
 false
-//│ Elab: { false‹› }‹›
 //│ Type: Bool
 
 "bbml"
-//│ Elab: { "bbml"‹› }‹›
 //│ Type: Str
 
 ()
-//│ Elab: { }‹›
 //│ Type: ⊤
 
 fun id(x) = x
-//│ Elab: { fun id(x@2) = x@2#0; }‹›
 //│ Type: ⊤
 
 fun inc(x) = x + 1
-//│ Elab: { fun inc(x@2) = +#0(x@2#0, 1‹›)‹›; }‹›
 //│ Type: ⊤
 
 fun mul(x, y) = x * y
-//│ Elab: { fun mul(x@2, y@3) = *#0(x@2#0, y@3#0)‹›; }‹›
 //│ Type: ⊤
 
 x => x
-//│ Elab: { λx@2. x@2#0‹› }‹›
 //│ Type: (α8_1) ->{⊥} α8_1
 
 +
-//│ Elab: { +#1 }‹›
 //│ Type: (Int, Int) ->{⊥} Int
 
 (x, y) => x + y
-//│ Elab: { λx@2, y@3. +#2(x@2#0, y@3#0)‹›‹› }‹›
 //│ Type: (Int, Int) ->{⊥} Int
 
 ((x, y) => x + y)(40, 2)
-//│ Elab: { λx@3, y@4. +#3(x@3#0, y@4#0)‹›‹›(40‹›, 2‹›)‹› }‹›
 //│ Type: Int
 
 :e
 114 + "514"
-//│ Elab: { +#4(114‹›, "514"‹›)‹› }‹›
-//│ ╔══[ERROR] Type error in term Lit(StrLit(514)) with expected type Int
+//│ ╔══[ERROR] Type error in term "514" with expected type Int
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Int
 
 
 inc(42)
-//│ Elab: { inc#0(42‹›)‹› }‹›
 //│ Type: Int
 
 let x = 42 in x
-//│ Elab: { { let x@2 = 42‹›; x@2#0 }‹› }‹›
 //│ Type: Int
 
 let x = 1 in let y = 2 in x + y
-//│ Elab: { { let x@2 = 1‹›; { let y@3 = 2‹›; +#5(x@2#0, y@3#0)‹› }‹› }‹› }‹›
 //│ Type: Int
 
 :e
 let x = 0 in x + "1"
-//│ Elab: { { let x@2 = 0‹›; +#6(x@2#0, "1"‹›)‹› }‹› }‹›
-//│ ╔══[ERROR] Type error in term Lit(StrLit(1)) with expected type Int
+//│ ╔══[ERROR] Type error in term "1" with expected type Int
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Int
 
 class Foo(x: Int)
-//│ Elab: { class Foo(x@2: class:Int#15) { }‹›; }‹›
 //│ Type: ⊤
 
 :e
 new Nothingness(0)
 //│ ╔══[ERROR] Class Nothingness not found.
-//│ ║  l.85: 	new Nothingness(0)
+//│ ║  l.67: 	new Nothingness(0)
 //│ ╙──      	               ^^^
-//│ Elab: { <error>‹› }‹›
 //│ Type: ⊥
 
 :e
 new 42
 //│ ╔══[ERROR] Illegal new expression.
 //│ ╙──
-//│ Elab: { <error>‹› }‹›
 //│ Type: ⊥
 
 
 new Foo(42)
-//│ Elab: { new class:Foo(Lit(IntLit(42)))‹› }‹›
 //│ Type: Foo
 
 
 class Point(x: Num, y: Num, z: Num)
-//│ Elab: { class Point(x@2: class:Num#13, y@3: class:Num#14, z@4: class:Num#15) { }‹›; }‹›
 //│ Type: ⊤
 
 
 new Point(0.0, 0.0, 0.0)
-//│ Elab: { new class:Point(Lit(DecLit(0.0)), Lit(DecLit(0.0)), Lit(DecLit(0.0)))‹› }‹›
 //│ Type: Point
 
 :e
 new Foo("1!5!")
-//│ Elab: { new class:Foo(Lit(StrLit(1!5!)))‹› }‹›
-//│ ╔══[ERROR] Type error in term Lit(StrLit(1!5!)) with expected type Int
+//│ ╔══[ERROR] Type error in term "1!5!" with expected type Int
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Foo
 
 
 class Some[A](value: A)
-//│ Elab: { class Some[out A@2](value@3: A@2#0) { }‹›; }‹›
 //│ Type: ⊤
 
 new Some(true)
-//│ Elab: { new class:Some(Lit(BoolLit(true)))‹› }‹›
 //│ Type: Some[in ⊤ out Bool]
 
 new Some(42)
-//│ Elab: { new class:Some(Lit(IntLit(42)))‹› }‹›
 //│ Type: Some[in ⊤ out Int]
 
 let p = new Point(1.0, 0.0, 0.0) in p.Point#x
-//│ Elab: { { let p@2 = new class:Point(Lit(DecLit(1.0)), Lit(DecLit(0.0)), Lit(DecLit(0.0)))‹›; p@2#0.class:Point#0#x‹› }‹› }‹›
 //│ Type: Num
 
 let t = new Some(true) in t.Some#value
-//│ Elab: { { let t@2 = new class:Some(Lit(BoolLit(true)))‹›; t@2#0.class:Some#0#value‹› }‹› }‹›
 //│ Type: Bool
 
 :fixme
@@ -146,26 +117,21 @@ let t = new Some(true) in t.Some#value
 
 
 class Printer[T](f: T -> Str)
-//│ Elab: { class Printer[in T@2](f@3: T@2#0 -> class:Str#0‹›) { }‹›; }‹›
 //│ Type: ⊤
 
 fun foofoo(x) =
   let t = x + 1 in "foo"
-//│ Elab: { fun foofoo(x@2) = { let t@3 = +#7(x@2#0, 1‹›)‹›; "foo"‹› }‹›; }‹›
 //│ Type: ⊤
 
 new Printer(foofoo)
-//│ Elab: { new class:Printer(Ref(foofoo))‹› }‹›
 //│ Type: Printer[in Int out ⊥]
 
 let ip = new Printer(foofoo) in ip.Printer#f(42)
-//│ Elab: { { let ip@2 = new class:Printer(Ref(foofoo))‹›; ip@2#0.class:Printer#0#f‹›(42‹›)‹› }‹› }‹›
 //│ Type: Str
 
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
-//│ Elab: { { let ip@2 = new class:Printer(Ref(foofoo))‹›; ip@2#0.class:Printer#1#f‹›("42"‹›)‹› }‹› }‹›
-//│ ╔══[ERROR] Type error in term Lit(StrLit(42)) with expected type α33_1
+//│ ╔══[ERROR] Type error in term "42" with expected type α33_1
 //│ ╟── because: cannot constrain  Str  <:  α33_1
 //│ ╟── because: cannot constrain  Str  <:  α31_1
 //│ ╟── because: cannot constrain  Str  <:  α24_1
@@ -173,25 +139,20 @@ let ip = new Printer(foofoo) in ip.Printer#f("42")
 //│ Type: Str
 
 class TFun[T](f: T -> T)
-//│ Elab: { class TFun[in out T@2](f@3: T@2#0 -> T@2#1‹›) { }‹›; }‹›
 //│ Type: ⊤
 
 fun inc(x) = x + 1
-//│ Elab: { fun inc(x@2) = +#8(x@2#0, 1‹›)‹›; }‹›
 //│ Type: ⊤
 
 new TFun(inc)
-//│ Elab: { new class:TFun(Ref(inc))‹› }‹›
 //│ Type: TFun[Int]
 
 let tf = new TFun(inc) in tf.TFun#f(1)
-//│ Elab: { { let tf@2 = new class:TFun(Ref(inc))‹›; tf@2#0.class:TFun#0#f‹›(1‹›)‹› }‹› }‹›
 //│ Type: Int
 
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
-//│ Elab: { { let tf@2 = new class:TFun(Ref(inc))‹›; tf@2#0.class:TFun#1#f‹›("1"‹›)‹› }‹› }‹›
-//│ ╔══[ERROR] Type error in term Lit(StrLit(1)) with expected type α45_1
+//│ ╔══[ERROR] Type error in term "1" with expected type α45_1
 //│ ╟── because: cannot constrain  Str  <:  α45_1
 //│ ╟── because: cannot constrain  Str  <:  α43_1
 //│ ╟── because: cannot constrain  Str  <:  α36_1
@@ -199,71 +160,56 @@ let tf = new TFun(inc) in tf.TFun#f("1")
 //│ Type: Int
 
 class Pair[A, B](fst: A, snd: B)
-//│ Elab: { class Pair[out A@2, out B@3](fst@4: A@2#0, snd@5: B@3#0) { }‹›; }‹›
 //│ Type: ⊤
 
 (new Pair(42, true)).Pair#fst
-//│ Elab: { new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›.class:Pair#0#fst‹› }‹›
 //│ Type: Int
 
 (new Pair(42, true)).Pair#snd
-//│ Elab: { new class:Pair(Lit(IntLit(42)), Lit(BoolLit(true)))‹›.class:Pair#1#snd‹› }‹›
 //│ Type: Bool
 
 
 if 1 < 2 then 1 else 0
-//│ Elab: { if Cons(Boolean(App(Ref(<),Tup(List(Fld(‹›,Lit(IntLit(1)),None), Fld(‹›,Lit(IntLit(2)),None)))),Else(Lit(IntLit(1)))),Else(Lit(IntLit(0))))‹› }‹›
 //│ Type: Int
 
 if false then 1 else "1"
-//│ Elab: { if Cons(Boolean(Lit(BoolLit(false)),Else(Lit(IntLit(1)))),Else(Lit(StrLit(1))))‹› }‹›
 //│ Type: Int ∨ Str
 
 
 if 1 is Int then 1 else 0
-//│ Elab: { if Cons(Match(Lit(IntLit(1)),Cons(PatternBranch(Class(class:Int,None,true),Else(Lit(IntLit(1)))),NoSplit)),Else(Lit(IntLit(0))))‹› }‹›
 //│ Type: Int
 
 fun test(x) =
   if x is Int then x + 1 else 0
 test
-//│ Elab: { fun test(x@2) = if Cons(Match(Ref(x@2),Cons(PatternBranch(Class(class:Int,None,true),Else(App(Ref(+),Tup(List(Fld(‹›,Ref(x@2),None), Fld(‹›,Lit(IntLit(1)),None)))))),NoSplit)),Else(Lit(IntLit(0))))‹›; test#0 }‹›
 //│ Type: (¬Int ∨ Int) ->{⊥} Int
 
 test(1)
-//│ Elab: { test#1(1‹›)‹› }‹›
 //│ Type: Int
 
 
 test("1")
-//│ Elab: { test#2("1"‹›)‹› }‹›
 //│ Type: Int
 
 
 fun fact(n) =
   if n > 1 then n * fact(n - 1) else 1
-//│ Elab: { fun fact(n@2) = if Cons(Boolean(App(Ref(>),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,Lit(IntLit(1)),None)))),Else(App(Ref(*),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,App(Ref(fact),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None)))))),Else(Lit(IntLit(1))))‹›; }‹›
 //│ Type: ⊤
 
 fact
-//│ Elab: { fact#1 }‹›
 //│ Type: Int ->{⊥} Int
 
 fact(1)
-//│ Elab: { fact#2(1‹›)‹› }‹›
 //│ Type: Int
 
 
 fun fact2 = case
   0 then 1
   n then n * fact2(n - 1)
-//│ Elab: { fun fact2 = λn@2. if Cons(Boolean(App(Ref(==),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,Lit(IntLit(0)),None)))),Else(Lit(IntLit(1)))),Else(App(Ref(*),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,App(Ref(fact2),Tup(List(Fld(‹›,App(Ref(-),Tup(List(Fld(‹›,Ref(n@2),None), Fld(‹›,Lit(IntLit(1)),None)))),None)))),None))))))‹›‹›; }‹›
 //│ Type: ⊤
 
 fact2
-//│ Elab: { fact2#1 }‹›
 //│ Type: Int ->{⊥} Int
 
 fact2(0)
-//│ Elab: { fact2#2(0‹›)‹› }‹›
 //│ Type: Int

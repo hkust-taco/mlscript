@@ -3,26 +3,20 @@
 
 
 fun foo: Int ->{Int} Int
-//│ Elab: { fun foo: class:Int#15 ->{class:Int#17} class:Int#16‹›; }‹›
 //│ Type: ⊤
 
 fun foo: Int ->{Int} Int
-//│ Elab: { fun foo: class:Int#18 ->{class:Int#20} class:Int#19‹›; }‹›
 //│ Type: ⊤
 
 fun foo: Int -> Int ->{Int} Int
-//│ Elab: { fun foo: class:Int#21 -> class:Int#22 ->{class:Int#24} class:Int#23‹›‹›; }‹›
 //│ Type: ⊤
 
 fun foo: Int ->{Int} Int -> Int
-//│ Elab: { fun foo: class:Int#25 ->{class:Int#28} class:Int#26 -> class:Int#27‹›‹›; }‹›
 //│ Type: ⊤
 
 fun foo: Int ->{Int} Int ->{Int} Int
-//│ Elab: { fun foo: class:Int#29 ->{class:Int#33} class:Int#30 ->{class:Int#32} class:Int#31‹›‹›; }‹›
 //│ Type: ⊤
 
 fun foo: [A] -> Int ->{A} Int
-//│ Elab: { fun foo: forall A@3: FunTy(Tup(List(Fld(‹›,Ref(class:Int),None))),Ref(class:Int),Some(Ref(A@3)))‹›; }‹›
 //│ Type: ⊤
 

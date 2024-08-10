@@ -13,7 +13,7 @@ type Cache = Set[(Type, Type)]
 case class CCtx(cache: Cache, parents: Ls[(Type, Type)], origin: Term, exp: Opt[GeneralType]):
   def err(using Raise) =
     raise(ErrorReport(
-      msg"Type error in term ${origin.toString}${exp match
+      msg"Type error in term ${origin.show}${exp match
           case S(ty) => msg" with expected type ${ty.toString}"
           case N => msg""
         }" -> origin.toLoc
@@ -38,7 +38,9 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
   // TODO: cache x-fresh
   private def freshXVar(lvl: Int): InfVar = InfVar(lvl, infVarState.nextUid, new VarState(), false)
 
-  def extrude(ty: Type)(using lvl: Int, pol: Bool): Type = if ty.lvl <= lvl then ty else ty match
+  def extrude(ty: Type)(using lvl: Int, pol: Bool): Type =
+  trace[Type](s"Extruding[${printPol(pol)}] $ty", r => s"~> $r"):
+    if ty.lvl <= lvl then ty else ty match
     case ClassType(sym, targs) =>
       ClassType(sym, targs.map {
         case Wildcard(in, out) =>

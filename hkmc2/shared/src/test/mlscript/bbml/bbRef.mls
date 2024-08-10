@@ -3,28 +3,23 @@
 
 
 region x in 42
-//│ Elab: { region x in 42‹›‹› }‹›
 //│ Type: Int
 
 region x in x
-//│ Elab: { region x in x@2#0‹› }‹›
 //│ Type: Region[?]
 
 
 region x in x.ref 42
-//│ Elab: { region x in (x@2#0).ref 42‹›‹›‹› }‹›
 //│ Type: Ref[Int, ?]
 
 let r = region x in x.ref 42
 r
-//│ Elab: { let r@2 = region x in (x@3#0).ref 42‹›‹›‹›; r@2#0 }‹›
 //│ Type: Ref[Int, ?]
 
 :e
 let r = region x in x.ref 42
 !r
-//│ Elab: { let r@2 = region x in (x@3#0).ref 42‹›‹›‹›; !Ref(r@2)‹› }‹›
-//│ ╔══[ERROR] Type error in term Blk(List(LetBinding(Var(r@2),Region(x@3,RegRef(Ref(x@3),Lit(IntLit(42)))))),Deref(Ref(r@2)))
+//│ ╔══[ERROR] Type error in term { let r@2 = region x in (x@3#0).ref 42; !Ref(r@2) }
 //│ ╟── because: cannot constrain  (α17_1 ∨ α15_1) ∨ <α>0_0  <:  <α>0_0
 //│ ╟── because: cannot constrain  α17_1  <:  <α>0_0
 //│ ╟── because: cannot constrain  α16_1  <:  <α>0_0
@@ -33,18 +28,16 @@ let r = region x in x.ref 42
 
 fun mkRef() = region x in x.ref 42
 mkRef
-//│ Elab: { fun mkRef() = region x in (x@2#0).ref 42‹›‹›‹›; mkRef#0 }‹›
 //│ Type: () ->{<α>0_0} Ref[Int, ?]
 
 :e
 let t = region x in x in t.ref 42
-//│ Elab: { { let t@2 = region x in x@3#0‹›; (t@2#0).ref 42‹›‹› }‹› }‹›
-//│ ╔══[ERROR] Type error in term RegRef(Ref(t@2),Lit(IntLit(42)))
+//│ ╔══[ERROR] Type error in term (t@2#0).ref 42
 //│ ╟── because: cannot constrain  Region[?]  <:  Region[α26_1]
 //│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥  <:  ((⊤ ∧ ⊤) ∧ α26_1) ∨ ⊥
 //│ ╟── because: cannot constrain  ⊤  <:  α26_1
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
-//│ ╔══[ERROR] Type error in term Blk(List(),Blk(List(LetBinding(Var(t@2),Region(x@3,Ref(x@3)))),RegRef(Ref(t@2),Lit(IntLit(42)))))
+//│ ╔══[ERROR] Type error in term { { let t@2 = region x in x@3#0; (t@2#0).ref 42 } }
 //│ ╟── because: cannot constrain  (α26_1 ∨ α25_1) ∨ <α>0_0  <:  <α>0_0
 //│ ╟── because: cannot constrain  α26_1  <:  <α>0_0
 //│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
@@ -53,15 +46,13 @@ let t = region x in x in t.ref 42
 
 region x in
   let r = x.ref 42 in r := 0
-//│ Elab: { region x in { let r@3 = (x@2#0).ref 42‹›‹›; r@3#0 := 0‹›‹› }‹›‹› }‹›
 //│ Type: Int
 
 :e
 let t = region x in
   x.ref 42
 in t := 0
-//│ Elab: { { let t@2 = region x in (x@3#0).ref 42‹›‹›‹›; t@2#0 := 0‹›‹› }‹› }‹›
-//│ ╔══[ERROR] Type error in term Blk(List(),Blk(List(LetBinding(Var(t@2),Region(x@3,RegRef(Ref(x@3),Lit(IntLit(42)))))),Set(Ref(t@2),Lit(IntLit(0)))))
+//│ ╔══[ERROR] Type error in term { { let t@2 = region x in (x@3#0).ref 42; t@2#0 := 0 } }
 //│ ╟── because: cannot constrain  (α35_1 ∨ α33_1) ∨ <α>0_0  <:  <α>0_0
 //│ ╟── because: cannot constrain  α35_1  <:  <α>0_0
 //│ ╟── because: cannot constrain  α34_1  <:  <α>0_0
@@ -71,15 +62,13 @@ in t := 0
 
 region x in
   let r = x.ref 42 in !r
-//│ Elab: { region x in { let r@3 = (x@2#0).ref 42‹›‹›; !Ref(r@3)‹› }‹›‹› }‹›
 //│ Type: Int
 
 :e
 let t = region x in
   x.ref 42
 in !t
-//│ Elab: { { let t@2 = region x in (x@3#0).ref 42‹›‹›‹›; !Ref(t@2)‹› }‹› }‹›
-//│ ╔══[ERROR] Type error in term Blk(List(),Blk(List(LetBinding(Var(t@2),Region(x@3,RegRef(Ref(x@3),Lit(IntLit(42)))))),Deref(Ref(t@2))))
+//│ ╔══[ERROR] Type error in term { { let t@2 = region x in (x@3#0).ref 42; !Ref(t@2) } }
 //│ ╟── because: cannot constrain  (α46_1 ∨ α44_1) ∨ <α>0_0  <:  <α>0_0
 //│ ╟── because: cannot constrain  α46_1  <:  <α>0_0
 //│ ╟── because: cannot constrain  α45_1  <:  <α>0_0
@@ -88,23 +77,20 @@ in !t
 
 region x in
   let r = x.ref 42 in let t = r := 0 in !r
-//│ Elab: { region x in { let r@3 = (x@2#0).ref 42‹›‹›; { let t@4 = r@3#0 := 0‹›‹›; !Ref(r@3)‹› }‹› }‹›‹› }‹›
 //│ Type: Int
 
 :e
 fun rid: [A] -> A -> A
 fun rid(x) =
   let t = (region y in 42) in x
-//│ Elab: { fun rid: forall A@3: FunTy(Tup(List(Fld(‹›,Ref(A@3),None))),Ref(A@3),None)‹›; fun rid(x@4): forall A@8: FunTy(Tup(List(Fld(‹›,Ref(A@8),None))),Ref(A@8),None)‹› = { let t@5 = region y in 42‹›‹›; x@4#0 }‹›; }‹›
-//│ ╔══[ERROR] Type error in term Lam(List(Param(‹›,x@4,None)),Blk(List(LetBinding(Var(t@5),Region(y@6,Lit(IntLit(42))))),Ref(x@4))) with expected type (<α>56_2) ->{⊥} <α>56_2
+//│ ╔══[ERROR] Type error in term λx@4. { let t@5 = region y in 42; x@4#0 } with expected type (<α>56_2) ->{⊥} <α>56_2
 //│ ╙── because: cannot constrain  α58_2 ∨ <α>0_0  <:  ⊥
 //│ Type: ⊤
 
 :e
 region x in
   (let dz = x.ref 42 in 42): [A] -> Int
-//│ Elab: { region x in Blk(List(LetBinding(Var(dz@3),RegRef(Ref(x@2),Lit(IntLit(42))))),Lit(IntLit(42))): Forall(List(A@4),Ref(class:Int))‹›‹› }‹›
-//│ ╔══[ERROR] Type error in term Blk(List(LetBinding(Var(dz@3),RegRef(Ref(x@2),Lit(IntLit(42))))),Lit(IntLit(42))) with expected type forall α60_3: Int
+//│ ╔══[ERROR] Type error in term { let dz@3 = (x@2#0).ref 42; 42 } with expected type forall α60_3: Int
 //│ ╟── because: cannot constrain  α61_3  <:  ⊥
 //│ ╙── because: cannot constrain  <α>59_2  <:  ⊥
 //│ Type: forall α60_3: Int
@@ -115,8 +101,7 @@ let t =
   region x in
     y => x.ref y
   in t(42)
-//│ Elab: { { let t@2 = region x in λy@4. (x@3#0).ref y@4#0‹›‹›‹›; t@2#0(42‹›)‹› }‹› }‹›
-//│ ╔══[ERROR] Type error in term Blk(List(),Blk(List(LetBinding(Var(t@2),Region(x@3,Lam(List(Param(‹›,y@4,None)),RegRef(Ref(x@3),Ref(y@4)))))),App(Ref(t@2),Tup(List(Fld(‹›,Lit(IntLit(42)),None))))))
+//│ ╔══[ERROR] Type error in term { { let t@2 = region x in λy@4. (x@3#0).ref y@4#0; t@2#0(42) } }
 //│ ╟── because: cannot constrain  (α71_1 ∨ α66_1) ∨ <α>0_0  <:  <α>0_0
 //│ ╟── because: cannot constrain  α71_1  <:  <α>0_0
 //│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
@@ -125,6 +110,5 @@ let t =
 fun foo: [A] -> Int ->{A | Alloc} Int
 fun foo(x) =
   region y in x + 1
-//│ Elab: { fun foo: forall A@3: FunTy(Tup(List(Fld(‹›,Ref(class:Int),None))),Ref(class:Int),Some(CompType(Ref(A@3),Ref(Alloc@1),true)))‹›; fun foo(x@4): forall A@8: FunTy(Tup(List(Fld(‹›,Ref(class:Int),None))),Ref(class:Int),Some(CompType(Ref(A@8),Ref(Alloc@1),true)))‹› = region y in +#0(x@4#0, 1‹›)‹›‹›; }‹›
 //│ Type: ⊤
 
