@@ -5,7 +5,7 @@ import mlscript.utils.*, shorthands.*
 import syntax.*
 
 
-sealed abstract class Split[+SomeBranch <: Branch] extends Located {
+sealed abstract class Split[+SomeBranch <: Branch] extends AutoLocated {
   def ::[OtherBranch >: SomeBranch <: Branch](head: OtherBranch): Split[OtherBranch] = Split.Cons(head, this)
 }
 object Split {
@@ -13,7 +13,7 @@ object Split {
     override def children: Ls[Located] = head :: tail :: Nil
   }
   final case class Let[SomeBranch <: Branch](rec: Bool, nme: VarSymbol, rhs: Term, tail: Split[SomeBranch]) extends Split[SomeBranch] {
-    override def children: Ls[Located] = nme :: rhs :: tail :: Nil
+    override def children: Ls[Located] = nme.id :: rhs :: tail :: Nil
   }
   final case class Else(term: Term) extends Split[Nothing] {
     override def children: Ls[Located] = term :: Nil
@@ -30,7 +30,7 @@ object Split {
     branches.foldRight(NoSplit: Split[SomeBranch])(Cons.apply)
 }
 
-sealed abstract class Branch extends Located
+sealed abstract class Branch extends AutoLocated
 
 sealed abstract class TermBranch extends Branch {
   final def toSplit: TermSplit = Split.single(this)
@@ -54,10 +54,10 @@ sealed abstract class OperatorBranch extends Branch {
 }
 object OperatorBranch {
   final case class Match(override val operator: VarSymbol, continuation: PatternSplit) extends OperatorBranch {
-    override def children: Ls[Located] = operator :: continuation :: Nil
+    override def children: Ls[Located] = operator.id :: continuation :: Nil
   }
   final case class Binary(override val operator: VarSymbol, continuation: TermSplit) extends OperatorBranch {
-    override def children: Ls[Located] = operator :: continuation :: Nil
+    override def children: Ls[Located] = operator.id :: continuation :: Nil
   }
 }
 type OperatorSplit = Split[OperatorBranch]

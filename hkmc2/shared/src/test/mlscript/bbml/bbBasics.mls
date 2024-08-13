@@ -41,7 +41,9 @@ x => x
 
 :e
 114 + "514"
-//│ ╔══[ERROR] Type error in term "514" with expected type Int
+//│ ╔══[ERROR] Type error in string literal with expected type Int
+//│ ║  l.43: 	114 + "514"
+//│ ║        	      ^^^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Int
 
@@ -57,7 +59,9 @@ let x = 1 in let y = 2 in x + y
 
 :e
 let x = 0 in x + "1"
-//│ ╔══[ERROR] Type error in term "1" with expected type Int
+//│ ╔══[ERROR] Type error in string literal with expected type Int
+//│ ║  l.61: 	let x = 0 in x + "1"
+//│ ║        	                 ^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Int
 
@@ -67,14 +71,15 @@ class Foo(x: Int)
 :e
 new Nothingness(0)
 //│ ╔══[ERROR] Class Nothingness not found.
-//│ ║  l.68: 	new Nothingness(0)
-//│ ╙──      	               ^^^
+//│ ║  l.72: 	new Nothingness(0)
+//│ ╙──      	    ^^^^^^^^^^^^^^
 //│ Type: ⊥
 
 :e
 new 42
 //│ ╔══[ERROR] Illegal new expression.
-//│ ╙──
+//│ ║  l.79: 	new 42
+//│ ╙──      	    ^^
 //│ Type: ⊥
 
 
@@ -91,7 +96,9 @@ new Point(0.0, 0.0, 0.0)
 
 :e
 new Foo("1!5!")
-//│ ╔══[ERROR] Type error in term "1!5!" with expected type Int
+//│ ╔══[ERROR] Type error in string literal with expected type Int
+//│ ║  l.98: 	new Foo("1!5!")
+//│ ║        	        ^^^^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Foo
 
@@ -112,9 +119,15 @@ let t = new Some(true) in t.Some#value
 //│ Type: Bool
 
 :fixme
-:e
+:pe
 42.Some#value
-//│ /!!!\ Uncaught error: scala.NotImplementedError: Lexing
+//│ ╔══[LEXICAL ERROR] Expect at least one digit after the  decimal point
+//│ ║  l.123: 	42.Some#value
+//│ ╙──       	   ^
+//│ ╔══[PARSE ERROR] Expected end of input; found identifier instead
+//│ ║  l.123: 	42.Some#value
+//│ ╙──       	   ^^^^
+//│ Type: Num
 
 
 class Printer[T](f: T -> Str)
@@ -132,7 +145,9 @@ let ip = new Printer(foofoo) in ip.Printer#f(42)
 
 :e
 let ip = new Printer(foofoo) in ip.Printer#f("42")
-//│ ╔══[ERROR] Type error in term "42" with expected type α33_1
+//│ ╔══[ERROR] Type error in string literal with expected type α33_1
+//│ ║  l.147: 	let ip = new Printer(foofoo) in ip.Printer#f("42")
+//│ ║         	                                             ^^^^
 //│ ╟── because: cannot constrain  Str  <:  α33_1
 //│ ╟── because: cannot constrain  Str  <:  α31_1
 //│ ╟── because: cannot constrain  Str  <:  α24_1
@@ -153,7 +168,9 @@ let tf = new TFun(inc) in tf.TFun#f(1)
 
 :e
 let tf = new TFun(inc) in tf.TFun#f("1")
-//│ ╔══[ERROR] Type error in term "1" with expected type α45_1
+//│ ╔══[ERROR] Type error in string literal with expected type α45_1
+//│ ║  l.170: 	let tf = new TFun(inc) in tf.TFun#f("1")
+//│ ║         	                                    ^^^
 //│ ╟── because: cannot constrain  Str  <:  α45_1
 //│ ╟── because: cannot constrain  Str  <:  α43_1
 //│ ╟── because: cannot constrain  Str  <:  α36_1

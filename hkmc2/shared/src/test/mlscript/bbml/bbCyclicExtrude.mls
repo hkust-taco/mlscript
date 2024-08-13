@@ -19,7 +19,9 @@ f => (let g = x => x(x) in f(g(g))) : [A] -> A -> A
 
 :e
 f => (let g = x => f(x(x)) in g) : [A] -> A -> A
-//│ ╔══[ERROR] Type error in term g@48#0 with expected type (<α>27_2) ->{⊥} <α>27_2
+//│ ╔══[ERROR] Type error in reference with expected type (<α>27_2) ->{⊥} <α>27_2
+//│ ║  l.21: 	f => (let g = x => f(x(x)) in g) : [A] -> A -> A
+//│ ║        	                              ^
 //│ ╟── because: cannot constrain  α28_2 ->{α31_2 ∨ α29_2} α32_2  <:  <α>27_2 ->{⊥} <α>27_2
 //│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ <α>27_2) ∨ ⊥  <:  ((⊤ ∧ ⊤) ∧ α28_2) ∨ ⊥
 //│ ╟── because: cannot constrain  <α>27_2  <:  α28_2
@@ -43,7 +45,8 @@ let foo(f) = (f(x => x(x)) : [A] -> A -> A) in foo
 :todo
 fun foo(f) = (f(x => x(x)) : [A] -> A -> A)
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ╙──
+//│ ║  l.46: 	fun foo(f) = (f(x => x(x)) : [A] -> A -> A)
+//│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
 :fixme // extrusion of cyclic bounds

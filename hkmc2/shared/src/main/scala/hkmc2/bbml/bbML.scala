@@ -337,7 +337,7 @@ class BBTyper(tl: TraceLogger)(using elState: Elaborator.State):
       val (altsTy, altsEff) = typeSplit(alts, sign)
       val allEff = condEff | (consEff | altsEff)
       constrain(monoOrErr(condTy, cond), Ctx.boolTy)
-      (sign.getOrElse(monoOrErr(consTy, cons) | monoOrErr(altsTy, alts)), allEff)
+      (sign.getOrElse(monoOrErr(consTy, cons) | monoOrErr(altsTy, split)), allEff)
     case Split.Cons(TermBranch.Match(scrutinee, Split.Cons(PatternBranch(Pattern.Class(sym, _, _), cons), Split.NoSplit)), alts) =>
       // * Pattern matching
       val (clsTy, tv, emptyTy) = ctx.getDef(sym.nme) match

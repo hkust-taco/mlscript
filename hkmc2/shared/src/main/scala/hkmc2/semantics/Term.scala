@@ -5,14 +5,14 @@ import mlscript.utils.*, shorthands.*
 import syntax.*
 
 
-enum Term extends Statement with Located:
+enum Term extends Statement:
   case Error
   case Lit(lit: Literal)
-  case Ref(sym: Symbol)(val refNum: Int)
-  case App(lhs: Term, rhs: Term)(val resSym: FlowSymbol)
+  case Ref(sym: Symbol)(val tree: Tree.Ident, val refNum: Int)
+  case App(lhs: Term, rhs: Term)(val tree: Tree.App, val resSym: FlowSymbol)
   case TyApp(lhs: Term, targs: Ls[Term])
   case Sel(prefix: Term, nme: Tree.Ident)
-  case Tup(fields: Ls[Fld])
+  case Tup(fields: Ls[Fld])(val tree: Tree.Tup)
   case If(body: TermSplit)
   case Lam(params: Ls[Param], body: Term)
   case FunTy(lhs: Term, rhs: Term, eff: Opt[Term])
@@ -50,11 +50,35 @@ enum Term extends Statement with Located:
     if s.isDefined then symbol = s
     s
   
-  def describe: Str = ???
-  def children: Ls[Located] = subTerms // TODO more precise (include located things that aren't terms)
+  def describe: Str = this match
+    case Error => "<error>"
+    case Lit(lit) => lit.describeLit
+    case Ref(sym) => "reference"
+    case App(lhs, rhs) => "application"
+    case TyApp(lhs, targs) => "type application"
+    case Sel(pre, nme) => "selection"
+    case Tup(fields) => "tuple literal"
+    case If(body) => "`if` expression"
+    case Lam(params, body) => "function literal"
+    case FunTy(lhs, rhs, eff) => "function type"
+    case Forall(tvs, body) => "universal quantification"
+    case WildcardTy(in, out) => "wildcard type"
+    case Blk(stats, res) => "block"
+    case Quoted(term) => "quoted term"
+    case Unquoted(term) => "unquoted term"
+    case New(cls, args) => "object creation"
+    case SelProj(pre, cls, proj) => "field selection"
+    case Asc(term, ty) => "type ascription"
+    case CompType(lhs, rhs, pol) => "composed type"
+    case Neg(rhs) => "negation type"
+    case Region(name, body) => "region expression"
+    case RegRef(reg, value) => "reference creation"
+    case Set(lhs, rhs) => "assignment"
+    case Deref(ref) => "dereference"
+  
 import Term.*
 
-sealed trait Statement extends Located:
+sealed trait Statement extends AutoLocated:
   
   def subStatements: Ls[Statement] = this match
     case Blk(stats, res) => stats ::: res :: Nil
@@ -86,6 +110,16 @@ sealed trait Statement extends Located:
       ps.toList.flatMap(_.flatMap(_.subTerms)) ::: sign.toList ::: body.toList
     case cls: ClassDef =>
       cls.paramsOpt.toList.flatMap(_.flatMap(_.subTerms)) ::: cls.body.blk :: Nil
+  
+  protected def children: Ls[Located] =this match
+    case t: Lit => t.lit.asTree :: Nil
+    case t: Ref => t.tree :: Nil
+    case t: Tup => t.tree :: Nil
+    case l: Lam => l.params.map(_.sym.id) ::: l.body :: Nil
+    case t: App => t.tree :: Nil
+    case SelProj(prefix, cls, proj) => prefix :: cls :: proj :: Nil
+    case _ =>
+      subTerms // TODO more precise (include located things that aren't terms)
   
   def show: Str = showDbg // TODO use Document
   
@@ -141,8 +175,7 @@ sealed trait Statement extends Located:
         cls.tparams.map(_.showDbg).mkStringOr(", ", "[", "]")}${
         cls.paramsOpt.fold("")(_.map(_.showDbg).mkString("(", ", ", ")"))} ${cls.body}"
 
-final case class LetBinding(pat: Pattern, rhs: Term) extends Statement:
-  def children: Ls[Located] = ???
+final case class LetBinding(pat: Pattern, rhs: Term) extends Statement
 
 final case class TermDefinition(
     k: TermDefKind,
@@ -151,8 +184,7 @@ final case class TermDefinition(
     sign: Opt[Term],
     body: Opt[Term],
     resSym: FlowSymbol,
-) extends Companion:
-  def children: Ls[Located] = ???
+) extends Companion
 
 case class ObjBody(blk: Term.Blk):
   // override def toString: String = statmts.mkString("{ ", "; ", " }")
@@ -173,7 +205,6 @@ sealed abstract class ClassDef extends Definition:
   val paramsOpt: Opt[Ls[Param]]
   val body: ObjBody
   val companion: Opt[Companion]
-  def children: Ls[Located] = ???
 object ClassDef:
   def apply(sym: ClassSymbol, tparams: Ls[TyParam], paramsOpt: Opt[Ls[Param]], body: ObjBody): ClassDef =
     paramsOpt match
@@ -187,11 +218,10 @@ object ClassDef:
     val paramsOpt: Opt[Ls[Param]] = N
 end ClassDef
 
-case class TypeDef(sym: TypeAliasSymbol, companion: Opt[Companion]) extends Statement:
-  def children: Ls[Located] = ???
+case class TypeDef(sym: TypeAliasSymbol, companion: Opt[Companion]) extends Statement
 
-final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool) extends Located:
-  def children: Ls[Located] = ???
+// TODO Store optional source locations for the flags instead of booleans
+final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool):
   def showDbg: Str = (if mut then "mut " else "") + (if spec then "spec " else "") + (if genGetter then "val " else "")
   override def toString: String = "‹" + showDbg + "›"
 
@@ -218,7 +248,7 @@ final case class Param(flags: FldFlags, sym: VarSymbol, sign: Opt[Term]):
 
 object FldFlags { val empty: FldFlags = FldFlags(false, false, false) }
 
-trait FldImpl extends Located:
+trait FldImpl extends AutoLocated:
   self: Fld =>
   def children: Ls[Located] = self.value :: self.asc.toList ::: Nil
   def showDbg: Str = flags.showDbg + self.value.showDbg

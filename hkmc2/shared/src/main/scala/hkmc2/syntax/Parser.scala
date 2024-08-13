@@ -390,17 +390,18 @@ abstract class Parser(
           errExpr
         case N =>
           consume
+          val id = Tree.Ident(nme).withLoc(S(loc))
           if prefixOps.contains(nme)
           then
             yeetSpaces match
-              case Nil => Tree.Ident(nme)
+              case Nil => id
               case _ =>
                 val rhs = expr(PrefixOpsPrec)
-                exprCont(App(Tree.Ident(nme), PlainTup(rhs)), prec, allowNewlines = true)
-          else exprCont(Tree.Ident(nme), prec, allowNewlines = true)
+                exprCont(App(id, PlainTup(rhs)), prec, allowNewlines = true)
+          else exprCont(id, prec, allowNewlines = true)
     case (LITVAL(lit), loc) :: _ =>
       consume
-      exprCont(lit.asTree, prec, allowNewlines = true)
+      exprCont(lit.asTree.withLoc(S(loc)), prec, allowNewlines = true)
     case (br @ BRACKETS(bk @ (Round | Square), toks), loc) :: _ =>
       consume
       val ps = rec(toks, S(br.innerLoc), br.describe).concludeWith(_.blockMaybeIndented)
@@ -412,23 +413,25 @@ abstract class Parser(
             val lhs = bk match
               case Round => Tup(ps)
               case Square => TyTup(ps)
-            exprCont(Quoted(InfixApp(lhs, kw, Unquoted(rhs))), prec, allowNewlines = true)
+            exprCont(
+              Quoted(InfixApp(lhs, kw, Unquoted(rhs)).withLoc(S(loc))).withLoc(S(l ++ loc)),
+              prec, allowNewlines = true)
         case (KEYWORD(kw @ (Keyword.`=>` | Keyword.`->`)), l0) :: _ =>
           consume
           val rhs = effectfulRhs(kw.rightPrecOrMin)
           val lhs = bk match
             case Round => Tup(ps)
             case Square => TyTup(ps)
-          val res = InfixApp(lhs, kw, rhs)
+          val res = InfixApp(lhs, kw, rhs).withLoc(S(loc))
           exprCont(res, prec, allowNewlines = true)
         case _ =>
           val sts = ps
           val res = bk match
-            case Square => Tup(sts)
+            case Square => Tup(sts).withLoc(S(loc))
             case Round => sts match
-              case Nil => UnitLit(true)
+              case Nil => UnitLit(true).withLoc(S(loc))
               case e :: Nil => e
-              case es => Block(es)
+              case es => Block(es).withLoc(S(loc))
           exprCont(res, prec, allowNewlines = true)
     case (QUOTE, loc) :: _ =>
       consume

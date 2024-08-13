@@ -6,33 +6,44 @@ fun add: (Int, Int) -> Int
 fun add(x, y) = x + y
 //│ Type: ⊤
 
+// FIXME locations
 :e
 fun foo: Int -> Int
 fun foo: Int -> Int
 //│ ╔══[ERROR] Duplicate definition of foo
-//│ ╙── aready defined here
+//│ ║  l.12: 	fun foo: Int -> Int
+//│ ║        	    ^^^^^^^^^^^^^^^
+//│ ╟── aready defined here
+//│ ║  l.12: 	fun foo: Int -> Int
+//│ ╙──      	    ^^^
 //│ Type: ⊤
 
 :e
 fun id(x) = x
 fun id(y) = y
 //│ ╔══[ERROR] Duplicate definition of id
-//│ ║  l.18: 	fun id(y) = y
-//│ ║        	      ^^^
-//│ ╙── aready defined here
+//│ ║  l.23: 	fun id(y) = y
+//│ ║        	    ^^^^^^^^^
+//│ ╟── aready defined here
+//│ ║  l.23: 	fun id(y) = y
+//│ ╙──      	    ^^
 //│ Type: ⊤
 
 :e
 fun bar: Str -> Str
 fun bar(x) = let t = x + 1 in "aaa"
-//│ ╔══[ERROR] Type error in term x@39#0 with expected type Int
+//│ ╔══[ERROR] Type error in reference with expected type Int
+//│ ║  l.34: 	fun bar(x) = let t = x + 1 in "aaa"
+//│ ║        	                     ^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: ⊤
 
 :e
 fun baz: Int -> Int
 fun baz(x) = "bbb"
-//│ ╔══[ERROR] Type error in term λx@45. "bbb" with expected type (Int) ->{⊥} Int
+//│ ╔══[ERROR] Type error in function literal with expected type (Int) ->{⊥} Int
+//│ ║  l.43: 	fun baz(x) = "bbb"
+//│ ║        	        ^^^^^^^^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: ⊤
 
@@ -45,13 +56,17 @@ add(1, 2): Int
 
 :e
 add(0, 0): Str
-//│ ╔══[ERROR] Type error in term add#2(0, 0) with expected type Str
+//│ ╔══[ERROR] Type error in application with expected type Str
+//│ ║  l.58: 	add(0, 0): Str
+//│ ║        	^^^^^^^^^
 //│ ╙── because: cannot constrain  Int  <:  Str
 //│ Type: Str
 
 :e
 fun errAdd(x: Int) = x + "1"
-//│ ╔══[ERROR] Type error in term "1" with expected type Int
+//│ ╔══[ERROR] Type error in string literal with expected type Int
+//│ ║  l.66: 	fun errAdd(x: Int) = x + "1"
+//│ ║        	                         ^^^
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: ⊤
 
@@ -71,9 +86,13 @@ high(x => x)
 
 :e
 high(x => x + 1)
-//│ ╔══[ERROR] Type error in term x@74#0 with expected type Int
+//│ ╔══[ERROR] Type error in reference with expected type Int
+//│ ║  l.88: 	high(x => x + 1)
+//│ ║        	          ^
 //│ ╙── because: cannot constrain  <α>7_2  <:  Int
-//│ ╔══[ERROR] Type error in term λx@74. +#3(x@74#0, 1) with expected type (<α>7_2) ->{⊥} <α>7_2
+//│ ╔══[ERROR] Type error in function literal with expected type (<α>7_2) ->{⊥} <α>7_2
+//│ ║  l.88: 	high(x => x + 1)
+//│ ║        	     ^^^^^^^^^^
 //│ ╙── because: cannot constrain  Int  <:  <α>7_2
 //│ Type: Int
 
@@ -92,9 +111,11 @@ fun baz(z) =
 :e
 baz: Int -> (([A] -> A -> A), Int) -> Int
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ╙──
+//│ ║  l.112: 	baz: Int -> (([A] -> A -> A), Int) -> Int
+//│ ╙──       	^^^
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ╙──
+//│ ║  l.112: 	baz: Int -> (([A] -> A -> A), Int) -> Int
+//│ ╙──       	^^^
 //│ Type: (Int) ->{⊥} (forall α16_2: (α16_2) ->{⊥} α16_2, Int) ->{⊥} Int
 
 
@@ -105,9 +126,11 @@ baz(42)
 :e
 baz(42): (([A] -> A -> A), Int) -> Int
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ╙──
+//│ ║  l.127: 	baz(42): (([A] -> A -> A), Int) -> Int
+//│ ╙──       	^^^^^^^
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ╙──
+//│ ║  l.127: 	baz(42): (([A] -> A -> A), Int) -> Int
+//│ ╙──       	^^^^^^^
 //│ Type: (forall α17_2: (α17_2) ->{⊥} α17_2, Int) ->{⊥} Int
 
 

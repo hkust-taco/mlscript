@@ -34,7 +34,9 @@ g(foo)
 
 :e
 y `=> (let t = run(x `=> x `+ y) in y)
-//│ ╔══[ERROR] Type error in term code"λx@61. ${code"+#2(${x@61#0}, ${y@58#0})"}" with expected type CodeBase[out α23_3, ⊥, ?]
+//│ ╔══[ERROR] Type error in quoted term with expected type CodeBase[out α23_3, ⊥, ?]
+//│ ║  l.36: 	y `=> (let t = run(x `=> x `+ y) in y)
+//│ ║        	                   ^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  CodeBase[out α24_5 ->{⊥} α31_5, out α33_4, ?]  <:  CodeBase[out α23_3, ⊥, ?]
 //│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ α33_4) ∨ ⊥  <:  ⊥ ∨ ⊥
 //│ ╟── because: cannot constrain  α33_4  <:  ⊥
@@ -72,7 +74,9 @@ f(g)(foo)
 
 :fixme // ???
 f(g)(bar)
-//│ ╔══[ERROR] Type error in term bar#1 with expected type α48_1
+//│ ╔══[ERROR] Type error in reference with expected type α48_1
+//│ ║  l.76: 	f(g)(bar)
+//│ ║        	     ^^^
 //│ ╟── because: cannot constrain  C[Int]  <:  α48_1
 //│ ╟── because: cannot constrain  C[((Int ∧ ⊤) ∧ ⊤) ∨ ⊥]  <:  α48_1
 //│ ╟── because: cannot constrain  C[((Int ∧ ⊤) ∧ ⊤) ∨ ⊥]  <:  ¬C[in ⊥ ∨ ⊥ out ⊤ ∧ ⊤] ∨ C[in ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥ out (⊤ ∧ ⊤) ∧ α50_1]

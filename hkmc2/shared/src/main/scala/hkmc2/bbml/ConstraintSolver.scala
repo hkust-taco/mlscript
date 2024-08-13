@@ -14,7 +14,7 @@ type Cache = Set[(Type, Type)]
 case class CCtx(cache: Cache, parents: Ls[(Type, Type)], origin: Term, exp: Opt[GeneralType]):
   def err(using Raise) =
     raise(ErrorReport(
-      msg"Type error in term ${origin.show}${exp match
+      msg"Type error in ${origin.describe}${exp match
           case S(ty) => msg" with expected type ${ty.toString}"
           case N => msg""
         }" -> origin.toLoc

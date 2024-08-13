@@ -21,7 +21,10 @@ trait TypeLike:
 trait NullaryType extends TypeLike
 
 trait Located:
-  def children: List[Located]
+  def toLoc: Opt[Loc]
+
+trait AutoLocated extends Located:
+  protected def children: List[Located]
   
   private var loc: Opt[Loc] = N
   

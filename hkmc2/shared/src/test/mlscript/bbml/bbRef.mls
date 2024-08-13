@@ -19,7 +19,11 @@ r
 :e
 let r = region x in x.ref 42
 !r
-//│ ╔══[ERROR] Type error in term { let r@33 = region x in (x@34#0).ref 42; !Ref(r@33) }
+//│ ╔══[ERROR] Type error in block
+//│ ║  l.20: 	let r = region x in x.ref 42
+//│ ║        	                    ^^^^^^^^
+//│ ║  l.21: 	!r
+//│ ║        	^^
 //│ ╟── because: cannot constrain  (α17_1 ∨ α15_1) ∨ <α>0_0  <:  <α>0_0
 //│ ╟── because: cannot constrain  α17_1  <:  <α>0_0
 //│ ╟── because: cannot constrain  α16_1  <:  <α>0_0
@@ -32,12 +36,16 @@ mkRef
 
 :e
 let t = region x in x in t.ref 42
-//│ ╔══[ERROR] Type error in term (t@39#0).ref 42
+//│ ╔══[ERROR] Type error in reference creation
+//│ ║  l.38: 	let t = region x in x in t.ref 42
+//│ ║        	                         ^^^^^^^^
 //│ ╟── because: cannot constrain  Region[?]  <:  Region[α26_1]
 //│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥  <:  ((⊤ ∧ ⊤) ∧ α26_1) ∨ ⊥
 //│ ╟── because: cannot constrain  ⊤  <:  α26_1
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
-//│ ╔══[ERROR] Type error in term { { let t@39 = region x in x@40#0; (t@39#0).ref 42 } }
+//│ ╔══[ERROR] Type error in block
+//│ ║  l.38: 	let t = region x in x in t.ref 42
+//│ ║        	                    ^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  (α26_1 ∨ α25_1) ∨ <α>0_0  <:  <α>0_0
 //│ ╟── because: cannot constrain  α26_1  <:  <α>0_0
 //│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
@@ -52,7 +60,11 @@ region x in
 let t = region x in
   x.ref 42
 in t := 0
-//│ ╔══[ERROR] Type error in term { { let t@45 = region x in (x@46#0).ref 42; t@45#0 := 0 } }
+//│ ╔══[ERROR] Type error in block
+//│ ║  l.61: 	  x.ref 42
+//│ ║        	  ^^^^^^^^
+//│ ║  l.62: 	in t := 0
+//│ ║        	^^^^^^^^^
 //│ ╟── because: cannot constrain  (α35_1 ∨ α33_1) ∨ <α>0_0  <:  <α>0_0
 //│ ╟── because: cannot constrain  α35_1  <:  <α>0_0
 //│ ╟── because: cannot constrain  α34_1  <:  <α>0_0
@@ -68,7 +80,11 @@ region x in
 let t = region x in
   x.ref 42
 in !t
-//│ ╔══[ERROR] Type error in term { { let t@51 = region x in (x@52#0).ref 42; !Ref(t@51) } }
+//│ ╔══[ERROR] Type error in block
+//│ ║  l.81: 	  x.ref 42
+//│ ║        	  ^^^^^^^^
+//│ ║  l.82: 	in !t
+//│ ║        	^^^^^
 //│ ╟── because: cannot constrain  (α46_1 ∨ α44_1) ∨ <α>0_0  <:  <α>0_0
 //│ ╟── because: cannot constrain  α46_1  <:  <α>0_0
 //│ ╟── because: cannot constrain  α45_1  <:  <α>0_0
@@ -83,14 +99,20 @@ region x in
 fun rid: [A] -> A -> A
 fun rid(x) =
   let t = (region y in 42) in x
-//│ ╔══[ERROR] Type error in term λx@60. { let t@61 = region y in 42; x@60#0 } with expected type (<α>56_2) ->{⊥} <α>56_2
+//│ ╔══[ERROR] Type error in function literal with expected type (<α>56_2) ->{⊥} <α>56_2
+//│ ║  l.100: 	fun rid(x) =
+//│ ║         	        ^^^^
+//│ ║  l.101: 	  let t = (region y in 42) in x
+//│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── because: cannot constrain  α58_2 ∨ <α>0_0  <:  ⊥
 //│ Type: ⊤
 
 :e
 region x in
   (let dz = x.ref 42 in 42): [A] -> Int
-//│ ╔══[ERROR] Type error in term { let dz@67 = (x@66#0).ref 42; 42 } with expected type forall α60_3: Int
+//│ ╔══[ERROR] Type error in block with expected type forall α60_3: Int
+//│ ║  l.112: 	  (let dz = x.ref 42 in 42): [A] -> Int
+//│ ║         	            ^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  α61_3  <:  ⊥
 //│ ╙── because: cannot constrain  <α>59_2  <:  ⊥
 //│ Type: forall α60_3: Int
@@ -101,7 +123,11 @@ let t =
   region x in
     y => x.ref y
   in t(42)
-//│ ╔══[ERROR] Type error in term { { let t@70 = region x in λy@72. (x@71#0).ref y@72#0; t@70#0(42) } }
+//│ ╔══[ERROR] Type error in block
+//│ ║  l.124: 	    y => x.ref y
+//│ ║         	    ^^^^^^^^^^^^
+//│ ║  l.125: 	  in t(42)
+//│ ║         	^^^^^^^^^^
 //│ ╟── because: cannot constrain  (α71_1 ∨ α66_1) ∨ <α>0_0  <:  <α>0_0
 //│ ╟── because: cannot constrain  α71_1  <:  <α>0_0
 //│ ╙── because: cannot constrain  ⊤  <:  <α>0_0

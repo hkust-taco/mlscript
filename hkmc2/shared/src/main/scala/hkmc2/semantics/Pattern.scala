@@ -22,6 +22,11 @@ enum Pattern extends Located:
   
   def boundSymbols: Ls[Str -> Symbol] = ???
   
+  def toLoc: Opt[Loc] = N // TODO
+  
+  /* 
+  def toLoc: Opt[Loc] = Loc(children)
+  
   def children: Ls[Located] = this match
     case Alias(nme, pattern) =>
       nme :: pattern :: Nil
@@ -41,6 +46,7 @@ enum Pattern extends Located:
     case Record(entries: List[(VarSymbol -> Pattern)]) =>
       // entries.iterator.flatMap { case (nme, als) => nme :: als :: Nil }.toList
       ???
+  */
   
   def showDbg: Str = this match
     case Alias(nme, pattern) => s"($nme as $pattern)"

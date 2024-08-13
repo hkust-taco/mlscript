@@ -6,7 +6,9 @@
 
 :e
 42: [A] -> Str
-//│ ╔══[ERROR] Type error in term 42 with expected type Str
+//│ ╔══[ERROR] Type error in integer literal with expected type Str
+//│ ║  l.8: 	42: [A] -> Str
+//│ ║       	^^
 //│ ╙── because: cannot constrain  Int  <:  Str
 //│ Type: forall α2_2: Str
 
@@ -19,9 +21,13 @@ id
 
 :e
 (x => x + 1): [A] -> A -> A
-//│ ╔══[ERROR] Type error in term x@35#0 with expected type Int
+//│ ╔══[ERROR] Type error in reference with expected type Int
+//│ ║  l.23: 	(x => x + 1): [A] -> A -> A
+//│ ║        	      ^
 //│ ╙── because: cannot constrain  <α>5_2  <:  Int
-//│ ╔══[ERROR] Type error in term λx@35. +#0(x@35#0, 1) with expected type (<α>5_2) ->{⊥} <α>5_2
+//│ ╔══[ERROR] Type error in function literal with expected type (<α>5_2) ->{⊥} <α>5_2
+//│ ║  l.23: 	(x => x + 1): [A] -> A -> A
+//│ ║        	 ^^^^^^^^^^
 //│ ╙── because: cannot constrain  Int  <:  <α>5_2
 //│ Type: forall α5_2: (α5_2) ->{⊥} α5_2
 
@@ -138,9 +144,11 @@ gen(42)
 fun cnt: Some[out [A] -> A -> A] -> Int
 fun cnt(x) = 42
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ╙──
+//│ ║  l.144: 	fun cnt: Some[out [A] -> A -> A] -> Int
+//│ ╙──       	                         ^^^^^^
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ╙──
+//│ ║  l.144: 	fun cnt: Some[out [A] -> A -> A] -> Int
+//│ ╙──       	                         ^^^^^^
 //│ Type: ⊤
 
 (x => x): [A] -> A -> A

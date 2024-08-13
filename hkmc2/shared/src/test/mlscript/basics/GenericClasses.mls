@@ -39,7 +39,8 @@ class Foo[A] with
 :e
 class Foo[A](x: Foo[A, A])
 //│ ╔══[ERROR] Wrong number of type arguments
-//│ ╙──
+//│ ║  l.40: 	class Foo[A](x: Foo[A, A])
+//│ ╙──      	                ^^^^^^^^
 //│ Type: Ctor(lit:UnitLit(true),List())
 
 :fixme
@@ -47,6 +48,7 @@ class Foo[A](x: Foo[A, A])
 class Foo[A](x: Bar[A])
 class Bar(x: Foo[Int])
 //│ ╔══[ERROR] Wrong number of type arguments
-//│ ╙──
+//│ ║  l.48: 	class Foo[A](x: Bar[A])
+//│ ╙──      	                ^^^^^
 //│ Type: Ctor(lit:UnitLit(true),List())
 

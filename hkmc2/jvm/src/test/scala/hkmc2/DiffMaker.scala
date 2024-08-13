@@ -122,7 +122,9 @@ abstract class DiffMaker:
         d.source match
         case Diagnostic.Source.Lexing =>
           parseErrors += 1
-          TODO(d.source)
+          if expectParseError.isUnset && !tolerateErrors then
+            failures += globalStartLineNum
+            unexpected("lexing error", blockLineNum)
         case Diagnostic.Source.Parsing =>
           parseErrors += 1
           if expectParseError.isUnset && !tolerateErrors then

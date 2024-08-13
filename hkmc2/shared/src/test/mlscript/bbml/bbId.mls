@@ -28,7 +28,9 @@ fun id(x) = x
 
 :e
 id : [A] -> A -> A
-//│ ╔══[ERROR] Type error in term id#0 with expected type (<α>9_2) ->{⊥} <α>9_2
+//│ ╔══[ERROR] Type error in reference with expected type (<α>9_2) ->{⊥} <α>9_2
+//│ ║  l.30: 	id : [A] -> A -> A
+//│ ║        	^^
 //│ ╟── because: cannot constrain  α7_1  <:  <α>9_2 ->{⊥} <α>9_2
 //│ ╟── because: cannot constrain  α7_1  <:  (⊤ ∧ ⊤) ->{⊥ ∨ ⊥} ⊥
 //│ ╟── because: cannot constrain  (((⊤ ∧ ⊤) ∧ α8_1) ∨ ⊥) ->{⊥ ∨ ⊥} (((⊤ ∧ ⊤) ∧ α8_1) ∨ ⊥)  <:  (⊤ ∧ ⊤) ->{⊥ ∨ ⊥} ⊥
@@ -44,7 +46,9 @@ id : [A] -> A -> A
 :fixme
 fun id(x) = x
 (y => id(y)) : [A] -> A -> A
-//│ ╔══[ERROR] Type error in term λy@43. id#0(y@43#0) with expected type (<α>13_2) ->{⊥} <α>13_2
+//│ ╔══[ERROR] Type error in function literal with expected type (<α>13_2) ->{⊥} <α>13_2
+//│ ║  l.48: 	(y => id(y)) : [A] -> A -> A
+//│ ║        	 ^^^^^^^^^^
 //│ ╟── because: cannot constrain  α15_2  <:  <α>13_2
 //│ ╟── because: cannot constrain  α16_1  <:  <α>13_2
 //│ ╟── because: cannot constrain  α16_1  <:  ⊥

@@ -30,7 +30,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
   
   // * Ref allocation skolem UID, preserved
   private val allocSkolemUID = nextUid
-  private val allocSkolemSym = VarSymbol("Alloc", allocSkolemUID)
+  private val allocSkolemSym = VarSymbol(Ident("Alloc"), allocSkolemUID)
   private val allocSkolemDef = TyParam(FldFlags.empty, N, allocSkolemSym)
   allocSkolemSym.decl = S(allocSkolemDef)
   
@@ -50,13 +50,13 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
       Term.Blk(List(LetBinding(pat, r)), b)
     case Ident("true") => Term.Lit(Tree.BoolLit(true))
     case Ident("false") => Term.Lit(Tree.BoolLit(false))
-    case Ident("Alloc") => Term.Ref(allocSkolemSym)(1)
-    case Ident(name) =>
+    case id @ Ident("Alloc") => Term.Ref(allocSkolemSym)(id, 1)
+    case id @ Ident(name) =>
       ctx.locals.get(name) match
-        case S(sym) => sym.ref
+        case S(sym) => sym.ref(id)
         case N =>
           ctx.members.get(name) match
-            case S(sym) => sym.ref
+            case S(sym) => sym.ref(id)
             case N =>
               raise(ErrorReport(msg"Name not found: $name" -> tree.toLoc :: Nil))
               Term.Error
@@ -71,10 +71,10 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
     case InfixApp(TyTup(tvs), Keyword.`->`, body) =>
       val boundVars = mutable.HashMap.empty[Str, VarSymbol]
       val bds = tvs.collect:
-        case Tree.Ident(nme) =>
-          val sym = VarSymbol(nme, nextUid)
+        case id: Tree.Ident =>
+          val sym = VarSymbol(id, nextUid)
           sym.decl = S(TyParam(FldFlags.empty, N, sym)) // TODO vce
-          boundVars += nme -> sym
+          boundVars += id.name -> sym
           sym          
       if bds.length != tvs.length then
         raise(ErrorReport(msg"Illegal forall annotation." -> tree.toLoc :: Nil))
@@ -96,21 +96,21 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
       Term.CompType(term(lhs), term(rhs), false)
     case App(Ident(":="), Tree.Tup(lhs :: rhs :: Nil)) =>
       Term.Set(term(lhs), term(rhs))
-    case App(Ident("#"), Tree.Tup(Sel(pre, Ident(name)) :: Ident(proj) :: Nil)) =>
-      Term.SelProj(term(pre), term(Ident(name)), Ident(proj))
+    case App(Ident("#"), Tree.Tup(Sel(pre, idn: Ident) :: (idp: Ident) :: Nil)) =>
+      Term.SelProj(term(pre), term(idn), idp)
     case App(Ident("#"), Tree.Tup(Sel(pre, Ident(name)) :: App(Ident(proj), args) :: Nil)) =>
       term(App(App(Ident("#"), Tree.Tup(Sel(pre, Ident(name)) :: Ident(proj) :: Nil)), args))
     case App(Ident("!"), Tree.Tup(rhs :: Nil)) =>
       Term.Deref(term(rhs))
     case App(Ident("~"), Tree.Tup(rhs :: Nil)) =>
       term(rhs)
-    case App(lhs, rhs) =>
+    case tree @ App(lhs, rhs) =>
       val sym = FlowSymbol("‹app-res›", nextUid)
-      Term.App(term(lhs), term(rhs))(sym)
+      Term.App(term(lhs), term(rhs))(tree, sym)
     case Sel(pre, nme) =>
       Term.Sel(term(pre), nme)
-    case Tup(fields) =>
-      Term.Tup(fields.map(fld(_)))
+    case tree @ Tup(fields) =>
+      Term.Tup(fields.map(fld(_)))(tree)
     case New(body) => body match
       case App(Ident(cls), Tup(params)) =>
         ctx.members.get(cls) match
@@ -133,15 +133,15 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
     case Tree.Quoted(body) => Term.Quoted(term(body))
     case Tree.Unquoted(body) => Term.Unquoted(term(body))
     case Tree.Case(Block(branches)) => branches.lastOption match
-      case S(InfixApp(Ident(name), Keyword.`then`, dflt)) =>
-        val sym = VarSymbol(name, nextUid)
-        val nestCtx = ctx.copy(locals = ctx.locals ++ Ls(name -> sym))
+      case S(InfixApp(id: Ident, Keyword.`then`, dflt)) =>
+        val sym = VarSymbol(id, nextUid)
+        val nestCtx = ctx.copy(locals = ctx.locals ++ Ls(id.name -> sym))
         Term.Lam(
           Param(FldFlags.empty, sym, N) :: Nil,
           Term.If(branches.dropRight(1).foldRight[Split[TermBranch]](Split.Else(term(dflt)(using nestCtx)))((e, res) => e match
             case InfixApp(target, Keyword.`then`, cons) =>
               TermBranch.Boolean(
-                term(App(Ident("=="), Tree.Tup(Ident(name) :: target :: Nil)))(using nestCtx),
+                term(App(Ident("=="), Tree.Tup(id :: target :: Nil)))(using nestCtx),
                 Split.`then`(term(cons)(using nestCtx))
               ) :: res
             case _ =>
@@ -152,9 +152,9 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
       case _ =>
         raise(ErrorReport(msg"Unsupported default case branch." -> tree.toLoc :: Nil))
         Term.Error
-    case Tree.Region(Tree.Ident(name), body) =>
-      val sym = VarSymbol(name, nextUid)
-      val nestCtx = ctx.copy(locals = ctx.locals ++ Ls(name -> sym))
+    case Tree.Region(id: Tree.Ident, body) =>
+      val sym = VarSymbol(id, nextUid)
+      val nestCtx = ctx.copy(locals = ctx.locals ++ Ls(id.name -> sym))
       Term.Region(sym, term(body)(using nestCtx))
     case Tree.RegRef(reg, value) => Term.RegRef(term(reg), term(value))
     case Empty() =>
@@ -192,16 +192,16 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
             members.get(id.name) match
               case S(sym) =>
                 raise(ErrorReport(msg"Duplicate definition of ${id.name}" -> td.toLoc
-                  :: msg"aready defined here" -> sym.toLoc :: Nil))
+                  :: msg"aready defined here" -> id.toLoc :: Nil))
               case N =>
                 members += id.name -> s
                 td.signature.foreach(newSignatureTrees += id.name -> _)
             td.symbolicName match
-              case S(Ident(nme)) =>
+              case S(id @ Ident(nme)) =>
                 members.get(nme) match
                   case S(sym) =>
                     raise(ErrorReport(msg"Duplicate definition of $nme" -> td.toLoc
-                      :: msg"aready defined here" -> sym.toLoc :: Nil))
+                      :: msg"aready defined here" -> id.toLoc :: Nil))
                   case N =>
                     members += nme -> s
                     td.signature.foreach(newSignatureTrees += id.name -> _)
@@ -214,7 +214,7 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
               // TODO pair up companions
               case S(sym) =>
                 raise(ErrorReport(msg"Duplicate definition of ${id.name}" -> td.toLoc
-                  :: msg"aready defined here" -> sym.toLoc :: Nil))
+                  :: msg"aready defined here" -> id.toLoc :: Nil))
               case N =>
                 newMembers += id.name -> ClassSymbol(id)
           case L(d) => raise(d)
@@ -257,14 +257,14 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
             val tps =
               given Ctx = newCtx
               tparams.flatMap: targ =>
-                val (nme, vce) = targ match
+                val (id, vce) = targ match
                   case id: Ident =>
-                    (id.name, N)
+                    (id, N)
                   case Modified(Keyword.`in`, id: Ident) =>
-                    (id.name, S(false))
+                    (id, S(false))
                   case Modified(Keyword.`out`, id: Ident) =>
-                    (id.name, S(true))
-                val vs = VarSymbol(nme, nextUid)
+                    (id, S(true))
+                val vs = VarSymbol(id, nextUid)
                 val res = TyParam(FldFlags.empty, vce, vs)
                 vs.decl = S(res)
                 res :: Nil
@@ -307,17 +307,17 @@ class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
     case Tup(ps) =>
       val res = ps.flatMap:
         case id: Ident =>
-          Param(FldFlags.empty, VarSymbol(id.name, nextUid), N) :: Nil
+          Param(FldFlags.empty, VarSymbol(id, nextUid), N) :: Nil
         case InfixApp(lhs: Ident, Keyword.`:`, rhs) =>
-          Param(FldFlags.empty, VarSymbol(lhs.name, nextUid), S(term(rhs))) :: Nil
+          Param(FldFlags.empty, VarSymbol(lhs, nextUid), S(term(rhs))) :: Nil
         case App(Ident(","), list) => params(list)._1
       (res, ctx.copy(locals = ctx.locals ++ res.map(p => p.sym.name -> p.sym)))
   
   def pattern(t: Tree): Ctxl[(Pattern, Ls[Str -> VarSymbol])] =
     val boundVars = mutable.HashMap.empty[Str, VarSymbol]
     def go(t: Tree): Pattern = t match
-      case Ident(name) =>
-        val sym = boundVars.getOrElseUpdate(name, VarSymbol(name, nextUid))
+      case id @ Ident(name) =>
+        val sym = boundVars.getOrElseUpdate(name, VarSymbol(id, nextUid))
         Pattern.Var(sym)
       case Tup(fields) =>
         val pats = fields.map(
