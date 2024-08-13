@@ -33,7 +33,7 @@ letreg of r =>
     write(r)
     read(r)
   write(r)
-//│ ╔══[ERROR] Type error in term { letreg#1(λr@3. { read#2(r@3#0); borrow#1(r@3#1)(λ. { write#1(r@3#2); read#3(r@3#3) }); write#2(r@3#4) }) }
+//│ ╔══[ERROR] Type error in term { letreg#1(λr@60. { read#2(r@60#0); borrow#1(r@60#1)(λ. { write#1(r@60#2); read#3(r@60#3) }); write#2(r@60#4) }) }
 //│ ╟── because: cannot constrain  α27_1  <:  <α>0_0
 //│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
 //│ Type: Int

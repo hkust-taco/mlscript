@@ -25,14 +25,14 @@ fun id(y) = y
 :e
 fun bar: Str -> Str
 fun bar(x) = let t = x + 1 in "aaa"
-//│ ╔══[ERROR] Type error in term x@3#0 with expected type Int
+//│ ╔══[ERROR] Type error in term x@39#0 with expected type Int
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: ⊤
 
 :e
 fun baz: Int -> Int
 fun baz(x) = "bbb"
-//│ ╔══[ERROR] Type error in term λx@3. "bbb" with expected type (Int) ->{⊥} Int
+//│ ╔══[ERROR] Type error in term λx@45. "bbb" with expected type (Int) ->{⊥} Int
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: ⊤
 
@@ -71,9 +71,9 @@ high(x => x)
 
 :e
 high(x => x + 1)
-//│ ╔══[ERROR] Type error in term x@3#0 with expected type Int
+//│ ╔══[ERROR] Type error in term x@74#0 with expected type Int
 //│ ╙── because: cannot constrain  <α>7_2  <:  Int
-//│ ╔══[ERROR] Type error in term λx@3. +#3(x@3#0, 1) with expected type (<α>7_2) ->{⊥} <α>7_2
+//│ ╔══[ERROR] Type error in term λx@74. +#3(x@74#0, 1) with expected type (<α>7_2) ->{⊥} <α>7_2
 //│ ╙── because: cannot constrain  Int  <:  <α>7_2
 //│ Type: Int
 

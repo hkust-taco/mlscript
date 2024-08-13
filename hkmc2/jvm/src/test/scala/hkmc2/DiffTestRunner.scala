@@ -9,7 +9,11 @@ import mlscript.utils._, shorthands._
 
 
 
-object DiffTests:
+class MainDiffMaker(val file: os.Path, val predefFile: os.Path, val relativeName: Str)
+  extends BbmlDiffMaker
+
+
+object DiffTestRunner:
   
   class State:
     
@@ -47,10 +51,10 @@ object DiffTests:
   
   lazy val State = new State
 
-end DiffTests
+end DiffTestRunner
 
 
-class DiffTests(state: DiffTests.State)
+class DiffTestRunner(state: DiffTestRunner.State)
   extends funsuite.AnyFunSuite
   with ParallelTestExecution
   with TimeLimitedTests
@@ -58,7 +62,7 @@ class DiffTests(state: DiffTests.State)
   import state.*
   
   // def newInstance = ???
-  def this() = this(DiffTests.State)
+  def this() = this(DiffTestRunner.State)
   
   private val inParallel = isInstanceOf[ParallelTestExecution]
   
@@ -97,12 +101,14 @@ class DiffTests(state: DiffTests.State)
       
       val predefPath = dir/"decls"/"Predef.mls"
       
-      val dm = new DiffMaker(file, predefPath, relativeName)
+      val dm = new MainDiffMaker(file, predefPath, relativeName)
+      
+      dm.run()
       
       if dm.failures.nonEmpty then
         fail(s"Unexpected test outcome(s) at: " +
           dm.failures.distinct.map("\n\t"+relativeName+"."+file.ext+":"+_).mkString(", "))
   
-end DiffTests
+end DiffTestRunner
 
 

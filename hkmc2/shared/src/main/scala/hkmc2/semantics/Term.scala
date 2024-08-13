@@ -39,7 +39,7 @@ enum Term extends Statement with Located:
       case Ref(sym) => S(sym)
       case Sel(pre, nme) =>
         pre.resolveSymbol match
-          case S(mem: MemberSymbol) =>
+          case S(mem: MemberSymbol[?]) =>
             mem.defn match
             case S(d: ClassDef) =>
               ???
@@ -197,7 +197,7 @@ final case class FldFlags(mut: Bool, spec: Bool, genGetter: Bool) extends Locate
 
 final case class Fld(flags: FldFlags, value: Term, asc: Opt[Term]) extends FldImpl
 
-final case class TyParam(flags: FldFlags, sym: VarSymbol) extends Declaration:
+final case class TyParam(flags: FldFlags, vce: Opt[Bool], sym: VarSymbol) extends Declaration:
   
   // * For variance analysis
   var isCovariant: Bool = true

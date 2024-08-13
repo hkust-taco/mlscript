@@ -14,14 +14,14 @@ letreg(r => r)
 
 :e
 letreg(r => r).ref 1
-//│ ╔══[ERROR] Type error in term (letreg#2(λr@3. r@3#0)).ref 1
+//│ ╔══[ERROR] Type error in term (letreg#2(λr@34. r@34#0)).ref 1
 //│ ╟── because: cannot constrain  α7_1  <:  Region[α8_1]
 //│ ╟── because: cannot constrain  α7_1  <:  Region[((⊤ ∧ ⊤) ∧ α8_1) ∨ ⊥]
 //│ ╟── because: cannot constrain  Region[out ⊤ ∧ ⊤]  <:  Region[((⊤ ∧ ⊤) ∧ α8_1) ∨ ⊥]
 //│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥  <:  ((⊤ ∧ ⊤) ∧ α8_1) ∨ ⊥
 //│ ╟── because: cannot constrain  ⊤  <:  α8_1
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
-//│ ╔══[ERROR] Type error in term { (letreg#2(λr@3. r@3#0)).ref 1 }
+//│ ╔══[ERROR] Type error in term { (letreg#2(λr@34. r@34#0)).ref 1 }
 //│ ╟── because: cannot constrain  α8_1 ∨ α6_1  <:  <α>0_0
 //│ ╟── because: cannot constrain  α8_1  <:  <α>0_0
 //│ ╙── because: cannot constrain  ⊤  <:  <α>0_0
@@ -35,7 +35,7 @@ letreg(r => !(r.ref 1))
 
 :e
 !letreg(r => r.ref 1)
-//│ ╔══[ERROR] Type error in term { !App(Ref(letreg),Tup(List(Fld(‹›,Lam(List(Param(‹›,r@3,None)),RegRef(Ref(r@3),Lit(IntLit(1)))),None)))) }
+//│ ╔══[ERROR] Type error in term { !App(Ref(letreg),Tup(List(Fld(‹›,Lam(List(Param(‹›,r@43,None)),RegRef(Ref(r@43),Lit(IntLit(1)))),None)))) }
 //│ ╟── because: cannot constrain  α22_1 ∨ α18_1  <:  <α>0_0
 //│ ╟── because: cannot constrain  α22_1  <:  <α>0_0
 //│ ╟── because: cannot constrain  α21_1  <:  <α>0_0
@@ -59,7 +59,7 @@ f
 
 :e
 letreg(r => arg => r.ref arg)(0)
-//│ ╔══[ERROR] Type error in term { letreg#8(λr@4. λarg@5. (r@4#0).ref arg@5#0)(0) }
+//│ ╔══[ERROR] Type error in term { letreg#8(λr@58. λarg@59. (r@58#0).ref arg@59#0)(0) }
 //│ ╟── because: cannot constrain  α50_1 ∨ α41_1  <:  <α>0_0
 //│ ╟── because: cannot constrain  α50_1  <:  <α>0_0
 //│ ╟── because: cannot constrain  α49_1  <:  <α>0_0
@@ -75,19 +75,19 @@ fun letreg: [E,Res] -> ([R] -> Region[R] -> Res) ->{E} Res
 
 :e
 letreg(r => r.ref 1)
-//│ ╔══[ERROR] Type error in term λr@3. (r@3#0).ref 1 with expected type (Region[<α>54_2]) ->{⊥} α56_1
+//│ ╔══[ERROR] Type error in term λr@67. (r@67#0).ref 1 with expected type (Region[<α>54_2]) ->{⊥} α56_1
 //│ ╟── because: cannot constrain  α57_2  <:  ⊥
 //│ ╙── because: cannot constrain  <α>54_2  <:  ⊥
 //│ Type: Ref[Int, ?]
 
 :e
 letreg(r => !(r.ref 1))
-//│ ╔══[ERROR] Type error in term λr@3. !RegRef(Ref(r@3),Lit(IntLit(1))) with expected type (Region[<α>54_2]) ->{⊥} α60_1
+//│ ╔══[ERROR] Type error in term λr@70. !RegRef(Ref(r@70),Lit(IntLit(1))) with expected type (Region[<α>54_2]) ->{⊥} α60_1
 //│ ╟── because: cannot constrain  α62_2 ∨ α61_2  <:  ⊥
 //│ ╟── because: cannot constrain  α62_2  <:  ⊥
 //│ ╟── because: cannot constrain  α61_2  <:  ⊥
 //│ ╙── because: cannot constrain  <α>54_2  <:  ⊥
-//│ ╔══[ERROR] Type error in term λr@3. !RegRef(Ref(r@3),Lit(IntLit(1))) with expected type (Region[<α>54_2]) ->{⊥} α60_1
+//│ ╔══[ERROR] Type error in term λr@70. !RegRef(Ref(r@70),Lit(IntLit(1))) with expected type (Region[<α>54_2]) ->{⊥} α60_1
 //│ ╟── because: cannot constrain  α62_2 ∨ α61_2  <:  ⊥
 //│ ╟── because: cannot constrain  α61_2  <:  ⊥
 //│ ╙── because: cannot constrain  <α>54_2  <:  ⊥

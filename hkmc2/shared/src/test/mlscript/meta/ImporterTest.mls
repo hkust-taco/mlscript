@@ -1,0 +1,9 @@
+
+:import ImportedTest.mls
+//│ Imported 19 members
+
+
+hello
+//│ Type: Flow(‹result of hello›@15)
+
+

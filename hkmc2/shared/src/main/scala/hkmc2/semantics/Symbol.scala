@@ -37,11 +37,11 @@ class VarSymbol(val name: Str, uid: Int) extends FlowSymbol(name, uid):
   var decl: Opt[Declaration] = N
   // override def toString: Str = s"$name@$uid"
 
-abstract class MemberSymbol extends Symbol:
+abstract class MemberSymbol[Defn <: Definition] extends Symbol:
   def nme: Str
-  var defn: Opt[Definition] = N
+  var defn: Opt[Defn] = N
 
-class TermSymbol(val id: Tree.Ident) extends MemberSymbol:
+class TermSymbol(val id: Tree.Ident) extends MemberSymbol[Definition]:
   def nme: Str = id.name
   override def toString: Str = s"${id.name}"
 
@@ -58,10 +58,10 @@ case class TupSymbol(arity: Opt[Int]) extends CtorSymbol:
   def nme: Str = s"Tuple#$arity"
   override def toString: Str = s"tup:$arity"
 
-class ClassSymbol(val id: Tree.Ident) extends MemberSymbol with CtorSymbol:
+class ClassSymbol(val id: Tree.Ident) extends MemberSymbol[ClassDef] with CtorSymbol:
   def nme = id.name
   override def toString: Str = s"class:$nme"
-class ModuleSymbol(val name: Str) extends MemberSymbol:
+class ModuleSymbol(val name: Str) extends MemberSymbol[ModuleDef]:
   def nme = name
   override def toString: Str = s"module:$name"
 class TypeAliasSymbol(val name: Str) extends MemberSymbol:

@@ -6,6 +6,7 @@ import scala.collection.mutable
 import semantics.*
 import Message.MessageContext
 import mlscript.utils.*, shorthands.*
+import utils.TraceLogger
 
 // * TODO use mutabnle cache instead for correct asymptotic complexity
 type Cache = Set[(Type, Type)]
@@ -76,12 +77,12 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
           if pol then
             val nc = Type.mkNegType(bd)
             log(s"New bound: $v <: $nc")
-            cctx.nest(v -> nc) in:
+            cctx.nest(v -> nc) givenIn:
               v.state.upperBounds ::= nc
               v.state.lowerBounds.foreach(lb => constrainImpl(lb, nc))
           else
             log(s"New bound: $v :> $bd")
-            cctx.nest(bd -> v) in:
+            cctx.nest(bd -> v) givenIn:
               v.state.lowerBounds ::= bd
               v.state.upperBounds.foreach(ub => constrainImpl(bd, ub))
       case Conj(i, u, Nil) => (conj.i, conj.u) match
@@ -117,7 +118,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
   private def constrainImpl(lhs: Type, rhs: Type)(using Ctx, CCtx) =
     if cctx.cache((lhs, rhs)) then log(s"Cached!")
     else trace(s"CONSTRAINT $lhs <: $rhs"):
-      cctx.nest(lhs -> rhs) in:
+      cctx.nest(lhs -> rhs) givenIn:
         constrainDNF(dnf(lhs & rhs.!)(using raise)) // TODO: inline skolem bounds
   def constrain(lhs: Type, rhs: Type)(using Ctx, CCtx): Unit =
     constrainImpl(lhs, rhs)

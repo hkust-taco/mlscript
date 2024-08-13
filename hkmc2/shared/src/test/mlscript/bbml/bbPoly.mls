@@ -19,9 +19,9 @@ id
 
 :e
 (x => x + 1): [A] -> A -> A
-//│ ╔══[ERROR] Type error in term x@2#0 with expected type Int
+//│ ╔══[ERROR] Type error in term x@35#0 with expected type Int
 //│ ╙── because: cannot constrain  <α>5_2  <:  Int
-//│ ╔══[ERROR] Type error in term λx@2. +#0(x@2#0, 1) with expected type (<α>5_2) ->{⊥} <α>5_2
+//│ ╔══[ERROR] Type error in term λx@35. +#0(x@35#0, 1) with expected type (<α>5_2) ->{⊥} <α>5_2
 //│ ╙── because: cannot constrain  Int  <:  <α>5_2
 //│ Type: forall α5_2: (α5_2) ->{⊥} α5_2
 

@@ -1,13 +1,16 @@
 package hkmc2
 package semantics
 
+
 import scala.collection.mutable
+import scala.annotation.tailrec
 
 import mlscript.utils.*, shorthands.*
+import utils.TraceLogger
+
 import syntax.*
 import Tree.*
 import hkmc2.Message.MessageContext
-import scala.annotation.tailrec
 
 
 object Elaborator:
@@ -16,20 +19,24 @@ object Elaborator:
     val empty: Ctx = Ctx(N, Map.empty, Map.empty)
   type Ctxl[A] = Ctx ?=> A
   def ctx: Ctxl[Ctx] = summon
+  class State:
+    private var curUi = 0
+    def nextUid: Int = { curUi += 1; curUi }
 import Elaborator.*
 
-class Elaborator(raise: Raise):
+class Elaborator(tl: TraceLogger)(using raise: Raise, state: State):
+  import state.nextUid
+  import tl.*
   
-  private var curUi = 0
-  def nextUid: Int = { curUi += 1; curUi }
-
   // * Ref allocation skolem UID, preserved
   private val allocSkolemUID = nextUid
   private val allocSkolemSym = VarSymbol("Alloc", allocSkolemUID)
-  private val allocSkolemDef = TyParam(FldFlags.empty, allocSkolemSym)
+  private val allocSkolemDef = TyParam(FldFlags.empty, N, allocSkolemSym)
   allocSkolemSym.decl = S(allocSkolemDef)
   
-  def term(tree: Tree): Ctxl[Term] = tree match
+  def term(tree: Tree): Ctxl[Term] =
+  trace[Term](s"Elab term ${tree.showDbg}", r => s"~> $r"):
+    tree match
     case Block(s :: Nil) =>
       term(s)
     case Block(sts) =>
@@ -66,7 +73,7 @@ class Elaborator(raise: Raise):
       val bds = tvs.collect:
         case Tree.Ident(nme) =>
           val sym = VarSymbol(nme, nextUid)
-          sym.decl = S(TyParam(FldFlags.empty, sym))
+          sym.decl = S(TyParam(FldFlags.empty, N, sym)) // TODO vce
           boundVars += nme -> sym
           sym          
       if bds.length != tvs.length then
@@ -172,8 +179,9 @@ class Elaborator(raise: Raise):
   def unit: Term.Lit = Term.Lit(UnitLit(true))
   
   def block(sts: Ls[Tree])(using c: Ctx): (Term.Blk, Ctx) =
-    val newMembers = mutable.Map.empty[Str, MemberSymbol] // * Definitions with implementations
-    val newSignatures = mutable.Map.empty[Str, MemberSymbol] // * Definitions containing only signatures
+  trace[(Term.Blk, Ctx)](s"Elab block ${sts.toString.take(20)}[...]", r => s"~> ${r._1}"):
+    val newMembers = mutable.Map.empty[Str, MemberSymbol[?]] // * Definitions with implementations
+    val newSignatures = mutable.Map.empty[Str, MemberSymbol[?]] // * Definitions containing only signatures
     val newSignatureTrees = mutable.Map.empty[Str, Tree] // * Store trees of signatures, passing them to definition objects
     sts.foreach:
       case td: TermDef =>
@@ -241,25 +249,26 @@ class Elaborator(raise: Raise):
       case TypeDef(k, head, extension, body) :: sts =>
         assert((k is Cls) || (k is Mod), k)
         def processHead(head: Tree): Ctxl[(Ident, Ls[TyParam], Opt[Ls[Param]], Ctx)] = head match
-          case TyApp(base, targs) =>
+          case TyApp(base, tparams) =>
             
             val (name, tas, as, newCtx) = processHead(base)
             // TODO reject duplicated tas, out of order as
             
-            val tparams =
+            val tps =
               given Ctx = newCtx
-              targs.flatMap:
-                case id: Ident =>
-                  val vs = VarSymbol(id.name, nextUid)
-                  val res = TyParam(FldFlags.empty, vs)
-                  vs.decl = S(res)
-                  res :: Nil
-                case InfixApp(lhs: Ident, Keyword.`:`, rhs) =>
-                  val vs = VarSymbol(lhs.name, nextUid)
-                  val res = TyParam(FldFlags.empty, vs)
-                  vs.decl = S(res)
-                  res :: Nil
-            (name, tparams, as, newCtx.copy(locals = ctx.locals ++ tparams.map(tp => tp.sym.name -> tp.sym)))
+              tparams.flatMap: targ =>
+                val (nme, vce) = targ match
+                  case id: Ident =>
+                    (id.name, N)
+                  case Modified(Keyword.`in`, id: Ident) =>
+                    (id.name, S(false))
+                  case Modified(Keyword.`out`, id: Ident) =>
+                    (id.name, S(true))
+                val vs = VarSymbol(nme, nextUid)
+                val res = TyParam(FldFlags.empty, vce, vs)
+                vs.decl = S(res)
+                res :: Nil
+            (name, tps, as, newCtx.copy(locals = ctx.locals ++ tps.map(tp => tp.sym.name -> tp.sym)))
           case App(base, args) =>
             
             val (name, tas, as, newCtx) = processHead(base)
@@ -325,7 +334,7 @@ class Elaborator(raise: Raise):
   def importFrom(sts: Ls[Tree])(using c: Ctx): Ctx =
     val (_, newCtx) = block(sts)
     // TODO handle name clashes
-    c.copy(members = c.members ++ newCtx.members)
+    newCtx
   
   
   def topLevel(sts: Ls[Tree])(using c: Ctx): (Term, Ctx) =

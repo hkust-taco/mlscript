@@ -5,6 +5,7 @@ import scala.collection.immutable.{SortedMap, SortedSet}
 import scala.util.chaining._
 
 import mlscript.utils.*, shorthands.*
+import utils.TraceLogger
 
 import Type.*
 

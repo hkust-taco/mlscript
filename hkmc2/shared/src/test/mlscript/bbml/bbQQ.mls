@@ -79,17 +79,17 @@ run(1)
 
 :e
 x `=> run(x)
-//│ ╔══[ERROR] Type error in term x@2#0 with expected type CodeBase[out α162_3, ⊥, ?]
+//│ ╔══[ERROR] Type error in term x@71#0 with expected type CodeBase[out α162_3, ⊥, ?]
 //│ ╟── because: cannot constrain  CodeBase[α160_3, <α>161_3, ⊥]  <:  CodeBase[out α162_3, ⊥, ?]
 //│ ╙── because: cannot constrain  ((⊤ ∧ ⊤) ∧ <α>161_3) ∨ ⊥  <:  ⊥ ∨ ⊥
 //│ Type: CodeBase[out CodeBase[out α163_3, ?, ?] ->{⊥} α163_3, out α165_2, ?]
 
 :e
 `let x = `42 `in run(x)
-//│ ╔══[ERROR] Type error in term x@2#0 with expected type CodeBase[out α169_3, ⊥, ?]
+//│ ╔══[ERROR] Type error in term x@74#0 with expected type CodeBase[out α169_3, ⊥, ?]
 //│ ╟── because: cannot constrain  CodeBase[α166_2, <α>168_3, ⊥]  <:  CodeBase[out α169_3, ⊥, ?]
 //│ ╙── because: cannot constrain  ((⊤ ∧ ⊤) ∧ <α>168_3) ∨ ⊥  <:  ⊥ ∨ ⊥
-//│ ╔══[ERROR] Type error in term ${run#3(x@2#0)}
+//│ ╔══[ERROR] Type error in term ${run#3(x@74#0)}
 //│ ╟── because: cannot constrain  α169_3  <:  CodeBase[out α170_3, out α171_3, ?]
 //│ ╟── because: cannot constrain  α169_3  <:  CodeBase[in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ α170_3) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ α171_3) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]
 //│ ╟── because: cannot constrain  α166_2  <:  CodeBase[in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ α170_3) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ α171_3) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]

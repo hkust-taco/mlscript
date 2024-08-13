@@ -11,7 +11,7 @@ import Diagnostic.Source.{Lexing, Parsing}
 import Lexer._
 import Tree.{IntLit, DecLit, StrLit}
 
-class Lexer(origin: Origin, raise: Raise, dbg: Bool):
+class Lexer(origin: Origin, dbg: Bool)(using raise: Raise):
   
   val bytes: Array[Char] = origin.fph.blockStr.toArray
   private val length = bytes.length

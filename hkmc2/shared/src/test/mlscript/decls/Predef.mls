@@ -8,17 +8,6 @@ class Bool
 class Nothing
 //│ Type: Ctor(lit:UnitLit(true),List())
 
-// TODO: move to a separate file?
-class CodeBase[T, C, S]
-class Region[T]
-class Ref[T, S]
-//│ Type: Ctor(lit:UnitLit(true),List())
-
-// the type here is fake.
-fun run: Any -> Any
-val error: Nothing
-//│ Type: Ctor(lit:UnitLit(true),List())
-
 fun (+): (Int, Int) -> Int
 fun (-): (Int, Int) -> Int
 fun (*): (Int, Int) -> Int

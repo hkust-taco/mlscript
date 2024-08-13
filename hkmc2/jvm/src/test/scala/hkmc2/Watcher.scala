@@ -87,10 +87,11 @@ class Watcher(dir: File):
       val relativeName = basePath.map(_ + "/").mkString + path.baseName
       val predefPath = os.pwd/os.up/"shared"/"src"/"test"/"mlscript"/"decls"/"Predef.mls"
       semantics.suid.reset // FIXME hack
-      val dm = new DiffMaker(path, predefPath, relativeName):
+      val dm = new MainDiffMaker(path, predefPath, relativeName):
         override def unhandled(blockLineNum: Int, exc: Throwable): Unit =
           exc.printStackTrace()
           super.unhandled(blockLineNum, exc)
+      dm.run()
       
   def show(file: File) =
     fansi.Color.Yellow:

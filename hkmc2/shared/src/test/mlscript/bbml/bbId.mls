@@ -44,7 +44,7 @@ id : [A] -> A -> A
 :fixme
 fun id(x) = x
 (y => id(y)) : [A] -> A -> A
-//│ ╔══[ERROR] Type error in term λy@4. id#0(y@4#0) with expected type (<α>13_2) ->{⊥} <α>13_2
+//│ ╔══[ERROR] Type error in term λy@43. id#0(y@43#0) with expected type (<α>13_2) ->{⊥} <α>13_2
 //│ ╟── because: cannot constrain  α15_2  <:  <α>13_2
 //│ ╟── because: cannot constrain  α16_1  <:  <α>13_2
 //│ ╟── because: cannot constrain  α16_1  <:  ⊥

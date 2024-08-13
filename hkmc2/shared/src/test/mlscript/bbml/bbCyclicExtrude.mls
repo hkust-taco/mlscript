@@ -19,7 +19,7 @@ f => (let g = x => x(x) in f(g(g))) : [A] -> A -> A
 
 :e
 f => (let g = x => f(x(x)) in g) : [A] -> A -> A
-//│ ╔══[ERROR] Type error in term g@3#0 with expected type (<α>27_2) ->{⊥} <α>27_2
+//│ ╔══[ERROR] Type error in term g@48#0 with expected type (<α>27_2) ->{⊥} <α>27_2
 //│ ╟── because: cannot constrain  α28_2 ->{α31_2 ∨ α29_2} α32_2  <:  <α>27_2 ->{⊥} <α>27_2
 //│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ <α>27_2) ∨ ⊥  <:  ((⊤ ∧ ⊤) ∧ α28_2) ∨ ⊥
 //│ ╟── because: cannot constrain  <α>27_2  <:  α28_2

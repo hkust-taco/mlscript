@@ -13,7 +13,7 @@ import Label as L
 import hkmc2.syntax.Tree
 
 
-class TypeChecker(raise: Raise):
+class TypeChecker(using raise: Raise):
   
   // val uid = Uid.FlowPoint.State()
   

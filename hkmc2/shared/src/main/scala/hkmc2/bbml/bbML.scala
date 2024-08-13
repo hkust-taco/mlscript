@@ -1,16 +1,21 @@
 package hkmc2
 package bbml
 
+
 import scala.collection.mutable.{LinkedHashSet, HashMap, ListBuffer}
 import scala.annotation.tailrec
 
 import mlscript.utils.*, shorthands.*
+import utils.TraceLogger
+
 import Message.MessageContext
 import semantics.*, semantics.Term.*
 import syntax.*
 import Tree.*
 
+
 object InfVarUid extends Uid.Handler[InfVar]
+
 
 final case class Ctx(
   raise: Raise,
@@ -92,7 +97,9 @@ object Ctx:
         case _ => ???
     ctx
 
-class BBTyper(tl: TraceLogger):
+
+class BBTyper(tl: TraceLogger)(using elState: Elaborator.State):
+  import elState.nextUid
   import tl.{trace, log}
   
   private val infVarState = new InfVarUid.State()
@@ -496,7 +503,7 @@ class BBTyper(tl: TraceLogger):
           case S(ClassDef.Parameterized(_, tparams, params, _, _)) =>
             val map = HashMap[Uid[Symbol], Wildcard]()
             val targs = tparams.map {
-              case TyParam(_, targ) =>
+              case TyParam(_, _, targ) =>
                 val ty = freshWildcard
                   map += targ.uid -> ty
                   ty
@@ -522,7 +529,7 @@ class BBTyper(tl: TraceLogger):
             else
               val map = HashMap[Uid[Symbol], Wildcard]()
               val targs = tparams.map {
-                case TyParam(_, targ) =>
+                case TyParam(_, _, targ) =>
                   val ty = freshWildcard
                   map += targ.uid -> ty
                   ty
