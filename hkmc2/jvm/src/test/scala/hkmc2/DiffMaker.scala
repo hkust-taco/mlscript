@@ -102,6 +102,7 @@ abstract class DiffMaker:
   val report = ReportFormatter(output.apply)
   
   val failures = mutable.Buffer.empty[Int]
+  val unmergedChanges = mutable.Buffer.empty[Int]
   
   var _onlyParse = false
   var _allowTypeErrors = false
@@ -204,6 +205,24 @@ abstract class DiffMaker:
     case line :: ls if line.startsWith("//") =>
       out.println(line)
       rec(ls)
+    case line :: ls if line.startsWith(output.diffBegMarker) => // Check if there are unmerged git conflicts
+      val diff = ls.takeWhile(l => !l.startsWith(output.diffEndMarker))
+      assert(diff.exists(_.startsWith(output.diffMidMarker)), diff)
+      val rest = ls.drop(diff.length)
+      val hdo = rest.headOption
+      assert(hdo.exists(_.startsWith(output.diffEndMarker)), hdo)
+      val blankLines = diff.count(_.isEmpty)
+      val hasBlankLines = diff.exists(_.isEmpty)
+      if diff.forall(l => l.startsWith(output.outputMarker) || l.startsWith(output.diffMidMarker) || l.startsWith(output.diff3MidMarker) || l.isEmpty) then {
+        for _ <- 1 to blankLines do out.println()
+      } else {
+        unmergedChanges += allLines.size - lines.size + 1
+        out.println(output.diffBegMarker)
+        diff.foreach(out.println)
+        out.println(output.diffEndMarker)
+      }
+      if hasBlankLines then resetCommands
+      rec(rest.tail)
     case l :: ls =>
       
       val blockLineNum = allLines.size - lines.size + 1
@@ -240,6 +259,7 @@ abstract class DiffMaker:
             ).map("\n" + "\tat: " + _).mkString)
       
       rec(lines.drop(block.size))
+      
     case Nil =>
   
   
