@@ -27,9 +27,12 @@ class TypeSimplifier(tl: TraceLogger):
         tv.state.lowerBounds = tv.state.lowerBounds.map(goType)
         tv.state.upperBounds = tv.state.upperBounds.map(goType)
       tv
-    def goType(ty: Type): Type = ty match
+    def goType(ty: Type): Type =
+    trace[Type](s"simplifyStructure($ty)", r => s"= $r"):
+      ty match
       case tv: InfVar => goTV(tv)
-      case _ => ty.map(goType).simp
+      case _ =>
+        ty.map(goType).simp
     def go(ty: GeneralType): GeneralType = ty match
       case ty: Type => goType(ty)
       case pt: PolyType =>

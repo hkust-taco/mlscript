@@ -1,0 +1,18 @@
+:global
+:bbml
+
+
+class Foo[out A]
+//│ Type: ⊤
+
+(x: Foo[Int]) => (x: Foo[Int | Str])
+//│ Type: (Foo[out Int]) ->{⊥} Foo[out Int ∨ Str]
+
+
+class Foo[in A]
+//│ Type: ⊤
+
+(x: Foo[Int]) => (x: Foo[Int & Str])
+//│ Type: (Foo[in Int]) ->{⊥} Foo[in Int ∧ Str]
+
+

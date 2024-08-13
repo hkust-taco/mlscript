@@ -24,10 +24,10 @@ sealed abstract class GeneralType:
 // * Types that can be used as class type arguments
 sealed trait TypeArg:
   lazy val lvl: Int
-  def map(f: Type => Type): TypeArg
+  def mapArg(f: Type => Type): TypeArg
 
 case class Wildcard(in: Type, out: Type) extends TypeArg {
-  override def map(f: Type => Type): Wildcard = Wildcard(f(in), f(out))
+  def mapArg(f: Type => Type): Wildcard = Wildcard(f(in), f(out))
 
   override def toString(): String = in match
     case `out` => in.toString
@@ -110,13 +110,16 @@ sealed abstract class Type extends GeneralType with TypeArg:
     case ComposedType(l, r, true) => l.! & r.!
     case ComposedType(l, r, false) => l.! | r.!
     case _ => NegType(this)
-
+  
   override def map(f: Type => Type): Type = this match
-    case ClassType(name, targs) => ClassType(name, targs.map(_.map(f)))
+    case ClassType(name, targs) => ClassType(name, targs.map(_.mapArg(f)))
     case FunType(args, ret, eff) => FunType(args.map(f), f(ret), f(eff))
     case ComposedType(lhs, rhs, pol) => Type.mkComposedType(f(lhs), f(rhs), pol)
     case NegType(ty) => Type.mkNegType(f(ty))
     case Top | Bot | _: InfVar => this
+  
+  def mapArg(f: Type => Type): Type = f(this)
+  
   def monoOr(fallback: => Type): Type = this
 
 case class ClassType(name: ClassSymbol, targs: Ls[TypeArg]) extends Type:

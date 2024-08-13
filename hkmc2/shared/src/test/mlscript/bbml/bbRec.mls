@@ -4,7 +4,7 @@
 
 :fixme // parsing
 fun f x = f
-//│ ╔══[ERROR] Can not define function x
+//│ ╔══[ERROR] Function definition shape not yet supported for x
 //│ ║  l.6: 	fun f x = f
 //│ ╙──     	          ^
 //│ Type: ⊤
@@ -21,7 +21,7 @@ f
 
 :todo
 fun f(x) = f(x.a)
-//│ ╔══[ERROR] Term shape not yet supported by BbML: Sel(Ref(x@33),Ident(a))
+//│ ╔══[ERROR] Term shape not yet supported by BbML: Sel(Ref(x@38),Ident(a))
 //│ ║  l.23: 	fun f(x) = f(x.a)
 //│ ╙──      	             ^
 //│ Type: ⊤
@@ -38,19 +38,21 @@ Foo(123)
 //│ Type: ⊥
 
 new Foo(123)
-//│ Type: Foo[in ⊤ out Int]
+//│ Type: Foo[α13_1]
+//│ Where:
+//│   Int <: α13_1
 
 :todo proper error
 fun f(x) = f(Foo.a(x))
 //│ ╔══[ERROR] Term shape not yet supported by BbML: Sel(Ref(class:Foo),Ident(a))
-//│ ║  l.44: 	fun f(x) = f(Foo.a(x))
+//│ ║  l.46: 	fun f(x) = f(Foo.a(x))
 //│ ╙──      	             ^^^
 //│ Type: ⊤
 
 fun f(x) = f(x.Foo#a)
 f
-//│ Type: Foo[out α22_1] ->{⊥} ⊥
+//│ Type: Foo[out α21_1] ->{⊥} ⊥
 //│ Where:
-//│   α22_1 <: Foo[out α22_1]
+//│   α21_1 <: Foo[out α21_1]
 
 

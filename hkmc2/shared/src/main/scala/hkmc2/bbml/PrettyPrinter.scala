@@ -24,8 +24,12 @@ object PrettyPrinter:
       override def apply(pol: Boolean)(ty: GeneralType): Unit = ty match
         case v @ InfVar(_, uid, state, _) =>
           if cache.add(uid) then
-            res ++= state.lowerBounds.map(bd => (bd, v))
-            res ++= state.upperBounds.map(bd => (v, bd))
+            res ++= state.lowerBounds.map: bd =>
+              apply(true)(bd)
+              (bd, v)
+            res ++= state.upperBounds.map: bd =>
+              apply(false)(bd)
+              (v, bd)
             super.apply(pol)(ty)
         case _ => super.apply(pol)(ty)
     CollectBounds(true)(ty)

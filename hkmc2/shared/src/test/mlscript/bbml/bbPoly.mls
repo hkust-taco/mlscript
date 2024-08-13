@@ -62,7 +62,10 @@ class Pair[A, B](a: A, b: B)
 //│ Type: ⊤
 
 new Pair(42, true)
-//│ Type: Pair[in ⊤ out Int, in ⊤ out Bool]
+//│ Type: Pair[α17_1, α18_1]
+//│ Where:
+//│   Int <: α17_1
+//│   Bool <: α18_1
 
 fun swap: [A, B] -> Pair[out A, out B] -> Pair[out B, out A]
 fun swap(p) = new Pair(p.Pair#b, p.Pair#a)
@@ -70,7 +73,7 @@ fun swap(p) = new Pair(p.Pair#b, p.Pair#a)
 
 
 swap
-//│ Type: forall α23_2, α24_2: (Pair[out α23_2, out α24_2]) ->{⊥} Pair[out α24_2, out α23_2]
+//│ Type: forall α21_2, α22_2: (Pair[out α21_2, out α22_2]) ->{⊥} Pair[out α22_2, out α21_2]
 
 let t = new Pair(42, true) in swap(t)
 //│ Type: Pair[out Bool, out Int]
@@ -79,14 +82,17 @@ let t = new Pair("114", "514") in swap(t)
 //│ Type: Pair[out Str, out Str]
 
 let id = ((x => x): [A] -> A -> A) in new Pair(id(42), id("42"))
-//│ Type: Pair[in ⊤ out Int, in ⊤ out Str]
+//│ Type: Pair[α42_1, α43_1]
+//│ Where:
+//│   Int <: α42_1
+//│   Str <: α43_1
 
 fun foo: ([A] -> A -> A) -> Int
 fun foo(x) = 42
 //│ Type: ⊤
 
 foo
-//│ Type: (forall α57_2: (α57_2) ->{⊥} α57_2) ->{⊥} Int
+//│ Type: (forall α47_2: (α47_2) ->{⊥} α47_2) ->{⊥} Int
 
 foo(id)
 //│ Type: Int
@@ -112,7 +118,9 @@ class Bar[A](x: A, f: [B] -> B -> B)
 
 
 new Bar(0, id)
-//│ Type: Bar[in ⊤ out Int]
+//│ Type: Bar[α56_1]
+//│ Where:
+//│   Int <: α56_1
 
 let bar = new Bar(0, id) in bar.Bar#f(bar.Bar#x)
 //│ Type: Int
@@ -121,7 +129,9 @@ class Some[A](value: A)
 //│ Type: ⊤
 
 new Some((x => x): [A] -> A -> A)
-//│ Type: Some[in ⊤ out α83_1 ->{⊥} α83_1]
+//│ Type: Some[α68_1]
+//│ Where:
+//│   α70_1 ->{⊥} α70_1 <: α68_1
 
 let s = new Some((x => x): [A] -> A -> A) in let t = s.Some#value(42) in s.Some#value(false)
 //│ Type: Bool ∨ Int
@@ -132,11 +142,11 @@ fun gen(x) =
 //│ Type: ⊤
 
 gen
-//│ Type: (Int) ->{⊥} forall α97_2: (α97_2) ->{⊥} α97_2
+//│ Type: (Int) ->{⊥} forall α83_2: (α83_2) ->{⊥} α83_2
 
 
 gen(42)
-//│ Type: forall α97_2: (α97_2) ->{⊥} α97_2
+//│ Type: forall α83_2: (α83_2) ->{⊥} α83_2
 
 // FIXME: toLoc
 :fixme
@@ -144,12 +154,12 @@ gen(42)
 fun cnt: Some[out [A] -> A -> A] -> Int
 fun cnt(x) = 42
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ║  l.144: 	fun cnt: Some[out [A] -> A -> A] -> Int
+//│ ║  l.154: 	fun cnt: Some[out [A] -> A -> A] -> Int
 //│ ╙──       	                         ^^^^^^
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ║  l.144: 	fun cnt: Some[out [A] -> A -> A] -> Int
+//│ ║  l.154: 	fun cnt: Some[out [A] -> A -> A] -> Int
 //│ ╙──       	                         ^^^^^^
 //│ Type: ⊤
 
 (x => x): [A] -> A -> A
-//│ Type: forall α102_2: (α102_2) ->{⊥} α102_2
+//│ Type: forall α88_2: (α88_2) ->{⊥} α88_2
