@@ -25,6 +25,22 @@ sealed abstract class GeneralType:
 sealed trait TypeArg:
   lazy val lvl: Int
   def mapArg(f: Type => Type): TypeArg
+  def & (that: TypeArg): TypeArg = (this, that) match
+    case (Wildcard(in1, out1), Wildcard(in2, out2)) => Wildcard(in1 | in2, out1 & out2)
+    case (ty: Type, Wildcard(in2, out2)) => Wildcard(ty | in2, ty & out2)
+    case (Wildcard(in1, out1), ty: Type) => Wildcard(in1 | ty, out1 & ty)
+    case (ty1: Type, ty2: Type) => ty1 & ty2
+  def | (that: TypeArg): TypeArg = (this, that) match
+    case (Wildcard(in1, out1), Wildcard(in2, out2)) => Wildcard(in1 & in2, out1 | out2)
+    case (ty: Type, Wildcard(in2, out2)) => Wildcard(ty & in2, ty | out2)
+    case (Wildcard(in1, out1), ty: Type) => Wildcard(in1 & ty, out1 | ty)
+    case (ty1: Type, ty2: Type) => ty1 | ty2
+  def posPart: Type = this match
+    case Wildcard(_, out) => out
+    case ty: Type => ty
+  def negPart: Type = this match
+    case Wildcard(in, _) => in
+    case ty: Type => ty
 
 case class Wildcard(in: Type, out: Type) extends TypeArg {
   def mapArg(f: Type => Type): Wildcard = Wildcard(f(in), f(out))

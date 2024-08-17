@@ -15,7 +15,7 @@
 //│ ║  l.13: 	(x => x(0))(1)
 //│ ║        	            ^
 //│ ╟── because: cannot constrain  Int  <:  α3_1
-//│ ╙── because: cannot constrain  Int  <:  (((Int ∧ ⊤) ∧ ⊤) ∨ ⊥) ->{((⊤ ∧ ⊤) ∧ α4_1) ∨ ⊥} (((⊤ ∧ ⊤) ∧ α5_1) ∨ ⊥)
+//│ ╙── because: cannot constrain  Int  <:  Int ->{α4_1} α5_1
 //│ Type: ⊥
 
 (1).Foo#a()
@@ -34,9 +34,7 @@ inc("oops")
 //│ ║  l.32: 	inc("oops")
 //│ ║        	^^^^^^^^^^^
 //│ ╟── because: cannot constrain  α8_1  <:  Str ->{α10_1} α11_1
-//│ ╟── because: cannot constrain  α8_1  <:  (((Str ∧ ⊤) ∧ ⊤) ∨ ⊥) ->{((⊤ ∧ ⊤) ∧ α10_1) ∨ ⊥} (((⊤ ∧ ⊤) ∧ α11_1) ∨ ⊥)
-//│ ╟── because: cannot constrain  (((⊤ ∧ ⊤) ∧ α9_1) ∨ ⊥) ->{⊥ ∨ ⊥} (((Int ∧ ⊤) ∧ ⊤) ∨ ⊥)  <:  (((Str ∧ ⊤) ∧ ⊤) ∨ ⊥) ->{((⊤ ∧ ⊤) ∧ α10_1) ∨ ⊥} (((⊤ ∧ ⊤) ∧ α11_1) ∨ ⊥)
-//│ ╟── because: cannot constrain  ((Str ∧ ⊤) ∧ ⊤) ∨ ⊥  <:  ((⊤ ∧ ⊤) ∧ α9_1) ∨ ⊥
+//│ ╟── because: cannot constrain  α9_1 ->{⊥} Int  <:  Str ->{α10_1} α11_1
 //│ ╟── because: cannot constrain  Str  <:  α9_1
 //│ ╙── because: cannot constrain  Str  <:  Int
 //│ Type: Int
@@ -44,10 +42,10 @@ inc("oops")
 fun inc(x) = x + 1
 inc : Int
 //│ ╔══[ERROR] Type error in reference with expected type Int
-//│ ║  l.45: 	inc : Int
+//│ ║  l.43: 	inc : Int
 //│ ║        	^^^
 //│ ╟── because: cannot constrain  α12_1  <:  Int
-//│ ╙── because: cannot constrain  (((⊤ ∧ ⊤) ∧ α13_1) ∨ ⊥) ->{⊥ ∨ ⊥} (((Int ∧ ⊤) ∧ ⊤) ∨ ⊥)  <:  Int
+//│ ╙── because: cannot constrain  α13_1 ->{⊥} Int  <:  Int
 //│ Type: Int
 
 

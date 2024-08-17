@@ -38,7 +38,6 @@ y `=> (let t = run(x `=> x `+ y) in y)
 //│ ║  l.36: 	y `=> (let t = run(x `=> x `+ y) in y)
 //│ ║        	                   ^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  CodeBase[out α24_5 ->{⊥} α31_5, out α33_4, ?]  <:  CodeBase[out α23_3, ⊥, ?]
-//│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ α33_4) ∨ ⊥  <:  ⊥ ∨ ⊥
 //│ ╟── because: cannot constrain  α33_4  <:  ⊥
 //│ ╙── because: cannot constrain  <α>22_3  <:  ⊥
 //│ Type: CodeBase[out α21_3 ->{⊥} α21_3, ⊥, ?]
@@ -75,12 +74,10 @@ f(g)(foo)
 :fixme // ???
 f(g)(bar)
 //│ ╔══[ERROR] Type error in reference with expected type α48_1
-//│ ║  l.76: 	f(g)(bar)
+//│ ║  l.75: 	f(g)(bar)
 //│ ║        	     ^^^
 //│ ╟── because: cannot constrain  C[Int]  <:  α48_1
-//│ ╟── because: cannot constrain  C[((Int ∧ ⊤) ∧ ⊤) ∨ ⊥]  <:  α48_1
-//│ ╟── because: cannot constrain  C[((Int ∧ ⊤) ∧ ⊤) ∨ ⊥]  <:  ¬C[in ⊥ ∨ ⊥ out ⊤ ∧ ⊤] ∨ C[in ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥ out (⊤ ∧ ⊤) ∧ α50_1]
-//│ ╟── because: cannot constrain  ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥  <:  ((⊤ ∧ ⊤) ∧ α50_1) ∨ ⊥
+//│ ╟── because: cannot constrain  C[Int]  <:  ¬C[?] ∨ C[in Int out α50_1]
 //│ ╟── because: cannot constrain  Int  <:  α50_1
 //│ ╙── because: cannot constrain  Int  <:  ⊥
 //│ Type: Int

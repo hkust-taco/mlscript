@@ -48,8 +48,7 @@ fun mapi = s => f =>
 //│ ║  l.36: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  α28_2 ->{α45_2 ∨ <α>0_0} Seq[out α46_2, out α47_2]  <:  ((Int, <α>26_2) ->{<α>27_2} <α>26_2) ->{<α>0_0} Seq[out <α>26_2, out <α>27_2]
-//│ ╟── because: cannot constrain  ((Seq[in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ α46_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ α47_2) ∨ ⊥] ∧ ⊤) ∧ ⊤) ∨ ⊥  <:  ((Seq[in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>26_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>27_2) ∨ ⊥] ∧ ⊤) ∧ ⊤) ∨ ⊥
-//│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ α47_2) ∨ ⊥  <:  ((⊤ ∧ ⊤) ∧ <α>27_2) ∨ ⊥
+//│ ╟── because: cannot constrain  Seq[out α46_2, out α47_2]  <:  Seq[out <α>26_2, out <α>27_2]
 //│ ╟── because: cannot constrain  α47_2  <:  <α>27_2
 //│ ╟── because: cannot constrain  α48_2  <:  <α>27_2
 //│ ╙── because: cannot constrain  ⊤  <:  <α>27_2
@@ -67,8 +66,7 @@ fun mapi = s => f =>
 //│ ║  l.36: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  α28_2 ->{α45_2 ∨ <α>0_0} Seq[out α46_2, out α47_2]  <:  ((Int, <α>26_2) ->{<α>27_2} <α>26_2) ->{<α>0_0} Seq[out <α>26_2, out <α>27_2]
-//│ ╟── because: cannot constrain  ((Seq[in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ α46_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ α47_2) ∨ ⊥] ∧ ⊤) ∧ ⊤) ∨ ⊥  <:  ((Seq[in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>26_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>27_2) ∨ ⊥] ∧ ⊤) ∧ ⊤) ∨ ⊥
-//│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ α47_2) ∨ ⊥  <:  ((⊤ ∧ ⊤) ∧ <α>27_2) ∨ ⊥
+//│ ╟── because: cannot constrain  Seq[out α46_2, out α47_2]  <:  Seq[out <α>26_2, out <α>27_2]
 //│ ╟── because: cannot constrain  α47_2  <:  <α>27_2
 //│ ╟── because: cannot constrain  α49_2  <:  <α>27_2
 //│ ╙── because: cannot constrain  ⊤  <:  <α>27_2
@@ -86,8 +84,7 @@ fun mapi = s => f =>
 //│ ║  l.36: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  α28_2 ->{α45_2 ∨ <α>0_0} Seq[out α46_2, out α47_2]  <:  ((Int, <α>26_2) ->{<α>27_2} <α>26_2) ->{<α>0_0} Seq[out <α>26_2, out <α>27_2]
-//│ ╟── because: cannot constrain  ((Seq[in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ α46_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ α47_2) ∨ ⊥] ∧ ⊤) ∧ ⊤) ∨ ⊥  <:  ((Seq[in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>26_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>27_2) ∨ ⊥] ∧ ⊤) ∧ ⊤) ∨ ⊥
-//│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ α47_2) ∨ ⊥  <:  ((⊤ ∧ ⊤) ∧ <α>27_2) ∨ ⊥
+//│ ╟── because: cannot constrain  Seq[out α46_2, out α47_2]  <:  Seq[out <α>26_2, out <α>27_2]
 //│ ╟── because: cannot constrain  α47_2  <:  <α>27_2
 //│ ╟── because: cannot constrain  α50_2  <:  <α>27_2
 //│ ╙── because: cannot constrain  ⊤  <:  <α>27_2

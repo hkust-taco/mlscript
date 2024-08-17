@@ -72,7 +72,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
         var rest = Conj(i, u, tail)
         if v.isSkolem then constrainConj(rest)
         else
-          val comp = rest.simp
+          val comp = rest.toType.simp
           val bd = if v.lvl >= comp.lvl then comp else extrude(comp)(using v.lvl, true)
           if pol then
             val nc = Type.mkNegType(bd)
@@ -89,17 +89,14 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
         case (_, Union(N, Nil)) =>
           // raise(ErrorReport(msg"Cannot solve ${conj.i.toString()} ∧ ¬⊥" -> N :: Nil))
           cctx.err
-        case (Inter(S(NormalClassType(cls1, targs1))), Union(f, NormalClassType(cls2, targs2) :: rest)) =>
-          if cls1.uid == cls2.uid then
-            targs1.zip(targs2).foreach {
-              case ((in1, out1), (in2, out2)) =>
-                constrainImpl(in2, in1)
-                constrainImpl(out1, out2)
-            }
+        case (Inter(S(ClassType(cls1, targs1))), Union(f, ClassType(cls2, targs2) :: rest)) =>
+          if cls1.uid === cls2.uid then
+            targs1.zip(targs2).foreach: (ta1, ta2) =>
+              constrainArgs(ta1, ta2)
           else constrainConj(Conj(conj.i, Union(f, rest), Nil))
         case (int: Inter, Union(f, _ :: rest)) => constrainConj(Conj(int, Union(f, rest), Nil))
-        case (Inter(S(NormalFunType(args1, ret1, eff1))), Union(S(NormalFunType(args2, ret2, eff2)), Nil)) =>
-          if args1.length != args2.length then
+        case (Inter(S(FunType(args1, ret1, eff1))), Union(S(FunType(args2, ret2, eff2)), Nil)) =>
+          if args1.length =/= args2.length then
             // raise(ErrorReport(msg"Cannot constrain ${conj.i.toString()} <: ${conj.u.toString()}" -> N :: Nil))
             cctx.err
           else
@@ -115,7 +112,11 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
   private def constrainDNF(disj: Disj)(using Ctx, CCtx): Unit =
     disj.conjs.foreach(constrainConj(_))
 
-  private def constrainImpl(lhs: Type, rhs: Type)(using Ctx, CCtx) =
+  private def constrainArgs(lhs: TypeArg, rhs: TypeArg)(using Ctx, CCtx): Unit =
+    constrainImpl(rhs.negPart, lhs.negPart)
+    constrainImpl(lhs.posPart, rhs.posPart)
+  
+  private def constrainImpl(lhs: Type, rhs: Type)(using Ctx, CCtx): Unit =
     if cctx.cache((lhs, rhs)) then log(s"Cached!")
     else trace(s"CONSTRAINT $lhs <: $rhs"):
       cctx.nest(lhs -> rhs) givenIn:

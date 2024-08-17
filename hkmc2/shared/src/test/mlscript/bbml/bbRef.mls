@@ -40,7 +40,6 @@ let t = region x in x in t.ref 42
 //│ ║  l.38: 	let t = region x in x in t.ref 42
 //│ ║        	                         ^^^^^^^^
 //│ ╟── because: cannot constrain  Region[?]  <:  Region[α26_1]
-//│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥  <:  ((⊤ ∧ ⊤) ∧ α26_1) ∨ ⊥
 //│ ╟── because: cannot constrain  ⊤  <:  α26_1
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ ╔══[ERROR] Type error in block
@@ -61,9 +60,9 @@ let t = region x in
   x.ref 42
 in t := 0
 //│ ╔══[ERROR] Type error in block
-//│ ║  l.61: 	  x.ref 42
+//│ ║  l.60: 	  x.ref 42
 //│ ║        	  ^^^^^^^^
-//│ ║  l.62: 	in t := 0
+//│ ║  l.61: 	in t := 0
 //│ ║        	^^^^^^^^^
 //│ ╟── because: cannot constrain  (α35_1 ∨ α33_1) ∨ <α>0_0  <:  <α>0_0
 //│ ╟── because: cannot constrain  α35_1  <:  <α>0_0
@@ -81,9 +80,9 @@ let t = region x in
   x.ref 42
 in !t
 //│ ╔══[ERROR] Type error in block
-//│ ║  l.81: 	  x.ref 42
+//│ ║  l.80: 	  x.ref 42
 //│ ║        	  ^^^^^^^^
-//│ ║  l.82: 	in !t
+//│ ║  l.81: 	in !t
 //│ ║        	^^^^^
 //│ ╟── because: cannot constrain  (α46_1 ∨ α44_1) ∨ <α>0_0  <:  <α>0_0
 //│ ╟── because: cannot constrain  α46_1  <:  <α>0_0
@@ -100,9 +99,9 @@ fun rid: [A] -> A -> A
 fun rid(x) =
   let t = (region y in 42) in x
 //│ ╔══[ERROR] Type error in function literal with expected type (<α>56_2) ->{⊥} <α>56_2
-//│ ║  l.100: 	fun rid(x) =
-//│ ║         	        ^^^^
-//│ ║  l.101: 	  let t = (region y in 42) in x
+//│ ║  l.99: 	fun rid(x) =
+//│ ║        	        ^^^^
+//│ ║  l.100: 	  let t = (region y in 42) in x
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╙── because: cannot constrain  α58_2 ∨ <α>0_0  <:  ⊥
 //│ Type: ⊤
@@ -111,7 +110,7 @@ fun rid(x) =
 region x in
   (let dz = x.ref 42 in 42): [A] -> Int
 //│ ╔══[ERROR] Type error in block with expected type forall α60_3: Int
-//│ ║  l.112: 	  (let dz = x.ref 42 in 42): [A] -> Int
+//│ ║  l.111: 	  (let dz = x.ref 42 in 42): [A] -> Int
 //│ ║         	            ^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  α61_3  <:  ⊥
 //│ ╙── because: cannot constrain  <α>59_2  <:  ⊥
@@ -124,9 +123,9 @@ let t =
     y => x.ref y
   in t(42)
 //│ ╔══[ERROR] Type error in block
-//│ ║  l.124: 	    y => x.ref y
+//│ ║  l.123: 	    y => x.ref y
 //│ ║         	    ^^^^^^^^^^^^
-//│ ║  l.125: 	  in t(42)
+//│ ║  l.124: 	  in t(42)
 //│ ║         	^^^^^^^^^^
 //│ ╟── because: cannot constrain  (α71_1 ∨ α66_1) ∨ <α>0_0  <:  <α>0_0
 //│ ╟── because: cannot constrain  α71_1  <:  <α>0_0

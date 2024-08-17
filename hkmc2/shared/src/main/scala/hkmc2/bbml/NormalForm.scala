@@ -7,17 +7,16 @@ import semantics.*
 import Message.MessageContext
 import mlscript.utils.*, shorthands.*
 
-final class Disj(val conjs: Ls[Conj]) extends ComposedType(conjs.foldLeft[Type](Bot)((res, c) => res | c), Bot, true) with NormalForm:
-  lazy val isBot: Bool = conjs.isEmpty
+final case class Disj(conjs: Ls[Conj]) extends NormalForm:
+  def toType: Type = ComposedType(conjs.foldLeft[Type](Bot)((res, c) => res | c.toType), Bot, true)
+  def isBot: Bool = conjs.isEmpty
 object Disj:
-  def apply(conjs: Ls[Conj]) = new Disj(conjs)
-  def unapply(disj: Disj): Opt[Ls[Conj]] = S(disj.conjs)
-  lazy val bot: Disj = Disj(Nil)
-  lazy val top: Disj = Disj(Conj.empty :: Nil)
+  val bot: Disj = Disj(Nil)
+  val top: Disj = Disj(Conj.empty :: Nil)
 
-sealed abstract class Conj(val i: Inter, val u: Union, val vars: Ls[(InfVar, Bool)]) extends ComposedType(i,
-  vars.foldLeft(Type.mkNegType(u))((res, v) => if v._2 then res & v._1 else res & Type.mkNegType(v._1)), false
-) with NormalForm:
+sealed abstract case class Conj(i: Inter, u: Union, vars: Ls[(InfVar, Bool)]) extends NormalForm:
+  def toType: Type = i.toType &
+    vars.foldLeft(Type.mkNegType(u.toType))((res, v) => if v._2 then res & v._1 else res & Type.mkNegType(v._1))
   def merge(other: Conj): Option[Conj] =
     val Conj(i1, u1, vars1) = this
     val Conj(i2, u2, vars2) = other
@@ -29,8 +28,8 @@ sealed abstract class Conj(val i: Inter, val u: Union, val vars: Ls[(InfVar, Boo
         }.foldLeft[Opt[Ls[(InfVar, Bool)]]](S(Nil))((res, p) => (res, p) match { // * None -> bot
           case (N, _) => N
           case (S(Nil), p) => S(p :: Nil)
-          case (S((InfVar(v, uid1, s, k), p1) :: tail), (InfVar(_, uid2, _, _), p2)) if uid1 == uid2 =>
-            if p1 == p2 then S((InfVar(v, uid1, s, k), p1) :: tail) else N
+          case (S((InfVar(v, uid1, s, k), p1) :: tail), (InfVar(_, uid2, _, _), p2)) if uid1 === uid2 =>
+            if p1 === p2 then S((InfVar(v, uid1, s, k), p1) :: tail) else N
           case (S(head :: tail), p) => S(p :: head :: tail)
         })
         vars match
@@ -43,82 +42,59 @@ object Conj:
   def apply(i: Inter, u: Union, vars: Ls[(InfVar, Bool)]) = new Conj(i, u, vars.sortWith {
     case ((InfVar(lv1, _, _, sk1), _), (InfVar(lv2, _, _, sk2), _)) => !(sk1 || !sk2 && lv1 <= lv2)
   }){}
-  def unapply(conj: Conj): S[(Inter, Union, Ls[(InfVar, Bool)])] = S((conj.i, conj.u, conj.vars))
   lazy val empty: Conj = Conj(Inter.empty, Union.empty, Nil)
   def mkVar(v: InfVar, pol: Bool) = Conj(Inter.empty, Union.empty, (v, pol) :: Nil)
-  def mkInter(inter: NormalClassType | NormalFunType) = Conj(Inter(S(inter)), Union.empty, Nil)
-  def mkUnion(union: NormalClassType | NormalFunType) = Conj(Inter.empty, union match {
-    case cls: NormalClassType => Union(N, cls :: Nil)
-    case fun: NormalFunType => Union(S(fun), Nil)
+  def mkInter(inter: ClassType | FunType) = Conj(Inter(S(inter)), Union.empty, Nil)
+  def mkUnion(union: ClassType | FunType) = Conj(Inter.empty, union match {
+    case cls: ClassType => Union(N, cls :: Nil)
+    case fun: FunType => Union(S(fun), Nil)
   }, Nil)
 
-// * Some(NormalClassType) -> C[in D_i out D_i], Some(NormalFunType) -> D_1 ->{D_2} D_3, None -> Top
-final class Inter(val v: Opt[NormalClassType | NormalFunType]) extends ComposedType(v match {
-  case S(c: NormalClassType) => c
-  case S(f: NormalFunType) => f
-  case _ => Top
-}, Top, false) with NormalForm:
+// * Some(ClassType) -> C[in D_i out D_i], Some(FunType) -> D_1 ->{D_2} D_3, None -> Top
+final case class Inter(v: Opt[ClassType | FunType]) extends NormalForm:
+  def toType: Type = v.getOrElse(Top)
   def merge(other: Inter): Option[Inter] = (v, other.v) match
-    case (S(NormalClassType(cls1, targs1)), S(NormalClassType(cls2, targs2))) if cls1.uid == cls2.uid =>
-      S(Inter(S(NormalClassType(cls1, targs1.zip(targs2).map {
-        case ((in1, out1), (in2, out2)) => (NormalForm.union(in1, in2), NormalForm.inter(out1, out2))
-      }))))
-    case (S(_: NormalClassType), S(_: NormalClassType)) => N
-    case (S(NormalFunType(a1, r1, e1)), S(NormalFunType(a2, r2, e2))) =>
-      S(Inter(S(NormalFunType(a1.zip(a2).map {
-        case (a1, a2) => NormalForm.union(a1, a2)
-      }, NormalForm.inter(r1, r2), NormalForm.inter(e1, e2)))))
+    case (S(ClassType(cls1, targs1)), S(ClassType(cls2, targs2))) if cls1.uid === cls2.uid =>
+      S(Inter(S(ClassType(cls1, targs1.lazyZip(targs2).map(_ & _)))))
+    case (S(_: ClassType), S(_: ClassType)) => N
+    case (S(FunType(a1, r1, e1)), S(FunType(a2, r2, e2))) =>
+      S(Inter(S(FunType(a1.lazyZip(a2).map(_ | _), r1 & r2, e1 & e2))))
     case (S(v), N) => S(Inter(S(v)))
     case (N, v) => S(Inter(v))
     case _ => N
 object Inter:
-  def apply(v: Opt[NormalClassType | NormalFunType]) = new Inter(v)
-  def unapply(i: Inter): Opt[Opt[NormalClassType | NormalFunType]] = S(i.v)
   lazy val empty: Inter = Inter(N)
 
-// * fun: Some(NormalFunType) -> D_1 ->{D_2} D_3, None -> bot
-final class Union(val fun: Opt[NormalFunType], val cls: Ls[NormalClassType]) extends ComposedType(fun.getOrElse(Bot),
-  cls.foldLeft[Type](Bot)((res, c) => res | c), true
-) with NormalForm:
+// * fun: Some(FunType) -> D_1 ->{D_2} D_3, None -> bot
+final case class Union(fun: Opt[FunType], cls: Ls[ClassType]) extends NormalForm:
+  def toType = fun.getOrElse(Bot) |
+    cls.foldLeft[Type](Bot)(_ | _)
   def merge(other: Union): Union = Union((fun, other.fun) match {
-    case (S(NormalFunType(a1, r1, e1)), S(NormalFunType(a2, r2, e2))) =>
-      S(NormalFunType(a1.zip(a2).map {
-        case (a1, a2) => NormalForm.inter(a1, a2)
-      }, NormalForm.union(r1, r2), NormalForm.union(e1, e2)))
+    case (S(FunType(a1, r1, e1)), S(FunType(a2, r2, e2))) =>
+      S(FunType(a1.lazyZip(a2).map(_ & _), r1 | r2, e1 | e2))
     case (S(f), N) => S(f)
     case (N, S(f)) => S(f)
-    case _ => N
+    case (N, N) => N
   }, (cls ++ other.cls).sortWith { // * Merge the same classes
-    case (cls1, cls2) => cls1.cls.uid <= cls2.cls.uid
-  }.foldLeft[Ls[NormalClassType]](Nil)((res, cls) => (res, cls) match {
+    case (cls1, cls2) => cls1.name.uid <= cls2.name.uid
+  }.foldLeft[Ls[ClassType]](Nil)((res, cls) => (res, cls) match {
     case (Nil, cls) => cls :: Nil
-    case (NormalClassType(cls1, targs1) :: tail, NormalClassType(cls2, targs2)) if cls1.uid == cls2.uid => 
-      NormalClassType(cls1, targs1.zip(targs2).map {
-        case ((in1, out1), (in2, out2)) => (NormalForm.inter(in1, in2), NormalForm.union(out1, out2))
-      }) :: tail
-    case (head ::tail, cls) => cls :: head :: tail
+    case (ClassType(cls1, targs1) :: tail, ClassType(cls2, targs2)) if cls1.uid === cls2.uid => 
+      ClassType(cls1, targs1.lazyZip(targs2).map(_ | _)) :: tail
+    case (head :: tail, cls) => cls :: head :: tail
   }))
 object Union:
-  def apply(fun: Opt[NormalFunType], cls: Ls[NormalClassType]) = new Union(fun, cls)
-  def unapply(u: Union): Opt[(Opt[NormalFunType], Ls[NormalClassType])] = S(u.fun, u.cls)
-  lazy val empty: Union = Union(N, Nil)
+  val empty: Union = Union(N, Nil)
 
-final class NormalClassType(val cls: ClassSymbol, val ntargs: List[(Disj, Disj)]) extends ClassType(cls, ntargs.map(p => Wildcard(p._1, p._2)))
-object NormalClassType:
-  def apply(cls: ClassSymbol, targs: List[(Disj, Disj)]) = new NormalClassType(cls, targs)
-  def unapply(cls: NormalClassType): Opt[(ClassSymbol, List[(Disj, Disj)])] = S((cls.cls, cls.ntargs))
-final class NormalFunType(val nargs: List[Disj], val nret: Disj, val neff: Disj) extends FunType(nargs, nret, neff)
-object NormalFunType:
-  def apply(args: List[Disj], ret: Disj, eff: Disj) = new NormalFunType(args, ret, eff)
-  def unapply(fun: NormalFunType): Opt[(List[Disj], Disj, Disj)] = S((fun.nargs, fun.nret, fun.neff))
+sealed abstract class NormalForm:
+  def toType: Type
 
-sealed trait NormalForm
 object NormalForm:
   def inter(lhs: Disj, rhs: Disj): Disj =
     if lhs.isBot || rhs.isBot then Disj.bot
     else Disj(lhs.conjs.flatMap(lhs => rhs.conjs.flatMap(rhs => lhs.merge(rhs) match {
       case S(conj) => conj :: Nil
-      case _ => Nil
+      case N => Nil
     })))
 
   def union(lhs: Disj, rhs: Disj): Disj = Disj(lhs.conjs ++ rhs.conjs)
@@ -127,15 +103,8 @@ object NormalForm:
     case Top => Disj.bot
     case Bot => Disj.top
     case v: InfVar => Disj(Conj.mkVar(v, false) :: Nil)
-    case ClassType(cls, targs) => Disj(Conj.mkUnion(NormalClassType(cls, targs.map {
-      case Wildcard(in, out) => (dnf(in), dnf(out))
-      case ty: Type =>
-        val res = dnf(ty)
-        (res, res)
-    })) :: Nil)
-    case FunType(args, ret, eff) => Disj(Conj.mkUnion(NormalFunType(
-      args.map(dnf), dnf(ret), dnf(eff)
-    )) :: Nil)
+    case ct: ClassType => Disj(Conj.mkUnion(ct) :: Nil)
+    case ft: FunType => Disj(Conj.mkUnion(ft) :: Nil)
     case ComposedType(lhs, rhs, pol) =>
       if pol then inter(neg(lhs), neg(rhs)) else union(neg(lhs), neg(rhs))
     case NegType(ty) => dnf(ty)
@@ -144,15 +113,9 @@ object NormalForm:
     case Top => Disj.top
     case Bot => Disj.bot
     case v: InfVar => Disj(Conj.mkVar(v, true) :: Nil)
-    case ClassType(cls, targs) => Disj(Conj.mkInter(NormalClassType(cls, targs.map {
-      case Wildcard(in, out) => (dnf(in), dnf(out))
-      case ty: Type =>
-        val res = dnf(ty)
-        (res, res)
-    })) :: Nil)
-    case FunType(args, ret, eff) => Disj(Conj.mkInter(NormalFunType(
-      args.map(dnf), dnf(ret), dnf(eff)
-    )) :: Nil)
+    case ct: ClassType => Disj(Conj.mkInter(ct) :: Nil)
+    case ft: FunType => Disj(Conj.mkInter(ft) :: Nil)
     case ComposedType(lhs, rhs, pol) =>
       if pol then union(dnf(lhs), dnf(rhs)) else inter(dnf(lhs), dnf(rhs))
     case NegType(ty) => neg(ty)
+

@@ -67,12 +67,12 @@ fun body(x, y) = case
 //│ ║  l.59: 	  n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
 //│ ║        	^^^
 //│ ╟── because: cannot constrain  α149_2 ->{α159_2} (CodeBase[out Int, out <α>148_2, ?] ∨ α160_2)  <:  Int ->{⊥} CodeBase[out Int, out <α>148_2, ?]
-//│ ╟── because: cannot constrain  (((CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>148_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥] ∧ ⊤) ∧ ⊤) ∨ ((⊤ ∧ ⊤) ∧ α160_2)) ∨ ⊥  <:  ((CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>148_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥] ∧ ⊤) ∧ ⊤) ∨ ⊥
-//│ ╟── because: cannot constrain  α160_2  <:  CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>148_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]
-//│ ╟── because: cannot constrain  α167_1  <:  CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>148_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]
-//│ ╟── because: cannot constrain  α167_1  <:  CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]
-//│ ╟── because: cannot constrain  CodeBase[in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ α140_1) ∨ ⊥, in ⊥ ∨ ⊥ out (((⊤ ∧ ⊤) ∧ α130_1) ∨ ((⊤ ∧ ⊤) ∧ α141_1)) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]  <:  CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]
-//│ ╟── because: cannot constrain  (((⊤ ∧ ⊤) ∧ α130_1) ∨ ((⊤ ∧ ⊤) ∧ α141_1)) ∨ ⊥  <:  ⊥ ∨ ⊥
+//│ ╟── because: cannot constrain  CodeBase[out Int, out <α>148_2, ?] ∨ α160_2  <:  CodeBase[out Int, out <α>148_2, ?]
+//│ ╟── because: cannot constrain  α160_2  <:  CodeBase[out Int, out <α>148_2, ?]
+//│ ╟── because: cannot constrain  α167_1  <:  CodeBase[out Int, out <α>148_2, ?]
+//│ ╟── because: cannot constrain  α167_1  <:  CodeBase[out Int, ⊥, ?]
+//│ ╟── because: cannot constrain  CodeBase[out α140_1, out α130_1 ∨ α141_1, ?]  <:  CodeBase[out Int, ⊥, ?]
+//│ ╟── because: cannot constrain  α130_1 ∨ α141_1  <:  ⊥
 //│ ╟── because: cannot constrain  α130_1  <:  ⊥
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ ╔══[ERROR] Type error in function literal with expected type (CodeBase[out Int, out <α>148_2, ?], CodeBase[out Int, out <α>148_2, ?]) ->{⊥} (Int) ->{⊥} CodeBase[out Int, out <α>148_2, ?]
@@ -85,12 +85,12 @@ fun body(x, y) = case
 //│ ║  l.59: 	  n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
 //│ ║        	^^^
 //│ ╟── because: cannot constrain  α149_2 ->{α159_2} (CodeBase[out Int, out <α>148_2, ?] ∨ α160_2)  <:  Int ->{⊥} CodeBase[out Int, out <α>148_2, ?]
-//│ ╟── because: cannot constrain  (((CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>148_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥] ∧ ⊤) ∧ ⊤) ∨ ((⊤ ∧ ⊤) ∧ α160_2)) ∨ ⊥  <:  ((CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>148_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥] ∧ ⊤) ∧ ⊤) ∨ ⊥
-//│ ╟── because: cannot constrain  α160_2  <:  CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>148_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]
-//│ ╟── because: cannot constrain  α167_1  <:  CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>148_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]
-//│ ╟── because: cannot constrain  α167_1  <:  CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]
-//│ ╟── because: cannot constrain  CodeBase[in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ α140_1) ∨ ⊥, in ⊥ ∨ ⊥ out (((⊤ ∧ ⊤) ∧ α130_1) ∨ ((⊤ ∧ ⊤) ∧ α141_1)) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]  <:  CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]
-//│ ╟── because: cannot constrain  (((⊤ ∧ ⊤) ∧ α130_1) ∨ ((⊤ ∧ ⊤) ∧ α141_1)) ∨ ⊥  <:  ⊥ ∨ ⊥
+//│ ╟── because: cannot constrain  CodeBase[out Int, out <α>148_2, ?] ∨ α160_2  <:  CodeBase[out Int, out <α>148_2, ?]
+//│ ╟── because: cannot constrain  α160_2  <:  CodeBase[out Int, out <α>148_2, ?]
+//│ ╟── because: cannot constrain  α167_1  <:  CodeBase[out Int, out <α>148_2, ?]
+//│ ╟── because: cannot constrain  α167_1  <:  CodeBase[out Int, ⊥, ?]
+//│ ╟── because: cannot constrain  CodeBase[out α140_1, out α130_1 ∨ α141_1, ?]  <:  CodeBase[out Int, ⊥, ?]
+//│ ╟── because: cannot constrain  α130_1 ∨ α141_1  <:  ⊥
 //│ ╟── because: cannot constrain  α130_1  <:  ⊥
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ ╔══[ERROR] Type error in function literal with expected type (CodeBase[out Int, out <α>148_2, ?], CodeBase[out Int, out <α>148_2, ?]) ->{⊥} (Int) ->{⊥} CodeBase[out Int, out <α>148_2, ?]
@@ -103,12 +103,12 @@ fun body(x, y) = case
 //│ ║  l.59: 	  n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
 //│ ║        	^^^
 //│ ╟── because: cannot constrain  α149_2 ->{α159_2} (CodeBase[out Int, out <α>148_2, ?] ∨ α160_2)  <:  Int ->{⊥} CodeBase[out Int, out <α>148_2, ?]
-//│ ╟── because: cannot constrain  (((CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>148_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥] ∧ ⊤) ∧ ⊤) ∨ ((⊤ ∧ ⊤) ∧ α160_2)) ∨ ⊥  <:  ((CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>148_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥] ∧ ⊤) ∧ ⊤) ∨ ⊥
-//│ ╟── because: cannot constrain  α160_2  <:  CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>148_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]
-//│ ╟── because: cannot constrain  α167_1  <:  CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>148_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]
-//│ ╟── because: cannot constrain  α167_1  <:  CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]
-//│ ╟── because: cannot constrain  CodeBase[in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ α140_1) ∨ ⊥, in ⊥ ∨ ⊥ out (((⊤ ∧ ⊤) ∧ α130_1) ∨ ((⊤ ∧ ⊤) ∧ α141_1)) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]  <:  CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]
-//│ ╟── because: cannot constrain  (((⊤ ∧ ⊤) ∧ α130_1) ∨ ((⊤ ∧ ⊤) ∧ α141_1)) ∨ ⊥  <:  ⊥ ∨ ⊥
+//│ ╟── because: cannot constrain  CodeBase[out Int, out <α>148_2, ?] ∨ α160_2  <:  CodeBase[out Int, out <α>148_2, ?]
+//│ ╟── because: cannot constrain  α160_2  <:  CodeBase[out Int, out <α>148_2, ?]
+//│ ╟── because: cannot constrain  α167_1  <:  CodeBase[out Int, out <α>148_2, ?]
+//│ ╟── because: cannot constrain  α167_1  <:  CodeBase[out Int, ⊥, ?]
+//│ ╟── because: cannot constrain  CodeBase[out α140_1, out α130_1 ∨ α141_1, ?]  <:  CodeBase[out Int, ⊥, ?]
+//│ ╟── because: cannot constrain  α130_1 ∨ α141_1  <:  ⊥
 //│ ╟── because: cannot constrain  α141_1  <:  ⊥
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ ╔══[ERROR] Type error in function literal with expected type (CodeBase[out Int, out <α>148_2, ?], CodeBase[out Int, out <α>148_2, ?]) ->{⊥} (Int) ->{⊥} CodeBase[out Int, out <α>148_2, ?]
@@ -121,12 +121,12 @@ fun body(x, y) = case
 //│ ║  l.59: 	  n then bind of x `+ y, (z => body(y, z)(n - 1)): [C] -> CodeBase[out Int, out C, out Any] -> CodeBase[out C, out Any]
 //│ ║        	^^^
 //│ ╟── because: cannot constrain  α149_2 ->{α159_2} (CodeBase[out Int, out <α>148_2, ?] ∨ α160_2)  <:  Int ->{⊥} CodeBase[out Int, out <α>148_2, ?]
-//│ ╟── because: cannot constrain  (((CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>148_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥] ∧ ⊤) ∧ ⊤) ∨ ((⊤ ∧ ⊤) ∧ α160_2)) ∨ ⊥  <:  ((CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>148_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥] ∧ ⊤) ∧ ⊤) ∨ ⊥
-//│ ╟── because: cannot constrain  α160_2  <:  CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>148_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]
-//│ ╟── because: cannot constrain  α167_1  <:  CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ <α>148_2) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]
-//│ ╟── because: cannot constrain  α167_1  <:  CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]
-//│ ╟── because: cannot constrain  CodeBase[in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ α140_1) ∨ ⊥, in ⊥ ∨ ⊥ out (((⊤ ∧ ⊤) ∧ α130_1) ∨ ((⊤ ∧ ⊤) ∧ α141_1)) ∨ ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]  <:  CodeBase[in ⊥ ∨ ⊥ out ((Int ∧ ⊤) ∧ ⊤) ∨ ⊥, in ⊥ ∨ ⊥ out ⊥, in ⊥ ∨ ⊥ out ((⊤ ∧ ⊤) ∧ ⊤) ∨ ⊥]
-//│ ╟── because: cannot constrain  (((⊤ ∧ ⊤) ∧ α130_1) ∨ ((⊤ ∧ ⊤) ∧ α141_1)) ∨ ⊥  <:  ⊥ ∨ ⊥
+//│ ╟── because: cannot constrain  CodeBase[out Int, out <α>148_2, ?] ∨ α160_2  <:  CodeBase[out Int, out <α>148_2, ?]
+//│ ╟── because: cannot constrain  α160_2  <:  CodeBase[out Int, out <α>148_2, ?]
+//│ ╟── because: cannot constrain  α167_1  <:  CodeBase[out Int, out <α>148_2, ?]
+//│ ╟── because: cannot constrain  α167_1  <:  CodeBase[out Int, ⊥, ?]
+//│ ╟── because: cannot constrain  CodeBase[out α140_1, out α130_1 ∨ α141_1, ?]  <:  CodeBase[out Int, ⊥, ?]
+//│ ╟── because: cannot constrain  α130_1 ∨ α141_1  <:  ⊥
 //│ ╟── because: cannot constrain  α141_1  <:  ⊥
 //│ ╙── because: cannot constrain  ⊤  <:  ⊥
 //│ Type: ⊤

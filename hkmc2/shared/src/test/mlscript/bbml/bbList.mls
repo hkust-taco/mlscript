@@ -78,7 +78,7 @@ fun mapi = s =>
 //│ ║  l.52: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  α74_2 ->{α82_2} List[out α81_2]  <:  ((Int, <α>58_2) ->{<α>59_2} <α>58_2) ->{<α>0_0 ∨ <α>59_2} List[out <α>58_2]
-//│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ α82_2) ∨ ⊥  <:  (((⊤ ∧ ⊤) ∧ <α>0_0) ∨ ((⊤ ∧ ⊤) ∧ <α>59_2)) ∨ ⊥
+//│ ╟── because: cannot constrain  α82_2  <:  <α>0_0 ∨ <α>59_2
 //│ ╟── because: cannot constrain  α82_2  <:  <α>59_2 ∨ <α>0_0
 //│ ╟── because: cannot constrain  α83_2  <:  <α>59_2 ∨ <α>0_0
 //│ ╙── because: cannot constrain  ⊤  <:  <α>59_2 ∨ <α>0_0
@@ -96,7 +96,7 @@ fun mapi = s =>
 //│ ║  l.52: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  α74_2 ->{α82_2} List[out α81_2]  <:  ((Int, <α>58_2) ->{<α>59_2} <α>58_2) ->{<α>0_0 ∨ <α>59_2} List[out <α>58_2]
-//│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ α82_2) ∨ ⊥  <:  (((⊤ ∧ ⊤) ∧ <α>0_0) ∨ ((⊤ ∧ ⊤) ∧ <α>59_2)) ∨ ⊥
+//│ ╟── because: cannot constrain  α82_2  <:  <α>0_0 ∨ <α>59_2
 //│ ╟── because: cannot constrain  α82_2  <:  <α>59_2 ∨ <α>0_0
 //│ ╟── because: cannot constrain  α84_2  <:  <α>59_2 ∨ <α>0_0
 //│ ╙── because: cannot constrain  ⊤  <:  <α>59_2 ∨ <α>0_0
@@ -114,7 +114,7 @@ fun mapi = s =>
 //│ ║  l.52: 	      f(!i, x)
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── because: cannot constrain  α74_2 ->{α82_2} List[out α81_2]  <:  ((Int, <α>58_2) ->{<α>59_2} <α>58_2) ->{<α>0_0 ∨ <α>59_2} List[out <α>58_2]
-//│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ α82_2) ∨ ⊥  <:  (((⊤ ∧ ⊤) ∧ <α>0_0) ∨ ((⊤ ∧ ⊤) ∧ <α>59_2)) ∨ ⊥
+//│ ╟── because: cannot constrain  α82_2  <:  <α>0_0 ∨ <α>59_2
 //│ ╟── because: cannot constrain  α82_2  <:  <α>59_2 ∨ <α>0_0
 //│ ╟── because: cannot constrain  α85_2  <:  <α>59_2 ∨ <α>0_0
 //│ ╙── because: cannot constrain  ⊤  <:  <α>59_2 ∨ <α>0_0

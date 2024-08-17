@@ -23,9 +23,8 @@ f => (let g = x => f(x(x)) in g) : [A] -> A -> A
 //│ ║  l.21: 	f => (let g = x => f(x(x)) in g) : [A] -> A -> A
 //│ ║        	                              ^
 //│ ╟── because: cannot constrain  α28_2 ->{α31_2 ∨ α29_2} α32_2  <:  <α>27_2 ->{⊥} <α>27_2
-//│ ╟── because: cannot constrain  ((⊤ ∧ ⊤) ∧ <α>27_2) ∨ ⊥  <:  ((⊤ ∧ ⊤) ∧ α28_2) ∨ ⊥
 //│ ╟── because: cannot constrain  <α>27_2  <:  α28_2
-//│ ╙── because: cannot constrain  <α>27_2  <:  (((⊤ ∧ ⊤) ∧ α28_2) ∨ ⊥) ->{((⊤ ∧ ⊤) ∧ α29_2) ∨ ⊥} (((⊤ ∧ ⊤) ∧ α30_2) ∨ ⊥)
+//│ ╙── because: cannot constrain  <α>27_2  <:  α28_2 ->{α29_2} α30_2
 //│ Type: (⊥ ->{⊥} ⊥) ->{⊥} forall α27_2: (α27_2) ->{⊥} α27_2
 
 f => (x => f(x(x)) : [A] -> A -> A)
@@ -45,7 +44,7 @@ let foo(f) = (f(x => x(x)) : [A] -> A -> A) in foo
 :todo
 fun foo(f) = (f(x => x(x)) : [A] -> A -> A)
 //│ ╔══[ERROR] General type is not allowed here.
-//│ ║  l.46: 	fun foo(f) = (f(x => x(x)) : [A] -> A -> A)
+//│ ║  l.45: 	fun foo(f) = (f(x => x(x)) : [A] -> A -> A)
 //│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
