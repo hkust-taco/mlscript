@@ -14,12 +14,11 @@ enum Specifier:
   case Static
   case Inline
 
-  def toDocument = raw(
+  def toDocument = raw:
     this match
     case Extern => "extern"
     case Static => "static"
     case Inline => "inline"
-  )
 
   override def toString: Str = toDocument.print
 
