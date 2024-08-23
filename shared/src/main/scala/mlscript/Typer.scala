@@ -689,6 +689,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
           val tsc = new TupleSetConstraints(constrs.map(_.map(rec)), tvs)(res.prov)
           tvs.zipWithIndex.foreach {
             case ((_, tv: TV), i) => tv.tsc.updateWith(tsc)(_.map(_ + i).orElse(S(Set(i))))
+            case ((_, ProvType(tv: TV)), i) => tv.tsc.updateWith(tsc)(_.map(_ + i).orElse(S(Set(i))))
             case _ => ()
           }
         }
@@ -1993,6 +1994,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
                 if (seenTscs.add(tsc)) {
                   val tvs = tsc.tvs.map {
                     case (pol, tv: TV) => (pol, tv.asTypeVar)
+                    case (pol, ProvType(tv: TV)) => (pol, tv.asTypeVar)
                     case (pol, t) => (pol, go(t))
                   }
                   val constrs = tsc.constraints.map(_.map(go))

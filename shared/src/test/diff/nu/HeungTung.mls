@@ -434,8 +434,8 @@ x => r(r(x))
 //│ ╙──       	       ^^^^
 //│ forall 'a 'b. 'a -> 'b
 //│   where
-//│     [+'c, -'b] in {[Int, Int], [Bool, Bool]}
-//│     [+'a, -'c] in {[Int, Int], [Bool, Bool]}
+//│     [-'b, +'c] in {[Int, Int], [Bool, Bool]}
+//│     [-'c, +'a] in {[Int, Int], [Bool, Bool]}
 //│ res
 //│     = <no result>
 //│       r is not implemented
@@ -457,9 +457,9 @@ fun u: {x:0, y:Int} -> Int & {x:1, z: Str} -> Str
 //│ fun u: {x: 0, y: Int} -> Int & {x: 1, z: Str} -> Str
 
 (a, b, c) => u({x: a, y: b, z: c})
-//│ forall 'a 'b 'c 'd. ('a, 'b, 'c) -> 'd
+//│ forall 'a 'b 'c 'd. ('a, 'c, 'd) -> 'b
 //│   where
-//│     [+'a, +'b, +'c, -'d] in {[0, Int, anything, Int], [1, anything, Str, Str]}
+//│     [-'b, +'c, +'a, +'d] in {[Int, Int, 0, anything], [Str, anything, 1, Str]}
 //│ res
 //│     = <no result>
 //│       u is not implemented
@@ -477,7 +477,7 @@ fun s: Str -> Str & AA -> AA
 let g = x => s(r(x))
 //│ let g: forall 'a 'b. 'a -> 'b
 //│   where
-//│     [+'c, -'b] in {[Str, Str], [AA, AA]}
+//│     [-'b, +'c] in {[Str, Str], [AA, AA]}
 //│     [+'a, -'c] in {[Int, Int], [Bool, Bool]}
 //│ g
 //│   = <no result>
@@ -520,18 +520,18 @@ fun app2: ('a -> 'a -> 'a) -> 'a -> 'a
 fun snd: A -> Int -> Int & Str -> Str -> Str
 //│ fun snd: A -> Int -> Int & Str -> Str -> Str
 
-
 :e
 x => app2(snd)(x):Int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.525: 	x => app2(snd)(x):Int
+//│ ║  l.524: 	x => app2(snd)(x):Int
 //│ ║         	     ^^^^^^^^^^^^
-//│ ╟── application of type `'a` does not match type `nothing`
+//│ ╟── application of type `Int` is not an instance of type `A`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.525: 	x => app2(snd)(x):Int
+//│ ║  l.520: 	fun snd: A -> Int -> Int & Str -> Str -> Str
+//│ ║         	         ^
+//│ ╟── from type reference:
+//│ ║  l.524: 	x => app2(snd)(x):Int
 //│ ╙──       	                  ^^^
-//│ ╔══[ERROR] ambiguous
-//│ ╙── cannot determine satisfiability of type 'a
 //│ nothing -> Int
 //│ res
 //│     = <no result>
@@ -544,7 +544,7 @@ app2_(snd)
 //│ 'a -> 'b
 //│   where
 //│     'a <: 'b
-//│     [+'a, -'a, -'b] in {[A & Int, Int, Int], [Str, Str, Str]}
+//│     [-'b, +'a, -'a] in {[Int, A & Int, Int], [Str, Str, Str]}
 //│ res
 //│     = <no result>
 //│       snd is not implemented

@@ -848,7 +848,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               }
             }
             val u = lhs.tsc.filter(_._1.constraints.sizeCompare(1) === 0)
-            u.foreachEntry { case (k, _) => lhs.tsc.remove(k) }
+            u.foreachEntry { case (k, _) =>
+              k.tvs.foreach {
+                case (_,tv: TV) => tv.tsc.remove(k)
+                case (_,ProvType(tv: TV)) => tv.tsc.remove(k)
+                case _ => ()
+              }
+            }
             u.foreachEntry { case (k, _) =>
               k.constraints.head.zip(k.tvs).foreach {
                 case (c, (pol, t)) => if (pol) rec(t, c, true) else rec(c, t, true)
@@ -870,7 +876,13 @@ class ConstraintSolver extends NormalForms { self: Typer =>
               }
             }
             val u = rhs.tsc.filter(_._1.constraints.sizeCompare(1) === 0)
-            u.foreachEntry { case (k, _) => rhs.tsc.remove(k) }
+            u.foreachEntry { case (k, _) =>
+              k.tvs.foreach {
+                case (_,tv: TV) => tv.tsc.remove(k)
+                case (_,ProvType(tv: TV)) => tv.tsc.remove(k)
+                case _ => ()
+              }
+            }
             u.foreachEntry { case (k, _) =>
               k.constraints.head.zip(k.tvs).foreach {
                 case (c, (pol, t)) => if (pol) rec(t, c, true) else rec(c, t, true)
@@ -1524,7 +1536,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
         (implicit ctx: Ctx, freshened: MutMap[TV, ST])
         : SimpleType =
   {
-    val freshenTsc: MutSet[TupleSetConstraints] = MutSet.empty
     def freshenImpl(ty: SimpleType, below: Level): SimpleType =
     // (trace(s"${lvl}. FRESHEN $ty || $above .. $below  ${ty.level} ${ty.level <= above}")
     {
@@ -1600,10 +1611,28 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             assert(lvl <= below, "this condition should be false for the result to be correct")
             lvl
           })
+          val freshentsc = tv.tsc.flatMap { case (tsc,_) =>
+            if (tsc.tvs.forall {
+              case (_,tv: TV) => !freshened.contains(tv)
+              case (_,ProvType(tv: TV)) => !freshened.contains(tv)
+              case _ => true
+            }) S(tsc) else N
+          }
           freshened += tv -> v
           v.lowerBounds = tv.lowerBounds.mapConserve(freshen)
           v.upperBounds = tv.upperBounds.mapConserve(freshen)
-          tv.tsc.foreachEntry { case (tsc, _) => freshenTsc += tsc }
+          freshentsc.foreach { tsc =>
+            val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov)
+            t.constraints = t.constraints.map(_.map(freshen))
+            t.tvs = t.tvs.map(x => (x._1,freshen(x._2)))
+            t.tvs.zipWithIndex.foreach {
+              case ((pol, tv: TV), i) =>
+                tv.tsc.updateWith(t)(_.map(_ + i).orElse(S(Set(i))))
+              case ((pol, ProvType(tv: TV)), i) =>
+                tv.tsc.updateWith(t)(_.map(_ + i).orElse(S(Set(i))))
+              case _ => ()
+            }
+          }
           v
       }
       
@@ -1650,17 +1679,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
     }}
     // (r => s"=> $r"))
     
-    val r = freshenImpl(ty, below)
-    val fr = Map.empty[ST, ST] ++ freshened
-    freshenTsc.foreach { tsc =>
-      val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov)
-      t.tvs = t.tvs.map(x => (x._1, substSyntax(x._2)(fr)))
-      t.tvs.zipWithIndex.foreach {
-        case ((pol, tv: TV), i) => tv.tsc.updateWith(t)(_.map(_ + i).orElse(S(Set(i))))
-        case _ => ()
-      }
-    }
-    r
+    freshenImpl(ty, below)
   }
   
   

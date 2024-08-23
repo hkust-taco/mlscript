@@ -44,14 +44,20 @@ foo(1) as Nothing
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.42: 	not / foo(1)
 //│ ║        	^^^^^^^^^^^^
-//│ ╟── application of type `int` is not an instance of type `bool`
+//│ ╟── reference of type `int` is not an instance of type `bool`
+//│ ║  l.26: 	let foo = (Int => Int) & (Bool => Bool)
+//│ ║        	                  ^^^
+//│ ╟── but it flows into application with expected type `bool`
 //│ ║  l.42: 	not / foo(1)
 //│ ╙──      	      ^^^^^^
 //│ res: bool | error
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
 //│ ║  l.43: 	foo(1) as Nothing
 //│ ║        	^^^^^^^^^^^^^^^^^
-//│ ╟── application of type `int` does not match type `nothing`
+//│ ╟── reference of type `int` does not match type `nothing`
+//│ ║  l.26: 	let foo = (Int => Int) & (Bool => Bool)
+//│ ║        	                  ^^^
+//│ ╟── but it flows into application with expected type `nothing`
 //│ ║  l.43: 	foo(1) as Nothing
 //│ ║        	^^^^^^
 //│ ╟── Note: constraint arises from reference:
@@ -62,26 +68,26 @@ foo(1) as Nothing
 :e
 foo as Nothing
 //│ ╔══[ERROR] Type mismatch in 'as' binding:
-//│ ║  l.63: 	foo as Nothing
+//│ ║  l.69: 	foo as Nothing
 //│ ║        	^^^^^^^^^^^^^^
 //│ ╟── type intersection of type `int -> int & bool -> bool` does not match type `nothing`
 //│ ║  l.26: 	let foo = (Int => Int) & (Bool => Bool)
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `nothing`
-//│ ║  l.63: 	foo as Nothing
+//│ ║  l.69: 	foo as Nothing
 //│ ║        	^^^
 //│ ╟── Note: constraint arises from reference:
-//│ ║  l.63: 	foo as Nothing
+//│ ║  l.69: 	foo as Nothing
 //│ ╙──      	       ^^^^^^^
 //│ res: nothing
 
 :e
 let oops = (&)
 //│ ╔══[ERROR] Illegal use of reserved operator: &
-//│ ║  l.79: 	let oops = (&)
+//│ ║  l.85: 	let oops = (&)
 //│ ╙──      	           ^^^
 //│ ╔══[ERROR] identifier not found: &
-//│ ║  l.79: 	let oops = (&)
+//│ ║  l.85: 	let oops = (&)
 //│ ╙──      	           ^^^
 //│ oops: error
 
