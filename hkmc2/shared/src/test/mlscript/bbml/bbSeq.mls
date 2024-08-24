@@ -68,7 +68,7 @@ fun mapi = s => f =>
 //│ ╟── because: cannot constrain  α28_2 ->{α45_2 ∨ <α>0_0} Seq[out α46_2, out α47_2]  <:  ((Int, <α>26_2) ->{<α>27_2} <α>26_2) ->{<α>0_0} Seq[out <α>26_2, out <α>27_2]
 //│ ╟── because: cannot constrain  Seq[out α46_2, out α47_2]  <:  Seq[out <α>26_2, out <α>27_2]
 //│ ╟── because: cannot constrain  α47_2  <:  <α>27_2
-//│ ╟── because: cannot constrain  α49_2  <:  <α>27_2
+//│ ╟── because: cannot constrain  α48_2  <:  <α>27_2
 //│ ╙── because: cannot constrain  ⊤  <:  <α>27_2
 //│ ╔══[ERROR] Type error in function literal with expected type (Seq[out <α>26_2, out <α>27_2]) ->{⊥} ((Int, <α>26_2) ->{<α>27_2} <α>26_2) ->{<α>0_0} Seq[out <α>26_2, out <α>27_2]
 //│ ║  l.31: 	fun mapi = s => f =>
@@ -86,7 +86,7 @@ fun mapi = s => f =>
 //│ ╟── because: cannot constrain  α28_2 ->{α45_2 ∨ <α>0_0} Seq[out α46_2, out α47_2]  <:  ((Int, <α>26_2) ->{<α>27_2} <α>26_2) ->{<α>0_0} Seq[out <α>26_2, out <α>27_2]
 //│ ╟── because: cannot constrain  Seq[out α46_2, out α47_2]  <:  Seq[out <α>26_2, out <α>27_2]
 //│ ╟── because: cannot constrain  α47_2  <:  <α>27_2
-//│ ╟── because: cannot constrain  α50_2  <:  <α>27_2
+//│ ╟── because: cannot constrain  α48_2  <:  <α>27_2
 //│ ╙── because: cannot constrain  ⊤  <:  <α>27_2
 //│ Type: ⊤
 
@@ -98,7 +98,7 @@ fun mapi = s => f =>
       i := !i + 1
       f(!i, x)
 mapi
-//│ Type: Seq[out α59_1, out α60_1] ->{⊥} (((Int, α59_1) ->{α71_1} α70_1) ->{<α>0_0} Seq[out α70_1, ?])
+//│ Type: Seq[out α57_1, out α58_1] ->{⊥} (((Int, α57_1) ->{α69_1} α68_1) ->{<α>0_0} Seq[out α68_1, ?])
 
 // * This version is correct as it keeps the mutation encapsulated within the region
 fun mapi_force: [A, E] -> Seq[out A, out E] -> ((Int, A) ->{E} A) ->{Alloc | E} Seq[out A, Nothing]

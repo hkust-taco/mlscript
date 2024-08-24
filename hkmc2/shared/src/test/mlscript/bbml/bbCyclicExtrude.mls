@@ -48,8 +48,10 @@ fun foo(f) = (f(x => x(x)) : [A] -> A -> A)
 //│ ╙──      	        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ Type: ⊤
 
-:fixme // extrusion of cyclic bounds
+
 f => (let g = x => x(x) in let tmp = g(g) in f(g)) : [A] -> A -> A
-//│ /!!!\ Uncaught error: java.lang.StackOverflowError
+//│ Type: ((((α86_1 ∨ (α86_1 ->{α89_1} α88_1)) ->{⊥} α88_1) ->{α89_1} α88_1) ->{⊥} (⊤ ->{⊥} ⊥)) ->{⊥} forall α80_2: (α80_2) ->{⊥} α80_2
+//│ Where:
+//│   α86_1 <: (α86_1 ∨ (α86_1 ->{α89_1} α88_1)) ->{⊥} α88_1
 
 

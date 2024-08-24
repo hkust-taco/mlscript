@@ -10,6 +10,7 @@ import utils.TraceLogger
 
 // * TODO use mutabnle cache instead for correct asymptotic complexity
 type Cache = Set[(Type, Type)]
+type ExtrudeCache = mutable.HashMap[(Uid[InfVar], Bool), InfVar]
 
 case class CCtx(cache: Cache, parents: Ls[(Type, Type)], origin: Term, exp: Opt[GeneralType]):
   def err(using Raise) =
@@ -36,10 +37,9 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
 
   import hkmc2.bbml.NormalForm.*
 
-  // TODO: cache x-fresh
   private def freshXVar(lvl: Int): InfVar = InfVar(lvl, infVarState.nextUid, new VarState(), false)
 
-  def extrude(ty: Type)(using lvl: Int, pol: Bool): Type =
+  def extrude(ty: Type)(using lvl: Int, pol: Bool, cache: ExtrudeCache): Type =
   trace[Type](s"Extruding[${printPol(pol)}] $ty", r => s"~> $r"):
     if ty.lvl <= lvl then ty else ty match
     case ClassType(sym, targs) =>
@@ -51,14 +51,17 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
     case v @ InfVar(_, uid, _, true) => // * skolem
       if pol then Top else Bot
     case v @ InfVar(_, uid, _, false) =>
-      val nv = freshXVar(lvl)
-      if pol then
-        v.state.upperBounds ::= nv
-        nv.state.lowerBounds = v.state.lowerBounds.map(extrude) // * propagate
-      else
-        v.state.lowerBounds ::= nv
-        nv.state.upperBounds = v.state.upperBounds.map(extrude) // * propagate
-      nv
+      cache.getOrElse(uid -> pol, {
+        val nv = freshXVar(lvl)
+        cache += uid -> pol -> nv
+        if pol then
+          v.state.upperBounds ::= nv
+          nv.state.lowerBounds = v.state.lowerBounds.map(extrude) // * propagate
+        else
+          v.state.lowerBounds ::= nv
+          nv.state.upperBounds = v.state.upperBounds.map(extrude) // * propagate
+        nv
+      })
     case FunType(args, ret, eff) =>
       FunType(args.map(arg => extrude(arg)(using lvl, !pol)), extrude(ret), extrude(eff))
     case ComposedType(lhs, rhs, p) =>
@@ -73,7 +76,7 @@ class ConstraintSolver(infVarState: InfVarUid.State, tl: TraceLogger):
         if v.isSkolem then constrainConj(rest)
         else
           val comp = rest.toType.simp
-          val bd = if v.lvl >= comp.lvl then comp else extrude(comp)(using v.lvl, true)
+          val bd = if v.lvl >= comp.lvl then comp else extrude(comp)(using v.lvl, true, mutable.HashMap.empty)
           if pol then
             val nc = Type.mkNegType(bd)
             log(s"New bound: $v <: $nc")

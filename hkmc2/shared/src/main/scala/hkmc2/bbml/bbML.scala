@@ -245,10 +245,10 @@ class BBTyper(tl: TraceLogger)(using elState: Elaborator.State):
     case _ => false
 
   private def extrude(ty: GeneralType)(using ctx: Ctx, pol: Bool): GeneralType = ty match
-    case ty: Type => solver.extrude(ty)(using ctx.lvl, pol)
+    case ty: Type => solver.extrude(ty)(using ctx.lvl, pol, HashMap.empty)
     case PolyType(tvs, body) => PolyType(tvs, extrude(body))
     case PolyFunType(args, ret, eff) =>
-      PolyFunType(args.map(extrude(_)(using ctx, !pol)), extrude(ret), solver.extrude(eff)(using ctx.lvl, pol))
+      PolyFunType(args.map(extrude(_)(using ctx, !pol)), extrude(ret), solver.extrude(eff)(using ctx.lvl, pol, HashMap.empty))
 
   private def constrain(lhs: Type, rhs: Type)(using ctx: Ctx, cctx: CCtx): Unit =
     solver.constrain(lhs, rhs)
