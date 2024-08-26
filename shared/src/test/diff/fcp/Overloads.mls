@@ -109,9 +109,9 @@ f(0) + 1
 //│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.13: 	def BBNN: bool -> bool & number -> number
 //│ ║        	                                   ^^^^^^
-//│ ╟── but it flows into integer literal with expected type `int`
+//│ ╟── but it flows into application with expected type `int`
 //│ ║  l.105: 	f(0) + 1
-//│ ╙──       	  ^
+//│ ╙──       	^^^^
 //│ res: error | int
 
 f : int -> number

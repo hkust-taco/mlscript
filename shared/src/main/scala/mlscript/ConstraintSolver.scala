@@ -849,7 +849,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             }
             val u = lhs.tsc.filter(_._1.constraints.sizeCompare(1) === 0)
             u.foreachEntry { case (k, _) =>
-              k.tvs.foreach {
+              k.tvs.mapValues(_.unwrapProxies).foreach { // TODO less inefficient; remove useless case
                 case (_,tv: TV) => tv.tsc.remove(k)
                 case (_,ProvType(tv: TV)) => tv.tsc.remove(k)
                 case _ => ()
@@ -857,7 +857,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             }
             u.foreachEntry { case (k, _) =>
               k.constraints.head.zip(k.tvs).foreach {
-                case (c, (pol, t)) => if (pol) rec(t, c, true) else rec(c, t, true)
+                case (c, (pol, t)) => if (pol) rec(t, c, false) else rec(c, t, false)
               }
             }
             lhs.lowerBounds.foreach(rec(_, rhs, true)) // propagate from the bound
@@ -877,7 +877,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             }
             val u = rhs.tsc.filter(_._1.constraints.sizeCompare(1) === 0)
             u.foreachEntry { case (k, _) =>
-              k.tvs.foreach {
+              k.tvs.mapValues(_.unwrapProxies).foreach { // TODO less inefficient; remove useless case
                 case (_,tv: TV) => tv.tsc.remove(k)
                 case (_,ProvType(tv: TV)) => tv.tsc.remove(k)
                 case _ => ()
@@ -885,7 +885,7 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             }
             u.foreachEntry { case (k, _) =>
               k.constraints.head.zip(k.tvs).foreach {
-                case (c, (pol, t)) => if (pol) rec(t, c, true) else rec(c, t, true)
+                case (c, (pol, t)) => if (pol) rec(t, c, false) else rec(c, t, false)
               }
             }
             rhs.upperBounds.foreach(rec(lhs, _, true)) // propagate from the bound

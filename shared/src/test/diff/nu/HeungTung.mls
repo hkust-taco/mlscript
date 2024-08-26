@@ -488,9 +488,7 @@ g(0)
 //│ ╔══[ERROR] Type mismatch in application:
 //│ ║  l.487: 	g(0)
 //│ ║         	^^^^
-//│ ╟── integer literal of type `Int` does not match type `?a`
-//│ ║  l.487: 	g(0)
-//│ ║         	  ^
+//│ ╟── expression of type `Int` does not match type `?a`
 //│ ╟── Note: constraint arises from application:
 //│ ║  l.477: 	let g = x => s(r(x))
 //│ ╙──       	               ^^^^
@@ -523,15 +521,14 @@ fun snd: A -> Int -> Int & Str -> Str -> Str
 :e
 x => app2(snd)(x):Int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.524: 	x => app2(snd)(x):Int
+//│ ║  l.522: 	x => app2(snd)(x):Int
 //│ ║         	     ^^^^^^^^^^^^
-//│ ╟── application of type `Int` is not an instance of type `A`
+//│ ╟── type `Int` is not an instance of type `A`
+//│ ║  l.515: 	fun app2: ('a -> 'a -> 'a) -> 'a -> 'a
+//│ ║         	                       ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.520: 	fun snd: A -> Int -> Int & Str -> Str -> Str
-//│ ║         	         ^
-//│ ╟── from type reference:
-//│ ║  l.524: 	x => app2(snd)(x):Int
-//│ ╙──       	                  ^^^
+//│ ║  l.518: 	fun snd: A -> Int -> Int & Str -> Str -> Str
+//│ ╙──       	         ^
 //│ nothing -> Int
 //│ res
 //│     = <no result>
