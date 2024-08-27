@@ -183,6 +183,7 @@ f(refined if true then 0 else false) // this one can be precise again!
 //│ ╙──       	^
 //│ 'a
 //│   where
+//│     'b :> error
 //│     'a :> error
 //│     [+'b, -'a] in {}
 //│ Code generation encountered an error:
@@ -240,7 +241,7 @@ type T = List[Int]
 :e // TODO application types
 type Res = M(T)
 //│ ╔══[ERROR] Wrong number of type arguments – expected 0, found 1
-//│ ║  l.241: 	type Res = M(T)
+//│ ║  l.242: 	type Res = M(T)
 //│ ╙──       	           ^^^^
 //│ type Res = M
 
@@ -263,7 +264,7 @@ fun f: Int -> Int
 fun f: Bool -> Bool
 fun f = id
 //│ ╔══[ERROR] A type signature for 'f' was already given
-//│ ║  l.263: 	fun f: Bool -> Bool
+//│ ║  l.264: 	fun f: Bool -> Bool
 //│ ╙──       	^^^^^^^^^^^^^^^^^^^
 //│ fun f: forall 'a. 'a -> 'a
 //│ fun f: Int -> Int
@@ -271,13 +272,13 @@ fun f = id
 :e // TODO support
 f: (Int -> Int) & (Bool -> Bool)
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.272: 	f: (Int -> Int) & (Bool -> Bool)
+//│ ║  l.273: 	f: (Int -> Int) & (Bool -> Bool)
 //│ ║         	^
 //│ ╟── type `Bool` is not an instance of type `Int`
-//│ ║  l.272: 	f: (Int -> Int) & (Bool -> Bool)
+//│ ║  l.273: 	f: (Int -> Int) & (Bool -> Bool)
 //│ ║         	                   ^^^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.262: 	fun f: Int -> Int
+//│ ║  l.263: 	fun f: Int -> Int
 //│ ╙──       	       ^^^
 //│ Int -> Int & Bool -> Bool
 //│ res
@@ -344,17 +345,17 @@ fun test(x) = refined if x is
   A then 0
   B then 1
 //│ ╔══[WARNING] Paren-less applications should use the 'of' keyword
-//│ ║  l.343: 	fun test(x) = refined if x is
+//│ ║  l.344: 	fun test(x) = refined if x is
 //│ ║         	              ^^^^^^^^^^^^^^^
-//│ ║  l.344: 	  A then 0
+//│ ║  l.345: 	  A then 0
 //│ ║         	^^^^^^^^^^
-//│ ║  l.345: 	  B then 1
+//│ ║  l.346: 	  B then 1
 //│ ╙──       	^^^^^^^^^^
 //│ ╔══[ERROR] Illegal use of reserved operator: refined
-//│ ║  l.343: 	fun test(x) = refined if x is
+//│ ║  l.344: 	fun test(x) = refined if x is
 //│ ╙──       	              ^^^^^^^
 //│ ╔══[ERROR] identifier not found: refined
-//│ ║  l.343: 	fun test(x) = refined if x is
+//│ ║  l.344: 	fun test(x) = refined if x is
 //│ ╙──       	              ^^^^^^^
 //│ fun test: (A | B) -> error
 //│ Code generation encountered an error:
@@ -407,6 +408,34 @@ x => q(x)
 //│     = <no result>
 //│       q is not implemented
 
+:e
+(x => q(x))(1):int
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.412: 	(x => q(x))(1):int
+//│ ║         	^^^^^^^^^^^^^^
+//│ ╟── application of type `?a` does not match type `int`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.412: 	(x => q(x))(1):int
+//│ ╙──       	               ^^^
+//│ int
+//│ res
+//│     = <no result>
+//│       q is not implemented
+
+:e
+q(1):int
+//│ ╔══[ERROR] Type mismatch in type ascription:
+//│ ║  l.426: 	q(1):int
+//│ ║         	^^^^
+//│ ╟── application of type `?a` does not match type `int`
+//│ ╟── Note: constraint arises from type reference:
+//│ ║  l.426: 	q(1):int
+//│ ╙──       	     ^^^
+//│ int
+//│ res
+//│     = <no result>
+//│       q is not implemented
+
 fun w = x => q(x)
 //│ fun w: forall 'a 'b. 'a -> 'b
 //│   where
@@ -430,12 +459,12 @@ fun r: Int -> Int & Bool -> Bool
 x => r(r(x))
 //│ ╔══[ERROR] ambiguous
 //│ ╟── cannot determine satisfiability of type ?a
-//│ ║  l.430: 	x => r(r(x))
+//│ ║  l.459: 	x => r(r(x))
 //│ ╙──       	       ^^^^
-//│ forall 'a 'b. 'a -> 'b
+//│ forall 'a 'b 'c. 'a -> 'c
 //│   where
-//│     [-'b, +'c] in {[Int, Int], [Bool, Bool]}
-//│     [-'c, +'a] in {[Int, Int], [Bool, Bool]}
+//│     [+'a, -'b] in {[Int, Int], [Bool, Bool]}
+//│     [-'c, +'b] in {[Int, Int], [Bool, Bool]}
 //│ res
 //│     = <no result>
 //│       r is not implemented
@@ -457,9 +486,9 @@ fun u: {x:0, y:Int} -> Int & {x:1, z: Str} -> Str
 //│ fun u: {x: 0, y: Int} -> Int & {x: 1, z: Str} -> Str
 
 (a, b, c) => u({x: a, y: b, z: c})
-//│ forall 'a 'b 'c 'd. ('a, 'c, 'd) -> 'b
+//│ forall 'a 'b 'c 'd. ('a, 'd, 'b) -> 'c
 //│   where
-//│     [-'b, +'c, +'a, +'d] in {[Int, Int, 0, anything], [Str, anything, 1, Str]}
+//│     [+'b, -'c, +'a, +'d] in {[anything, Int, 0, Int], [Str, Str, 1, anything]}
 //│ res
 //│     = <no result>
 //│       u is not implemented
@@ -475,10 +504,10 @@ fun s: Str -> Str & AA -> AA
 
 // FIXME
 let g = x => s(r(x))
-//│ let g: forall 'a 'b. 'a -> 'b
+//│ let g: forall 'a 'b 'c. 'a -> 'c
 //│   where
-//│     [-'b, +'c] in {[Str, Str], [AA, AA]}
-//│     [+'a, -'c] in {[Int, Int], [Bool, Bool]}
+//│     [+'a, -'b] in {[Int, Int], [Bool, Bool]}
+//│     [+'b, -'c] in {[Str, Str], [AA, AA]}
 //│ g
 //│   = <no result>
 //│     s is not implemented
@@ -486,11 +515,11 @@ let g = x => s(r(x))
 :e
 g(0)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.487: 	g(0)
+//│ ║  l.516: 	g(0)
 //│ ║         	^^^^
 //│ ╟── expression of type `Int` does not match type `?a`
 //│ ╟── Note: constraint arises from application:
-//│ ║  l.477: 	let g = x => s(r(x))
+//│ ║  l.506: 	let g = x => s(r(x))
 //│ ╙──       	               ^^^^
 //│ error
 //│ res
@@ -521,13 +550,13 @@ fun snd: A -> Int -> Int & Str -> Str -> Str
 :e
 x => app2(snd)(x):Int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.522: 	x => app2(snd)(x):Int
+//│ ║  l.551: 	x => app2(snd)(x):Int
 //│ ║         	     ^^^^^^^^^^^^
 //│ ╟── type `Int` is not an instance of type `A`
-//│ ║  l.515: 	fun app2: ('a -> 'a -> 'a) -> 'a -> 'a
+//│ ║  l.544: 	fun app2: ('a -> 'a -> 'a) -> 'a -> 'a
 //│ ║         	                       ^^
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.518: 	fun snd: A -> Int -> Int & Str -> Str -> Str
+//│ ║  l.547: 	fun snd: A -> Int -> Int & Str -> Str -> Str
 //│ ╙──       	         ^
 //│ nothing -> Int
 //│ res
@@ -541,7 +570,7 @@ app2_(snd)
 //│ 'a -> 'b
 //│   where
 //│     'a <: 'b
-//│     [-'b, +'a, -'a] in {[Int, A & Int, Int], [Str, Str, Str]}
+//│     [-'a, +'a, -'b] in {[Int, A & Int, Int], [Str, Str, Str]}
 //│ res
 //│     = <no result>
 //│       snd is not implemented

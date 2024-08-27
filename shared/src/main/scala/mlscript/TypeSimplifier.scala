@@ -83,7 +83,7 @@ trait TypeSimplifier { self: Typer =>
             case S(tsc) => (tsc, i)
             case N if inPlace => (tsc, i)
             case N =>
-              val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov)
+              val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)
               renewedtsc += tsc -> t
               t.tvs = t.tvs.map(x => (x._1, process(x._2, N)))
               (t, i)
@@ -1041,7 +1041,7 @@ trait TypeSimplifier { self: Typer =>
                         res.tsc ++= tv.tsc.map { case (tsc, i) => renewaltsc.get(tsc) match {
                           case S(tsc) => (tsc, i)
                           case N =>
-                            val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov)
+                            val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)
                             renewaltsc += tsc -> t
                             t.tvs = t.tvs.map(x => (x._1, transform(x._2, PolMap.neu, Set.empty)))
                             (t, i)

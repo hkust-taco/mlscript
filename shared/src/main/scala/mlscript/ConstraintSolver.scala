@@ -632,8 +632,6 @@ class ConstraintSolver extends NormalForms { self: Typer =>
                 case S(tsc) => if (!tsc.tvs.isEmpty && tsc.constraints.isEmpty) reportError()
                 case N => reportError()
               }
-              // val t = TupleSetConstraints.mk(ov)
-              // annoying(Nil, LhsRefined(S(t), ts, r, trs), Nil, done_rs)
             case (LhsRefined(S(ov: Overload), ts, r, trs), _) =>
               annoying(Nil, LhsRefined(S(ov.approximatePos), ts, r, trs), Nil, done_rs) // TODO remove approx. with ambiguous constraints
             case (LhsRefined(S(Without(b, ns)), ts, r, _), RhsBases(pts, N | S(L(_)), _)) =>
@@ -849,9 +847,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             }
             val u = lhs.tsc.filter(_._1.constraints.sizeCompare(1) === 0)
             u.foreachEntry { case (k, _) =>
-              k.tvs.mapValues(_.unwrapProxies).foreach { // TODO less inefficient; remove useless case
+              k.tvs.mapValues(_.unwrapProxies).foreach {
                 case (_,tv: TV) => tv.tsc.remove(k)
-                case (_,ProvType(tv: TV)) => tv.tsc.remove(k)
                 case _ => ()
               }
             }
@@ -877,9 +874,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             }
             val u = rhs.tsc.filter(_._1.constraints.sizeCompare(1) === 0)
             u.foreachEntry { case (k, _) =>
-              k.tvs.mapValues(_.unwrapProxies).foreach { // TODO less inefficient; remove useless case
+              k.tvs.mapValues(_.unwrapProxies).foreach {
                 case (_,tv: TV) => tv.tsc.remove(k)
-                case (_,ProvType(tv: TV)) => tv.tsc.remove(k)
                 case _ => ()
               }
             }
@@ -1612,9 +1608,8 @@ class ConstraintSolver extends NormalForms { self: Typer =>
             lvl
           })
           val freshentsc = tv.tsc.flatMap { case (tsc,_) =>
-            if (tsc.tvs.forall {
-              case (_,tv: TV) => !freshened.contains(tv)
-              case (_,ProvType(tv: TV)) => !freshened.contains(tv)
+            if (tsc.tvs.map(_._2.unwrapProxies).forall {
+              case tv: TV => !freshened.contains(tv)
               case _ => true
             }) S(tsc) else N
           }
@@ -1622,14 +1617,11 @@ class ConstraintSolver extends NormalForms { self: Typer =>
           v.lowerBounds = tv.lowerBounds.mapConserve(freshen)
           v.upperBounds = tv.upperBounds.mapConserve(freshen)
           freshentsc.foreach { tsc =>
-            val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)(tsc.prov)
+            val t = new TupleSetConstraints(tsc.constraints, tsc.tvs)
             t.constraints = t.constraints.map(_.map(freshen))
             t.tvs = t.tvs.map(x => (x._1,freshen(x._2)))
-            t.tvs.zipWithIndex.foreach {
-              case ((pol, tv: TV), i) =>
-                tv.tsc.updateWith(t)(_.map(_ + i).orElse(S(Set(i))))
-              case ((pol, ProvType(tv: TV)), i) =>
-                tv.tsc.updateWith(t)(_.map(_ + i).orElse(S(Set(i))))
+            t.tvs.map(_._2.unwrapProxies).zipWithIndex.foreach {
+              case (tv: TV, i) => tv.tsc.updateWith(t)(_.map(_ + i).orElse(S(Set(i))))
               case _ => ()
             }
           }

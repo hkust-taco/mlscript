@@ -673,7 +673,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
     val prov = noProv
   }
 
-  class TupleSetConstraints(var constraints: Ls[Ls[ST]], var tvs: Ls[(Bool, ST)])(val prov: TypeProvenance) {
+  class TupleSetConstraints(var constraints: Ls[Ls[ST]], var tvs: Ls[(Bool, ST)]) {
     def updateImpl(index: Int, bound: ST)(implicit raise: Raise, ctx: Ctx) : Unit = {
       val u0 = constraints.flatMap { c =>
         TupleSetConstraints.lcg(tvs(index)._1, bound, c(index)).map(tvs.zip(c)++_)
@@ -683,17 +683,15 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
           (u,l.reduce((x,y) => ComposedType(!p,x,y)(noProv)))
         }
       }
-      tvs.foreach {
-        case (_, tv: TV) => tv.tsc += this -> Set.empty
-        case (_, ProvType(tv: TV)) => tv.tsc += this -> Set.empty
+      tvs.map(_._2.unwrapProxies).foreach {
+        case tv: TV => tv.tsc += this -> Set.empty
         case _ => ()
       }
       if (!u.isEmpty) {
         tvs = u.flatMap(_.keys).distinct
         constraints = tvs.map(x => u.map(_.getOrElse(x,if (x._1) TopType else BotType))).transpose
-        tvs.zipWithIndex.foreach {
-          case ((pol, tv: TV), i) => tv.tsc.updateWith(this)(_.map(_ + i).orElse(S(Set(i))))
-          case ((pol, ProvType(tv: TV)), i) => tv.tsc.updateWith(this)(_.map(_ + i).orElse(S(Set(i))))
+        tvs.map(_._2.unwrapProxies).zipWithIndex.foreach {
+          case (tv: TV, i) => tv.tsc.updateWith(this)(_.map(_ + i).orElse(S(Set(i))))
           case _ => ()
         }
       } else {
@@ -779,8 +777,8 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       if (u.isEmpty) { return N }
       val tvs = u.flatMap(_.keys).distinct
       val m = tvs.map(x => u.map(_.getOrElse(x,if (x._1) TopType else BotType)))
-      val tsc = new TupleSetConstraints(m.transpose, tvs)(ov.prov)
-      tvs.map(x => (x._1,x._2.unwrapProxies)).zipWithIndex.foreach {
+      val tsc = new TupleSetConstraints(m.transpose, tvs)
+      tvs.mapValues(_.unwrapProxies).zipWithIndex.foreach {
         case ((true, tv: TV), i) =>
           tv.tsc.updateWith(tsc)(_.map(_ + i).orElse(S(Set(i))))
           tv.lowerBounds.foreach(tsc.updateImpl(i, _))
@@ -791,9 +789,8 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       }
       println(s"TSC mk: ${tsc.tvs} in ${tsc.constraints}")
       if (tsc.constraints.sizeCompare(1) === 0) {
-        tvs.foreach {
-          case (_, tv: TV) => tv.tsc.remove(tsc)
-          case (_, ProvType(tv: TV)) => tv.tsc.remove(tsc)
+        tvs.map(_._2.unwrapProxies).foreach {
+          case tv: TV => tv.tsc.remove(tsc)
           case _ => ()
         }
         tsc.constraints.head.zip(tvs).foreach {

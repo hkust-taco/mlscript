@@ -94,23 +94,22 @@ IISS 0
 def f = fun x -> (if true then IISS else BBNN) x
 //│ f: 'a -> 'b
 //│   where
-//│     [+'a, -'b] in {[bool, bool], [number, number]}
 //│     [+'a, -'b] in {[int, int], [string, string]}
+//│     [+'a, -'b] in {[bool, bool], [number, number]}
 
 f(0)
 //│ res: number
 
-
 // FIXME
 f(0) + 1
 //│ ╔══[ERROR] Type mismatch in operator application:
-//│ ║  l.105: 	f(0) + 1
+//│ ║  l.104: 	f(0) + 1
 //│ ║         	^^^^^^
 //│ ╟── type `number` is not an instance of type `int`
 //│ ║  l.13: 	def BBNN: bool -> bool & number -> number
 //│ ║        	                                   ^^^^^^
 //│ ╟── but it flows into application with expected type `int`
-//│ ║  l.105: 	f(0) + 1
+//│ ║  l.104: 	f(0) + 1
 //│ ╙──       	^^^^
 //│ res: error | int
 
@@ -120,10 +119,10 @@ f : int -> number
 :e
 f : number -> int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.121: 	f : number -> int
+//│ ║  l.120: 	f : number -> int
 //│ ║         	^
 //│ ╟── type `number` does not match type `?a`
-//│ ║  l.121: 	f : number -> int
+//│ ║  l.120: 	f : number -> int
 //│ ╙──       	    ^^^^^^
 //│ res: number -> int
 
@@ -140,16 +139,16 @@ if true then IISS else BBNN
 :e
 (if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.141: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.140: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║         	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── type `int -> int & string -> string` is not a function
 //│ ║  l.12: 	def IISS: int -> int & string -> string
 //│ ║        	          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `(0 | 1 | true) -> number`
-//│ ║  l.141: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.140: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ║         	              ^^^^
 //│ ╟── Note: constraint arises from function type:
-//│ ║  l.141: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
+//│ ║  l.140: 	(if true then IISS else BBNN) : (0 | 1 | true) -> number
 //│ ╙──       	                                ^^^^^^^^^^^^^^^^^^^^^^^^
 //│ res: (0 | 1 | true) -> number
 
@@ -168,13 +167,13 @@ not test
 //│   <:  test:
 //│ ~(int -> int)
 //│ ╔══[ERROR] Type mismatch in application:
-//│ ║  l.166: 	not test
+//│ ║  l.165: 	not test
 //│ ║         	^^^^^^^^
 //│ ╟── type `~(int -> int)` is not an instance of type `bool`
-//│ ║  l.160: 	def test: ~(int -> int)
+//│ ║  l.159: 	def test: ~(int -> int)
 //│ ║         	          ^^^^^^^^^^^^^
 //│ ╟── but it flows into reference with expected type `bool`
-//│ ║  l.166: 	not test
+//│ ║  l.165: 	not test
 //│ ╙──       	    ^^^^
 //│ res: bool | error
 

@@ -917,7 +917,7 @@ abstract class TyperHelpers { Typer: Typer =>
     }
     def children(includeBounds: Bool): List[SimpleType] = this match {
       case tv @ AssignedVariable(ty) => if (includeBounds) ty :: Nil else Nil
-      case tv: TypeVariable => if (includeBounds) tv.lowerBounds ::: tv.upperBounds else Nil
+      case tv: TypeVariable => if (includeBounds) tv.lowerBounds ::: tv.upperBounds ++ tv.tsc.keys.flatMap(_.tvs.map(_._2)) else Nil
       case FunctionType(l, r) => l :: r :: Nil
       case Overload(as) => as
       case ComposedType(_, l, r) => l :: r :: Nil
@@ -1014,9 +1014,7 @@ abstract class TyperHelpers { Typer: Typer =>
           val couldBeDistribbed = bod.varsBetween(polymLevel, MaxLevel)
           println(s"could be distribbed: $couldBeDistribbed")
           if (couldBeDistribbed.isEmpty) return N
-          val cannotBeDistribbed = par.varsBetween(polymLevel, MaxLevel).flatMap { v =>
-            v :: v.tsc.keys.flatMap(_.tvs.flatMap(_._2.getVars)).toList
-          }
+          val cannotBeDistribbed = par.varsBetween(polymLevel, MaxLevel)
           println(s"cannot be distribbed: $cannotBeDistribbed")
           val canBeDistribbed = couldBeDistribbed -- cannotBeDistribbed
           if (canBeDistribbed.isEmpty) return N // TODO
