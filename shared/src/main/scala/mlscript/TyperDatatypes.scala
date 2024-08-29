@@ -683,14 +683,14 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
           (u,l.reduce((x,y) => ComposedType(!p,x,y)(noProv)))
         }
       }
-      tvs.map(_._2.unwrapProxies).foreach {
+      tvs.values.map(_.unwrapProxies).foreach {
         case tv: TV => tv.tsc += this -> Set.empty
         case _ => ()
       }
       if (!u.isEmpty) {
         tvs = u.flatMap(_.keys).distinct
         constraints = tvs.map(x => u.map(_.getOrElse(x,if (x._1) TopType else BotType))).transpose
-        tvs.map(_._2.unwrapProxies).zipWithIndex.foreach {
+        tvs.values.map(_.unwrapProxies).zipWithIndex.foreach {
           case (tv: TV, i) => tv.tsc.updateWith(this)(_.map(_ + i).orElse(S(Set(i))))
           case _ => ()
         }
@@ -769,7 +769,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       }
     }
     def mk(ov: Overload, f: FT)(implicit raise: Raise, ctx: Ctx): Opt[TupleSetConstraints] = {
-      val u = ov.alts.map(lcgFunction(false, f, _)).flatten.map { x =>
+      val u = ov.alts.flatMap(lcgFunction(false, f, _)).map { x =>
         x.groupMap(_._1)(_._2).map { case (u@(p,_),l) =>
           (u,l.reduce((x,y) => ComposedType(!p,x,y)(noProv)))
         }
@@ -778,7 +778,7 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       val tvs = u.flatMap(_.keys).distinct
       val m = tvs.map(x => u.map(_.getOrElse(x,if (x._1) TopType else BotType)))
       val tsc = new TupleSetConstraints(m.transpose, tvs)
-      tvs.mapValues(_.unwrapProxies).zipWithIndex.foreach {
+      tvs.mapValuesIter(_.unwrapProxies).zipWithIndex.foreach {
         case ((true, tv: TV), i) =>
           tv.tsc.updateWith(tsc)(_.map(_ + i).orElse(S(Set(i))))
           tv.lowerBounds.foreach(tsc.updateImpl(i, _))
@@ -789,11 +789,11 @@ abstract class TyperDatatypes extends TyperHelpers { Typer: Typer =>
       }
       println(s"TSC mk: ${tsc.tvs} in ${tsc.constraints}")
       if (tsc.constraints.sizeCompare(1) === 0) {
-        tvs.map(_._2.unwrapProxies).foreach {
+        tvs.values.map(_.unwrapProxies).foreach {
           case tv: TV => tv.tsc.remove(tsc)
           case _ => ()
         }
-        tsc.constraints.head.zip(tvs).foreach {
+        tsc.constraints.head.iterator.zip(tvs).foreach {
           case (c, (pol, t)) =>
             if (!pol) constrain(c, t)(raise, ov.prov, ctx)
             if (pol) constrain(t, c)(raise, ov.prov, ctx)

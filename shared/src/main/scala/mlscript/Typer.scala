@@ -169,8 +169,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
               if (p) (b, tv) else (tv, b) }
           }.toList, innerTy)
 
-        val ambiguous = innerTy.getVars.toList.flatMap(_.tsc)
-          .flatMap(_._1.tvs).distinct
+        val ambiguous = innerTy.getVars.unsorted.flatMap(_.tsc.keys.flatMap(_.tvs))
           .groupBy(_._2)
           .filter { case (v,pvs) => pvs.sizeIs > 1 }
         if (ambiguous.nonEmpty) raise(ErrorReport(
@@ -687,7 +686,7 @@ class Typer(var dbg: Boolean, var verbose: Bool, var explainErrors: Bool, val ne
         tscs.foreach { case (typevars, constrs) =>
           val tvs = typevars.map(x => (x._1, rec(x._2)))
           val tsc = new TupleSetConstraints(constrs.map(_.map(rec)), tvs)
-          tvs.map(_._2.unwrapProxies).zipWithIndex.foreach {
+          tvs.values.map(_.unwrapProxies).zipWithIndex.foreach {
             case (tv: TV, i) => tv.tsc.updateWith(tsc)(_.map(_ + i).orElse(S(Set(i))))
             case _ => ()
           }

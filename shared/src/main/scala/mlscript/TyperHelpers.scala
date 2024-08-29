@@ -759,8 +759,8 @@ abstract class TyperHelpers { Typer: Typer =>
         case tv: TypeVariable =>
           val poltv = pol(tv)
           (if (poltv =/= S(false)) tv.lowerBounds.map(pol.at(tv.level, true) -> _) else Nil) :::
-          (if (poltv =/= S(true)) tv.upperBounds.map(pol.at(tv.level, false) -> _) else Nil) :::
-          tv.tsc.keys.flatMap(_.tvs).map(u => pol.at(tv.level,u._1) -> u._2).toList
+          (if (poltv =/= S(true)) tv.upperBounds.map(pol.at(tv.level, false) -> _) else Nil) ++
+          tv.tsc.keys.flatMap(_.tvs).map(u => pol.at(tv.level,u._1) -> u._2)
         case FunctionType(l, r) => pol.contravar -> l :: pol.covar -> r :: Nil
         case Overload(as) => as.map(pol -> _)
         case ComposedType(_, l, r) => pol -> l :: pol -> r :: Nil
@@ -917,7 +917,7 @@ abstract class TyperHelpers { Typer: Typer =>
     }
     def children(includeBounds: Bool): List[SimpleType] = this match {
       case tv @ AssignedVariable(ty) => if (includeBounds) ty :: Nil else Nil
-      case tv: TypeVariable => if (includeBounds) tv.lowerBounds ::: tv.upperBounds ++ tv.tsc.keys.flatMap(_.tvs.map(_._2)) else Nil
+      case tv: TypeVariable => if (includeBounds) tv.lowerBounds ::: tv.upperBounds ++ tv.tsc.keys.flatMap(_.tvs.values) else Nil
       case FunctionType(l, r) => l :: r :: Nil
       case Overload(as) => as
       case ComposedType(_, l, r) => l :: r :: Nil

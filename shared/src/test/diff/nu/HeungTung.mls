@@ -409,15 +409,15 @@ x => q(x)
 //│       q is not implemented
 
 :e
-(x => q(x))(1):int
+(x => q(x))(1):Int
 //│ ╔══[ERROR] Type mismatch in type ascription:
-//│ ║  l.412: 	(x => q(x))(1):int
+//│ ║  l.412: 	(x => q(x))(1):Int
 //│ ║         	^^^^^^^^^^^^^^
-//│ ╟── application of type `?a` does not match type `int`
+//│ ╟── application of type `?a` does not match type `Int`
 //│ ╟── Note: constraint arises from type reference:
-//│ ║  l.412: 	(x => q(x))(1):int
+//│ ║  l.412: 	(x => q(x))(1):Int
 //│ ╙──       	               ^^^
-//│ int
+//│ Int
 //│ res
 //│     = <no result>
 //│       q is not implemented
